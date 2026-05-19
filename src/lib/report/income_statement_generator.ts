@@ -134,8 +134,8 @@ export function generateIncomeStatement(
         name: data.name,
         amount: data.amount.toString(),
         percentageOfRevenue: !baseTotal.isZero()
-          ? data.amount.abs().dividedBy(baseTotal).times(100).toNumber()
-          : 0,
+          ? data.amount.abs().dividedBy(baseTotal).times(100).toString()
+          : "0",
       }))
       .sort((a, b) => a.code.localeCompare(b.code));
   };
@@ -186,7 +186,7 @@ export function generateIncomeStatement(
     nonOperatingIncomeRatio: MoneyUtil.safeRatio(totalNonOp, totalRevenue),
     interestCoverageRatio: interestExpense.isZero()
       ? null
-      : operatingIncome.dividedBy(interestExpense).toNumber(),
+      : operatingIncome.dividedBy(interestExpense).toString(),
     // Info: (20260518 - Tzuhan) [AUDIT FIX] EPS 為跨表指標 (需 BS 總股本)，已交由 CrossReportMetrics 計算
     eps: null,
     taxRate: MoneyUtil.safeRatio(totalTax, incomeBeforeTax),

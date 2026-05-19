@@ -30,7 +30,7 @@ export interface IEsgEmissionIntensity {
 export interface IEsgScopeDistributionData {
   scope: EsgScope;
   value: string;
-  percentage: number;
+  percentage: string;
 }
 
 export interface IEsgDashboardSummary {
@@ -38,7 +38,7 @@ export interface IEsgDashboardSummary {
   emissionIntensity: IEsgEmissionIntensity;
   scopeDistribution: IEsgScopeDistributionData[];
   goalProgress: {
-    percentage: number;
+    percentage: string;
   };
 }
 

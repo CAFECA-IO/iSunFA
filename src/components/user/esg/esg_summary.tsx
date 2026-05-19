@@ -207,9 +207,9 @@ export default function EsgSummary({
         <div className="mt-4 lg:mt-8">
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
             <div
-              className={`h-full rounded-full ${summaryData.goalProgress.percentage > 100 ? "bg-red-500" : "bg-orange-500"}`}
+              className={`h-full rounded-full ${Number(summaryData.goalProgress.percentage) > 100 ? "bg-red-500" : "bg-orange-500"}`}
               style={{
-                width: `${Math.min(100, summaryData.goalProgress.percentage)}%`,
+                width: `${Math.min(100, Number(summaryData.goalProgress.percentage))}%`,
               }}
             ></div>
           </div>

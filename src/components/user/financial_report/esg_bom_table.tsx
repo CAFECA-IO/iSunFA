@@ -50,7 +50,7 @@ export default function EsgBomTable({ sections }: IEsgBomTableProps) {
                 {MoneyUtil.format(item.emissions, 1)}
               </td>
               <td className="px-4 py-3 text-right text-xs text-gray-500">
-                {item.percentage.toFixed(1)}%
+                {Number(item.percentage).toFixed(1)}%
               </td>
             </tr>
           );

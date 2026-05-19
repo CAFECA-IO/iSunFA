@@ -2,7 +2,7 @@ export interface IEsgReportItem {
   id: string;
   name: string;
   amount: string | number; // Info: (20260406 - Luphia) Emissions in kgCO2e
-  percentageOfScope: number;
+  percentageOfScope: string;
 }
 
 export interface IEsgReportDetailedRecord {
@@ -12,7 +12,7 @@ export interface IEsgReportDetailedRecord {
   unit: string;
   emissions: string | number;
   emissionFactor: string | null; // Info: (20260512 - Tzuhan) Allow null to prevent greenwashing when originalData is 0
-  percentage: number;
+  percentage: string;
 }
 
 export interface IEsgReportSection {
@@ -23,9 +23,9 @@ export interface IEsgReportSection {
 
 export interface IEsgReportMetrics {
   totalEmissions: string | number;
-  scope1Proportion: number;
-  scope2Proportion: number;
-  scope3Proportion: number;
+  scope1Proportion: string;
+  scope2Proportion: string;
+  scope3Proportion: string;
 }
 
 export interface IEsgReport {

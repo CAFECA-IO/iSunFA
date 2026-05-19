@@ -268,8 +268,8 @@ export function generateBalanceSheet(
     ),
     equityRatio: MoneyUtil.safeRatio(totalEquity, totalAssets),
     equityMultiplier: totalEquity.isZero()
-      ? 0
-      : totalAssets.dividedBy(totalEquity).toNumber(),
+      ? "0"
+      : totalAssets.dividedBy(totalEquity).toString(),
     interestBearingDebtRatio: MoneyUtil.safeRatio(
       interestBearingDebtTotal,
       totalAssets,

@@ -96,8 +96,8 @@ export function generateEsgReport(esgRecords: IEsgRecordDetail[]): IEsgReport {
         name: data.name,
         amount: data.amount.toString(),
         percentageOfScope: baseTotal.isZero()
-          ? 0
-          : data.amount.dividedBy(baseTotal).times(100).toNumber(),
+          ? "0"
+          : data.amount.dividedBy(baseTotal).times(100).toString(),
       }))
       .sort((a, b) =>
         MoneyUtil.toDecimal(b.amount).comparedTo(MoneyUtil.toDecimal(a.amount)),
@@ -111,14 +111,14 @@ export function generateEsgReport(esgRecords: IEsgRecordDetail[]): IEsgReport {
   const metrics = {
     totalEmissions: totalEmissions.toString(),
     scope1Proportion: totalEmissions.isZero()
-      ? 0
-      : totalScope1.dividedBy(totalEmissions).times(100).toNumber(),
+      ? "0"
+      : totalScope1.dividedBy(totalEmissions).times(100).toString(),
     scope2Proportion: totalEmissions.isZero()
-      ? 0
-      : totalScope2.dividedBy(totalEmissions).times(100).toNumber(),
+      ? "0"
+      : totalScope2.dividedBy(totalEmissions).times(100).toString(),
     scope3Proportion: totalEmissions.isZero()
-      ? 0
-      : totalScope3.dividedBy(totalEmissions).times(100).toNumber(),
+      ? "0"
+      : totalScope3.dividedBy(totalEmissions).times(100).toString(),
   };
 
   const calculateRecords = (
@@ -140,11 +140,11 @@ export function generateEsgReport(esgRecords: IEsgRecordDetail[]): IEsgReport {
         return {
           ...record,
           percentage: scopeTotal.isZero()
-            ? 0
+            ? "0"
             : MoneyUtil.toDecimal(record.emissions)
                 .dividedBy(scopeTotal)
                 .times(100)
-                .toNumber(),
+                .toString(),
         };
       })
       .sort((a, b) =>

@@ -85,23 +85,38 @@ export function buildOenTransactionPayload(
   orderData: Record<string, unknown>,
   providerToken: string,
 ) {
+  const parsedAmount = MoneyUtil.toDecimal(amount.toString()).toNumber();
+  if (!Number.isSafeInteger(parsedAmount)) {
+    throw new Error(
+      "[External API Overflow] Amount exceeds safe integer limits for external payment gateway.",
+    );
+  }
+
   const items = generateReceiptItems(amount, orderData);
 
   return {
     merchantId: "mermer",
-    amount: amount.toString(),
+    amount: parsedAmount,
     currency: "TWD",
     token: providerToken,
     orderId: orderId,
     userName: pmData?.buyerName || dbUser.name || "Unknown",
     userEmail: pmData?.email || `${dbUser.id}@isunfa.tw`,
-    productDetails: items.map((item, idx) => ({
-      productionCode: `ISUNFA-ITM-${idx}`,
-      description: item.name,
-      quantity: MoneyUtil.toDecimal(item.quantity).toNumber() || 1,
-      unit: "pcs",
-      unitPrice: MoneyUtil.toDecimal(item.unitPrice).toNumber(), // Info: (20260410 - Luphia) mapped explicitly to each item tax/price structure
-    })),
+    productDetails: items.map((item, idx) => {
+      const parsedPrice = MoneyUtil.toDecimal(item.unitPrice).toNumber();
+      if (!Number.isSafeInteger(parsedPrice)) {
+        throw new Error(
+          "[External API Overflow] Amount exceeds safe integer limits for external payment gateway.",
+        );
+      }
+      return {
+        productionCode: `ISUNFA-ITM-${idx}`,
+        description: item.name,
+        quantity: MoneyUtil.toDecimal(item.quantity).toNumber() || 1,
+        unit: "pcs",
+        unitPrice: parsedPrice, // Info: (20260410 - Luphia) mapped explicitly to each item tax/price structure
+      };
+    }),
   };
 }
 

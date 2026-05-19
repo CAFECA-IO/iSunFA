@@ -141,9 +141,9 @@ export const MoneyUtil = {
    * 安全計算比率 (numerator / denominator * 100)，避免除以零。
    * 回傳數值 (number)
    */
-  safeRatio(numerator: MoneyValue, denominator: MoneyValue): number {
+  safeRatio(numerator: MoneyValue, denominator: MoneyValue): string {
     const denom = this.toDecimal(denominator);
-    if (denom.isZero()) return 0;
-    return this.toDecimal(numerator).dividedBy(denom).times(100).toNumber();
+    if (denom.isZero()) return "0";
+    return this.toDecimal(numerator).dividedBy(denom).times(100).toString();
   },
 };

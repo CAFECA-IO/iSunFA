@@ -65,7 +65,7 @@ const BalanceSheetSection = ({
                 <div
                   className={`h-full rounded-full ${barColor}`}
                   style={{
-                    width: `${item.percentageOfAssetOrLiabEquity}%`,
+                    width: `${Number(item.percentageOfAssetOrLiabEquity)}%`,
                   }}
                 ></div>
               </div>
@@ -75,7 +75,7 @@ const BalanceSheetSection = ({
                 {numberWithCommas(item.amount)}
               </span>
               <span className="text-[10px] font-bold text-gray-400">
-                {item.percentageOfAssetOrLiabEquity.toFixed(1)}%
+                {Number(item.percentageOfAssetOrLiabEquity).toFixed(1)}%
               </span>
             </div>
           </div>
@@ -252,37 +252,37 @@ export default function BalanceSheetView({
     },
     {
       title: t("balance_sheet_view.metric_cr_title"),
-      value: `${metrics.currentRatio.toFixed(1)}%`,
+      value: `${Number(metrics.currentRatio).toFixed(1)}%`,
       description: t("balance_sheet_view.metric_cr_desc"),
       textColor: "text-gray-900",
-      statusGood: metrics.currentRatio > 200,
+      statusGood: Number(metrics.currentRatio) > 200,
       className: "print:w-1/4",
       tooltipAlign: TooltipAlign.LEFT,
     },
     {
       title: t("balance_sheet_view.metric_qr_title"),
-      value: `${(metrics.quickRatio || 0).toFixed(1)}%`,
+      value: `${(Number(metrics.quickRatio) || 0).toFixed(1)}%`,
       description: t("balance_sheet_view.metric_qr_desc"),
       textColor: "text-gray-900",
-      statusGood: (metrics.quickRatio || 0) > 100,
+      statusGood: Number(metrics.quickRatio || 0) > 100,
       className: "print:w-1/4",
       tooltipAlign: TooltipAlign.RIGHT,
     },
     {
       title: t("balance_sheet_view.metric_dr_title"),
-      value: `${metrics.debtRatio.toFixed(1)}%`,
+      value: `${Number(metrics.debtRatio).toFixed(1)}%`,
       description: t("balance_sheet_view.metric_dr_desc"),
       textColor: "text-gray-900",
-      statusGood: metrics.debtRatio < 0.5,
+      statusGood: Number(metrics.debtRatio) < 0.5,
       className: "print:w-1/4",
       tooltipAlign: TooltipAlign.LEFT,
     },
     {
       title: t("balance_sheet_view.metric_cashr_title"),
-      value: `${(metrics.cashRatio || 0).toFixed(1)}%`,
+      value: `${(Number(metrics.cashRatio) || 0).toFixed(1)}%`,
       description: t("balance_sheet_view.metric_cashr_desc"),
       textColor: "text-gray-900",
-      statusGood: (metrics.cashRatio || 0) > 20,
+      statusGood: Number(metrics.cashRatio || 0) > 20,
       className: "print:w-1/4",
       tooltipAlign: TooltipAlign.RIGHT,
     },
@@ -290,12 +290,12 @@ export default function BalanceSheetView({
       title: t("balance_sheet_view.metric_dte_title"),
       value: MoneyUtil.toDecimal(equity.total).isZero()
         ? "N/A"
-        : `${(metrics.debtToEquityRatio || 0).toFixed(1)}%`,
+        : `${(Number(metrics.debtToEquityRatio) || 0).toFixed(1)}%`,
       description: t("balance_sheet_view.metric_dte_desc"),
       textColor: "text-gray-900",
       statusGood: MoneyUtil.toDecimal(equity.total).isZero()
         ? undefined
-        : (metrics.debtToEquityRatio || 0) < 100,
+        : Number(metrics.debtToEquityRatio || 0) < 100,
       className: "print:w-1/4",
       tooltipAlign: TooltipAlign.LEFT,
     },
@@ -303,12 +303,12 @@ export default function BalanceSheetView({
       title: t("balance_sheet_view.metric_ltftfa_title"),
       value: isFixedAssetsZero
         ? "N/A"
-        : `${(metrics.longTermFundsToFixedAssetsRatio || 0).toFixed(1)}%`,
+        : `${(Number(metrics.longTermFundsToFixedAssetsRatio) || 0).toFixed(1)}%`,
       description: t("balance_sheet_view.metric_ltftfa_desc"),
       textColor: "text-gray-900",
       statusGood: isFixedAssetsZero
         ? undefined
-        : (metrics.longTermFundsToFixedAssetsRatio || 0) > 100,
+        : Number(metrics.longTermFundsToFixedAssetsRatio || 0) > 100,
       className: "print:w-1/4",
       tooltipAlign: TooltipAlign.RIGHT,
     },
@@ -316,12 +316,12 @@ export default function BalanceSheetView({
       title: t("balance_sheet_view.metric_rer_title"),
       value: MoneyUtil.toDecimal(equity.total).isZero()
         ? "N/A"
-        : `${(metrics.retainedEarningsRatio || 0).toFixed(1)}%`,
+        : `${(Number(metrics.retainedEarningsRatio) || 0).toFixed(1)}%`,
       description: t("balance_sheet_view.metric_rer_desc"),
       textColor: "text-gray-900",
       statusGood: MoneyUtil.toDecimal(equity.total).isZero()
         ? undefined
-        : (metrics.retainedEarningsRatio || 0) > 0,
+        : Number(metrics.retainedEarningsRatio || 0) > 0,
       className: "print:w-1/4",
       tooltipAlign: TooltipAlign.LEFT,
     },
@@ -329,12 +329,12 @@ export default function BalanceSheetView({
       title: t("balance_sheet_view.metric_iar_title"),
       value: MoneyUtil.toDecimal(assets.total).isZero()
         ? "N/A"
-        : `${(metrics.intangibleAssetsRatio || 0).toFixed(1)}%`,
+        : `${(Number(metrics.intangibleAssetsRatio) || 0).toFixed(1)}%`,
       description: t("balance_sheet_view.metric_iar_desc"),
       textColor: "text-gray-900",
       statusGood: MoneyUtil.toDecimal(assets.total).isZero()
         ? undefined
-        : (metrics.intangibleAssetsRatio || 0) < 20,
+        : Number(metrics.intangibleAssetsRatio || 0) < 20,
       className: "print:w-1/4",
       tooltipAlign: TooltipAlign.RIGHT,
     },

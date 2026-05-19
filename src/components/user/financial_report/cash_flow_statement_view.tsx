@@ -70,7 +70,7 @@ const CashFlowSection = ({
                   <div
                     className={`h-full rounded-full ${isNegative ? "bg-rose-400" : barColor}`}
                     style={{
-                      width: `${Math.min(percentage, 100)}%`,
+                      width: `${Math.min(Number(percentage), 100)}%`,
                     }}
                   ></div>
                 </div>
@@ -83,7 +83,7 @@ const CashFlowSection = ({
                   {numberWithCommas(displayAmount)}
                 </span>
                 <span className="text-[10px] font-bold text-gray-400">
-                  {percentage.toFixed(1)}%
+                  {Number(percentage).toFixed(1)}%
                 </span>
               </div>
             </div>
@@ -209,13 +209,13 @@ export default function CashFlowSheetView({
       title: t("cash_flow_statement_view.metric_ocf_ratio_title"),
       value:
         metrics.operatingCashFlowRatio !== null
-          ? `${metrics.operatingCashFlowRatio.toFixed(1)}%`
+          ? `${Number(metrics.operatingCashFlowRatio).toFixed(1)}%`
           : "N/A",
       description: t("cash_flow_statement_view.metric_ocf_ratio_desc"),
       textColor: "text-gray-900",
       statusGood:
         metrics.operatingCashFlowRatio !== null
-          ? metrics.operatingCashFlowRatio >= 100
+          ? Number(metrics.operatingCashFlowRatio) >= 100
           : false,
       tooltipAlign: TooltipAlign.RIGHT,
     },
@@ -223,13 +223,13 @@ export default function CashFlowSheetView({
       title: t("cash_flow_statement_view.metric_cf_adequacy_title"),
       value:
         metrics.cashFlowAdequacyRatio !== null
-          ? `${metrics.cashFlowAdequacyRatio.toFixed(1)}%`
+          ? `${Number(metrics.cashFlowAdequacyRatio).toFixed(1)}%`
           : "N/A",
       description: t("cash_flow_statement_view.metric_cf_adequacy_desc"),
       textColor: "text-gray-900",
       statusGood:
         metrics.cashFlowAdequacyRatio !== null
-          ? metrics.cashFlowAdequacyRatio >= 100
+          ? Number(metrics.cashFlowAdequacyRatio) >= 100
           : false,
       tooltipAlign: TooltipAlign.LEFT,
     },

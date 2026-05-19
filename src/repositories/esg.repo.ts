@@ -825,22 +825,22 @@ export class EsgRepository implements IEsgRepository {
 
     const rev10k = revenue.dividedBy(10000);
     const intensity = rev10k.gt(0)
-      ? totalEmissionsTons.dividedBy(rev10k).toNumber()
+      ? totalEmissionsTons.dividedBy(rev10k).toString()
       : null;
 
     const s1Pct = totalEmissions.gt(0)
-      ? scope1.dividedBy(totalEmissions).times(100).toNumber()
-      : 0;
+      ? scope1.dividedBy(totalEmissions).times(100).toString()
+      : "0";
     const s2Pct = totalEmissions.gt(0)
-      ? scope2.dividedBy(totalEmissions).times(100).toNumber()
-      : 0;
+      ? scope2.dividedBy(totalEmissions).times(100).toString()
+      : "0";
     const s3Pct = totalEmissions.gt(0)
-      ? scope3.dividedBy(totalEmissions).times(100).toNumber()
-      : 0;
+      ? scope3.dividedBy(totalEmissions).times(100).toString()
+      : "0";
 
     const target = targets.find((t) => t.year === currentYear);
 
-    let goalProgress = 0;
+    let goalProgress = "0";
     if (
       target &&
       target.totalEmissionTarget &&
@@ -860,7 +860,7 @@ export class EsgRepository implements IEsgRepository {
       goalProgress = totalEmissionsTons
         .dividedBy(proportionalTarget)
         .times(100)
-        .toNumber(); // Info: (20260326 - Julian) 碳排放目標達成率，單位為百分比
+        .toString(); // Info: (20260326 - Julian) 碳排放目標達成率，單位為百分比
     }
 
     // Info: (20260410 - Julian) 估算本月/本年度的期末總排放量
@@ -895,17 +895,17 @@ export class EsgRepository implements IEsgRepository {
       {
         scope: EsgScope.SCOPE_1,
         value: scope1Tons.toFixed(2),
-        percentage: Number(s1Pct.toFixed(1)),
+        percentage: MoneyUtil.toDecimal(s1Pct).toFixed(1),
       },
       {
         scope: EsgScope.SCOPE_2,
         value: scope2Tons.toFixed(2),
-        percentage: Number(s2Pct.toFixed(1)),
+        percentage: MoneyUtil.toDecimal(s2Pct).toFixed(1),
       },
       {
         scope: EsgScope.SCOPE_3,
         value: scope3Tons.toFixed(2),
-        percentage: Number(s3Pct.toFixed(1)),
+        percentage: MoneyUtil.toDecimal(s3Pct).toFixed(1),
       },
     ];
 
@@ -917,13 +917,14 @@ export class EsgRepository implements IEsgRepository {
         estimatedUnit: "tCO2e",
       },
       emissionIntensity: {
-        value: intensity !== null ? intensity.toFixed(2) : null,
+        value:
+          intensity !== null ? MoneyUtil.toDecimal(intensity).toFixed(2) : null,
         unit: "tCO2e / 萬元營收",
         industryAverage: industryAverage.toFixed(2),
       },
       scopeDistribution,
       goalProgress: {
-        percentage: Number(goalProgress.toFixed(1)),
+        percentage: MoneyUtil.toDecimal(goalProgress).toFixed(1),
       },
     };
 

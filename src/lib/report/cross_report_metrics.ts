@@ -5,9 +5,9 @@ import { IIncomeStatement } from "@/interfaces/income_statement";
 import { MoneyUtil } from "@/lib/utils/money";
 
 export interface ICrossReportMetrics {
-  operatingCashFlowRatio: number | null; // Info: (20260518 - Tzuhan) 營業現金流量比率
-  cashFlowAdequacyRatio: number | null; // Info: (20260518 - Tzuhan) 現金流量允當比率
-  cashReinvestmentRatio: number | null; // Info: (20260518 - Tzuhan) 現金再投資比率
+  operatingCashFlowRatio: string | null; // Info: (20260518 - Tzuhan) 營業現金流量比率
+  cashFlowAdequacyRatio: string | null; // Info: (20260518 - Tzuhan) 現金流量允當比率
+  cashReinvestmentRatio: string | null; // Info: (20260518 - Tzuhan) 現金再投資比率
   eps: string | null; // Info: (20260518 - Tzuhan) 新增精確版 EPS
 }
 

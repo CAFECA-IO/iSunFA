@@ -40,8 +40,7 @@ export function SetupFundWallet({
         });
         setIsMining(result.isMining ?? false);
 
-        const bal = MoneyUtil.toDecimal(result.balance).toNumber();
-        if (bal >= 1) {
+        if (MoneyUtil.toDecimal(result.balance).gte(1)) {
           setStatus(StepStatus.SUCCESS);
           setTimeout(onNext, 800);
         } else {
@@ -204,7 +203,7 @@ export function SetupFundWallet({
                   )}
                 </div>
 
-                {Number(walletInfo.balance) < 1 && (
+                {MoneyUtil.toDecimal(walletInfo.balance).lt(1) && (
                   <div className="mt-4 border-t border-slate-200 pt-3">
                     <div className="rounded-md border border-orange-200 bg-orange-100 px-3 py-2 text-xs leading-relaxed font-semibold text-orange-800">
                       <span className="mb-1 flex items-center gap-1.5">
