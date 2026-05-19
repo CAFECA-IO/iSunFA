@@ -1,8 +1,8 @@
 "use client";
 
 import { IEsgReport, IEsgReportDetailedRecord } from "@/interfaces/esg_report";
-import { numberWithCommas } from "@/lib/utils/common";
 import { useTranslation } from "@/i18n/i18n_context";
+import { MoneyUtil } from "@/lib/utils/money";
 
 interface IEsgBomTableProps {
   sections: IEsgReport["sections"];
@@ -38,17 +38,16 @@ export default function EsgBomTable({ sections }: IEsgBomTableProps) {
                 {t(`esg_activity_type.${item.activityType.toLowerCase()}`)}
               </td>
               <td className="px-4 py-3 text-right">
-                {numberWithCommas(Number(item.originalData.toFixed(2)))}{" "}
-                {item.unit}
+                {MoneyUtil.format(item.originalData, 2)} {item.unit}
               </td>
               <td className="px-4 py-3 text-right">
                 *{" "}
-                {item.coefficient !== null
-                  ? numberWithCommas(Number(item.coefficient.toFixed(4)))
+                {item.emissionFactor !== null
+                  ? MoneyUtil.format(item.emissionFactor, 4)
                   : "N/A"}
               </td>
               <td className="px-4 py-3 text-right font-bold text-gray-900">
-                {numberWithCommas(Number(item.emissions.toFixed(1)))}
+                {MoneyUtil.format(item.emissions, 1)}
               </td>
               <td className="px-4 py-3 text-right text-xs text-gray-500">
                 {item.percentage.toFixed(1)}%

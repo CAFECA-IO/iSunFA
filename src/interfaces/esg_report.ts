@@ -10,8 +10,8 @@ export interface IEsgReportDetailedRecord {
   activityType: string;
   originalData: number;
   unit: string;
-  emissions: number;
-  coefficient: number | null; // Info: (20260512 - Tzuhan) Allow null to prevent greenwashing when originalData is 0
+  emissions: string | number;
+  emissionFactor: string | null; // Info: (20260512 - Tzuhan) Allow null to prevent greenwashing when originalData is 0
   percentage: number;
 }
 

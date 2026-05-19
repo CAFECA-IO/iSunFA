@@ -62,8 +62,8 @@ export function generateEsgReport(esgRecords: IEsgRecordDetail[]): IEsgReport {
       originalData: MoneyUtil.toDecimal(record.amount || 0).toNumber(),
       unit: record.unit || "",
       // Info: (20260518 - Tzuhan) 維持 Decimal 字串精度，防堵微量碳排截斷
-      emissions: emissionDecimal.toString() as unknown as number,
-      coefficient: dbCoefficient, // Info: (20260518 - Tzuhan) 忠實傳遞真理係數或 null
+      emissions: emissionDecimal.toString(),
+      emissionFactor: dbCoefficient, // Info: (20260518 - Tzuhan) 忠實傳遞真理係數或 null
     };
 
     // Info: (20260512 - Tzuhan) 根據活動類型分流與高精度加總
