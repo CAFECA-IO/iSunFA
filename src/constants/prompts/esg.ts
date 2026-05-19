@@ -27,7 +27,7 @@ export const getEsgPrompt = (
 
   // Info: (20260518 - Julian) 產出語言
   const languageInstruction = accountBook?.country
-    ? `\n  請用「${getLanguageByCountry(accountBook.country)}」為主要語言產出 aiNote 欄位，其餘欄位請 100% 忠實保留原始文字，嚴禁翻譯。`
+    ? `\n  請用「${getLanguageByCountry(accountBook.country).chinese}」作為主要語言產出 aiNote 欄位，其餘欄位請 100% 忠實保留原始文字，嚴禁翻譯。`
     : "";
 
   // Info: (20260430 - Julian) 建立排放源清單

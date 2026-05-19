@@ -45,9 +45,9 @@ export const getBaseVoucherPrompt = (accountBook?: IAccountBookBase | null) => {
     ? `\nYou MUST strictly adhere to the following special accounting rules and preferences for this account book:\n${accountBook.rule}`
     : "";
 
-  // Info: (20260518 - Julian) 產出語言
+  // Info: (20260518 - Julian) 帳本語系
   const languageInstruction = accountBook?.country
-    ? `\n  請用「${getLanguageByCountry(accountBook.country)}」為主要語言產出 aiNote 欄位，其餘欄位請 100% 忠實保留原始文字，嚴禁翻譯。`
+    ? `\n  Please use "${getLanguageByCountry(accountBook.country).english}" as the primary language for the aiNote field. For all other fields, you MUST strictly preserve the original text without any translation.`
     : "";
 
   return `
@@ -56,7 +56,6 @@ ${ANTI_HALLUCINATION_RULES}
 ${languageInstruction}
 
 Write down your analysis logic in the "aiNote" field without any markdown formatting.
-IMPORTANT: Your output MUST be in the language of the uploaded document (e.g., Traditional Chinese).
 `;
 };
 
@@ -82,11 +81,11 @@ Extract precise accounting journal entries from the user-uploaded document (file
 ${ANTI_HALLUCINATION_RULES}
 
 Write down your logic for determining the debit and credit accounts in the "aiNote" field.
-IMPORTANT: Your output (particular, aiNote) MUST be in the language of the uploaded document (e.g., Traditional Chinese).
 
 [IMPORTANT]
 Do NOT invent exact numerical accounting codes if you don't know them. 
 Simply provide the most standard and descriptive account name (e.g., "Cash", "Accounts Payable", "Office Supplies") in the "accountingCode" field. 
+You MUST strictly preserve the original text without any translation.
 The backend system will map this to the exact local accounting code via Vector Search.
 `;
 };
