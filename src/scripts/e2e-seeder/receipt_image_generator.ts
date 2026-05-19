@@ -8,7 +8,7 @@ interface ISimulatedVoucherLine {
   debitAmount: number;
   creditAmount: number;
   vendor?: string;
-  esgRecords?: { carbonAmount: number }[];
+  esgRecords?: { carbonAmount: number; amount?: number; unit?: string }[];
 }
 
 interface ISimulatedVoucher {
@@ -77,7 +77,7 @@ export const generateReceiptImages = (stockId: string) => {
 
     const esgRecord = mainLine.esgRecords?.[0];
     const esgText = esgRecord
-      ? `<text x="50" y="375" font-family="sans-serif" font-size="14" fill="#006600">本單據碳排量: ${esgRecord.carbonAmount.toFixed(4)} 公噸 CO2e</text>`
+      ? `<text x="50" y="375" font-family="sans-serif" font-size="14" fill="#006600">活動單位: ${esgRecord.amount || "N/A"} ${esgRecord.unit || "N/A"}</text>`
       : "";
 
     if (isNoisy) {

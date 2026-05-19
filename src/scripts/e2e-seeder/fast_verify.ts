@@ -98,7 +98,9 @@ async function fastVerify(stockId: string) {
       voucherId: createdVoucher.id,
       particular: l.description,
       accountingCode: l.accountingCode,
-      amount: l.debitAmount > 0 ? l.debitAmount : l.creditAmount,
+      amount: BigInt(
+        Math.round(l.debitAmount > 0 ? l.debitAmount : l.creditAmount),
+      ),
       isDebit: l.debitAmount > 0,
     }));
     await prisma.voucherLine.createMany({ data: lineData });

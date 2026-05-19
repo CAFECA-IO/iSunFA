@@ -65,7 +65,7 @@ export const importPhase2Db = async (stockId: string) => {
             }) => ({
               accountingCode: l.accountingCode,
               particular: l.particular,
-              amount: l.amount,
+              amount: BigInt(Math.round(l.amount)),
               isDebit: l.isDebit,
             }),
           ),

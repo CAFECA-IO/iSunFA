@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated";
+import Decimal from "decimal.js";
 import { generateIncomeStatement } from "@/lib/report/income_statement_generator";
 import { generateCashFlowStatement } from "@/lib/report/cash_flow_statement_generator";
 import { generateBalanceSheet } from "@/lib/report/balance_sheet_generator";
@@ -116,7 +117,7 @@ export const runCrossValidation = async (stockId: string) => {
           ? (acc as IAccount)
           : ({ code, name: code } as IAccount),
         particular: String(line.particular || ""),
-        amount: Number(line.amount || 0),
+        amount: new Decimal(line.amount || 0).toString(),
         isDebit: Boolean(line.isDebit),
       } as unknown as IVoucherLineUI);
     }
@@ -173,9 +174,11 @@ export const runCrossValidation = async (stockId: string) => {
   };
 
   // Info: (20260505 - Tzuhan) [Internal Articulation] 驗證三表連動性
-  const isAccountingEquationBalanced =
-    Number(balanceSheet.assets.total) ===
-    Number(balanceSheet.liabilities.total) + Number(balanceSheet.equity.total);
+  const isAccountingEquationBalanced = new Decimal(
+    balanceSheet.assets.total,
+  ).equals(
+    new Decimal(balanceSheet.liabilities.total).add(balanceSheet.equity.total),
+  );
 
   const isIncomeStatementNetIncome = incomeStatement.sections.netIncome.total;
   const bsRetainedEarnings =
@@ -189,8 +192,8 @@ export const runCrossValidation = async (stockId: string) => {
     )?.amount || 0;
 
   const isNetIncomeArticulated =
-    Number(isIncomeStatementNetIncome) === Number(bsRetainedEarnings) &&
-    Number(isIncomeStatementNetIncome) === Number(cfStartingNetIncome);
+    new Decimal(isIncomeStatementNetIncome).equals(bsRetainedEarnings) &&
+    new Decimal(isIncomeStatementNetIncome).equals(cfStartingNetIncome);
 
   const bsEndingCash =
     balanceSheet.assets.current.items.find(
@@ -198,7 +201,7 @@ export const runCrossValidation = async (stockId: string) => {
     )?.amount || 0;
   const cfEndingCash = cashFlowStatement.summary.endingBalance;
 
-  const isCashArticulated = Number(bsEndingCash) === Number(cfEndingCash);
+  const isCashArticulated = new Decimal(bsEndingCash).equals(cfEndingCash);
 
   const report = {
     metadata: {

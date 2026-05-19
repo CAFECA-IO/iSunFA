@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { prisma } from "@/lib/prisma";
+import Decimal from "decimal.js";
 import { ANALYSIS_CATEGORY, ANALYSIS_PERIOD } from "@/constants/analysis";
 import { analysisService } from "@/services/analysis.service";
 import { processNext } from "@/services/mission.executor.service";
@@ -66,7 +67,7 @@ export const runAiBlindTester = async (stockId: string) => {
           ? (acc as IAccount)
           : ({ code, name: code } as IAccount),
         particular: String(line.particular || ""),
-        amount: Number(line.amount || 0),
+        amount: new Decimal(line.amount || 0).toString(),
         isDebit: Boolean(line.isDebit),
       } as unknown as IVoucherLineUI);
     }
@@ -96,8 +97,8 @@ export const runAiBlindTester = async (stockId: string) => {
 
     // Info: (20260504 - Tzuhan) 基本防呆檢查 (有沒有產生 NaN 或非邏輯的 Undefined)
     if (
-      isNaN(Number(bsReport.assets.total)) ||
-      isNaN(Number(cfReport.summary.netIncreaseDecrease))
+      new Decimal(bsReport.assets.total).isNaN() ||
+      new Decimal(cfReport.summary.netIncreaseDecrease).isNaN()
     ) {
       console.error(
         `❌ [FAILED] JSON 報表結算出現 NaN，運算邏輯可能遭遇浮點數崩潰或除以零！`,

@@ -255,8 +255,8 @@ export async function getMemberInfo(userAddress: string) {
       data: {
         registrationTime: Number(regTime) * 1000,
         lastCheckInTime: Number(lastCheckIn) * 1000,
-        totalCheckInRewards: Number(formatEther(checkInRewards as bigint)),
-        totalPurchasedPoints: Number(formatEther(purchasedPoints as bigint)),
+        totalCheckInRewards: formatEther(checkInRewards as bigint),
+        totalPurchasedPoints: formatEther(purchasedPoints as bigint),
       },
     };
   } catch (error) {

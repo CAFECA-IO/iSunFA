@@ -1,4 +1,5 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import Decimal from "decimal.js";
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { Role } from "@/constants/role";
@@ -37,8 +38,10 @@ export async function GET(
     // Info: (20260417 - Luphia) Calculate EXP dynamically from MembershipSystem smart contract rewards & top-ups
     const registrationExp =
       registrationTime > 0 ? REWARD_AMOUNTS.REGISTRATION_REWARD : 0;
-    const totalExp =
-      registrationExp + totalCheckInRewards + totalPurchasedPoints;
+    const totalExp = new Decimal(registrationExp)
+      .add(totalCheckInRewards)
+      .add(totalPurchasedPoints)
+      .toNumber();
 
     let mode = "Bronze";
     let modeZh = "銅卡";

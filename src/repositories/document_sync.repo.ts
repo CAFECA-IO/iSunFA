@@ -296,23 +296,34 @@ export class DocumentSyncRepository {
           let finalCoefficientId = ed.coefficientId || null;
           let finalEmissionSourceId = ed.emissionSourceId || null;
 
-          // Info: (20260430 - Julian) 將 AI 提供的新係數加入 DB
-          if (ed.newCoefficient && ed.newCoefficient.name) {
-            const newCoef = await tx.coefficient.create({
-              data: {
-                name: ed.newCoefficient.name,
-                description: ed.newCoefficient.description || "",
-                unit: ed.newCoefficient.unit || "",
-                emissionFactor: new Prisma.Decimal(
-                  String(ed.newCoefficient.emissionFactor) || "0",
-                ),
-                source:
-                  ed.newCoefficient.source || "[[I18N_AI_DYNAMIC_EXTRACTION]]",
-                accountBookId: accountBookId, // Info: (20260518 - Julian) AI 新增的係數屬於自訂係數，應歸屬到當前帳本
-                isVerified: false, // Info: (20260514 - Tzuhan) 未經驗證的係數
+          // Info: (20260519 - Tzuhan) 使用 fallbackCategory 進行最大係數 (Max-Factor) 查詢
+          const fallbackTag = ed.fallbackCategory?.trim();
+          if (!finalCoefficientId && fallbackTag) {
+            // 防禦空字串地圖砲
+            const matchedCoefficients = await tx.coefficient.findMany({
+              where: {
+                AND: [
+                  {
+                    OR: [
+                      { name: { contains: fallbackTag } },
+                      { description: { contains: fallbackTag } },
+                    ],
+                  },
+                  {
+                    OR: [{ accountBookId: null }, { accountBookId }],
+                  },
+                ],
+                isVerified: true,
               },
+              orderBy: { emissionFactor: "desc" },
+              take: 1,
             });
-            finalCoefficientId = newCoef.id;
+            if (matchedCoefficients.length > 0) {
+              finalCoefficientId = matchedCoefficients[0].id;
+              ed.aiNote =
+                (ed.aiNote || "") +
+                `\n[系統匹配] 透過大類標籤「${fallbackTag}」鎖定保守係數。`;
+            }
           }
 
           // Info: (20260430 - Julian) 將 AI 提供的新排放源歸口加入 DB
@@ -338,12 +349,7 @@ export class DocumentSyncRepository {
           let isSuspense = false;
           let recordIsVerified = confidence > 85;
 
-          if (ed.newCoefficient && ed.newCoefficient.name) {
-            emissionFactorValue = new Prisma.Decimal(
-              String(ed.newCoefficient.emissionFactor) || "0",
-            );
-            recordIsVerified = false; // Info: (20260513 - Tzuhan) AI generated new coefficient is unverified
-          } else if (finalCoefficientId) {
+          if (finalCoefficientId) {
             const coefExists = await tx.coefficient.findUnique({
               where: { id: finalCoefficientId },
             });
