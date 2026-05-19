@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { prisma } from "@/lib/prisma";
+import { MoneyUtil } from "@/lib/utils/money";
 import { VoucherLinesParsingSkill } from "@/skills/document/voucher_lines_parsing";
 import { EsgParsingSkill } from "@/skills/document/esg_parsing";
 import { ChatService } from "@/services/chat.service";
@@ -313,7 +314,11 @@ export const runPhase2ReceiptAnalysis = async (
             create: extractedLines.map((l: IExtractedLine) => ({
               accountingCode: l.accountingCode || "9999",
               particular: l.particular || "",
-              amount: BigInt(Math.round(l.amount || 0)),
+              amount: BigInt(
+                MoneyUtil.toDecimal(l.amount || 0)
+                  .round()
+                  .toString(),
+              ),
               isDebit: l.isDebit === true,
             })),
           },
@@ -448,7 +453,11 @@ export const runPhase2ReceiptAnalysis = async (
             accountingCode: l.accountingCode,
             particular: l.description,
             amount: BigInt(
-              Math.round(l.debitAmount > 0 ? l.debitAmount : l.creditAmount),
+              MoneyUtil.toDecimal(
+                l.debitAmount > 0 ? l.debitAmount : l.creditAmount,
+              )
+                .round()
+                .toString(),
             ),
             isDebit: l.debitAmount > 0,
           })),

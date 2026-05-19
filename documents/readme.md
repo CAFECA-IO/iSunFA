@@ -58,6 +58,8 @@
   - 記錄 Sprint 1 期間為達 Big 4 確定性標準，對 AI 數學幻覺、Regex 擷取、Prompt 冗餘結構與硬編碼面額進行的「史詩級拔除」決策。
 - **[ADR 002: ESG Vector RAG & Hybrid Pipeline (ESG 向量檢索與混合決定論管線)](architecture/decisions/002_esg_vector_rag_hybrid_pipeline.md)**
   - 記錄解決 15,000+ 筆碳排係數比對時的架構躍升。詳述了從「暴力字典注入」轉向「本機 RAG + AI 保守型預估 (黃燈懸記)」的決策脈絡，並收錄了 Sprint 1 消除漂綠地雷的深度復盤。
+- **[ADR 003: Residual `.toNumber()` Justifications & Precision Hardening (剩餘 toNumber 合規決策)](architecture/decisions/003_residual_tonumber_justifications.md)**
+  - 記錄全面精準度重構後，剩餘的 5 大類安全 `.toNumber()` 使用場景（相對比率、API 約束、純整數等），並建立未來的 PR 審核鐵律。
 
 ---
 

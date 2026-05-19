@@ -252,11 +252,11 @@ export function generateBalanceSheet(
     ),
     workingCapital: currentAssetsTotal
       .minus(currentLiabilitiesTotal)
-      .toNumber(),
+      .toString(),
     cashRatio: MoneyUtil.safeRatio(cashTotal, currentLiabilitiesTotal),
     netWorthPerShare: outstandingShares.gt(0)
-      ? totalEquity.dividedBy(outstandingShares).toNumber()
-      : 0,
+      ? totalEquity.dividedBy(outstandingShares).toString()
+      : "0",
     parValue,
     retainedEarningsRatio: MoneyUtil.safeRatio(
       retainedEarningsTotal,

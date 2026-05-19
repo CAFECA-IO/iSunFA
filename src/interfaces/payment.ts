@@ -62,10 +62,10 @@ export interface IPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (txHash: string) => void;
-  amount: number;
-  credits: number;
-  baseCredits: number;
-  bonusCredits: number;
+  amount: string;
+  credits: string;
+  baseCredits: string;
+  bonusCredits: string;
   displayPrice?: string;
   initialStep?: PaymentStep;
   transactionHash?: string;

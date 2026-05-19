@@ -13,6 +13,7 @@ import {
 import { CURRENCY_UNIT, REWARD_AMOUNTS } from "@/constants/price";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
+import { MoneyUtil } from "@/lib/utils/money";
 
 export async function GET(request: NextRequest) {
   try {
@@ -70,9 +71,9 @@ export async function GET(request: NextRequest) {
           args: [user.address as `0x${string}`],
         });
 
-        const credits = Number(formatUnits(balance, 18));
+        const credits = formatUnits(balance, 18);
 
-        if (credits < REWARD_AMOUNTS.FREE_PLAN_LIMIT) {
+        if (MoneyUtil.toDecimal(credits).lt(REWARD_AMOUNTS.FREE_PLAN_LIMIT)) {
           // Info: (20260408 - Luphia) Check if user is blacklisted before minting
           const isBlacklisted = await publicClient.readContract({
             address: CONTRACT_ADDRESSES.DYNAMIC_KYC_MEMBERSHIP,

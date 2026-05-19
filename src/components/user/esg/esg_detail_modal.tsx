@@ -106,16 +106,12 @@ export default function EsgDetailModal({
       coefficient.emissionFactor || 0,
     );
 
-    // Info: (20260519 - Tzuhan) 計算總排放量，取小數點後兩位，並配合前端渲染允許最後轉回 number
-    const totalEmissions = parseFloat(
-      emissionFactorDec.times(amountDec).toFixed(2),
-    );
+    // Info: (20260519 - Tzuhan) 計算總排放量，取小數點後兩位字串輸出
+    const totalEmissions = emissionFactorDec.times(amountDec).toFixed(2);
 
     // Info: (20260519 - Tzuhan) 計算排放強度分級
     const intensity = amountDec.gt(0)
-      ? parseFloat(
-          MoneyUtil.toDecimal(totalEmissions).dividedBy(amountDec).toString(),
-        )
+      ? MoneyUtil.toDecimal(totalEmissions).dividedBy(amountDec).toNumber()
       : 0;
     const intensityLevel =
       intensity < 1

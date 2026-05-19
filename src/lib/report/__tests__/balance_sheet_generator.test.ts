@@ -39,7 +39,7 @@ describe("generateBalanceSheet", () => {
     // Info: (20260510 - Tzuhan) 股本 = 1000
     // Info: (20260510 - Tzuhan) 面額 = 10 -> 發行股數 = 100
     // Info: (20260510 - Tzuhan) 每股淨值 = 1000 / 100 = 10
-    expect(report.metrics.netWorthPerShare).toBe(10);
+    expect(report.metrics.netWorthPerShare).toBe("10");
     expect(report.metrics.parValue).toBe(10);
   });
 
@@ -47,7 +47,7 @@ describe("generateBalanceSheet", () => {
     const report = generateBalanceSheet(mockLines, 1);
     // Info: (20260510 - Tzuhan) 面額 = 1 -> 發行股數 = 1000
     // Info: (20260510 - Tzuhan) 每股淨值 = 1000 / 1000 = 1
-    expect(report.metrics.netWorthPerShare).toBe(1);
+    expect(report.metrics.netWorthPerShare).toBe("1");
     expect(report.metrics.parValue).toBe(1);
   });
 
@@ -55,7 +55,7 @@ describe("generateBalanceSheet", () => {
     const report = generateBalanceSheet(mockLines, 50);
     // Info: (20260510 - Tzuhan) 面額 = 50 -> 發行股數 = 20
     // Info: (20260510 - Tzuhan) 每股淨值 = 1000 / 20 = 50
-    expect(report.metrics.netWorthPerShare).toBe(50);
+    expect(report.metrics.netWorthPerShare).toBe("50");
     expect(report.metrics.parValue).toBe(50);
   });
 });

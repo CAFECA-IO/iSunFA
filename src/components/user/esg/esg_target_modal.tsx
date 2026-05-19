@@ -15,8 +15,8 @@ interface IHistory {
   emissions: number | null;
   revenue: number | null;
   intensity: number | null;
-  totalEmissionTarget: number | null;
-  revenueEmissionTarget: number | null;
+  totalEmissionTarget: string | number | null;
+  revenueEmissionTarget: string | number | null;
 }
 
 interface ITargetInfo {
@@ -48,38 +48,43 @@ export default function EsgTargetModal({
     Record<
       number,
       {
-        totalEmissionTarget: number | null;
-        revenueEmissionTarget: number | null;
+        totalEmissionTarget: string | number | null;
+        revenueEmissionTarget: string | number | null;
       }
     >
   >({});
 
   const getIndustryRank = (
-    target: number | null,
+    targetRaw: string | number | null,
     industryId?: number | null,
   ): number | null => {
-    if (target === null || !industryId) return null;
+    if (targetRaw === null || !industryId) return null;
+    const target = MoneyUtil.toDecimal(targetRaw);
     const industry = ESG_INDUSTRY_BENCHMARKS.find((i) => i.id === industryId);
     if (!industry) return null;
-    if (target <= industry.emissionPer10kMin) return 1;
-    if (target >= industry.emissionPer10kMax) return 100;
+    const min = MoneyUtil.toDecimal(industry.emissionPer10kMin);
+    const max = MoneyUtil.toDecimal(industry.emissionPer10kMax);
+    if (target.lte(min)) return 1;
+    if (target.gte(max)) return 100;
     const rank =
-      1 +
-      ((target - industry.emissionPer10kMin) /
-        (industry.emissionPer10kMax - industry.emissionPer10kMin)) *
-        99;
+      1 + target.minus(min).dividedBy(max.minus(min)).times(99).toNumber();
     return Math.max(1, Math.min(100, Math.round(rank)));
   };
 
-  const getGlobalRank = (target: number | null): number | null => {
-    if (target === null) return null;
+  const getGlobalRank = (targetRaw: string | number | null): number | null => {
+    if (targetRaw === null) return null;
+    const target = MoneyUtil.toDecimal(targetRaw);
     const allMins = ESG_INDUSTRY_BENCHMARKS.map((i) => i.emissionPer10kMin);
     const allMaxs = ESG_INDUSTRY_BENCHMARKS.map((i) => i.emissionPer10kMax);
     const globalMin = Math.min(...allMins);
     const globalMax = Math.max(...allMaxs);
-    if (target <= globalMin) return 1;
-    if (target >= globalMax) return 100;
-    const rank = 1 + ((target - globalMin) / (globalMax - globalMin)) * 99;
+    const minDec = MoneyUtil.toDecimal(globalMin);
+    const maxDec = MoneyUtil.toDecimal(globalMax);
+    if (target.lte(minDec)) return 1;
+    if (target.gte(maxDec)) return 100;
+    const rank =
+      1 +
+      target.minus(minDec).dividedBy(maxDec.minus(minDec)).times(99).toNumber();
     return Math.max(1, Math.min(100, Math.round(rank)));
   };
 
@@ -94,8 +99,8 @@ export default function EsgTargetModal({
         const drafts: Record<
           number,
           {
-            totalEmissionTarget: number | null;
-            revenueEmissionTarget: number | null;
+            totalEmissionTarget: string | number | null;
+            revenueEmissionTarget: string | number | null;
           }
         > = {};
         res.payload.history.forEach((h) => {
@@ -128,7 +133,7 @@ export default function EsgTargetModal({
       ...prev,
       [year]: {
         ...prev[year],
-        [field]: value === "" ? null : MoneyUtil.toDecimal(value).toNumber(),
+        [field]: value === "" ? null : value,
       },
     }));
   };
@@ -192,8 +197,8 @@ export default function EsgTargetModal({
   };
 
   const renderYoY = (
-    currentValue: number | null | undefined,
-    previousValue: number | null | undefined,
+    currentValue: string | number | null | undefined,
+    previousValue: string | number | null | undefined,
   ) => {
     if (
       currentValue === null ||
@@ -203,15 +208,19 @@ export default function EsgTargetModal({
       previousValue === 0
     )
       return null;
-    const diff = Number(currentValue) - Number(previousValue);
-    const percent = Math.abs((diff / Number(previousValue)) * 100).toFixed(1);
-    if (diff < 0) {
+    const currDec = MoneyUtil.toDecimal(currentValue);
+    const prevDec = MoneyUtil.toDecimal(previousValue);
+    const diffDec = currDec.minus(prevDec);
+    const percent = prevDec.gt(0)
+      ? diffDec.dividedBy(prevDec).times(100).abs().toFixed(1)
+      : "0.0";
+    if (diffDec.isNegative()) {
       return (
         <div className="mt-1.5 w-full justify-end text-[11px] whitespace-nowrap text-green-600">
           {t("esg_target.yoy_reduction", { percent })}
         </div>
       );
-    } else if (diff > 0) {
+    } else if (diffDec.gt(0)) {
       return (
         <div className="mt-1.5 w-full justify-end text-[11px] whitespace-nowrap text-red-500">
           {t("esg_target.yoy_increase", { percent })}

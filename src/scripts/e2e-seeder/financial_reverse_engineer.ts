@@ -26,8 +26,8 @@ interface ISimulatedVoucherLine {
   id: string;
   description: string;
   accountingCode: string; // Info: (20260502 - Tzuhan) 例如 4111
-  debitAmount: number;
-  creditAmount: number;
+  debitAmount: string;
+  creditAmount: string;
   vendor?: string;
 }
 
@@ -108,7 +108,7 @@ export const generateFinancialVouchers = (stockId: string) => {
   // Info: (20260504 - Tzuhan) ============================================
   // Info: (20260502 - Tzuhan) 為了簡化，建立 12 張月度收入傳票，或是 50 張隨機傳票。
   const numSales = 50;
-  const revenuePerSale = totalRevenue.div(numSales).floor().toNumber();
+  const revenuePerSale = totalRevenue.div(numSales).floor().toString();
   for (let i = 0; i < numSales; i++) {
     vouchers.push({
       id: randomUUID(),
@@ -120,14 +120,14 @@ export const generateFinancialVouchers = (stockId: string) => {
           description: "日常銷貨收款",
           accountingCode: "1100", // Info: (20260502 - Tzuhan) 現金
           debitAmount: revenuePerSale,
-          creditAmount: 0,
+          creditAmount: "0",
           vendor: contextCache.financial.top3Customers?.[0] || "國際主力客戶",
         },
         {
           id: randomUUID(),
           description: "日常銷貨收入",
           accountingCode: "4111", // Info: (20260502 - Tzuhan) 銷貨收入
-          debitAmount: 0,
+          debitAmount: "0",
           creditAmount: revenuePerSale,
         },
       ],
@@ -138,7 +138,7 @@ export const generateFinancialVouchers = (stockId: string) => {
   // Info: (20260502 - Tzuhan) 2. 產生營業費用：水電瓦斯費
   // Info: (20260504 - Tzuhan) ============================================
   const numUtilities = 12; // Info: (20260502 - Tzuhan) 每月
-  const utilityPerMonth = utilitiesAmount.div(numUtilities).floor().toNumber();
+  const utilityPerMonth = utilitiesAmount.div(numUtilities).floor().toString();
   for (let i = 0; i < numUtilities; i++) {
     vouchers.push({
       id: randomUUID(),
@@ -150,14 +150,14 @@ export const generateFinancialVouchers = (stockId: string) => {
           description: "當月水電瓦斯費",
           accountingCode: "6288", // Info: (20260502 - Tzuhan) 水電瓦斯費 (改用其他管理費用)
           debitAmount: utilityPerMonth,
-          creditAmount: 0,
+          creditAmount: "0",
           vendor: "台灣電力公司",
         },
         {
           id: randomUUID(),
           description: "支付水電瓦斯費",
           accountingCode: "1100", // Info: (20260502 - Tzuhan) 現金
-          debitAmount: 0,
+          debitAmount: "0",
           creditAmount: utilityPerMonth,
         },
       ],
@@ -168,7 +168,7 @@ export const generateFinancialVouchers = (stockId: string) => {
   // Info: (20260502 - Tzuhan) 3. 產生營業費用：差旅費
   // Info: (20260504 - Tzuhan) ============================================
   const numTravels = 20;
-  const travelPerTrip = travelAmount.div(numTravels).floor().toNumber();
+  const travelPerTrip = travelAmount.div(numTravels).floor().toString();
   for (let i = 0; i < numTravels; i++) {
     vouchers.push({
       id: randomUUID(),
@@ -180,14 +180,14 @@ export const generateFinancialVouchers = (stockId: string) => {
           description: "公司自有公務車燃油費",
           accountingCode: "6213", // Info: (20260502 - Tzuhan) 旅費/交通費
           debitAmount: travelPerTrip,
-          creditAmount: 0,
+          creditAmount: "0",
           vendor: "台灣中油",
         },
         {
           id: randomUUID(),
           description: "支付差旅費",
           accountingCode: "1100", // Info: (20260502 - Tzuhan) 現金
-          debitAmount: 0,
+          debitAmount: "0",
           creditAmount: travelPerTrip,
         },
       ],
@@ -206,15 +206,15 @@ export const generateFinancialVouchers = (stockId: string) => {
         id: randomUUID(),
         description: "其他營業費用彙總",
         accountingCode: "6288", // Info: (20260502 - Tzuhan) 其他管理費用
-        debitAmount: otherOpexAmount.floor().toNumber(),
-        creditAmount: 0,
+        debitAmount: otherOpexAmount.floor().toString(),
+        creditAmount: "0",
       },
       {
         id: randomUUID(),
         description: "支付其他營業費用",
         accountingCode: "1100",
-        debitAmount: 0,
-        creditAmount: otherOpexAmount.floor().toNumber(),
+        debitAmount: "0",
+        creditAmount: otherOpexAmount.floor().toString(),
       },
     ],
   };
@@ -234,15 +234,15 @@ export const generateFinancialVouchers = (stockId: string) => {
           id: randomUUID(),
           description: "期末提列製造費用折舊",
           accountingCode: "5110", // Info: (20260504 - Tzuhan) 銷貨成本，避免錯誤膨脹營業費用 (6XXX)
-          debitAmount: depreciation.toNumber(),
-          creditAmount: 0,
+          debitAmount: depreciation.toString(),
+          creditAmount: "0",
         },
         {
           id: randomUUID(),
           description: "累計折舊增加",
           accountingCode: "1613", // Info: (20260504 - Tzuhan) 累計折舊－房屋及建築 (此為 Contra-Asset，isDebit=false)
-          debitAmount: 0,
-          creditAmount: depreciation.toNumber(),
+          debitAmount: "0",
+          creditAmount: depreciation.toString(),
         },
       ],
     };

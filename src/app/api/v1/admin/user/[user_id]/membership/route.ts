@@ -38,17 +38,17 @@ export async function GET(
     // Info: (20260417 - Luphia) Calculate EXP dynamically from MembershipSystem smart contract rewards & top-ups
     const registrationExp =
       registrationTime > 0 ? REWARD_AMOUNTS.REGISTRATION_REWARD : 0;
-    const totalExp = new Decimal(registrationExp)
+    const totalExpDec = new Decimal(registrationExp)
       .add(totalCheckInRewards)
-      .add(totalPurchasedPoints)
-      .toNumber();
+      .add(totalPurchasedPoints);
+    const totalExp = totalExpDec.toNumber();
 
     let mode = "Bronze";
     let modeZh = "銅卡";
-    if (totalExp >= 2000) {
+    if (totalExpDec.gte(2000)) {
       mode = "Gold";
       modeZh = "金卡";
-    } else if (totalExp >= 500) {
+    } else if (totalExpDec.gte(500)) {
       mode = "Silver";
       modeZh = "銀卡";
     }

@@ -41,8 +41,8 @@ export interface IEsgRepository {
   upsertEsgTarget(data: {
     accountBookId: string;
     year: number;
-    totalEmissionTarget: Prisma.Decimal | number | null;
-    revenueEmissionTarget: Prisma.Decimal | number | null;
+    totalEmissionTarget: Prisma.Decimal | number | string | null;
+    revenueEmissionTarget: Prisma.Decimal | number | string | null;
   }): Promise<IEsgTarget>;
   getVerifiedEsgRecordsByAccountBookId(
     accountBookId: string,
@@ -447,7 +447,7 @@ export class EsgRepository implements IEsgRepository {
       id: source.id,
       name: source.name,
       address: source.address || undefined,
-      intensity: this.computeIntensity(totalEmission.toNumber()),
+      intensity: this.computeIntensity(totalEmission.toString()),
       records,
       totalEmission: totalEmission.toFixed(2),
     };
@@ -456,9 +456,10 @@ export class EsgRepository implements IEsgRepository {
   // Info: (20260507 - Julian) 計算總排放量對應的強度區間
   /* ToDo: (20260507 - Julian) ⚠️還在開發中
    ** 需要根據搜集到的資料來制定計算強度區間的方法，目前先寫死區間，後續會再擴充 */
-  private computeIntensity(totalEmission: number): EsgIntensity {
-    if (totalEmission < 100) return EsgIntensity.LOW;
-    if (totalEmission < 1000) return EsgIntensity.MEDIUM;
+  private computeIntensity(totalEmission: string): EsgIntensity {
+    const dec = MoneyUtil.toDecimal(totalEmission);
+    if (dec.lt(100)) return EsgIntensity.LOW;
+    if (dec.lt(1000)) return EsgIntensity.MEDIUM;
     return EsgIntensity.HIGH;
   }
 
@@ -484,8 +485,8 @@ export class EsgRepository implements IEsgRepository {
   }: {
     accountBookId: string;
     year: number;
-    totalEmissionTarget: Prisma.Decimal | number | null;
-    revenueEmissionTarget: Prisma.Decimal | number | null;
+    totalEmissionTarget: Prisma.Decimal | number | string | null;
+    revenueEmissionTarget: Prisma.Decimal | number | string | null;
   }) {
     const totalDec =
       totalEmissionTarget !== null
@@ -800,36 +801,42 @@ export class EsgRepository implements IEsgRepository {
         this.getEsgTargetsByAccountBookId(accountBookId),
       ]);
 
-    let totalEmissions = 0;
-    let scope1 = 0;
-    let scope2 = 0;
-    let scope3 = 0;
+    let totalEmissions = MoneyUtil.toDecimal(0);
+    let scope1 = MoneyUtil.toDecimal(0);
+    let scope2 = MoneyUtil.toDecimal(0);
+    let scope3 = MoneyUtil.toDecimal(0);
 
     esgAggregations.forEach((aggr) => {
-      const e = MoneyUtil.toDecimal(aggr._sum.emissions || 0).toNumber();
-      totalEmissions += e;
-      if (aggr.scope === "SCOPE_1") scope1 += e;
-      else if (aggr.scope === "SCOPE_2") scope2 += e;
-      else if (aggr.scope === "SCOPE_3") scope3 += e;
+      const e = MoneyUtil.toDecimal(aggr._sum.emissions || 0);
+      totalEmissions = totalEmissions.plus(e);
+      if (aggr.scope === "SCOPE_1") scope1 = scope1.plus(e);
+      else if (aggr.scope === "SCOPE_2") scope2 = scope2.plus(e);
+      else if (aggr.scope === "SCOPE_3") scope3 = scope3.plus(e);
     });
 
     const revenue = MoneyUtil.toDecimal(
       incomeVoucherLinesAggr._sum.amount?.toString() || 0,
-    )
-      .dividedBy(2)
-      .toNumber();
+    ).dividedBy(2);
 
-    const totalEmissionsTons = totalEmissions / 1000;
-    const scope1Tons = scope1 / 1000;
-    const scope2Tons = scope2 / 1000;
-    const scope3Tons = scope3 / 1000;
+    const totalEmissionsTons = totalEmissions.dividedBy(1000);
+    const scope1Tons = scope1.dividedBy(1000);
+    const scope2Tons = scope2.dividedBy(1000);
+    const scope3Tons = scope3.dividedBy(1000);
 
-    const rev10k = revenue / 10000;
-    const intensity = rev10k > 0 ? totalEmissionsTons / rev10k : null;
+    const rev10k = revenue.dividedBy(10000);
+    const intensity = rev10k.gt(0)
+      ? totalEmissionsTons.dividedBy(rev10k).toNumber()
+      : null;
 
-    const s1Pct = totalEmissions > 0 ? (scope1 / totalEmissions) * 100 : 0;
-    const s2Pct = totalEmissions > 0 ? (scope2 / totalEmissions) * 100 : 0;
-    const s3Pct = totalEmissions > 0 ? (scope3 / totalEmissions) * 100 : 0;
+    const s1Pct = totalEmissions.gt(0)
+      ? scope1.dividedBy(totalEmissions).times(100).toNumber()
+      : 0;
+    const s2Pct = totalEmissions.gt(0)
+      ? scope2.dividedBy(totalEmissions).times(100).toNumber()
+      : 0;
+    const s3Pct = totalEmissions.gt(0)
+      ? scope3.dividedBy(totalEmissions).times(100).toNumber()
+      : 0;
 
     const target = targets.find((t) => t.year === currentYear);
 
@@ -847,10 +854,13 @@ export class EsgRepository implements IEsgRepository {
         msInYear,
       );
       const proportion = spanMs / msInYear;
-      const proportionalTarget = MoneyUtil.toDecimal(target.totalEmissionTarget)
-        .times(proportion)
-        .toNumber();
-      goalProgress = (totalEmissionsTons / proportionalTarget) * 100; // Info: (20260326 - Julian) 碳排放目標達成率，單位為百分比
+      const proportionalTarget = MoneyUtil.toDecimal(
+        target.totalEmissionTarget,
+      ).times(proportion);
+      goalProgress = totalEmissionsTons
+        .dividedBy(proportionalTarget)
+        .times(100)
+        .toNumber(); // Info: (20260326 - Julian) 碳排放目標達成率，單位為百分比
     }
 
     // Info: (20260410 - Julian) 估算本月/本年度的期末總排放量
@@ -860,10 +870,12 @@ export class EsgRepository implements IEsgRepository {
       const totalPeriodMs = endDate.getTime() - startDate.getTime();
       const passedMs = nowTime - startDate.getTime();
       if (passedMs > 0) {
-        estimatedEndOfMonth = totalEmissionsTons * (totalPeriodMs / passedMs);
+        estimatedEndOfMonth = totalEmissionsTons
+          .times(totalPeriodMs)
+          .dividedBy(passedMs);
       }
     } else if (nowTime < startDate.getTime()) {
-      estimatedEndOfMonth = 0; // Info: (20260410 - Julian) 若時間未到，預估為 0
+      estimatedEndOfMonth = MoneyUtil.toDecimal(0); // Info: (20260410 - Julian) 若時間未到，預估為 0
     }
 
     // Info: (20260410 - Julian) 取得產業基準值

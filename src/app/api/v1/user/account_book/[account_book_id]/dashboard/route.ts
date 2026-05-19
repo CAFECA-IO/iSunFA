@@ -1,6 +1,7 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
+import { MoneyUtil } from "@/lib/utils/money";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { Decimal } from "decimal.js";
 import { voucherRepo } from "@/repositories/voucher.repo";
@@ -149,23 +150,48 @@ export async function GET(
         return {
           timestamp: ts,
           name: new Date(ts).toLocaleDateString("en-US", labelFormat),
-          income: 0,
-          outcome: 0,
-          scope1: { co2: 0, ch4: 0, n2o: 0, f_gases: 0 },
-          scope2: { co2: 0, ch4: 0, n2o: 0, f_gases: 0 },
-          scope3: { co2: 0, ch4: 0, n2o: 0, f_gases: 0 },
+          income: new Decimal(0),
+          outcome: new Decimal(0),
+          scope1: {
+            co2: new Decimal(0),
+            ch4: new Decimal(0),
+            n2o: new Decimal(0),
+            f_gases: new Decimal(0),
+          },
+          scope2: {
+            co2: new Decimal(0),
+            ch4: new Decimal(0),
+            n2o: new Decimal(0),
+            f_gases: new Decimal(0),
+          },
+          scope3: {
+            co2: new Decimal(0),
+            ch4: new Decimal(0),
+            n2o: new Decimal(0),
+            f_gases: new Decimal(0),
+          },
         };
       });
 
     const buckets = initializeBuckets();
 
     // Info: (20260321 - Luphia) Aggregates for CURRENT period vs PREV period
-    let currentIncome = 0;
-    let prevIncome = 0;
-    let currentOutcome = 0;
-    let prevOutcome = 0;
-    const currentGas = { co2: 0, ch4: 0, n2o: 0, f_gases: 0 };
-    const prevGas = { co2: 0, ch4: 0, n2o: 0, f_gases: 0 };
+    let currentIncome = new Decimal(0);
+    let prevIncome = new Decimal(0);
+    let currentOutcome = new Decimal(0);
+    let prevOutcome = new Decimal(0);
+    const currentGas = {
+      co2: new Decimal(0),
+      ch4: new Decimal(0),
+      n2o: new Decimal(0),
+      f_gases: new Decimal(0),
+    };
+    const prevGas = {
+      co2: new Decimal(0),
+      ch4: new Decimal(0),
+      n2o: new Decimal(0),
+      f_gases: new Decimal(0),
+    };
 
     // Info: (20260321 - Luphia) Process Vouchers
     // Info: (20260506 - Julian) 以 IVoucher 重構
@@ -178,12 +204,12 @@ export async function GET(
           (acc, line) => acc.plus(new Decimal(line.amount as string | number)),
           new Decimal(0),
         )
-        .div(2)
-        .toNumber(); // Info: (20260321 - Luphia) Derived from lines
+        .div(2); // Info: (20260321 - Luphia) Derived from lines
 
       if (isCurrent) {
-        if (v.tradingType === "INCOME") currentIncome += val;
-        else if (v.tradingType === "OUTCOME") currentOutcome += val;
+        if (v.tradingType === "INCOME") currentIncome = currentIncome.plus(val);
+        else if (v.tradingType === "OUTCOME")
+          currentOutcome = currentOutcome.plus(val);
 
         let bIdx = 0;
         if (unit === "1y" || (unit === "custom" && !monthStr)) {
@@ -201,11 +227,14 @@ export async function GET(
           );
         }
 
-        if (v.tradingType === "INCOME") buckets[bIdx].income += val;
-        else if (v.tradingType === "OUTCOME") buckets[bIdx].outcome += val;
+        if (v.tradingType === "INCOME")
+          buckets[bIdx].income = buckets[bIdx].income.plus(val);
+        else if (v.tradingType === "OUTCOME")
+          buckets[bIdx].outcome = buckets[bIdx].outcome.plus(val);
       } else {
-        if (v.tradingType === "INCOME") prevIncome += val;
-        else if (v.tradingType === "OUTCOME") prevOutcome += val;
+        if (v.tradingType === "INCOME") prevIncome = prevIncome.plus(val);
+        else if (v.tradingType === "OUTCOME")
+          prevOutcome = prevOutcome.plus(val);
       }
     });
 
@@ -213,7 +242,7 @@ export async function GET(
     esgRecords.forEach((e) => {
       const tradingDateMs = e.tradingDate * 1000;
       const isCurrent = tradingDateMs >= start.getTime();
-      const em = Number(e.emissions);
+      const em = new Decimal(e.emissions as number | string);
       /**
        * Info: (20260321 - Luphia) Determine gas type roughly from activityType or vendor
        * For authentic mapping, assuming 'co2' is default main
@@ -228,7 +257,7 @@ export async function GET(
             : "co2";
 
       if (isCurrent) {
-        currentGas[gasType] += em;
+        currentGas[gasType] = currentGas[gasType].plus(em);
 
         let bIdx = 0;
         if (unit === "1y" || (unit === "custom" && !monthStr)) {
@@ -247,73 +276,80 @@ export async function GET(
           );
         }
 
-        if (e.scope === "SCOPE_1") buckets[bIdx].scope1[gasType] += em;
-        else if (e.scope === "SCOPE_2") buckets[bIdx].scope2[gasType] += em;
-        else if (e.scope === "SCOPE_3") buckets[bIdx].scope3[gasType] += em;
+        if (e.scope === "SCOPE_1")
+          buckets[bIdx].scope1[gasType] =
+            buckets[bIdx].scope1[gasType].plus(em);
+        else if (e.scope === "SCOPE_2")
+          buckets[bIdx].scope2[gasType] =
+            buckets[bIdx].scope2[gasType].plus(em);
+        else if (e.scope === "SCOPE_3")
+          buckets[bIdx].scope3[gasType] =
+            buckets[bIdx].scope3[gasType].plus(em);
       } else {
-        prevGas[gasType] += em;
+        prevGas[gasType] = prevGas[gasType].plus(em);
       }
     });
 
     // Info: (20260321 - Luphia) Compute Metrics & Charts
-    const calculateTrend = (curr: number, prev: number) => {
-      if (prev === 0) return curr > 0 ? 100 : 0;
-      return ((curr - prev) / prev) * 100;
+    const calculateTrend = (curr: Decimal, prev: Decimal) => {
+      if (prev.isZero()) return curr.gt(0) ? 100 : 0;
+      return curr.minus(prev).div(prev).times(100).toNumber();
     };
 
-    let runningFunds = 0; // Info: (20260406 - Luphia) Fix double counting (previously currentIncome - currentOutcome)
+    let runningFunds = new Decimal(0); // Info: (20260406 - Luphia) Fix double counting (previously currentIncome - currentOutcome)
 
     const fundsData = buckets.map((b) => {
-      const net = b.income - b.outcome;
+      const net = b.income.minus(b.outcome);
       const open = runningFunds;
-      runningFunds += net;
+      runningFunds = runningFunds.plus(net);
       const close = runningFunds;
       return {
         name: b.name,
-        open,
-        close,
-        high: Math.max(open, close),
-        low: Math.min(open, close),
-        value: close,
+        open: open.toString(),
+        close: close.toString(),
+        high: Decimal.max(open, close).toString(),
+        low: Decimal.min(open, close).toString(),
+        value: close.toString(),
       };
     });
 
-    const revenueData = buckets.map((b) => ({ name: b.name, value: b.income }));
+    const revenueData = buckets.map((b) => ({
+      name: b.name,
+      value: b.income.toString(),
+    }));
     const expenditureData = buckets.map((b) => ({
       name: b.name,
-      value: b.outcome,
+      value: b.outcome.toString(),
     }));
 
     const revTrend = calculateTrend(currentIncome, prevIncome);
     const expTrend = calculateTrend(currentOutcome, prevOutcome);
     const fundsTrendNum = calculateTrend(
-      currentIncome - currentOutcome,
-      prevIncome - prevOutcome,
+      currentIncome.minus(currentOutcome),
+      prevIncome.minus(prevOutcome),
     );
 
     const financialMetrics = {
       fundsTrend:
         (fundsTrendNum > 0 ? "+" : "") + fundsTrendNum.toFixed(1) + "%",
-      revenueCurrent: currentIncome,
+      revenueCurrent: currentIncome.toString(),
       revenueTrend: (revTrend > 0 ? "+" : "") + revTrend.toFixed(1) + "%",
       revenueTrendVal: revTrend,
-      revenueTarget: prevIncome * 1.1,
-      revenueAchievement:
-        prevIncome > 0
-          ? (currentIncome / (prevIncome * 1.1)) * 100
-          : currentIncome > 0
-            ? 100
-            : 0,
-      expenditureCurrent: currentOutcome,
+      revenueTarget: prevIncome.times(1.1).toString(),
+      revenueAchievement: prevIncome.gt(0)
+        ? currentIncome.div(prevIncome.times(1.1)).times(100).toNumber()
+        : currentIncome.gt(0)
+          ? 100
+          : 0,
+      expenditureCurrent: currentOutcome.toString(),
       expenditureTrend: (expTrend > 0 ? "+" : "") + expTrend.toFixed(1) + "%",
       expenditureTrendVal: expTrend,
-      expenditureBudget: prevOutcome * 1.05,
-      expenditureRate:
-        prevOutcome > 0
-          ? (currentOutcome / (prevOutcome * 1.05)) * 100
-          : currentOutcome > 0
-            ? 100
-            : 0,
+      expenditureBudget: prevOutcome.times(1.05).toString(),
+      expenditureRate: prevOutcome.gt(0)
+        ? currentOutcome.div(prevOutcome.times(1.05)).times(100).toNumber()
+        : currentOutcome.gt(0)
+          ? 100
+          : 0,
       pendingCount: 0,
       applyingCount: 0,
       anomaliesCritical: 0,
@@ -331,42 +367,40 @@ export async function GET(
     const endYear = end.getFullYear();
     const esgTarget = await esgRepo.getEsgTargetByYear(accountBookId, endYear);
     const targetValue = esgTarget?.totalEmissionTarget
-      ? Number(esgTarget.totalEmissionTarget)
+      ? new Decimal(esgTarget.totalEmissionTarget)
       : null;
 
     const periodEmissionsSum = esgRecords.reduce(
-      (acc, current) => acc + Number(current.emissions || 0),
-      0,
+      (acc, current) => acc.plus(new Decimal(current.emissions || 0)),
+      new Decimal(0),
     );
 
     let goalStatus = "on_track";
     let goalProgress = 0;
     let goalTargetStr = "No target set";
 
-    if (targetValue !== null && targetValue > 0) {
+    if (targetValue !== null && targetValue.gt(0)) {
       const yearStartMs = new Date(endYear, 0, 1).getTime();
       const yearEndMs = new Date(endYear, 11, 31, 23, 59, 59, 999).getTime();
       const msInYear = yearEndMs - yearStartMs;
       const spanMs = end.getTime() - start.getTime();
       const proportion = Math.min(1, spanMs / msInYear);
-      const proportionalTarget = targetValue * proportion; // kgCO2e
+      const proportionalTarget = targetValue.times(proportion); // kgCO2e
 
       goalProgress = Math.round(
-        (periodEmissionsSum / proportionalTarget) * 100,
+        periodEmissionsSum.div(proportionalTarget).times(100).toNumber(),
       );
-      goalTargetStr = `${Math.round(proportionalTarget / 1000)} tCO2e`;
+      goalTargetStr = `${proportionalTarget.div(1000).toDP(0).toString()} tCO2e`;
 
       const now = new Date();
       if (now.getTime() > end.getTime()) {
-        goalStatus =
-          periodEmissionsSum <= proportionalTarget
-            ? "achieved"
-            : "not_achieved";
+        goalStatus = periodEmissionsSum.lte(proportionalTarget)
+          ? "achieved"
+          : "not_achieved";
       } else {
-        goalStatus =
-          periodEmissionsSum <= proportionalTarget
-            ? "on_track"
-            : "not_achieved";
+        goalStatus = periodEmissionsSum.lte(proportionalTarget)
+          ? "on_track"
+          : "not_achieved";
       }
     }
 
@@ -377,10 +411,10 @@ export async function GET(
         const s3 = b.scope3[gasType];
         return {
           name: b.name,
-          scope1: s1,
-          scope2: s2,
-          scope3: s3,
-          total: s1 + s2 + s3,
+          scope1: s1.toString(),
+          scope2: s2.toString(),
+          scope3: s3.toString(),
+          total: s1.plus(s2).plus(s3).toString(),
         };
       });
 
@@ -388,43 +422,48 @@ export async function GET(
       const pGas = prevGas[gasType];
       const carbonTrend = calculateTrend(cGas, pGas);
 
-      const currentS1 = ghgData.reduce((acc, b) => acc + b.scope1, 0);
-      const currentS2 = ghgData.reduce((acc, b) => acc + b.scope2, 0);
-      const currentS3 = ghgData.reduce((acc, b) => acc + b.scope3, 0);
+      const currentS1 = ghgData.reduce(
+        (acc, b) => acc.plus(new Decimal(b.scope1)),
+        new Decimal(0),
+      );
+      const currentS2 = ghgData.reduce(
+        (acc, b) => acc.plus(new Decimal(b.scope2)),
+        new Decimal(0),
+      );
+      const currentS3 = ghgData.reduce(
+        (acc, b) => acc.plus(new Decimal(b.scope3)),
+        new Decimal(0),
+      );
 
       return {
         ghgData,
         metrics: {
-          carbonCost:
-            "$" +
-            (cGas * 50).toLocaleString(undefined, { maximumFractionDigits: 0 }),
+          carbonCost: "$" + MoneyUtil.formatDynamic(cGas.times(50), 0),
           carbonTrend:
             (carbonTrend > 0 ? "+" : "") + carbonTrend.toFixed(1) + "%",
           carbonTotal:
-            (gasType === "co2" ? cGas / 1000 : cGas).toFixed(1) +
+            (gasType === "co2" ? cGas.div(1000) : cGas).toFixed(1) +
             (gasType === "co2" ? "t" : "kg"),
           scope1Current:
-            (gasType === "co2" ? currentS1 / 1000 : currentS1).toFixed(1) +
+            (gasType === "co2" ? currentS1.div(1000) : currentS1).toFixed(1) +
             (gasType === "co2" ? "t" : "kg"),
           scope1Trend: "+0%",
           scope1TrendVal: 0,
           scope2Current:
-            (gasType === "co2" ? currentS2 / 1000 : currentS2).toFixed(1) +
+            (gasType === "co2" ? currentS2.div(1000) : currentS2).toFixed(1) +
             (gasType === "co2" ? "t" : "kg"),
           scope2Trend: "+0%",
           scope2TrendVal: 0,
           scope3Current:
-            (gasType === "co2" ? currentS3 / 1000 : currentS3).toFixed(1) +
+            (gasType === "co2" ? currentS3.div(1000) : currentS3).toFixed(1) +
             (gasType === "co2" ? "t" : "kg"),
           scope3Trend: "+0%",
           scope3TrendVal: 0,
-          emissionsIntensity:
-            currentIncome === 0
-              ? "N/A"
-              : (
-                  (gasType === "co2" ? cGas / 1000 : cGas) /
-                  (currentIncome / 10000)
-                ).toFixed(2),
+          emissionsIntensity: currentIncome.isZero()
+            ? "N/A"
+            : (gasType === "co2" ? cGas.div(1000) : cGas)
+                .div(currentIncome.div(10000))
+                .toFixed(2),
           isTop10Percent: true,
           goalStatus,
           goalProgress,

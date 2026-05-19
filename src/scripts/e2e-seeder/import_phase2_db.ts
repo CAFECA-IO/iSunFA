@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { prisma } from "@/lib/prisma";
+import { MoneyUtil } from "@/lib/utils/money";
 
 export const importPhase2Db = async (stockId: string) => {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/2024`);
@@ -65,7 +66,7 @@ export const importPhase2Db = async (stockId: string) => {
             }) => ({
               accountingCode: l.accountingCode,
               particular: l.particular,
-              amount: BigInt(Math.round(l.amount)),
+              amount: BigInt(MoneyUtil.toDecimal(l.amount).round().toString()),
               isDebit: l.isDebit,
             }),
           ),

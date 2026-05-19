@@ -224,21 +224,20 @@ export default function BalanceSheetView({
   const fixedAssetsTotal = assets.nonCurrent.items
     .filter((i) => i.code.startsWith("15") || i.code.startsWith("16"))
     .reduce(
-      (acc, curr) =>
-        MoneyUtil.toDecimal(acc)
-          .plus(MoneyUtil.toDecimal(curr.amount))
-          .toNumber(),
-      0,
+      (acc, curr) => acc.plus(MoneyUtil.toDecimal(curr.amount)),
+      MoneyUtil.toDecimal(0),
     );
-  const isFixedAssetsZero = fixedAssetsTotal === 0;
+  const isFixedAssetsZero = fixedAssetsTotal.isZero();
 
   const balanceKeyMetricsData = [
     {
       title: t("balance_sheet_view.metric_nwps_title"),
-      value: `${numberWithCommas(metrics.netWorthPerShare || 0)}`,
+      value: `${MoneyUtil.formatDynamic(metrics.netWorthPerShare || "0", 2)}`,
       description: t("balance_sheet_view.metric_nwps_desc"),
       textColor: "text-gray-900",
-      statusGood: (metrics.netWorthPerShare || 0) > (metrics.parValue || 10),
+      statusGood: MoneyUtil.toDecimal(metrics.netWorthPerShare || "0").gt(
+        metrics.parValue || 10,
+      ),
       className: "col-span-2 lg:col-span-2 print:w-1/2",
       tooltipAlign: TooltipAlign.RIGHT,
     },
@@ -247,7 +246,7 @@ export default function BalanceSheetView({
       value: `${numberWithCommas(metrics.workingCapital)}`,
       description: t("balance_sheet_view.metric_wc_desc"),
       textColor: "text-gray-900",
-      statusGood: metrics.workingCapital > 0,
+      statusGood: MoneyUtil.toDecimal(metrics.workingCapital).gt(0),
       className: "col-span-2 lg:col-span-2 print:w-1/2",
       tooltipAlign: TooltipAlign.RIGHT,
     },

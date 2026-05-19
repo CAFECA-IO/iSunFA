@@ -18,7 +18,7 @@ export class EsgIntensityEvaluationSkill implements ITaskSkill {
         description: "The ESG activity type key (e.g. ELECTRICITY_USAGE).",
       },
       coefficient: {
-        type: "number",
+        type: "string",
         description: "The emission coefficient value.",
       },
     },
@@ -32,7 +32,7 @@ export class EsgIntensityEvaluationSkill implements ITaskSkill {
     // chatService: ChatService,
   ): Promise<string> {
     let activityType: EsgActivityTypeKey | null = null;
-    let coefficient: number = 0;
+    let coefficient: string = "0";
 
     // Info: (20250417 - Julian) 取得活動類型與係數
     const { esgRecord } = await prepareDocumentContext(task);
@@ -45,8 +45,8 @@ export class EsgIntensityEvaluationSkill implements ITaskSkill {
           | Record<string, unknown>
           | undefined;
         coefficient = coefObj?.emissionFactor
-          ? MoneyUtil.toDecimal(coefObj.emissionFactor as string).toNumber()
-          : 0;
+          ? (coefObj.emissionFactor as string)
+          : "0";
       }
     } catch (error) {
       console.warn(
@@ -72,10 +72,12 @@ export class EsgIntensityEvaluationSkill implements ITaskSkill {
    */
   private evaluateIntensity(
     activityType: EsgActivityTypeKey | null,
-    coefficient: number,
+    coefficient: string,
   ): EsgIntensity {
+    const dec = MoneyUtil.toDecimal(coefficient);
+
     // Info: (20250417 - Julian) 如果缺乏重要資訊，預設給予中強度
-    if (!activityType || isNaN(coefficient)) {
+    if (!activityType || dec.isNaN()) {
       return EsgIntensity.MEDIUM;
     }
 
@@ -84,9 +86,9 @@ export class EsgIntensityEvaluationSkill implements ITaskSkill {
     // 計算前、後段班的 PR 級距範圍...
 
     // 以下為 Mock 評估邏輯
-    if (coefficient > 1.5) {
+    if (dec.gt(1.5)) {
       return EsgIntensity.HIGH;
-    } else if (coefficient > 0.5) {
+    } else if (dec.gt(0.5)) {
       return EsgIntensity.MEDIUM;
     } else {
       return EsgIntensity.LOW;

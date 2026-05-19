@@ -1,4 +1,5 @@
 import { Decimal } from "decimal.js";
+import { MoneyUtil } from "@/lib/utils/money";
 
 export type IReceiptItem = {
   name: string;
@@ -97,9 +98,9 @@ export function buildOenTransactionPayload(
     productDetails: items.map((item, idx) => ({
       productionCode: `ISUNFA-ITM-${idx}`,
       description: item.name,
-      quantity: Number(item.quantity) || 1,
+      quantity: MoneyUtil.toDecimal(item.quantity).toNumber() || 1,
       unit: "pcs",
-      unitPrice: Number(item.unitPrice), // Info: (20260410 - Luphia) mapped explicitly to each item tax/price structure
+      unitPrice: MoneyUtil.toDecimal(item.unitPrice).toNumber(), // Info: (20260410 - Luphia) mapped explicitly to each item tax/price structure
     })),
   };
 }

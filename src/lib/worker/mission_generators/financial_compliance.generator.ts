@@ -4,6 +4,7 @@ import {
 } from "@/lib/worker/mission.interface";
 import { generateBaseInternalMission } from "@/lib/worker/mission_generators/base_internal.generator";
 import * as Prompts from "@/constants/prompts/financial_compliance";
+import { MoneyUtil } from "@/lib/utils/money";
 
 // Info: (20260418 - Tzuhan) 內部演算法快篩：從海量傳票與日記帳中，過濾出具備「異常樣態」之清單。
 // Info: (20260418 - Tzuhan) 實務對接：可將此處改寫為針對 Prisma DB 的 SQL Query，撈取如「月底大額退貨」等紀錄。
@@ -48,7 +49,7 @@ function fastScreenAnomalies(rawData: unknown): string {
       let hasLargeAmount = false;
       const amountMatches = line.matchAll(/金額:(\d+)/g);
       for (const match of amountMatches) {
-        if (Number(match[1]) >= 500000) {
+        if (MoneyUtil.toDecimal(match[1]).gte(500000)) {
           hasLargeAmount = true;
           break;
         }

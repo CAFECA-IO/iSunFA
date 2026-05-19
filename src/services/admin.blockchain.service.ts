@@ -36,7 +36,7 @@ export interface IBlockchainDashboardData {
   systemTotalIcp: string;
   collateralRate: string;
   totalMembers: number;
-  blockHeight: number;
+  blockHeight: string;
   peers?: IBlockchainPeer[];
 }
 
@@ -94,7 +94,7 @@ export async function getBlockchainDashboardData(
       publicClient.getBlockNumber(),
     ]);
     const adminIscBalance = formatEther(adminIscWei);
-    const blockHeight = Number(blockHeightBigInt);
+    const blockHeight = blockHeightBigInt.toString();
 
     /**
      * Info: (20260416 - Luphia) For Mining we reuse toggleMining approach (check via API/Node or we can wrap the existing helper)

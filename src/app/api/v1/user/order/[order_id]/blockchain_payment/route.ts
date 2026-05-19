@@ -84,7 +84,6 @@ export async function POST(
     );
 
     // Info: (20260419 - Luphia) Check if pending balance is sufficient before sending
-    const { formatUnits } = await import("viem");
     const balance = await publicClient.readContract({
       address: CONTRACT_ADDRESSES.CREDIT_POINT as `0x${string}`,
       abi: ABIS.CREDIT_POINT,
@@ -92,9 +91,8 @@ export async function POST(
       args: [user.address as `0x${string}`],
       blockTag: "pending",
     });
-    const pendingCredits = Number(formatUnits(balance as bigint, 18));
 
-    if (pendingCredits < order.amount) {
+    if ((balance as bigint) < BigInt(order.amount)) {
       return jsonFail(API_ERRORS.VL_INSUFFICIENT_PENDING);
     }
 
