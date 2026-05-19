@@ -83,7 +83,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **⚠️ Pending (Blocker)：強制修復傳票重複加總漏洞 (Voucher Duplication)**：目前 Voucher 金額運算邏輯在代繳與已繳費的處理上會產生重複計算。必須實作嚴格的「交易關聯 ID (Transaction Correlation ID)」與沖銷邏輯，確保代墊款與實際支付在會計科目上能完美沖抵，否則系統將無法通過四大會計師的三表勾稽審查。
 
 - **[CPA 碳排合規任務 (DPP 產品護照架構交由 Luphia 負責)]**
-- **✅ Done (2026-05-14)：建置碳排暫存區 (SuspenseEsgRecord)**：廢除 `SCOPE_3` 的無腦 Fallback。憑證資訊不明或缺少碳排係數主檔時，依然如實寫入憑證紀錄以保留查核軌跡，但將 `emissions` 強制設為 0，且 `isVerified` 設為 `false`，並打上懸記警告標籤 (`aiNote`)，凍結該筆資料於待釐清區等待 CPA 覆核補登，徹底防堵隱匿財報與漂綠風險。
+- **⚠️ Pending：碳排暫存區與保守型推測機制 (SuspenseEsgRecord & AI Speculation)**：全面重構 RAG 未命中時的防護邏輯。廢除舊版無腦強制 emissions 設為 0 的剛性設計。允許 AI 進行官方大類的「語義降級推測」，並由後端套用該大類最高係數進行「保守型預估加總」。此類紀錄在寫入 DB 時，狀態強制鎖死為 `isVerified = false` 且 `generationSource = "AI_SPECULATIVE_STAGE_3"`。此設計既保證了前端儀表板具備即時算出碳排的優良體驗，又能透過「合規黃燈」在最終審計閘門阻斷正式報告的產出，完美兼顧產品商業力（PLG）與 CPA 確信標準。
 - **✅ Done (Architectural Decision: Immutable IDs)：排放係數時空快照 (Emission Factor Versioning)**：經過重新設計，不再將數值硬拷貝至 EsgRecord 造成 Schema 污染。改為全面採用「Immutable Coefficient IDs (如 epa-2025-t1-004)」，天然實現時空快照。
   - **🔒 Immutable Coefficient 兩大鐵律**：未來維護係數庫必須嚴格遵守：1. **禁止 UPDATE 數值** (避免污染歷史帳本)；2. **永遠只用 INSERT (Append-Only)**。
 - **⚠️ Pending (急迫)：官方標準係數資料庫轉移與自動化管線 (Standard Coefficients DB Migration & Scraper)**：
