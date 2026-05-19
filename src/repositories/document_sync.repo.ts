@@ -6,7 +6,7 @@ import {
   EsgScope,
   EsgIntensity,
 } from "@/generated";
-import { MeasurementUnit } from "@/constants/enums";
+import { MeasurementUnit, EsgGenerationSource } from "@/constants/enums";
 import { ISyncDocumentResultParams } from "@/skills/utils/document_parser_db_sync";
 import { ACCOUNTS, IAccount } from "@/constants/accounts";
 import { ExchangeRateService } from "@/services/exchange_rate.service";
@@ -295,6 +295,7 @@ export class DocumentSyncRepository {
           const confidence = parseInt(String(ed.confidence)) || 0;
           let finalCoefficientId = ed.coefficientId || null;
           let finalEmissionSourceId = ed.emissionSourceId || null;
+          let isFallbackMatched = false;
 
           // Info: (20260519 - Tzuhan) 使用 fallbackCategory 進行最大係數 (Max-Factor) 查詢
           const fallbackTag = ed.fallbackCategory?.trim();
@@ -320,6 +321,7 @@ export class DocumentSyncRepository {
             });
             if (matchedCoefficients.length > 0) {
               finalCoefficientId = matchedCoefficients[0].id;
+              isFallbackMatched = true;
               ed.aiNote =
                 (ed.aiNote || "") +
                 `\n[系統匹配] 透過大類標籤「${fallbackTag}」鎖定保守係數。`;
@@ -355,7 +357,7 @@ export class DocumentSyncRepository {
             });
             if (coefExists) {
               emissionFactorValue = coefExists.emissionFactor;
-              if (!coefExists.isVerified) {
+              if (!coefExists.isVerified || isFallbackMatched) {
                 recordIsVerified = false; // Info: (20260513 - Tzuhan) Using unverified coefficient makes record unverified
               }
             } else {
@@ -397,6 +399,9 @@ export class DocumentSyncRepository {
             isVerified: recordIsVerified,
             aiNote,
             analysisStatus: "COMPLETED" as AIAnalysisStatus,
+            generationSource: isFallbackMatched
+              ? EsgGenerationSource.AI_SPECULATIVE_STAGE_3
+              : EsgGenerationSource.SYSTEM_DETERMINISTIC,
             coefficientId: finalCoefficientId,
             emissionSourceId: finalEmissionSourceId,
           };

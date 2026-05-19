@@ -85,7 +85,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 
 - **[CPA 碳排合規任務 (DPP 產品護照架構交由 Luphia 負責)]**
 - **⚠️ Pending：碳排暫存區與保守型推測機制 (SuspenseEsgRecord & AI Speculation)**：全面重構 RAG 未命中時的防護邏輯。廢除舊版無腦強制 emissions 設為 0 的剛性設計。允許 AI 進行官方大類的「語義降級推測」，並由後端套用該大類最高係數進行「保守型預估加總」。此類紀錄在寫入 DB 時，狀態強制鎖死為 `isVerified = false` 且 `generationSource = "AI_SPECULATIVE_STAGE_3"`。此設計既保證了前端儀表板具備即時算出碳排的優良體驗，又能透過「合規黃燈」在最終審計閘門阻斷正式報告的產出，完美兼顧產品商業力（PLG）與 CPA 確信標準。
-  - 👉 **實作要求**：更新 `prisma/schema.prisma` 確保支援此 Enum。在 `document_sync.repo.ts` 中，若係數由 `fallbackCategory` 匹配而來，必須強制將該筆紀錄寫入 `generationSource: "AI_SPECULATIVE_STAGE_3"` 以保全稽核軌跡。
+  - 👉 **實作要求**：更新 `prisma/schema.prisma` 確保支援此欄位（以 `String` 型別即可，並透過 TypeScript 常數約束 Enum）。在 `document_sync.repo.ts` 中，若係數由 `fallbackCategory` 匹配而來，必須強制將該筆紀錄寫入 `generationSource: "AI_SPECULATIVE_STAGE_3"` 以保全稽核軌跡。
 - **✅ Done (Architectural Decision: Immutable IDs)：排放係數時空快照 (Emission Factor Versioning)**：經過重新設計，不再將數值硬拷貝至 EsgRecord 造成 Schema 污染。改為全面採用「Immutable Coefficient IDs (如 epa-2025-t1-004)」，天然實現時空快照。
   - **🔒 Immutable Coefficient 兩大鐵律**：未來維護係數庫必須嚴格遵守：1. **禁止 UPDATE 數值** (避免污染歷史帳本)；2. **永遠只用 INSERT (Append-Only)**。
 - **⚠️ Pending (急迫)：官方標準係數資料庫轉移與自動化管線 (Standard Coefficients DB Migration & Scraper)**：

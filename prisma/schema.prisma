@@ -501,6 +501,8 @@ enum EsgIntensity {
   HIGH
 }
 
+
+
 model EsgRecord {
   id                String           @id @default(uuid())
   createdAt         DateTime         @default(now()) @map("created_at")
@@ -519,6 +521,7 @@ model EsgRecord {
   isVerified        Boolean          @default(false) @map("is_verified") // Info: (20260318 - Julian) 是否已經驗證
   analysisStatus    AIAnalysisStatus @default(PENDING) @map("analysis_status") // Info: (20260318 - Julian) AI 分析狀態
   emissionSourceTag String?          @map("emission_source_tag") // Info: (20260421 - Julian) 排放源標籤（廠）
+  generationSource  String           @default("SYSTEM_DETERMINISTIC") @map("generation_source") // Info: (20260519 - Tzuhan) 紀錄產生來源，用於審計追蹤
 
   // Info: (20260312 - Julian) 關聯檔案憑證
   fileId String? @map("file_id")

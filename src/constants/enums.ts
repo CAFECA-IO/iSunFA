@@ -12,3 +12,12 @@ export const MeasurementUnit = {
 
 export type MeasurementUnit =
   (typeof MeasurementUnit)[keyof typeof MeasurementUnit];
+
+export const EsgGenerationSource = {
+  MANUAL_ENTRY: "MANUAL_ENTRY",
+  SYSTEM_DETERMINISTIC: "SYSTEM_DETERMINISTIC",
+  AI_SPECULATIVE_STAGE_3: "AI_SPECULATIVE_STAGE_3",
+} as const;
+
+export type EsgGenerationSource =
+  (typeof EsgGenerationSource)[keyof typeof EsgGenerationSource];
