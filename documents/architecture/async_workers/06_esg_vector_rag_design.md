@@ -22,7 +22,11 @@
 
 ## 🎯 2. 架構突破：本機向量 RAG (Local Vector RAG)
 
-為解決上述兩難，我們導入 **「本機向量檢索 + 多選題 Prompt (Local Vector Search + Multiple-Choice Prompting)」** 架構。
+在我們未來的產品藍圖中，整個系統的物理架構將明確劃分為兩大區塊：
+1. **Issuer 端 (核心系統)**：包含前端 UI 與完整的 PostgreSQL 資料庫，負責最終資料落地、商業邏輯與報表呈現。
+2. **Executor 端 (未來的「AI 費思」獨立產品)**：完全獨立、無狀態 (Stateless)，由各種 AI 技術（OCR、LLM 引擎、RAG 檢索）拼湊組合而成的智能處理大腦。
+
+本套 ESG 解析與推估解決方案**必須 100% 實作於後者 (Executor 端)**。為解決上述兩難，我們導入 **「本機向量檢索 + 多選題 Prompt (Local Vector Search + Multiple-Choice Prompting)」** 架構。
 
 ### 階段 2.1：建置期靜態向量化 (Build-Time Vectorization)
 
