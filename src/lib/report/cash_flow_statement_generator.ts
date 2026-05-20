@@ -5,6 +5,9 @@ import {
 } from "@/interfaces/cash_flow_statement";
 import { MoneyUtil } from "@/lib/utils/money";
 import { Decimal } from "decimal.js";
+import { TW_ACCOUNTS } from "@/constants/accounts/tw";
+import { AccountUtil } from "@/lib/utils/account_util";
+import { SystemAccountNodes } from "@/constants/system_account_codes";
 
 // Info: (20260518 - Tzuhan) [AUDIT FIX] 強制要求外部傳入期初餘額，不准在內部虛擬補數
 export function generateCashFlowStatement(
@@ -54,46 +57,109 @@ export function generateCashFlowStatement(
       ? MoneyUtil.toDecimal(amount).negated()
       : MoneyUtil.toDecimal(amount);
 
-    // Info: (20260330 - Julian) 1. 計算應計基礎淨利 (Net Income)
-    if (
-      code.startsWith("4") ||
-      code.startsWith("5") ||
-      code.startsWith("6") ||
-      code.startsWith("7") ||
-      code.startsWith("8")
-    ) {
+    // Info: (20260520 - Tzuhan) [REFACTOR] 1. 樹狀溯源計算應計基礎淨利 (Net Income)
+    const isIncomeOrExpense =
+      AccountUtil.isDescendantOf(
+        code,
+        SystemAccountNodes.INCOME_ROOT,
+        TW_ACCOUNTS,
+      ) ||
+      AccountUtil.isDescendantOf(
+        code,
+        SystemAccountNodes.COST_ROOT,
+        TW_ACCOUNTS,
+      ) ||
+      AccountUtil.isDescendantOf(
+        code,
+        SystemAccountNodes.EXPENSE_ROOT,
+        TW_ACCOUNTS,
+      ) ||
+      AccountUtil.isDescendantOf(
+        code,
+        SystemAccountNodes.NON_OP_INCOME_ROOT,
+        TW_ACCOUNTS,
+      ) ||
+      AccountUtil.isDescendantOf(
+        code,
+        SystemAccountNodes.OTHER_COMPREHENSIVE_INCOME_ROOT,
+        TW_ACCOUNTS,
+      );
+
+    if (isIncomeOrExpense) {
       netIncome = netIncome.plus(impact);
 
-      // Info: (20260504 - Tzuhan) 補充揭露：使用代碼 (7510/7050 利息, 79 所得稅) 避免中文判斷失效
-      if (code.startsWith("751") || code.startsWith("705"))
+      // Info: (20260520 - Tzuhan) [REFACTOR] 補充揭露：精確錨點定位利息與所得稅
+      if (
+        AccountUtil.isDescendantOf(
+          code,
+          SystemAccountNodes.INTEREST_EXPENSE_ROOT,
+          TW_ACCOUNTS,
+        ) ||
+        AccountUtil.isDescendantOf(
+          code,
+          SystemAccountNodes.INTEREST_EXPENSE_ROOT_ALT,
+          TW_ACCOUNTS,
+        )
+      ) {
         interestPaid = interestPaid.plus(
           isDebit
             ? MoneyUtil.toDecimal(amount)
             : MoneyUtil.toDecimal(amount).negated(),
         );
-      if (code.startsWith("79"))
+      }
+      if (
+        AccountUtil.isDescendantOf(
+          code,
+          SystemAccountNodes.TAX_EXPENSE_ROOT,
+          TW_ACCOUNTS,
+        )
+      ) {
         taxesPaid = taxesPaid.plus(
           isDebit
             ? MoneyUtil.toDecimal(amount)
             : MoneyUtil.toDecimal(amount).negated(),
         );
-    }
-
-    // Info: (20260330 - Julian) 2. 營業活動 - 營運營運資金變動
-    if (code.startsWith("11") || code.startsWith("12")) {
-      // Info: (20260331 - Julian) 排除現金
-      if (!code.startsWith("110")) {
-        addItem(operatingItems, `[營運資金] ${name}變動`, impact);
       }
-    } else if (code.startsWith("13")) {
-      // Info: (20260331 - Julian) 存貨
-      addItem(operatingItems, `[營運資金] ${name}變動`, impact);
-      // Info: (20260518 - Tzuhan) [AUDIT FIX] 資產借方增加 = 現金流負向(impact 為負)。
-      inventoryIncrease = inventoryIncrease.plus(impact.negated());
     }
 
-    // Info: (20260330 - Julian) 流動負債變動 (營業活動)
-    if (code.startsWith("21") || code.startsWith("22")) {
+    // Info: (20260520 - Tzuhan) [REFACTOR] 2. 營業活動 - 營運資金變動 (動態適應，不再漏接)
+    if (
+      AccountUtil.isDescendantOf(
+        code,
+        SystemAccountNodes.CURRENT_ASSETS_ROOT,
+        TW_ACCOUNTS,
+      )
+    ) {
+      if (
+        !AccountUtil.isDescendantOf(
+          code,
+          SystemAccountNodes.CASH_ROOT,
+          TW_ACCOUNTS,
+        )
+      ) {
+        addItem(operatingItems, `[營運資金] ${name}變動`, impact);
+
+        if (
+          AccountUtil.isDescendantOf(
+            code,
+            SystemAccountNodes.INVENTORY_ROOT,
+            TW_ACCOUNTS,
+          )
+        ) {
+          // Info: (20260518 - Tzuhan) [AUDIT FIX] 資產借方增加 = 現金流負向(impact 為負)。
+          inventoryIncrease = inventoryIncrease.plus(impact.negated());
+        }
+      }
+    }
+
+    // Info: (20260520 - Tzuhan) [REFACTOR] 流動負債變動 (營業活動，包含 23 預收款徹底防漏)
+    if (
+      AccountUtil.isDescendantOf(
+        code,
+        SystemAccountNodes.CURRENT_LIABILITIES_ROOT,
+        TW_ACCOUNTS,
+      )
+    ) {
       // Info: (20260504 - Tzuhan) 改由底層字典的 isInterestBearing 標籤統一控管有息負債
       if (line.accounting?.isInterestBearing) {
         addItem(financingItems, `短期借款/票券及一年內到期長債變動`, impact);
@@ -102,13 +168,13 @@ export function generateCashFlowStatement(
       }
     }
 
-    // Info: (20260330 - Julian) 3. 投資活動
+    // Info: (20260520 - Tzuhan) [REFACTOR] 3. 投資活動 (非流動資產)
     if (
-      code.startsWith("15") ||
-      code.startsWith("16") ||
-      code.startsWith("17") ||
-      code.startsWith("18") ||
-      code.startsWith("19")
+      AccountUtil.isDescendantOf(
+        code,
+        SystemAccountNodes.NON_CURRENT_ASSETS_ROOT,
+        TW_ACCOUNTS,
+      )
     ) {
       // Info: (20260504 - Tzuhan) 改由備抵資產 (Contra-Asset) 的變動來精準捕捉折舊攤銷，完全捨棄中文關鍵字比對
       if (line.accounting && !line.accounting.isDebit) {
@@ -125,33 +191,55 @@ export function generateCashFlowStatement(
       }
 
       // Info: (20260330 - Julian) 粗略算資本支出 (不動產廠房設備增加=借方)
-      if (isDebit && (code.startsWith("15") || code.startsWith("16"))) {
+      if (
+        isDebit &&
+        !AccountUtil.isDescendantOf(
+          code,
+          SystemAccountNodes.INTANGIBLE_ASSETS_ROOT,
+          TW_ACCOUNTS,
+        ) &&
+        !AccountUtil.isDescendantOf(
+          code,
+          SystemAccountNodes.OTHER_ASSETS_ROOT,
+          TW_ACCOUNTS,
+        )
+      ) {
+        // 為了相容原本判斷 15, 16 但排除其他，簡化為只要是非流動且不是無形/其他，就算資本支出
         capitalExpenditure = capitalExpenditure.plus(
           MoneyUtil.toDecimal(amount),
         );
       }
       addItem(investingItems, `取得/處分 ${name}`, impact);
     }
-    // Info: (20260330 - Julian) 長期投資
-    if (code.startsWith("14")) {
-      addItem(investingItems, `長期投資變動`, impact);
-    }
 
-    // Info: (20260330 - Julian) 4. 籌資活動 (融資)
+    // Info: (20260520 - Tzuhan) [REFACTOR] 4. 籌資活動 (非流動負債與權益)
     if (
-      code.startsWith("25") ||
-      code.startsWith("26") ||
-      code.startsWith("28") ||
-      code.startsWith("29")
+      AccountUtil.isDescendantOf(
+        code,
+        SystemAccountNodes.NON_CURRENT_LIABILITIES_ROOT,
+        TW_ACCOUNTS,
+      )
     ) {
       addItem(financingItems, `長期負債變動: ${name}`, impact);
     }
-    if (code.startsWith("3")) {
+    if (
+      AccountUtil.isDescendantOf(
+        code,
+        SystemAccountNodes.EQUITY_ROOT,
+        TW_ACCOUNTS,
+      )
+    ) {
       if (line.accounting?.isDividend && isDebit) {
         // Info: (20260504 - Tzuhan) 分配股利為未分配盈餘 (335) 的借方變動
         dividendsPaid = dividendsPaid.plus(MoneyUtil.toDecimal(amount));
         addItem(financingItems, `發放股利`, impact);
-      } else if (!code.startsWith("33")) {
+      } else if (
+        !AccountUtil.isDescendantOf(
+          code,
+          SystemAccountNodes.RETAINED_EARNINGS_ROOT,
+          TW_ACCOUNTS,
+        )
+      ) {
         addItem(financingItems, `權益變動: ${name}`, impact);
       }
     }

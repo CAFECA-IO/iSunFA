@@ -183,7 +183,7 @@ export const runCrossValidation = async (stockId: string) => {
   const isIncomeStatementNetIncome = incomeStatement.sections.netIncome.total;
   const bsRetainedEarnings =
     balanceSheet.equity.items.find(
-      (i: { code: string; amount: string | number }) => i.code === "3200",
+      (i: { code: string; amount: string | number }) => i.code === "3353",
     )?.amount || 0;
   const cfStartingNetIncome =
     cashFlowStatement.activities.operating.items.find(

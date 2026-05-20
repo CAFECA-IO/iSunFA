@@ -2,6 +2,9 @@ import { IVoucherLineUI } from "@/interfaces/voucher";
 import { IBalanceSheet, IBalanceSheetItem } from "@/interfaces/balance_sheet";
 import { MoneyUtil } from "@/lib/utils/money";
 import { Decimal } from "decimal.js";
+import { TW_ACCOUNTS } from "@/constants/accounts/tw";
+import { AccountUtil } from "@/lib/utils/account_util";
+import { SystemAccountNodes } from "@/constants/system_account_codes";
 
 export function generateBalanceSheet(
   lineItems: IVoucherLineUI[],
@@ -62,24 +65,66 @@ export function generateBalanceSheet(
       ? MoneyUtil.toDecimal(amount)
       : MoneyUtil.toDecimal(amount).negated();
 
-    // Info: (20260504 - Tzuhan) ⚠️修復：將本期損益科目(4~9)動態結轉到本期淨利，否則資產負債表永遠無法配平
-    if (code.match(/^[456789]/)) {
+    // Info: (20260520 - Tzuhan) [REFACTOR] 徹底拔除 Regex，改由樹狀溯源動態結轉本期損益
+    const isIncomeOrExpense =
+      AccountUtil.isDescendantOf(
+        code,
+        SystemAccountNodes.INCOME_ROOT,
+        TW_ACCOUNTS,
+      ) ||
+      AccountUtil.isDescendantOf(
+        code,
+        SystemAccountNodes.COST_ROOT,
+        TW_ACCOUNTS,
+      ) ||
+      AccountUtil.isDescendantOf(
+        code,
+        SystemAccountNodes.EXPENSE_ROOT,
+        TW_ACCOUNTS,
+      ) ||
+      AccountUtil.isDescendantOf(
+        code,
+        SystemAccountNodes.NON_OP_INCOME_ROOT,
+        TW_ACCOUNTS,
+      ) ||
+      AccountUtil.isDescendantOf(
+        code,
+        SystemAccountNodes.OTHER_COMPREHENSIVE_INCOME_ROOT,
+        TW_ACCOUNTS,
+      );
+
+    if (isIncomeOrExpense) {
       // Info: (20260512 - Tzuhan) 貸方(收益) impact為負 -> 淨利增加; 借方(費損) impact為正 -> 淨利減少
       currentPeriodEarnings = currentPeriodEarnings.minus(impact);
     }
 
-    // Info: (20260331 - Julian) 根據標準臺灣會計編碼規則分組 (1: 資產, 2: 負債, 3: 權益)
-    const isAsset = code.startsWith("1");
-    const isLiability = code.startsWith("2");
-    const isEquity = code.startsWith("3");
+    // Info: (20260520 - Tzuhan) [REFACTOR] 導入資料驅動樹狀結構，完全拔除 Magic String
+    const isAsset = AccountUtil.isDescendantOf(
+      code,
+      SystemAccountNodes.ASSETS_ROOT,
+      TW_ACCOUNTS,
+    );
+    const isLiability = AccountUtil.isDescendantOf(
+      code,
+      SystemAccountNodes.LIABILITIES_ROOT,
+      TW_ACCOUNTS,
+    );
+    const isEquity = AccountUtil.isDescendantOf(
+      code,
+      SystemAccountNodes.EQUITY_ROOT,
+      TW_ACCOUNTS,
+    );
 
-    // Info: (20260518 - Tzuhan) [AUDIT FIX] 剔除 14 (長期投資)，確保流動資產純淨度
-    const isCurrentAsset =
-      isAsset &&
-      (code.startsWith("11") || code.startsWith("12") || code.startsWith("13"));
-    const isCurrentLiability =
-      isLiability &&
-      (code.startsWith("21") || code.startsWith("22") || code.startsWith("23"));
+    const isCurrentAsset = AccountUtil.isDescendantOf(
+      code,
+      SystemAccountNodes.CURRENT_ASSETS_ROOT,
+      TW_ACCOUNTS,
+    );
+    const isCurrentLiability = AccountUtil.isDescendantOf(
+      code,
+      SystemAccountNodes.CURRENT_LIABILITIES_ROOT,
+      TW_ACCOUNTS,
+    );
 
     // Info: (20260331 - Julian) 借貸方向
 
@@ -94,21 +139,64 @@ export function generateBalanceSheet(
       });
       totalAssets = totalAssets.plus(impact);
 
-      // Info: (20260518 - Tzuhan) [REFACTOR] 使用互斥的 else if 鏈清整混亂邏輯，拔除死碼
-      if (code.startsWith("110")) {
-        cashTotal = cashTotal.plus(impact); // Info: (20260513 - Tzuhan) 現金及約當現金
-      } else if (code.startsWith("117")) {
-        accountsReceivableTotal = accountsReceivableTotal.plus(impact); // Info: (20260513 - Tzuhan) 應收帳款
-      } else if (code.startsWith("13")) {
-        inventoryTotal = inventoryTotal.plus(impact); // Info: (20260513 - Tzuhan) 存貨
-      } else if (code.startsWith("14")) {
-        longTermInvestmentsTotal = longTermInvestmentsTotal.plus(impact); // Info: (20260518 - Tzuhan) 長期投資
-      } else if (code.startsWith("15") || code.startsWith("16")) {
-        fixedAssetsTotal = fixedAssetsTotal.plus(impact); // Info: (20260513 - Tzuhan) 不動產、廠房及設備
-      } else if (code.startsWith("17")) {
-        intangibleAssetsTotal = intangibleAssetsTotal.plus(impact); // Info: (20260513 - Tzuhan) 無形資產
-      } else if (code.startsWith("18") || code.startsWith("19")) {
-        otherAssetsTotal = otherAssetsTotal.plus(impact); // Info: (20260518 - Tzuhan) 其他資產
+      // Info: (20260520 - Tzuhan) [REFACTOR] 樹狀溯源取代 startsWith (使用 SystemAccountNodes)
+      if (
+        AccountUtil.isDescendantOf(
+          code,
+          SystemAccountNodes.CASH_ROOT,
+          TW_ACCOUNTS,
+        )
+      ) {
+        cashTotal = cashTotal.plus(impact);
+      } else if (
+        AccountUtil.isDescendantOf(
+          code,
+          SystemAccountNodes.ACCOUNTS_RECEIVABLE_ROOT,
+          TW_ACCOUNTS,
+        )
+      ) {
+        accountsReceivableTotal = accountsReceivableTotal.plus(impact);
+      } else if (
+        AccountUtil.isDescendantOf(
+          code,
+          SystemAccountNodes.INVENTORY_ROOT,
+          TW_ACCOUNTS,
+        )
+      ) {
+        inventoryTotal = inventoryTotal.plus(impact);
+      } else if (
+        AccountUtil.isDescendantOf(
+          code,
+          SystemAccountNodes.FIXED_ASSETS_ROOT,
+          TW_ACCOUNTS,
+        )
+      ) {
+        fixedAssetsTotal = fixedAssetsTotal.plus(impact);
+      } else if (
+        AccountUtil.isDescendantOf(
+          code,
+          SystemAccountNodes.INTANGIBLE_ASSETS_ROOT,
+          TW_ACCOUNTS,
+        )
+      ) {
+        intangibleAssetsTotal = intangibleAssetsTotal.plus(impact);
+      } else if (
+        AccountUtil.isDescendantOf(
+          code,
+          SystemAccountNodes.OTHER_ASSETS_ROOT,
+          TW_ACCOUNTS,
+        )
+      ) {
+        otherAssetsTotal = otherAssetsTotal.plus(impact);
+      } else if (
+        AccountUtil.isDescendantOf(
+          code,
+          SystemAccountNodes.NON_CURRENT_ASSETS_ROOT,
+          TW_ACCOUNTS,
+        )
+      ) {
+        // Info: (20260520 - Tzuhan) [REFACTOR] 如果是非流動資產，但不是上述(固定、無形、其他)，則歸類為長期投資
+        longTermInvestmentsTotal = longTermInvestmentsTotal.plus(impact);
       }
     } else if (isLiability) {
       // Info: (20260331 - Julian) 負債增加在貸方
@@ -132,22 +220,35 @@ export function generateBalanceSheet(
       equityMap.set(code, { name, amount: currentAmount.minus(impact) });
       totalEquity = totalEquity.minus(impact);
 
-      // Info: (20260518 - Tzuhan) 股本與保留盈餘同樣互斥，採用 else if
-      if (code.startsWith("33")) {
-        retainedEarningsTotal = retainedEarningsTotal.minus(impact); // Info: (20260518 - Tzuhan) 保留盈餘
-      } else if (code.startsWith("31")) {
-        commonStockCapitalTotal = commonStockCapitalTotal.minus(impact); // Info: (20260518 - Tzuhan) 股本
+      // Info: (20260520 - Tzuhan) [REFACTOR] 樹狀溯源取代 startsWith
+      if (
+        AccountUtil.isDescendantOf(
+          code,
+          SystemAccountNodes.RETAINED_EARNINGS_ROOT,
+          TW_ACCOUNTS,
+        )
+      ) {
+        retainedEarningsTotal = retainedEarningsTotal.minus(impact);
+      } else if (
+        AccountUtil.isDescendantOf(
+          code,
+          SystemAccountNodes.COMMON_STOCK_ROOT,
+          TW_ACCOUNTS,
+        )
+      ) {
+        commonStockCapitalTotal = commonStockCapitalTotal.minus(impact);
       }
     }
   });
 
   if (!currentPeriodEarnings.isZero()) {
-    // Info: (20260518 - Tzuhan) [AUDIT FIX] 防禦靜默覆寫：若已有 3200 調整傳票，必須累加而非直接 set
-    const existing3200 =
-      equityMap.get("3200")?.amount || MoneyUtil.toDecimal(0);
-    equityMap.set("3200", {
+    // Info: (20260520 - Tzuhan) [AUDIT FIX] 防禦靜默覆寫：若已有結轉傳票，必須累加而非直接 set
+    const cpEarningsCode = SystemAccountNodes.CURRENT_PERIOD_EARNINGS;
+    const existingCPE =
+      equityMap.get(cpEarningsCode)?.amount || MoneyUtil.toDecimal(0);
+    equityMap.set(cpEarningsCode, {
       name: "本期損益",
-      amount: existing3200.plus(currentPeriodEarnings),
+      amount: existingCPE.plus(currentPeriodEarnings),
     });
 
     totalEquity = totalEquity.plus(currentPeriodEarnings);

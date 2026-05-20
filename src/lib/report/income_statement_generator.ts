@@ -5,6 +5,9 @@ import {
 } from "@/interfaces/income_statement";
 import { MoneyUtil } from "@/lib/utils/money";
 import { Decimal } from "decimal.js";
+import { TW_ACCOUNTS } from "@/constants/accounts/tw";
+import { AccountUtil } from "@/lib/utils/account_util";
+import { SystemAccountNodes } from "@/constants/system_account_codes";
 
 export function generateIncomeStatement(
   lineItems: IVoucherLineUI[],
@@ -33,13 +36,13 @@ export function generateIncomeStatement(
     const name = line.accounting?.name || line.particular || code;
     const { isDebit, amount } = line;
 
-    // Info: (20260504 - Tzuhan) ⚠️修復：改由備抵資產 (Contra-Asset) 的變動來精準捕捉折舊攤銷，完全捨棄中文關鍵字比對
+    // Info: (20260520 - Tzuhan) [REFACTOR] 改由樹狀結構溯源捕捉所有非流動資產的折舊攤銷
     if (
-      code.startsWith("15") ||
-      code.startsWith("16") ||
-      code.startsWith("17") ||
-      code.startsWith("18") ||
-      code.startsWith("19")
+      AccountUtil.isDescendantOf(
+        code,
+        SystemAccountNodes.NON_CURRENT_ASSETS_ROOT,
+        TW_ACCOUNTS,
+      )
     ) {
       if (line.accounting && !line.accounting.isDebit) {
         if (!isDebit) {
@@ -51,19 +54,56 @@ export function generateIncomeStatement(
       }
     }
 
-    // Info: (20260330 - Julian) 只處理損益表科目（4 ~ 9 開頭）來做後續分類
-    if (!code.match(/^[456789]/)) return;
+    // Info: (20260520 - Tzuhan) [REFACTOR] 資料驅動樹狀溯源，完全淘汰 Regex 與魔術字串
+    const isRevenue = AccountUtil.isDescendantOf(
+      code,
+      SystemAccountNodes.INCOME_ROOT,
+      TW_ACCOUNTS,
+    );
+    const isCOGS = AccountUtil.isDescendantOf(
+      code,
+      SystemAccountNodes.COST_ROOT,
+      TW_ACCOUNTS,
+    );
+    const isOpex = AccountUtil.isDescendantOf(
+      code,
+      SystemAccountNodes.EXPENSE_ROOT,
+      TW_ACCOUNTS,
+    );
+    const isTax = AccountUtil.isDescendantOf(
+      code,
+      SystemAccountNodes.TAX_EXPENSE_ROOT,
+      TW_ACCOUNTS,
+    );
+    const isNonOp =
+      AccountUtil.isDescendantOf(
+        code,
+        SystemAccountNodes.NON_OP_INCOME_ROOT,
+        TW_ACCOUNTS,
+      ) ||
+      AccountUtil.isDescendantOf(
+        code,
+        SystemAccountNodes.OTHER_COMPREHENSIVE_INCOME_ROOT,
+        TW_ACCOUNTS,
+      );
 
-    // Info: (20260518 - Tzuhan) [AUDIT FIX] 修正邏輯短路悖論，將 79 與其他 7 開頭徹底互斥
-    const isRevenue = code.startsWith("4");
-    const isCOGS = code.startsWith("5");
-    const isOpex = code.startsWith("6");
-    const isTax = code.startsWith("79");
-    // Info: (20260518 - Tzuhan) [AUDIT FIX] 必須排除 isTax，否則 79 會讓 isNonOp 變成 true
-    const isNonOp = (code.startsWith("7") && !isTax) || code.startsWith("8");
+    // 如果都不屬於上述任何損益類別，就直接 return
+    if (!isRevenue && !isCOGS && !isOpex && !isTax && !isNonOp) return;
 
-    // Info: (20260504 - Tzuhan) ⚠️修復：不再用中文「利息費用」判斷，改以標準代碼 (7510 利息費用, 7050 財務成本)
-    if (isNonOp && (code.startsWith("751") || code.startsWith("705"))) {
+    // Info: (20260520 - Tzuhan) [REFACTOR] 使用 SystemAccountNodes 錨點取代寫死的 751/705
+    if (
+      isNonOp &&
+      (AccountUtil.isDescendantOf(
+        code,
+        SystemAccountNodes.INTEREST_EXPENSE_ROOT,
+        TW_ACCOUNTS,
+      ) ||
+        AccountUtil.isDescendantOf(
+          code,
+          SystemAccountNodes.INTEREST_EXPENSE_ROOT_ALT,
+          TW_ACCOUNTS,
+        ))
+    ) {
       // Info: (20260330 - Julian) 利息是費用，借方增加 => 借方為正
       const impact = isDebit
         ? MoneyUtil.toDecimal(amount)

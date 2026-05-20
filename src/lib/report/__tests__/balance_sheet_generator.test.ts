@@ -21,9 +21,9 @@ describe("generateBalanceSheet", () => {
     // Info: (20260510 - Tzuhan) 貸方 股本 1000
     {
       id: "2",
-      accountingCode: "3111",
+      accountingCode: "3110",
       accounting: {
-        code: "3111",
+        code: "3110",
         name: "普通股股本",
         isInterestBearing: false,
       } as IAccount,

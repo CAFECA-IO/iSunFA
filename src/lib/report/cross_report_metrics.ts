@@ -3,6 +3,9 @@ import { IBalanceSheet } from "@/interfaces/balance_sheet";
 import { ICashFlowStatement } from "@/interfaces/cash_flow_statement";
 import { IIncomeStatement } from "@/interfaces/income_statement";
 import { MoneyUtil } from "@/lib/utils/money";
+import { TW_ACCOUNTS } from "@/constants/accounts/tw";
+import { AccountUtil } from "@/lib/utils/account_util";
+import { SystemAccountNodes } from "@/constants/system_account_codes";
 
 export interface ICrossReportMetrics {
   operatingCashFlowRatio: string | null; // Info: (20260518 - Tzuhan) 營業現金流量比率
@@ -90,9 +93,15 @@ export function calculateCrossReportMetrics(
   );
   const parValue = MoneyUtil.toDecimal(balanceSheet.metrics.parValue || 10);
 
-  // Info: (20260518 - Tzuhan) 找出股本總額 (從權益項目中撈取 31 開頭)
+  // Info: (20260520 - Tzuhan) [REFACTOR] 找出股本總額 (拔除 startsWith("31")，改用 AccountUtil 樹狀溯源)
   const commonStockCapital = balanceSheet.equity.items
-    .filter((item) => item.code.startsWith("31"))
+    .filter((item) =>
+      AccountUtil.isDescendantOf(
+        item.code,
+        SystemAccountNodes.COMMON_STOCK_ROOT,
+        TW_ACCOUNTS,
+      ),
+    )
     .reduce(
       (acc, curr) => acc.plus(MoneyUtil.toDecimal(curr.amount)),
       MoneyUtil.toDecimal(0),
