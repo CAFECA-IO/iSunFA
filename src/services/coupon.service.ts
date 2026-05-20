@@ -91,6 +91,10 @@ export class CouponService {
   async claimCoupon(userId: string, claimCode: string) {
     return couponRepo.claimCoupon(userId, claimCode);
   }
+
+  async useCoupon(userId: string, recordId: string) {
+    return couponRepo.useCoupon(userId, recordId);
+  }
 }
 
 export const couponService = new CouponService();

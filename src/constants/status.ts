@@ -54,3 +54,9 @@ export const DPP_SKU_STATUS = {
   AUDITING: "AUDITING",
   INCOMPLETE: "INCOMPLETE",
 } as const;
+
+export const COUPON_STATUS = {
+  ACTIVE: "ACTIVE",
+  USED: "USED",
+  EXPIRED: "EXPIRED",
+} as const;
