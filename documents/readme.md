@@ -25,6 +25,8 @@
    👉 說明了 AI 在系統中的定位。絕對禁止讓 AI 算數學、做業務邏輯判斷，並規範了「混合決策管線 (Hybrid Pipeline)」與「English-First Prompting」的防幻覺實作方式。
 4. **[數值精度處理規範](engineering_guidelines/numerical_precision_guideline.md)**
    👉 說明為何我們在財務與碳排計算中全面棄用原生 `number`，並強制使用 `Prisma.Decimal` 與 `BigInt`。
+5. **[Sprint 1: 企業級混合審計防護網與精度極限重構 (Proof of Work)](engineering_guidelines/sprint1_zero_tolerance_pow.md)**
+   👉 **Sprint 1 里程碑必讀**！詳述系統如何從概念驗證躍升為 Big 4 查驗級別，全面拔除妥協機制並實作決定論護城河。
 
 ---
 
@@ -36,6 +38,12 @@
   - 本專案的最高戰略指導文件。包含了「零捏造」、「財務三表勾稽」、「ESG 質量守恆勾稽」等核心系統防線。
 
 ### 👑 國家級與會計師 (Big 4) 合規白皮書
+
+#### 💡 數位審計知識庫 (Digital Audit Knowledge Base)
+- **[如何打造 Big 4 級別的財務報表引擎：告別 startsWith，擁抱樹狀溯源](compliance_and_audit/01_tree_traversal_reporting_engine.md)**
+- **[自動沖銷架構：從「應計基礎」到「現金流」的完整閉環](compliance_and_audit/02_auto_reconciliation_accrual_basis.md)**
+- **[不確定的隔離牆：財務雙軌懸記分流與 ESG 保守型推估的 ITAC 實務](compliance_and_audit/03_suspense_and_quarantine_guardrails.md)**
+- **[跨表指標引擎：破除微服務時代的「財務指標孤島」](compliance_and_audit/04_cross_report_metrics_engine.md)**
 
 - **[iSunFA 內部控制與系統自動控制說明書 (ITAC)](architecture/compliance_and_audit/internal_control_and_audit_framework.md)**：COSO 框架對應與去中心化仲裁 (Arbitration) 規範。
 - **[企業機密隔離與加密計算架構 (FHE & Privacy-Preserving)](architecture/security_and_web3/zkp_privacy_preserving.md)**：全同態加密 (FHE) 與 AA 錢包金鑰管理。
@@ -60,6 +68,8 @@
   - 記錄解決 15,000+ 筆碳排係數比對時的架構躍升。詳述了從「暴力字典注入」轉向「本機 RAG + AI 保守型預估 (黃燈懸記)」的決策脈絡，並收錄了 Sprint 1 消除漂綠地雷的深度復盤。
 - **[ADR 003: Residual `.toNumber()` Justifications & Precision Hardening (剩餘 toNumber 合規決策)](architecture/decisions/003_residual_tonumber_justifications.md)**
   - 記錄全面精準度重構後，剩餘的 5 大類安全 `.toNumber()` 使用場景（相對比率、API 約束、純整數等），並建立未來的 PR 審核鐵律。
+- **[ADR 004: Voucher & Account Code Hybrid Deterministic Parsing Pipeline (財務傳票與會計科目混合決定論解析管線)](architecture/decisions/004_voucher_account_code_hybrid_pipeline.md)**
+  - 記錄為補齊拔除全域會計科目後的防護缺口，所導入的會計科目 Vector RAG、多維度廠商攔截器 (統編+別名)，以及依據借貸雙軌隔離的財務懸記黃燈機制 (1471/2330)，徹底消滅 Fuzzy Matching 的審計災難。
 
 ---
 

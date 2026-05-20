@@ -77,11 +77,15 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
   - **實作架構**：徹底拔除 Prompt 字典注入。實作 `UniversalAccountTag` (如 `TELECOM_EXPENSE`) 作為通用語意標籤，並於後端建立 `SemanticAccountMatcher`。
   - **防護機制**：AI 只需輸出自然語言（如「郵電費」），後端透過 `COUNTRY_ALIASES` 進行 O(1) 複雜度映射，精準對應至該租戶國家 (TW, US, JP 等) 絕對合規的底層代碼（如台灣的 `6215`），徹底阻絕 AI 瞎編會計代碼的幻覺。
 
-- **✅ Done (2026-05-20)：ESG 碳排防護 - 單次語意降級與保守型推估 (Single-Pass Semantic Fallback)**：
-  - **痛點拆彈**：過去將 1.5 萬筆官方碳排係數餵給 AI 執行乘法，引發嚴重的「漂綠 (Greenwashing)」與計算崩潰風險 (參考 ADR-002)。
-  - **實作架構**：在 Prompt 中僅要求 AI 萃取客觀「活動數據(Amount)」與推估「大類標籤(fallbackCategory)」，嚴禁推估係數值。
-  - **防護機制 (Max-Factor Guard)**：後端接收到 `fallbackCategory` (如: "塑膠包材") 後，在資料庫執行 `orderBy: { emissionFactor: "desc" }`，強制套用該類別的「最高碳排係數」，符合 CPA 審計的**保守原則**。寫入 DB 時強制鎖定 `isVerified = false` 與 `generationSource = AI_SPECULATIVE_STAGE_3` (黃燈懸記)，兼顧前端儀表板連續性與最終審計阻斷。
-  - **量綱一致性防護 (Dimensional Guard)**：實作跨量綱阻斷，若 AI 萃取的單位 (如 LITER) 與係數庫單位 (如 KWH) 物理量綱不符，直接退回懸記，防止「公升乘上度數」的荒謬碳排入庫。
+- **⚠️ Pending (Sprint 1 Blocker)：Voucher 解析防護升級 - 多維度廠商攔截器 (Multi-Dimensional Vendor Registry)**：實作統編 (Tax ID) 優先與別名陣列，取代單純字串比對，建立 O(1) 決定論攔截引擎 (參閱 ADR 004)。
+- **⚠️ Pending (Sprint 1 Blocker)：Voucher 解析防護升級 - 本機向量檢索與選擇題 (COA Vector RAG & Multiple-Choice)**：將各國會計科目表靜態向量化，以 Top-K 選擇題徹底廢除危險的模糊比對 (Fuzzy Matching) (參閱 ADR 004)。
+- **⚠️ Pending (Sprint 1 Blocker)：Voucher 解析防護升級 - 雙軌懸記與虛擬科目隔離區 (Dual-Track Suspense & Quarantine Zone)**：廢除強制指派，實作未知款項進入 BS 懸記 (`1471`/`2330`/`2204`)，以及損益性質不明款項進入 PL 虛擬隔離區 (`6288`/`7590`)，標記 `isVerified=false` 以防淨利虛增 (參閱 ADR 004)。
+
+- **⚠️ Pending (Sprint 1 Blocker)：ESG 解析防護升級 - 決定論攔截器 (EmissionFactorRegistry)**：比照 Voucher 的 VendorRegistry，實作高頻碳排項目（如台電、中油）的 O(1) 攔截字典 (參閱 ADR 002)。
+- **⚠️ Pending (Sprint 1 Blocker)：ESG 解析防護升級 - 修復單次語意降級斷鏈 (Fix Single-Pass Semantic Fallback)**：
+  - **斷鏈地雷**：後端 `document_sync.repo.ts` 雖已實作完美的 Max-Factor Guard 與 Dimensional Guard，但前端 AI `vision.accounting.service.ts` 的 JSON Schema 中完全遺漏了 `fallbackCategory`，導致後端的降級與保守型估算機制淪為死碼。
+  - **修復目標**：在 Phase 3 Prompt Schema 中補上 `fallbackCategory`，並明確授權 AI 在找不到精準係數時進行「大類標籤推測」。寫入 DB 時強制鎖定 `isVerified = false` 與 `generationSource = AI_SPECULATIVE_STAGE_3` (黃燈懸記)，兼顧前端儀表板連續性與最終審計阻斷。
+  - **量綱一致性防護 (Dimensional Guard)**：(✅ 已實作) 實作跨量綱阻斷，若 AI 萃取的單位 (如 LITER) 與係數庫單位 (如 KWH) 物理量綱不符，直接退回懸記。
 
 - **✅ Done (2026-05-20)：混合決策管線與 Schema 實體約束 (Hybrid Deterministic Pipeline & Schema Enum Binding)**：
   - 全面導入 Gemini JSON Schema `enum` 與 `format: "enum"`，在物理 API 層面封鎖 AI 發明自創字串。例如：強制約束 `DocumentType` 只能是 `ACCRUAL_NOTICE` 或 `PAYMENT_RECEIPT`，單位只能是 `MeasurementUnit` 枚舉，將萃取資料 100% 標準化。

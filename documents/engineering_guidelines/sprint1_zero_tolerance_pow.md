@@ -56,26 +56,10 @@
 
 ---
 
-## 📚 建議沉澱之知識庫文章 (Knowledge Base Article Candidates)
+## 📚 數位審計知識庫 (Digital Audit Knowledge Base)
 
-檢視本次修改的複雜度與價值，我強烈建議技術寫手或架構團隊將以下三大主題撰寫成內部的 Engineering Wiki，因為這些防禦思維超出了普通軟體工程的範疇，屬於「數位審計」的深水區：
-
-### 📝 知識文章 1: 《如何打造 Big 4 級別的財務報表引擎：告別 startsWith，擁抱樹狀溯源》
-
-* **痛點**：解釋為何傳統用 `startsWith("14")` 抓資產會漏掉預收貨款、算錯預付費用，導致資產負債表不平。
-* **解法**：介紹 `AccountUtil.isDescendantOf` 的實作原理，以及如何利用 `SystemAccountNodes` 與單例快取 (Memoization) 實現 O(1) 的高效查詢。
-
-### 📝 知識文章 2: 《自動沖銷架構：從「應計基礎」到「現金流」的完整閉環》
-
-* **痛點**：發布一張「繳費通知」跟一張「繳費收據」，如果不做關聯，系統會把費用跟負債重複計算兩次。
-* **解法**：詳解 `ReconciliationService.findUnpaidVoucher` 的 FIFO 匹配邏輯，以及如何透過 `DocumentType.ACCRUAL_NOTICE` 鎖定負債科目，再藉由 `PAYMENT_RECEIPT` 產生 `clearedByVoucherId` 雙向鏈結，完美實現應付帳款的自動沖銷。
-
-### 📝 知識文章 3: 《防堵漂綠 (Greenwashing)：ESG 混合決策管線與量綱防護網》
-
-* **痛點**：AI 把「公升」乘上「每度電」的碳排係數；或是遇到不認識的活動直接填 0 碳排。
-* **解法**：解析 `EsgGenerationSource` 的生命週期。介紹「量綱防護 (Dimensional Consistency)」的實作（確保 MASS 只能對齊 MASS），以及系統如何透過 `fallbackCategory` 結合資料庫 `orderBy: { emissionFactor: "desc" }` 取出最高保守係數的實務手法。
-
-### 📝 知識文章 4: 《跨表指標引擎：破除微服務時代的「財務指標孤島」》
-
-* **痛點**：單表報表引擎無法取得發行股數，導致無法計算 EPS；或者現金流引擎無法取得流動負債餘額，導致允當比率崩潰。
-* **解法**：介紹 `cross_report_metrics.ts` 的設計哲學，探討為何報表引擎在遇到無法計算的指標時「必須回傳 null」，並由統一的編排層進行聚合防護。
+上述各項核心防護機制已正式沉澱為內部工程與審計指南。後續開發團隊與查核人員請直接參閱 [iSunFA 文件索引 (README)](../readme.md) 中 **「國家級與會計師 (Big 4) 合規白皮書」** 下的知識庫專區，深入了解：
+1. 樹狀溯源報表引擎實作 (`01_tree_traversal_reporting_engine.md`)
+2. 自動沖銷架構與應計基礎閉環 (`02_auto_reconciliation_accrual_basis.md`)
+3. 財務懸記隔離區與 ESG 保守型估算 ITAC (`03_suspense_and_quarantine_guardrails.md`)
+4. 跨表指標引擎與解耦編排 (`04_cross_report_metrics_engine.md`)

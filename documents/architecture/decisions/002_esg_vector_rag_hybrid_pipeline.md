@@ -1,8 +1,9 @@
 # ESG Vector RAG & Hybrid Deterministic Architecture (ESG 向量檢索與混合決定論架構)
 
 > **Date**: 2026-05-19
+> **Latest Update**: 2026-05-20
 > **Author**: Tzuhan
-> **版本狀態**: Accepted (已接受)
+> **Status**: Accepted (Pending Implementation in Sprint 1)
 > **核心目標**: 解決環境部 15,000+ 筆碳排係數比對時的「Token 爆炸」與「AI 幻覺」問題，同時嚴守 Executor 的無狀態 (Stateless) 與零資料庫 I/O (Zero DB I/O) 原則。
 
 ---
@@ -61,7 +62,7 @@
 
 除了解決「系統官方係數」的配對，架構亦同時防禦「用戶自定義係數」與「高頻標準品項」。
 
-### 3.1 決定論防禦層 (EmissionFactorRegistry)
+### 3.1 決定論防禦層 (EmissionFactorRegistry) [⚠️ Pending]
 
 借鑑財務模組的 `VendorRegistry`，建立 ESG 專屬的決定論攔截器。
 將佔據企業 80% 碳排的最常見 100 項高頻項目（如：台電電費、自來水、95無鉛汽油）寫死在 TypeScript 字典中。此類單據直接 $O(1)$ 命中，連 LLM 都不必呼叫。
@@ -74,7 +75,7 @@
 2. **Executor 讀取**：Executor 僅需讀取本地的 JSON 檔案（如果檔案過大，由 `DocumentHelper` 負責底層切塊傳輸）。
 3. **優先比對**：Executor 在進行 Vector RAG 前，優先以精準比對 (Exact Match) 檢查 `prerequisiteData.coefficients`，達成租戶資料隔離與高效配對。
 
-### 3.3 雙軌懸記與 AI 保守型估算 (Dual-Track Suspense & AI Conservative Speculation)
+### 3.3 雙軌懸記與 AI 保守型估算 (Dual-Track Suspense & AI Conservative Speculation) [⚠️ Pending - Schema Disconnect]
 
 若本機 RAG 的 Top-5 皆不符合，或相似度過低（Confidence < 70%），管線不應採取剛性死鎖（強制將 emissions 設為 0），以防前端大盤數據斷層；應改採「語義降級推測機制」：
 
@@ -149,3 +150,27 @@
 
 1. **跳脫「絕對剛性」的死胡同**：過去我們被「絕對不能有誤差、絕對不能讓 AI 猜測」的剛性思維綁架，導致系統只要遇到未知就強制報錯或填 null，嚴重犧牲了軟體的商業價值 (PLG)。
 2. **擁抱「護欄內的彈性」**：透過這次重構，我們學會了優雅地把這些「推測值」圈禁在 `isVerified = false`（黃燈）與 `aiNote`（查帳軌跡）的護欄裡。系統既能流暢運作，又能隨時阻斷未經覆核的正式報告產出，順利向企業級 (Enterprise) 產品邁進！
+
+---
+
+### 🔎 Sprint 1 實作現況與斷層分析 (Implementation Gap Analysis)
+
+> **稽核時間**: 2026-05-20
+
+#### 1. 🔗 單次語意降級與保守型估算 (Max-Factor Guard)：前端嚴重斷鏈
+- **實作現況 (後端 - 優秀)**：在 `document_sync.repo.ts` (L352-L381)，後端實作了非常完美的保守原則。只要收到 `fallbackCategory` (大類標籤)，就會執行 `orderBy: { emissionFactor: "desc" }` 抓取最大碳排係數，並在 L475 強制打上 `AI_SPECULATIVE_STAGE_3` 黃燈。
+- **致命斷層 (前端 - 死碼)**：在 `src/services/vision.accounting.service.ts` (L195-L210) 的 Phase 3 ESG Prompt 中，**完全沒有定義 `fallbackCategory` 這個屬性**！目前的 JSON Schema 只要求 AI 輸出 `esgActivityType` 與 `esgAmount`。
+- **審計風險**：因為 Prompt 沒要，AI 永遠不會輸出 `fallbackCategory`。這導致後端那套花費心力打造的「防漂綠最高係數降級機制」目前 100% 淪為**死碼 (Dead Code)**。一旦找不到精準係數，系統就會直接當機或亂給值。
+
+#### 2. ⚖️ 物理量綱一致性防護 (Dimensional Guard)：實作完整且強悍
+- **實作現況 (✅ Pass)**：在 `document_sync.repo.ts` (L411-L428)，明確實作了 `getDimension(docUnit) !== getDimension(coefUnit)` 的邏輯。
+- **審計效益**：如果 AI 萃取的是「公升 (LITER)」，但對應到的係數是「度數 (KWH)」，系統會無情阻斷跨量綱相乘，強制打入懸記 (Suspense = true)。這是目前 ESG 管線中**唯一完全發揮作用**的亮點，成功防堵了荒謬的碳排入庫。
+
+#### 3. 🛡️ 決定論防禦層 (EmissionFactorRegistry)：完全不存在
+- **實作現況**：完全未實作。
+- **致命斷層**：目前 codebase 只有針對財務的 `VendorRegistry`。ADR 002 Section 3.1 提到的「將佔據企業 80% 碳排的最常見 100 項高頻項目（如：台電電費、自來水）寫死在 TypeScript 字典中」的機制，目前在 codebase 中找不到任何蹤影。
+- **審計風險**：連最標準、最不可能出錯的「台電電費」，現在都必須經過 AI 推論與全庫搜尋，白白浪費運算資源且增加不必要的幻覺風險。
+
+#### 4. 🧠 本機向量檢索 (Local Vector RAG)：尚未進入開發階段
+- **實作現況**：完全未實作 (但符合 Roadmap 預期，安排在 Phase 2)。
+- **斷層狀況**：目前 Executor 內沒有 `SQLite-vss` 或 `.bin` 向量檔。
