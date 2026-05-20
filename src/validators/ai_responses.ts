@@ -50,7 +50,7 @@ export const VoucherBaseParsingSchema = z.object({
     .string()
     .describe("Extracted name of the vendor (e.g. 中華電信)"),
   documentType: z
-    .enum(["BILL_NOTICE", "PAYMENT_RECEIPT", "OTHER"])
+    .enum(["ACCRUAL_NOTICE", "PAYMENT_RECEIPT", "OTHERS"])
     .describe("Identify the document type based on the rules"),
   totalAmount: z
     .number()

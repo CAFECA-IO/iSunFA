@@ -58,7 +58,7 @@ export class EsgParsingSkill implements ITaskSkill {
       if (baseParsed && baseParsed.vendorName) {
         const esgRule = VendorRegistry.matchEsg(
           String(baseParsed.vendorName),
-          String(baseParsed.documentType || "BILL_NOTICE"),
+          String(baseParsed.documentType || "ACCRUAL_NOTICE"),
         );
 
         if (esgRule) {

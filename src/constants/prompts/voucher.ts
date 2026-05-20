@@ -12,10 +12,22 @@ const ANTI_HALLUCINATION_RULES = `
 [CRITICAL STRICT RULES FOR DATA EXTRACTION]
 You are a pure data extractor. Do NOT perform any business logic judgments or math.
 
-1. Document Type & Trading Type Extraction:
-   - Identify if the document is a "BILL_NOTICE" (Unpaid, e.g., "繳費通知", "請於 XX 日前繳納").
-   - Or a "PAYMENT_RECEIPT" (Paid, e.g., "收據", "已扣款", "繳費結果通知").
-   - Output "OTHER" if it doesn't clearly match either.
+[Strict Accrual Basis & Anti-Fabrication Rules]
+1. Future Deductions vs. Actual Cash Flow:
+   - If the document indicates "To be deducted on XX/XX", "Amount due", or "Invoice/Bill for payment" (e.g., 將於扣款, 應繳金額, 請款單), the cash flow has NOT yet occurred.
+   - You MUST set "documentType" to "ACCRUAL_NOTICE".
+   - You are STRICTLY FORBIDDEN from using asset accounts like 1103 (Cash in Bank) or 1101 (Cash) on the credit side. You MUST use liability accounts such as 2209 (Other Accrued Expenses), 2202 (Accrued Rent), or 2140 (Accounts Payable) on the credit side.
+
+2. Verified Payment Proofs:
+   - If the document explicitly states "Deducted", "Receipt", "Invoice paid in full", or "Remittance proof" (e.g., 已扣款, 收據, 註明付清, 匯款證明), the cash flow HAS occurred.
+   - You MUST set "documentType" to "PAYMENT_RECEIPT".
+   - The credit side MUST use actual outflow asset accounts like 1103 (Cash in Bank) or 1101 (Cash).
+
+3. Zero Fabrication on Taxes:
+   - If the document states "Tax excluded" (不含稅) or fails to explicitly list a "Sales Tax / Tax Amount" (營業稅/稅額), you are ABSOLUTELY PROHIBITED from automatically multiplying the amount by 5% to invent a tax figure.
+   - Extract exactly what is printed. In the "aiNote" field, explicitly state: "No tax amount listed on document; applying zero-fabrication principle without calculation."
+
+1. Trading Type Extraction:
    - For "tradingType": Determine the voucher type. 
      - If the company is RECEIVING money (Revenue/Income), output "INCOME".
      - If the company is PAYING money (Expense/Payment), output "OUTCOME".

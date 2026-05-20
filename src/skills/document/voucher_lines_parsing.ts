@@ -67,7 +67,7 @@ export class VoucherLinesParsingSkill implements ITaskSkill {
       if (baseParsed && baseParsed.vendorName) {
         const matchedRules = VendorRegistry.match(
           String(baseParsed.vendorName),
-          String(baseParsed.documentType || "BILL_NOTICE"),
+          String(baseParsed.documentType || "ACCRUAL_NOTICE"),
         );
 
         if (matchedRules && matchedRules.length > 0) {
