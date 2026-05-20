@@ -6,6 +6,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
+import sharp from "sharp";
 
 // Info: (20260520 - Julian) 對抗性項目資料結構
 interface IAdversarialItem {
@@ -93,7 +94,7 @@ const buildAdversarialSVG = (params: IAdversarialParams): string => {
   const row2Y = tableBottomY + 60;
   const row3Y = tableBottomY + 90 + extraHeight;
 
-  // Info: (20260520 - Julian) 欄位垂直分水嶺格線
+  // Info: (20260520 - Julian) 欄位垂直格線
   const vLines = `
     <!-- Top table vertical lines (Items area) -->
     <line x1="230" y1="250" x2="230" y2="${tableBottomY}" stroke="#000" stroke-width="1" />
@@ -209,16 +210,21 @@ const buildAdversarialSVG = (params: IAdversarialParams): string => {
 };
 
 // Info: (20260520 - Julian) 主程序，生成三種對抗性測試憑證
-export const generateAdversarialSamples = (stockId: string) => {
+export const generateAdversarialSamples = async (stockId: string) => {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/2024`);
   const testingDir = path.join(dataDir, "inputs", "testing", "adversarial");
+  const svgDir = path.join(testingDir, "samples");
+  const pngDir = path.join(testingDir, "samples_png");
+  const jsonDir = path.join(testingDir, "json");
   const goldenDataDir = path.join(dataDir, "inputs", "golden_data");
 
   // Info: (20260520 - Julian) 清理並建立隔離測試目錄
   if (fs.existsSync(testingDir)) {
     fs.rmSync(testingDir, { recursive: true, force: true });
   }
-  fs.mkdirSync(testingDir, { recursive: true });
+  fs.mkdirSync(svgDir, { recursive: true });
+  fs.mkdirSync(pngDir, { recursive: true });
+  fs.mkdirSync(jsonDir, { recursive: true });
 
   // Info: (20260520 - Julian) 取出買方公司資料
   const buyerCompanyProfilePath = path.join(
@@ -234,7 +240,7 @@ export const generateAdversarialSamples = (stockId: string) => {
   const dateStr = "2024-05-20";
 
   // Info: (20260520 - Julian) 對抗性樣本 1: 混合科目憑證 (mixed_accounting)
-  // 明細混合了辦公用品(5108 - 無碳排項目) 與 車用汽油(5151 - 高碳排項目)
+  // Info: (20260520 - Julian) 明細混合了辦公用品(5108 - 無碳排項目) 與 車用汽油(5151 - 高碳排項目)
   const mixedParams: IAdversarialParams = {
     tradingDate: dateStr,
     voucherNumber: "E2E-ADV-MIXED-001",
@@ -274,8 +280,8 @@ export const generateAdversarialSamples = (stockId: string) => {
     watermarkText: "亞太綜合辦公與石化燃料行",
   };
 
-  // Info: (20260520 - Antigravity) 對抗性樣本 2: 干擾性文字憑證 (distractor_text)
-  // 圖片上印有大大的 "總量：1000 噸" 浮誇漂綠字眼，但實際明細是 "常規用電 10 度(KWH)"
+  // Info: (20260520 - Julian) 對抗性樣本 2: 干擾性文字憑證 (distractor_text)
+  // Info: (20260520 - Julian) 圖片上印有大大的 "總量：1000 噸" 浮誇漂綠字眼，但實際明細是 "常規用電 10 度(KWH)"
   const distractorParams: IAdversarialParams = {
     tradingDate: dateStr,
     voucherNumber: "E2E-ADV-DISTRACT-001",
@@ -300,8 +306,8 @@ export const generateAdversarialSamples = (stockId: string) => {
     distractorText: "年度減碳統計宣稱：累積排放減碳量已達 1000 公噸 CO2e",
   };
 
-  // Info: (20260520 - Antigravity) 對抗性樣本 3: 異常單位憑證 (invalid_unit)
-  // 品項是車用柴油，但單位植入了不合規的 "桶" (Barrels)
+  // Info: (20260520 - Julian) 對抗性樣本 3: 異常單位憑證 (invalid_unit)
+  // Info: (20260520 - Julian) 品項是車用柴油，但單位植入了不合規的 "桶" (Barrels)
   const invalidUnitParams: IAdversarialParams = {
     tradingDate: dateStr,
     voucherNumber: "E2E-ADV-INVALID-001",
@@ -325,21 +331,29 @@ export const generateAdversarialSamples = (stockId: string) => {
     watermarkText: "亞太綜合辦公與石化燃料行",
   };
 
-  // Info: (20260520 - Antigravity) 寫入 SVGs
+  // Info: (20260520 - Julian) 寫入 SVG 並轉 PNG
   const samples = [
     { name: "mixed_accounting", params: mixedParams },
     { name: "distractor_text", params: distractorParams },
     { name: "invalid_unit", params: invalidUnitParams },
   ];
 
-  samples.forEach((sample) => {
+  for (const sample of samples) {
     const svgContent = buildAdversarialSVG(sample.params);
-    const svgPath = path.join(testingDir, `${sample.name}.svg`);
-    fs.writeFileSync(svgPath, svgContent.trim(), "utf-8");
-    console.log(`✅ Generated SVG: ${sample.name}.svg`);
-  });
+    const voucherNumber = sample.params.voucherNumber;
 
-  // Info: (20260520 - Antigravity) 生成 metadata JSON 與總 manifest
+    // Info: (20260520 - Julian) 儲存 SVG
+    const svgPath = path.join(svgDir, `${voucherNumber}.svg`);
+    fs.writeFileSync(svgPath, svgContent.trim(), "utf-8");
+
+    // Info: (20260520 - Julian) 儲存 PNG
+    const pngPath = path.join(pngDir, `${voucherNumber}.png`);
+    await sharp(Buffer.from(svgContent.trim())).png().toFile(pngPath);
+
+    console.log(`✅ Generated SVG & PNG: ${voucherNumber}`);
+  }
+
+  // Info: (20260520 - Julian) 生成 metadata JSON 與總 manifest
   const mixedMeta = {
     voucherNumber: mixedParams.voucherNumber,
     description:
@@ -396,25 +410,25 @@ export const generateAdversarialSamples = (stockId: string) => {
     },
   };
 
-  // Info: (20260520 - Antigravity) 寫入各樣本 meta JSON
+  // Info: (20260520 - Julian) 寫入各樣本 meta JSON
   fs.writeFileSync(
-    path.join(testingDir, "mixed_accounting_meta.json"),
+    path.join(jsonDir, `${mixedParams.voucherNumber}.json`),
     JSON.stringify(mixedMeta, null, 2),
     "utf-8",
   );
   fs.writeFileSync(
-    path.join(testingDir, "distractor_text_meta.json"),
+    path.join(jsonDir, `${distractorParams.voucherNumber}.json`),
     JSON.stringify(distractorMeta, null, 2),
     "utf-8",
   );
   fs.writeFileSync(
-    path.join(testingDir, "invalid_unit_meta.json"),
+    path.join(jsonDir, `${invalidUnitParams.voucherNumber}.json`),
     JSON.stringify(invalidUnitMeta, null, 2),
     "utf-8",
   );
   console.log("✅ Generated all sample metadata JSON files.");
 
-  // Info: (20260520 - Antigravity) 生成總 manifest.json
+  // Info: (20260520 - Julian) 生成總 manifest.json
   const manifest = {
     stockId,
     timestamp: new Date().toISOString(),
@@ -422,27 +436,27 @@ export const generateAdversarialSamples = (stockId: string) => {
     testCases: [
       {
         id: "mixed_accounting",
-        fileName: "mixed_accounting.svg",
-        metaFile: "mixed_accounting_meta.json",
+        fileName: `${mixedParams.voucherNumber}.svg`,
+        metaFile: `${mixedParams.voucherNumber}.json`,
         expectedCategory: "MIXED_ACCOUNTING_CODES",
       },
       {
         id: "distractor_text",
-        fileName: "distractor_text.svg",
-        metaFile: "distractor_text_meta.json",
+        fileName: `${distractorParams.voucherNumber}.svg`,
+        metaFile: `${distractorParams.voucherNumber}.json`,
         expectedCategory: "DISTRACTOR_TEXT_EXCLUSION",
       },
       {
         id: "invalid_unit",
-        fileName: "invalid_unit.svg",
-        metaFile: "invalid_unit_meta.json",
+        fileName: `${invalidUnitParams.voucherNumber}.svg`,
+        metaFile: `${invalidUnitParams.voucherNumber}.json`,
         expectedCategory: "INVALID_UNIT_BLOCKING",
       },
     ],
   };
 
   fs.writeFileSync(
-    path.join(testingDir, "manifest.json"),
+    path.join(jsonDir, "manifest.json"),
     JSON.stringify(manifest, null, 2),
     "utf-8",
   );
@@ -453,8 +467,17 @@ export const generateAdversarialSamples = (stockId: string) => {
   );
 };
 
-// Info: (20260520 - Antigravity) 如果直接執行此腳本
+// Info: (20260520 - Julian) 如果直接執行此腳本
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const targetStock = process.argv[2] || "2330";
-  generateAdversarialSamples(targetStock);
+  const stocks = process.argv.slice(2);
+  if (stocks.length === 0) {
+    stocks.push("1539", "2330", "4147", "6830"); // Info: (20260520 - Julian) 預設使用這 4 間公司作為測試
+  }
+
+  (async () => {
+    for (const stockId of stocks) {
+      console.log(`\n--- Generating Adversarial Samples for ${stockId} ---`);
+      await generateAdversarialSamples(stockId);
+    }
+  })();
 }

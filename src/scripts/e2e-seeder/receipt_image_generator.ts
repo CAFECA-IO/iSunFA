@@ -492,9 +492,9 @@ export const generateReceiptImages = (stockId: string) => {
         ? mainLine.items.map((item) => ({
             productCode: item.productCode || "-",
             description: item.description,
-            quantity: item.quantity,
+            quantity: item.quantity || 1,
             unit: item.unit || "PCS",
-            unitPrice: item.unitPrice,
+            unitPrice: item.unitPrice || item.amount,
             amount: item.amount,
           }))
         : splitIntoItems(netAmountDecimal.toNumber(), mainLine.description);
