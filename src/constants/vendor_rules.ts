@@ -1,3 +1,4 @@
+// Info: (20260520 - Tzuhan) [AUDIT FIX] Mapped hallucinated codes to valid tw.ts accounts
 // Info: (20260515 - Julian) 台灣企業最常報帳的 100 間公司
 export const VENDOR_RULES = [
   {
@@ -6,21 +7,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6117",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -39,21 +40,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6116",
+          accountingCode: "6218",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -71,21 +72,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6116",
+          accountingCode: "6218",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -97,21 +98,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6115",
+          accountingCode: "6213",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -123,21 +124,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6115",
+          accountingCode: "6213",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -149,21 +150,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6114",
+          accountingCode: "6213",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -175,21 +176,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6114",
+          accountingCode: "6213",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -201,21 +202,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6124",
+          accountingCode: "6288",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -227,21 +228,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6111",
+          accountingCode: "6288",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -260,21 +261,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6125",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -286,21 +287,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6125",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -312,21 +313,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6125",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -338,21 +339,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6117",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -364,21 +365,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6115",
+          accountingCode: "6213",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -390,21 +391,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6119",
+          accountingCode: "6212",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -416,21 +417,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6124",
+          accountingCode: "6288",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -442,21 +443,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6123",
+          accountingCode: "6288",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -468,21 +469,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6117",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -494,21 +495,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6117",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -520,21 +521,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6114",
+          accountingCode: "6213",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -546,21 +547,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6114",
+          accountingCode: "6213",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -572,21 +573,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6114",
+          accountingCode: "6213",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -598,21 +599,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6114",
+          accountingCode: "6213",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -624,21 +625,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6114",
+          accountingCode: "6213",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -650,21 +651,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6114",
+          accountingCode: "6213",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -676,21 +677,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6125",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -702,21 +703,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6125",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -728,21 +729,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6118",
+          accountingCode: "6117",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -754,21 +755,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6118",
+          accountingCode: "6117",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -780,21 +781,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6118",
+          accountingCode: "6117",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -806,21 +807,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6122",
+          accountingCode: "6288",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -832,21 +833,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6122",
+          accountingCode: "6288",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -858,21 +859,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6122",
+          accountingCode: "6288",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -884,21 +885,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6111",
+          accountingCode: "6288",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -910,21 +911,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6113",
+          accountingCode: "6220",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -936,21 +937,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6113",
+          accountingCode: "6220",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -962,21 +963,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6113",
+          accountingCode: "6220",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -988,21 +989,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6113",
+          accountingCode: "6220",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1014,21 +1015,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6123",
+          accountingCode: "6288",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1040,21 +1041,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6120",
+          accountingCode: "6288",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1066,21 +1067,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6123",
+          accountingCode: "6288",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1092,21 +1093,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6123",
+          accountingCode: "6288",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1118,21 +1119,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6121",
+          accountingCode: "6288",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1144,21 +1145,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6119",
+          accountingCode: "6212",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1170,21 +1171,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6112",
+          accountingCode: "6211",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1196,21 +1197,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6115",
+          accountingCode: "6213",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1222,21 +1223,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6112",
+          accountingCode: "6211",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1248,21 +1249,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6112",
+          accountingCode: "6211",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1274,21 +1275,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6115",
+          accountingCode: "6213",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1300,21 +1301,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6115",
+          accountingCode: "6213",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1326,21 +1327,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6115",
+          accountingCode: "6213",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1352,21 +1353,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6115",
+          accountingCode: "6213",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1378,21 +1379,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6117",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1404,21 +1405,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6108",
+          accountingCode: "6214",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1430,21 +1431,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6108",
+          accountingCode: "6214",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1456,21 +1457,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6117",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1482,21 +1483,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6117",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1508,21 +1509,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6117",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1534,21 +1535,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6117",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1560,21 +1561,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6117",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1593,21 +1594,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6125",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1619,21 +1620,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6125",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1645,21 +1646,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6125",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1671,21 +1672,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6125",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1697,21 +1698,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6125",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1723,21 +1724,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6118",
+          accountingCode: "6117",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1749,21 +1750,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6118",
+          accountingCode: "6117",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1775,21 +1776,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6118",
+          accountingCode: "6117",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1801,21 +1802,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6118",
+          accountingCode: "6117",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1827,21 +1828,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6118",
+          accountingCode: "6117",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1853,21 +1854,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6125",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1879,21 +1880,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6118",
+          accountingCode: "6117",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1905,21 +1906,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6125",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1931,21 +1932,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6125",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1957,21 +1958,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6125",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -1983,21 +1984,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6115",
+          accountingCode: "6213",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2009,21 +2010,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6115",
+          accountingCode: "6213",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2035,21 +2036,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6115",
+          accountingCode: "6213",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2061,21 +2062,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "1252",
+          accountingCode: "6213",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2087,21 +2088,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6115",
+          accountingCode: "6213",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2113,21 +2114,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6115",
+          accountingCode: "6213",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2139,21 +2140,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6115",
+          accountingCode: "6213",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2165,21 +2166,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6119",
+          accountingCode: "6212",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2191,21 +2192,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6124",
+          accountingCode: "6288",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2217,21 +2218,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6124",
+          accountingCode: "6288",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2243,21 +2244,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6115",
+          accountingCode: "6213",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2269,21 +2270,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6123",
+          accountingCode: "6288",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2295,21 +2296,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6123",
+          accountingCode: "6288",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2321,21 +2322,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6123",
+          accountingCode: "6288",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2347,21 +2348,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6118",
+          accountingCode: "6117",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2373,21 +2374,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6118",
+          accountingCode: "6117",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2399,21 +2400,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6120",
+          accountingCode: "6288",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2425,21 +2426,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6125",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2451,21 +2452,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6125",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2477,21 +2478,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6125",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2503,21 +2504,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6125",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2529,21 +2530,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6125",
+          accountingCode: "6215",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2555,21 +2556,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6120",
+          accountingCode: "6288",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2581,21 +2582,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6113",
+          accountingCode: "6220",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2607,21 +2608,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6121",
+          accountingCode: "6288",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
@@ -2633,21 +2634,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6121",
+          accountingCode: "6288",
           isDebit: true,
         },
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2141",
+          accountingCode: "2209",
           isDebit: true,
         },
         {
-          accountingCode: "1101",
+          accountingCode: "1103",
           isDebit: false,
         },
       ],
