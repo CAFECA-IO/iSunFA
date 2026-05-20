@@ -385,7 +385,7 @@ export async function GET(
       const msInYear = yearEndMs - yearStartMs;
       const spanMs = end.getTime() - start.getTime();
       const proportion = Math.min(1, spanMs / msInYear);
-      const proportionalTarget = targetValue.times(proportion); // kgCO2e
+      const proportionalTarget = targetValue.times(proportion); // Info: (20260322 - Luphia) kgCO2e
 
       goalProgress = Math.round(
         periodEmissionsSum.div(proportionalTarget).times(100).toNumber(),
