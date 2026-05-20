@@ -12,20 +12,23 @@ const ANTI_HALLUCINATION_RULES = `
 [CRITICAL STRICT RULES FOR DATA EXTRACTION]
 You are a pure data extractor. Do NOT perform any business logic judgments or math.
 
-[Strict Accrual Basis & Anti-Fabrication Rules]
-1. Future Deductions vs. Actual Cash Flow:
-   - If the document indicates "To be deducted on XX/XX", "Amount due", or "Invoice/Bill for payment" (e.g., 將於扣款, 應繳金額, 請款單), the cash flow has NOT yet occurred.
-   - You MUST set "documentType" to "ACCRUAL_NOTICE".
-   - You are STRICTLY FORBIDDEN from using asset accounts like 1103 (Cash in Bank) or 1101 (Cash) on the credit side. You MUST use liability accounts such as 2209 (Other Accrued Expenses), 2202 (Accrued Rent), or 2140 (Accounts Payable) on the credit side.
+### STRICT ACCRUAL BASIS RULES
 
-2. Verified Payment Proofs:
-   - If the document explicitly states "Deducted", "Receipt", "Invoice paid in full", or "Remittance proof" (e.g., 已扣款, 收據, 註明付清, 匯款證明), the cash flow HAS occurred.
-   - You MUST set "documentType" to "PAYMENT_RECEIPT".
-   - The credit side MUST use actual outflow asset accounts like 1103 (Cash in Bank) or 1101 (Cash).
+**RULE 1: Future Payment (Unrealized Cash Flow)**
+- CONDITION: The document contains terms like "will be deducted" (將於扣款), "amount payable" (應繳金額), "billing notice" (請款單/繳費通知), or implies that the payment is pending.
+- ACTION 1: You MUST set 'documentType' exactly to "ACCRUAL_NOTICE".
+- ACTION 2: You are STRICTLY PROHIBITED from using asset accounts like 1103 (Cash in Bank) or 1101 (Cash) on the credit side.
+- ACTION 3: You MUST assign the credit side to a liability account, such as 2209 (Other Accrued Expenses), 2202 (Accrued Rent), or 2140 (Accounts Payable).
 
-3. Zero Fabrication on Taxes:
-   - If the document states "Tax excluded" (不含稅) or fails to explicitly list a "Sales Tax / Tax Amount" (營業稅/稅額), you are ABSOLUTELY PROHIBITED from automatically multiplying the amount by 5% to invent a tax figure.
-   - Extract exactly what is printed. In the "aiNote" field, explicitly state: "No tax amount listed on document; applying zero-fabrication principle without calculation."
+**RULE 2: Verified Payment (Realized Cash Flow)**
+- CONDITION: The document contains terms like "deducted" (已扣款), "receipt" (收據), "paid in full" (註明付清), "remittance proof" (匯款證明), or clearly indicates that the payment has been completed.
+- ACTION 1: You MUST set 'documentType' exactly to "PAYMENT_RECEIPT".
+- ACTION 2: You MUST assign the credit side to a realized asset account, such as 1103 (Cash in Bank) or 1101 (Cash).
+
+**RULE 3: Zero Tax Hallucination**
+- CONDITION: The document explicitly states "tax excluded" (不含稅) or does not explicitly display a "Sales Tax / Tax Amount" (營業稅/稅額).
+- ACTION 1: You are STRICTLY PROHIBITED from calculating or assuming a default tax rate (e.g., 5%). Extract ONLY the exact numbers printed on the document.
+- ACTION 2: You MUST append the following exact phrase to 'aiNote': "No tax amount explicitly listed on the document; applying zero-fabrication principle without calculation."
 
 1. Trading Type Extraction:
    - For "tradingType": Determine the voucher type. 
