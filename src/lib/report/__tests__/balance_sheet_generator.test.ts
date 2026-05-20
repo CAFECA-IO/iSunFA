@@ -70,7 +70,7 @@ describe("generateBalanceSheet", () => {
       amount: 300,
       isDebit: true,
     },
-    // 抵銷上面新增的資產 (600)，讓資產負債表保持平衡
+    // Info: (20260520 - Tzuhan) 抵銷上面新增的資產 (600)，讓資產負債表保持平衡
     {
       id: "6",
       accountingCode: "1101",

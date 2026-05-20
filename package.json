@@ -7,8 +7,9 @@
     "node": "22.x"
   },
   "scripts": {
-    "dev": "npm run initial_wallet && npm run lint && prisma generate && next dev",
-    "build": "npm run initial_wallet && npm run lint && prisma generate && next build",
+    "postinstall": "prisma generate",
+    "dev": "npm run initial_wallet && prisma generate && npm run lint && next dev",
+    "build": "npm run initial_wallet && prisma generate && npm run lint && next build",
     "start": "npm run build && next start",
     "seed": "npx tsx scripts/seed/seed.ts",
     "lint": "eslint",
