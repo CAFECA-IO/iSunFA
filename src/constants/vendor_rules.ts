@@ -1,3 +1,5 @@
+// Info: (20260520 - Tzuhan) [AUDIT FIX] Mapped to UniversalAccountTag for multi-region compatibility
+import { UniversalAccountTag } from "@/constants/accounts";
 // Info: (20260520 - Tzuhan) [AUDIT FIX] Mapped hallucinated codes to valid tw.ts accounts
 // Info: (20260515 - Julian) 台灣企業最常報帳的 100 間公司
 export const VENDOR_RULES = [
@@ -7,21 +9,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -40,21 +42,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6218",
+          accountingCode: UniversalAccountTag.UTILITIES_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -72,21 +74,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6218",
+          accountingCode: UniversalAccountTag.UTILITIES_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -98,21 +100,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6213",
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -124,21 +126,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6213",
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -150,21 +152,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6213",
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -176,21 +178,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6213",
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -202,21 +204,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6288",
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -228,21 +230,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6288",
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -261,21 +263,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -287,21 +289,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -313,21 +315,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -339,21 +341,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -365,21 +367,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6213",
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -391,21 +393,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6212",
+          accountingCode: UniversalAccountTag.OFFICE_SUPPLIES,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -417,21 +419,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6288",
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -443,21 +445,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6288",
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -469,21 +471,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -495,21 +497,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -521,21 +523,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6213",
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -547,21 +549,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6213",
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -573,21 +575,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6213",
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -599,21 +601,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6213",
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -625,21 +627,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6213",
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -651,21 +653,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6213",
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -677,21 +679,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -703,21 +705,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -729,21 +731,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6117",
+          accountingCode: UniversalAccountTag.MARKETING_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -755,21 +757,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6117",
+          accountingCode: UniversalAccountTag.MARKETING_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -781,21 +783,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6117",
+          accountingCode: UniversalAccountTag.MARKETING_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -807,21 +809,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6288",
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -833,21 +835,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6288",
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -859,21 +861,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6288",
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -885,21 +887,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6288",
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -911,21 +913,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6220",
+          accountingCode: UniversalAccountTag.ENTERTAINMENT_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -937,21 +939,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6220",
+          accountingCode: UniversalAccountTag.ENTERTAINMENT_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -963,21 +965,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6220",
+          accountingCode: UniversalAccountTag.ENTERTAINMENT_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -989,21 +991,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6220",
+          accountingCode: UniversalAccountTag.ENTERTAINMENT_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1015,21 +1017,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6288",
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1041,21 +1043,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6288",
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1067,21 +1069,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6288",
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1093,21 +1095,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6288",
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1119,21 +1121,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6288",
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1145,21 +1147,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6212",
+          accountingCode: UniversalAccountTag.OFFICE_SUPPLIES,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1171,21 +1173,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6211",
+          accountingCode: UniversalAccountTag.RENT_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1197,21 +1199,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6213",
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1223,21 +1225,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6211",
+          accountingCode: UniversalAccountTag.RENT_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1249,21 +1251,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6211",
+          accountingCode: UniversalAccountTag.RENT_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1275,21 +1277,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6213",
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1301,21 +1303,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6213",
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1327,21 +1329,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6213",
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1353,21 +1355,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6213",
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1379,21 +1381,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1405,21 +1407,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6214",
+          accountingCode: UniversalAccountTag.SHIPPING_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1431,21 +1433,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6214",
+          accountingCode: UniversalAccountTag.SHIPPING_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1457,21 +1459,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1483,21 +1485,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1509,21 +1511,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1535,21 +1537,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1561,21 +1563,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1594,21 +1596,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1620,21 +1622,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1646,21 +1648,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1672,21 +1674,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1698,21 +1700,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1724,21 +1726,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6117",
+          accountingCode: UniversalAccountTag.MARKETING_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1750,21 +1752,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6117",
+          accountingCode: UniversalAccountTag.MARKETING_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1776,21 +1778,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6117",
+          accountingCode: UniversalAccountTag.MARKETING_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1802,21 +1804,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6117",
+          accountingCode: UniversalAccountTag.MARKETING_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1828,21 +1830,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6117",
+          accountingCode: UniversalAccountTag.MARKETING_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1854,21 +1856,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1880,21 +1882,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6117",
+          accountingCode: UniversalAccountTag.MARKETING_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1906,21 +1908,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1932,21 +1934,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1958,21 +1960,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -1984,21 +1986,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6213",
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2010,21 +2012,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6213",
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2036,21 +2038,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6213",
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2062,21 +2064,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6213",
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2088,21 +2090,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6213",
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2114,21 +2116,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6213",
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2140,21 +2142,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6213",
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2166,21 +2168,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6212",
+          accountingCode: UniversalAccountTag.OFFICE_SUPPLIES,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2192,21 +2194,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6288",
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2218,21 +2220,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6288",
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2244,21 +2246,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6213",
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2270,21 +2272,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6288",
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2296,21 +2298,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6288",
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2322,21 +2324,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6288",
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2348,21 +2350,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6117",
+          accountingCode: UniversalAccountTag.MARKETING_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2374,21 +2376,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6117",
+          accountingCode: UniversalAccountTag.MARKETING_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2400,21 +2402,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6288",
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2426,21 +2428,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2452,21 +2454,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2478,21 +2480,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2504,21 +2506,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2530,21 +2532,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6215",
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2556,21 +2558,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6288",
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2582,21 +2584,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6220",
+          accountingCode: UniversalAccountTag.ENTERTAINMENT_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2608,21 +2610,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6288",
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],
@@ -2634,21 +2636,21 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: "6288",
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: false,
         },
       ],
       PAYMENT_RECEIPT: [
         {
-          accountingCode: "2209",
+          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
           isDebit: true,
         },
         {
-          accountingCode: "1103",
+          accountingCode: UniversalAccountTag.CASH_IN_BANK,
           isDebit: false,
         },
       ],

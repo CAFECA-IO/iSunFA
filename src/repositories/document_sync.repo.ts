@@ -203,8 +203,9 @@ export class DocumentSyncRepository {
               (accountBook.country || "TW") as keyof typeof ACCOUNTS
             ] || ACCOUNTS["TW"]) as IAccount[];
             const paymentAccountCode = SemanticAccountMatcher.match(
-              "1103",
+              "CASH_IN_BANK",
               dictionary,
+              accountBook.country || "TW",
             );
             linesToCreate = ReconciliationService.generateClearingLines(
               oldVoucherToClear,
@@ -224,9 +225,14 @@ export class DocumentSyncRepository {
                 const amountDec = MoneyUtil.toDecimal(
                   String(vdRecord.totalAmount || 0),
                 );
+                const matchedAccountingCode = SemanticAccountMatcher.match(
+                  rule.accountingCode,
+                  dictionary,
+                  accountBook.country || "TW",
+                );
                 linesToCreate.push({
-                  accountingCode: rule.accountingCode,
-                  particular: `${getAccountName(accountBook.country || "TW", rule.accountingCode)} - ${vendorNameStr}`,
+                  accountingCode: matchedAccountingCode,
+                  particular: `${getAccountName(accountBook.country || "TW", matchedAccountingCode)} - ${vendorNameStr}`,
                   amount: BigInt(amountDec.toFixed(0)),
                   isDebit: rule.isDebit,
                 });
@@ -242,6 +248,7 @@ export class DocumentSyncRepository {
                   accountingCode: SemanticAccountMatcher.match(
                     l.accountingCode || "",
                     dictionary,
+                    accountBook.country || "TW",
                   ),
                   particular: l.particular || "",
                   amount: BigInt(amountDec.toFixed(0)),

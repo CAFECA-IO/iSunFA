@@ -8,19 +8,150 @@ export class SemanticAccountMatcher {
     Map<string, string>
   >();
 
-  // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA Level Override. other payables 應對應至 2200 其他應付款，而非 2209。
-  private static readonly CUSTOM_ALIASES: Record<string, string> = {
-    cash: "1101",
-    "cash in bank": "1103",
-    "accounts receivable": "1170",
-    "accounts payable": "2170",
-    "other payables": "2200",
-    "refundable deposits": "1920",
-    "guarantee deposits paid": "1920",
-    "prepaid rent": "1412",
-    "prepaid expense": "1250",
-    revenue: "4111",
-    expense: "6200",
+  // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA Multi-region Alias Override. 確保代碼絕對對應至字典中真實存在的項目。
+  private static readonly COUNTRY_ALIASES: Record<
+    string,
+    Record<string, string>
+  > = {
+    TW: {
+      CASH: "1101",
+      CASH_IN_BANK: "1103",
+      ACCOUNTS_RECEIVABLE: "1170",
+      ACCOUNTS_PAYABLE: "2170",
+      OTHER_PAYABLES: "2200",
+      ACCRUED_RENT: "2202",
+      REFUNDABLE_DEPOSITS: "1920",
+      PREPAID_RENT: "1412",
+      PREPAID_EXPENSE: "1410",
+      REVENUE: "4111",
+      EXPENSE: "6200",
+
+      TELECOM_EXPENSE: "6215",
+      SHIPPING_EXPENSE: "6214",
+      UTILITIES_EXPENSE: "6218",
+      TRAVEL_EXPENSE: "6213",
+      MARKETING_EXPENSE: "6117",
+      SOFTWARE_EXPENSE: "6215",
+      OFFICE_SUPPLIES: "6212",
+      RENT_EXPENSE: "6211",
+      ENTERTAINMENT_EXPENSE: "6220",
+      MISCELLANEOUS_EXPENSE: "6288",
+    },
+    US: {
+      CASH: "1101",
+      CASH_IN_BANK: "1103",
+      ACCOUNTS_RECEIVABLE: "1170",
+      ACCOUNTS_PAYABLE: "2170",
+      OTHER_PAYABLES: "2200",
+      ACCRUED_RENT: "2202",
+      REFUNDABLE_DEPOSITS: "1920",
+      PREPAID_RENT: "1412",
+      PREPAID_EXPENSE: "1410",
+      REVENUE: "4111",
+      EXPENSE: "6200",
+      TELECOM_EXPENSE: "6215",
+      SHIPPING_EXPENSE: "6214",
+      UTILITIES_EXPENSE: "6218",
+      TRAVEL_EXPENSE: "6213",
+      MARKETING_EXPENSE: "6117",
+      SOFTWARE_EXPENSE: "6215",
+      OFFICE_SUPPLIES: "6212",
+      RENT_EXPENSE: "6211",
+      ENTERTAINMENT_EXPENSE: "6220",
+      MISCELLANEOUS_EXPENSE: "6288",
+    },
+    JP: {
+      CASH: "1101",
+      CASH_IN_BANK: "1103",
+      ACCOUNTS_RECEIVABLE: "1170",
+      ACCOUNTS_PAYABLE: "2170",
+      OTHER_PAYABLES: "2200",
+      ACCRUED_RENT: "2202",
+      REFUNDABLE_DEPOSITS: "1920",
+      PREPAID_RENT: "1412",
+      PREPAID_EXPENSE: "1410",
+      REVENUE: "4111",
+      EXPENSE: "6200",
+      TELECOM_EXPENSE: "6215",
+      SHIPPING_EXPENSE: "6214",
+      UTILITIES_EXPENSE: "6218",
+      TRAVEL_EXPENSE: "6213",
+      MARKETING_EXPENSE: "6117",
+      SOFTWARE_EXPENSE: "6215",
+      OFFICE_SUPPLIES: "6212",
+      RENT_EXPENSE: "6211",
+      ENTERTAINMENT_EXPENSE: "6220",
+      MISCELLANEOUS_EXPENSE: "6288",
+    },
+    CN: {
+      CASH: "1101",
+      CASH_IN_BANK: "1103",
+      ACCOUNTS_RECEIVABLE: "1170",
+      ACCOUNTS_PAYABLE: "2170",
+      OTHER_PAYABLES: "2200",
+      ACCRUED_RENT: "2202",
+      REFUNDABLE_DEPOSITS: "1920",
+      PREPAID_RENT: "1412",
+      PREPAID_EXPENSE: "1410",
+      REVENUE: "4111",
+      EXPENSE: "6200",
+      TELECOM_EXPENSE: "6215",
+      SHIPPING_EXPENSE: "6214",
+      UTILITIES_EXPENSE: "6218",
+      TRAVEL_EXPENSE: "6213",
+      MARKETING_EXPENSE: "6117",
+      SOFTWARE_EXPENSE: "6215",
+      OFFICE_SUPPLIES: "6212",
+      RENT_EXPENSE: "6211",
+      ENTERTAINMENT_EXPENSE: "6220",
+      MISCELLANEOUS_EXPENSE: "6288",
+    },
+    KR: {
+      CASH: "1101",
+      CASH_IN_BANK: "1103",
+      ACCOUNTS_RECEIVABLE: "1170",
+      ACCOUNTS_PAYABLE: "2170",
+      OTHER_PAYABLES: "2200",
+      ACCRUED_RENT: "2202",
+      REFUNDABLE_DEPOSITS: "1920",
+      PREPAID_RENT: "1412",
+      PREPAID_EXPENSE: "1410",
+      REVENUE: "4111",
+      EXPENSE: "6200",
+      TELECOM_EXPENSE: "6215",
+      SHIPPING_EXPENSE: "6214",
+      UTILITIES_EXPENSE: "6218",
+      TRAVEL_EXPENSE: "6213",
+      MARKETING_EXPENSE: "6117",
+      SOFTWARE_EXPENSE: "6215",
+      OFFICE_SUPPLIES: "6212",
+      RENT_EXPENSE: "6211",
+      ENTERTAINMENT_EXPENSE: "6220",
+      MISCELLANEOUS_EXPENSE: "6288",
+    },
+    HK: {
+      CASH: "1101",
+      CASH_IN_BANK: "1103",
+      ACCOUNTS_RECEIVABLE: "1170",
+      ACCOUNTS_PAYABLE: "2170",
+      OTHER_PAYABLES: "2200",
+      ACCRUED_RENT: "2202",
+      REFUNDABLE_DEPOSITS: "1920",
+      PREPAID_RENT: "1412",
+      PREPAID_EXPENSE: "1410",
+      REVENUE: "4111",
+      EXPENSE: "6200",
+      TELECOM_EXPENSE: "6215",
+      SHIPPING_EXPENSE: "6214",
+      UTILITIES_EXPENSE: "6218",
+      TRAVEL_EXPENSE: "6213",
+      MARKETING_EXPENSE: "6117",
+      SOFTWARE_EXPENSE: "6215",
+      OFFICE_SUPPLIES: "6212",
+      RENT_EXPENSE: "6211",
+      ENTERTAINMENT_EXPENSE: "6220",
+      MISCELLANEOUS_EXPENSE: "6288",
+    },
   };
 
   private static normalize(str: string): string {
@@ -43,7 +174,11 @@ export class SemanticAccountMatcher {
     }
   }
 
-  static match(keyword: string, dictionary: IAccount[]): string {
+  static match(
+    keyword: string,
+    dictionary: IAccount[],
+    country: string = "TW",
+  ): string {
     if (!keyword) return dictionary[0]?.code || "UNKNOWN";
 
     this.initializeCache(dictionary);
@@ -59,10 +194,21 @@ export class SemanticAccountMatcher {
     const normKeyword = this.normalize(keyword);
     if (nameMap.has(normKeyword)) return nameMap.get(normKeyword)!;
 
-    // Info: (20260520 - Tzuhan) 3. Match from Custom Aliases
-    const lowerKeyword = keyword.toLowerCase();
-    if (this.CUSTOM_ALIASES[lowerKeyword]) {
-      const aliasCode = this.CUSTOM_ALIASES[lowerKeyword];
+    // Info: (20260520 - Tzuhan) 3. Match from Multi-region Aliases (COUNTRY_ALIASES)
+    // Info: (20260520 - Tzuhan) We try uppercase for UniversalAccountTags, and also lowercase for backwards compatibility
+    const upperKeyword = keyword.toUpperCase();
+    const regionAliases =
+      this.COUNTRY_ALIASES[country] || this.COUNTRY_ALIASES["TW"];
+
+    // Info: (20260520 - Tzuhan) Convert to backwards compatible check just in case
+    let aliasCode = regionAliases[upperKeyword];
+    if (!aliasCode) {
+      // Info: (20260520 - Tzuhan) For legacy text matches like "cash in bank", replace spaces with underscores and uppercase
+      const legacyTag = upperKeyword.replace(/\s+/g, "_");
+      aliasCode = regionAliases[legacyTag];
+    }
+
+    if (aliasCode) {
       if (codeMap.has(aliasCode)) return aliasCode;
 
       // Info: (20260520 - Tzuhan) If code not direct, find descendant? (Fallback to old logic if needed, but exact code usually works)
