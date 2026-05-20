@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DocumentType } from "@/constants/enums";
 
 // Info: (20260514 - Tzuhan) Phase 1.1 Zod Schemas for structured AI output validation
 
@@ -49,8 +50,9 @@ export const VoucherBaseParsingSchema = z.object({
   vendorName: z
     .string()
     .describe("Extracted name of the vendor (e.g. 中華電信)"),
+  // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: Refactor magic strings to Enum
   documentType: z
-    .enum(["ACCRUAL_NOTICE", "PAYMENT_RECEIPT", "OTHERS"])
+    .nativeEnum(DocumentType)
     .describe("Identify the document type based on the rules"),
   totalAmount: z
     .number()

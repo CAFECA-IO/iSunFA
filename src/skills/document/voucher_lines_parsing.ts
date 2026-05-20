@@ -5,6 +5,7 @@ import { prepareDocumentContext } from "@/skills/utils/document_helper";
 import { SchemaType, Schema } from "@google/generative-ai";
 import { MoneyUtil } from "@/lib/utils/money";
 import { VendorRegistry } from "@/services/rules/vendor_registry";
+import { DocumentType } from "@/constants/enums";
 
 export class VoucherLinesParsingSkill implements ITaskSkill {
   name = "VOUCHER_LINES_PARSING";
@@ -67,7 +68,8 @@ export class VoucherLinesParsingSkill implements ITaskSkill {
       if (baseParsed && baseParsed.vendorName) {
         const matchedRules = VendorRegistry.match(
           String(baseParsed.vendorName),
-          String(baseParsed.documentType || "ACCRUAL_NOTICE"),
+          // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: Refactor magic strings to Enum
+          String(baseParsed.documentType || DocumentType.ACCRUAL_NOTICE),
         );
 
         if (matchedRules && matchedRules.length > 0) {

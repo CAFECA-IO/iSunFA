@@ -4,6 +4,7 @@ import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
 import { SchemaType, Schema } from "@google/generative-ai";
 import { VendorRegistry, IEsgRule } from "@/services/rules/vendor_registry";
+import { MeasurementUnit } from "@/constants/enums";
 
 export class EsgParsingSkill implements ITaskSkill {
   name = "ESG_PARSING";
@@ -103,7 +104,8 @@ export class EsgParsingSkill implements ITaskSkill {
             description:
               "單位 (必須是以下之一: KWH, LITER, KG, TONNE, GALLON, PIECE, TWD)",
             format: "enum",
-            enum: ["KWH", "LITER", "KG", "TONNE", "GALLON", "PIECE", "TWD"],
+            // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: Refactor magic strings to Enum
+            enum: Object.values(MeasurementUnit),
           },
           fallbackCategory: {
             type: SchemaType.STRING,
