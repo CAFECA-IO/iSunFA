@@ -197,11 +197,12 @@ export class DocumentSyncRepository {
             );
           }
 
+          // Info: (20260520 - Tzuhan) 載入會計科目字典以供 SemanticAccountMatcher 使用
+          const dictionary = (ACCOUNTS[
+            (accountBook.country || "TW") as keyof typeof ACCOUNTS
+          ] || ACCOUNTS["TW"]) as IAccount[];
+
           if (oldVoucherToClear) {
-            // Info: (20260520 - Tzuhan) 載入會計科目字典以供 SemanticAccountMatcher 使用
-            const dictionary = (ACCOUNTS[
-              (accountBook.country || "TW") as keyof typeof ACCOUNTS
-            ] || ACCOUNTS["TW"]) as IAccount[];
             const paymentAccountCode = SemanticAccountMatcher.match(
               "CASH_IN_BANK",
               dictionary,
@@ -240,10 +241,6 @@ export class DocumentSyncRepository {
             } else {
               for (const l of vd.lines || []) {
                 const amountDec = MoneyUtil.toDecimal(String(l.amount || 0));
-                // Info: (20260520 - Tzuhan) 載入會計科目字典以供 SemanticAccountMatcher 使用
-                const dictionary = (ACCOUNTS[
-                  (accountBook.country || "TW") as keyof typeof ACCOUNTS
-                ] || ACCOUNTS["TW"]) as IAccount[];
                 linesToCreate.push({
                   accountingCode: SemanticAccountMatcher.match(
                     l.accountingCode || "",

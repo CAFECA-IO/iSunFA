@@ -1,5 +1,5 @@
 // Info: (20260520 - Tzuhan) [AUDIT FIX] Mapped to UniversalAccountTag for multi-region compatibility
-import { UniversalAccountTag } from "@/constants/accounts";
+import { UniversalAccountTag } from "@/constants/account_tags";
 // Info: (20260520 - Tzuhan) [AUDIT FIX] Mapped hallucinated codes to valid tw.ts accounts
 // Info: (20260515 - Julian) 台灣企業最常報帳的 100 間公司
 export const VENDOR_RULES = [
@@ -100,7 +100,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
+          accountingCode: UniversalAccountTag.TRANSPORTATION_EXPENSE,
           isDebit: true,
         },
         {
@@ -126,7 +126,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
+          accountingCode: UniversalAccountTag.TRANSPORTATION_EXPENSE,
           isDebit: true,
         },
         {
@@ -152,7 +152,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
+          accountingCode: UniversalAccountTag.TRANSPORTATION_EXPENSE,
           isDebit: true,
         },
         {
@@ -178,7 +178,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
+          accountingCode: UniversalAccountTag.TRANSPORTATION_EXPENSE,
           isDebit: true,
         },
         {
@@ -263,7 +263,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
+          accountingCode: UniversalAccountTag.SOFTWARE_SUBSCRIPTION,
           isDebit: true,
         },
         {
@@ -289,7 +289,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
+          accountingCode: UniversalAccountTag.SOFTWARE_SUBSCRIPTION,
           isDebit: true,
         },
         {
@@ -315,7 +315,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
+          accountingCode: UniversalAccountTag.SOFTWARE_SUBSCRIPTION,
           isDebit: true,
         },
         {
@@ -341,7 +341,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
+          accountingCode: UniversalAccountTag.SOFTWARE_SUBSCRIPTION,
           isDebit: true,
         },
         {
@@ -367,7 +367,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
+          accountingCode: UniversalAccountTag.TRANSPORTATION_EXPENSE,
           isDebit: true,
         },
         {
@@ -523,7 +523,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
+          accountingCode: UniversalAccountTag.TRANSPORTATION_EXPENSE,
           isDebit: true,
         },
         {
@@ -549,7 +549,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
+          accountingCode: UniversalAccountTag.TRANSPORTATION_EXPENSE,
           isDebit: true,
         },
         {
@@ -575,7 +575,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
+          accountingCode: UniversalAccountTag.TRANSPORTATION_EXPENSE,
           isDebit: true,
         },
         {
@@ -601,7 +601,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
+          accountingCode: UniversalAccountTag.TRANSPORTATION_EXPENSE,
           isDebit: true,
         },
         {
@@ -627,7 +627,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
+          accountingCode: UniversalAccountTag.TRANSPORTATION_EXPENSE,
           isDebit: true,
         },
         {
@@ -653,7 +653,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
+          accountingCode: UniversalAccountTag.TRANSPORTATION_EXPENSE,
           isDebit: true,
         },
         {
@@ -679,7 +679,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
+          accountingCode: UniversalAccountTag.SOFTWARE_SUBSCRIPTION,
           isDebit: true,
         },
         {
@@ -705,7 +705,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
+          accountingCode: UniversalAccountTag.SOFTWARE_SUBSCRIPTION,
           isDebit: true,
         },
         {
@@ -731,7 +731,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.MARKETING_EXPENSE,
+          accountingCode: UniversalAccountTag.ADVERTISING_EXPENSE,
           isDebit: true,
         },
         {
@@ -757,7 +757,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.MARKETING_EXPENSE,
+          accountingCode: UniversalAccountTag.ADVERTISING_EXPENSE,
           isDebit: true,
         },
         {
@@ -783,7 +783,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.MARKETING_EXPENSE,
+          accountingCode: UniversalAccountTag.ADVERTISING_EXPENSE,
           isDebit: true,
         },
         {
@@ -913,7 +913,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.ENTERTAINMENT_EXPENSE,
+          accountingCode: UniversalAccountTag.MEAL_EXPENSE,
           isDebit: true,
         },
         {
@@ -939,7 +939,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.ENTERTAINMENT_EXPENSE,
+          accountingCode: UniversalAccountTag.MEAL_EXPENSE,
           isDebit: true,
         },
         {
@@ -965,7 +965,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.ENTERTAINMENT_EXPENSE,
+          accountingCode: UniversalAccountTag.MEAL_EXPENSE,
           isDebit: true,
         },
         {
@@ -991,7 +991,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.ENTERTAINMENT_EXPENSE,
+          accountingCode: UniversalAccountTag.MEAL_EXPENSE,
           isDebit: true,
         },
         {
@@ -1199,7 +1199,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
+          accountingCode: UniversalAccountTag.TRANSPORTATION_EXPENSE,
           isDebit: true,
         },
         {
@@ -1277,7 +1277,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
+          accountingCode: UniversalAccountTag.TRANSPORTATION_EXPENSE,
           isDebit: true,
         },
         {
@@ -1303,7 +1303,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
+          accountingCode: UniversalAccountTag.TRANSPORTATION_EXPENSE,
           isDebit: true,
         },
         {
@@ -1329,7 +1329,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
+          accountingCode: UniversalAccountTag.TRANSPORTATION_EXPENSE,
           isDebit: true,
         },
         {
@@ -1355,7 +1355,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
+          accountingCode: UniversalAccountTag.TRANSPORTATION_EXPENSE,
           isDebit: true,
         },
         {
@@ -1622,7 +1622,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
+          accountingCode: UniversalAccountTag.SOFTWARE_SUBSCRIPTION,
           isDebit: true,
         },
         {
@@ -1726,7 +1726,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.MARKETING_EXPENSE,
+          accountingCode: UniversalAccountTag.ADVERTISING_EXPENSE,
           isDebit: true,
         },
         {
@@ -1752,7 +1752,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.MARKETING_EXPENSE,
+          accountingCode: UniversalAccountTag.ADVERTISING_EXPENSE,
           isDebit: true,
         },
         {
@@ -1778,7 +1778,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.MARKETING_EXPENSE,
+          accountingCode: UniversalAccountTag.ADVERTISING_EXPENSE,
           isDebit: true,
         },
         {
@@ -1804,7 +1804,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.MARKETING_EXPENSE,
+          accountingCode: UniversalAccountTag.ADVERTISING_EXPENSE,
           isDebit: true,
         },
         {
@@ -1830,7 +1830,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.MARKETING_EXPENSE,
+          accountingCode: UniversalAccountTag.ADVERTISING_EXPENSE,
           isDebit: true,
         },
         {
@@ -1882,7 +1882,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.MARKETING_EXPENSE,
+          accountingCode: UniversalAccountTag.ADVERTISING_EXPENSE,
           isDebit: true,
         },
         {
@@ -1986,7 +1986,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
+          accountingCode: UniversalAccountTag.TRANSPORTATION_EXPENSE,
           isDebit: true,
         },
         {
@@ -2012,7 +2012,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
+          accountingCode: UniversalAccountTag.TRANSPORTATION_EXPENSE,
           isDebit: true,
         },
         {
@@ -2038,7 +2038,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
+          accountingCode: UniversalAccountTag.TRANSPORTATION_EXPENSE,
           isDebit: true,
         },
         {
@@ -2064,7 +2064,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
+          accountingCode: UniversalAccountTag.TRANSPORTATION_EXPENSE,
           isDebit: true,
         },
         {
@@ -2090,7 +2090,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
+          accountingCode: UniversalAccountTag.TRANSPORTATION_EXPENSE,
           isDebit: true,
         },
         {
@@ -2116,7 +2116,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
+          accountingCode: UniversalAccountTag.TRANSPORTATION_EXPENSE,
           isDebit: true,
         },
         {
@@ -2142,7 +2142,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
+          accountingCode: UniversalAccountTag.TRANSPORTATION_EXPENSE,
           isDebit: true,
         },
         {
@@ -2246,7 +2246,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
+          accountingCode: UniversalAccountTag.TRANSPORTATION_EXPENSE,
           isDebit: true,
         },
         {
@@ -2350,7 +2350,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.MARKETING_EXPENSE,
+          accountingCode: UniversalAccountTag.ADVERTISING_EXPENSE,
           isDebit: true,
         },
         {
@@ -2376,7 +2376,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.MARKETING_EXPENSE,
+          accountingCode: UniversalAccountTag.ADVERTISING_EXPENSE,
           isDebit: true,
         },
         {
@@ -2584,7 +2584,7 @@ export const VENDOR_RULES = [
     rules: {
       ACCRUAL_NOTICE: [
         {
-          accountingCode: UniversalAccountTag.ENTERTAINMENT_EXPENSE,
+          accountingCode: UniversalAccountTag.MEAL_EXPENSE,
           isDebit: true,
         },
         {
