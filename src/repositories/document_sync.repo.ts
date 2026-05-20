@@ -20,65 +20,7 @@ import { VendorRegistry } from "@/services/rules/vendor_registry";
 import { ReconciliationService } from "@/services/reconciliation.service";
 import { MoneyUtil } from "@/lib/utils/money";
 
-function mapAccountingCode(
-  country: string,
-  keyword: string,
-  particular?: string,
-): string {
-  const accountList = (ACCOUNTS[country as keyof typeof ACCOUNTS] ||
-    ACCOUNTS["TW"]) as IAccount[];
-  if (!keyword) return accountList[0]?.code || "UNKNOWN";
-
-  // Info: (20260513 - Tzuhan) exact match on code
-  let matchName = accountList.find((a: IAccount) => a.code === keyword);
-  if (matchName) return matchName.code;
-
-  // Info: (20260520 - Tzuhan)  Enhance: exact match on name (prevents "存出保證金" matching "工程存出保證金" first)
-  matchName = accountList.find((a: IAccount) => a.name === keyword);
-  if (matchName) return matchName.code;
-
-  // Info: (20260513 - Tzuhan) partial match on name
-  matchName = accountList.find(
-    (a: IAccount) => a.name.includes(keyword) || keyword.includes(a.name),
-  );
-  if (matchName) return matchName.code;
-
-  // Info: (20260520 - Tzuhan) Enhance: partial match on particular if keyword failed
-  if (particular) {
-    matchName = accountList.find(
-      (a: IAccount) =>
-        a.name.includes(particular) || particular.includes(a.name),
-    );
-    if (matchName) return matchName.code;
-  }
-
-  // Info: (20260520 - Tzuhan) Enhance: Fallback alias map for common English AI hallucinatory outputs
-  const lowerKeyword = keyword.toLowerCase();
-  const aliasMap: Record<string, string> = {
-    cash: "1101",
-    "cash in bank": "1103",
-    "accounts receivable": "1170",
-    "accounts payable": "2170", // or 2140
-    "other payables": "2209",
-    "accrued rent": "2202",
-    "refundable deposits": "1920",
-    "guarantee deposits paid": "1920",
-    "prepaid rent": "1412",
-    "prepaid expense": "1250",
-    revenue: "4111",
-    expense: "6200",
-  };
-
-  if (aliasMap[lowerKeyword]) {
-    const aliasCode = aliasMap[lowerKeyword];
-    const aliasMatch = accountList.find(
-      (a: IAccount) => a.code === aliasCode || a.parentCode === aliasCode,
-    );
-    if (aliasMatch) return aliasMatch.code;
-  }
-
-  return keyword; // Info: (20260513 - Tzuhan) fallback
-}
+import { SemanticAccountMatcher } from "@/lib/utils/semantic_account_matcher";
 
 function getAccountName(country: string, code: string): string {
   const accountList = (ACCOUNTS[country as keyof typeof ACCOUNTS] ||
@@ -256,9 +198,13 @@ export class DocumentSyncRepository {
           }
 
           if (oldVoucherToClear) {
-            const paymentAccountCode = mapAccountingCode(
-              accountBook.country || "TW",
+            // Info: (20260520 - Tzuhan) 載入會計科目字典以供 SemanticAccountMatcher 使用
+            const dictionary = (ACCOUNTS[
+              (accountBook.country || "TW") as keyof typeof ACCOUNTS
+            ] || ACCOUNTS["TW"]) as IAccount[];
+            const paymentAccountCode = SemanticAccountMatcher.match(
               "1103",
+              dictionary,
             );
             linesToCreate = ReconciliationService.generateClearingLines(
               oldVoucherToClear,
@@ -288,11 +234,14 @@ export class DocumentSyncRepository {
             } else {
               for (const l of vd.lines || []) {
                 const amountDec = MoneyUtil.toDecimal(String(l.amount || 0));
+                // Info: (20260520 - Tzuhan) 載入會計科目字典以供 SemanticAccountMatcher 使用
+                const dictionary = (ACCOUNTS[
+                  (accountBook.country || "TW") as keyof typeof ACCOUNTS
+                ] || ACCOUNTS["TW"]) as IAccount[];
                 linesToCreate.push({
-                  accountingCode: mapAccountingCode(
-                    accountBook.country || "TW",
+                  accountingCode: SemanticAccountMatcher.match(
                     l.accountingCode || "",
-                    l.particular || "",
+                    dictionary,
                   ),
                   particular: l.particular || "",
                   amount: BigInt(amountDec.toFixed(0)),

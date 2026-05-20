@@ -80,10 +80,11 @@ export const VoucherLinesParsingSchema = z.object({
   lines: z
     .array(
       z.object({
+        // Info: (20260520 - Tzuhan) [AUDIT FIX] 強制約束為帳本當地語系以阻止英文 AI 幻覺
         accountingCode: z
           .string()
           .describe(
-            "Accounting code from the provided list or the most standard and descriptive account name",
+            "會計科目名稱。必須強制輸出為『帳本當地語系』（若為台灣帳本，請絕對輸出繁體中文，例如：『預付租金』、『存出保證金』）。嚴禁輸出英文！",
           ),
         particular: z
           .string()

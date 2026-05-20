@@ -105,9 +105,11 @@ export class VoucherLinesParsingSkill implements ITaskSkill {
             items: {
               type: SchemaType.OBJECT,
               properties: {
+                // Info: (20260520 - Tzuhan) [AUDIT FIX] 強制約束為帳本當地語系以阻止英文 AI 幻覺
                 accountingCode: {
                   type: SchemaType.STRING,
-                  description: "會計科目代碼",
+                  description:
+                    "會計科目名稱。必須強制輸出為『帳本當地語系』（若為台灣帳本，請絕對輸出繁體中文，例如：『預付租金』、『存出保證金』）。嚴禁輸出英文！",
                 },
                 particular: {
                   type: SchemaType.STRING,
