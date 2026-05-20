@@ -16,7 +16,12 @@ export class ReconciliationService {
     tx: Prisma.TransactionClient,
     vendorName: string,
     amount: string,
+    accountBookId: string,
   ): Promise<(Voucher & { lines: VoucherLine[] }) | null> {
+    if (!vendorName || vendorName.trim() === "") {
+      return null;
+    }
+
     // Info: (20260520 - Tzuhan) 找出所有屬於負債類的會計科目代碼
     const liabilityCodes = TW_ACCOUNTS.filter((acc) =>
       AccountUtil.isDescendantOf(
@@ -30,6 +35,7 @@ export class ReconciliationService {
 
     const voucher = await tx.voucher.findFirst({
       where: {
+        accountBookId,
         note: {
           contains: vendorName,
         },

@@ -205,6 +205,7 @@ export class DocumentSyncRepository {
               tx,
               vendorNameStr,
               totalAmountStr,
+              accountBookId,
             );
           }
 
