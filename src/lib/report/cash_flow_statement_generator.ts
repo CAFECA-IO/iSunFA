@@ -182,7 +182,8 @@ export function generateCashFlowStatement(
       )
     ) {
       // Info: (20260504 - Tzuhan) 改由備抵資產 (Contra-Asset) 的變動來精準捕捉折舊攤銷，完全捨棄中文關鍵字比對
-      if (line.accounting && !line.accounting.isDebit) {
+      const accountInfo = AccountUtil.getAccount(code, TW_ACCOUNTS);
+      if (accountInfo && accountInfo.isDebit === false) {
         if (!isDebit) {
           // Info: (20260512 - Tzuhan) 貸方增加代表提列折舊/攤銷，加回淨利
           depreciationAndAmortization = depreciationAndAmortization.plus(

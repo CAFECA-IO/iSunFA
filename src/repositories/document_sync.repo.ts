@@ -20,20 +20,62 @@ import { VendorRegistry } from "@/services/rules/vendor_registry";
 import { ReconciliationService } from "@/services/reconciliation.service";
 import { MoneyUtil } from "@/lib/utils/money";
 
-function mapAccountingCode(country: string, keyword: string): string {
+function mapAccountingCode(
+  country: string,
+  keyword: string,
+  particular?: string,
+): string {
   const accountList = (ACCOUNTS[country as keyof typeof ACCOUNTS] ||
     ACCOUNTS["TW"]) as IAccount[];
   if (!keyword) return accountList[0]?.code || "UNKNOWN";
 
   // Info: (20260513 - Tzuhan) exact match on code
-  const exactCode = accountList.find((a: IAccount) => a.code === keyword);
-  if (exactCode) return exactCode.code;
+  let matchName = accountList.find((a: IAccount) => a.code === keyword);
+  if (matchName) return matchName.code;
+
+  // Info: (20260520 - Tzuhan)  Enhance: exact match on name (prevents "存出保證金" matching "工程存出保證金" first)
+  matchName = accountList.find((a: IAccount) => a.name === keyword);
+  if (matchName) return matchName.code;
 
   // Info: (20260513 - Tzuhan) partial match on name
-  const matchName = accountList.find(
+  matchName = accountList.find(
     (a: IAccount) => a.name.includes(keyword) || keyword.includes(a.name),
   );
   if (matchName) return matchName.code;
+
+  // Info: (20260520 - Tzuhan) Enhance: partial match on particular if keyword failed
+  if (particular) {
+    matchName = accountList.find(
+      (a: IAccount) =>
+        a.name.includes(particular) || particular.includes(a.name),
+    );
+    if (matchName) return matchName.code;
+  }
+
+  // Info: (20260520 - Tzuhan) Enhance: Fallback alias map for common English AI hallucinatory outputs
+  const lowerKeyword = keyword.toLowerCase();
+  const aliasMap: Record<string, string> = {
+    cash: "1101",
+    "cash in bank": "1103",
+    "accounts receivable": "1170",
+    "accounts payable": "2170", // or 2140
+    "other payables": "2209",
+    "accrued rent": "2202",
+    "refundable deposits": "1920",
+    "guarantee deposits paid": "1920",
+    "prepaid rent": "1412",
+    "prepaid expense": "1250",
+    revenue: "4111",
+    expense: "6200",
+  };
+
+  if (aliasMap[lowerKeyword]) {
+    const aliasCode = aliasMap[lowerKeyword];
+    const aliasMatch = accountList.find(
+      (a: IAccount) => a.code === aliasCode || a.parentCode === aliasCode,
+    );
+    if (aliasMatch) return aliasMatch.code;
+  }
 
   return keyword; // Info: (20260513 - Tzuhan) fallback
 }
@@ -250,8 +292,9 @@ export class DocumentSyncRepository {
                   accountingCode: mapAccountingCode(
                     accountBook.country || "TW",
                     l.accountingCode || "",
+                    l.particular || "",
                   ),
-                  particular: l.particular || null,
+                  particular: l.particular || "",
                   amount: BigInt(amountDec.toFixed(0)),
                   isDebit: l.isDebit === true,
                 });
@@ -412,9 +455,29 @@ export class DocumentSyncRepository {
               where: { id: finalCoefficientId },
             });
             if (coefExists) {
-              emissionFactorValue = coefExists.emissionFactor;
-              if (!coefExists.isVerified || isFallbackMatched) {
-                recordIsVerified = false; // Info: (20260513 - Tzuhan) Using unverified coefficient makes record unverified
+              // Info: (20260520 - Tzuhan) [AUDIT FIX] 量綱防呆檢查
+              const getDimension = (u: string) => {
+                if (["KG", "TONNE"].includes(u)) return "MASS";
+                if (["LITER", "GALLON"].includes(u)) return "VOLUME";
+                if (u === "KWH") return "ENERGY";
+                if (u === "TWD") return "CURRENCY";
+                return u;
+              };
+
+              const docUnit = ed.unit as string;
+              const coefUnit = coefExists.unit as string;
+
+              if (getDimension(docUnit) !== getDimension(coefUnit)) {
+                isSuspense = true;
+                finalCoefficientId = null;
+                ed.aiNote =
+                  (ed.aiNote || "") +
+                  `\n[系統稽核警告] 憑證單位 (${docUnit}) 與係數庫單位 (${coefUnit}) 量綱不符，已阻斷跨量綱相乘，強制列入懸記。`;
+              } else {
+                emissionFactorValue = coefExists.emissionFactor;
+                if (!coefExists.isVerified || isFallbackMatched) {
+                  recordIsVerified = false; // Info: (20260513 - Tzuhan) Using unverified coefficient makes record unverified
+                }
               }
             } else {
               isSuspense = true;

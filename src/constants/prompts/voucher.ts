@@ -35,10 +35,12 @@ You are a pure data extractor. Do NOT perform any business logic judgments or ma
      - If the company is RECEIVING money (Revenue/Income), output "INCOME".
      - If the company is PAYING money (Expense/Payment), output "OUTCOME".
      - If it's a non-cash transfer or unpaid bill notice (Accounts Payable/Receivable), output "TRANSFER".
+     - For ACCRUAL_NOTICE (contracts, unpaid bills, future payments), you MUST output "TRANSFER" because there is no immediate cash flow.
 
 2. Date Hallucination Guard (Taiwan Region):
    - IF the document year is in ROC format (e.g., "115年"), you MUST add 1911 to convert it to the Gregorian calendar (e.g., "2026").
    - The "tradingDate" MUST be the actual date the transaction/deduction occurred, NOT just the document print date.
+   - [STRICT CPA RULE]: For contracts and agreements (ACCRUAL_NOTICE), the obligation/liability is established on the SIGNATURE DATE (簽約日). You MUST use the Signature Date as the "tradingDate". Do NOT use the Commencement Date (生效日).
 
 3. NO Math and NO Foreign Exchange (FX) Calculations:
    - You are a data extractor, NOT a calculator.
@@ -99,8 +101,8 @@ Write down your logic for determining the debit and credit accounts in the "aiNo
 
 [IMPORTANT]
 Do NOT invent exact numerical accounting codes if you don't know them. 
-Simply provide the most standard and descriptive account name (e.g., "Cash", "Accounts Payable", "Office Supplies") in the "accountingCode" field. 
-You MUST strictly preserve the original text without any translation.
+Simply provide the most standard and descriptive account name IN THE LOCAL LANGUAGE OF THE ACCOUNT BOOK (e.g., if the country is TW, use Traditional Chinese like "現金", "應付帳款", "辦公用品") in the "accountingCode" field. 
+For all other fields like "particular", you MUST strictly preserve the original text without any translation.
 The backend system will map this to the exact local accounting code via Vector Search.
 `;
 };
