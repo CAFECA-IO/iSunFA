@@ -83,6 +83,11 @@ export function generateCashFlowStatement(
         code,
         SystemAccountNodes.OTHER_COMPREHENSIVE_INCOME_ROOT,
         TW_ACCOUNTS,
+      ) ||
+      AccountUtil.isDescendantOf(
+        code,
+        SystemAccountNodes.TAX_EXPENSE_ROOT,
+        TW_ACCOUNTS,
       );
 
     if (isIncomeOrExpense) {
