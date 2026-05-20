@@ -1,20 +1,23 @@
-// Info: (20260520 - Antigravity) 對抗性樣本生成腳本 (Adversarial Samples Generator)
-// This script creates mock receipts designed to challenge AI extraction and test validation constraints.
+/*
+ ** Info: (20260520 - Julian) 對抗性樣本生成腳本 (Adversarial Samples Generator)
+ ** 這個腳本會在憑證中加入混合科目(mixed accounting)、干擾文字(distractor text)、異常單位(abnormal unit)。
+ ** 生成「有問題」的憑證，來測試 AI 在處理異常資料時的表現。
+ */
 
 import * as fs from "fs";
 import * as path from "path";
 
-// Info: (20260520 - Antigravity) 對抗性項目資料結構
+// Info: (20260520 - Julian) 對抗性項目資料結構
 interface IAdversarialItem {
   description: string;
   quantity: number;
   unitPrice: number;
   amount: number;
-  unit: string; // The physical unit (e.g. LITER, KWH, KG, 桶, 箱)
+  unit: string; // Info: (20260520 - Julian) 實際單位，如：LITER, KWH, KG, 桶, 箱
   remark?: string;
 }
 
-// Info: (20260520 - Antigravity) 對抗性憑證參數結構
+// Info: (20260520 - Julian) 對抗性憑證參數結構
 interface IAdversarialParams {
   tradingDate: string;
   voucherNumber: string;
@@ -27,15 +30,15 @@ interface IAdversarialParams {
   taxAmount: number;
   netAmount: number;
   watermarkText?: string;
-  distractorText?: string; // Prominent misleading statistic text
+  distractorText?: string; // Info: (20260520 - Julian) 干擾文字
 }
 
-// Info: (20260520 - Antigravity) 產生隨機統一編號
+// Info: (20260520 - Julian) 產生隨機統一編號
 const generateTaxId = () => {
   return Math.floor(10000000 + Math.random() * 90000000).toString();
 };
 
-// Info: (20260520 - Antigravity) 繪製對抗性憑證 SVG 圖片
+// Info: (20260520 - Julian) 繪製對抗性憑證 SVG 圖片
 const buildAdversarialSVG = (params: IAdversarialParams): string => {
   const {
     sellerName,
@@ -52,7 +55,7 @@ const buildAdversarialSVG = (params: IAdversarialParams): string => {
     distractorText,
   } = params;
 
-  // Info: (20260520 - Antigravity) 產生隨機碼(4碼)
+  // Info: (20260520 - Julian) 產生隨機碼(4碼)
   const randomCode = Math.random()
     .toString(36)
     .substring(2)
@@ -74,7 +77,7 @@ const buildAdversarialSVG = (params: IAdversarialParams): string => {
 
   const tableBottomY = currentY + 10;
 
-  // Info: (20260520 - Antigravity) 處理賣方名稱換行
+  // Info: (20260520 - Julian) 處理賣方名稱換行
   const chunkString = (str: string, size: number) => {
     const chunks = [];
     for (let i = 0; i < str.length; i += size) {
@@ -90,7 +93,7 @@ const buildAdversarialSVG = (params: IAdversarialParams): string => {
   const row2Y = tableBottomY + 60;
   const row3Y = tableBottomY + 90 + extraHeight;
 
-  // Info: (20260520 - Antigravity) 欄位垂直分水嶺格線
+  // Info: (20260520 - Julian) 欄位垂直分水嶺格線
   const vLines = `
     <!-- Top table vertical lines (Items area) -->
     <line x1="230" y1="250" x2="230" y2="${tableBottomY}" stroke="#000" stroke-width="1" />
@@ -103,22 +106,22 @@ const buildAdversarialSVG = (params: IAdversarialParams): string => {
     <line x1="680" y1="250" x2="680" y2="${row3Y}" stroke="#000" stroke-width="1" />
   `;
 
-  // Info: (20260520 - Antigravity) 渲染浮水印
+  // Info: (20260520 - Julian) 渲染浮水印
   let watermark = "";
   if (watermarkText) {
     watermark = `
-      <!-- Info: (20260520 - Antigravity) 動態印章浮水印 -->
+      <!-- Info: (20260520 - Julian) 動態印章浮水印 -->
       <text x="350" y="400" font-family="sans-serif" font-size="44" font-weight="bold" fill="rgba(255, 0, 0, 0.12)" text-anchor="middle" transform="rotate(-30, 350, 400)">
         ${watermarkText}
       </text>
     `;
   }
 
-  // Info: (20260520 - Antigravity) 渲染干擾性文字條幅
+  // Info: (20260520 - Julian) 渲染干擾性文字條幅
   let distractorBanner = "";
   if (distractorText) {
     distractorBanner = `
-      <!-- Info: (20260520 - Antigravity) 刻意植入之干擾性大字體宣告 -->
+      <!-- Info: (20260520 - Julian) 刻意植入之干擾性大字體宣告 -->
       <g transform="translate(0, 10)">
         <rect x="20" y="215" width="660" height="30" fill="#FFF2E2" stroke="#FFA726" stroke-width="1.5" rx="4" />
         <text x="350" y="235" font-family="sans-serif" font-weight="bold" font-size="12" fill="#E65100" text-anchor="middle">
@@ -205,27 +208,32 @@ const buildAdversarialSVG = (params: IAdversarialParams): string => {
   `;
 };
 
-// Info: (20260520 - Antigravity) 主程序，生成三種對抗性測試憑證
+// Info: (20260520 - Julian) 主程序，生成三種對抗性測試憑證
 export const generateAdversarialSamples = (stockId: string) => {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/2024`);
   const testingDir = path.join(dataDir, "inputs", "testing", "adversarial");
+  const goldenDataDir = path.join(dataDir, "inputs", "golden_data");
 
-  // Info: (20260520 - Antigravity) 清理並建立隔離測試目錄
+  // Info: (20260520 - Julian) 清理並建立隔離測試目錄
   if (fs.existsSync(testingDir)) {
     fs.rmSync(testingDir, { recursive: true, force: true });
   }
   fs.mkdirSync(testingDir, { recursive: true });
 
-  console.log(
-    `\n😈 [ADVERSARIAL GENERATOR] Generating samples for Stock ID: ${stockId}...`,
+  // Info: (20260520 - Julian) 取出買方公司資料
+  const buyerCompanyProfilePath = path.join(
+    goldenDataDir,
+    "company_profile.json",
   );
-  console.log(`📁 Target isolation directory: ${testingDir}\n`);
-
-  const buyerCompanyName = "本公司受測帳本行";
-  const buyerTaxId = "88888888";
+  const buyerCompanyName = JSON.parse(
+    fs.readFileSync(buyerCompanyProfilePath, "utf-8"),
+  )["公司名稱"];
+  const buyerTaxId = JSON.parse(
+    fs.readFileSync(buyerCompanyProfilePath, "utf-8"),
+  )["統一編號"];
   const dateStr = "2024-05-20";
 
-  // Info: (20260520 - Antigravity) 對抗性樣本 1: 混合科目憑證 (mixed_accounting)
+  // Info: (20260520 - Julian) 對抗性樣本 1: 混合科目憑證 (mixed_accounting)
   // 明細混合了辦公用品(5108 - 無碳排項目) 與 車用汽油(5151 - 高碳排項目)
   const mixedParams: IAdversarialParams = {
     tradingDate: dateStr,
