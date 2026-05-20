@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated";
+import { COUPON_STATUS } from "@/constants/status";
 
 export class CouponRepository {
   async getCampaigns(skip: number, take: number) {
@@ -49,7 +50,7 @@ export class CouponRepository {
       }
 
       const userIds = users.map((u) => u.userId);
-      const existingRecords = await tx.userCouponRecord.findMany({
+      const existingRecords = await tx.coupon.findMany({
         where: {
           campaignId,
           userId: { in: userIds },
@@ -62,7 +63,7 @@ export class CouponRepository {
 
       if (newUsers.length === 0) return { airdropped: 0 };
 
-      await tx.userCouponRecord.createMany({
+      await tx.coupon.createMany({
         data: newUsers.map((user) => ({
           userId: user.userId,
           campaignId,
@@ -84,7 +85,7 @@ export class CouponRepository {
     });
   }
   async getUserCoupons(userId: string) {
-    return prisma.userCouponRecord.findMany({
+    return prisma.coupon.findMany({
       where: { userId },
       include: { campaign: true },
       orderBy: { createdAt: "desc" },
@@ -112,7 +113,7 @@ export class CouponRepository {
         throw new Error("Coupon is fully claimed");
       }
 
-      const existingRecord = await tx.userCouponRecord.findFirst({
+      const existingRecord = await tx.coupon.findFirst({
         where: {
           userId,
           campaignId: campaign.id,
@@ -123,7 +124,7 @@ export class CouponRepository {
         throw new Error("User has already claimed this coupon");
       }
 
-      const record = await tx.userCouponRecord.create({
+      const record = await tx.coupon.create({
         data: {
           userId,
           campaignId: campaign.id,
@@ -142,6 +143,31 @@ export class CouponRepository {
       });
 
       return record;
+    });
+  }
+
+  async useCoupon(userId: string, recordId: string) {
+    const record = await prisma.coupon.findFirst({
+      where: {
+        id: recordId,
+        userId,
+      },
+    });
+
+    if (!record) {
+      throw new Error("Coupon record not found");
+    }
+
+    if (record.status !== COUPON_STATUS.ACTIVE) {
+      throw new Error("Coupon is not active");
+    }
+
+    return prisma.coupon.update({
+      where: { id: recordId },
+      data: {
+        status: COUPON_STATUS.USED,
+      },
+      include: { campaign: true },
     });
   }
 }
