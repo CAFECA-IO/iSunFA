@@ -5,12 +5,20 @@ import {
   Prisma,
   EsgScope,
   EsgIntensity,
+  Voucher,
+  VoucherLine,
 } from "@/generated";
-import { MeasurementUnit, EsgGenerationSource } from "@/constants/enums";
+import {
+  MeasurementUnit,
+  EsgGenerationSource,
+  DocumentType,
+  VoucherPaymentStatus,
+} from "@/constants/enums";
 import { ISyncDocumentResultParams } from "@/skills/utils/document_parser_db_sync";
 import { ACCOUNTS, IAccount } from "@/constants/accounts";
 import { ExchangeRateService } from "@/services/exchange_rate.service";
 import { VendorRegistry } from "@/services/rules/vendor_registry";
+import { ReconciliationService } from "@/services/reconciliation.service";
 
 function mapAccountingCode(country: string, keyword: string): string {
   const accountList = (ACCOUNTS[country as keyof typeof ACCOUNTS] ||
@@ -177,42 +185,80 @@ export class DocumentSyncRepository {
           // Info: (20260515 - Tzuhan) 攔截器實作：AccountCode Interceptor 與 FX Interceptor
           const vdRecord = vd as Record<string, unknown>;
           const vendorNameStr = String(vdRecord.vendorName || "");
-          const vendorMatch = VendorRegistry.match(vendorNameStr);
-          const linesToCreate: Prisma.VoucherLineCreateWithoutVoucherInput[] =
-            [];
+          let linesToCreate: Prisma.VoucherLineCreateWithoutVoucherInput[] = [];
 
-          if (vendorMatch) {
-            for (const rule of vendorMatch) {
-              const fx = await ExchangeRateService.convert({
-                amount: String(vdRecord.totalAmount || 0),
-                fromCurrency: vd.currency || "TWD",
-                toCurrency: "TWD",
-                date: tradingDate,
-              });
-              linesToCreate.push({
-                accountingCode: rule.accountingCode,
-                particular: `${getAccountName(accountBook.country || "TW", rule.accountingCode)} - ${vendorNameStr}`,
-                amount: BigInt(fx.convertedAmount.round().toFixed(0)),
-                isDebit: rule.isDebit,
-              });
-            }
+          const docType = vdRecord.documentType || DocumentType.OTHERS;
+          let currentPaymentStatus: VoucherPaymentStatus =
+            VoucherPaymentStatus.NOT_APPLICABLE;
+
+          if (docType === DocumentType.ACCRUAL_NOTICE) {
+            currentPaymentStatus = VoucherPaymentStatus.UNPAID;
+          }
+
+          let oldVoucherToClear: (Voucher & { lines: VoucherLine[] }) | null =
+            null;
+          let finalAiNote = vd.aiNote ?? "無 AI 分析備註";
+
+          if (docType === DocumentType.PAYMENT_RECEIPT) {
+            const totalAmountStr = String(vdRecord.totalAmount || "0");
+            oldVoucherToClear = await ReconciliationService.findUnpaidVoucher(
+              tx,
+              vendorNameStr,
+              totalAmountStr,
+            );
+          }
+
+          if (oldVoucherToClear) {
+            const paymentAccountCode = mapAccountingCode(
+              accountBook.country || "TW",
+              "1103",
+            );
+            linesToCreate = ReconciliationService.generateClearingLines(
+              oldVoucherToClear,
+              paymentAccountCode,
+            );
+            finalAiNote =
+              `[系統稽核] 偵測為付款收據，已自動沖銷前期應付帳款 (Voucher ID: ${oldVoucherToClear.id})\n` +
+              finalAiNote;
+            currentPaymentStatus = VoucherPaymentStatus.NOT_APPLICABLE;
           } else {
-            for (const l of vd.lines || []) {
-              const fx = await ExchangeRateService.convert({
-                amount: l.amount || 0,
-                fromCurrency: vd.currency || "TWD",
-                toCurrency: "TWD",
-                date: tradingDate,
-              });
-              linesToCreate.push({
-                accountingCode: mapAccountingCode(
-                  accountBook.country || "TW",
-                  l.accountingCode || "",
-                ),
-                particular: l.particular || null,
-                amount: BigInt(fx.convertedAmount.round().toFixed(0)),
-                isDebit: l.isDebit === true,
-              });
+            if (docType === DocumentType.PAYMENT_RECEIPT) {
+              currentPaymentStatus = VoucherPaymentStatus.NOT_APPLICABLE;
+            }
+            const vendorMatch = VendorRegistry.match(vendorNameStr);
+            if (vendorMatch) {
+              for (const rule of vendorMatch) {
+                const fx = await ExchangeRateService.convert({
+                  amount: String(vdRecord.totalAmount || 0),
+                  fromCurrency: vd.currency || "TWD",
+                  toCurrency: "TWD",
+                  date: tradingDate,
+                });
+                linesToCreate.push({
+                  accountingCode: rule.accountingCode,
+                  particular: `${getAccountName(accountBook.country || "TW", rule.accountingCode)} - ${vendorNameStr}`,
+                  amount: BigInt(fx.convertedAmount.round().toFixed(0)),
+                  isDebit: rule.isDebit,
+                });
+              }
+            } else {
+              for (const l of vd.lines || []) {
+                const fx = await ExchangeRateService.convert({
+                  amount: l.amount || 0,
+                  fromCurrency: vd.currency || "TWD",
+                  toCurrency: "TWD",
+                  date: tradingDate,
+                });
+                linesToCreate.push({
+                  accountingCode: mapAccountingCode(
+                    accountBook.country || "TW",
+                    l.accountingCode || "",
+                  ),
+                  particular: l.particular || null,
+                  amount: BigInt(fx.convertedAmount.round().toFixed(0)),
+                  isDebit: l.isDebit === true,
+                });
+              }
             }
           }
 
@@ -228,7 +274,6 @@ export class DocumentSyncRepository {
             ? ("COMPLETED" as AIAnalysisStatus)
             : ("FAILED" as AIAnalysisStatus);
           const finalIsVerified = isBalanced ? confidence > 85 : false;
-          let finalAiNote = vd.aiNote ?? "無 AI 分析備註";
           if (!isBalanced) {
             finalAiNote = "[系統稽核警告] 憑證借貸不平衡。\n" + finalAiNote;
           }
@@ -244,10 +289,13 @@ export class DocumentSyncRepository {
             isVerified: finalIsVerified,
             aiNote: finalAiNote,
             analysisStatus: finalAnalysisStatus,
+            paymentStatus: currentPaymentStatus,
             lines: {
               create: linesToCreate,
             },
           };
+
+          let finalVoucherId = existingVoucher?.id;
 
           if (existingVoucher) {
             await tx.voucher.update({
@@ -261,7 +309,18 @@ export class DocumentSyncRepository {
               },
             });
           } else {
-            await tx.voucher.create({ data: dataPayload });
+            const created = await tx.voucher.create({ data: dataPayload });
+            finalVoucherId = created.id;
+          }
+
+          if (oldVoucherToClear && finalVoucherId) {
+            await tx.voucher.update({
+              where: { id: oldVoucherToClear.id },
+              data: {
+                paymentStatus: VoucherPaymentStatus.PAID,
+                clearedByVoucherId: finalVoucherId,
+              },
+            });
           }
         }
       }
