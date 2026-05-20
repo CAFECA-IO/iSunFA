@@ -83,8 +83,9 @@ export const VoucherLinesParsingSchema = z.object({
         // Info: (20260520 - Tzuhan) [AUDIT FIX] 強制約束為帳本當地語系以阻止英文 AI 幻覺
         accountingCode: z
           .string()
+          // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: Strict enforcement of no numeric codes
           .describe(
-            "會計科目名稱。必須強制輸出為『帳本當地語系』（若為台灣帳本，請絕對輸出繁體中文，例如：『預付租金』、『存出保證金』）。嚴禁輸出英文！",
+            "會計科目名稱。必須強制輸出為『帳本當地語系』（若為台灣帳本，請絕對輸出繁體中文，例如：『預付租金』、『存出保證金』）。嚴禁輸出英文！絕對禁止輸出數字代碼！只能輸出中文科目名稱（或國家字典支援之字串）。違者將導致系統崩潰！",
           ),
         particular: z
           .string()

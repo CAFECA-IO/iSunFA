@@ -17,6 +17,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -50,6 +51,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -82,6 +84,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -108,9 +111,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
@@ -134,9 +138,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
@@ -160,9 +165,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
@@ -186,9 +192,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
@@ -212,9 +219,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
@@ -238,9 +246,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
@@ -271,6 +280,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -297,6 +307,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -323,6 +334,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -349,6 +361,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -375,9 +388,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
@@ -401,9 +415,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.OFFICE_SUPPLIES,
           isDebit: true,
         },
         {
@@ -427,9 +442,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
@@ -453,9 +469,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
@@ -479,6 +496,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -505,6 +523,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -531,9 +550,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
@@ -557,9 +577,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
@@ -583,9 +604,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
@@ -609,9 +631,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
@@ -635,9 +658,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
@@ -661,9 +685,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
@@ -687,6 +712,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -713,6 +739,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -739,6 +766,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -765,6 +793,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -791,6 +820,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -817,6 +847,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -843,6 +874,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -869,6 +901,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -895,6 +928,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -921,6 +955,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -947,6 +982,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -973,6 +1009,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -999,6 +1036,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1025,6 +1063,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1051,6 +1090,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1077,6 +1117,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1103,6 +1144,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1129,6 +1171,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1155,6 +1198,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1181,6 +1225,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1207,6 +1252,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1233,6 +1279,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1259,6 +1306,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1285,6 +1333,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1311,6 +1360,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1337,6 +1387,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1363,6 +1414,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1389,9 +1441,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
@@ -1415,9 +1468,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.SHIPPING_EXPENSE,
           isDebit: true,
         },
         {
@@ -1441,9 +1495,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.SHIPPING_EXPENSE,
           isDebit: true,
         },
         {
@@ -1467,9 +1522,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
@@ -1493,6 +1549,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1519,9 +1576,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.TELECOM_EXPENSE,
           isDebit: true,
         },
         {
@@ -1545,6 +1603,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1571,6 +1630,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1604,6 +1664,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1630,6 +1691,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1656,6 +1718,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1682,6 +1745,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1708,6 +1772,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1734,6 +1799,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1760,6 +1826,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1786,6 +1853,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1812,6 +1880,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1838,6 +1907,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1864,6 +1934,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1890,6 +1961,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1916,6 +1988,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1942,6 +2015,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1968,6 +2042,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -1994,9 +2069,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
@@ -2020,9 +2096,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
@@ -2046,9 +2123,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
@@ -2072,9 +2150,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
@@ -2098,9 +2177,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
@@ -2124,9 +2204,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
@@ -2150,9 +2231,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
@@ -2176,9 +2258,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.OFFICE_SUPPLIES,
           isDebit: true,
         },
         {
@@ -2202,9 +2285,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
@@ -2228,9 +2312,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
@@ -2254,9 +2339,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.TRAVEL_EXPENSE,
           isDebit: true,
         },
         {
@@ -2280,9 +2366,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
@@ -2306,9 +2393,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
@@ -2332,9 +2420,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
@@ -2358,6 +2447,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -2384,6 +2474,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -2410,6 +2501,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -2436,6 +2528,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -2462,6 +2555,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -2488,6 +2582,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -2514,6 +2609,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -2540,6 +2636,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -2566,9 +2663,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.MISCELLANEOUS_EXPENSE,
           isDebit: true,
         },
         {
@@ -2592,9 +2690,10 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
-          accountingCode: UniversalAccountTag.OTHER_PAYABLES,
+          accountingCode: UniversalAccountTag.ENTERTAINMENT_EXPENSE,
           isDebit: true,
         },
         {
@@ -2618,6 +2717,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
@@ -2644,6 +2744,7 @@ export const VENDOR_RULES = [
           isDebit: false,
         },
       ],
+      // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: configured PAYMENT_RECEIPT
       PAYMENT_RECEIPT: [
         {
           accountingCode: UniversalAccountTag.OTHER_PAYABLES,
