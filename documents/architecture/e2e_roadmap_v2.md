@@ -71,6 +71,27 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **[第五順位：Prompt 提示詞微調 (Prompt Calibration)]**
 - **✅ Done (2026-05-18)：恢復 Markdown 優美排版 (Restore Rich Markdown Parsing)**：針對 `journal.ts` 的指令進行「權限分流」。放寬排版與摘要權限（允許 H2/H3 與條列式），但繼續鎖死數學與推斷權限，解決因「零幻覺」鐵律矯枉過正導致日記帳喪失易讀性的問題。
 
+- **[Architect & CPA 聯手任務 (取代 Prompt 暴力注入的決定論防護網)]**
+- **✅ Done (2026-05-20)：Voucher 財務防護 - 語意標籤與多國映射 (Semantic Account Matching)**：
+  - **痛點拆彈**：過去將 1 萬多筆會計科目塞入 Prompt，導致 Token 爆炸且 AI 經常選錯相近科目。
+  - **實作架構**：徹底拔除 Prompt 字典注入。實作 `UniversalAccountTag` (如 `TELECOM_EXPENSE`) 作為通用語意標籤，並於後端建立 `SemanticAccountMatcher`。
+  - **防護機制**：AI 只需輸出自然語言（如「郵電費」），後端透過 `COUNTRY_ALIASES` 進行 O(1) 複雜度映射，精準對應至該租戶國家 (TW, US, JP 等) 絕對合規的底層代碼（如台灣的 `6215`），徹底阻絕 AI 瞎編會計代碼的幻覺。
+
+- **✅ Done (2026-05-20)：ESG 碳排防護 - 單次語意降級與保守型推估 (Single-Pass Semantic Fallback)**：
+  - **痛點拆彈**：過去將 1.5 萬筆官方碳排係數餵給 AI 執行乘法，引發嚴重的「漂綠 (Greenwashing)」與計算崩潰風險 (參考 ADR-002)。
+  - **實作架構**：在 Prompt 中僅要求 AI 萃取客觀「活動數據(Amount)」與推估「大類標籤(fallbackCategory)」，嚴禁推估係數值。
+  - **防護機制 (Max-Factor Guard)**：後端接收到 `fallbackCategory` (如: "塑膠包材") 後，在資料庫執行 `orderBy: { emissionFactor: "desc" }`，強制套用該類別的「最高碳排係數」，符合 CPA 審計的**保守原則**。寫入 DB 時強制鎖定 `isVerified = false` 與 `generationSource = AI_SPECULATIVE_STAGE_3` (黃燈懸記)，兼顧前端儀表板連續性與最終審計阻斷。
+  - **量綱一致性防護 (Dimensional Guard)**：實作跨量綱阻斷，若 AI 萃取的單位 (如 LITER) 與係數庫單位 (如 KWH) 物理量綱不符，直接退回懸記，防止「公升乘上度數」的荒謬碳排入庫。
+
+- **✅ Done (2026-05-20)：混合決策管線與 Schema 實體約束 (Hybrid Deterministic Pipeline & Schema Enum Binding)**：
+  - 全面導入 Gemini JSON Schema `enum` 與 `format: "enum"`，在物理 API 層面封鎖 AI 發明自創字串。例如：強制約束 `DocumentType` 只能是 `ACCRUAL_NOTICE` 或 `PAYMENT_RECEIPT`，單位只能是 `MeasurementUnit` 枚舉，將萃取資料 100% 標準化。
+
+- **✅ Done (2026-05-20)：強制修復傳票重複加總漏洞與自動沖銷 (Auto-Reconciliation)**：
+  - 實作 `ReconciliationService`。當 AI 判定憑證為 `PAYMENT_RECEIPT` (已付款收據) 時，系統會啟動 FIFO 機制，自動尋找前期未付款的 `ACCRUAL_NOTICE` (應付帳款) 進行借貸沖銷 (`clearedByVoucherId`)。完美解決了代墊款與實際支付重複加總的破網漏洞，達成會計應計基礎 (Accrual Basis) 的完整閉環。
+
+- **✅ Done (2026-05-20)：跨表指標引擎解耦 (Cross-Report Metrics Engine)**：
+  - 建立獨立的 `calculateCrossReportMetrics` 引擎。單一報表 (如現金流量表) 只負責絕對的當期變動，將 EPS (需總股本) 與 現金流量允當比率 (需存貨變動) 等「跨表指標」抽離至最高編排層處理，消滅了為求指標數字而在單一引擎內虛擬補數的造假行徑。
+
 ### 📌 Sprint 2: 商業邏輯防禦與抗幻覺 (Business Logic & Anti-Hallucination)
 
 **🎯 收斂目標 (DoD)**：數學引擎算得準之後，測試系統能否攔截人類或 AI 犯下的「業務邏輯錯誤與幻覺」。投入具備邏輯矛盾的 Payload，系統必須精準凍結。
@@ -80,11 +101,8 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **⚠️ Pending：廢除不合理允當標準 (Zero Tolerance)**：日常上線的報表驗證 Threshold 嚴格鎖死在 **0%**。
 - **⚠️ Pending：防堵日期幻覺 (Anti-Date Hallucination)**：強制依賴 AI 輸出的 `tradingDate`，若發生跨期，系統必須報錯並阻斷財報生成。
 - **⚠️ Pending：追溯重編的「關聯性鎖死」 (Adjustment Voucher Audit Trail)**：實作前期損益調整時，追加帶有標籤 (`isRestatement=true`) 的當期調整傳票。**Schema 強制帶入 `targetVoucherId` (被更正的原始傳票 ID)**，形成雙向鏈結，杜絕幽靈調整傳票。
-- **⚠️ Pending (Blocker)：強制修復傳票重複加總漏洞 (Voucher Duplication)**：目前 Voucher 金額運算邏輯在代繳與已繳費的處理上會產生重複計算。必須實作嚴格的「交易關聯 ID (Transaction Correlation ID)」與沖銷邏輯，確保代墊款與實際支付在會計科目上能完美沖抵，否則系統將無法通過四大會計師的三表勾稽審查。
 
 - **[CPA 碳排合規任務 (DPP 產品護照架構交由 Luphia 負責)]**
-- **⚠️ Pending：碳排暫存區與保守型推測機制 (SuspenseEsgRecord & AI Speculation)**：全面重構 RAG 未命中時的防護邏輯。廢除舊版無腦強制 emissions 設為 0 的剛性設計。允許 AI 進行官方大類的「語義降級推測」，並由後端套用該大類最高係數進行「保守型預估加總」。此類紀錄在寫入 DB 時，狀態強制鎖死為 `isVerified = false` 且 `generationSource = "AI_SPECULATIVE_STAGE_3"`。此設計既保證了前端儀表板具備即時算出碳排的優良體驗，又能透過「合規黃燈」在最終審計閘門阻斷正式報告的產出，完美兼顧產品商業力（PLG）與 CPA 確信標準。
-  - 👉 **實作要求**：更新 `prisma/schema.prisma` 確保支援此 Enum。在 `document_sync.repo.ts` 中，若係數由 `fallbackCategory` 匹配而來，必須強制將該筆紀錄寫入 `generationSource: "AI_SPECULATIVE_STAGE_3"` 以保全稽核軌跡。
 - **✅ Done (Architectural Decision: Immutable IDs)：排放係數時空快照 (Emission Factor Versioning)**：經過重新設計，不再將數值硬拷貝至 EsgRecord 造成 Schema 污染。改為全面採用「Immutable Coefficient IDs (如 epa-2025-t1-004)」，天然實現時空快照。
   - **🔒 Immutable Coefficient 兩大鐵律**：未來維護係數庫必須嚴格遵守：1. **禁止 UPDATE 數值** (避免污染歷史帳本)；2. **永遠只用 INSERT (Append-Only)**。
 - **⚠️ Pending (急迫)：官方標準係數資料庫轉移與自動化管線 (Standard Coefficients DB Migration & Scraper)**：
@@ -98,11 +116,6 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **⚠️ Pending (急迫)：質量守恆勾稽與動態容許耗損率 (Mass Conservation & Loss Ratio Threshold)**：將「進銷存與原物料物理防護」實作於管線中。猶如財務的 A=L+E，系統將強制核對：`期初庫存重量 + 本期採購重量 = 消耗重量 + 期末庫存重量`。**(物理防呆地雷拆彈)** 避免過度剛性的物理防護導致系統死鎖，現實中絕對守恆不存在，必須在 Schema 為不同原物料引入動態的「容許耗損率 (Loss Ratio Threshold)」。若 AI 萃取出的消耗量與 ERP 盤盈虧落在合理閥值內，系統應自動生成「盤盈虧/耗損調整分錄」並繼續放行，以貼近真實製造業的運作樣貌。
   - **⚠️ Pending (2026-05-13)：進階防護實作**：必須在寫入 DB 前掛載 ERP 庫存比對微服務，若 `amount > MAX_INVENTORY_LIMIT` 則直接拋出 Error 並將憑證標記為 `FRAUD_SUSPECTED` 阻斷寫入，達到 100% 物理防漂綠。
 
-- **[Architect & CPA 聯手任務 (Self-Healing & Deterministic AI)]**
-- **✅ Done (2026-05-15)：混合決策管線與 Schema 實體約束 (Hybrid Deterministic Pipeline & Schema Enum Binding)**：徹底解決 LLM 機率不穩定性的終極架構。
-  1. **Schema Enum 約束**：全面導入 Gemini JSON Schema `enum` 與 `format: "enum"`，在物理 API 層面封鎖 AI 發明自創字串（如 `documentType`, `tradingType`）的可能性，將萃取資料標準化。
-  2. **混合管線重構**：將憑證解析任務升級為真正的混合編排。Stage 1 讓 AI 萃取受 Enum 約束的特徵；Stage 2 依賴 TypeScript (`VendorRegistry`) 進行絕對精確比對（已移除模糊的 `includes`）；Stage 3 不僅支援純 Fallback，更支援 **HYBRID_STAGE_2_AND_3**（由 Stage 2 鎖死範疇與活動類型，交由 Stage 3 AI 僅推估未知參數如碳排係數）。
-  - **⚠️ Pending (2026-05-16)：進階對應實作**：雖然目前 Stage 2 已實現穩定精確比對，下一個 Sprint 仍須在 Node.js 引入輕量級 Embeddings (如 OpenAI `text-embedding-3-small` 搭配 Postgres `pgvector`)，將未收錄在黃金字典的長尾廠商升級為具備語意理解能力的向量檢索 (Vector Search)。
 - **⚠️ Pending：AI 封閉迴圈校正管線 (Closed-Loop Prompt Calibration)**：針對高度相似的憑證建立自動盲測機制。若 AI 解析錯誤，將「錯誤輸出」與「正確答案」交由高階模型自動產出優化版的解析 Prompt。**(資安防線地雷拆彈)** 禁止 AI 直接覆寫生產環境的 Prompt，以防惡意供應商發動「提示詞注入 (Prompt Injection)」攻擊導致模型崩潰。優化 Prompt 必須進入「人工覆核 (HITL)」，由具備 CPA 權限的超級管理員審核並簽章後，才能部署更新。
 
 ### 📌 Sprint 3: 視覺極限與合規深水區 (Vision Extreme & ITGC Compliance)
