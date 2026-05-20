@@ -50,6 +50,9 @@ export class ReconciliationService {
           },
         },
       },
+      orderBy: {
+        tradingDate: "asc", // Info: (20260520 - Tzuhan) FIFO 先進先出沖銷
+      },
       include: {
         lines: true,
       },

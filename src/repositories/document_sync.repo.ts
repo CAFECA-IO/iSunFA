@@ -16,9 +16,9 @@ import {
 } from "@/constants/enums";
 import { ISyncDocumentResultParams } from "@/skills/utils/document_parser_db_sync";
 import { ACCOUNTS, IAccount } from "@/constants/accounts";
-import { ExchangeRateService } from "@/services/exchange_rate.service";
 import { VendorRegistry } from "@/services/rules/vendor_registry";
 import { ReconciliationService } from "@/services/reconciliation.service";
+import { MoneyUtil } from "@/lib/utils/money";
 
 function mapAccountingCode(country: string, keyword: string): string {
   const accountList = (ACCOUNTS[country as keyof typeof ACCOUNTS] ||
@@ -200,11 +200,15 @@ export class DocumentSyncRepository {
           let finalAiNote = vd.aiNote ?? "無 AI 分析備註";
 
           if (docType === DocumentType.PAYMENT_RECEIPT) {
-            const totalAmountStr = String(vdRecord.totalAmount || "0");
+            // Info: (20260520 - Tzuhan) 根據 ADR 001 絕對對應原則，尋找與原始憑證完全相同之金額
+            const searchAmountStr = MoneyUtil.toDecimal(
+              String(vdRecord.totalAmount || 0),
+            ).toFixed(0);
+
             oldVoucherToClear = await ReconciliationService.findUnpaidVoucher(
               tx,
               vendorNameStr,
-              totalAmountStr,
+              searchAmountStr,
               accountBookId,
             );
           }
@@ -229,34 +233,26 @@ export class DocumentSyncRepository {
             const vendorMatch = VendorRegistry.match(vendorNameStr);
             if (vendorMatch) {
               for (const rule of vendorMatch) {
-                const fx = await ExchangeRateService.convert({
-                  amount: String(vdRecord.totalAmount || 0),
-                  fromCurrency: vd.currency || "TWD",
-                  toCurrency: "TWD",
-                  date: tradingDate,
-                });
+                const amountDec = MoneyUtil.toDecimal(
+                  String(vdRecord.totalAmount || 0),
+                );
                 linesToCreate.push({
                   accountingCode: rule.accountingCode,
                   particular: `${getAccountName(accountBook.country || "TW", rule.accountingCode)} - ${vendorNameStr}`,
-                  amount: BigInt(fx.convertedAmount.round().toFixed(0)),
+                  amount: BigInt(amountDec.toFixed(0)),
                   isDebit: rule.isDebit,
                 });
               }
             } else {
               for (const l of vd.lines || []) {
-                const fx = await ExchangeRateService.convert({
-                  amount: l.amount || 0,
-                  fromCurrency: vd.currency || "TWD",
-                  toCurrency: "TWD",
-                  date: tradingDate,
-                });
+                const amountDec = MoneyUtil.toDecimal(String(l.amount || 0));
                 linesToCreate.push({
                   accountingCode: mapAccountingCode(
                     accountBook.country || "TW",
                     l.accountingCode || "",
                   ),
                   particular: l.particular || null,
-                  amount: BigInt(fx.convertedAmount.round().toFixed(0)),
+                  amount: BigInt(amountDec.toFixed(0)),
                   isDebit: l.isDebit === true,
                 });
               }
