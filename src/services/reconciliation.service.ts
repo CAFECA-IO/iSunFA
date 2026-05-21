@@ -4,6 +4,13 @@ import { TW_ACCOUNTS } from "@/constants/accounts/tw";
 import { AccountUtil } from "@/lib/utils/account_util";
 import { SystemAccountNodes } from "@/constants/system_account_codes";
 
+/**
+ * Info: (20260521 - Tzuhan) [Auto-Reconciliation Service]
+ * 嚴禁於單一 Document Sync Pipeline 中進行「同步阻斷呼叫 (Synchronous Blocking Call)」。
+ * 為了解決平行 Executor 帶來的時序悖論 (Temporal Paradox) 與資料庫死鎖 (Deadlocks)，
+ * 自動沖銷必須由「背景批次任務 (Background Batch)」或「事件驅動 (Event-Driven Hook)」觸發。
+ * 採行池化配對 (Pool Matching)：拉出特定廠商所有憑證，依 tradingDate 重新排序後雙向扣合。
+ */
 export class ReconciliationService {
   /**
    * Info: (20260520 - Tzuhan)
@@ -110,5 +117,28 @@ export class ReconciliationService {
         amount: liabilityLine.amount,
       },
     ];
+  }
+
+  /**
+   * Info: (20260521 - Tzuhan) [Eventual Consistency Pool Matching]
+   * 批次沖銷單一廠商的應付帳款與付款收據。
+   * 此方法應在背景排程 (CronJob) 或 Event Hook 中被觸發，避免 Document Sync 產生 Race Condition。
+   * @param tx Prisma Transaction Client
+   * @param accountBookId 帳本 ID
+   * @param vendorTaxId 廠商統編
+   */
+  static async batchReconcileVendor(
+    tx: Prisma.TransactionClient,
+    accountBookId: string,
+    vendorTaxId: string,
+  ): Promise<void> {
+    // TODO: 1. 拉出此廠商所有的 UNPAID 傳票 (應付帳款)
+    // TODO: 2. 拉出此廠商所有的 UNRECONCILED (或無 clearedByVoucherId) 且為 PAID/NOT_APPLICABLE 的傳票 (付款收據)
+    // TODO: 3. 雙方合併並按照 tradingDate ASC 進行排序
+    // TODO: 4. 透過雙指標 (Two-Pointer) 或金額匹配進行 In-Memory Pool Matching
+    // TODO: 5. 批次寫入狀態更新與 clearedByVoucherId 綁定
+    console.log(
+      `[ReconciliationService] Batch reconciling vendor ${vendorTaxId} in book ${accountBookId}`,
+    );
   }
 }

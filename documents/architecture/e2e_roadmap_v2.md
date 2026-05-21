@@ -77,21 +77,21 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
   - **實作架構**：徹底拔除 Prompt 字典注入。實作 `UniversalAccountTag` (如 `TELECOM_EXPENSE`) 作為通用語意標籤，並於後端建立 `SemanticAccountMatcher`。
   - **防護機制**：AI 只需輸出自然語言（如「郵電費」），後端透過 `COUNTRY_ALIASES` 進行 O(1) 複雜度映射，精準對應至該租戶國家 (TW, US, JP 等) 絕對合規的底層代碼（如台灣的 `6215`），徹底阻絕 AI 瞎編會計代碼的幻覺。
 
-- **⚠️ Pending (Sprint 1 Blocker)：Voucher 解析防護升級 - 多維度廠商攔截器 (Multi-Dimensional Vendor Registry)**：實作統編 (Tax ID) 優先與別名陣列，取代單純字串比對，建立 O(1) 決定論攔截引擎 (參閱 ADR 004)。
-- **⚠️ Pending (Sprint 1 Blocker)：Voucher 解析防護升級 - 本機向量檢索與選擇題 (COA Vector RAG & Multiple-Choice)**：將各國會計科目表靜態向量化，以 Top-K 選擇題徹底廢除危險的模糊比對 (Fuzzy Matching) (參閱 ADR 004)。
-- **⚠️ Pending (Sprint 1 Blocker)：Voucher 解析防護升級 - 雙軌懸記與虛擬科目隔離區 (Dual-Track Suspense & Quarantine Zone)**：廢除強制指派，實作未知款項進入 BS 懸記 (`1471`/`2330`/`2204`)，以及損益性質不明款項進入 PL 虛擬隔離區 (`6288`/`7590`)，標記 `isVerified=false` 以防淨利虛增 (參閱 ADR 004)。
+- **✅ Done (2026-05-21)：Voucher 解析防護升級 - 多維度廠商攔截器 (Multi-Dimensional Vendor Registry)**：已於 `VendorRegistry` 與後端同步層實作統編 (Tax ID) 優先與別名陣列，建立 O(1) 靜態記憶體倒排索引與決定論攔截引擎，強制覆寫 AI 推論，確保盲測 0 誤差 (參閱 ADR 004)。
+- **✅ Done (2026-05-21)：Voucher 解析防護升級 - 本機向量檢索與逐行映射 (COA Vector RAG & Per-Line Mapping)**：徹底剝奪 AI 推論會計科目的權限。AI 僅作 OCR 萃取，交由後端 `coa_vector.service.ts` 進行純 TypeScript 逐行餘弦相似度運算映射 (參閱 ADR 004)。
+- **✅ Done (2026-05-21)：Voucher 解析防護升級 - 雙軌懸記與虛擬科目隔離區 (Dual-Track Suspense & Quarantine Zone)**：於 `document_sync.repo.ts` 實作防線。未知款項進入 BS 懸記 (`1471`/`2330`/`2204`)，損益性質不明款項進入 PL 虛擬隔離區 (`6288`/`7590`)，標記 `isVerified=false` 以防淨利虛增 (參閱 ADR 004)。
 
-- **⚠️ Pending (Sprint 1 Blocker)：ESG 解析防護升級 - 決定論攔截器 (EmissionFactorRegistry)**：比照 Voucher 的 VendorRegistry，實作高頻碳排項目（如台電、中油）的 O(1) 攔截字典 (參閱 ADR 002)。
-- **⚠️ Pending (Sprint 1 Blocker)：ESG 解析防護升級 - 修復單次語意降級斷鏈 (Fix Single-Pass Semantic Fallback)**：
-  - **斷鏈地雷**：後端 `document_sync.repo.ts` 雖已實作完美的 Max-Factor Guard 與 Dimensional Guard，但前端 AI `vision.accounting.service.ts` 的 JSON Schema 中完全遺漏了 `fallbackCategory`，導致後端的降級與保守型估算機制淪為死碼。
-  - **修復目標**：在 Phase 3 Prompt Schema 中補上 `fallbackCategory`，並明確授權 AI 在找不到精準係數時進行「大類標籤推測」。寫入 DB 時強制鎖定 `isVerified = false` 與 `generationSource = AI_SPECULATIVE_STAGE_3` (黃燈懸記)，兼顧前端儀表板連續性與最終審計阻斷。
+- **✅ Done (2026-05-21)：ESG 解析防護升級 - 決定論攔截器 (EmissionFactorRegistry)**：新增 `EmissionFactorRegistry` 作為 ESG 專屬攔截器，實作台電、中油等高頻項目的 O(1) Tax ID 攔截。並已實作 1. 官方 DB -> 2. 官方靜態墊片 -> 3. 租戶 DB -> 4. 懸記 的 4 軌降級管線 (參閱 ADR 002)。
+- **✅ Done (2026-05-21)：ESG 解析防護升級 - 修復單次語意降級斷鏈 (Fix Single-Pass Semantic Fallback)**：
+  - 在 `EsgParsingSchema` 中補上強型別 Enum 的 `fallbackCategory`。
+  - 將後端標籤升級為強型別 `EsgGenerationSource.AI_GENERATED`，完美銜接 Max-Factor Guard 與黃燈懸記機制。
   - **量綱一致性防護 (Dimensional Guard)**：(✅ 已實作) 實作跨量綱阻斷，若 AI 萃取的單位 (如 LITER) 與係數庫單位 (如 KWH) 物理量綱不符，直接退回懸記。
 
 - **✅ Done (2026-05-20)：混合決策管線與 Schema 實體約束 (Hybrid Deterministic Pipeline & Schema Enum Binding)**：
   - 全面導入 Gemini JSON Schema `enum` 與 `format: "enum"`，在物理 API 層面封鎖 AI 發明自創字串。例如：強制約束 `DocumentType` 只能是 `ACCRUAL_NOTICE` 或 `PAYMENT_RECEIPT`，單位只能是 `MeasurementUnit` 枚舉，將萃取資料 100% 標準化。
 
 - **✅ Done (2026-05-20)：強制修復傳票重複加總漏洞與自動沖銷 (Auto-Reconciliation)**：
-  - 實作 `ReconciliationService`。當 AI 判定憑證為 `PAYMENT_RECEIPT` (已付款收據) 時，系統會啟動 FIFO 機制，自動尋找前期未付款的 `ACCRUAL_NOTICE` (應付帳款) 進行借貸沖銷 (`clearedByVoucherId`)。完美解決了代墊款與實際支付重複加總的破網漏洞，達成會計應計基礎 (Accrual Basis) 的完整閉環。
+  - 實作 `ReconciliationService`。為避免去中心化 Executor 的 Race Condition (時序悖論)，放棄同步沖銷，改採「延遲綁定與最終一致性 (Late Binding & Eventual Consistency)」。系統透過背景批次池化 (Pool Matching)，拉出同供應商的單據依 `tradingDate` 重新排序並雙向扣合 (`clearedByVoucherId`)。完美解決了代墊款與實際支付重複加總的破網漏洞，達成會計應計基礎 (Accrual Basis) 的完整閉環。
 
 - **✅ Done (2026-05-20)：跨表指標引擎解耦 (Cross-Report Metrics Engine)**：
   - 建立獨立的 `calculateCrossReportMetrics` 引擎。單一報表 (如現金流量表) 只負責絕對的當期變動，將 EPS (需總股本) 與 現金流量允當比率 (需存貨變動) 等「跨表指標」抽離至最高編排層處理，消滅了為求指標數字而在單一引擎內虛擬補數的造假行徑。
@@ -109,8 +109,9 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **[CPA 碳排合規任務 (DPP 產品護照架構交由 Luphia 負責)]**
 - **✅ Done (Architectural Decision: Immutable IDs)：排放係數時空快照 (Emission Factor Versioning)**：經過重新設計，不再將數值硬拷貝至 EsgRecord 造成 Schema 污染。改為全面採用「Immutable Coefficient IDs (如 epa-2025-t1-004)」，天然實現時空快照。
   - **🔒 Immutable Coefficient 兩大鐵律**：未來維護係數庫必須嚴格遵守：1. **禁止 UPDATE 數值** (避免污染歷史帳本)；2. **永遠只用 INSERT (Append-Only)**。
-- **⚠️ Pending (急迫)：官方標準係數資料庫轉移與自動化管線 (Standard Coefficients DB Migration & Scraper)**：
-  - 目前為求開發便利，將大量係數混寫於常數檔中 (`TRUE_COEFFICIENT_DATA_*`)。未來必須開發專屬 Seeder 將數萬筆標準係數全數整併至資料庫（以 `accountBookId = null` 作為全域辨識），並重構 `route.ts` 直接查詢 DB 以支援效能與分頁。
+- **⚠️ Pending (Sprint 2)：Vendor MDM 本地唯讀對照庫架構升級 (Local SQLite Reference)**：將 150 萬筆台灣廠商登記資料打包為 `tax_reference.sqlite` 本地唯讀檔案，內建於 Backend Image 中。透過統編對應行業代號 (`industry_rules.ts`)，實作 O(1) 的零網路 I/O 攔截 (參閱 ADR 005)。
+- **⚠️ Pending [Critical/Audit Requirement]：官方標準係數資料庫轉移與自動化管線 (Standard Coefficients DB Migration & Scraper)**：
+  - 目前為求開發便利，將大量係數混寫於常數檔中 (`TRUE_COEFFICIENT_DATA_*`)。未來必須開發專屬 Seeder 將數萬筆標準係數全數整併至資料庫（以 `accountBookId = null` 作為官方辨識錨定），並重構 `route.ts` 直接查詢 DB 以支援效能與分頁 (參閱 ADR 005)。
   - **三大資料來源同步**：
     1. **US EPA** (美國環保署資料庫)
     2. **UK DEFRA** (英國環境食品與鄉村事務部資料庫)

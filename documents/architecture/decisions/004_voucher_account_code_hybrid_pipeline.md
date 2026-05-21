@@ -24,14 +24,13 @@
 
 為了徹底根絕傳票解析的不確定性，我們決議實作與 ESG 等級齊平、甚至更為嚴苛的三重防護管線。
 
-### 🛡️ 第一重：多維度廠商攔截器 (Multi-Dimensional Vendor Registry) [⚠️ Pending]
+### 🛡️ 第一重：多維度廠商攔截器 (Multi-Dimensional Vendor Registry) [✅ Done]
 
 廢除單純的字串 `.includes()`，將 `VENDOR_RULE_REGISTRY` 升級為 $O(1)$ 的高精度配對引擎，以對齊世界級 ERP（如 SAP, Oracle）處理供應商主檔 (Vendor Master Data) 的標準作法。
 
-- **統編優先 (Tax ID First)**：強制 OCR / AI 優先提取憑證上的統一編號 (Tax ID)。統編是不會變的物理真理，後端直接透過統編查表（例如：`24979925` 必定對應「中華電信」與特定的電信費科目），達成 100% 決定論攔截。
-- **別名陣列 (Aliases Array)**：將廠商註冊表擴充支援陣列。例如 `{ aliases: ["中華電信", "Chunghwa Telecom", "CHT"] }`，最大化防禦 AI 命名變體與錯字。
+- **統編優先與 O(1) 倒排索引 (Tax ID & Inverted Index)**：我們最終決定不查外部 DB，而是採用「O(1) Map 倒排索引」的實作。強制 OCR / AI 優先提取憑證上的統一編號 (Tax ID)。將廠商註冊表擴充為鍵值對映，例如直接把「統編」與「別名」作為 Key，達成微秒級 100% 決定論攔截。
 
-### 🧠 第二重：本機向量檢索與選擇題 (Local Vector RAG & Multiple-Choice) [⚠️ Pending]
+### 🧠 第二重：本機向量檢索與逐行映射 (Local Vector RAG & Per-Line Mapping) [✅ Done]
 
 針對無法在第一道防線攔截的陌生單據，採用與 ESG 一致的 Vector RAG 策略。
 
@@ -40,7 +39,7 @@
 3. **執行期後端逐行映射 (Per-Line Deterministic RAG)**：AI 完成萃取後，在後端 `document_sync.repo.ts` 階段，由系統針對每一行明細的 `particular`，呼叫 `CoaVectorSearchService` 進行純 TypeScript 餘弦相似度運算，直接算出唯一確定的 `accountCode`。
    **架構效益**：徹底解決了「單據包含多種分錄，無法在 AI 執行前進行全域 Top-3 注入」的邏輯悖論，並從物理上完全剝奪了 AI 推測或發明新會計科目的權力。
 
-### 🚥 第三重：雙軌懸記與虛擬科目隔離區 (Dual-Track Suspense & Quarantine Zone) [⚠️ Pending]
+### 🚥 第三重：雙軌懸記與虛擬科目隔離區 (Dual-Track Suspense & Quarantine Zone) [✅ Done]
 
 如果後端 Vector RAG 算出來的餘弦相似度過低（無法找到精確對應），**絕對禁止系統使用 Fuzzy Matching 強行猜測科目**。為了兼顧「四大會計師的查核鐵律」與「管理報表淨利的真實性（避免虛增淨利）」，我們將懸記防線升級為兩道分流：
 
@@ -76,7 +75,7 @@
 
 ## 🪞 附錄：Sprint 1 實作現況與斷層分析 (Implementation Gap Analysis)
 
-> **稽核時間**: 2026-05-20
+> **稽核時間**: 2026-05-20 (⚠️ 註：以下斷層已於 2026-05-21 透過 `coa_vector.service.ts` 與 `document_sync.repo.ts` 全面修復並解耦，特此保留作為架構演進之歷史紀錄)
 
 ### 1. 🔍 廠商攔截器：只有半套，最核心的「統編」還沒做
 雖然 `src/services/rules/vendor_registry.ts` 和 `vendor_rules.ts` 已經存在，並且實作了「別名陣列 (Aliases Array)」，但它的 `match()` 方法目前**只接收 `vendorName` 並使用 `.includes` 進行模糊比對**。

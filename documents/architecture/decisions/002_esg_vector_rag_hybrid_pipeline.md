@@ -62,7 +62,7 @@
 
 除了解決「系統官方係數」的配對，架構亦同時防禦「用戶自定義係數」與「高頻標準品項」。
 
-### 3.1 決定論防禦層 (EmissionFactorRegistry) [⚠️ Pending]
+### 3.1 決定論防禦層 (EmissionFactorRegistry) [✅ Done]
 
 借鑑財務模組的 `VendorRegistry`，建立 ESG 專屬的決定論攔截器。
 將佔據企業 80% 碳排的最常見 100 項高頻項目（如：台電電費、自來水、95無鉛汽油）寫死在 TypeScript 字典中。此類單據直接 $O(1)$ 命中，連 LLM 都不必呼叫。
@@ -74,12 +74,12 @@
 1. **Issuer 注入**：MissionIssuer (API Server) 可連線 Web2 DB，在產生與上傳任務 `mission.json` 至 IPFS 之前，就會預先將該租戶專屬的自定義係數陣列封裝進入 `prerequisiteData.coefficients`。這確保了 MissionPlanner 與 MissionExecutor 等去中心化運算節點能夠在「完全斷開資料庫連線 (Shared-Nothing)」的前提下，仍擁有完整的租戶環境上下文。
 2. **優先比對**：Executor 在進行 Vector RAG 前，優先以精準比對 (Exact Match) 檢查 `prerequisiteData.coefficients`，達成租戶資料隔離與高效配對。
 
-### 3.3 雙軌懸記與 AI 保守型估算 (Dual-Track Suspense & AI Conservative Speculation) [⚠️ Pending - Schema Disconnect]
+### 3.3 雙軌懸記與 AI 保守型估算 (Dual-Track Suspense & AI Conservative Speculation) [✅ Done]
 
 若本機 RAG 的 Top-5 皆不符合，或相似度過低（Confidence < 70%），管線不應採取剛性死鎖（強制將 emissions 設為 0），以防前端大盤數據斷層；應改採「語義降級推測機制」：
 
 1. **AI 語義降級歸類 (Semantic Fallback)**：禁止 AI 自己通靈數值！要求 Stage 3 AI 依據其通用知識，僅輸出一個最接近的「官方標準大類標籤」（例：回傳 fallbackCategory: "塑膠包材"）。
-2. **後端保守原則 4 軌物理隔離降級檢索 (4-Track Max-Factor Fallback Guard)**：後端系統接收到大類標籤後，將依序執行嚴格的 4 軌隔離查詢，確保不會誤用租戶間的髒資料，並於每個軌道中抓取「碳排係數最高 (MAX factor)」的項目以符合保守原則：
+2. **後端保守原則 4 軌物理隔離降級檢索 (4-Track Max-Factor Fallback Guard)**：已實作 `EmissionFactorRegistry`。後端系統接收到大類標籤後，將依序執行嚴格的 4 軌隔離查詢，並確保 `accountBookId: null` 作為全域官方標準的精妙辨識：
    - **軌道一 (官方 DB)**：優先檢索資料庫的「官方標準數據」(`accountBookId = null`)。
    - **軌道二 (官方 Static 墊片)**：若官方 DB 查無資料，退回系統全域靜態常數檔 (`ALL_COEFFICIENTS`，作為 Sprint 1 的過渡期墊片)。
    - **軌道三 (租戶 DB)**：若常數檔未命中，才檢索該專屬帳本內的「用戶自定義係數」或「AI 推測過的係數」(`accountBookId = current`).
@@ -158,7 +158,7 @@
 
 ### 🔎 Sprint 1 實作現況與斷層分析 (Implementation Gap Analysis)
 
-> **稽核時間**: 2026-05-20
+> **稽核時間**: 2026-05-20 (⚠️ 註：以下斷層已於 2026-05-21 透過 `emission_factor_registry.ts` 建立與 `fallbackCategory` Schema 修復，特此保留作為歷史紀錄)
 
 #### 1. 🔗 單次語意降級與保守型估算 (Max-Factor Guard)：前端嚴重斷鏈
 - **實作現況 (後端 - 優秀)**：在 `document_sync.repo.ts` (L352-L381)，後端實作了非常完美的保守原則。只要收到 `fallbackCategory` (大類標籤)，就會執行 `orderBy: { emissionFactor: "desc" }` 抓取最大碳排係數，並在 L475 強制打上 `AI_SPECULATIVE` 黃燈。

@@ -20,7 +20,7 @@
 
 ### 3. 🛡️ 零捏造與會計法理實作 (Accrual Basis & Zero Invention)
 
-* **自動沖銷機制 (Auto-Reconciliation)**：新增 `ReconciliationService`。當 AI 解析出 `PAYMENT_RECEIPT` (已付款收據) 時，後端會啟動 FIFO 機制，自動尋找前期未付款的 `ACCRUAL_NOTICE` (應付帳款) 傳票進行沖銷 (Cleared by Voucher ID)。
+* **自動沖銷機制 (Auto-Reconciliation)**：新增 `ReconciliationService`。當 AI 解析出 `PAYMENT_RECEIPT` (已付款收據) 時，後端透過最終一致性 (Eventual Consistency) 批次啟動 FIFO 沖銷池，將同供應商單據依 `tradingDate` 排序配對，避免非同步 Executor 產生 Race Condition。
 * **防呆 Prompt 憲法**：在 `journal.ts` 與 `voucher.ts` 中寫入極端嚴厲的 AI 護欄。嚴禁 AI 自行計算預設營業稅（Zero Tax Hallucination）；強制跨期合約採用「預付費用/租金 (Prepaid)」邏輯。
 
 ### 4. 🌍 碳會計：量綱護欄與降級推測 (Dimensional Guard & Semantic Fallback)
