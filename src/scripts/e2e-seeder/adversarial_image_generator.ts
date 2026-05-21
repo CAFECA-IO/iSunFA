@@ -1,7 +1,7 @@
-/*
- ** Info: (20260520 - Julian) 對抗性樣本生成腳本 (Adversarial Samples Generator)
- ** 這個腳本會在憑證中加入混合科目(mixed accounting)、干擾文字(distractor text)、異常單位(abnormal unit)。
- ** 生成「有問題」的憑證，來測試 AI 在處理異常資料時的表現。
+/**
+ * Info: (20260520 - Julian) 對抗性樣本生成腳本 (Adversarial Samples Generator)
+ * 這個腳本會在憑證中加入混合科目(mixed accounting)、干擾文字(distractor text)、異常單位(abnormal unit)。
+ * 生成「有問題」的憑證，來測試 AI 在處理異常資料時的表現。
  */
 
 import * as fs from "fs";
@@ -319,7 +319,7 @@ export const generateAdversarialSamples = async (stockId: string) => {
       {
         description: "工業級車用柴油",
         quantity: 200,
-        unit: "桶", // Invalid unit (not in MeasurementUnit enum)
+        unit: "桶", // Info: (20260520 - Julian) Invalid unit (not in MeasurementUnit enum)
         unitPrice: 400,
         amount: 80000,
         remark: "應稅",
@@ -393,7 +393,7 @@ export const generateAdversarialSamples = async (stockId: string) => {
     verificationRules: {
       expectedAmount: 10,
       expectedUnit: "KWH",
-      maxAllowedHallucination: 15, // Ensure it doesn't extract 1000
+      maxAllowedHallucination: 15, // Info: (20260520 - Julian) Ensure it doesn't extract 1000
     },
   };
 
