@@ -345,6 +345,10 @@ model AccountBook {
   // Info: (20260508 - Tzuhan) 面額 (預設 10)
   parValue Float @default(10) @map("par_value")
 
+  // Info: (20260521 - Tzuhan) 懸記與隔離虛擬科目設定
+  bsSuspenseAccount   String @default("1471") @map("bs_suspense_account")
+  plQuarantineAccount String @default("6288") @map("pl_quarantine_account")
+
   // Info: (20260305 - Julian) 一個帳本可以有多個憑證
   journals Journal[]
 
@@ -429,6 +433,9 @@ model Voucher {
 
   // Info: (20260310 - Julian) 備註
   note String? @db.Text
+
+  // Info: (20260521 - Tzuhan) 廠商統編 (支援 O(1) 攔截比對)
+  vendorTaxId String? @map("vendor_tax_id")
 
   // Info: (20260310 - Julian) 幣別
   currency String @default("TWD")

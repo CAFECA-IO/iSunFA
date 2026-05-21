@@ -17,8 +17,9 @@ export class ReconciliationService {
     vendorName: string,
     amount: string,
     accountBookId: string,
+    vendorTaxId?: string,
   ): Promise<(Voucher & { lines: VoucherLine[] }) | null> {
-    if (!vendorName || vendorName.trim() === "") {
+    if ((!vendorName || vendorName.trim() === "") && !vendorTaxId) {
       return null;
     }
 
@@ -33,12 +34,20 @@ export class ReconciliationService {
 
     const targetAmount = BigInt(amount);
 
+    const searchConditions: Prisma.VoucherWhereInput[] = [];
+    if (vendorTaxId) {
+      searchConditions.push({ vendorTaxId });
+    } else if (vendorName && vendorName.trim() !== "") {
+      searchConditions.push({ note: { contains: vendorName } });
+      searchConditions.push({
+        lines: { some: { particular: { contains: vendorName } } },
+      });
+    }
+
     const voucher = await tx.voucher.findFirst({
       where: {
         accountBookId,
-        note: {
-          contains: vendorName,
-        },
+        OR: searchConditions.length > 0 ? searchConditions : undefined,
         paymentStatus: VoucherPaymentStatus.UNPAID,
         lines: {
           some: {

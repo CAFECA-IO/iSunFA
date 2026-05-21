@@ -7,6 +7,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "chunghwa_telecom",
     aliases: ["中華電信", "中華電信股份有限公司", "Chunghwa Telecom", "CHT"],
+    taxIds: ["96979933", "81691784"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -41,6 +42,7 @@ export const VENDOR_RULES = [
       "TPC",
       "台灣電力",
     ],
+    taxIds: ["03566542"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -74,6 +76,7 @@ export const VENDOR_RULES = [
       "台灣自來水",
       "TWC",
     ],
+    taxIds: ["05937404"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -101,6 +104,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "cpc_corporation",
     aliases: ["台灣中油", "CPC Corporation", "中油", "台灣中油股份有限公司"],
+    taxIds: ["03707901"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -128,6 +132,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "formosa_petrochemical",
     aliases: ["台塑石油", "台塑石化", "Formosa Petrochemical"],
+    taxIds: ["86522210"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -155,6 +160,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "taiwan_high_speed_rail",
     aliases: ["台灣高鐵", "高鐵", "台灣高速鐵路", "THSR"],
+    taxIds: ["16446274"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -209,6 +215,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "uni_president_7_11",
     aliases: ["統一超商", "7-11", "統一超商股份有限公司", "7-Eleven"],
+    taxIds: ["22555003"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -236,6 +243,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "familymart",
     aliases: ["全家便利商店", "全家便利商店股份有限公司", "FamilyMart", "全家"],
+    taxIds: ["23060248"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -405,6 +413,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "pchome_24h",
     aliases: ["PChome 24h", "PChome", "網路家庭", "PChome Online"],
+    taxIds: ["16606102"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -432,6 +441,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "momo",
     aliases: ["momo 購物網", "momo", "富邦媒體科技"],
+    taxIds: ["27365925"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -486,6 +496,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "far_eas_tone",
     aliases: ["遠傳電信", "遠傳", "Far EasTone", "FET"],
+    taxIds: ["97178066"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -513,6 +524,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "taiwan_mobile",
     aliases: ["台灣大哥大", "台哥大", "Taiwan Mobile"],
+    taxIds: ["97176270"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -567,6 +579,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "eva_air",
     aliases: ["長榮航空", "EVA Air", "長榮"],
+    taxIds: ["23214251"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -594,6 +607,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "china_airlines",
     aliases: ["中華航空", "華航", "China Airlines"],
+    taxIds: ["11145904"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -621,6 +635,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "starlux_airlines",
     aliases: ["星宇航空", "星宇", "STARLUX Airlines"],
+    taxIds: ["51712072"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -837,6 +852,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "line_pay",
     aliases: ["LINE Pay", "連加網路", "連加網路商業"],
+    taxIds: ["24941093"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -864,6 +880,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "ecpay",
     aliases: ["綠界科技", "ECPay", "綠界"],
+    taxIds: ["97025978"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -945,6 +962,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "hi_lai_harbour",
     aliases: ["漢來海港", "漢來美食", "漢來"],
+    taxIds: ["80352343"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -972,6 +990,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "wowprime",
     aliases: ["王品集團", "王品", "Wowprime"],
+    taxIds: ["84630426"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -1161,6 +1180,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "kingstone_eslite",
     aliases: ["金石堂", "誠品", "Kingstone", "Eslite", "誠品書店"],
+    taxIds: ["27952966"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -1215,6 +1235,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "aurora",
     aliases: ["震旦行", "震旦", "Aurora"],
+    taxIds: ["03568400"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -1242,6 +1263,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "hti",
     aliases: ["互盛", "互盛股份有限公司"],
+    taxIds: ["12516241"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -1350,6 +1372,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "taiwan_taxi",
     aliases: ["台灣大車隊", "55688", "Taiwan Taxi"],
+    taxIds: ["27767961"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -1458,6 +1481,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "kerry_tj",
     aliases: ["嘉里大榮", "大榮貨運", "Kerry TJ Logistics"],
+    taxIds: ["51015548"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -1816,6 +1840,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "104_job_bank",
     aliases: ["104 人力銀行", "104", "一零四資訊科技"],
+    taxIds: ["84598349"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -2005,6 +2030,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "91app",
     aliases: ["91APP", "九易宇軒"],
+    taxIds: ["88176897"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -2167,6 +2193,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "dodohome",
     aliases: ["嘟嘟房", "中興電工", "Dodo Home"],
+    taxIds: ["33029464"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -2248,6 +2275,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "tsannkuen",
     aliases: ["燦坤 3C", "燦坤", "Tsannkuen"],
+    taxIds: ["69568009"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -2275,6 +2303,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "elife_mall",
     aliases: ["全國電子", "Elife Mall"],
+    taxIds: ["22006252"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {
@@ -2302,6 +2331,7 @@ export const VENDOR_RULES = [
   {
     vendorId: "ikea",
     aliases: ["宜家家居", "IKEA"],
+    taxIds: ["84309586", "10005948"],
     rules: {
       [DocumentType.ACCRUAL_NOTICE]: [
         {

@@ -50,6 +50,7 @@ export const VoucherBaseParsingSchema = z.object({
   vendorName: z
     .string()
     .describe("Extracted name of the vendor (e.g. 中華電信)"),
+  vendorTaxId: z.string().nullable().describe("廠商統一編號，若無則填 null"),
   // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: Refactor magic strings to Enum
   documentType: z
     .nativeEnum(DocumentType)
@@ -92,7 +93,7 @@ export const VoucherLinesParsingSchema = z.object({
         particular: z
           .string()
           .describe(
-            "Summary of this specific entry (Output in Traditional Chinese)",
+            "請強制以『交易項目 - 廠商簡稱』的格式輸出摘要，例如：『市內電話上網費 - 中華電信』 (Output in Traditional Chinese)",
           ),
         amount: z.number().describe("Numeric amount"),
         isDebit: z.boolean().describe("true = Debit, false = Credit"),
@@ -129,6 +130,48 @@ export const EsgParsingSchema = z.object({
     .string()
     .nullable()
     .describe("The unit of consumption (e.g. kWh, L, kg)"),
+  fallbackCategory: z
+    .enum([
+      // --- 能源與燃料 (Scope 1 & 2) ---
+      "外購電力與熱能",
+      "天然氣與瓦斯",
+      "汽油與航空燃油",
+      "柴油與重油",
+      "煤炭與固體燃料",
+      "生質能與替代燃料",
+
+      // --- 逸散與環境 (Scope 1 & 3) ---
+      "冷媒與工業氣體",
+      "自來水與污水處理",
+      "廢棄物處理與回收",
+
+      // --- 交通與物流 (Scope 1 & 3) ---
+      "陸上交通與通勤",
+      "航空運輸",
+      "貨運與物流",
+
+      // --- 採購商品 (Scope 3 - 實體物品) ---
+      "塑膠與橡膠製品",
+      "金屬與礦物製品",
+      "紙製品與木材",
+      "電子與電機設備",
+      "化學品與溶劑",
+      "農林漁牧與食品",
+      "紡織與服飾",
+
+      // --- 採購服務與資本財 (Scope 3 - 無形服務) ---
+      "資訊與通訊服務",
+      "住宿與餐飲服務",
+      "不動產與設備租賃",
+      "專業與各項服務",
+
+      // --- 兜底防線 ---
+      "其他未知項目",
+    ])
+    .nullable()
+    .describe(
+      "最接近的官方標準大類標籤。必須嚴格從清單中挑選最符合的一項，用以推估碳排。",
+    ),
   confidence: z
     .number()
     .int()

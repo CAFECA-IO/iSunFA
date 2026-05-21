@@ -19,6 +19,7 @@ import { ACCOUNTS, IAccount } from "@/constants/accounts";
 import { VendorRegistry } from "@/services/rules/vendor_registry";
 import { ReconciliationService } from "@/services/reconciliation.service";
 import { MoneyUtil } from "@/lib/utils/money";
+import { EmissionFactorRepo } from "@/repositories/emission_factor.repo";
 
 import { SemanticAccountMatcher } from "@/lib/utils/semantic_account_matcher";
 
@@ -71,6 +72,9 @@ export class DocumentSyncRepository {
       }
 
       // Info: (20260420 - Luphia) 1. Sync Journal
+      // ToDo: (20260521 - Tzuhan) refine types for voucherBase and esg data payload
+      // const rawVendorTaxId = (voucherBase?.data as Record<string, unknown>)?.vendorTaxId || (voucherBase as Record<string, unknown>)?.vendorTaxId || (esg?.data as Record<string, unknown>)?.vendorTaxId || (esg as Record<string, unknown>)?.vendorTaxId;
+
       if (journal || failureReason) {
         let existingJournal = null;
         if (journalIdContext) {
@@ -169,9 +173,11 @@ export class DocumentSyncRepository {
           // Info: (20260515 - Tzuhan) 攔截器實作：AccountCode Interceptor 與 FX Interceptor
           const vdRecord = vd as Record<string, unknown>;
           const vendorNameStr = String(vdRecord.vendorName || "");
+          const vendorTaxIdStr = String(vdRecord.vendorTaxId || "");
           let linesToCreate: Prisma.VoucherLineCreateWithoutVoucherInput[] = [];
 
-          const docType = vdRecord.documentType || DocumentType.OTHERS;
+          const docType =
+            (vdRecord.documentType as DocumentType) || DocumentType.OTHERS;
           let currentPaymentStatus: VoucherPaymentStatus =
             VoucherPaymentStatus.NOT_APPLICABLE;
 
@@ -182,6 +188,7 @@ export class DocumentSyncRepository {
           let oldVoucherToClear: (Voucher & { lines: VoucherLine[] }) | null =
             null;
           let finalAiNote = vd.aiNote ?? "無 AI 分析備註";
+          let hasSuspense = false;
 
           if (docType === DocumentType.PAYMENT_RECEIPT) {
             // Info: (20260520 - Tzuhan) 根據 ADR 001 絕對對應原則，尋找與原始憑證完全相同之金額
@@ -194,6 +201,7 @@ export class DocumentSyncRepository {
               vendorNameStr,
               searchAmountStr,
               accountBookId,
+              vendorTaxIdStr,
             );
           }
 
@@ -220,7 +228,14 @@ export class DocumentSyncRepository {
             if (docType === DocumentType.PAYMENT_RECEIPT) {
               currentPaymentStatus = VoucherPaymentStatus.NOT_APPLICABLE;
             }
-            const vendorMatch = VendorRegistry.match(vendorNameStr);
+
+            // Info: (20260521 - Tzuhan) 由 VendorRegistry (Service) 負責業務邏輯，Repo 僅提供查出的 DB 資料
+            const vendorMatch = VendorRegistry.match(
+              vendorNameStr,
+              docType,
+              vendorTaxIdStr,
+            );
+
             if (vendorMatch) {
               for (const rule of vendorMatch) {
                 const amountDec = MoneyUtil.toDecimal(
@@ -241,12 +256,26 @@ export class DocumentSyncRepository {
             } else {
               for (const l of vd.lines || []) {
                 const amountDec = MoneyUtil.toDecimal(String(l.amount || 0));
+                let matchedAccountingCode = SemanticAccountMatcher.match(
+                  l.accountingCode || "",
+                  dictionary,
+                  accountBook.country || "TW",
+                );
+
+                const isValidCode = dictionary.some(
+                  (a) => a.code === matchedAccountingCode,
+                );
+                if (!isValidCode) {
+                  hasSuspense = true;
+                  matchedAccountingCode =
+                    accountBook.bsSuspenseAccount || "1471";
+                  finalAiNote =
+                    `[系統稽核警告] 會計科目「${l.accountingCode}」無法對應至系統科目表，強制歸入懸記科目 (${matchedAccountingCode})。\n` +
+                    finalAiNote;
+                }
+
                 linesToCreate.push({
-                  accountingCode: SemanticAccountMatcher.match(
-                    l.accountingCode || "",
-                    dictionary,
-                    accountBook.country || "TW",
-                  ),
+                  accountingCode: matchedAccountingCode,
                   particular: l.particular || "",
                   amount: BigInt(amountDec.toFixed(0)),
                   isDebit: l.isDebit === true,
@@ -266,7 +295,12 @@ export class DocumentSyncRepository {
           const finalAnalysisStatus = isBalanced
             ? ("COMPLETED" as AIAnalysisStatus)
             : ("FAILED" as AIAnalysisStatus);
-          const finalIsVerified = isBalanced ? confidence > 85 : false;
+          let finalIsVerified = isBalanced ? confidence > 85 : false;
+
+          if (hasSuspense) {
+            finalIsVerified = false;
+          }
+
           if (!isBalanced) {
             finalAiNote = "[系統稽核警告] 憑證借貸不平衡。\n" + finalAiNote;
           }
@@ -351,28 +385,19 @@ export class DocumentSyncRepository {
 
           // Info: (20260519 - Tzuhan) 使用 fallbackCategory 進行最大係數 (Max-Factor) 查詢
           const fallbackTag = ed.fallbackCategory?.trim();
+
           if (!finalCoefficientId && fallbackTag) {
             // Info: (20260519 - Tzuhan) 防禦空字串地圖砲
-            const matchedCoefficients = await tx.coefficient.findMany({
-              where: {
-                AND: [
-                  {
-                    OR: [
-                      { name: { contains: fallbackTag } },
-                      { description: { contains: fallbackTag } },
-                    ],
-                  },
-                  {
-                    OR: [{ accountBookId: null }, { accountBookId }],
-                  },
-                ],
-                isVerified: true,
-              },
-              orderBy: { emissionFactor: "desc" },
-              take: 1,
-            });
-            if (matchedCoefficients.length > 0) {
-              finalCoefficientId = matchedCoefficients[0].id;
+            // Info: (20260521 - Tzuhan) 職能分離：由 EmissionFactorRepo 負責 DB 查詢
+            const matchedCoefId =
+              await EmissionFactorRepo.findFallbackCoefficient(
+                tx,
+                fallbackTag,
+                accountBookId,
+              );
+
+            if (matchedCoefId) {
+              finalCoefficientId = matchedCoefId;
               isFallbackMatched = true;
               ed.aiNote =
                 (ed.aiNote || "") +

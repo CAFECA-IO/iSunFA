@@ -1,4 +1,5 @@
 import { getPriorityEnvConfig } from "@/services/env.service";
+import { prisma } from "@/lib/prisma";
 import {
   missionGenerator,
   IMissionParams,
@@ -94,6 +95,23 @@ export async function processNext() {
 
             const missionObj = JSON.parse(missionJsonStr);
 
+            const latestAccountBook = missionObj.accountBook || null;
+
+            const tenantCustomCoefficients = latestAccountBook?.id
+              ? await prisma.coefficient.findMany({
+                  where: {
+                    accountBookId: latestAccountBook.id,
+                  },
+                  select: {
+                    id: true,
+                    name: true,
+                    description: true,
+                    unit: true,
+                    emissionFactor: true,
+                  },
+                })
+              : [];
+
             const missionParams = {
               orderId: missionObj.orderId,
               type: missionObj.type,
@@ -107,8 +125,11 @@ export async function processNext() {
                 ...(missionObj.prerequisiteData ||
                   missionObj.data?.prerequisiteData ||
                   {}),
-                ...(missionObj.accountBook
-                  ? { accountBook: missionObj.accountBook }
+                ...(latestAccountBook
+                  ? {
+                      accountBook: latestAccountBook,
+                      coefficients: tenantCustomCoefficients,
+                    }
                   : {}),
               },
             } as IMissionParams;
