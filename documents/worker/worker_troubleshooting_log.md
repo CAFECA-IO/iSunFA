@@ -1,10 +1,11 @@
-# 🚀 iSunFA Worker 效能優化與踩雷實錄 (Troubleshooting & Optimization Guide)
+# 🚀 iSunFA Worker 踩雷實錄 (Troubleshooting Log)
 
 > **Date**: May 2026
 > **Scope**: `src/services/*.service.ts`
 > **Info**: (20260521 - Julian)
 
-這份文件詳細記錄了我們在擴展 `iSunFA Worker` (多開並發處理) 時遭遇的效能瓶頸與異常狀況。為了避免影響當前開發進度，這些修正目前皆作為**建議優化方案**保留於此，方便未來開發團隊參考實作，以將 Worker 從「互相干擾卡死」進化為「完美負載平衡的平行處理叢集」。
+這份文件詳細記錄了我們在擴展 `iSunFA Worker` (多開並發處理) 時遭遇的效能瓶頸與異常狀況。
+⚠️注意：本文件非真正的優化建議，開發方向也與 iSunFA 的核心不同，僅供紀錄，請勿直接套用。
 
 ---
 
@@ -16,7 +17,7 @@
 * **根本原因 (Root Cause)：** 
   Gemini API 在處理含有大量影像的複雜 Prompt 時，如果剛好遇到網路波動或 API 伺服器滿載，請求會無限期掛起 (Hang)。而原本的底層呼叫 `model.generateContent` 時**沒有設定明確的 Timeout 機制**，導致 Node.js 的 Thread 被永久鎖死在等待回傳的狀態。
 
-* **建議優化 (Recommended Optimization)：**
+* **修正方案：**
   * **修改檔案：** `src/services/chat.service.ts`
   * **修改原因：** 為底層 API 呼叫加上 `Promise.race` 封裝，給予明確的 Timeout，確保執行緒能正常拋錯並觸發退避機制，不會永遠卡死。
   * **修改細節：**
@@ -47,7 +48,7 @@
 * **根本原因 (Root Cause)：** 
   `.env` 中只配置了一把**免費版的 Gemini API Key**。免費版的硬性限制為 **15 RPM**。當 7 台 Worker 瞬間發送請求，會觸發 429 Too Many Requests。Google SDK 內建的「指數退避 (Exponential Backoff)」機制會導致所有 Worker 被強制罰站，造成惡性循環。
 
-* **建議優化 (Recommended Optimization)：**
+* **修正方案：**
   * **修改檔案：** `src/services/chat.service.ts`
   * **修改原因：** 實作「多 API Key 輪詢 (Load Balancing)」機制。讓系統支援讀取 `GEMINI_API_KEYS` 陣列，隨機分散請求，繞過單把 Key 的物理速限。
   * **修改細節：**
@@ -80,7 +81,7 @@
 * **根本原因 (Root Cause)：** 
   任務被 AI 解析完成後，會由 `IssueRecorder` 負責同步回資料庫。但舊版程式碼有嚴格檢查：如果找不到該任務對應的 `Order` 紀錄，就會直接 `continue` 跳過。這導致沒掛 Order 的歷史任務或測試任務，永遠無法更新會計憑證狀態，也永遠不會寫入 `recorded.flag`，讓 Worker 陷入無限輪迴掃描。
 
-* **建議優化 (Recommended Optimization)：**
+* **修正方案：**
   * **修改檔案：** `src/services/issue.recorder.service.ts`
   * **修改原因：** 解除對 `Order` 的強依賴。就算找不到 Order，也必須將 `dbSyncPayload` 同步到 Journal / Voucher 等資料表，並留下標記。
   * **修改細節：**
@@ -107,7 +108,7 @@
   1. **固定排序掃描：** 所有 Worker 預設使用字母順序掃描 `missions` 資料夾，保證多台 Worker 永遠會同時選中「同一個」目標。
   2. **錯誤的上鎖位置：** 建立 `executing.lock` 原子鎖的邏輯被寫在尋找任務的 `for` 迴圈**之外**。當 4 台 Worker 同時鎖定任務 A，失敗的 3 台會直接 `return` 結束這回合。在下一次循環中，這 3 台又會掃描到同一個任務 A，再次搶鎖失敗、再次 `return`。每秒發生數萬次，形成災難性的無限空轉 (Busy Spin)。
 
-* **建議優化 (Recommended Optimization)：**
+* **修正方案：**
   * **修改檔案：** `src/services/mission.executor.service.ts`
   * **修改原因：** 確保 Worker 在搶鎖失敗時，能「立刻」繼續尋找下一個未鎖定的任務，而不是放棄並重啟整個流程。
   * **修改細節：**
@@ -143,7 +144,7 @@
 > [!TIP]
 > **情境：** 如果未來又遇到某一間公司憑證量極大，嚴重卡住後方其他公司的進度，想直接跳過它。
 
-* **建議優化 (Recommended Optimization)：** 
+* **修正方案：** 
   遇到這種需緊急清創的情況，不要只刪除實體檔案。建議撰寫一支專用腳本 (例如 `scripts/skip-company.ts`) 雙管齊下：
   1. 使用 Prisma 將該 `accountBookId` 旗下狀態為 `PENDING` 或 `PROCESSING` 的 Journal / Voucher 狀態統一強改為 `AIAnalysisStatus.FAILED`。
   2. 掃描 `missions` 與 `issues` 資料夾，讀取 `mission.json` 比對該公司 ID，直接刪除整包任務資料夾。
