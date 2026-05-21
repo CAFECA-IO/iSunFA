@@ -236,7 +236,7 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
       Number(dest.lng),
       MoneyUtil.toDecimal(
         MoneyUtil.parseInput(String(weightKg || 1000)),
-      ).toNumber(),
+      ).toString(),
     );
 
     return JSON.stringify(plan, null, 2);

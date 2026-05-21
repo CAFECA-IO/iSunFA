@@ -65,7 +65,7 @@ export default function CampaignManagementPage() {
     description: "",
     startDate: "",
     endDate: "",
-    bonusPoints: 0,
+    bonusPoints: "0",
     bonusModules: "",
     isActive: true,
   });
@@ -114,7 +114,7 @@ export default function CampaignManagementPage() {
         description: campaign.description || "",
         startDate: new Date(campaign.startDate).toISOString().slice(0, 16),
         endDate: new Date(campaign.endDate).toISOString().slice(0, 16),
-        bonusPoints: campaign.bonusPoints,
+        bonusPoints: String(campaign.bonusPoints),
         bonusModules: campaign.bonusModules.join(", "),
         isActive: campaign.isActive,
       });
@@ -128,7 +128,7 @@ export default function CampaignManagementPage() {
         endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
           .toISOString()
           .slice(0, 16),
-        bonusPoints: 0,
+        bonusPoints: "0",
         bonusModules: "",
         isActive: true,
       });

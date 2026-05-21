@@ -24,7 +24,6 @@ import { ApiCode } from "@/lib/utils/status";
 import { useParams } from "next/navigation";
 import AccountBookSelector from "@/components/user/voucher/account_book_selector";
 import FilePreviewModal from "@/components/common/file_preview_modal";
-import { translateAiNote } from "@/utils/ai_note_translator";
 
 interface IVoucherDetailModalProps {
   isOpen: boolean;
@@ -387,7 +386,7 @@ export default function VoucherDetailModal({
           <div className="ml-auto">
             <AiConfidence
               confidence={activeVoucher.confidence}
-              note={translateAiNote(activeVoucher.aiNote, t)}
+              note={activeVoucher.aiNote}
             />
           </div>
         </div>

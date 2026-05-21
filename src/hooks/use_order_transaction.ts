@@ -126,8 +126,8 @@ export const useOrderTransaction = () => {
       setWorkflowStatus("payment_success");
 
       // Info: (20260419 - Agent) Optimistic UI Update to hide alt-mempool fetch latency
-      if (user?.credits !== undefined && typeof user.credits === "number") {
-        updateLocalCredits(-calculatedCost);
+      if (user?.credits !== undefined) {
+        updateLocalCredits(String(-calculatedCost));
       }
 
       await onPaymentSuccess({

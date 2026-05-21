@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Info: (20260419 - Luphia) fetch pending balance from blockchain
-    let pendingCredits = 0;
+    let pendingCredits: string = "0";
     try {
       if (user.address) {
         const balance = await publicClient.readContract({
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
           args: [user.address as `0x${string}`],
           blockTag: "pending",
         });
-        pendingCredits = Number(formatUnits(balance as bigint, 18));
+        pendingCredits = formatUnits(balance as bigint, 18);
       }
     } catch (err) {
       console.warn("Failed to fetch pending balance:", err);

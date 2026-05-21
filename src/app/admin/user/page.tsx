@@ -25,6 +25,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { Role } from "@/constants/role";
 import { IBlockchainDashboardData } from "@/services/admin.blockchain.service";
 import { IPagination } from "@/interfaces/admin_billing";
+import { MoneyUtil } from "@/lib/utils/money";
 
 interface IMembershipInfo {
   exp: number;
@@ -364,11 +365,10 @@ export default function MemberAdminPage() {
                     </span>
                     <span className="mt-0.5 text-sm leading-tight font-bold text-gray-800">
                       {blockchainData
-                        ? parseFloat(
+                        ? MoneyUtil.formatDynamic(
                             blockchainData.membershipSystemIcpInventory,
-                          ).toLocaleString(undefined, {
-                            maximumFractionDigits: 4,
-                          })
+                            4,
+                          )
                         : "---"}
                     </span>
                   </div>

@@ -48,17 +48,31 @@ export const MoneyUtil = {
     }
   },
 
-  /**
-   * Info: (20260512 - Tzuhan)
-   * 格式化金額，加入千分位與自訂小數點位數
-   * 如果是負數，會回傳帶有括號的會計格式：(1,000)
-   */
   format(val: MoneyValue, fractionDigits: number = 0): string {
     const dec = this.toDecimal(val);
     const isNegative = dec.isNegative();
     const absValStr = dec.abs().toFixed(fractionDigits);
 
     // Info: (20260512 - Tzuhan) 加上千分位
+    const parts = absValStr.split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    const formatted = parts.join(".");
+
+    return isNegative ? `(${formatted})` : formatted;
+  },
+
+  /**
+   * Info: (20260519 - Tzuhan)
+   * 動態格式化金額，預設保護整數展現，並允許動態保留最多 maxDecimals 位小數
+   */
+  formatDynamic(val: MoneyValue, maxDecimals: number = 2): string {
+    const dec = this.toDecimal(val);
+    const isNegative = dec.isNegative();
+
+    // Info: (20260519 - Tzuhan) 使用 toDP 動態截斷，同時去除尾數多餘的 0
+    const absValStr = dec.abs().toDP(maxDecimals).toString();
+
+    // Info: (20260519 - Tzuhan) 加上千分位
     const parts = absValStr.split(".");
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     const formatted = parts.join(".");
@@ -78,6 +92,22 @@ export const MoneyUtil = {
    */
   subtract(a: MoneyValue, b: MoneyValue): string {
     return this.toDecimal(a).minus(this.toDecimal(b)).toString();
+  },
+
+  /**
+   * Info: (20260518 - Tzuhan) 安全相乘 (a * b)，專治 ESG 碳排係數運算
+   */
+  multiply(a: MoneyValue, b: MoneyValue): string {
+    return this.toDecimal(a).times(this.toDecimal(b)).toString();
+  },
+
+  /**
+   * Info: (20260518 - Tzuhan) 安全相除 (a / b)
+   */
+  divide(numerator: MoneyValue, denominator: MoneyValue): string {
+    const denom = this.toDecimal(denominator);
+    if (denom.isZero()) throw new Error("[MoneyUtil] Division by zero");
+    return this.toDecimal(numerator).dividedBy(denom).toString();
   },
 
   /**
@@ -111,9 +141,9 @@ export const MoneyUtil = {
    * 安全計算比率 (numerator / denominator * 100)，避免除以零。
    * 回傳數值 (number)
    */
-  safeRatio(numerator: MoneyValue, denominator: MoneyValue): number {
+  safeRatio(numerator: MoneyValue, denominator: MoneyValue): string {
     const denom = this.toDecimal(denominator);
-    if (denom.isZero()) return 0;
-    return this.toDecimal(numerator).dividedBy(denom).times(100).toNumber();
+    if (denom.isZero()) return "0";
+    return this.toDecimal(numerator).dividedBy(denom).times(100).toString();
   },
 };

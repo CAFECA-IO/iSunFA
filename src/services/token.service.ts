@@ -30,7 +30,7 @@ type ActionResponse = {
 export async function mintToAddress(
   tokenAddress: string,
   userAddress: string,
-  amount: number,
+  amount: number | string | bigint,
 ): Promise<ActionResponse> {
   try {
     const account = await getAdminAccount();

@@ -128,7 +128,10 @@ export async function GET(
         case ReportType.BALANCE_SHEET:
           return generateBalanceSheet(lineItems, accountBook.parValue);
         case ReportType.CASH_FLOW:
-          return generateCashFlowStatement(lineItems);
+          return generateCashFlowStatement(
+            lineItems,
+            0 /* TODO: (20260518 - Tzuhan) Roadmap V2 Sprint 2 Opening Balance */,
+          );
         case ReportType.INCOME_STATEMENT:
           return generateIncomeStatement(lineItems);
         default:

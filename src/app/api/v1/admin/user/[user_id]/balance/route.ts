@@ -39,7 +39,7 @@ export async function GET(
       blockTag: "pending",
     });
 
-    return jsonOk(Number(formatUnits(balance, 18)));
+    return jsonOk(formatUnits(balance, 18));
   } catch (error) {
     return jsonFail({
       code: "IS000099",

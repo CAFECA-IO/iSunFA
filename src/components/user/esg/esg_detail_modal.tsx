@@ -26,7 +26,6 @@ import {
   EsgActivityTypeKey,
 } from "@/constants/esg_activity_type";
 import { MoneyUtil } from "@/lib/utils/money";
-import { translateAiNote } from "@/utils/ai_note_translator";
 
 interface IEsgDetailModalProps {
   isOpen: boolean;
@@ -100,15 +99,19 @@ export default function EsgDetailModal({
       };
     }
 
-    // Info: (20260416 - Julian) 轉換為數字
-    const amountNum = Number(amount) || 0;
-    const emissionFactorNum = Number(coefficient.emissionFactor) || 0;
+    // Info: (20260519 - Tzuhan) 轉換為高精度 (防止 IEEE 754 誤差)
+    const amountDec = MoneyUtil.toDecimal(amount || 0);
+    const emissionFactorDec = MoneyUtil.toDecimal(
+      coefficient.emissionFactor || 0,
+    );
 
-    // Info: (20260415 - Julian) 計算總排放量，取小數點後兩位
-    const totalEmissions = Number((emissionFactorNum * amountNum).toFixed(2));
+    // Info: (20260519 - Tzuhan) 計算總排放量，取小數點後兩位字串輸出
+    const totalEmissions = emissionFactorDec.times(amountDec).toFixed(2);
 
-    // Info: (20260415 - Julian) 計算排放強度分級
-    const intensity = amount > 0 ? totalEmissions / amount : 0;
+    // Info: (20260519 - Tzuhan) 計算排放強度分級
+    const intensity = amountDec.gt(0)
+      ? MoneyUtil.toDecimal(totalEmissions).dividedBy(amountDec).toNumber()
+      : 0;
     const intensityLevel =
       intensity < 1
         ? EsgIntensity.LOW
@@ -144,7 +147,7 @@ export default function EsgDetailModal({
       const formPayload: IEsgRecordDetail = {
         ...formData,
         isVerified: isVerifiedState,
-        emissions: calculatedResult.totalEmissions,
+        emissions: calculatedResult.totalEmissions.toString(),
         intensity:
           calculatedResult.intensityLevel !== "-"
             ? (calculatedResult.intensityLevel as EsgIntensity)
@@ -272,7 +275,7 @@ export default function EsgDetailModal({
           <div className="ml-auto">
             <AiConfidence
               confidence={formData.confidence}
-              note={translateAiNote(formData.aiNote, t)}
+              note={formData.aiNote}
             />
           </div>
         </div>
@@ -400,7 +403,7 @@ export default function EsgDetailModal({
                   placeholder="0.00"
                   value={formData.amount || ""}
                   onChange={(e) => {
-                    const value = Number(e.target.value);
+                    const value = e.target.value;
                     setFormData({ ...formData, amount: value });
                   }}
                   className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"

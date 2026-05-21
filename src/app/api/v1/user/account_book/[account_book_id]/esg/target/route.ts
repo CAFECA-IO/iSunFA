@@ -34,28 +34,37 @@ export async function GET(
     const incomes =
       await voucherRepo.getVerifiedIncomesByAccountBookId(accountBookId);
 
-    const yearlyData: Record<number, { emissions: number; revenue: number }> =
+    const yearlyData: Record<number, { emissions: Decimal; revenue: Decimal }> =
       {};
 
     esgRecords.forEach((r) => {
       const date = new Date(r.tradingDate * 1000);
       const year = date.getFullYear();
-      if (!yearlyData[year]) yearlyData[year] = { emissions: 0, revenue: 0 };
-      yearlyData[year].emissions += Number(r.emissions);
+      if (!yearlyData[year])
+        yearlyData[year] = {
+          emissions: new Decimal(0),
+          revenue: new Decimal(0),
+        };
+      yearlyData[year].emissions = yearlyData[year].emissions.plus(
+        new Decimal(r.emissions as string | number),
+      );
     });
 
     incomes.forEach((v) => {
       const date = new Date(v.tradingDate * 1000);
       const year = date.getFullYear();
-      if (!yearlyData[year]) yearlyData[year] = { emissions: 0, revenue: 0 };
+      if (!yearlyData[year])
+        yearlyData[year] = {
+          emissions: new Decimal(0),
+          revenue: new Decimal(0),
+        };
       const val = v.lineItems.lines
         .reduce(
           (a, l) => a.plus(new Decimal(l.amount as string | number)),
           new Decimal(0),
         )
-        .div(2)
-        .toNumber();
-      yearlyData[year].revenue += val;
+        .div(2);
+      yearlyData[year].revenue = yearlyData[year].revenue.plus(val);
     });
 
     const targets = await esgRepo.getEsgTargetsByAccountBookId(accountBookId);
@@ -66,24 +75,28 @@ export async function GET(
 
     const history = [];
     for (let year = startYear; year <= endYear; year++) {
-      const data = yearlyData[year] || { emissions: 0, revenue: 0 };
-      const rev10k = data.revenue / 10000;
-      const intensity = rev10k > 0 ? data.emissions / rev10k : 0;
+      const data = yearlyData[year] || {
+        emissions: new Decimal(0),
+        revenue: new Decimal(0),
+      };
+      const rev10k = data.revenue.div(10000);
+      const intensity = rev10k.gt(0)
+        ? data.emissions.div(rev10k)
+        : new Decimal(0);
       const target = targetMap.get(year);
 
       history.push({
         year,
-        emissions: data.emissions > 0 ? data.emissions : null,
-        revenue: data.revenue > 0 ? data.revenue : null,
-        intensity:
-          data.emissions > 0
-            ? MoneyUtil.toDecimal(intensity.toFixed(2)).toNumber()
-            : null,
+        emissions: data.emissions.gt(0) ? data.emissions.toString() : null,
+        revenue: data.revenue.gt(0) ? data.revenue.toString() : null,
+        intensity: data.emissions.gt(0)
+          ? MoneyUtil.toDecimal(intensity.toFixed(2)).toString()
+          : null,
         totalEmissionTarget: target?.totalEmissionTarget
-          ? Number(target.totalEmissionTarget) / 1000
+          ? new Decimal(target.totalEmissionTarget).div(1000).toString()
           : null,
         revenueEmissionTarget: target?.revenueEmissionTarget
-          ? Number(target.revenueEmissionTarget) / 1000
+          ? new Decimal(target.revenueEmissionTarget).div(1000).toString()
           : null,
       });
     }
@@ -94,9 +107,11 @@ export async function GET(
       history.find((h) => h.year === currentYear - 1) || null;
 
     // Info: (20260322 - Luphia) Provide a suggested intensity based on last year if available
-    let suggestedTargetIntensity = 0;
+    let suggestedTargetIntensity = "0";
     if (lastYearData && lastYearData.intensity) {
-      suggestedTargetIntensity = lastYearData.intensity * 0.95;
+      suggestedTargetIntensity = new Decimal(lastYearData.intensity)
+        .times(0.95)
+        .toFixed(2);
     }
 
     return jsonOk({
@@ -142,11 +157,11 @@ export async function POST(
       year: Number(year),
       totalEmissionTarget:
         totalEmissionTarget !== undefined && totalEmissionTarget !== null
-          ? totalEmissionTarget * 1000
+          ? new Decimal(totalEmissionTarget).times(1000).toString()
           : null,
       revenueEmissionTarget:
         revenueEmissionTarget !== undefined && revenueEmissionTarget !== null
-          ? revenueEmissionTarget * 1000
+          ? new Decimal(revenueEmissionTarget).times(1000).toString()
           : null,
     });
 

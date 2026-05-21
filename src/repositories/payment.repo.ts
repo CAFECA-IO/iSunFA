@@ -8,6 +8,7 @@ import {
 import { IOenCallbackData, IOenOrderData } from "@/interfaces/payment";
 import { buildReceiptDataToSave } from "@/lib/utils/payment_helpers";
 import { CurrencyUnit, CURRENCY_UNIT } from "@/constants/price";
+import { MoneyUtil } from "@/lib/utils/money";
 
 export interface IOrderWithUser extends Order {
   user: User | null;
@@ -29,7 +30,7 @@ export class PaymentRepository {
   ) {
     let shouldMint = false;
     let creditsToMint = 0;
-    let amountPaid = 0;
+    let amountPaid = 0n;
 
     await prisma.$transaction(async (tx) => {
       if (token && typeof token === "string") {
@@ -125,7 +126,7 @@ export class PaymentRepository {
 
           shouldMint = true;
           creditsToMint = _creditsToMint;
-          amountPaid = Number(order.amount);
+          amountPaid = order.amount;
         }
       } else if (!isPaymentSuccess && order.status === ORDER_STATUS.PENDING) {
         await tx.paymentTransaction.updateMany({
@@ -196,8 +197,8 @@ export class PaymentRepository {
     const safeData = {
       ...data,
       amount:
-        typeof data.amount === "number"
-          ? BigInt(Math.round(data.amount))
+        typeof data.amount === "number" || typeof data.amount === "string"
+          ? BigInt(MoneyUtil.toDecimal(data.amount).round().toString())
           : data.amount,
     };
 
@@ -413,7 +414,7 @@ export class PaymentRepository {
     userId: string,
     paymentMethodId: string,
     orderId: string,
-    amount: number,
+    amount: bigint,
     orderData: object,
     authentication: string,
   ) {
@@ -424,7 +425,7 @@ export class PaymentRepository {
           paymentMethodId: paymentMethodId,
           orderId: orderId,
           provider: "OEN",
-          amount: BigInt(Math.round(amount)),
+          amount: amount,
           status: PAYMENT_TRANSACTION_STATUS.PENDING,
         },
       });
@@ -476,7 +477,7 @@ export class PaymentRepository {
     orderId: string,
     userId: string,
     userName: string,
-    amount: number,
+    amount: bigint,
     credits: number,
     orderData: IOenOrderData,
     oenData: Prisma.InputJsonValue,
@@ -487,7 +488,7 @@ export class PaymentRepository {
       const dbReceipt = await tx.receipt.create({
         data: {
           orderId: orderId,
-          amount: BigInt(Math.round(amount)),
+          amount: amount,
           data: {
             ...(oenData as Record<string, unknown>),
             receiptDetails: {
@@ -546,7 +547,7 @@ export class PaymentRepository {
   async getGlobalRevenueTotal(
     startDate?: Date,
     endDate?: Date,
-  ): Promise<number> {
+  ): Promise<bigint> {
     const where = this.buildDateWhereClause(startDate, endDate);
     where.type = ORDER_TYPE.OEN_PAYMENT;
     where.status = { in: [ORDER_STATUS.PAID, ORDER_STATUS.COMPLETED] };
@@ -555,7 +556,7 @@ export class PaymentRepository {
       _sum: { amount: true },
       where,
     });
-    return Number(agg._sum.amount || 0n);
+    return agg._sum.amount || 0n;
   }
 
   async getGlobalTransactingUsersCount(
@@ -599,7 +600,7 @@ export class PaymentRepository {
   async getGlobalPointsConsumedTotal(
     startDate?: Date,
     endDate?: Date,
-  ): Promise<number> {
+  ): Promise<bigint> {
     const where = this.buildDateWhereClause(startDate, endDate);
     where.type = {
       notIn: [
@@ -617,7 +618,7 @@ export class PaymentRepository {
       _sum: { amount: true },
       where,
     });
-    return Number(agg._sum.amount || 0n);
+    return agg._sum.amount || 0n;
   }
 
   async countGlobalOrders(startDate?: Date, endDate?: Date): Promise<number> {

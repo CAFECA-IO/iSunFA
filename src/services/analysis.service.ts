@@ -12,9 +12,9 @@ import { orderRepo } from "@/repositories/order.repo";
 import { generateBalanceSheet } from "@/lib/report/balance_sheet_generator";
 import { generateCashFlowStatement } from "@/lib/report/cash_flow_statement_generator";
 import { generateIncomeStatement } from "@/lib/report/income_statement_generator";
-// import { getAccountByCode } from "@/lib/utils/account";
-// import { IAccount } from "@/constants/accounts";
 import { generateEsgReport } from "@/lib/report/esg_report_generator";
+// Info: (20260518 - Tzuhan) 引入跨表指標計算引擎
+import { calculateCrossReportMetrics } from "@/lib/report/cross_report_metrics";
 import {
   missionGenerator,
   IMissionDefinition,
@@ -336,7 +336,7 @@ export class AnalysisService {
                       ? (acc as IAccount)
                       : ({ code, name: code } as IAccount), // Info: (20260502 - Tzuhan) ⚠️修復：正確綁定科目字典，消滅 AI 幻覺
                     particular: String(line.particular || ""),
-                    amount: Number(line.amount || 0),
+                    amount: line.amount?.toString() || "0",
                     isDebit: Boolean(line.isDebit),
                   } as unknown as IVoucherLineUI);
                 }
@@ -363,7 +363,7 @@ export class AnalysisService {
                     .map((l) => {
                       const code = String(l.accountingCode || "");
                       const acc = getAccountByCode(code);
-                      return `    - 科目: ${acc ? acc.name : code}, 金額:${Number(l.amount || 0)}, 摘要: ${l.particular || ""}, 借貸: ${l.isDebit ? "借方" : "貸方"}`;
+                      return `    - 科目: ${acc ? acc.name : code}, 金額:${l.amount?.toString() || "0"}, 摘要: ${l.particular || ""}, 借貸: ${l.isDebit ? "借方" : "貸方"}`;
                     })
                     .join("\n");
                   const dateStr =
@@ -398,8 +398,9 @@ export class AnalysisService {
                   matchedAccountBook?.parValue || 10,
                 );
             } else if (params.category === ANALYSIS_CATEGORY.CASH_FLOW) {
+              // Info: (20260518 - Tzuhan) [AUDIT FIX] 必須強制傳入期初現金。在 Roadmap V2 Sprint 2 期初餘額模組上線前，暫時傳入 0。
               parsedPrerequisiteParams.cashFlowReport =
-                generateCashFlowStatement(periodLines);
+                generateCashFlowStatement(periodLines, 0);
             } else if (params.category === ANALYSIS_CATEGORY.INCOME_STATEMENT) {
               parsedPrerequisiteParams.incomeStatementReport =
                 generateIncomeStatement(periodLines);
@@ -409,15 +410,21 @@ export class AnalysisService {
               params.category === ANALYSIS_CATEGORY.CARBON_HEALTH_CHECK ||
               params.category === ANALYSIS_CATEGORY.NET_ZERO_EMISSIONS
             ) {
-              parsedPrerequisiteParams.balanceSheetReport =
-                generateBalanceSheet(
-                  cumulativeLines,
-                  matchedAccountBook?.parValue || 10,
-                );
-              parsedPrerequisiteParams.cashFlowReport =
-                generateCashFlowStatement(periodLines);
-              parsedPrerequisiteParams.incomeStatementReport =
-                generateIncomeStatement(periodLines);
+              // Info: (20260518 - Tzuhan) [AUDIT FIX] 綜合分析需要同時產出三表，並在此編排層進行「跨表指標計算」
+              const bsReport = generateBalanceSheet(
+                cumulativeLines,
+                matchedAccountBook?.parValue || 10,
+              );
+              const cfReport = generateCashFlowStatement(periodLines, 0);
+              const isReport = generateIncomeStatement(periodLines);
+
+              parsedPrerequisiteParams.balanceSheetReport = bsReport;
+              parsedPrerequisiteParams.cashFlowReport = cfReport;
+              parsedPrerequisiteParams.incomeStatementReport = isReport;
+
+              // Info: (20260518 - Tzuhan) 呼叫跨表指標引擎，將精準的綜合指標餵給 AI
+              parsedPrerequisiteParams.crossReportMetrics =
+                calculateCrossReportMetrics(bsReport, cfReport, isReport);
             }
 
             if (esgRecords.length > 0) {
@@ -429,7 +436,7 @@ export class AnalysisService {
                   const tradingDateStr = new Date(r.tradingDate * 1000)
                     .toISOString()
                     .split("T")[0];
-                  return `- 日期: ${tradingDateStr}, 活動: ${r.activityType}, 排放量: ${Number(r.emissions)} ${r.unit}, 範疇: ${r.scope}, 廠商: ${r.vendor}`;
+                  return `- 日期: ${tradingDateStr}, 活動: ${r.activityType}, 排放量: ${r.emissions?.toString() || "0"} ${r.unit}, 範疇: ${r.scope}, 廠商: ${r.vendor}`;
                 });
                 parsedPrerequisiteParams.esgRecordsContext = `\n【內部 ESG 明細紀錄】:\n${esgContextLines.join("\n")}\n`;
               }
