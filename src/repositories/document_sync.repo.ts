@@ -263,9 +263,9 @@ export class DocumentSyncRepository {
               for (const l of vd.lines || []) {
                 const amountDec = MoneyUtil.toDecimal(String(l.amount || 0));
 
-                // Info: (20260521 - Tzuhan) Per-Line Deterministic RAG. 拿摘要去找確定答案
+                // Info: (20260521 - Tzuhan) Per-Line Deterministic RAG. 優先使用 AI 解析之標準科目名稱，若無則降級使用摘要
                 let matchedAccountingCode = CoaVectorSearchService.match(
-                  l.particular || "",
+                  (l.accountingCode as string) || l.particular || "",
                   (accountBook.country as CountryCode) || CountryCode.TW,
                 );
 
@@ -414,8 +414,14 @@ export class DocumentSyncRepository {
           // Info: (20260521 - Tzuhan) Stage 1: ESG Deterministic Vendor Interceptor
           const vendorTaxId =
             (voucherBase?.data || voucherBase)?.vendorTaxId || null;
-          const deterministicCategory =
-            EmissionFactorRegistry.matchCategory(vendorTaxId);
+          const vendorNameStr = String(
+            ((voucherBase?.data || voucherBase) as Record<string, unknown>)
+              ?.vendorName || "",
+          );
+          const deterministicCategory = EmissionFactorRegistry.matchCategory(
+            vendorTaxId,
+            vendorNameStr,
+          );
 
           let fallbackTag = ed.fallbackCategory?.trim();
           if (deterministicCategory) {

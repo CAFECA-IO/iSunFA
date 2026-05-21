@@ -14,11 +14,27 @@ export class EmissionFactorRegistry {
     }
   }
 
-  static matchCategory(vendorTaxIdStr?: string | null): string | null {
+  static matchCategory(
+    vendorTaxIdStr?: string | null,
+    vendorNameStr?: string | null,
+  ): string | null {
     if (vendorTaxIdStr) {
       const matched = this.taxIdIndex.get(vendorTaxIdStr);
       if (matched) return matched.fallbackCategory;
     }
+
+    if (vendorNameStr) {
+      const normalizedVendor = vendorNameStr.toLowerCase().replace(/\s+/g, "");
+      if (normalizedVendor) {
+        for (const rule of ESG_DETERMINISTIC_RULES) {
+          const matchFound = rule.aliases.some((alias) =>
+            normalizedVendor.includes(alias.toLowerCase().replace(/\s+/g, "")),
+          );
+          if (matchFound) return rule.fallbackCategory;
+        }
+      }
+    }
+
     return null;
   }
 }

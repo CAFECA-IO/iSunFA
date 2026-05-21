@@ -54,13 +54,13 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
   - 👉 **實作要求**：建立 `src/__tests__/e2e/core_pipeline.e2e.test.ts`，必須使用 Jest 框架，且在頂端強制加入防呆鎖 `if (process.env.NODE_ENV === 'production') throw new Error('嚴禁在正式機執行 E2E 測試');`。
 
 - **[第二順位：CPA 財務合規任務 (核心財務防禦)]**
-- **✅ Done (2026-05-14)：外幣與全域字典解耦 (Backend Rule Registry)**：徹底剝奪 AI 計算匯率與小數點乘法的權力，並拔除所有全域會計字典注入（節省巨量 Token）。外幣匯率微服務與黃金廠商映射引擎 (`VENDOR_RULE_REGISTRY`) 已獨立切分，正式交由 Julian 負責實作。
+- **✅ Done (2026-05-14/21)：外幣與全域字典解耦 (Backend Rule Registry)**：徹底剝奪 AI 計算匯率與小數點乘法的權力，並拔除所有全域會計字典注入（節省巨量 Token）。外幣匯率微服務已由 Julian 實作完成（包含自動化匯率常數與 Repo）；黃金廠商映射引擎 (`VendorRegistry`) 由 Julian 完成核心實作與映射表，隨後由 Tzuhan 串接 Mock 並升級為 O(1) 倒排索引防護機制。
 - **✅ Done (2026-05-16)：強制財務憑證平衡防護 (Strict Accounting Integrity)**：**(錯誤邏輯拆彈)** 廢除過去「包容不完美揭露」與自動提列至懸記科目的錯誤設計。複式簿記不管資料是否完整都不會有差額。API 閘道與資料庫寫入層已全面導入「借貸平衡 (Debits = Credits)」的嚴格檢核。AI 解析若產生不平的傳票，系統將自動標記為 `FAILED` 狀態並加入警告，且任何不平的傳票更新也將被 API 直接阻擋，確保最終財報 (Balance Sheet) 絕對平衡，符合會計鐵律。
 - **✅ Done (2026-05-10)：面額彈性解耦 (Decoupling Par Value)**：拔除系統內 `parValue = 10` 的 Hardcode，改為動態傳入（已實作完成，動態計算每股淨值與 EPS）。
 
 - **[第三順位：CPA 碳排合規任務 (DPP 基礎)]**
 - **✅ Done (2026-05-14)：數位 BOM 與產品關聯解耦 (DPP Handover)**：為了保持核心借貸引擎極簡，徹底移除了資料庫中對 `productId` 的強耦合。DPP 數位產品護照架構已切分出領域邊界，正式交由老闆 Luphia 親自負責統籌與設計。
-- **✅ Done (2026-05-13)：實作「ESG 兩段式計算架構 (Two-Stage Calculation)」**：**(漂綠地雷拆彈)** 廢除 Prompt 中的 `ALL_TRUE_COEFFICIENT_DATA` 與乘法指令。AI 僅限萃取，後端 ESG 碳排係數洗轉與產業容損率建置交由 Julian 實作。
+- **✅ Done (2026-05-13/21)：實作「ESG 兩段式計算架構 (Two-Stage Calculation)」**：**(漂綠地雷拆彈)** 廢除 Prompt 中的 `ALL_TRUE_COEFFICIENT_DATA` 與乘法指令。AI 僅限萃取，後端 ESG 碳排係數洗轉與產業容損率基礎機制已由 Julian 實作 (包含 Seed 腳本與 Loss Ratio 函數)；後續由 Tzuhan 疊加實作了 `EmissionFactorRegistry` 4 軌降級攔截器。剩餘的官方標準 DB 轉移與爬蟲管線整合排入 Sprint 2。
 - **✅ Done (2026-05-14)：高精度數據重構與單位枚舉 (Precision & Unit Enum)**：財務欄位升級為 `BigInt`；碳排引擎導入 `Prisma.Decimal` 並將 `MeasurementUnit` 從 DB 拔除轉為 TypeScript 端強型別，前端全面套用 `MoneyUtil` 防腐層。徹底消滅所有 `parseFloat` 的隱性精度流失漏洞，保障千兆級財報與極精密碳排係數安全寫入。
 
 - **[第四順位：Sprint 1 殘餘除錯與前端同步 (Residual Fixes - Assigned to Julian)]**
@@ -71,7 +71,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **[第五順位：Prompt 提示詞微調 (Prompt Calibration)]**
 - **✅ Done (2026-05-18)：恢復 Markdown 優美排版 (Restore Rich Markdown Parsing)**：針對 `journal.ts` 的指令進行「權限分流」。放寬排版與摘要權限（允許 H2/H3 與條列式），但繼續鎖死數學與推斷權限，解決因「零幻覺」鐵律矯枉過正導致日記帳喪失易讀性的問題。
 
-- **[Architect & CPA 聯手任務 (取代 Prompt 暴力注入的決定論防護網)]**
+- **[Tzuhan 任務 (取代 Prompt 暴力注入的決定論防護網)]**
 - **✅ Done (2026-05-20)：Voucher 財務防護 - 語意標籤與多國映射 (Semantic Account Matching)**：
   - **痛點拆彈**：過去將 1 萬多筆會計科目塞入 Prompt，導致 Token 爆炸且 AI 經常選錯相近科目。
   - **實作架構**：徹底拔除 Prompt 字典注入。實作 `UniversalAccountTag` (如 `TELECOM_EXPENSE`) 作為通用語意標籤，並於後端建立 `SemanticAccountMatcher`。
@@ -117,7 +117,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
     2. **UK DEFRA** (英國環境食品與鄉村事務部資料庫)
     3. **Taiwan MOENV** (台灣環境部事業溫室氣體排放量資訊平台 - 需找回舊有爬蟲程式碼整合進管線)
   - 建立定期自動下載 Pipeline，確保系統具備最新 Master Data 且強制遵守 Append-Only 不可竄改規則。
-- **⚠️ Pending：阻斷 AI 碳排幻覺與導入向量搜尋 (Anti-ESG Hallucination & Vector Search)**：內建 `EmissionFactorDictionary`。不僅要求 AI 只抓取「活動數據」，後端必須導入 `pgvector` 向量搜尋來精準對接官方係數庫並交由系統重算。
+- **✅ Done / ⚠️ Pending：阻斷 AI 碳排幻覺與導入向量搜尋 (Anti-ESG Hallucination & Vector Search)**：(✅ 已完成) 已實作 O(1) 的 `EmissionFactorRegistry` 4 軌降級管線，要求 AI 只抓取「活動數據」並交由後端精準對接重算。(⚠️ Pending Sprint 2) 後端將導入 `pgvector` 向量搜尋以強化罕見項目的模糊比對。
 - **⚠️ Pending (急迫)：質量守恆勾稽與動態容許耗損率 (Mass Conservation & Loss Ratio Threshold)**：將「進銷存與原物料物理防護」實作於管線中。猶如財務的 A=L+E，系統將強制核對：`期初庫存重量 + 本期採購重量 = 消耗重量 + 期末庫存重量`。**(物理防呆地雷拆彈)** 避免過度剛性的物理防護導致系統死鎖，現實中絕對守恆不存在，必須在 Schema 為不同原物料引入動態的「容許耗損率 (Loss Ratio Threshold)」。若 AI 萃取出的消耗量與 ERP 盤盈虧落在合理閥值內，系統應自動生成「盤盈虧/耗損調整分錄」並繼續放行，以貼近真實製造業的運作樣貌。
   - **⚠️ Pending (2026-05-13)：進階防護實作**：必須在寫入 DB 前掛載 ERP 庫存比對微服務，若 `amount > MAX_INVENTORY_LIMIT` 則直接拋出 Error 並將憑證標記為 `FRAUD_SUSPECTED` 阻斷寫入，達到 100% 物理防漂綠。
 

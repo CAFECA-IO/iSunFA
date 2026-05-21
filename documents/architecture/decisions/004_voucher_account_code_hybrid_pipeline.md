@@ -2,7 +2,7 @@
 
 > **Date**: 2026-05-20
 > **Author**: Tzuhan
-> **Status**: Accepted (Pending Implementation in Sprint 1)
+> **Status**: Accepted (✅ Implemented in Sprint 1)
 > **核心目標**: 在拔除上萬筆全域會計科目暴力注入後，補齊 `Voucher` 解析管線的防護缺口。捨棄危險的「自然語言模糊比對 (Fuzzy Matching)」，全面導入 **會計科目 Vector RAG**、**多維度攔截器** 與 **財務懸記機制 (Suspense Fallback)**，確保系統達到四大會計師 (Big 4) 等級的零幻覺與絕對應計基礎 (Accrual Basis)。
 
 ---
