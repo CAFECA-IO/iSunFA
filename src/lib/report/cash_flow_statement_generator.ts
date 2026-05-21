@@ -210,7 +210,7 @@ export function generateCashFlowStatement(
           TW_ACCOUNTS,
         )
       ) {
-        // 為了相容原本判斷 15, 16 但排除其他，簡化為只要是非流動且不是無形/其他，就算資本支出
+        // Info: (20260520 - Tzuhan) 為了相容原本判斷 15, 16 但排除其他，簡化為只要是非流動且不是無形/其他，就算資本支出
         capitalExpenditure = capitalExpenditure.plus(
           MoneyUtil.toDecimal(amount),
         );
