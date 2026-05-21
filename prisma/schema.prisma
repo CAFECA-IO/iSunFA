@@ -56,7 +56,7 @@ model User {
   checkins              Checkin[]
   reportShareTokens     ReportShareToken[]     @relation("ReportSharer")
   campaignRegistrations CampaignRegistration[]
-  userCouponRecords     UserCouponRecord[]
+  coupons               Coupon[]
 
   @@index([address])
   @@map("user")
@@ -460,6 +460,11 @@ model Voucher {
   // Info: (20260324 - Julian) AI 分析的備註
   aiNote String @default("") @map("ai_note") @db.Text
 
+  paymentStatus      String    @default("NOT_APPLICABLE") @map("payment_status")
+  clearedByVoucherId String?   @map("cleared_by_voucher_id")
+  clearedBy          Voucher?  @relation("VoucherClearing", fields: [clearedByVoucherId], references: [id])
+  clearingVouchers   Voucher[] @relation("VoucherClearing")
+
   @@map("voucher")
 }
 
@@ -501,6 +506,8 @@ enum EsgIntensity {
   HIGH
 }
 
+
+
 model EsgRecord {
   id                String           @id @default(uuid())
   createdAt         DateTime         @default(now()) @map("created_at")
@@ -519,6 +526,7 @@ model EsgRecord {
   isVerified        Boolean          @default(false) @map("is_verified") // Info: (20260318 - Julian) 是否已經驗證
   analysisStatus    AIAnalysisStatus @default(PENDING) @map("analysis_status") // Info: (20260318 - Julian) AI 分析狀態
   emissionSourceTag String?          @map("emission_source_tag") // Info: (20260421 - Julian) 排放源標籤（廠）
+  generationSource  String           @default("SYSTEM_DETERMINISTIC") @map("generation_source") // Info: (20260519 - Tzuhan) 紀錄產生來源，用於審計追蹤
 
   // Info: (20260312 - Julian) 關聯檔案憑證
   fileId String? @map("file_id")
@@ -899,12 +907,12 @@ model CouponCampaign {
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 
-  userRecords UserCouponRecord[]
+  coupons Coupon[]
 
   @@map("coupon_campaign")
 }
 
-model UserCouponRecord {
+model Coupon {
   id          String   @id @default(uuid())
   userId      String   @map("user_id")
   campaignId  String   @map("campaign_id")
@@ -918,5 +926,5 @@ model UserCouponRecord {
   user     User           @relation(fields: [userId], references: [id])
   campaign CouponCampaign @relation(fields: [campaignId], references: [id])
 
-  @@map("user_coupon_record")
+  @@map("coupon")
 }

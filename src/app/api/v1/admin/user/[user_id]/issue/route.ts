@@ -7,6 +7,7 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { CURRENCY_UNIT } from "@/constants/price";
 import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
+import { MoneyUtil } from "@/lib/utils/money";
 
 export async function POST(
   req: Request,
@@ -20,9 +21,10 @@ export async function POST(
       return jsonFail(API_ERRORS.VL_MISSING_PARAMS);
     }
 
-    const amount = Number(body.amount);
+    const amount = String(body.amount);
 
-    if (isNaN(amount) || amount <= 0) {
+    const amountDec = MoneyUtil.toDecimal(amount);
+    if (amountDec.isNaN() || amountDec.lte(0)) {
       return jsonFail(API_ERRORS.VA_ISSUE_AMOUNT_MUST_BE_GREATE);
     }
 
@@ -46,7 +48,7 @@ export async function POST(
     await paymentRepo.createOrder({
       userId: targetUser.id,
       type: ORDER_TYPE.ADMIN_ISSUED,
-      amount: amount,
+      amount: BigInt(amount),
       unit: CURRENCY_UNIT.ICP,
       status: ORDER_STATUS.COMPLETED,
       challenge: "admin_distribute",

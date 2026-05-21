@@ -85,7 +85,7 @@ export function formatTime(timestamp: number, now: number) {
   }
 }
 
-// Info: (20260512 - Tzuhan) 千分位符號、括號 (Delegated to MoneyUtil)
-export function numberWithCommas(number: MoneyValue) {
-  return MoneyUtil.format(number);
+// Info: (20260519 - Tzuhan) 升級為動態小數保留，預設保護財務報表的整數展現，但允許動態小數
+export function numberWithCommas(number: MoneyValue, maxDecimals: number = 2) {
+  return MoneyUtil.formatDynamic(number, maxDecimals);
 }

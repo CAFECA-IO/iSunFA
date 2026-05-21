@@ -3,6 +3,7 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { Role } from "@/constants/role";
+import { MoneyUtil } from "@/lib/utils/money";
 
 export async function GET(req: Request) {
   try {
@@ -67,7 +68,7 @@ export async function POST(req: Request) {
       description,
       startDate: new Date(startDate),
       endDate: new Date(endDate),
-      bonusPoints: Number(bonusPoints),
+      bonusPoints: MoneyUtil.toDecimal(bonusPoints).toNumber(),
       bonusModules: Array.isArray(bonusModules) ? bonusModules : [],
       isActive: Boolean(isActive),
     });

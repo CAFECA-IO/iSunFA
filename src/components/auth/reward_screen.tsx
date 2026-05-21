@@ -1,7 +1,7 @@
 import { useTranslation } from "@/i18n/i18n_context";
 
 interface IRewardScreenProps {
-  rewardData: { points: number; modules: string[] };
+  rewardData: { points: string; modules: string[] };
   onRewardAccept: () => void;
 }
 

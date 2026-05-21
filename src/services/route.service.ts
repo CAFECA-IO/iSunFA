@@ -183,7 +183,7 @@ export async function calculateLogisticsPlan(
   originLng: number,
   destLat: number,
   destLng: number,
-  weightKg: number = 1000,
+  weightKg: string | number = "1000",
 ): Promise<ILogisticsPlan> {
   try {
     const [exportPort, importPort, exportAirport, importAirport] =
@@ -204,80 +204,89 @@ export async function calculateLogisticsPlan(
       LAND: 0.11289,
     };
 
-    const weightTonne = weightKg / 1000.0;
+    const weightTonne = MoneyUtil.toDecimal(weightKg)
+      .dividedBy(1000)
+      .toString();
     const origin = { lat: originLat, lng: originLng };
     const dest = { lat: destLat, lng: destLng };
 
     const landOnly = await getLandRoute(origin, dest);
     if (landOnly.success) {
-      landOnly.co2eKg = (landOnly.distanceKm || 0) * weightTonne * factors.LAND;
+      landOnly.co2eKg = MoneyUtil.toDecimal(landOnly.distanceKm || 0)
+        .times(weightTonne)
+        .times(factors.LAND)
+        .toString();
     } else {
-      landOnly.co2eKg = 0;
+      landOnly.co2eKg = "0";
     }
 
     const seaPlan = {
       land_origin_to_port: await getLandRoute(origin, exportPort),
       sea_port_to_port: calculateSeaPath(exportPort, importPort),
       land_port_to_dest: await getLandRoute(importPort, dest),
-      total_co2eKg: 0,
+      total_co2eKg: "0",
     };
 
-    let seaCo2e = 0;
+    let seaCo2e = MoneyUtil.toDecimal(0);
     if (seaPlan.land_origin_to_port.success) {
-      const c =
-        (seaPlan.land_origin_to_port.distanceKm || 0) *
-        weightTonne *
-        factors.LAND;
-      seaPlan.land_origin_to_port.co2eKg = c;
-      seaCo2e += c;
+      const c = MoneyUtil.toDecimal(seaPlan.land_origin_to_port.distanceKm || 0)
+        .times(weightTonne)
+        .times(factors.LAND);
+      seaPlan.land_origin_to_port.co2eKg = c.toString();
+      seaCo2e = seaCo2e.plus(c);
     }
     if (seaPlan.sea_port_to_port.success) {
       const seaDistKm = seaPlan.sea_port_to_port.distanceKm || 0;
-      const c = seaDistKm * weightTonne * factors.SEA;
-      seaPlan.sea_port_to_port.co2eKg = c;
-      seaCo2e += c;
+      const c = MoneyUtil.toDecimal(seaDistKm)
+        .times(weightTonne)
+        .times(factors.SEA);
+      seaPlan.sea_port_to_port.co2eKg = c.toString();
+      seaCo2e = seaCo2e.plus(c);
     }
     if (seaPlan.land_port_to_dest.success) {
-      const c =
-        (seaPlan.land_port_to_dest.distanceKm || 0) *
-        weightTonne *
-        factors.LAND;
-      seaPlan.land_port_to_dest.co2eKg = c;
-      seaCo2e += c;
+      const c = MoneyUtil.toDecimal(seaPlan.land_port_to_dest.distanceKm || 0)
+        .times(weightTonne)
+        .times(factors.LAND);
+      seaPlan.land_port_to_dest.co2eKg = c.toString();
+      seaCo2e = seaCo2e.plus(c);
     }
-    seaPlan.total_co2eKg = seaCo2e;
+    seaPlan.total_co2eKg = seaCo2e.toString();
 
     const airPlan = {
       land_origin_to_airport: await getLandRoute(origin, exportAirport),
       air_airport_to_airport: calculateAirPath(exportAirport, importAirport),
       land_airport_to_dest: await getLandRoute(importAirport, dest),
-      total_co2eKg: 0,
+      total_co2eKg: "0",
     };
 
-    let airCo2e = 0;
+    let airCo2e = MoneyUtil.toDecimal(0);
     if (airPlan.land_origin_to_airport.success) {
-      const c =
-        (airPlan.land_origin_to_airport.distanceKm || 0) *
-        weightTonne *
-        factors.LAND;
-      airPlan.land_origin_to_airport.co2eKg = c;
-      airCo2e += c;
+      const c = MoneyUtil.toDecimal(
+        airPlan.land_origin_to_airport.distanceKm || 0,
+      )
+        .times(weightTonne)
+        .times(factors.LAND);
+      airPlan.land_origin_to_airport.co2eKg = c.toString();
+      airCo2e = airCo2e.plus(c);
     }
     if (airPlan.air_airport_to_airport.success) {
       const airDistKm = airPlan.air_airport_to_airport.distanceKm || 0;
-      const c = airDistKm * weightTonne * factors.AIR;
-      airPlan.air_airport_to_airport.co2eKg = c;
-      airCo2e += c;
+      const c = MoneyUtil.toDecimal(airDistKm)
+        .times(weightTonne)
+        .times(factors.AIR);
+      airPlan.air_airport_to_airport.co2eKg = c.toString();
+      airCo2e = airCo2e.plus(c);
     }
     if (airPlan.land_airport_to_dest.success) {
-      const c =
-        (airPlan.land_airport_to_dest.distanceKm || 0) *
-        weightTonne *
-        factors.LAND;
-      airPlan.land_airport_to_dest.co2eKg = c;
-      airCo2e += c;
+      const c = MoneyUtil.toDecimal(
+        airPlan.land_airport_to_dest.distanceKm || 0,
+      )
+        .times(weightTonne)
+        .times(factors.LAND);
+      airPlan.land_airport_to_dest.co2eKg = c.toString();
+      airCo2e = airCo2e.plus(c);
     }
-    airPlan.total_co2eKg = airCo2e;
+    airPlan.total_co2eKg = airCo2e.toString();
 
     const finalPlan: ILogisticsPlan = {
       exportPort,
@@ -314,7 +323,7 @@ export async function calculateLogisticsPlanFromText(
   const weightStr = String(externalWeight || parsed.weightKg || 1000);
   const weight = MoneyUtil.toDecimal(
     MoneyUtil.parseInput(weightStr),
-  ).toNumber();
+  ).toString();
   const plan = await calculateLogisticsPlan(
     parsed.origin.lat,
     parsed.origin.lng,

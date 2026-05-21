@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import path from "path";
 import { fileURLToPath } from "url";
 import { z } from "zod";
+import { MoneyUtil } from "@/lib/utils/money";
 
 // Info: (20260515 - Julian) 資料來源，之後可依需求變更
 const DATA_SOURCE = "環境部溫室氣體排放係數";
@@ -14,7 +15,12 @@ const CoefficientSchema = z.object({
   description: z.string(),
   unit: z.string().min(1),
   // Info: (20260515 - Julian) 碳排係數必須是正數且具有合理上限，過濾掉不合理的值 (如年份或標號)
-  emissionFactor: z.number().positive().max(1000000),
+  emissionFactor: z
+    .union([z.number(), z.string()])
+    .refine(
+      (val) =>
+        MoneyUtil.toDecimal(val).gt(0) && MoneyUtil.toDecimal(val).lte(1000000),
+    ),
   source: z.string(),
 });
 

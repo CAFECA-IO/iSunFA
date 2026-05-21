@@ -7,6 +7,7 @@ import {
   getAdminWalletClient,
 } from "@/lib/wallet/admin_wallet";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
+import { MoneyUtil } from "@/lib/utils/money";
 
 const MEMBERSHIP_ABI = parseAbi([
   "function registerUser(address user) external",
@@ -116,7 +117,7 @@ export async function claimDailyCheckIn(
 // Info: (20260413 - Luphia) Distributes purchased points directly through the Membership contract's reserve.
 export async function issuePurchasedPointsToMember(
   userAddress: string,
-  amount: number,
+  amount: number | string,
 ): Promise<ActionResponse> {
   let account, walletClient, membershipAddress;
   try {
@@ -186,7 +187,11 @@ export async function issuePurchasedPointsToMember(
         errorMsg.includes("0x9443a76e")
       ) {
         // Info: (20260417 - Luphia) Make auto-funding dynamic to cover large issuances, plus 50 as buffer
-        const fundingAmount = Math.max(50, amount + 50);
+        const amtDec = MoneyUtil.toDecimal(amount);
+        const fundingAmountDec = amtDec.plus(50);
+        const fundingAmount = fundingAmountDec.gt(50)
+          ? fundingAmountDec.toString()
+          : "50";
         console.warn(
           `[MembershipService] Contract reserves low during point issuance. Executing auto-funding of ${fundingAmount} ISC...`,
         );
@@ -255,8 +260,8 @@ export async function getMemberInfo(userAddress: string) {
       data: {
         registrationTime: Number(regTime) * 1000,
         lastCheckInTime: Number(lastCheckIn) * 1000,
-        totalCheckInRewards: Number(formatEther(checkInRewards as bigint)),
-        totalPurchasedPoints: Number(formatEther(purchasedPoints as bigint)),
+        totalCheckInRewards: formatEther(checkInRewards as bigint),
+        totalPurchasedPoints: formatEther(purchasedPoints as bigint),
       },
     };
   } catch (error) {
@@ -266,7 +271,7 @@ export async function getMemberInfo(userAddress: string) {
 
 // Info: (20260417 - Luphia) Funds the MembershipSystem contract with Native ISC (Ether equivalent)
 export async function fundMembershipSystem(
-  amountISC: number,
+  amountISC: number | string,
 ): Promise<ActionResponse> {
   try {
     const { account, walletClient, membershipAddress } = await getClients();

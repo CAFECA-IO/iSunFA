@@ -87,7 +87,7 @@ export async function POST(
         user.id,
         oenPaymentMethod.id,
         order.id,
-        amount,
+        BigInt(amount),
         order.data as object,
         authentication,
       );
@@ -142,7 +142,7 @@ export async function POST(
       order.id,
       user.id,
       dbUser?.name || "Unknown",
-      amount,
+      BigInt(amount),
       credits,
       order.data as IOenOrderData,
       oenData,

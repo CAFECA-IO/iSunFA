@@ -5,7 +5,7 @@ interface ICampaignData {
   code: string;
   name: string;
   description: string;
-  bonusPoints: number;
+  bonusPoints: string;
   bonusModules: string[];
 }
 

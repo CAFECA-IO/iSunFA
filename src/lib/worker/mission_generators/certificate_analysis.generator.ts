@@ -82,7 +82,7 @@ export function generateCertificateAnalysisMission(
           vendorName: { type: SchemaType.STRING },
           documentType: {
             type: SchemaType.STRING,
-            enum: ["BILL_NOTICE", "PAYMENT_RECEIPT", "OTHER"],
+            enum: ["ACCRUAL_NOTICE", "PAYMENT_RECEIPT", "OTHERS"],
             description: "Must strictly be one of the provided enums.",
             format: "enum",
           },

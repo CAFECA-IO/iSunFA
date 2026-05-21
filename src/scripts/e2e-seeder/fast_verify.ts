@@ -11,6 +11,7 @@
 import fs from "fs";
 import path from "path";
 import { prisma } from "@/lib/prisma";
+import { MoneyUtil } from "@/lib/utils/money";
 import { Prisma, EsgScope, AIAnalysisStatus } from "@/generated";
 import { MeasurementUnit } from "@/constants/enums";
 import { runCrossValidation } from "@/scripts/e2e-seeder/cross_validator";
@@ -98,7 +99,11 @@ async function fastVerify(stockId: string) {
       voucherId: createdVoucher.id,
       particular: l.description,
       accountingCode: l.accountingCode,
-      amount: l.debitAmount > 0 ? l.debitAmount : l.creditAmount,
+      amount: BigInt(
+        MoneyUtil.toDecimal(l.debitAmount > 0 ? l.debitAmount : l.creditAmount)
+          .round()
+          .toString(),
+      ),
       isDebit: l.debitAmount > 0,
     }));
     await prisma.voucherLine.createMany({ data: lineData });

@@ -17,7 +17,6 @@ import { FilePreview } from "@/components/common/file_preview";
 import AiConfidence from "@/components/common/ai_confidence";
 import { IVoucher, IVoucherLineUI, TradingType } from "@/interfaces/voucher";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
-import { translateAiNote } from "@/utils/ai_note_translator";
 
 export function VoucherRow({
   voucher,
@@ -191,7 +190,7 @@ export function VoucherRow({
   if (voucher.analysisStatus === AIAnalysisStatus.FAILED) {
     const failedMessage =
       voucher.aiNote && voucher.aiNote.trim().length > 0
-        ? translateAiNote(voucher.aiNote, t)
+        ? voucher.aiNote
         : (t("voucher.main_view.table.ai.failed") as string);
 
     return (

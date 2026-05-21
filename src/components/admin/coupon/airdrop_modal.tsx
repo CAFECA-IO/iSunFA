@@ -244,11 +244,11 @@ export default function AirdropModal({
                               : ""
                           }`}
                         >
-                          <div className="flex flex-col">
-                            <span className="text-sm font-semibold text-gray-900">
+                          <div className="mr-3 flex min-w-0 flex-1 flex-col">
+                            <span className="truncate text-sm font-semibold text-gray-900">
                               {user.name || t("admin_member.page.unnamed_user")}
                             </span>
-                            <span className="font-mono text-xs text-gray-500">
+                            <span className="truncate font-mono text-xs text-gray-500">
                               {user.address}
                             </span>
                           </div>

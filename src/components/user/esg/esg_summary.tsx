@@ -15,6 +15,7 @@ import { useParams, usePathname } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { useTranslation } from "@/i18n/i18n_context";
+import { MoneyUtil } from "@/lib/utils/money";
 
 interface IEsgSummaryProps {
   year?: number;
@@ -110,8 +111,7 @@ export default function EsgSummary({
             />
           </div>
           <p className="text-center text-[10px] font-bold text-gray-400">
-            {t(`esg_summary.${scope.toLowerCase()}`)}:{" "}
-            {value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            {t(`esg_summary.${scope.toLowerCase()}`)}: {MoneyUtil.format(value)}
           </p>
         </div>
       );
@@ -131,7 +131,7 @@ export default function EsgSummary({
           </div>
           <div className="flex items-baseline gap-1.5">
             <span className="text-2xl font-bold tracking-tight text-slate-800">
-              {summaryData.totalEmissions.value.toLocaleString()}
+              {MoneyUtil.format(summaryData.totalEmissions.value)}
             </span>
             <span className="text-xs font-bold text-slate-500 lg:text-sm">
               {summaryData.totalEmissions.unit}
@@ -142,7 +142,7 @@ export default function EsgSummary({
           <div className="inline-flex items-center rounded-full border border-green-100 bg-green-50 px-3 py-1.5 text-xs font-bold text-green-700">
             <TrendingUp className="mr-1 h-3.5 w-3.5 shrink-0" />
             {t("esg_summary.estimate_eom")}{" "}
-            {summaryData.totalEmissions.estimatedEndOfMonth.toLocaleString()}{" "}
+            {MoneyUtil.format(summaryData.totalEmissions.estimatedEndOfMonth)}{" "}
             {summaryData.totalEmissions.estimatedUnit}
           </div>
         </div>
@@ -161,10 +161,7 @@ export default function EsgSummary({
             <span className="text-2xl font-bold tracking-tight text-slate-800">
               {summaryData.emissionIntensity.value === null
                 ? "N/A"
-                : summaryData.emissionIntensity.value.toLocaleString(
-                    undefined,
-                    { minimumFractionDigits: 2 },
-                  )}
+                : MoneyUtil.format(summaryData.emissionIntensity.value)}
             </span>
             <span className="text-xs font-bold text-slate-500 lg:text-sm">
               {summaryData.emissionIntensity.unit}
@@ -210,9 +207,9 @@ export default function EsgSummary({
         <div className="mt-4 lg:mt-8">
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
             <div
-              className={`h-full rounded-full ${summaryData.goalProgress.percentage > 100 ? "bg-red-500" : "bg-orange-500"}`}
+              className={`h-full rounded-full ${Number(summaryData.goalProgress.percentage) > 100 ? "bg-red-500" : "bg-orange-500"}`}
               style={{
-                width: `${Math.min(100, summaryData.goalProgress.percentage)}%`,
+                width: `${Math.min(100, Number(summaryData.goalProgress.percentage))}%`,
               }}
             ></div>
           </div>

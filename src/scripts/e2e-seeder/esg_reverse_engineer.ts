@@ -33,9 +33,9 @@ interface ISimulatedVoucherLine {
     id: string;
     category: "scope1" | "scope2" | "scope3" | "water" | "waste";
     source: string;
-    metricAmount: number;
+    metricAmount: string;
     metricUnit: string;
-    carbonAmount: number;
+    carbonAmount: string;
   }[];
 }
 
@@ -66,8 +66,10 @@ const findEsgValue = (
             if (rawValue.startsWith("(") && rawValue.endsWith(")")) {
               rawValue = "-" + rawValue.slice(1, -1);
             }
-            const val = MoneyUtil.toDecimal(rawValue).toNumber();
-            return isNaN(val) ? new Prisma.Decimal(0) : new Prisma.Decimal(val);
+            const dec = MoneyUtil.toDecimal(rawValue);
+            return dec.isNaN()
+              ? new Prisma.Decimal(0)
+              : new Prisma.Decimal(dec.toString());
           }
         }
       }
@@ -149,9 +151,9 @@ export const generateEsgRecords = (stockId: string) => {
         id: randomUUID(),
         category: "scope2",
         source: contextCache.esg.scope2MajorSource || "台電外購電力",
-        metricAmount: scope2PerVoucher.mul(1980).toNumber(), // Info: (20260502 - Tzuhan) 假設 1 噸 CO2e 約等於 1980 度電
+        metricAmount: scope2PerVoucher.mul(1980).toString(), // Info: (20260502 - Tzuhan) 假設 1 噸 CO2e 約等於 1980 度電
         metricUnit: "kWh",
-        carbonAmount: scope2PerVoucher.toNumber(),
+        carbonAmount: scope2PerVoucher.toString(),
       });
     });
   }
@@ -169,9 +171,9 @@ export const generateEsgRecords = (stockId: string) => {
         id: randomUUID(),
         category: "scope1",
         source: contextCache.esg.scope1MajorSource || "公司車輛燃油",
-        metricAmount: scope1PerVoucher.mul(400).toNumber(), // Info: (20260502 - Tzuhan) 假設 1 噸 CO2e 約等於 400 公升汽油
+        metricAmount: scope1PerVoucher.mul(400).toString(), // Info: (20260502 - Tzuhan) 假設 1 噸 CO2e 約等於 400 公升汽油
         metricUnit: "Liters",
-        carbonAmount: scope1PerVoucher.toNumber(),
+        carbonAmount: scope1PerVoucher.toString(),
       });
     });
   }
@@ -189,9 +191,9 @@ export const generateEsgRecords = (stockId: string) => {
         id: randomUUID(),
         category: "scope3",
         source: "其他供應鏈間接排放",
-        metricAmount: scope3PerVoucher.mul(100).toNumber(), // Info: (20260504 - Tzuhan) 假設 1 噸 CO2e 約對應 100 單位物料
+        metricAmount: scope3PerVoucher.mul(100).toString(), // Info: (20260504 - Tzuhan) 假設 1 噸 CO2e 約對應 100 單位物料
         metricUnit: "Pieces",
-        carbonAmount: scope3PerVoucher.toNumber(),
+        carbonAmount: scope3PerVoucher.toString(),
       });
     });
   }
@@ -208,18 +210,18 @@ export const generateEsgRecords = (stockId: string) => {
         id: randomUUID(),
         category: "water",
         source: "自來水",
-        metricAmount: waterPerVoucher.toNumber(),
+        metricAmount: waterPerVoucher.toString(),
         metricUnit: "ton",
-        carbonAmount: 0, // Info: (20260502 - Tzuhan) 用水通常不會直接映射到這裡的範疇一或範疇二的碳排放量
+        carbonAmount: "0", // Info: (20260502 - Tzuhan) 用水通常不會直接映射到這裡的範疇一或範疇二的碳排放量
       });
       if (wastePerVoucher.gt(0)) {
         line.esgRecords.push({
           id: randomUUID(),
           category: "waste",
           source: "一般廢棄物",
-          metricAmount: wastePerVoucher.toNumber(),
+          metricAmount: wastePerVoucher.toString(),
           metricUnit: "ton",
-          carbonAmount: 0,
+          carbonAmount: "0",
         });
       }
     });
@@ -229,7 +231,7 @@ export const generateEsgRecords = (stockId: string) => {
   fs.writeFileSync(vouchersPath, JSON.stringify(vouchers, null, 2), "utf-8");
 
   console.log(
-    `[SUCCESS] Embedded ESG Data into Vouchers for ${stockId}. (Scope1: ${scope1Target.toNumber()}t, Scope2: ${scope2Target.toNumber()}t, Scope3: ${scope3Target.toNumber()}t)`,
+    `[SUCCESS] Embedded ESG Data into Vouchers for ${stockId}. (Scope1: ${scope1Target.toString()}t, Scope2: ${scope2Target.toString()}t, Scope3: ${scope3Target.toString()}t)`,
   );
 };
 

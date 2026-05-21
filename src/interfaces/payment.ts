@@ -14,7 +14,7 @@ export type IOenCallbackData = {
 
 export type IOenOrderData = {
   credits: number;
-  amount: number;
+  amount: string;
   paymentId?: string;
   paymentMethodId?: string;
   timestamp?: string;
@@ -62,10 +62,10 @@ export interface IPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (txHash: string) => void;
-  amount: number;
-  credits: number;
-  baseCredits: number;
-  bonusCredits: number;
+  amount: string;
+  credits: string;
+  baseCredits: string;
+  bonusCredits: string;
   displayPrice?: string;
   initialStep?: PaymentStep;
   transactionHash?: string;
