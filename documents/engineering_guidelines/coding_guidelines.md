@@ -58,7 +58,7 @@
 3. **絕對路徑引入 (Path Aliasing)**：
    全面使用 `@/` 進行模組引入 (例如 `import { ChatService } from "@/services/chat.service";`)。嚴禁使用過深的相對路徑 (如 `../../../../`)，以提升重構時的安全性與可讀性。
 4. **拒絕魔法字串 (No Hardcoded / Magic Strings)**：
-   對於任何需要「條件判斷 (if/switch)」或「狀態比對」的字串，**絕對禁止直接 Hardcode 在程式碼中**。必須統一抽離至 `src/constants/` 目錄或獨立的字典檔 (如 `error_dictionary.ts` 或是 `status.ts`)，定義成 `enum` 或是唯讀的 `const` 常數。所有攸關商業邏輯的狀態字串，也必須同步記錄於架構文件中，保持文件與代碼的一致性。
+   對於任何需要「條件判斷 (if/switch)」或「狀態比對」的字串，**絕對禁止直接 Hardcode 在程式碼中進行比對（容易錯還難追查）**。必須統一抽離至 `src/constants/` 目錄或獨立的字典檔 (如 `enums.ts`, `error_dictionary.ts` 或是 `status.ts`)，定義成 `enum` 或是唯讀的 `const` 常數。所有攸關商業邏輯的狀態字串，也必須同步記錄於架構文件中，保持文件與代碼的一致性。
 5. **套用函式前的「停看聽」(Inspect Before Use)**：
    不論是工程師還是 AI，在呼叫任何現有的系統函式、API 工具或是錯誤處理套件 (如 `jsonFail`) 時，**務必先去查看該函式或介面的原始定義 (Definition)**。嚴禁憑直覺盲目傳遞參數，或憑空捏造未定義的列舉值 (例如隨意塞入不屬於 `ApiCode` 的 HTTP Status)。使用前確認定義，才能守住系統的型別安全防線。
 

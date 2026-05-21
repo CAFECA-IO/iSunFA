@@ -14,13 +14,23 @@ export type MeasurementUnit =
   (typeof MeasurementUnit)[keyof typeof MeasurementUnit];
 
 export const EsgGenerationSource = {
-  MANUAL_ENTRY: "MANUAL_ENTRY",
-  SYSTEM_DETERMINISTIC: "SYSTEM_DETERMINISTIC",
-  AI_SPECULATIVE_STAGE_3: "AI_SPECULATIVE_STAGE_3",
+  MANUAL_ENTRY: "MANUAL_ENTRY", // Info: (20260521 - Tzuhan) 人工輸入或修正。
+  SYSTEM_DETERMINISTIC: "SYSTEM_DETERMINISTIC", // Info: (20260521 - Tzuhan) 規則引擎命中（例如：免計碳排的繳費單），100% 決定論。
+  AI_GENERATED: "AI_GENERATED", // Info: (20260521 - Tzuhan) AI 順利萃取資料，並結合資料庫得出具備一定信心的標準碳排數據。
+  AI_SPECULATIVE: "AI_SPECULATIVE", // Info: (20260521 - Tzuhan) RAG 未命中，AI 執行語意降級，系統強制套用「該大類最高碳排係數」的保守推測值。
 } as const;
 
 export type EsgGenerationSource =
   (typeof EsgGenerationSource)[keyof typeof EsgGenerationSource];
+
+export const JournalGenerationSource = {
+  MANUAL_ENTRY: "MANUAL_ENTRY", // Info: (20260521 - Tzuhan) 人工輸入或修正。
+  SYSTEM_DETERMINISTIC: "SYSTEM_DETERMINISTIC", // Info: (20260521 - Tzuhan) 系統決定論。包含規則引擎命中，與 Vector RAG 精準匹配到合法科目。
+  SYSTEM_SUSPENSE: "SYSTEM_SUSPENSE", // Info: (20260521 - Tzuhan) 系統強制懸記。RAG 匹配失敗時，系統強制打入暫付款或 PL 隔離區的虛擬配平。
+} as const;
+
+export type JournalGenerationSource =
+  (typeof JournalGenerationSource)[keyof typeof JournalGenerationSource];
 
 export const VoucherPaymentStatus = {
   UNPAID: "UNPAID",
@@ -39,3 +49,55 @@ export const DocumentType = {
 } as const;
 
 export type DocumentType = (typeof DocumentType)[keyof typeof DocumentType];
+
+export const CountryCode = {
+  TW: "TW",
+  US: "US",
+  JP: "JP",
+  CN: "CN",
+  HK: "HK",
+  KR: "KR",
+} as const;
+
+export type CountryCode = (typeof CountryCode)[keyof typeof CountryCode];
+
+export const EsgFallbackCategory = {
+  // Info: (20260521 - Tzuhan) --- 能源與燃料 (Scope 1 & 2) ---
+  ELECTRICITY_AND_HEAT: "外購電力與熱能",
+  NATURAL_GAS: "天然氣與瓦斯",
+  GASOLINE_AND_AVIATION: "汽油與航空燃油",
+  DIESEL_AND_HEAVY_OIL: "柴油與重油",
+  COAL_AND_SOLID_FUEL: "煤炭與固體燃料",
+  BIOMASS_AND_ALTERNATIVE: "生質能與替代燃料",
+
+  // Info: (20260521 - Tzuhan) --- 逸散與環境 (Scope 1 & 3) ---
+  REFRIGERANT_AND_INDUSTRIAL_GAS: "冷媒與工業氣體",
+  WATER_AND_WASTEWATER: "自來水與污水處理",
+  WASTE_MANAGEMENT: "廢棄物處理與回收",
+
+  // Info: (20260521 - Tzuhan) --- 交通與物流 (Scope 1 & 3) ---
+  LAND_TRANSPORT_AND_COMMUTE: "陸上交通與通勤",
+  AVIATION: "航空運輸",
+  FREIGHT_AND_LOGISTICS: "貨運與物流",
+
+  // Info: (20260521 - Tzuhan) --- 採購商品 (Scope 3 - 實體物品) ---
+  PLASTICS_AND_RUBBER: "塑膠與橡膠製品",
+  METALS_AND_MINERALS: "金屬與礦物製品",
+  PAPER_AND_WOOD: "紙製品與木材",
+  ELECTRONICS_AND_ELECTRICAL: "電子與電機設備",
+  CHEMICALS_AND_SOLVENTS: "化學品與溶劑",
+  AGRICULTURE_AND_FOOD: "農林漁牧與食品",
+  TEXTILES_AND_APPAREL: "紡織與服飾",
+
+  // Info: (20260521 - Tzuhan) --- 採購服務與資本財 (Scope 3 - 無形服務) ---
+  IT_AND_TELECOM: "資訊與通訊服務",
+  ACCOMMODATION_AND_DINING: "住宿與餐飲服務",
+  REAL_ESTATE_AND_EQUIPMENT_RENTAL: "不動產與設備租賃",
+  PROFESSIONAL_SERVICES: "專業與各項服務",
+
+  // Info: (20260521 - Tzuhan) --- 兜底防線 ---
+  OTHER_UNKNOWN: "其他未知項目",
+} as const;
+
+export type EsgFallbackCategory =
+  (typeof EsgFallbackCategory)[keyof typeof EsgFallbackCategory];

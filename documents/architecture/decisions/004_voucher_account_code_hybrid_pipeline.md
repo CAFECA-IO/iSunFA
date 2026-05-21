@@ -35,15 +35,14 @@
 
 針對無法在第一道防線攔截的陌生單據，採用與 ESG 一致的 Vector RAG 策略。
 
-1. **COA 靜態向量化**：將各國別 (TW, US, JP) 的會計科目表 (Chart of Accounts, COA，如 `tw.ts` 的 1500 個科目) 連同其定義 (`description`)，於建置期打包為 SQLite-vss 或 `.bin` 本機向量庫。
-2. **執行期 Top-K 檢索**：利用單據上的 `particulars` (摘要)，在本機瞬間找出最相似的 Top-3 會計科目。
-3. **選擇題 Prompting**：將這 Top-3 科目及其代碼注入 LLM Prompt：
-   > 「根據單據摘要『AWS 雲端主機』，請由以下 3 個科目中挑選最適合的代碼。只能回傳代碼，若皆不符合請回傳 null。」
-   **效益**：完全鎖死 AI 「發明新會計科目」的權限，完美銜接 Schema 語系限制，從物理上拔除 Fuzzy Matching 的災難。
+1. **COA 靜態向量化**：將各國別 (TW, US, JP) 的會計科目表 (Chart of Accounts, COA，如 `tw.ts` 的 1500 個科目) 連同其定義 (`description`)，於建置期打包為本機的 `coa_embeddings.json`。
+2. **AI 降級與剝奪選擇權 (AI Degradation)**：在 `voucher_lines_parsing.ts` 中，徹底刪除 `accountingCode` 的 Schema 欄位。AI 的任務僅剩下從圖片中客觀萃取每行明細的：「摘要 (`particular`)」、「金額 (`amount`)」、「借貸 (`isDebit`)」。
+3. **執行期後端逐行映射 (Per-Line Deterministic RAG)**：AI 完成萃取後，在後端 `document_sync.repo.ts` 階段，由系統針對每一行明細的 `particular`，呼叫 `CoaVectorSearchService` 進行純 TypeScript 餘弦相似度運算，直接算出唯一確定的 `accountCode`。
+   **架構效益**：徹底解決了「單據包含多種分錄，無法在 AI 執行前進行全域 Top-3 注入」的邏輯悖論，並從物理上完全剝奪了 AI 推測或發明新會計科目的權力。
 
 ### 🚥 第三重：雙軌懸記與虛擬科目隔離區 (Dual-Track Suspense & Quarantine Zone) [⚠️ Pending]
 
-如果 AI 在 Top-3 選擇題中回傳 `null`，或系統信心度過低，**絕對禁止系統使用 Fuzzy Matching 強行猜測科目**。為了兼顧「四大會計師的查核鐵律」與「管理報表淨利的真實性（避免虛增淨利）」，我們將懸記防線升級為兩道分流：
+如果後端 Vector RAG 算出來的餘弦相似度過低（無法找到精確對應），**絕對禁止系統使用 Fuzzy Matching 強行猜測科目**。為了兼顧「四大會計師的查核鐵律」與「管理報表淨利的真實性（避免虛增淨利）」，我們將懸記防線升級為兩道分流：
 
 1. **性質完全未知 -> 進入 BS 懸記 (資產/負債防線)**
    - **情境**：如銀行帳戶扣款但無憑證，連是否為「費用」都無法確定。

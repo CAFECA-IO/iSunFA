@@ -414,7 +414,7 @@ export const runPhase2ReceiptAnalysis = async (
           unit: esgData.unit || MeasurementUnit.KG,
           emissions: (esgData.amount || 0) * 1.5, // Info: (20260519 - Tzuhan) 模擬後端 MAX(factor) 行為
           isVerified: false,
-          aiNote: `[AI_SPECULATIVE_STAGE_3] E2E 模擬已套用最高係數. 原註記: ${esgData.aiNote || "系統預設給定之猜測數值"}`,
+          aiNote: `[AI_SPECULATIVE] E2E 模擬已套用最高係數. 原註記: ${esgData.aiNote || "系統預設給定之猜測數值"}`,
           confidence: esgData.confidence || 85,
           analysisStatus: "COMPLETED",
         },

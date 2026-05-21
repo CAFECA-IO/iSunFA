@@ -228,6 +228,22 @@ export async function processNext() {
             );
             if (accBook) {
               missionData.accountBook = accBook;
+              const { prisma } = await import("@/lib/prisma");
+              const tenantCustomCoefficients =
+                await prisma.coefficient.findMany({
+                  where: { accountBookId: accBook.id },
+                  select: {
+                    id: true,
+                    name: true,
+                    description: true,
+                    unit: true,
+                    emissionFactor: true,
+                  },
+                });
+              if (!missionData.prerequisiteData)
+                missionData.prerequisiteData = {};
+              missionData.prerequisiteData.coefficients =
+                tenantCustomCoefficients;
             }
           } catch (e) {
             console.warn(

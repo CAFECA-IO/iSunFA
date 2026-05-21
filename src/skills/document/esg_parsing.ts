@@ -4,6 +4,7 @@ import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
 import { SchemaType, Schema } from "@google/generative-ai";
 import { VendorRegistry, IEsgRule } from "@/services/rules/vendor_registry";
+import { EsgGenerationSource } from "@/constants/enums";
 import { MeasurementUnit } from "@/constants/enums";
 
 export class EsgParsingSkill implements ITaskSkill {
@@ -68,7 +69,7 @@ export class EsgParsingSkill implements ITaskSkill {
               `[EsgParsingSkill] 🎯 Stage 2 Match: ESG suppressed for ${baseParsed.vendorName} (${baseParsed.documentType})`,
             );
             return JSON.stringify({
-              generationSource: "RULE_ENGINE_STAGE_2",
+              generationSource: EsgGenerationSource.SYSTEM_DETERMINISTIC,
               confidence: 100,
               aiNote:
                 "系統判定：此為資金沖銷/繳費收據，非實體消耗，因此無須計算碳排。",
@@ -187,7 +188,7 @@ export class EsgParsingSkill implements ITaskSkill {
             parsed.activityType =
               esgRuleForFallback.esgActivityType || parsed.activityType;
             parsed.unit = esgRuleForFallback.esgUnit || parsed.unit;
-            parsed.generationSource = "HYBRID_STAGE_2_AND_3";
+            parsed.generationSource = EsgGenerationSource.AI_GENERATED;
             if (parsed.aiNote) {
               parsed.aiNote = `[混合決策] 範疇與活動由規則引擎鎖定，係數由 AI 推估。原註記: ${parsed.aiNote}`;
             } else {
@@ -196,7 +197,7 @@ export class EsgParsingSkill implements ITaskSkill {
             }
             text = JSON.stringify(parsed);
           } else if (!parsed.generationSource) {
-            parsed.generationSource = "LLM_FALLBACK_STAGE_3";
+            parsed.generationSource = EsgGenerationSource.AI_GENERATED;
             text = JSON.stringify(parsed);
           }
         }

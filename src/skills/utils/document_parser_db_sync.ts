@@ -24,6 +24,7 @@ export interface IDocNode {
   scope?: string;
   activityType?: string;
   vendor?: string;
+  vendorTaxId?: string;
   amount?: number | string;
   unit?: string;
   emissions?: number | string;

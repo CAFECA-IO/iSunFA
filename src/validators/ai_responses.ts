@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DocumentType } from "@/constants/enums";
+import { DocumentType, EsgFallbackCategory } from "@/constants/enums";
 
 // Info: (20260514 - Tzuhan) Phase 1.1 Zod Schemas for structured AI output validation
 
@@ -131,43 +131,7 @@ export const EsgParsingSchema = z.object({
     .nullable()
     .describe("The unit of consumption (e.g. kWh, L, kg)"),
   fallbackCategory: z
-    .enum([
-      // --- 能源與燃料 (Scope 1 & 2) ---
-      "外購電力與熱能",
-      "天然氣與瓦斯",
-      "汽油與航空燃油",
-      "柴油與重油",
-      "煤炭與固體燃料",
-      "生質能與替代燃料",
-
-      // --- 逸散與環境 (Scope 1 & 3) ---
-      "冷媒與工業氣體",
-      "自來水與污水處理",
-      "廢棄物處理與回收",
-
-      // --- 交通與物流 (Scope 1 & 3) ---
-      "陸上交通與通勤",
-      "航空運輸",
-      "貨運與物流",
-
-      // --- 採購商品 (Scope 3 - 實體物品) ---
-      "塑膠與橡膠製品",
-      "金屬與礦物製品",
-      "紙製品與木材",
-      "電子與電機設備",
-      "化學品與溶劑",
-      "農林漁牧與食品",
-      "紡織與服飾",
-
-      // --- 採購服務與資本財 (Scope 3 - 無形服務) ---
-      "資訊與通訊服務",
-      "住宿與餐飲服務",
-      "不動產與設備租賃",
-      "專業與各項服務",
-
-      // --- 兜底防線 ---
-      "其他未知項目",
-    ])
+    .nativeEnum(EsgFallbackCategory)
     .nullable()
     .describe(
       "最接近的官方標準大類標籤。必須嚴格從清單中挑選最符合的一項，用以推估碳排。",

@@ -9,10 +9,12 @@ import {
   VoucherLine,
 } from "@/generated";
 import {
-  MeasurementUnit,
   EsgGenerationSource,
+  JournalGenerationSource,
   DocumentType,
   VoucherPaymentStatus,
+  CountryCode,
+  MeasurementUnit,
 } from "@/constants/enums";
 import { ISyncDocumentResultParams } from "@/skills/utils/document_parser_db_sync";
 import { ACCOUNTS, IAccount } from "@/constants/accounts";
@@ -20,12 +22,13 @@ import { VendorRegistry } from "@/services/rules/vendor_registry";
 import { ReconciliationService } from "@/services/reconciliation.service";
 import { MoneyUtil } from "@/lib/utils/money";
 import { EmissionFactorRepo } from "@/repositories/emission_factor.repo";
-
+import { CoaVectorSearchService } from "@/services/coa_vector_search.service";
+import { EmissionFactorRegistry } from "@/services/rules/emission_factor_registry";
 import { SemanticAccountMatcher } from "@/lib/utils/semantic_account_matcher";
 
 function getAccountName(country: string, code: string): string {
   const accountList = (ACCOUNTS[country as keyof typeof ACCOUNTS] ||
-    ACCOUNTS["TW"]) as IAccount[];
+    ACCOUNTS[CountryCode.TW]) as IAccount[];
   const exactCode = accountList.find((a: IAccount) => a.code === code);
   return exactCode ? exactCode.name : code;
 }
@@ -207,14 +210,14 @@ export class DocumentSyncRepository {
 
           // Info: (20260520 - Tzuhan) 載入會計科目字典以供 SemanticAccountMatcher 使用
           const dictionary = (ACCOUNTS[
-            (accountBook.country || "TW") as keyof typeof ACCOUNTS
-          ] || ACCOUNTS["TW"]) as IAccount[];
+            (accountBook.country || CountryCode.TW) as keyof typeof ACCOUNTS
+          ] || ACCOUNTS[CountryCode.TW]) as IAccount[];
 
           if (oldVoucherToClear) {
             const paymentAccountCode = SemanticAccountMatcher.match(
               "CASH_IN_BANK",
               dictionary,
-              accountBook.country || "TW",
+              accountBook.country || CountryCode.TW,
             );
             linesToCreate = ReconciliationService.generateClearingLines(
               oldVoucherToClear,
@@ -244,34 +247,57 @@ export class DocumentSyncRepository {
                 const matchedAccountingCode = SemanticAccountMatcher.match(
                   rule.accountingCode,
                   dictionary,
-                  accountBook.country || "TW",
+                  accountBook.country || CountryCode.TW,
                 );
                 linesToCreate.push({
                   accountingCode: matchedAccountingCode,
-                  particular: `${getAccountName(accountBook.country || "TW", matchedAccountingCode)} - ${vendorNameStr}`,
+                  particular: `${getAccountName(accountBook.country || CountryCode.TW, matchedAccountingCode)} - ${vendorNameStr}`,
                   amount: BigInt(amountDec.toFixed(0)),
                   isDebit: rule.isDebit,
+                  isVerified: true,
+                  generationSource:
+                    JournalGenerationSource.SYSTEM_DETERMINISTIC,
                 });
               }
             } else {
               for (const l of vd.lines || []) {
                 const amountDec = MoneyUtil.toDecimal(String(l.amount || 0));
-                let matchedAccountingCode = SemanticAccountMatcher.match(
-                  l.accountingCode || "",
-                  dictionary,
-                  accountBook.country || "TW",
+
+                // Info: (20260521 - Tzuhan) Per-Line Deterministic RAG. 拿摘要去找確定答案
+                let matchedAccountingCode = CoaVectorSearchService.match(
+                  l.particular || "",
+                  (accountBook.country as CountryCode) || CountryCode.TW,
                 );
 
                 const isValidCode = dictionary.some(
                   (a) => a.code === matchedAccountingCode,
                 );
-                if (!isValidCode) {
+
+                let lineIsVerified = true;
+                let lineGenSource: JournalGenerationSource =
+                  JournalGenerationSource.SYSTEM_DETERMINISTIC;
+
+                if (!isValidCode || matchedAccountingCode === "UNKNOWN") {
                   hasSuspense = true;
-                  matchedAccountingCode =
-                    accountBook.bsSuspenseAccount || "1471";
-                  finalAiNote =
-                    `[系統稽核警告] 會計科目「${l.accountingCode}」無法對應至系統科目表，強制歸入懸記科目 (${matchedAccountingCode})。\n` +
-                    finalAiNote;
+                  lineIsVerified = false;
+                  lineGenSource = JournalGenerationSource.SYSTEM_SUSPENSE;
+
+                  if (
+                    l.isDebit === true ||
+                    docType === DocumentType.ACCRUAL_NOTICE
+                  ) {
+                    matchedAccountingCode =
+                      accountBook.plQuarantineAccount || "6288";
+                    finalAiNote =
+                      `[系統稽核警告] 摘要「${l.particular}」無法對應，依據費用性質強制隔離至 PL 隔離區 (${matchedAccountingCode})。\n` +
+                      finalAiNote;
+                  } else {
+                    matchedAccountingCode =
+                      accountBook.bsSuspenseAccount || "1471";
+                    finalAiNote =
+                      `[系統稽核警告] 摘要「${l.particular}」無法對應，強制歸入懸記科目 (${matchedAccountingCode})。\n` +
+                      finalAiNote;
+                  }
                 }
 
                 linesToCreate.push({
@@ -279,6 +305,8 @@ export class DocumentSyncRepository {
                   particular: l.particular || "",
                   amount: BigInt(amountDec.toFixed(0)),
                   isDebit: l.isDebit === true,
+                  isVerified: lineIsVerified,
+                  generationSource: lineGenSource,
                 });
               }
             }
@@ -383,9 +411,21 @@ export class DocumentSyncRepository {
           let finalEmissionSourceId = ed.emissionSourceId || null;
           let isFallbackMatched = false;
 
-          // Info: (20260519 - Tzuhan) 使用 fallbackCategory 進行最大係數 (Max-Factor) 查詢
-          const fallbackTag = ed.fallbackCategory?.trim();
+          // Info: (20260521 - Tzuhan) Stage 1: ESG Deterministic Vendor Interceptor
+          const vendorTaxId =
+            (voucherBase?.data || voucherBase)?.vendorTaxId || null;
+          const deterministicCategory =
+            EmissionFactorRegistry.matchCategory(vendorTaxId);
 
+          let fallbackTag = ed.fallbackCategory?.trim();
+          if (deterministicCategory) {
+            fallbackTag = deterministicCategory;
+            ed.aiNote =
+              (ed.aiNote || "") +
+              `\n[系統稽核] 命中高頻廠商攔截器，強制修正大類為「${fallbackTag}」。`;
+          }
+
+          // Info: (20260519 - Tzuhan) Stage 2: 使用 fallbackCategory 進行最大係數 (Max-Factor) 查詢
           if (!finalCoefficientId && fallbackTag) {
             // Info: (20260519 - Tzuhan) 防禦空字串地圖砲
             // Info: (20260521 - Tzuhan) 職能分離：由 EmissionFactorRepo 負責 DB 查詢
@@ -401,7 +441,7 @@ export class DocumentSyncRepository {
               isFallbackMatched = true;
               ed.aiNote =
                 (ed.aiNote || "") +
-                `\n[系統匹配] 透過大類標籤「${fallbackTag}」鎖定保守係數。`;
+                `\n[系統稽核] RAG 未命中，系統套用大類「${fallbackTag}」最高係數以符合保守原則。等待人工確認。`;
             }
           }
 
@@ -497,7 +537,7 @@ export class DocumentSyncRepository {
             aiNote,
             analysisStatus: "COMPLETED" as AIAnalysisStatus,
             generationSource: isFallbackMatched
-              ? EsgGenerationSource.AI_SPECULATIVE_STAGE_3
+              ? EsgGenerationSource.AI_SPECULATIVE
               : EsgGenerationSource.SYSTEM_DETERMINISTIC,
             coefficientId: finalCoefficientId,
             emissionSourceId: finalEmissionSourceId,
