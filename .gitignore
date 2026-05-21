@@ -24,7 +24,9 @@
 /downloads
 /logs
 /issues
+/issues*
 /missions
+/missions*
 
 # misc
 .DS_Store
