@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState, useEffect, useRef, FormEvent } from 'react';
+import { Fragment, useState, useEffect, useRef, FormEvent } from "react";
 
 import {
   Dialog,
@@ -14,9 +14,16 @@ import { request } from "@/lib/utils/request";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAuth } from "@/contexts/auth_context";
 import LegalModal from "@/components/common/legal_modal";
-import { fido2ClientService } from '@/lib/auth/fido2_client';
-import { encodeWebAuthnSignature } from '@/lib/auth/crypto_utils';
-import { IPaymentModalProps, IOenCheckoutResponse, IOrderStatusResponse, PaymentStep, IOenCallbackData } from "@/interfaces/payment";
+import { MoneyUtil } from "@/lib/utils/money";
+import { fido2ClientService } from "@/lib/auth/fido2_client";
+import { encodeWebAuthnSignature } from "@/lib/auth/crypto_utils";
+import {
+  IPaymentModalProps,
+  IOenCheckoutResponse,
+  IOrderStatusResponse,
+  PaymentStep,
+  IOenCallbackData,
+} from "@/interfaces/payment";
 import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 import { IJSONObject } from "@/validators/common";
 import EditCardModal from "@/components/user/billing/edit_card_modal";
@@ -34,7 +41,6 @@ const parseCardInfo = (data: IOenCallbackData) => {
   const last4 = data?.paymentInfo ? String(data.paymentInfo) : "****";
   return { brand, last4 };
 };
-
 
 export default function PaymentModal({
   isOpen,
@@ -59,10 +65,11 @@ export default function PaymentModal({
   const [step, setStep] = useState<PaymentStep>(
     initialStep || PaymentStep.confirm,
   );
-  const [originalCredits, setOriginalCredits] = useState<number | null>(null);
+  const [originalCredits, setOriginalCredits] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(transactionHash || null);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
-  const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<string>("new");
+  const [selectedPaymentMethodId, setSelectedPaymentMethodId] =
+    useState<string>("new");
   // Info: (20260302 - Tzuhan) 新增 isInitializingKyc 狀態，用於顯示「正在初始化身分與建立訂單...」的提示
   const [isInitializingKyc, setIsInitializingKyc] = useState(false);
   const [legalDoc, setLegalDoc] = useState<
@@ -71,7 +78,8 @@ export default function PaymentModal({
 
   const [paymentMethods, setPaymentMethods] = useState<IPaymentMethod[]>([]);
   const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false);
-  const [requireSetupCard, setRequireSetupCard] = useState<IPaymentMethod | null>(null);
+  const [requireSetupCard, setRequireSetupCard] =
+    useState<IPaymentMethod | null>(null);
 
   const wasOpen = useRef(isOpen);
 
@@ -92,13 +100,21 @@ export default function PaymentModal({
       const fetchPaymentMethods = async () => {
         try {
           setLoadingPaymentMethods(true);
-          const pmResponse = await request<{ payload: { paymentMethods: IPaymentMethod[] } }>('/api/v1/user/payment_method', {
-            method: 'GET',
+          const pmResponse = await request<{
+            payload: { paymentMethods: IPaymentMethod[] };
+          }>("/api/v1/user/payment_method", {
+            method: "GET",
           });
-          if (pmResponse && pmResponse.payload && pmResponse.payload.paymentMethods) {
+          if (
+            pmResponse &&
+            pmResponse.payload &&
+            pmResponse.payload.paymentMethods
+          ) {
             setPaymentMethods(pmResponse.payload.paymentMethods);
             if (pmResponse.payload.paymentMethods.length > 0) {
-              setSelectedPaymentMethodId(pmResponse.payload.paymentMethods[0].id);
+              setSelectedPaymentMethodId(
+                pmResponse.payload.paymentMethods[0].id,
+              );
             }
           } else {
             setPaymentMethods([]);
@@ -122,9 +138,9 @@ export default function PaymentModal({
   useEffect(() => {
     if (isOpen && !authLoading && originalCredits === null) {
       if (user !== null) {
-        setOriginalCredits(user.credits || 0);
+        setOriginalCredits(user.credits || "0");
       } else {
-        setOriginalCredits(0);
+        setOriginalCredits("0");
       }
     }
   }, [isOpen, authLoading, originalCredits, user]);
@@ -147,10 +163,13 @@ export default function PaymentModal({
       try {
         // Info: (20260302 - Tzuhan) [流程 5-5: 呼叫訂單狀態 API] 檢查訂單是否更新
         const res = await request<{ payload?: IOrderStatusResponse }>(
-          `/api/v1/user/order/${orderId}`
+          `/api/v1/user/order/${orderId}`,
         );
 
-        console.log(`[PaymentModal] pollOrderStatus: ${orderId}, IOrderStatusResponse res:`, res);
+        console.log(
+          `[PaymentModal] pollOrderStatus: ${orderId}, IOrderStatusResponse res:`,
+          res,
+        );
 
         // Info: (20260303 - Tzuhan) 防禦：如果等待 API 期間使用者關閉了彈窗（元件卸載），不應繼續更新 State
         if (!mounted) return;
@@ -166,10 +185,17 @@ export default function PaymentModal({
             setStep(PaymentStep.success);
             if (tHash) onSuccess(tHash);
             return; // Info: (20260303 - Tzuhan) 成功即終止，不再呼叫 setTimeout
-
-          } else if (status === ORDER_STATUS.FAILED || status === ORDER_STATUS.PAYMENT_FAILED || status === ORDER_STATUS.MINT_FAILED) {
+          } else if (
+            status === ORDER_STATUS.FAILED ||
+            status === ORDER_STATUS.PAYMENT_FAILED ||
+            status === ORDER_STATUS.MINT_FAILED
+          ) {
             // Info: (20260302 - Tzuhan) [流程 5-6b: 訂單失敗]
-            setError(errorMessage || t("pricing.credits.payment_modal.processing_failed") || "付款處理失敗。請重試。");
+            setError(
+              errorMessage ||
+                t("pricing.credits.payment_modal.processing_failed") ||
+                "付款處理失敗。請重試。",
+            );
             setStep(PaymentStep.error);
             return; // Info: (20260303 - Tzuhan) 失敗即終止，不再呼叫 setTimeout
           }
@@ -180,9 +206,12 @@ export default function PaymentModal({
         if (mounted) {
           timeoutId = setTimeout(pollOrderStatus, 3000);
         }
-
       } catch (err) {
-        console.error("Deprecate: (20260310 - Tzuhan) ", "Failed to poll order status:", err);
+        console.error(
+          "Deprecate: (20260310 - Tzuhan) ",
+          "Failed to poll order status:",
+          err,
+        );
         // Info: (20260303 - Tzuhan) 遇到網路瞬斷也可以容錯，繼續排程下一次輪詢
         if (mounted) {
           timeoutId = setTimeout(pollOrderStatus, 3000);
@@ -214,7 +243,7 @@ export default function PaymentModal({
       }>("/api/v1/user/payment_method", {
         method: "POST",
       });
-      console.log(`[PaymentModal] handleBindNewCard response:`, response)
+      console.log(`[PaymentModal] handleBindNewCard response:`, response);
       if (response.payload?.requireBinding && response.payload.redirectUrl) {
         window.location.href = response.payload.redirectUrl;
         onClose();
@@ -224,7 +253,10 @@ export default function PaymentModal({
       }
     } catch (err) {
       console.error("Binding failed:", err);
-      setError(t("pricing.credits.payment_modal.processing_failed") || "付款處理失敗。請重試。");
+      setError(
+        t("pricing.credits.payment_modal.processing_failed") ||
+          "付款處理失敗。請重試。",
+      );
       setStep(PaymentStep.error);
     } finally {
       setLoading(false);
@@ -262,7 +294,9 @@ export default function PaymentModal({
       }
 
       // Info: (20260409 - Luphia) Check if the selected card requires setup
-      const currentPm = paymentMethods.find(p => p.id === selectedPaymentMethodId);
+      const currentPm = paymentMethods.find(
+        (p) => p.id === selectedPaymentMethodId,
+      );
       if (currentPm) {
         const pmData = currentPm.data || {};
         if (!pmData.email || !pmData.buyerName || !pmData.billingAddress) {
@@ -273,8 +307,10 @@ export default function PaymentModal({
       }
 
       // Info: (20260306 - Tzuhan) 1. Request Payment Order to get challenge
-      const orderRes = await request<{ payload: { orderId: string, challenge: string } }>('/api/v1/user/order', {
-        method: 'POST',
+      const orderRes = await request<{
+        payload: { orderId: string; challenge: string };
+      }>("/api/v1/user/order", {
+        method: "POST",
         body: JSON.stringify({
           type: ORDER_TYPE.OEN_PAYMENT,
           amount,
@@ -285,33 +321,39 @@ export default function PaymentModal({
           bonusCredits,
           planId,
           items: planId
-            ? [{
-              name: title || '會員訂閱',
-              quantity: 1,
-              unitPrice: amount,
-              amount: amount,
-              remark: '購買會員資格'
-            }]
+            ? [
+                {
+                  name: title || "會員訂閱",
+                  quantity: 1,
+                  unitPrice: amount,
+                  amount: amount,
+                  remark: "購買會員資格",
+                },
+              ]
             : [
-              {
-                name: `iSunFA ${baseCredits || credits} 點`,
-                quantity: 1,
-                unitPrice: amount,
-                amount: amount,
-                remark: `購買 ${baseCredits || credits} 點`
-              },
-              ...(bonusCredits && bonusCredits > 0 ? [{
-                name: `iSunFA ${bonusCredits} 點（贈品）`,
-                quantity: 1,
-                unitPrice: 0,
-                amount: 0,
-                remark: `贈送 ${bonusCredits} 點`
-              }] : [])
-            ]
-        })
+                {
+                  name: `iSunFA ${baseCredits || credits} 點`,
+                  quantity: 1,
+                  unitPrice: amount,
+                  amount: amount,
+                  remark: `購買 ${baseCredits || credits} 點`,
+                },
+                ...(bonusCredits && bonusCredits !== "0"
+                  ? [
+                      {
+                        name: `iSunFA ${bonusCredits} 點（贈品）`,
+                        quantity: 1,
+                        unitPrice: 0,
+                        amount: 0,
+                        remark: `贈送 ${bonusCredits} 點`,
+                      },
+                    ]
+                  : []),
+              ],
+        }),
       });
 
-      if (!orderRes?.payload) throw new Error('Failed to create payment order');
+      if (!orderRes?.payload) throw new Error("Failed to create payment order");
       const { orderId, challenge } = orderRes.payload;
 
       // Info: (20260306 - Tzuhan) 2. FIDO Signature
@@ -322,14 +364,14 @@ export default function PaymentModal({
       const transferAuth = await fido2ClientService.startLogin({
         challenge: challenge,
         timeout: 60000,
-        userVerification: 'required',
+        userVerification: "required",
         allowCredentials: [],
       });
 
       const encodedSignature = encodeWebAuthnSignature(
         transferAuth,
         BigInt(user.pubKeyX),
-        BigInt(user.pubKeyY)
+        BigInt(user.pubKeyY),
       );
 
       // Info: (20260306 - Tzuhan) 3. Submit Checkout
@@ -342,16 +384,13 @@ export default function PaymentModal({
           orderId,
           authentication: {
             ...transferAuth,
-            signature: encodedSignature
-          }
+            signature: encodedSignature,
+          },
         }),
       });
-      console.log(`[PaymentModal] handleBindNewCard response:`, response)
+      console.log(`[PaymentModal] handleBindNewCard response:`, response);
 
-      if (
-        !response.payload?.requireBinding &&
-        response.payload?.txHash
-      ) {
+      if (!response.payload?.requireBinding && response.payload?.txHash) {
         // Info: (20260303 - Tzuhan) [流程 2-3b: 直接扣款成功] 若選擇使用已綁定的卡片，後端會直接發動扣款並鑄造代幣。前端取得成功的 txHash 後更新畫面為「付款成功」
         await refreshAuth();
         setTxHash(response.payload.txHash);
@@ -362,14 +401,22 @@ export default function PaymentModal({
       }
     } catch (err) {
       // Info: (20260303 - Tzuhan) [流程 2-3c: 捕捉錯誤] 若扣款 API 發生異常，顯示失敗畫面
-      console.error("Deprecate: (20260310 - Tzuhan) ", "Payment Submission failed:", err);
+      console.error(
+        "Deprecate: (20260310 - Tzuhan) ",
+        "Payment Submission failed:",
+        err,
+      );
       const errorMessage =
         (err as Error).message ||
-        t("pricing.credits.payment_modal.processing_failed") || "付款處理失敗。請重試。";
+        t("pricing.credits.payment_modal.processing_failed") ||
+        "付款處理失敗。請重試。";
       if (errorMessage !== "OK") {
         setError(errorMessage);
       } else {
-        setError(t("pricing.credits.payment_modal.processing_failed") || "付款處理失敗。請重試。");
+        setError(
+          t("pricing.credits.payment_modal.processing_failed") ||
+            "付款處理失敗。請重試。",
+        );
       }
       setStep(PaymentStep.error);
     } finally {
@@ -405,11 +452,11 @@ export default function PaymentModal({
                 leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                 leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
               >
-                <DialogPanel className="relative transform overflow-hidden rounded-2xl bg-white px-4 pb-4 pt-5 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 ring-1 ring-black/5">
-                  <div className="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
+                <DialogPanel className="relative transform overflow-hidden rounded-2xl bg-white px-4 pt-5 pb-4 text-left shadow-2xl ring-1 ring-black/5 transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                  <div className="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
                     <button
                       type="button"
-                      className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                       onClick={handleClose}
                       disabled={loading || step === "processing"}
                     >
@@ -418,13 +465,16 @@ export default function PaymentModal({
                     </button>
                   </div>
 
-                  <div className="sm:flex sm:items-start w-full">
-                    <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
-                      {authLoading || (step === "success" && originalCredits === null) ? (
-                        <div className="flex flex-col items-center justify-center py-16 min-h-[300px]">
-                          <Loader2 className="h-10 w-10 text-orange-500 animate-spin mb-4" />
-                          <p className="text-gray-500 font-medium">
-                            {t("pricing.credits.payment_modal.syncing_status") || "正在同步您的帳戶狀態..."}
+                  <div className="w-full sm:flex sm:items-start">
+                    <div className="mt-3 w-full text-center sm:mt-0 sm:ml-4 sm:text-left">
+                      {authLoading ||
+                      (step === "success" && originalCredits === null) ? (
+                        <div className="flex min-h-[300px] flex-col items-center justify-center py-16">
+                          <Loader2 className="mb-4 h-10 w-10 animate-spin text-orange-500" />
+                          <p className="font-medium text-gray-500">
+                            {t(
+                              "pricing.credits.payment_modal.syncing_status",
+                            ) || "正在同步您的帳戶狀態..."}
                           </p>
                         </div>
                       ) : (
@@ -432,18 +482,22 @@ export default function PaymentModal({
                           {step === "processing" && (
                             <div className="flex flex-col items-center py-8">
                               <div className="mx-auto flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-orange-100 sm:mx-0 sm:h-16 sm:w-16">
-                                <Loader2 className="h-8 w-8 text-orange-600 animate-spin" />
+                                <Loader2 className="h-8 w-8 animate-spin text-orange-600" />
                               </div>
                               <DialogTitle
                                 as="h3"
-                                className="mt-6 text-xl font-semibold leading-6 text-gray-900"
+                                className="mt-6 text-xl leading-6 font-semibold text-gray-900"
                               >
-                                {t("pricing.credits.payment_modal.processing_title") || "處理中"}
+                                {t(
+                                  "pricing.credits.payment_modal.processing_title",
+                                ) || "處理中"}
                               </DialogTitle>
 
-                              <div className="mt-4 w-full text-center px-4">
+                              <div className="mt-4 w-full px-4 text-center">
                                 <p className="text-sm text-gray-500">
-                                  {t("pricing.credits.payment_modal.processing_message") ||
+                                  {t(
+                                    "pricing.credits.payment_modal.processing_message",
+                                  ) ||
                                     "授權已成功，正在發行區塊鏈點數至您的錢包，請稍候..."}
                                 </p>
                               </div>
@@ -454,31 +508,52 @@ export default function PaymentModal({
                             <>
                               <DialogTitle
                                 as="h3"
-                                className="text-base font-semibold leading-6 text-gray-900"
+                                className="text-base leading-6 font-semibold text-gray-900"
                               >
                                 {t("pricing.credits.payment_modal.title")}
                               </DialogTitle>
-                              <div className="mt-6 bg-gray-50/80 p-4 sm:p-5 rounded-xl border border-gray-200/60 shadow-sm space-y-4">
-                                <div className="flex justify-between items-center bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                              <div className="mt-6 space-y-4 rounded-xl border border-gray-200/60 bg-gray-50/80 p-4 shadow-sm sm:p-5">
+                                <div className="flex items-center justify-between rounded-lg border border-gray-100 bg-white p-3 shadow-sm">
                                   <span className="text-sm font-medium text-gray-500">
-                                    {t("pricing.credits.payment_modal.amount_to_pay") || t("pricing.credits.payment_modal.amount_paid")}
+                                    {t(
+                                      "pricing.credits.payment_modal.amount_to_pay",
+                                    ) ||
+                                      t(
+                                        "pricing.credits.payment_modal.amount_paid",
+                                      )}
                                   </span>
-                                  <span className="text-xl font-bold text-gray-900 tracking-tight">
+                                  <span className="text-xl font-bold tracking-tight text-gray-900">
                                     {displayPrice || `$${amount}`}
                                   </span>
                                 </div>
-                                <div className="flex justify-between items-start px-2">
-                                  <span className="text-sm font-medium text-gray-500 pt-1">
-                                    {t("pricing.credits.payment_modal.tokens_to_receive") || t("pricing.credits.payment_modal.tokens_received")}
+                                <div className="flex items-start justify-between px-2">
+                                  <span className="pt-1 text-sm font-medium text-gray-500">
+                                    {t(
+                                      "pricing.credits.payment_modal.tokens_to_receive",
+                                    ) ||
+                                      t(
+                                        "pricing.credits.payment_modal.tokens_received",
+                                      )}
                                   </span>
-                                  <div className="text-right flex flex-col items-end">
+                                  <div className="flex flex-col items-end text-right">
                                     <span className="text-lg font-bold text-orange-600">
                                       {baseCredits.toLocaleString()}{" "}
-                                      {t("pricing.credits.payment_modal.credits_unit_short", { count: "" }).trim() || "點"}
+                                      {t(
+                                        "pricing.credits.payment_modal.credits_unit_short",
+                                        { count: "" },
+                                      ).trim() || "點"}
                                     </span>
-                                    {bonusCredits > 0 && (
-                                      <span className="inline-flex items-center rounded-md bg-orange-50 px-2 py-0.5 text-xs font-semibold text-orange-600 ring-1 ring-inset ring-orange-600/20 mt-1">
-                                        + {t("pricing.credits.payment_modal.bonus_points", { count: bonusCredits.toLocaleString() }) || `贈送 ${bonusCredits.toLocaleString()} 點`}
+                                    {bonusCredits !== "0" && (
+                                      <span className="mt-1 inline-flex items-center rounded-md bg-orange-50 px-2 py-0.5 text-xs font-semibold text-orange-600 ring-1 ring-orange-600/20 ring-inset">
+                                        +{" "}
+                                        {t(
+                                          "pricing.credits.payment_modal.bonus_points",
+                                          {
+                                            count:
+                                              bonusCredits.toLocaleString(),
+                                          },
+                                        ) ||
+                                          `贈送 ${bonusCredits.toLocaleString()} 點`}
                                       </span>
                                     )}
                                   </div>
@@ -487,23 +562,31 @@ export default function PaymentModal({
 
                               {user && (
                                 <div className="mt-6 space-y-3">
-                                  <h4 className="text-sm font-semibold text-gray-900 flex items-center">
-                                    {t("pricing.credits.payment_modal.payment_method") || "付款方式"}
-                                    {loadingPaymentMethods && <Loader2 className="ml-2 h-4 w-4 animate-spin text-gray-400" />}
+                                  <h4 className="flex items-center text-sm font-semibold text-gray-900">
+                                    {t(
+                                      "pricing.credits.payment_modal.payment_method",
+                                    ) || "付款方式"}
+                                    {loadingPaymentMethods && (
+                                      <Loader2 className="ml-2 h-4 w-4 animate-spin text-gray-400" />
+                                    )}
                                   </h4>
                                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                     {paymentMethods.map((pm) => {
-                                      const { brand, last4 } = parseCardInfo(pm.data as IOenCallbackData);
-                                      const isSelected = selectedPaymentMethodId === pm.id;
+                                      const { brand, last4 } = parseCardInfo(
+                                        pm.data as IOenCallbackData,
+                                      );
+                                      const isSelected =
+                                        selectedPaymentMethodId === pm.id;
 
                                       return (
                                         <label
                                           key={pm.id}
                                           htmlFor={`pm-${pm.id}`}
-                                          className={`relative flex cursor-pointer rounded-xl border p-4 shadow-sm focus:outline-none transition-all duration-200 ${isSelected
-                                            ? "border-orange-500 bg-orange-50 ring-1 ring-orange-500"
-                                            : "border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-50/30"
-                                            }`}
+                                          className={`relative flex cursor-pointer rounded-xl border p-4 shadow-sm transition-all duration-200 focus:outline-none ${
+                                            isSelected
+                                              ? "border-orange-500 bg-orange-50 ring-1 ring-orange-500"
+                                              : "border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-50/30"
+                                          }`}
                                         >
                                           <input
                                             id={`pm-${pm.id}`}
@@ -511,18 +594,27 @@ export default function PaymentModal({
                                             name="paymentMethod"
                                             value={pm.id}
                                             checked={isSelected}
-                                            onChange={() => setSelectedPaymentMethodId(pm.id)}
+                                            onChange={() =>
+                                              setSelectedPaymentMethodId(pm.id)
+                                            }
                                             className="sr-only"
                                             aria-label={`${brand} **** ${last4}`}
                                           />
                                           <div className="flex w-full items-center justify-between">
                                             <div className="flex items-center">
                                               <div className="text-sm">
-                                                <p className={`font-semibold ${isSelected ? "text-orange-900" : "text-gray-900"}`}>
-                                                  {(pm.data?.name as string) || brand}
+                                                <p
+                                                  className={`font-semibold ${isSelected ? "text-orange-900" : "text-gray-900"}`}
+                                                >
+                                                  {(pm.data?.name as string) ||
+                                                    brand}
                                                 </p>
-                                                <div className={`mt-1 flex items-center gap-2 ${isSelected ? "text-orange-700" : "text-gray-500"}`}>
-                                                  <span className="text-xs">••••</span>
+                                                <div
+                                                  className={`mt-1 flex items-center gap-2 ${isSelected ? "text-orange-700" : "text-gray-500"}`}
+                                                >
+                                                  <span className="text-xs">
+                                                    ••••
+                                                  </span>
                                                   <span>{last4}</span>
                                                 </div>
                                               </div>
@@ -539,18 +631,34 @@ export default function PaymentModal({
                                     <button
                                       type="button"
                                       onClick={handleBindNewCard}
-                                      aria-label={t("pricing.credits.payment_modal.bind_new_card") || "綁定新信用卡"}
-                                      className="relative flex w-full cursor-pointer rounded-xl border p-4 shadow-sm focus:outline-none transition-all duration-200 border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-50/30 text-left"
+                                      aria-label={
+                                        t(
+                                          "pricing.credits.payment_modal.bind_new_card",
+                                        ) || "綁定新信用卡"
+                                      }
+                                      className="relative flex w-full cursor-pointer rounded-xl border border-gray-200 bg-white p-4 text-left shadow-sm transition-all duration-200 hover:border-orange-300 hover:bg-orange-50/30 focus:outline-none"
                                     >
                                       <div className="flex w-full items-center justify-between">
                                         <div className="flex items-center gap-3">
                                           <div className="flex h-8 w-8 items-center justify-center rounded-full border border-dashed border-gray-300 bg-gray-50">
-                                            <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                            <svg
+                                              className="h-4 w-4 text-gray-400"
+                                              fill="none"
+                                              viewBox="0 0 24 24"
+                                              stroke="currentColor"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M12 4v16m8-8H4"
+                                              />
                                             </svg>
                                           </div>
                                           <span className="text-sm font-semibold text-gray-900">
-                                            {t("pricing.credits.payment_modal.bind_new_card") || "綁定新信用卡"}
+                                            {t(
+                                              "pricing.credits.payment_modal.bind_new_card",
+                                            ) || "綁定新信用卡"}
                                           </span>
                                         </div>
                                       </div>
@@ -570,18 +678,20 @@ export default function PaymentModal({
                                       onChange={(e) =>
                                         setAgreedToTerms(e.target.checked)
                                       }
-                                      className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-600 cursor-pointer"
+                                      className="h-4 w-4 cursor-pointer rounded border-gray-300 text-orange-600 focus:ring-orange-600"
                                     />
                                   </div>
                                   <div className="ml-3 text-sm leading-6">
                                     <label
                                       htmlFor="tos-payment"
-                                      className="font-medium text-gray-900 cursor-pointer flex flex-wrap items-center gap-x-1"
+                                      className="flex cursor-pointer flex-wrap items-center gap-x-1 font-medium text-gray-900"
                                     >
-                                      <span>{t("auth_modal.tos_agree") || "我同意"}</span>
+                                      <span>
+                                        {t("auth_modal.tos_agree") || "我同意"}
+                                      </span>
                                       <button
                                         type="button"
-                                        className="font-semibold text-orange-600 hover:text-orange-500 underline decoration-transparent hover:decoration-orange-500 transition-all"
+                                        className="font-semibold text-orange-600 underline decoration-transparent transition-all hover:text-orange-500 hover:decoration-orange-500"
                                         onClick={(e) => {
                                           e.preventDefault();
                                           setLegalDoc("terms_of_service");
@@ -593,7 +703,7 @@ export default function PaymentModal({
                                       <span>{t("auth_modal.and") || "與"}</span>
                                       <button
                                         type="button"
-                                        className="font-semibold text-orange-600 hover:text-orange-500 underline decoration-transparent hover:decoration-orange-500 transition-all"
+                                        className="font-semibold text-orange-600 underline decoration-transparent transition-all hover:text-orange-500 hover:decoration-orange-500"
                                         onClick={(e) => {
                                           e.preventDefault();
                                           setLegalDoc("refund_policy");
@@ -614,22 +724,30 @@ export default function PaymentModal({
                                 <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:gap-4">
                                   <button
                                     type="submit"
-                                    disabled={loading || !agreedToTerms || paymentMethods.length <= 0}
-                                    className="inline-flex w-full sm:w-auto flex-1 justify-center items-center gap-2 rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:from-orange-500 hover:to-orange-400 hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed sm:flex-none hover:-translate-y-0.5"
+                                    disabled={
+                                      loading ||
+                                      !agreedToTerms ||
+                                      paymentMethods.length <= 0
+                                    }
+                                    className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:from-orange-500 hover:to-orange-400 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:flex-none"
                                   >
                                     {loading && (
                                       <Loader2 className="h-4 w-4 animate-spin" />
                                     )}
                                     {loading
                                       ? isInitializingKyc
-                                        // Info: (20260302 - Tzuhan) 當正在初始化身分時，顯示符合預期的等待訊息
-                                        ? "正在初始化身分與建立訂單..."
-                                        : t("pricing.credits.payment_modal.processing")
-                                      : t("pricing.credits.payment_modal.confirm_btn")}
+                                        ? // Info: (20260302 - Tzuhan) 當正在初始化身分時，顯示符合預期的等待訊息
+                                          "正在初始化身分與建立訂單..."
+                                        : t(
+                                            "pricing.credits.payment_modal.processing",
+                                          )
+                                      : t(
+                                          "pricing.credits.payment_modal.confirm_btn",
+                                        )}
                                   </button>
                                   <button
                                     type="button"
-                                    className="inline-flex w-full sm:w-auto flex-1 justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed sm:flex-none transition-all"
+                                    className="inline-flex w-full flex-1 justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-gray-300 transition-all ring-inset hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:flex-none"
                                     onClick={handleClose}
                                     disabled={loading}
                                   >
@@ -650,24 +768,25 @@ export default function PaymentModal({
                               </div>
                               <DialogTitle
                                 as="h3"
-                                className="mt-4 text-lg font-semibold leading-6 text-gray-900"
+                                className="mt-4 text-lg leading-6 font-semibold text-gray-900"
                               >
-                                {t("pricing.credits.payment_modal.success_title") ||
-                                  "購買成功"}
+                                {t(
+                                  "pricing.credits.payment_modal.success_title",
+                                ) || "購買成功"}
                               </DialogTitle>
 
-                              <div className="mt-4 w-full bg-gray-50 p-4 rounded-md border border-gray-200 space-y-3">
-                                <div className="flex justify-between items-center">
+                              <div className="mt-4 w-full space-y-3 rounded-md border border-gray-200 bg-gray-50 p-4">
+                                <div className="flex items-center justify-between">
                                   <span className="text-sm text-gray-500">
                                     {t(
                                       "pricing.credits.payment_modal.original_credits",
                                     ) || "原有點數"}
                                   </span>
                                   <span className="text-base font-medium text-gray-700">
-                                    {(originalCredits || 0).toLocaleString()}
+                                    {MoneyUtil.format(originalCredits || "0")}
                                   </span>
                                 </div>
-                                <div className="flex justify-between items-center border-t border-gray-200 pt-3">
+                                <div className="flex items-center justify-between border-t border-gray-200 pt-3">
                                   <span className="text-sm text-gray-500">
                                     {t(
                                       "pricing.credits.payment_modal.amount_paid",
@@ -677,7 +796,7 @@ export default function PaymentModal({
                                     {displayPrice || `$${amount}`}
                                   </span>
                                 </div>
-                                <div className="flex justify-between items-center border-t border-gray-200 pt-3">
+                                <div className="flex items-center justify-between border-t border-gray-200 pt-3">
                                   <span className="text-sm text-gray-500">
                                     {t(
                                       "pricing.credits.payment_modal.tokens_received",
@@ -689,12 +808,15 @@ export default function PaymentModal({
                                       "pricing.credits.payment_modal.credits_unit_short",
                                       { count: "" },
                                     ).trim() || "點"}
-                                    {bonusCredits > 0 && (
-                                      <span className="text-sm font-normal ml-1">
+                                    {bonusCredits !== "0" && (
+                                      <span className="ml-1 text-sm font-normal">
                                         (
                                         {t(
                                           "pricing.credits.payment_modal.bonus_points",
-                                          { count: bonusCredits.toLocaleString() },
+                                          {
+                                            count:
+                                              bonusCredits.toLocaleString(),
+                                          },
                                         ) ||
                                           `活動贈與 ${bonusCredits.toLocaleString()} 點`}
                                         )
@@ -702,7 +824,7 @@ export default function PaymentModal({
                                     )}
                                   </span>
                                 </div>
-                                <div className="flex justify-between items-center border-t border-gray-200 pt-3">
+                                <div className="flex items-center justify-between border-t border-gray-200 pt-3">
                                   <span className="text-sm font-medium text-gray-900">
                                     {t(
                                       "pricing.credits.payment_modal.current_credits",
@@ -715,12 +837,12 @@ export default function PaymentModal({
                               </div>
 
                               {txHash && (
-                                <div className="mt-4 w-full flex justify-center">
+                                <div className="mt-4 flex w-full justify-center">
                                   <a
                                     href={`https://baifa.io/chain/isuncoin/txs/${txHash}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-orange-600 transition-colors"
+                                    className="inline-flex items-center gap-1.5 text-xs text-gray-500 transition-colors hover:text-orange-600"
                                     title="View Transaction on Block Explorer"
                                   >
                                     <span>
@@ -740,19 +862,26 @@ export default function PaymentModal({
                                     >
                                       <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                                       <polyline points="15 3 21 3 21 9"></polyline>
-                                      <line x1="10" y1="14" x2="21" y2="3"></line>
+                                      <line
+                                        x1="10"
+                                        y1="14"
+                                        x2="21"
+                                        y2="3"
+                                      ></line>
                                     </svg>
                                   </a>
                                 </div>
                               )}
 
-                              <div className="mt-6 w-full flex justify-center sm:justify-end">
+                              <div className="mt-6 flex w-full justify-center sm:justify-end">
                                 <button
                                   type="button"
-                                  className="inline-flex w-full sm:w-auto justify-center rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:from-orange-500 hover:to-orange-400 hover:shadow-lg transition-all duration-200"
+                                  className="inline-flex w-full justify-center rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:from-orange-500 hover:to-orange-400 hover:shadow-lg sm:w-auto"
                                   onClick={handleClose}
                                 >
-                                  {t("pricing.credits.payment_modal.close_btn") ||
+                                  {t(
+                                    "pricing.credits.payment_modal.close_btn",
+                                  ) ||
                                     t("common.close") ||
                                     "關閉"}
                                 </button>
@@ -770,36 +899,43 @@ export default function PaymentModal({
                               </div>
                               <DialogTitle
                                 as="h3"
-                                className="mt-4 text-lg font-semibold leading-6 text-gray-900"
+                                className="mt-4 text-lg leading-6 font-semibold text-gray-900"
                               >
-                                {t("pricing.credits.payment_modal.error_title") ||
-                                  "購買失敗"}
+                                {t(
+                                  "pricing.credits.payment_modal.error_title",
+                                ) || "購買失敗"}
                               </DialogTitle>
 
                               <div className="mt-4 w-full text-center">
                                 <p className="text-sm text-gray-500">
                                   {error ||
-                                    t("pricing.credits.payment_modal.processing_failed") || "付款處理失敗。請重試。"}
+                                    t(
+                                      "pricing.credits.payment_modal.processing_failed",
+                                    ) ||
+                                    "付款處理失敗。請重試。"}
                                 </p>
                               </div>
 
-                              <div className="mt-6 w-full flex flex-col-reverse gap-3 sm:flex-row sm:justify-center sm:gap-4">
+                              <div className="mt-6 flex w-full flex-col-reverse gap-3 sm:flex-row sm:justify-center sm:gap-4">
                                 <button
                                   type="button"
-                                  className="inline-flex w-full sm:w-auto flex-1 justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-all sm:flex-none"
+                                  className="inline-flex w-full flex-1 justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-gray-300 transition-all ring-inset hover:bg-gray-50 sm:w-auto sm:flex-none"
                                   onClick={handleClose}
                                 >
-                                  {t("pricing.credits.payment_modal.close_btn") ||
+                                  {t(
+                                    "pricing.credits.payment_modal.close_btn",
+                                  ) ||
                                     t("common.close") ||
                                     "關閉"}
                                 </button>
                                 <button
                                   type="button"
-                                  className="inline-flex w-full sm:w-auto flex-1 justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-red-500 transition-all sm:flex-none"
+                                  className="inline-flex w-full flex-1 justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-red-500 sm:w-auto sm:flex-none"
                                   onClick={() => setStep(PaymentStep.confirm)}
                                 >
-                                  {t("pricing.credits.payment_modal.retry_btn") ||
-                                    "返回重試"}
+                                  {t(
+                                    "pricing.credits.payment_modal.retry_btn",
+                                  ) || "返回重試"}
                                 </button>
                               </div>
                             </div>
@@ -825,26 +961,41 @@ export default function PaymentModal({
           onClose={() => setRequireSetupCard(null)}
           onSave={async (data) => {
             try {
-              const res = await request<{ payload: { success: boolean } }>(`/api/v1/user/payment_method/${requireSetupCard.id}`, {
-                method: 'PATCH',
-                body: JSON.stringify(data)
-              });
+              const res = await request<{ payload: { success: boolean } }>(
+                `/api/v1/user/payment_method/${requireSetupCard.id}`,
+                {
+                  method: "PATCH",
+                  body: JSON.stringify(data),
+                },
+              );
               if (res?.payload?.success) {
-                setPaymentMethods(prev => prev.map(p => p.id === requireSetupCard.id ? { ...p, data: { ...p.data, ...data } } : p));
+                setPaymentMethods((prev) =>
+                  prev.map((p) =>
+                    p.id === requireSetupCard.id
+                      ? { ...p, data: { ...p.data, ...data } }
+                      : p,
+                  ),
+                );
                 setRequireSetupCard(null);
                 // Info: (20260409 - Luphia) Users must manually click 'Confirm' again after setup to avoid unexpected immediate charges
               }
             } catch (err) {
               console.error(err);
-              setError(t("pricing.credits.payment_modal.processing_failed") || "付款處理失敗。請重試。");
+              setError(
+                t("pricing.credits.payment_modal.processing_failed") ||
+                  "付款處理失敗。請重試。",
+              );
             }
           }}
           initialData={{
-            name: requireSetupCard.data?.name as string || requireSetupCard.provider,
-            email: requireSetupCard.data?.email as string || '',
-            taxId: requireSetupCard.data?.taxId as string || '',
-            buyerName: requireSetupCard.data?.buyerName as string || '',
-            billingAddress: requireSetupCard.data?.billingAddress as string || ''
+            name:
+              (requireSetupCard.data?.name as string) ||
+              requireSetupCard.provider,
+            email: (requireSetupCard.data?.email as string) || "",
+            taxId: (requireSetupCard.data?.taxId as string) || "",
+            buyerName: (requireSetupCard.data?.buyerName as string) || "",
+            billingAddress:
+              (requireSetupCard.data?.billingAddress as string) || "",
           }}
         />
       )}

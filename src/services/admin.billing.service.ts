@@ -1,4 +1,5 @@
 import { paymentRepo } from "@/repositories/payment.repo";
+import { Decimal } from "decimal.js";
 
 export class AdminBillingService {
   async getGlobalBillingStats(
@@ -27,8 +28,11 @@ export class AdminBillingService {
       await paymentRepo.getGlobalTransactingUsersCount(startDate, endDate);
     const arpu =
       totalTransactingUsers > 0
-        ? Math.round(totalRevenue / totalTransactingUsers)
-        : 0;
+        ? new Decimal(totalRevenue.toString())
+            .dividedBy(totalTransactingUsers)
+            .round()
+            .toString()
+        : "0";
 
     // Info: (20260416 - Luphia) We need total points purchased to calculate burn ratio
     const totalPointsPurchased =
@@ -42,7 +46,10 @@ export class AdminBillingService {
 
     const burnToBuyRatio =
       totalPointsPurchased > 0
-        ? Number((totalPointsConsumed / totalPointsPurchased).toFixed(2))
+        ? new Decimal(totalPointsConsumed.toString())
+            .dividedBy(totalPointsPurchased)
+            .toDecimalPlaces(2)
+            .toNumber()
         : 0;
 
     // Info: (20260416 - Luphia) 2. Paginate Data for the requested Tab

@@ -3,7 +3,7 @@
 > **Date**: 2026-05-10
 > **Author**: Tzuhan
 > **Version**: 1.1
-> **Last Updated**: 2026-05-14
+> **Last Updated**: 2026-05-19
 
 > **Status**: 🔴 **UI/UX 進入全面凍結 (Freeze)**。全隊開發量能 100% 轉向底層報表與數據引擎的準確性構建。
 >
@@ -48,10 +48,10 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **✅ Done (2026-05-14)：廢除 Markdown 故事腦補與全域替換 JSON 擷取**：**(幻覺地雷拆彈)** 明令禁止要求 AI 撰寫「事件摘要或故事」。全面強制升級為 Gemini 的 `responseSchema` (Structured Output) 與 `application/json`，徹底拔除舊版脆弱的 `/\{[\s\S]*\}/` Regex 擷取，斷絕資料靜默遺失風險。
 - **✅ Done (2026-05-14)：極致去中心化與無退款防禦 (Decentralized Worker & DLQ)**：**取消**原本的 POSIX 原子鎖與 Saga 點數退款機制。確立 Worker 為獨立外部節點，負責從鏈上抓取檔案建立完全隔離的檔案系統，天然無 Race Condition。實作「無退款權限」原則，Worker 的唯一目標是**「無限重試至成功 (Retry-Until-Success)」**，摒棄傳統遇到錯誤就妥協退款的機制。
 - **✅ Done (2026-05-15)：實作 Post-Parsing 攔截器與 Mock Facades (Backend Interceptors)**：接續 AI 降級決策，於核心寫入管線建置匯率 (FX)、會計科目 (AccountCode) 與碳排 (ESG) 三大攔截閘門。已完成 `VendorRegistry` Mock 與 `MoneyUtil` 防腐層，確保主引擎能即時阻斷 AI 的數學與邏輯幻覺。
-- **⚠️ Pending：高精度防禦死角大掃蕩 (Precision Blackhole Cleanup)**：全面掃描專案中殘存的 `Number()` 或 `parseFloat()` 強制轉型。所有涉及財務傳票與碳排數據的運算與轉型，必須全面升級使用 `MoneyUtil` 或 `BigInt`。
-- **⚠️ Pending：報表引擎的「無偽造」大盤查 (Report Engine Integrity Audit)**：全面審查 `cash_flow_statement_generator.ts`, `balance_sheet_generator.ts`, `esg_report_generator.ts`, `income_statement_generator.ts` 四大報表產生器，拔除所有「虛擬配平」、「懸記補數」或任何與原始憑證無法 100% 勾稽的錯誤妥協邏輯。
-- **⚠️ Pending：輕量級 E2E 核心防護網 (Minimalistic Core E2E Testing)**：規劃基於 Jest 的整合測試機制。測試情境限縮於「註冊登入 -> 建立單據 -> 檢驗財排報表平衡」的最短路徑，用極低的時間成本驗證 Sprint 1 數學恆等目標。此機制必須掛載環境隔離 (Environment Isolation) 防護，嚴格禁止在 Production 環境執行，以免污染真實金流與碳排帳本。
-
+- **✅ Done (2026-05-20)：高精度防禦死角大掃蕩 (Precision Blackhole Cleanup)**：全面掃描專案中殘存的 `Number()` 或 `parseFloat()` 強制轉型。所有涉及財務傳票與碳排數據的運算與轉型，必須全面升級使用 `MoneyUtil` 或 `BigInt`。
+- **✅ Done (2026-05-20)：報表引擎的「無偽造」大盤查 (Report Engine Integrity Audit)**：全面審查 `cash_flow_statement_generator.ts`, `balance_sheet_generator.ts`, `esg_report_generator.ts`, `income_statement_generator.ts` 四大報表產生器，拔除所有「虛擬配平」、「懸記補數」或任何與原始憑證無法 100% 勾稽的錯誤妥協邏輯。
+- **✅ Done (2026-05-20)：輕量級 E2E 核心防護網 (Minimalistic Core E2E Testing)**：規劃基於 Jest 的整合測試機制。測試情境限縮於「註冊登入 -> 建立單據 -> 檢驗財排報表平衡」的最短路徑，用極低的時間成本驗證 Sprint 1 數學恆等目標。此機制必須掛載環境隔離 (Environment Isolation) 防護，嚴格禁止在 Production 環境執行，以免污染真實金流與碳排帳本。
+  - 👉 **實作要求**：建立 `src/__tests__/e2e/core_pipeline.e2e.test.ts`，必須使用 Jest 框架，且在頂端強制加入防呆鎖 `if (process.env.NODE_ENV === 'production') throw new Error('嚴禁在正式機執行 E2E 測試');`。
 
 - **[第二順位：CPA 財務合規任務 (核心財務防禦)]**
 - **✅ Done (2026-05-14)：外幣與全域字典解耦 (Backend Rule Registry)**：徹底剝奪 AI 計算匯率與小數點乘法的權力，並拔除所有全域會計字典注入（節省巨量 Token）。外幣匯率微服務與黃金廠商映射引擎 (`VENDOR_RULE_REGISTRY`) 已獨立切分，正式交由 Julian 負責實作。
@@ -63,19 +63,50 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **✅ Done (2026-05-13)：實作「ESG 兩段式計算架構 (Two-Stage Calculation)」**：**(漂綠地雷拆彈)** 廢除 Prompt 中的 `ALL_TRUE_COEFFICIENT_DATA` 與乘法指令。AI 僅限萃取，後端 ESG 碳排係數洗轉與產業容損率建置交由 Julian 實作。
 - **✅ Done (2026-05-14)：高精度數據重構與單位枚舉 (Precision & Unit Enum)**：財務欄位升級為 `BigInt`；碳排引擎導入 `Prisma.Decimal` 並將 `MeasurementUnit` 從 DB 拔除轉為 TypeScript 端強型別，前端全面套用 `MoneyUtil` 防腐層。徹底消滅所有 `parseFloat` 的隱性精度流失漏洞，保障千兆級財報與極精密碳排係數安全寫入。
 
+- **[第四順位：Sprint 1 殘餘除錯與前端同步 (Residual Fixes - Assigned to Julian)]**
+- **✅ Done (2026-05-19)：多語系動態同步 (I18n Localization)**：確保日記帳、傳票與碳盤查係數的語系能根據 `account_book` 的設定動態調整，確保跨國查帳時無語系障礙。
+- **✅ Done (2026-05-19)：ESG 碳排係數選擇介面升級 (Dropdown UI)**：升級前端介面，區分系統預設係數 (`true_esg_coefficients.ts`) 與自定義係數，提升填報者體驗。
+- **✅ Done (2026-05-19)：修復 AI 備註的顯示 (AI Note Rendering)**：還原碳盤查介面中 `aiNote` 的顯示機制，確保 AI 解析時標註的「異常警告或推論邏輯」能如實呈現給終端使用者，完善稽核軌跡。
+
+- **[第五順位：Prompt 提示詞微調 (Prompt Calibration)]**
+- **✅ Done (2026-05-18)：恢復 Markdown 優美排版 (Restore Rich Markdown Parsing)**：針對 `journal.ts` 的指令進行「權限分流」。放寬排版與摘要權限（允許 H2/H3 與條列式），但繼續鎖死數學與推斷權限，解決因「零幻覺」鐵律矯枉過正導致日記帳喪失易讀性的問題。
+
+- **[Architect & CPA 聯手任務 (取代 Prompt 暴力注入的決定論防護網)]**
+- **✅ Done (2026-05-20)：Voucher 財務防護 - 語意標籤與多國映射 (Semantic Account Matching)**：
+  - **痛點拆彈**：過去將 1 萬多筆會計科目塞入 Prompt，導致 Token 爆炸且 AI 經常選錯相近科目。
+  - **實作架構**：徹底拔除 Prompt 字典注入。實作 `UniversalAccountTag` (如 `TELECOM_EXPENSE`) 作為通用語意標籤，並於後端建立 `SemanticAccountMatcher`。
+  - **防護機制**：AI 只需輸出自然語言（如「郵電費」），後端透過 `COUNTRY_ALIASES` 進行 O(1) 複雜度映射，精準對應至該租戶國家 (TW, US, JP 等) 絕對合規的底層代碼（如台灣的 `6215`），徹底阻絕 AI 瞎編會計代碼的幻覺。
+
+- **⚠️ Pending (Sprint 1 Blocker)：Voucher 解析防護升級 - 多維度廠商攔截器 (Multi-Dimensional Vendor Registry)**：實作統編 (Tax ID) 優先與別名陣列，取代單純字串比對，建立 O(1) 決定論攔截引擎 (參閱 ADR 004)。
+- **⚠️ Pending (Sprint 1 Blocker)：Voucher 解析防護升級 - 本機向量檢索與選擇題 (COA Vector RAG & Multiple-Choice)**：將各國會計科目表靜態向量化，以 Top-K 選擇題徹底廢除危險的模糊比對 (Fuzzy Matching) (參閱 ADR 004)。
+- **⚠️ Pending (Sprint 1 Blocker)：Voucher 解析防護升級 - 雙軌懸記與虛擬科目隔離區 (Dual-Track Suspense & Quarantine Zone)**：廢除強制指派，實作未知款項進入 BS 懸記 (`1471`/`2330`/`2204`)，以及損益性質不明款項進入 PL 虛擬隔離區 (`6288`/`7590`)，標記 `isVerified=false` 以防淨利虛增 (參閱 ADR 004)。
+
+- **⚠️ Pending (Sprint 1 Blocker)：ESG 解析防護升級 - 決定論攔截器 (EmissionFactorRegistry)**：比照 Voucher 的 VendorRegistry，實作高頻碳排項目（如台電、中油）的 O(1) 攔截字典 (參閱 ADR 002)。
+- **⚠️ Pending (Sprint 1 Blocker)：ESG 解析防護升級 - 修復單次語意降級斷鏈 (Fix Single-Pass Semantic Fallback)**：
+  - **斷鏈地雷**：後端 `document_sync.repo.ts` 雖已實作完美的 Max-Factor Guard 與 Dimensional Guard，但前端 AI `vision.accounting.service.ts` 的 JSON Schema 中完全遺漏了 `fallbackCategory`，導致後端的降級與保守型估算機制淪為死碼。
+  - **修復目標**：在 Phase 3 Prompt Schema 中補上 `fallbackCategory`，並明確授權 AI 在找不到精準係數時進行「大類標籤推測」。寫入 DB 時強制鎖定 `isVerified = false` 與 `generationSource = AI_SPECULATIVE_STAGE_3` (黃燈懸記)，兼顧前端儀表板連續性與最終審計阻斷。
+  - **量綱一致性防護 (Dimensional Guard)**：(✅ 已實作) 實作跨量綱阻斷，若 AI 萃取的單位 (如 LITER) 與係數庫單位 (如 KWH) 物理量綱不符，直接退回懸記。
+
+- **✅ Done (2026-05-20)：混合決策管線與 Schema 實體約束 (Hybrid Deterministic Pipeline & Schema Enum Binding)**：
+  - 全面導入 Gemini JSON Schema `enum` 與 `format: "enum"`，在物理 API 層面封鎖 AI 發明自創字串。例如：強制約束 `DocumentType` 只能是 `ACCRUAL_NOTICE` 或 `PAYMENT_RECEIPT`，單位只能是 `MeasurementUnit` 枚舉，將萃取資料 100% 標準化。
+
+- **✅ Done (2026-05-20)：強制修復傳票重複加總漏洞與自動沖銷 (Auto-Reconciliation)**：
+  - 實作 `ReconciliationService`。當 AI 判定憑證為 `PAYMENT_RECEIPT` (已付款收據) 時，系統會啟動 FIFO 機制，自動尋找前期未付款的 `ACCRUAL_NOTICE` (應付帳款) 進行借貸沖銷 (`clearedByVoucherId`)。完美解決了代墊款與實際支付重複加總的破網漏洞，達成會計應計基礎 (Accrual Basis) 的完整閉環。
+
+- **✅ Done (2026-05-20)：跨表指標引擎解耦 (Cross-Report Metrics Engine)**：
+  - 建立獨立的 `calculateCrossReportMetrics` 引擎。單一報表 (如現金流量表) 只負責絕對的當期變動，將 EPS (需總股本) 與 現金流量允當比率 (需存貨變動) 等「跨表指標」抽離至最高編排層處理，消滅了為求指標數字而在單一引擎內虛擬補數的造假行徑。
+
 ### 📌 Sprint 2: 商業邏輯防禦與抗幻覺 (Business Logic & Anti-Hallucination)
 
 **🎯 收斂目標 (DoD)**：數學引擎算得準之後，測試系統能否攔截人類或 AI 犯下的「業務邏輯錯誤與幻覺」。投入具備邏輯矛盾的 Payload，系統必須精準凍結。
 
 - **[CPA 財務合規任務]**
-- **⚠️ Pending：報表快照與期初餘額 (Snapshots & Opening Balance)**：**(效能地雷拆彈)** 若不實作期初餘額，E2E 盲測驗證龐大真實資料庫時，API 會因反覆重算數十萬筆傳票而觸發 OOM (Out of Memory) 崩潰。報表引擎必須基於 `本期報表 = 期初快照 + 當期變動明細` 打造。
+- **⚠️ Pending：報表快照與期初餘額 (Snapshots & Opening Balance)**：**(效能地雷拆彈)** 若不實作期初餘額，E2E 盲測驗證龐大真實資料庫時，API 會因反覆重算數十萬筆傳票而觸發 OOM (Out of Memory) 崩潰。報表引擎必須基於 `本期報表 = 期初快照 + 當期變動明細` 打造。_(TODO: [20260518 - Tzuhan] Roadmap V2 Opening Balance，預計實作時間：Sprint 2)_
 - **⚠️ Pending：廢除不合理允當標準 (Zero Tolerance)**：日常上線的報表驗證 Threshold 嚴格鎖死在 **0%**。
 - **⚠️ Pending：防堵日期幻覺 (Anti-Date Hallucination)**：強制依賴 AI 輸出的 `tradingDate`，若發生跨期，系統必須報錯並阻斷財報生成。
 - **⚠️ Pending：追溯重編的「關聯性鎖死」 (Adjustment Voucher Audit Trail)**：實作前期損益調整時，追加帶有標籤 (`isRestatement=true`) 的當期調整傳票。**Schema 強制帶入 `targetVoucherId` (被更正的原始傳票 ID)**，形成雙向鏈結，杜絕幽靈調整傳票。
-- **⚠️ Pending (Blocker)：強制修復傳票重複加總漏洞 (Voucher Duplication)**：目前 Voucher 金額運算邏輯在代繳與已繳費的處理上會產生重複計算。必須實作嚴格的「交易關聯 ID (Transaction Correlation ID)」與沖銷邏輯，確保代墊款與實際支付在會計科目上能完美沖抵，否則系統將無法通過四大會計師的三表勾稽審查。
 
 - **[CPA 碳排合規任務 (DPP 產品護照架構交由 Luphia 負責)]**
-- **✅ Done (2026-05-14)：建置碳排暫存區 (SuspenseEsgRecord)**：廢除 `SCOPE_3` 的無腦 Fallback。憑證資訊不明或缺少碳排係數主檔時，依然如實寫入憑證紀錄以保留查核軌跡，但將 `emissions` 強制設為 0，且 `isVerified` 設為 `false`，並打上懸記警告標籤 (`aiNote`)，凍結該筆資料於待釐清區等待 CPA 覆核補登，徹底防堵隱匿財報與漂綠風險。
 - **✅ Done (Architectural Decision: Immutable IDs)：排放係數時空快照 (Emission Factor Versioning)**：經過重新設計，不再將數值硬拷貝至 EsgRecord 造成 Schema 污染。改為全面採用「Immutable Coefficient IDs (如 epa-2025-t1-004)」，天然實現時空快照。
   - **🔒 Immutable Coefficient 兩大鐵律**：未來維護係數庫必須嚴格遵守：1. **禁止 UPDATE 數值** (避免污染歷史帳本)；2. **永遠只用 INSERT (Append-Only)**。
 - **⚠️ Pending (急迫)：官方標準係數資料庫轉移與自動化管線 (Standard Coefficients DB Migration & Scraper)**：
@@ -89,11 +120,6 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **⚠️ Pending (急迫)：質量守恆勾稽與動態容許耗損率 (Mass Conservation & Loss Ratio Threshold)**：將「進銷存與原物料物理防護」實作於管線中。猶如財務的 A=L+E，系統將強制核對：`期初庫存重量 + 本期採購重量 = 消耗重量 + 期末庫存重量`。**(物理防呆地雷拆彈)** 避免過度剛性的物理防護導致系統死鎖，現實中絕對守恆不存在，必須在 Schema 為不同原物料引入動態的「容許耗損率 (Loss Ratio Threshold)」。若 AI 萃取出的消耗量與 ERP 盤盈虧落在合理閥值內，系統應自動生成「盤盈虧/耗損調整分錄」並繼續放行，以貼近真實製造業的運作樣貌。
   - **⚠️ Pending (2026-05-13)：進階防護實作**：必須在寫入 DB 前掛載 ERP 庫存比對微服務，若 `amount > MAX_INVENTORY_LIMIT` 則直接拋出 Error 並將憑證標記為 `FRAUD_SUSPECTED` 阻斷寫入，達到 100% 物理防漂綠。
 
-- **[Architect & CPA 聯手任務 (Self-Healing & Deterministic AI)]**
-- **✅ Done (2026-05-15)：混合決策管線與 Schema 實體約束 (Hybrid Deterministic Pipeline & Schema Enum Binding)**：徹底解決 LLM 機率不穩定性的終極架構。
-  1. **Schema Enum 約束**：全面導入 Gemini JSON Schema `enum` 與 `format: "enum"`，在物理 API 層面封鎖 AI 發明自創字串（如 `documentType`, `tradingType`）的可能性，將萃取資料標準化。
-  2. **混合管線重構**：將憑證解析任務升級為真正的混合編排。Stage 1 讓 AI 萃取受 Enum 約束的特徵；Stage 2 依賴 TypeScript (`VendorRegistry`) 進行絕對精確比對（已移除模糊的 `includes`）；Stage 3 不僅支援純 Fallback，更支援 **HYBRID_STAGE_2_AND_3**（由 Stage 2 鎖死範疇與活動類型，交由 Stage 3 AI 僅推估未知參數如碳排係數）。
-  - **⚠️ Pending (2026-05-16)：進階對應實作**：雖然目前 Stage 2 已實現穩定精確比對，下一個 Sprint 仍須在 Node.js 引入輕量級 Embeddings (如 OpenAI `text-embedding-3-small` 搭配 Postgres `pgvector`)，將未收錄在黃金字典的長尾廠商升級為具備語意理解能力的向量檢索 (Vector Search)。
 - **⚠️ Pending：AI 封閉迴圈校正管線 (Closed-Loop Prompt Calibration)**：針對高度相似的憑證建立自動盲測機制。若 AI 解析錯誤，將「錯誤輸出」與「正確答案」交由高階模型自動產出優化版的解析 Prompt。**(資安防線地雷拆彈)** 禁止 AI 直接覆寫生產環境的 Prompt，以防惡意供應商發動「提示詞注入 (Prompt Injection)」攻擊導致模型崩潰。優化 Prompt 必須進入「人工覆核 (HITL)」，由具備 CPA 權限的超級管理員審核並簽章後，才能部署更新。
 
 ### 📌 Sprint 3: 視覺極限與合規深水區 (Vision Extreme & ITGC Compliance)

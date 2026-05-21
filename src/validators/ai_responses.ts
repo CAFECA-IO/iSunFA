@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DocumentType } from "@/constants/enums";
 
 // Info: (20260514 - Tzuhan) Phase 1.1 Zod Schemas for structured AI output validation
 
@@ -49,8 +50,9 @@ export const VoucherBaseParsingSchema = z.object({
   vendorName: z
     .string()
     .describe("Extracted name of the vendor (e.g. 中華電信)"),
+  // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: Refactor magic strings to Enum
   documentType: z
-    .enum(["BILL_NOTICE", "PAYMENT_RECEIPT", "OTHER"])
+    .nativeEnum(DocumentType)
     .describe("Identify the document type based on the rules"),
   totalAmount: z
     .number()
@@ -80,10 +82,12 @@ export const VoucherLinesParsingSchema = z.object({
   lines: z
     .array(
       z.object({
+        // Info: (20260520 - Tzuhan) [AUDIT FIX] 強制約束為帳本當地語系以阻止英文 AI 幻覺
         accountingCode: z
           .string()
+          // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: Strict enforcement of no numeric codes
           .describe(
-            "Accounting code from the provided list or the most standard and descriptive account name",
+            "會計科目名稱。必須強制輸出為『帳本當地語系』（若為台灣帳本，請絕對輸出繁體中文，例如：『預付租金』、『存出保證金』）。嚴禁輸出英文！絕對禁止輸出數字代碼！只能輸出中文科目名稱（或國家字典支援之字串）。違者將導致系統崩潰！",
           ),
         particular: z
           .string()

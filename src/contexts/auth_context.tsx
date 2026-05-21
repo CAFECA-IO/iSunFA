@@ -15,14 +15,15 @@ import { publicClient } from "@/lib/viem_public";
 import { ABIS, CONTRACT_ADDRESSES } from "@/config/contracts";
 import { formatUnits } from "viem";
 import { CheckinRewardModal } from "@/components/common/checkin_reward_modal";
+import { MoneyUtil } from "@/lib/utils/money";
 
 interface IAuthUser {
   address: string;
   name: string | null;
   role: string | null;
   plan?: string;
-  credits?: number;
-  pendingCredits?: number;
+  credits?: string;
+  pendingCredits?: string;
   isAdmin?: boolean;
   modules?: string[];
   identityAddress?: string | null;
@@ -36,7 +37,7 @@ interface IAuthContextType {
   loading: boolean;
   refreshAuth: () => Promise<void>;
   logout: () => void;
-  updateLocalCredits: (delta: number) => void;
+  updateLocalCredits: (delta: string) => void;
 }
 
 const AuthContext = createContext<IAuthContextType | undefined>(undefined);
@@ -44,7 +45,7 @@ const AuthContext = createContext<IAuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<IAuthUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [rewardAmount, setRewardAmount] = useState<number>(0);
+  const [rewardAmount, setRewardAmount] = useState<string>("0");
   const [showRewardModal, setShowRewardModal] = useState<boolean>(false);
 
   const refreshAuth = useCallback(async () => {
@@ -62,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Info: (20260408 - Luphia) Parallel non-blocking checkin
       const checkinPromise = request<{
-        payload: { checkinSuccess: boolean; rewardAmount: number };
+        payload: { checkinSuccess: boolean; rewardAmount: string };
       }>("/api/v1/auth/checkin", {
         method: "GET",
       }).catch((err) => {
@@ -70,7 +71,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return null;
       });
       checkinPromise.then((res) => {
-        if (res && res.payload && res.payload.rewardAmount > 0) {
+        if (
+          res &&
+          res.payload &&
+          MoneyUtil.toDecimal(res.payload.rewardAmount).gt(0)
+        ) {
           setRewardAmount(res.payload.rewardAmount);
           setShowRewardModal(true);
         }
@@ -90,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               args: [userData.address as `0x${string}`],
               blockTag: "pending",
             });
-            const credits = Number(formatUnits(balance, 18));
+            const credits = formatUnits(balance, 18);
 
             // Info: (20260418 - Luphia) Fetch verification status from DYNAMIC_KYC_MEMBERSHIP
             const isBlacklisted = await publicClient.readContract({
@@ -139,10 +144,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.reload();
   }, []);
 
-  const updateLocalCredits = useCallback((delta: number) => {
+  const updateLocalCredits = useCallback((delta: string) => {
     setUser((prev) => {
       if (!prev || prev.credits === undefined) return prev;
-      return { ...prev, credits: prev.credits + delta };
+      return { ...prev, credits: MoneyUtil.add(prev.credits, delta) };
     });
   }, []);
 

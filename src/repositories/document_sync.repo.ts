@@ -5,30 +5,22 @@ import {
   Prisma,
   EsgScope,
   EsgIntensity,
+  Voucher,
+  VoucherLine,
 } from "@/generated";
-import { MeasurementUnit } from "@/constants/enums";
+import {
+  MeasurementUnit,
+  EsgGenerationSource,
+  DocumentType,
+  VoucherPaymentStatus,
+} from "@/constants/enums";
 import { ISyncDocumentResultParams } from "@/skills/utils/document_parser_db_sync";
 import { ACCOUNTS, IAccount } from "@/constants/accounts";
-import { ExchangeRateService } from "@/services/exchange_rate.service";
 import { VendorRegistry } from "@/services/rules/vendor_registry";
+import { ReconciliationService } from "@/services/reconciliation.service";
+import { MoneyUtil } from "@/lib/utils/money";
 
-function mapAccountingCode(country: string, keyword: string): string {
-  const accountList = (ACCOUNTS[country as keyof typeof ACCOUNTS] ||
-    ACCOUNTS["TW"]) as IAccount[];
-  if (!keyword) return accountList[0]?.code || "UNKNOWN";
-
-  // Info: (20260513 - Tzuhan) exact match on code
-  const exactCode = accountList.find((a: IAccount) => a.code === keyword);
-  if (exactCode) return exactCode.code;
-
-  // Info: (20260513 - Tzuhan) partial match on name
-  const matchName = accountList.find(
-    (a: IAccount) => a.name.includes(keyword) || keyword.includes(a.name),
-  );
-  if (matchName) return matchName.code;
-
-  return keyword; // Info: (20260513 - Tzuhan) fallback
-}
+import { SemanticAccountMatcher } from "@/lib/utils/semantic_account_matcher";
 
 function getAccountName(country: string, code: string): string {
   const accountList = (ACCOUNTS[country as keyof typeof ACCOUNTS] ||
@@ -115,7 +107,7 @@ export class DocumentSyncRepository {
             analysisStatus: "COMPLETED" as AIAnalysisStatus,
             confidence,
             isVerified: confidence > 85,
-            aiNote: jd.aiNote ?? "[[I18N_AI_NOTE_EMPTY]]",
+            aiNote: jd.aiNote ?? "無 AI 分析備註",
           };
 
           if (existingJournal) {
@@ -157,7 +149,7 @@ export class DocumentSyncRepository {
           const vd = {
             ...(voucherBase?.data || voucherBase || {}),
             ...(voucherLines?.data || voucherLines || {}),
-            aiNote: `- [[I18N_BASE_INFO_ANALYSIS]]：${voucherBase?.aiNote || voucherBase?.data?.aiNote || ""}\n- [[I18N_ENTRY_ANALYSIS]]：${voucherLines?.aiNote || voucherLines?.data?.aiNote || ""}`,
+            aiNote: `- 基本資訊分析：${voucherBase?.aiNote || voucherBase?.data?.aiNote || ""}\n- 會計科目分錄分析：${voucherLines?.aiNote || voucherLines?.data?.aiNote || ""}`,
           };
           const tradingDate = new Date(vd.tradingDate || new Date());
           const typeMap: Record<string, VoucherTradingType> = {
@@ -177,42 +169,89 @@ export class DocumentSyncRepository {
           // Info: (20260515 - Tzuhan) 攔截器實作：AccountCode Interceptor 與 FX Interceptor
           const vdRecord = vd as Record<string, unknown>;
           const vendorNameStr = String(vdRecord.vendorName || "");
-          const vendorMatch = VendorRegistry.match(vendorNameStr);
-          const linesToCreate: Prisma.VoucherLineCreateWithoutVoucherInput[] =
-            [];
+          let linesToCreate: Prisma.VoucherLineCreateWithoutVoucherInput[] = [];
 
-          if (vendorMatch) {
-            for (const rule of vendorMatch) {
-              const fx = await ExchangeRateService.convert({
-                amount: Number(vdRecord.totalAmount) || 0,
-                fromCurrency: vd.currency || "TWD",
-                toCurrency: "TWD",
-                date: tradingDate,
-              });
-              linesToCreate.push({
-                accountingCode: rule.accountingCode,
-                particular: `${getAccountName(accountBook.country || "TW", rule.accountingCode)} - ${vendorNameStr}`,
-                amount: BigInt(fx.convertedAmount.round().toFixed(0)),
-                isDebit: rule.isDebit,
-              });
-            }
+          const docType = vdRecord.documentType || DocumentType.OTHERS;
+          let currentPaymentStatus: VoucherPaymentStatus =
+            VoucherPaymentStatus.NOT_APPLICABLE;
+
+          if (docType === DocumentType.ACCRUAL_NOTICE) {
+            currentPaymentStatus = VoucherPaymentStatus.UNPAID;
+          }
+
+          let oldVoucherToClear: (Voucher & { lines: VoucherLine[] }) | null =
+            null;
+          let finalAiNote = vd.aiNote ?? "無 AI 分析備註";
+
+          if (docType === DocumentType.PAYMENT_RECEIPT) {
+            // Info: (20260520 - Tzuhan) 根據 ADR 001 絕對對應原則，尋找與原始憑證完全相同之金額
+            const searchAmountStr = MoneyUtil.toDecimal(
+              String(vdRecord.totalAmount || 0),
+            ).toFixed(0);
+
+            oldVoucherToClear = await ReconciliationService.findUnpaidVoucher(
+              tx,
+              vendorNameStr,
+              searchAmountStr,
+              accountBookId,
+            );
+          }
+
+          // Info: (20260520 - Tzuhan) 載入會計科目字典以供 SemanticAccountMatcher 使用
+          const dictionary = (ACCOUNTS[
+            (accountBook.country || "TW") as keyof typeof ACCOUNTS
+          ] || ACCOUNTS["TW"]) as IAccount[];
+
+          if (oldVoucherToClear) {
+            const paymentAccountCode = SemanticAccountMatcher.match(
+              "CASH_IN_BANK",
+              dictionary,
+              accountBook.country || "TW",
+            );
+            linesToCreate = ReconciliationService.generateClearingLines(
+              oldVoucherToClear,
+              paymentAccountCode,
+            );
+            finalAiNote =
+              `[系統稽核] 偵測為付款收據，已自動沖銷前期應付帳款 (Voucher ID: ${oldVoucherToClear.id})\n` +
+              finalAiNote;
+            currentPaymentStatus = VoucherPaymentStatus.NOT_APPLICABLE;
           } else {
-            for (const l of vd.lines || []) {
-              const fx = await ExchangeRateService.convert({
-                amount: Number(l.amount) || 0,
-                fromCurrency: vd.currency || "TWD",
-                toCurrency: "TWD",
-                date: tradingDate,
-              });
-              linesToCreate.push({
-                accountingCode: mapAccountingCode(
+            if (docType === DocumentType.PAYMENT_RECEIPT) {
+              currentPaymentStatus = VoucherPaymentStatus.NOT_APPLICABLE;
+            }
+            const vendorMatch = VendorRegistry.match(vendorNameStr);
+            if (vendorMatch) {
+              for (const rule of vendorMatch) {
+                const amountDec = MoneyUtil.toDecimal(
+                  String(vdRecord.totalAmount || 0),
+                );
+                const matchedAccountingCode = SemanticAccountMatcher.match(
+                  rule.accountingCode,
+                  dictionary,
                   accountBook.country || "TW",
-                  l.accountingCode || "",
-                ),
-                particular: l.particular || null,
-                amount: BigInt(fx.convertedAmount.round().toFixed(0)),
-                isDebit: l.isDebit === true,
-              });
+                );
+                linesToCreate.push({
+                  accountingCode: matchedAccountingCode,
+                  particular: `${getAccountName(accountBook.country || "TW", matchedAccountingCode)} - ${vendorNameStr}`,
+                  amount: BigInt(amountDec.toFixed(0)),
+                  isDebit: rule.isDebit,
+                });
+              }
+            } else {
+              for (const l of vd.lines || []) {
+                const amountDec = MoneyUtil.toDecimal(String(l.amount || 0));
+                linesToCreate.push({
+                  accountingCode: SemanticAccountMatcher.match(
+                    l.accountingCode || "",
+                    dictionary,
+                    accountBook.country || "TW",
+                  ),
+                  particular: l.particular || "",
+                  amount: BigInt(amountDec.toFixed(0)),
+                  isDebit: l.isDebit === true,
+                });
+              }
             }
           }
 
@@ -228,9 +267,8 @@ export class DocumentSyncRepository {
             ? ("COMPLETED" as AIAnalysisStatus)
             : ("FAILED" as AIAnalysisStatus);
           const finalIsVerified = isBalanced ? confidence > 85 : false;
-          let finalAiNote = vd.aiNote ?? "[[I18N_AI_NOTE_EMPTY]]";
           if (!isBalanced) {
-            finalAiNote = "[[I18N_IMBALANCED_VOUCHER_WARNING]]\n" + finalAiNote;
+            finalAiNote = "[系統稽核警告] 憑證借貸不平衡。\n" + finalAiNote;
           }
 
           const dataPayload: Prisma.VoucherUncheckedCreateInput = {
@@ -244,10 +282,13 @@ export class DocumentSyncRepository {
             isVerified: finalIsVerified,
             aiNote: finalAiNote,
             analysisStatus: finalAnalysisStatus,
+            paymentStatus: currentPaymentStatus,
             lines: {
               create: linesToCreate,
             },
           };
+
+          let finalVoucherId = existingVoucher?.id;
 
           if (existingVoucher) {
             await tx.voucher.update({
@@ -261,7 +302,18 @@ export class DocumentSyncRepository {
               },
             });
           } else {
-            await tx.voucher.create({ data: dataPayload });
+            const created = await tx.voucher.create({ data: dataPayload });
+            finalVoucherId = created.id;
+          }
+
+          if (oldVoucherToClear && finalVoucherId) {
+            await tx.voucher.update({
+              where: { id: oldVoucherToClear.id },
+              data: {
+                paymentStatus: VoucherPaymentStatus.PAID,
+                clearedByVoucherId: finalVoucherId,
+              },
+            });
           }
         }
       }
@@ -295,24 +347,37 @@ export class DocumentSyncRepository {
           const confidence = parseInt(String(ed.confidence)) || 0;
           let finalCoefficientId = ed.coefficientId || null;
           let finalEmissionSourceId = ed.emissionSourceId || null;
+          let isFallbackMatched = false;
 
-          // Info: (20260430 - Julian) 將 AI 提供的新係數加入 DB
-          if (ed.newCoefficient && ed.newCoefficient.name) {
-            const newCoef = await tx.coefficient.create({
-              data: {
-                name: ed.newCoefficient.name,
-                description: ed.newCoefficient.description || "",
-                unit: ed.newCoefficient.unit || "",
-                emissionFactor: new Prisma.Decimal(
-                  String(ed.newCoefficient.emissionFactor) || "0",
-                ),
-                source:
-                  ed.newCoefficient.source || "[[I18N_AI_DYNAMIC_EXTRACTION]]",
-                accountBookId: accountBookId, // Info: (20260518 - Julian) AI 新增的係數屬於自訂係數，應歸屬到當前帳本
-                isVerified: false, // Info: (20260514 - Tzuhan) 未經驗證的係數
+          // Info: (20260519 - Tzuhan) 使用 fallbackCategory 進行最大係數 (Max-Factor) 查詢
+          const fallbackTag = ed.fallbackCategory?.trim();
+          if (!finalCoefficientId && fallbackTag) {
+            // Info: (20260519 - Tzuhan) 防禦空字串地圖砲
+            const matchedCoefficients = await tx.coefficient.findMany({
+              where: {
+                AND: [
+                  {
+                    OR: [
+                      { name: { contains: fallbackTag } },
+                      { description: { contains: fallbackTag } },
+                    ],
+                  },
+                  {
+                    OR: [{ accountBookId: null }, { accountBookId }],
+                  },
+                ],
+                isVerified: true,
               },
+              orderBy: { emissionFactor: "desc" },
+              take: 1,
             });
-            finalCoefficientId = newCoef.id;
+            if (matchedCoefficients.length > 0) {
+              finalCoefficientId = matchedCoefficients[0].id;
+              isFallbackMatched = true;
+              ed.aiNote =
+                (ed.aiNote || "") +
+                `\n[系統匹配] 透過大類標籤「${fallbackTag}」鎖定保守係數。`;
+            }
           }
 
           // Info: (20260430 - Julian) 將 AI 提供的新排放源歸口加入 DB
@@ -338,19 +403,34 @@ export class DocumentSyncRepository {
           let isSuspense = false;
           let recordIsVerified = confidence > 85;
 
-          if (ed.newCoefficient && ed.newCoefficient.name) {
-            emissionFactorValue = new Prisma.Decimal(
-              String(ed.newCoefficient.emissionFactor) || "0",
-            );
-            recordIsVerified = false; // Info: (20260513 - Tzuhan) AI generated new coefficient is unverified
-          } else if (finalCoefficientId) {
+          if (finalCoefficientId) {
             const coefExists = await tx.coefficient.findUnique({
               where: { id: finalCoefficientId },
             });
             if (coefExists) {
-              emissionFactorValue = coefExists.emissionFactor;
-              if (!coefExists.isVerified) {
-                recordIsVerified = false; // Info: (20260513 - Tzuhan) Using unverified coefficient makes record unverified
+              // Info: (20260520 - Tzuhan) [AUDIT FIX] 量綱防呆檢查
+              const getDimension = (u: string) => {
+                if (["KG", "TONNE"].includes(u)) return "MASS";
+                if (["LITER", "GALLON"].includes(u)) return "VOLUME";
+                if (u === "KWH") return "ENERGY";
+                if (u === "TWD") return "CURRENCY";
+                return u;
+              };
+
+              const docUnit = ed.unit as string;
+              const coefUnit = coefExists.unit as string;
+
+              if (getDimension(docUnit) !== getDimension(coefUnit)) {
+                isSuspense = true;
+                finalCoefficientId = null;
+                ed.aiNote =
+                  (ed.aiNote || "") +
+                  `\n[系統稽核警告] 憑證單位 (${docUnit}) 與係數庫單位 (${coefUnit}) 量綱不符，已阻斷跨量綱相乘，強制列入懸記。`;
+              } else {
+                emissionFactorValue = coefExists.emissionFactor;
+                if (!coefExists.isVerified || isFallbackMatched) {
+                  recordIsVerified = false; // Info: (20260513 - Tzuhan) Using unverified coefficient makes record unverified
+                }
               }
             } else {
               isSuspense = true;
@@ -361,12 +441,14 @@ export class DocumentSyncRepository {
           }
 
           let calculatedEmissions = esgAmount.mul(emissionFactorValue);
-          let aiNote = ed.aiNote ?? "[[I18N_AI_NOTE_EMPTY]]";
+          let aiNote = ed.aiNote ?? "無 AI 分析備註";
 
           if (isSuspense) {
             calculatedEmissions = new Prisma.Decimal(0);
             recordIsVerified = false;
-            aiNote = "[[I18N_ESG_SUSPENSE_WARNING]]\n" + aiNote;
+            aiNote =
+              "[系統稽核警告] 缺乏對應的碳排係數主檔，系統已凍結計算並列入懸記。\n" +
+              aiNote;
           }
 
           const esgData: Prisma.EsgRecordUncheckedCreateInput = {
@@ -389,6 +471,9 @@ export class DocumentSyncRepository {
             isVerified: recordIsVerified,
             aiNote,
             analysisStatus: "COMPLETED" as AIAnalysisStatus,
+            generationSource: isFallbackMatched
+              ? EsgGenerationSource.AI_SPECULATIVE_STAGE_3
+              : EsgGenerationSource.SYSTEM_DETERMINISTIC,
             coefficientId: finalCoefficientId,
             emissionSourceId: finalEmissionSourceId,
           };

@@ -6,8 +6,8 @@ import {
   IEsgReportDetailedRecord,
 } from "@/interfaces/esg_report";
 import { IEsgRecordDetail } from "@/interfaces/esg";
+import { MoneyUtil } from "@/lib/utils/money";
 
-// Info: (20260512 - Tzuhan) 定義映射字典，移除 if-else 硬編碼，未來可擴充 ISO Categories
 const ESG_CATEGORY_MAP: Record<string, "scope1" | "scope2" | "scope3"> = {
   SCOPE_1: "scope1",
   SCOPE_2: "scope2",
@@ -15,7 +15,6 @@ const ESG_CATEGORY_MAP: Record<string, "scope1" | "scope2" | "scope3"> = {
 };
 
 export function generateEsgReport(esgRecords: IEsgRecordDetail[]): IEsgReport {
-  // Info: (20260512 - Tzuhan) 記錄每個 scope 裡各活動的加總
   const categoryMap = {
     scope1: new Map<string, { name: string; amount: Decimal }>(),
     scope2: new Map<string, { name: string; amount: Decimal }>(),
@@ -23,55 +22,66 @@ export function generateEsgReport(esgRecords: IEsgRecordDetail[]): IEsgReport {
   };
 
   const categoryRecords = {
-    scope1: [] as Omit<
-      IEsgReportDetailedRecord,
-      "coefficient" | "percentage"
-    >[],
-    scope2: [] as Omit<
-      IEsgReportDetailedRecord,
-      "coefficient" | "percentage"
-    >[],
-    scope3: [] as Omit<
-      IEsgReportDetailedRecord,
-      "coefficient" | "percentage"
-    >[],
+    scope1: [] as Omit<IEsgReportDetailedRecord, "percentage">[],
+    scope2: [] as Omit<IEsgReportDetailedRecord, "percentage">[],
+    scope3: [] as Omit<IEsgReportDetailedRecord, "percentage">[],
   };
 
-  let totalScope1 = new Decimal(0);
-  let totalScope2 = new Decimal(0);
-  let totalScope3 = new Decimal(0);
+  let totalScope1 = MoneyUtil.toDecimal(0);
+  let totalScope2 = MoneyUtil.toDecimal(0);
+  let totalScope3 = MoneyUtil.toDecimal(0);
 
   esgRecords.forEach((record) => {
     const scopeKey = record.scope;
     const category = scopeKey ? ESG_CATEGORY_MAP[scopeKey] : undefined;
-    if (!category) return; // Info: (20260512 - Tzuhan) 忽略未定義的範疇
 
-    const amount = new Decimal(record.emissions || 0);
-    const name = record.activityType || "未分類排放";
+    if (!category) {
+      throw new Error(
+        `[ESG Integrity Violation] 發現無法對應範疇的碳排紀錄 (Record ID: ${record.id}, Scope: ${scopeKey})`,
+      );
+    }
+
+    if (!record.activityType) {
+      throw new Error(
+        `[ESG Audit Error] 碳排紀錄缺少活動名稱，拒絕列入盤查 (Record ID: ${record.id})`,
+      );
+    }
+
+    // Info: (20260518 - Tzuhan) [REFACTOR] 重新命名為 emissionDecimal，避免與 record.amount(活動數據) 產生語意混淆，並套用防腐層
+    const emissionDecimal = MoneyUtil.toDecimal(record.emissions || 0);
+    const name = record.activityType;
+
+    // Info: (20260518 - Tzuhan) [AUDIT FIX] 嚴格區分「0 碳排」與「缺乏係數 (null)」。
+    // 透過 Nullish Coalescing (??) 保留 null。若強制給 0 會構成嚴重漂綠造假！
+    const dbCoefficient = record.coefficient?.emissionFactor ?? null;
 
     const detailedRecord = {
       id: record.id,
       activityType: name,
-      originalData: Number(record.amount) || 0,
+      // Info: (20260518 - Tzuhan) 套用防腐層確保解析安全
+      originalData: MoneyUtil.toDecimal(record.amount || 0).toString(),
       unit: record.unit || "",
-      emissions: amount.toNumber(),
+      // Info: (20260518 - Tzuhan) 維持 Decimal 字串精度，防堵微量碳排截斷
+      emissions: emissionDecimal.toString(),
+      emissionFactor: dbCoefficient, // Info: (20260518 - Tzuhan) 忠實傳遞真理係數或 null
     };
 
     // Info: (20260512 - Tzuhan) 根據活動類型分流與高精度加總
     const map = categoryMap[category];
-    const currentAmount = map.get(name)?.amount || new Decimal(0);
-    map.set(name, { name, amount: currentAmount.plus(amount) });
+    const currentAmount = map.get(name)?.amount || MoneyUtil.toDecimal(0);
+    map.set(name, { name, amount: currentAmount.plus(emissionDecimal) });
 
-    if (category === "scope1") totalScope1 = totalScope1.plus(amount);
-    else if (category === "scope2") totalScope2 = totalScope2.plus(amount);
-    else if (category === "scope3") totalScope3 = totalScope3.plus(amount);
+    if (category === "scope1") totalScope1 = totalScope1.plus(emissionDecimal);
+    else if (category === "scope2")
+      totalScope2 = totalScope2.plus(emissionDecimal);
+    else if (category === "scope3")
+      totalScope3 = totalScope3.plus(emissionDecimal);
 
     categoryRecords[category].push(detailedRecord);
   });
 
   const totalEmissions = totalScope1.plus(totalScope2).plus(totalScope3);
 
-  // Info: (20260512 - Tzuhan) 產生陣列並計算佔比
   const mapToArray = (
     map: Map<string, { name: string; amount: Decimal }>,
     baseTotal: Decimal,
@@ -79,7 +89,6 @@ export function generateEsgReport(esgRecords: IEsgRecordDetail[]): IEsgReport {
   ): IEsgReportItem[] => {
     return Array.from(map.entries())
       .map(([name, data]) => ({
-        // Info: (20260512 - Tzuhan) 改用 Hash 取代 Buffer Base64，確保穩定且唯一
         id: crypto
           .createHash("sha256")
           .update(`${scopeName}-${name}`)
@@ -87,10 +96,12 @@ export function generateEsgReport(esgRecords: IEsgRecordDetail[]): IEsgReport {
         name: data.name,
         amount: data.amount.toString(),
         percentageOfScope: baseTotal.isZero()
-          ? 0
-          : data.amount.dividedBy(baseTotal).times(100).toNumber(),
+          ? "0"
+          : data.amount.dividedBy(baseTotal).times(100).toString(),
       }))
-      .sort((a, b) => Number(b.amount) - Number(a.amount));
+      .sort((a, b) =>
+        MoneyUtil.toDecimal(b.amount).comparedTo(MoneyUtil.toDecimal(a.amount)),
+      );
   };
 
   const scope1Items = mapToArray(categoryMap.scope1, totalScope1, "scope1");
@@ -100,43 +111,47 @@ export function generateEsgReport(esgRecords: IEsgRecordDetail[]): IEsgReport {
   const metrics = {
     totalEmissions: totalEmissions.toString(),
     scope1Proportion: totalEmissions.isZero()
-      ? 0
-      : totalScope1.dividedBy(totalEmissions).times(100).toNumber(),
+      ? "0"
+      : totalScope1.dividedBy(totalEmissions).times(100).toString(),
     scope2Proportion: totalEmissions.isZero()
-      ? 0
-      : totalScope2.dividedBy(totalEmissions).times(100).toNumber(),
+      ? "0"
+      : totalScope2.dividedBy(totalEmissions).times(100).toString(),
     scope3Proportion: totalEmissions.isZero()
-      ? 0
-      : totalScope3.dividedBy(totalEmissions).times(100).toNumber(),
+      ? "0"
+      : totalScope3.dividedBy(totalEmissions).times(100).toString(),
   };
 
   const calculateRecords = (
-    records: Omit<IEsgReportDetailedRecord, "coefficient" | "percentage">[],
+    records: Omit<IEsgReportDetailedRecord, "percentage">[],
     scopeTotal: Decimal,
   ): IEsgReportDetailedRecord[] => {
     return records
       .map((record) => {
-        // Info: (20260512 - Tzuhan) 修正除以零與漂綠漏洞
-        const coeff =
-          record.originalData !== 0
-            ? new Decimal(record.emissions)
-                .dividedBy(record.originalData)
-                .toNumber()
-            : null;
+        // Info: (20260518 - Tzuhan) [AUDIT FIX] 暴露不合理數據 (若排放量不為 0 但原始數據為 0，直接拋錯)，使用防腐層驗證排放量
+        if (
+          MoneyUtil.toDecimal(record.originalData).isZero() &&
+          !MoneyUtil.toDecimal(record.emissions).isZero()
+        ) {
+          throw new Error(
+            `[ESG Audit Error] 發現憑空產生的碳排數據 (Record ID: ${record.id})`,
+          );
+        }
 
         return {
           ...record,
-          coefficient: coeff,
-          // Info: (20260512 - Tzuhan) 佔比分母修正為該範疇的加總 (scopeTotal)
           percentage: scopeTotal.isZero()
-            ? 0
-            : new Decimal(record.emissions)
+            ? "0"
+            : MoneyUtil.toDecimal(record.emissions)
                 .dividedBy(scopeTotal)
                 .times(100)
-                .toNumber(),
+                .toString(),
         };
       })
-      .sort((a, b) => b.emissions - a.emissions);
+      .sort((a, b) =>
+        MoneyUtil.toDecimal(b.emissions).comparedTo(
+          MoneyUtil.toDecimal(a.emissions),
+        ),
+      );
   };
 
   return {

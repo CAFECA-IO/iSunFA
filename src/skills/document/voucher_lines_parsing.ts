@@ -5,6 +5,7 @@ import { prepareDocumentContext } from "@/skills/utils/document_helper";
 import { SchemaType, Schema } from "@google/generative-ai";
 import { MoneyUtil } from "@/lib/utils/money";
 import { VendorRegistry } from "@/services/rules/vendor_registry";
+import { DocumentType } from "@/constants/enums";
 
 export class VoucherLinesParsingSkill implements ITaskSkill {
   name = "VOUCHER_LINES_PARSING";
@@ -67,7 +68,8 @@ export class VoucherLinesParsingSkill implements ITaskSkill {
       if (baseParsed && baseParsed.vendorName) {
         const matchedRules = VendorRegistry.match(
           String(baseParsed.vendorName),
-          String(baseParsed.documentType || "BILL_NOTICE"),
+          // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: Refactor magic strings to Enum
+          String(baseParsed.documentType || DocumentType.ACCRUAL_NOTICE),
         );
 
         if (matchedRules && matchedRules.length > 0) {
@@ -105,9 +107,11 @@ export class VoucherLinesParsingSkill implements ITaskSkill {
             items: {
               type: SchemaType.OBJECT,
               properties: {
+                // Info: (20260520 - Tzuhan) [AUDIT FIX] 強制約束為帳本當地語系以阻止英文 AI 幻覺
                 accountingCode: {
                   type: SchemaType.STRING,
-                  description: "會計科目代碼",
+                  description:
+                    "會計科目名稱。必須強制輸出為『帳本當地語系』（若為台灣帳本，請絕對輸出繁體中文，例如：『預付租金』、『存出保證金』）。嚴禁輸出英文！",
                 },
                 particular: {
                   type: SchemaType.STRING,

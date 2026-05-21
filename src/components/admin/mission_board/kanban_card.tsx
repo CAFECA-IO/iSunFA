@@ -13,6 +13,7 @@ import {
 import { useTranslation } from "@/i18n/i18n_context";
 import { ITask, TaskStatus } from "@/interfaces/mission_board";
 import { formatDate } from "@/lib/utils/date";
+import { parseEther } from "viem";
 
 export const getWaitTime = (createdAtSecs: number) => {
   const diff = Math.floor(Date.now() / 1000) - createdAtSecs;
@@ -98,17 +99,12 @@ export default function KanbanCard({
           </div>
           {(() => {
             const totalTokens = task.submissions.reduce(
-              (sum, sub) =>
-                sum + Math.round(parseFloat(sub.consumedTokens) * 1e18),
-              0,
+              (sum, sub) => sum + parseEther(sub.consumedTokens.toString()),
+              0n,
             );
-            const rewardICP = parseFloat(task.reward);
+            const rewardICP = parseEther(task.reward.toString());
             const tokenPerICP =
-              rewardICP > 0
-                ? (totalTokens / rewardICP).toLocaleString(undefined, {
-                    maximumFractionDigits: 0,
-                  })
-                : "0";
+              rewardICP > 0n ? (totalTokens / rewardICP).toString() : "0";
 
             return (
               <>
@@ -243,8 +239,8 @@ export default function KanbanCard({
                       Tokens
                     </span>
                     <span className="font-mono font-black text-indigo-600">
-                      {Math.round(
-                        parseFloat(sub.consumedTokens) * 1e18,
+                      {parseEther(
+                        sub.consumedTokens.toString(),
                       ).toLocaleString()}
                     </span>
                   </div>

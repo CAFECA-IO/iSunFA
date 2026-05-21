@@ -1,9 +1,10 @@
 # 架構決策紀錄 (ADR) 001: The Great Purge (精準度架構重構與拔除)
 
 > **Date**: 2026-05-14
+> **Update**: 2026-05-20
 > **Author**: Tzuhan
 > **Replaced**: `documents/architecture/epics/precision_frontend_refactor.md`
-> **Status**: Active (進行中)
+> **Status**: Accepted (已接受)
 > **Branch**: `epic/precision-frontend-refactor`
 > **Context**: 在 V2 藍圖的推進中，為了確保系統具備 Big 4 (四大會計師事務所) 級別的確定性 (Determinism) 與防禦深度，工程團隊與 AI 協作執行了史詩級的「減法工程 (The Great Purge)」。本文件記錄了在這個分支中被徹底拔除的歷史包袱，以及其背後的架構決策脈絡。
 
@@ -93,17 +94,21 @@
 在本次（The Great Purge）拔除大量寬鬆的妥協機制後，系統進入了「極度要求精準」的狀態。這無可避免地引入了新的系統脆弱性（Trade-offs），以下是團隊後續必須排入 Sprint 優先處理的四大防護缺口：
 
 ### 1. 極度嚴苛的資料庫防線 (Database Boundary Guard)
+
 - **地雷風險**：`prisma.ts` 內的 Middleware 已強制鎖死 `amount` 等欄位，若新 API 或第三方串接傳入原生 `number`，將瞬間導致 DB 寫入崩潰 (Crash)。
 - **拆彈指南**：強制要求所有開發者閱讀 `numerical_precision_guideline.md`，並規定任何數值運算必須使用 `MoneyUtil` 過水處理。
 
 ### 2. 拔除 Regex 帶來的「零容錯」AI 解析
+
 - **地雷風險**：由於全面棄用 `/\{[\s\S]*\}/` Regex 備案並依賴 Gemini 的 `responseSchema`，若未來模型更新導致對 Structured Outputs 的支援度下降，或切換到非支援模型，系統將完全喪失容錯擷取能力。
 - **拆彈指南**：嚴格鎖定具備原生 JSON Schema 支援的模型版本（如 Gemini 1.5 Pro/Flash），並透過 E2E 盲測腳本監控解析失敗率。
 
 ### 3. 確定性攔截 (Golden Vendor Mapping) 的字串脆弱性
+
 - **地雷風險**：目前 `VENDOR_RULE_REGISTRY` 依賴單純的字串比對 (`includes`)。若 AI 將「中華電信股份有限公司」萃取為簡寫「中華電信」或英文「Chunghwa Telecom」，攔截將失效並落入 AI 幻覺手中。
 - **拆彈指南**：在下一個 Sprint 應將註冊表升級為支援「別名陣列 (Aliases Array)」，或導入 `pgvector` 等輕量級 Embedding 進行語意相似度檢索。
 
 ### 4. Async Worker 報錯後的「殭屍狀態 (Zombie State)」
+
 - **地雷風險**：為了避免 Worker Crash，我們現在遇到 AI 解析失敗會優雅地寫入 `failed_xxx.md`。但若負責同步的 `document_sync.repo.ts` 未實作對此失敗紀錄的偵測，這筆任務會在 UI 永遠卡在「處理中 (Processing)」。
 - **拆彈指南**：必須在 `SyncRepo` 或監控 Cronjob 中實作「主動偵測 FAILED log」與「逾時 (Timeout) 機制」，一旦失敗即在前端亮紅燈並允許人工介入。

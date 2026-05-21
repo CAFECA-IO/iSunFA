@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated";
+import Decimal from "decimal.js";
 import { generateIncomeStatement } from "@/lib/report/income_statement_generator";
 import { generateCashFlowStatement } from "@/lib/report/cash_flow_statement_generator";
 import { generateBalanceSheet } from "@/lib/report/balance_sheet_generator";
@@ -73,21 +74,21 @@ export const runCrossValidation = async (stockId: string) => {
     );
     if (s1)
       goldenScope1 = new Prisma.Decimal(
-        MoneyUtil.toDecimal(s1[1].replace(/,/g, "")).toNumber(),
+        MoneyUtil.toDecimal(s1[1].replace(/,/g, "")).toString(),
       );
     const s2 = esgStr.match(
       /"value":\s*"([^"]+)",\s*"ctrType":\s*"number",\s*"imageUrl":\s*null,\s*"code":\s*"grossScope2GreenhouseGasEmissions"/,
     );
     if (s2)
       goldenScope2 = new Prisma.Decimal(
-        MoneyUtil.toDecimal(s2[1].replace(/,/g, "")).toNumber(),
+        MoneyUtil.toDecimal(s2[1].replace(/,/g, "")).toString(),
       );
     const s3 = esgStr.match(
       /"value":\s*"([^"]+)",\s*"ctrType":\s*"number",\s*"imageUrl":\s*null,\s*"code":\s*"grossScope3GreenhouseGasEmissions"/,
     );
     if (s3)
       goldenScope3 = new Prisma.Decimal(
-        MoneyUtil.toDecimal(s3[1].replace(/,/g, "")).toNumber(),
+        MoneyUtil.toDecimal(s3[1].replace(/,/g, "")).toString(),
       );
   }
 
@@ -116,14 +117,17 @@ export const runCrossValidation = async (stockId: string) => {
           ? (acc as IAccount)
           : ({ code, name: code } as IAccount),
         particular: String(line.particular || ""),
-        amount: Number(line.amount || 0),
+        amount: new Decimal(line.amount || 0).toString(),
         isDebit: Boolean(line.isDebit),
       } as unknown as IVoucherLineUI);
     }
   }
 
   const incomeStatement = generateIncomeStatement(allLines);
-  const cashFlowStatement = generateCashFlowStatement(allLines);
+  const cashFlowStatement = generateCashFlowStatement(
+    allLines,
+    0 /* TODO: (20260518 - Tzuhan) Roadmap V2 Sprint 2 Opening Balance */,
+  );
   const balanceSheet = generateBalanceSheet(allLines);
 
   const systemRevenue = new Prisma.Decimal(
@@ -170,14 +174,16 @@ export const runCrossValidation = async (stockId: string) => {
   };
 
   // Info: (20260505 - Tzuhan) [Internal Articulation] 驗證三表連動性
-  const isAccountingEquationBalanced =
-    Number(balanceSheet.assets.total) ===
-    Number(balanceSheet.liabilities.total) + Number(balanceSheet.equity.total);
+  const isAccountingEquationBalanced = new Decimal(
+    balanceSheet.assets.total,
+  ).equals(
+    new Decimal(balanceSheet.liabilities.total).add(balanceSheet.equity.total),
+  );
 
   const isIncomeStatementNetIncome = incomeStatement.sections.netIncome.total;
   const bsRetainedEarnings =
     balanceSheet.equity.items.find(
-      (i: { code: string; amount: string | number }) => i.code === "3200",
+      (i: { code: string; amount: string | number }) => i.code === "3353",
     )?.amount || 0;
   const cfStartingNetIncome =
     cashFlowStatement.activities.operating.items.find(
@@ -186,8 +192,8 @@ export const runCrossValidation = async (stockId: string) => {
     )?.amount || 0;
 
   const isNetIncomeArticulated =
-    Number(isIncomeStatementNetIncome) === Number(bsRetainedEarnings) &&
-    Number(isIncomeStatementNetIncome) === Number(cfStartingNetIncome);
+    new Decimal(isIncomeStatementNetIncome).equals(bsRetainedEarnings) &&
+    new Decimal(isIncomeStatementNetIncome).equals(cfStartingNetIncome);
 
   const bsEndingCash =
     balanceSheet.assets.current.items.find(
@@ -195,7 +201,7 @@ export const runCrossValidation = async (stockId: string) => {
     )?.amount || 0;
   const cfEndingCash = cashFlowStatement.summary.endingBalance;
 
-  const isCashArticulated = Number(bsEndingCash) === Number(cfEndingCash);
+  const isCashArticulated = new Decimal(bsEndingCash).equals(cfEndingCash);
 
   const report = {
     metadata: {
@@ -206,8 +212,8 @@ export const runCrossValidation = async (stockId: string) => {
     },
     metrics: {
       Revenue: {
-        golden: goldenRevenue.toNumber(),
-        system: systemRevenue.toNumber(),
+        golden: goldenRevenue.toString(),
+        system: systemRevenue.toString(),
         variancePercent: calculateVariance(systemRevenue, goldenRevenue),
         isPassed: systemRevenue
           .sub(goldenRevenue)
@@ -216,14 +222,14 @@ export const runCrossValidation = async (stockId: string) => {
           .lt(0.2), // Info: (20260503 - Tzuhan) 容忍 20% 的誤差，因為我們有 15% 的極端雜訊實驗
       },
       OperatingExpenses: {
-        golden: goldenOpex.toNumber(),
-        system: systemOpex.toNumber(),
+        golden: goldenOpex.toString(),
+        system: systemOpex.toString(),
         variancePercent: calculateVariance(systemOpex, goldenOpex),
         isPassed: systemOpex.sub(goldenOpex).abs().div(goldenOpex).lt(0.2), // Info: (20260503 - Tzuhan) 容忍 20% 誤差
       },
       Depreciation: {
-        golden: goldenDepreciation.toNumber(),
-        system: systemDepreciation.toNumber(),
+        golden: goldenDepreciation.toString(),
+        system: systemDepreciation.toString(),
         variancePercent: calculateVariance(
           systemDepreciation,
           goldenDepreciation,
@@ -231,24 +237,24 @@ export const runCrossValidation = async (stockId: string) => {
         isPassed: systemDepreciation.equals(goldenDepreciation),
       },
       Scope1: {
-        golden: goldenScope1.toNumber(),
-        system: systemScope1.toNumber(),
+        golden: goldenScope1.toString(),
+        system: systemScope1.toString(),
         variancePercent: calculateVariance(systemScope1, goldenScope1),
         isPassed: goldenScope1.equals(0)
           ? systemScope1.equals(0)
           : systemScope1.sub(goldenScope1).abs().div(goldenScope1).lt(0.2), // Info: (20260503 - Tzuhan) 容忍 20% 誤差
       },
       Scope2: {
-        golden: goldenScope2.toNumber(),
-        system: systemScope2.toNumber(),
+        golden: goldenScope2.toString(),
+        system: systemScope2.toString(),
         variancePercent: calculateVariance(systemScope2, goldenScope2),
         isPassed: goldenScope2.equals(0)
           ? systemScope2.equals(0)
           : systemScope2.sub(goldenScope2).abs().div(goldenScope2).lt(0.2), // Info: (20260503 - Tzuhan) 容忍 20% 誤差
       },
       Scope3: {
-        golden: goldenScope3.toNumber(),
-        system: systemScope3.toNumber(),
+        golden: goldenScope3.toString(),
+        system: systemScope3.toString(),
         variancePercent: calculateVariance(systemScope3, goldenScope3),
         isPassed:
           goldenScope3.equals(0) || goldenScope3.isNaN()
@@ -293,18 +299,18 @@ export const runCrossValidation = async (stockId: string) => {
   console.log(`\n📊 [FINANCIAL VARIANCE REPORT]`);
   console.table({
     Revenue: {
-      Expected: goldenRevenue.toNumber(),
-      AI_Actual: systemRevenue.toNumber(),
+      Expected: goldenRevenue.toString(),
+      AI_Actual: systemRevenue.toString(),
       Variance: report.metrics.Revenue.variancePercent,
     },
     OpEx: {
-      Expected: goldenOpex.toNumber(),
-      AI_Actual: systemOpex.toNumber(),
+      Expected: goldenOpex.toString(),
+      AI_Actual: systemOpex.toString(),
       Variance: report.metrics.OperatingExpenses.variancePercent,
     },
     Depreciation: {
-      Expected: goldenDepreciation.toNumber(),
-      AI_Actual: systemDepreciation.toNumber(),
+      Expected: goldenDepreciation.toString(),
+      AI_Actual: systemDepreciation.toString(),
       Variance: report.metrics.Depreciation.variancePercent,
     },
   });
@@ -312,18 +318,18 @@ export const runCrossValidation = async (stockId: string) => {
   console.log(`\n🌍 [ESG VARIANCE REPORT]`);
   console.table({
     Scope1: {
-      Expected: goldenScope1.toNumber(),
-      AI_Actual: systemScope1.toNumber(),
+      Expected: goldenScope1.toString(),
+      AI_Actual: systemScope1.toString(),
       Variance: report.metrics.Scope1.variancePercent,
     },
     Scope2: {
-      Expected: goldenScope2.toNumber(),
-      AI_Actual: systemScope2.toNumber(),
+      Expected: goldenScope2.toString(),
+      AI_Actual: systemScope2.toString(),
       Variance: report.metrics.Scope2.variancePercent,
     },
     Scope3: {
-      Expected: goldenScope3.toNumber(),
-      AI_Actual: systemScope3.toNumber(),
+      Expected: goldenScope3.toString(),
+      AI_Actual: systemScope3.toString(),
       Variance: report.metrics.Scope3.variancePercent,
     },
   });

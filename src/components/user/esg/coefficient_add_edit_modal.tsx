@@ -65,7 +65,7 @@ export default function CoefficientAddEditModal({
   const confirmCoefficient = () => {
     const input: ICoefficientInput = {
       name,
-      emissionFactor: MoneyUtil.toDecimal(emissionFactor).toNumber(),
+      emissionFactor: emissionFactor, // Info: (20260519 - Tzuhan) 高精度防禦：直接以字串傳遞
       unit,
       description,
       source: "", // Info: (20260414 - Julian) 預設為空，由 API 填入

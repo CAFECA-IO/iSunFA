@@ -46,7 +46,7 @@ export class OrderBackfillService {
 
       if (!Array.isArray(taskIds) || taskIds.length === 0) continue;
 
-      let totalTokensForOrder = 0;
+      let totalTokensForOrder = 0n;
 
       for (const taskId of taskIds) {
         try {
@@ -57,9 +57,9 @@ export class OrderBackfillService {
             args: [BigInt(taskId)],
           })) as [string, string, bigint, bigint, bigint, number, bigint];
 
-          const submissionCount = Number(taskTuple[6]);
+          const submissionCount = taskTuple[6]; // Info: (20260519 - Tzuhan) Keep as BigInt
 
-          if (submissionCount > 0) {
+          if (submissionCount > 0n) {
             const subTuple = (await publicClient.readContract({
               address: missionBoardAddress,
               abi: MB_ABI,
@@ -67,10 +67,10 @@ export class OrderBackfillService {
               args: [BigInt(taskId), 0n],
             })) as [string, string, bigint, boolean, bigint];
 
-            const consumedTokens = Number(subTuple[2]);
+            const consumedTokens = subTuple[2]; // Info: (20260519 - Tzuhan) Keep as BigInt
             totalTokensForOrder += consumedTokens;
             console.log(
-              `[OrderBackfillService] Task ${taskId} consumed ${consumedTokens} tokens.`,
+              `[OrderBackfillService] Task ${taskId} consumed ${consumedTokens.toString()} tokens.`,
             );
           }
         } catch (err) {
@@ -81,13 +81,18 @@ export class OrderBackfillService {
         }
       }
 
-      if (totalTokensForOrder > 0) {
+      if (totalTokensForOrder > 0n) {
+        if (totalTokensForOrder > 2147483647n) {
+          throw new Error(
+            `[DB Overflow] Order ${order.id} token count exceeds Prisma Int bounds.`,
+          );
+        }
         await orderRepo.updateOrderTokens({
           id: order.id,
-          tokens: totalTokensForOrder,
+          tokens: Number(totalTokensForOrder), // Info: (20260519 - Tzuhan) Guarded against Prisma Int overflow
         });
         console.log(
-          `[OrderBackfillService] Updated Order ${order.id} with ${totalTokensForOrder} tokens.`,
+          `[OrderBackfillService] Updated Order ${order.id} with ${totalTokensForOrder.toString()} tokens.`,
         );
       } else {
         console.log(

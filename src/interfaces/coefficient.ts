@@ -7,7 +7,7 @@ export enum CoefficientCategory {
 export interface ICoefficientInput {
   name: string; // Info: (20260413 - Julian) 公式名稱
   description: string; // Info: (20260413 - Julian) 公式描述
-  emissionFactor: number; // Info: (20260413 - Julian) 排放係數
+  emissionFactor: string; // Info: (20260413 - Julian) 排放係數 (高精度防禦: 強制轉字串)
   unit: string; // Info: (20260413 - Julian) 單位
   source: string; // Info: (20260413 - Julian) 公式來源
 }

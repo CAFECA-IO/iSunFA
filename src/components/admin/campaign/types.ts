@@ -5,7 +5,7 @@ export interface ICampaignData {
   description: string | null;
   startDate: string;
   endDate: string;
-  bonusPoints: number;
+  bonusPoints: string;
   bonusModules: string[];
   isActive: boolean;
   participantCount: number;

@@ -65,7 +65,7 @@ const IncomeStatementSection = ({
                   <div
                     className={`h-full rounded-full ${barColor}`}
                     style={{
-                      width: `${Math.min(percentage, 100)}%`, // Info: (20260330 - Julian) 避免破版
+                      width: `${Math.min(Number(percentage), 100)}%`, // Info: (20260330 - Julian) 避免破版
                     }}
                   ></div>
                 </div>
@@ -78,7 +78,7 @@ const IncomeStatementSection = ({
                     : numberWithCommas(item.amount)}
                 </span>
                 <span className="text-[10px] font-bold text-gray-400">
-                  {percentage.toFixed(1)}%
+                  {Number(percentage).toFixed(1)}%
                 </span>
               </div>
             </div>
@@ -195,34 +195,34 @@ export default function IncomeStatementView({
   const incomeKeyMetricsData = [
     {
       title: t("income_statement_view.metric_gm_title"),
-      value: `${metrics.grossMargin.toFixed(1)}%`,
-      description: t("income_statement_view.metric_gm_desc"),
-      textColor: "text-gray-900",
-      statusGood: metrics.grossMargin >= 50,
+      value: `${Number(metrics.grossMargin).toFixed(1)}%`,
+      description: "營業毛利 / 營業收入",
+      textColor: "text-blue-600",
+      statusGood: Number(metrics.grossMargin) >= 30,
       tooltipAlign: TooltipAlign.LEFT,
     },
     {
       title: t("income_statement_view.metric_om_title"),
-      value: `${metrics.operatingMargin.toFixed(1)}%`,
-      description: t("income_statement_view.metric_om_desc"),
-      textColor: "text-gray-900",
-      statusGood: metrics.operatingMargin >= 15,
+      value: `${Number(metrics.operatingMargin).toFixed(1)}%`,
+      description: "營業利益 / 營業收入",
+      textColor: "text-blue-600",
+      statusGood: Number(metrics.operatingMargin) >= 15,
       tooltipAlign: TooltipAlign.RIGHT,
     },
     {
       title: t("income_statement_view.metric_npm_title"),
-      value: `${metrics.netProfitMargin.toFixed(1)}%`,
-      description: t("income_statement_view.metric_npm_desc"),
-      textColor: "text-gray-900",
-      statusGood: metrics.netProfitMargin >= 10,
+      value: `${Number(metrics.netProfitMargin).toFixed(1)}%`,
+      description: "稅後淨利 / 營業收入",
+      textColor: "text-green-600",
+      statusGood: Number(metrics.netProfitMargin) >= 10,
       tooltipAlign: TooltipAlign.LEFT,
     },
     {
       title: t("income_statement_view.metric_ebitda_title"),
-      value: `${metrics.ebitdaMargin.toFixed(1)}%`,
-      description: t("income_statement_view.metric_ebitda_desc"),
-      textColor: "text-gray-900",
-      statusGood: metrics.ebitdaMargin >= 15,
+      value: `${Number(metrics.ebitdaMargin).toFixed(1)}%`,
+      description: "EBITDA / 營業收入",
+      textColor: "text-indigo-600",
+      statusGood: Number(metrics.ebitdaMargin) >= 15,
       tooltipAlign: TooltipAlign.RIGHT,
     },
   ];

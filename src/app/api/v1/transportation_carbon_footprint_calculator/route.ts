@@ -78,7 +78,7 @@ export async function POST(request: Request) {
         Number(body.originLng),
         Number(body.destLat),
         Number(body.destLng),
-        Number(body.weightKg || 1000),
+        String(body.weightKg || 1000),
       );
       return jsonOk(plan);
     } else {

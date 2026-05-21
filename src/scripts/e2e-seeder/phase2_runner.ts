@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { prisma } from "@/lib/prisma";
+import { MoneyUtil } from "@/lib/utils/money";
 import { VoucherLinesParsingSkill } from "@/skills/document/voucher_lines_parsing";
 import { EsgParsingSkill } from "@/skills/document/esg_parsing";
 import { ChatService } from "@/services/chat.service";
@@ -8,6 +9,7 @@ import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { config } from "dotenv";
 import sharp from "sharp";
 import { Role } from "@/constants/role";
+import { MeasurementUnit } from "@/constants/enums";
 
 config();
 
@@ -312,7 +314,11 @@ export const runPhase2ReceiptAnalysis = async (
             create: extractedLines.map((l: IExtractedLine) => ({
               accountingCode: l.accountingCode || "9999",
               particular: l.particular || "",
-              amount: l.amount || 0,
+              amount: BigInt(
+                MoneyUtil.toDecimal(l.amount || 0)
+                  .round()
+                  .toString(),
+              ),
               isDebit: l.isDebit === true,
             })),
           },
@@ -341,17 +347,12 @@ export const runPhase2ReceiptAnalysis = async (
   "activityType": "用電",
   "vendor": "台灣電力公司",
   "amount": 5000,
-  "unit": "度",
-  "newCoefficient": {
-    "name": "電力估算係數",
-    "emissionFactor": 0.495,
-    "unit": "度",
-    "source": "AI估算"
-  },
+  "unit": "KWH",
+  "fallbackCategory": "電力與能源",
   "confidence": 95
 }
 注意：
-1. 若系統無對應係數，請根據行業知識估算 "newCoefficient"，嚴禁自行計算最終 emissions。
+1. 若系統無對應係數，請根據行業知識估算 "fallbackCategory"，嚴禁自行推估係數或計算最終 emissions。
 2. 若無碳排資訊，請合理給予 SCOPE_3 或預設值。不可有任何 markdown 標籤，直接輸出 JSON 即可。`;
 
       process.stdout.write(
@@ -385,7 +386,7 @@ export const runPhase2ReceiptAnalysis = async (
         if (esgData.scope === formattedExpectedScope) {
           correctEsgCount++;
           console.log(
-            `✅ ESG Passed (Extracted Scope: ${esgData.scope}, Est. Coefficient: ${esgData.newCoefficient?.emissionFactor || "None"})`,
+            `✅ ESG Passed (Extracted Scope: ${esgData.scope}, Fallback Category: ${esgData.fallbackCategory || "None"})`,
           );
         } else {
           console.log(
@@ -410,8 +411,10 @@ export const runPhase2ReceiptAnalysis = async (
           activityType: esgData.activityType || "UNKNOWN",
           vendor: esgData.vendor || "現金交易",
           amount: esgData.amount || 0,
-          unit: esgData.unit || "N/A",
-          emissions: 0, // Info: (20260515 - Tzuhan) 兩段式架構，由主線程後算，此處預設 0
+          unit: esgData.unit || MeasurementUnit.KG,
+          emissions: (esgData.amount || 0) * 1.5, // Info: (20260519 - Tzuhan) 模擬後端 MAX(factor) 行為
+          isVerified: false,
+          aiNote: `[AI_SPECULATIVE_STAGE_3] E2E 模擬已套用最高係數. 原註記: ${esgData.aiNote || "系統預設給定之猜測數值"}`,
           confidence: esgData.confidence || 85,
           analysisStatus: "COMPLETED",
         },
@@ -449,7 +452,13 @@ export const runPhase2ReceiptAnalysis = async (
           create: adjV.lines.map((l: ISimulatedVoucherLine) => ({
             accountingCode: l.accountingCode,
             particular: l.description,
-            amount: l.debitAmount > 0 ? l.debitAmount : l.creditAmount,
+            amount: BigInt(
+              MoneyUtil.toDecimal(
+                l.debitAmount > 0 ? l.debitAmount : l.creditAmount,
+              )
+                .round()
+                .toString(),
+            ),
             isDebit: l.debitAmount > 0,
           })),
         },

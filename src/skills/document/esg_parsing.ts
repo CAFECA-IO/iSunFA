@@ -4,6 +4,7 @@ import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
 import { SchemaType, Schema } from "@google/generative-ai";
 import { VendorRegistry, IEsgRule } from "@/services/rules/vendor_registry";
+import { MeasurementUnit } from "@/constants/enums";
 
 export class EsgParsingSkill implements ITaskSkill {
   name = "ESG_PARSING";
@@ -58,7 +59,7 @@ export class EsgParsingSkill implements ITaskSkill {
       if (baseParsed && baseParsed.vendorName) {
         const esgRule = VendorRegistry.matchEsg(
           String(baseParsed.vendorName),
-          String(baseParsed.documentType || "BILL_NOTICE"),
+          String(baseParsed.documentType || "ACCRUAL_NOTICE"),
         );
 
         if (esgRule) {
@@ -81,7 +82,7 @@ export class EsgParsingSkill implements ITaskSkill {
               `[EsgParsingSkill] 🎯 Stage 2 Match: Deterministic ESG rules found for ${baseParsed.vendorName}, falling back to AI for coefficient estimation.`,
             );
             esgRuleForFallback = esgRule;
-            promptText += `\n\n【決定論攔截指示】\n系統已判定此廠商為 ${esgRule.esgScope} / ${esgRule.esgActivityType}。請你「強制」使用此範疇與活動類型，並專注於為這個供應商推估合理的碳排係數 (newCoefficient)。`;
+            promptText += `\n\n【決定論攔截指示】\n系統已判定此廠商為 ${esgRule.esgScope} / ${esgRule.esgActivityType}。請你「強制」使用此範疇與活動類型，並依據其通用知識，僅輸出一個最接近的「官方標準大類標籤」(fallbackCategory)，嚴禁自行推估數值。`;
           }
         }
       }
@@ -98,24 +99,17 @@ export class EsgParsingSkill implements ITaskSkill {
           activityType: { type: SchemaType.STRING, description: "活動類型" },
           vendor: { type: SchemaType.STRING, description: "供應商" },
           amount: { type: SchemaType.NUMBER, description: "數量" },
-          unit: { type: SchemaType.STRING, description: "單位" },
-          newCoefficient: {
-            type: SchemaType.OBJECT,
-            description: "若系統無預設係數，由 AI 根據領域知識估算的碳排係數",
-            properties: {
-              name: { type: SchemaType.STRING, description: "係數名稱" },
-              description: { type: SchemaType.STRING, description: "描述" },
-              unit: { type: SchemaType.STRING, description: "單位" },
-              emissionFactor: {
-                type: SchemaType.NUMBER,
-                description: "排放係數值",
-              },
-              source: {
-                type: SchemaType.STRING,
-                description: "資料來源 (如: EPA, 估算)",
-              },
-            },
-            required: ["name", "emissionFactor", "unit"],
+          unit: {
+            type: SchemaType.STRING,
+            description:
+              "單位 (必須是以下之一: KWH, LITER, KG, TONNE, GALLON, PIECE, TWD)",
+            format: "enum",
+            // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: Refactor magic strings to Enum
+            enum: Object.values(MeasurementUnit),
+          },
+          fallbackCategory: {
+            type: SchemaType.STRING,
+            description: "最接近的官方標準大類標籤 (例如: 塑膠包材、交通運輸)",
           },
           aiNote: {
             type: SchemaType.STRING,
@@ -134,6 +128,7 @@ export class EsgParsingSkill implements ITaskSkill {
           "unit",
           "aiNote",
           "confidence",
+          "fallbackCategory",
         ],
       };
 

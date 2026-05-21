@@ -2,6 +2,7 @@ import cron from "node-cron";
 import { prisma } from "@/lib/prisma";
 import fs from "fs";
 import path from "path";
+import Decimal from "decimal.js";
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 5000;
@@ -89,30 +90,25 @@ export async function syncExchangeRates() {
        ** 12: 現金賣出 (Cash Sell)
        ** 13: 即期賣出 (Spot Sell) */
 
-      const spotBuy = parseFloat(cols[3]);
-      const spotSell = parseFloat(cols[13]);
+      const spotBuy = new Decimal(cols[3] || 0);
+      const spotSell = new Decimal(cols[13] || 0);
 
-      let rateToSave = 0;
+      let rateToSave = new Decimal(0);
 
       // Info: (20260514 - Julian) 優先使用「即期」匯率中價 (買進 + 賣出 / 2)
-      if (!isNaN(spotBuy) && spotBuy > 0 && !isNaN(spotSell) && spotSell > 0) {
-        rateToSave = (spotBuy + spotSell) / 2;
+      if (spotBuy.gt(0) && spotSell.gt(0)) {
+        rateToSave = spotBuy.add(spotSell).div(2);
       } else {
         // Info: (20260514 - Julian) 若無即期匯率，退而求其次使用「現金」匯率中價
-        const cashBuy = parseFloat(cols[2]);
-        const cashSell = parseFloat(cols[12]);
-        if (
-          !isNaN(cashBuy) &&
-          cashBuy > 0 &&
-          !isNaN(cashSell) &&
-          cashSell > 0
-        ) {
-          rateToSave = (cashBuy + cashSell) / 2;
+        const cashBuy = new Decimal(cols[2] || 0);
+        const cashSell = new Decimal(cols[12] || 0);
+        if (cashBuy.gt(0) && cashSell.gt(0)) {
+          rateToSave = cashBuy.add(cashSell).div(2);
         }
       }
 
       // Info: (20260514 - Julian) 若成功取得匯率，則將匯率存入 DB
-      if (rateToSave > 0) {
+      if (rateToSave.gt(0)) {
         await prisma.exchangeRate.upsert({
           where: {
             date_baseCurrency_targetCurrency: {
@@ -122,13 +118,13 @@ export async function syncExchangeRates() {
             },
           },
           update: {
-            rate: rateToSave,
+            rate: rateToSave.toString(),
           },
           create: {
             date: today,
             baseCurrency: "TWD",
             targetCurrency: currency,
-            rate: rateToSave,
+            rate: rateToSave.toString(),
           },
         });
 

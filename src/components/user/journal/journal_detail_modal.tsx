@@ -12,7 +12,6 @@ import { IJournal } from "@/interfaces/journal";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { translateAiNote } from "@/utils/ai_note_translator";
 
 interface IJournalDetailModalProps {
   isOpen: boolean;
@@ -194,7 +193,7 @@ export default function JournalDetailModal({
             <div className="relative ml-auto">
               <AiConfidence
                 confidence={activeJournal.confidence}
-                note={translateAiNote(activeJournal.aiNote, t)}
+                note={activeJournal.aiNote}
               />
             </div>
           </div>
