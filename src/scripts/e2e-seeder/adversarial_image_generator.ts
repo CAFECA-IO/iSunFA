@@ -145,7 +145,7 @@ const buildAdversarialSVG = (params: IAdversarialParams): string => {
       <text x="20" y="130" font-family="sans-serif" font-size="14" fill="#000">發票號碼: ${voucherNumber}</text>
       <text x="20" y="155" font-family="sans-serif" font-size="14" fill="#000">買　　方: ${buyerName}</text>
       <text x="20" y="180" font-family="sans-serif" font-size="14" fill="#000">統一編號: ${taxId}</text>
-      <text x="20" y="205" font-family="sans-serif" font-size="14" fill="#000">地　　址: 測試隔離儲存區</text>
+      <text x="20" y="205" font-family="sans-serif" font-size="14" fill="#000">地　　址: </text>
       
       <!-- Top Right Info -->
       <text x="450" y="130" font-family="sans-serif" font-size="14" fill="#000">格　　式: 25</text>
