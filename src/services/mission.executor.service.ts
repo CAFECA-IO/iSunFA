@@ -55,6 +55,30 @@ export async function processNext() {
         continue; // Info: (20260502 - Luphia) Given up after 3 rejections
       } catch {}
 
+      // Info: (20260521 - Luphia) Check for running lock
+      const runningFilePath = path.join(taskDir, "running");
+      let isRunningLockActive = false;
+      try {
+        const runningContent = await fs.readFile(runningFilePath, "utf8");
+        const runningTimestamp = parseInt(runningContent.trim(), 10);
+        if (!isNaN(runningTimestamp)) {
+          const oneHourAgo = Date.now() - 60 * 60 * 1000;
+          if (runningTimestamp > oneHourAgo) {
+            isRunningLockActive = true;
+          } else {
+            try {
+              await fs.unlink(runningFilePath);
+            } catch {}
+          }
+        }
+      } catch {
+        // Info: (20260521 - Luphia) File does not exist or is unreadable, not locked
+      }
+
+      if (isRunningLockActive) {
+        continue;
+      }
+
       let useJsonPlan = true;
       try {
         await fs.access(path.join(taskDir, "plan.executor.json"));
@@ -97,378 +121,404 @@ export async function processNext() {
     const resultPath = path.join(taskDir, "result.md");
     const missionJsonPath = path.join(taskDir, "mission.json");
 
-    console.log(
-      `[MissionExecutor] Found pending execution for Task ID: ${folderName} (Using ${useJsonPlan ? "JSON" : "MD"} Plan)`,
-    );
-
-    let aggregatedResult: JSONValue = "Execution completed statically.";
-    const aggregatedResultsByFileId: Record<
-      string,
-      Record<string, JSONValue>
-    > = {};
+    const runningFilePath = path.join(taskDir, "running");
+    try {
+      await fs.writeFile(runningFilePath, String(Date.now()), { flag: "wx" });
+    } catch (err) {
+      const error = err as NodeJS.ErrnoException;
+      if (error.code === "EEXIST") {
+        console.log(
+          `[MissionExecutor] Folder ${folderName} is already locked by another process. Skipping.`,
+        );
+        return;
+      }
+      throw err;
+    }
 
     try {
-      // Info: (20260420 - Luphia) Read mission data
-      const missionJsonStr = await fs.readFile(missionJsonPath, "utf8");
-      const missionData = JSON.parse(missionJsonStr) as Record<string, unknown>;
-      const pseudoMission: IPseudoMission = {
-        id: String(folderName || "MOCK_MISSION"),
-        data: missionData,
-      };
+      console.log(
+        `[MissionExecutor] Found pending execution for Task ID: ${folderName} (Using ${useJsonPlan ? "JSON" : "MD"} Plan)`,
+      );
 
-      if (useJsonPlan) {
-        // Info: (20260420 - Luphia) Complex LLM & Skill sequence execution
-        const planStr = await fs.readFile(executorPlanPath, "utf8");
-        const missionDef = JSON.parse(planStr) as IMissionDefinition;
+      let aggregatedResult: JSONValue = "Execution completed statically.";
+      const aggregatedResultsByFileId: Record<
+        string,
+        Record<string, JSONValue>
+      > = {};
 
-        const tasksConfig = missionDef.tasks || [];
-        console.log(
-          `[MissionExecutor] Executing ${tasksConfig.length} tasks in sequence...`,
-        );
+      try {
+        // Info: (20260420 - Luphia) Read mission data
+        const missionJsonStr = await fs.readFile(missionJsonPath, "utf8");
+        const missionData = JSON.parse(missionJsonStr) as Record<
+          string,
+          unknown
+        >;
+        const pseudoMission: IPseudoMission = {
+          id: String(folderName || "MOCK_MISSION"),
+          data: missionData,
+        };
 
-        // Info: (20260420 - Luphia) In-memory kv store for passing context between tasks (simulates DB previous task results)
-        const priorResults = new Map<string, string>();
-        const executionLogs: Record<string, unknown>[] = [];
+        if (useJsonPlan) {
+          // Info: (20260420 - Luphia) Complex LLM & Skill sequence execution
+          const planStr = await fs.readFile(executorPlanPath, "utf8");
+          const missionDef = JSON.parse(planStr) as IMissionDefinition;
 
-        for (const subTaskConfig of tasksConfig) {
-          const taskKey = subTaskConfig.data?.key || "UNKNOWN";
+          const tasksConfig = missionDef.tasks || [];
           console.log(
-            `[MissionExecutor]   -> Running sub-task [${taskKey}] (${subTaskConfig.type})`,
+            `[MissionExecutor] Executing ${tasksConfig.length} tasks in sequence...`,
           );
-          const pseudoTask: IPseudoTask = {
-            id: taskKey,
-            type: subTaskConfig.type,
-            data: JSON.parse(JSON.stringify(subTaskConfig.data)),
-            order: subTaskConfig.order,
-          };
 
-          // Info: (20260420 - Luphia) Build Prompt
-          const fullPrompt = await buildTaskPrompt(
-            subTaskConfig,
-            missionData,
-            priorResults,
-          );
-          let taskResultStr = "";
-          const skill = skillRegistry[subTaskConfig.type];
-          if (skill) {
-            console.log(`[MissionExecutor]      Invoking Skill: ${skill.name}`);
-            taskResultStr = await skill.execute(
-              pseudoTask,
-              pseudoMission,
-              fullPrompt,
-              chatService,
+          // Info: (20260420 - Luphia) In-memory kv store for passing context between tasks (simulates DB previous task results)
+          const priorResults = new Map<string, string>();
+          const executionLogs: Record<string, unknown>[] = [];
+
+          for (const subTaskConfig of tasksConfig) {
+            const taskKey = subTaskConfig.data?.key || "UNKNOWN";
+            console.log(
+              `[MissionExecutor]   -> Running sub-task [${taskKey}] (${subTaskConfig.type})`,
+            );
+            const pseudoTask: IPseudoTask = {
+              id: taskKey,
+              type: subTaskConfig.type,
+              data: JSON.parse(JSON.stringify(subTaskConfig.data)),
+              order: subTaskConfig.order,
+            };
+
+            // Info: (20260420 - Luphia) Build Prompt
+            const fullPrompt = await buildTaskPrompt(
+              subTaskConfig,
+              missionData,
               priorResults,
             );
-          } else {
-            console.log(
-              `[MissionExecutor]      Invoking raw ChatService LLM...`,
-            );
-            const responseSchema = subTaskConfig.data?.responseSchema as
-              | Schema
-              | undefined;
-            taskResultStr = await chatService.generateRaw(
-              fullPrompt,
-              responseSchema,
-            );
+            let taskResultStr = "";
+            const skill = skillRegistry[subTaskConfig.type];
+            if (skill) {
+              console.log(
+                `[MissionExecutor]      Invoking Skill: ${skill.name}`,
+              );
+              taskResultStr = await skill.execute(
+                pseudoTask,
+                pseudoMission,
+                fullPrompt,
+                chatService,
+                priorResults,
+              );
+            } else {
+              console.log(
+                `[MissionExecutor]      Invoking raw ChatService LLM...`,
+              );
+              const responseSchema = subTaskConfig.data?.responseSchema as
+                | Schema
+                | undefined;
+              taskResultStr = await chatService.generateRaw(
+                fullPrompt,
+                responseSchema,
+              );
 
-            // Info: (20260516 - Tzuhan) Add LLM_FALLBACK_STAGE_3 tag to raw LLM output if it is JSON
-            try {
-              const parsed = JSON.parse(taskResultStr);
-              if (typeof parsed === "object" && !parsed.generationSource) {
-                parsed.generationSource = "LLM_FALLBACK_STAGE_3";
-                taskResultStr = JSON.stringify(parsed);
-              }
-            } catch {}
-          }
-
-          // Info: (20260420 - Luphia) Track execution tokens and content
-          const inputTokens = await chatService.countTokens(fullPrompt);
-          const outputTokens = await chatService.countTokens(taskResultStr);
-
-          executionLogs.push({
-            taskKey,
-            type: subTaskConfig.type,
-            order: subTaskConfig.order,
-            inputTokens,
-            outputTokens,
-            totalTokens: inputTokens + outputTokens,
-            input: fullPrompt,
-            output: taskResultStr,
-            timestamp: new Date().toISOString(),
-          });
-
-          // Info: (20260420 - Luphia) Save in memory for next step
-          priorResults.set(taskKey, taskResultStr);
-
-          let cleanedTaskResultStr = taskResultStr.trim();
-          // Info: (20260514 - Tzuhan) 即使廢除了 Regex 擷取，LLM 有時還是會固執地包上 Markdown，必須移除前後綴
-          if (cleanedTaskResultStr.startsWith("```json")) {
-            cleanedTaskResultStr = cleanedTaskResultStr
-              .replace(/^```json/, "")
-              .replace(/```$/, "")
-              .trim();
-          } else if (cleanedTaskResultStr.startsWith("```")) {
-            cleanedTaskResultStr = cleanedTaskResultStr
-              .replace(/^```/, "")
-              .replace(/```$/, "")
-              .trim();
-          }
-
-          let isJson = false;
-          let parsedVal: JSONValue | undefined;
-
-          try {
-            // Info: (20260514 - Tzuhan) Phase 1.1: Strict JSON Schema parsing, removing Regex fallback
-            parsedVal = JSON.parse(cleanedTaskResultStr) as JSONValue;
-            isJson = true;
-          } catch {
-            // Info: (20260514 - Tzuhan) If it fails to parse, we log the failure but do NOT fallback to Regex
-            console.error(
-              `[MissionExecutor] ❌ JSON Parsing Failed for Task ${taskKey}. Expected strict JSON from AI. Raw: ${cleanedTaskResultStr.substring(0, 50)}...`,
-            );
-            cleanedTaskResultStr = taskResultStr;
-          }
-
-          if (isJson && parsedVal !== undefined) {
-            // Info: (20260420 - Luphia) Track for database sync grouped by fileId
-            if (useJsonPlan && subTaskConfig.data?.context) {
+              // Info: (20260516 - Tzuhan) Add LLM_FALLBACK_STAGE_3 tag to raw LLM output if it is JSON
               try {
-                const ctx = JSON.parse(subTaskConfig.data.context as string);
-                const recordKey =
-                  ctx.fileId ||
-                  ctx.voucherId ||
-                  ctx.esgRecordId ||
-                  ctx.journalId ||
-                  "default";
-
-                if (recordKey) {
-                  if (!aggregatedResultsByFileId[recordKey]) {
-                    aggregatedResultsByFileId[recordKey] = {
-                      fileId: ctx.fileId || "",
-                      voucherIdContext: ctx.voucherId || "",
-                      esgRecordIdContext: ctx.esgRecordId || "",
-                      journalIdContext: ctx.journalId || "",
-                    };
-                  }
-
-                  if (
-                    subTaskConfig.type === "JOURNAL_PARSING" ||
-                    subTaskConfig.type === "JOURNAL" ||
-                    subTaskConfig.data?.key === "JOURNAL"
-                  )
-                    aggregatedResultsByFileId[recordKey].journal = parsedVal;
-                  if (
-                    subTaskConfig.type === "VOUCHER_BASE_PARSING" ||
-                    subTaskConfig.type === "VOUCHER_BASE" ||
-                    subTaskConfig.data?.key === "VOUCHER_BASE"
-                  )
-                    aggregatedResultsByFileId[recordKey].voucherBase =
-                      parsedVal;
-                  if (
-                    subTaskConfig.type === "VOUCHER_LINES_PARSING" ||
-                    subTaskConfig.type === "VOUCHER_LINES" ||
-                    subTaskConfig.data?.key === "VOUCHER_LINES"
-                  )
-                    aggregatedResultsByFileId[recordKey].voucherLines =
-                      parsedVal;
-                  if (
-                    subTaskConfig.type === "ESG_PARSING" ||
-                    subTaskConfig.type === "ESG" ||
-                    subTaskConfig.data?.key === "ESG"
-                  )
-                    aggregatedResultsByFileId[recordKey].esg = parsedVal;
+                const parsed = JSON.parse(taskResultStr);
+                if (typeof parsed === "object" && !parsed.generationSource) {
+                  parsed.generationSource = "LLM_FALLBACK_STAGE_3";
+                  taskResultStr = JSON.stringify(parsed);
                 }
               } catch {}
             }
 
-            if (useJsonPlan && tasksConfig.length > 1) {
-              if (typeof aggregatedResult === "string") aggregatedResult = {};
-              (aggregatedResult as Record<string, unknown>)[taskKey] =
-                parsedVal;
-            } else {
-              aggregatedResult = parsedVal as JSONValue;
+            // Info: (20260420 - Luphia) Track execution tokens and content
+            const inputTokens = await chatService.countTokens(fullPrompt);
+            const outputTokens = await chatService.countTokens(taskResultStr);
+
+            executionLogs.push({
+              taskKey,
+              type: subTaskConfig.type,
+              order: subTaskConfig.order,
+              inputTokens,
+              outputTokens,
+              totalTokens: inputTokens + outputTokens,
+              input: fullPrompt,
+              output: taskResultStr,
+              timestamp: new Date().toISOString(),
+            });
+
+            // Info: (20260420 - Luphia) Save in memory for next step
+            priorResults.set(taskKey, taskResultStr);
+
+            let cleanedTaskResultStr = taskResultStr.trim();
+            // Info: (20260514 - Tzuhan) 即使廢除了 Regex 擷取，LLM 有時還是會固執地包上 Markdown，必須移除前後綴
+            if (cleanedTaskResultStr.startsWith("```json")) {
+              cleanedTaskResultStr = cleanedTaskResultStr
+                .replace(/^```json/, "")
+                .replace(/```$/, "")
+                .trim();
+            } else if (cleanedTaskResultStr.startsWith("```")) {
+              cleanedTaskResultStr = cleanedTaskResultStr
+                .replace(/^```/, "")
+                .replace(/```$/, "")
+                .trim();
             }
-          } else {
-            if (useJsonPlan && tasksConfig.length > 1) {
-              if (typeof aggregatedResult === "string") aggregatedResult = {};
-              (aggregatedResult as Record<string, unknown>)[taskKey] =
-                cleanedTaskResultStr;
+
+            let isJson = false;
+            let parsedVal: JSONValue | undefined;
+
+            try {
+              // Info: (20260514 - Tzuhan) Phase 1.1: Strict JSON Schema parsing, removing Regex fallback
+              parsedVal = JSON.parse(cleanedTaskResultStr) as JSONValue;
+              isJson = true;
+            } catch {
+              // Info: (20260514 - Tzuhan) If it fails to parse, we log the failure but do NOT fallback to Regex
+              console.error(
+                `[MissionExecutor] ❌ JSON Parsing Failed for Task ${taskKey}. Expected strict JSON from AI. Raw: ${cleanedTaskResultStr.substring(0, 50)}...`,
+              );
+              cleanedTaskResultStr = taskResultStr;
+            }
+
+            if (isJson && parsedVal !== undefined) {
+              // Info: (20260420 - Luphia) Track for database sync grouped by fileId
+              if (useJsonPlan && subTaskConfig.data?.context) {
+                try {
+                  const ctx = JSON.parse(subTaskConfig.data.context as string);
+                  const recordKey =
+                    ctx.fileId ||
+                    ctx.voucherId ||
+                    ctx.esgRecordId ||
+                    ctx.journalId ||
+                    "default";
+
+                  if (recordKey) {
+                    if (!aggregatedResultsByFileId[recordKey]) {
+                      aggregatedResultsByFileId[recordKey] = {
+                        fileId: ctx.fileId || "",
+                        voucherIdContext: ctx.voucherId || "",
+                        esgRecordIdContext: ctx.esgRecordId || "",
+                        journalIdContext: ctx.journalId || "",
+                      };
+                    }
+
+                    if (
+                      subTaskConfig.type === "JOURNAL_PARSING" ||
+                      subTaskConfig.type === "JOURNAL" ||
+                      subTaskConfig.data?.key === "JOURNAL"
+                    )
+                      aggregatedResultsByFileId[recordKey].journal = parsedVal;
+                    if (
+                      subTaskConfig.type === "VOUCHER_BASE_PARSING" ||
+                      subTaskConfig.type === "VOUCHER_BASE" ||
+                      subTaskConfig.data?.key === "VOUCHER_BASE"
+                    )
+                      aggregatedResultsByFileId[recordKey].voucherBase =
+                        parsedVal;
+                    if (
+                      subTaskConfig.type === "VOUCHER_LINES_PARSING" ||
+                      subTaskConfig.type === "VOUCHER_LINES" ||
+                      subTaskConfig.data?.key === "VOUCHER_LINES"
+                    )
+                      aggregatedResultsByFileId[recordKey].voucherLines =
+                        parsedVal;
+                    if (
+                      subTaskConfig.type === "ESG_PARSING" ||
+                      subTaskConfig.type === "ESG" ||
+                      subTaskConfig.data?.key === "ESG"
+                    )
+                      aggregatedResultsByFileId[recordKey].esg = parsedVal;
+                  }
+                } catch {}
+              }
+
+              if (useJsonPlan && tasksConfig.length > 1) {
+                if (typeof aggregatedResult === "string") aggregatedResult = {};
+                (aggregatedResult as Record<string, unknown>)[taskKey] =
+                  parsedVal;
+              } else {
+                aggregatedResult = parsedVal as JSONValue;
+              }
             } else {
-              aggregatedResult = cleanedTaskResultStr; // Info: (20260420 - Luphia) Fallback to raw string
+              if (useJsonPlan && tasksConfig.length > 1) {
+                if (typeof aggregatedResult === "string") aggregatedResult = {};
+                (aggregatedResult as Record<string, unknown>)[taskKey] =
+                  cleanedTaskResultStr;
+              } else {
+                aggregatedResult = cleanedTaskResultStr; // Info: (20260420 - Luphia) Fallback to raw string
+              }
             }
           }
+
+          // Info: (20260420 - Luphia) Write execution logs array
+          await fs.writeFile(
+            path.join(taskDir, "execution_log.json"),
+            JSON.stringify(executionLogs, null, 2),
+            "utf8",
+          );
+
+          // Info: (20260420 - Luphia) Transform multi-step result into standardized { answer, tags } UI format
+          if (
+            tasksConfig.length > 1 &&
+            typeof aggregatedResult === "object" &&
+            aggregatedResult !== null
+          ) {
+            const agg = aggregatedResult as Record<string, unknown>;
+
+            const serializeVal = (val: unknown): string => {
+              if (typeof val === "object" && val !== null) {
+                return JSON.stringify(val, null, 2);
+              }
+              return String(val);
+            };
+
+            const finalTaskKey = tasksConfig[tasksConfig.length - 1]?.data
+              ?.key as string;
+            let finalAnswer =
+              finalTaskKey && agg[finalTaskKey]
+                ? serializeVal(agg[finalTaskKey])
+                : "";
+
+            if (!finalAnswer) {
+              const stepKeys = Object.keys(agg)
+                .filter(
+                  (k) =>
+                    k.startsWith("STEP_") || k === "MARKET_FORMATTED_OUTPUT",
+                )
+                .sort();
+              const fallbackKey = agg["STEP_5"]
+                ? "STEP_5"
+                : stepKeys.length > 0
+                  ? stepKeys[stepKeys.length - 1]
+                  : null;
+              finalAnswer = fallbackKey ? serializeVal(agg[fallbackKey]) : "";
+            }
+
+            let tags: string[] = [];
+            if (agg["STEP_2"]) {
+              const step2Str = serializeVal(agg["STEP_2"]);
+              const lines = step2Str.split("\n");
+              let capturingTags = false;
+              for (const line of lines) {
+                // Info: (20260420 - Luphia) Some models output tags under a specific heading
+                if (
+                  line.includes("最終決定的標籤清單") ||
+                  line.includes("Final Tags")
+                ) {
+                  capturingTags = true;
+                }
+
+                const match = line.match(
+                  /^(?:[*-]|\d+\.)\s+(?:\*\*)?(#.*?[^\*])(?:\*\*)?\s*$/,
+                );
+                if (match && (capturingTags || step2Str.length < 500)) {
+                  tags.push(match[1].trim());
+                } else if (
+                  !match &&
+                  capturingTags &&
+                  line.match(
+                    /^(?:[*-]|\d+\.)\s+(?:\*\*)?([^#\*\s].*?[^\*])(?:\*\*)?\s*$/,
+                  )
+                ) {
+                  // Info: (20260420 - Luphia) Sometimes AI forgets the # symbol
+                  const tagMatch = line.match(
+                    /^(?:[*-]|\d+\.)\s+(?:\*\*)?([^#\*\s].*?[^\*])(?:\*\*)?\s*$/,
+                  );
+                  if (tagMatch) tags.push(`#${tagMatch[1].trim()}`);
+                }
+              }
+
+              if (tags.length === 0) {
+                const matchArray = step2Str.match(
+                  /最終決定的標籤清單[：:][\[【](.*?)[\]】]/,
+                );
+                if (matchArray) {
+                  tags = matchArray[1].split(/[,、]/).map((t) => t.trim());
+                }
+              }
+            }
+
+            const finalResult: Record<string, JSONValue> = {
+              answer: finalAnswer,
+              tags: tags,
+            };
+            if (Object.keys(aggregatedResultsByFileId).length > 0) {
+              finalResult.dbSyncPayload = aggregatedResultsByFileId;
+            }
+            aggregatedResult = finalResult;
+          } else if (
+            tasksConfig.length === 1 &&
+            typeof aggregatedResult === "object" &&
+            aggregatedResult !== null &&
+            useJsonPlan
+          ) {
+            const finalResult: Record<string, JSONValue> = {
+              ...(aggregatedResult as Record<string, JSONValue>),
+            };
+            if (Object.keys(aggregatedResultsByFileId).length > 0) {
+              finalResult.dbSyncPayload = aggregatedResultsByFileId;
+            }
+            aggregatedResult = finalResult;
+          }
+        } else {
+          // Info: (20260420 - Luphia) Fallback MD behavior
+          console.log(
+            `[MissionExecutor] Executing basic simulated logic for category: ${missionData.category}...`,
+          );
+          aggregatedResult = {
+            answer: `The systematic analysis for ${missionData.category} has been successfully conducted.`,
+            tags: ["simulated", "fallback"],
+            aiNote: "Simulated output due to missing JSON execution plan.",
+          };
         }
 
-        // Info: (20260420 - Luphia) Write execution logs array
+        const resultPayloadStr =
+          typeof aggregatedResult === "string"
+            ? aggregatedResult
+            : JSON.stringify(aggregatedResult, null, 2);
+
+        // Info: (20260426 - Luphia) Write result.md ONLY after database sync payload is saved to avoid premature commit by Commitor
+        await fs.writeFile(resultPath, resultPayloadStr, "utf8");
+        console.log(
+          `[MissionExecutor] Execution successful. Final Result extracted to result.md`,
+        );
+      } catch (execErr) {
+        console.error(
+          `[MissionExecutor] Execution error for Task ID ${folderName}:`,
+          execErr,
+        );
+        const errorMessage = `[Error at ${new Date().toISOString()}]\n${execErr instanceof Error ? execErr.message : String(execErr)}\n`;
+
+        // Info: (20260514 - Tzuhan) 解決 Worker 殭屍狀態：將錯誤包裝進 dbSyncPayload，讓 IssueRecorder 得以標記為 FAILED
+        const errorResult: Record<string, JSONValue> = {
+          answer: "Execution failed.",
+          tags: ["error"],
+        };
+
+        if (Object.keys(aggregatedResultsByFileId).length > 0) {
+          for (const key of Object.keys(aggregatedResultsByFileId)) {
+            aggregatedResultsByFileId[key].failureReason =
+              execErr instanceof Error ? execErr.message : String(execErr);
+          }
+          errorResult.dbSyncPayload = aggregatedResultsByFileId;
+        } else {
+          errorResult.dbSyncPayload = {
+            default: {
+              failureReason:
+                execErr instanceof Error ? execErr.message : String(execErr),
+            },
+          };
+        }
+
         await fs.writeFile(
-          path.join(taskDir, "execution_log.json"),
-          JSON.stringify(executionLogs, null, 2),
+          path.join(taskDir, "result.md"),
+          JSON.stringify(errorResult, null, 2),
           "utf8",
         );
 
-        // Info: (20260420 - Luphia) Transform multi-step result into standardized { answer, tags } UI format
-        if (
-          tasksConfig.length > 1 &&
-          typeof aggregatedResult === "object" &&
-          aggregatedResult !== null
-        ) {
-          const agg = aggregatedResult as Record<string, unknown>;
-
-          const serializeVal = (val: unknown): string => {
-            if (typeof val === "object" && val !== null) {
-              return JSON.stringify(val, null, 2);
-            }
-            return String(val);
-          };
-
-          const finalTaskKey = tasksConfig[tasksConfig.length - 1]?.data
-            ?.key as string;
-          let finalAnswer =
-            finalTaskKey && agg[finalTaskKey]
-              ? serializeVal(agg[finalTaskKey])
-              : "";
-
-          if (!finalAnswer) {
-            const stepKeys = Object.keys(agg)
-              .filter(
-                (k) => k.startsWith("STEP_") || k === "MARKET_FORMATTED_OUTPUT",
-              )
-              .sort();
-            const fallbackKey = agg["STEP_5"]
-              ? "STEP_5"
-              : stepKeys.length > 0
-                ? stepKeys[stepKeys.length - 1]
-                : null;
-            finalAnswer = fallbackKey ? serializeVal(agg[fallbackKey]) : "";
-          }
-
-          let tags: string[] = [];
-          if (agg["STEP_2"]) {
-            const step2Str = serializeVal(agg["STEP_2"]);
-            const lines = step2Str.split("\n");
-            let capturingTags = false;
-            for (const line of lines) {
-              // Info: (20260420 - Luphia) Some models output tags under a specific heading
-              if (
-                line.includes("最終決定的標籤清單") ||
-                line.includes("Final Tags")
-              ) {
-                capturingTags = true;
-              }
-
-              const match = line.match(
-                /^(?:[*-]|\d+\.)\s+(?:\*\*)?(#.*?[^\*])(?:\*\*)?\s*$/,
-              );
-              if (match && (capturingTags || step2Str.length < 500)) {
-                tags.push(match[1].trim());
-              } else if (
-                !match &&
-                capturingTags &&
-                line.match(
-                  /^(?:[*-]|\d+\.)\s+(?:\*\*)?([^#\*\s].*?[^\*])(?:\*\*)?\s*$/,
-                )
-              ) {
-                // Info: (20260420 - Luphia) Sometimes AI forgets the # symbol
-                const tagMatch = line.match(
-                  /^(?:[*-]|\d+\.)\s+(?:\*\*)?([^#\*\s].*?[^\*])(?:\*\*)?\s*$/,
-                );
-                if (tagMatch) tags.push(`#${tagMatch[1].trim()}`);
-              }
-            }
-
-            if (tags.length === 0) {
-              const matchArray = step2Str.match(
-                /最終決定的標籤清單[：:][\[【](.*?)[\]】]/,
-              );
-              if (matchArray) {
-                tags = matchArray[1].split(/[,、]/).map((t) => t.trim());
-              }
-            }
-          }
-
-          const finalResult: Record<string, JSONValue> = {
-            answer: finalAnswer,
-            tags: tags,
-          };
-          if (Object.keys(aggregatedResultsByFileId).length > 0) {
-            finalResult.dbSyncPayload = aggregatedResultsByFileId;
-          }
-          aggregatedResult = finalResult;
-        } else if (
-          tasksConfig.length === 1 &&
-          typeof aggregatedResult === "object" &&
-          aggregatedResult !== null &&
-          useJsonPlan
-        ) {
-          const finalResult: Record<string, JSONValue> = {
-            ...(aggregatedResult as Record<string, JSONValue>),
-          };
-          if (Object.keys(aggregatedResultsByFileId).length > 0) {
-            finalResult.dbSyncPayload = aggregatedResultsByFileId;
-          }
-          aggregatedResult = finalResult;
-        }
-      } else {
-        // Info: (20260420 - Luphia) Fallback MD behavior
-        console.log(
-          `[MissionExecutor] Executing basic simulated logic for category: ${missionData.category}...`,
+        await fs.writeFile(
+          path.join(taskDir, `failed_${Date.now()}.md`),
+          errorMessage,
+          "utf8",
         );
-        aggregatedResult = {
-          answer: `The systematic analysis for ${missionData.category} has been successfully conducted.`,
-          tags: ["simulated", "fallback"],
-          aiNote: "Simulated output due to missing JSON execution plan.",
-        };
       }
-
-      const resultPayloadStr =
-        typeof aggregatedResult === "string"
-          ? aggregatedResult
-          : JSON.stringify(aggregatedResult, null, 2);
-
-      // Info: (20260426 - Luphia) Write result.md ONLY after database sync payload is saved to avoid premature commit by Commitor
-      await fs.writeFile(resultPath, resultPayloadStr, "utf8");
-      console.log(
-        `[MissionExecutor] Execution successful. Final Result extracted to result.md`,
-      );
-    } catch (execErr) {
-      console.error(
-        `[MissionExecutor] Execution error for Task ID ${folderName}:`,
-        execErr,
-      );
-      const errorMessage = `[Error at ${new Date().toISOString()}]\n${execErr instanceof Error ? execErr.message : String(execErr)}\n`;
-
-      // Info: (20260514 - Tzuhan) 解決 Worker 殭屍狀態：將錯誤包裝進 dbSyncPayload，讓 IssueRecorder 得以標記為 FAILED
-      const errorResult: Record<string, JSONValue> = {
-        answer: "Execution failed.",
-        tags: ["error"],
-      };
-
-      if (Object.keys(aggregatedResultsByFileId).length > 0) {
-        for (const key of Object.keys(aggregatedResultsByFileId)) {
-          aggregatedResultsByFileId[key].failureReason =
-            execErr instanceof Error ? execErr.message : String(execErr);
-        }
-        errorResult.dbSyncPayload = aggregatedResultsByFileId;
-      } else {
-        errorResult.dbSyncPayload = {
-          default: {
-            failureReason:
-              execErr instanceof Error ? execErr.message : String(execErr),
-          },
-        };
-      }
-
-      await fs.writeFile(
-        path.join(taskDir, "result.md"),
-        JSON.stringify(errorResult, null, 2),
-        "utf8",
-      );
-
-      await fs.writeFile(
-        path.join(taskDir, `failed_${Date.now()}.md`),
-        errorMessage,
-        "utf8",
-      );
+    } finally {
+      try {
+        await fs.unlink(runningFilePath);
+      } catch {}
     }
   } catch (e) {
     console.log("[MissionExecutor] Invalid MISSION_DIR or none exists yet.", e);
