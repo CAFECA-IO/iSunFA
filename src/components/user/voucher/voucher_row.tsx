@@ -226,7 +226,7 @@ export function VoucherRow({
             </span>
           ) : (
             <p
-              className="truncate text-[10px] font-bold text-red-500 sm:text-xs lg:text-sm"
+              className="line-clamp-2 text-[10px] font-bold text-red-500 sm:text-xs lg:text-sm"
               title={failedMessage}
             >
               {failedMessage}
