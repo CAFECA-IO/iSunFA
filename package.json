@@ -7,8 +7,9 @@
     "node": "22.x"
   },
   "scripts": {
-    "dev": "npm run initial_wallet && npm run lint && prisma generate && next dev",
-    "build": "npm run initial_wallet && npm run lint && prisma generate && next build",
+    "postinstall": "prisma generate",
+    "dev": "npm run initial_wallet && prisma generate && npm run lint && next dev",
+    "build": "npm run initial_wallet && prisma generate && npm run lint && next build",
     "start": "npm run build && next start",
     "seed": "npx tsx scripts/seed/seed.ts",
     "lint": "eslint",
@@ -31,7 +32,7 @@
     "@nomicfoundation/hardhat-toolbox-viem": "^5.0.1",
     "@passwordless-id/webauthn": "^2.3.1",
     "@prisma/adapter-pg": "^7.2.0",
-    "@prisma/client": "^7.2.0",
+    "@prisma/client": "^7.8.0",
     "@tailwindcss/typography": "^0.5.19",
     "@types/geojson": "^7946.0.16",
     "cheerio": "^1.2.0",
@@ -90,7 +91,7 @@
     "lint-staged": "^17.0.2",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.8.0",
-    "prisma": "^7.2.0",
+    "prisma": "^7.8.0",
     "tailwindcss": "^4",
     "typescript": "^6",
     "typescript-eslint": "^8.51.0"

@@ -67,7 +67,7 @@ export default function AuthModal({
     code: string;
     name: string;
     description: string;
-    bonusPoints: number;
+    bonusPoints: string;
     bonusModules: string[];
   } | null>(null);
   const [verifyingCampaign, setVerifyingCampaign] = useState(false);
@@ -78,7 +78,7 @@ export default function AuthModal({
   const [contactPhone, setContactPhone] = useState("");
 
   const [rewardData, setRewardData] = useState<{
-    points: number;
+    points: string;
     modules: string[];
   } | null>(null);
   const [onRewardAccept, setOnRewardAccept] = useState<(() => void) | null>(
@@ -93,7 +93,10 @@ export default function AuthModal({
       const res = await fetch(`/api/v1/campaign/verify?code=${codeToVerify}`);
       const result = await res.json();
       if (res.ok && result.success) {
-        setCampaignData(result.payload);
+        setCampaignData({
+          ...result.payload,
+          bonusPoints: String(result.payload.bonusPoints),
+        });
       } else {
         setCampaignError(result.message || "無效或已過期的活動代碼");
       }
@@ -174,7 +177,7 @@ export default function AuthModal({
             const data = await res.json();
             localStorage.removeItem("pending_campaign_registration");
             setRewardData({
-              points: data.payload.bonusPoints || 0,
+              points: String(data.payload.bonusPoints || 0),
               modules: data.payload.bonusModules || [],
             });
             setOnRewardAccept(() => async () => {

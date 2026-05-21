@@ -39,7 +39,7 @@ export class VendorRegistry {
    */
   static match(
     vendorName: string,
-    documentType: string = "BILL_NOTICE",
+    documentType: string = "ACCRUAL_NOTICE",
   ): IVendorRule[] | null {
     if (!vendorName) return null;
 
@@ -63,7 +63,7 @@ export class VendorRegistry {
    */
   static matchEsg(
     vendorName: string,
-    documentType: string = "BILL_NOTICE",
+    documentType: string = "ACCRUAL_NOTICE",
   ): IEsgRule | null {
     if (!vendorName) return null;
 

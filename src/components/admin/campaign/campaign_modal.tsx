@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 import { ICampaignData } from "@/components/admin/campaign/types";
 import { useTranslation } from "@/i18n/i18n_context";
+import { MoneyUtil } from "@/lib/utils/money";
 
 interface ICampaignModalProps {
   isOpen: boolean;
@@ -13,7 +14,7 @@ interface ICampaignModalProps {
     description: string;
     startDate: string;
     endDate: string;
-    bonusPoints: number;
+    bonusPoints: string;
     bonusModules: string;
     isActive: boolean;
   };
@@ -23,7 +24,7 @@ interface ICampaignModalProps {
     description: string;
     startDate: string;
     endDate: string;
-    bonusPoints: number;
+    bonusPoints: string;
     bonusModules: string;
     isActive: boolean;
   }) => void;
@@ -177,7 +178,10 @@ export default function CampaignModal({
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    bonusPoints: Number(e.target.value),
+                    bonusPoints:
+                      e.target.value === ""
+                        ? "0"
+                        : MoneyUtil.toDecimal(e.target.value).toString(),
                   })
                 }
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none sm:text-sm"

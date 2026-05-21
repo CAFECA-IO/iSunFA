@@ -12,13 +12,7 @@ export interface IDocNode {
   currency?: string;
   lines?: IParsedVoucherLine[];
   coefficientId?: string;
-  newCoefficient?: {
-    name?: string;
-    description?: string;
-    unit?: string;
-    emissionFactor?: number | string;
-    source?: string;
-  };
+  fallbackCategory?: string;
   emissionSourceId?: string;
   newEmissionSource?: {
     name?: string;

@@ -7,6 +7,7 @@ import { syncDocumentResultToDatabase } from "@/skills/utils/document_parser_db_
 import { getPriorityEnvConfig } from "@/services/env.service";
 import type { IAggregatedDocumentResult } from "@/skills/utils/document_parser_db_sync";
 import type { JSONValue } from "@/validators";
+import { MoneyUtil } from "@/lib/utils/money";
 
 export class IssueRecorderService {
   async processNext() {
@@ -113,13 +114,22 @@ export class IssueRecorderService {
             const usage = parsedResult?.usage as
               | Record<string, unknown>
               | undefined;
-            if (usage?.totalTokens) tokensConsumed = Number(usage.totalTokens);
+            if (usage?.totalTokens)
+              tokensConsumed = MoneyUtil.toDecimal(
+                usage.totalTokens as string | number,
+              ).toNumber();
             else if (usage?.total_tokens)
-              tokensConsumed = Number(usage.total_tokens);
+              tokensConsumed = MoneyUtil.toDecimal(
+                usage.total_tokens as string | number,
+              ).toNumber();
             else if (parsedResult?.tokens)
-              tokensConsumed = Number(parsedResult.tokens);
+              tokensConsumed = MoneyUtil.toDecimal(
+                parsedResult.tokens as string | number,
+              ).toNumber();
             else if (parsedResult?.totalTokens)
-              tokensConsumed = Number(parsedResult.totalTokens);
+              tokensConsumed = MoneyUtil.toDecimal(
+                parsedResult.totalTokens as string | number,
+              ).toNumber();
           } catch {}
 
           try {

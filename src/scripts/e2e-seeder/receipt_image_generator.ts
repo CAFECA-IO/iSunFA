@@ -296,7 +296,7 @@ const buildReceiptSVG = (params: IReceiptParams, isNoisy: boolean): string => {
     `;
   }
 
-  // Red official stamp setup
+  // Info: (20260520 - Julian) Red official stamp setup
   const stampTextLine1 =
     sellerName.length > 10 ? sellerName.substring(0, 10) : sellerName;
   const stampTextLine2 = isSales ? "統一發票專用章" : "收訖專用章";

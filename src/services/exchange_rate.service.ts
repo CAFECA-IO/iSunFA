@@ -3,7 +3,7 @@ import { Prisma } from "@/generated";
 import { exchangeRateRepo } from "@/repositories/exchange_rate.repo";
 
 export interface IConversionParams {
-  amount: number | Prisma.Decimal | bigint;
+  amount: string | number | Prisma.Decimal | bigint;
   fromCurrency: string;
   toCurrency: string;
   date: Date;

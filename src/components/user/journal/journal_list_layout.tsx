@@ -14,7 +14,6 @@ import AiConfidence from "@/components/common/ai_confidence";
 import { IJournal } from "@/interfaces/journal";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { timestampToString } from "@/lib/utils/common";
-import { translateAiNote } from "@/utils/ai_note_translator";
 
 const JournalListItem = ({
   journal,
@@ -158,7 +157,7 @@ const JournalListItem = ({
   if (journal.analysisStatus === AIAnalysisStatus.FAILED) {
     const failedMessage =
       journal.aiNote && journal.aiNote.trim().length > 0
-        ? translateAiNote(journal.aiNote, t)
+        ? journal.aiNote
         : (t("ocr.ai.failed") as string);
 
     return (

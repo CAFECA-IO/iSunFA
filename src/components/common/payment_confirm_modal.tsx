@@ -14,6 +14,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { useAuth } from "@/contexts/auth_context";
 import { useRouter } from "next/navigation";
 import ConfirmModal from "@/components/common/confirm_modal";
+import { MoneyUtil } from "@/lib/utils/money";
 
 export type PaymentStatus =
   | "idle"
@@ -32,7 +33,7 @@ interface IPaymentConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  cost: number;
+  cost: string | number;
   items?: IPaymentDetailItem[];
   title?: string;
   description?: string;
@@ -85,14 +86,14 @@ export default function PaymentConfirmModal({
     return null;
   }
 
-  const currentCredits = user.credits ?? 0;
+  const currentCredits = user.credits ?? "0";
 
   const isProcessing =
     status !== "idle" && status !== "error" && status !== "payment_success";
   const isSuccess = status === "payment_success";
 
-  const balance = currentCredits - cost;
-  const isBalanceNegative = balance < 0;
+  const balance = MoneyUtil.subtract(currentCredits, cost);
+  const isBalanceNegative = MoneyUtil.isNegative(balance);
 
   return (
     <>
@@ -288,7 +289,9 @@ export default function PaymentConfirmModal({
                             disabled={isLoading}
                             className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-orange-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:cursor-wait disabled:opacity-70 sm:col-start-2"
                             onClick={() => {
-                              if (currentCredits < cost) {
+                              if (
+                                MoneyUtil.toDecimal(currentCredits).lt(cost)
+                              ) {
                                 setShowInsufficient(true);
                               } else {
                                 onConfirm();

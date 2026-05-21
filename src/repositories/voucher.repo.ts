@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma, Voucher } from "@/generated";
-import { Decimal } from "decimal.js";
 import { MoneyUtil } from "@/lib/utils/money";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { IAccount } from "@/constants/accounts";
@@ -47,7 +46,7 @@ export interface IVoucherRepository {
       invoiceNumber?: string | null;
       vendorTaxId?: string | null;
       tradingDate?: string | null;
-      totalAmount?: number | null;
+      totalAmount?: string | number | null;
     },
   ): Promise<{
     isDuplicate: boolean;
@@ -254,21 +253,21 @@ export class VoucherRepository implements IVoucherRepository {
         ) {
           const aDebit = a.lineItems.lines
             .filter((l) => l.isDebit)
-            .reduce(
-              (sum, l) => sum.plus(new Decimal(l.amount as string | number)),
-              new Decimal(0),
-            )
-            .toNumber();
+            .reduce((sum, l) => sum + BigInt(l.amount), 0n);
           const bDebit = b.lineItems.lines
             .filter((l) => l.isDebit)
-            .reduce(
-              (sum, l) => sum.plus(new Decimal(l.amount as string | number)),
-              new Decimal(0),
-            )
-            .toNumber();
+            .reduce((sum, l) => sum + BigInt(l.amount), 0n);
           return sorting === VoucherSorting.DEBIT_DESC
-            ? bDebit - aDebit
-            : aDebit - bDebit;
+            ? bDebit > aDebit
+              ? 1
+              : bDebit < aDebit
+                ? -1
+                : 0
+            : aDebit > bDebit
+              ? 1
+              : aDebit < bDebit
+                ? -1
+                : 0;
         }
 
         if (
@@ -277,21 +276,21 @@ export class VoucherRepository implements IVoucherRepository {
         ) {
           const aCredit = a.lineItems.lines
             .filter((l) => !l.isDebit)
-            .reduce(
-              (sum, l) => sum.plus(new Decimal(l.amount as string | number)),
-              new Decimal(0),
-            )
-            .toNumber();
+            .reduce((sum, l) => sum + BigInt(l.amount), 0n);
           const bCredit = b.lineItems.lines
             .filter((l) => !l.isDebit)
-            .reduce(
-              (sum, l) => sum.plus(new Decimal(l.amount as string | number)),
-              new Decimal(0),
-            )
-            .toNumber();
+            .reduce((sum, l) => sum + BigInt(l.amount), 0n);
           return sorting === VoucherSorting.CREDIT_DESC
-            ? bCredit - aCredit
-            : aCredit - bCredit;
+            ? bCredit > aCredit
+              ? 1
+              : bCredit < aCredit
+                ? -1
+                : 0
+            : aCredit > bCredit
+              ? 1
+              : aCredit < bCredit
+                ? -1
+                : 0;
         }
 
         return 0;
@@ -475,7 +474,7 @@ export class VoucherRepository implements IVoucherRepository {
       invoiceNumber?: string | null;
       vendorTaxId?: string | null;
       tradingDate?: string | null;
-      totalAmount?: number | null;
+      totalAmount?: string | number | null;
     },
   ): Promise<{
     isDuplicate: boolean;
@@ -526,18 +525,11 @@ export class VoucherRepository implements IVoucherRepository {
           include: { lines: true },
         });
         if (v) {
-          const sum = v.lines
-            .reduce(
-              (acc, obj) =>
-                acc.plus(
-                  obj.isDebit
-                    ? MoneyUtil.toDecimal(obj.amount)
-                    : MoneyUtil.toDecimal(0),
-                ),
-              MoneyUtil.toDecimal(0),
-            )
-            .toNumber();
-          if (sum === Number(preCheckData.totalAmount))
+          const sum = v.lines.reduce(
+            (acc, obj) => acc + (obj.isDebit ? BigInt(obj.amount) : 0n),
+            0n,
+          );
+          if (sum === BigInt(preCheckData.totalAmount || 0))
             return {
               isDuplicate: true,
               duplicateId: v.id,

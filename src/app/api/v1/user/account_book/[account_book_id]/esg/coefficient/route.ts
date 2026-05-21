@@ -193,7 +193,7 @@ export async function GET(
         id: c.id,
         name: c.name,
         description: c.description,
-        emissionFactor: Number(c.emissionFactor),
+        emissionFactor: String(c.emissionFactor),
         unit: c.unit,
         source: c.source,
         category: CoefficientCategory.STANDARD,

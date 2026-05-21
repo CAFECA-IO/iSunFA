@@ -36,7 +36,7 @@ const CashFlowSection = ({
   titleValue: string | number;
   items: ICashFlowStatementItem[];
   barColor: string;
-  totalAbsolute: number; // Info: (20260330 - Julian) 用於計算百分比佔比的基底分母
+  totalAbsolute: string | number; // Info: (20260330 - Julian) 用於計算百分比佔比的基底分母
   isMainTotal?: boolean;
 }) => {
   return (
@@ -55,9 +55,8 @@ const CashFlowSection = ({
           const isNegative = MoneyUtil.toDecimal(item.amount).isNegative();
           const displayAmount = MoneyUtil.toDecimal(item.amount)
             .abs()
-            .toNumber();
-          const percentage =
-            totalAbsolute > 0 ? (displayAmount / totalAbsolute) * 100 : 0;
+            .toString();
+          const percentage = MoneyUtil.safeRatio(displayAmount, totalAbsolute);
           return (
             <div
               key={`${item.name}-${idx}`}
@@ -71,7 +70,7 @@ const CashFlowSection = ({
                   <div
                     className={`h-full rounded-full ${isNegative ? "bg-rose-400" : barColor}`}
                     style={{
-                      width: `${Math.min(percentage, 100)}%`,
+                      width: `${Math.min(Number(percentage), 100)}%`,
                     }}
                   ></div>
                 </div>
@@ -84,7 +83,7 @@ const CashFlowSection = ({
                   {numberWithCommas(displayAmount)}
                 </span>
                 <span className="text-[10px] font-bold text-gray-400">
-                  {percentage.toFixed(1)}%
+                  {Number(percentage).toFixed(1)}%
                 </span>
               </div>
             </div>
@@ -203,23 +202,35 @@ export default function CashFlowSheetView({
       value: `$${numberWithCommas(metrics.freeCashFlow)}`,
       description: t("cash_flow_statement_view.metric_fcf_desc"),
       textColor: "text-gray-900",
-      statusGood: metrics.freeCashFlow >= 0,
+      statusGood: !MoneyUtil.toDecimal(metrics.freeCashFlow).isNegative(),
       tooltipAlign: TooltipAlign.LEFT,
     },
     {
       title: t("cash_flow_statement_view.metric_ocf_ratio_title"),
-      value: `${metrics.operatingCashFlowRatio.toFixed(1)}%`,
+      value:
+        metrics.operatingCashFlowRatio !== null
+          ? `${Number(metrics.operatingCashFlowRatio).toFixed(1)}%`
+          : "N/A",
       description: t("cash_flow_statement_view.metric_ocf_ratio_desc"),
       textColor: "text-gray-900",
-      statusGood: metrics.operatingCashFlowRatio >= 100,
+      statusGood:
+        metrics.operatingCashFlowRatio !== null
+          ? Number(metrics.operatingCashFlowRatio) >= 100
+          : false,
       tooltipAlign: TooltipAlign.RIGHT,
     },
     {
       title: t("cash_flow_statement_view.metric_cf_adequacy_title"),
-      value: `${metrics.cashFlowAdequacyRatio.toFixed(1)}%`,
+      value:
+        metrics.cashFlowAdequacyRatio !== null
+          ? `${Number(metrics.cashFlowAdequacyRatio).toFixed(1)}%`
+          : "N/A",
       description: t("cash_flow_statement_view.metric_cf_adequacy_desc"),
       textColor: "text-gray-900",
-      statusGood: metrics.cashFlowAdequacyRatio >= 100,
+      statusGood:
+        metrics.cashFlowAdequacyRatio !== null
+          ? Number(metrics.cashFlowAdequacyRatio) >= 100
+          : false,
       tooltipAlign: TooltipAlign.LEFT,
     },
     {
@@ -234,10 +245,12 @@ export default function CashFlowSheetView({
 
   // Info: (20260330 - Julian) 計算每個活動區塊內項目的絕對值總計，用於畫進度條
   const getTotalAbsolute = (items: ICashFlowStatementItem[]) =>
-    items.reduce(
-      (acc, curr) => acc + MoneyUtil.toDecimal(curr.amount).abs().toNumber(),
-      0,
-    );
+    items
+      .reduce(
+        (acc, curr) => acc.plus(MoneyUtil.toDecimal(curr.amount).abs()),
+        MoneyUtil.toDecimal(0),
+      )
+      .toString();
 
   // Info: (20260330 - Julian) 取得各活動區塊的絕對值總計
   const operatingAbsolute = getTotalAbsolute(activities.operating.items);

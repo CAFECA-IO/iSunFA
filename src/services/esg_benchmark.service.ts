@@ -2,6 +2,7 @@ import {
   ESG_INDUSTRY_LOSS_RATIO_BENCHMARKS,
   IndustryCategory,
 } from "@/constants/esg_industry_benchmarks";
+import Decimal from "decimal.js";
 
 export class EsgBenchmarkService {
   // Info: (20260515 - Julian) 取得特定產業容損率
@@ -21,8 +22,10 @@ export class EsgBenchmarkService {
     }
 
     // Info: (20260515 - Julian) 回傳 min 與 max 的平均值
-    const lossRatio =
-      (Number(benchmark.lossRatioMin) + Number(benchmark.lossRatioMax)) / 2;
+    const lossRatio = new Decimal(benchmark.lossRatioMin)
+      .add(benchmark.lossRatioMax)
+      .div(2)
+      .toNumber();
     return lossRatio;
   }
 }

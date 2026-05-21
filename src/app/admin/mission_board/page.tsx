@@ -1,19 +1,31 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { Target, FileText, Activity, AlertCircle, Users, Loader2, Trash2 } from 'lucide-react';
-import { useTranslation } from '@/i18n/i18n_context';
-import AdminPageHeader from '@/components/admin/common/admin_page_header';
-import AdminMetricCard from '@/components/admin/common/admin_metric_card';
-import WalkingRobot, { IRobotRef, RobotActionTarget } from '@/components/admin/mission_board/walking_robot';
-import { ITask, TaskStatus } from '@/interfaces/mission_board';
-import KanbanColumn from '@/components/admin/mission_board/kanban_column';
-import { useMissionBoardDiffEngine } from '@/components/admin/mission_board/use_mission_board_diff_engine';
+import { useState, useEffect, useRef } from "react";
+import {
+  Target,
+  FileText,
+  Activity,
+  AlertCircle,
+  Users,
+  Loader2,
+  Trash2,
+} from "lucide-react";
+import { useTranslation } from "@/i18n/i18n_context";
+import AdminPageHeader from "@/components/admin/common/admin_page_header";
+import AdminMetricCard from "@/components/admin/common/admin_metric_card";
+import WalkingRobot, {
+  IRobotRef,
+  RobotActionTarget,
+} from "@/components/admin/mission_board/walking_robot";
+import { ITask, TaskStatus } from "@/interfaces/mission_board";
+import KanbanColumn from "@/components/admin/mission_board/kanban_column";
+import { useMissionBoardDiffEngine } from "@/components/admin/mission_board/use_mission_board_diff_engine";
 import { request } from "@/lib/utils/request";
-import { useAuth } from '@/contexts/auth_context';
-import { getAdminAddressString } from '@/lib/wallet/admin_wallet';
+import { useAuth } from "@/contexts/auth_context";
+import { getAdminAddressString } from "@/lib/wallet/admin_wallet";
 import { getLoginOptions, fido2ClientService } from "@/lib/auth/fido2_client";
-import ConfirmModal from '@/components/common/confirm_modal';
+import ConfirmModal from "@/components/common/confirm_modal";
+import { MoneyUtil } from "@/lib/utils/money";
 
 export default function AdminMissionBoardPage() {
   const { t } = useTranslation();
@@ -21,7 +33,9 @@ export default function AdminMissionBoardPage() {
 
   // Info: (20260420 - Luphia) Decoupled States
   const [apiTasks, setApiTasks] = useState<ITask[]>([]);
-  const [systemAdminAddress, setSystemAdminAddress] = useState<string | null>(null);
+  const [systemAdminAddress, setSystemAdminAddress] = useState<string | null>(
+    null,
+  );
   const [globalDisplayTasks, setGlobalDisplayTasks] = useState<ITask[]>([]);
   const globalDisplayTasksRef = useRef<ITask[]>([]);
   const globalRobotRef = useRef<IRobotRef>(null);
@@ -31,7 +45,10 @@ export default function AdminMissionBoardPage() {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [gcLoading, setGcLoading] = useState(false);
-  const [gcResult, setGcResult] = useState<{ message: string; details: string[] } | null>(null);
+  const [gcResult, setGcResult] = useState<{
+    message: string;
+    details: string[];
+  } | null>(null);
 
   const handleGC = async () => {
     if (gcLoading) return;
@@ -40,19 +57,23 @@ export default function AdminMissionBoardPage() {
       const { challenge, token } = await getLoginOptions();
       const authentication = await fido2ClientService.startLogin({ challenge });
 
-      const data = await request<{ payload: { deleted: number; details: string[] } }>(`/api/v1/admin/mission_board/gc`, {
+      const data = await request<{
+        payload: { deleted: number; details: string[] };
+      }>(`/api/v1/admin/mission_board/gc`, {
         method: "POST",
         body: JSON.stringify({
           action: "gc",
           fido2Signature: {
             authentication,
-            challengeToken: token
-          }
+            challengeToken: token,
+          },
         }),
       });
       setGcResult({
-        message: t("admin_mission_board.gc.success_msg", { count: data.payload?.deleted || 0 }),
-        details: data.payload?.details || []
+        message: t("admin_mission_board.gc.success_msg", {
+          count: data.payload?.deleted || 0,
+        }),
+        details: data.payload?.details || [],
       });
     } catch (e) {
       console.error(e);
@@ -74,8 +95,8 @@ export default function AdminMissionBoardPage() {
           action: "cancel",
           fido2Signature: {
             authentication,
-            challengeToken: token
-          }
+            challengeToken: token,
+          },
         }),
       });
     } catch (e) {
@@ -98,8 +119,8 @@ export default function AdminMissionBoardPage() {
           action: "bump",
           fido2Signature: {
             authentication,
-            challengeToken: token
-          }
+            challengeToken: token,
+          },
         }),
       });
     } catch (e) {
@@ -116,21 +137,33 @@ export default function AdminMissionBoardPage() {
   // Info: (20260420 - Luphia) Sync columns physical coords for robot to dispatch moves
   useEffect(() => {
     const syncPositions = () => {
-      const zones: { zone: RobotActionTarget, pos: { x: number, y: number } }[] = [];
+      const zones: {
+        zone: RobotActionTarget;
+        pos: { x: number; y: number };
+      }[] = [];
       if (openColRef.current) {
         const rect = openColRef.current.getBoundingClientRect();
-        zones.push({ zone: "OPEN", pos: { x: rect.left + rect.width / 2, y: rect.top } });
+        zones.push({
+          zone: "OPEN",
+          pos: { x: rect.left + rect.width / 2, y: rect.top },
+        });
       }
       if (pendingColRef.current) {
         const rect = pendingColRef.current.getBoundingClientRect();
-        zones.push({ zone: "PENDING_REVIEW", pos: { x: rect.left + rect.width / 2, y: rect.top } });
+        zones.push({
+          zone: "PENDING_REVIEW",
+          pos: { x: rect.left + rect.width / 2, y: rect.top },
+        });
       }
       if (closedColRef.current) {
         const rect = closedColRef.current.getBoundingClientRect();
-        zones.push({ zone: "CLOSED", pos: { x: rect.left + rect.width / 2, y: rect.top } });
+        zones.push({
+          zone: "CLOSED",
+          pos: { x: rect.left + rect.width / 2, y: rect.top },
+        });
       }
 
-      zones.forEach(z => {
+      zones.forEach((z) => {
         globalRobotRef.current?.setZonePosition(z.zone, z.pos);
       });
     };
@@ -148,7 +181,9 @@ export default function AdminMissionBoardPage() {
     let isInitialLoad = true;
     const fetchTasks = async () => {
       try {
-        const res = await request<{ payload: ITask[] }>("/api/v1/admin/mission_board");
+        const res = await request<{ payload: ITask[] }>(
+          "/api/v1/admin/mission_board",
+        );
 
         if (res.payload) {
           setApiTasks(res.payload);
@@ -167,12 +202,22 @@ export default function AdminMissionBoardPage() {
     return () => clearInterval(intervalId);
   }, []);
 
-  useMissionBoardDiffEngine(apiTasks, globalDisplayTasksRef, setGlobalDisplayTasks, globalRobotRef, loading);
+  useMissionBoardDiffEngine(
+    apiTasks,
+    globalDisplayTasksRef,
+    setGlobalDisplayTasks,
+    globalRobotRef,
+    loading,
+  );
 
   const displayTasks = globalDisplayTasks;
 
   const toggleExpand = (taskId: number) => {
-    setExpandedTasks(prev => prev.includes(taskId) ? prev.filter(id => id !== taskId) : [...prev, taskId]);
+    setExpandedTasks((prev) =>
+      prev.includes(taskId)
+        ? prev.filter((id) => id !== taskId)
+        : [...prev, taskId],
+    );
   };
 
   const handleCopy = (text: string, id: string) => {
@@ -183,19 +228,28 @@ export default function AdminMissionBoardPage() {
 
   const kpis = {
     totalMissions: apiTasks.length,
-    openMissions: apiTasks.filter(t => t.status === TaskStatus.Open).length,
-    pendingMissions: apiTasks.filter(t => t.status === TaskStatus.PendingReview).length,
-    totalRewards: apiTasks.reduce((sum, t) => sum + parseFloat(t.reward), 0),
-    totalParticipants: new Set(apiTasks.flatMap(t => t.submissions.map(s => s.submitter))).size,
+    openMissions: apiTasks.filter((t) => t.status === TaskStatus.Open).length,
+    pendingMissions: apiTasks.filter(
+      (t) => t.status === TaskStatus.PendingReview,
+    ).length,
+    totalRewards: apiTasks.reduce(
+      (sum, t) => MoneyUtil.add(sum, t.reward),
+      "0",
+    ),
+    totalParticipants: new Set(
+      apiTasks.flatMap((t) => t.submissions.map((s) => s.submitter)),
+    ).size,
   };
-
-
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8 sm:px-6 lg:px-8">
-      <WalkingRobot ref={globalRobotRef} className="opacity-100" colorTheme="blue" />
+      <WalkingRobot
+        ref={globalRobotRef}
+        className="opacity-100"
+        colorTheme="blue"
+      />
 
-      <div className="mx-auto max-w-7xl space-y-6 relative z-10">
+      <div className="relative z-10 mx-auto max-w-7xl space-y-6">
         <AdminPageHeader
           icon={Target}
           title={t("admin_mission_board.page.title")}
@@ -203,33 +257,67 @@ export default function AdminMissionBoardPage() {
         />
 
         {/* Info: (20260424 - Luphia) Actions */}
-        <div className="flex items-center justify-end relative z-10">
+        <div className="relative z-10 flex items-center justify-end">
           <button
             onClick={handleGC}
             disabled={gcLoading}
-            className="flex items-center gap-2 px-5 py-2.5 bg-orange-600 text-white hover:bg-orange-500 border border-transparent rounded-md text-sm font-semibold transition-all hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:opacity-50 shadow-sm"
+            className="flex items-center gap-2 rounded-md border border-transparent bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:scale-105 hover:bg-orange-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 active:scale-95 disabled:opacity-50"
           >
-            {gcLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+            {gcLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
             {t("admin_mission_board.gc.btn_text")}
           </button>
         </div>
 
         {/* Info: (20260424 - Luphia) Global KPIs */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-          <AdminMetricCard title={t("admin_mission_board.kpi.total_missions")} value={kpis.totalMissions.toString()} icon={FileText} colorTheme="blue" />
-          <AdminMetricCard title={t("admin_mission_board.kpi.open_missions")} value={kpis.openMissions.toString()} icon={Target} colorTheme="emerald" />
-          <AdminMetricCard title={t("admin_mission_board.kpi.pending_reviews")} value={kpis.pendingMissions.toString()} icon={Activity} colorTheme="orange" />
-          <AdminMetricCard title={t("admin_mission_board.kpi.total_participants")} value={kpis.totalParticipants.toString()} icon={Users} colorTheme="gray" />
-          <AdminMetricCard title={t("admin_mission_board.kpi.total_rewards")} value={kpis.totalRewards.toLocaleString()} unit="ICP" icon={AlertCircle} colorTheme="rose" />
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+          <AdminMetricCard
+            title={t("admin_mission_board.kpi.total_missions")}
+            value={kpis.totalMissions.toString()}
+            icon={FileText}
+            colorTheme="blue"
+          />
+          <AdminMetricCard
+            title={t("admin_mission_board.kpi.open_missions")}
+            value={kpis.openMissions.toString()}
+            icon={Target}
+            colorTheme="emerald"
+          />
+          <AdminMetricCard
+            title={t("admin_mission_board.kpi.pending_reviews")}
+            value={kpis.pendingMissions.toString()}
+            icon={Activity}
+            colorTheme="orange"
+          />
+          <AdminMetricCard
+            title={t("admin_mission_board.kpi.total_participants")}
+            value={kpis.totalParticipants.toString()}
+            icon={Users}
+            colorTheme="gray"
+          />
+          <AdminMetricCard
+            title={t("admin_mission_board.kpi.total_rewards")}
+            value={MoneyUtil.formatDynamic(kpis.totalRewards, 0)}
+            unit="ICP"
+            icon={AlertCircle}
+            colorTheme="rose"
+          />
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center h-64 text-gray-400 animate-pulse">{t("admin_mission_board.labels.loading")}</div>
+          <div className="flex h-64 animate-pulse items-center justify-center text-gray-400">
+            {t("admin_mission_board.labels.loading")}
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+          <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-3">
             <KanbanColumn
               title={t("admin_mission_board.tabs.open")}
-              columnTasks={displayTasks.filter(t => t.status === TaskStatus.Open)}
+              columnTasks={displayTasks.filter(
+                (t) => t.status === TaskStatus.Open,
+              )}
               refObj={openColRef}
               activeTab="global"
               systemAdminAddress={systemAdminAddress}
@@ -243,7 +331,9 @@ export default function AdminMissionBoardPage() {
             />
             <KanbanColumn
               title={t("admin_mission_board.tabs.pending_review")}
-              columnTasks={displayTasks.filter(t => t.status === TaskStatus.PendingReview)}
+              columnTasks={displayTasks.filter(
+                (t) => t.status === TaskStatus.PendingReview,
+              )}
               refObj={pendingColRef}
               activeTab="global"
               systemAdminAddress={systemAdminAddress}
@@ -257,7 +347,9 @@ export default function AdminMissionBoardPage() {
             />
             <KanbanColumn
               title={t("admin_mission_board.tabs.closed")}
-              columnTasks={displayTasks.filter(t => t.status === TaskStatus.Closed)}
+              columnTasks={displayTasks.filter(
+                (t) => t.status === TaskStatus.Closed,
+              )}
               refObj={closedColRef}
               activeTab="global"
               systemAdminAddress={systemAdminAddress}
@@ -285,12 +377,14 @@ export default function AdminMissionBoardPage() {
         onClose={() => setGcResult(null)}
         title={t("admin_mission_board.gc.result_title")}
         message={
-          <div className="text-left space-y-4">
-            <p className="text-gray-700 font-medium">{gcResult?.message}</p>
+          <div className="space-y-4 text-left">
+            <p className="font-medium text-gray-700">{gcResult?.message}</p>
             {gcResult && gcResult.details.length > 0 && (
-              <div className="max-h-60 overflow-y-auto bg-gray-50 p-3 rounded-lg border border-gray-200">
-                <ul className="list-disc pl-5 text-sm text-gray-600 font-mono space-y-1">
-                  {gcResult.details.map((d, i) => <li key={i}>{d}</li>)}
+              <div className="max-h-60 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <ul className="list-disc space-y-1 pl-5 font-mono text-sm text-gray-600">
+                  {gcResult.details.map((d, i) => (
+                    <li key={i}>{d}</li>
+                  ))}
                 </ul>
               </div>
             )}

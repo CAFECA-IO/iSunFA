@@ -35,9 +35,7 @@ const EsgReportSection = ({
       <div className="mb-2 flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
         <span className="font-bold text-gray-700">{titleText}</span>
         <span className="text-base font-bold text-gray-900 print:text-sm">
-          {numberWithCommas(
-            MoneyUtil.toDecimal(titleValue).toNumber().toFixed(1),
-          )}{" "}
+          {numberWithCommas(MoneyUtil.toDecimal(titleValue).toFixed(1))}{" "}
           <span className="text-xs font-semibold">{t("esg_report.unit")}</span>
         </span>
       </div>
@@ -58,7 +56,7 @@ const EsgReportSection = ({
                   <div
                     className={`h-full rounded-full ${barColor}`}
                     style={{
-                      width: `${Math.min(percentage, 100)}%`, // Info: (20260406 - Luphia) 避免破版
+                      width: `${Math.min(Number(percentage), 100)}%`, // Info: (20260406 - Luphia) 避免破版
                     }}
                   ></div>
                 </div>
@@ -66,11 +64,11 @@ const EsgReportSection = ({
               <div className="flex flex-col items-end">
                 <span className="text-base font-bold text-gray-900 print:text-sm">
                   {numberWithCommas(
-                    MoneyUtil.toDecimal(item.amount).toNumber().toFixed(1),
+                    MoneyUtil.toDecimal(item.amount).toFixed(1),
                   )}
                 </span>
                 <span className="text-[10px] font-bold text-gray-400">
-                  {percentage.toFixed(1)}%
+                  {Number(percentage).toFixed(1)}%
                 </span>
               </div>
             </div>
@@ -164,7 +162,7 @@ export default function EsgReportView({
       value: (
         <>
           {numberWithCommas(
-            MoneyUtil.toDecimal(metrics.totalEmissions).toNumber().toFixed(1),
+            MoneyUtil.toDecimal(metrics.totalEmissions).toFixed(1),
           )}
           <span className="ml-[2px] text-xs font-bold">
             {t("esg_report.unit")}
@@ -177,21 +175,21 @@ export default function EsgReportView({
     },
     {
       title: t("esg_report.scope1"),
-      value: `${metrics.scope1Proportion.toFixed(1)}%`,
+      value: `${Number(metrics.scope1Proportion).toFixed(1)}%`,
       description: t("esg_report.scope1_desc"),
       textColor: "text-gray-900",
-      statusGood: metrics.scope1Proportion < 30, // Info: (20260406 - Luphia) example benchmark
+      statusGood: Number(metrics.scope1Proportion) < 30, // Info: (20260406 - Luphia) example benchmark
     },
     {
       title: t("esg_report.scope2"),
-      value: `${metrics.scope2Proportion.toFixed(1)}%`,
+      value: `${Number(metrics.scope2Proportion).toFixed(1)}%`,
       description: t("esg_report.scope2_desc"),
       textColor: "text-gray-900",
       statusGood: true,
     },
     {
       title: t("esg_report.scope3"),
-      value: `${metrics.scope3Proportion.toFixed(1)}%`,
+      value: `${Number(metrics.scope3Proportion).toFixed(1)}%`,
       description: t("esg_report.scope3_desc"),
       textColor: "text-gray-900",
       statusGood: true,
@@ -257,9 +255,7 @@ export default function EsgReportView({
         </span>
         <span className="text-3xl font-black text-white">
           {numberWithCommas(
-            MoneyUtil.toDecimal(sections.grossEmissions.total)
-              .toNumber()
-              .toFixed(1),
+            MoneyUtil.toDecimal(sections.grossEmissions.total).toFixed(1),
           )}{" "}
           <span className="text-lg font-bold">{t("esg_report.unit")}</span>
         </span>

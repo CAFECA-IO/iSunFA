@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { paymentRepo } from "@/repositories/payment.repo";
+import { MoneyUtil } from "@/lib/utils/money";
 
 export async function GET(
   request: NextRequest,
@@ -41,8 +42,8 @@ export async function GET(
           {
             name: (orderData.title as string) || "會員訂閱",
             quantity: 1,
-            unitPrice: Number(t.amount),
-            amount: Number(t.amount),
+            unitPrice: String(t.amount),
+            amount: String(t.amount),
             remark:
               orderData.billingInterval === "year"
                 ? "購買會員資格 (年繳)"
@@ -50,34 +51,36 @@ export async function GET(
           },
         ];
       } else {
-        let base = Number(
+        let base = String(
           orderData.baseCredits || orderData.credits || t.amount,
         );
-        let bonus = Number(orderData.bonusCredits || 0);
+        let bonus = String(orderData.bonusCredits || 0);
 
         if (
           !orderData.bonusCredits &&
           orderData.credits &&
-          Number(orderData.credits) > Number(t.amount)
+          MoneyUtil.toDecimal(String(orderData.credits)).gt(t.amount)
         ) {
-          base = Number(t.amount);
-          bonus = Number(orderData.credits) - Number(t.amount);
+          base = String(t.amount);
+          bonus = MoneyUtil.toDecimal(String(orderData.credits))
+            .minus(t.amount)
+            .toString();
         }
 
         itemsFallback.push({
           name: `iSunFA ${base} 點`,
           quantity: 1,
-          unitPrice: Number(t.amount),
-          amount: Number(t.amount),
+          unitPrice: String(t.amount),
+          amount: String(t.amount),
           remark: `購買 ${base} 點`,
         });
 
-        if (bonus > 0) {
+        if (MoneyUtil.toDecimal(bonus).gt(0)) {
           itemsFallback.push({
             name: `iSunFA ${bonus} 點（贈品）`,
             quantity: 1,
-            unitPrice: 0,
-            amount: 0,
+            unitPrice: "0",
+            amount: "0",
             remark: `贈送 ${bonus} 點`,
           });
         }
