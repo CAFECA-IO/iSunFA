@@ -187,22 +187,22 @@ describe("generateCashFlowStatement", () => {
     // Info: (20260520 - Tzuhan) 期初現金 5000
     const report = generateCashFlowStatement(mockLines, 5000);
 
-    // 營業活動現金流 = 淨利 10000 (銷貨) + 預收貨款增加 2000 - 支付利息 200 - 支付所得稅 800 = 11000
+    // Info: (20260520 - Tzuhan) 營業活動現金流 = 淨利 10000 (銷貨) + 預收貨款增加 2000 - 支付利息 200 - 支付所得稅 800 = 11000
     expect(report.activities.operating.total).toBe("11000");
 
-    // 投資活動現金流 = 購買設備 -3000
+    // Info: (20260520 - Tzuhan) 投資活動現金流 = 購買設備 -3000
     expect(report.activities.investing.total).toBe("-3000");
 
-    // 籌資活動現金流 = 發行股本 5000 - 發放股利 1000 = 4000
+    // Info: (20260520 - Tzuhan) 籌資活動現金流 = 發行股本 5000 - 發放股利 1000 = 4000
     expect(report.activities.financing.total).toBe("4000");
 
-    // 淨現金流量 = 11000 - 3000 + 4000 = 12000
+    // Info: (20260520 - Tzuhan) 淨現金流量 = 11000 - 3000 + 4000 = 12000
     expect(report.summary.netIncreaseDecrease).toBe("12000");
 
-    // 期末現金餘額 = 5000 + 12000 = 17000
+    // Info: (20260520 - Tzuhan) 期末現金餘額 = 5000 + 12000 = 17000
     expect(report.summary.endingBalance).toBe("17000");
 
-    // 驗證補充揭露項目 (7510 利息, 7950 所得稅, 3350 股利)
+    // Info: (20260520 - Tzuhan) 驗證補充揭露項目 (7510 利息, 7950 所得稅, 3350 股利)
     expect(report.supplementary?.interestPaid).toBe("200");
     expect(report.supplementary?.taxesPaid).toBe("800");
     expect(report.supplementary?.dividendsPaid).toBe("1000");
