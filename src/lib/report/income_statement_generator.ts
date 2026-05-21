@@ -87,7 +87,7 @@ export function generateIncomeStatement(
         TW_ACCOUNTS,
       );
 
-    // 如果都不屬於上述任何損益類別，就直接 return
+    // Info: (20260520 - Tzuhan) 如果都不屬於上述任何損益類別，就直接 return
     if (!isRevenue && !isCOGS && !isOpex && !isTax && !isNonOp) return;
 
     // Info: (20260520 - Tzuhan) [REFACTOR] 使用 SystemAccountNodes 錨點取代寫死的 751/705
@@ -149,8 +149,11 @@ export function generateIncomeStatement(
         nonOpMap.get(code)?.amount || MoneyUtil.toDecimal(0);
       nonOpMap.set(code, { name, amount: currentAmount.plus(impact) });
     } else {
-      // Info: (20260518 - Tzuhan) [AUDIT FIX] 攔截 9 (其他綜合損益) 或任何未知 4~9 科目
-      // 杜絕靜默遺失導致與資產負債表 (BS) 結轉的本期損益無法勾稽
+      /**
+       * Info: (20260518 - Tzuhan) [AUDIT FIX]
+       * 攔截 9 (其他綜合損益) 或任何未知 4~9 科目
+       * 杜絕靜默遺失導致與資產負債表 (BS) 結轉的本期損益無法勾稽
+       */
       throw new Error(
         `[Data Integrity Violation] 損益表遇到無法歸類的代碼，可能是尚未支援的其他綜合損益科目 (Code: ${code}, Line ID: ${line.id})`,
       );
