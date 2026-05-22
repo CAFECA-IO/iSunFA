@@ -441,6 +441,12 @@ export class DocumentSyncRepository {
                 if (!coefExists.isVerified) {
                   recordIsVerified = false;
                 }
+                if (
+                  coefExists.source ===
+                  "Internal_Proxy_Estimation_Based_On_Spend"
+                ) {
+                  recordIsVerified = false;
+                }
               }
             } else {
               isSuspense = true;

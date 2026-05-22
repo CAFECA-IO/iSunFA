@@ -1,7 +1,14 @@
 import { Prisma } from "@/generated";
 import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
+import { MOCK_EEIO_COEFFICIENTS } from "@/constants/mock_eeio_coefficients";
 
 export class EmissionFactorRepo {
+  static async getAllGlobalCoefficients(tx: Prisma.TransactionClient) {
+    return tx.coefficient.findMany({
+      where: { accountBookId: null },
+    });
+  }
+
   static async findFallbackCoefficient(
     tx: Prisma.TransactionClient,
     fallbackTag: string,
@@ -30,11 +37,14 @@ export class EmissionFactorRepo {
     if (officialDbMatches.length > 0) return officialDbMatches[0].id;
 
     // Info: (20260521 - Tzuhan) 軌道二：官方 DB 查無資料，退回系統全域靜態常數檔 (Sprint 1 過渡期墊片)
-    const staticMatches = ALL_COEFFICIENTS.filter(
-      (c) =>
-        c.name.includes(fallbackTag) ||
-        (c.description && c.description.includes(fallbackTag)),
-    ).sort((a, b) => Number(b.emissionFactor) - Number(a.emissionFactor));
+    const combinedStatic = [...ALL_COEFFICIENTS, ...MOCK_EEIO_COEFFICIENTS];
+    const staticMatches = combinedStatic
+      .filter(
+        (c) =>
+          c.name.includes(fallbackTag) ||
+          (c.description && c.description.includes(fallbackTag)),
+      )
+      .sort((a, b) => Number(b.emissionFactor) - Number(a.emissionFactor));
 
     if (staticMatches.length > 0) return staticMatches[0].id;
 

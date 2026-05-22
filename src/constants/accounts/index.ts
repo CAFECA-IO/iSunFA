@@ -16,6 +16,7 @@ export interface IAccount {
   isDebit: boolean;
   isInterestBearing?: boolean;
   isDividend?: boolean;
+  aliases?: string[];
 }
 
 export const CURRENCY = {

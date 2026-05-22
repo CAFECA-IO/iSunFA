@@ -3,10 +3,13 @@ import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
 import { SchemaType, Schema } from "@google/generative-ai";
-import { EsgGenerationSource } from "@/constants/enums";
+import { EsgGenerationSource, EsgFallbackCategory } from "@/constants/enums";
 import { MeasurementUnit } from "@/constants/enums";
 import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
+import { MOCK_EEIO_COEFFICIENTS } from "@/constants/mock_eeio_coefficients";
 import { MoneyUtil } from "@/lib/utils/money";
+import { EmissionFactorRepo } from "@/repositories/emission_factor.repo";
+import { prisma } from "@/lib/prisma";
 
 export class EsgParsingSkill implements ITaskSkill {
   name = "ESG_PARSING";
@@ -107,6 +110,13 @@ export class EsgParsingSkill implements ITaskSkill {
             type: SchemaType.STRING,
             description: "AI 分析邏輯",
           },
+          searchKeywords: {
+            type: SchemaType.ARRAY,
+            description: "3-5 個用於搜尋具體碳排係數的關鍵字",
+            items: {
+              type: SchemaType.STRING,
+            },
+          },
         },
         required: [
           "scope",
@@ -134,7 +144,32 @@ export class EsgParsingSkill implements ITaskSkill {
         ...(parsed1.searchKeywords || []),
         parsed1.fallbackCategory || "",
       ];
-      const scoredCoefficients = ALL_COEFFICIENTS.map((c) => {
+
+      // Info: (20260522 - Tzuhan) Fetch dynamic coefficients from DB (including our Mock EEIOs)
+      const dbCoefficients =
+        await EmissionFactorRepo.getAllGlobalCoefficients(prisma);
+
+      // Info: (20260522 - Tzuhan) Combine static and DB coefficients, deduplicating by ID (DB takes precedence)
+      const combinedCoefficientsMap = new Map();
+      [...ALL_COEFFICIENTS, ...MOCK_EEIO_COEFFICIENTS].forEach((c) =>
+        combinedCoefficientsMap.set(c.id, c),
+      );
+      dbCoefficients.forEach((c) =>
+        combinedCoefficientsMap.set(c.id, {
+          ...c,
+          emissionFactor: c.emissionFactor.toString(),
+        }),
+      );
+      const combinedCoefficients = Array.from(combinedCoefficientsMap.values());
+
+      const isServiceCategory = [
+        EsgFallbackCategory.IT_AND_TELECOM,
+        EsgFallbackCategory.ACCOMMODATION_AND_DINING,
+        EsgFallbackCategory.REAL_ESTATE_AND_EQUIPMENT_RENTAL,
+        EsgFallbackCategory.PROFESSIONAL_SERVICES,
+      ].includes(parsed1.fallbackCategory as EsgFallbackCategory);
+
+      const scoredCoefficients = combinedCoefficients.map((c) => {
         let score = 0;
         const textToSearch = (
           c.name +
@@ -146,6 +181,12 @@ export class EsgParsingSkill implements ITaskSkill {
             score += 10;
           }
         }
+
+        // Info: (20260522 - Tzuhan) Dimensional Weighting (量綱加權分數)
+        if (isServiceCategory && c.unit === "TWD") {
+          score += 100; // Info: (20260522 - Tzuhan) 強力引導 AI 選擇 EEIO 係數
+        }
+
         return { ...c, score };
       });
 
@@ -171,10 +212,12 @@ export class EsgParsingSkill implements ITaskSkill {
         properties: {
           coefficientId: {
             type: SchemaType.STRING,
-            description: "挑選的係數 ID",
+            nullable: true,
+            description: "挑選的係數 ID。若提供的候選清單皆不符合，請設為 null",
           },
           amount: {
             type: SchemaType.NUMBER,
+            nullable: true,
             description: "對應該係數單位的數量",
           },
           unit: {
@@ -207,17 +250,25 @@ export class EsgParsingSkill implements ITaskSkill {
       // ==========================================
       // Info: (20260522 - Tzuhan) Backend: CPA-Grade Emission Calculation
       // ==========================================
-      const selectedCoef = ALL_COEFFICIENTS.find(
+      const selectedCoef = combinedCoefficients.find(
         (c) => c.id === parsed2.coefficientId,
       );
       let calculatedEmissions = "0";
+      let finalAiNote = `[Turn 1] ${parsed1.aiNote}\n[Turn 2] ${parsed2.aiNote}`;
 
-      if (selectedCoef) {
+      if (selectedCoef && parsed2.amount != null) {
         // Info: (20260522 - Tzuhan) 嚴格使用 MoneyUtil 高精度運算
         calculatedEmissions = MoneyUtil.multiply(
           parsed2.amount,
           selectedCoef.emissionFactor,
-        );
+        ).toString();
+
+        if (
+          selectedCoef.source === "Internal_Proxy_Estimation_Based_On_Spend"
+        ) {
+          finalAiNote +=
+            "\n*使用內部過渡期 EEIO 係數進行花費基礎估算，非官方直接宣告數值，待查核*";
+        }
       }
 
       const finalParsed = {
@@ -229,7 +280,7 @@ export class EsgParsingSkill implements ITaskSkill {
         amount: parsed2.amount,
         unit: parsed2.unit,
         emissions: calculatedEmissions,
-        aiNote: `[Turn 1] ${parsed1.aiNote}\n[Turn 2] ${parsed2.aiNote}`,
+        aiNote: finalAiNote,
         confidence: parsed2.confidence,
         generationSource: EsgGenerationSource.AI_GENERATED,
       };
