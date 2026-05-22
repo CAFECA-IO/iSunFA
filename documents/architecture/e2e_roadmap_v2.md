@@ -42,13 +42,14 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 我們全面重構開發邏輯，採行「逆向推進路線：先求數學絕對精準 ➡️ 再測商業邏輯異常 ➡️ 最後挑戰視覺極限與合規深水區」。
 
 ### 🚨 當前待辦與優先度總表 (Priority To-Do List)
-為確保 780 萬筆台積電 PoC 順利通關且系統不崩潰，全隊目前必須嚴格遵守以下執行優先度（包含 ADR 004, 005, 006 的落地實作）：
+為確保 780 萬筆台積電 PoC 順利通關且系統不崩潰，全隊目前必須嚴格遵守以下執行優先度（包含 ADR 004, 005, 006, 007 的落地實作）：
 
 **🔥 [Priority 1: Sprint 1 基礎防線補齊 (ADR 004)]**
 - ✅ **Done: [Tzuhan] Voucher 財務防護 - 語意標籤與多國映射**: 實作 `UniversalAccountTag` 與後端 `SemanticAccountMatcher`。
 - 🚫 **Canceled: [Tzuhan] 多維度廠商攔截器**: 廢棄 O(1) 攔截，以避免靜態規則造成的「看人下單」誤判，改由 Two-Turn RAG 處理。
 - ✅ **Done: [Tzuhan] 動態兩回合檢索與決策 (Two-Turn RAG)**: 實作 Turn 1 語意萃取與 Turn 2 AI 科目選擇，結合 `CoaVectorSearchService` 的前 10 名候選清單，最終強制標記 `isVerified: false` 進入隔離審核區。
 - ✅ **Done: [Tzuhan] 雙軌懸記與虛擬科目隔離區 (Suspense & Quarantine)**: 取消 DB 硬體寫死，改由程式碼統一 4 向精準分流 (BS 1471/2330, PL 6288/7590)。
+- ✅ **Done: [Tzuhan] 零信任會計稽核防線 (Zero-Trust Audit Defense)**: 於 Schema 實作 `isVerified` 與 `generationSource`，確保所有 AI 產生的憑證明細在人類覆核前皆保持未驗證狀態，建立 CPA 等級的資料血緣溯源 (ADR 007)。
 
 **🔥 [Priority 2: 邊界壓力測試 (可與 P1 並行)]**
 - 🚧 **WIP: [Julian] 台積電 780 萬筆大數據批次注入 (TSMC Batch Seeding)**: 確保巨量資料進入 DB。注意：灌完即停手，嚴禁讀取報表。
@@ -61,7 +62,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 **🔥 [Priority 4: Sprint 2 ESG 架構升級 (ADR 006)]**
 - ✅ **Done (2026-05-22): [Tzuhan] 動態兩回合檢索 (Two-Turn AI-RAG Pivot) (ADR 006)**: 拔除靜態攔截器，重構 `EsgParsingSkill`。改為兩回合對話，並在後端 TypeScript 內嚴格限制 `MoneyUtil` 運算，禁止 AI 執行數學邏輯。
 - ⚠️ **Pending (Next Target): [Tzuhan] 質量守恆勾稽與動態容許耗損率**: 物理防呆機制，實作進銷存防護。
-- 🚫 **Canceled: [Tzuhan] 本地唯讀對照庫隔離架構 (Vendor MDM SQLite) (ADR 005)**: (已由 ADR 006 動態 RAG 全面取代) 將 150 萬筆政府開放資料轉入 `tax_reference.sqlite` 的構想已捨棄。
+- 🚫 **Canceled: [Tzuhan] 本地唯讀對照庫隔離架構 (Vendor MDM SQLite) (ADR 005)**: (已由 ADR 007 動態 RAG 與零信任防線全面取代) 將 150 萬筆政府開放資料轉入 `tax_reference.sqlite` 的構想已捨棄。
 
 ---
 
@@ -102,11 +103,12 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
   - **實作架構**：徹底拔除 Prompt 字典注入。實作 `UniversalAccountTag` (如 `TELECOM_EXPENSE`) 作為通用語意標籤，並於後端建立 `SemanticAccountMatcher`。
   - **防護機制**：AI 只需輸出自然語言（如「郵電費」），後端透過 `COUNTRY_ALIASES` 進行 O(1) 複雜度映射，精準對應至該租戶國家 (TW, US, JP 等) 絕對合規的底層代碼（如台灣的 `6215`），徹底阻絕 AI 瞎編會計代碼的幻覺。
 
-- **✅ Done (2026-05-21)：Voucher 解析防護升級 - 多維度廠商攔截器 (Multi-Dimensional Vendor Registry)**：於 `VendorRegistry` 與後端同步層實作統編 (Tax ID) 優先與別名陣列，建立 O(1) 靜態記憶體倒排索引與決定論攔截引擎，強制覆寫 AI 推論，確保盲測 0 誤差 (參閱 ADR 004)。
+- **✅ Done (2026-05-21)：Voucher 解析防護升級 - 多維度廠商攔截器 (Multi-Dimensional Vendor Registry)**：於 `VendorRegistry` 與後端同步層實作統編 (Tax ID) 優先與別名陣列，建立 O(1) 靜態記憶體倒排索引與決定論攔截引擎，強制覆寫 AI 推論，確保盲測 0 誤差 (參閱 ADR 007)。
 - **✅ Done (2026-05-22)：Voucher 解析防護升級 - 本機向量檢索與逐行映射 (COA Vector RAG & Per-Line Mapping)**：徹底剝奪 AI 推論會計科目的權限。實作純 TypeScript 的 Bigram 餘弦相似度演算法，精準比對會計科目描述。
 - **✅ Done (2026-05-22)：Voucher 解析防護升級 - 雙軌懸記與虛擬科目隔離區 (Dual-Track Suspense & Quarantine Zone)**：於 `document_sync.repo.ts` 實作防線。實作完美的 4 向精準分流，BS 未知款進入 (1471/2330)，PL 未知款進入 (6288/7590)，徹底解決借貸顛倒之嚴重會計漏洞。
 
-- **✅ Done / ⚠️ Deprecated (2026-05-22)：ESG 解析防護升級 - 決定論攔截器 (EmissionFactorRegistry)**：原先新增了 `EmissionFactorRegistry` 作為 ESG 專屬攔截器（實作台電、中油等高頻項目的 O(1) Tax ID 攔截）。但經 Luphia 審查，因大型集團業務多元，單一統編攔截會導致分類錯誤，**已決議廢棄此靜態攔截器**。
+- **✅ Done / ⚠️ Deprecated (2026-05-22)：ESG 解析防護升級 - 決定論攔截器 (EmissionFactorRegistry)**：原先新增了 `EmissionFactorRegistry` 作為 ESG 專屬攔截器（實作台電、中油等高頻項目的 O(1) Tax ID 攔截）。但因大型集團業務多元，單一統編攔截會導致分類錯誤，**已決議廢棄此靜態攔截器**，由動態 RAG 徹底取代。
+- **✅ Done (2026-05-22)：保留 vendorTaxId 以符合稅法與 ESG 溯源 (Tax & Scope 3 Defense)**：廢除 Vendor MDM 後，原本考慮徹底刪除 `vendorTaxId`，但經過架構仲裁 (ADR 007)，決議保留該欄位以應對台灣 401/403 報稅媒體檔、自動沖銷 (Reconciliation) 以及精確的供應商碳足跡追蹤。
 - **✅ Done (2026-05-21)：ESG 解析防護升級 - 修復單次語意降級斷鏈 (Fix Single-Pass Semantic Fallback)**：
   - 在 `EsgParsingSchema` 中補上強型別 Enum 的 `fallbackCategory`。
   - 將後端標籤升級為強型別 `EsgGenerationSource.AI_GENERATED`，完美銜接 Max-Factor Guard 與黃燈懸記機制（過渡期方案）。
@@ -134,13 +136,14 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **[CPA 碳排合規任務 (DPP 產品護照架構交由 Luphia 負責)]**
 - **✅ Done (Architectural Decision: Immutable IDs)：排放係數時空快照 (Emission Factor Versioning)**：經過重新設計，不再將數值硬拷貝至 EsgRecord 造成 Schema 污染。改為全面採用「Immutable Coefficient IDs (如 epa-2025-t1-004)」，天然實現時空快照。
   - **🔒 Immutable Coefficient 兩大鐵律**：未來維護係數庫必須嚴格遵守：1. **禁止 UPDATE 數值** (避免污染歷史帳本)；2. **永遠只用 INSERT (Append-Only)**。
-- **🚫 Canceled (Superseded by ADR 006)：Vendor MDM 本地唯讀對照庫架構升級 (Local SQLite Reference)**：(本項目已廢棄) 原擬將 150 萬筆台灣廠商登記資料打包為 `tax_reference.sqlite` 本地唯讀檔案，但因違背動態 RAG 精神，已被 ADR 006 全面取代。
+- **🚫 Canceled (Superseded by ADR 007)：Vendor MDM 本地唯讀對照庫架構升級 (Local SQLite Reference)**：(本項目已廢棄) 原擬將 150 萬筆台灣廠商登記資料打包為 `tax_reference.sqlite` 本地唯讀檔案，但因違背動態 RAG 精神，已被 ADR 007 全面取代。
 - **⚠️ Pending [Critical/Audit Requirement]：官方標準係數資料庫轉移與自動化管線 (Standard Coefficients DB Migration & Scraper)**：
-  - 目前為求開發便利，將大量係數混寫於常數檔中 (`TRUE_COEFFICIENT_DATA_*`)。未來必須開發專屬 Seeder 將數萬筆標準係數全數整併至資料庫（以 `accountBookId = null` 作為官方辨識錨定），並重構 `route.ts` 直接查詢 DB 以支援效能與分頁。
+  - 目前為求開發便利，將大量係數混寫於常數檔中 (`TRUE_COEFFICIENT_DATA_*`)，並已建立過渡期的 `mock_eeio_coefficients.ts` 作為花費基礎估算防線 (Spend-based Proxy)。
+  - 未來必須開發專屬排程指令，將數萬筆標準係數全數整併至資料庫（以 `accountBookId = null` 作為官方辨識錨定）。
   - **三大資料來源同步**：
     1. **US EPA** (美國環保署資料庫)
     2. **UK DEFRA** (英國環境食品與鄉村事務部資料庫)
-    3. **Taiwan MOENV** (台灣環境部事業溫室氣體排放量資訊平台 - 需找回舊有爬蟲程式碼整合進管線)
+    3. **Taiwan MOENV** (台灣環境部事業溫室氣體排放量資訊平台)
   - 建立定期自動下載 Pipeline，確保系統具備最新 Master Data 且強制遵守 Append-Only 不可竄改規則。
 - **✅ Done (2026-05-22)：阻斷 AI 碳排幻覺與導入動態檢索 (Anti-ESG Hallucination & Two-Turn RAG)**：已廢棄靜態的 `EmissionFactorRegistry`，改為在 `EsgParsingSkill` 中實作兩回合動態檢索。第一回合由 AI 推論活動大類與關鍵字，第二回合由 AI 從系統過濾出的 Top 20 係數中做選擇題 (精準萃取係數 ID 與數量)，交由 TS 核心引擎進行 `MoneyUtil` 高位元乘法，徹底消滅碳排數值編造幻覺。
 - **⚠️ Pending (急迫)：質量守恆勾稽與動態容許耗損率 (Mass Conservation & Loss Ratio Threshold)**：將「進銷存與原物料物理防護」實作於管線中。猶如財務的 A=L+E，系統將強制核對：`期初庫存重量 + 本期採購重量 = 消耗重量 + 期末庫存重量`。**(物理防呆地雷拆彈)** 避免過度剛性的物理防護導致系統死鎖，現實中絕對守恆不存在，必須在 Schema 為不同原物料引入動態的「容許耗損率 (Loss Ratio Threshold)」。若 AI 萃取出的消耗量與 ERP 盤盈虧落在合理閥值內，系統應自動生成「盤盈虧/耗損調整分錄」並繼續放行，以貼近真實製造業的運作樣貌。
