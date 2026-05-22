@@ -1,5 +1,7 @@
 # 架構決策紀錄 (ADR) 004: Voucher & Account Code Hybrid Deterministic Parsing Pipeline (財務傳票與會計科目混合決定論解析管線)
 
+> ⚠️ **CRITICAL DEPRECATION WARNING (2026-05-22)**: 本文件提倡的「多維度廠商攔截器 (`VENDOR_RULE_REGISTRY` 靜態統編防線)」已被認定為架構地雷，且其相關原始碼已於 Sprint 2 中被**全數刪除**。目前的傳票解析全面改用 Two-Turn RAG 與零信任防線。請立即轉移至最終決策文件：**[ADR 007](./007_ai_accounting_defenses_tradeoffs_and_upgrade_paths.md)**。
+
 > **Date**: 2026-05-20
 > **Author**: Tzuhan
 > **Status**: Accepted (✅ Implemented & Optimized in Sprint 1)

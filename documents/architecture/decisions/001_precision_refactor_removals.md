@@ -1,5 +1,7 @@
 # 架構決策紀錄 (ADR) 001: The Great Purge (精準度架構重構與拔除)
 
+> ⚠️ **DEPRECATION WARNING (2026-05-22)**: 本文件中的部分決策（特別是「實作後端 `mapAccountingCode` 模糊比對」）已被判定為審計地雷。目前的系統架構已**徹底禁用 Fuzzy Matching**。最新且唯一有效的憑證防線架構，請參閱 **[ADR 007](./007_ai_accounting_defenses_tradeoffs_and_upgrade_paths.md)**。
+
 > **Date**: 2026-05-14
 > **Update**: 2026-05-20
 > **Author**: Tzuhan

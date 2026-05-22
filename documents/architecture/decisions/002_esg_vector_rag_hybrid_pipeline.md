@@ -1,5 +1,7 @@
 # ESG Vector RAG & Hybrid Deterministic Architecture (ESG 向量檢索與混合決定論架構)
 
+> ⚠️ **DEPRECATION WARNING (2026-05-22)**: 本文件描述的「單回合 RAG 後端對齊」架構已過時，且不適用於大型集團多元業務。系統已全面升級為「動態兩回合檢索 (Two-Turn RAG)」。完整升級細節請參閱 **[ADR 006](./006_dynamic_two_turn_rag_esg.md)** 與 **[ADR 007](./007_ai_accounting_defenses_tradeoffs_and_upgrade_paths.md)**。
+
 > **Date**: 2026-05-19
 > **Latest Update**: 2026-05-20
 > **Author**: Tzuhan
