@@ -41,10 +41,9 @@
 
 1. **全面導入混合決策管線 (Hybrid Deterministic Pipeline)**：
    - **Stage 1 (萃取特徵)**：AI 僅負責萃取發票廠商、日期、金額等客觀特徵。
-   - **Stage 2 (程式查表)**：完全廢除 Prompt 字典注入。依賴後端 TypeScript 建立「黃金廠商映射表」，看到如「中華電信繳費通知」，直接回傳確定的 CPA 認證分錄 (Deterministic Logic)。
-   - **Stage 3 (AI 推論)**：若遇未知憑證，才啟動具備向量檢索 (Vector Search) 功能的高階 Prompt 進行猜測。
-   - **✅ 已實作：策略模式註冊表 (Strategy Registry Pattern)**：將黃金映射表封裝至 `VendorRegistry` 的 O(1) 記憶體倒排索引中，後端透過廠商統編與名稱動態調用對應的查表函式，完全遵守 OCP 開閉原則並強制覆寫 AI。
-   - **(未來擴充) 審計軌跡標籤 (Audit Trail Flag)**：強制要求輸出的 JSON 中帶有 `generationSource`（如 `RULE_ENGINE_STAGE_2` 或 `LLM_FALLBACK_STAGE_3`），供會計師查帳時快速篩選高風險傳票。
+   - **Stage 2 (本地向量檢索)**：完全廢除靜態廠商攔截器。改用純 TypeScript 的 `CoaVectorSearchService` 進行本地的 Bigram 向量檢索，從數百個科目中過濾出 Top 10 最適合當下交易情境的候選名單。
+   - **Stage 3 (AI 強制選擇題)**：將 Top 10 候選清單交給 AI 進行「第二回合 (Turn 2)」推論。AI 失去自由創造會計科目的權力，必須強制從我們提供的選項中挑選一個最合理的科目，達成 100% 存在於系統字典中的保證。
+   - **✅ 已實作：零信任審計軌跡標籤 (Zero-Trust Audit Defense)**：強制將所有 AI 產生的 JSON 賦予 `isVerified: false` 標籤，並標記 `generationSource: "AI_SPECULATIVE"` 或對應的來源，供會計師查帳時快速篩選高風險傳票。
 2. **將匯率與數學運算抽回系統層 (Backend Math Offloading)** `(👉 交由 Julian 負責實作：外幣匯率自動化爬蟲與換算服務)`：
    - AI 僅被允許萃取「原始幣別 (如 USD)」與「原始金額 (如 100.50)」。
    - 後端透過專屬的匯率微服務 (Exchange Rate API) 取得精確的結匯日匯率，並使用精確的 `Decimal` 模組算出本位幣，從根源消滅數學幻覺。
