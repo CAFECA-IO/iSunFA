@@ -221,6 +221,20 @@ export class SemanticAccountMatcher {
     // Info: (20260520 - Tzuhan) 4. Memoized Fallback Cache
     if (memoMap.has(keyword)) return memoMap.get(keyword)!;
 
+    // Info: (20260521 - Tzuhan) 4.5 Heuristic Keyword Match (For dynamic AI outputs that don't exact match)
+    if (keyword.includes("預付會員") || keyword.includes("預付費用")) {
+      const prepaidRent = dictionary.find(
+        (a) => a.code === "1412" || a.code === "1410",
+      );
+      if (prepaidRent) return prepaidRent.code;
+    }
+    if (keyword.includes("合約應付")) {
+      const accruedRent = dictionary.find(
+        (a) => a.code === "2202" || a.code === "2170",
+      );
+      if (accruedRent) return accruedRent.code;
+    }
+
     // Info: (20260520 - Tzuhan) 5. O(N) Partial Match
     const matchName = dictionary.find(
       (a) => a.name.includes(keyword) || keyword.includes(a.name),
