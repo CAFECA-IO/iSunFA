@@ -430,7 +430,7 @@ model Voucher {
   // Info: (20260310 - Julian) 備註
   note String? @db.Text
 
-  // Info: (20260521 - Tzuhan) 廠商統編 (支援 O(1) 攔截比對)
+  // Info: (20260522 - Tzuhan) 廠商統編 (用於發票與收據之一般稅務紀錄，已廢除 O(1) 靜態攔截)
   vendorTaxId String? @map("vendor_tax_id")
 
   // Info: (20260310 - Julian) 幣別
