@@ -442,6 +442,8 @@ export class DocumentSyncRepository {
                 where: { id: finalCoefficientId },
               });
 
+            let isStaticMock = false;
+
             if (!coefExists) {
               coefExists = [
                 ...ALL_COEFFICIENTS,
@@ -449,6 +451,10 @@ export class DocumentSyncRepository {
               ].find(
                 (c) => c.id === finalCoefficientId,
               ) as unknown as Coefficient;
+
+              if (coefExists) {
+                isStaticMock = true;
+              }
             }
 
             if (coefExists) {
@@ -479,6 +485,28 @@ export class DocumentSyncRepository {
                   "Internal_Proxy_Estimation_Based_On_Spend"
                 ) {
                   recordIsVerified = false;
+                }
+
+                if (isStaticMock) {
+                  // Info: (20260522 - Tzuhan) [AUDIT FIX] 把靜態過渡期 mock 係數直接寫入資料庫，以符合 Foreign Key 約束
+                  await tx.coefficient.upsert({
+                    where: { id: coefExists.id },
+                    create: {
+                      id: coefExists.id,
+                      name: coefExists.name,
+                      description: coefExists.description || "",
+                      unit: coefExists.unit,
+                      emissionFactor: coefExists.emissionFactor,
+                      source: coefExists.source,
+                      category: coefExists.category || "STANDARD",
+                      isVerified: true,
+                    },
+                    update: {},
+                  });
+
+                  ed.aiNote =
+                    (ed.aiNote || "") +
+                    `\n[系統通知] 該碳排係數為過渡期靜態模擬 (${coefExists.id})，系統已自動將其補登至資料庫主檔，並完成精確碳排計算寫入。`;
                 }
               }
             } else {
