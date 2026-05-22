@@ -46,9 +46,9 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 
 **🔥 [Priority 1: Sprint 1 基礎防線補齊 (ADR 004)]**
 - ✅ **Done: [Tzuhan] Voucher 財務防護 - 語意標籤與多國映射**: 實作 `UniversalAccountTag` 與後端 `SemanticAccountMatcher`。
-- ✅ **Done: [Tzuhan] 多維度廠商攔截器**: 實作統編 (Tax ID) 優先與別名陣列的 O(1) 攔截。
-- ✅ **Done: [Tzuhan] 本機向量檢索與逐行映射 (COA Vector RAG)**: 實作純 TS 餘弦相似度 (Cosine Similarity) 計算，取代 Fallback 空殼。作為 coa_embeddings.json 就緒前的真・演算法防護）
-- ✅ **Done: [Tzuhan] 雙軌懸記與虛擬科目隔離區 (Suspense & Quarantine)**: 實作 4 向精準分流 (BS 1471/2330, PL 6288/7590)，修復借貸顛倒漏洞。
+- 🚫 **Canceled: [Tzuhan] 多維度廠商攔截器**: 廢棄 O(1) 攔截，以避免靜態規則造成的「看人下單」誤判，改由 Two-Turn RAG 處理。
+- ✅ **Done: [Tzuhan] 動態兩回合檢索與決策 (Two-Turn RAG)**: 實作 Turn 1 語意萃取與 Turn 2 AI 科目選擇，結合 `CoaVectorSearchService` 的前 10 名候選清單，最終強制標記 `isVerified: false` 進入隔離審核區。
+- ✅ **Done: [Tzuhan] 雙軌懸記與虛擬科目隔離區 (Suspense & Quarantine)**: 取消 DB 硬體寫死，改由程式碼統一 4 向精準分流 (BS 1471/2330, PL 6288/7590)。
 
 **🔥 [Priority 2: 邊界壓力測試 (可與 P1 並行)]**
 - 🚧 **WIP: [Julian] 台積電 780 萬筆大數據批次注入 (TSMC Batch Seeding)**: 確保巨量資料進入 DB。注意：灌完即停手，嚴禁讀取報表。
@@ -58,10 +58,10 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - ⚠️ **Pending: [Tzuhan] 核心引擎 SQL 聚合重構 (Raw SQL Aggregation)**: 重寫四大報表產生器，利用 PostgreSQL 算力取代 Node.js 記憶體運算。
 - ⚠️ **Pending: [Tzuhan & Julian] 聯合盲測與審計對比**: 待 SQL 引擎上線後，執行 `cross_validator.ts` 驗證絕對 0 誤差。
 
-**🔥 [Priority 4: Sprint 2 ESG 與主檔架構升級 (ADR 005 & 006)]**
-- ⚠️ **Pending: [Tzuhan] 動態兩回合檢索 (Two-Turn AI-RAG Pivot) (ADR 006)**: 拔除靜態攔截器，重構 `EsgParsingSkill`。
-- ⚠️ **Pending: [Tzuhan] 質量守恆勾稽與動態容許耗損率**: 物理防呆機制，實作進銷存防護。
-- ⚠️ **Pending: [Tzuhan] 本地唯讀對照庫隔離架構 (Vendor MDM SQLite) (ADR 005)**: 將 150 萬筆政府開放資料轉入 `tax_reference.sqlite`，確保外鍵與效能隔離。
+**🔥 [Priority 4: Sprint 2 ESG 架構升級 (ADR 006)]**
+- ✅ **Done (2026-05-22): [Tzuhan] 動態兩回合檢索 (Two-Turn AI-RAG Pivot) (ADR 006)**: 拔除靜態攔截器，重構 `EsgParsingSkill`。改為兩回合對話，並在後端 TypeScript 內嚴格限制 `MoneyUtil` 運算，禁止 AI 執行數學邏輯。
+- ⚠️ **Pending (Next Target): [Tzuhan] 質量守恆勾稽與動態容許耗損率**: 物理防呆機制，實作進銷存防護。
+- 🚫 **Canceled: [Tzuhan] 本地唯讀對照庫隔離架構 (Vendor MDM SQLite) (ADR 005)**: (已由 ADR 006 動態 RAG 全面取代) 將 150 萬筆政府開放資料轉入 `tax_reference.sqlite` 的構想已捨棄。
 
 ---
 
@@ -134,15 +134,15 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **[CPA 碳排合規任務 (DPP 產品護照架構交由 Luphia 負責)]**
 - **✅ Done (Architectural Decision: Immutable IDs)：排放係數時空快照 (Emission Factor Versioning)**：經過重新設計，不再將數值硬拷貝至 EsgRecord 造成 Schema 污染。改為全面採用「Immutable Coefficient IDs (如 epa-2025-t1-004)」，天然實現時空快照。
   - **🔒 Immutable Coefficient 兩大鐵律**：未來維護係數庫必須嚴格遵守：1. **禁止 UPDATE 數值** (避免污染歷史帳本)；2. **永遠只用 INSERT (Append-Only)**。
-- **⚠️ Pending (Sprint 2)：Vendor MDM 本地唯讀對照庫架構升級 (Local SQLite Reference)**：將 150 萬筆台灣廠商登記資料打包為 `tax_reference.sqlite` 本地唯讀檔案，內建於 Backend Image 中。透過統編對應行業代號 (`industry_rules.ts`)，實作 O(1) 的零網路 I/O 攔截 (參閱 ADR 005)。
+- **🚫 Canceled (Superseded by ADR 006)：Vendor MDM 本地唯讀對照庫架構升級 (Local SQLite Reference)**：(本項目已廢棄) 原擬將 150 萬筆台灣廠商登記資料打包為 `tax_reference.sqlite` 本地唯讀檔案，但因違背動態 RAG 精神，已被 ADR 006 全面取代。
 - **⚠️ Pending [Critical/Audit Requirement]：官方標準係數資料庫轉移與自動化管線 (Standard Coefficients DB Migration & Scraper)**：
-  - 目前為求開發便利，將大量係數混寫於常數檔中 (`TRUE_COEFFICIENT_DATA_*`)。未來必須開發專屬 Seeder 將數萬筆標準係數全數整併至資料庫（以 `accountBookId = null` 作為官方辨識錨定），並重構 `route.ts` 直接查詢 DB 以支援效能與分頁 (參閱 ADR 005)。
+  - 目前為求開發便利，將大量係數混寫於常數檔中 (`TRUE_COEFFICIENT_DATA_*`)。未來必須開發專屬 Seeder 將數萬筆標準係數全數整併至資料庫（以 `accountBookId = null` 作為官方辨識錨定），並重構 `route.ts` 直接查詢 DB 以支援效能與分頁。
   - **三大資料來源同步**：
     1. **US EPA** (美國環保署資料庫)
     2. **UK DEFRA** (英國環境食品與鄉村事務部資料庫)
     3. **Taiwan MOENV** (台灣環境部事業溫室氣體排放量資訊平台 - 需找回舊有爬蟲程式碼整合進管線)
   - 建立定期自動下載 Pipeline，確保系統具備最新 Master Data 且強制遵守 Append-Only 不可竄改規則。
-- **⚠️ Pending (Sprint 2)：阻斷 AI 碳排幻覺與導入動態檢索 (Anti-ESG Hallucination & Two-Turn RAG)**：已廢棄靜態的 `EmissionFactorRegistry`，改為在 `EsgParsingSkill` 中實作兩回合動態檢索。第一回合由 AI 推論活動大類與關鍵字，第二回合由 AI 從系統過濾出的 Top 20 係數中做選擇題並計算數據，徹底消滅碳排數值編造幻覺。
+- **✅ Done (2026-05-22)：阻斷 AI 碳排幻覺與導入動態檢索 (Anti-ESG Hallucination & Two-Turn RAG)**：已廢棄靜態的 `EmissionFactorRegistry`，改為在 `EsgParsingSkill` 中實作兩回合動態檢索。第一回合由 AI 推論活動大類與關鍵字，第二回合由 AI 從系統過濾出的 Top 20 係數中做選擇題 (精準萃取係數 ID 與數量)，交由 TS 核心引擎進行 `MoneyUtil` 高位元乘法，徹底消滅碳排數值編造幻覺。
 - **⚠️ Pending (急迫)：質量守恆勾稽與動態容許耗損率 (Mass Conservation & Loss Ratio Threshold)**：將「進銷存與原物料物理防護」實作於管線中。猶如財務的 A=L+E，系統將強制核對：`期初庫存重量 + 本期採購重量 = 消耗重量 + 期末庫存重量`。**(物理防呆地雷拆彈)** 避免過度剛性的物理防護導致系統死鎖，現實中絕對守恆不存在，必須在 Schema 為不同原物料引入動態的「容許耗損率 (Loss Ratio Threshold)」。若 AI 萃取出的消耗量與 ERP 盤盈虧落在合理閥值內，系統應自動生成「盤盈虧/耗損調整分錄」並繼續放行，以貼近真實製造業的運作樣貌。
   - **⚠️ Pending (2026-05-13)：進階防護實作**：必須在寫入 DB 前掛載 ERP 庫存比對微服務，若 `amount > MAX_INVENTORY_LIMIT` 則直接拋出 Error 並將憑證標記為 `FRAUD_SUSPECTED` 阻斷寫入，達到 100% 物理防漂綠。
 

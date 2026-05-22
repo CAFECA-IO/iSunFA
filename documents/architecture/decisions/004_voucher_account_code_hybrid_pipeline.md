@@ -24,11 +24,13 @@
 
 為了徹底根絕傳票解析的不確定性，我們決議實作與 ESG 等級齊平、甚至更為嚴苛的三重防護管線。
 
-### 🛡️ 第一重：多維度廠商攔截器 (Multi-Dimensional Vendor Registry) [✅ Done]
+### 🛡️ 第一重：多維度廠商攔截器 (Multi-Dimensional Vendor Registry) [🚫 Canceled]
 
-廢除單純的字串 `.includes()`，將 `VENDOR_RULE_REGISTRY` 升級為 $O(1)$ 的高精度配對引擎，以對齊世界級 ERP（如 SAP, Oracle）處理供應商主檔 (Vendor Master Data) 的標準作法。
+**廢棄原因 (2026-05-22 Update)**：原先我們依賴 O(1) 的倒排索引與統編比對來強迫配對會計科目。但實務上，「不能看人下單，要看交易本質 (Substance over Form)」。單一廠商（如中華電信）可能販售多種不同性質的商品（通訊費 vs 設備資產）。帶小抄上考場會引發嚴重的「靜態誤判」。
 
-- **統編優先與 O(1) 倒排索引 (Tax ID & Inverted Index)**：我們最終決定不查外部 DB，而是採用「O(1) Map 倒排索引」的實作。強制 OCR / AI 優先提取憑證上的統一編號 (Tax ID)。將廠商註冊表擴充為鍵值對映，例如直接把「統編」與「別名」作為 Key，達成微秒級 100% 決定論攔截。
+**解決方案**：此防線已徹底廢除。Voucher 解析管線全面升級為 **「動態兩回合檢索 (Two-Turn RAG)」**。
+- **Turn 1 (語意萃取)**：AI 僅負責客觀萃取明細摘要 (`particular`)。
+- **Turn 2 (選擇題決策)**：由本機 Vector RAG 提供 Top 10 合法科目，AI 進行語意決策，最後強制掛上 `isVerified: false` 進入隔離區。
 
 ### 🧠 第二重：本機向量檢索與逐行映射 (Local Vector RAG & Per-Line Mapping) [✅ Done]
 

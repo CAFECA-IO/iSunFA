@@ -18,20 +18,11 @@ import {
 } from "@/constants/enums";
 import { ISyncDocumentResultParams } from "@/skills/utils/document_parser_db_sync";
 import { ACCOUNTS, IAccount } from "@/constants/accounts";
-import { VendorRegistry } from "@/services/rules/vendor_registry";
+
 import { ReconciliationService } from "@/services/reconciliation.service";
 import { MoneyUtil } from "@/lib/utils/money";
-import { EmissionFactorRepo } from "@/repositories/emission_factor.repo";
-import { CoaVectorSearchService } from "@/services/coa_vector_search.service";
-import { EmissionFactorRegistry } from "@/services/rules/emission_factor_registry";
-import { SemanticAccountMatcher } from "@/lib/utils/semantic_account_matcher";
 
-function getAccountName(country: string, code: string): string {
-  const accountList = (ACCOUNTS[country as keyof typeof ACCOUNTS] ||
-    ACCOUNTS[CountryCode.TW]) as IAccount[];
-  const exactCode = accountList.find((a: IAccount) => a.code === code);
-  return exactCode ? exactCode.name : code;
-}
+import { SemanticAccountMatcher } from "@/lib/utils/semantic_account_matcher";
 
 export class DocumentSyncRepository {
   async syncDocumentResultToDatabase({
@@ -232,96 +223,66 @@ export class DocumentSyncRepository {
               currentPaymentStatus = VoucherPaymentStatus.NOT_APPLICABLE;
             }
 
-            // Info: (20260521 - Tzuhan) 由 VendorRegistry (Service) 負責業務邏輯，Repo 僅提供查出的 DB 資料
-            const vendorMatch = VendorRegistry.match(
-              vendorNameStr,
-              docType,
-              vendorTaxIdStr,
-            );
+            for (const l of vd.lines || []) {
+              const amountDec = MoneyUtil.toDecimal(String(l.amount || 0));
 
-            if (vendorMatch) {
-              for (const rule of vendorMatch) {
-                const amountDec = MoneyUtil.toDecimal(
-                  String(vdRecord.totalAmount || 0),
-                );
-                const matchedAccountingCode = SemanticAccountMatcher.match(
-                  rule.accountingCode,
-                  dictionary,
-                  accountBook.country || CountryCode.TW,
-                );
-                linesToCreate.push({
-                  accountingCode: matchedAccountingCode,
-                  particular: `${getAccountName(accountBook.country || CountryCode.TW, matchedAccountingCode)} - ${vendorNameStr}`,
-                  amount: BigInt(amountDec.toFixed(0)),
-                  isDebit: rule.isDebit,
-                  isVerified: true,
-                  generationSource:
-                    JournalGenerationSource.SYSTEM_DETERMINISTIC,
-                });
-              }
-            } else {
-              for (const l of vd.lines || []) {
-                const amountDec = MoneyUtil.toDecimal(String(l.amount || 0));
+              // Info: (20260522 - Tzuhan) Repo 盲目信任 Skill 傳來的 Turn 2 AI 選擇 (l.accountingCode)
+              let matchedAccountingCode =
+                (l.accountingCode as string) || "UNKNOWN";
 
-                // Info: (20260521 - Tzuhan) Per-Line Deterministic RAG. 優先使用 AI 解析之標準科目名稱，若無則降級使用摘要
-                let matchedAccountingCode = CoaVectorSearchService.match(
-                  (l.accountingCode as string) || l.particular || "",
-                  (accountBook.country as CountryCode) || CountryCode.TW,
-                );
+              const isValidCode = dictionary.some(
+                (a) => a.code === matchedAccountingCode,
+              );
 
-                const isValidCode = dictionary.some(
-                  (a) => a.code === matchedAccountingCode,
-                );
+              // Info: (20260522 - Tzuhan) 繼承由 Skill 傳遞下來的驗證標記與來源
+              let lineIsVerified =
+                l.isVerified !== undefined ? l.isVerified : true;
+              let lineGenSource: JournalGenerationSource =
+                (l.generationSource as JournalGenerationSource) ||
+                JournalGenerationSource.SYSTEM_DETERMINISTIC;
 
-                let lineIsVerified = true;
-                let lineGenSource: JournalGenerationSource =
-                  JournalGenerationSource.SYSTEM_DETERMINISTIC;
+              if (!isValidCode || matchedAccountingCode === "UNKNOWN") {
+                hasSuspense = true;
+                lineIsVerified = false;
+                lineGenSource = JournalGenerationSource.SYSTEM_SUSPENSE;
 
-                if (!isValidCode || matchedAccountingCode === "UNKNOWN") {
-                  hasSuspense = true;
-                  lineIsVerified = false;
-                  lineGenSource = JournalGenerationSource.SYSTEM_SUSPENSE;
+                const isPL = docType === DocumentType.ACCRUAL_NOTICE;
 
-                  const isPL = docType === DocumentType.ACCRUAL_NOTICE;
-
-                  if (isPL) {
-                    if (l.isDebit) {
-                      matchedAccountingCode =
-                        accountBook.plQuarantineAccount || "6288";
-                      finalAiNote =
-                        `[系統稽核警告] 摘要「${l.particular}」無法對應，依據性質強制隔離至 PL 借方隔離區 (${matchedAccountingCode})。\n` +
-                        finalAiNote;
-                    } else {
-                      matchedAccountingCode = "7590";
-                      finalAiNote =
-                        `[系統稽核警告] 摘要「${l.particular}」無法對應，依據性質強制隔離至 PL 貸方隔離區 (${matchedAccountingCode})。\n` +
-                        finalAiNote;
-                    }
+                if (isPL) {
+                  if (l.isDebit) {
+                    matchedAccountingCode = "6288"; // Info: (20260522 - Tzuhan) 固定退回 PL 隔離區
+                    finalAiNote =
+                      `[系統稽核警告] 摘要「${l.particular}」無法對應，依據性質強制隔離至 PL 借方隔離區 (${matchedAccountingCode})。\n` +
+                      finalAiNote;
                   } else {
-                    if (l.isDebit) {
-                      matchedAccountingCode =
-                        accountBook.bsSuspenseAccount || "1471";
-                      finalAiNote =
-                        `[系統稽核警告] 摘要「${l.particular}」無法對應，強制歸入 BS 借方懸記科目 (${matchedAccountingCode})。\n` +
-                        finalAiNote;
-                    } else {
-                      matchedAccountingCode = "2330";
-                      finalAiNote =
-                        `[系統稽核警告] 摘要「${l.particular}」無法對應，強制歸入 BS 貸方懸記科目 (${matchedAccountingCode})。\n` +
-                        finalAiNote;
-                    }
+                    matchedAccountingCode = "7590";
+                    finalAiNote =
+                      `[系統稽核警告] 摘要「${l.particular}」無法對應，依據性質強制隔離至 PL 貸方隔離區 (${matchedAccountingCode})。\n` +
+                      finalAiNote;
+                  }
+                } else {
+                  if (l.isDebit) {
+                    matchedAccountingCode = "1471"; // Info: (20260522 - Tzuhan) 固定退回 BS 隔離區
+                    finalAiNote =
+                      `[系統稽核警告] 摘要「${l.particular}」無法對應，依據性質強制隔離至 BS 借方隔離區 (${matchedAccountingCode})。\n` +
+                      finalAiNote;
+                  } else {
+                    matchedAccountingCode = "2330"; // Info: (20260522 - Tzuhan) 固定退回 BS 隔離區
+                    finalAiNote =
+                      `[系統稽核警告] 摘要「${l.particular}」無法對應，依據性質強制隔離至 BS 貸方隔離區 (${matchedAccountingCode})。\n` +
+                      finalAiNote;
                   }
                 }
-
-                linesToCreate.push({
-                  accountingCode: matchedAccountingCode,
-                  particular: l.particular || "",
-                  amount: BigInt(amountDec.toFixed(0)),
-                  isDebit: l.isDebit === true,
-                  isVerified: lineIsVerified,
-                  generationSource: lineGenSource,
-                });
               }
+
+              linesToCreate.push({
+                accountingCode: matchedAccountingCode,
+                particular: l.particular || "",
+                amount: BigInt(amountDec.toFixed(0)),
+                isDebit: l.isDebit === true,
+                isVerified: lineIsVerified,
+                generationSource: lineGenSource,
+              });
             }
           }
 
@@ -418,51 +379,14 @@ export class DocumentSyncRepository {
             });
           }
         } else if (esg) {
+          // Info: (20260522 - Tzuhan) IDocNode 介面已正式擴充 generationSource，嚴禁使用 any
           const ed = esg.data || esg;
           const confidence = parseInt(String(ed.confidence)) || 0;
           let finalCoefficientId = ed.coefficientId || null;
           let finalEmissionSourceId = ed.emissionSourceId || null;
-          let isFallbackMatched = false;
 
-          // Info: (20260521 - Tzuhan) Stage 1: ESG Deterministic Vendor Interceptor
-          const vendorTaxId =
-            (voucherBase?.data || voucherBase)?.vendorTaxId || null;
-          const vendorNameStr = String(
-            ((voucherBase?.data || voucherBase) as Record<string, unknown>)
-              ?.vendorName || "",
-          );
-          const deterministicCategory = EmissionFactorRegistry.matchCategory(
-            vendorTaxId,
-            vendorNameStr,
-          );
-
-          let fallbackTag = ed.fallbackCategory?.trim();
-          if (deterministicCategory) {
-            fallbackTag = deterministicCategory;
-            ed.aiNote =
-              (ed.aiNote || "") +
-              `\n[系統稽核] 命中高頻廠商攔截器，強制修正大類為「${fallbackTag}」。`;
-          }
-
-          // Info: (20260519 - Tzuhan) Stage 2: 使用 fallbackCategory 進行最大係數 (Max-Factor) 查詢
-          if (!finalCoefficientId && fallbackTag) {
-            // Info: (20260519 - Tzuhan) 防禦空字串地圖砲
-            // Info: (20260521 - Tzuhan) 職能分離：由 EmissionFactorRepo 負責 DB 查詢
-            const matchedCoefId =
-              await EmissionFactorRepo.findFallbackCoefficient(
-                tx,
-                fallbackTag,
-                accountBookId,
-              );
-
-            if (matchedCoefId) {
-              finalCoefficientId = matchedCoefId;
-              isFallbackMatched = true;
-              ed.aiNote =
-                (ed.aiNote || "") +
-                `\n[系統稽核] RAG 未命中，系統套用大類「${fallbackTag}」最高係數以符合保守原則。等待人工確認。`;
-            }
-          }
+          // Info: (20260522 - Tzuhan) ADR 006: 廢除 Stage 1 靜態廠商攔截與 Stage 2 大類粗估。
+          // 系統全面信任 Two-Turn RAG 前端傳遞的 coefficientId，僅在寫入前進行物理量綱防呆。
 
           // Info: (20260430 - Julian) 將 AI 提供的新排放源歸口加入 DB
           if (ed.newEmissionSource && ed.newEmissionSource.name) {
@@ -483,7 +407,10 @@ export class DocumentSyncRepository {
           }
 
           const esgAmount = new Prisma.Decimal(String(ed.amount) || "0");
-          let emissionFactorValue = new Prisma.Decimal(0);
+          // Info: (20260522 - Tzuhan) 直接採用 Two-Turn RAG 在後端 TS 算好的高精度碳排量
+          let calculatedEmissions = new Prisma.Decimal(
+            String(ed.emissions) || "0",
+          );
           let isSuspense = false;
           let recordIsVerified = confidence > 85;
 
@@ -509,11 +436,10 @@ export class DocumentSyncRepository {
                 finalCoefficientId = null;
                 ed.aiNote =
                   (ed.aiNote || "") +
-                  `\n[系統稽核警告] 憑證單位 (${docUnit}) 與係數庫單位 (${coefUnit}) 量綱不符，已阻斷跨量綱相乘，強制列入懸記。`;
+                  `\n[系統稽核警告] 憑證單位 (${docUnit}) 與係數庫單位 (${coefUnit}) 量綱不符，已阻斷寫入，強制列入懸記。`;
               } else {
-                emissionFactorValue = coefExists.emissionFactor;
-                if (!coefExists.isVerified || isFallbackMatched) {
-                  recordIsVerified = false; // Info: (20260513 - Tzuhan) Using unverified coefficient makes record unverified
+                if (!coefExists.isVerified) {
+                  recordIsVerified = false;
                 }
               }
             } else {
@@ -521,18 +447,26 @@ export class DocumentSyncRepository {
               finalCoefficientId = null;
             }
           } else {
-            isSuspense = true;
+            // Info: (20260522 - Tzuhan) 若 RAG 未能找到 coefficientId (例如純付款收據或真查無係數)，依舊懸記
+            if (
+              ed.generationSource !== EsgGenerationSource.SYSTEM_DETERMINISTIC
+            ) {
+              isSuspense = true;
+            }
           }
 
-          let calculatedEmissions = esgAmount.mul(emissionFactorValue);
           let aiNote = ed.aiNote ?? "無 AI 分析備註";
 
           if (isSuspense) {
             calculatedEmissions = new Prisma.Decimal(0);
             recordIsVerified = false;
-            aiNote =
-              "[系統稽核警告] 缺乏對應的碳排係數主檔，系統已凍結計算並列入懸記。\n" +
-              aiNote;
+            if (
+              ed.generationSource !== EsgGenerationSource.SYSTEM_DETERMINISTIC
+            ) {
+              aiNote =
+                "[系統稽核警告] 缺乏有效對應的碳排係數主檔，系統已凍結計算並列入懸記。\n" +
+                aiNote;
+            }
           }
 
           const esgData: Prisma.EsgRecordUncheckedCreateInput = {
@@ -555,9 +489,8 @@ export class DocumentSyncRepository {
             isVerified: recordIsVerified,
             aiNote,
             analysisStatus: "COMPLETED" as AIAnalysisStatus,
-            generationSource: isFallbackMatched
-              ? EsgGenerationSource.AI_SPECULATIVE
-              : EsgGenerationSource.SYSTEM_DETERMINISTIC,
+            generationSource:
+              ed.generationSource || EsgGenerationSource.AI_GENERATED,
             coefficientId: finalCoefficientId,
             emissionSourceId: finalEmissionSourceId,
           };

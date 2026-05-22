@@ -1,5 +1,6 @@
 import { documentSyncRepo } from "@/repositories/document_sync.repo";
 import { IParsedVoucherLine } from "@/interfaces/voucher";
+import { EsgGenerationSource } from "@/constants/enums";
 
 export interface IDocNode {
   data?: IDocNode;
@@ -30,6 +31,7 @@ export interface IDocNode {
   emissions?: number | string;
   intensity?: unknown;
   dqiScore?: number | string;
+  generationSource?: EsgGenerationSource | string;
 }
 
 export interface IAggregatedDocumentResult {

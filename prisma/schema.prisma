@@ -345,10 +345,6 @@ model AccountBook {
   // Info: (20260508 - Tzuhan) 面額 (預設 10)
   parValue Float @default(10) @map("par_value")
 
-  // Info: (20260521 - Tzuhan) 懸記與隔離虛擬科目設定
-  bsSuspenseAccount   String @default("1471") @map("bs_suspense_account")
-  plQuarantineAccount String @default("6288") @map("pl_quarantine_account")
-
   // Info: (20260305 - Julian) 一個帳本可以有多個憑證
   journals Journal[]
 
@@ -498,8 +494,8 @@ model VoucherLine {
   isDebit Boolean @map("is_debit")
 
   // Info: (20260521 - Tzuhan) [AUDIT FIX] 雙軌懸記隔離與決定論攔截防線
-  isVerified Boolean @default(true) @map("is_verified")
-  generationSource String @default("AI_GENERATED") @map("generation_source")
+  isVerified       Boolean @default(false) @map("is_verified")
+  generationSource String  @default("AI_GENERATED") @map("generation_source")
 
   @@map("voucher_line")
 }
@@ -516,8 +512,6 @@ enum EsgIntensity {
   MEDIUM
   HIGH
 }
-
-
 
 model EsgRecord {
   id                String           @id @default(uuid())
@@ -924,15 +918,15 @@ model CouponCampaign {
 }
 
 model Coupon {
-  id          String   @id @default(uuid())
-  userId      String   @map("user_id")
-  campaignId  String   @map("campaign_id")
-  txHashClaim String   @map("tx_hash_claim")
-  txHashBurn  String?  @map("tx_hash_burn")
-  customQrContent String? @map("custom_qr_content")
-  status      String   @default("ACTIVE") // Info: (20260517 - Luphia) ACTIVE, USED, EXPIRED
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  campaignId      String   @map("campaign_id")
+  txHashClaim     String   @map("tx_hash_claim")
+  txHashBurn      String?  @map("tx_hash_burn")
+  customQrContent String?  @map("custom_qr_content")
+  status          String   @default("ACTIVE") // Info: (20260517 - Luphia) ACTIVE, USED, EXPIRED
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   user     User           @relation(fields: [userId], references: [id])
   campaign CouponCampaign @relation(fields: [campaignId], references: [id])

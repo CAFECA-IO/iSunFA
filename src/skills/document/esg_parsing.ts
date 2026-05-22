@@ -3,9 +3,10 @@ import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
 import { SchemaType, Schema } from "@google/generative-ai";
-import { VendorRegistry, IEsgRule } from "@/services/rules/vendor_registry";
 import { EsgGenerationSource } from "@/constants/enums";
 import { MeasurementUnit } from "@/constants/enums";
+import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
+import { MoneyUtil } from "@/lib/utils/money";
 
 export class EsgParsingSkill implements ITaskSkill {
   name = "ESG_PARSING";
@@ -31,7 +32,7 @@ export class EsgParsingSkill implements ITaskSkill {
     mission: IPseudoMission,
     fullPrompt: string,
     chatService: ChatService,
-    priorResults?: Map<string, string>,
+    // priorResults?: Map<string, string>,
   ): Promise<string> {
     const { images, parsedContext } = await prepareDocumentContext(task);
 
@@ -42,55 +43,16 @@ export class EsgParsingSkill implements ITaskSkill {
       promptText += `\n\n【重要指示】\n使用者已提供/修正日記帳的最新內容如下。請優先依據以下文字資訊進行解析，若與圖片內容有衝突，以此文字為準：\n${parsedContext.journalText}`;
     }
 
-    let esgRuleForFallback: IEsgRule | null = null;
-
-    if (priorResults) {
-      let baseParsed: Record<string, unknown> | null = null;
-      for (const prevResultStr of priorResults.values()) {
-        try {
-          const parsed = JSON.parse(prevResultStr);
-          const actualParsed = parsed.data || parsed;
-          if (actualParsed.vendorName && actualParsed.documentType) {
-            baseParsed = actualParsed;
-            break;
-          }
-        } catch {}
-      }
-
-      if (baseParsed && baseParsed.vendorName) {
-        const esgRule = VendorRegistry.matchEsg(
-          String(baseParsed.vendorName),
-          String(baseParsed.documentType || "ACCRUAL_NOTICE"),
-        );
-
-        if (esgRule) {
-          if (esgRule.suppressEsg) {
-            console.log(
-              `[EsgParsingSkill] 🎯 Stage 2 Match: ESG suppressed for ${baseParsed.vendorName} (${baseParsed.documentType})`,
-            );
-            return JSON.stringify({
-              generationSource: EsgGenerationSource.SYSTEM_DETERMINISTIC,
-              confidence: 100,
-              aiNote:
-                "系統判定：此為資金沖銷/繳費收據，非實體消耗，因此無須計算碳排。",
-              scope: null,
-              activityType: "N/A",
-              amount: "0",
-              unit: "KG",
-            });
-          } else {
-            console.log(
-              `[EsgParsingSkill] 🎯 Stage 2 Match: Deterministic ESG rules found for ${baseParsed.vendorName}, falling back to AI for coefficient estimation.`,
-            );
-            esgRuleForFallback = esgRule;
-            promptText += `\n\n【決定論攔截指示】\n系統已判定此廠商為 ${esgRule.esgScope} / ${esgRule.esgActivityType}。請你「強制」使用此範疇與活動類型，並依據其通用知識，僅輸出一個最接近的「官方標準大類標籤」(fallbackCategory)，嚴禁自行推估數值。必須從提供的 Enum 清單中選擇。`;
-          }
-        }
-      }
-    }
-
     try {
-      const responseSchema: Schema = {
+      // Info: (20260522 - Tzuhan) [ADR 006] 動態兩回合檢索 (Two-Turn RAG)
+      // ==========================================
+      // Info: (20260522 - Tzuhan) Turn 1: 意圖與關鍵字萃取
+      // ==========================================
+      const turn1Prompt =
+        promptText +
+        `\n\n[Turn 1 指示]\n請分析此憑證的範疇、活動類型、供應商，並給出最符合的大類標籤 (fallbackCategory)，以及 3-5 個搜尋具體碳排係數用的關鍵字 (searchKeywords)。`;
+
+      const turn1Schema: Schema = {
         type: SchemaType.OBJECT,
         properties: {
           scope: {
@@ -99,15 +61,6 @@ export class EsgParsingSkill implements ITaskSkill {
           },
           activityType: { type: SchemaType.STRING, description: "活動類型" },
           vendor: { type: SchemaType.STRING, description: "供應商" },
-          amount: { type: SchemaType.NUMBER, description: "數量" },
-          unit: {
-            type: SchemaType.STRING,
-            description:
-              "單位 (必須是以下之一: KWH, LITER, KG, TONNE, GALLON, PIECE, TWD)",
-            format: "enum",
-            // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: Refactor magic strings to Enum
-            enum: Object.values(MeasurementUnit),
-          },
           fallbackCategory: {
             type: SchemaType.STRING,
             description: "最接近的官方標準大類標籤",
@@ -154,56 +107,134 @@ export class EsgParsingSkill implements ITaskSkill {
             type: SchemaType.STRING,
             description: "AI 分析邏輯",
           },
-          confidence: {
-            type: SchemaType.NUMBER,
-            description: "信心指數 1-100",
-          },
         },
         required: [
           "scope",
           "activityType",
           "vendor",
-          "amount",
-          "unit",
-          "aiNote",
-          "confidence",
           "fallbackCategory",
+          "searchKeywords",
+          "aiNote",
         ],
       };
 
-      let text = await chatService.generateRawWithImages(
-        promptText,
+      const text1 = await chatService.generateRawWithImages(
+        turn1Prompt,
         images,
         true,
-        responseSchema,
+        turn1Schema,
       );
 
-      text = text.trim();
+      const parsed1 = JSON.parse(text1.trim());
 
-      try {
-        const parsed = JSON.parse(text);
-        if (typeof parsed === "object") {
-          if (esgRuleForFallback && !parsed.error) {
-            parsed.scope = esgRuleForFallback.esgScope || parsed.scope;
-            parsed.activityType =
-              esgRuleForFallback.esgActivityType || parsed.activityType;
-            parsed.unit = esgRuleForFallback.esgUnit || parsed.unit;
-            parsed.generationSource = EsgGenerationSource.AI_GENERATED;
-            if (parsed.aiNote) {
-              parsed.aiNote = `[混合決策] 範疇與活動由規則引擎鎖定，係數由 AI 推估。原註記: ${parsed.aiNote}`;
-            } else {
-              parsed.aiNote =
-                "[混合決策] 範疇與活動由規則引擎鎖定，係數由 AI 推估。";
-            }
-            text = JSON.stringify(parsed);
-          } else if (!parsed.generationSource) {
-            parsed.generationSource = EsgGenerationSource.AI_GENERATED;
-            text = JSON.stringify(parsed);
+      // ==========================================
+      // Info: (20260522 - Tzuhan) Backend: Keyword Weight Matching for Top 20
+      // ==========================================
+      const keywords = [
+        ...(parsed1.searchKeywords || []),
+        parsed1.fallbackCategory || "",
+      ];
+      const scoredCoefficients = ALL_COEFFICIENTS.map((c) => {
+        let score = 0;
+        const textToSearch = (
+          c.name +
+          " " +
+          (c.description || "")
+        ).toLowerCase();
+        for (const kw of keywords) {
+          if (kw && textToSearch.includes(kw.toLowerCase())) {
+            score += 10;
           }
         }
-      } catch {}
+        return { ...c, score };
+      });
 
-      return text;
+      const candidates = scoredCoefficients
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 20)
+        .map((c) => ({
+          id: c.id,
+          name: c.name,
+          unit: c.unit,
+          emissionFactor: c.emissionFactor,
+        }));
+
+      // ==========================================
+      // Info: (20260522 - Tzuhan) Turn 2: 係數挑選與數量萃取
+      // ==========================================
+      const turn2Prompt =
+        promptText +
+        `\n\n[Turn 2 指示]\n你先前在 Turn 1 分析為：${parsed1.scope}, ${parsed1.activityType}, ${parsed1.vendor}。大類為 ${parsed1.fallbackCategory}。\n以下是系統根據關鍵字檢索出的 Top 20 候選碳排係數：\n${JSON.stringify(candidates, null, 2)}\n\n請從中精準挑選一個最適合的 coefficientId，並根據該係數的單位，從憑證中萃取出正確的 amount (數量) 與對應的 unit (單位)。\n\n【CPA 級別鐵律：絕對禁止 AI 進行數學計算】\n你只需要萃取 amount，後端系統會自動進行高精度乘法運算。`;
+
+      const turn2Schema: Schema = {
+        type: SchemaType.OBJECT,
+        properties: {
+          coefficientId: {
+            type: SchemaType.STRING,
+            description: "挑選的係數 ID",
+          },
+          amount: {
+            type: SchemaType.NUMBER,
+            description: "對應該係數單位的數量",
+          },
+          unit: {
+            type: SchemaType.STRING,
+            description: "對應的單位",
+            format: "enum",
+            enum: Object.values(MeasurementUnit),
+          },
+          aiNote: {
+            type: SchemaType.STRING,
+            description: "係數挑選理由與數量萃取邏輯",
+          },
+          confidence: {
+            type: SchemaType.NUMBER,
+            description: "信心指數 1-100",
+          },
+        },
+        required: ["coefficientId", "amount", "unit", "aiNote", "confidence"],
+      };
+
+      const text2 = await chatService.generateRawWithImages(
+        turn2Prompt,
+        images,
+        true,
+        turn2Schema,
+      );
+
+      const parsed2 = JSON.parse(text2.trim());
+
+      // ==========================================
+      // Info: (20260522 - Tzuhan) Backend: CPA-Grade Emission Calculation
+      // ==========================================
+      const selectedCoef = ALL_COEFFICIENTS.find(
+        (c) => c.id === parsed2.coefficientId,
+      );
+      let calculatedEmissions = "0";
+
+      if (selectedCoef) {
+        // Info: (20260522 - Tzuhan) 嚴格使用 MoneyUtil 高精度運算
+        calculatedEmissions = MoneyUtil.multiply(
+          parsed2.amount,
+          selectedCoef.emissionFactor,
+        );
+      }
+
+      const finalParsed = {
+        scope: parsed1.scope,
+        activityType: parsed1.activityType,
+        vendor: parsed1.vendor,
+        fallbackCategory: parsed1.fallbackCategory,
+        coefficientId: parsed2.coefficientId,
+        amount: parsed2.amount,
+        unit: parsed2.unit,
+        emissions: calculatedEmissions,
+        aiNote: `[Turn 1] ${parsed1.aiNote}\n[Turn 2] ${parsed2.aiNote}`,
+        confidence: parsed2.confidence,
+        generationSource: EsgGenerationSource.AI_GENERATED,
+      };
+
+      return JSON.stringify(finalParsed);
     } catch (error) {
       console.error("[EsgParsingSkill] Error:", error);
       return JSON.stringify({

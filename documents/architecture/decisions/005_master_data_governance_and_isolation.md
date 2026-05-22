@@ -2,8 +2,8 @@
 
 > **Date**: 2026-05-21
 > **Author**: Tzuhan
-> **Status**: Accepted (Sprint 2 Core Blueprint)
-> **核心目標**: 定義「外部映射雜訊 (Vendor MDM)」與「內部審計真理 (ESG Coefficients)」的物理儲存與治理邊界，徹底隔絕 150 萬筆台灣公司登記資料對核心 PostgreSQL 的效能衝擊，同時捍衛碳盤查係數的 CPA 查帳外鍵鐵律。
+> **Status**: 🚫 Canceled (Superseded by ADR 006 Two-Turn RAG)
+> **核心目標**: (本決策已被撤銷) 定義「外部映射雜訊 (Vendor MDM)」與「內部審計真理 (ESG Coefficients)」的物理儲存與治理邊界。其中 Vendor MDM SQLite 的構想因違背動態 RAG 精神，已被 ADR 006 動態兩回合檢索全面取代。
 
 ---
 
@@ -20,16 +20,14 @@
 
 ---
 
-## 🎯 2. 決策一：Vendor MDM 定義為「外部映射雜訊」 (Local Static Reference Architecture)
+## 🎯 2. 決策一：Vendor MDM 定義為「外部映射雜訊」 (Local Static Reference Architecture) [🚫 Canceled]
 
-**決策：嚴禁將 150 萬筆廠商主檔寫入核心 PostgreSQL，必須全面走「本地唯讀對照庫 (Local SQLite) 隔離架構」。**
+**舊版構想 (現已廢棄)**：將 150 萬筆政府開放資料萃取為 `[branch_tax_id, industry_code]`，打包為唯讀 `tax_reference.sqlite`，執行期進行微秒級的本機檢索並強制對應行業代號。
 
-- **Sprint 1 (過渡期)**：採用 `VendorRegistry` 的 O(1) 靜態記憶體倒排索引，確保盲測 0 誤差。
-- **Sprint 2 (終極目標)**：
-  1. 建立線下 ETL 管線，將 150 萬筆政府開放資料萃取為 `[branch_tax_id, industry_code]`，打包為高度壓縮的唯讀檔案 (`tax_reference.sqlite`，約 50MB)。
-  2. 將此 SQLite 內建於 Node.js Backend Docker Image 中。
-  3. 執行期透過 `better-sqlite3` 進行微秒級的本機檢索，並關聯至 `industry_rules.ts` (行業代號映射規則表)，動態推演會計分錄與 ESG 範疇。
-  4. 絕對隔絕網路 I/O，確保寫入核心不會被垃圾雜訊拖垮。
+**廢棄與更新原因 (Superseded by ADR 006)**：
+1. **資料時效性痛點**：台灣公司登記資訊並非靜態不變，每個月會有上千筆的新增、註銷與變更。要維護這份 SQLite 字典會帶來無謂的 ETL 維運成本。
+2. **大型集團的類型誤判 (Conglomerate Fallacy)**：單憑統編對應單一「行業代號」會引發嚴重的靜態誤判。例如「統一集團」若在 SQLite 內直接被判為「農業與食品」，但其旗下憑證可能涵蓋「包裝耗材」、「物流配送服務」等完全不同屬性的碳排活動。
+3. **終極解決方案 (動態 RAG)**：理想做法已於 ADR 006 實作。系統不再依賴死板的政府行業代號降維，而是透過「已經分析好的日記帳內容 (交易明細)」，交由 AI 進行 Turn 1 分析：「這是什麼活動？」。由 AI 讀取交易脈絡來決定該套用什麼碳排類別，徹底消滅了靜態對應的謬誤。
 
 ---
 
