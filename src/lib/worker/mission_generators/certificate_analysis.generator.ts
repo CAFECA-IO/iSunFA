@@ -132,12 +132,12 @@ export function generateCertificateAnalysisMission(
             items: {
               type: SchemaType.OBJECT,
               properties: {
-                accountingCode: { type: SchemaType.STRING },
+                semanticCategory: { type: SchemaType.STRING },
                 particular: { type: SchemaType.STRING },
                 amount: { type: SchemaType.NUMBER },
                 isDebit: { type: SchemaType.BOOLEAN },
               },
-              required: ["accountingCode", "particular", "amount", "isDebit"],
+              required: ["semanticCategory", "particular", "amount", "isDebit"],
             },
           },
         },

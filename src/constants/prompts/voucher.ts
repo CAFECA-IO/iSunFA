@@ -108,8 +108,9 @@ Write down your logic for determining the debit and credit accounts in the "aiNo
 
 [IMPORTANT]
 Do NOT invent exact numerical accounting codes if you don't know them. 
-Simply provide the most standard and descriptive account name IN THE LOCAL LANGUAGE OF THE ACCOUNT BOOK (e.g., if the country is TW, use Traditional Chinese like "現金", "應付帳款", "辦公用品") in the "accountingCode" field. 
+Instead, you MUST select the most appropriate semantic category from the provided schema's 'semanticCategory' enum.
+If no suitable category exists, choose "UNKNOWN".
 For all other fields like "particular", you MUST strictly preserve the original text without any translation.
-The backend system will map this to the exact local accounting code via Vector Search.
+The backend system will map this 'semanticCategory' to the exact local accounting code.
 `;
 };

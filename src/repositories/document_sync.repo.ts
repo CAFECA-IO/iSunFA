@@ -7,6 +7,7 @@ import {
   EsgIntensity,
   Voucher,
   VoucherLine,
+  Coefficient,
 } from "@/generated";
 import {
   EsgGenerationSource,
@@ -18,12 +19,13 @@ import {
 } from "@/constants/enums";
 import { ISyncDocumentResultParams } from "@/skills/utils/document_parser_db_sync";
 import { ACCOUNTS, IAccount } from "@/constants/accounts";
-
 import { ReconciliationService } from "@/services/reconciliation.service";
 import { MoneyUtil } from "@/lib/utils/money";
-
 import { SemanticAccountMatcher } from "@/lib/utils/semantic_account_matcher";
+import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
+import { MOCK_EEIO_COEFFICIENTS } from "@/constants/mock_eeio_coefficients";
 import { CoaVectorSearchService } from "@/services/coa_vector_search.service";
+
 export class DocumentSyncRepository {
   async syncDocumentResultToDatabase({
     fileId,
@@ -228,10 +230,22 @@ export class DocumentSyncRepository {
 
               // Info: (20260522 - Tzuhan) [ADR 004 Enforcement] 廢除 Turn 2 盲目信任，改由後端嚴格 Bigram 閥值懸記
               const particularStr = (l.particular as string) || "";
-              const matchResult = CoaVectorSearchService.matchWithScore(
+              let matchResult = CoaVectorSearchService.matchWithScore(
                 particularStr,
                 (accountBook.country as CountryCode) || CountryCode.TW,
               );
+
+              // Info: (20260522 - Tzuhan) Bypass Bigram if AI provided a high-confidence semantic category
+              if (l.semanticCategory && l.semanticCategory !== "UNKNOWN") {
+                const semanticCode = SemanticAccountMatcher.match(
+                  l.semanticCategory as string,
+                  dictionary,
+                  (accountBook.country as CountryCode) || CountryCode.TW,
+                );
+                if (semanticCode !== "UNKNOWN") {
+                  matchResult = { code: semanticCode, score: 1.0 };
+                }
+              }
 
               let matchedAccountingCode = matchResult.code;
               let isValidCode = dictionary.some(
@@ -423,9 +437,20 @@ export class DocumentSyncRepository {
           let recordIsVerified = confidence > 85;
 
           if (finalCoefficientId) {
-            const coefExists = await tx.coefficient.findUnique({
-              where: { id: finalCoefficientId },
-            });
+            let coefExists: Coefficient | null | undefined =
+              await tx.coefficient.findUnique({
+                where: { id: finalCoefficientId },
+              });
+
+            if (!coefExists) {
+              coefExists = [
+                ...ALL_COEFFICIENTS,
+                ...MOCK_EEIO_COEFFICIENTS,
+              ].find(
+                (c) => c.id === finalCoefficientId,
+              ) as unknown as Coefficient;
+            }
+
             if (coefExists) {
               // Info: (20260520 - Tzuhan) [AUDIT FIX] 量綱防呆檢查
               const getDimension = (u: string) => {

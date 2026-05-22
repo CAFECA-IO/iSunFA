@@ -63,6 +63,7 @@ export interface IParsedVoucherLine {
   isDebit: boolean;
   isVerified?: boolean;
   generationSource?: string;
+  semanticCategory?: string;
 }
 
 export interface IParsedVoucher {

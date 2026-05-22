@@ -2,6 +2,8 @@ import { ITaskSkill } from "@/skills/types";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
+import { UniversalAccountTag } from "@/constants/enums";
+
 import { SchemaType, Schema } from "@google/generative-ai";
 
 export class VoucherLinesParsingSkill implements ITaskSkill {
@@ -63,8 +65,15 @@ export class VoucherLinesParsingSkill implements ITaskSkill {
                   type: SchemaType.BOOLEAN,
                   description: "是否為借方",
                 },
+                semanticCategory: {
+                  type: SchemaType.STRING,
+                  description:
+                    "從標準會計類別中挑選最適合的一項。若無合適選項請填寫 UNKNOWN",
+                  format: "enum",
+                  enum: Object.values(UniversalAccountTag),
+                },
               },
-              required: ["particular", "amount", "isDebit"],
+              required: ["particular", "amount", "isDebit", "semanticCategory"],
             },
           },
         },
