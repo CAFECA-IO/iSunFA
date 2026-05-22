@@ -1,5 +1,6 @@
 import { IAccountBookBase } from "@/interfaces/account_book";
 import { getLanguageByCountry } from "@/constants/country";
+import { CountryCode } from "@/constants/enums";
 
 /*
  ** Info: (20260407 - Julian) 將傳票的分析拆解成「基本資料」和「會計分錄」
@@ -56,7 +57,7 @@ You are a pure data extractor. Do NOT perform any business logic judgments or ma
 
 //  Info: (20260407 - Julian) 分析傳票「基本資料」的 Prompt
 export const getBaseVoucherPrompt = (accountBook?: IAccountBookBase | null) => {
-  const country = accountBook?.country || "TW";
+  const country = accountBook?.country || CountryCode.TW;
 
   // Info: (20260326 - Julian) 帳本資訊
   const accountBookInfo = accountBook
@@ -70,7 +71,7 @@ export const getBaseVoucherPrompt = (accountBook?: IAccountBookBase | null) => {
 
   // Info: (20260518 - Julian) 帳本語系
   const languageInstruction = accountBook?.country
-    ? `\n  Please use "${getLanguageByCountry(accountBook.country).english}" as the primary language for the aiNote field. For all other fields, you MUST strictly preserve the original text without any translation.`
+    ? `\n  Please use "${getLanguageByCountry(accountBook.country as CountryCode).english}" as the primary language for the aiNote field. For all other fields, you MUST strictly preserve the original text without any translation.`
     : "";
 
   return `
@@ -87,7 +88,7 @@ export const getVoucherLinesPrompt = (
   accountBook?: IAccountBookBase | null,
 ) => {
   // Info: (20260512 - Tzuhan) 廢除全域會計科目表暴力注入，改由後端 Hybrid Pipeline 處理
-  const country = accountBook?.country || "TW";
+  const country = accountBook?.country || CountryCode.TW;
 
   // Info: (20260326 - Julian) 帳本資訊
   const accountBookInfo = accountBook

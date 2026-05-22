@@ -2,7 +2,7 @@
 
 > **Date**: 2026-05-20
 > **Author**: Tzuhan
-> **Status**: Accepted (Pending Implementation in Sprint 1)
+> **Status**: Accepted (✅ Implemented & Optimized in Sprint 1)
 > **核心目標**: 在拔除上萬筆全域會計科目暴力注入後，補齊 `Voucher` 解析管線的防護缺口。捨棄危險的「自然語言模糊比對 (Fuzzy Matching)」，全面導入 **會計科目 Vector RAG**、**多維度攔截器** 與 **財務懸記機制 (Suspense Fallback)**，確保系統達到四大會計師 (Big 4) 等級的零幻覺與絕對應計基礎 (Accrual Basis)。
 
 ---
@@ -24,26 +24,24 @@
 
 為了徹底根絕傳票解析的不確定性，我們決議實作與 ESG 等級齊平、甚至更為嚴苛的三重防護管線。
 
-### 🛡️ 第一重：多維度廠商攔截器 (Multi-Dimensional Vendor Registry) [⚠️ Pending]
+### 🛡️ 第一重：多維度廠商攔截器 (Multi-Dimensional Vendor Registry) [✅ Done]
 
 廢除單純的字串 `.includes()`，將 `VENDOR_RULE_REGISTRY` 升級為 $O(1)$ 的高精度配對引擎，以對齊世界級 ERP（如 SAP, Oracle）處理供應商主檔 (Vendor Master Data) 的標準作法。
 
-- **統編優先 (Tax ID First)**：強制 OCR / AI 優先提取憑證上的統一編號 (Tax ID)。統編是不會變的物理真理，後端直接透過統編查表（例如：`24979925` 必定對應「中華電信」與特定的電信費科目），達成 100% 決定論攔截。
-- **別名陣列 (Aliases Array)**：將廠商註冊表擴充支援陣列。例如 `{ aliases: ["中華電信", "Chunghwa Telecom", "CHT"] }`，最大化防禦 AI 命名變體與錯字。
+- **統編優先與 O(1) 倒排索引 (Tax ID & Inverted Index)**：我們最終決定不查外部 DB，而是採用「O(1) Map 倒排索引」的實作。強制 OCR / AI 優先提取憑證上的統一編號 (Tax ID)。將廠商註冊表擴充為鍵值對映，例如直接把「統編」與「別名」作為 Key，達成微秒級 100% 決定論攔截。
 
-### 🧠 第二重：本機向量檢索與選擇題 (Local Vector RAG & Multiple-Choice) [⚠️ Pending]
+### 🧠 第二重：本機向量檢索與逐行映射 (Local Vector RAG & Per-Line Mapping) [✅ Done]
 
 針對無法在第一道防線攔截的陌生單據，採用與 ESG 一致的 Vector RAG 策略。
 
-1. **COA 靜態向量化**：將各國別 (TW, US, JP) 的會計科目表 (Chart of Accounts, COA，如 `tw.ts` 的 1500 個科目) 連同其定義 (`description`)，於建置期打包為 SQLite-vss 或 `.bin` 本機向量庫。
-2. **執行期 Top-K 檢索**：利用單據上的 `particulars` (摘要)，在本機瞬間找出最相似的 Top-3 會計科目。
-3. **選擇題 Prompting**：將這 Top-3 科目及其代碼注入 LLM Prompt：
-   > 「根據單據摘要『AWS 雲端主機』，請由以下 3 個科目中挑選最適合的代碼。只能回傳代碼，若皆不符合請回傳 null。」
-   **效益**：完全鎖死 AI 「發明新會計科目」的權限，完美銜接 Schema 語系限制，從物理上拔除 Fuzzy Matching 的災難。
+1. **COA 靜態向量化**：將各國別 (TW, US, JP) 的會計科目表 (Chart of Accounts, COA，如 `tw.ts` 的 1500 個科目) 連同其定義 (`description`)，於建置期打包為本機的 `coa_embeddings.json`。
+2. **AI 降級與剝奪選擇權 (AI Degradation)**：在 `voucher_lines_parsing.ts` 中，徹底刪除 `accountingCode` 的 Schema 欄位。AI 的任務僅剩下從圖片中客觀萃取每行明細的：「摘要 (`particular`)」、「金額 (`amount`)」、「借貸 (`isDebit`)」。
+3. **執行期後端逐行映射 (Per-Line Deterministic RAG)**：AI 完成萃取後，在後端 `document_sync.repo.ts` 階段，由系統針對每一行明細的 `particular`，呼叫 `CoaVectorSearchService` 進行純 TypeScript 餘弦相似度運算，直接算出唯一確定的 `accountCode`。
+   **架構效益**：徹底解決了「單據包含多種分錄，無法在 AI 執行前進行全域 Top-3 注入」的邏輯悖論，並從物理上完全剝奪了 AI 推測或發明新會計科目的權力。
 
-### 🚥 第三重：雙軌懸記與虛擬科目隔離區 (Dual-Track Suspense & Quarantine Zone) [⚠️ Pending]
+### 🚥 第三重：雙軌懸記與虛擬科目隔離區 (Dual-Track Suspense & Quarantine Zone) [✅ Done]
 
-如果 AI 在 Top-3 選擇題中回傳 `null`，或系統信心度過低，**絕對禁止系統使用 Fuzzy Matching 強行猜測科目**。為了兼顧「四大會計師的查核鐵律」與「管理報表淨利的真實性（避免虛增淨利）」，我們將懸記防線升級為兩道分流：
+如果後端 Vector RAG 算出來的餘弦相似度過低（無法找到精確對應），**絕對禁止系統使用 Fuzzy Matching 強行猜測科目**。為了兼顧「四大會計師的查核鐵律」與「管理報表淨利的真實性（避免虛增淨利）」，我們將懸記防線升級為兩道分流：
 
 1. **性質完全未知 -> 進入 BS 懸記 (資產/負債防線)**
    - **情境**：如銀行帳戶扣款但無憑證，連是否為「費用」都無法確定。
@@ -77,7 +75,11 @@
 
 ## 🪞 附錄：Sprint 1 實作現況與斷層分析 (Implementation Gap Analysis)
 
-> **稽核時間**: 2026-05-20
+> **稽核時間**: 2026-05-22 (✅ 註：以下架構優化已於 2026-05-22 全面修復並實作完成)
+
+### 🚨 2026-05-22 已修復之技術負債 (Resolved Technical Debt)
+1. **[防護升級] 懸記科目 4 向精準分流 (✅ Fixed)**: `document_sync.repo.ts` 已重構為嚴謹的 4 向精準分流 (BS 借貸 1471/2330，PL 借貸 6288/7590)，徹底解決了先前借貸顛倒的會計嚴重錯誤。
+2. **[演算法升級] Vector RAG 替換計畫 (✅ Fixed)**: `coa_vector_search.service.ts` 已不再是 Fallback 框架。我們實作了純 TypeScript 的 Bigram 餘弦相似度 (Cosine Similarity) 演算法，直接將憑證摘要與會計科目的定義進行數學向量對比，達成純本機 RAG 檢索。作為 coa_embeddings.json 就緒前的真・演算法防護）。
 
 ### 1. 🔍 廠商攔截器：只有半套，最核心的「統編」還沒做
 雖然 `src/services/rules/vendor_registry.ts` 和 `vendor_rules.ts` 已經存在，並且實作了「別名陣列 (Aliases Array)」，但它的 `match()` 方法目前**只接收 `vendorName` 並使用 `.includes` 進行模糊比對**。

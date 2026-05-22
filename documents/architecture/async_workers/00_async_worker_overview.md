@@ -105,6 +105,12 @@ graph TD
 
 ## 🏆 架構師評價與防禦機制實作 (Architectural Defenses)
 
+### 🔐 零資料庫存取與安全隔離 (Zero DB Access & Security Boundary)
+系統劃下了一道不可踰越的安全鴻溝：**`MissionExecutor` (與其他所有負責 Web3 / AI 運算的外部節點) 絕對沒有存取主系統 PostgreSQL 資料庫的權限。**
+- **物理隔離**：它們無法連線 DB，更無法直接寫入、修改或刪除任何帳本資料。
+- **單向提議**：它們的輸出 (`result.md`) 僅是一份「提議載荷 (Payload)」，必須經過上鏈 (`MissionCommitor`)、查帳核准 (`IssueValidator`)，最終由具備寫庫權限的內部節點 `MissionRecorder` 負責抄寫回資料庫。
+- **防禦提示詞注入 (Prompt Injection Guard)**：這種極端的隔離確保了即使 AI 遭到惡意使用者的「提示詞注入攻擊」，攻擊者也絕對無法穿越實體網路邊界去污染或竊取核心財務資料庫。
+
 ### 🛡️ 徹底隔離的檔案系統 (Shared-Nothing Architecture)
 由於 Planner 與 Executor 依賴的是本地的檔案系統狀態機，這意味著多個 Worker 之間**完全不需要共用掛載硬碟 (Shared Volume)**。
 因為沒有共用硬碟，自然就從物理層面徹底消滅了分散式擴展時最難解的「競爭條件 (Race Condition)」。系統不需要實作任何 Redis Lock，K8s 的橫向擴展變得極度輕量、純粹且具備無限擴展性。

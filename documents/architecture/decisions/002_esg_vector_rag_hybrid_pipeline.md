@@ -3,7 +3,7 @@
 > **Date**: 2026-05-19
 > **Latest Update**: 2026-05-20
 > **Author**: Tzuhan
-> **Status**: Accepted (Pending Implementation in Sprint 1)
+> **Status**: Accepted (✅ Implemented in Sprint 1)
 > **核心目標**: 解決環境部 15,000+ 筆碳排係數比對時的「Token 爆炸」與「AI 幻覺」問題，同時嚴守 Executor 的無狀態 (Stateless) 與零資料庫 I/O (Zero DB I/O) 原則。
 
 ---
@@ -62,29 +62,32 @@
 
 除了解決「系統官方係數」的配對，架構亦同時防禦「用戶自定義係數」與「高頻標準品項」。
 
-### 3.1 決定論防禦層 (EmissionFactorRegistry) [⚠️ Pending]
+### 3.1 決定論防禦層 (EmissionFactorRegistry) [⚠️ Deprecated]
 
-借鑑財務模組的 `VendorRegistry`，建立 ESG 專屬的決定論攔截器。
-將佔據企業 80% 碳排的最常見 100 項高頻項目（如：台電電費、自來水、95無鉛汽油）寫死在 TypeScript 字典中。此類單據直接 $O(1)$ 命中，連 LLM 都不必呼叫。
+原先借鑑財務模組的 `VendorRegistry`，建立 ESG 專屬的決定論攔截器（將高頻廠商寫死在 TypeScript 字典中）。
+**架構轉向 (Pivot) 決策 (2026-05-21)**：此做法已被架構 Tzuhan & Luphia 認定存在極高風險。因為企業型態並非單一（如「統一集團」旗下同時包含農業食品、包裝耗材、物流運費），強制綁定單一統編對應單一碳排係數會導致嚴重的分類錯誤。我們已決議廢棄靜態映射，改為在 `EsgParsingSkill` 中全面導入 **Two-Turn AI-RAG (兩階段動態檢索)**，讓 AI 直接根據「日記帳品項明細」進行意圖檢索與精確係數挑選。
 
 ### 3.2 租戶專屬自訂係數 (Tenant Custom Coefficients)
 
 用戶人工建立或經由 CPA 覆核過的「自定義係數（Custom Coefficient）」，採用**動態注入**：
 
-1. **Planner 注入**：`MissionPlanner` (API Server) 可連線 DB，在產生任務 JSON 時，將該租戶專屬的自定義係數陣列放入 `prerequisiteData`。
-2. **Executor 讀取**：Executor 僅需讀取本地的 JSON 檔案（如果檔案過大，由 `DocumentHelper` 負責底層切塊傳輸）。
-3. **優先比對**：Executor 在進行 Vector RAG 前，優先以精準比對 (Exact Match) 檢查 `prerequisiteData.coefficients`，達成租戶資料隔離與高效配對。
+1. **Issuer 注入**：MissionIssuer (API Server) 可連線 Web2 DB，在產生與上傳任務 `mission.json` 至 IPFS 之前，就會預先將該租戶專屬的自定義係數陣列封裝進入 `prerequisiteData.coefficients`。這確保了 MissionPlanner 與 MissionExecutor 等去中心化運算節點能夠在「完全斷開資料庫連線 (Shared-Nothing)」的前提下，仍擁有完整的租戶環境上下文。
+2. **優先比對**：Executor 在進行 Vector RAG 前，優先以精準比對 (Exact Match) 檢查 `prerequisiteData.coefficients`，達成租戶資料隔離與高效配對。
 
-### 3.3 雙軌懸記與 AI 保守型估算 (Dual-Track Suspense & AI Conservative Speculation) [⚠️ Pending - Schema Disconnect]
+### 3.3 雙軌懸記與 AI 保守型估算 (Dual-Track Suspense & AI Conservative Speculation) [✅ Done]
 
 若本機 RAG 的 Top-5 皆不符合，或相似度過低（Confidence < 70%），管線不應採取剛性死鎖（強制將 emissions 設為 0），以防前端大盤數據斷層；應改採「語義降級推測機制」：
 
 1. **AI 語義降級歸類 (Semantic Fallback)**：禁止 AI 自己通靈數值！要求 Stage 3 AI 依據其通用知識，僅輸出一個最接近的「官方標準大類標籤」（例：回傳 fallbackCategory: "塑膠包材"）。
-2. **後端保守原則查表與單位檢核 (Backend Max-Factor & Unit Guard)**：後端系統接收到大類標籤後，於資料庫查詢該類別，並執行 `MAX(factor)` 抓取「碳排係數最高」的官方項目（防低估/防漂綠）。
-   - **[同量綱比較鐵律 (Dimensional Consistency Guard)]**: 後端在執行 `MAX(factor)` 之前，絕對禁止跨單位比較。必須先讀取 AI 萃取出的憑證 unit (如：金額、重量、體積)，並在 SQL 查詢中加上前置過濾條件 (如 `WHERE unit_type = '金額'`)。只能在物理量綱相同的係數池中取 `MAX(factor)` 進行乘法，若無同量綱係數，則必須強制懸記 (Suspense) 留白，不可強行計算。
+2. **後端保守原則 4 軌物理隔離降級檢索 (4-Track Max-Factor Fallback Guard)**：已實作 `EmissionFactorRegistry`。後端系統接收到大類標籤後，將依序執行嚴格的 4 軌隔離查詢，並確保 `accountBookId: null` 作為全域官方標準的精妙辨識：
+   - **軌道一 (官方 DB)**：優先檢索資料庫的「官方標準數據」(`accountBookId = null`)。
+   - **軌道二 (官方 Static 墊片)**：若官方 DB 查無資料，退回系統全域靜態常數檔 (`ALL_COEFFICIENTS`，作為 Sprint 1 的過渡期墊片)。
+   - **軌道三 (租戶 DB)**：若常數檔未命中，才檢索該專屬帳本內的「用戶自定義係數」或「AI 推測過的係數」(`accountBookId = current`).
+   - **軌道四 (無情隔離)**：徹底無解，退回 `null`。
+   - **[同量綱比較鐵律 (Dimensional Consistency Guard)]**: 系統在執行以上 4 軌比對與 `MAX(factor)` 之前，絕對禁止跨單位比較。必須先讀取 AI 萃取出的憑證 unit (如：金額、重量、體積)，並加上前置過濾條件。若無同量綱係數，則必須強制懸記 (Suspense) 留白，不可強行計算。
 3. **入庫與審計軌跡**：若單位換算成功，後端執行確定性乘法，綁定該「最高係數之真實 ID」，寫入資料庫並標記為：
    - `isVerified = false`
-   - `generationSource = "AI_SPECULATIVE_STAGE_3"`
+   - `generationSource = "AI_SPECULATIVE"`
    - `aiNote` 記錄完整降級推測脈絡：「RAG 未命中。AI 降級歸類為 [塑膠包材]。系統自動套用該類別最高係數 [環境部ID: XXX] 以符合保守原則。等待人工確認。」
 
 ---
@@ -132,7 +135,7 @@
 
 - **位置**：`document_sync.repo.ts` (L366)
 - **舊視角問題**：為了防漂綠，過去認為遇到懸記時應「全面允許 `emissions` 為 `null`」。
-- **新架構解法 (PLG + CPA)**：如果填 `null`，前端儀表板的碳排大盤會出現斷層，損害產品體驗 (PLG)。我們的升級解法是：**不填 0，也不填 null**。允許 AI 進行「語義降級歸類」，並由後端套用該大類的「最高碳排係數」算出數值。隨後打上 `isVerified = false` 與 `generationSource = "AI_SPECULATIVE_STAGE_3"` 的黃燈標籤。這完美兼顧了儀表板的連續性與防漂綠（保守原則）的底線。
+- **新架構解法 (PLG + CPA)**：如果填 `null`，前端儀表板的碳排大盤會出現斷層，損害產品體驗 (PLG)。我們的升級解法是：**不填 0，也不填 null**。允許 AI 進行「語義降級歸類」，並由後端套用該大類的「最高碳排係數」算出數值。隨後打上 `isVerified = false` 與 `generationSource = "AI_SPECULATIVE"` 的黃燈標籤。這完美兼顧了儀表板的連續性與防漂綠（保守原則）的底線。
 
 #### 🚨 地雷二與三：錯把「審計軌跡」當作「UI 視圖資料」 (Misinterpreted Audit Trail)
 
@@ -155,10 +158,10 @@
 
 ### 🔎 Sprint 1 實作現況與斷層分析 (Implementation Gap Analysis)
 
-> **稽核時間**: 2026-05-20
+> **稽核時間**: 2026-05-20 (⚠️ 註：以下斷層已於 2026-05-21 透過 `emission_factor_registry.ts` 建立與 `fallbackCategory` Schema 修復，特此保留作為歷史紀錄)
 
 #### 1. 🔗 單次語意降級與保守型估算 (Max-Factor Guard)：前端嚴重斷鏈
-- **實作現況 (後端 - 優秀)**：在 `document_sync.repo.ts` (L352-L381)，後端實作了非常完美的保守原則。只要收到 `fallbackCategory` (大類標籤)，就會執行 `orderBy: { emissionFactor: "desc" }` 抓取最大碳排係數，並在 L475 強制打上 `AI_SPECULATIVE_STAGE_3` 黃燈。
+- **實作現況 (後端 - 優秀)**：在 `document_sync.repo.ts` (L352-L381)，後端實作了非常完美的保守原則。只要收到 `fallbackCategory` (大類標籤)，就會執行 `orderBy: { emissionFactor: "desc" }` 抓取最大碳排係數，並在 L475 強制打上 `AI_SPECULATIVE` 黃燈。
 - **致命斷層 (前端 - 死碼)**：在 `src/services/vision.accounting.service.ts` (L195-L210) 的 Phase 3 ESG Prompt 中，**完全沒有定義 `fallbackCategory` 這個屬性**！目前的 JSON Schema 只要求 AI 輸出 `esgActivityType` 與 `esgAmount`。
 - **審計風險**：因為 Prompt 沒要，AI 永遠不會輸出 `fallbackCategory`。這導致後端那套花費心力打造的「防漂綠最高係數降級機制」目前 100% 淪為**死碼 (Dead Code)**。一旦找不到精準係數，系統就會直接當機或亂給值。
 
@@ -166,10 +169,10 @@
 - **實作現況 (✅ Pass)**：在 `document_sync.repo.ts` (L411-L428)，明確實作了 `getDimension(docUnit) !== getDimension(coefUnit)` 的邏輯。
 - **審計效益**：如果 AI 萃取的是「公升 (LITER)」，但對應到的係數是「度數 (KWH)」，系統會無情阻斷跨量綱相乘，強制打入懸記 (Suspense = true)。這是目前 ESG 管線中**唯一完全發揮作用**的亮點，成功防堵了荒謬的碳排入庫。
 
-#### 3. 🛡️ 決定論防禦層 (EmissionFactorRegistry)：完全不存在
-- **實作現況**：完全未實作。
-- **致命斷層**：目前 codebase 只有針對財務的 `VendorRegistry`。ADR 002 Section 3.1 提到的「將佔據企業 80% 碳排的最常見 100 項高頻項目（如：台電電費、自來水）寫死在 TypeScript 字典中」的機制，目前在 codebase 中找不到任何蹤影。
-- **審計風險**：連最標準、最不可能出錯的「台電電費」，現在都必須經過 AI 推論與全庫搜尋，白白浪費運算資源且增加不必要的幻覺風險。
+#### 3. 🛡️ 決定論防禦層 (EmissionFactorRegistry)：架構轉向 (Pivot to Dynamic RAG)
+- **實作現況**：原本計畫實作 O(1) 攔截器，但在 2026-05-22 經 Luphia 審查後緊急叫停並廢棄。
+- **廢棄原因**：大型企業集團（如統一、遠東）具備多元複合業務。若將統編硬性綁定「農業與食品」係數，將導致其物流、包裝等服務被嚴重錯估。
+- **新架構解法**：全面升級 `EsgParsingSkill` 導入 **Two-Turn RAG (動態兩回合檢索)**。由 AI 根據憑證明細推斷關鍵字，Skill 執行向量/字典檢索後，再由 AI 從 Top 20 候選名單中精準挑選最合適的 `coefficientId`。此舉正式將碳排係數的配對邏輯，從「廠商死綁」解放為「明細動態推論」。
 
 #### 4. 🧠 本機向量檢索 (Local Vector RAG)：尚未進入開發階段
 - **實作現況**：完全未實作 (但符合 Roadmap 預期，安排在 Phase 2)。

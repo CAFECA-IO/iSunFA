@@ -4,6 +4,7 @@ import { JP_ACCOUNTS } from "@/constants/accounts/jp";
 import { CN_ACCOUNTS } from "@/constants/accounts/cn";
 import { HK_ACCOUNTS } from "@/constants/accounts/hk";
 import { TW_ACCOUNTS } from "@/constants/accounts/tw";
+import { CountryCode } from "@/constants/enums";
 
 export interface IAccount {
   code: string;
@@ -16,15 +17,6 @@ export interface IAccount {
   isInterestBearing?: boolean;
   isDividend?: boolean;
 }
-
-export const COUNTRY = {
-  CN: "CN",
-  HK: "HK",
-  JP: "JP",
-  KR: "KR",
-  TW: "TW",
-  US: "US",
-};
 
 export const CURRENCY = {
   CN: "CNY",
@@ -47,12 +39,12 @@ export const RULE = {
 };
 
 export const DEFAULT_RULE = {
-  [COUNTRY.CN]: RULE.ASBE,
-  [COUNTRY.HK]: RULE.HKFRS,
-  [COUNTRY.JP]: RULE.JMIS,
-  [COUNTRY.KR]: RULE.K_IFRS,
-  [COUNTRY.TW]: RULE.T_IFRS,
-  [COUNTRY.US]: RULE.US_GAAP,
+  [CountryCode.CN]: RULE.ASBE,
+  [CountryCode.HK]: RULE.HKFRS,
+  [CountryCode.JP]: RULE.JMIS,
+  [CountryCode.KR]: RULE.K_IFRS,
+  [CountryCode.TW]: RULE.T_IFRS,
+  [CountryCode.US]: RULE.US_GAAP,
 };
 
 export const ACCOUNTS = {
@@ -63,4 +55,3 @@ export const ACCOUNTS = {
   TW: TW_ACCOUNTS,
   US: US_ACCOUNTS,
 };
-

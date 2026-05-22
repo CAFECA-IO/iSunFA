@@ -4,6 +4,7 @@ import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
 import { SchemaType, Schema } from "@google/generative-ai";
 import { VendorRegistry, IEsgRule } from "@/services/rules/vendor_registry";
+import { EsgGenerationSource } from "@/constants/enums";
 import { MeasurementUnit } from "@/constants/enums";
 
 export class EsgParsingSkill implements ITaskSkill {
@@ -68,7 +69,7 @@ export class EsgParsingSkill implements ITaskSkill {
               `[EsgParsingSkill] 🎯 Stage 2 Match: ESG suppressed for ${baseParsed.vendorName} (${baseParsed.documentType})`,
             );
             return JSON.stringify({
-              generationSource: "RULE_ENGINE_STAGE_2",
+              generationSource: EsgGenerationSource.SYSTEM_DETERMINISTIC,
               confidence: 100,
               aiNote:
                 "系統判定：此為資金沖銷/繳費收據，非實體消耗，因此無須計算碳排。",
@@ -82,7 +83,7 @@ export class EsgParsingSkill implements ITaskSkill {
               `[EsgParsingSkill] 🎯 Stage 2 Match: Deterministic ESG rules found for ${baseParsed.vendorName}, falling back to AI for coefficient estimation.`,
             );
             esgRuleForFallback = esgRule;
-            promptText += `\n\n【決定論攔截指示】\n系統已判定此廠商為 ${esgRule.esgScope} / ${esgRule.esgActivityType}。請你「強制」使用此範疇與活動類型，並依據其通用知識，僅輸出一個最接近的「官方標準大類標籤」(fallbackCategory)，嚴禁自行推估數值。`;
+            promptText += `\n\n【決定論攔截指示】\n系統已判定此廠商為 ${esgRule.esgScope} / ${esgRule.esgActivityType}。請你「強制」使用此範疇與活動類型，並依據其通用知識，僅輸出一個最接近的「官方標準大類標籤」(fallbackCategory)，嚴禁自行推估數值。必須從提供的 Enum 清單中選擇。`;
           }
         }
       }
@@ -109,7 +110,45 @@ export class EsgParsingSkill implements ITaskSkill {
           },
           fallbackCategory: {
             type: SchemaType.STRING,
-            description: "最接近的官方標準大類標籤 (例如: 塑膠包材、交通運輸)",
+            description: "最接近的官方標準大類標籤",
+            format: "enum",
+            enum: [
+              // Info: (20260521 - Tzuhan) --- 能源與燃料 (Scope 1 & 2) ---
+              "外購電力與熱能",
+              "天然氣與瓦斯",
+              "汽油與航空燃油",
+              "柴油與重油",
+              "煤炭與固體燃料",
+              "生質能與替代燃料",
+
+              // Info: (20260521 - Tzuhan) --- 逸散與環境 (Scope 1 & 3) ---
+              "冷媒與工業氣體",
+              "自來水與污水處理",
+              "廢棄物處理與回收",
+
+              // Info: (20260521 - Tzuhan) --- 交通與物流 (Scope 1 & 3) ---
+              "陸上交通與通勤",
+              "航空運輸",
+              "貨運與物流",
+
+              // Info: (20260521 - Tzuhan) --- 採購商品 (Scope 3 - 實體物品) ---
+              "塑膠與橡膠製品",
+              "金屬與礦物製品",
+              "紙製品與木材",
+              "電子與電機設備",
+              "化學品與溶劑",
+              "農林漁牧與食品",
+              "紡織與服飾",
+
+              // Info: (20260521 - Tzuhan) --- 採購服務與資本財 (Scope 3 - 無形服務) ---
+              "資訊與通訊服務",
+              "住宿與餐飲服務",
+              "不動產與設備租賃",
+              "專業與各項服務",
+
+              // Info: (20260521 - Tzuhan) --- 兜底防線 ---
+              "其他未知項目",
+            ],
           },
           aiNote: {
             type: SchemaType.STRING,
@@ -149,7 +188,7 @@ export class EsgParsingSkill implements ITaskSkill {
             parsed.activityType =
               esgRuleForFallback.esgActivityType || parsed.activityType;
             parsed.unit = esgRuleForFallback.esgUnit || parsed.unit;
-            parsed.generationSource = "HYBRID_STAGE_2_AND_3";
+            parsed.generationSource = EsgGenerationSource.AI_GENERATED;
             if (parsed.aiNote) {
               parsed.aiNote = `[混合決策] 範疇與活動由規則引擎鎖定，係數由 AI 推估。原註記: ${parsed.aiNote}`;
             } else {
@@ -158,7 +197,7 @@ export class EsgParsingSkill implements ITaskSkill {
             }
             text = JSON.stringify(parsed);
           } else if (!parsed.generationSource) {
-            parsed.generationSource = "LLM_FALLBACK_STAGE_3";
+            parsed.generationSource = EsgGenerationSource.AI_GENERATED;
             text = JSON.stringify(parsed);
           }
         }

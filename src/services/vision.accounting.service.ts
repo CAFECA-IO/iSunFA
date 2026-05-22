@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI, Part } from "@google/generative-ai";
-import { ACCOUNTS } from "@/constants/accounts";
+import { CoaVectorService } from "@/services/rag/coa_vector.service";
 
 // Info: (20260407 - Luphia) Stage 1. Journal Paradigm
 export interface IJournalExtraction {
@@ -143,10 +143,14 @@ export class VisionAccountingService {
     journalResult: IJournalExtraction,
     auxContext?: string,
   ): Promise<IVoucherExtraction> {
-    // Info: (20260407 - Luphia) Stringify available accounting subsets to enforce strict referencing
-    const availableAccounts = ACCOUNTS.TW.map(
-      (acc) => "[" + acc.code + "] " + acc.name,
-    ).join(" | ");
+    // Info: (20260521 - Tzuhan) Use CoaVectorService to fetch top 20 possible accounts to prevent context window explosion
+    const availableAccounts = CoaVectorService.search(
+      journalResult.text || "",
+      "TW",
+      20,
+    )
+      .map((acc) => "[" + acc.code + "] " + acc.name)
+      .join(" | ");
 
     const prompt =
       "You are a Senior Auditor determining formal accounting entries (Vouchers).\n" +

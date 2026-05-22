@@ -215,17 +215,13 @@ export const runCrossValidation = async (stockId: string) => {
         golden: goldenRevenue.toString(),
         system: systemRevenue.toString(),
         variancePercent: calculateVariance(systemRevenue, goldenRevenue),
-        isPassed: systemRevenue
-          .sub(goldenRevenue)
-          .abs()
-          .div(goldenRevenue)
-          .lt(0.2), // Info: (20260503 - Tzuhan) 容忍 20% 的誤差，因為我們有 15% 的極端雜訊實驗
+        isPassed: systemRevenue.equals(goldenRevenue), // Info: (20260522 - Tzuhan) [Zero Tolerance] 絕對零容忍
       },
       OperatingExpenses: {
         golden: goldenOpex.toString(),
         system: systemOpex.toString(),
         variancePercent: calculateVariance(systemOpex, goldenOpex),
-        isPassed: systemOpex.sub(goldenOpex).abs().div(goldenOpex).lt(0.2), // Info: (20260503 - Tzuhan) 容忍 20% 誤差
+        isPassed: systemOpex.equals(goldenOpex), // Info: (20260522 - Tzuhan) [Zero Tolerance] 絕對零容忍
       },
       Depreciation: {
         golden: goldenDepreciation.toString(),
@@ -240,26 +236,21 @@ export const runCrossValidation = async (stockId: string) => {
         golden: goldenScope1.toString(),
         system: systemScope1.toString(),
         variancePercent: calculateVariance(systemScope1, goldenScope1),
-        isPassed: goldenScope1.equals(0)
-          ? systemScope1.equals(0)
-          : systemScope1.sub(goldenScope1).abs().div(goldenScope1).lt(0.2), // Info: (20260503 - Tzuhan) 容忍 20% 誤差
+        isPassed: systemScope1.equals(goldenScope1), // Info: (20260522 - Tzuhan) [Zero Tolerance] 絕對零容忍
       },
       Scope2: {
         golden: goldenScope2.toString(),
         system: systemScope2.toString(),
         variancePercent: calculateVariance(systemScope2, goldenScope2),
-        isPassed: goldenScope2.equals(0)
-          ? systemScope2.equals(0)
-          : systemScope2.sub(goldenScope2).abs().div(goldenScope2).lt(0.2), // Info: (20260503 - Tzuhan) 容忍 20% 誤差
+        isPassed: systemScope2.equals(goldenScope2), // Info: (20260522 - Tzuhan) [Zero Tolerance] 絕對零容忍
       },
       Scope3: {
         golden: goldenScope3.toString(),
         system: systemScope3.toString(),
         variancePercent: calculateVariance(systemScope3, goldenScope3),
-        isPassed:
-          goldenScope3.equals(0) || goldenScope3.isNaN()
-            ? systemScope3.equals(0)
-            : systemScope3.sub(goldenScope3).abs().div(goldenScope3).lt(0.2), // Info: (20260503 - Tzuhan) 容忍 20% 誤差
+        isPassed: systemScope3.equals(
+          goldenScope3.isNaN() ? new Prisma.Decimal(0) : goldenScope3,
+        ), // Info: (20260522 - Tzuhan) [Zero Tolerance] 絕對零容忍
       },
       InternalArticulation: {
         isAccountingEquationBalanced,

@@ -3,12 +3,13 @@
 > **Date**: 2026-05-10
 > **Author**: Tzuhan
 > **Version**: 1.1
-> **Last Updated**: 2026-05-19
+> **Last Updated**: 2026-05-22
 
 > **Status**: 🔴 **UI/UX 進入全面凍結 (Freeze)**。全隊開發量能 100% 轉向底層報表與數據引擎的準確性構建。
 >
-> **Vision**: 讓 iSunFA 成為 ESG 與財務混合審計的黃金標準，達到四大會計師 (Big 4) 的查帳要求，並足以作為政府（如新北市）數位產品護照 (DPP) 與合規審查的底層引擎 。
-> **Lineage (架構演進)**: 本文件正式取代並重構了先前的 `archive/future_optimization_roadmap.md`。我們在此正式推翻了過去「為了極限測試而讓 AI 參與數學運算」的實驗室思維，確立了「零捏造、完全職能分離」的 CPA 級別鐵律。
+> **Vision**: 本 Roadmap 作為回應「5~7 月各縣市政府與外貿協會展示」之最高指導原則。旨在從底層架構徹底拔除 AI 幻覺，賦予 AI 生成報告絕對的「專業度與可信度」。我們將讓 iSunFA 成為 ESG 與財務混合審計的黃金標準，達到四大會計師 (Big 4) 查帳要求，並足以作為新北市數位產品護照 (DPP) 的底層引擎。
+>
+> **Lineage (架構演進)**: 本文件正式取代並重構了先前的 `archive/future_optimization_roadmap.md`。我們在此正式推翻了過去「為了極限測試而讓 AI 參與數學運算」的實驗室思維，確立了「零捏造、完全職能分離」的 CPA 級別鐵律。。
 >
 > ⚠️ **IMPORTANT RULE**: 本 Roadmap v2 必須與 `documents/architecture/pipeline/` 底下的各模組實作說明 **結合一起看**，因為 Roadmap 中的每一項「地雷拆除」都精確對應著底層 Pipeline 原始碼的現況與弱點。
 
@@ -40,6 +41,30 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 
 我們全面重構開發邏輯，採行「逆向推進路線：先求數學絕對精準 ➡️ 再測商業邏輯異常 ➡️ 最後挑戰視覺極限與合規深水區」。
 
+### 🚨 當前待辦與優先度總表 (Priority To-Do List)
+為確保 780 萬筆台積電 PoC 順利通關且系統不崩潰，全隊目前必須嚴格遵守以下執行優先度（包含 ADR 004, 005, 006 的落地實作）：
+
+**🔥 [Priority 1: Sprint 1 基礎防線補齊 (ADR 004)]**
+- ✅ **Done: [Tzuhan] Voucher 財務防護 - 語意標籤與多國映射**: 實作 `UniversalAccountTag` 與後端 `SemanticAccountMatcher`。
+- ✅ **Done: [Tzuhan] 多維度廠商攔截器**: 實作統編 (Tax ID) 優先與別名陣列的 O(1) 攔截。
+- ✅ **Done: [Tzuhan] 本機向量檢索與逐行映射 (COA Vector RAG)**: 實作純 TS 餘弦相似度 (Cosine Similarity) 計算，取代 Fallback 空殼。作為 coa_embeddings.json 就緒前的真・演算法防護）
+- ✅ **Done: [Tzuhan] 雙軌懸記與虛擬科目隔離區 (Suspense & Quarantine)**: 實作 4 向精準分流 (BS 1471/2330, PL 6288/7590)，修復借貸顛倒漏洞。
+
+**🔥 [Priority 2: 邊界壓力測試 (可與 P1 並行)]**
+- 🚧 **WIP: [Julian] 台積電 780 萬筆大數據批次注入 (TSMC Batch Seeding)**: 確保巨量資料進入 DB。注意：灌完即停手，嚴禁讀取報表。
+
+**🔥 [Priority 3: Sprint 2 效能拆彈與總驗收 (OOM Defense)]**
+- ⚠️ **Pending: [Tzuhan] 報表快照與期初餘額 (Snapshots & Opening Balance)**: 建立 Snapshot 表格避免重複計算。
+- ⚠️ **Pending: [Tzuhan] 核心引擎 SQL 聚合重構 (Raw SQL Aggregation)**: 重寫四大報表產生器，利用 PostgreSQL 算力取代 Node.js 記憶體運算。
+- ⚠️ **Pending: [Tzuhan & Julian] 聯合盲測與審計對比**: 待 SQL 引擎上線後，執行 `cross_validator.ts` 驗證絕對 0 誤差。
+
+**🔥 [Priority 4: Sprint 2 ESG 與主檔架構升級 (ADR 005 & 006)]**
+- ⚠️ **Pending: [Tzuhan] 動態兩回合檢索 (Two-Turn AI-RAG Pivot) (ADR 006)**: 拔除靜態攔截器，重構 `EsgParsingSkill`。
+- ⚠️ **Pending: [Tzuhan] 質量守恆勾稽與動態容許耗損率**: 物理防呆機制，實作進銷存防護。
+- ⚠️ **Pending: [Tzuhan] 本地唯讀對照庫隔離架構 (Vendor MDM SQLite) (ADR 005)**: 將 150 萬筆政府開放資料轉入 `tax_reference.sqlite`，確保外鍵與效能隔離。
+
+---
+
 ### 📌 Sprint 1: 數學絕對真理與底層水管 (Mathematical Truth & Infrastructure)
 
 **🎯 收斂目標 (DoD)**：在不考慮 AI 辨識率的情況下，系統的財務引擎能精準加總且總資產完美配平；ESG 引擎能精準執行單位轉換與係數乘法，且在高併發下達到 0 丟包率。
@@ -54,13 +79,13 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
   - 👉 **實作要求**：建立 `src/__tests__/e2e/core_pipeline.e2e.test.ts`，必須使用 Jest 框架，且在頂端強制加入防呆鎖 `if (process.env.NODE_ENV === 'production') throw new Error('嚴禁在正式機執行 E2E 測試');`。
 
 - **[第二順位：CPA 財務合規任務 (核心財務防禦)]**
-- **✅ Done (2026-05-14)：外幣與全域字典解耦 (Backend Rule Registry)**：徹底剝奪 AI 計算匯率與小數點乘法的權力，並拔除所有全域會計字典注入（節省巨量 Token）。外幣匯率微服務與黃金廠商映射引擎 (`VENDOR_RULE_REGISTRY`) 已獨立切分，正式交由 Julian 負責實作。
+- **✅ Done (2026-05-14/21)：外幣與全域字典解耦 (Backend Rule Registry)**：徹底剝奪 AI 計算匯率與小數點乘法的權力，並拔除所有全域會計字典注入（節省巨量 Token）。外幣匯率微服務與常數 Repo 已由 Julian 實作完成；廠商映射防護交由 Tzuhan 於防護網任務中升級。
 - **✅ Done (2026-05-16)：強制財務憑證平衡防護 (Strict Accounting Integrity)**：**(錯誤邏輯拆彈)** 廢除過去「包容不完美揭露」與自動提列至懸記科目的錯誤設計。複式簿記不管資料是否完整都不會有差額。API 閘道與資料庫寫入層已全面導入「借貸平衡 (Debits = Credits)」的嚴格檢核。AI 解析若產生不平的傳票，系統將自動標記為 `FAILED` 狀態並加入警告，且任何不平的傳票更新也將被 API 直接阻擋，確保最終財報 (Balance Sheet) 絕對平衡，符合會計鐵律。
 - **✅ Done (2026-05-10)：面額彈性解耦 (Decoupling Par Value)**：拔除系統內 `parValue = 10` 的 Hardcode，改為動態傳入（已實作完成，動態計算每股淨值與 EPS）。
 
 - **[第三順位：CPA 碳排合規任務 (DPP 基礎)]**
 - **✅ Done (2026-05-14)：數位 BOM 與產品關聯解耦 (DPP Handover)**：為了保持核心借貸引擎極簡，徹底移除了資料庫中對 `productId` 的強耦合。DPP 數位產品護照架構已切分出領域邊界，正式交由老闆 Luphia 親自負責統籌與設計。
-- **✅ Done (2026-05-13)：實作「ESG 兩段式計算架構 (Two-Stage Calculation)」**：**(漂綠地雷拆彈)** 廢除 Prompt 中的 `ALL_TRUE_COEFFICIENT_DATA` 與乘法指令。AI 僅限萃取，後端 ESG 碳排係數洗轉與產業容損率建置交由 Julian 實作。
+- **✅ Done (2026-05-13/21)：實作「ESG 兩段式計算架構 (Two-Stage Calculation)」**：**(漂綠地雷拆彈)** 廢除 Prompt 中的 `ALL_TRUE_COEFFICIENT_DATA` 與乘法指令。AI 僅限萃取，後端 ESG 碳排係數洗轉與產業容損率基礎機制已由 Julian 實作 (包含 Seed 腳本與 Loss Ratio 函數)；後續由 Tzuhan 疊加實作了 `EmissionFactorRegistry` 4 軌降級攔截器 **(註：因業務相容性問題，已於 5/22 決議廢棄，全面轉向 Sprint 2 的動態 RAG 檢索)**。剩餘的官方標準 DB 轉移與爬蟲管線整合排入 Sprint 2。
 - **✅ Done (2026-05-14)：高精度數據重構與單位枚舉 (Precision & Unit Enum)**：財務欄位升級為 `BigInt`；碳排引擎導入 `Prisma.Decimal` 並將 `MeasurementUnit` 從 DB 拔除轉為 TypeScript 端強型別，前端全面套用 `MoneyUtil` 防腐層。徹底消滅所有 `parseFloat` 的隱性精度流失漏洞，保障千兆級財報與極精密碳排係數安全寫入。
 
 - **[第四順位：Sprint 1 殘餘除錯與前端同步 (Residual Fixes - Assigned to Julian)]**
@@ -71,27 +96,27 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **[第五順位：Prompt 提示詞微調 (Prompt Calibration)]**
 - **✅ Done (2026-05-18)：恢復 Markdown 優美排版 (Restore Rich Markdown Parsing)**：針對 `journal.ts` 的指令進行「權限分流」。放寬排版與摘要權限（允許 H2/H3 與條列式），但繼續鎖死數學與推斷權限，解決因「零幻覺」鐵律矯枉過正導致日記帳喪失易讀性的問題。
 
-- **[Architect & CPA 聯手任務 (取代 Prompt 暴力注入的決定論防護網)]**
+- **[Tzuhan 任務 (取代 Prompt 暴力注入的決定論防護網)]**
 - **✅ Done (2026-05-20)：Voucher 財務防護 - 語意標籤與多國映射 (Semantic Account Matching)**：
   - **痛點拆彈**：過去將 1 萬多筆會計科目塞入 Prompt，導致 Token 爆炸且 AI 經常選錯相近科目。
   - **實作架構**：徹底拔除 Prompt 字典注入。實作 `UniversalAccountTag` (如 `TELECOM_EXPENSE`) 作為通用語意標籤，並於後端建立 `SemanticAccountMatcher`。
   - **防護機制**：AI 只需輸出自然語言（如「郵電費」），後端透過 `COUNTRY_ALIASES` 進行 O(1) 複雜度映射，精準對應至該租戶國家 (TW, US, JP 等) 絕對合規的底層代碼（如台灣的 `6215`），徹底阻絕 AI 瞎編會計代碼的幻覺。
 
-- **⚠️ Pending (Sprint 1 Blocker)：Voucher 解析防護升級 - 多維度廠商攔截器 (Multi-Dimensional Vendor Registry)**：實作統編 (Tax ID) 優先與別名陣列，取代單純字串比對，建立 O(1) 決定論攔截引擎 (參閱 ADR 004)。
-- **⚠️ Pending (Sprint 1 Blocker)：Voucher 解析防護升級 - 本機向量檢索與選擇題 (COA Vector RAG & Multiple-Choice)**：將各國會計科目表靜態向量化，以 Top-K 選擇題徹底廢除危險的模糊比對 (Fuzzy Matching) (參閱 ADR 004)。
-- **⚠️ Pending (Sprint 1 Blocker)：Voucher 解析防護升級 - 雙軌懸記與虛擬科目隔離區 (Dual-Track Suspense & Quarantine Zone)**：廢除強制指派，實作未知款項進入 BS 懸記 (`1471`/`2330`/`2204`)，以及損益性質不明款項進入 PL 虛擬隔離區 (`6288`/`7590`)，標記 `isVerified=false` 以防淨利虛增 (參閱 ADR 004)。
+- **✅ Done (2026-05-21)：Voucher 解析防護升級 - 多維度廠商攔截器 (Multi-Dimensional Vendor Registry)**：於 `VendorRegistry` 與後端同步層實作統編 (Tax ID) 優先與別名陣列，建立 O(1) 靜態記憶體倒排索引與決定論攔截引擎，強制覆寫 AI 推論，確保盲測 0 誤差 (參閱 ADR 004)。
+- **✅ Done (2026-05-22)：Voucher 解析防護升級 - 本機向量檢索與逐行映射 (COA Vector RAG & Per-Line Mapping)**：徹底剝奪 AI 推論會計科目的權限。實作純 TypeScript 的 Bigram 餘弦相似度演算法，精準比對會計科目描述。
+- **✅ Done (2026-05-22)：Voucher 解析防護升級 - 雙軌懸記與虛擬科目隔離區 (Dual-Track Suspense & Quarantine Zone)**：於 `document_sync.repo.ts` 實作防線。實作完美的 4 向精準分流，BS 未知款進入 (1471/2330)，PL 未知款進入 (6288/7590)，徹底解決借貸顛倒之嚴重會計漏洞。
 
-- **⚠️ Pending (Sprint 1 Blocker)：ESG 解析防護升級 - 決定論攔截器 (EmissionFactorRegistry)**：比照 Voucher 的 VendorRegistry，實作高頻碳排項目（如台電、中油）的 O(1) 攔截字典 (參閱 ADR 002)。
-- **⚠️ Pending (Sprint 1 Blocker)：ESG 解析防護升級 - 修復單次語意降級斷鏈 (Fix Single-Pass Semantic Fallback)**：
-  - **斷鏈地雷**：後端 `document_sync.repo.ts` 雖已實作完美的 Max-Factor Guard 與 Dimensional Guard，但前端 AI `vision.accounting.service.ts` 的 JSON Schema 中完全遺漏了 `fallbackCategory`，導致後端的降級與保守型估算機制淪為死碼。
-  - **修復目標**：在 Phase 3 Prompt Schema 中補上 `fallbackCategory`，並明確授權 AI 在找不到精準係數時進行「大類標籤推測」。寫入 DB 時強制鎖定 `isVerified = false` 與 `generationSource = AI_SPECULATIVE_STAGE_3` (黃燈懸記)，兼顧前端儀表板連續性與最終審計阻斷。
+- **✅ Done / ⚠️ Deprecated (2026-05-22)：ESG 解析防護升級 - 決定論攔截器 (EmissionFactorRegistry)**：原先新增了 `EmissionFactorRegistry` 作為 ESG 專屬攔截器（實作台電、中油等高頻項目的 O(1) Tax ID 攔截）。但經 Luphia 審查，因大型集團業務多元，單一統編攔截會導致分類錯誤，**已決議廢棄此靜態攔截器**。
+- **✅ Done (2026-05-21)：ESG 解析防護升級 - 修復單次語意降級斷鏈 (Fix Single-Pass Semantic Fallback)**：
+  - 在 `EsgParsingSchema` 中補上強型別 Enum 的 `fallbackCategory`。
+  - 將後端標籤升級為強型別 `EsgGenerationSource.AI_GENERATED`，完美銜接 Max-Factor Guard 與黃燈懸記機制（過渡期方案）。
   - **量綱一致性防護 (Dimensional Guard)**：(✅ 已實作) 實作跨量綱阻斷，若 AI 萃取的單位 (如 LITER) 與係數庫單位 (如 KWH) 物理量綱不符，直接退回懸記。
 
 - **✅ Done (2026-05-20)：混合決策管線與 Schema 實體約束 (Hybrid Deterministic Pipeline & Schema Enum Binding)**：
   - 全面導入 Gemini JSON Schema `enum` 與 `format: "enum"`，在物理 API 層面封鎖 AI 發明自創字串。例如：強制約束 `DocumentType` 只能是 `ACCRUAL_NOTICE` 或 `PAYMENT_RECEIPT`，單位只能是 `MeasurementUnit` 枚舉，將萃取資料 100% 標準化。
 
 - **✅ Done (2026-05-20)：強制修復傳票重複加總漏洞與自動沖銷 (Auto-Reconciliation)**：
-  - 實作 `ReconciliationService`。當 AI 判定憑證為 `PAYMENT_RECEIPT` (已付款收據) 時，系統會啟動 FIFO 機制，自動尋找前期未付款的 `ACCRUAL_NOTICE` (應付帳款) 進行借貸沖銷 (`clearedByVoucherId`)。完美解決了代墊款與實際支付重複加總的破網漏洞，達成會計應計基礎 (Accrual Basis) 的完整閉環。
+  - 實作 `ReconciliationService`。為避免去中心化 Executor 的 Race Condition (時序悖論)，放棄同步沖銷，改採「延遲綁定與最終一致性 (Late Binding & Eventual Consistency)」。系統透過背景批次池化 (Pool Matching)，拉出同供應商的單據依 `tradingDate` 重新排序並雙向扣合 (`clearedByVoucherId`)。完美解決了代墊款與實際支付重複加總的破網漏洞，達成會計應計基礎 (Accrual Basis) 的完整閉環。
 
 - **✅ Done (2026-05-20)：跨表指標引擎解耦 (Cross-Report Metrics Engine)**：
   - 建立獨立的 `calculateCrossReportMetrics` 引擎。單一報表 (如現金流量表) 只負責絕對的當期變動，將 EPS (需總股本) 與 現金流量允當比率 (需存貨變動) 等「跨表指標」抽離至最高編排層處理，消滅了為求指標數字而在單一引擎內虛擬補數的造假行徑。
@@ -109,14 +134,15 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **[CPA 碳排合規任務 (DPP 產品護照架構交由 Luphia 負責)]**
 - **✅ Done (Architectural Decision: Immutable IDs)：排放係數時空快照 (Emission Factor Versioning)**：經過重新設計，不再將數值硬拷貝至 EsgRecord 造成 Schema 污染。改為全面採用「Immutable Coefficient IDs (如 epa-2025-t1-004)」，天然實現時空快照。
   - **🔒 Immutable Coefficient 兩大鐵律**：未來維護係數庫必須嚴格遵守：1. **禁止 UPDATE 數值** (避免污染歷史帳本)；2. **永遠只用 INSERT (Append-Only)**。
-- **⚠️ Pending (急迫)：官方標準係數資料庫轉移與自動化管線 (Standard Coefficients DB Migration & Scraper)**：
-  - 目前為求開發便利，將大量係數混寫於常數檔中 (`TRUE_COEFFICIENT_DATA_*`)。未來必須開發專屬 Seeder 將數萬筆標準係數全數整併至資料庫（以 `accountBookId = null` 作為全域辨識），並重構 `route.ts` 直接查詢 DB 以支援效能與分頁。
+- **⚠️ Pending (Sprint 2)：Vendor MDM 本地唯讀對照庫架構升級 (Local SQLite Reference)**：將 150 萬筆台灣廠商登記資料打包為 `tax_reference.sqlite` 本地唯讀檔案，內建於 Backend Image 中。透過統編對應行業代號 (`industry_rules.ts`)，實作 O(1) 的零網路 I/O 攔截 (參閱 ADR 005)。
+- **⚠️ Pending [Critical/Audit Requirement]：官方標準係數資料庫轉移與自動化管線 (Standard Coefficients DB Migration & Scraper)**：
+  - 目前為求開發便利，將大量係數混寫於常數檔中 (`TRUE_COEFFICIENT_DATA_*`)。未來必須開發專屬 Seeder 將數萬筆標準係數全數整併至資料庫（以 `accountBookId = null` 作為官方辨識錨定），並重構 `route.ts` 直接查詢 DB 以支援效能與分頁 (參閱 ADR 005)。
   - **三大資料來源同步**：
     1. **US EPA** (美國環保署資料庫)
     2. **UK DEFRA** (英國環境食品與鄉村事務部資料庫)
     3. **Taiwan MOENV** (台灣環境部事業溫室氣體排放量資訊平台 - 需找回舊有爬蟲程式碼整合進管線)
   - 建立定期自動下載 Pipeline，確保系統具備最新 Master Data 且強制遵守 Append-Only 不可竄改規則。
-- **⚠️ Pending：阻斷 AI 碳排幻覺與導入向量搜尋 (Anti-ESG Hallucination & Vector Search)**：內建 `EmissionFactorDictionary`。不僅要求 AI 只抓取「活動數據」，後端必須導入 `pgvector` 向量搜尋來精準對接官方係數庫並交由系統重算。
+- **⚠️ Pending (Sprint 2)：阻斷 AI 碳排幻覺與導入動態檢索 (Anti-ESG Hallucination & Two-Turn RAG)**：已廢棄靜態的 `EmissionFactorRegistry`，改為在 `EsgParsingSkill` 中實作兩回合動態檢索。第一回合由 AI 推論活動大類與關鍵字，第二回合由 AI 從系統過濾出的 Top 20 係數中做選擇題並計算數據，徹底消滅碳排數值編造幻覺。
 - **⚠️ Pending (急迫)：質量守恆勾稽與動態容許耗損率 (Mass Conservation & Loss Ratio Threshold)**：將「進銷存與原物料物理防護」實作於管線中。猶如財務的 A=L+E，系統將強制核對：`期初庫存重量 + 本期採購重量 = 消耗重量 + 期末庫存重量`。**(物理防呆地雷拆彈)** 避免過度剛性的物理防護導致系統死鎖，現實中絕對守恆不存在，必須在 Schema 為不同原物料引入動態的「容許耗損率 (Loss Ratio Threshold)」。若 AI 萃取出的消耗量與 ERP 盤盈虧落在合理閥值內，系統應自動生成「盤盈虧/耗損調整分錄」並繼續放行，以貼近真實製造業的運作樣貌。
   - **⚠️ Pending (2026-05-13)：進階防護實作**：必須在寫入 DB 前掛載 ERP 庫存比對微服務，若 `amount > MAX_INVENTORY_LIMIT` 則直接拋出 Error 並將憑證標記為 `FRAUD_SUSPECTED` 阻斷寫入，達到 100% 物理防漂綠。
 
@@ -152,3 +178,17 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 
 3. **合規混沌工程 (Compliance Chaos Engineering)**
    開發後期定期舉辦破壞性演練。模擬 DBA 刪除資料，驗證 Hash Chain 斷裂警報；模擬 AI 幻覺攻擊，驗證內控的凍結機制。
+
+4. **企業級大數據實兵演練 (Enterprise Big Data PoC)**
+   系統必須具備處理百萬級真實交易的吞吐能力。將「台積電 780 萬筆 ESG 擬真數據 PoC」定義為 Sprint 1 與 Sprint 2 交界處的關鍵里程碑，驗證底層防禦與 SQL 聚合能力。
+   [👉 詳見 TSMC 旗艦級 ESG 擬真數據 PoC 實作戰略](../testing_and_qa/e2e_audit_pipeline/tsmc_poc_blueprint.md)
+   
+   **[協作解耦與工作順序 (Decoupled Workflow Sequence)]**
+   為了避免開發過程互卡與伺服器 OOM 崩潰，針對 780 萬筆大數據測試，嚴格定義以下工作時序：
+   - **Step 1: [Julian] 巨量資料批次注入 (Batch Seeding)**
+     - **任務**：負責將 780 萬筆 JSON 成功灌進資料庫（或產出 `db_dump_vouchers.json`）。
+     - **限制**：灌完資料後即算 100% 完工。**請先不要**跑 `cross_validator.ts` 或開 UI 讀報表，以免引發系統 OOM 崩潰。確認資料有進 DB 後，即可轉往進行視覺抽驗 (SVG) 的任務。
+   - **Step 2: [Tzuhan] 核心引擎 SQL 聚合重構 (Raw SQL Aggregation)**
+     - **任務**：在核心金流與報表引擎中實作 SQL 原生聚合，利用 PostgreSQL 算力取代 Node.js 記憶體運算，完成底層效能瓶頸的最後拆彈。
+   - **Step 3: 聯合盲測與審計對比**
+     - **任務**：待 Tzuhan 的 SQL 引擎重構上線後，雙方再一起執行 `cross_validator.ts`，以絕對 0 誤差的零容忍標準，跑出最終的財排對比報告。

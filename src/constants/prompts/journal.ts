@@ -1,5 +1,6 @@
 import { IAccountBookBase } from "@/interfaces/account_book";
 import { getLanguageByCountry } from "@/constants/country";
+import { CountryCode } from "@/constants/enums";
 
 export const getJournalPrompt = (accountBook?: IAccountBookBase | null) => {
   // Info: (20260518 - Tzuhan) 今日日期
@@ -7,7 +8,7 @@ export const getJournalPrompt = (accountBook?: IAccountBookBase | null) => {
 
   // Info: (20260326 - Julian) 帳本資訊 (轉為全英文以增強指令遵循)
   const accountBookInfo = accountBook
-    ? `\n  This journal entry is for the account book "${accountBook.name}". Accounting standard country: ${accountBook.country || "TW"}. Base currency: ${accountBook.currency}.`
+    ? `\n  This journal entry is for the account book "${accountBook.name}". Accounting standard country: ${accountBook.country || CountryCode.TW}. Base currency: ${accountBook.currency}.`
     : "";
 
   // Info: (20260326 - Julian) 帳本規則
@@ -17,7 +18,7 @@ export const getJournalPrompt = (accountBook?: IAccountBookBase | null) => {
 
   // Info: (20260518 - Julian) 產出語言 (轉為全英文以增強指令遵循)
   const languageInstruction = accountBook?.country
-    ? `\n  Please use "${getLanguageByCountry(accountBook.country).english}" as the primary language for the aiNote and text fields. For all other fields, you MUST strictly preserve the original text without any translation.`
+    ? `\n  Please use "${getLanguageByCountry(accountBook.country as CountryCode).english}" as the primary language for the aiNote and text fields. For all other fields, you MUST strictly preserve the original text without any translation.`
     : "";
 
   return `

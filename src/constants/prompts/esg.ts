@@ -3,6 +3,7 @@ import { ICoefficient } from "@/interfaces/coefficient";
 import { EsgActivityTypeMapping } from "@/constants/esg_activity_type";
 import { IEmissionSources } from "@/interfaces/emission_sources";
 import { getLanguageByCountry } from "@/constants/country";
+import { CountryCode } from "@/constants/enums";
 
 export const getEsgPrompt = (
   accountBook?: IAccountBookBase | null,
@@ -17,7 +18,7 @@ export const getEsgPrompt = (
 
   // Info: (20260423 - Julian) 建立帳本資訊
   const accountBookInfo = accountBook
-    ? `\n  這筆碳盤查紀錄是為了「${accountBook.name}」所分析，請根據該企業情境與所在地（${accountBook.country || "TW"}）進行溫室氣體範疇的判斷。`
+    ? `\n  這筆碳盤查紀錄是為了「${accountBook.name}」所分析，請根據該企業情境與所在地（${accountBook.country || CountryCode.TW}）進行溫室氣體範疇的判斷。`
     : "";
 
   // Info: (20260423 - Julian) 建立帳本規則
@@ -27,7 +28,7 @@ export const getEsgPrompt = (
 
   // Info: (20260518 - Julian) 產出語言
   const languageInstruction = accountBook?.country
-    ? `\n  請用「${getLanguageByCountry(accountBook.country).chinese}」作為主要語言產出 aiNote 欄位，其餘欄位請 100% 忠實保留原始文字，嚴禁翻譯。`
+    ? `\n  請用「${getLanguageByCountry(accountBook.country as CountryCode).chinese}」作為主要語言產出 aiNote 欄位，其餘欄位請 100% 忠實保留原始文字，嚴禁翻譯。`
     : "";
 
   // Info: (20260430 - Julian) 建立排放源清單

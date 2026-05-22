@@ -32,9 +32,10 @@
 - **Prompt 端**：已拔除 AI 計算匯差的權力 (`journal.ts`)，強制要求保留原始幣別與金額。
 - **Backend 端 (⚠️ Pending)**：雖然拔除了 AI 的權限，但我們尚未實作「匯率微服務 (Exchange Rate API)」。這意味著目前系統處理外幣憑證時，仍無法自動化結算回本位幣。此功能必須在 Sprint 2 優先實作，否則會影響跨國企業的試算表平衡。
 
-### 🚨 2.3 傳票金額重複加總問題 (Voucher Duplication Issue)
+### 🚨 2.3 ✅ 已徹底修復：傳票金額重複加總問題 (Voucher Duplication Issue)
 
-目前的 `Voucher` 統計邏輯中，針對「代繳」與「已繳費」的情境未有明確的防護分離，導致部分複雜憑證在總額結算時會產生重複計算（Double-counting）。此商業邏輯錯誤目前標記為 Pending，將於接下來的 Sprint 中修復。
+過去的 `Voucher` 統計邏輯中，針對「代繳」與「已繳費」的情境未有明確的防護分離，導致部分複雜憑證在總額結算時會產生重複計算（Double-counting）。
+**現已拆彈**：我們已實作 `ReconciliationService`。為避免去中心化 Executor 產生時序悖論 (Race Condition)，系統透過背景批次池化 (Pool Matching)，拉出同供應商的單據依 `tradingDate` 重新排序並雙向扣合 (`clearedByVoucherId`)。完美達成會計應計基礎 (Accrual Basis) 的完整閉環。
 
 ## 3. Deloitte 級別重構目標 (Refactoring Towards Audit-Ready)
 
@@ -42,7 +43,7 @@
    - **Stage 1 (萃取特徵)**：AI 僅負責萃取發票廠商、日期、金額等客觀特徵。
    - **Stage 2 (程式查表)**：完全廢除 Prompt 字典注入。依賴後端 TypeScript 建立「黃金廠商映射表」，看到如「中華電信繳費通知」，直接回傳確定的 CPA 認證分錄 (Deterministic Logic)。
    - **Stage 3 (AI 推論)**：若遇未知憑證，才啟動具備向量檢索 (Vector Search) 功能的高階 Prompt 進行猜測。
-   - **策略模式註冊表 (Strategy Registry Pattern)** `(👉 交由 Julian 負責實作)`：將黃金映射表封裝至 `VENDOR_RULE_REGISTRY`，後端透過廠商名稱動態調用對應的查表函式，遵守 OCP 開閉原則。
+   - **✅ 已實作：策略模式註冊表 (Strategy Registry Pattern)**：將黃金映射表封裝至 `VendorRegistry` 的 O(1) 記憶體倒排索引中，後端透過廠商統編與名稱動態調用對應的查表函式，完全遵守 OCP 開閉原則並強制覆寫 AI。
    - **(未來擴充) 審計軌跡標籤 (Audit Trail Flag)**：強制要求輸出的 JSON 中帶有 `generationSource`（如 `RULE_ENGINE_STAGE_2` 或 `LLM_FALLBACK_STAGE_3`），供會計師查帳時快速篩選高風險傳票。
 2. **將匯率與數學運算抽回系統層 (Backend Math Offloading)** `(👉 交由 Julian 負責實作：外幣匯率自動化爬蟲與換算服務)`：
    - AI 僅被允許萃取「原始幣別 (如 USD)」與「原始金額 (如 100.50)」。
