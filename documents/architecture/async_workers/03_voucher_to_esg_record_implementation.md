@@ -40,9 +40,10 @@ AI 被要求：
    - 這是阻絕 AI 漂綠的終極防呆機制。將 AI 萃取出的消耗量與企業 ERP 系統進行比對（`期初庫存 + 本期採購 = 消耗重量 + 期末庫存`）。若數量大於物理上限，立刻報錯凍結。
 4. **✅ 已完成：ESG 單位型別強固化 (MeasurementUnit Decoupling)**
    - 已將 `MeasurementUnit` 從 Prisma 資料庫 Enum 中徹底拔除，轉為 TypeScript 端的強型別常數 (`src/constants/enums.ts`)。這消除了 AI 萃取時與資料庫層的依賴耦合，並確保單位定義在系統層是絕對靜態的真理，不會因為 DB Schema 異動而導致碳排計算邏輯崩潰。
-5. **✅ Sprint 1 已完成：ESG 四軌降級攔截器 (EmissionFactorRegistry)**
-   - 實作了「1. 官方 DB -> 2. 官方靜態墊片 -> 3. 租戶 DB -> 4. 懸記」的 4 軌降級管線，攔截如台電、中油等高頻項目。
-   - **⚠️ Pending (Sprint 2)：官方標準係數資料庫轉移**：將龐大的原始係數資料表 (1,200+ 筆) 洗轉並全數整併至核心 PostgreSQL（以 `accountBookId = null` 錨定），並建置產業容損率檢索機制。
+5. **✅ Sprint 1 架構轉向 (Pivot)：廢棄靜態攔截，導入 Two-Turn AI-RAG**
+   - 原本實作了「1. 官方 DB -> 2. 官方靜態墊片 -> 3. 租戶 DB -> 4. 懸記」的 4 軌降級管線與 `EmissionFactorRegistry`。
+   - **(2026-05-22 決議)**：因大型企業集團（如統一、遠東）業務複雜，單一統編綁定特定係數會產生嚴重錯估。Tzuhan 決議廢棄靜態映射，全面改寫 `EsgParsingSkill` 為「動態兩回合檢索 (Two-Turn RAG)」。由 AI 讀取明細並推論出搜尋關鍵字，Skill 過濾出 Top 20 係數後，再由 AI 精準挑選並計算單位數值。
+   - **⚠️ Pending (Sprint 2)：官方標準係數資料庫轉移與 RAG 實作**：將 `esg_parsing.ts` 改寫為 Two-Turn RAG 管線，並將龐大的原始係數資料表全數整併至核心 PostgreSQL（以 `accountBookId = null` 錨定）。
 6. **🛡️ 精度防護：碳排數據強制 Prisma.Decimal 鑄造 (Mandatory Decimal Casting)**：
    - 與財務金流不同，ESG 的「活動數據 (esgAmount)」與「排放係數 (factor)」必然牽涉到極微小的小數點運算（例如 `0.000054` 噸 CO2e）。這類數值絕對不能使用 `BigInt`（會遺失小數），更不能使用原生 JavaScript `number`（會產生二進制浮點數漂移）。
    - 當 AI 回傳或系統檢索到正確的係數與數據後，準備回寫至主系統 `EsgRecord` 前，必須強制透過 `new Prisma.Decimal(amount)` 將數值轉型為 Decimal 實體。

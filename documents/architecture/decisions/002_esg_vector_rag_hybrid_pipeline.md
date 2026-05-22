@@ -62,10 +62,10 @@
 
 除了解決「系統官方係數」的配對，架構亦同時防禦「用戶自定義係數」與「高頻標準品項」。
 
-### 3.1 決定論防禦層 (EmissionFactorRegistry) [✅ Done]
+### 3.1 決定論防禦層 (EmissionFactorRegistry) [⚠️ Deprecated]
 
-借鑑財務模組的 `VendorRegistry`，建立 ESG 專屬的決定論攔截器。
-將佔據企業 80% 碳排的最常見 100 項高頻項目（如：台電電費、自來水、95無鉛汽油）寫死在 TypeScript 字典中。此類單據直接 $O(1)$ 命中，連 LLM 都不必呼叫。
+原先借鑑財務模組的 `VendorRegistry`，建立 ESG 專屬的決定論攔截器（將高頻廠商寫死在 TypeScript 字典中）。
+**架構轉向 (Pivot) 決策 (2026-05-21)**：此做法已被架構 Tzuhan & Luphia 認定存在極高風險。因為企業型態並非單一（如「統一集團」旗下同時包含農業食品、包裝耗材、物流運費），強制綁定單一統編對應單一碳排係數會導致嚴重的分類錯誤。我們已決議廢棄靜態映射，改為在 `EsgParsingSkill` 中全面導入 **Two-Turn AI-RAG (兩階段動態檢索)**，讓 AI 直接根據「日記帳品項明細」進行意圖檢索與精確係數挑選。
 
 ### 3.2 租戶專屬自訂係數 (Tenant Custom Coefficients)
 
@@ -169,10 +169,10 @@
 - **實作現況 (✅ Pass)**：在 `document_sync.repo.ts` (L411-L428)，明確實作了 `getDimension(docUnit) !== getDimension(coefUnit)` 的邏輯。
 - **審計效益**：如果 AI 萃取的是「公升 (LITER)」，但對應到的係數是「度數 (KWH)」，系統會無情阻斷跨量綱相乘，強制打入懸記 (Suspense = true)。這是目前 ESG 管線中**唯一完全發揮作用**的亮點，成功防堵了荒謬的碳排入庫。
 
-#### 3. 🛡️ 決定論防禦層 (EmissionFactorRegistry)：完全不存在
-- **實作現況**：完全未實作。
-- **致命斷層**：目前 codebase 只有針對財務的 `VendorRegistry`。ADR 002 Section 3.1 提到的「將佔據企業 80% 碳排的最常見 100 項高頻項目（如：台電電費、自來水）寫死在 TypeScript 字典中」的機制，目前在 codebase 中找不到任何蹤影。
-- **審計風險**：連最標準、最不可能出錯的「台電電費」，現在都必須經過 AI 推論與全庫搜尋，白白浪費運算資源且增加不必要的幻覺風險。
+#### 3. 🛡️ 決定論防禦層 (EmissionFactorRegistry)：架構轉向 (Pivot to Dynamic RAG)
+- **實作現況**：原本計畫實作 O(1) 攔截器，但在 2026-05-22 經 Luphia 審查後緊急叫停並廢棄。
+- **廢棄原因**：大型企業集團（如統一、遠東）具備多元複合業務。若將統編硬性綁定「農業與食品」係數，將導致其物流、包裝等服務被嚴重錯估。
+- **新架構解法**：全面升級 `EsgParsingSkill` 導入 **Two-Turn RAG (動態兩回合檢索)**。由 AI 根據憑證明細推斷關鍵字，Skill 執行向量/字典檢索後，再由 AI 從 Top 20 候選名單中精準挑選最合適的 `coefficientId`。此舉正式將碳排係數的配對邏輯，從「廠商死綁」解放為「明細動態推論」。
 
 #### 4. 🧠 本機向量檢索 (Local Vector RAG)：尚未進入開發階段
 - **實作現況**：完全未實作 (但符合 Roadmap 預期，安排在 Phase 2)。
