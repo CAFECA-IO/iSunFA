@@ -1,6 +1,6 @@
 # 架構決策紀錄 (ADR) 004: Voucher & Account Code Hybrid Deterministic Parsing Pipeline (財務傳票與會計科目混合決定論解析管線)
 
-> ⚠️ **CRITICAL DEPRECATION WARNING (2026-05-22)**: 本文件提倡的「多維度廠商攔截器 (`VENDOR_RULE_REGISTRY` 靜態統編防線)」已被認定為架構地雷，且其相關原始碼已於 Sprint 2 中被**全數刪除**。目前的傳票解析全面改用 Two-Turn RAG 與零信任防線。請立即轉移至最終決策文件：**[ADR 007](./007_ai_accounting_defenses_tradeoffs_and_upgrade_paths.md)**。
+> ⚠️ **CRITICAL DEPRECATION WARNING (2026-05-22)**: 本文件提倡的「多維度廠商攔截器 (`VENDOR_RULE_REGISTRY` 靜態統編防線)」已被認定為架構地雷，且其相關原始碼已於 Sprint 1 中被**全數刪除**。目前的傳票解析全面改用 Two-Turn RAG 與零信任防線。請立即轉移至最終決策文件：**[ADR 007](./007_ai_accounting_defenses_tradeoffs_and_upgrade_paths.md)**。
 
 > **Date**: 2026-05-20
 > **Author**: Tzuhan
@@ -30,9 +30,9 @@
 
 **廢棄原因 (2026-05-22 Update)**：原先我們依賴 O(1) 的倒排索引與統編比對來強迫配對會計科目。但實務上，「不能看人下單，要看交易本質 (Substance over Form)」。單一廠商（如中華電信）可能販售多種不同性質的商品（通訊費 vs 設備資產）。帶小抄上考場會引發嚴重的「靜態誤判」。
 
-**解決方案**：此防線已徹底廢除。Voucher 解析管線全面升級為 **「動態兩回合檢索 (Two-Turn RAG)」**。
-- **Turn 1 (語意萃取)**：AI 僅負責客觀萃取明細摘要 (`particular`)。
-- **Turn 2 (選擇題決策)**：由本機 Vector RAG 提供 Top 10 合法科目，AI 進行語意決策，最後強制掛上 `isVerified: false` 進入隔離區。
+**解決方案**：此防線已徹底廢除。Voucher 解析管線全面降級為 **「單回合萃取與後端決定論懸記 (Single-Turn Extraction & Deterministic Suspense)」** 以防堵 AI 幻覺。
+- **Turn 1 (客觀萃取)**：AI 僅負責客觀萃取明細摘要 (`particular`)、金額 (`amount`) 與借貸方 (`isDebit`)。徹底拔除 AI 決定會計科目的權力。
+- **後端 Bigram 閥值懸記**：由 `CoaVectorSearchService.matchWithScore` 計算字面相似度。大於 0.85 採信；否則一律退回後端的 Dual-Track Suspense Fallback (BS / PL 隔離區)。
 
 ### 🧠 第二重：本機向量檢索與逐行映射 (Local Vector RAG & Per-Line Mapping) [✅ Done]
 
@@ -85,14 +85,11 @@
 1. **[防護升級] 懸記科目 4 向精準分流 (✅ Fixed)**: `document_sync.repo.ts` 已重構為嚴謹的 4 向精準分流 (BS 借貸 1471/2330，PL 借貸 6288/7590)，徹底解決了先前借貸顛倒的會計嚴重錯誤。
 2. **[演算法升級] Vector RAG 替換計畫 (✅ Fixed)**: `coa_vector_search.service.ts` 已不再是 Fallback 框架。我們實作了純 TypeScript 的 Bigram 餘弦相似度 (Cosine Similarity) 演算法，直接將憑證摘要與會計科目的定義進行數學向量對比，達成純本機 RAG 檢索。作為 coa_embeddings.json 就緒前的真・演算法防護）。
 
-### 1. 🔍 廠商攔截器：只有半套，最核心的「統編」還沒做
-雖然 `src/services/rules/vendor_registry.ts` 和 `vendor_rules.ts` 已經存在，並且實作了「別名陣列 (Aliases Array)」，但它的 `match()` 方法目前**只接收 `vendorName` 並使用 `.includes` 進行模糊比對**。
-AI 在 OCR 階段 (`VisionAccountingService`) 雖然有萃取出 `vendorTaxId`，但後端根本還沒有實作「Tax ID 優先的 $O(1)$ 決定論比對」。這在審計上依然有很高的漏網風險。
+### 1. 🔍 廠商攔截器：只有半套，最核心的「統編」還沒做 (🚫 已徹底廢除)
+> **2026-05-22 Update**: 為了避免靜態誤判（如統一超商可能同時開出交際費與伙食費），我們已於 Sprint 1 正式刪除 `vendor_rules.ts` 與 `vendor_registry.ts`，不再依賴 O(1) 決定論比對。此技術債因架構升級而自動消滅。
 
-### 2. 💣 本機向量檢索 (Vector RAG)：根本還在「暴力注入」階段
-我在 `src/services/vision.accounting.service.ts` 的第 147 行發現了這段程式碼：
-`const availableAccounts = ACCOUNTS.TW.map(...)`
-系統目前**依然在把台灣帳本一千多個會計科目全部塞進 Prompt 裡** (`[ACCOUNTING DICTIONARY REFERENCE (TAIWAN)]`)，逼迫 AI 在龐大的字典中大海撈針！這就是我們急需用 Vector RAG 替換掉的 Token 災難與幻覺根源。
+### 2. 💣 本機向量檢索 (Vector RAG)：根本還在「暴力注入」階段 (✅ Fixed)
+> **2026-05-22 Update**: 我們已從 `vision.accounting.service.ts` 中拔除暴力塞入的全域字典，改由 `voucher_lines_parsing.ts` (Turn 1) 僅進行摘要萃取，並在 `document_sync.repo.ts` 透過 `CoaVectorSearchService` 進行本機後端的 Bigram 數學運算，徹底根除了 Token 災難與 AI 幻覺。
 
-### 3. 🚦 雙軌懸記與虛擬隔離區 (Suspense & Quarantine)：完全不存在
-無論是核心寫入層 (`document_sync.repo.ts`) 還是解析層，目前程式碼中**完全沒有看到**任何關於 `1471 暫付款` (BS)、`2330 暫收款`，或者是我們剛剛決議的 `6288 管理費用-其他費用` (PL) 隔離區的防呆路由機制。一旦 AI 給出爛數字，系統沒有任何黃燈保護傘。
+### 3. 🚦 雙軌懸記與虛擬隔離區 (Suspense & Quarantine)：完全不存在 (✅ Fixed)
+> **2026-05-22 Update**: 已於 `document_sync.repo.ts` 全面實裝！系統不再依賴 Fuzzy Matching，低信賴度的分錄將被強制打入 BS 防線 (`1471`/`2330`) 或 PL 隔離區 (`6288`/`7590`)，並標上 `isVerified = false` 與 `generationSource = JournalGenerationSource.SYSTEM_SUSPENSE`，完美落實了「零捏造」的四大查帳標準。

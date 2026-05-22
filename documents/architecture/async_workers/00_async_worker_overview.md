@@ -117,7 +117,7 @@ graph TD
 
 ### 🏗️ 混合決定論管線 (Hybrid Deterministic Pipeline)
 Executor 的內部實作了「不確定的機率推論」與「絕對的數學真理」拆分。
-1. **任務層級分流 (`skillRegistry` & Two-Turn RAG)**：判斷是否為預先寫死的 TypeScript 技能，透過本地 Vector Search 提供動態決策選項，廢棄了硬編碼的統編攔截器 (VendorRegistry)。
+1. **任務層級分流 (`skillRegistry` 與 RAG 管線)**：判斷是否為預先寫死的 TypeScript 技能，透過本地 Vector Search 提供動態決策選項 (`EsgParsingSkill` 採 Two-Turn AI 決策；`VoucherLinesParsingSkill` 採單回合萃取並搭配後端 Bigram 嚴格懸記)。
 2. **AI 推論 Fallback**：若皆無命中，才會退回到純粹的 Gemini API 請求。所有產出預設為 `isVerified: false`。
 
 ### 🧮 數值型別防腐層 (Type Flow & Anti-Corruption)

@@ -11,9 +11,9 @@
 
 本次重構徹底解耦了資料庫同步層與 AI 解析層，並確立了以下最高指導原則：「**寧可懸記、絕不瞎猜；犧牲極小部分開發便利性，換取絕對會計安全性。**」
 
-1. **廢除靜態防線**：刪除了 `vendor_rules.ts` 與 `vendor_registry.ts`，放棄 O(1) 統編命中機制，改為動態「本地向量檢索 + LLM 選擇題」架構。
+1. **廢除靜態防線**：刪除了 `vendor_rules.ts` 與 `vendor_registry.ts`，放棄 O(1) 統編命中機制。
 2. **導入本地 Retriever**：新增 `CoaVectorSearchService`，實作基於純 TypeScript 的 Bigram Cosine Similarity 演算法。
-3. **實作 Two-Turn RAG**：將解析流程改寫為兩回合 (Turn 1: 擷取明細 → Vector Retrieval → Turn 2: 強制 AI 選擇題作答)。
+3. **退回單回合萃取與嚴格懸記 (Single-Turn + Strict Suspense)**：因 Two-Turn RAG 會產生嚴重的會計科目幻覺 (如捏造 `1423-8`)，決議將傳票解析全面降級為單回合客觀萃取。後端採 `>0.85` Bigram 閥值把關，不合者一律退回系統懸記，寧可錯殺不放過。
 4. **Repo 退縮與零信任**：移除 `document_sync.repo.ts` 內所有的外部 API 呼叫，避免資料庫 Transaction 死鎖；並在 Schema 新增審計血緣欄位。
 
 ---
@@ -51,19 +51,19 @@
 
 ---
 
-## 4. Two-Turn RAG 架構之利弊與盲點
+## 4. 單回合 RAG 與嚴格懸記之利弊與盲點 (Trade-offs of Single-Turn + Strict Suspense)
 
 ### 4.1 架構優點 (Advantages)
-- **實質重於形式 (Substance over Form)**：不再以單一統編綁死科目，系統能動態依據「交易摘要的語意」映射至正確的會計科目。
-- **杜絕 AI 幻覺 (Zero Hallucination)**：AI 被剝奪了自由填寫科目的權利。Turn 2 限制 AI 只能在我們提供的合法選項中抉擇，確保進入資料庫的代碼 100% 存在於系統字典中。
-- **解鎖高併發吞吐量 (High Concurrency)**：移除 Repo 層的網路 I/O 阻塞後，避免了大量並行處理文件時引發的 Connection Pool Exhaustion 與 Deadlocks。
+- **實質重於形式 (Substance over Form)**：不再以單一統編綁死科目，系統能動態依據「交易摘要的語意」進行向量比對。
+- **杜絕 AI 幻覺 (Zero Hallucination)**：徹底剝奪 AI 決定會計科目的權利，由後端 TypeScript 的 `CoaVectorSearchService.matchWithScore` 進行決定論閥值 (`>0.85`) 審核。不合格者直接打入 `1471` 或 `6288` 懸記隔離區，確保進入核心損益表的資料 100% 精準。
+- **解鎖高併發吞吐量與降低成本**：移除 Turn 2 後，Token 消耗減半，API 延遲減半，且移除 Repo 層網路 I/O 阻塞，解鎖高併發處理。
 
 ### 4.2 架構缺點 (Disadvantages)
-- **營運成本 (API Cost) 倍增**：改為 Two-Turn 後，Token 消耗量與 API 請求次數實質翻倍，在高印量情境下將顯著增加雲端成本。
-- **處理延遲 (Latency) 上升**：多一次 LLM 網路來回，非同步 Worker 處理單張憑證的總耗時將會拉長。
+- **懸記率大幅飆升 (High Suspense Rate)**：Bigram 演算法閥值設為 0.85 極度嚴苛。只要發票上的摘要（如「Uber 車資」）與字典（如「交通費」）字面上不夠相近，系統就會判定為懸記，導致大量憑證需要 CPA 手動覆核。
+- **無法處理語意近義詞**：Bigram 是字面相似度，不是 Embedding 語意相似度，因此「油資」與「燃料費」會被判定為不相關而打入懸記。
 
 ### 4.3 盲點與風險 (Blind Spots)
-- **Top 10 候選的「強迫中獎」謬誤**：如果使用者的憑證摘要極度不精確或充滿錯字，導致本地 Retriever 算出的 Top 10 根本不包含正確的科目。此時 Turn 2 的 AI 只能被迫在錯誤的選項中「挑一個比較合理的」，導致嚴重分類錯誤。
+- **CPA 覆核疲勞 (Audit Fatigue)**：寧可錯殺不放過的策略會導致大量合法的憑證被標記為 `isVerified: false`，可能引發使用者的作業疲勞。需依賴未來的 Batch Reclassify UI 或是更進階的 Text-Embedding 演算法來紓解。
 
 ---
 

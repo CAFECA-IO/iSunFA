@@ -100,32 +100,46 @@ export class CoaVectorSearchService {
 
   /**
    * Info: (20260522 - Tzuhan)
-   * Fetches the Top N candidate account codes based on Cosine Similarity.
-   * Used for Turn 2 AI Selection (Two-Turn RAG).
+   * 單筆精準匹配並回傳分數 (Per-Line Deterministic RAG with Score).
+   * 回傳 { code, score } 以供 Repo 層判斷是否進入懸記隔離區。
    */
-  static matchTopN(
+  static matchWithScore(
     particular: string,
     accountBookCountry: CountryCode = CountryCode.TW,
-    limit: number = 10,
-  ): string[] {
+  ): { code: string; score: number } {
     const dictionary = ACCOUNTS[accountBookCountry] || ACCOUNTS[CountryCode.TW];
 
     const cleanQuery = particular.split("-")[0].trim();
-    if (!cleanQuery) return [];
+    if (!cleanQuery) return { code: "UNKNOWN", score: 0 };
 
     const queryVec = getBigrams(cleanQuery);
-    const scoredAccounts: { code: string; score: number }[] = [];
+    let bestMatchCode = "UNKNOWN";
+    let bestScore = -1;
 
     for (const account of dictionary) {
       const docText = `${account.name} ${account.description}`;
       const docVec = getBigrams(docText);
       const score = cosineSimilarity(queryVec, docVec);
-      scoredAccounts.push({ code: account.code, score });
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatchCode = account.code;
+      }
     }
 
-    // Sort descending by score
-    scoredAccounts.sort((a, b) => b.score - a.score);
+    if (bestScore < 0.1) {
+      const fallbackCode = SemanticAccountMatcher.match(
+        cleanQuery.toLowerCase(),
+        dictionary,
+        accountBookCountry,
+      );
+      //  Info: (20260522 - Tzuhan) Give semantic matcher a static score if matched
+      return {
+        code: fallbackCode,
+        score: fallbackCode !== "UNKNOWN" ? 0.8 : 0,
+      };
+    }
 
-    return scoredAccounts.slice(0, limit).map((a) => a.code);
+    return { code: bestMatchCode, score: bestScore };
   }
 }

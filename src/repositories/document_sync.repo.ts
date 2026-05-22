@@ -23,7 +23,7 @@ import { ReconciliationService } from "@/services/reconciliation.service";
 import { MoneyUtil } from "@/lib/utils/money";
 
 import { SemanticAccountMatcher } from "@/lib/utils/semantic_account_matcher";
-
+import { CoaVectorSearchService } from "@/services/coa_vector_search.service";
 export class DocumentSyncRepository {
   async syncDocumentResultToDatabase({
     fileId,
@@ -226,20 +226,28 @@ export class DocumentSyncRepository {
             for (const l of vd.lines || []) {
               const amountDec = MoneyUtil.toDecimal(String(l.amount || 0));
 
-              // Info: (20260522 - Tzuhan) Repo 盲目信任 Skill 傳來的 Turn 2 AI 選擇 (l.accountingCode)
-              let matchedAccountingCode =
-                (l.accountingCode as string) || "UNKNOWN";
+              // Info: (20260522 - Tzuhan) [ADR 004 Enforcement] 廢除 Turn 2 盲目信任，改由後端嚴格 Bigram 閥值懸記
+              const particularStr = (l.particular as string) || "";
+              const matchResult = CoaVectorSearchService.matchWithScore(
+                particularStr,
+                (accountBook.country as CountryCode) || CountryCode.TW,
+              );
 
-              const isValidCode = dictionary.some(
+              let matchedAccountingCode = matchResult.code;
+              let isValidCode = dictionary.some(
                 (a) => a.code === matchedAccountingCode,
               );
 
-              // Info: (20260522 - Tzuhan) 繼承由 Skill 傳遞下來的驗證標記與來源
-              let lineIsVerified =
-                l.isVerified !== undefined ? l.isVerified : true;
+              let lineIsVerified = false;
               let lineGenSource: JournalGenerationSource =
-                (l.generationSource as JournalGenerationSource) ||
-                JournalGenerationSource.SYSTEM_DETERMINISTIC;
+                JournalGenerationSource.SYSTEM_SUSPENSE;
+
+              if (isValidCode && matchResult.score > 0.85) {
+                lineIsVerified = true;
+                lineGenSource = JournalGenerationSource.SYSTEM_DETERMINISTIC;
+              } else {
+                isValidCode = false; // Info: (20260522 - Tzuhan) Force suspense
+              }
 
               if (!isValidCode || matchedAccountingCode === "UNKNOWN") {
                 hasSuspense = true;

@@ -46,8 +46,8 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 
 **🔥 [Priority 1: Sprint 1 基礎防線補齊 (ADR 004)]**
 - ✅ **Done: [Tzuhan] Voucher 財務防護 - 語意標籤與多國映射**: 實作 `UniversalAccountTag` 與後端 `SemanticAccountMatcher`。
-- 🚫 **Canceled: [Tzuhan] 多維度廠商攔截器**: 廢棄 O(1) 攔截，以避免靜態規則造成的「看人下單」誤判，改由 Two-Turn RAG 處理。
-- ✅ **Done: [Tzuhan] 動態兩回合檢索與決策 (Two-Turn RAG)**: 實作 Turn 1 語意萃取與 Turn 2 AI 科目選擇，結合 `CoaVectorSearchService` 的前 10 名候選清單，最終強制標記 `isVerified: false` 進入隔離審核區。
+- 🚫 **Canceled: [Tzuhan] 多維度廠商攔截器**: 廢棄 O(1) 攔截，以避免靜態規則造成的「看人下單」誤判。
+- ✅ **Done: [Tzuhan] 單回合萃取與後端決定論懸記 (Single-Turn & Deterministic Suspense)**: 因 AI 幻覺嚴重，已拔除 Turn 2。由 AI 負責 Turn 1 客觀萃取，後端 `CoaVectorSearchService.matchWithScore` 進行 `>0.85` 閾值把關，不合者一律進入 BS/PL 隔離審核區 (`1471/6288`)。
 - ✅ **Done: [Tzuhan] 雙軌懸記與虛擬科目隔離區 (Suspense & Quarantine)**: 取消 DB 硬體寫死，改由程式碼統一 4 向精準分流 (BS 1471/2330, PL 6288/7590)。
 - ✅ **Done: [Tzuhan] 零信任會計稽核防線 (Zero-Trust Audit Defense)**: 於 Schema 實作 `isVerified` 與 `generationSource`，確保所有 AI 產生的憑證明細在人類覆核前皆保持未驗證狀態，建立 CPA 等級的資料血緣溯源 (ADR 007)。
 
