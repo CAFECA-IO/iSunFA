@@ -282,21 +282,34 @@ export class DocumentSyncRepository {
                   lineIsVerified = false;
                   lineGenSource = JournalGenerationSource.SYSTEM_SUSPENSE;
 
-                  if (
-                    l.isDebit === true ||
-                    docType === DocumentType.ACCRUAL_NOTICE
-                  ) {
-                    matchedAccountingCode =
-                      accountBook.plQuarantineAccount || "6288";
-                    finalAiNote =
-                      `[系統稽核警告] 摘要「${l.particular}」無法對應，依據費用性質強制隔離至 PL 隔離區 (${matchedAccountingCode})。\n` +
-                      finalAiNote;
+                  const isPL = docType === DocumentType.ACCRUAL_NOTICE;
+
+                  if (isPL) {
+                    if (l.isDebit) {
+                      matchedAccountingCode =
+                        accountBook.plQuarantineAccount || "6288";
+                      finalAiNote =
+                        `[系統稽核警告] 摘要「${l.particular}」無法對應，依據性質強制隔離至 PL 借方隔離區 (${matchedAccountingCode})。\n` +
+                        finalAiNote;
+                    } else {
+                      matchedAccountingCode = "7590";
+                      finalAiNote =
+                        `[系統稽核警告] 摘要「${l.particular}」無法對應，依據性質強制隔離至 PL 貸方隔離區 (${matchedAccountingCode})。\n` +
+                        finalAiNote;
+                    }
                   } else {
-                    matchedAccountingCode =
-                      accountBook.bsSuspenseAccount || "1471";
-                    finalAiNote =
-                      `[系統稽核警告] 摘要「${l.particular}」無法對應，強制歸入懸記科目 (${matchedAccountingCode})。\n` +
-                      finalAiNote;
+                    if (l.isDebit) {
+                      matchedAccountingCode =
+                        accountBook.bsSuspenseAccount || "1471";
+                      finalAiNote =
+                        `[系統稽核警告] 摘要「${l.particular}」無法對應，強制歸入 BS 借方懸記科目 (${matchedAccountingCode})。\n` +
+                        finalAiNote;
+                    } else {
+                      matchedAccountingCode = "2330";
+                      finalAiNote =
+                        `[系統稽核警告] 摘要「${l.particular}」無法對應，強制歸入 BS 貸方懸記科目 (${matchedAccountingCode})。\n` +
+                        finalAiNote;
+                    }
                   }
                 }
 

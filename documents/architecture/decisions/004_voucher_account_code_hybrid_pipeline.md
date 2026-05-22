@@ -2,7 +2,7 @@
 
 > **Date**: 2026-05-20
 > **Author**: Tzuhan
-> **Status**: Accepted (✅ Implemented in Sprint 1)
+> **Status**: Accepted (✅ Implemented & Optimized in Sprint 1)
 > **核心目標**: 在拔除上萬筆全域會計科目暴力注入後，補齊 `Voucher` 解析管線的防護缺口。捨棄危險的「自然語言模糊比對 (Fuzzy Matching)」，全面導入 **會計科目 Vector RAG**、**多維度攔截器** 與 **財務懸記機制 (Suspense Fallback)**，確保系統達到四大會計師 (Big 4) 等級的零幻覺與絕對應計基礎 (Accrual Basis)。
 
 ---
@@ -75,7 +75,11 @@
 
 ## 🪞 附錄：Sprint 1 實作現況與斷層分析 (Implementation Gap Analysis)
 
-> **稽核時間**: 2026-05-20 (⚠️ 註：以下斷層已於 2026-05-21 透過 `coa_vector.service.ts` 與 `document_sync.repo.ts` 全面修復並解耦，特此保留作為架構演進之歷史紀錄)
+> **稽核時間**: 2026-05-22 (✅ 註：以下架構優化已於 2026-05-22 全面修復並實作完成)
+
+### 🚨 2026-05-22 已修復之技術負債 (Resolved Technical Debt)
+1. **[防護升級] 懸記科目 4 向精準分流 (✅ Fixed)**: `document_sync.repo.ts` 已重構為嚴謹的 4 向精準分流 (BS 借貸 1471/2330，PL 借貸 6288/7590)，徹底解決了先前借貸顛倒的會計嚴重錯誤。
+2. **[演算法升級] Vector RAG 替換計畫 (✅ Fixed)**: `coa_vector_search.service.ts` 已不再是 Fallback 框架。我們實作了純 TypeScript 的 Bigram 餘弦相似度 (Cosine Similarity) 演算法，直接將憑證摘要與會計科目的定義進行數學向量對比，達成純本機 RAG 檢索。作為 coa_embeddings.json 就緒前的真・演算法防護）。
 
 ### 1. 🔍 廠商攔截器：只有半套，最核心的「統編」還沒做
 雖然 `src/services/rules/vendor_registry.ts` 和 `vendor_rules.ts` 已經存在，並且實作了「別名陣列 (Aliases Array)」，但它的 `match()` 方法目前**只接收 `vendorName` 並使用 `.includes` 進行模糊比對**。
