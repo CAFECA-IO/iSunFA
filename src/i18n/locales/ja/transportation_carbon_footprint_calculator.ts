@@ -57,6 +57,8 @@ export const transportationCarbonFootprintCalculator = {
     calculating: "計算中...",
     generate_report: "分析レポートを生成",
     login_to_generate: "分析レポートを生成するにはログインしてください",
+    login_to_use:
+      "物流カーボンフットプリント機能を使用するには、まずログインしてください",
     tab_analysis: "炭素会計",
     tab_history: "履歴レポート",
     tab_mileage: "マイレージ計算",

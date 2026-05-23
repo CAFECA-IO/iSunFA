@@ -31,6 +31,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { ORDER_TYPE } from "@/constants/status";
 import { useAuth } from "@/contexts/auth_context";
 import LoginButton from "@/components/common/login_button";
+import AuthPlaceholder from "@/components/common/auth_placeholder";
 
 // Info: (20260419 - Luphia) 靜態常數外提，避免每次 Render 重複建立 ---
 const SEASONS = ["S1", "S2", "S3", "S4"];
@@ -670,522 +671,543 @@ export default function AnalysisView() {
         <p className="mt-2 text-sm text-gray-500">{t("analysis.desc")}</p>
       </div>
 
-      {/* Info: (20260419 - Luphia) Tabs */}
-      <div className="mb-8 flex justify-center">
-        <div className="flex rounded-lg bg-gray-100 p-1">
-          {(["internal", "external", "history"] as TabType[]).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`${activeTab === tab ? "bg-white shadow-sm" : "hover:bg-gray-50"} rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200`}
-            >
-              {t(
-                `analysis.${tab}_${tab === "history" ? "reports" : "analysis"}`,
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
+      {user ? (
+        <>
+          {/* Info: (20260419 - Luphia) Tabs */}
+          <div className="mb-8 flex justify-center">
+            <div className="flex rounded-lg bg-gray-100 p-1">
+              {(["internal", "external", "history"] as TabType[]).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`${activeTab === tab ? "bg-white shadow-sm" : "hover:bg-gray-50"} rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200`}
+                >
+                  {t(
+                    `analysis.${tab}_${tab === "history" ? "reports" : "analysis"}`,
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
 
-      {/* Info: (20260419 - Luphia) Main Content */}
-      {activeTab !== "history" && (
-        <div className="min-h-[400px] rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
-          <div className="mx-auto max-w-4xl space-y-8">
-            <div className="space-y-6">
-              {/* Info: (20260419 - Luphia) 1. Period Type */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  {t("analysis.period_type")}
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {PERIOD_TYPES.filter(
-                    (type) =>
-                      !(
-                        isCarbonAnalysis &&
-                        (
-                          [
-                            ANALYSIS_PERIOD.MONTHLY,
-                            ANALYSIS_PERIOD.WEEKLY,
-                            ANALYSIS_PERIOD.DAILY,
-                          ] as string[]
-                        ).includes(type)
-                      ),
-                  ).map((type) => (
-                    <button
-                      key={type}
-                      onClick={() => {
-                        setPeriodType(type);
-                        setSelectedPeriodValue("");
-                      }}
-                      className={`rounded-full border px-4 py-2 text-sm font-medium transition-all ${periodType === type ? "border-gray-900 bg-gray-900 text-white shadow-md" : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"}`}
-                    >
-                      {t(`analysis.time_units.${type.toLowerCase()}`)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Info: (20260419 - Luphia) 2. Year Selection */}
-              {!isDaily && (
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    {t("analysis.select_year")}
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {Array.from(
-                      { length: currentYear - 2020 + 1 },
-                      (_, i) => currentYear - i,
-                    ).map((year) => (
-                      <button
-                        key={year}
-                        onClick={() => setSelectedYear(year)}
-                        className={`min-w-[4rem] rounded-lg border px-3 py-2 text-sm font-medium transition-all ${selectedYear === year ? "border-orange-600 bg-orange-600 text-white shadow-sm" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`}
-                      >
-                        {year}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Info: (20260419 - Luphia) 3. Specific Period Selection */}
-              {periodType !== ANALYSIS_PERIOD.YEARLY && (
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    {t("analysis.select_period")}
-                  </label>
-                  <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-                    {renderPeriodOptions()}
-                  </div>
-                </div>
-              )}
-
-              {/* Info: (20260419 - Luphia) Country Selection */}
-              {activeTab === "external" && !isExternalCarbonAnalysis && (
-                <div className="space-y-2 border-t border-gray-100 pt-4">
-                  <label className="block text-sm font-medium text-gray-700">
-                    {t("analysis.country")}
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {COUNTRIES.map((code) => (
-                      <button
-                        key={code}
-                        onClick={() => setSelectedCountry(code)}
-                        className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all ${selectedCountry === code ? "border-orange-600 bg-orange-600 text-white shadow-sm" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`}
-                      >
-                        <Globe className="h-4 w-4" />{" "}
-                        {t(`analysis.countries.${code}`)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Info: (20260419 - Luphia) Category Selection */}
-              <div className="space-y-3 border-t border-gray-100 pt-4">
-                <label className="block text-sm font-medium text-gray-700">
-                  {t("analysis.category")}
-                </label>
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-                  {currentCategories.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setCategory(cat)}
-                      className={`relative flex flex-col items-start rounded-xl border p-4 text-left transition-all duration-200 ${category === cat ? "border-orange-600 bg-orange-50 text-orange-900 ring-1 ring-orange-600" : "border-gray-200 text-gray-700 hover:border-orange-300 hover:bg-gray-50"}`}
-                    >
-                      <div className="flex w-full items-center justify-between">
-                        <span className="text-sm font-semibold">
-                          {t(`analysis.categories.${cat.toLowerCase()}`)}
-                        </span>
-                        {category === cat && (
-                          <Check className="h-4 w-4 text-orange-600" />
-                        )}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Info: (20260419 - Luphia) Internal Company Dropdown */}
-              {isInternalCompanyAnalysis && (
-                <div className="space-y-4 border-t border-gray-100 pt-4">
-                  <select
-                    className="w-full max-w-md rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-900 transition-all focus:ring-2 focus:ring-orange-500 focus:outline-none"
-                    value={
-                      accountBooks.find((b) =>
-                        internalCompanyName.startsWith(b.name),
-                      )?.id || ""
-                    }
-                    onChange={(e) => {
-                      const ab = accountBooks.find(
-                        (b) => b.id === e.target.value,
-                      );
-                      if (ab) {
-                        setInternalCompanyName(
-                          ab.enterpriseId
-                            ? `${ab.name} (${ab.enterpriseId})`
-                            : ab.name,
-                        );
-                        if (ab.enterpriseId) {
-                          setSelectedCompany({
-                            taxId: ab.enterpriseId,
-                            name: ab.name,
-                          });
-                        } else {
-                          setSelectedCompany(null);
-                          setPendingAccountBook({ id: ab.id, name: ab.name });
-                          setUiState((prev) => ({
-                            ...prev,
-                            isTaxIdModalOpen: true,
-                          }));
-                        }
-                      }
-                    }}
-                  >
-                    <option value="" disabled>
-                      -- {t("analysis.select_from_account_books") || "選擇帳本"}{" "}
-                      --
-                    </option>
-                    {accountBooks.map((ab) => (
-                      <option key={ab.id} value={ab.id}>
-                        {ab.name}{" "}
-                        {ab.enterpriseId ? `(${ab.enterpriseId})` : ""}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Info: (20260419 - Luphia) External Carbon Company Input */}
-              {isExternalCarbonAnalysis && (
-                <div className="relative space-y-4 border-t border-gray-100 pt-4">
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
-                    {t("analysis.company_input.label")}
-                  </label>
-                  <div className="flex items-center">
-                    <input
-                      aria-label={t("analysis.company_input.label")}
-                      type="text"
-                      value={internalCompanyName}
-                      onChange={(e) => {
-                        setSelectedCompany(null);
-                        setInternalCompanyName(e.target.value);
-                      }}
-                      placeholder={t("analysis.company_input.placeholder")}
-                      className="w-full max-w-md rounded-lg border border-gray-200 px-4 py-2 text-gray-900 transition-all focus:ring-2 focus:ring-orange-500 focus:outline-none"
-                    />
-                    {uiState.isSearchingCompany && (
-                      <span className="ml-2 text-xs text-gray-500">
-                        {t("analysis.company_input.searching")}
-                      </span>
-                    )}
+          {/* Info: (20260419 - Luphia) Main Content */}
+          {activeTab !== "history" && (
+            <div className="min-h-[400px] rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
+              <div className="mx-auto max-w-4xl space-y-8">
+                <div className="space-y-6">
+                  {/* Info: (20260419 - Luphia) 1. Period Type */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      {t("analysis.period_type")}
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {PERIOD_TYPES.filter(
+                        (type) =>
+                          !(
+                            isCarbonAnalysis &&
+                            (
+                              [
+                                ANALYSIS_PERIOD.MONTHLY,
+                                ANALYSIS_PERIOD.WEEKLY,
+                                ANALYSIS_PERIOD.DAILY,
+                              ] as string[]
+                            ).includes(type)
+                          ),
+                      ).map((type) => (
+                        <button
+                          key={type}
+                          onClick={() => {
+                            setPeriodType(type);
+                            setSelectedPeriodValue("");
+                          }}
+                          className={`rounded-full border px-4 py-2 text-sm font-medium transition-all ${periodType === type ? "border-gray-900 bg-gray-900 text-white shadow-md" : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"}`}
+                        >
+                          {t(`analysis.time_units.${type.toLowerCase()}`)}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
-                  {uiState.showCompanyDropdown &&
-                    companySuggestions.length > 0 && (
-                      <div className="absolute z-10 mt-1 max-h-60 w-full max-w-md overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
-                        {companySuggestions.map((c) => (
+                  {/* Info: (20260419 - Luphia) 2. Year Selection */}
+                  {!isDaily && (
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        {t("analysis.select_year")}
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {Array.from(
+                          { length: currentYear - 2020 + 1 },
+                          (_, i) => currentYear - i,
+                        ).map((year) => (
                           <button
-                            key={c.taxId}
-                            type="button"
-                            onClick={() => {
-                              setSelectedCompany(c);
-                              setInternalCompanyName(`${c.name} (${c.taxId})`);
-                              setUiState((prev) => ({
-                                ...prev,
-                                showCompanyDropdown: false,
-                              }));
-                            }}
-                            className="w-full border-b border-gray-100 px-4 py-2 text-left text-sm font-medium text-gray-700 last:border-0 hover:bg-orange-50"
+                            key={year}
+                            onClick={() => setSelectedYear(year)}
+                            className={`min-w-[4rem] rounded-lg border px-3 py-2 text-sm font-medium transition-all ${selectedYear === year ? "border-orange-600 bg-orange-600 text-white shadow-sm" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`}
                           >
-                            {c.name}{" "}
-                            <span className="font-normal text-gray-400">
-                              ({c.taxId})
-                            </span>
+                            {year}
                           </button>
                         ))}
                       </div>
-                    )}
-                  {uiState.showCompanyDropdown &&
-                    companySuggestions.length === 0 &&
-                    internalCompanyName.length >= 2 &&
-                    !uiState.isSearchingCompany && (
-                      <div className="absolute z-10 mt-1 w-full max-w-md rounded-md border border-gray-200 bg-white p-3 shadow-lg">
-                        <p className="text-sm text-red-500">
-                          {t("analysis.company_input.not_found")}
-                        </p>
+                    </div>
+                  )}
+
+                  {/* Info: (20260419 - Luphia) 3. Specific Period Selection */}
+                  {periodType !== ANALYSIS_PERIOD.YEARLY && (
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        {t("analysis.select_period")}
+                      </label>
+                      <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                        {renderPeriodOptions()}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Info: (20260419 - Luphia) Country Selection */}
+                  {activeTab === "external" && !isExternalCarbonAnalysis && (
+                    <div className="space-y-2 border-t border-gray-100 pt-4">
+                      <label className="block text-sm font-medium text-gray-700">
+                        {t("analysis.country")}
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {COUNTRIES.map((code) => (
+                          <button
+                            key={code}
+                            onClick={() => setSelectedCountry(code)}
+                            className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all ${selectedCountry === code ? "border-orange-600 bg-orange-600 text-white shadow-sm" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`}
+                          >
+                            <Globe className="h-4 w-4" />{" "}
+                            {t(`analysis.countries.${code}`)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Info: (20260419 - Luphia) Category Selection */}
+                  <div className="space-y-3 border-t border-gray-100 pt-4">
+                    <label className="block text-sm font-medium text-gray-700">
+                      {t("analysis.category")}
+                    </label>
+                    <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+                      {currentCategories.map((cat) => (
+                        <button
+                          key={cat}
+                          onClick={() => setCategory(cat)}
+                          className={`relative flex flex-col items-start rounded-xl border p-4 text-left transition-all duration-200 ${category === cat ? "border-orange-600 bg-orange-50 text-orange-900 ring-1 ring-orange-600" : "border-gray-200 text-gray-700 hover:border-orange-300 hover:bg-gray-50"}`}
+                        >
+                          <div className="flex w-full items-center justify-between">
+                            <span className="text-sm font-semibold">
+                              {t(`analysis.categories.${cat.toLowerCase()}`)}
+                            </span>
+                            {category === cat && (
+                              <Check className="h-4 w-4 text-orange-600" />
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Info: (20260419 - Luphia) Internal Company Dropdown */}
+                  {isInternalCompanyAnalysis && (
+                    <div className="space-y-4 border-t border-gray-100 pt-4">
+                      <select
+                        className="w-full max-w-md rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-900 transition-all focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                        value={
+                          accountBooks.find((b) =>
+                            internalCompanyName.startsWith(b.name),
+                          )?.id || ""
+                        }
+                        onChange={(e) => {
+                          const ab = accountBooks.find(
+                            (b) => b.id === e.target.value,
+                          );
+                          if (ab) {
+                            setInternalCompanyName(
+                              ab.enterpriseId
+                                ? `${ab.name} (${ab.enterpriseId})`
+                                : ab.name,
+                            );
+                            if (ab.enterpriseId) {
+                              setSelectedCompany({
+                                taxId: ab.enterpriseId,
+                                name: ab.name,
+                              });
+                            } else {
+                              setSelectedCompany(null);
+                              setPendingAccountBook({
+                                id: ab.id,
+                                name: ab.name,
+                              });
+                              setUiState((prev) => ({
+                                ...prev,
+                                isTaxIdModalOpen: true,
+                              }));
+                            }
+                          }
+                        }}
+                      >
+                        <option value="" disabled>
+                          --{" "}
+                          {t("analysis.select_from_account_books") ||
+                            "選擇帳本"}{" "}
+                          --
+                        </option>
+                        {accountBooks.map((ab) => (
+                          <option key={ab.id} value={ab.id}>
+                            {ab.name}{" "}
+                            {ab.enterpriseId ? `(${ab.enterpriseId})` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Info: (20260419 - Luphia) External Carbon Company Input */}
+                  {isExternalCarbonAnalysis && (
+                    <div className="relative space-y-4 border-t border-gray-100 pt-4">
+                      <label className="mb-1 block text-sm font-medium text-gray-700">
+                        {t("analysis.company_input.label")}
+                      </label>
+                      <div className="flex items-center">
+                        <input
+                          aria-label={t("analysis.company_input.label")}
+                          type="text"
+                          value={internalCompanyName}
+                          onChange={(e) => {
+                            setSelectedCompany(null);
+                            setInternalCompanyName(e.target.value);
+                          }}
+                          placeholder={t("analysis.company_input.placeholder")}
+                          className="w-full max-w-md rounded-lg border border-gray-200 px-4 py-2 text-gray-900 transition-all focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                        />
+                        {uiState.isSearchingCompany && (
+                          <span className="ml-2 text-xs text-gray-500">
+                            {t("analysis.company_input.searching")}
+                          </span>
+                        )}
+                      </div>
+
+                      {uiState.showCompanyDropdown &&
+                        companySuggestions.length > 0 && (
+                          <div className="absolute z-10 mt-1 max-h-60 w-full max-w-md overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
+                            {companySuggestions.map((c) => (
+                              <button
+                                key={c.taxId}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedCompany(c);
+                                  setInternalCompanyName(
+                                    `${c.name} (${c.taxId})`,
+                                  );
+                                  setUiState((prev) => ({
+                                    ...prev,
+                                    showCompanyDropdown: false,
+                                  }));
+                                }}
+                                className="w-full border-b border-gray-100 px-4 py-2 text-left text-sm font-medium text-gray-700 last:border-0 hover:bg-orange-50"
+                              >
+                                {c.name}{" "}
+                                <span className="font-normal text-gray-400">
+                                  ({c.taxId})
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      {uiState.showCompanyDropdown &&
+                        companySuggestions.length === 0 &&
+                        internalCompanyName.length >= 2 &&
+                        !uiState.isSearchingCompany && (
+                          <div className="absolute z-10 mt-1 w-full max-w-md rounded-md border border-gray-200 bg-white p-3 shadow-lg">
+                            <p className="text-sm text-red-500">
+                              {t("analysis.company_input.not_found")}
+                            </p>
+                          </div>
+                        )}
+                    </div>
+                  )}
+
+                  {/* Info: (20260419 - Luphia) Keyword Input */}
+                  {activeTab === "external" &&
+                    !isExternalCarbonAnalysis &&
+                    category !== ANALYSIS_CATEGORY.MARKET_TRENDS && (
+                      <div className="space-y-2 border-t border-gray-100 pt-4">
+                        <div className="flex items-center gap-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            {t("analysis.keyword")}
+                          </label>
+                          {(
+                            [
+                              ANALYSIS_CATEGORY.INDUSTRY_DEVELOPMENT,
+                              ANALYSIS_CATEGORY.IRSC,
+                              ANALYSIS_CATEGORY.FINANCIAL_PRODUCT_RATING,
+                            ] as string[]
+                          ).includes(category) && (
+                            <div className="group relative">
+                              <Info className="h-4 w-4 cursor-help text-gray-400 hover:text-orange-500" />
+                              <div className="absolute top-1/2 left-6 z-50 hidden max-h-[80vh] w-[450px] -translate-y-1/2 overflow-y-auto rounded-lg bg-white p-4 text-xs text-gray-800 shadow-xl ring-1 ring-gray-900/5 group-hover:block">
+                                {renderTooltipContent()}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <input
+                          aria-label={t("analysis.keyword")}
+                          type="text"
+                          value={keyword}
+                          onChange={(e) => setKeyword(e.target.value)}
+                          placeholder={t("analysis.enter_keyword")}
+                          className="relative z-10 w-full max-w-md rounded-lg border border-gray-200 px-4 py-2 text-gray-900 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                        />
                       </div>
                     )}
                 </div>
-              )}
 
-              {/* Info: (20260419 - Luphia) Keyword Input */}
-              {activeTab === "external" &&
-                !isExternalCarbonAnalysis &&
-                category !== ANALYSIS_CATEGORY.MARKET_TRENDS && (
-                  <div className="space-y-2 border-t border-gray-100 pt-4">
-                    <div className="flex items-center gap-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        {t("analysis.keyword")}
-                      </label>
-                      {(
-                        [
-                          ANALYSIS_CATEGORY.INDUSTRY_DEVELOPMENT,
-                          ANALYSIS_CATEGORY.IRSC,
-                          ANALYSIS_CATEGORY.FINANCIAL_PRODUCT_RATING,
-                        ] as string[]
-                      ).includes(category) && (
-                        <div className="group relative">
-                          <Info className="h-4 w-4 cursor-help text-gray-400 hover:text-orange-500" />
-                          <div className="absolute top-1/2 left-6 z-50 hidden max-h-[80vh] w-[450px] -translate-y-1/2 overflow-y-auto rounded-lg bg-white p-4 text-xs text-gray-800 shadow-xl ring-1 ring-gray-900/5 group-hover:block">
-                            {renderTooltipContent()}
-                          </div>
+                {/* Info: (20260419 - Luphia) Bottom Actions & Summary */}
+                <div className="flex flex-col items-center justify-between gap-4 border-t border-gray-100 pt-6 sm:flex-row">
+                  <div className="flex w-full flex-col items-start gap-4 sm:w-auto sm:flex-row sm:items-center">
+                    {(periodType === ANALYSIS_PERIOD.YEARLY ||
+                      selectedPeriodValue !== "") && (
+                      <div className="flex items-center gap-2 rounded-lg border border-orange-100 bg-orange-50 px-3 py-2">
+                        <Calendar className="h-4 w-4 text-orange-600" />
+                        <div className="flex flex-col">
+                          <span className="mb-0.5 text-xs font-medium text-orange-600">
+                            {t("analysis.period")}
+                          </span>
+                          <span className="text-sm font-bold text-orange-900">
+                            {simplePeriodString}
+                          </span>
                         </div>
-                      )}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                      <Coins className="h-4 w-4 text-gray-500" />
+                      <div className="flex flex-col">
+                        <span className="mb-0.5 text-xs font-medium text-gray-500">
+                          {t("analysis.confirm_cost")}
+                        </span>
+                        <span className="text-sm font-bold text-gray-900">
+                          {finalCost}
+                        </span>
+                      </div>
                     </div>
+                  </div>
+
+                  {user ? (
+                    <button
+                      onClick={handleGenerate}
+                      disabled={
+                        (periodType !== ANALYSIS_PERIOD.YEARLY &&
+                          !selectedPeriodValue) ||
+                        (activeTab === "external" &&
+                          !isExternalCarbonAnalysis &&
+                          !selectedCountry) ||
+                        (activeTab === "external" &&
+                          !isExternalCarbonAnalysis &&
+                          category !== ANALYSIS_CATEGORY.MARKET_TRENDS &&
+                          !keyword.trim()) ||
+                        (needsCompanyInput && !selectedCompany)
+                      }
+                      className="w-full rounded-lg bg-orange-600 px-8 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                    >
+                      {t("analysis.generate")}
+                    </button>
+                  ) : (
+                    <div className="flex h-full w-full items-stretch sm:w-auto">
+                      <LoginButton label={t("analysis.login_to_generate")} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Info: (20260419 - Luphia) Payment Modal */}
+          <PaymentConfirmModal
+            isOpen={uiState.isPaymentModalOpen}
+            onClose={() => {
+              if (
+                workflowStatus === "error" ||
+                workflowStatus === "payment_success"
+              )
+                resetTransaction();
+              setUiState((prev) => ({ ...prev, isPaymentModalOpen: false }));
+            }}
+            onConfirm={handleAnalysisWorkflow}
+            cost={finalCost}
+            items={[
+              {
+                label: t("analysis.category"),
+                value: t(`analysis.categories.${category.toLowerCase()}`),
+              },
+              ...(country
+                ? [
+                    {
+                      label: t("analysis.country"),
+                      value: t(`analysis.countries.${country}`),
+                    },
+                  ]
+                : []),
+              ...(keyword &&
+              activeTab === "external" &&
+              !isExternalCarbonAnalysis &&
+              category !== ANALYSIS_CATEGORY.MARKET_TRENDS
+                ? [{ label: t("analysis.keyword"), value: keyword }]
+                : []),
+              ...(needsCompanyInput && internalCompanyName
+                ? [
+                    {
+                      label: t("analysis.company_input.label"),
+                      value: internalCompanyName,
+                    },
+                  ]
+                : []),
+              {
+                label: t("analysis.period"),
+                value: t("analysis.selected_period_desc", {
+                  value:
+                    periodType === ANALYSIS_PERIOD.YEARLY
+                      ? selectedYear
+                      : selectedPeriodValue,
+                  type: t(`analysis.time_units.${periodType.toLowerCase()}`),
+                }),
+              },
+            ]}
+            extraContent={
+              isInternalCompanyAnalysis ? (
+                <div className="mt-4 space-y-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                  <h4 className="text-sm font-bold text-gray-900">
+                    {t("analysis.addons_title", { defaultValue: "加購項目" })}
+                  </h4>
+                  <div className="space-y-2">
+                    {renderAddonsCheckbox(
+                      "bookkeeper",
+                      "analysis.addon_bookkeeper",
+                      ANALYSIS_ADDON_COSTS.BOOKKEEPER,
+                    )}
+                    {renderAddonsCheckbox(
+                      "cpa",
+                      "analysis.addon_cpa",
+                      ANALYSIS_ADDON_COSTS.CPA,
+                    )}
+                    {renderAddonsCheckbox(
+                      "thirdParty",
+                      "analysis.addon_third_party",
+                      ANALYSIS_ADDON_COSTS.THIRD_PARTY,
+                    )}
+                  </div>
+                </div>
+              ) : undefined
+            }
+            isLoading={uiState.isLoading}
+            status={workflowStatus}
+            errorMessage={errorMessage}
+            txHash={txHash}
+          />
+
+          {/* Info: (20260419 - Luphia) Success Notification */}
+          <SuccessNotification
+            show={uiState.showSuccessNotification}
+            title={t("analysis.success.title")}
+            message={
+              <div className="flex flex-col gap-2">
+                <span>{t("analysis.success.message")}</span>
+                {txHash && (
+                  <a
+                    href={`${process.env.NEXT_PUBLIC_BAIFA_EXPLORER || "https://baifa.io"}/chain/isuncoin/txs/${txHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs break-all text-orange-600 underline hover:text-orange-700"
+                  >
+                    {t("analysis.success.view_tx")}: {txHash}
+                  </a>
+                )}
+              </div>
+            }
+            onClose={() =>
+              setUiState((prev) => ({
+                ...prev,
+                showSuccessNotification: false,
+              }))
+            }
+            autoCloseDelay={10000}
+          />
+
+          {/* Info: (20260419 - Luphia) History Section */}
+          {activeTab === "history" && <HistorySection />}
+
+          {/* Info: (20260419 - Luphia) Tax ID Edit Modal */}
+          <Dialog
+            open={uiState.isTaxIdModalOpen}
+            onClose={() =>
+              !uiState.isUpdatingTaxId &&
+              setUiState((prev) => ({ ...prev, isTaxIdModalOpen: false }))
+            }
+            className="relative z-50"
+          >
+            <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+            <div className="fixed inset-0 overflow-y-auto">
+              <div className="flex min-h-full items-center justify-center p-4">
+                <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+                  <h3 className="mb-4 text-lg font-medium text-gray-900">
+                    {t("account_book_selection.form_enterprise_id") ||
+                      "統一編號 (Tax ID)"}
+                  </h3>
+                  <p className="mb-4 text-sm text-gray-500">
+                    {t("analysis.company_input.missing_tax_id_desc", {
+                      name: pendingAccountBook?.name || "",
+                    })}
+                  </p>
+                  <div className="space-y-4">
                     <input
-                      aria-label={t("analysis.keyword")}
+                      aria-label={t(
+                        "account_book_selection.form_enterprise_id",
+                      )}
                       type="text"
-                      value={keyword}
-                      onChange={(e) => setKeyword(e.target.value)}
-                      placeholder={t("analysis.enter_keyword")}
-                      className="relative z-10 w-full max-w-md rounded-lg border border-gray-200 px-4 py-2 text-gray-900 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                      value={taxIdInput}
+                      onChange={(e) => setTaxIdInput(e.target.value)}
+                      placeholder="12345678"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 focus:ring-orange-500"
                     />
-                  </div>
-                )}
-            </div>
-
-            {/* Info: (20260419 - Luphia) Bottom Actions & Summary */}
-            <div className="flex flex-col items-center justify-between gap-4 border-t border-gray-100 pt-6 sm:flex-row">
-              <div className="flex w-full flex-col items-start gap-4 sm:w-auto sm:flex-row sm:items-center">
-                {(periodType === ANALYSIS_PERIOD.YEARLY ||
-                  selectedPeriodValue !== "") && (
-                  <div className="flex items-center gap-2 rounded-lg border border-orange-100 bg-orange-50 px-3 py-2">
-                    <Calendar className="h-4 w-4 text-orange-600" />
-                    <div className="flex flex-col">
-                      <span className="mb-0.5 text-xs font-medium text-orange-600">
-                        {t("analysis.period")}
-                      </span>
-                      <span className="text-sm font-bold text-orange-900">
-                        {simplePeriodString}
-                      </span>
+                    <div className="mt-6 flex justify-end gap-3">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setUiState((prev) => ({
+                            ...prev,
+                            isTaxIdModalOpen: false,
+                          }))
+                        }
+                        disabled={uiState.isUpdatingTaxId}
+                        className="rounded-lg border px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      >
+                        {t("common.cancel")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleUpdateTaxId}
+                        disabled={uiState.isUpdatingTaxId || !taxIdInput}
+                        className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50"
+                      >
+                        {uiState.isUpdatingTaxId
+                          ? t("common.loading")
+                          : t("common.confirm") || "確認"}
+                      </button>
                     </div>
                   </div>
-                )}
-                <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
-                  <Coins className="h-4 w-4 text-gray-500" />
-                  <div className="flex flex-col">
-                    <span className="mb-0.5 text-xs font-medium text-gray-500">
-                      {t("analysis.confirm_cost")}
-                    </span>
-                    <span className="text-sm font-bold text-gray-900">
-                      {finalCost}
-                    </span>
-                  </div>
                 </div>
               </div>
-
-              {user ? (
-                <button
-                  onClick={handleGenerate}
-                  disabled={
-                    (periodType !== ANALYSIS_PERIOD.YEARLY &&
-                      !selectedPeriodValue) ||
-                    (activeTab === "external" &&
-                      !isExternalCarbonAnalysis &&
-                      !selectedCountry) ||
-                    (activeTab === "external" &&
-                      !isExternalCarbonAnalysis &&
-                      category !== ANALYSIS_CATEGORY.MARKET_TRENDS &&
-                      !keyword.trim()) ||
-                    (needsCompanyInput && !selectedCompany)
-                  }
-                  className="w-full rounded-lg bg-orange-600 px-8 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                >
-                  {t("analysis.generate")}
-                </button>
-              ) : (
-                <div className="flex h-full w-full items-stretch sm:w-auto">
-                  <LoginButton label={t("analysis.login_to_generate")} />
-                </div>
-              )}
             </div>
-          </div>
-        </div>
+          </Dialog>
+        </>
+      ) : (
+        <AuthPlaceholder
+          title={t("analysis.login_to_use")}
+          buttonLabel={t("header.login")}
+        />
       )}
-
-      {/* Info: (20260419 - Luphia) Payment Modal */}
-      <PaymentConfirmModal
-        isOpen={uiState.isPaymentModalOpen}
-        onClose={() => {
-          if (
-            workflowStatus === "error" ||
-            workflowStatus === "payment_success"
-          )
-            resetTransaction();
-          setUiState((prev) => ({ ...prev, isPaymentModalOpen: false }));
-        }}
-        onConfirm={handleAnalysisWorkflow}
-        cost={finalCost}
-        items={[
-          {
-            label: t("analysis.category"),
-            value: t(`analysis.categories.${category.toLowerCase()}`),
-          },
-          ...(country
-            ? [
-                {
-                  label: t("analysis.country"),
-                  value: t(`analysis.countries.${country}`),
-                },
-              ]
-            : []),
-          ...(keyword &&
-          activeTab === "external" &&
-          !isExternalCarbonAnalysis &&
-          category !== ANALYSIS_CATEGORY.MARKET_TRENDS
-            ? [{ label: t("analysis.keyword"), value: keyword }]
-            : []),
-          ...(needsCompanyInput && internalCompanyName
-            ? [
-                {
-                  label: t("analysis.company_input.label"),
-                  value: internalCompanyName,
-                },
-              ]
-            : []),
-          {
-            label: t("analysis.period"),
-            value: t("analysis.selected_period_desc", {
-              value:
-                periodType === ANALYSIS_PERIOD.YEARLY
-                  ? selectedYear
-                  : selectedPeriodValue,
-              type: t(`analysis.time_units.${periodType.toLowerCase()}`),
-            }),
-          },
-        ]}
-        extraContent={
-          isInternalCompanyAnalysis ? (
-            <div className="mt-4 space-y-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-              <h4 className="text-sm font-bold text-gray-900">
-                {t("analysis.addons_title", { defaultValue: "加購項目" })}
-              </h4>
-              <div className="space-y-2">
-                {renderAddonsCheckbox(
-                  "bookkeeper",
-                  "analysis.addon_bookkeeper",
-                  ANALYSIS_ADDON_COSTS.BOOKKEEPER,
-                )}
-                {renderAddonsCheckbox(
-                  "cpa",
-                  "analysis.addon_cpa",
-                  ANALYSIS_ADDON_COSTS.CPA,
-                )}
-                {renderAddonsCheckbox(
-                  "thirdParty",
-                  "analysis.addon_third_party",
-                  ANALYSIS_ADDON_COSTS.THIRD_PARTY,
-                )}
-              </div>
-            </div>
-          ) : undefined
-        }
-        isLoading={uiState.isLoading}
-        status={workflowStatus}
-        errorMessage={errorMessage}
-        txHash={txHash}
-      />
-
-      {/* Info: (20260419 - Luphia) Success Notification */}
-      <SuccessNotification
-        show={uiState.showSuccessNotification}
-        title={t("analysis.success.title")}
-        message={
-          <div className="flex flex-col gap-2">
-            <span>{t("analysis.success.message")}</span>
-            {txHash && (
-              <a
-                href={`${process.env.NEXT_PUBLIC_BAIFA_EXPLORER || "https://baifa.io"}/chain/isuncoin/txs/${txHash}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs break-all text-orange-600 underline hover:text-orange-700"
-              >
-                {t("analysis.success.view_tx")}: {txHash}
-              </a>
-            )}
-          </div>
-        }
-        onClose={() =>
-          setUiState((prev) => ({ ...prev, showSuccessNotification: false }))
-        }
-        autoCloseDelay={10000}
-      />
-
-      {/* Info: (20260419 - Luphia) History Section */}
-      {activeTab === "history" && <HistorySection />}
-
-      {/* Info: (20260419 - Luphia) Tax ID Edit Modal */}
-      <Dialog
-        open={uiState.isTaxIdModalOpen}
-        onClose={() =>
-          !uiState.isUpdatingTaxId &&
-          setUiState((prev) => ({ ...prev, isTaxIdModalOpen: false }))
-        }
-        className="relative z-50"
-      >
-        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-              <h3 className="mb-4 text-lg font-medium text-gray-900">
-                {t("account_book_selection.form_enterprise_id") ||
-                  "統一編號 (Tax ID)"}
-              </h3>
-              <p className="mb-4 text-sm text-gray-500">
-                {t("analysis.company_input.missing_tax_id_desc", {
-                  name: pendingAccountBook?.name || "",
-                })}
-              </p>
-              <div className="space-y-4">
-                <input
-                  aria-label={t("account_book_selection.form_enterprise_id")}
-                  type="text"
-                  value={taxIdInput}
-                  onChange={(e) => setTaxIdInput(e.target.value)}
-                  placeholder="12345678"
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 focus:ring-orange-500"
-                />
-                <div className="mt-6 flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setUiState((prev) => ({
-                        ...prev,
-                        isTaxIdModalOpen: false,
-                      }))
-                    }
-                    disabled={uiState.isUpdatingTaxId}
-                    className="rounded-lg border px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                  >
-                    {t("common.cancel")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleUpdateTaxId}
-                    disabled={uiState.isUpdatingTaxId || !taxIdInput}
-                    className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50"
-                  >
-                    {uiState.isUpdatingTaxId
-                      ? t("common.loading")
-                      : t("common.confirm") || "確認"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Dialog>
     </div>
   );
 }
