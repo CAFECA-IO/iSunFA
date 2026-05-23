@@ -1,18 +1,18 @@
-import { COUNTRY } from "@/constants/accounts";
+import { CountryCode } from "@/constants/enums";
 
-type CountryType = (typeof COUNTRY)[keyof typeof COUNTRY];
+type CountryType = CountryCode;
 
 /**
  * Info: (20260519 - Julian)
  * @description 用於 prompts 的國家-語言映射表(中文)
  */
 export const languageMapChinese: Record<CountryType, string> = {
-  [COUNTRY.US]: "英語",
-  [COUNTRY.JP]: "日語",
-  [COUNTRY.TW]: "繁體中文",
-  [COUNTRY.KR]: "韓語",
-  [COUNTRY.HK]: "繁體中文",
-  [COUNTRY.CN]: "簡體中文",
+  [CountryCode.US]: "英語",
+  [CountryCode.JP]: "日語",
+  [CountryCode.TW]: "繁體中文",
+  [CountryCode.KR]: "韓語",
+  [CountryCode.HK]: "繁體中文",
+  [CountryCode.CN]: "簡體中文",
 };
 
 /**
@@ -20,12 +20,12 @@ export const languageMapChinese: Record<CountryType, string> = {
  * @description 用於 prompts 的國家-語言映射表(英文)
  */
 export const languageMapEnglish: Record<CountryType, string> = {
-  [COUNTRY.US]: "English",
-  [COUNTRY.JP]: "Japanese",
-  [COUNTRY.TW]: "Traditional Chinese",
-  [COUNTRY.KR]: "Korean",
-  [COUNTRY.HK]: "Traditional Chinese",
-  [COUNTRY.CN]: "Simplified Chinese",
+  [CountryCode.US]: "English",
+  [CountryCode.JP]: "Japanese",
+  [CountryCode.TW]: "Traditional Chinese",
+  [CountryCode.KR]: "Korean",
+  [CountryCode.HK]: "Traditional Chinese",
+  [CountryCode.CN]: "Simplified Chinese",
 };
 
 /**

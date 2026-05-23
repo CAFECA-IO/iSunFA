@@ -430,6 +430,9 @@ model Voucher {
   // Info: (20260310 - Julian) 備註
   note String? @db.Text
 
+  // Info: (20260522 - Tzuhan) 廠商統編 (用於發票與收據之一般稅務紀錄，已廢除 O(1) 靜態攔截)
+  vendorTaxId String? @map("vendor_tax_id")
+
   // Info: (20260310 - Julian) 幣別
   currency String @default("TWD")
 
@@ -490,6 +493,10 @@ model VoucherLine {
   // Info: (20260310 - Julian) 是否為借方 (true=借方/Debit, false=貸方/Credit)
   isDebit Boolean @map("is_debit")
 
+  // Info: (20260521 - Tzuhan) [AUDIT FIX] 雙軌懸記隔離與決定論攔截防線
+  isVerified       Boolean @default(false) @map("is_verified")
+  generationSource String  @default("AI_GENERATED") @map("generation_source")
+
   @@map("voucher_line")
 }
 
@@ -505,8 +512,6 @@ enum EsgIntensity {
   MEDIUM
   HIGH
 }
-
-
 
 model EsgRecord {
   id                String           @id @default(uuid())
@@ -913,15 +918,15 @@ model CouponCampaign {
 }
 
 model Coupon {
-  id          String   @id @default(uuid())
-  userId      String   @map("user_id")
-  campaignId  String   @map("campaign_id")
-  txHashClaim String   @map("tx_hash_claim")
-  txHashBurn  String?  @map("tx_hash_burn")
-  customQrContent String? @map("custom_qr_content")
-  status      String   @default("ACTIVE") // Info: (20260517 - Luphia) ACTIVE, USED, EXPIRED
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  campaignId      String   @map("campaign_id")
+  txHashClaim     String   @map("tx_hash_claim")
+  txHashBurn      String?  @map("tx_hash_burn")
+  customQrContent String?  @map("custom_qr_content")
+  status          String   @default("ACTIVE") // Info: (20260517 - Luphia) ACTIVE, USED, EXPIRED
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   user     User           @relation(fields: [userId], references: [id])
   campaign CouponCampaign @relation(fields: [campaignId], references: [id])

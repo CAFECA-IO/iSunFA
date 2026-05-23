@@ -44,6 +44,8 @@ export const importPhase2Db = async (stockId: string) => {
       rule: "IFRS",
       enterpriseId: stockId,
       teamId: team.id,
+      bsSuspenseAccount: "1471",
+      plQuarantineAccount: "6288",
     },
   });
 

@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { DocumentType } from "@/constants/enums";
+import {
+  DocumentType,
+  EsgFallbackCategory,
+  UniversalAccountTag,
+} from "@/constants/enums";
 
 // Info: (20260514 - Tzuhan) Phase 1.1 Zod Schemas for structured AI output validation
 
@@ -50,6 +54,7 @@ export const VoucherBaseParsingSchema = z.object({
   vendorName: z
     .string()
     .describe("Extracted name of the vendor (e.g. 中華電信)"),
+  vendorTaxId: z.string().nullable().describe("廠商統一編號，若無則填 null"),
   // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: Refactor magic strings to Enum
   documentType: z
     .nativeEnum(DocumentType)
@@ -82,17 +87,16 @@ export const VoucherLinesParsingSchema = z.object({
   lines: z
     .array(
       z.object({
-        // Info: (20260520 - Tzuhan) [AUDIT FIX] 強制約束為帳本當地語系以阻止英文 AI 幻覺
-        accountingCode: z
-          .string()
-          // Info: (20260520 - Tzuhan) [AUDIT FIX] CPA directive: Strict enforcement of no numeric codes
+        // Info: (20260522 - Tzuhan) [ADR 004] 廢棄原先的會計科目名稱，強制改為 UniversalAccountTag
+        semanticCategory: z
+          .nativeEnum(UniversalAccountTag)
           .describe(
-            "會計科目名稱。必須強制輸出為『帳本當地語系』（若為台灣帳本，請絕對輸出繁體中文，例如：『預付租金』、『存出保證金』）。嚴禁輸出英文！絕對禁止輸出數字代碼！只能輸出中文科目名稱（或國家字典支援之字串）。違者將導致系統崩潰！",
+            "從標準會計類別中挑選最適合的一項。若無合適選項請填寫 UNKNOWN",
           ),
         particular: z
           .string()
           .describe(
-            "Summary of this specific entry (Output in Traditional Chinese)",
+            "請強制以『交易項目 - 廠商簡稱』的格式輸出摘要，例如：『市內電話上網費 - 中華電信』 (Output in Traditional Chinese)",
           ),
         amount: z.number().describe("Numeric amount"),
         isDebit: z.boolean().describe("true = Debit, false = Credit"),
@@ -129,6 +133,12 @@ export const EsgParsingSchema = z.object({
     .string()
     .nullable()
     .describe("The unit of consumption (e.g. kWh, L, kg)"),
+  fallbackCategory: z
+    .nativeEnum(EsgFallbackCategory)
+    .nullable()
+    .describe(
+      "最接近的官方標準大類標籤。必須嚴格從清單中挑選最符合的一項，用以推估碳排。",
+    ),
   confidence: z
     .number()
     .int()

@@ -94,6 +94,8 @@ export async function processNext() {
 
             const missionObj = JSON.parse(missionJsonStr);
 
+            const latestAccountBook = missionObj.accountBook || null;
+
             const missionParams = {
               orderId: missionObj.orderId,
               type: missionObj.type,
@@ -107,8 +109,10 @@ export async function processNext() {
                 ...(missionObj.prerequisiteData ||
                   missionObj.data?.prerequisiteData ||
                   {}),
-                ...(missionObj.accountBook
-                  ? { accountBook: missionObj.accountBook }
+                ...(latestAccountBook
+                  ? {
+                      accountBook: latestAccountBook,
+                    }
                   : {}),
               },
             } as IMissionParams;

@@ -1188,6 +1188,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 2,
     parentCode: "11XX",
     isDebit: true,
+    aliases: ["預付會員", "預付費用"],
   },
   {
     code: "1411",
@@ -1206,6 +1207,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 3,
     parentCode: "1410",
     isDebit: true,
+    aliases: ["預付會員", "預付費用"],
   },
   {
     code: "1413",
@@ -4985,6 +4987,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 2,
     parentCode: "21XX",
     isDebit: false,
+    aliases: ["合約應付"],
   },
   {
     code: "2171",
@@ -5084,6 +5087,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 3,
     parentCode: "2200",
     isDebit: false,
+    aliases: ["合約應付"],
   },
   {
     code: "2203",

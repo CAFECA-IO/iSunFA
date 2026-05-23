@@ -1,41 +1,148 @@
 // Info: (20260514 - Tzuhan) Centralized constants to replace Prisma Enums
 
-export const MeasurementUnit = {
-  KWH: "KWH",
-  LITER: "LITER",
-  KG: "KG",
-  TONNE: "TONNE",
-  GALLON: "GALLON",
-  PIECE: "PIECE",
-  TWD: "TWD",
-} as const;
+export enum MeasurementUnit {
+  KWH = "KWH",
+  LITER = "LITER",
+  KG = "KG",
+  TONNE = "TONNE",
+  GALLON = "GALLON",
+  PIECE = "PIECE",
+  TWD = "TWD",
+}
 
-export type MeasurementUnit =
-  (typeof MeasurementUnit)[keyof typeof MeasurementUnit];
+export enum EsgGenerationSource {
+  MANUAL_ENTRY = "MANUAL_ENTRY", // Info: (20260521 - Tzuhan) 人工輸入或修正。
+  SYSTEM_DETERMINISTIC = "SYSTEM_DETERMINISTIC", // Info: (20260521 - Tzuhan) 規則引擎命中（例如：免計碳排的繳費單），100% 決定論。
+  AI_GENERATED = "AI_GENERATED", // Info: (20260521 - Tzuhan) AI 順利萃取資料，並結合資料庫得出具備一定信心的標準碳排數據。
+  AI_SPECULATIVE = "AI_SPECULATIVE", // Info: (20260521 - Tzuhan) RAG 未命中，AI 執行語意降級，系統強制套用「該大類最高碳排係數」的保守推測值。
+}
 
-export const EsgGenerationSource = {
-  MANUAL_ENTRY: "MANUAL_ENTRY",
-  SYSTEM_DETERMINISTIC: "SYSTEM_DETERMINISTIC",
-  AI_SPECULATIVE_STAGE_3: "AI_SPECULATIVE_STAGE_3",
-} as const;
+export enum JournalGenerationSource {
+  MANUAL_ENTRY = "MANUAL_ENTRY", // Info: (20260521 - Tzuhan) 人工輸入或修正。
+  SYSTEM_DETERMINISTIC = "SYSTEM_DETERMINISTIC", // Info: (20260521 - Tzuhan) 系統決定論。包含規則引擎命中，與 Vector RAG 精準匹配到合法科目。
+  SYSTEM_SUSPENSE = "SYSTEM_SUSPENSE", // Info: (20260521 - Tzuhan) 系統強制懸記。RAG 匹配失敗時，系統強制打入暫付款或 PL 隔離區的虛擬配平。
+  AI_SPECULATIVE = "AI_SPECULATIVE", // Info: (20260522 - Tzuhan) AI 選擇之科目，必須經人工覆核。
+}
 
-export type EsgGenerationSource =
-  (typeof EsgGenerationSource)[keyof typeof EsgGenerationSource];
+export enum VoucherPaymentStatus {
+  UNPAID = "UNPAID",
+  PARTIAL = "PARTIAL",
+  PAID = "PAID",
+  NOT_APPLICABLE = "NOT_APPLICABLE",
+}
 
-export const VoucherPaymentStatus = {
-  UNPAID: "UNPAID",
-  PARTIAL: "PARTIAL",
-  PAID: "PAID",
-  NOT_APPLICABLE: "NOT_APPLICABLE",
-} as const;
+export enum DocumentType {
+  ACCRUAL_NOTICE = "ACCRUAL_NOTICE",
+  PAYMENT_RECEIPT = "PAYMENT_RECEIPT",
+  OTHERS = "OTHERS",
+}
 
-export type VoucherPaymentStatus =
-  (typeof VoucherPaymentStatus)[keyof typeof VoucherPaymentStatus];
+export enum CountryCode {
+  TW = "TW",
+  US = "US",
+  JP = "JP",
+  CN = "CN",
+  HK = "HK",
+  KR = "KR",
+}
 
-export const DocumentType = {
-  ACCRUAL_NOTICE: "ACCRUAL_NOTICE",
-  PAYMENT_RECEIPT: "PAYMENT_RECEIPT",
-  OTHERS: "OTHERS",
-} as const;
+export enum EsgFallbackCategory {
+  // Info: (20260521 - Tzuhan) --- 能源與燃料 (Scope 1 & 2) ---
+  ELECTRICITY_AND_HEAT = "外購電力與熱能",
+  NATURAL_GAS = "天然氣與瓦斯",
+  GASOLINE_AND_AVIATION = "汽油與航空燃油",
+  DIESEL_AND_HEAVY_OIL = "柴油與重油",
+  COAL_AND_SOLID_FUEL = "煤炭與固體燃料",
+  BIOMASS_AND_ALTERNATIVE = "生質能與替代燃料",
 
-export type DocumentType = (typeof DocumentType)[keyof typeof DocumentType];
+  // Info: (20260521 - Tzuhan) --- 逸散與環境 (Scope 1 & 3) ---
+  REFRIGERANT_AND_INDUSTRIAL_GAS = "冷媒與工業氣體",
+  WATER_AND_WASTEWATER = "自來水與污水處理",
+  WASTE_MANAGEMENT = "廢棄物處理與回收",
+
+  // Info: (20260521 - Tzuhan) --- 交通與物流 (Scope 1 & 3) ---
+  LAND_TRANSPORT_AND_COMMUTE = "陸上交通與通勤",
+  AVIATION = "航空運輸",
+  FREIGHT_AND_LOGISTICS = "貨運與物流",
+
+  // Info: (20260521 - Tzuhan) --- 採購商品 (Scope 3 - 實體物品) ---
+  PLASTICS_AND_RUBBER = "塑膠與橡膠製品",
+  METALS_AND_MINERALS = "金屬與礦物製品",
+  PAPER_AND_WOOD = "紙製品與木材",
+  ELECTRONICS_AND_ELECTRICAL = "電子與電機設備",
+  CHEMICALS_AND_SOLVENTS = "化學品與溶劑",
+  AGRICULTURE_AND_FOOD = "農林漁牧與食品",
+  TEXTILES_AND_APPAREL = "紡織與服飾",
+
+  // Info: (20260521 - Tzuhan) --- 採購服務與資本財 (Scope 3 - 無形服務) ---
+  IT_AND_TELECOM = "資訊與通訊服務",
+  ACCOMMODATION_AND_DINING = "住宿與餐飲服務",
+  REAL_ESTATE_AND_EQUIPMENT_RENTAL = "不動產與設備租賃",
+  PROFESSIONAL_SERVICES = "專業與各項服務",
+
+  // Info: (20260521 - Tzuhan) --- 兜底防線 ---
+  OTHER_UNKNOWN = "其他未知項目",
+}
+
+export enum UniversalAccountTag {
+  // Info: (20260522 - Tzuhan) 資產 (Assets)
+  CASH = "CASH",
+  CASH_IN_BANK = "CASH_IN_BANK",
+  ACCOUNTS_RECEIVABLE = "ACCOUNTS_RECEIVABLE",
+  NOTES_RECEIVABLE = "NOTES_RECEIVABLE",
+  INVENTORY = "INVENTORY",
+  PREPAID_EXPENSE = "PREPAID_EXPENSE",
+  PREPAID_RENT = "PREPAID_RENT",
+  INPUT_TAX = "INPUT_TAX", // Info: (20260522 - Tzuhan) 進項稅額
+  REFUNDABLE_DEPOSITS = "REFUNDABLE_DEPOSITS",
+  FIXED_ASSETS = "FIXED_ASSETS",
+  INTANGIBLE_ASSETS = "INTANGIBLE_ASSETS",
+
+  // Info: (20260522 - Tzuhan) 負債 (Liabilities)
+  SHORT_TERM_BORROWINGS = "SHORT_TERM_BORROWINGS",
+  ACCOUNTS_PAYABLE = "ACCOUNTS_PAYABLE",
+  NOTES_PAYABLE = "NOTES_PAYABLE",
+  OTHER_PAYABLES = "OTHER_PAYABLES",
+  ACCRUED_RENT = "ACCRUED_RENT",
+  OUTPUT_TAX = "OUTPUT_TAX", // Info: (20260522 - Tzuhan) 銷項稅額
+  INCOME_TAX_PAYABLE = "INCOME_TAX_PAYABLE",
+  LONG_TERM_BORROWINGS = "LONG_TERM_BORROWINGS",
+
+  // Info: (20260522 - Tzuhan) 權益 (Equity)
+  COMMON_STOCK = "COMMON_STOCK",
+  RETAINED_EARNINGS = "RETAINED_EARNINGS",
+
+  // Info: (20260522 - Tzuhan) 收益 (Revenues)
+  REVENUE = "REVENUE",
+  SALES_REVENUE = "SALES_REVENUE",
+  SERVICE_REVENUE = "SERVICE_REVENUE",
+  INTEREST_REVENUE = "INTEREST_REVENUE",
+
+  // Info: (20260522 - Tzuhan) 費損 (Expenses)
+  EXPENSE = "EXPENSE",
+  COST_OF_GOODS_SOLD = "COST_OF_GOODS_SOLD",
+  WAGE_EXPENSE = "WAGE_EXPENSE",
+  PENSION_EXPENSE = "PENSION_EXPENSE",
+  RENT_EXPENSE = "RENT_EXPENSE",
+  OFFICE_SUPPLIES = "OFFICE_SUPPLIES",
+  TRAVEL_EXPENSE = "TRAVEL_EXPENSE",
+  SHIPPING_EXPENSE = "SHIPPING_EXPENSE",
+  TELECOM_EXPENSE = "TELECOM_EXPENSE",
+  REPAIR_AND_MAINTENANCE = "REPAIR_AND_MAINTENANCE",
+  MARKETING_EXPENSE = "MARKETING_EXPENSE",
+  INSURANCE_EXPENSE = "INSURANCE_EXPENSE",
+  ENTERTAINMENT_EXPENSE = "ENTERTAINMENT_EXPENSE",
+  SOFTWARE_EXPENSE = "SOFTWARE_EXPENSE",
+  DEPRECIATION_EXPENSE = "DEPRECIATION_EXPENSE",
+  AMORTIZATION_EXPENSE = "AMORTIZATION_EXPENSE",
+  MEAL_EXPENSE = "MEAL_EXPENSE",
+  TRAINING_EXPENSE = "TRAINING_EXPENSE",
+  DONATION_EXPENSE = "DONATION_EXPENSE",
+  TAX_EXPENSE = "TAX_EXPENSE",
+  BANK_FEE = "BANK_FEE",
+  INTEREST_EXPENSE = "INTEREST_EXPENSE",
+  MISCELLANEOUS_EXPENSE = "MISCELLANEOUS_EXPENSE",
+  UTILITIES_EXPENSE = "UTILITIES_EXPENSE",
+
+  UNKNOWN = "UNKNOWN",
+}

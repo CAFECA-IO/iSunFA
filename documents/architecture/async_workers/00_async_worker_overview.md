@@ -105,15 +105,20 @@ graph TD
 
 ## 🏆 架構師評價與防禦機制實作 (Architectural Defenses)
 
+### 🔐 零資料庫存取與安全隔離 (Zero DB Access & Security Boundary)
+系統劃下了一道不可踰越的安全鴻溝：**`MissionExecutor` (與其他所有負責 Web3 / AI 運算的外部節點) 絕對沒有存取主系統 PostgreSQL 資料庫的權限。**
+- **物理隔離**：它們無法連線 DB，更無法直接寫入、修改或刪除任何帳本資料。
+- **單向提議**：它們的輸出 (`result.md`) 僅是一份「提議載荷 (Payload)」，必須經過上鏈 (`MissionCommitor`)、查帳核准 (`IssueValidator`)，最終由具備寫庫權限的內部節點 `MissionRecorder` 負責抄寫回資料庫。
+- **防禦提示詞注入 (Prompt Injection Guard)**：這種極端的隔離確保了即使 AI 遭到惡意使用者的「提示詞注入攻擊」，攻擊者也絕對無法穿越實體網路邊界去污染或竊取核心財務資料庫。
+
 ### 🛡️ 徹底隔離的檔案系統 (Shared-Nothing Architecture)
 由於 Planner 與 Executor 依賴的是本地的檔案系統狀態機，這意味著多個 Worker 之間**完全不需要共用掛載硬碟 (Shared Volume)**。
 因為沒有共用硬碟，自然就從物理層面徹底消滅了分散式擴展時最難解的「競爭條件 (Race Condition)」。系統不需要實作任何 Redis Lock，K8s 的橫向擴展變得極度輕量、純粹且具備無限擴展性。
 
 ### 🏗️ 混合決定論管線 (Hybrid Deterministic Pipeline)
 Executor 的內部實作了「不確定的機率推論」與「絕對的數學真理」拆分。
-1. **廠商查表防禦 (`VendorRegistry`)**：最優先攔截，走決定論查表，100% 杜絕 LLM 猜測會計科目。
-2. **任務層級分流 (`skillRegistry`)**：若未被攔截，判斷是否為預先寫死的 TypeScript 技能。
-3. **AI 推論 Fallback**：若皆無命中，才會退回到純粹的 Gemini API 請求。
+1. **任務層級分流 (`skillRegistry` 與 RAG 管線)**：判斷是否為預先寫死的 TypeScript 技能，透過本地 Vector Search 提供動態決策選項 (`EsgParsingSkill` 採 Two-Turn AI 決策；`VoucherLinesParsingSkill` 採單回合萃取並搭配後端 Bigram 嚴格懸記)。
+2. **AI 推論 Fallback**：若皆無命中，才會退回到純粹的 Gemini API 請求。所有產出預設為 `isVerified: false`。
 
 ### 🧮 數值型別防腐層 (Type Flow & Anti-Corruption)
 整個管線嚴格管制數值型別：

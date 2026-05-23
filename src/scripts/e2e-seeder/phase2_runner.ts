@@ -235,7 +235,7 @@ export const runPhase2ReceiptAnalysis = async (
 {
   "lines": [
     {
-      "accountingCode": "4111",
+      "semanticCategory": "TELECOM_FEES",
       "particular": "摘要說明",
       "amount": 2253680,
       "isDebit": false
@@ -243,14 +243,7 @@ export const runPhase2ReceiptAnalysis = async (
   ]
 }
 
-【請注意，你必須只能從以下會計項目代碼中選擇最符合的】：
-- 1100: 現金及約當現金 (資產)
-- 4111: 銷貨收入 (收入)
-- 6161: 水電瓦斯費 (營業費用)
-- 6213: 交通費/公務車燃油費 (營業費用)
-- 6288: 其他管理費用 (營業費用)
-- 5110: 銷貨成本/製造費用折舊 (營業成本)
-- 1613: 累計折舊－房屋及建築 (資產抵銷)
+【請注意，你必須從 UniversalAccountTag 列舉中選擇最符合的 semanticCategory，若無合適選項請填寫 UNKNOWN】。
 
 確保數字準確，借貸平衡，不可有任何 markdown 標籤或其餘文字，直接輸出 JSON 即可。`;
 
@@ -414,7 +407,7 @@ export const runPhase2ReceiptAnalysis = async (
           unit: esgData.unit || MeasurementUnit.KG,
           emissions: (esgData.amount || 0) * 1.5, // Info: (20260519 - Tzuhan) 模擬後端 MAX(factor) 行為
           isVerified: false,
-          aiNote: `[AI_SPECULATIVE_STAGE_3] E2E 模擬已套用最高係數. 原註記: ${esgData.aiNote || "系統預設給定之猜測數值"}`,
+          aiNote: `[AI_SPECULATIVE] E2E 模擬已套用最高係數. 原註記: ${esgData.aiNote || "系統預設給定之猜測數值"}`,
           confidence: esgData.confidence || 85,
           analysisStatus: "COMPLETED",
         },

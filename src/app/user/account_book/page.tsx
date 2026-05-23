@@ -7,7 +7,8 @@ import { Book, Users, UserCircle2, Plus, Pencil } from "lucide-react";
 import { Dialog } from "@headlessui/react";
 import { IAccountBook } from "@/interfaces/account_book";
 import { useTranslation } from "@/i18n/i18n_context";
-import { COUNTRY, CURRENCY, RULE } from "@/constants/accounts";
+import { CURRENCY, RULE } from "@/constants/accounts";
+import { CountryCode } from "@/constants/enums";
 import { ESG_INDUSTRY_BENCHMARKS } from "@/constants/esg_industry_benchmarks";
 import ConfirmModal from "@/components/common/confirm_modal";
 
@@ -25,7 +26,7 @@ export default function UserMainPage() {
 
   // Info: (20260321 - Luphia) Form states
   const [formName, setFormName] = useState("");
-  const [formCountry, setFormCountry] = useState(COUNTRY.TW);
+  const [formCountry, setFormCountry] = useState<string>(CountryCode.TW);
   const [formCurrency, setFormCurrency] = useState(CURRENCY.TW);
   const [formStartYear, setFormStartYear] = useState<number>(
     new Date().getFullYear(),
@@ -112,7 +113,7 @@ export default function UserMainPage() {
   const openCreateModal = () => {
     setEditingBook(null);
     setFormName("New Account Book"); // Info: (20260321 - Luphia) Default as requested by user
-    setFormCountry(COUNTRY.TW);
+    setFormCountry(CountryCode.TW);
     setFormCurrency(CURRENCY.TW);
     setFormStartYear(new Date().getFullYear());
     setFormRule(RULE.T_IFRS);
@@ -432,8 +433,8 @@ export default function UserMainPage() {
                       onChange={(e) => setFormCountry(e.target.value)}
                       className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
                     >
-                      {Object.entries(COUNTRY).map(([key, val]) => (
-                        <option key={key} value={val}>
+                      {Object.entries(CountryCode).map(([key, val]) => (
+                        <option key={key} value={val as string}>
                           {key}
                         </option>
                       ))}

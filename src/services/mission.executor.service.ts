@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import { getPriorityEnvConfig } from "@/services/env.service";
 import { ChatService } from "@/services/chat.service";
+import { EsgGenerationSource } from "@/constants/enums";
 import { skillRegistry } from "@/skills";
 import { IMissionDefinition } from "@/lib/worker/mission.generator";
 import { ITaskDefinition } from "@/lib/worker/task.generator";
@@ -215,11 +216,16 @@ export async function processNext() {
                 responseSchema,
               );
 
-              // Info: (20260516 - Tzuhan) Add LLM_FALLBACK_STAGE_3 tag to raw LLM output if it is JSON
+              // Info: (20260516 - Tzuhan) Add AI_GENERATED tag to raw LLM output if it is JSON
               try {
                 const parsed = JSON.parse(taskResultStr);
-                if (typeof parsed === "object" && !parsed.generationSource) {
-                  parsed.generationSource = "LLM_FALLBACK_STAGE_3";
+                if (typeof parsed === "object" && parsed !== null) {
+                  if (parsed.data) {
+                    parsed.data.generationSource =
+                      EsgGenerationSource.AI_GENERATED;
+                  } else {
+                    parsed.generationSource = EsgGenerationSource.AI_GENERATED;
+                  }
                   taskResultStr = JSON.stringify(parsed);
                 }
               } catch {}

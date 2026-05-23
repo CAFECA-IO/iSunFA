@@ -61,6 +61,9 @@ export interface IParsedVoucherLine {
   particular: string;
   amount: number | bigint | string;
   isDebit: boolean;
+  isVerified?: boolean;
+  generationSource?: string;
+  semanticCategory?: string;
 }
 
 export interface IParsedVoucher {

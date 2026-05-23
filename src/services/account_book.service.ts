@@ -1,4 +1,5 @@
-import { COUNTRY, CURRENCY, RULE } from "@/constants/accounts";
+import { CURRENCY, RULE } from "@/constants/accounts";
+import { CountryCode } from "@/constants/enums";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { teamRepo } from "@/repositories/team.repo";
 import { IAccountBook } from "@/interfaces/account_book";
@@ -17,7 +18,7 @@ export const createAccountBookForTeamsWithoutOne = async () => {
   for (const team of teamsWithoutAccountBook) {
     const accountBook = await createAccountBook({
       name: "New Account Book",
-      country: COUNTRY.TW,
+      country: CountryCode.TW,
       currency: CURRENCY.TW,
       rule: RULE.T_IFRS,
       teamId: team.id,
