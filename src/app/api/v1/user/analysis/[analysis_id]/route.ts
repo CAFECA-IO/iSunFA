@@ -4,6 +4,7 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { analysisRepo } from "@/repositories/analysis.repo";
+import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 
 export async function GET(
   request: NextRequest,
@@ -48,7 +49,10 @@ export async function GET(
 
     // Info: (20260502 - Luphia) Automatically unwrap TRANSPORTATION_CARBON_FOOTPRINT result
     let finalResult = analysis.result;
-    if (analysis.type === "TRANSPORTATION_CARBON_FOOTPRINT" && finalResult) {
+    if (
+      analysis.type === ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT &&
+      finalResult
+    ) {
       if (typeof finalResult === "object") {
         const resObj = finalResult as Record<string, unknown>;
         if (typeof resObj.answer === "string") {

@@ -5,6 +5,8 @@ import {
 } from "@/lib/auth/crypto_utils";
 import type { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
 import { registerBotService } from "@/services/bot.register.service";
+import { ANALYSIS_CATEGORY } from "@/constants/analysis";
+import { ORDER_TYPE } from "@/constants/status";
 
 export class AnalysisBotService {
   public async generateAnalysis(
@@ -34,8 +36,8 @@ export class AnalysisBotService {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          type: "ANALYSIS",
-          category: "AI_CONSULTING",
+          type: ORDER_TYPE.ANALYSIS,
+          category: ANALYSIS_CATEGORY.AI_CONSULTING,
           data: { question, accountBookId },
         }),
       });

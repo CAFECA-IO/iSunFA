@@ -159,7 +159,7 @@ function ReportPageContent() {
   const fetchHistory = useCallback(async () => {
     try {
       const res = await request<{ payload: IHistoryItem[] }>(
-        "/api/v1/user/analysis?category=TRANSPORTATION_CARBON_FOOTPRINT",
+        `/api/v1/user/analysis?category=${ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT}`,
       );
       if (res?.payload) {
         setHistory(res.payload);

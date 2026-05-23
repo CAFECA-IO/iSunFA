@@ -12,7 +12,7 @@ if (fs.existsSync(srcEnv)) {
   dotenvExpand.expand(defaultEnv);
 }
 
-// Info: (20260521 - Luphia) Import service and Prisma, ensuring they are resolved using the project root paths
+// Info: (20260521 - Luphia) Import service, ensuring they are resolved using the project root paths
 import { processNext as processMissionExecutorNext } from "../src/services/mission.executor.service";
 
 // Info: (20260521 - Luphia) Setup executor using argument ID

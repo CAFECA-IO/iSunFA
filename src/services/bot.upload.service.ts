@@ -5,6 +5,8 @@ import {
 } from "@/lib/auth/crypto_utils";
 import type { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
 import { registerBotService } from "@/services/bot.register.service";
+import { ANALYSIS_CATEGORY } from "@/constants/analysis";
+import { ORDER_TYPE } from "@/constants/status";
 
 export class UploadBotService {
   public async uploadVoucher(
@@ -88,8 +90,8 @@ export class UploadBotService {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        type: "ANALYSIS",
-        category: "CERTIFICATE_ANALYSIS",
+        type: ORDER_TYPE.ANALYSIS,
+        category: ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS,
         data: { accountBookId },
       }),
     });

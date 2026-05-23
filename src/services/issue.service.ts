@@ -19,6 +19,8 @@ import { orderRepo } from "@/repositories/order.repo";
 import { ORDER_STATUS } from "@/constants/status";
 import { analysisRepo } from "@/repositories/analysis.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
+import { esgRepo } from "@/repositories/esg.repo";
+import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 
 // Info: (20260420 - Luphia) ERC20 & MissionBoard ABIs
 const CP_ABI = parseAbi([
@@ -72,7 +74,7 @@ export async function processNext() {
       { fileInfo: null as { hash: string; name: string } | null, index: 0 },
     ];
     if (
-      category === "CERTIFICATE_ANALYSIS" &&
+      category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS &&
       Array.isArray(files) &&
       files.length > 0
     ) {
@@ -195,9 +197,14 @@ export async function processNext() {
     const preparedItems = await Promise.all(
       itemsToProcess.map(async (item) => {
         let localContextObj: Record<string, unknown> | null = null;
+        let analysisId: string | undefined = undefined;
         if (item.fileInfo) {
           const fileInfoObj = item.fileInfo as Record<string, unknown>;
+          if (category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS) {
+            analysisId = crypto.randomUUID();
+          }
           localContextObj = {
+            analysisId,
             journalId: fileInfoObj.journalId,
             voucherId: fileInfoObj.voucherId,
             esgRecordId: fileInfoObj.esgRecordId,
@@ -221,25 +228,16 @@ export async function processNext() {
         // Info: (20260516 - Luphia) 將 accountBookId 轉換為完整的 accountBook JSON 給 AI 解析器
         const accBookId =
           missionData.accountBookId || missionData.data?.accountBookId;
-        if (accBookId && category === "CERTIFICATE_ANALYSIS") {
+        if (accBookId && category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS) {
           try {
             const accBook = await accountBookRepo.getAccountBookById(
               accBookId as string,
             );
             if (accBook) {
               missionData.accountBook = accBook;
-              const { prisma } = await import("@/lib/prisma");
-              const tenantCustomCoefficients =
-                await prisma.coefficient.findMany({
-                  where: { accountBookId: accBook.id },
-                  select: {
-                    id: true,
-                    name: true,
-                    description: true,
-                    unit: true,
-                    emissionFactor: true,
-                  },
-                });
+              const tenantCustomCoefficients = await esgRepo.getEsgCoefficients(
+                accBook.id,
+              );
               if (!missionData.prerequisiteData)
                 missionData.prerequisiteData = {};
               missionData.prerequisiteData.coefficients =
@@ -285,7 +283,14 @@ export async function processNext() {
         });
 
         const cid = await storageService.uploadLaria(missionFile);
-        return { item, cid, missionJsonStr, missionData, localContextObj };
+        return {
+          item,
+          cid,
+          missionJsonStr,
+          missionData,
+          localContextObj,
+          analysisId,
+        };
       }),
     );
 
@@ -299,6 +304,7 @@ export async function processNext() {
       missionJsonStr,
       missionData,
       localContextObj,
+      analysisId,
     } of preparedItems) {
       console.log(
         `[MissionIssuer] Creating task on MissionBoard with CID ${cid}...`,
@@ -369,8 +375,8 @@ This is an automated validation plan.
 ## Verifications
 1. Check if the output follows the expected analysis structure for category: ${category}.
 2. Ensure the resulting numerical figures are accurately derived from ${missionData.type}.
-${category === "TRANSPORTATION_CARBON_FOOTPRINT" ? "3. Accept raw JSON output directly as it represents a highly precise logistics calculation data structure." : ""}
-${category === "CERTIFICATE_ANALYSIS" ? "3. CRITICAL: The result MUST contain a `dbSyncPayload` object. If `dbSyncPayload` is missing, you MUST rate confidence below 60 and reject it." : ""}
+${category === ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT ? "3. Accept raw JSON output directly as it represents a highly precise logistics calculation data structure." : ""}
+${category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS ? "3. CRITICAL: The result MUST contain a `dbSyncPayload` object. If `dbSyncPayload` is missing, you MUST rate confidence below 60 and reject it." : ""}
 `;
       await fs.writeFile(
         path.join(taskDir, "plan.validator.md"),
@@ -380,10 +386,14 @@ ${category === "CERTIFICATE_ANALYSIS" ? "3. CRITICAL: The result MUST contain a 
       generatedTaskIds.push(taskId);
 
       // Info: (20260427 - Luphia) Prepare DB writes
-      if (item.fileInfo && category === "CERTIFICATE_ANALYSIS") {
+      if (
+        item.fileInfo &&
+        category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS &&
+        analysisId
+      ) {
         analysisDbPromises.push(
           analysisRepo.create({
-            reportId: crypto.randomUUID(),
+            reportId: analysisId,
             userId: order.userId,
             orderId: order.id,
             category: category,
