@@ -81,11 +81,14 @@ export class EsgIntensityEvaluationSkill implements ITaskSkill {
       return EsgIntensity.MEDIUM;
     }
 
-    // TODO: 未來實作 - 根據 accountBookId 條件從 DB 取出該企業（或是全站、同行業）的歷史 ESGRecords：
-    // const records = await prisma.esgRecord.findMany({ where: { activityType: activityType } });
-    // 計算前、後段班的 PR 級距範圍...
+    /**
+     * TODO: (20250417 - Julian) 未來實作
+     * 根據 accountBookId 條件從 DB 取出該企業（或是全站、同行業）的歷史 ESGRecords：
+     * const records = await prisma.esgRecord.findMany({ where: { activityType: activityType } });
+     * 計算前、後段班的 PR 級距範圍...
+     */
 
-    // 以下為 Mock 評估邏輯
+    // Info: (20250417 - Julian) 根據排放係數判斷排放強度
     if (dec.gt(1.5)) {
       return EsgIntensity.HIGH;
     } else if (dec.gt(0.5)) {

@@ -428,11 +428,19 @@ export class DocumentSyncRepository {
             if (!sourceExists) finalEmissionSourceId = null;
           }
 
-          const esgAmount = new Prisma.Decimal(String(ed.amount) || "0");
+          const esgAmount =
+            ed.amount === null ||
+            ed.amount === undefined ||
+            String(ed.amount) === "null"
+              ? new Prisma.Decimal(0)
+              : new Prisma.Decimal(String(ed.amount) || "0");
           // Info: (20260522 - Tzuhan) 直接採用 Two-Turn RAG 在後端 TS 算好的高精度碳排量
-          let calculatedEmissions = new Prisma.Decimal(
-            String(ed.emissions) || "0",
-          );
+          let calculatedEmissions =
+            ed.emissions === null ||
+            ed.emissions === undefined ||
+            String(ed.emissions) === "null"
+              ? new Prisma.Decimal(0)
+              : new Prisma.Decimal(String(ed.emissions) || "0");
           let isSuspense = false;
           let recordIsVerified = confidence > 85;
 
@@ -551,7 +559,13 @@ export class DocumentSyncRepository {
               : MeasurementUnit.KG) as MeasurementUnit,
             emissions: calculatedEmissions,
             intensity: (ed.intensity as EsgIntensity) || null,
-            dqiScore: new Prisma.Decimal(String(ed.dqiScore || "0")),
+            dqiScore: new Prisma.Decimal(
+              ed.dqiScore === null ||
+                ed.dqiScore === undefined ||
+                String(ed.dqiScore) === "null"
+                ? "0"
+                : String(ed.dqiScore || "0"),
+            ),
             confidence,
             isVerified: recordIsVerified,
             aiNote,

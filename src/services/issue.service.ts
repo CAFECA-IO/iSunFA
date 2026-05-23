@@ -21,6 +21,7 @@ import { analysisRepo } from "@/repositories/analysis.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { esgRepo } from "@/repositories/esg.repo";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
+import type { Analysis } from "@/generated";
 
 // Info: (20260420 - Luphia) ERC20 & MissionBoard ABIs
 const CP_ABI = parseAbi([
@@ -194,14 +195,40 @@ export async function processNext() {
     console.log(
       `[MissionIssuer] Preparing and uploading ${itemsToProcess.length} mission(s) to IPFS concurrently...`,
     );
+
+    // Info: (20260523 - Luphia) Retrieve existing Analyses for this order upfront to reuse placeholders
+    const existingAnalyses = await analysisRepo.findMany({
+      where: {
+        orderId: order.id,
+        type: category,
+      },
+    });
+
     const preparedItems = await Promise.all(
       itemsToProcess.map(async (item) => {
         let localContextObj: Record<string, unknown> | null = null;
         let analysisId: string | undefined = undefined;
+        let reusedAnalysis = false;
+        let existingAnalysisObj: Analysis | null = null;
+
         if (item.fileInfo) {
           const fileInfoObj = item.fileInfo as Record<string, unknown>;
           if (category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS) {
-            analysisId = crypto.randomUUID();
+            const match = existingAnalyses.find((a) => {
+              const dataObj = (a.data as Record<string, unknown>) || {};
+              const innerData = (dataObj.data as Record<string, unknown>) || {};
+              const files = innerData.files;
+              return (
+                Array.isArray(files) && files.includes(item.fileInfo!.hash)
+              );
+            });
+            if (match) {
+              analysisId = match.id;
+              reusedAnalysis = true;
+              existingAnalysisObj = match;
+            } else {
+              analysisId = crypto.randomUUID();
+            }
           }
           localContextObj = {
             analysisId,
@@ -290,6 +317,8 @@ export async function processNext() {
           missionData,
           localContextObj,
           analysisId,
+          reusedAnalysis,
+          existingAnalysisObj,
         };
       }),
     );
@@ -305,6 +334,8 @@ export async function processNext() {
       missionData,
       localContextObj,
       analysisId,
+      reusedAnalysis,
+      existingAnalysisObj,
     } of preparedItems) {
       console.log(
         `[MissionIssuer] Creating task on MissionBoard with CID ${cid}...`,
@@ -391,27 +422,53 @@ ${category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS ? "3. CRITICAL: The result
         category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS &&
         analysisId
       ) {
-        analysisDbPromises.push(
-          analysisRepo.create({
-            reportId: analysisId,
-            userId: order.userId,
-            orderId: order.id,
-            category: category,
-            data: {
-              missionName: `Analysis-${category}-${item.fileInfo.name}`,
-              missionTaskId: taskId,
+        if (reusedAnalysis && existingAnalysisObj) {
+          const existingData =
+            (existingAnalysisObj.data as Record<string, unknown>) || {};
+          analysisDbPromises.push(
+            analysisRepo.update({
+              where: { id: analysisId },
+              data: {
+                data: {
+                  ...existingData,
+                  missionName: `Analysis-${category}-${item.fileInfo.name}`,
+                  missionTaskId: taskId,
+                  category: category,
+                  cost: (orderDataObj.cost as number) || 0,
+                  generatedAt: new Date().toISOString(),
+                  periodType: "unknown",
+                  periodValue: "unknown",
+                  year: new Date().getFullYear(),
+                  keyword: item.fileInfo.name,
+                  isExternal: false,
+                  fileHash: item.fileInfo.hash,
+                },
+              },
+            }),
+          );
+        } else {
+          analysisDbPromises.push(
+            analysisRepo.create({
+              reportId: analysisId,
+              userId: order.userId,
+              orderId: order.id,
               category: category,
-              cost: (orderDataObj.cost as number) || 0,
-              generatedAt: new Date().toISOString(),
-              periodType: "unknown",
-              periodValue: "unknown",
-              year: new Date().getFullYear(),
-              keyword: item.fileInfo.name,
-              isExternal: false,
-              fileHash: item.fileInfo.hash,
-            },
-          }),
-        );
+              data: {
+                missionName: `Analysis-${category}-${item.fileInfo.name}`,
+                missionTaskId: taskId,
+                category: category,
+                cost: (orderDataObj.cost as number) || 0,
+                generatedAt: new Date().toISOString(),
+                periodType: "unknown",
+                periodValue: "unknown",
+                year: new Date().getFullYear(),
+                keyword: item.fileInfo.name,
+                isExternal: false,
+                fileHash: item.fileInfo.hash,
+              },
+            }),
+          );
+        }
       }
     }
 
