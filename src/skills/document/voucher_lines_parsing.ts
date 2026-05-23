@@ -37,9 +37,10 @@ export class VoucherLinesParsingSkill implements ITaskSkill {
     chatService: ChatService,
   ): Promise<string> {
     const { images, parsedContext } = await prepareDocumentContext(task);
-    // ==========================================
-    // Turn 1: 語意萃取 (Extract intent/particulars)
-    // ==========================================
+    /**
+     * Info: (20260522 - Tzuhan)
+     * Turn 1: 語意萃取 (Extract intent/particulars)
+     */
     let turn1Prompt = fullPrompt;
 
     if (parsedContext.journalText) {
@@ -94,9 +95,10 @@ export class VoucherLinesParsingSkill implements ITaskSkill {
         return JSON.stringify({ lines: [] });
       }
 
-      // ==========================================
-      // Return Clean Extraction (Without LLM Hallucinated Accounting Codes)
-      // ==========================================
+      /**
+       * Info: (20260522 - Tzuhan)
+       * Return Clean Extraction (Without LLM Hallucinated Accounting Codes)
+       */
       return JSON.stringify({ lines: lines });
     } catch (error) {
       console.error("[VoucherLinesParsingSkill] Error:", error);
