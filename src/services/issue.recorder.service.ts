@@ -3,6 +3,7 @@ import path from "path";
 import { orderRepo } from "@/repositories/order.repo";
 import { analysisRepo } from "@/repositories/analysis.repo";
 import { ORDER_STATUS } from "@/constants/status";
+import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import { syncDocumentResultToDatabase } from "@/skills/utils/document_parser_db_sync";
 import { getPriorityEnvConfig } from "@/services/env.service";
 import type { IAggregatedDocumentResult } from "@/skills/utils/document_parser_db_sync";
@@ -59,22 +60,44 @@ export class IssueRecorderService {
           `[MissionRecorder] Found approved task to record: Task ID ${taskId}`,
         );
 
+        let localContextObj: Record<string, string> = {};
         try {
+          const contextContent = await fs.readFile(
+            path.join(taskDir, "context.json"),
+            "utf8",
+          );
+          localContextObj = JSON.parse(contextContent);
+        } catch {
+          // Info: (20260506 - Luphia) context.json might not exist
+        }
+
+        let analysis = null;
+
+        try {
+          // Info: (20260522 - Julian) Find analysis first by analysisId if present
+          if (localContextObj.analysisId) {
+            analysis = await analysisRepo.findById(localContextObj.analysisId);
+          }
+
           // Info: (20260506 - Luphia) Read mission.json to get the exact orderId
           let orderId = "";
-          try {
-            const missionContent = await fs.readFile(
-              path.join(taskDir, "mission.json"),
-              "utf8",
-            );
-            const missionData = JSON.parse(missionContent);
-            if (missionData && missionData.orderId) {
-              orderId = missionData.orderId;
+          if (analysis) {
+            orderId = analysis.orderId;
+          } else {
+            try {
+              const missionContent = await fs.readFile(
+                path.join(taskDir, "mission.json"),
+                "utf8",
+              );
+              const missionData = JSON.parse(missionContent);
+              if (missionData && missionData.orderId) {
+                orderId = missionData.orderId;
+              }
+            } catch {
+              console.warn(
+                `[MissionRecorder] Could not read mission.json for Task ID ${taskId}`,
+              );
             }
-          } catch {
-            console.warn(
-              `[MissionRecorder] Could not read mission.json for Task ID ${taskId}`,
-            );
           }
 
           let order = null;
@@ -159,13 +182,15 @@ export class IssueRecorderService {
            * "Cancel, temporarily keep mission and task table". Thus Analysis might still exist.
            * Let's find analysis by orderId and update its result
            */
-          let analysis = await analysisRepo.findByOrderIdAndTaskId(
-            order.id,
-            taskId,
-          );
+          if (!analysis && order) {
+            analysis = await analysisRepo.findByOrderIdAndTaskId(
+              order.id,
+              taskId,
+            );
 
-          if (!analysis) {
-            analysis = await analysisRepo.findByOrderId(order.id);
+            if (!analysis) {
+              analysis = await analysisRepo.findByOrderId(order.id);
+            }
           }
 
           if (analysis) {
@@ -200,17 +225,6 @@ export class IssueRecorderService {
                 unknown
               >;
             } catch {}
-
-            let localContextObj: Record<string, string> = {};
-            try {
-              const contextContent = await fs.readFile(
-                path.join(taskDir, "context.json"),
-                "utf8",
-              );
-              localContextObj = JSON.parse(contextContent);
-            } catch {
-              // Info: (20260506 - Luphia) context.json might not exist
-            }
 
             // Info: (20260516 - Luphia) Extract accountBookId dynamically from the original order
             const orderDataObj = (order.data as Record<string, unknown>) || {};
@@ -267,7 +281,7 @@ export class IssueRecorderService {
                 (orderDataObj.data as Record<string, unknown>) || {};
               const orderCategory =
                 payloadData.category || orderDataObj.category;
-              if (orderCategory === "CERTIFICATE_ANALYSIS") {
+              if (orderCategory === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS) {
                 finalOrderStatus = ORDER_STATUS.FAILED;
                 syncErrorMessage =
                   "Expected dbSyncPayload for CERTIFICATE_ANALYSIS but none was found in result.";
@@ -327,7 +341,18 @@ export class IssueRecorderService {
                     ? ORDER_STATUS.COMPLETED
                     : ORDER_STATUS.EXECUTING;
                 } else {
-                  newOrderStatus = ORDER_STATUS.COMPLETED;
+                  /**
+                   * Info: (20260525 - Luphia) Prevent bypass bug when order.mission is null/empty during execution.
+                   * If the order was currently EXECUTING or PAID, do not force COMPLETED since tasks are still being issued or processed.
+                   */
+                  if (
+                    order.status === ORDER_STATUS.EXECUTING ||
+                    order.status === ORDER_STATUS.PAID
+                  ) {
+                    newOrderStatus = ORDER_STATUS.EXECUTING;
+                  } else {
+                    newOrderStatus = ORDER_STATUS.COMPLETED;
+                  }
                 }
               } catch {
                 newOrderStatus = ORDER_STATUS.COMPLETED;

@@ -26,6 +26,7 @@ import { getAdminAddressString } from "@/lib/wallet/admin_wallet";
 import { getLoginOptions, fido2ClientService } from "@/lib/auth/fido2_client";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { MoneyUtil } from "@/lib/utils/money";
+import { CURRENCY_UNIT } from "@/constants/price";
 
 export default function AdminMissionBoardPage() {
   const { t } = useTranslation();
@@ -301,7 +302,7 @@ export default function AdminMissionBoardPage() {
           <AdminMetricCard
             title={t("admin_mission_board.kpi.total_rewards")}
             value={MoneyUtil.formatDynamic(kpis.totalRewards, 0)}
-            unit="ICP"
+            unit={CURRENCY_UNIT.ICP}
             icon={AlertCircle}
             colorTheme="rose"
           />

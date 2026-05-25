@@ -59,6 +59,7 @@ export const analysis = {
   },
   title: "顾问分析",
   desc: "提供多领域专家企业分析，协助管理层做出明智商业决策。",
+  login_to_use: "请登录以使用顾问分析",
   login_to_generate: "请先登录以产生分析报告",
   internal_analysis: "内部数据分析",
   external_analysis: "外部数据分析",

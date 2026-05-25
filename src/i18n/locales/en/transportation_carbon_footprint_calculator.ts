@@ -58,6 +58,8 @@ export const transportationCarbonFootprintCalculator = {
     calculating: "Calculating...",
     generate_report: "Generate Analysis Report",
     login_to_generate: "Please login to generate analysis report",
+    login_to_use:
+      "Please login first to use the transportation carbon footprint feature",
     tab_analysis: "Carbon Accounting",
     tab_history: "Historical Reports",
     tab_mileage: "Mileage Calculation",

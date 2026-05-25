@@ -182,6 +182,9 @@ export function MileageCalculator({
         setPollingOrderId(orderId);
         setIsPaymentModalOpen(false);
         resetTransaction();
+        if (onNavigateToHistory) {
+          onNavigateToHistory();
+        }
       },
     );
   };

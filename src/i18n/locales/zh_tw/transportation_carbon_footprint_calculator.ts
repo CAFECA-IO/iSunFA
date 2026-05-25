@@ -53,6 +53,7 @@ export const transportationCarbonFootprintCalculator = {
     calculating: "運算中...",
     generate_report: "產生分析報告",
     login_to_generate: "請先登入以產生分析報告",
+    login_to_use: "請先登入以使用物流碳足跡",
     tab_analysis: "碳排核算",
     tab_history: "歷史報告",
     tab_mileage: "里程核算",

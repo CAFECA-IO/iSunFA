@@ -59,6 +59,7 @@ export const analysis = {
   },
   title: "Advisory Analysis",
   desc: "Provide multidisciplinary expert business analysis to help management make informed business decisions.",
+  login_to_use: "Please login to use consultant analysis",
   login_to_generate: "Please login to generate the analysis report",
   internal_analysis: "Internal Data Analysis",
   external_analysis: "External Analysis",

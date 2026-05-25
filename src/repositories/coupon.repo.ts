@@ -170,6 +170,74 @@ export class CouponRepository {
       include: { campaign: true },
     });
   }
+
+  async getCoupons(
+    page: number,
+    limit: number,
+    campaignId?: string,
+    search?: string,
+  ) {
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.CouponWhereInput = {};
+
+    if (campaignId) {
+      where.campaignId = campaignId;
+    }
+
+    if (search) {
+      where.user = {
+        OR: [
+          {
+            name: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+          {
+            address: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+        ],
+      };
+    }
+
+    const [totalElements, coupons] = await Promise.all([
+      prisma.coupon.count({ where }),
+      prisma.coupon.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          user: true,
+          campaign: true,
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+    ]);
+
+    return {
+      data: coupons,
+      totalElements,
+      totalPages: Math.ceil(totalElements / limit),
+    };
+  }
+
+  async forceResetCouponStatus(couponId: string) {
+    return prisma.coupon.update({
+      where: { id: couponId },
+      data: {
+        status: COUPON_STATUS.ACTIVE,
+        txHashBurn: null,
+      },
+      include: {
+        user: true,
+        campaign: true,
+      },
+    });
+  }
 }
 
 export const couponRepo = new CouponRepository();

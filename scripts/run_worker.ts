@@ -6,6 +6,7 @@ import { processNext as processMissionCommitorNext } from "@/services/mission.co
 import { processNext as processMissionCloserNext } from "@/services/mission.closer.service";
 import { processNext as processIssueValidatorNext } from "@/services/issue.validator.service";
 import { issueRecorderService } from "@/services/issue.recorder.service";
+import { syncExchangeRates } from "@/services/cron/exchange_rate.cron";
 
 /**
  * Info: (20260130 - Luphia)
@@ -49,6 +50,11 @@ async function runWorker() {
     startServiceLoop("MissionCloser", () => processMissionCloserNext()),
     startServiceLoop("IssueValidator", () => processIssueValidatorNext()),
     startServiceLoop("IssueRecorder", () => issueRecorderService.processNext()),
+    startServiceLoop(
+      "ExchangeRateSync",
+      () => syncExchangeRates(),
+      8 * 60 * 60 * 1000,
+    ),
   ]);
 
   console.log("[Worker] Stopped.");

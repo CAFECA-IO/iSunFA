@@ -23,7 +23,18 @@ export class ExchangeRateService {
     toCurrency,
     date, // Info: (20260518 - Tzuhan) 補上 date
   }: IConversionParams): Promise<IConversionResult> {
-    const inputAmount = new Prisma.Decimal(amount.toString());
+    let inputAmount = new Prisma.Decimal(0);
+    if (
+      amount !== null &&
+      amount !== undefined &&
+      String(amount).toLowerCase() !== "null"
+    ) {
+      try {
+        inputAmount = new Prisma.Decimal(amount.toString());
+      } catch {
+        // Info: (20260524 - Luphia) Fallback to 0
+      }
+    }
 
     // Info: (20260518 - Tzuhan) 1. 同幣別直接放行
     if (fromCurrency === toCurrency) {

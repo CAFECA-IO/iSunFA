@@ -149,9 +149,9 @@ export async function generateAnalysisOrder(
   // Info: (20260128 - Luphia) Create PENDING order
   const order = await paymentRepo.createOrder({
     userId,
-    type: "ANALYSIS",
+    type: ORDER_TYPE.ANALYSIS,
     amount: -cost,
-    unit: "ICP",
+    unit: CURRENCY_UNIT.ICP,
     // Info: (20260128 - Luphia) Store the full data object including timestamp
     data: JSON.parse(jsonString) as IJSONObject,
     status: ORDER_STATUS.PENDING,

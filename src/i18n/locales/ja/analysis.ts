@@ -62,6 +62,7 @@ export const analysis = {
   },
   title: "顧問分析",
   desc: "多分野の専門家による企業分析を提供し、経営陣が賢明なビジネス上の意思決定を行えるよう支援します。",
+  login_to_use: "顧問分析機能を使用するには、ログインしてください",
   login_to_generate: "分析レポートを作成するにはログインしてください",
   internal_analysis: "内部データ分析",
   external_analysis: "外部分析",

@@ -6,6 +6,116 @@ import { storageService } from "@/services/storage.service";
 import { getAdminAccount } from "@/lib/wallet/admin_wallet";
 import { isuncoin } from "@/lib/viem_public";
 import { ChatService } from "@/services/chat.service";
+import { Prisma } from "@/generated";
+
+interface IFileResult {
+  journal?: Record<string, unknown>;
+  voucherBase?: Record<string, unknown> & { data?: Record<string, unknown> };
+  voucherLines?: Record<string, unknown> & { data?: Record<string, unknown> };
+  esg?: Record<string, unknown> & { data?: Record<string, unknown> };
+}
+
+function testPrismaDecimal(val: unknown, fieldName: string): void {
+  if (val === null || val === undefined) {
+    throw new Error(`${fieldName} is missing (null/undefined)`);
+  }
+  const s = String(val).trim();
+  if (
+    s === "" ||
+    s.toLowerCase() === "null" ||
+    s.toLowerCase() === "undefined" ||
+    s.toLowerCase() === "nan" ||
+    s.toLowerCase() === "n/a" ||
+    s.toLowerCase() === "tbd" ||
+    s === "-"
+  ) {
+    throw new Error(`${fieldName} has an invalid representation: "${s}"`);
+  }
+  try {
+    const d = new Prisma.Decimal(s);
+    if (d.isNaN()) {
+      throw new Error(`${fieldName} is NaN`);
+    }
+  } catch {
+    throw new Error(`Failed to parse ${fieldName} to Decimal: "${s}"`);
+  }
+}
+
+function validateDbSyncPayload(payload: unknown): void {
+  if (!payload || typeof payload !== "object") {
+    throw new Error("dbSyncPayload is missing or not a valid object");
+  }
+  const p = payload as Record<string, Record<string, unknown>>;
+  for (const recordKey of Object.keys(p)) {
+    const fileResult = p[recordKey] as IFileResult;
+    if (!fileResult || typeof fileResult !== "object") {
+      throw new Error(`dbSyncPayload record "${recordKey}" is not an object`);
+    }
+
+    // Info: (20260524 - Luphia) 1. 校驗 Journal
+    if (!fileResult.journal) {
+      throw new Error(
+        `dbSyncPayload record "${recordKey}" is missing "journal" property`,
+      );
+    }
+
+    // Info: (20260524 - Luphia) 2. 校驗 Voucher
+    if (fileResult.voucherBase || fileResult.voucherLines) {
+      const vd = {
+        ...((fileResult.voucherBase?.data as Record<string, unknown>) ||
+          (fileResult.voucherBase as Record<string, unknown>) ||
+          {}),
+        ...((fileResult.voucherLines?.data as Record<string, unknown>) ||
+          (fileResult.voucherLines as Record<string, unknown>) ||
+          {}),
+      } as Record<string, unknown> & {
+        lines?: unknown[];
+        totalAmount?: unknown;
+      };
+
+      // Info: (20260524 - Luphia) 校驗 totalAmount
+      const totalAmtStr = String(vd.totalAmount || "").trim();
+      if (
+        totalAmtStr === "" ||
+        totalAmtStr.toLowerCase() === "null" ||
+        isNaN(Number(totalAmtStr.replace(/,/g, "")))
+      ) {
+        throw new Error(
+          `Voucher totalAmount has an invalid representation: "${totalAmtStr}"`,
+        );
+      }
+
+      // Info: (20260524 - Luphia) 校驗 lines amount
+      const lines = vd.lines;
+      if (Array.isArray(lines)) {
+        for (const l of lines) {
+          const lineObj = l as Record<string, unknown> & { amount?: unknown };
+          const amtStr = String(lineObj.amount || "").trim();
+          if (
+            amtStr === "" ||
+            amtStr.toLowerCase() === "null" ||
+            isNaN(Number(amtStr.replace(/,/g, "")))
+          ) {
+            throw new Error(
+              `Voucher line amount has an invalid representation: "${amtStr}"`,
+            );
+          }
+        }
+      }
+    }
+
+    // Info: (20260524 - Luphia) 3. 校驗 ESG
+    if (fileResult.esg) {
+      const ed = (fileResult.esg.data || fileResult.esg) as Record<
+        string,
+        unknown
+      > & { amount?: unknown; emissions?: unknown; dqiScore?: unknown };
+      testPrismaDecimal(ed.amount, "ESG amount");
+      testPrismaDecimal(ed.emissions, "ESG emissions");
+      testPrismaDecimal(ed.dqiScore, "ESG dqiScore");
+    }
+  }
+}
 
 const MB_ABI = parseAbi([
   "function tasks(uint256) view returns (address creator, string contentCid, uint256 reward, uint256 createdAt, uint256 updatedAt, uint8 status, uint256 submissionCount)",
@@ -196,54 +306,84 @@ export async function processNext() {
             let isApproved = false;
             let rejectReason = "Unknown Error";
             let aiConfidence = 0;
+            let dataError = "";
 
+            // Info: (20260524 - Luphia) 1. 執行嚴格的前置資料結構與數值校驗，杜絕異常數據流向 Recorder (Rejection Guard)
             try {
-              const apiKey = setupConfig.GEMINI_API_KEY;
-              if (!apiKey) {
-                throw new Error(
-                  "Missing GEMINI_API_KEY in environment for validation.",
-                );
-              }
-              const chatService = new ChatService(apiKey);
+              const parsedResult = JSON.parse(resultContent);
 
-              let contentToValidate = resultContent;
+              // Info: (20260524 - Luphia) 取得 orderCategory 判斷
+              let orderCategory = "";
               try {
-                const parsedResult = JSON.parse(resultContent);
+                const missionContent = await fs.readFile(
+                  path.join(taskIssueDir, "mission.json"),
+                  "utf8",
+                );
+                const missionData = JSON.parse(missionContent);
+                const orderDataObj = (missionData.data ||
+                  missionData) as Record<string, unknown>;
+                orderCategory = (orderDataObj.category ||
+                  missionData.category) as string;
+              } catch {}
 
-                // Info: (20260503 - Luphia) 限制傳入 AI 的文字長度，避免超出 token limit
-                const stripHeavyData = (obj: unknown): void => {
-                  if (!obj || typeof obj !== "object") return;
-
-                  const record = obj as Record<string, unknown>;
-
-                  for (const key of Object.keys(record)) {
-                    if (key === "geometry") {
-                      const geometry = record[key];
-                      if (geometry && typeof geometry === "object") {
-                        const geoRecord = geometry as Record<string, unknown>;
-                        if (geoRecord.coordinates) {
-                          geoRecord.coordinates =
-                            "[Geometry coordinates omitted for AI validation]";
-                        }
-                      }
-                    } else if (typeof record[key] === "object") {
-                      stripHeavyData(record[key]);
-                    }
-                  }
-                };
-
-                stripHeavyData(parsedResult);
-                contentToValidate = JSON.stringify(parsedResult, null, 2);
-
-                if (contentToValidate.length > 8000) {
-                  contentToValidate =
-                    contentToValidate.substring(0, 8000) + "\n...[truncated]";
-                }
-              } catch {
-                contentToValidate = resultContent.substring(0, 8000);
+              if (orderCategory === "certificate_analysis") {
+                validateDbSyncPayload(parsedResult.dbSyncPayload);
               }
+            } catch (err) {
+              dataError = `[異常數據拒絕] ${(err as Error).message}`;
+              console.warn(
+                `[IssueValidator] Data pre-validation rejected the task: ${dataError}`,
+              );
+            }
 
-              const prompt = `
+            if (!dataError) {
+              try {
+                const apiKey = setupConfig.GEMINI_API_KEY;
+                if (!apiKey) {
+                  throw new Error(
+                    "Missing GEMINI_API_KEY in environment for validation.",
+                  );
+                }
+                const chatService = new ChatService(apiKey);
+
+                let contentToValidate = resultContent;
+                try {
+                  const parsedResult = JSON.parse(resultContent);
+
+                  // Info: (20260503 - Luphia) 限制傳入 AI 的文字長度，避免超出 token limit
+                  const stripHeavyData = (obj: unknown): void => {
+                    if (!obj || typeof obj !== "object") return;
+
+                    const record = obj as Record<string, unknown>;
+
+                    for (const key of Object.keys(record)) {
+                      if (key === "geometry") {
+                        const geometry = record[key];
+                        if (geometry && typeof geometry === "object") {
+                          const geoRecord = geometry as Record<string, unknown>;
+                          if (geoRecord.coordinates) {
+                            geoRecord.coordinates =
+                              "[Geometry coordinates omitted for AI validation]";
+                          }
+                        }
+                      } else if (typeof record[key] === "object") {
+                        stripHeavyData(record[key]);
+                      }
+                    }
+                  };
+
+                  stripHeavyData(parsedResult);
+                  contentToValidate = JSON.stringify(parsedResult, null, 2);
+
+                  if (contentToValidate.length > 8000) {
+                    contentToValidate =
+                      contentToValidate.substring(0, 8000) + "\n...[truncated]";
+                  }
+                } catch {
+                  contentToValidate = resultContent.substring(0, 8000);
+                }
+
+                const prompt = `
 Please act as an automated validator. Your task is to evaluate the provided execution result against the validation plan.
 Rate your confidence in the result's correctness and completeness on a scale of 0 to 100.
 Also provide a short reason for your rating.
@@ -259,60 +399,64 @@ ${validatorPlan}
 Execution Result:
 ${contentToValidate}
 `;
-              const rawResponse = await chatService.generateRaw(prompt);
+                const rawResponse = await chatService.generateRaw(prompt);
 
-              // Info: (20260427 - Luphia) 處理可能包含 markdown code block 的情況
-              let jsonStr = rawResponse.trim();
-              if (jsonStr.startsWith("```json")) {
-                jsonStr = jsonStr
-                  .replace(/^```json/, "")
-                  .replace(/```$/, "")
-                  .trim();
-              } else if (jsonStr.startsWith("```")) {
-                jsonStr = jsonStr
-                  .replace(/^```/, "")
-                  .replace(/```$/, "")
-                  .trim();
-              }
+                // Info: (20260427 - Luphia) 處理可能包含 markdown code block 的情況
+                let jsonStr = rawResponse.trim();
+                if (jsonStr.startsWith("```json")) {
+                  jsonStr = jsonStr
+                    .replace(/^```json/, "")
+                    .replace(/```$/, "")
+                    .trim();
+                } else if (jsonStr.startsWith("```")) {
+                  jsonStr = jsonStr
+                    .replace(/^```/, "")
+                    .replace(/```$/, "")
+                    .trim();
+                }
 
-              const aiResult = JSON.parse(jsonStr) as {
-                confidence: number;
-                reason: string;
-              };
-              aiConfidence = aiResult.confidence;
+                const aiResult = JSON.parse(jsonStr) as {
+                  confidence: number;
+                  reason: string;
+                };
+                aiConfidence = aiResult.confidence;
 
-              if (aiConfidence < 60) {
-                rejectReason = `AI Confidence too low (${aiConfidence}/100): ${aiResult.reason}`;
-                isApproved = false;
-                console.log(
-                  `[IssueValidator] Validation failed. ${rejectReason}`,
+                if (aiConfidence < 60) {
+                  rejectReason = `AI Confidence too low (${aiConfidence}/100): ${aiResult.reason}`;
+                  isApproved = false;
+                  console.log(
+                    `[IssueValidator] Validation failed. ${rejectReason}`,
+                  );
+                } else {
+                  isApproved = true;
+                  console.log(
+                    `[IssueValidator] Validation passed! AI Confidence: ${aiConfidence}/100. Reason: ${aiResult.reason}`,
+                  );
+                }
+              } catch (err) {
+                console.error(
+                  `[IssueValidator] AI Validation failed for Task ID: ${currentTaskId}.`,
+                  err,
                 );
-              } else {
-                isApproved = true;
-                console.log(
-                  `[IssueValidator] Validation passed! AI Confidence: ${aiConfidence}/100. Reason: ${aiResult.reason}`,
-                );
-              }
-            } catch (err) {
-              console.error(
-                `[IssueValidator] AI Validation failed for Task ID: ${currentTaskId}.`,
-                err,
-              );
-              rejectReason =
-                "AI Validation encountered an error or returned invalid format";
+                rejectReason =
+                  "AI Validation encountered an error or returned invalid format";
 
-              // Info: (20260427 - Luphia) 如果 AI 暫時不可用，採用長度防呆降級驗證
-              if (
-                resultContent &&
-                resultContent.length > 50 &&
-                !resultContent.toLowerCase().includes("error") &&
-                !resultContent.toLowerCase().includes("failed")
-              ) {
-                console.log(
-                  "[IssueValidator] Falling back to basic validation due to AI failure (passed).",
-                );
-                isApproved = true;
+                // Info: (20260427 - Luphia) 如果 AI 暫時不可用，採用長度防呆降級驗證
+                if (
+                  resultContent &&
+                  resultContent.length > 50 &&
+                  !resultContent.toLowerCase().includes("error") &&
+                  !resultContent.toLowerCase().includes("failed")
+                ) {
+                  console.log(
+                    "[IssueValidator] Falling back to basic validation due to AI failure (passed).",
+                  );
+                  isApproved = true;
+                }
               }
+            } else {
+              isApproved = false;
+              rejectReason = dataError;
             }
 
             if (isApproved) {

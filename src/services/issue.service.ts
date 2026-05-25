@@ -19,6 +19,9 @@ import { orderRepo } from "@/repositories/order.repo";
 import { ORDER_STATUS } from "@/constants/status";
 import { analysisRepo } from "@/repositories/analysis.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
+import { esgRepo } from "@/repositories/esg.repo";
+import { ANALYSIS_CATEGORY } from "@/constants/analysis";
+import type { Analysis } from "@/generated";
 
 // Info: (20260420 - Luphia) ERC20 & MissionBoard ABIs
 const CP_ABI = parseAbi([
@@ -72,7 +75,7 @@ export async function processNext() {
       { fileInfo: null as { hash: string; name: string } | null, index: 0 },
     ];
     if (
-      category === "CERTIFICATE_ANALYSIS" &&
+      category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS &&
       Array.isArray(files) &&
       files.length > 0
     ) {
@@ -192,12 +195,53 @@ export async function processNext() {
     console.log(
       `[MissionIssuer] Preparing and uploading ${itemsToProcess.length} mission(s) to IPFS concurrently...`,
     );
+
+    // Info: (20260523 - Luphia) Retrieve existing Analyses for this order upfront to reuse placeholders
+    const existingAnalyses = await analysisRepo.findMany({
+      where: {
+        orderId: order.id,
+        type: category,
+      },
+    });
+
     const preparedItems = await Promise.all(
       itemsToProcess.map(async (item) => {
         let localContextObj: Record<string, unknown> | null = null;
+        let analysisId: string | undefined = undefined;
+        let reusedAnalysis = false;
+        let existingAnalysisObj: Analysis | null = null;
+
         if (item.fileInfo) {
           const fileInfoObj = item.fileInfo as Record<string, unknown>;
+          if (category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS) {
+            const match = existingAnalyses.find((a) => {
+              const dataObj = (a.data as Record<string, unknown>) || {};
+              const innerData = (dataObj.data as Record<string, unknown>) || {};
+              const files = innerData.files;
+              return (
+                Array.isArray(files) &&
+                files.some((f: unknown) => {
+                  if (typeof f === "string") return f === item.fileInfo!.hash;
+                  if (f && typeof f === "object" && "hash" in f) {
+                    return (
+                      (f as Record<string, unknown>).hash ===
+                      item.fileInfo!.hash
+                    );
+                  }
+                  return false;
+                })
+              );
+            });
+            if (match) {
+              analysisId = match.id;
+              reusedAnalysis = true;
+              existingAnalysisObj = match;
+            } else {
+              analysisId = crypto.randomUUID();
+            }
+          }
           localContextObj = {
+            analysisId,
             journalId: fileInfoObj.journalId,
             voucherId: fileInfoObj.voucherId,
             esgRecordId: fileInfoObj.esgRecordId,
@@ -221,25 +265,16 @@ export async function processNext() {
         // Info: (20260516 - Luphia) 將 accountBookId 轉換為完整的 accountBook JSON 給 AI 解析器
         const accBookId =
           missionData.accountBookId || missionData.data?.accountBookId;
-        if (accBookId && category === "CERTIFICATE_ANALYSIS") {
+        if (accBookId && category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS) {
           try {
             const accBook = await accountBookRepo.getAccountBookById(
               accBookId as string,
             );
             if (accBook) {
               missionData.accountBook = accBook;
-              const { prisma } = await import("@/lib/prisma");
-              const tenantCustomCoefficients =
-                await prisma.coefficient.findMany({
-                  where: { accountBookId: accBook.id },
-                  select: {
-                    id: true,
-                    name: true,
-                    description: true,
-                    unit: true,
-                    emissionFactor: true,
-                  },
-                });
+              const tenantCustomCoefficients = await esgRepo.getEsgCoefficients(
+                accBook.id,
+              );
               if (!missionData.prerequisiteData)
                 missionData.prerequisiteData = {};
               missionData.prerequisiteData.coefficients =
@@ -285,7 +320,16 @@ export async function processNext() {
         });
 
         const cid = await storageService.uploadLaria(missionFile);
-        return { item, cid, missionJsonStr, missionData, localContextObj };
+        return {
+          item,
+          cid,
+          missionJsonStr,
+          missionData,
+          localContextObj,
+          analysisId,
+          reusedAnalysis,
+          existingAnalysisObj,
+        };
       }),
     );
 
@@ -299,48 +343,75 @@ export async function processNext() {
       missionJsonStr,
       missionData,
       localContextObj,
+      analysisId,
+      reusedAnalysis,
+      existingAnalysisObj,
     } of preparedItems) {
-      console.log(
-        `[MissionIssuer] Creating task on MissionBoard with CID ${cid}...`,
-      );
-      const { request } = await publicClient.simulateContract({
-        account: adminAccount,
-        address: mbAddress,
-        abi: MB_ABI,
-        functionName: "createTask",
-        args: [cid, baseRewardBigInt],
-      });
-
-      const createTx = await walletClient.writeContract(request);
-      const receipt = await publicClient.waitForTransactionReceipt({
-        hash: createTx,
-      });
-
       let taskId = "";
-      for (const log of receipt.logs) {
-        try {
-          const decoded = decodeEventLog({
-            abi: MB_FULL_ABI,
-            data: log.data,
-            topics: log.topics,
-            eventName: "TaskCreated",
-          });
-          if (decoded && decoded.args && "taskId" in decoded.args) {
-            taskId = String(decoded.args.taskId);
-            break;
-          }
-        } catch {
-          // Info: (20260427 - Luphia) ignore parsing error for other events
+
+      // Info: (20260525 - Luphia) Check if this task was already successfully created in a previous attempt to achieve idempotence/resume capability.
+      if (
+        existingAnalysisObj &&
+        existingAnalysisObj.data &&
+        typeof existingAnalysisObj.data === "object"
+      ) {
+        const existingData = existingAnalysisObj.data as Record<
+          string,
+          unknown
+        >;
+        if (
+          typeof existingData.missionTaskId === "string" &&
+          existingData.missionTaskId
+        ) {
+          taskId = existingData.missionTaskId;
+          console.log(
+            `[MissionIssuer] Task already created in previous attempt! Reusing Task ID: ${taskId}`,
+          );
         }
       }
 
       if (!taskId) {
-        throw new Error(
-          `Could not find TaskCreated event to extract taskId for CID ${cid}.`,
+        console.log(
+          `[MissionIssuer] Creating task on MissionBoard with CID ${cid}...`,
         );
-      }
+        const { request } = await publicClient.simulateContract({
+          account: adminAccount,
+          address: mbAddress,
+          abi: MB_ABI,
+          functionName: "createTask",
+          args: [cid, baseRewardBigInt],
+        });
 
-      console.log(`[MissionIssuer] Task created! Task ID: ${taskId}`);
+        const createTx = await walletClient.writeContract(request);
+        const receipt = await publicClient.waitForTransactionReceipt({
+          hash: createTx,
+        });
+
+        for (const log of receipt.logs) {
+          try {
+            const decoded = decodeEventLog({
+              abi: MB_FULL_ABI,
+              data: log.data,
+              topics: log.topics,
+              eventName: "TaskCreated",
+            });
+            if (decoded && decoded.args && "taskId" in decoded.args) {
+              taskId = String(decoded.args.taskId);
+              break;
+            }
+          } catch {
+            // Info: (20260427 - Luphia) ignore parsing error for other events
+          }
+        }
+
+        if (!taskId) {
+          throw new Error(
+            `Could not find TaskCreated event to extract taskId for CID ${cid}.`,
+          );
+        }
+
+        console.log(`[MissionIssuer] Task created! Task ID: ${taskId}`);
+      }
 
       // Info: (20260427 - Luphia) Store Files Locally
       const issueDirBase = setupConfig.ISSUE_DIR || "issues";
@@ -369,8 +440,8 @@ This is an automated validation plan.
 ## Verifications
 1. Check if the output follows the expected analysis structure for category: ${category}.
 2. Ensure the resulting numerical figures are accurately derived from ${missionData.type}.
-${category === "TRANSPORTATION_CARBON_FOOTPRINT" ? "3. Accept raw JSON output directly as it represents a highly precise logistics calculation data structure." : ""}
-${category === "CERTIFICATE_ANALYSIS" ? "3. CRITICAL: The result MUST contain a `dbSyncPayload` object. If `dbSyncPayload` is missing, you MUST rate confidence below 60 and reject it." : ""}
+${category === ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT ? "3. Accept raw JSON output directly as it represents a highly precise logistics calculation data structure." : ""}
+${category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS ? "3. CRITICAL: The result MUST contain a `dbSyncPayload` object. If `dbSyncPayload` is missing, you MUST rate confidence below 60 and reject it." : ""}
 `;
       await fs.writeFile(
         path.join(taskDir, "plan.validator.md"),
@@ -380,28 +451,58 @@ ${category === "CERTIFICATE_ANALYSIS" ? "3. CRITICAL: The result MUST contain a 
       generatedTaskIds.push(taskId);
 
       // Info: (20260427 - Luphia) Prepare DB writes
-      if (item.fileInfo && category === "CERTIFICATE_ANALYSIS") {
-        analysisDbPromises.push(
-          analysisRepo.create({
-            reportId: crypto.randomUUID(),
-            userId: order.userId,
-            orderId: order.id,
-            category: category,
-            data: {
-              missionName: `Analysis-${category}-${item.fileInfo.name}`,
-              missionTaskId: taskId,
+      if (
+        item.fileInfo &&
+        category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS &&
+        analysisId
+      ) {
+        if (reusedAnalysis && existingAnalysisObj) {
+          const existingData =
+            (existingAnalysisObj.data as Record<string, unknown>) || {};
+          analysisDbPromises.push(
+            analysisRepo.update({
+              where: { id: analysisId },
+              data: {
+                data: {
+                  ...existingData,
+                  missionName: `Analysis-${category}-${item.fileInfo.name}`,
+                  missionTaskId: taskId,
+                  category: category,
+                  cost: (orderDataObj.cost as number) || 0,
+                  generatedAt: new Date().toISOString(),
+                  periodType: "unknown",
+                  periodValue: "unknown",
+                  year: new Date().getFullYear(),
+                  keyword: item.fileInfo.name,
+                  isExternal: false,
+                  fileHash: item.fileInfo.hash,
+                },
+              },
+            }),
+          );
+        } else {
+          analysisDbPromises.push(
+            analysisRepo.create({
+              reportId: analysisId,
+              userId: order.userId,
+              orderId: order.id,
               category: category,
-              cost: (orderDataObj.cost as number) || 0,
-              generatedAt: new Date().toISOString(),
-              periodType: "unknown",
-              periodValue: "unknown",
-              year: new Date().getFullYear(),
-              keyword: item.fileInfo.name,
-              isExternal: false,
-              fileHash: item.fileInfo.hash,
-            },
-          }),
-        );
+              data: {
+                missionName: `Analysis-${category}-${item.fileInfo.name}`,
+                missionTaskId: taskId,
+                category: category,
+                cost: (orderDataObj.cost as number) || 0,
+                generatedAt: new Date().toISOString(),
+                periodType: "unknown",
+                periodValue: "unknown",
+                year: new Date().getFullYear(),
+                keyword: item.fileInfo.name,
+                isExternal: false,
+                fileHash: item.fileInfo.hash,
+              },
+            }),
+          );
+        }
       }
     }
 

@@ -398,12 +398,43 @@ export const downloadFromMetadata = async (
     // Info: (20260113 - Luphia) Truncate to original size
     const truncated = finalBuffer.slice(0, originalFileSize);
 
+    let mimeType = metadata.mimeType;
+    if (!mimeType || mimeType === "application/octet-stream") {
+      if (truncated.length >= 4) {
+        const headerHex = Array.from(truncated.slice(0, 4))
+          .map((b) => b.toString(16).padStart(2, "0").toLowerCase())
+          .join("");
+        if (headerHex === "89504e47") {
+          mimeType = "image/png";
+        } else if (headerHex.startsWith("ffd8ff")) {
+          mimeType = "image/jpeg";
+        } else if (headerHex === "25504446") {
+          mimeType = "application/pdf";
+        } else if (headerHex === "47494638") {
+          mimeType = "image/gif";
+        }
+      }
+    }
+
+    let finalFilename = filename;
+    if (finalFilename && !finalFilename.includes(".")) {
+      if (mimeType === "image/png") {
+        finalFilename += ".png";
+      } else if (mimeType === "image/jpeg") {
+        finalFilename += ".jpg";
+      } else if (mimeType === "application/pdf") {
+        finalFilename += ".pdf";
+      } else if (mimeType === "image/gif") {
+        finalFilename += ".gif";
+      }
+    }
+
     const finalBlob = new Blob([truncated as unknown as BlobPart], {
-      type: metadata.mimeType || "application/octet-stream",
+      type: mimeType || "application/octet-stream",
     });
 
     if (callbacks.onProgress) callbacks.onProgress(100);
-    if (callbacks.onSuccess) callbacks.onSuccess(finalBlob, filename);
+    if (callbacks.onSuccess) callbacks.onSuccess(finalBlob, finalFilename);
   } catch (err) {
     if (callbacks.onError) {
       callbacks.onError(err instanceof Error ? err.message : "Download failed");
