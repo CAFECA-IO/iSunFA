@@ -3,9 +3,9 @@ import { IBalanceSheet } from "@/interfaces/balance_sheet";
 import { ICashFlowStatement } from "@/interfaces/cash_flow_statement";
 import { IIncomeStatement } from "@/interfaces/income_statement";
 import { MoneyUtil } from "@/lib/utils/money";
-import { TW_ACCOUNTS } from "@/constants/accounts/tw";
-import { AccountUtil } from "@/lib/utils/account_util";
-import { SystemAccountNodes } from "@/constants/system_account_codes";
+// import { TW_ACCOUNTS } from "@/constants/accounts/tw";
+// import { AccountUtil } from "@/lib/utils/account_util";
+// import { SystemAccountNodes } from "@/constants/system_account_codes";
 
 export interface ICrossReportMetrics {
   operatingCashFlowRatio: string | null; // Info: (20260518 - Tzuhan) 營業現金流量比率
@@ -24,7 +24,8 @@ export interface ICrossReportMetrics {
 export function calculateCrossReportMetrics(
   balanceSheet: IBalanceSheet,
   cashFlow: ICashFlowStatement,
-  incomeStatement: IIncomeStatement,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _incomeStatement: IIncomeStatement,
 ): ICrossReportMetrics {
   // Info: (20260518 - Tzuhan) 1. 營業現金流量比率 = 營業活動現金流量 (CF) / 流動負債期末總額 (BS)
   // Info: (20260518 - Tzuhan) [CPA 正確定義] 解決了舊版拿傳票變動數當分母的重大錯誤
@@ -88,33 +89,35 @@ export function calculateCrossReportMetrics(
 
   // Info: (20260518 - Tzuhan) 4. 每股盈餘 (EPS) = 本期稅後淨利 (IS) / 期末流通在外股數 (BS)
   // Info: (20260518 - Tzuhan) [CPA 正確定義] 徹底解決了 IS 單表引擎只能拿到「當期增資股數」導致 EPS 永遠為 0 的荒謬錯誤
-  const netIncome = MoneyUtil.toDecimal(
-    incomeStatement.sections.netIncome.total,
-  );
-  const parValue = MoneyUtil.toDecimal(balanceSheet.metrics.parValue || 10);
+  // const netIncome = MoneyUtil.toDecimal(
+  //   incomeStatement.sections.netIncome.total,
+  // );
+  // const parValue = MoneyUtil.toDecimal(balanceSheet.metrics.parValue || 10);
 
   // Info: (20260520 - Tzuhan) [REFACTOR] 找出股本總額 (拔除 startsWith("31")，改用 AccountUtil 樹狀溯源)
-  const commonStockCapital = balanceSheet.equity.items
-    .filter((item) =>
-      AccountUtil.isDescendantOf(
-        item.code,
-        SystemAccountNodes.COMMON_STOCK_ROOT,
-        TW_ACCOUNTS,
-      ),
-    )
-    .reduce(
-      (acc, curr) => acc.plus(MoneyUtil.toDecimal(curr.amount)),
-      MoneyUtil.toDecimal(0),
-    );
+  // const commonStockCapital = balanceSheet.equity.items
+  //   .filter((item) =>
+  //     AccountUtil.isDescendantOf(
+  //       item.code,
+  //       SystemAccountNodes.COMMON_STOCK_ROOT,
+  //       TW_ACCOUNTS,
+  //     ),
+  //   )
+  //   .reduce(
+  //     (acc, curr) => acc.plus(MoneyUtil.toDecimal(curr.amount)),
+  //     MoneyUtil.toDecimal(0),
+  //   );
 
   // Info: (20260518 - Tzuhan) 計算流通在外股數 (防禦無面額股)
-  const outstandingShares = parValue.gt(0)
-    ? commonStockCapital.dividedBy(parValue)
-    : MoneyUtil.toDecimal(0);
+  // const outstandingShares = parValue.gt(0)
+  //   ? commonStockCapital.dividedBy(parValue)
+  //   : MoneyUtil.toDecimal(0);
 
-  const eps = outstandingShares.gt(0)
-    ? netIncome.dividedBy(outstandingShares).toString()
-    : "0";
+  // Info: (20260525 - Tzuhan) [IAS 33 FIX] 阻斷直接使用期末股數相除的謬誤
+  // TODO: [IAS 33] Implement WACSO (Weighted Average Number of Ordinary Shares Outstanding)
+  // 在未實作依據增資日期加權平均的演算法前，直接相除會導致嚴重的 EPS 人為稀釋。
+  // 目前強制回傳 null (N/A) 以防禦錯誤的財務指標外洩。
+  const eps = null;
 
   return {
     operatingCashFlowRatio,

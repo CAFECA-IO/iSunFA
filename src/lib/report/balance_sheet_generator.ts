@@ -9,6 +9,7 @@ import { SystemAccountNodes } from "@/constants/system_account_codes";
 export function generateBalanceSheet(
   lineItems: IVoucherLineUI[],
   parValue: number = 10,
+  previousPeriodSnapshot?: IBalanceSheet,
 ): IBalanceSheet {
   const assetMap = new Map<
     string,
@@ -45,6 +46,56 @@ export function generateBalanceSheet(
   // Info: (20260518 - Tzuhan) 新增追蹤長期投資與其他資產
   let longTermInvestmentsTotal = MoneyUtil.toDecimal(0);
   let otherAssetsTotal = MoneyUtil.toDecimal(0);
+
+  // Info: (20260525 - Tzuhan) [IAS 1 FIX] 期初餘額快照繼承 (Snapshot Inheritance)
+  if (previousPeriodSnapshot) {
+    const processSnapshotItems = (
+      items: IBalanceSheetItem[],
+      map: Map<
+        string,
+        | { name: string; amount: Decimal; isCurrent: boolean }
+        | { name: string; amount: Decimal }
+      >,
+      isCurrentFunc?: (code: string) => boolean,
+    ) => {
+      items.forEach((item) => {
+        if (isCurrentFunc) {
+          map.set(item.code, {
+            name: item.name,
+            amount: MoneyUtil.toDecimal(item.amount),
+            isCurrent: isCurrentFunc(item.code),
+          });
+        } else {
+          map.set(item.code, {
+            name: item.name,
+            amount: MoneyUtil.toDecimal(item.amount),
+          });
+        }
+      });
+    };
+
+    processSnapshotItems(
+      previousPeriodSnapshot.assets.current.items,
+      assetMap,
+      () => true,
+    );
+    processSnapshotItems(
+      previousPeriodSnapshot.assets.nonCurrent.items,
+      assetMap,
+      () => false,
+    );
+    processSnapshotItems(
+      previousPeriodSnapshot.liabilities.current.items,
+      liabilityMap,
+      () => true,
+    );
+    processSnapshotItems(
+      previousPeriodSnapshot.liabilities.nonCurrent.items,
+      liabilityMap,
+      () => false,
+    );
+    processSnapshotItems(previousPeriodSnapshot.equity.items, equityMap);
+  }
 
   lineItems.forEach((line) => {
     // Info: (20260331 - Julian) 確保有會計科目且借貸方有值
@@ -90,6 +141,11 @@ export function generateBalanceSheet(
       AccountUtil.isDescendantOf(
         code,
         SystemAccountNodes.OTHER_COMPREHENSIVE_INCOME_ROOT,
+        TW_ACCOUNTS,
+      ) ||
+      AccountUtil.isDescendantOf(
+        code,
+        SystemAccountNodes.TAX_EXPENSE_ROOT,
         TW_ACCOUNTS,
       );
 

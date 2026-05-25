@@ -125,6 +125,26 @@ export function generateCashFlowStatement(
             : MoneyUtil.toDecimal(amount).negated(),
         );
       }
+
+      // Info: (20260525 - Tzuhan) [IAS 7 FIX] 處分資產損益調節 (從營業活動中反向扣除，並加回投資活動)
+      const isDisposalGain = AccountUtil.isDescendantOf(
+        code,
+        SystemAccountNodes.DISPOSAL_GAIN_ROOT,
+        TW_ACCOUNTS,
+      );
+      const isDisposalLoss = AccountUtil.isDescendantOf(
+        code,
+        SystemAccountNodes.DISPOSAL_LOSS_ROOT,
+        TW_ACCOUNTS,
+      );
+
+      if (isDisposalGain || isDisposalLoss) {
+        // Info: (20260525 - Tzuhan) impact 為對淨利的影響 (Gain 為正, Loss 為負)
+        // Info: (20260525 - Tzuhan) 為了抵銷這個影響，我們在 operatingItems 加上反向的 -impact
+        addItem(operatingItems, `處分資產損益調節`, impact.negated());
+        // Info: (20260525 - Tzuhan) 並將該影響還原至投資活動現金流 (Gain 代表有更多現金流入，Loss 代表較少現金流入)
+        addItem(investingItems, `處分資產損益(調節至投資活動)`, impact);
+      }
     }
 
     // Info: (20260520 - Tzuhan) [REFACTOR] 2. 營業活動 - 營運資金變動 (動態適應，不再漏接)
@@ -239,13 +259,7 @@ export function generateCashFlowStatement(
         // Info: (20260504 - Tzuhan) 分配股利為未分配盈餘 (335) 的借方變動
         dividendsPaid = dividendsPaid.plus(MoneyUtil.toDecimal(amount));
         addItem(financingItems, `發放股利`, impact);
-      } else if (
-        !AccountUtil.isDescendantOf(
-          code,
-          SystemAccountNodes.RETAINED_EARNINGS_ROOT,
-          TW_ACCOUNTS,
-        )
-      ) {
+      } else {
         addItem(financingItems, `權益變動: ${name}`, impact);
       }
     }

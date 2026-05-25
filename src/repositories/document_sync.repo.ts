@@ -16,6 +16,7 @@ import {
   VoucherPaymentStatus,
   CountryCode,
   MeasurementUnit,
+  verifyDimensionalConsistency,
 } from "@/constants/enums";
 import { ISyncDocumentResultParams } from "@/skills/utils/document_parser_db_sync";
 import { ACCOUNTS, IAccount } from "@/constants/accounts";
@@ -458,19 +459,10 @@ export class DocumentSyncRepository {
             }
 
             if (coefExists) {
-              // Info: (20260520 - Tzuhan) [AUDIT FIX] 量綱防呆檢查
-              const getDimension = (u: string) => {
-                if (["KG", "TONNE"].includes(u)) return "MASS";
-                if (["LITER", "GALLON"].includes(u)) return "VOLUME";
-                if (u === "KWH") return "ENERGY";
-                if (u === "TWD") return "CURRENCY";
-                return u;
-              };
+              const docUnit = ed.unit as MeasurementUnit;
+              const coefUnit = coefExists.unit as MeasurementUnit;
 
-              const docUnit = ed.unit as string;
-              const coefUnit = coefExists.unit as string;
-
-              if (getDimension(docUnit) !== getDimension(coefUnit)) {
+              if (!verifyDimensionalConsistency(docUnit, coefUnit)) {
                 isSuspense = true;
                 finalCoefficientId = null;
                 ed.aiNote =
