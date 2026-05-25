@@ -10,6 +10,7 @@ import { MOCK_EEIO_COEFFICIENTS } from "@/constants/mock_eeio_coefficients";
 import { MoneyUtil } from "@/lib/utils/money";
 import { EmissionFactorRepo } from "@/repositories/emission_factor.repo";
 import { prisma } from "@/lib/prisma";
+import { getCrossExchangeRateStatic } from "@/skills/utils/exchange_rate_helper";
 
 export class EsgParsingSkill implements ITaskSkill {
   name = "ESG_PARSING";
@@ -48,9 +49,7 @@ export class EsgParsingSkill implements ITaskSkill {
 
     try {
       // Info: (20260522 - Tzuhan) [ADR 006] 動態兩回合檢索 (Two-Turn RAG)
-      // ==========================================
       // Info: (20260522 - Tzuhan) Turn 1: 意圖與關鍵字萃取
-      // ==========================================
       const turn1Prompt =
         promptText +
         `\n\n[Turn 1 指示]\n請分析此憑證的範疇、活動類型、供應商，並給出最符合的大類標籤 (fallbackCategory)，以及 3-5 個搜尋具體碳排係數用的關鍵字 (searchKeywords)。`;
@@ -200,12 +199,10 @@ export class EsgParsingSkill implements ITaskSkill {
           emissionFactor: c.emissionFactor,
         }));
 
-      // ==========================================
       // Info: (20260522 - Tzuhan) Turn 2: 係數挑選與數量萃取
-      // ==========================================
       const turn2Prompt =
         promptText +
-        `\n\n[Turn 2 指示]\n你先前在 Turn 1 分析為：${parsed1.scope}, ${parsed1.activityType}, ${parsed1.vendor}。大類為 ${parsed1.fallbackCategory}。\n以下是系統根據關鍵字檢索出的 Top 20 候選碳排係數：\n${JSON.stringify(candidates, null, 2)}\n\n請從中精準挑選一個最適合的 coefficientId，並根據該係數的單位，從憑證中萃取出正確的 amount (數量) 與對應的 unit (單位)。\n\n【CPA 級別鐵律：絕對禁止 AI 進行數學計算】\n你只需要萃取 amount，後端系統會自動進行高精度乘法運算。`;
+        `\n\n[Turn 2 指示]\n你先前在 Turn 1 分析為：${parsed1.scope}, ${parsed1.activityType}, ${parsed1.vendor}。大類為 ${parsed1.fallbackCategory}。\n以下是系統根據關鍵字檢索出的 Top 20 候選碳排係數：\n${JSON.stringify(candidates, null, 2)}\n\n請從中精準挑選一個最適合的 coefficientId，並根據該係數的單位，從憑證中萃取出正確的 amount (數量) 與對應的 unit (單位)。\n\n【外幣折算指示】\n若憑證中的金額為外幣（如 USD, JPY, CNY, HKD, KRW 等），且你選中的係數單位為 TWD（花費基礎係數），請將數量 (amount) 設為憑證上的「原始外幣金額」，並將單位 (unit) 設為該「原始外幣代碼」（如 USD, JPY 等），絕對不要自己進行匯率換算！後端系統會自動根據交易日期將其折算為 TWD。\n\n【CPA 級別鐵律：絕對禁止 AI 進行數學計算】\n你只需要萃取原始 amount，後端系統會自動進行高精度乘法運算。`;
 
       const turn2Schema: Schema = {
         type: SchemaType.OBJECT,
@@ -218,13 +215,27 @@ export class EsgParsingSkill implements ITaskSkill {
           amount: {
             type: SchemaType.NUMBER,
             nullable: true,
-            description: "對應該係數單位的數量",
+            description:
+              "對應該係數單位的數量。若需要進行外幣折算，請原樣輸出憑證上的原始外幣金額",
           },
           unit: {
             type: SchemaType.STRING,
-            description: "對應的單位",
+            description:
+              "對應的單位。若需要進行外幣折算，可輸出原始貨幣代碼，如 USD, JPY, CNY, HKD, KRW 等",
             format: "enum",
-            enum: Object.values(MeasurementUnit),
+            enum: [
+              ...Object.values(MeasurementUnit),
+              "USD",
+              "JPY",
+              "CNY",
+              "HKD",
+              "KRW",
+            ],
+          },
+          tradingDate: {
+            type: SchemaType.STRING,
+            nullable: true,
+            description: "憑證交易日期 (格式: YYYY-MM-DD)。若查無，可設為 null",
           },
           aiNote: {
             type: SchemaType.STRING,
@@ -234,8 +245,19 @@ export class EsgParsingSkill implements ITaskSkill {
             type: SchemaType.NUMBER,
             description: "信心指數 1-100",
           },
+          dqiScore: {
+            type: SchemaType.NUMBER,
+            description: "數據品質分數 (DQI)，範圍 1-5 (1 為最優，5 為最差)",
+          },
         },
-        required: ["coefficientId", "amount", "unit", "aiNote", "confidence"],
+        required: [
+          "coefficientId",
+          "amount",
+          "unit",
+          "aiNote",
+          "confidence",
+          "dqiScore",
+        ],
       };
 
       const text2 = await chatService.generateRawWithImages(
@@ -247,19 +269,46 @@ export class EsgParsingSkill implements ITaskSkill {
 
       const parsed2 = JSON.parse(text2.trim());
 
-      // ==========================================
       // Info: (20260522 - Tzuhan) Backend: CPA-Grade Emission Calculation
-      // ==========================================
       const selectedCoef = combinedCoefficients.find(
         (c) => c.id === parsed2.coefficientId,
       );
       let calculatedEmissions = "0";
       let finalAiNote = `[Turn 1] ${parsed1.aiNote}\n[Turn 2] ${parsed2.aiNote}`;
+      let finalAmount = parsed2.amount;
+      let finalUnit = parsed2.unit;
 
       if (selectedCoef && parsed2.amount != null) {
+        // Info: (20260525 - Luphia) Check for currency mismatch and perform currency conversion programmatically in the skill code
+        const coefUnit = selectedCoef.unit;
+        if (
+          finalUnit !== coefUnit &&
+          ["USD", "JPY", "CNY", "HKD", "KRW", "TWD"].includes(finalUnit) &&
+          ["USD", "JPY", "CNY", "HKD", "KRW", "TWD"].includes(coefUnit)
+        ) {
+          try {
+            const tradingDate = new Date(parsed2.tradingDate || new Date());
+            const rate = getCrossExchangeRateStatic(
+              finalUnit,
+              coefUnit,
+              tradingDate,
+            );
+            console.log(
+              `[EsgParsingSkill] Currency mismatch in ESG: ${finalUnit} vs ${coefUnit}. Applying static exchange rate: ${rate} for tradingDate: ${tradingDate.toISOString().split("T")[0]}`,
+            );
+
+            const origAmount = parsed2.amount;
+            finalAmount = parseFloat((origAmount * rate).toFixed(4));
+            finalUnit = coefUnit;
+            finalAiNote += `\n[外幣折算] 原始幣別: ${parsed2.unit}, 原始金額: ${origAmount}, 適用匯率: ${rate.toFixed(4)}, 換算為 ${coefUnit} 金額: ${finalAmount}`;
+          } catch (err) {
+            console.warn(`[EsgParsingSkill] Currency conversion failed:`, err);
+          }
+        }
+
         // Info: (20260522 - Tzuhan) 嚴格使用 MoneyUtil 高精度運算
         calculatedEmissions = MoneyUtil.multiply(
-          parsed2.amount,
+          finalAmount,
           selectedCoef.emissionFactor,
         ).toString();
 
@@ -277,11 +326,12 @@ export class EsgParsingSkill implements ITaskSkill {
         vendor: parsed1.vendor,
         fallbackCategory: parsed1.fallbackCategory,
         coefficientId: parsed2.coefficientId,
-        amount: parsed2.amount,
-        unit: parsed2.unit,
+        amount: finalAmount,
+        unit: finalUnit,
         emissions: calculatedEmissions,
         aiNote: finalAiNote,
         confidence: parsed2.confidence,
+        dqiScore: parsed2.dqiScore,
         generationSource: EsgGenerationSource.AI_GENERATED,
       };
 

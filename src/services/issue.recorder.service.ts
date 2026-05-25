@@ -341,7 +341,18 @@ export class IssueRecorderService {
                     ? ORDER_STATUS.COMPLETED
                     : ORDER_STATUS.EXECUTING;
                 } else {
-                  newOrderStatus = ORDER_STATUS.COMPLETED;
+                  /**
+                   * Info: (20260525 - Luphia) Prevent bypass bug when order.mission is null/empty during execution.
+                   * If the order was currently EXECUTING or PAID, do not force COMPLETED since tasks are still being issued or processed.
+                   */
+                  if (
+                    order.status === ORDER_STATUS.EXECUTING ||
+                    order.status === ORDER_STATUS.PAID
+                  ) {
+                    newOrderStatus = ORDER_STATUS.EXECUTING;
+                  } else {
+                    newOrderStatus = ORDER_STATUS.COMPLETED;
+                  }
                 }
               } catch {
                 newOrderStatus = ORDER_STATUS.COMPLETED;

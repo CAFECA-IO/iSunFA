@@ -89,4 +89,5 @@ export const common = {
   other: "기타",
   pdf_tool: "PDF 도구",
   please_login: "로그인 해주세요",
+  success: "성공",
 };

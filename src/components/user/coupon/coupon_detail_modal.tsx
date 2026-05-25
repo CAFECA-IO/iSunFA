@@ -165,7 +165,7 @@ export default function CouponDetailModal({
                   </div>
 
                   <div className="relative overflow-hidden p-6">
-                    {coupon.status === COUPON_STATUS.USED && (
+                    {coupon.status === COUPON_STATUS.USED && !isRevealed && (
                       <UsedStamp
                         usedAt={coupon.updatedAt}
                         className="absolute top-40 right-5 z-20 opacity-90 md:top-10 md:right-10"

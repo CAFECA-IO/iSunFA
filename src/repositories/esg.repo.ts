@@ -6,7 +6,6 @@ import {
   Coefficient,
   EmissionSource,
 } from "@/generated";
-import { Decimal } from "decimal.js";
 import { MoneyUtil } from "@/lib/utils/money";
 import {
   IEsgDashboardSummary,
@@ -31,6 +30,29 @@ import {
 } from "@/interfaces/data_filter_option";
 import { VerifyStatus } from "@/constants/verify_status";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+
+const safePrismaDecimal = (val: unknown, fallback = "0"): Prisma.Decimal => {
+  if (val === null || val === undefined) {
+    return new Prisma.Decimal(fallback);
+  }
+  const s = String(val).trim();
+  if (
+    s === "" ||
+    s.toLowerCase() === "null" ||
+    s.toLowerCase() === "undefined" ||
+    s.toLowerCase() === "nan" ||
+    s.toLowerCase() === "n/a" ||
+    s.toLowerCase() === "tbd" ||
+    s === "-"
+  ) {
+    return new Prisma.Decimal(fallback);
+  }
+  try {
+    return new Prisma.Decimal(s);
+  } catch {
+    return new Prisma.Decimal(fallback);
+  }
+};
 
 export type EsgRecordWithRelations = Prisma.EsgRecordGetPayload<{
   include: { file: true; coefficient: true; emissionSource: true };
@@ -489,12 +511,16 @@ export class EsgRepository implements IEsgRepository {
     revenueEmissionTarget: Prisma.Decimal | number | string | null;
   }) {
     const totalDec =
-      totalEmissionTarget !== null
-        ? new Prisma.Decimal(String(totalEmissionTarget))
+      totalEmissionTarget !== null &&
+      totalEmissionTarget !== undefined &&
+      String(totalEmissionTarget).toLowerCase() !== "null"
+        ? safePrismaDecimal(totalEmissionTarget)
         : null;
     const revenueDec =
-      revenueEmissionTarget !== null
-        ? new Prisma.Decimal(String(revenueEmissionTarget))
+      revenueEmissionTarget !== null &&
+      revenueEmissionTarget !== undefined &&
+      String(revenueEmissionTarget).toLowerCase() !== "null"
+        ? safePrismaDecimal(revenueEmissionTarget)
         : null;
 
     const esgTarget = await prisma.esgTarget.upsert({

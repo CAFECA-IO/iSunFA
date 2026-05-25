@@ -95,6 +95,33 @@ export class CouponService {
   async useCoupon(userId: string, recordId: string) {
     return couponRepo.useCoupon(userId, recordId);
   }
+
+  async getCoupons(
+    page: number,
+    limit: number,
+    campaignId?: string,
+    search?: string,
+  ) {
+    const { data, totalElements, totalPages } = await couponRepo.getCoupons(
+      page,
+      limit,
+      campaignId,
+      search,
+    );
+    return {
+      data,
+      pagination: {
+        page,
+        limit,
+        totalElements,
+        totalPages,
+      },
+    };
+  }
+
+  async forceResetCouponStatus(couponId: string) {
+    return couponRepo.forceResetCouponStatus(couponId);
+  }
 }
 
 export const couponService = new CouponService();

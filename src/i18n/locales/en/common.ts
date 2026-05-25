@@ -88,4 +88,5 @@ export const common = {
   other: "Other",
   pdf_tool: "PDF Tool",
   please_login: "Please login to continue",
+  success: "Success",
 };

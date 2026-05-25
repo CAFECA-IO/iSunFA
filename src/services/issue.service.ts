@@ -219,7 +219,17 @@ export async function processNext() {
               const innerData = (dataObj.data as Record<string, unknown>) || {};
               const files = innerData.files;
               return (
-                Array.isArray(files) && files.includes(item.fileInfo!.hash)
+                Array.isArray(files) &&
+                files.some((f: unknown) => {
+                  if (typeof f === "string") return f === item.fileInfo!.hash;
+                  if (f && typeof f === "object" && "hash" in f) {
+                    return (
+                      (f as Record<string, unknown>).hash ===
+                      item.fileInfo!.hash
+                    );
+                  }
+                  return false;
+                })
               );
             });
             if (match) {
@@ -337,47 +347,71 @@ export async function processNext() {
       reusedAnalysis,
       existingAnalysisObj,
     } of preparedItems) {
-      console.log(
-        `[MissionIssuer] Creating task on MissionBoard with CID ${cid}...`,
-      );
-      const { request } = await publicClient.simulateContract({
-        account: adminAccount,
-        address: mbAddress,
-        abi: MB_ABI,
-        functionName: "createTask",
-        args: [cid, baseRewardBigInt],
-      });
-
-      const createTx = await walletClient.writeContract(request);
-      const receipt = await publicClient.waitForTransactionReceipt({
-        hash: createTx,
-      });
-
       let taskId = "";
-      for (const log of receipt.logs) {
-        try {
-          const decoded = decodeEventLog({
-            abi: MB_FULL_ABI,
-            data: log.data,
-            topics: log.topics,
-            eventName: "TaskCreated",
-          });
-          if (decoded && decoded.args && "taskId" in decoded.args) {
-            taskId = String(decoded.args.taskId);
-            break;
-          }
-        } catch {
-          // Info: (20260427 - Luphia) ignore parsing error for other events
+
+      // Info: (20260525 - Luphia) Check if this task was already successfully created in a previous attempt to achieve idempotence/resume capability.
+      if (
+        existingAnalysisObj &&
+        existingAnalysisObj.data &&
+        typeof existingAnalysisObj.data === "object"
+      ) {
+        const existingData = existingAnalysisObj.data as Record<
+          string,
+          unknown
+        >;
+        if (
+          typeof existingData.missionTaskId === "string" &&
+          existingData.missionTaskId
+        ) {
+          taskId = existingData.missionTaskId;
+          console.log(
+            `[MissionIssuer] Task already created in previous attempt! Reusing Task ID: ${taskId}`,
+          );
         }
       }
 
       if (!taskId) {
-        throw new Error(
-          `Could not find TaskCreated event to extract taskId for CID ${cid}.`,
+        console.log(
+          `[MissionIssuer] Creating task on MissionBoard with CID ${cid}...`,
         );
-      }
+        const { request } = await publicClient.simulateContract({
+          account: adminAccount,
+          address: mbAddress,
+          abi: MB_ABI,
+          functionName: "createTask",
+          args: [cid, baseRewardBigInt],
+        });
 
-      console.log(`[MissionIssuer] Task created! Task ID: ${taskId}`);
+        const createTx = await walletClient.writeContract(request);
+        const receipt = await publicClient.waitForTransactionReceipt({
+          hash: createTx,
+        });
+
+        for (const log of receipt.logs) {
+          try {
+            const decoded = decodeEventLog({
+              abi: MB_FULL_ABI,
+              data: log.data,
+              topics: log.topics,
+              eventName: "TaskCreated",
+            });
+            if (decoded && decoded.args && "taskId" in decoded.args) {
+              taskId = String(decoded.args.taskId);
+              break;
+            }
+          } catch {
+            // Info: (20260427 - Luphia) ignore parsing error for other events
+          }
+        }
+
+        if (!taskId) {
+          throw new Error(
+            `Could not find TaskCreated event to extract taskId for CID ${cid}.`,
+          );
+        }
+
+        console.log(`[MissionIssuer] Task created! Task ID: ${taskId}`);
+      }
 
       // Info: (20260427 - Luphia) Store Files Locally
       const issueDirBase = setupConfig.ISSUE_DIR || "issues";
