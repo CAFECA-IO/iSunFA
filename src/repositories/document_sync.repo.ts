@@ -26,6 +26,7 @@ import { SemanticAccountMatcher } from "@/lib/utils/semantic_account_matcher";
 import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
 import { MOCK_EEIO_COEFFICIENTS } from "@/constants/mock_eeio_coefficients";
 import { CoaVectorSearchService } from "@/services/coa_vector_search.service";
+import { getCrossExchangeRateStatic } from "@/skills/utils/exchange_rate_helper";
 
 function parsePrismaDecimal(val: unknown, fieldName: string): Prisma.Decimal {
   if (val === null || val === undefined) {
@@ -207,13 +208,38 @@ export class DocumentSyncRepository {
             let currentPaymentStatus: VoucherPaymentStatus =
               VoucherPaymentStatus.NOT_APPLICABLE;
 
+            let finalAiNote = vd.aiNote ?? "無 AI 分析備註";
+
+            // Info: (20260526 - Tzuhan) FX Interceptor - 統一換算本位幣
+            const bookCurrency = accountBook.currency || "TWD";
+            const parsedCurrency = (vd.currency as string) || bookCurrency;
+            let fxRate = 1;
+            let applyFx = false;
+
+            if (
+              parsedCurrency !== bookCurrency &&
+              ["USD", "JPY", "CNY", "HKD", "KRW", "TWD"].includes(
+                parsedCurrency,
+              ) &&
+              ["USD", "JPY", "CNY", "HKD", "KRW", "TWD"].includes(bookCurrency)
+            ) {
+              fxRate = getCrossExchangeRateStatic(
+                parsedCurrency,
+                bookCurrency,
+                tradingDate,
+              );
+              applyFx = true;
+              finalAiNote =
+                `[FX 換匯攔截器] 原始外幣: ${parsedCurrency}, 適用匯率: ${fxRate.toFixed(4)}, 強制寫入本位幣: ${bookCurrency}\n` +
+                finalAiNote;
+            }
+
             if (docType === DocumentType.ACCRUAL_NOTICE) {
               currentPaymentStatus = VoucherPaymentStatus.UNPAID;
             }
 
             let oldVoucherToClear: (Voucher & { lines: VoucherLine[] }) | null =
               null;
-            let finalAiNote = vd.aiNote ?? "無 AI 分析備註";
             let hasSuspense = false;
 
             if (docType === DocumentType.PAYMENT_RECEIPT) {
@@ -230,8 +256,12 @@ export class DocumentSyncRepository {
               }
 
               // Info: (20260520 - Tzuhan) 根據 ADR 001 絕對對應原則，尋找與原始憑證完全相同之金額
+              let searchAmountNum = Number(totalAmtStr.replace(/,/g, ""));
+              if (applyFx) {
+                searchAmountNum = Math.round(searchAmountNum * fxRate);
+              }
               const searchAmountStr =
-                MoneyUtil.toDecimal(totalAmtStr).toFixed(0);
+                MoneyUtil.toDecimal(searchAmountNum).toFixed(0);
 
               oldVoucherToClear = await ReconciliationService.findUnpaidVoucher(
                 tx,
@@ -278,7 +308,11 @@ export class DocumentSyncRepository {
                     `Voucher line amount has an invalid representation: "${amtStr}"`,
                   );
                 }
-                const amountDec = MoneyUtil.toDecimal(amtStr);
+                let origAmountNum = Number(amtStr.replace(/,/g, ""));
+                if (applyFx) {
+                  origAmountNum = Math.round(origAmountNum * fxRate);
+                }
+                const amountDec = MoneyUtil.toDecimal(origAmountNum);
 
                 // Info: (20260522 - Tzuhan) [ADR 004 Enforcement] 廢除 Turn 2 盲目信任，改由後端嚴格 Bigram 閥值懸記
                 const particularStr = (l.particular as string) || "";
@@ -385,7 +419,7 @@ export class DocumentSyncRepository {
               tradingDate,
               tradingType: trType as VoucherTradingType,
               note: vd.note ?? "-",
-              currency: vd.currency || "TWD",
+              currency: applyFx ? bookCurrency : vd.currency || "TWD",
               fileId: realFileId,
               accountBookId,
               confidence,
@@ -444,7 +478,7 @@ export class DocumentSyncRepository {
                   tradingDate: new Date(),
                   tradingType: "INCOME",
                   note: vd.note ?? "-",
-                  currency: vd.currency || "TWD",
+                  currency: accountBook.currency || "TWD",
                   confidence,
                   isVerified: false,
                   aiNote: failNote,
