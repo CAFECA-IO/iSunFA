@@ -38,6 +38,11 @@ You are a pure data extractor. Do NOT perform any business logic judgments or ma
 - ACTION 2: You are STRICTLY PROHIBITED from using realized expense categories for future periods or refundable deposits.
 - ACTION 3: You MUST extract 'startDate' and 'endDate' EXACTLY as printed. You are STRICTLY PROHIBITED from calculating 'totalMonths' or amortization amounts. All period calculations will be handled deterministically by the backend.
 
+**RULE 5: Credit Card Payment**
+- CONDITION: The document is a credit card bill or explicitly states it was paid by credit card (信用卡支付/卡號).
+- ACTION 1: You MUST assign the credit side to a liability semantic category (e.g., CREDIT_CARD_PAYABLE or OTHER_PAYABLES).
+- ACTION 2: You are STRICTLY PROHIBITED from using CASH_IN_BANK or CASH on the credit side for credit card purchases.
+
 1. Trading Type Extraction:
    - For "tradingType": Determine the voucher type. 
      - If the company is RECEIVING money (Revenue/Income), output "INCOME".

@@ -16,8 +16,8 @@ import {
   VoucherPaymentStatus,
   CountryCode,
   MeasurementUnit,
-  verifyDimensionalConsistency,
 } from "@/constants/enums";
+import { verifyDimensionalConsistency } from "@/constants/dimension";
 import { ISyncDocumentResultParams } from "@/skills/utils/document_parser_db_sync";
 import { ACCOUNTS, IAccount } from "@/constants/accounts";
 import { ReconciliationService } from "@/services/reconciliation.service";
@@ -671,11 +671,12 @@ export class DocumentSyncRepository {
               activityType: ed.activityType || "",
               vendor: ed.vendor || "",
               amount: esgAmount,
-              unit: (Object.values(MeasurementUnit).includes(
-                ed.unit as MeasurementUnit,
-              )
-                ? ed.unit
-                : MeasurementUnit.KG) as MeasurementUnit,
+              unit:
+                Object.values(MeasurementUnit).includes(
+                  ed.unit as MeasurementUnit,
+                ) || FIAT_CURRENCIES.includes(ed.unit)
+                  ? ed.unit
+                  : MeasurementUnit.KG,
               emissions: calculatedEmissions,
               intensity: (ed.intensity as EsgIntensity) || null,
               dqiScore: parsePrismaDecimal(ed.dqiScore, "dqiScore"),

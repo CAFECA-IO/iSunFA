@@ -5,6 +5,7 @@ import { keccak256, toUtf8Bytes } from "ethers";
 import fs from "fs/promises";
 import path from "path";
 import { getPriorityEnvConfig } from "@/services/env.service";
+import { SystemWorkerSource } from "@/constants/enums";
 
 export async function processAmortization() {
   console.log("[AmortizationWorker] Scanning ACTIVE schedules...");
@@ -195,7 +196,7 @@ export async function processAmortization() {
     );
 
     const contextJson = {
-      source: "AMORTIZATION_WORKER",
+      source: SystemWorkerSource.AMORTIZATION_WORKER,
       accountBookId: schedule.accountBookId,
       scheduleId: schedule.id,
     };

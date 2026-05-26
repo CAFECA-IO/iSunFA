@@ -37,49 +37,6 @@ export enum PhysicalDimension {
   UNKNOWN = "UNKNOWN",
 }
 
-// Info: (20260525 - Tzuhan) 3. 建立 O(1) 量綱映射表 (The Dimensional Guard Matrix)
-export const UnitDimensionMap: Record<MeasurementUnit, PhysicalDimension> = {
-  [MeasurementUnit.KG]: PhysicalDimension.MASS,
-  [MeasurementUnit.TONNE]: PhysicalDimension.MASS,
-  [MeasurementUnit.GRAM]: PhysicalDimension.MASS,
-
-  [MeasurementUnit.LITER]: PhysicalDimension.VOLUME,
-  [MeasurementUnit.GALLON]: PhysicalDimension.VOLUME,
-  [MeasurementUnit.M3]: PhysicalDimension.VOLUME,
-
-  [MeasurementUnit.KWH]: PhysicalDimension.ENERGY,
-  [MeasurementUnit.MWH]: PhysicalDimension.ENERGY,
-  [MeasurementUnit.GJ]: PhysicalDimension.ENERGY,
-
-  [MeasurementUnit.KM]: PhysicalDimension.TRANSPORT,
-  [MeasurementUnit.TKM]: PhysicalDimension.TRANSPORT,
-  [MeasurementUnit.PKM]: PhysicalDimension.TRANSPORT,
-
-  [MeasurementUnit.PIECE]: PhysicalDimension.COUNT,
-};
-
-// Info: (20260525 - Tzuhan) 4. 量綱一致性防護函數 (用於後端寫入與計算前)
-export const verifyDimensionalConsistency = (
-  docUnit: string,
-  coefUnit: string,
-): boolean => {
-  const getDimension = (u: string): PhysicalDimension => {
-    // Info: (20260526 - Tzuhan) 1. 若為標準物理單位
-    if (UnitDimensionMap[u as MeasurementUnit]) {
-      return UnitDimensionMap[u as MeasurementUnit];
-    }
-    // Info: (20260526 - Tzuhan)    // 2. 若為外幣字串 (透過 CountryCode 整合清單驗證)
-    if (FIAT_CURRENCIES.includes(u)) {
-      return PhysicalDimension.MONEY;
-    }
-    return PhysicalDimension.UNKNOWN;
-  };
-
-  const docDim = getDimension(docUnit);
-  const coefDim = getDimension(coefUnit);
-  return docDim === coefDim && docDim !== PhysicalDimension.UNKNOWN;
-};
-
 export enum EsgGenerationSource {
   MANUAL_ENTRY = "MANUAL_ENTRY", // Info: (20260521 - Tzuhan) 人工輸入或修正。
   SYSTEM_DETERMINISTIC = "SYSTEM_DETERMINISTIC", // Info: (20260521 - Tzuhan) 規則引擎命中（例如：免計碳排的繳費單），100% 決定論。
@@ -107,6 +64,10 @@ export enum DocumentType {
   OTHERS = "OTHERS",
 }
 
+export enum SystemWorkerSource {
+  AMORTIZATION_WORKER = "AMORTIZATION_WORKER",
+}
+
 export enum CountryCode {
   TW = "TW",
   US = "US",
@@ -114,19 +75,8 @@ export enum CountryCode {
   CN = "CN",
   HK = "HK",
   KR = "KR",
+  EU = "EU",
 }
-
-// Info: (20260526 - Tzuhan) 將法幣與國家代碼整合
-export const CurrencyMap: Record<CountryCode, string> = {
-  [CountryCode.TW]: "TWD",
-  [CountryCode.US]: "USD",
-  [CountryCode.JP]: "JPY",
-  [CountryCode.CN]: "CNY",
-  [CountryCode.HK]: "HKD",
-  [CountryCode.KR]: "KRW",
-};
-
-export const FIAT_CURRENCIES = Object.values(CurrencyMap);
 
 export enum EsgFallbackCategory {
   // Info: (20260521 - Tzuhan) --- 能源與燃料 (Scope 1 & 2) ---

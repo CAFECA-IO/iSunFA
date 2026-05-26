@@ -11,6 +11,7 @@ import type { JSONValue } from "@/validators";
 import { MoneyUtil } from "@/lib/utils/money";
 import { fxInterceptorService } from "@/services/fx.interceptor.service";
 import { prisma } from "@/lib/prisma";
+import { SystemWorkerSource } from "@/constants/enums";
 
 export class IssueRecorderService {
   async processNext() {
@@ -119,7 +120,9 @@ export class IssueRecorderService {
           }
 
           if (!order) {
-            if (localContextObj.source === "AMORTIZATION_WORKER") {
+            if (
+              localContextObj.source === SystemWorkerSource.AMORTIZATION_WORKER
+            ) {
               console.log(
                 `[MissionRecorder] Task ID ${taskId} is an amortization task. Bypassing order requirement.`,
               );
@@ -329,7 +332,8 @@ export class IssueRecorderService {
                 payloadData.category || orderDataObj.category;
               if (
                 orderCategory === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS ||
-                localContextObj.source === "AMORTIZATION_WORKER"
+                localContextObj.source ===
+                  SystemWorkerSource.AMORTIZATION_WORKER
               ) {
                 finalOrderStatus = ORDER_STATUS.FAILED;
                 syncErrorMessage =

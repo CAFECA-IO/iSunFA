@@ -1,6 +1,6 @@
 import { IAggregatedDocumentResult } from "@/skills/utils/document_parser_db_sync";
 import { getCrossExchangeRateStatic } from "@/skills/utils/exchange_rate_helper";
-
+import { FIAT_CURRENCIES } from "@/constants/country";
 export class FxInterceptorService {
   /**
    * Info: (20260526 - Tzuhan) [ADR] FX Interceptor
@@ -20,8 +20,8 @@ export class FxInterceptorService {
       const parsedCurrency = result.voucherBase.currency || bookCurrency;
       if (
         parsedCurrency !== bookCurrency &&
-        ["USD", "JPY", "CNY", "HKD", "KRW", "TWD"].includes(parsedCurrency) &&
-        ["USD", "JPY", "CNY", "HKD", "KRW", "TWD"].includes(bookCurrency)
+        FIAT_CURRENCIES.includes(parsedCurrency) &&
+        FIAT_CURRENCIES.includes(bookCurrency)
       ) {
         const fxRate = getCrossExchangeRateStatic(
           parsedCurrency,
