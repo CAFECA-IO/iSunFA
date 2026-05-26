@@ -26,6 +26,7 @@ import { SemanticAccountMatcher } from "@/lib/utils/semantic_account_matcher";
 import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
 import { MOCK_EEIO_COEFFICIENTS } from "@/constants/mock_eeio_coefficients";
 import { CoaVectorSearchService } from "@/services/coa_vector_search.service";
+import { FIAT_CURRENCIES } from "@/constants/country";
 
 function parsePrismaDecimal(val: unknown, fieldName: string): Prisma.Decimal {
   if (val === null || val === undefined) {
@@ -672,9 +673,11 @@ export class DocumentSyncRepository {
               vendor: ed.vendor || "",
               amount: esgAmount,
               unit:
-                Object.values(MeasurementUnit).includes(
+                ed.unit &&
+                (Object.values(MeasurementUnit).includes(
                   ed.unit as MeasurementUnit,
-                ) || FIAT_CURRENCIES.includes(ed.unit)
+                ) ||
+                  FIAT_CURRENCIES.includes(ed.unit))
                   ? ed.unit
                   : MeasurementUnit.KG,
               emissions: calculatedEmissions,

@@ -103,12 +103,12 @@ export function generateCertificateAnalysisMission(
           startDate: {
             type: SchemaType.STRING,
             description:
-              "If this is a contract/prepaid expense, extract the exact start date (YYYY-MM-DD).",
+              "Extract the exact start date (YYYY-MM-DD) of the service period, billing period, or contract if mentioned.",
           },
           endDate: {
             type: SchemaType.STRING,
             description:
-              "If this is a contract/prepaid expense, extract the exact end date (YYYY-MM-DD).",
+              "Extract the exact end date (YYYY-MM-DD) of the service period, billing period, or contract if mentioned.",
           },
           confidence: { type: SchemaType.INTEGER },
         },
