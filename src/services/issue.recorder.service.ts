@@ -119,12 +119,18 @@ export class IssueRecorderService {
           }
 
           if (!order) {
-            console.warn(
-              `[MissionRecorder] Task ID ${taskId} has no Order in database.`,
-            );
-            // Info: (20260420 - Luphia) mark flag anyway to skip
-            await fs.writeFile(flagFile, "No matching order found", "utf8");
-            continue;
+            if (localContextObj.source === "AMORTIZATION_WORKER") {
+              console.log(
+                `[MissionRecorder] Task ID ${taskId} is an amortization task. Bypassing order requirement.`,
+              );
+            } else {
+              console.warn(
+                `[MissionRecorder] Task ID ${taskId} has no Order in database.`,
+              );
+              // Info: (20260420 - Luphia) mark flag anyway to skip
+              await fs.writeFile(flagFile, "No matching order found", "utf8");
+              continue;
+            }
           }
 
           // Info: (20260420 - Luphia) Read the actual result text
@@ -229,11 +235,15 @@ export class IssueRecorderService {
             } catch {}
 
             // Info: (20260516 - Luphia) Extract accountBookId dynamically from the original order
-            const orderDataObj = (order.data as Record<string, unknown>) || {};
+            const orderDataObj = order
+              ? (order.data as Record<string, unknown>) || {}
+              : {};
             const payloadData =
               (orderDataObj.data as Record<string, unknown>) || {};
             const dbAccountBookId =
-              payloadData.accountBookId || orderDataObj.accountBookId;
+              payloadData.accountBookId ||
+              orderDataObj.accountBookId ||
+              localContextObj.accountBookId;
 
             if (
               parsedResult &&
@@ -310,13 +320,17 @@ export class IssueRecorderService {
                 `[MissionRecorder] Synced document results to DB for Task ID ${taskId}`,
               );
             } else {
-              const orderDataObj =
-                (order.data as Record<string, unknown>) || {};
+              const orderDataObj = order
+                ? (order.data as Record<string, unknown>) || {}
+                : {};
               const payloadData =
                 (orderDataObj.data as Record<string, unknown>) || {};
               const orderCategory =
                 payloadData.category || orderDataObj.category;
-              if (orderCategory === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS) {
+              if (
+                orderCategory === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS ||
+                localContextObj.source === "AMORTIZATION_WORKER"
+              ) {
                 finalOrderStatus = ORDER_STATUS.FAILED;
                 syncErrorMessage =
                   "Expected dbSyncPayload for CERTIFICATE_ANALYSIS but none was found in result.";
@@ -334,75 +348,80 @@ export class IssueRecorderService {
             );
           }
 
-          // Info: (20260517 - Luphia) Calculate accumulated tokens
-          const newTokens = (order.tokens || 0) + tokensConsumed;
+          if (order) {
+            // Info: (20260517 - Luphia) Calculate accumulated tokens
+            const newTokens = (order.tokens || 0) + tokensConsumed;
 
-          let newOrderStatus = order.status;
-          if (newOrderStatus !== ORDER_STATUS.FAILED) {
-            if (finalOrderStatus === ORDER_STATUS.FAILED) {
-              newOrderStatus = ORDER_STATUS.FAILED;
-            } else {
-              // Info: (20260517 - Luphia) Check if all sub-tasks are completed
-              try {
-                const taskIds = order.mission
-                  ? JSON.parse(order.mission as string)
-                  : [];
-                if (Array.isArray(taskIds) && taskIds.length > 0) {
-                  let allDone = true;
-                  for (const tId of taskIds) {
-                    if (tId === taskId) continue; // Info: (20260517 - Luphia) Current task is implicitly done
+            let newOrderStatus = order.status;
+            if (newOrderStatus !== ORDER_STATUS.FAILED) {
+              if (finalOrderStatus === ORDER_STATUS.FAILED) {
+                newOrderStatus = ORDER_STATUS.FAILED;
+              } else {
+                // Info: (20260517 - Luphia) Check if all sub-tasks are completed
+                try {
+                  const taskIds = order.mission
+                    ? JSON.parse(order.mission as string)
+                    : [];
+                  if (Array.isArray(taskIds) && taskIds.length > 0) {
+                    let allDone = true;
+                    for (const tId of taskIds) {
+                      if (tId === taskId) continue; // Info: (20260517 - Luphia) Current task is implicitly done
 
-                    const folderEntry = folders.find((f) =>
-                      f.name.endsWith(`_${tId}`),
-                    );
-                    if (!folderEntry) {
-                      allDone = false;
-                      break;
+                      const folderEntry = folders.find((f) =>
+                        f.name.endsWith(`_${tId}`),
+                      );
+                      if (!folderEntry) {
+                        allDone = false;
+                        break;
+                      }
+
+                      const tFlagPath = path.join(
+                        issueDirPath,
+                        folderEntry.name,
+                        "recorded.flag",
+                      );
+                      try {
+                        await fs.access(tFlagPath);
+                      } catch {
+                        allDone = false;
+                        break;
+                      }
                     }
-
-                    const tFlagPath = path.join(
-                      issueDirPath,
-                      folderEntry.name,
-                      "recorded.flag",
-                    );
-                    try {
-                      await fs.access(tFlagPath);
-                    } catch {
-                      allDone = false;
-                      break;
-                    }
-                  }
-                  newOrderStatus = allDone
-                    ? ORDER_STATUS.COMPLETED
-                    : ORDER_STATUS.EXECUTING;
-                } else {
-                  /**
-                   * Info: (20260525 - Luphia) Prevent bypass bug when order.mission is null/empty during execution.
-                   * If the order was currently EXECUTING or PAID, do not force COMPLETED since tasks are still being issued or processed.
-                   */
-                  if (
-                    order.status === ORDER_STATUS.EXECUTING ||
-                    order.status === ORDER_STATUS.PAID
-                  ) {
-                    newOrderStatus = ORDER_STATUS.EXECUTING;
+                    newOrderStatus = allDone
+                      ? ORDER_STATUS.COMPLETED
+                      : ORDER_STATUS.EXECUTING;
                   } else {
-                    newOrderStatus = ORDER_STATUS.COMPLETED;
+                    /**
+                     * Info: (20260525 - Luphia) Prevent bypass bug when order.mission is null/empty during execution.
+                     * If the order was currently EXECUTING or PAID, do not force COMPLETED since tasks are still being issued or processed.
+                     */
+                    if (
+                      order.status === ORDER_STATUS.EXECUTING ||
+                      order.status === ORDER_STATUS.PAID
+                    ) {
+                      newOrderStatus = ORDER_STATUS.EXECUTING;
+                    } else {
+                      newOrderStatus = ORDER_STATUS.COMPLETED;
+                    }
                   }
+                } catch {
+                  newOrderStatus = ORDER_STATUS.COMPLETED;
                 }
-              } catch {
-                newOrderStatus = ORDER_STATUS.COMPLETED;
               }
             }
-          }
 
-          // Info: (20260517 - Luphia) Update Order Status accurately based on DB sync result and accumulate tokens
-          await orderRepo.update({
-            where: { id: order.id },
-            data: {
-              status: newOrderStatus,
-              tokens: newTokens > 0 ? newTokens : undefined,
-            },
-          });
+            // Info: (20260517 - Luphia) Update Order Status accurately based on DB sync result and accumulate tokens
+            await orderRepo.update({
+              where: { id: order.id },
+              data: {
+                status: newOrderStatus,
+                tokens: newTokens > 0 ? newTokens : undefined,
+              },
+            });
+            console.log(
+              `[MissionRecorder] Successfully updated Order ${order.id} to ${newOrderStatus}.`,
+            );
+          }
 
           // Info: (20260420 - Luphia) Write flag to prevent reprocessing
           const flagContent =
@@ -410,9 +429,6 @@ export class IssueRecorderService {
               ? `Recorded with FAILED status at ${new Date().toISOString()}. Reason: ${syncErrorMessage}`
               : `Recorded at ${new Date().toISOString()}`;
           await fs.writeFile(flagFile, flagContent, "utf8");
-          console.log(
-            `[MissionRecorder] Successfully updated Order ${order.id} to ${finalOrderStatus}.`,
-          );
 
           break; // Info: (20260420 - Luphia) process one at a time
         } catch (err) {
