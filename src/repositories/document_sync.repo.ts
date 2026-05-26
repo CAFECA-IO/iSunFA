@@ -26,7 +26,6 @@ import { SemanticAccountMatcher } from "@/lib/utils/semantic_account_matcher";
 import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
 import { MOCK_EEIO_COEFFICIENTS } from "@/constants/mock_eeio_coefficients";
 import { CoaVectorSearchService } from "@/services/coa_vector_search.service";
-import { getCrossExchangeRateStatic } from "@/skills/utils/exchange_rate_helper";
 
 function parsePrismaDecimal(val: unknown, fieldName: string): Prisma.Decimal {
   if (val === null || val === undefined) {
@@ -210,30 +209,6 @@ export class DocumentSyncRepository {
 
             let finalAiNote = vd.aiNote ?? "無 AI 分析備註";
 
-            // Info: (20260526 - Tzuhan) FX Interceptor - 統一換算本位幣
-            const bookCurrency = accountBook.currency || "TWD";
-            const parsedCurrency = (vd.currency as string) || bookCurrency;
-            let fxRate = 1;
-            let applyFx = false;
-
-            if (
-              parsedCurrency !== bookCurrency &&
-              ["USD", "JPY", "CNY", "HKD", "KRW", "TWD"].includes(
-                parsedCurrency,
-              ) &&
-              ["USD", "JPY", "CNY", "HKD", "KRW", "TWD"].includes(bookCurrency)
-            ) {
-              fxRate = getCrossExchangeRateStatic(
-                parsedCurrency,
-                bookCurrency,
-                tradingDate,
-              );
-              applyFx = true;
-              finalAiNote =
-                `[FX 換匯攔截器] 原始外幣: ${parsedCurrency}, 適用匯率: ${fxRate.toFixed(4)}, 強制寫入本位幣: ${bookCurrency}\n` +
-                finalAiNote;
-            }
-
             if (docType === DocumentType.ACCRUAL_NOTICE) {
               currentPaymentStatus = VoucherPaymentStatus.UNPAID;
             }
@@ -256,12 +231,8 @@ export class DocumentSyncRepository {
               }
 
               // Info: (20260520 - Tzuhan) 根據 ADR 001 絕對對應原則，尋找與原始憑證完全相同之金額
-              let searchAmountNum = Number(totalAmtStr.replace(/,/g, ""));
-              if (applyFx) {
-                searchAmountNum = Math.round(searchAmountNum * fxRate);
-              }
               const searchAmountStr =
-                MoneyUtil.toDecimal(searchAmountNum).toFixed(0);
+                MoneyUtil.toDecimal(totalAmtStr).toFixed(0);
 
               oldVoucherToClear = await ReconciliationService.findUnpaidVoucher(
                 tx,
@@ -308,11 +279,7 @@ export class DocumentSyncRepository {
                     `Voucher line amount has an invalid representation: "${amtStr}"`,
                   );
                 }
-                let origAmountNum = Number(amtStr.replace(/,/g, ""));
-                if (applyFx) {
-                  origAmountNum = Math.round(origAmountNum * fxRate);
-                }
-                const amountDec = MoneyUtil.toDecimal(origAmountNum);
+                const amountDec = MoneyUtil.toDecimal(amtStr);
 
                 // Info: (20260522 - Tzuhan) [ADR 004 Enforcement] 廢除 Turn 2 盲目信任，改由後端嚴格 Bigram 閥值懸記
                 const particularStr = (l.particular as string) || "";
@@ -419,7 +386,7 @@ export class DocumentSyncRepository {
               tradingDate,
               tradingType: trType as VoucherTradingType,
               note: vd.note ?? "-",
-              currency: applyFx ? bookCurrency : vd.currency || "TWD",
+              currency: vd.currency || "TWD",
               fileId: realFileId,
               accountBookId,
               confidence,
@@ -458,6 +425,60 @@ export class DocumentSyncRepository {
                   clearedByVoucherId: finalVoucherId,
                 },
               });
+            }
+
+            // Info: (20260526 - Tzuhan) 自動創建 AmortizationSchedule
+            if (vd.startDate && vd.endDate && finalVoucherId) {
+              // Find if there is a prepaid expense account code (e.g., 1251, 1252, etc. - we check if accountingCode is in a known prepaid list, or we can check original semantic category)
+              // Since semanticCategory was lost, let's just check the raw voucherLines to find the original amount, or just check the accounting code here.
+              // Assuming 1251 is prepaid expense. If the AI classified it, we have it in linesToCreate.
+              const prepaidLine = linesToCreate.find(
+                (l) =>
+                  l.accountingCode === "1251" ||
+                  l.accountingCode === "1252" ||
+                  l.accountingCode === "1253" ||
+                  l.accountingCode === "1254",
+              );
+              if (prepaidLine) {
+                const sDate = new Date(vd.startDate);
+                const eDate = new Date(vd.endDate);
+
+                if (!isNaN(sDate.getTime()) && !isNaN(eDate.getTime())) {
+                  // TODO: find the correct expense account code, using RENT_EXPENSE as a default if none is found
+                  const expenseAccountCode = "RENT_EXPENSE";
+                  const existingSchedule =
+                    await tx.amortizationSchedule.findFirst({
+                      where: { originalVoucherId: finalVoucherId },
+                    });
+
+                  if (existingSchedule) {
+                    await tx.amortizationSchedule.update({
+                      where: { id: existingSchedule.id },
+                      data: {
+                        startDate: sDate,
+                        endDate: eDate,
+                        totalAmount: prepaidLine.amount?.toString() || "0",
+                        assetAccountCode: prepaidLine.accountingCode || "1251",
+                        expenseAccountCode,
+                        accountBookId,
+                      },
+                    });
+                  } else {
+                    await tx.amortizationSchedule.create({
+                      data: {
+                        originalVoucherId: finalVoucherId,
+                        accountBookId,
+                        assetAccountCode: prepaidLine.accountingCode || "1251",
+                        expenseAccountCode,
+                        totalAmount: prepaidLine.amount?.toString() || "0",
+                        startDate: sDate,
+                        endDate: eDate,
+                        status: "ACTIVE",
+                      },
+                    });
+                  }
+                }
+              }
             }
           } catch (voucherErr) {
             const failNote = `[系統同步失敗] 關鍵數據解析失敗，已拒絕寫入 (Rejected): ${(voucherErr as Error).message}`;

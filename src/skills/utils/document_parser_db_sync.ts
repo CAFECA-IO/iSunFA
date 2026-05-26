@@ -27,6 +27,9 @@ export interface IDocNode {
   vendor?: string;
   vendorTaxId?: string;
   amount?: number | string;
+  totalAmount?: number | string;
+  startDate?: string;
+  endDate?: string;
   unit?: string;
   emissions?: number | string;
   intensity?: unknown;

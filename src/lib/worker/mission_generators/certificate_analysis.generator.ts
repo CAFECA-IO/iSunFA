@@ -99,6 +99,16 @@ export function generateCertificateAnalysisMission(
             format: "enum",
           },
           note: { type: SchemaType.STRING },
+          startDate: {
+            type: SchemaType.STRING,
+            description:
+              "If this is a contract/prepaid expense, extract the exact start date (YYYY-MM-DD).",
+          },
+          endDate: {
+            type: SchemaType.STRING,
+            description:
+              "If this is a contract/prepaid expense, extract the exact end date (YYYY-MM-DD).",
+          },
           confidence: { type: SchemaType.INTEGER },
         },
         required: [
