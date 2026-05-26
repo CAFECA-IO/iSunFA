@@ -4,7 +4,7 @@ import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
 import { SchemaType, Schema } from "@google/generative-ai";
 import { EsgGenerationSource, EsgFallbackCategory } from "@/constants/enums";
-import { MeasurementUnit } from "@/constants/enums";
+import { MeasurementUnit, FIAT_CURRENCIES } from "@/constants/enums";
 import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
 import { MOCK_EEIO_COEFFICIENTS } from "@/constants/mock_eeio_coefficients";
 import { MoneyUtil } from "@/lib/utils/money";
@@ -223,14 +223,7 @@ export class EsgParsingSkill implements ITaskSkill {
             description:
               "對應的單位。若需要進行外幣折算，可輸出原始貨幣代碼，如 USD, JPY, CNY, HKD, KRW 等",
             format: "enum",
-            enum: [
-              ...Object.values(MeasurementUnit),
-              "USD",
-              "JPY",
-              "CNY",
-              "HKD",
-              "KRW",
-            ],
+            enum: [...Object.values(MeasurementUnit), ...FIAT_CURRENCIES],
           },
           tradingDate: {
             type: SchemaType.STRING,

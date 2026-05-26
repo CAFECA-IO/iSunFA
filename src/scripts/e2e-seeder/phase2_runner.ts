@@ -251,17 +251,56 @@ export const runPhase2ReceiptAnalysis = async (
         `  [${i + 1}/${sampleSize}] Parsing ${voucherNumber} via Core Skill... `,
       );
 
-      const resultJsonStr = await skill.execute(
-        task,
-        mission,
-        corePrompt,
-        chatService,
-      );
-      const result = JSON.parse(resultJsonStr);
+      let attempt = 0;
+      const maxAttempts = 5;
+      let result;
 
-      if (result.error) {
-        console.log(`❌ AI Error: ${result.error}`);
-        continue;
+      while (attempt < maxAttempts) {
+        try {
+          const resultJsonStr = await skill.execute(
+            task,
+            mission,
+            corePrompt,
+            chatService,
+          );
+          result = JSON.parse(resultJsonStr);
+
+          if (result.error) {
+            console.log(
+              `❌ AI Error on attempt ${attempt + 1}: ${result.error}`,
+            );
+            if (
+              String(result.error).includes("429") ||
+              String(result.error).includes("Too Many") ||
+              String(result.error).includes("Quota")
+            ) {
+              const delay = 2000 * Math.pow(2, attempt);
+              console.log(`⏳ Rate limited. Backing off for ${delay}ms...`);
+              await new Promise((res) => setTimeout(res, delay));
+              attempt++;
+              continue;
+            } else {
+              // Info: (20260525 - Tzuhan) Not a rate limit error, but still failed. Retry a few times just in case it's transient.
+              const delay = 2000 * Math.pow(2, attempt);
+              await new Promise((res) => setTimeout(res, delay));
+              attempt++;
+              continue;
+            }
+          }
+          break; // Info: (20260525 - Tzuhan) Success
+        } catch (e) {
+          console.log(`❌ AI Exception on attempt ${attempt + 1}: ${e}`);
+          const delay = 2000 * Math.pow(2, attempt);
+          await new Promise((res) => setTimeout(res, delay));
+          attempt++;
+        }
+      }
+
+      if (!result || result.error) {
+        console.error(
+          `🚨 FATAL: AI extraction failed for ${voucherNumber} after ${maxAttempts} attempts. Terminating pipeline to avoid silent drops.`,
+        );
+        process.exit(1);
       }
 
       const extractedData = result.data;
@@ -403,9 +442,9 @@ export const runPhase2ReceiptAnalysis = async (
           scope: esgData.scope || "SCOPE_3",
           activityType: esgData.activityType || "UNKNOWN",
           vendor: esgData.vendor || "現金交易",
-          amount: esgData.amount || 0,
+          amount: String(esgData.amount || "0"),
           unit: esgData.unit || MeasurementUnit.KG,
-          emissions: (esgData.amount || 0) * 1.5, // Info: (20260519 - Tzuhan) 模擬後端 MAX(factor) 行為
+          emissions: String((esgData.amount || 0) * 1.5), // Info: (20260519 - Tzuhan) 模擬後端 MAX(factor) 行為
           isVerified: false,
           aiNote: `[AI_SPECULATIVE] E2E 模擬已套用最高係數. 原註記: ${esgData.aiNote || "系統預設給定之猜測數值"}`,
           confidence: esgData.confidence || 85,

@@ -1,14 +1,84 @@
 // Info: (20260514 - Tzuhan) Centralized constants to replace Prisma Enums
 
+// Info: (20260525 - Tzuhan) 1. 擴充後的物理單位 Enum (The Flat Dictionary)
 export enum MeasurementUnit {
-  KWH = "KWH",
-  LITER = "LITER",
+  // Info: (20260525 - Tzuhan) --- 質量 (Mass) ---
   KG = "KG",
   TONNE = "TONNE",
+  GRAM = "GRAM",
+
+  // Info: (20260525 - Tzuhan) --- 體積 (Volume) ---
+  LITER = "LITER",
   GALLON = "GALLON",
+  M3 = "M3", // Info: (20260525 - Tzuhan) 立方公尺 (水、天然氣)
+
+  // Info: (20260525 - Tzuhan) --- 能量與熱值 (Energy) ---
+  KWH = "KWH",
+  MWH = "MWH",
+  GJ = "GJ", // Info: (20260525 - Tzuhan) 十億焦耳
+
+  // Info: (20260525 - Tzuhan) --- 距離與運力 (Distance & Transport) ---
+  KM = "KM",
+  TKM = "TKM", // Info: (20260525 - Tzuhan) 延噸公里 (Scope 3 物流)
+  PKM = "PKM", // Info: (20260525 - Tzuhan) 延人公里 (Scope 3 差旅)
+
+  // Info: (20260525 - Tzuhan) --- 計數 (Count) ---
   PIECE = "PIECE",
-  TWD = "TWD",
 }
+
+// Info: (20260525 - Tzuhan) 2. 定義量綱類別 (Physical Dimensions)
+export enum PhysicalDimension {
+  MASS = "MASS",
+  VOLUME = "VOLUME",
+  ENERGY = "ENERGY",
+  TRANSPORT = "TRANSPORT",
+  MONEY = "MONEY",
+  COUNT = "COUNT",
+  UNKNOWN = "UNKNOWN",
+}
+
+// Info: (20260525 - Tzuhan) 3. 建立 O(1) 量綱映射表 (The Dimensional Guard Matrix)
+export const UnitDimensionMap: Record<MeasurementUnit, PhysicalDimension> = {
+  [MeasurementUnit.KG]: PhysicalDimension.MASS,
+  [MeasurementUnit.TONNE]: PhysicalDimension.MASS,
+  [MeasurementUnit.GRAM]: PhysicalDimension.MASS,
+
+  [MeasurementUnit.LITER]: PhysicalDimension.VOLUME,
+  [MeasurementUnit.GALLON]: PhysicalDimension.VOLUME,
+  [MeasurementUnit.M3]: PhysicalDimension.VOLUME,
+
+  [MeasurementUnit.KWH]: PhysicalDimension.ENERGY,
+  [MeasurementUnit.MWH]: PhysicalDimension.ENERGY,
+  [MeasurementUnit.GJ]: PhysicalDimension.ENERGY,
+
+  [MeasurementUnit.KM]: PhysicalDimension.TRANSPORT,
+  [MeasurementUnit.TKM]: PhysicalDimension.TRANSPORT,
+  [MeasurementUnit.PKM]: PhysicalDimension.TRANSPORT,
+
+  [MeasurementUnit.PIECE]: PhysicalDimension.COUNT,
+};
+
+// Info: (20260525 - Tzuhan) 4. 量綱一致性防護函數 (用於後端寫入與計算前)
+export const verifyDimensionalConsistency = (
+  docUnit: string,
+  coefUnit: string,
+): boolean => {
+  const getDimension = (u: string): PhysicalDimension => {
+    // Info: (20260526 - Tzuhan) 1. 若為標準物理單位
+    if (UnitDimensionMap[u as MeasurementUnit]) {
+      return UnitDimensionMap[u as MeasurementUnit];
+    }
+    // Info: (20260526 - Tzuhan)    // 2. 若為外幣字串 (透過 CountryCode 整合清單驗證)
+    if (FIAT_CURRENCIES.includes(u)) {
+      return PhysicalDimension.MONEY;
+    }
+    return PhysicalDimension.UNKNOWN;
+  };
+
+  const docDim = getDimension(docUnit);
+  const coefDim = getDimension(coefUnit);
+  return docDim === coefDim && docDim !== PhysicalDimension.UNKNOWN;
+};
 
 export enum EsgGenerationSource {
   MANUAL_ENTRY = "MANUAL_ENTRY", // Info: (20260521 - Tzuhan) 人工輸入或修正。
@@ -45,6 +115,18 @@ export enum CountryCode {
   HK = "HK",
   KR = "KR",
 }
+
+// Info: (20260526 - Tzuhan) 將法幣與國家代碼整合
+export const CurrencyMap: Record<CountryCode, string> = {
+  [CountryCode.TW]: "TWD",
+  [CountryCode.US]: "USD",
+  [CountryCode.JP]: "JPY",
+  [CountryCode.CN]: "CNY",
+  [CountryCode.HK]: "HKD",
+  [CountryCode.KR]: "KRW",
+};
+
+export const FIAT_CURRENCIES = Object.values(CurrencyMap);
 
 export enum EsgFallbackCategory {
   // Info: (20260521 - Tzuhan) --- 能源與燃料 (Scope 1 & 2) ---
