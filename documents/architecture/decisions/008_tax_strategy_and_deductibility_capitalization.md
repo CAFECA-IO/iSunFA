@@ -44,3 +44,16 @@
    未來需於 `AccountBook` (帳本層級) 新增 `isPartiallyExempt` 的設定。對於兼營投資等免稅項目的公司，應依據當期「不得扣抵比例 (Non-deductible Ratio)」自動按比例將進項稅額拆分為「可扣抵」與「不可扣抵並資本化」兩筆明細。
 2. **多國稅率策略擴充 (EU VAT Directive)**：
    目前歐洲區 (EU) 稅率高達 17%~27% 且極度複雜，已透過 `TaxStrategyService` 將其分流至 `applyEuStrategy` 並標記為需人工覆核 (Warning)。未來應串接歐洲 VAT Number Validation API，動態判斷 B2B (買方逆向課稅) 或 B2C (賣方代扣繳) 的正確稅務分錄。
+
+---
+
+## 4. 盲點與已知風險 (Risks & Blind Spots)
+
+雖然系統引入了精準的數學防禦與語意驗證，但仍存在以下兩個階段性的盲點：
+
+1. **AI 科目分類幻覺 (Semantic Classification Hallucination)**
+   - **問題**：系統依賴主費用的 `semanticCategory` 來判斷扣抵資格。雖然數學算式絕對正確，但若 AI 一開始將「員工旅遊」誤判分類為「軟體網路費」，系統將依賴此錯誤分類，錯誤地判定為「可扣抵」並發動逆向課稅。
+   - **影響**：此為「垃圾進，垃圾出 (GIGO)」的經典案例。目前系統對源頭的語意分類錯誤處於零防禦狀態，仍需仰賴人工查帳 (`isVerified = false`) 作為最後防線。
+2. **國內自然人勞務扣繳盲點 (Domestic Individual Fallback Risk)**
+   - **問題**：為了拔除硬編碼的關鍵字 (`DOMESTIC_VENDOR_KEYWORDS`)，系統全面改用實質的 8 碼統編 (`isTaiwanTaxId`) 來判斷是否為國內企業。但如果供應商是「無統編的台灣本地自然人（如：個人外包接案）」，系統可能會將其誤判為「無統編之境外電商」，進而發動 5% 逆向課稅。
+   - **影響**：實際上自然人勞務應走「各類所得扣繳（如 10% 執行業務所得）」。由於 B2B SaaS 情境中極少遇見自然人，此風險被標記為可接受的 Tech Debt，待未來建立 Vendor Master Data (供應商主檔) 機制時一併修復。

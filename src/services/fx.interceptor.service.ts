@@ -18,7 +18,15 @@ export class FxInterceptorService {
     ) as IAggregatedDocumentResult;
 
     if (result.voucherBase) {
-      const parsedCurrency = result.voucherBase.currency || bookCurrency;
+      const parsedCurrencyRaw = String(
+        result.voucherBase.currency || bookCurrency,
+      )
+        .toUpperCase()
+        .trim();
+      // Handle simple alias just in case
+      const parsedCurrency =
+        parsedCurrencyRaw === "RMB" ? "CNY" : parsedCurrencyRaw;
+
       if (
         parsedCurrency !== bookCurrency &&
         FIAT_CURRENCIES.includes(parsedCurrency) &&
@@ -182,7 +190,11 @@ export class FxInterceptorService {
 
     // Info: (20260526 - Tzuhan) 攔截 ESG 物件，處理碳排金額外幣換算
     if (result.esg) {
-      const esgUnit = result.esg.unit || bookCurrency;
+      const esgUnitRaw = String(result.esg.unit || bookCurrency)
+        .toUpperCase()
+        .trim();
+      const esgUnit = esgUnitRaw === "RMB" ? "CNY" : esgUnitRaw;
+
       if (
         esgUnit !== bookCurrency &&
         FIAT_CURRENCIES.includes(esgUnit) &&

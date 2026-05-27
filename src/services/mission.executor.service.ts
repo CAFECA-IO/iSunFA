@@ -2,7 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import { getPriorityEnvConfig } from "@/services/env.service";
 import { ChatService } from "@/services/chat.service";
-import { EsgGenerationSource, AnalysisCategory } from "@/constants/enums";
+import { EsgGenerationSource } from "@/constants/enums";
 import { AccountingEngineService } from "@/services/accounting.engine.service";
 import { VoucherPipelineOrchestrator } from "@/services/voucher.pipeline.orchestrator";
 import { IAggregatedDocumentResult } from "@/skills/utils/document_parser_db_sync";
@@ -477,7 +477,6 @@ export async function processNext() {
         // Info: (20260527 - Tzuhan) 決定論管線洗淨 (Washing)
         // Info: (20260527 - Tzuhan) 在寫入 result.md 前，針對特定領域 (如憑證) 執行會計切斷與換匯攔截，確保落地即為最終正確狀態
         if (
-          missionData.category === AnalysisCategory.VOUCHER_PARSING &&
           typeof aggregatedResult === "object" &&
           aggregatedResult !== null &&
           (aggregatedResult as Record<string, unknown>).dbSyncPayload

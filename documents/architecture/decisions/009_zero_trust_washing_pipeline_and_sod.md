@@ -68,3 +68,12 @@
 3. **防堵 AI 運算誤差**：所有牽涉稅率 (5%)、匯率與金額加總的數學運算，全數改由高精度的決定論程式 (`MoneyUtil`) 接手。
 
 iSunFA 的資料管線現在就像是一座設計精良的水質淨化廠：AI 負責從源頭抽水 (Extraction)，Executor 內的管線負責加氯消毒與過濾 (Washing Logic)，最後由 Recorder 負責安全地把純淨水灌入水庫 (DB)。
+
+---
+
+## 5. 盲點與已知風險 (Risks & Blind Spots)
+
+### 全局金額異常熔斷機制缺口 (Circuit Breaker Gap)
+- **問題**：系統目前已經實作了高精度的決定論加總 (`MoneyUtil`)，能保證稅基與明細加總完美吻合。然而，如果前端 AI 發生嚴重幻覺，在原始發票金額上「多加了三個零」（例如 1,000 元變成 1,000,000 元），高精度系統會「非常精準地」幫這 100 萬算出 5 萬元的稅金，並順利通過所有內部數學勾稽，最終寫入總帳。
+- **影響**：這會導致財報上出現天價的異常費用與負債。
+- **未來解法**：應在 `VoucherPipelineOrchestrator` 進入 DB 盲推前，實作一組「全局異常阻斷機制 (Global Circuit Breaker)」。例如：當單筆發票總額大於 1,000 萬台幣（可依據公司資本額設定重要性閾值），應直接拋出 `AnomalyDetectionError` 強制阻斷寫入，並將狀態標記為 `Status: NEEDS_HUMAN_INTERVENTION`。
