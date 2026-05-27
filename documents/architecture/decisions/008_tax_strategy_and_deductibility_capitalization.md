@@ -1,4 +1,4 @@
-# ADR 010: 稅務策略與不可扣抵進項稅額資本化 (Tax Strategy & Non-Deductible Input Tax Capitalization)
+# ADR 008: 稅務策略與不可扣抵進項稅額資本化 (Tax Strategy & Non-Deductible Input Tax Capitalization)
 
 > **Date**: 2026-05-27
 > **Author**: Tzuhan (CPA Audit Review)

@@ -58,7 +58,11 @@
 - **[ADR 002: ESG Vector RAG Pivot](architecture/decisions/002_esg_vector_rag_hybrid_pipeline.md)**：從靜態字典注入轉向 RAG 與動態檢索。
 - **[ADR 003: Residual `.toNumber()` Justifications](architecture/decisions/003_residual_tonumber_justifications.md)**：剩餘 `.toNumber()` 的 5 大安全情境與合規決策。
 - **[ADR 004: Voucher Hybrid Deterministic Pipeline](architecture/decisions/004_voucher_account_code_hybrid_pipeline.md)**：多維度廠商攔截器與財務懸記黃燈機制。
+- **[ADR 005: Master Data Governance and Isolation Strategy](architecture/decisions/005_master_data_governance_and_isolation.md)**：主檔資料治理與隔離策略。
 - **[ADR 006: Dynamic Two-Turn RAG for ESG](architecture/decisions/006_dynamic_two_turn_rag_esg.md)**：廢棄靜態統編攔截器，全面啟用兩回合 AI 選擇題與動態檢索。
+- **[ADR 007: AI Accounting Defenses, Two-Turn RAG Trade-offs & Upgrade Paths](architecture/decisions/007_ai_accounting_defenses_tradeoffs_and_upgrade_paths.md)**：AI 會計防線、兩回合檢索權衡與未來升級路徑。
+- **[ADR 008: Tax Strategy & Non-Deductible Input Tax Capitalization](architecture/decisions/008_tax_strategy_and_deductibility_capitalization.md)**：稅務策略與不可扣抵進項稅額資本化。
+- **[ADR 009: Zero-Trust Washing Pipeline and SoD](architecture/decisions/009_zero_trust_washing_pipeline_and_sod.md)**：決定論管線洗淨與 IssueRecorder 瘦身，嚴守資料流的單向黃金法則。
 
 ---
 

@@ -2,7 +2,10 @@ import fs from "fs/promises";
 import path from "path";
 import { getPriorityEnvConfig } from "@/services/env.service";
 import { ChatService } from "@/services/chat.service";
-import { EsgGenerationSource } from "@/constants/enums";
+import { EsgGenerationSource, AnalysisCategory } from "@/constants/enums";
+import { AccountingEngineService } from "@/services/accounting.engine.service";
+import { VoucherPipelineOrchestrator } from "@/services/voucher.pipeline.orchestrator";
+import { IAggregatedDocumentResult } from "@/skills/utils/document_parser_db_sync";
 import { skillRegistry } from "@/skills";
 import { IMissionDefinition } from "@/lib/worker/mission.generator";
 import { ITaskDefinition } from "@/lib/worker/task.generator";
@@ -469,6 +472,57 @@ export async function processNext() {
             tags: ["simulated", "fallback"],
             aiNote: "Simulated output due to missing JSON execution plan.",
           };
+        }
+
+        // Info: (20260527 - Tzuhan) 決定論管線洗淨 (Washing)
+        // Info: (20260527 - Tzuhan) 在寫入 result.md 前，針對特定領域 (如憑證) 執行會計切斷與換匯攔截，確保落地即為最終正確狀態
+        if (
+          missionData.category === AnalysisCategory.VOUCHER_PARSING &&
+          typeof aggregatedResult === "object" &&
+          aggregatedResult !== null &&
+          (aggregatedResult as Record<string, unknown>).dbSyncPayload
+        ) {
+          let bookCurrency = "TWD";
+          let bookCountry = "TW";
+          if (missionData.accountBook) {
+            const ab = missionData.accountBook as Record<string, unknown>;
+            if (ab.currency) bookCurrency = ab.currency as string;
+            if (ab.country) bookCountry = ab.country as string;
+          }
+
+          const originalPayload = (aggregatedResult as Record<string, unknown>)
+            .dbSyncPayload as Record<string, unknown>;
+          const newDbSyncPayload: Record<string, unknown> = {};
+
+          for (const recordKey of Object.keys(originalPayload)) {
+            const originalResult = originalPayload[
+              recordKey
+            ] as unknown as IAggregatedDocumentResult;
+
+            // Info: (20260527 - Tzuhan) 1. 會計切斷 (Cut-off) - 一變多
+            const splitResults =
+              await AccountingEngineService.processCutoffEvents(
+                originalResult,
+                bookCurrency,
+              );
+
+            // Info: (20260527 - Tzuhan) 2. 決定論管線 (攔截器與換匯邏輯)
+            const washedResults = splitResults.map((res) =>
+              VoucherPipelineOrchestrator.executePipeline(
+                res,
+                bookCurrency,
+                bookCountry,
+              ),
+            );
+
+            for (let idx = 0; idx < washedResults.length; idx++) {
+              const splitSuffix = washedResults.length > 1 ? `-${idx}` : "";
+              newDbSyncPayload[`${recordKey}${splitSuffix}`] =
+                washedResults[idx];
+            }
+          }
+          (aggregatedResult as Record<string, unknown>).dbSyncPayload =
+            newDbSyncPayload;
         }
 
         const resultPayloadStr =

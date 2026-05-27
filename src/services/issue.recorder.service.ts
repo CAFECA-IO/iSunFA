@@ -4,13 +4,13 @@ import { orderRepo } from "@/repositories/order.repo";
 import { analysisRepo } from "@/repositories/analysis.repo";
 import { ORDER_STATUS } from "@/constants/status";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
-import { syncDocumentResultToDatabase } from "@/skills/utils/document_parser_db_sync";
+import {
+  syncDocumentResultToDatabase,
+  IAggregatedDocumentResult,
+} from "@/skills/utils/document_parser_db_sync";
 import { getPriorityEnvConfig } from "@/services/env.service";
-import type { IAggregatedDocumentResult } from "@/skills/utils/document_parser_db_sync";
 import type { JSONValue } from "@/validators";
 import { MoneyUtil } from "@/lib/utils/money";
-import { VoucherPipelineOrchestrator } from "@/services/voucher.pipeline.orchestrator";
-import { AccountingEngineService } from "@/services/accounting.engine.service";
 import { SystemWorkerSource } from "@/constants/enums";
 
 export class IssueRecorderService {
@@ -274,76 +274,21 @@ export class IssueRecorderService {
                 const targetAccountBookId = (dbAccountBookId ||
                   fileResult.accountBookId) as string;
 
-                const originalResult =
-                  fileResult as unknown as IAggregatedDocumentResult;
-
-                // Info: (20260526 - Tzuhan) 攔截器與換匯邏輯由獨立的 VoucherPipelineOrchestrator 負責
-                let bookCurrency = "TWD";
-                let bookCountry = "TW";
-                try {
-                  const missionStr = await fs.readFile(
-                    path.join(taskDir, "mission.json"),
-                    "utf8",
-                  );
-                  const missionData = JSON.parse(missionStr);
-                  if (missionData && missionData.accountBook) {
-                    if (missionData.accountBook.currency)
-                      bookCurrency = missionData.accountBook.currency;
-                    if (missionData.accountBook.country)
-                      bookCountry = missionData.accountBook.country;
-                  }
-                } catch {}
-
-                // Info: (20260527 - Tzuhan) 會計引擎跨期切斷管線 (Accrual/Prepaid Cut-off) 先執行，將發票切分成多個事件並綁定目標匯率日
-                const splitResults =
-                  await AccountingEngineService.processCutoffEvents(
-                    originalResult,
-                    bookCurrency,
-                  );
-
-                // Info: (20260527 - Tzuhan) 對切斷後的每個事件，獨立跑決定論管線 (攔截器與換匯邏輯)
-                const finalResults = splitResults.map((res) =>
-                  VoucherPipelineOrchestrator.executePipeline(
-                    res,
-                    bookCurrency,
-                    bookCountry,
-                  ),
-                );
-
-                // Info: (20260526 - Tzuhan) 覆寫 payload 以確保 MissionCommitor 上傳至區塊鏈的資料是洗淨後的版本
-                // Note: 這裡原先只寫回 splitResults[0]，但如果切出多個事件，應根據需求處理。這裡維持覆寫第一筆，其餘可能由後續引擎補齊或需要迴圈寫入
-                payload[recordKey] = finalResults[0] as unknown as Record<
-                  string,
-                  unknown
-                >;
-
-                for (let idx = 0; idx < finalResults.length; idx++) {
-                  const currentEventResult = finalResults[idx];
-                  const splitSuffix = finalResults.length > 1 ? `-${idx}` : "";
-
-                  await syncDocumentResultToDatabase({
-                    fileId: `${fileIdToSync}${splitSuffix}`,
-                    accountBookId: targetAccountBookId,
-                    result: currentEventResult,
-                    voucherIdContext:
-                      localContextObj.voucherId ||
-                      (fileResult.voucherIdContext as string | undefined),
-                    esgRecordIdContext:
-                      localContextObj.esgRecordId ||
-                      (fileResult.esgRecordIdContext as string | undefined),
-                    journalIdContext:
-                      localContextObj.journalId ||
-                      (fileResult.journalIdContext as string | undefined),
-                  });
-                }
+                await syncDocumentResultToDatabase({
+                  fileId: fileIdToSync,
+                  accountBookId: targetAccountBookId,
+                  result: fileResult as unknown as IAggregatedDocumentResult,
+                  voucherIdContext:
+                    localContextObj.voucherId ||
+                    (fileResult.voucherIdContext as string | undefined),
+                  esgRecordIdContext:
+                    localContextObj.esgRecordId ||
+                    (fileResult.esgRecordIdContext as string | undefined),
+                  journalIdContext:
+                    localContextObj.journalId ||
+                    (fileResult.journalIdContext as string | undefined),
+                });
               }
-
-              // Info: (20260526 - Tzuhan) 將攔截與清洗後的 Payload 覆寫回 result.md，讓後續的 MissionCommitor 直接盲推上鏈
-              await fs.writeFile(
-                path.join(taskDir, "result.md"),
-                JSON.stringify(parsedResult, null, 2),
-                "utf8",
-              );
 
               console.log(
                 `[MissionRecorder] Synced document results to DB for Task ID ${taskId}`,

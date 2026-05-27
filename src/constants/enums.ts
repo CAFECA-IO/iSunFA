@@ -68,6 +68,12 @@ export enum SystemWorkerSource {
   AMORTIZATION_WORKER = "AMORTIZATION_WORKER",
 }
 
+export enum AnalysisCategory {
+  VOUCHER_PARSING = "VOUCHER_PARSING",
+  CERTIFICATE_ANALYSIS = "CERTIFICATE_ANALYSIS",
+  GENERAL = "GENERAL",
+}
+
 export enum CountryCode {
   TW = "TW",
   US = "US",
