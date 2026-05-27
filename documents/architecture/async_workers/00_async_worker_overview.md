@@ -93,9 +93,13 @@ graph TD
 - **職責**：取代傳統的人工覆核 (HITL)。
 - **動作**：聆聽合約上 `PendingReview` 的任務。將 IPFS 上的結果下載後進行規則驗證（例如確認 AI 信心度是否為滿分）。若驗證無誤，發送 `approveSubmission` 交易解鎖資金並放行任務。
 
-### 6. `MissionRecorder` (總帳抄寫員)
-- **職責**：將 Web3 的真相寫回 Web2 供使用者檢視。
-- **動作**：掃描本地 `ISSUE_DIR` 尋找 Validator 留下的 `approved.*.md`。讀取本地最終確定版的產出，安全地寫回 PostgreSQL 總帳本，並將原本的訂單標記為 `COMPLETED`。
+### 6. `MissionRecorder` (總帳抄寫員) 與決定論管線 (Deterministic Pipeline)
+- **職責**：將 Web3 的客觀真相轉換為 Web2 的財務真相，並寫回總帳。
+- **動作**：掃描本地 `ISSUE_DIR` 尋找 Validator 留下的 `approved.*.md`。在寫入 PostgreSQL 前，**此處是決定論攔截器管線 (VoucherPipelineOrchestrator) 的唯一觸發點**。系統將依序啟動：
+  1. **TaxStrategyService**：偵測非本地統編，自動補齊 1423 / 2941 境外電商逆向稅額。
+  2. **FxInterceptorService**：套用高精度匯率轉換，並處理借貸尾差配平 (Plug)。
+  3. **AccountingEngineService**：執行應計基礎 (Accrual Basis) 跨期切斷 (Cut-off)。
+  清洗完成後，安全地寫回 PostgreSQL 總帳本，並將原本的訂單標記為 `COMPLETED`。
 
 ### 7. `MissionFallbacker` (結算與回收員)
 - **職責**：任務最終狀態的結算與死信佇列 (DLQ) 處理。

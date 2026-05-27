@@ -54,3 +54,18 @@
    - 由於 Prisma Schema 將 `Order.amount` 與 `VoucherLine.amount` 等牽涉到財務的欄位定義為 64-bit `BigInt`，以防止千兆級法幣或 18 位數加密貨幣的溢位。
    - 在 AI 回傳或查表決策出正確的 `amount` 後，準備回寫至主系統前，必須透過 `BigInt(Math.round(amount))` 將數值強制轉型為原生 JavaScript `BigInt`。
    - 這同時滿足了 TypeScript 編譯器對 `BigInt` 欄位的嚴格型別要求，並順利通過主系統的 `Database Boundary Guard`，徹底防堵原始 `number` 進入資料庫造成的潛在精度流失。
+
+## 4. 攔截器與業務邏輯防禦 (Interceptor Defenses)
+
+為了貫徹「零捏造」與「無狀態」架構，系統在 `MissionRecorder` 寫入主系統資料庫前，建置了「決定論攔截器管線 (VoucherPipelineOrchestrator)」，確保所有業務邏輯與型別精度完美合規：
+
+1. **TaxStrategyService (境外電商稅額推估)**：
+   - 針對未具備 8 碼台灣統編的境外電商 (如 AWS、Adobe)，系統會透過 `UniversalAccountTag.INPUT_TAX` 與 `OUTPUT_TAX` 自動補齊 5% 逆向稅額。
+   - 同時認列進項 (Debit) 與銷項 (Credit)，確保基礎傳票借貸平衡 (A = L + E)，並透過語意標籤避免科目硬編碼 (Hardcoding)。
+2. **AccountingEngineService (跨期切斷 Cut-off)**：
+   - 根據發票的服務起訖日與付款日，自動執行會計應計基礎 (Accrual Basis) 的判斷。
+   - **後付制 (Post-paid)**：自動將傳票拆分為「費用估列 (Accrued Expense)」與「付款沖銷 (Payment Offset)」。
+   - **預付制 (Pre-paid)**：自動轉入「預付資產 (Prepaid Asset)」並觸發後續的攤銷排程。
+3. **FxInterceptorService (匯率與精度防護)**：
+   - 全面配合 `MoneyUtil` (封裝 `Prisma.Decimal` / `BigInt`) 執行高精度外幣轉換。
+   - 實作「尾差配平 (Plug to the largest line)」，確保匯率轉換後產生的微小四捨五入誤差不會導致傳票借貸不平。
