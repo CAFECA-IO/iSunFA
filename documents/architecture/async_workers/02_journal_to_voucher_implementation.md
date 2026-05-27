@@ -57,7 +57,7 @@
 
 ## 4. 攔截器與業務邏輯防禦 (Interceptor Defenses)
 
-為了貫徹「零捏造」與「無狀態」架構，系統在 `MissionRecorder` 寫入主系統資料庫前，建置了「決定論攔截器管線 (VoucherPipelineOrchestrator)」，確保所有業務邏輯與型別精度完美合規：
+為了貫徹「零捏造」與「無狀態」架構，系統在 `MissionExecutor` 寫出本地結果檔 (`result.md`) 前，建置了「決定論攔截器管線 (VoucherPipelineOrchestrator)」，確保所有業務邏輯與型別精度完美合規：
 
 1. **TaxStrategyService (境外電商稅額推估)**：
    - 針對未具備 8 碼台灣統編的境外電商 (如 AWS、Adobe)，系統會透過 `UniversalAccountTag.INPUT_TAX` 與 `OUTPUT_TAX` 自動補齊 5% 逆向稅額。
