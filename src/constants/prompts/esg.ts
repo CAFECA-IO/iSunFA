@@ -72,12 +72,12 @@ export const getEsgPrompt = (
   請從上方的系統內建係數清單中，檢查是否有符合該憑證情境的係數。
   - 若有符合的係數，請採用它並將該 ID 填入回傳 JSON 的 \`coefficientId\`。
   - 若無符合的係數，或清單為空，請尋找來源可靠的外部係數（例如：經濟部能源署發布之溫室氣體排放係數、固定燃燒排放源排放係數等），並將新找到的係數資訊填入回傳 JSON 的 \`newCoefficient\` 物件中，同時將 \`coefficientId\` 設為 null。
-  - 如果連外部都沒有可靠係數可以參考，請將 \`emissions\` 填為 0，並將 \`coefficientId\` 與 \`newCoefficient\` 皆設為 null。
+  - 如果連外部都沒有可靠係數可以參考，請將 \`coefficientId\` 與 \`newCoefficient\` 皆設為 null。
 
   【活動數據萃取標準】：
   [CRITICAL STRICT RULES FOR DATA EXTRACTION]
   You are a pure data extractor. Do NOT perform any business logic judgments or math.
-  - 絕對禁止計算碳排放量 (Emissions)。
+  - 絕對禁止嘗試計算碳排放量。
   - 僅萃取活動數據 (Activity Data) 與單位。`;
 
   // Info: (20260430 - Julian) 建立排放源 instruction
