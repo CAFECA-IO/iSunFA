@@ -46,14 +46,10 @@ export class VoucherPipelineOrchestrator {
           String(fileResult.voucherBase?.taxAmount || "0"),
         );
 
-        const esgAmount = Number(esgAmountStr);
-        const totalAmount = Number(totalAmountStr);
-        const totalTax = Number(totalTaxStr);
-
         if (
           isEEIO &&
-          totalTax > 0 &&
-          Math.abs(esgAmount - totalAmount) < 0.01
+          MoneyUtil.toDecimal(totalTaxStr).greaterThan(0) &&
+          MoneyUtil.toDecimal(esgAmountStr).minus(totalAmountStr).abs().lessThan(0.01)
         ) {
           const newEsgAmountStr = MoneyUtil.subtract(
             totalAmountStr,
