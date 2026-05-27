@@ -76,7 +76,6 @@ export const voucher = {
     empty_link: "伝票を追加",
     today_count: "本日の伝票数",
     unit: " 件",
-    month_total: "今月の累計金額",
     pending: "確認待ち",
     ai_confidence: "AI平均信頼度",
   },

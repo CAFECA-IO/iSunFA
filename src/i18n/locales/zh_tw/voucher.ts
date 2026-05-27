@@ -77,7 +77,6 @@ export const voucher = {
     empty_link: "新增傳票",
     today_count: "今日產生傳票",
     unit: "張",
-    month_total: "本月累計金額",
     pending: "待核對",
     ai_confidence: "AI 平均信心度",
   },
