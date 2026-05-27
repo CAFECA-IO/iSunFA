@@ -37,5 +37,22 @@ export const verifyDimensionalConsistency = (
 
   const docDim = getDimension(docUnit);
   const coefDim = getDimension(coefUnit);
-  return docDim === coefDim && docDim !== PhysicalDimension.UNKNOWN;
+
+  if (
+    docDim === PhysicalDimension.UNKNOWN ||
+    coefDim === PhysicalDimension.UNKNOWN
+  ) {
+    return false;
+  }
+
+  // Info: (20260527 - Tzuhan) [AUDIT FIX] 若兩者皆為法幣 (MONEY)，必須確保幣別嚴格吻合 (例如 USD !== TWD)
+  // 否則雖然都是 MONEY 量綱，但幣別錯置會導致嚴重的碳排倍率錯誤。
+  if (
+    docDim === PhysicalDimension.MONEY &&
+    coefDim === PhysicalDimension.MONEY
+  ) {
+    return docUnit === coefUnit;
+  }
+
+  return docDim === coefDim;
 };

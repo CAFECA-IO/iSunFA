@@ -445,8 +445,21 @@ export class DocumentSyncRepository {
                 const eDate = new Date(vd.endDate);
 
                 if (!isNaN(sDate.getTime()) && !isNaN(eDate.getTime())) {
-                  // TODO: find the correct expense account code, using RENT_EXPENSE as a default if none is found
-                  const expenseAccountCode = "RENT_EXPENSE";
+                  let expenseAccountCode = "RENT_EXPENSE";
+                  const prefix = "Prepaid for: ";
+                  if (
+                    prepaidLine.particular &&
+                    prepaidLine.particular.startsWith(prefix)
+                  ) {
+                    const originalSemantic = prepaidLine.particular.substring(
+                      prefix.length,
+                    );
+                    expenseAccountCode = SemanticAccountMatcher.match(
+                      originalSemantic,
+                      dictionary,
+                      (accountBook.country as CountryCode) || CountryCode.TW,
+                    );
+                  }
                   const existingSchedule =
                     await tx.amortizationSchedule.findFirst({
                       where: { originalVoucherId: finalVoucherId },

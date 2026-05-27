@@ -64,6 +64,7 @@ export interface IParsedVoucherLine {
   isVerified?: boolean;
   generationSource?: string;
   semanticCategory?: string;
+  targetFxDate?: string;
 }
 
 export interface IParsedVoucher {
