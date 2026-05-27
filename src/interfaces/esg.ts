@@ -39,6 +39,7 @@ export interface IEsgDashboardSummary {
   scopeDistribution: IEsgScopeDistributionData[];
   goalProgress: {
     percentage: string;
+    isTargetSet?: boolean;
   };
 }
 
