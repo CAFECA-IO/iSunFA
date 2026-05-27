@@ -61,6 +61,7 @@ export async function processAmortization() {
       http,
       parseAbi,
       decodeEventLog,
+      parseAbiItem,
     } = await import("viem");
     const { isuncoin } = await import("@/lib/viem_public");
 
@@ -110,10 +111,65 @@ export async function processAmortization() {
       }
     } catch (e) {
       console.log(
-        `[AmortizationWorker] createTask reverted for ${hashHex}. Likely duplicate (unique constraint). Skipping.`,
-        e,
+        `[AmortizationWorker] createTask reverted for ${hashHex}. Likely duplicate (unique constraint). Entering Healing Mode..., Error: ${e}`,
       );
-      continue;
+
+      // Info: (20260527 - Tzuhan) === Healing Mode ===
+      try {
+        const currentBlock = await publicClient.getBlockNumber();
+        const MAX_BLOCKS = (30n * 24n * 60n * 60n) / 2n; // Approx 30 days (assuming 2s block time)
+        const fromBlock =
+          currentBlock > MAX_BLOCKS ? currentBlock - MAX_BLOCKS : 0n;
+
+        console.log(
+          `[AmortizationWorker] [Healing Mode] Scanning logs from block ${fromBlock} for ${hashHex}...`,
+        );
+
+        const logs = await publicClient.getLogs({
+          address: mbAddress,
+          event: parseAbiItem(
+            "event TaskCreated(uint256 indexed taskId, address indexed creator, uint256 reward, string contentCid)",
+          ),
+          fromBlock,
+          toBlock: "latest",
+        });
+
+        let recoveredTaskIdStr = "";
+        for (const log of logs) {
+          if (log.args && log.args.contentCid === hashHex) {
+            recoveredTaskIdStr = String(log.args.taskId);
+            break;
+          }
+        }
+
+        if (recoveredTaskIdStr) {
+          const taskDir = path.join(missionDirPath, recoveredTaskIdStr);
+          try {
+            await fs.access(path.join(taskDir, "result.md"));
+            console.log(
+              `[AmortizationWorker] [Healing Mode] Local file exists for ${recoveredTaskIdStr}. Normal duplicate, skipping.`,
+            );
+            continue; // Info: (20260527 - Tzuhan) Pure execution collision, safe to skip
+          } catch {
+            console.log(
+              `[AmortizationWorker] [Healing Mode] Recovered Ghost Task for taskId: ${recoveredTaskIdStr}. Rebuilding local payload...`,
+            );
+            taskIdStr = recoveredTaskIdStr;
+            // Info: (20260527 - Tzuhan) Healing successful, let it proceed down to create the files!
+          }
+        } else {
+          console.log(
+            `[AmortizationWorker] [Healing Mode] Could not find TaskCreated event for ${hashHex}. Giving up.`,
+          );
+          continue;
+        }
+      } catch (healingError) {
+        console.error(
+          `[AmortizationWorker] [Healing Mode] Failed to recover task:`,
+          healingError,
+        );
+        continue;
+      }
     }
 
     if (!taskIdStr) {

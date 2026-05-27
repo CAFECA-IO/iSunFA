@@ -78,3 +78,18 @@ Worker 自身**不修改任何 DB 狀態 (如累積已攤銷金額)**，徹底�
 1. **零成本的高可用防重機制**：不需架設 Redis 或依賴複雜的 DB Transaction，純靠 Keccak256 與區塊鏈解決 Double Booking。
 2. **極速的 Pipeline**：捨棄 IPFS，擁抱 File-System I/O。
 3. **無狀態化**：為未來 Worker 節點的橫向擴展 (Horizontal Scaling) 鋪平了道路。
+
+### ⚠️ 代價與風險 (Risks & Trade-offs)
+- **破壞了去中心化的橫向擴展性 (Breaks Decentralized Scaling)**：這是最致命的代價。原本 IPFS 的架構下，A 節點發包，全世界任何一台 B 節點都可以透過 CID 下載任務來接力執行。現在寫入「本地硬碟 (MissionDir)」，這意味著接手的 `MissionCommitor` 或 `IssueRecorder` 必須跟 `AmortizationWorker` 跑在同一台實體伺服器（或掛載同一個 NFS 共享硬碟）上，否則後續節點會找不到檔案而卡死。
+
+---
+
+## 5. 緩解措施：被動式幽靈任務自我修復 (Mitigation: Lazy Self-Healing)
+
+由於拔除 IPFS 後，任務的 Payload (如 `result.md`) 僅存在於發起者的本地硬碟中。若該伺服器發生硬碟損壞或被強行重啟 (OOMKilled)，原本已上鏈的任務將會因為找不到本地檔案而變成「幽靈任務 (Ghost Task)」。而下個月 Worker 再次執行時，又會因為區塊鏈的唯一性限制 (Unique Constraint) 被 Revert，導致客戶永遠漏掉該期攤銷。
+
+為了不破壞這套極簡高效的架構，且不增加額外的 Cron Job 負擔，我們在 `AmortizationWorker` 實作了 **「被動式自我修復 (Lazy Healing)」** 機制：
+
+1. **攔截與打撈 (Event Log Extraction)**：當 `createTask` 因為重複的 `hashHex` 而 Revert 時，Worker 會立即啟動 Healing Mode。它會往前掃描最近 30 天的區塊鏈 `TaskCreated` 事件日誌 (Event Logs)，找出與 `hashHex` 匹配的歷史 `taskId`。
+2. **決定論重建 (Deterministic Reconstruction)**：打撈到 `taskId` 後，若發現本地 `missions/${taskId}` 目錄不存在，系統會再次利用「無狀態攤銷引擎」重新算一次當月應攤銷額，並當場把遺失的 `result.md` 補回硬碟中。
+3. **優勢**：完美遵循了 **"Don't pay for it until you need it"** 的架構哲學。平常不耗費任何額外算力，只有在碰撞發生且檔案遺失的災難情境下，才精準發動修復，達成 100% 的災難復原 (Disaster Recovery)。

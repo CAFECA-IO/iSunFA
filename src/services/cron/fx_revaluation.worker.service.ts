@@ -14,72 +14,95 @@ export class FxRevaluationWorkerService {
    * 4. 兩者相減，即為未實現兌換損益 (Unrealized FX Gain/Loss)
    */
   public async processMonthEndRevaluation(
-    targetYearMonth: string, // e.g., "2026-05"
-    accountBookId: string
+    targetYearMonth: string, // Info: (20260527 - Tzuhan) e.g., "2026-05"
+    accountBookId: string,
   ) {
-    console.log(`[FxRevaluationWorker] Starting FX revaluation for ${targetYearMonth}`);
+    console.log(
+      `[FxRevaluationWorker] Starting FX revaluation for ${targetYearMonth}`,
+    );
     const monthEnd = dayjs(targetYearMonth).endOf("month").toDate();
 
     const book = await prisma.accountBook.findUnique({
-      where: { id: accountBookId }
+      where: { id: accountBookId },
     });
     if (!book) throw new Error("AccountBook not found");
     const baseCurrency = book.currency;
 
-    // 1. 抓取所有外幣憑證 (currency != baseCurrency)
+    // Info: (20260527 - Tzuhan) 1. 抓取所有外幣憑證 (currency != baseCurrency)
     const foreignVouchers = await prisma.voucher.findMany({
       where: {
         accountBookId,
         currency: { not: baseCurrency },
         tradingDate: { lte: monthEnd },
-        deletedAt: null
+        deletedAt: null,
       },
-      include: { lines: true }
+      include: { lines: true },
     });
 
-    const adjustments: { voucherId: string, diffStr: string, isLoss: boolean }[] = [];
+    const adjustments: {
+      voucherId: string;
+      diffStr: string;
+      isLoss: boolean;
+    }[] = [];
 
     for (const voucher of foreignVouchers) {
       const foreignCurrency = voucher.currency;
-      const historicalRate = getCrossExchangeRateStatic(foreignCurrency, baseCurrency, voucher.tradingDate);
-      const closingRate = getCrossExchangeRateStatic(foreignCurrency, baseCurrency, monthEnd);
+      const historicalRate = getCrossExchangeRateStatic(
+        foreignCurrency,
+        baseCurrency,
+        voucher.tradingDate,
+      );
+      const closingRate = getCrossExchangeRateStatic(
+        foreignCurrency,
+        baseCurrency,
+        monthEnd,
+      );
 
       if (historicalRate === closingRate) continue;
 
-      // 尋找 AP/AR 分錄
+      // Info: (20260527 - Tzuhan) 尋找 AP/AR 分錄
       for (const line of voucher.lines) {
         if (
           line.accountingCode.startsWith("214") || // Accounts Payable (e.g., 2140)
           line.accountingCode.startsWith("117") || // Accounts Receivable (e.g., 1170)
           line.accountingCode.startsWith("119") // Other Receivables
         ) {
-          // 決定論反推：外幣餘額 = TWD餘額 / 歷史匯率
+          // Info: (20260527 - Tzuhan) 決定論反推：外幣餘額 = TWD餘額 / 歷史匯率
           const twdAmountStr = line.amount.toString();
-          const foreignAmountStr = MoneyUtil.toDecimal(twdAmountStr).dividedBy(historicalRate).toString();
+          const foreignAmountStr = MoneyUtil.toDecimal(twdAmountStr)
+            .dividedBy(historicalRate)
+            .toString();
 
-          // 期末 TWD 餘額 = 外幣餘額 * 期末匯率
-          const revaluedTwdStr = MoneyUtil.toDecimal(foreignAmountStr).times(closingRate).round().toString();
+          // Info: (20260527 - Tzuhan) 期末 TWD 餘額 = 外幣餘額 * 期末匯率
+          const revaluedTwdStr = MoneyUtil.toDecimal(foreignAmountStr)
+            .times(closingRate)
+            .round()
+            .toString();
 
           const diffStr = MoneyUtil.subtract(revaluedTwdStr, twdAmountStr);
           if (diffStr === "0") continue;
 
-          // 判斷損失或利益
-          // 對於負債(AP)，匯率上升 -> TWD變多 -> 損失 (Loss)
-          // 對於資產(AR)，匯率上升 -> TWD變多 -> 利益 (Gain)
+          // Info: (20260527 - Tzuhan) 判斷損失或利益
+          // Info: (20260527 - Tzuhan) 對於負債(AP)，匯率上升 -> TWD變多 -> 損失 (Loss)
+          // Info: (20260527 - Tzuhan) 對於資產(AR)，匯率上升 -> TWD變多 -> 利益 (Gain)
           const isLiability = !line.isDebit; // 通常 AP 放貸方
           const diffDec = MoneyUtil.toDecimal(diffStr);
-          const isLoss = isLiability ? diffDec.greaterThan(0) : diffDec.lessThan(0);
+          const isLoss = isLiability
+            ? diffDec.greaterThan(0)
+            : diffDec.lessThan(0);
 
           adjustments.push({
             voucherId: voucher.id,
             diffStr: MoneyUtil.toDecimal(diffStr).abs().toString(),
-            isLoss
+            isLoss,
           });
         }
       }
     }
 
-    console.log(`[FxRevaluationWorker] Processed ${adjustments.length} revaluation entries.`);
+    console.log(
+      `[FxRevaluationWorker] Processed ${adjustments.length} revaluation entries.`,
+    );
     return adjustments;
   }
 }

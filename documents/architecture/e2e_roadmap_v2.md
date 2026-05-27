@@ -138,6 +138,10 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **✅ Done (2026-05-27)：台灣稅務逆向課稅防線 (Taiwan Reverse Charge Deductibility Pattern Matching)**：針對境外電商開立之發票，實作精準的進項稅額扣抵資格檢查。利用 RegExp 語意模式匹配 (Pattern Matching) 取代窮舉，自動攔截交際費與職工福利等不可扣抵之費用，並依據稅法強制轉為「費用資本化 (Capitalized Expense)」，達成 CPA 級別的稅務內控防禦。
 - **⚠️ Pending (Tech Debt)：資料庫 Schema 升級 (FX Tracing)**：目前的重評價是基於數學反推。為了避免四捨五入的匯差並追蹤外幣債權真實水位，未來仍須於 `VoucherLine` 擴充 `foreign_amount` 與 `foreign_currency` 欄位。
 - **✅ Done (2026-05-27) [Workaround]：外幣期末重評價引擎 (Month-end FX Revaluation)**：為遵守 IAS 21 公報，系統已實作月底自動計算 AP/AR 未實現兌換損益。因無法更動 Schema 紀錄原幣金額，採「歷史匯率反推外幣原額」之無痕決定論作法。詳見 [05_cpa_audit_findings](../compliance_and_audit/05_cpa_audit_findings_eu_vat_fx_revaluation.md)。
+- **⚠️ Pending (Tech Debt)：國內自然人勞務扣繳盲點 (Domestic Individual Fallback Risk)**：因移除了 `DOMESTIC_VENDOR_KEYWORDS`，目前無統編的國內自然人勞務可能會被誤判為境外電商發動 5% 逆向課稅（應為各類所得扣繳）。由於 B2B 情境少見自然人軟體服務，目前列為已知限制，待未來擴充 Vendor 註冊機制時修復。
+- **⚠️ Pending (Tech Debt)：AI 科目分類幻覺無法被數學防禦 (Semantic Classification Hallucination)**：雖然數學運算已完美防禦，但若 AI 從源頭將「員工旅遊」誤判為「軟體網路費」，系統將依賴此分類發動逆向課稅。目前對此類語意分類錯誤處於零防禦狀態，需仰賴人工查帳 (`isVerified = false`)。
+- **⚠️ Pending (Tech Debt)：全局金額異常熔斷機制 (Circuit Breaker)**：目前若 AI 發狂在發票金額多加三個零，高精度系統將會精準算出天價營業稅並過帳。未來須在 `VoucherPipelineOrchestrator` 實作全局熔斷機制 (如：單筆金額 > 10 億 TWD 即拋出 `AnomalyDetectionError` 並強制阻斷寫入)。
+
 - **⏸️ Paused：WACSO 實作與 EPS 計算 (IAS 33 Compliance)**：為避免人為稀釋，期末股數相除法已阻斷。待高精度加權平均演算法就緒後重啟。詳見 [IAS 33 合規架構](../compliance_and_audit/06_ias33_wacso_and_eps_engine.md)。
 - **✅ Done (2026-05-27)：無資料庫狀態的攤銷折舊引擎 (Stateless Amortization Engine)**：基礎排程已升級為純粹的數學決定論推導 (`calculateStatelessAmortizationForMonth`)。系統能根據起訖日期動態推算過去累積的攤銷額與本期應攤銷額，在不依賴資料庫 `amortizedAmount` 狀態的情況下完美處理尾差配平，達成 Zero-DB State 境界，為橫向擴展鋪平道路。詳見 [Stateless Worker 架構](../async_workers/06_stateless_amortization_engine.md)。
 - **✅ Done (2026-05-27)：應計基礎跨期切斷與已實現兌換損益 (Accrual Cut-off & Realized FX Gain/Loss)**：會計引擎全面升級，提早將發票憑證依據服務期間切割為獨立事件，並為每個事件綁定歷史匯率 (`targetFxDate`)。搭配 `FXInterceptor` 自動偵測多重匯率並轉化尾差為 `FOREIGN_EXCHANGE_GAIN_OR_LOSS`，完美補齊 IAS 21 外幣財報合規要求。詳見 [IAS 21 合規架構](../compliance_and_audit/07_accrual_cutoff_and_fx_realization.md)。
