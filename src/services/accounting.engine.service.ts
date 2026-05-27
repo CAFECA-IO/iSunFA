@@ -36,6 +36,34 @@ export class AccountingEngineService {
       tradingDate.getUTCFullYear() * 12 + tradingDate.getUTCMonth();
     const endMonth = endDate.getUTCFullYear() * 12 + endDate.getUTCMonth();
 
+    // Info: (20260527 - Tzuhan) 1. 導入混合重要性門檻 (Hybrid Materiality)
+    if (endMonth !== tradingMonth && payload.voucherLines?.lines) {
+      const totalAmount = Number(payload.voucherBase.totalAmount || 0);
+      const isImmaterialAmount = totalAmount < 50000;
+      
+      const debitLines = payload.voucherLines.lines.filter(l => l.isDebit);
+      
+      // Info: (20260527 - Tzuhan) 避免窮舉困境 (Avoid Exhaustive Enumeration)
+      // 使用 Regex 語意模式匹配，涵蓋所有相關雜項費用
+      const routinePatterns = [
+        /TELECOM/i,
+        /UTILITIES/i,
+        /SOFTWARE/i,
+        /MISCELLANEOUS/i,
+        /INPUT_TAX/i
+      ];
+      
+      const isAllWhiteListed = debitLines.every(l => 
+        routinePatterns.some(regex => regex.test(l.semanticCategory || ""))
+      );
+
+      if (isImmaterialAmount && isAllWhiteListed) {
+        console.log(`[AccountingEngine] Hybrid Materiality triggered. Skipping cut-off for immaterial expense: ${totalAmount}`);
+        results.push(payload);
+        return results;
+      }
+    }
+
     // Info: (20260526 - Tzuhan) 情境 A: 後付制 (Post-paid) - 服務已於過去月份結束，但於今日付款
     if (endMonth < tradingMonth) {
       console.log(
@@ -58,6 +86,9 @@ export class AccountingEngineService {
         (accruedPayload.voucherBase!.aiNote || "") +
         "\n[AccountingEngine] 自動切斷(Cut-off) - 費用估列 (Accrued Expense)";
 
+      let isTrade = false;
+      let payableTag = UniversalAccountTag.OTHER_PAYABLES;
+
       // Info: (20260526 - Tzuhan) 覆寫估列的分錄 (借：原費用與進項稅額，貸：應付帳款或其他應付款)
       if (accruedPayload.voucherLines?.lines) {
         // Info: (20260527 - Tzuhan) CPA Review: 判斷此為營業進貨 (Trade) 或 非營業費用 (Non-trade) - Multi-language Safe
@@ -73,19 +104,19 @@ export class AccountingEngineService {
           EsgFallbackCategory.TEXTILES_AND_APPAREL,
         ];
 
-        const debitLines = accruedPayload.voucherLines.lines.filter(
+        const accruedDebitLines = accruedPayload.voucherLines.lines.filter(
           (l) =>
             l.isDebit && l.semanticCategory !== UniversalAccountTag.INPUT_TAX,
         );
-        const hasTradeDebit = debitLines.some(
+        const hasTradeDebit = accruedDebitLines.some(
           (l) =>
             l.semanticCategory === UniversalAccountTag.INVENTORY ||
             l.semanticCategory === UniversalAccountTag.COST_OF_GOODS_SOLD,
         );
 
-        const isTrade = tradeCategories.includes(fallback) || hasTradeDebit;
+        isTrade = tradeCategories.includes(fallback) || hasTradeDebit;
 
-        const payableTag = isTrade
+        payableTag = isTrade
           ? UniversalAccountTag.ACCOUNTS_PAYABLE
           : UniversalAccountTag.OTHER_PAYABLES;
 
@@ -105,65 +136,55 @@ export class AccountingEngineService {
           });
       }
 
-      // Info: (20260526 - Tzuhan) 2. 扣款沖銷事件 (Payment Offsetting Event)
-      const paymentPayload = JSON.parse(
-        JSON.stringify(payload),
-      ) as IAggregatedDocumentResult;
-      paymentPayload.voucherBase!.aiNote =
-        (paymentPayload.voucherBase!.aiNote || "") +
-        "\n[AccountingEngine] 自動切斷(Cut-off) - 應付款沖銷 (Payment Offset)";
-
-      // Info: (20260526 - Tzuhan) 從付款事件中移除 ESG，因為已在估列時認列
-      delete paymentPayload.esg;
-
-      if (paymentPayload.voucherLines?.lines) {
-        const fallback = paymentPayload.voucherBase
-          ?.fallbackCategory as EsgFallbackCategory;
-        const tradeCategories = [
-          EsgFallbackCategory.PLASTICS_AND_RUBBER,
-          EsgFallbackCategory.METALS_AND_MINERALS,
-          EsgFallbackCategory.PAPER_AND_WOOD,
-          EsgFallbackCategory.ELECTRONICS_AND_ELECTRICAL,
-          EsgFallbackCategory.CHEMICALS_AND_SOLVENTS,
-          EsgFallbackCategory.AGRICULTURE_AND_FOOD,
-          EsgFallbackCategory.TEXTILES_AND_APPAREL,
-        ];
-
-        const debitLines = paymentPayload.voucherLines.lines.filter(
+      // Info: (20260527 - Tzuhan) 3. 阻斷空轉分錄 (Dr. 2200 / Cr. 2200 & UX)
+      // 若原始憑證是「尚未付款」的 Invoice，Credit 已經是應付款項，則捨棄付款沖銷事件。
+      let isUnpaidInvoice = false;
+      if (payload.voucherLines?.lines) {
+        const creditLines = payload.voucherLines.lines.filter(l => !l.isDebit);
+        isUnpaidInvoice = creditLines.some(
           (l) =>
-            l.isDebit && l.semanticCategory !== UniversalAccountTag.INPUT_TAX,
+            l.semanticCategory === UniversalAccountTag.ACCOUNTS_PAYABLE ||
+            l.semanticCategory === UniversalAccountTag.OTHER_PAYABLES
         );
-        const hasTradeDebit = debitLines.some(
-          (l) =>
-            l.semanticCategory === UniversalAccountTag.INVENTORY ||
-            l.semanticCategory === UniversalAccountTag.COST_OF_GOODS_SOLD,
-        );
-
-        const isTrade = tradeCategories.includes(fallback) || hasTradeDebit;
-
-        const payableTag = isTrade
-          ? UniversalAccountTag.ACCOUNTS_PAYABLE
-          : UniversalAccountTag.OTHER_PAYABLES;
-
-        paymentPayload.voucherLines.lines =
-          paymentPayload.voucherLines.lines.map((line: IParsedVoucherLine) => {
-            if (line.isDebit) {
-              return {
-                ...line,
-                particular: isTrade
-                  ? "Accrued Trade Payable Offset"
-                  : "Accrued Other Payable Offset",
-                semanticCategory: payableTag,
-                accountingCode: "",
-                targetFxDate: serviceMonthEnd.toISOString().split("T")[0], // Info: (20260527 - Tzuhan) 鎖定前期匯率
-              };
-            }
-            return line;
-          });
       }
 
       results.push(accruedPayload);
-      results.push(paymentPayload);
+
+      if (!isUnpaidInvoice) {
+        // Info: (20260526 - Tzuhan) 2. 扣款沖銷事件 (Payment Offsetting Event)
+        const paymentPayload = JSON.parse(
+          JSON.stringify(payload),
+        ) as IAggregatedDocumentResult;
+        paymentPayload.voucherBase!.aiNote =
+          (paymentPayload.voucherBase!.aiNote || "") +
+          "\n[AccountingEngine] 自動切斷(Cut-off) - 應付款沖銷 (Payment Offset)";
+
+        // Info: (20260526 - Tzuhan) 從付款事件中移除 ESG，因為已在估列時認列
+        delete paymentPayload.esg;
+
+        if (paymentPayload.voucherLines?.lines) {
+          paymentPayload.voucherLines.lines =
+            paymentPayload.voucherLines.lines.map((line: IParsedVoucherLine) => {
+              // Info: (20260527 - Tzuhan) 2. 保護進項稅額 (Protect INPUT_TAX)
+              if (line.isDebit && line.semanticCategory !== UniversalAccountTag.INPUT_TAX) {
+                // Info: (20260527 - Tzuhan) 4. UX 修復：保留原費用名稱
+                const originalParticular = line.particular || "未命名費用";
+                return {
+                  ...line,
+                  particular: `[沖銷] ${originalParticular} (Offset)`,
+                  semanticCategory: payableTag,
+                  accountingCode: "",
+                  targetFxDate: serviceMonthEnd.toISOString().split("T")[0], // Info: (20260527 - Tzuhan) 鎖定前期匯率
+                };
+              }
+              return line;
+            });
+        }
+        results.push(paymentPayload);
+      } else {
+        console.log(`[AccountingEngine] Unpaid Invoice detected (Cr. AP/OP). Dropping payment offset payload.`);
+      }
+
       return results;
     }
 
@@ -185,6 +206,7 @@ export class AccountingEngineService {
       if (prepaidPayload.voucherLines?.lines) {
         prepaidPayload.voucherLines.lines =
           prepaidPayload.voucherLines.lines.map((line: IParsedVoucherLine) => {
+            // Info: (20260527 - Tzuhan) 2. 保護進項稅額 (Protect INPUT_TAX)
             if (
               line.isDebit &&
               line.semanticCategory !== UniversalAccountTag.INPUT_TAX

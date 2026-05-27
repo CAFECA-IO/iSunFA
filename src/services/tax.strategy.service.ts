@@ -16,11 +16,7 @@ export class TaxStrategyService {
     countryCode: CountryCode,
   ): IAggregatedDocumentResult {
     const voucherBase = payload.voucherBase;
-    if (
-      !voucherBase ||
-      !voucherBase.vendorTaxId ||
-      typeof voucherBase.vendorTaxId !== "string"
-    ) {
+    if (!voucherBase) {
       return payload;
     }
 
@@ -76,15 +72,13 @@ export class TaxStrategyService {
       const totalAmountStr = MoneyUtil.parseInput(
         String(voucherBase.totalAmount || "0"),
       );
-      const totalAmount = Number(totalAmountStr);
-      if (totalAmount > 0) {
-        // Info: (20260526 - Tzuhan) Calculate 5% reverse charge tax using high-precision MoneyUtil
-        const taxAmountStr = MoneyUtil.multiply(totalAmount.toString(), "0.05");
-        const taxAmount = Number(
-          MoneyUtil.toDecimal(taxAmountStr).toFixed(0, 1),
-        ); // Round half up
+      if (MoneyUtil.toDecimal(totalAmountStr).greaterThan(0)) {
+        // Info: (20260527 - Tzuhan) Calculate 5% reverse charge tax using high-precision MoneyUtil, strictly avoid Number casting
+        const taxAmountStr = MoneyUtil.multiply(totalAmountStr, "0.05");
+        const taxAmountDecimal = MoneyUtil.toDecimal(taxAmountStr).toDecimalPlaces(0, 1); // Round half up
+        const taxAmountFinalStr = taxAmountDecimal.toString();
 
-        if (taxAmount > 0) {
+        if (taxAmountDecimal.greaterThan(0)) {
           if (!payload.voucherLines) {
             payload.voucherLines = { lines: [] };
           }
@@ -95,7 +89,9 @@ export class TaxStrategyService {
           // Info: (20260527 - Tzuhan) [AUDIT] Deductibility Check for Reverse Charge
           // Info: (20260527 - Tzuhan) 抓取主費用以判斷是否具備扣抵資格
           const debitLines = payload.voucherLines.lines.filter(l => l.isDebit);
-          const primaryExpenseLine = debitLines.sort((a, b) => Number(b.amount) - Number(a.amount))[0];
+          const primaryExpenseLine = debitLines.sort((a, b) => 
+            MoneyUtil.toDecimal(String(b.amount || "0")).minus(MoneyUtil.toDecimal(String(a.amount || "0"))).toNumber()
+          )[0];
           
           const isDeductible = primaryExpenseLine 
              ? this.isExpenseDeductible(primaryExpenseLine.semanticCategory || "")
@@ -111,7 +107,7 @@ export class TaxStrategyService {
             particular: isDeductible
               ? `境外電商營業稅 (Reverse Charge Input Tax) - ${voucherBase.vendor}`
               : `境外電商營業稅 (Non-deductible, Capitalized) - ${voucherBase.vendor}`,
-            amount: taxAmount.toString(),
+            amount: taxAmountFinalStr,
             accountingCode: "",
             semanticCategory: capitalizedCategory || UniversalAccountTag.INPUT_TAX,
             isDebit: true,
@@ -120,7 +116,7 @@ export class TaxStrategyService {
           // Info: (20260526 - Tzuhan) Credit: 銷項稅額 (Output Tax)
           payload.voucherLines.lines.push({
             particular: `境外電商營業稅 (Reverse Charge Output Tax) - ${voucherBase.vendor}`,
-            amount: taxAmount.toString(),
+            amount: taxAmountFinalStr,
             accountingCode: "",
             semanticCategory: UniversalAccountTag.OUTPUT_TAX,
             isDebit: false,
@@ -128,7 +124,7 @@ export class TaxStrategyService {
 
           voucherBase.aiNote =
             (voucherBase.aiNote || "") +
-            `\n[TaxStrategyService] Auto-applied 5% reverse charge for foreign digital service (Tax Amount: ${taxAmount}).` +
+            `\n[TaxStrategyService] Auto-applied 5% reverse charge for foreign digital service (Tax Amount: ${taxAmountFinalStr}).` +
             (!isDeductible ? " Note: Tax capitalized into expense due to non-deductibility." : "");
         }
       }

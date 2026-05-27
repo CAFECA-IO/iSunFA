@@ -134,7 +134,8 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **⚠️ Pending：廢除不合理允當標準 (Zero Tolerance)**：日常上線的報表驗證 Threshold 嚴格鎖死在 **0%**。
 - **⚠️ Pending：防堵日期幻覺 (Anti-Date Hallucination)**：強制依賴 AI 輸出的 `tradingDate`，若發生跨期，系統必須報錯並阻斷財報生成。
 - **⚠️ Pending：追溯重編的「關聯性鎖死」 (Adjustment Voucher Audit Trail)**：實作前期損益調整時，追加帶有標籤 (`isRestatement=true`) 的當期調整傳票。**Schema 強制帶入 `targetVoucherId` (被更正的原始傳票 ID)**，形成雙向鏈結，杜絕幽靈調整傳票。
-- **✅ Done (2026-05-27)：歐洲區 (EU) 稅務逆向課稅 (VAT Directive Strategy)**：目前境外電商逆向課稅已不再寫死為台灣的 5%。針對歐盟 (EU) 帳本，已實作稅務策略模式 (`TaxStrategyService`)，精準應對各成員國 (17%~27%) 稅率及 B2B 逆向課稅/B2C 一般課稅差異，徹底解除跨國稅務裁罰地雷。詳見 [05_cpa_audit_findings](../compliance_and_audit/05_cpa_audit_findings_eu_vat_fx_revaluation.md)。
+- **✅ Done (2026-05-27) [Workaround]：歐洲區 (EU) 稅務逆向課稅 (VAT Directive Strategy)**：已導入稅務策略模式 (`TaxStrategyService`)。因歐盟各國稅率 (17%~27%) 及 B2B/B2C 判定極度複雜，目前實作「防呆警告機制」，若偵測到境外發票將強制附加 `aiNote` 提醒人工覆核，阻斷自動放行，避免跨國稅務裁罰地雷。自動化稅率 API 串接列入未來 Tech Debt。
+- **✅ Done (2026-05-27)：台灣稅務逆向課稅防線 (Taiwan Reverse Charge Deductibility Pattern Matching)**：針對境外電商開立之發票，實作精準的進項稅額扣抵資格檢查。利用 RegExp 語意模式匹配 (Pattern Matching) 取代窮舉，自動攔截交際費與職工福利等不可扣抵之費用，並依據稅法強制轉為「費用資本化 (Capitalized Expense)」，達成 CPA 級別的稅務內控防禦。
 - **⚠️ Pending (Tech Debt)：資料庫 Schema 升級 (FX Tracing)**：目前的重評價是基於數學反推。為了避免四捨五入的匯差並追蹤外幣債權真實水位，未來仍須於 `VoucherLine` 擴充 `foreign_amount` 與 `foreign_currency` 欄位。
 - **✅ Done (2026-05-27) [Workaround]：外幣期末重評價引擎 (Month-end FX Revaluation)**：為遵守 IAS 21 公報，系統已實作月底自動計算 AP/AR 未實現兌換損益。因無法更動 Schema 紀錄原幣金額，採「歷史匯率反推外幣原額」之無痕決定論作法。詳見 [05_cpa_audit_findings](../compliance_and_audit/05_cpa_audit_findings_eu_vat_fx_revaluation.md)。
 - **⏸️ Paused：WACSO 實作與 EPS 計算 (IAS 33 Compliance)**：為避免人為稀釋，期末股數相除法已阻斷。待高精度加權平均演算法就緒後重啟。詳見 [IAS 33 合規架構](../compliance_and_audit/06_ias33_wacso_and_eps_engine.md)。
