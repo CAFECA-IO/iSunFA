@@ -498,6 +498,30 @@ export async function processNext() {
               recordKey
             ] as unknown as IAggregatedDocumentResult;
 
+            // Info: (20260527 - Tzuhan) 早期防線 (Early Normalization)
+            // Info: (20260527 - Tzuhan) 防止 AI 輸出大小寫不一的幣別 (如 "usd")，統一轉為大寫並去除空白
+            if (
+              originalResult.voucherBase &&
+              originalResult.voucherBase.currency
+            ) {
+              originalResult.voucherBase.currency = String(
+                originalResult.voucherBase.currency,
+              )
+                .toUpperCase()
+                .trim();
+              if (originalResult.voucherBase.currency === "RMB") {
+                originalResult.voucherBase.currency = "CNY";
+              }
+            }
+            if (originalResult.esg && originalResult.esg.unit) {
+              originalResult.esg.unit = String(originalResult.esg.unit)
+                .toUpperCase()
+                .trim();
+              if (originalResult.esg.unit === "RMB") {
+                originalResult.esg.unit = "CNY";
+              }
+            }
+
             // Info: (20260527 - Tzuhan) 1. 會計切斷 (Cut-off) - 一變多
             const splitResults =
               await AccountingEngineService.processCutoffEvents(
