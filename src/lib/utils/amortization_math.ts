@@ -22,13 +22,14 @@ export function getInclusiveDays(start: Date, end: Date): number {
 }
 
 /**
- * Info: (20260526 - Tzuhan)
+ * Info: (20260527 - Tzuhan)
+ * [Stateless Engine Upgrade]
  * Given a schedule and a target month date, calculates the amortization amount
  * using Pro-rata temporis (exact days).
+ * This function calculates the previously amortized amount mathematically without needing DB state.
  */
-export function calculateAmortizationForMonth(
+export function calculateStatelessAmortizationForMonth(
   totalAmount: Decimal,
-  amortizedAmount: Decimal,
   startDate: Date,
   endDate: Date,
   targetMonth: Date,
@@ -51,20 +52,57 @@ export function calculateAmortizationForMonth(
   }
 
   const isFinalMonth = monthEnd >= endDate;
+  const totalDays = getInclusiveDays(startDate, endDate);
 
-  if (isFinalMonth) {
-    // Info: (20260526 - Tzuhan) 尾差配平：最後一期強制吃掉所有剩餘餘額
-    return totalAmount.minus(amortizedAmount);
+  if (totalDays <= 0) {
+    return new Decimal(0);
   }
 
-  // Info: (20260526 - Tzuhan) Calculate intersection
+  // Info: (20260527 - Tzuhan) 計算此前累積的攤銷額 (Stateless Accumulation)
+  let accumulatedRawAmt = new Decimal(0);
+  const currentCursor = new Date(
+    Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), 1),
+  );
+
+  while (currentCursor < monthStart) {
+    const curMonthStart = new Date(
+      Date.UTC(currentCursor.getUTCFullYear(), currentCursor.getUTCMonth(), 1),
+    );
+    const curMonthEnd = new Date(
+      Date.UTC(
+        currentCursor.getUTCFullYear(),
+        currentCursor.getUTCMonth() + 1,
+        0,
+      ),
+    );
+
+    const effStart = startDate > curMonthStart ? startDate : curMonthStart;
+    const effEnd = endDate < curMonthEnd ? endDate : curMonthEnd;
+
+    const covDays = getInclusiveDays(effStart, effEnd);
+    if (covDays > 0) {
+      const rawAmt = totalAmount.times(covDays).dividedBy(totalDays);
+      const roundedAmt = MoneyUtil.toDecimal(
+        rawAmt.toFixed(0, Decimal.ROUND_HALF_UP),
+      );
+      accumulatedRawAmt = accumulatedRawAmt.plus(roundedAmt);
+    }
+
+    // Move to next month
+    currentCursor.setUTCMonth(currentCursor.getUTCMonth() + 1);
+  }
+
+  if (isFinalMonth) {
+    // Info: (20260526 - Tzuhan) 尾差配平：最後一期強制吃掉所有剩餘餘額 (100% Stateless)
+    return totalAmount.minus(accumulatedRawAmt);
+  }
+
+  // Info: (20260526 - Tzuhan) Calculate intersection for the current month
   const effectiveStart = startDate > monthStart ? startDate : monthStart;
   const effectiveEnd = endDate < monthEnd ? endDate : monthEnd;
-
-  const totalDays = getInclusiveDays(startDate, endDate);
   const coveredDays = getInclusiveDays(effectiveStart, effectiveEnd);
 
-  if (totalDays <= 0 || coveredDays <= 0) {
+  if (coveredDays <= 0) {
     return new Decimal(0);
   }
 

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { calculateAmortizationForMonth } from "@/lib/utils/amortization_math";
+import { calculateStatelessAmortizationForMonth } from "@/lib/utils/amortization_math";
 import Decimal from "decimal.js";
 import { keccak256, toUtf8Bytes } from "ethers";
 import fs from "fs/promises";
@@ -28,13 +28,11 @@ export async function processAmortization() {
   await fs.mkdir(missionDirPath, { recursive: true }).catch(() => {});
 
   for (const schedule of schedules) {
-    // Info: (20260526 - Tzuhan) Pro-rata temporis Math
+    // Info: (20260527 - Tzuhan) Pro-rata temporis Math (Stateless Upgrade)
     const totalAmt = new Decimal(schedule.totalAmount.toString());
-    const amortizedAmt = new Decimal(schedule.amortizedAmount.toString());
 
-    const amountForMonth = calculateAmortizationForMonth(
+    const amountForMonth = calculateStatelessAmortizationForMonth(
       totalAmt,
-      amortizedAmt,
       schedule.startDate,
       schedule.endDate,
       targetDate,
@@ -150,7 +148,7 @@ export async function processAmortization() {
             amount: amountForMonth.toNumber(),
             currency: "TWD",
             exchangeRate: 1,
-            description: `[System Amortization] ${schedule.assetAccountCode} -> ${schedule.expenseAccountCode}`,
+            description: `[System Amortization (Daily Pro-rata)] ${schedule.assetAccountCode} -> ${schedule.expenseAccountCode}`,
             referenceId: schedule.id,
             accountBookId: schedule.accountBookId,
             generationSource: "SYSTEM_DETERMINISTIC",
