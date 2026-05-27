@@ -35,16 +35,16 @@ export class TaxStrategyService {
 
   private static isExpenseDeductible(category: string): boolean {
     if (!category) return true;
-    // Info: (20260527 - Tzuhan) 避免窮舉 (Avoid Exhaustive Enumeration)
+    // Info: (20260527 - Tzuhan) 避免窮舉困境 (Avoid Exhaustive Enumeration)
     // Info: (20260527 - Tzuhan) 透過語意模式匹配 (Pattern Matching)，只要科目包含特定交際、福利等關鍵字即自動攔截，無須窮舉所有 Enum
     const nonDeductiblePatterns = [
       /ENTERTAINMENT/i,
       /BENEFIT/i,
       /DONATION/i,
       /MEAL/i,
-      /PENALTY/i
+      /PENALTY/i,
     ];
-    return !nonDeductiblePatterns.some(regex => regex.test(category));
+    return !nonDeductiblePatterns.some((regex) => regex.test(category));
   }
 
   private static applyTaiwanStrategy(
@@ -55,16 +55,23 @@ export class TaxStrategyService {
     // Info: (20260526 - Tzuhan) In Taiwan, valid local tax IDs are strictly 8 digits
     const isTaiwanTaxId = /^\d{8}$/.test(voucherBase.vendorTaxId || "");
 
-    // Info: (20260526 - Tzuhan) Detect foreign software/IT services (reverse charge target)
-    const isSoftwareOrIT =
-      voucherBase.vendor?.toLowerCase().includes("adobe") ||
-      voucherBase.vendor?.toLowerCase().includes("aws") ||
-      voucherBase.vendor?.toLowerCase().includes("google") ||
-      voucherBase.vendor?.toLowerCase().includes("microsoft") ||
-      voucherBase.fallbackCategory === "Software" ||
-      voucherBase.fallbackCategory === "Information Technology";
+    // Info: (20260527 - Tzuhan) [REFACTOR] 捨棄脆弱的字串白名單，改依賴系統內部強型別 Enum 判斷境外電子勞務
+    const digitalServiceTags = [
+      UniversalAccountTag.SOFTWARE_EXPENSE,
+      UniversalAccountTag.TELECOM_EXPENSE,
+      UniversalAccountTag.MARKETING_EXPENSE,
+      UniversalAccountTag.ENTERTAINMENT_EXPENSE,
+      UniversalAccountTag.MISCELLANEOUS_EXPENSE,
+      UniversalAccountTag.EXPENSE,
+    ];
 
-    if (!isTaiwanTaxId && isSoftwareOrIT) {
+    const debitLines =
+      payload.voucherLines?.lines?.filter((l) => l.isDebit) || [];
+    const hasDigitalService = debitLines.some((l) =>
+      digitalServiceTags.includes(l.semanticCategory as UniversalAccountTag),
+    );
+
+    if (!isTaiwanTaxId && hasDigitalService) {
       console.log(
         `[TaxStrategyService] Reverse charge activated for foreign vendor: ${voucherBase.vendor} (${voucherBase.vendorTaxId})`,
       );
@@ -75,7 +82,9 @@ export class TaxStrategyService {
       if (MoneyUtil.toDecimal(totalAmountStr).greaterThan(0)) {
         // Info: (20260527 - Tzuhan) Calculate 5% reverse charge tax using high-precision MoneyUtil, strictly avoid Number casting
         const taxAmountStr = MoneyUtil.multiply(totalAmountStr, "0.05");
-        const taxAmountDecimal = MoneyUtil.toDecimal(taxAmountStr).toDecimalPlaces(0, 1); // Round half up
+        const taxAmountDecimal = MoneyUtil.toDecimal(
+          taxAmountStr,
+        ).toDecimalPlaces(0, 1); // Round half up
         const taxAmountFinalStr = taxAmountDecimal.toString();
 
         if (taxAmountDecimal.greaterThan(0)) {
@@ -88,18 +97,25 @@ export class TaxStrategyService {
 
           // Info: (20260527 - Tzuhan) [AUDIT] Deductibility Check for Reverse Charge
           // Info: (20260527 - Tzuhan) 抓取主費用以判斷是否具備扣抵資格
-          const debitLines = payload.voucherLines.lines.filter(l => l.isDebit);
-          const primaryExpenseLine = debitLines.sort((a, b) => 
-            MoneyUtil.toDecimal(String(b.amount || "0")).minus(MoneyUtil.toDecimal(String(a.amount || "0"))).toNumber()
+          const debitLines = payload.voucherLines.lines.filter(
+            (l) => l.isDebit,
+          );
+          const primaryExpenseLine = debitLines.sort((a, b) =>
+            MoneyUtil.toDecimal(String(b.amount || "0"))
+              .minus(MoneyUtil.toDecimal(String(a.amount || "0")))
+              .toNumber(),
           )[0];
-          
-          const isDeductible = primaryExpenseLine 
-             ? this.isExpenseDeductible(primaryExpenseLine.semanticCategory || "")
-             : true;
 
-          const capitalizedCategory = !isDeductible && primaryExpenseLine
-             ? primaryExpenseLine.semanticCategory
-             : UniversalAccountTag.INPUT_TAX;
+          const isDeductible = primaryExpenseLine
+            ? this.isExpenseDeductible(
+                primaryExpenseLine.semanticCategory || "",
+              )
+            : true;
+
+          const capitalizedCategory =
+            !isDeductible && primaryExpenseLine
+              ? primaryExpenseLine.semanticCategory
+              : UniversalAccountTag.INPUT_TAX;
 
           // Info: (20260526 - Tzuhan) In reverse charge, we book both input tax (Debit) and output tax (Credit) simultaneously
           // Info: (20260526 - Tzuhan) Debit: 進項稅額 (Input Tax) or Capitalized Expense
@@ -109,7 +125,8 @@ export class TaxStrategyService {
               : `境外電商營業稅 (Non-deductible, Capitalized) - ${voucherBase.vendor}`,
             amount: taxAmountFinalStr,
             accountingCode: "",
-            semanticCategory: capitalizedCategory || UniversalAccountTag.INPUT_TAX,
+            semanticCategory:
+              capitalizedCategory || UniversalAccountTag.INPUT_TAX,
             isDebit: true,
           });
 
@@ -125,7 +142,9 @@ export class TaxStrategyService {
           voucherBase.aiNote =
             (voucherBase.aiNote || "") +
             `\n[TaxStrategyService] Auto-applied 5% reverse charge for foreign digital service (Tax Amount: ${taxAmountFinalStr}).` +
-            (!isDeductible ? " Note: Tax capitalized into expense due to non-deductibility." : "");
+            (!isDeductible
+              ? " Note: Tax capitalized into expense due to non-deductibility."
+              : "");
         }
       }
     }

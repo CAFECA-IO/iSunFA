@@ -1,6 +1,10 @@
 import { IAggregatedDocumentResult } from "@/skills/utils/document_parser_db_sync";
 import { IParsedVoucherLine } from "@/interfaces/voucher";
 import { UniversalAccountTag, EsgFallbackCategory } from "@/constants/enums";
+import { getCrossExchangeRateStatic } from "@/skills/utils/exchange_rate_helper";
+import { MoneyUtil } from "@/lib/utils/money";
+import { CurrencyCode } from "@/constants/exchange_rate";
+
 export class AccountingEngineService {
   /**
    * Info: (20260526 - Tzuhan)
@@ -9,6 +13,7 @@ export class AccountingEngineService {
    */
   public static async processCutoffEvents(
     payload: IAggregatedDocumentResult,
+    bookCurrency: string = CurrencyCode.TWD,
   ): Promise<IAggregatedDocumentResult[]> {
     const results: IAggregatedDocumentResult[] = [];
 
@@ -38,11 +43,30 @@ export class AccountingEngineService {
 
     // Info: (20260527 - Tzuhan) 1. 導入混合重要性門檻 (Hybrid Materiality)
     if (endMonth !== tradingMonth && payload.voucherLines?.lines) {
-      const totalAmount = Number(payload.voucherBase.totalAmount || 0);
-      const isImmaterialAmount = totalAmount < 50000;
-      
-      const debitLines = payload.voucherLines.lines.filter(l => l.isDebit);
-      
+      const documentCurrency = payload.voucherBase.currency || "TWD";
+      let baseTotalAmount = Number(payload.voucherBase.totalAmount || 0);
+
+      // Info: (20260527 - Tzuhan) 外幣定錨 (Currency Anchor)
+      // Info: (20260527 - Tzuhan) 若原幣非帳本幣別，提早抓取靜態匯率進行約當轉換，避免重大外幣發票被違規豁免
+      if (documentCurrency !== bookCurrency) {
+        try {
+          const fxRate = getCrossExchangeRateStatic(
+            documentCurrency,
+            bookCurrency,
+            new Date(payload.voucherBase.tradingDate as string),
+          );
+          baseTotalAmount = baseTotalAmount * Number(fxRate);
+        } catch (err) {
+          console.warn(
+            `[AccountingEngine] Failed to get exchange rate for materiality check, using raw amount. Error: ${err instanceof Error ? err.message : String(err)}`,
+          );
+        }
+      }
+
+      const isImmaterialAmount = baseTotalAmount < 50000;
+
+      const debitLines = payload.voucherLines.lines.filter((l) => l.isDebit);
+
       // Info: (20260527 - Tzuhan) 避免窮舉困境 (Avoid Exhaustive Enumeration)
       // 使用 Regex 語意模式匹配，涵蓋所有相關雜項費用
       const routinePatterns = [
@@ -50,15 +74,17 @@ export class AccountingEngineService {
         /UTILITIES/i,
         /SOFTWARE/i,
         /MISCELLANEOUS/i,
-        /INPUT_TAX/i
+        /INPUT_TAX/i,
       ];
-      
-      const isAllWhiteListed = debitLines.every(l => 
-        routinePatterns.some(regex => regex.test(l.semanticCategory || ""))
+
+      const isAllWhiteListed = debitLines.every((l) =>
+        routinePatterns.some((regex) => regex.test(l.semanticCategory || "")),
       );
 
       if (isImmaterialAmount && isAllWhiteListed) {
-        console.log(`[AccountingEngine] Hybrid Materiality triggered. Skipping cut-off for immaterial expense: ${totalAmount}`);
+        console.log(
+          `[AccountingEngine] Hybrid Materiality triggered. Skipping cut-off for immaterial expense: ${baseTotalAmount}`,
+        );
         results.push(payload);
         return results;
       }
@@ -91,6 +117,48 @@ export class AccountingEngineService {
 
       // Info: (20260526 - Tzuhan) 覆寫估列的分錄 (借：原費用與進項稅額，貸：應付帳款或其他應付款)
       if (accruedPayload.voucherLines?.lines) {
+        // Info: (20260527 - Tzuhan) [BUGFIX] 將 INPUT_TAX 自估列事件中移除，以避免雙重認列
+        const filteredLines = accruedPayload.voucherLines.lines.filter(
+          (l) =>
+            !(
+              l.isDebit && l.semanticCategory === UniversalAccountTag.INPUT_TAX
+            ),
+        );
+
+        // Info: (20260527 - Tzuhan) 加總移除的進項稅額，並從貸方應付款中扣除以配平
+        const removedTaxLines = accruedPayload.voucherLines.lines.filter(
+          (l) =>
+            l.isDebit && l.semanticCategory === UniversalAccountTag.INPUT_TAX,
+        );
+        let totalRemovedTax = "0";
+        for (const t of removedTaxLines) {
+          totalRemovedTax = MoneyUtil.add(
+            totalRemovedTax,
+            String(t.amount || "0"),
+          );
+        }
+
+        let maxCreditLine = null;
+        let maxCreditAmt = -1;
+        for (const l of filteredLines) {
+          if (!l.isDebit) {
+            const amt = Number(l.amount || 0);
+            if (amt > maxCreditAmt) {
+              maxCreditAmt = amt;
+              maxCreditLine = l;
+            }
+          }
+        }
+        if (
+          maxCreditLine &&
+          MoneyUtil.toDecimal(totalRemovedTax).greaterThan(0)
+        ) {
+          maxCreditLine.amount = MoneyUtil.subtract(
+            String(maxCreditLine.amount || "0"),
+            totalRemovedTax,
+          );
+        }
+
         // Info: (20260527 - Tzuhan) CPA Review: 判斷此為營業進貨 (Trade) 或 非營業費用 (Non-trade) - Multi-language Safe
         const fallback = accruedPayload.voucherBase
           ?.fallbackCategory as EsgFallbackCategory;
@@ -104,10 +172,7 @@ export class AccountingEngineService {
           EsgFallbackCategory.TEXTILES_AND_APPAREL,
         ];
 
-        const accruedDebitLines = accruedPayload.voucherLines.lines.filter(
-          (l) =>
-            l.isDebit && l.semanticCategory !== UniversalAccountTag.INPUT_TAX,
-        );
+        const accruedDebitLines = filteredLines.filter((l) => l.isDebit);
         const hasTradeDebit = accruedDebitLines.some(
           (l) =>
             l.semanticCategory === UniversalAccountTag.INVENTORY ||
@@ -120,8 +185,8 @@ export class AccountingEngineService {
           ? UniversalAccountTag.ACCOUNTS_PAYABLE
           : UniversalAccountTag.OTHER_PAYABLES;
 
-        accruedPayload.voucherLines.lines =
-          accruedPayload.voucherLines.lines.map((line: IParsedVoucherLine) => {
+        accruedPayload.voucherLines.lines = filteredLines.map(
+          (line: IParsedVoucherLine) => {
             if (!line.isDebit) {
               return {
                 ...line,
@@ -133,18 +198,21 @@ export class AccountingEngineService {
               };
             }
             return line;
-          });
+          },
+        );
       }
 
       // Info: (20260527 - Tzuhan) 3. 阻斷空轉分錄 (Dr. 2200 / Cr. 2200 & UX)
       // 若原始憑證是「尚未付款」的 Invoice，Credit 已經是應付款項，則捨棄付款沖銷事件。
       let isUnpaidInvoice = false;
       if (payload.voucherLines?.lines) {
-        const creditLines = payload.voucherLines.lines.filter(l => !l.isDebit);
+        const creditLines = payload.voucherLines.lines.filter(
+          (l) => !l.isDebit,
+        );
         isUnpaidInvoice = creditLines.some(
           (l) =>
             l.semanticCategory === UniversalAccountTag.ACCOUNTS_PAYABLE ||
-            l.semanticCategory === UniversalAccountTag.OTHER_PAYABLES
+            l.semanticCategory === UniversalAccountTag.OTHER_PAYABLES,
         );
       }
 
@@ -164,25 +232,32 @@ export class AccountingEngineService {
 
         if (paymentPayload.voucherLines?.lines) {
           paymentPayload.voucherLines.lines =
-            paymentPayload.voucherLines.lines.map((line: IParsedVoucherLine) => {
-              // Info: (20260527 - Tzuhan) 2. 保護進項稅額 (Protect INPUT_TAX)
-              if (line.isDebit && line.semanticCategory !== UniversalAccountTag.INPUT_TAX) {
-                // Info: (20260527 - Tzuhan) 4. UX 修復：保留原費用名稱
-                const originalParticular = line.particular || "未命名費用";
-                return {
-                  ...line,
-                  particular: `[沖銷] ${originalParticular} (Offset)`,
-                  semanticCategory: payableTag,
-                  accountingCode: "",
-                  targetFxDate: serviceMonthEnd.toISOString().split("T")[0], // Info: (20260527 - Tzuhan) 鎖定前期匯率
-                };
-              }
-              return line;
-            });
+            paymentPayload.voucherLines.lines.map(
+              (line: IParsedVoucherLine) => {
+                // Info: (20260527 - Tzuhan) 2. 保護進項稅額 (Protect INPUT_TAX)
+                if (
+                  line.isDebit &&
+                  line.semanticCategory !== UniversalAccountTag.INPUT_TAX
+                ) {
+                  // Info: (20260527 - Tzuhan) 4. UX 修復：保留原費用名稱
+                  const originalParticular = line.particular || "未命名費用";
+                  return {
+                    ...line,
+                    particular: `[沖銷] ${originalParticular} (Offset)`,
+                    semanticCategory: payableTag,
+                    accountingCode: "",
+                    targetFxDate: serviceMonthEnd.toISOString().split("T")[0], // Info: (20260527 - Tzuhan) 鎖定前期匯率
+                  };
+                }
+                return line;
+              },
+            );
         }
         results.push(paymentPayload);
       } else {
-        console.log(`[AccountingEngine] Unpaid Invoice detected (Cr. AP/OP). Dropping payment offset payload.`);
+        console.log(
+          `[AccountingEngine] Unpaid Invoice detected (Cr. AP/OP). Dropping payment offset payload.`,
+        );
       }
 
       return results;

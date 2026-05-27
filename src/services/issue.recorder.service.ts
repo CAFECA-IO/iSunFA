@@ -298,6 +298,7 @@ export class IssueRecorderService {
                 const splitResults =
                   await AccountingEngineService.processCutoffEvents(
                     originalResult,
+                    bookCurrency,
                   );
 
                 // Info: (20260527 - Tzuhan) 對切斷後的每個事件，獨立跑決定論管線 (攔截器與換匯邏輯)

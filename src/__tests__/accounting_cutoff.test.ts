@@ -59,7 +59,7 @@ describe("AccountingEngineService Cut-off Logic", () => {
     );
     expect(results[1].voucherLines!.lines!.length).toBe(2);
     expect(results[1].voucherLines!.lines![0].particular).toBe(
-      "Accrued Other Payable Offset",
+      "[沖銷] AWS Hosting (Offset)",
     );
     expect(results[0].esg).toBeDefined();
 
