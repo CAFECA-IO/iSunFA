@@ -71,17 +71,34 @@ export class TaxStrategyService {
       digitalServiceTags.includes(l.semanticCategory as UniversalAccountTag),
     );
 
-    if (!isTaiwanTaxId && hasDigitalService) {
+    const hasExistingTax =
+      debitLines.some(
+        (l) => l.semanticCategory === UniversalAccountTag.INPUT_TAX,
+      ) ||
+      MoneyUtil.toDecimal(String(voucherBase.taxAmount || "0")).greaterThan(0);
+
+    // Info: (20260527 - Tzuhan) [BUGFIX] 如果憑證已經包含進項稅額 (表示已有營業稅)，或是已經有 taxAmount，則不啟動逆向課稅
+    if (!isTaiwanTaxId && hasDigitalService && !hasExistingTax) {
       console.log(
         `[TaxStrategyService] Reverse charge activated for foreign vendor: ${voucherBase.vendor} (${voucherBase.vendorTaxId})`,
       );
 
-      const totalAmountStr = MoneyUtil.parseInput(
-        String(voucherBase.totalAmount || "0"),
-      );
-      if (MoneyUtil.toDecimal(totalAmountStr).greaterThan(0)) {
-        // Info: (20260527 - Tzuhan) Calculate 5% reverse charge tax using high-precision MoneyUtil, strictly avoid Number casting
-        const taxAmountStr = MoneyUtil.multiply(totalAmountStr, "0.05");
+      // Info: (20260527 - Tzuhan) [BUGFIX] 不依賴可能被 AI 誤判的 voucherBase.totalAmount，改用實際的數位勞務費用加總作為稅基
+      let baseTaxableAmount = "0";
+      for (const l of debitLines) {
+        if (
+          digitalServiceTags.includes(l.semanticCategory as UniversalAccountTag)
+        ) {
+          baseTaxableAmount = MoneyUtil.add(
+            baseTaxableAmount,
+            String(l.amount || "0"),
+          );
+        }
+      }
+
+      if (MoneyUtil.toDecimal(baseTaxableAmount).greaterThan(0)) {
+        // Info: (20260527 - Tzuhan) Calculate 5% reverse charge tax using high-precision MoneyUtil
+        const taxAmountStr = MoneyUtil.multiply(baseTaxableAmount, "0.05");
         const taxAmountDecimal = MoneyUtil.toDecimal(
           taxAmountStr,
         ).toDecimalPlaces(0, 1); // Round half up
@@ -97,9 +114,6 @@ export class TaxStrategyService {
 
           // Info: (20260527 - Tzuhan) [AUDIT] Deductibility Check for Reverse Charge
           // Info: (20260527 - Tzuhan) 抓取主費用以判斷是否具備扣抵資格
-          const debitLines = payload.voucherLines.lines.filter(
-            (l) => l.isDebit,
-          );
           const primaryExpenseLine = debitLines.sort((a, b) =>
             MoneyUtil.toDecimal(String(b.amount || "0"))
               .minus(MoneyUtil.toDecimal(String(a.amount || "0")))
