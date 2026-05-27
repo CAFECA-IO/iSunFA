@@ -44,7 +44,9 @@ export class AccountingEngineService {
     // Info: (20260527 - Tzuhan) 1. 導入混合重要性門檻 (Hybrid Materiality)
     if (endMonth !== tradingMonth && payload.voucherLines?.lines) {
       const documentCurrency = payload.voucherBase.currency || "TWD";
-      let baseTotalAmount = Number(payload.voucherBase.totalAmount || 0);
+      let baseTotalAmount = MoneyUtil.toDecimal(
+        String(payload.voucherBase.totalAmount || "0"),
+      );
 
       // Info: (20260527 - Tzuhan) 外幣定錨 (Currency Anchor)
       // Info: (20260527 - Tzuhan) 若原幣非帳本幣別，提早抓取靜態匯率進行約當轉換，避免重大外幣發票被違規豁免
@@ -55,7 +57,7 @@ export class AccountingEngineService {
             bookCurrency,
             new Date(payload.voucherBase.tradingDate as string),
           );
-          baseTotalAmount = baseTotalAmount * Number(fxRate);
+          baseTotalAmount = baseTotalAmount.mul(fxRate);
         } catch (err) {
           console.warn(
             `[AccountingEngine] Failed to get exchange rate for materiality check, using raw amount. Error: ${err instanceof Error ? err.message : String(err)}`,
@@ -63,7 +65,7 @@ export class AccountingEngineService {
         }
       }
 
-      const isImmaterialAmount = baseTotalAmount < 50000;
+      const isImmaterialAmount = baseTotalAmount.lessThan(50000);
 
       const debitLines = payload.voucherLines.lines.filter((l) => l.isDebit);
 
@@ -83,7 +85,7 @@ export class AccountingEngineService {
 
       if (isImmaterialAmount && isAllWhiteListed) {
         console.log(
-          `[AccountingEngine] Hybrid Materiality triggered. Skipping cut-off for immaterial expense: ${baseTotalAmount}`,
+          `[AccountingEngine] Hybrid Materiality triggered. Skipping cut-off for immaterial expense: ${baseTotalAmount.toString()}`,
         );
         results.push(payload);
         return results;
@@ -142,9 +144,9 @@ export class AccountingEngineService {
         let maxCreditAmt = -1;
         for (const l of filteredLines) {
           if (!l.isDebit) {
-            const amt = Number(l.amount || 0);
-            if (amt > maxCreditAmt) {
-              maxCreditAmt = amt;
+            const amt = MoneyUtil.toDecimal(String(l.amount || "0"));
+            if (amt.toNumber() > maxCreditAmt) {
+              maxCreditAmt = amt.toNumber();
               maxCreditLine = l;
             }
           }
