@@ -88,8 +88,8 @@
 
 - 💥 **[端到端測試架構設計 (E2E Testing Architecture)](testing_and_qa/e2e_audit_pipeline/e2e_testing_architecture.md)**
   > 了解系統如何進行 E2E 驗證與對抗式視覺壓力測試。
-- 🚀 **[台積電 780 萬筆旗艦級 ESG 擬真數據 PoC 實作戰略 (TSMC PoC Blueprint)](testing_and_qa/e2e_audit_pipeline/tsmc_poc_blueprint.md)**
-  > 詳述應對千萬級交易吞吐量的管線解耦、防 OOM 的 SQL 聚合戰略。
+- 🚀 **[6642 5.4 萬筆旗艦級 ESG 擬真數據 PoC 實作戰略 (6642 PoC Blueprint)](testing_and_qa/e2e_audit_pipeline/6642_poc_blueprint.md)**
+  > 詳述捨棄巨量吞吐虛榮指標，改為專注「絕對防禦深度」的管線解耦與防禦演練戰略。
 - 🎯 **[審計與稽核指標指南 (E2E Cross Validation Metrics)](testing_and_qa/e2e_audit_pipeline/guidelines/e2e_cross_validation_metrics.md)**
   > 紀載系統如何執行 0 誤差的四維度 (財務、碳排、三表勾稽、防禦覆蓋率) 交叉驗證。
 - 🧪 **[整合測試撰寫指南 (Integration Test Guide)](testing_and_qa/integration_test/01_integration_test_guide.md)**

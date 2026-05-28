@@ -42,7 +42,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 我們全面重構開發邏輯，採行「逆向推進路線：先求數學絕對精準 ➡️ 再測商業邏輯異常 ➡️ 最後挑戰視覺極限與合規深水區」。
 
 ### 🚨 當前待辦與優先度總表 (Priority To-Do List)
-為確保 780 萬筆台積電 PoC 順利通關且系統不崩潰，全隊目前必須嚴格遵守以下執行優先度（包含 ADR 004, 005, 006, 007 的落地實作）：
+為確保 6642 5.4萬筆 PoC 順利通關且系統不崩潰，全隊目前必須嚴格遵守以下執行優先度（包含 ADR 004, 005, 006, 007 的落地實作）：
 
 **🔥 [Priority 1: Sprint 1 基礎防線補齊 (ADR 004)]**
 - ✅ **Done: [Tzuhan] Voucher 財務防護 - 語意標籤與多國映射**: 實作 `UniversalAccountTag` 與後端 `SemanticAccountMatcher`。
@@ -52,7 +52,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - ✅ **Done: [Tzuhan] 零信任會計稽核防線 (Zero-Trust Audit Defense)**: 於 Schema 實作 `isVerified` 與 `generationSource`，確保所有 AI 產生的憑證明細在人類覆核前皆保持未驗證狀態，建立 CPA 等級的資料血緣溯源 (ADR 007)。
 
 **🔥 [Priority 2: 邊界壓力測試 (可與 P1 並行)]**
-- 🚧 **WIP: [Julian] 台積電 780 萬筆大數據批次注入 (TSMC Batch Seeding)**: 確保巨量資料進入 DB。注意：灌完即停手，嚴禁讀取報表。
+- 🚧 **WIP: [Julian] 6642 5.4萬筆大數據批次注入 (6642 Batch Seeding)**: 確保巨量資料進入 DB。注意：灌完即停手，嚴禁讀取報表。
 
 **🔥 [Priority 3: Sprint 2 效能拆彈與總驗收 (OOM Defense)]**
 - ⚠️ **Pending: [Tzuhan] 報表快照與期初餘額 (Snapshots & Opening Balance)**: 建立 Snapshot 表格避免重複計算。

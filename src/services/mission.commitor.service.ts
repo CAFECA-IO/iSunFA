@@ -73,7 +73,6 @@ export async function processNext() {
         const taskId = BigInt(metaData.taskId);
 
         // Info: (20260420 - Luphia) 2. Upload result.md to IPFS (Laria)
-        // Info: (20260526 - Tzuhan) 攔截器已移至 MissionRecorder / VoucherPipelineOrchestrator
         const resultStr = await fs.readFile(resultPath, "utf8");
         const resultBlob = new Blob([resultStr], { type: "text/markdown" });
         const resultFile = new globalThis.File([resultBlob], "result.md", {

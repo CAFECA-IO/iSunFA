@@ -171,7 +171,7 @@ export class TaxStrategyService {
   ): IAggregatedDocumentResult {
     const voucherBase = payload.voucherBase!;
     // Info: (20260527 - Tzuhan) EU Strategy: Do not apply hardcoded 5% Taiwan rate.
-    // 若未來需擴充，可在此處調用 EU Vat Validation API。目前標記 Warning 給前端。
+    // Info: (20260527 - Tzuhan) 若未來需擴充，可在此處調用 EU Vat Validation API。目前標記 Warning 給前端。
     const isForeign = !/^[A-Z]{2}[A-Z0-9]+$/.test(
       voucherBase.vendorTaxId || "",
     );

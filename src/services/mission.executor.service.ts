@@ -3,9 +3,7 @@ import path from "path";
 import { getPriorityEnvConfig } from "@/services/env.service";
 import { ChatService } from "@/services/chat.service";
 import { EsgGenerationSource } from "@/constants/enums";
-import { AccountingEngineService } from "@/services/accounting.engine.service";
 import { VoucherPipelineOrchestrator } from "@/services/voucher.pipeline.orchestrator";
-import { IAggregatedDocumentResult } from "@/skills/utils/document_parser_db_sync";
 import { skillRegistry } from "@/skills";
 import { IMissionDefinition } from "@/lib/worker/mission.generator";
 import { ITaskDefinition } from "@/lib/worker/task.generator";
@@ -474,78 +472,22 @@ export async function processNext() {
           };
         }
 
-        // Info: (20260527 - Tzuhan) 決定論管線洗淨 (Washing)
-        // Info: (20260527 - Tzuhan) 在寫入 result.md 前，針對特定領域 (如憑證) 執行會計切斷與換匯攔截，確保落地即為最終正確狀態
+        // Info: (20260528 - Tzuhan) 決定論管線洗淨 (Washing)
+        // Info: (20260528 - Tzuhan) Delegate Early Normalization, Cut-off splitting, and Interceptor execution to the Pipeline Orchestrator
         if (
           typeof aggregatedResult === "object" &&
           aggregatedResult !== null &&
-          (aggregatedResult as Record<string, unknown>).dbSyncPayload
+          "dbSyncPayload" in aggregatedResult
         ) {
-          let bookCurrency = "TWD";
-          let bookCountry = "TW";
-          if (missionData.accountBook) {
-            const ab = missionData.accountBook as Record<string, unknown>;
-            if (ab.currency) bookCurrency = ab.currency as string;
-            if (ab.country) bookCountry = ab.country as string;
-          }
+          const resultObj = aggregatedResult as Record<string, unknown>;
+          const ab = (missionData.accountBook || {}) as Record<string, unknown>;
 
-          const originalPayload = (aggregatedResult as Record<string, unknown>)
-            .dbSyncPayload as Record<string, unknown>;
-          const newDbSyncPayload: Record<string, unknown> = {};
-
-          for (const recordKey of Object.keys(originalPayload)) {
-            const originalResult = originalPayload[
-              recordKey
-            ] as unknown as IAggregatedDocumentResult;
-
-            // Info: (20260527 - Tzuhan) 早期防線 (Early Normalization)
-            // Info: (20260527 - Tzuhan) 防止 AI 輸出大小寫不一的幣別 (如 "usd")，統一轉為大寫並去除空白
-            if (
-              originalResult.voucherBase &&
-              originalResult.voucherBase.currency
-            ) {
-              originalResult.voucherBase.currency = String(
-                originalResult.voucherBase.currency,
-              )
-                .toUpperCase()
-                .trim();
-              if (originalResult.voucherBase.currency === "RMB") {
-                originalResult.voucherBase.currency = "CNY";
-              }
-            }
-            if (originalResult.esg && originalResult.esg.unit) {
-              originalResult.esg.unit = String(originalResult.esg.unit)
-                .toUpperCase()
-                .trim();
-              if (originalResult.esg.unit === "RMB") {
-                originalResult.esg.unit = "CNY";
-              }
-            }
-
-            // Info: (20260527 - Tzuhan) 1. 會計切斷 (Cut-off) - 一變多
-            const splitResults =
-              await AccountingEngineService.processCutoffEvents(
-                originalResult,
-                bookCurrency,
-              );
-
-            // Info: (20260527 - Tzuhan) 2. 決定論管線 (攔截器與換匯邏輯)
-            const washedResults = splitResults.map((res) =>
-              VoucherPipelineOrchestrator.executePipeline(
-                res,
-                bookCurrency,
-                bookCountry,
-              ),
+          resultObj.dbSyncPayload =
+            await VoucherPipelineOrchestrator.processDbSyncPayload(
+              resultObj.dbSyncPayload as Record<string, unknown>,
+              (ab.currency as string) || "TWD",
+              (ab.country as string) || "TW",
             );
-
-            for (let idx = 0; idx < washedResults.length; idx++) {
-              const splitSuffix = washedResults.length > 1 ? `-${idx}` : "";
-              newDbSyncPayload[`${recordKey}${splitSuffix}`] =
-                washedResults[idx];
-            }
-          }
-          (aggregatedResult as Record<string, unknown>).dbSyncPayload =
-            newDbSyncPayload;
         }
 
         const resultPayloadStr =

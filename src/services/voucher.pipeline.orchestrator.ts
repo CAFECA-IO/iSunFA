@@ -5,8 +5,65 @@ import { fxInterceptorService } from "@/services/fx.interceptor.service";
 import { MoneyUtil } from "@/lib/utils/money";
 import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
 import { MOCK_EEIO_COEFFICIENTS } from "@/constants/mock_eeio_coefficients";
+import { AccountingEngineService } from "@/services/accounting.engine.service";
 
 export class VoucherPipelineOrchestrator {
+  /**
+   * Info: (20260528 - Tzuhan)
+   * Orchestrates the entire processing of a dbSyncPayload object, including Early Normalization,
+   * Cut-off event splitting, and Deterministic Pipeline Execution (FX & Tax).
+   */
+  public static async processDbSyncPayload(
+    originalPayload: Record<string, unknown>,
+    bookCurrency: string,
+    bookCountry: string,
+  ): Promise<Record<string, unknown>> {
+    const newDbSyncPayload: Record<string, unknown> = {};
+
+    for (const recordKey of Object.keys(originalPayload)) {
+      const originalResult = originalPayload[
+        recordKey
+      ] as unknown as IAggregatedDocumentResult;
+
+      // Info: (20260527 - Tzuhan) 早期防線 (Early Normalization)
+      if (originalResult.voucherBase && originalResult.voucherBase.currency) {
+        originalResult.voucherBase.currency = String(
+          originalResult.voucherBase.currency,
+        )
+          .toUpperCase()
+          .trim();
+        if (originalResult.voucherBase.currency === "RMB") {
+          originalResult.voucherBase.currency = "CNY";
+        }
+      }
+      if (originalResult.esg && originalResult.esg.unit) {
+        originalResult.esg.unit = String(originalResult.esg.unit)
+          .toUpperCase()
+          .trim();
+        if (originalResult.esg.unit === "RMB") {
+          originalResult.esg.unit = "CNY";
+        }
+      }
+
+      // Info: (20260527 - Tzuhan) 1. 會計切斷 (Cut-off) - 一變多
+      const splitResults = await AccountingEngineService.processCutoffEvents(
+        originalResult,
+        bookCurrency,
+      );
+
+      // Info: (20260527 - Tzuhan) 2. 決定論管線 (攔截器與換匯邏輯)
+      const washedResults = splitResults.map((res) =>
+        this.executePipeline(res, bookCurrency, bookCountry),
+      );
+
+      for (let idx = 0; idx < washedResults.length; idx++) {
+        const splitSuffix = washedResults.length > 1 ? `-${idx}` : "";
+        newDbSyncPayload[`${recordKey}${splitSuffix}`] = washedResults[idx];
+      }
+    }
+    return newDbSyncPayload;
+  }
+
   /**
    * Info: (20260526 - Tzuhan)
    * 在將 Payload 傳遞給 AccountingEngineService 或提交到區塊鏈之前，
@@ -49,7 +106,10 @@ export class VoucherPipelineOrchestrator {
         if (
           isEEIO &&
           MoneyUtil.toDecimal(totalTaxStr).greaterThan(0) &&
-          MoneyUtil.toDecimal(esgAmountStr).minus(totalAmountStr).abs().lessThan(0.01)
+          MoneyUtil.toDecimal(esgAmountStr)
+            .minus(totalAmountStr)
+            .abs()
+            .lessThan(0.01)
         ) {
           const newEsgAmountStr = MoneyUtil.subtract(
             totalAmountStr,
