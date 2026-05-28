@@ -50,10 +50,10 @@
 3. **✅ 已完成：VoucherLine 資料庫 Schema 淨化**：
    - 徹底拔除了 `VoucherLine` 模型中的 `originalAmount` 與 `currency` 欄位。
    - 所有外幣細節全面回歸至 `Journal` 的文本 (`text`) 或備註中記錄，確保傳票明細層 (VoucherLine) 專注於本位幣的借貸平衡，大幅降低後端結算與對帳的複雜度。
-4. **🛡️ 精度防護：財務金流強制 BigInt 鑄造 (Mandatory BigInt Casting)**：
-   - 由於 Prisma Schema 將 `Order.amount` 與 `VoucherLine.amount` 等牽涉到財務的欄位定義為 64-bit `BigInt`，以防止千兆級法幣或 18 位數加密貨幣的溢位。
-   - 在 AI 回傳或查表決策出正確的 `amount` 後，準備回寫至主系統前，必須透過 `BigInt(Math.round(amount))` 將數值強制轉型為原生 JavaScript `BigInt`。
-   - 這同時滿足了 TypeScript 編譯器對 `BigInt` 欄位的嚴格型別要求，並順利通過主系統的 `Database Boundary Guard`，徹底防堵原始 `number` 進入資料庫造成的潛在精度流失。
+4. **🛡️ 精度防護：財務金流全面導入 MoneyUtil (Decimal.js)**：
+   - 由於會計與財務計算涉及極端的小數點精度與龐大金額，單純依賴 JavaScript 原生的 `number` 會產生不可預期的浮點數誤差。
+   - 系統已全面淘汰早期粗暴的 `BigInt(Math.round(amount))` 整數轉型作法。現在，在 AI 回傳數值或系統進行計算（如匯率換算、稅額推算）時，必須全面透過統一的 `MoneyUtil` 進行處理與字串化 (Stringification)。
+   - `MoneyUtil` 底層封裝了高精度的字串運算與 `Decimal` 物件，確保了數值在記憶體流轉與資料庫邊界存取 (Database Boundary Guard) 的過程中，精確度能完美保留。
 
 ## 4. 攔截器與業務邏輯防禦 (Interceptor Defenses)
 
