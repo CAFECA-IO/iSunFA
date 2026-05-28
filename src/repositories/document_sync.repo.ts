@@ -430,16 +430,16 @@ export class DocumentSyncRepository {
 
             // Info: (20260526 - Tzuhan) 自動創建 AmortizationSchedule
             if (vd.startDate && vd.endDate && finalVoucherId) {
-              // Find if there is a prepaid expense account code (e.g., 1251, 1252, etc. - we check if accountingCode is in a known prepaid list, or we can check original semantic category)
-              // Since semanticCategory was lost, let's just check the raw voucherLines to find the original amount, or just check the accounting code here.
-              // Assuming 1251 is prepaid expense. If the AI classified it, we have it in linesToCreate.
-              const prepaidLine = linesToCreate.find(
-                (l) =>
-                  l.accountingCode === "1251" ||
-                  l.accountingCode === "1252" ||
-                  l.accountingCode === "1253" ||
-                  l.accountingCode === "1254",
-              );
+              // Info: (20260528) 動態依據 AI 判斷的 semanticCategory 來對應，避免 Hardcode 科目代碼
+              const originalPrepaidIndex =
+                vd.lines?.findIndex(
+                  (l) => l.semanticCategory === "PREPAID_EXPENSE",
+                ) ?? -1;
+
+              const prepaidLine =
+                originalPrepaidIndex >= 0
+                  ? linesToCreate[originalPrepaidIndex]
+                  : undefined;
               if (prepaidLine) {
                 const sDate = new Date(vd.startDate);
                 const eDate = new Date(vd.endDate);
