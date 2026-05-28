@@ -43,6 +43,8 @@
 
 ### 🛠️ 建議修正方向與暫時性解法 (Workaround)
 - **暫時性解法 (已於 2026-05-27 實作)**：實作 `FxRevaluationWorkerService` 月結排程，撈取月底最後一天的匯率，利用「月底匯率」與「歷史匯率」的差額反推。為保持資料庫單純未改 Schema，採數學反推機制（現有本位幣餘額 / 歷史匯率 = 外幣原額）。
-- **終極架構技術債 (Schema 升級)**：數學反推機制會面臨「小數點四捨五入誤差 (Rounding Errors)」的致命傷。長遠來看，為了追蹤外幣債權與債務的真實水位，必須賦予每一筆分錄記錄原幣金額的能力。
-  - 必須在 `VoucherLine` 模型中新增 `foreign_amount` 與 `foreign_currency` 欄位。
-  - 這將使系統能透過 SQL 聚合算出單一供應商/客戶的純外幣餘額，徹底根絕反推所造成的匯差誤差。
+- **終極架構技術債 (Schema 升級)**：數學反推機制會面臨「小數點四捨五入誤差 (Rounding Errors)」的致命傷。長遠來看，為了追蹤外幣債權與債務的真實水位，未來實作時將採用**業界標準的「子帳 / 輔助帳分離 (Subledger Architecture)」**。
+  - 為了解決將外幣記錄在 `VoucherLine` 可能造成的「借貸不平誤解」與「總帳效能/Null 污染」缺點，系統將把「外幣」與「沖銷明細」從總帳中抽離，另外建立子帳表 (Subledger)，例如：`ForeignCurrencyLedger` 或 `AP_AR_Subledger`。
+  - **純潔的總帳**：`VoucherLine` 保持目前的極簡狀態，只專注於 TWD 的借貸平衡，負責出「資產負債表」與「損益表」。
+  - **豐富的子帳**：每當有一筆涉及外幣或應收/應付的交易時，除了寫入 `VoucherLine`，系統會同步寫一筆紀錄到 `AP_AR_Subledger`。這個子帳表裡面就有完整的 `original_currency`、`remaining_foreign_amount`、`due_date` 等欄位。
+  - **月底評價**：月底外幣重評價時，系統不去掃描龐大的 `VoucherLine`，而是去掃描 `AP_AR_Subledger`，算出未實現匯兌損益後，再把損益結果發布一筆新傳票回 `VoucherLine`。徹底根絕反推所造成的匯差誤差。
