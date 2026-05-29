@@ -51,7 +51,7 @@ export async function processAmortization() {
     );
     let taskIdStr = "";
 
-    // Check if we already created it locally (or we can just let blockchain revert)
+    // Info: (20260526 - Tzuhan) Check if we already created it locally (or we can just let blockchain revert)
     const adminAccount = await import("@/lib/wallet/admin_wallet").then((m) =>
       m.getAdminAccount(),
     );

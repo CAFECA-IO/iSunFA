@@ -444,6 +444,7 @@ export class DocumentSyncRepository {
                 const sDate = new Date(vd.startDate);
                 const eDate = new Date(vd.endDate);
 
+                // Info: (20260528 - Tzuhan) 找出合適的 account code
                 if (!isNaN(sDate.getTime()) && !isNaN(eDate.getTime())) {
                   let expenseAccountCode = "RENT_EXPENSE";
                   const prefix = "Prepaid for: ";
