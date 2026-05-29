@@ -11,6 +11,7 @@ import {
 } from "@/constants/prompts/voucher";
 import { getEsgPrompt } from "@/constants/prompts/esg";
 import { getDocumentDuplicateCheckPrompt } from "@/constants/prompts/document_check";
+import { DocumentType, EsgGenerationSource } from "@/constants/enums";
 import { IAccountBookBase } from "@/interfaces/account_book";
 
 export function generateCertificateAnalysisMission(
@@ -82,7 +83,7 @@ export function generateCertificateAnalysisMission(
           vendorName: { type: SchemaType.STRING },
           documentType: {
             type: SchemaType.STRING,
-            enum: ["ACCRUAL_NOTICE", "PAYMENT_RECEIPT", "OTHERS"],
+            enum: Object.values(DocumentType),
             description: "Must strictly be one of the provided enums.",
             format: "enum",
           },
@@ -99,6 +100,16 @@ export function generateCertificateAnalysisMission(
             format: "enum",
           },
           note: { type: SchemaType.STRING },
+          startDate: {
+            type: SchemaType.STRING,
+            description:
+              "Extract the exact start date (YYYY-MM-DD) of the service period, billing period, or contract if mentioned.",
+          },
+          endDate: {
+            type: SchemaType.STRING,
+            description:
+              "Extract the exact end date (YYYY-MM-DD) of the service period, billing period, or contract if mentioned.",
+          },
           confidence: { type: SchemaType.INTEGER },
         },
         required: [
@@ -161,9 +172,15 @@ export function generateCertificateAnalysisMission(
           activityType: { type: SchemaType.STRING, nullable: true },
           amount: { type: SchemaType.NUMBER, nullable: true },
           unit: { type: SchemaType.STRING, nullable: true },
+          generationSource: {
+            type: SchemaType.STRING,
+            enum: Object.values(EsgGenerationSource),
+            description: "Must strictly be one of the provided enums.",
+            format: "enum",
+          },
           confidence: { type: SchemaType.INTEGER },
         },
-        required: ["aiNote", "isTarget", "confidence"],
+        required: ["aiNote", "isTarget", "confidence", "generationSource"],
       },
     },
   });

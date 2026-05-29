@@ -93,6 +93,8 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **✅ Done (2026-05-19)：多語系動態同步 (I18n Localization)**：確保日記帳、傳票與碳盤查係數的語系能根據 `account_book` 的設定動態調整，確保跨國查帳時無語系障礙。
 - **✅ Done (2026-05-19)：ESG 碳排係數選擇介面升級 (Dropdown UI)**：升級前端介面，區分系統預設係數 (`true_esg_coefficients.ts`) 與自定義係數，提升填報者體驗。
 - **✅ Done (2026-05-19)：修復 AI 備註的顯示 (AI Note Rendering)**：還原碳盤查介面中 `aiNote` 的顯示機制，確保 AI 解析時標註的「異常警告或推論邏輯」能如實呈現給終端使用者，完善稽核軌跡。
+- **✅ Done (2026-05-26)：外幣攔截器擴充與尾差配平 (FX Interceptor Upgrade)**：修復了任務 93 中因匯率轉換四捨五入導致的借貸不平問題，導入「尾差配平 (Plug to the largest line)」機制。同時將 ESG 的活動數據與碳排量納入攔截範圍，精準解決了任務 113 中物理量綱與匯率脫鉤的碳排計算漏洞。
+- **✅ Done (2026-05-26)：應計基礎與服務期間解綁 (Accrual Basis Period Extraction)**：修復了任務 87 中 AI 拒絕抓取後付制 (Post-paid) 電信費日期的問題。移除了 `certificate_analysis.generator.ts` 中「僅限預付/合約」的限制條件，確保攤銷引擎具備正確的起訖日期基礎。
 
 - **[第五順位：Prompt 提示詞微調 (Prompt Calibration)]**
 - **✅ Done (2026-05-18)：恢復 Markdown 優美排版 (Restore Rich Markdown Parsing)**：針對 `journal.ts` 的指令進行「權限分流」。放寬排版與摘要權限（允許 H2/H3 與條列式），但繼續鎖死數學與推斷權限，解決因「零幻覺」鐵律矯枉過正導致日記帳喪失易讀性的問題。
@@ -132,6 +134,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **⚠️ Pending：廢除不合理允當標準 (Zero Tolerance)**：日常上線的報表驗證 Threshold 嚴格鎖死在 **0%**。
 - **⚠️ Pending：防堵日期幻覺 (Anti-Date Hallucination)**：強制依賴 AI 輸出的 `tradingDate`，若發生跨期，系統必須報錯並阻斷財報生成。
 - **⚠️ Pending：追溯重編的「關聯性鎖死」 (Adjustment Voucher Audit Trail)**：實作前期損益調整時，追加帶有標籤 (`isRestatement=true`) 的當期調整傳票。**Schema 強制帶入 `targetVoucherId` (被更正的原始傳票 ID)**，形成雙向鏈結，杜絕幽靈調整傳票。
+- **🚧 WIP (2026-05-26)：攤銷排程自動化引擎 (Amortization Automation Worker)**：`processAmortization` 排程核心邏輯已開發完成，能根據 `ACTIVE` 狀態的攤銷排程與起訖日期，精準計算本期攤銷金額並拋出自動化任務。*(備註：目前此 Worker 尚未掛載至 `scripts/run_worker.ts` 的常駐系統輪詢池中，需手動執行或等待後續整合。)*
 
 - **[CPA 碳排合規任務 (DPP 產品護照架構交由 Luphia 負責)]**
 - **✅ Done (Architectural Decision: Immutable IDs)：排放係數時空快照 (Emission Factor Versioning)**：經過重新設計，不再將數值硬拷貝至 EsgRecord 造成 Schema 污染。改為全面採用「Immutable Coefficient IDs (如 epa-2025-t1-004)」，天然實現時空快照。

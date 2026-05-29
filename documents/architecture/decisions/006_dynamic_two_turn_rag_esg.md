@@ -32,8 +32,9 @@
 - **Turn 2 (係數過濾與精準挑選)**：
   - Skill 內部將 AI 給出的 `fallbackCategory` 或 `searchKeywords` 拿去過濾 `ALL_COEFFICIENTS` 靜態庫（或呼叫 `EmissionFactorRepo`），篩選出最匹配的 Top 20 候選係數。
   - 將這 Top 20 候選係數（包含 ID、名稱、單位、數值）提供給 AI，要求 AI **「精準挑選唯一的 coefficientId」**，並根據該係數的單位（如 `TWD` 或 `KG`），從憑證中萃取出對應的 `amount`。
-- **Skill 內計算 (Calculation Logic)**：
-  - 取得 AI 挑選的 `coefficientId` 與數量 `amount` 後，Skill 內部直接透過 `amount * coefficient.emissionFactor` 計算出總碳排量 (`emissions`)。
+- **Skill 內計算與量綱配平 (Calculation & FX Intercept)**：
+  - 取得 AI 挑選的 `coefficientId` 與數量 `amount` 後，Skill 內部直接透過 `amount * coefficient.emissionFactor` 計算出**初步**的總碳排量 (`emissions`)。此時 `amount` 仍保留為原始憑證上的外幣（如 `USD`）。
+  - 將結果交由 `document_sync.repo.ts` 寫入前，系統將統一由 `FxInterceptorService` 攔截。若判斷為外幣，將嚴格利用數學分配律，將 `amount` 與初步 `emissions` 同步乘上交易當日匯率，確保最終寫入資料庫的單位完美對齊本位幣（如 `TWD`），徹底消滅「AI 處理匯率的數學幻覺」。
   - 將完整的結果打包為 JSON (包含 `emissions`, `coefficientId`, `scope` 等) 進行回傳。
 
 ### 2.2 修改範圍：同步儲存層 (document_sync.repo.ts)

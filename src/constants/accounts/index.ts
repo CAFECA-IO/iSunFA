@@ -4,6 +4,7 @@ import { JP_ACCOUNTS } from "@/constants/accounts/jp";
 import { CN_ACCOUNTS } from "@/constants/accounts/cn";
 import { HK_ACCOUNTS } from "@/constants/accounts/hk";
 import { TW_ACCOUNTS } from "@/constants/accounts/tw";
+import { EU_ACCOUNTS } from "@/constants/accounts/eu";
 import { CountryCode } from "@/constants/enums";
 
 export interface IAccount {
@@ -26,6 +27,7 @@ export const CURRENCY = {
   KR: "KRW",
   TW: "TWD",
   US: "USD",
+  EU: "EUR",
 };
 
 export const RULE = {
@@ -37,6 +39,7 @@ export const RULE = {
   JMIS: "JMIS",
   US_GAAP: "US-GAAP",
   J_GAAP: "J-GAAP",
+  IFRS_EU: "IFRS-EU",
 };
 
 export const DEFAULT_RULE = {
@@ -46,6 +49,7 @@ export const DEFAULT_RULE = {
   [CountryCode.KR]: RULE.K_IFRS,
   [CountryCode.TW]: RULE.T_IFRS,
   [CountryCode.US]: RULE.US_GAAP,
+  [CountryCode.EU]: RULE.IFRS_EU,
 };
 
 export const ACCOUNTS = {
@@ -55,4 +59,5 @@ export const ACCOUNTS = {
   KR: KR_ACCOUNTS,
   TW: TW_ACCOUNTS,
   US: US_ACCOUNTS,
+  EU: EU_ACCOUNTS,
 };

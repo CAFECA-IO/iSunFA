@@ -13,6 +13,7 @@ export const languageMapChinese: Record<CountryType, string> = {
   [CountryCode.KR]: "韓語",
   [CountryCode.HK]: "繁體中文",
   [CountryCode.CN]: "簡體中文",
+  [CountryCode.EU]: "英語",
 };
 
 /**
@@ -26,6 +27,7 @@ export const languageMapEnglish: Record<CountryType, string> = {
   [CountryCode.KR]: "Korean",
   [CountryCode.HK]: "Traditional Chinese",
   [CountryCode.CN]: "Simplified Chinese",
+  [CountryCode.EU]: "English",
 };
 
 /**
@@ -38,3 +40,25 @@ export const getLanguageByCountry = (country: CountryType) => {
     english: languageMapEnglish[country],
   };
 };
+
+export const COUNTRY_MAPPING: Record<CountryCode, string> = {
+  [CountryCode.TW]: "臺灣",
+  [CountryCode.US]: "美國",
+  [CountryCode.CN]: "中國",
+  [CountryCode.JP]: "日本",
+  [CountryCode.EU]: "歐洲",
+  [CountryCode.HK]: "香港",
+  [CountryCode.KR]: "韓國",
+};
+
+export const CurrencyMap: Record<CountryCode, string> = {
+  [CountryCode.TW]: "TWD",
+  [CountryCode.US]: "USD",
+  [CountryCode.JP]: "JPY",
+  [CountryCode.CN]: "CNY",
+  [CountryCode.HK]: "HKD",
+  [CountryCode.KR]: "KRW",
+  [CountryCode.EU]: "EUR",
+};
+
+export const FIAT_CURRENCIES = Object.values(CurrencyMap);
