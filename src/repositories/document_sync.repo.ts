@@ -430,9 +430,12 @@ export class DocumentSyncRepository {
 
             // Info: (20260526 - Tzuhan) 自動創建 AmortizationSchedule
             if (vd.startDate && vd.endDate && finalVoucherId) {
-              // Find if there is a prepaid expense account code (e.g., 1251, 1252, etc. - we check if accountingCode is in a known prepaid list, or we can check original semantic category)
-              // Since semanticCategory was lost, let's just check the raw voucherLines to find the original amount, or just check the accounting code here.
-              // Assuming 1251 is prepaid expense. If the AI classified it, we have it in linesToCreate.
+              /**
+               * Info: (20260526 - Tzuhan)
+               * Find if there is a prepaid expense account code (e.g., 1251, 1252, etc. - we check if accountingCode is in a known prepaid list, or we can check original semantic category)
+               * Since semanticCategory was lost, let's just check the raw voucherLines to find the original amount, or just check the accounting code here.
+               * Assuming 1251 is prepaid expense. If the AI classified it, we have it in linesToCreate.
+               */
               const prepaidLine = linesToCreate.find(
                 (l) =>
                   l.accountingCode === "1251" ||
@@ -445,7 +448,7 @@ export class DocumentSyncRepository {
                 const eDate = new Date(vd.endDate);
 
                 if (!isNaN(sDate.getTime()) && !isNaN(eDate.getTime())) {
-                  // TODO: find the correct expense account code, using RENT_EXPENSE as a default if none is found
+                  // TODO: (20260526 - Tzuhan) 未來需要 AI 分析開立會計科目，預設使用 RENT_EXPENSE
                   const expenseAccountCode = "RENT_EXPENSE";
                   const existingSchedule =
                     await tx.amortizationSchedule.findFirst({
