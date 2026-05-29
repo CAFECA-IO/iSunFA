@@ -66,6 +66,23 @@ async function fastVerify(stockId: string) {
 
   // Info: (20260505 - Tzuhan) 1. Clean DB
   console.log("🧹 Cleaning old DB records...");
+  await prisma.accountBook.upsert({
+    where: { id: accountBookId },
+    update: {},
+    create: {
+      id: accountBookId,
+      name: `E2E Book ${stockId}`,
+      currency: "TWD",
+      country: "TW",
+      rule: "IFRS",
+      team: {
+        connectOrCreate: {
+          where: { id: `e2e-team-${stockId}` },
+          create: { id: `e2e-team-${stockId}`, name: `E2E Team ${stockId}` },
+        },
+      },
+    },
+  });
   const existingVouchers = await prisma.voucher.findMany({
     where: { accountBookId },
     select: { id: true },
@@ -124,9 +141,9 @@ async function fastVerify(stockId: string) {
             scope: formattedScope,
             activityType: e.source || "Unknown",
             vendor: "Test Vendor",
-            amount: e.metricAmount || 0,
+            amount: String(e.metricAmount || "0"),
             unit: (e.metricUnit as MeasurementUnit) || MeasurementUnit.KG,
-            emissions: e.carbonAmount || 0,
+            emissions: String(e.carbonAmount || "0"),
             confidence: 100,
             analysisStatus: AIAnalysisStatus.COMPLETED,
           });

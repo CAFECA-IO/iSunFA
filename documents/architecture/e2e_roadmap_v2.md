@@ -93,6 +93,8 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **✅ Done (2026-05-19)：多語系動態同步 (I18n Localization)**：確保日記帳、傳票與碳盤查係數的語系能根據 `account_book` 的設定動態調整，確保跨國查帳時無語系障礙。
 - **✅ Done (2026-05-19)：ESG 碳排係數選擇介面升級 (Dropdown UI)**：升級前端介面，區分系統預設係數 (`true_esg_coefficients.ts`) 與自定義係數，提升填報者體驗。
 - **✅ Done (2026-05-19)：修復 AI 備註的顯示 (AI Note Rendering)**：還原碳盤查介面中 `aiNote` 的顯示機制，確保 AI 解析時標註的「異常警告或推論邏輯」能如實呈現給終端使用者，完善稽核軌跡。
+- **✅ Done (2026-05-26)：外幣攔截器擴充與尾差配平 (FX Interceptor Upgrade)**：修復了任務 93 中因匯率轉換四捨五入導致的借貸不平問題，導入「尾差配平 (Plug to the largest line)」機制。同時將 ESG 的活動數據與碳排量納入攔截範圍，精準解決了任務 113 中物理量綱與匯率脫鉤的碳排計算漏洞。
+- **✅ Done (2026-05-26)：應計基礎與服務期間解綁 (Accrual Basis Period Extraction)**：修復了任務 87 中 AI 拒絕抓取後付制 (Post-paid) 電信費日期的問題。移除了 `certificate_analysis.generator.ts` 中「僅限預付/合約」的限制條件，確保攤銷引擎具備正確的起訖日期基礎。
 
 - **[第五順位：Prompt 提示詞微調 (Prompt Calibration)]**
 - **✅ Done (2026-05-18)：恢復 Markdown 優美排版 (Restore Rich Markdown Parsing)**：針對 `journal.ts` 的指令進行「權限分流」。放寬排版與摘要權限（允許 H2/H3 與條列式），但繼續鎖死數學與推斷權限，解決因「零幻覺」鐵律矯枉過正導致日記帳喪失易讀性的問題。
@@ -132,6 +134,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **⚠️ Pending：廢除不合理允當標準 (Zero Tolerance)**：日常上線的報表驗證 Threshold 嚴格鎖死在 **0%**。
 - **⚠️ Pending：防堵日期幻覺 (Anti-Date Hallucination)**：強制依賴 AI 輸出的 `tradingDate`，若發生跨期，系統必須報錯並阻斷財報生成。
 - **⚠️ Pending：追溯重編的「關聯性鎖死」 (Adjustment Voucher Audit Trail)**：實作前期損益調整時，追加帶有標籤 (`isRestatement=true`) 的當期調整傳票。**Schema 強制帶入 `targetVoucherId` (被更正的原始傳票 ID)**，形成雙向鏈結，杜絕幽靈調整傳票。
+- **🚧 WIP (2026-05-26)：攤銷排程自動化引擎 (Amortization Automation Worker)**：`processAmortization` 排程核心邏輯已開發完成，能根據 `ACTIVE` 狀態的攤銷排程與起訖日期，精準計算本期攤銷金額並拋出自動化任務。*(備註：目前此 Worker 尚未掛載至 `scripts/run_worker.ts` 的常駐系統輪詢池中，需手動執行或等待後續整合。)*
 
 - **[CPA 碳排合規任務 (DPP 產品護照架構交由 Luphia 負責)]**
 - **✅ Done (Architectural Decision: Immutable IDs)：排放係數時空快照 (Emission Factor Versioning)**：經過重新設計，不再將數值硬拷貝至 EsgRecord 造成 Schema 污染。改為全面採用「Immutable Coefficient IDs (如 epa-2025-t1-004)」，天然實現時空快照。
@@ -182,16 +185,19 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 3. **合規混沌工程 (Compliance Chaos Engineering)**
    開發後期定期舉辦破壞性演練。模擬 DBA 刪除資料，驗證 Hash Chain 斷裂警報；模擬 AI 幻覺攻擊，驗證內控的凍結機制。
 
-4. **企業級大數據實兵演練 (Enterprise Big Data PoC)**
-   系統必須具備處理百萬級真實交易的吞吐能力。將「台積電 780 萬筆 ESG 擬真數據 PoC」定義為 Sprint 1 與 Sprint 2 交界處的關鍵里程碑，驗證底層防禦與 SQL 聚合能力。
-   [👉 詳見 TSMC 旗艦級 ESG 擬真數據 PoC 實作戰略](../testing_and_qa/e2e_audit_pipeline/tsmc_poc_blueprint.md)
+4. **6642 中小企業實兵演練 (6642 Enterprise PoC)**
+   為證明系統能 100% 攔截漂綠與作假，並貼近 Big 4 查帳員對「業務邏輯多樣性」及「例外隔離機制」的絕對要求，我們正式捨棄單純追求巨量吞吐的虛榮指標 (台積電 780 萬筆專案)，改以 6642 為標竿，展開專注於「絕對防禦深度」的四階段精準打擊演練。
+   [👉 詳見 6642 旗艦級 ESG 擬真數據 PoC 實作戰略](../testing_and_qa/e2e_audit_pipeline/6642_poc_blueprint.md)
    
-   **[協作解耦與工作順序 (Decoupled Workflow Sequence)]**
-   為了避免開發過程互卡與伺服器 OOM 崩潰，針對 780 萬筆大數據測試，嚴格定義以下工作時序：
-   - **Step 1: [Julian] 巨量資料批次注入 (Batch Seeding)**
-     - **任務**：負責將 780 萬筆 JSON 成功灌進資料庫（或產出 `db_dump_vouchers.json`）。
-     - **限制**：灌完資料後即算 100% 完工。**請先不要**跑 `cross_validator.ts` 或開 UI 讀報表，以免引發系統 OOM 崩潰。確認資料有進 DB 後，即可轉往進行視覺抽驗 (SVG) 的任務。
-   - **Step 2: [Tzuhan] 核心引擎 SQL 聚合重構 (Raw SQL Aggregation)**
-     - **任務**：在核心金流與報表引擎中實作 SQL 原生聚合，利用 PostgreSQL 算力取代 Node.js 記憶體運算，完成底層效能瓶頸的最後拆彈。
-   - **Step 3: 聯合盲測與審計對比**
-     - **任務**：待 Tzuhan 的 SQL 引擎重構上線後，雙方再一起執行 `cross_validator.ts`，以絕對 0 誤差的零容忍標準，跑出最終的財排對比報告。
+   **[6642 PoC 演練四階段時序]**
+   為了循序漸進驗證系統極限，我們嚴格定義以下實兵演練階段：
+   - **階段一：微型契約與實質查核 (Task 1 & 2)**
+     - **任務**：不追求量，只求「零捏造」的絕對真理。透過 3 張傳票建立 Ground Truth 逆推管線，徒手完成三表勾稽與 AI CPA 漏洞盲測。這決定了系統資料庫 Schema 的底線。
+   - **階段二：單月全量度與業務矩陣 (放量至 4,500 筆)**
+     - **任務**：建立中小型製造業的真實財務與碳排分佈。以 `createMany` 批次寫入單月 4,500 筆真實交易，確保 5xxx (營業成本)、62xx (管理費用)、63xx (研發費用) 均勻分佈，並涵蓋 Scope 1/2/3 完整的碳排活動。同步以 `cross_validator.ts` 進行財務、ESG、三表勾稽、防禦覆蓋率的四維度零誤差盲測。
+   - **階段三：單年全量度與跨年時區防禦測試 (放量至 54,000 筆)**
+     - **任務**：規模拉升至全年度 54,000 筆。刻意於 12/31 壓線邊界（`2024-12-31T23:59:59.000Z` UTC）模擬大額的期末折舊調整傳票 (`ADJ-DEP-2024`)，壓力測試報表引擎在邊界時間轉譯時，是否會發生折舊跨年位移的 Bug。
+     - **DoD**：寫入期間無 OOM 記憶體耗盡；12/31 折舊費用 100% 精準鎖在 2024 年度；全年度數據與官方天花板達絕對 0 誤差。
+   - **階段四：對抗式紅隊演練與視覺抽驗 (Adversarial Testing)**
+     - **任務**：驗證系統遭遇「髒資料」時的精準報錯能力。刻意注入毒藥資料 (如：汽油配上度數的「量綱不符」碳排、未知會計科目)，並從 54,000 筆中隨機抽樣 10 筆生成含 15% 雜訊的 SVG 圖片。
+     - **DoD**：人工確認 10 張 SVG 與 JSON 100% 一致。證明 ITAC 隔離生效：未知費用強行打入 `6288/7590` 虛擬隔離區並亮黃燈；量綱不符碳排遭無情阻斷。

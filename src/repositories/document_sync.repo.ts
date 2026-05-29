@@ -17,6 +17,7 @@ import {
   CountryCode,
   MeasurementUnit,
 } from "@/constants/enums";
+import { verifyDimensionalConsistency } from "@/constants/dimension";
 import { ISyncDocumentResultParams } from "@/skills/utils/document_parser_db_sync";
 import { ACCOUNTS, IAccount } from "@/constants/accounts";
 import { ReconciliationService } from "@/services/reconciliation.service";
@@ -25,6 +26,7 @@ import { SemanticAccountMatcher } from "@/lib/utils/semantic_account_matcher";
 import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
 import { MOCK_EEIO_COEFFICIENTS } from "@/constants/mock_eeio_coefficients";
 import { CoaVectorSearchService } from "@/services/coa_vector_search.service";
+import { FIAT_CURRENCIES } from "@/constants/country";
 
 function parsePrismaDecimal(val: unknown, fieldName: string): Prisma.Decimal {
   if (val === null || val === undefined) {
@@ -206,13 +208,14 @@ export class DocumentSyncRepository {
             let currentPaymentStatus: VoucherPaymentStatus =
               VoucherPaymentStatus.NOT_APPLICABLE;
 
+            let finalAiNote = vd.aiNote ?? "無 AI 分析備註";
+
             if (docType === DocumentType.ACCRUAL_NOTICE) {
               currentPaymentStatus = VoucherPaymentStatus.UNPAID;
             }
 
             let oldVoucherToClear: (Voucher & { lines: VoucherLine[] }) | null =
               null;
-            let finalAiNote = vd.aiNote ?? "無 AI 分析備註";
             let hasSuspense = false;
 
             if (docType === DocumentType.PAYMENT_RECEIPT) {
@@ -424,6 +427,63 @@ export class DocumentSyncRepository {
                 },
               });
             }
+
+            // Info: (20260526 - Tzuhan) 自動創建 AmortizationSchedule
+            if (vd.startDate && vd.endDate && finalVoucherId) {
+              /**
+               * Info: (20260526 - Tzuhan)
+               * Find if there is a prepaid expense account code (e.g., 1251, 1252, etc. - we check if accountingCode is in a known prepaid list, or we can check original semantic category)
+               * Since semanticCategory was lost, let's just check the raw voucherLines to find the original amount, or just check the accounting code here.
+               * Assuming 1251 is prepaid expense. If the AI classified it, we have it in linesToCreate.
+               */
+              const prepaidLine = linesToCreate.find(
+                (l) =>
+                  l.accountingCode === "1251" ||
+                  l.accountingCode === "1252" ||
+                  l.accountingCode === "1253" ||
+                  l.accountingCode === "1254",
+              );
+              if (prepaidLine) {
+                const sDate = new Date(vd.startDate);
+                const eDate = new Date(vd.endDate);
+
+                if (!isNaN(sDate.getTime()) && !isNaN(eDate.getTime())) {
+                  // TODO: (20260526 - Tzuhan) 未來需要 AI 分析開立會計科目，預設使用 RENT_EXPENSE
+                  const expenseAccountCode = "RENT_EXPENSE";
+                  const existingSchedule =
+                    await tx.amortizationSchedule.findFirst({
+                      where: { originalVoucherId: finalVoucherId },
+                    });
+
+                  if (existingSchedule) {
+                    await tx.amortizationSchedule.update({
+                      where: { id: existingSchedule.id },
+                      data: {
+                        startDate: sDate,
+                        endDate: eDate,
+                        totalAmount: prepaidLine.amount?.toString() || "0",
+                        assetAccountCode: prepaidLine.accountingCode || "1251",
+                        expenseAccountCode,
+                        accountBookId,
+                      },
+                    });
+                  } else {
+                    await tx.amortizationSchedule.create({
+                      data: {
+                        originalVoucherId: finalVoucherId,
+                        accountBookId,
+                        assetAccountCode: prepaidLine.accountingCode || "1251",
+                        expenseAccountCode,
+                        totalAmount: prepaidLine.amount?.toString() || "0",
+                        startDate: sDate,
+                        endDate: eDate,
+                        status: "ACTIVE",
+                      },
+                    });
+                  }
+                }
+              }
+            }
           } catch (voucherErr) {
             const failNote = `[系統同步失敗] 關鍵數據解析失敗，已拒絕寫入 (Rejected): ${(voucherErr as Error).message}`;
             if (existingVoucher) {
@@ -443,7 +503,7 @@ export class DocumentSyncRepository {
                   tradingDate: new Date(),
                   tradingType: "INCOME",
                   note: vd.note ?? "-",
-                  currency: vd.currency || "TWD",
+                  currency: accountBook.currency || "TWD",
                   confidence,
                   isVerified: false,
                   aiNote: failNote,
@@ -538,23 +598,10 @@ export class DocumentSyncRepository {
               }
 
               if (coefExists) {
-                // Info: (20260520 - Tzuhan) [AUDIT FIX] 量綱防呆檢查
-                const getDimension = (u: string) => {
-                  const clean = u.replace(/^kgCO2e\//i, "");
-                  if (["KG", "TONNE"].includes(clean)) return "MASS";
-                  if (["LITER", "GALLON"].includes(clean)) return "VOLUME";
-                  if (clean === "KWH") return "ENERGY";
-                  if (
-                    ["TWD", "USD", "JPY", "CNY", "HKD", "KRW"].includes(clean)
-                  )
-                    return "CURRENCY";
-                  return clean;
-                };
-
                 const docUnit = ed.unit as string;
                 const coefUnit = coefExists.unit as string;
 
-                if (getDimension(docUnit) !== getDimension(coefUnit)) {
+                if (!verifyDimensionalConsistency(docUnit, coefUnit)) {
                   isSuspense = true;
                   finalCoefficientId = null;
                   ed.aiNote =
@@ -628,11 +675,14 @@ export class DocumentSyncRepository {
               activityType: ed.activityType || "",
               vendor: ed.vendor || "",
               amount: esgAmount,
-              unit: (Object.values(MeasurementUnit).includes(
-                ed.unit as MeasurementUnit,
-              )
-                ? ed.unit
-                : MeasurementUnit.KG) as MeasurementUnit,
+              unit:
+                ed.unit &&
+                (Object.values(MeasurementUnit).includes(
+                  ed.unit as MeasurementUnit,
+                ) ||
+                  FIAT_CURRENCIES.includes(ed.unit))
+                  ? ed.unit
+                  : MeasurementUnit.KG,
               emissions: calculatedEmissions,
               intensity: (ed.intensity as EsgIntensity) || null,
               dqiScore: parsePrismaDecimal(ed.dqiScore, "dqiScore"),

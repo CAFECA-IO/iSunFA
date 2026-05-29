@@ -1,13 +1,40 @@
 // Info: (20260514 - Tzuhan) Centralized constants to replace Prisma Enums
 
+// Info: (20260525 - Tzuhan) 1. 擴充後的物理單位 Enum (The Flat Dictionary)
 export enum MeasurementUnit {
-  KWH = "KWH",
-  LITER = "LITER",
+  // Info: (20260525 - Tzuhan) --- 質量 (Mass) ---
   KG = "KG",
   TONNE = "TONNE",
+  GRAM = "GRAM",
+
+  // Info: (20260525 - Tzuhan) --- 體積 (Volume) ---
+  LITER = "LITER",
   GALLON = "GALLON",
+  M3 = "M3", // Info: (20260525 - Tzuhan) 立方公尺 (水、天然氣)
+
+  // Info: (20260525 - Tzuhan) --- 能量與熱值 (Energy) ---
+  KWH = "KWH",
+  MWH = "MWH",
+  GJ = "GJ", // Info: (20260525 - Tzuhan) 十億焦耳
+
+  // Info: (20260525 - Tzuhan) --- 距離與運力 (Distance & Transport) ---
+  KM = "KM",
+  TKM = "TKM", // Info: (20260525 - Tzuhan) 延噸公里 (Scope 3 物流)
+  PKM = "PKM", // Info: (20260525 - Tzuhan) 延人公里 (Scope 3 差旅)
+
+  // Info: (20260525 - Tzuhan) --- 計數 (Count) ---
   PIECE = "PIECE",
-  TWD = "TWD",
+}
+
+// Info: (20260525 - Tzuhan) 2. 定義量綱類別 (Physical Dimensions)
+export enum PhysicalDimension {
+  MASS = "MASS",
+  VOLUME = "VOLUME",
+  ENERGY = "ENERGY",
+  TRANSPORT = "TRANSPORT",
+  MONEY = "MONEY",
+  COUNT = "COUNT",
+  UNKNOWN = "UNKNOWN",
 }
 
 export enum EsgGenerationSource {
@@ -37,6 +64,10 @@ export enum DocumentType {
   OTHERS = "OTHERS",
 }
 
+export enum SystemWorkerSource {
+  AMORTIZATION_WORKER = "AMORTIZATION_WORKER",
+}
+
 export enum CountryCode {
   TW = "TW",
   US = "US",
@@ -44,6 +75,7 @@ export enum CountryCode {
   CN = "CN",
   HK = "HK",
   KR = "KR",
+  EU = "EU",
 }
 
 export enum EsgFallbackCategory {

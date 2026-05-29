@@ -5,12 +5,12 @@ import { prepareDocumentContext } from "@/skills/utils/document_helper";
 import { SchemaType, Schema } from "@google/generative-ai";
 import { EsgGenerationSource, EsgFallbackCategory } from "@/constants/enums";
 import { MeasurementUnit } from "@/constants/enums";
+import { FIAT_CURRENCIES } from "@/constants/country";
 import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
 import { MOCK_EEIO_COEFFICIENTS } from "@/constants/mock_eeio_coefficients";
 import { MoneyUtil } from "@/lib/utils/money";
 import { EmissionFactorRepo } from "@/repositories/emission_factor.repo";
 import { prisma } from "@/lib/prisma";
-import { getCrossExchangeRateStatic } from "@/skills/utils/exchange_rate_helper";
 
 export class EsgParsingSkill implements ITaskSkill {
   name = "ESG_PARSING";
@@ -223,14 +223,7 @@ export class EsgParsingSkill implements ITaskSkill {
             description:
               "對應的單位。若需要進行外幣折算，可輸出原始貨幣代碼，如 USD, JPY, CNY, HKD, KRW 等",
             format: "enum",
-            enum: [
-              ...Object.values(MeasurementUnit),
-              "USD",
-              "JPY",
-              "CNY",
-              "HKD",
-              "KRW",
-            ],
+            enum: [...Object.values(MeasurementUnit), ...FIAT_CURRENCIES],
           },
           tradingDate: {
             type: SchemaType.STRING,
@@ -275,40 +268,11 @@ export class EsgParsingSkill implements ITaskSkill {
       );
       let calculatedEmissions = "0";
       let finalAiNote = `[Turn 1] ${parsed1.aiNote}\n[Turn 2] ${parsed2.aiNote}`;
-      let finalAmount = parsed2.amount;
-      let finalUnit = parsed2.unit;
 
       if (selectedCoef && parsed2.amount != null) {
-        // Info: (20260525 - Luphia) Check for currency mismatch and perform currency conversion programmatically in the skill code
-        const coefUnit = selectedCoef.unit;
-        if (
-          finalUnit !== coefUnit &&
-          ["USD", "JPY", "CNY", "HKD", "KRW", "TWD"].includes(finalUnit) &&
-          ["USD", "JPY", "CNY", "HKD", "KRW", "TWD"].includes(coefUnit)
-        ) {
-          try {
-            const tradingDate = new Date(parsed2.tradingDate || new Date());
-            const rate = getCrossExchangeRateStatic(
-              finalUnit,
-              coefUnit,
-              tradingDate,
-            );
-            console.log(
-              `[EsgParsingSkill] Currency mismatch in ESG: ${finalUnit} vs ${coefUnit}. Applying static exchange rate: ${rate} for tradingDate: ${tradingDate.toISOString().split("T")[0]}`,
-            );
-
-            const origAmount = parsed2.amount;
-            finalAmount = parseFloat((origAmount * rate).toFixed(4));
-            finalUnit = coefUnit;
-            finalAiNote += `\n[外幣折算] 原始幣別: ${parsed2.unit}, 原始金額: ${origAmount}, 適用匯率: ${rate.toFixed(4)}, 換算為 ${coefUnit} 金額: ${finalAmount}`;
-          } catch (err) {
-            console.warn(`[EsgParsingSkill] Currency conversion failed:`, err);
-          }
-        }
-
         // Info: (20260522 - Tzuhan) 嚴格使用 MoneyUtil 高精度運算
         calculatedEmissions = MoneyUtil.multiply(
-          finalAmount,
+          parsed2.amount,
           selectedCoef.emissionFactor,
         ).toString();
 
@@ -326,8 +290,8 @@ export class EsgParsingSkill implements ITaskSkill {
         vendor: parsed1.vendor,
         fallbackCategory: parsed1.fallbackCategory,
         coefficientId: parsed2.coefficientId,
-        amount: finalAmount,
-        unit: finalUnit,
+        amount: parsed2.amount,
+        unit: parsed2.unit,
         emissions: calculatedEmissions,
         aiNote: finalAiNote,
         confidence: parsed2.confidence,

@@ -12,6 +12,9 @@ import { IVoucherLineUI } from "@/interfaces/voucher";
 import { IAccount } from "@/constants/accounts";
 import { esgRepo } from "@/repositories/esg.repo";
 import { MoneyUtil } from "@/lib/utils/money";
+import { SystemAccountNodes } from "@/constants/system_account_codes";
+import { AccountUtil } from "@/lib/utils/account_util";
+import { ACCOUNTS } from "@/constants/accounts";
 
 const parseFinanceNumber = (val: string): Prisma.Decimal => {
   if (!val) return new Prisma.Decimal(0);
@@ -61,7 +64,14 @@ export const runCrossValidation = async (stockId: string) => {
   const cfList = finData.cashFlow.reportList;
 
   const goldenRevenue = findReportValue(isList, "營業收入合計");
+  const goldenCogs = findReportValue(isList, "營業成本合計");
+  const goldenSelling = findReportValue(isList, "推銷費用");
+  const goldenAdmin = findReportValue(isList, "管理費用");
+  const goldenRnD = findReportValue(isList, "研究發展費用");
   const goldenOpex = findReportValue(isList, "營業費用合計");
+  const goldenInterestRev = findReportValue(isList, "利息收入");
+  const goldenInterestExp = findReportValue(isList, "財務成本淨額");
+  const goldenTax = findReportValue(isList, "所得稅費用（利益）合計");
   const goldenDepreciation = findReportValue(cfList, "折舊費用");
 
   let goldenScope1 = new Prisma.Decimal(0);
@@ -133,8 +143,51 @@ export const runCrossValidation = async (stockId: string) => {
   const systemRevenue = new Prisma.Decimal(
     incomeStatement.sections.revenue.total,
   );
+
+  const aggregateOpexItems = (rootCode: string) => {
+    return incomeStatement.sections.operatingExpenses.items
+      .filter((i: { code: string; amount: string | number }) =>
+        AccountUtil.isDescendantOf(i.code, rootCode, ACCOUNTS.TW),
+      )
+      .reduce(
+        (sum: Prisma.Decimal, i: { code: string; amount: string | number }) =>
+          sum.add(new Prisma.Decimal(i.amount)),
+        new Prisma.Decimal(0),
+      );
+  };
+
+  const systemSelling = aggregateOpexItems("6100");
+  const systemAdmin = aggregateOpexItems("6200");
+  const systemRnD = aggregateOpexItems("6300");
+
   const systemOpex = new Prisma.Decimal(
     incomeStatement.sections.operatingExpenses.total,
+  );
+
+  const systemCogs = new Prisma.Decimal(incomeStatement.sections.cogs.total);
+
+  const systemInterestRev = incomeStatement.sections.nonOperating.items
+    .filter((i: { code: string; amount: string | number }) =>
+      AccountUtil.isDescendantOf(i.code, "7110", ACCOUNTS.TW),
+    )
+    .reduce(
+      (sum: Prisma.Decimal, i: { code: string; amount: string | number }) =>
+        sum.add(new Prisma.Decimal(i.amount)),
+      new Prisma.Decimal(0),
+    );
+
+  const systemInterestExp = incomeStatement.sections.nonOperating.items
+    .filter((i: { code: string; amount: string | number }) =>
+      AccountUtil.isDescendantOf(i.code, "7510", ACCOUNTS.TW),
+    )
+    .reduce(
+      (sum: Prisma.Decimal, i: { code: string; amount: string | number }) =>
+        sum.add(new Prisma.Decimal(i.amount).abs()),
+      new Prisma.Decimal(0),
+    );
+
+  const systemTax = new Prisma.Decimal(
+    incomeStatement.sections.taxExpense.total,
   );
 
   const depreciationItem = cashFlowStatement.activities.operating.items.find(
@@ -183,7 +236,8 @@ export const runCrossValidation = async (stockId: string) => {
   const isIncomeStatementNetIncome = incomeStatement.sections.netIncome.total;
   const bsRetainedEarnings =
     balanceSheet.equity.items.find(
-      (i: { code: string; amount: string | number }) => i.code === "3353",
+      (i: { code: string; amount: string | number }) =>
+        i.code === SystemAccountNodes.CURRENT_PERIOD_EARNINGS,
     )?.amount || 0;
   const cfStartingNetIncome =
     cashFlowStatement.activities.operating.items.find(
@@ -196,12 +250,25 @@ export const runCrossValidation = async (stockId: string) => {
     new Decimal(isIncomeStatementNetIncome).equals(cfStartingNetIncome);
 
   const bsEndingCash =
-    balanceSheet.assets.current.items.find(
-      (i: { code: string; amount: string | number }) => i.code === "1100",
-    )?.amount || 0;
+    balanceSheet.assets.current.items
+      .filter((i: { code: string; amount: string | number }) =>
+        AccountUtil.isDescendantOf(
+          i.code,
+          SystemAccountNodes.CASH_ROOT,
+          ACCOUNTS.TW,
+        ),
+      )
+      .reduce((sum, item) => sum + Number(item.amount), 0) || 0;
   const cfEndingCash = cashFlowStatement.summary.endingBalance;
 
   const isCashArticulated = new Decimal(bsEndingCash).equals(cfEndingCash);
+  console.log({
+    isIncomeStatementNetIncome,
+    bsRetainedEarnings,
+    cfStartingNetIncome,
+    bsEndingCash,
+    cfEndingCash,
+  });
 
   const report = {
     metadata: {
@@ -215,7 +282,55 @@ export const runCrossValidation = async (stockId: string) => {
         golden: goldenRevenue.toString(),
         system: systemRevenue.toString(),
         variancePercent: calculateVariance(systemRevenue, goldenRevenue),
-        isPassed: systemRevenue.equals(goldenRevenue), // Info: (20260522 - Tzuhan) [Zero Tolerance] 絕對零容忍
+        isPassed: systemRevenue.equals(goldenRevenue),
+      },
+      COGS: {
+        golden: goldenCogs.toString(),
+        system: systemCogs.toString(),
+        variancePercent: calculateVariance(systemCogs, goldenCogs),
+        isPassed: systemCogs.equals(goldenCogs),
+      },
+      SellingExpenses: {
+        golden: goldenSelling.toString(),
+        system: systemSelling.toString(),
+        variancePercent: calculateVariance(systemSelling, goldenSelling),
+        isPassed: systemSelling.equals(goldenSelling),
+      },
+      AdminExpenses: {
+        golden: goldenAdmin.toString(),
+        system: systemAdmin.toString(),
+        variancePercent: calculateVariance(systemAdmin, goldenAdmin),
+        isPassed: systemAdmin.equals(goldenAdmin),
+      },
+      RnDExpenses: {
+        golden: goldenRnD.toString(),
+        system: systemRnD.toString(),
+        variancePercent: calculateVariance(systemRnD, goldenRnD),
+        isPassed: systemRnD.equals(goldenRnD),
+      },
+      InterestRev: {
+        golden: goldenInterestRev.toString(),
+        system: systemInterestRev.toString(),
+        variancePercent: calculateVariance(
+          systemInterestRev,
+          goldenInterestRev,
+        ),
+        isPassed: systemInterestRev.equals(goldenInterestRev),
+      },
+      InterestExp: {
+        golden: goldenInterestExp.toString(),
+        system: systemInterestExp.toString(),
+        variancePercent: calculateVariance(
+          systemInterestExp,
+          goldenInterestExp,
+        ),
+        isPassed: systemInterestExp.equals(goldenInterestExp),
+      },
+      Tax: {
+        golden: goldenTax.toString(),
+        system: systemTax.toString(),
+        variancePercent: calculateVariance(systemTax, goldenTax),
+        isPassed: systemTax.equals(goldenTax),
       },
       OperatingExpenses: {
         golden: goldenOpex.toString(),
@@ -268,6 +383,13 @@ export const runCrossValidation = async (stockId: string) => {
 
   const tests = [
     report.metrics.Revenue.isPassed,
+    report.metrics.COGS.isPassed,
+    report.metrics.SellingExpenses.isPassed,
+    report.metrics.AdminExpenses.isPassed,
+    report.metrics.RnDExpenses.isPassed,
+    report.metrics.InterestRev.isPassed,
+    report.metrics.InterestExp.isPassed,
+    report.metrics.Tax.isPassed,
     report.metrics.OperatingExpenses.isPassed,
     report.metrics.Depreciation.isPassed,
     report.metrics.Scope1.isPassed,
@@ -293,6 +415,41 @@ export const runCrossValidation = async (stockId: string) => {
       Expected: goldenRevenue.toString(),
       AI_Actual: systemRevenue.toString(),
       Variance: report.metrics.Revenue.variancePercent,
+    },
+    COGS: {
+      Expected: goldenCogs.toString(),
+      AI_Actual: systemCogs.toString(),
+      Variance: report.metrics.COGS.variancePercent,
+    },
+    Selling: {
+      Expected: goldenSelling.toString(),
+      AI_Actual: systemSelling.toString(),
+      Variance: report.metrics.SellingExpenses.variancePercent,
+    },
+    Admin: {
+      Expected: goldenAdmin.toString(),
+      AI_Actual: systemAdmin.toString(),
+      Variance: report.metrics.AdminExpenses.variancePercent,
+    },
+    RnD: {
+      Expected: goldenRnD.toString(),
+      AI_Actual: systemRnD.toString(),
+      Variance: report.metrics.RnDExpenses.variancePercent,
+    },
+    InterestRev: {
+      Expected: goldenInterestRev.toString(),
+      AI_Actual: systemInterestRev.toString(),
+      Variance: report.metrics.InterestRev.variancePercent,
+    },
+    InterestExp: {
+      Expected: goldenInterestExp.toString(),
+      AI_Actual: systemInterestExp.toString(),
+      Variance: report.metrics.InterestExp.variancePercent,
+    },
+    Tax: {
+      Expected: goldenTax.toString(),
+      AI_Actual: systemTax.toString(),
+      Variance: report.metrics.Tax.variancePercent,
     },
     OpEx: {
       Expected: goldenOpex.toString(),

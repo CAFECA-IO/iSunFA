@@ -9,6 +9,9 @@ import { getPriorityEnvConfig } from "@/services/env.service";
 import type { IAggregatedDocumentResult } from "@/skills/utils/document_parser_db_sync";
 import type { JSONValue } from "@/validators";
 import { MoneyUtil } from "@/lib/utils/money";
+import { fxInterceptorService } from "@/services/fx.interceptor.service";
+import { prisma } from "@/lib/prisma";
+import { SystemWorkerSource } from "@/constants/enums";
 
 export class IssueRecorderService {
   async processNext() {
@@ -117,12 +120,20 @@ export class IssueRecorderService {
           }
 
           if (!order) {
-            console.warn(
-              `[MissionRecorder] Task ID ${taskId} has no Order in database.`,
-            );
-            // Info: (20260420 - Luphia) mark flag anyway to skip
-            await fs.writeFile(flagFile, "No matching order found", "utf8");
-            continue;
+            if (
+              localContextObj.source === SystemWorkerSource.AMORTIZATION_WORKER
+            ) {
+              console.log(
+                `[MissionRecorder] Task ID ${taskId} is an amortization task. Bypassing order requirement.`,
+              );
+            } else {
+              console.warn(
+                `[MissionRecorder] Task ID ${taskId} has no Order in database.`,
+              );
+              // Info: (20260420 - Luphia) mark flag anyway to skip
+              await fs.writeFile(flagFile, "No matching order found", "utf8");
+              continue;
+            }
           }
 
           // Info: (20260420 - Luphia) Read the actual result text
@@ -227,11 +238,15 @@ export class IssueRecorderService {
             } catch {}
 
             // Info: (20260516 - Luphia) Extract accountBookId dynamically from the original order
-            const orderDataObj = (order.data as Record<string, unknown>) || {};
+            const orderDataObj = order
+              ? (order.data as Record<string, unknown>) || {}
+              : {};
             const payloadData =
               (orderDataObj.data as Record<string, unknown>) || {};
             const dbAccountBookId =
-              payloadData.accountBookId || orderDataObj.accountBookId;
+              payloadData.accountBookId ||
+              orderDataObj.accountBookId ||
+              localContextObj.accountBookId;
 
             if (
               parsedResult &&
@@ -255,11 +270,44 @@ export class IssueRecorderService {
                   typeof fileResult.fileId === "string"
                     ? fileResult.fileId
                     : recordKey;
+
+                const targetAccountBookId = (dbAccountBookId ||
+                  fileResult.accountBookId) as string;
+
+                let bookCurrency = "TWD";
+                try {
+                  const book = await prisma.accountBook.findUnique({
+                    where: { id: targetAccountBookId },
+                  });
+                  if (book && book.currency) {
+                    bookCurrency = book.currency;
+                  }
+                } catch (e) {
+                  console.warn(
+                    "[MissionRecorder] Could not fetch account book currency, defaulting to TWD",
+                    e,
+                  );
+                }
+
+                const originalResult =
+                  fileResult as unknown as IAggregatedDocumentResult;
+                const tradingDateStr = originalResult.voucherBase?.tradingDate;
+                const tradingDate = tradingDateStr
+                  ? new Date(tradingDateStr)
+                  : new Date();
+
+                // Info: (20260526 - Tzuhan) 統一在寫入 DB 之前調用 FX Interceptor，維護架構分層
+                const interceptedResult =
+                  fxInterceptorService.interceptAndConvert(
+                    originalResult,
+                    bookCurrency,
+                    tradingDate,
+                  );
+
                 await syncDocumentResultToDatabase({
                   fileId: fileIdToSync,
-                  accountBookId: (dbAccountBookId ||
-                    fileResult.accountBookId) as string,
-                  result: fileResult as unknown as IAggregatedDocumentResult,
+                  accountBookId: targetAccountBookId,
+                  result: interceptedResult,
                   voucherIdContext:
                     localContextObj.voucherId ||
                     (fileResult.voucherIdContext as string | undefined),
@@ -275,13 +323,18 @@ export class IssueRecorderService {
                 `[MissionRecorder] Synced document results to DB for Task ID ${taskId}`,
               );
             } else {
-              const orderDataObj =
-                (order.data as Record<string, unknown>) || {};
+              const orderDataObj = order
+                ? (order.data as Record<string, unknown>) || {}
+                : {};
               const payloadData =
                 (orderDataObj.data as Record<string, unknown>) || {};
               const orderCategory =
                 payloadData.category || orderDataObj.category;
-              if (orderCategory === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS) {
+              if (
+                orderCategory === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS ||
+                localContextObj.source ===
+                  SystemWorkerSource.AMORTIZATION_WORKER
+              ) {
                 finalOrderStatus = ORDER_STATUS.FAILED;
                 syncErrorMessage =
                   "Expected dbSyncPayload for CERTIFICATE_ANALYSIS but none was found in result.";
@@ -299,75 +352,80 @@ export class IssueRecorderService {
             );
           }
 
-          // Info: (20260517 - Luphia) Calculate accumulated tokens
-          const newTokens = (order.tokens || 0) + tokensConsumed;
+          if (order) {
+            // Info: (20260517 - Luphia) Calculate accumulated tokens
+            const newTokens = (order.tokens || 0) + tokensConsumed;
 
-          let newOrderStatus = order.status;
-          if (newOrderStatus !== ORDER_STATUS.FAILED) {
-            if (finalOrderStatus === ORDER_STATUS.FAILED) {
-              newOrderStatus = ORDER_STATUS.FAILED;
-            } else {
-              // Info: (20260517 - Luphia) Check if all sub-tasks are completed
-              try {
-                const taskIds = order.mission
-                  ? JSON.parse(order.mission as string)
-                  : [];
-                if (Array.isArray(taskIds) && taskIds.length > 0) {
-                  let allDone = true;
-                  for (const tId of taskIds) {
-                    if (tId === taskId) continue; // Info: (20260517 - Luphia) Current task is implicitly done
+            let newOrderStatus = order.status;
+            if (newOrderStatus !== ORDER_STATUS.FAILED) {
+              if (finalOrderStatus === ORDER_STATUS.FAILED) {
+                newOrderStatus = ORDER_STATUS.FAILED;
+              } else {
+                // Info: (20260517 - Luphia) Check if all sub-tasks are completed
+                try {
+                  const taskIds = order.mission
+                    ? JSON.parse(order.mission as string)
+                    : [];
+                  if (Array.isArray(taskIds) && taskIds.length > 0) {
+                    let allDone = true;
+                    for (const tId of taskIds) {
+                      if (tId === taskId) continue; // Info: (20260517 - Luphia) Current task is implicitly done
 
-                    const folderEntry = folders.find((f) =>
-                      f.name.endsWith(`_${tId}`),
-                    );
-                    if (!folderEntry) {
-                      allDone = false;
-                      break;
+                      const folderEntry = folders.find((f) =>
+                        f.name.endsWith(`_${tId}`),
+                      );
+                      if (!folderEntry) {
+                        allDone = false;
+                        break;
+                      }
+
+                      const tFlagPath = path.join(
+                        issueDirPath,
+                        folderEntry.name,
+                        "recorded.flag",
+                      );
+                      try {
+                        await fs.access(tFlagPath);
+                      } catch {
+                        allDone = false;
+                        break;
+                      }
                     }
-
-                    const tFlagPath = path.join(
-                      issueDirPath,
-                      folderEntry.name,
-                      "recorded.flag",
-                    );
-                    try {
-                      await fs.access(tFlagPath);
-                    } catch {
-                      allDone = false;
-                      break;
-                    }
-                  }
-                  newOrderStatus = allDone
-                    ? ORDER_STATUS.COMPLETED
-                    : ORDER_STATUS.EXECUTING;
-                } else {
-                  /**
-                   * Info: (20260525 - Luphia) Prevent bypass bug when order.mission is null/empty during execution.
-                   * If the order was currently EXECUTING or PAID, do not force COMPLETED since tasks are still being issued or processed.
-                   */
-                  if (
-                    order.status === ORDER_STATUS.EXECUTING ||
-                    order.status === ORDER_STATUS.PAID
-                  ) {
-                    newOrderStatus = ORDER_STATUS.EXECUTING;
+                    newOrderStatus = allDone
+                      ? ORDER_STATUS.COMPLETED
+                      : ORDER_STATUS.EXECUTING;
                   } else {
-                    newOrderStatus = ORDER_STATUS.COMPLETED;
+                    /**
+                     * Info: (20260525 - Luphia) Prevent bypass bug when order.mission is null/empty during execution.
+                     * If the order was currently EXECUTING or PAID, do not force COMPLETED since tasks are still being issued or processed.
+                     */
+                    if (
+                      order.status === ORDER_STATUS.EXECUTING ||
+                      order.status === ORDER_STATUS.PAID
+                    ) {
+                      newOrderStatus = ORDER_STATUS.EXECUTING;
+                    } else {
+                      newOrderStatus = ORDER_STATUS.COMPLETED;
+                    }
                   }
+                } catch {
+                  newOrderStatus = ORDER_STATUS.COMPLETED;
                 }
-              } catch {
-                newOrderStatus = ORDER_STATUS.COMPLETED;
               }
             }
-          }
 
-          // Info: (20260517 - Luphia) Update Order Status accurately based on DB sync result and accumulate tokens
-          await orderRepo.update({
-            where: { id: order.id },
-            data: {
-              status: newOrderStatus,
-              tokens: newTokens > 0 ? newTokens : undefined,
-            },
-          });
+            // Info: (20260517 - Luphia) Update Order Status accurately based on DB sync result and accumulate tokens
+            await orderRepo.update({
+              where: { id: order.id },
+              data: {
+                status: newOrderStatus,
+                tokens: newTokens > 0 ? newTokens : undefined,
+              },
+            });
+            console.log(
+              `[MissionRecorder] Successfully updated Order ${order.id} to ${newOrderStatus}.`,
+            );
+          }
 
           // Info: (20260420 - Luphia) Write flag to prevent reprocessing
           const flagContent =
@@ -375,9 +433,6 @@ export class IssueRecorderService {
               ? `Recorded with FAILED status at ${new Date().toISOString()}. Reason: ${syncErrorMessage}`
               : `Recorded at ${new Date().toISOString()}`;
           await fs.writeFile(flagFile, flagContent, "utf8");
-          console.log(
-            `[MissionRecorder] Successfully updated Order ${order.id} to ${finalOrderStatus}.`,
-          );
 
           break; // Info: (20260420 - Luphia) process one at a time
         } catch (err) {

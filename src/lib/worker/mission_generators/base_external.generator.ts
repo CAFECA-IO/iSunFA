@@ -4,6 +4,7 @@ import {
   IMissionParams,
 } from "@/lib/worker/mission.interface";
 import { getPeriodDateRange } from "@/lib/analysis/period";
+import { COUNTRY_MAPPING } from "@/constants/country";
 
 export interface IExternalPromptModule {
   STEP_1_EVENT_COLLECTION_PROMPT: string;
@@ -19,20 +20,14 @@ export interface IExternalPromptModule {
   ) => string;
 }
 
-const COUNTRY_MAPPING: Record<string, string> = {
-  tw: "臺灣",
-  us: "美國",
-  cn: "中國",
-  jp: "日本",
-  eu: "歐洲",
-};
-
 export function generateBaseExternalMission(
   params: IMissionParams,
   selectedPrompts: IExternalPromptModule,
 ): IMissionDefinition | null {
   const countryName = params.country
-    ? COUNTRY_MAPPING[params.country] || params.country
+    ? COUNTRY_MAPPING[
+        params.country.toUpperCase() as import("@/constants/enums").CountryCode
+      ] || params.country
     : "臺灣";
   let startDateStr = "N/A";
   let endDateStr = "N/A";

@@ -3,6 +3,7 @@ import * as path from "path";
 import { randomUUID } from "crypto";
 import { Prisma } from "@/generated";
 import { MoneyUtil } from "@/lib/utils/money";
+import { MeasurementUnit } from "@/constants/enums";
 
 interface IExtractedContextCache {
   financial: {
@@ -34,7 +35,7 @@ interface ISimulatedVoucherLine {
     category: "scope1" | "scope2" | "scope3" | "water" | "waste";
     source: string;
     metricAmount: string;
-    metricUnit: string;
+    metricUnit: MeasurementUnit;
     carbonAmount: string;
   }[];
 }
@@ -122,6 +123,13 @@ export const generateEsgRecords = (stockId: string) => {
     fs.readFileSync(vouchersPath, "utf-8"),
   ) as ISimulatedVoucher[];
 
+  // Info: (20260525 - Tzuhan) [BUG FIX] Clear existing esgRecords to prevent appending duplicates across multiple runs
+  vouchers.forEach((v) => {
+    v.lines.forEach((l) => {
+      l.esgRecords = [];
+    });
+  });
+
   // Info: (20260502 - Tzuhan) 1. 從 JSON 解析真實的 ESG 目標
   const scope1Target = findEsgValue(
     esgData,
@@ -139,61 +147,103 @@ export const generateEsgRecords = (stockId: string) => {
   const wasteTarget = findEsgValue(esgData, "nonHazardousWaste");
 
   // Info: (20260502 - Tzuhan) 2. 將範疇二 (電力) 映射至水電費傳票 (代碼 6288)
-  const utilityLines = vouchers.flatMap((v) =>
+  let utilityLines = vouchers.flatMap((v) =>
     v.lines.filter((l) => l.accountingCode === "6288" && l.debitAmount > 0),
   );
+  if (utilityLines.length === 0) {
+    utilityLines = vouchers.flatMap((v) =>
+      v.lines.filter((l) => l.accountingCode === "6200" && l.debitAmount > 0),
+    );
+  }
 
   if (utilityLines.length > 0 && scope2Target.gt(0)) {
-    const scope2PerVoucher = scope2Target.div(utilityLines.length);
-    utilityLines.forEach((line) => {
+    const scope2PerVoucher = scope2Target
+      .div(utilityLines.length)
+      .toDecimalPlaces(4, Prisma.Decimal.ROUND_HALF_UP);
+    let cumulativeScope2 = new Prisma.Decimal(0);
+    utilityLines.forEach((line, index) => {
+      const isLast = index === utilityLines.length - 1;
+      const actualScope2 = isLast
+        ? scope2Target.sub(cumulativeScope2)
+        : scope2PerVoucher;
+      cumulativeScope2 = cumulativeScope2.add(actualScope2);
+
       line.esgRecords = line.esgRecords || [];
       line.esgRecords.push({
         id: randomUUID(),
         category: "scope2",
-        source: contextCache.esg.scope2MajorSource || "台電外購電力",
-        metricAmount: scope2PerVoucher.mul(1980).toString(), // Info: (20260502 - Tzuhan) 假設 1 噸 CO2e 約等於 1980 度電
-        metricUnit: "kWh",
-        carbonAmount: scope2PerVoucher.toString(),
+        source: contextCache.esg.scope2MajorSource || "外購電力",
+        metricAmount: actualScope2.mul(2000).toString(),
+        metricUnit: MeasurementUnit.KWH,
+        carbonAmount: actualScope2.toString(),
       });
     });
   }
 
   // Info: (20260502 - Tzuhan) 3. 將範疇一 (直接排放) 映射至交通費傳票 (代碼 6213)
-  const travelLines = vouchers.flatMap((v) =>
+  let travelLines = vouchers.flatMap((v) =>
     v.lines.filter((l) => l.accountingCode === "6213" && l.debitAmount > 0),
   );
+  if (travelLines.length === 0) {
+    travelLines = vouchers.flatMap((v) =>
+      v.lines.filter((l) => l.accountingCode === "6200" && l.debitAmount > 0),
+    );
+  }
 
   if (travelLines.length > 0 && scope1Target.gt(0)) {
-    const scope1PerVoucher = scope1Target.div(travelLines.length);
-    travelLines.forEach((line) => {
+    const scope1PerVoucher = scope1Target
+      .div(travelLines.length)
+      .toDecimalPlaces(4, Prisma.Decimal.ROUND_HALF_UP);
+    let cumulativeScope1 = new Prisma.Decimal(0);
+    travelLines.forEach((line, index) => {
+      const isLast = index === travelLines.length - 1;
+      const actualScope1 = isLast
+        ? scope1Target.sub(cumulativeScope1)
+        : scope1PerVoucher;
+      cumulativeScope1 = cumulativeScope1.add(actualScope1);
+
       line.esgRecords = line.esgRecords || [];
       line.esgRecords.push({
         id: randomUUID(),
         category: "scope1",
         source: contextCache.esg.scope1MajorSource || "公司車輛燃油",
-        metricAmount: scope1PerVoucher.mul(400).toString(), // Info: (20260502 - Tzuhan) 假設 1 噸 CO2e 約等於 400 公升汽油
-        metricUnit: "Liters",
-        carbonAmount: scope1PerVoucher.toString(),
+        metricAmount: actualScope1.mul(400).toString(),
+        metricUnit: MeasurementUnit.LITER,
+        carbonAmount: actualScope1.toString(),
       });
     });
   }
 
   // Info: (20260504 - Tzuhan) 將範疇三 (其他間接排放) 映射至其他管理費用傳票 (代碼 6288)
-  const opexLines = vouchers.flatMap((v) =>
+  let opexLines = vouchers.flatMap((v) =>
     v.lines.filter((l) => l.accountingCode === "6288" && l.debitAmount > 0),
   );
+  if (opexLines.length === 0) {
+    opexLines = vouchers.flatMap((v) =>
+      v.lines.filter((l) => l.accountingCode === "6200" && l.debitAmount > 0),
+    );
+  }
 
   if (opexLines.length > 0 && scope3Target.gt(0)) {
-    const scope3PerVoucher = scope3Target.div(opexLines.length);
-    opexLines.forEach((line) => {
+    const scope3PerVoucher = scope3Target
+      .div(opexLines.length)
+      .toDecimalPlaces(4, Prisma.Decimal.ROUND_HALF_UP);
+    let cumulativeScope3 = new Prisma.Decimal(0);
+    opexLines.forEach((line, index) => {
+      const isLast = index === opexLines.length - 1;
+      const actualScope3 = isLast
+        ? scope3Target.sub(cumulativeScope3)
+        : scope3PerVoucher;
+      cumulativeScope3 = cumulativeScope3.add(actualScope3);
+
       line.esgRecords = line.esgRecords || [];
       line.esgRecords.push({
         id: randomUUID(),
         category: "scope3",
         source: "其他供應鏈間接排放",
-        metricAmount: scope3PerVoucher.mul(100).toString(), // Info: (20260504 - Tzuhan) 假設 1 噸 CO2e 約對應 100 單位物料
-        metricUnit: "Pieces",
-        carbonAmount: scope3PerVoucher.toString(),
+        metricAmount: actualScope3.mul(100).toString(),
+        metricUnit: MeasurementUnit.PIECE,
+        carbonAmount: actualScope3.toString(),
       });
     });
   }
@@ -211,7 +261,7 @@ export const generateEsgRecords = (stockId: string) => {
         category: "water",
         source: "自來水",
         metricAmount: waterPerVoucher.toString(),
-        metricUnit: "ton",
+        metricUnit: MeasurementUnit.TONNE,
         carbonAmount: "0", // Info: (20260502 - Tzuhan) 用水通常不會直接映射到這裡的範疇一或範疇二的碳排放量
       });
       if (wastePerVoucher.gt(0)) {
@@ -220,7 +270,7 @@ export const generateEsgRecords = (stockId: string) => {
           category: "waste",
           source: "一般廢棄物",
           metricAmount: wastePerVoucher.toString(),
-          metricUnit: "ton",
+          metricUnit: MeasurementUnit.TONNE,
           carbonAmount: "0",
         });
       }
