@@ -430,9 +430,9 @@ export default function EsgTableSection({
       </div>
 
       {/* Info: (20260401 - Julian) Table */}
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="w-full min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm md:overflow-x-auto">
         {/* Info: (20260324 - Julian) 隱藏已刪除紀錄 toggle */}
-        <div className="flex items-center justify-between bg-white px-2 py-4 lg:px-6">
+        <div className="flex flex-col gap-2 bg-white px-4 py-4 md:flex-row md:items-center md:justify-between lg:px-6">
           <div className="flex cursor-pointer items-center gap-3">
             <button
               type="button"
@@ -450,7 +450,7 @@ export default function EsgTableSection({
             </button>
             <label
               htmlFor="hideDeletedToggle"
-              className="cursor-pointer text-xs font-semibold text-slate-600 lg:text-sm"
+              className="cursor-pointer text-sm font-bold text-slate-600"
             >
               {t("voucher.main_view.filters.hide_deleted")}
             </label>
@@ -458,9 +458,9 @@ export default function EsgTableSection({
         </div>
 
         {/* Info: (20260312 - Julian) Table */}
-        <div className="overflow-x-auto border-t border-slate-200">
-          <table className="w-full min-w-[800px] border-collapse text-left">
-            <thead>
+        <div className="border-t border-slate-200">
+          <table className="w-full border-collapse text-left md:min-w-[800px]">
+            <thead className="hidden md:table-header-group">
               <tr className="border-b border-slate-200 bg-slate-50/70">
                 <th className="p-2 text-center text-xs font-semibold tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
                   {t("esg_table.header.voucher")}

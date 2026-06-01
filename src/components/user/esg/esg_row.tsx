@@ -10,6 +10,7 @@ import {
   CircleAlert,
   Trash2,
   Undo2,
+  Leaf,
 } from "lucide-react";
 import { numberWithCommas, timestampToString } from "@/lib/utils/common";
 import { IEsgRecordDetail, EsgScope, EsgIntensity } from "@/interfaces/esg";
@@ -66,7 +67,7 @@ export function EsgRow({
         // Info: (20260325 - Julian) 如果沒有資料，就不要顯示 intensity
         return (
           <span
-            className={`inline-flex items-center justify-center rounded-full border border-gray-300 bg-gray-100 px-3 py-1 text-xs font-semibold whitespace-nowrap text-gray-600 transition-colors`}
+            className={`inline-flex items-center justify-center rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-xs font-semibold whitespace-nowrap text-slate-600 transition-colors`}
           >
             {t("common.no_data")}
           </span>
@@ -84,7 +85,7 @@ export function EsgRow({
         return (
           <div className="flex items-center">
             <div className="shrink-0">
-              <Zap className="mr-1.5 h-4 w-4 text-amber-500" />
+              <Zap className="mr-1.5 size-4 text-amber-500" />
             </div>
             <div className="flex flex-wrap">
               <p>{t("esg_table.scope.scope_1")}：</p>
@@ -96,7 +97,7 @@ export function EsgRow({
         return (
           <div className="flex items-center">
             <div className="shrink-0">
-              <Truck className="mr-1.5 h-4 w-4 text-blue-500" />
+              <Truck className="mr-1.5 size-4 text-blue-500" />
             </div>
             <div className="flex flex-wrap">
               <p>{t("esg_table.scope.scope_2")}：</p>
@@ -108,7 +109,7 @@ export function EsgRow({
         return (
           <div className="flex items-center">
             <div className="shrink-0">
-              <Cloud className="mr-1.5 h-4 w-4 text-green-500" />
+              <Cloud className="mr-1.5 size-4 text-green-500" />
             </div>
             <div className="flex flex-wrap">
               <p>{t("esg_table.scope.scope_3")}：</p>
@@ -119,17 +120,39 @@ export function EsgRow({
       default:
         // Info: (20260325 - Julian) 如果沒有資料，就不要顯示 scope
         return (
-          <div className="w-fit rounded-full border border-gray-300 bg-gray-100 px-1.5 py-1 text-gray-600">
+          <div className="w-fit rounded-full border border-slate-300 bg-slate-100 px-1.5 py-1 text-slate-600">
             {t("common.no_data")}
           </div>
         );
     }
   };
 
-  const actionsColumn = (
+  const mobileActionBtn = (
+    <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+      {record.isDeleted ? (
+        <button
+          title={t("common.restore")}
+          onClick={() => onRestore(record.id)}
+          className="rounded-full bg-emerald-100 p-2.5 text-emerald-600"
+        >
+          <Undo2 size={20} />
+        </button>
+      ) : (
+        <button
+          title={t("common.delete")}
+          onClick={() => onDelete(record.id)}
+          className="rounded-full bg-red-100 p-2.5 text-red-600"
+        >
+          <Trash2 size={20} />
+        </button>
+      )}
+    </div>
+  );
+
+  const desktopActionsTd = (
     <td
       aria-label="Actions"
-      className="p-2 text-center align-middle lg:px-4 lg:py-4"
+      className="hidden p-2 text-center align-middle md:table-cell lg:px-4 lg:py-4"
       onClick={(e) => e.stopPropagation()}
     >
       {record.isDeleted ? (
@@ -158,9 +181,51 @@ export function EsgRow({
   if (record.analysisStatus === AIAnalysisStatus.PENDING) {
     return (
       <tr
-        className={`border-b opacity-80 transition-colors last:border-0 ${record.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500" : "border-slate-200 bg-slate-50"}`}
+        className={`block border-b-4 border-double text-sm transition-colors last:border-0 md:table-row md:border-b md:border-solid ${record.isDeleted ? "border-slate-700 bg-slate-50 text-slate-500 opacity-50" : "border-slate-500 bg-slate-50 text-slate-400 md:border-slate-300"}`}
       >
-        <td className="p-2 lg:px-6 lg:py-4">
+        {/* Info: (20260601 - Julian) 手機版 */}
+        <td className="block w-full p-4 md:hidden">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-white shadow-sm">
+                {record.isDeleted ? (
+                  <Trash2 className="size-6 text-slate-400" />
+                ) : (
+                  <Loader2 className="size-6 animate-spin text-orange-400" />
+                )}
+              </div>
+              <div className="flex flex-1 flex-col justify-center gap-1.5">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-bold text-slate-800">
+                    {timestampToString(record.tradingDate).dateWithDash}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="h-px w-full bg-slate-200" />
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500">狀態：</span>
+                {record.isDeleted ? (
+                  <span className="flex items-center gap-1 text-xs font-bold text-slate-400">
+                    <Trash2 size={14} />
+                    {t("common.status_deleted")}
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-[10px] font-medium text-orange-500 italic sm:text-xs">
+                    <Loader2 className="size-3 animate-spin text-orange-500" />
+                    {t("common.ai.pending")}
+                  </span>
+                )}
+              </div>
+              <div className="ml-auto">{mobileActionBtn}</div>
+            </div>
+          </div>
+        </td>
+        {/* Info: (20260601 - Julian) 電腦版 */}
+        <td className="hidden p-2 md:table-cell lg:px-6 lg:py-4">
           <div className="mx-auto flex size-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-white p-1 shadow-sm sm:size-16">
             {record.isDeleted ? (
               <Trash2 className="size-6 text-slate-400" />
@@ -169,12 +234,12 @@ export function EsgRow({
             )}
           </div>
         </td>
-        <td className="p-2 text-center text-xs font-semibold whitespace-nowrap text-slate-400 lg:px-6 lg:py-4 lg:text-sm">
+        <td className="hidden p-2 text-center text-xs font-semibold whitespace-nowrap text-slate-400 md:table-cell lg:px-6 lg:py-4 lg:text-sm">
           {dateString}
         </td>
         <td
           colSpan={5}
-          className="p-2 text-center align-middle lg:px-6 lg:py-4"
+          className="hidden p-2 text-center align-middle md:table-cell lg:px-6 lg:py-4"
         >
           {record.isDeleted ? (
             <span className="flex items-center justify-center gap-2 font-bold text-slate-500">
@@ -188,7 +253,7 @@ export function EsgRow({
             </span>
           )}
         </td>
-        {actionsColumn}
+        {desktopActionsTd}
       </tr>
     );
   }
@@ -197,9 +262,56 @@ export function EsgRow({
   if (record.analysisStatus === AIAnalysisStatus.PROCESSING) {
     return (
       <tr
-        className={`border-b text-sm opacity-90 transition-colors last:border-0 ${record.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500" : "border-blue-200 bg-blue-50"}`}
+        className={`block border-b-4 border-double text-sm transition-colors last:border-0 md:table-row md:border-b md:border-solid ${record.isDeleted ? "border-slate-700 bg-slate-50 text-slate-500 opacity-50" : "border-slate-500 bg-blue-50 text-blue-400 md:border-blue-200"}`}
       >
-        <td className="p-2 lg:px-6 lg:py-4">
+        {/* Info: (20260601 - Julian) 手機版 */}
+        <td className="block w-full p-4 md:hidden">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-blue-300 bg-white shadow-sm">
+                {record.isDeleted ? (
+                  <Trash2 className="size-6 text-slate-400" />
+                ) : (
+                  <Loader2 className="size-6 animate-spin text-blue-500" />
+                )}
+              </div>
+              <div className="flex flex-1 flex-col justify-center gap-1.5">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-bold text-slate-800">
+                    {timestampToString(record.tradingDate).dateWithDash}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="h-px w-full bg-slate-200" />
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500">狀態：</span>
+                {record.isDeleted ? (
+                  <span className="flex items-center gap-1 text-xs font-bold text-slate-400">
+                    <Trash2 size={14} />
+                    {t("common.status_deleted")}
+                  </span>
+                ) : (
+                  <div className="flex flex-col gap-1">
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-blue-600 italic sm:text-xs">
+                      <Loader2 className="size-3 animate-spin text-blue-500" />
+                      {t("esg_table.ai.processing")}
+                    </span>
+                    <div className="h-1 w-full overflow-hidden rounded-full bg-blue-200">
+                      <div className="h-full w-2/3 animate-pulse rounded-full bg-blue-500"></div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="ml-auto">{mobileActionBtn}</div>
+            </div>
+          </div>
+        </td>
+        {/* Info: (20260601 - Julian) 電腦版 */}
+        <td className="hidden p-2 md:table-cell lg:px-6 lg:py-4">
           <div className="mx-auto flex size-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-blue-300 bg-white p-1 shadow-sm sm:size-16">
             {record.isDeleted ? (
               <Trash2 className="size-6 text-slate-400" />
@@ -208,13 +320,13 @@ export function EsgRow({
             )}
           </div>
         </td>
-        <td className="p-2 text-center text-xs font-semibold whitespace-nowrap text-blue-400 lg:px-6 lg:py-4 lg:text-sm">
+        <td className="hidden p-2 text-center text-xs font-semibold whitespace-nowrap text-blue-400 md:table-cell lg:px-6 lg:py-4 lg:text-sm">
           {dateString}
         </td>
         <td
           aria-label="AI Processing"
           colSpan={5}
-          className="p-2 text-center align-middle lg:px-6 lg:py-4"
+          className="hidden p-2 text-center align-middle md:table-cell lg:px-6 lg:py-4"
         >
           {record.isDeleted ? (
             <span className="flex items-center justify-center gap-2 font-bold text-slate-500">
@@ -233,7 +345,7 @@ export function EsgRow({
             </div>
           )}
         </td>
-        {actionsColumn}
+        {desktopActionsTd}
       </tr>
     );
   }
@@ -243,9 +355,55 @@ export function EsgRow({
     return (
       <tr
         onClick={!record.isDeleted ? handleVerifyClick : undefined}
-        className={`border-b opacity-80 transition-colors last:border-0 ${record.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500" : "border-slate-200 bg-red-50 text-red-500 hover:cursor-pointer hover:bg-red-100"}`}
+        className={`block border-b-4 border-double text-sm transition-colors last:border-0 md:table-row md:border-b md:border-solid ${record.isDeleted ? "border-slate-700 bg-slate-50 text-slate-500 opacity-50" : "border-slate-500 bg-red-50 text-red-500 hover:cursor-pointer hover:bg-red-100 md:border-slate-300"}`}
       >
-        <td className="p-2 lg:px-6 lg:py-4">
+        {/* Info: (20260601 - Julian) 手機版 */}
+        <td className="block w-full p-4 md:hidden">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-red-300 bg-white shadow-sm">
+                {record.isDeleted ? (
+                  <Trash2 className="size-6 text-slate-400" />
+                ) : (
+                  <CircleAlert className="size-6 text-red-500" />
+                )}
+              </div>
+              <div className="flex flex-1 flex-col justify-center gap-1.5">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-bold text-slate-800">
+                    {timestampToString(record.tradingDate).dateWithDash}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="h-px w-full bg-slate-200" />
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500">狀態：</span>
+                {record.isDeleted ? (
+                  <span className="flex items-center gap-1 text-xs font-bold text-slate-400">
+                    <Trash2 size={14} />
+                    {t("common.status_deleted")}
+                  </span>
+                ) : (
+                  <span
+                    className="line-clamp-2 text-[10px] font-bold text-red-500 sm:text-xs"
+                    title={
+                      record.aiNote || (t("esg_table.ai.failed") as string)
+                    }
+                  >
+                    {record.aiNote || t("esg_table.ai.failed")}
+                  </span>
+                )}
+              </div>
+              <div className="ml-auto">{mobileActionBtn}</div>
+            </div>
+          </div>
+        </td>
+        {/* Info: (20260601 - Julian) 電腦版 */}
+        <td className="hidden p-2 md:table-cell lg:px-6 lg:py-4">
           <div className="mx-auto flex size-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-red-300 bg-white p-1 shadow-sm sm:size-16">
             {record.isDeleted ? (
               <Trash2 className="size-6 text-slate-400" />
@@ -254,12 +412,12 @@ export function EsgRow({
             )}
           </div>
         </td>
-        <td className="p-2 text-center text-xs font-semibold whitespace-nowrap lg:px-6 lg:py-4 lg:text-sm">
+        <td className="hidden p-2 text-center text-xs font-semibold whitespace-nowrap md:table-cell lg:px-6 lg:py-4 lg:text-sm">
           {dateString}
         </td>
         <td
           colSpan={5}
-          className="p-2 text-center align-middle lg:px-6 lg:py-4"
+          className="hidden p-2 text-center align-middle md:table-cell lg:px-6 lg:py-4"
         >
           {record.isDeleted ? (
             <span className="flex items-center justify-center gap-2 font-bold text-slate-500">
@@ -272,7 +430,7 @@ export function EsgRow({
             </p>
           )}
         </td>
-        {actionsColumn}
+        {desktopActionsTd}
       </tr>
     );
   }
@@ -292,10 +450,102 @@ export function EsgRow({
   return (
     <tr
       onClick={!record.isDeleted ? handleVerifyClick : undefined}
-      className={`border-b border-slate-300 transition-colors last:border-0 ${record.isDeleted ? "bg-slate-50 opacity-50" : isAnalysisFailed ? "cursor-pointer bg-red-200 hover:bg-red-300" : "cursor-pointer bg-white hover:bg-orange-100"}`}
+      className={`block border-b-4 border-double border-slate-500 text-sm transition-colors last:border-0 md:table-row md:border-b md:border-solid md:border-slate-300 ${record.isDeleted ? "bg-slate-50 opacity-50" : isAnalysisFailed ? "cursor-pointer bg-red-200 hover:bg-red-300" : "cursor-pointer bg-white hover:bg-orange-100"}`}
     >
-      {/* Info: (20260320 - Julian) File */}
-      <td className="p-2 lg:px-6 lg:py-4">
+      {/* Info: (20260601 - Julian) 手機版 */}
+      <td className="block w-full p-4 md:hidden">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-start gap-3">
+            <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
+              {record.file ? (
+                <FilePreview
+                  file={{ filename: record.file.fileName || "Unknown" }}
+                  fileId={record.file.hash}
+                  className="size-full object-cover"
+                />
+              ) : (
+                <div className="flex size-full items-center justify-center rounded-lg bg-slate-100 p-1">
+                  <FileQuestion className="size-6 text-slate-300" />
+                </div>
+              )}
+              {isAnalysisFailed && (
+                <div className="absolute top-0 left-0 z-10 flex size-full items-center justify-center bg-red-100/50 p-1">
+                  <CircleAlert size={24} className="text-red-500" />
+                </div>
+              )}
+            </div>
+            <div className="flex flex-1 flex-col justify-center gap-1.5">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-bold text-slate-800">{dateString}</p>
+              </div>
+              <div className="text-xs font-bold text-slate-800">
+                {renderScope(record.scope)}
+              </div>
+              <p className="pl-6 text-[10px] font-medium text-slate-500">
+                {record.vendor}
+              </p>
+            </div>
+          </div>
+
+          <div className="h-px w-full bg-slate-100" />
+
+          {/* Info: (20260601 - Julian) 活動與排放數據 */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500">
+                {t("esg_table.header.raw_data")}
+              </span>
+              <span className="text-xs font-bold text-slate-700">
+                {rawActivity}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500">
+                {t("esg_table.header.intensity_label")}
+              </span>
+              {renderIntensity(record.intensity)}
+            </div>
+            <div className="mt-1 flex flex-col gap-1 rounded-lg border border-slate-100 bg-slate-50 p-3">
+              <span className="text-xs font-bold text-slate-500">
+                {t("esg_table.header.emissions")} (KGCO2E)
+              </span>
+              <span className="flex items-center gap-2 text-base font-bold text-slate-800">
+                <Leaf className="size-4 text-green-500" />
+                {numberWithCommas(record.emissions)}
+              </span>
+            </div>
+          </div>
+
+          <div className="h-px w-full bg-slate-100" />
+
+          {/* Info: (20260601 - Julian) 狀態與操作 */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500">狀態：</span>
+              {record.isDeleted ? (
+                <span className="flex items-center gap-1 text-xs font-bold text-slate-400">
+                  <Trash2 size={14} />
+                  {t("common.status_deleted")}
+                </span>
+              ) : record.isVerified ? (
+                <span className="flex items-center gap-1 text-xs font-bold text-emerald-500">
+                  <CheckCircle2 size={14} />
+                  {t("verify.status.verified")}
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-xs font-bold text-orange-500">
+                  <FileQuestion size={14} />
+                  {t("verify.status.unverified")}
+                </span>
+              )}
+              <AiConfidence confidence={record.confidence} barOnly />
+            </div>
+            <div className="ml-auto">{mobileActionBtn}</div>
+          </div>
+        </div>
+      </td>
+      {/* Info: (20260601 - Julian) 電腦版 */}
+      <td className="hidden p-2 md:table-cell lg:px-6 lg:py-4">
         <div className="relative mx-auto flex size-14 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-sm sm:size-16">
           {/* Info: (20260312 - Julian) File Preview */}
           {record.file ? (
@@ -318,11 +568,11 @@ export function EsgRow({
         </div>
       </td>
       {/* Info: (20260320 - Julian) Date */}
-      <td className="p-2 text-center text-xs font-semibold whitespace-nowrap text-slate-800 lg:px-6 lg:py-4 lg:text-sm">
+      <td className="hidden p-2 text-center text-xs font-semibold whitespace-nowrap text-slate-800 md:table-cell lg:px-6 lg:py-4 lg:text-sm">
         {dateString}
       </td>
       {/* Info: (20260320 - Julian) Activity Type */}
-      <td className="p-2 lg:px-6 lg:py-4">
+      <td className="hidden p-2 md:table-cell lg:px-6 lg:py-4">
         <div className="mb-1 text-xs font-bold text-slate-800 lg:text-sm">
           {renderScope(record.scope)}
         </div>
@@ -331,13 +581,13 @@ export function EsgRow({
         </div>
       </td>
       {/* Info: (20260320 - Julian) Activity Data */}
-      <td className="p-2 text-center whitespace-nowrap lg:px-6 lg:py-4">
+      <td className="hidden p-2 text-center whitespace-nowrap md:table-cell lg:px-6 lg:py-4">
         {rawActivity}
       </td>
       {/* Info: (20260320 - Julian) Emissions */}
       <td
         aria-label={t("esg_table.emissions")}
-        className="p-2 text-center whitespace-nowrap lg:px-6 lg:py-4"
+        className="hidden p-2 text-center whitespace-nowrap md:table-cell lg:px-6 lg:py-4"
       >
         <div className="flex flex-col items-center justify-center gap-1">
           <span className="text-sm font-semibold text-slate-800">
@@ -346,11 +596,11 @@ export function EsgRow({
         </div>
       </td>
       {/* Info: (20260320 - Julian) Intensity */}
-      <td className="p-2 text-center lg:px-6 lg:py-4">
+      <td className="hidden p-2 text-center md:table-cell lg:px-6 lg:py-4">
         {renderIntensity(record.intensity)}
       </td>
       {/* Info: (20260409 - Julian) Status / AI Confidence */}
-      <td className="p-2 text-center lg:px-6 lg:py-4">
+      <td className="hidden p-2 text-center md:table-cell lg:px-6 lg:py-4">
         <div className="flex flex-col items-center gap-2">
           {record.isDeleted ? (
             <div className="mx-auto flex flex-col items-center justify-center gap-1 text-slate-400">
@@ -377,8 +627,7 @@ export function EsgRow({
           <AiConfidence confidence={record.confidence} barOnly />
         </div>
       </td>
-      {/* Info: (20260404 - Luphia) Actions */}
-      {actionsColumn}
+      {desktopActionsTd}
     </tr>
   );
 }
