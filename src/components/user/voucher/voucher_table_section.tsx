@@ -453,9 +453,9 @@ export default function VoucherTableSection() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="w-full min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:overflow-x-auto">
             {/* Info: (20260324 - Julian) 隱藏已刪除傳票 toggle */}
-            <div className="flex flex-col items-center justify-between gap-y-2 bg-white px-2 py-4 lg:flex-row lg:px-6">
+            <div className="flex flex-col gap-2 bg-white px-4 py-4 md:flex-row md:items-center md:justify-between lg:px-6">
               <div className="flex cursor-pointer items-center gap-3">
                 <button
                   type="button"
@@ -473,13 +473,13 @@ export default function VoucherTableSection() {
                 </button>
                 <label
                   htmlFor="hideDeletedToggle"
-                  className="cursor-pointer text-xs font-semibold text-slate-600 lg:text-sm"
+                  className="cursor-pointer text-sm font-bold text-slate-600"
                 >
                   {t("voucher.main_view.filters.hide_deleted")}
                 </label>
               </div>
 
-              <div className="flex items-center gap-2 text-right text-xs font-bold text-slate-400 uppercase">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase md:text-right">
                 {/* Info: (20260324 - Julian) 總傳票數 */}
                 <p>
                   {t("voucher.main_view.filters.total_vouchers", {
@@ -499,9 +499,9 @@ export default function VoucherTableSection() {
             </div>
 
             {/* Info: (20260310 - Julian) Table Container */}
-            <div className="overflow-x-auto border-t border-slate-200">
-              <table className="w-full min-w-[1000px] border-collapse text-left text-sm text-gray-600">
-                <thead className="border-b border-slate-200 bg-slate-100">
+            <div className="border-t border-slate-200">
+              <table className="w-full border-collapse text-left text-sm text-gray-600 md:min-w-[1000px]">
+                <thead className="hidden border-b border-slate-200 bg-slate-100 md:table-header-group">
                   <tr>
                     <th className="p-2 text-center text-xs font-black tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4 lg:whitespace-nowrap">
                       {t("voucher.main_view.table.headers.receipt")}

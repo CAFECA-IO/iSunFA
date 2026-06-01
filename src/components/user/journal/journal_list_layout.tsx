@@ -384,26 +384,23 @@ const JournalListItem = ({
               <span className="text-xs text-slate-500">
                 {t("ocr.status")}：
               </span>
-              <div className="flex items-center gap-1.5">
-                {journal.isDeleted ? (
-                  <span className="flex items-center gap-1 text-sm font-bold text-slate-500">
-                    <Trash2 size={16} /> {t("common.status_deleted")}
-                  </span>
-                ) : journal.isVerified ? (
-                  <span className="flex items-center gap-1 text-sm font-bold text-emerald-500">
-                    <CheckCircle2 size={16} /> {t("verify.status.verified")}
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1 text-sm font-bold text-orange-500">
-                    <FileQuestion size={16} /> {t("verify.status.unverified")}
-                  </span>
-                )}
-                {!journal.isDeleted && (
-                  <span className="text-xs text-slate-400">
-                    ({t("ocr.confidence")} {journal.confidence}%)
-                  </span>
-                )}
-              </div>
+              {journal.isDeleted ? (
+                <span className="flex items-center gap-1 text-xs font-bold text-slate-400">
+                  <Trash2 size={14} />
+                  {t("common.status_deleted")}
+                </span>
+              ) : journal.isVerified ? (
+                <span className="flex items-center gap-1 text-xs font-bold text-emerald-500">
+                  <CheckCircle2 size={14} />
+                  {t("verify.status.verified")}
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-xs font-bold text-orange-500">
+                  <FileQuestion size={14} />
+                  {t("verify.status.unverified")}
+                </span>
+              )}
+              <AiConfidence confidence={journal.confidence} barOnly />
             </div>
             {mobileActionBtn}
           </div>
