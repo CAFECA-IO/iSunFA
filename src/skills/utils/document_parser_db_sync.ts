@@ -8,6 +8,7 @@ export interface IDocNode {
   confidence?: number | string;
   text?: string;
   aiNote?: string;
+  documentType?: string;
   tradingType?: string;
   note?: string;
   currency?: string;
@@ -28,6 +29,7 @@ export interface IDocNode {
   vendorTaxId?: string;
   amount?: number | string;
   totalAmount?: number | string;
+  taxAmount?: number | string;
   startDate?: string;
   endDate?: string;
   unit?: string;

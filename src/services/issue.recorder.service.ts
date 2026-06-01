@@ -4,13 +4,13 @@ import { orderRepo } from "@/repositories/order.repo";
 import { analysisRepo } from "@/repositories/analysis.repo";
 import { ORDER_STATUS } from "@/constants/status";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
-import { syncDocumentResultToDatabase } from "@/skills/utils/document_parser_db_sync";
+import {
+  syncDocumentResultToDatabase,
+  IAggregatedDocumentResult,
+} from "@/skills/utils/document_parser_db_sync";
 import { getPriorityEnvConfig } from "@/services/env.service";
-import type { IAggregatedDocumentResult } from "@/skills/utils/document_parser_db_sync";
 import type { JSONValue } from "@/validators";
 import { MoneyUtil } from "@/lib/utils/money";
-import { fxInterceptorService } from "@/services/fx.interceptor.service";
-import { prisma } from "@/lib/prisma";
 import { SystemWorkerSource } from "@/constants/enums";
 
 export class IssueRecorderService {
@@ -243,6 +243,11 @@ export class IssueRecorderService {
               : {};
             const payloadData =
               (orderDataObj.data as Record<string, unknown>) || {};
+            /**
+             * Info: (20260529 - Tzuhan)
+             * 作為最終的 Fallback 機制。專門為了沒有實體 Order Payload 的內部背景任務設計（例如：AMORTIZATION_WORKER），
+             * 確保從本地上下文中依然能萃取出正確的帳本 ID。
+             */
             const dbAccountBookId =
               payloadData.accountBookId ||
               orderDataObj.accountBookId ||
@@ -274,40 +279,10 @@ export class IssueRecorderService {
                 const targetAccountBookId = (dbAccountBookId ||
                   fileResult.accountBookId) as string;
 
-                let bookCurrency = "TWD";
-                try {
-                  const book = await prisma.accountBook.findUnique({
-                    where: { id: targetAccountBookId },
-                  });
-                  if (book && book.currency) {
-                    bookCurrency = book.currency;
-                  }
-                } catch (e) {
-                  console.warn(
-                    "[MissionRecorder] Could not fetch account book currency, defaulting to TWD",
-                    e,
-                  );
-                }
-
-                const originalResult =
-                  fileResult as unknown as IAggregatedDocumentResult;
-                const tradingDateStr = originalResult.voucherBase?.tradingDate;
-                const tradingDate = tradingDateStr
-                  ? new Date(tradingDateStr)
-                  : new Date();
-
-                // Info: (20260526 - Tzuhan) 統一在寫入 DB 之前調用 FX Interceptor，維護架構分層
-                const interceptedResult =
-                  fxInterceptorService.interceptAndConvert(
-                    originalResult,
-                    bookCurrency,
-                    tradingDate,
-                  );
-
                 await syncDocumentResultToDatabase({
                   fileId: fileIdToSync,
                   accountBookId: targetAccountBookId,
-                  result: interceptedResult,
+                  result: fileResult as unknown as IAggregatedDocumentResult,
                   voucherIdContext:
                     localContextObj.voucherId ||
                     (fileResult.voucherIdContext as string | undefined),
@@ -319,6 +294,7 @@ export class IssueRecorderService {
                     (fileResult.journalIdContext as string | undefined),
                 });
               }
+
               console.log(
                 `[MissionRecorder] Synced document results to DB for Task ID ${taskId}`,
               );

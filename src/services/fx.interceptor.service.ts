@@ -1,6 +1,8 @@
+import { UniversalAccountTag } from "@/constants/enums";
 import { IAggregatedDocumentResult } from "@/skills/utils/document_parser_db_sync";
 import { getCrossExchangeRateStatic } from "@/skills/utils/exchange_rate_helper";
 import { FIAT_CURRENCIES } from "@/constants/country";
+import { MoneyUtil } from "@/lib/utils/money";
 export class FxInterceptorService {
   /**
    * Info: (20260526 - Tzuhan) [ADR] FX Interceptor
@@ -18,6 +20,7 @@ export class FxInterceptorService {
 
     if (result.voucherBase) {
       const parsedCurrency = result.voucherBase.currency || bookCurrency;
+
       if (
         parsedCurrency !== bookCurrency &&
         FIAT_CURRENCIES.includes(parsedCurrency) &&
@@ -40,55 +43,141 @@ export class FxInterceptorService {
         // Info: (20260526 - Tzuhan) 轉換 VoucherBase 總金額 (PAYMENT_RECEIPT 等需要總金額的比對)
         const vBase = result.voucherBase as Record<string, unknown>;
         if (vBase.totalAmount) {
-          const amtStr = String(vBase.totalAmount).replace(/,/g, "");
-          const amtNum = Number(amtStr);
-          if (!isNaN(amtNum)) {
-            vBase.totalAmount = Math.round(amtNum * fxRate).toString();
+          try {
+            const amtStr = MoneyUtil.parseInput(String(vBase.totalAmount));
+            vBase.totalAmount = MoneyUtil.toDecimal(
+              MoneyUtil.multiply(amtStr, fxRate.toString()),
+            )
+              .round()
+              .toString();
+          } catch (e) {
+            console.warn(
+              "[FxInterceptorService] parseInput failed for totalAmount",
+              e,
+            );
+          }
+        }
+
+        // Info: (20260527 - Tzuhan) 轉換 VoucherBase 稅額 (避免營業稅以原幣申報)
+        if (vBase.taxAmount) {
+          try {
+            const taxAmtStr = MoneyUtil.parseInput(String(vBase.taxAmount));
+            vBase.taxAmount = MoneyUtil.toDecimal(
+              MoneyUtil.multiply(taxAmtStr, fxRate.toString()),
+            )
+              .round()
+              .toString();
+          } catch (e) {
+            console.warn(
+              "[FxInterceptorService] parseInput failed for taxAmount",
+              e,
+            );
           }
         }
 
         // Info: (20260526 - Tzuhan) 轉換 VoucherLines 各分錄金額，並處理四捨五入導致的匯差配平
         if (result.voucherLines && Array.isArray(result.voucherLines.lines)) {
-          let totalDebit = 0;
-          let totalCredit = 0;
+          let totalDebit = "0";
+          let totalCredit = "0";
           let maxDebitLineIndex = -1;
           let maxCreditLineIndex = -1;
-          let maxDebitAmount = -1;
-          let maxCreditAmount = -1;
+          let maxDebitAmountStr = "-1";
+          let maxCreditAmountStr = "-1";
+
+          let hasMultipleFxRates = false;
 
           for (let i = 0; i < result.voucherLines.lines.length; i++) {
             const line = result.voucherLines.lines[i];
-            const amtStr = String(line.amount).replace(/,/g, "");
-            const amtNum = Number(amtStr);
-            if (!isNaN(amtNum)) {
-              const converted = Math.round(amtNum * fxRate);
-              line.amount = converted.toString();
+            try {
+              let lineFxRate = fxRate;
+              if (line.targetFxDate && typeof line.targetFxDate === "string") {
+                const lineTradingDate = new Date(line.targetFxDate);
+                lineFxRate = getCrossExchangeRateStatic(
+                  parsedCurrency,
+                  bookCurrency,
+                  lineTradingDate,
+                );
+                hasMultipleFxRates = true;
+              }
+
+              const amtStr = MoneyUtil.parseInput(String(line.amount || "0"));
+              const convertedStr = MoneyUtil.toDecimal(
+                MoneyUtil.multiply(amtStr, lineFxRate.toString()),
+              )
+                .round()
+                .toString();
+              line.amount = convertedStr;
 
               if (line.isDebit) {
-                totalDebit += converted;
-                if (converted > maxDebitAmount) {
-                  maxDebitAmount = converted;
+                totalDebit = MoneyUtil.add(totalDebit, convertedStr);
+                if (
+                  MoneyUtil.toDecimal(convertedStr).greaterThan(
+                    MoneyUtil.toDecimal(maxDebitAmountStr),
+                  )
+                ) {
+                  maxDebitAmountStr = convertedStr;
                   maxDebitLineIndex = i;
                 }
               } else {
-                totalCredit += converted;
-                if (converted > maxCreditAmount) {
-                  maxCreditAmount = converted;
+                totalCredit = MoneyUtil.add(totalCredit, convertedStr);
+                if (
+                  MoneyUtil.toDecimal(convertedStr).greaterThan(
+                    MoneyUtil.toDecimal(maxCreditAmountStr),
+                  )
+                ) {
+                  maxCreditAmountStr = convertedStr;
                   maxCreditLineIndex = i;
                 }
               }
+            } catch (e) {
+              console.warn(
+                `[FxInterceptorService] parseInput failed for line ${i}`,
+                e,
+              );
             }
           }
 
-          // Info: (20260526 - Tzuhan) 處理配平差額 (Plug to the largest line)
+          // Info: (20260526 - Tzuhan) 處理配平差額
           if (totalDebit !== totalCredit) {
-            const diff = totalDebit - totalCredit;
-            if (diff > 0 && maxCreditLineIndex !== -1) {
-              const line = result.voucherLines.lines[maxCreditLineIndex];
-              line.amount = (Number(line.amount) + diff).toString();
-            } else if (diff < 0 && maxDebitLineIndex !== -1) {
-              const line = result.voucherLines.lines[maxDebitLineIndex];
-              line.amount = (Number(line.amount) - diff).toString();
+            const diffStr = MoneyUtil.subtract(totalDebit, totalCredit);
+            const diffDec = MoneyUtil.toDecimal(diffStr);
+
+            // Info: (20260527 - Tzuhan) [AUDIT FIX] 若有跨期換匯 (Multiple FX Rates)，尾差為已實現兌換損益，不可強塞給最大分錄
+            if (hasMultipleFxRates) {
+              if (diffDec.greaterThan(0)) {
+                result.voucherLines.lines.push({
+                  particular: "Realized Foreign Exchange Gain/Loss",
+                  accountingCode: "",
+                  semanticCategory:
+                    UniversalAccountTag.FOREIGN_EXCHANGE_GAIN_OR_LOSS, // Info: (20260527 - Tzuhan) [Refactor] Using Enum instead of string
+                  amount: diffStr,
+                  isDebit: false,
+                });
+              } else if (diffDec.lessThan(0)) {
+                result.voucherLines.lines.push({
+                  particular: "Realized Foreign Exchange Gain/Loss",
+                  accountingCode: "",
+                  semanticCategory:
+                    UniversalAccountTag.FOREIGN_EXCHANGE_GAIN_OR_LOSS,
+                  amount: diffDec.abs().toString(),
+                  isDebit: true,
+                });
+              }
+            } else {
+              // Info: (20260526 - Tzuhan) 單一匯率純粹四捨五入導致的尾差，配平給最大分錄 (Plug to the largest line)
+              if (diffDec.greaterThan(0) && maxCreditLineIndex !== -1) {
+                const line = result.voucherLines.lines[maxCreditLineIndex];
+                line.amount = MoneyUtil.add(
+                  String(line.amount || "0"),
+                  diffStr,
+                );
+              } else if (diffDec.lessThan(0) && maxDebitLineIndex !== -1) {
+                const line = result.voucherLines.lines[maxDebitLineIndex];
+                line.amount = MoneyUtil.subtract(
+                  String(line.amount || "0"),
+                  diffStr,
+                );
+              }
             }
           }
         }
@@ -98,6 +187,7 @@ export class FxInterceptorService {
     // Info: (20260526 - Tzuhan) 攔截 ESG 物件，處理碳排金額外幣換算
     if (result.esg) {
       const esgUnit = result.esg.unit || bookCurrency;
+
       if (
         esgUnit !== bookCurrency &&
         FIAT_CURRENCIES.includes(esgUnit) &&
@@ -110,17 +200,16 @@ export class FxInterceptorService {
         );
 
         // Info: (20260526 - Tzuhan) 轉換金額與碳排量 (利用分配律: (Amount * FX) * Coef = (Amount * Coef) * FX)
-        const esgAmtStr = String(result.esg.amount).replace(/,/g, "");
-        const esgAmtNum = Number(esgAmtStr);
-        if (!isNaN(esgAmtNum)) {
-          result.esg.amount = esgAmtNum * fxRate;
-        }
-
-        const esgEmsStr = String(result.esg.emissions || "0").replace(/,/g, "");
-        const esgEmsNum = Number(esgEmsStr);
-        if (!isNaN(esgEmsNum)) {
-          // Info: (20260526 - Tzuhan) 因為 Two-Turn RAG 已預先使用未換匯的金額計算過 emissions，我們在此將 emissions 也乘上匯率，達成等式配平。
-          result.esg.emissions = (esgEmsNum * fxRate).toString();
+        try {
+          const esgAmtStr = MoneyUtil.parseInput(
+            String(result.esg.amount || "0"),
+          );
+          result.esg.amount = MoneyUtil.multiply(esgAmtStr, fxRate.toString());
+        } catch (e) {
+          console.warn(
+            "[FxInterceptorService] parseInput failed for ESG amount",
+            e,
+          );
         }
 
         // Info: (20260526 - Tzuhan) 替換幣別為本位幣

@@ -68,6 +68,12 @@ export enum SystemWorkerSource {
   AMORTIZATION_WORKER = "AMORTIZATION_WORKER",
 }
 
+export enum AnalysisCategory {
+  VOUCHER_PARSING = "VOUCHER_PARSING",
+  CERTIFICATE_ANALYSIS = "CERTIFICATE_ANALYSIS",
+  GENERAL = "GENERAL",
+}
+
 export enum CountryCode {
   TW = "TW",
   US = "US",
@@ -114,6 +120,20 @@ export enum EsgFallbackCategory {
 
   // Info: (20260521 - Tzuhan) --- 兜底防線 ---
   OTHER_UNKNOWN = "其他未知項目",
+}
+
+export enum AccountType {
+  ASSET = "asset",
+  LIABILITY = "liability",
+  EQUITY = "equity",
+  REVENUE = "revenue",
+  EXPENSE = "expense",
+  COST = "cost",
+  INCOME = "income",
+  GAIN_OR_LOSS = "gainOrLoss",
+  CASH_FLOW = "cashFlow",
+  OTHER_COMPREHENSIVE_INCOME = "otherComprehensiveIncome",
+  OTHER = "other",
 }
 
 export enum UniversalAccountTag {
@@ -175,6 +195,7 @@ export enum UniversalAccountTag {
   INTEREST_EXPENSE = "INTEREST_EXPENSE",
   MISCELLANEOUS_EXPENSE = "MISCELLANEOUS_EXPENSE",
   UTILITIES_EXPENSE = "UTILITIES_EXPENSE",
+  FOREIGN_EXCHANGE_GAIN_OR_LOSS = "FOREIGN_EXCHANGE_GAIN_OR_LOSS",
 
   UNKNOWN = "UNKNOWN",
 }

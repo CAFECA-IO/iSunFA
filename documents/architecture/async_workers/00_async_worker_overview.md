@@ -81,9 +81,13 @@ graph TD
 - **職責**：任務準備與在地化。
 - **動作**：聆聽智能合約上狀態為 `Open (0)` 的任務。拿到任務後，從 IPFS 下載使用者的原始 `mission.json`，並在本地建立隔離的 `MISSION_DIR`，同時產出供 AI 讀取的 `plan.executor.json`。
 
-### 3. `MissionExecutor` (AI 運算引擎)
-- **職責**：系統的算力心臟，執行純粹的 AI 推論與決定論管線。
-- **動作**：掃描 `MISSION_DIR` 執行混合決策管線，將結果寫成 `result.md`。若發生錯誤，除了寫入 `failed_*.md` 外，**會刻意輸出帶有錯誤標記的 `result.md` 以推進狀態機至後續的退回流程**。若偵測到 `giveup.md` 則會直接跳過。
+### 3. `MissionExecutor` (推論引擎) 與決定論管線 (Deterministic Pipeline)
+- **職責**：系統的算力心臟，執行純粹的 AI 推論，並在寫入磁碟前透過決定論管線洗淨資料。
+- **動作**：掃描 `MISSION_DIR` 執行 AI 推論。在將結果寫入 `result.md` 前，**此處是決定論攔截器管線 (VoucherPipelineOrchestrator) 的唯一觸發點**。系統會偵測 Payload 並依序啟動：
+  1. **TaxStrategyService**：偵測非本地統編，自動補齊 1423 / 2941 境外電商逆向稅額。
+  2. **FxInterceptorService**：套用高精度匯率轉換，並處理借貸尾差配平 (Plug)。
+  3. **AccountingEngineService**：執行應計基礎 (Accrual Basis) 跨期切斷 (Cut-off)。
+  清洗完成後，將最終結果寫成 `result.md`。若發生錯誤，除了寫入 `failed_*.md` 外，**會刻意輸出帶有錯誤標記的 `result.md` 以推進狀態機至後續的退回流程**。若偵測到 `giveup.md` 則會直接跳過。
 
 ### 4. `MissionCommitor` (上鏈員)
 - **職責**：產出保護與提交。
@@ -94,8 +98,8 @@ graph TD
 - **動作**：聆聽合約上 `PendingReview` 的任務。將 IPFS 上的結果下載後進行規則驗證（例如確認 AI 信心度是否為滿分）。若驗證無誤，發送 `approveSubmission` 交易解鎖資金並放行任務。
 
 ### 6. `MissionRecorder` (總帳抄寫員)
-- **職責**：將 Web3 的真相寫回 Web2 供使用者檢視。
-- **動作**：掃描本地 `ISSUE_DIR` 尋找 Validator 留下的 `approved.*.md`。讀取本地最終確定版的產出，安全地寫回 PostgreSQL 總帳本，並將原本的訂單標記為 `COMPLETED`。
+- **職責**：將 Web3 的客觀真相轉換為 Web2 的財務真相，並寫回總帳。
+- **動作**：掃描本地 `ISSUE_DIR` 尋找 Validator 留下的 `approved.*.md`。**作為絕對愚蠢的寫入器 (Dumb Writer)，它不再攔截或修改任何資料**。它僅單純地將 `approved.*.md` 內的 `dbSyncPayload` 安全地寫回 PostgreSQL 總帳本，並將原本的訂單標記為 `COMPLETED`。
 
 ### 7. `MissionFallbacker` (結算與回收員)
 - **職責**：任務最終狀態的結算與死信佇列 (DLQ) 處理。

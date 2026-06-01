@@ -48,6 +48,13 @@ export class VoucherBaseParsingSkill implements ITaskSkill {
         responseSchema,
       );
 
+      /**
+       * Info: (20260527 - Tzuhan) [ADR Migration]
+       * 過去此處包含大段的外幣匯率轉換 (getCrossExchangeRateStatic) 邏輯。
+       * 為貫徹 Zero Trust Architecture 與 Segregation of Duties，
+       * 所有外幣換算與高精度數學運算已全數抽離至後端的 FxInterceptorService 與 VoucherPipelineOrchestrator。
+       * 絕對禁止 AI Parser 層進行任何數學運算。
+       */
       return text.trim();
     } catch (error) {
       console.error("[VoucherBaseParsingSkill] Error:", error);

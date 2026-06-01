@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { calculateAmortizationForMonth } from "@/lib/utils/amortization_math";
+import { calculateStatelessAmortizationForMonth } from "@/lib/utils/amortization_math";
 import Decimal from "decimal.js";
 import { keccak256, toUtf8Bytes } from "ethers";
 import fs from "fs/promises";
@@ -28,13 +28,11 @@ export async function processAmortization() {
   await fs.mkdir(missionDirPath, { recursive: true }).catch(() => {});
 
   for (const schedule of schedules) {
-    // Info: (20260526 - Tzuhan) Pro-rata temporis Math
+    // Info: (20260527 - Tzuhan) Pro-rata temporis Math (Stateless Upgrade)
     const totalAmt = new Decimal(schedule.totalAmount.toString());
-    const amortizedAmt = new Decimal(schedule.amortizedAmount.toString());
 
-    const amountForMonth = calculateAmortizationForMonth(
+    const amountForMonth = calculateStatelessAmortizationForMonth(
       totalAmt,
-      amortizedAmt,
       schedule.startDate,
       schedule.endDate,
       targetDate,
@@ -63,6 +61,7 @@ export async function processAmortization() {
       http,
       parseAbi,
       decodeEventLog,
+      parseAbiItem,
     } = await import("viem");
     const { isuncoin } = await import("@/lib/viem_public");
 
@@ -112,10 +111,65 @@ export async function processAmortization() {
       }
     } catch (e) {
       console.log(
-        `[AmortizationWorker] createTask reverted for ${hashHex}. Likely duplicate (unique constraint). Skipping.`,
-        e,
+        `[AmortizationWorker] createTask reverted for ${hashHex}. Likely duplicate (unique constraint). Entering Healing Mode..., Error: ${e}`,
       );
-      continue;
+
+      // Info: (20260527 - Tzuhan) Healing Mode
+      try {
+        const currentBlock = await publicClient.getBlockNumber();
+        const MAX_BLOCKS = (30n * 24n * 60n * 60n) / 2n; // Info: (20260527 - Tzuhan) Approx 30 days (assuming 2s block time)
+        const fromBlock =
+          currentBlock > MAX_BLOCKS ? currentBlock - MAX_BLOCKS : 0n;
+
+        console.log(
+          `[AmortizationWorker] [Healing Mode] Scanning logs from block ${fromBlock} for ${hashHex}...`,
+        );
+
+        const logs = await publicClient.getLogs({
+          address: mbAddress,
+          event: parseAbiItem(
+            "event TaskCreated(uint256 indexed taskId, address indexed creator, uint256 reward, string contentCid)",
+          ),
+          fromBlock,
+          toBlock: "latest",
+        });
+
+        let recoveredTaskIdStr = "";
+        for (const log of logs) {
+          if (log.args && log.args.contentCid === hashHex) {
+            recoveredTaskIdStr = String(log.args.taskId);
+            break;
+          }
+        }
+
+        if (recoveredTaskIdStr) {
+          const taskDir = path.join(missionDirPath, recoveredTaskIdStr);
+          try {
+            await fs.access(path.join(taskDir, "result.md"));
+            console.log(
+              `[AmortizationWorker] [Healing Mode] Local file exists for ${recoveredTaskIdStr}. Normal duplicate, skipping.`,
+            );
+            continue; // Info: (20260527 - Tzuhan) Pure execution collision, safe to skip
+          } catch {
+            console.log(
+              `[AmortizationWorker] [Healing Mode] Recovered Ghost Task for taskId: ${recoveredTaskIdStr}. Rebuilding local payload...`,
+            );
+            taskIdStr = recoveredTaskIdStr;
+            // Info: (20260527 - Tzuhan) Healing successful, let it proceed down to create the files!
+          }
+        } else {
+          console.log(
+            `[AmortizationWorker] [Healing Mode] Could not find TaskCreated event for ${hashHex}. Giving up.`,
+          );
+          continue;
+        }
+      } catch (healingError) {
+        console.error(
+          `[AmortizationWorker] [Healing Mode] Failed to recover task:`,
+          healingError,
+        );
+        continue;
+      }
     }
 
     if (!taskIdStr) {
@@ -150,7 +204,7 @@ export async function processAmortization() {
             amount: amountForMonth.toNumber(),
             currency: "TWD",
             exchangeRate: 1,
-            description: `[System Amortization] ${schedule.assetAccountCode} -> ${schedule.expenseAccountCode}`,
+            description: `[System Amortization (Daily Pro-rata)] ${schedule.assetAccountCode} -> ${schedule.expenseAccountCode}`,
             referenceId: schedule.id,
             accountBookId: schedule.accountBookId,
             generationSource: "SYSTEM_DETERMINISTIC",

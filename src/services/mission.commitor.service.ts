@@ -5,7 +5,6 @@ import { storageService } from "@/services/storage.service";
 import { getAdminAccount } from "@/lib/wallet/admin_wallet";
 import { createPublicClient, createWalletClient, http, parseAbi } from "viem";
 import { isuncoin } from "@/lib/viem_public";
-
 const MB_ABI = parseAbi([
   "function submitResult(uint256 taskId, string calldata resultCid, uint256 consumedTokens) external",
 ]);
@@ -74,13 +73,11 @@ export async function processNext() {
         const taskId = BigInt(metaData.taskId);
 
         // Info: (20260420 - Luphia) 2. Upload result.md to IPFS (Laria)
-        console.log(`[MissionCommitor] Uploading result.md to Laria...`);
         const resultStr = await fs.readFile(resultPath, "utf8");
         const resultBlob = new Blob([resultStr], { type: "text/markdown" });
         const resultFile = new globalThis.File([resultBlob], "result.md", {
           type: "text/markdown",
         });
-
         const resultCid = await storageService.uploadLaria(resultFile);
         console.log(`[MissionCommitor] result.md uploaded. CID: ${resultCid}`);
 
