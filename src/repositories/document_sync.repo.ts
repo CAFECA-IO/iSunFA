@@ -430,7 +430,7 @@ export class DocumentSyncRepository {
 
             // Info: (20260526 - Tzuhan) 自動創建 AmortizationSchedule
             if (vd.startDate && vd.endDate && finalVoucherId) {
-              // Info: (20260528) 動態依據 AI 判斷的 semanticCategory 來對應，避免 Hardcode 科目代碼
+              // Info: (20260528 - Tzuhan) 動態依據 AI 判斷的 semanticCategory 來對應，避免 Hardcode 科目代碼
               const originalPrepaidIndex =
                 vd.lines?.findIndex(
                   (l) => l.semanticCategory === "PREPAID_EXPENSE",
