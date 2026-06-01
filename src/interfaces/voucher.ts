@@ -9,7 +9,6 @@ export enum TradingType {
 
 export interface IVoucherDashboardSummary {
   todayVoucherCount: number;
-  monthTotalAmount: number | bigint | string;
   pendingVoucherCount: number;
   aiAverageConfidence: number;
 }

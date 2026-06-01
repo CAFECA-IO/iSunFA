@@ -78,7 +78,6 @@ export const voucher = {
     empty_link: "전표 추가",
     today_count: "오늘 생성된 전표",
     unit: " 건",
-    month_total: "당월 누적 금액",
     pending: "확인 대기 중",
     ai_confidence: "AI 평균 신뢰도",
   },

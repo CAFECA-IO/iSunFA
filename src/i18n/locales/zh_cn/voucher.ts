@@ -80,7 +80,6 @@ export const voucher = {
     empty_link: "新增凭证",
     today_count: "今日产生凭证",
     unit: "张",
-    month_total: "本月累计金额",
     pending: "待核对",
     ai_confidence: "AI 平均信心度",
   },

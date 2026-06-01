@@ -47,12 +47,12 @@ const VoucherRow = ({
   const { t } = useTranslation();
 
   return (
-    <>
-      <div className="col-span-4 flex flex-1 flex-col gap-2">
+    <div className="flex flex-col gap-2 rounded-xl border border-slate-200 p-3 md:contents md:rounded-none md:border-none md:p-0">
+      <div className="flex flex-1 flex-col gap-2 md:col-span-4">
         <div className="relative flex h-[36px] items-center overflow-hidden rounded-xl border border-slate-300 bg-white focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500 lg:h-[42px]">
           <button
             type="button"
-            className="w-[250px] flex-1 appearance-none truncate bg-transparent px-2 text-left text-[10px] font-semibold text-slate-700 outline-none lg:px-4 lg:text-sm"
+            className="w-full flex-1 appearance-none truncate bg-transparent px-2 text-left text-[10px] font-semibold text-slate-700 outline-none lg:px-4 lg:text-sm"
             onClick={() => onOpenSelector(row.id)}
           >
             {row.accounting
@@ -77,71 +77,79 @@ const VoucherRow = ({
         </div>
       </div>
 
-      <div className="col-span-3 h-[36px] lg:h-[42px]">
-        <input
-          type="number"
-          aria-label={t("voucher.detail_modal.fields.debit")}
-          placeholder="0"
-          value={
-            row.isDebit === true
-              ? row.amount !== 0 && row.amount !== "0" && row.amount !== 0n
-                ? row.amount.toString()
+      <div className="flex flex-row items-center gap-2 md:contents">
+        <div className="relative h-[36px] flex-1 md:col-span-3 lg:h-[42px]">
+          <span className="pointer-events-none absolute top-1/2 left-2 -translate-y-1/2 text-[10px] font-bold text-slate-400 md:hidden">
+            {t("voucher.detail_modal.fields.debit")}
+          </span>
+          <input
+            type="number"
+            aria-label={t("voucher.detail_modal.fields.debit")}
+            placeholder="0"
+            value={
+              row.isDebit === true
+                ? row.amount !== 0 && row.amount !== "0" && row.amount !== 0n
+                  ? row.amount.toString()
+                  : ""
                 : ""
-              : ""
-          }
-          disabled={row.isDebit === false}
-          min={0}
-          onWheel={(e) => e.currentTarget.blur()}
-          onChange={(e) => {
-            const val = e.target.value;
-            updateRow(row.id, {
-              ...row,
-              isDebit: val === "" ? null : true,
-              amount: val === "" ? "0" : val,
-            });
-          }}
-          className="h-full w-full appearance-none rounded-xl border border-slate-300 bg-white px-2 text-right text-[10px] font-semibold text-slate-700 placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400 lg:px-4 lg:text-sm"
-        />
-      </div>
+            }
+            disabled={row.isDebit === false}
+            min={0}
+            onWheel={(e) => e.currentTarget.blur()}
+            onChange={(e) => {
+              const val = e.target.value;
+              updateRow(row.id, {
+                ...row,
+                isDebit: val === "" ? null : true,
+                amount: val === "" ? "0" : val,
+              });
+            }}
+            className="h-full w-full appearance-none rounded-xl border border-slate-300 bg-white py-2 pr-2 pl-10 text-right text-[10px] font-semibold text-slate-700 placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400 md:px-2 lg:px-4 lg:text-sm"
+          />
+        </div>
 
-      <div className="col-span-3 h-[36px] lg:h-[42px]">
-        <input
-          type="number"
-          aria-label={t("voucher.detail_modal.fields.credit")}
-          placeholder="0"
-          value={
-            row.isDebit === false
-              ? row.amount !== 0 && row.amount !== "0" && row.amount !== 0n
-                ? row.amount.toString()
+        <div className="relative h-[36px] flex-1 md:col-span-3 lg:h-[42px]">
+          <span className="pointer-events-none absolute top-1/2 left-2 -translate-y-1/2 text-[10px] font-bold text-slate-400 md:hidden">
+            {t("voucher.detail_modal.fields.credit")}
+          </span>
+          <input
+            type="number"
+            aria-label={t("voucher.detail_modal.fields.credit")}
+            placeholder="0"
+            value={
+              row.isDebit === false
+                ? row.amount !== 0 && row.amount !== "0" && row.amount !== 0n
+                  ? row.amount.toString()
+                  : ""
                 : ""
-              : ""
-          }
-          disabled={row.isDebit === true}
-          min={0}
-          onWheel={(e) => e.currentTarget.blur()}
-          onChange={(e) => {
-            const val = e.target.value;
-            updateRow(row.id, {
-              ...row,
-              isDebit: val === "" ? null : false,
-              amount: val === "" ? "0" : val,
-            });
-          }}
-          className="h-full w-full appearance-none rounded-xl border border-slate-300 bg-white px-2 text-right text-[10px] font-semibold text-slate-700 placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400 lg:px-4 lg:text-sm"
-        />
-      </div>
+            }
+            disabled={row.isDebit === true}
+            min={0}
+            onWheel={(e) => e.currentTarget.blur()}
+            onChange={(e) => {
+              const val = e.target.value;
+              updateRow(row.id, {
+                ...row,
+                isDebit: val === "" ? null : false,
+                amount: val === "" ? "0" : val,
+              });
+            }}
+            className="h-full w-full appearance-none rounded-xl border border-slate-300 bg-white py-2 pr-2 pl-10 text-right text-[10px] font-semibold text-slate-700 placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400 md:px-2 lg:px-4 lg:text-sm"
+          />
+        </div>
 
-      <div className="flex h-[36px] items-center justify-center p-2 lg:h-[42px]">
-        <button
-          type="button"
-          aria-label="Delete row"
-          onClick={() => removeRow(row.id)}
-          className="text-slate-300 transition-colors hover:text-red-500"
-        >
-          <Trash2 size={18} />
-        </button>
+        <div className="flex h-[36px] shrink-0 items-center justify-center lg:h-[42px]">
+          <button
+            type="button"
+            aria-label="Delete row"
+            onClick={() => removeRow(row.id)}
+            className="rounded-lg p-2 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-500 md:p-0 md:hover:bg-transparent"
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
       </div>
-    </>
+    </div>
   );
 };
 
@@ -479,20 +487,20 @@ export default function VoucherDetailModal({
           </button>
         </div>
 
-        <div className="mb-2 flex items-center px-6 pr-10">
+        <div className="mb-2 hidden px-6 pr-10 md:grid md:grid-cols-11">
           <div className="flex-1 text-[10px] font-bold text-slate-600 lg:text-xs">
             {t("voucher.detail_modal.fields.account_code_name")}
           </div>
-          <div className="w-[100px] pr-2 text-right text-[10px] font-bold text-slate-600 lg:text-xs">
+          <div className="col-end-8 w-[100px] pr-2 text-right text-[10px] font-bold text-slate-600 lg:text-xs">
             {t("voucher.detail_modal.fields.debit")}
           </div>
-          <div className="w-[100px] pr-2 text-right text-[10px] font-bold text-slate-600 lg:text-xs">
+          <div className="col-end-11 w-[100px] pr-2 text-right text-[10px] font-bold text-slate-600 lg:text-xs">
             {t("voucher.detail_modal.fields.credit")}
           </div>
         </div>
 
         {/* Info: (20260416 - Julian) Voucher Line Items */}
-        <div className="mb-4 grid grid-cols-11 gap-x-1 gap-y-2 px-6">
+        <div className="mb-4 flex flex-col gap-3 px-6 md:grid md:grid-cols-11 md:gap-x-1 md:gap-y-2">
           {voucherLineItems}
         </div>
 

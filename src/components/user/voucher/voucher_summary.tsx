@@ -6,7 +6,6 @@ import {
   Cloud,
   Loader2,
   FileSpreadsheet,
-  CircleDollarSign,
   CircleAlert,
   Zap,
 } from "lucide-react";
@@ -15,7 +14,6 @@ import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { IVoucherDashboardSummary } from "@/interfaces/voucher";
 import { useTranslation } from "@/i18n/i18n_context";
-import { numberWithCommas } from "@/lib/utils/common";
 
 export default function VoucherSummary() {
   const params = useParams();
@@ -79,7 +77,7 @@ export default function VoucherSummary() {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4">
+    <div className="grid grid-cols-2 gap-2 lg:grid-cols-3 lg:gap-4">
       {/* Info: (20260316 - Julian) 今日產生傳票 */}
       <div className="flex items-center rounded-2xl border border-slate-300 bg-white p-2 shadow-sm lg:p-4">
         <div className="shrink-0 px-2 text-blue-500 lg:px-4">
@@ -92,21 +90,6 @@ export default function VoucherSummary() {
           <p className="text-base font-bold text-black sm:text-lg">
             <span>{summaryData.todayVoucherCount}</span>{" "}
             {t("voucher.summary.unit")}
-          </p>
-        </div>
-      </div>
-
-      {/* Info: (20260316 - Julian) 本月累計金額 */}
-      <div className="flex items-center rounded-2xl border border-slate-300 bg-white p-2 shadow-sm lg:p-4">
-        <div className="shrink-0 px-2 text-green-500 lg:px-4">
-          <CircleDollarSign size={24} />
-        </div>
-        <div className="flex flex-col px-2">
-          <p className="text-[10px] font-bold text-slate-700 sm:text-sm">
-            {t("voucher.summary.month_total")}
-          </p>
-          <p className="text-base font-bold text-black sm:text-lg">
-            $ <span>{numberWithCommas(summaryData.monthTotalAmount)}</span>
           </p>
         </div>
       </div>

@@ -865,13 +865,13 @@ export class EsgRepository implements IEsgRepository {
       : "0";
 
     const target = targets.find((t) => t.year === currentYear);
+    const isTargetSet =
+      !!target &&
+      !!target.totalEmissionTarget &&
+      MoneyUtil.toDecimal(target.totalEmissionTarget).gt(0);
 
     let goalProgress = "0";
-    if (
-      target &&
-      target.totalEmissionTarget &&
-      MoneyUtil.toDecimal(target.totalEmissionTarget).gt(0)
-    ) {
+    if (isTargetSet) {
       const msInYear =
         new Date(currentYear, 11, 31, 23, 59, 59, 999).getTime() -
         new Date(currentYear, 0, 1).getTime();
@@ -951,6 +951,7 @@ export class EsgRepository implements IEsgRepository {
       scopeDistribution,
       goalProgress: {
         percentage: MoneyUtil.toDecimal(goalProgress).toFixed(1),
+        isTargetSet,
       },
     };
 

@@ -411,14 +411,15 @@ export class VoucherRepository implements IVoucherRepository {
   }
 
   // Info: (20260506 - Julian) 取得傳票儀表板摘要：回傳 IVoucherDashboardSummary
-  async getVoucherSummary(accountBookId: string) {
+  async getVoucherSummary(
+    accountBookId: string,
+  ): Promise<IVoucherDashboardSummary> {
     const now = new Date();
     const startOfToday = new Date(
       now.getFullYear(),
       now.getMonth(),
       now.getDate(),
     );
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
     // Info: (20260506 - Julian) 今日傳票數量
     const todayVoucherCount = await prisma.voucher.count({
@@ -428,20 +429,6 @@ export class VoucherRepository implements IVoucherRepository {
         deletedAt: null,
       },
     });
-
-    // Info: (20260506 - Julian) 本月支出總金額
-    const monthTotalAmountAggr = await prisma.voucherLine.aggregate({
-      where: {
-        isDebit: true,
-        voucher: {
-          accountBookId,
-          tradingDate: { gte: startOfMonth },
-          deletedAt: null,
-        },
-      },
-      _sum: { amount: true },
-    });
-    const monthTotalAmount = monthTotalAmountAggr._sum.amount || 0n;
 
     // Info: (20260506 - Julian) 未核對傳票數量
     const pendingVoucherCount = await prisma.voucher.count({
@@ -460,7 +447,6 @@ export class VoucherRepository implements IVoucherRepository {
 
     return {
       todayVoucherCount,
-      monthTotalAmount,
       pendingVoucherCount,
       aiAverageConfidence,
     };

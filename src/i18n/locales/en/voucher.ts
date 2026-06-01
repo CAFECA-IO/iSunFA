@@ -80,7 +80,6 @@ export const voucher = {
     empty_link: "add a voucher",
     today_count: "Vouchers Today",
     unit: " sheets",
-    month_total: "Monthly Total",
     pending: "Pending Verification",
     ai_confidence: "AI Average Confidence",
   },

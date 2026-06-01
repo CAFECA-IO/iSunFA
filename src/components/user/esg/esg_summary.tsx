@@ -198,10 +198,18 @@ export default function EsgSummary({
             <Target size={20} className="shrink-0 text-orange-600" />
           </div>
           <div className="mt-2 flex items-baseline gap-1">
-            <span className="text-2xl font-bold tracking-tight text-orange-600">
-              {summaryData.goalProgress.percentage}%
-            </span>
-            <span className="text-sm font-bold text-slate-500">/ 100%</span>
+            {summaryData.goalProgress.isTargetSet ? (
+              <>
+                <span className="text-2xl font-bold tracking-tight text-orange-600">
+                  {summaryData.goalProgress.percentage}%
+                </span>
+                <span className="text-sm font-bold text-slate-500">/ 100%</span>
+              </>
+            ) : (
+              <span className="text-lg font-bold tracking-tight text-slate-400">
+                {t("esg_summary.target_not_set")}
+              </span>
+            )}
           </div>
         </div>
         <div className="mt-4 lg:mt-8">

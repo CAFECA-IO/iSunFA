@@ -131,5 +131,6 @@ export const useDashboardData = () => {
     refresh,
     autoRefresh,
     setAutoRefresh,
+    apiData,
   };
 };
