@@ -35,9 +35,12 @@ export default function LanguageSelector() {
   return (
     <Menu as="div" className="relative">
       <MenuButton className="flex items-center gap-x-1 text-sm leading-6 font-semibold text-gray-900 transition-colors hover:text-orange-600 focus:outline-none">
-        <Globe className="h-5 w-5 text-gray-500" aria-hidden="true" />
+        <Globe className="size-5 shrink-0 text-gray-500" aria-hidden="true" />
         <span className="hidden sm:inline">{currentLangLabel}</span>
-        <ChevronDown className="h-4 w-4 text-gray-400" aria-hidden="true" />
+        <ChevronDown
+          className="size-4 shrink-0 text-gray-400"
+          aria-hidden="true"
+        />
       </MenuButton>
       <Transition
         as={Fragment}
@@ -57,7 +60,9 @@ export default function LanguageSelector() {
                   className={` ${focus ? "bg-orange-50" : ""} ${language === lang.code ? "font-bold text-orange-600" : "text-gray-700"} group flex w-full items-center justify-between px-4 py-2 text-sm`}
                 >
                   <span>{lang.label}</span>
-                  {language === lang.code && <Check className="h-4 w-4" />}
+                  {language === lang.code && (
+                    <Check className="size-4 shrink-0" />
+                  )}
                 </button>
               )}
             </MenuItem>

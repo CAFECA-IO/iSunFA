@@ -103,7 +103,7 @@ export default function UserActions() {
                 className={` ${focus ? "bg-orange-50 ring-1 ring-orange-200" : "bg-white shadow-sm ring-1 ring-gray-200 hover:bg-gray-50 md:shadow-none md:ring-gray-100"} group flex h-full w-full flex-col items-center justify-center rounded-xl p-2 transition-all duration-200 md:rounded-lg md:p-3`}
               >
                 <Icon
-                  className={`mb-1 h-6 w-6 md:mb-2 md:h-6 md:w-6 ${focus ? "text-orange-600" : "text-gray-500 group-hover:text-orange-500"}`}
+                  className={`mb-1 size-6 md:mb-2 ${focus ? "text-orange-600" : "text-gray-500 group-hover:text-orange-500"}`}
                 />
                 <span
                   className={`text-center text-xs font-normal md:text-sm md:font-medium ${focus ? "text-orange-900" : "text-gray-700"}`}
@@ -139,7 +139,7 @@ export default function UserActions() {
               className={` ${focus ? "bg-orange-50 ring-1 ring-orange-200" : "bg-white shadow-sm ring-1 ring-gray-200 hover:bg-gray-50 md:shadow-none md:ring-gray-100"} group flex h-full w-full flex-col items-center justify-center rounded-xl p-2 transition-all duration-200 md:rounded-lg md:p-3`}
             >
               <Icon
-                className={`mb-1 h-6 w-6 md:mb-2 md:h-6 md:w-6 ${focus ? "text-orange-600" : "text-gray-500 group-hover:text-orange-500"}`}
+                className={`mb-1 size-6 md:mb-2 ${focus ? "text-orange-600" : "text-gray-500 group-hover:text-orange-500"}`}
               />
               <span
                 className={`text-center text-xs font-normal md:text-sm md:font-medium ${focus ? "text-orange-900" : "text-gray-700"}`}
@@ -171,7 +171,7 @@ export default function UserActions() {
             >
               <Icon
                 size={24}
-                className="mb-1 text-gray-400 group-hover:text-gray-600 md:h-5 md:w-5"
+                className="mb-1 text-gray-400 group-hover:text-gray-600 md:size-5"
               />
               {t(action.labelKey)}
             </Link>
@@ -182,7 +182,7 @@ export default function UserActions() {
             >
               <Icon
                 size={24}
-                className={`mb-1 text-gray-400 group-hover:text-gray-600 md:h-5 md:w-5 ${focus ? (action.isDestructive ? "text-red-500" : "text-gray-600") : "group-hover: text-gray-400" + (action.isDestructive ? "text-red-500" : "text-gray-600")}`}
+                className={`mb-1 text-gray-400 group-hover:text-gray-600 md:size-5 ${focus ? (action.isDestructive ? "text-red-500" : "text-gray-600") : "group-hover: text-gray-400" + (action.isDestructive ? "text-red-500" : "text-gray-600")}`}
               />
               {t(action.labelKey)}
             </button>
@@ -214,11 +214,11 @@ export default function UserActions() {
           onClick={refreshAuth}
           className="flex items-center gap-x-2 rounded-full bg-white py-1 pr-3 pl-1 text-sm leading-6 font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200 transition-all ring-inset hover:ring-orange-300 focus:outline-none"
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-50 text-orange-600 ring-1 ring-orange-100 ring-inset">
-            <User className="h-5 w-5" />
+          <span className="flex size-8 items-center justify-center rounded-full bg-orange-50 text-orange-600 ring-1 ring-orange-100 ring-inset">
+            <User className="size-5" />
           </span>
           <span className="hidden sm:inline">{user.name}</span>
-          <ChevronDown className="h-4 w-4 text-gray-400" aria-hidden="true" />
+          <ChevronDown className="size-4 text-gray-400" aria-hidden="true" />
         </MenuButton>
         <Transition
           as={Fragment}
@@ -234,35 +234,13 @@ export default function UserActions() {
             <div className="z-10 shrink-0 border-b border-gray-100 bg-gray-50 p-4 md:px-6 md:py-4">
               <div className="flex items-start justify-between md:items-center">
                 <div className="flex items-center gap-3">
-                  <div className="flex size-12 items-center justify-center rounded-full bg-orange-100 text-orange-600 ring-2 ring-white md:h-10 md:w-10">
-                    <User className="h-7 w-7 md:h-6 md:w-6" />
+                  <div className="flex size-12 items-center justify-center rounded-full bg-orange-100 text-orange-600 ring-2 ring-white md:size-10">
+                    <User className="size-7 md:size-6" />
                   </div>
                   <div className="overflow-hidden">
-                    <div className="flex items-center gap-4">
-                      <p className="truncate text-base font-bold text-gray-900 md:max-w-none md:text-sm">
-                        {user.name || "User"}
-                      </p>
-                      {accountBook && (
-                        <div className="flex flex-wrap items-center gap-x-1 md:hidden">
-                          <p className="text-[10px] text-slate-500">
-                            {t("sidebar.current_account_book")}
-                          </p>
-                          <MenuItem>
-                            {() => (
-                              <Link
-                                href="/user/account_book"
-                                className="inline-flex items-center gap-1 rounded-md bg-orange-100 px-1.5 py-0.5 text-orange-700 ring-1 ring-orange-600/20 transition-colors ring-inset hover:bg-orange-200"
-                              >
-                                <Book size={10} className="shrink-0" />
-                                <p className="text-[10px] font-medium">
-                                  {accountBook.name}
-                                </p>
-                              </Link>
-                            )}
-                          </MenuItem>
-                        </div>
-                      )}
-                    </div>
+                    <p className="truncate text-base font-bold text-gray-900 md:max-w-none md:text-sm">
+                      {user.name || "User"}
+                    </p>
                     <div className="mt-1 flex items-center gap-2 md:mt-0">
                       <p className="max-w-[180px] truncate text-sm text-gray-500 md:max-w-[120px] md:text-xs lg:max-w-none">
                         {user.address}
@@ -274,9 +252,9 @@ export default function UserActions() {
                         title="Copy Address"
                       >
                         {copiedAddress ? (
-                          <Check className="h-4 w-4 text-emerald-500 md:h-3 md:w-3" />
+                          <Check className="size-4 text-emerald-500 md:size-3" />
                         ) : (
-                          <Copy className="h-4 w-4 md:h-3 md:w-3" />
+                          <Copy className="size-4 md:size-3" />
                         )}
                       </button>
                     </div>
@@ -310,12 +288,27 @@ export default function UserActions() {
                 <div className="inline-flex items-center rounded-md bg-orange-50 px-2 py-1 text-[10px] font-medium text-orange-700 ring-1 ring-orange-600/20 ring-inset">
                   {t(`pricing.plans.${user.plan || "personal"}.name`)}
                 </div>
-                <p className="text-xs text-gray-500">
-                  {t("header.credits")}:{" "}
-                  <span className="font-semibold text-gray-900">
-                    {user.credits?.toLocaleString() || 0}
-                  </span>
-                </p>
+                <div className="flex flex-col items-end gap-1">
+                  {accountBook && (
+                    <div className="flex flex-wrap items-center gap-x-1 md:hidden">
+                      <p className="text-xs text-gray-500">
+                        {t("sidebar.current_account_book")}:
+                      </p>
+                      <div className="inline-flex items-center gap-1 text-orange-700">
+                        <Book size={10} className="shrink-0" />
+                        <p className="text-[10px] font-semibold">
+                          {accountBook.name}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    {t("header.credits")}:{" "}
+                    <span className="font-semibold text-gray-900">
+                      {user.credits?.toLocaleString() || 0}
+                    </span>
+                  </p>
+                </div>
               </div>
             </div>
 

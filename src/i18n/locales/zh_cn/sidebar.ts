@@ -6,5 +6,5 @@ export const sidebar = {
   settings: "设置",
   account_book: "账本切换",
   public_modules: "小工具",
-  current_account_book: "当前账本：",
+  current_account_book: "当前账本",
 };
