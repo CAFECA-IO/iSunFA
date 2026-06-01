@@ -9,7 +9,7 @@ export const importPhase2Db = async (stockId: string) => {
     dataDir,
     "inputs",
     "simulated_data",
-    "phase5_articulation_test",
+    "e2e_roadmap-sprint1",
     "db_dump_vouchers.json",
   );
 
@@ -126,7 +126,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
             "2024",
             "inputs",
             "simulated_data",
-            "phase5_articulation_test",
+            "e2e_roadmap-sprint1",
             "db_dump_vouchers.json",
           );
           if (fs.existsSync(dumpPath)) {

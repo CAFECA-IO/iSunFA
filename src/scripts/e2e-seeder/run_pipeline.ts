@@ -26,7 +26,7 @@ export const runPipeline = async (
 
     if (!skipImages) {
       console.log("\n[4/6] Running Receipt Image Generator...");
-      generateReceiptImages(stockId);
+      await generateReceiptImages(stockId);
     } else {
       console.log(
         "\n[4/6] ⏭️ Skipping Receipt Image Generator (--skip-images)...",

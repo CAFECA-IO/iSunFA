@@ -54,21 +54,21 @@ export const runPhase2ReceiptAnalysis = async (
     dataDir,
     "inputs",
     "simulated_data",
-    "phase5_articulation_test",
+    "e2e_roadmap-sprint1",
     "receipts",
   );
   const receiptsPngDir = path.join(
     dataDir,
     "inputs",
     "simulated_data",
-    "phase5_articulation_test",
+    "e2e_roadmap-sprint1",
     "receipts_png",
   );
   const vouchersPath = path.join(
     dataDir,
     "inputs",
     "simulated_data",
-    "phase5_articulation_test",
+    "e2e_roadmap-sprint1",
     "simulated_vouchers.json",
   );
 
