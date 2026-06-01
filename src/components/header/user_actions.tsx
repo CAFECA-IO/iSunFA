@@ -193,16 +193,21 @@ export default function UserActions() {
   });
 
   return (
-    <div className="flex items-center gap-x-2">
+    <div className="flex items-center gap-x-4">
       {accountBook && (
-        <Link
-          href="/user/account_book"
-          className="hidden items-center gap-1 rounded-md bg-orange-100 px-2.5 py-1 text-orange-700 ring-1 ring-orange-600/20 transition-all ring-inset hover:bg-orange-200 hover:text-orange-800 md:inline-flex"
-          title={t("sidebar.account_book")}
-        >
-          <Book size={12} className="shrink-0" />
-          <p className="text-xs font-medium">{accountBook.name}</p>
-        </Link>
+        <div className="hidden flex-col md:flex">
+          <p className="text-[10px] text-slate-500">
+            {t("sidebar.current_account_book")}
+          </p>
+          <Link
+            href="/user/account_book"
+            className="inline-flex items-center gap-1 rounded-md bg-orange-100 px-2.5 py-1 text-orange-700 ring-1 ring-orange-600/20 transition-all ring-inset hover:bg-orange-200 hover:text-orange-800"
+            title={t("sidebar.account_book")}
+          >
+            <Book size={12} className="shrink-0" />
+            <p className="text-xs font-medium">{accountBook.name}</p>
+          </Link>
+        </div>
       )}
       <Menu as="div" className="relative">
         <MenuButton
@@ -233,24 +238,29 @@ export default function UserActions() {
                     <User className="h-7 w-7 md:h-6 md:w-6" />
                   </div>
                   <div className="overflow-hidden">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-4">
                       <p className="truncate text-base font-bold text-gray-900 md:max-w-none md:text-sm">
                         {user.name || "User"}
                       </p>
                       {accountBook && (
-                        <MenuItem>
-                          {() => (
-                            <Link
-                              href="/user/account_book"
-                              className="inline-flex items-center gap-1 rounded-md bg-orange-100 px-1.5 py-0.5 text-orange-700 ring-1 ring-orange-600/20 transition-colors ring-inset hover:bg-orange-200 md:hidden"
-                            >
-                              <Book size={10} className="shrink-0" />
-                              <p className="text-[10px] font-medium">
-                                {accountBook.name}
-                              </p>
-                            </Link>
-                          )}
-                        </MenuItem>
+                        <div className="flex flex-wrap items-center gap-x-1 md:hidden">
+                          <p className="text-[10px] text-slate-500">
+                            {t("sidebar.current_account_book")}
+                          </p>
+                          <MenuItem>
+                            {() => (
+                              <Link
+                                href="/user/account_book"
+                                className="inline-flex items-center gap-1 rounded-md bg-orange-100 px-1.5 py-0.5 text-orange-700 ring-1 ring-orange-600/20 transition-colors ring-inset hover:bg-orange-200"
+                              >
+                                <Book size={10} className="shrink-0" />
+                                <p className="text-[10px] font-medium">
+                                  {accountBook.name}
+                                </p>
+                              </Link>
+                            )}
+                          </MenuItem>
+                        </div>
                       )}
                     </div>
                     <div className="mt-1 flex items-center gap-2 md:mt-0">
