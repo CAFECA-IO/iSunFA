@@ -320,14 +320,26 @@ export class VoucherRepository implements IVoucherRepository {
 
   // Info: (20260506 - Julian) 驗證所有傳票：回傳總數(number)
   async verifyAllVouchers(accountBookId: string) {
-    const result = await prisma.voucher.updateMany({
+    // Info: (20260601 - Julian) 找出未刪除、分析狀態為 COMPLETED 的傳票
+    const uncheckedVouchers = await prisma.voucher.findMany({
       where: {
         accountBookId,
         isVerified: false,
-        deletedAt: null, // Info: (20260506 - Julian) 避免改動到被軟刪除的傳票
+        deletedAt: null,
+        analysisStatus: AIAnalysisStatus.COMPLETED,
       },
+      select: { id: true },
+    });
+
+    // Info: (20260601 - Julian) 如果沒有未核對的傳票，回傳 0
+    if (uncheckedVouchers.length === 0) return 0;
+
+    // Info: (20260601 - Julian) 更新傳票
+    const result = await prisma.voucher.updateMany({
+      where: { id: { in: uncheckedVouchers.map((v) => v.id) } },
       data: { isVerified: true },
     });
+
     return result.count;
   }
 
