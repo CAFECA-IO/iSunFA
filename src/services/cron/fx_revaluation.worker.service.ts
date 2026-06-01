@@ -63,9 +63,9 @@ export class FxRevaluationWorkerService {
       // Info: (20260527 - Tzuhan) 尋找 AP/AR 分錄
       for (const line of voucher.lines) {
         if (
-          line.accountingCode.startsWith("214") || // Accounts Payable (e.g., 2140)
-          line.accountingCode.startsWith("117") || // Accounts Receivable (e.g., 1170)
-          line.accountingCode.startsWith("119") // Other Receivables
+          line.accountingCode.startsWith("214") || // Info: (20260527 - Tzuhan) Accounts Payable (e.g., 2140)
+          line.accountingCode.startsWith("117") || // Info: (20260527 - Tzuhan) Accounts Receivable (e.g., 1170)
+          line.accountingCode.startsWith("119") // Info: (20260527 - Tzuhan) Other Receivables
         ) {
           // Info: (20260527 - Tzuhan) 決定論反推：外幣餘額 = TWD餘額 / 歷史匯率
           const twdAmountStr = line.amount.toString();
@@ -82,9 +82,11 @@ export class FxRevaluationWorkerService {
           const diffStr = MoneyUtil.subtract(revaluedTwdStr, twdAmountStr);
           if (diffStr === "0") continue;
 
-          // Info: (20260527 - Tzuhan) 判斷損失或利益
-          // Info: (20260527 - Tzuhan) 對於負債(AP)，匯率上升 -> TWD變多 -> 損失 (Loss)
-          // Info: (20260527 - Tzuhan) 對於資產(AR)，匯率上升 -> TWD變多 -> 利益 (Gain)
+          /**
+           * Info: (20260527 - Tzuhan) 判斷損失或利益
+           * 對於負債(AP)，匯率上升 -> TWD變多 -> 損失 (Loss)
+           * 對於資產(AR)，匯率上升 -> TWD變多 -> 利益 (Gain)
+           */
           const isLiability = !line.isDebit; // 通常 AP 放貸方
           const diffDec = MoneyUtil.toDecimal(diffStr);
           const isLoss = isLiability
