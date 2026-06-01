@@ -88,7 +88,7 @@ export function calculateStatelessAmortizationForMonth(
       accumulatedRawAmt = accumulatedRawAmt.plus(roundedAmt);
     }
 
-    // Move to next month
+    // Info: (20260526 - Tzuhan) Move to next month
     currentCursor.setUTCMonth(currentCursor.getUTCMonth() + 1);
   }
 
