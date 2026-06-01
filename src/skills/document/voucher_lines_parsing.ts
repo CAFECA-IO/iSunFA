@@ -59,7 +59,7 @@ export class VoucherLinesParsingSkill implements ITaskSkill {
                 particular: {
                   type: SchemaType.STRING,
                   description:
-                    "請強制以『交易項目 - 廠商簡稱』的格式輸出摘要，例如：『市內電話上網費 - 中華電信』",
+                    "請輸出適當的摘要。若是費用或採購，請以『交易項目 - 廠商簡稱』格式輸出；若是股本注資、借款等無明確廠商之交易，請原樣輸出，嚴禁自行加上『- 供應商』",
                 },
                 amount: { type: SchemaType.NUMBER, description: "金額" },
                 isDebit: {
@@ -102,7 +102,7 @@ export class VoucherLinesParsingSkill implements ITaskSkill {
        * 過去此處包含大段的外幣匯率轉換邏輯 (Currency Mismatch Conversion)。
        * 為貫徹 Zero Trust Architecture，所有外幣換算與高精度數學運算
        * 已全數抽離至後端的 FxInterceptorService 與 VoucherPipelineOrchestrator。
-       * 
+       *
        * Info: (20260522 - Tzuhan)
        * Return Clean Extraction (Without LLM Hallucinated Accounting Codes)
        */

@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import sharp from "sharp";
 import Decimal from "decimal.js";
+import { SystemAccountNodes } from "@/constants/system_account_codes";
 
 interface ISimulatedVoucherLine {
   id: string;
@@ -50,6 +51,7 @@ interface IReceiptParams {
   esgRecord?: { carbonAmount: number };
   watermarkText?: string; // Info: (20260519 - Julian) 動態浮水印文字
   isSales?: boolean;
+  isBankReceipt?: boolean;
 }
 
 // Info: (20260502 - Tzuhan) 產生隨機統一編號
@@ -331,7 +333,7 @@ const buildReceiptSVG = (params: IReceiptParams, isNoisy: boolean): string => {
     <g ${noiseFilter} ${transform} class="receipt-text">
       <!-- Title -->
       <text x="350" y="45" font-family="'Inter', 'Noto Sans TC', sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="${theme.primary}">${sellerName}</text>
-      <text x="350" y="75" font-family="'Inter', 'Noto Sans TC', sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="${theme.primary}">電子發票證明聯</text>
+      <text x="350" y="75" font-family="'Inter', 'Noto Sans TC', sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="${theme.primary}">${params.isBankReceipt ? "銀行入帳憑單" : "電子發票證明聯"}</text>
       <text x="350" y="100" font-family="'Inter', 'Noto Sans TC', sans-serif" font-size="18" text-anchor="middle" fill="${theme.text}">${tradingDate}</text>
       
       <!-- Top Left Info -->
@@ -486,13 +488,25 @@ export const generateReceiptImages = async (stockId: string) => {
     const totalAmount =
       mainLine.debitAmount > 0 ? mainLine.debitAmount : mainLine.creditAmount;
 
-    // Info: (20260519 - Julian) 計算含稅反推未稅
+    // Info: (20260601 - Tzuhan) 判斷是否為籌資或借款等銀行往來憑證 (股本 3110, 短期借款 2100)
+    const isBankReceipt = voucher.lines.some(
+      (l) =>
+        l.accountingCode === SystemAccountNodes.COMMON_STOCK_CAPITAL ||
+        l.accountingCode === SystemAccountNodes.SHORT_TERM_BORROWINGS,
+    );
     const totalDecimal = new Decimal(totalAmount);
-    // Info: (20260519 - Julian) netAmount = Math.round(total / 1.05)
-    const netAmountDecimal = totalDecimal
-      .div(1.05)
-      .toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
-    const taxAmountDecimal = totalDecimal.minus(netAmountDecimal);
+    let netAmountDecimal: Decimal;
+    let taxAmountDecimal: Decimal;
+
+    if (isBankReceipt) {
+      netAmountDecimal = totalDecimal;
+      taxAmountDecimal = new Decimal(0);
+    } else {
+      netAmountDecimal = totalDecimal
+        .div(1.05)
+        .toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
+      taxAmountDecimal = totalDecimal.minus(netAmountDecimal);
+    }
 
     // Info: (20260520 - Julian) 優先使用現有的細項
     const items =
@@ -521,6 +535,7 @@ export const generateReceiptImages = async (stockId: string) => {
       esgRecord: mainLine.esgRecords?.[0],
       watermarkText,
       isSales,
+      isBankReceipt,
     };
 
     // User Update: 現階段先不測髒汙雜訊，純驗證解析邏輯是否正確

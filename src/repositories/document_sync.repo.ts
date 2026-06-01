@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { AccountingEngineService } from "@/services/accounting.engine.service";
 import {
   VoucherTradingType,
   AIAnalysisStatus,
@@ -362,6 +363,10 @@ export class DocumentSyncRepository {
               }
             }
 
+            // Info: (20260601 - Tzuhan) [Refactor] 實務改良：自動聚合 (Group by) 相同會計科目與借貸方向的分錄，業務邏輯移至 Service 層
+            linesToCreate =
+              AccountingEngineService.aggregateVoucherLines(linesToCreate);
+
             let totalDebit = BigInt(0);
             let totalCredit = BigInt(0);
             for (const l of linesToCreate) {
@@ -524,20 +529,26 @@ export class DocumentSyncRepository {
       }
 
       // Info: (20260420 - Luphia) 3. Sync ESG
-      if (esg || failureReason) {
-        let existingEsg = null;
-        if (esgRecordIdContext) {
-          existingEsg = await tx.esgRecord.findUnique({
-            where: { id: esgRecordIdContext },
-          });
-        } else if (fileId && accountBookId) {
-          existingEsg = await tx.esgRecord.findFirst({
-            where: { file: { hash: fileId }, accountBookId },
-            orderBy: { createdAt: "desc" },
-          });
-        }
+      let existingEsg = null;
+      if (esgRecordIdContext) {
+        existingEsg = await tx.esgRecord.findUnique({
+          where: { id: esgRecordIdContext },
+        });
+      } else if (fileId && accountBookId) {
+        existingEsg = await tx.esgRecord.findFirst({
+          where: { file: { hash: fileId }, accountBookId },
+          orderBy: { createdAt: "desc" },
+        });
+      }
 
-        if (failureReason && !esg) {
+      if (esg || failureReason || existingEsg) {
+        if (!esg && !failureReason && existingEsg) {
+          // Info: (20260601 - Tzuhan) [BUGFIX] 如果新的 Payload 決定刪除 esg (例如被攔截器判定為 INCOME)，則必須同步清除 DB 中的舊資料 (Soft Delete)
+          await tx.esgRecord.update({
+            where: { id: existingEsg.id },
+            data: { deletedAt: new Date() },
+          });
+        } else if (failureReason && !esg) {
           if (existingEsg) {
             await tx.esgRecord.update({
               where: { id: existingEsg.id },

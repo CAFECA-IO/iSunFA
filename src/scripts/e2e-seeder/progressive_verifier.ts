@@ -1,5 +1,5 @@
 /**
- * Info: (20260531 - Tzuhan) [E2E SEEDER] 漸進式財報配平驗證器
+ * Info: (20260601 - Tzuhan) [E2E SEEDER] 漸進式財報配平驗證器
  * progressive_verifier.ts
  * 用途：模擬時間軸漸進式測試 (Time-Based Progressive Stacking)。
  * 行為：
@@ -20,7 +20,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { IVoucherLineUI } from "@/interfaces/voucher";
 
-// Info: (20260531 - Tzuhan 工具函數：確保必定能抓到會計科目，拒絕 any 或 undefined
+// Info: (20260601 - Tzuhan 工具函數：確保必定能抓到會計科目，拒絕 any 或 undefined
 function mustGetAccount(code: string) {
   const acc = getAccountByCode(code);
   if (!acc) {
@@ -29,18 +29,18 @@ function mustGetAccount(code: string) {
   return acc;
 }
 
-// Info: (20260531 - Tzuhan 工具函數：精確處理字串加總
+// Info: (20260601 - Tzuhan 工具函數：精確處理字串加總
 function sumItems(items: { amount: string | number }[]): bigint {
   return items.reduce((acc, curr) => acc + BigInt(curr.amount), 0n);
 }
 
-// Info: (20260531 - Tzuhan 嚴格檢驗三表內部每一個欄位與小計的數學正確性
+// Info: (20260601 - Tzuhan 嚴格檢驗三表內部每一個欄位與小計的數學正確性
 function assertReportIntegrity(
   bs: IBalanceSheet,
   is: IIncomeStatement,
   cf: ICashFlowStatement,
 ) {
-  // Info: (20260531 - Tzuhan --- IS 內部數學檢驗 ---
+  // Info: (20260601 - Tzuhan --- IS 內部數學檢驗 ---
   const revTotal = sumItems(is.sections.revenue.items);
   if (revTotal !== BigInt(is.sections.revenue.total))
     throw new Error(
@@ -93,7 +93,7 @@ function assertReportIntegrity(
       `[IS] Net Income ${netIncome} !== ${is.sections.netIncome.total}`,
     );
 
-  // Info: (20260531 - Tzuhan --- BS 內部數學檢驗 ---
+  // Info: (20260601 - Tzuhan --- BS 內部數學檢驗 ---
   const caTotal = sumItems(bs.assets.current.items);
   if (caTotal !== BigInt(bs.assets.current.total))
     throw new Error(
@@ -130,7 +130,7 @@ function assertReportIntegrity(
   if (eqTotal !== BigInt(bs.equity.total))
     throw new Error(`[BS] Equity items sum ${eqTotal} !== ${bs.equity.total}`);
 
-  // Info: (20260531 - Tzuhan --- CF 內部數學檢驗 ---
+  // Info: (20260601 - Tzuhan --- CF 內部數學檢驗 ---
   const cfOpTotal = sumItems(cf.activities.operating.items);
   if (cfOpTotal !== BigInt(cf.activities.operating.total))
     throw new Error(
@@ -166,19 +166,19 @@ function generateDay1Vouchers(): IVoucherLineUI[][] {
   const vouchers: IVoucherLineUI[][] = [];
   let lineId = 1;
 
-  // Info: (20260531 - Tzuhan 1. 開張股本注資 (1筆)
+  // Info: (20260601 - Tzuhan 1. 開張股本注資 (1筆)
   vouchers.push([
     {
       id: `l-${lineId++}`,
-      accountingCode: "1101", // Info: (20260531 - Tzuhan 現金
+      accountingCode: "1101", // Info: (20260601 - Tzuhan 現金
       accounting: mustGetAccount("1101"),
       particular: "股東注資",
-      amount: "15000000", // Info: (20260531 - Tzuhan 1500萬
+      amount: "15000000", // Info: (20260601 - Tzuhan 1500萬
       isDebit: true,
     },
     {
       id: `l-${lineId++}`,
-      accountingCode: "3110", // Info: (20260531 - Tzuhan 普通股股本
+      accountingCode: "3110", // Info: (20260601 - Tzuhan 普通股股本
       accounting: mustGetAccount("3110"),
       particular: "股東注資",
       amount: "15000000",
@@ -186,7 +186,7 @@ function generateDay1Vouchers(): IVoucherLineUI[][] {
     },
   ]);
 
-  // Info: (20260531 - Tzuhan 2. 向銀行短期借款 (1筆)
+  // Info: (20260601 - Tzuhan 2. 向銀行短期借款 (1筆)
   vouchers.push([
     {
       id: `l-${lineId++}`,
@@ -198,7 +198,7 @@ function generateDay1Vouchers(): IVoucherLineUI[][] {
     },
     {
       id: `l-${lineId++}`,
-      accountingCode: "2100", // Info: (20260531 - Tzuhan 短期借款
+      accountingCode: "2100", // Info: (20260601 - Tzuhan 短期借款
       accounting: mustGetAccount("2100"),
       particular: "銀行短期借款",
       amount: "5000000",
@@ -206,11 +206,11 @@ function generateDay1Vouchers(): IVoucherLineUI[][] {
     },
   ]);
 
-  // Info: (20260531 - Tzuhan 3. 預付一年租金 (1筆)
+  // Info: (20260601 - Tzuhan 3. 預付一年租金 (1筆)
   vouchers.push([
     {
       id: `l-${lineId++}`,
-      accountingCode: "1410", // Info: (20260531 - Tzuhan 預付款項
+      accountingCode: "1410", // Info: (20260601 - Tzuhan 預付款項
       accounting: mustGetAccount("1410"),
       particular: "預付辦公室租金",
       amount: "1200000",
@@ -226,11 +226,11 @@ function generateDay1Vouchers(): IVoucherLineUI[][] {
     },
   ]);
 
-  // Info: (20260531 - Tzuhan 4. 購買設備 (1筆)
+  // Info: (20260601 - Tzuhan 4. 購買設備 (1筆)
   vouchers.push([
     {
       id: `l-${lineId++}`,
-      accountingCode: "1600", // Info: (20260531 - Tzuhan 不動產廠房設備
+      accountingCode: "1600", // Info: (20260601 - Tzuhan 不動產廠房設備
       accounting: mustGetAccount("1600"),
       particular: "購入生產設備",
       amount: "3000000",
@@ -246,11 +246,11 @@ function generateDay1Vouchers(): IVoucherLineUI[][] {
     },
   ]);
 
-  // Info: (20260531 - Tzuhan 5. 模擬 146 筆單日交易 (包含進銷存、應收應付、薪資、各類費用)
+  // Info: (20260601 - Tzuhan 5. 模擬 146 筆單日交易 (包含進銷存、應收應付、薪資、各類費用)
   for (let i = 0; i < 146; i++) {
     const rand = Math.random();
     if (rand < 0.2) {
-      // Info: (20260531 - Tzuhan 20% 機率：銷貨收現
+      // Info: (20260601 - Tzuhan 20% 機率：銷貨收現
       const amount = Math.floor(Math.random() * 50000 + 1000).toString();
       vouchers.push([
         {
@@ -271,7 +271,7 @@ function generateDay1Vouchers(): IVoucherLineUI[][] {
         },
       ]);
     } else if (rand < 0.4) {
-      // Info: (20260531 - Tzuhan 20% 機率：賒銷 (產生應收帳款)
+      // Info: (20260601 - Tzuhan 20% 機率：賒銷 (產生應收帳款)
       const amount = Math.floor(Math.random() * 100000 + 5000).toString();
       vouchers.push([
         {
@@ -292,7 +292,7 @@ function generateDay1Vouchers(): IVoucherLineUI[][] {
         },
       ]);
     } else if (rand < 0.5) {
-      // Info: (20260531 - Tzuhan 10% 機率：收回部分應收帳款
+      // Info: (20260601 - Tzuhan 10% 機率：收回部分應收帳款
       const amount = Math.floor(Math.random() * 20000 + 1000).toString();
       vouchers.push([
         {
@@ -313,7 +313,7 @@ function generateDay1Vouchers(): IVoucherLineUI[][] {
         },
       ]);
     } else if (rand < 0.6) {
-      // Info: (20260531 - Tzuhan 10% 機率：進貨付現
+      // Info: (20260601 - Tzuhan 10% 機率：進貨付現
       const amount = Math.floor(Math.random() * 30000 + 500).toString();
       vouchers.push([
         {
@@ -334,7 +334,7 @@ function generateDay1Vouchers(): IVoucherLineUI[][] {
         },
       ]);
     } else if (rand < 0.75) {
-      // Info: (20260531 - Tzuhan 15% 機率：賒購 (產生應付帳款)
+      // Info: (20260601 - Tzuhan 15% 機率：賒購 (產生應付帳款)
       const amount = Math.floor(Math.random() * 80000 + 10000).toString();
       vouchers.push([
         {
@@ -355,7 +355,7 @@ function generateDay1Vouchers(): IVoucherLineUI[][] {
         },
       ]);
     } else if (rand < 0.85) {
-      // Info: (20260531 - Tzuhan 10% 機率：支付薪資
+      // Info: (20260601 - Tzuhan 10% 機率：支付薪資
       const amount = Math.floor(Math.random() * 50000 + 30000).toString();
       vouchers.push([
         {
@@ -376,7 +376,7 @@ function generateDay1Vouchers(): IVoucherLineUI[][] {
         },
       ]);
     } else if (rand < 0.95) {
-      // Info: (20260531 - Tzuhan 10% 機率：結轉銷貨成本 (COGS)
+      // Info: (20260601 - Tzuhan 10% 機率：結轉銷貨成本 (COGS)
       const amount = Math.floor(Math.random() * 30000 + 1000).toString();
       vouchers.push([
         {
@@ -397,9 +397,9 @@ function generateDay1Vouchers(): IVoucherLineUI[][] {
         },
       ]);
     } else {
-      // Info: (20260531 - Tzuhan 5% 機率：雜支 (水電/交際費)
+      // Info: (20260601 - Tzuhan 5% 機率：雜支 (水電/交際費)
       const amount = Math.floor(Math.random() * 5000 + 500).toString();
-      const expenseCodes = ["6214", "6215", "6216"]; // Info: (20260531 - Tzuhan 差旅, 水電, 交際
+      const expenseCodes = ["6214", "6215", "6216"]; // Info: (20260601 - Tzuhan 差旅, 水電, 交際
       const code =
         expenseCodes[Math.floor(Math.random() * expenseCodes.length)];
       vouchers.push([
@@ -439,13 +439,13 @@ async function runProgressiveVerification() {
     const voucher = vouchers[i];
     cumulativeLines.push(...voucher);
 
-    // Info: (20260531 - Tzuhan 每次丟入後，立刻產生當下三表
+    // Info: (20260601 - Tzuhan 每次丟入後，立刻產生當下三表
     const is = generateIncomeStatement(cumulativeLines);
     const bs = generateBalanceSheet(cumulativeLines, 10);
     const cf = generateCashFlowStatement(cumulativeLines, "0");
 
     // ---------------------------------------------------------
-    // Info: (20260531 - Tzuhan 嚴格斷言 0: 三大表內部所有欄位、小計與總計的數學正確性
+    // Info: (20260601 - Tzuhan 嚴格斷言 0: 三大表內部所有欄位、小計與總計的數學正確性
     // ---------------------------------------------------------
     try {
       assertReportIntegrity(bs, is, cf);
@@ -460,7 +460,7 @@ async function runProgressiveVerification() {
     }
 
     // ---------------------------------------------------------
-    // Info: (20260531 - Tzuhan 嚴格斷言 1: 資產負債表 (BS) 恆等式
+    // Info: (20260601 - Tzuhan 嚴格斷言 1: 資產負債表 (BS) 恆等式
     // ---------------------------------------------------------
     const assets = BigInt(bs.assets.total);
     const liabilities = BigInt(bs.liabilities.total);
@@ -475,7 +475,7 @@ async function runProgressiveVerification() {
     }
 
     // ---------------------------------------------------------
-    // Info: (20260531 - Tzuhan 嚴格斷言 2: 損益表 (IS) 與資產負債表 (BS) 勾稽
+    // Info: (20260601 - Tzuhan 嚴格斷言 2: 損益表 (IS) 與資產負債表 (BS) 勾稽
     // ---------------------------------------------------------
     const isNetIncome = is.sections.netIncome.total;
     const bsCurrentEarnings =
@@ -490,7 +490,7 @@ async function runProgressiveVerification() {
     }
 
     // ---------------------------------------------------------
-    // Info: (20260531 - Tzuhan 嚴格斷言 3: 現金流量表 (CF) 與資產負債表 (BS) 勾稽
+    // Info: (20260601 - Tzuhan 嚴格斷言 3: 現金流量表 (CF) 與資產負債表 (BS) 勾稽
     // ---------------------------------------------------------
     const cfEndingCash = cf.summary.endingBalance;
     const bsCash =
@@ -505,7 +505,7 @@ async function runProgressiveVerification() {
       process.exit(1);
     }
 
-    // Info: (20260531 - Tzuhan 每 20 張回報一次進度
+    // Info: (20260601 - Tzuhan 每 20 張回報一次進度
     if ((i + 1) % 20 === 0 || i === vouchers.length - 1) {
       console.log(
         `✅ [${i + 1}/${vouchers.length}] 三表勾稽 (BS配平, IS->BS, CF->BS) 確認通過！當前總現金: ${bsCash}`,
@@ -517,7 +517,7 @@ async function runProgressiveVerification() {
     "\n🎉 [驗證成功] 150 張單日憑證已全數通過漸進式財報配平考驗！沒有發現任何低級錯誤！",
   );
 
-  // Info: (20260531 - Tzuhan 轉換格式為 ISimulatedVoucher 以供 receipt_image_generator 使用
+  // Info: (20260601 - Tzuhan 轉換格式為 ISimulatedVoucher 以供 receipt_image_generator 使用
   const exportedVouchers = vouchers.map((lines, idx) => {
     return {
       id: `v-${idx + 1}`,
@@ -533,7 +533,7 @@ async function runProgressiveVerification() {
     };
   });
 
-  // Info: (20260531 - Tzuhan 匯出為 JSON，供 receipt_image_generator.ts 產出圖片
+  // Info: (20260601 - Tzuhan 匯出為 JSON，供 receipt_image_generator.ts 產出圖片
   const outDir = path.resolve(
     process.cwd(),
     "data/6642/2024/inputs/simulated_data/e2e_roadmap-sprint1",

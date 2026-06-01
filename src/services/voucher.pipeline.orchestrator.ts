@@ -80,6 +80,18 @@ export class VoucherPipelineOrchestrator {
       JSON.stringify(originalPayload),
     ) as IAggregatedDocumentResult;
 
+    // Info: (20260601 - Tzuhan) 0. 攔截不應計算碳排的交易 (如股東注資、借款等 INCOME 類型)
+    if (fileResult.voucherBase) {
+      const vd = (fileResult.voucherBase.data ||
+        fileResult.voucherBase) as Record<string, unknown>;
+      const rawType = String(vd.tradingType || vd.type || "").toLowerCase();
+      if (rawType === "income" || rawType === "receipt") {
+        if (fileResult.esg) {
+          delete fileResult.esg;
+        }
+      }
+    }
+
     // Info: (20260526 - Tzuhan) 1. 稅務逆向攔截器 (Tax Reverse Charge Interceptor)
     // Info: (20260527 - Tzuhan) 傳遞 CountryCode 進入策略模式
     fileResult = TaxStrategyService.applyReverseChargeIfApplicable(
