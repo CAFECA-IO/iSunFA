@@ -41,6 +41,14 @@ export default function UserActions() {
     }
   };
 
+  // Info: (20260601 - Julian) 7 字以上的帳本名稱顯示省略號
+  const formatAccountBookName = (name: string) => {
+    if (name.length > 7) {
+      return `${name.substring(0, 2)}...${name.substring(name.length - 2)}`;
+    }
+    return name;
+  };
+
   // Info: (20260118 - Luphia) Check if a module is active for the current user
   const isModuleActive = (moduleKey: string) => {
     if (!user || !user.modules) return false;
@@ -202,10 +210,12 @@ export default function UserActions() {
           <Link
             href="/user/account_book"
             className="inline-flex items-center gap-1 rounded-md bg-orange-100 px-2.5 py-1 text-orange-700 ring-1 ring-orange-600/20 transition-all ring-inset hover:bg-orange-200 hover:text-orange-800"
-            title={t("sidebar.account_book")}
+            title={accountBook.name}
           >
             <Book size={12} className="shrink-0" />
-            <p className="text-xs font-medium">{accountBook.name}</p>
+            <p className="text-xs font-medium">
+              {formatAccountBookName(accountBook.name)}
+            </p>
           </Link>
         </div>
       )}
@@ -290,13 +300,16 @@ export default function UserActions() {
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   {accountBook && (
-                    <div className="flex flex-wrap items-center gap-x-1 md:hidden">
+                    <div className="flex gap-0.5 text-right md:hidden">
                       <p className="text-xs text-gray-500">
                         {t("sidebar.current_account_book")}:
                       </p>
-                      <div className="inline-flex items-center gap-1 text-orange-700">
+                      <div
+                        className="inline-flex max-w-[140px] items-center gap-1 text-orange-700 transition-colors hover:text-orange-800"
+                        title={accountBook.name}
+                      >
                         <Book size={10} className="shrink-0" />
-                        <p className="text-[10px] font-semibold">
+                        <p className="truncate text-[10px] font-bold">
                           {accountBook.name}
                         </p>
                       </div>

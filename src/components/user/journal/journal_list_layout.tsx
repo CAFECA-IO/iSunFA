@@ -110,7 +110,7 @@ const JournalListItem = ({
   if (journal.analysisStatus === AIAnalysisStatus.PENDING) {
     return (
       <tr
-        className={`block border-b-4 border-double last:border-0 md:table-row md:border-b md:border-solid ${journal.isDeleted ? "border-slate-700 bg-slate-50 text-slate-500 opacity-50" : "border-slate-500 bg-white text-slate-400 md:border-slate-300"}`}
+        className={`block border-b border-slate-400 last:border-0 md:table-row ${journal.isDeleted ? "bg-slate-50 text-slate-500 opacity-50" : "bg-white text-slate-400 md:border-slate-300"}`}
       >
         {/* Info: (20260601 - Julian) 手機版 */}
         <td className="block w-full p-4 md:hidden">
@@ -123,22 +123,39 @@ const JournalListItem = ({
                   <Loader2 className="size-6 animate-spin text-orange-400" />
                 )}
               </div>
-              <div className="flex-1">
+              <div className="flex flex-1 flex-col justify-center gap-1.5">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-bold text-slate-800">
+                    {formattedDate}
+                  </p>
+                </div>
+                <p className="text-[10px] font-bold tracking-wider text-slate-500">
+                  {t("ocr.id")}: {journal.id}
+                </p>
+              </div>
+            </div>
+
+            <div className="h-px w-full bg-slate-200" />
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500">
+                  {t("ocr.status")}：
+                </span>
                 {journal.isDeleted ? (
-                  <span className="flex items-center gap-2 text-sm font-bold text-slate-500">
-                    <Trash2 size={16} />
+                  <span className="flex items-center gap-1 text-xs font-bold text-slate-400">
+                    <Trash2 size={14} />
                     {t("common.status_deleted")}
                   </span>
                 ) : (
-                  <span className="flex items-center gap-2 text-sm text-slate-500 italic">
-                    <Loader2 className="size-4 shrink-0 animate-spin text-orange-400" />
+                  <span className="flex items-center gap-1 text-[10px] font-medium text-orange-500 italic sm:text-xs">
+                    <Loader2 className="size-3 animate-spin text-orange-500" />
                     {t("common.ai.pending")}
                   </span>
                 )}
               </div>
+              <div className="ml-auto">{mobileActionBtn}</div>
             </div>
-            {mobileInfoRows}
-            <div className="ml-auto">{mobileActionBtn}</div>
           </div>
         </td>
         {/* Info: (20260601 - Julian) 電腦版 */}
@@ -182,40 +199,57 @@ const JournalListItem = ({
   if (journal.analysisStatus === AIAnalysisStatus.PROCESSING) {
     return (
       <tr
-        className={`block border-b last:border-0 md:table-row ${journal.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500 opacity-50" : "border-blue-200 bg-blue-50 text-blue-500 opacity-90"}`}
+        className={`block border-b last:border-0 md:table-row ${journal.isDeleted ? "border-slate-400 bg-slate-50 text-slate-500 opacity-50" : "border-blue-200 bg-blue-50 text-blue-500 opacity-90"}`}
       >
         {/* Info: (20260601 - Julian) 手機版 */}
         <td className="block w-full p-4 md:hidden">
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
-              <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-blue-300 bg-white">
+              <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-blue-300 bg-white shadow-sm">
                 {journal.isDeleted ? (
                   <Trash2 className="size-6 text-slate-400" />
                 ) : (
                   <Loader2 className="size-6 animate-spin text-blue-500" />
                 )}
               </div>
-              <div className="flex-1">
+              <div className="flex flex-1 flex-col justify-center gap-1.5">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-bold text-slate-800">
+                    {formattedDate}
+                  </p>
+                </div>
+                <p className="text-[10px] font-bold tracking-wider text-slate-500">
+                  {t("ocr.id")}: {journal.id}
+                </p>
+              </div>
+            </div>
+
+            <div className="h-px w-full bg-slate-200" />
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500">
+                  {t("ocr.status")}：
+                </span>
                 {journal.isDeleted ? (
-                  <span className="flex items-center gap-2 text-sm font-bold text-slate-500">
-                    <Trash2 size={16} />
+                  <span className="flex items-center gap-1 text-xs font-bold text-slate-400">
+                    <Trash2 size={14} />
                     {t("common.status_deleted")}
                   </span>
                 ) : (
-                  <div className="flex flex-col gap-2">
-                    <span className="flex items-center gap-2 text-sm font-bold italic">
-                      <Loader2 className="size-4 shrink-0 animate-spin text-blue-500" />
+                  <div className="flex flex-col gap-1">
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-blue-600 italic sm:text-xs">
+                      <Loader2 className="size-3 animate-spin text-blue-500" />
                       {t("ocr.ai.processing")}
                     </span>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-blue-200">
+                    <div className="h-1 w-full overflow-hidden rounded-full bg-blue-200">
                       <div className="h-full w-2/3 animate-pulse rounded-full bg-blue-500"></div>
                     </div>
                   </div>
                 )}
               </div>
+              <div className="ml-auto">{mobileActionBtn}</div>
             </div>
-            {mobileInfoRows}
-            <div className="ml-auto">{mobileActionBtn}</div>
           </div>
         </td>
         {/* Info: (20260601 - Julian) 電腦版 */}
@@ -271,37 +305,54 @@ const JournalListItem = ({
     return (
       <tr
         onClick={!journal.isDeleted ? () => onSelect(journal) : undefined}
-        className={`block border-b transition-colors last:border-0 md:table-row ${journal.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500 opacity-50" : "cursor-pointer border-red-200 bg-red-50 text-red-500 opacity-90 hover:bg-red-100"}`}
+        className={`block border-b transition-colors last:border-0 md:table-row ${journal.isDeleted ? "border-slate-400 bg-slate-50 text-slate-500 opacity-50" : "cursor-pointer border-red-200 bg-red-50 text-red-500 opacity-90 hover:bg-red-100"}`}
       >
         {/* Info: (20260601 - Julian) 手機版 */}
         <td className="block w-full p-4 md:hidden">
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
-              <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-red-300 bg-white">
+              <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-red-300 bg-white shadow-sm">
                 {journal.isDeleted ? (
                   <Trash2 className="size-6 text-slate-400" />
                 ) : (
-                  <CircleAlert size={24} className="text-red-500" />
+                  <CircleAlert className="size-6 text-red-500" />
                 )}
               </div>
-              <div className="flex-1">
+              <div className="flex flex-1 flex-col justify-center gap-1.5">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-bold text-slate-800">
+                    {formattedDate}
+                  </p>
+                </div>
+                <p className="text-[10px] font-bold tracking-wider text-slate-500">
+                  {t("ocr.id")}: {journal.id}
+                </p>
+              </div>
+            </div>
+
+            <div className="h-px w-full bg-slate-200" />
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500">
+                  {t("ocr.status")}：
+                </span>
                 {journal.isDeleted ? (
-                  <span className="flex items-center gap-2 text-sm font-bold text-slate-500">
-                    <Trash2 size={16} />
+                  <span className="flex items-center gap-1 text-xs font-bold text-slate-400">
+                    <Trash2 size={14} />
                     {t("common.status_deleted")}
                   </span>
                 ) : (
-                  <p
-                    className="line-clamp-2 text-sm font-bold text-red-500"
+                  <span
+                    className="line-clamp-2 text-[10px] font-bold text-red-500 sm:text-xs"
                     title={failedMessage}
                   >
                     {failedMessage}
-                  </p>
+                  </span>
                 )}
               </div>
+              <div className="ml-auto">{mobileActionBtn}</div>
             </div>
-            {mobileInfoRows}
-            <div className="ml-auto">{mobileActionBtn}</div>
           </div>
         </td>
         {/* Info: (20260601 - Julian) 電腦版 */}
@@ -346,7 +397,7 @@ const JournalListItem = ({
 
   return (
     <tr
-      className={`block border-b-4 border-double border-slate-500 transition-colors last:border-0 md:table-row md:border-b md:border-solid md:border-slate-300 ${journal.isDeleted ? "bg-slate-50 opacity-50" : "cursor-pointer bg-white hover:bg-orange-50"}`}
+      className={`block border-b border-slate-400 transition-colors last:border-0 md:table-row md:border-slate-300 ${journal.isDeleted ? "bg-slate-50 opacity-50" : "cursor-pointer bg-white hover:bg-orange-50"}`}
       onClick={!journal.isDeleted ? () => onSelect(journal) : undefined}
     >
       {/* Info: (20260601 - Julian) 手機版 */}

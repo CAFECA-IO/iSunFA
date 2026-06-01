@@ -119,7 +119,7 @@ export function VoucherRow({
   if (voucher.analysisStatus === AIAnalysisStatus.PENDING) {
     return (
       <tr
-        className={`block border-b-4 border-double text-sm transition-colors last:border-0 md:table-row md:border-b md:border-solid ${voucher.isDeleted ? "border-slate-700 bg-slate-50 text-slate-500 opacity-50" : "border-slate-500 bg-slate-50 text-slate-400 md:border-slate-300"}`}
+        className={`block border-b text-sm transition-colors last:border-0 md:table-row ${voucher.isDeleted ? "border-slate-400 bg-slate-50 text-slate-500 opacity-50" : "border-slate-400 bg-slate-50 text-slate-400 md:border-slate-300"}`}
       >
         {/* Info: (20260601 - Julian) 手機版 */}
         <td className="block w-full p-4 md:hidden">
@@ -202,7 +202,7 @@ export function VoucherRow({
   if (voucher.analysisStatus === AIAnalysisStatus.PROCESSING) {
     return (
       <tr
-        className={`block border-b-4 border-double text-sm transition-colors last:border-0 md:table-row md:border-b md:border-solid ${voucher.isDeleted ? "border-slate-700 bg-slate-50 text-slate-500 opacity-50" : "border-slate-500 bg-blue-50 text-blue-400 md:border-blue-200"}`}
+        className={`block border-b text-sm transition-colors last:border-0 md:table-row ${voucher.isDeleted ? "border-slate-400 bg-slate-50 text-slate-500 opacity-50" : "border-blue-200 bg-blue-50 text-blue-500"}`}
       >
         {/* Info: (20260601 - Julian) 手機版 */}
         <td className="block w-full p-4 md:hidden">
@@ -302,7 +302,7 @@ export function VoucherRow({
     return (
       <tr
         onClick={!voucher.isDeleted ? onClick : undefined}
-        className={`block border-b-4 border-double text-sm transition-colors last:border-0 md:table-row md:border-b md:border-solid ${voucher.isDeleted ? "border-slate-700 bg-slate-50 text-slate-500 opacity-50" : "border-slate-500 bg-red-50 text-red-500 hover:cursor-pointer hover:bg-red-100 md:border-slate-300"}`}
+        className={`block border-b text-sm transition-colors last:border-0 md:table-row ${voucher.isDeleted ? "border-slate-400 bg-slate-50 text-slate-500 opacity-50" : "border-red-200 bg-red-50 text-red-500 hover:cursor-pointer hover:bg-red-100"}`}
       >
         {/* Info: (20260601 - Julian) 手機版 */}
         <td className="block w-full p-4 md:hidden">
@@ -489,7 +489,7 @@ export function VoucherRow({
   return (
     <tr
       onClick={!voucher.isDeleted ? onClick : undefined}
-      className={`block border-b-4 border-double border-slate-500 text-sm transition-colors last:border-0 md:table-row md:border-b md:border-solid md:border-slate-300 ${isAnalysisFailed ? "bg-red-50 md:bg-red-200" : "bg-white"} ${voucher.isDeleted ? "opacity-50" : "cursor-pointer hover:bg-orange-50 md:hover:bg-orange-100"}`}
+      className={`block border-b border-slate-300 text-sm transition-colors last:border-0 md:table-row ${isAnalysisFailed ? "bg-red-50 md:bg-red-200" : "bg-white"} ${voucher.isDeleted ? "opacity-50" : "cursor-pointer hover:bg-orange-50 md:hover:bg-orange-100"}`}
     >
       {/* Info: (20260601 - Julian) 手機版 */}
       <td className="block w-full p-4 md:hidden">

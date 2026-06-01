@@ -417,7 +417,7 @@ export default function JournalListView() {
         </div>
 
         {/* Info: (20260601 - Julian) 憑證總筆數 */}
-        <div className="mx-auto mt-4 text-sm font-bold text-slate-500 md:ml-auto">
+        <div className="mt-4 flex items-center justify-center text-sm font-bold text-slate-500 md:justify-end">
           共 {totalItems} 筆憑證
         </div>
 

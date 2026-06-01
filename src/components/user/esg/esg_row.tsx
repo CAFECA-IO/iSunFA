@@ -181,7 +181,7 @@ export function EsgRow({
   if (record.analysisStatus === AIAnalysisStatus.PENDING) {
     return (
       <tr
-        className={`block border-b-4 border-double text-sm transition-colors last:border-0 md:table-row md:border-b md:border-solid ${record.isDeleted ? "border-slate-700 bg-slate-50 text-slate-500 opacity-50" : "border-slate-500 bg-slate-50 text-slate-400 md:border-slate-300"}`}
+        className={`block border-b text-sm transition-colors last:border-0 md:table-row ${record.isDeleted ? "border-slate-400 bg-slate-50 text-slate-500 opacity-50" : "border-slate-400 bg-slate-50 text-slate-400 md:border-slate-300"}`}
       >
         {/* Info: (20260601 - Julian) 手機版 */}
         <td className="block w-full p-4 md:hidden">
@@ -262,7 +262,7 @@ export function EsgRow({
   if (record.analysisStatus === AIAnalysisStatus.PROCESSING) {
     return (
       <tr
-        className={`block border-b-4 border-double text-sm transition-colors last:border-0 md:table-row md:border-b md:border-solid ${record.isDeleted ? "border-slate-700 bg-slate-50 text-slate-500 opacity-50" : "border-slate-500 bg-blue-50 text-blue-400 md:border-blue-200"}`}
+        className={`block border-b text-sm transition-colors last:border-0 md:table-row ${record.isDeleted ? "border-slate-700 bg-slate-50 text-slate-500 opacity-50" : "border-blue-200 bg-blue-50 text-blue-400"}`}
       >
         {/* Info: (20260601 - Julian) 手機版 */}
         <td className="block w-full p-4 md:hidden">
@@ -355,7 +355,7 @@ export function EsgRow({
     return (
       <tr
         onClick={!record.isDeleted ? handleVerifyClick : undefined}
-        className={`block border-b-4 border-double text-sm transition-colors last:border-0 md:table-row md:border-b md:border-solid ${record.isDeleted ? "border-slate-700 bg-slate-50 text-slate-500 opacity-50" : "border-slate-500 bg-red-50 text-red-500 hover:cursor-pointer hover:bg-red-100 md:border-slate-300"}`}
+        className={`block border-b text-sm transition-colors last:border-0 md:table-row ${record.isDeleted ? "border-slate-400 bg-slate-50 text-slate-500 opacity-50" : "border-red-200 bg-red-50 text-red-500 hover:cursor-pointer hover:bg-red-100"}`}
       >
         {/* Info: (20260601 - Julian) 手機版 */}
         <td className="block w-full p-4 md:hidden">
@@ -450,7 +450,7 @@ export function EsgRow({
   return (
     <tr
       onClick={!record.isDeleted ? handleVerifyClick : undefined}
-      className={`block border-b-4 border-double border-slate-500 text-sm transition-colors last:border-0 md:table-row md:border-b md:border-solid md:border-slate-300 ${record.isDeleted ? "bg-slate-50 opacity-50" : isAnalysisFailed ? "cursor-pointer bg-red-200 hover:bg-red-300" : "cursor-pointer bg-white hover:bg-orange-100"}`}
+      className={`block border-b border-slate-300 text-sm transition-colors last:border-0 md:table-row ${record.isDeleted ? "bg-slate-50 opacity-50" : isAnalysisFailed ? "cursor-pointer bg-red-200 hover:bg-red-300" : "cursor-pointer bg-white hover:bg-orange-100"}`}
     >
       {/* Info: (20260601 - Julian) 手機版 */}
       <td className="block w-full p-4 md:hidden">
