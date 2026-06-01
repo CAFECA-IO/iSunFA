@@ -48,8 +48,10 @@ export class AccountingEngineService {
         String(payload.voucherBase.totalAmount || "0"),
       );
 
-      // Info: (20260527 - Tzuhan) 外幣定錨 (Currency Anchor)
-      // Info: (20260527 - Tzuhan) 若原幣非帳本幣別，提早抓取靜態匯率進行約當轉換，避免重大外幣發票被違規豁免
+      /**
+       * Info: (20260527 - Tzuhan) 外幣定錨 (Currency Anchor)
+       * 若原幣非帳本幣別，提早抓取靜態匯率進行約當轉換，避免重大外幣發票被違規豁免
+       */
       if (documentCurrency !== bookCurrency) {
         try {
           const fxRate = getCrossExchangeRateStatic(
@@ -69,8 +71,10 @@ export class AccountingEngineService {
 
       const debitLines = payload.voucherLines.lines.filter((l) => l.isDebit);
 
-      // Info: (20260527 - Tzuhan) 避免窮舉困境 (Avoid Exhaustive Enumeration)
-      // 使用 Regex 語意模式匹配，涵蓋所有相關雜項費用
+      /**
+       * Info: (20260527 - Tzuhan) 避免窮舉困境 (Avoid Exhaustive Enumeration)
+       * 使用 Regex 語意模式匹配，涵蓋所有相關雜項費用
+       */
       const routinePatterns = [
         /TELECOM/i,
         /UTILITIES/i,
@@ -204,8 +208,10 @@ export class AccountingEngineService {
         );
       }
 
-      // Info: (20260527 - Tzuhan) 3. 阻斷空轉分錄 (Dr. 2200 / Cr. 2200 & UX)
-      // 若原始憑證是「尚未付款」的 Invoice，Credit 已經是應付款項，則捨棄付款沖銷事件。
+      /**
+       * Info: (20260527 - Tzuhan) 3. 阻斷空轉分錄 (Dr. 2200 / Cr. 2200 & UX)
+       * 若原始憑證是「尚未付款」的 Invoice，Credit 已經是應付款項，則捨棄付款沖銷事件。
+       */
       let isUnpaidInvoice = false;
       if (payload.voucherLines?.lines) {
         const creditLines = payload.voucherLines.lines.filter(
@@ -303,9 +309,11 @@ export class AccountingEngineService {
 
       results.push(prepaidPayload);
 
-      // Info: (20260526 - Tzuhan) 2. 將包含 startDate/endDate 的 Payload 傳回
-      // document_sync.repo.ts 會在寫入 Voucher (Prepaid Asset 1251) 後，自動於資料庫建立 AmortizationSchedule，
-      // 並由現有的 amortization.worker.service.ts 定期執行攤銷。
+      /**
+       * Info: (20260526 - Tzuhan) 2. 將包含 startDate/endDate 的 Payload 傳回
+       * document_sync.repo.ts 會在寫入 Voucher (Prepaid Asset 1251) 後，自動於資料庫建立 AmortizationSchedule，
+       * 並由現有的 amortization.worker.service.ts 定期執行攤銷。
+       */
       return results;
     }
 
