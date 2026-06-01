@@ -410,10 +410,15 @@ export default function JournalListView() {
               disabled={isLoading}
               className="inline-flex items-center justify-center gap-2 rounded-lg bg-orange-100 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-orange-600 shadow-sm enabled:hover:bg-orange-200 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
             >
-              <Download className="h-4 w-4" />
+              <Download className="size-4" />
               {t("common.batch_download")}
             </button>
           </div>
+        </div>
+
+        {/* Info: (20260601 - Julian) 憑證總筆數 */}
+        <div className="mx-auto mt-4 text-sm font-bold text-slate-500 md:ml-auto">
+          共 {totalItems} 筆憑證
         </div>
 
         {/* Info: (20260304 - Julian) Journal List */}
