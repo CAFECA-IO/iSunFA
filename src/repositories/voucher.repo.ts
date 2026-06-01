@@ -318,7 +318,7 @@ export class VoucherRepository implements IVoucherRepository {
     return prisma.voucher.count({ where });
   }
 
-  // Info: (20260506 - Julian) 驗證所有傳票：回傳總數(number)
+  // Info: (20260601 - Julian) 驗證所有傳票：回傳總數(number)
   async verifyAllVouchers(accountBookId: string) {
     // Info: (20260601 - Julian) 找出未刪除、分析狀態為 COMPLETED 的傳票
     const uncheckedVouchers = await prisma.voucher.findMany({
