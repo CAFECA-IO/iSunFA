@@ -147,7 +147,7 @@ export class FxInterceptorService {
                 result.voucherLines.lines.push({
                   particular: "Realized Foreign Exchange Gain/Loss",
                   accountingCode: "",
-                  semanticCategory: "FOREIGN_EXCHANGE_GAIN_OR_LOSS", // Using string since UniversalAccountTag enum might not be imported here, but it's equivalent
+                  semanticCategory: "FOREIGN_EXCHANGE_GAIN_OR_LOSS", // Info: (20260527 - Tzuhan) Using string since UniversalAccountTag enum might not be imported here, but it's equivalent
                   amount: diffStr,
                   isDebit: false,
                 });
