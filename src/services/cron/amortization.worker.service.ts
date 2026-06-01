@@ -114,10 +114,10 @@ export async function processAmortization() {
         `[AmortizationWorker] createTask reverted for ${hashHex}. Likely duplicate (unique constraint). Entering Healing Mode..., Error: ${e}`,
       );
 
-      // Info: (20260527 - Tzuhan) === Healing Mode ===
+      // Info: (20260527 - Tzuhan) Healing Mode
       try {
         const currentBlock = await publicClient.getBlockNumber();
-        const MAX_BLOCKS = (30n * 24n * 60n * 60n) / 2n; // Approx 30 days (assuming 2s block time)
+        const MAX_BLOCKS = (30n * 24n * 60n * 60n) / 2n; // Info: (20260527 - Tzuhan) Approx 30 days (assuming 2s block time)
         const fromBlock =
           currentBlock > MAX_BLOCKS ? currentBlock - MAX_BLOCKS : 0n;
 
