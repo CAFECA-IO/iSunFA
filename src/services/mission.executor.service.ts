@@ -473,7 +473,7 @@ export async function processNext() {
           };
         }
 
-        // Todo: (20260528 - Tzuhan) 應該根據類型放在各自的 documents/skill裡面
+        // ToDo: (20260528 - Tzuhan) 應該根據類型放在各自的 documents/skill裡面
         // Info: (20260528 - Tzuhan) 決定論管線洗淨 (Washing)
         // Info: (20260528 - Tzuhan) Delegate Early Normalization, Cut-off splitting, and Interceptor execution to the Pipeline Orchestrator
         if (
