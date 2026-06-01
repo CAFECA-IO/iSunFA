@@ -1,30 +1,39 @@
+import { CountryCode } from "@/constants/enums";
+
 // Info: (20260601 - Tzuhan) 集中管理系統產生的所有顯示文案/標籤，避免 Hardcode
 
 export const SystemLabels = {
   PREPAID_PREFIX: {
-    TW: "[預付]",
-    US: "[Prepaid]",
-    CN: "[预付]",
-    KR: "[선급]",
-    JP: "[前払]",
+    [CountryCode.TW]: "[預付]",
+    [CountryCode.US]: "[Prepaid]",
+    [CountryCode.CN]: "[预付]",
+    [CountryCode.KR]: "[선급]",
+    [CountryCode.JP]: "[前払]",
+    [CountryCode.HK]: "[預付]",
+    [CountryCode.EU]: "[Prepaid]",
     DEFAULT: "[Prepaid]",
   },
   AMORTIZATION_POSTFIX: {
-    TW: "攤銷",
-    US: "Amortization",
-    CN: "摊销",
-    KR: "상각",
-    JP: "償却",
+    [CountryCode.TW]: "攤銷",
+    [CountryCode.US]: "Amortization",
+    [CountryCode.CN]: "摊销",
+    [CountryCode.KR]: "상각",
+    [CountryCode.JP]: "償却",
+    [CountryCode.HK]: "攤銷",
+    [CountryCode.EU]: "Amortization",
     DEFAULT: "Amortization",
   },
 } as const;
 
-export type LabelCountryCode = keyof typeof SystemLabels.PREPAID_PREFIX;
+export type LabelGroup = keyof typeof SystemLabels;
 
 export function getLabel(
-  labelGroup: keyof typeof SystemLabels,
-  countryCode: string,
+  labelGroup: LabelGroup,
+  countryCode: CountryCode | string,
 ): string {
   const group = SystemLabels[labelGroup];
-  return group[countryCode] || group.DEFAULT;
+  if (countryCode in group) {
+    return group[countryCode as keyof typeof group];
+  }
+  return group.DEFAULT;
 }

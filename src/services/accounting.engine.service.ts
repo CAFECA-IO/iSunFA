@@ -1,6 +1,10 @@
 import { IAggregatedDocumentResult } from "@/skills/utils/document_parser_db_sync";
 import { IParsedVoucherLine } from "@/interfaces/voucher";
-import { UniversalAccountTag, EsgFallbackCategory } from "@/constants/enums";
+import {
+  UniversalAccountTag,
+  EsgFallbackCategory,
+  CountryCode,
+} from "@/constants/enums";
 import { getCrossExchangeRateStatic } from "@/skills/utils/exchange_rate_helper";
 import { MoneyUtil } from "@/lib/utils/money";
 import { CurrencyCode } from "@/constants/exchange_rate";
@@ -15,7 +19,7 @@ export class AccountingEngineService {
   public static async processCutoffEvents(
     payload: IAggregatedDocumentResult,
     bookCurrency: string = CurrencyCode.TWD,
-    countryCode: string = "TW",
+    countryCode: CountryCode | string = CountryCode.TW,
   ): Promise<IAggregatedDocumentResult[]> {
     const results: IAggregatedDocumentResult[] = [];
 
