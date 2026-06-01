@@ -122,6 +122,20 @@ export enum EsgFallbackCategory {
   OTHER_UNKNOWN = "其他未知項目",
 }
 
+export enum AccountType {
+  ASSET = "asset",
+  LIABILITY = "liability",
+  EQUITY = "equity",
+  REVENUE = "revenue",
+  EXPENSE = "expense",
+  COST = "cost",
+  INCOME = "income",
+  GAIN_OR_LOSS = "gainOrLoss",
+  CASH_FLOW = "cashFlow",
+  OTHER_COMPREHENSIVE_INCOME = "otherComprehensiveIncome",
+  OTHER = "other",
+}
+
 export enum UniversalAccountTag {
   // Info: (20260522 - Tzuhan) 資產 (Assets)
   CASH = "CASH",
@@ -181,6 +195,7 @@ export enum UniversalAccountTag {
   INTEREST_EXPENSE = "INTEREST_EXPENSE",
   MISCELLANEOUS_EXPENSE = "MISCELLANEOUS_EXPENSE",
   UTILITIES_EXPENSE = "UTILITIES_EXPENSE",
+  FOREIGN_EXCHANGE_GAIN_OR_LOSS = "FOREIGN_EXCHANGE_GAIN_OR_LOSS",
 
   UNKNOWN = "UNKNOWN",
 }

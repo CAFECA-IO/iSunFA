@@ -126,7 +126,7 @@ describe("AccountingEngineService Cut-off Logic", () => {
     // Info: (20260526 - Tzuhan) 事件 1: 付款 (預付資產)
     expect(results[0].voucherLines!.lines!.length).toBe(2);
     expect(results[0].voucherLines!.lines![0].particular).toBe(
-      "Prepaid for: Expense",
+      "[預付] Adobe Subscription",
     );
     expect(results[0].voucherLines!.lines![1].semanticCategory).toBe(
       UniversalAccountTag.CASH_IN_BANK,

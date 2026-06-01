@@ -294,12 +294,28 @@ export class AccountingEngineService {
               line.isDebit &&
               line.semanticCategory !== UniversalAccountTag.INPUT_TAX
             ) {
-              const dominantExpense =
+              let dominantExpense =
                 line.semanticCategory || UniversalAccountTag.EXPENSE;
+
+              /**
+               * Info: (20260601 - Tzuhan) [Refactor]
+               * 若 AI 給出的性質本身已是預付/資產
+               * 代表喪失原本的費用性質，安全降級至攤銷費用
+               */
+              if (
+                dominantExpense === UniversalAccountTag.PREPAID_EXPENSE ||
+                dominantExpense === UniversalAccountTag.PREPAID_RENT
+              ) {
+                dominantExpense = UniversalAccountTag.AMORTIZATION_EXPENSE;
+              }
+
+              const originalParticular = line.particular || "未命名費用";
+
               return {
                 ...line,
-                particular: `Prepaid for: ${dominantExpense}`,
+                particular: `[預付] ${originalParticular}`,
                 semanticCategory: UniversalAccountTag.PREPAID_EXPENSE,
+                amortizationTargetCategory: dominantExpense,
                 accountingCode: "",
               };
             }

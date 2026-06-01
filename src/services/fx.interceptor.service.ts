@@ -1,3 +1,4 @@
+import { UniversalAccountTag } from "@/constants/enums";
 import { IAggregatedDocumentResult } from "@/skills/utils/document_parser_db_sync";
 import { getCrossExchangeRateStatic } from "@/skills/utils/exchange_rate_helper";
 import { FIAT_CURRENCIES } from "@/constants/country";
@@ -147,7 +148,8 @@ export class FxInterceptorService {
                 result.voucherLines.lines.push({
                   particular: "Realized Foreign Exchange Gain/Loss",
                   accountingCode: "",
-                  semanticCategory: "FOREIGN_EXCHANGE_GAIN_OR_LOSS", // Info: (20260527 - Tzuhan) Using string since UniversalAccountTag enum might not be imported here, but it's equivalent
+                  semanticCategory:
+                    UniversalAccountTag.FOREIGN_EXCHANGE_GAIN_OR_LOSS, // Info: (20260527 - Tzuhan) [Refactor] Using Enum instead of string
                   amount: diffStr,
                   isDebit: false,
                 });
@@ -155,7 +157,8 @@ export class FxInterceptorService {
                 result.voucherLines.lines.push({
                   particular: "Realized Foreign Exchange Gain/Loss",
                   accountingCode: "",
-                  semanticCategory: "FOREIGN_EXCHANGE_GAIN_OR_LOSS",
+                  semanticCategory:
+                    UniversalAccountTag.FOREIGN_EXCHANGE_GAIN_OR_LOSS,
                   amount: diffDec.abs().toString(),
                   isDebit: true,
                 });

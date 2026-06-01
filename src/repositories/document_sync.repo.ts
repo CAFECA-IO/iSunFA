@@ -430,37 +430,31 @@ export class DocumentSyncRepository {
 
             // Info: (20260526 - Tzuhan) 自動創建 AmortizationSchedule
             if (vd.startDate && vd.endDate && finalVoucherId) {
-              // Info: (20260528 - Tzuhan) 動態依據 AI 判斷的 semanticCategory 來對應，避免 Hardcode 科目代碼
+              // Info: (20260528 - Tzuhan) 依據 Service 層傳遞的攤銷意圖來對應費用科目
               const originalPrepaidIndex =
-                vd.lines?.findIndex(
-                  (l) => l.semanticCategory === "PREPAID_EXPENSE",
-                ) ?? -1;
+                vd.lines?.findIndex((l) => !!l.amortizationTargetCategory) ??
+                -1;
 
-              const prepaidLine =
+              const prepaidLineData =
+                originalPrepaidIndex >= 0
+                  ? vd.lines![originalPrepaidIndex]
+                  : undefined;
+              const prepaidLineDb =
                 originalPrepaidIndex >= 0
                   ? linesToCreate[originalPrepaidIndex]
                   : undefined;
-              if (prepaidLine) {
+
+              if (prepaidLineData && prepaidLineDb) {
                 const sDate = new Date(vd.startDate);
                 const eDate = new Date(vd.endDate);
 
-                // Info: (20260528 - Tzuhan) 找出合適的 account code
+                // Info: (20260601 - Tzuhan) [Refactor] Repository 層僅負責查字典寫入 DB，業務邏輯已移至 Service 層
                 if (!isNaN(sDate.getTime()) && !isNaN(eDate.getTime())) {
-                  let expenseAccountCode = "RENT_EXPENSE";
-                  const prefix = "Prepaid for: ";
-                  if (
-                    prepaidLine.particular &&
-                    prepaidLine.particular.startsWith(prefix)
-                  ) {
-                    const originalSemantic = prepaidLine.particular.substring(
-                      prefix.length,
-                    );
-                    expenseAccountCode = SemanticAccountMatcher.match(
-                      originalSemantic,
-                      dictionary,
-                      (accountBook.country as CountryCode) || CountryCode.TW,
-                    );
-                  }
+                  const expenseAccountCode = SemanticAccountMatcher.match(
+                    prepaidLineData.amortizationTargetCategory!,
+                    dictionary,
+                    (accountBook.country as CountryCode) || CountryCode.TW,
+                  );
                   const existingSchedule =
                     await tx.amortizationSchedule.findFirst({
                       where: { originalVoucherId: finalVoucherId },
@@ -472,8 +466,9 @@ export class DocumentSyncRepository {
                       data: {
                         startDate: sDate,
                         endDate: eDate,
-                        totalAmount: prepaidLine.amount?.toString() || "0",
-                        assetAccountCode: prepaidLine.accountingCode || "1251",
+                        totalAmount: prepaidLineDb.amount?.toString() || "0",
+                        assetAccountCode:
+                          prepaidLineDb.accountingCode || "1251",
                         expenseAccountCode,
                         accountBookId,
                       },
@@ -483,9 +478,10 @@ export class DocumentSyncRepository {
                       data: {
                         originalVoucherId: finalVoucherId,
                         accountBookId,
-                        assetAccountCode: prepaidLine.accountingCode || "1251",
+                        assetAccountCode:
+                          prepaidLineDb.accountingCode || "1251",
                         expenseAccountCode,
-                        totalAmount: prepaidLine.amount?.toString() || "0",
+                        totalAmount: prepaidLineDb.amount?.toString() || "0",
                         startDate: sDate,
                         endDate: eDate,
                         status: "ACTIVE",

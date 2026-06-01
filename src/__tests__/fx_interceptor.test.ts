@@ -101,7 +101,9 @@ describe("FxInterceptorService", () => {
     expect(lines.length).toBe(4);
     const plugLine = lines[3];
     expect(plugLine.amount).toBe(diffDec.abs().toString());
-    expect(plugLine.semanticCategory).toBe("FOREIGN_EXCHANGE_GAIN_OR_LOSS");
+    expect(plugLine.semanticCategory).toBe(
+      UniversalAccountTag.FOREIGN_EXCHANGE_GAIN_OR_LOSS,
+    );
     expect(plugLine.isDebit).toBe(diffDec.lessThan(0));
   });
 });
