@@ -33,10 +33,10 @@
 ### 2.1 決定性雜湊 (Deterministic Hash) 取代 CID
 系統不再上傳任何檔案到 IPFS，而是擷取排程的絕對不變特徵：
 ```typescript
-// 帳本ID + 執行年月 + 科目代碼 + 排程ID
+// Info: (20260527 - Tzuhan) 帳本ID + 執行年月 + 科目代碼 + 排程ID
 const hashInput = `${schedule.accountBookId}_${yearMonth}_${schedule.assetAccountCode}_${schedule.id}`;
 
-// 產生 keccak256 決定性雜湊
+// Info: (20260527 - Tzuhan) 產生 keccak256 決定性雜湊
 const hashHex = keccak256(toUtf8Bytes(hashInput));
 ```
 這意味著，無論今天這台伺服器當機重啟幾次，只要是同一個月 (`yearMonth`) 針對同一筆排程，算出來的 `hashHex` 永遠一樣。
