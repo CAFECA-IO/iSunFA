@@ -43,6 +43,8 @@ export const common = {
   verify_all_confirm_title: "일괄 확인하시겠습니까?",
   verify_all_confirm_desc:
     "이렇게 하면 확인되지 않은 모든 항목이 확인됨으로 표시됩니다.",
+  verify_all_success_count: "성공적으로 {{count}}개의 데이터를 확인했습니다.",
+  verify_all_no_data: "현재 확인할 데이터가 없습니다!",
   cancel: "취소",
   notification: "시스템 알림",
   ok: "확인",

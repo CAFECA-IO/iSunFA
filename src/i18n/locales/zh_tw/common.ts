@@ -40,6 +40,8 @@ export const common = {
   verify_all: "一鍵核對",
   verify_all_confirm_title: "確認一鍵核對？",
   verify_all_confirm_desc: "這將會把所有未核對的項目標示為已核對",
+  verify_all_success_count: "成功核對 {{count}} 筆資料",
+  verify_all_no_data: "目前沒有需要核對的資料喔！",
   cancel: "取消",
   notification: "系統提示",
   ok: "確認",

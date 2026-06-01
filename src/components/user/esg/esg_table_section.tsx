@@ -8,6 +8,7 @@ import { EsgRow } from "@/components/user/esg/esg_row";
 import RecordTabModal from "@/components/user/common/record_tab_modal";
 import ConfirmModal from "@/components/common/confirm_modal";
 import DateSortButton from "@/components/user/common/date_sort_button";
+import SuccessNotification from "@/components/common/success_notification";
 import { request } from "@/lib/utils/request";
 import { useParams, useSearchParams } from "next/navigation";
 import { IApiResponse } from "@/lib/utils/response";
@@ -50,6 +51,10 @@ export default function EsgTableSection({
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState<boolean>(false);
   const [isVerifyAllConfirmOpen, setIsVerifyAllConfirmOpen] =
     useState<boolean>(false);
+  const [isVerifySuccessOpen, setIsVerifySuccessOpen] =
+    useState<boolean>(false);
+  const [verifySuccessMsg, setVerifySuccessMsg] = useState<string>("");
+  const [isAllVerified, setIsAllVerified] = useState<boolean>(false);
   const [selectedEsgId, setSelectedEsgId] = useState<string | null>(null);
 
   const [esgToDelete, setEsgToDelete] = useState<IEsgRecordDetail | null>(null);
@@ -120,6 +125,7 @@ export default function EsgTableSection({
   // Info: (20260324 - Julian) Reset pagination when filters change
   useEffect(() => {
     setCurrentPage(1);
+    setIsAllVerified(false);
   }, [
     keyWord,
     verifyStatusFilter,
@@ -288,10 +294,25 @@ export default function EsgTableSection({
     if (!accountBookId) return;
     try {
       setIsLoading(true);
-      await request(
+      const res = await request<IApiResponse<{ count: number }>>(
         `/api/v1/user/account_book/${accountBookId}/esg/verify_all`,
         { method: "PUT" },
       );
+
+      // Info: (20260601 - Julian) 根據 API 回傳的 count，顯示對應的 message
+      if (res.payload) {
+        if (res.payload.count > 0) {
+          setVerifySuccessMsg(
+            t("common.verify_all_success_count", {
+              count: res.payload.count,
+            }) as string,
+          );
+        } else {
+          setVerifySuccessMsg(t("common.verify_all_no_data") as string);
+        }
+        setIsVerifySuccessOpen(true);
+        setIsAllVerified(true);
+      }
       // Info: (20260325 - Luphia) 加入 await，且讓 fetchRecords 內部接管後續的 loading 狀態
       await fetchRecords();
     } catch (error) {
@@ -401,7 +422,7 @@ export default function EsgTableSection({
           type="button"
           aria-label={t("common.verify_all")}
           onClick={() => setIsVerifyAllConfirmOpen(true)}
-          disabled={isLoading}
+          disabled={isLoading || isAllVerified || records.length === 0}
           className="inline-flex items-center justify-center rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm enabled:hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300 lg:ml-auto"
         >
           {t("common.verify_all")}
@@ -606,6 +627,12 @@ export default function EsgTableSection({
         }
         cancelText={t("common.cancel") as string}
         onConfirm={executeRestore}
+      />
+      <SuccessNotification
+        show={isVerifySuccessOpen}
+        title={t("common.notification") as string}
+        message={verifySuccessMsg}
+        onClose={() => setIsVerifySuccessOpen(false)}
       />
     </div>
   );

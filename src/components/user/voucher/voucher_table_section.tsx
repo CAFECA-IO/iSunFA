@@ -12,6 +12,7 @@ import RecordTabModal from "@/components/user/common/record_tab_modal";
 import ConfirmModal from "@/components/common/confirm_modal";
 import Pagination from "@/components/common/pagination";
 import DateRangePicker from "@/components/common/date_range_picker";
+import SuccessNotification from "@/components/common/success_notification";
 import { IVoucher, TradingType } from "@/interfaces/voucher";
 import { VerifyStatus } from "@/constants/verify_status";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
@@ -48,6 +49,10 @@ export default function VoucherTableSection() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isVerifyAllConfirmOpen, setIsVerifyAllConfirmOpen] =
     useState<boolean>(false);
+  const [isVerifySuccessOpen, setIsVerifySuccessOpen] =
+    useState<boolean>(false);
+  const [verifySuccessMsg, setVerifySuccessMsg] = useState<string>("");
+  const [isAllVerified, setIsAllVerified] = useState<boolean>(false);
   const [selectedVoucherId, setSelectedVoucherId] = useState<string | null>(
     null,
   );
@@ -157,6 +162,7 @@ export default function VoucherTableSection() {
   // Info: (20260324 - Julian) Reset pagination when filters change
   useEffect(() => {
     setCurrentPage(1);
+    setIsAllVerified(false);
   }, [
     debouncedKeyWord,
     startDate,
@@ -267,10 +273,26 @@ export default function VoucherTableSection() {
     if (!accountBookId) return;
     try {
       setIsLoading(true); // Info: (20260325 - Luphia) 為 PUT 請求開啟 loading
-      await request(
+      const res = await request<IApiResponse<{ count: number }>>(
         `/api/v1/user/account_book/${accountBookId}/voucher/verify_all`,
         { method: "PUT" },
       );
+
+      // Info: (20260601 - Julian) 根據 API 回傳的 count，顯示對應的 message
+      if (res.payload) {
+        if (res.payload.count > 0) {
+          setVerifySuccessMsg(
+            t("common.verify_all_success_count", {
+              count: res.payload.count,
+            }) as string,
+          );
+        } else {
+          setVerifySuccessMsg(t("common.verify_all_no_data") as string);
+        }
+        setIsVerifySuccessOpen(true);
+        setIsAllVerified(true);
+      }
+
       // Info: (20260325 - Luphia) 加入 await，讓 fetchVouchers 內部接管後續的 loading 狀態
       await fetchVouchers();
     } catch (error) {
@@ -422,7 +444,7 @@ export default function VoucherTableSection() {
             <div className="lg:ml-auto">
               <button
                 type="button"
-                disabled={isLoading}
+                disabled={isLoading || isAllVerified || vouchers.length === 0}
                 onClick={() => setIsVerifyAllConfirmOpen(true)}
                 className="inline-flex items-center justify-center rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm enabled:hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"
               >
@@ -719,6 +741,12 @@ export default function VoucherTableSection() {
         confirmText={t("common.confirm")}
         cancelText={t("common.cancel")}
         onConfirm={handleDeleteVoucher}
+      />
+      <SuccessNotification
+        show={isVerifySuccessOpen}
+        title={t("common.notification") as string}
+        message={verifySuccessMsg}
+        onClose={() => setIsVerifySuccessOpen(false)}
       />
     </>
   );

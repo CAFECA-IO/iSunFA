@@ -42,6 +42,8 @@ export const common = {
   verify_all: "Verify All",
   verify_all_confirm_title: "Confirm Verify All?",
   verify_all_confirm_desc: "This will mark all unverified items as verified.",
+  verify_all_success_count: "Successfully verified {{count}} items",
+  verify_all_no_data: "There is no data to verify!",
   cancel: "Cancel",
   notification: "Notification",
   ok: "OK",

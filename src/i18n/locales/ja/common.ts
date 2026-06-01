@@ -43,6 +43,8 @@ export const common = {
   verify_all_confirm_title: "一括確認しますか？",
   verify_all_confirm_desc:
     "これにより、すべての未確認項目が確認済みとしてマークされます。",
+  verify_all_success_count: "正常に {{count}} 件のデータを確認しました。",
+  verify_all_no_data: "現在確認すべきデータはありません！",
   cancel: "キャンセル",
   notification: "システム通知",
   ok: "確認",
