@@ -243,10 +243,14 @@ export class IssueRecorderService {
               : {};
             const payloadData =
               (orderDataObj.data as Record<string, unknown>) || {};
+            /**
+             * Info: (20260529 - Tzuhan)
+             * 作為最終的 Fallback 機制。專門為了沒有實體 Order Payload 的內部背景任務設計（例如：AMORTIZATION_WORKER），
+             * 確保從本地上下文中依然能萃取出正確的帳本 ID。
+             */
             const dbAccountBookId =
               payloadData.accountBookId ||
               orderDataObj.accountBookId ||
-              // Info: (20260529 - Tzuhan) 作為最終的 Fallback 機制。專門為了沒有實體 Order Payload 的內部背景任務設計（例如：AMORTIZATION_WORKER），確保從本地上下文中依然能萃取出正確的帳本 ID。
               localContextObj.accountBookId;
 
             if (
