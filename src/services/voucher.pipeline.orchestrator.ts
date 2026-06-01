@@ -49,6 +49,7 @@ export class VoucherPipelineOrchestrator {
       const splitResults = await AccountingEngineService.processCutoffEvents(
         originalResult,
         bookCurrency,
+        bookCountry,
       );
 
       // Info: (20260527 - Tzuhan) 2. 決定論管線 (攔截器與換匯邏輯)

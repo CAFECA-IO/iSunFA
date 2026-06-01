@@ -4,6 +4,7 @@ import { UniversalAccountTag, EsgFallbackCategory } from "@/constants/enums";
 import { getCrossExchangeRateStatic } from "@/skills/utils/exchange_rate_helper";
 import { MoneyUtil } from "@/lib/utils/money";
 import { CurrencyCode } from "@/constants/exchange_rate";
+import { getLabel } from "@/constants/labels";
 
 export class AccountingEngineService {
   /**
@@ -14,6 +15,7 @@ export class AccountingEngineService {
   public static async processCutoffEvents(
     payload: IAggregatedDocumentResult,
     bookCurrency: string = CurrencyCode.TWD,
+    countryCode: string = "TW",
   ): Promise<IAggregatedDocumentResult[]> {
     const results: IAggregatedDocumentResult[] = [];
 
@@ -311,9 +313,11 @@ export class AccountingEngineService {
 
               const originalParticular = line.particular || "未命名費用";
 
+              const prefix = getLabel("PREPAID_PREFIX", countryCode);
+
               return {
                 ...line,
-                particular: `[預付] ${originalParticular}`,
+                particular: `${prefix} ${originalParticular}`,
                 semanticCategory: UniversalAccountTag.PREPAID_EXPENSE,
                 amortizationTargetCategory: dominantExpense,
                 accountingCode: "",
