@@ -59,7 +59,7 @@ args: [hashHex, 0n],
 
 Worker 拿到 `taskId` 後，直接在本地伺服器的硬碟建立任務夾：
 ```typescript
-const taskDir = path.join(missionDirPath, taskIdStr); // 例如: missions/123
+const taskDir = path.join(missionDirPath, taskIdStr); // Info: (20260527 - Tzuhan) 例如: missions/123
 await fs.writeFile(path.join(taskDir, "result.md"), resultMd, "utf8");
 ```
 
