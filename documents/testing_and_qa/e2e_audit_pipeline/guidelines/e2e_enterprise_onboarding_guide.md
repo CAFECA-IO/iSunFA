@@ -9,22 +9,40 @@
 ## 📂 目錄結構與所需檔案
 
 ```text
-data/[stock_id]/[year]/inputs/
-├── golden_data/
-│   ├── [year]_FIN_DATA.json     (1) 真實財務結構化數據 (Ground Truth)
-│   └── [year]_ESG_METRICS.json  (2) 真實 ESG 結構化數據 (Ground Truth)
-├── raw_reports/
-│   ├── [year]_FIN_REPORT.pdf    (3) 真實財務報告書 PDF
-│   └── [year]_ESG_REPORT.pdf    (4) 真實永續報告書 PDF
+data/[stock_id]/[year]/
+├── inputs/
+│   ├── golden_data/
+│   │   ├── [year]_FIN_DATA.json     (1) 真實財務結構化數據 (Ground Truth)
+│   │   └── [year]_ESG_METRICS.json  (2) 真實 ESG 結構化數據 (Ground Truth)
+│   ├── raw_reports/
+│   │   ├── [year]_FIN_REPORT.pdf    (3) 真實財務報告書 PDF
+│   │   └── [year]_ESG_REPORT.pdf    (4) 真實永續報告書 PDF
+│   └── simulated_data/
+│       └── e2e_roadmap-sprint1/
+│           ├── simulated_vouchers.json (5) 逆推產出的標準答案憑證
+│           └── receipts/               (6) 依據憑證畫出的實體 SVG/PNG 圖檔
+└── outputs/
+    └── phase4_vision_test/
+        ├── ai_extracted_context_cache.json (7) AI PDF 萃取出的供應商與比例快取
+        └── audit_variance_report.json      (8) 最終配平驗證報告
 ```
 
 ### 🔍 檔案用途說明：
+
+#### Inputs (輸入來源)
 1. **(1) `[year]_FIN_DATA.json`**：
-   - 包含該公司當年度公布的精確「營業收入」、「營業費用」、「折舊」等數字。`financial_reverse_engineer.ts` (Phase 2) 會以這些數字為天花板，融合 AI 讀出的供應商比例，**逆向推導切碎成幾十張完美的模擬傳票 (Voucher)**。
+   - 包含該公司當年度公布的精確「營業收入」、「營業費用」、「折舊」等數字。`financial_reverse_engineer.ts` (Phase 2) 會以這些數字為天花板，融合 AI 讀出的供應商比例，**逆向推導切碎成數千至數萬張完美的模擬傳票 (Voucher)**。
 2. **(2) `[year]_ESG_METRICS.json`**：
    - 包含官方公布的 Scope 1、Scope 2 等碳排總量。`esg_reverse_engineer.ts` (Phase 3) 會拿它來逆向推導每一張水電或公務車發票「應該帶有多少碳排與碳係數」。
 3. **(3) & (4) 雙 PDF 報告**：
    - 這是餵給 `ai_vision_extractor.ts` (Phase 1) 的原料。系統會把這兩份幾百頁的 PDF 送進 Gemini 進行閱讀，萃取出這家公司真實的「主要供應商、水電比例、差旅比例、折舊攤銷策略」。
+4. **(5) & (6) `simulated_data/`**：
+   - 依據 Golden Data 逆推出來的模擬傳票 JSON 與對應的實體憑證影像。
+
+#### Outputs (歷史紀錄與開發成果)
+*   **`outputs/` 目錄**：裡面不同的資料夾代表的是我們**不同階段開發的結果與歷史紀錄**（例如：`phase4_vision_test/`、`e2e_roadmap-sprint1/` 等）。如果有些公司尚未進行到特定階段，不用刻意加入或補齊這些歷史資料夾。
+*   **(7) `ai_extracted_context_cache.json`**：AI 模型從 PDF 抽取的供應商、客戶比例與關鍵資訊快取。
+*   **(8) `audit_variance_report.json`**：最終端到端跑完後，系統產出的財報對齊度分析與差異報表。
 
 ---
 

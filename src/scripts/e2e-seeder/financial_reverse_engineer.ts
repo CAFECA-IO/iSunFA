@@ -226,7 +226,7 @@ const createDiversifiedVoucherBlocks = (
   return vouchers;
 };
 
-export const generateFinancialVouchers = (stockId: string) => {
+export const generateFinancialVouchers = (stockId: string, targetVoucherCount?: number) => {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/2024`);
   const finDataPath = path.join(
     dataDir,
@@ -267,6 +267,27 @@ export const generateFinancialVouchers = (stockId: string) => {
   const taxExp = findReportValue(isList, "所得稅費用（利益）合計");
   const creditLoss = findReportValue(isList, "預期信用減損損失（利益）");
 
+  // Info: (20260601 - Tzuhan) Calculate dynamic voucher volume based on revenue scale
+  let totalTarget = targetVoucherCount;
+  if (!totalTarget || totalTarget <= 0) {
+    // 預設：每一百萬元營業額產生 10 張傳票（即平均十萬一張），最高上限 55,000 張，最低 100 張
+    const calculated = totalRevenue.div(100000).toNumber();
+    totalTarget = Math.min(Math.max(calculated, 100), 55000); 
+  }
+
+  // Info: Allocate proportions based on typical transaction frequency
+  const revBlocks = Math.floor(totalTarget * 0.4);
+  const cogsBlocks = Math.floor(totalTarget * 0.3);
+  const selBlocks = Math.floor(totalTarget * 0.1);
+  const admBlocks = Math.floor(totalTarget * 0.15);
+  const rndBlocks = Math.floor(totalTarget * 0.05);
+
+  const actualRevBlocks = Math.max(revBlocks, 1);
+  const actualCogsBlocks = Math.max(cogsBlocks, 1);
+  const actualSelBlocks = Math.max(selBlocks, 1);
+  const actualAdmBlocks = Math.max(admBlocks, 1);
+  const actualRndBlocks = Math.max(rndBlocks, 1);
+
   const vouchers: ISimulatedVoucher[] = [];
 
   // Info: (20260525 - Tzuhan) P&L Generation
@@ -274,7 +295,7 @@ export const generateFinancialVouchers = (stockId: string) => {
   vouchers.push(
     ...createDiversifiedVoucherBlocks(
       totalRevenue,
-      20,
+      actualRevBlocks,
       "RV",
       REVENUE_POOL,
       "1100",
@@ -284,19 +305,19 @@ export const generateFinancialVouchers = (stockId: string) => {
   );
   // Info: (20260525 - Tzuhan) 2. COGS (51xx)
   vouchers.push(
-    ...createDiversifiedVoucherBlocks(cogs, 20, "COGS", COGS_POOL, "1100", true),
+    ...createDiversifiedVoucherBlocks(cogs, actualCogsBlocks, "COGS", COGS_POOL, "1100", true),
   );
   // Info: (20260525 - Tzuhan) 3. Selling (61xx)
   vouchers.push(
-    ...createDiversifiedVoucherBlocks(sellingExp, 10, "SEL", SELLING_EXP_POOL, "1100", true),
+    ...createDiversifiedVoucherBlocks(sellingExp, actualSelBlocks, "SEL", SELLING_EXP_POOL, "1100", true),
   );
   // Info: (20260525 - Tzuhan) 4. Admin (62xx)
   vouchers.push(
-    ...createDiversifiedVoucherBlocks(adminExp, 10, "ADM", ADMIN_EXP_POOL, "1100", true),
+    ...createDiversifiedVoucherBlocks(adminExp, actualAdmBlocks, "ADM", ADMIN_EXP_POOL, "1100", true),
   );
   // Info: (20260525 - Tzuhan) 5. R&D (63xx)
   vouchers.push(
-    ...createDiversifiedVoucherBlocks(rndExp, 10, "RND", RND_EXP_POOL, "1100", true),
+    ...createDiversifiedVoucherBlocks(rndExp, actualRndBlocks, "RND", RND_EXP_POOL, "1100", true),
   );
   // Info: (20260525 - Tzuhan) 6. Interest Revenue (7110)
   vouchers.push(
@@ -525,11 +546,12 @@ export const generateFinancialVouchers = (stockId: string) => {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const targetStock = process.argv[2];
+  const targetCount = process.argv[3] ? parseInt(process.argv[3], 10) : undefined;
   if (!targetStock) {
     console.error(
-      "Please provide a stock ID. Usage: tsx financial_reverse_engineer.ts 1538",
+      "Please provide a stock ID. Usage: tsx financial_reverse_engineer.ts 1538 [voucherCount]",
     );
     process.exit(1);
   }
-  generateFinancialVouchers(targetStock);
+  generateFinancialVouchers(targetStock, targetCount);
 }
