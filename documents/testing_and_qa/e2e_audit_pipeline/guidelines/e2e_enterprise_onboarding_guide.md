@@ -80,6 +80,23 @@ npx tsx src/scripts/e2e-seeder/fast_verify.ts [stock_id]
 
 ---
 
+## 🏗️ 真實財報逆向工程引擎 (Financial Reverse Engineer)
+
+如果您想要針對特定公司（如 `6642`），完美地將其真實財報的宏觀數字（如年度總營收、總成本）逆向打碎成上萬張具備真實日期、多樣化科目的模擬傳票，並確保最終加總 **100% 完美吻合 Golden Data**，請使用這支腳本：
+
+```bash
+npx tsx src/scripts/e2e-seeder/financial_reverse_engineer.ts [stock_id] [target_voucher_count]
+```
+
+- **[stock_id]**: 股票代號（例如 `6642`）。
+- **[target_voucher_count]** *(Optional)*: 期望生成的傳票總數。
+  - 若**不指定**，系統會啟動「動態體積計算引擎 (Dynamic Volume Scaling)」，依據該公司的營業額大小自動推算最合理的憑證數量（每 100 萬營收產出 10 張，預設最高上限為 55,000 張，精準對齊每日約 150 張的企業體量）。
+  - 若**指定數字**（例如 `5000`），系統會強制以此總量來切分財報，適合開發初期的輕量化快速驗證。
+
+**核心特色**：這支腳本具備「多樣化會計科目池 (Diversified Account Allocator)」，會自動將管理費用等總額，擬真地打散至 6212 薪資、6213 租金、6220 水電等十幾種子科目，並智慧處理減項科目（如 4170 銷貨退回）的借貸反轉。產出的 `simulated_vouchers.json` 是進行漸進式揭露測試的最強 Ground Truth。
+
+---
+
 ## 📈 漸進式財報配平壓力測試 (Progressive Verifier)
 
 當需要跨年份、跨公司進行「極限壓力測試與絕對配平稽核」，或者模擬公司日復一日不斷湧入資料的情境，可以使用 `progressive_verifier.ts` 腳本：
@@ -92,4 +109,7 @@ npx tsx src/scripts/e2e-seeder/progressive_verifier.ts [days] [year] [stock_id]
 - **[year]**: 財報年份（預設 `2024`）。資料將輸出至 `data/[stock_id]/[year]/...`。
 - **[stock_id]**: 股票代號（預設 `6642`）。
 
-這支腳本會在每一筆憑證寫入時，嚴格斷言當下的三大表（BS, IS, CF）恆等式 (A = L + E)。搭配 `data/` 資料夾的水平擴充設計，您可以在不污染現有測試庫的情況下，自由生成各年度的測試資料。
+這支腳本會在每一筆憑證寫入時，嚴格斷言當下的三大表（BS, IS, CF）恆等式 (A = L + E)。
+
+> ⚠️ **注意：隨機資料生成 (Randomness)**
+> 此腳本生成的金額與項目完全是**隨機**的（例如 `Math.random() * 50000`），主要目的是為了「壓測」底層會計引擎是否能在海量憑證下保持數學正確性。若您需要與真實財報吻合的 Golden Data，請務必改用上方的 `financial_reverse_engineer.ts`。
