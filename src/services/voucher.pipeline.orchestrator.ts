@@ -1,5 +1,5 @@
 import { IAggregatedDocumentResult } from "@/skills/utils/document_parser_db_sync";
-import { CountryCode } from "@/constants/enums";
+import { CountryCode, NonEmissiveTransactionType } from "@/constants/enums";
 import { TaxStrategyService } from "@/services/tax.strategy.service";
 import { fxInterceptorService } from "@/services/fx.interceptor.service";
 import { MoneyUtil } from "@/lib/utils/money";
@@ -84,8 +84,11 @@ export class VoucherPipelineOrchestrator {
     if (fileResult.voucherBase) {
       const vd = (fileResult.voucherBase.data ||
         fileResult.voucherBase) as Record<string, unknown>;
-      const rawType = String(vd.tradingType || vd.type || "").toLowerCase();
-      if (rawType === "income" || rawType === "receipt") {
+      const rawType = String(vd.tradingType || vd.type || "").toLowerCase() as NonEmissiveTransactionType;
+      if (
+        rawType === NonEmissiveTransactionType.INCOME ||
+        rawType === NonEmissiveTransactionType.RECEIPT
+      ) {
         if (fileResult.esg) {
           delete fileResult.esg;
         }

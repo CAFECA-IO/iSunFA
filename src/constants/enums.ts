@@ -136,6 +136,11 @@ export enum AccountType {
   OTHER = "other",
 }
 
+export enum NonEmissiveTransactionType {
+  INCOME = "income",
+  RECEIPT = "receipt",
+}
+
 export enum UniversalAccountTag {
   // Info: (20260522 - Tzuhan) 資產 (Assets)
   CASH = "CASH",
