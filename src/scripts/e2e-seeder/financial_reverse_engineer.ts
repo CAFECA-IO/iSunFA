@@ -107,6 +107,125 @@ const createVoucherBlocks = (
   return vouchers;
 };
 
+interface IAccountPoolItem {
+  code: string;
+  desc: string;
+}
+
+const REVENUE_POOL: IAccountPoolItem[] = [
+  { code: "4111", desc: "銷貨收入" },
+  { code: "4112", desc: "分期付款銷貨收入" },
+  { code: "4150", desc: "勞務收入" },
+  { code: "4170", desc: "銷貨退回" },
+  { code: "4190", desc: "銷貨折讓" },
+];
+
+const COGS_POOL: IAccountPoolItem[] = [
+  { code: "5111", desc: "銷貨成本" },
+  { code: "5121", desc: "進貨費用" },
+  { code: "5122", desc: "進貨折讓" },
+];
+
+const SELLING_EXP_POOL: IAccountPoolItem[] = [
+  { code: "6112", desc: "薪資支出" },
+  { code: "6113", desc: "租金支出" },
+  { code: "6115", desc: "旅費" },
+  { code: "6116", desc: "運費" },
+  { code: "6117", desc: "郵電費" },
+  { code: "6118", desc: "修繕費" },
+  { code: "6119", desc: "廣告費" },
+  { code: "6120", desc: "水電瓦斯費" },
+  { code: "6121", desc: "保險費" },
+  { code: "6123", desc: "交際費" },
+  { code: "6124", desc: "折舊" },
+];
+
+const ADMIN_EXP_POOL: IAccountPoolItem[] = [
+  { code: "6212", desc: "薪資支出" },
+  { code: "6213", desc: "租金支出" },
+  { code: "6214", desc: "文具用品" },
+  { code: "6215", desc: "旅費" },
+  { code: "6217", desc: "郵電費" },
+  { code: "6218", desc: "修繕費" },
+  { code: "6220", desc: "水電瓦斯費" },
+  { code: "6221", desc: "保險費" },
+  { code: "6223", desc: "交際費" },
+  { code: "6224", desc: "折舊" },
+  { code: "6227", desc: "勞務費" },
+  { code: "6231", desc: "伙食費" },
+];
+
+const RND_EXP_POOL: IAccountPoolItem[] = [
+  { code: "6312", desc: "薪資支出" },
+  { code: "6314", desc: "文具用品" },
+  { code: "6315", desc: "旅費" },
+  { code: "6316", desc: "實驗費用" },
+  { code: "6320", desc: "水電瓦斯費" },
+  { code: "6324", desc: "折舊" },
+];
+
+const createDiversifiedVoucherBlocks = (
+  targetAmount: Prisma.Decimal,
+  numBlocks: number,
+  prefix: string,
+  pool: IAccountPoolItem[],
+  creditCode: string, // The offset account, usually CASH or AR/AP
+  isDebitNormal: boolean = true,
+  vendor: string | undefined = undefined,
+): ISimulatedVoucher[] => {
+  if (targetAmount.lte(0)) return [];
+  const vouchers: ISimulatedVoucher[] = [];
+  const perBlock = targetAmount.div(numBlocks).floor();
+  let cumulative = new Prisma.Decimal(0);
+
+  for (let i = 0; i < numBlocks; i++) {
+    const isLast = i === numBlocks - 1;
+    const actual = isLast ? targetAmount.sub(cumulative) : perBlock;
+    cumulative = cumulative.add(actual);
+
+    const randomItem = pool[Math.floor(Math.random() * pool.length)];
+
+    let debitCode = isDebitNormal ? randomItem.code : creditCode;
+    let finalCreditCode = isDebitNormal ? creditCode : randomItem.code;
+    
+    // Info: (20260601 - Tzuhan) Reverse for contra accounts
+    if (randomItem.code === "4170" || randomItem.code === "4190") {
+      debitCode = randomItem.code;
+      finalCreditCode = creditCode;
+    } else if (randomItem.code === "5122") {
+      debitCode = creditCode;
+      finalCreditCode = randomItem.code;
+    }
+
+    const lines: ISimulatedVoucherLine[] = [
+      {
+        id: randomUUID(),
+        description: randomItem.desc,
+        accountingCode: debitCode,
+        debitAmount: actual.toString(),
+        creditAmount: "0",
+        vendor,
+      },
+      {
+        id: randomUUID(),
+        description: randomItem.desc,
+        accountingCode: finalCreditCode,
+        debitAmount: "0",
+        creditAmount: actual.toString(),
+        vendor,
+      },
+    ];
+    
+    vouchers.push({
+      id: randomUUID(),
+      tradingDate: getRandomDate2024(),
+      voucherNumber: `${prefix}-2024-${i.toString().padStart(3, "0")}`,
+      lines,
+    });
+  }
+  return vouchers;
+};
+
 export const generateFinancialVouchers = (stockId: string) => {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/2024`);
   const finDataPath = path.join(
@@ -151,33 +270,33 @@ export const generateFinancialVouchers = (stockId: string) => {
   const vouchers: ISimulatedVoucher[] = [];
 
   // Info: (20260525 - Tzuhan) P&L Generation
-  // Info: (20260525 - Tzuhan) 1. Revenue (4111)
+  // Info: (20260525 - Tzuhan) 1. Revenue (41xx)
   vouchers.push(
-    ...createVoucherBlocks(
+    ...createDiversifiedVoucherBlocks(
       totalRevenue,
       20,
       "RV",
+      REVENUE_POOL,
       "1100",
-      "4111",
-      "銷貨收入",
+      false, // Revenue is Credit Normal
       contextCache.financial.top3Customers?.[0],
     ),
   );
-  // Info: (20260525 - Tzuhan) 2. COGS (5111)
+  // Info: (20260525 - Tzuhan) 2. COGS (51xx)
   vouchers.push(
-    ...createVoucherBlocks(cogs, 20, "COGS", "5111", "1100", "銷貨成本"),
+    ...createDiversifiedVoucherBlocks(cogs, 20, "COGS", COGS_POOL, "1100", true),
   );
-  // Info: (20260525 - Tzuhan) 3. Selling (6100)
+  // Info: (20260525 - Tzuhan) 3. Selling (61xx)
   vouchers.push(
-    ...createVoucherBlocks(sellingExp, 10, "SEL", "6100", "1100", "推銷費用"),
+    ...createDiversifiedVoucherBlocks(sellingExp, 10, "SEL", SELLING_EXP_POOL, "1100", true),
   );
-  // Info: (20260525 - Tzuhan) 4. Admin (6200)
+  // Info: (20260525 - Tzuhan) 4. Admin (62xx)
   vouchers.push(
-    ...createVoucherBlocks(adminExp, 10, "ADM", "6200", "1100", "管理費用"),
+    ...createDiversifiedVoucherBlocks(adminExp, 10, "ADM", ADMIN_EXP_POOL, "1100", true),
   );
-  // Info: (20260525 - Tzuhan) 5. R&D (6300)
+  // Info: (20260525 - Tzuhan) 5. R&D (63xx)
   vouchers.push(
-    ...createVoucherBlocks(rndExp, 10, "RND", "6300", "1100", "研究發展費用"),
+    ...createDiversifiedVoucherBlocks(rndExp, 10, "RND", RND_EXP_POOL, "1100", true),
   );
   // Info: (20260525 - Tzuhan) 6. Interest Revenue (7110)
   vouchers.push(
