@@ -272,7 +272,7 @@ export default function EsgDetailModal({
               </span>
             )}
           </div>
-          <div className="ml-auto">
+          <div className="relative mr-auto ml-auto md:mr-0">
             <AiConfidence
               confidence={formData.confidence}
               note={formData.aiNote}

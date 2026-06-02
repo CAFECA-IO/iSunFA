@@ -91,4 +91,5 @@ export const common = {
   pdf_tool: "PDF Tool",
   please_login: "Please login to continue",
   success: "Success",
+  mobile_view: "Mobile View",
 };

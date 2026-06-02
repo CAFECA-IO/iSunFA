@@ -92,4 +92,5 @@ export const common = {
   pdf_tool: "PDF 도구",
   please_login: "로그인 해주세요",
   success: "성공",
+  mobile_view: "모바일 보기",
 };

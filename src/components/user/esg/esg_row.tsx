@@ -128,11 +128,14 @@ export function EsgRow({
   };
 
   const mobileActionBtn = (
-    <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+    <div className="shrink-0">
       {record.isDeleted ? (
         <button
           title={t("common.restore")}
-          onClick={() => onRestore(record.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRestore(record.id);
+          }}
           className="rounded-full bg-emerald-100 p-2.5 text-emerald-600"
         >
           <Undo2 size={20} />
@@ -140,7 +143,10 @@ export function EsgRow({
       ) : (
         <button
           title={t("common.delete")}
-          onClick={() => onDelete(record.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(record.id);
+          }}
           className="rounded-full bg-red-100 p-2.5 text-red-600"
         >
           <Trash2 size={20} />
@@ -153,12 +159,14 @@ export function EsgRow({
     <td
       aria-label="Actions"
       className="hidden p-2 text-center align-middle md:table-cell lg:px-4 lg:py-4"
-      onClick={(e) => e.stopPropagation()}
     >
       {record.isDeleted ? (
         <button
           title={t("common.restore")}
-          onClick={() => onRestore(record.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRestore(record.id);
+          }}
           className="rounded-full p-2 text-slate-400 transition-colors hover:bg-emerald-100 hover:text-emerald-500"
         >
           <Undo2 size={20} />
@@ -166,7 +174,10 @@ export function EsgRow({
       ) : (
         <button
           title={t("common.delete")}
-          onClick={() => onDelete(record.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(record.id);
+          }}
           className="rounded-full p-2 text-slate-400 transition-colors hover:bg-red-100 hover:text-red-500"
         >
           <Trash2 size={20} />
@@ -184,7 +195,10 @@ export function EsgRow({
         className={`block border-b text-sm transition-colors last:border-0 md:table-row ${record.isDeleted ? "border-slate-400 bg-slate-50 text-slate-500 opacity-50" : "border-slate-400 bg-slate-50 text-slate-400 md:border-slate-300"}`}
       >
         {/* Info: (20260601 - Julian) 手機版 */}
-        <td className="block w-full p-4 md:hidden">
+        <td
+          className="block w-full p-4 md:hidden"
+          aria-label={t("common.mobile_view")}
+        >
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
               <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-white shadow-sm">
@@ -265,7 +279,10 @@ export function EsgRow({
         className={`block border-b text-sm transition-colors last:border-0 md:table-row ${record.isDeleted ? "border-slate-700 bg-slate-50 text-slate-500 opacity-50" : "border-blue-200 bg-blue-50 text-blue-400"}`}
       >
         {/* Info: (20260601 - Julian) 手機版 */}
-        <td className="block w-full p-4 md:hidden">
+        <td
+          className="block w-full p-4 md:hidden"
+          aria-label={t("common.mobile_view")}
+        >
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
               <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-blue-300 bg-white shadow-sm">
@@ -358,7 +375,10 @@ export function EsgRow({
         className={`block border-b text-sm transition-colors last:border-0 md:table-row ${record.isDeleted ? "border-slate-400 bg-slate-50 text-slate-500 opacity-50" : "border-red-200 bg-red-50 text-red-500 hover:cursor-pointer hover:bg-red-100"}`}
       >
         {/* Info: (20260601 - Julian) 手機版 */}
-        <td className="block w-full p-4 md:hidden">
+        <td
+          className="block w-full p-4 md:hidden"
+          aria-label={t("common.mobile_view")}
+        >
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
               <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-red-300 bg-white shadow-sm">

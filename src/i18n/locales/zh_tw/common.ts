@@ -89,4 +89,5 @@ export const common = {
   pdf_tool: "PDF 工具",
   please_login: "請先登入",
   success: "成功",
+  mobile_view: "手機版樣式",
 };
