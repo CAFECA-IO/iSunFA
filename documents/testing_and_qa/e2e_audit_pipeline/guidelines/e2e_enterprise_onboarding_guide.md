@@ -9,20 +9,22 @@
 ## 📂 目錄結構與所需檔案
 
 ```text
-data/[stock_id]/
-├── 2024_FIN_REPORT.pdf    (1) 真實財務報告書 PDF
-├── 2024_ESG_REPORT.pdf    (2) 真實永續報告書 PDF
-├── 2024_FIN_DATA.json     (3) 真實財務結構化數據 (Ground Truth)
-└── 2024_ESG_METRICS.json  (4) 真實 ESG 結構化數據 (Ground Truth)
+data/[stock_id]/[year]/inputs/
+├── golden_data/
+│   ├── [year]_FIN_DATA.json     (1) 真實財務結構化數據 (Ground Truth)
+│   └── [year]_ESG_METRICS.json  (2) 真實 ESG 結構化數據 (Ground Truth)
+├── raw_reports/
+│   ├── [year]_FIN_REPORT.pdf    (3) 真實財務報告書 PDF
+│   └── [year]_ESG_REPORT.pdf    (4) 真實永續報告書 PDF
 ```
 
 ### 🔍 檔案用途說明：
-1. **(1) & (2) 雙 PDF 報告**：
-   - 這是餵給 `ai_vision_extractor.ts` (Phase 1) 的原料。系統會把這兩份幾百頁的 PDF 送進 Gemini 2.5 Flash 進行精準閱讀，讓 AI 萃取出這家公司真實的「主要供應商、水電比例、差旅比例、折舊攤銷策略」。
-2. **(3) `2024_FIN_DATA.json`**：
+1. **(1) `[year]_FIN_DATA.json`**：
    - 包含該公司當年度公布的精確「營業收入」、「營業費用」、「折舊」等數字。`financial_reverse_engineer.ts` (Phase 2) 會以這些數字為天花板，融合 AI 讀出的供應商比例，**逆向推導切碎成幾十張完美的模擬傳票 (Voucher)**。
-3. **(4) `2024_ESG_METRICS.json`**：
+2. **(2) `[year]_ESG_METRICS.json`**：
    - 包含官方公布的 Scope 1、Scope 2 等碳排總量。`esg_reverse_engineer.ts` (Phase 3) 會拿它來逆向推導每一張水電或公務車發票「應該帶有多少碳排與碳係數」。
+3. **(3) & (4) 雙 PDF 報告**：
+   - 這是餵給 `ai_vision_extractor.ts` (Phase 1) 的原料。系統會把這兩份幾百頁的 PDF 送進 Gemini 進行閱讀，萃取出這家公司真實的「主要供應商、水電比例、差旅比例、折舊攤銷策略」。
 
 ---
 
