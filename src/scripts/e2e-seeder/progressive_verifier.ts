@@ -162,9 +162,11 @@ function assertReportIntegrity(
     );
 }
 
-function generateDay1Vouchers(): IVoucherLineUI[][] {
+function generateDailyVouchers(dayIndex: number, startLineId: number): { vouchers: IVoucherLineUI[][], nextLineId: number } {
   const vouchers: IVoucherLineUI[][] = [];
-  let lineId = 1;
+  let lineId = startLineId;
+
+  if (dayIndex === 0) {
 
   // Info: (20260601 - Tzuhan 1. 開張股本注資 (1筆)
   vouchers.push([
@@ -245,6 +247,7 @@ function generateDay1Vouchers(): IVoucherLineUI[][] {
       isDebit: false,
     },
   ]);
+  }
 
   // Info: (20260601 - Tzuhan 5. 模擬 146 筆單日交易 (包含進銷存、應收應付、薪資、各類費用)
   for (let i = 0; i < 146; i++) {
@@ -423,21 +426,39 @@ function generateDay1Vouchers(): IVoucherLineUI[][] {
     }
   }
 
-  return vouchers;
+  return { vouchers, nextLineId: lineId };
 }
 
 async function runProgressiveVerification() {
-  console.log("🚀 [Progressive Verifier] 開始生成 Day 1 測試憑證...");
-  const vouchers = generateDay1Vouchers();
-  console.log(`✅ 成功生成 ${vouchers.length} 張憑證。`);
+  const args = process.argv.slice(2);
+  const totalDays = args.length > 0 ? parseInt(args[0], 10) : 1;
+  if (isNaN(totalDays) || totalDays < 1) {
+    console.error("請輸入有效的天數 (例如 1, 30, 365)");
+    process.exit(1);
+  }
+
+  console.log(`🚀 [Progressive Verifier] 開始生成 ${totalDays} 天的測試憑證...`);
+  
+  const allVouchers: { lines: IVoucherLineUI[], dayIndex: number }[] = [];
+  let currentLineId = 1;
+
+  for (let day = 0; day < totalDays; day++) {
+    const { vouchers, nextLineId } = generateDailyVouchers(day, currentLineId);
+    currentLineId = nextLineId;
+    for (const v of vouchers) {
+      allVouchers.push({ lines: v, dayIndex: day });
+    }
+  }
+  
+  console.log(`✅ 成功生成 ${allVouchers.length} 張憑證。`);
 
   console.log("\n🔍 開始一張一張丟入系統並進行財報配平稽核...");
 
   const cumulativeLines: IVoucherLineUI[] = [];
 
-  for (let i = 0; i < vouchers.length; i++) {
-    const voucher = vouchers[i];
-    cumulativeLines.push(...voucher);
+  for (let i = 0; i < allVouchers.length; i++) {
+    const voucherInfo = allVouchers[i];
+    cumulativeLines.push(...voucherInfo.lines);
 
     // Info: (20260601 - Tzuhan 每次丟入後，立刻產生當下三表
     const is = generateIncomeStatement(cumulativeLines);
@@ -506,24 +527,29 @@ async function runProgressiveVerification() {
     }
 
     // Info: (20260601 - Tzuhan 每 20 張回報一次進度
-    if ((i + 1) % 20 === 0 || i === vouchers.length - 1) {
+    if ((i + 1) % 20 === 0 || i === allVouchers.length - 1) {
       console.log(
-        `✅ [${i + 1}/${vouchers.length}] 三表勾稽 (BS配平, IS->BS, CF->BS) 確認通過！當前總現金: ${bsCash}`,
+        `✅ [${i + 1}/${allVouchers.length}] 三表勾稽 (BS配平, IS->BS, CF->BS) 確認通過！當前總現金: ${bsCash}`,
       );
     }
   }
 
   console.log(
-    "\n🎉 [驗證成功] 150 張單日憑證已全數通過漸進式財報配平考驗！沒有發現任何低級錯誤！",
+    `\n🎉 [驗證成功] ${allVouchers.length} 張憑證 (共 ${totalDays} 天) 已全數通過漸進式財報配平考驗！沒有發現任何低級錯誤！`,
   );
 
   // Info: (20260601 - Tzuhan 轉換格式為 ISimulatedVoucher 以供 receipt_image_generator 使用
-  const exportedVouchers = vouchers.map((lines, idx) => {
+  const exportedVouchers = allVouchers.map((voucherInfo, idx) => {
+    // 根據 dayIndex 推進日期
+    const date = new Date("2024-01-01");
+    date.setDate(date.getDate() + voucherInfo.dayIndex);
+    const dateString = date.toISOString().split("T")[0];
+
     return {
       id: `v-${idx + 1}`,
-      tradingDate: "2024-01-01",
-      voucherNumber: `VOUCHER-${(idx + 1).toString().padStart(3, "0")}`,
-      lines: lines.map((line) => ({
+      tradingDate: dateString,
+      voucherNumber: `VOUCHER-${(idx + 1).toString().padStart(5, "0")}`,
+      lines: voucherInfo.lines.map((line) => ({
         id: line.id,
         description: line.particular || "",
         accountingCode: line.accountingCode,
@@ -544,7 +570,7 @@ async function runProgressiveVerification() {
   const outPath = path.join(outDir, "simulated_vouchers.json");
   fs.writeFileSync(outPath, JSON.stringify(exportedVouchers, null, 2), "utf8");
   console.log(
-    `✅ 已將這 150 筆通過數學嚴格驗證的 Ground Truth 憑證，匯出至 ${outPath}`,
+    `✅ 已將這 ${allVouchers.length} 筆通過數學嚴格驗證的 Ground Truth 憑證，匯出至 ${outPath}`,
   );
 }
 
