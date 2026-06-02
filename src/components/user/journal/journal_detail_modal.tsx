@@ -152,7 +152,7 @@ export default function JournalDetailModal({
     <>
       <div className="flex h-full w-full flex-col overflow-hidden bg-[#F8FAFC]">
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-[10px]">
-          <div className="flex shrink-0 flex-col items-start justify-between gap-3 p-4 sm:flex-row sm:items-center">
+          <div className="flex shrink-0 flex-col items-start justify-between gap-2 p-4 sm:flex-row sm:items-center sm:gap-3">
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <h4 className="text-base font-bold text-slate-500">
                 {t("verify.type.journal")}
@@ -190,7 +190,7 @@ export default function JournalDetailModal({
               </button>
             </div>
             {/* Info: (20260325 - Julian) AI Confidence */}
-            <div className="relative ml-auto">
+            <div className="relative mr-auto ml-auto md:mr-0">
               <AiConfidence
                 confidence={activeJournal.confidence}
                 note={activeJournal.aiNote}
