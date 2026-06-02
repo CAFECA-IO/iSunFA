@@ -432,12 +432,15 @@ function generateDailyVouchers(dayIndex: number, startLineId: number): { voucher
 async function runProgressiveVerification() {
   const args = process.argv.slice(2);
   const totalDays = args.length > 0 ? parseInt(args[0], 10) : 1;
+  const year = args.length > 1 ? args[1] : "2024";
+  const stockId = args.length > 2 ? args[2] : "6642";
+
   if (isNaN(totalDays) || totalDays < 1) {
-    console.error("請輸入有效的天數 (例如 1, 30, 365)");
+    console.error("請輸入有效的天數 (例如 1, 30, 365)\nUsage: npx tsx progressive_verifier.ts <days> [year] [stockId]");
     process.exit(1);
   }
 
-  console.log(`🚀 [Progressive Verifier] 開始生成 ${totalDays} 天的測試憑證...`);
+  console.log(`🚀 [Progressive Verifier] 開始生成 ${stockId} (${year}) 共 ${totalDays} 天的測試憑證...`);
   
   const allVouchers: { lines: IVoucherLineUI[], dayIndex: number }[] = [];
   let currentLineId = 1;
@@ -541,7 +544,7 @@ async function runProgressiveVerification() {
   // Info: (20260601 - Tzuhan 轉換格式為 ISimulatedVoucher 以供 receipt_image_generator 使用
   const exportedVouchers = allVouchers.map((voucherInfo, idx) => {
     // 根據 dayIndex 推進日期
-    const date = new Date("2024-01-01");
+    const date = new Date(`${year}-01-01`);
     date.setDate(date.getDate() + voucherInfo.dayIndex);
     const dateString = date.toISOString().split("T")[0];
 
@@ -562,7 +565,7 @@ async function runProgressiveVerification() {
   // Info: (20260601 - Tzuhan 匯出為 JSON，供 receipt_image_generator.ts 產出圖片
   const outDir = path.resolve(
     process.cwd(),
-    "data/6642/2024/inputs/simulated_data/e2e_roadmap-sprint1",
+    `data/${stockId}/${year}/inputs/simulated_data/e2e_roadmap-sprint1`,
   );
   if (!fs.existsSync(outDir)) {
     fs.mkdirSync(outDir, { recursive: true });

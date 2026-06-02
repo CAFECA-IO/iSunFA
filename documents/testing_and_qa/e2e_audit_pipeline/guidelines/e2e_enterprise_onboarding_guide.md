@@ -57,3 +57,19 @@ npx tsx src/scripts/e2e-seeder/fast_verify.ts [stock_id]
 ### 💡 開發黃金守則：
 *   改了 **AI Prompts** 或 **發票圖片長相** ➡️ 跑 `run_pipeline.ts` (測試 AI 眼力)。
 *   改了 **財報計算公式** 或 **會計科目邏輯** ➡️ 跑 `fast_verify.ts` (測試數學引擎的精準度)。
+
+---
+
+## 📈 漸進式財報配平壓力測試 (Progressive Verifier)
+
+當需要跨年份、跨公司進行「極限壓力測試與絕對配平稽核」，或者模擬公司日復一日不斷湧入資料的情境，可以使用 `progressive_verifier.ts` 腳本：
+
+```bash
+npx tsx src/scripts/e2e-seeder/progressive_verifier.ts [days] [year] [stock_id]
+```
+
+- **[days]**: 模擬的天數（如 `365` 代表一整年，會自動產生 5 萬多筆虛擬資料）。
+- **[year]**: 財報年份（預設 `2024`）。資料將輸出至 `data/[stock_id]/[year]/...`。
+- **[stock_id]**: 股票代號（預設 `6642`）。
+
+這支腳本會在每一筆憑證寫入時，嚴格斷言當下的三大表（BS, IS, CF）恆等式 (A = L + E)。搭配 `data/` 資料夾的水平擴充設計，您可以在不污染現有測試庫的情況下，自由生成各年度的測試資料。
