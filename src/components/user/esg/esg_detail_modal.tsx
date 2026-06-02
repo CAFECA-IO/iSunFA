@@ -280,7 +280,7 @@ export default function EsgDetailModal({
           </div>
         </div>
 
-        <div className="grid flex-1 grid-cols-2 gap-4 px-6 py-4">
+        <div className="grid flex-1 grid-cols-2 gap-4 px-4 py-4 sm:px-6">
           {/* Info: (20260312 - Julian) Date */}
           <div>
             <label
