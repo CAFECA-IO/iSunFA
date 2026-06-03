@@ -211,14 +211,18 @@ export default function PdfEditor({
       } else {
         setErrorModal({
           isOpen: true,
-          message: t("common.error.unknown") || "AI Refinement Failed",
+          message:
+            t("admin_mission_board.pdf_editor.ai_no_response") ||
+            "AI 暫時無法回應或缺乏有效結果，請稍後再試！",
         });
       }
     } catch (error) {
       console.error("Failed to refine text:", error);
       setErrorModal({
         isOpen: true,
-        message: t("common.error.unknown") || "AI Refinement Error",
+        message:
+          t("admin_mission_board.pdf_editor.ai_timeout") ||
+          "網路連線逾時或系統異常，請檢查網路狀態並稍後再試！",
       });
     } finally {
       setIsAiProcessing(false);
