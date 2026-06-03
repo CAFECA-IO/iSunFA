@@ -10,10 +10,14 @@ import {
   Type,
   Maximize2,
   Loader2,
+  Check,
+  X as XIcon,
 } from "lucide-react";
 import { MarkdownContent } from "@/components/common/markdown_content";
 import { useTranslation } from "@/i18n/i18n_context";
 import Image from "next/image";
+import { request } from "@/lib/utils/request";
+import { IApiResponse } from "@/lib/utils/response";
 
 enum ViewMode {
   EDIT = "edit",
@@ -24,6 +28,17 @@ enum AiActionType {
   REWRITE = "rewrite",
   EXPAND = "expand",
   POLISH = "polish",
+}
+
+interface IAiSuggestion {
+  isActive: boolean;
+  originalContext: string;
+  selectionStart: number;
+  selectionEnd: number;
+  selectedText: string;
+  aiResult: string;
+  x: number;
+  y: number;
 }
 
 interface IAiText {
@@ -65,14 +80,16 @@ export default function PdfEditor({
     selectionEnd: 0,
   });
   const [isAiProcessing, setIsAiProcessing] = useState<boolean>(false);
+  const [aiSuggestion, setAiSuggestion] = useState<IAiSuggestion | null>(null);
 
   useEffect(() => {
+    // Info: (20260603 - Julian) 點擊 menu 外時，關閉 ai menu
     const handleClickOutside = (e: MouseEvent) => {
-      if (isAiProcessing) return; // Info: Don't close while processing
+      if (isAiProcessing) return;
       const menuEl = document.getElementById("ai-context-menu");
-      if (menuEl && menuEl.contains(e.target as Node)) {
-        return;
-      }
+      const suggestionEl = document.getElementById("ai-suggestion-menu");
+      if (menuEl && menuEl.contains(e.target as Node)) return;
+      if (suggestionEl && suggestionEl.contains(e.target as Node)) return;
       setAiMenu((prev) => ({ ...prev, isOpen: false }));
     };
 
@@ -85,12 +102,14 @@ export default function PdfEditor({
   }, [aiMenu.isOpen, isAiProcessing]);
 
   useEffect(() => {
+    // Info: (20260603 - Julian) 檢查選取
     const checkSelection = (e?: MouseEvent | KeyboardEvent) => {
-      if (isAiProcessing) return; // Info: Don't disrupt while processing
+      if (isAiProcessing) return; // Info: (20260603 - Julian) AI 處理時，不處理選取事件
 
       const textarea = textareaRef.current;
       if (!textarea || document.activeElement !== textarea) return;
 
+      // Info: (20260603 - Julian) 取得選取範圍
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
 
@@ -101,6 +120,7 @@ export default function PdfEditor({
           let x = prev.x;
           let y = prev.y;
 
+          // Info: (20260603 - Julian) 從 MouseEvent 取得 ai menu 位置；否則定位到 Textarea 中央位置
           if (e instanceof MouseEvent) {
             x = e.clientX;
             y = e.clientY;
@@ -125,14 +145,16 @@ export default function PdfEditor({
       }
     };
 
+    // Info: (20260603 - Julian) MouseUp → 檢查選取；若點擊 ai menu 則不處理
     const handleGlobalMouseUp = (e: MouseEvent) => {
       const menuEl = document.getElementById("ai-context-menu");
-      if (menuEl && menuEl.contains(e.target as Node)) {
-        return;
-      }
+      const suggestionEl = document.getElementById("ai-suggestion-menu");
+      if (menuEl && menuEl.contains(e.target as Node)) return;
+      if (suggestionEl && suggestionEl.contains(e.target as Node)) return;
       checkSelection(e);
     };
 
+    // Info: (20260603 - Julian) KeyUp → 檢查選取
     const handleGlobalKeyUp = (e: KeyboardEvent) => {
       checkSelection(e);
     };
@@ -151,24 +173,56 @@ export default function PdfEditor({
     if (!aiMenu.selectedText || isAiProcessing) return;
 
     setIsAiProcessing(true);
-    // TODO: (20260603 - Julian) replace with real API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setAiMenu((prev) => ({ ...prev, isOpen: false }));
 
-    let newText = aiMenu.selectedText;
+    let instruction = "";
     if (actionType === AiActionType.REWRITE) {
-      newText = `[AI 重寫] ${aiMenu.selectedText}`;
+      instruction = "【精簡縮寫】";
     } else if (actionType === AiActionType.EXPAND) {
-      newText = `[AI 擴寫] ${aiMenu.selectedText} (補充細節...)`;
+      instruction = "擴寫";
     } else if (actionType === AiActionType.POLISH) {
-      newText = `[AI 潤飾] ${aiMenu.selectedText}`;
+      instruction = "【潤飾流暢】";
     }
 
-    const before = markdownContext.substring(0, aiMenu.selectionStart);
-    const after = markdownContext.substring(aiMenu.selectionEnd);
+    try {
+      const response = await request<IApiResponse<{ result: string }>>(
+        "/api/v1/admin/pdf_editor/refine",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            text: aiMenu.selectedText,
+            instruction,
+          }),
+        },
+      );
 
-    setMarkdownContext(before + newText + after);
-    setAiMenu((prev) => ({ ...prev, isOpen: false }));
-    setIsAiProcessing(false);
+      if (response && response.payload && response.payload.result) {
+        setAiSuggestion({
+          isActive: true,
+          originalContext: markdownContext,
+          selectionStart: aiMenu.selectionStart,
+          selectionEnd: aiMenu.selectionEnd,
+          selectedText: aiMenu.selectedText,
+          aiResult: response.payload.result,
+          x: aiMenu.x,
+          y: aiMenu.y,
+        });
+        setAiMenu((prev) => ({ ...prev, isOpen: false }));
+      } else {
+        setErrorModal({
+          isOpen: true,
+          message: t("common.error.unknown") || "AI Refinement Failed",
+        });
+      }
+    } catch (error) {
+      console.error("Failed to refine text:", error);
+      setErrorModal({
+        isOpen: true,
+        message: t("common.error.unknown") || "AI Refinement Error",
+      });
+    } finally {
+      setIsAiProcessing(false);
+    }
   };
 
   const handleDownloadPDF = async () => {
@@ -279,14 +333,23 @@ export default function PdfEditor({
       [AiActionType.EXPAND]: Maximize2,
       [AiActionType.POLISH]: Type,
     };
-    const Icon = iconMap[value];
+
+    // ToDo: (20260603 - Julian) 處理翻譯
+    const tKey: Record<AiActionType, string> = {
+      [AiActionType.REWRITE]: "精簡縮寫",
+      [AiActionType.EXPAND]: "擴寫",
+      [AiActionType.POLISH]: "潤飾流暢",
+    };
+
     return {
       key,
       value,
-      icon: Icon,
+      icon: iconMap[value],
+      text: tKey[value],
     };
   });
 
+  // Info: (20260603 - Julian) AI 編輯 menu
   const aiContextMenu = aiMenu.isOpen && (
     <div
       id="ai-context-menu"
@@ -312,16 +375,104 @@ export default function PdfEditor({
               if (!isAiProcessing) handleAiAction(option.value);
             }}
             disabled={isAiProcessing}
-            className="enable:hover:text-orange-700 enable:hover:bg-orange-50 flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors enabled:hover:bg-orange-50 enabled:hover:text-orange-700 disabled:opacity-50"
           >
             {isAiProcessing ? (
               <Loader2 size={16} className="animate-spin" />
             ) : (
               <option.icon size={16} />
             )}
-            {option.key}
+            {option.text}
           </button>
         ))}
+      </div>
+    </div>
+  );
+
+  // Info: (20260603 - Julian) 是否採用 AI 建議 menu
+  const aiSuggestionMenu = aiSuggestion?.isActive && (
+    <div
+      id="ai-suggestion-menu"
+      className="absolute top-12 right-6 z-30 flex flex-col items-center gap-2 overflow-hidden rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 shadow-2xl"
+      onMouseDown={(e) => e.preventDefault()}
+    >
+      <div className="flex w-full items-center justify-center gap-1 border-b border-orange-100 pb-2 text-xs font-bold text-orange-600">
+        <Sparkles size={14} />
+        採用 AI 建議？
+      </div>
+      <div className="mt-1 flex w-full flex-col gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            const { originalContext, selectionStart, selectionEnd, aiResult } =
+              aiSuggestion;
+            const newContext =
+              originalContext.substring(0, selectionStart) +
+              aiResult +
+              originalContext.substring(selectionEnd);
+            setMarkdownContext(newContext);
+            setAiSuggestion(null);
+          }}
+          className="flex w-full items-center justify-center gap-1 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-green-500"
+        >
+          <Check size={14} />
+          採用
+        </button>
+        <button
+          type="button"
+          onClick={() => setAiSuggestion(null)}
+          className="flex w-full items-center justify-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+        >
+          <XIcon size={14} />
+          捨棄
+        </button>
+      </div>
+    </div>
+  );
+
+  // Info: (20260603 - Julian) AI 思考中的動畫
+  const aiThinkingAnim = isAiProcessing && (
+    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/60 backdrop-blur-[2px]">
+      <div className="flex items-center gap-3 rounded-2xl border border-orange-100 bg-white px-6 py-4 shadow-xl">
+        <div className="flex size-8 items-center justify-center rounded-full bg-orange-100 text-orange-600">
+          <Sparkles size={16} className="animate-pulse" />
+        </div>
+        <div className="flex items-center gap-1 font-bold text-orange-600">
+          <span>AI 正在思考中</span>
+          <span className="flex gap-0.5">
+            <span className="animate-bounce" style={{ animationDelay: "0ms" }}>
+              .
+            </span>
+            <span
+              className="animate-bounce"
+              style={{ animationDelay: "150ms" }}
+            >
+              .
+            </span>
+            <span
+              className="animate-bounce"
+              style={{ animationDelay: "300ms" }}
+            >
+              .
+            </span>
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Info: (20260603 - Julian) AI 編輯結果差異預覽
+  const diffPreview = aiSuggestion?.isActive && (
+    <div className="absolute inset-0 z-20 flex flex-col bg-white/80 p-6 backdrop-blur-sm">
+      <div className="flex-1 overflow-y-auto rounded-xl border border-orange-200 bg-white p-6 font-mono text-sm leading-relaxed whitespace-pre-wrap text-gray-800 shadow-lg">
+        {aiSuggestion.originalContext.substring(0, aiSuggestion.selectionStart)}
+        <del className="text-gray-400 decoration-red-500 decoration-2">
+          {aiSuggestion.selectedText}
+        </del>
+        <mark className="rounded bg-orange-100 px-1 text-orange-900">
+          {aiSuggestion.aiResult}
+        </mark>
+        {aiSuggestion.originalContext.substring(aiSuggestion.selectionEnd)}
       </div>
     </div>
   );
@@ -370,7 +521,7 @@ export default function PdfEditor({
       <div className="flex flex-1 overflow-hidden">
         {/* Info: (20260426 - Luphia) Editor Pane */}
         <div
-          className={`flex flex-1 flex-col border-r border-gray-200 ${viewMode === "preview" ? "hidden md:flex" : "flex"}`}
+          className={`relative flex flex-1 flex-col border-r border-gray-200 ${viewMode === "preview" ? "hidden md:flex" : "flex"}`}
         >
           <div className="bg-gray-100 px-4 py-2 text-xs font-bold tracking-wider text-gray-500 uppercase">
             {t("admin_mission_board.pdf_editor.markdown_input")!}
@@ -384,9 +535,23 @@ export default function PdfEditor({
               if (aiMenu.isOpen)
                 setAiMenu((prev) => ({ ...prev, isOpen: false }));
             }}
-            className="flex-1 resize-none p-6 font-mono text-sm text-gray-800 focus:ring-2 focus:ring-orange-500 focus:outline-none focus:ring-inset"
+            readOnly={isAiProcessing}
+            className={`flex-1 resize-none p-6 font-mono text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none focus:ring-inset ${
+              isAiProcessing
+                ? "cursor-not-allowed text-gray-400 opacity-75"
+                : "text-gray-800"
+            }`}
             placeholder={t("admin_mission_board.pdf_editor.type_here")!}
           />
+
+          {/* Info: (20260603 - Julian) Diff Preview Overlay */}
+          {diffPreview}
+
+          {/* Info: (20260603 - Julian) Pinned AI Suggestion Menu */}
+          {aiSuggestionMenu}
+
+          {/* Info: (20260603 - Julian) AI Processing Animation */}
+          {aiThinkingAnim}
         </div>
 
         {/* Info: (20260603 - Julian) AI Context Menu */}
