@@ -771,7 +771,7 @@ export class EsgRepository implements IEsgRepository {
     data: Prisma.EsgRecordUpdateInput,
   ): Promise<number> {
     const result = await prisma.esgRecord.updateMany({
-      where: { fileId, accountBookId }, // Info: (20260603 - Tzuhan) 修正：移除 deletedAt: null，否則 restore 時無法更新到已刪除的紀錄
+      where: { fileId, accountBookId, deletedAt: null },
       data,
     });
     return result.count;
