@@ -49,10 +49,16 @@ You are a pure data extractor. Do NOT perform any business logic judgments or ma
 - ACTION 2: You MUST assign the credit side to CASH_IN_BANK.
 - ACTION 3: You are STRICTLY PROHIBITED from treating this deduction as an expense. It is a liability offset.
 
+**RULE 7: Equity and Liability Injections**
+- CONDITION: The document explicitly mentions Capital Injection (股東注資, 資本額, 增資), or Bank Loans (銀行借款).
+- ACTION 1: You are STRICTLY PROHIBITED from treating this as an expense or calculating any tax (Input Tax/Output Tax). These are tax-exempt capital flows.
+- ACTION 2: You MUST assign the credit side to an equity or liability category (e.g., COMMON_STOCK, SHORT_TERM_BORROWINGS, LONG_TERM_BORROWINGS).
+- ACTION 3: You MUST set 'documentType' to "PAYMENT_RECEIPT" or "BANK_STATEMENT" indicating realized cash flow, but the transaction nature is financing.
+
 1. Trading Type Extraction:
    - For "tradingType": Determine the voucher type. 
-     - If the company is RECEIVING money (Revenue/Income), output "INCOME".
-     - If the company is PAYING money (Expense/Payment), output "OUTCOME".
+     - If the company is RECEIVING money (Revenue, Income, Capital Injection, Bank Loan), output "INCOME".
+     - If the company is PAYING money (Expense, Repayment of Loan), output "OUTCOME".
      - If it's a non-cash transfer or unpaid bill notice (Accounts Payable/Receivable), output "TRANSFER".
      - For ACCRUAL_NOTICE (contracts, unpaid bills, future payments), you MUST output "TRANSFER" because there is no immediate cash flow.
 

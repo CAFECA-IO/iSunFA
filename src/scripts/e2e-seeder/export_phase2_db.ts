@@ -8,7 +8,7 @@ export const exportPhase2Db = async (stockId: string) => {
     dataDir,
     "inputs",
     "simulated_data",
-    "phase5_articulation_test",
+    "e2e_roadmap-sprint1",
   );
   const dumpPath = path.join(outDir, "db_dump_vouchers.json");
 
