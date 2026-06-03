@@ -544,11 +544,10 @@ export class DocumentSyncRepository {
       if (esg || failureReason || existingEsg) {
         if (!esg && !failureReason && existingEsg) {
           // Info: (20260601 - Tzuhan) [BUGFIX] 如果新的 Payload 決定刪除 esg (例如被攔截器判定為 INCOME)，則必須同步清除 DB 中的舊資料 (Soft Delete)
-          // Info: (20260603 - Tzuhan) 修正：當 payload 是 partial update 時，!esg 會導致原有的 esgRecord 被意外 soft delete 造成 UI 空白，因此先註解掉。
-          // await tx.esgRecord.update({
-          //   where: { id: existingEsg.id },
-          //   data: { deletedAt: new Date() },
-          // });
+          await tx.esgRecord.update({
+            where: { id: existingEsg.id },
+            data: { deletedAt: new Date() },
+          });
         } else if (failureReason && !esg) {
           if (existingEsg) {
             await tx.esgRecord.update({
@@ -713,6 +712,7 @@ export class DocumentSyncRepository {
                 ed.generationSource || EsgGenerationSource.AI_GENERATED,
               coefficientId: finalCoefficientId,
               emissionSourceId: finalEmissionSourceId,
+              deletedAt: null, // Info: (20260603 - Tzuhan) 確保收到有效的 ESG 數據時，可以解除先前的軟刪除狀態
             };
 
             if (existingEsg) {
