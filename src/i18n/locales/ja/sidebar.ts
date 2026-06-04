@@ -6,4 +6,5 @@ export const sidebar = {
   settings: "設定",
   account_book: "帳簿の切り替え",
   public_modules: "ツール",
+  current_account_book: "現在帳簿",
 };

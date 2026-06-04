@@ -61,6 +61,12 @@ export const voucher = {
       filter_btn: "フィルター",
       verify_all: "一括確認",
       no_data: "データなし",
+      status_colon: "ステータス: ",
+      id_colon: "番号: ",
+      accounting_entries_dr_cr: "仕訳 (借方/貸方)",
+      unknown_account: "不明な勘定科目",
+      debit_abbr: "借",
+      credit_abbr: "貸",
       no_data_desc:
         "選択した期間の伝票データはありません。別の期間を選択するか、データをアップロードしてください。",
       no_data_cta: "データをアップロード",

@@ -62,6 +62,12 @@ export const voucher = {
       filter_btn: "Filters",
       verify_all: "Verify All",
       no_data: "No Data Found",
+      status_colon: "Status: ",
+      id_colon: "ID: ",
+      accounting_entries_dr_cr: "Accounting Entries (Dr/Cr)",
+      unknown_account: "Unknown Subject",
+      debit_abbr: "Dr.",
+      credit_abbr: "Cr.",
       no_data_desc:
         "No voucher records found for the selected period. Try selecting a different time range or upload new receipts to the Journal.",
       no_data_cta: "Upload Data",

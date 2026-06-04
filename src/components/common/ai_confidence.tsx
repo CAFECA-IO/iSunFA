@@ -18,7 +18,7 @@ export default function AiConfidence({
   const { t } = useTranslation();
   const hasNote = note && note.trim().length > 0;
 
-  const progessBar = (
+  const progressBar = (
     <div className="flex items-center justify-center gap-2 text-sm font-bold">
       {/* Info: (20260325 - Julian) Progress Bar */}
       <div
@@ -39,7 +39,7 @@ export default function AiConfidence({
   );
 
   // Info: (20260325 - Julian) Only show progress bar
-  if (barOnly) return progessBar;
+  if (barOnly) return progressBar;
 
   const formattedNote =
     note
@@ -58,7 +58,7 @@ export default function AiConfidence({
         <p className="text-xs font-bold text-slate-500">
           {t("common.ai_confidence.title")}
         </p>
-        {progessBar}
+        {progressBar}
       </div>
 
       {/* Info: (20260325 - Julian) AI 備註 Button */}

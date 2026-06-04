@@ -248,14 +248,25 @@ export class JournalRepository implements IJournalRepository {
     return { deletedJournalId: result.id };
   }
 
-  // Info: (20260506 - Julian) 核對所有日記帳：回傳核對數量(number)
+  // Info: (20260601 - Julian) 核對所有日記帳：回傳核對數量(number)
   async verifyAllJournals(accountBookId: string) {
-    const result = await prisma.journal.updateMany({
+    // Info: (20260601 - Julian) 找出未刪除、分析狀態為 COMPLETED 的日記帳
+    const uncheckedJournals = await prisma.journal.findMany({
       where: {
         accountBookId,
         isVerified: false,
-        deletedAt: null, // Info: (20260506 - Julian) 避免改動到被軟刪除的日記帳
+        deletedAt: null,
+        analysisStatus: AIAnalysisStatus.COMPLETED,
       },
+      select: { id: true },
+    });
+
+    // Info: (20260601 - Julian) 如果沒有未核對的日記帳，回傳 0
+    if (uncheckedJournals.length === 0) return 0;
+
+    // Info: (20260601 - Julian) 更新日記帳
+    const result = await prisma.journal.updateMany({
+      where: { id: { in: uncheckedJournals.map((j) => j.id) } },
       data: { isVerified: true },
     });
 
