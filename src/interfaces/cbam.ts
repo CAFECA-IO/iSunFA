@@ -78,7 +78,8 @@ export interface IOutsourcedLog {
   DispatchDate: string;
   InputWeight_kg: number;
   OutputWeight_kg: number;
-  SupplierReportedCarbon_kgCO2e: number;
+  SupplierScope1_kgCO2e: number;
+  SupplierScope2_kgCO2e: number;
   ProcessingFee_NTD: number;
 }
 
@@ -87,6 +88,8 @@ export interface ICustomsExportLog {
   Ref_WorkOrderID: string;
   ExportDate: string;
   DestinationCountry: string;
+  CountryOfOrigin: string;
+  Exporter_EORI: string;
   ProductID: string;
   ProductName: string;
   CN_Code: string;

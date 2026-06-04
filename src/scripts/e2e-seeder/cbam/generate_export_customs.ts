@@ -26,10 +26,16 @@ export async function generateCustomsLogs(
   year: string = "2024",
 ) {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
-  const cbamMocksDir = path.join(dataDir, "outputs", "cbam_mocks");
-  const mesFile = path.join(cbamMocksDir, "mes_work_orders.csv");
-  const bomFile = path.join(cbamMocksDir, "boms_and_precursors.json");
-  const outFile = path.join(cbamMocksDir, "customs_export_declarations.csv");
+  const mockSourcesDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1", "mock_sources");
+  const ingestionDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1", "system_ingestion");
+  
+  if (!fs.existsSync(ingestionDir)) {
+    fs.mkdirSync(ingestionDir, { recursive: true });
+  }
+
+  const bomFile = path.join(mockSourcesDir, "boms_and_precursors.json");
+  const mesFile = path.join(ingestionDir, "mes_work_orders.csv");
+  const outFile = path.join(ingestionDir, "customs_export_declarations.csv");
 
   if (!fs.existsSync(mesFile) || !fs.existsSync(bomFile)) {
     console.error(`❌ 找不到必備檔案。請確認前面的腳本已執行。`);
@@ -109,6 +115,8 @@ export async function generateCustomsLogs(
       ExportDate: exportDate.toISOString().split("T")[0],
       DestinationCountry:
         euDestinations[getRandomInt(0, euDestinations.length - 1)],
+      CountryOfOrigin: "Taiwan", // Info: (20260604 - Tzuhan) CBAM 必備欄位：原產國
+      Exporter_EORI: `TW${stockId}${getRandomInt(100000, 999999)}`, // Info: (20260604 - Tzuhan) 海關 EORI 識別碼
       ProductID: productId,
       ProductName: productBom.productName,
       CN_Code: productBom.cnCode,

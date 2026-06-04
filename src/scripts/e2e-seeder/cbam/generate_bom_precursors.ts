@@ -184,8 +184,13 @@ export async function generateBOMAndPrecursors(
     "e2e_roadmap-sprint1",
     `${stockId}_company_persona.json`,
   );
-  const cbamMocksDir = path.join(dataDir, "outputs", "cbam_mocks");
-  const outFile = path.join(cbamMocksDir, "boms_and_precursors.json");
+  const mockSourcesDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1", "mock_sources");
+
+  if (!fs.existsSync(mockSourcesDir)) {
+    fs.mkdirSync(mockSourcesDir, { recursive: true });
+  }
+
+  const outFile = path.join(mockSourcesDir, "boms_and_precursors.json");
 
   if (!fs.existsSync(personaFile)) {
     console.error(
@@ -233,7 +238,6 @@ export async function generateBOMAndPrecursors(
 
   const result = await generateContentWithRetry(model, prompt);
 
-  fs.mkdirSync(cbamMocksDir, { recursive: true });
   fs.writeFileSync(outFile, result.response.text(), "utf-8");
 
   console.log(`🎉 [SUCCESS] 產品 BOM 與前驅物數據已成功產生：${outFile}`);

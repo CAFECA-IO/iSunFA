@@ -24,15 +24,21 @@ function getRandomFloat(min: number, max: number, decimals: number = 2) {
 
 export async function generateMESLogs(stockId: string, year: string = "2024") {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
-  const cbamMocksDir = path.join(dataDir, "outputs", "cbam_mocks");
-  const bomFile = path.join(cbamMocksDir, "boms_and_precursors.json");
+  const mockSourcesDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1", "mock_sources");
+  const ingestionDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1", "system_ingestion");
+  
+  if (!fs.existsSync(ingestionDir)) {
+    fs.mkdirSync(ingestionDir, { recursive: true });
+  }
+
+  const bomFile = path.join(mockSourcesDir, "boms_and_precursors.json");
   const personaFile = path.join(
     dataDir,
     "outputs",
     "e2e_roadmap-sprint1",
     `${stockId}_company_persona.json`,
   );
-  const outFile = path.join(cbamMocksDir, "mes_work_orders.csv");
+  const outFile = path.join(ingestionDir, "mes_work_orders.csv");
 
   if (!fs.existsSync(bomFile) || !fs.existsSync(personaFile)) {
     console.error(

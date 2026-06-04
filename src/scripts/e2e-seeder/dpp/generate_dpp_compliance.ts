@@ -12,15 +12,9 @@ export async function generateDppCompliance(
   year: string = "2024",
 ) {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
-  const personaFile = path.join(
-    dataDir,
-    "outputs",
-    "e2e_roadmap-sprint1",
-    `${stockId}_company_persona.json`,
-  );
-  const cbamMocksDir = path.join(dataDir, "outputs", "cbam_mocks");
-  const mdOutFile = path.join(cbamMocksDir, "dpp_compliance_declaration.md");
-  const pdfOutFile = path.join(cbamMocksDir, "dpp_compliance_declaration.pdf");
+  const baseDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1");
+  const mockSourcesDir = path.join(baseDir, "mock_sources");
+  const personaFile = path.join(baseDir, `${stockId}_company_persona.json`);
 
   if (!fs.existsSync(personaFile)) {
     console.error(
@@ -32,17 +26,16 @@ export async function generateDppCompliance(
   const personaRaw = fs.readFileSync(personaFile, "utf-8");
   const persona = JSON.parse(personaRaw);
 
-  const bomFile = path.join(cbamMocksDir, "boms_and_precursors.json");
-  let skuList = "General Products";
-  if (fs.existsSync(bomFile)) {
-    const bomRaw = fs.readFileSync(bomFile, "utf-8");
-    const bomData = JSON.parse(bomRaw);
-    skuList = bomData.products.map((p: IProductBom) => p.productId).join(", ");
+  const bomFile = path.join(mockSourcesDir, "boms_and_precursors.json");
+  if (!fs.existsSync(bomFile)) {
+    console.error(`❌ 找不到 BOM 檔案: ${bomFile}。請先執行 generate_bom_precursors.ts`);
+    process.exit(1);
   }
+  const bomRaw = fs.readFileSync(bomFile, "utf-8");
+  const bomData = JSON.parse(bomRaw);
+  const products: IProductBom[] = bomData.products;
 
-  console.log(
-    `🚀 [DPP Compliance Generator] 開始為 ${stockId} 產生法規無使用宣告書...`,
-  );
+  console.log(`🚀 [DPP Compliance Generator] 開始為 ${stockId} 的 ${products.length} 項產品產生 SKU 級別法規無使用宣告書...`);
 
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
   const model = genAI.getGenerativeModel({
@@ -62,7 +55,18 @@ export async function generateDppCompliance(
       : "Taiwan";
   const today = new Date().toISOString().split("T")[0];
 
-  const prompt = `你現在是「${companyName}」的法規與永續合規長 (Chief Compliance Officer)。
+  for (const product of products) {
+    const productId = product.productId;
+    const productMockDir = path.join(baseDir, productId, "mock_sources");
+    const productIngestionDir = path.join(baseDir, productId, "system_ingestion");
+    
+    if (!fs.existsSync(productMockDir)) fs.mkdirSync(productMockDir, { recursive: true });
+    if (!fs.existsSync(productIngestionDir)) fs.mkdirSync(productIngestionDir, { recursive: true });
+
+    const mdOutFile = path.join(productMockDir, `${productId}_dpp_compliance_declaration.md`);
+    const pdfOutFile = path.join(productIngestionDir, `${productId}_dpp_compliance_declaration.pdf`);
+
+    const prompt = `你現在是「${companyName}」的法規與永續合規長 (Chief Compliance Officer)。
 公司基本資料：
 - 產業：${persona.industryDynamics}
 - 核心競爭力：${persona.coreCompetence}
@@ -81,10 +85,10 @@ export async function generateDppCompliance(
 
 ## 9.3 Hazardous Chemicals (PFAS)
 - 必須明確包含段落："Declaration of exact locations of hazardous materials: **None / Not Applicable**"
-- 在該段落後面具體以英文描述：「本產品經檢驗，100% 不含任何 PFAS 或 REACH SVHC 有害物質。產品為純鋼鐵合金，無任何有害化學殘留。Supported by third-party laboratory test report (Ref: SGS-TW-2024-88392).」
+- 在該段落後面具體以英文描述：「本產品經檢驗，100% 不含任何 PFAS 或 REACH SVHC 有害物質。產品為純鋼鐵合金，無任何有害化學殘留。Supported by third-party laboratory test report (Ref: SGS-TW-2024-${Math.floor(Math.random() * 90000) + 10000}).」
 
-開頭需有公司信頭與日期，並明確標示適用的產品編號：
-"Covered SKUs / Part Numbers: ${skuList}"
+開頭需有公司信頭與日期，並明確標示適用的單一產品編號與名稱：
+"Covered SKU / Part Number: ${productId} - ${product.productName}"
 結尾需有簽名欄位。
 4. 絕對不可使用任何中括號佔位符 (如 [Company Name], [Address], [Date])。必須直接填寫以下真實資料：
    - Company Name: ${companyName}
@@ -93,51 +97,52 @@ export async function generateDppCompliance(
    - Chief Compliance Officer Signature: (請直接打上一個擬真的英文人名，例如 Tzuhan Lin)
 `;
 
-  console.log("⏳ 正在請求 AI 撰寫宣告信...");
-  const result = await model.generateContent(prompt);
-  let mdContent = result.response.text();
+    console.log(`⏳ [${productId}] 正在請求 AI 撰寫宣告信...`);
+    // Info: (20260604 - Tzuhan) 簡易重試邏輯
+    let mdContent = "";
+    try {
+      const result = await model.generateContent(prompt);
+      mdContent = result.response.text();
+    } catch (error) {
+      console.warn(`⚠️ [${productId}] API Error, retrying after 3s...`, error);
+      await new Promise(r => setTimeout(r, 3000));
+      const result = await model.generateContent(prompt);
+      mdContent = result.response.text();
+    }
 
-  // Info: (20260604 - Tzuhan) 防呆：強制移除 AI 可能硬加的 Markdown 程式碼區塊標籤
-  mdContent = mdContent
-    .replace(/^```[a-z]*\s*/im, "")
-    .replace(/```\s*$/s, "")
-    .trim();
+    mdContent = mdContent
+      .replace(/^```[a-z]*\s*/im, "")
+      .replace(/```\s*$/s, "")
+      .trim();
 
-  // Info: (20260604 - Tzuhan) 注入實體工程藍圖來騙過死板的 AI 視覺萃取引擎
-  const blueprintPath = path.resolve(
-    process.cwd(),
-    "data/2066/2024/outputs/cbam_mocks/fastener_blueprint.png",
-  );
-  if (fs.existsSync(blueprintPath)) {
-    const base64Image = fs.readFileSync(blueprintPath).toString("base64");
-    const dataUri = `data:image/png;base64,${base64Image}`;
-    const imgMarkdown = `\n\n<img src="${dataUri}" alt="Mechanical Layout (Equivalent to Mainboard Layout / Circuit Diagram)" width="500" />\n\n*(Above: Engineering Mechanical Blueprint, provided in lieu of circuit diagrams as this product is non-electronic)*\n\n`;
-    mdContent = mdContent.replace(
-      "## 6.1 Repair & Teardown Guidelines",
-      "## 6.1 Repair & Teardown Guidelines" + imgMarkdown,
-    );
-  }
+    const blueprintPath = path.resolve(process.cwd(), `data/${stockId}/${year}/outputs/e2e_roadmap-sprint1/fastener_blueprint.png`);
+    if (fs.existsSync(blueprintPath)) {
+      const base64Image = fs.readFileSync(blueprintPath).toString("base64");
+      const dataUri = `data:image/png;base64,${base64Image}`;
+      const imgMarkdown = `\n\n<img src="${dataUri}" alt="Mechanical Layout" width="500" />\n\n*(Above: Engineering Mechanical Blueprint, provided in lieu of circuit diagrams as this product is non-electronic)*\n\n`;
+      mdContent = mdContent.replace("## 6.1 Repair & Teardown Guidelines", "## 6.1 Repair & Teardown Guidelines" + imgMarkdown);
+    }
 
-  fs.mkdirSync(cbamMocksDir, { recursive: true });
-  fs.writeFileSync(mdOutFile, mdContent, "utf-8");
-  console.log(`📝 [SUCCESS] Markdown 宣告信已產生：${mdOutFile}`);
+    fs.writeFileSync(mdOutFile, mdContent, "utf-8");
+    console.log(`📝 [SUCCESS] [${productId}] Markdown 宣告信已產生：${mdOutFile}`);
 
-  console.log("⏳ 正在將 Markdown 轉檔為高質感 PDF...");
-  try {
-    await mdToPdf(
-      { content: mdContent },
-      {
-        dest: pdfOutFile,
-        pdf_options: {
-          format: "A4",
-          margin: { top: "20mm", right: "20mm", bottom: "20mm", left: "20mm" },
-          printBackground: true,
+    console.log(`⏳ [${productId}] 正在轉檔為 PDF...`);
+    try {
+      await mdToPdf(
+        { content: mdContent },
+        {
+          dest: pdfOutFile,
+          pdf_options: {
+            format: "A4",
+            margin: { top: "20mm", right: "20mm", bottom: "20mm", left: "20mm" },
+            printBackground: true,
+          },
         },
-      },
-    );
-    console.log(`📄 [SUCCESS] PDF 宣告信已成功匯出：${pdfOutFile}`);
-  } catch (error) {
-    console.error(`❌ PDF 轉檔失敗:`, error);
+      );
+      console.log(`📄 [SUCCESS] [${productId}] PDF 宣告信已成功匯出：${pdfOutFile}`);
+    } catch (error) {
+      console.error(`❌ [${productId}] PDF 轉檔失敗:`, error);
+    }
   }
 }
 

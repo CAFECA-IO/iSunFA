@@ -192,21 +192,14 @@ export async function generateDppGroundTruth(
   stockId: string,
   year: string = "2024",
 ) {
-  const dataDir = path.resolve(
-    process.cwd(),
-    `data/${stockId}/${year}/outputs`,
-  );
+  const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}/outputs`);
+  const baseDir = path.join(dataDir, "e2e_roadmap-sprint1");
+  const mockSourcesDir = path.join(baseDir, "mock_sources");
 
   // Info: (20260604 - Tzuhan) 讀取所有來源資料
-  const personaPath = path.join(
-    dataDir,
-    "e2e_roadmap-sprint1",
-    `${stockId}_company_persona.json`,
-  );
-  const bomPath = path.join(dataDir, "cbam_mocks", "boms_and_precursors.json");
-  const specsPath = path.join(dataDir, "cbam_mocks", "product_specs.json");
-
-  const outFile = path.join(dataDir, "cbam_mocks", "dpp_ground_truth.json");
+  const personaPath = path.join(baseDir, `${stockId}_company_persona.json`);
+  const bomPath = path.join(mockSourcesDir, "boms_and_precursors.json");
+  const specsPath = path.join(mockSourcesDir, "product_specs.json");
 
   // Info: (20260604 - Tzuhan) 防呆檢查
   const filesToCheck = [personaPath, bomPath, specsPath];
@@ -219,80 +212,15 @@ export async function generateDppGroundTruth(
   }
 
   const personaStr = fs.readFileSync(personaPath, "utf-8");
-  const bomStr = fs.readFileSync(bomPath, "utf-8");
-  const specsStr = fs.readFileSync(specsPath, "utf-8");
+  const bomRaw = JSON.parse(fs.readFileSync(bomPath, "utf-8"));
+  const specsRaw = JSON.parse(fs.readFileSync(specsPath, "utf-8"));
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("Missing GEMINI_API_KEY in .env");
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
 
-  console.log(
-    `🚀 [DPP Ground Truth Generator] 開始為 ${stockId} (${year}) 產出 DPP 標準答案...`,
-  );
-
-  // Info: (20260604 - Tzuhan) 建立強大的 Context 文本
-  const baseContext = `我們正在為台灣公司代號 ${stockId} (年份 ${year}) 建立數位產品護照 (DPP) 的 Ground Truth 測試數據。
-這份 DPP 將用於前端 Battery Pass 風格的 Dashboard 顯示。
-以下是底層系統生成的 Raw Mock Data：
-
-【1. Company Persona (公司畫像)】
-${personaStr}
-
-【2. BOM & Material Composition (產品物料與化學成分)】
-${bomStr}
-
-【3. Product Specs (產品規格與壽命)】
-${specsStr}
-`;
-
-  console.log(`🔄 STEP 1: 啟動 Map-Reduce 三大 Auditor 平行審查...`);
-
-  const [resCarbon, resCircularity, resSupplyChain] = await Promise.all([
-    generateContentWithRetry(
-      model,
-      `你現在是【嚴格的碳會計師 (Carbon Actuary)】。
-${baseContext}
-你的任務是從這些資料中推算出這項產品的「單件總碳排 (total_tCO2e)」。
-遵守歐盟 CBAM 規範，必須是 Cradle-to-Gate (搖籃到大門)，不可包含 Distribution (運輸與分發)。
-必須拆分成三大項：
-1. Precursors Emissions (原物料碳排)
-2. Direct Emissions Scope 1 (製程直接排放)
-3. Indirect Emissions Scope 2 (製程間接排放/電力)
-請參考 Company Persona 中的 \`totalScope2Emissions_tCO2e\` 進行合理推估，數字加總必須等於單件總碳排。
-請給出你的分析筆記與最終數字。`,
-    ),
-
-    generateContentWithRetry(
-      model,
-      `你現在是【循環經濟與材料專家 (Circularity & Material Expert)】。
-${baseContext}
-你的任務是從 BOM 表萃取出這個產品的主要材質與詳細的化學元素。
-1. 針對每種主材料 (如 Alloy Steel)，提供詳細的 elements 比例 (Fe, C, Cr, Mo...等)，以符合 CRMA 關鍵原物料的顆粒度要求。
-2. 精確推算它的 recycledContentShare (包含 preConsumerShare, postConsumerShare, primaryMaterial)。三者加總必須為 100。
-請確保數據跟 BOM 表的記載吻合！給出你的分析筆記。`,
-    ),
-
-    generateContentWithRetry(
-      model,
-      `你現在是【供應鏈與合規稽核員 (Supply Chain & Compliance Auditor)】。
-${baseContext}
-你的任務是統整 General Info (Model Number, Weight, Name, Facility, Manufactured Date)。
-強烈注意：請務必根據產品屬性(例如扣件 fastener)推斷並提供正確的海關稅則號列 (CN Code，如 7318.15.xx)。
-並且統整 durabilityAndRepair (壽命與維修) 以及 compliance (合規性：是否符合 RoHS, PFAS Free)。
-參考產品規格 (Product Specs) 以及先前的 PDF 宣告書邏輯，給出精準的屬性值。`,
-    ),
-  ]);
-
-  const carbonNotes = resCarbon.response.text();
-  const circularityNotes = resCircularity.response.text();
-  const supplyChainNotes = resSupplyChain.response.text();
-
-  console.log(`✅ 三大 Auditor 審查意見收集完成。`);
-
-  console.log(
-    `🔄 STEP 2: Aggregator 正在聚合意見並強制輸出符合 Schema 的 JSON...`,
-  );
+  console.log(`🚀 [DPP Ground Truth Generator] 開始為 ${stockId} 的 ${bomRaw.products.length} 項產品產出 SKU 級別 DPP 標準答案...`);
 
   const aggregatorModel = genAI.getGenerativeModel({
     model: "gemini-2.5-pro",
@@ -303,8 +231,74 @@ ${baseContext}
     },
   });
 
-  const aggregatorPrompt = `你現在是【Aggregator 總架構師】。
-我們需要為 ${stockId} 建立一份符合嚴格 JSON Schema 的 DPP Ground Truth JSON 檔案。
+  for (const product of bomRaw.products) {
+    const productId = product.productId;
+    const productMockDir = path.join(baseDir, productId, "mock_sources");
+    if (!fs.existsSync(productMockDir)) fs.mkdirSync(productMockDir, { recursive: true });
+    
+    const outFile = path.join(productMockDir, `${productId}_dpp_ground_truth.json`);
+    const productSpec = specsRaw.specs.find((s: { productId: string }) => s.productId === productId);
+
+    // Info: (20260604 - Tzuhan) 建立強大的 Context 文本 (針對單一 SKU)
+    const baseContext = `我們正在為台灣公司代號 ${stockId} (年份 ${year}) 的產品 ${productId} (${product.productName}) 建立數位產品護照 (DPP) 的 Ground Truth 測試數據。
+這份 DPP 將用於前端 Battery Pass 風格的 Dashboard 顯示。
+以下是底層系統生成的 Raw Mock Data：
+
+【1. Company Persona (公司畫像)】
+${personaStr}
+
+【2. BOM & Material Composition (單一產品物料與化學成分)】
+${JSON.stringify(product, null, 2)}
+
+【3. Product Specs (單一產品規格與壽命)】
+${JSON.stringify(productSpec, null, 2)}
+`;
+
+    console.log(`🔄 [${productId}] STEP 1: 啟動 Map-Reduce 三大 Auditor 平行審查...`);
+
+    const [resCarbon, resCircularity, resSupplyChain] = await Promise.all([
+      generateContentWithRetry(
+        model,
+        `你現在是【嚴格的碳會計師 (Carbon Actuary)】。
+${baseContext}
+你的任務是從這些資料中推算出這項產品的「單件總碳排 (total_tCO2e)」。
+遵守歐盟 CBAM 規範，必須是 Cradle-to-Gate (搖籃到大門)，不可包含 Distribution (運輸與分發)。
+必須拆分成三大項：
+1. Precursors Emissions (原物料碳排)
+2. Direct Emissions Scope 1 (製程直接排放)
+3. Indirect Emissions Scope 2 (製程間接排放/電力)
+請參考 Company Persona 中的 \`totalScope2Emissions_tCO2e\` 進行合理推估，數字加總必須等於單件總碳排。
+請給出你的分析筆記與最終數字。`,
+      ),
+      generateContentWithRetry(
+        model,
+        `你現在是【循環經濟與材料專家 (Circularity & Material Expert)】。
+${baseContext}
+你的任務是從 BOM 表萃取出這個產品的主要材質與詳細的化學元素。
+1. 針對每種主材料 (如 Alloy Steel)，提供詳細的 elements 比例 (Fe, C, Cr, Mo...等)，以符合 CRMA 關鍵原物料的顆粒度要求。
+2. 精確推算它的 recycledContentShare (包含 preConsumerShare, postConsumerShare, primaryMaterial)。三者加總必須為 100。
+請確保數據跟 BOM 表的記載吻合！給出你的分析筆記。`,
+      ),
+      generateContentWithRetry(
+        model,
+        `你現在是【供應鏈與合規稽核員 (Supply Chain & Compliance Auditor)】。
+${baseContext}
+你的任務是統整 General Info (Model Number, Weight, Name, Facility, Manufactured Date)。
+強烈注意：請務必根據產品屬性(例如扣件 fastener)推斷並提供正確的海關稅則號列 (CN Code，如 7318.15.xx)。
+並且統整 durabilityAndRepair (壽命與維修) 以及 compliance (合規性：是否符合 RoHS, PFAS Free)。
+參考產品規格 (Product Specs) 以及先前的 PDF 宣告書邏輯，給出精準的屬性值。`,
+      ),
+    ]);
+
+    const carbonNotes = resCarbon.response.text();
+    const circularityNotes = resCircularity.response.text();
+    const supplyChainNotes = resSupplyChain.response.text();
+
+    console.log(`✅ [${productId}] 三大 Auditor 審查意見收集完成。`);
+    console.log(`🔄 [${productId}] STEP 2: Aggregator 正在聚合意見並強制輸出符合 Schema 的 JSON...`);
+
+    const aggregatorPrompt = `你現在是【Aggregator 總架構師】。
+我們需要為 ${stockId} 的產品 ${productId} 建立一份符合嚴格 JSON Schema 的 DPP Ground Truth JSON 檔案。
 
 以下是底層的上下文：
 ${baseContext}
@@ -319,16 +313,17 @@ ${baseContext}
 - 確保 carbonFootprint.breakdown 的三個數字 (precursorsEmissions + directEmissionsScope1 + indirectEmissionsScope2) 加起來等於 total_tCO2e。
 - 確保 general.cnCode 有填寫海關稅則號碼。
 - 確保 recycledContentShare 的每個 material 內部，pre + post + primary 剛好等於 100。
-- compliance.declarationDocument 檔名應設定為 "dpp_compliance_declaration.pdf"。
-- general.passportId 請設定為 "did:web:isunfa.com:dpp:${stockId}-[Model Number]"。`;
+- compliance.declarationDocument 檔名應設定為 "${productId}_dpp_compliance_declaration.pdf"。
+- general.passportId 請設定為 "did:web:isunfa.com:dpp:${stockId}-${productId}"。`;
 
-  const finalResult = await generateContentWithRetry(
-    aggregatorModel,
-    aggregatorPrompt,
-  );
+    const finalResult = await generateContentWithRetry(
+      aggregatorModel,
+      aggregatorPrompt,
+    );
 
-  fs.writeFileSync(outFile, finalResult.response.text(), "utf-8");
-  console.log(`🎉 [SUCCESS] DPP Ground Truth 已成功產出：${outFile}`);
+    fs.writeFileSync(outFile, finalResult.response.text(), "utf-8");
+    console.log(`🎉 [SUCCESS] [${productId}] DPP Ground Truth 已成功產出：${outFile}`);
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

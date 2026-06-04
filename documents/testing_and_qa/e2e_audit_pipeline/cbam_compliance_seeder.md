@@ -43,3 +43,13 @@
 - **製程對齊**：針對扣件業特有的「成型 -> 輾牙 -> 熱處理 -> 表面處理」流程，完美模擬 MES 能耗與委外加工的碳排節點。
 
 透過這套以 2066 為基底訓練出來的**「深度擬真金屬扣件供應鏈」**，iSunFA 具備了極具說服力的展示 (Demo) 能力。我們的戰略目標是拿著這套系統向 **5007 三星科技 (鋼鐵/扣件大廠)** 展示：我們不僅能做基本的 ESG 盤查，更能**一鍵打通從廠房機台 (MES) 到歐盟海關 (CBAM) 甚至供應鏈盡職調查 (DDP)** 的全數據鏈路，藉此強勢拿下其未來的 ESG 與 DDP 專案！
+
+---
+
+## 🚀 完整管線執行指令 (E2E Pipeline Execution)
+
+如果要一次性生成針對特定企業 (如 2066 世德工業) 的完整 CBAM 與 DPP 模擬測試資料，請在專案根目錄執行以下串聯指令：
+
+```bash
+npx tsx src/scripts/e2e-seeder/cbam/generate_bom_precursors.ts 2066 && npx tsx src/scripts/e2e-seeder/dpp/generate_product_specs.ts 2066 && npx tsx src/scripts/e2e-seeder/cbam/generate_mes_energy.ts 2066 && npx tsx src/scripts/e2e-seeder/cbam/generate_outsourced_processing.ts 2066 && npx tsx src/scripts/e2e-seeder/cbam/generate_export_customs.ts 2066 && npx tsx src/scripts/e2e-seeder/dpp/generate_dpp_compliance.ts 2066 && npx tsx src/scripts/e2e-seeder/dpp/generate_dpp_ground_truth.ts 2066 && npx tsx src/scripts/e2e-seeder/dpp/render_dpp_pdf.ts 2066
+```

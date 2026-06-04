@@ -59,3 +59,13 @@
 3. 當場畫出一張與該產業完美吻合的工程藍圖/電路圖，並即時嵌入到 PDF 中。
 
 這樣的多模態結合，將能讓 iSunFA 的 E2E 系統具備軟體測試界罕見的「視覺對抗自動化 (Automated Visual Red-Teaming)」能力。
+
+---
+
+## 🚀 完整管線執行指令 (E2E Pipeline Execution)
+
+如果要一次性生成針對特定企業 (如 2066 世德工業) 的完整 CBAM 與 DPP 模擬測試資料，請在專案根目錄執行以下串聯指令：
+
+```bash
+npx tsx src/scripts/e2e-seeder/cbam/generate_bom_precursors.ts 2066 && npx tsx src/scripts/e2e-seeder/dpp/generate_product_specs.ts 2066 && npx tsx src/scripts/e2e-seeder/cbam/generate_mes_energy.ts 2066 && npx tsx src/scripts/e2e-seeder/cbam/generate_outsourced_processing.ts 2066 && npx tsx src/scripts/e2e-seeder/cbam/generate_export_customs.ts 2066 && npx tsx src/scripts/e2e-seeder/dpp/generate_dpp_compliance.ts 2066 && npx tsx src/scripts/e2e-seeder/dpp/generate_dpp_ground_truth.ts 2066 && npx tsx src/scripts/e2e-seeder/dpp/render_dpp_pdf.ts 2066
+```

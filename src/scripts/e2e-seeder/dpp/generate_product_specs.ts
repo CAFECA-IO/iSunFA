@@ -159,9 +159,14 @@ export async function generateProductSpecs(
   year: string = "2024",
 ) {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
-  const cbamMocksDir = path.join(dataDir, "outputs", "cbam_mocks");
-  const bomFile = path.join(cbamMocksDir, "boms_and_precursors.json");
-  const outFile = path.join(cbamMocksDir, "product_specs.json");
+  const mockSourcesDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1", "mock_sources");
+  
+  if (!fs.existsSync(mockSourcesDir)) {
+    fs.mkdirSync(mockSourcesDir, { recursive: true });
+  }
+
+  const bomFile = path.join(mockSourcesDir, "boms_and_precursors.json");
+  const outFile = path.join(mockSourcesDir, "product_specs.json");
 
   if (!fs.existsSync(bomFile)) {
     console.error(
