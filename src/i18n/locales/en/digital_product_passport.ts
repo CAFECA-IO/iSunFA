@@ -1,6 +1,7 @@
 export const digitalProductPassport = {
   title: "Digital Product Passport",
   description: "Manage B2B SKUs and issue manufacturing batches.",
+  login_to_use: "Please login to use the Digital Product Passport",
   define_sku: "Define New SKU",
   define_sku_desc: "Upload technical documents for AI extraction",
   create_sku: "Create SKU",

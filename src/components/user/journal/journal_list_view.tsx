@@ -18,6 +18,7 @@ import { VerifyStatus } from "@/constants/verify_status";
 import JournalSummary from "@/components/user/journal/journal_summary";
 import BatchDownloadModal from "@/components/user/journal/batch_download_modal";
 import DateRangePicker from "@/components/common/date_range_picker";
+import SuccessNotification from "@/components/common/success_notification";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { SortOrder } from "@/constants/sort";
 
@@ -62,6 +63,10 @@ export default function JournalListView() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isVerifyAllConfirmOpen, setIsVerifyAllConfirmOpen] =
     useState<boolean>(false);
+  const [isVerifySuccessOpen, setIsVerifySuccessOpen] =
+    useState<boolean>(false);
+  const [verifySuccessMsg, setVerifySuccessMsg] = useState<string>("");
+  const [isAllVerified, setIsAllVerified] = useState<boolean>(false);
   const [isBatchDownloadModalOpen, setIsBatchDownloadModalOpen] =
     useState<boolean>(false);
 
@@ -154,10 +159,26 @@ export default function JournalListView() {
     if (!accountBookId) return;
     try {
       setIsLoading(true);
-      await request(
+      const res = await request<IApiResponse<{ count: number }>>(
         `/api/v1/user/account_book/${accountBookId}/journal/verify_all`,
         { method: "PUT" },
       );
+
+      // Info: (20260601 - Julian) 根據 API 回傳的 count，顯示對應的 message
+      if (res.payload) {
+        if (res.payload.count > 0) {
+          setVerifySuccessMsg(
+            t("common.verify_all_success_count", {
+              count: res.payload.count,
+            }) as string,
+          );
+        } else {
+          setVerifySuccessMsg(t("common.verify_all_no_data") as string);
+        }
+        setIsVerifySuccessOpen(true);
+        setIsAllVerified(true);
+      }
+
       await fetchJournals();
     } catch (error) {
       console.error("Failed to verify all journals:", error);
@@ -220,6 +241,7 @@ export default function JournalListView() {
   // Info: (20260324 - Julian) Reset pagination when filters change
   useEffect(() => {
     setCurrentPage(1);
+    setIsAllVerified(false);
   }, [sortOrder, debouncedKeyWord, filteredVerifyStatus, startDate, endDate]);
 
   const totalPages = Math.ceil(totalItems / PAGE_SIZE) || 1;
@@ -336,13 +358,13 @@ export default function JournalListView() {
           </div>
 
           {/* Info: (20260304 - Julian) Date Picker */}
-                   <DateRangePicker
-                        startDate={startDate}
-                        endDate={endDate}
-                        setStartDate={setStartDate}
-                        setEndDate={setEndDate}
-                        className="flex items-center justify-center gap-2 text-slate-400"
-                      />
+          <DateRangePicker
+            startDate={startDate}
+            endDate={endDate}
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
+            className="flex items-center justify-center gap-2 text-slate-400"
+          />
 
           {/* Info: (20260428 - Julian) Verify Status Filter */}
           <select
@@ -376,7 +398,7 @@ export default function JournalListView() {
               type="button"
               aria-label="common.verify_all"
               onClick={() => setIsVerifyAllConfirmOpen(true)}
-              disabled={isLoading}
+              disabled={isLoading || isAllVerified || journals.length === 0}
               className="inline-flex items-center justify-center rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm enabled:hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
               {t("common.verify_all")}
@@ -388,10 +410,15 @@ export default function JournalListView() {
               disabled={isLoading}
               className="inline-flex items-center justify-center gap-2 rounded-lg bg-orange-100 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-orange-600 shadow-sm enabled:hover:bg-orange-200 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
             >
-              <Download className="h-4 w-4" />
+              <Download className="size-4" />
               {t("common.batch_download")}
             </button>
           </div>
+        </div>
+
+        {/* Info: (20260601 - Julian) 憑證總筆數 */}
+        <div className="mt-4 flex items-center justify-center text-sm font-bold text-slate-500 md:justify-end">
+          共 {totalItems} 筆憑證
         </div>
 
         {/* Info: (20260304 - Julian) Journal List */}
@@ -469,6 +496,12 @@ export default function JournalListView() {
           isOpen={isBatchDownloadModalOpen}
           onClose={() => setIsBatchDownloadModalOpen(false)}
           accountBookId={accountBookId}
+        />
+        <SuccessNotification
+          show={isVerifySuccessOpen}
+          title={t("common.notification") as string}
+          message={verifySuccessMsg}
+          onClose={() => setIsVerifySuccessOpen(false)}
         />
       </div>
     </div>

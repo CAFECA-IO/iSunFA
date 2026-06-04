@@ -64,6 +64,12 @@ export const voucher = {
       filter_btn: "筛选条件",
       verify_all: "一键核对",
       no_data: "暂无数据",
+      status_colon: "状态: ",
+      id_colon: "编号: ",
+      accounting_entries_dr_cr: "会计科目分录 (借/贷)",
+      unknown_account: "未知科目",
+      debit_abbr: "借",
+      credit_abbr: "贷",
       no_data_desc:
         "在所选期间内暂无凭证数据。您可以尝试切换不同的时间区间，或是前往凭证模块上传新数据。",
       no_data_cta: "上传凭证/数据",

@@ -78,8 +78,18 @@ export default function EsgMainView() {
             setAccountBook(res.payload);
             if (res.payload.createdAt) {
               const createdAt = new Date(res.payload.createdAt);
-              setStartYear(createdAt.getFullYear());
-              setStartMonth(createdAt.getMonth() + 1);
+              // Info: (20260603 - Tzuhan) 強制回推到至少 2024 年，以涵蓋 ESG 歷史資料匯入
+              const calculatedStartYear = Math.min(
+                2024,
+                createdAt.getFullYear(),
+              );
+              setStartYear(calculatedStartYear);
+              // Info: (20260603 - Tzuhan) 如果回推了年份，月份也應放寬為 1 月，避免舊資料看得到年卻選不到月
+              setStartMonth(
+                calculatedStartYear < createdAt.getFullYear()
+                  ? 1
+                  : createdAt.getMonth() + 1,
+              );
             }
           }
         } catch (error) {

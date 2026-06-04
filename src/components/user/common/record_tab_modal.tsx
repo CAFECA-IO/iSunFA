@@ -7,7 +7,16 @@ import {
   Transition,
   TransitionChild,
 } from "@headlessui/react";
-import { X, BookCopy, FileText, Leaf, ImageIcon, Trash2, Undo2, Download } from "lucide-react";
+import {
+  X,
+  BookCopy,
+  FileText,
+  Leaf,
+  ImageIcon,
+  Trash2,
+  Undo2,
+  Download,
+} from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import dynamic from "next/dynamic";
 import { IJournal } from "@/interfaces/journal";
@@ -24,10 +33,22 @@ const TabLoading = () => (
 );
 
 // Info: (20260327 - Luphia) 加入 Loading Fallback 避免動態載入時出現短暫白畫面
-const JournalDetailModal = dynamic(() => import("@/components/user/journal/journal_detail_modal"), { ssr: false, loading: TabLoading });
-const VoucherDetailModal = dynamic(() => import("@/components/user/voucher/voucher_detail_modal"), { ssr: false, loading: TabLoading });
-const EsgDetailModal = dynamic(() => import("@/components/user/esg/esg_detail_modal"), { ssr: false, loading: TabLoading });
-const ZoomablePreview = dynamic(() => import("@/components/common/zoomable_preview"), { ssr: false, loading: TabLoading });
+const JournalDetailModal = dynamic(
+  () => import("@/components/user/journal/journal_detail_modal"),
+  { ssr: false, loading: TabLoading },
+);
+const VoucherDetailModal = dynamic(
+  () => import("@/components/user/voucher/voucher_detail_modal"),
+  { ssr: false, loading: TabLoading },
+);
+const EsgDetailModal = dynamic(
+  () => import("@/components/user/esg/esg_detail_modal"),
+  { ssr: false, loading: TabLoading },
+);
+const ZoomablePreview = dynamic(
+  () => import("@/components/common/zoomable_preview"),
+  { ssr: false, loading: TabLoading },
+);
 
 export type RecordTabType = "journal" | "voucher" | "esg" | "preview";
 
@@ -69,8 +90,12 @@ export default function RecordTabModal({
   // Info: (20260327 - Luphia) 記錄已點擊過/已掛載的 Tabs，避免切換 Tab 時遺失資料或重複打 API
   const [mountedTabs, setMountedTabs] = useState<Set<RecordTabType>>(new Set());
 
-  const [journalId, setJournalId] = useState<string | null | undefined>(initialJournalId);
-  const [voucherId, setVoucherId] = useState<string | null | undefined>(initialVoucherId);
+  const [journalId, setJournalId] = useState<string | null | undefined>(
+    initialJournalId,
+  );
+  const [voucherId, setVoucherId] = useState<string | null | undefined>(
+    initialVoucherId,
+  );
   const [esgId, setEsgId] = useState<string | null | undefined>(initialEsgId);
   const [file, setFile] = useState(initialFile);
 
@@ -137,26 +162,35 @@ export default function RecordTabModal({
   };
 
   // Info: (20260327 - Luphia) 使用 useCallback 避免子元件不必要的 Re-render
-  const handleJournalUpdate = useCallback((j: IJournal) => {
-    onJournalUpdate?.(j);
-    if (j.voucherId) setVoucherId(j.voucherId);
-    if (j.esgRecordId) setEsgId(j.esgRecordId);
-    if (j.file) setFile(j.file);
-  }, [onJournalUpdate]);
+  const handleJournalUpdate = useCallback(
+    (j: IJournal) => {
+      onJournalUpdate?.(j);
+      if (j.voucherId) setVoucherId(j.voucherId);
+      if (j.esgRecordId) setEsgId(j.esgRecordId);
+      if (j.file) setFile(j.file);
+    },
+    [onJournalUpdate],
+  );
 
-  const handleVoucherUpdate = useCallback((v: IVoucher) => {
-    onVoucherUpdate?.(v);
-    if (v.journalId) setJournalId(v.journalId);
-    if (v.esgRecordId) setEsgId(v.esgRecordId);
-    if (v.file) setFile(v.file);
-  }, [onVoucherUpdate]);
+  const handleVoucherUpdate = useCallback(
+    (v: IVoucher) => {
+      onVoucherUpdate?.(v);
+      if (v.journalId) setJournalId(v.journalId);
+      if (v.esgRecordId) setEsgId(v.esgRecordId);
+      if (v.file) setFile(v.file);
+    },
+    [onVoucherUpdate],
+  );
 
-  const handleEsgUpdate = useCallback((e: IEsgRecordDetail) => {
-    onEsgUpdate?.(e);
-    if (e.journalId) setJournalId(e.journalId);
-    if (e.voucherId) setVoucherId(e.voucherId);
-    if (e.file) setFile(e.file);
-  }, [onEsgUpdate]);
+  const handleEsgUpdate = useCallback(
+    (e: IEsgRecordDetail) => {
+      onEsgUpdate?.(e);
+      if (e.journalId) setJournalId(e.journalId);
+      if (e.voucherId) setVoucherId(e.voucherId);
+      if (e.file) setFile(e.file);
+    },
+    [onEsgUpdate],
+  );
 
   const [isDownloadingFile, setIsDownloadingFile] = useState(false);
   const handleDownloadOriginal = useCallback(async () => {
@@ -178,7 +212,7 @@ export default function RecordTabModal({
         onError: (err) => {
           console.error("Failed to download file:", err);
           alert(t("common.error.download_failed") || "Download failed");
-        }
+        },
       });
     } catch (err) {
       console.error(err);
@@ -216,50 +250,62 @@ export default function RecordTabModal({
               <DialogPanel className="relative flex h-[90vh] w-full max-w-[95vw] transform flex-col rounded-2xl bg-white text-left shadow-2xl transition-all sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl">
                 {/* Info: (20260327 - Luphia) Header / Tabs */}
                 <div className="flex items-center justify-between rounded-t-2xl border-b border-gray-200 bg-gray-50/50 px-4 py-3 sm:px-6">
-                  <div className="flex select-none space-x-2 overflow-x-auto pb-1 sm:space-x-4 sm:pb-0">
+                  <div className="flex space-x-2 overflow-x-auto pb-1 select-none sm:space-x-4 sm:pb-0">
                     <button
                       onClick={() => handleTabChange("journal")}
                       disabled={!journalId}
-                      className={`flex items-center gap-2 rounded-t-lg border-b-2 px-3 py-2 text-sm font-bold transition-colors ${activeTab === "journal"
-                        ? "border-orange-500 text-orange-600"
-                        : "border-transparent text-gray-500 enabled:hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
-                        }`}
+                      className={`flex items-center gap-2 rounded-t-lg border-b-2 px-3 py-2 text-sm font-bold transition-colors ${
+                        activeTab === "journal"
+                          ? "border-orange-500 text-orange-600"
+                          : "border-transparent text-gray-500 enabled:hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      }`}
                     >
                       <BookCopy size={16} />
-                      <span className="hidden sm:inline">{t("journal.detail_modal.title")}</span>
+                      <span className="hidden sm:inline">
+                        {t("journal.detail_modal.title")}
+                      </span>
                     </button>
                     <button
                       onClick={() => handleTabChange("voucher")}
                       disabled={!voucherId}
-                      className={`flex items-center gap-2 rounded-t-lg border-b-2 px-3 py-2 text-sm font-bold transition-colors ${activeTab === "voucher"
-                        ? "border-blue-500 text-blue-600"
-                        : "border-transparent text-gray-500 enabled:hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
-                        }`}
+                      className={`flex items-center gap-2 rounded-t-lg border-b-2 px-3 py-2 text-sm font-bold transition-colors ${
+                        activeTab === "voucher"
+                          ? "border-blue-500 text-blue-600"
+                          : "border-transparent text-gray-500 enabled:hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      }`}
                     >
                       <FileText size={16} />
-                      <span className="hidden sm:inline">{t("voucher.detail_modal.title")}</span>
+                      <span className="hidden sm:inline">
+                        {t("voucher.detail_modal.title")}
+                      </span>
                     </button>
                     <button
                       onClick={() => handleTabChange("esg")}
                       disabled={!esgId}
-                      className={`flex items-center gap-2 rounded-t-lg border-b-2 px-3 py-2 text-sm font-bold transition-colors ${activeTab === "esg"
-                        ? "border-emerald-500 text-emerald-600"
-                        : "border-transparent text-gray-500 enabled:hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
-                        }`}
+                      className={`flex items-center gap-2 rounded-t-lg border-b-2 px-3 py-2 text-sm font-bold transition-colors ${
+                        activeTab === "esg"
+                          ? "border-emerald-500 text-emerald-600"
+                          : "border-transparent text-gray-500 enabled:hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      }`}
                     >
                       <Leaf size={16} />
-                      <span className="hidden sm:inline">{t("esg.detail_modal.title")}</span>
+                      <span className="hidden sm:inline">
+                        {t("esg.detail_modal.title")}
+                      </span>
                     </button>
                     <button
                       onClick={() => handleTabChange("preview")}
                       disabled={!file?.hash}
-                      className={`flex items-center gap-2 rounded-t-lg border-b-2 px-3 py-2 text-sm font-bold transition-colors ${activeTab === "preview"
-                        ? "border-indigo-500 text-indigo-600"
-                        : "border-transparent text-gray-500 enabled:hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
-                        }`}
+                      className={`flex items-center gap-2 rounded-t-lg border-b-2 px-3 py-2 text-sm font-bold transition-colors ${
+                        activeTab === "preview"
+                          ? "border-indigo-500 text-indigo-600"
+                          : "border-transparent text-gray-500 enabled:hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      }`}
                     >
                       <ImageIcon size={16} />
-                      <span className="hidden sm:inline">{t("ocr.preview")}</span>
+                      <span className="hidden sm:inline">
+                        {t("ocr.preview")}
+                      </span>
                     </button>
                   </div>
 
@@ -267,7 +313,7 @@ export default function RecordTabModal({
                     {!!file?.hash && (
                       <button
                         type="button"
-                        className="rounded-full bg-orange-100 p-2 text-orange-500 outline-none transition-colors hover:bg-orange-200 hover:text-orange-700"
+                        className="rounded-full bg-orange-100 p-2 text-orange-500 transition-colors outline-none hover:bg-orange-200 hover:text-orange-700"
                         onClick={handleDownloadOriginal}
                         disabled={isDownloadingFile}
                         title={t("common.download")}
@@ -282,7 +328,7 @@ export default function RecordTabModal({
                     {onRestore && isDeleted ? (
                       <button
                         type="button"
-                        className="rounded-full bg-emerald-50 p-2 text-emerald-500 outline-none transition-colors hover:bg-emerald-100 hover:text-emerald-700"
+                        className="rounded-full bg-emerald-50 p-2 text-emerald-500 transition-colors outline-none hover:bg-emerald-100 hover:text-emerald-700"
                         onClick={onRestore}
                         title={t("common.restore")}
                       >
@@ -291,7 +337,7 @@ export default function RecordTabModal({
                     ) : onDelete && !isDeleted ? (
                       <button
                         type="button"
-                        className="rounded-full bg-red-50 p-2 text-red-500 outline-none transition-colors hover:bg-red-100 hover:text-red-700"
+                        className="rounded-full bg-red-50 p-2 text-red-500 transition-colors outline-none hover:bg-red-100 hover:text-red-700"
                         onClick={onDelete}
                         title={t("common.delete")}
                       >
@@ -300,7 +346,7 @@ export default function RecordTabModal({
                     ) : null}
                     <button
                       type="button"
-                      className="rounded-full bg-gray-100 p-2 text-gray-500 outline-none transition-colors hover:bg-gray-200 hover:text-gray-700"
+                      className="rounded-full bg-gray-100 p-2 text-gray-500 transition-colors outline-none hover:bg-gray-200 hover:text-gray-700"
                       onClick={onClose}
                     >
                       <X className="h-5 w-5" />
@@ -309,32 +355,69 @@ export default function RecordTabModal({
                 </div>
 
                 {/* Info: (20260327 - Luphia) Content Area */}
-                <div className="flex-1 min-h-0 overflow-hidden">
+                <div className="min-h-0 flex-1 overflow-hidden">
                   <div className="h-full w-full">
                     {/* Info: (20260327 - Luphia) 只要曾被點擊過就掛載，非目前 active 則用 hidden 隱藏以保留狀態 */}
                     {mountedTabs.has("journal") && !!journalId && (
-                      <div className={activeTab === "journal" ? "flex h-full flex-col" : "hidden"}>
-                        <JournalDetailModal isOpen={true} onClose={onClose} journalId={journalId} onUpdate={handleJournalUpdate} />
+                      <div
+                        className={
+                          activeTab === "journal"
+                            ? "flex h-full flex-col"
+                            : "hidden"
+                        }
+                      >
+                        <JournalDetailModal
+                          isOpen={true}
+                          onClose={onClose}
+                          journalId={journalId}
+                          onUpdate={handleJournalUpdate}
+                        />
                       </div>
                     )}
 
                     {mountedTabs.has("voucher") && !!voucherId && (
-                      <div className={activeTab === "voucher" ? "flex h-full flex-col" : "hidden"}>
-                        <VoucherDetailModal isOpen={true} onClose={onClose} voucherId={voucherId} onUpdate={handleVoucherUpdate} />
+                      <div
+                        className={
+                          activeTab === "voucher"
+                            ? "flex h-full flex-col"
+                            : "hidden"
+                        }
+                      >
+                        <VoucherDetailModal
+                          isOpen={true}
+                          onClose={onClose}
+                          voucherId={voucherId}
+                          onUpdate={handleVoucherUpdate}
+                        />
                       </div>
                     )}
 
                     {mountedTabs.has("esg") && !!esgId && (
-                      <div className={activeTab === "esg" ? "flex h-full flex-col" : "hidden"}>
-                        <EsgDetailModal isOpen={true} onClose={onClose} esgId={esgId} onSave={handleEsgUpdate} />
+                      <div
+                        className={
+                          activeTab === "esg"
+                            ? "flex h-full flex-col"
+                            : "hidden"
+                        }
+                      >
+                        <EsgDetailModal
+                          isOpen={true}
+                          onClose={onClose}
+                          esgId={esgId}
+                          onSave={handleEsgUpdate}
+                        />
                       </div>
                     )}
 
                     {mountedTabs.has("preview") && !!file && (
-                      <div className={activeTab === "preview" ? "block h-full" : "hidden"}>
+                      <div
+                        className={
+                          activeTab === "preview" ? "block h-full" : "hidden"
+                        }
+                      >
                         <div className="flex h-full flex-col">
                           <div className="flex-1 overflow-hidden bg-gray-50 p-0 lg:p-6">
-                            <div className="size-full overflow-hidden lg:rounded-xl border-0 lg:border border-gray-200 bg-white shadow-sm">
+                            <div className="size-full overflow-hidden border-0 border-gray-200 bg-white shadow-sm lg:rounded-xl lg:border">
                               <ZoomablePreview
                                 hasContent={!!file?.hash}
                                 fallbackText={t("ocr.no_image") as string}

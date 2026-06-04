@@ -57,7 +57,7 @@ export const adminMissionBoard = {
     markdown_input: "Markdown 輸入區",
     type_here: "請在此輸入您的 markdown...",
     pdf_preview: "PDF 預覽區",
-    brand: "陽光智能會計",
+    brand: "陽光智能碳會計",
     internal_document: "內部文件",
     system_report: "系統報告",
     footer_title: "用人工智能重塑碳會計",

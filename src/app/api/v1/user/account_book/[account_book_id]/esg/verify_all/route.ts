@@ -6,6 +6,10 @@ import { esgRepo } from "@/repositories/esg.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { teamRepo } from "@/repositories/team.repo";
 
+/**
+ * Info: (20260601 - Julian) ESG 一鍵核對
+ * PUT /api/v1/user/account_book/:account_book_id/esg/verify_all
+ */
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ account_book_id: string }> },
