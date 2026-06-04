@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, Fragment } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Check,
   Download,
@@ -19,16 +19,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 import Image from "next/image";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
-
-import {
-  Dialog,
-  DialogPanel,
-  DialogTitle,
-  Transition,
-  TransitionChild,
-} from "@headlessui/react";
-import { QRCodeSVG } from "qrcode.react";
-import { Copy, Trash2 } from "lucide-react";
+import PdfShareLinkModal from "@/components/pdf_tool/pdf_share_link_modal";
 
 enum ViewMode {
   EDIT = "edit",
@@ -41,151 +32,26 @@ enum AiActionType {
   POLISH = "polish",
 }
 
+// Info: (20260604 - Julian) AI 助手 menu
+interface IAiAssistant {
+  isOpen: boolean;
+  x: number;
+  y: number;
+  selectedText: string;
+  selectionStart: number;
+  selectionEnd: number;
+}
+
+// Info: (20260604 - Julian) AI 建議（採用/捨棄）
 interface IAiSuggestion {
-  isActive: boolean;
+  isOpen: boolean;
+  x: number;
+  y: number;
   originalContext: string;
   selectionStart: number;
   selectionEnd: number;
   selectedText: string;
   aiResult: string;
-  x: number;
-  y: number;
-}
-
-interface IAiText {
-  isOpen: boolean;
-  x: number;
-  y: number;
-  selectedText: string;
-  selectionStart: number;
-  selectionEnd: number;
-}
-
-function PdfShareLinkModal({
-  isOpen,
-  toggleShareLinkModal,
-  shareToken,
-  isRevoking,
-  handleRevokeShare,
-}: {
-  isOpen: boolean;
-  toggleShareLinkModal: () => void;
-  shareToken: string | null;
-  isRevoking: boolean;
-  handleRevokeShare: () => void;
-}) {
-  const { t } = useTranslation();
-
-  const linkUrl = shareToken
-    ? `${window.location.origin}/share/pdf/${shareToken}`
-    : "";
-
-  const copyToClipboard = async () => {
-    if (!shareToken) return;
-    await navigator.clipboard.writeText(linkUrl);
-  };
-
-  return (
-    <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-60" onClose={toggleShareLinkModal}>
-        <TransitionChild
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
-        </TransitionChild>
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <TransitionChild
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                <DialogTitle
-                  as="h3"
-                  className="mb-2 flex items-center gap-2 text-lg leading-6 font-bold text-gray-900"
-                >
-                  <Share2 size={20} className="text-blue-600" />
-                  分享 PDF
-                </DialogTitle>
-
-                <div className="mt-2">
-                  <p
-                    className="mb-4 text-sm text-gray-500"
-                    dangerouslySetInnerHTML={{
-                      __html: "任何擁有此連結的人皆可檢視此 PDF。",
-                    }}
-                  />
-
-                  <div className="mt-4 mb-6 flex justify-center">
-                    {shareToken && (
-                      <div className="inline-block rounded-xl border border-gray-100 bg-white p-3 shadow-sm">
-                        <QRCodeSVG
-                          value={linkUrl}
-                          size={160}
-                          level="M"
-                          className="h-auto w-full"
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-1.5">
-                    <input
-                      aria-label="Share link"
-                      readOnly
-                      value={shareToken ? linkUrl : ""}
-                      className="flex-1 border-none bg-transparent px-2 text-sm text-gray-600 outline-none focus:ring-0"
-                    />
-                    <button
-                      type="button"
-                      onClick={copyToClipboard}
-                      className="flex shrink-0 items-center gap-1 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-blue-50 hover:text-blue-600"
-                    >
-                      <Copy size={16} /> {t("analysis.share.copy")}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-4">
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
-                    onClick={handleRevokeShare}
-                    disabled={isRevoking || !shareToken}
-                  >
-                    {isRevoking ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      <Trash2 size={16} />
-                    )}
-                    {t("analysis.share.revoke")}
-                  </button>
-                  <button
-                    type="button"
-                    className="inline-flex justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
-                    onClick={toggleShareLinkModal}
-                  >
-                    {t("analysis.share.done")}
-                  </button>
-                </div>
-              </DialogPanel>
-            </TransitionChild>
-          </div>
-        </div>
-      </Dialog>
-    </Transition>
-  );
 }
 
 export default function PdfEditor({
@@ -208,8 +74,8 @@ export default function PdfEditor({
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.EDIT);
 
-  // Info: (20260603 - Julian) AI Context Menu State
-  const [aiMenu, setAiMenu] = useState<IAiText>({
+  // Info: (20260603 - Julian) AI Assistant Menu State
+  const [aiAssistantMenu, setAiAssistantMenu] = useState<IAiAssistant>({
     isOpen: false,
     x: 0,
     y: 0,
@@ -228,23 +94,23 @@ export default function PdfEditor({
   const [isRevoking, setIsRevoking] = useState<boolean>(false);
 
   useEffect(() => {
-    // Info: (20260603 - Julian) 點擊 menu 外時，關閉 ai menu
+    // Info: (20260603 - Julian) 點擊外部時，關閉 AI menu
     const handleClickOutside = (e: MouseEvent) => {
       if (isAiProcessing) return;
       const menuEl = document.getElementById("ai-context-menu");
       const suggestionEl = document.getElementById("ai-suggestion-menu");
       if (menuEl && menuEl.contains(e.target as Node)) return;
       if (suggestionEl && suggestionEl.contains(e.target as Node)) return;
-      setAiMenu((prev) => ({ ...prev, isOpen: false }));
+      setAiAssistantMenu((prev) => ({ ...prev, isOpen: false }));
     };
 
-    if (aiMenu.isOpen) {
+    if (aiAssistantMenu.isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [aiMenu.isOpen, isAiProcessing]);
+  }, [aiAssistantMenu.isOpen, isAiProcessing]);
 
   useEffect(() => {
     // Info: (20260603 - Julian) 檢查選取
@@ -261,11 +127,11 @@ export default function PdfEditor({
       if (start !== end) {
         const selectedText = textarea.value.substring(start, end);
 
-        setAiMenu((prev) => {
+        setAiAssistantMenu((prev) => {
           let x = prev.x;
           let y = prev.y;
 
-          // Info: (20260603 - Julian) 從 MouseEvent 取得 ai menu 位置；否則定位到 Textarea 中央位置
+          // Info: (20260603 - Julian) 從 MouseEvent 取得 AI menu 位置；否則定位到 Textarea 中央位置
           if (e instanceof MouseEvent) {
             x = e.clientX;
             y = e.clientY;
@@ -286,11 +152,13 @@ export default function PdfEditor({
           };
         });
       } else {
-        setAiMenu((prev) => (prev.isOpen ? { ...prev, isOpen: false } : prev));
+        setAiAssistantMenu((prev) =>
+          prev.isOpen ? { ...prev, isOpen: false } : prev,
+        );
       }
     };
 
-    // Info: (20260603 - Julian) MouseUp → 檢查選取；若點擊 ai menu 則不處理
+    // Info: (20260603 - Julian) MouseUp → 檢查選取；若點擊 AI menu 則不處理
     const handleGlobalMouseUp = (e: MouseEvent) => {
       const menuEl = document.getElementById("ai-context-menu");
       const suggestionEl = document.getElementById("ai-suggestion-menu");
@@ -373,10 +241,10 @@ export default function PdfEditor({
 
   // Info: (20260603 - Julian) 「AI 操作」處理
   const handleAiAction = async (actionType: AiActionType) => {
-    if (!aiMenu.selectedText || isAiProcessing) return;
+    if (!aiAssistantMenu.selectedText || isAiProcessing) return;
 
     setIsAiProcessing(true);
-    setAiMenu((prev) => ({ ...prev, isOpen: false }));
+    setAiAssistantMenu((prev) => ({ ...prev, isOpen: false }));
 
     let instruction = "";
     if (actionType === AiActionType.REWRITE) {
@@ -393,24 +261,25 @@ export default function PdfEditor({
         {
           method: "POST",
           body: JSON.stringify({
-            text: aiMenu.selectedText,
+            text: aiAssistantMenu.selectedText,
             instruction,
           }),
         },
       );
 
       if (response && response.payload && response.payload.result) {
+        // Info: (20260604 - Julian) 設置 AI 建議的座標、選取範圍及結果
         setAiSuggestion({
-          isActive: true,
+          isOpen: true,
+          x: aiAssistantMenu.x,
+          y: aiAssistantMenu.y,
           originalContext: markdownContext,
-          selectionStart: aiMenu.selectionStart,
-          selectionEnd: aiMenu.selectionEnd,
-          selectedText: aiMenu.selectedText,
+          selectionStart: aiAssistantMenu.selectionStart,
+          selectionEnd: aiAssistantMenu.selectionEnd,
+          selectedText: aiAssistantMenu.selectedText,
           aiResult: response.payload.result,
-          x: aiMenu.x,
-          y: aiMenu.y,
         });
-        setAiMenu((prev) => ({ ...prev, isOpen: false }));
+        setAiAssistantMenu((prev) => ({ ...prev, isOpen: false }));
       } else {
         setErrorModal({
           isOpen: true,
@@ -557,13 +426,13 @@ export default function PdfEditor({
   });
 
   // Info: (20260603 - Julian) AI 編輯 menu
-  const aiContextMenu = aiMenu.isOpen && (
+  const aiContextMenu = aiAssistantMenu.isOpen && (
     <div
       id="ai-context-menu"
       className="fixed z-50 flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl"
       style={{
-        top: `${aiMenu.y + 10}px`,
-        left: `${aiMenu.x + 10}px`,
+        top: `${aiAssistantMenu.y + 10}px`,
+        left: `${aiAssistantMenu.x + 10}px`,
       }}
       onMouseDown={(e) => e.preventDefault()} // Info: (20260603 - Julian) 阻止預設事件
     >
@@ -597,7 +466,7 @@ export default function PdfEditor({
   );
 
   // Info: (20260603 - Julian) 是否採用 AI 建議 menu
-  const aiSuggestionMenu = aiSuggestion?.isActive && (
+  const aiSuggestionMenu = aiSuggestion?.isOpen && (
     <div
       id="ai-suggestion-menu"
       className="absolute top-12 right-6 z-30 flex flex-col items-center gap-2 overflow-hidden rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 shadow-2xl"
@@ -669,7 +538,7 @@ export default function PdfEditor({
   );
 
   // Info: (20260603 - Julian) AI 編輯結果差異預覽
-  const diffPreview = aiSuggestion?.isActive && (
+  const diffPreview = aiSuggestion?.isOpen && (
     <div className="absolute inset-0 z-20 flex flex-col bg-white/80 p-6 backdrop-blur-sm">
       <div className="flex-1 overflow-y-auto rounded-xl border border-orange-200 bg-white p-6 font-mono text-sm leading-relaxed whitespace-pre-wrap text-gray-800 shadow-lg">
         {aiSuggestion.originalContext.substring(0, aiSuggestion.selectionStart)}
@@ -754,8 +623,8 @@ export default function PdfEditor({
             onChange={(e) => {
               setMarkdownContext(e.target.value);
               setShareToken(null); // Info: (20260604 - Julian) PDF 內容變更時，將 Token 設為 null
-              if (aiMenu.isOpen)
-                setAiMenu((prev) => ({ ...prev, isOpen: false }));
+              if (aiAssistantMenu.isOpen)
+                setAiAssistantMenu((prev) => ({ ...prev, isOpen: false }));
             }}
             readOnly={isAiProcessing}
             className={`flex-1 resize-none p-6 font-mono text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none focus:ring-inset ${
