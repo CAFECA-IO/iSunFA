@@ -77,7 +77,7 @@ function PdfShareLinkModal({
   const { t } = useTranslation();
 
   const linkUrl = shareToken
-    ? `${window.location.origin}/share/report/${shareToken}`
+    ? `${window.location.origin}/share/pdf/${shareToken}`
     : "";
 
   const copyToClipboard = async () => {
