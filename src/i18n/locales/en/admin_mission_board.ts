@@ -53,6 +53,7 @@ export const adminMissionBoard = {
     edit_markdown: "Edit Markdown",
     preview_pdf: "Preview PDF",
     download_pdf: "Download PDF",
+    share_pdf: "Share PDF Link",
     generating: "Generating...",
     markdown_input: "Markdown Input",
     type_here: "Type your markdown here...",
@@ -63,6 +64,32 @@ export const adminMissionBoard = {
     footer_title: "Reinventing Carbon Accounting with AI",
     footer_text:
       "© {{year}} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal.",
+    ai_assistant: {
+      ai_assistant_title: "AI Text Assistant",
+      custom: "Custom Prompt",
+      custom_placeholder: "Enter custom instruction...",
+      rewrite: "Rewrite & Simplify",
+      expand: "Expand Details",
+      polish: "Polish & Refine",
+      ai_suggestion_title: "Process AI Response",
+      ai_suggestion_replace: "Replace Selection",
+      ai_suggestion_insert: "Insert Below",
+      ai_suggestion_discard: "Discard Changes",
+      ai_is_thinking: "AI is thinking",
+      stop_thinking: "Stop Thinking",
+      ai_no_response:
+        "AI is temporarily unresponsive or unable to provide a valid result. Please try again later!",
+      ai_timeout:
+        "Network timeout or system error. Please check your connection and try again later!",
+    },
+    share_link_modal: {
+      title: "Share PDF Link",
+      subtitle: "Anyone with this link can view this PDF.",
+      copy: "Copy",
+      done: "Done",
+      revoke: "Revoke",
+      copy_success: "Link copied to clipboard!",
+    },
   },
   gc: {
     btn_text: "Execute GC Cleanup",

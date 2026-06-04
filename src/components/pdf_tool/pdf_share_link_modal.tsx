@@ -69,14 +69,16 @@ export default function PdfShareLinkModal({
                   className="mb-2 flex items-center gap-2 text-lg leading-6 font-bold text-gray-900"
                 >
                   <Share2 size={20} className="text-blue-600" />
-                  分享 PDF
+                  {t("admin_mission_board.pdf_editor.share_link_modal.title")}
                 </DialogTitle>
 
                 <div className="mt-2">
                   <p
                     className="mb-4 text-sm text-gray-500"
                     dangerouslySetInnerHTML={{
-                      __html: "任何擁有此連結的人皆可檢視此 PDF。",
+                      __html: t(
+                        "admin_mission_board.pdf_editor.share_link_modal.subtitle",
+                      ),
                     }}
                   />
 

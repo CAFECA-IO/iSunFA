@@ -2,20 +2,13 @@
 
 import { useState, useRef, useEffect } from "react";
 import {
-  Brush,
-  Check,
   CirclePause,
-  CornerDownRight,
   Download,
   Edit3,
   Eye,
   Loader2,
-  Send,
   Share2,
   Sparkles,
-  Type,
-  Wand2,
-  X as XIcon,
 } from "lucide-react";
 import { MarkdownContent } from "@/components/common/markdown_content";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -23,7 +16,8 @@ import Image from "next/image";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import PdfShareLinkModal from "@/components/pdf_tool/pdf_share_link_modal";
-import { AiRefineType } from "@/constants/ai_refine_type";
+import { AiContextMenu } from "@/components/pdf_tool/ai_context_menu";
+import { AiSuggestionMenu } from "@/components/pdf_tool/ai_suggestion_menu";
 
 enum ViewMode {
   EDIT = "edit",
@@ -320,9 +314,9 @@ export default function PdfEditor({
       } else {
         setErrorModal({
           isOpen: true,
-          message:
-            t("admin_mission_board.pdf_editor.ai_no_response") ||
-            "AI 暫時無法回應或缺乏有效結果，請稍後再試！",
+          message: t(
+            "admin_mission_board.pdf_editor.ai_assistant.ai_no_response",
+          ),
         });
       }
     } catch (error: unknown) {
@@ -337,9 +331,7 @@ export default function PdfEditor({
       console.error("Failed to refine text:", error);
       setErrorModal({
         isOpen: true,
-        message:
-          t("admin_mission_board.pdf_editor.ai_timeout") ||
-          "網路連線逾時或系統異常，請檢查網路狀態並稍後再試！",
+        message: t("admin_mission_board.pdf_editor.ai_assistant.ai_timeout"),
       });
     } finally {
       setIsAiProcessing(false);
@@ -447,173 +439,45 @@ export default function PdfEditor({
     }
   };
 
-  const aiOptions = Object.entries(AiRefineType).map(([key, value]) => {
-    const iconMap: Record<
-      AiRefineType,
-      React.ComponentType<{ size?: number }>
-    > = {
-      [AiRefineType.REWRITE]: Wand2,
-      [AiRefineType.EXPAND]: Brush,
-      [AiRefineType.POLISH]: Type,
-    };
-
-    // ToDo: (20260603 - Julian) 處理翻譯
-    const tKey: Record<AiRefineType, string> = {
-      [AiRefineType.REWRITE]: "精簡縮寫",
-      [AiRefineType.EXPAND]: "擴寫",
-      [AiRefineType.POLISH]: "潤飾流暢",
-    };
-
-    return {
-      key,
-      value,
-      icon: iconMap[value],
-      text: tKey[value],
-    };
-  });
-
   // Info: (20260603 - Julian) AI 編輯 menu
   const aiContextMenu = aiAssistantMenu.isOpen && (
-    <div
-      id="ai-context-menu"
-      role="presentation"
-      className="fixed z-50 flex w-72 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl"
-      style={{
-        top: `${aiAssistantMenu.y + 10}px`,
-        left: `${aiAssistantMenu.x + 10}px`,
-      }}
-      onMouseDown={(e) => {
-        // Info: (20260604 - Julian) 允許 input 取得焦點
-        if ((e.target as HTMLElement).tagName === "INPUT") {
-          return;
-        }
-        e.preventDefault();
-      }}
-    >
-      <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-3 py-2 text-xs font-bold text-gray-500">
-        <Sparkles size={16} />
-        AI Assistant
-      </div>
-
-      {/* Info: (20260604 - Julian) 自訂 AI 操作 */}
-      <div className="flex items-center gap-1 border-b border-gray-100 p-2">
-        <input
-          id="ai-custom-prompt"
-          type="text"
-          aria-label="自訂指令"
-          placeholder="輸入自訂指令..."
-          value={customAiPrompt}
-          onChange={(e) => setCustomAiPrompt(e.target.value)}
-          onKeyDown={(e) => {
-            // Info: (20260604 - Julian) 避免與中文輸入法衝突
-            if (e.nativeEvent.isComposing) return;
-
-            if (e.key === "Enter" && customAiPrompt.trim() && !isAiProcessing) {
-              e.preventDefault();
-              handleAiAction(customAiPrompt.trim());
-            }
-          }}
-          className="flex-1 rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-700 transition-colors placeholder:text-gray-400 focus:border-orange-500 focus:bg-white focus:ring-1 focus:ring-orange-500 focus:outline-none"
-        />
-        <button
-          type="button"
-          onMouseDown={(e) => {
-            e.preventDefault();
-            if (customAiPrompt.trim() && !isAiProcessing) {
-              handleAiAction(customAiPrompt.trim());
-            }
-          }}
-          disabled={isAiProcessing || !customAiPrompt.trim()}
-          className="flex shrink-0 items-center justify-center rounded-md bg-emerald-600 p-1.5 text-white transition-colors hover:bg-emerald-500 disabled:opacity-50 disabled:hover:bg-emerald-600"
-        >
-          <Send size={14} />
-        </button>
-      </div>
-
-      {/* Info: (20260604 - Julian) 預設 AI 操作 */}
-      <div className="flex items-center justify-around p-1">
-        {aiOptions.map((option) => (
-          <button
-            key={option.key}
-            onMouseDown={(e) => {
-              // Info: (20260603 - Julian) 按下滑鼠時，不要觸發 onBlur
-              e.preventDefault();
-              e.stopPropagation();
-              if (!isAiProcessing) handleAiAction(option.value);
-            }}
-            disabled={isAiProcessing}
-            className="flex flex-1 flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs text-gray-600 transition-colors enabled:hover:bg-orange-50 enabled:hover:text-orange-700 disabled:opacity-50"
-          >
-            {isAiProcessing ? (
-              <Loader2 size={16} className="animate-spin text-gray-400" />
-            ) : (
-              <option.icon size={16} />
-            )}
-            <span className="font-medium">{option.text}</span>
-          </button>
-        ))}
-      </div>
-    </div>
+    <AiContextMenu
+      isOpen={aiAssistantMenu.isOpen}
+      x={aiAssistantMenu.x}
+      y={aiAssistantMenu.y}
+      customAiPrompt={customAiPrompt}
+      setCustomAiPrompt={setCustomAiPrompt}
+      isAiProcessing={isAiProcessing}
+      handleAiAction={handleAiAction}
+    />
   );
 
   // Info: (20260603 - Julian) 是否採用 AI 建議 menu
-  const aiSuggestionMenu = aiSuggestion?.isOpen && (
-    <div
-      id="ai-suggestion-menu"
-      role="presentation"
-      className="absolute top-12 right-6 z-30 flex flex-col items-center gap-2 overflow-hidden rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 shadow-2xl"
-      onMouseDown={(e) => e.preventDefault()}
-    >
-      <div className="flex w-full items-center justify-center gap-1 border-b border-orange-100 pb-2 text-xs font-bold text-orange-600">
-        <Sparkles size={14} />
-        處理 AI 回應
-      </div>
-      <div className="mt-1 flex w-full flex-col gap-2">
-        <button
-          type="button"
-          onClick={() => {
-            const { originalContext, selectionStart, selectionEnd, aiResult } =
-              aiSuggestion;
-            const newContext =
-              originalContext.substring(0, selectionStart) +
-              aiResult +
-              originalContext.substring(selectionEnd);
-            setMarkdownContext(newContext);
-            setAiSuggestion(null);
-          }}
-          className="flex w-full items-center justify-center gap-1 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-green-500"
-        >
-          <Check size={14} />
-          取代選取
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            const { originalContext, selectionEnd, aiResult } = aiSuggestion;
-            // Info: (20260604 - Julian) 插入於後方，保留原字串
-            const insertText = `\n\n${aiResult}`;
-            const newContext =
-              originalContext.substring(0, selectionEnd) +
-              insertText +
-              originalContext.substring(selectionEnd);
-            setMarkdownContext(newContext);
-            setAiSuggestion(null);
-          }}
-          className="flex w-full items-center justify-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-blue-500"
-        >
-          <CornerDownRight size={14} />
-          插入於後方
-        </button>
-        <button
-          type="button"
-          onClick={() => setAiSuggestion(null)}
-          className="flex w-full items-center justify-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
-        >
-          <XIcon size={14} />
-          捨棄
-        </button>
-      </div>
-    </div>
+  const aiSuggestionMenuEl = aiSuggestion?.isOpen && (
+    <AiSuggestionMenu
+      isOpen={aiSuggestion.isOpen}
+      onReplace={() => {
+        const { originalContext, selectionStart, selectionEnd, aiResult } =
+          aiSuggestion;
+        const newContext =
+          originalContext.substring(0, selectionStart) +
+          aiResult +
+          originalContext.substring(selectionEnd);
+        setMarkdownContext(newContext);
+        setAiSuggestion(null);
+      }}
+      onInsert={() => {
+        const { originalContext, selectionEnd, aiResult } = aiSuggestion;
+        const insertText = `\n\n${aiResult}`;
+        const newContext =
+          originalContext.substring(0, selectionEnd) +
+          insertText +
+          originalContext.substring(selectionEnd);
+        setMarkdownContext(newContext);
+        setAiSuggestion(null);
+      }}
+      onDiscard={() => setAiSuggestion(null)}
+    />
   );
 
   // Info: (20260603 - Julian) AI 思考中的動畫
@@ -625,7 +489,9 @@ export default function PdfEditor({
             <Sparkles size={16} className="animate-pulse" />
           </div>
           <div className="flex items-center gap-1 font-bold text-orange-600">
-            <span>AI 正在思考中</span>
+            <span>
+              {t("admin_mission_board.pdf_editor.ai_assistant.ai_is_thinking")}
+            </span>
             <span className="flex gap-0.5">
               <span
                 className="animate-bounce"
@@ -658,7 +524,7 @@ export default function PdfEditor({
           className="flex items-center gap-2 rounded-full border border-gray-200 px-6 py-1.5 text-xs font-bold text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700"
         >
           <CirclePause size={16} />
-          中斷思考
+          {t("admin_mission_board.pdf_editor.ai_assistant.stop_thinking")}
         </button>
       </div>
     </div>
@@ -730,7 +596,7 @@ export default function PdfEditor({
             ) : (
               <Share2 size={16} />
             )}
-            分享 PDF 連結
+            {t("admin_mission_board.pdf_editor.share_pdf")}
           </button>
         </div>
       </div>
@@ -766,7 +632,7 @@ export default function PdfEditor({
           {diffPreview}
 
           {/* Info: (20260603 - Julian) Pinned AI Suggestion Menu */}
-          {aiSuggestionMenu}
+          {aiSuggestionMenuEl}
 
           {/* Info: (20260603 - Julian) AI Processing Animation */}
           {aiThinkingAnim}

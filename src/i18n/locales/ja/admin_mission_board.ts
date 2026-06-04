@@ -53,7 +53,8 @@ export const adminMissionBoard = {
       "マークダウンを記述し、iSunFA専用フォーマットのPDFとしてエクスポートします。",
     edit_markdown: "マークダウンを編集",
     preview_pdf: "PDFをプレビュー",
-    download_pdf: "PDFをダウンロード",
+    download_pdf: "PDF をダウンロード",
+    share_pdf: "PDF リンクを共有",
     generating: "生成中...",
     markdown_input: "マークダウン入力",
     type_here: "ここにマークダウンを入力してください...",
@@ -64,6 +65,32 @@ export const adminMissionBoard = {
     footer_title: "AIによる炭素会計の再構築",
     footer_text:
       "© {{year}} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal.",
+    ai_assistant: {
+      ai_assistant_title: "AI テキストアシスタント",
+      custom: "カスタムプロンプト",
+      custom_placeholder: "カスタム指示を入力...",
+      rewrite: "要約・短縮",
+      expand: "詳細に展開",
+      polish: "推敲・洗練",
+      ai_suggestion_title: "AI 応答の処理",
+      ai_suggestion_replace: "選択範囲を置換",
+      ai_suggestion_insert: "下部に挿入",
+      ai_suggestion_discard: "変更を破棄",
+      ai_is_thinking: "AI が思考中",
+      stop_thinking: "思考を中断",
+      ai_no_response:
+        "AI が一時的に応答しないか、有効な結果がありません。後でもう一度お試しください！",
+      ai_timeout:
+        "ネットワークタイムアウトまたはシステムエラーです。ネットワークの状態を確認して、後でもう一度お試しください！",
+    },
+    share_link_modal: {
+      title: "PDF リンクを共有",
+      subtitle: "このリンクを知っている人は誰でもこの PDF を閲覧できます。",
+      copy: "コピー",
+      done: "完了",
+      revoke: "取り消し",
+      copy_success: "リンクをクリップボードにコピーしました！",
+    },
   },
   gc: {
     btn_text: "GCクリーンアップを実行",
