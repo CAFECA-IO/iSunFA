@@ -128,11 +128,15 @@ export function EsgRow({
   };
 
   const mobileActionBtn = (
-    <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+    <div className="shrink-0">
       {record.isDeleted ? (
         <button
           title={t("common.restore")}
-          onClick={() => onRestore(record.id)}
+          aria-label={t("common.restore")}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRestore(record.id);
+          }}
           className="rounded-full bg-emerald-100 p-2.5 text-emerald-600"
         >
           <Undo2 size={20} />
@@ -140,7 +144,11 @@ export function EsgRow({
       ) : (
         <button
           title={t("common.delete")}
-          onClick={() => onDelete(record.id)}
+          aria-label={t("common.delete")}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(record.id);
+          }}
           className="rounded-full bg-red-100 p-2.5 text-red-600"
         >
           <Trash2 size={20} />
@@ -158,6 +166,7 @@ export function EsgRow({
       {record.isDeleted ? (
         <button
           title={t("common.restore")}
+          aria-label={t("common.restore")}
           onClick={() => onRestore(record.id)}
           className="rounded-full p-2 text-slate-400 transition-colors hover:bg-emerald-100 hover:text-emerald-500"
         >
@@ -166,6 +175,7 @@ export function EsgRow({
       ) : (
         <button
           title={t("common.delete")}
+          aria-label={t("common.delete")}
           onClick={() => onDelete(record.id)}
           className="rounded-full p-2 text-slate-400 transition-colors hover:bg-red-100 hover:text-red-500"
         >
