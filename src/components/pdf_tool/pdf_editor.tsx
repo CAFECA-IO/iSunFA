@@ -393,7 +393,7 @@ export default function PdfEditor({
                       property.toLowerCase().includes("image")
                     )
                       return "none";
-                    return "rgb(17, 24, 39)"; // Safe fallback
+                    return "rgb(17, 24, 39)"; // Info: (20260426 - Luphia) Safe fallback
                   }
                   return val;
                 };
@@ -415,7 +415,7 @@ export default function PdfEditor({
                 String(prop).toLowerCase().includes("image")
               )
                 return "none";
-              return "rgb(17, 24, 39)"; // Safe fallback
+              return "rgb(17, 24, 39)"; // Info: (20260426 - Luphia) Safe fallback
             }
 
             return val;
