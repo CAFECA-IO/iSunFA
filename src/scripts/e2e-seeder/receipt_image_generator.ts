@@ -1,6 +1,8 @@
 import * as fs from "fs";
 import * as path from "path";
+import sharp from "sharp";
 import Decimal from "decimal.js";
+import { SystemAccountNodes } from "@/constants/system_account_codes";
 
 interface ISimulatedVoucherLine {
   id: string;
@@ -49,6 +51,7 @@ interface IReceiptParams {
   esgRecord?: { carbonAmount: number };
   watermarkText?: string; // Info: (20260519 - Julian) 動態浮水印文字
   isSales?: boolean;
+  isBankReceipt?: boolean;
 }
 
 // Info: (20260502 - Tzuhan) 產生隨機統一編號
@@ -330,7 +333,7 @@ const buildReceiptSVG = (params: IReceiptParams, isNoisy: boolean): string => {
     <g ${noiseFilter} ${transform} class="receipt-text">
       <!-- Title -->
       <text x="350" y="45" font-family="'Inter', 'Noto Sans TC', sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="${theme.primary}">${sellerName}</text>
-      <text x="350" y="75" font-family="'Inter', 'Noto Sans TC', sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="${theme.primary}">電子發票證明聯</text>
+      <text x="350" y="75" font-family="'Inter', 'Noto Sans TC', sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="${theme.primary}">${params.isBankReceipt ? "銀行入帳憑單" : "電子發票證明聯"}</text>
       <text x="350" y="100" font-family="'Inter', 'Noto Sans TC', sans-serif" font-size="18" text-anchor="middle" fill="${theme.text}">${tradingDate}</text>
       
       <!-- Top Left Info -->
@@ -404,14 +407,14 @@ const buildReceiptSVG = (params: IReceiptParams, isNoisy: boolean): string => {
   `;
 };
 
-export const generateReceiptImages = (stockId: string) => {
+export const generateReceiptImages = async (stockId: string) => {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/2024`);
 
   const vouchersPath = path.join(
     dataDir,
     "inputs",
     "simulated_data",
-    "phase5_articulation_test",
+    "e2e_roadmap-sprint1",
     "simulated_vouchers.json",
   );
 
@@ -419,7 +422,7 @@ export const generateReceiptImages = (stockId: string) => {
     dataDir,
     "inputs",
     "simulated_data",
-    "phase5_articulation_test",
+    "e2e_roadmap-sprint1",
     "receipts",
   );
 
@@ -452,12 +455,19 @@ export const generateReceiptImages = (stockId: string) => {
   let generatedCount = 0;
   let noiseCount = 0;
 
-  vouchers.forEach((voucher) => {
+  for (const voucher of vouchers) {
     // Info: (20260502 - Tzuhan) 僅為外部供應商或現金交易產生實體憑證。
     // Info: (20260502 - Tzuhan) 略過如折舊等無實體憑證的內部調整。
-    if (voucher.voucherNumber.startsWith("ADJ-")) return;
+    if (voucher.voucherNumber.startsWith("ADJ-")) continue;
 
     // Info: (20260502 - Tzuhan) 找出主要的分錄以取得描述與金額
+    if (
+      voucher.lines.length === 0 ||
+      (voucher.lines[0].debitAmount === 0 &&
+        voucher.lines[0].creditAmount === 0)
+    ) {
+      continue;
+    }
     const mainLine =
       voucher.lines.find((l) => l.debitAmount > 0) || voucher.lines[0];
     const vendorName = mainLine.vendor || "現金交易客戶/供應商";
@@ -478,13 +488,25 @@ export const generateReceiptImages = (stockId: string) => {
     const totalAmount =
       mainLine.debitAmount > 0 ? mainLine.debitAmount : mainLine.creditAmount;
 
-    // Info: (20260519 - Julian) 計算含稅反推未稅
+    // Info: (20260601 - Tzuhan) 判斷是否為籌資或借款等銀行往來憑證 (股本 3110, 短期借款 2100)
+    const isBankReceipt = voucher.lines.some(
+      (l) =>
+        l.accountingCode === SystemAccountNodes.COMMON_STOCK_CAPITAL ||
+        l.accountingCode === SystemAccountNodes.SHORT_TERM_BORROWINGS,
+    );
     const totalDecimal = new Decimal(totalAmount);
-    // Info: (20260519 - Julian) netAmount = Math.round(total / 1.05)
-    const netAmountDecimal = totalDecimal
-      .div(1.05)
-      .toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
-    const taxAmountDecimal = totalDecimal.minus(netAmountDecimal);
+    let netAmountDecimal: Decimal;
+    let taxAmountDecimal: Decimal;
+
+    if (isBankReceipt) {
+      netAmountDecimal = totalDecimal;
+      taxAmountDecimal = new Decimal(0);
+    } else {
+      netAmountDecimal = totalDecimal
+        .div(1.05)
+        .toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
+      taxAmountDecimal = totalDecimal.minus(netAmountDecimal);
+    }
 
     // Info: (20260520 - Julian) 優先使用現有的細項
     const items =
@@ -513,20 +535,22 @@ export const generateReceiptImages = (stockId: string) => {
       esgRecord: mainLine.esgRecords?.[0],
       watermarkText,
       isSales,
+      isBankReceipt,
     };
 
-    const isNoisy = Math.random() < 0.15;
+    // User Update: 現階段先不測髒汙雜訊，純驗證解析邏輯是否正確
+    const isNoisy = false; // Math.random() < 0.1;
     if (isNoisy) noiseCount++;
 
     const svgContent = buildReceiptSVG(params, isNoisy);
 
-    const svgPath = path.join(receiptsDir, `${voucher.voucherNumber}.svg`);
-    fs.writeFileSync(svgPath, svgContent.trim(), "utf-8");
+    const pngPath = path.join(receiptsDir, `${voucher.voucherNumber}.png`);
+    await sharp(Buffer.from(svgContent.trim())).png().toFile(pngPath);
     generatedCount++;
-  });
+  }
 
   console.log(
-    `[SUCCESS] Generated ${generatedCount} receipt SVGs (including ${noiseCount} noisy ones) for ${stockId} in ${receiptsDir}.`,
+    `[SUCCESS] Generated ${generatedCount} receipt PNGs (including ${noiseCount} noisy ones) for ${stockId} in ${receiptsDir}.`,
   );
 };
 
@@ -539,5 +563,5 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     );
     process.exit(1);
   }
-  generateReceiptImages(targetStock);
+  await generateReceiptImages(targetStock);
 }

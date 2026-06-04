@@ -24,7 +24,6 @@ import { EsgIntensity } from "@/interfaces/esg";
 import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
 import { CoefficientCategory, ICoefficient } from "@/interfaces/coefficient";
 import {
-  IBaseStringFilter,
   ICoefficientFilterOptions,
   IEsgRecordFilterOptions,
 } from "@/interfaces/data_filter_option";
@@ -163,34 +162,44 @@ export class EsgRepository implements IEsgRepository {
   private buildEsgRecordWhereClause(
     options: IEsgRecordFilterOptions,
   ): Prisma.EsgRecordWhereInput {
-    // Info: (20260508 - Julian) 查詢條件：帳簿、軟刪除
+    // Info: (20260508 - Julian) 查詢條件：帳簿
     const where: Prisma.EsgRecordWhereInput = {
       accountBookId: options.accountBookId,
-      deletedAt: null,
     };
+
+    // Info: (20260603 - Tzuhan) 如果 hideDeleted 為 true，則過濾掉已刪除的紀錄
+    if (options.hideDeleted) {
+      where.deletedAt = null;
+    }
+
+    const andConditions: Prisma.EsgRecordWhereInput[] = [];
 
     // Info: (20260311 - Julian) 關鍵字篩選：id / vendor / activityType
     if (options.keyword) {
-      where.OR = [
-        { id: { contains: options.keyword, mode: "insensitive" } },
-        { vendor: { contains: options.keyword, mode: "insensitive" } },
-        { activityType: { contains: options.keyword, mode: "insensitive" } },
-      ];
+      andConditions.push({
+        OR: [
+          { id: { contains: options.keyword, mode: "insensitive" } },
+          { vendor: { contains: options.keyword, mode: "insensitive" } },
+          { activityType: { contains: options.keyword, mode: "insensitive" } },
+        ],
+      });
     }
 
     // Info: (20260508 - Julian) 審核狀態過濾
     if (options.verifyStatus) {
-      where.isVerified = options.verifyStatus === VerifyStatus.VERIFIED;
+      andConditions.push({
+        isVerified: options.verifyStatus === VerifyStatus.VERIFIED,
+      });
     }
 
     // Info: (20260508 - Julian) 排放強度過濾
     if (options.intensity) {
-      where.intensity = options.intensity as EsgIntensity;
+      andConditions.push({ intensity: options.intensity as EsgIntensity });
     }
 
     // Info: (20260508 - Julian) 排放範圍過濾
     if (options.scope) {
-      where.scope = options.scope as EsgScope;
+      andConditions.push({ scope: options.scope as EsgScope });
     }
 
     // Info: (20260508 - Julian) 年度、月份過濾邏輯
@@ -206,15 +215,12 @@ export class EsgRepository implements IEsgRepository {
         endDate = new Date(options.year, 11, 31, 23, 59, 59, 999);
       }
 
-      where.OR = [
-        {
-          tradingDate: {
-            gte: startDate.toISOString(),
-            lte: endDate.toISOString(),
-          },
+      andConditions.push({
+        tradingDate: {
+          gte: startDate,
+          lte: endDate,
         },
-        { AND: [{ tradingDate: { gte: startDate, lte: endDate } }] },
-      ];
+      });
     }
 
     // Info: (20260508 - Julian) 日期過濾邏輯
@@ -222,18 +228,17 @@ export class EsgRepository implements IEsgRepository {
       const gte = options.startDate ? new Date(options.startDate) : undefined;
       const lte = options.endDate ? new Date(options.endDate) : undefined;
 
-      const dateCondition: IBaseStringFilter = {};
-      if (gte) dateCondition.gte = gte.toISOString();
-      if (lte) dateCondition.lte = lte.toISOString();
+      const dateCondition: Prisma.DateTimeFilter = {};
+      if (gte) dateCondition.gte = gte;
+      if (lte) dateCondition.lte = lte;
 
-      const stringCondition: IBaseStringFilter = {};
-      if (gte) stringCondition.gte = gte.toISOString();
-      if (lte) stringCondition.lte = lte.toISOString();
+      andConditions.push({
+        tradingDate: dateCondition,
+      });
+    }
 
-      where.OR = [
-        { tradingDate: stringCondition },
-        { AND: [{ tradingDate: dateCondition }] },
-      ];
+    if (andConditions.length > 0) {
+      where.AND = andConditions;
     }
 
     return where;

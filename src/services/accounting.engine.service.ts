@@ -1,4 +1,5 @@
 import { IAggregatedDocumentResult } from "@/skills/utils/document_parser_db_sync";
+import { Prisma } from "@/generated";
 import { IParsedVoucherLine } from "@/interfaces/voucher";
 import {
   UniversalAccountTag,
@@ -344,5 +345,25 @@ export class AccountingEngineService {
     // Info: (20260526 - Tzuhan) 預設：沒有跨月情況，原樣回傳
     results.push(payload);
     return results;
+  }
+
+  public static aggregateVoucherLines(
+    linesToCreate: Prisma.VoucherLineCreateWithoutVoucherInput[],
+  ): Prisma.VoucherLineCreateWithoutVoucherInput[] {
+    const aggregatedLines: Prisma.VoucherLineCreateWithoutVoucherInput[] = [];
+    for (const line of linesToCreate) {
+      const existingLine = aggregatedLines.find(
+        (l) =>
+          l.accountingCode === line.accountingCode &&
+          l.isDebit === line.isDebit,
+      );
+      if (existingLine) {
+        existingLine.amount =
+          BigInt(existingLine.amount as bigint) + BigInt(line.amount as bigint);
+      } else {
+        aggregatedLines.push(line);
+      }
+    }
+    return aggregatedLines;
   }
 }

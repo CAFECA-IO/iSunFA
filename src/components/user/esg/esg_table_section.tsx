@@ -46,7 +46,7 @@ export default function EsgTableSection({
   >("all");
   const [filteredIntensity, setFilteredIntensity] = useState<string>("all");
   const [filteredScope, setFilteredScope] = useState<string>("all");
-  const [hideDeleted, setHideDeleted] = useState<boolean>(false);
+  const [hideDeleted, setHideDeleted] = useState<boolean>(true);
 
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState<boolean>(false);
   const [isVerifyAllConfirmOpen, setIsVerifyAllConfirmOpen] =
