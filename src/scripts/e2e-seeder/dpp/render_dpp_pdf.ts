@@ -1,6 +1,5 @@
 import * as fs from "fs";
 import * as path from "path";
-import puppeteer from "puppeteer";
 
 export async function renderDppPdf(stockId: string, year: string = "2024") {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
@@ -33,7 +32,10 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
 
     const dppData = JSON.parse(fs.readFileSync(groundTruthPath, "utf-8"));
 
-    const blueprintPath = path.join(baseDir, "fastener_blueprint.png");
+    let blueprintPath = path.join(productMockDir, "fastener_blueprint.png");
+    if (!fs.existsSync(blueprintPath)) {
+      blueprintPath = path.join(baseDir, "fastener_blueprint.png");
+    }
     let blueprintBase64 = "";
     if (fs.existsSync(blueprintPath)) {
       blueprintBase64 = fs.readFileSync(blueprintPath).toString("base64");
@@ -44,6 +46,16 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
       preConsumerShare: number;
       postConsumerShare: number;
       primaryMaterial: number;
+    }
+
+    interface IChemicalElement {
+      element: string;
+      percentage: number;
+    }
+
+    interface IMaterialComposition {
+      materialName: string;
+      elements: IChemicalElement[];
     }
 
     const tCO2e = dppData.carbonFootprint.total_tCO2e;
@@ -107,8 +119,8 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
       margin-bottom: 12px;
       font-size: 14px;
     }
-    .kv-key { color: #cbd5e1; line-height: 1.4; }
-    .kv-val { color: #f8fafc; font-weight: 600; white-space: nowrap; text-align: right; margin-left: 15px; }
+    .kv-key { color: #cbd5e1; line-height: 1.4; flex-shrink: 0; }
+    .kv-val { color: #f8fafc; font-weight: 600; text-align: right; margin-left: 15px; word-break: break-word; }
     
     /* Circularity Chart Simulation */
     .recycled-bar {
@@ -171,13 +183,13 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
       <div class="kv-row"><span class="kv-key">CN Code</span><span class="kv-val">${dppData.general.cnCode || "7318.15"}</span></div>
       <div class="kv-row"><span class="kv-key">Category</span><span class="kv-val">${dppData.general.category}</span></div>
       <div class="kv-row"><span class="kv-key">Weight</span><span class="kv-val">${dppData.general.weightKg} kg</span></div>
-      <div class="kv-row"><span class="kv-key">Facility</span><span class="kv-val">${dppData.general.facility}</span></div>
+      <div class="kv-row"><span class="kv-key">Facility</span><span class="kv-val">${dppData.general.facility} (UNLOCODE: ${dppData.general.facilityUNLOCODE || "N/A"})</span></div>
       <div class="kv-row"><span class="kv-key">Manufactured Date</span><span class="kv-val">${dppData.general.manufacturedDate}</span></div>
     </div>
     <div class="card">
       <h2>Carbon Footprint Summary</h2>
       <div style="font-size: 42px; font-weight: bold; color: #10b981; text-align: center; margin-top: 10px;">
-        ${dppData.carbonFootprint.total_tCO2e} <span style="font-size: 16px; color: #94a3b8;">tCO₂e</span>
+        ${dppData.carbonFootprint.total_tCO2e} <span style="font-size: 16px; color: #94a3b8;">tonnes CO₂e</span>
       </div>
       
       <div style="display: flex; align-items: center; justify-content: center; gap: 30px; margin: 25px 0;">
@@ -203,6 +215,7 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
       <div class="kv-row"><span class="kv-key">Indirect Emissions (Scope 2)</span><span class="kv-val">${dppData.carbonFootprint.breakdown.indirectEmissionsScope2} tCO₂e</span></div>
     </div>
   </div>
+  <div style="page-break-before: always; height: 40px;"></div>
   <div class="card" style="margin-bottom: 30px;">
     <h2>Circularity & Material Composition</h2>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
@@ -230,7 +243,7 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
                     m.material.includes(c.materialName),
                 )
                 .elements.map(
-                  (e: IChemicalElement) => `${e.element} ${e.percentage}%`,
+                  (e: IChemicalElement) => `${e.element} ${String(e.percentage).replace(/,/g, '.')}%`,
                 )
                 .join(", ")}
             </div>
@@ -253,8 +266,7 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
         .join("")}
     </div>
   </div>
-  <div style="page-break-before: always; height: 40px;"></div>
-  <div style="display: flex; flex-direction: column; gap: 20px;">
+  <div style="display: flex; flex-direction: column; gap: 30px;">
     <div class="card">
       <h2>Durability & Repair Guidelines</h2>
       <div class="kv-row"><span class="kv-key">Physical Lifespan</span><span class="kv-val">${dppData.durabilityAndRepair.physicalLifespanYears} Years</span></div>
@@ -278,7 +290,7 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
     </div>
   </div>
   <div style="text-align: center; margin-top: 20px; padding: 15px; border-top: 1px dashed #334155; color: #94a3b8; font-size: 12px; line-height: 1.6;">
-    * Carbon footprint calculated in accordance with <b>${dppData.carbonFootprint.methodology || "ISO 14067 (Cradle-to-Gate)"}</b>.<br>
+    * Carbon footprint evaluated according to ISO 14067 / CBAM Implementing Regulation (EU) 2023/1773. System boundary: Cradle-to-Gate.<br>
     * Subject to Customs Nomenclature (CN) Code: <b>${dppData.general.cnCode || "7318.15"}</b>.
   </div>
   <div style="text-align: center; margin-top: 20px; color: #64748b; font-size: 12px;">

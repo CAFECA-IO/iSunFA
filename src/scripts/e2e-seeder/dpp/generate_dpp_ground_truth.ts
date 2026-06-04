@@ -34,6 +34,10 @@ const dppGroundTruthSchema: Schema = {
           description: "YYYY-MM-DD",
         },
         facility: { type: SchemaType.STRING },
+        facilityUNLOCODE: { 
+          type: SchemaType.STRING,
+          description: "UN/LOCODE for the facility, e.g., TW KHH"
+        },
         weightKg: { type: SchemaType.NUMBER },
       },
       required: [
@@ -45,6 +49,7 @@ const dppGroundTruthSchema: Schema = {
         "cnCode",
         "manufacturedDate",
         "facility",
+        "facilityUNLOCODE",
         "weightKg",
       ],
     },
@@ -239,6 +244,13 @@ export async function generateDppGroundTruth(
     const outFile = path.join(productMockDir, `${productId}_dpp_ground_truth.json`);
     const productSpec = specsRaw.specs.find((s: { productId: string }) => s.productId === productId);
 
+    // Info: (20260604 - Tzuhan) 防止 AI 產生幻覺，強迫寫死真實公司英文名稱
+    const stockNameMap: Record<string, string> = {
+      "2066": "Sumeeko Industries Co., Ltd.",
+      "5007": "San Shing Fastech Corp.",
+    };
+    const companyNameEN = stockNameMap[stockId] || `Company ${stockId}`;
+
     // Info: (20260604 - Tzuhan) 建立強大的 Context 文本 (針對單一 SKU)
     const baseContext = `我們正在為台灣公司代號 ${stockId} (年份 ${year}) 的產品 ${productId} (${product.productName}) 建立數位產品護照 (DPP) 的 Ground Truth 測試數據。
 這份 DPP 將用於前端 Battery Pass 風格的 Dashboard 顯示。
@@ -252,6 +264,9 @@ ${JSON.stringify(product, null, 2)}
 
 【3. Product Specs (單一產品規格與壽命)】
 ${JSON.stringify(productSpec, null, 2)}
+
+【4. 強制性規則 (CRITICAL)】
+- 公司英文名稱 (Company Name EN)：嚴格規定必須填寫 "${companyNameEN}"，絕對不可發明或使用其他名稱 (例如 Sheico 等)。
 `;
 
     console.log(`🔄 [${productId}] STEP 1: 啟動 Map-Reduce 三大 Auditor 平行審查...`);
@@ -284,7 +299,9 @@ ${baseContext}
         `你現在是【供應鏈與合規稽核員 (Supply Chain & Compliance Auditor)】。
 ${baseContext}
 你的任務是統整 General Info (Model Number, Weight, Name, Facility, Manufactured Date)。
-強烈注意：請務必根據產品屬性(例如扣件 fastener)推斷並提供正確的海關稅則號列 (CN Code，如 7318.15.xx)。
+強烈注意：
+1. 請務必根據產品屬性(例如扣件 fastener)推斷並提供正確的海關稅則號列 (CN Code，如 7318.15.xx)。
+2. Facility 欄位必須加上對應的 facilityUNLOCODE (例如台灣高雄的 UNLOCODE 是 TW KHH，屏東是 TW PIF)。
 並且統整 durabilityAndRepair (壽命與維修) 以及 compliance (合規性：是否符合 RoHS, PFAS Free)。
 參考產品規格 (Product Specs) 以及先前的 PDF 宣告書邏輯，給出精準的屬性值。`,
       ),

@@ -88,6 +88,8 @@
 
 - 💥 **[端到端測試架構設計 (E2E Testing Architecture)](testing_and_qa/e2e_audit_pipeline/e2e_testing_architecture.md)**
   > 了解系統如何進行 E2E 驗證與對抗式視覺壓力測試。
+- 🏃‍♂️ **[端到端執行指南 (E2E Pipeline Execution Guide)](testing_and_qa/e2e_audit_pipeline/e2e_pipeline_execution_guide.md)**
+  > 從下載真實財報到產出 DPP 黃金數據與 PDF 護照的完整操作步驟。
 - 🌍 **[歐盟 CBAM 碳排追溯與前驅物模擬 (CBAM Seeder)](testing_and_qa/e2e_audit_pipeline/cbam_compliance_seeder.md)**
   > 詳細解說如何透過 AI 逆向生成符合 CBAM 規範的海關報單、前驅物碳排與委外加工資料。
 - 📦 **[歐盟 DPP 數位產品護照生成架構 (DPP Seeder)](testing_and_qa/e2e_audit_pipeline/dpp_compliance_seeder.md)**
