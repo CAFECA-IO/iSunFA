@@ -61,6 +61,12 @@ export const voucher = {
       filter_btn: "篩選條件",
       verify_all: "一鍵核對",
       no_data: "尚無資料",
+      status_colon: "狀態: ",
+      id_colon: "編號: ",
+      accounting_entries_dr_cr: "會計科目分錄 (借/貸)",
+      unknown_account: "未知科目",
+      debit_abbr: "借",
+      credit_abbr: "貸",
       no_data_desc:
         "在所選期間內尚無傳票資料。您可以嘗試切換不同的時間區間，或是前往傳票模組上傳新資料。",
       no_data_cta: "上傳憑證/資料",

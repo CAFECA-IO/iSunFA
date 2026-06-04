@@ -6,4 +6,5 @@ export const sidebar = {
   settings: "설정",
   account_book: "장부 전환",
   public_modules: "도구",
+  current_account_book: "현재 장부",
 };

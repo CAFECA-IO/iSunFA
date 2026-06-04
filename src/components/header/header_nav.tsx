@@ -30,7 +30,7 @@ export default function HeaderNav() {
   return (
     <>
       {/* Info: (20260304 - Julian) Desktop Navigation */}
-      <div className="hidden items-center gap-x-3 lg:flex lg:gap-x-8">
+      <div className="hidden items-center gap-x-3 xl:flex xl:gap-x-8">
         {NAV_ITEMS.map((item) => (
           <Link
             key={item.label}
@@ -45,11 +45,11 @@ export default function HeaderNav() {
       {/* Info: (20260304 - Julian) Mobile Navigation */}
       <Menu
         as="div"
-        className="relative z-100 flex flex-col items-center lg:hidden"
+        className="relative z-100 flex flex-col items-center xl:hidden"
       >
         <MenuButton className="flex items-center gap-x-1 px-2 py-1 text-sm leading-6 font-semibold text-gray-900 transition-colors hover:text-orange-600 focus:outline-none">
           <TextAlignJustify
-            className="h-5 w-5 text-gray-500"
+            className="size-5 shrink-0 text-gray-500"
             aria-hidden="true"
           />
         </MenuButton>
