@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Fragment } from "react";
 import {
+  Check,
   Download,
   Edit3,
   Eye,
-  Sparkles,
-  Wand2,
-  Type,
   Maximize2,
   Loader2,
-  Check,
+  Share2,
+  Sparkles,
+  Type,
+  Wand2,
   X as XIcon,
 } from "lucide-react";
 import { MarkdownContent } from "@/components/common/markdown_content";
@@ -18,6 +19,16 @@ import { useTranslation } from "@/i18n/i18n_context";
 import Image from "next/image";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
+
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  Transition,
+  TransitionChild,
+} from "@headlessui/react";
+import { QRCodeSVG } from "qrcode.react";
+import { Copy, Trash2 } from "lucide-react";
 
 enum ViewMode {
   EDIT = "edit",
@@ -48,6 +59,133 @@ interface IAiText {
   selectedText: string;
   selectionStart: number;
   selectionEnd: number;
+}
+
+function PdfShareLinkModal({
+  isOpen,
+  toggleShareLinkModal,
+  shareToken,
+  isRevoking,
+  handleRevokeShare,
+}: {
+  isOpen: boolean;
+  toggleShareLinkModal: () => void;
+  shareToken: string | null;
+  isRevoking: boolean;
+  handleRevokeShare: () => void;
+}) {
+  const { t } = useTranslation();
+
+  const linkUrl = shareToken
+    ? `${window.location.origin}/share/report/${shareToken}`
+    : "";
+
+  const copyToClipboard = async () => {
+    if (!shareToken) return;
+    await navigator.clipboard.writeText(linkUrl);
+  };
+
+  return (
+    <Transition appear show={isOpen} as={Fragment}>
+      <Dialog as="div" className="relative z-60" onClose={toggleShareLinkModal}>
+        <TransitionChild
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+        </TransitionChild>
+        <div className="fixed inset-0 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4 text-center">
+            <TransitionChild
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
+              <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                <DialogTitle
+                  as="h3"
+                  className="mb-2 flex items-center gap-2 text-lg leading-6 font-bold text-gray-900"
+                >
+                  <Share2 size={20} className="text-blue-600" />
+                  分享 PDF
+                </DialogTitle>
+
+                <div className="mt-2">
+                  <p
+                    className="mb-4 text-sm text-gray-500"
+                    dangerouslySetInnerHTML={{
+                      __html: "任何擁有此連結的人皆可檢視此 PDF。",
+                    }}
+                  />
+
+                  <div className="mt-4 mb-6 flex justify-center">
+                    {shareToken && (
+                      <div className="inline-block rounded-xl border border-gray-100 bg-white p-3 shadow-sm">
+                        <QRCodeSVG
+                          value={linkUrl}
+                          size={160}
+                          level="M"
+                          className="h-auto w-full"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-1.5">
+                    <input
+                      aria-label="Share link"
+                      readOnly
+                      value={shareToken ? linkUrl : ""}
+                      className="flex-1 border-none bg-transparent px-2 text-sm text-gray-600 outline-none focus:ring-0"
+                    />
+                    <button
+                      type="button"
+                      onClick={copyToClipboard}
+                      className="flex shrink-0 items-center gap-1 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-blue-50 hover:text-blue-600"
+                    >
+                      <Copy size={16} /> {t("analysis.share.copy")}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-4">
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+                    onClick={handleRevokeShare}
+                    disabled={isRevoking || !shareToken}
+                  >
+                    {isRevoking ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <Trash2 size={16} />
+                    )}
+                    {t("analysis.share.revoke")}
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-flex justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+                    onClick={toggleShareLinkModal}
+                  >
+                    {t("analysis.share.done")}
+                  </button>
+                </div>
+              </DialogPanel>
+            </TransitionChild>
+          </div>
+        </div>
+      </Dialog>
+    </Transition>
+  );
 }
 
 export default function PdfEditor({
@@ -81,6 +219,13 @@ export default function PdfEditor({
   });
   const [isAiProcessing, setIsAiProcessing] = useState<boolean>(false);
   const [aiSuggestion, setAiSuggestion] = useState<IAiSuggestion | null>(null);
+
+  // Info: (20260604 - Julian) Share Link Modal State
+  const [isShareLinkModalOpen, setIsShareLinkModalOpen] =
+    useState<boolean>(false);
+  const [isSharing, setIsSharing] = useState<boolean>(false);
+  const [shareToken, setShareToken] = useState<string | null>(null);
+  const [isRevoking, setIsRevoking] = useState<boolean>(false);
 
   useEffect(() => {
     // Info: (20260603 - Julian) 點擊 menu 外時，關閉 ai menu
@@ -167,6 +312,64 @@ export default function PdfEditor({
       document.removeEventListener("keyup", handleGlobalKeyUp);
     };
   }, [isAiProcessing]);
+
+  const toggleShareLinkModal = () => setIsShareLinkModalOpen((prev) => !prev);
+
+  const handleShareClick = async () => {
+    if (shareToken) {
+      setIsShareLinkModalOpen(true);
+      return;
+    }
+
+    setIsSharing(true);
+    try {
+      const result = await request<IApiResponse<{ token: string }>>(
+        "/api/v1/admin/pdf_editor/share",
+        {
+          method: "POST",
+          body: JSON.stringify({ text: markdownContext }),
+        },
+      );
+
+      if (result.code === "SUCCESS" && result.payload?.token) {
+        setShareToken(result.payload.token);
+        setIsShareLinkModalOpen(true);
+      } else {
+        setErrorModal({
+          isOpen: true,
+          message: t("common.error.default") || "Failed to generate share link",
+        });
+      }
+    } catch (error) {
+      console.error("Share error:", error);
+      setErrorModal({
+        isOpen: true,
+        message: t("common.error.default") || "Failed to generate share link",
+      });
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const handleRevokeShare = async () => {
+    if (!shareToken) return;
+    try {
+      setIsRevoking(true);
+      const result = await request<IApiResponse<null>>(
+        `/api/v1/admin/pdf_editor/share/${shareToken}/revoke`,
+        { method: "PATCH" },
+      );
+
+      if (result.code === "SUCCESS") {
+        setShareToken(null);
+        setIsShareLinkModalOpen(false);
+      }
+    } catch (error) {
+      console.error("Revoke error:", error);
+    } finally {
+      setIsRevoking(false);
+    }
+  };
 
   // Info: (20260603 - Julian) 「AI 操作」處理
   const handleAiAction = async (actionType: AiActionType) => {
@@ -510,16 +713,30 @@ export default function PdfEditor({
           </button>
         </div>
 
-        <button
-          onClick={handleDownloadPDF}
-          disabled={isGenerating || !markdownContext.trim()}
-          className="flex items-center gap-2 rounded-lg bg-orange-600 px-5 py-2 text-sm font-bold text-white transition-all hover:bg-orange-500 disabled:opacity-50"
-        >
-          <Download size={16} />
-          {isGenerating
-            ? t("admin_mission_board.pdf_editor.generating")!
-            : t("admin_mission_board.pdf_editor.download_pdf")!}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleDownloadPDF}
+            disabled={isGenerating || !markdownContext.trim()}
+            className="flex items-center gap-2 rounded-lg bg-orange-600 px-5 py-2 text-sm font-bold text-white transition-all enabled:hover:bg-orange-500 disabled:cursor-not-allowed disabled:bg-gray-400"
+          >
+            <Download size={16} />
+            {isGenerating
+              ? t("admin_mission_board.pdf_editor.generating")!
+              : t("admin_mission_board.pdf_editor.download_pdf")!}
+          </button>
+          <button
+            onClick={handleShareClick}
+            disabled={isGenerating || !markdownContext.trim() || isSharing}
+            className="flex items-center gap-2 rounded-lg bg-blue-500 px-5 py-2 text-sm font-bold text-white transition-all enabled:hover:bg-blue-400 disabled:cursor-not-allowed disabled:bg-gray-400"
+          >
+            {isSharing ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Share2 size={16} />
+            )}
+            分享 PDF 連結
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
@@ -536,6 +753,7 @@ export default function PdfEditor({
             value={markdownContext}
             onChange={(e) => {
               setMarkdownContext(e.target.value);
+              setShareToken(null); // Info: (20260604 - Julian) PDF 內容變更時，將 Token 設為 null
               if (aiMenu.isOpen)
                 setAiMenu((prev) => ({ ...prev, isOpen: false }));
             }}
@@ -634,6 +852,15 @@ export default function PdfEditor({
           </div>
         </div>
       </div>
+
+      {/* Info: (20260604 - Julian) Share Link Modal */}
+      <PdfShareLinkModal
+        isOpen={isShareLinkModalOpen}
+        toggleShareLinkModal={toggleShareLinkModal}
+        shareToken={shareToken}
+        isRevoking={isRevoking}
+        handleRevokeShare={handleRevokeShare}
+      />
     </div>
   );
 }
