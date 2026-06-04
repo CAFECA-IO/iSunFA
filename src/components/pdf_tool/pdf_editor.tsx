@@ -54,6 +54,11 @@ interface IAiSuggestion {
   aiResult: string;
 }
 
+// Info: (20260604 - Julian) 定義預設 md 內容與 storage key
+const DEFAULT_CONTENT =
+  "# iSunFA Report\n\nEnter your markdown content here...";
+const STORAGE_KEY = "isunfa_pdf_editor_draft";
+
 export default function PdfEditor({
   setErrorModal,
 }: {
@@ -68,9 +73,8 @@ export default function PdfEditor({
   const contentRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const [markdownContext, setMarkdownContext] = useState<string>(
-    "# iSunFA Report\n\nEnter your markdown content here...",
-  );
+  const [markdownContext, setMarkdownContext] =
+    useState<string>(DEFAULT_CONTENT);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.EDIT);
 
@@ -92,6 +96,42 @@ export default function PdfEditor({
   const [isSharing, setIsSharing] = useState<boolean>(false);
   const [shareToken, setShareToken] = useState<string | null>(null);
   const [isRevoking, setIsRevoking] = useState<boolean>(false);
+
+  // Info: (20260604 - Julian) 建立一個 ref 來儲存 markdownContext 的最新值
+  const markdownRef = useRef<string>(markdownContext);
+  useEffect(() => {
+    markdownRef.current = markdownContext;
+  }, [markdownContext]);
+
+  useEffect(() => {
+    // Info: (20260604 - Julian) 頁面載入時，從 localstorage 取得草稿
+    const savedDraft = localStorage.getItem(STORAGE_KEY);
+    if (savedDraft && savedDraft !== DEFAULT_CONTENT) {
+      setMarkdownContext(savedDraft);
+    }
+
+    // Info: (20260604 - Julian) 建立「儲存草稿」函式
+    const saveDraft = () => {
+      const currentContent = markdownRef.current;
+      if (currentContent && currentContent !== DEFAULT_CONTENT) {
+        localStorage.setItem(STORAGE_KEY, currentContent);
+      } else {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    };
+
+    // Info: (20260604 - Julian) 建立「頁面離開前儲存草稿」監聽
+    const handleBeforeUnload = () => {
+      saveDraft();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      // Info: (20260604 - Julian) 移除監聽並儲存草稿
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      saveDraft();
+    };
+  }, []);
 
   useEffect(() => {
     // Info: (20260603 - Julian) 點擊外部時，關閉 AI menu
