@@ -58,6 +58,7 @@
     "p-limit": "^7.3.0",
     "pdf-lib": "^1.17.1",
     "pdf-parse": "^2.4.5",
+    "puppeteer": "^25.1.0",
     "qrcode.react": "^4.2.0",
     "react": "19.2.6",
     "react-barcode": "^1.6.1",
