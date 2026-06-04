@@ -92,4 +92,9 @@ export const common = {
   pdf_tool: "PDF ツール",
   please_login: "ログインしてください",
   success: "成功",
+  report_layout: {
+    brand: "iSunFAスマート炭素会計",
+    footer_note:
+      "このレポートはAI技術によって生成され、iSunFAスマート炭素会計によって提供されています • ",
+  },
 };

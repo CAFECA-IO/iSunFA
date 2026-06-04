@@ -1,6 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslation } from "@/i18n/i18n_context";
 
 export interface IReportLayoutProps {
   children: React.ReactNode;
@@ -39,6 +40,7 @@ export function ReportLayout({
   className = "bg-white rounded-2xl shadow-md ring-1 ring-gray-900/5",
   contentClassName = "p-6 sm:p-10",
 }: IReportLayoutProps) {
+  const { t } = useTranslation();
   const Logo = isPdfExport ? (
     <div className="flex items-center gap-3 text-lg font-bold text-white">
       <Image
@@ -50,7 +52,7 @@ export function ReportLayout({
         priority
       />
       <span className="hidden border-l border-gray-600 pl-3 sm:inline-block">
-        陽光智能碳會計
+        {t("common.report_layout.brand")}
       </span>
     </div>
   ) : (
@@ -67,7 +69,7 @@ export function ReportLayout({
         className="h-7 w-auto"
       />
       <span className="hidden border-l border-gray-600 pl-3 sm:inline-block">
-        陽光智能碳會計
+        {t("common.report_layout.brand")}
       </span>
     </Link>
   );
@@ -114,7 +116,7 @@ export function ReportLayout({
         <div className="flex flex-col items-center justify-between gap-2 border-t border-gray-200 bg-gray-50 px-6 py-5 text-center text-sm font-medium text-gray-500 sm:flex-row sm:px-8 sm:text-left">
           {footerTitle && <span>{footerTitle}</span>}
           <span>
-            本報告透過 AI 技術生成，由 iSunFA 陽光智能碳會計提供 •{" "}
+            {t("common.report_layout.footer_note")}
             {new Date().toISOString().split("T")[0].replace(/-/g, "/")}
           </span>
         </div>

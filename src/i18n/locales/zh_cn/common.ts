@@ -89,4 +89,8 @@ export const common = {
   pdf_tool: "PDF 工具",
   please_login: "请先登录",
   success: "成功",
+  report_layout: {
+    brand: "阳光智能碳会计",
+    footer_note: "本报告由 AI 技术生成，由 iSunFA 阳光智能碳会计提供 • ",
+  },
 };
