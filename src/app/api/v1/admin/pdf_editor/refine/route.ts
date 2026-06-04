@@ -4,7 +4,10 @@ import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { ChatService } from "@/services/chat.service";
-import { TEXT_REFINEMENT_PROMPT } from "@/constants/prompts/pdf_editor/text_refinement";
+import {
+  AI_REFINE_INSTRUCTIONS,
+  TEXT_REFINEMENT_PROMPT,
+} from "@/constants/prompts/pdf_editor/text_refinement";
 
 /**
  * Info: (20260603 - Julian) PDF 編輯器智慧化：AI 文本微調
@@ -24,9 +27,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Info: (20260603 - Julian) 解析 request body
-    const { text, instruction } = await req.json();
+    const { text, action } = await req.json();
 
-    if (!text || !instruction) {
+    if (!text || !action) {
       return jsonFail(API_ERRORS.VL_MISSING_PARAMS);
     }
 
@@ -35,6 +38,10 @@ export async function POST(req: NextRequest) {
       console.error("Missing GEMINI_API_KEY");
       return jsonFail(API_ERRORS.IN_SERVER_CONFIGURATION_ERROR);
     }
+
+    // Info: (20260604 - Julian) 透過前端傳來的 action 提取 prompt
+    // 若 action 屬於 AiRefineType，使用對應的 prompt；否則為用戶自訂指令，直接使用 action 作為 prompt
+    const instruction = AI_REFINE_INSTRUCTIONS[action] || action;
 
     // Info: (20260603 - Julian) 組合提示詞
     const finalPrompt = `${TEXT_REFINEMENT_PROMPT}

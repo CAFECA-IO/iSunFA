@@ -1,3 +1,5 @@
+import { AiRefineType } from "@/constants/ai_refine_type";
+
 export const TEXT_REFINEMENT_PROMPT = `
     # Role
     你是一位精煉、專業且極具細節洞察力的文字編輯。你的任務是根據使用者的指令，針對他所選取的文字進行智慧調整。
@@ -16,3 +18,12 @@ export const TEXT_REFINEMENT_PROMPT = `
     - 若要求「通俗/生活化」，請轉化為直白易懂、具親和力的口語表達。
     - 【精簡縮寫】：刪除冗詞贅字，在保留核心資訊的前提下，以最精簡的字數呈現。
 `;
+
+export const AI_REFINE_INSTRUCTIONS: Record<string, string> = {
+  [AiRefineType.REWRITE]:
+    "精簡縮寫：請在保持語意不變的前提下，將內容精簡、重點明確的縮寫。",
+  [AiRefineType.EXPAND]:
+    "擴寫：請在保持語意不變的前提下，將內容適度擴寫，補充細節與描述。但是避免冗長、邏輯兜圈及不適當的重複論述。",
+  [AiRefineType.POLISH]:
+    "潤飾流暢：請在保持語意不變的前提下，將內容潤飾流暢，剔除贅字與語意不清的描述，並適當調整陳述語氣。",
+};
