@@ -169,7 +169,7 @@ const createDiversifiedVoucherBlocks = (
   numBlocks: number,
   prefix: string,
   pool: IAccountPoolItem[],
-  creditCode: string, // The offset account, usually CASH or AR/AP
+  creditCode: string, // Info: (20260601 - Tzuhan) The offset account, usually CASH or AR/AP
   isDebitNormal: boolean = true,
   vendor: string | undefined = undefined,
 ): ISimulatedVoucher[] => {
@@ -270,12 +270,12 @@ export const generateFinancialVouchers = (stockId: string, targetVoucherCount?: 
   // Info: (20260601 - Tzuhan) Calculate dynamic voucher volume based on revenue scale
   let totalTarget = targetVoucherCount;
   if (!totalTarget || totalTarget <= 0) {
-    // 預設：每一百萬元營業額產生 10 張傳票（即平均十萬一張），最高上限 55,000 張，最低 100 張
+    // Info: (20260601 - Tzuhan) 預設：每一百萬元營業額產生 10 張傳票（即平均十萬一張），最高上限 55,000 張，最低 100 張
     const calculated = totalRevenue.div(100000).toNumber();
     totalTarget = Math.min(Math.max(calculated, 100), 55000); 
   }
 
-  // Info: Allocate proportions based on typical transaction frequency
+  // Info: (20260601 - Tzuhan) Allocate proportions based on typical transaction frequency
   const revBlocks = Math.floor(totalTarget * 0.4);
   const cogsBlocks = Math.floor(totalTarget * 0.3);
   const selBlocks = Math.floor(totalTarget * 0.1);
@@ -299,7 +299,7 @@ export const generateFinancialVouchers = (stockId: string, targetVoucherCount?: 
       "RV",
       REVENUE_POOL,
       "1100",
-      false, // Revenue is Credit Normal
+      false, // Info: (20260525 - Tzuhan) Revenue is Credit Normal
       contextCache.financial.top3Customers?.[0],
     ),
   );
