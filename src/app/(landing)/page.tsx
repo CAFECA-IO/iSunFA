@@ -1,8 +1,9 @@
-import Hero from '@/components/landing_page/hero';
-import Features from '@/components/landing_page/features';
-import TechSpecs from '@/components/landing_page/tech_specs';
-import Acknowledgement from '@/components/landing_page/acknowledgement';
-import AIConsultationSection from '@/components/landing_page/ai_consultation_section';
+import Hero from "@/components/landing_page/hero";
+import Features from "@/components/landing_page/features";
+import TechSpecs from "@/components/landing_page/tech_specs";
+import Acknowledgement from "@/components/landing_page/acknowledgement";
+import AIConsultationSection from "@/components/landing_page/ai_consultation_section";
+import DPPUrbanMining from "@/components/landing_page/dpp_urban_mining";
 
 export default function Home() {
   return (
@@ -10,6 +11,7 @@ export default function Home() {
       <Hero />
       <Features />
       <AIConsultationSection />
+      <DPPUrbanMining />
       <TechSpecs />
       <Acknowledgement />
     </main>

@@ -90,4 +90,8 @@ export const common = {
   please_login: "請先登入",
   success: "成功",
   mobile_view: "手機版樣式",
+  report_layout: {
+    brand: "陽光智能碳會計",
+    footer_note: "本報告透過 AI 技術生成，由 iSunFA 陽光智能碳會計提供 • ",
+  },
 };

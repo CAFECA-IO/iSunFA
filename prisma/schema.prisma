@@ -939,14 +939,14 @@ model AmortizationSchedule {
   id                 String    @id @default(uuid())
   originalVoucherId  String    @map("original_voucher_id")
   accountBookId      String    @map("account_book_id")
-  assetAccountCode   String    @map("asset_account_code") // Info: (20260526 - Tzuhan) e.g. PREPAID_EXPENSE
-  expenseAccountCode String    @map("expense_account_code") // Info: (20260526 - Tzuhan) e.g. RENT_EXPENSE
+  assetAccountCode   String    @map("asset_account_code") // Info: (20260528 - Tzuhan) e.g. PREPAID_EXPENSE
+  expenseAccountCode String    @map("expense_account_code") // Info: (20260528 - Tzuhan) e.g. RENT_EXPENSE
   totalAmount        Decimal   @map("total_amount")
   amortizedAmount    Decimal   @default(0) @map("amortized_amount")
   startDate          DateTime  @map("start_date")
   endDate            DateTime  @map("end_date")
   lastAmortizedDate  DateTime? @map("last_amortized_date")
-  status             String    @default("ACTIVE") // Info: (20260526 - Tzuhan) ACTIVE, COMPLETED, CANCELLED
+  status             String    @default("ACTIVE") // Info: (20260528 - Tzuhan) ACTIVE, COMPLETED, CANCELLED
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

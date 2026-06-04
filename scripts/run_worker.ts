@@ -7,6 +7,7 @@ import { processNext as processMissionCloserNext } from "@/services/mission.clos
 import { processNext as processIssueValidatorNext } from "@/services/issue.validator.service";
 import { issueRecorderService } from "@/services/issue.recorder.service";
 import { syncExchangeRates } from "@/services/cron/exchange_rate.cron";
+import { processAmortization } from "@/services/cron/amortization.worker.service";
 
 /**
  * Info: (20260130 - Luphia)
@@ -54,6 +55,11 @@ async function runWorker() {
       "ExchangeRateSync",
       () => syncExchangeRates(),
       8 * 60 * 60 * 1000,
+    ),
+    startServiceLoop(
+      "AmortizationWorker",
+      () => processAmortization(),
+      60 * 60 * 1000,
     ),
   ]);
 

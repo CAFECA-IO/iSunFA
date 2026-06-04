@@ -42,7 +42,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 我們全面重構開發邏輯，採行「逆向推進路線：先求數學絕對精準 ➡️ 再測商業邏輯異常 ➡️ 最後挑戰視覺極限與合規深水區」。
 
 ### 🚨 當前待辦與優先度總表 (Priority To-Do List)
-為確保 780 萬筆台積電 PoC 順利通關且系統不崩潰，全隊目前必須嚴格遵守以下執行優先度（包含 ADR 004, 005, 006, 007 的落地實作）：
+為確保 6642 5.4萬筆 PoC 順利通關且系統不崩潰，全隊目前必須嚴格遵守以下執行優先度（包含 ADR 004, 005, 006, 007 的落地實作）：
 
 **🔥 [Priority 1: Sprint 1 基礎防線補齊 (ADR 004)]**
 - ✅ **Done: [Tzuhan] Voucher 財務防護 - 語意標籤與多國映射**: 實作 `UniversalAccountTag` 與後端 `SemanticAccountMatcher`。
@@ -52,7 +52,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - ✅ **Done: [Tzuhan] 零信任會計稽核防線 (Zero-Trust Audit Defense)**: 於 Schema 實作 `isVerified` 與 `generationSource`，確保所有 AI 產生的憑證明細在人類覆核前皆保持未驗證狀態，建立 CPA 等級的資料血緣溯源 (ADR 007)。
 
 **🔥 [Priority 2: 邊界壓力測試 (可與 P1 並行)]**
-- 🚧 **WIP: [Julian] 台積電 780 萬筆大數據批次注入 (TSMC Batch Seeding)**: 確保巨量資料進入 DB。注意：灌完即停手，嚴禁讀取報表。
+- 🚧 **WIP: [Julian] 6642 5.4萬筆大數據批次注入 (6642 Batch Seeding)**: 確保巨量資料進入 DB。注意：灌完即停手，嚴禁讀取報表。
 
 **🔥 [Priority 3: Sprint 2 效能拆彈與總驗收 (OOM Defense)]**
 - ⚠️ **Pending: [Tzuhan] 報表快照與期初餘額 (Snapshots & Opening Balance)**: 建立 Snapshot 表格避免重複計算。
@@ -134,8 +134,17 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **⚠️ Pending：廢除不合理允當標準 (Zero Tolerance)**：日常上線的報表驗證 Threshold 嚴格鎖死在 **0%**。
 - **⚠️ Pending：防堵日期幻覺 (Anti-Date Hallucination)**：強制依賴 AI 輸出的 `tradingDate`，若發生跨期，系統必須報錯並阻斷財報生成。
 - **⚠️ Pending：追溯重編的「關聯性鎖死」 (Adjustment Voucher Audit Trail)**：實作前期損益調整時，追加帶有標籤 (`isRestatement=true`) 的當期調整傳票。**Schema 強制帶入 `targetVoucherId` (被更正的原始傳票 ID)**，形成雙向鏈結，杜絕幽靈調整傳票。
-- **🚧 WIP (2026-05-26)：攤銷排程自動化引擎 (Amortization Automation Worker)**：`processAmortization` 排程核心邏輯已開發完成，能根據 `ACTIVE` 狀態的攤銷排程與起訖日期，精準計算本期攤銷金額並拋出自動化任務。*(備註：目前此 Worker 尚未掛載至 `scripts/run_worker.ts` 的常駐系統輪詢池中，需手動執行或等待後續整合。)*
+- **✅ Done (2026-05-27) [Workaround]：歐洲區 (EU) 稅務逆向課稅 (VAT Directive Strategy)**：已導入稅務策略模式 (`TaxStrategyService`)。因歐盟各國稅率 (17%~27%) 及 B2B/B2C 判定極度複雜，目前實作「防呆警告機制」，若偵測到境外發票將強制附加 `aiNote` 提醒人工覆核，阻斷自動放行，避免跨國稅務裁罰地雷。自動化稅率 API 串接列入未來 Tech Debt。
+- **✅ Done (2026-05-27)：台灣稅務逆向課稅防線 (Taiwan Reverse Charge Deductibility Pattern Matching)**：針對境外電商開立之發票，實作精準的進項稅額扣抵資格檢查。利用 RegExp 語意模式匹配 (Pattern Matching) 取代窮舉，自動攔截交際費與職工福利等不可扣抵之費用，並依據稅法強制轉為「費用資本化 (Capitalized Expense)」，達成 CPA 級別的稅務內控防禦。
+- **⚠️ Pending (Tech Debt)：資料庫 Schema 升級 (FX Tracing)**：目前的重評價是基於數學反推。為了避免四捨五入的匯差並追蹤外幣債權真實水位，未來仍須於 `VoucherLine` 擴充 `foreign_amount` 與 `foreign_currency` 欄位。
+- **✅ Done (2026-05-27) [Workaround]：外幣期末重評價引擎 (Month-end FX Revaluation)**：為遵守 IAS 21 公報，系統已實作月底自動計算 AP/AR 未實現兌換損益。因無法更動 Schema 紀錄原幣金額，採「歷史匯率反推外幣原額」之無痕決定論作法。詳見 [05_cpa_audit_findings](../compliance_and_audit/05_cpa_audit_findings_eu_vat_fx_revaluation.md)。
+- **⚠️ Pending (Tech Debt)：國內自然人勞務扣繳盲點 (Domestic Individual Fallback Risk)**：因移除了 `DOMESTIC_VENDOR_KEYWORDS`，目前無統編的國內自然人勞務可能會被誤判為境外電商發動 5% 逆向課稅（應為各類所得扣繳）。由於 B2B 情境少見自然人軟體服務，目前列為已知限制，待未來擴充 Vendor 註冊機制時修復。
+- **⚠️ Pending (Tech Debt)：AI 科目分類幻覺無法被數學防禦 (Semantic Classification Hallucination)**：雖然數學運算已完美防禦，但若 AI 從源頭將「員工旅遊」誤判為「軟體網路費」，系統將依賴此分類發動逆向課稅。目前對此類語意分類錯誤處於零防禦狀態，需仰賴人工查帳 (`isVerified = false`)。
+- **⚠️ Pending (Tech Debt)：全局金額異常熔斷機制 (Circuit Breaker)**：目前若 AI 發狂在發票金額多加三個零，高精度系統將會精準算出天價營業稅並過帳。未來須在 `VoucherPipelineOrchestrator` 實作全局熔斷機制 (如：單筆金額 > 10 億 TWD 即拋出 `AnomalyDetectionError` 並強制阻斷寫入)。
 
+- **⏸️ Paused：WACSO 實作與 EPS 計算 (IAS 33 Compliance)**：為避免人為稀釋，期末股數相除法已阻斷。待高精度加權平均演算法就緒後重啟。詳見 [IAS 33 合規架構](../compliance_and_audit/06_ias33_wacso_and_eps_engine.md)。
+- **✅ Done (2026-05-27)：無資料庫狀態的攤銷折舊引擎 (Stateless Amortization Engine)**：基礎排程已升級為純粹的數學決定論推導 (`calculateStatelessAmortizationForMonth`)。系統能根據起訖日期動態推算過去累積的攤銷額與本期應攤銷額，在不依賴資料庫 `amortizedAmount` 狀態的情況下完美處理尾差配平，達成 Zero-DB State 境界，為橫向擴展鋪平道路。詳見 [Stateless Worker 架構](../async_workers/06_stateless_amortization_engine.md)。
+- **✅ Done (2026-05-27)：應計基礎跨期切斷與已實現兌換損益 (Accrual Cut-off & Realized FX Gain/Loss)**：會計引擎全面升級，提早將發票憑證依據服務期間切割為獨立事件，並為每個事件綁定歷史匯率 (`targetFxDate`)。搭配 `FXInterceptor` 自動偵測多重匯率並轉化尾差為 `FOREIGN_EXCHANGE_GAIN_OR_LOSS`，完美補齊 IAS 21 外幣財報合規要求。詳見 [IAS 21 合規架構](../compliance_and_audit/07_accrual_cutoff_and_fx_realization.md)。
 - **[CPA 碳排合規任務 (DPP 產品護照架構交由 Luphia 負責)]**
 - **✅ Done (Architectural Decision: Immutable IDs)：排放係數時空快照 (Emission Factor Versioning)**：經過重新設計，不再將數值硬拷貝至 EsgRecord 造成 Schema 污染。改為全面採用「Immutable Coefficient IDs (如 epa-2025-t1-004)」，天然實現時空快照。
   - **🔒 Immutable Coefficient 兩大鐵律**：未來維護係數庫必須嚴格遵守：1. **禁止 UPDATE 數值** (避免污染歷史帳本)；2. **永遠只用 INSERT (Append-Only)**。

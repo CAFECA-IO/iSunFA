@@ -2,7 +2,9 @@ import fs from "fs/promises";
 import path from "path";
 import { getPriorityEnvConfig } from "@/services/env.service";
 import { ChatService } from "@/services/chat.service";
-import { EsgGenerationSource } from "@/constants/enums";
+import { EsgGenerationSource, CountryCode } from "@/constants/enums";
+import { CurrencyCode } from "@/constants/exchange_rate";
+import { VoucherPipelineOrchestrator } from "@/services/voucher.pipeline.orchestrator";
 import { skillRegistry } from "@/skills";
 import { IMissionDefinition } from "@/lib/worker/mission.generator";
 import { ITaskDefinition } from "@/lib/worker/task.generator";
@@ -469,6 +471,27 @@ export async function processNext() {
             tags: ["simulated", "fallback"],
             aiNote: "Simulated output due to missing JSON execution plan.",
           };
+        }
+
+        // ToDo: (20260528 - Tzuhan) 應該根據類型放在各自的 documents/skill裡面
+        // Info: (20260528 - Tzuhan) 決定論管線洗淨 (Washing)
+        // Info: (20260528 - Tzuhan) Delegate Early Normalization, Cut-off splitting, and Interceptor execution to the Pipeline Orchestrator
+        if (
+          typeof aggregatedResult === "object" &&
+          aggregatedResult !== null &&
+          "dbSyncPayload" in aggregatedResult
+        ) {
+          const resultObj = aggregatedResult as Record<string, unknown>;
+          const ab = (missionData.accountBook || {}) as Record<string, unknown>;
+          const bookCurrency = (ab.currency as string) || CurrencyCode.TWD;
+          const bookCountry = (ab.country as string) || CountryCode.TW;
+
+          resultObj.dbSyncPayload =
+            await VoucherPipelineOrchestrator.processDbSyncPayload(
+              resultObj.dbSyncPayload as Record<string, unknown>,
+              bookCurrency,
+              bookCountry,
+            );
         }
 
         const resultPayloadStr =

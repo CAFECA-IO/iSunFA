@@ -16,4 +16,5 @@ export const esgSummary = {
   scope_1: "S1",
   scope_2: "S2",
   scope_3: "S3",
+  target_not_set: "Not Set",
 };

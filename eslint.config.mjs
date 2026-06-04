@@ -121,7 +121,22 @@ const tslintConfigs = [
 
       'jsx-a11y/click-events-have-key-events': 'warn',
       'jsx-a11y/no-static-element-interactions': 'warn',
-      'jsx-a11y/control-has-associated-label': 'warn',
+      'jsx-a11y/control-has-associated-label': [
+        'warn',
+        {
+          ignoreElements: [
+            'audio',
+            'canvas',
+            'embed',
+            'input',
+            'textarea',
+            'tr',
+            'video',
+            'td',
+            'th',
+          ],
+        },
+      ],
     },
   },
 

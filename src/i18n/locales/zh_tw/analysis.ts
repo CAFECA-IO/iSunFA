@@ -182,7 +182,7 @@ export const analysis = {
     cta_title: "想為您的企業產生專屬的深度分析報告嗎？",
     cta_desc:
       "iSunFA 透過前沿 AI 技術，為您提供包含碳健檢、財務評級、合規審查等全方位智能會計解決方案。",
-    cta_button: "了解 iSunFA 陽光智能會計",
+    cta_button: "了解 iSunFA 陽光智能碳會計",
   },
   share_settings: {
     title: "分析報告分享設定",

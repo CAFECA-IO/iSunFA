@@ -8,7 +8,6 @@ import { MeasurementUnit } from "@/constants/enums";
 import { FIAT_CURRENCIES } from "@/constants/country";
 import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
 import { MOCK_EEIO_COEFFICIENTS } from "@/constants/mock_eeio_coefficients";
-import { MoneyUtil } from "@/lib/utils/money";
 import { EmissionFactorRepo } from "@/repositories/emission_factor.repo";
 import { prisma } from "@/lib/prisma";
 
@@ -202,7 +201,7 @@ export class EsgParsingSkill implements ITaskSkill {
       // Info: (20260522 - Tzuhan) Turn 2: 係數挑選與數量萃取
       const turn2Prompt =
         promptText +
-        `\n\n[Turn 2 指示]\n你先前在 Turn 1 分析為：${parsed1.scope}, ${parsed1.activityType}, ${parsed1.vendor}。大類為 ${parsed1.fallbackCategory}。\n以下是系統根據關鍵字檢索出的 Top 20 候選碳排係數：\n${JSON.stringify(candidates, null, 2)}\n\n請從中精準挑選一個最適合的 coefficientId，並根據該係數的單位，從憑證中萃取出正確的 amount (數量) 與對應的 unit (單位)。\n\n【外幣折算指示】\n若憑證中的金額為外幣（如 USD, JPY, CNY, HKD, KRW 等），且你選中的係數單位為 TWD（花費基礎係數），請將數量 (amount) 設為憑證上的「原始外幣金額」，並將單位 (unit) 設為該「原始外幣代碼」（如 USD, JPY 等），絕對不要自己進行匯率換算！後端系統會自動根據交易日期將其折算為 TWD。\n\n【CPA 級別鐵律：絕對禁止 AI 進行數學計算】\n你只需要萃取原始 amount，後端系統會自動進行高精度乘法運算。`;
+        `\n\n[Turn 2 指示]\n你先前在 Turn 1 分析為：${parsed1.scope}, ${parsed1.activityType}, ${parsed1.vendor}。大類為 ${parsed1.fallbackCategory}。\n以下是系統根據關鍵字檢索出的 Top 20 候選碳排係數：\n${JSON.stringify(candidates, null, 2)}\n\n請從中精準挑選一個最適合的 coefficientId，並根據該係數的單位，從憑證中萃取出正確的 amount (數量) 與對應的 unit (單位)。\n\n【外幣折算與未稅指示】\n1. 若憑證中的金額為外幣（如 USD, JPY, CNY, HKD, KRW 等），且你選中的係數單位為 TWD（花費基礎係數），請將數量 (amount) 設為憑證上的「原始外幣金額」，並將單位 (unit) 設為該「原始外幣代碼」（如 USD, JPY 等），絕對不要自己進行匯率換算！後端系統會自動根據交易日期將其折算為 TWD。\n2. 若你選中的係數是花費基礎（如 TWD），你萃取的 amount 必須是「未稅淨額 (Tax-exclusive net amount)」，絕對不可包含營業稅等稅金，以免碳排被高估。\n\n【CPA 級別鐵律：絕對禁止 AI 進行數學計算】\n你只需要萃取原始 amount (未稅淨額或物理量)，後端與智能合約會自動進行高精度乘法運算。`;
 
       const turn2Schema: Schema = {
         type: SchemaType.OBJECT,
@@ -216,7 +215,7 @@ export class EsgParsingSkill implements ITaskSkill {
             type: SchemaType.NUMBER,
             nullable: true,
             description:
-              "對應該係數單位的數量。若需要進行外幣折算，請原樣輸出憑證上的原始外幣金額",
+              "對應該係數單位的數量。若是花費基礎係數，必須是未稅淨額。若需外幣折算，請原樣輸出原始外幣未稅金額。",
           },
           unit: {
             type: SchemaType.STRING,
@@ -262,27 +261,8 @@ export class EsgParsingSkill implements ITaskSkill {
 
       const parsed2 = JSON.parse(text2.trim());
 
-      // Info: (20260522 - Tzuhan) Backend: CPA-Grade Emission Calculation
-      const selectedCoef = combinedCoefficients.find(
-        (c) => c.id === parsed2.coefficientId,
-      );
-      let calculatedEmissions = "0";
-      let finalAiNote = `[Turn 1] ${parsed1.aiNote}\n[Turn 2] ${parsed2.aiNote}`;
-
-      if (selectedCoef && parsed2.amount != null) {
-        // Info: (20260522 - Tzuhan) 嚴格使用 MoneyUtil 高精度運算
-        calculatedEmissions = MoneyUtil.multiply(
-          parsed2.amount,
-          selectedCoef.emissionFactor,
-        ).toString();
-
-        if (
-          selectedCoef.source === "Internal_Proxy_Estimation_Based_On_Spend"
-        ) {
-          finalAiNote +=
-            "\n*使用內部過渡期 EEIO 係數進行花費基礎估算，非官方直接宣告數值，待查核*";
-        }
-      }
+      // Info: (20260526 - Tzuhan) Backend: CPA-Grade - Math calculation and warnings moved to VoucherPipelineOrchestrator to strictly enforce Segregation of Duties
+      const finalAiNote = `[Turn 1] ${parsed1.aiNote}\n[Turn 2] ${parsed2.aiNote}`;
 
       const finalParsed = {
         scope: parsed1.scope,
@@ -292,7 +272,6 @@ export class EsgParsingSkill implements ITaskSkill {
         coefficientId: parsed2.coefficientId,
         amount: parsed2.amount,
         unit: parsed2.unit,
-        emissions: calculatedEmissions,
         aiNote: finalAiNote,
         confidence: parsed2.confidence,
         dqiScore: parsed2.dqiScore,

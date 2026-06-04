@@ -39,6 +39,7 @@ export function VoucherRow({
       {voucher.isDeleted ? (
         <button
           title={t("common.restore")}
+          aria-label={t("common.restore")}
           onClick={(e) => {
             e.stopPropagation();
             onRestore(voucher.id);
@@ -50,6 +51,7 @@ export function VoucherRow({
       ) : (
         <button
           title={t("common.delete")}
+          aria-label={t("common.delete")}
           onClick={(e) => {
             e.stopPropagation();
             onDelete(voucher.id);
@@ -74,6 +76,7 @@ export function VoucherRow({
             e.stopPropagation();
             onRestore(voucher.id);
           }}
+          aria-label={t("common.restore")}
           className="rounded-full p-2 text-slate-400 transition-colors hover:bg-emerald-100 hover:text-emerald-500"
         >
           <Undo2 size={20} />
@@ -85,6 +88,7 @@ export function VoucherRow({
             e.stopPropagation();
             onDelete(voucher.id);
           }}
+          aria-label={t("common.delete")}
           className="rounded-full p-2 text-slate-400 transition-colors hover:bg-red-100 hover:text-red-500"
         >
           <Trash2 size={20} />
@@ -159,7 +163,9 @@ export function VoucherRow({
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-500">狀態：</span>
+                <span className="text-xs text-slate-500">
+                  {t("voucher.main_view.table.status_colon")}
+                </span>
                 {voucher.isDeleted ? (
                   <span className="flex items-center gap-1 text-xs font-bold text-slate-400">
                     <Trash2 size={14} />
@@ -245,7 +251,9 @@ export function VoucherRow({
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-500">狀態：</span>
+                <span className="text-xs text-slate-500">
+                  {t("voucher.main_view.table.status_colon")}
+                </span>
                 {voucher.isDeleted ? (
                   <span className="flex items-center gap-1 text-xs font-bold text-slate-400">
                     <Trash2 size={14} />
@@ -348,7 +356,9 @@ export function VoucherRow({
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-500">狀態：</span>
+                <span className="text-xs text-slate-500">
+                  {t("voucher.main_view.table.status_colon")}
+                </span>
                 {voucher.isDeleted ? (
                   <span className="flex items-center gap-1 text-xs font-bold text-slate-400">
                     <Trash2 size={14} />
@@ -518,7 +528,9 @@ export function VoucherRow({
             <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50 p-1">
               {voucher.file ? (
                 <FilePreview
-                  file={{ filename: voucher.file.fileName || "Unknown" }}
+                  file={{
+                    filename: voucher.file.fileName || t("common.unknown"),
+                  }}
                   fileId={voucher.file.hash}
                   className="size-full object-cover"
                 />
@@ -544,7 +556,8 @@ export function VoucherRow({
                 {renderType(voucher.tradingType)}
               </div>
               <p className="text-[10px] font-bold tracking-wider text-slate-500">
-                編號: {voucher.id}
+                {t("voucher.main_view.table.id_colon")}
+                {voucher.id}
               </p>
             </div>
           </div>
@@ -554,7 +567,7 @@ export function VoucherRow({
           {/* Info: (20260601 - Julian) 會計科目分錄 (借/貸) */}
           <div className="flex flex-col gap-2">
             <p className="text-xs font-bold text-slate-500">
-              {t("voucher.main_view.table.headers.accounting_entries")} (借/貸)
+              {t("voucher.main_view.table.accounting_entries_dr_cr")}
             </p>
             <div className="flex flex-col gap-2">
               {lineItems.length > 0 ? (
@@ -565,23 +578,25 @@ export function VoucherRow({
                   >
                     <div className="flex items-center gap-2">
                       <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700">
-                        {line.accounting?.code || "無"}
+                        {line.accounting?.code ||
+                          t("voucher.main_view.table.no_account_code")}
                       </span>
                       <span className="text-xs font-bold text-slate-700">
-                        {line.accounting?.name || "未知科目"}
+                        {line.accounting?.name ||
+                          t("voucher.main_view.table.unknown_account")}
                       </span>
                     </div>
                     <div className="pl-2.5 text-xs font-bold">
                       {line.isDebit ? (
                         <span className="text-slate-700">
-                          借{" "}
+                          {t("voucher.main_view.table.debit_abbr")}{" "}
                           <span className="text-blue-600">
                             ${numberWithCommas(line.amount)}
                           </span>
                         </span>
                       ) : (
                         <span className="ml-2.5 text-slate-700">
-                          貸{" "}
+                          {t("voucher.main_view.table.credit_abbr")}{" "}
                           <span className="text-emerald-600">
                             ${numberWithCommas(line.amount)}
                           </span>
@@ -603,7 +618,9 @@ export function VoucherRow({
           {/* Info: (20260601 - Julian) 狀態與操作 */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500">狀態：</span>
+              <span className="text-xs text-slate-500">
+                {t("voucher.main_view.table.status_colon")}
+              </span>
               {voucher.isDeleted ? (
                 <span className="flex items-center gap-1 text-xs font-bold text-slate-400">
                   <Trash2 size={14} />
@@ -631,7 +648,7 @@ export function VoucherRow({
         <div className="relative mx-auto flex size-14 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
           {voucher.file ? (
             <FilePreview
-              file={{ filename: voucher.file.fileName || "Unknown" }}
+              file={{ filename: voucher.file.fileName || t("common.unknown") }}
               fileId={voucher.file.hash}
               className="h-full w-full object-cover"
             />

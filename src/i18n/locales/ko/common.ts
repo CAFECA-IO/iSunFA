@@ -93,4 +93,9 @@ export const common = {
   please_login: "로그인 해주세요",
   success: "성공",
   mobile_view: "모바일 보기",
+  report_layout: {
+    brand: "iSunFA 스마트 탄소 회계",
+    footer_note:
+      "본 보고서는 AI 기술로 생성되었으며, iSunFA 스마트 탄소 회계에서 제공합니다 • ",
+  },
 };

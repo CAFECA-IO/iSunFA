@@ -9,7 +9,6 @@ export enum TradingType {
 
 export interface IVoucherDashboardSummary {
   todayVoucherCount: number;
-  monthTotalAmount: number | bigint | string;
   pendingVoucherCount: number;
   aiAverageConfidence: number;
 }
@@ -64,6 +63,8 @@ export interface IParsedVoucherLine {
   isVerified?: boolean;
   generationSource?: string;
   semanticCategory?: string;
+  targetFxDate?: string;
+  amortizationTargetCategory?: string;
 }
 
 export interface IParsedVoucher {

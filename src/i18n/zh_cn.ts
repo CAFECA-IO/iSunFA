@@ -1,4 +1,5 @@
 import { digitalProductPassport } from "@/i18n/locales/zh_cn/digital_product_passport";
+import { dppUrbanMining } from "@/i18n/locales/zh_cn/dpp_urban_mining";
 import { adminDashboard } from "@/i18n/locales/zh_cn/admin_dashboard";
 import { adminCampaign } from "@/i18n/locales/zh_cn/admin_campaign";
 import { common } from "@/i18n/locales/zh_cn/common";
@@ -60,6 +61,7 @@ import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const zhCn = {
   digital_product_passport: digitalProductPassport,
+  dpp_urban_mining: dppUrbanMining,
   transportation_carbon_footprint_calculator:
     transportationCarbonFootprintCalculator,
   salary_calculator: salaryCalculator,

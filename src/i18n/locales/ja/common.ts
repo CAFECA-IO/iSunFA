@@ -93,4 +93,9 @@ export const common = {
   please_login: "ログインしてください",
   success: "成功",
   mobile_view: "モバイル表示",
+  report_layout: {
+    brand: "iSunFAスマート炭素会計",
+    footer_note:
+      "このレポートはAI技術によって生成され、iSunFAスマート炭素会計によって提供されています • ",
+  },
 };

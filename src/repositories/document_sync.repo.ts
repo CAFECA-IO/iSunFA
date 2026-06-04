@@ -430,26 +430,31 @@ export class DocumentSyncRepository {
 
             // Info: (20260526 - Tzuhan) 自動創建 AmortizationSchedule
             if (vd.startDate && vd.endDate && finalVoucherId) {
-              /**
-               * Info: (20260526 - Tzuhan)
-               * Find if there is a prepaid expense account code (e.g., 1251, 1252, etc. - we check if accountingCode is in a known prepaid list, or we can check original semantic category)
-               * Since semanticCategory was lost, let's just check the raw voucherLines to find the original amount, or just check the accounting code here.
-               * Assuming 1251 is prepaid expense. If the AI classified it, we have it in linesToCreate.
-               */
-              const prepaidLine = linesToCreate.find(
-                (l) =>
-                  l.accountingCode === "1251" ||
-                  l.accountingCode === "1252" ||
-                  l.accountingCode === "1253" ||
-                  l.accountingCode === "1254",
-              );
-              if (prepaidLine) {
+              // Info: (20260528 - Tzuhan) 依據 Service 層傳遞的攤銷意圖來對應費用科目
+              const originalPrepaidIndex =
+                vd.lines?.findIndex((l) => !!l.amortizationTargetCategory) ??
+                -1;
+
+              const prepaidLineData =
+                originalPrepaidIndex >= 0
+                  ? vd.lines![originalPrepaidIndex]
+                  : undefined;
+              const prepaidLineDb =
+                originalPrepaidIndex >= 0
+                  ? linesToCreate[originalPrepaidIndex]
+                  : undefined;
+
+              if (prepaidLineData && prepaidLineDb) {
                 const sDate = new Date(vd.startDate);
                 const eDate = new Date(vd.endDate);
 
+                // Info: (20260601 - Tzuhan) [Refactor] Repository 層僅負責查字典寫入 DB，業務邏輯已移至 Service 層
                 if (!isNaN(sDate.getTime()) && !isNaN(eDate.getTime())) {
-                  // TODO: (20260526 - Tzuhan) 未來需要 AI 分析開立會計科目，預設使用 RENT_EXPENSE
-                  const expenseAccountCode = "RENT_EXPENSE";
+                  const expenseAccountCode = SemanticAccountMatcher.match(
+                    prepaidLineData.amortizationTargetCategory!,
+                    dictionary,
+                    (accountBook.country as CountryCode) || CountryCode.TW,
+                  );
                   const existingSchedule =
                     await tx.amortizationSchedule.findFirst({
                       where: { originalVoucherId: finalVoucherId },
@@ -461,8 +466,9 @@ export class DocumentSyncRepository {
                       data: {
                         startDate: sDate,
                         endDate: eDate,
-                        totalAmount: prepaidLine.amount?.toString() || "0",
-                        assetAccountCode: prepaidLine.accountingCode || "1251",
+                        totalAmount: prepaidLineDb.amount?.toString() || "0",
+                        assetAccountCode:
+                          prepaidLineDb.accountingCode || "1251",
                         expenseAccountCode,
                         accountBookId,
                       },
@@ -472,9 +478,10 @@ export class DocumentSyncRepository {
                       data: {
                         originalVoucherId: finalVoucherId,
                         accountBookId,
-                        assetAccountCode: prepaidLine.accountingCode || "1251",
+                        assetAccountCode:
+                          prepaidLineDb.accountingCode || "1251",
                         expenseAccountCode,
-                        totalAmount: prepaidLine.amount?.toString() || "0",
+                        totalAmount: prepaidLineDb.amount?.toString() || "0",
                         startDate: sDate,
                         endDate: eDate,
                         status: "ACTIVE",

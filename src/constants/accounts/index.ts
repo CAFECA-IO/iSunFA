@@ -5,13 +5,13 @@ import { CN_ACCOUNTS } from "@/constants/accounts/cn";
 import { HK_ACCOUNTS } from "@/constants/accounts/hk";
 import { TW_ACCOUNTS } from "@/constants/accounts/tw";
 import { EU_ACCOUNTS } from "@/constants/accounts/eu";
-import { CountryCode } from "@/constants/enums";
+import { AccountType, CountryCode } from "@/constants/enums";
 
 export interface IAccount {
   code: string;
   name: string;
   description: string;
-  type: string;
+  type: AccountType | string;
   level: number;
   parentCode: string;
   isDebit: boolean;

@@ -98,6 +98,11 @@ export class VoucherLinesParsingSkill implements ITaskSkill {
       }
 
       /**
+       * Info: (20260527 - Tzuhan) [ADR Migration]
+       * 過去此處包含大段的外幣匯率轉換邏輯 (Currency Mismatch Conversion)。
+       * 為貫徹 Zero Trust Architecture，所有外幣換算與高精度數學運算
+       * 已全數抽離至後端的 FxInterceptorService 與 VoucherPipelineOrchestrator。
+       * 
        * Info: (20260522 - Tzuhan)
        * Return Clean Extraction (Without LLM Hallucinated Accounting Codes)
        */
