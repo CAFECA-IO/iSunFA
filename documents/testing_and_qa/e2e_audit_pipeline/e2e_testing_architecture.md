@@ -1,9 +1,11 @@
 # 🧪 iSunFA E2E 全端測試管線架構解析 (E2E Testing Architecture)
 
-> **Date**: May 2026
+> **Date**: 2026-05-06
+> **UpdateAt**: 2026-06-04
+> **Author**: Tzuhan
+> **Version**: 1.1
 > **Scope**: `src/scripts/e2e-seeder/*`
 > **Context**: 指引新接手的開發者（人類或 AI）理解 iSunFA 複雜的 E2E 測試腳本生態系。
-> **Info**: (20260506 - Tzuhan)
 
 ## 🎯 什麼是 iSunFA 的 E2E 系統？
 
@@ -20,27 +22,34 @@
 ```mermaid
 graph TD
     A[PDF/真實財報] -->|1. ai_vision_extractor.ts| B(AI 萃取上下文快取)
-    C[2024_FIN_DATA.json] -->|2. financial_reverse_engineer.ts| D(simulated_vouchers.json)
-    B --> D
+    B -->|1.5 persona_generator.ts| P(company_persona.json)
+    
+    %% 財務與 ESG 逆推分支
+    C[2024_FIN_DATA.json] -->|2. chronological_reverse_engineer.ts| D(simulated_vouchers.json)
+    P --> D
     E[2024_ESG_METRICS.json] -->|3. esg_reverse_engineer.ts| D
-
     D -->|4. receipt_image_generator.ts| F[receipts/ 產生大量 SVG 憑證圖片]
-
     F -->|5. phase2_runner.ts \n上傳並觸發 AI 判讀| G[(Prisma Database:\n Voucher & EsgRecord)]
-
     G -->|6. cross_validator.ts \n結算並比對| H[Audit Variance Report]
     C -.-> H
     E -.-> H
+
+    %% 歐盟合規宣告分支 (CBAM & DPP)
+    P -->|7. cbam/ & dpp/ seeders| I[歐盟合規資料夾]
+    I -->|CBAM 海關報單 / 委外碳排| J[Export Customs & MES Energy]
+    I -->|DPP 規格書 / 宣告 PDF| K[product_specs.json & DPP PDF]
 ```
 
 ### 📦 工作單元詳解：
 
-1. **[資料備料] `ai_vision_extractor.ts`**：讀取目標企業的真實背景，產出「背景快取」，決定後續生成資料的「特性」（如供應商名稱、碳排主要來源）。
-2. **[財務逆推] `financial_reverse_engineer.ts`**：讀取 Ground Truth (2024_FIN_DATA)，向下拆解成數百筆含有借貸方的 `simulated_vouchers.json`。
+1. **[資料備料] `ai_vision_extractor.ts`**：讀取目標企業的真實背景，產出「背景快取」。
+1.5. **[對抗式企業畫像] `persona_generator.ts`**：基於背景快取與 Google 搜尋 Grounding，透過 AI 進行 8 次自我對抗（Generator vs Auditor），產生極度擬真的供應商清單、關係人與金額分佈 (`company_persona.json`)。這確保了壓測資料具備產業特徵（如半導體廠會出現 EDA 軟體費）。
+2. **[時序性逆推引擎] `chronological_reverse_engineer.ts`**：這是 E2E 管線的心臟。它讀取 Ground Truth (2024_FIN_DATA) 與企業畫像，透過「精確分配演算法 (Exact Sum Allocator)」將千億級財報總額，切割成數萬筆具備真實供應商的憑證，並隨機撒佈於 365 天中。在生成的過程中，它會**每日呼叫報表引擎進行斷言**，確保在第 365 天結束時，A=L+E 完美配平，且總額與 Ground Truth 「一毛不差」。
 3. **[ESG 逆推] `esg_reverse_engineer.ts`**：讀取碳盤查 Ground Truth，將 Scope 1/2 的排放量「掛載」回剛剛產生的水電、差旅傳票上。
 4. **[實體加工] `receipt_image_generator.ts`**：把這幾百筆 JSON 傳票，透過 15% 隨機加噪邏輯，轉譯為難以辨識的 `*.svg` 圖片，作為模擬原始憑證。
 5. **[上線測試] `phase2_runner.ts`**：模擬 Client 端操作，清空 DB，並將圖片餵給 `VoucherLinesParsingSkill` 與 `EsgParsingSkill`。系統將 AI 的 OCR+Semantic 結果正式入庫。
 6. **[品管驗收] `cross_validator.ts`**：從資料庫拉出經過 AI 解析的傳票與 ESG 紀錄，加總後跟最一開始的 Ground Truth 進行「零誤差盲測」，產出 Variance Report。
+7. **[歐盟合規分支] `cbam/*` & `dpp/*`**：透過 `persona_generator.ts` 產生的畫像，進一步產生 100% 擬真的歐盟 CBAM 前驅物/海關申報資料，以及 DPP (數位產品護照) 要求的生命週期、物理耐久度與化學品宣告信。這是作為攻打大廠供應鏈盡職調查 (DDP) 專案的核心武器。
 
 ---
 
@@ -50,8 +59,8 @@ graph TD
 
 ### 1. 逆向工程與擬真數據產生 (Reverse Engineering & Smart Mocking)
 
-- **核心腳本**：`financial_reverse_engineer.ts`, `esg_reverse_engineer.ts`
-- **機制**：多數測試只會隨機塞入假數字。但這兩個腳本具備**「財報逆推能力」**。它們會讀取真實上市櫃公司（如台積電、巨大機械）的千億級總營收與總費用，並自動「逆向拆解」成數十筆符合會計借貸法則的擬真傳票分錄。這讓系統能在無需真實發票授權的情況下，進行企業級規模的壓力測試。
+- **核心腳本**：`persona_generator.ts`, `chronological_reverse_engineer.ts`, `esg_reverse_engineer.ts`
+- **機制**：多數測試只會隨機塞入假數字。但這組腳本具備**「時序性財報逆推與對抗生成能力」**。它首先透過 8 輪對抗生成該企業的專屬供應商畫像，接著讀取真實上市櫃公司（如台積電、巨大機械）的千億級總營收與總費用，自動「逆向拆解」成數萬筆符合會計借貸法則與真實外觀的擬真傳票分錄。這讓系統能在無需真實發票授權的情況下，進行企業級規模、365 天連續性的極限壓力測試。
 
 ### 2. 對抗式 AI 視覺壓力測試 (Adversarial Visual Red-Teaming)
 

@@ -78,7 +78,14 @@ async function main() {
 
     console.log(`⏳ [開始] ${task.stockId} - ${task.year} 年 ${task.taskType}`);
 
-    const baseDir = path.join(process.cwd(), "downloads", task.stockId);
+    const baseDir = path.join(
+      process.cwd(),
+      "data",
+      task.stockId,
+      task.year.toString(),
+      "inputs",
+      "raw_reports",
+    );
     let savePath = "";
     let isSuccess = false;
 
