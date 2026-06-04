@@ -39,8 +39,10 @@ export async function POST(req: NextRequest) {
       return jsonFail(API_ERRORS.IN_SERVER_CONFIGURATION_ERROR);
     }
 
-    // Info: (20260604 - Julian) 透過前端傳來的 action 提取 prompt
-    // 若 action 屬於 AiRefineType，使用對應的 prompt；否則為用戶自訂指令，直接使用 action 作為 prompt
+    /**
+     * Info: (20260604 - Julian) 透過前端傳來的 action 提取 prompt
+     * 若 action 屬於 AiRefineType，使用對應的 prompt；否則為用戶自訂指令，直接使用 action 作為 prompt
+     */
     const instruction = AI_REFINE_INSTRUCTIONS[action] || action;
 
     // Info: (20260603 - Julian) 組合提示詞
