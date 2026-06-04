@@ -1,6 +1,7 @@
 export const digitalProductPassport = {
   title: "디지털 상품 여권",
   description: "B2B SKU 관리 및 제조 배치 발행.",
+  login_to_use: "디지털 제품 여권을 사용하려면 로그인해 주세요",
   define_sku: "새 SKU 정의",
   define_sku_desc: "AI 추출을 위한 기술 문서 업로드",
   create_sku: "SKU 생성",

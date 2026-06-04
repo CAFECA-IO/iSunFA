@@ -1,7 +1,12 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
-import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
+import { Sparkles, X } from "lucide-react";
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  PopoverBackdrop,
+} from "@headlessui/react";
 import { useTranslation } from "@/i18n/i18n_context";
 
 interface IAiConfidenceProps {
@@ -22,7 +27,7 @@ export default function AiConfidence({
     <div className="flex items-center justify-center gap-2 text-sm font-bold">
       {/* Info: (20260325 - Julian) Progress Bar */}
       <div
-        className={`block h-1.5 shrink-0 overflow-hidden rounded-full bg-slate-200 sm:h-2 ${barOnly ? "w-12" : "w-32 lg:w-20"}`}
+        className={`block h-1.5 shrink-0 overflow-hidden rounded-full bg-slate-200 sm:h-2 ${barOnly ? "w-12" : "w-20"}`}
       >
         <div
           // Info: (20260325 - Julian) 85 以上為綠色
@@ -31,7 +36,7 @@ export default function AiConfidence({
         />
       </div>
       <p
-        className={`whitespace-nowrap text-slate-700 ${barOnly ? "text-[10px]" : "text-sm"}`}
+        className={`whitespace-nowrap text-slate-700 ${barOnly ? "text-[10px]" : "text-xs sm:text-sm"}`}
       >
         {confidence}%
       </p>
@@ -52,7 +57,7 @@ export default function AiConfidence({
       .replace("</li>", "</li></ul>") ?? "";
 
   return (
-    <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
+    <div className="flex flex-row items-center gap-2">
       {/* Info: (20260325 - Julian) AI 信心度 Progress Bar */}
       <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
         <p className="text-xs font-bold text-slate-500">
@@ -63,7 +68,7 @@ export default function AiConfidence({
 
       {/* Info: (20260325 - Julian) AI 備註 Button */}
       <Popover className="relative">
-        {({ open }) => (
+        {({ open, close }) => (
           <>
             {/* Info: (20260325 - Julian) Button */}
             <PopoverButton
@@ -89,23 +94,38 @@ export default function AiConfidence({
 
             {/* Info: (20260325 - Julian) Note Panel */}
             {hasNote && (
-              <PopoverPanel
-                transition
-                anchor="bottom start"
-                className="z-201 flex w-[85vw] max-w-[320px] flex-col rounded-xl border border-blue-100 bg-white p-4 shadow-xl ring-1 ring-black/5 transition duration-200 ease-out outline-none data-closed:scale-95 data-closed:opacity-0 sm:w-[350px] sm:max-w-none"
-              >
-                <div className="mb-2 flex items-center gap-2">
-                  <Sparkles size={16} className="text-blue-500" />
-                  <h4 className="text-sm font-bold text-blue-900">
-                    {t("common.ai_confidence.note_title")}
-                  </h4>
-                </div>
-                <div className="text-sm leading-relaxed whitespace-pre-wrap text-slate-600">
-                  <article
-                    dangerouslySetInnerHTML={{ __html: formattedNote }}
-                  />
-                </div>
-              </PopoverPanel>
+              <>
+                <PopoverBackdrop
+                  transition
+                  className="fixed inset-0 z-200 bg-black/50 transition-opacity data-closed:opacity-0 sm:hidden"
+                />
+                <PopoverPanel
+                  transition
+                  anchor="bottom start"
+                  className="z-201 flex flex-col rounded-xl border border-blue-100 bg-white p-4 shadow-xl ring-1 ring-black/5 transition duration-200 ease-out outline-none data-closed:scale-95 data-closed:opacity-0 max-sm:fixed! max-sm:inset-0! max-sm:m-auto! max-sm:h-fit! max-sm:w-[90vw]! max-sm:max-w-[400px]! max-sm:transform-none! sm:w-[350px] sm:max-w-none"
+                >
+                  <div className="mb-2 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Sparkles size={16} className="text-blue-500" />
+                      <h4 className="text-sm font-bold text-blue-900">
+                        {t("common.ai_confidence.note_title")}
+                      </h4>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={close}
+                      className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 sm:hidden"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                  <div className="text-sm leading-relaxed whitespace-pre-wrap text-slate-600 max-sm:max-h-[70vh] max-sm:overflow-y-auto">
+                    <article
+                      dangerouslySetInnerHTML={{ __html: formattedNote }}
+                    />
+                  </div>
+                </PopoverPanel>
+              </>
             )}
           </>
         )}
