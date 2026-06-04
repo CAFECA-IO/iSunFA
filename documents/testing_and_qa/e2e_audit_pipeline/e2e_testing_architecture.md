@@ -42,14 +42,19 @@ graph TD
 
 ### 📦 工作單元詳解：
 
-1. **[資料備料] `ai_vision_extractor.ts`**：讀取目標企業的真實背景，產出「背景快取」。
-1.5. **[對抗式企業畫像] `persona_generator.ts`**：基於背景快取與 Google 搜尋 Grounding，透過 AI 進行 8 次自我對抗（Generator vs Auditor），產生極度擬真的供應商清單、關係人與金額分佈 (`company_persona.json`)。這確保了壓測資料具備產業特徵（如半導體廠會出現 EDA 軟體費）。
+1. **[資料備料與 AI 視覺萃取] `ai_vision_extractor.ts`**：
+   這是整個管線的基因庫！腳本會直接吞吐 `inputs/raw_reports/` 底下的真實 PDF（例如 `2024_FIN_REPORT.pdf` 與 `2024_ESG_REPORT.pdf`）。透過呼叫 Gemini Vision 模型並賦予「專業會計師暨 ESG 稽核員」的 Persona，從幾萬字的公開報告中精準萃取出該企業的「真實營運特徵 (Operational Nuances)」——包含真實的碳排來源 (Scope 1/2 大宗)、綠電佈局與供應鏈輪廓，打包成 Context Cache。
+
+1.5. **[對抗式企業畫像] `persona_generator.ts`**：
+   基於萃取出的背景快取，透過 AI 進行 8 次自我對抗（Generator vs Auditor），產生極度擬真的供應商清單、關係人與金額分佈 (`company_persona.json`)。這確保了壓測資料**並非憑空捏造，而是深度根植於真實企業的體質**。
+
 2. **[時序性逆推引擎] `chronological_reverse_engineer.ts`**：這是 E2E 管線的心臟。它讀取 Ground Truth (2024_FIN_DATA) 與企業畫像，透過「精確分配演算法 (Exact Sum Allocator)」將千億級財報總額，切割成數萬筆具備真實供應商的憑證，並隨機撒佈於 365 天中。在生成的過程中，它會**每日呼叫報表引擎進行斷言**，確保在第 365 天結束時，A=L+E 完美配平，且總額與 Ground Truth 「一毛不差」。
 3. **[ESG 逆推] `esg_reverse_engineer.ts`**：讀取碳盤查 Ground Truth，將 Scope 1/2 的排放量「掛載」回剛剛產生的水電、差旅傳票上。
 4. **[實體加工] `receipt_image_generator.ts`**：把這幾百筆 JSON 傳票，透過 15% 隨機加噪邏輯，轉譯為難以辨識的 `*.svg` 圖片，作為模擬原始憑證。
 5. **[上線測試] `phase2_runner.ts`**：模擬 Client 端操作，清空 DB，並將圖片餵給 `VoucherLinesParsingSkill` 與 `EsgParsingSkill`。系統將 AI 的 OCR+Semantic 結果正式入庫。
 6. **[品管驗收] `cross_validator.ts`**：從資料庫拉出經過 AI 解析的傳票與 ESG 紀錄，加總後跟最一開始的 Ground Truth 進行「零誤差盲測」，產出 Variance Report。
 7. **[歐盟合規分支] `cbam/*` & `dpp/*`**：透過 `persona_generator.ts` 產生的畫像，進一步產生 100% 擬真的歐盟 CBAM 前驅物/海關申報資料，以及 DPP (數位產品護照) 要求的生命週期、物理耐久度與化學品宣告信。這是作為攻打大廠供應鏈盡職調查 (DDP) 專案的核心武器。
+   > **💡 核心價值 (Data Genesis)**：系統將「企業畫像」餵給扮演「碳會計師 (Carbon Actuary)」的 AI，嚴格遵守歐盟規範（Cradle-to-Gate），**根據該企業在 ESG 報告中揭露的實際排碳體質，反向拆解、還原出「微觀的單一 SKU 產品」在生產線上的合理分配數據。** 這套用「真實宏觀報告」推演出「微觀 SKU 數據」的邏輯，正是 DPP 數字看起來如此有模有樣、說服力極強的根本原因！
 
 ---
 
