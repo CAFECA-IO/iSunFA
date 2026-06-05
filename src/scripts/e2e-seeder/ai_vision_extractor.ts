@@ -121,55 +121,34 @@ export const extractContextFromPdf = async (
     `${targetYear}_ESG_REPORT.pdf`,
   );
 
-  let baseYear = targetYear;
+  let finBaseYear = targetYear;
+  let esgBaseYear = targetYear;
 
-  // Info: (20260605 - Tzuhan) Cross-Year Baseline Extrapolation - 目錄掃描與歷史回溯
-  if (!fs.existsSync(finPdfPath) || !fs.existsSync(esgPdfPath)) {
-    console.warn(
-      `[WARN] 本地端找不到 ${stockId} 於 ${targetYear} 的 PDF 報告。`,
-    );
-
-    // Info: (20260605 - Tzuhan) 先嘗試從 DB 或爬蟲即時取得當年度報告
+  // Info: (20260605 - Tzuhan) 分別針對 FIN 與 ESG 進行獨立檢查與回溯
+  if (!fs.existsSync(finPdfPath)) {
+    console.warn(`[WARN] 本地端找不到 ${stockId} 於 ${targetYear} 的 FIN 報告。`);
     const downloadSuccess = await checkDatabaseAndDownload(stockId, targetYear);
-
     if (!downloadSuccess) {
-      console.warn(
-        `[WARN] 確定取得 ${targetYear} 報告失敗！準備啟動歷史回溯與時空推演...`,
-      );
-      // Info: (20260605 - Tzuhan) Fallback to 2024 for now, could be dynamic scan later
-      baseYear = "2024";
-      const baseDir = path.resolve(
-        process.cwd(),
-        `data/${stockId}/${baseYear}`,
-      );
-      finPdfPath = path.join(
-        baseDir,
-        "inputs",
-        "raw_reports",
-        `${baseYear}_FIN_REPORT.pdf`,
-      );
-      esgPdfPath = path.join(
-        baseDir,
-        "inputs",
-        "raw_reports",
-        `${baseYear}_ESG_REPORT.pdf`,
-      );
-
-      if (!fs.existsSync(finPdfPath) || !fs.existsSync(esgPdfPath)) {
-        console.warn(
-          `[WARN] Fallback PDFs not found for ${stockId} in ${baseYear}. Returning null.`,
-        );
-        return null;
-      }
-      console.log(
-        `[INFO] Found historical PDFs in ${baseYear}. Will extrapolate to ${targetYear}.`,
-      );
-    } else {
-      console.log(`[INFO] Successfully downloaded current year PDFs for ${targetYear}.`);
+      console.warn(`[WARN] 確定取得 ${targetYear} FIN 報告失敗！準備啟動歷史回溯...`);
+      finBaseYear = "2024";
+      finPdfPath = path.join(path.resolve(process.cwd(), `data/${stockId}/${finBaseYear}`), "inputs", "raw_reports", `${finBaseYear}_FIN_REPORT.pdf`);
+      if (!fs.existsSync(finPdfPath)) return null;
     }
-  } else {
-    console.log(`[INFO] Found current year PDFs for ${targetYear}.`);
   }
+
+  if (!fs.existsSync(esgPdfPath)) {
+    console.warn(`[WARN] 本地端找不到 ${stockId} 於 ${targetYear} 的 ESG 報告。`);
+    // 如果剛剛已經跑過下載腳本，就不需要再跑一次
+    const downloadSuccess = fs.existsSync(esgPdfPath) || await checkDatabaseAndDownload(stockId, targetYear);
+    if (!downloadSuccess) {
+      console.warn(`[WARN] 確定取得 ${targetYear} ESG 報告失敗！準備啟動歷史回溯...`);
+      esgBaseYear = "2024";
+      esgPdfPath = path.join(path.resolve(process.cwd(), `data/${stockId}/${esgBaseYear}`), "inputs", "raw_reports", `${esgBaseYear}_ESG_REPORT.pdf`);
+      if (!fs.existsSync(esgPdfPath)) return null;
+    }
+  }
+
+  console.log(`[INFO] Final Reports to analyze: FIN(${finBaseYear}), ESG(${esgBaseYear}) target: ${targetYear}`);
 
     console.log(
       `[INFO] Analyzing PDFs for ${stockId} via Gemini Vision API...`,
@@ -182,18 +161,18 @@ export const extractContextFromPdf = async (
 
       const finUploadResult = await fileManager.uploadFile(finPdfPath, {
         mimeType: "application/pdf",
-        displayName: `${stockId}_${baseYear}_FIN_REPORT.pdf`,
+        displayName: `${stockId}_${finBaseYear}_FIN_REPORT.pdf`,
       });
 
       const esgUploadResult = await fileManager.uploadFile(esgPdfPath, {
         mimeType: "application/pdf",
-        displayName: `${stockId}_${baseYear}_ESG_REPORT.pdf`,
+        displayName: `${stockId}_${esgBaseYear}_ESG_REPORT.pdf`,
       });
 
       const prompt = `
       You are an elite Intelligence Analyst, Certified Public Accountant (CPA), and Macroeconomic Forecaster.
-      I have provided the Annual Financial Report and ESG Report for a specific company from the year ${baseYear}.
-      ${baseYear !== targetYear ? `\n      CRITICAL INSTRUCTION [TIME-MACHINE]: The target simulation year is ${targetYear}, but reports are from ${baseYear}. You MUST perform a Cross-Year Baseline Extrapolation. Analyze the ${baseYear} baseline, then logically project how macroeconomic trends (e.g., CBAM, global EV market, interest rates, geopolitics) will impact their ${targetYear} revenue, supply chain, and carbon emissions (specifically their green energy adoption rate).\n` : ""}
+      I have provided the Annual Financial Report from ${finBaseYear} and the ESG Report from ${esgBaseYear} for a specific company.
+      ${finBaseYear !== targetYear || esgBaseYear !== targetYear ? `\n      CRITICAL INSTRUCTION [TIME-MACHINE]: The target simulation year is ${targetYear}, but some reports are from historical years. You MUST perform a Cross-Year Baseline Extrapolation for any missing data. Analyze the historical baselines, then logically project how macroeconomic trends (e.g., CBAM, global EV market, interest rates, geopolitics) will impact their ${targetYear} revenue, supply chain, and carbon emissions (specifically their green energy adoption rate).\n` : ""}
       
       Your task is to perform an EXTREME GRANULARITY FACT EXTRACTION. 
       DO NOT invent generic placeholder names (like "主要熱處理外包商"). You MUST extract the REAL supplier names, REAL bank names, REAL numbers, and REAL product lines directly from the tens of thousands of words in these PDFs.
@@ -201,13 +180,13 @@ export const extractContextFromPdf = async (
       Please extract the information and return ONLY a valid JSON object matching this schema exactly:
       {
         "historicalBaseline": {
-          "revenueScale": "Extract the exact revenue number for ${baseYear} (e.g. '新台幣 6,854,321 仟元')",
+          "revenueScale": "Extract the exact revenue number for the target year or closest available year (e.g. '新台幣 6,854,321 仟元')",
           "scope1Emissions": "Extract exact Scope 1 emissions (e.g. '12,345 tCO2e')",
           "scope2Emissions": "Extract exact Scope 2 emissions (e.g. '45,678 tCO2e')"
         },
         "crossYearExtrapolation": {
-          "macroTrends": "A detailed paragraph forecasting the macroeconomic and industry challenges from ${baseYear} to ${targetYear}.",
-          "predictedRevenueGrowth": "Logical deduction of revenue growth/decline % for ${targetYear} with rationale.",
+          "macroTrends": "A detailed paragraph forecasting the macroeconomic and industry challenges heading into ${targetYear}.",
+          "predictedRevenueGrowth": "Logical deduction of revenue growth/decline % for ${targetYear} with rationale based on the extracted baseline.",
           "greenEnergyShift": "How will their Scope 2 emissions and green power purchasing behavior change in ${targetYear} due to regulations like CBAM?"
         },
         "supplyChainIntelligence": {
