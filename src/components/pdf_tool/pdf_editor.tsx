@@ -126,6 +126,11 @@ export default function PdfEditor({
       // Info: (20260604 - Julian) 移除監聽並儲存草稿
       window.removeEventListener("beforeunload", handleBeforeUnload);
       saveDraft();
+
+      // Info: (20260605 - Julian) 元件卸載時，如果還有進行中的 AI 請求，就直接中斷它，避免 Memory Leak
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
     };
   }, []);
 

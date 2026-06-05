@@ -26,12 +26,10 @@ export function AiReportModal({
   const handleGenerate = () => {
     if (!dataInput.trim()) return;
     onSubmit(dataInput.trim(), instruction.trim());
-    handleClose();
   };
 
   const handleClose = () => {
-    setDataInput("");
-    setInstruction("");
+    // Info: (20260605 - Julian) 關閉視窗但不清空輸入，避免 API 失敗或誤關時遺失草稿
     onClose();
   };
 
