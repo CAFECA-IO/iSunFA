@@ -14,19 +14,34 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
 
   const bomRaw = JSON.parse(fs.readFileSync(bomPath, "utf-8"));
 
-  console.log(`🚀 [DPP PDF Renderer] 開始為 ${bomRaw.products.length} 項產品生成 Battery Pass 風格 PDF...`);
+  console.log(
+    `🚀 [DPP PDF Renderer] 開始為 ${bomRaw.products.length} 項產品生成 Battery Pass 風格 PDF...`,
+  );
 
   for (const product of bomRaw.products) {
     const productId = product.productId;
     const productMockDir = path.join(baseDir, productId, "mock_sources");
-    const productIngestionDir = path.join(baseDir, productId, "system_ingestion");
-    if (!fs.existsSync(productIngestionDir)) fs.mkdirSync(productIngestionDir, { recursive: true });
+    const productIngestionDir = path.join(
+      baseDir,
+      productId,
+      "system_ingestion",
+    );
+    if (!fs.existsSync(productIngestionDir))
+      fs.mkdirSync(productIngestionDir, { recursive: true });
 
-    const groundTruthPath = path.join(productMockDir, `${productId}_dpp_ground_truth.json`);
-    const outFile = path.join(productIngestionDir, `${productId}_dpp_ground_truth_dashboard.pdf`);
+    const groundTruthPath = path.join(
+      productMockDir,
+      `${productId}_dpp_ground_truth.json`,
+    );
+    const outFile = path.join(
+      productIngestionDir,
+      `${productId}_dpp_ground_truth_dashboard.pdf`,
+    );
 
     if (!fs.existsSync(groundTruthPath)) {
-      console.warn(`⚠️ [${productId}] 找不到對應的 Ground Truth JSON，跳過 PDF 產出。`);
+      console.warn(
+        `⚠️ [${productId}] 找不到對應的 Ground Truth JSON，跳過 PDF 產出。`,
+      );
       continue;
     }
 
@@ -59,9 +74,15 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
     }
 
     const tCO2e = dppData.carbonFootprint.total_tCO2e;
-    const prePct = (dppData.carbonFootprint.breakdown.precursorsEmissions / tCO2e) * 100 || 0;
-    const s1Pct = (dppData.carbonFootprint.breakdown.directEmissionsScope1 / tCO2e) * 100 || 0;
-    const s2Pct = (dppData.carbonFootprint.breakdown.indirectEmissionsScope2 / tCO2e) * 100 || 0;
+    const prePct =
+      (dppData.carbonFootprint.breakdown.precursorsEmissions / tCO2e) * 100 ||
+      0;
+    const s1Pct =
+      (dppData.carbonFootprint.breakdown.directEmissionsScope1 / tCO2e) * 100 ||
+      0;
+    const s2Pct =
+      (dppData.carbonFootprint.breakdown.indirectEmissionsScope2 / tCO2e) *
+        100 || 0;
 
     const htmlContent = `
 <!DOCTYPE html>
@@ -243,7 +264,8 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
                     m.material.includes(c.materialName),
                 )
                 .elements.map(
-                  (e: IChemicalElement) => `${e.element} ${String(e.percentage).replace(/,/g, '.')}%`,
+                  (e: IChemicalElement) =>
+                    `${e.element} ${String(e.percentage).replace(/,/g, ".")}%`,
                 )
                 .join(", ")}
             </div>
@@ -266,8 +288,8 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
         .join("")}
     </div>
   </div>
-  <div style="display: flex; flex-direction: column; gap: 30px;">
-    <div class="card">
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+    <div class="card" style="margin-bottom: 0;">
       <h2>Durability & Repair Guidelines</h2>
       <div class="kv-row"><span class="kv-key">Physical Lifespan</span><span class="kv-val">${dppData.durabilityAndRepair.physicalLifespanYears} Years</span></div>
       <div class="kv-row" style="flex-direction: column; gap: 8px; margin-top: 15px;">
@@ -279,7 +301,7 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
         <span class="kv-val" style="color: #cbd5e1; font-weight: normal; line-height: 1.5; white-space: normal; text-align: left; margin-left: 0;">${dppData.durabilityAndRepair.disposal}</span>
       </div>
     </div>
-    <div class="card">
+    <div class="card" style="margin-bottom: 0;">
       <h2>Compliance & Certifications</h2>
       <div class="kv-row"><span class="kv-key">RoHS Compliant</span><span class="kv-val">${dppData.compliance.rohsCompliant ? "✅ YES" : "❌ NO"}</span></div>
       <div class="kv-row"><span class="kv-key">PFAS Free</span><span class="kv-val">${dppData.compliance.pfasFree ? "✅ YES" : "❌ NO"}</span></div>
@@ -306,7 +328,7 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
 
     console.log(`⏳ [${productId}] Rendering DPP Dashboard PDF...`);
     const { mdToPdf } = await import("md-to-pdf");
-    
+
     await mdToPdf(
       { content: safeHtmlContent },
       {
@@ -319,7 +341,9 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
       },
     );
 
-    console.log(`🎉 [SUCCESS] [${productId}] 數位產品護照 PDF 已成功產出：${outFile}`);
+    console.log(
+      `🎉 [SUCCESS] [${productId}] 數位產品護照 PDF 已成功產出：${outFile}`,
+    );
   }
 }
 
