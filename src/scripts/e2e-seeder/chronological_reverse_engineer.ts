@@ -251,7 +251,7 @@ export const runChronologicalEngine = (
   const bomPath = path.join(mockSourcesDir, "boms_and_precursors.json");
 
   if (!fs.existsSync(finDataPath)) {
-    console.error(`[ERROR] Missing 2024_FIN_DATA.json for ${stockId}`);
+    console.error(`[ERROR] Missing ${year}_FIN_DATA.json for ${stockId}`);
     process.exit(1);
   }
 
@@ -628,7 +628,7 @@ export const runChronologicalEngine = (
     for (const v of dayVouchers) {
       cumulativeLines.push(...v.lines);
 
-      const date = new Date(`2024-01-01`);
+      const date = new Date(`${year}-01-01`);
       date.setDate(date.getDate() + day);
       const dateString = date.toISOString().split("T")[0];
 
