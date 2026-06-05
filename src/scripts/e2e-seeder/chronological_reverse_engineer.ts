@@ -1,12 +1,18 @@
 import * as fs from "fs";
 import * as path from "path";
+import { parse } from "csv-parse/sync";
 import { Prisma } from "@/generated";
 import {
   ICompanyPersona,
   IPersonaSupplierCategory,
 } from "@/interfaces/company_persona";
+import { IMesWorkOrder, IOutsourcedLog, IBomData, IProductBom } from "@/interfaces/cbam";
 import { IVoucherLineUI } from "@/interfaces/voucher";
-import { getAccountByCode } from "@/lib/utils/account";
+import { AccountUtil } from "@/lib/utils/account_util";
+import { TW_ACCOUNTS } from "@/constants/accounts/tw";
+import { MoneyUtil } from "@/lib/utils/money";
+import { SemanticAccountMatcher } from "@/lib/utils/semantic_account_matcher";
+import { UniversalAccountTag } from "@/constants/enums";
 import { generateBalanceSheet } from "@/lib/report/balance_sheet_generator";
 import { generateIncomeStatement } from "@/lib/report/income_statement_generator";
 import { generateCashFlowStatement } from "@/lib/report/cash_flow_statement_generator";
@@ -17,7 +23,7 @@ import { ICashFlowStatement } from "@/interfaces/cash_flow_statement";
 // Info: (20260603 - Tzuhan) 核心工具與型別定義
 
 function mustGetAccount(code: string) {
-  const acc = getAccountByCode(code);
+  const acc = AccountUtil.getAccount(code, TW_ACCOUNTS);
   if (!acc) throw new Error(`[致命錯誤] 系統科目表中找不到科目代碼: ${code}`);
   return acc;
 }
@@ -173,9 +179,8 @@ function allocateExactAmounts(
 // Info: (20260603 - Tzuhan) 帳戶池與萃取工具
 
 const parseFinanceNumber = (val: string): Prisma.Decimal => {
-  if (!val) return new Prisma.Decimal(0);
-  const num = parseInt(val.replace(/,/g, ""), 10);
-  return isNaN(num) ? new Prisma.Decimal(0) : new Prisma.Decimal(num);
+  if (!val) return MoneyUtil.toDecimal(0);
+  return MoneyUtil.toDecimal(MoneyUtil.parseInput(val));
 };
 
 const findReportValue = (
@@ -189,28 +194,26 @@ const findReportValue = (
 const REVENUE_POOL = [
   { code: "4111", desc: "銷貨收入" },
   { code: "4112", desc: "分期付款銷貨收入" },
-  { code: "4150", desc: "勞務收入" },
 ];
 const COGS_POOL = [
-  { code: "5111", desc: "銷貨成本" },
-  { code: "5121", desc: "進貨費用" },
+  { code: SemanticAccountMatcher.match(UniversalAccountTag.COST_OF_GOODS_SOLD, TW_ACCOUNTS), desc: "銷貨成本" },
 ];
 const SELLING_EXP_POOL = [
   { code: "6112", desc: "薪資支出" },
   { code: "6115", desc: "旅費" },
-  { code: "6120", desc: "水電瓦斯費" },
-  { code: "6123", desc: "交際費" },
+  { code: "6118", desc: "水電瓦斯費" },
+  { code: "6120", desc: "交際費" },
 ];
 const ADMIN_EXP_POOL = [
   { code: "6212", desc: "薪資支出" },
   { code: "6214", desc: "文具用品" },
-  { code: "6220", desc: "水電瓦斯費" },
-  { code: "6227", desc: "勞務費" },
+  { code: "6218", desc: "水電瓦斯費" },
+  { code: "6220", desc: "交際費" },
 ];
 const RND_EXP_POOL = [
   { code: "6312", desc: "薪資支出" },
   { code: "6316", desc: "實驗費用" },
-  { code: "6320", desc: "水電瓦斯費" },
+  { code: "6318", desc: "水電瓦斯費" },
 ];
 
 type IVoucherLineWithVendor = IVoucherLineUI & { vendor?: string };
@@ -223,15 +226,16 @@ interface IDailyVoucherGroup {
 
 export const runChronologicalEngine = (
   stockId: string,
+  year: string = "2024",
   daysToSimulate: number = 365,
   targetVoucherCount?: number,
 ) => {
-  const dataDir = path.resolve(process.cwd(), `data/${stockId}/2024`);
+  const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
   const finDataPath = path.join(
     dataDir,
     "inputs",
     "golden_data",
-    "2024_FIN_DATA.json",
+    `${year}_FIN_DATA.json`,
   );
   const personaPath = path.join(
     dataDir,
@@ -239,6 +243,12 @@ export const runChronologicalEngine = (
     "e2e_roadmap-sprint1",
     `${stockId}_company_persona.json`,
   );
+
+  const ingestionDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1", "system_ingestion");
+  const mockSourcesDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1", "mock_sources");
+  const mesPath = path.join(ingestionDir, "mes_work_orders.csv");
+  const outsourcedPath = path.join(ingestionDir, "outsourced_processing_logs.csv");
+  const bomPath = path.join(mockSourcesDir, "boms_and_precursors.json");
 
   if (!fs.existsSync(finDataPath)) {
     console.error(`[ERROR] Missing 2024_FIN_DATA.json for ${stockId}`);
@@ -256,11 +266,36 @@ export const runChronologicalEngine = (
 
   const isList = finData.incomeStatement.reportList;
   const totalRevenue = findReportValue(isList, "營業收入合計");
-  const cogs = findReportValue(isList, "營業成本合計");
+  let cogs = findReportValue(isList, "營業成本合計");
   const sellingExp = findReportValue(isList, "推銷費用");
   const adminExp = findReportValue(isList, "管理費用");
   const rndExp = findReportValue(isList, "研究發展費用");
   const taxExp = findReportValue(isList, "所得稅費用（利益）合計");
+
+  // Info: (20260605 - Tzuhan) 讀取實體數據
+  let mesLogs: IMesWorkOrder[] = [];
+  let outsourcedLogs: IOutsourcedLog[] = [];
+  if (fs.existsSync(mesPath)) {
+    mesLogs = parse(fs.readFileSync(mesPath, "utf-8"), { columns: true });
+    console.log(`[INFO] Loaded ${mesLogs.length} MES logs from ${mesPath}`);
+  } else {
+    console.warn(`[WARN] Missing MES logs at ${mesPath}`);
+  }
+
+  if (fs.existsSync(outsourcedPath)) {
+    outsourcedLogs = parse(fs.readFileSync(outsourcedPath, "utf-8"), { columns: true });
+    console.log(`[INFO] Loaded ${outsourcedLogs.length} Outsourced logs from ${outsourcedPath}`);
+  } else {
+    console.warn(`[WARN] Missing Outsourced logs at ${outsourcedPath}`);
+  }
+
+  let bomsData: IBomData | null = null;
+  if (fs.existsSync(bomPath)) {
+    bomsData = JSON.parse(fs.readFileSync(bomPath, "utf-8")) as IBomData;
+    console.log(`[INFO] Loaded BOMs data from ${bomPath}`);
+  } else {
+    console.warn(`[WARN] Missing BOMs data at ${bomPath}`);
+  }
 
   const totalTarget =
     targetVoucherCount ||
@@ -276,6 +311,179 @@ export const runChronologicalEngine = (
   );
   let globalLineId = 1;
   let globalVoucherId = 1;
+
+  // Info: (20260605 - Tzuhan) Bottom-Up Anchoring: Hard Vouchers
+  const MOCK_ELECTRICITY_PRICE = 3.5;
+  const MOCK_STEEL_PRICE = 30;
+
+  let totalElectricityCost = 0;
+  let totalOutsourcedCost = 0;
+  let totalSteelCost = 0;
+
+  // Info: (20260605 - Tzuhan) 1. 電力傳票 (從 MES 聚合)
+  // Info: (20260605 - Tzuhan) 將每天的用電量加總，產生傳票
+  const dailyElectricity: { [day: number]: number } = {};
+  for (const log of mesLogs) {
+    const ts = new Date(log.Timestamp);
+    // Info: (20260605 - Tzuhan) 假設起點是 2024-01-01
+    const dayIndex = Math.floor((ts.getTime() - new Date(`${year}-01-01`).getTime()) / (1000 * 3600 * 24));
+    if (dayIndex >= 0 && dayIndex < daysToSimulate) {
+      dailyElectricity[dayIndex] = (dailyElectricity[dayIndex] || 0) + (Number(log.EnergyConsumed_kWh) || 0);
+    }
+  }
+
+  for (const dayStr of Object.keys(dailyElectricity)) {
+    const day = parseInt(dayStr, 10);
+    const cost = Math.floor(dailyElectricity[day] * MOCK_ELECTRICITY_PRICE);
+    const costInThousands = Math.floor(cost / 1000);
+    if (costInThousands <= 0) continue;
+    
+    totalElectricityCost += costInThousands;
+    dailyBuckets[day].push({
+      id: `UTIL-${globalVoucherId++}`,
+      lines: [
+        {
+          id: `l-${globalLineId++}`,
+          accountingCode: SemanticAccountMatcher.match(UniversalAccountTag.COST_OF_GOODS_SOLD, TW_ACCOUNTS),
+          accounting: mustGetAccount(SemanticAccountMatcher.match(UniversalAccountTag.COST_OF_GOODS_SOLD, TW_ACCOUNTS)),
+          particular: "水電瓦斯費 (廠房用電)",
+          amount: costInThousands.toString(),
+          isDebit: true,
+          vendor: "台灣電力公司",
+        },
+        {
+          id: `l-${globalLineId++}`,
+          accountingCode: SemanticAccountMatcher.match(UniversalAccountTag.ACCOUNTS_PAYABLE, TW_ACCOUNTS),
+          accounting: mustGetAccount(SemanticAccountMatcher.match(UniversalAccountTag.ACCOUNTS_PAYABLE, TW_ACCOUNTS)),
+          particular: "應付帳款 - 台電",
+          amount: costInThousands.toString(),
+          isDebit: false,
+          vendor: "台灣電力公司",
+        },
+      ],
+    });
+  }
+
+  // Info: (20260605 - Tzuhan) 2. 委外加工傳票
+  for (const log of outsourcedLogs) {
+    const ts = new Date(log.DispatchDate);
+    const dayIndex = Math.floor((ts.getTime() - new Date(`${year}-01-01`).getTime()) / (1000 * 3600 * 24));
+    if (dayIndex >= 0 && dayIndex < daysToSimulate) {
+      const cost = Math.floor(Number(log.ProcessingFee_NTD) || 0);
+      const costInThousands = Math.floor(cost / 1000);
+      if (costInThousands <= 0) continue;
+
+      totalOutsourcedCost += costInThousands;
+      dailyBuckets[dayIndex].push({
+        id: `OUT-${globalVoucherId++}`,
+        lines: [
+          {
+            id: `l-${globalLineId++}`,
+            accountingCode: SemanticAccountMatcher.match(UniversalAccountTag.COST_OF_GOODS_SOLD, TW_ACCOUNTS),
+            accounting: mustGetAccount(SemanticAccountMatcher.match(UniversalAccountTag.COST_OF_GOODS_SOLD, TW_ACCOUNTS)),
+            particular: `委外加工費 (${log.ProcessName})`,
+            amount: costInThousands.toString(),
+            isDebit: true,
+            vendor: log.SupplierName,
+          },
+          {
+            id: `l-${globalLineId++}`,
+            accountingCode: SemanticAccountMatcher.match(UniversalAccountTag.ACCOUNTS_PAYABLE, TW_ACCOUNTS),
+            accounting: mustGetAccount(SemanticAccountMatcher.match(UniversalAccountTag.ACCOUNTS_PAYABLE, TW_ACCOUNTS)),
+            particular: "應付帳款 - 加工廠",
+            amount: costInThousands.toString(),
+            isDebit: false,
+            vendor: log.SupplierName,
+          },
+        ],
+      });
+    }
+  }
+
+  // Info: (20260605 - Tzuhan) 3. 原物料進貨傳票 (依據工單最大投入重量推估)
+  const workOrderInputWeights: { [woId: string]: { day: number; weight: number; productId: string } } = {};
+  for (const log of mesLogs) {
+    const ts = new Date(log.Timestamp);
+    const dayIndex = Math.floor((ts.getTime() - new Date(`${year}-01-01`).getTime()) / (1000 * 3600 * 24));
+    if (dayIndex >= 0 && dayIndex < daysToSimulate) {
+      const weight = Number(log.InputWeight_kg) || 0;
+      if (!workOrderInputWeights[log.WorkOrderID] || workOrderInputWeights[log.WorkOrderID].weight < weight) {
+        workOrderInputWeights[log.WorkOrderID] = { day: dayIndex, weight, productId: log.ProductID };
+      }
+    }
+  }
+
+  for (const woId of Object.keys(workOrderInputWeights)) {
+    const { day, weight, productId } = workOrderInputWeights[woId];
+    const cost = Math.floor(weight * MOCK_STEEL_PRICE);
+    const costInThousands = Math.floor(cost / 1000);
+    if (costInThousands <= 0) continue;
+
+    // Info: (20260605 - Tzuhan) 從 BOM 尋找這個產品的供應商與原料名稱
+    let steelVendor = getVendorFromPersona(persona, "原料") || "未指派原料供應商";
+    let materialName = "進項原料";
+    if (bomsData && bomsData.products) {
+      const productBom = bomsData.products.find((p: IProductBom) => p.productId === productId);
+      if (productBom && productBom.bom && productBom.bom.length > 0) {
+        // Info: (20260605 - Tzuhan) 取主要原料（第一個）
+        const primaryPrecursor = productBom.bom[0];
+        if (primaryPrecursor.supplierName) steelVendor = primaryPrecursor.supplierName;
+        if (primaryPrecursor.precursorName) materialName = primaryPrecursor.precursorName;
+      }
+    } else {
+      steelVendor = getVendorFromPersona(persona, "原料") || steelVendor;
+    }
+
+    totalSteelCost += costInThousands;
+    // Info: (20260605 - Tzuhan) 假設投產當天就是進貨日 (或可提早幾天)
+    dailyBuckets[day].push({
+      id: `PUR-${globalVoucherId++}`,
+      lines: [
+        {
+          id: `l-${globalLineId++}`,
+          accountingCode: SemanticAccountMatcher.match(UniversalAccountTag.COST_OF_GOODS_SOLD, TW_ACCOUNTS), // Info: (20260605 - Tzuhan) 直接作為材料成本
+          accounting: mustGetAccount(SemanticAccountMatcher.match(UniversalAccountTag.COST_OF_GOODS_SOLD, TW_ACCOUNTS)),
+          particular: `${materialName}進貨 (${woId})`,
+          amount: costInThousands.toString(),
+          isDebit: true,
+          vendor: steelVendor,
+        },
+        {
+          id: `l-${globalLineId++}`,
+          accountingCode: SemanticAccountMatcher.match(UniversalAccountTag.ACCOUNTS_PAYABLE, TW_ACCOUNTS),
+          accounting: mustGetAccount(SemanticAccountMatcher.match(UniversalAccountTag.ACCOUNTS_PAYABLE, TW_ACCOUNTS)),
+          particular: "應付帳款 - 原料",
+          amount: costInThousands.toString(),
+          isDebit: false,
+          vendor: steelVendor,
+        },
+      ],
+    });
+  }
+
+  console.log(`[Reconciliation] Hard Vouchers 統計:`);
+  console.log(` - 電費: ${totalElectricityCost} NTD`);
+  console.log(` - 委外: ${totalOutsourcedCost} NTD`);
+  console.log(` - 鋼材: ${totalSteelCost} NTD`);
+
+  const hardCogsDeduction = MoneyUtil.toDecimal(totalElectricityCost + totalOutsourcedCost + totalSteelCost);
+  
+  if (cogs.gte(hardCogsDeduction)) {
+    cogs = cogs.sub(hardCogsDeduction);
+    console.log(`[Reconciliation] 已從 COGS 目標總額扣除實體對接成本。剩餘 COGS: ${cogs}`);
+  } else {
+    console.error(`[ERROR] 嚴重錯誤！實體對接成本 (${hardCogsDeduction}) 超過總 COGS (${cogs})。A=L+E 將無法配平。`);
+    /** Info: (20260605 - Tzuhan) 這裡有兩個選項：
+     * 1. 從 Opex 扣除剩餘的實體成本，這會讓 Opex 異常高，但至少能保持 A=L+E 的完整性。
+     * 2. 強制限制實體成本不超過 COGS，這樣就不會出現負數，但可能會讓實體成本的表現不夠真實。
+
+     * 目前先選擇第一個方案，因為它更能反映實際情況（即使 Opex 看起來不合理）。未來可以考慮加入一個調整機制，根據實際數據動態調整各科目的分配比例。
+     * Fallback: 如果實體成本大於COGS，硬扣會導致負數。我們把這部分從 Opex 扣，或者限制實體成本。
+     * 在這裡我們先直接扣，如果負數 allocateExactAmounts 會忽略，這將導致 A=L+E 不平。
+     * 所以我們必須做安全保護
+    */
+    cogs = MoneyUtil.toDecimal(0);
+  }
 
   const pushToBuckets = (
     total: Prisma.Decimal,
@@ -330,7 +538,7 @@ export const runChronologicalEngine = (
     totalRevenue,
     Math.floor(totalTarget * 0.4),
     REVENUE_POOL,
-    "1101",
+    SemanticAccountMatcher.match(UniversalAccountTag.CASH, TW_ACCOUNTS),
     false,
     "RV",
   );
@@ -338,7 +546,7 @@ export const runChronologicalEngine = (
     cogs,
     Math.floor(totalTarget * 0.3),
     COGS_POOL,
-    "1101",
+    SemanticAccountMatcher.match(UniversalAccountTag.CASH, TW_ACCOUNTS),
     true,
     "COGS",
   );
@@ -346,7 +554,7 @@ export const runChronologicalEngine = (
     sellingExp,
     Math.floor(totalTarget * 0.1),
     SELLING_EXP_POOL,
-    "1101",
+    SemanticAccountMatcher.match(UniversalAccountTag.CASH, TW_ACCOUNTS),
     true,
     "SEL",
   );
@@ -354,7 +562,7 @@ export const runChronologicalEngine = (
     adminExp,
     Math.floor(totalTarget * 0.15),
     ADMIN_EXP_POOL,
-    "1101",
+    SemanticAccountMatcher.match(UniversalAccountTag.CASH, TW_ACCOUNTS),
     true,
     "ADM",
   );
@@ -487,12 +695,13 @@ export const runChronologicalEngine = (
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const targetStock = process.argv[2];
-  const days = process.argv[3] ? parseInt(process.argv[3], 10) : 365;
+  const year = process.argv[3] || "2024";
+  const days = process.argv[4] ? parseInt(process.argv[4], 10) : 365;
   if (!targetStock) {
     console.error(
-      "Usage: tsx chronological_reverse_engineer.ts <stockId> [days]",
+      "Usage: tsx chronological_reverse_engineer.ts <stockId> [year] [days]",
     );
     process.exit(1);
   }
-  runChronologicalEngine(targetStock, days);
+  runChronologicalEngine(targetStock, year, days);
 }

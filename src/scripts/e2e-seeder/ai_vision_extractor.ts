@@ -138,7 +138,7 @@ export const extractContextFromPdf = async (
 
   if (!fs.existsSync(esgPdfPath)) {
     console.warn(`[WARN] 本地端找不到 ${stockId} 於 ${targetYear} 的 ESG 報告。`);
-    // 如果剛剛已經跑過下載腳本，就不需要再跑一次
+    // Info: (20260605 - Tzuhan) 如果剛剛已經跑過下載腳本，就不需要再跑一次
     const downloadSuccess = fs.existsSync(esgPdfPath) || await checkDatabaseAndDownload(stockId, targetYear);
     if (!downloadSuccess) {
       console.warn(`[WARN] 確定取得 ${targetYear} ESG 報告失敗！準備啟動歷史回溯...`);

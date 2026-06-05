@@ -250,11 +250,12 @@ if (
   fs.realpathSync(process.argv[1]) === fs.realpathSync(currentFilePath)
 ) {
   const stockId = process.argv[2];
+  const year = process.argv[3] || "2024";
   if (!stockId) {
     console.error(
       "❌ 請提供股票代號，例如: npx tsx src/scripts/e2e-seeder/cbam/generate_bom_precursors.ts 2066",
     );
     process.exit(1);
   }
-  generateBOMAndPrecursors(stockId).catch(console.error);
+  generateBOMAndPrecursors(stockId, year).catch(console.error);
 }

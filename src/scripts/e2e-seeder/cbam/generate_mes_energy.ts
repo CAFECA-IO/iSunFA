@@ -227,9 +227,10 @@ if (
   fs.realpathSync(process.argv[1]) === fs.realpathSync(currentFilePath)
 ) {
   const stockId = process.argv[2];
+  const year = process.argv[3] || "2024";
   if (!stockId) {
     console.error("❌ 請提供股票代號");
     process.exit(1);
   }
-  generateMESLogs(stockId).catch(console.error);
+  generateMESLogs(stockId, year).catch(console.error);
 }

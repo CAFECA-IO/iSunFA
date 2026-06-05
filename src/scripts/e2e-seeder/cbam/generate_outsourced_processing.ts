@@ -136,7 +136,7 @@ export async function generateOutsourcedLogs(
         OutputWeight_kg: totalOutputWeightKg,
         SupplierScope1_kgCO2e: scope1Carbon,
         SupplierScope2_kgCO2e: scope2Carbon,
-        ProcessingFee_NTD: Math.floor(totalInputWeightKg * getRandomFloat(10, 50)),
+        ProcessingFee_NTD: Math.floor(totalInputWeightKg * getRandomFloat(3, 10)),
       });
     }
   }
@@ -161,9 +161,10 @@ if (
   fs.realpathSync(process.argv[1]) === fs.realpathSync(currentFilePath)
 ) {
   const stockId = process.argv[2];
+  const year = process.argv[3] || "2024";
   if (!stockId) {
     console.error("❌ 請提供股票代號");
     process.exit(1);
   }
-  generateOutsourcedLogs(stockId).catch(console.error);
+  generateOutsourcedLogs(stockId, year).catch(console.error);
 }
