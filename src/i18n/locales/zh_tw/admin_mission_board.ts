@@ -87,6 +87,16 @@ export const adminMissionBoard = {
       revoke: "撤銷",
       copy_success: "連結已複製到剪貼簿！",
     },
+    ai_report_modal: {
+      title: "AI 報告生成",
+      subtitle:
+        "請貼上數據來源（支援文字、CSV、JSON），AI 將自動為您生成結構化報告。",
+      data_label: "來源數據 (必填)",
+      data_placeholder: "貼上要分析的財報數字、ESG 指標等...",
+      instruction_label: "自訂指令 (選填)",
+      instruction_placeholder: "例如：請著重分析減碳成效，並以列表呈現重點...",
+      generate: "生成報告",
+    },
   },
   gc: {
     btn_text: "執行 GC 清理",

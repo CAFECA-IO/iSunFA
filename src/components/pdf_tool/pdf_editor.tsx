@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import {
+  Check,
   CirclePause,
   Download,
   Edit3,
@@ -9,6 +10,7 @@ import {
   Loader2,
   Share2,
   Sparkles,
+  X as XIcon,
 } from "lucide-react";
 import { MarkdownContent } from "@/components/common/markdown_content";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -18,6 +20,7 @@ import { IApiResponse } from "@/lib/utils/response";
 import PdfShareLinkModal from "@/components/pdf_tool/pdf_share_link_modal";
 import { AiContextMenu } from "@/components/pdf_tool/ai_context_menu";
 import { AiSuggestionMenu } from "@/components/pdf_tool/ai_suggestion_menu";
+import { AiReportModal } from "@/components/pdf_tool/ai_report_modal";
 
 enum ViewMode {
   EDIT = "edit",
@@ -91,6 +94,16 @@ export default function PdfEditor({
   const [isSharing, setIsSharing] = useState<boolean>(false);
   const [shareToken, setShareToken] = useState<string | null>(null);
   const [isRevoking, setIsRevoking] = useState<boolean>(false);
+
+  // Info: (20260605 - Julian) AI Report Modal State
+  const [isAiReportModalOpen, setIsAiReportModalOpen] =
+    useState<boolean>(false);
+
+  // Info: (20260605 - Julian) Toast Message State
+  const [toastMessage, setToastMessage] = useState<{
+    text: string;
+    type: "success" | "error";
+  } | null>(null);
 
   // Info: (20260604 - Julian) 建立一個 ref 來儲存 markdownContext 的最新值
   const markdownRef = useRef<string>(markdownContext);
@@ -340,6 +353,58 @@ export default function PdfEditor({
     }
   };
 
+  const handleGenerateAiReport = async (data: string, instruction: string) => {
+    setIsAiReportModalOpen(false); // Info: (20260605 - Julian) 立即關閉視窗
+    setIsAiProcessing(true);
+    abortControllerRef.current = new AbortController();
+
+    try {
+      const response = await request<IApiResponse<{ result: string }>>(
+        "/api/v1/admin/pdf_editor/report_generate",
+        {
+          method: "POST",
+          body: JSON.stringify({ data, instruction }),
+          signal: abortControllerRef.current.signal,
+        },
+      );
+
+      if (response && response.payload && response.payload.result) {
+        const report = response.payload.result;
+        setMarkdownContext((prev) => prev + "\n\n" + report);
+
+        // Info: (20260605 - Julian) 顯示成功提示
+        setToastMessage({
+          type: "success",
+          text: t("common.success") || "報告生成並插入成功！",
+        });
+        setTimeout(() => setToastMessage(null), 3000);
+      } else {
+        setErrorModal({
+          isOpen: true,
+          message: t(
+            "admin_mission_board.pdf_editor.ai_assistant.ai_no_response",
+          ),
+        });
+      }
+    } catch (error: unknown) {
+      if (
+        error instanceof Error &&
+        error.message.toLowerCase().includes("abort")
+      ) {
+        console.log("AI request cancelled by user.");
+        return;
+      }
+      console.error("Failed to generate report:", error);
+      setErrorModal({
+        isOpen: true,
+        message: t("admin_mission_board.pdf_editor.ai_assistant.ai_timeout"),
+      });
+    } finally {
+      setIsAiProcessing(false);
+      abortControllerRef.current = null;
+    }
+  };
+
   const handleDownloadPDF = async () => {
     if (!contentRef.current) return;
 
@@ -547,7 +612,25 @@ export default function PdfEditor({
   );
 
   return (
-    <div className="flex h-[800px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <div className="relative flex h-[800px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+      {/* Info: (20260605 - Julian) Toast 訊息 */}
+      {toastMessage && (
+        <div
+          className={`fixed top-24 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-lg px-6 py-3 shadow-lg transition-all ${
+            toastMessage.type === "success"
+              ? "bg-emerald-500 text-white"
+              : "bg-red-500 text-white"
+          }`}
+        >
+          {toastMessage.type === "success" ? (
+            <Check size={20} />
+          ) : (
+            <XIcon size={20} />
+          )}
+          <span className="font-medium">{toastMessage.text}</span>
+        </div>
+      )}
+
       {/* Info: (20260426 - Luphia) Editor Toolbar */}
       <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 p-4">
         <div className="flex gap-2">
@@ -576,6 +659,14 @@ export default function PdfEditor({
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsAiReportModalOpen(true)}
+            className="flex items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-5 py-2 text-sm font-bold text-orange-600 transition-all hover:bg-orange-100"
+          >
+            <Sparkles size={16} />
+            {t("admin_mission_board.pdf_editor.ai_report_modal.title") ||
+              "AI 報告生成"}
+          </button>
           <button
             onClick={handleDownloadPDF}
             disabled={isGenerating || !markdownContext.trim()}
@@ -722,6 +813,13 @@ export default function PdfEditor({
         shareToken={shareToken}
         isRevoking={isRevoking}
         handleRevokeShare={handleRevokeShare}
+      />
+
+      {/* Info: (20260605 - Julian) AI Report Modal */}
+      <AiReportModal
+        isOpen={isAiReportModalOpen}
+        onClose={() => setIsAiReportModalOpen(false)}
+        onSubmit={handleGenerateAiReport}
       />
     </div>
   );
