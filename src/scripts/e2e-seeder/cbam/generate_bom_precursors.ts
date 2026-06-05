@@ -257,5 +257,5 @@ if (
     );
     process.exit(1);
   }
-  generateBOMAndPrecursors(stockId, year).catch(console.error);
+  generateBOMAndPrecursors(stockId, year).catch((e) => { console.error(e); process.exit(1); });
 }

@@ -399,9 +399,10 @@ ${baseContext}
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const stockId = process.argv[2];
+  const year = process.argv[3] || "2024";
   if (!stockId) {
     console.error("Usage: npx tsx generate_dpp_ground_truth.ts <stockId>");
     process.exit(1);
   }
-  generateDppGroundTruth(stockId).catch(console.error);
+  generateDppGroundTruth(stockId, year).catch((e) => { console.error(e); process.exit(1); });
 }

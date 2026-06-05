@@ -166,5 +166,5 @@ if (
     console.error("❌ 請提供股票代號");
     process.exit(1);
   }
-  generateOutsourcedLogs(stockId, year).catch(console.error);
+  generateOutsourcedLogs(stockId, year).catch((e) => { console.error(e); process.exit(1); });
 }

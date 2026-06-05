@@ -232,5 +232,5 @@ if (
     console.error("❌ 請提供股票代號");
     process.exit(1);
   }
-  generateMESLogs(stockId, year).catch(console.error);
+  generateMESLogs(stockId, year).catch((e) => { console.error(e); process.exit(1); });
 }

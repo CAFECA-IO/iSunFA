@@ -360,9 +360,10 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const stockId = process.argv[2];
+  const year = process.argv[3] || "2024";
   if (!stockId) {
     console.error("Usage: npx tsx render_dpp_pdf.ts <stockId>");
     process.exit(1);
   }
-  renderDppPdf(stockId).catch(console.error);
+  renderDppPdf(stockId, year).catch((e) => { console.error(e); process.exit(1); });
 }
