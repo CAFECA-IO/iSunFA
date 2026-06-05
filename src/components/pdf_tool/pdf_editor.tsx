@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { MarkdownContent } from "@/components/common/markdown_content";
 import { useTranslation } from "@/i18n/i18n_context";
+import { useTextSelectionMenu } from "@/hooks/use_text_selection_menu";
 import Image from "next/image";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -25,16 +26,6 @@ import { AiReportModal } from "@/components/pdf_tool/ai_report_modal";
 enum ViewMode {
   EDIT = "edit",
   PREVIEW = "preview",
-}
-
-// Info: (20260604 - Julian) AI 助手 menu
-interface IAiAssistant {
-  isOpen: boolean;
-  x: number;
-  y: number;
-  selectedText: string;
-  selectionStart: number;
-  selectionEnd: number;
 }
 
 // Info: (20260604 - Julian) AI 建議（採用/捨棄）
@@ -75,16 +66,13 @@ export default function PdfEditor({
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.EDIT);
 
-  // Info: (20260603 - Julian) AI Assistant Menu State
-  const [aiAssistantMenu, setAiAssistantMenu] = useState<IAiAssistant>({
-    isOpen: false,
-    x: 0,
-    y: 0,
-    selectedText: "",
-    selectionStart: 0,
-    selectionEnd: 0,
-  });
   const [isAiProcessing, setIsAiProcessing] = useState<boolean>(false);
+
+  // Info: (20260603 - Julian) AI Assistant Menu Hook
+  const { aiAssistantMenu, setAiAssistantMenu } = useTextSelectionMenu(
+    textareaRef,
+    isAiProcessing,
+  );
   const [aiSuggestion, setAiSuggestion] = useState<IAiSuggestion | null>(null);
   const [customAiPrompt, setCustomAiPrompt] = useState<string>("");
 
@@ -140,94 +128,6 @@ export default function PdfEditor({
       saveDraft();
     };
   }, []);
-
-  useEffect(() => {
-    // Info: (20260603 - Julian) 點擊外部時，關閉 AI Assistant menu
-    const handleClickOutside = (e: MouseEvent) => {
-      if (isAiProcessing) return;
-      const menuEl = document.getElementById("ai-context-menu");
-      const suggestionEl = document.getElementById("ai-suggestion-menu");
-      if (menuEl && menuEl.contains(e.target as Node)) return;
-      if (suggestionEl && suggestionEl.contains(e.target as Node)) return;
-      setAiAssistantMenu((prev) => ({ ...prev, isOpen: false }));
-    };
-
-    if (aiAssistantMenu.isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [aiAssistantMenu.isOpen, isAiProcessing]);
-
-  useEffect(() => {
-    // Info: (20260603 - Julian) 檢查選取
-    const checkSelection = (e?: MouseEvent | KeyboardEvent) => {
-      if (isAiProcessing) return; // Info: (20260603 - Julian) AI 處理時，不處理選取事件
-
-      const textarea = textareaRef.current;
-      if (!textarea || document.activeElement !== textarea) return;
-
-      // Info: (20260603 - Julian) 取得選取範圍
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-
-      if (start !== end) {
-        const selectedText = textarea.value.substring(start, end);
-
-        setAiAssistantMenu((prev) => {
-          let x = prev.x;
-          let y = prev.y;
-
-          // Info: (20260603 - Julian) 從 MouseEvent 取得 AI menu 位置；否則定位到 Textarea 中央位置
-          if (e instanceof MouseEvent) {
-            x = e.clientX;
-            y = e.clientY;
-          } else if (!prev.isOpen) {
-            const rect = textarea.getBoundingClientRect();
-            x = rect.left + rect.width / 2;
-            y = rect.top + rect.height / 2;
-          }
-
-          return {
-            ...prev,
-            isOpen: true,
-            x,
-            y,
-            selectedText,
-            selectionStart: start,
-            selectionEnd: end,
-          };
-        });
-      } else {
-        setAiAssistantMenu((prev) =>
-          prev.isOpen ? { ...prev, isOpen: false } : prev,
-        );
-      }
-    };
-
-    // Info: (20260603 - Julian) MouseUp → 檢查選取；若點擊 AI menu 則不處理
-    const handleGlobalMouseUp = (e: MouseEvent) => {
-      const menuEl = document.getElementById("ai-context-menu");
-      const suggestionEl = document.getElementById("ai-suggestion-menu");
-      if (menuEl && menuEl.contains(e.target as Node)) return;
-      if (suggestionEl && suggestionEl.contains(e.target as Node)) return;
-      checkSelection(e);
-    };
-
-    // Info: (20260603 - Julian) KeyUp → 檢查選取
-    const handleGlobalKeyUp = (e: KeyboardEvent) => {
-      checkSelection(e);
-    };
-
-    document.addEventListener("mouseup", handleGlobalMouseUp);
-    document.addEventListener("keyup", handleGlobalKeyUp);
-
-    return () => {
-      document.removeEventListener("mouseup", handleGlobalMouseUp);
-      document.removeEventListener("keyup", handleGlobalKeyUp);
-    };
-  }, [isAiProcessing]);
 
   const toggleShareLinkModal = () => setIsShareLinkModalOpen((prev) => !prev);
 

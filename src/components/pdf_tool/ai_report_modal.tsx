@@ -35,6 +35,14 @@ export function AiReportModal({
     onClose();
   };
 
+  const handleSubmitHotkey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Info: (20260605 - Julian) 快捷鍵送出：Command + Enter (Mac) 或 Ctrl + Enter (Windows)
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault(); // Info: (20260605 - Julian) 阻止預設行為
+      handleGenerate(); // Info: (20260605 - Julian) 呼叫 handleGenerate
+    }
+  };
+
   return (
     <Dialog open={isOpen} onClose={handleClose} className="relative z-50">
       <DialogBackdrop className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" />
@@ -49,8 +57,7 @@ export function AiReportModal({
                   className="flex items-center gap-2 text-lg leading-6 font-bold text-gray-900"
                 >
                   <FileText size={20} className="text-orange-600" />
-                  {t("admin_mission_board.pdf_editor.ai_report_modal.title") ||
-                    "AI 報告生成"}
+                  {t("admin_mission_board.pdf_editor.ai_report_modal.title")}
                 </DialogTitle>
                 <button
                   type="button"
@@ -63,10 +70,7 @@ export function AiReportModal({
 
               <div className="mt-4">
                 <p className="mb-4 text-sm text-gray-500">
-                  {t(
-                    "admin_mission_board.pdf_editor.ai_report_modal.subtitle",
-                  ) ||
-                    "請貼上數據來源（支援文字、CSV、JSON），AI 將自動為您生成結構化報告。"}
+                  {t("admin_mission_board.pdf_editor.ai_report_modal.subtitle")}
                 </p>
 
                 <div className="flex flex-col gap-4">
@@ -74,18 +78,17 @@ export function AiReportModal({
                     <label className="mb-1 block text-sm font-bold text-gray-700">
                       {t(
                         "admin_mission_board.pdf_editor.ai_report_modal.data_label",
-                      ) || "來源數據 (必填)"}
+                      )}
                     </label>
                     <textarea
                       value={dataInput}
                       onChange={(e) => setDataInput(e.target.value)}
+                      onKeyDown={handleSubmitHotkey}
                       rows={6}
                       className="w-full rounded-xl border border-gray-300 p-3 text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
-                      placeholder={
-                        t(
-                          "admin_mission_board.pdf_editor.ai_report_modal.data_placeholder",
-                        ) || "貼上要分析的財報數字、ESG 指標等..."
-                      }
+                      placeholder={t(
+                        "admin_mission_board.pdf_editor.ai_report_modal.data_placeholder",
+                      )}
                     />
                   </div>
 
@@ -93,18 +96,17 @@ export function AiReportModal({
                     <label className="mb-1 block text-sm font-bold text-gray-700">
                       {t(
                         "admin_mission_board.pdf_editor.ai_report_modal.instruction_label",
-                      ) || "自訂指令 (選填)"}
+                      )}
                     </label>
                     <textarea
                       value={instruction}
                       onChange={(e) => setInstruction(e.target.value)}
+                      onKeyDown={handleSubmitHotkey}
                       rows={2}
                       className="w-full rounded-xl border border-gray-300 p-3 text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
-                      placeholder={
-                        t(
-                          "admin_mission_board.pdf_editor.ai_report_modal.instruction_placeholder",
-                        ) || "例如：請著重分析減碳成效，並以列表呈現重點..."
-                      }
+                      placeholder={t(
+                        "admin_mission_board.pdf_editor.ai_report_modal.instruction_placeholder",
+                      )}
                     />
                   </div>
                 </div>
@@ -117,7 +119,7 @@ export function AiReportModal({
                 onClick={handleClose}
                 className="rounded-xl px-4 py-2 text-sm font-bold text-gray-600 transition-colors hover:bg-gray-200"
               >
-                {t("common.cancel") || "取消"}
+                {t("common.cancel")}
               </button>
 
               <button
@@ -127,8 +129,7 @@ export function AiReportModal({
                 className="flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-orange-500 disabled:bg-gray-300"
               >
                 <Sparkles size={16} />
-                {t("admin_mission_board.pdf_editor.ai_report_modal.generate") ||
-                  "生成報告"}
+                {t("admin_mission_board.pdf_editor.ai_report_modal.generate")}
               </button>
             </div>
           </DialogPanel>

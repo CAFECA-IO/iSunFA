@@ -81,11 +81,21 @@ export const adminMissionBoard = {
     },
     share_link_modal: {
       title: "分享 PDF 链接",
-      subtitle: "任何拥有此链接的人皆可查看此 PDF。",
+      subtitle: "拥有此链接的任何人都可以查看此 PDF。",
       copy: "复制",
       done: "完成",
       revoke: "撤销",
       copy_success: "链接已复制到剪贴板！",
+    },
+    ai_report_modal: {
+      title: "AI 报告生成",
+      subtitle:
+        "请粘贴数据来源（支持文本、CSV、JSON），AI 将自动为您生成结构化报告。",
+      data_label: "来源数据 (必填)",
+      data_placeholder: "粘贴要分析的财报数字、ESG 指标等...",
+      instruction_label: "自定义指令 (选填)",
+      instruction_placeholder: "例如：请以表格呈现各季度的营收增长率...",
+      generate: "生成报告",
     },
   },
   gc: {

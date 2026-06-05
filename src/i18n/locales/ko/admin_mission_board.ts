@@ -84,11 +84,21 @@ export const adminMissionBoard = {
     },
     share_link_modal: {
       title: "PDF 링크 공유",
-      subtitle: "이 링크를 가진 모든 사람이 이 PDF를 볼 수 있습니다.",
+      subtitle: "이 링크가 있는 사람은 누구나 이 PDF를 볼 수 있습니다.",
       copy: "복사",
       done: "완료",
       revoke: "취소",
       copy_success: "링크가 클립보드에 복사되었습니다!",
+    },
+    ai_report_modal: {
+      title: "AI 보고서 생성",
+      subtitle:
+        "데이터 소스를 붙여넣으세요 (텍스트, CSV, JSON 지원). AI가 자동으로 구조화된 보고서를 생성합니다.",
+      data_label: "소스 데이터 (필수)",
+      data_placeholder: "분석할 재무 수치, ESG 지표 등을 붙여넣으세요...",
+      instruction_label: "사용자 지정 지침 (선택 사항)",
+      instruction_placeholder: "예: 분기별 매출 성장률을 표로 표시해 주세요...",
+      generate: "보고서 생성",
     },
   },
   gc: {
