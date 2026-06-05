@@ -52,7 +52,7 @@ export const adminMissionBoard = {
     edit_markdown: "編輯 Markdown",
     preview_pdf: "預覽 PDF",
     download_pdf: "下載 PDF",
-    share_pdf: "分享 PDF 連結",
+    share_pdf: "分享 PDF",
     generating: "產生中...",
     markdown_input: "Markdown 輸入區",
     type_here: "請在此輸入您的 markdown...",

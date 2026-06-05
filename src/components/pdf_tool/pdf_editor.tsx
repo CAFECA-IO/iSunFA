@@ -254,6 +254,7 @@ export default function PdfEditor({
   };
 
   const handleGenerateAiReport = async (data: string, instruction: string) => {
+    if (isAiProcessing) return; // Info: (20260605 - Julian) 避免重複呼叫 AI
     setIsAiReportModalOpen(false); // Info: (20260605 - Julian) 立即關閉視窗
     setIsAiProcessing(true);
     abortControllerRef.current = new AbortController();
@@ -532,8 +533,8 @@ export default function PdfEditor({
       )}
 
       {/* Info: (20260426 - Luphia) Editor Toolbar */}
-      <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 p-4">
-        <div className="flex gap-2">
+      <div className="flex flex-col gap-4 border-b border-gray-200 bg-gray-50 p-4">
+        <div className="flex gap-2 lg:hidden">
           <button
             onClick={() => setViewMode(ViewMode.EDIT)}
             className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-all ${
@@ -542,7 +543,7 @@ export default function PdfEditor({
                 : "text-gray-600 hover:bg-gray-100"
             }`}
           >
-            <Edit3 size={16} />
+            <Edit3 size={16} className="shrink-0" />
             {t("admin_mission_board.pdf_editor.edit_markdown")!}
           </button>
           <button
@@ -553,41 +554,47 @@ export default function PdfEditor({
                 : "text-gray-600 hover:bg-gray-100"
             }`}
           >
-            <Eye size={16} />
+            <Eye size={16} className="shrink-0" />
             {t("admin_mission_board.pdf_editor.preview_pdf")!}
           </button>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex w-full gap-2">
           <button
             onClick={() => setIsAiReportModalOpen(true)}
-            className="flex items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-5 py-2 text-sm font-bold text-orange-600 transition-all hover:bg-orange-100"
+            disabled={isAiProcessing}
+            className="mr-auto flex flex-1 flex-col items-center justify-center gap-x-2 gap-y-1 rounded-lg border border-purple-300 bg-purple-100 px-2 py-2 text-xs font-bold text-purple-600 transition-all enabled:hover:bg-purple-200 disabled:cursor-not-allowed disabled:border-gray-400 disabled:bg-gray-400 disabled:text-gray-700 sm:flex-row sm:px-3 lg:flex-none lg:px-5 lg:text-sm"
           >
-            <Sparkles size={16} />
-            {t("admin_mission_board.pdf_editor.ai_report_modal.title") ||
-              "AI 報告生成"}
+            <Sparkles size={16} className="shrink-0" />
+            <span className="text-center">
+              {t("admin_mission_board.pdf_editor.ai_report_modal.title")}
+            </span>
           </button>
           <button
             onClick={handleDownloadPDF}
             disabled={isGenerating || !markdownContext.trim()}
-            className="flex items-center gap-2 rounded-lg bg-orange-600 px-5 py-2 text-sm font-bold text-white transition-all enabled:hover:bg-orange-500 disabled:cursor-not-allowed disabled:bg-gray-400"
+            className="flex flex-1 flex-col items-center justify-center gap-x-2 gap-y-1 rounded-lg bg-orange-600 px-2 py-2 text-xs font-bold text-white transition-all enabled:hover:bg-orange-500 disabled:cursor-not-allowed disabled:bg-gray-400 sm:flex-row sm:px-3 lg:flex-none lg:px-5 lg:text-sm"
           >
-            <Download size={16} />
-            {isGenerating
-              ? t("admin_mission_board.pdf_editor.generating")!
-              : t("admin_mission_board.pdf_editor.download_pdf")!}
+            <Download size={16} className="shrink-0" />
+            <span className="text-center">
+              {isGenerating
+                ? t("admin_mission_board.pdf_editor.generating")!
+                : t("admin_mission_board.pdf_editor.download_pdf")!}
+            </span>
           </button>
           <button
             onClick={handleShareClick}
             disabled={isGenerating || !markdownContext.trim() || isSharing}
-            className="flex items-center gap-2 rounded-lg bg-blue-500 px-5 py-2 text-sm font-bold text-white transition-all enabled:hover:bg-blue-400 disabled:cursor-not-allowed disabled:bg-gray-400"
+            className="flex flex-1 flex-col items-center justify-center gap-x-2 gap-y-1 rounded-lg bg-blue-500 px-2 py-2 text-xs font-bold text-white transition-all enabled:hover:bg-blue-400 disabled:cursor-not-allowed disabled:bg-gray-400 sm:flex-row sm:px-3 lg:flex-none lg:px-5 lg:text-sm"
           >
             {isSharing ? (
-              <Loader2 size={16} className="animate-spin" />
+              <Loader2 size={16} className="shrink-0 animate-spin" />
             ) : (
-              <Share2 size={16} />
+              <Share2 size={16} className="shrink-0" />
             )}
-            {t("admin_mission_board.pdf_editor.share_pdf")}
+            <span className="text-center">
+              {t("admin_mission_board.pdf_editor.share_pdf")}
+            </span>
           </button>
         </div>
       </div>
