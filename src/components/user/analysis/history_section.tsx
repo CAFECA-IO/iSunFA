@@ -1145,7 +1145,7 @@ export default function HistorySection() {
       <Transition appear show={isShareSettingsModalOpen} as={Fragment}>
         <Dialog
           as="div"
-          className="relative z-[60]"
+          className="relative z-60"
           onClose={() => setIsShareSettingsModalOpen(false)}
         >
           <TransitionChild
@@ -1280,7 +1280,7 @@ export default function HistorySection() {
       <Transition appear show={isShareLinkModalOpen} as={Fragment}>
         <Dialog
           as="div"
-          className="relative z-[60]"
+          className="relative z-60"
           onClose={() => setIsShareLinkModalOpen(false)}
         >
           <TransitionChild

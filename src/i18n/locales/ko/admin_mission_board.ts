@@ -53,6 +53,7 @@ export const adminMissionBoard = {
     edit_markdown: "마크다운 편집",
     preview_pdf: "PDF 미리보기",
     download_pdf: "PDF 다운로드",
+    share_pdf: "PDF 링크 공유",
     generating: "생성 중...",
     markdown_input: "마크다운 입력",
     type_here: "여기에 마크다운을 입력하세요...",
@@ -63,6 +64,32 @@ export const adminMissionBoard = {
     footer_title: "AI로 탄소 회계를 재구성하다",
     footer_text:
       "© {{year}} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal.",
+    ai_assistant: {
+      ai_assistant_title: "AI 텍스트 어시스턴트",
+      custom: "사용자 지정 프롬프트",
+      custom_placeholder: "사용자 지정 명령어 입력...",
+      rewrite: "요약 및 축소",
+      expand: "상세 확장",
+      polish: "매끄럽게 다듬기",
+      ai_suggestion_title: "AI 응답 처리",
+      ai_suggestion_replace: "선택 항목 바꾸기",
+      ai_suggestion_insert: "아래에 삽입",
+      ai_suggestion_discard: "변경 사항 취소",
+      ai_is_thinking: "AI가 생각하는 중",
+      stop_thinking: "생각 중지",
+      ai_no_response:
+        "AI가 일시적으로 응답할 수 없거나 유효한 결과가 없습니다. 나중에 다시 시도해 주세요!",
+      ai_timeout:
+        "네트워크 시간 초과 또는 시스템 오류입니다. 네트워크 상태를 확인하고 나중에 다시 시도해 주세요!",
+    },
+    share_link_modal: {
+      title: "PDF 링크 공유",
+      subtitle: "이 링크를 가진 모든 사람이 이 PDF를 볼 수 있습니다.",
+      copy: "복사",
+      done: "완료",
+      revoke: "취소",
+      copy_success: "링크가 클립보드에 복사되었습니다!",
+    },
   },
   gc: {
     btn_text: "GC 정리 실행",
