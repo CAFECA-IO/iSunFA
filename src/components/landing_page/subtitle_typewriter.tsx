@@ -1,14 +1,16 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface ISubtitleTypewriterProps {
   lines: string[];
 }
 
-export default function SubtitleTypewriter({ lines }: ISubtitleTypewriterProps) {
+export default function SubtitleTypewriter({
+  lines,
+}: ISubtitleTypewriterProps) {
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
-  const [displayedText, setDisplayedText] = useState('');
+  const [displayedText, setDisplayedText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
@@ -24,7 +26,7 @@ export default function SubtitleTypewriter({ lines }: ISubtitleTypewriterProps) 
       if (!isDeleting && displayedText === currentLine) {
         // Info: (20260104 - Luphia) Finished typing, pause before deleting
         setTimeout(() => setIsDeleting(true), 2000);
-      } else if (isDeleting && displayedText === '') {
+      } else if (isDeleting && displayedText === "") {
         // Info: (20260104 - Luphia) Finished deleting, move to next line
         setIsDeleting(false);
         setCurrentLineIndex((prev) => (prev + 1) % lines.length);
@@ -33,7 +35,7 @@ export default function SubtitleTypewriter({ lines }: ISubtitleTypewriterProps) 
 
     // Info: (20260104 - Luphia) Calculate typing speed to finish in 3 seconds (3000ms)
     // Info: (20260104 - Luphia) Avoid division by zero by ensuring length is at least 1
-    const typingSpeed = isDeleting ? 50 : (3000 / Math.max(currentLine.length, 1));
+    const typingSpeed = isDeleting ? 10 : 50;
 
     const timer = setTimeout(handleTyping, typingSpeed);
 
