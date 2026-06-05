@@ -201,11 +201,19 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
       ${blueprintBase64 ? `<div style="text-align: center; margin-bottom: 15px;"><img src="data:image/png;base64,${blueprintBase64}" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid #334155;"></div>` : ""}
       <div class="kv-row"><span class="kv-key">Product Name</span><span class="kv-val">${dppData.general.name}</span></div>
       <div class="kv-row"><span class="kv-key">Model Number</span><span class="kv-val">${dppData.general.modelNumber}</span></div>
+      <div class="kv-row"><span class="kv-key">GTIN</span><span class="kv-val">${dppData.general.gtin || "N/A"}</span></div>
+      <div class="kv-row"><span class="kv-key">Heat Number</span><span class="kv-val">${dppData.general.heatNumber || "N/A"}</span></div>
+      <div class="kv-row"><span class="kv-key">Lot Number</span><span class="kv-val">${dppData.general.lotNumber || "N/A"}</span></div>
       <div class="kv-row"><span class="kv-key">CN Code</span><span class="kv-val">${dppData.general.cnCode || "7318.15"}</span></div>
       <div class="kv-row"><span class="kv-key">Category</span><span class="kv-val">${dppData.general.category}</span></div>
       <div class="kv-row"><span class="kv-key">Weight</span><span class="kv-val">${dppData.general.weightKg} kg</span></div>
       <div class="kv-row"><span class="kv-key">Facility</span><span class="kv-val">${dppData.general.facility} (UNLOCODE: ${dppData.general.facilityUNLOCODE || "N/A"})</span></div>
       <div class="kv-row"><span class="kv-key">Manufactured Date</span><span class="kv-val">${dppData.general.manufacturedDate}</span></div>
+      <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #334155;">
+        <div style="margin: 0 0 10px 0; font-size: 14px; font-weight: bold; color: #94a3b8;">EU Importer Information</div>
+        <div class="kv-row"><span class="kv-key">Company</span><span class="kv-val">${dppData.importer?.companyName || "N/A"}</span></div>
+        <div class="kv-row"><span class="kv-key">EORI Number</span><span class="kv-val">${dppData.importer?.eori || "N/A"}</span></div>
+      </div>
     </div>
     <div class="card">
       <h2>Carbon Footprint Summary</h2>
@@ -290,7 +298,9 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
   </div>
   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
     <div class="card" style="margin-bottom: 0;">
-      <h2>Durability & Repair Guidelines</h2>
+      <h2>Durability & Technical Specs</h2>
+      <div class="kv-row"><span class="kv-key">Surface Treatment</span><span class="kv-val">${dppData.technicalSpecs?.surfaceTreatment || "N/A"}</span></div>
+      <div class="kv-row"><span class="kv-key">Salt Spray Test</span><span class="kv-val">${dppData.technicalSpecs?.saltSprayTestHours || "N/A"}</span></div>
       <div class="kv-row"><span class="kv-key">Physical Lifespan</span><span class="kv-val">${dppData.durabilityAndRepair.physicalLifespanYears} Years</span></div>
       <div class="kv-row" style="flex-direction: column; gap: 8px; margin-top: 15px;">
         <span class="kv-key">Repairability Notes</span>
@@ -303,6 +313,7 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
     </div>
     <div class="card" style="margin-bottom: 0;">
       <h2>Compliance & Certifications</h2>
+      <div class="kv-row"><span class="kv-key">IATF 16949</span><span class="kv-val">${dppData.compliance.iatf16949Compliant ? "✅ YES (" + dppData.compliance.iatfCertificateId + ")" : "❌ NO"}</span></div>
       <div class="kv-row"><span class="kv-key">RoHS Compliant</span><span class="kv-val">${dppData.compliance.rohsCompliant ? "✅ YES" : "❌ NO"}</span></div>
       <div class="kv-row"><span class="kv-key">PFAS Free</span><span class="kv-val">${dppData.compliance.pfasFree ? "✅ YES" : "❌ NO"}</span></div>
       <div style="margin-top: 30px; padding: 15px; background: #0f172a; border-radius: 8px; border: 1px solid #334155;">
