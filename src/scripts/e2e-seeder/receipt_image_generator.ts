@@ -407,8 +407,8 @@ const buildReceiptSVG = (params: IReceiptParams, isNoisy: boolean): string => {
   `;
 };
 
-export const generateReceiptImages = async (stockId: string) => {
-  const dataDir = path.resolve(process.cwd(), `data/${stockId}/2024`);
+export const generateReceiptImages = async (stockId: string, year: string = "2024") => {
+  const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
 
   const vouchersPath = path.join(
     dataDir,
@@ -556,12 +556,11 @@ export const generateReceiptImages = async (stockId: string) => {
 
 // Info: (20260502 - Tzuhan) 如果直接執行此腳本
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const targetStock = process.argv[2];
-  if (!targetStock) {
-    console.error(
-      "Please provide a stock ID. Usage: tsx receipt_image_generator.ts 1538",
-    );
+  const stockId = process.argv[2];
+  const year = process.argv[3] || "2024";
+  if (!stockId) {
+    console.error("Usage: tsx receipt_image_generator.ts <stockId>");
     process.exit(1);
   }
-  await generateReceiptImages(targetStock);
+  generateReceiptImages(stockId, year).catch((e) => { console.error(e); process.exit(1); });
 }

@@ -78,14 +78,29 @@ async function main() {
 
     console.log(`⏳ [開始] ${task.stockId} - ${task.year} 年 ${task.taskType}`);
 
-    const baseDir = path.join(process.cwd(), "downloads", task.stockId);
+    const rawReportsDir = path.join(
+      process.cwd(),
+      "data",
+      task.stockId,
+      task.year.toString(),
+      "inputs",
+      "raw_reports",
+    );
+    const goldenDataDir = path.join(
+      process.cwd(),
+      "data",
+      task.stockId,
+      task.year.toString(),
+      "inputs",
+      "golden_data",
+    );
     let savePath = "";
     let isSuccess = false;
 
     try {
       switch (task.taskType) {
         case TaskType.FIN_REPORT:
-          savePath = path.join(baseDir, `${task.year}_FIN_REPORT.pdf`);
+          savePath = path.join(rawReportsDir, `${task.year}_FIN_REPORT.pdf`);
           isSuccess = await downloadFinancialReport(
             task.stockId,
             task.year,
@@ -93,7 +108,7 @@ async function main() {
           );
           break;
         case TaskType.FIN_DATA:
-          savePath = path.join(baseDir, `${task.year}_FIN_DATA.json`);
+          savePath = path.join(goldenDataDir, `${task.year}_FIN_DATA.json`);
           isSuccess = await downloadFinancialData(
             task.stockId,
             task.marketType,
@@ -102,7 +117,7 @@ async function main() {
           );
           break;
         case TaskType.ESG_REPORT:
-          savePath = path.join(baseDir, `${task.year}_ESG_REPORT.pdf`);
+          savePath = path.join(rawReportsDir, `${task.year}_ESG_REPORT.pdf`);
           isSuccess = await downloadEsgReport(
             task.stockId,
             task.marketType as "sii" | "otc",
@@ -111,7 +126,7 @@ async function main() {
           );
           break;
         case TaskType.ESG_METRICS:
-          savePath = path.join(baseDir, `${task.year}_ESG_METRICS.json`);
+          savePath = path.join(goldenDataDir, `${task.year}_ESG_METRICS.json`);
           isSuccess = await downloadEsgMetrics(
             task.stockId,
             task.year,
