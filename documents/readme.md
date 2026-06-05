@@ -88,6 +88,12 @@
 
 - 💥 **[端到端測試架構設計 (E2E Testing Architecture)](testing_and_qa/e2e_audit_pipeline/e2e_testing_architecture.md)**
   > 了解系統如何進行 E2E 驗證與對抗式視覺壓力測試。
+- 🏃‍♂️ **[端到端執行指南 (E2E Pipeline Execution Guide)](testing_and_qa/e2e_audit_pipeline/e2e_pipeline_execution_guide.md)**
+  > 從下載真實財報到產出 DPP 黃金數據與 PDF 護照的完整操作步驟。
+- 🌍 **[歐盟 CBAM 碳排追溯與前驅物模擬 (CBAM Seeder)](testing_and_qa/e2e_audit_pipeline/cbam_compliance_seeder.md)**
+  > 詳細解說如何透過 AI 逆向生成符合 CBAM 規範的海關報單、前驅物碳排與委外加工資料。
+- 📦 **[歐盟 DPP 數位產品護照生成架構 (DPP Seeder)](testing_and_qa/e2e_audit_pipeline/dpp_compliance_seeder.md)**
+  > 探討如何自動生成歐盟 DPP 要求的 9 大面向產品履歷、產品規格與物理化學宣告 PDF。
 - 🚀 **[6642 5.4 萬筆旗艦級 ESG 擬真數據 PoC 實作戰略 (6642 PoC Blueprint)](testing_and_qa/e2e_audit_pipeline/6642_poc_blueprint.md)**
   > 詳述捨棄巨量吞吐虛榮指標，改為專注「絕對防禦深度」的管線解耦與防禦演練戰略。
 - 🎯 **[審計與稽核指標指南 (E2E Cross Validation Metrics)](testing_and_qa/e2e_audit_pipeline/guidelines/e2e_cross_validation_metrics.md)**
@@ -106,5 +112,5 @@
 ### 💼 業務邏輯與法律政策
 - **外部整合**：[外部使用者綁定機制 (External User Binding)](business_and_product/external_user_binding.md)
 - **特定業務邏輯**：[薪資計算機運作機制 (Salary Calculator)](business_and_product/salary_calculator_operating_mechanism/v1_0_0.md)
-- **商業戰略**：[商業藍圖與 GTM 戰略 (GTM Blueprint)](business_and_product/gtm_business_blueprint.md)
+- **商業戰略**：[商業藍圖與 GTM 戰略 (GTM Blueprint)](business_and_product/gtm_business_blueprint.md) | [DPP 供應鏈合規索資指南 (Internal Data Strategy)](business_and_product/dpp_b2b_pain_point_sales_strategy.md)
 - **合規政策**：[服務條款 (Terms of Service)](legal/terms_of_service.md) | [隱私權政策 (Privacy Policy)](legal/privacy_policy.md) | [退款政策 (Refund Policy)](legal/refund_policy.md)
