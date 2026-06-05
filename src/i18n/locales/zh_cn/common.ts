@@ -40,6 +40,8 @@ export const common = {
   verify_all: "一键核对",
   verify_all_confirm_title: "确认一键核对？",
   verify_all_confirm_desc: "这将会把所有未核对的项目标示为已核对",
+  verify_all_success_count: "成功核对 {{count}} 笔资料",
+  verify_all_no_data: "目前没有需要核对的资料喔！",
   cancel: "取消",
   notification: "系统提示",
   ok: "确认",
@@ -87,4 +89,9 @@ export const common = {
   pdf_tool: "PDF 工具",
   please_login: "请先登录",
   success: "成功",
+  mobile_view: "手机版样式",
+  report_layout: {
+    brand: "阳光智能碳会计",
+    footer_note: "本报告由 AI 技术生成，由 iSunFA 阳光智能碳会计提供 • ",
+  },
 };

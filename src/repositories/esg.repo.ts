@@ -678,10 +678,25 @@ export class EsgRepository implements IEsgRepository {
     return result;
   }
 
-  // Info: (20260507 - Julian) 將所有未驗證的 ESG 記錄設為已驗證，回傳數量(number)
+  // Info: (20260601 - Julian) 將所有未驗證的 ESG 記錄設為已驗證，回傳數量(number)
   async verifyAllEsgRecords(accountBookId: string) {
+    // Info: (20260601 - Julian) 找出未刪除、分析狀態為 COMPLETED 的 ESG 記錄
+    const uncheckedEsgRecords = await prisma.esgRecord.findMany({
+      where: {
+        accountBookId,
+        isVerified: false,
+        deletedAt: null,
+        analysisStatus: AIAnalysisStatus.COMPLETED,
+      },
+      select: { id: true },
+    });
+
+    // Info: (20260601 - Julian) 如果沒有未核對的 ESG 記錄，回傳 0
+    if (uncheckedEsgRecords.length === 0) return 0;
+
+    // Info: (20260601 - Julian) 更新 ESG 記錄
     const result = await prisma.esgRecord.updateMany({
-      where: { accountBookId, isVerified: false },
+      where: { id: { in: uncheckedEsgRecords.map((r) => r.id) } },
       data: { isVerified: true },
     });
 

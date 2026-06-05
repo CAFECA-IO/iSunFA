@@ -1,6 +1,7 @@
 export const digitalProductPassport = {
   title: "数字产品护照",
   description: "管理 B2B 产品 SKU 并发布生产批次",
+  login_to_use: "请先登录以使用数字产品护照",
   define_sku: "定义新 SKU",
   define_sku_desc: "上传技术文档供 AI 解析",
   create_sku: "建立 SKU",

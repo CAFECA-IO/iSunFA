@@ -742,7 +742,7 @@ export default function AnalysisView() {
                           <button
                             key={year}
                             onClick={() => setSelectedYear(year)}
-                            className={`min-w-[4rem] rounded-lg border px-3 py-2 text-sm font-medium transition-all ${selectedYear === year ? "border-orange-600 bg-orange-600 text-white shadow-sm" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`}
+                            className={`min-w-16 rounded-lg border px-3 py-2 text-sm font-medium transition-all ${selectedYear === year ? "border-orange-600 bg-orange-600 text-white shadow-sm" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`}
                           >
                             {year}
                           </button>

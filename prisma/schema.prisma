@@ -57,6 +57,7 @@ model User {
   reportShareTokens     ReportShareToken[]     @relation("ReportSharer")
   campaignRegistrations CampaignRegistration[]
   coupons               Coupon[]
+  pdfEditorDocuments    PdfEditorDocument[]    @relation("PdfEditorDocumentCreator")
 
   @@index([address])
   @@map("user")
@@ -952,4 +953,19 @@ model AmortizationSchedule {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("amortization_schedule")
+}
+
+model PdfEditorDocument {
+  id          String   @id @default(uuid())
+  token       String   @unique @default(uuid()) // Info: (20260604 - Julian) 分享用的亂碼字串
+  content     String   @db.Text                 // Info: (20260604 - Julian) Markdown 內容
+  isActive    Boolean  @default(true) @map("is_active") // Info: (20260604 - Julian) 支援手動關閉分享
+  createdById String   @map("created_by_id")
+  createdBy   User     @relation("PdfEditorDocumentCreator", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([token])
+  @@map("pdf_editor_document")
 }

@@ -299,7 +299,7 @@ export const generateFinancialVouchers = (stockId: string, targetVoucherCount?: 
       "RV",
       REVENUE_POOL,
       "1100",
-      false, // Info: (20260601 - Tzuhan) Revenue is Credit Normal
+      false, // Info: (20260525 - Tzuhan) Revenue is Credit Normal
       contextCache.financial.top3Customers?.[0],
     ),
   );
