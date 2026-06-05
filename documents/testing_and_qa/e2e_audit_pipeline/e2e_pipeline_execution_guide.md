@@ -31,6 +31,9 @@ npx tsx scripts/auto_download.ts --stockId=2066 --year=2025
 ## 步驟二：萃取企業真實特徵 (Context & Persona)
 有了真實的 PDF 報告後，我們需要喚醒 Gemini Vision API 去閱讀這些萬字報告，並精煉出該企業的「真實營運特徵 (如碳排源、供應鏈)」，最終建立專屬的企業畫像。
 
+> [!NOTE]
+> **跨年度推估機制 (Cross-Year Extrapolation)**：如果當年度 (例如 2025) 的 ESG 報告尚未出爐，系統會自動向前回溯尋找 2024 年的報告，並透過總體經濟專家 (Macroeconomic Forecaster) 結合通膨與電價漲幅，自動為您「推估出」2025 年極度擬真的企業畫像！
+
 ```bash
 # 1. 讀取 PDF 進行視覺萃取 (快取至 ai_extracted_context_cache.json)
 npx tsx src/scripts/e2e-seeder/ai_vision_extractor.ts 2066 2025

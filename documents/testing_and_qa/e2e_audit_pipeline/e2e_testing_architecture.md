@@ -44,9 +44,11 @@ graph TD
 
 1. **[資料備料與 AI 視覺萃取] `ai_vision_extractor.ts`**：
    這是整個管線的基因庫！腳本會直接吞吐 `inputs/raw_reports/` 底下的真實 PDF（例如 `2024_FIN_REPORT.pdf` 與 `2024_ESG_REPORT.pdf`）。透過呼叫 Gemini Vision 模型並賦予「專業會計師暨 ESG 稽核員」的 Persona，從幾萬字的公開報告中精準萃取出該企業的「真實營運特徵 (Operational Nuances)」——包含真實的碳排來源 (Scope 1/2 大宗)、綠電佈局與供應鏈輪廓，打包成 Context Cache。
+   > **💡 跨年度推估機制 (Cross-Year Extrapolation)**：若缺乏目標年份（如 2025 年）的真實報告，本腳本具備歷史回溯能力。AI 會自動錨定舊年度（如 2024 年）的碳排基線與供應鏈輪廓，邏輯推演出目標年份的營運特徵，徹底解決「ESG 報告時間差 (Time-Lag)」的痛點。
 
 1.5. **[對抗式企業畫像] `persona_generator.ts`**：
    基於萃取出的背景快取，透過 AI 進行 8 次自我對抗（Generator vs Auditor），產生極度擬真的供應商清單、關係人與金額分佈 (`company_persona.json`)。這確保了壓測資料**並非憑空捏造，而是深度根植於真實企業的體質**。
+   > **💡 總經專家推演 (Macroeconomic Forecaster)**：除了 CPA、ESG 與資安專家，我們特別引入了第四位「總體經濟預測專家」進行 AI 腦力對抗。它會根據真實世界的總經數據（如工業電價調漲、通膨率），對企業未來的營收與碳排提出嚴格的增減挑戰，確保跨年度推估資料具備極高的商業邏輯與「Audit-Ready」說服力。
 
 2. **[時序性逆推引擎] `chronological_reverse_engineer.ts`**：這是 E2E 管線的心臟。它讀取 Ground Truth (2024_FIN_DATA) 與企業畫像，透過「精確分配演算法 (Exact Sum Allocator)」將千億級財報總額，切割成數萬筆具備真實供應商的憑證，並隨機撒佈於 365 天中。在生成的過程中，它會**每日呼叫報表引擎進行斷言**，確保在第 365 天結束時，A=L+E 完美配平，且總額與 Ground Truth 「一毛不差」。
 3. **[ESG 逆推] `esg_reverse_engineer.ts`**：讀取碳盤查 Ground Truth，將 Scope 1/2 的排放量「掛載」回剛剛產生的水電、差旅傳票上。
