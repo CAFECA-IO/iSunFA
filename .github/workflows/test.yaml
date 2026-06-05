@@ -14,6 +14,7 @@ env:
   DEWT_PRIVATE_KEY_PEM: ${{ secrets.DEWT_PRIVATE_KEY_PEM }}
   ISUNCOIN_ADDRESS: ${{ secrets.ISUNCOIN_ADDRESS }}
   ISUNCOIN_PRIVATE_KEY: ${{ secrets.ISUNCOIN_PRIVATE_KEY }}
+  PUPPETEER_SKIP_DOWNLOAD: "true"
 
 jobs:
   # Your job configurations here

@@ -1,6 +1,6 @@
 {
   "name": "isunfa",
-  "version": "0.12.0+132",
+  "version": "0.12.0+133",
   "private": true,
   "type": "module",
   "engines": {
@@ -37,6 +37,7 @@
     "@tailwindcss/typography": "^0.5.19",
     "@types/geojson": "^7946.0.16",
     "cheerio": "^1.2.0",
+    "csv-parse": "^6.2.1",
     "csv-stringify": "^6.7.0",
     "decimal.js": "^10.6.0",
     "dotenv": "^17.2.3",
@@ -50,6 +51,7 @@
     "jszip": "^3.10.1",
     "lucide-react": "^1.7.0",
     "maplibre-gl": "^5.24.0",
+    "md-to-pdf": "^5.2.5",
     "mermaid": "^11.13.0",
     "next": "16.2.7",
     "node-cron": "^4.2.1",
@@ -73,6 +75,8 @@
     "@next/eslint-plugin-next": "^16.1.1",
     "@nomicfoundation/solidity-analyzer-darwin-arm64": "^0.1.2",
     "@tailwindcss/postcss": "^4",
+    "@types/csv-parse": "^1.1.12",
+    "@types/csv-stringify": "^1.4.3",
     "@types/file-saver": "^2.0.7",
     "@types/jest": "^30.0.0",
     "@types/node": "^25",
