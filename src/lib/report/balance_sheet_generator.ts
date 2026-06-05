@@ -34,6 +34,7 @@ export function generateBalanceSheet(
 
   // Info: (20260331 - Julian) 關鍵指標
   let inventoryTotal = MoneyUtil.toDecimal(0);
+  let prepaymentsTotal = MoneyUtil.toDecimal(0);
   let accountsReceivableTotal = MoneyUtil.toDecimal(0);
   let cashTotal = MoneyUtil.toDecimal(0);
   let fixedAssetsTotal = MoneyUtil.toDecimal(0);
@@ -223,6 +224,14 @@ export function generateBalanceSheet(
       } else if (
         AccountUtil.isDescendantOf(
           code,
+          SystemAccountNodes.PREPAYMENTS_ROOT,
+          TW_ACCOUNTS,
+        )
+      ) {
+        prepaymentsTotal = prepaymentsTotal.plus(impact);
+      } else if (
+        AccountUtil.isDescendantOf(
+          code,
           SystemAccountNodes.FIXED_ASSETS_ROOT,
           TW_ACCOUNTS,
         )
@@ -398,7 +407,7 @@ export function generateBalanceSheet(
       currentLiabilitiesTotal,
     ),
     quickRatio: MoneyUtil.safeRatio(
-      currentAssetsTotal.minus(inventoryTotal),
+      currentAssetsTotal.minus(inventoryTotal).minus(prepaymentsTotal),
       currentLiabilitiesTotal,
     ),
     debtRatio: MoneyUtil.safeRatio(totalLiabilities, totalAssets),

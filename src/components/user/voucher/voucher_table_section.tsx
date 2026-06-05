@@ -12,6 +12,7 @@ import RecordTabModal from "@/components/user/common/record_tab_modal";
 import ConfirmModal from "@/components/common/confirm_modal";
 import Pagination from "@/components/common/pagination";
 import DateRangePicker from "@/components/common/date_range_picker";
+import SuccessNotification from "@/components/common/success_notification";
 import { IVoucher, TradingType } from "@/interfaces/voucher";
 import { VerifyStatus } from "@/constants/verify_status";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
@@ -48,6 +49,10 @@ export default function VoucherTableSection() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isVerifyAllConfirmOpen, setIsVerifyAllConfirmOpen] =
     useState<boolean>(false);
+  const [isVerifySuccessOpen, setIsVerifySuccessOpen] =
+    useState<boolean>(false);
+  const [verifySuccessMsg, setVerifySuccessMsg] = useState<string>("");
+  const [isAllVerified, setIsAllVerified] = useState<boolean>(false);
   const [selectedVoucherId, setSelectedVoucherId] = useState<string | null>(
     null,
   );
@@ -157,6 +162,7 @@ export default function VoucherTableSection() {
   // Info: (20260324 - Julian) Reset pagination when filters change
   useEffect(() => {
     setCurrentPage(1);
+    setIsAllVerified(false);
   }, [
     debouncedKeyWord,
     startDate,
@@ -267,10 +273,26 @@ export default function VoucherTableSection() {
     if (!accountBookId) return;
     try {
       setIsLoading(true); // Info: (20260325 - Luphia) 為 PUT 請求開啟 loading
-      await request(
+      const res = await request<IApiResponse<{ count: number }>>(
         `/api/v1/user/account_book/${accountBookId}/voucher/verify_all`,
         { method: "PUT" },
       );
+
+      // Info: (20260601 - Julian) 根據 API 回傳的 count，顯示對應的 message
+      if (res.payload) {
+        if (res.payload.count > 0) {
+          setVerifySuccessMsg(
+            t("common.verify_all_success_count", {
+              count: res.payload.count,
+            }) as string,
+          );
+        } else {
+          setVerifySuccessMsg(t("common.verify_all_no_data") as string);
+        }
+        setIsVerifySuccessOpen(true);
+        setIsAllVerified(true);
+      }
+
       // Info: (20260325 - Luphia) 加入 await，讓 fetchVouchers 內部接管後續的 loading 狀態
       await fetchVouchers();
     } catch (error) {
@@ -422,7 +444,7 @@ export default function VoucherTableSection() {
             <div className="lg:ml-auto">
               <button
                 type="button"
-                disabled={isLoading}
+                disabled={isLoading || isAllVerified || vouchers.length === 0}
                 onClick={() => setIsVerifyAllConfirmOpen(true)}
                 className="inline-flex items-center justify-center rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm enabled:hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"
               >
@@ -431,9 +453,9 @@ export default function VoucherTableSection() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="w-full min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:overflow-x-auto">
             {/* Info: (20260324 - Julian) 隱藏已刪除傳票 toggle */}
-            <div className="flex flex-col items-center justify-between gap-y-2 bg-white px-2 py-4 lg:flex-row lg:px-6">
+            <div className="flex flex-col gap-2 bg-white px-4 py-4 md:flex-row md:items-center md:justify-between lg:px-6">
               <div className="flex cursor-pointer items-center gap-3">
                 <button
                   type="button"
@@ -451,13 +473,13 @@ export default function VoucherTableSection() {
                 </button>
                 <label
                   htmlFor="hideDeletedToggle"
-                  className="cursor-pointer text-xs font-semibold text-slate-600 lg:text-sm"
+                  className="cursor-pointer text-sm font-bold text-slate-600"
                 >
                   {t("voucher.main_view.filters.hide_deleted")}
                 </label>
               </div>
 
-              <div className="flex items-center gap-2 text-right text-xs font-bold text-slate-400 uppercase">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase md:text-right">
                 {/* Info: (20260324 - Julian) 總傳票數 */}
                 <p>
                   {t("voucher.main_view.filters.total_vouchers", {
@@ -477,9 +499,9 @@ export default function VoucherTableSection() {
             </div>
 
             {/* Info: (20260310 - Julian) Table Container */}
-            <div className="overflow-x-auto border-t border-slate-200">
-              <table className="w-full min-w-[1000px] border-collapse text-left text-sm text-gray-600">
-                <thead className="border-b border-slate-200 bg-slate-100">
+            <div className="border-t border-slate-200">
+              <table className="w-full border-collapse text-left text-sm text-gray-600 md:min-w-[1000px]">
+                <thead className="hidden border-b border-slate-200 bg-slate-100 md:table-header-group">
                   <tr>
                     <th className="p-2 text-center text-xs font-black tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4 lg:whitespace-nowrap">
                       {t("voucher.main_view.table.headers.receipt")}
@@ -719,6 +741,12 @@ export default function VoucherTableSection() {
         confirmText={t("common.confirm")}
         cancelText={t("common.cancel")}
         onConfirm={handleDeleteVoucher}
+      />
+      <SuccessNotification
+        show={isVerifySuccessOpen}
+        title={t("common.notification") as string}
+        message={verifySuccessMsg}
+        onClose={() => setIsVerifySuccessOpen(false)}
       />
     </>
   );

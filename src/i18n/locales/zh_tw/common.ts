@@ -40,6 +40,8 @@ export const common = {
   verify_all: "一鍵核對",
   verify_all_confirm_title: "確認一鍵核對？",
   verify_all_confirm_desc: "這將會把所有未核對的項目標示為已核對",
+  verify_all_success_count: "成功核對 {{count}} 筆資料",
+  verify_all_no_data: "目前沒有需要核對的資料喔！",
   cancel: "取消",
   notification: "系統提示",
   ok: "確認",
@@ -87,4 +89,9 @@ export const common = {
   pdf_tool: "PDF 工具",
   please_login: "請先登入",
   success: "成功",
+  mobile_view: "手機版樣式",
+  report_layout: {
+    brand: "陽光智能碳會計",
+    footer_note: "本報告透過 AI 技術生成，由 iSunFA 陽光智能碳會計提供 • ",
+  },
 };

@@ -48,7 +48,7 @@ async function fastVerify(stockId: string) {
     dataDir,
     "inputs",
     "simulated_data",
-    "phase5_articulation_test",
+    "e2e_roadmap-sprint1",
     "simulated_vouchers.json",
   );
 
