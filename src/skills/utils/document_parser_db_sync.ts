@@ -1,6 +1,7 @@
 import { documentSyncRepo } from "@/repositories/document_sync.repo";
 import { IParsedVoucherLine } from "@/interfaces/voucher";
 import { EsgGenerationSource } from "@/constants/enums";
+import { Prisma } from "@/generated";
 
 export interface IDocNode {
   data?: IDocNode;
@@ -58,6 +59,7 @@ export interface ISyncDocumentResultParams {
 
 export async function syncDocumentResultToDatabase(
   params: ISyncDocumentResultParams,
+  tx?: Prisma.TransactionClient,
 ) {
-  return documentSyncRepo.syncDocumentResultToDatabase(params);
+  return documentSyncRepo.syncDocumentResultToDatabase(params, tx);
 }

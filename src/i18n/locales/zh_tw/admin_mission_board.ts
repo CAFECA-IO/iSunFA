@@ -52,7 +52,7 @@ export const adminMissionBoard = {
     edit_markdown: "編輯 Markdown",
     preview_pdf: "預覽 PDF",
     download_pdf: "下載 PDF",
-    share_pdf: "分享 PDF 連結",
+    share_pdf: "分享 PDF",
     generating: "產生中...",
     markdown_input: "Markdown 輸入區",
     type_here: "請在此輸入您的 markdown...",
@@ -86,6 +86,16 @@ export const adminMissionBoard = {
       done: "完成",
       revoke: "撤銷",
       copy_success: "連結已複製到剪貼簿！",
+    },
+    ai_report_modal: {
+      title: "AI 報告生成",
+      subtitle:
+        "請貼上數據來源（支援文字、CSV、JSON），AI 將自動為您生成結構化報告。",
+      data_label: "來源數據 (必填)",
+      data_placeholder: "貼上要分析的財報數字、ESG 指標等...",
+      instruction_label: "自訂指令 (選填)",
+      instruction_placeholder: "例如：請著重分析減碳成效，並以列表呈現重點...",
+      generate: "生成報告",
     },
   },
   gc: {

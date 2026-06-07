@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import {
+  Check,
   CirclePause,
   Download,
   Edit3,
@@ -9,29 +10,22 @@ import {
   Loader2,
   Share2,
   Sparkles,
+  X as XIcon,
 } from "lucide-react";
 import { MarkdownContent } from "@/components/common/markdown_content";
 import { useTranslation } from "@/i18n/i18n_context";
+import { useTextSelectionMenu } from "@/hooks/use_text_selection_menu";
 import Image from "next/image";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import PdfShareLinkModal from "@/components/pdf_tool/pdf_share_link_modal";
 import { AiContextMenu } from "@/components/pdf_tool/ai_context_menu";
 import { AiSuggestionMenu } from "@/components/pdf_tool/ai_suggestion_menu";
+import { AiReportModal } from "@/components/pdf_tool/ai_report_modal";
 
 enum ViewMode {
   EDIT = "edit",
   PREVIEW = "preview",
-}
-
-// Info: (20260604 - Julian) AI 助手 menu
-interface IAiAssistant {
-  isOpen: boolean;
-  x: number;
-  y: number;
-  selectedText: string;
-  selectionStart: number;
-  selectionEnd: number;
 }
 
 // Info: (20260604 - Julian) AI 建議（採用/捨棄）
@@ -72,16 +66,13 @@ export default function PdfEditor({
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.EDIT);
 
-  // Info: (20260603 - Julian) AI Assistant Menu State
-  const [aiAssistantMenu, setAiAssistantMenu] = useState<IAiAssistant>({
-    isOpen: false,
-    x: 0,
-    y: 0,
-    selectedText: "",
-    selectionStart: 0,
-    selectionEnd: 0,
-  });
   const [isAiProcessing, setIsAiProcessing] = useState<boolean>(false);
+
+  // Info: (20260603 - Julian) AI Assistant Menu Hook
+  const { aiAssistantMenu, setAiAssistantMenu } = useTextSelectionMenu(
+    textareaRef,
+    isAiProcessing,
+  );
   const [aiSuggestion, setAiSuggestion] = useState<IAiSuggestion | null>(null);
   const [customAiPrompt, setCustomAiPrompt] = useState<string>("");
 
@@ -91,6 +82,16 @@ export default function PdfEditor({
   const [isSharing, setIsSharing] = useState<boolean>(false);
   const [shareToken, setShareToken] = useState<string | null>(null);
   const [isRevoking, setIsRevoking] = useState<boolean>(false);
+
+  // Info: (20260605 - Julian) AI Report Modal State
+  const [isAiReportModalOpen, setIsAiReportModalOpen] =
+    useState<boolean>(false);
+
+  // Info: (20260605 - Julian) Toast Message State
+  const [toastMessage, setToastMessage] = useState<{
+    text: string;
+    type: "success" | "error";
+  } | null>(null);
 
   // Info: (20260604 - Julian) 建立一個 ref 來儲存 markdownContext 的最新值
   const markdownRef = useRef<string>(markdownContext);
@@ -125,96 +126,13 @@ export default function PdfEditor({
       // Info: (20260604 - Julian) 移除監聽並儲存草稿
       window.removeEventListener("beforeunload", handleBeforeUnload);
       saveDraft();
-    };
-  }, []);
 
-  useEffect(() => {
-    // Info: (20260603 - Julian) 點擊外部時，關閉 AI Assistant menu
-    const handleClickOutside = (e: MouseEvent) => {
-      if (isAiProcessing) return;
-      const menuEl = document.getElementById("ai-context-menu");
-      const suggestionEl = document.getElementById("ai-suggestion-menu");
-      if (menuEl && menuEl.contains(e.target as Node)) return;
-      if (suggestionEl && suggestionEl.contains(e.target as Node)) return;
-      setAiAssistantMenu((prev) => ({ ...prev, isOpen: false }));
-    };
-
-    if (aiAssistantMenu.isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [aiAssistantMenu.isOpen, isAiProcessing]);
-
-  useEffect(() => {
-    // Info: (20260603 - Julian) 檢查選取
-    const checkSelection = (e?: MouseEvent | KeyboardEvent) => {
-      if (isAiProcessing) return; // Info: (20260603 - Julian) AI 處理時，不處理選取事件
-
-      const textarea = textareaRef.current;
-      if (!textarea || document.activeElement !== textarea) return;
-
-      // Info: (20260603 - Julian) 取得選取範圍
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-
-      if (start !== end) {
-        const selectedText = textarea.value.substring(start, end);
-
-        setAiAssistantMenu((prev) => {
-          let x = prev.x;
-          let y = prev.y;
-
-          // Info: (20260603 - Julian) 從 MouseEvent 取得 AI menu 位置；否則定位到 Textarea 中央位置
-          if (e instanceof MouseEvent) {
-            x = e.clientX;
-            y = e.clientY;
-          } else if (!prev.isOpen) {
-            const rect = textarea.getBoundingClientRect();
-            x = rect.left + rect.width / 2;
-            y = rect.top + rect.height / 2;
-          }
-
-          return {
-            ...prev,
-            isOpen: true,
-            x,
-            y,
-            selectedText,
-            selectionStart: start,
-            selectionEnd: end,
-          };
-        });
-      } else {
-        setAiAssistantMenu((prev) =>
-          prev.isOpen ? { ...prev, isOpen: false } : prev,
-        );
+      // Info: (20260605 - Julian) 元件卸載時，如果還有進行中的 AI 請求，就直接中斷它，避免 Memory Leak
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
     };
-
-    // Info: (20260603 - Julian) MouseUp → 檢查選取；若點擊 AI menu 則不處理
-    const handleGlobalMouseUp = (e: MouseEvent) => {
-      const menuEl = document.getElementById("ai-context-menu");
-      const suggestionEl = document.getElementById("ai-suggestion-menu");
-      if (menuEl && menuEl.contains(e.target as Node)) return;
-      if (suggestionEl && suggestionEl.contains(e.target as Node)) return;
-      checkSelection(e);
-    };
-
-    // Info: (20260603 - Julian) KeyUp → 檢查選取
-    const handleGlobalKeyUp = (e: KeyboardEvent) => {
-      checkSelection(e);
-    };
-
-    document.addEventListener("mouseup", handleGlobalMouseUp);
-    document.addEventListener("keyup", handleGlobalKeyUp);
-
-    return () => {
-      document.removeEventListener("mouseup", handleGlobalMouseUp);
-      document.removeEventListener("keyup", handleGlobalKeyUp);
-    };
-  }, [isAiProcessing]);
+  }, []);
 
   const toggleShareLinkModal = () => setIsShareLinkModalOpen((prev) => !prev);
 
@@ -336,6 +254,59 @@ export default function PdfEditor({
     } finally {
       setIsAiProcessing(false);
       // Info: (20260604 - Julian) 清空 AbortController
+      abortControllerRef.current = null;
+    }
+  };
+
+  const handleGenerateAiReport = async (data: string, instruction: string) => {
+    if (isAiProcessing) return; // Info: (20260605 - Julian) 避免重複呼叫 AI
+    setIsAiReportModalOpen(false); // Info: (20260605 - Julian) 立即關閉視窗
+    setIsAiProcessing(true);
+    abortControllerRef.current = new AbortController();
+
+    try {
+      const response = await request<IApiResponse<{ result: string }>>(
+        "/api/v1/admin/pdf_editor/report_generate",
+        {
+          method: "POST",
+          body: JSON.stringify({ data, instruction }),
+          signal: abortControllerRef.current.signal,
+        },
+      );
+
+      if (response && response.payload && response.payload.result) {
+        const report = response.payload.result;
+        setMarkdownContext((prev) => prev + "\n\n" + report);
+
+        // Info: (20260605 - Julian) 顯示成功提示
+        setToastMessage({
+          type: "success",
+          text: t("common.success") || "報告生成並插入成功！",
+        });
+        setTimeout(() => setToastMessage(null), 3000);
+      } else {
+        setErrorModal({
+          isOpen: true,
+          message: t(
+            "admin_mission_board.pdf_editor.ai_assistant.ai_no_response",
+          ),
+        });
+      }
+    } catch (error: unknown) {
+      if (
+        error instanceof Error &&
+        error.message.toLowerCase().includes("abort")
+      ) {
+        console.log("AI request cancelled by user.");
+        return;
+      }
+      console.error("Failed to generate report:", error);
+      setErrorModal({
+        isOpen: true,
+        message: t("admin_mission_board.pdf_editor.ai_assistant.ai_timeout"),
+      });
+    } finally {
+      setIsAiProcessing(false);
       abortControllerRef.current = null;
     }
   };
@@ -547,10 +518,28 @@ export default function PdfEditor({
   );
 
   return (
-    <div className="flex h-[800px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <div className="relative flex h-[800px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+      {/* Info: (20260605 - Julian) Toast 訊息 */}
+      {toastMessage && (
+        <div
+          className={`fixed top-24 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-lg px-6 py-3 shadow-lg transition-all ${
+            toastMessage.type === "success"
+              ? "bg-emerald-500 text-white"
+              : "bg-red-500 text-white"
+          }`}
+        >
+          {toastMessage.type === "success" ? (
+            <Check size={20} />
+          ) : (
+            <XIcon size={20} />
+          )}
+          <span className="font-medium">{toastMessage.text}</span>
+        </div>
+      )}
+
       {/* Info: (20260426 - Luphia) Editor Toolbar */}
-      <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 p-4">
-        <div className="flex gap-2">
+      <div className="flex flex-col gap-4 border-b border-gray-200 bg-gray-50 p-4">
+        <div className="flex gap-2 lg:hidden">
           <button
             onClick={() => setViewMode(ViewMode.EDIT)}
             className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-all ${
@@ -559,7 +548,7 @@ export default function PdfEditor({
                 : "text-gray-600 hover:bg-gray-100"
             }`}
           >
-            <Edit3 size={16} />
+            <Edit3 size={16} className="shrink-0" />
             {t("admin_mission_board.pdf_editor.edit_markdown")!}
           </button>
           <button
@@ -570,33 +559,47 @@ export default function PdfEditor({
                 : "text-gray-600 hover:bg-gray-100"
             }`}
           >
-            <Eye size={16} />
+            <Eye size={16} className="shrink-0" />
             {t("admin_mission_board.pdf_editor.preview_pdf")!}
           </button>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex w-full gap-2">
+          <button
+            onClick={() => setIsAiReportModalOpen(true)}
+            disabled={isAiProcessing}
+            className="mr-auto flex flex-1 flex-col items-center justify-center gap-x-2 gap-y-1 rounded-lg border border-purple-300 bg-purple-100 px-2 py-2 text-xs font-bold text-purple-600 transition-all enabled:hover:bg-purple-200 disabled:cursor-not-allowed disabled:border-gray-400 disabled:bg-gray-400 disabled:text-gray-700 sm:flex-row sm:px-3 lg:flex-none lg:px-5 lg:text-sm"
+          >
+            <Sparkles size={16} className="shrink-0" />
+            <span className="text-center">
+              {t("admin_mission_board.pdf_editor.ai_report_modal.title")}
+            </span>
+          </button>
           <button
             onClick={handleDownloadPDF}
             disabled={isGenerating || !markdownContext.trim()}
-            className="flex items-center gap-2 rounded-lg bg-orange-600 px-5 py-2 text-sm font-bold text-white transition-all enabled:hover:bg-orange-500 disabled:cursor-not-allowed disabled:bg-gray-400"
+            className="flex flex-1 flex-col items-center justify-center gap-x-2 gap-y-1 rounded-lg bg-orange-600 px-2 py-2 text-xs font-bold text-white transition-all enabled:hover:bg-orange-500 disabled:cursor-not-allowed disabled:bg-gray-400 sm:flex-row sm:px-3 lg:flex-none lg:px-5 lg:text-sm"
           >
-            <Download size={16} />
-            {isGenerating
-              ? t("admin_mission_board.pdf_editor.generating")!
-              : t("admin_mission_board.pdf_editor.download_pdf")!}
+            <Download size={16} className="shrink-0" />
+            <span className="text-center">
+              {isGenerating
+                ? t("admin_mission_board.pdf_editor.generating")!
+                : t("admin_mission_board.pdf_editor.download_pdf")!}
+            </span>
           </button>
           <button
             onClick={handleShareClick}
             disabled={isGenerating || !markdownContext.trim() || isSharing}
-            className="flex items-center gap-2 rounded-lg bg-blue-500 px-5 py-2 text-sm font-bold text-white transition-all enabled:hover:bg-blue-400 disabled:cursor-not-allowed disabled:bg-gray-400"
+            className="flex flex-1 flex-col items-center justify-center gap-x-2 gap-y-1 rounded-lg bg-blue-500 px-2 py-2 text-xs font-bold text-white transition-all enabled:hover:bg-blue-400 disabled:cursor-not-allowed disabled:bg-gray-400 sm:flex-row sm:px-3 lg:flex-none lg:px-5 lg:text-sm"
           >
             {isSharing ? (
-              <Loader2 size={16} className="animate-spin" />
+              <Loader2 size={16} className="shrink-0 animate-spin" />
             ) : (
-              <Share2 size={16} />
+              <Share2 size={16} className="shrink-0" />
             )}
-            {t("admin_mission_board.pdf_editor.share_pdf")}
+            <span className="text-center">
+              {t("admin_mission_board.pdf_editor.share_pdf")}
+            </span>
           </button>
         </div>
       </div>
@@ -722,6 +725,13 @@ export default function PdfEditor({
         shareToken={shareToken}
         isRevoking={isRevoking}
         handleRevokeShare={handleRevokeShare}
+      />
+
+      {/* Info: (20260605 - Julian) AI Report Modal */}
+      <AiReportModal
+        isOpen={isAiReportModalOpen}
+        onClose={() => setIsAiReportModalOpen(false)}
+        onSubmit={handleGenerateAiReport}
       />
     </div>
   );

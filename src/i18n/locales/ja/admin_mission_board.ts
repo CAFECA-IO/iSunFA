@@ -84,12 +84,24 @@ export const adminMissionBoard = {
         "ネットワークタイムアウトまたはシステムエラーです。ネットワークの状態を確認して、後でもう一度お試しください！",
     },
     share_link_modal: {
-      title: "PDF リンクを共有",
-      subtitle: "このリンクを知っている人は誰でもこの PDF を閲覧できます。",
+      title: "PDFリンクを共有",
+      subtitle: "このリンクを知っている人は誰でもPDFを閲覧できます。",
       copy: "コピー",
       done: "完了",
-      revoke: "取り消し",
+      revoke: "リンクを無効化",
       copy_success: "リンクをクリップボードにコピーしました！",
+    },
+    ai_report_modal: {
+      title: "AIレポート生成",
+      subtitle:
+        "データソース（テキスト、CSV、JSONをサポート）を貼り付けると、AIが自動的に構造化されたレポートを生成します。",
+      data_label: "ソースデータ (必須)",
+      data_placeholder:
+        "分析する財務データ、ESG指標などを貼り付けてください...",
+      instruction_label: "カスタム指示 (任意)",
+      instruction_placeholder:
+        "例：四半期ごとの収益成長率をテーブルで表示してください...",
+      generate: "レポートを生成",
     },
   },
   gc: {

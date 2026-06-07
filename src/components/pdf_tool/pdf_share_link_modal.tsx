@@ -73,14 +73,11 @@ export default function PdfShareLinkModal({
                 </DialogTitle>
 
                 <div className="mt-2">
-                  <p
-                    className="mb-4 text-sm text-gray-500"
-                    dangerouslySetInnerHTML={{
-                      __html: t(
-                        "admin_mission_board.pdf_editor.share_link_modal.subtitle",
-                      ),
-                    }}
-                  />
+                  <p className="mb-4 text-sm text-gray-500">
+                    {t(
+                      "admin_mission_board.pdf_editor.share_link_modal.subtitle",
+                    )}
+                  </p>
 
                   <div className="mt-4 mb-6 flex justify-center">
                     {shareToken && (

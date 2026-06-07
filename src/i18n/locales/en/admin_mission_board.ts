@@ -90,6 +90,18 @@ export const adminMissionBoard = {
       revoke: "Revoke",
       copy_success: "Link copied to clipboard!",
     },
+    ai_report_modal: {
+      title: "AI Report Generation",
+      subtitle:
+        "Paste the data source (supports text, CSV, JSON), and AI will automatically generate a structured report for you.",
+      data_label: "Source Data (Required)",
+      data_placeholder:
+        "Paste financial figures, ESG metrics, etc. to be analyzed...",
+      instruction_label: "Custom Instruction (Optional)",
+      instruction_placeholder:
+        "e.g., Please present the quarterly revenue growth rates in a table...",
+      generate: "Generate Report",
+    },
   },
   gc: {
     btn_text: "Execute GC Cleanup",
