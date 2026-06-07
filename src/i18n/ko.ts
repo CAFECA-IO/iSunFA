@@ -57,6 +57,7 @@ import { transportationCarbonFootprintCalculator } from "@/i18n/locales/ko/trans
 import { salaryCalculator } from "@/i18n/locales/ko/salary_calculator";
 import { adminCoupon } from "@/i18n/locales/ko/admin_coupon";
 import { userCoupon } from "@/i18n/locales/ko/user_coupon";
+import { adminCarbonEmissionDatabase } from "@/i18n/locales/ko/admin_carbon_emission_database";
 import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const ko = {
@@ -120,4 +121,5 @@ export const ko = {
   admin_campaign: adminCampaign,
   admin_coupon: adminCoupon,
   user_coupon: userCoupon,
+  admin_carbon_emission_database: adminCarbonEmissionDatabase,
 } satisfies BaseTranslation;

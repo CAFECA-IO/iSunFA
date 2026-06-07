@@ -1,0 +1,45 @@
+export const adminCarbonEmissionDatabase = {
+  title: "Public Carbon Emission Database",
+  subtitle:
+    "Manage public carbon emission factor standards and official verified data used in ESG calculations",
+  import_constants: "Import System Constants",
+  importing: "Importing...",
+  add_coefficient: "Add Coefficient",
+  edit_coefficient: "Edit Coefficient",
+  search_placeholder: "Search coefficient name, description, or source...",
+  all_categories: "All Categories",
+  all_status: "All Status",
+  empty_state: "No coefficients found",
+  category: "Category",
+  version_year: "Version Year",
+  source: "Source",
+  status: "Verification Status",
+  verified: "Verified",
+  pending: "Pending",
+  required_fields: "Please fill in all required fields.",
+  save_error: "Failed to save carbon factor. Please try again.",
+  delete_error: "Failed to delete carbon factor.",
+  import_confirm_title: "Import System Constants",
+  import_confirm_message:
+    "Are you sure you want to import the system's built-in standard emission factors (tens of thousands of data points) into the database? This operation will skip already existing coefficients.",
+  import_success_title: "Import Successful",
+  import_success_message:
+    "Successfully imported {{count}} new public emission factors to the database!",
+  import_error: "Failed to import system constants, please try again.",
+  delete_confirm_title: "Delete Coefficient",
+  delete_confirm_message: "Are you sure you want to delete this coefficient?",
+
+  name: "Coefficient Name",
+  ef: "Emission Factor (EF)",
+  unit: "Unit",
+  description: "Description",
+  verified_checkbox: "Verified",
+
+  name_placeholder: "e.g., Electricity carbon emission factor",
+  ef_placeholder: "e.g., 0.495",
+  unit_placeholder: "e.g., kgCO2e/kWh",
+  source_placeholder: "e.g., Bureau of Energy",
+  description_placeholder:
+    "Additional description of applicability, reference benchmarks, etc...",
+  version_year_placeholder: "e.g., 2026",
+};

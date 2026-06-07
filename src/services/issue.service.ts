@@ -441,7 +441,7 @@ This is an automated validation plan.
 1. Check if the output follows the expected analysis structure for category: ${category}.
 2. Ensure the resulting numerical figures are accurately derived from ${missionData.type}.
 ${category === ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT ? "3. Accept raw JSON output directly as it represents a highly precise logistics calculation data structure." : ""}
-${category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS ? "3. CRITICAL: The result MUST contain a `dbSyncPayload` object. If `dbSyncPayload` is missing, you MUST rate confidence below 60 and reject it." : ""}
+${category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS ? "3. CRITICAL: The result MUST contain a `dbSyncPayload` object. If `dbSyncPayload` is missing, you MUST rate confidence below 60 and reject it.\n4. CRITICAL: If the `dbSyncPayload` contains an \`esg\` object, it MUST contain complete fields, including non-empty \`coefficientId\`, \`amount\`, \`unit\`, and \`emissions\`. If any of these fields are missing or empty, you MUST rate confidence below 60 and reject the task." : ""}
 `;
       await fs.writeFile(
         path.join(taskDir, "plan.validator.md"),
