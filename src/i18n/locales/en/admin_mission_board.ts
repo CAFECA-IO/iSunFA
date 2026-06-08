@@ -101,6 +101,11 @@ export const adminMissionBoard = {
       instruction_placeholder:
         "e.g., Please present the quarterly revenue growth rates in a table...",
       generate: "Generate Report",
+      upload_file: "Upload File",
+      invalid_file_type:
+        "Invalid file format. Please upload .txt, .csv, or .json.",
+      file_too_large: "File size exceeds the 4MB limit.",
+      drag_drop_hint: "Drop file here to extract text...",
     },
   },
   gc: {

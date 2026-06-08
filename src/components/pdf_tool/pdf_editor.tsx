@@ -732,6 +732,7 @@ export default function PdfEditor({
         isOpen={isAiReportModalOpen}
         onClose={() => setIsAiReportModalOpen(false)}
         onSubmit={handleGenerateAiReport}
+        onError={(message) => setErrorModal({ isOpen: true, message })}
       />
     </div>
   );
