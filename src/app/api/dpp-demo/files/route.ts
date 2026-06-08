@@ -76,8 +76,8 @@ export async function GET(req: NextRequest) {
     try {
       const tree = await buildFileTree(targetDir, cwd);
       return NextResponse.json(tree);
-    } catch (e: any) {
-      return NextResponse.json({ error: e.message }, { status: 404 });
+    } catch (e: unknown) {
+      return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 404 });
     }
   } 
   else if (action === "serve") {
@@ -108,7 +108,7 @@ export async function GET(req: NextRequest) {
           "Cache-Control": "public, max-age=3600"
         }
       });
-    } catch (e: any) {
+    } catch {
       return NextResponse.json({ error: "File not found" }, { status: 404 });
     }
   }

@@ -1,12 +1,13 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useEffect } from "react";
-import { Folder, File, FileText, Image as ImageIcon, ChevronRight, ChevronDown, Download, CheckCircle2, Shield, Search, Zap, AlertCircle, FilePlus, Loader2, UploadCloud, QrCode, Factory, PackageOpen } from "lucide-react";
+import { File, FileText, ChevronRight, Download, CheckCircle2, Shield, Search, Zap, AlertCircle, FilePlus, Loader2, UploadCloud, QrCode, Factory } from "lucide-react";
 
 type Tab = "sku" | "batch";
 type ModuleState = "pending" | "scanning" | "found" | "missing" | "na";
 
-interface DppModule {
+interface IDppModule {
   id: number;
   name: string;
   state: ModuleState;
@@ -20,16 +21,18 @@ const PRODUCTS = [
   { id: "P-M12-EH-001", name: "產品 C (六角螺栓)" },
 ];
 
-const getModulesForProduct = (productId: string, stockId: string, year: string): DppModule[] => {
-  const basePath = `data/${stockId}/${year}/outputs/e2e_roadmap-sprint1`;
+const getModulesForProduct = (productId: string, stockId: string, year: string): IDppModule[] => {
+  const basePath = `/data/${stockId}/${year}/outputs/e2e_roadmap-sprint1`;
   return [
     // Info: (20260608 - Tzuhan)
     { id: 1, name: "基本與製造商資訊", state: "pending", mockFile: `${basePath}/${stockId}_company_persona.html` },
-    { id: 2, name: "供應鏈溯源", state: "pending", mockFile: `${basePath}/system_ingestion/mes_work_orders.csv` },
-    { id: 3, name: "物質與成分構成", state: "pending", mockFile: `${basePath}/mock_sources/boms_and_precursors.csv` },
-    { id: 4, name: "專業技術手冊", state: "pending", missingDesc: "所有上傳文件中皆未發現電路圖與維修拆解指南" },
-    { id: 5, name: "合規稽核", state: "pending", missingDesc: "RoHS 報告已過期 (2022年)，且缺乏 CE 測試報告" },
-    { id: 6, name: "生產批次", state: "na", missingDesc: "將於批次生產階段動態處理" },
+    { id: 2, name: "供應鏈溯源 - 廠內生產紀錄", state: "pending", mockFile: `${basePath}/system_ingestion/mes_work_orders.csv` },
+    { id: 3, name: "供應鏈溯源 - 委外加工日誌", state: "pending", mockFile: `${basePath}/system_ingestion/outsourced_processing_logs.csv` },
+    { id: 4, name: "供應鏈溯源 - 海關出口報單", state: "pending", mockFile: `${basePath}/system_ingestion/customs_export_declarations.csv` },
+    { id: 5, name: "物質與成分構成", state: "pending", mockFile: `${basePath}/mock_sources/boms_and_precursors.csv` },
+    { id: 6, name: "專業技術手冊", state: "pending", missingDesc: "所有上傳文件中皆未發現電路圖與維修拆解指南" },
+    { id: 7, name: "合規稽核", state: "pending", mockFile: `${basePath}/${productId}/system_ingestion/${productId}_dpp_compliance_declaration.pdf` },
+    { id: 8, name: "生產批次", state: "na", missingDesc: "將於批次生產階段動態處理" },
   ];
 };
 
@@ -52,10 +55,11 @@ export default function DppWorkspacePage() {
   const stockId = "2066";
   const [year, setYear] = useState("2024");
   const [availableYears, setAvailableYears] = useState<string[]>(["2024"]);
-  const basePath = `data/${stockId}/${year}/outputs/e2e_roadmap-sprint1`;
+  // Info: (20260608 - Tzuhan) Static basePath pointing to public folder
+  const basePath = `/data/${stockId}/${year}/outputs/e2e_roadmap-sprint1`;
 
   // Info: (20260608 - Tzuhan) SKU Audit State
-  const [modules, setModules] = useState<DppModule[]>(getModulesForProduct(PRODUCTS[0].id, stockId, year));
+  const [modules, setModules] = useState<IDppModule[]>(getModulesForProduct(PRODUCTS[0].id, stockId, year));
   const [isScanning, setIsScanning] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
   const [skuReady, setSkuReady] = useState(false);
@@ -125,7 +129,7 @@ export default function DppWorkspacePage() {
       await new Promise(r => setTimeout(r, 500));
 
       currentModules = [...currentModules];
-      currentModules[i].state = [4, 5].includes(currentModules[i].id) ? "missing" : "found";
+      currentModules[i].state = [6, 7].includes(currentModules[i].id) ? "missing" : "found";
       setModules(currentModules);
     }
 
@@ -138,8 +142,9 @@ export default function DppWorkspacePage() {
     showToast("模擬補傳文件中...");
     await new Promise(r => setTimeout(r, 1500));
     const fixed = modules.map(m => {
-      if (m.id === 4) return { ...m, state: "found" as ModuleState, mockFile: `${basePath}/${selectedProductId}/mock_sources/fastener_blueprint.png` };
-      if (m.id === 5) return { ...m, state: "found" as ModuleState, mockFile: `${basePath}/${selectedProductId}/system_ingestion/${selectedProductId}_dpp_compliance_declaration.pdf` };
+      const t = Date.now();
+      if (m.id === 6) return { ...m, state: "found" as ModuleState, mockFile: `${basePath}/${selectedProductId}/mock_sources/fastener_blueprint.png?t=${t}` };
+      if (m.id === 7) return { ...m, state: "found" as ModuleState, mockFile: `${basePath}/${selectedProductId}/system_ingestion/${selectedProductId}_dpp_compliance_declaration.pdf?t=${t}` };
       return m;
     });
     setModules(fixed);
@@ -183,7 +188,7 @@ export default function DppWorkspacePage() {
     if (!selectedFilePath) return;
     if (selectedFilePath.match(/\.(csv|json|md|txt)$/i)) {
       setIsTextLoading(true);
-      fetch(`/api/dpp-demo/files?action=serve&path=${encodeURIComponent(selectedFilePath)}`)
+      fetch(selectedFilePath)
         .then(res => res.text())
         .then(text => {
           setTextContent(text);
@@ -370,6 +375,14 @@ export default function DppWorkspacePage() {
                   <div
                     key={mod.id}
                     onClick={() => mod.state === "found" && mod.mockFile && setSelectedFilePath(mod.mockFile)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        if (mod.state === "found" && mod.mockFile) setSelectedFilePath(mod.mockFile);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
                     className={`flex items-start p-3 mb-1 rounded-xl border ${mod.state === "found" ? "cursor-pointer hover:bg-blue-50 border-transparent hover:border-blue-100" : "border-transparent opacity-70"}`}
                   >
                     <div className="mt-0.5 mr-3">
@@ -430,18 +443,18 @@ export default function DppWorkspacePage() {
                     </button>
                   </div>
                   <div className="flex-1 overflow-hidden p-6 bg-slate-100 flex items-center justify-center relative">
-                    {selectedFilePath.match(/\.(pdf|html)$/i) ? (
-                      <iframe src={`/api/dpp-demo/files?action=serve&path=${encodeURIComponent(selectedFilePath)}`} className="w-full h-full rounded-xl shadow-sm border border-gray-200 bg-white" />
-                    ) : selectedFilePath.match(/\.(png|jpg|jpeg)$/i) ? (
-                      <div className="w-full h-full rounded-xl shadow-sm border border-gray-200 bg-white flex items-center justify-center overflow-hidden p-4">
-                        <img src={`/api/dpp-demo/files?action=serve&path=${encodeURIComponent(selectedFilePath)}`} className="max-w-full max-h-full object-contain" alt="preview" />
+                    {selectedFilePath.split('?')[0].match(/\.(pdf|html)$/i) ? (
+                      <iframe src={selectedFilePath} title="Preview" className="w-full h-full rounded-xl shadow-sm border border-gray-200 bg-white" />
+                    ) : selectedFilePath.split('?')[0].match(/\.(png|jpg|jpeg)$/i) ? (
+                      <div className="w-full h-full rounded-xl shadow-sm border border-gray-200 bg-white flex items-center justify-center overflow-hidden p-4 relative">
+                        <Image src={selectedFilePath} alt="preview" fill style={{ objectFit: "contain" }} unoptimized />
                       </div>
-                    ) : selectedFilePath.match(/\.(csv|json|md|txt)$/i) ? (
-                      <div className={`w-full h-full rounded-xl shadow-sm border border-gray-200 bg-white overflow-auto custom-scrollbar ${selectedFilePath.endsWith(".csv") ? "p-0" : "p-6 text-sm font-mono text-slate-700 whitespace-pre"}`}>
-                        {isTextLoading ? <div className="flex h-full items-center justify-center text-slate-400">Loading content...</div> : selectedFilePath.endsWith(".csv") ? renderCsvTable(textContent) : textContent}
+                    ) : selectedFilePath.split('?')[0].match(/\.(csv|json|md|txt)$/i) ? (
+                      <div className={`w-full h-full rounded-xl shadow-sm border border-gray-200 bg-white overflow-auto custom-scrollbar ${selectedFilePath.split('?')[0].endsWith(".csv") ? "p-0" : "p-6 text-sm font-mono text-slate-700 whitespace-pre"}`}>
+                        {isTextLoading ? <div className="flex h-full items-center justify-center text-slate-400">Loading content...</div> : selectedFilePath.split('?')[0].endsWith(".csv") ? renderCsvTable(textContent) : textContent}
                       </div>
                     ) : (
-                      <iframe src={`/api/dpp-demo/files?action=serve&path=${encodeURIComponent(selectedFilePath)}`} className="w-full h-full rounded-xl shadow-sm border border-gray-200 bg-white" />
+                      <iframe src={selectedFilePath} title="Fallback Preview" className="w-full h-full rounded-xl shadow-sm border border-gray-200 bg-white" />
                     )}
                   </div>
                 </div>
@@ -492,29 +505,29 @@ export default function DppWorkspacePage() {
 
                 <div className="space-y-4 mb-6">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">指定已稽核 SKU</label>
-                    <div className="w-full bg-slate-50 border border-slate-200 text-slate-500 rounded-lg p-2.5 font-medium text-sm">
+                    <label htmlFor="sku-display" className="block text-xs font-bold text-slate-700 mb-1">指定已稽核 SKU</label>
+                    <div id="sku-display" className="w-full bg-slate-50 border border-slate-200 text-slate-500 rounded-lg p-2.5 font-medium text-sm">
                       {PRODUCTS.find(p => p.id === selectedProductId)?.name} (Ready for Passport)
                     </div>
                     <p className="text-[10px] text-emerald-600 mt-1 flex items-center"><CheckCircle2 className="w-3 h-3 mr-1" /> 已繼承 5 項靜態合規與技術文件</p>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">批次編號 (Batch ID)</label>
-                    <input type="text" value={batchId} onChange={e => setBatchId(e.target.value)} placeholder="例：BAT-2025-08X" className="w-full bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 font-medium text-sm" />
+                    <label htmlFor="batchId" className="block text-xs font-bold text-slate-700 mb-1">批次編號 (Batch ID)</label>
+                    <input id="batchId" type="text" value={batchId} onChange={e => setBatchId(e.target.value)} placeholder="例：BAT-2025-08X" className="w-full bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 font-medium text-sm" />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">生產日期</label>
-                      <input type="date" value={mfgDate} onChange={e => setMfgDate(e.target.value)} className="w-full bg-white border border-slate-300 text-slate-900 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 font-medium text-sm" />
+                      <label htmlFor="mfgDate" className="block text-xs font-bold text-slate-700 mb-1">生產日期</label>
+                      <input id="mfgDate" type="date" value={mfgDate} onChange={e => setMfgDate(e.target.value)} className="w-full bg-white border border-slate-300 text-slate-900 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 font-medium text-sm" />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">產地設施</label>
-                      <input type="text" value={facility} onChange={e => setFacility(e.target.value)} placeholder="例：桃園龜山一廠" className="w-full bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 font-medium text-sm" />
+                      <label htmlFor="facility" className="block text-xs font-bold text-slate-700 mb-1">產地設施</label>
+                      <input id="facility" type="text" value={facility} onChange={e => setFacility(e.target.value)} placeholder="例：桃園龜山一廠" className="w-full bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 font-medium text-sm" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">產品序號範圍 (SN Range)</label>
-                    <input type="text" value={snRange} onChange={e => setSnRange(e.target.value)} placeholder="例：SN001 - SN500" className="w-full bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 font-medium text-sm" />
+                    <label htmlFor="snRange" className="block text-xs font-bold text-slate-700 mb-1">產品序號範圍 (SN Range)</label>
+                    <input id="snRange" type="text" value={snRange} onChange={e => setSnRange(e.target.value)} placeholder="例：SN001 - SN500" className="w-full bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 font-medium text-sm" />
                   </div>
                 </div>
 
@@ -537,6 +550,14 @@ export default function DppWorkspacePage() {
                       <div
                         key={p.id}
                         onClick={() => setSelectedPassport(p)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setSelectedPassport(p);
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
                         className={`p-3 border rounded-xl cursor-pointer transition-colors ${selectedPassport?.id === p.id ? "bg-emerald-50 border-emerald-500 shadow-sm" : "bg-white hover:bg-slate-50 border-slate-200"}`}
                       >
                         <div className="flex justify-between items-center mb-1">
@@ -561,9 +582,10 @@ export default function DppWorkspacePage() {
                       護照發布預覽 ({selectedPassport.batchId})
                     </div>
                     <a
-                      href={`/api/dpp-demo/files?action=serve&path=${encodeURIComponent(selectedPassport.pdfPath)}`}
+                      href={selectedPassport.pdfPath}
                       download
                       target="_blank"
+                      rel="noreferrer"
                       className="text-xs font-bold text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg flex items-center transition-colors"
                     >
                       <Download className="w-3 h-3 mr-1" /> 獨立頁面開啟
@@ -571,7 +593,8 @@ export default function DppWorkspacePage() {
                   </div>
                   <div className="flex-1 overflow-hidden p-0 bg-slate-200">
                     <iframe
-                      src={`/api/dpp-demo/files?action=serve&path=${encodeURIComponent(selectedPassport.pdfPath)}`}
+                      src={selectedPassport.pdfPath}
+                      title="Passport Preview"
                       className="w-full h-full border-0 bg-white shadow-sm"
                     />
                   </div>

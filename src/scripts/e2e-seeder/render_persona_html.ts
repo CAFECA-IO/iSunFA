@@ -1,6 +1,49 @@
 import * as fs from "fs";
 import * as path from "path";
 
+// Info: (20260608 - Tzuhan) 定義 PersonaData 型別，嚴格遵守免 any 開發規範
+interface IManufacturingProcess {
+  stepName: string;
+  description: string;
+  energyIntensity: string;
+  lossRate: number;
+  processWeight_percent: number;
+}
+
+interface ISupplier {
+  name: string;
+  taxId: string;
+  errorRate: number;
+}
+
+interface ISupplierCategory {
+  category: string;
+  suppliers: ISupplier[];
+}
+
+interface IRelatedParty {
+  name: string;
+  relationship: string;
+}
+
+interface IBankAccount {
+  bankCode: string;
+  isForeign: boolean;
+}
+
+interface IPersonaData {
+  revenueScale: string;
+  totalRevenue_NTD: number;
+  totalScope2Emissions_tCO2e: number;
+  estimatedAnnualVouchers: number;
+  industryDynamics: string;
+  manufacturingProcess?: IManufacturingProcess[];
+  topSuppliers?: ISupplierCategory[];
+  voucherCalculationRationale: string;
+  relatedParties?: IRelatedParty[];
+  commonBankAccounts?: IBankAccount[];
+}
+
 export async function renderPersonaHtml(stockId: string, year: string = "2024") {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
   const baseDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1");
@@ -11,7 +54,7 @@ export async function renderPersonaHtml(stockId: string, year: string = "2024") 
     process.exit(1);
   }
 
-  const personaData = JSON.parse(fs.readFileSync(personaPath, "utf-8"));
+  const personaData: IPersonaData = JSON.parse(fs.readFileSync(personaPath, "utf-8"));
 
   console.log(`🚀 [Persona HTML Renderer] 開始為 ${stockId} 生成企業畫像 HTML...`);
 
@@ -94,7 +137,7 @@ export async function renderPersonaHtml(stockId: string, year: string = "2024") 
           </tr>
         </thead>
         <tbody>
-          ${(personaData.manufacturingProcess || []).map((p: any) => `
+          ${(personaData.manufacturingProcess || []).map((p) => `
             <tr>
               <td style="font-weight: 600;">${p.stepName}</td>
               <td style="max-width: 200px;">${p.description}</td>
@@ -111,7 +154,7 @@ export async function renderPersonaHtml(stockId: string, year: string = "2024") 
 
     <div class="card">
       <h2>Top Suppliers</h2>
-      ${(personaData.topSuppliers || []).map((cat: any) => `
+      ${(personaData.topSuppliers || []).map((cat) => `
         <h3 style="font-size: 12px; color: #475569; margin-top: 10px;">Category: ${cat.category}</h3>
         <table>
           <thead>
@@ -122,7 +165,7 @@ export async function renderPersonaHtml(stockId: string, year: string = "2024") 
             </tr>
           </thead>
           <tbody>
-            ${(cat.suppliers || []).map((sup: any) => `
+            ${(cat.suppliers || []).map((sup) => `
               <tr>
                 <td style="font-weight: 600;">${sup.name}</td>
                 <td>${sup.taxId}</td>
@@ -143,13 +186,13 @@ export async function renderPersonaHtml(stockId: string, year: string = "2024") 
         <div style="flex: 1;">
           <h3 style="font-size: 12px; color: #475569;">Related Parties</h3>
           <ul>
-            ${(personaData.relatedParties || []).map((rp: any) => `<li style="font-size: 12px; margin-bottom: 4px;"><b>${rp.name}</b> (${rp.relationship})</li>`).join("")}
+            ${(personaData.relatedParties || []).map((rp) => `<li style="font-size: 12px; margin-bottom: 4px;"><b>${rp.name}</b> (${rp.relationship})</li>`).join("")}
           </ul>
         </div>
         <div style="flex: 1;">
           <h3 style="font-size: 12px; color: #475569;">Common Bank Accounts</h3>
           <ul>
-            ${(personaData.commonBankAccounts || []).map((ba: any) => `<li style="font-size: 12px; margin-bottom: 4px;">Bank Code: <b>${ba.bankCode}</b> ${ba.isForeign ? "(Foreign)" : "(Domestic)"}</li>`).join("")}
+            ${(personaData.commonBankAccounts || []).map((ba) => `<li style="font-size: 12px; margin-bottom: 4px;">Bank Code: <b>${ba.bankCode}</b> ${ba.isForeign ? "(Foreign)" : "(Domestic)"}</li>`).join("")}
           </ul>
         </div>
       </div>
@@ -167,7 +210,7 @@ export async function renderPersonaHtml(stockId: string, year: string = "2024") 
   // Info: (20260608 - Tzuhan) Save as HTML instead of generating PDF
   const outHtmlPath = path.join(baseDir, `${stockId}_company_persona.html`);
   console.log(`⏳ [Persona HTML Renderer] 寫入 HTML 檔案至 ${outHtmlPath}...`);
-  
+
   fs.writeFileSync(outHtmlPath, htmlContent, "utf-8");
 
   console.log(`🎉 [SUCCESS] 企業畫像 HTML 已成功產出：${outHtmlPath}`);

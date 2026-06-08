@@ -4,7 +4,7 @@ import path from "path";
 
 export async function GET() {
   try {
-    const dataDir = path.join(process.cwd(), "data");
+    const dataDir = path.join(process.cwd(), "public", "data");
     const options: Record<string, string[]> = {};
 
     try {
@@ -17,7 +17,7 @@ export async function GET() {
         let years;
         try {
           years = await fs.readdir(yearsDir, { withFileTypes: true });
-        } catch (e) {
+        } catch {
           continue;
         }
         
@@ -34,18 +34,18 @@ export async function GET() {
               }
               options[stockId].push(yearStr);
             }
-          } catch (e) {
+          } catch {
             // Info: (20260608 - Tzuhan) Target dir doesn't exist, skip
           }
         }
       }
-    } catch (e) {
+    } catch {
       // Info: (20260608 - Tzuhan) Data dir doesn't exist
       return NextResponse.json({ error: "Data directory not found" }, { status: 404 });
     }
 
     return NextResponse.json(options);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }
 }
