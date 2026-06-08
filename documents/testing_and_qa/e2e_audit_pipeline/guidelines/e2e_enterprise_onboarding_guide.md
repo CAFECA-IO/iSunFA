@@ -82,13 +82,13 @@ npx tsx src/scripts/e2e-seeder/fast_verify.ts [stock_id]
 
 ## 🏗️ 真實財報逆向工程引擎 (Financial Reverse Engineer)
 
-如果您想要針對特定公司（如 `6642`），完美地將其真實財報的宏觀數字（如年度總營收、總成本）逆向打碎成上萬張具備真實日期、多樣化科目的模擬傳票，並確保最終加總 **100% 完美吻合 Golden Data**，請使用這支腳本：
+如果您想要針對特定公司（如 `2066`），完美地將其真實財報的宏觀數字（如年度總營收、總成本）逆向打碎成上萬張具備真實日期、多樣化科目的模擬傳票，並確保最終加總 **100% 完美吻合 Golden Data**，請使用這支腳本：
 
 ```bash
 npx tsx src/scripts/e2e-seeder/financial_reverse_engineer.ts [stock_id] [target_voucher_count]
 ```
 
-- **[stock_id]**: 股票代號（例如 `6642`）。
+- **[stock_id]**: 股票代號（例如 `2066`）。
 - **[target_voucher_count]** *(Optional)*: 期望生成的傳票總數。
   - 若**不指定**，系統會啟動「動態體積計算引擎 (Dynamic Volume Scaling)」，依據該公司的營業額大小自動推算最合理的憑證數量（每 100 萬營收產出 10 張，預設最高上限為 55,000 張，精準對齊每日約 150 張的企業體量）。
   - 若**指定數字**（例如 `5000`），系統會強制以此總量來切分財報，適合開發初期的輕量化快速驗證。
@@ -107,7 +107,7 @@ npx tsx src/scripts/e2e-seeder/progressive_verifier.ts [days] [year] [stock_id]
 
 - **[days]**: 模擬的天數（如 `365` 代表一整年，會自動產生 5 萬多筆虛擬資料）。
 - **[year]**: 財報年份（預設 `2024`）。資料將輸出至 `data/[stock_id]/[year]/...`。
-- **[stock_id]**: 股票代號（預設 `6642`）。
+- **[stock_id]**: 股票代號（預設 `2066`）。
 
 這支腳本會在每一筆憑證寫入時，嚴格斷言當下的三大表（BS, IS, CF）恆等式 (A = L + E)。
 

@@ -94,7 +94,7 @@
   > 詳細解說如何透過 AI 逆向生成符合 CBAM 規範的海關報單、前驅物碳排與委外加工資料。
 - 📦 **[歐盟 DPP 數位產品護照生成架構 (DPP Seeder)](testing_and_qa/e2e_audit_pipeline/dpp_compliance_seeder.md)**
   > 探討如何自動生成歐盟 DPP 要求的 9 大面向產品履歷、產品規格與物理化學宣告 PDF。
-- 🚀 **[6642 5.4 萬筆旗艦級 ESG 擬真數據 PoC 實作戰略 (6642 PoC Blueprint)](testing_and_qa/e2e_audit_pipeline/6642_poc_blueprint.md)**
+- 🚀 **[2066 5.4 萬筆旗艦級 ESG 擬真數據 PoC 實作戰略 (2066 PoC Blueprint)](testing_and_qa/e2e_audit_pipeline/2066_poc_blueprint.md)**
   > 詳述捨棄巨量吞吐虛榮指標，改為專注「絕對防禦深度」的管線解耦與防禦演練戰略。
 - 🎯 **[審計與稽核指標指南 (E2E Cross Validation Metrics)](testing_and_qa/e2e_audit_pipeline/guidelines/e2e_cross_validation_metrics.md)**
   > 紀載系統如何執行 0 誤差的四維度 (財務、碳排、三表勾稽、防禦覆蓋率) 交叉驗證。

@@ -55,11 +55,14 @@ npx tsx src/scripts/e2e-seeder/dpp/generate_product_specs.ts 2066 2025
 # 生成 MES 廠房耗能數據
 npx tsx src/scripts/e2e-seeder/cbam/generate_mes_energy.ts 2066 2025
 
-# 生成出貨物流資訊
-npx tsx src/scripts/e2e-seeder/cbam/generate_outbound_logistics.ts 2066 2025
-
 # 生成委外加工資訊 (視需求可選)
 npx tsx src/scripts/e2e-seeder/cbam/generate_outsourced_processing.ts 2066 2025
+
+# 生成出口海關報單與物流資訊
+npx tsx src/scripts/e2e-seeder/cbam/generate_export_customs.ts 2066 2025
+
+# 生成 DPP 合規宣告信
+npx tsx src/scripts/e2e-seeder/dpp/generate_dpp_compliance.ts 2066 2025
 ```
 
 ---
