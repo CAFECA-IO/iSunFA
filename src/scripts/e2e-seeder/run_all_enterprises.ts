@@ -4,12 +4,13 @@ import { runPipeline } from "@/scripts/e2e-seeder/run_pipeline";
 import pLimit from "p-limit";
 
 export const runScaleTest = async (
+  year: string = "2024",
   shouldClean: boolean = false,
   skipImages: boolean = false,
 ) => {
   console.log(`\n======================================================`);
   console.log(`🏢 [ENTERPRISE SCALING] Batch E2E Seeder Initialization`);
-  console.log(`Flags: --clean=${shouldClean}, --skip-images=${skipImages}`);
+  console.log(`Flags: --year=${year}, --clean=${shouldClean}, --skip-images=${skipImages}`);
   console.log(`======================================================\n`);
 
   const dataDir = path.resolve(process.cwd(), "data");
@@ -79,7 +80,7 @@ export const runScaleTest = async (
             fs.rmSync(outputsDir, { recursive: true, force: true });
           }
         }
-        await runPipeline(stockId, shouldClean, skipImages);
+        await runPipeline(stockId, year, shouldClean, skipImages);
         results[stockId] = "PASSED";
       } catch {
         console.error(
@@ -107,8 +108,14 @@ export const runScaleTest = async (
 if (import.meta.url === `file://${process.argv[1]}`) {
   const shouldClean = process.argv.includes("--clean");
   const skipImages = process.argv.includes("--skip-images");
+  
+  let targetYear = "2024";
+  const yearArg = process.argv.find((a) => a.startsWith("--year="));
+  if (yearArg) {
+    targetYear = yearArg.split("=")[1];
+  }
 
-  runScaleTest(shouldClean, skipImages).catch((err) => {
+  runScaleTest(targetYear, shouldClean, skipImages).catch((err) => {
     console.error("Batch execution failed:", err);
     process.exit(1);
   });
