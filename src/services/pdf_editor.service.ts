@@ -29,7 +29,12 @@ ${instruction ? `【額外指示 (Additional Instructions)】：\n${instruction}
     const chatService = new ChatService(apiKey);
     const reply = await chatService.generateRaw(finalPrompt);
 
-    return reply.trim();
+    // Info: (20260608 - Julian) 過濾掉 AI 的自我反思過程 (<thinking>...</thinking>)
+    const finalReport = reply
+      .replace(/<thinking>[\s\S]*?<\/thinking>\n*/gi, "")
+      .trim();
+
+    return finalReport;
   }
 
   /**
