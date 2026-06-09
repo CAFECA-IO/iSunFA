@@ -3,9 +3,9 @@ import { mockReports } from "@/interfaces/business_monitor";
 import { IAIResponse } from "@/interfaces/business_monitor";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-/*
- ** Info:(20260609 - Julian) 用於開發 Business Monitor 的 Mock API，之後會移除
- ** GET /api/v1/mock/reports?query={query}&company={company}&industry={industry}&year={year}&page={page}&pageSize={pageSize}
+/**
+ * Info:(20260609 - Julian) 用於開發 Business Monitor 的 Mock API，之後會移除
+ * GET /api/v1/mock/reports?query={query}&company={company}&industry={industry}&year={year}&page={page}&pageSize={pageSize}
  */
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
