@@ -11,6 +11,11 @@ export interface IReportDownloadTask {
   estimatedTimeRemaining?: number;
 }
 
+export interface IAIResponse {
+  answer: string;
+  sourceReportIds: number[];
+}
+
 export interface IMockReport {
   id: number;
   company: string;

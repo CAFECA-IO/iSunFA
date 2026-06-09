@@ -1,4 +1,6 @@
 import { NextRequest } from "next/server";
+
+export const dynamic = "force-dynamic";
 import {
   IReportDownloadTask,
   DownloadStatus,
@@ -7,7 +9,6 @@ import {
 /*
  ** Info:(20260609 - Julian) 用於開發 Business Monitor 的 Mock API，之後會移除
  ** GET /api/v1/mock/download?reportId={reportId}
- **
  */
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
@@ -59,7 +60,7 @@ export async function GET(req: NextRequest) {
   return new Response(stream, {
     headers: {
       "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
+      "Cache-Control": "no-cache, no-transform",
       Connection: "keep-alive",
     },
   });
