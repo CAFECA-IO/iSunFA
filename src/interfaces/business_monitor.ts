@@ -1,3 +1,5 @@
+import { BUSINESS_MONITOR_INDUSTRIES } from "@/constants/business_monitor";
+
 export type DownloadStatus = "idle" | "downloading" | "completed" | "error";
 
 export interface IReportDownloadTask {
@@ -66,7 +68,7 @@ export const mockReports: IMockReport[] = [
     title: "2024 年永續報告書",
     reportYear: "2024",
     period: "2024/01/01 ~ 2024/12/31",
-    industry: "光電業",
+    industry: BUSINESS_MONITOR_INDUSTRIES.OPTOELECTRONICS,
     capital: "100億以上",
     verificationAgency: "台灣檢驗科技股份有限公司(SGS)",
     verificationStandards: "參考國際永續標準、準則與規範(GRI、SASB)",
@@ -80,7 +82,7 @@ export const mockReports: IMockReport[] = [
     title: "2024 年永續報告書",
     reportYear: "2024",
     period: "2024/01/01 ~ 2024/12/31",
-    industry: "半導體業",
+    industry: BUSINESS_MONITOR_INDUSTRIES.SEMICONDUCTOR,
     capital: "100億以上",
     verificationAgency: "台灣檢驗科技股份有限公司(SGS)",
     verificationStandards: "參考國際永續標準、準則與規範(GRI、SASB)",
@@ -94,7 +96,7 @@ export const mockReports: IMockReport[] = [
     title: "2024 年永續報告書",
     reportYear: "2024",
     period: "2024/01/01 ~ 2024/12/31",
-    industry: "半導體業",
+    industry: BUSINESS_MONITOR_INDUSTRIES.SEMICONDUCTOR,
     capital: "100億以上",
     verificationAgency: "台灣檢驗科技股份有限公司(SGS)",
     verificationStandards: "參考國際永續標準、準則與規範(GRI、SASB)",
