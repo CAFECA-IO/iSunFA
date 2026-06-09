@@ -16,6 +16,7 @@ import { useReportDownload } from "@/hooks/use_report_download";
 import { IMockReport, IAIResponse } from "@/interfaces/business_monitor";
 import { request } from "@/lib/utils/request";
 import { useTranslation } from "@/i18n/i18n_context";
+import { BUSINESS_MONITOR_INDUSTRIES } from "@/constants/business_monitor";
 
 const ReportItem: FC<{
   report: IMockReport;
@@ -370,21 +371,25 @@ const BusinessMonitorPageBody: FC = () => {
                   <option value="">
                     {t("business_monitor.filter.all_industries")}
                   </option>
-                  <option value="半導體業">
+                  <option value={BUSINESS_MONITOR_INDUSTRIES.SEMICONDUCTOR}>
                     {t("business_monitor.filter.industries.semiconductor")}
                   </option>
-                  <option value="電腦及週邊設備業">
+                  <option
+                    value={BUSINESS_MONITOR_INDUSTRIES.COMPUTER_PERIPHERALS}
+                  >
                     {t(
                       "business_monitor.filter.industries.computer_peripherals",
                     )}
                   </option>
-                  <option value="光電業">
+                  <option value={BUSINESS_MONITOR_INDUSTRIES.OPTOELECTRONICS}>
                     {t("business_monitor.filter.industries.optoelectronics")}
                   </option>
-                  <option value="通信網路業">
+                  <option value={BUSINESS_MONITOR_INDUSTRIES.COMMUNICATIONS}>
                     {t("business_monitor.filter.industries.communications")}
                   </option>
-                  <option value="電子零組件業">
+                  <option
+                    value={BUSINESS_MONITOR_INDUSTRIES.ELECTRONIC_COMPONENTS}
+                  >
                     {t(
                       "business_monitor.filter.industries.electronic_components",
                     )}
