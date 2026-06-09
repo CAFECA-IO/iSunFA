@@ -99,6 +99,11 @@ export const adminMissionBoard = {
       instruction_label: "사용자 지정 지침 (선택 사항)",
       instruction_placeholder: "예: 분기별 매출 성장률을 표로 표시해 주세요...",
       generate: "보고서 생성",
+      upload_file: "파일 업로드",
+      invalid_file_type:
+        "잘못된 파일 형식입니다. .txt, .csv 또는 .json을 업로드하세요.",
+      file_too_large: "파일 크기가 4MB 제한을 초과합니다.",
+      drag_drop_hint: "텍스트를 추출하려면 여기에 파일을 드롭하세요...",
     },
   },
   gc: {

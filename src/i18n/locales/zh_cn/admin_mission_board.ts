@@ -96,6 +96,10 @@ export const adminMissionBoard = {
       instruction_label: "自定义指令 (选填)",
       instruction_placeholder: "例如：请以表格呈现各季度的营收增长率...",
       generate: "生成报告",
+      upload_file: "上传文件",
+      invalid_file_type: "文件格式错误，请上传 .txt, .csv 或 .json",
+      file_too_large: "文件大小超过 4MB 限制",
+      drag_drop_hint: "将文件拖拽至此处以读取内容...",
     },
   },
   gc: {
