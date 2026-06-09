@@ -90,12 +90,16 @@ export const adminMissionBoard = {
     ai_report_modal: {
       title: "AI 報告生成",
       subtitle:
-        "請貼上數據來源（支援文字、CSV、JSON），AI 將自動為您生成結構化報告。",
+        "請貼上數據來源（支援 TXT、CSV、JSON 檔案格式），AI 將自動為您生成結構化報告。",
       data_label: "來源數據 (必填)",
-      data_placeholder: "貼上要分析的財報數字、ESG 指標等...",
+      data_placeholder: "輸入或貼上要分析的財報數字、ESG 指標等...",
       instruction_label: "自訂指令 (選填)",
-      instruction_placeholder: "例如：請著重分析減碳成效，並以列表呈現重點...",
+      instruction_placeholder: "例如：請以表格呈現各季度的營收成長率...",
       generate: "生成報告",
+      upload_file: "上傳檔案",
+      invalid_file_type: "檔案格式錯誤，請上傳 .txt, .csv, 或 .json",
+      file_too_large: "檔案大小超過 4MB 限制",
+      drag_drop_hint: "將檔案拖曳至此處以讀取內容...",
     },
   },
   gc: {
