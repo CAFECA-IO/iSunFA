@@ -2,7 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building, Plus, PlayCircle, Loader2, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
+import {
+  Building,
+  Plus,
+  PlayCircle,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+  RefreshCw,
+  Trash2,
+  Eye,
+} from "lucide-react";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 
@@ -27,7 +37,9 @@ export default function DppDemoListPage() {
   const fetchItems = async () => {
     try {
       setLoading(true);
-      const res = await request<IApiResponse<IDemoItem[]>>("/api/v1/dpp-demo/list");
+      const res = await request<IApiResponse<IDemoItem[]>>(
+        "/api/v1/dpp-demo/list",
+      );
       if (res.payload) {
         setItems(res.payload);
       }
@@ -38,19 +50,43 @@ export default function DppDemoListPage() {
     }
   };
 
+  const handleDelete = async (stockId: string, year: string, name: string) => {
+    if (
+      !window.confirm(
+        `確定要刪除「${name} (${year} 年)」的模擬資料嗎？此動作無法復原。`,
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await fetch("/api/v1/dpp-demo/list", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stockId, year }),
+      });
+      await fetchItems();
+    } catch (e) {
+      console.error("Delete failed:", e);
+      alert("刪除失敗，請稍後再試");
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchItems();
   }, []);
 
   return (
-    <div className="flex flex-col h-full w-full gap-5 pb-4 font-sans max-w-5xl mx-auto">
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm px-6 py-5 flex items-center justify-between">
+    <div className="mx-auto flex h-full w-full max-w-5xl flex-col gap-5 pb-4 font-sans">
+      <div className="flex items-center justify-between rounded-2xl border border-gray-200 bg-white px-6 py-5 shadow-sm">
         <div>
-          <h1 className="text-xl font-bold text-gray-900 flex items-center">
-            <Building className="w-6 h-6 mr-3 text-blue-600" />
+          <h1 className="flex items-center text-xl font-bold text-gray-900">
+            <Building className="mr-3 h-6 w-6 text-blue-600" />
             企業模擬資料庫
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="mt-1 text-sm text-gray-500">
             管理與預覽已生成的企業數位產品護照模擬資料。
           </p>
         </div>
@@ -58,83 +94,130 @@ export default function DppDemoListPage() {
           onClick={() => router.push("/user/dpp-demo/start")}
           className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="h-4 w-4" />
           生成新的企業模擬資料
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm flex-1 overflow-hidden flex flex-col">
+      <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         {loading ? (
-          <div className="flex-1 flex items-center justify-center">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          <div className="flex flex-1 items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
           </div>
         ) : items.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-gray-500">
-            <Building className="w-16 h-16 text-gray-300 mb-4" />
-            <p className="text-lg font-medium text-gray-900">尚無企業模擬資料</p>
-            <p className="text-sm mt-1">點擊上方按鈕立即建立</p>
+          <div className="flex flex-1 flex-col items-center justify-center text-gray-500">
+            <Building className="mb-4 h-16 w-16 text-gray-300" />
+            <p className="text-lg font-medium text-gray-900">
+              尚無企業模擬資料
+            </p>
+            <p className="mt-1 text-sm">點擊上方按鈕立即建立</p>
           </div>
         ) : (
-          <div className="overflow-y-auto p-4 space-y-4">
+          <div className="space-y-4 overflow-y-auto p-4">
             {items.map((item) => (
-              <div key={item.id} className="border border-gray-200 rounded-xl p-5 hover:border-blue-300 transition-colors bg-slate-50/30">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  
+              <div
+                key={item.id}
+                className="rounded-xl border border-gray-200 bg-slate-50/30 p-5 transition-colors hover:border-blue-300"
+              >
+                <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
                   {/* Info: (20260609 - Tzuhan) 企業資訊 */}
                   <div>
                     <h3 className="text-lg font-bold text-gray-900">
-                      {item.name} <span className="text-sm font-medium text-gray-500 ml-1">({item.stockId})</span>
+                      {item.name}{" "}
+                      <span className="ml-1 text-sm font-medium text-gray-500">
+                        ({item.stockId})
+                      </span>
                     </h3>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="mt-1 text-sm text-gray-500">
                       目標年度: {item.year}
                     </p>
                   </div>
 
                   {/* Info: (20260609 - Tzuhan) Day 1 進度顯示 */}
-                  <div className="flex-1 max-w-md w-full">
-                    <p className="text-xs font-semibold text-gray-500 mb-2">生成進度 (Phase 1)</p>
-                    <div className="flex items-center justify-between text-xs font-medium text-gray-600 bg-white border border-gray-100 rounded-lg p-2 shadow-sm">
+                  <div className="w-full max-w-md flex-1">
+                    <p className="mb-2 text-xs font-semibold text-gray-500">
+                      生成進度 (Phase 1)
+                    </p>
+                    <div className="flex items-center justify-between rounded-lg border border-gray-100 bg-white p-2 text-xs font-medium text-gray-600 shadow-sm">
                       <div className="flex items-center gap-1.5">
-                        {item.progress.hasFin ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <AlertCircle className="w-4 h-4 text-amber-500" />}
+                        {item.progress.hasFin ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        ) : (
+                          <AlertCircle className="h-4 w-4 text-amber-500" />
+                        )}
                         財報下載
                       </div>
-                      <div className="w-4 h-px bg-gray-300" />
+                      <div className="h-px w-4 bg-gray-300" />
                       <div className="flex items-center gap-1.5">
-                        {item.progress.hasEsg ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <AlertCircle className="w-4 h-4 text-amber-500" />}
+                        {item.progress.hasEsg ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        ) : (
+                          <AlertCircle className="h-4 w-4 text-amber-500" />
+                        )}
                         ESG 下載
                       </div>
-                      <div className="w-4 h-px bg-gray-300" />
+                      <div className="h-px w-4 bg-gray-300" />
                       <div className="flex items-center gap-1.5">
-                        {item.progress.hasPersonaHtml ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <AlertCircle className="w-4 h-4 text-amber-500" />}
+                        {item.progress.hasPersonaHtml ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        ) : (
+                          <AlertCircle className="h-4 w-4 text-amber-500" />
+                        )}
                         企業畫像
                       </div>
                     </div>
                   </div>
 
                   {/* Info: (20260609 - Tzuhan) 操作按鈕 */}
-                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <div className="mt-4 flex w-full items-center gap-2 sm:mt-0 sm:w-auto">
                     <button
-                      onClick={() => router.push("/user/dpp-demo/start")}
-                      className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                      disabled={!item.isComplete}
+                      onClick={() =>
+                        router.push(
+                          `/user/dpp-demo/start?stockId=${item.stockId}&year=${item.year}&action=view`,
+                        )
+                      }
+                      className="flex items-center justify-center rounded-lg p-2 text-gray-400 transition hover:bg-blue-50 hover:text-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                      title="查看結果"
                     >
-                      <RefreshCw className="w-4 h-4" />
-                      生成模擬資料
+                      <Eye className="h-5 w-5" />
                     </button>
-                    
+
+                    <button
+                      onClick={() =>
+                        handleDelete(item.stockId, item.year, item.name)
+                      }
+                      className="flex items-center justify-center rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
+                      title="刪除資料"
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        router.push(
+                          `/user/dpp-demo/start?stockId=${item.stockId}&year=${item.year}`,
+                        )
+                      }
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 sm:flex-none"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                      重新生成
+                    </button>
+
                     <button
                       disabled={!item.isComplete}
                       onClick={() => router.push("/user/dpp-demo/workspace")}
-                      className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 rounded-lg px-5 py-2 text-sm font-bold shadow-sm transition
-                        ${item.isComplete 
-                          ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:scale-105 hover:shadow-md" 
-                          : "bg-gray-100 text-gray-400 cursor-not-allowed"}
-                      `}
+                      className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-5 py-2 text-sm font-bold shadow-sm transition sm:flex-none ${
+                        item.isComplete
+                          ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:scale-105 hover:shadow-md"
+                          : "cursor-not-allowed bg-gray-100 text-gray-400"
+                      } `}
                     >
-                      <PlayCircle className="w-4 h-4" />
+                      <PlayCircle className="h-4 w-4" />
                       demo
                     </button>
                   </div>
-
                 </div>
               </div>
             ))}
