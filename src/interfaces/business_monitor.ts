@@ -28,6 +28,7 @@ export interface IMockReport {
   verificationStandards: string;
   assuranceAgency: string;
   assuranceStandards: string;
+  isVerifiedByThirdParty: boolean;
 }
 
 export const mockReports: IMockReport[] = [
@@ -43,6 +44,7 @@ export const mockReports: IMockReport[] = [
     verificationStandards: "參考國際永續標準、準則與規範(GRI、TCFD、SASB)",
     assuranceAgency: "無",
     assuranceStandards: "無",
+    isVerifiedByThirdParty: false,
   },
   {
     id: 2,
@@ -56,6 +58,7 @@ export const mockReports: IMockReport[] = [
     verificationStandards: "參考國際永續標準、準則與規範(GRI、SASB)",
     assuranceAgency: "資誠聯合會計師事務所",
     assuranceStandards: "確信準則 3000 號",
+    isVerifiedByThirdParty: true,
   },
   {
     id: 3,
@@ -69,6 +72,7 @@ export const mockReports: IMockReport[] = [
     verificationStandards: "參考國際永續標準、準則與規範(GRI、SASB)",
     assuranceAgency: "資誠聯合會計師事務所",
     assuranceStandards: "確信準則 3000 號",
+    isVerifiedByThirdParty: true,
   },
   {
     id: 4,
@@ -82,6 +86,7 @@ export const mockReports: IMockReport[] = [
     verificationStandards: "參考國際永續標準、準則與規範(GRI、SASB)",
     assuranceAgency: "資誠聯合會計師事務所",
     assuranceStandards: "確信準則 3000 號",
+    isVerifiedByThirdParty: true,
   },
   {
     id: 5,
@@ -95,5 +100,6 @@ export const mockReports: IMockReport[] = [
     verificationStandards: "參考國際永續標準、準則與規範(GRI、SASB)",
     assuranceAgency: "資誠聯合會計師事務所",
     assuranceStandards: "確信準則 3000 號",
+    isVerifiedByThirdParty: true,
   },
 ];

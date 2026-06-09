@@ -7,6 +7,8 @@ import {
   Sparkles,
   CheckCircle2,
   AlertCircle,
+  LoaderCircle,
+  BookmarkCheck,
 } from "lucide-react";
 import Pagination from "@/components/common/pagination";
 import CompanySearchInput from "@/components/common/company_search_input";
@@ -49,11 +51,21 @@ const ReportItem: FC<{
 
   return (
     <div className="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md">
-      <div className="border-b border-orange-100 bg-orange-50 px-4 py-3 md:px-6 md:py-4">
-        <h3 className="mb-1 text-xl font-bold text-orange-900">
-          {report.company}
-        </h3>
-        <p className="text-sm font-medium text-orange-700">{report.title}</p>
+      <div className="flex items-center justify-between border-b border-orange-100 bg-orange-50 px-4 py-3 md:px-6 md:py-4">
+        <div className="flex flex-col gap-1">
+          <h3 className="text-xl font-bold text-orange-900">
+            {report.company}
+          </h3>
+          <p className="text-sm font-medium text-orange-700">{report.title}</p>
+        </div>
+        {report.isVerifiedByThirdParty && (
+          <div className="flex items-center gap-1 rounded-md border-0 border-green-300 bg-green-50 px-1 py-1 text-green-700 md:border md:px-2">
+            <BookmarkCheck size={24} className="shrink-0" />
+            <p className="hidden text-xs font-medium md:block">
+              已通過第三方查證
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col p-4 md:p-6">
@@ -378,29 +390,35 @@ const BusinessMonitorPageBody: FC = () => {
 
         {/* Info:(20260609 - Julian) AI Answer Card */}
         {!isLoading && aiResponse && (
-          <div className="flex flex-col gap-3 rounded-xl border border-orange-200 bg-linear-to-br from-orange-50 to-white p-5 shadow-sm md:p-6">
-            <div className="flex items-center gap-2">
-              <Sparkles size={20} className="shrink-0 text-orange-500" />
-              <h2 className="text-lg font-bold text-orange-900">AI 解答</h2>
-            </div>
-            <p className="text-sm leading-relaxed font-medium text-slate-700">
-              {aiResponse.answer}
-            </p>
-            {aiResponse.sourceReportIds.length > 0 && (
-              <div className="mt-2 border-t border-orange-100 pt-3">
-                <p className="text-xs font-bold text-orange-800">資料來源：</p>
-                <ul className="mt-1 flex flex-col gap-1">
-                  {filteredReports.map((report) => (
-                    <li
-                      key={report.id}
-                      className="text-xs font-medium text-slate-600"
-                    >
-                      • {report.company} {report.title}
-                    </li>
-                  ))}
-                </ul>
+          <div className="border-b border-dashed border-slate-200 pb-6">
+            <div className="flex flex-col gap-3 rounded-xl border border-orange-200 bg-orange-50 p-4 shadow-sm md:p-6">
+              <div className="flex items-center gap-2">
+                <Sparkles size={20} className="shrink-0 text-orange-500" />
+                <h2 className="text-sm font-bold text-orange-900 md:text-lg">
+                  AI 解答
+                </h2>
               </div>
-            )}
+              <div className="rounded-2xl bg-orange-100 px-4 py-2 text-base leading-relaxed font-medium text-slate-800 md:text-xl">
+                {aiResponse.answer}
+              </div>
+              {aiResponse.sourceReportIds.length > 0 && (
+                <div className="mt-2 border-t border-orange-100 pt-3">
+                  <p className="text-xs font-bold text-orange-800">
+                    資料來源：
+                  </p>
+                  <ul className="mt-1 flex flex-col gap-1">
+                    {filteredReports.map((report) => (
+                      <li
+                        key={report.id}
+                        className="text-xs font-medium text-slate-600"
+                      >
+                        • {report.company} {report.title}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -425,9 +443,13 @@ const BusinessMonitorPageBody: FC = () => {
                 </span>
               </>
             ) : (
-              <span className="text-sm font-medium text-slate-500">
-                資料載入中...
-              </span>
+              <div className="flex flex-col items-center gap-2 text-sm font-medium text-slate-500">
+                <LoaderCircle
+                  size={32}
+                  className="shrink-0 animate-spin text-orange-500"
+                />
+                <p>資料載入中...</p>
+              </div>
             )}
           </div>
         ) : filteredReports.length > 0 ? (
