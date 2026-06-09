@@ -1,8 +1,8 @@
 # 🌍 DPP (Digital Product Passport) 全端生成架構解析
 
-> **Date**: 2026-06-04
+> **Date**: 2026-06-08 (Updated)
 > **Author**: Tzuhan
-> **Version**: 1.0
+> **Version**: 1.1
 > **Scope**: `src/scripts/e2e-seeder/dpp/*`
 > **Context**: 指引開發者理解 iSunFA 如何生成符合歐盟數位產品護照 (DPP) 要求的結構化與非結構化合規資料。
 > **Target Scenario**: 目前針對「2066 世德工業」進行高度產業特化開發，**戰略目標為以此作為 PoC，攻打並拿下「5007 三星科技」的 ESG 報告書及 DDP (Due Diligence Process, 供應鏈盡職調查) 專案。**
@@ -11,15 +11,15 @@
 
 歐盟的 DPP (Digital Product Passport) 規範遠遠超出了單純的碳排，它要求企業揭露高達 9 大面向的產品履歷，包含：循環經濟、耐用性、維修手冊、化學品合規等。同時，許多國際大廠也要求其供應鏈提供詳盡的 DDP (Due Diligence Process) 盡職調查報告。
 
-為了解決系統在展示或壓力測試時缺乏此類資料的問題，我們擴充了 E2E Seeder，新增了多支強大的生成腳本，能從企業畫像 (`persona_generator.ts`) 出發，自動幻覺出 100% 符合 DPP 規範與供應鏈盡職調查要求的擬真合規文件。
+為了解決系統在展示或壓力測試時缺乏此類資料的問題，我們擴充了 E2E Seeder，新增了多支強大的生成腳本，能從企業畫像 (`persona_generator.ts`) 出發，自動幻覺出 100% 符合 DPP 規範與供應鏈盡職調查要求的擬真合規文件。本模組亦已全面支援**跨年度動態參數 (year)** 推估。
 
 ---
 
 ## 📦 核心腳本與用途說明
 
-### 1. `generate_dpp_ground_truth.ts` (新增)
+### 1. `generate_dpp_ground_truth.ts`
 - **用途**：負責產生 DPP 的真實標竿數據 (Ground Truth)。
-- **機制**：建立一份基礎的黃金數據 (Golden Data)，定義產品的標準生命週期與各項基礎參數，作為後續生成詳細規格與宣告信的基石。這保證了在進行 AI 驗證盲測時有一致的正確答案。
+- **機制**：建立一份基礎的黃金數據 (Golden Data)，定義產品的標準生命週期與各項基礎參數，作為後續生成詳細規格與宣告信的基石。這保證了在進行 AI 驗證盲測時有一致的正確答案。支援接收 CLI 的 `year` 參數做跨年度推估。
 
 ### 2. `generate_product_specs.ts`
 - **用途**：產生結構化的產品規格與生命週期指南 (`product_specs.json`)。
@@ -31,7 +31,7 @@
 - **DPP 對應燈號**：`6.1 維修拆解` 與 `9.3 有害化學物質 (PFAS/REACH/RoHS)`。
 - **機制**：讀取企業畫像，填入真實公司名稱與地址。強制要求 AI 產出純淨的企業聲明（無對話、無佔位符），並透過**精確的 Markdown 標題設計 (如 `## 9.3 Hazardous Chemicals`)** 確保系統端的 AI 萃取引擎能 100% 準確抓取。
 
-### 4. `render_dpp_pdf.ts` (新增)
+### 4. `render_dpp_pdf.ts`
 - **用途**：將宣告信 Markdown 渲染為高質感的實體 PDF (`dpp_compliance_declaration.pdf`)。
 - **機制**：為了進行對抗式視覺盲測 (Visual Red-Teaming)，系統不直接提供乾淨的 JSON 給驗證引擎，而是將文字渲染成逼真的 PDF 檔，藉此考驗底層 OCR 與語義理解引擎的能耐。
 
@@ -67,5 +67,5 @@
 如果要一次性生成針對特定企業 (如 2066 世德工業) 的完整 CBAM 與 DPP 模擬測試資料，請在專案根目錄執行以下串聯指令：
 
 ```bash
-npx tsx src/scripts/e2e-seeder/cbam/generate_bom_precursors.ts 2066 && npx tsx src/scripts/e2e-seeder/dpp/generate_product_specs.ts 2066 && npx tsx src/scripts/e2e-seeder/cbam/generate_mes_energy.ts 2066 && npx tsx src/scripts/e2e-seeder/cbam/generate_outsourced_processing.ts 2066 && npx tsx src/scripts/e2e-seeder/cbam/generate_export_customs.ts 2066 && npx tsx src/scripts/e2e-seeder/dpp/generate_dpp_compliance.ts 2066 && npx tsx src/scripts/e2e-seeder/dpp/generate_dpp_ground_truth.ts 2066 && npx tsx src/scripts/e2e-seeder/dpp/render_dpp_pdf.ts 2066
+npx tsx src/scripts/e2e-seeder/cbam/generate_bom_precursors.ts 2066 2024 && npx tsx src/scripts/e2e-seeder/dpp/generate_product_specs.ts 2066 2024 && npx tsx src/scripts/e2e-seeder/cbam/generate_mes_energy.ts 2066 2024 && npx tsx src/scripts/e2e-seeder/cbam/generate_outsourced_processing.ts 2066 2024 && npx tsx src/scripts/e2e-seeder/cbam/generate_export_customs.ts 2066 2024 && npx tsx src/scripts/e2e-seeder/dpp/generate_dpp_compliance.ts 2066 2024 && npx tsx src/scripts/e2e-seeder/dpp/generate_dpp_ground_truth.ts 2066 2024 && npx tsx src/scripts/e2e-seeder/dpp/render_dpp_pdf.ts 2066 2024 && npx tsx src/scripts/e2e-seeder/cbam/cbam_generator.ts 2066 2024
 ```

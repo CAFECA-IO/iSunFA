@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 
-export async function renderDppPdf(stockId: string, year: string = "2024") {
+export async function renderDppHtml(stockId: string, year: string = "2024") {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
   const baseDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1");
   const mockSourcesDir = path.join(baseDir, "mock_sources");
@@ -15,7 +15,7 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
   const bomRaw = JSON.parse(fs.readFileSync(bomPath, "utf-8"));
 
   console.log(
-    `🚀 [DPP PDF Renderer] 開始為 ${bomRaw.products.length} 項產品生成 Battery Pass 風格 PDF...`,
+    `🚀 [DPP PDF Renderer] 開始為 ${bomRaw.products.length} 項產品生成 Battery Pass 風格 HTML...`,
   );
 
   for (const product of bomRaw.products) {
@@ -35,12 +35,12 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
     );
     const outFile = path.join(
       productIngestionDir,
-      `${productId}_dpp_ground_truth_dashboard.pdf`,
+      `${productId}_dpp_ground_truth_dashboard.html`,
     );
 
     if (!fs.existsSync(groundTruthPath)) {
       console.warn(
-        `⚠️ [${productId}] 找不到對應的 Ground Truth JSON，跳過 PDF 產出。`,
+        `⚠️ [${productId}] 找不到對應的 Ground Truth JSON，跳過 HTML 產出。`,
       );
       continue;
     }
@@ -222,6 +222,7 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
     .pie-chart {
       width: 120px;
       height: 120px;
+      border-radius: 50%;
     }
     .legend {
       display: flex;
@@ -309,12 +310,7 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
         </div>
         
         <div style="display: flex; align-items: center; justify-content: center; gap: 24px; margin: 20px 0;">
-          <div class="pie-chart">
-            <svg viewBox="0 0 32 32" style="width: 100%; height: 100%; transform: rotate(-90deg);">
-              <circle r="15.9155" cx="16" cy="16" fill="transparent" stroke="#10b981" stroke-width="32" />
-              <circle r="15.9155" cx="16" cy="16" fill="transparent" stroke="#3b82f6" stroke-width="32" stroke-dasharray="${prePct + s1Pct} 100" />
-              <circle r="15.9155" cx="16" cy="16" fill="transparent" stroke="#f97316" stroke-width="32" stroke-dasharray="${prePct} 100" />
-            </svg>
+          <div class="pie-chart" style="background: conic-gradient(#f97316 0% ${prePct.toFixed(2)}%, #3b82f6 ${prePct.toFixed(2)}% ${(prePct + s1Pct).toFixed(2)}%, #10b981 ${(prePct + s1Pct).toFixed(2)}% 100%);">
           </div>
           <div class="legend">
             <div class="legend-item"><div class="legend-color" style="background: #f97316;"></div><span>Precursors: ${prePct.toFixed(1)}%</span></div>
@@ -427,26 +423,10 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
 </html>
     `;
 
-    // Info: (20260608 - Tzuhan) 完全移除換行字元，防止 marked.js 把任何區塊解析成 Markdown paragraph (<p>) 導致 CSS 破版
-    const safeHtmlContent = htmlContent.replace(/\n/g, " ").replace(/\r/g, "");
-
-    console.log(`⏳ [${productId}] Rendering DPP Dashboard PDF...`);
-    const { mdToPdf } = await import("md-to-pdf");
-
-    await mdToPdf(
-      { content: safeHtmlContent },
-      {
-        dest: outFile,
-        pdf_options: {
-          format: "A4",
-          margin: { top: "0mm", right: "0mm", bottom: "0mm", left: "0mm" },
-          printBackground: true,
-        },
-      },
-    );
-
+console.log(`⏳ [${productId}] Rendering DPP Dashboard HTML...`);
+    fs.writeFileSync(outFile, htmlContent);
     console.log(
-      `🎉 [SUCCESS] [${productId}] 數位產品護照 PDF 已成功產出：${outFile}`,
+      `🎉 [SUCCESS] [${productId}] 數位產品護照 HTML 已成功產出：${outFile}`,
     );
   }
 }
@@ -455,8 +435,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const stockId = process.argv[2];
   const year = process.argv[3] || "2024";
   if (!stockId) {
-    console.error("Usage: npx tsx render_dpp_pdf.ts <stockId>");
+    console.error("Usage: npx tsx render_dpp_html.ts <stockId>");
     process.exit(1);
   }
-  renderDppPdf(stockId, year).catch((e) => { console.error(e); process.exit(1); });
+  renderDppHtml(stockId, year).catch((e) => { console.error(e); process.exit(1); });
 }

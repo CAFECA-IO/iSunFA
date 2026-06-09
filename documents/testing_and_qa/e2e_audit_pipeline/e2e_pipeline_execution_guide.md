@@ -58,6 +58,14 @@ npx tsx src/scripts/e2e-seeder/dpp/generate_product_specs.ts 2066 2024
 # 3. 執行聚合運算，產出三大核心產品的 DPP Ground Truth JSON
 npx tsx src/scripts/e2e-seeder/dpp/generate_dpp_ground_truth.ts 2066 2024
 
+# 生成委外加工資訊 (視需求可選)
+npx tsx src/scripts/e2e-seeder/cbam/generate_outsourced_processing.ts 2066 2025
+
+# 生成出口海關報單與物流資訊
+npx tsx src/scripts/e2e-seeder/cbam/generate_export_customs.ts 2066 2025
+
+# 生成 DPP 合規宣告信
+npx tsx src/scripts/e2e-seeder/dpp/generate_dpp_compliance.ts 2066 2025
 # 4. 將 Ground Truth JSON 無縫套版，渲染出最終的視覺化 PDF (DPP 證書)
 npx tsx src/scripts/e2e-seeder/dpp/render_dpp_pdf.ts 2066 2024
 ```

@@ -1,0 +1,6 @@
+ProductId,PrecursorName,SupplierName,CountryOfOrigin,IsCbamCovered,InputWeightKg,EmbeddedEmissionsKgCO2ePerKg
+P-M12-EH-001,SCM435 合金鋼盤元,中鋼股份有限公司,TW,Yes,0.075,1.85
+P-M12-EH-001,防鏽油與包材,永豐餘工業用紙股份有限公司,TW,No,0.005,0.8
+P-M10-BN-002,特殊合金鋼棒材,榮剛材料科技股份有限公司,TW,Yes,0.02,2.4
+P-CS-BS-003,S45C 中碳鋼盤元,JFE Steel Corporation,JP,Yes,0.32,1.9
+P-CS-BS-003,瓦楞紙箱包材,永豐餘工業用紙股份有限公司,TW,No,0.02,0.85
