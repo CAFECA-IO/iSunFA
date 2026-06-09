@@ -1,14 +1,14 @@
 import { ICompanySearchResult } from "@/app/user/dpp-demo/start/page";
 import {
-  Search,
-  Play,
   Loader2,
   AlertCircle,
   CircleDashed,
   CheckCircle2,
   FileText,
   Sparkles,
+  DownloadCloud,
 } from "lucide-react";
+import { CompanySearchInput } from "@/components/common/company_search_input";
 
 // Info: (20260609 - Tzuhan) 繪製狀態圖示
 const renderStateIcon = (
@@ -77,55 +77,14 @@ export function DppDemoSidebar({
     <div className="relative z-20 flex h-full w-full flex-shrink-0 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm lg:w-[420px]">
       <div className="border-b border-gray-100 bg-slate-50/50 p-5">
         <div className="space-y-4">
-          <div className="relative">
-            <label
-              htmlFor="companyKeyword"
-              className="mb-1 block text-xs font-bold text-slate-700"
-            >
-              Target Enterprise (統一編號 / 企業名稱)
-            </label>
-            <div className="relative">
-              <Search className="absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
-              <input
-                id="companyKeyword"
-                type="text"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                placeholder="輸入股票代號或公司名稱..."
-                className="w-full rounded-lg border border-slate-300 bg-white py-2 pr-4 pl-9 text-sm text-slate-900 placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                disabled={isGenerating}
-              />
-            </div>
-            {showDropdown && (
-              <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg">
-                {suggestions.length > 0 ? (
-                  suggestions.map((c) => (
-                    <button
-                      key={c.taxId}
-                      type="button"
-                      onClick={() => handleSelectCompany(c)}
-                      className="flex w-full cursor-pointer items-center justify-between border-b border-slate-100 px-4 py-2 text-left text-sm last:border-0 hover:bg-slate-50"
-                    >
-                      <span className="font-semibold text-slate-700">
-                        {c.name}
-                      </span>
-                      <span className="text-xs text-slate-400">{c.taxId}</span>
-                    </button>
-                  ))
-                ) : (
-                  <div className="m-2 flex flex-col gap-1 rounded-r border-l-4 border-orange-500 bg-slate-50 p-4">
-                    <span className="text-sm font-bold text-slate-700">
-                      尚未支援此非公開發行企業
-                    </span>
-                    <span className="text-xs text-slate-500">
-                      目前系統僅支援上市櫃公司之公開財報與 ESG
-                      永續報告書自動爬梳。若需特定企業展示，請聯絡技術團隊進行手動建檔。
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          <CompanySearchInput
+            keyword={keyword}
+            setKeyword={setKeyword}
+            suggestions={suggestions}
+            showDropdown={showDropdown}
+            handleSelectCompany={handleSelectCompany}
+            disabled={isGenerating}
+          />
 
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -174,31 +133,47 @@ export function DppDemoSidebar({
 
           {(() => {
             const hasFin = steps[0]?.status === "completed";
-            const hasEsg = steps[1]?.status === "completed";
+            const hasEsg =
+              steps[1]?.status === "completed" ||
+              steps[1]?.status === "extrapolated";
             const hasPersona = steps[3]?.status === "completed";
             const isPartial = (hasFin || hasEsg) && !hasPersona;
             const isAllDone = hasPersona;
 
-            const buttonText = isAllDone ? "重新生成全部資料" : (isPartial ? "接續生成企業畫像" : "開始生成資料");
-            const mode = isAllDone ? "all" : (isPartial ? "generate_only" : "all");
-            
             return (
-              <button
-                onClick={() => startGeneration(undefined, mode)}
-                disabled={!selectedCompany || isGenerating}
-                className="mt-2 flex w-full items-center justify-center rounded-xl bg-slate-800 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-slate-700 disabled:bg-slate-300"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
-                    生成腳本執行中...
-                  </>
-                ) : (
-                  <>
-                    <Play className="mr-2 h-4 w-4" /> {buttonText}
-                  </>
-                )}
-              </button>
+              <div className="mt-2 flex flex-col gap-2">
+                <button
+                  onClick={() => startGeneration(undefined, "download_only")}
+                  disabled={!selectedCompany || isGenerating}
+                  className="flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 disabled:opacity-50"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
+                      處理中...
+                    </>
+                  ) : (
+                    <>
+                      <DownloadCloud className="mr-2 h-4 w-4" /> 下載報告與數據
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() =>
+                    startGeneration(
+                      undefined,
+                      isAllDone ? "all" : isPartial ? "generate_only" : "all",
+                    )
+                  }
+                  disabled={
+                    !selectedCompany || isGenerating || (!hasFin && !hasEsg)
+                  }
+                  className="flex w-full items-center justify-center rounded-xl bg-slate-800 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-slate-700 disabled:bg-slate-300"
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />{" "}
+                  {isAllDone ? "重新生成企業畫像" : "執行 AI 萃取與畫像生成"}
+                </button>
+              </div>
             );
           })()}
         </div>
@@ -243,12 +218,15 @@ export function DppDemoSidebar({
               className={`group relative flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-all lg:gap-4 ${
                 step.status === "running"
                   ? "border-orange-100 bg-orange-50"
-                  : step.status === "completed" || step.status === "extrapolated"
+                  : step.status === "completed" ||
+                      step.status === "extrapolated"
                     ? "cursor-pointer border-transparent hover:border-slate-200 hover:bg-slate-50"
                     : "border-transparent opacity-70"
               } `}
               disabled={
-                step.status !== "completed" && step.status !== "extrapolated" && step.status !== "running"
+                step.status !== "completed" &&
+                step.status !== "extrapolated" &&
+                step.status !== "running"
               }
             >
               <div className="relative flex shrink-0 items-center justify-center rounded-full bg-transparent lg:bg-white">
