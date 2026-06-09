@@ -3,14 +3,7 @@
 import { FC, useState } from "react";
 import { Search, Building2, Sparkles } from "lucide-react";
 import Pagination from "@/components/common/pagination";
-
-// Mock data
-const companySuggestions = [
-  { taxId: "2317", name: "鴻海精密工業股份有限公司" },
-  { taxId: "2330", name: "台灣積體電路製造股份有限公司" },
-  { taxId: "2454", name: "聯發科技股份有限公司" },
-  { taxId: "2308", name: "台達電子工業股份有限公司" },
-];
+import CompanySearchInput from "@/components/common/company_search_input";
 
 interface IMockReport {
   id: number;
@@ -158,8 +151,6 @@ const BusinessMonitorPageBody: FC = () => {
   const [selectedYear, setSelectedYear] = useState<number>(2025);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [companyName, setCompanyName] = useState<string>("");
-  const [showCompanyDropdown, setShowCompanyDropdown] =
-    useState<boolean>(false);
   const [selectedIndustry, setSelectedIndustry] = useState<string>("");
 
   // Info:(20260609 - Julian) Data States
@@ -214,70 +205,17 @@ const BusinessMonitorPageBody: FC = () => {
             </div>
 
             {/* Info:(20260609 - Julian) 選擇企業 */}
-            <div className="relative flex flex-col gap-2">
+            <div className="flex flex-col gap-2">
               <label
                 htmlFor="company-search"
                 className="text-xs font-bold text-slate-500"
               >
                 選擇企業
               </label>
-              <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                  <Building2 className="h-4 w-4 text-slate-400" />
-                </div>
-                <input
-                  id="company-search"
-                  type="text"
-                  placeholder="輸入企業名稱或統編"
-                  value={companyName}
-                  onChange={(e) => {
-                    setCompanyName(e.target.value);
-                    setShowCompanyDropdown(true);
-                  }}
-                  onFocus={() => setShowCompanyDropdown(true)}
-                  onBlur={() =>
-                    setTimeout(() => setShowCompanyDropdown(false), 200)
-                  }
-                  className="block w-full rounded-lg border border-slate-200 py-2.5 pr-3 pl-10 text-sm text-slate-900 placeholder-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
-                />
-              </div>
-
-              {showCompanyDropdown && companyName && (
-                <div className="absolute top-full z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
-                  {companySuggestions
-                    .filter(
-                      (c) =>
-                        c.name.includes(companyName) ||
-                        c.taxId.includes(companyName),
-                    )
-                    .map((c) => (
-                      <button
-                        key={c.taxId}
-                        type="button"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => {
-                          setCompanyName(`${c.name} (${c.taxId})`);
-                          setShowCompanyDropdown(false);
-                        }}
-                        className="w-full border-b border-gray-100 px-4 py-2 text-left text-sm font-medium text-gray-700 last:border-0 hover:bg-orange-50"
-                      >
-                        {c.name}{" "}
-                        <span className="font-normal text-gray-400">
-                          ({c.taxId})
-                        </span>
-                      </button>
-                    ))}
-                  {companySuggestions.filter(
-                    (c) =>
-                      c.name.includes(companyName) ||
-                      c.taxId.includes(companyName),
-                  ).length === 0 && (
-                    <div className="px-4 py-2 text-sm text-gray-500">
-                      查無符合的企業
-                    </div>
-                  )}
-                </div>
-              )}
+              <CompanySearchInput
+                value={companyName}
+                onChange={setCompanyName}
+              />
             </div>
 
             {/* Info:(20260609 - Julian) 選擇產業別 */}

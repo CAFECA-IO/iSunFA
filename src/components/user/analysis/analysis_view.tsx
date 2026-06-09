@@ -8,6 +8,7 @@ import { request } from "@/lib/utils/request";
 import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
 import SuccessNotification from "@/components/common/success_notification";
 import HistorySection from "@/components/user/analysis/history_section";
+import CompanySearchInput from "@/components/common/company_search_input";
 import { getAnalysisCost, IAnalysisParams } from "@/lib/analysis/pricing";
 import {
   useOrderTransaction,
@@ -80,13 +81,7 @@ export default function AnalysisView() {
     taxId: string;
     name: string;
   } | null>(null);
-  const [companySuggestions, setCompanySuggestions] = useState<
-    { taxId: string; name: string }[]
-  >([]);
-
   const [uiState, setUiState] = useState({
-    isSearchingCompany: false,
-    showCompanyDropdown: false,
     isTaxIdModalOpen: false,
     isPaymentModalOpen: false,
     isLoading: false,
@@ -185,43 +180,7 @@ export default function AnalysisView() {
     };
   }, [user]);
 
-  // Info: (20260419 - Luphia) 公司搜尋 Debounce
-  useEffect(() => {
-    if (!isExternalCarbonAnalysis || internalCompanyName.length < 2) {
-      setCompanySuggestions([]);
-      setUiState((prev) => ({ ...prev, showCompanyDropdown: false }));
-      return;
-    }
-
-    if (
-      selectedCompany &&
-      `${selectedCompany.name} (${selectedCompany.taxId})` ===
-        internalCompanyName
-    ) {
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      setUiState((prev) => ({ ...prev, isSearchingCompany: true }));
-      try {
-        const res = await request<{
-          payload: { taxId: string; name: string }[];
-        }>(
-          `/api/v1/company/lookup?query=${encodeURIComponent(internalCompanyName)}`,
-        );
-        if (res?.payload) {
-          setCompanySuggestions(res.payload);
-          setUiState((prev) => ({ ...prev, showCompanyDropdown: true }));
-        }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setUiState((prev) => ({ ...prev, isSearchingCompany: false }));
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [internalCompanyName, isExternalCarbonAnalysis, selectedCompany]);
+  // Info: (20260419 - Luphia) 公司搜尋 Debounce (Removed)
 
   // Info: (20260419 - Luphia) 防止碳盤查選擇日/週/月
   useEffect(() => {
@@ -870,62 +829,21 @@ export default function AnalysisView() {
                       <label className="mb-1 block text-sm font-medium text-gray-700">
                         {t("analysis.company_input.label")}
                       </label>
-                      <div className="flex items-center">
-                        <input
-                          aria-label={t("analysis.company_input.label")}
-                          type="text"
+                      <div className="flex w-full max-w-md items-center">
+                        <CompanySearchInput
                           value={internalCompanyName}
-                          onChange={(e) => {
+                          onChange={(val) => {
                             setSelectedCompany(null);
-                            setInternalCompanyName(e.target.value);
+                            setInternalCompanyName(val);
+                          }}
+                          onSelect={(c) => {
+                            setSelectedCompany(c);
+                            setInternalCompanyName(`${c.name} (${c.taxId})`);
                           }}
                           placeholder={t("analysis.company_input.placeholder")}
-                          className="w-full max-w-md rounded-lg border border-gray-200 px-4 py-2 text-gray-900 transition-all focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                          className="w-full"
                         />
-                        {uiState.isSearchingCompany && (
-                          <span className="ml-2 text-xs text-gray-500">
-                            {t("analysis.company_input.searching")}
-                          </span>
-                        )}
                       </div>
-
-                      {uiState.showCompanyDropdown &&
-                        companySuggestions.length > 0 && (
-                          <div className="absolute z-10 mt-1 max-h-60 w-full max-w-md overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
-                            {companySuggestions.map((c) => (
-                              <button
-                                key={c.taxId}
-                                type="button"
-                                onClick={() => {
-                                  setSelectedCompany(c);
-                                  setInternalCompanyName(
-                                    `${c.name} (${c.taxId})`,
-                                  );
-                                  setUiState((prev) => ({
-                                    ...prev,
-                                    showCompanyDropdown: false,
-                                  }));
-                                }}
-                                className="w-full border-b border-gray-100 px-4 py-2 text-left text-sm font-medium text-gray-700 last:border-0 hover:bg-orange-50"
-                              >
-                                {c.name}{" "}
-                                <span className="font-normal text-gray-400">
-                                  ({c.taxId})
-                                </span>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      {uiState.showCompanyDropdown &&
-                        companySuggestions.length === 0 &&
-                        internalCompanyName.length >= 2 &&
-                        !uiState.isSearchingCompany && (
-                          <div className="absolute z-10 mt-1 w-full max-w-md rounded-md border border-gray-200 bg-white p-3 shadow-lg">
-                            <p className="text-sm text-red-500">
-                              {t("analysis.company_input.not_found")}
-                            </p>
-                          </div>
-                        )}
                     </div>
                   )}
 
