@@ -89,7 +89,7 @@ export function AiReportModal({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       handleFile(e.target.files[0]);
-      e.target.value = ""; // 重置 input
+      e.target.value = ""; // Info: (20260608 - Julian) 重置 input
     }
   };
 
