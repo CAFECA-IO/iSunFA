@@ -138,7 +138,8 @@ export async function generateMESLogs(stockId: string, year: string = "2024") {
     workOrderCounter++;
 
     // Info: (20260604 - Tzuhan) 工單排程時間
-    const timestamp = new Date(Number(year), 0, 1);
+    // Info: (20260605 - AI) 使用 YYYY-MM-DD 強制轉換為 UTC 日期以避免時區偏差導致日期倒退到 2024-12-31
+    const timestamp = new Date(`${year}-01-01`);
     timestamp.setDate(
       timestamp.getDate() +
         Math.floor((currentRevenue / totalRevenueNtd) * 360),
@@ -227,9 +228,10 @@ if (
   fs.realpathSync(process.argv[1]) === fs.realpathSync(currentFilePath)
 ) {
   const stockId = process.argv[2];
+  const year = process.argv[3] || "2024";
   if (!stockId) {
     console.error("❌ 請提供股票代號");
     process.exit(1);
   }
-  generateMESLogs(stockId).catch(console.error);
+  generateMESLogs(stockId, year).catch((e) => { console.error(e); process.exit(1); });
 }

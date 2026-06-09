@@ -218,11 +218,12 @@ if (
   fs.realpathSync(process.argv[1]) === fs.realpathSync(currentFilePath)
 ) {
   const stockId = process.argv[2];
+  const year = process.argv[3] || "2024";
   if (!stockId) {
     console.error(
       "❌ 請提供股票代號，例如: npx tsx src/scripts/e2e-seeder/dpp/generate_product_specs.ts 2066",
     );
     process.exit(1);
   }
-  generateProductSpecs(stockId).catch(console.error);
+  generateProductSpecs(stockId, year).catch((e) => { console.error(e); process.exit(1); });
 }

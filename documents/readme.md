@@ -113,4 +113,5 @@
 - **外部整合**：[外部使用者綁定機制 (External User Binding)](business_and_product/external_user_binding.md)
 - **特定業務邏輯**：[薪資計算機運作機制 (Salary Calculator)](business_and_product/salary_calculator_operating_mechanism/v1_0_0.md)
 - **商業戰略**：[商業藍圖與 GTM 戰略 (GTM Blueprint)](business_and_product/gtm_business_blueprint.md) | [DPP 供應鏈合規索資指南 (Internal Data Strategy)](business_and_product/dpp_b2b_pain_point_sales_strategy.md)
+- **產品設計**：[DPP B2B 核心 UI 開發規劃 (DPP B2B Workspace UI Design)](business_and_product/dpp_b2b_workspace_ui_design.md)
 - **合規政策**：[服務條款 (Terms of Service)](legal/terms_of_service.md) | [隱私權政策 (Privacy Policy)](legal/privacy_policy.md) | [退款政策 (Refund Policy)](legal/refund_policy.md)

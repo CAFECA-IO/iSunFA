@@ -59,51 +59,7 @@ const generateTaxId = () => {
   return Math.floor(10000000 + Math.random() * 90000000).toString();
 };
 
-// Info: (20260519 - Julian) 將金額拆分成 3~5 項明細，並計算未稅、稅額
-const splitIntoItems = (
-  totalAmount: number,
-  baseDescription: string,
-): IReceiptParams["items"] => {
-  // Info: (20260519 - Julian) 假設傳入為未稅金額
-  const amountDecimal = new Decimal(totalAmount);
-  // Info: (20260519 - Julian) 隨機拆分 3~5 項
-  const numItems = Math.floor(Math.random() * 3) + 3;
-  const items: IReceiptParams["items"] = [];
-
-  let remainingAmount = amountDecimal;
-
-  for (let i = 0; i < numItems; i++) {
-    if (i === numItems - 1) {
-      // Info: (20260519 - Julian) 最後一筆吃掉剩下的金額
-      const itemAmount = remainingAmount.toNumber();
-      items.push({
-        productCode: "-",
-        description: `${baseDescription} - 項目 ${i + 1}`,
-        quantity: 1,
-        unit: "PCS",
-        unitPrice: itemAmount,
-        amount: itemAmount,
-      });
-    } else {
-      // Info: (20260519 - Julian) 隨機分配金額，最多分配剩下的一半，確保後面還有剩
-      const portion = Math.random() * 0.4 + 0.1;
-      let itemAmount = Math.floor(remainingAmount.mul(portion).toNumber());
-      if (itemAmount === 0) itemAmount = 1;
-
-      items.push({
-        productCode: "-",
-        description: `${baseDescription} - 項目 ${i + 1}`,
-        quantity: 1,
-        unit: "PCS",
-        unitPrice: itemAmount,
-        amount: itemAmount,
-      });
-      remainingAmount = remainingAmount.minus(itemAmount);
-    }
-  }
-
-  return items;
-};
+// Info: (20260606 - Tzuhan) 智慧推測合理的單位與隨機拆分邏輯已完全拔除，改由源頭 (chronological_reverse_engineer.ts) 賦予真實明細
 
 interface ITheme {
   primary: string;
@@ -407,8 +363,8 @@ const buildReceiptSVG = (params: IReceiptParams, isNoisy: boolean): string => {
   `;
 };
 
-export const generateReceiptImages = async (stockId: string) => {
-  const dataDir = path.resolve(process.cwd(), `data/${stockId}/2024`);
+export const generateReceiptImages = async (stockId: string, year: string = "2024") => {
+  const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
 
   const vouchersPath = path.join(
     dataDir,
@@ -431,9 +387,9 @@ export const generateReceiptImages = async (stockId: string) => {
     process.exit(1);
   }
 
-  if (fs.existsSync(receiptsDir)) {
-    fs.rmSync(receiptsDir, { recursive: true, force: true });
-  }
+  // if (fs.existsSync(receiptsDir)) {
+  //   fs.rmSync(receiptsDir, { recursive: true, force: true });
+  // }
   fs.mkdirSync(receiptsDir, { recursive: true });
 
   const vouchers = JSON.parse(
@@ -484,9 +440,9 @@ export const generateReceiptImages = async (stockId: string) => {
       ? `${buyerCompanyName || "本公司"} - 記帳聯`
       : `${buyerCompanyName || "本公司"} - 財務部收訖`;
 
-    // Info: (20260519 - Julian) 模擬金額拆分與營業稅計算 (5%)
+    // Info: (20260605 - Tzuhan) 憑證上的金額是以「千元」為單位（為吻合財報），但實體發票必須還原為「元」，因此乘上 1000
     const totalAmount =
-      mainLine.debitAmount > 0 ? mainLine.debitAmount : mainLine.creditAmount;
+      (mainLine.debitAmount > 0 ? mainLine.debitAmount : mainLine.creditAmount) * 1000;
 
     // Info: (20260601 - Tzuhan) 判斷是否為籌資或借款等銀行往來憑證 (股本 3110, 短期借款 2100)
     const isBankReceipt = voucher.lines.some(
@@ -508,18 +464,25 @@ export const generateReceiptImages = async (stockId: string) => {
       taxAmountDecimal = totalDecimal.minus(netAmountDecimal);
     }
 
-    // Info: (20260520 - Julian) 優先使用現有的細項
-    const items =
-      mainLine.items && mainLine.items.length > 0
-        ? mainLine.items.map((item) => ({
-            productCode: item.productCode || "-",
-            description: item.description,
-            quantity: item.quantity || 1,
-            unit: item.unit || "PCS",
-            unitPrice: item.unitPrice || item.amount,
-            amount: item.amount,
-          }))
-        : splitIntoItems(netAmountDecimal.toNumber(), mainLine.description);
+    // Info: (20260606 - Tzuhan) 明細直接吃模擬引擎產出的底層單一真相 (Single Source of Truth)
+    // 並且將「千元」轉換回真實發票金額 (* 1000)
+    const items = mainLine.items && mainLine.items.length > 0
+      ? mainLine.items.map((item) => ({
+          productCode: item.productCode || "-",
+          description: item.description,
+          quantity: item.quantity || 1,
+          unit: item.unit || "式",
+          unitPrice: (item.unitPrice || item.amount) * 1000,
+          amount: item.amount * 1000,
+        }))
+      : [{
+          productCode: "-",
+          description: mainLine.description || "未提供說明",
+          quantity: 1,
+          unit: "式",
+          unitPrice: netAmountDecimal.toNumber(),
+          amount: netAmountDecimal.toNumber(),
+        }];
 
     const params: IReceiptParams = {
       tradingDate: new Date(voucher.tradingDate).toISOString().split("T")[0],
@@ -556,12 +519,11 @@ export const generateReceiptImages = async (stockId: string) => {
 
 // Info: (20260502 - Tzuhan) 如果直接執行此腳本
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const targetStock = process.argv[2];
-  if (!targetStock) {
-    console.error(
-      "Please provide a stock ID. Usage: tsx receipt_image_generator.ts 1538",
-    );
+  const stockId = process.argv[2];
+  const year = process.argv[3] || "2024";
+  if (!stockId) {
+    console.error("Usage: tsx receipt_image_generator.ts <stockId>");
     process.exit(1);
   }
-  await generateReceiptImages(targetStock);
+  generateReceiptImages(stockId, year).catch((e) => { console.error(e); process.exit(1); });
 }
