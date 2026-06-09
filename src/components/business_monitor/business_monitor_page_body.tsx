@@ -15,11 +15,13 @@ import CompanySearchInput from "@/components/common/company_search_input";
 import { useReportDownload } from "@/hooks/use_report_download";
 import { IMockReport, IAIResponse } from "@/interfaces/business_monitor";
 import { request } from "@/lib/utils/request";
+import { useTranslation } from "@/i18n/i18n_context";
 
 const ReportItem: FC<{
   report: IMockReport;
   onShowToast: (type: "success" | "error", message: string) => void;
 }> = ({ report, onShowToast }) => {
+  const { t } = useTranslation();
   const { downloadTask, startDownload } = useReportDownload();
 
   // Info: (20260609 - Julian) 整合 useReportDownload 處理下載
@@ -27,7 +29,12 @@ const ReportItem: FC<{
     startDownload(
       report.id,
       () => {
-        onShowToast("success", `${report.company} - 原始報告下載完成`);
+        onShowToast(
+          "success",
+          t("business_monitor.reports.item.toast_download_success", {
+            company: report.company,
+          }),
+        );
         // Info:(20260609 - Julian) 模擬產生檔案 Blob 並觸發瀏覽器下載
         const dummyContent = `Mock Report Content for ${report.company}\nReport Year: ${report.reportYear}\nPeriod: ${report.period}\nIndustry: ${report.industry}`;
         const blob = new Blob([dummyContent], {
@@ -42,7 +49,13 @@ const ReportItem: FC<{
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       },
-      () => onShowToast("error", `${report.company} - 下載失敗，請稍後再試`),
+      () =>
+        onShowToast(
+          "error",
+          t("business_monitor.reports.item.toast_download_error", {
+            company: report.company,
+          }),
+        ),
     );
   };
 
@@ -62,7 +75,7 @@ const ReportItem: FC<{
           <div className="flex items-center gap-1 rounded-md border-0 border-green-300 bg-green-50 px-1 py-1 text-green-700 md:border md:px-2">
             <BookmarkCheck size={24} className="shrink-0" />
             <p className="hidden text-xs font-medium md:block">
-              已通過第三方查證
+              {t("business_monitor.reports.item.verified_by_third_party")}
             </p>
           </div>
         )}
@@ -71,35 +84,51 @@ const ReportItem: FC<{
       <div className="flex flex-col p-4 md:p-6">
         <div className="mb-6 flex flex-col gap-1 text-sm text-slate-600 md:gap-2">
           <p>
-            <span className="font-medium text-slate-700">報告年度：</span>
+            <span className="font-medium text-slate-700">
+              {t("business_monitor.reports.item.report_year")}
+            </span>
             {report.reportYear}
           </p>
           <p>
-            <span className="font-medium text-slate-700">揭露期間：</span>
+            <span className="font-medium text-slate-700">
+              {t("business_monitor.reports.item.disclosure_period")}
+            </span>
             {report.period}
           </p>
           <p>
-            <span className="font-medium text-slate-700">產業別：</span>
+            <span className="font-medium text-slate-700">
+              {t("business_monitor.reports.item.industry")}
+            </span>
             {report.industry}
           </p>
           <p>
-            <span className="font-medium text-slate-700">資本額區間：</span>
+            <span className="font-medium text-slate-700">
+              {t("business_monitor.reports.item.capital_range")}
+            </span>
             {report.capital}
           </p>
           <p>
-            <span className="font-medium text-slate-700">查證機構：</span>
+            <span className="font-medium text-slate-700">
+              {t("business_monitor.reports.item.verification_agency")}
+            </span>
             {report.verificationAgency}
           </p>
           <p>
-            <span className="font-medium text-slate-700">查證採用標準：</span>
+            <span className="font-medium text-slate-700">
+              {t("business_monitor.reports.item.verification_standards")}
+            </span>
             {report.verificationStandards}
           </p>
           <p>
-            <span className="font-medium text-slate-700">確信機構：</span>
+            <span className="font-medium text-slate-700">
+              {t("business_monitor.reports.item.assurance_agency")}
+            </span>
             {report.assuranceAgency}
           </p>
           <p>
-            <span className="font-medium text-slate-700">確信採用標準：</span>
+            <span className="font-medium text-slate-700">
+              {t("business_monitor.reports.item.assurance_standards")}
+            </span>
             {report.assuranceStandards}
           </p>
         </div>
@@ -109,7 +138,7 @@ const ReportItem: FC<{
             type="button"
             className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-700"
           >
-            查看揭露細節
+            {t("business_monitor.reports.item.view_details")}
           </button>
           <button
             type="button"
@@ -122,10 +151,10 @@ const ReportItem: FC<{
             }`}
           >
             {isDownloading
-              ? "下載中..."
+              ? t("business_monitor.reports.item.downloading")
               : isCompleted
-                ? "重新下載"
-                : "下載原始報告"}
+                ? t("business_monitor.reports.item.re_download")
+                : t("business_monitor.reports.item.download_original")}
           </button>
         </div>
 
@@ -133,7 +162,9 @@ const ReportItem: FC<{
         {isDownloading && downloadTask && (
           <div className="mt-4 flex flex-col gap-1">
             <div className="flex justify-between text-xs text-slate-500">
-              <span>下載進度</span>
+              <span>
+                {t("business_monitor.reports.item.download_progress")}
+              </span>
               <span>{downloadTask.progress}%</span>
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
@@ -154,6 +185,8 @@ const ReportItem: FC<{
 };
 
 const BusinessMonitorPageBody: FC = () => {
+  const { t } = useTranslation();
+
   // Info:(20260609 - Julian) Filter States
   const [selectedYear, setSelectedYear] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -271,11 +304,10 @@ const BusinessMonitorPageBody: FC = () => {
               className="mr-2 shrink-0 text-orange-500"
               strokeWidth={2.5}
             />
-            企業觀測看板
+            {t("business_monitor.title")}
           </h1>
           <p className="text-xs font-medium text-slate-500 lg:text-sm">
-            搜尋臺灣公開發行公司之財報數據、下載官方股東會年報，並由 AI
-            智能助理為您深度分析
+            {t("business_monitor.subtitle")}
           </p>
         </div>
 
@@ -288,7 +320,7 @@ const BusinessMonitorPageBody: FC = () => {
                 htmlFor="ai-search"
                 className="text-xs font-bold text-slate-500"
               >
-                AI 諮詢
+                {t("business_monitor.filter.ai_consult")}
               </label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -297,7 +329,7 @@ const BusinessMonitorPageBody: FC = () => {
                 <input
                   id="ai-search"
                   type="text"
-                  placeholder="如：鴻海離職率是多少？"
+                  placeholder={t("business_monitor.filter.ai_placeholder")}
                   value={searchQuery}
                   onKeyDown={handleHotkey}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -312,7 +344,7 @@ const BusinessMonitorPageBody: FC = () => {
                 htmlFor="company-search"
                 className="text-xs font-bold text-slate-500"
               >
-                選擇企業
+                {t("business_monitor.filter.select_company")}
               </label>
               <CompanySearchInput
                 value={companyName}
@@ -326,7 +358,7 @@ const BusinessMonitorPageBody: FC = () => {
                 htmlFor="industry-select"
                 className="text-xs font-bold text-slate-500"
               >
-                選擇產業別
+                {t("business_monitor.filter.select_industry")}
               </label>
               <div className="relative">
                 <select
@@ -335,12 +367,28 @@ const BusinessMonitorPageBody: FC = () => {
                   onChange={(e) => setSelectedIndustry(e.target.value)}
                   className="block w-full appearance-none rounded-lg border border-slate-200 py-2.5 pr-8 pl-3 text-sm text-slate-900 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                 >
-                  <option value="">全部產業</option>
-                  <option value="半導體業">半導體業</option>
-                  <option value="電腦及週邊設備業">電腦及週邊設備業</option>
-                  <option value="光電業">光電業</option>
-                  <option value="通信網路業">通信網路業</option>
-                  <option value="電子零組件業">電子零組件業</option>
+                  <option value="">
+                    {t("business_monitor.filter.all_industries")}
+                  </option>
+                  <option value="半導體業">
+                    {t("business_monitor.filter.industries.semiconductor")}
+                  </option>
+                  <option value="電腦及週邊設備業">
+                    {t(
+                      "business_monitor.filter.industries.computer_peripherals",
+                    )}
+                  </option>
+                  <option value="光電業">
+                    {t("business_monitor.filter.industries.optoelectronics")}
+                  </option>
+                  <option value="通信網路業">
+                    {t("business_monitor.filter.industries.communications")}
+                  </option>
+                  <option value="電子零組件業">
+                    {t(
+                      "business_monitor.filter.industries.electronic_components",
+                    )}
+                  </option>
                 </select>
               </div>
             </div>
@@ -351,7 +399,7 @@ const BusinessMonitorPageBody: FC = () => {
                 htmlFor="year-select"
                 className="text-xs font-bold text-slate-500"
               >
-                選擇報告區間
+                {t("business_monitor.filter.select_year_range")}
               </label>
               <div className="relative">
                 <select
@@ -360,10 +408,12 @@ const BusinessMonitorPageBody: FC = () => {
                   onChange={(e) => setSelectedYear(e.target.value)}
                   className="block w-full appearance-none rounded-lg border border-slate-200 py-2.5 pr-8 pl-3 text-sm text-slate-900 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                 >
-                  <option value="">全部年份</option>
-                  <option value="2025">2025 年 (民國 114 年)</option>
-                  <option value="2024">2024 年 (民國 113 年)</option>
-                  <option value="2023">2023 年 (民國 112 年)</option>
+                  <option value="">
+                    {t("business_monitor.filter.all_years")}
+                  </option>
+                  <option value="2025">2025</option>
+                  <option value="2024">2024</option>
+                  <option value="2023">2023</option>
                 </select>
               </div>
             </div>
@@ -375,7 +425,7 @@ const BusinessMonitorPageBody: FC = () => {
               onClick={handleClear}
               className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-6 py-2.5 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50 focus:outline-none lg:w-auto"
             >
-              清除搜尋條件
+              {t("business_monitor.filter.clear_filters")}
             </button>
             <button
               type="button"
@@ -383,7 +433,7 @@ const BusinessMonitorPageBody: FC = () => {
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-600 px-8 py-2.5 text-sm font-bold text-white transition-colors hover:bg-orange-700 focus:outline-none lg:w-auto"
             >
               <Search size={16} />
-              搜尋報告
+              {t("business_monitor.filter.search_reports")}
             </button>
           </div>
         </div>
@@ -395,7 +445,7 @@ const BusinessMonitorPageBody: FC = () => {
               <div className="flex items-center gap-2">
                 <Sparkles size={20} className="shrink-0 text-orange-500" />
                 <h2 className="text-sm font-bold text-orange-900 md:text-lg">
-                  AI 解答
+                  {t("business_monitor.ai_section.title")}
                 </h2>
               </div>
               <div className="rounded-2xl bg-orange-100 px-4 py-2 text-base leading-relaxed font-medium text-slate-800 md:text-xl">
@@ -404,7 +454,7 @@ const BusinessMonitorPageBody: FC = () => {
               {aiResponse.sourceReportIds.length > 0 && (
                 <div className="mt-2 border-t border-orange-100 pt-3">
                   <p className="text-xs font-bold text-orange-800">
-                    資料來源：
+                    {t("business_monitor.ai_section.data_sources")}
                   </p>
                   <ul className="mt-1 flex flex-col gap-1">
                     {filteredReports.map((report) => (
@@ -425,7 +475,7 @@ const BusinessMonitorPageBody: FC = () => {
         {/* Info:(20260609 - Julian) Report Count */}
         {!isLoading && filteredReports.length > 0 && (
           <p className="ml-auto text-sm font-medium text-slate-500">
-            共找到 {totalCount} 筆報告
+            {t("business_monitor.reports.total_count", { count: totalCount })}
           </p>
         )}
 
@@ -439,7 +489,7 @@ const BusinessMonitorPageBody: FC = () => {
                   className="shrink-0 animate-pulse text-orange-500"
                 />
                 <span className="text-sm font-medium text-slate-500">
-                  AI 正在為您分析語意並尋找相關報告...
+                  {t("business_monitor.ai_section.searching")}
                 </span>
               </>
             ) : (
@@ -448,7 +498,7 @@ const BusinessMonitorPageBody: FC = () => {
                   size={32}
                   className="shrink-0 animate-spin text-orange-500"
                 />
-                <p>資料載入中...</p>
+                <p>{t("business_monitor.reports.loading")}</p>
               </div>
             )}
           </div>
@@ -473,8 +523,8 @@ const BusinessMonitorPageBody: FC = () => {
             </div>
             <p className="text-sm font-bold text-slate-400">
               {appliedFilters.query
-                ? "在現有報告中找不到符合您問題的解答與來源。"
-                : "找不到符合條件的報告，請調整篩選條件。"}
+                ? t("business_monitor.ai_section.no_answer")
+                : t("business_monitor.reports.no_reports")}
             </p>
           </div>
         )}
