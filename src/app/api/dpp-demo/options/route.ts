@@ -24,7 +24,7 @@ export async function GET() {
         for (const year of years) {
           if (!year.isDirectory()) continue;
           const yearStr = year.name;
-          const targetDir = path.join(yearsDir, yearStr, "outputs", "e2e_roadmap-sprint1");
+          const targetDir = path.join(yearsDir, yearStr, "outputs");
           
           try {
             const stats = await fs.stat(targetDir);

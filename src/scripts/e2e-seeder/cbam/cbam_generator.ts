@@ -17,20 +17,17 @@ export const runCbamGenerator = (stockId: string, year: string = "2024") => {
     dataDir,
     "inputs",
     "simulated_data",
-    "e2e_roadmap-sprint1",
     "simulated_vouchers.json",
   );
   const bomsPath = path.join(
     dataDir,
     "outputs",
-    "e2e_roadmap-sprint1",
     "mock_sources",
     "boms_and_precursors.json",
   );
   const outPath = path.join(
     dataDir,
     "outputs",
-    "e2e_roadmap-sprint1",
     "cbam_reconciliation_report.json",
   );
 

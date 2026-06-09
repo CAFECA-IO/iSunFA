@@ -109,7 +109,7 @@ npx tsx src/scripts/e2e-seeder/cbam/cbam_generator.ts 2066 2024
 ---
 
 🎉 **大功告成！**
-完成以上步驟後，您就可以在 `data/2066/2024/outputs/e2e_roadmap-sprint1/` 中找到：
+完成以上步驟後，您就可以在 `data/2066/2024/outputs/` 中找到：
 1. 三大核心產品的精美 PDF 數位產品護照 (DPP)
 2. 數萬筆與實體綁定的完美總帳傳票 (`simulated_vouchers.json`)
 3. 基於傳票金額反推而成的防漂綠 CBAM 勾稽報告

@@ -26,8 +26,8 @@ export async function generateCustomsLogs(
   year: string = "2024",
 ) {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
-  const mockSourcesDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1", "mock_sources");
-  const ingestionDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1", "system_ingestion");
+  const mockSourcesDir = path.join(dataDir, "outputs", "mock_sources");
+  const ingestionDir = path.join(dataDir, "outputs", "system_ingestion");
   
   if (!fs.existsSync(ingestionDir)) {
     fs.mkdirSync(ingestionDir, { recursive: true });

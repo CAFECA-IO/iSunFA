@@ -7,8 +7,7 @@ export async function convertJsonToCsv(stockId: string, year: string) {
     "data",
     stockId,
     year,
-    "outputs",
-    "e2e_roadmap-sprint1"
+    "outputs"
   );
 
   const bomsJsonPath = path.join(baseDir, "mock_sources", "boms_and_precursors.json");

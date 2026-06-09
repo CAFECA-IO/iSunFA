@@ -159,7 +159,7 @@ export async function generateProductSpecs(
   year: string = "2024",
 ) {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
-  const mockSourcesDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1", "mock_sources");
+  const mockSourcesDir = path.join(dataDir, "outputs", "mock_sources");
   
   if (!fs.existsSync(mockSourcesDir)) {
     fs.mkdirSync(mockSourcesDir, { recursive: true });

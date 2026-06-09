@@ -181,10 +181,9 @@ export async function generateBOMAndPrecursors(
   const personaFile = path.join(
     dataDir,
     "outputs",
-    "e2e_roadmap-sprint1",
     `${stockId}_company_persona.json`,
   );
-  const mockSourcesDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1", "mock_sources");
+  const mockSourcesDir = path.join(dataDir, "outputs", "mock_sources");
 
   if (!fs.existsSync(mockSourcesDir)) {
     fs.mkdirSync(mockSourcesDir, { recursive: true });

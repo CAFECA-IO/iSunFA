@@ -94,7 +94,6 @@ export const extractContextFromPdf = async (
   const cachePath = path.join(
     dataDir,
     "outputs",
-    "e2e_roadmap-sprint1",
     "ai_extracted_context_cache.json",
   );
 

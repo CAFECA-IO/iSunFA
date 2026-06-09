@@ -46,7 +46,7 @@ interface IPersonaData {
 
 export async function renderPersonaHtml(stockId: string, year: string = "2024") {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
-  const baseDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1");
+  const baseDir = path.join(dataDir, "outputs");
   const personaPath = path.join(baseDir, `${stockId}_company_persona.json`);
 
   if (!fs.existsSync(personaPath)) {

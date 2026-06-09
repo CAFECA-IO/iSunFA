@@ -3,7 +3,7 @@ import * as path from "path";
 
 export async function renderDppPdf(stockId: string, year: string = "2024") {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
-  const baseDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1");
+  const baseDir = path.join(dataDir, "outputs");
   const mockSourcesDir = path.join(baseDir, "mock_sources");
   const bomPath = path.join(mockSourcesDir, "boms_and_precursors.json");
 

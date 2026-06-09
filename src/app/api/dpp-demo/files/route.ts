@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Missing stockId or year" }, { status: 400 });
     }
     
-    const targetDir = path.join(cwd, "data", stockId, year, "outputs", "e2e_roadmap-sprint1");
+    const targetDir = path.join(cwd, "data", stockId, year, "outputs");
     try {
       const tree = await buildFileTree(targetDir, cwd);
       return NextResponse.json(tree);

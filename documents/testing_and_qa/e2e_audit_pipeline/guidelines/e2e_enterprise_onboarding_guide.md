@@ -18,7 +18,7 @@ data/[stock_id]/[year]/
 │   │   ├── [year]_FIN_REPORT.pdf    (3) 真實財務報告書 PDF
 │   │   └── [year]_ESG_REPORT.pdf    (4) 真實永續報告書 PDF
 │   └── simulated_data/
-│       └── e2e_roadmap-sprint1/
+│       └── 
 │           ├── simulated_vouchers.json (5) 逆推產出的標準答案憑證
 │           └── receipts/               (6) 依據憑證畫出的實體 SVG/PNG 圖檔
 └── outputs/
@@ -40,7 +40,7 @@ data/[stock_id]/[year]/
    - 依據 Golden Data 逆推出來的模擬傳票 JSON 與對應的實體憑證影像。
 
 #### Outputs (歷史紀錄與開發成果)
-*   **`outputs/` 目錄**：裡面不同的資料夾代表的是我們**不同階段開發的結果與歷史紀錄**（例如：`phase4_vision_test/`、`e2e_roadmap-sprint1/` 等）。如果有些公司尚未進行到特定階段，不用刻意加入或補齊這些歷史資料夾。
+*   **`outputs/` 目錄**：存放 E2E 系統各階段萃取與生成出來的最終報告、快取資料與數位護照等結果檔案。
 *   **(7) `ai_extracted_context_cache.json`**：AI 模型從 PDF 抽取的供應商、客戶比例與關鍵資訊快取。
 *   **(8) `audit_variance_report.json`**：最終端到端跑完後，系統產出的財報對齊度分析與差異報表。
 

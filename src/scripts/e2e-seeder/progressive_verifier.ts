@@ -565,7 +565,7 @@ async function runProgressiveVerification() {
   // Info: (20260601 - Tzuhan) 匯出為 JSON，供 receipt_image_generator.ts 產出圖片
   const outDir = path.resolve(
     process.cwd(),
-    `data/${stockId}/${year}/inputs/simulated_data/e2e_roadmap-sprint1`,
+    `data/${stockId}/${year}/inputs/simulated_data/outputs`,
   );
   if (!fs.existsSync(outDir)) {
     fs.mkdirSync(outDir, { recursive: true });

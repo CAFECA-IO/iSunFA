@@ -21,8 +21,10 @@ const PRODUCTS = [
   { id: "P-M12-EH-001", name: "產品 C (六角螺栓)" },
 ];
 
+const getFileUrl = (path: string) => `/api/dpp-demo/files?action=serve&path=${encodeURIComponent(path)}`;
+
 const getModulesForProduct = (productId: string, stockId: string, year: string): IDppModule[] => {
-  const basePath = `/data/${stockId}/${year}/outputs/e2e_roadmap-sprint1`;
+  const basePath = `data/${stockId}/${year}/outputs`;
   return [
     // Info: (20260608 - Tzuhan)
     { id: 1, name: "基本與製造商資訊", state: "pending", mockFile: `${basePath}/${stockId}_company_persona.html` },
@@ -55,8 +57,8 @@ export default function DppWorkspacePage() {
   const stockId = "2066";
   const [year, setYear] = useState("2024");
   const [availableYears, setAvailableYears] = useState<string[]>(["2024"]);
-  // Info: (20260608 - Tzuhan) Static basePath pointing to public folder
-  const basePath = `/data/${stockId}/${year}/outputs/e2e_roadmap-sprint1`;
+  // Info: (20260608 - Tzuhan) Static basePath pointing to raw data dir
+  const basePath = `data/${stockId}/${year}/outputs`;
 
   // Info: (20260608 - Tzuhan) SKU Audit State
   const [modules, setModules] = useState<IDppModule[]>(getModulesForProduct(PRODUCTS[0].id, stockId, year));
@@ -188,7 +190,7 @@ export default function DppWorkspacePage() {
     if (!selectedFilePath) return;
     if (selectedFilePath.match(/\.(csv|json|md|txt)$/i)) {
       setIsTextLoading(true);
-      fetch(selectedFilePath)
+      fetch(getFileUrl(selectedFilePath))
         .then(res => res.text())
         .then(text => {
           setTextContent(text);
@@ -444,17 +446,17 @@ export default function DppWorkspacePage() {
                   </div>
                   <div className="flex-1 overflow-hidden p-6 bg-slate-100 flex items-center justify-center relative">
                     {selectedFilePath.split('?')[0].match(/\.(pdf|html)$/i) ? (
-                      <iframe src={selectedFilePath} title="Preview" className="w-full h-full rounded-xl shadow-sm border border-gray-200 bg-white" />
+                      <iframe src={getFileUrl(selectedFilePath)} title="Preview" className="w-full h-full rounded-xl shadow-sm border border-gray-200 bg-white" />
                     ) : selectedFilePath.split('?')[0].match(/\.(png|jpg|jpeg)$/i) ? (
                       <div className="w-full h-full rounded-xl shadow-sm border border-gray-200 bg-white flex items-center justify-center overflow-hidden p-4 relative">
-                        <Image src={selectedFilePath} alt="preview" fill style={{ objectFit: "contain" }} unoptimized />
+                        <Image src={getFileUrl(selectedFilePath)} alt="preview" fill style={{ objectFit: "contain" }} unoptimized />
                       </div>
                     ) : selectedFilePath.split('?')[0].match(/\.(csv|json|md|txt)$/i) ? (
                       <div className={`w-full h-full rounded-xl shadow-sm border border-gray-200 bg-white overflow-auto custom-scrollbar ${selectedFilePath.split('?')[0].endsWith(".csv") ? "p-0" : "p-6 text-sm font-mono text-slate-700 whitespace-pre"}`}>
                         {isTextLoading ? <div className="flex h-full items-center justify-center text-slate-400">Loading content...</div> : selectedFilePath.split('?')[0].endsWith(".csv") ? renderCsvTable(textContent) : textContent}
                       </div>
                     ) : (
-                      <iframe src={selectedFilePath} title="Fallback Preview" className="w-full h-full rounded-xl shadow-sm border border-gray-200 bg-white" />
+                      <iframe src={getFileUrl(selectedFilePath)} title="Fallback Preview" className="w-full h-full rounded-xl shadow-sm border border-gray-200 bg-white" />
                     )}
                   </div>
                 </div>
@@ -593,7 +595,7 @@ export default function DppWorkspacePage() {
                   </div>
                   <div className="flex-1 overflow-hidden p-0 bg-slate-200">
                     <iframe
-                      src={selectedPassport.pdfPath}
+                      src={getFileUrl(selectedPassport.pdfPath)}
                       title="Passport Preview"
                       className="w-full h-full border-0 bg-white shadow-sm"
                     />
