@@ -1,95 +1,37 @@
 "use client";
 
 import { FC, useState } from "react";
-import { Search, Building2, Sparkles } from "lucide-react";
+import {
+  Search,
+  Building2,
+  Sparkles,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
 import Pagination from "@/components/common/pagination";
 import CompanySearchInput from "@/components/common/company_search_input";
+import { useReportDownload } from "@/hooks/use_report_download";
+import { IMockReport, mockReports } from "@/interfaces/business_monitor";
 
-interface IMockReport {
-  id: number;
-  company: string;
-  title: string;
-  reportYear: string;
-  period: string;
-  industry: string;
-  capital: string;
-  verificationAgency: string;
-  verificationStandards: string;
-  assuranceAgency: string;
-  assuranceStandards: string;
-}
+const ReportItem: FC<{
+  report: IMockReport;
+  onShowToast: (type: "success" | "error", message: string) => void;
+}> = ({ report, onShowToast }) => {
+  const { downloadTask, startDownload } = useReportDownload();
 
-const mockReports: IMockReport[] = [
-  {
-    id: 1,
-    company: "環拓科技股份有限公司",
-    title: "2024 年永續報告書",
-    reportYear: "2024",
-    period: "2024/01/31 ~ 2024/12/31",
-    industry: "綠能環保",
-    capital: "無",
-    verificationAgency: "無",
-    verificationStandards: "參考國際永續標準、準則與規範(GRI、TCFD、SASB)",
-    assuranceAgency: "無",
-    assuranceStandards: "無",
-  },
-  {
-    id: 2,
-    company: "鴻海精密工業股份有限公司",
-    title: "2024 年永續報告書",
-    reportYear: "2024",
-    period: "2024/01/01 ~ 2024/12/31",
-    industry: "其他電子業",
-    capital: "100億以上",
-    verificationAgency: "台灣檢驗科技股份有限公司(SGS)",
-    verificationStandards: "參考國際永續標準、準則與規範(GRI、SASB)",
-    assuranceAgency: "資誠聯合會計師事務所",
-    assuranceStandards: "確信準則 3000 號",
-  },
-  {
-    id: 3,
-    company: "友達光電股份有限公司",
-    title: "2024 年永續報告書",
-    reportYear: "2024",
-    period: "2024/01/01 ~ 2024/12/31",
-    industry: "光電業",
-    capital: "100億以上",
-    verificationAgency: "台灣檢驗科技股份有限公司(SGS)",
-    verificationStandards: "參考國際永續標準、準則與規範(GRI、SASB)",
-    assuranceAgency: "資誠聯合會計師事務所",
-    assuranceStandards: "確信準則 3000 號",
-  },
-  {
-    id: 4,
-    company: "聯電股份有限公司",
-    title: "2024 年永續報告書",
-    reportYear: "2024",
-    period: "2024/01/01 ~ 2024/12/31",
-    industry: "半導體業",
-    capital: "100億以上",
-    verificationAgency: "台灣檢驗科技股份有限公司(SGS)",
-    verificationStandards: "參考國際永續標準、準則與規範(GRI、SASB)",
-    assuranceAgency: "資誠聯合會計師事務所",
-    assuranceStandards: "確信準則 3000 號",
-  },
-  {
-    id: 5,
-    company: "台灣積體電路製造股份有限公司",
-    title: "2024 年永續報告書",
-    reportYear: "2024",
-    period: "2024/01/01 ~ 2024/12/31",
-    industry: "半導體業",
-    capital: "100億以上",
-    verificationAgency: "台灣檢驗科技股份有限公司(SGS)",
-    verificationStandards: "參考國際永續標準、準則與規範(GRI、SASB)",
-    assuranceAgency: "資誠聯合會計師事務所",
-    assuranceStandards: "確信準則 3000 號",
-  },
-];
+  const handleDownload = () => {
+    startDownload(
+      report.id,
+      () => onShowToast("success", `${report.company} - 原始報告下載完成`),
+      () => onShowToast("error", `${report.company} - 下載失敗，請稍後再試`),
+    );
+  };
 
-const ReportItem: FC<{ report: IMockReport }> = ({ report }) => {
+  const isDownloading = downloadTask?.status === "downloading";
+  const isCompleted = downloadTask?.status === "completed";
+
   return (
-    <div className="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-md">
+    <div className="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md">
       <div className="border-b border-orange-100 bg-orange-50 px-4 py-3 md:px-6 md:py-4">
         <h3 className="mb-1 text-xl font-bold text-orange-900">
           {report.company}
@@ -137,10 +79,42 @@ const ReportItem: FC<{ report: IMockReport }> = ({ report }) => {
           <button className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-700">
             查看揭露細節
           </button>
-          <button className="rounded-lg border border-orange-600 bg-white px-4 py-2 text-sm font-bold text-orange-600 transition-colors hover:bg-orange-50">
-            下載原始報告
+          <button
+            onClick={handleDownload}
+            disabled={isDownloading}
+            className={`rounded-lg border px-4 py-2 text-sm font-bold transition-colors ${
+              isDownloading
+                ? "cursor-not-allowed border-slate-300 bg-slate-100 text-slate-400"
+                : "border-orange-600 bg-white text-orange-600 hover:bg-orange-50"
+            }`}
+          >
+            {isDownloading
+              ? "下載中..."
+              : isCompleted
+                ? "重新下載"
+                : "下載原始報告"}
           </button>
         </div>
+
+        {/* Info:(20260609 - Julian) Progress Bar Section */}
+        {isDownloading && downloadTask && (
+          <div className="mt-4 flex flex-col gap-1">
+            <div className="flex justify-between text-xs text-slate-500">
+              <span>下載進度</span>
+              <span>{downloadTask.progress}%</span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-full bg-orange-500 transition-all duration-300 ease-in-out"
+                style={{ width: `${downloadTask.progress}%` }}
+              />
+            </div>
+            <div className="text-right text-[10px] text-slate-400">
+              {(downloadTask.downloadedBytes / (1024 * 1024)).toFixed(1)} MB /{" "}
+              {(downloadTask.fileSizeBytes / (1024 * 1024)).toFixed(1)} MB
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -152,6 +126,17 @@ const BusinessMonitorPageBody: FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [companyName, setCompanyName] = useState<string>("");
   const [selectedIndustry, setSelectedIndustry] = useState<string>("");
+
+  // Info:(20260609 - Julian) Toast State
+  const [toastMessage, setToastMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
+  const showToast = (type: "success" | "error", text: string) => {
+    setToastMessage({ type, text });
+    setTimeout(() => setToastMessage(null), 3000);
+  };
 
   // Info:(20260609 - Julian) Data States
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -191,7 +176,7 @@ const BusinessMonitorPageBody: FC = () => {
               </label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                  <Sparkles className="h-4 w-4 text-slate-400" />
+                  <Sparkles size={16} className="shrink-0 text-slate-400" />
                 </div>
                 <input
                   id="ai-search"
@@ -284,7 +269,11 @@ const BusinessMonitorPageBody: FC = () => {
         {filteredReports.length > 0 ? (
           <div className="grid grid-flow-row grid-cols-1 gap-4 md:grid-cols-2">
             {filteredReports.map((report) => (
-              <ReportItem key={report.id} report={report} />
+              <ReportItem
+                key={report.id}
+                report={report}
+                onShowToast={showToast}
+              />
             ))}
           </div>
         ) : (
@@ -311,6 +300,24 @@ const BusinessMonitorPageBody: FC = () => {
           />
         )}
       </div>
+
+      {/* Info:(20260609 - Julian) Toast Notification */}
+      {toastMessage && (
+        <div
+          className={`fixed top-24 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-lg px-6 py-3 shadow-lg transition-all ${
+            toastMessage.type === "success"
+              ? "bg-emerald-500 text-white"
+              : "bg-red-500 text-white"
+          }`}
+        >
+          {toastMessage.type === "success" ? (
+            <CheckCircle2 size={20} className="shrink-0" />
+          ) : (
+            <AlertCircle size={20} className="shrink-0" />
+          )}
+          <span className="font-medium">{toastMessage.text}</span>
+        </div>
+      )}
     </main>
   );
 };
