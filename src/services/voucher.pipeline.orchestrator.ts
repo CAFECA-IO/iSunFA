@@ -3,9 +3,8 @@ import { CountryCode, NonEmissiveTransactionType } from "@/constants/enums";
 import { TaxStrategyService } from "@/services/tax.strategy.service";
 import { fxInterceptorService } from "@/services/fx.interceptor.service";
 import { MoneyUtil } from "@/lib/utils/money";
-import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
-import { MOCK_EEIO_COEFFICIENTS } from "@/constants/mock_eeio_coefficients";
 import { AccountingEngineService } from "@/services/accounting.engine.service";
+import { EmissionFactorRepo } from "@/repositories/emission_factor.repo";
 
 export class VoucherPipelineOrchestrator {
   /**
@@ -53,8 +52,10 @@ export class VoucherPipelineOrchestrator {
       );
 
       // Info: (20260527 - Tzuhan) 2. 決定論管線 (攔截器與換匯邏輯)
-      const washedResults = splitResults.map((res) =>
-        this.executePipeline(res, bookCurrency, bookCountry),
+      const washedResults = await Promise.all(
+        splitResults.map((res) =>
+          this.executePipeline(res, bookCurrency, bookCountry),
+        ),
       );
 
       for (let idx = 0; idx < washedResults.length; idx++) {
@@ -70,11 +71,11 @@ export class VoucherPipelineOrchestrator {
    * 在將 Payload 傳遞給 AccountingEngineService 或提交到區塊鏈之前，
    * 統籌執行所有決定性轉換 (Deterministic transformations) 的完整管線。
    */
-  public static executePipeline(
+  public static async executePipeline(
     originalPayload: IAggregatedDocumentResult,
     bookCurrency: string,
     countryCode: string = "TW",
-  ): IAggregatedDocumentResult {
+  ): Promise<IAggregatedDocumentResult> {
     // Info: (20260526 - Tzuhan) 深度複製以避免污染原始資料
     let fileResult = JSON.parse(
       JSON.stringify(originalPayload),
@@ -84,7 +85,9 @@ export class VoucherPipelineOrchestrator {
     if (fileResult.voucherBase) {
       const vd = (fileResult.voucherBase.data ||
         fileResult.voucherBase) as Record<string, unknown>;
-      const rawType = String(vd.tradingType || vd.type || "").toLowerCase() as NonEmissiveTransactionType;
+      const rawType = String(
+        vd.tradingType || vd.type || "",
+      ).toLowerCase() as NonEmissiveTransactionType;
       if (
         rawType === NonEmissiveTransactionType.INCOME ||
         rawType === NonEmissiveTransactionType.RECEIPT
@@ -104,8 +107,9 @@ export class VoucherPipelineOrchestrator {
 
     // Info: (20260526 - Tzuhan) 2. ESG 稅額自動校正 (ESG Tax Auto-Correction)
     if (fileResult.esg && fileResult.esg.coefficientId) {
-      const allCoef = [...ALL_COEFFICIENTS, ...MOCK_EEIO_COEFFICIENTS];
-      const coef = allCoef.find((c) => c.id === fileResult.esg!.coefficientId);
+      const coef = await EmissionFactorRepo.getCoefficientById(
+        fileResult.esg.coefficientId,
+      );
 
       if (coef) {
         const isEEIO = coef.id.startsWith("eeio");
@@ -152,8 +156,9 @@ export class VoucherPipelineOrchestrator {
 
     // Info: (20260526 - Tzuhan) 4. 決定性 ESG 碳排運算 (使用換匯後的金額)
     if (fileResult.esg && fileResult.esg.coefficientId) {
-      const allCoef = [...ALL_COEFFICIENTS, ...MOCK_EEIO_COEFFICIENTS];
-      const coef = allCoef.find((c) => c.id === fileResult.esg!.coefficientId);
+      const coef = await EmissionFactorRepo.getCoefficientById(
+        fileResult.esg.coefficientId,
+      );
       if (coef) {
         const convertedEsgAmount = fileResult.esg!.amount;
         fileResult.esg!.emissions = MoneyUtil.multiply(

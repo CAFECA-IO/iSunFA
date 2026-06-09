@@ -22,6 +22,7 @@ import {
   Trophy,
   Computer,
   Tag,
+  Database,
 } from "lucide-react";
 
 export const MODULES = [
@@ -63,6 +64,7 @@ export const ADMIN_MODULES = [
   { key: "campaign", icon: Trophy, basic: true },
   { key: "coupon", icon: Tag, basic: true },
   { key: "pdf_tool", icon: FileText, basic: true },
+  { key: "carbon_emission_database", icon: Database, basic: true },
 ];
 
 export const SYSTEM_MODULES = [
@@ -146,6 +148,8 @@ export function getModuleI18nKey(key: string, isAdminContext: boolean = false) {
       return isAdminContext ? "admin_coupon.title" : "user_coupon.title";
     case "pdf_tool":
       return "common.pdf_tool";
+    case "carbon_emission_database":
+      return "admin_carbon_emission_database.title";
     default:
       return `${key}.title`;
   }

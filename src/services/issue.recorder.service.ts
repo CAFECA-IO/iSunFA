@@ -12,6 +12,7 @@ import { getPriorityEnvConfig } from "@/services/env.service";
 import type { JSONValue } from "@/validators";
 import { MoneyUtil } from "@/lib/utils/money";
 import { SystemWorkerSource } from "@/constants/enums";
+import { TransactionRepo } from "@/repositories/transaction.repo";
 
 export class IssueRecorderService {
   async processNext() {
@@ -262,38 +263,44 @@ export class IssueRecorderService {
                 string,
                 Record<string, unknown>
               >;
-              for (const recordKey of Object.keys(payload)) {
-                const fileResult = payload[recordKey];
+              await TransactionRepo.run(async (tx) => {
+                for (const recordKey of Object.keys(payload)) {
+                  const fileResult = payload[recordKey];
 
-                if (!fileResult.journal) {
-                  console.warn(
-                    `[MissionRecorder] ⚠️ 警告：Task ID ${taskId} 的 dbSyncPayload (recordKey: ${recordKey}) 缺少 journal 屬性。請確認 MissionExecutor 是否正確打包了 JOURNAL_PARSING 的結果。`,
+                  if (!fileResult.journal) {
+                    console.warn(
+                      `[MissionRecorder] ⚠️ 警告：Task ID ${taskId} 的 dbSyncPayload (recordKey: ${recordKey}) 缺少 journal 屬性。請確認 MissionExecutor 是否正確打包了 JOURNAL_PARSING 的結果。`,
+                    );
+                  }
+
+                  const fileIdToSync =
+                    typeof fileResult.fileId === "string"
+                      ? fileResult.fileId
+                      : recordKey;
+
+                  const targetAccountBookId = (dbAccountBookId ||
+                    fileResult.accountBookId) as string;
+
+                  await syncDocumentResultToDatabase(
+                    {
+                      fileId: fileIdToSync,
+                      accountBookId: targetAccountBookId,
+                      result:
+                        fileResult as unknown as IAggregatedDocumentResult,
+                      voucherIdContext:
+                        localContextObj.voucherId ||
+                        (fileResult.voucherIdContext as string | undefined),
+                      esgRecordIdContext:
+                        localContextObj.esgRecordId ||
+                        (fileResult.esgRecordIdContext as string | undefined),
+                      journalIdContext:
+                        localContextObj.journalId ||
+                        (fileResult.journalIdContext as string | undefined),
+                    },
+                    tx,
                   );
                 }
-
-                const fileIdToSync =
-                  typeof fileResult.fileId === "string"
-                    ? fileResult.fileId
-                    : recordKey;
-
-                const targetAccountBookId = (dbAccountBookId ||
-                  fileResult.accountBookId) as string;
-
-                await syncDocumentResultToDatabase({
-                  fileId: fileIdToSync,
-                  accountBookId: targetAccountBookId,
-                  result: fileResult as unknown as IAggregatedDocumentResult,
-                  voucherIdContext:
-                    localContextObj.voucherId ||
-                    (fileResult.voucherIdContext as string | undefined),
-                  esgRecordIdContext:
-                    localContextObj.esgRecordId ||
-                    (fileResult.esgRecordIdContext as string | undefined),
-                  journalIdContext:
-                    localContextObj.journalId ||
-                    (fileResult.journalIdContext as string | undefined),
-                });
-              }
+              });
 
               console.log(
                 `[MissionRecorder] Synced document results to DB for Task ID ${taskId}`,
