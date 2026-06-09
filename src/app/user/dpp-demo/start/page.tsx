@@ -5,9 +5,11 @@ import { request } from "@/lib/utils/request";
 import { DppDemoHeader } from "@/components/user/dpp_demo_start/dpp_demo_header";
 import { DppDemoSidebar } from "@/components/user/dpp_demo_start/dpp_demo_sidebar";
 import { DppDemoPreviewPane } from "@/components/user/dpp_demo_start/dpp_demo_preview_pane";
+import ConfirmModal from "@/components/common/confirm_modal";
+import { IApiResponse } from "@/lib/utils/response";
 
 // Info: (20260609 - Tzuhan) 定義流程狀態
-type StepStatus = "pending" | "running" | "completed" | "error";
+type StepStatus = "pending" | "running" | "completed" | "error" | "extrapolated";
 
 interface IGenerationStep {
   id: string;
@@ -38,6 +40,19 @@ interface ISseEvent {
 export interface ICompanySearchResult {
   taxId: string;
   name: string;
+}
+
+export interface IDemoItem {
+  id: string;
+  stockId: string;
+  year: string;
+  name: string;
+  progress: {
+    hasFin: boolean;
+    hasEsg: boolean;
+    hasPersonaHtml: boolean;
+  };
+  isComplete: boolean;
 }
 
 export default function DppDemoStartPage() {
@@ -78,6 +93,12 @@ export default function DppDemoStartPage() {
     },
   ]);
 
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+  }>({ isOpen: false, title: "", message: "" });
+
   // Info: (20260609 - Tzuhan) 處理從列表頁帶過來的參數 (預覽或重新生成)
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -86,59 +107,102 @@ export default function DppDemoStartPage() {
       const paramYear = params.get("year");
       const paramAction = params.get("action");
 
-      if (paramStockId && paramYear) {
-        setYear(paramYear);
-
-        // Fetch company lookup to set selectedCompany
-        request<{ payload: ICompanySearchResult[] }>(
-          `/api/v1/company/lookup?query=${paramStockId}`,
-        )
-          .then((res) => {
-            if (res.payload && res.payload.length > 0) {
-              const comp =
-                res.payload.find((c) => c.taxId === paramStockId) ||
-                res.payload[0];
-              setSelectedCompany(comp);
-              setKeyword(comp.name);
-            }
-          })
-          .catch(console.error);
-
-        if (paramAction === "view") {
-          const finFile = `data/${paramStockId}/${paramYear}/inputs/raw_reports/${paramYear}_FIN_REPORT.pdf`;
-          const esgFile = `data/${paramStockId}/${paramYear}/inputs/raw_reports/${paramYear}_ESG_REPORT.pdf`;
-          const personaFile = `data/${paramStockId}/${paramYear}/outputs/${paramStockId}_company_persona.html`;
-
-          setSteps([
-            {
-              id: "fin_download",
-              label: "1. 財務報告與公開數據擷取",
-              status: "completed",
-              file: finFile,
-            },
-            {
-              id: "esg_download",
-              label: "2. ESG 永續報告書與指標擷取",
-              status: "completed",
-              file: esgFile,
-            },
-            {
-              id: "vision",
-              label: "3. AI 視覺圖表萃取 (ai_vision_extractor)",
-              status: "completed",
-            },
-            {
-              id: "persona",
-              label: "4. 企業畫像建構 (persona_generator)",
-              status: "completed",
-              file: personaFile,
-            },
-          ]);
-          setSelectedFilePath(personaFile);
+        if (paramStockId && paramYear) {
+          setYear(paramYear);
+  
+          // Fetch company lookup to set selectedCompany
+          request<{ payload: ICompanySearchResult[] }>(
+            `/api/v1/company/lookup?query=${paramStockId}`,
+          )
+            .then((res) => {
+              if (res.payload && res.payload.length > 0) {
+                const comp =
+                  res.payload.find((c) => c.taxId === paramStockId) ||
+                  res.payload[0];
+                setSelectedCompany(comp);
+                setKeyword(comp.name);
+                if (paramAction === "redownload") {
+                  setTimeout(() => startGeneration(comp, "download_only"), 100);
+                } else if (paramAction === "extrapolate") {
+                  setTimeout(() => startGeneration(comp, "extrapolate_only"), 100);
+                } else if (paramAction === "regenerate") {
+                  setTimeout(() => startGeneration(comp, "persona_only"), 100);
+                }
+              }
+            })
+            .catch(console.error);
         }
       }
-    }
-  }, []);
+    }, []);
+
+    // Info: (20260609 - Tzuhan) 監聽所選企業與年份變化，獲取當前生成進度
+    useEffect(() => {
+      if (!selectedCompany) {
+        setSteps(prev => prev.map(s => ({...s, status: "pending", file: undefined})));
+        if (!isGenerating) setSelectedFilePath(null);
+        return;
+      }
+      
+      request<IApiResponse<IDemoItem[]>>("/api/v1/dpp-demo/list")
+        .then((listRes) => {
+          const items = listRes.payload || [];
+          const currentItem = items.find((i) => i.stockId === selectedCompany.taxId && i.year === year);
+          
+          if (currentItem) {
+            const finFile = `data/${selectedCompany.taxId}/${year}/inputs/raw_reports/${year}_FIN_REPORT.pdf`;
+            const esgFile = `data/${selectedCompany.taxId}/${year}/inputs/raw_reports/${year}_ESG_REPORT.pdf`;
+            const personaFile = `data/${selectedCompany.taxId}/${year}/outputs/${selectedCompany.taxId}_company_persona.html`;
+            const cacheFile = `data/${selectedCompany.taxId}/${year}/outputs/ai_extracted_context_cache.json`;
+
+            const isEsgExtrapolated = currentItem.year === "2025" || (!currentItem.progress.hasEsg && currentItem.progress.hasPersonaHtml);
+
+            setSteps([
+              {
+                id: "fin_download",
+                label: "1. 財務報告與公開數據擷取",
+                status: currentItem.progress.hasFin ? "completed" : "pending",
+                file: currentItem.progress.hasFin ? finFile : undefined,
+              },
+              {
+                id: "esg_download",
+                label: isEsgExtrapolated ? "2. ESG 跨年推估 (Time-Machine)" : "2. ESG 永續報告書與指標擷取",
+                status: currentItem.progress.hasEsg ? "completed" : (isEsgExtrapolated && currentItem.progress.hasPersonaHtml ? "extrapolated" : "pending"),
+                file: currentItem.progress.hasEsg ? esgFile : (isEsgExtrapolated ? cacheFile : undefined),
+              },
+              {
+                id: "vision",
+                label: "3. AI 視覺圖表萃取 (ai_vision_extractor)",
+                status: currentItem.progress.hasPersonaHtml ? "completed" : "pending",
+              },
+              {
+                id: "persona",
+                label: "4. 企業畫像建構 (persona_generator)",
+                status: currentItem.progress.hasPersonaHtml ? "completed" : "pending",
+                file: currentItem.progress.hasPersonaHtml ? personaFile : undefined,
+              },
+            ]);
+            
+            if (!isGenerating) {
+              if (currentItem.progress.hasPersonaHtml) {
+                setSelectedFilePath(personaFile);
+              } else if (currentItem.progress.hasEsg) {
+                setSelectedFilePath(esgFile);
+              } else if (isEsgExtrapolated && currentItem.progress.hasFin) {
+                // Info: (20260609 - Tzuhan) 如果是 2025 年且已經有了 Fin，可能也有 Cache，我們先優先顯示 Cache (會在 preview pane 中做容錯處理)
+                setSelectedFilePath(cacheFile);
+              } else if (currentItem.progress.hasFin) {
+                setSelectedFilePath(finFile);
+              } else {
+                setSelectedFilePath(null);
+              }
+            }
+          } else {
+            setSteps(prev => prev.map(s => ({...s, status: "pending", file: undefined, log: ""})));
+            if (!isGenerating) setSelectedFilePath(null);
+          }
+        })
+        .catch(console.error);
+    }, [selectedCompany, year]);
 
   // Info: (20260609 - Tzuhan) 模糊搜尋防抖處理 (Debounce)
   useEffect(() => {
@@ -177,10 +241,26 @@ export default function DppDemoStartPage() {
   };
 
   // Info: (20260609 - Tzuhan) 啟動資料生成流程
-  const startGeneration = async () => {
-    if (!selectedCompany) return;
+  async function startGeneration(company?: ICompanySearchResult, mode: string = "all") {
+    const targetComp = company || selectedCompany;
+    if (!targetComp) {
+      setModalConfig({
+        isOpen: true,
+        title: "提醒",
+        message: "請先選擇一家企業",
+      });
+      return;
+    }
+
     setIsGenerating(true);
-    setSteps(steps.map((s) => ({ ...s, status: "pending", log: "" })));
+    setSteps((prev) =>
+      prev.map((s, index) => {
+        let shouldReset = true;
+        if (mode === "generate_only" && index < 2) shouldReset = false;
+        if (mode === "download_only" && index >= 2) shouldReset = false;
+        return shouldReset ? { ...s, status: "pending", log: "" } : s;
+      })
+    );
     setSelectedFilePath(null);
     setShowExtrapolationAlert(false);
 
@@ -189,9 +269,10 @@ export default function DppDemoStartPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          stockId: selectedCompany.taxId,
+          stockId: targetComp.taxId,
           year,
           productCount,
+          mode,
         }),
       });
 
@@ -232,8 +313,15 @@ export default function DppDemoStartPage() {
             } else if (data.type === "esg_complete") {
               setSteps((prev) => {
                 const newSteps = [...prev];
-                newSteps[1].status = "completed";
-                newSteps[1].file = data.file;
+                if (!data.file || data.file.endsWith(".json")) {
+                  newSteps[1].status = "extrapolated";
+                  newSteps[1].label = "2. ESG 跨年推估 (Time-Machine)";
+                  newSteps[1].file = data.file;
+                } else {
+                  newSteps[1].status = "completed";
+                  newSteps[1].label = "2. ESG 永續報告書與指標擷取";
+                  newSteps[1].file = data.file;
+                }
                 return newSteps;
               });
             } else if (data.type === "log" && data.message) {
@@ -246,14 +334,16 @@ export default function DppDemoStartPage() {
               setSelectedFilePath(data.file); // Info: (20260609 - Tzuhan) 下載完成後優先預覽 PDF
             } else if (data.type === "extrapolation_alert") {
               setShowExtrapolationAlert(true); // Info: (20260609 - Tzuhan) 底層觸發推估，顯示提醒
-            } else if (data.type === "complete" && data.file) {
-              setSteps((prev) => {
-                const newSteps = [...prev];
-                newSteps[3].status = "completed";
-                newSteps[3].file = data.file;
-                return newSteps;
-              });
-              setSelectedFilePath(data.file); // Info: (20260609 - Tzuhan) 生成完畢後自動於右側預覽
+            } else if (data.type === "complete") {
+              if (data.file) {
+                setSteps((prev) => {
+                  const newSteps = [...prev];
+                  newSteps[3].status = "completed";
+                  newSteps[3].file = data.file;
+                  return newSteps;
+                });
+                setSelectedFilePath(data.file); // Info: (20260609 - Tzuhan) 生成完畢後自動於右側預覽
+              }
               setIsGenerating(false);
             } else if (data.type === "error") {
               setSteps((prev) => {
@@ -271,7 +361,7 @@ export default function DppDemoStartPage() {
       console.error(error);
       setIsGenerating(false);
     }
-  };
+  }
 
   return (
     <div className="relative flex h-[calc(100vh-100px)] w-full flex-col gap-5 overflow-hidden bg-slate-50 pb-4 font-sans">
@@ -302,6 +392,14 @@ export default function DppDemoStartPage() {
 
         <DppDemoPreviewPane selectedFilePath={selectedFilePath} />
       </div>
+
+      <ConfirmModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig((prev) => ({ ...prev, isOpen: false }))}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        confirmText="確定"
+      />
     </div>
   );
 }

@@ -9,12 +9,15 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
-  RefreshCw,
   Trash2,
   Eye,
+  DownloadCloud,
+  Sparkles,
+  Wand2,
 } from "lucide-react";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
+import ConfirmModal from "@/components/common/confirm_modal";
 
 interface IDemoItem {
   id: string;
@@ -34,6 +37,15 @@ export default function DppDemoListPage() {
   const [items, setItems] = useState<IDemoItem[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    onConfirm?: () => void;
+  }>({ isOpen: false, title: "", message: "" });
+
   const fetchItems = async () => {
     try {
       setLoading(true);
@@ -50,28 +62,36 @@ export default function DppDemoListPage() {
     }
   };
 
-  const handleDelete = async (stockId: string, year: string, name: string) => {
-    if (
-      !window.confirm(
-        `確定要刪除「${name} (${year} 年)」的模擬資料嗎？此動作無法復原。`,
-      )
-    ) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-      await fetch("/api/v1/dpp-demo/list", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stockId, year }),
-      });
-      await fetchItems();
-    } catch (e) {
-      console.error("Delete failed:", e);
-      alert("刪除失敗，請稍後再試");
-      setLoading(false);
-    }
+  const handleDelete = (stockId: string, year: string, name: string) => {
+    setModalConfig({
+      isOpen: true,
+      title: "確認刪除",
+      message: `確定要刪除「${name} (${year} 年)」的模擬資料嗎？此動作無法復原。`,
+      confirmText: "刪除",
+      cancelText: "取消",
+      onConfirm: async () => {
+        try {
+          setLoading(true);
+          await fetch("/api/v1/dpp-demo/list", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ stockId, year }),
+          });
+          await fetchItems();
+        } catch (e) {
+          console.error("Delete failed:", e);
+          setModalConfig({
+            isOpen: true,
+            title: "錯誤",
+            message: "刪除失敗，請稍後再試",
+            confirmText: "確定",
+            cancelText: undefined,
+            onConfirm: undefined,
+          });
+          setLoading(false);
+        }
+      },
+    });
   };
 
   useEffect(() => {
@@ -150,11 +170,27 @@ export default function DppDemoListPage() {
                       <div className="h-px w-4 bg-gray-300" />
                       <div className="flex items-center gap-1.5">
                         {item.progress.hasEsg ? (
-                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                          <>
+                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                            ESG 下載
+                          </>
+                        ) : item.year === "2025" || (!item.progress.hasEsg && item.progress.hasPersonaHtml) ? (
+                          <>
+                            {item.progress.hasPersonaHtml ? (
+                              <Sparkles className="h-4 w-4 text-purple-500" />
+                            ) : (
+                              <AlertCircle className="h-4 w-4 text-amber-500" />
+                            )}
+                            <span className={item.progress.hasPersonaHtml ? "text-purple-600" : ""}>
+                              ESG 推估
+                            </span>
+                          </>
                         ) : (
-                          <AlertCircle className="h-4 w-4 text-amber-500" />
+                          <>
+                            <AlertCircle className="h-4 w-4 text-amber-500" />
+                            ESG 下載
+                          </>
                         )}
-                        ESG 下載
                       </div>
                       <div className="h-px w-4 bg-gray-300" />
                       <div className="flex items-center gap-1.5">
@@ -170,40 +206,84 @@ export default function DppDemoListPage() {
 
                   {/* Info: (20260609 - Tzuhan) 操作按鈕 */}
                   <div className="mt-4 flex w-full items-center gap-2 sm:mt-0 sm:w-auto">
-                    <button
-                      disabled={!item.isComplete}
-                      onClick={() =>
-                        router.push(
-                          `/user/dpp-demo/start?stockId=${item.stockId}&year=${item.year}&action=view`,
-                        )
-                      }
-                      className="flex items-center justify-center rounded-lg p-2 text-gray-400 transition hover:bg-blue-50 hover:text-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
-                      title="查看結果"
-                    >
-                      <Eye className="h-5 w-5" />
-                    </button>
+                    <div className="relative group">
+                      <button
+                        disabled={!item.progress.hasFin && !item.progress.hasEsg && !item.progress.hasPersonaHtml}
+                        onClick={() =>
+                          router.push(
+                            `/user/dpp-demo/start?stockId=${item.stockId}&year=${item.year}&action=view`,
+                          )
+                        }
+                        className="flex items-center justify-center rounded-lg p-2 text-gray-400 transition hover:bg-blue-50 hover:text-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <Eye className="h-5 w-5" />
+                      </button>
+                      <div className="pointer-events-none absolute bottom-full left-1/2 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2.5 py-1 text-xs font-medium text-white opacity-0 shadow-sm transition-opacity group-hover:opacity-100 z-10">
+                        查看結果
+                      </div>
+                    </div>
 
-                    <button
-                      onClick={() =>
-                        handleDelete(item.stockId, item.year, item.name)
-                      }
-                      className="flex items-center justify-center rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
-                      title="刪除資料"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
+                    <div className="relative group">
+                      <button
+                        onClick={() =>
+                          handleDelete(item.stockId, item.year, item.name)
+                        }
+                        className="flex items-center justify-center rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                      <div className="pointer-events-none absolute bottom-full left-1/2 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2.5 py-1 text-xs font-medium text-white opacity-0 shadow-sm transition-opacity group-hover:opacity-100 z-10">
+                        刪除資料
+                      </div>
+                    </div>
 
-                    <button
-                      onClick={() =>
-                        router.push(
-                          `/user/dpp-demo/start?stockId=${item.stockId}&year=${item.year}`,
-                        )
-                      }
-                      className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 sm:flex-none"
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                      重新生成
-                    </button>
+                    <div className="relative group">
+                      <button
+                        onClick={() =>
+                          router.push(
+                            `/user/dpp-demo/start?stockId=${item.stockId}&year=${item.year}&action=extrapolate`,
+                          )
+                        }
+                        className="flex items-center justify-center rounded-lg p-2 text-indigo-400 transition hover:bg-indigo-50 hover:text-indigo-500"
+                      >
+                        <Wand2 className="h-5 w-5" />
+                      </button>
+                      <div className="pointer-events-none absolute bottom-full left-1/2 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2.5 py-1 text-xs font-medium text-white opacity-0 shadow-sm transition-opacity group-hover:opacity-100 z-10">
+                        啟動歷史回溯推估
+                      </div>
+                    </div>
+
+                    <div className="relative group">
+                      <button
+                        onClick={() =>
+                          router.push(
+                            `/user/dpp-demo/start?stockId=${item.stockId}&year=${item.year}&action=redownload`,
+                          )
+                        }
+                        className="flex items-center justify-center rounded-lg p-2 text-gray-400 transition hover:bg-blue-50 hover:text-blue-500"
+                      >
+                        <DownloadCloud className="h-5 w-5" />
+                      </button>
+                      <div className="pointer-events-none absolute bottom-full left-1/2 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2.5 py-1 text-xs font-medium text-white opacity-0 shadow-sm transition-opacity group-hover:opacity-100 z-10">
+                        重新下載
+                      </div>
+                    </div>
+
+                    <div className="relative group">
+                      <button
+                        onClick={() =>
+                          router.push(
+                            `/user/dpp-demo/start?stockId=${item.stockId}&year=${item.year}&action=regenerate`,
+                          )
+                        }
+                        className="flex items-center justify-center rounded-lg p-2 text-gray-400 transition hover:bg-purple-50 hover:text-purple-500"
+                      >
+                        <Sparkles className="h-5 w-5" />
+                      </button>
+                      <div className="pointer-events-none absolute bottom-full left-1/2 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2.5 py-1 text-xs font-medium text-white opacity-0 shadow-sm transition-opacity group-hover:opacity-100 z-10">
+                        重新生成畫像
+                      </div>
+                    </div>
 
                     <button
                       disabled={!item.isComplete}
@@ -224,6 +304,16 @@ export default function DppDemoListPage() {
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig((prev) => ({ ...prev, isOpen: false }))}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        confirmText={modalConfig.confirmText}
+        cancelText={modalConfig.cancelText}
+        onConfirm={modalConfig.onConfirm}
+      />
     </div>
   );
 }

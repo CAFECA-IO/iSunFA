@@ -7,11 +7,12 @@ import {
   CircleDashed,
   CheckCircle2,
   FileText,
+  Sparkles,
 } from "lucide-react";
 
 // Info: (20260609 - Tzuhan) 繪製狀態圖示
 const renderStateIcon = (
-  status: "pending" | "running" | "completed" | "error",
+  status: "pending" | "running" | "completed" | "error" | "extrapolated",
 ) => {
   switch (status) {
     case "pending":
@@ -24,13 +25,15 @@ const renderStateIcon = (
       return <CheckCircle2 className="h-6 w-6 text-orange-500" />;
     case "error":
       return <AlertCircle className="h-6 w-6 stroke-[2.5px] text-red-500" />;
+    case "extrapolated":
+      return <Sparkles className="h-6 w-6 text-purple-500" />;
   }
 };
 
 export interface IDppDemoStep {
   id: string;
   label: string;
-  status: "pending" | "running" | "completed" | "error";
+  status: "pending" | "running" | "completed" | "error" | "extrapolated";
   log?: string;
   file?: string;
 }
@@ -47,7 +50,7 @@ export interface IDppDemoSidebarProps {
   productCount: number;
   setProductCount: (val: number) => void;
   isGenerating: boolean;
-  startGeneration: () => void;
+  startGeneration: (company?: ICompanySearchResult, mode?: string) => void;
   showExtrapolationAlert: boolean;
   steps: IDppDemoStep[];
   onStepClick?: (step: IDppDemoStep) => void;
@@ -169,22 +172,35 @@ export function DppDemoSidebar({
             </div>
           </div>
 
-          <button
-            onClick={startGeneration}
-            disabled={!selectedCompany || isGenerating}
-            className="mt-2 flex w-full items-center justify-center rounded-xl bg-slate-800 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-slate-700 disabled:bg-slate-300"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
-                生成腳本執行中...
-              </>
-            ) : (
-              <>
-                <Play className="mr-2 h-4 w-4" /> 開始生成資料
-              </>
-            )}
-          </button>
+          {(() => {
+            const hasFin = steps[0]?.status === "completed";
+            const hasEsg = steps[1]?.status === "completed";
+            const hasPersona = steps[3]?.status === "completed";
+            const isPartial = (hasFin || hasEsg) && !hasPersona;
+            const isAllDone = hasPersona;
+
+            const buttonText = isAllDone ? "重新生成全部資料" : (isPartial ? "接續生成企業畫像" : "開始生成資料");
+            const mode = isAllDone ? "all" : (isPartial ? "generate_only" : "all");
+            
+            return (
+              <button
+                onClick={() => startGeneration(undefined, mode)}
+                disabled={!selectedCompany || isGenerating}
+                className="mt-2 flex w-full items-center justify-center rounded-xl bg-slate-800 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-slate-700 disabled:bg-slate-300"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
+                    生成腳本執行中...
+                  </>
+                ) : (
+                  <>
+                    <Play className="mr-2 h-4 w-4" /> {buttonText}
+                  </>
+                )}
+              </button>
+            );
+          })()}
         </div>
       </div>
 
@@ -227,12 +243,12 @@ export function DppDemoSidebar({
               className={`group relative flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-all lg:gap-4 ${
                 step.status === "running"
                   ? "border-orange-100 bg-orange-50"
-                  : step.status === "completed"
+                  : step.status === "completed" || step.status === "extrapolated"
                     ? "cursor-pointer border-transparent hover:border-slate-200 hover:bg-slate-50"
                     : "border-transparent opacity-70"
               } `}
               disabled={
-                step.status !== "completed" && step.status !== "running"
+                step.status !== "completed" && step.status !== "extrapolated" && step.status !== "running"
               }
             >
               <div className="relative flex shrink-0 items-center justify-center rounded-full bg-transparent lg:bg-white">
@@ -240,11 +256,11 @@ export function DppDemoSidebar({
               </div>
               <div className="min-w-0 flex-1">
                 <h4
-                  className={`mb-0.5 truncate text-sm font-semibold transition-colors ${step.status === "running" ? "text-orange-900" : step.status === "completed" ? "text-slate-800" : "text-slate-500"} `}
+                  className={`mb-0.5 truncate text-sm font-semibold transition-colors ${step.status === "running" ? "text-orange-900" : step.status === "completed" || step.status === "extrapolated" ? "text-slate-800" : "text-slate-500"} `}
                 >
                   {step.label}
                 </h4>
-                {step.status === "completed" && (
+                {step.status === "completed" && step.file && (
                   <div className="mt-0.5 flex items-center text-xs text-slate-400">
                     <FileText className="mr-1 h-3.5 w-3.5" />
                     點擊檢視來源檔案
