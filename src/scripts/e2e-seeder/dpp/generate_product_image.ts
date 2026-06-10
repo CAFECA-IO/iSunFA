@@ -9,6 +9,7 @@ import { IProductBom } from "@/interfaces/cbam";
 export async function generateProductImage(
   stockId: string,
   year: string = "2024",
+  targetProductId?: string,
 ) {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
   const baseDir = path.join(dataDir, "outputs");
@@ -24,7 +25,16 @@ export async function generateProductImage(
 
   const bomRaw = fs.readFileSync(bomFile, "utf-8");
   const bomData = JSON.parse(bomRaw);
-  const products: IProductBom[] = bomData.products;
+  let products: IProductBom[] = bomData.products;
+
+  if (targetProductId) {
+    products = products.filter((p) => p.productId === targetProductId);
+  }
+
+  if (products.length === 0) {
+    console.warn(`⚠️ [Imagen Generator] 找不到符合的產品，略過生成。`);
+    return;
+  }
 
   console.log(
     `🚀 [Imagen Generator] 開始為 ${stockId} 的 ${products.length} 項產品動態生成 Imagen 4.0 工程藍圖...`,
@@ -140,5 +150,22 @@ if (
     );
     process.exit(1);
   }
-  generateProductImage(stockId).catch(console.error);
+  let productId: string | undefined;
+  if (
+    process.argv.length > 3 &&
+    process.argv[3] &&
+    !process.argv[3].startsWith("--")
+  ) {
+    // legacy compat
+  }
+  if (process.argv.length > 4 && process.argv[4].startsWith("--productId=")) {
+    productId = process.argv[4].split("=")[1];
+  }
+
+  const year =
+    process.argv[3] && !process.argv[3].startsWith("--")
+      ? process.argv[3]
+      : "2024";
+
+  generateProductImage(stockId, year, productId).catch(console.error);
 }

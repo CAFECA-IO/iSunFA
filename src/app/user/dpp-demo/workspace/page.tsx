@@ -17,6 +17,8 @@ import {
   UploadCloud,
   QrCode,
   Factory,
+  Database,
+  FileBox,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -38,7 +40,7 @@ interface IProductBomLite {
 }
 
 const getFileUrl = (path: string) =>
-  `/api/dpp-demo/files?action=serve&path=${encodeURIComponent(path)}`;
+  `/api/dpp-demo/files?action=serve&path=${encodeURIComponent(path.split("?")[0])}`;
 
 const getModulesForProduct = (
   productId: string,
@@ -63,7 +65,7 @@ const getModulesForProduct = (
       id: 3,
       name: "產品規格展開",
       state: "pending",
-      mockFile: `${basePath}/mock_sources/product_specs.json`,
+      mockFile: `${basePath}/${productId}/mock_sources/${productId}_product_specs.json`,
     },
     {
       id: 4,
@@ -75,13 +77,13 @@ const getModulesForProduct = (
       id: 5,
       name: "產品工程圖繪製",
       state: "pending",
-      missingDesc: "未發現此 SKU 的產品結構與設計藍圖",
+      mockFile: `${basePath}/${productId}/mock_sources/fastener_blueprint.png`,
     },
     {
       id: 6,
       name: "DPP 合規與驗證數據生成",
       state: "pending",
-      missingDesc: "未發現此 SKU 的合規宣告與歐盟指令驗證文件",
+      mockFile: `${basePath}/${productId}/mock_sources/${productId}_dpp_compliance_declaration.md`,
     },
     {
       id: 7,
@@ -294,7 +296,7 @@ export default function DppWorkspacePage() {
   // Info: (20260608 - Tzuhan) Viewer Effect
   useEffect(() => {
     if (!selectedFilePath) return;
-    if (selectedFilePath.match(/\.(csv|json|md|txt)$/i)) {
+    if (selectedFilePath.split("?")[0].match(/\.(csv|json|md|txt)$/i)) {
       setIsTextLoading(true);
       fetch(getFileUrl(selectedFilePath))
         .then((res) => res.text())
@@ -333,6 +335,133 @@ export default function DppWorkspacePage() {
     }
     result.push(cell);
     return result;
+  };
+
+  const renderJsonView = (data: unknown) => {
+    if (!data)
+      return <div className="p-8 text-center text-slate-500">載入中...</div>;
+
+    const isRootArray = Array.isArray(data);
+    const rootData = isRootArray
+      ? { list: data }
+      : (data as Record<string, unknown>);
+
+    return (
+      <div className="custom-scrollbar h-full overflow-y-auto bg-slate-50 p-4 text-sm text-slate-700 md:p-6">
+        <div className="mb-6">
+          <h2 className="mb-2 flex items-center text-lg font-bold text-slate-800">
+            <Database className="mr-2 h-5 w-5 text-indigo-500" />
+            DPP / AI 解析數據呈現
+          </h2>
+          <p className="text-xs text-slate-500">
+            系統已將原始 JSON 數據轉換為視覺化元件以便檢視。
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          {Object.entries(rootData).map(([sectionKey, sectionData]) => (
+            <div
+              key={sectionKey}
+              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+            >
+              <h3 className="mb-4 flex items-center border-b border-slate-100 pb-2 text-base font-bold text-slate-800 capitalize">
+                <span className="mr-2 rounded bg-orange-100 p-1 text-orange-600">
+                  <FileBox className="h-4 w-4" />
+                </span>
+                {sectionKey.replace(/([A-Z])/g, " $1").trim()}
+              </h3>
+              <div className="text-sm">{renderJsonValue(sectionData)}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderJsonValue = (
+    value: unknown,
+    level: number = 0,
+  ): React.ReactNode => {
+    if (value === null || value === undefined)
+      return <span className="text-slate-400">null</span>;
+    if (typeof value === "boolean") {
+      return (
+        <span
+          className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold ${
+            value
+              ? "bg-emerald-100 text-emerald-700"
+              : "bg-rose-100 text-rose-700"
+          }`}
+        >
+          {value ? "TRUE" : "FALSE"}
+        </span>
+      );
+    }
+    if (typeof value === "string") {
+      if (/^\d{4}-\d{2}-\d{2}/.test(value)) {
+        return <span className="font-medium text-indigo-600">{value}</span>;
+      }
+      return (
+        <span className="break-words whitespace-pre-wrap text-slate-800">
+          {value}
+        </span>
+      );
+    }
+    if (typeof value === "number") {
+      return <span className="font-mono text-orange-600">{value}</span>;
+    }
+    if (Array.isArray(value)) {
+      if (value.length === 0) return <span className="text-slate-400">[]</span>;
+      if (typeof value[0] !== "object") {
+        return (
+          <div className="flex flex-wrap gap-1">
+            {value.map((v, idx) => (
+              <span
+                key={idx}
+                className="inline-block rounded border border-slate-200 bg-slate-100 px-2 py-1 text-xs text-slate-600"
+              >
+                {String(v)}
+              </span>
+            ))}
+          </div>
+        );
+      }
+      return (
+        <div className="mt-1 flex flex-col gap-2">
+          {value.map((item, idx) => (
+            <div
+              key={idx}
+              className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm"
+            >
+              <div className="mb-1 border-b border-slate-100 pb-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                Item {idx + 1}
+              </div>
+              {renderJsonValue(item, level + 1)}
+            </div>
+          ))}
+        </div>
+      );
+    }
+    if (typeof value === "object") {
+      return (
+        <div className="flex w-full flex-col gap-1">
+          {Object.entries(value as Record<string, unknown>).map(([k, v]) => (
+            <div
+              key={k}
+              className="flex flex-col border-b border-slate-50 py-1.5 last:border-0 sm:flex-row sm:items-start"
+            >
+              <span className="w-full shrink-0 pt-0.5 text-xs font-semibold text-slate-500 capitalize sm:w-1/3">
+                {k.replace(/([A-Z])/g, " $1").trim()}
+              </span>
+              <div className="min-w-0 flex-1">
+                {renderJsonValue(v, level + 1)}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return <span>{String(value)}</span>;
   };
 
   const renderCsvTable = (csvText: string) => {
@@ -695,15 +824,39 @@ export default function DppWorkspacePage() {
                           </div>
                         ) : (
                           <article className="prose prose-slate prose-sm sm:prose-base mx-auto w-full max-w-4xl break-words">
-                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm]}
+                              urlTransform={(value: string) => value}
+                            >
                               {preprocessMarkdown(textContent)}
                             </ReactMarkdown>
                           </article>
                         )}
                       </div>
+                    ) : selectedFilePath.split("?")[0].match(/\.json$/i) ? (
+                      <div className="h-full w-full overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+                        {isTextLoading ? (
+                          <div className="flex h-full items-center justify-center bg-white text-slate-400">
+                            Loading content...
+                          </div>
+                        ) : (
+                          (() => {
+                            try {
+                              return renderJsonView(JSON.parse(textContent));
+                            } catch (e) {
+                              console.error("Failed to parse JSON", e);
+                              return (
+                                <div className="custom-scrollbar h-full overflow-y-auto bg-white p-6 font-mono text-sm whitespace-pre text-slate-700">
+                                  {textContent}
+                                </div>
+                              );
+                            }
+                          })()
+                        )}
+                      </div>
                     ) : selectedFilePath
                         .split("?")[0]
-                        .match(/\.(csv|json|txt)$/i) ? (
+                        .match(/\.(csv|txt)$/i) ? (
                       <div
                         className={`custom-scrollbar h-full w-full overflow-auto rounded-xl border border-gray-200 bg-white shadow-sm ${selectedFilePath.split("?")[0].endsWith(".csv") ? "p-0" : "p-6 font-mono text-sm whitespace-pre text-slate-700"}`}
                       >

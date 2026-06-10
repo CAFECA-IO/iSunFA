@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import { exec, spawn } from "child_process";
-import util from "util";
+import { spawn } from "child_process";
 import { GenerateDppDemoSchema } from "@/validators/dpp_demo.validator";
 import { reportDownloadTaskRepo } from "@/repositories/report_download_task.repo";
 import { TaskType, TaskStatus } from "@/generated";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
-
-const execPromise = util.promisify(exec);
 
 // Info: (20260609 - Tzuhan) 定義 SSE 事件介面
 interface ISseEvent {
@@ -40,7 +37,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { stockId, year, productCount, mode } = parsed.data;
+    const { stockId, year, productCount, productId, mode } = parsed.data;
 
     // Info: (20260609 - Tzuhan) 建立 SSE 資料流
     const stream = new ReadableStream({
@@ -107,16 +104,33 @@ export async function POST(req: NextRequest) {
               message: `Executing auto_download.ts for ${stockId} (${year}) in background...`,
             });
 
-            // Info: (20260609 - Tzuhan) 非同步啟動下載腳本，不使用 await 阻擋 Event Loop，並設定 resurrect=0 避免失敗時腳本進入 10 分鐘睡眠而卡死 API
-            const downloadPromise = execPromise(
-              `npx tsx scripts/auto_download.ts --stockId=${stockId} --year=${year} --resurrect=0`,
-            );
+            let downloadError: Error | null = null;
+            const downloadPromise = runScript("npx", [
+              "tsx",
+              "scripts/auto_download.ts",
+              `--stockId=${stockId}`,
+              `--year=${year}`,
+              "--resurrect=0",
+            ]).catch((err) => {
+              downloadError =
+                err instanceof Error ? err : new Error(String(err));
+            });
 
             let finCompleted = false;
             let esgCompleted = false;
 
             // Info: (20260609 - Tzuhan) 開始輪詢資料庫 (Enterprise-grade Status Polling)
             while (!finCompleted || !esgCompleted) {
+              if (downloadError) {
+                sendEvent({
+                  type: "log",
+                  message: `[ERR] 執行下載腳本失敗或公司不存在`,
+                });
+                throw new Error(
+                  "下載腳本中斷。可能找不到該公司代號，請先執行同步。",
+                );
+              }
+
               const tasks = await reportDownloadTaskRepo.findMany({
                 where: {
                   stockId,
@@ -269,7 +283,11 @@ export async function POST(req: NextRequest) {
             }
           }
 
-          if (mode === "all" || mode === "dpp_only") {
+          if (
+            mode === "all" ||
+            mode === "dpp_only" ||
+            mode === "dpp_catalog_only"
+          ) {
             // Info: (20260610 - Tzuhan) 步驟五：BOM 與前驅物數據建構
             sendEvent({ type: "step_start", stepIndex: 4 });
             sendEvent({
@@ -287,6 +305,14 @@ export async function POST(req: NextRequest) {
               type: "preview",
               file: `data/${stockId}/${year}/outputs/mock_sources/boms_and_precursors.json`,
             });
+          }
+
+          if (
+            mode === "all" ||
+            mode === "dpp_only" ||
+            mode === "product_dpp_only"
+          ) {
+            const productArg = productId ? `--productId=${productId}` : "";
 
             // Info: (20260610 - Tzuhan) 步驟六：產品規格生成
             sendEvent({ type: "step_start", stepIndex: 5 });
@@ -299,6 +325,7 @@ export async function POST(req: NextRequest) {
               "src/scripts/e2e-seeder/dpp/generate_product_specs.ts",
               stockId,
               year,
+              ...(productArg ? [productArg] : []),
             ]);
             sendEvent({
               type: "preview",
@@ -316,6 +343,7 @@ export async function POST(req: NextRequest) {
               "src/scripts/e2e-seeder/dpp/generate_product_image.ts",
               stockId,
               year,
+              ...(productArg ? [productArg] : []),
             ]);
 
             // Info: (20260610 - Tzuhan) 步驟八：DPP 核心真實數據演算
@@ -329,6 +357,7 @@ export async function POST(req: NextRequest) {
               "src/scripts/e2e-seeder/dpp/generate_dpp_ground_truth.ts",
               stockId,
               year,
+              ...(productArg ? [productArg] : []),
             ]);
 
             // Info: (20260610 - Tzuhan) 步驟九：DPP 合規與驗證數據生成
@@ -342,6 +371,7 @@ export async function POST(req: NextRequest) {
               "src/scripts/e2e-seeder/dpp/generate_dpp_compliance.ts",
               stockId,
               year,
+              ...(productArg ? [productArg] : []),
             ]);
 
             // Info: (20260610 - Tzuhan) 尋找產生出來的產品 JSON，發送預覽事件
@@ -392,6 +422,18 @@ export async function POST(req: NextRequest) {
               message: "Downloads completed successfully.",
             });
             sendEvent({ type: "complete" }); // no file attached for download_only
+          } else if (mode === "dpp_catalog_only") {
+            sendEvent({
+              type: "log",
+              message: "DPP Catalog Pipeline completed successfully.",
+            });
+            sendEvent({ type: "complete" });
+          } else if (mode === "product_dpp_only") {
+            sendEvent({
+              type: "log",
+              message: `Product DPP Pipeline completed successfully for ${productId}.`,
+            });
+            sendEvent({ type: "complete" });
           } else if (mode === "all" || mode === "dpp_only") {
             // Info: (20260610 - Tzuhan) 完成 Day 2 流程
             sendEvent({

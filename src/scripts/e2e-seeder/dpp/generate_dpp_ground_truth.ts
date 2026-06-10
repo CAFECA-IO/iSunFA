@@ -220,6 +220,7 @@ async function generateContentWithRetry(
 export async function generateDppGroundTruth(
   stockId: string,
   year: string = "2024",
+  targetProductId?: string,
 ) {
   const dataDir = path.resolve(
     process.cwd(),
@@ -231,10 +232,9 @@ export async function generateDppGroundTruth(
   // Info: (20260604 - Tzuhan) 讀取所有來源資料
   const personaPath = path.join(baseDir, `${stockId}_company_persona.json`);
   const bomPath = path.join(mockSourcesDir, "boms_and_precursors.json");
-  const specsPath = path.join(mockSourcesDir, "product_specs.json");
 
   // Info: (20260604 - Tzuhan) 防呆檢查
-  const filesToCheck = [personaPath, bomPath, specsPath];
+  const filesToCheck = [personaPath, bomPath];
   for (const f of filesToCheck) {
     if (!fs.existsSync(f)) {
       throw new Error(
@@ -245,7 +245,20 @@ export async function generateDppGroundTruth(
 
   const personaStr = fs.readFileSync(personaPath, "utf-8");
   const bomRaw = JSON.parse(fs.readFileSync(bomPath, "utf-8"));
-  const specsRaw = JSON.parse(fs.readFileSync(specsPath, "utf-8"));
+
+  let products = bomRaw.products;
+  if (targetProductId) {
+    products = products.filter(
+      (p: { productId: string }) => p.productId === targetProductId,
+    );
+  }
+
+  if (products.length === 0) {
+    console.warn(
+      `⚠️ [DPP Ground Truth Generator] 找不到符合的產品，略過生成。`,
+    );
+    return;
+  }
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("Missing GEMINI_API_KEY in .env");
@@ -253,7 +266,7 @@ export async function generateDppGroundTruth(
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
 
   console.log(
-    `🚀 [DPP Ground Truth Generator] 開始為 ${stockId} 的 ${bomRaw.products.length} 項產品產出 SKU 級別 DPP 標準答案...`,
+    `🚀 [DPP Ground Truth Generator] 開始為 ${stockId} 的 ${products.length} 項產品產出 SKU 級別 DPP 標準答案...`,
   );
 
   const aggregatorModel = genAI.getGenerativeModel({
@@ -265,18 +278,26 @@ export async function generateDppGroundTruth(
     },
   });
 
-  for (const product of bomRaw.products) {
+  for (const product of products) {
     const productId = product.productId;
     const productMockDir = path.join(baseDir, productId, "mock_sources");
     if (!fs.existsSync(productMockDir))
       fs.mkdirSync(productMockDir, { recursive: true });
 
+    const specsPath = path.join(
+      productMockDir,
+      `${productId}_product_specs.json`,
+    );
+    if (!fs.existsSync(specsPath)) {
+      throw new Error(
+        `❌ Missing required seeder file: ${specsPath}. Please run generate_product_specs.ts first.`,
+      );
+    }
+    const productSpec = JSON.parse(fs.readFileSync(specsPath, "utf-8"));
+
     const outFile = path.join(
       productMockDir,
       `${productId}_dpp_ground_truth.json`,
-    );
-    const productSpec = specsRaw.specs.find(
-      (s: { productId: string }) => s.productId === productId,
     );
 
     // Info: (20260604 - Tzuhan) 防止 AI 產生幻覺，強迫寫死真實公司英文名稱
@@ -428,7 +449,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.error("Usage: npx tsx generate_dpp_ground_truth.ts <stockId>");
     process.exit(1);
   }
-  generateDppGroundTruth(stockId, year).catch((e) => {
+  let productId: string | undefined;
+  if (process.argv.length > 4 && process.argv[4].startsWith("--productId=")) {
+    productId = process.argv[4].split("=")[1];
+  }
+
+  generateDppGroundTruth(stockId, year, productId).catch((e) => {
     console.error(e);
     process.exit(1);
   });

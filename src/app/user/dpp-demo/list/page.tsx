@@ -29,9 +29,16 @@ interface IDemoItem {
     hasEsg: boolean;
     hasPersonaHtml: boolean;
     hasBom?: boolean;
-    hasSpecs?: boolean;
-    dppGroundTruthFile?: string;
-    dppComplianceFile?: string;
+    products?: {
+      productId: string;
+      productName: string;
+      progress: {
+        hasSpecs: boolean;
+        hasImage: boolean;
+        dppGroundTruthFile?: string;
+        dppComplianceFile?: string;
+      };
+    }[];
   };
   isComplete: boolean;
 }
@@ -219,7 +226,7 @@ export default function DppDemoListPage() {
 
                     <div className="flex-1">
                       <p className="mb-2 text-xs font-semibold text-gray-500">
-                        Phase 2: DPP 核心資料
+                        Phase 2 & 3: 型錄與產品 DPP
                       </p>
                       <div className="flex items-center justify-between rounded-lg border border-gray-100 bg-white p-2 text-xs font-medium text-gray-600 shadow-sm">
                         <div className="flex items-center gap-1.5">
@@ -228,34 +235,29 @@ export default function DppDemoListPage() {
                           ) : (
                             <AlertCircle className="h-4 w-4 text-amber-500" />
                           )}
-                          BOM 生成
+                          企業型錄 (BOM)
                         </div>
                         <div className="h-px w-2 bg-gray-300 sm:w-4" />
-                        <div className="flex items-center gap-1.5">
-                          {item.progress.hasSpecs ? (
+                        <div
+                          className="flex items-center gap-1.5"
+                          title={
+                            item.progress.products
+                              ? `產品數: ${item.progress.products.length}`
+                              : ""
+                          }
+                        >
+                          {item.progress.products &&
+                          item.progress.products.length > 0 &&
+                          item.progress.products.every(
+                            (p) =>
+                              p.progress.dppGroundTruthFile &&
+                              p.progress.dppComplianceFile,
+                          ) ? (
                             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                           ) : (
                             <AlertCircle className="h-4 w-4 text-amber-500" />
                           )}
-                          規格展開
-                        </div>
-                        <div className="h-px w-2 bg-gray-300 sm:w-4" />
-                        <div className="flex items-center gap-1.5">
-                          {item.progress.dppGroundTruthFile ? (
-                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                          ) : (
-                            <AlertCircle className="h-4 w-4 text-amber-500" />
-                          )}
-                          DPP 原型
-                        </div>
-                        <div className="h-px w-2 bg-gray-300 sm:w-4" />
-                        <div className="flex items-center gap-1.5">
-                          {item.progress.dppComplianceFile ? (
-                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                          ) : (
-                            <AlertCircle className="h-4 w-4 text-amber-500" />
-                          )}
-                          合規宣告
+                          單品 DPP
                         </div>
                       </div>
                     </div>

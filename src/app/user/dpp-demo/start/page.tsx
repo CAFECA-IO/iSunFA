@@ -57,9 +57,16 @@ export interface IDemoItem {
     hasEsg: boolean;
     hasPersonaHtml: boolean;
     hasBom: boolean;
-    hasSpecs: boolean;
-    dppGroundTruthFile?: string;
-    dppComplianceFile?: string;
+    products?: {
+      productId: string;
+      productName: string;
+      progress: {
+        hasSpecs: boolean;
+        hasImage: boolean;
+        dppGroundTruthFile?: string;
+        dppComplianceFile?: string;
+      };
+    }[];
   };
   isComplete: boolean;
 }
@@ -77,6 +84,10 @@ export default function DppDemoStartPage() {
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const [showExtrapolationAlert, setShowExtrapolationAlert] =
     useState<boolean>(false);
+  const [products, setProducts] = useState<
+    NonNullable<IDemoItem["progress"]["products"]>
+  >([]);
+  const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [steps, setSteps] = useState<IGenerationStep[]>([
     {
       id: "fin_download",
@@ -137,6 +148,7 @@ export default function DppDemoStartPage() {
       company?: ICompanySearchResult,
       mode: string = "all",
       overrideYear?: string,
+      productId?: string,
     ) => {
       const targetComp = company || selectedCompany;
       const targetYear = overrideYear || year;
@@ -155,6 +167,7 @@ export default function DppDemoStartPage() {
           let shouldReset = true;
           if (mode === "generate_only" && index < 2) shouldReset = false;
           if (mode === "download_only" && index >= 2) shouldReset = false;
+          if (mode === "product_dpp_only" && index < 5) shouldReset = false;
           return shouldReset ? { ...s, status: "pending", log: "" } : s;
         }),
       );
@@ -169,6 +182,7 @@ export default function DppDemoStartPage() {
             stockId: targetComp.taxId,
             year: targetYear,
             productCount,
+            productId,
             mode,
           }),
         });
@@ -355,6 +369,20 @@ export default function DppDemoStartPage() {
             (!currentItem.progress.hasEsg &&
               currentItem.progress.hasPersonaHtml);
 
+          setProducts(currentItem.progress.products || []);
+          const activeProductId =
+            selectedProductId ||
+            (currentItem.progress.products &&
+            currentItem.progress.products.length > 0
+              ? currentItem.progress.products[0].productId
+              : "");
+          if (activeProductId && !selectedProductId) {
+            setSelectedProductId(activeProductId);
+          }
+          const activeProduct = currentItem.progress.products?.find(
+            (p) => p.productId === activeProductId,
+          );
+
           setSteps([
             {
               id: "fin_download",
@@ -406,50 +434,49 @@ export default function DppDemoStartPage() {
             {
               id: "product_specs",
               label: "6. 產品規格生成 (generate_product_specs)",
-              status: currentItem.progress.hasSpecs ? "completed" : "pending",
-              file: currentItem.progress.hasSpecs
-                ? `data/${selectedCompany.taxId}/${year}/outputs/mock_sources/product_specs.json`
+              status: activeProduct?.progress.hasSpecs
+                ? "completed"
+                : "pending",
+              file: activeProduct?.progress.hasSpecs
+                ? `data/${selectedCompany.taxId}/${year}/outputs/${activeProduct.productId}/mock_sources/${activeProduct.productId}_product_specs.json`
                 : undefined,
             },
             {
               id: "product_image",
               label: "7. 產品工程圖繪製 (generate_product_image)",
-              status: currentItem.progress.dppGroundTruthFile
+              status: activeProduct?.progress.hasImage
                 ? "completed"
                 : "pending",
-              file: currentItem.progress.dppGroundTruthFile
-                ? currentItem.progress.dppGroundTruthFile.replace(
-                    /[^/]+_dpp_ground_truth\.json$/,
-                    "fastener_blueprint.png",
-                  )
+              file: activeProduct?.progress.hasImage
+                ? `data/${selectedCompany.taxId}/${year}/outputs/${activeProduct.productId}/mock_sources/fastener_blueprint.png`
                 : undefined,
             },
             {
               id: "dpp_ground_truth",
               label: "8. DPP 核心真實數據演算 (generate_dpp_ground_truth)",
-              status: currentItem.progress.dppGroundTruthFile
+              status: activeProduct?.progress.dppGroundTruthFile
                 ? "completed"
                 : "pending",
-              file: currentItem.progress.dppGroundTruthFile,
+              file: activeProduct?.progress.dppGroundTruthFile,
             },
             {
               id: "dpp_compliance",
               label: "9. DPP 合規與驗證數據生成 (generate_dpp_compliance)",
-              status: currentItem.progress.dppComplianceFile
+              status: activeProduct?.progress.dppComplianceFile
                 ? "completed"
                 : "pending",
-              file: currentItem.progress.dppComplianceFile,
+              file: activeProduct?.progress.dppComplianceFile,
             },
           ]);
 
           if (!isGenerating) {
-            if (currentItem.progress.dppComplianceFile) {
-              setSelectedFilePath(currentItem.progress.dppComplianceFile);
-            } else if (currentItem.progress.dppGroundTruthFile) {
-              setSelectedFilePath(currentItem.progress.dppGroundTruthFile);
-            } else if (currentItem.progress.hasSpecs) {
+            if (activeProduct?.progress.dppComplianceFile) {
+              setSelectedFilePath(activeProduct.progress.dppComplianceFile);
+            } else if (activeProduct?.progress.dppGroundTruthFile) {
+              setSelectedFilePath(activeProduct.progress.dppGroundTruthFile);
+            } else if (activeProduct?.progress.hasSpecs) {
               setSelectedFilePath(
-                `data/${selectedCompany.taxId}/${year}/outputs/mock_sources/product_specs.json`,
+                `data/${selectedCompany.taxId}/${year}/outputs/${activeProduct.productId}/mock_sources/${activeProduct.productId}_product_specs.json`,
               );
             } else if (currentItem.progress.hasBom) {
               setSelectedFilePath(
@@ -476,11 +503,12 @@ export default function DppDemoStartPage() {
               log: "",
             })),
           );
+          setProducts([]);
           if (!isGenerating) setSelectedFilePath(null);
         }
       })
       .catch(console.error);
-  }, [selectedCompany, year, isGenerating]);
+  }, [selectedCompany, year, isGenerating, selectedProductId]);
 
   // Info: (20260609 - Tzuhan) 處理選擇公司
   const handleSelectCompany = (company: ICompanySearchResult) => {
@@ -504,6 +532,9 @@ export default function DppDemoStartPage() {
           startGeneration={startGeneration}
           showExtrapolationAlert={showExtrapolationAlert}
           steps={steps}
+          products={products}
+          selectedProductId={selectedProductId}
+          setSelectedProductId={setSelectedProductId}
           onStepClick={(step) => {
             if (step.file) {
               setSelectedFilePath(step.file);

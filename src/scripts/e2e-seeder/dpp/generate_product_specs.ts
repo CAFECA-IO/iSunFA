@@ -157,6 +157,7 @@ async function generateContentWithRetry(
 export async function generateProductSpecs(
   stockId: string,
   year: string = "2024",
+  targetProductId?: string,
 ) {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
   const mockSourcesDir = path.join(dataDir, "outputs", "mock_sources");
@@ -166,7 +167,6 @@ export async function generateProductSpecs(
   }
 
   const bomFile = path.join(mockSourcesDir, "boms_and_precursors.json");
-  const outFile = path.join(mockSourcesDir, "product_specs.json");
 
   if (!fs.existsSync(bomFile)) {
     console.error(
@@ -177,7 +177,16 @@ export async function generateProductSpecs(
 
   const bomRaw = fs.readFileSync(bomFile, "utf-8");
   const bomData = JSON.parse(bomRaw);
-  const products: IProductBom[] = bomData.products;
+  let products: IProductBom[] = bomData.products;
+
+  if (targetProductId) {
+    products = products.filter((p) => p.productId === targetProductId);
+  }
+
+  if (products.length === 0) {
+    console.warn(`⚠️ [DPP Specs Generator] 找不到符合的產品，略過生成。`);
+    return;
+  }
 
   console.log(
     `🚀 [DPP Specs Generator] 開始為 ${products.length} 項產品生成規格指南...`,
@@ -205,10 +214,32 @@ ${products.map((p) => `- [${p.productId}] ${p.productName}`).join("\n")}
 - 報廢處置請明確給出 recyclabilityRate_percent (例如 100)，以及 disposalMethod (例如 Metal Scrap Smelting)。`;
 
   const result = await generateContentWithRetry(model, prompt);
+  const generatedData = JSON.parse(result.response.text());
 
-  fs.writeFileSync(outFile, result.response.text(), "utf-8");
+  for (const product of products) {
+    const productSpec = generatedData.specs.find(
+      (s: { productId: string }) => s.productId === product.productId,
+    );
+    if (!productSpec) continue;
 
-  console.log(`🎉 [SUCCESS] DPP 產品規格指南已成功產生：${outFile}`);
+    const productMockDir = path.join(
+      dataDir,
+      "outputs",
+      product.productId,
+      "mock_sources",
+    );
+    if (!fs.existsSync(productMockDir)) {
+      fs.mkdirSync(productMockDir, { recursive: true });
+    }
+    const outFile = path.join(
+      productMockDir,
+      `${product.productId}_product_specs.json`,
+    );
+    fs.writeFileSync(outFile, JSON.stringify(productSpec, null, 2), "utf-8");
+    console.log(
+      `🎉 [SUCCESS] [${product.productId}] DPP 產品規格指南已成功產生：${outFile}`,
+    );
+  }
 }
 
 import url from "url";
@@ -225,7 +256,12 @@ if (
     );
     process.exit(1);
   }
-  generateProductSpecs(stockId, year).catch((e) => {
+  let productId: string | undefined;
+  if (process.argv.length > 4 && process.argv[4].startsWith("--productId=")) {
+    productId = process.argv[4].split("=")[1];
+  }
+
+  generateProductSpecs(stockId, year, productId).catch((e) => {
     console.error(e);
     process.exit(1);
   });

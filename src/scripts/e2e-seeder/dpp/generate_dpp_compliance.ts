@@ -10,6 +10,7 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 export async function generateDppCompliance(
   stockId: string,
   year: string = "2024",
+  targetProductId?: string,
 ) {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
   const baseDir = path.join(dataDir, "outputs");
@@ -35,7 +36,16 @@ export async function generateDppCompliance(
   }
   const bomRaw = fs.readFileSync(bomFile, "utf-8");
   const bomData = JSON.parse(bomRaw);
-  const products: IProductBom[] = bomData.products;
+  let products: IProductBom[] = bomData.products;
+
+  if (targetProductId) {
+    products = products.filter((p) => p.productId === targetProductId);
+  }
+
+  if (products.length === 0) {
+    console.warn(`⚠️ [DPP Compliance Generator] 找不到符合的產品，略過生成。`);
+    return;
+  }
 
   console.log(
     `🚀 [DPP Compliance Generator] 開始為 ${stockId} 的 ${products.length} 項產品產生 SKU 級別法規無使用宣告書...`,
@@ -190,5 +200,22 @@ if (
     );
     process.exit(1);
   }
-  generateDppCompliance(stockId).catch(console.error);
+  let productId: string | undefined;
+  if (
+    process.argv.length > 3 &&
+    process.argv[3] &&
+    !process.argv[3].startsWith("--")
+  ) {
+    // legacy compat
+  }
+  if (process.argv.length > 4 && process.argv[4].startsWith("--productId=")) {
+    productId = process.argv[4].split("=")[1];
+  }
+
+  const year =
+    process.argv[3] && !process.argv[3].startsWith("--")
+      ? process.argv[3]
+      : "2024";
+
+  generateDppCompliance(stockId, year, productId).catch(console.error);
 }

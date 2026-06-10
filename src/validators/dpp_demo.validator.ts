@@ -5,6 +5,7 @@ export const GenerateDppDemoSchema = z.object({
   stockId: z.string().min(1, "必須提供股票代號"),
   year: z.string().min(4, "必須提供年度"),
   productCount: z.number().min(1).max(10).default(1),
+  productId: z.string().optional(),
   mode: z
     .enum([
       "all",
@@ -13,6 +14,8 @@ export const GenerateDppDemoSchema = z.object({
       "extrapolate_only",
       "persona_only",
       "dpp_only",
+      "dpp_catalog_only",
+      "product_dpp_only",
     ])
     .optional()
     .default("all"),

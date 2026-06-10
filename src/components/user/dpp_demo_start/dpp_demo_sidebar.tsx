@@ -49,6 +49,9 @@ export interface IDppDemoSidebarProps {
   startGeneration: (company?: ICompanySearchResult, mode?: string) => void;
   showExtrapolationAlert: boolean;
   steps: IDppDemoStep[];
+  products?: { productId: string; productName: string }[];
+  selectedProductId?: string;
+  setSelectedProductId?: (id: string) => void;
   onStepClick?: (step: IDppDemoStep) => void;
 }
 
@@ -63,6 +66,9 @@ export function DppDemoSidebar({
   startGeneration,
   showExtrapolationAlert,
   steps,
+  products = [],
+  selectedProductId = "",
+  setSelectedProductId = () => {},
   onStepClick = () => {},
 }: IDppDemoSidebarProps) {
   return (
@@ -115,8 +121,6 @@ export function DppDemoSidebar({
             const hasPersona = steps[3]?.status === "completed";
             const isPartial = (hasFin || hasEsg) && !hasPersona;
             const isAllDone = hasPersona;
-            const hasDppCompliance = steps[7]?.status === "completed";
-            const isDay2AllDone = hasDppCompliance;
 
             return (
               <div className="mt-2 flex flex-col gap-2">
@@ -153,16 +157,55 @@ export function DppDemoSidebar({
                 </button>
                 {isAllDone && (
                   <button
-                    onClick={() => startGeneration(undefined, "dpp_only")}
+                    onClick={() =>
+                      startGeneration(undefined, "dpp_catalog_only")
+                    }
                     disabled={isGenerating}
                     className="mt-1 flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:opacity-90 disabled:opacity-50"
                   >
                     <Sparkles className="mr-2 h-4 w-4" />{" "}
-                    {isDay2AllDone
-                      ? "重新生成 DPP 數據"
-                      : "繼續生成 DPP 核心數據"}
+                    {steps[4]?.status === "completed"
+                      ? "重新生成產品型錄 (BOM)"
+                      : "生成企業產品型錄 (BOM)"}
                   </button>
                 )}
+                {steps[4]?.status === "completed" &&
+                  products &&
+                  products.length > 0 && (
+                    <div className="mt-2 rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+                      <label
+                        htmlFor="productSelect"
+                        className="mb-2 block text-xs font-bold text-slate-700"
+                      >
+                        選擇產品以生成單品 DPP
+                      </label>
+                      <select
+                        id="productSelect"
+                        value={selectedProductId}
+                        onChange={(e) => setSelectedProductId?.(e.target.value)}
+                        disabled={isGenerating}
+                        className="mb-3 w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+                      >
+                        {products.map((p) => (
+                          <option key={p.productId} value={p.productId}>
+                            {p.productName} ({p.productId})
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() =>
+                          startGeneration(undefined, "product_dpp_only")
+                        }
+                        disabled={isGenerating || !selectedProductId}
+                        className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:opacity-90 disabled:opacity-50"
+                      >
+                        <Sparkles className="mr-2 h-4 w-4" />{" "}
+                        {steps[5]?.status === "completed"
+                          ? "重新生成單品 DPP"
+                          : "產生此產品專屬 DPP"}
+                      </button>
+                    </div>
+                  )}
               </div>
             );
           })()}
