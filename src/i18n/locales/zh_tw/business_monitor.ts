@@ -1,5 +1,5 @@
 export const businessMonitor = {
-  title: "企業觀測看板",
+  title: "企業觀測站",
   subtitle:
     "搜尋臺灣公開發行公司之財報數據、下載官方股東會年報，並由 AI 智能助理為您深度分析",
   filter: {

@@ -1,5 +1,5 @@
 export const businessMonitor = {
-  title: "企业观测看板",
+  title: "企业观测站",
   subtitle:
     "搜寻台湾公开发行公司之财报数据、下载官方股东会年报，并由 AI 智能助理为您深度分析",
   filter: {

@@ -1,5 +1,5 @@
 export const businessMonitor = {
-  title: "Business Monitor Dashboard",
+  title: "Business Monitor",
   subtitle:
     "Search financial data of Taiwan public companies, download official shareholder reports, and get deep analysis from our AI assistant",
   filter: {
