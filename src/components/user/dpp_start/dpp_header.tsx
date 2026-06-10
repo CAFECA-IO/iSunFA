@@ -1,6 +1,6 @@
 import { Building } from "lucide-react";
 
-export function DppDemoHeader() {
+export function DppHeader() {
   return (
     <>
       <div

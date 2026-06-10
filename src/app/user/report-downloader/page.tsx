@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { CompanySearchInput } from "@/components/common/company_search_input";
-import { ICompanySearchResult } from "@/app/user/dpp-demo/start/page";
+import { ICompanySearchResult } from "@/app/user/dpp/start/page";
 import {
   DownloadCloud,
   Loader2,
@@ -10,12 +10,12 @@ import {
   AlertCircle,
   FileText,
 } from "lucide-react";
-import { DppDemoHeader } from "@/components/user/dpp_demo_start/dpp_demo_header";
+import { DppHeader } from "@/components/user/dpp_start/dpp_header";
 
 const getFileUrl = (path: string) =>
-  `/api/dpp-demo/files?action=serve&path=${encodeURIComponent(path)}`;
+  `/api/dpp/files?action=serve&path=${encodeURIComponent(path)}`;
 const downloadFileUrl = (path: string) =>
-  `/api/dpp-demo/files?action=download&path=${encodeURIComponent(path)}`;
+  `/api/dpp/files?action=download&path=${encodeURIComponent(path)}`;
 
 export default function ReportDownloaderPage() {
   const [keyword, setKeyword] = useState<string>("");
@@ -52,7 +52,7 @@ export default function ReportDownloaderPage() {
       });
 
       const response = await fetch(
-        `/api/v1/dpp-demo/generate?${queryParams.toString()}`,
+        `/api/v1/dpp/generate?${queryParams.toString()}`,
       );
       if (!response.body) throw new Error("No response body");
 
@@ -107,7 +107,7 @@ export default function ReportDownloaderPage() {
 
   return (
     <div className="flex h-full flex-col bg-slate-50">
-      <DppDemoHeader />
+      <DppHeader />
 
       <div className="mx-auto w-full max-w-4xl flex-1 overflow-hidden p-6">
         <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">

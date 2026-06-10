@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { request } from "@/lib/utils/request";
-import { DppDemoHeader } from "@/components/user/dpp_demo_start/dpp_demo_header";
-import { DppDemoSidebar } from "@/components/user/dpp_demo_start/dpp_demo_sidebar";
-import { DppDemoPreviewPane } from "@/components/user/dpp_demo_start/dpp_demo_preview_pane";
+import { DppHeader } from "@/components/user/dpp_start/dpp_header";
+import { DppSidebar } from "@/components/user/dpp_start/dpp_sidebar";
+import { DppPreviewPane } from "@/components/user/dpp_start/dpp_preview_pane";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { IApiResponse } from "@/lib/utils/response";
 
@@ -71,7 +71,7 @@ export interface IDemoItem {
   isComplete: boolean;
 }
 
-export default function DppDemoStartPage() {
+export default function DppStartPage() {
   // Info: (20260609 - Tzuhan) 輸入區塊狀態管理
   const [keyword, setKeyword] = useState<string>("");
   const [selectedCompany, setSelectedCompany] =
@@ -175,7 +175,7 @@ export default function DppDemoStartPage() {
       setShowExtrapolationAlert(false);
 
       try {
-        const response = await fetch("/api/v1/dpp-demo/generate", {
+        const response = await fetch("/api/v1/dpp/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -351,7 +351,7 @@ export default function DppDemoStartPage() {
       return;
     }
 
-    request<IApiResponse<IDemoItem[]>>("/api/v1/dpp-demo/list")
+    request<IApiResponse<IDemoItem[]>>("/api/v1/dpp/list")
       .then((listRes) => {
         const items = listRes.payload || [];
         const currentItem = items.find(
@@ -518,10 +518,10 @@ export default function DppDemoStartPage() {
 
   return (
     <div className="relative flex h-[calc(100vh-100px)] w-full flex-col gap-5 overflow-hidden bg-slate-50 pb-4 font-sans">
-      <DppDemoHeader />
+      <DppHeader />
 
       <div className="flex min-h-0 flex-1 flex-col gap-5 lg:flex-row">
-        <DppDemoSidebar
+        <DppSidebar
           keyword={keyword}
           setKeyword={setKeyword}
           selectedCompany={selectedCompany}
@@ -542,7 +542,7 @@ export default function DppDemoStartPage() {
           }}
         />
 
-        <DppDemoPreviewPane selectedFilePath={selectedFilePath} />
+        <DppPreviewPane selectedFilePath={selectedFilePath} />
       </div>
 
       <ConfirmModal

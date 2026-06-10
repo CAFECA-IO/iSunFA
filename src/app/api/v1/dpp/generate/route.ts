@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { spawn } from "child_process";
-import { GenerateDppDemoSchema } from "@/validators/dpp_demo.validator";
+import { GenerateDppSchema } from "@/validators/dpp.validator";
 import { reportDownloadTaskRepo } from "@/repositories/report_download_task.repo";
 import { TaskType, TaskStatus } from "@/generated";
 
@@ -28,7 +28,7 @@ interface ISseEvent {
 export async function POST(req: NextRequest) {
   try {
     const body: unknown = await req.json();
-    const parsed = GenerateDppDemoSchema.safeParse(body);
+    const parsed = GenerateDppSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(

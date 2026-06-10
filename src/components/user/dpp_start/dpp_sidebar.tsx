@@ -1,4 +1,4 @@
-import { ICompanySearchResult } from "@/app/user/dpp-demo/start/page";
+import { ICompanySearchResult } from "@/app/user/dpp/start/page";
 import {
   Loader2,
   AlertCircle,
@@ -30,7 +30,7 @@ const renderStateIcon = (
   }
 };
 
-export interface IDppDemoStep {
+export interface IDppStep {
   id: string;
   label: string;
   status: "pending" | "running" | "completed" | "error" | "extrapolated";
@@ -38,7 +38,7 @@ export interface IDppDemoStep {
   file?: string;
 }
 
-export interface IDppDemoSidebarProps {
+export interface IDppSidebarProps {
   keyword: string;
   setKeyword: (val: string) => void;
   selectedCompany: ICompanySearchResult | null;
@@ -48,14 +48,14 @@ export interface IDppDemoSidebarProps {
   isGenerating: boolean;
   startGeneration: (company?: ICompanySearchResult, mode?: string) => void;
   showExtrapolationAlert: boolean;
-  steps: IDppDemoStep[];
+  steps: IDppStep[];
   products?: { productId: string; productName: string }[];
   selectedProductId?: string;
   setSelectedProductId?: (id: string) => void;
-  onStepClick?: (step: IDppDemoStep) => void;
+  onStepClick?: (step: IDppStep) => void;
 }
 
-export function DppDemoSidebar({
+export function DppSidebar({
   keyword,
   setKeyword,
   selectedCompany,
@@ -70,7 +70,7 @@ export function DppDemoSidebar({
   selectedProductId = "",
   setSelectedProductId = () => {},
   onStepClick = () => {},
-}: IDppDemoSidebarProps) {
+}: IDppSidebarProps) {
   return (
     <div className="relative z-20 flex h-full w-full flex-shrink-0 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm lg:w-[420px]">
       <div className="border-b border-gray-100 bg-slate-50/50 p-5">

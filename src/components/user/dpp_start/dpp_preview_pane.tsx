@@ -6,15 +6,13 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 const getFileUrl = (path: string) =>
-  `/api/dpp-demo/files?action=serve&path=${encodeURIComponent(path)}`;
+  `/api/dpp/files?action=serve&path=${encodeURIComponent(path)}`;
 
-export interface IDppDemoPreviewPaneProps {
+export interface IDppPreviewPaneProps {
   selectedFilePath: string | null;
 }
 
-export function DppDemoPreviewPane({
-  selectedFilePath,
-}: IDppDemoPreviewPaneProps) {
+export function DppPreviewPane({ selectedFilePath }: IDppPreviewPaneProps) {
   const [jsonData, setJsonData] = useState<Record<string, unknown> | null>(
     null,
   );

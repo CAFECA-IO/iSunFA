@@ -40,7 +40,7 @@ interface IProductBomLite {
 }
 
 const getFileUrl = (path: string) =>
-  `/api/dpp-demo/files?action=serve&path=${encodeURIComponent(path.split("?")[0])}`;
+  `/api/dpp/files?action=serve&path=${encodeURIComponent(path.split("?")[0])}`;
 
 const getModulesForProduct = (
   productId: string,
@@ -184,7 +184,7 @@ export default function DppWorkspacePage() {
 
   // Info: (20260608 - Tzuhan) Fetch available years
   useEffect(() => {
-    fetch("/api/dpp-demo/options")
+    fetch("/api/dpp/options")
       .then((res) => res.json())
       .then((data) => {
         if (data && data[stockId] && data[stockId].length > 0) {

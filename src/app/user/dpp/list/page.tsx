@@ -43,7 +43,7 @@ interface IDemoItem {
   isComplete: boolean;
 }
 
-export default function DppDemoListPage() {
+export default function DppListPage() {
   const router = useRouter();
   const [items, setItems] = useState<IDemoItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,9 +60,7 @@ export default function DppDemoListPage() {
   const fetchItems = async () => {
     try {
       setLoading(true);
-      const res = await request<IApiResponse<IDemoItem[]>>(
-        "/api/v1/dpp-demo/list",
-      );
+      const res = await request<IApiResponse<IDemoItem[]>>("/api/v1/dpp/list");
       if (res.payload) {
         setItems(res.payload);
       }
@@ -83,7 +81,7 @@ export default function DppDemoListPage() {
       onConfirm: async () => {
         try {
           setLoading(true);
-          await fetch("/api/v1/dpp-demo/list", {
+          await fetch("/api/v1/dpp/list", {
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ stockId, year }),
@@ -122,7 +120,7 @@ export default function DppDemoListPage() {
           </p>
         </div>
         <button
-          onClick={() => router.push("/user/dpp-demo/start")}
+          onClick={() => router.push("/user/dpp/start")}
           className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" />
@@ -274,7 +272,7 @@ export default function DppDemoListPage() {
                         }
                         onClick={() =>
                           router.push(
-                            `/user/dpp-demo/start?stockId=${item.stockId}&year=${item.year}&action=view`,
+                            `/user/dpp/start?stockId=${item.stockId}&year=${item.year}&action=view`,
                           )
                         }
                         className="flex items-center justify-center rounded-lg p-2 text-gray-400 transition hover:bg-blue-50 hover:text-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
@@ -304,7 +302,7 @@ export default function DppDemoListPage() {
                       <button
                         onClick={() =>
                           router.push(
-                            `/user/dpp-demo/start?stockId=${item.stockId}&year=${item.year}&action=extrapolate`,
+                            `/user/dpp/start?stockId=${item.stockId}&year=${item.year}&action=extrapolate`,
                           )
                         }
                         className="flex items-center justify-center rounded-lg p-2 text-indigo-400 transition hover:bg-indigo-50 hover:text-indigo-500"
@@ -320,7 +318,7 @@ export default function DppDemoListPage() {
                       <button
                         onClick={() =>
                           router.push(
-                            `/user/dpp-demo/start?stockId=${item.stockId}&year=${item.year}&action=redownload`,
+                            `/user/dpp/start?stockId=${item.stockId}&year=${item.year}&action=redownload`,
                           )
                         }
                         className="flex items-center justify-center rounded-lg p-2 text-gray-400 transition hover:bg-blue-50 hover:text-blue-500"
@@ -336,7 +334,7 @@ export default function DppDemoListPage() {
                       <button
                         onClick={() =>
                           router.push(
-                            `/user/dpp-demo/start?stockId=${item.stockId}&year=${item.year}&action=regenerate`,
+                            `/user/dpp/start?stockId=${item.stockId}&year=${item.year}&action=regenerate`,
                           )
                         }
                         className="flex items-center justify-center rounded-lg p-2 text-gray-400 transition hover:bg-purple-50 hover:text-purple-500"
@@ -350,7 +348,7 @@ export default function DppDemoListPage() {
 
                     <button
                       disabled={!item.isComplete}
-                      onClick={() => router.push("/user/dpp-demo/workspace")}
+                      onClick={() => router.push("/user/dpp/workspace")}
                       className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-5 py-2 text-sm font-bold shadow-sm transition sm:flex-none ${
                         item.isComplete
                           ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:scale-105 hover:shadow-md"
@@ -358,7 +356,7 @@ export default function DppDemoListPage() {
                       } `}
                     >
                       <PlayCircle className="h-4 w-4" />
-                      demo
+                      進入工作區
                     </button>
                   </div>
                 </div>
