@@ -165,7 +165,7 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    // 1. Delete files
+    // Info: (20260610 - Tzuhan) 1. Delete files
     const targetDir = path.join(
       process.cwd(),
       "data",
@@ -176,7 +176,7 @@ export async function DELETE(req: NextRequest) {
       fs.rmSync(targetDir, { recursive: true, force: true });
     }
 
-    // 2. Delete database records
+    // Info: (20260610 - Tzuhan) 2. Delete database records
     await reportDownloadTaskRepo.deleteMany({
       where: {
         stockId,
