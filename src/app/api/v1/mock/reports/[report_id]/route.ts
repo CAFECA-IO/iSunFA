@@ -11,7 +11,8 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: { report_id: string } },
 ) {
-  const { report_id: reportId } = await params;
+  const resolvedParams = await params;
+  const { report_id: reportId } = resolvedParams;
 
   const reportIdNumber = parseInt(reportId, 10);
   const report = mockReports.find((r) => r.id === reportIdNumber);

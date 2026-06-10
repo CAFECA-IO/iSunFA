@@ -143,7 +143,7 @@ const ReportDetailPageBody = () => {
                   主要報告書詳細資訊
                 </h3>
                 <div className="grid grid-cols-1 gap-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm md:grid-cols-2 md:p-8">
-                  {/* Left Column */}
+                  {/* Info: (20260610 - Julian) 報告基本資訊 */}
                   <div className="flex flex-col gap-4 md:border-r md:border-slate-100 md:pr-8">
                     <h4 className="mb-2 border-b border-slate-100 pb-3 font-bold text-slate-700">
                       報告基本資訊
@@ -186,7 +186,7 @@ const ReportDetailPageBody = () => {
                     </div>
                   </div>
 
-                  {/* Right Column */}
+                  {/* Info: (20260610 - Julian) 查證與確信資訊 */}
                   <div className="flex flex-col gap-4">
                     <h4 className="mb-2 border-b border-slate-100 pb-3 font-bold text-slate-700">
                       查證與確信資訊
