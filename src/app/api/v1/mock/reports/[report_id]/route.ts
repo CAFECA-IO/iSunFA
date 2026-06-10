@@ -4,7 +4,7 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 
 /**
- * Info:(20260610 - Julian) 用於開發 Business Monitor 的 Mock API，之後會移除
+ * ToDo: (20260610 - Julian) 用於開發 Business Monitor 的 Mock API，之後會移除
  * GET /api/v1/mock/reports/:report_id
  */
 export async function GET(
