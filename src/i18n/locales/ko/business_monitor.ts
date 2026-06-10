@@ -1,5 +1,5 @@
 export const businessMonitor = {
-  title: "기업 관측 대시보드",
+  title: "기업 관측소",
   subtitle:
     "대만 상장 기업의 재무 데이터를 검색하고 공식 주주총회 연례 보고서를 다운로드하며 AI 어시스턴트로부터 심층 분석을 받으세요",
   filter: {

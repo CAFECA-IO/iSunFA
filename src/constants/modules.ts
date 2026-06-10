@@ -52,6 +52,7 @@ export const PUBLIC_MODULES = [
     nav: true,
   },
   { key: "coupon", icon: Tag, basic: true, nav: false },
+  { key: "business_monitor", icon: Tag, basic: true, nav: true },
 ];
 
 export const ADMIN_MODULES = [
