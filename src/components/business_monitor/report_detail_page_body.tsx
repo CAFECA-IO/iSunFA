@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BookmarkCheck,
   ChevronLeft,
   CloudDownload,
   Share2,
@@ -85,6 +86,15 @@ const ReportDetailPageBody = () => {
                   <p className="text-sm font-medium text-orange-700">
                     {report.title}
                   </p>
+
+                  {report.isVerifiedByThirdParty && (
+                    <div className="mt-2 flex w-fit items-center gap-1 rounded-md border-0 border-green-300 bg-green-50 px-1 py-1 text-green-700 md:border md:px-2">
+                      <BookmarkCheck size={16} className="shrink-0" />
+                      <p className="hidden text-xs font-medium md:block">
+                        已通過第三方查證
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Info: (20260610 - Julian) Metadata List */}
