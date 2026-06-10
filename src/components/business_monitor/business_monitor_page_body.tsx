@@ -1,6 +1,7 @@
 "use client";
 
 import { FC, useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Search,
   Building2,
@@ -135,12 +136,14 @@ const ReportItem: FC<{
         </div>
 
         <div className="grid grid-cols-2 items-center gap-2 md:mt-auto md:flex">
-          <button
-            type="button"
-            className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-700"
-          >
-            {t("business_monitor.reports.item.view_details")}
-          </button>
+          <Link href={`/business_monitor/${report.id}`}>
+            <button
+              type="button"
+              className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-700"
+            >
+              {t("business_monitor.reports.item.view_details")}
+            </button>
+          </Link>
           <button
             type="button"
             onClick={handleDownload}

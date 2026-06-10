@@ -1,15 +1,15 @@
-import { SubmitEvent } from 'react';
+import { FormEvent } from "react";
 import { Coins, ArrowRight } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { IBlockchainDashboardData } from "@/services/admin.blockchain.service";
-import { CURRENCY_UNIT } from '@/constants/price';
+import { CURRENCY_UNIT } from "@/constants/price";
 
 interface IBlockchainMintFormProps {
   data: IBlockchainDashboardData | null;
   mintAmount: string;
   setMintAmount: (amount: string) => void;
   isMinting: boolean;
-  handleMintSubmit: (e: SubmitEvent) => void;
+  handleMintSubmit: (e: FormEvent<HTMLFormElement>) => void;
 }
 
 export default function BlockchainMintForm({
@@ -22,15 +22,15 @@ export default function BlockchainMintForm({
   const { t } = useTranslation();
 
   return (
-    <div className="rounded-3xl border border-orange-100 bg-gradient-to-b from-white to-orange-50/30 p-6 sm:p-8 shadow-sm">
-      <div className="flex flex-col sm:flex-row items-start gap-5">
-        <div className="shrink-0 rounded-2xl bg-orange-100 p-4 text-orange-600 shadow-inner hidden sm:block">
-          <Coins className="h-8 w-8" />
+    <div className="rounded-3xl border border-orange-100 bg-linear-to-b from-white to-orange-50/30 p-6 shadow-sm sm:p-8">
+      <div className="flex flex-col items-start gap-5 sm:flex-row">
+        <div className="hidden shrink-0 rounded-2xl bg-orange-100 p-4 text-orange-600 shadow-inner sm:block">
+          <Coins size={32} />
         </div>
-        <div className="min-w-0 flex-1 w-full">
-          <div className="flex items-center gap-3 mb-2 sm:mb-0">
+        <div className="w-full min-w-0 flex-1">
+          <div className="mb-2 flex items-center gap-3 sm:mb-0">
             <div className="shrink-0 rounded-xl bg-orange-100 p-2 text-orange-600 shadow-inner sm:hidden">
-              <Coins className="h-5 w-5" />
+              <Coins size={20} />
             </div>
             <h3 className="text-xl font-bold text-gray-900">
               {t("admin_blockchain.page.mint_icp")}
@@ -54,11 +54,14 @@ export default function BlockchainMintForm({
                 step="0.0001"
                 min="0.0001"
                 aria-label={t("admin_blockchain.page.amount_aria") || "Amount"}
-                placeholder={t("admin_blockchain.page.amount_placeholder") || "Amount to mint"}
+                placeholder={
+                  t("admin_blockchain.page.amount_placeholder") ||
+                  "Amount to mint"
+                }
                 value={mintAmount}
                 onChange={(e) => setMintAmount(e.target.value)}
                 disabled={!data || isMinting}
-                className="w-full rounded-2xl border-2 border-gray-200 py-3.5 pl-5 pr-16 font-semibold text-gray-900 transition hover:border-gray-300 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 focus:outline-none disabled:opacity-50"
+                className="w-full rounded-2xl border-2 border-gray-200 py-3.5 pr-16 pl-5 font-semibold text-gray-900 transition hover:border-gray-300 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 focus:outline-none disabled:opacity-50"
               />
               <span className="absolute top-1/2 right-5 -translate-y-1/2 font-bold text-gray-400">
                 {CURRENCY_UNIT.ICP}
@@ -69,7 +72,7 @@ export default function BlockchainMintForm({
               disabled={!data || !mintAmount || isMinting}
               className="flex items-center justify-center gap-2 rounded-2xl bg-gray-900 px-8 py-3.5 font-bold text-white shadow-md transition hover:bg-gray-800 hover:shadow-lg focus:ring-4 focus:ring-gray-900/20 focus:outline-none disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none"
             >
-              {t("admin_blockchain.page.confirm")} <ArrowRight className="h-5 w-5" />
+              {t("admin_blockchain.page.confirm")} <ArrowRight size={20} />
             </button>
           </form>
 
@@ -80,7 +83,9 @@ export default function BlockchainMintForm({
                 {t("admin_blockchain.page.live_rate")}
               </span>
               <span className="ml-auto font-bold">
-                1 {CURRENCY_UNIT.ICP} ≈ {parseFloat(data.collateralRate).toLocaleString()} {CURRENCY_UNIT.ISC}
+                1 {CURRENCY_UNIT.ICP} ≈{" "}
+                {parseFloat(data.collateralRate).toLocaleString()}{" "}
+                {CURRENCY_UNIT.ISC}
               </span>
             </div>
           )}
