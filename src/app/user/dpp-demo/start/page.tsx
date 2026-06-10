@@ -252,7 +252,7 @@ export default function DppDemoStartPage() {
       if (paramStockId && paramYear) {
         setYear(paramYear);
 
-        // Fetch company lookup to set selectedCompany
+        // Info: (20260609 - Tzuhan) Fetch company lookup to set selectedCompany
         request<{ payload: ICompanySearchResult[] }>(
           `/api/v1/company/lookup?query=${paramStockId}`,
         )
