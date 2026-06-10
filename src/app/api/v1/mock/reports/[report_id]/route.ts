@@ -20,5 +20,19 @@ export async function GET(
     return jsonFail(API_ERRORS.IS_DB_FAILED);
   }
 
-  return jsonOk(report);
+  // Info: (20260610 - Julian) 找出該公司的歷史報告，並依照年份降序排列
+  const historicalReports = mockReports
+    .filter((r) => r.company === report.company && r.id !== report.id)
+    .sort((a, b) => parseInt(b.reportYear, 10) - parseInt(a.reportYear, 10));
+
+  // Info: (20260610 - Julian) 找出同產業的其他公司報告 (全顯示，不限數量)
+  const industryReports = mockReports.filter(
+    (r) => r.industry === report.industry && r.company !== report.company,
+  );
+
+  return jsonOk({
+    report,
+    historicalReports,
+    industryReports,
+  });
 }

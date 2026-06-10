@@ -33,6 +33,12 @@ export interface IMockReport {
   isVerifiedByThirdParty: boolean; // Info: (20260610 - Julian) 是否經第三方確信
 }
 
+export interface IReportDetailPayload {
+  report: IMockReport;
+  historicalReports: IMockReport[];
+  industryReports: IMockReport[];
+}
+
 export const mockReports: IMockReport[] = [
   {
     id: 1,

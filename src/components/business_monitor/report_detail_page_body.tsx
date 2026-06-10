@@ -17,15 +17,18 @@ import {
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { IMockReport } from "@/interfaces/business_monitor";
+import {
+  IMockReport,
+  IReportDetailPayload,
+} from "@/interfaces/business_monitor";
 import { request } from "@/lib/utils/request";
 
 const ReportDetailPageBody = () => {
   const params = useParams<{ report_id: string }>();
   const { report_id: reportId } = params;
 
-  const [report, setReport] = useState<IMockReport | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [payload, setPayload] = useState<IReportDetailPayload | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     if (!reportId) return;
@@ -33,11 +36,11 @@ const ReportDetailPageBody = () => {
     const fetchReport = async () => {
       setIsLoading(true);
       try {
-        const res = await request<{ payload: IMockReport }>(
+        const res = await request<{ payload: IReportDetailPayload }>(
           `/api/v1/mock/reports/${reportId}`,
         );
         if (res?.payload) {
-          setReport(res.payload);
+          setPayload(res.payload);
         }
       } catch (err) {
         console.error("Failed to fetch report details", err);
@@ -48,6 +51,26 @@ const ReportDetailPageBody = () => {
 
     fetchReport();
   }, [reportId]);
+
+  const report = payload?.report;
+  const historicalReports = payload?.historicalReports || [];
+  const industryReports = payload?.industryReports || [];
+
+  const handleDownload = (targetReport: IMockReport) => {
+    // Info: (20260610 - Julian) 模擬產生檔案 Blob 並觸發瀏覽器下載
+    const dummyContent = `Mock Report Content for ${targetReport.company}\nReport Year: ${targetReport.reportYear}\nPeriod: ${targetReport.period}\nIndustry: ${targetReport.industry}`;
+    const blob = new Blob([dummyContent], {
+      type: "text/plain;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${targetReport.company}_${targetReport.reportYear}永續報告書.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <main className="min-h-screen bg-gray-50/50 pt-8 pb-20">
@@ -96,6 +119,7 @@ const ReportDetailPageBody = () => {
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
+                    onClick={() => handleDownload(report)}
                     className="flex items-center gap-2 rounded-lg bg-orange-600 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-orange-700 focus:outline-none"
                   >
                     <CloudDownload size={18} />
@@ -213,59 +237,58 @@ const ReportDetailPageBody = () => {
             </div>
 
             {/* Info: (20260610 - Julian) Section 2: 歷年報告書 */}
-            <div className="flex flex-col gap-4">
-              <h3 className="text-lg font-bold text-slate-800">歷年報告書</h3>
-              <div className="flex flex-wrap items-center gap-3">
-                {["2023", "2022", "2021", "2020", "2019", "2018"].map(
-                  (year) => (
+            {historicalReports.length > 0 && (
+              <div className="flex flex-col gap-4">
+                <h3 className="text-lg font-bold text-slate-800">歷年報告書</h3>
+                <div className="flex flex-wrap items-center gap-3">
+                  {historicalReports.map((histReport) => (
                     <button
-                      key={year}
+                      key={histReport.id}
                       type="button"
+                      onClick={() => handleDownload(histReport)}
                       className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-600 transition-colors hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600 focus:outline-none"
                     >
                       <CloudDownload size={16} />
-                      下載 {year}
+                      下載 {histReport.reportYear}
                     </button>
-                  ),
-                )}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Info: (20260610 - Julian) Section 3: 同產業報告書 */}
-            <div className="flex flex-col gap-4">
-              <h3 className="text-lg font-bold text-slate-800">同產業報告書</h3>
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {[
-                  "智冠科技股份有限公司",
-                  "華義國際數位娛樂股份有限公司",
-                  "智崴資訊科技股份有限公司",
-                  "鑫傳國際多媒體科技股份有限公司",
-                  "鈊象電子股份有限公司",
-                  "樂意傳播股份有限公司",
-                ].map((company) => (
-                  <div
-                    key={company}
-                    className="flex flex-col gap-5 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
-                  >
-                    <div>
-                      <h4 className="mb-1 text-base font-bold text-slate-800">
-                        {company}
-                      </h4>
-                      <p className="text-sm font-medium text-slate-500">
-                        2024 年永續報告書
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      className="mt-auto flex w-full items-center justify-center gap-2 rounded-lg bg-orange-50 px-4 py-2.5 text-sm font-bold text-orange-600 transition-colors hover:bg-orange-100 focus:outline-none"
+            {industryReports.length > 0 && (
+              <div className="flex flex-col gap-4">
+                <h3 className="text-lg font-bold text-slate-800">
+                  同產業報告書
+                </h3>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {industryReports.map((indReport) => (
+                    <div
+                      key={indReport.id}
+                      className="flex flex-col gap-5 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
                     >
-                      <CloudDownload size={16} />
-                      下載報告書
-                    </button>
-                  </div>
-                ))}
+                      <div>
+                        <h4 className="mb-1 text-base font-bold text-slate-800">
+                          {indReport.company}
+                        </h4>
+                        <p className="text-sm font-medium text-slate-500">
+                          {indReport.reportYear} 年永續報告書
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDownload(indReport)}
+                        className="mt-auto flex w-full items-center justify-center gap-2 rounded-lg bg-orange-50 px-4 py-2.5 text-sm font-bold text-orange-600 transition-colors hover:bg-orange-100 focus:outline-none"
+                      >
+                        <CloudDownload size={16} />
+                        下載報告書
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
       </div>
