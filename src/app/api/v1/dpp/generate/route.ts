@@ -186,7 +186,7 @@ export async function POST(req: NextRequest) {
                 sendEvent({ type: "esg_complete" });
               }
 
-              // Keep connection alive with heartbeat
+              // Info: (20260609 - Tzuhan) Keep connection alive with heartbeat
               sendEvent({
                 type: "log",
                 message: `Waiting for download tasks...`,
@@ -208,7 +208,7 @@ export async function POST(req: NextRequest) {
             mode === "extrapolate_only" ||
             mode === "persona_only"
           ) {
-            // If we skipped download, we might still want to signal that download is done so the UI can proceed if it was waiting
+            // Info: (20260609 - Tzuhan) If we skipped download, we might still want to signal that download is done so the UI can proceed if it was waiting
             if (mode !== "all") {
               sendEvent({
                 type: "fin_complete",
@@ -414,14 +414,14 @@ export async function POST(req: NextRequest) {
               message:
                 "Extrapolation and vision extraction completed successfully.",
             });
-            sendEvent({ type: "complete" }); // no file attached for extrapolate_only, it relies on next step
+            sendEvent({ type: "complete" }); // Info: (20260609 - Tzuhan) no file attached for extrapolate_only, it relies on next step
           } else if (mode === "download_only") {
-            // For download_only, we just finish successfully
+            // Info: (20260609 - Tzuhan) For download_only, we just finish successfully
             sendEvent({
               type: "log",
               message: "Downloads completed successfully.",
             });
-            sendEvent({ type: "complete" }); // no file attached for download_only
+            sendEvent({ type: "complete" }); // Info: (20260609 - Tzuhan) no file attached for download_only
           } else if (mode === "dpp_catalog_only") {
             sendEvent({
               type: "log",
@@ -440,7 +440,7 @@ export async function POST(req: NextRequest) {
               type: "log",
               message: "DPP Pipeline completed successfully.",
             });
-            sendEvent({ type: "complete" }); // UI 會自己決定預覽哪個檔案
+            sendEvent({ type: "complete" }); // Info: (20260609 - Tzuhan) UI 會自己決定預覽哪個檔案
           }
         } catch (err: unknown) {
           // Info: (20260609 - Tzuhan) 攔截執行錯誤
