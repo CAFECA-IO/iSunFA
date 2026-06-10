@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { mockReports } from "@/interfaces/business_monitor";
 import { IAIResponse } from "@/interfaces/business_monitor";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { jsonOk } from "@/lib/utils/response";
 
 /**
  * Info:(20260609 - Julian) 用於開發 Business Monitor 的 Mock API，之後會移除
@@ -105,12 +106,10 @@ ${query}
   const startIndex = (page - 1) * pageSize;
   const paginatedReports = filtered.slice(startIndex, startIndex + pageSize);
 
-  return NextResponse.json({
-    payload: {
-      reports: paginatedReports,
-      total,
-      totalPages,
-      ...(aiResponse && { aiResponse }),
-    },
+  return jsonOk({
+    reports: paginatedReports,
+    total,
+    totalPages,
+    ...(aiResponse && { aiResponse }),
   });
 }
