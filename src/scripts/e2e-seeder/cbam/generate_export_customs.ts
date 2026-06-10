@@ -26,9 +26,9 @@ export async function generateCustomsLogs(
   year: string = "2024",
 ) {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
-  const mockSourcesDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1", "mock_sources");
-  const ingestionDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1", "system_ingestion");
-  
+  const mockSourcesDir = path.join(dataDir, "outputs", "mock_sources");
+  const ingestionDir = path.join(dataDir, "outputs", "system_ingestion");
+
   if (!fs.existsSync(ingestionDir)) {
     fs.mkdirSync(ingestionDir, { recursive: true });
   }
@@ -147,9 +147,13 @@ if (
   fs.realpathSync(process.argv[1]) === fs.realpathSync(currentFilePath)
 ) {
   const stockId = process.argv[2];
+  const year = process.argv[3] || "2024";
   if (!stockId) {
     console.error("❌ 請提供股票代號");
     process.exit(1);
   }
-  generateCustomsLogs(stockId).catch(console.error);
+  generateCustomsLogs(stockId, year).catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
 }

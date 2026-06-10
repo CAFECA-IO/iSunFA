@@ -69,6 +69,13 @@ export const ADMIN_MODULES = [
 
 export const SYSTEM_MODULES = [
   {
+    id: "dpp_workspace",
+    icon: QrCode,
+    href: "/user/dpp-workspace",
+    labelKey: "features.items.digital_product_passport.title",
+    enable: true,
+  },
+  {
     id: "account_book",
     icon: Library,
     href: "/user/account_book",

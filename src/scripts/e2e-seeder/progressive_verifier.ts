@@ -162,91 +162,93 @@ function assertReportIntegrity(
     );
 }
 
-function generateDailyVouchers(dayIndex: number, startLineId: number): { vouchers: IVoucherLineUI[][], nextLineId: number } {
+function generateDailyVouchers(
+  dayIndex: number,
+  startLineId: number,
+): { vouchers: IVoucherLineUI[][]; nextLineId: number } {
   const vouchers: IVoucherLineUI[][] = [];
   let lineId = startLineId;
 
   if (dayIndex === 0) {
+    // Info: (20260601 - Tzuhan) 1. 開張股本注資 (1筆)
+    vouchers.push([
+      {
+        id: `l-${lineId++}`,
+        accountingCode: "1101", // Info: (20260601 - Tzuhan) 現金
+        accounting: mustGetAccount("1101"),
+        particular: "股東注資",
+        amount: "15000000", // Info: (20260601 - Tzuhan) 1500萬
+        isDebit: true,
+      },
+      {
+        id: `l-${lineId++}`,
+        accountingCode: "3110", // Info: (20260601 - Tzuhan) 普通股股本
+        accounting: mustGetAccount("3110"),
+        particular: "股東注資",
+        amount: "15000000",
+        isDebit: false,
+      },
+    ]);
 
-  // Info: (20260601 - Tzuhan) 1. 開張股本注資 (1筆)
-  vouchers.push([
-    {
-      id: `l-${lineId++}`,
-      accountingCode: "1101", // Info: (20260601 - Tzuhan) 現金
-      accounting: mustGetAccount("1101"),
-      particular: "股東注資",
-      amount: "15000000", // Info: (20260601 - Tzuhan) 1500萬
-      isDebit: true,
-    },
-    {
-      id: `l-${lineId++}`,
-      accountingCode: "3110", // Info: (20260601 - Tzuhan) 普通股股本
-      accounting: mustGetAccount("3110"),
-      particular: "股東注資",
-      amount: "15000000",
-      isDebit: false,
-    },
-  ]);
+    // Info: (20260601 - Tzuhan) 2. 向銀行短期借款 (1筆)
+    vouchers.push([
+      {
+        id: `l-${lineId++}`,
+        accountingCode: "1101",
+        accounting: mustGetAccount("1101"),
+        particular: "銀行短期借款",
+        amount: "5000000",
+        isDebit: true,
+      },
+      {
+        id: `l-${lineId++}`,
+        accountingCode: "2100", // Info: (20260601 - Tzuhan) 短期借款
+        accounting: mustGetAccount("2100"),
+        particular: "銀行短期借款",
+        amount: "5000000",
+        isDebit: false,
+      },
+    ]);
 
-  // Info: (20260601 - Tzuhan) 2. 向銀行短期借款 (1筆)
-  vouchers.push([
-    {
-      id: `l-${lineId++}`,
-      accountingCode: "1101",
-      accounting: mustGetAccount("1101"),
-      particular: "銀行短期借款",
-      amount: "5000000",
-      isDebit: true,
-    },
-    {
-      id: `l-${lineId++}`,
-      accountingCode: "2100", // Info: (20260601 - Tzuhan) 短期借款
-      accounting: mustGetAccount("2100"),
-      particular: "銀行短期借款",
-      amount: "5000000",
-      isDebit: false,
-    },
-  ]);
+    // Info: (20260601 - Tzuhan) 3. 預付一年租金 (1筆)
+    vouchers.push([
+      {
+        id: `l-${lineId++}`,
+        accountingCode: "1410", // Info: (20260601 - Tzuhan) 預付款項
+        accounting: mustGetAccount("1410"),
+        particular: "預付辦公室租金",
+        amount: "1200000",
+        isDebit: true,
+      },
+      {
+        id: `l-${lineId++}`,
+        accountingCode: "1101",
+        accounting: mustGetAccount("1101"),
+        particular: "支付預付租金",
+        amount: "1200000",
+        isDebit: false,
+      },
+    ]);
 
-  // Info: (20260601 - Tzuhan) 3. 預付一年租金 (1筆)
-  vouchers.push([
-    {
-      id: `l-${lineId++}`,
-      accountingCode: "1410", // Info: (20260601 - Tzuhan) 預付款項
-      accounting: mustGetAccount("1410"),
-      particular: "預付辦公室租金",
-      amount: "1200000",
-      isDebit: true,
-    },
-    {
-      id: `l-${lineId++}`,
-      accountingCode: "1101",
-      accounting: mustGetAccount("1101"),
-      particular: "支付預付租金",
-      amount: "1200000",
-      isDebit: false,
-    },
-  ]);
-
-  // Info: (20260601 - Tzuhan) 4. 購買設備 (1筆)
-  vouchers.push([
-    {
-      id: `l-${lineId++}`,
-      accountingCode: "1600", // Info: (20260601 - Tzuhan) 不動產廠房設備
-      accounting: mustGetAccount("1600"),
-      particular: "購入生產設備",
-      amount: "3000000",
-      isDebit: true,
-    },
-    {
-      id: `l-${lineId++}`,
-      accountingCode: "1101",
-      accounting: mustGetAccount("1101"),
-      particular: "支付設備款",
-      amount: "3000000",
-      isDebit: false,
-    },
-  ]);
+    // Info: (20260601 - Tzuhan) 4. 購買設備 (1筆)
+    vouchers.push([
+      {
+        id: `l-${lineId++}`,
+        accountingCode: "1600", // Info: (20260601 - Tzuhan) 不動產廠房設備
+        accounting: mustGetAccount("1600"),
+        particular: "購入生產設備",
+        amount: "3000000",
+        isDebit: true,
+      },
+      {
+        id: `l-${lineId++}`,
+        accountingCode: "1101",
+        accounting: mustGetAccount("1101"),
+        particular: "支付設備款",
+        amount: "3000000",
+        isDebit: false,
+      },
+    ]);
   }
 
   // Info: (20260601 - Tzuhan) 5. 模擬 146 筆單日交易 (包含進銷存、應收應付、薪資、各類費用)
@@ -436,13 +438,17 @@ async function runProgressiveVerification() {
   const stockId = args.length > 2 ? args[2] : "6642";
 
   if (isNaN(totalDays) || totalDays < 1) {
-    console.error("請輸入有效的天數 (例如 1, 30, 365)\nUsage: npx tsx progressive_verifier.ts <days> [year] [stockId]");
+    console.error(
+      "請輸入有效的天數 (例如 1, 30, 365)\nUsage: npx tsx progressive_verifier.ts <days> [year] [stockId]",
+    );
     process.exit(1);
   }
 
-  console.log(`🚀 [Progressive Verifier] 開始生成 ${stockId} (${year}) 共 ${totalDays} 天的測試憑證...`);
-  
-  const allVouchers: { lines: IVoucherLineUI[], dayIndex: number }[] = [];
+  console.log(
+    `🚀 [Progressive Verifier] 開始生成 ${stockId} (${year}) 共 ${totalDays} 天的測試憑證...`,
+  );
+
+  const allVouchers: { lines: IVoucherLineUI[]; dayIndex: number }[] = [];
   let currentLineId = 1;
 
   for (let day = 0; day < totalDays; day++) {
@@ -452,7 +458,7 @@ async function runProgressiveVerification() {
       allVouchers.push({ lines: v, dayIndex: day });
     }
   }
-  
+
   console.log(`✅ 成功生成 ${allVouchers.length} 張憑證。`);
 
   console.log("\n🔍 開始一張一張丟入系統並進行財報配平稽核...");
@@ -565,7 +571,7 @@ async function runProgressiveVerification() {
   // Info: (20260601 - Tzuhan) 匯出為 JSON，供 receipt_image_generator.ts 產出圖片
   const outDir = path.resolve(
     process.cwd(),
-    `data/${stockId}/${year}/inputs/simulated_data/e2e_roadmap-sprint1`,
+    `data/${stockId}/${year}/inputs/simulated_data/outputs`,
   );
   if (!fs.existsSync(outDir)) {
     fs.mkdirSync(outDir, { recursive: true });

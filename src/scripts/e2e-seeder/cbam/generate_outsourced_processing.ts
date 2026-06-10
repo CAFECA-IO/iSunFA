@@ -28,14 +28,18 @@ export async function generateOutsourcedLogs(
   year: string = "2024",
 ) {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
-  const ingestionDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1", "system_ingestion");
-  
+  const ingestionDir = path.join(dataDir, "outputs", "system_ingestion");
+
   if (!fs.existsSync(ingestionDir)) {
     fs.mkdirSync(ingestionDir, { recursive: true });
   }
 
   const mesFile = path.join(ingestionDir, "mes_work_orders.csv");
-  const personaFile = path.join(dataDir, "outputs", "e2e_roadmap-sprint1", `${stockId}_company_persona.json`);
+  const personaFile = path.join(
+    dataDir,
+    "outputs",
+    `${stockId}_company_persona.json`,
+  );
   const outFile = path.join(ingestionDir, "outsourced_processing_logs.csv");
 
   if (!fs.existsSync(mesFile) || !fs.existsSync(personaFile)) {
@@ -103,24 +107,37 @@ export async function generateOutsourcedLogs(
 
       // Info: (20260604 - Tzuhan) CBAM 嚴格物理校驗：電鍍會增加重量，不該減少！
       let totalOutputWeightKg = 0;
-      if (oProc.stepName.includes("表面處理") || oProc.stepName.includes("塗層") || oProc.stepName.includes("電鍍")) {
+      if (
+        oProc.stepName.includes("表面處理") ||
+        oProc.stepName.includes("塗層") ||
+        oProc.stepName.includes("電鍍")
+      ) {
         // Info: (20260604 - Tzuhan)電鍍通常增加 0.2% ~ 0.8% 的重量
         const gainRate = getRandomFloat(0.002, 0.008, 4);
-        totalOutputWeightKg = parseFloat((totalInputWeightKg * (1 + gainRate)).toFixed(2));
+        totalOutputWeightKg = parseFloat(
+          (totalInputWeightKg * (1 + gainRate)).toFixed(2),
+        );
       } else {
         const lossRate = oProc.lossRate || 0.005;
-        totalOutputWeightKg = parseFloat((totalInputWeightKg * (1 - lossRate)).toFixed(2));
+        totalOutputWeightKg = parseFloat(
+          (totalInputWeightKg * (1 - lossRate)).toFixed(2),
+        );
       }
-      
+
       // Info: (20260604 - Tzuhan) 模擬電鍍廠/熱處理廠回報的碳排數據 (CBAM 要求必須區分 Scope 1 與 Scope 2)
       let totalReportedCarbon = 0;
-      if (oProc.energyIntensity.includes("高")) totalReportedCarbon = getRandomFloat(2.5, 4.0) * totalOutputWeightKg;
+      if (oProc.energyIntensity.includes("高"))
+        totalReportedCarbon = getRandomFloat(2.5, 4.0) * totalOutputWeightKg;
       else totalReportedCarbon = getRandomFloat(0.5, 1.5) * totalOutputWeightKg;
 
       // Info: (20260604 - Tzuhan)熱處理與表面處理，Scope 2 (用電) 通常佔 60~80%
       const scope2Ratio = getRandomFloat(0.6, 0.8, 2);
-      const scope2Carbon = parseFloat((totalReportedCarbon * scope2Ratio).toFixed(2));
-      const scope1Carbon = parseFloat((totalReportedCarbon - scope2Carbon).toFixed(2));
+      const scope2Carbon = parseFloat(
+        (totalReportedCarbon * scope2Ratio).toFixed(2),
+      );
+      const scope1Carbon = parseFloat(
+        (totalReportedCarbon - scope2Carbon).toFixed(2),
+      );
 
       const poDate = new Date(woTimestamp);
       poDate.setDate(poDate.getDate() + getRandomInt(2, 7)); // Info: (20260604 - Tzuhan) 委外通常在成型後幾天進行
@@ -136,7 +153,9 @@ export async function generateOutsourcedLogs(
         OutputWeight_kg: totalOutputWeightKg,
         SupplierScope1_kgCO2e: scope1Carbon,
         SupplierScope2_kgCO2e: scope2Carbon,
-        ProcessingFee_NTD: Math.floor(totalInputWeightKg * getRandomFloat(10, 50)),
+        ProcessingFee_NTD: Math.floor(
+          totalInputWeightKg * getRandomFloat(3, 10),
+        ),
       });
     }
   }
@@ -161,9 +180,13 @@ if (
   fs.realpathSync(process.argv[1]) === fs.realpathSync(currentFilePath)
 ) {
   const stockId = process.argv[2];
+  const year = process.argv[3] || "2024";
   if (!stockId) {
     console.error("❌ 請提供股票代號");
     process.exit(1);
   }
-  generateOutsourcedLogs(stockId).catch(console.error);
+  generateOutsourcedLogs(stockId, year).catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
 }

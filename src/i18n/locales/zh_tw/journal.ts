@@ -7,7 +7,7 @@ export const journal = {
   summary: {
     empty: "目前沒有日記帳資料",
     today_count: "今日產生日記帳",
-    unit: "張",
+    unit: "-",
     pending: "待核對",
     ai_confidence: "AI 平均信心度",
   },

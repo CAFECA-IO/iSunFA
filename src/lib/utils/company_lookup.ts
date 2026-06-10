@@ -1,4 +1,5 @@
 import { fetchWithRetry } from "@/lib/utils/http_client";
+import { companyRepo } from "@/repositories/company.repo";
 
 export interface ICompanyData {
   taxId: string;
@@ -128,16 +129,25 @@ async function lookupByNameGCIS(name: string): Promise<ICompanyData[]> {
       encodeURIComponent(name);
     const res = await fetchWithRetry(url, {}, 3, 1000, 5000);
     if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        return data
-          .slice(0, 10)
-          .map(
-            (d: { Business_Accounting_NO: string; Company_Name: string }) => ({
-              taxId: d.Business_Accounting_NO,
-              name: d.Company_Name,
-            }),
-          );
+      const text = await res.text();
+      if (!text) return [];
+      try {
+        const data = JSON.parse(text);
+        if (Array.isArray(data) && data.length > 0) {
+          return data
+            .slice(0, 10)
+            .map(
+              (d: {
+                Business_Accounting_NO: string;
+                Company_Name: string;
+              }) => ({
+                taxId: d.Business_Accounting_NO,
+                name: d.Company_Name,
+              }),
+            );
+        }
+      } catch (parseError) {
+        console.error("GCIS JSON parse error:", parseError);
       }
     }
   } catch (e) {
@@ -150,7 +160,9 @@ export async function lookupCompany(query: string): Promise<ICompanyData[]> {
   const trimmed = query.trim();
   if (!trimmed) return [];
 
-  const cleanTrimmed = trimmed.replace(/(股份有限公司|有限公司|公司)$/, "");
+  // Info: (20260609 - Tzuhan) 移除 UI 帶入的括號與數字 e.g. " (2066)"
+  let cleanTrimmed = trimmed.replace(/\s*[（\(]\d+[）\)]\s*$/, "");
+  cleanTrimmed = cleanTrimmed.replace(/(股份有限公司|有限公司|公司)$/, "");
 
   // Info: (20260320 - Tzuhan) 1. Check exact abbreviation or generic substring match
   const abbrResults = lookupByAbbreviation(cleanTrimmed);
@@ -163,12 +175,33 @@ export async function lookupCompany(query: string): Promise<ICompanyData[]> {
     return await lookupByTaxId(cleanTrimmed);
   }
 
-  // Info: (20260320 - Tzuhan) 3. Fallback 1: DuckDuckGo Semantic Search
+  // Info: (20260320 - Tzuhan) 3. Local DB search (Fastest & most reliable for TWSE/TPEx)
+  // 如果原始 query 有附帶 "(2066)"，就直接嘗試擷取出代碼作為條件
+  const idMatch = trimmed.match(/[（\(](\d+)[）\)]/);
+  const possibleId = idMatch ? idMatch[1] : cleanTrimmed;
+
+  const dbResults = await companyRepo.findMany({
+    where: {
+      OR: [
+        { stockId: { contains: possibleId } },
+        { stockId: { contains: cleanTrimmed } },
+        { name: { contains: cleanTrimmed } },
+        { name: { contains: trimmed } },
+      ],
+    },
+    take: 5,
+  });
+
+  if (dbResults.length > 0) {
+    return dbResults.map((c) => ({ taxId: c.stockId, name: c.name }));
+  }
+
+  // Info: (20260320 - Tzuhan) 4. Fallback 1: DuckDuckGo Semantic Search
   const ddgResults = await lookupByDuckDuckGo(cleanTrimmed);
   if (ddgResults.length > 0) {
     return ddgResults;
   }
 
-  // Info: (20260320 - Tzuhan) 4. Fallback 2: Strict GCIS Name Lookup
+  // Info: (20260320 - Tzuhan) 5. Fallback 2: Strict GCIS Name Lookup
   return await lookupByNameGCIS(cleanTrimmed);
 }

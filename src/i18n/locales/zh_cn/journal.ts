@@ -7,7 +7,7 @@ export const journal = {
   summary: {
     empty: "目前没有日记账资料",
     today_count: "今日产生日记账",
-    unit: "张",
+    unit: "-",
     pending: "待核对",
     ai_confidence: "AI 平均信心度",
   },
