@@ -90,14 +90,12 @@ export const generateEsgRecords = (stockId: string) => {
   const cachePath = path.join(
     dataDir,
     "outputs",
-    "e2e_roadmap-sprint1",
     "ai_extracted_context_cache.json",
   );
   const vouchersPath = path.join(
     dataDir,
     "inputs",
     "simulated_data",
-    "e2e_roadmap-sprint1",
     "simulated_vouchers.json",
   );
 

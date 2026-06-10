@@ -8,6 +8,7 @@ export const SystemAccountNodes = {
   CURRENT_ASSETS_ROOT: "11XX",
   NON_CURRENT_ASSETS_ROOT: "15XX",
   CASH_ROOT: "1100",
+  CASH_EQUIVALENTS: "1101",
   ACCOUNTS_RECEIVABLE_ROOT: "1170",
   INVENTORY_ROOT: "130X",
   PREPAYMENTS_ROOT: "1410",
@@ -19,6 +20,7 @@ export const SystemAccountNodes = {
   LIABILITIES_ROOT: "2XXX",
   CURRENT_LIABILITIES_ROOT: "21XX",
   SHORT_TERM_BORROWINGS: "2100",
+  ACCOUNTS_PAYABLE_ROOT: "2170",
   UNEARNED_REVENUE_ROOT: "2310",
   NON_CURRENT_LIABILITIES_ROOT: "25XX",
 
@@ -31,6 +33,7 @@ export const SystemAccountNodes = {
   // Info: (20260520 - Tzuhan) --- 損益表與現金流量表錨點 ---
   INCOME_ROOT: "4000", // Info: (20260520 - Tzuhan) 營業收入
   COST_ROOT: "5000", // Info: (20260520 - Tzuhan) 營業成本
+  COGS_ROOT: "5111", // Info: (20260605 - Tzuhan) 銷貨成本
   EXPENSE_ROOT: "6000", // Info: (20260520 - Tzuhan) 營業費用
   NON_OP_INCOME_ROOT: "7000", // Info: (20260520 - Tzuhan) 營業外收支
   DISPOSAL_GAIN_ROOT: "7140", // Info: (20260525 - Tzuhan) 處分資產利益

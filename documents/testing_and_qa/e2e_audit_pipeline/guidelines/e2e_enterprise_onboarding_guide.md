@@ -18,7 +18,7 @@ data/[stock_id]/[year]/
 │   │   ├── [year]_FIN_REPORT.pdf    (3) 真實財務報告書 PDF
 │   │   └── [year]_ESG_REPORT.pdf    (4) 真實永續報告書 PDF
 │   └── simulated_data/
-│       └── e2e_roadmap-sprint1/
+│       └── 
 │           ├── simulated_vouchers.json (5) 逆推產出的標準答案憑證
 │           └── receipts/               (6) 依據憑證畫出的實體 SVG/PNG 圖檔
 └── outputs/
@@ -40,7 +40,7 @@ data/[stock_id]/[year]/
    - 依據 Golden Data 逆推出來的模擬傳票 JSON 與對應的實體憑證影像。
 
 #### Outputs (歷史紀錄與開發成果)
-*   **`outputs/` 目錄**：裡面不同的資料夾代表的是我們**不同階段開發的結果與歷史紀錄**（例如：`phase4_vision_test/`、`e2e_roadmap-sprint1/` 等）。如果有些公司尚未進行到特定階段，不用刻意加入或補齊這些歷史資料夾。
+*   **`outputs/` 目錄**：存放 E2E 系統各階段萃取與生成出來的最終報告、快取資料與數位護照等結果檔案。
 *   **(7) `ai_extracted_context_cache.json`**：AI 模型從 PDF 抽取的供應商、客戶比例與關鍵資訊快取。
 *   **(8) `audit_variance_report.json`**：最終端到端跑完後，系統產出的財報對齊度分析與差異報表。
 
@@ -82,13 +82,13 @@ npx tsx src/scripts/e2e-seeder/fast_verify.ts [stock_id]
 
 ## 🏗️ 真實財報逆向工程引擎 (Financial Reverse Engineer)
 
-如果您想要針對特定公司（如 `6642`），完美地將其真實財報的宏觀數字（如年度總營收、總成本）逆向打碎成上萬張具備真實日期、多樣化科目的模擬傳票，並確保最終加總 **100% 完美吻合 Golden Data**，請使用這支腳本：
+如果您想要針對特定公司（如 `2066`），完美地將其真實財報的宏觀數字（如年度總營收、總成本）逆向打碎成上萬張具備真實日期、多樣化科目的模擬傳票，並確保最終加總 **100% 完美吻合 Golden Data**，請使用這支腳本：
 
 ```bash
 npx tsx src/scripts/e2e-seeder/financial_reverse_engineer.ts [stock_id] [target_voucher_count]
 ```
 
-- **[stock_id]**: 股票代號（例如 `6642`）。
+- **[stock_id]**: 股票代號（例如 `2066`）。
 - **[target_voucher_count]** *(Optional)*: 期望生成的傳票總數。
   - 若**不指定**，系統會啟動「動態體積計算引擎 (Dynamic Volume Scaling)」，依據該公司的營業額大小自動推算最合理的憑證數量（每 100 萬營收產出 10 張，預設最高上限為 55,000 張，精準對齊每日約 150 張的企業體量）。
   - 若**指定數字**（例如 `5000`），系統會強制以此總量來切分財報，適合開發初期的輕量化快速驗證。
@@ -107,7 +107,7 @@ npx tsx src/scripts/e2e-seeder/progressive_verifier.ts [days] [year] [stock_id]
 
 - **[days]**: 模擬的天數（如 `365` 代表一整年，會自動產生 5 萬多筆虛擬資料）。
 - **[year]**: 財報年份（預設 `2024`）。資料將輸出至 `data/[stock_id]/[year]/...`。
-- **[stock_id]**: 股票代號（預設 `6642`）。
+- **[stock_id]**: 股票代號（預設 `2066`）。
 
 這支腳本會在每一筆憑證寫入時，嚴格斷言當下的三大表（BS, IS, CF）恆等式 (A = L + E)。
 

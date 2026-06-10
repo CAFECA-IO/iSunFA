@@ -10,9 +10,10 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 export async function generateDppCompliance(
   stockId: string,
   year: string = "2024",
+  targetProductId?: string,
 ) {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
-  const baseDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1");
+  const baseDir = path.join(dataDir, "outputs");
   const mockSourcesDir = path.join(baseDir, "mock_sources");
   const personaFile = path.join(baseDir, `${stockId}_company_persona.json`);
 
@@ -28,14 +29,27 @@ export async function generateDppCompliance(
 
   const bomFile = path.join(mockSourcesDir, "boms_and_precursors.json");
   if (!fs.existsSync(bomFile)) {
-    console.error(`❌ 找不到 BOM 檔案: ${bomFile}。請先執行 generate_bom_precursors.ts`);
+    console.error(
+      `❌ 找不到 BOM 檔案: ${bomFile}。請先執行 generate_bom_precursors.ts`,
+    );
     process.exit(1);
   }
   const bomRaw = fs.readFileSync(bomFile, "utf-8");
   const bomData = JSON.parse(bomRaw);
-  const products: IProductBom[] = bomData.products;
+  let products: IProductBom[] = bomData.products;
 
-  console.log(`🚀 [DPP Compliance Generator] 開始為 ${stockId} 的 ${products.length} 項產品產生 SKU 級別法規無使用宣告書...`);
+  if (targetProductId) {
+    products = products.filter((p) => p.productId === targetProductId);
+  }
+
+  if (products.length === 0) {
+    console.warn(`⚠️ [DPP Compliance Generator] 找不到符合的產品，略過生成。`);
+    return;
+  }
+
+  console.log(
+    `🚀 [DPP Compliance Generator] 開始為 ${stockId} 的 ${products.length} 項產品產生 SKU 級別法規無使用宣告書...`,
+  );
 
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
   const model = genAI.getGenerativeModel({
@@ -58,13 +72,25 @@ export async function generateDppCompliance(
   for (const product of products) {
     const productId = product.productId;
     const productMockDir = path.join(baseDir, productId, "mock_sources");
-    const productIngestionDir = path.join(baseDir, productId, "system_ingestion");
-    
-    if (!fs.existsSync(productMockDir)) fs.mkdirSync(productMockDir, { recursive: true });
-    if (!fs.existsSync(productIngestionDir)) fs.mkdirSync(productIngestionDir, { recursive: true });
+    const productIngestionDir = path.join(
+      baseDir,
+      productId,
+      "system_ingestion",
+    );
 
-    const mdOutFile = path.join(productMockDir, `${productId}_dpp_compliance_declaration.md`);
-    const pdfOutFile = path.join(productIngestionDir, `${productId}_dpp_compliance_declaration.pdf`);
+    if (!fs.existsSync(productMockDir))
+      fs.mkdirSync(productMockDir, { recursive: true });
+    if (!fs.existsSync(productIngestionDir))
+      fs.mkdirSync(productIngestionDir, { recursive: true });
+
+    const mdOutFile = path.join(
+      productMockDir,
+      `${productId}_dpp_compliance_declaration.md`,
+    );
+    const pdfOutFile = path.join(
+      productIngestionDir,
+      `${productId}_dpp_compliance_declaration.pdf`,
+    );
 
     const prompt = `你現在是「${companyName}」的法規與永續合規長 (Chief Compliance Officer)。
 公司基本資料：
@@ -105,7 +131,7 @@ export async function generateDppCompliance(
       mdContent = result.response.text();
     } catch (error) {
       console.warn(`⚠️ [${productId}] API Error, retrying after 3s...`, error);
-      await new Promise(r => setTimeout(r, 3000));
+      await new Promise((r) => setTimeout(r, 3000));
       const result = await model.generateContent(prompt);
       mdContent = result.response.text();
     }
@@ -115,16 +141,24 @@ export async function generateDppCompliance(
       .replace(/```\s*$/s, "")
       .trim();
 
-    const blueprintPath = path.resolve(process.cwd(), `data/${stockId}/${year}/outputs/e2e_roadmap-sprint1/fastener_blueprint.png`);
+    const blueprintPath = path.resolve(
+      process.cwd(),
+      `data/${stockId}/${year}/outputs/${productId}/mock_sources/fastener_blueprint.png`,
+    );
     if (fs.existsSync(blueprintPath)) {
       const base64Image = fs.readFileSync(blueprintPath).toString("base64");
       const dataUri = `data:image/png;base64,${base64Image}`;
       const imgMarkdown = `\n\n<img src="${dataUri}" alt="Mechanical Layout" width="500" />\n\n*(Above: Engineering Mechanical Blueprint, provided in lieu of circuit diagrams as this product is non-electronic)*\n\n`;
-      mdContent = mdContent.replace("## 6.1 Repair & Teardown Guidelines", "## 6.1 Repair & Teardown Guidelines" + imgMarkdown);
+      mdContent = mdContent.replace(
+        "## 6.1 Repair & Teardown Guidelines",
+        "## 6.1 Repair & Teardown Guidelines" + imgMarkdown,
+      );
     }
 
     fs.writeFileSync(mdOutFile, mdContent, "utf-8");
-    console.log(`📝 [SUCCESS] [${productId}] Markdown 宣告信已產生：${mdOutFile}`);
+    console.log(
+      `📝 [SUCCESS] [${productId}] Markdown 宣告信已產生：${mdOutFile}`,
+    );
 
     console.log(`⏳ [${productId}] 正在轉檔為 PDF...`);
     try {
@@ -134,12 +168,19 @@ export async function generateDppCompliance(
           dest: pdfOutFile,
           pdf_options: {
             format: "A4",
-            margin: { top: "20mm", right: "20mm", bottom: "20mm", left: "20mm" },
+            margin: {
+              top: "20mm",
+              right: "20mm",
+              bottom: "20mm",
+              left: "20mm",
+            },
             printBackground: true,
           },
         },
       );
-      console.log(`📄 [SUCCESS] [${productId}] PDF 宣告信已成功匯出：${pdfOutFile}`);
+      console.log(
+        `📄 [SUCCESS] [${productId}] PDF 宣告信已成功匯出：${pdfOutFile}`,
+      );
     } catch (error) {
       console.error(`❌ [${productId}] PDF 轉檔失敗:`, error);
     }
@@ -159,5 +200,22 @@ if (
     );
     process.exit(1);
   }
-  generateDppCompliance(stockId).catch(console.error);
+  let productId: string | undefined;
+  if (
+    process.argv.length > 3 &&
+    process.argv[3] &&
+    !process.argv[3].startsWith("--")
+  ) {
+    // legacy compat
+  }
+  if (process.argv.length > 4 && process.argv[4].startsWith("--productId=")) {
+    productId = process.argv[4].split("=")[1];
+  }
+
+  const year =
+    process.argv[3] && !process.argv[3].startsWith("--")
+      ? process.argv[3]
+      : "2024";
+
+  generateDppCompliance(stockId, year, productId).catch(console.error);
 }

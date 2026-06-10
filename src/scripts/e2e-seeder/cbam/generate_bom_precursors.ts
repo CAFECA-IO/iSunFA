@@ -181,10 +181,9 @@ export async function generateBOMAndPrecursors(
   const personaFile = path.join(
     dataDir,
     "outputs",
-    "e2e_roadmap-sprint1",
     `${stockId}_company_persona.json`,
   );
-  const mockSourcesDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1", "mock_sources");
+  const mockSourcesDir = path.join(dataDir, "outputs", "mock_sources");
 
   if (!fs.existsSync(mockSourcesDir)) {
     fs.mkdirSync(mockSourcesDir, { recursive: true });
@@ -250,11 +249,15 @@ if (
   fs.realpathSync(process.argv[1]) === fs.realpathSync(currentFilePath)
 ) {
   const stockId = process.argv[2];
+  const year = process.argv[3] || "2024";
   if (!stockId) {
     console.error(
       "❌ 請提供股票代號，例如: npx tsx src/scripts/e2e-seeder/cbam/generate_bom_precursors.ts 2066",
     );
     process.exit(1);
   }
-  generateBOMAndPrecursors(stockId).catch(console.error);
+  generateBOMAndPrecursors(stockId, year).catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
 }

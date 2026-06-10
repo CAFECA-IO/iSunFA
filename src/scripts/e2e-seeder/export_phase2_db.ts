@@ -4,12 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export const exportPhase2Db = async (stockId: string) => {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/2024`);
-  const outDir = path.join(
-    dataDir,
-    "inputs",
-    "simulated_data",
-    "e2e_roadmap-sprint1",
-  );
+  const outDir = path.join(dataDir, "inputs", "simulated_data");
   const dumpPath = path.join(outDir, "db_dump_vouchers.json");
 
   console.log(`\n======================================================`);

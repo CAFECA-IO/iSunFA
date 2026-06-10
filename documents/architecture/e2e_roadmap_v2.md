@@ -42,7 +42,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 我們全面重構開發邏輯，採行「逆向推進路線：先求數學絕對精準 ➡️ 再測商業邏輯異常 ➡️ 最後挑戰視覺極限與合規深水區」。
 
 ### 🚨 當前待辦與優先度總表 (Priority To-Do List)
-為確保 6642 5.4萬筆 PoC 順利通關且系統不崩潰，全隊目前必須嚴格遵守以下執行優先度（包含 ADR 004, 005, 006, 007 的落地實作）：
+為確保 2066 5.4萬筆 PoC 順利通關且系統不崩潰，全隊目前必須嚴格遵守以下執行優先度（包含 ADR 004, 005, 006, 007 的落地實作）：
 
 **🔥 [Priority 1: Sprint 1 基礎防線補齊 (ADR 004)]**
 - ✅ **Done: [Tzuhan] Voucher 財務防護 - 語意標籤與多國映射**: 實作 `UniversalAccountTag` 與後端 `SemanticAccountMatcher`。
@@ -52,7 +52,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - ✅ **Done: [Tzuhan] 零信任會計稽核防線 (Zero-Trust Audit Defense)**: 於 Schema 實作 `isVerified` 與 `generationSource`，確保所有 AI 產生的憑證明細在人類覆核前皆保持未驗證狀態，建立 CPA 等級的資料血緣溯源 (ADR 007)。
 
 **🔥 [Priority 2: 邊界壓力測試 (可與 P1 並行)]**
-- 🚧 **WIP: [Julian] 6642 5.4萬筆大數據批次注入 (6642 Batch Seeding)**: 確保巨量資料進入 DB。注意：灌完即停手，嚴禁讀取報表。
+- 🚧 **WIP: [Julian] 2066 5.4萬筆大數據批次注入 (2066 Batch Seeding)**: 確保巨量資料進入 DB。注意：灌完即停手，嚴禁讀取報表。
 
 **🔥 [Priority 3: Sprint 2 效能拆彈與總驗收 (OOM Defense)]**
 - ⚠️ **Pending: [Tzuhan] 報表快照與期初餘額 (Snapshots & Opening Balance)**: 建立 Snapshot 表格避免重複計算。
@@ -194,11 +194,11 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 3. **合規混沌工程 (Compliance Chaos Engineering)**
    開發後期定期舉辦破壞性演練。模擬 DBA 刪除資料，驗證 Hash Chain 斷裂警報；模擬 AI 幻覺攻擊，驗證內控的凍結機制。
 
-4. **6642 中小企業實兵演練 (6642 Enterprise PoC)**
-   為證明系統能 100% 攔截漂綠與作假，並貼近 Big 4 查帳員對「業務邏輯多樣性」及「例外隔離機制」的絕對要求，我們正式捨棄單純追求巨量吞吐的虛榮指標 (台積電 780 萬筆專案)，改以 6642 為標竿，展開專注於「絕對防禦深度」的四階段精準打擊演練。
-   [👉 詳見 6642 旗艦級 ESG 擬真數據 PoC 實作戰略](../testing_and_qa/e2e_audit_pipeline/6642_poc_blueprint.md)
+4. **2066 中小企業實兵演練 (2066 Enterprise PoC)**
+   為證明系統能 100% 攔截漂綠與作假，並貼近 Big 4 查帳員對「業務邏輯多樣性」及「例外隔離機制」的絕對要求，我們正式捨棄單純追求巨量吞吐的虛榮指標 (台積電 780 萬筆專案)，改以 2066 為標竿，展開專注於「絕對防禦深度」的四階段精準打擊演練。
+   [👉 詳見 2066 旗艦級 ESG 擬真數據 PoC 實作戰略](../testing_and_qa/e2e_audit_pipeline/2066_poc_blueprint.md)
    
-   **[6642 PoC 演練四階段時序]**
+   **[2066 PoC 演練四階段時序]**
    為了循序漸進驗證系統極限，我們嚴格定義以下實兵演練階段：
    - **階段一：微型契約與實質查核 (Task 1 & 2)**
      - **任務**：不追求量，只求「零捏造」的絕對真理。透過 3 張傳票建立 Ground Truth 逆推管線，徒手完成三表勾稽與 AI CPA 漏洞盲測。這決定了系統資料庫 Schema 的底線。

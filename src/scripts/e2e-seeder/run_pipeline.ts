@@ -7,16 +7,17 @@ import { runCrossValidation } from "@/scripts/e2e-seeder/cross_validator";
 
 export const runPipeline = async (
   stockId: string,
+  year: string = "2024",
   shouldClean: boolean = false,
   skipImages: boolean = false,
 ) => {
   console.log(
-    `\n🚀 [START] Running Full E2E Seeder Pipeline for Stock ID: ${stockId}`,
+    `\n🚀 [START] Running Full E2E Seeder Pipeline for Stock ID: ${stockId} (Year: ${year})`,
   );
 
   try {
-    console.log("\n[1/6] Running AI Vision Extractor...");
-    await extractContextFromPdf(stockId);
+    console.log(`\n[1/6] Running AI Vision Extractor for ${year}...`);
+    await extractContextFromPdf(stockId, year);
 
     console.log("\n[2/6] Running Financial Reverse Engineer...");
     generateFinancialVouchers(stockId);
@@ -54,13 +55,20 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const targetStock = process.argv[2];
   const shouldClean = process.argv.includes("--clean");
   const skipImages = process.argv.includes("--skip-images");
+
+  let targetYear = "2024";
+  const yearArg = process.argv.find((a) => a.startsWith("--year="));
+  if (yearArg) {
+    targetYear = yearArg.split("=")[1];
+  }
+
   if (!targetStock || targetStock.startsWith("--")) {
     console.error(
-      "Please provide a stock ID. Usage: tsx run_pipeline.ts <stockId> [--clean] [--skip-images]",
+      "Please provide a stock ID. Usage: tsx run_pipeline.ts <stockId> [--clean] [--skip-images] [--year=2025]",
     );
     process.exit(1);
   }
-  runPipeline(targetStock, shouldClean, skipImages).catch(() =>
+  runPipeline(targetStock, targetYear, shouldClean, skipImages).catch(() =>
     process.exit(1),
   );
 }

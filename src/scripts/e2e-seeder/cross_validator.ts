@@ -401,12 +401,7 @@ export const runCrossValidation = async (stockId: string) => {
   report.score = Math.round((passedCount / tests.length) * 100);
   report.overallStatus = report.score === 100 ? "PASSED" : "FAILED";
 
-  const outPath = path.join(
-    dataDir,
-    "outputs",
-    "e2e_roadmap-sprint1",
-    "audit_variance_report.json",
-  );
+  const outPath = path.join(dataDir, "outputs", "audit_variance_report.json");
   fs.writeFileSync(outPath, JSON.stringify(report, null, 2), "utf-8");
 
   console.log(`\n📊 [FINANCIAL VARIANCE REPORT]`);
