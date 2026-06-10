@@ -76,9 +76,10 @@ export const ANALYSIS_ADDON_COSTS = {
 } as const;
 
 export const ENTERPRISE_PLAN_PRICE = {
-  MACHINE: 10200 * 1.05,
-  USER: 100 * 1.05,
-  MODULE: 2000 * 1.05,
+  MACHINE: 10000 * 1.05 * 12,
+  USER: 100 * 1.05 * 12,
+  MODULE: 2000 * 1.05 * 12,
+  UPDATE: 3000 * 1.05 * 12,
 } as const;
 
 export const SUBSCRIPTION_PLAN_PRICE = {

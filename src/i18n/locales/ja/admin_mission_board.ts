@@ -102,6 +102,11 @@ export const adminMissionBoard = {
       instruction_placeholder:
         "例：四半期ごとの収益成長率をテーブルで表示してください...",
       generate: "レポートを生成",
+      upload_file: "ファイルをアップロード",
+      invalid_file_type:
+        "ファイル形式が無効です。.txt、.csv、または .json をアップロードしてください。",
+      file_too_large: "ファイルサイズが4MBの制限を超えています。",
+      drag_drop_hint: "ここにファイルをドロップしてテキストを抽出...",
     },
   },
   gc: {

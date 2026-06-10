@@ -58,6 +58,7 @@ import { salaryCalculator } from "@/i18n/locales/zh_tw/salary_calculator";
 import { adminCoupon } from "@/i18n/locales/zh_tw/admin_coupon";
 import { userCoupon } from "@/i18n/locales/zh_tw/user_coupon";
 import { adminCarbonEmissionDatabase } from "@/i18n/locales/zh_tw/admin_carbon_emission_database";
+import { businessMonitor } from "@/i18n/locales/zh_tw/business_monitor";
 
 export const zhTw = {
   digital_product_passport: digitalProductPassport,
@@ -121,6 +122,7 @@ export const zhTw = {
   admin_coupon: adminCoupon,
   user_coupon: userCoupon,
   admin_carbon_emission_database: adminCarbonEmissionDatabase,
+  business_monitor: businessMonitor,
 } as const;
 
 export type BaseTranslation = typeof zhTw;
