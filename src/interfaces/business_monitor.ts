@@ -35,7 +35,7 @@ export interface IMockReport {
 
 export interface IReportDetailPayload {
   report: IMockReport;
-  historicalReports: IMockReport[];
+  companyReports: IMockReport[];
   industryReports: IMockReport[];
 }
 

@@ -53,7 +53,7 @@ const ReportDetailPageBody = () => {
   }, [reportId]);
 
   const report = payload?.report;
-  const historicalReports = payload?.historicalReports || [];
+  const companyReports = payload?.companyReports || [];
   const industryReports = payload?.industryReports || [];
 
   const handleDownload = (targetReport: IMockReport) => {
@@ -123,7 +123,7 @@ const ReportDetailPageBody = () => {
                     className="flex items-center gap-2 rounded-lg bg-orange-600 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-orange-700 focus:outline-none"
                   >
                     <CloudDownload size={18} />
-                    下載 {report.reportYear} 報告書
+                    下載 {report.title}
                   </button>
                   <button
                     type="button"
@@ -236,20 +236,22 @@ const ReportDetailPageBody = () => {
               </div>
             </div>
 
-            {/* Info: (20260610 - Julian) Section 2: 歷年報告書 */}
-            {historicalReports.length > 0 && (
+            {/* Info: (20260610 - Julian) Section 2: 本企業所有報告書 */}
+            {companyReports.length > 0 && (
               <div className="flex flex-col gap-4">
-                <h3 className="text-lg font-bold text-slate-800">歷年報告書</h3>
+                <h3 className="text-lg font-bold text-slate-800">
+                  本企業所有報告書
+                </h3>
                 <div className="flex flex-wrap items-center gap-3">
-                  {historicalReports.map((histReport) => (
+                  {companyReports.map((compReport) => (
                     <button
-                      key={histReport.id}
+                      key={compReport.id}
                       type="button"
-                      onClick={() => handleDownload(histReport)}
+                      onClick={() => handleDownload(compReport)}
                       className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-600 transition-colors hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600 focus:outline-none"
                     >
                       <CloudDownload size={16} />
-                      下載 {histReport.reportYear}
+                      下載 {compReport.title}
                     </button>
                   ))}
                 </div>
