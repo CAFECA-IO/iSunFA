@@ -28,14 +28,14 @@ export async function generateOutsourcedLogs(
   year: string = "2024",
 ) {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
-  const ingestionDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1", "system_ingestion");
+  const ingestionDir = path.join(dataDir, "outputs", "system_ingestion");
   
   if (!fs.existsSync(ingestionDir)) {
     fs.mkdirSync(ingestionDir, { recursive: true });
   }
 
   const mesFile = path.join(ingestionDir, "mes_work_orders.csv");
-  const personaFile = path.join(dataDir, "outputs", "e2e_roadmap-sprint1", `${stockId}_company_persona.json`);
+  const personaFile = path.join(dataDir, "outputs", `${stockId}_company_persona.json`);
   const outFile = path.join(ingestionDir, "outsourced_processing_logs.csv");
 
   if (!fs.existsSync(mesFile) || !fs.existsSync(personaFile)) {

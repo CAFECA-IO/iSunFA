@@ -370,7 +370,6 @@ export const generateReceiptImages = async (stockId: string, year: string = "202
     dataDir,
     "inputs",
     "simulated_data",
-    "e2e_roadmap-sprint1",
     "simulated_vouchers.json",
   );
 
@@ -378,7 +377,6 @@ export const generateReceiptImages = async (stockId: string, year: string = "202
     dataDir,
     "inputs",
     "simulated_data",
-    "e2e_roadmap-sprint1",
     "receipts",
   );
 

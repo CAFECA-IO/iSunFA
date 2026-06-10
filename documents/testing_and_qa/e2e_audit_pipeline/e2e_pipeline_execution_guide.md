@@ -58,6 +58,14 @@ npx tsx src/scripts/e2e-seeder/dpp/generate_product_specs.ts 2066 2024
 # 3. 執行聚合運算，產出三大核心產品的 DPP Ground Truth JSON
 npx tsx src/scripts/e2e-seeder/dpp/generate_dpp_ground_truth.ts 2066 2024
 
+# 生成委外加工資訊 (視需求可選)
+npx tsx src/scripts/e2e-seeder/cbam/generate_outsourced_processing.ts 2066 2025
+
+# 生成出口海關報單與物流資訊
+npx tsx src/scripts/e2e-seeder/cbam/generate_export_customs.ts 2066 2025
+
+# 生成 DPP 合規宣告信
+npx tsx src/scripts/e2e-seeder/dpp/generate_dpp_compliance.ts 2066 2025
 # 4. 將 Ground Truth JSON 無縫套版，渲染出最終的視覺化 PDF (DPP 證書)
 npx tsx src/scripts/e2e-seeder/dpp/render_dpp_pdf.ts 2066 2024
 ```
@@ -101,7 +109,7 @@ npx tsx src/scripts/e2e-seeder/cbam/cbam_generator.ts 2066 2024
 ---
 
 🎉 **大功告成！**
-完成以上步驟後，您就可以在 `data/2066/2024/outputs/e2e_roadmap-sprint1/` 中找到：
+完成以上步驟後，您就可以在 `data/2066/2024/outputs/` 中找到：
 1. 三大核心產品的精美 PDF 數位產品護照 (DPP)
 2. 數萬筆與實體綁定的完美總帳傳票 (`simulated_vouchers.json`)
 3. 基於傳票金額反推而成的防漂綠 CBAM 勾稽報告

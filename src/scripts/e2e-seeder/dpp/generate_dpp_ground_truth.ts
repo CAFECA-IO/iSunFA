@@ -222,7 +222,7 @@ export async function generateDppGroundTruth(
   year: string = "2024",
 ) {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}/outputs`);
-  const baseDir = path.join(dataDir, "e2e_roadmap-sprint1");
+  const baseDir = path.join(dataDir);
   const mockSourcesDir = path.join(baseDir, "mock_sources");
 
   // Info: (20260604 - Tzuhan) 讀取所有來源資料

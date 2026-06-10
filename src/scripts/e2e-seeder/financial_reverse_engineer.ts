@@ -237,7 +237,6 @@ export const generateFinancialVouchers = (stockId: string, targetVoucherCount?: 
   const cachePath = path.join(
     dataDir,
     "outputs",
-    "e2e_roadmap-sprint1",
     "ai_extracted_context_cache.json",
   );
 
@@ -534,7 +533,6 @@ export const generateFinancialVouchers = (stockId: string, targetVoucherCount?: 
     dataDir,
     "inputs",
     "simulated_data",
-    "e2e_roadmap-sprint1",
     "simulated_vouchers.json",
   );
   fs.mkdirSync(path.dirname(outPath), { recursive: true });

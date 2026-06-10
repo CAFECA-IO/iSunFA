@@ -404,7 +404,6 @@ export const runCrossValidation = async (stockId: string) => {
   const outPath = path.join(
     dataDir,
     "outputs",
-    "e2e_roadmap-sprint1",
     "audit_variance_report.json",
   );
   fs.writeFileSync(outPath, JSON.stringify(report, null, 2), "utf-8");

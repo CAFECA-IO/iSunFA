@@ -12,7 +12,7 @@ export async function generateDppCompliance(
   year: string = "2024",
 ) {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
-  const baseDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1");
+  const baseDir = path.join(dataDir, "outputs");
   const mockSourcesDir = path.join(baseDir, "mock_sources");
   const personaFile = path.join(baseDir, `${stockId}_company_persona.json`);
 
@@ -115,7 +115,7 @@ export async function generateDppCompliance(
       .replace(/```\s*$/s, "")
       .trim();
 
-    const blueprintPath = path.resolve(process.cwd(), `data/${stockId}/${year}/outputs/e2e_roadmap-sprint1/fastener_blueprint.png`);
+    const blueprintPath = path.resolve(process.cwd(), `data/${stockId}/${year}/outputs/fastener_blueprint.png`);
     if (fs.existsSync(blueprintPath)) {
       const base64Image = fs.readFileSync(blueprintPath).toString("base64");
       const dataUri = `data:image/png;base64,${base64Image}`;

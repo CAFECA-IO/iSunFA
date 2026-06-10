@@ -177,7 +177,7 @@ async function generateContentWithRetry(
 
 export async function generatePersona(stockId: string, year: string = "2024") {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
-  const cacheDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1");
+  const cacheDir = path.join(dataDir, "outputs");
   const outFile = path.join(cacheDir, `${stockId}_company_persona.json`);
   const contextCacheFile = path.join(
     cacheDir,

@@ -206,12 +206,11 @@ export const runChronologicalEngine = (
   const personaPath = path.join(
     dataDir,
     "outputs",
-    "e2e_roadmap-sprint1",
     `${stockId}_company_persona.json`,
   );
 
-  const ingestionDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1", "system_ingestion");
-  const mockSourcesDir = path.join(dataDir, "outputs", "e2e_roadmap-sprint1", "mock_sources");
+  const ingestionDir = path.join(dataDir, "outputs", "system_ingestion");
+  const mockSourcesDir = path.join(dataDir, "outputs", "mock_sources");
   const mesPath = path.join(ingestionDir, "mes_work_orders.csv");
   const outsourcedPath = path.join(ingestionDir, "outsourced_processing_logs.csv");
   const bomPath = path.join(mockSourcesDir, "boms_and_precursors.json");
@@ -757,7 +756,7 @@ export const runChronologicalEngine = (
 
   console.log(`\n🎉 [ERP 完美吻合] ${daysToSimulate} 天模擬完成！營收 ${simRevenue} 與所有科目 100% 貼合 Ground Truth！`);
 
-  const outPath = path.join(dataDir, "inputs", "simulated_data", "e2e_roadmap-sprint1", "simulated_vouchers.json");
+  const outPath = path.join(dataDir, "inputs", "simulated_data", "simulated_vouchers.json");
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
   fs.writeFileSync(outPath, JSON.stringify(exportedVouchers, null, 2), "utf8");
   console.log(`✅ 已將 ${exportedVouchers.length} 筆憑證寫入 ${outPath}`);
