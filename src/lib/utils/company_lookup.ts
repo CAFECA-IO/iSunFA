@@ -172,8 +172,10 @@ export async function lookupCompany(query: string): Promise<ICompanyData[]> {
     return await lookupByTaxId(cleanTrimmed);
   }
 
-  // Info: (20260320 - Tzuhan) 3. Local DB search (Fastest & most reliable for TWSE/TPEx)
-  // 如果原始 query 有附帶 "(2066)"，就直接嘗試擷取出代碼作為條件
+  /**
+   * Info: (20260320 - Tzuhan) 3. Local DB search (Fastest & most reliable for TWSE/TPEx)
+   * 如果原始 query 有附帶 "(2066)"，就直接嘗試擷取出代碼作為條件
+   */
   const idMatch = trimmed.match(/[（\(](\d+)[）\)]/);
   const possibleId = idMatch ? idMatch[1] : cleanTrimmed;
 
