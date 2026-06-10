@@ -49,4 +49,16 @@ export const businessMonitor = {
       toast_download_error: "{{company}} - 下载失败，请稍后再试",
     },
   },
+  detail: {
+    back_to_list: "返回列表",
+    report_not_found: "找不到报告书",
+    report_details: "报告详细资讯",
+    all_company_reports: "本企业所有报告书",
+    industry_reports: "同产业报告书",
+    share: "分享",
+    download: "下载",
+    download_report: "下载报告书",
+    report_file_suffix: "永续报告书",
+    year_report: "{{year}} 年永续报告书",
+  },
 };

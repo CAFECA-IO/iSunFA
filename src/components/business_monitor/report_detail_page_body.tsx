@@ -6,13 +6,16 @@ import {
   CloudDownload,
   Share2,
   Calendar,
-  CalendarRange,
-  Globe,
   Info,
-  Landmark,
-  Shield,
   Building2,
   LoaderCircle,
+  AlertCircle,
+  Clock,
+  DollarSign,
+  ShieldCheck,
+  BookOpenCheck,
+  Award,
+  FileCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -22,10 +25,12 @@ import {
   IReportDetailPayload,
 } from "@/interfaces/business_monitor";
 import { request } from "@/lib/utils/request";
+import { useTranslation } from "@/i18n/i18n_context";
 
 const ReportDetailPageBody = () => {
   const params = useParams<{ report_id: string }>();
   const { report_id: reportId } = params;
+  const { t } = useTranslation();
 
   const [payload, setPayload] = useState<IReportDetailPayload | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -65,7 +70,7 @@ const ReportDetailPageBody = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${targetReport.company}_${targetReport.reportYear}永續報告書.txt`;
+    a.download = `${targetReport.company}_${targetReport.reportYear}${t("business_monitor.detail.report_file_suffix")}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -75,110 +80,107 @@ const ReportDetailPageBody = () => {
   return (
     <main className="min-h-screen bg-gray-50/50 pt-8 pb-20">
       <div className="mx-auto flex max-w-6xl flex-col gap-y-4 px-4 md:px-8 lg:max-w-[calc(100vw-30px)] lg:gap-y-6 lg:px-12">
-        {/* Info: (20260610 - Julian) Header */}
-        <div>
-          <Link
-            href="/business_monitor"
-            className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-slate-600 transition-colors hover:text-orange-400 focus:outline-none"
-          >
-            <ChevronLeft size={16} />
-            回上一頁
-          </Link>
-        </div>
+        <Link
+          href="/business_monitor"
+          className="flex w-fit items-center gap-2 text-sm font-bold text-slate-500 transition-colors hover:text-orange-600 focus:outline-none"
+        >
+          <ChevronLeft size={16} />
+          {t("business_monitor.detail.back_to_list")}
+        </Link>
 
         {isLoading ? (
-          <div className="flex h-[600px] flex-col items-center justify-center gap-4 rounded-xl border border-slate-200 bg-white shadow-sm">
-            <LoaderCircle size={40} className="animate-spin text-orange-500" />
-            <p className="font-bold text-slate-500">載入報告資料中...</p>
+          <div className="flex h-64 w-full items-center justify-center">
+            <LoaderCircle className="animate-spin text-orange-500" size={32} />
           </div>
         ) : !report ? (
-          <div className="flex h-[600px] flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center shadow-sm">
-            <Building2 size={60} className="text-slate-300" strokeWidth={1.5} />
-            <p className="font-bold text-slate-400">找不到相關報告</p>
+          <div className="flex flex-col items-center justify-center gap-4 py-20 text-slate-500">
+            <AlertCircle size={48} className="text-slate-300" />
+            <p>{t("business_monitor.detail.report_not_found")}</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-y-12">
-            {/* Info: (20260610 - Julian) Section 1: 主要報告書焦點區 */}
-            <div className="flex flex-col gap-y-6">
-              <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="flex flex-col gap-8 lg:gap-12">
+            <div className="flex flex-col gap-6 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+              <div className="flex flex-col gap-5 border-b border-orange-100 bg-orange-50 px-6 py-8 md:px-10 md:py-10">
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-1.5 rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-700">
+                    <Building2 size={14} />
+                    {report.industry}
+                  </span>
+                  {report.isVerifiedByThirdParty && (
+                    <span className="flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
+                      <BookmarkCheck size={14} />
+                      {t(
+                        "business_monitor.reports.item.verified_by_third_party",
+                      )}
+                    </span>
+                  )}
+                </div>
+
                 <div className="flex flex-col gap-2">
-                  <h1 className="text-2xl font-bold text-slate-800 lg:text-3xl">
+                  <h1 className="text-2xl font-black text-slate-900 md:text-4xl">
                     {report.company}
                   </h1>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="text-lg font-bold text-slate-700">
-                      {report.title}
-                    </span>
-                    {report.isVerifiedByThirdParty && (
-                      <span className="flex items-center gap-1 rounded-md border border-green-200 bg-green-50 px-2.5 py-1 text-sm font-bold text-green-700">
-                        <BookmarkCheck size={16} /> 已通過第三方查證
-                      </span>
-                    )}
-                  </div>
+                  <h2 className="text-xl font-bold text-slate-600 md:text-2xl">
+                    {report.title}
+                  </h2>
                 </div>
-                <div className="flex items-center gap-3">
+
+                <div className="mt-2 flex items-center gap-3">
                   <button
                     type="button"
                     onClick={() => handleDownload(report)}
                     className="flex items-center gap-2 rounded-lg bg-orange-600 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-orange-700 focus:outline-none"
                   >
                     <CloudDownload size={18} />
-                    下載 {report.title}
+                    {t("business_monitor.detail.download")} {report.title}
                   </button>
                   <button
                     type="button"
                     className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 focus:outline-none"
                   >
                     <Share2 size={18} />
-                    分享
+                    {t("business_monitor.detail.share")}
                   </button>
                 </div>
               </div>
 
-              <hr className="border-slate-200" />
-
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-6 px-6 pb-8 md:px-10">
                 <h3 className="flex items-center gap-2 text-lg font-bold text-slate-800">
-                  <Building2 size={20} className="text-orange-500" />
-                  主要報告書詳細資訊
+                  <Info size={20} className="text-orange-500" />
+                  {t("business_monitor.detail.report_details")}
                 </h3>
-                <div className="grid grid-cols-1 gap-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm md:grid-cols-2 md:p-8">
-                  {/* Info: (20260610 - Julian) 報告基本資訊 */}
-                  <div className="flex flex-col gap-4 md:border-r md:border-slate-100 md:pr-8">
-                    <h4 className="mb-2 border-b border-slate-100 pb-3 font-bold text-slate-700">
-                      報告基本資訊
-                    </h4>
-                    <div className="flex items-center justify-between">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-12">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-1 border-b border-slate-100 pb-3">
                       <div className="flex items-center gap-2 text-slate-500">
-                        <Calendar size={18} />
-                        <span className="text-sm font-medium">報告年度</span>
+                        <Calendar size={16} />
+                        <span className="text-sm font-medium">
+                          {t("business_monitor.reports.item.report_year")}
+                        </span>
                       </div>
                       <span className="text-sm font-bold text-slate-800">
                         {report.reportYear}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between">
+
+                    <div className="flex flex-col gap-1 border-b border-slate-100 pb-3">
                       <div className="flex items-center gap-2 text-slate-500">
-                        <CalendarRange size={18} />
-                        <span className="text-sm font-medium">揭露期間</span>
+                        <Clock size={16} />
+                        <span className="text-sm font-medium">
+                          {t("business_monitor.reports.item.disclosure_period")}
+                        </span>
                       </div>
                       <span className="text-sm font-bold text-slate-800">
                         {report.period}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between">
+
+                    <div className="flex flex-col gap-1 border-b border-slate-100 pb-3">
                       <div className="flex items-center gap-2 text-slate-500">
-                        <Globe size={18} />
-                        <span className="text-sm font-medium">產業別</span>
-                      </div>
-                      <span className="text-sm font-bold text-slate-800">
-                        {report.industry}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-slate-500">
-                        <Info size={18} />
-                        <span className="text-sm font-medium">資本額區間</span>
+                        <DollarSign size={16} />
+                        <span className="text-sm font-medium">
+                          {t("business_monitor.reports.item.capital_range")}
+                        </span>
                       </div>
                       <span className="text-sm font-bold text-slate-800">
                         {report.capital}
@@ -186,45 +188,54 @@ const ReportDetailPageBody = () => {
                     </div>
                   </div>
 
-                  {/* Info: (20260610 - Julian) 查證與確信資訊 */}
                   <div className="flex flex-col gap-4">
-                    <h4 className="mb-2 border-b border-slate-100 pb-3 font-bold text-slate-700">
-                      查證與確信資訊
-                    </h4>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-1 border-b border-slate-100 pb-3">
                       <div className="flex items-center gap-2 text-slate-500">
-                        <Landmark size={18} />
-                        <span className="text-sm font-medium">查證機構</span>
+                        <ShieldCheck size={16} />
+                        <span className="text-sm font-medium">
+                          {t(
+                            "business_monitor.reports.item.verification_agency",
+                          )}
+                        </span>
                       </div>
                       <span className="text-sm font-bold text-slate-800">
                         {report.verificationAgency || "無"}
                       </span>
                     </div>
-                    <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="flex items-center gap-2 text-slate-500 sm:shrink-0">
-                        <Shield size={18} />
+
+                    <div className="flex flex-col gap-1 border-b border-slate-100 pb-3">
+                      <div className="flex items-center gap-2 text-slate-500">
+                        <BookOpenCheck size={16} />
                         <span className="text-sm font-medium">
-                          查證採用標準
+                          {t(
+                            "business_monitor.reports.item.verification_standards",
+                          )}
                         </span>
                       </div>
-                      <span className="text-sm leading-relaxed font-bold text-slate-800 sm:text-right">
+                      <span className="text-sm font-bold text-slate-800">
                         {report.verificationStandards || "無"}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between">
+
+                    <div className="flex flex-col gap-1 border-b border-slate-100 pb-3">
                       <div className="flex items-center gap-2 text-slate-500">
-                        <Landmark size={18} />
-                        <span className="text-sm font-medium">確信機構</span>
+                        <Award size={16} />
+                        <span className="text-sm font-medium">
+                          {t("business_monitor.reports.item.assurance_agency")}
+                        </span>
                       </div>
                       <span className="text-sm font-bold text-slate-800">
                         {report.assuranceAgency || "無"}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between">
+
+                    <div className="flex flex-col gap-1 pb-3">
                       <div className="flex items-center gap-2 text-slate-500">
-                        <Shield size={18} />
+                        <FileCheck size={16} />
                         <span className="text-sm font-medium">
-                          確信採用標準
+                          {t(
+                            "business_monitor.reports.item.assurance_standards",
+                          )}
                         </span>
                       </div>
                       <span className="text-sm font-bold text-slate-800">
@@ -236,11 +247,10 @@ const ReportDetailPageBody = () => {
               </div>
             </div>
 
-            {/* Info: (20260610 - Julian) Section 2: 本企業所有報告書 */}
             {companyReports.length > 0 && (
               <div className="flex flex-col gap-4">
                 <h3 className="text-lg font-bold text-slate-800">
-                  本企業所有報告書
+                  {t("business_monitor.detail.all_company_reports")}
                 </h3>
                 <div className="flex flex-wrap items-center gap-3">
                   {companyReports.map((compReport) => (
@@ -251,7 +261,7 @@ const ReportDetailPageBody = () => {
                       className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-600 transition-colors hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600 focus:outline-none"
                     >
                       <CloudDownload size={16} />
-                      下載 {compReport.title}
+                      {t("business_monitor.detail.download")} {compReport.title}
                     </button>
                   ))}
                 </div>
@@ -262,7 +272,7 @@ const ReportDetailPageBody = () => {
             {industryReports.length > 0 && (
               <div className="flex flex-col gap-4">
                 <h3 className="text-lg font-bold text-slate-800">
-                  同產業報告書
+                  {t("business_monitor.detail.industry_reports")}
                 </h3>
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {industryReports.map((indReport) => (
@@ -275,7 +285,9 @@ const ReportDetailPageBody = () => {
                           {indReport.company}
                         </h4>
                         <p className="text-sm font-medium text-slate-500">
-                          {indReport.reportYear} 年永續報告書
+                          {t("business_monitor.detail.year_report", {
+                            year: indReport.reportYear,
+                          })}
                         </p>
                       </div>
                       <button
@@ -284,7 +296,7 @@ const ReportDetailPageBody = () => {
                         className="mt-auto flex w-full items-center justify-center gap-2 rounded-lg bg-orange-50 px-4 py-2.5 text-sm font-bold text-orange-600 transition-colors hover:bg-orange-100 focus:outline-none"
                       >
                         <CloudDownload size={16} />
-                        下載報告書
+                        {t("business_monitor.detail.download_report")}
                       </button>
                     </div>
                   ))}

@@ -49,4 +49,16 @@ export const businessMonitor = {
       toast_download_error: "{{company}} - 下載失敗，請稍後再試",
     },
   },
+  detail: {
+    back_to_list: "返回列表",
+    report_not_found: "找不到報告書",
+    report_details: "報告詳細資訊",
+    all_company_reports: "本企業所有報告書",
+    industry_reports: "同產業報告書",
+    share: "分享",
+    download: "下載",
+    download_report: "下載報告書",
+    report_file_suffix: "永續報告書",
+    year_report: "{{year}} 年永續報告書",
+  },
 };

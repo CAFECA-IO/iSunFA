@@ -53,4 +53,16 @@ export const businessMonitor = {
         "{{company}} - ダウンロードに失敗しました。時間をおいて再度お試しください",
     },
   },
+  detail: {
+    back_to_list: "リストに戻る",
+    report_not_found: "レポートが見つかりません",
+    report_details: "レポートの詳細",
+    all_company_reports: "この企業のすべてのレポート",
+    industry_reports: "同業界のレポート",
+    share: "共有",
+    download: "ダウンロード",
+    download_report: "レポートをダウンロード",
+    report_file_suffix: "サステナビリティレポート",
+    year_report: "{{year}} 年サステナビリティレポート",
+  },
 };

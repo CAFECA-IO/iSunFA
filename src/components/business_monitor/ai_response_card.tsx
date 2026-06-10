@@ -41,7 +41,7 @@ const AiResponseCard: FC<IAiResponseCardProps> = ({ aiResponse, reports }) => {
         onClick={() => handleDownload(report)}
         className="font-bold text-blue-500 underline underline-offset-2 transition-colors hover:text-blue-700 focus:outline-none active:text-purple-500"
       >
-        下載報告書
+        {t("business_monitor.detail.download_report")}
       </button>
     </div>
   ));

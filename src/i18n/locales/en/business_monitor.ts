@@ -53,4 +53,16 @@ export const businessMonitor = {
         "{{company}} - Download failed, please try again later",
     },
   },
+  detail: {
+    back_to_list: "Back to list",
+    report_not_found: "Report not found",
+    report_details: "Report Details",
+    all_company_reports: "All Reports of this Company",
+    industry_reports: "Same Industry Reports",
+    share: "Share",
+    download: "Download",
+    download_report: "Download Report",
+    report_file_suffix: "Sustainability Report",
+    year_report: "{{year}} Sustainability Report",
+  },
 };
