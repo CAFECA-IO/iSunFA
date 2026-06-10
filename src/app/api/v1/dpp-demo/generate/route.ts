@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
 import { exec, spawn } from "child_process";
 import util from "util";
 import { GenerateDppDemoSchema } from "@/validators/dpp_demo.validator";
@@ -262,28 +264,135 @@ export async function POST(req: NextRequest) {
             }
           }
 
+          if (mode === "all" || mode === "dpp_only") {
+            // Info: (20260610 - Tzuhan) 步驟五：BOM 與前驅物數據建構
+            sendEvent({ type: "step_start", stepIndex: 4 });
+            sendEvent({
+              type: "log",
+              message: `Executing generate_bom_precursors.ts...`,
+            });
+            await runScript("npx", [
+              "tsx",
+              "src/scripts/e2e-seeder/cbam/generate_bom_precursors.ts",
+              stockId,
+              year,
+              productCount.toString(),
+            ]);
+            sendEvent({
+              type: "preview",
+              file: `data/${stockId}/${year}/outputs/mock_sources/boms_and_precursors.json`,
+            });
+
+            // Info: (20260610 - Tzuhan) 步驟六：產品規格生成
+            sendEvent({ type: "step_start", stepIndex: 5 });
+            sendEvent({
+              type: "log",
+              message: `Executing generate_product_specs.ts...`,
+            });
+            await runScript("npx", [
+              "tsx",
+              "src/scripts/e2e-seeder/dpp/generate_product_specs.ts",
+              stockId,
+              year,
+            ]);
+            sendEvent({
+              type: "preview",
+              file: `data/${stockId}/${year}/outputs/mock_sources/product_specs.json`,
+            });
+
+            // Info: (20260610 - Tzuhan) 步驟：動態生成產品藍圖圖片 (Imagen 4)
+            sendEvent({
+              type: "log",
+              message: `Executing generate_product_image.ts...`,
+            });
+            await runScript("npx", [
+              "tsx",
+              "src/scripts/e2e-seeder/dpp/generate_product_image.ts",
+              stockId,
+              year,
+            ]);
+
+            // Info: (20260610 - Tzuhan) 步驟七：DPP 核心真實數據演算
+            sendEvent({ type: "step_start", stepIndex: 6 });
+            sendEvent({
+              type: "log",
+              message: `Executing generate_dpp_ground_truth.ts...`,
+            });
+            await runScript("npx", [
+              "tsx",
+              "src/scripts/e2e-seeder/dpp/generate_dpp_ground_truth.ts",
+              stockId,
+              year,
+            ]);
+
+            // Info: (20260610 - Tzuhan) 步驟八：DPP 合規與驗證數據生成
+            sendEvent({ type: "step_start", stepIndex: 7 });
+            sendEvent({
+              type: "log",
+              message: `Executing generate_dpp_compliance.ts...`,
+            });
+            await runScript("npx", [
+              "tsx",
+              "src/scripts/e2e-seeder/dpp/generate_dpp_compliance.ts",
+              stockId,
+              year,
+            ]);
+
+            // Info: (20260610 - Tzuhan) 尋找產生出來的產品 JSON，發送預覽事件
+            const outputsDir = path.join(
+              process.cwd(),
+              "data",
+              stockId,
+              year,
+              "outputs",
+            );
+            if (fs.existsSync(outputsDir)) {
+              const dirs = fs.readdirSync(outputsDir, { withFileTypes: true });
+              for (const dir of dirs) {
+                if (dir.isDirectory() && dir.name !== "mock_sources") {
+                  sendEvent({
+                    type: "preview",
+                    file: `data/${stockId}/${year}/outputs/${dir.name}/mock_sources/${dir.name}_dpp_compliance_declaration.md`,
+                  });
+                  break; // Info: (20260610 - Tzuhan) 只預覽第一個產品
+                }
+              }
+            }
+          }
+
           if (
             mode === "all" ||
             mode === "generate_only" ||
             mode === "persona_only"
           ) {
-            // Info: (20260609 - Tzuhan) 完成流程並回傳檔案路徑 (Day 1 Scope 結束)
+            // Info: (20260609 - Tzuhan) 完成 Day 1 流程
             const mockFilePath = `data/${stockId}/${year}/outputs/${stockId}_company_persona.html`;
-            sendEvent({ type: "complete", file: mockFilePath });
-          } else if (mode === "extrapolate_only") {
+            if (mode !== "all") {
+              sendEvent({ type: "complete", file: mockFilePath });
+            }
+          }
+
+          if (mode === "extrapolate_only") {
             sendEvent({
               type: "log",
               message:
                 "Extrapolation and vision extraction completed successfully.",
             });
             sendEvent({ type: "complete" }); // no file attached for extrapolate_only, it relies on next step
-          } else {
+          } else if (mode === "download_only") {
             // For download_only, we just finish successfully
             sendEvent({
               type: "log",
               message: "Downloads completed successfully.",
             });
             sendEvent({ type: "complete" }); // no file attached for download_only
+          } else if (mode === "all" || mode === "dpp_only") {
+            // Info: (20260610 - Tzuhan) 完成 Day 2 流程
+            sendEvent({
+              type: "log",
+              message: "DPP Pipeline completed successfully.",
+            });
+            sendEvent({ type: "complete" }); // UI 會自己決定預覽哪個檔案
           }
         } catch (err: unknown) {
           // Info: (20260609 - Tzuhan) 攔截執行錯誤

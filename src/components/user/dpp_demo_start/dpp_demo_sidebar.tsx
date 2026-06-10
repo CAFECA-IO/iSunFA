@@ -141,6 +141,8 @@ export function DppDemoSidebar({
             const hasPersona = steps[3]?.status === "completed";
             const isPartial = (hasFin || hasEsg) && !hasPersona;
             const isAllDone = hasPersona;
+            const hasDppCompliance = steps[7]?.status === "completed";
+            const isDay2AllDone = hasDppCompliance;
 
             return (
               <div className="mt-2 flex flex-col gap-2">
@@ -175,6 +177,18 @@ export function DppDemoSidebar({
                   <Sparkles className="mr-2 h-4 w-4" />{" "}
                   {isAllDone ? "重新生成企業畫像" : "執行 AI 萃取與畫像生成"}
                 </button>
+                {isAllDone && (
+                  <button
+                    onClick={() => startGeneration(undefined, "dpp_only")}
+                    disabled={isGenerating}
+                    className="mt-1 flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:opacity-90 disabled:opacity-50"
+                  >
+                    <Sparkles className="mr-2 h-4 w-4" />{" "}
+                    {isDay2AllDone
+                      ? "重新生成 DPP 數據"
+                      : "繼續生成 DPP 核心數據 (Day 2)"}
+                  </button>
+                )}
               </div>
             );
           })()}

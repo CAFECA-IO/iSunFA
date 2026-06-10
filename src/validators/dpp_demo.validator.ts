@@ -12,6 +12,7 @@ export const GenerateDppDemoSchema = z.object({
       "generate_only",
       "extrapolate_only",
       "persona_only",
+      "dpp_only",
     ])
     .optional()
     .default("all"),

@@ -39,6 +39,7 @@ export interface IBomPrecursor {
 export interface IProductBom {
   productId: string;
   productName: string;
+  productCategory?: string;
   cnCode: string;
   bom: IBomPrecursor[];
   materialComposition?: {

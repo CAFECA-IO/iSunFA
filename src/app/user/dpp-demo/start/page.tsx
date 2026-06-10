@@ -56,6 +56,10 @@ export interface IDemoItem {
     hasFin: boolean;
     hasEsg: boolean;
     hasPersonaHtml: boolean;
+    hasBom: boolean;
+    hasSpecs: boolean;
+    dppGroundTruthFile?: string;
+    dppComplianceFile?: string;
   };
   isComplete: boolean;
 }
@@ -92,6 +96,26 @@ export default function DppDemoStartPage() {
     {
       id: "persona",
       label: "4. 企業畫像建構 (persona_generator)",
+      status: "pending",
+    },
+    {
+      id: "bom_generation",
+      label: "5. BOM 與前驅物數據建構 (generate_bom_precursors)",
+      status: "pending",
+    },
+    {
+      id: "product_specs",
+      label: "6. 產品規格生成 (generate_product_specs)",
+      status: "pending",
+    },
+    {
+      id: "dpp_ground_truth",
+      label: "7. DPP 核心真實數據演算 (generate_dpp_ground_truth)",
+      status: "pending",
+    },
+    {
+      id: "dpp_compliance",
+      label: "8. DPP 合規與驗證數據生成 (generate_dpp_compliance)",
       status: "pending",
     },
   ]);
@@ -352,15 +376,58 @@ export default function DppDemoStartPage() {
                 ? personaFile
                 : undefined,
             },
+            {
+              id: "bom_generation",
+              label: "5. BOM 與前驅物數據建構 (generate_bom_precursors)",
+              status: currentItem.progress.hasBom ? "completed" : "pending",
+              file: currentItem.progress.hasBom
+                ? `data/${selectedCompany.taxId}/${year}/outputs/mock_sources/boms_and_precursors.json`
+                : undefined,
+            },
+            {
+              id: "product_specs",
+              label: "6. 產品規格生成 (generate_product_specs)",
+              status: currentItem.progress.hasSpecs ? "completed" : "pending",
+              file: currentItem.progress.hasSpecs
+                ? `data/${selectedCompany.taxId}/${year}/outputs/mock_sources/product_specs.json`
+                : undefined,
+            },
+            {
+              id: "dpp_ground_truth",
+              label: "7. DPP 核心真實數據演算 (generate_dpp_ground_truth)",
+              status: currentItem.progress.dppGroundTruthFile
+                ? "completed"
+                : "pending",
+              file: currentItem.progress.dppGroundTruthFile,
+            },
+            {
+              id: "dpp_compliance",
+              label: "8. DPP 合規與驗證數據生成 (generate_dpp_compliance)",
+              status: currentItem.progress.dppComplianceFile
+                ? "completed"
+                : "pending",
+              file: currentItem.progress.dppComplianceFile,
+            },
           ]);
 
           if (!isGenerating) {
-            if (currentItem.progress.hasPersonaHtml) {
+            if (currentItem.progress.dppComplianceFile) {
+              setSelectedFilePath(currentItem.progress.dppComplianceFile);
+            } else if (currentItem.progress.dppGroundTruthFile) {
+              setSelectedFilePath(currentItem.progress.dppGroundTruthFile);
+            } else if (currentItem.progress.hasSpecs) {
+              setSelectedFilePath(
+                `data/${selectedCompany.taxId}/${year}/outputs/mock_sources/product_specs.json`,
+              );
+            } else if (currentItem.progress.hasBom) {
+              setSelectedFilePath(
+                `data/${selectedCompany.taxId}/${year}/outputs/mock_sources/boms_and_precursors.json`,
+              );
+            } else if (currentItem.progress.hasPersonaHtml) {
               setSelectedFilePath(personaFile);
             } else if (currentItem.progress.hasEsg) {
               setSelectedFilePath(esgFile);
             } else if (isEsgExtrapolated && currentItem.progress.hasFin) {
-              // Info: (20260609 - Tzuhan) 如果是 2025 年且已經有了 Fin，可能也有 Cache，我們先優先顯示 Cache (會在 preview pane 中做容錯處理)
               setSelectedFilePath(cacheFile);
             } else if (currentItem.progress.hasFin) {
               setSelectedFilePath(finFile);

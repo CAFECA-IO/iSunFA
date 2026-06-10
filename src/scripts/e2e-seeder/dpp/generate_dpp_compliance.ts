@@ -133,7 +133,7 @@ export async function generateDppCompliance(
 
     const blueprintPath = path.resolve(
       process.cwd(),
-      `data/${stockId}/${year}/outputs/fastener_blueprint.png`,
+      `data/${stockId}/${year}/outputs/${productId}/mock_sources/fastener_blueprint.png`,
     );
     if (fs.existsSync(blueprintPath)) {
       const base64Image = fs.readFileSync(blueprintPath).toString("base64");

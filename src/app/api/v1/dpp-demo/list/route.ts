@@ -47,6 +47,61 @@ export async function GET() {
             // Info: (20260609 - Tzuhan) Day 1 進度：下載財報、ESG報告、生成畫像
             const isComplete = hasFin && hasEsg && hasPersonaHtml;
 
+            // Info: (20260610 - Tzuhan) Day 2 進度檢查
+            const hasBom = fs.existsSync(
+              path.join(
+                yearPath,
+                "outputs",
+                "mock_sources",
+                "boms_and_precursors.json",
+              ),
+            );
+            const hasSpecs = fs.existsSync(
+              path.join(
+                yearPath,
+                "outputs",
+                "mock_sources",
+                "product_specs.json",
+              ),
+            );
+
+            // Info: (20260610 - Tzuhan) 簡單檢查 outputs 底下是否有任何 _dpp_ground_truth.json 檔案
+            let dppGroundTruthFile: string | undefined;
+            let dppComplianceFile: string | undefined;
+            const outputsDir = path.join(yearPath, "outputs");
+            if (fs.existsSync(outputsDir)) {
+              const dirs = fs.readdirSync(outputsDir, { withFileTypes: true });
+              for (const dir of dirs) {
+                if (dir.isDirectory() && dir.name !== "mock_sources") {
+                  const productMockDir = path.join(
+                    outputsDir,
+                    dir.name,
+                    "mock_sources",
+                  );
+                  if (
+                    fs.existsSync(
+                      path.join(
+                        productMockDir,
+                        `${dir.name}_dpp_ground_truth.json`,
+                      ),
+                    )
+                  ) {
+                    dppGroundTruthFile = `data/${stockId}/${year}/outputs/${dir.name}/mock_sources/${dir.name}_dpp_ground_truth.json`;
+                  }
+                  if (
+                    fs.existsSync(
+                      path.join(
+                        productMockDir,
+                        `${dir.name}_dpp_compliance_declaration.md`,
+                      ),
+                    )
+                  ) {
+                    dppComplianceFile = `data/${stockId}/${year}/outputs/${dir.name}/mock_sources/${dir.name}_dpp_compliance_declaration.md`;
+                  }
+                }
+              }
+            }
+
             // Info: (20260609 - Tzuhan) 從資料庫撈取公司名稱，如果沒有則顯示企業+代號
             const companyName = companyMap.get(stockId) || `企業 ${stockId}`;
 
@@ -59,6 +114,10 @@ export async function GET() {
                 hasFin,
                 hasEsg,
                 hasPersonaHtml,
+                hasBom,
+                hasSpecs,
+                dppGroundTruthFile,
+                dppComplianceFile,
               },
               isComplete,
             });
