@@ -59,10 +59,12 @@ import { adminCoupon } from "@/i18n/locales/zh_tw/admin_coupon";
 import { userCoupon } from "@/i18n/locales/zh_tw/user_coupon";
 import { adminCarbonEmissionDatabase } from "@/i18n/locales/zh_tw/admin_carbon_emission_database";
 import { businessMonitor } from "@/i18n/locales/zh_tw/business_monitor";
+import { dppSimulation } from "@/i18n/locales/zh_tw/dpp_simulation";
 
 export const zhTw = {
   digital_product_passport: digitalProductPassport,
   dpp_urban_mining: dppUrbanMining,
+  dpp_simulation: dppSimulation,
   transportation_carbon_footprint_calculator:
     transportationCarbonFootprintCalculator,
   salary_calculator: salaryCalculator,

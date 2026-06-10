@@ -59,10 +59,12 @@ import { adminCoupon } from "@/i18n/locales/en/admin_coupon";
 import { userCoupon } from "@/i18n/locales/en/user_coupon";
 import { adminCarbonEmissionDatabase } from "@/i18n/locales/en/admin_carbon_emission_database";
 import { businessMonitor } from "@/i18n/locales/en/business_monitor";
+import { dppSimulation } from "@/i18n/locales/en/dpp_simulation";
 import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const en = {
   digital_product_passport: digitalProductPassport,
+  dpp_simulation: dppSimulation,
   dpp_urban_mining: dppUrbanMining,
   transportation_carbon_footprint_calculator:
     transportationCarbonFootprintCalculator,

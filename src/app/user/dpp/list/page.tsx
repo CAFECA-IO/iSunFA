@@ -18,6 +18,7 @@ import {
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import ConfirmModal from "@/components/common/confirm_modal";
+import { useTranslation } from "@/i18n/i18n_context";
 
 interface IDemoItem {
   id: string;
@@ -44,6 +45,7 @@ interface IDemoItem {
 }
 
 export default function DppListPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [items, setItems] = useState<IDemoItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,10 +76,10 @@ export default function DppListPage() {
   const handleDelete = (stockId: string, year: string, name: string) => {
     setModalConfig({
       isOpen: true,
-      title: "確認刪除",
-      message: `確定要刪除「${name} (${year} 年)」的模擬資料嗎？此動作無法復原。`,
-      confirmText: "刪除",
-      cancelText: "取消",
+      title: t("dpp_simulation.confirm_delete_title"),
+      message: t("dpp_simulation.confirm_delete_message", { name, year }),
+      confirmText: t("dpp_simulation.delete"),
+      cancelText: t("dpp_simulation.cancel"),
       onConfirm: async () => {
         try {
           setLoading(true);
@@ -91,9 +93,9 @@ export default function DppListPage() {
           console.error("Delete failed:", e);
           setModalConfig({
             isOpen: true,
-            title: "錯誤",
-            message: "刪除失敗，請稍後再試",
-            confirmText: "確定",
+            title: t("dpp_simulation.error"),
+            message: t("dpp_simulation.delete_failed"),
+            confirmText: t("dpp_simulation.ok"),
             cancelText: undefined,
             onConfirm: undefined,
           });
@@ -113,10 +115,10 @@ export default function DppListPage() {
         <div>
           <h1 className="flex items-center text-xl font-bold text-gray-900">
             <Building className="mr-3 h-6 w-6 text-blue-600" />
-            企業模擬資料庫
+            {t("dpp_simulation.title")}
           </h1>
           <p className="mt-1 text-sm text-gray-500">
-            管理與預覽已生成的企業數位產品護照模擬資料。
+            {t("dpp_simulation.description")}
           </p>
         </div>
         <button
@@ -124,7 +126,7 @@ export default function DppListPage() {
           className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" />
-          生成新的企業模擬資料
+          {t("dpp_simulation.generate_new")}
         </button>
       </div>
 
@@ -137,9 +139,11 @@ export default function DppListPage() {
           <div className="flex flex-1 flex-col items-center justify-center text-gray-500">
             <Building className="mb-4 h-16 w-16 text-gray-300" />
             <p className="text-lg font-medium text-gray-900">
-              尚無企業模擬資料
+              {t("dpp_simulation.no_data")}
             </p>
-            <p className="mt-1 text-sm">點擊上方按鈕立即建立</p>
+            <p className="mt-1 text-sm">
+              {t("dpp_simulation.click_to_create")}
+            </p>
           </div>
         ) : (
           <div className="space-y-4 overflow-y-auto p-4">
@@ -158,7 +162,7 @@ export default function DppListPage() {
                       </span>
                     </h3>
                     <p className="mt-1 text-sm text-gray-500">
-                      目標年度: {item.year}
+                      {t("dpp_simulation.target_year", { year: item.year })}
                     </p>
                   </div>
 
@@ -166,7 +170,7 @@ export default function DppListPage() {
                   <div className="flex w-full flex-1 flex-col gap-3 xl:flex-row">
                     <div className="flex-1">
                       <p className="mb-2 text-xs font-semibold text-gray-500">
-                        Phase 1: 基礎資料
+                        {t("dpp_simulation.phase1_title")}
                       </p>
                       <div className="flex items-center justify-between rounded-lg border border-gray-100 bg-white p-2 text-xs font-medium text-gray-600 shadow-sm">
                         <div className="flex items-center gap-1.5">
@@ -175,14 +179,14 @@ export default function DppListPage() {
                           ) : (
                             <AlertCircle className="h-4 w-4 text-amber-500" />
                           )}
-                          財報下載
+                          {t("dpp_simulation.financial_report")}
                         </div>
                         <div className="h-px w-2 bg-gray-300 sm:w-4" />
                         <div className="flex items-center gap-1.5">
                           {item.progress.hasEsg ? (
                             <>
                               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                              ESG 下載
+                              {t("dpp_simulation.esg_download")}
                             </>
                           ) : item.year === "2025" ||
                             (!item.progress.hasEsg &&
@@ -200,13 +204,13 @@ export default function DppListPage() {
                                     : ""
                                 }
                               >
-                                ESG 推估
+                                {t("dpp_simulation.esg_estimation")}
                               </span>
                             </>
                           ) : (
                             <>
                               <AlertCircle className="h-4 w-4 text-amber-500" />
-                              ESG 下載
+                              {t("dpp_simulation.esg_download")}
                             </>
                           )}
                         </div>
@@ -217,14 +221,14 @@ export default function DppListPage() {
                           ) : (
                             <AlertCircle className="h-4 w-4 text-amber-500" />
                           )}
-                          企業畫像
+                          {t("dpp_simulation.company_persona")}
                         </div>
                       </div>
                     </div>
 
                     <div className="flex-1">
                       <p className="mb-2 text-xs font-semibold text-gray-500">
-                        Phase 2 & 3: 型錄與產品 DPP
+                        {t("dpp_simulation.phase2_3_title")}
                       </p>
                       <div className="flex items-center justify-between rounded-lg border border-gray-100 bg-white p-2 text-xs font-medium text-gray-600 shadow-sm">
                         <div className="flex items-center gap-1.5">
@@ -233,14 +237,16 @@ export default function DppListPage() {
                           ) : (
                             <AlertCircle className="h-4 w-4 text-amber-500" />
                           )}
-                          企業型錄 (BOM)
+                          {t("dpp_simulation.catalog_bom")}
                         </div>
                         <div className="h-px w-2 bg-gray-300 sm:w-4" />
                         <div
                           className="flex items-center gap-1.5"
                           title={
                             item.progress.products
-                              ? `產品數: ${item.progress.products.length}`
+                              ? t("dpp_simulation.product_count", {
+                                  count: item.progress.products.length,
+                                })
                               : ""
                           }
                         >
@@ -255,7 +261,7 @@ export default function DppListPage() {
                           ) : (
                             <AlertCircle className="h-4 w-4 text-amber-500" />
                           )}
-                          單品 DPP
+                          {t("dpp_simulation.product_dpp")}
                         </div>
                       </div>
                     </div>
@@ -280,7 +286,7 @@ export default function DppListPage() {
                         <Eye className="h-5 w-5" />
                       </button>
                       <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1.5 -translate-x-1/2 rounded bg-gray-800 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-white opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
-                        查看結果
+                        {t("dpp_simulation.view_results")}
                       </div>
                     </div>
 
@@ -294,7 +300,7 @@ export default function DppListPage() {
                         <Trash2 className="h-5 w-5" />
                       </button>
                       <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1.5 -translate-x-1/2 rounded bg-gray-800 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-white opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
-                        刪除資料
+                        {t("dpp_simulation.delete_data")}
                       </div>
                     </div>
 
@@ -310,7 +316,7 @@ export default function DppListPage() {
                         <Wand2 className="h-5 w-5" />
                       </button>
                       <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1.5 -translate-x-1/2 rounded bg-gray-800 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-white opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
-                        啟動歷史回溯推估
+                        {t("dpp_simulation.start_historical_extrapolation")}
                       </div>
                     </div>
 
@@ -326,7 +332,7 @@ export default function DppListPage() {
                         <DownloadCloud className="h-5 w-5" />
                       </button>
                       <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1.5 -translate-x-1/2 rounded bg-gray-800 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-white opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
-                        重新下載
+                        {t("dpp_simulation.redownload")}
                       </div>
                     </div>
 
@@ -342,7 +348,7 @@ export default function DppListPage() {
                         <Sparkles className="h-5 w-5" />
                       </button>
                       <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1.5 -translate-x-1/2 rounded bg-gray-800 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-white opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
-                        重新生成畫像
+                        {t("dpp_simulation.regenerate_persona")}
                       </div>
                     </div>
 
@@ -356,7 +362,7 @@ export default function DppListPage() {
                       } `}
                     >
                       <PlayCircle className="h-4 w-4" />
-                      進入工作區
+                      {t("dpp_simulation.enter_workspace")}
                     </button>
                   </div>
                 </div>

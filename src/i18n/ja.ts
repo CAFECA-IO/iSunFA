@@ -59,10 +59,12 @@ import { adminCoupon } from "@/i18n/locales/ja/admin_coupon";
 import { userCoupon } from "@/i18n/locales/ja/user_coupon";
 import { adminCarbonEmissionDatabase } from "@/i18n/locales/ja/admin_carbon_emission_database";
 import { businessMonitor } from "@/i18n/locales/ja/business_monitor";
+import { dppSimulation } from "@/i18n/locales/ja/dpp_simulation";
 import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const ja = {
   digital_product_passport: digitalProductPassport,
+  dpp_simulation: dppSimulation,
   dpp_urban_mining: dppUrbanMining,
   transportation_carbon_footprint_calculator:
     transportationCarbonFootprintCalculator,
