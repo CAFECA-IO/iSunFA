@@ -77,7 +77,7 @@ export default function DppStartPage() {
   const [selectedCompany, setSelectedCompany] =
     useState<ICompanySearchResult | null>(null);
   const [year, setYear] = useState<string>("2025");
-  const productCount = 3; // Info: 預設為 3 個產品，不再透過 UI 選擇
+  const productCount = 3; //  Info: (20260609 - Tzuhan) 預設為 3 個產品，不再透過 UI 選擇
 
   // Info: (20260609 - Tzuhan) 工作流狀態管理
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -307,7 +307,7 @@ export default function DppStartPage() {
           window.history.replaceState({}, "", newUrl.toString());
         }
 
-        // Fetch company lookup to set selectedCompany
+        // Info: (20260610 - Tzuhan) Fetch company lookup to set selectedCompany
         request<{ payload: ICompanySearchResult[] }>(
           `/api/v1/company/lookup?query=${paramStockId}`,
         )
