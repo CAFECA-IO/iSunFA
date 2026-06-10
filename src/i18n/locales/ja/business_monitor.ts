@@ -1,5 +1,5 @@
 export const businessMonitor = {
-  title: "企業観測ダッシュボード",
+  title: "企業観測所",
   subtitle:
     "台湾の公開企業の財務データを検索し、公式の株主総会年次報告書をダウンロードして、AIアシスタントから詳細な分析を取得します",
   filter: {
