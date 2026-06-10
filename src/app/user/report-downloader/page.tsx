@@ -63,7 +63,7 @@ export default function ReportDownloaderPage() {
     setSelectedCompany(company);
     setKeyword(company.name);
     setShowDropdown(false);
-    setCompletedFiles([]); // Reset results when changing company
+    setCompletedFiles([]); // Info: (20260609 - Tzuhan) Reset results when changing company
     setDownloadLog("");
     setDownloadError("");
   };
