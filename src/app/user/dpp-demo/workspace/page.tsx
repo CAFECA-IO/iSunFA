@@ -18,6 +18,8 @@ import {
   QrCode,
   Factory,
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type Tab = "sku" | "batch";
 type ModuleState = "pending" | "scanning" | "found" | "missing" | "na";
@@ -30,11 +32,10 @@ interface IDppModule {
   missingDesc?: string;
 }
 
-const PRODUCTS = [
-  { id: "P-CS-BS-003", name: "產品 A (球狀螺栓)" },
-  { id: "P-M10-BN-002", name: "產品 B (法蘭螺帽)" },
-  { id: "P-M12-EH-001", name: "產品 C (六角螺栓)" },
-];
+interface IProductBomLite {
+  productId: string;
+  productName: string;
+}
 
 const getFileUrl = (path: string) =>
   `/api/dpp-demo/files?action=serve&path=${encodeURIComponent(path)}`;
@@ -46,7 +47,6 @@ const getModulesForProduct = (
 ): IDppModule[] => {
   const basePath = `data/${stockId}/${year}/outputs`;
   return [
-    // Info: (20260608 - Tzuhan)
     {
       id: 1,
       name: "基本與製造商資訊",
@@ -55,42 +55,36 @@ const getModulesForProduct = (
     },
     {
       id: 2,
-      name: "供應鏈溯源 - 廠內生產紀錄",
+      name: "BOM 與前驅物構成",
       state: "pending",
-      mockFile: `${basePath}/system_ingestion/mes_work_orders.csv`,
+      mockFile: `${basePath}/mock_sources/boms_and_precursors.json`,
     },
     {
       id: 3,
-      name: "供應鏈溯源 - 委外加工日誌",
+      name: "產品規格展開",
       state: "pending",
-      mockFile: `${basePath}/system_ingestion/outsourced_processing_logs.csv`,
+      mockFile: `${basePath}/mock_sources/product_specs.json`,
     },
     {
       id: 4,
-      name: "供應鏈溯源 - 海關出口報單",
+      name: "DPP 核心真實數據演算",
       state: "pending",
-      mockFile: `${basePath}/system_ingestion/customs_export_declarations.csv`,
+      mockFile: `${basePath}/${productId}/mock_sources/${productId}_dpp_ground_truth.json`,
     },
     {
       id: 5,
-      name: "物質與成分構成",
+      name: "產品工程圖繪製",
       state: "pending",
-      mockFile: `${basePath}/mock_sources/boms_and_precursors.csv`,
+      missingDesc: "未發現此 SKU 的產品結構與設計藍圖",
     },
     {
       id: 6,
-      name: "專業技術手冊",
+      name: "DPP 合規與驗證數據生成",
       state: "pending",
-      missingDesc: "所有上傳文件中皆未發現電路圖與維修拆解指南",
+      missingDesc: "未發現此 SKU 的合規宣告與歐盟指令驗證文件",
     },
     {
       id: 7,
-      name: "合規稽核",
-      state: "pending",
-      mockFile: `${basePath}/${productId}/system_ingestion/${productId}_dpp_compliance_declaration.pdf`,
-    },
-    {
-      id: 8,
       name: "生產批次",
       state: "na",
       missingDesc: "將於批次生產階段動態處理",
@@ -111,7 +105,8 @@ export default function DppWorkspacePage() {
   const [toastMsg, setToastMsg] = useState("");
 
   // Info: (20260608 - Tzuhan) Product Selection
-  const [selectedProductId, setSelectedProductId] = useState(PRODUCTS[0].id);
+  const [products, setProducts] = useState<{ id: string; name: string }[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState("");
 
   // Info: (20260608 - Tzuhan) Options (Mock data context)
   const stockId = "2066";
@@ -121,9 +116,7 @@ export default function DppWorkspacePage() {
   const basePath = `data/${stockId}/${year}/outputs`;
 
   // Info: (20260608 - Tzuhan) SKU Audit State
-  const [modules, setModules] = useState<IDppModule[]>(
-    getModulesForProduct(PRODUCTS[0].id, stockId, year),
-  );
+  const [modules, setModules] = useState<IDppModule[]>([]);
   const [isScanning, setIsScanning] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
   const [skuReady, setSkuReady] = useState(false);
@@ -147,15 +140,45 @@ export default function DppWorkspacePage() {
   const [selectedPassport, setSelectedPassport] =
     useState<PublishedPassport | null>(null);
 
+  // Info: (20260608 - Tzuhan) Fetch available products dynamically
+  useEffect(() => {
+    fetch(
+      getFileUrl(
+        `data/${stockId}/${year}/outputs/mock_sources/boms_and_precursors.json`,
+      ),
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.products) {
+          const parsedProducts = data.products.map((p: IProductBomLite) => ({
+            id: p.productId,
+            name: p.productName,
+          }));
+          setProducts(parsedProducts);
+          if (parsedProducts.length > 0) {
+            setSelectedProductId(parsedProducts[0].id);
+          }
+        }
+      })
+      .catch(() => {
+        setProducts([]);
+        setSelectedProductId("");
+      });
+  }, [stockId, year]);
+
   // Info: (20260608 - Tzuhan) Handle Product Change
   useEffect(() => {
-    setModules(getModulesForProduct(selectedProductId, stockId, year));
+    if (selectedProductId) {
+      setModules(getModulesForProduct(selectedProductId, stockId, year));
+    } else {
+      setModules([]);
+    }
     setScanComplete(false);
     setSkuReady(false);
     setSelectedFilePath(null);
     setSelectedPassport(null);
     setActiveTab("sku");
-  }, [selectedProductId, year]);
+  }, [selectedProductId, stockId, year]);
 
   // Info: (20260608 - Tzuhan) Fetch available years
   useEffect(() => {
@@ -198,7 +221,7 @@ export default function DppWorkspacePage() {
       await new Promise((r) => setTimeout(r, 500));
 
       currentModules = [...currentModules];
-      currentModules[i].state = [6, 7].includes(currentModules[i].id)
+      currentModules[i].state = [5, 6].includes(currentModules[i].id)
         ? "missing"
         : "found";
       setModules(currentModules);
@@ -214,17 +237,17 @@ export default function DppWorkspacePage() {
     await new Promise((r) => setTimeout(r, 1500));
     const fixed = modules.map((m) => {
       const t = Date.now();
-      if (m.id === 6)
+      if (m.id === 5)
         return {
           ...m,
           state: "found" as ModuleState,
           mockFile: `${basePath}/${selectedProductId}/mock_sources/fastener_blueprint.png?t=${t}`,
         };
-      if (m.id === 7)
+      if (m.id === 6)
         return {
           ...m,
           state: "found" as ModuleState,
-          mockFile: `${basePath}/${selectedProductId}/system_ingestion/${selectedProductId}_dpp_compliance_declaration.pdf?t=${t}`,
+          mockFile: `${basePath}/${selectedProductId}/mock_sources/${selectedProductId}_dpp_compliance_declaration.md?t=${t}`,
         };
       return m;
     });
@@ -259,7 +282,7 @@ export default function DppWorkspacePage() {
       batchId,
       date: new Date().toLocaleString(),
       productId: selectedProductId,
-      pdfPath: `${basePath}/${selectedProductId}/system_ingestion/${selectedProductId}_dpp_ground_truth_dashboard.html`,
+      pdfPath: `${basePath}/${selectedProductId}/mock_sources/${selectedProductId}_dpp_compliance_declaration.md`,
     };
 
     setPublishedPassports([newPassport, ...publishedPassports]);
@@ -286,6 +309,13 @@ export default function DppWorkspacePage() {
         });
     }
   }, [selectedFilePath]);
+
+  const preprocessMarkdown = (md: string) => {
+    return md.replace(/<img\s+src="([^"]+)"[^>]*>/g, (match, src) => {
+      const cleanSrc = src.replace(/\s+/g, "");
+      return `![image](${cleanSrc})`;
+    });
+  };
 
   const parseCsvRow = (str: string) => {
     const result = [];
@@ -447,7 +477,10 @@ export default function DppWorkspacePage() {
                   backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
                 }}
               >
-                {PRODUCTS.map((p) => (
+                {products.length === 0 && (
+                  <option value="">載入中或無資料...</option>
+                )}
+                {products.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
                   </option>
@@ -654,9 +687,23 @@ export default function DppWorkspacePage() {
                           unoptimized
                         />
                       </div>
+                    ) : selectedFilePath.split("?")[0].match(/\.md$/i) ? (
+                      <div className="custom-scrollbar h-full w-full overflow-auto rounded-xl border border-gray-200 bg-white p-6 shadow-sm md:p-8">
+                        {isTextLoading ? (
+                          <div className="flex h-full items-center justify-center text-slate-400">
+                            Loading content...
+                          </div>
+                        ) : (
+                          <article className="prose prose-slate prose-sm sm:prose-base mx-auto w-full max-w-4xl break-words">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                              {preprocessMarkdown(textContent)}
+                            </ReactMarkdown>
+                          </article>
+                        )}
+                      </div>
                     ) : selectedFilePath
                         .split("?")[0]
-                        .match(/\.(csv|json|md|txt)$/i) ? (
+                        .match(/\.(csv|json|txt)$/i) ? (
                       <div
                         className={`custom-scrollbar h-full w-full overflow-auto rounded-xl border border-gray-200 bg-white shadow-sm ${selectedFilePath.split("?")[0].endsWith(".csv") ? "p-0" : "p-6 font-mono text-sm whitespace-pre text-slate-700"}`}
                       >
@@ -750,7 +797,7 @@ export default function DppWorkspacePage() {
                       id="sku-display"
                       className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-sm font-medium text-slate-500"
                     >
-                      {PRODUCTS.find((p) => p.id === selectedProductId)?.name}{" "}
+                      {products.find((p) => p.id === selectedProductId)?.name}{" "}
                       (Ready for Passport)
                     </div>
                     <p className="mt-1 flex items-center text-[10px] text-emerald-600">

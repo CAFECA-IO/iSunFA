@@ -28,6 +28,10 @@ interface IDemoItem {
     hasFin: boolean;
     hasEsg: boolean;
     hasPersonaHtml: boolean;
+    hasBom?: boolean;
+    hasSpecs?: boolean;
+    dppGroundTruthFile?: string;
+    dppComplianceFile?: string;
   };
   isComplete: boolean;
 }
@@ -153,61 +157,106 @@ export default function DppDemoListPage() {
                     </p>
                   </div>
 
-                  {/* Info: (20260609 - Tzuhan) Day 1 進度顯示 */}
-                  <div className="w-full max-w-md flex-1">
-                    <p className="mb-2 text-xs font-semibold text-gray-500">
-                      生成進度 (Phase 1)
-                    </p>
-                    <div className="flex items-center justify-between rounded-lg border border-gray-100 bg-white p-2 text-xs font-medium text-gray-600 shadow-sm">
-                      <div className="flex items-center gap-1.5">
-                        {item.progress.hasFin ? (
-                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                        ) : (
-                          <AlertCircle className="h-4 w-4 text-amber-500" />
-                        )}
-                        財報下載
-                      </div>
-                      <div className="h-px w-4 bg-gray-300" />
-                      <div className="flex items-center gap-1.5">
-                        {item.progress.hasEsg ? (
-                          <>
+                  {/* Info: (20260609 - Tzuhan) 進度顯示 */}
+                  <div className="flex w-full flex-1 flex-col gap-3 xl:flex-row">
+                    <div className="flex-1">
+                      <p className="mb-2 text-xs font-semibold text-gray-500">
+                        Phase 1: 基礎資料
+                      </p>
+                      <div className="flex items-center justify-between rounded-lg border border-gray-100 bg-white p-2 text-xs font-medium text-gray-600 shadow-sm">
+                        <div className="flex items-center gap-1.5">
+                          {item.progress.hasFin ? (
                             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                            ESG 下載
-                          </>
-                        ) : item.year === "2025" ||
-                          (!item.progress.hasEsg &&
-                            item.progress.hasPersonaHtml) ? (
-                          <>
-                            {item.progress.hasPersonaHtml ? (
-                              <Sparkles className="h-4 w-4 text-purple-500" />
-                            ) : (
-                              <AlertCircle className="h-4 w-4 text-amber-500" />
-                            )}
-                            <span
-                              className={
-                                item.progress.hasPersonaHtml
-                                  ? "text-purple-600"
-                                  : ""
-                              }
-                            >
-                              ESG 推估
-                            </span>
-                          </>
-                        ) : (
-                          <>
+                          ) : (
                             <AlertCircle className="h-4 w-4 text-amber-500" />
-                            ESG 下載
-                          </>
-                        )}
+                          )}
+                          財報下載
+                        </div>
+                        <div className="h-px w-2 bg-gray-300 sm:w-4" />
+                        <div className="flex items-center gap-1.5">
+                          {item.progress.hasEsg ? (
+                            <>
+                              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                              ESG 下載
+                            </>
+                          ) : item.year === "2025" ||
+                            (!item.progress.hasEsg &&
+                              item.progress.hasPersonaHtml) ? (
+                            <>
+                              {item.progress.hasPersonaHtml ? (
+                                <Sparkles className="h-4 w-4 text-purple-500" />
+                              ) : (
+                                <AlertCircle className="h-4 w-4 text-amber-500" />
+                              )}
+                              <span
+                                className={
+                                  item.progress.hasPersonaHtml
+                                    ? "text-purple-600"
+                                    : ""
+                                }
+                              >
+                                ESG 推估
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <AlertCircle className="h-4 w-4 text-amber-500" />
+                              ESG 下載
+                            </>
+                          )}
+                        </div>
+                        <div className="h-px w-2 bg-gray-300 sm:w-4" />
+                        <div className="flex items-center gap-1.5">
+                          {item.progress.hasPersonaHtml ? (
+                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                          ) : (
+                            <AlertCircle className="h-4 w-4 text-amber-500" />
+                          )}
+                          企業畫像
+                        </div>
                       </div>
-                      <div className="h-px w-4 bg-gray-300" />
-                      <div className="flex items-center gap-1.5">
-                        {item.progress.hasPersonaHtml ? (
-                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                        ) : (
-                          <AlertCircle className="h-4 w-4 text-amber-500" />
-                        )}
-                        企業畫像
+                    </div>
+
+                    <div className="flex-1">
+                      <p className="mb-2 text-xs font-semibold text-gray-500">
+                        Phase 2: DPP 核心資料
+                      </p>
+                      <div className="flex items-center justify-between rounded-lg border border-gray-100 bg-white p-2 text-xs font-medium text-gray-600 shadow-sm">
+                        <div className="flex items-center gap-1.5">
+                          {item.progress.hasBom ? (
+                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                          ) : (
+                            <AlertCircle className="h-4 w-4 text-amber-500" />
+                          )}
+                          BOM 生成
+                        </div>
+                        <div className="h-px w-2 bg-gray-300 sm:w-4" />
+                        <div className="flex items-center gap-1.5">
+                          {item.progress.hasSpecs ? (
+                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                          ) : (
+                            <AlertCircle className="h-4 w-4 text-amber-500" />
+                          )}
+                          規格展開
+                        </div>
+                        <div className="h-px w-2 bg-gray-300 sm:w-4" />
+                        <div className="flex items-center gap-1.5">
+                          {item.progress.dppGroundTruthFile ? (
+                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                          ) : (
+                            <AlertCircle className="h-4 w-4 text-amber-500" />
+                          )}
+                          DPP 原型
+                        </div>
+                        <div className="h-px w-2 bg-gray-300 sm:w-4" />
+                        <div className="flex items-center gap-1.5">
+                          {item.progress.dppComplianceFile ? (
+                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                          ) : (
+                            <AlertCircle className="h-4 w-4 text-amber-500" />
+                          )}
+                          合規宣告
+                        </div>
                       </div>
                     </div>
                   </div>

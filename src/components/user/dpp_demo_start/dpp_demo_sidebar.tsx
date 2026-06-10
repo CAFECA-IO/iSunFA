@@ -45,8 +45,6 @@ export interface IDppDemoSidebarProps {
   handleSelectCompany: (c: ICompanySearchResult) => void;
   year: string;
   setYear: (val: string) => void;
-  productCount: number;
-  setProductCount: (val: number) => void;
   isGenerating: boolean;
   startGeneration: (company?: ICompanySearchResult, mode?: string) => void;
   showExtrapolationAlert: boolean;
@@ -61,8 +59,6 @@ export function DppDemoSidebar({
   handleSelectCompany,
   year,
   setYear,
-  productCount,
-  setProductCount,
   isGenerating,
   startGeneration,
   showExtrapolationAlert,
@@ -88,7 +84,7 @@ export function DppDemoSidebar({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div>
               <label
                 htmlFor="yearSelect"
@@ -101,34 +97,12 @@ export function DppDemoSidebar({
                 value={year}
                 onChange={(e) => setYear(e.target.value)}
                 disabled={isGenerating}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:ring-1 focus:ring-orange-500"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
               >
-                {["2025", "2024"].map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label
-                htmlFor="productCountSelect"
-                className="mb-1 block text-xs font-bold text-slate-700"
-              >
-                Product Count
-              </label>
-              <select
-                id="productCountSelect"
-                value={productCount}
-                onChange={(e) => setProductCount(Number(e.target.value))}
-                disabled={isGenerating}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:ring-1 focus:ring-orange-500"
-              >
-                {[1, 2, 3, 5].map((n) => (
-                  <option key={n} value={n}>
-                    {n} 項產品
-                  </option>
-                ))}
+                <option value="2025">2025 (Cross-Year Prediction)</option>
+                <option value="2024">2024</option>
+                <option value="2023">2023</option>
+                <option value="2022">2022</option>
               </select>
             </div>
           </div>
@@ -186,7 +160,7 @@ export function DppDemoSidebar({
                     <Sparkles className="mr-2 h-4 w-4" />{" "}
                     {isDay2AllDone
                       ? "重新生成 DPP 數據"
-                      : "繼續生成 DPP 核心數據 (Day 2)"}
+                      : "繼續生成 DPP 核心數據"}
                   </button>
                 )}
               </div>

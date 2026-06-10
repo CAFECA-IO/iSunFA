@@ -2,6 +2,8 @@
 
 import { FileText, FileBox, Database } from "lucide-react";
 import { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 const getFileUrl = (path: string) =>
   `/api/dpp-demo/files?action=serve&path=${encodeURIComponent(path)}`;
@@ -16,6 +18,7 @@ export function DppDemoPreviewPane({
   const [jsonData, setJsonData] = useState<Record<string, unknown> | null>(
     null,
   );
+  const [mdContent, setMdContent] = useState<string>("");
 
   useEffect(() => {
     if (selectedFilePath?.endsWith(".json")) {
@@ -26,7 +29,23 @@ export function DppDemoPreviewPane({
     } else {
       setJsonData(null);
     }
+
+    if (selectedFilePath?.endsWith(".md")) {
+      fetch(getFileUrl(selectedFilePath))
+        .then((res) => res.text())
+        .then((text) => setMdContent(text))
+        .catch((err) => console.error("Failed to load MD", err));
+    } else {
+      setMdContent("");
+    }
   }, [selectedFilePath]);
+
+  const preprocessMarkdown = (md: string) => {
+    return md.replace(/<img\s+src="([^"]+)"[^>]*>/g, (match, src) => {
+      const cleanSrc = src.replace(/\s+/g, "");
+      return `![image](${cleanSrc})`;
+    });
+  };
 
   const renderJsonValue = (
     value: unknown,
@@ -172,6 +191,17 @@ export function DppDemoPreviewPane({
           <div className="min-h-0 flex-1 overflow-hidden bg-slate-200 p-0">
             {selectedFilePath.endsWith(".json") ? (
               renderJsonView(jsonData)
+            ) : selectedFilePath.endsWith(".md") ? (
+              <div className="custom-scrollbar h-full overflow-y-auto bg-white p-6 md:p-8">
+                <article className="prose prose-slate prose-sm sm:prose-base mx-auto w-full max-w-4xl break-words">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    urlTransform={(value: string) => value}
+                  >
+                    {preprocessMarkdown(mdContent)}
+                  </ReactMarkdown>
+                </article>
+              </div>
             ) : (
               <iframe
                 title="Document Preview"

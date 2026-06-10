@@ -48,9 +48,14 @@ export async function POST(req: NextRequest) {
         const encoder = new TextEncoder();
 
         const sendEvent = (data: ISseEvent) => {
-          controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify(data)}\n\n`),
-          );
+          try {
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify(data)}\n\n`),
+            );
+          } catch (e) {
+            // Info: (20260610 - Tzuhan) Ignore if controller is already closed (client disconnected)
+            console.warn("Failed to send event, stream might be closed:", e);
+          }
         };
 
         const runScript = async (
@@ -300,7 +305,8 @@ export async function POST(req: NextRequest) {
               file: `data/${stockId}/${year}/outputs/mock_sources/product_specs.json`,
             });
 
-            // Info: (20260610 - Tzuhan) 步驟：動態生成產品藍圖圖片 (Imagen 4)
+            // Info: (20260610 - Tzuhan) 步驟七：動態生成產品藍圖圖片 (Imagen 4)
+            sendEvent({ type: "step_start", stepIndex: 6 });
             sendEvent({
               type: "log",
               message: `Executing generate_product_image.ts...`,
@@ -312,8 +318,8 @@ export async function POST(req: NextRequest) {
               year,
             ]);
 
-            // Info: (20260610 - Tzuhan) 步驟七：DPP 核心真實數據演算
-            sendEvent({ type: "step_start", stepIndex: 6 });
+            // Info: (20260610 - Tzuhan) 步驟八：DPP 核心真實數據演算
+            sendEvent({ type: "step_start", stepIndex: 7 });
             sendEvent({
               type: "log",
               message: `Executing generate_dpp_ground_truth.ts...`,
@@ -325,8 +331,8 @@ export async function POST(req: NextRequest) {
               year,
             ]);
 
-            // Info: (20260610 - Tzuhan) 步驟八：DPP 合規與驗證數據生成
-            sendEvent({ type: "step_start", stepIndex: 7 });
+            // Info: (20260610 - Tzuhan) 步驟九：DPP 合規與驗證數據生成
+            sendEvent({ type: "step_start", stepIndex: 8 });
             sendEvent({
               type: "log",
               message: `Executing generate_dpp_compliance.ts...`,

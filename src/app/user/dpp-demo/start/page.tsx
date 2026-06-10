@@ -70,7 +70,7 @@ export default function DppDemoStartPage() {
   const [selectedCompany, setSelectedCompany] =
     useState<ICompanySearchResult | null>(null);
   const [year, setYear] = useState<string>("2025");
-  const [productCount, setProductCount] = useState<number>(1);
+  const productCount = 3; // Info: 預設為 3 個產品，不再透過 UI 選擇
 
   // Info: (20260609 - Tzuhan) 工作流狀態管理
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -109,13 +109,18 @@ export default function DppDemoStartPage() {
       status: "pending",
     },
     {
+      id: "product_image",
+      label: "7. 產品工程圖繪製 (generate_product_image)",
+      status: "pending",
+    },
+    {
       id: "dpp_ground_truth",
-      label: "7. DPP 核心真實數據演算 (generate_dpp_ground_truth)",
+      label: "8. DPP 核心真實數據演算 (generate_dpp_ground_truth)",
       status: "pending",
     },
     {
       id: "dpp_compliance",
-      label: "8. DPP 合規與驗證數據生成 (generate_dpp_compliance)",
+      label: "9. DPP 合規與驗證數據生成 (generate_dpp_compliance)",
       status: "pending",
     },
   ]);
@@ -236,6 +241,12 @@ export default function DppDemoStartPage() {
                     return newSteps;
                   });
                   setSelectedFilePath(data.file); // Info: (20260609 - Tzuhan) 生成完畢後自動於右側預覽
+                } else {
+                  setSteps((prev) => {
+                    const newSteps = [...prev];
+                    newSteps[currentStepIndex].status = "completed";
+                    return newSteps;
+                  });
                 }
                 setIsGenerating(false);
               } else if (data.type === "error") {
@@ -264,6 +275,7 @@ export default function DppDemoStartPage() {
   // Info: (20260609 - Tzuhan) 處理從列表頁帶過來的參數 (預覽或重新生成)
   useEffect(() => {
     if (!isInitialLoad.current) return;
+    isInitialLoad.current = false;
 
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -273,6 +285,13 @@ export default function DppDemoStartPage() {
 
       if (paramStockId && paramYear) {
         setYear(paramYear);
+
+        // Info: (20260610 - Tzuhan) Remove action from URL to prevent infinite regenerate loop on HMR or reload
+        if (paramAction) {
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete("action");
+          window.history.replaceState({}, "", newUrl.toString());
+        }
 
         // Fetch company lookup to set selectedCompany
         request<{ payload: ICompanySearchResult[] }>(
@@ -393,8 +412,21 @@ export default function DppDemoStartPage() {
                 : undefined,
             },
             {
+              id: "product_image",
+              label: "7. 產品工程圖繪製 (generate_product_image)",
+              status: currentItem.progress.dppGroundTruthFile
+                ? "completed"
+                : "pending",
+              file: currentItem.progress.dppGroundTruthFile
+                ? currentItem.progress.dppGroundTruthFile.replace(
+                    /[^/]+_dpp_ground_truth\.json$/,
+                    "fastener_blueprint.png",
+                  )
+                : undefined,
+            },
+            {
               id: "dpp_ground_truth",
-              label: "7. DPP 核心真實數據演算 (generate_dpp_ground_truth)",
+              label: "8. DPP 核心真實數據演算 (generate_dpp_ground_truth)",
               status: currentItem.progress.dppGroundTruthFile
                 ? "completed"
                 : "pending",
@@ -402,7 +434,7 @@ export default function DppDemoStartPage() {
             },
             {
               id: "dpp_compliance",
-              label: "8. DPP 合規與驗證數據生成 (generate_dpp_compliance)",
+              label: "9. DPP 合規與驗證數據生成 (generate_dpp_compliance)",
               status: currentItem.progress.dppComplianceFile
                 ? "completed"
                 : "pending",
@@ -468,8 +500,6 @@ export default function DppDemoStartPage() {
           handleSelectCompany={handleSelectCompany}
           year={year}
           setYear={setYear}
-          productCount={productCount}
-          setProductCount={setProductCount}
           isGenerating={isGenerating}
           startGeneration={startGeneration}
           showExtrapolationAlert={showExtrapolationAlert}

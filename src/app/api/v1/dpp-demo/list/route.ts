@@ -44,9 +44,6 @@ export async function GET() {
               path.join(yearPath, "outputs", `${stockId}_company_persona.html`),
             );
 
-            // Info: (20260609 - Tzuhan) Day 1 進度：下載財報、ESG報告、生成畫像
-            const isComplete = hasFin && hasEsg && hasPersonaHtml;
-
             // Info: (20260610 - Tzuhan) Day 2 進度檢查
             const hasBom = fs.existsSync(
               path.join(
@@ -101,6 +98,16 @@ export async function GET() {
                 }
               }
             }
+
+            // Info: (20260610 - Tzuhan) 判斷是否所有階段 (Phase 1 & Phase 2) 皆完成
+            const isComplete =
+              hasFin &&
+              hasEsg &&
+              hasPersonaHtml &&
+              hasBom &&
+              hasSpecs &&
+              !!dppGroundTruthFile &&
+              !!dppComplianceFile;
 
             // Info: (20260609 - Tzuhan) 從資料庫撈取公司名稱，如果沒有則顯示企業+代號
             const companyName = companyMap.get(stockId) || `企業 ${stockId}`;
