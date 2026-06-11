@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { jsonOk } from "@/lib/utils/response";
 
 export const dynamic = "force-dynamic";
 import {
@@ -57,7 +58,8 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  return new Response(stream, {
+  return jsonOk({
+    stream,
     headers: {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache, no-transform",

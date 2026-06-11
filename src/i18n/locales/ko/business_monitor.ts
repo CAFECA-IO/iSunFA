@@ -52,4 +52,16 @@ export const businessMonitor = {
         "{{company}} - 다운로드 실패. 잠시 후 다시 시도해 주세요",
     },
   },
+  detail: {
+    back_to_list: "목록으로 돌아가기",
+    report_not_found: "보고서를 찾을 수 없습니다",
+    report_details: "보고서 상세 정보",
+    all_company_reports: "이 기업의 모든 보고서",
+    industry_reports: "동종 업계 보고서",
+    share: "공유",
+    download: "다운로드",
+    download_report: "보고서 다운로드",
+    report_file_suffix: "지속가능경영보고서",
+    year_report: "{{year}} 년 지속가능경영보고서",
+  },
 };
