@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   Building,
   Plus,
-  PlayCircle,
   Loader2,
   CheckCircle2,
   AlertCircle,
@@ -62,7 +61,9 @@ export default function DppListPage() {
   const fetchItems = async () => {
     try {
       setLoading(true);
-      const res = await request<IApiResponse<IDemoItem[]>>("/api/v1/dpp/list");
+      const res = await request<IApiResponse<IDemoItem[]>>(
+        "/api/v1/digital_product_passport_simulator/list",
+      );
       if (res.payload) {
         setItems(res.payload);
       }
@@ -76,8 +77,8 @@ export default function DppListPage() {
   const handleDelete = (stockId: string, year: string, name: string) => {
     setModalConfig({
       isOpen: true,
-      title: t("digitalProductPassport.list.delete_confirm_title"),
-      message: t("digitalProductPassport.list.delete_confirm_message")
+      title: t("digital_product_passport.list.delete_confirm_title"),
+      message: t("digital_product_passport.list.delete_confirm_message")
         .replace("{{name}}", name)
         .replace("{{year}}", year),
       confirmText: t("common.delete"),
@@ -85,7 +86,7 @@ export default function DppListPage() {
       onConfirm: async () => {
         try {
           setLoading(true);
-          await fetch("/api/v1/dpp/list", {
+          await fetch("/api/v1/digital_product_passport_simulator/list", {
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ stockId, year }),
@@ -96,7 +97,7 @@ export default function DppListPage() {
           setModalConfig({
             isOpen: true,
             title: t("common.error"),
-            message: t("digitalProductPassport.list.delete_failed"),
+            message: t("digital_product_passport.list.delete_failed"),
             confirmText: t("common.confirm"),
             cancelText: undefined,
             onConfirm: undefined,
@@ -105,6 +106,72 @@ export default function DppListPage() {
         }
       },
     });
+  };
+
+  const handleDownloadCsv = async (item: IDemoItem) => {
+    try {
+      setLoading(true);
+      const filePath = `data/${item.stockId}/${item.year}/outputs/mock_sources/boms_and_precursors.json`;
+      const res = await fetch(
+        `/api/dpp/files?action=serve&path=${encodeURIComponent(filePath)}`,
+      );
+      if (!res.ok) {
+        throw new Error("BOM file not found");
+      }
+      const bomData = await res.json();
+
+      const rows = [
+        "Product ID,Product Name,Material/Component,Supplier,Country of Origin",
+      ];
+      if (bomData.products && Array.isArray(bomData.products)) {
+        bomData.products.forEach(
+          (product: {
+            productId: string;
+            productName: string;
+            bom?: {
+              precursorName: string;
+              supplierName: string;
+              countryOfOrigin: string;
+            }[];
+          }) => {
+            if (product.bom && Array.isArray(product.bom)) {
+              product.bom.forEach(
+                (component: {
+                  precursorName: string;
+                  supplierName: string;
+                  countryOfOrigin: string;
+                }) => {
+                  rows.push(
+                    `${product.productId},${product.productName},${component.precursorName},${component.supplierName},${component.countryOfOrigin}`,
+                  );
+                },
+              );
+            }
+          },
+        );
+      }
+
+      const csvContent = rows.join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Bill_Of_Materials_${item.stockId}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (e) {
+      console.error(e);
+      setModalConfig({
+        isOpen: true,
+        title: t("common.error"),
+        message:
+          t("digital_product_passport.start.unknown_error") ||
+          "Failed to download CSV",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -117,18 +184,20 @@ export default function DppListPage() {
         <div>
           <h1 className="flex items-center text-xl font-bold text-gray-900">
             <Building className="mr-3 h-6 w-6 text-blue-600" />
-            {t("digitalProductPassport.title")}
+            {t("digital_product_passport.title")}
           </h1>
           <p className="mt-1 text-sm text-gray-500">
-            {t("digitalProductPassport.description")}
+            {t("digital_product_passport.description")}
           </p>
         </div>
         <button
-          onClick={() => router.push("/user/dpp/start")}
+          onClick={() =>
+            router.push("/digital_product_passport_simulator/start")
+          }
           className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" />
-          {t("digitalProductPassport.create_sku")}
+          {t("digital_product_passport.create_sku")}
         </button>
       </div>
 
@@ -141,7 +210,7 @@ export default function DppListPage() {
           <div className="flex flex-1 flex-col items-center justify-center text-gray-500">
             <Building className="mb-4 h-16 w-16 text-gray-300" />
             <p className="text-lg font-medium text-gray-900">
-              {t("digitalProductPassport.no_recent_skus")}
+              {t("digital_product_passport.no_recent_skus")}
             </p>
             <p className="mt-1 text-sm"></p>
           </div>
@@ -165,106 +234,44 @@ export default function DppListPage() {
                   </div>
 
                   {/* Info: (20260609 - Tzuhan) 進度顯示 */}
-                  <div className="flex w-full flex-1 flex-col gap-3 xl:flex-row">
-                    <div className="flex-1">
-                      <p className="mb-2 text-xs font-semibold text-gray-500">
-                        {t("digitalProductPassport.list.phase1")}
-                      </p>
-                      <div className="flex items-center justify-between rounded-lg border border-gray-100 bg-white p-2 text-xs font-medium text-gray-600 shadow-sm">
-                        <div className="flex items-center gap-1.5">
-                          {item.progress.hasFin ? (
-                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                          ) : (
-                            <AlertCircle className="h-4 w-4 text-amber-500" />
-                          )}
-                          {t(
-                            "digitalProductPassport.list.esg_download",
-                          ).replace("ESG", "FIN")}
-                        </div>
-                        <div className="h-px w-2 bg-gray-300 sm:w-4" />
-                        <div className="flex items-center gap-1.5">
-                          {item.progress.hasEsg ? (
-                            <>
-                              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                              {t("digitalProductPassport.list.esg_download")}
-                            </>
-                          ) : item.year === "2025" ||
-                            (!item.progress.hasEsg &&
-                              item.progress.hasPersonaHtml) ? (
-                            <>
-                              {item.progress.hasPersonaHtml ? (
-                                <Sparkles className="h-4 w-4 text-purple-500" />
-                              ) : (
-                                <AlertCircle className="h-4 w-4 text-amber-500" />
-                              )}
-                              <span
-                                className={
-                                  item.progress.hasPersonaHtml
-                                    ? "text-purple-600"
-                                    : ""
-                                }
-                              >
-                                {t(
-                                  "digitalProductPassport.list.esg_extrapolate",
-                                )}
-                              </span>
-                            </>
-                          ) : (
-                            <>
-                              <AlertCircle className="h-4 w-4 text-amber-500" />
-                              {t("digitalProductPassport.list.esg_download")}
-                            </>
-                          )}
-                        </div>
-                        <div className="h-px w-2 bg-gray-300 sm:w-4" />
-                        <div className="flex items-center gap-1.5">
-                          {item.progress.hasPersonaHtml ? (
-                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                          ) : (
-                            <AlertCircle className="h-4 w-4 text-amber-500" />
-                          )}
-                          {t("digitalProductPassport.list.company_info")}
-                        </div>
+                  <div className="flex w-full flex-1 flex-col justify-center overflow-x-auto rounded-lg border border-gray-100 bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-start">
+                    <div className="flex w-max items-center gap-2 text-xs font-semibold text-gray-500 sm:gap-4">
+                      <div className="flex items-center gap-1.5">
+                        {item.progress.hasFin ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        ) : (
+                          <AlertCircle className="h-4 w-4 text-amber-500" />
+                        )}
+                        {t("digital_product_passport.sidebar.mode_accounting")}
                       </div>
-                    </div>
-
-                    <div className="flex-1">
-                      <p className="mb-2 text-xs font-semibold text-gray-500">
-                        {t("digitalProductPassport.list.phase23")}
-                      </p>
-                      <div className="flex items-center justify-between rounded-lg border border-gray-100 bg-white p-2 text-xs font-medium text-gray-600 shadow-sm">
-                        <div className="flex items-center gap-1.5">
-                          {item.progress.hasBom ? (
-                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                          ) : (
-                            <AlertCircle className="h-4 w-4 text-amber-500" />
-                          )}
-                          {t("digitalProductPassport.sidebar.mode_catalog")
-                            .replace("生成", "")
-                            .replace(" (BOM)", "")}
-                        </div>
-                        <div className="h-px w-2 bg-gray-300 sm:w-4" />
-                        <div
-                          className="flex items-center gap-1.5"
-                          title={
-                            item.progress.products
-                              ? `${t("digitalProductPassport.list.product_count")}${item.progress.products.length}`
-                              : ""
-                          }
-                        >
-                          {item.progress.products &&
-                          item.progress.products.length > 0 &&
-                          item.progress.products.every(
-                            (p) =>
-                              p.progress.dppGroundTruthFile &&
-                              p.progress.dppComplianceFile,
-                          ) ? (
-                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                          ) : (
-                            <AlertCircle className="h-4 w-4 text-amber-500" />
-                          )}
-                          DPP
-                        </div>
+                      <div className="h-px w-2 bg-gray-300 sm:w-4" />
+                      <div className="flex items-center gap-1.5">
+                        {item.progress.hasEsg ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        ) : (
+                          <AlertCircle className="h-4 w-4 text-amber-500" />
+                        )}
+                        {t("digital_product_passport.sidebar.mode_carbon")}
+                      </div>
+                      <div className="h-px w-2 bg-gray-300 sm:w-4" />
+                      <div className="flex items-center gap-1.5">
+                        {item.progress.hasPersonaHtml ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        ) : (
+                          <AlertCircle className="h-4 w-4 text-amber-500" />
+                        )}
+                        {t("digital_product_passport.sidebar.mode_business")}
+                      </div>
+                      <div className="h-px w-2 bg-gray-300 sm:w-4" />
+                      <div className="flex items-center gap-1.5">
+                        {item.progress.hasBom ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        ) : (
+                          <AlertCircle className="h-4 w-4 text-amber-500" />
+                        )}
+                        {t("digital_product_passport.sidebar.mode_catalog")
+                          .replace("生成", "")
+                          .replace(" (BOM)", "")}
                       </div>
                     </div>
                   </div>
@@ -280,7 +287,7 @@ export default function DppListPage() {
                         }
                         onClick={() =>
                           router.push(
-                            `/user/dpp/start?stockId=${item.stockId}&year=${item.year}&action=view`,
+                            `/digital_product_passport_simulator/start?stockId=${item.stockId}&year=${item.year}&action=view`,
                           )
                         }
                         className="flex items-center justify-center rounded-lg p-2 text-gray-400 transition hover:bg-blue-50 hover:text-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
@@ -310,7 +317,7 @@ export default function DppListPage() {
                       <button
                         onClick={() =>
                           router.push(
-                            `/user/dpp/start?stockId=${item.stockId}&year=${item.year}&action=extrapolate`,
+                            `/digital_product_passport_simulator/start?stockId=${item.stockId}&year=${item.year}&action=extrapolate`,
                           )
                         }
                         className="flex items-center justify-center rounded-lg p-2 text-indigo-400 transition hover:bg-indigo-50 hover:text-indigo-500"
@@ -318,17 +325,13 @@ export default function DppListPage() {
                         <Wand2 className="h-5 w-5" />
                       </button>
                       <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1.5 -translate-x-1/2 rounded bg-gray-800 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-white opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
-                        {t("digitalProductPassport.list.esg_extrapolate")}
+                        {t("digital_product_passport.list.esg_extrapolate")}
                       </div>
                     </div>
 
                     <div className="group relative">
                       <button
-                        onClick={() =>
-                          router.push(
-                            `/user/dpp/start?stockId=${item.stockId}&year=${item.year}&action=redownload`,
-                          )
-                        }
+                        onClick={() => handleDownloadCsv(item)}
                         className="flex items-center justify-center rounded-lg p-2 text-gray-400 transition hover:bg-blue-50 hover:text-blue-500"
                       >
                         <DownloadCloud className="h-5 w-5" />
@@ -342,7 +345,7 @@ export default function DppListPage() {
                       <button
                         onClick={() =>
                           router.push(
-                            `/user/dpp/start?stockId=${item.stockId}&year=${item.year}&action=regenerate`,
+                            `/digital_product_passport_simulator/start?stockId=${item.stockId}&year=${item.year}&action=regenerate`,
                           )
                         }
                         className="flex items-center justify-center rounded-lg p-2 text-gray-400 transition hover:bg-purple-50 hover:text-purple-500"
@@ -353,19 +356,6 @@ export default function DppListPage() {
                         {t("common.regenerate")}
                       </div>
                     </div>
-
-                    <button
-                      disabled={!item.isComplete}
-                      onClick={() => router.push("/user/dpp/workspace")}
-                      className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-5 py-2 text-sm font-bold shadow-sm transition sm:flex-none ${
-                        item.isComplete
-                          ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:scale-105 hover:shadow-md"
-                          : "cursor-not-allowed bg-gray-100 text-gray-400"
-                      } `}
-                    >
-                      <PlayCircle className="h-4 w-4" />
-                      {t("digitalProductPassport.list.enter_workspace")}
-                    </button>
                   </div>
                 </div>
               </div>

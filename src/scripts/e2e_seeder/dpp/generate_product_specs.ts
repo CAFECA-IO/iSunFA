@@ -252,7 +252,7 @@ if (
   const year = process.argv[3] || "2024";
   if (!stockId) {
     console.error(
-      "❌ 請提供股票代號，例如: npx tsx src/scripts/e2e-seeder/dpp/generate_product_specs.ts 2066",
+      "❌ 請提供股票代號，例如: npx tsx src/scripts/e2e_seeder/dpp/generate_product_specs.ts 2066",
     );
     process.exit(1);
   }

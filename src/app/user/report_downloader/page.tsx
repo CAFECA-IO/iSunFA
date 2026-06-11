@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { CompanySearchInput } from "@/components/common/company_search_input";
-import { ICompanySearchResult } from "@/app/user/dpp/start/page";
+import { ICompanySearchResult } from "@/app/(landing)/digital_product_passport_simulator/start/page";
 import {
   DownloadCloud,
   Loader2,

@@ -55,6 +55,9 @@ export const analysis = {
     label: "企業名または法人番号",
     placeholder: "正式名称、略称、または法人番号を入力...",
     searching: "検索中...",
+    unsupported_title: "未上場企業はサポートされていません",
+    unsupported_desc:
+      "現在、システムは上場企業の公開財務およびESG報告書の自動解析のみをサポートしています。特定の企業のデモが必要な場合は、技術チームに連絡して手動で設定してください。",
     not_found:
       "企業が見つかりません。より完全な名称または法人番号を入力してください。",
     missing_tax_id_desc:

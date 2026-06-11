@@ -9,7 +9,6 @@ import {
   PackageOpen,
   Search,
   Loader2,
-  PlayCircle,
 } from "lucide-react";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { useState, useEffect } from "react";
@@ -217,15 +216,6 @@ export default function DppDashboard() {
             {t("digital_product_passport.description")}
           </p>
         </div>
-        {user && (
-          <button
-            onClick={() => router.push("/user/dpp/list")}
-            className="flex flex-shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:scale-105 hover:shadow-md focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none"
-          >
-            <PlayCircle className="h-5 w-5" />
-            體驗 AI 數位護照 Demo
-          </button>
-        )}
       </div>
 
       {user ? (

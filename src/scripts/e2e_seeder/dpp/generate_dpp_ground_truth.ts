@@ -7,6 +7,7 @@ import {
   GenerativeModel,
 } from "@google/generative-ai";
 import * as dotenv from "dotenv";
+import { lookupCompany } from "@/lib/utils/company_lookup";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
@@ -300,12 +301,10 @@ export async function generateDppGroundTruth(
       `${productId}_dpp_ground_truth.json`,
     );
 
-    // Info: (20260604 - Tzuhan) 防止 AI 產生幻覺，強迫寫死真實公司英文名稱
-    const stockNameMap: Record<string, string> = {
-      "2066": "Sumeeko Industries Co., Ltd.",
-      "5007": "San Shing Fastech Corp.",
-    };
-    const companyNameEN = stockNameMap[stockId] || `Company ${stockId}`;
+    // Info: (20260604 - Tzuhan) 防止 AI 產生幻覺，強制注入真實公司名稱
+    const companyData = await lookupCompany(stockId);
+    const companyNameEN =
+      companyData.length > 0 ? companyData[0].name : `Company ${stockId}`;
 
     // Info: (20260604 - Tzuhan) 建立強大的 Context 文本 (針對單一 SKU)
     const baseContext = `我們正在為台灣公司代號 ${stockId} (年份 ${year}) 的產品 ${productId} (${product.productName}) 建立數位產品護照 (DPP) 的 Ground Truth 測試數據。
@@ -427,7 +426,7 @@ ${baseContext}
       .padStart(5, "0")}`;
 
     parsedDpp.importer = {
-      companyName: "Sumeeko EU BV",
+      companyName: `${companyNameEN} EU BV`,
       address: "Berliner Straße 123, 10713 Berlin, Germany",
       eori: "DE12345678901234",
     };

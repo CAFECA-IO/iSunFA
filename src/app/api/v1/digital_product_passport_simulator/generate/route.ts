@@ -239,7 +239,7 @@ export async function POST(req: NextRequest) {
                 "npx",
                 [
                   "tsx",
-                  "src/scripts/e2e-seeder/ai_vision_extractor.ts",
+                  "src/scripts/e2e_seeder/ai_vision_extractor.ts",
                   stockId,
                   year,
                 ],
@@ -267,7 +267,7 @@ export async function POST(req: NextRequest) {
               });
               await runScript("npx", [
                 "tsx",
-                "src/scripts/e2e-seeder/persona_generator.ts",
+                "src/scripts/e2e_seeder/persona_generator.ts",
                 stockId,
                 year,
                 `--products=${productCount}`,
@@ -276,7 +276,7 @@ export async function POST(req: NextRequest) {
               sendEvent({ type: "log", message: `Rendering HTML persona...` });
               await runScript("npx", [
                 "tsx",
-                "src/scripts/e2e-seeder/render_persona_html.ts",
+                "src/scripts/e2e_seeder/render_persona_html.ts",
                 stockId,
                 year,
               ]);
@@ -296,7 +296,7 @@ export async function POST(req: NextRequest) {
             });
             await runScript("npx", [
               "tsx",
-              "src/scripts/e2e-seeder/cbam/generate_bom_precursors.ts",
+              "src/scripts/e2e_seeder/cbam/generate_bom_precursors.ts",
               stockId,
               year,
               productCount.toString(),
@@ -322,7 +322,7 @@ export async function POST(req: NextRequest) {
             });
             await runScript("npx", [
               "tsx",
-              "src/scripts/e2e-seeder/dpp/generate_product_specs.ts",
+              "src/scripts/e2e_seeder/dpp/generate_product_specs.ts",
               stockId,
               year,
               ...(productArg ? [productArg] : []),
@@ -340,7 +340,7 @@ export async function POST(req: NextRequest) {
             });
             await runScript("npx", [
               "tsx",
-              "src/scripts/e2e-seeder/dpp/generate_product_image.ts",
+              "src/scripts/e2e_seeder/dpp/generate_product_image.ts",
               stockId,
               year,
               ...(productArg ? [productArg] : []),
@@ -354,7 +354,7 @@ export async function POST(req: NextRequest) {
             });
             await runScript("npx", [
               "tsx",
-              "src/scripts/e2e-seeder/dpp/generate_dpp_ground_truth.ts",
+              "src/scripts/e2e_seeder/dpp/generate_dpp_ground_truth.ts",
               stockId,
               year,
               ...(productArg ? [productArg] : []),
@@ -368,7 +368,7 @@ export async function POST(req: NextRequest) {
             });
             await runScript("npx", [
               "tsx",
-              "src/scripts/e2e-seeder/dpp/generate_dpp_compliance.ts",
+              "src/scripts/e2e_seeder/dpp/generate_dpp_compliance.ts",
               stockId,
               year,
               ...(productArg ? [productArg] : []),

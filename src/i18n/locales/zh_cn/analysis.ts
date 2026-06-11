@@ -53,6 +53,9 @@ export const analysis = {
     label: "企业名称或统一社会信用代码",
     placeholder: "输入全称、简称或统一代码...",
     searching: "搜索中...",
+    unsupported_title: "尚未支援此非公开发行企业",
+    unsupported_desc:
+      "目前系统仅支持上市柜公司之公开财报与 ESG 可持续发展报告自动梳理。若需特定企业展示，请联系技术团队进行手动建档。",
     not_found: "找不到此公司，请尝试输入更完整的全称或统一代码。",
     missing_tax_id_desc:
       "此账本（{{name}}）尚未设置统一对应代码，内部数据分析需使用统一代码。请在此补齐设置：",

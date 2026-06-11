@@ -1,9 +1,9 @@
-import { extractContextFromPdf } from "@/scripts/e2e-seeder/ai_vision_extractor";
-import { generateFinancialVouchers } from "@/scripts/e2e-seeder/financial_reverse_engineer";
-import { generateEsgRecords } from "@/scripts/e2e-seeder/esg_reverse_engineer";
-import { generateReceiptImages } from "@/scripts/e2e-seeder/receipt_image_generator";
-import { runPhase2ReceiptAnalysis } from "@/scripts/e2e-seeder/phase2_runner";
-import { runCrossValidation } from "@/scripts/e2e-seeder/cross_validator";
+import { extractContextFromPdf } from "@/scripts/e2e_seeder/ai_vision_extractor";
+import { generateFinancialVouchers } from "@/scripts/e2e_seeder/financial_reverse_engineer";
+import { generateEsgRecords } from "@/scripts/e2e_seeder/esg_reverse_engineer";
+import { generateReceiptImages } from "@/scripts/e2e_seeder/receipt_image_generator";
+import { runPhase2ReceiptAnalysis } from "@/scripts/e2e_seeder/phase2_runner";
+import { runCrossValidation } from "@/scripts/e2e_seeder/cross_validator";
 
 export const runPipeline = async (
   stockId: string,

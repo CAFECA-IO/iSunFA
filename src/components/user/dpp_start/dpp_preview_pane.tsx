@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, FileBox, Database } from "lucide-react";
+import { FileText, FileBox, Database, Download } from "lucide-react";
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -139,7 +139,7 @@ export function DppPreviewPane({ selectedFilePath }: IDppPreviewPaneProps) {
     if (!data)
       return (
         <div className="p-8 text-center text-slate-500">
-          {t("digitalProductPassport.preview_extra.loading")}
+          {t("digital_product_passport.preview_extra.loading")}
         </div>
       );
 
@@ -153,10 +153,10 @@ export function DppPreviewPane({ selectedFilePath }: IDppPreviewPaneProps) {
         <div className="mb-6">
           <h2 className="mb-2 flex items-center text-lg font-bold text-slate-800">
             <Database className="mr-2 h-5 w-5 text-indigo-500" />
-            {t("digitalProductPassport.preview_extra.json_title")}
+            {t("digital_product_passport.preview_extra.json_title")}
           </h2>
           <p className="text-xs text-slate-500">
-            {t("digitalProductPassport.preview_extra.json_desc")}
+            {t("digital_product_passport.preview_extra.json_desc")}
           </p>
         </div>
 
@@ -191,6 +191,18 @@ export function DppPreviewPane({ selectedFilePath }: IDppPreviewPaneProps) {
                 {selectedFilePath.split("/").pop()}
               </span>
             </div>
+            <div className="flex items-center gap-2">
+              <a
+                href={getFileUrl(selectedFilePath)}
+                download={selectedFilePath.split("/").pop()}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1 rounded-md bg-orange-100 px-3 py-1.5 text-xs font-semibold text-orange-600 transition hover:bg-orange-200"
+              >
+                <Download className="h-4 w-4" />
+                {t("common.download") || "下載模擬資料"}
+              </a>
+            </div>
           </div>
           <div className="min-h-0 flex-1 overflow-hidden bg-slate-200 p-0">
             {selectedFilePath.endsWith(".json") ? (
@@ -219,10 +231,10 @@ export function DppPreviewPane({ selectedFilePath }: IDppPreviewPaneProps) {
         <div className="flex flex-1 flex-col items-center justify-center bg-slate-50/50 p-8 text-center text-slate-500">
           <FileBox className="mb-4 h-16 w-16 text-slate-300" />
           <p className="text-lg font-bold text-slate-600">
-            {t("digitalProductPassport.preview_extra.waiting_title")}
+            {t("digital_product_passport.preview_extra.waiting_title")}
           </p>
           <p className="mt-2 text-sm text-slate-400">
-            {t("digitalProductPassport.preview_extra.waiting_desc")}
+            {t("digital_product_passport.preview_extra.waiting_desc")}
           </p>
         </div>
       )}

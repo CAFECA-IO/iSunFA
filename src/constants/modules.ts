@@ -43,6 +43,12 @@ export const MODULES = [
 export const PUBLIC_MODULES = [
   { key: "analysis", icon: PieChart, basic: true, nav: true },
   { key: "ai_consultation_room", icon: Bot, basic: true, nav: true },
+  {
+    key: "digital_product_passport_simulator",
+    icon: QrCode,
+    basic: true,
+    nav: true,
+  },
   { key: "digital_product_passport", icon: QrCode, basic: true, nav: true },
   { key: "salary_calculator", icon: Wallet, basic: true, nav: true },
   {
@@ -69,13 +75,6 @@ export const ADMIN_MODULES = [
 ];
 
 export const SYSTEM_MODULES = [
-  {
-    id: "dpp_workspace",
-    icon: QrCode,
-    href: "/user/dpp-workspace",
-    labelKey: "features.items.digital_product_passport.title",
-    enable: true,
-  },
   {
     id: "account_book",
     icon: Library,
@@ -148,6 +147,8 @@ export function getModuleI18nKey(key: string, isAdminContext: boolean = false) {
       return "features.items.tax.title";
     case "signing":
       return "features.items.signing.title";
+    case "digital_product_passport_simulator":
+      return "features.items.digital_product_passport_simulator.title";
     case "digital_product_passport":
       return "features.items.digital_product_passport.title";
     case "campaign":

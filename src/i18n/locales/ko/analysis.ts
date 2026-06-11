@@ -53,6 +53,9 @@ export const analysis = {
     label: "기업명 또는 사업자등록번호",
     placeholder: "전체 이름, 약어 또는 사업자등록번호 입력...",
     searching: "검색 중...",
+    unsupported_title: "비상장 기업은 지원되지 않습니다",
+    unsupported_desc:
+      "현재 시스템은 상장 기업의 공개 재무 및 ESG 보고서 자동 분석만 지원합니다. 특정 기업 데모가 필요한 경우 기술 팀에 문의하여 수동으로 설정하십시오.",
     not_found:
       "기업을 찾을 수 없습니다. 더 완전한 이름이나 사업자등록번호를 입력해 보세요.",
     missing_tax_id_desc:

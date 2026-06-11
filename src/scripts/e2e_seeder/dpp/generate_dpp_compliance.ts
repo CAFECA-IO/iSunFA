@@ -4,6 +4,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import * as dotenv from "dotenv";
 import { mdToPdf } from "md-to-pdf";
 import { IProductBom } from "@/interfaces/cbam";
+import { lookupCompany } from "@/lib/utils/company_lookup";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
@@ -59,14 +60,10 @@ export async function generateDppCompliance(
     },
   });
 
+  const companyData = await lookupCompany(stockId);
   const companyName =
-    stockId === "2066"
-      ? "SHIH-TEH Industrial Co., Ltd. (世德工業)"
-      : `Company ${stockId}`;
-  const address =
-    stockId === "2066"
-      ? "No. 43, Jianuo Rd., Gangshan Dist., Kaohsiung City, Taiwan"
-      : "Taiwan";
+    companyData.length > 0 ? companyData[0].name : `Company ${stockId}`;
+  const address = "Taiwan";
   const today = new Date().toISOString().split("T")[0];
 
   for (const product of products) {
@@ -196,7 +193,7 @@ if (
   const stockId = process.argv[2];
   if (!stockId) {
     console.error(
-      "❌ 請提供股票代號，例如: npx tsx src/scripts/e2e-seeder/dpp/generate_dpp_compliance.ts 2066",
+      "❌ 請提供股票代號，例如: npx tsx src/scripts/e2e_seeder/dpp/generate_dpp_compliance.ts 2330",
     );
     process.exit(1);
   }

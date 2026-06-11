@@ -1,4 +1,4 @@
-import { ICompanySearchResult } from "@/app/user/dpp/start/page";
+import { ICompanySearchResult } from "@/app/(landing)/digital_product_passport_simulator/start/page";
 import {
   Loader2,
   AlertCircle,
@@ -82,7 +82,7 @@ export function DppSidebar({
               htmlFor="companyKeyword"
               className="mb-1 block text-xs font-bold text-slate-700"
             >
-              {t("digitalProductPassport.sidebar_extra.target_enterprise")}
+              {t("digital_product_passport.sidebar_extra.target_enterprise")}
             </label>
             <CompanySearchInput
               value={keyword}
@@ -98,7 +98,7 @@ export function DppSidebar({
                 htmlFor="yearSelect"
                 className="mb-1 block text-xs font-bold text-slate-700"
               >
-                {t("digitalProductPassport.sidebar_extra.year")}
+                {t("digital_product_passport.sidebar_extra.year")}
               </label>
               <select
                 id="yearSelect"
@@ -108,7 +108,7 @@ export function DppSidebar({
                 className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
               >
                 <option value="2025">
-                  {t("digitalProductPassport.sidebar_extra.year_prediction")}
+                  {t("digital_product_passport.sidebar_extra.year_prediction")}
                 </option>
                 <option value="2024">2024</option>
                 <option value="2023">2023</option>
@@ -136,13 +136,13 @@ export function DppSidebar({
                   {isGenerating ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
-                      {t("digitalProductPassport.sidebar_extra.processing")}
+                      {t("digital_product_passport.sidebar_extra.processing")}
                     </>
                   ) : (
                     <>
                       <DownloadCloud className="mr-2 h-4 w-4" />{" "}
                       {t(
-                        "digitalProductPassport.sidebar_extra.download_reports",
+                        "digital_product_passport.sidebar_extra.download_reports",
                       )}
                     </>
                   )}
@@ -162,9 +162,9 @@ export function DppSidebar({
                   <Sparkles className="mr-2 h-4 w-4" />{" "}
                   {isAllDone
                     ? t(
-                        "digitalProductPassport.sidebar_extra.regenerate_persona",
+                        "digital_product_passport.sidebar_extra.regenerate_persona",
                       )
-                    : t("digitalProductPassport.sidebar_extra.execute_ai")}
+                    : t("digital_product_passport.sidebar_extra.execute_ai")}
                 </button>
                 {isAllDone && (
                   <button
@@ -176,8 +176,12 @@ export function DppSidebar({
                   >
                     <Sparkles className="mr-2 h-4 w-4" />{" "}
                     {steps[4]?.status === "completed"
-                      ? t("digitalProductPassport.sidebar_extra.regenerate_bom")
-                      : t("digitalProductPassport.sidebar_extra.generate_bom")}
+                      ? t(
+                          "digital_product_passport.sidebar_extra.regenerate_bom",
+                        )
+                      : t(
+                          "digital_product_passport.sidebar_extra.generate_bom",
+                        )}
                   </button>
                 )}
                 {steps[4]?.status === "completed" &&
@@ -189,7 +193,7 @@ export function DppSidebar({
                         className="mb-2 block text-xs font-bold text-slate-700"
                       >
                         {t(
-                          "digitalProductPassport.sidebar_extra.select_product_dpp",
+                          "digital_product_passport.sidebar_extra.select_product_dpp",
                         )}
                       </label>
                       <select
@@ -215,10 +219,10 @@ export function DppSidebar({
                         <Sparkles className="mr-2 h-4 w-4" />{" "}
                         {steps[5]?.status === "completed"
                           ? t(
-                              "digitalProductPassport.sidebar_extra.regenerate_dpp",
+                              "digital_product_passport.sidebar_extra.regenerate_dpp",
                             )
                           : t(
-                              "digitalProductPassport.sidebar_extra.generate_dpp",
+                              "digital_product_passport.sidebar_extra.generate_dpp",
                             )}
                       </button>
                     </div>
@@ -231,34 +235,34 @@ export function DppSidebar({
 
       <div className="custom-scrollbar flex-1 overflow-y-auto bg-white p-4">
         <h3 className="mb-4 text-xs font-bold tracking-widest text-slate-500 uppercase">
-          {t("digitalProductPassport.sidebar_extra.pipeline_execution")}
+          {t("digital_product_passport.sidebar_extra.pipeline_execution")}
         </h3>
         {showExtrapolationAlert && (
           <div className="animate-in fade-in slide-in-from-top-4 mb-4 flex flex-col gap-2 rounded-xl border border-orange-200 bg-orange-50 p-4 shadow-sm duration-500">
             <div className="flex items-center text-sm font-bold text-orange-800">
               <AlertCircle className="mr-2 h-4 w-4 flex-shrink-0" />
               {t(
-                "digitalProductPassport.sidebar_extra.extrapolation_alert_title",
+                "digital_product_passport.sidebar_extra.extrapolation_alert_title",
               )}
             </div>
             <div className="pl-6 text-[11px] leading-relaxed text-orange-700/80">
               {t(
-                "digitalProductPassport.sidebar_extra.extrapolation_alert_desc",
+                "digital_product_passport.sidebar_extra.extrapolation_alert_desc",
               )}
               <ul className="mt-1.5 list-disc space-y-1 pl-4">
                 <li>
                   {t(
-                    "digitalProductPassport.sidebar_extra.extrapolation_bullet1",
+                    "digital_product_passport.sidebar_extra.extrapolation_bullet1",
                   )}
                 </li>
                 <li>
                   {t(
-                    "digitalProductPassport.sidebar_extra.extrapolation_bullet2",
+                    "digital_product_passport.sidebar_extra.extrapolation_bullet2",
                   )}
                 </li>
                 <li>
                   {t(
-                    "digitalProductPassport.sidebar_extra.extrapolation_bullet3",
+                    "digital_product_passport.sidebar_extra.extrapolation_bullet3",
                   )}
                 </li>
               </ul>
@@ -298,7 +302,7 @@ export function DppSidebar({
                 {step.status === "completed" && step.file && (
                   <div className="mt-0.5 flex items-center text-xs text-slate-400">
                     <FileText className="mr-1 h-3.5 w-3.5" />
-                    {t("digitalProductPassport.sidebar_extra.click_to_view")}
+                    {t("digital_product_passport.sidebar_extra.click_to_view")}
                   </div>
                 )}
                 {step.log && (

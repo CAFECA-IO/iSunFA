@@ -500,7 +500,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const targetStock = process.argv[2];
   if (!targetStock) {
     console.error(
-      "Please provide a stock ID. Usage: npx tsx src/scripts/e2e-seeder/cross_validator.ts 1538",
+      "Please provide a stock ID. Usage: npx tsx src/scripts/e2e_seeder/cross_validator.ts 1538",
     );
     process.exit(1);
   }

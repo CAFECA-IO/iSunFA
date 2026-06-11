@@ -52,6 +52,9 @@ export const analysis = {
     label: "Company Name or Tax ID",
     placeholder: "Enter full name, abbreviation, or Tax ID...",
     searching: "Searching...",
+    unsupported_title: "Unsupported Private Enterprise",
+    unsupported_desc:
+      "Currently, the system only supports automatic parsing of public financial and ESG reports for listed companies. For specific enterprise demos, please contact the technical team for manual setup.",
     not_found:
       "Company not found. Please try entering a more complete name or Tax ID.",
     missing_tax_id_desc:

@@ -146,7 +146,7 @@ if (
   const stockId = process.argv[2];
   if (!stockId) {
     console.error(
-      "❌ 請提供股票代號，例如: npx tsx src/scripts/e2e-seeder/dpp/generate_product_image.ts 2066",
+      "❌ 請提供股票代號，例如: npx tsx src/scripts/e2e_seeder/dpp/generate_product_image.ts 2066",
     );
     process.exit(1);
   }

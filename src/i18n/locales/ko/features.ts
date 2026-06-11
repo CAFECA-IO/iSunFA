@@ -40,6 +40,10 @@ export const features = {
       title: "AI OCR",
       desc: "영수증 정보를 자동으로 추출하고 분류하여 아카이빙함으로써 수기 입력 업무의 부담을 없앱니다.",
     },
+    digital_product_passport_simulator: {
+      title: "디지털 제품 여권 시뮬레이터",
+      desc: "테스트 및 데모용으로 디지털 제품 여권의 모의 데이터를 제공합니다。",
+    },
     digital_product_passport: {
       title: "디지털 상품 여권",
       desc: "제품의 수명 주기 정보와 탄소 발자국의 디지털 이력서를 작성하여 국제 표준을 준수하고 녹색 경쟁력을 강화합니다.",

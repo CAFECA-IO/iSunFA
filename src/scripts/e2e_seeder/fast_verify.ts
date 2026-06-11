@@ -14,7 +14,7 @@ import { prisma } from "@/lib/prisma";
 import { MoneyUtil } from "@/lib/utils/money";
 import { Prisma, EsgScope, AIAnalysisStatus } from "@/generated";
 import { MeasurementUnit } from "@/constants/enums";
-import { runCrossValidation } from "@/scripts/e2e-seeder/cross_validator";
+import { runCrossValidation } from "@/scripts/e2e_seeder/cross_validator";
 
 interface ISimulatedLine {
   id: string;

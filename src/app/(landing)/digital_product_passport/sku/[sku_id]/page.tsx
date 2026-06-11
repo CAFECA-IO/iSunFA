@@ -35,7 +35,7 @@ export default function SkuDiagnosticPage() {
   const skuId = params.sku_id as string;
 
   const { data: response, isLoading } = useSWR(
-    skuId !== "demo-sku-12345" ? `/api/v1/user/dpp/sku/${skuId}` : null,
+    `/api/v1/user/dpp/sku/${skuId}`,
     fetcher,
   );
 

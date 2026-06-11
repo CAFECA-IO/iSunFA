@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { runPipeline } from "@/scripts/e2e-seeder/run_pipeline";
+import { runPipeline } from "@/scripts/e2e_seeder/run_pipeline";
 import pLimit from "p-limit";
 
 export const runScaleTest = async (

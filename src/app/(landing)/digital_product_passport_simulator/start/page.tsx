@@ -93,47 +93,47 @@ export default function DppStartPage() {
   const [steps, setSteps] = useState<IGenerationStep[]>([
     {
       id: "fin_download",
-      label: t("digitalProductPassport.start.step1"),
+      label: t("digital_product_passport.start.step1"),
       status: "pending",
     },
     {
       id: "esg_download",
-      label: t("digitalProductPassport.start.step2"),
+      label: t("digital_product_passport.start.step2"),
       status: "pending",
     },
     {
       id: "vision",
-      label: t("digitalProductPassport.start.step3"),
+      label: t("digital_product_passport.start.step3"),
       status: "pending",
     },
     {
       id: "persona",
-      label: t("digitalProductPassport.start.step4"),
+      label: t("digital_product_passport.start.step4"),
       status: "pending",
     },
     {
       id: "bom_generation",
-      label: t("digitalProductPassport.start.step5"),
+      label: t("digital_product_passport.start.step5"),
       status: "pending",
     },
     {
       id: "product_specs",
-      label: t("digitalProductPassport.start.step6"),
+      label: t("digital_product_passport.start.step6"),
       status: "pending",
     },
     {
       id: "product_image",
-      label: t("digitalProductPassport.start.step7"),
+      label: t("digital_product_passport.start.step7"),
       status: "pending",
     },
     {
       id: "dpp_ground_truth",
-      label: t("digitalProductPassport.start.step8"),
+      label: t("digital_product_passport.start.step8"),
       status: "pending",
     },
     {
       id: "dpp_compliance",
-      label: t("digitalProductPassport.start.step9"),
+      label: t("digital_product_passport.start.step9"),
       status: "pending",
     },
   ]);
@@ -158,7 +158,7 @@ export default function DppStartPage() {
         setModalConfig({
           isOpen: true,
           title: t("common.error"),
-          message: t("digitalProductPassport.sidebar.select_company_first"),
+          message: t("digital_product_passport.sidebar.select_company_first"),
         });
         return;
       }
@@ -190,7 +190,7 @@ export default function DppStartPage() {
         });
 
         if (!response.body)
-          throw new Error(t("digitalProductPassport.start.unknown_error"));
+          throw new Error(t("digital_product_passport.start.unknown_error"));
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
 
@@ -231,12 +231,14 @@ export default function DppStartPage() {
                   if (!data.file || data.file.endsWith(".json")) {
                     newSteps[1].status = "extrapolated";
                     newSteps[1].label = t(
-                      "digitalProductPassport.start.step2_extrapolate",
+                      "digital_product_passport.start.step2_extrapolate",
                     );
                     newSteps[1].file = data.file;
                   } else {
                     newSteps[1].status = "completed";
-                    newSteps[1].label = t("digitalProductPassport.start.step2");
+                    newSteps[1].label = t(
+                      "digital_product_passport.start.step2",
+                    );
                     newSteps[1].file = data.file;
                   }
                   return newSteps;
@@ -274,7 +276,7 @@ export default function DppStartPage() {
                   newSteps[currentStepIndex].status = "error";
                   newSteps[currentStepIndex].log =
                     data.message ||
-                    t("digitalProductPassport.start.unknown_error");
+                    t("digital_product_passport.start.unknown_error");
                   return newSteps;
                 });
                 setIsGenerating(false);
@@ -287,7 +289,7 @@ export default function DppStartPage() {
         setIsGenerating(false);
       }
     },
-    [selectedCompany, year, productCount],
+    [selectedCompany, year, productCount, t],
   );
 
   const isInitialLoad = useRef(true);
@@ -357,7 +359,9 @@ export default function DppStartPage() {
       return;
     }
 
-    request<IApiResponse<IDemoItem[]>>("/api/v1/dpp/list")
+    request<IApiResponse<IDemoItem[]>>(
+      "/api/v1/digital_product_passport_simulator/list",
+    )
       .then((listRes) => {
         const items = listRes.payload || [];
         const currentItem = items.find(
@@ -392,15 +396,15 @@ export default function DppStartPage() {
           setSteps([
             {
               id: "fin_download",
-              label: t("digitalProductPassport.start.step1"),
+              label: t("digital_product_passport.start.step1"),
               status: currentItem.progress.hasFin ? "completed" : "pending",
               file: currentItem.progress.hasFin ? finFile : undefined,
             },
             {
               id: "esg_download",
               label: isEsgExtrapolated
-                ? t("digitalProductPassport.start.step2_extrapolate")
-                : t("digitalProductPassport.start.step2"),
+                ? t("digital_product_passport.start.step2_extrapolate")
+                : t("digital_product_passport.start.step2"),
               status: currentItem.progress.hasEsg
                 ? "completed"
                 : isEsgExtrapolated && currentItem.progress.hasPersonaHtml
@@ -414,14 +418,14 @@ export default function DppStartPage() {
             },
             {
               id: "vision",
-              label: t("digitalProductPassport.start.step3"),
+              label: t("digital_product_passport.start.step3"),
               status: currentItem.progress.hasPersonaHtml
                 ? "completed"
                 : "pending",
             },
             {
               id: "persona",
-              label: t("digitalProductPassport.start.step4"),
+              label: t("digital_product_passport.start.step4"),
               status: currentItem.progress.hasPersonaHtml
                 ? "completed"
                 : "pending",
@@ -431,7 +435,7 @@ export default function DppStartPage() {
             },
             {
               id: "bom_generation",
-              label: t("digitalProductPassport.start.step5"),
+              label: t("digital_product_passport.start.step5"),
               status: currentItem.progress.hasBom ? "completed" : "pending",
               file: currentItem.progress.hasBom
                 ? `data/${selectedCompany.taxId}/${year}/outputs/mock_sources/boms_and_precursors.json`
@@ -439,7 +443,7 @@ export default function DppStartPage() {
             },
             {
               id: "product_specs",
-              label: t("digitalProductPassport.start.step6"),
+              label: t("digital_product_passport.start.step6"),
               status: activeProduct?.progress.hasSpecs
                 ? "completed"
                 : "pending",
@@ -449,7 +453,7 @@ export default function DppStartPage() {
             },
             {
               id: "product_image",
-              label: t("digitalProductPassport.start.step7"),
+              label: t("digital_product_passport.start.step7"),
               status: activeProduct?.progress.hasImage
                 ? "completed"
                 : "pending",
@@ -459,7 +463,7 @@ export default function DppStartPage() {
             },
             {
               id: "dpp_ground_truth",
-              label: t("digitalProductPassport.start.step8"),
+              label: t("digital_product_passport.start.step8"),
               status: activeProduct?.progress.dppGroundTruthFile
                 ? "completed"
                 : "pending",
@@ -467,7 +471,7 @@ export default function DppStartPage() {
             },
             {
               id: "dpp_compliance",
-              label: t("digitalProductPassport.start.step9"),
+              label: t("digital_product_passport.start.step9"),
               status: activeProduct?.progress.dppComplianceFile
                 ? "completed"
                 : "pending",
@@ -514,7 +518,7 @@ export default function DppStartPage() {
         }
       })
       .catch(console.error);
-  }, [selectedCompany, year, isGenerating, selectedProductId]);
+  }, [selectedCompany, year, isGenerating, selectedProductId, t]);
 
   // Info: (20260609 - Tzuhan) 處理選擇公司
   const handleSelectCompany = (company: ICompanySearchResult) => {
