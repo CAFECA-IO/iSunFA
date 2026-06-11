@@ -20,7 +20,7 @@ function getRandomInt(min: number, max: number) {
 
 function getRandomFloat(min: number, max: number, decimals: number = 2) {
   const str = (Math.random() * (max - min) + min).toFixed(decimals);
-  return parseFloat(str);
+  return MoneyUtil.toDecimal(str).toNumber();
 }
 
 export async function generateOutsourcedLogs(
@@ -114,14 +114,14 @@ export async function generateOutsourcedLogs(
       ) {
         // Info: (20260604 - Tzuhan)電鍍通常增加 0.2% ~ 0.8% 的重量
         const gainRate = getRandomFloat(0.002, 0.008, 4);
-        totalOutputWeightKg = parseFloat(
+        totalOutputWeightKg = MoneyUtil.toDecimal(
           (totalInputWeightKg * (1 + gainRate)).toFixed(2),
-        );
+        ).toNumber();
       } else {
         const lossRate = oProc.lossRate || 0.005;
-        totalOutputWeightKg = parseFloat(
+        totalOutputWeightKg = MoneyUtil.toDecimal(
           (totalInputWeightKg * (1 - lossRate)).toFixed(2),
-        );
+        ).toNumber();
       }
 
       // Info: (20260604 - Tzuhan) 模擬電鍍廠/熱處理廠回報的碳排數據 (CBAM 要求必須區分 Scope 1 與 Scope 2)
@@ -132,12 +132,12 @@ export async function generateOutsourcedLogs(
 
       // Info: (20260604 - Tzuhan)熱處理與表面處理，Scope 2 (用電) 通常佔 60~80%
       const scope2Ratio = getRandomFloat(0.6, 0.8, 2);
-      const scope2Carbon = parseFloat(
+      const scope2Carbon = MoneyUtil.toDecimal(
         (totalReportedCarbon * scope2Ratio).toFixed(2),
-      );
-      const scope1Carbon = parseFloat(
+      ).toNumber();
+      const scope1Carbon = MoneyUtil.toDecimal(
         (totalReportedCarbon - scope2Carbon).toFixed(2),
-      );
+      ).toNumber();
 
       const poDate = new Date(woTimestamp);
       poDate.setDate(poDate.getDate() + getRandomInt(2, 7)); // Info: (20260604 - Tzuhan) 委外通常在成型後幾天進行

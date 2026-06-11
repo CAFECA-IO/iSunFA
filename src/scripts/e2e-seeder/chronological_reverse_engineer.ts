@@ -14,6 +14,7 @@ import {
 } from "@/interfaces/cbam";
 import { IVoucherLineUI } from "@/interfaces/voucher";
 import { AccountUtil } from "@/lib/utils/account_util";
+import { SystemAccountNodes } from "@/constants/system_account_codes";
 import { TW_ACCOUNTS } from "@/constants/accounts/tw";
 import { MoneyUtil } from "@/lib/utils/money";
 import { SemanticAccountMatcher } from "@/lib/utils/semantic_account_matcher";
@@ -81,7 +82,13 @@ function assertReportIntegrity(
   // Info: (20260606 - Tzuhan) Account 1100 is Cash and Cash Equivalents. Account 1101 is Cash.
   // Info: (20260606 - Tzuhan) Our system aggregates it dynamically or it falls under current assets.
   const bsCash = bs.assets.current.items
-    .filter((item) => item.code.startsWith("110")) // Usually 1101, 1103 etc.
+    .filter((item) =>
+      AccountUtil.isDescendantOf(
+        item.code,
+        SystemAccountNodes.CASH_ROOT,
+        TW_ACCOUNTS,
+      ),
+    ) // Info: (20260611 - Tzuhan) Usually 1101, 1103 etc.
     .reduce((acc, curr) => acc + BigInt(curr.amount), 0n)
     .toString();
 
@@ -180,21 +187,37 @@ const SELLING_EXP_POOL = [
 ];
 // Info: (20260606 - AI) ERP 級別單位映射字典
 const getUnitForAccount = (code: string, desc: string): string => {
-  if (code.startsWith("6")) {
-    if (code.startsWith("6111") || code.startsWith("6211")) return "月"; // 租金
-    if (
-      code.startsWith("6116") ||
-      code.startsWith("6216") ||
-      code.startsWith("6316")
+  if (
+    AccountUtil.isDescendantOf(
+      code,
+      SystemAccountNodes.EXPENSE_ROOT,
+      TW_ACCOUNTS,
     )
-      return "人"; // 薪資/實驗等通常跟人或件有關，這裡降落為人/式
-    if (code.startsWith("6225")) return "式"; // 系統維護
+  ) {
+    if (desc.includes("租金")) return "月";
+    if (desc.includes("薪資") || desc.includes("保險") || desc.includes("退休"))
+      return "人";
+    if (desc.includes("系統維護") || desc.includes("電腦軟體")) return "式";
     if (desc.includes("電費") || desc.includes("水")) return "度";
-    if (desc.includes("保險") || desc.includes("退休")) return "人";
     if (desc.includes("運費")) return "趟";
   }
-  if (code === "5111") return "PCS"; // 銷貨收入
-  if (code === "1301" || code === "1310") return "KG"; // 鋼材原料
+  if (code === SystemAccountNodes.COGS_ROOT) return "PCS"; // Info: (20260611 - Tzuhan) 銷貨成本
+  if (
+    AccountUtil.isDescendantOf(
+      code,
+      SystemAccountNodes.INCOME_ROOT,
+      TW_ACCOUNTS,
+    )
+  )
+    return "PCS"; // Info: (20260611 - Tzuhan) 銷貨收入
+  if (
+    AccountUtil.isDescendantOf(
+      code,
+      SystemAccountNodes.INVENTORY_ROOT,
+      TW_ACCOUNTS,
+    )
+  )
+    return "KG"; // Info: (20260611 - Tzuhan) 鋼材原料
   if (desc.includes("委外") || desc.includes("加工")) return "批";
   return "式";
 };
@@ -451,24 +474,25 @@ export const runChronologicalEngine = (
     );
   };
 
-  const dailyElectricity: { [day: number]: number } = {};
+  const dailyElectricity: { [day: number]: Prisma.Decimal } = {};
   for (const log of mesLogs) {
     const dayIndex = getDayIndex(log.Timestamp);
     if (dayIndex >= 0 && dayIndex < daysToSimulate) {
-      dailyElectricity[dayIndex] =
-        (dailyElectricity[dayIndex] || 0) +
-        (Number(log.EnergyConsumed_kWh) || 0);
+      const current = dailyElectricity[dayIndex] || MoneyUtil.toDecimal(0);
+      dailyElectricity[dayIndex] = current.add(
+        MoneyUtil.toDecimal(log.EnergyConsumed_kWh || 0),
+      );
     }
   }
 
   for (const dayStr of Object.keys(dailyElectricity)) {
     const day = parseInt(dayStr, 10);
-    const cost = Math.floor(dailyElectricity[day] * MOCK_ELECTRICITY_PRICE);
-    const costInThousands = Math.floor(cost / 1000);
+    const costDec = dailyElectricity[day].mul(MOCK_ELECTRICITY_PRICE).floor();
+    const costInThousands = costDec.div(1000).floor().toNumber();
     if (costInThousands <= 0) continue;
     totalElectricityCost += costInThousands;
 
-    const vat = Math.floor(costInThousands * 0.05);
+    const vat = costDec.div(1000).mul(0.05).floor().toNumber();
     const totalPayable = costInThousands + vat;
 
     dailyBuckets[day].push({
@@ -533,12 +557,12 @@ export const runChronologicalEngine = (
   for (const log of outsourcedLogs) {
     const dayIndex = getDayIndex(log.DispatchDate);
     if (dayIndex >= 0 && dayIndex < daysToSimulate) {
-      const cost = Math.floor(Number(log.ProcessingFee_NTD) || 0);
-      const costInThousands = Math.floor(cost / 1000);
+      const costDec = MoneyUtil.toDecimal(log.ProcessingFee_NTD || 0).floor();
+      const costInThousands = costDec.div(1000).floor().toNumber();
       if (costInThousands <= 0) continue;
       totalOutsourcedCost += costInThousands;
 
-      const vat = Math.floor(costInThousands * 0.05);
+      const vat = costDec.div(1000).mul(0.05).floor().toNumber();
       const totalPayable = costInThousands + vat;
 
       dailyBuckets[dayIndex].push({
@@ -607,7 +631,7 @@ export const runChronologicalEngine = (
   for (const log of mesLogs) {
     const dayIndex = getDayIndex(log.Timestamp);
     if (dayIndex >= 0 && dayIndex < daysToSimulate) {
-      const weight = Number(log.InputWeight_kg) || 0;
+      const weight = MoneyUtil.toDecimal(log.InputWeight_kg || 0).toNumber();
       if (
         !workOrderInputWeights[log.WorkOrderID] ||
         workOrderInputWeights[log.WorkOrderID].weight < weight
@@ -660,7 +684,10 @@ export const runChronologicalEngine = (
               unit: "KG",
               unitPrice:
                 weight > 0
-                  ? Number((costInThousands / weight).toFixed(4))
+                  ? MoneyUtil.toDecimal(costInThousands)
+                      .div(weight)
+                      .toDecimalPlaces(4)
+                      .toNumber()
                   : costInThousands,
               amount: costInThousands,
             },
@@ -740,12 +767,21 @@ export const runChronologicalEngine = (
   for (let d = 0; d < daysToSimulate; d++) {
     const dailyWipInThousands =
       (dailyElectricity[d]
-        ? Math.floor((dailyElectricity[d] * MOCK_ELECTRICITY_PRICE) / 1000)
+        ? dailyElectricity[d]
+            .mul(MOCK_ELECTRICITY_PRICE)
+            .div(1000)
+            .floor()
+            .toNumber()
         : 0) +
       outsourcedLogs
         .filter((log) => getDayIndex(log.DispatchDate) === d)
         .reduce(
-          (acc, log) => acc + Math.floor(Number(log.ProcessingFee_NTD) / 1000),
+          (acc, log) =>
+            acc +
+            MoneyUtil.toDecimal(log.ProcessingFee_NTD || 0)
+              .div(1000)
+              .floor()
+              .toNumber(),
           0,
         ) +
       Object.values(workOrderInputWeights)

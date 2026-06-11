@@ -18,7 +18,7 @@ function getRandomInt(min: number, max: number) {
 
 function getRandomFloat(min: number, max: number, decimals: number = 2) {
   const str = (Math.random() * (max - min) + min).toFixed(decimals);
-  return parseFloat(str);
+  return MoneyUtil.toDecimal(str).toNumber();
 }
 
 export async function generateCustomsLogs(
@@ -102,9 +102,9 @@ export async function generateCustomsLogs(
     const packagingWeightKg = packagingMaterial
       ? packagingMaterial.inputWeightKg * baseQty
       : totalNetWeightKg * 0.05;
-    const grossWeightKg = parseFloat(
+    const grossWeightKg = MoneyUtil.toDecimal(
       (totalNetWeightKg + packagingWeightKg).toFixed(2),
-    );
+    ).toNumber();
 
     const invoiceNo = `INV-EU-${year}-${String(invoiceCounter).padStart(5, "0")}`;
     invoiceCounter++;

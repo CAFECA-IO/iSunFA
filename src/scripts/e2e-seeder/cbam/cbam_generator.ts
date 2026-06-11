@@ -8,8 +8,10 @@ import {
   ISimulatedVoucher,
   IPrecursorReconciliation,
 } from "@/interfaces/cbam";
+import { Prisma } from "@prisma/client";
 
 // Info: (20260605 - Tzuhan) Reverse-Engineering Constants
+import { MoneyUtil } from "@/lib/utils/money";
 const MOCK_ELECTRICITY_PRICE = 3.5; // Info: (20260605 - Tzuhan) NTD/kWh
 const MOCK_STEEL_PRICE = 30; // Info: (20260605 - Tzuhan) NTD/kg
 const TAIPOWER_EMISSION_FACTOR_2023 = 0.495; // Info: (20260605 - Tzuhan) kgCO2e/kWh
@@ -81,9 +83,9 @@ export const runCbamGenerator = (stockId: string, year: string = "2024") => {
     TW_ACCOUNTS,
   );
 
-  let totalElectricityCostNtd = 0;
-  const precursorCostsNtd = new Map<string, number>();
-  let totalOutsourcedCostNtd = 0;
+  let totalElectricityCostNtd = MoneyUtil.toDecimal(0);
+  const precursorCostsNtd = new Map<string, Prisma.Decimal>();
+  let totalOutsourcedCostNtd = MoneyUtil.toDecimal(0);
 
   for (const voucher of vouchers) {
     for (const line of voucher.lines) {
@@ -91,23 +93,24 @@ export const runCbamGenerator = (stockId: string, year: string = "2024") => {
       if (line.accountingCode !== COGS_ACCOUNT) continue;
 
       // Info: (20260605 - Tzuhan) Vouchers are stored in THOUSANDS NTD, so we must multiply by 1000
-      const debitAmt = (Number(line.debitAmount) || 0) * 1000;
-      if (debitAmt <= 0) continue;
+      const debitAmt = MoneyUtil.toDecimal(line.debitAmount || 0).mul(1000);
+      if (debitAmt.lte(0)) continue;
 
       if (line.vendor === "台灣電力公司") {
-        totalElectricityCostNtd += debitAmt;
+        totalElectricityCostNtd = totalElectricityCostNtd.add(debitAmt);
       } else if (line.vendor && supplierFactors.has(line.vendor)) {
-        const current = precursorCostsNtd.get(line.vendor) || 0;
-        precursorCostsNtd.set(line.vendor, current + debitAmt);
+        const current =
+          precursorCostsNtd.get(line.vendor) || MoneyUtil.toDecimal(0);
+        precursorCostsNtd.set(line.vendor, current.add(debitAmt));
       } else if (line.description && line.description.includes("委外加工")) {
-        totalOutsourcedCostNtd += debitAmt;
+        totalOutsourcedCostNtd = totalOutsourcedCostNtd.add(debitAmt);
       }
     }
   }
 
   // Info: (20260605 - Tzuhan) 3. Reverse-Engineer Physical Quantities
   const inferredElectricityKwh = Math.floor(
-    totalElectricityCostNtd / MOCK_ELECTRICITY_PRICE,
+    totalElectricityCostNtd.toNumber() / MOCK_ELECTRICITY_PRICE,
   );
   const scope2EmissionsKgCo2e = Math.floor(
     inferredElectricityKwh * TAIPOWER_EMISSION_FACTOR_2023,
@@ -118,14 +121,14 @@ export const runCbamGenerator = (stockId: string, year: string = "2024") => {
 
   for (const [vendor, cost] of precursorCostsNtd.entries()) {
     const factor = supplierFactors.get(vendor) || 2.0; // Info: (20260605 - Tzuhan) fallback to 2.0 kgCO2e/kg if not found
-    const inferredWeightKg = Math.floor(cost / MOCK_STEEL_PRICE);
+    const inferredWeightKg = Math.floor(cost.toNumber() / MOCK_STEEL_PRICE);
     const emissionsKgCo2e = Math.floor(inferredWeightKg * factor);
 
     totalPrecursorEmissionsKgCo2e += emissionsKgCo2e;
 
     precursorReconciliations.push({
       supplierName: vendor,
-      totalCostNtd: cost,
+      totalCostNtd: cost.toNumber(),
       inferredWeightKg: inferredWeightKg,
       emissionFactorKgCo2ePerKg: factor,
       totalEmissionsKgCo2e: emissionsKgCo2e,
@@ -143,11 +146,11 @@ export const runCbamGenerator = (stockId: string, year: string = "2024") => {
     summary: {
       totalScope2EmissionsKgCo2e: scope2EmissionsKgCo2e,
       totalPrecursorEmissionsKgCo2e: totalPrecursorEmissionsKgCo2e,
-      totalOutsourcedCostNtd: totalOutsourcedCostNtd,
+      totalOutsourcedCostNtd: totalOutsourcedCostNtd.toNumber(),
     },
     reconciliation: {
       electricity: {
-        totalCostNtd: totalElectricityCostNtd,
+        totalCostNtd: totalElectricityCostNtd.toNumber(),
         inferredVolumeKwh: inferredElectricityKwh,
         priceConstantNtdPerKwh: MOCK_ELECTRICITY_PRICE,
         emissionFactor: TAIPOWER_EMISSION_FACTOR_2023,

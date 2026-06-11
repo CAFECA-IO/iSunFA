@@ -468,7 +468,7 @@ export const generateReceiptImages = async (
     }
 
     // Info: (20260606 - Tzuhan) 明細直接吃模擬引擎產出的底層單一真相 (Single Source of Truth)
-    // 並且將「千元」轉換回真實發票金額 (* 1000)
+    // Info: (20260611 - Tzuhan) 並且將「千元」轉換回真實發票金額 (* 1000)
     const items =
       mainLine.items && mainLine.items.length > 0
         ? mainLine.items.map((item) => ({

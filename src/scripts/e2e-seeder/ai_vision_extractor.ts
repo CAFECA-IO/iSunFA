@@ -232,9 +232,9 @@ export const extractContextFromPdf = async (
           "greenEnergyShift": "How will their Scope 2 emissions and green power purchasing behavior change in ${targetYear} due to regulations like CBAM?"
         },
         "supplyChainIntelligence": {
-          "upstreamSuppliers": ["REAL_NAME_1", "REAL_NAME_2", "REAL_NAME_3"], // Must be ACTUAL company names found in the text!
-          "downstreamCustomers": ["REAL_CUSTOMER_1", "REAL_CUSTOMER_2"], // Actual customers or target markets mentioned
-          "outsourcedProcesses": ["REAL_PROCESS_1", "REAL_PROCESS_2"] // Specific outsourced processes like "達可銹處理", "高週波熱處理"
+          "upstreamSuppliers": ["REAL_NAME_1", "REAL_NAME_2", "REAL_NAME_3"], // Info: (20260611 - Tzuhan) Must be ACTUAL company names found in the text!
+          "downstreamCustomers": ["REAL_CUSTOMER_1", "REAL_CUSTOMER_2"], // Info: (20260611 - Tzuhan) Actual customers or target markets mentioned
+          "outsourcedProcesses": ["REAL_PROCESS_1", "REAL_PROCESS_2"] // Info: (20260611 - Tzuhan) Specific outsourced processes like "達可銹處理", "高週波熱處理"
         },
         "costStructureAnalysis": {
           "majorCostComponents": "Detailed breakdown of their direct materials, labor, and specific manufacturing overheads.",

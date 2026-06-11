@@ -19,7 +19,7 @@ function getRandomInt(min: number, max: number) {
 
 function getRandomFloat(min: number, max: number, decimals: number = 2) {
   const str = (Math.random() * (max - min) + min).toFixed(decimals);
-  return parseFloat(str);
+  return MoneyUtil.toDecimal(str).toNumber();
 }
 
 export async function generateMESLogs(stockId: string, year: string = "2024") {
@@ -145,9 +145,9 @@ export async function generateMESLogs(stockId: string, year: string = "2024") {
     );
 
     // Info: (20260604 - Tzuhan) 起始投入重量 (Mass Balance)
-    let currentInputWeight = parseFloat(
-      (targetOutputQty * prod.unitWeight * 1.05).toFixed(1),
-    ); // 假設總耗損 5% 回推初始重量
+    let currentInputWeight = MoneyUtil.toDecimal(
+      (targetOutputQty * prod.unitWeight * 1.05).toFixed(2),
+    ).toNumber();
 
     // Info: (20260604 - Tzuhan) 分配碳排至各製程
     for (let i = 0; i < inHouseProcesses.length; i++) {
@@ -171,20 +171,20 @@ export async function generateMESLogs(stockId: string, year: string = "2024") {
       accumulatedCarbon += processCarbon;
 
       // Info: (20260604 - Tzuhan) 根據排碳係數逆推耗電量
-      const energyKwh = parseFloat(
+      const energyKwh = MoneyUtil.toDecimal(
         (processCarbon / TAIPOWER_EMISSION_FACTOR_2023).toFixed(2),
-      );
-      const durationHrs = parseFloat(
+      ).toNumber();
+      const durationHrs = MoneyUtil.toDecimal(
         (energyKwh / getRandomFloat(10, 50)).toFixed(1),
-      ); // 推算合理加工時數
+      ).toNumber(); // 推算合理加工時數
 
       // Info: (20260604 - Tzuhan) 模擬每一站的質量耗損
-      const scrapWeight = parseFloat(
+      const scrapWeight = MoneyUtil.toDecimal(
         (currentInputWeight * process.lossRate).toFixed(2),
-      );
-      const goodWeight = parseFloat(
+      ).toNumber();
+      const goodWeight = MoneyUtil.toDecimal(
         (currentInputWeight - scrapWeight).toFixed(2),
-      );
+      ).toNumber();
 
       mesLogs.push({
         WorkOrderID: workOrderId,

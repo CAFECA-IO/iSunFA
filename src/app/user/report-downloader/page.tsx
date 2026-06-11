@@ -31,7 +31,7 @@ export default function ReportDownloaderPage() {
   const handleSelectCompany = (company: ICompanySearchResult) => {
     setSelectedCompany(company);
     setKeyword(company.name);
-    setCompletedFiles([]); // Reset results when changing company
+    setCompletedFiles([]); // Info: (20260611 - Tzuhan) Reset results when changing company
     setDownloadLog("");
     setDownloadError("");
   };

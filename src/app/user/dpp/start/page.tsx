@@ -307,7 +307,7 @@ export default function DppStartPage() {
           window.history.replaceState({}, "", newUrl.toString());
         }
 
-        // Fetch company lookup to set selectedCompany
+        // Info: (20260611 - Tzuhan) Fetch company lookup to set selectedCompany
         request<{ payload: ICompanySearchResult[] }>(
           `/api/v1/company/lookup?query=${paramStockId}`,
         )

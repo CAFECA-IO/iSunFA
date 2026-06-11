@@ -156,7 +156,7 @@ if (
     process.argv[3] &&
     !process.argv[3].startsWith("--")
   ) {
-    // legacy compat
+    // Info: (20260611 - Tzuhan) legacy compat
   }
   if (process.argv.length > 4 && process.argv[4].startsWith("--productId=")) {
     productId = process.argv[4].split("=")[1];
