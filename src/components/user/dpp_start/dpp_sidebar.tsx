@@ -9,6 +9,7 @@ import {
   DownloadCloud,
 } from "lucide-react";
 import { CompanySearchInput } from "@/components/common/company_search_input";
+import { useTranslation } from "@/i18n/i18n_context";
 
 // Info: (20260609 - Tzuhan) 繪製狀態圖示
 const renderStateIcon = (
@@ -71,6 +72,7 @@ export function DppSidebar({
   setSelectedProductId = () => {},
   onStepClick = () => {},
 }: IDppSidebarProps) {
+  const { t } = useTranslation();
   return (
     <div className="relative z-20 flex h-full w-full flex-shrink-0 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm lg:w-[420px]">
       <div className="border-b border-gray-100 bg-slate-50/50 p-5">
@@ -80,7 +82,7 @@ export function DppSidebar({
               htmlFor="companyKeyword"
               className="mb-1 block text-xs font-bold text-slate-700"
             >
-              Target Enterprise (統一編號 / 企業名稱)
+              {t("digitalProductPassport.sidebar_extra.target_enterprise")}
             </label>
             <CompanySearchInput
               value={keyword}
@@ -96,7 +98,7 @@ export function DppSidebar({
                 htmlFor="yearSelect"
                 className="mb-1 block text-xs font-bold text-slate-700"
               >
-                Year
+                {t("digitalProductPassport.sidebar_extra.year")}
               </label>
               <select
                 id="yearSelect"
@@ -105,7 +107,9 @@ export function DppSidebar({
                 disabled={isGenerating}
                 className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
               >
-                <option value="2025">2025 (Cross-Year Prediction)</option>
+                <option value="2025">
+                  {t("digitalProductPassport.sidebar_extra.year_prediction")}
+                </option>
                 <option value="2024">2024</option>
                 <option value="2023">2023</option>
                 <option value="2022">2022</option>
@@ -132,11 +136,14 @@ export function DppSidebar({
                   {isGenerating ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
-                      處理中...
+                      {t("digitalProductPassport.sidebar_extra.processing")}
                     </>
                   ) : (
                     <>
-                      <DownloadCloud className="mr-2 h-4 w-4" /> 下載報告與數據
+                      <DownloadCloud className="mr-2 h-4 w-4" />{" "}
+                      {t(
+                        "digitalProductPassport.sidebar_extra.download_reports",
+                      )}
                     </>
                   )}
                 </button>
@@ -153,7 +160,11 @@ export function DppSidebar({
                   className="flex w-full items-center justify-center rounded-xl bg-slate-800 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-slate-700 disabled:bg-slate-300"
                 >
                   <Sparkles className="mr-2 h-4 w-4" />{" "}
-                  {isAllDone ? "重新生成企業畫像" : "執行 AI 萃取與畫像生成"}
+                  {isAllDone
+                    ? t(
+                        "digitalProductPassport.sidebar_extra.regenerate_persona",
+                      )
+                    : t("digitalProductPassport.sidebar_extra.execute_ai")}
                 </button>
                 {isAllDone && (
                   <button
@@ -165,8 +176,8 @@ export function DppSidebar({
                   >
                     <Sparkles className="mr-2 h-4 w-4" />{" "}
                     {steps[4]?.status === "completed"
-                      ? "重新生成產品型錄 (BOM)"
-                      : "生成企業產品型錄 (BOM)"}
+                      ? t("digitalProductPassport.sidebar_extra.regenerate_bom")
+                      : t("digitalProductPassport.sidebar_extra.generate_bom")}
                   </button>
                 )}
                 {steps[4]?.status === "completed" &&
@@ -177,7 +188,9 @@ export function DppSidebar({
                         htmlFor="productSelect"
                         className="mb-2 block text-xs font-bold text-slate-700"
                       >
-                        選擇產品以生成單品 DPP
+                        {t(
+                          "digitalProductPassport.sidebar_extra.select_product_dpp",
+                        )}
                       </label>
                       <select
                         id="productSelect"
@@ -201,8 +214,12 @@ export function DppSidebar({
                       >
                         <Sparkles className="mr-2 h-4 w-4" />{" "}
                         {steps[5]?.status === "completed"
-                          ? "重新生成單品 DPP"
-                          : "產生此產品專屬 DPP"}
+                          ? t(
+                              "digitalProductPassport.sidebar_extra.regenerate_dpp",
+                            )
+                          : t(
+                              "digitalProductPassport.sidebar_extra.generate_dpp",
+                            )}
                       </button>
                     </div>
                   )}
@@ -214,28 +231,35 @@ export function DppSidebar({
 
       <div className="custom-scrollbar flex-1 overflow-y-auto bg-white p-4">
         <h3 className="mb-4 text-xs font-bold tracking-widest text-slate-500 uppercase">
-          Pipeline Execution
+          {t("digitalProductPassport.sidebar_extra.pipeline_execution")}
         </h3>
         {showExtrapolationAlert && (
           <div className="animate-in fade-in slide-in-from-top-4 mb-4 flex flex-col gap-2 rounded-xl border border-orange-200 bg-orange-50 p-4 shadow-sm duration-500">
             <div className="flex items-center text-sm font-bold text-orange-800">
               <AlertCircle className="mr-2 h-4 w-4 flex-shrink-0" />
-              未發現當年度 ESG 報告，已自動採用 AI 跨年推估 (Time-Machine)
+              {t(
+                "digitalProductPassport.sidebar_extra.extrapolation_alert_title",
+              )}
             </div>
             <div className="pl-6 text-[11px] leading-relaxed text-orange-700/80">
-              系統已自動回溯歷史基期，並根據以下核心原理進行跨年度動態模擬：
+              {t(
+                "digitalProductPassport.sidebar_extra.extrapolation_alert_desc",
+              )}
               <ul className="mt-1.5 list-disc space-y-1 pl-4">
                 <li>
-                  <strong>總體經濟預測</strong>
-                  ：套用全球通膨趨勢與供應鏈波動因子
+                  {t(
+                    "digitalProductPassport.sidebar_extra.extrapolation_bullet1",
+                  )}
                 </li>
                 <li>
-                  <strong>營收動能推估</strong>
-                  ：依循已公布財報之營收動能推估產能與能耗變化
+                  {t(
+                    "digitalProductPassport.sidebar_extra.extrapolation_bullet2",
+                  )}
                 </li>
                 <li>
-                  <strong>綠電轉型推估</strong>：模擬企業面對 CBAM
-                  壓力下之再生能源採購佔比提升與減碳路徑
+                  {t(
+                    "digitalProductPassport.sidebar_extra.extrapolation_bullet3",
+                  )}
                 </li>
               </ul>
             </div>
@@ -274,7 +298,7 @@ export function DppSidebar({
                 {step.status === "completed" && step.file && (
                   <div className="mt-0.5 flex items-center text-xs text-slate-400">
                     <FileText className="mr-1 h-3.5 w-3.5" />
-                    點擊檢視來源檔案
+                    {t("digitalProductPassport.sidebar_extra.click_to_view")}
                   </div>
                 )}
                 {step.log && (

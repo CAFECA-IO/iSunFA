@@ -91,4 +91,86 @@ export const digitalProductPassport = {
       INCOMPLETE: "データ欠落",
     },
   },
+
+  list: {
+    delete_confirm_title: "削除の確認",
+    delete_confirm_message:
+      "「{{name}} ({{year}}年)」のシミュレーションデータを削除してもよろしいですか？この操作は元に戻せません。",
+    delete_failed: "削除に失敗しました。後でもう一度お試しください。",
+    phase1: "フェーズ1: 基礎データ",
+    esg_download: "ESGダウンロード",
+    esg_extrapolate: "ESG推定",
+    phase23: "フェーズ2 & 3: カタログと製品DPP",
+    product_count: "製品数: ",
+    enter_workspace: "ワークスペースに入る",
+    company_info: "企業情報",
+    progress_status: "進捗状況",
+    action_buttons: "操作ボタン",
+  },
+  start: {
+    unknown_error: "不明なエラーが発生しました",
+    step1: "1. 財務報告書および公開データの抽出",
+    step2_extrapolate: "2. ESGの年度またぎ推定（タイムマシン）",
+    step2: "2. ESGサステナビリティ報告書および指標の抽出",
+    step3: "3. AI視覚的チャートの抽出 (ai_vision_extractor)",
+    step4: "4. 企業ペルソナの構築 (persona_generator)",
+    step5: "5. BOMおよび前駆体データの構築 (generate_bom_precursors)",
+    step6: "6. 製品仕様の生成 (generate_product_specs)",
+    step7: "7. 製品設計図の生成 (generate_product_image)",
+    step8: "8. DPPコアのグラウンドトゥルース計算 (generate_dpp_ground_truth)",
+    step9:
+      "9. DPPコンプライアンスおよび検証データの生成 (generate_dpp_compliance)",
+  },
+  sidebar: {
+    search_placeholder: "統一番号を検索...",
+    select_company_first: "先に企業を選択してください",
+    mode: "モード",
+    mode_catalog: "企業製品カタログ（BOM）を生成する",
+    mode_dpp: "この製品専用のDPPを生成する",
+    product_list: "製品リスト",
+    no_products: "なし",
+    select_product: "製品を選択してください",
+  },
+  preview: {
+    no_file: "プレビューできるファイルがありません",
+    support_formats:
+      "左側のステップを選択してプレビューします（PDF、JSON、PNG、HTMLをサポート）",
+    generating: "生成中...",
+  },
+
+  sidebar_extra: {
+    target_enterprise: "対象企業 (統一番号 / 企業名)",
+    year: "年度",
+    year_prediction: "2025 (年度またぎ推定)",
+    processing: "処理中...",
+    download_reports: "レポートとデータをダウンロード",
+    regenerate_persona: "企業ペルソナを再生成",
+    execute_ai: "AI抽出とペルソナ生成を実行",
+    regenerate_bom: "製品カタログ (BOM) を再生成",
+    generate_bom: "企業製品カタログ (BOM) を生成",
+    select_product_dpp: "製品を選択して単一製品DPPを生成",
+    regenerate_dpp: "単一製品DPPを再生成",
+    generate_dpp: "この製品専用のDPPを生成",
+    pipeline_execution: "パイプライン実行 (Pipeline Execution)",
+    extrapolation_alert_title:
+      "当年度のESGレポートが見つかりません。AI年度またぎ推定 (Time-Machine) が自動適用されました。",
+    extrapolation_alert_desc:
+      "システムは自動的に過去の基準に遡及し、以下のコア原則に基づいて年度またぎの動的シミュレーションを行いました：",
+    extrapolation_bullet1:
+      "マクロ経済予測：世界のインフレ傾向とサプライチェーンの変動要因を適用",
+    extrapolation_bullet2:
+      "収益モメンタム推定：公表された財務報告書の収益モメンタムに基づいて生産能力とエネルギー消費の変化を推定",
+    extrapolation_bullet3:
+      "グリーンエネルギー移行推定：CBAMの圧力下における企業の再生可能エネルギー調達比率の向上と脱炭素経路をシミュレーション",
+    click_to_view: "クリックしてソースファイルを表示",
+  },
+
+  preview_extra: {
+    loading: "読み込み中...",
+    json_title: "DPP / AI解析データ表示",
+    json_desc:
+      "システムは生のJSONデータを視覚的なコンポーネントに変換して表示しています。",
+    waiting_title: "データの生成を待っています",
+    waiting_desc: "企業ペルソナとレポートがここに表示されます。",
+  },
 };

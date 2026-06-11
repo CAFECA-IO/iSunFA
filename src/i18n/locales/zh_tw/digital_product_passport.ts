@@ -85,4 +85,82 @@ export const digitalProductPassport = {
       INCOMPLETE: "資料缺失",
     },
   },
+
+  list: {
+    delete_confirm_title: "確認刪除",
+    delete_confirm_message:
+      "確定要刪除「{{name}} ({{year}} 年)」的模擬資料嗎？此動作無法復原。",
+    delete_failed: "刪除失敗，請稍後再試",
+    phase1: "Phase 1: 基礎資料",
+    esg_download: "ESG 下載",
+    esg_extrapolate: "ESG 推估",
+    phase23: "Phase 2 & 3: 型錄與產品 DPP",
+    product_count: "產品數: ",
+    enter_workspace: "進入工作區",
+    company_info: "企業資訊",
+    progress_status: "進度顯示",
+    action_buttons: "操作按鈕",
+  },
+  start: {
+    unknown_error: "發生未知錯誤",
+    step1: "1. 財務報告與公開數據擷取",
+    step2_extrapolate: "2. ESG 跨年推估 (Time-Machine)",
+    step2: "2. ESG 永續報告書與指標擷取",
+    step3: "3. AI 視覺圖表萃取 (ai_vision_extractor)",
+    step4: "4. 企業畫像建構 (persona_generator)",
+    step5: "5. BOM 與前驅物數據建構 (generate_bom_precursors)",
+    step6: "6. 產品規格生成 (generate_product_specs)",
+    step7: "7. 產品工程圖繪製 (generate_product_image)",
+    step8: "8. DPP 核心真實數據演算 (generate_dpp_ground_truth)",
+    step9: "9. DPP 合規與驗證數據生成 (generate_dpp_compliance)",
+  },
+  sidebar: {
+    search_placeholder: "搜尋統編...",
+    select_company_first: "請先選擇一間企業",
+    mode: "模式",
+    mode_catalog: "生成企業產品型錄 (BOM)",
+    mode_dpp: "產生此產品專屬 DPP",
+    product_list: "產品列表",
+    no_products: "無",
+    select_product: "請選擇產品",
+  },
+  preview: {
+    no_file: "沒有可預覽的檔案",
+    support_formats: "選擇左側步驟以預覽內容 (支援 PDF, JSON, PNG, HTML)",
+    generating: "生成中...",
+  },
+
+  sidebar_extra: {
+    target_enterprise: "目標企業 (統一編號 / 企業名稱)",
+    year: "年度",
+    year_prediction: "2025 (跨年推估)",
+    processing: "處理中...",
+    download_reports: "下載報告與數據",
+    regenerate_persona: "重新生成企業畫像",
+    execute_ai: "執行 AI 萃取與畫像生成",
+    regenerate_bom: "重新生成產品型錄 (BOM)",
+    generate_bom: "生成企業產品型錄 (BOM)",
+    select_product_dpp: "選擇產品以生成單品 DPP",
+    regenerate_dpp: "重新生成單品 DPP",
+    generate_dpp: "產生此產品專屬 DPP",
+    pipeline_execution: "管線執行 (Pipeline Execution)",
+    extrapolation_alert_title:
+      "未發現當年度 ESG 報告，已自動採用 AI 跨年推估 (Time-Machine)",
+    extrapolation_alert_desc:
+      "系統已自動回溯歷史基期，並根據以下核心原理進行跨年度動態模擬：",
+    extrapolation_bullet1: "總體經濟預測：套用全球通膨趨勢與供應鏈波動因子",
+    extrapolation_bullet2:
+      "營收動能推估：依循已公布財報之營收動能推估產能與能耗變化",
+    extrapolation_bullet3:
+      "綠電轉型推估：模擬企業面對 CBAM 壓力下之再生能源採購佔比提升與減碳路徑",
+    click_to_view: "點擊檢視來源檔案",
+  },
+
+  preview_extra: {
+    loading: "載入中...",
+    json_title: "DPP / AI 解析數據呈現",
+    json_desc: "系統已將原始 JSON 數據轉換為視覺化元件以便檢視。",
+    waiting_title: "等待資料生成完畢",
+    waiting_desc: "企業畫像 (Persona) 與報告將在此呈現",
+  },
 };

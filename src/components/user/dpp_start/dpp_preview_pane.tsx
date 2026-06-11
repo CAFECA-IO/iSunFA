@@ -4,6 +4,7 @@ import { FileText, FileBox, Database } from "lucide-react";
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useTranslation } from "@/i18n/i18n_context";
 
 const getFileUrl = (path: string) =>
   `/api/dpp/files?action=serve&path=${encodeURIComponent(path)}`;
@@ -13,6 +14,7 @@ export interface IDppPreviewPaneProps {
 }
 
 export function DppPreviewPane({ selectedFilePath }: IDppPreviewPaneProps) {
+  const { t } = useTranslation();
   const [jsonData, setJsonData] = useState<Record<string, unknown> | null>(
     null,
   );
@@ -135,7 +137,11 @@ export function DppPreviewPane({ selectedFilePath }: IDppPreviewPaneProps) {
 
   const renderJsonView = (data: unknown) => {
     if (!data)
-      return <div className="p-8 text-center text-slate-500">載入中...</div>;
+      return (
+        <div className="p-8 text-center text-slate-500">
+          {t("digitalProductPassport.preview_extra.loading")}
+        </div>
+      );
 
     const isRootArray = Array.isArray(data);
     const rootData = isRootArray
@@ -147,10 +153,10 @@ export function DppPreviewPane({ selectedFilePath }: IDppPreviewPaneProps) {
         <div className="mb-6">
           <h2 className="mb-2 flex items-center text-lg font-bold text-slate-800">
             <Database className="mr-2 h-5 w-5 text-indigo-500" />
-            DPP / AI 解析數據呈現
+            {t("digitalProductPassport.preview_extra.json_title")}
           </h2>
           <p className="text-xs text-slate-500">
-            系統已將原始 JSON 數據轉換為視覺化元件以便檢視。
+            {t("digitalProductPassport.preview_extra.json_desc")}
           </p>
         </div>
 
@@ -212,9 +218,11 @@ export function DppPreviewPane({ selectedFilePath }: IDppPreviewPaneProps) {
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center bg-slate-50/50 p-8 text-center text-slate-500">
           <FileBox className="mb-4 h-16 w-16 text-slate-300" />
-          <p className="text-lg font-bold text-slate-600">等待資料生成完畢</p>
+          <p className="text-lg font-bold text-slate-600">
+            {t("digitalProductPassport.preview_extra.waiting_title")}
+          </p>
           <p className="mt-2 text-sm text-slate-400">
-            企業畫像 (Persona) 與報告將在此呈現
+            {t("digitalProductPassport.preview_extra.waiting_desc")}
           </p>
         </div>
       )}

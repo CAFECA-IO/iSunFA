@@ -89,4 +89,86 @@ export const digitalProductPassport = {
       INCOMPLETE: "INCOMPLETE",
     },
   },
+
+  list: {
+    delete_confirm_title: "Confirm Deletion",
+    delete_confirm_message:
+      "Are you sure you want to delete the simulation data for '{{name}} ({{year}})'? This action cannot be undone.",
+    delete_failed: "Deletion failed, please try again later",
+    phase1: "Phase 1: Basic Data",
+    esg_download: "ESG Download",
+    esg_extrapolate: "ESG Extrapolate",
+    phase23: "Phase 2 & 3: Catalog and Product DPP",
+    product_count: "Product Count: ",
+    enter_workspace: "Enter Workspace",
+    company_info: "Company Info",
+    progress_status: "Progress Status",
+    action_buttons: "Action Buttons",
+  },
+  start: {
+    unknown_error: "An unknown error occurred",
+    step1: "1. Financial Report and Public Data Extraction",
+    step2_extrapolate: "2. ESG Cross-Year Extrapolation (Time-Machine)",
+    step2: "2. ESG Sustainability Report and Metrics Extraction",
+    step3: "3. AI Visual Chart Extraction (ai_vision_extractor)",
+    step4: "4. Corporate Persona Construction (persona_generator)",
+    step5: "5. BOM and Precursor Data Construction (generate_bom_precursors)",
+    step6: "6. Product Spec Generation (generate_product_specs)",
+    step7: "7. Product Blueprint Generation (generate_product_image)",
+    step8: "8. DPP Core Ground Truth Calculation (generate_dpp_ground_truth)",
+    step9:
+      "9. DPP Compliance and Verification Data Generation (generate_dpp_compliance)",
+  },
+  sidebar: {
+    search_placeholder: "Search Tax ID...",
+    select_company_first: "Please select a company first",
+    mode: "Mode",
+    mode_catalog: "Generate Company Product Catalog (BOM)",
+    mode_dpp: "Generate Product-Specific DPP",
+    product_list: "Product List",
+    no_products: "None",
+    select_product: "Select Product",
+  },
+  preview: {
+    no_file: "No file available for preview",
+    support_formats:
+      "Select a step on the left to preview (Supports PDF, JSON, PNG, HTML)",
+    generating: "Generating...",
+  },
+
+  sidebar_extra: {
+    target_enterprise: "Target Enterprise (Tax ID / Name)",
+    year: "Year",
+    year_prediction: "2025 (Cross-Year Prediction)",
+    processing: "Processing...",
+    download_reports: "Download Reports and Data",
+    regenerate_persona: "Regenerate Company Persona",
+    execute_ai: "Execute AI Extraction and Persona Generation",
+    regenerate_bom: "Regenerate Product Catalog (BOM)",
+    generate_bom: "Generate Company Product Catalog (BOM)",
+    select_product_dpp: "Select product to generate product-specific DPP",
+    regenerate_dpp: "Regenerate Product-Specific DPP",
+    generate_dpp: "Generate Product-Specific DPP",
+    pipeline_execution: "Pipeline Execution",
+    extrapolation_alert_title:
+      "Current year ESG report not found. AI Cross-Year Extrapolation (Time-Machine) automatically applied.",
+    extrapolation_alert_desc:
+      "The system has automatically retroactively traced historical baselines and dynamically simulated cross-year metrics based on:",
+    extrapolation_bullet1:
+      "Macroeconomic Prediction: Applied global inflation trends and supply chain volatility factors.",
+    extrapolation_bullet2:
+      "Revenue Momentum Extrapolation: Estimated capacity and energy consumption changes based on published financial reports.",
+    extrapolation_bullet3:
+      "Green Energy Transition Extrapolation: Simulated renewable energy procurement increases and decarbonization pathways under CBAM pressure.",
+    click_to_view: "Click to view source file",
+  },
+
+  preview_extra: {
+    loading: "Loading...",
+    json_title: "DPP / AI Parsed Data Presentation",
+    json_desc:
+      "The system has converted raw JSON data into visual components for easy viewing.",
+    waiting_title: "Waiting for Data Generation",
+    waiting_desc: "Corporate Persona and reports will be displayed here.",
+  },
 };

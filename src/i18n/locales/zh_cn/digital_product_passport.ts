@@ -85,4 +85,82 @@ export const digitalProductPassport = {
       INCOMPLETE: "资料缺失",
     },
   },
+
+  list: {
+    delete_confirm_title: "确认删除",
+    delete_confirm_message:
+      "确定要删除“{{name}} ({{year}} 年)”的模拟数据吗？此操作无法恢复。",
+    delete_failed: "删除失败，请稍后再试",
+    phase1: "Phase 1: 基础数据",
+    esg_download: "ESG 下载",
+    esg_extrapolate: "ESG 推估",
+    phase23: "Phase 2 & 3: 目录与产品 DPP",
+    product_count: "产品数: ",
+    enter_workspace: "进入工作区",
+    company_info: "企业信息",
+    progress_status: "进度显示",
+    action_buttons: "操作按钮",
+  },
+  start: {
+    unknown_error: "发生未知错误",
+    step1: "1. 财务报告与公开数据提取",
+    step2_extrapolate: "2. ESG 跨年推估 (Time-Machine)",
+    step2: "2. ESG 可持续发展报告与指标提取",
+    step3: "3. AI 视觉图表提取 (ai_vision_extractor)",
+    step4: "4. 企业画像构建 (persona_generator)",
+    step5: "5. BOM 与前驱物数据构建 (generate_bom_precursors)",
+    step6: "6. 产品规格生成 (generate_product_specs)",
+    step7: "7. 产品工程图绘制 (generate_product_image)",
+    step8: "8. DPP 核心真实数据演算 (generate_dpp_ground_truth)",
+    step9: "9. DPP 合规与验证数据生成 (generate_dpp_compliance)",
+  },
+  sidebar: {
+    search_placeholder: "搜索统编...",
+    select_company_first: "请先选择一家企业",
+    mode: "模式",
+    mode_catalog: "生成企业产品目录 (BOM)",
+    mode_dpp: "生成此产品专属 DPP",
+    product_list: "产品列表",
+    no_products: "无",
+    select_product: "请选择产品",
+  },
+  preview: {
+    no_file: "没有可预览的文件",
+    support_formats: "选择左侧步骤以预览内容 (支持 PDF, JSON, PNG, HTML)",
+    generating: "生成中...",
+  },
+
+  sidebar_extra: {
+    target_enterprise: "目标企业 (统一编号 / 企业名称)",
+    year: "年度",
+    year_prediction: "2025 (跨年推估)",
+    processing: "处理中...",
+    download_reports: "下载报告与数据",
+    regenerate_persona: "重新生成企业画像",
+    execute_ai: "执行 AI 提取与画像生成",
+    regenerate_bom: "重新生成产品目录 (BOM)",
+    generate_bom: "生成企业产品目录 (BOM)",
+    select_product_dpp: "选择产品以生成单品 DPP",
+    regenerate_dpp: "重新生成单品 DPP",
+    generate_dpp: "生成此产品专属 DPP",
+    pipeline_execution: "管线执行 (Pipeline Execution)",
+    extrapolation_alert_title:
+      "未发现当年度 ESG 报告，已自动采用 AI 跨年推估 (Time-Machine)",
+    extrapolation_alert_desc:
+      "系统已自动回溯历史基期，并根据以下核心原理进行跨年度动态模拟：",
+    extrapolation_bullet1: "宏观经济预测：套用全球通胀趋势与供应链波动因子",
+    extrapolation_bullet2:
+      "营收动能推估：依循已公布财报之营收动能推估产能与能耗变化",
+    extrapolation_bullet3:
+      "绿电转型推估：模拟企业面对 CBAM 压力下之再生能源采购占比提升与减碳路径",
+    click_to_view: "点击查看来源文件",
+  },
+
+  preview_extra: {
+    loading: "加载中...",
+    json_title: "DPP / AI 解析数据呈现",
+    json_desc: "系统已将原始 JSON 数据转换为可视化组件以便查看。",
+    waiting_title: "等待数据生成完毕",
+    waiting_desc: "企业画像 (Persona) 与报告将在此呈现",
+  },
 };

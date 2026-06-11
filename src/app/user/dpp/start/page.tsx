@@ -7,6 +7,7 @@ import { DppSidebar } from "@/components/user/dpp_start/dpp_sidebar";
 import { DppPreviewPane } from "@/components/user/dpp_start/dpp_preview_pane";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { IApiResponse } from "@/lib/utils/response";
+import { useTranslation } from "@/i18n/i18n_context";
 
 // Info: (20260609 - Tzuhan) 定義流程狀態
 type StepStatus =
@@ -72,6 +73,7 @@ export interface IDemoItem {
 }
 
 export default function DppStartPage() {
+  const { t } = useTranslation();
   // Info: (20260609 - Tzuhan) 輸入區塊狀態管理
   const [keyword, setKeyword] = useState<string>("");
   const [selectedCompany, setSelectedCompany] =
@@ -91,47 +93,47 @@ export default function DppStartPage() {
   const [steps, setSteps] = useState<IGenerationStep[]>([
     {
       id: "fin_download",
-      label: "1. 財務報告與公開數據擷取",
+      label: t("digitalProductPassport.start.step1"),
       status: "pending",
     },
     {
       id: "esg_download",
-      label: "2. ESG 永續報告書與指標擷取",
+      label: t("digitalProductPassport.start.step2"),
       status: "pending",
     },
     {
       id: "vision",
-      label: "3. AI 視覺圖表萃取 (ai_vision_extractor)",
+      label: t("digitalProductPassport.start.step3"),
       status: "pending",
     },
     {
       id: "persona",
-      label: "4. 企業畫像建構 (persona_generator)",
+      label: t("digitalProductPassport.start.step4"),
       status: "pending",
     },
     {
       id: "bom_generation",
-      label: "5. BOM 與前驅物數據建構 (generate_bom_precursors)",
+      label: t("digitalProductPassport.start.step5"),
       status: "pending",
     },
     {
       id: "product_specs",
-      label: "6. 產品規格生成 (generate_product_specs)",
+      label: t("digitalProductPassport.start.step6"),
       status: "pending",
     },
     {
       id: "product_image",
-      label: "7. 產品工程圖繪製 (generate_product_image)",
+      label: t("digitalProductPassport.start.step7"),
       status: "pending",
     },
     {
       id: "dpp_ground_truth",
-      label: "8. DPP 核心真實數據演算 (generate_dpp_ground_truth)",
+      label: t("digitalProductPassport.start.step8"),
       status: "pending",
     },
     {
       id: "dpp_compliance",
-      label: "9. DPP 合規與驗證數據生成 (generate_dpp_compliance)",
+      label: t("digitalProductPassport.start.step9"),
       status: "pending",
     },
   ]);
@@ -155,8 +157,8 @@ export default function DppStartPage() {
       if (!targetComp) {
         setModalConfig({
           isOpen: true,
-          title: "提醒",
-          message: "請先選擇一家企業",
+          title: t("common.error"),
+          message: t("digitalProductPassport.sidebar.select_company_first"),
         });
         return;
       }
@@ -187,7 +189,8 @@ export default function DppStartPage() {
           }),
         });
 
-        if (!response.body) throw new Error("無回應內容");
+        if (!response.body)
+          throw new Error(t("digitalProductPassport.start.unknown_error"));
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
 
@@ -227,11 +230,13 @@ export default function DppStartPage() {
                   const newSteps = [...prev];
                   if (!data.file || data.file.endsWith(".json")) {
                     newSteps[1].status = "extrapolated";
-                    newSteps[1].label = "2. ESG 跨年推估 (Time-Machine)";
+                    newSteps[1].label = t(
+                      "digitalProductPassport.start.step2_extrapolate",
+                    );
                     newSteps[1].file = data.file;
                   } else {
                     newSteps[1].status = "completed";
-                    newSteps[1].label = "2. ESG 永續報告書與指標擷取";
+                    newSteps[1].label = t("digitalProductPassport.start.step2");
                     newSteps[1].file = data.file;
                   }
                   return newSteps;
@@ -268,7 +273,8 @@ export default function DppStartPage() {
                   const newSteps = [...prev];
                   newSteps[currentStepIndex].status = "error";
                   newSteps[currentStepIndex].log =
-                    data.message || "發生未知錯誤";
+                    data.message ||
+                    t("digitalProductPassport.start.unknown_error");
                   return newSteps;
                 });
                 setIsGenerating(false);
@@ -386,15 +392,15 @@ export default function DppStartPage() {
           setSteps([
             {
               id: "fin_download",
-              label: "1. 財務報告與公開數據擷取",
+              label: t("digitalProductPassport.start.step1"),
               status: currentItem.progress.hasFin ? "completed" : "pending",
               file: currentItem.progress.hasFin ? finFile : undefined,
             },
             {
               id: "esg_download",
               label: isEsgExtrapolated
-                ? "2. ESG 跨年推估 (Time-Machine)"
-                : "2. ESG 永續報告書與指標擷取",
+                ? t("digitalProductPassport.start.step2_extrapolate")
+                : t("digitalProductPassport.start.step2"),
               status: currentItem.progress.hasEsg
                 ? "completed"
                 : isEsgExtrapolated && currentItem.progress.hasPersonaHtml
@@ -408,14 +414,14 @@ export default function DppStartPage() {
             },
             {
               id: "vision",
-              label: "3. AI 視覺圖表萃取 (ai_vision_extractor)",
+              label: t("digitalProductPassport.start.step3"),
               status: currentItem.progress.hasPersonaHtml
                 ? "completed"
                 : "pending",
             },
             {
               id: "persona",
-              label: "4. 企業畫像建構 (persona_generator)",
+              label: t("digitalProductPassport.start.step4"),
               status: currentItem.progress.hasPersonaHtml
                 ? "completed"
                 : "pending",
@@ -425,7 +431,7 @@ export default function DppStartPage() {
             },
             {
               id: "bom_generation",
-              label: "5. BOM 與前驅物數據建構 (generate_bom_precursors)",
+              label: t("digitalProductPassport.start.step5"),
               status: currentItem.progress.hasBom ? "completed" : "pending",
               file: currentItem.progress.hasBom
                 ? `data/${selectedCompany.taxId}/${year}/outputs/mock_sources/boms_and_precursors.json`
@@ -433,7 +439,7 @@ export default function DppStartPage() {
             },
             {
               id: "product_specs",
-              label: "6. 產品規格生成 (generate_product_specs)",
+              label: t("digitalProductPassport.start.step6"),
               status: activeProduct?.progress.hasSpecs
                 ? "completed"
                 : "pending",
@@ -443,7 +449,7 @@ export default function DppStartPage() {
             },
             {
               id: "product_image",
-              label: "7. 產品工程圖繪製 (generate_product_image)",
+              label: t("digitalProductPassport.start.step7"),
               status: activeProduct?.progress.hasImage
                 ? "completed"
                 : "pending",
@@ -453,7 +459,7 @@ export default function DppStartPage() {
             },
             {
               id: "dpp_ground_truth",
-              label: "8. DPP 核心真實數據演算 (generate_dpp_ground_truth)",
+              label: t("digitalProductPassport.start.step8"),
               status: activeProduct?.progress.dppGroundTruthFile
                 ? "completed"
                 : "pending",
@@ -461,7 +467,7 @@ export default function DppStartPage() {
             },
             {
               id: "dpp_compliance",
-              label: "9. DPP 合規與驗證數據生成 (generate_dpp_compliance)",
+              label: t("digitalProductPassport.start.step9"),
               status: activeProduct?.progress.dppComplianceFile
                 ? "completed"
                 : "pending",
@@ -550,7 +556,7 @@ export default function DppStartPage() {
         onClose={() => setModalConfig((prev) => ({ ...prev, isOpen: false }))}
         title={modalConfig.title}
         message={modalConfig.message}
-        confirmText="確定"
+        confirmText={t("common.confirm")}
       />
     </div>
   );
