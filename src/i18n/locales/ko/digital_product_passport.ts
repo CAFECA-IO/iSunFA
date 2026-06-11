@@ -91,6 +91,12 @@ export const digitalProductPassport = {
   },
 
   list: {
+    simulator_title: "DPP 시뮬레이터 데이터 생성기",
+    simulator_desc:
+      "공개 재무 및 지속 가능성 보고서를 사용하여 데모 및 테스트용 디지털 제품 여권(DPP) 모의 데이터 소스를 자동으로 생성합니다.",
+    create_simulation: "새 시뮬레이션",
+    no_simulations:
+      "시뮬레이션된 기업을 찾을 수 없습니다. '새 시뮬레이션'을 클릭하여 첫 번째 데이터 세트를 만드십시오.",
     delete_confirm_title: "삭제 확인",
     delete_confirm_message:
       "'{{name}} ({{year}}년)'의 시뮬레이션 데이터를 삭제하시겠습니까? 이 작업은 실행 취소할 수 없습니다.",

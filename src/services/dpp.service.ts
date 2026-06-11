@@ -1,4 +1,11 @@
 import { DppRepository } from "@/repositories/dpp.repo";
+import { FileRepository } from "@/repositories/file.repo";
+import {
+  GoogleGenerativeAI,
+  SchemaType,
+  Schema,
+  Part,
+} from "@google/generative-ai";
 import {
   IDigitalProductPassportBatch,
   IDigitalProductPassportSku,
@@ -9,9 +16,11 @@ import { DPP_SKU_STATUS } from "@/constants/status";
 
 export class DppService {
   private dppRepo: DppRepository;
+  private fileRepo: FileRepository;
 
   constructor() {
     this.dppRepo = new DppRepository();
+    this.fileRepo = new FileRepository();
   }
 
   public async issueBatch(
@@ -64,7 +73,9 @@ export class DppService {
 
     // Info: (20260514 - Luphia) Create the Batch
     const publicUrl = `https://dpp.isunfa.com/dpp/sku/${skuId}/batch/${batchNumber}`;
-    const dynamicOverrides = {
+    const dynamicOverrides: {
+      createdAt: string;
+    } = {
       createdAt: new Date().toISOString(),
     };
 
@@ -101,46 +112,195 @@ export class DppService {
     }
 
     /**
-     * Info: (20260513 - Luphia) Mock AI Analysis Workflow ---
-     * Normally, we would send these files to our LangChain/LLM pipeline
-     * to map against the 9 DPP modules and identify missing required gaps.
+     * Info: (20260611 - Tzuhan) Read file content to dynamically generate DPP modules
      */
 
-    const mockGtin = `GTIN-${Date.now()}`;
-    const mockName = `Product SKU based on document ${fileIds[0] ? fileIds[0].substring(0, 8) : "Unknown Document"}`;
-    const mockModulesData = {
-      "1_product_info": { extracted: true },
-      "2_environmental_impact": { extracted: true },
-      "3_circularity": { extracted: true },
+    let fileName = "Unknown Document";
+    let fileContent = "";
+    let isBase64 = false;
+    let mimeType = "text/plain";
+
+    if (fileIds.length > 0) {
+      const fileRecord = await this.fileRepo.getFileById(fileIds[0]);
+      if (fileRecord) {
+        fileName = fileRecord.fileName || fileRecord.id;
+        if (fileName.toLowerCase().endsWith(".pdf")) {
+          mimeType = "application/pdf";
+          isBase64 = true;
+        } else if (fileName.toLowerCase().endsWith(".csv")) {
+          mimeType = "text/csv";
+        } else if (fileName.toLowerCase().endsWith(".json")) {
+          mimeType = "application/json";
+        }
+
+        try {
+          const STORAGE_DOMAIN =
+            process.env.STORAGE_DOMAIN || "http://127.0.0.1:3000";
+          const res = await fetch(
+            `${STORAGE_DOMAIN}/api/v1/file/${fileRecord.id}`,
+          );
+          if (res.ok) {
+            if (isBase64) {
+              const buffer = await res.arrayBuffer();
+              fileContent = Buffer.from(buffer).toString("base64");
+            } else {
+              fileContent = await res.text();
+            }
+          }
+        } catch (err) {
+          console.error("Failed to read file from storage", err);
+        }
+      } else {
+        fileName = fileIds[0].substring(0, 8);
+      }
+    }
+
+    let parsedGtin = `GTIN-${Date.now()}`;
+    let parsedName = `Product SKU based on ${fileName}`;
+    let parsedModulesData: Record<string, { extracted: boolean }> = {
+      "1_product_info": { extracted: false },
+      "2_environmental_impact": { extracted: false },
+      "3_circularity": { extracted: false },
       "4_compliance": { extracted: false },
       "5_social_impact": { extracted: false },
       "6_repairability": { extracted: false },
-      "7_logistics": { extracted: true },
-      "8_critical_raw_materials": { extracted: true },
+      "7_logistics": { extracted: false },
+      "8_critical_raw_materials": { extracted: false },
       "9_material_composition": { extracted: false },
     };
+    let parsedMissingGaps: { module: string; issue: string; impact: string }[] =
+      [
+        {
+          module: "General",
+          issue: "Document format unsupported or content empty.",
+          impact: "High",
+        },
+      ];
 
-    const mockMissingGaps = [
-      {
-        module: "6.1 Repair & Teardown Guidelines",
-        issue:
-          "No circuit diagrams or mainboard layout found in uploaded documents.",
-        impact: "High",
-      },
-      {
-        module: "9.3 Hazardous Chemicals (PFAS)",
-        issue: "Missing declaration of exact locations of hazardous materials.",
-        impact: "Critical",
-      },
-    ];
+    if (
+      fileContent &&
+      !fileName.toLowerCase().endsWith(".docx") &&
+      !fileName.toLowerCase().endsWith(".pages")
+    ) {
+      try {
+        const genAI = new GoogleGenerativeAI(
+          process.env.GEMINI_API_KEY as string,
+        );
+        const dppExtractionSchema: Schema = {
+          type: SchemaType.OBJECT,
+          properties: {
+            gtin: { type: SchemaType.STRING },
+            name: { type: SchemaType.STRING },
+            modulesData: {
+              type: SchemaType.OBJECT,
+              properties: {
+                "1_product_info": {
+                  type: SchemaType.OBJECT,
+                  properties: { extracted: { type: SchemaType.BOOLEAN } },
+                },
+                "2_environmental_impact": {
+                  type: SchemaType.OBJECT,
+                  properties: { extracted: { type: SchemaType.BOOLEAN } },
+                },
+                "3_circularity": {
+                  type: SchemaType.OBJECT,
+                  properties: { extracted: { type: SchemaType.BOOLEAN } },
+                },
+                "4_compliance": {
+                  type: SchemaType.OBJECT,
+                  properties: { extracted: { type: SchemaType.BOOLEAN } },
+                },
+                "5_social_impact": {
+                  type: SchemaType.OBJECT,
+                  properties: { extracted: { type: SchemaType.BOOLEAN } },
+                },
+                "6_repairability": {
+                  type: SchemaType.OBJECT,
+                  properties: { extracted: { type: SchemaType.BOOLEAN } },
+                },
+                "7_logistics": {
+                  type: SchemaType.OBJECT,
+                  properties: { extracted: { type: SchemaType.BOOLEAN } },
+                },
+                "8_critical_raw_materials": {
+                  type: SchemaType.OBJECT,
+                  properties: { extracted: { type: SchemaType.BOOLEAN } },
+                },
+                "9_material_composition": {
+                  type: SchemaType.OBJECT,
+                  properties: { extracted: { type: SchemaType.BOOLEAN } },
+                },
+              },
+            },
+            missingGaps: {
+              type: SchemaType.ARRAY,
+              items: {
+                type: SchemaType.OBJECT,
+                properties: {
+                  module: { type: SchemaType.STRING },
+                  issue: { type: SchemaType.STRING },
+                  impact: { type: SchemaType.STRING },
+                },
+              },
+            },
+          },
+        };
+
+        const model = genAI.getGenerativeModel({
+          model: "gemini-2.5-pro",
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: dppExtractionSchema,
+            temperature: 0.1,
+          },
+        });
+
+        const prompt = `You are a Digital Product Passport (DPP) compliance auditor. Analyze the provided document for the product and determine which DPP modules are covered. Generate GTIN if possible, or create a mock one based on the context. Ensure you output a boolean for each module in modulesData. Create missingGaps for any missing critical information (especially Environmental Impact, Compliance, Repairability). Impact should be 'High', 'Medium', or 'Critical'. Document File name: ${fileName}`;
+
+        const parts: Part[] = [{ text: prompt }];
+        if (isBase64) {
+          parts.push({
+            inlineData: {
+              data: fileContent,
+              mimeType,
+            },
+          });
+        } else {
+          parts.push({ text: `\n\n--- Document Content ---\n${fileContent}` });
+        }
+
+        const result = await model.generateContent(parts);
+        const parsed = JSON.parse(result.response.text());
+
+        if (parsed.gtin) parsedGtin = parsed.gtin;
+        if (parsed.name) parsedName = parsed.name;
+        if (parsed.modulesData) parsedModulesData = parsed.modulesData;
+        if (parsed.missingGaps) parsedMissingGaps = parsed.missingGaps;
+      } catch (err) {
+        console.error("Gemini AI extraction failed:", err);
+        parsedMissingGaps = [
+          {
+            module: "General",
+            issue: "AI parsing failed or document is too large.",
+            impact: "Critical",
+          },
+        ];
+      }
+    }
+
+    // Info: (20260611 - Tzuhan) Determine final status based on whether there are critical missing gaps
+    const finalStatus =
+      parsedMissingGaps.length === 0
+        ? DPP_SKU_STATUS.READY
+        : DPP_SKU_STATUS.INCOMPLETE;
 
     const sku = await this.dppRepo.createSku({
       accountBookId,
-      gtin: mockGtin,
-      name: mockName,
-      status: DPP_SKU_STATUS.INCOMPLETE, // Info: (20260513 - Luphia) Because there are missing gaps
-      modulesData: mockModulesData,
-      missingGaps: mockMissingGaps,
+      gtin: parsedGtin,
+      name: parsedName,
+      status: finalStatus,
+      modulesData: parsedModulesData,
+      missingGaps: parsedMissingGaps,
     });
 
     return sku;

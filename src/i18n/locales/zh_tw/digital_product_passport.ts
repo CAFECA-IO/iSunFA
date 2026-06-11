@@ -87,6 +87,12 @@ export const digitalProductPassport = {
   },
 
   list: {
+    simulator_title: "DPP 模擬資料產生器",
+    simulator_desc:
+      "透過公開上市櫃公司財報與永續報告書，自動產生具真實感的數位產品護照 (DPP) 模擬數據源，供展示與測試用途。",
+    create_simulation: "新增模擬企業",
+    no_simulations:
+      "找不到模擬企業。請點擊「新增模擬企業」建立您的第一筆數據。",
     delete_confirm_title: "確認刪除",
     delete_confirm_message:
       "確定要刪除「{{name}} ({{year}} 年)」的模擬資料嗎？此動作無法復原。",
