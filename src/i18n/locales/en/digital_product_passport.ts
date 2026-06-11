@@ -148,6 +148,7 @@ export const digitalProductPassport = {
     gap_bom: "Product & Logistics Info (BOM)",
     gap_lca: "Environmental Impact Report (LCA)",
     download_sku: "Generate & Download SKU Package",
+    view_sku_details: "View SKU Details",
     baseline_manufacturer: "Manufacturer",
     baseline_traceability: "Supply Chain Traceability",
     baseline_circularity: "Circularity & Efficiency Policy",

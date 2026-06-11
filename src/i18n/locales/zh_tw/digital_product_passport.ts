@@ -142,6 +142,7 @@ export const digitalProductPassport = {
     gap_bom: "產品與物流資訊 (BOM)",
     gap_lca: "環境影響報告 (LCA)",
     download_sku: "生成與下載 SKU 檔案包",
+    view_sku_details: "查看 SKU 數據細節",
     baseline_manufacturer: "製造商 (Manufacturer)",
     baseline_traceability: "供應鏈追溯 (Traceability)",
     baseline_circularity: "循環性與效率政策 (Circularity)",

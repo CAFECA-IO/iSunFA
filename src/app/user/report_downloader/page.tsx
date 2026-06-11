@@ -11,6 +11,7 @@ import {
   FileText,
 } from "lucide-react";
 import { DppHeader } from "@/components/user/dpp_start/dpp_header";
+import { useTranslation } from "@/i18n/i18n_context";
 
 const getFileUrl = (path: string) =>
   `/api/dpp/files?action=serve&path=${encodeURIComponent(path)}`;
@@ -18,6 +19,7 @@ const downloadFileUrl = (path: string) =>
   `/api/dpp/files?action=download&path=${encodeURIComponent(path)}`;
 
 export default function ReportDownloaderPage() {
+  const { t } = useTranslation();
   const [keyword, setKeyword] = useState<string>("");
   const [selectedCompany, setSelectedCompany] =
     useState<ICompanySearchResult | null>(null);
@@ -39,7 +41,7 @@ export default function ReportDownloaderPage() {
   const startDownload = async () => {
     if (!selectedCompany) return;
     setIsDownloading(true);
-    setDownloadLog("準備下載中...");
+    setDownloadLog(t("report_downloader.preparing"));
     setDownloadError("");
     setCompletedFiles([]);
 
@@ -88,7 +90,7 @@ export default function ReportDownloaderPage() {
                 }
               } else if (eventData.type === "complete") {
                 setIsDownloading(false);
-                setDownloadLog("下載完成！");
+                setDownloadLog(t("report_downloader.download_complete"));
               } else if (eventData.type === "error") {
                 setDownloadError(eventData.message);
                 setIsDownloading(false);
@@ -100,7 +102,11 @@ export default function ReportDownloaderPage() {
         }
       }
     } catch (err: unknown) {
-      setDownloadError(err instanceof Error ? err.message : "下載失敗");
+      setDownloadError(
+        err instanceof Error
+          ? err.message
+          : t("report_downloader.download_failed"),
+      );
       setIsDownloading(false);
     }
   };
@@ -112,10 +118,10 @@ export default function ReportDownloaderPage() {
       <div className="mx-auto w-full max-w-4xl flex-1 overflow-hidden p-6">
         <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
           <h1 className="mb-2 text-2xl font-bold text-slate-800">
-            財報與 ESG 報告下載器
+            {t("report_downloader.title")}
           </h1>
           <p className="mb-8 text-slate-500">
-            透過輸入企業統編或名稱，快速自動爬梳並下載公開財務報表及永續報告書。
+            {t("report_downloader.description")}
           </p>
 
           <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -124,7 +130,7 @@ export default function ReportDownloaderPage() {
                 htmlFor="companyKeyword"
                 className="mb-1 block text-xs font-bold text-slate-700"
               >
-                Target Enterprise (統一編號 / 企業名稱)
+                {t("report_downloader.target_enterprise")}
               </label>
               <CompanySearchInput
                 value={keyword}
@@ -139,7 +145,7 @@ export default function ReportDownloaderPage() {
                 htmlFor="yearSelect"
                 className="mb-1 block text-xs font-bold text-slate-700"
               >
-                Year
+                {t("report_downloader.year")}
               </label>
               <select
                 id="yearSelect"
@@ -164,11 +170,13 @@ export default function ReportDownloaderPage() {
           >
             {isDownloading ? (
               <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" /> 下載進行中...
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />{" "}
+                {t("report_downloader.downloading")}
               </>
             ) : (
               <>
-                <DownloadCloud className="mr-2 h-5 w-5" /> 開始下載報告
+                <DownloadCloud className="mr-2 h-5 w-5" />{" "}
+                {t("report_downloader.start_download")}
               </>
             )}
           </button>
@@ -176,7 +184,7 @@ export default function ReportDownloaderPage() {
           {(downloadLog || downloadError || completedFiles.length > 0) && (
             <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-6">
               <h2 className="mb-4 flex items-center text-lg font-bold text-slate-700">
-                處理狀態
+                {t("report_downloader.processing_status")}
               </h2>
 
               {downloadError ? (
@@ -198,7 +206,7 @@ export default function ReportDownloaderPage() {
               {completedFiles.length > 0 && (
                 <div className="mt-4 border-t border-slate-200 pt-4">
                   <h3 className="mb-3 text-sm font-bold text-slate-700">
-                    已下載的檔案：
+                    {t("report_downloader.downloaded_files")}
                   </h3>
                   <ul className="space-y-2">
                     {completedFiles.map((file, idx) => (
@@ -219,14 +227,14 @@ export default function ReportDownloaderPage() {
                             rel="noreferrer"
                             className="rounded-md px-3 py-1.5 text-xs font-bold text-indigo-500 transition-colors hover:bg-indigo-50 hover:text-indigo-600"
                           >
-                            新分頁開啟
+                            {t("report_downloader.open_new_tab")}
                           </a>
                           <a
                             href={downloadFileUrl(file)}
                             download
                             className="rounded-md bg-orange-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-orange-600"
                           >
-                            儲存檔案
+                            {t("report_downloader.save_file")}
                           </a>
                         </div>
                       </li>

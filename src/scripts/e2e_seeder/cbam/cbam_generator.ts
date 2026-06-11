@@ -8,7 +8,7 @@ import {
   ISimulatedVoucher,
   IPrecursorReconciliation,
 } from "@/interfaces/cbam";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@/generated";
 
 // Info: (20260605 - Tzuhan) Reverse-Engineering Constants
 import { MoneyUtil } from "@/lib/utils/money";

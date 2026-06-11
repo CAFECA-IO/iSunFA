@@ -9,6 +9,7 @@ import {
   IMesWorkOrder,
 } from "@/interfaces/cbam";
 import { TAIPOWER_EMISSION_FACTOR_2023 } from "@/constants/esg";
+import { MoneyUtil } from "@/lib/utils/money";
 import * as dotenv from "dotenv";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });

@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   Network,
   Lightbulb,
+  Search,
 } from "lucide-react";
 
 export interface IProductGapSettings {
@@ -20,6 +21,7 @@ interface IDppProductMatrixPaneProps {
   isGenerating: boolean;
   onDownloadSku: (productId: string, gapSettings: IProductGapSettings) => void;
   onAddSku: () => void;
+  onViewProductDetails: (productId: string) => void;
 }
 
 export function DppProductMatrixPane({
@@ -27,6 +29,7 @@ export function DppProductMatrixPane({
   isGenerating,
   onDownloadSku,
   onAddSku,
+  onViewProductDetails,
 }: IDppProductMatrixPaneProps) {
   const { t } = useTranslation();
 
@@ -159,7 +162,15 @@ export function DppProductMatrixPane({
                   </div>
                 </div>
 
-                <div className="border-t border-slate-100 bg-slate-50/50 p-4">
+                <div className="space-y-2 border-t border-slate-100 bg-slate-50/50 p-4">
+                  <button
+                    onClick={() => onViewProductDetails(p.productId)}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 py-2 text-sm font-bold text-blue-700 shadow-sm transition-colors hover:bg-blue-100 disabled:opacity-50"
+                  >
+                    <Search className="h-4 w-4" />
+                    {t("digital_product_passport.simulator.view_sku_details") ||
+                      "查看 SKU 數據細節"}
+                  </button>
                   <button
                     onClick={() => onDownloadSku(p.productId, settings)}
                     disabled={isGenerating}

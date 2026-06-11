@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { request } from "@/lib/utils/request";
 import { DppHeader } from "@/components/user/dpp_start/dpp_header";
-import { DppSidebar } from "@/components/user/dpp_start/dpp_sidebar";
+import { DppLogsNavigator } from "@/components/user/dpp_start/dpp_logs_navigator";
 import { DppPreviewPane } from "@/components/user/dpp_start/dpp_preview_pane";
 import { DppCompanyBaselinePane } from "@/components/user/dpp_start/dpp_company_baseline_pane";
 import {
@@ -93,9 +93,7 @@ export default function DppStartPage() {
   // Info: (20260609 - Tzuhan) 工作流狀態管理
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
-  const [showExtrapolationAlert, setShowExtrapolationAlert] =
-    useState<boolean>(false);
-  const [showDetailsModal, setShowDetailsModal] = useState<boolean>(false);
+  const [modalContext, setModalContext] = useState<string | null>(null);
   const [products, setProducts] = useState<
     NonNullable<IDemoItem["progress"]["products"]>
   >([]);
@@ -184,7 +182,6 @@ export default function DppStartPage() {
         }),
       );
       setSelectedFilePath(null);
-      setShowExtrapolationAlert(false);
 
       try {
         const response = await fetch(
@@ -249,9 +246,6 @@ export default function DppStartPage() {
                     newSteps[1].file = data.file;
                   } else {
                     newSteps[1].status = "completed";
-                    newSteps[1].label = t(
-                      "digital_product_passport.start.step2",
-                    );
                     newSteps[1].file = data.file;
                   }
                   return newSteps;
@@ -264,8 +258,6 @@ export default function DppStartPage() {
                 });
               } else if (data.type === "preview" && data.file) {
                 setSelectedFilePath(data.file); // Info: (20260609 - Tzuhan) 下載完成後優先預覽 PDF
-              } else if (data.type === "extrapolation_alert") {
-                setShowExtrapolationAlert(true); // Info: (20260609 - Tzuhan) 底層觸發推估，顯示提醒
               } else if (data.type === "complete") {
                 if (data.file) {
                   setSteps((prev) => {
@@ -649,7 +641,7 @@ export default function DppStartPage() {
       <div className="flex min-h-0 flex-1 flex-col gap-6 lg:flex-row">
         <DppCompanyBaselinePane
           isGenerating={isGenerating}
-          onViewDetails={() => setShowDetailsModal(true)}
+          onViewDetails={() => setModalContext("baseline")}
           onRegenerate={() => startGeneration(undefined, "generate_only")}
         />
 
@@ -658,6 +650,7 @@ export default function DppStartPage() {
           isGenerating={isGenerating}
           onDownloadSku={handleDownloadSku}
           onAddSku={handleAddSku}
+          onViewProductDetails={(productId) => setModalContext(productId)}
         />
       </div>
 
@@ -685,11 +678,11 @@ export default function DppStartPage() {
         </button>
       </div>
 
-      {showDetailsModal && (
+      {modalContext !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="relative flex h-[85vh] w-[90vw] max-w-6xl flex-col gap-4 overflow-hidden rounded-2xl bg-slate-50 p-6 shadow-2xl">
             <button
-              onClick={() => setShowDetailsModal(false)}
+              onClick={() => setModalContext(null)}
               className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-slate-600 hover:bg-slate-300"
             >
               ✕
@@ -698,20 +691,13 @@ export default function DppStartPage() {
               {t("digital_product_passport.start.baseline_details")}
             </h2>
             <div className="flex min-h-0 flex-1 gap-6">
-              <DppSidebar
-                keyword={keyword}
-                setKeyword={setKeyword}
+              <DppLogsNavigator
                 selectedCompany={selectedCompany}
-                handleSelectCompany={handleSelectCompany}
                 year={year}
-                setYear={setYear}
-                isGenerating={isGenerating}
-                startGeneration={startGeneration}
-                showExtrapolationAlert={showExtrapolationAlert}
                 steps={steps}
                 products={products}
-                selectedProductId={selectedProductId}
-                setSelectedProductId={setSelectedProductId}
+                activeTabContext={modalContext}
+                onTabChange={(tab) => setModalContext(tab)}
                 onStepClick={(step) => {
                   if (step.file) {
                     setSelectedFilePath(step.file);

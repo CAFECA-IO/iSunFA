@@ -59,6 +59,7 @@ import { adminCoupon } from "@/i18n/locales/ja/admin_coupon";
 import { userCoupon } from "@/i18n/locales/ja/user_coupon";
 import { adminCarbonEmissionDatabase } from "@/i18n/locales/ja/admin_carbon_emission_database";
 import { businessMonitor } from "@/i18n/locales/ja/business_monitor";
+import { reportDownloader } from "@/i18n/locales/ja/report_downloader";
 import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const ja = {
@@ -124,4 +125,5 @@ export const ja = {
   user_coupon: userCoupon,
   admin_carbon_emission_database: adminCarbonEmissionDatabase,
   business_monitor: businessMonitor,
+  report_downloader: reportDownloader,
 } satisfies BaseTranslation;
