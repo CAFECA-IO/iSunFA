@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import archiver from "archiver";
-import { PassThrough } from "stream";
+import JSZip from "jszip";
 import { convertJsonToCsv } from "@/scripts/e2e_seeder/dpp/convert_json_to_csv";
 import { renderDppPdf } from "@/scripts/e2e_seeder/dpp/render_dpp_pdf";
 
@@ -140,10 +139,7 @@ export async function POST(request: Request) {
       targetProductId: skuId,
     });
 
-    // Pack the ZIP
-    const archive = archiver("zip", { zlib: { level: 9 } });
-    const passThrough = new PassThrough();
-    archive.pipe(passThrough);
+    const zip = new JSZip();
 
     // 1. Add generated CSV
     const generatedCsvPath = path.join(
@@ -151,7 +147,7 @@ export async function POST(request: Request) {
       "boms_and_precursors.csv",
     );
     if (fs.existsSync(generatedCsvPath)) {
-      archive.file(generatedCsvPath, { name: "BOM_材料清單.csv" });
+      zip.file("BOM_材料清單.csv", fs.readFileSync(generatedCsvPath));
     }
 
     // 2. Add generated PDF
@@ -162,35 +158,20 @@ export async function POST(request: Request) {
       `${skuId}_dpp_ground_truth_dashboard.pdf`,
     );
     if (fs.existsSync(generatedPdfPath)) {
-      archive.file(generatedPdfPath, { name: "合規宣告書_與_LCA報告.pdf" });
+      zip.file("合規宣告書_與_LCA報告.pdf", fs.readFileSync(generatedPdfPath));
     }
 
-    // 3. Add company baseline (optional, for realism)
-    if (fs.existsSync(baseOutputsDir)) {
-      const items = fs.readdirSync(baseOutputsDir, { withFileTypes: true });
-      for (const item of items) {
-        if (!item.isDirectory() && item.name.endsWith(".json")) {
-          archive.file(path.join(baseOutputsDir, item.name), {
-            name: `company_baseline/${item.name}`,
-          });
-        }
-      }
-    }
-
-    // Await full zip generation into a memory buffer
-    const zipBuffer = await new Promise<Buffer>((resolve, reject) => {
-      const chunks: Buffer[] = [];
-      passThrough.on("data", (chunk) => chunks.push(chunk));
-      passThrough.on("end", () => resolve(Buffer.concat(chunks)));
-      passThrough.on("error", reject);
-      archive.on("error", reject);
-      archive.finalize();
+    const zipBuffer = await zip.generateAsync({
+      type: "nodebuffer",
+      compression: "DEFLATE",
+      compressionOptions: { level: 9 },
     });
 
-    return new NextResponse(zipBuffer, {
+    return new NextResponse(new Uint8Array(zipBuffer), {
+      status: 200,
       headers: {
         "Content-Type": "application/zip",
-        "Content-Disposition": `attachment; filename="${stockId}_${skuId}_dpp_real_mock.zip"`,
+        "Content-Disposition": `attachment; filename="DPP_Simulation_${stockId}_${year}_${skuId}.zip"`,
       },
     });
   } catch (error) {
