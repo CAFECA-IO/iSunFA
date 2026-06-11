@@ -53,6 +53,7 @@ export const PUBLIC_MODULES = [
   },
   { key: "coupon", icon: Tag, basic: true, nav: false },
   { key: "business_monitor", icon: Tag, basic: true, nav: true },
+  { key: "document_simulation", icon: FileText, basic: true, nav: true },
 ];
 
 export const ADMIN_MODULES = [
