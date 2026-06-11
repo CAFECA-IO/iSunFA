@@ -168,7 +168,7 @@ async function main() {
           } else if (existingTask.status === TaskStatus.SUCCESS) {
             // Info: (20260610 - Tzuhan) 檢查實體檔案是否還在，如果不在則重置為 PENDING
             let fileExists = false;
-            // filePath 可能是在 data/ 或 downloads/
+            // Info: (20260610 - Tzuhan) filePath 可能是在 data/ 或 downloads/
             const expectedPath1 = path.join(
               process.cwd(),
               "data",

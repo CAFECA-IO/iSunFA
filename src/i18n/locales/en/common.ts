@@ -1,4 +1,6 @@
 export const common = {
+  view: "View",
+  regenerate: "Regenerate",
   ai_notes: {
     empty: "No AI analysis note",
     base_info: "Basic Info Analysis",

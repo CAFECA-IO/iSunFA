@@ -28,12 +28,12 @@ const CompanySearchInput: FC<ICompanySearchInputProps> = ({
   const { t } = useTranslation();
   const [showCompanyDropdown, setShowCompanyDropdown] =
     useState<boolean>(false);
-  const [suggestions, setSuggestions] = useState<ICompany[]>([]);
-  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [companySuggestions, setCompanySuggestions] = useState<ICompany[]>([]);
+  const [isSearchingCompany, setIsSearchingCompany] = useState<boolean>(false);
 
   useEffect(() => {
     if (!value.trim()) {
-      setSuggestions([]);
+      setCompanySuggestions([]);
       return;
     }
 
@@ -42,19 +42,19 @@ const CompanySearchInput: FC<ICompanySearchInputProps> = ({
     }
 
     const timer = setTimeout(async () => {
-      setIsSearching(true);
+      setIsSearchingCompany(true);
       try {
         const res = await request<{ payload: ICompany[] }>(
           `/api/v1/company/lookup?query=${encodeURIComponent(value)}`,
         );
         if (res?.payload) {
-          setSuggestions(res.payload);
+          setCompanySuggestions(res.payload);
           setShowCompanyDropdown(true);
         }
       } catch (e) {
         console.error(e);
       } finally {
-        setIsSearching(false);
+        setIsSearchingCompany(false);
       }
     }, 500);
 
@@ -82,8 +82,8 @@ const CompanySearchInput: FC<ICompanySearchInputProps> = ({
 
       {showCompanyDropdown && value && (
         <div className="absolute top-full z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg">
-          {suggestions.length > 0 ? (
-            suggestions.map((c) => (
+          {companySuggestions.length > 0 ? (
+            companySuggestions.map((c) => (
               <button
                 key={c.taxId}
                 type="button"
@@ -99,7 +99,7 @@ const CompanySearchInput: FC<ICompanySearchInputProps> = ({
                 <span className="text-xs text-slate-400">{c.taxId}</span>
               </button>
             ))
-          ) : !isSearching ? (
+          ) : !isSearchingCompany ? (
             <div className="m-2 flex flex-col gap-1 rounded-r border-l-4 border-orange-500 bg-slate-50 p-4">
               <span className="text-sm font-bold text-slate-700">
                 {t("analysis.company_input.unsupported_title")}
@@ -110,7 +110,7 @@ const CompanySearchInput: FC<ICompanySearchInputProps> = ({
             </div>
           ) : (
             <div className="px-4 py-2 text-sm text-gray-500">
-              {t("analysis.company_input.searching") || "搜尋中..."}
+              {t("analysis.company_input.searching")}
             </div>
           )}
         </div>

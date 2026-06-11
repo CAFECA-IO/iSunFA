@@ -8,6 +8,7 @@ import { DppPreviewPane } from "@/components/user/dpp_start/dpp_preview_pane";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { IApiResponse } from "@/lib/utils/response";
 import { useTranslation } from "@/i18n/i18n_context";
+import { useRouter } from "next/navigation";
 
 // Info: (20260609 - Tzuhan) 定義流程狀態
 type StepStatus =
@@ -74,6 +75,7 @@ export interface IDemoItem {
 
 export default function DppStartPage() {
   const { t } = useTranslation();
+  const router = useRouter();
   // Info: (20260609 - Tzuhan) 輸入區塊狀態管理
   const [keyword, setKeyword] = useState<string>("");
   const [selectedCompany, setSelectedCompany] =
@@ -325,7 +327,7 @@ export default function DppStartPage() {
                 res.payload.find((c) => c.taxId === paramStockId) ||
                 res.payload[0];
               setSelectedCompany(comp);
-              setKeyword(comp.name);
+              setKeyword(`${comp.name} (${comp.taxId})`);
               if (paramAction === "redownload") {
                 setTimeout(
                   () => startGeneration(comp, "download_only", paramYear),
@@ -523,14 +525,25 @@ export default function DppStartPage() {
   // Info: (20260609 - Tzuhan) 處理選擇公司
   const handleSelectCompany = (company: ICompanySearchResult) => {
     setSelectedCompany(company);
-    setKeyword(company.name);
+    setKeyword(`${company.name} (${company.taxId})`);
   };
 
   return (
-    <div className="relative flex h-[calc(100vh-100px)] w-full flex-col gap-5 overflow-hidden bg-slate-50 pb-4 font-sans">
-      <DppHeader />
+    <div className="relative flex h-[calc(100vh-100px)] w-full flex-col gap-4 overflow-hidden bg-slate-50 px-4 pt-4 pb-4 font-sans lg:px-8">
+      <DppHeader
+        showBack={true}
+        onBack={() => router.back()}
+        title={
+          t("digital_product_passport.simulator_title") ||
+          "企業模擬資料生成中心 (Phase 1)"
+        }
+        subtitle={
+          t("digital_product_passport.simulator_desc") ||
+          "指定目標企業並自動觸發底層爬蟲與 AI 萃取腳本，以建立數位產品護照的企業畫像與基礎實體檔案。"
+        }
+      />
 
-      <div className="flex min-h-0 flex-1 flex-col gap-5 lg:flex-row">
+      <div className="flex min-h-0 flex-1 flex-col gap-6 lg:flex-row">
         <DppSidebar
           keyword={keyword}
           setKeyword={setKeyword}

@@ -1,4 +1,6 @@
 export const common = {
+  view: "檢視",
+  regenerate: "重新生成",
   ai_notes: {
     empty: "無 AI 分析備註",
     base_info: "基本資訊分析",
