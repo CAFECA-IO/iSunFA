@@ -59,6 +59,8 @@ import { adminCoupon } from "@/i18n/locales/zh_tw/admin_coupon";
 import { userCoupon } from "@/i18n/locales/zh_tw/user_coupon";
 import { adminCarbonEmissionDatabase } from "@/i18n/locales/zh_tw/admin_carbon_emission_database";
 import { businessMonitor } from "@/i18n/locales/zh_tw/business_monitor";
+import { simulationWorkflow } from "@/i18n/locales/zh_tw/simulation_workflow";
+import { netZeroPathway } from "@/i18n/locales/zh_tw/net_zero_pathway";
 
 export const zhTw = {
   digital_product_passport: digitalProductPassport,
@@ -123,6 +125,8 @@ export const zhTw = {
   user_coupon: userCoupon,
   admin_carbon_emission_database: adminCarbonEmissionDatabase,
   business_monitor: businessMonitor,
+  simulation_workflow: simulationWorkflow,
+  net_zero_pathway: netZeroPathway,
 } as const;
 
 export type BaseTranslation = typeof zhTw;

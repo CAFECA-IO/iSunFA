@@ -59,6 +59,8 @@ import { adminCoupon } from "@/i18n/locales/zh_cn/admin_coupon";
 import { userCoupon } from "@/i18n/locales/zh_cn/user_coupon";
 import { adminCarbonEmissionDatabase } from "@/i18n/locales/zh_cn/admin_carbon_emission_database";
 import { businessMonitor } from "@/i18n/locales/zh_cn/business_monitor";
+import { simulationWorkflow } from "@/i18n/locales/zh_cn/simulation_workflow";
+import { netZeroPathway } from "@/i18n/locales/zh_cn/net_zero_pathway";
 import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const zhCn = {
@@ -124,4 +126,6 @@ export const zhCn = {
   user_coupon: userCoupon,
   admin_carbon_emission_database: adminCarbonEmissionDatabase,
   business_monitor: businessMonitor,
+  simulation_workflow: simulationWorkflow,
+  net_zero_pathway: netZeroPathway,
 } satisfies BaseTranslation;

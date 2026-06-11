@@ -59,6 +59,8 @@ import { adminCoupon } from "@/i18n/locales/ko/admin_coupon";
 import { userCoupon } from "@/i18n/locales/ko/user_coupon";
 import { adminCarbonEmissionDatabase } from "@/i18n/locales/ko/admin_carbon_emission_database";
 import { businessMonitor } from "@/i18n/locales/ko/business_monitor";
+import { simulationWorkflow } from "@/i18n/locales/ko/simulation_workflow";
+import { netZeroPathway } from "@/i18n/locales/ko/net_zero_pathway";
 import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const ko = {
@@ -124,4 +126,6 @@ export const ko = {
   user_coupon: userCoupon,
   admin_carbon_emission_database: adminCarbonEmissionDatabase,
   business_monitor: businessMonitor,
+  simulation_workflow: simulationWorkflow,
+  net_zero_pathway: netZeroPathway,
 } satisfies BaseTranslation;
