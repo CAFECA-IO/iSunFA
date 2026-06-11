@@ -6,6 +6,8 @@ import {
   Settings,
   AlertCircle,
   CheckCircle2,
+  Network,
+  Lightbulb,
 } from "lucide-react";
 
 export interface IProductGapSettings {
@@ -47,13 +49,13 @@ export function DppProductMatrixPane({
     <div className="flex flex-1 flex-col rounded-2xl border border-gray-200 bg-white shadow-sm">
       <div className="flex items-center justify-between border-b border-gray-100 bg-slate-50/50 p-5">
         <div>
-          <h2 className="text-lg font-bold text-gray-900">
-            📊{" "}
+          <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
+            <Network className="h-5 w-5 text-indigo-600" />
             {t("digital_product_passport.simulator.matrix_title") ||
               "產品組合與 Gap 設定 (Unique)"}
           </h2>
-          <p className="mt-1 text-xs text-gray-500">
-            💡{" "}
+          <p className="mt-1 flex text-xs text-gray-500">
+            <Lightbulb className="mt-0.5 mr-1.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
             {t("digital_product_passport.simulator.matrix_desc") ||
               "請為不同產品 SKU 設定不同的缺陷情境，體驗判定。"}
           </p>

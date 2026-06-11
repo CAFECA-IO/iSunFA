@@ -95,6 +95,7 @@ export const digitalProductPassport = {
     simulator_desc:
       "Automatically generate realistic Digital Product Passport (DPP) mock data sources using public financial and sustainability reports for demo and testing.",
     create_simulation: "New Simulation",
+    enter_data_center: "Enter Data Center",
     no_simulations:
       "No simulated enterprises found. Click 'New Simulation' to create your first dataset.",
     delete_confirm_title: "Confirm Deletion",

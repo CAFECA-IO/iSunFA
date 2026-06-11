@@ -1,5 +1,11 @@
 import { useTranslation } from "@/i18n/i18n_context";
-import { CheckCircle2, BarChart2, Zap } from "lucide-react";
+import {
+  CheckCircle2,
+  BarChart2,
+  Zap,
+  Building2,
+  Lightbulb,
+} from "lucide-react";
 
 interface IDppCompanyBaselinePaneProps {
   isGenerating: boolean;
@@ -30,13 +36,13 @@ export function DppCompanyBaselinePane({
   return (
     <div className="flex h-full w-full flex-col rounded-2xl border border-gray-200 bg-white shadow-sm lg:w-[450px]">
       <div className="border-b border-gray-100 bg-slate-50/50 p-5">
-        <h2 className="text-lg font-bold text-gray-900">
-          📦{" "}
+        <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
+          <Building2 className="h-5 w-5 text-blue-600" />
           {t("digital_product_passport.simulator.baseline_title") ||
             "公司公用 Baseline 資料集"}
         </h2>
-        <p className="mt-1 text-xs text-gray-500">
-          💡{" "}
+        <p className="mt-1 flex text-xs text-gray-500">
+          <Lightbulb className="mt-0.5 mr-1.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
           {t("digital_product_passport.simulator.baseline_desc") ||
             "此資料集由財報 & ESG 報告反推。作為所有產品模擬的共用基礎。"}
         </p>

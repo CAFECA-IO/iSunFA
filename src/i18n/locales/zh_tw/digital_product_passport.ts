@@ -91,6 +91,7 @@ export const digitalProductPassport = {
     simulator_desc:
       "透過公開上市櫃公司財報與永續報告書，自動產生具真實感的數位產品護照 (DPP) 模擬數據源，供展示與測試用途。",
     create_simulation: "新增模擬企業",
+    enter_data_center: "進入資料中心",
     no_simulations:
       "找不到模擬企業。請點擊「新增模擬企業」建立您的第一筆數據。",
     delete_confirm_title: "確認刪除",

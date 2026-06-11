@@ -10,7 +10,6 @@ import {
   AlertCircle,
   Trash2,
   Eye,
-  DownloadCloud,
   Wand2,
   MoreVertical,
   Building,
@@ -100,72 +99,6 @@ export default function DppListPage() {
         }
       },
     });
-  };
-
-  const handleDownloadCsv = async (item: IDemoItem) => {
-    try {
-      setLoading(true);
-      const filePath = `data/${item.stockId}/${item.year}/outputs/mock_sources/boms_and_precursors.json`;
-      const res = await fetch(
-        `/api/dpp/files?action=serve&path=${encodeURIComponent(filePath)}`,
-      );
-      if (!res.ok) {
-        throw new Error("BOM file not found");
-      }
-      const bomData = await res.json();
-
-      const rows = [
-        "Product ID,Product Name,Material/Component,Supplier,Country of Origin",
-      ];
-      if (bomData.products && Array.isArray(bomData.products)) {
-        bomData.products.forEach(
-          (product: {
-            productId: string;
-            productName: string;
-            bom?: {
-              precursorName: string;
-              supplierName: string;
-              countryOfOrigin: string;
-            }[];
-          }) => {
-            if (product.bom && Array.isArray(product.bom)) {
-              product.bom.forEach(
-                (component: {
-                  precursorName: string;
-                  supplierName: string;
-                  countryOfOrigin: string;
-                }) => {
-                  rows.push(
-                    `${product.productId},${product.productName},${component.precursorName},${component.supplierName},${component.countryOfOrigin}`,
-                  );
-                },
-              );
-            }
-          },
-        );
-      }
-
-      const csvContent = rows.join("\\n");
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.setAttribute("href", url);
-      link.setAttribute("download", `Bill_Of_Materials_${item.stockId}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (e) {
-      console.error(e);
-      setModalConfig({
-        isOpen: true,
-        title: t("common.error"),
-        message:
-          t("digital_product_passport.start.unknown_error") ||
-          "Failed to download CSV",
-      });
-    } finally {
-      setLoading(false);
-    }
   };
 
   useEffect(() => {
@@ -279,13 +212,6 @@ export default function DppListPage() {
                 {/* Actions */}
                 <div className="mt-6 flex items-center gap-2 border-t border-gray-100 pt-4">
                   <button
-                    onClick={() => handleDownloadCsv(item)}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-100"
-                  >
-                    <DownloadCloud className="h-4 w-4" />
-                    {t("common.download")} CSV
-                  </button>
-                  <button
                     disabled={
                       !item.progress.hasFin &&
                       !item.progress.hasEsg &&
@@ -293,13 +219,14 @@ export default function DppListPage() {
                     }
                     onClick={() =>
                       router.push(
-                        `/digital_product_passport_simulator/start?stockId=${item.stockId}&year=${item.year}&action=view`,
+                        `/digital_product_passport_simulator/start?stockId=${item.stockId}&year=${item.year}`,
                       )
                     }
-                    className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <Eye className="h-4 w-4" />
-                    {t("common.view")}
+                    {t("digital_product_passport.list.enter_data_center") ||
+                      "進入資料中心"}
                   </button>
 
                   <div className="relative">

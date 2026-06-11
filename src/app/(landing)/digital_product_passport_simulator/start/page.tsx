@@ -15,6 +15,7 @@ import ConfirmModal from "@/components/common/confirm_modal";
 import { IApiResponse } from "@/lib/utils/response";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useRouter } from "next/navigation";
+import { Sparkles, Rocket } from "lucide-react";
 
 // Info: (20260609 - Tzuhan) 定義流程狀態
 type StepStatus =
@@ -600,7 +601,9 @@ export default function DppStartPage() {
 
       <div className="flex shrink-0 items-center gap-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-blue-600">1️⃣</span>
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600">
+            1
+          </div>
           <span className="text-sm font-bold text-slate-700">
             {t("digital_product_passport.start.target_enterprise_label")}
           </span>
@@ -635,7 +638,9 @@ export default function DppStartPage() {
       </div>
 
       <div className="mb-1 flex shrink-0 items-center gap-2">
-        <span className="font-bold text-blue-600">2️⃣</span>
+        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600">
+          2
+        </div>
         <h2 className="text-sm font-bold text-slate-700">
           {t("digital_product_passport.start.simulation_matrix")}
         </h2>
@@ -659,20 +664,24 @@ export default function DppStartPage() {
       <div className="flex shrink-0 items-center justify-between gap-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 shadow-sm">
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-bold text-blue-600">3️⃣</span>
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600">
+              3
+            </div>
             <h3 className="text-sm font-bold text-blue-900">
               {t("digital_product_passport.start.next_step_verify")}
             </h3>
           </div>
-          <p className="mt-1 text-xs text-blue-800">
+          <p className="mt-1 flex items-center text-xs text-blue-800">
+            <Sparkles className="mr-1.5 h-3.5 w-3.5 text-amber-500" />
             {t("digital_product_passport.start.next_step_verify_desc")}
           </p>
         </div>
         <button
           onClick={() => router.push("/digital_product_passport")}
-          className="rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow transition-colors hover:bg-blue-700"
+          className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow transition-colors hover:bg-blue-700"
         >
-          🚀 前往建立護照 (/digital_product_passport) ➔
+          <Rocket className="h-4 w-4" />
+          前往建立護照 (/digital_product_passport) ➔
         </button>
       </div>
 
