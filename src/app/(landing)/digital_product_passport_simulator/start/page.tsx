@@ -5,6 +5,12 @@ import { request } from "@/lib/utils/request";
 import { DppHeader } from "@/components/user/dpp_start/dpp_header";
 import { DppSidebar } from "@/components/user/dpp_start/dpp_sidebar";
 import { DppPreviewPane } from "@/components/user/dpp_start/dpp_preview_pane";
+import { DppCompanyBaselinePane } from "@/components/user/dpp_start/dpp_company_baseline_pane";
+import {
+  DppProductMatrixPane,
+  IProductGapSettings,
+} from "@/components/user/dpp_start/dpp_product_matrix_pane";
+import { CompanySearchInput } from "@/components/common/company_search_input";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { IApiResponse } from "@/lib/utils/response";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -88,6 +94,7 @@ export default function DppStartPage() {
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const [showExtrapolationAlert, setShowExtrapolationAlert] =
     useState<boolean>(false);
+  const [showDetailsModal, setShowDetailsModal] = useState<boolean>(false);
   const [products, setProducts] = useState<
     NonNullable<IDemoItem["progress"]["products"]>
   >([]);
@@ -179,17 +186,20 @@ export default function DppStartPage() {
       setShowExtrapolationAlert(false);
 
       try {
-        const response = await fetch("/api/v1/dpp/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            stockId: targetComp.taxId,
-            year: targetYear,
-            productCount,
-            productId,
-            mode,
-          }),
-        });
+        const response = await fetch(
+          "/api/v1/digital_product_passport_simulator/generate",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              stockId: targetComp.taxId,
+              year: targetYear,
+              productCount,
+              productId,
+              mode,
+            }),
+          },
+        );
 
         if (!response.body)
           throw new Error(t("digital_product_passport.start.unknown_error"));
@@ -528,45 +538,182 @@ export default function DppStartPage() {
     setKeyword(`${company.name} (${company.taxId})`);
   };
 
+  const handleDownloadSku = async (
+    productId: string,
+    gapSettings: IProductGapSettings,
+  ) => {
+    if (!selectedCompany) return;
+
+    const missingModules: string[] = [];
+    if (!gapSettings.includeBom) missingModules.push("BOM");
+    if (!gapSettings.includeLca) missingModules.push("LCA");
+
+    try {
+      const response = await fetch(
+        "/api/v1/digital_product_passport_simulator/download",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            stockId: selectedCompany.taxId,
+            year,
+            skuId: productId,
+            missingModules,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Download failed");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${selectedCompany.taxId}_${productId}_dpp_mock.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Download error:", error);
+      alert(t("digital_product_passport.start.download_failed"));
+    }
+  };
+
+  const handleAddSku = () => {
+    // Info: (20260611 - Tzuhan) 模擬新增一個產品，重新呼叫產生
+    startGeneration(undefined, "all");
+  };
+
   return (
     <div className="relative flex h-[calc(100vh-100px)] w-full flex-col gap-4 overflow-hidden bg-slate-50 px-4 pt-4 pb-4 font-sans lg:px-8">
       <DppHeader
         showBack={true}
         onBack={() => router.back()}
-        title={
-          t("digital_product_passport.simulator_title") ||
-          "企業模擬資料生成中心 (Phase 1)"
-        }
-        subtitle={
-          t("digital_product_passport.simulator_desc") ||
-          "指定目標企業並自動觸發底層爬蟲與 AI 萃取腳本，以建立數位產品護照的企業畫像與基礎實體檔案。"
-        }
+        title={t("digital_product_passport.start.simulator_title_phase1")}
+        subtitle={t(
+          "digital_product_passport.start.simulator_title_phase1_desc",
+        )}
       />
 
+      <div className="flex shrink-0 items-center gap-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-blue-600">1️⃣</span>
+          <span className="text-sm font-bold text-slate-700">
+            {t("digital_product_passport.start.target_enterprise_label")}
+          </span>
+        </div>
+        <div className="w-64">
+          <CompanySearchInput
+            value={keyword}
+            onChange={setKeyword}
+            onSelect={handleSelectCompany}
+            disabled={isGenerating}
+          />
+        </div>
+        <div className="ml-4 flex items-center gap-2">
+          <span className="text-sm font-bold text-slate-700">
+            {t("digital_product_passport.start.year_label")}
+          </span>
+        </div>
+        <select
+          value={year}
+          onChange={(e) => setYear(e.target.value)}
+          disabled={isGenerating}
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
+        >
+          <option value="2025">
+            {t("digital_product_passport.sidebar_extra.year_prediction") ||
+              "2025 (預測)"}
+          </option>
+          <option value="2024">2024</option>
+          <option value="2023">2023</option>
+          <option value="2022">2022</option>
+        </select>
+      </div>
+
+      <div className="mb-1 flex shrink-0 items-center gap-2">
+        <span className="font-bold text-blue-600">2️⃣</span>
+        <h2 className="text-sm font-bold text-slate-700">
+          {t("digital_product_passport.start.simulation_matrix")}
+        </h2>
+      </div>
+
       <div className="flex min-h-0 flex-1 flex-col gap-6 lg:flex-row">
-        <DppSidebar
-          keyword={keyword}
-          setKeyword={setKeyword}
-          selectedCompany={selectedCompany}
-          handleSelectCompany={handleSelectCompany}
-          year={year}
-          setYear={setYear}
+        <DppCompanyBaselinePane
           isGenerating={isGenerating}
-          startGeneration={startGeneration}
-          showExtrapolationAlert={showExtrapolationAlert}
-          steps={steps}
-          products={products}
-          selectedProductId={selectedProductId}
-          setSelectedProductId={setSelectedProductId}
-          onStepClick={(step) => {
-            if (step.file) {
-              setSelectedFilePath(step.file);
-            }
-          }}
+          onViewDetails={() => setShowDetailsModal(true)}
+          onRegenerate={() => startGeneration(undefined, "generate_only")}
         />
 
-        <DppPreviewPane selectedFilePath={selectedFilePath} />
+        <DppProductMatrixPane
+          products={products}
+          isGenerating={isGenerating}
+          onDownloadSku={handleDownloadSku}
+          onAddSku={handleAddSku}
+        />
       </div>
+
+      <div className="flex shrink-0 items-center justify-between gap-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 shadow-sm">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-blue-600">3️⃣</span>
+            <h3 className="text-sm font-bold text-blue-900">
+              {t("digital_product_passport.start.next_step_verify")}
+            </h3>
+          </div>
+          <p className="mt-1 text-xs text-blue-800">
+            {t("digital_product_passport.start.next_step_verify_desc")}
+          </p>
+        </div>
+        <button
+          onClick={() => router.push("/digital_product_passport")}
+          className="rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow transition-colors hover:bg-blue-700"
+        >
+          🚀 前往建立護照 (/digital_product_passport) ➔
+        </button>
+      </div>
+
+      {showDetailsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="relative flex h-[85vh] w-[90vw] max-w-6xl flex-col gap-4 overflow-hidden rounded-2xl bg-slate-50 p-6 shadow-2xl">
+            <button
+              onClick={() => setShowDetailsModal(false)}
+              className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-slate-600 hover:bg-slate-300"
+            >
+              ✕
+            </button>
+            <h2 className="mb-2 text-xl font-bold text-slate-800">
+              {t("digital_product_passport.start.baseline_details")}
+            </h2>
+            <div className="flex min-h-0 flex-1 gap-6">
+              <DppSidebar
+                keyword={keyword}
+                setKeyword={setKeyword}
+                selectedCompany={selectedCompany}
+                handleSelectCompany={handleSelectCompany}
+                year={year}
+                setYear={setYear}
+                isGenerating={isGenerating}
+                startGeneration={startGeneration}
+                showExtrapolationAlert={showExtrapolationAlert}
+                steps={steps}
+                products={products}
+                selectedProductId={selectedProductId}
+                setSelectedProductId={setSelectedProductId}
+                onStepClick={(step) => {
+                  if (step.file) {
+                    setSelectedFilePath(step.file);
+                  }
+                }}
+              />
+              <DppPreviewPane selectedFilePath={selectedFilePath} />
+            </div>
+          </div>
+        </div>
+      )}
 
       <ConfirmModal
         isOpen={modalConfig.isOpen}

@@ -9,7 +9,7 @@ interface IDppHeaderProps {
 }
 
 export function DppHeader({
-  title = "企業模擬資料生成中心 (Phase 1)",
+  title = "企業模擬資料生成中心",
   subtitle = "指定目標企業並自動觸發底層爬蟲與 AI 萃取腳本，以建立數位產品護照的企業畫像與基礎實體檔案。",
   showBack = false,
   onBack = () => {},

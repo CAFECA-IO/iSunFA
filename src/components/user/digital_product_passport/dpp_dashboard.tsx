@@ -227,11 +227,15 @@ export default function DppDashboard() {
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
-                  router.push(`/digital_product_passport/sku/create`);
+                  router.push(
+                    `/digital_product_passport/digital_product_passport`,
+                  );
                 }
               }}
               onClick={() =>
-                router.push(`/digital_product_passport/sku/create`)
+                router.push(
+                  `/digital_product_passport/digital_product_passport`,
+                )
               }
               className="group cursor-pointer rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:border-blue-300 hover:shadow-md"
             >

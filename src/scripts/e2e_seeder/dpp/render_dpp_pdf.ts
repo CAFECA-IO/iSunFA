@@ -1,9 +1,13 @@
 import * as fs from "fs";
 import * as path from "path";
 
-export async function renderDppPdf(stockId: string, year: string = "2024") {
+export async function renderDppPdf(
+  stockId: string,
+  year: string = "2024",
+  options?: { baseDirOverride?: string; targetProductId?: string },
+) {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
-  const baseDir = path.join(dataDir, "outputs");
+  const baseDir = options?.baseDirOverride || path.join(dataDir, "outputs");
   const mockSourcesDir = path.join(baseDir, "mock_sources");
   const bomPath = path.join(mockSourcesDir, "boms_and_precursors.json");
 
@@ -19,6 +23,11 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
   );
 
   for (const product of bomRaw.products) {
+    if (
+      options?.targetProductId &&
+      product.productId !== options.targetProductId
+    )
+      continue;
     const productId = product.productId;
     const productMockDir = path.join(baseDir, productId, "mock_sources");
     const productIngestionDir = path.join(
@@ -79,16 +88,28 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
       elements: IChemicalElement[];
     }
 
-    const tCO2e = dppData.carbonFootprint.total_tCO2e;
-    const prePct =
-      (dppData.carbonFootprint.breakdown.precursorsEmissions / tCO2e) * 100 ||
-      0;
-    const s1Pct =
-      (dppData.carbonFootprint.breakdown.directEmissionsScope1 / tCO2e) * 100 ||
-      0;
-    const s2Pct =
-      (dppData.carbonFootprint.breakdown.indirectEmissionsScope2 / tCO2e) *
-        100 || 0;
+    const tCO2e = dppData.carbonFootprint?.total_tCO2e || 0;
+    const prePct = tCO2e
+      ? (dppData.carbonFootprint.breakdown.precursorsEmissions / tCO2e) * 100
+      : 0;
+    const s1Pct = tCO2e
+      ? (dppData.carbonFootprint.breakdown.directEmissionsScope1 / tCO2e) * 100
+      : 0;
+    const s2Pct = tCO2e
+      ? (dppData.carbonFootprint.breakdown.indirectEmissionsScope2 / tCO2e) *
+        100
+      : 0;
+
+    const displayTCO2e = tCO2e ? tCO2e : "N/A";
+    const displayPre = tCO2e
+      ? `${dppData.carbonFootprint.breakdown.precursorsEmissions} tCO₂e`
+      : "N/A";
+    const displayS1 = tCO2e
+      ? `${dppData.carbonFootprint.breakdown.directEmissionsScope1} tCO₂e`
+      : "N/A";
+    const displayS2 = tCO2e
+      ? `${dppData.carbonFootprint.breakdown.indirectEmissionsScope2} tCO₂e`
+      : "N/A";
 
     const htmlContent = `
 <!DOCTYPE html>
@@ -305,7 +326,7 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
       <div class="card">
         <h2>Carbon Footprint Summary</h2>
         <div style="font-size: 36px; font-weight: bold; color: #10b981; text-align: center; margin-top: 8px;">
-          ${dppData.carbonFootprint.total_tCO2e} <span style="font-size: 14px; color: #64748b;">tonnes CO₂e</span>
+          ${displayTCO2e} ${tCO2e ? `<span style="font-size: 14px; color: #64748b;">tonnes CO₂e</span>` : ``}
         </div>
         
         <div style="display: flex; align-items: center; justify-content: center; gap: 24px; margin: 20px 0;">
@@ -323,9 +344,9 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
           </div>
         </div>
 
-        <div class="kv-row"><span class="kv-key">Precursors Emissions</span><span class="kv-val">${dppData.carbonFootprint.breakdown.precursorsEmissions} tCO₂e</span></div>
-        <div class="kv-row"><span class="kv-key">Direct Emissions (Scope 1)</span><span class="kv-val">${dppData.carbonFootprint.breakdown.directEmissionsScope1} tCO₂e</span></div>
-        <div class="kv-row"><span class="kv-key">Indirect Emissions (Scope 2)</span><span class="kv-val">${dppData.carbonFootprint.breakdown.indirectEmissionsScope2} tCO₂e</span></div>
+        <div class="kv-row"><span class="kv-key">Precursors Emissions</span><span class="kv-val">${displayPre}</span></div>
+        <div class="kv-row"><span class="kv-key">Direct Emissions (Scope 1)</span><span class="kv-val">${displayS1}</span></div>
+        <div class="kv-row"><span class="kv-key">Indirect Emissions (Scope 2)</span><span class="kv-val">${displayS2}</span></div>
       </div>
     </div>
     
@@ -454,11 +475,14 @@ export async function renderDppPdf(stockId: string, year: string = "2024") {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const stockId = process.argv[2];
   const year = process.argv[3] || "2024";
+  const targetProductId = process.argv[4];
   if (!stockId) {
-    console.error("Usage: npx tsx render_dpp_pdf.ts <stockId>");
+    console.error(
+      "Usage: npx tsx render_dpp_pdf.ts <stockId> [year] [targetProductId]",
+    );
     process.exit(1);
   }
-  renderDppPdf(stockId, year).catch((e) => {
+  renderDppPdf(stockId, year, { targetProductId }).catch((e) => {
     console.error(e);
     process.exit(1);
   });
