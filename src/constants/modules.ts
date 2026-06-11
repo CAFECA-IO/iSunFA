@@ -32,8 +32,8 @@ export const MODULES = [
   { key: "esg", icon: Leaf, basic: true },
   { key: "financial_report", icon: FileText, basic: true },
   { key: "analysis", icon: PieChart, basic: true },
-  { key: "pos", icon: Computer, basic: false },
   { key: "digital_product_passport", icon: QrCode, basic: true },
+  { key: "pos", icon: Computer, basic: false },
   { key: "signing", icon: FileSignature, basic: false },
   { key: "cashier", icon: Wallet, basic: false },
   { key: "tax", icon: Landmark, basic: false },
@@ -53,7 +53,6 @@ export const PUBLIC_MODULES = [
   },
   { key: "coupon", icon: Tag, basic: true, nav: false },
   { key: "business_monitor", icon: Tag, basic: true, nav: true },
-  { key: "document_simulation", icon: FileText, basic: true, nav: true },
 ];
 
 export const ADMIN_MODULES = [
