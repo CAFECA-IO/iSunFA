@@ -236,11 +236,23 @@ export async function POST(req: NextRequest) {
                 type: "log",
                 message: `Executing ai_vision_extractor.ts...`,
               });
-              const { stdout: visionStdout } = await runScript(
+              await runScript("npx", [
+                "tsx",
+                "src/scripts/e2e_seeder/ai_vision_extractor.ts",
+                stockId,
+                year,
+              ]);
+
+              // Info: (20260612 - Tzuhan) 步驟三點五：ESG 推估
+              sendEvent({
+                type: "log",
+                message: `Executing esg_extrapolator.ts...`,
+              });
+              const { stdout: esgStdout } = await runScript(
                 "npx",
                 [
                   "tsx",
-                  "src/scripts/e2e_seeder/ai_vision_extractor.ts",
+                  "src/scripts/e2e_seeder/esg_extrapolator.ts",
                   stockId,
                   year,
                 ],
@@ -248,8 +260,8 @@ export async function POST(req: NextRequest) {
               );
 
               if (
-                visionStdout.includes("[WARN] 確定取得") ||
-                visionStdout.includes("準備啟動歷史回溯")
+                esgStdout.includes("[SUCCESS] Extrapolated ESG data") ||
+                esgStdout.includes("[INFO] ESG Extrapolation found")
               ) {
                 sendEvent({ type: "extrapolation_alert" });
               }
@@ -288,7 +300,8 @@ export async function POST(req: NextRequest) {
             mode === "all" ||
             mode === "add_sku" ||
             mode === "dpp_only" ||
-            mode === "dpp_catalog_only"
+            mode === "dpp_catalog_only" ||
+            mode === "bom_only"
           ) {
             // Info: (20260610 - Tzuhan) 步驟五：BOM 與前驅物數據建構
             sendEvent({ type: "step_start", stepIndex: 4 });
@@ -441,6 +454,13 @@ export async function POST(req: NextRequest) {
                 "Extrapolation and vision extraction completed successfully.",
             });
             sendEvent({ type: "complete" }); // Info: (20260611 - Tzuhan) no file attached for extrapolate_only, it relies on next step
+          } else if (mode === "bom_only") {
+            sendEvent({
+              type: "log",
+              message: "BOM Generation completed successfully.",
+            });
+            const bomFilePath = `data/${stockId}/${year}/outputs/mock_sources/boms_and_precursors.json`;
+            sendEvent({ type: "complete", file: bomFilePath });
           } else if (mode === "download_only") {
             // Info: (20260611 - Tzuhan) For download_only, we just finish successfully
             sendEvent({

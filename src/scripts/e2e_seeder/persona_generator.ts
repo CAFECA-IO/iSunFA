@@ -293,7 +293,7 @@ ${contextStr}
 if (import.meta.url === `file://${process.argv[1]}`) {
   const stockId = process.argv[2];
 
-  let targetYear = "2024";
+  let targetYear = process.argv[3] || "2024";
   const yearArg = process.argv.find((a) => a.startsWith("--year="));
   if (yearArg) {
     targetYear = yearArg.split("=")[1];

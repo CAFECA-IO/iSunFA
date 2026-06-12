@@ -65,6 +65,8 @@ export interface IDemoItem {
     hasFin: boolean;
     hasEsg: boolean;
     hasPersonaHtml: boolean;
+    hasVisionCache?: boolean;
+    hasEsgExtrapolation?: boolean;
     hasBom: boolean;
     products?: {
       productId: string;
@@ -379,7 +381,8 @@ export default function DppStartPage() {
           const finFile = `data/${selectedCompany.taxId}/${year}/inputs/raw_reports/${year}_FIN_REPORT.pdf`;
           const esgFile = `data/${selectedCompany.taxId}/${year}/inputs/raw_reports/${year}_ESG_REPORT.pdf`;
           const personaFile = `data/${selectedCompany.taxId}/${year}/outputs/${selectedCompany.taxId}_company_persona.html`;
-          const cacheFile = `data/${selectedCompany.taxId}/${year}/outputs/ai_extracted_context_cache.json`;
+
+          const esgExtrapolationFile = `data/${selectedCompany.taxId}/${year}/outputs/esg_extrapolation.json`;
 
           const isEsgExtrapolated =
             currentItem.year === "2025" ||
@@ -411,7 +414,7 @@ export default function DppStartPage() {
               id: "fin_download",
               label: t("digital_product_passport.start.step1"),
               status: currentItem.progress.hasFin ? "completed" : "pending",
-              file: currentItem.progress.hasFin ? finFile : undefined,
+              file: finFile,
             },
             {
               id: "esg_download",
@@ -420,21 +423,18 @@ export default function DppStartPage() {
                 : t("digital_product_passport.start.step2"),
               status: currentItem.progress.hasEsg
                 ? "completed"
-                : isEsgExtrapolated && currentItem.progress.hasPersonaHtml
+                : isEsgExtrapolated && currentItem.progress.hasEsgExtrapolation
                   ? "extrapolated"
                   : "pending",
-              file: currentItem.progress.hasEsg
-                ? esgFile
-                : isEsgExtrapolated && currentItem.progress.hasPersonaHtml
-                  ? cacheFile
-                  : undefined,
+              file: isEsgExtrapolated ? esgExtrapolationFile : esgFile,
             },
             {
               id: "vision",
               label: t("digital_product_passport.start.step3"),
-              status: currentItem.progress.hasPersonaHtml
+              status: currentItem.progress.hasVisionCache
                 ? "completed"
                 : "pending",
+              file: undefined,
             },
             {
               id: "persona",
@@ -442,17 +442,13 @@ export default function DppStartPage() {
               status: currentItem.progress.hasPersonaHtml
                 ? "completed"
                 : "pending",
-              file: currentItem.progress.hasPersonaHtml
-                ? personaFile
-                : undefined,
+              file: personaFile,
             },
             {
               id: "bom_generation",
               label: t("digital_product_passport.start.step5"),
               status: currentItem.progress.hasBom ? "completed" : "pending",
-              file: currentItem.progress.hasBom
-                ? `data/${selectedCompany.taxId}/${year}/outputs/mock_sources/boms_and_precursors.json`
-                : undefined,
+              file: `data/${selectedCompany.taxId}/${year}/outputs/mock_sources/boms_and_precursors.json`,
             },
             {
               id: "product_specs",
@@ -510,7 +506,7 @@ export default function DppStartPage() {
             } else if (currentItem.progress.hasEsg) {
               setSelectedFilePath(esgFile);
             } else if (isEsgExtrapolated && currentItem.progress.hasFin) {
-              setSelectedFilePath(cacheFile);
+              setSelectedFilePath(esgExtrapolationFile);
             } else if (currentItem.progress.hasFin) {
               setSelectedFilePath(finFile);
             } else {
@@ -589,8 +585,19 @@ export default function DppStartPage() {
   };
 
   const handleRegenerateFile = (filePath: string) => {
-    // Info: (20260612 - Tzuhan) 解析 filePath 以找出 productId 和對應的 mode
-    // Info: (20260612 - Tzuhan) 預期路徑格式: data/taxId/year/outputs/P-123/mock_sources/P-123_product_specs.json
+    if (filePath.includes("esg_extrapolation.json")) {
+      startGeneration(undefined, "extrapolate_only");
+      return;
+    }
+    if (filePath.includes("company_persona.html")) {
+      startGeneration(undefined, "persona_only");
+      return;
+    }
+    if (filePath.includes("boms_and_precursors.json")) {
+      startGeneration(undefined, "bom_only");
+      return;
+    }
+
     const match = filePath.match(/outputs\/([^/]+)\/mock_sources\/(.+)$/);
     if (match) {
       const pId = match[1];

@@ -31,11 +31,6 @@ export interface IExtractedContextCache {
     scope1Emissions: string;
     scope2Emissions: string;
   };
-  crossYearExtrapolation: {
-    macroTrends: string; // Info: (20260605 - Tzuhan) Time-machine logic (e.g. 2024->2025 CBAM impact, EV market)
-    predictedRevenueGrowth: string;
-    greenEnergyShift: string;
-  };
   supplyChainIntelligence: {
     upstreamSuppliers: string[]; // Info: (20260605 - Tzuhan) REAL company names from PDF
     downstreamCustomers: string[]; // Info: (20260605 - Tzuhan) REAL OEM/Tier1 customers
@@ -212,9 +207,8 @@ export const extractContextFromPdf = async (
     });
 
     const prompt = `
-      You are an elite Intelligence Analyst, Certified Public Accountant (CPA), and Macroeconomic Forecaster.
+      You are an elite Intelligence Analyst and Certified Public Accountant (CPA).
       I have provided the Annual Financial Report from ${finBaseYear} and the ESG Report from ${esgBaseYear} for a specific company.
-      ${finBaseYear !== targetYear || esgBaseYear !== targetYear ? `\n      CRITICAL INSTRUCTION [TIME-MACHINE]: The target simulation year is ${targetYear}, but some reports are from historical years. You MUST perform a Cross-Year Baseline Extrapolation for any missing data. Analyze the historical baselines, then logically project how macroeconomic trends (e.g., CBAM, global EV market, interest rates, geopolitics) will impact their ${targetYear} revenue, supply chain, and carbon emissions (specifically their green energy adoption rate).\n` : ""}
       
       Your task is to perform an EXTREME GRANULARITY FACT EXTRACTION. 
       DO NOT invent generic placeholder names (like "主要熱處理外包商"). You MUST extract the REAL supplier names, REAL bank names, REAL numbers, and REAL product lines directly from the tens of thousands of words in these PDFs.
@@ -226,15 +220,10 @@ export const extractContextFromPdf = async (
           "scope1Emissions": "Extract exact Scope 1 emissions (e.g. '12,345 tCO2e')",
           "scope2Emissions": "Extract exact Scope 2 emissions (e.g. '45,678 tCO2e')"
         },
-        "crossYearExtrapolation": {
-          "macroTrends": "A detailed paragraph forecasting the macroeconomic and industry challenges heading into ${targetYear}.",
-          "predictedRevenueGrowth": "Logical deduction of revenue growth/decline % for ${targetYear} with rationale based on the extracted baseline.",
-          "greenEnergyShift": "How will their Scope 2 emissions and green power purchasing behavior change in ${targetYear} due to regulations like CBAM?"
-        },
         "supplyChainIntelligence": {
-          "upstreamSuppliers": ["REAL_NAME_1", "REAL_NAME_2", "REAL_NAME_3"], // Info: (20260611 - Tzuhan) Must be ACTUAL company names found in the text!
-          "downstreamCustomers": ["REAL_CUSTOMER_1", "REAL_CUSTOMER_2"], // Info: (20260611 - Tzuhan) Actual customers or target markets mentioned
-          "outsourcedProcesses": ["REAL_PROCESS_1", "REAL_PROCESS_2"] // Info: (20260611 - Tzuhan) Specific outsourced processes like "達可銹處理", "高週波熱處理"
+          "upstreamSuppliers": ["REAL_NAME_1", "REAL_NAME_2", "REAL_NAME_3"], // Info: Must be ACTUAL company names found in the text!
+          "downstreamCustomers": ["REAL_CUSTOMER_1", "REAL_CUSTOMER_2"], // Info: Actual customers or target markets mentioned
+          "outsourcedProcesses": ["REAL_PROCESS_1", "REAL_PROCESS_2"] // Info: Specific outsourced processes like "達可銹處理", "高週波熱處理"
         },
         "costStructureAnalysis": {
           "majorCostComponents": "Detailed breakdown of their direct materials, labor, and specific manufacturing overheads.",

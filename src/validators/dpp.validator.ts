@@ -14,6 +14,7 @@ export const GenerateDppSchema = z.object({
       "generate_only",
       "extrapolate_only",
       "persona_only",
+      "bom_only",
       "dpp_only",
       "dpp_catalog_only",
       "product_dpp_only",

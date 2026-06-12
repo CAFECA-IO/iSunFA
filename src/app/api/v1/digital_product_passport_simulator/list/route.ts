@@ -45,6 +45,12 @@ export async function GET() {
             const hasPersonaHtml = fs.existsSync(
               path.join(yearPath, "outputs", `${stockId}_company_persona.html`),
             );
+            const hasVisionCache = fs.existsSync(
+              path.join(yearPath, "outputs", "ai_extracted_context_cache.json"),
+            );
+            const hasEsgExtrapolation = fs.existsSync(
+              path.join(yearPath, "outputs", "esg_extrapolation.json"),
+            );
 
             // Info: (20260610 - Tzuhan) 讀取 BOMs 取出 products
             let products: unknown[] = [];
@@ -143,6 +149,8 @@ export async function GET() {
                 hasFin,
                 hasEsg,
                 hasPersonaHtml,
+                hasVisionCache,
+                hasEsgExtrapolation,
                 hasBom,
                 products,
               },
