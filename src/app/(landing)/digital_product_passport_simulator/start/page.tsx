@@ -582,19 +582,17 @@ export default function DppStartPage() {
 
   const handleRegenerateFile = (filePath: string) => {
     // Info: (20260612 - Tzuhan) 解析 filePath 以找出 productId 和對應的 mode
-    // Info: (20260612 - Tzuhan) 預期路徑格式: data/taxId/year/outputs/products/P-123/product_specs.json
-    const match = filePath.match(/products\/([^/]+)\/(.+)$/);
+    // Info: (20260612 - Tzuhan) 預期路徑格式: data/taxId/year/outputs/P-123/mock_sources/P-123_product_specs.json
+    const match = filePath.match(/outputs\/([^/]+)\/mock_sources\/(.+)$/);
     if (match) {
       const pId = match[1];
       const fileName = match[2];
       let mode: string | undefined;
 
       if (fileName.includes("product_specs")) mode = "product_specs_only";
-      else if (fileName.includes("product_image")) mode = "product_image_only";
-      else if (fileName.includes("dpp_ground_truth"))
-        mode = "dpp_ground_truth_only";
-      else if (fileName.includes("dpp_compliance"))
-        mode = "dpp_compliance_only";
+      else if (fileName.includes("fastener_blueprint")) mode = "product_image_only";
+      else if (fileName.includes("dpp_ground_truth")) mode = "dpp_ground_truth_only";
+      else if (fileName.includes("dpp_compliance_declaration")) mode = "dpp_compliance_only";
 
       if (mode) {
         startGeneration(undefined, mode, undefined, pId);

@@ -6,7 +6,7 @@ export const features = {
   items: {
     dashboard: {
       title: "정보 상황실",
-      desc: "재무 분석과 카본 플루트프린트의 주요 데이터를 통합하여 즉시 결정과 대응 지원을 제공합니다.",
+      desc: "재무 분석과 탄소 발자국의 주요 데이터를 통합하여 즉각적인 의사결정과 대응을 지원합니다.",
     },
     voucher: {
       title: "전표 관리",
@@ -37,15 +37,15 @@ export const features = {
       desc: "클릭 한 번으로 전문 회계 보고서와 ESG 보고서를 생성하여 기업 현황을 즉시 파악하세요.",
     },
     journal: {
-      title: "AI OCR",
+      title: "AI 영수증 인식",
       desc: "영수증 정보를 자동으로 추출하고 분류하여 아카이빙함으로써 수기 입력 업무의 부담을 없앱니다.",
     },
     digital_product_passport_simulator: {
       title: "디지털 제품 여권 시뮬레이터",
-      desc: "테스트 및 데모용으로 디지털 제품 여권의 모의 데이터를 제공합니다。",
+      desc: "테스트 및 데모용으로 디지털 제품 여권의 모의 데이터를 제공합니다.",
     },
     digital_product_passport: {
-      title: "디지털 상품 여권",
+      title: "디지털 제품 여권",
       desc: "제품의 수명 주기 정보와 탄소 발자국의 디지털 이력서를 작성하여 국제 표준을 준수하고 녹색 경쟁력을 강화합니다.",
     },
     esg: {

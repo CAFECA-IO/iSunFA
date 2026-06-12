@@ -107,15 +107,15 @@ export function DppLogsNavigator({
             // Recompute step file path if it's a product step to avoid singleton overlap
             let actualFile = step.file;
             if (!isBaseline && activeTabContext && selectedCompany) {
-              const baseDir = `data/${selectedCompany.taxId}/${year}/outputs/products/${activeTabContext}`;
+              const baseDir = `data/${selectedCompany.taxId}/${year}/outputs/${activeTabContext}/mock_sources`;
               if (globalIndex === 5)
-                actualFile = `${baseDir}/product_specs.json`;
+                actualFile = `${baseDir}/${activeTabContext}_product_specs.json`;
               else if (globalIndex === 6)
-                actualFile = `${baseDir}/product_image.png`;
+                actualFile = `${baseDir}/fastener_blueprint.png`;
               else if (globalIndex === 7)
-                actualFile = `${baseDir}/dpp_ground_truth.json`;
+                actualFile = `${baseDir}/${activeTabContext}_dpp_ground_truth.json`;
               else if (globalIndex === 8)
-                actualFile = `${baseDir}/dpp_compliance_report.json`;
+                actualFile = `${baseDir}/${activeTabContext}_dpp_compliance_declaration.md`;
             }
 
             return (
@@ -138,15 +138,19 @@ export function DppLogsNavigator({
                     </div>
                   )}
 
-                  {actualFile && isCompleted && (
+                  {actualFile && (
                     <button
                       onClick={() => onStepClick({ ...step, file: actualFile })}
                       className="mt-2 flex w-fit items-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:text-blue-600"
                     >
                       <FileText className="mr-1.5 h-3.5 w-3.5" />
-                      {t(
-                        "digital_product_passport.preview_extra.view_generated_output",
-                      )}
+                      {isCompleted
+                        ? t(
+                            "digital_product_passport.preview_extra.view_generated_output",
+                          )
+                        : t(
+                            "digital_product_passport.preview_extra.file_not_found",
+                          )}
                     </button>
                   )}
                 </div>
