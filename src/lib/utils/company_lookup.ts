@@ -7,36 +7,36 @@ export interface ICompanyData {
 }
 
 const COMMON_ABBREVIATIONS: Record<string, ICompanyData> = {
-  台積電: { taxId: "22099131", name: "台灣積體電路製造股份有限公司" },
-  聯發科: { taxId: "16093554", name: "聯發科技股份有限公司" },
-  鴻海: { taxId: "04541302", name: "鴻海精密工業股份有限公司" },
-  大立光: { taxId: "23015546", name: "大立光電股份有限公司" },
-  日月光: { taxId: "22099719", name: "日月光半導體製造股份有限公司" },
-  台達電: { taxId: "11200164", name: "台達電子工業股份有限公司" },
-  聯電: { taxId: "11340156", name: "聯華電子股份有限公司" },
-  廣達: { taxId: "22822281", name: "廣達電腦股份有限公司" },
-  華碩: { taxId: "23330685", name: "華碩電腦股份有限公司" },
-  宏碁: { taxId: "11956108", name: "宏碁股份有限公司" },
-  微星: { taxId: "22156844", name: "微星科技股份有限公司" },
-  技嘉: { taxId: "22216654", name: "技嘉科技股份有限公司" },
-  群創: { taxId: "80281223", name: "群創光電股份有限公司" },
-  友達: { taxId: "97177530", name: "友達光電股份有限公司" },
-  緯創: { taxId: "70774748", name: "緯創資通股份有限公司" },
-  台泥: { taxId: "11909207", name: "台灣水泥股份有限公司" },
-  亞泥: { taxId: "03244509", name: "亞洲水泥股份有限公司" },
-  中鋼: { taxId: "30414175", name: "中國鋼鐵股份有限公司" },
-  統一: { taxId: "73251209", name: "統一企業股份有限公司" },
-  富邦金: { taxId: "80328224", name: "富邦金融控股股份有限公司" },
-  國泰金: { taxId: "80327715", name: "國泰金融控股股份有限公司" },
-  兆豐金: { taxId: "12791629", name: "兆豐金融控股股份有限公司" },
-  中信金: { taxId: "12821422", name: "中國信託金融控股股份有限公司" },
-  玉山金: { taxId: "12822941", name: "玉山金融控股股份有限公司" },
-  長榮: { taxId: "11068407", name: "長榮海運股份有限公司" },
-  陽明: { taxId: "11287610", name: "陽明海運股份有限公司" },
-  萬海: { taxId: "11211186", name: "萬海航運股份有限公司" },
-  中華電: { taxId: "96979933", name: "中華電信股份有限公司" },
-  台灣大: { taxId: "97176270", name: "台灣大哥大股份有限公司" },
-  遠傳: { taxId: "97178125", name: "遠傳電信股份有限公司" },
+  台積電: { taxId: "2330", name: "台灣積體電路製造股份有限公司" },
+  聯發科: { taxId: "2454", name: "聯發科技股份有限公司" },
+  鴻海: { taxId: "2317", name: "鴻海精密工業股份有限公司" },
+  大立光: { taxId: "3008", name: "大立光電股份有限公司" },
+  日月光: { taxId: "3711", name: "日月光投資控股股份有限公司" }, // Updated name
+  台達電: { taxId: "2308", name: "台達電子工業股份有限公司" },
+  聯電: { taxId: "2303", name: "聯華電子股份有限公司" },
+  廣達: { taxId: "2382", name: "廣達電腦股份有限公司" },
+  華碩: { taxId: "2357", name: "華碩電腦股份有限公司" },
+  宏碁: { taxId: "2353", name: "宏碁股份有限公司" },
+  微星: { taxId: "2377", name: "微星科技股份有限公司" },
+  技嘉: { taxId: "2376", name: "技嘉科技股份有限公司" },
+  群創: { taxId: "3481", name: "群創光電股份有限公司" },
+  友達: { taxId: "2409", name: "友達光電股份有限公司" },
+  緯創: { taxId: "3231", name: "緯創資通股份有限公司" },
+  台泥: { taxId: "1101", name: "台灣水泥股份有限公司" },
+  亞泥: { taxId: "1102", name: "亞洲水泥股份有限公司" },
+  中鋼: { taxId: "2002", name: "中國鋼鐵股份有限公司" },
+  統一: { taxId: "1216", name: "統一企業股份有限公司" },
+  富邦金: { taxId: "2881", name: "富邦金融控股股份有限公司" },
+  國泰金: { taxId: "2882", name: "國泰金融控股股份有限公司" },
+  兆豐金: { taxId: "2886", name: "兆豐金融控股股份有限公司" },
+  中信金: { taxId: "2891", name: "中國信託金融控股股份有限公司" },
+  玉山金: { taxId: "2884", name: "玉山金融控股股份有限公司" },
+  長榮: { taxId: "2603", name: "長榮海運股份有限公司" },
+  陽明: { taxId: "2609", name: "陽明海運股份有限公司" },
+  萬海: { taxId: "2615", name: "萬海航運股份有限公司" },
+  中華電: { taxId: "2412", name: "中華電信股份有限公司" },
+  台灣大: { taxId: "3045", name: "台灣大哥大股份有限公司" },
+  遠傳: { taxId: "4904", name: "遠傳電信股份有限公司" },
 };
 
 function lookupByAbbreviation(cleanQuery: string): ICompanyData[] {
@@ -164,13 +164,7 @@ export async function lookupCompany(query: string): Promise<ICompanyData[]> {
   let cleanTrimmed = trimmed.replace(/\s*[（\(]\d+[）\)]\s*$/, "");
   cleanTrimmed = cleanTrimmed.replace(/(股份有限公司|有限公司|公司)$/, "");
 
-  // Info: (20260320 - Tzuhan) 1. Check exact abbreviation or generic substring match
-  const abbrResults = lookupByAbbreviation(cleanTrimmed);
-  if (abbrResults.length > 0) {
-    return abbrResults;
-  }
-
-  // Info: (20260320 - Tzuhan) 2. Local DB search (Fastest & most reliable for TWSE/TPEx)
+  // Info: (20260320 - Tzuhan) 1. Local DB search (Fastest & most reliable for TWSE/TPEx)
   // 如果原始 query 有附帶 "(2066)"，就直接嘗試擷取出代碼作為條件
   const idMatch = trimmed.match(/[（\(](\d+)[）\)]/);
   const possibleId = idMatch ? idMatch[1] : cleanTrimmed;
@@ -189,6 +183,15 @@ export async function lookupCompany(query: string): Promise<ICompanyData[]> {
 
   if (dbResults.length > 0) {
     return dbResults.map((c) => ({ taxId: c.stockId, name: c.name }));
+  }
+
+  // Info: (20260320 - Tzuhan) 2. Check exact abbreviation or generic substring match
+  const abbrResults = lookupByAbbreviation(cleanTrimmed);
+  if (abbrResults.length > 0) {
+    // Info: (20260612 - Tzuhan) We want stock IDs, but abbreviations have tax IDs.
+    // However, if the local DB didn't find them, it might mean they are not listed or synced.
+    // We will just return the abbreviation result as fallback.
+    return abbrResults;
   }
 
   // Info: (20260320 - Tzuhan) 3. If it's exactly 8 digits, use strict Tax ID lookup
