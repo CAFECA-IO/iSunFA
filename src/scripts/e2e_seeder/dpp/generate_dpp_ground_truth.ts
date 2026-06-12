@@ -7,7 +7,8 @@ import {
   GenerativeModel,
 } from "@google/generative-ai";
 import * as dotenv from "dotenv";
-import { lookupCompany } from "@/lib/utils/company_lookup";
+import { fileURLToPath } from "url";
+import { prisma } from "@/lib/prisma";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
@@ -301,10 +302,24 @@ export async function generateDppGroundTruth(
       `${productId}_dpp_ground_truth.json`,
     );
 
-    // Info: (20260604 - Tzuhan) 防止 AI 產生幻覺，強制注入真實公司名稱
-    const companyData = await lookupCompany(stockId);
-    const companyNameEN =
-      companyData.length > 0 ? companyData[0].name : `Company ${stockId}`;
+    // Info: (20260604 - Tzuhan) 防止 AI 產生幻覺，獲取真實公司中文與英文簡稱，並推導官方英文名稱
+    const company = await prisma.company.findUnique({
+      where: { stockId },
+    });
+    const companyNameZH = company?.name || `Company ${stockId}`;
+    const companySymbol = company?.symbol || "";
+
+    const nameModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const nameResult = await nameModel.generateContent(`
+你是一個專業的英文翻譯助手。請根據以下台灣上市櫃公司的中文名稱與英文證券簡稱，推導出該公司在真實世界中最合適的英文全稱（例如結尾為 Co., Ltd. 或 Corp.）。
+中文名稱：${companyNameZH}
+英文證券簡稱：${companySymbol}
+請直接輸出該公司的英文官方全稱字串（如 "Sumeeko Industries Co., Ltd."），不要包含任何引號、前綴或額外解釋。
+`);
+    const companyNameEN = nameResult.response
+      .text()
+      .trim()
+      .replace(/['"]/g, "");
 
     // Info: (20260604 - Tzuhan) 建立強大的 Context 文本 (針對單一 SKU)
     const baseContext = `我們正在為台灣公司代號 ${stockId} (年份 ${year}) 的產品 ${productId} (${product.productName}) 建立數位產品護照 (DPP) 的 Ground Truth 測試數據。
@@ -441,7 +456,11 @@ ${baseContext}
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+const currentFilePath = fileURLToPath(import.meta.url);
+if (
+  process.argv[1] &&
+  fs.realpathSync(process.argv[1]) === fs.realpathSync(currentFilePath)
+) {
   const stockId = process.argv[2];
   const year = process.argv[3] || "2024";
   if (!stockId) {

@@ -14,9 +14,9 @@ import { DppHeader } from "@/components/user/dpp_start/dpp_header";
 import { useTranslation } from "@/i18n/i18n_context";
 
 const getFileUrl = (path: string) =>
-  `/api/dpp/files?action=serve&path=${encodeURIComponent(path)}`;
+  `/api/v1/digital_product_passport_simulator/files?action=serve&path=${encodeURIComponent(path)}`;
 const downloadFileUrl = (path: string) =>
-  `/api/dpp/files?action=download&path=${encodeURIComponent(path)}`;
+  `/api/v1/digital_product_passport_simulator/files?action=download&path=${encodeURIComponent(path)}`;
 
 export default function ReportDownloaderPage() {
   const { t } = useTranslation();

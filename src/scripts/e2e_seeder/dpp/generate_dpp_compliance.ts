@@ -4,7 +4,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import * as dotenv from "dotenv";
 import { mdToPdf } from "md-to-pdf";
 import { IProductBom } from "@/interfaces/cbam";
-import { lookupCompany } from "@/lib/utils/company_lookup";
+import { prisma } from "@/lib/prisma";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
@@ -60,9 +60,21 @@ export async function generateDppCompliance(
     },
   });
 
-  const companyData = await lookupCompany(stockId);
-  const companyName =
-    companyData.length > 0 ? companyData[0].name : `Company ${stockId}`;
+  // Info: (20260612 - Tzuhan) 獲取真實公司中文與英文簡稱，並推導官方英文名稱
+  const company = await prisma.company.findUnique({
+    where: { stockId },
+  });
+  const companyNameZH = company?.name || `Company ${stockId}`;
+  const companySymbol = company?.symbol || "";
+
+  const nameModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+  const nameResult = await nameModel.generateContent(`
+你是一個專業的英文翻譯助手。請根據以下台灣上市櫃公司的中文名稱與英文證券簡稱，推導出該公司在真實世界中最合適的英文全稱（例如結尾為 Co., Ltd. 或 Corp.）。
+中文名稱：${companyNameZH}
+英文證券簡稱：${companySymbol}
+請直接輸出該公司的英文官方全稱字串（如 "Sumeeko Industries Co., Ltd."），不要包含 any 引號、前綴或額外解釋。
+`);
+  const companyNameEN = nameResult.response.text().trim().replace(/['"]/g, "");
   const address = "Taiwan";
   const today = new Date().toISOString().split("T")[0];
 
@@ -89,7 +101,7 @@ export async function generateDppCompliance(
       `${productId}_dpp_compliance_declaration.pdf`,
     );
 
-    const prompt = `你現在是「${companyName}」的法規與永續合規長 (Chief Compliance Officer)。
+    const prompt = `你現在是「${companyNameZH}」（英文官方名稱為「${companyNameEN}」）的法規與永續合規長 (Chief Compliance Officer)。
 公司基本資料：
 - 產業：${persona.industryDynamics}
 - 核心競爭力：${persona.coreCompetence}
@@ -114,7 +126,7 @@ export async function generateDppCompliance(
 "Covered SKU / Part Number: ${productId} - ${product.productName}"
 結尾需有簽名欄位。
 4. 絕對不可使用任何中括號佔位符 (如 [Company Name], [Address], [Date])。必須直接填寫以下真實資料：
-   - Company Name: ${companyName}
+   - Company Name: ${companyNameEN}
    - Address: ${address}
    - Date: ${today}
    - Chief Compliance Officer Signature: (請直接打上一個擬真的英文人名，例如 Tzuhan Lin)

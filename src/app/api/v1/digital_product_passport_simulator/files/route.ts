@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
         { status: 404 },
       );
     }
-  } else if (action === "serve") {
+  } else if (action === "serve" || action === "download") {
     const filePath = searchParams.get("path");
     if (!filePath) {
       return NextResponse.json({ error: "Missing path" }, { status: 400 });
@@ -119,13 +119,18 @@ export async function GET(req: NextRequest) {
       const mimeType = getMimeType(absolutePath);
       const fileBuffer = await fs.readFile(absolutePath);
 
-      return new NextResponse(fileBuffer, {
-        headers: {
-          "Content-Type": mimeType,
-          "Content-Length": stats.size.toString(),
-          "Cache-Control": "public, max-age=3600",
-        },
-      });
+      const headers: Record<string, string> = {
+        "Content-Type": mimeType,
+        "Content-Length": stats.size.toString(),
+        "Cache-Control": "public, max-age=3600",
+      };
+
+      if (action === "download") {
+        headers["Content-Disposition"] =
+          `attachment; filename="${path.basename(absolutePath)}"`;
+      }
+
+      return new NextResponse(fileBuffer, { headers });
     } catch {
       return NextResponse.json({ error: "File not found" }, { status: 404 });
     }

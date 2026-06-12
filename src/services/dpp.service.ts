@@ -1,5 +1,6 @@
 import { DppRepository } from "@/repositories/dpp.repo";
 import { FileRepository } from "@/repositories/file.repo";
+import { Prisma } from "@/generated";
 import {
   GoogleGenerativeAI,
   SchemaType,
@@ -157,7 +158,10 @@ export class DppService {
 
     let parsedGtin = `GTIN-${Date.now()}`;
     let parsedName = `Product SKU based on ${fileName}`;
-    let parsedModulesData: Record<string, { extracted: boolean }> = {
+    let parsedModulesData: Record<
+      string,
+      { extracted: boolean; data?: Record<string, unknown> }
+    > = {
       "1_product_info": { extracted: false },
       "2_environmental_impact": { extracted: false },
       "3_circularity": { extracted: false },
@@ -186,65 +190,7 @@ export class DppService {
         const genAI = new GoogleGenerativeAI(
           process.env.GEMINI_API_KEY as string,
         );
-        const dppExtractionSchema: Schema = {
-          type: SchemaType.OBJECT,
-          properties: {
-            gtin: { type: SchemaType.STRING },
-            name: { type: SchemaType.STRING },
-            modulesData: {
-              type: SchemaType.OBJECT,
-              properties: {
-                "1_product_info": {
-                  type: SchemaType.OBJECT,
-                  properties: { extracted: { type: SchemaType.BOOLEAN } },
-                },
-                "2_environmental_impact": {
-                  type: SchemaType.OBJECT,
-                  properties: { extracted: { type: SchemaType.BOOLEAN } },
-                },
-                "3_circularity": {
-                  type: SchemaType.OBJECT,
-                  properties: { extracted: { type: SchemaType.BOOLEAN } },
-                },
-                "4_compliance": {
-                  type: SchemaType.OBJECT,
-                  properties: { extracted: { type: SchemaType.BOOLEAN } },
-                },
-                "5_social_impact": {
-                  type: SchemaType.OBJECT,
-                  properties: { extracted: { type: SchemaType.BOOLEAN } },
-                },
-                "6_repairability": {
-                  type: SchemaType.OBJECT,
-                  properties: { extracted: { type: SchemaType.BOOLEAN } },
-                },
-                "7_logistics": {
-                  type: SchemaType.OBJECT,
-                  properties: { extracted: { type: SchemaType.BOOLEAN } },
-                },
-                "8_critical_raw_materials": {
-                  type: SchemaType.OBJECT,
-                  properties: { extracted: { type: SchemaType.BOOLEAN } },
-                },
-                "9_material_composition": {
-                  type: SchemaType.OBJECT,
-                  properties: { extracted: { type: SchemaType.BOOLEAN } },
-                },
-              },
-            },
-            missingGaps: {
-              type: SchemaType.ARRAY,
-              items: {
-                type: SchemaType.OBJECT,
-                properties: {
-                  module: { type: SchemaType.STRING },
-                  issue: { type: SchemaType.STRING },
-                  impact: { type: SchemaType.STRING },
-                },
-              },
-            },
-          },
-        };
+        const dppExtractionSchema = this.getDppExtractionSchema();
 
         const model = genAI.getGenerativeModel({
           model: "gemini-2.5-pro",
@@ -255,7 +201,24 @@ export class DppService {
           },
         });
 
-        const prompt = `You are a Digital Product Passport (DPP) compliance auditor. Analyze the provided document for the product and determine which DPP modules are covered. Generate GTIN if possible, or create a mock one based on the context. Ensure you output a boolean for each module in modulesData. Create missingGaps for any missing critical information (especially Environmental Impact, Compliance, Repairability). Impact should be 'High', 'Medium', or 'Critical'. Document File name: ${fileName}`;
+        const prompt = `You are a Digital Product Passport (DPP) compliance auditor. Analyze the provided document for the product.
+For each module in modulesData:
+1. If the document contains information for that module, set "extracted" to true and populate the "data" object with the extracted fields.
+2. If the document does not contain information for that module, set "extracted" to false and omit or leave "data" empty.
+3. For any module that is not covered or has missing critical information, list it in "missingGaps" with a description of the missing info in "issue", and its "impact" ('High', 'Medium', or 'Critical').
+
+Make sure to extract:
+- Product info (ID, name, model, CN code, weight) for "1_product_info".
+- Carbon footprint (Scope 1, Scope 2, precursor emissions) for "2_environmental_impact".
+- Circularity recycled shares (pre-consumer, post-consumer, primary material) for "3_circularity".
+- Compliance certificates/declarations for "4_compliance".
+- Social/ethical sourcing info for "5_social_impact".
+- Durability (lifespan, repair notes, disposal instructions) for "6_repairability".
+- Importer details for "7_logistics".
+- Critical raw materials list for "8_critical_raw_materials".
+- Material chemical composition breakdown for "9_material_composition".
+
+Document File name: ${fileName}`;
 
         const parts: Part[] = [{ text: prompt }];
         if (isBase64) {
@@ -299,8 +262,8 @@ export class DppService {
       gtin: parsedGtin,
       name: parsedName,
       status: finalStatus,
-      modulesData: parsedModulesData,
-      missingGaps: parsedMissingGaps,
+      modulesData: parsedModulesData as Prisma.InputJsonValue,
+      missingGaps: parsedMissingGaps as Prisma.InputJsonValue,
     });
 
     return sku;
@@ -340,5 +303,401 @@ export class DppService {
     delete skuData.accountBook;
 
     return skuData as unknown as Partial<IDigitalProductPassportSku>;
+  }
+
+  public async updateSkuWithSupplement(
+    skuId: string,
+    userAddress: string,
+    fileId: string,
+  ): Promise<IDigitalProductPassportSku> {
+    const skuWithAccess = await this.dppRepo.getSkuByIdWithTeamAccess(
+      skuId,
+      userAddress,
+    );
+
+    if (!skuWithAccess) {
+      throw new ApiError("ISDPP004", "SKU not found", ApiCode.NOT_FOUND);
+    }
+
+    if (skuWithAccess.accountBook.team.teamMembers.length === 0) {
+      throw new ApiError("ISDPP005", "Access denied", ApiCode.FORBIDDEN);
+    }
+
+    const fileRecord = await this.fileRepo.getFileById(fileId);
+    if (!fileRecord) {
+      throw new ApiError(
+        "ISDPP008",
+        "Supplement file not found",
+        ApiCode.NOT_FOUND,
+      );
+    }
+
+    const fileName = fileRecord.fileName || fileRecord.id;
+    let fileContent = "";
+    let isBase64 = false;
+    let mimeType = "text/plain";
+
+    if (fileName.toLowerCase().endsWith(".pdf")) {
+      mimeType = "application/pdf";
+      isBase64 = true;
+    } else if (fileName.toLowerCase().endsWith(".csv")) {
+      mimeType = "text/csv";
+    } else if (fileName.toLowerCase().endsWith(".json")) {
+      mimeType = "application/json";
+    }
+
+    try {
+      const STORAGE_DOMAIN =
+        process.env.STORAGE_DOMAIN || "http://127.0.0.1:3000";
+      const res = await fetch(`${STORAGE_DOMAIN}/api/v1/file/${fileRecord.id}`);
+      if (res.ok) {
+        if (isBase64) {
+          const buffer = await res.arrayBuffer();
+          fileContent = Buffer.from(buffer).toString("base64");
+        } else {
+          fileContent = await res.text();
+        }
+      }
+    } catch (err) {
+      console.error("Failed to read file from storage", err);
+      throw new ApiError(
+        "ISDPP009",
+        "Failed to read supplement file",
+        ApiCode.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    if (!fileContent) {
+      throw new ApiError(
+        "ISDPP010",
+        "Supplement file is empty",
+        ApiCode.VALIDATION_ERROR,
+      );
+    }
+
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
+    const dppExtractionSchema = this.getDppExtractionSchema();
+
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-pro",
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: dppExtractionSchema,
+        temperature: 0.1,
+      },
+    });
+
+    const prompt = `You are a Digital Product Passport (DPP) compliance auditor. Analyze the provided supplementary document.
+For each module in modulesData:
+1. If the document contains information for that module, set "extracted" to true and populate the "data" object with the extracted fields.
+2. If the document does not contain information for that module, set "extracted" to false.
+
+Document File name: ${fileName}`;
+
+    const parts: Part[] = [{ text: prompt }];
+    if (isBase64) {
+      parts.push({
+        inlineData: {
+          data: fileContent,
+          mimeType,
+        },
+      });
+    } else {
+      parts.push({ text: `\n\n--- Document Content ---\n${fileContent}` });
+    }
+
+    const result = await model.generateContent(parts);
+    const parsed = JSON.parse(result.response.text());
+
+    const existingModules =
+      (skuWithAccess.modulesData as Record<
+        string,
+        { extracted: boolean; data?: Record<string, unknown> }
+      >) || {};
+    const existingGaps =
+      (skuWithAccess.missingGaps as Array<{
+        module: string;
+        issue: string;
+        impact: string;
+      }>) || [];
+
+    const updatedModules = { ...existingModules };
+    let updatedGaps = [...existingGaps];
+
+    const moduleNormalizedNames: Record<string, string[]> = {
+      "1_product_info": ["general", "product info", "product_info"],
+      "2_environmental_impact": [
+        "environmental impact",
+        "environmental_impact",
+        "carbon footprint",
+        "carbon_footprint",
+      ],
+      "3_circularity": ["circularity"],
+      "4_compliance": ["compliance"],
+      "5_social_impact": ["social impact", "social_impact"],
+      "6_repairability": ["repairability", "durability"],
+      "7_logistics": ["logistics", "importer"],
+      "8_critical_raw_materials": [
+        "critical raw materials",
+        "critical_raw_materials",
+        "raw materials",
+      ],
+      "9_material_composition": [
+        "material composition",
+        "material_composition",
+      ],
+    };
+
+    if (parsed.modulesData) {
+      for (const [moduleKey, moduleVal] of Object.entries(parsed.modulesData)) {
+        const val = moduleVal as {
+          extracted: boolean;
+          data?: Record<string, unknown>;
+        };
+        if (val.extracted) {
+          updatedModules[moduleKey] = val;
+          const matchNames = moduleNormalizedNames[moduleKey] || [moduleKey];
+          updatedGaps = updatedGaps.filter(
+            (g) => !matchNames.includes(g.module.toLowerCase().trim()),
+          );
+        }
+      }
+    }
+
+    const finalStatus =
+      updatedGaps.length === 0
+        ? DPP_SKU_STATUS.READY
+        : DPP_SKU_STATUS.INCOMPLETE;
+
+    const updatedSku = await this.dppRepo.updateSku(skuId, {
+      status: finalStatus,
+      modulesData: updatedModules as Prisma.InputJsonValue,
+      missingGaps: updatedGaps as Prisma.InputJsonValue,
+    });
+
+    return updatedSku;
+  }
+
+  public async getPublicBatchPassport(
+    skuId: string,
+    batchNumber: string,
+  ): Promise<{
+    sku: IDigitalProductPassportSku;
+    batch: IDigitalProductPassportBatch;
+  }> {
+    const sku = await this.dppRepo.getSkuById(skuId);
+    if (!sku) {
+      throw new ApiError("ISDPP004", "SKU not found", ApiCode.NOT_FOUND);
+    }
+
+    const batch = await this.dppRepo.getBatchByNumber(skuId, batchNumber);
+    if (!batch) {
+      throw new ApiError("ISDPP007", "Batch not found", ApiCode.NOT_FOUND);
+    }
+
+    return { sku, batch };
+  }
+
+  private getDppExtractionSchema(): Schema {
+    return {
+      type: SchemaType.OBJECT,
+      properties: {
+        gtin: { type: SchemaType.STRING },
+        name: { type: SchemaType.STRING },
+        modulesData: {
+          type: SchemaType.OBJECT,
+          properties: {
+            "1_product_info": {
+              type: SchemaType.OBJECT,
+              properties: {
+                extracted: { type: SchemaType.BOOLEAN },
+                data: {
+                  type: SchemaType.OBJECT,
+                  properties: {
+                    productId: { type: SchemaType.STRING },
+                    name: { type: SchemaType.STRING },
+                    modelNumber: { type: SchemaType.STRING },
+                    category: { type: SchemaType.STRING },
+                    cnCode: { type: SchemaType.STRING },
+                    manufacturedDate: { type: SchemaType.STRING },
+                    facility: { type: SchemaType.STRING },
+                    facilityUNLOCODE: { type: SchemaType.STRING },
+                    weightKg: { type: SchemaType.NUMBER },
+                  },
+                },
+              },
+              required: ["extracted"],
+            },
+            "2_environmental_impact": {
+              type: SchemaType.OBJECT,
+              properties: {
+                extracted: { type: SchemaType.BOOLEAN },
+                data: {
+                  type: SchemaType.OBJECT,
+                  properties: {
+                    total_tCO2e: { type: SchemaType.NUMBER },
+                    methodology: { type: SchemaType.STRING },
+                    breakdown: {
+                      type: SchemaType.OBJECT,
+                      properties: {
+                        precursorsEmissions: { type: SchemaType.NUMBER },
+                        directEmissionsScope1: { type: SchemaType.NUMBER },
+                        indirectEmissionsScope2: { type: SchemaType.NUMBER },
+                      },
+                    },
+                  },
+                },
+              },
+              required: ["extracted"],
+            },
+            "3_circularity": {
+              type: SchemaType.OBJECT,
+              properties: {
+                extracted: { type: SchemaType.BOOLEAN },
+                data: {
+                  type: SchemaType.OBJECT,
+                  properties: {
+                    recycledContentShare: {
+                      type: SchemaType.ARRAY,
+                      items: {
+                        type: SchemaType.OBJECT,
+                        properties: {
+                          material: { type: SchemaType.STRING },
+                          preConsumerShare: { type: SchemaType.NUMBER },
+                          postConsumerShare: { type: SchemaType.NUMBER },
+                          primaryMaterial: { type: SchemaType.NUMBER },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              required: ["extracted"],
+            },
+            "4_compliance": {
+              type: SchemaType.OBJECT,
+              properties: {
+                extracted: { type: SchemaType.BOOLEAN },
+                data: {
+                  type: SchemaType.OBJECT,
+                  properties: {
+                    rohsCompliant: { type: SchemaType.BOOLEAN },
+                    pfasFree: { type: SchemaType.BOOLEAN },
+                    iatf16949Compliant: { type: SchemaType.BOOLEAN },
+                    iatfCertificateId: { type: SchemaType.STRING },
+                    declarationDocument: { type: SchemaType.STRING },
+                  },
+                },
+              },
+              required: ["extracted"],
+            },
+            "5_social_impact": {
+              type: SchemaType.OBJECT,
+              properties: {
+                extracted: { type: SchemaType.BOOLEAN },
+                data: {
+                  type: SchemaType.OBJECT,
+                  properties: {
+                    ethicalSourcing: { type: SchemaType.BOOLEAN },
+                    laborStandardCompliant: { type: SchemaType.BOOLEAN },
+                  },
+                },
+              },
+              required: ["extracted"],
+            },
+            "6_repairability": {
+              type: SchemaType.OBJECT,
+              properties: {
+                extracted: { type: SchemaType.BOOLEAN },
+                data: {
+                  type: SchemaType.OBJECT,
+                  properties: {
+                    physicalLifespanYears: { type: SchemaType.NUMBER },
+                    repairability: { type: SchemaType.STRING },
+                    disposal: { type: SchemaType.STRING },
+                  },
+                },
+              },
+              required: ["extracted"],
+            },
+            "7_logistics": {
+              type: SchemaType.OBJECT,
+              properties: {
+                extracted: { type: SchemaType.BOOLEAN },
+                data: {
+                  type: SchemaType.OBJECT,
+                  properties: {
+                    companyName: { type: SchemaType.STRING },
+                    address: { type: SchemaType.STRING },
+                    eori: { type: SchemaType.STRING },
+                  },
+                },
+              },
+              required: ["extracted"],
+            },
+            "8_critical_raw_materials": {
+              type: SchemaType.OBJECT,
+              properties: {
+                extracted: { type: SchemaType.BOOLEAN },
+                data: {
+                  type: SchemaType.OBJECT,
+                  properties: {
+                    criticalRawMaterials: {
+                      type: SchemaType.ARRAY,
+                      items: { type: SchemaType.STRING },
+                    },
+                  },
+                },
+              },
+              required: ["extracted"],
+            },
+            "9_material_composition": {
+              type: SchemaType.OBJECT,
+              properties: {
+                extracted: { type: SchemaType.BOOLEAN },
+                data: {
+                  type: SchemaType.OBJECT,
+                  properties: {
+                    materialComposition: {
+                      type: SchemaType.ARRAY,
+                      items: {
+                        type: SchemaType.OBJECT,
+                        properties: {
+                          materialName: { type: SchemaType.STRING },
+                          elements: {
+                            type: SchemaType.ARRAY,
+                            items: {
+                              type: SchemaType.OBJECT,
+                              properties: {
+                                element: { type: SchemaType.STRING },
+                                percentage: { type: SchemaType.NUMBER },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              required: ["extracted"],
+            },
+          },
+        },
+        missingGaps: {
+          type: SchemaType.ARRAY,
+          items: {
+            type: SchemaType.OBJECT,
+            properties: {
+              module: { type: SchemaType.STRING },
+              issue: { type: SchemaType.STRING },
+              impact: { type: SchemaType.STRING },
+            },
+            required: ["module", "issue", "impact"],
+          },
+        },
+      },
+      required: ["gtin", "name", "modulesData", "missingGaps"],
+    };
   }
 }

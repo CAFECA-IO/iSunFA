@@ -126,6 +126,17 @@ export class DppRepository {
     return this.mapSkuToInterface(sku);
   }
 
+  public async updateSku(
+    skuId: string,
+    data: Prisma.DigitalProductPassportSkuUpdateInput,
+  ): Promise<IDigitalProductPassportSku> {
+    const sku = await prisma.digitalProductPassportSku.update({
+      where: { id: skuId },
+      data,
+    });
+    return this.mapSkuToInterface(sku);
+  }
+
   public async getBatchByNumber(
     skuId: string,
     batchNumber: string,

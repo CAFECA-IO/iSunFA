@@ -7,7 +7,7 @@ import remarkGfm from "remark-gfm";
 import { useTranslation } from "@/i18n/i18n_context";
 
 const getFileUrl = (path: string) =>
-  `/api/dpp/files?action=serve&path=${encodeURIComponent(path)}`;
+  `/api/v1/digital_product_passport_simulator/files?action=serve&path=${encodeURIComponent(path)}`;
 
 export interface IDppPreviewPaneProps {
   selectedFilePath: string | null;
