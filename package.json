@@ -31,7 +31,6 @@
     "@google/generative-ai": "^0.24.1",
     "@headlessui/react": "^2.2.9",
     "@lancedb/lancedb": "^0.30.0",
-    "@lancedb/lancedb-darwin-arm64": "^0.30.0",
     "@llamaindex/llama-cloud": "^2.9.0",
     "@next/third-parties": "^16.1.6",
     "@nomicfoundation/hardhat-toolbox-viem": "^5.0.1",
@@ -79,7 +78,6 @@
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^16.1.1",
-    "@nomicfoundation/solidity-analyzer-darwin-arm64": "^0.1.2",
     "@tailwindcss/postcss": "^4",
     "@types/csv-parse": "^1.1.12",
     "@types/csv-stringify": "^1.4.3",

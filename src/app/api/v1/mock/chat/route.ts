@@ -142,6 +142,7 @@ export const POST = async (req: NextRequest) => {
       .join("\n\n---\n\n")
       .slice(0, 3500);
     // Info: (20260612 - Julian) 步驟 3：撰寫嚴謹的 RAG Prompt
+    // ToDo: (20260612 - Julian) 之後要移動到 constants/prompts
     const systemPrompt = `你是一個專業的企業報告分析師。請嚴格根據下方提供的【參考資料】來回答使用者的【問題】。
 規則：
 1. 只能根據【參考資料】內的數據與事實回答，切勿憑空捏造或憑空猜測。
