@@ -53,22 +53,25 @@ export const analysis = {
     label: "기업명 또는 사업자등록번호",
     placeholder: "전체 이름, 약어 또는 사업자등록번호 입력...",
     searching: "검색 중...",
+    unsupported_title: "비상장 기업은 지원되지 않습니다",
+    unsupported_desc:
+      "현재 시스템은 상장 기업의 공개 재무 및 ESG 보고서 자동 분석만 지원합니다. 특정 기업 데모가 필요한 경우 기술 팀에 문의하여 수동으로 설정하십시오.",
     not_found:
       "기업을 찾을 수 없습니다. 더 완전한 이름이나 사업자등록번호를 입력해 보세요.",
     missing_tax_id_desc:
       "이 장부({{name}})에는 사업자등록번호가 설정되어 있지 않습니다. 내부 데이터 분석을 위해서는 사업자등록번호가 필요합니다. 여기서 설정해 주세요:",
   },
-  title: "고문 분석",
+  title: "자문 분석",
   desc: "다분야 전문가의 기업 분석을 제공하여 경영진이 타당한 비즈니스 결정을 내리도록 지원합니다.",
-  login_to_use: "컨설턴트 분석 기능을 사용하려면 로그인하십시오",
-  login_to_generate: "분석 보고서를 생성하려면 로그인하십시오",
+  login_to_use: "자문 분석 기능을 사용하려면 로그인하세요",
+  login_to_generate: "분석 보고서를 생성하려면 로그인하세요",
   internal_analysis: "내부 데이터 분석",
   external_analysis: "외부 데이터 분석",
-  addon_bookkeeper: "기장사 비자 추가",
-  addon_cpa: "공인회계사 비자 추가",
-  addon_third_party: "제3자 검증 기관 비자 추가",
+  addon_bookkeeper: "기장 담당자 관점 추가",
+  addon_cpa: "공인회계사(CPA) 관점 추가",
+  addon_third_party: "제3자 검증기관 관점 추가",
   addons_title: "추가 항목 (복수 선택 가능)",
-  history_reports: "이력 보고서",
+  history_reports: "과거 보고서",
   period_type: "시간 단위",
   select_year: "연도 선택",
   select_period: "기간 선택",
@@ -98,7 +101,8 @@ export const analysis = {
   },
   cost_hint: "비용: {{cost}} 크레딧",
   confirm_title: "분석 보고서 생성 확인",
-  confirm_desc: "이 작업은 크레딧을 소비합니다. 아래 세부 정보를 확인하십시오:",
+  confirm_desc:
+    "이 작업은 크레딧을 소비합니다. 아래 세부 정보를 확인해 주세요:",
   confirm_balance: "결제 후 잔액",
   confirm_action: "결제 및 생성",
   countries: {
@@ -113,16 +117,16 @@ export const analysis = {
     balance_sheet: "대차대조표",
     cash_flow: "현금흐름표",
     income_statement: "손익계산서",
-    irsc: "지능형 기업 등급",
+    irsc: "스마트 기업 등급",
     financial_compliance: "재무 규정 준수",
     financial_health: "재무 건전성",
     market_trends: "시장 동향",
     industry_development: "산업 발전",
     financial_product_rating: "금융 상품 평가",
-    carbon_health_check: "탄소 건강 검진",
-    net_zero_emissions: "넷제로 배출",
+    carbon_health_check: "탄소 건전성 진단",
+    net_zero_emissions: "탄소중립 (Net-Zero)",
     ai_consulting: "AI 컨설팅",
-    journal_upload: "분개장 등록",
+    journal_upload: "분개장 업로드",
     certificate_analysis: "증빙 분석",
     transportation_carbon_footprint: "운송 탄소 발자국",
   },
@@ -165,7 +169,7 @@ export const analysis = {
   success: {
     title: "분석 요청이 제출되었습니다",
     message:
-      "요청이 온체인에 기록되었습니다. 보고서 생성에는 시간이 걸립니다. 기록 보고서 탭에서 진행 상황을 확인해 주세요.",
+      "요청이 온체인에 기록되었습니다. 보고서 생성에는 시간이 걸립니다. 분석 기록 탭에서 진행 상황을 확인해 주세요.",
     view_tx: "트랜잭션 보기",
   },
   share: {
@@ -185,7 +189,7 @@ export const analysis = {
       "이 유형의 보고서는 공개 공유가 지원되지 않거나 데이터 형식이 잘못되었습니다.",
     cta_title: "귀하의 기업을 위한 맞춤형 심층 분석 보고서를 생성하시겠습니까?",
     cta_desc:
-      "iSunFA는 최첨단 AI 기술을 통해 탄소 건강 진단, 재무 등급 평가, 규정 준수 감사를 포함한 포괄적인 스마트 회계 솔루션을 제공합니다.",
+      "iSunFA는 최첨단 AI 기술을 통해 탄소 건전성 진단, 재무 등급 평가, 규정 준수 감사를 포함한 포괄적인 스마트 회계 솔루션을 제공합니다.",
     cta_button: "iSunFA 스마트 회계 알아보기",
   },
   share_settings: {
@@ -193,13 +197,13 @@ export const analysis = {
     privacy_warning_title:
       "주의: 기업 내부의 민감한 기밀 데이터가 포함되어 있습니다.",
     privacy_warning_desc:
-      "외부에 공유하기 전에 적절한 권한을 얻었는지 반드시 확인하십시오. 영업 비밀 유출을 방지하기 위해 '익명화 및 금액 숨기기'를 선택하는 것을 강력히 권장합니다.",
+      "외부에 공유하기 전에 적절한 권한을 얻었는지 반드시 확인하세요. 영업 비밀 유출을 방지하기 위해 '익명화 및 금액 숨기기'를 선택하는 것을 강력히 권장합니다.",
     hide_data_title: "🛡️ 익명화 및 금액 숨기기 (권장)",
     hide_data_desc:
-      "모든 특정 전표, 공급업체 세부 정보 및 절대 금액의 크기를 숨깁니다. AI가 생성한 관점 구조 및 위험 평가 결론만 공유합니다. 영업 비밀을 최대한 보호할 수 있습니다.",
+      "모든 특정 전표, 공급업체 세부 정보 및 절대 금액을 숨깁니다. AI가 생성한 분석 관점 및 위험 평가 결과만 공유합니다. 이를 통해 영업 비밀을 최대한 보호할 수 있습니다.",
     show_data_title: "⚠️ 기밀 금액을 포함하여 전체 공개",
     show_data_desc:
-      "모든 회계 과목, 절대 잔액 및 관련 분석이 상세히 공개됩니다. 링크가 있는 사람은 누구나 완전한 내부 운영 데이터를 볼 수 있습니다.",
+      "모든 계정과목, 절대 잔액 및 관련 분석이 상세히 공개됩니다. 링크가 있는 사람은 누구나 완전한 내부 운영 데이터를 볼 수 있습니다.",
     confirm: "확인 및 링크 생성",
   },
 };

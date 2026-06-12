@@ -207,13 +207,15 @@ export default function DppDashboard() {
 
   return (
     <div className="w-full space-y-12">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-bold text-gray-900">
-          {t("digital_product_passport.title")}
-        </h1>
-        <p className="mt-2 text-sm text-gray-500">
-          {t("digital_product_passport.description")}
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold text-gray-900">
+            {t("digital_product_passport.title")}
+          </h1>
+          <p className="mt-2 text-sm text-gray-500">
+            {t("digital_product_passport.description")}
+          </p>
+        </div>
       </div>
 
       {user ? (

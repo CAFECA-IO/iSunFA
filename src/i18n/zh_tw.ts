@@ -61,6 +61,7 @@ import { adminCarbonEmissionDatabase } from "@/i18n/locales/zh_tw/admin_carbon_e
 import { businessMonitor } from "@/i18n/locales/zh_tw/business_monitor";
 import { simulationWorkflow } from "@/i18n/locales/zh_tw/simulation_workflow";
 import { netZeroPathway } from "@/i18n/locales/zh_tw/net_zero_pathway";
+import { reportDownloader } from "@/i18n/locales/zh_tw/report_downloader";
 
 export const zhTw = {
   digital_product_passport: digitalProductPassport,
@@ -127,6 +128,7 @@ export const zhTw = {
   business_monitor: businessMonitor,
   simulation_workflow: simulationWorkflow,
   net_zero_pathway: netZeroPathway,
+  report_downloader: reportDownloader,
 } as const;
 
 export type BaseTranslation = typeof zhTw;

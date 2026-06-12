@@ -55,6 +55,9 @@ export const analysis = {
     label: "企業名または法人番号",
     placeholder: "正式名称、略称、または法人番号を入力...",
     searching: "検索中...",
+    unsupported_title: "未上場企業はサポートされていません",
+    unsupported_desc:
+      "現在、システムは上場企業の公開財務およびESG報告書の自動解析のみをサポートしています。特定の企業のデモが必要な場合は、技術チームに連絡して手動で設定してください。",
     not_found:
       "企業が見つかりません。より完全な名称または法人番号を入力してください。",
     missing_tax_id_desc:
@@ -125,7 +128,7 @@ export const analysis = {
     carbon_health_check: "カーボンヘルスチェック",
     net_zero_emissions: "ネットゼロエミッション",
     ai_consulting: "AI コンサルティング",
-    journal_upload: "仕訳帳の作成",
+    journal_upload: "仕訳アップロード",
     certificate_analysis: "証憑分析",
     transportation_carbon_footprint: "輸送カーボンフットプリント",
   },
@@ -152,13 +155,13 @@ export const analysis = {
     },
     empty_title: "分析レポートはまだありません",
     empty_description:
-      "高度なAIツールを使用して最初の財務分析レポートを作成し、旅を始めましょう。",
+      "高度なAIツールを使用して、最初の財務分析レポートを作成しましょう。",
     retry: "再試行",
-    retry_confirm_title: "再試行を確認しますか？",
+    retry_confirm_title: "再試行の確認",
     retry_confirm_desc: "この操作は分析を再試行します。よろしいですか？",
   },
   steps: {
-    preparing: "取引の準備中...",
+    preparing: "トランザクションを準備中...",
     signing_payment: "支払い取引に署名してください",
     submitting_payment: "支払い取引をブロックチェーンに送信中...",
     payment_success: "支払い成功！",

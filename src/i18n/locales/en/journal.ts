@@ -7,7 +7,7 @@ export const journal = {
   summary: {
     empty: "No journal data available",
     today_count: "Journals created today",
-    unit: "pcs",
+    unit: "-",
     pending: "Pending verify",
     ai_confidence: "AI average confidence",
   },

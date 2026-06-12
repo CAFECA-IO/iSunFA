@@ -21,6 +21,16 @@ export class DppRepository {
     return this.mapSkuToInterface(sku);
   }
 
+  public async getSkuByGtin(
+    gtin: string,
+  ): Promise<IDigitalProductPassportSku | null> {
+    const sku = await prisma.digitalProductPassportSku.findUnique({
+      where: { gtin },
+    });
+    if (!sku) return null;
+    return this.mapSkuToInterface(sku);
+  }
+
   public async verifyAccountBookAccess(
     accountBookId: string,
     userAddress: string,
@@ -121,6 +131,17 @@ export class DppRepository {
     missingGaps: Prisma.InputJsonValue;
   }): Promise<IDigitalProductPassportSku> {
     const sku = await prisma.digitalProductPassportSku.create({
+      data,
+    });
+    return this.mapSkuToInterface(sku);
+  }
+
+  public async updateSku(
+    skuId: string,
+    data: Prisma.DigitalProductPassportSkuUpdateInput,
+  ): Promise<IDigitalProductPassportSku> {
+    const sku = await prisma.digitalProductPassportSku.update({
+      where: { id: skuId },
       data,
     });
     return this.mapSkuToInterface(sku);
