@@ -367,6 +367,8 @@ export default function DppStartPage() {
                 () => startGeneration(comp, "persona_only", paramYear),
                 100,
               );
+            } else if (paramAction === "generate") {
+              setTimeout(() => startGeneration(comp, "all", paramYear), 100);
             }
           })
           .catch((err) => {
@@ -377,6 +379,10 @@ export default function DppStartPage() {
             } as ICompanySearchResult;
             setSelectedCompany(comp);
             setKeyword(`${comp.name} (${comp.taxId})`);
+
+            if (paramAction === "generate") {
+              setTimeout(() => startGeneration(comp, "all", paramYear), 100);
+            }
           });
       }
     }
@@ -605,6 +611,7 @@ export default function DppStartPage() {
   const handleSelectCompany = (company: ICompanySearchResult) => {
     setSelectedCompany(company);
     setKeyword(`${company.name} (${company.taxId})`);
+    router.replace(`?stockId=${company.taxId}&year=${year}`, { scroll: false });
   };
 
   const handleDownloadSku = async (productId: string) => {
@@ -717,7 +724,16 @@ export default function DppStartPage() {
         </div>
         <select
           value={year}
-          onChange={(e) => setYear(e.target.value)}
+          onChange={(e) => {
+            const newYear = e.target.value;
+            setYear(newYear);
+            if (selectedCompany) {
+              router.replace(
+                `?stockId=${selectedCompany.taxId}&year=${newYear}`,
+                { scroll: false },
+              );
+            }
+          }}
           disabled={isGenerating}
           className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
         >

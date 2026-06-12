@@ -11,10 +11,15 @@ import {
   Eye,
   MoreVertical,
   Building,
+  Rocket,
+  Sparkles,
 } from "lucide-react";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import ConfirmModal from "@/components/common/confirm_modal";
+import CompanySearchInput, {
+  ICompany,
+} from "@/components/common/company_search_input";
 import { useTranslation } from "@/i18n/i18n_context";
 
 interface IDemoItem {
@@ -41,6 +46,11 @@ export default function DppListPage() {
   const [activeYearMap, setActiveYearMap] = useState<Record<string, string>>(
     {},
   );
+
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [selectedCompany, setSelectedCompany] = useState<ICompany | null>(null);
+  const [selectedYear, setSelectedYear] = useState("2025");
 
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
@@ -123,9 +133,12 @@ export default function DppListPage() {
         </div>
         <div>
           <button
-            onClick={() =>
-              router.push("/digital_product_passport_simulator/start")
-            }
+            onClick={() => {
+              setSearchKeyword("");
+              setSelectedCompany(null);
+              setSelectedYear("2025");
+              setIsCreateModalOpen(true);
+            }}
             className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
           >
             <Plus className="h-4 w-4" />
@@ -388,6 +401,84 @@ export default function DppListPage() {
         cancelText={modalConfig.cancelText || t("common.cancel")}
         onConfirm={modalConfig.onConfirm}
       />
+
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            onClick={() => setIsCreateModalOpen(false)}
+            aria-hidden="true"
+          ></div>
+          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <h2 className="mb-6 flex items-center gap-2 text-xl font-bold text-slate-800">
+              <Rocket className="h-5 w-5 text-blue-600" />
+              {t("digital_product_passport.start.initialize_simulation") ||
+                "初始化企業模擬數據庫"}
+            </h2>
+
+            <div className="space-y-5">
+              <div>
+                <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                  {t("digital_product_passport.start.search_company") ||
+                    "搜尋目標企業"}
+                </label>
+                <CompanySearchInput
+                  value={searchKeyword}
+                  onChange={(v) => {
+                    setSearchKeyword(v);
+                    setSelectedCompany(null);
+                  }}
+                  onSelect={setSelectedCompany}
+                  placeholder={
+                    t(
+                      "digital_product_passport.start.search_company_placeholder",
+                    ) || "輸入公司名稱或統一編號..."
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                  {t("digital_product_passport.start.simulation_year") ||
+                    "模擬年份"}
+                </label>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                >
+                  <option value="2025">2025 (Demo Data Base)</option>
+                  <option value="2024">2024 (Last Year)</option>
+                  <option value="2023">2023 (Previous Year)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-8 flex justify-end gap-3">
+              <button
+                onClick={() => setIsCreateModalOpen(false)}
+                className="rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100"
+              >
+                {t("common.cancel") || "取消"}
+              </button>
+              <button
+                disabled={!searchKeyword}
+                onClick={() => {
+                  const targetId = selectedCompany?.taxId || searchKeyword;
+                  router.push(
+                    `/digital_product_passport_simulator/start?stockId=${targetId}&year=${selectedYear}&action=generate`,
+                  );
+                }}
+                className="flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50"
+              >
+                <Sparkles className="h-4 w-4" />
+                {t("digital_product_passport.start.start_simulation") ||
+                  "開始建立"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
