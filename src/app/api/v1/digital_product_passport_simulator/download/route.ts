@@ -4,7 +4,7 @@ import path from "path";
 import JSZip from "jszip";
 import { convertJsonToCsv } from "@/scripts/e2e_seeder/dpp/convert_json_to_csv";
 import { renderDppPdf } from "@/scripts/e2e_seeder/dpp/render_dpp_pdf";
-import { renderSpecsPdf } from "@/scripts/e2e_seeder/dpp/render_specs_pdf";
+import { convertSpecsToCsv } from "@/scripts/e2e_seeder/dpp/convert_specs_to_csv";
 
 export async function POST(request: Request) {
   let tmpDir: string | null = null;
@@ -122,51 +122,58 @@ export async function POST(request: Request) {
       baseDirOverride: tmpDir,
       targetProductId: skuId,
     });
-    await renderSpecsPdf(stockId, year, {
+    await convertSpecsToCsv(stockId, year, {
       baseDirOverride: tmpDir,
       targetProductId: skuId,
     });
 
     const zip = new JSZip();
 
-    // Info: (20260612 - Tzuhan) 1. Add generated CSV
+    // 1. boms_and_precursors.csv
     const generatedCsvPath = path.join(
       tmpMockSourcesDir,
       "boms_and_precursors.csv",
     );
     if (fs.existsSync(generatedCsvPath)) {
-      zip.file("BOM_材料清單.csv", fs.readFileSync(generatedCsvPath));
+      zip.file(
+        `data/${stockId}/${year}/outputs/mock_sources/boms_and_precursors.csv`,
+        fs.readFileSync(generatedCsvPath),
+      );
     }
 
-    // Info: (20260612 - Tzuhan) 2. Add generated PDF
+    // 2. product_specs.csv
+    const generatedSpecsCsvPath = path.join(
+      tmpProductMockDir,
+      `${skuId}_product_specs.csv`,
+    );
+    if (fs.existsSync(generatedSpecsCsvPath)) {
+      zip.file(
+        `data/${stockId}/${year}/outputs/mock_sources/product_specs.csv`,
+        fs.readFileSync(generatedSpecsCsvPath),
+      );
+    }
+
+    // 3. fastener_blueprint.png
+    const blueprintPathTmp = path.join(tmpDir, "fastener_blueprint.png");
+    if (fs.existsSync(blueprintPathTmp)) {
+      zip.file(
+        `data/${stockId}/${year}/outputs/${skuId}/mock_sources/fastener_blueprint.png`,
+        fs.readFileSync(blueprintPathTmp),
+      );
+    }
+
+    // 4. dpp_compliance_declaration.pdf
     const generatedPdfPath = path.join(
       tmpDir,
       skuId,
       "system_ingestion",
-      `${skuId}_dpp_ground_truth_dashboard.pdf`,
+      `${skuId}_dpp_compliance_declaration.pdf`,
     );
     if (fs.existsSync(generatedPdfPath)) {
-      zip.file("合規宣告書_與_LCA報告.pdf", fs.readFileSync(generatedPdfPath));
-    }
-
-    // Info: (20260612 - Tzuhan) 3. Add generated Specs PDF
-    const generatedSpecsPdfPath = path.join(
-      tmpDir,
-      skuId,
-      "system_ingestion",
-      `${skuId}_product_specs.pdf`,
-    );
-    if (fs.existsSync(generatedSpecsPdfPath)) {
       zip.file(
-        "產品規格與技術手冊.pdf",
-        fs.readFileSync(generatedSpecsPdfPath),
+        `data/${stockId}/${year}/outputs/${skuId}/system_ingestion/${skuId}_dpp_compliance_declaration.pdf`,
+        fs.readFileSync(generatedPdfPath),
       );
-    }
-
-    // Info: (20260612 - Tzuhan) 4. Add blueprint PNG
-    const blueprintPathTmp = path.join(tmpDir, "fastener_blueprint.png");
-    if (fs.existsSync(blueprintPathTmp)) {
-      zip.file("產品設計藍圖.png", fs.readFileSync(blueprintPathTmp));
     }
 
     const zipBuffer = await zip.generateAsync({

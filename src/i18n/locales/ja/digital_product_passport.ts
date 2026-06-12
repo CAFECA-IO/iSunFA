@@ -116,7 +116,12 @@ export const digitalProductPassport = {
     action_buttons: "操作ボタン",
   },
   start: {
-    unknown_error: "不明なエラーが発生しました",
+    initialize_simulation: "シミュレーションを初期化",
+    search_company: "会社を検索",
+    search_company_placeholder: "会社名を入力...",
+    simulation_year: "シミュレーション年度",
+    start_simulation: "シミュレーション開始",
+    unknown_error: "予期しないエラーが発生しました",
     step1: "1. 財務報告書および公開データの抽出",
     step2_extrapolate: "2. ESGの年度またぎ推定（タイムマシン）",
     step2: "2. ESGサステナビリティ報告書および指標の抽出",

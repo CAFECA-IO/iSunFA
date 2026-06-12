@@ -110,6 +110,11 @@ export const digitalProductPassport = {
     action_buttons: "操作按鈕",
   },
   start: {
+    initialize_simulation: "初始化企業模擬數據庫",
+    search_company: "搜尋目標企業",
+    search_company_placeholder: "輸入公司名稱或統一編號...",
+    simulation_year: "模擬年份",
+    start_simulation: "開始建立",
     unknown_error: "發生未知錯誤",
     step1: "1. 財務報告與公開數據擷取",
     step2_extrapolate: "2. ESG 跨年推估 (Time-Machine)",

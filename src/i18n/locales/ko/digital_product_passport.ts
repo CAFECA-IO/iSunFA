@@ -114,7 +114,12 @@ export const digitalProductPassport = {
     action_buttons: "작업 버튼",
   },
   start: {
-    unknown_error: "알 수 없는 오류가 발생했습니다.",
+    initialize_simulation: "시뮬레이션 초기화",
+    search_company: "회사 검색",
+    search_company_placeholder: "회사 이름 입력...",
+    simulation_year: "시뮬레이션 연도",
+    start_simulation: "시뮬레이션 시작",
+    unknown_error: "알 수 없는 오류가 발생했습니다",
     step1: "1. 재무 보고서 및 공개 데이터 추출",
     step2_extrapolate: "2. ESG 연도 간 추정 (타임머신)",
     step2: "2. ESG 지속가능성 보고서 및 지표 추출",

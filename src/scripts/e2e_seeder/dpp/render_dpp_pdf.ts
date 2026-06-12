@@ -44,7 +44,7 @@ export async function renderDppPdf(
     );
     const outFile = path.join(
       productIngestionDir,
-      `${productId}_dpp_ground_truth_dashboard.pdf`,
+      `${productId}_dpp_compliance_declaration.pdf`,
     );
 
     if (!fs.existsSync(groundTruthPath)) {

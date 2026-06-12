@@ -114,6 +114,11 @@ export const digitalProductPassport = {
     action_buttons: "Action Buttons",
   },
   start: {
+    initialize_simulation: "Initialize Simulation",
+    search_company: "Search Company",
+    search_company_placeholder: "Enter company name or ID...",
+    simulation_year: "Simulation Year",
+    start_simulation: "Start Simulation",
     unknown_error: "An unknown error occurred",
     step1: "1. Financial Report and Public Data Extraction",
     step2_extrapolate: "2. ESG Cross-Year Extrapolation (Time-Machine)",
