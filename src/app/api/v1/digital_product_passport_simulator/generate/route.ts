@@ -307,13 +307,13 @@ export async function POST(req: NextRequest) {
             });
           }
 
-          if (
+          const isAllProductDpp =
             mode === "all" ||
             mode === "dpp_only" ||
-            mode === "product_dpp_only"
-          ) {
-            const productArg = productId ? `--productId=${productId}` : "";
+            mode === "product_dpp_only";
+          const productArg = productId ? `--productId=${productId}` : "";
 
+          if (isAllProductDpp || mode === "product_specs_only") {
             // Info: (20260610 - Tzuhan) 步驟六：產品規格生成
             sendEvent({ type: "step_start", stepIndex: 5 });
             sendEvent({
@@ -331,7 +331,9 @@ export async function POST(req: NextRequest) {
               type: "preview",
               file: `data/${stockId}/${year}/outputs/mock_sources/product_specs.json`,
             });
+          }
 
+          if (isAllProductDpp || mode === "product_image_only") {
             // Info: (20260610 - Tzuhan) 步驟七：動態生成產品藍圖圖片 (Imagen 4)
             sendEvent({ type: "step_start", stepIndex: 6 });
             sendEvent({
@@ -345,7 +347,9 @@ export async function POST(req: NextRequest) {
               year,
               ...(productArg ? [productArg] : []),
             ]);
+          }
 
+          if (isAllProductDpp || mode === "dpp_ground_truth_only") {
             // Info: (20260610 - Tzuhan) 步驟八：DPP 核心真實數據演算
             sendEvent({ type: "step_start", stepIndex: 7 });
             sendEvent({
@@ -359,7 +363,9 @@ export async function POST(req: NextRequest) {
               year,
               ...(productArg ? [productArg] : []),
             ]);
+          }
 
+          if (isAllProductDpp || mode === "dpp_compliance_only") {
             // Info: (20260610 - Tzuhan) 步驟九：DPP 合規與驗證數據生成
             sendEvent({ type: "step_start", stepIndex: 8 });
             sendEvent({
@@ -428,10 +434,16 @@ export async function POST(req: NextRequest) {
               message: "DPP Catalog Pipeline completed successfully.",
             });
             sendEvent({ type: "complete" });
-          } else if (mode === "product_dpp_only") {
+          } else if (
+            mode === "product_dpp_only" ||
+            mode === "product_specs_only" ||
+            mode === "product_image_only" ||
+            mode === "dpp_ground_truth_only" ||
+            mode === "dpp_compliance_only"
+          ) {
             sendEvent({
               type: "log",
-              message: `Product DPP Pipeline completed successfully for ${productId}.`,
+              message: `Product DPP Pipeline (${mode}) completed successfully for ${productId}.`,
             });
             sendEvent({ type: "complete" });
           } else if (mode === "all" || mode === "dpp_only") {

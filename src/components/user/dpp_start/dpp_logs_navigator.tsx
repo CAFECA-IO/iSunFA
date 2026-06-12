@@ -144,7 +144,9 @@ export function DppLogsNavigator({
                       className="mt-2 flex w-fit items-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:text-blue-600"
                     >
                       <FileText className="mr-1.5 h-3.5 w-3.5" />
-                      View Generated Output
+                      {t(
+                        "digital_product_passport.preview_extra.view_generated_output",
+                      )}
                     </button>
                   )}
                 </div>

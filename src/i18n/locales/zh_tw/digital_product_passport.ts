@@ -129,8 +129,8 @@ export const digitalProductPassport = {
     simulation_matrix: "模擬資料生成矩陣 (Simulation Matrix)",
     next_step_verify: "下一步：驗證闖關",
     next_step_verify_desc:
-      "🎉 模擬資料已依不同產品生成。請依序下載檔案包，前往真實流程上傳驗證。",
-    go_to_create: "🚀 前往建立護照 (/sku/create) ➔",
+      "模擬資料已依不同產品生成。請依序下載檔案包，前往真實流程上傳驗證。",
+    go_to_create: "前往建立護照",
     baseline_details: "Baseline 生成詳情 (技術顧問專用)",
   },
   simulator: {
@@ -200,6 +200,11 @@ export const digitalProductPassport = {
   },
 
   preview_extra: {
+    view_generated_output: "檢視生成的輸出檔案",
+    file_not_found: "檔案不存在",
+    file_not_found_desc:
+      "無法找到指定的檔案，這可能是因為生成步驟未能成功。您可以嘗試重新生成此階段的資料。",
+    regenerate_file: "重新生成此資料",
     loading: "載入中...",
     json_title: "DPP / AI 解析數據呈現",
     json_desc: "系統已將原始 JSON 數據轉換為視覺化元件以便檢視。",

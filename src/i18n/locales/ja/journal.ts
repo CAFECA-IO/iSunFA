@@ -7,7 +7,7 @@ export const journal = {
   summary: {
     empty: "現在仕訳帳データはありません",
     today_count: "本日作成された仕訳帳",
-    unit: "-",
+    unit: "件",
     pending: "確認待ち",
     ai_confidence: "AI平均信頼度",
   },

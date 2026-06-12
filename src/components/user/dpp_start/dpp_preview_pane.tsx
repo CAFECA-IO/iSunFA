@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, FileBox, Database, Download } from "lucide-react";
+import { FileText, FileBox, Database, Download, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -11,33 +11,46 @@ const getFileUrl = (path: string) =>
 
 export interface IDppPreviewPaneProps {
   selectedFilePath: string | null;
+  onRegenerateFile?: (filePath: string) => void;
 }
 
-export function DppPreviewPane({ selectedFilePath }: IDppPreviewPaneProps) {
+export function DppPreviewPane({
+  selectedFilePath,
+  onRegenerateFile = () => {},
+}: IDppPreviewPaneProps) {
   const { t } = useTranslation();
   const [jsonData, setJsonData] = useState<Record<string, unknown> | null>(
     null,
   );
   const [mdContent, setMdContent] = useState<string>("");
+  const [fileError, setFileError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (selectedFilePath?.endsWith(".json")) {
-      fetch(getFileUrl(selectedFilePath))
-        .then((res) => res.json())
-        .then((data) => setJsonData(data))
-        .catch((err) => console.error("Failed to parse JSON", err));
-    } else {
-      setJsonData(null);
+    setFileError(null);
+    setJsonData(null);
+    setMdContent("");
+
+    if (!selectedFilePath) {
+      return;
     }
 
-    if (selectedFilePath?.endsWith(".md")) {
-      fetch(getFileUrl(selectedFilePath))
-        .then((res) => res.text())
-        .then((text) => setMdContent(text))
-        .catch((err) => console.error("Failed to load MD", err));
-    } else {
-      setMdContent("");
-    }
+    fetch(getFileUrl(selectedFilePath))
+      .then(async (res) => {
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          setFileError(errData.error || "File not found");
+        } else {
+          if (selectedFilePath.endsWith(".json")) {
+            setJsonData(await res.json());
+          } else if (selectedFilePath.endsWith(".md")) {
+            setMdContent(await res.text());
+          }
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load file", err);
+        setFileError("Network error");
+      });
   }, [selectedFilePath]);
 
   const preprocessMarkdown = (md: string) => {
@@ -205,7 +218,30 @@ export function DppPreviewPane({ selectedFilePath }: IDppPreviewPaneProps) {
             </div>
           </div>
           <div className="min-h-0 flex-1 overflow-hidden bg-slate-200 p-0">
-            {selectedFilePath.endsWith(".json") ? (
+            {fileError ? (
+              <div className="flex h-full flex-col items-center justify-center bg-slate-50 p-8 text-center">
+                <FileBox className="mb-4 h-16 w-16 text-slate-300" />
+                <p className="text-lg font-bold text-slate-700">
+                  {t("digital_product_passport.preview_extra.file_not_found")}
+                </p>
+                <p className="mt-2 mb-6 text-sm text-slate-500">
+                  {t(
+                    "digital_product_passport.preview_extra.file_not_found_desc",
+                  )}
+                </p>
+                {onRegenerateFile && (
+                  <button
+                    onClick={() => onRegenerateFile(selectedFilePath)}
+                    className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-700"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    {t(
+                      "digital_product_passport.preview_extra.regenerate_file",
+                    )}
+                  </button>
+                )}
+              </div>
+            ) : selectedFilePath.endsWith(".json") ? (
               renderJsonView(jsonData)
             ) : selectedFilePath.endsWith(".md") ? (
               <div className="custom-scrollbar h-full overflow-y-auto bg-white p-6 md:p-8">

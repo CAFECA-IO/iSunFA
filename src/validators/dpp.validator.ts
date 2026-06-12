@@ -16,6 +16,10 @@ export const GenerateDppSchema = z.object({
       "dpp_only",
       "dpp_catalog_only",
       "product_dpp_only",
+      "product_specs_only",
+      "product_image_only",
+      "dpp_ground_truth_only",
+      "dpp_compliance_only",
     ])
     .optional()
     .default("all"),

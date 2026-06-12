@@ -15,7 +15,7 @@ import ConfirmModal from "@/components/common/confirm_modal";
 import { IApiResponse } from "@/lib/utils/response";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useRouter } from "next/navigation";
-import { Sparkles, Rocket } from "lucide-react";
+import { Sparkles, Rocket, ArrowRight } from "lucide-react";
 
 // Info: (20260609 - Tzuhan) 定義流程狀態
 type StepStatus =
@@ -580,6 +580,28 @@ export default function DppStartPage() {
     startGeneration(undefined, "all");
   };
 
+  const handleRegenerateFile = (filePath: string) => {
+    // Info: (20260612 - Tzuhan) 解析 filePath 以找出 productId 和對應的 mode
+    // Info: (20260612 - Tzuhan) 預期路徑格式: data/taxId/year/outputs/products/P-123/product_specs.json
+    const match = filePath.match(/products\/([^/]+)\/(.+)$/);
+    if (match) {
+      const pId = match[1];
+      const fileName = match[2];
+      let mode: string | undefined;
+
+      if (fileName.includes("product_specs")) mode = "product_specs_only";
+      else if (fileName.includes("product_image")) mode = "product_image_only";
+      else if (fileName.includes("dpp_ground_truth"))
+        mode = "dpp_ground_truth_only";
+      else if (fileName.includes("dpp_compliance"))
+        mode = "dpp_compliance_only";
+
+      if (mode) {
+        startGeneration(undefined, mode, undefined, pId);
+      }
+    }
+  };
+
   return (
     <div className="relative flex h-[calc(100vh-100px)] w-full flex-col gap-4 overflow-hidden bg-slate-50 px-4 pt-4 pb-4 font-sans lg:px-8">
       <DppHeader
@@ -674,7 +696,8 @@ export default function DppStartPage() {
           className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow transition-colors hover:bg-blue-700"
         >
           <Rocket className="h-4 w-4" />
-          前往建立護照 (/digital_product_passport) ➔
+          {t("digital_product_passport.start.go_to_create")}
+          <ArrowRight className="h-4 w-4" />
         </button>
       </div>
 
@@ -704,7 +727,10 @@ export default function DppStartPage() {
                   }
                 }}
               />
-              <DppPreviewPane selectedFilePath={selectedFilePath} />
+              <DppPreviewPane
+                selectedFilePath={selectedFilePath}
+                onRegenerateFile={handleRegenerateFile}
+              />
             </div>
           </div>
         </div>

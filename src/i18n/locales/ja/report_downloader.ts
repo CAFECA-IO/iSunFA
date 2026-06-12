@@ -2,8 +2,8 @@ export const reportDownloader = {
   title: "財務・ESGレポートダウンローダー",
   description:
     "企業の事業者番号または名称を入力することで、公開財務諸表およびサステナビリティレポートを自動で収集・ダウンロードします。",
-  target_enterprise: "Target Enterprise (事業者番号 / 企業名)",
-  year: "Year",
+  target_enterprise: "対象企業（事業者番号 / 企業名）",
+  year: "年度",
   start_download: "ダウンロード開始",
   downloading: "ダウンロード中...",
   preparing: "ダウンロード準備中...",
