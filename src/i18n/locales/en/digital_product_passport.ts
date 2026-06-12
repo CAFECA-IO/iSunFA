@@ -129,9 +129,9 @@ export const digitalProductPassport = {
     step5: "5. BOM and Precursor Data Construction (generate_bom_precursors)",
     step6: "6. Product Spec Generation (generate_product_specs)",
     step7: "7. Product Blueprint Generation (generate_product_image)",
-    step8: "8. DPP Core Ground Truth Calculation (generate_dpp_ground_truth)",
+    step8: "8. LCA & Carbon Footprint Calculation (generate_lca_ground_truth)",
     step9:
-      "9. DPP Compliance and Verification Data Generation (generate_dpp_compliance)",
+      "9. Product Compliance & Verification Data (generate_compliance_declaration)",
     download_failed: "Download failed, please try again later!",
     simulator_title_phase1: "Enterprise Simulation Data Center",
     simulator_title_phase1_desc:
@@ -154,10 +154,12 @@ export const digitalProductPassport = {
     header_subtitle:
       "Specify a target enterprise to automatically trigger underlying crawlers and AI extraction scripts to build the enterprise persona and foundational files for Digital Product Passports.",
     group_company_policy: "Company Policy & Persona",
-    group_traceability: "Traceability & Material",
+    group_traceability:
+      "🔗 Traceability & Material Library (Traceability & Material)",
     group_circularity: "Circularity & Efficiency Policy",
-    group_product_specs: "Product Specs & Engineering",
-    group_dpp_core: "DPP Core Calculation & Compliance",
+    group_product_specs:
+      "📦 Product Specs & Engineering Data (Product Specs & Engineering)",
+    group_dpp_core: "📊 LCA Footprint & Compliance Reports",
     matrix_title: "Product Portfolio & Gap Settings (Unique)",
     matrix_desc:
       "Set different defect scenarios for various product SKUs to experience validation.",

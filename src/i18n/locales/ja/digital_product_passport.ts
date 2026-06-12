@@ -131,10 +131,11 @@ export const digitalProductPassport = {
     step5: "5. BOMおよび前駆体データの構築 (generate_bom_precursors)",
     step6: "6. 製品仕様の生成 (generate_product_specs)",
     step7: "7. 製品設計図の生成 (generate_product_image)",
-    step8: "8. DPPコアのグラウンドトゥルース計算 (generate_dpp_ground_truth)",
+    step8:
+      "8. LCA およびカーボンフットプリント計算 (generate_lca_ground_truth)",
     step9:
-      "9. DPPコンプライアンスおよび検証データの生成 (generate_dpp_compliance)",
-    download_failed: "ダウンロードに失敗しました。後でもう一度お試しください。",
+      "9. 製品コンプライアンスおよび検証データ生成 (generate_compliance_declaration)",
+    download_failed: "ダウンロードに失敗しました。後でもう一度お試しください！",
     simulator_title_phase1: "企業シミュレーションデータセンター",
     simulator_title_phase1_desc:
       "特定の企業向けの高品質なモックデータを生成し、複数製品の完全な管理プロセスを体験します。",
@@ -156,11 +157,12 @@ export const digitalProductPassport = {
     header_subtitle:
       "ターゲット企業を指定し、自動的にクローラーとAI抽出スクリプトをトリガーして、デジタル製品パスポート（DPP）の企業ペルソナと基本ファイルを構築します。",
     group_company_policy: "企業運営と方針 (Company Policy & Persona)",
-    group_traceability: "サプライチェーンと材料 (Traceability & Material)",
+    group_traceability:
+      "🔗 サプライチェーンのトレーサビリティとマテリアルライブラリ (Traceability & Material)",
     group_circularity: "循環性と効率化方針 (Circularity)",
     group_product_specs:
-      "製品仕様とエンジニアリングデータ (Product Specs & Engineering)",
-    group_dpp_core: "DPP コア計算とコンプライアンス (DPP Core & Compliance)",
+      "📦 製品仕様とエンジニアリングデータ (Product Specs & Engineering)",
+    group_dpp_core: "📊 LCA フットプリントとコンプライアンスレポート",
     matrix_title: "製品ポートフォリオとギャップ設定 (個別)",
     matrix_desc:
       "製品SKUごとに異なる欠陥シナリオを設定し、判定を体験してください。",

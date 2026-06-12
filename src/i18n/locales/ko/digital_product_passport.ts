@@ -129,9 +129,10 @@ export const digitalProductPassport = {
     step5: "5. BOM 및 전구체 데이터 구축 (generate_bom_precursors)",
     step6: "6. 제품 사양 생성 (generate_product_specs)",
     step7: "7. 제품 설계도 생성 (generate_product_image)",
-    step8: "8. DPP 핵심 기준 데이터 계산 (generate_dpp_ground_truth)",
-    step9: "9. DPP 규정 준수 및 검증 데이터 생성 (generate_dpp_compliance)",
-    download_failed: "다운로드에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+    step8: "8. LCA 및 탄소 발자국 데이터 계산 (generate_lca_ground_truth)",
+    step9:
+      "9. 제품 규정 준수 및 검증 데이터 생성 (generate_compliance_declaration)",
+    download_failed: "다운로드에 실패했습니다. 나중에 다시 시도해 주세요!",
     simulator_title_phase1: "기업 시뮬레이션 데이터 센터",
     simulator_title_phase1_desc:
       "특정 기업을 위한 고품질 모의 데이터를 생성하여 전체 다중 제품 관리 프로세스를 경험해 보세요.",
@@ -153,11 +154,12 @@ export const digitalProductPassport = {
     header_subtitle:
       "대상 기업을 지정하고 크롤러와 AI 추출 스크립트를 자동으로 트리거하여 디지털 제품 여권(DPP)의 기업 페르소나 및 기본 파일을 구축합니다.",
     group_company_policy: "기업 운영 및 정책 (Company Policy & Persona)",
-    group_traceability: "공급망 추적 및 자재 (Traceability & Material)",
+    group_traceability:
+      "🔗 공급망 추적성 및 자재 라이브러리 (Traceability & Material)",
     group_circularity: "순환성 및 효율성 정책 (Circularity)",
     group_product_specs:
-      "제품 사양 및 엔지니어링 데이터 (Product Specs & Engineering)",
-    group_dpp_core: "DPP 핵심 연산 및 컴플라이언스 (DPP Core & Compliance)",
+      "📦 제품 사양 및 엔지니어링 데이터 (Product Specs & Engineering)",
+    group_dpp_core: "📊 LCA 발자국 및 컴플라이언스 보고서",
     matrix_title: "제품 포트폴리오 및 차이(Gap) 설정 (고유)",
     matrix_desc:
       "다양한 제품 SKU에 대해 서로 다른 결함 시나리오를 설정하여 판정을 경험해 보세요.",

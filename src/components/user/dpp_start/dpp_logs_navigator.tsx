@@ -227,7 +227,7 @@ export function DppLogsNavigator({
                 )}
                 {renderBaselineGroup(
                   t("digital_product_passport.simulator.group_dpp_core") ||
-                    "📊 DPP 核心演算與合規 (DPP Core & Compliance)",
+                    "📊 LCA 碳排足跡與合規 (LCA Footprint & Compliance)",
                   [steps[7], steps[8]],
                 )}
               </div>
