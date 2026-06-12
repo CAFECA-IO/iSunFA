@@ -95,7 +95,11 @@ export async function POST(req: NextRequest) {
         };
 
         try {
-          if (mode === "all" || mode === "download_only") {
+          if (
+            mode === "all" ||
+            mode === "download_only" ||
+            mode === "baseline_only"
+          ) {
             // Info: (20260609 - Tzuhan) 步驟一與二：財務與 ESG 永續報告下載 (非同步監聽)
             sendEvent({ type: "step_start", stepIndex: 0 }); // Info: (20260609 - Tzuhan) fin_download
             sendEvent({ type: "step_start", stepIndex: 1 }); // Info: (20260609 - Tzuhan) esg_download
@@ -205,9 +209,10 @@ export async function POST(req: NextRequest) {
 
           if (
             mode === "all" ||
-            mode === "generate_only" ||
             mode === "extrapolate_only" ||
-            mode === "persona_only"
+            mode === "persona_only" ||
+            mode === "baseline_only" ||
+            mode === "generate_only"
           ) {
             // Info: (20260611 - Tzuhan) If we skipped download, we might still want to signal that download is done so the UI can proceed if it was waiting
             if (mode !== "all") {
@@ -226,9 +231,9 @@ export async function POST(req: NextRequest) {
             }
 
             if (
-              mode === "all" ||
               mode === "generate_only" ||
-              mode === "extrapolate_only"
+              mode === "extrapolate_only" ||
+              mode === "baseline_only"
             ) {
               // Info: (20260609 - Tzuhan) 步驟三：AI 視覺圖表萃取
               sendEvent({ type: "step_start", stepIndex: 2 });
@@ -268,9 +273,9 @@ export async function POST(req: NextRequest) {
             }
 
             if (
-              mode === "all" ||
               mode === "generate_only" ||
-              mode === "persona_only"
+              mode === "persona_only" ||
+              mode === "baseline_only"
             ) {
               // Info: (20260609 - Tzuhan) 步驟四：企業畫像建構
               sendEvent({ type: "step_start", stepIndex: 3 });
@@ -299,9 +304,10 @@ export async function POST(req: NextRequest) {
           if (
             mode === "all" ||
             mode === "add_sku" ||
-            mode === "dpp_only" ||
             mode === "dpp_catalog_only" ||
-            mode === "bom_only"
+            mode === "bom_only" ||
+            mode === "generate_only" ||
+            mode === "baseline_only"
           ) {
             // Info: (20260610 - Tzuhan) 步驟五：BOM 與前驅物數據建構
             sendEvent({ type: "step_start", stepIndex: 4 });
@@ -436,15 +442,13 @@ export async function POST(req: NextRequest) {
           }
 
           if (
-            mode === "all" ||
             mode === "generate_only" ||
-            mode === "persona_only"
+            mode === "persona_only" ||
+            mode === "baseline_only"
           ) {
             // Info: (20260609 - Tzuhan) 完成 Day 1 流程
             const mockFilePath = `data/${stockId}/${year}/outputs/${stockId}_company_persona.html`;
-            if (mode !== "all") {
-              sendEvent({ type: "complete", file: mockFilePath });
-            }
+            sendEvent({ type: "complete", file: mockFilePath });
           }
 
           if (mode === "extrapolate_only") {
@@ -461,6 +465,12 @@ export async function POST(req: NextRequest) {
             });
             const bomFilePath = `data/${stockId}/${year}/outputs/mock_sources/boms_and_precursors.json`;
             sendEvent({ type: "complete", file: bomFilePath });
+          } else if (mode === "generate_only" || mode === "baseline_only") {
+            sendEvent({
+              type: "log",
+              message: "Company Baseline Pipeline completed successfully.",
+            });
+            sendEvent({ type: "complete" });
           } else if (mode === "download_only") {
             // Info: (20260611 - Tzuhan) For download_only, we just finish successfully
             sendEvent({

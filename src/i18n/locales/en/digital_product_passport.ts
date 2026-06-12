@@ -102,6 +102,7 @@ export const digitalProductPassport = {
     delete_confirm_message:
       "Are you sure you want to delete the simulation data for '{{name}} ({{year}})'? This action cannot be undone.",
     delete_failed: "Deletion failed, please try again later",
+    simulation_status: "Simulation Status",
     phase1: "Phase 1: Basic Data",
     esg_download: "ESG Download",
     esg_extrapolate: "ESG Extrapolate",
@@ -139,6 +140,12 @@ export const digitalProductPassport = {
     baseline_details: "Baseline Details (For Technical Consultants)",
   },
   simulator: {
+    group_manufacturer: "Manufacturer",
+    group_company_policy: "Company Policy & Persona",
+    group_traceability: "Traceability & Material",
+    group_circularity: "Circularity & Efficiency Policy",
+    group_product_specs: "Product Specs & Engineering",
+    group_dpp_core: "DPP Core Calculation & Compliance",
     matrix_title: "Product Portfolio & Gap Settings (Unique)",
     matrix_desc:
       "Set different defect scenarios for various product SKUs to experience validation.",

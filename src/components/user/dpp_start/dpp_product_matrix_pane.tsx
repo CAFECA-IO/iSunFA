@@ -1,25 +1,30 @@
-import { useState } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
 import {
   DownloadCloud,
-  Plus,
   Settings,
   AlertCircle,
   CheckCircle2,
   Network,
   Lightbulb,
   Search,
+  Zap,
 } from "lucide-react";
 
-export interface IProductGapSettings {
-  includeBom: boolean;
-  includeLca: boolean;
+export interface IProductItem {
+  productId: string;
+  productName: string;
+  progress: {
+    hasSpecs: boolean;
+    hasImage: boolean;
+    dppGroundTruthFile?: string;
+    dppComplianceFile?: string;
+  };
 }
 
 interface IDppProductMatrixPaneProps {
-  products: { productId: string; productName: string }[];
+  products: IProductItem[];
   isGenerating: boolean;
-  onDownloadSku: (productId: string, gapSettings: IProductGapSettings) => void;
+  onDownloadSku: (productId: string) => void;
   onAddSku: () => void;
   onViewProductDetails: (productId: string) => void;
 }
@@ -33,21 +38,6 @@ export function DppProductMatrixPane({
 }: IDppProductMatrixPaneProps) {
   const { t } = useTranslation();
 
-  // Local state to track gap settings for each product
-  const [gapSettingsMap, setGapSettingsMap] = useState<
-    Record<string, IProductGapSettings>
-  >({});
-
-  const handleToggleGap = (
-    productId: string,
-    field: keyof IProductGapSettings,
-  ) => {
-    setGapSettingsMap((prev) => {
-      const current = prev[productId] || { includeBom: true, includeLca: true };
-      return { ...prev, [productId]: { ...current, [field]: !current[field] } };
-    });
-  };
-
   return (
     <div className="flex flex-1 flex-col rounded-2xl border border-gray-200 bg-white shadow-sm">
       <div className="flex items-center justify-between border-b border-gray-100 bg-slate-50/50 p-5">
@@ -55,34 +45,33 @@ export function DppProductMatrixPane({
           <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
             <Network className="h-5 w-5 text-indigo-600" />
             {t("digital_product_passport.simulator.matrix_title") ||
-              "產品組合與 Gap 設定 (Unique)"}
+              "產品組合 (Unique)"}
           </h2>
           <p className="mt-1 flex text-xs text-gray-500">
             <Lightbulb className="mt-0.5 mr-1.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
             {t("digital_product_passport.simulator.matrix_desc") ||
-              "請為不同產品 SKU 設定不同的缺陷情境，體驗判定。"}
+              "管理旗下所有產品 SKU，並生成可供上傳驗證的 DPP 模擬資料檔。"}
           </p>
         </div>
         <button
           onClick={onAddSku}
           disabled={isGenerating}
-          className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 disabled:opacity-50"
+          className="flex items-center gap-2 rounded-lg border border-blue-600 bg-blue-50 px-3 py-2 text-sm font-bold text-blue-700 shadow-sm transition-colors hover:bg-blue-100 disabled:opacity-50"
         >
-          <Plus className="h-4 w-4" />
+          <Zap className="h-4 w-4" />
           {t("digital_product_passport.simulator.add_sku") ||
-            "新增模擬產品 SKU"}
+            "⚡ AI 自動建立模擬 SKU"}
         </button>
       </div>
 
       <div className="custom-scrollbar flex-1 overflow-y-auto p-5">
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
           {products.map((p) => {
-            const settings = gapSettingsMap[p.productId] || {
-              includeBom: true,
-              includeLca: true,
-            };
-            const isPerfect = settings.includeBom && settings.includeLca;
-            const isMissingLca = settings.includeBom && !settings.includeLca;
+            const isComplete =
+              p.progress.hasSpecs &&
+              p.progress.hasImage &&
+              !!p.progress.dppGroundTruthFile &&
+              !!p.progress.dppComplianceFile;
 
             return (
               <div
@@ -103,62 +92,18 @@ export function DppProductMatrixPane({
                   <div className="mb-4">
                     <p className="mb-2 text-xs font-bold text-slate-700">
                       {t("digital_product_passport.simulator.scenario") ||
-                        "情境設定"}
+                        "資料狀態"}
                       ：
                     </p>
-                    {isPerfect ? (
+                    {isComplete ? (
                       <div className="flex items-center gap-1.5 rounded-md bg-emerald-50 px-2 py-1.5 text-xs font-medium text-emerald-600">
-                        <CheckCircle2 className="h-4 w-4" /> 完美護照 (全勾)
-                      </div>
-                    ) : isMissingLca ? (
-                      <div className="flex items-center gap-1.5 rounded-md bg-amber-50 px-2 py-1.5 text-xs font-medium text-amber-600">
-                        <AlertCircle className="h-4 w-4" /> 缺陷護照 (缺碳排)
+                        <CheckCircle2 className="h-4 w-4" /> 資料齊全 (可下載)
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1.5 rounded-md bg-red-50 px-2 py-1.5 text-xs font-medium text-red-600">
-                        <AlertCircle className="h-4 w-4" /> 嚴重缺陷
-                        (缺物流與碳排)
+                      <div className="flex items-center gap-1.5 rounded-md bg-amber-50 px-2 py-1.5 text-xs font-medium text-amber-600">
+                        <AlertCircle className="h-4 w-4" /> 資料處理中或不完整
                       </div>
                     )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <p className="text-xs font-bold text-slate-700">
-                      {t("digital_product_passport.simulator.gap_settings") ||
-                        "Gap 設定 (僅針對此產品獨有數據)"}
-                    </p>
-                    <label className="group flex cursor-pointer items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={settings.includeBom}
-                        onChange={() =>
-                          handleToggleGap(p.productId, "includeBom")
-                        }
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 transition-all focus:ring-blue-500"
-                      />
-                      <span
-                        className={`text-sm ${settings.includeBom ? "text-slate-700" : "text-slate-400 line-through"} transition-colors`}
-                      >
-                        {t("digital_product_passport.simulator.gap_bom") ||
-                          "產品與物流資訊 (BOM)"}
-                      </span>
-                    </label>
-                    <label className="group flex cursor-pointer items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={settings.includeLca}
-                        onChange={() =>
-                          handleToggleGap(p.productId, "includeLca")
-                        }
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 transition-all focus:ring-blue-500"
-                      />
-                      <span
-                        className={`text-sm ${settings.includeLca ? "text-slate-700" : "text-slate-400 line-through"} transition-colors`}
-                      >
-                        {t("digital_product_passport.simulator.gap_lca") ||
-                          "環境影響報告 (LCA)"}
-                      </span>
-                    </label>
                   </div>
                 </div>
 
@@ -172,13 +117,13 @@ export function DppProductMatrixPane({
                       "查看 SKU 數據細節"}
                   </button>
                   <button
-                    onClick={() => onDownloadSku(p.productId, settings)}
-                    disabled={isGenerating}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:opacity-50"
+                    onClick={() => onDownloadSku(p.productId)}
+                    disabled={isGenerating || !isComplete}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-50"
                   >
                     <DownloadCloud className="h-4 w-4" />
                     {t("digital_product_passport.simulator.download_sku") ||
-                      "生成與下載 SKU 檔案包"}
+                      "下載模擬資料檔 (供上傳測試)"}
                   </button>
                 </div>
               </div>
@@ -188,7 +133,8 @@ export function DppProductMatrixPane({
           {products.length === 0 && (
             <div className="col-span-full flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 p-10 text-slate-500">
               <p className="text-sm font-medium">
-                尚無產品資料，請先生成公司公用資料或新增模擬產品。
+                {t("digital_product_passport.simulator.empty_product_data") ||
+                  "尚無產品資料，請先生成公司公用資料或新增模擬產品。"}
               </p>
             </div>
           )}

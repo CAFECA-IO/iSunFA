@@ -6,11 +6,8 @@ import { DppHeader } from "@/components/user/dpp_start/dpp_header";
 import { DppLogsNavigator } from "@/components/user/dpp_start/dpp_logs_navigator";
 import { DppPreviewPane } from "@/components/user/dpp_start/dpp_preview_pane";
 import { DppCompanyBaselinePane } from "@/components/user/dpp_start/dpp_company_baseline_pane";
-import {
-  DppProductMatrixPane,
-  IProductGapSettings,
-} from "@/components/user/dpp_start/dpp_product_matrix_pane";
-import { CompanySearchInput } from "@/components/common/company_search_input";
+import { DppProductMatrixPane } from "@/components/user/dpp_start/dpp_product_matrix_pane";
+import SimulatorCompanySelector from "@/components/user/dpp_start/simulator_company_selector";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { IApiResponse } from "@/lib/utils/response";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -179,13 +176,25 @@ export default function DppStartPage() {
       setSteps((prev) =>
         prev.map((s, index) => {
           let shouldReset = true;
-          if (mode === "generate_only" && index < 2) shouldReset = false;
+          if (mode === "baseline_only" && index >= 5) shouldReset = false;
+          if (mode === "generate_only" && (index < 2 || index >= 5))
+            shouldReset = false;
           if (mode === "download_only" && index >= 2) shouldReset = false;
           if (mode === "product_dpp_only" && index < 5) shouldReset = false;
+          if (mode === "extrapolate_only" && index !== 2) shouldReset = false;
+          if (mode === "persona_only" && index !== 3) shouldReset = false;
+          if (mode === "bom_only" && index !== 4) shouldReset = false;
+          if (mode === "product_specs_only" && index !== 5) shouldReset = false;
+          if (mode === "product_image_only" && index !== 6) shouldReset = false;
+          if (mode === "dpp_ground_truth_only" && index !== 7)
+            shouldReset = false;
+          if (mode === "dpp_compliance_only" && index !== 8)
+            shouldReset = false;
+          if (mode === "add_sku" && index < 4) shouldReset = false;
           return shouldReset ? { ...s, status: "pending", log: "" } : s;
         }),
       );
-      setSelectedFilePath(null);
+      // Removed setSelectedFilePath(null) to prevent breaking preview UX during regeneration
 
       try {
         const response = await fetch(
@@ -324,36 +333,52 @@ export default function DppStartPage() {
           window.history.replaceState({}, "", newUrl.toString());
         }
 
-        // Info: (20260611 - Tzuhan) Fetch company lookup to set selectedCompany
-        request<{ payload: ICompanySearchResult[] }>(
-          `/api/v1/company/lookup?query=${paramStockId}`,
+        // Info: (20260612 - Tzuhan) Fetch from public list API instead of protected company lookup API
+        request<IApiResponse<IDemoItem[]>>(
+          `/api/v1/digital_product_passport_simulator/list?t=${Date.now()}`,
         )
           .then((res) => {
-            if (res.payload && res.payload.length > 0) {
-              const comp =
-                res.payload.find((c) => c.taxId === paramStockId) ||
-                res.payload[0];
-              setSelectedCompany(comp);
-              setKeyword(`${comp.name} (${comp.taxId})`);
-              if (paramAction === "redownload") {
-                setTimeout(
-                  () => startGeneration(comp, "download_only", paramYear),
-                  100,
-                );
-              } else if (paramAction === "extrapolate") {
-                setTimeout(
-                  () => startGeneration(comp, "extrapolate_only", paramYear),
-                  100,
-                );
-              } else if (paramAction === "regenerate") {
-                setTimeout(
-                  () => startGeneration(comp, "persona_only", paramYear),
-                  100,
-                );
-              }
+            const items = res.payload || [];
+            const match = items.find((i) => i.stockId === paramStockId);
+            const comp = match
+              ? ({
+                  taxId: match.stockId,
+                  name: match.name,
+                } as ICompanySearchResult)
+              : ({
+                  taxId: paramStockId,
+                  name: paramStockId,
+                } as ICompanySearchResult);
+
+            setSelectedCompany(comp);
+            setKeyword(`${comp.name} (${comp.taxId})`);
+
+            if (paramAction === "redownload") {
+              setTimeout(
+                () => startGeneration(comp, "download_only", paramYear),
+                100,
+              );
+            } else if (paramAction === "extrapolate") {
+              setTimeout(
+                () => startGeneration(comp, "extrapolate_only", paramYear),
+                100,
+              );
+            } else if (paramAction === "regenerate") {
+              setTimeout(
+                () => startGeneration(comp, "persona_only", paramYear),
+                100,
+              );
             }
           })
-          .catch(console.error);
+          .catch((err) => {
+            console.error("Failed to fetch list for lookup:", err);
+            const comp = {
+              taxId: paramStockId,
+              name: paramStockId,
+            } as ICompanySearchResult;
+            setSelectedCompany(comp);
+            setKeyword(`${comp.name} (${comp.taxId})`);
+          });
       }
     }
   }, [startGeneration]);
@@ -386,23 +411,25 @@ export default function DppStartPage() {
 
           const isEsgExtrapolated =
             currentItem.year === "2025" ||
-            (!currentItem.progress.hasEsg &&
-              currentItem.progress.hasPersonaHtml);
+            currentItem.progress.hasEsgExtrapolation;
 
           setProducts(currentItem.progress.products || []);
           setCurrentProgress({
             hasFin: currentItem.progress.hasFin,
             hasEsg: currentItem.progress.hasEsg,
+            hasEsgExtrapolation: currentItem.progress.hasEsgExtrapolation,
             hasPersonaHtml: currentItem.progress.hasPersonaHtml,
             hasBom: currentItem.progress.hasBom,
           });
           const activeProductId =
-            selectedProductId ||
+            (modalContext !== "baseline" && modalContext !== null
+              ? modalContext
+              : selectedProductId) ||
             (currentItem.progress.products &&
             currentItem.progress.products.length > 0
               ? currentItem.progress.products[0].productId
               : "");
-          if (activeProductId && !selectedProductId) {
+          if (activeProductId && selectedProductId !== activeProductId) {
             setSelectedProductId(activeProductId);
           }
           const activeProduct = currentItem.progress.products?.find(
@@ -514,20 +541,66 @@ export default function DppStartPage() {
             }
           }
         } else {
-          setSteps((prev) =>
-            prev.map((s) => ({
-              ...s,
-              status: "pending",
-              file: undefined,
-              log: "",
-            })),
-          );
+          setCurrentProgress({
+            hasFin: false,
+            hasEsg: false,
+            hasEsgExtrapolation: false,
+            hasPersonaHtml: false,
+            hasBom: false,
+          });
           setProducts([]);
           if (!isGenerating) setSelectedFilePath(null);
+          setSteps([
+            {
+              id: "fin_download",
+              label: t("digital_product_passport.start.step1"),
+              status: "pending",
+            },
+            {
+              id: "esg_download",
+              label: t("digital_product_passport.start.step2"),
+              status: "pending",
+            },
+            {
+              id: "vision",
+              label: t("digital_product_passport.start.step3"),
+              status: "pending",
+            },
+            {
+              id: "persona",
+              label: t("digital_product_passport.start.step4"),
+              status: "pending",
+            },
+            {
+              id: "bom_generation",
+              label: t("digital_product_passport.start.step5"),
+              status: "pending",
+            },
+            {
+              id: "product_specs",
+              label: t("digital_product_passport.start.step6"),
+              status: "pending",
+            },
+            {
+              id: "product_image",
+              label: t("digital_product_passport.start.step7"),
+              status: "pending",
+            },
+            {
+              id: "dpp_ground_truth",
+              label: t("digital_product_passport.start.step8"),
+              status: "pending",
+            },
+            {
+              id: "dpp_compliance",
+              label: t("digital_product_passport.start.step9"),
+              status: "pending",
+            },
+          ]);
         }
       })
       .catch(console.error);
-  }, [selectedCompany, year, isGenerating, selectedProductId, t]);
+  }, [selectedCompany, year, isGenerating, selectedProductId, modalContext, t]);
 
   // Info: (20260609 - Tzuhan) 處理選擇公司
   const handleSelectCompany = (company: ICompanySearchResult) => {
@@ -535,15 +608,8 @@ export default function DppStartPage() {
     setKeyword(`${company.name} (${company.taxId})`);
   };
 
-  const handleDownloadSku = async (
-    productId: string,
-    gapSettings: IProductGapSettings,
-  ) => {
+  const handleDownloadSku = async (productId: string) => {
     if (!selectedCompany) return;
-
-    const missingModules: string[] = [];
-    if (!gapSettings.includeBom) missingModules.push("BOM");
-    if (!gapSettings.includeLca) missingModules.push("LCA");
 
     try {
       const response = await fetch(
@@ -555,7 +621,6 @@ export default function DppStartPage() {
             stockId: selectedCompany.taxId,
             year,
             skuId: productId,
-            missingModules,
           }),
         },
       );
@@ -639,7 +704,7 @@ export default function DppStartPage() {
           </span>
         </div>
         <div className="w-64">
-          <CompanySearchInput
+          <SimulatorCompanySelector
             value={keyword}
             onChange={setKeyword}
             onSelect={handleSelectCompany}
@@ -680,7 +745,15 @@ export default function DppStartPage() {
         <DppCompanyBaselinePane
           isGenerating={isGenerating}
           onViewDetails={() => setModalContext("baseline")}
-          onRegenerate={() => startGeneration(undefined, "generate_only")}
+          onRegenerate={() =>
+            startGeneration(
+              undefined,
+              currentProgress &&
+                (currentProgress.hasFin || currentProgress.hasEsg)
+                ? "generate_only"
+                : "baseline_only",
+            )
+          }
           progress={currentProgress}
         />
 
@@ -737,7 +810,12 @@ export default function DppStartPage() {
                 steps={steps}
                 products={products}
                 activeTabContext={modalContext}
-                onTabChange={(tab) => setModalContext(tab)}
+                onTabChange={(tab) => {
+                  setModalContext(tab);
+                  if (tab !== "baseline") {
+                    setSelectedProductId(tab);
+                  }
+                }}
                 onStepClick={(step) => {
                   if (step.file) {
                     setSelectedFilePath(step.file);

@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   let tmpDir: string | null = null;
   try {
     const body = await request.json();
-    const { stockId, year, skuId, missingModules = [] } = body;
+    const { stockId, year, skuId } = body;
 
     if (!stockId || !year || !skuId) {
       return NextResponse.json(
@@ -80,38 +80,6 @@ export async function POST(request: Request) {
     const groundTruthData = JSON.parse(
       fs.readFileSync(originalGroundTruthPath, "utf-8"),
     );
-
-    // Apply Gap Settings (Dig holes)
-    if (missingModules.includes("BOM")) {
-      // Empty the BOM list for this product
-      const productBom = bomsData.products.find(
-        (p: unknown) => (p as { productId: string }).productId === skuId,
-      );
-      if (productBom) {
-        productBom.bom = [];
-      }
-    }
-
-    if (missingModules.includes("LCA")) {
-      // Zero out emissions in BOM
-      const productBom = bomsData.products.find(
-        (p: unknown) => (p as { productId: string }).productId === skuId,
-      );
-      if (productBom) {
-        productBom.bom.forEach((b: unknown) => {
-          (
-            b as { embeddedEmissionsKgCO2ePerKg: number }
-          ).embeddedEmissionsKgCO2ePerKg = 0;
-        });
-      }
-      // Zero out emissions in Ground Truth
-      if (groundTruthData.carbonFootprint) {
-        groundTruthData.carbonFootprint.total_tCO2e = 0;
-        groundTruthData.carbonFootprint.breakdown.precursorsEmissions = 0;
-        groundTruthData.carbonFootprint.breakdown.directEmissionsScope1 = 0;
-        groundTruthData.carbonFootprint.breakdown.indirectEmissionsScope2 = 0;
-      }
-    }
 
     // Write modified JSONs to tmp directory
     fs.writeFileSync(tmpBomsPath, JSON.stringify(bomsData, null, 2));

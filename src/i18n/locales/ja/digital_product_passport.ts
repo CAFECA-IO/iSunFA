@@ -104,6 +104,7 @@ export const digitalProductPassport = {
     delete_confirm_message:
       "「{{name}} ({{year}}年)」のシミュレーションデータを削除してもよろしいですか？この操作は元に戻せません。",
     delete_failed: "削除に失敗しました。後でもう一度お試しください。",
+    simulation_status: "シミュレーションステータス",
     phase1: "フェーズ1: 基礎データ",
     esg_download: "ESGダウンロード",
     esg_extrapolate: "ESG推定",
@@ -141,6 +142,13 @@ export const digitalProductPassport = {
     baseline_details: "ベースライン詳細 (技術コンサルタント向け)",
   },
   simulator: {
+    group_manufacturer: "メーカー (Manufacturer)",
+    group_company_policy: "企業運営と方針 (Company Policy & Persona)",
+    group_traceability: "サプライチェーンと材料 (Traceability & Material)",
+    group_circularity: "循環性と効率化方針 (Circularity)",
+    group_product_specs:
+      "製品仕様とエンジニアリングデータ (Product Specs & Engineering)",
+    group_dpp_core: "DPP コア計算とコンプライアンス (DPP Core & Compliance)",
     matrix_title: "製品ポートフォリオとギャップ設定 (個別)",
     matrix_desc:
       "製品SKUごとに異なる欠陥シナリオを設定し、判定を体験してください。",

@@ -9,21 +9,21 @@ export const GenerateDppSchema = z.object({
   mode: z
     .enum([
       "all",
-      "add_sku",
       "download_only",
       "generate_only",
-      "extrapolate_only",
-      "persona_only",
-      "bom_only",
+      "baseline_only",
       "dpp_only",
+      "add_sku",
       "dpp_catalog_only",
       "product_dpp_only",
+      "extrapolate_only",
+      "persona_only",
       "product_specs_only",
       "product_image_only",
       "dpp_ground_truth_only",
       "dpp_compliance_only",
+      "bom_only",
     ])
-    .optional()
     .default("all"),
 });
 

@@ -97,6 +97,7 @@ export const digitalProductPassport = {
     delete_confirm_message:
       "确定要删除“{{name}} ({{year}} 年)”的模拟数据吗？此操作无法恢复。",
     delete_failed: "删除失败，请稍后再试",
+    simulation_status: "模拟状态",
     phase1: "Phase 1: 基础数据",
     esg_download: "ESG 下载",
     esg_extrapolate: "ESG 推算",
@@ -133,6 +134,12 @@ export const digitalProductPassport = {
     baseline_details: "基线详情 (供技术顾问使用)",
   },
   simulator: {
+    group_manufacturer: "制造商 (Manufacturer)",
+    group_company_policy: "企业运营与政策方针 (Company Policy & Persona)",
+    group_traceability: "供应链追溯与物料库 (Traceability & Material)",
+    group_circularity: "循环性与效率政策 (Circularity)",
+    group_product_specs: "产品规格与工程资料 (Product Specs & Engineering)",
+    group_dpp_core: "DPP 核心演算与合规 (DPP Core & Compliance)",
     matrix_title: "产品组合与差距设置 (Unique)",
     matrix_desc: "请为不同的产品 SKU 设置不同的缺陷场景，以体验判定流程。",
     add_sku: "新增模拟产品 SKU",

@@ -7,6 +7,7 @@ import {
   Sparkles,
   Building2,
   Package,
+  Info,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 
@@ -63,8 +64,6 @@ export function DppLogsNavigator({
 
   // Baseline gets steps 0-4
   // Product gets steps 5-8
-  const displayedSteps = isBaseline ? steps.slice(0, 5) : steps.slice(5, 9);
-  const stepOffset = isBaseline ? 0 : 5;
 
   return (
     <div className="relative z-20 flex h-full w-full flex-shrink-0 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm lg:w-[420px]">
@@ -98,65 +97,142 @@ export function DppLogsNavigator({
           {t("digital_product_passport.sidebar_extra.pipeline_execution")}
         </h3>
 
-        <div className="relative border-l-2 border-slate-100 pl-4">
-          {displayedSteps.map((step, index) => {
-            const globalIndex = index + stepOffset;
-            const isCompleted =
-              step.status === "completed" || step.status === "extrapolated";
+        <div className="relative">
+          {(() => {
+            const renderStep = (step: IDppStep, globalIndex: number) => {
+              if (!step) return null;
+              const isCompleted =
+                step.status === "completed" || step.status === "extrapolated";
 
-            // Recompute step file path if it's a product step to avoid singleton overlap
-            let actualFile = step.file;
-            if (!isBaseline && activeTabContext && selectedCompany) {
-              const baseDir = `data/${selectedCompany.taxId}/${year}/outputs/${activeTabContext}/mock_sources`;
-              if (globalIndex === 5)
-                actualFile = `${baseDir}/${activeTabContext}_product_specs.json`;
-              else if (globalIndex === 6)
-                actualFile = `${baseDir}/fastener_blueprint.png`;
-              else if (globalIndex === 7)
-                actualFile = `${baseDir}/${activeTabContext}_dpp_ground_truth.json`;
-              else if (globalIndex === 8)
-                actualFile = `${baseDir}/${activeTabContext}_dpp_compliance_declaration.md`;
-            }
+              let actualFile = step.file;
+              if (!isBaseline && activeTabContext && selectedCompany) {
+                const baseDir = `data/${selectedCompany.taxId}/${year}/outputs/${activeTabContext}/mock_sources`;
+                if (globalIndex === 5)
+                  actualFile = `${baseDir}/${activeTabContext}_product_specs.json`;
+                else if (globalIndex === 6)
+                  actualFile = `${baseDir}/fastener_blueprint.png`;
+                else if (globalIndex === 7)
+                  actualFile = `${baseDir}/${activeTabContext}_dpp_ground_truth.json`;
+                else if (globalIndex === 8)
+                  actualFile = `${baseDir}/${activeTabContext}_dpp_compliance_declaration.md`;
+              }
 
-            return (
-              <div key={step.id} className="relative mb-6 last:mb-0">
-                <div className="absolute top-1 -left-[29px] bg-white">
-                  {renderStateIcon(step.status)}
-                </div>
-                <div className="flex flex-col">
-                  <span
-                    className={`text-sm font-bold ${isCompleted ? "text-slate-800" : "text-slate-400"}`}
-                  >
-                    {step.label}
-                  </span>
-
-                  {step.log && (
-                    <div className="mt-2 overflow-x-auto rounded-lg bg-slate-900 p-3 font-mono text-xs text-green-400">
-                      <pre className="leading-relaxed whitespace-pre-wrap">
-                        {step.log}
-                      </pre>
-                    </div>
-                  )}
-
-                  {actualFile && (
-                    <button
-                      onClick={() => onStepClick({ ...step, file: actualFile })}
-                      className="mt-2 flex w-fit items-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:text-blue-600"
+              return (
+                <div key={step.id} className="relative mb-6 last:mb-0">
+                  <div className="absolute top-1 -left-[29px] bg-white">
+                    {renderStateIcon(step.status)}
+                  </div>
+                  <div className="flex flex-col">
+                    <span
+                      className={`flex items-center text-sm font-bold ${isCompleted ? "text-slate-800" : "text-slate-400"}`}
                     >
-                      <FileText className="mr-1.5 h-3.5 w-3.5" />
-                      {isCompleted
-                        ? t(
-                            "digital_product_passport.preview_extra.view_generated_output",
-                          )
-                        : t(
-                            "digital_product_passport.preview_extra.file_not_found",
-                          )}
-                    </button>
-                  )}
+                      {step.label}
+                      {step.id === "esg" && step.status === "extrapolated" && (
+                        <div className="group relative ml-2 flex items-center">
+                          <Info className="h-4 w-4 cursor-pointer text-purple-500 hover:text-purple-600" />
+                          <div className="invisible absolute bottom-full left-0 z-50 mb-2 w-64 opacity-0 transition-all group-hover:visible group-hover:opacity-100">
+                            <div className="relative rounded-lg bg-slate-800 p-3 text-xs leading-relaxed font-normal tracking-wide whitespace-normal text-slate-100 shadow-xl">
+                              確保數據具備高度合理性，並符合 CBAM
+                              申報要求：系統自動抓取上一年度的永續報告書基準，並結合本年度最新的財務與營收財報數據，透過大語言模型動態推算出本年度的碳排指標。
+                              <div className="absolute top-full left-2 h-2 w-2 -translate-y-1/2 rotate-45 bg-slate-800"></div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </span>
+
+                    {step.log && (
+                      <div className="mt-2 overflow-x-auto rounded-lg bg-slate-900 p-3 font-mono text-xs text-green-400">
+                        <pre className="leading-relaxed whitespace-pre-wrap">
+                          {step.log}
+                        </pre>
+                      </div>
+                    )}
+
+                    {actualFile && (
+                      <button
+                        onClick={() =>
+                          onStepClick({ ...step, file: actualFile })
+                        }
+                        className="mt-2 flex w-fit items-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:text-blue-600"
+                      >
+                        <FileText className="mr-1.5 h-3.5 w-3.5" />
+                        {isCompleted
+                          ? t(
+                              "digital_product_passport.preview_extra.view_generated_output",
+                            )
+                          : t(
+                              "digital_product_passport.preview_extra.file_not_found",
+                            )}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            };
+
+            const renderBaselineGroup = (
+              title: string,
+              groupSteps: IDppStep[],
+            ) => (
+              <div className="mb-6 rounded-xl border border-slate-100 bg-slate-50/50 p-4 last:mb-0">
+                <h4 className="mb-6 flex items-center text-sm font-bold text-slate-800">
+                  {title}
+                </h4>
+                <div className="relative ml-2 border-l-2 border-slate-200 pl-4">
+                  {groupSteps.filter(Boolean).map((s) => {
+                    const globalIndex = steps.indexOf(s);
+                    return renderStep(s, globalIndex);
+                  })}
                 </div>
               </div>
             );
-          })}
+
+            if (isBaseline) {
+              return (
+                <div className="flex flex-col gap-4">
+                  {renderBaselineGroup(
+                    t(
+                      "digital_product_passport.simulator.group_manufacturer",
+                    ) || "🏢 製造商 (Manufacturer)",
+                    [steps[0]],
+                  )}
+                  {renderBaselineGroup(
+                    t("digital_product_passport.simulator.group_circularity") ||
+                      "♻️ 循環性與效率政策 (Circularity)",
+                    [steps[1], steps[2]],
+                  )}
+                  {renderBaselineGroup(
+                    t(
+                      "digital_product_passport.simulator.group_company_policy",
+                    ) || "🎯 企業營運與政策方針 (Company Policy & Persona)",
+                    [steps[3]],
+                  )}
+                  {renderBaselineGroup(
+                    t(
+                      "digital_product_passport.simulator.group_traceability",
+                    ) || "🔗 供應鏈追溯與物料庫 (Traceability & Material)",
+                    [steps[4]],
+                  )}
+                </div>
+              );
+            }
+
+            return (
+              <div className="flex flex-col gap-4">
+                {renderBaselineGroup(
+                  t("digital_product_passport.simulator.group_product_specs") ||
+                    "📦 產品規格與工程資料 (Product Specs & Engineering)",
+                  [steps[5], steps[6]],
+                )}
+                {renderBaselineGroup(
+                  t("digital_product_passport.simulator.group_dpp_core") ||
+                    "📊 DPP 核心演算與合規 (DPP Core & Compliance)",
+                  [steps[7], steps[8]],
+                )}
+              </div>
+            );
+          })()}
         </div>
       </div>
     </div>

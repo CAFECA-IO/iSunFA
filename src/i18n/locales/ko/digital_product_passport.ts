@@ -102,6 +102,7 @@ export const digitalProductPassport = {
     delete_confirm_message:
       "'{{name}} ({{year}}년)'의 시뮬레이션 데이터를 삭제하시겠습니까? 이 작업은 실행 취소할 수 없습니다.",
     delete_failed: "삭제에 실패했습니다. 나중에 다시 시도해 주세요.",
+    simulation_status: "시뮬레이션 상태",
     phase1: "1단계: 기초 데이터",
     esg_download: "ESG 다운로드",
     esg_extrapolate: "ESG 추정",
@@ -138,6 +139,13 @@ export const digitalProductPassport = {
     baseline_details: "베이스라인 세부 정보 (기술 컨설턴트용)",
   },
   simulator: {
+    group_manufacturer: "제조업체 (Manufacturer)",
+    group_company_policy: "기업 운영 및 정책 (Company Policy & Persona)",
+    group_traceability: "공급망 추적 및 자재 (Traceability & Material)",
+    group_circularity: "순환성 및 효율성 정책 (Circularity)",
+    group_product_specs:
+      "제품 사양 및 엔지니어링 데이터 (Product Specs & Engineering)",
+    group_dpp_core: "DPP 핵심 연산 및 컴플라이언스 (DPP Core & Compliance)",
     matrix_title: "제품 포트폴리오 및 차이(Gap) 설정 (고유)",
     matrix_desc:
       "다양한 제품 SKU에 대해 서로 다른 결함 시나리오를 설정하여 판정을 경험해 보세요.",

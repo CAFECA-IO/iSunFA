@@ -98,6 +98,7 @@ export const digitalProductPassport = {
     delete_confirm_message:
       "確定要刪除「{{name}} ({{year}} 年)」的模擬資料嗎？此動作無法復原。",
     delete_failed: "刪除失敗，請稍後再試",
+    simulation_status: "模擬狀態",
     phase1: "Phase 1: 基礎資料",
     esg_download: "ESG 下載",
     esg_extrapolate: "ESG 推估",
@@ -134,6 +135,12 @@ export const digitalProductPassport = {
     baseline_details: "Baseline 生成詳情 (技術顧問專用)",
   },
   simulator: {
+    group_manufacturer: "製造商 (Manufacturer)",
+    group_company_policy: "企業營運與政策方針 (Company Policy & Persona)",
+    group_traceability: "供應鏈追溯與物料庫 (Traceability & Material)",
+    group_circularity: "循環性與效率政策 (Circularity)",
+    group_product_specs: "產品規格與工程資料 (Product Specs & Engineering)",
+    group_dpp_core: "DPP 核心演算與合規 (DPP Core & Compliance)",
     matrix_title: "產品組合與 Gap 設定 (Unique)",
     matrix_desc: "請為不同產品 SKU 設定不同的缺陷情境，體驗判定。",
     add_sku: "新增模擬產品 SKU",

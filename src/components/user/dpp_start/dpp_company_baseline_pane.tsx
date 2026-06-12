@@ -5,6 +5,7 @@ import {
   Zap,
   Building2,
   Lightbulb,
+  Info,
 } from "lucide-react";
 
 interface IDppCompanyBaselinePaneProps {
@@ -14,6 +15,7 @@ interface IDppCompanyBaselinePaneProps {
   progress?: {
     hasFin: boolean;
     hasEsg: boolean;
+    hasEsgExtrapolation?: boolean;
     hasPersonaHtml: boolean;
     hasBom: boolean;
   };
@@ -26,6 +28,7 @@ export function DppCompanyBaselinePane({
   progress = {
     hasFin: false,
     hasEsg: false,
+    hasEsgExtrapolation: false,
     hasPersonaHtml: false,
     hasBom: false,
   },
@@ -36,34 +39,52 @@ export function DppCompanyBaselinePane({
     {
       name:
         t("digital_product_passport.simulator.baseline_manufacturer") ||
-        "製造商 (Manufacturer)",
+        "🏢 製造商 (Manufacturer)",
       completed: !!progress?.hasFin,
     },
     {
-      name:
-        t("digital_product_passport.simulator.baseline_traceability") ||
-        "供應鏈追溯 (Traceability)",
-      completed: !!progress?.hasBom,
-    },
-    {
-      name:
-        t("digital_product_passport.simulator.baseline_circularity") ||
-        "循環性與效率政策 (Circularity)",
-      completed: !!progress?.hasEsg,
+      name: (
+        <span className="flex items-center">
+          {t("digital_product_passport.simulator.baseline_circularity") ||
+            "♻️ 循環性與效率政策 (Circularity)"}
+          {progress?.hasEsgExtrapolation && !progress?.hasEsg && (
+            <div className="group relative ml-2 flex items-center">
+              <span className="flex items-center gap-1 rounded-sm border border-purple-200 bg-purple-100 px-1.5 py-0.5 text-[10px] font-bold text-purple-700">
+                ✨ AI 推估
+                <Info className="h-3 w-3" />
+              </span>
+              <div className="invisible absolute right-0 bottom-full z-50 mb-2 w-64 opacity-0 transition-all group-hover:visible group-hover:opacity-100">
+                <div className="relative rounded-lg bg-slate-800 p-3 text-xs leading-relaxed font-normal whitespace-normal text-slate-100 shadow-xl">
+                  AI
+                  跨年推估原則：系統自動抓取上一年度的永續報告書基準，並結合本年度最新的財務與營收財報數據，透過大語言模型動態推算出本年度的碳排與能源消耗指標。
+                  <div className="absolute top-full right-4 h-2 w-2 -translate-y-1/2 rotate-45 bg-slate-800"></div>
+                </div>
+              </div>
+            </div>
+          )}
+        </span>
+      ),
+      completed: !!progress?.hasEsg || !!progress?.hasEsgExtrapolation,
     },
     {
       name:
         t("digital_product_passport.simulator.baseline_compliance") ||
-        "技術手冊 & 合規稽核政策 (Compliance)",
+        "🎯 企業營運與政策方針 (Company Policy & Persona)",
       completed: !!progress?.hasPersonaHtml,
     },
     {
       name:
-        t("digital_product_passport.simulator.baseline_material") ||
-        "材料組成政策 (Material Composition)",
+        t("digital_product_passport.simulator.baseline_traceability") ||
+        "🔗 供應鏈追溯與物料庫 (Traceability & Material)",
       completed: !!progress?.hasBom,
     },
   ];
+
+  const hasAnyProgress =
+    progress?.hasFin ||
+    progress?.hasEsg ||
+    progress?.hasPersonaHtml ||
+    progress?.hasBom;
 
   return (
     <div className="flex h-full w-full flex-col rounded-2xl border border-gray-200 bg-white shadow-sm lg:w-[450px]">
@@ -121,8 +142,11 @@ export function DppCompanyBaselinePane({
           <Zap className="h-4 w-4" />
           {isGenerating
             ? t("common.processing") || "處理中..."
-            : t("digital_product_passport.simulator.regenerate_baseline") ||
-              "重新生成公司公用資料"}
+            : hasAnyProgress
+              ? t("digital_product_passport.simulator.regenerate_baseline") ||
+                "重新生成公司公用資料"
+              : t("digital_product_passport.start.start_generation") ||
+                "⚡ 開始提取企業 Baseline (Start Generation)"}
         </button>
       </div>
     </div>

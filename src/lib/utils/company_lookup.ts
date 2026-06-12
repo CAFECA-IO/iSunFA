@@ -170,12 +170,7 @@ export async function lookupCompany(query: string): Promise<ICompanyData[]> {
     return abbrResults;
   }
 
-  // Info: (20260320 - Tzuhan) 2. If it's exactly 8 digits, use strict Tax ID lookup
-  if (/^\d{8}$/.test(cleanTrimmed)) {
-    return await lookupByTaxId(cleanTrimmed);
-  }
-
-  // Info: (20260320 - Tzuhan) 3. Local DB search (Fastest & most reliable for TWSE/TPEx)
+  // Info: (20260320 - Tzuhan) 2. Local DB search (Fastest & most reliable for TWSE/TPEx)
   // 如果原始 query 有附帶 "(2066)"，就直接嘗試擷取出代碼作為條件
   const idMatch = trimmed.match(/[（\(](\d+)[）\)]/);
   const possibleId = idMatch ? idMatch[1] : cleanTrimmed;
@@ -194,6 +189,11 @@ export async function lookupCompany(query: string): Promise<ICompanyData[]> {
 
   if (dbResults.length > 0) {
     return dbResults.map((c) => ({ taxId: c.stockId, name: c.name }));
+  }
+
+  // Info: (20260320 - Tzuhan) 3. If it's exactly 8 digits, use strict Tax ID lookup
+  if (/^\d{8}$/.test(cleanTrimmed)) {
+    return await lookupByTaxId(cleanTrimmed);
   }
 
   // Info: (20260320 - Tzuhan) 4. Fallback 1: DuckDuckGo Semantic Search

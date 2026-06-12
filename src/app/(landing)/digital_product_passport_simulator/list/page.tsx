@@ -10,10 +10,8 @@ import {
   AlertCircle,
   Trash2,
   Eye,
-  Wand2,
   MoreVertical,
   Building,
-  Sparkles,
 } from "lucide-react";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -29,6 +27,7 @@ interface IDemoItem {
   progress: {
     hasFin: boolean;
     hasEsg: boolean;
+    hasEsgExtrapolation?: boolean;
     hasPersonaHtml: boolean;
     hasBom?: boolean;
   };
@@ -41,6 +40,9 @@ export default function DppListPage() {
   const [items, setItems] = useState<IDemoItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [activeYearMap, setActiveYearMap] = useState<Record<string, string>>(
+    {},
+  );
 
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
@@ -146,154 +148,227 @@ export default function DppListPage() {
             </p>
           </div>
         ) : (
-          <div className="grid gap-4 overflow-y-auto p-4 md:grid-cols-2 lg:grid-cols-3">
-            {items.map((item) => (
+          <div className="grid items-start gap-6 overflow-y-auto p-6 md:grid-cols-2 xl:grid-cols-3">
+            {Object.values(
+              items.reduce(
+                (acc, item) => {
+                  if (!acc[item.stockId]) {
+                    acc[item.stockId] = {
+                      name: item.name,
+                      stockId: item.stockId,
+                      years: [],
+                    };
+                  }
+                  acc[item.stockId].years.push(item);
+                  return acc;
+                },
+                {} as Record<
+                  string,
+                  { name: string; stockId: string; years: IDemoItem[] }
+                >,
+              ),
+            ).map((group) => (
               <div
-                key={item.id}
-                className="flex flex-col justify-between rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-blue-300 hover:shadow-md"
+                key={group.stockId}
+                className="flex flex-col rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm transition-all hover:border-indigo-200 hover:shadow-md"
               >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <h3 className="line-clamp-1 text-lg font-bold text-gray-900">
-                      {item.name}
-                    </h3>
-                    <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
-                      {item.stockId} | {item.year}
-                    </span>
-                  </div>
-
-                  {/* Progress Badges */}
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    <div
-                      className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium ${item.progress.hasFin ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
-                    >
-                      {item.progress.hasFin ? (
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                      ) : (
-                        <AlertCircle className="h-3.5 w-3.5" />
-                      )}
-                      {t("digital_product_passport.sidebar.mode_accounting")}
+                <div className="mb-4 flex items-center justify-between pb-2">
+                  <div className="flex items-center gap-3.5">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-blue-50 text-indigo-600 shadow-sm">
+                      <Building className="h-5 w-5" />
                     </div>
-                    <div
-                      className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium ${item.progress.hasEsg ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
-                    >
-                      {item.progress.hasEsg ? (
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                      ) : (
-                        <AlertCircle className="h-3.5 w-3.5" />
-                      )}
-                      {t("digital_product_passport.sidebar.mode_carbon")}
-                    </div>
-                    <div
-                      className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium ${item.progress.hasPersonaHtml ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
-                    >
-                      {item.progress.hasPersonaHtml ? (
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                      ) : (
-                        <AlertCircle className="h-3.5 w-3.5" />
-                      )}
-                      {t("digital_product_passport.sidebar.mode_business")}
-                    </div>
-                    <div
-                      className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium ${item.progress.hasBom ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
-                    >
-                      {item.progress.hasBom ? (
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                      ) : (
-                        <AlertCircle className="h-3.5 w-3.5" />
-                      )}
-                      {t("digital_product_passport.sidebar.mode_catalog")
-                        .replace("生成", "")
-                        .replace(" (BOM)", "")}
+                    <div>
+                      <h3 className="line-clamp-1 text-[17px] font-bold text-slate-800">
+                        {group.name}
+                      </h3>
+                      <span className="text-sm font-medium text-slate-500">
+                        {group.stockId}
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="mt-6 flex items-center gap-2 border-t border-gray-100 pt-4">
-                  <button
-                    disabled={
-                      !item.progress.hasFin &&
-                      !item.progress.hasEsg &&
-                      !item.progress.hasPersonaHtml
-                    }
-                    onClick={() =>
-                      router.push(
-                        `/digital_product_passport_simulator/start?stockId=${item.stockId}&year=${item.year}`,
-                      )
-                    }
-                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <Eye className="h-4 w-4" />
-                    {t("digital_product_passport.list.enter_data_center") ||
-                      "進入資料中心"}
-                  </button>
+                <div className="flex flex-col">
+                  {(() => {
+                    const sortedYears = [...group.years].sort(
+                      (a, b) => Number(b.year) - Number(a.year),
+                    );
+                    const defaultYearItem =
+                      sortedYears.find(
+                        (y) =>
+                          y.progress.hasFin ||
+                          y.progress.hasEsg ||
+                          y.progress.hasPersonaHtml ||
+                          y.progress.hasBom,
+                      ) || sortedYears[0];
+                    const activeYearId =
+                      activeYearMap[group.stockId] || defaultYearItem.id;
+                    const activeItem =
+                      sortedYears.find((y) => y.id === activeYearId) ||
+                      sortedYears[0];
 
-                  <div className="relative">
-                    <button
-                      onClick={() =>
-                        setOpenDropdownId(
-                          openDropdownId === item.id ? null : item.id,
-                        )
-                      }
-                      className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-50"
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </button>
-                    {openDropdownId === item.id && (
+                    return (
                       <>
-                        <div
-                          className="fixed inset-0 z-10"
-                          onClick={() => setOpenDropdownId(null)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Escape" || e.key === "Enter") {
-                              setOpenDropdownId(null);
+                        <div className="custom-scrollbar mb-4 flex flex-nowrap gap-2 overflow-x-auto scroll-smooth border-b border-slate-100 pb-3">
+                          {sortedYears.map((item) => {
+                            const isActive = item.id === activeItem.id;
+                            return (
+                              <button
+                                key={item.id}
+                                onClick={() =>
+                                  setActiveYearMap((prev) => ({
+                                    ...prev,
+                                    [group.stockId]: item.id,
+                                  }))
+                                }
+                                className={`shrink-0 rounded-lg px-3 py-1.5 text-sm font-bold whitespace-nowrap transition-colors ${
+                                  isActive
+                                    ? "border border-indigo-100/50 bg-indigo-50 text-indigo-700 shadow-sm"
+                                    : "border border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                                }`}
+                              >
+                                {item.year} 年
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        <div className="flex flex-col gap-4 rounded-xl border border-slate-100/80 bg-slate-50/50 p-4 transition-colors hover:bg-slate-50/80">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-bold text-slate-700">
+                              {t(
+                                "digital_product_passport.list.simulation_status",
+                              ) || "模擬狀態"}
+                            </span>
+
+                            <div className="relative">
+                              <button
+                                onClick={() =>
+                                  setOpenDropdownId(
+                                    openDropdownId === activeItem.id
+                                      ? null
+                                      : activeItem.id,
+                                  )
+                                }
+                                className="flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-slate-400 transition-colors hover:border-slate-200 hover:bg-white hover:text-slate-600 hover:shadow-sm"
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </button>
+                              {openDropdownId === activeItem.id && (
+                                <>
+                                  <div
+                                    className="fixed inset-0 z-10"
+                                    onClick={() => setOpenDropdownId(null)}
+                                    onKeyDown={(e) => {
+                                      if (
+                                        e.key === "Escape" ||
+                                        e.key === "Enter"
+                                      ) {
+                                        setOpenDropdownId(null);
+                                      }
+                                    }}
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label={t("common.close") || "Close"}
+                                  />
+                                  <div className="absolute right-0 bottom-full z-20 mb-2 w-48 rounded-xl border border-slate-200/80 bg-white py-1.5 shadow-lg backdrop-blur-sm">
+                                    <button
+                                      onClick={() => {
+                                        setOpenDropdownId(null);
+                                        handleDelete(
+                                          activeItem.stockId,
+                                          activeItem.year,
+                                          activeItem.name,
+                                        );
+                                      }}
+                                      className="flex w-full items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                      {t("common.delete")}
+                                    </button>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap gap-1.5">
+                            <div
+                              className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-bold tracking-wide ${activeItem.progress.hasFin ? "border border-emerald-100/50 bg-emerald-50 text-emerald-700" : "border border-amber-100/50 bg-amber-50 text-amber-700"}`}
+                            >
+                              {activeItem.progress.hasFin ? (
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                              ) : (
+                                <AlertCircle className="h-3.5 w-3.5" />
+                              )}
+                              {t(
+                                "digital_product_passport.sidebar.mode_accounting",
+                              )}
+                            </div>
+                            <div
+                              className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-bold tracking-wide ${activeItem.progress.hasEsg || activeItem.progress.hasEsgExtrapolation ? "border border-emerald-100/50 bg-emerald-50 text-emerald-700" : "border border-amber-100/50 bg-amber-50 text-amber-700"}`}
+                            >
+                              {activeItem.progress.hasEsg ||
+                              activeItem.progress.hasEsgExtrapolation ? (
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                              ) : (
+                                <AlertCircle className="h-3.5 w-3.5" />
+                              )}
+                              {t(
+                                "digital_product_passport.sidebar.mode_carbon",
+                              )}
+                              {activeItem.progress.hasEsgExtrapolation &&
+                                !activeItem.progress.hasEsg && (
+                                  <span className="ml-1 rounded-sm border border-purple-200 bg-purple-100 px-1 py-0.5 text-[9px] font-bold text-purple-700">
+                                    ✨ AI 推估
+                                  </span>
+                                )}
+                            </div>
+                            <div
+                              className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-bold tracking-wide ${activeItem.progress.hasPersonaHtml ? "border border-emerald-100/50 bg-emerald-50 text-emerald-700" : "border border-amber-100/50 bg-amber-50 text-amber-700"}`}
+                            >
+                              {activeItem.progress.hasPersonaHtml ? (
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                              ) : (
+                                <AlertCircle className="h-3.5 w-3.5" />
+                              )}
+                              {t(
+                                "digital_product_passport.sidebar.mode_business",
+                              )}
+                            </div>
+                            <div
+                              className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-bold tracking-wide ${activeItem.progress.hasBom ? "border border-emerald-100/50 bg-emerald-50 text-emerald-700" : "border border-amber-100/50 bg-amber-50 text-amber-700"}`}
+                            >
+                              {activeItem.progress.hasBom ? (
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                              ) : (
+                                <AlertCircle className="h-3.5 w-3.5" />
+                              )}
+                              {t(
+                                "digital_product_passport.sidebar.mode_catalog",
+                              )
+                                .replace("生成", "")
+                                .replace(" (BOM)", "")}
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() =>
+                              router.push(
+                                `/digital_product_passport_simulator/start?stockId=${activeItem.stockId}&year=${activeItem.year}`,
+                              )
                             }
-                          }}
-                          role="button"
-                          tabIndex={0}
-                          aria-label={t("common.close") || "Close"}
-                        />
-                        <div className="absolute right-0 bottom-full z-20 mb-2 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
-                          <button
-                            onClick={() => {
-                              setOpenDropdownId(null);
-                              router.push(
-                                `/digital_product_passport_simulator/start?stockId=${item.stockId}&year=${item.year}&action=extrapolate`,
-                              );
-                            }}
-                            className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                            className="mt-1 flex w-full items-center justify-center gap-2 rounded-lg border border-indigo-600 bg-indigo-50/50 px-3 py-2.5 text-sm font-bold text-indigo-700 shadow-sm transition-all hover:bg-indigo-600 hover:text-white"
                           >
-                            <Wand2 className="h-4 w-4 text-indigo-500" />
-                            {t("digital_product_passport.list.esg_extrapolate")}
-                          </button>
-                          <button
-                            onClick={() => {
-                              setOpenDropdownId(null);
-                              router.push(
-                                `/digital_product_passport_simulator/start?stockId=${item.stockId}&year=${item.year}&action=regenerate`,
-                              );
-                            }}
-                            className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                          >
-                            <Sparkles className="h-4 w-4 text-purple-500" />
-                            {t("common.regenerate")}
-                          </button>
-                          <div className="my-1 border-t border-gray-100" />
-                          <button
-                            onClick={() => {
-                              setOpenDropdownId(null);
-                              handleDelete(item.stockId, item.year, item.name);
-                            }}
-                            className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            {t("common.delete")}
+                            <Eye className="h-4 w-4" />
+                            {t(
+                              "digital_product_passport.list.enter_data_center",
+                            ) || "進入資料中心"}
                           </button>
                         </div>
                       </>
-                    )}
-                  </div>
+                    );
+                  })()}
                 </div>
               </div>
             ))}
