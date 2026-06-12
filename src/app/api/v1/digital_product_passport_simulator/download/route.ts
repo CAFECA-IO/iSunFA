@@ -4,6 +4,7 @@ import path from "path";
 import JSZip from "jszip";
 import { convertJsonToCsv } from "@/scripts/e2e_seeder/dpp/convert_json_to_csv";
 import { renderDppPdf } from "@/scripts/e2e_seeder/dpp/render_dpp_pdf";
+import { renderSpecsPdf } from "@/scripts/e2e_seeder/dpp/render_specs_pdf";
 
 export async function POST(request: Request) {
   let tmpDir: string | null = null;
@@ -88,6 +89,21 @@ export async function POST(request: Request) {
       JSON.stringify(groundTruthData, null, 2),
     );
 
+    const originalSpecsPath = path.join(
+      baseOutputsDir,
+      skuId,
+      "mock_sources",
+      `${skuId}_product_specs.json`,
+    );
+    const tmpSpecsPath = path.join(
+      tmpProductMockDir,
+      `${skuId}_product_specs.json`,
+    );
+    if (fs.existsSync(originalSpecsPath)) {
+      const specsData = JSON.parse(fs.readFileSync(originalSpecsPath, "utf-8"));
+      fs.writeFileSync(tmpSpecsPath, JSON.stringify(specsData, null, 2));
+    }
+
     // Info: (20260612 - Tzuhan) Copy static assets needed for PDF
     const blueprintPath = path.join(baseOutputsDir, "fastener_blueprint.png");
     if (fs.existsSync(blueprintPath)) {
@@ -103,6 +119,10 @@ export async function POST(request: Request) {
       targetProductId: skuId,
     });
     await renderDppPdf(stockId, year, {
+      baseDirOverride: tmpDir,
+      targetProductId: skuId,
+    });
+    await renderSpecsPdf(stockId, year, {
       baseDirOverride: tmpDir,
       targetProductId: skuId,
     });
@@ -127,6 +147,26 @@ export async function POST(request: Request) {
     );
     if (fs.existsSync(generatedPdfPath)) {
       zip.file("合規宣告書_與_LCA報告.pdf", fs.readFileSync(generatedPdfPath));
+    }
+
+    // Info: (20260612 - Tzuhan) 3. Add generated Specs PDF
+    const generatedSpecsPdfPath = path.join(
+      tmpDir,
+      skuId,
+      "system_ingestion",
+      `${skuId}_product_specs.pdf`,
+    );
+    if (fs.existsSync(generatedSpecsPdfPath)) {
+      zip.file(
+        "產品規格與技術手冊.pdf",
+        fs.readFileSync(generatedSpecsPdfPath),
+      );
+    }
+
+    // Info: (20260612 - Tzuhan) 4. Add blueprint PNG
+    const blueprintPathTmp = path.join(tmpDir, "fastener_blueprint.png");
+    if (fs.existsSync(blueprintPathTmp)) {
+      zip.file("產品設計藍圖.png", fs.readFileSync(blueprintPathTmp));
     }
 
     const zipBuffer = await zip.generateAsync({

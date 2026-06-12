@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  TestTube2,
   Plus,
   Loader2,
   CheckCircle2,
@@ -17,7 +16,6 @@ import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { useTranslation } from "@/i18n/i18n_context";
-import AdminPageHeader from "@/components/admin/common/admin_page_header";
 
 interface IDemoItem {
   id: string;
@@ -108,19 +106,22 @@ export default function DppListPage() {
   }, []);
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-6xl flex-col gap-6 px-4 pt-6 pb-6 font-sans">
-      <AdminPageHeader
-        icon={TestTube2}
-        iconColorClass="text-blue-600"
-        title={
-          t("digital_product_passport.list.simulator_title") ||
-          "DPP 模擬資料產生器"
-        }
-        subtitle={
-          t("digital_product_passport.list.simulator_desc") ||
-          "透過公開上市櫃公司財報與永續報告書，自動產生具真實感的數位產品護照 (DPP) 模擬數據源，供展示與測試用途。"
-        }
-        rightNode={
+    <main
+      className="mx-auto flex w-full max-w-7xl flex-col space-y-8 px-6 py-12 font-sans text-gray-900 select-none"
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      <div className="relative z-10 flex items-start justify-between">
+        <div className="flex-1 space-y-2">
+          <h1 className="text-2xl font-bold text-gray-900">
+            {t("digital_product_passport.list.simulator_title") ||
+              "DPP 模擬資料產生器"}
+          </h1>
+          <p className="mt-2 text-sm text-gray-500">
+            {t("digital_product_passport.list.simulator_desc") ||
+              "透過公開上市櫃公司財報與永續報告書，自動產生具真實感的數位產品護照 (DPP) 模擬數據源，供展示與測試用途。"}
+          </p>
+        </div>
+        <div>
           <button
             onClick={() =>
               router.push("/digital_product_passport_simulator/start")
@@ -131,8 +132,8 @@ export default function DppListPage() {
             {t("digital_product_passport.list.create_simulation") ||
               "新增模擬企業"}
           </button>
-        }
-      />
+        </div>
+      </div>
 
       <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         {loading ? (
@@ -387,6 +388,6 @@ export default function DppListPage() {
         cancelText={modalConfig.cancelText || t("common.cancel")}
         onConfirm={modalConfig.onConfirm}
       />
-    </div>
+    </main>
   );
 }
