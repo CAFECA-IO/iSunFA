@@ -165,6 +165,7 @@ export function AiReportModal({
                       </button>
                     </div>
 
+                    {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
                     <div
                       onDragOver={handleDragOver}
                       onDragLeave={handleDragLeave}
