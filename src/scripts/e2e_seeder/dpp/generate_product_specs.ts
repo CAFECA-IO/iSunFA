@@ -160,10 +160,21 @@ export async function generateProductSpecs(
   targetProductId?: string,
 ) {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
-  const mockSourcesDir = path.join(dataDir, "outputs", "mock_sources");
+  const baseDir = path.join(dataDir, "outputs");
+  const mockSourcesDir = path.join(baseDir, "mock_sources");
 
   if (!fs.existsSync(mockSourcesDir)) {
     fs.mkdirSync(mockSourcesDir, { recursive: true });
+  }
+
+  const personaFile = path.join(baseDir, `${stockId}_company_persona.json`);
+  let persona = {
+    industryDynamics: "金屬扣件與五金零件製造",
+    coreCompetence: "",
+  };
+  if (fs.existsSync(personaFile)) {
+    const personaRaw = fs.readFileSync(personaFile, "utf-8");
+    persona = JSON.parse(personaRaw);
   }
 
   const bomFile = path.join(mockSourcesDir, "boms_and_precursors.json");
@@ -202,16 +213,18 @@ export async function generateProductSpecs(
     },
   });
 
-  const prompt = `你是一個專業的金屬扣件/五金零件的產品工程師與法規專家。
+  const prompt = `你是一個專業的產品工程師與法規專家。
+我們公司的產業與背景如下：
+- 產業描述：${persona.industryDynamics}
+
 我們目前有以下終端產品 (SKU)：
 ${products.map((p) => `- [${p.productId}] ${p.productName}`).join("\n")}
 
-為了符合歐盟 DPP (數位產品護照) 對於「Durability (耐用性)」、「Repair & Teardown (維修與拆解)」以及「Disposal (報廢處置)」的要求，請為每項產品生成對應的說明。
-特別注意：這是金屬扣件 (如螺絲、螺帽)，沒有電路板 (No mainboard layout)。
-- isRepairable 應為 false。
-- teardownEffort 應標示 Low/Medium/High。
+為了符合歐盟 DPP (數位產品護照) 對於「Durability (耐用性)」、「Repair & Teardown (維修與拆解)」以及「Disposal (報廢處置)」的要求，請根據我們的產業背景與產品特性，為每項產品生成對應的說明。
+- 判斷該產品是否可修復 (isRepairable)；對於高精密晶圓或單一機械扣件，一般為 false。
+- 拆解難易度 (teardownEffort) 應標示 Low/Medium/High。
 - 請條列所需的 toolList，如果是 true (requiresSpecialTools)。
-- 報廢處置請明確給出 recyclabilityRate_percent (例如 100)，以及 disposalMethod (例如 Metal Scrap Smelting)。`;
+- 報廢處置請明確給出合理的 recyclabilityRate_percent (如果是矽晶圓/半導體材料，請評估其主要材料矽與包裝材料的可回收百分比；如果是金屬螺絲，一般為 100)，以及對應的 disposalMethod (例如 "Silicon Wafer Recycling / Reclaiming" 或 "Metal Scrap Smelting")。`;
 
   const result = await generateContentWithRetry(model, prompt);
   const generatedData = JSON.parse(result.response.text());

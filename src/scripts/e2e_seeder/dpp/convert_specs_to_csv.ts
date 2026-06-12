@@ -1,6 +1,55 @@
 import * as fs from "fs";
 import * as path from "path";
 
+interface IDppGroundTruth {
+  general?: {
+    gtin?: string;
+    cnCode?: string;
+    manufacturedDate?: string;
+    facility?: string;
+    facilityUNLOCODE?: string;
+    weightKg?: number;
+  };
+  carbonFootprint?: {
+    total_tCO2e?: number;
+    methodology?: string;
+    breakdown?: {
+      directEmissionsScope1?: number;
+      indirectEmissionsScope2?: number;
+      precursorsEmissions?: number;
+    };
+  };
+  circularity?: {
+    recycledContentShare?: Array<{
+      material: string;
+      preConsumerShare: number;
+      postConsumerShare: number;
+      primaryMaterial: number;
+    }>;
+  };
+  materialComposition?: Array<{
+    materialName: string;
+    elements?: Array<{
+      element: string;
+      percentage: number;
+    }>;
+  }>;
+  importer?: {
+    companyName: string;
+    address?: string;
+    eori: string;
+  };
+  compliance?: {
+    iatf16949Compliant?: boolean;
+    iatfCertificateId?: string;
+  };
+  durabilityAndRepair?: {
+    physicalLifespanYears?: number;
+    repairability?: string;
+    disposal?: string;
+  };
+}
+
 export async function convertSpecsToCsv(
   stockId: string,
   year: string = "2024",
@@ -46,22 +95,155 @@ export async function convertSpecsToCsv(
 
     const specsData = JSON.parse(fs.readFileSync(specsPath, "utf-8"));
 
+    // Info: (20260612 - Tzuhan) Read ground truth if it exists to enrich CSV
+    const groundTruthPath = path.join(
+      productMockDir,
+      `${productId}_dpp_ground_truth.json`,
+    );
+    let groundTruthData: IDppGroundTruth | null = null;
+    if (fs.existsSync(groundTruthPath)) {
+      try {
+        groundTruthData = JSON.parse(
+          fs.readFileSync(groundTruthPath, "utf-8"),
+        ) as IDppGroundTruth;
+      } catch (err) {
+        console.error(
+          `Failed to parse ground truth at ${groundTruthPath}`,
+          err,
+        );
+      }
+    }
+
     const csvLines = [
       "Category,Key,Value",
       `General,Product ID,${specsData.productId}`,
       `General,Product Name,${specsData.productName}`,
-      `Durability,Physical Lifespan (Years),${specsData.durability?.physicalLifespanYears || "N/A"}`,
+    ];
+
+    if (groundTruthData) {
+      // General
+      if (groundTruthData.general?.gtin) {
+        csvLines.push(`General,GTIN,${groundTruthData.general.gtin}`);
+      }
+      if (groundTruthData.general?.cnCode) {
+        csvLines.push(`General,CN Code,${groundTruthData.general.cnCode}`);
+      }
+      if (groundTruthData.general?.manufacturedDate) {
+        csvLines.push(
+          `General,Manufactured Date,${groundTruthData.general.manufacturedDate}`,
+        );
+      }
+      if (groundTruthData.general?.facility) {
+        csvLines.push(
+          `General,Manufacturing Facility,${groundTruthData.general.facility}`,
+        );
+      }
+      if (groundTruthData.general?.facilityUNLOCODE) {
+        csvLines.push(
+          `General,Facility UN/LOCODE,${groundTruthData.general.facilityUNLOCODE}`,
+        );
+      }
+      if (groundTruthData.general?.weightKg) {
+        csvLines.push(
+          `General,Product Weight (Kg),${groundTruthData.general.weightKg}`,
+        );
+      }
+
+      // Carbon Footprint
+      if (groundTruthData.carbonFootprint) {
+        const cf = groundTruthData.carbonFootprint;
+        csvLines.push(
+          `Environmental,Total Carbon Footprint (tCO2e),${cf.total_tCO2e || "N/A"}`,
+        );
+        csvLines.push(
+          `Environmental,CF Methodology,${cf.methodology || "N/A"}`,
+        );
+        if (cf.breakdown) {
+          csvLines.push(
+            `Environmental,Scope 1 Direct Emissions (tCO2e),${cf.breakdown.directEmissionsScope1 || "0"}`,
+          );
+          csvLines.push(
+            `Environmental,Scope 2 Indirect Emissions (tCO2e),${cf.breakdown.indirectEmissionsScope2 || "0"}`,
+          );
+          csvLines.push(
+            `Environmental,Precursor Embedded Emissions (tCO2e),${cf.breakdown.precursorsEmissions || "0"}`,
+          );
+        }
+      }
+
+      // Circularity
+      if (groundTruthData.circularity?.recycledContentShare) {
+        const shares = groundTruthData.circularity.recycledContentShare;
+        shares.forEach((share) => {
+          csvLines.push(`Circularity,Material,${share.material}`);
+          csvLines.push(
+            `Circularity,Pre-Consumer Recycled Share (%),${share.preConsumerShare}`,
+          );
+          csvLines.push(
+            `Circularity,Post-Consumer Recycled Share (%),${share.postConsumerShare}`,
+          );
+          csvLines.push(
+            `Circularity,Primary Material Share (%),${share.primaryMaterial}`,
+          );
+        });
+      }
+
+      // Material Composition
+      if (groundTruthData.materialComposition) {
+        const comp = groundTruthData.materialComposition;
+        comp.forEach((mat) => {
+          csvLines.push(`Material,Material Name,${mat.materialName}`);
+          if (mat.elements) {
+            mat.elements.forEach((el) => {
+              csvLines.push(
+                `Material,Element ${el.element} (%),${el.percentage}`,
+              );
+            });
+          }
+        });
+      }
+
+      // Importer Details
+      if (groundTruthData.importer) {
+        const imp = groundTruthData.importer;
+        csvLines.push(`Logistics,Importer Company Name,${imp.companyName}`);
+        csvLines.push(
+          `Logistics,Importer Address,"${(imp.address || "").replace(/"/g, '""')}"`,
+        );
+        csvLines.push(`Logistics,Importer EORI,${imp.eori}`);
+      }
+
+      // Compliance additions
+      if (groundTruthData.compliance) {
+        const comp = groundTruthData.compliance;
+        csvLines.push(
+          `Compliance,IATF 16949 Compliant,${comp.iatf16949Compliant ? "Yes" : "No"}`,
+        );
+        if (comp.iatfCertificateId) {
+          csvLines.push(
+            `Compliance,IATF Certificate ID,${comp.iatfCertificateId}`,
+          );
+        }
+      }
+
+      // Social Impact
+      csvLines.push(`Social,Ethical Sourcing,Yes`);
+      csvLines.push(`Social,Labor Standard Compliant,Yes`);
+    }
+
+    csvLines.push(
+      `Durability,Physical Lifespan (Years),${groundTruthData?.durabilityAndRepair?.physicalLifespanYears || specsData.durability?.physicalLifespanYears || "N/A"}`,
       `Durability,Max Operating Temp (C),${specsData.durability?.maxOperatingTemperature_C || "N/A"}`,
       `Durability,Operating Conditions,"${(specsData.durability?.operatingConditions || "N/A").replace(/"/g, '""')}"`,
       `Repair & Teardown,Is Repairable,${specsData.repairAndTeardown?.isRepairable ? "Yes" : "No"}`,
       `Repair & Teardown,Requires Special Tools,${specsData.repairAndTeardown?.requiresSpecialTools ? "Yes" : "No"}`,
       `Repair & Teardown,Tool List,"${(specsData.repairAndTeardown?.toolList || []).join(", ").replace(/"/g, '""')}"`,
       `Repair & Teardown,Teardown Effort,${specsData.repairAndTeardown?.teardownEffort || "N/A"}`,
-      `Repair & Teardown,Guidelines,"${(specsData.repairAndTeardown?.guidelines || "N/A").replace(/"/g, '""')}"`,
+      `Repair & Teardown,Guidelines,"${(groundTruthData?.durabilityAndRepair?.repairability || specsData.repairAndTeardown?.guidelines || "N/A").replace(/"/g, '""')}"`,
       `Disposal,Recyclability Rate (%),${specsData.disposal?.recyclabilityRate_percent || "0"}`,
       `Disposal,Disposal Method,"${(specsData.disposal?.disposalMethod || "N/A").replace(/"/g, '""')}"`,
-      `Disposal,Instructions,"${(specsData.disposal?.instructions || "N/A").replace(/"/g, '""')}"`,
-    ];
+      `Disposal,Instructions,"${(groundTruthData?.durabilityAndRepair?.disposal || specsData.disposal?.instructions || "N/A").replace(/"/g, '""')}"`,
+    );
 
     fs.writeFileSync(outFile, "\uFEFF" + csvLines.join("\n")); // Add BOM for excel support
     console.log(`✅ [${productId}] 生成 CSV 完成: ${outFile}`);

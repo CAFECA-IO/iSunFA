@@ -1,6 +1,9 @@
 import { DppRepository } from "@/repositories/dpp.repo";
 import { FileRepository } from "@/repositories/file.repo";
+import { StorageService } from "@/services/storage.service";
 import { Prisma } from "@/generated";
+import * as fs from "fs";
+import * as path from "path";
 import {
   GoogleGenerativeAI,
   SchemaType,
@@ -73,7 +76,7 @@ export class DppService {
     }
 
     // Info: (20260514 - Luphia) Create the Batch
-    const publicUrl = `https://dpp.isunfa.com/dpp/sku/${skuId}/batch/${batchNumber}`;
+    const publicUrl = `/digital_product_passport/sku/${skuId}/batch/${batchNumber}`;
     const dynamicOverrides: {
       createdAt: string;
     } = {
@@ -112,52 +115,52 @@ export class DppService {
       );
     }
 
+    const stockId = accountBook.enterpriseId;
+    let personaContext = "";
+    if (stockId) {
+      try {
+        const cwd = process.cwd();
+        let personaPath = path.join(
+          cwd,
+          "data",
+          stockId,
+          "2024",
+          "outputs",
+          `${stockId}_company_persona.json`,
+        );
+        if (!fs.existsSync(personaPath)) {
+          personaPath = path.join(
+            cwd,
+            "data",
+            stockId,
+            "2025",
+            "outputs",
+            `${stockId}_company_persona.json`,
+          );
+        }
+        if (fs.existsSync(personaPath)) {
+          const personaRaw = fs.readFileSync(personaPath, "utf-8");
+          const persona = JSON.parse(personaRaw);
+          personaContext = `\n\nCompany Background Profile:
+- Company Name (Chinese): ${accountBook.name || ""}
+- Industry Dynamics & Supply Chain Profile: ${persona.industryDynamics || ""}
+- Manufacturing Process Steps: ${JSON.stringify(persona.manufacturingProcess || [])}`;
+        }
+      } catch (err) {
+        console.warn(
+          `[DppService] Failed to load company persona for stockId ${stockId}:`,
+          err,
+        );
+      }
+    }
+
     /**
      * Info: (20260611 - Tzuhan) Read file content to dynamically generate DPP modules
      */
 
-    let fileName = "Unknown Document";
-    let fileContent = "";
-    let isBase64 = false;
-    let mimeType = "text/plain";
-
-    if (fileIds.length > 0) {
-      const fileRecord = await this.fileRepo.getFileById(fileIds[0]);
-      if (fileRecord) {
-        fileName = fileRecord.fileName || fileRecord.id;
-        if (fileName.toLowerCase().endsWith(".pdf")) {
-          mimeType = "application/pdf";
-          isBase64 = true;
-        } else if (fileName.toLowerCase().endsWith(".csv")) {
-          mimeType = "text/csv";
-        } else if (fileName.toLowerCase().endsWith(".json")) {
-          mimeType = "application/json";
-        }
-
-        try {
-          const STORAGE_DOMAIN =
-            process.env.STORAGE_DOMAIN || "http://127.0.0.1:3000";
-          const res = await fetch(
-            `${STORAGE_DOMAIN}/api/v1/file/${fileRecord.id}`,
-          );
-          if (res.ok) {
-            if (isBase64) {
-              const buffer = await res.arrayBuffer();
-              fileContent = Buffer.from(buffer).toString("base64");
-            } else {
-              fileContent = await res.text();
-            }
-          }
-        } catch (err) {
-          console.error("Failed to read file from storage", err);
-        }
-      } else {
-        fileName = fileIds[0].substring(0, 8);
-      }
-    }
-
+    let fileName = "Multiple Documents";
     let parsedGtin = `GTIN-${Date.now()}`;
-    let parsedName = `Product SKU based on ${fileName}`;
+    let parsedName = "Product SKU";
     let parsedModulesData: Record<
       string,
       { extracted: boolean; data?: Record<string, unknown> }
@@ -181,30 +184,11 @@ export class DppService {
         },
       ];
 
-    if (
-      fileContent &&
-      !fileName.toLowerCase().endsWith(".docx") &&
-      !fileName.toLowerCase().endsWith(".pages")
-    ) {
-      try {
-        const genAI = new GoogleGenerativeAI(
-          process.env.GEMINI_API_KEY as string,
-        );
-        const dppExtractionSchema = this.getDppExtractionSchema();
-
-        const model = genAI.getGenerativeModel({
-          model: "gemini-2.5-pro",
-          generationConfig: {
-            responseMimeType: "application/json",
-            responseSchema: dppExtractionSchema,
-            temperature: 0.1,
-          },
-        });
-
-        const prompt = `You are a Digital Product Passport (DPP) compliance auditor. Analyze the provided document for the product.
+    if (fileIds.length > 0) {
+      const prompt = `You are a Digital Product Passport (DPP) compliance auditor. Analyze the provided documents for the product.
 For each module in modulesData:
-1. If the document contains information for that module, set "extracted" to true and populate the "data" object with the extracted fields.
-2. If the document does not contain information for that module, set "extracted" to false and omit or leave "data" empty.
+1. If any of the documents contain information for that module, set "extracted" to true and populate the "data" object with the extracted fields. Combine insights from multiple documents if necessary.
+2. If none of the documents contain information for that module, set "extracted" to false and omit or leave "data" empty.
 3. For any module that is not covered or has missing critical information, list it in "missingGaps" with a description of the missing info in "issue", and its "impact" ('High', 'Medium', or 'Critical').
 
 Make sure to extract:
@@ -217,37 +201,107 @@ Make sure to extract:
 - Importer details for "7_logistics".
 - Critical raw materials list for "8_critical_raw_materials".
 - Material chemical composition breakdown for "9_material_composition".
+${personaContext}`;
 
-Document File name: ${fileName}`;
+      const parts: Part[] = [{ text: prompt }];
+      let hasContent = false;
+      let lastFileName = "Unknown Document";
 
-        const parts: Part[] = [{ text: prompt }];
-        if (isBase64) {
-          parts.push({
-            inlineData: {
-              data: fileContent,
-              mimeType,
+      for (const fileId of fileIds) {
+        try {
+          const details = await this.resolveFileDetails(fileId);
+          if (details.fileContent) {
+            hasContent = true;
+            lastFileName = details.fileName;
+            if (details.isBase64) {
+              parts.push({
+                inlineData: {
+                  data: details.fileContent,
+                  mimeType: details.mimeType,
+                },
+              });
+              parts.push({
+                text: `\n\n--- Document File name: ${details.fileName} ---\n`,
+              });
+            } else {
+              parts.push({
+                text: `\n\n--- Document File name: ${details.fileName} ---\n${details.fileContent}`,
+              });
+            }
+          }
+        } catch (err) {
+          console.error(
+            `Failed to resolve file details for ${fileId} in createSku`,
+            err,
+          );
+        }
+      }
+
+      if (hasContent) {
+        fileName = lastFileName;
+        parsedName = `Product SKU based on ${fileName}`;
+        try {
+          const genAI = new GoogleGenerativeAI(
+            process.env.GEMINI_API_KEY as string,
+          );
+          const dppExtractionSchema = this.getDppExtractionSchema();
+
+          const model = genAI.getGenerativeModel({
+            model: "gemini-2.5-pro",
+            generationConfig: {
+              responseMimeType: "application/json",
+              responseSchema: dppExtractionSchema,
+              temperature: 0.1,
+              maxOutputTokens: 8192,
             },
           });
-        } else {
-          parts.push({ text: `\n\n--- Document Content ---\n${fileContent}` });
+
+          const result = await model.generateContent(parts);
+          let responseText = result.response.text();
+          responseText = responseText
+            .replace(/^```(?:json)?\s*/i, "")
+            .replace(/\s*```$/i, "")
+            .trim();
+
+          let parsed;
+          try {
+            parsed = JSON.parse(responseText);
+          } catch (jsonErr) {
+            console.error(
+              "Failed to parse JSON directly. Truncated output? Attempting to fix.",
+              jsonErr,
+            );
+            // Basic attempt to close truncated JSON object if missing }
+            if (!responseText.endsWith("}")) {
+              responseText += "}";
+            }
+            try {
+              parsed = JSON.parse(responseText);
+            } catch {
+              // Add closing quotes and braces
+              responseText = responseText.replace(/[^}"]*$/, "") + '"}';
+              try {
+                parsed = JSON.parse(responseText);
+              } catch {
+                throw jsonErr;
+              }
+            }
+          }
+
+          if (parsed.gtin) parsedGtin = parsed.gtin;
+          if (parsed.name) parsedName = parsed.name;
+          if (parsed.modulesData) parsedModulesData = parsed.modulesData;
+          if (parsed.missingGaps) parsedMissingGaps = parsed.missingGaps;
+        } catch (err) {
+          console.error("Gemini AI extraction failed:", err);
+          parsedMissingGaps = [
+            {
+              module: "General",
+              issue: "AI parsing failed or document is too large.",
+              impact: "Critical",
+            },
+          ];
         }
-
-        const result = await model.generateContent(parts);
-        const parsed = JSON.parse(result.response.text());
-
-        if (parsed.gtin) parsedGtin = parsed.gtin;
-        if (parsed.name) parsedName = parsed.name;
-        if (parsed.modulesData) parsedModulesData = parsed.modulesData;
-        if (parsed.missingGaps) parsedMissingGaps = parsed.missingGaps;
-      } catch (err) {
-        console.error("Gemini AI extraction failed:", err);
-        parsedMissingGaps = [
-          {
-            module: "General",
-            issue: "AI parsing failed or document is too large.",
-            impact: "Critical",
-          },
-        ];
       }
     }
 
@@ -257,14 +311,33 @@ Document File name: ${fileName}`;
         ? DPP_SKU_STATUS.READY
         : DPP_SKU_STATUS.INCOMPLETE;
 
-    const sku = await this.dppRepo.createSku({
-      accountBookId,
-      gtin: parsedGtin,
-      name: parsedName,
-      status: finalStatus,
-      modulesData: parsedModulesData as Prisma.InputJsonValue,
-      missingGaps: parsedMissingGaps as Prisma.InputJsonValue,
-    });
+    const existingSku = await this.dppRepo.getSkuByGtin(parsedGtin);
+    let sku;
+
+    if (existingSku) {
+      if (existingSku.accountBookId !== accountBookId) {
+        throw new ApiError(
+          "ISDPP011",
+          `SKU with GTIN ${parsedGtin} already exists in another account book.`,
+          ApiCode.CONFLICT,
+        );
+      }
+      sku = await this.dppRepo.updateSku(existingSku.id, {
+        name: parsedName,
+        status: finalStatus,
+        modulesData: parsedModulesData as Prisma.InputJsonValue,
+        missingGaps: parsedMissingGaps as Prisma.InputJsonValue,
+      });
+    } else {
+      sku = await this.dppRepo.createSku({
+        accountBookId,
+        gtin: parsedGtin,
+        name: parsedName,
+        status: finalStatus,
+        modulesData: parsedModulesData as Prisma.InputJsonValue,
+        missingGaps: parsedMissingGaps as Prisma.InputJsonValue,
+      });
+    }
 
     return sku;
   }
@@ -323,46 +396,26 @@ Document File name: ${fileName}`;
       throw new ApiError("ISDPP005", "Access denied", ApiCode.FORBIDDEN);
     }
 
-    const fileRecord = await this.fileRepo.getFileById(fileId);
-    if (!fileRecord) {
-      throw new ApiError(
-        "ISDPP008",
-        "Supplement file not found",
-        ApiCode.NOT_FOUND,
-      );
-    }
-
-    const fileName = fileRecord.fileName || fileRecord.id;
+    let fileName = "Unknown Document";
     let fileContent = "";
     let isBase64 = false;
     let mimeType = "text/plain";
 
-    if (fileName.toLowerCase().endsWith(".pdf")) {
-      mimeType = "application/pdf";
-      isBase64 = true;
-    } else if (fileName.toLowerCase().endsWith(".csv")) {
-      mimeType = "text/csv";
-    } else if (fileName.toLowerCase().endsWith(".json")) {
-      mimeType = "application/json";
-    }
-
     try {
-      const STORAGE_DOMAIN =
-        process.env.STORAGE_DOMAIN || "http://127.0.0.1:3000";
-      const res = await fetch(`${STORAGE_DOMAIN}/api/v1/file/${fileRecord.id}`);
-      if (res.ok) {
-        if (isBase64) {
-          const buffer = await res.arrayBuffer();
-          fileContent = Buffer.from(buffer).toString("base64");
-        } else {
-          fileContent = await res.text();
-        }
-      }
+      const details = await this.resolveFileDetails(fileId);
+      fileName = details.fileName;
+      fileContent = details.fileContent;
+      isBase64 = details.isBase64;
+      mimeType = details.mimeType;
     } catch (err) {
-      console.error("Failed to read file from storage", err);
+      console.error(
+        "Failed to resolve file details in updateSkuWithSupplement",
+        err,
+      );
       throw new ApiError(
         "ISDPP009",
-        "Failed to read supplement file",
+        "Failed to read supplement file: " +
+          (err instanceof Error ? err.message : String(err)),
         ApiCode.INTERNAL_SERVER_ERROR,
       );
     }
@@ -373,6 +426,45 @@ Document File name: ${fileName}`;
         "Supplement file is empty",
         ApiCode.VALIDATION_ERROR,
       );
+    }
+
+    const stockId = skuWithAccess.accountBook.enterpriseId;
+    let personaContext = "";
+    if (stockId) {
+      try {
+        const cwd = process.cwd();
+        let personaPath = path.join(
+          cwd,
+          "data",
+          stockId,
+          "2024",
+          "outputs",
+          `${stockId}_company_persona.json`,
+        );
+        if (!fs.existsSync(personaPath)) {
+          personaPath = path.join(
+            cwd,
+            "data",
+            stockId,
+            "2025",
+            "outputs",
+            `${stockId}_company_persona.json`,
+          );
+        }
+        if (fs.existsSync(personaPath)) {
+          const personaRaw = fs.readFileSync(personaPath, "utf-8");
+          const persona = JSON.parse(personaRaw);
+          personaContext = `\n\nCompany Background Profile:
+- Company Name (Chinese): ${skuWithAccess.accountBook.name || ""}
+- Industry Dynamics & Supply Chain Profile: ${persona.industryDynamics || ""}
+- Manufacturing Process Steps: ${JSON.stringify(persona.manufacturingProcess || [])}`;
+        }
+      } catch (err) {
+        console.warn(
+          `[DppService] Failed to load company persona for stockId ${stockId}:`,
+          err,
+        );
+      }
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
@@ -391,6 +483,7 @@ Document File name: ${fileName}`;
 For each module in modulesData:
 1. If the document contains information for that module, set "extracted" to true and populate the "data" object with the extracted fields.
 2. If the document does not contain information for that module, set "extracted" to false.
+${personaContext}
 
 Document File name: ${fileName}`;
 
@@ -699,5 +792,114 @@ Document File name: ${fileName}`;
       },
       required: ["gtin", "name", "modulesData", "missingGaps"],
     };
+  }
+
+  private async resolveFileDetails(fileId: string): Promise<{
+    fileName: string;
+    fileContent: string;
+    isBase64: boolean;
+    mimeType: string;
+  }> {
+    const fileRecord = await this.fileRepo.getFileById(fileId);
+    const dbFileName = fileRecord?.fileName;
+
+    const STORAGE_DOMAIN =
+      process.env.STORAGE_DOMAIN || "http://127.0.0.1:3000";
+    const domain = STORAGE_DOMAIN.replace(/\/$/, "");
+
+    let lariaFileName: string | undefined;
+    let lariaMimeType: string | undefined;
+
+    try {
+      const metaRes = await fetch(`${domain}/api/v1/file/${fileId}`);
+      if (metaRes.ok) {
+        const metaJson = (await metaRes.json()) as {
+          payload?: {
+            filename?: string;
+            mimeType?: string;
+            type?: string;
+            shards?: unknown[];
+          };
+          filename?: string;
+          mimeType?: string;
+          type?: string;
+          shards?: unknown[];
+        };
+        const metaObj = metaJson.payload || metaJson;
+        if (metaObj && metaObj.shards && Array.isArray(metaObj.shards)) {
+          lariaFileName = metaObj.filename;
+          lariaMimeType = metaObj.mimeType || metaObj.type;
+        }
+      }
+    } catch (err) {
+      console.warn(
+        `[resolveFileDetails] Failed to retrieve Laria metadata for ${fileId}:`,
+        err,
+      );
+    }
+
+    const resolvedFileName = dbFileName || lariaFileName || fileId;
+
+    let finalFileName = resolvedFileName;
+    if (finalFileName === fileId && fileId.length > 8) {
+      finalFileName = fileId.substring(0, 8);
+    }
+
+    const resFile = await this.getFileContent(fileId, resolvedFileName);
+
+    return {
+      fileName: finalFileName,
+      fileContent: resFile.content,
+      isBase64: resFile.isBase64,
+      mimeType: lariaMimeType || resFile.mimeType,
+    };
+  }
+
+  private async getFileContent(
+    fileId: string,
+    fileName: string,
+  ): Promise<{ content: string; isBase64: boolean; mimeType: string }> {
+    const storageService = new StorageService();
+    let isBase64 = false;
+    let mimeType = "text/plain";
+
+    if (fileName.toLowerCase().endsWith(".pdf")) {
+      mimeType = "application/pdf";
+      isBase64 = true;
+    } else if (fileName.toLowerCase().endsWith(".csv")) {
+      mimeType = "text/csv";
+    } else if (fileName.toLowerCase().endsWith(".json")) {
+      mimeType = "application/json";
+    }
+
+    try {
+      // Info: (20260612 - Tzuhan) Try to recover Laria split file first
+      const buffer = await storageService.recoverLaria(fileId);
+      const content = isBase64
+        ? buffer.toString("base64")
+        : buffer.toString("utf-8");
+      return { content, isBase64, mimeType };
+    } catch (recoverErr) {
+      console.warn(
+        `[getFileContent] Laria recovery failed, falling back to direct fetch for ${fileId}:`,
+        recoverErr,
+      );
+
+      const STORAGE_DOMAIN =
+        process.env.STORAGE_DOMAIN || "http://127.0.0.1:3000";
+      const res = await fetch(`${STORAGE_DOMAIN}/api/v1/file/${fileId}`);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch file: ${res.statusText}`);
+      }
+
+      let content = "";
+      if (isBase64) {
+        const buffer = await res.arrayBuffer();
+        content = Buffer.from(buffer).toString("base64");
+      } else {
+        content = await res.text();
+      }
+      return { content, isBase64, mimeType };
+    }
   }
 }

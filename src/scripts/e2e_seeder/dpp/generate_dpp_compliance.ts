@@ -101,14 +101,56 @@ export async function generateDppCompliance(
       `${productId}_dpp_compliance_declaration.pdf`,
     );
 
+    // Info: (20260612 - Tzuhan) Read ground truth if it exists to pass data to compliance declaration prompt
+    const groundTruthPath = path.join(
+      productMockDir,
+      `${productId}_dpp_ground_truth.json`,
+    );
+    let groundTruthContext = "";
+    if (fs.existsSync(groundTruthPath)) {
+      try {
+        const gt = JSON.parse(fs.readFileSync(groundTruthPath, "utf-8"));
+        groundTruthContext = `
+【Real SKU Data to Include (真實 SKU 數據 - 必須在宣告書中以正式英文提及以供審查提取)】:
+- GTIN: ${gt.general?.gtin || ""}
+- CN Code: ${gt.general?.cnCode || ""}
+- Manufactured Date: ${gt.general?.manufacturedDate || ""}
+- Facility: ${gt.general?.facility || ""} (${gt.general?.facilityUNLOCODE || ""})
+- Product Weight: ${gt.general?.weightKg || ""} kg
+- Carbon Footprint: Total ${gt.carbonFootprint?.total_tCO2e || ""} tCO2e (Methodology: ${gt.carbonFootprint?.methodology || ""}). Scope 1 Direct: ${gt.carbonFootprint?.breakdown?.directEmissionsScope1 || ""} tCO2e, Scope 2 Indirect: ${gt.carbonFootprint?.breakdown?.indirectEmissionsScope2 || ""} tCO2e, Precursor: ${gt.carbonFootprint?.breakdown?.precursorsEmissions || ""} tCO2e.
+- Recycled Content Share (Circularity): ${JSON.stringify(gt.circularity?.recycledContentShare || [])}
+- Material Chemical Composition: ${JSON.stringify(gt.materialComposition || [])}
+- IATF 16949 Certificate ID: ${gt.compliance?.iatfCertificateId || ""}
+- Importer: ${gt.importer?.companyName || ""} located at ${gt.importer?.address || ""}, EORI: ${gt.importer?.eori || ""}
+- Ethical Sourcing: Yes / Labor Standard Compliant: Yes
+`;
+      } catch (err) {
+        console.error(
+          `Failed to parse ground truth at ${groundTruthPath}`,
+          err,
+        );
+      }
+    }
+
     const prompt = `你現在是「${companyNameZH}」（英文官方名稱為「${companyNameEN}」）的法規與永續合規長 (Chief Compliance Officer)。
 公司基本資料：
 - 產業：${persona.industryDynamics}
 - 核心競爭力：${persona.coreCompetence}
+${groundTruthContext}
 
 請為我們即將出口到歐盟的產品撰寫一份正式的英文「符合性與無使用宣告書 (Declaration of Conformity and Non-Use)」。
 這份文件將做為 Digital Product Passport (DPP) 審查的佐證資料。
-這是一家「車用扣件廠 (Automotive Fasteners)」，因此除了 RoHS 和 REACH，合規宣告中【必須】包含對 **EU ELV Directive (2000/53/EC)** 的遵守宣告，確保無鉛 (Lead)、汞 (Mercury)、鎘 (Cadmium) 與六價鉻 (Hexavalent Chromium)。
+這是一家「車用扣件廠 (Automotive Fasteners)」，因此除了 RoHS 和 REACH，合規宣告中【必須】包含對 **EU ELV Directive (2000/53/EC)** 的遵守宣告，確保無鉛 (Lead), 汞 (Mercury), 鎘 (Cadmium) 與六價鉻 (Hexavalent Chromium)。
+
+【重要合規資料要求】
+宣告書中必須以專業英文寫入以下段落以揭露合規與技術資訊：
+1. **General Product Information**: 揭露產品的 GTIN, CN Code, Manufactured Date, Product Weight, and Manufacturing Facility UN/LOCODE.
+2. **Product Carbon Footprint (PCF)**: 宣告本產品之總碳足跡 (Total Carbon Footprint) 以及對應的 ISO 14067 (Cradle-to-Gate) 計算方法論。列出 Scope 1, Scope 2 與 Precursor 排放細項。
+3. **Circularity & Recycled Shares**: 宣告產品材料的回收料比例 (pre-consumer, post-consumer recycled content share) 與原生材料比例 (primary material)。
+4. **Material Chemical Composition**: 條列出詳細的化學元素組成百分比（例如 Fe, C, Mn, P, S, Si, B 等的佔比）。
+5. **Importer & Logistics Details**: 宣告進口商的公司名稱、地址與 EORI 號碼。
+6. **Social & Ethical Sourcing**: 明確宣告本產品在製造過程中符合國際勞工標準 (Labor Standard Compliant) 以及所有原料均為道德採購 (Ethical Sourcing)。
+7. **Compliance Certificates**: 列出 IATF 16949 合規性與其 Certificate ID。
 
 【嚴格格式要求】
 1. 絕對不要輸出任何對話式的開頭或結尾（例如「好的，身為合規長...」）。

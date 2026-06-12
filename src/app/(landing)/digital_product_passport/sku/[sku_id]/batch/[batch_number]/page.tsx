@@ -349,7 +349,11 @@ export default function PublicBatchPassportPage() {
             </h2>
             <div className="text-center">
               <div className="text-4xl font-extrabold text-emerald-600">
-                {totalCO2e.toFixed(4)}{" "}
+                {totalCO2e === 0
+                  ? "0.0000"
+                  : totalCO2e < 0.0001
+                    ? totalCO2e.toExponential(2)
+                    : totalCO2e.toFixed(4)}{" "}
                 <span className="text-sm font-semibold text-slate-500">
                   tCO₂e
                 </span>
@@ -369,7 +373,7 @@ export default function PublicBatchPassportPage() {
                     <span className="text-[9px] font-bold tracking-widest text-slate-400 uppercase">
                       Cradle
                     </span>
-                    <span className="text-slate-450 text-[9px] font-bold tracking-widest uppercase">
+                    <span className="text-[9px] font-bold tracking-widest text-slate-400 uppercase">
                       to Gate
                     </span>
                   </div>
@@ -395,7 +399,12 @@ export default function PublicBatchPassportPage() {
                 <div className="flex justify-between">
                   <span className="text-slate-500">Precursors Emissions</span>
                   <span className="font-semibold text-slate-800">
-                    {precursors.toFixed(4)} tCO₂e
+                    {precursors === 0
+                      ? "0.0000"
+                      : precursors < 0.0001
+                        ? precursors.toExponential(2)
+                        : precursors.toFixed(4)}{" "}
+                    tCO₂e
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -403,7 +412,12 @@ export default function PublicBatchPassportPage() {
                     Direct Emissions (Scope 1)
                   </span>
                   <span className="font-semibold text-slate-800">
-                    {scope1.toFixed(4)} tCO₂e
+                    {scope1 === 0
+                      ? "0.0000"
+                      : scope1 < 0.0001
+                        ? scope1.toExponential(2)
+                        : scope1.toFixed(4)}{" "}
+                    tCO₂e
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -411,7 +425,12 @@ export default function PublicBatchPassportPage() {
                     Indirect Emissions (Scope 2)
                   </span>
                   <span className="font-semibold text-slate-800">
-                    {scope2.toFixed(4)} tCO₂e
+                    {scope2 === 0
+                      ? "0.0000"
+                      : scope2 < 0.0001
+                        ? scope2.toExponential(2)
+                        : scope2.toFixed(4)}{" "}
+                    tCO₂e
                   </span>
                 </div>
               </div>
@@ -435,9 +454,18 @@ export default function PublicBatchPassportPage() {
                   </div>
                 ) : (
                   recycledContentShare.map((m, idx) => {
-                    const totalRecycled =
-                      Number(m.preConsumerShare || 0) +
-                      Number(m.postConsumerShare || 0);
+                    const preShareRaw = Number(m.preConsumerShare || 0);
+                    const postShareRaw = Number(m.postConsumerShare || 0);
+                    const primaryShareRaw = Number(m.primaryMaterial || 0);
+                    const isFraction =
+                      preShareRaw + postShareRaw + primaryShareRaw <= 1.01;
+
+                    const multiplier = isFraction ? 100 : 1;
+                    const preShare = preShareRaw * multiplier;
+                    const postShare = postShareRaw * multiplier;
+                    const primaryShare = primaryShareRaw * multiplier;
+                    const totalRecycled = preShare + postShare;
+
                     return (
                       <div
                         key={idx}
@@ -446,7 +474,7 @@ export default function PublicBatchPassportPage() {
                         <div className="flex justify-between text-xs font-bold text-slate-800">
                           <span>{m.material}</span>
                           <span className="text-emerald-600">
-                            Recycled: {totalRecycled}%
+                            Recycled: {totalRecycled.toFixed(1)}%
                           </span>
                         </div>
 
@@ -454,18 +482,18 @@ export default function PublicBatchPassportPage() {
                         <div className="mt-2 flex h-3 w-full overflow-hidden rounded-full bg-slate-200">
                           <div
                             className="bg-orange-500 transition-all duration-500"
-                            style={{ width: `${m.preConsumerShare}%` }}
-                            title={`Pre-consumer: ${m.preConsumerShare}%`}
+                            style={{ width: `${preShare}%` }}
+                            title={`Pre-consumer: ${preShare}%`}
                           ></div>
                           <div
                             className="bg-emerald-500 transition-all duration-500"
-                            style={{ width: `${m.postConsumerShare}%` }}
-                            title={`Post-consumer: ${m.postConsumerShare}%`}
+                            style={{ width: `${postShare}%` }}
+                            title={`Post-consumer: ${postShare}%`}
                           ></div>
                           <div
                             className="bg-slate-400 transition-all duration-500"
-                            style={{ width: `${m.primaryMaterial}%` }}
-                            title={`Primary: ${m.primaryMaterial}%`}
+                            style={{ width: `${primaryShare}%` }}
+                            title={`Primary: ${primaryShare}%`}
                           ></div>
                         </div>
 
@@ -473,15 +501,15 @@ export default function PublicBatchPassportPage() {
                         <div className="mt-3 flex flex-wrap gap-4 text-[10px] font-bold tracking-wider text-slate-500 uppercase">
                           <div className="flex items-center gap-1.5">
                             <span className="h-2 w-2 rounded-full bg-orange-500"></span>
-                            Pre-consumer ({m.preConsumerShare}%)
+                            Pre-consumer ({preShare.toFixed(1)}%)
                           </div>
                           <div className="flex items-center gap-1.5">
                             <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-                            Post-consumer ({m.postConsumerShare}%)
+                            Post-consumer ({postShare.toFixed(1)}%)
                           </div>
                           <div className="flex items-center gap-1.5">
                             <span className="h-2 w-2 rounded-full bg-slate-400"></span>
-                            Primary ({m.primaryMaterial}%)
+                            Primary ({primaryShare.toFixed(1)}%)
                           </div>
                         </div>
                       </div>
