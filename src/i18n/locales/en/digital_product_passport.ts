@@ -141,6 +141,10 @@ export const digitalProductPassport = {
   },
   simulator: {
     group_manufacturer: "Manufacturer",
+    ai_extrapolation: "✨ AI Extrapolation",
+    header_title: "Enterprise Mock Data Generation Center",
+    header_subtitle:
+      "Specify a target enterprise to automatically trigger underlying crawlers and AI extraction scripts to build the enterprise persona and foundational files for Digital Product Passports.",
     group_company_policy: "Company Policy & Persona",
     group_traceability: "Traceability & Material",
     group_circularity: "Circularity & Efficiency Policy",

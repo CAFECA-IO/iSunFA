@@ -119,5 +119,4 @@ const CompanySearchInput: FC<ICompanySearchInputProps> = ({
   );
 };
 
-export { CompanySearchInput };
 export default CompanySearchInput;

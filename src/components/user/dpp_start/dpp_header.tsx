@@ -1,4 +1,5 @@
 import { Building, ArrowLeft } from "lucide-react";
+import { useTranslation } from "@/i18n/i18n_context";
 
 interface IDppHeaderProps {
   title?: string;
@@ -9,12 +10,21 @@ interface IDppHeaderProps {
 }
 
 export function DppHeader({
-  title = "企業模擬資料生成中心",
-  subtitle = "指定目標企業並自動觸發底層爬蟲與 AI 萃取腳本，以建立數位產品護照的企業畫像與基礎實體檔案。",
+  title: titleProp = undefined,
+  subtitle: subtitleProp = undefined,
   showBack = false,
   onBack = () => {},
   rightNode = null,
 }: IDppHeaderProps) {
+  const { t } = useTranslation();
+  const title =
+    titleProp ||
+    t("digital_product_passport.simulator.header_title") ||
+    "企業模擬資料生成中心";
+  const subtitle =
+    subtitleProp ||
+    t("digital_product_passport.simulator.header_subtitle") ||
+    "指定目標企業並自動觸發底層爬蟲與 AI 萃取腳本，以建立數位產品護照的企業畫像與基礎實體檔案。";
   return (
     <>
       <div

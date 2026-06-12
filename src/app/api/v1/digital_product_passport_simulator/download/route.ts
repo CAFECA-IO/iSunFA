@@ -35,7 +35,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create unique temporary directory
+    // Info: (20260612 - Tzuhan) Create unique temporary directory
     const tmpDirName = `tmp_${skuId}_${Date.now()}`;
     tmpDir = path.join(baseOutputsDir, tmpDirName);
     const tmpMockSourcesDir = path.join(tmpDir, "mock_sources");
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     fs.mkdirSync(tmpMockSourcesDir, { recursive: true });
     fs.mkdirSync(tmpProductMockDir, { recursive: true });
 
-    // Copy original JSONs
+    // Info: (20260612 - Tzuhan) Copy original JSONs
     const originalBomsPath = path.join(
       baseOutputsDir,
       "mock_sources",
@@ -81,14 +81,14 @@ export async function POST(request: Request) {
       fs.readFileSync(originalGroundTruthPath, "utf-8"),
     );
 
-    // Write modified JSONs to tmp directory
+    // Info: (20260612 - Tzuhan) Write modified JSONs to tmp directory
     fs.writeFileSync(tmpBomsPath, JSON.stringify(bomsData, null, 2));
     fs.writeFileSync(
       tmpGroundTruthPath,
       JSON.stringify(groundTruthData, null, 2),
     );
 
-    // Copy static assets needed for PDF
+    // Info: (20260612 - Tzuhan) Copy static assets needed for PDF
     const blueprintPath = path.join(baseOutputsDir, "fastener_blueprint.png");
     if (fs.existsSync(blueprintPath)) {
       fs.copyFileSync(
@@ -97,7 +97,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Execute generation scripts on tmp directory
+    // Info: (20260612 - Tzuhan) Execute generation scripts on tmp directory
     await convertJsonToCsv(stockId, year, {
       baseDirOverride: tmpDir,
       targetProductId: skuId,
@@ -109,7 +109,7 @@ export async function POST(request: Request) {
 
     const zip = new JSZip();
 
-    // 1. Add generated CSV
+    // Info: (20260612 - Tzuhan) 1. Add generated CSV
     const generatedCsvPath = path.join(
       tmpMockSourcesDir,
       "boms_and_precursors.csv",
@@ -118,7 +118,7 @@ export async function POST(request: Request) {
       zip.file("BOM_材料清單.csv", fs.readFileSync(generatedCsvPath));
     }
 
-    // 2. Add generated PDF
+    // Info: (20260612 - Tzuhan) 2. Add generated PDF
     const generatedPdfPath = path.join(
       tmpDir,
       skuId,

@@ -30,7 +30,7 @@ const SimulatorCompanySelector: FC<ISimulatorCompanySelectorProps> = ({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch all generated companies once on mount
+  // Info: (20260612 - Tzuhan) Fetch all generated companies once on mount
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
@@ -39,10 +39,10 @@ const SimulatorCompanySelector: FC<ISimulatorCompanySelectorProps> = ({
         );
         if (res.ok) {
           const data = await res.json();
-          // Fix: API returns { payload: [...] }
+          // Info: (20260612 - Tzuhan) Fix: API returns { payload: [...] }
           const items = data.payload || [];
 
-          // Extract unique companies
+          // Info: (20260612 - Tzuhan) Extract unique companies
           const uniqueMap = new Map<string, ICompanySearchResult>();
           if (items && Array.isArray(items)) {
             items.forEach((item) => {
@@ -65,7 +65,7 @@ const SimulatorCompanySelector: FC<ISimulatorCompanySelectorProps> = ({
     fetchCompanies();
   }, []);
 
-  // Handle outside click to close dropdown
+  // Info: (20260612 - Tzuhan) Handle outside click to close dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -81,16 +81,16 @@ const SimulatorCompanySelector: FC<ISimulatorCompanySelectorProps> = ({
     };
   }, []);
 
-  // Focus search input when dropdown opens
+  // Info: (20260612 - Tzuhan) Focus search input when dropdown opens
   useEffect(() => {
     if (showDropdown && inputRef.current) {
       inputRef.current.focus();
     } else {
-      setSearchKeyword(""); // clear search when closed
+      setSearchKeyword(""); // Info: (20260612 - Tzuhan) clear search when closed
     }
   }, [showDropdown]);
 
-  // Filter companies based on search input
+  // Info: (20260612 - Tzuhan) Filter companies based on search input
   const filterKeywordLower = searchKeyword.trim().toLowerCase();
   const filteredCompanies = availableCompanies.filter((c) => {
     if (!filterKeywordLower) return true;

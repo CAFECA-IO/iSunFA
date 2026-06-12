@@ -194,7 +194,6 @@ export default function DppStartPage() {
           return shouldReset ? { ...s, status: "pending", log: "" } : s;
         }),
       );
-      // Removed setSelectedFilePath(null) to prevent breaking preview UX during regeneration
 
       try {
         const response = await fetch(

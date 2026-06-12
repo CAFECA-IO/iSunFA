@@ -43,7 +43,7 @@ export interface IDppLogsNavigatorProps {
   year: string;
   steps: IDppStep[];
   products?: { productId: string; productName: string }[];
-  activeTabContext: string | null; // "baseline" or productId
+  activeTabContext: string | null; // Info: (20260612 - Tzuhan) "baseline" or productId
   onTabChange: (tabContext: string) => void;
   onStepClick?: (step: IDppStep) => void;
 }
@@ -59,11 +59,11 @@ export function DppLogsNavigator({
 }: IDppLogsNavigatorProps) {
   const { t } = useTranslation();
 
-  // Filter steps based on active context
+  // Info: (20260612 - Tzuhan) Filter steps based on active context
   const isBaseline = activeTabContext === "baseline" || !activeTabContext;
 
-  // Baseline gets steps 0-4
-  // Product gets steps 5-8
+  // Info: (20260612 - Tzuhan) Baseline gets steps 0-4
+  // Info: (20260612 - Tzuhan) Product gets steps 5-8
 
   return (
     <div className="relative z-20 flex h-full w-full flex-shrink-0 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm lg:w-[420px]">

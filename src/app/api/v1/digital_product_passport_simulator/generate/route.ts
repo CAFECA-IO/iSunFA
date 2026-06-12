@@ -328,7 +328,7 @@ export async function POST(req: NextRequest) {
               true,
             );
 
-            // If mode is add_sku, try to extract the new product ID from stdout
+            // Info: (20260612 - Tzuhan) If mode is add_sku, try to extract the new product ID from stdout
             if (mode === "add_sku") {
               const match = bomStdout.match(/\[NEW_SKU\]\s+(P-[A-Za-z0-9-]+)/);
               if (match && match[1]) {

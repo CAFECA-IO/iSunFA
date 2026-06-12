@@ -50,7 +50,8 @@ export function DppCompanyBaselinePane({
           {progress?.hasEsgExtrapolation && !progress?.hasEsg && (
             <div className="group relative ml-2 flex items-center">
               <span className="flex items-center gap-1 rounded-sm border border-purple-200 bg-purple-100 px-1.5 py-0.5 text-[10px] font-bold text-purple-700">
-                ✨ AI 推估
+                {t("digital_product_passport.simulator.ai_extrapolation") ||
+                  "✨ AI 推估"}
                 <Info className="h-3 w-3" />
               </span>
               <div className="invisible absolute right-0 bottom-full z-50 mb-2 w-64 opacity-0 transition-all group-hover:visible group-hover:opacity-100">

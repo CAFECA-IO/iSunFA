@@ -140,6 +140,10 @@ export const digitalProductPassport = {
   },
   simulator: {
     group_manufacturer: "제조업체 (Manufacturer)",
+    ai_extrapolation: "✨ AI 추정",
+    header_title: "기업 목업 데이터 생성 센터",
+    header_subtitle:
+      "대상 기업을 지정하고 크롤러와 AI 추출 스크립트를 자동으로 트리거하여 디지털 제품 여권(DPP)의 기업 페르소나 및 기본 파일을 구축합니다.",
     group_company_policy: "기업 운영 및 정책 (Company Policy & Persona)",
     group_traceability: "공급망 추적 및 자재 (Traceability & Material)",
     group_circularity: "순환성 및 효율성 정책 (Circularity)",

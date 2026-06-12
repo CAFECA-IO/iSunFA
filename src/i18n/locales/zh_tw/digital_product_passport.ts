@@ -136,6 +136,10 @@ export const digitalProductPassport = {
   },
   simulator: {
     group_manufacturer: "製造商 (Manufacturer)",
+    ai_extrapolation: "✨ AI 推估",
+    header_title: "企業模擬資料生成中心",
+    header_subtitle:
+      "指定目標企業並自動觸發底層爬蟲與 AI 萃取腳本，以建立數位產品護照的企業畫像與基礎實體檔案。",
     group_company_policy: "企業營運與政策方針 (Company Policy & Persona)",
     group_traceability: "供應鏈追溯與物料庫 (Traceability & Material)",
     group_circularity: "循環性與效率政策 (Circularity)",

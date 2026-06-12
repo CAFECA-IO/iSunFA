@@ -320,7 +320,9 @@ export default function DppListPage() {
                               {activeItem.progress.hasEsgExtrapolation &&
                                 !activeItem.progress.hasEsg && (
                                   <span className="ml-1 rounded-sm border border-purple-200 bg-purple-100 px-1 py-0.5 text-[9px] font-bold text-purple-700">
-                                    ✨ AI 推估
+                                    {t(
+                                      "digital_product_passport.simulator.ai_extrapolation",
+                                    ) || "✨ AI 推估"}
                                   </span>
                                 )}
                             </div>

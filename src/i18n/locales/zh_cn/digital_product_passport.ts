@@ -135,6 +135,10 @@ export const digitalProductPassport = {
   },
   simulator: {
     group_manufacturer: "制造商 (Manufacturer)",
+    ai_extrapolation: "✨ AI 推算",
+    header_title: "企业模拟资料生成中心",
+    header_subtitle:
+      "指定目标企业并自动触发底层爬虫与 AI 萃取脚本，以建立数位产品护照的企业画像与基础实体档案。",
     group_company_policy: "企业运营与政策方针 (Company Policy & Persona)",
     group_traceability: "供应链追溯与物料库 (Traceability & Material)",
     group_circularity: "循环性与效率政策 (Circularity)",
