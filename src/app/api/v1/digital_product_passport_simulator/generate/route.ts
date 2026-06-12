@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import { spawn } from "child_process";
+import { spawn, ChildProcess } from "child_process";
 import { GenerateDppSchema } from "@/validators/dpp.validator";
 import { reportDownloadTaskRepo } from "@/repositories/report_download_task.repo";
 import { TaskType, TaskStatus } from "@/generated";
@@ -29,7 +29,6 @@ export async function POST(req: NextRequest) {
   try {
     const body: unknown = await req.json();
     const parsed = GenerateDppSchema.safeParse(body);
-
     if (!parsed.success) {
       return NextResponse.json(
         { error: parsed.error.format() },
@@ -40,12 +39,44 @@ export async function POST(req: NextRequest) {
     const { stockId, year, productCount, mode } = parsed.data;
     let { productId } = parsed.data;
 
+    // Info: (20260612 - Tzuhan) Clear cache if regenerating (generate_only or baseline_only)
+    if (mode === "generate_only" || mode === "baseline_only") {
+      const cacheDir = path.join(
+        process.cwd(),
+        "data",
+        stockId,
+        year,
+        "outputs",
+      );
+      const filesToDelete = [
+        "ai_extracted_context_cache.json",
+        "esg_extrapolation.json",
+        `${stockId}_company_persona.json`,
+        `${stockId}_company_persona.html`,
+      ];
+      for (const file of filesToDelete) {
+        const filePath = path.join(cacheDir, file);
+        if (fs.existsSync(filePath)) {
+          try {
+            fs.unlinkSync(filePath);
+            console.log(`[CLEAN] Cleared cache file: ${filePath}`);
+          } catch (e) {
+            console.warn(`[CLEAN] Failed to delete cache file: ${filePath}`, e);
+          }
+        }
+      }
+    }
+
+    let activeChild: ChildProcess | null = null;
+    let isAborted = false;
+
     // Info: (20260609 - Tzuhan) 建立 SSE 資料流
     const stream = new ReadableStream({
       async start(controller) {
         const encoder = new TextEncoder();
 
         const sendEvent = (data: ISseEvent) => {
+          if (isAborted) return;
           try {
             controller.enqueue(
               encoder.encode(`data: ${JSON.stringify(data)}\n\n`),
@@ -61,9 +92,19 @@ export async function POST(req: NextRequest) {
           args: string[],
           captureOutput = false,
         ) => {
+          if (isAborted) throw new Error("Stream aborted");
           return new Promise<{ stdout: string }>((resolve, reject) => {
             const child = spawn(command, args);
+            activeChild = child;
             let stdoutFull = "";
+
+            // Info: (20260612 - Tzuhan) Keep alive heartbeat timer to keep SSE open even during long operations
+            const heartbeat = setInterval(() => {
+              sendEvent({
+                type: "log",
+                message: `⌛ [System] Running ${path.basename(args[1] || command)}...`,
+              });
+            }, 15000); // Info: (20260612 - Tzuhan) every 15 seconds
 
             child.stdout.on("data", (data: Buffer) => {
               const lines = data.toString().split("\n");
@@ -85,6 +126,8 @@ export async function POST(req: NextRequest) {
             });
 
             child.on("close", (code: number) => {
+              clearInterval(heartbeat);
+              if (activeChild === child) activeChild = null;
               if (code === 0) {
                 resolve({ stdout: stdoutFull });
               } else {
@@ -514,6 +557,16 @@ export async function POST(req: NextRequest) {
           sendEvent({ type: "error", message: errorMessage });
         } finally {
           controller.close();
+        }
+      },
+      cancel() {
+        isAborted = true;
+        if (activeChild) {
+          console.warn(
+            "Killing active child process due to stream cancellation",
+          );
+          activeChild.kill();
+          activeChild = null;
         }
       },
     });

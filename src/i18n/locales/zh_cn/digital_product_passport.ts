@@ -170,6 +170,7 @@ export const digitalProductPassport = {
       "此数据集由财报和 ESG 报告反向推导，作为所有产品模拟的通用基础。",
     view_baseline_details: "查看基线生成详情",
     regenerate_baseline: "重新生成公司通用数据",
+    continue_baseline: "继续生成公司通用数据",
   },
   sidebar: {
     search_placeholder: "搜索统编...",

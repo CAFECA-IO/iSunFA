@@ -180,6 +180,7 @@ export const digitalProductPassport = {
       "This dataset is reverse-engineered from financial and ESG reports. It serves as the shared foundation for all product simulations.",
     view_baseline_details: "View Baseline Generation Details",
     regenerate_baseline: "Regenerate Company Public Data",
+    continue_baseline: "Continue Generating Company Public Data",
   },
   sidebar: {
     search_placeholder: "Search Tax ID...",

@@ -82,10 +82,17 @@ export function DppCompanyBaselinePane({
   ];
 
   const hasAnyProgress =
-    progress?.hasFin ||
-    progress?.hasEsg ||
-    progress?.hasPersonaHtml ||
-    progress?.hasBom;
+    !!progress?.hasFin ||
+    !!progress?.hasEsg ||
+    !!progress?.hasEsgExtrapolation ||
+    !!progress?.hasPersonaHtml ||
+    !!progress?.hasBom;
+
+  const isBaselineFullyCompleted =
+    !!progress?.hasFin &&
+    (!!progress?.hasEsg || !!progress?.hasEsgExtrapolation) &&
+    !!progress?.hasPersonaHtml &&
+    !!progress?.hasBom;
 
   return (
     <div className="flex h-full w-full flex-col rounded-2xl border border-gray-200 bg-white shadow-sm lg:w-[450px]">
@@ -143,11 +150,14 @@ export function DppCompanyBaselinePane({
           <Zap className="h-4 w-4" />
           {isGenerating
             ? t("common.processing") || "處理中..."
-            : hasAnyProgress
+            : isBaselineFullyCompleted
               ? t("digital_product_passport.simulator.regenerate_baseline") ||
                 "重新生成公司公用資料"
-              : t("digital_product_passport.start.start_generation") ||
-                "⚡ 開始提取企業 Baseline (Start Generation)"}
+              : hasAnyProgress
+                ? t("digital_product_passport.simulator.continue_baseline") ||
+                  "繼續生成公司公用資料"
+                : t("digital_product_passport.start.start_generation") ||
+                  "⚡ 開始提取企業 Baseline (Start Generation)"}
         </button>
       </div>
     </div>

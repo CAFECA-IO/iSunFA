@@ -184,6 +184,7 @@ export const digitalProductPassport = {
       "このデータセットは財務報告書とESG報告書から逆算されたもので、すべての製品シミュレーションの共通基盤となります。",
     view_baseline_details: "ベースライン生成の詳細を表示",
     regenerate_baseline: "企業共通データを再生成",
+    continue_baseline: "企業共通データの生成を継続",
   },
   sidebar: {
     search_placeholder: "企業名または法人番号で検索...",

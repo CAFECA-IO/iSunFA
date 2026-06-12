@@ -171,6 +171,7 @@ export const digitalProductPassport = {
       "此資料集由財報 & ESG 報告反推。作為所有產品模擬的共用基礎。",
     view_baseline_details: "查看 Baseline 生成詳情",
     regenerate_baseline: "重新生成公司公用資料",
+    continue_baseline: "繼續生成公司公用資料",
   },
   sidebar: {
     search_placeholder: "搜尋統編...",

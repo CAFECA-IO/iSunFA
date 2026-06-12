@@ -108,7 +108,6 @@ export async function POST(request: Request) {
     // Info: (20260612 - Tzuhan) Execute generation scripts on tmp directory
     await convertJsonToCsv(stockId, year, {
       baseDirOverride: tmpDir,
-      targetProductId: skuId,
     });
     await convertSpecsToCsv(stockId, year, {
       baseDirOverride: tmpDir,

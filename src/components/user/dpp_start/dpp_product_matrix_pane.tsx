@@ -27,6 +27,7 @@ interface IDppProductMatrixPaneProps {
   onDownloadSku: (productId: string) => void;
   onAddSku: () => void;
   onViewProductDetails: (productId: string) => void;
+  onGenerateSku?: (productId: string) => void;
 }
 
 export function DppProductMatrixPane({
@@ -35,6 +36,7 @@ export function DppProductMatrixPane({
   onDownloadSku,
   onAddSku,
   onViewProductDetails,
+  onGenerateSku = () => {},
 }: IDppProductMatrixPaneProps) {
   const { t } = useTranslation();
 
@@ -116,15 +118,27 @@ export function DppProductMatrixPane({
                     {t("digital_product_passport.simulator.view_sku_details") ||
                       "查看 SKU 數據細節"}
                   </button>
-                  <button
-                    onClick={() => onDownloadSku(p.productId)}
-                    disabled={isGenerating || !isComplete}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-50"
-                  >
-                    <DownloadCloud className="h-4 w-4" />
-                    {t("digital_product_passport.simulator.download_sku") ||
-                      "下載模擬資料檔 (供上傳測試)"}
-                  </button>
+                  {isComplete ? (
+                    <button
+                      onClick={() => onDownloadSku(p.productId)}
+                      disabled={isGenerating}
+                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-50"
+                    >
+                      <DownloadCloud className="h-4 w-4" />
+                      {t("digital_product_passport.simulator.download_sku") ||
+                        "下載模擬資料檔 (供上傳測試)"}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => onGenerateSku(p.productId)}
+                      disabled={isGenerating}
+                      className="flex w-full animate-pulse items-center justify-center gap-2 rounded-lg bg-orange-600 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-700 disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-50"
+                      style={{ animationDuration: "3s" }}
+                    >
+                      <Zap className="h-4 w-4" />
+                      一鍵生成全部資料
+                    </button>
+                  )}
                 </div>
               </div>
             );

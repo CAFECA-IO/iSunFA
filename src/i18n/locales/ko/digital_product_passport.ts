@@ -180,6 +180,7 @@ export const digitalProductPassport = {
       "이 데이터 세트는 재무 보고서 및 ESG 보고서에서 역산출되었습니다. 모든 제품 시뮬레이션의 공통 기반으로 사용됩니다.",
     view_baseline_details: "베이스라인 생성 세부 정보 보기",
     regenerate_baseline: "회사 공용 데이터 다시 생성",
+    continue_baseline: "회사 공용 데이터 생성 계속",
   },
   sidebar: {
     search_placeholder: "사업자 번호 검색...",

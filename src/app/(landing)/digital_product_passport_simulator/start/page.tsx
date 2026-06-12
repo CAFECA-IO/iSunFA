@@ -301,6 +301,7 @@ export default function DppStartPage() {
             }
           }
         }
+        setIsGenerating(false);
       } catch (error: unknown) {
         console.error(error);
         setIsGenerating(false);
@@ -466,7 +467,7 @@ export default function DppStartPage() {
               status: currentItem.progress.hasVisionCache
                 ? "completed"
                 : "pending",
-              file: undefined,
+              file: `data/${selectedCompany.taxId}/${year}/outputs/ai_extracted_context_cache.json`,
             },
             {
               id: "persona",
@@ -656,6 +657,10 @@ export default function DppStartPage() {
   };
 
   const handleRegenerateFile = (filePath: string) => {
+    if (filePath.includes("ai_extracted_context_cache.json")) {
+      startGeneration(undefined, "extrapolate_only");
+      return;
+    }
     if (filePath.includes("esg_extrapolation.json")) {
       startGeneration(undefined, "extrapolate_only");
       return;
@@ -778,6 +783,15 @@ export default function DppStartPage() {
           onDownloadSku={handleDownloadSku}
           onAddSku={handleAddSku}
           onViewProductDetails={(productId) => setModalContext(productId)}
+          onGenerateSku={(productId) => {
+            setModalContext(productId);
+            startGeneration(
+              undefined,
+              "product_dpp_only",
+              undefined,
+              productId,
+            );
+          }}
         />
       </div>
 
