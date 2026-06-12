@@ -135,10 +135,7 @@ export async function POST(request: Request) {
       "boms_and_precursors.csv",
     );
     if (fs.existsSync(generatedCsvPath)) {
-      zip.file(
-        `data/${stockId}/${year}/outputs/mock_sources/boms_and_precursors.csv`,
-        fs.readFileSync(generatedCsvPath),
-      );
+      zip.file("boms_and_precursors.csv", fs.readFileSync(generatedCsvPath));
     }
 
     // 2. product_specs.csv
@@ -148,7 +145,7 @@ export async function POST(request: Request) {
     );
     if (fs.existsSync(generatedSpecsCsvPath)) {
       zip.file(
-        `data/${stockId}/${year}/outputs/mock_sources/product_specs.csv`,
+        `${skuId}_product_specs.csv`,
         fs.readFileSync(generatedSpecsCsvPath),
       );
     }
@@ -156,10 +153,7 @@ export async function POST(request: Request) {
     // 3. fastener_blueprint.png
     const blueprintPathTmp = path.join(tmpDir, "fastener_blueprint.png");
     if (fs.existsSync(blueprintPathTmp)) {
-      zip.file(
-        `data/${stockId}/${year}/outputs/${skuId}/mock_sources/fastener_blueprint.png`,
-        fs.readFileSync(blueprintPathTmp),
-      );
+      zip.file("fastener_blueprint.png", fs.readFileSync(blueprintPathTmp));
     }
 
     // 4. dpp_compliance_declaration.pdf
@@ -171,7 +165,7 @@ export async function POST(request: Request) {
     );
     if (fs.existsSync(generatedPdfPath)) {
       zip.file(
-        `data/${stockId}/${year}/outputs/${skuId}/system_ingestion/${skuId}_dpp_compliance_declaration.pdf`,
+        `${skuId}_dpp_compliance_declaration.pdf`,
         fs.readFileSync(generatedPdfPath),
       );
     }
