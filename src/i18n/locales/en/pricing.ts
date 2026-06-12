@@ -1,7 +1,7 @@
 export const pricing = {
   free_cost: "Free",
-  title: "Simple, transparent pricing",
-  subtitle: "Choose the plan that right for you",
+  title: "Cloud Service Subscription Plans",
+  subtitle: "Choose the most suitable plan based on your team size",
   monthly: "Monthly",
   yearly: "Yearly",
   save_percent: "Save 17%",
@@ -130,7 +130,7 @@ export const pricing = {
     title: "Flexible Credit Packs",
     subtitle: "Top up anytime, credits never expire",
     tab_subscription: "Subscriptions",
-    tab_buyout: "Enterprise Buyout",
+    tab_buyout: "On-Premise",
     tab_credits: "Buy Credits",
     buy_btn: "Buy Now",
     items: {

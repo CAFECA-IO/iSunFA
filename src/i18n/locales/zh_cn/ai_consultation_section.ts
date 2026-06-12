@@ -1,6 +1,6 @@
 export const aiConsultationSection = {
-  title: "AI 咨询室",
+  title: "AI 智能助手",
   description:
-    "体验与人工智能会计师的即时互动问答，快速厘清财务与碳费议题；分享洞察与反馈，与社群共创成长。",
-  button: "立即咨询 AI",
+    "提供 7×24 小时即时智能问答，秒级解答复杂的财税合规与碳税计算难题，高效辅助企业经营决策。",
+  button: "立即体验",
 };

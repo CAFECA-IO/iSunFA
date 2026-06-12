@@ -72,8 +72,8 @@ export default function PricingPage() {
     : undefined;
 
   // Info: (20260115 - Luphia) Pricing Calculator State
-  const [userCount, setUserCount] = useState(5);
-  const [updateYears, setUpdateYears] = useState(1);
+  const [userCount, setUserCount] = useState(1);
+  const [updateYears, setUpdateYears] = useState(0);
   const [selectedModules, setSelectedModules] = useState<string[]>(
     MODULES.filter((m) => m.basic).map((m) => m.key),
   );
@@ -566,13 +566,6 @@ export default function PricingPage() {
               <div className="rounded-[22px] bg-gray-900/50 px-6 py-8 backdrop-blur-xl sm:px-12 lg:px-12 lg:py-12">
                 <div className="mx-auto flex max-w-2xl flex-col gap-16 lg:mx-0 lg:max-w-none lg:flex-row lg:items-start">
                   <div className="w-full flex-auto">
-                    <h2 className="bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-3xl font-bold tracking-tight text-transparent sm:text-4xl">
-                      {t("pricing.ai_adoption.title")}
-                    </h2>
-                    <p className="mt-6 text-lg leading-8 text-gray-300">
-                      {t("pricing.ai_adoption.description")}
-                    </p>
-
                     <ul className="mt-8 grid grid-cols-1 gap-x-8 gap-y-4 text-base leading-7 text-gray-300 sm:grid-cols-2">
                       {t<string[]>("pricing.ai_adoption.features").map(
                         (feature, index) => (
@@ -592,6 +585,26 @@ export default function PricingPage() {
                     {/* Info: (20260117 - Luphia) Add-ons Section */}
                     <div className="mt-12 border-t border-white/10 pt-10">
                       <div className="space-y-10">
+                        {/* Info: (20260611 - Luphia) Base Machine */}
+                        <div className="flex flex-col justify-between gap-6 border-b border-white/5 pb-8 sm:flex-row sm:items-center">
+                          <div>
+                            <span className="block text-lg font-medium text-white">
+                              ASUS Ascent GX10
+                            </span>
+                            <span className="mt-1 block text-sm text-gray-400">
+                              {t("pricing.ai_adoption.add_module_price", {
+                                price:
+                                  ENTERPRISE_PLAN_PRICE.MACHINE.toLocaleString(),
+                              })}
+                            </span>
+                          </div>
+                          <div className="flex w-full items-center justify-start sm:w-auto sm:justify-end">
+                            <span className="rounded-lg bg-orange-600/10 px-3 py-1 text-sm font-medium text-orange-400 ring-1 ring-orange-500/20 ring-inset">
+                              {t("pricing.ai_adoption.required")}
+                            </span>
+                          </div>
+                        </div>
+
                         {/* Info: (20260117 - Luphia) Additional User */}
                         <div className="flex flex-col justify-between gap-6 border-b border-white/5 pb-8 sm:flex-row sm:items-center">
                           <div>
@@ -609,10 +622,10 @@ export default function PricingPage() {
                           <div className="flex w-full items-center justify-between gap-x-4 rounded-xl bg-black/20 p-1.5 ring-1 ring-white/10 sm:w-auto">
                             <button
                               onClick={() =>
-                                setUserCount((prev) => Math.max(5, prev - 1))
+                                setUserCount((prev) => Math.max(1, prev - 1))
                               }
                               className="rounded-lg p-2 text-white transition-all hover:scale-105 hover:bg-white/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
-                              disabled={userCount <= 5}
+                              disabled={userCount <= 1}
                             >
                               <Minus className="h-5 w-5" />
                             </button>

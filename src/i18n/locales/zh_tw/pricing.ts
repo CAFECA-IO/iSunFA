@@ -1,7 +1,7 @@
 export const pricing = {
   free_cost: "免費",
-  title: "簡單透明的收費模式",
-  subtitle: "選擇最適合您的方案",
+  title: "雲端服務訂閱方案",
+  subtitle: "根據團隊規模選擇最合適的方案",
   monthly: "月繳",
   yearly: "年繳",
   save_percent: "省下 17%",
@@ -125,7 +125,7 @@ export const pricing = {
     title: "彈性購買點數",
     subtitle: "依據您的需求隨時補充，點數永久有效",
     tab_subscription: "訂閱方案",
-    tab_buyout: "企業買斷",
+    tab_buyout: "本地部署",
     tab_credits: "購買點數",
     buy_btn: "購買",
     items: {

@@ -1,7 +1,7 @@
 export const pricing = {
   free_cost: "무료",
-  title: "단순하고 투명한 요금제",
-  subtitle: "자신에게 맞는 요금제를 선택하세요",
+  title: "클라우드 서비스 구독 요금제",
+  subtitle: "팀 규모에 맞는 최적의 요금제를 선택하세요",
   monthly: "월 결제",
   yearly: "연 결제",
   save_percent: "17% 절약",
@@ -126,7 +126,7 @@ export const pricing = {
     title: "포인트 구매",
     subtitle: "필요할 때마다 충전, 유효기간 없음",
     tab_subscription: "구독 요금제",
-    tab_buyout: "기업 인수",
+    tab_buyout: "온프레미스",
     tab_credits: "포인트 구매",
     buy_btn: "구매",
     items: {

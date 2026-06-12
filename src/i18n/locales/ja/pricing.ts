@@ -1,7 +1,7 @@
 export const pricing = {
   free_cost: "無料",
-  title: "シンプルで透明な料金プラン",
-  subtitle: "あなたに最適なプランをお選びください",
+  title: "クラウドサービスサブスクリプションプラン",
+  subtitle: "チームの規模に合わせて最適なプランをお選びください",
   monthly: "月払い",
   yearly: "年払い",
   save_percent: "17% お得",
@@ -129,7 +129,7 @@ export const pricing = {
     title: "ポイント購入",
     subtitle: "必要な分だけいつでもチャージ、有効期限なし",
     tab_subscription: "サブスクリプション",
-    tab_buyout: "企業買取り",
+    tab_buyout: "オンプレミス",
     tab_credits: "ポイント購入",
     buy_btn: "購入",
     items: {

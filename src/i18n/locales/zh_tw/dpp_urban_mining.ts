@@ -1,8 +1,8 @@
 export const dppUrbanMining = {
   title: "循環經濟新局",
-  subtitle: "數位產品護照 ✕ 都市採礦",
+  subtitle: "數位產品護照 ✕ 城市採礦",
   description:
-    "基於歐盟 ESPR 規範，iSunFA 將數位產品護照與都市採礦深度整合。透過區塊鏈存證與 AI 材料擷取，我們為每個產品賦予可追溯的綠色身份，讓廢棄物轉化為高價值的都市礦山資源，實現真正的閉環循環經濟。",
+    "基於歐盟 ESPR 規範，iSunFA 將數位產品護照與城市採礦深度整合。透過區塊鏈存證與 AI 材料擷取，我們為每個產品賦予可追溯的綠色身份，讓廢棄物轉化為高價值的城市礦山資源，實現真正的閉環循環經濟。",
   dpp: {
     title: "數位產品護照",
     desc: "建立產品全生命履歷，符合國際綠色合規標準。",
@@ -17,7 +17,7 @@ export const dppUrbanMining = {
       "生成唯一的二維碼與 NFC 識別標籤，方便供應鏈各環節與回收商一秒掃描查詢。",
   },
   urban: {
-    title: "都市採礦",
+    title: "城市採礦",
     desc: "精準識別廢棄物中的貴重資源，讓回收高效且透明。",
     feature1_title: "貴重金屬精準回收",
     feature1_desc:
@@ -27,19 +27,19 @@ export const dppUrbanMining = {
       "自動化為回收商解析無毒/有害物質配置，提供安全的拆解與二次回收安全工作指南。",
     feature3_title: "碳足跡抵減鏈結",
     feature3_desc:
-      "將都市採礦獲得的再生材料，自動關聯為下一代產品的碳排放抵減項目，大幅降低產品碳足跡。",
+      "將城市採礦獲得的再生材料，自動關聯為下一代產品的碳排放抵減項目，大幅降低產品碳足跡。",
   },
   interactive: {
     scan_demo: "數位護照互動掃描體驗",
     product_identity: "產品身份證：綠色循環智慧電池",
-    scan_success: "掃描成功！已擷取 DPP 與都市採礦回收指引",
+    scan_success: "掃描成功！已擷取 DPP 與城市採礦回收指引",
     category: "產品類別",
     category_val: "動力儲能鋰電池組",
     manufacturer: "製造商",
     manufacturer_val: "極光綠能科技股份有限公司",
     carbon_footprint: "產品碳足跡 (LCA)",
     recyclability_rate: "整體可回收率",
-    materials_composition: "都市採礦貴重金屬清單 (BOM)",
+    materials_composition: "城市採礦貴重金屬清單 (BOM)",
     material_gold: "黃金 (Au)",
     material_copper: "高純度銅 (Cu)",
     material_lithium: "電池級鋰 (Li)",
@@ -50,11 +50,11 @@ export const dppUrbanMining = {
     scanning: "掃描中...",
     rescan: "重新掃描產品護照",
     scan_dpp: "掃描 DPP 二維碼",
-    scan_placeholder: "點擊掃描按鈕以擷取實時數位產品護照與都市採礦指引。",
+    scan_placeholder: "點擊掃描按鈕以擷取實時數位產品護照與城市採礦指引。",
     pipeline_title: "AI 實時擷取管線",
     step1_title: "步驟 1: 讀取區塊鏈 ZKP 存證收據...",
     step2_title: "步驟 2: 解析 LCA 產品碳足跡數據...",
-    step3_title: "步驟 3: 計算都市採礦 BOM 資源清單...",
+    step3_title: "步驟 3: 計算城市採礦 BOM 資源清單...",
     status_extracting: "擷取中...",
     status_resolved: "已解析",
     status_waiting: "等待中",
