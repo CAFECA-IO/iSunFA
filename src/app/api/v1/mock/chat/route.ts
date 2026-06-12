@@ -2,16 +2,7 @@ import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { lanceDBService } from "@/services/lancedb.service";
-
-type ILanceDBRow = {
-  id?: string;
-  vector?: Float32Array;
-  text: string;
-  reportId: string;
-  companyName: string;
-  pageNumber?: number;
-  _distance?: number;
-};
+import { ILanceDBRow } from "@/interfaces/lance_db";
 
 const OLLAMA_HOST = "http://localhost:11434";
 const EMBED_MODEL = "nomic-embed-text";
@@ -54,8 +45,6 @@ async function extractCompanyNames(question: string): Promise<string[]> {
       }),
     });
     const data = await responseToJSON(response);
-    // console.log("🤖 LLM 原始回傳內容:", data.response);
-
     const rawResponse = data.response;
     const match = rawResponse.match(/\{.*?\}/s);
     const jsonStr = match ? match[0] : rawResponse;
@@ -81,7 +70,6 @@ export const POST = async (req: NextRequest) => {
 
     // Info: (20260612 - Julian) 透過 LLM 擷取公司名稱 (Metadata Pre-filtering)
     const companyNames = await extractCompanyNames(question);
-    // console.log(`🔍 從提問中擷取到的公司名稱:`, companyNames);
 
     // Info: (20260612 - Julian) 將用戶問題轉換為向量
     const queryVector = await getQueryEmbedding(question);
@@ -153,14 +141,13 @@ export const POST = async (req: NextRequest) => {
       .map((doc) => doc.text)
       .join("\n\n---\n\n")
       .slice(0, 3500);
-    // console.log(`📌 成功從 LanceDB 檢索到 ${matchedDocs.length} 個相關文字區塊。`,);
-
     // Info: (20260612 - Julian) 步驟 3：撰寫嚴謹的 RAG Prompt
     const systemPrompt = `你是一個專業的企業報告分析師。請嚴格根據下方提供的【參考資料】來回答使用者的【問題】。
 規則：
 1. 只能根據【參考資料】內的數據與事實回答，切勿憑空捏造或憑空猜測。
 2. 如果【參考資料】中找不到答案，請直接回答：「抱歉，根據目前的報告資料，無法找到相關數據。」，不要嘗試瞎編。
 3. 如果資料包含表格，請精準解讀表格中的對應欄位。
+4. 不需要開場白（例：根據您提供的【參考資料】...），直接回答問題即可。
 
 【參考資料】：
 ${context}
@@ -168,8 +155,6 @@ ${context}
 【問題】：
 ${question}`;
 
-    // Info: (20260612 - Julian) 步驟 4：呼叫 Ollama LLM 生成答案
-    // console.log(`🧠 正在呼叫 Ollama (${LLM_MODEL}) 組織答案...`);
     const llmResponse = await fetch(`${OLLAMA_HOST}/api/generate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

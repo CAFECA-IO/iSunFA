@@ -1,16 +1,8 @@
 import { lanceDBService } from "@/services/lancedb.service";
 import dotenv from "dotenv";
+import { ILanceDBRow } from "@/interfaces/lance_db";
 
 dotenv.config();
-
-type ILanceDBRow = {
-  id: string;
-  vector: Float32Array<ArrayBuffer>;
-  text: string;
-  reportId: string;
-  companyName: string;
-  pageNumber?: number;
-};
 
 /**
  * Info: (20260612 - Julian) 檢查 LanceDB 資料表內容

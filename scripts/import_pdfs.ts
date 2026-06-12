@@ -3,20 +3,12 @@ import * as path from "path";
 import dotenv from "dotenv";
 import LlamaCloud from "@llamaindex/llama-cloud";
 import { lanceDBService } from "@/services/lancedb.service";
+import { ILanceDBRow } from "@/interfaces/lance_db";
 
 dotenv.config();
 
 const OLLAMA_EMBED_URL = "http://localhost:11434/api/embeddings";
 const EMBED_MODEL = "nomic-embed-text";
-
-type ILanceDBRow = {
-  id: string;
-  vector: Float32Array<ArrayBuffer>;
-  text: string;
-  reportId: string;
-  companyName: string;
-  pageNumber?: number;
-};
 
 // Info: (20260612 - Julian) 輔助函式：呼叫 Ollama 取得 768 維向量
 async function getEmbedding(text: string): Promise<number[]> {
