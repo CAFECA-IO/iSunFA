@@ -11,11 +11,13 @@ const getFileUrl = (path: string) =>
 
 export interface IDppPreviewPaneProps {
   selectedFilePath: string | null;
+  isGenerating?: boolean;
   onRegenerateFile?: (filePath: string) => void;
 }
 
 export function DppPreviewPane({
   selectedFilePath,
+  isGenerating = false,
   onRegenerateFile = () => {},
 }: IDppPreviewPaneProps) {
   const { t } = useTranslation();
@@ -218,7 +220,21 @@ export function DppPreviewPane({
             </div>
           </div>
           <div className="min-h-0 flex-1 overflow-hidden bg-slate-200 p-0">
-            {fileError ? (
+            {isGenerating ? (
+              <div className="flex flex-1 flex-col items-center justify-center bg-slate-50/50 p-8 text-center text-slate-500">
+                <RefreshCw className="mb-4 h-16 w-16 animate-spin text-blue-500" />
+                <p className="text-lg font-bold text-slate-600">
+                  {t(
+                    "digital_product_passport.preview_extra.regenerating_title",
+                  ) || "資料生成中..."}
+                </p>
+                <p className="mt-2 text-sm text-slate-400">
+                  {t(
+                    "digital_product_passport.preview_extra.regenerating_desc",
+                  ) || "AI 正在重新生成此資料，請稍候。"}
+                </p>
+              </div>
+            ) : fileError ? (
               <div className="flex h-full flex-col items-center justify-center bg-slate-50 p-8 text-center">
                 <FileBox className="mb-4 h-16 w-16 text-slate-300" />
                 <p className="text-lg font-bold text-slate-700">

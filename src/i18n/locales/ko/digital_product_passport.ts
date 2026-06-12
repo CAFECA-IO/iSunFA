@@ -212,11 +212,31 @@ export const digitalProductPassport = {
     file_not_found_desc:
       "지정된 파일을 찾을 수 없습니다. 생성 단계에서 오류가 발생했을 수 있습니다. 이 단계의 데이터를 다시 생성해 보세요.",
     regenerate_file: "이 데이터 다시 생성",
-    loading: "로딩 중...",
     json_title: "DPP / AI 분석 데이터 표시",
+    json_view_desc: "시스템 통합 또는 분석에 적합한 구조화된 데이터입니다.",
     json_desc:
       "시스템이 원시 JSON 데이터를 시각적 구성 요소로 변환하여 쉽게 볼 수 있도록 했습니다.",
-    waiting_title: "데이터 생성 대기 중",
-    waiting_desc: "기업 페르소나 및 보고서가 여기에 표시됩니다.",
+    regenerating_title: "데이터 생성 중...",
+    regenerating_desc:
+      "AI가 데이터를 다시 생성하고 있습니다. 잠시만 기다려주세요.",
+    waiting_title: "항목을 선택하세요",
+    waiting_desc: "관련 파일 또는 데이터를 미리 보려면 왼쪽 단계를 클릭하세요.",
+    loading: "로딩 중...",
+  },
+  report_downloader: {
+    title: "공개 재무 및 ESG 보고서 다운로더",
+    description:
+      "티커 기호와 연도를 입력하면 공공 출처에서 재무 및 지속 가능성 보고서를 자동으로 다운로드합니다.",
+    target_enterprise: "대상 기업",
+    year: "연도",
+    downloading: "다운로드 중...",
+    start_download: "다운로드 시작",
+    processing_status: "처리 상태",
+    downloaded_files: "다운로드한 파일",
+    open_new_tab: "새 탭에서 열기",
+    save_file: "파일 저장",
+    download_failed: "다운로드 실패, 다시 시도해 주세요",
+    download_complete: "다운로드 완료",
+    preparing: "다운로드 준비 중...",
   },
 };

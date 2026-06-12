@@ -4,6 +4,8 @@ import path from "path";
 import { companyRepo } from "@/repositories/company.repo";
 import { reportDownloadTaskRepo } from "@/repositories/report_download_task.repo";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const dataDir = path.join(process.cwd(), "data");
   const items = [];

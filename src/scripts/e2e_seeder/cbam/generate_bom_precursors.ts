@@ -176,6 +176,7 @@ async function generateContentWithRetry(
 export async function generateBOMAndPrecursors(
   stockId: string,
   year: string = "2024",
+  mode: string = "all",
 ) {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
   const personaFile = path.join(
@@ -221,7 +222,37 @@ export async function generateBOMAndPrecursors(
     },
   });
 
-  const prompt = `你是一個 ERP 系統的物料大師 (Master Data Manager) 與碳盤查顧問。
+  let existingProducts: {
+    productName: string;
+    productId: string;
+    [key: string]: unknown;
+  }[] = [];
+  let existingProductNames = "";
+  if (mode === "add_sku" && fs.existsSync(outFile)) {
+    const existingData = JSON.parse(fs.readFileSync(outFile, "utf-8"));
+    existingProducts = existingData.products || [];
+    existingProductNames = existingProducts
+      .map((p: { productName: string }) => p.productName)
+      .join(", ");
+  }
+
+  const prompt =
+    mode === "add_sku"
+      ? `你是一個 ERP 系統的物料大師 (Master Data Manager) 與碳盤查顧問。
+這家企業的畫像如下：
+產業動態：${persona.industryDynamics}
+可用的主要原料供應商：${JSON.stringify(rawMaterialSuppliers)}
+
+請為這家企業「新增 1 種」全新的主力「終端產品」，並展開其 BOM 表。
+已經存在的產品名稱為：${existingProductNames}，請勿重複生成相似產品，且 productId 需保證唯一。
+特別要求：
+1. BOM 裡面的 supplierName 必須從「可用的主要原料供應商」中挑選，以保持追溯一致性。
+2. inputWeightKg 必須合理。如果是金屬加工，投入的重量通常大於產品最終淨重(因為有邊角料耗損)。
+3. 請針對每項產品，幻覺出合理的金屬材料化學元素佔比 (materialComposition)，所有元素的 percentage 加總必須「絕對等於 100%」(可加入 Others 來補齊餘數)。
+4. 請賦予產品 8 碼的歐盟海關稅則號列 (cnCode，例如 73181595)。
+5. 請在 BOM 中刻意加入一項「紙箱包材」以測試系統邊界，但記得將包材的 isCbamCovered 標記為 false。
+6. recycledContentShare 必須將 total_percent 拆分為 preConsumer_percent 與 postConsumer_percent。`
+      : `你是一個 ERP 系統的物料大師 (Master Data Manager) 與碳盤查顧問。
 這家企業的畫像如下：
 產業動態：${persona.industryDynamics}
 可用的主要原料供應商：${JSON.stringify(rawMaterialSuppliers)}
@@ -236,8 +267,23 @@ export async function generateBOMAndPrecursors(
 6. recycledContentShare 必須將 total_percent 拆分為 preConsumer_percent 與 postConsumer_percent。`;
 
   const result = await generateContentWithRetry(model, prompt);
+  let resultText = result.response.text();
+  try {
+    const resultData = JSON.parse(resultText);
+    if (mode === "add_sku") {
+      const newProduct = resultData.products[0];
+      if (newProduct) {
+        console.log(`[NEW_SKU] ${newProduct.productId}`);
+        existingProducts.push(...resultData.products);
+        resultData.products = existingProducts;
+        resultText = JSON.stringify(resultData, null, 2);
+      }
+    }
+  } catch (e) {
+    console.error("Failed to parse Gemini response as JSON", e);
+  }
 
-  fs.writeFileSync(outFile, result.response.text(), "utf-8");
+  fs.writeFileSync(outFile, resultText, "utf-8");
 
   console.log(`🎉 [SUCCESS] 產品 BOM 與前驅物數據已成功產生：${outFile}`);
 }
@@ -250,13 +296,14 @@ if (
 ) {
   const stockId = process.argv[2];
   const year = process.argv[3] || "2024";
+  const mode = process.argv[5] || "all";
   if (!stockId) {
     console.error(
       "❌ 請提供股票代號，例如: npx tsx src/scripts/e2e_seeder/cbam/generate_bom_precursors.ts 2066",
     );
     process.exit(1);
   }
-  generateBOMAndPrecursors(stockId, year).catch((e) => {
+  generateBOMAndPrecursors(stockId, year, mode).catch((e) => {
     console.error(e);
     process.exit(1);
   });

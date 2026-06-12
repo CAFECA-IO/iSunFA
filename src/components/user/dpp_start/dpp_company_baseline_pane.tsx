@@ -11,26 +11,58 @@ interface IDppCompanyBaselinePaneProps {
   isGenerating: boolean;
   onViewDetails: () => void;
   onRegenerate: () => void;
+  progress?: {
+    hasFin: boolean;
+    hasEsg: boolean;
+    hasPersonaHtml: boolean;
+    hasBom: boolean;
+  };
 }
 
 export function DppCompanyBaselinePane({
   isGenerating,
   onViewDetails,
   onRegenerate,
+  progress = {
+    hasFin: false,
+    hasEsg: false,
+    hasPersonaHtml: false,
+    hasBom: false,
+  },
 }: IDppCompanyBaselinePaneProps) {
   const { t } = useTranslation();
 
   const baselineModules = [
-    t("digital_product_passport.simulator.baseline_manufacturer") ||
-      "製造商 (Manufacturer)",
-    t("digital_product_passport.simulator.baseline_traceability") ||
-      "供應鏈追溯 (Traceability)",
-    t("digital_product_passport.simulator.baseline_circularity") ||
-      "循環性與效率政策 (Circularity)",
-    t("digital_product_passport.simulator.baseline_compliance") ||
-      "技術手冊 & 合規稽核政策 (Compliance)",
-    t("digital_product_passport.simulator.baseline_material") ||
-      "材料組成政策 (Material Composition)",
+    {
+      name:
+        t("digital_product_passport.simulator.baseline_manufacturer") ||
+        "製造商 (Manufacturer)",
+      completed: !!progress?.hasFin,
+    },
+    {
+      name:
+        t("digital_product_passport.simulator.baseline_traceability") ||
+        "供應鏈追溯 (Traceability)",
+      completed: !!progress?.hasBom,
+    },
+    {
+      name:
+        t("digital_product_passport.simulator.baseline_circularity") ||
+        "循環性與效率政策 (Circularity)",
+      completed: !!progress?.hasEsg,
+    },
+    {
+      name:
+        t("digital_product_passport.simulator.baseline_compliance") ||
+        "技術手冊 & 合規稽核政策 (Compliance)",
+      completed: !!progress?.hasPersonaHtml,
+    },
+    {
+      name:
+        t("digital_product_passport.simulator.baseline_material") ||
+        "材料組成政策 (Material Composition)",
+      completed: !!progress?.hasBom,
+    },
   ];
 
   return (
@@ -53,10 +85,20 @@ export function DppCompanyBaselinePane({
           {baselineModules.map((mod, idx) => (
             <div
               key={idx}
-              className="flex items-center gap-3 rounded-lg border border-slate-100 bg-slate-50 p-3"
+              className={`flex items-center gap-3 rounded-lg border p-3 ${mod.completed ? "border-emerald-100 bg-emerald-50/30" : "border-slate-100 bg-slate-50 opacity-60"}`}
             >
-              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-              <span className="text-sm font-medium text-slate-700">{mod}</span>
+              {mod.completed ? (
+                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+              ) : (
+                <div className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-slate-300 bg-transparent text-slate-300">
+                  <span className="text-[10px] font-bold">!</span>
+                </div>
+              )}
+              <span
+                className={`text-sm font-medium ${mod.completed ? "text-slate-700" : "text-slate-500"}`}
+              >
+                {mod.name}
+              </span>
             </div>
           ))}
         </div>

@@ -97,6 +97,8 @@ export default function DppStartPage() {
   const [products, setProducts] = useState<
     NonNullable<IDemoItem["progress"]["products"]>
   >([]);
+  const [currentProgress, setCurrentProgress] =
+    useState<Omit<IDemoItem["progress"], "products">>();
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [steps, setSteps] = useState<IGenerationStep[]>([
     {
@@ -365,7 +367,7 @@ export default function DppStartPage() {
     }
 
     request<IApiResponse<IDemoItem[]>>(
-      "/api/v1/digital_product_passport_simulator/list",
+      `/api/v1/digital_product_passport_simulator/list?t=${Date.now()}`,
     )
       .then((listRes) => {
         const items = listRes.payload || [];
@@ -385,6 +387,12 @@ export default function DppStartPage() {
               currentItem.progress.hasPersonaHtml);
 
           setProducts(currentItem.progress.products || []);
+          setCurrentProgress({
+            hasFin: currentItem.progress.hasFin,
+            hasEsg: currentItem.progress.hasEsg,
+            hasPersonaHtml: currentItem.progress.hasPersonaHtml,
+            hasBom: currentItem.progress.hasBom,
+          });
           const activeProductId =
             selectedProductId ||
             (currentItem.progress.products &&
@@ -417,7 +425,7 @@ export default function DppStartPage() {
                   : "pending",
               file: currentItem.progress.hasEsg
                 ? esgFile
-                : isEsgExtrapolated
+                : isEsgExtrapolated && currentItem.progress.hasPersonaHtml
                   ? cacheFile
                   : undefined,
             },
@@ -576,8 +584,8 @@ export default function DppStartPage() {
   };
 
   const handleAddSku = () => {
-    // Info: (20260611 - Tzuhan) 模擬新增一個產品，重新呼叫產生
-    startGeneration(undefined, "all");
+    // Info: (20260611 - Tzuhan) 模擬新增一個產品，呼叫產生
+    startGeneration(undefined, "add_sku");
   };
 
   const handleRegenerateFile = (filePath: string) => {
@@ -590,9 +598,12 @@ export default function DppStartPage() {
       let mode: string | undefined;
 
       if (fileName.includes("product_specs")) mode = "product_specs_only";
-      else if (fileName.includes("fastener_blueprint")) mode = "product_image_only";
-      else if (fileName.includes("dpp_ground_truth")) mode = "dpp_ground_truth_only";
-      else if (fileName.includes("dpp_compliance_declaration")) mode = "dpp_compliance_only";
+      else if (fileName.includes("fastener_blueprint"))
+        mode = "product_image_only";
+      else if (fileName.includes("dpp_ground_truth"))
+        mode = "dpp_ground_truth_only";
+      else if (fileName.includes("dpp_compliance_declaration"))
+        mode = "dpp_compliance_only";
 
       if (mode) {
         startGeneration(undefined, mode, undefined, pId);
@@ -663,6 +674,7 @@ export default function DppStartPage() {
           isGenerating={isGenerating}
           onViewDetails={() => setModalContext("baseline")}
           onRegenerate={() => startGeneration(undefined, "generate_only")}
+          progress={currentProgress}
         />
 
         <DppProductMatrixPane
@@ -727,6 +739,7 @@ export default function DppStartPage() {
               />
               <DppPreviewPane
                 selectedFilePath={selectedFilePath}
+                isGenerating={isGenerating}
                 onRegenerateFile={handleRegenerateFile}
               />
             </div>

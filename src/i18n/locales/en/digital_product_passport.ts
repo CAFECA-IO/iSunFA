@@ -209,15 +209,36 @@ export const digitalProductPassport = {
 
   preview_extra: {
     view_generated_output: "View Generated Output",
-    file_not_found: "File not found",
+    file_not_found: "File Not Found",
     file_not_found_desc:
-      "The specified file could not be found. This may be due to a failure in the generation step. You can try regenerating the data for this phase.",
+      "Unable to locate the specified file, this might be due to an unsuccessful generation step. You may try to regenerate the data for this phase.",
     regenerate_file: "Regenerate this data",
-    loading: "Loading...",
     json_title: "DPP / AI Parsed Data Presentation",
+    json_view_desc:
+      "This is structured data, suitable for system integration or analysis.",
     json_desc:
       "The system has converted raw JSON data into visual components for easy viewing.",
-    waiting_title: "Waiting for Data Generation",
-    waiting_desc: "Corporate Persona and reports will be displayed here.",
+    regenerating_title: "Generating Data...",
+    regenerating_desc: "AI is regenerating this data, please wait.",
+    waiting_title: "Please select an item",
+    waiting_desc:
+      "Click a step on the left to preview the related file or data.",
+    loading: "Loading...",
+  },
+  report_downloader: {
+    title: "Public Financial & ESG Report Downloader",
+    description:
+      "Enter the ticker symbol and year to automatically download financial and sustainability reports from public sources.",
+    target_enterprise: "Target Enterprise",
+    year: "Year",
+    downloading: "Downloading...",
+    start_download: "Start Download",
+    processing_status: "Processing Status",
+    downloaded_files: "Downloaded Files",
+    open_new_tab: "Open in new tab",
+    save_file: "Save file",
+    download_failed: "Download failed, please try again",
+    download_complete: "Download complete",
+    preparing: "Preparing download...",
   },
 };

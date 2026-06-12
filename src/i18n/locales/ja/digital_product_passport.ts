@@ -216,11 +216,32 @@ export const digitalProductPassport = {
     file_not_found_desc:
       "指定されたファイルが見つかりませんでした。生成ステップでのエラーが原因である可能性があります。このフェーズのデータを再生成してみてください。",
     regenerate_file: "このデータを再生成する",
-    loading: "読み込み中...",
     json_title: "DPP / AI解析データ表示",
+    json_view_desc:
+      "これは構造化データであり、システム統合や分析に適しています。",
     json_desc:
       "システムは生のJSONデータを視覚的なコンポーネントに変換して表示しています。",
-    waiting_title: "データの生成を待っています",
-    waiting_desc: "企業ペルソナとレポートがここに表示されます。",
+    regenerating_title: "データを生成しています...",
+    regenerating_desc: "AIがデータを再生成しています。お待ちください。",
+    waiting_title: "項目を選択してください",
+    waiting_desc:
+      "左側のステップをクリックして関連ファイルまたはデータをプレビューします。",
+    loading: "読み込み中...",
+  },
+  report_downloader: {
+    title: "公開財務およびESGレポートダウンローダー",
+    description:
+      "ティッカーシンボルと年を入力すると、公開情報源から財務およびサステナビリティレポートを自動的にダウンロードします。",
+    target_enterprise: "対象企業",
+    year: "年",
+    downloading: "ダウンロード中...",
+    start_download: "ダウンロード開始",
+    processing_status: "処理ステータス",
+    downloaded_files: "ダウンロードしたファイル",
+    open_new_tab: "新しいタブで開く",
+    save_file: "ファイルを保存",
+    download_failed: "ダウンロードに失敗しました。もう一度お試しください",
+    download_complete: "ダウンロード完了",
+    preparing: "ダウンロードの準備中...",
   },
 };

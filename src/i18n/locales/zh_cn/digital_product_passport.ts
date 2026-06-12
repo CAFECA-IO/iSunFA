@@ -199,15 +199,34 @@ export const digitalProductPassport = {
   },
 
   preview_extra: {
-    view_generated_output: "查看生成的输出文件",
+    view_generated_output: "查看已生成数据",
     file_not_found: "文件不存在",
     file_not_found_desc:
       "无法找到指定的文件，这可能是因为生成步骤未能成功。您可以尝试重新生成此阶段的数据。",
     regenerate_file: "重新生成此数据",
-    loading: "加载中...",
     json_title: "DPP / AI 解析数据呈现",
+    json_view_desc: "此为结构化数据，可作为系统对接或分析使用",
     json_desc: "系统已将原始 JSON 数据转换为可视化组件以便查看。",
-    waiting_title: "等待数据生成完毕",
-    waiting_desc: "企业画像 (Persona) 与报告将在此呈现",
+    regenerating_title: "数据生成中...",
+    regenerating_desc: "AI 正在重新生成此数据，请稍候。",
+    waiting_title: "请选择一个项目",
+    waiting_desc: "点击左侧步骤以预览相关的文件或数据。",
+    loading: "加载中...",
+  },
+  report_downloader: {
+    title: "公开财报与 ESG 报告书下载",
+    description:
+      "输入上市企业代号与年份，系统将自动从公开信息来源下载该年度之财务报告与可持续发展报告。",
+    target_enterprise: "目标企业",
+    year: "年份",
+    downloading: "下载中...",
+    start_download: "开始下载",
+    processing_status: "处理状态",
+    downloaded_files: "已下载文件",
+    open_new_tab: "在新标签页中打开",
+    save_file: "保存文件",
+    download_failed: "下载失败，请稍后再试",
+    download_complete: "下载完成",
+    preparing: "准备下载中...",
   },
 };

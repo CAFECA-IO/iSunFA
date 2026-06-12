@@ -9,6 +9,7 @@ export const GenerateDppSchema = z.object({
   mode: z
     .enum([
       "all",
+      "add_sku",
       "download_only",
       "generate_only",
       "extrapolate_only",

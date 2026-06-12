@@ -37,7 +37,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { stockId, year, productCount, productId, mode } = parsed.data;
+    const { stockId, year, productCount, mode } = parsed.data;
+    let { productId } = parsed.data;
 
     // Info: (20260609 - Tzuhan) 建立 SSE 資料流
     const stream = new ReadableStream({
@@ -285,6 +286,7 @@ export async function POST(req: NextRequest) {
 
           if (
             mode === "all" ||
+            mode === "add_sku" ||
             mode === "dpp_only" ||
             mode === "dpp_catalog_only"
           ) {
@@ -294,13 +296,30 @@ export async function POST(req: NextRequest) {
               type: "log",
               message: `Executing generate_bom_precursors.ts...`,
             });
-            await runScript("npx", [
-              "tsx",
-              "src/scripts/e2e_seeder/cbam/generate_bom_precursors.ts",
-              stockId,
-              year,
-              productCount.toString(),
-            ]);
+            const { stdout: bomStdout } = await runScript(
+              "npx",
+              [
+                "tsx",
+                "src/scripts/e2e_seeder/cbam/generate_bom_precursors.ts",
+                stockId,
+                year,
+                productCount.toString(),
+                mode === "add_sku" ? "add_sku" : "all",
+              ],
+              true,
+            );
+
+            // If mode is add_sku, try to extract the new product ID from stdout
+            if (mode === "add_sku") {
+              const match = bomStdout.match(/\[NEW_SKU\]\s+(P-[A-Za-z0-9-]+)/);
+              if (match && match[1]) {
+                productId = match[1];
+                sendEvent({
+                  type: "log",
+                  message: `Detected new SKU: ${productId}`,
+                });
+              }
+            }
             sendEvent({
               type: "preview",
               file: `data/${stockId}/${year}/outputs/mock_sources/boms_and_precursors.json`,
@@ -309,6 +328,7 @@ export async function POST(req: NextRequest) {
 
           const isAllProductDpp =
             mode === "all" ||
+            mode === "add_sku" ||
             mode === "dpp_only" ||
             mode === "product_dpp_only";
           const productArg = productId ? `--productId=${productId}` : "";
