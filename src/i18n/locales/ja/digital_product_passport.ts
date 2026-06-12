@@ -116,12 +116,13 @@ export const digitalProductPassport = {
     action_buttons: "操作ボタン",
   },
   start: {
-    initialize_simulation: "シミュレーションを初期化",
-    search_company: "会社を検索",
-    search_company_placeholder: "会社名を入力...",
-    simulation_year: "シミュレーション年度",
-    start_simulation: "シミュレーション開始",
-    unknown_error: "予期しないエラーが発生しました",
+    initialize_simulation: "企業シミュレーションデータベースの初期化",
+    search_company: "対象企業の検索",
+    search_company_placeholder: "企業名または統一会社番号を入力...",
+    simulation_year: "シミュレーション年",
+    start_simulation: "初期化を開始",
+    start_generation: "推計および分析スクリプトの実行開始",
+    unknown_error: "不明なエラーが発生しました",
     step1: "1. 財務報告書および公開データの抽出",
     step2_extrapolate: "2. ESGの年度またぎ推定（タイムマシン）",
     step2: "2. ESGサステナビリティ報告書および指標の抽出",
@@ -147,6 +148,8 @@ export const digitalProductPassport = {
     baseline_details: "ベースライン詳細 (技術コンサルタント向け)",
   },
   simulator: {
+    empty_product_data:
+      "製品データがありません。右上の「シミュレーション製品 SKU を追加」をクリックしてください。",
     group_manufacturer: "メーカー (Manufacturer)",
     ai_extrapolation: "✨ AI 推定",
     header_title: "企業モックデータ生成センター",

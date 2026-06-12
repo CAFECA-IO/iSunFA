@@ -114,6 +114,7 @@ export const digitalProductPassport = {
     search_company_placeholder: "输入公司名称或统一社会信用代码...",
     simulation_year: "模拟年份",
     start_simulation: "开始建立",
+    start_generation: "开始执行推演与分析脚本",
     unknown_error: "发生未知错误",
     step1: "1. 财务报告与公开数据提取",
     step2_extrapolate: "2. ESG 跨年推演 (Time-Machine)",
@@ -139,6 +140,7 @@ export const digitalProductPassport = {
     baseline_details: "基线详情 (供技术顾问使用)",
   },
   simulator: {
+    empty_product_data: "目前尚无产品资料，请点击右上方新增产品 SKU",
     group_manufacturer: "制造商 (Manufacturer)",
     ai_extrapolation: "✨ AI 推算",
     header_title: "企业模拟资料生成中心",

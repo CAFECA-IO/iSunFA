@@ -114,11 +114,12 @@ export const digitalProductPassport = {
     action_buttons: "작업 버튼",
   },
   start: {
-    initialize_simulation: "시뮬레이션 초기화",
-    search_company: "회사 검색",
-    search_company_placeholder: "회사 이름 입력...",
+    initialize_simulation: "기업 시뮬레이션 데이터베이스 초기화",
+    search_company: "대상 기업 검색",
+    search_company_placeholder: "회사명 또는 통합 사업자 번호 입력...",
     simulation_year: "시뮬레이션 연도",
-    start_simulation: "시뮬레이션 시작",
+    start_simulation: "초기화 시작",
+    start_generation: "추정 및 분석 스크립트 실행 시작",
     unknown_error: "알 수 없는 오류가 발생했습니다",
     step1: "1. 재무 보고서 및 공개 데이터 추출",
     step2_extrapolate: "2. ESG 연도 간 추정 (타임머신)",
@@ -144,7 +145,9 @@ export const digitalProductPassport = {
     baseline_details: "베이스라인 세부 정보 (기술 컨설턴트용)",
   },
   simulator: {
-    group_manufacturer: "제조업체 (Manufacturer)",
+    empty_product_data:
+      "제품 데이터가 없습니다. 우측 상단의 '시뮬레이션 제품 SKU 추가'를 클릭하세요.",
+    group_manufacturer: "제조사 (Manufacturer)",
     ai_extrapolation: "✨ AI 추정",
     header_title: "기업 목업 데이터 생성 센터",
     header_subtitle:

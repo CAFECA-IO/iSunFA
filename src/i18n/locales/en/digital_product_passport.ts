@@ -114,12 +114,13 @@ export const digitalProductPassport = {
     action_buttons: "Action Buttons",
   },
   start: {
-    initialize_simulation: "Initialize Simulation",
-    search_company: "Search Company",
-    search_company_placeholder: "Enter company name or ID...",
+    initialize_simulation: "Initialize Corporate Simulation Database",
+    search_company: "Search Target Enterprise",
+    search_company_placeholder: "Enter company name or Tax ID...",
     simulation_year: "Simulation Year",
-    start_simulation: "Start Simulation",
-    unknown_error: "An unknown error occurred",
+    start_simulation: "Start Initialization",
+    start_generation: "Start Estimation & Analysis Script",
+    unknown_error: "Unknown Error Occurred",
     step1: "1. Financial Report and Public Data Extraction",
     step2_extrapolate: "2. ESG Cross-Year Extrapolation (Time-Machine)",
     step2: "2. ESG Sustainability Report and Metrics Extraction",
@@ -145,6 +146,8 @@ export const digitalProductPassport = {
     baseline_details: "Baseline Details (For Technical Consultants)",
   },
   simulator: {
+    empty_product_data:
+      "No product data available. Please click 'Add Simulated Product SKU' on the top right.",
     group_manufacturer: "Manufacturer",
     ai_extrapolation: "✨ AI Extrapolation",
     header_title: "Enterprise Mock Data Generation Center",

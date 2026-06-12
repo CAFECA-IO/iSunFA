@@ -3,7 +3,6 @@ import fs from "fs";
 import path from "path";
 import JSZip from "jszip";
 import { convertJsonToCsv } from "@/scripts/e2e_seeder/dpp/convert_json_to_csv";
-import { renderDppPdf } from "@/scripts/e2e_seeder/dpp/render_dpp_pdf";
 import { convertSpecsToCsv } from "@/scripts/e2e_seeder/dpp/convert_specs_to_csv";
 
 export async function POST(request: Request) {
@@ -104,21 +103,10 @@ export async function POST(request: Request) {
       fs.writeFileSync(tmpSpecsPath, JSON.stringify(specsData, null, 2));
     }
 
-    // Info: (20260612 - Tzuhan) Copy static assets needed for PDF
-    const blueprintPath = path.join(baseOutputsDir, "fastener_blueprint.png");
-    if (fs.existsSync(blueprintPath)) {
-      fs.copyFileSync(
-        blueprintPath,
-        path.join(tmpDir, "fastener_blueprint.png"),
-      );
-    }
+    // Removed incorrect blueprint copy to tmpDir
 
     // Info: (20260612 - Tzuhan) Execute generation scripts on tmp directory
     await convertJsonToCsv(stockId, year, {
-      baseDirOverride: tmpDir,
-      targetProductId: skuId,
-    });
-    await renderDppPdf(stockId, year, {
       baseDirOverride: tmpDir,
       targetProductId: skuId,
     });
@@ -151,22 +139,27 @@ export async function POST(request: Request) {
     }
 
     // 3. fastener_blueprint.png
-    const blueprintPathTmp = path.join(tmpDir, "fastener_blueprint.png");
-    if (fs.existsSync(blueprintPathTmp)) {
-      zip.file("fastener_blueprint.png", fs.readFileSync(blueprintPathTmp));
+    const blueprintPathSrc = path.join(
+      baseOutputsDir,
+      skuId,
+      "mock_sources",
+      "fastener_blueprint.png",
+    );
+    if (fs.existsSync(blueprintPathSrc)) {
+      zip.file("fastener_blueprint.png", fs.readFileSync(blueprintPathSrc));
     }
 
     // 4. dpp_compliance_declaration.pdf
-    const generatedPdfPath = path.join(
-      tmpDir,
+    const compliancePdfPathSrc = path.join(
+      baseOutputsDir,
       skuId,
       "system_ingestion",
       `${skuId}_dpp_compliance_declaration.pdf`,
     );
-    if (fs.existsSync(generatedPdfPath)) {
+    if (fs.existsSync(compliancePdfPathSrc)) {
       zip.file(
         `${skuId}_dpp_compliance_declaration.pdf`,
-        fs.readFileSync(generatedPdfPath),
+        fs.readFileSync(compliancePdfPathSrc),
       );
     }
 
