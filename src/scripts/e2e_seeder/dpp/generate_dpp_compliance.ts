@@ -149,7 +149,7 @@ ${groundTruthContext}
 3. **Circularity & Recycled Shares**: 宣告產品材料的回收料比例 (pre-consumer, post-consumer recycled content share) 與原生材料比例 (primary material)。
 4. **Material Chemical Composition**: 條列出詳細的化學元素組成百分比（例如 Fe, C, Mn, P, S, Si, B 等的佔比）。
 5. **Importer & Logistics Details**: 宣告進口商的公司名稱、地址與 EORI 號碼。
-6. **Social & Ethical Sourcing**: 明確宣告本產品在製造過程中符合國際勞工標準 (Labor Standard Compliant) 以及所有原料均為道德採購 (Ethical Sourcing)。
+6. **Social & Ethical Sourcing**: 明確宣告本產品在製造過程中符合國際勞工標準 (Labor Standard Compliant) 以及所有原料均為道德採購 (Ethical Sourcing)，並必須明確聲明此宣告已獲第三方稽核認證 (Supported by third-party SA8000 Certification and independent social audit reports)。
 7. **Compliance Certificates**: 列出 IATF 16949 合規性與其 Certificate ID。
 
 【嚴格格式要求】

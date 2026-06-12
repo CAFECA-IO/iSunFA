@@ -189,7 +189,7 @@ export class DppService {
 For each module in modulesData:
 1. If any of the documents contain information for that module, set "extracted" to true and populate the "data" object with the extracted fields. Combine insights from multiple documents if necessary.
 2. If none of the documents contain information for that module, set "extracted" to false and omit or leave "data" empty.
-3. For any module that is not covered or has missing critical information, list it in "missingGaps" with a description of the missing info in "issue", and its "impact" ('High', 'Medium', or 'Critical').
+3. For any module that is not covered or has missing critical information, list it in "missingGaps" with a description of the missing info in "issue", and its "impact" ('High', 'Medium', or 'Critical'). If a module explicitly claims third-party certifications or compliance (e.g. SA8000 for social impact, ISO 14067 for LCA), consider it covered and do not report a missing gap.
 
 Make sure to extract:
 - Product info (ID, name, model, CN code, weight) for "1_product_info".
