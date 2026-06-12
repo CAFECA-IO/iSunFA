@@ -64,3 +64,6 @@ pdfs/
 
 # Backup Archives
 *.tar.gz
+
+# LanceDB
+.lancedb_data
