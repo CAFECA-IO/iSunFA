@@ -91,11 +91,11 @@ async function runBatchPipeline() {
   for (const file of files) {
     console.log(`\n==============================================`);
 
-    /* ToDo: (20260612 - Julian) 目前 companyName 是直接從檔名提取的，未來須加入 LLM Metadata Extraction (資料萃取) 的機制。
-     ** 具體做法如下：
-     ** 1. 讓 LLM 自己讀前幾頁： 當 LlamaCloud 把 PDF 轉成 Markdown 之後，我們不要立刻切塊存入 LanceDB。我們先把文件的前 1000~2000 字（通常包含封面、目錄、董事長致詞）丟給一個輕量級的 LLM。
-     ** 2. 要求 LLM 判斷公司： 給 LLM 一個 Prompt：「請閱讀以下報告片段，判斷這份報告是屬於哪一家企業的？請回傳該企業的『全名』與『常見簡稱』的 JSON。」
-     ** 3. 將萃取結果存入 LanceDB： LLM 回傳 {"fullName": "亞洲水泥股份有限公司", "shortName": "亞泥"} 後，我們再把這兩個精確的名字，當作 Metadata 寫入 LanceDB 的欄位裡。
+    /** ToDo: (20260612 - Julian) 目前 companyName 是直接從檔名提取的，未來須加入 LLM Metadata Extraction (資料萃取) 的機制。
+     * 具體做法如下：
+     * 1. 讓 LLM 自己讀前幾頁： 當 LlamaCloud 把 PDF 轉成 Markdown 之後，我們不要立刻切塊存入 LanceDB。我們先把文件的前 1000~2000 字（通常包含封面、目錄、董事長致詞）丟給一個輕量級的 LLM。
+     * 2. 要求 LLM 判斷公司： 給 LLM 一個 Prompt：「請閱讀以下報告片段，判斷這份報告是屬於哪一家企業的？請回傳該企業的『全名』與『常見簡稱』的 JSON。」
+     * 3. 將萃取結果存入 LanceDB： LLM 回傳 {"fullName": "亞洲水泥股份有限公司", "shortName": "亞泥"} 後，我們再把這兩個精確的名字，當作 Metadata 寫入 LanceDB 的欄位裡。
      */
 
     const [companyName, yearStr] = file.split("_");
