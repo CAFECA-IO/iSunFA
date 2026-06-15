@@ -41,6 +41,14 @@ export const SystemAccountNodes = {
   OTHER_COMPREHENSIVE_INCOME_ROOT: "8000", // Info: (20260520 - Tzuhan) 其他綜合損益
   TAX_EXPENSE_ROOT: "7950", // Info: (20260520 - Tzuhan) 所得稅費用
   INTEREST_EXPENSE_ROOT: "7050", // Info: (20260520 - Tzuhan) 財務成本/利息
-  INTEREST_EXPENSE_ROOT_ALT: "7510", // Info: (20260520 - Tzuhan) 利息費用
-  DIVIDEND_PAYABLE_ROOT: "3350", // Info: (20260520 - Tzuhan) 股利發放相關(未分配盈餘)
+  INTEREST_EXPENSE_ROOT_ALT: "7510", // Info: (20250920 - Tzuhan) 利息費用
+  DIVIDEND_PAYABLE_ROOT: "3350", // Info: (20250920 - Tzuhan) 股利發放相關(未分配盈餘)
+
+  // Info: (20260615 - Tzuhan) --- Seeder / Diagnostic Specific Nodes ---
+  UTILITIES_EXPENSE: "6288", // Info: (20260615 - Tzuhan)水電燃氣費
+  ADMIN_EXPENSE: "6200", // Info: (20260615 - Tzuhan)管理費用
+  TRAVEL_EXPENSE: "6213", // Info: (20260615 - Tzuhan)交通/差旅費
+  SALES_RETURN: "4170", // Info: (20260615 - Tzuhan)銷貨退回
+  SALES_DISCOUNT: "4190", // Info: (20260615 - Tzuhan)銷貨折讓
+  DIRECT_LABOR_WAGES: "5122", // Info: (20260615 - Tzuhan)製造費用-薪工
 } as const;

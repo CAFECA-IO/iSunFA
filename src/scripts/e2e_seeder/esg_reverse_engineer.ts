@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import { Prisma } from "@/generated";
 import { MoneyUtil } from "@/lib/utils/money";
 import { MeasurementUnit } from "@/constants/enums";
+import { SystemAccountNodes } from "@/constants/system_account_codes";
 
 interface IExtractedContextCache {
   financial: {
@@ -146,11 +147,19 @@ export const generateEsgRecords = (stockId: string) => {
 
   // Info: (20260502 - Tzuhan) 2. 將範疇二 (電力) 映射至水電費傳票 (代碼 6288)
   let utilityLines = vouchers.flatMap((v) =>
-    v.lines.filter((l) => l.accountingCode === "6288" && l.debitAmount > 0),
+    v.lines.filter(
+      (l) =>
+        l.accountingCode === SystemAccountNodes.UTILITIES_EXPENSE &&
+        l.debitAmount > 0,
+    ),
   );
   if (utilityLines.length === 0) {
     utilityLines = vouchers.flatMap((v) =>
-      v.lines.filter((l) => l.accountingCode === "6200" && l.debitAmount > 0),
+      v.lines.filter(
+        (l) =>
+          l.accountingCode === SystemAccountNodes.ADMIN_EXPENSE &&
+          l.debitAmount > 0,
+      ),
     );
   }
 
@@ -180,11 +189,19 @@ export const generateEsgRecords = (stockId: string) => {
 
   // Info: (20260502 - Tzuhan) 3. 將範疇一 (直接排放) 映射至交通費傳票 (代碼 6213)
   let travelLines = vouchers.flatMap((v) =>
-    v.lines.filter((l) => l.accountingCode === "6213" && l.debitAmount > 0),
+    v.lines.filter(
+      (l) =>
+        l.accountingCode === SystemAccountNodes.TRAVEL_EXPENSE &&
+        l.debitAmount > 0,
+    ),
   );
   if (travelLines.length === 0) {
     travelLines = vouchers.flatMap((v) =>
-      v.lines.filter((l) => l.accountingCode === "6200" && l.debitAmount > 0),
+      v.lines.filter(
+        (l) =>
+          l.accountingCode === SystemAccountNodes.ADMIN_EXPENSE &&
+          l.debitAmount > 0,
+      ),
     );
   }
 
@@ -214,11 +231,19 @@ export const generateEsgRecords = (stockId: string) => {
 
   // Info: (20260504 - Tzuhan) 將範疇三 (其他間接排放) 映射至其他管理費用傳票 (代碼 6288)
   let opexLines = vouchers.flatMap((v) =>
-    v.lines.filter((l) => l.accountingCode === "6288" && l.debitAmount > 0),
+    v.lines.filter(
+      (l) =>
+        l.accountingCode === SystemAccountNodes.UTILITIES_EXPENSE &&
+        l.debitAmount > 0,
+    ),
   );
   if (opexLines.length === 0) {
     opexLines = vouchers.flatMap((v) =>
-      v.lines.filter((l) => l.accountingCode === "6200" && l.debitAmount > 0),
+      v.lines.filter(
+        (l) =>
+          l.accountingCode === SystemAccountNodes.ADMIN_EXPENSE &&
+          l.debitAmount > 0,
+      ),
     );
   }
 

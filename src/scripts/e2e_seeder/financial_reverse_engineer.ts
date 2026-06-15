@@ -116,14 +116,14 @@ const REVENUE_POOL: IAccountPoolItem[] = [
   { code: "4111", desc: "銷貨收入" },
   { code: "4112", desc: "分期付款銷貨收入" },
   { code: "4150", desc: "勞務收入" },
-  { code: "4170", desc: "銷貨退回" },
-  { code: "4190", desc: "銷貨折讓" },
+  { code: SystemAccountNodes.SALES_RETURN, desc: "銷貨退回" },
+  { code: SystemAccountNodes.SALES_DISCOUNT, desc: "銷貨折讓" },
 ];
 
 const COGS_POOL: IAccountPoolItem[] = [
   { code: "5111", desc: "銷貨成本" },
   { code: "5121", desc: "進貨費用" },
-  { code: "5122", desc: "進貨折讓" },
+  { code: SystemAccountNodes.DIRECT_LABOR_WAGES, desc: "進貨折讓" },
 ];
 
 const SELLING_EXP_POOL: IAccountPoolItem[] = [
@@ -189,10 +189,13 @@ const createDiversifiedVoucherBlocks = (
     let finalCreditCode = isDebitNormal ? creditCode : randomItem.code;
 
     // Info: (20260601 - Tzuhan) Reverse for contra accounts
-    if (randomItem.code === "4170" || randomItem.code === "4190") {
+    if (
+      randomItem.code === SystemAccountNodes.SALES_RETURN ||
+      randomItem.code === SystemAccountNodes.SALES_DISCOUNT
+    ) {
       debitCode = randomItem.code;
       finalCreditCode = creditCode;
-    } else if (randomItem.code === "5122") {
+    } else if (randomItem.code === SystemAccountNodes.DIRECT_LABOR_WAGES) {
       debitCode = creditCode;
       finalCreditCode = randomItem.code;
     }

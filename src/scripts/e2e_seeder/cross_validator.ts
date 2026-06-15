@@ -157,7 +157,7 @@ export const runCrossValidation = async (stockId: string) => {
   };
 
   const systemSelling = aggregateOpexItems("6100");
-  const systemAdmin = aggregateOpexItems("6200");
+  const systemAdmin = aggregateOpexItems(SystemAccountNodes.ADMIN_EXPENSE);
   const systemRnD = aggregateOpexItems("6300");
 
   const systemOpex = new Prisma.Decimal(
