@@ -14,7 +14,7 @@ import {
   IDigitalProductPassportBatch,
   IDigitalProductPassportSku,
 } from "@/interfaces/dpp";
-import { ApiError } from "@/lib/utils/error_dictionary";
+import { ApiError, API_ERRORS } from "@/lib/utils/error_dictionary";
 import { ApiCode } from "@/lib/utils/status";
 import { DPP_SKU_STATUS } from "@/constants/status";
 
@@ -32,9 +32,9 @@ export class DppService {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       throw new ApiError(
-        "ISDPP008",
-        "GEMINI_API_KEY environment variable is not defined",
-        ApiCode.INTERNAL_SERVER_ERROR,
+        API_ERRORS.IS_GEMINI_API_KEY_UNDEFINED.code,
+        API_ERRORS.IS_GEMINI_API_KEY_UNDEFINED.message,
+        API_ERRORS.IS_GEMINI_API_KEY_UNDEFINED.status,
       );
     }
     return new GoogleGenerativeAI(apiKey);

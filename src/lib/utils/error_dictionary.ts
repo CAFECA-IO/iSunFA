@@ -666,6 +666,11 @@ export const API_ERRORS = {
     message: "Key generation failed",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
+  IS_GEMINI_API_KEY_UNDEFINED: {
+    code: "IS000008",
+    message: "GEMINI_API_KEY environment variable is not defined",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
   IS_UNKNOWN: {
     code: "IS000099",
     message: "Internal Server Error",
