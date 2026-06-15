@@ -20,6 +20,7 @@ import PdfShareLinkModal from "@/components/pdf_tool/pdf_share_link_modal";
 import { AiReportModal } from "@/components/pdf_tool/ai_report_modal";
 import EditPanel from "@/components/pdf_tool/edit_panel";
 import { PdfToolViewMode, PDF_PRINT_STYLE } from "@/constants/pdf_tool";
+import { safeStorage } from "@/lib/utils/storage";
 
 // Info: (20260604 - Julian) 定義預設 md 內容與 storage key
 const DEFAULT_CONTENT =
@@ -80,7 +81,7 @@ export default function PdfEditor({
 
   useEffect(() => {
     // Info: (20260604 - Julian) 頁面載入時，從 localstorage 取得草稿
-    const savedDraft = localStorage.getItem(STORAGE_KEY);
+    const savedDraft = safeStorage.getItem(STORAGE_KEY);
     if (savedDraft && savedDraft !== DEFAULT_CONTENT) {
       setMarkdownContext(savedDraft);
     }
@@ -89,9 +90,9 @@ export default function PdfEditor({
     const saveDraft = () => {
       const currentContent = markdownRef.current;
       if (currentContent && currentContent !== DEFAULT_CONTENT) {
-        localStorage.setItem(STORAGE_KEY, currentContent);
+        safeStorage.setItem(STORAGE_KEY, currentContent);
       } else {
-        localStorage.removeItem(STORAGE_KEY);
+        safeStorage.removeItem(STORAGE_KEY);
       }
     };
 
@@ -112,6 +113,35 @@ export default function PdfEditor({
       }
     };
   }, []);
+
+  // Info: (20260615 - Julian) 捕捉 Cmd + S / Ctrl + S 快捷鍵，手動儲存草稿到 localStorage
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isSaveShortcut =
+        (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s";
+      if (isSaveShortcut) {
+        e.preventDefault();
+
+        const currentContent = markdownRef.current;
+        if (currentContent && currentContent !== DEFAULT_CONTENT) {
+          safeStorage.setItem(STORAGE_KEY, currentContent);
+        } else {
+          safeStorage.removeItem(STORAGE_KEY);
+        }
+
+        setToastMessage({
+          type: ToastType.SUCCESS,
+          text: "草稿已手動儲存",
+        });
+        setTimeout(() => setToastMessage(null), 3000);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [t]);
 
   const toggleShareLinkModal = () => setIsShareLinkModalOpen((prev) => !prev);
 
