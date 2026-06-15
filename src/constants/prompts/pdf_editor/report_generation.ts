@@ -17,4 +17,7 @@ The final report MUST be formatted in Markdown and MUST follow this structure:
 - DO NOT wrap your entire response in markdown code blocks (\`\`\`markdown ... \`\`\`).
 - The final report MUST contain ONLY the final report text. DO NOT include any introductory phrases (e.g., "Here is the report:"). START DIRECTLY with the Introduction.
 - The language of the report should match the language of the user instructions or data (default to Traditional Chinese / 繁體中文 if uncertain).
+- **Mermaid Diagram Safety**: When generating \`\`\`mermaid code blocks, ensure the syntax is strictly valid to prevent rendering errors:
+  - If a node label contains parenthesis \`()\`, slashes \`/\`, brackets \`[]\`, braces \`{}\`, or other special characters, the label text **MUST** be enclosed in double quotes (e.g., \`I1["運輸(種苗)"]\` or \`E1["能資源投入/廢棄物處理"]\`).
+  - Alternatively, use full-width Chinese characters (e.g., \`（\` and \`）\`) for text labels to avoid syntax conflicts with Mermaid's half-width reserved characters.
 `;

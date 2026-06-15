@@ -36,6 +36,12 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
   });
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
+  // Info: (20260615 - Julian) 使用 Ref 快取最新狀態，避免拖曳滑鼠時因 state 更新導致頻繁重新綁定事件監聽器
+  const latestStateRef = useRef({ position, isDragging, dragStart });
+  useEffect(() => {
+    latestStateRef.current = { position, isDragging, dragStart };
+  }, [position, isDragging, dragStart]);
+
   // Info: (20260418 - Tzuhan) Intercept Mermaid Pie charts and render using our premium Recharts Donut instead
   const parsedPieData = useMemo(() => {
     if (!chart || typeof chart !== "string") return null;
@@ -232,16 +238,16 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
       if ((e.target as HTMLElement).closest(".mermaid-control-btn")) return;
       setIsDragging(true);
       setDragStart({
-        x: e.clientX - position.x,
-        y: e.clientY - position.y,
+        x: e.clientX - latestStateRef.current.position.x,
+        y: e.clientY - latestStateRef.current.position.y,
       });
     };
 
     const handleMouseMoveNative = (e: MouseEvent) => {
-      if (!isDragging) return;
+      if (!latestStateRef.current.isDragging) return;
       setPosition({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y,
+        x: e.clientX - latestStateRef.current.dragStart.x,
+        y: e.clientY - latestStateRef.current.dragStart.y,
       });
     };
 
@@ -271,7 +277,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
       viewport.removeEventListener("mouseleave", handleMouseLeaveNative);
       viewport.removeEventListener("dblclick", handleDoubleClickNative);
     };
-  }, [position, isDragging, dragStart]); // Info: (20260615 - Julian) 重新綁定事件
+  }, []); // Info: (20260615 - Julian) 僅在掛載時綁定一次
 
   // Info: (20260615 - Julian) 綁定 Modal 事件，避免 JSX-a11y 警告
   useEffect(() => {
@@ -284,16 +290,16 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
       if ((e.target as HTMLElement).closest(".mermaid-control-btn")) return;
       setIsDragging(true);
       setDragStart({
-        x: e.clientX - position.x,
-        y: e.clientY - position.y,
+        x: e.clientX - latestStateRef.current.position.x,
+        y: e.clientY - latestStateRef.current.position.y,
       });
     };
 
     const handleMouseMoveNative = (e: MouseEvent) => {
-      if (!isDragging) return;
+      if (!latestStateRef.current.isDragging) return;
       setPosition({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y,
+        x: e.clientX - latestStateRef.current.dragStart.x,
+        y: e.clientY - latestStateRef.current.dragStart.y,
       });
     };
 
@@ -323,7 +329,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
       modal.removeEventListener("mouseleave", handleMouseLeaveNative);
       modal.removeEventListener("dblclick", handleDoubleClickNative);
     };
-  }, [isFullscreen, position, isDragging, dragStart]);
+  }, [isFullscreen]);
 
   if (parsedPieData) {
     return <DonutChart title={parsedPieData.title} data={parsedPieData.data} />;

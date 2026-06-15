@@ -13,6 +13,12 @@ interface IAiReportModalProps {
   onClose: () => void;
   onSubmit: (data: string, instruction: string) => void;
   onError: (message: string) => void;
+
+  // Info: (20260615 - Julian) 將 state 提升到父層，以便生成報告完成後，清除 textarea 的文字內容
+  dataInput: string;
+  setDataInput: React.Dispatch<React.SetStateAction<string>>;
+  instruction: string;
+  setInstruction: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export function AiReportModal({
@@ -20,10 +26,12 @@ export function AiReportModal({
   onClose,
   onSubmit,
   onError,
+  dataInput,
+  setDataInput,
+  instruction,
+  setInstruction,
 }: IAiReportModalProps) {
   const { t } = useTranslation();
-  const [dataInput, setDataInput] = useState<string>("");
-  const [instruction, setInstruction] = useState<string>("");
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 

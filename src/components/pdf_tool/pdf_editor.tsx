@@ -66,6 +66,8 @@ export default function PdfEditor({
   // Info: (20260605 - Julian) AI Report Modal State
   const [isAiReportModalOpen, setIsAiReportModalOpen] =
     useState<boolean>(false);
+  const [aiDataInput, setAiDataInput] = useState<string>("");
+  const [aiInstruction, setAiInstruction] = useState<string>("");
 
   // Info: (20260605 - Julian) Toast Message State
   const [toastMessage, setToastMessage] = useState<{
@@ -246,6 +248,8 @@ export default function PdfEditor({
           t("admin_mission_board.pdf_editor.toast_report_inserted")!,
           ToastType.SUCCESS,
         );
+        setAiDataInput("");
+        setAiInstruction("");
       } else {
         setErrorModal({
           isOpen: true,
@@ -568,6 +572,10 @@ export default function PdfEditor({
         onClose={() => setIsAiReportModalOpen(false)}
         onSubmit={handleGenerateAiReport}
         onError={(message) => setErrorModal({ isOpen: true, message })}
+        dataInput={aiDataInput}
+        setDataInput={setAiDataInput}
+        instruction={aiInstruction}
+        setInstruction={setAiInstruction}
       />
     </div>
   );

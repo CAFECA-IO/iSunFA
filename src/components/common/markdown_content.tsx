@@ -21,6 +21,7 @@ const AsyncLariaImage = ({
 
   useEffect(() => {
     if (!src) return;
+    let active = true;
     let urlToRevoke: string | null = null;
 
     // Info: (20260517 - Luphia) Check if it's a file from our Laria storage
@@ -29,13 +30,16 @@ const AsyncLariaImage = ({
       const cid = match[1];
       downloadFile(cid, {
         onSuccess: (blob) => {
+          if (!active) return;
           const url = URL.createObjectURL(blob);
           urlToRevoke = url;
           setObjectUrl(url);
         },
         onError: (err) => {
           console.error("Failed to load Laria image:", err);
-          setObjectUrl(src);
+          if (active) {
+            setObjectUrl(src);
+          }
         },
       });
     } else {
@@ -43,6 +47,7 @@ const AsyncLariaImage = ({
     }
 
     return () => {
+      active = false;
       if (urlToRevoke) {
         URL.revokeObjectURL(urlToRevoke);
       }
