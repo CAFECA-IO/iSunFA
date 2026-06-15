@@ -60,6 +60,10 @@ yarn.lock
 # data & local seeding
 data/
 /agent.md
+pdfs/
 
 # Backup Archives
 *.tar.gz
+
+# LanceDB
+.lancedb_data

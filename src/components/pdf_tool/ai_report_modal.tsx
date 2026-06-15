@@ -166,6 +166,7 @@ export function AiReportModal({
                     </div>
 
                     <div
+                      role="presentation"
                       onDragOver={handleDragOver}
                       onDragLeave={handleDragLeave}
                       onDrop={handleDrop}
