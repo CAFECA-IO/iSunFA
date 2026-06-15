@@ -18,10 +18,11 @@ import { DPP_SKU_STATUS } from "@/constants/status";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { uploadFile } from "@/lib/file_operator";
+import { IDppMissingGap } from "@/interfaces/dpp";
 
 interface ISkuPayload {
   status: string;
-  missingGaps?: { module: string; issue: string; impact: string }[];
+  missingGaps?: IDppMissingGap[];
   modulesData?: Record<string, { extracted: boolean }>;
 }
 
@@ -278,57 +279,52 @@ export default function SkuDiagnosticPage() {
                   </p>
                 </div>
               ) : (
-                gaps.map(
-                  (
-                    gap: { module: string; issue: string; impact: string },
-                    idx: number,
-                  ) => {
-                    const isUploading = uploadingGaps[idx];
+                gaps.map((gap: IDppMissingGap, idx: number) => {
+                  const isUploading = uploadingGaps[idx];
 
-                    return (
-                      <div
-                        key={idx}
-                        className="group rounded-2xl border border-amber-200 bg-amber-50/30 p-5 transition hover:border-amber-300 hover:shadow-md"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <div className="mb-2 flex items-center gap-2">
-                              <span className="rounded bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700 uppercase">
-                                {gap.impact}
-                              </span>
-                              <h4 className="font-bold text-gray-900">
-                                {gap.module}
-                              </h4>
-                            </div>
-                            <p className="mb-4 text-sm text-gray-600">
-                              {gap.issue}
-                            </p>
+                  return (
+                    <div
+                      key={idx}
+                      className="group rounded-2xl border border-amber-200 bg-amber-50/30 p-5 transition hover:border-amber-300 hover:shadow-md"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <div className="mb-2 flex items-center gap-2">
+                            <span className="rounded bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700 uppercase">
+                              {gap.impact}
+                            </span>
+                            <h4 className="font-bold text-gray-900">
+                              {gap.module}
+                            </h4>
                           </div>
-                        </div>
-                        <div className="flex justify-end border-t border-amber-200/50 pt-4">
-                          <button
-                            onClick={() => handleTriggerUpload(idx)}
-                            disabled={isUploading}
-                            className="flex items-center gap-2 rounded-lg bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-200 disabled:opacity-50"
-                          >
-                            {isUploading ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <UploadCloud className="h-4 w-4" />
-                            )}
-                            {isUploading
-                              ? t(
-                                  "digital_product_passport.sku_creation.uploading",
-                                )
-                              : t(
-                                  "digital_product_passport.sku_diagnostics.upload_doc",
-                                )}
-                          </button>
+                          <p className="mb-4 text-sm text-gray-600">
+                            {gap.issue}
+                          </p>
                         </div>
                       </div>
-                    );
-                  },
-                )
+                      <div className="flex justify-end border-t border-amber-200/50 pt-4">
+                        <button
+                          onClick={() => handleTriggerUpload(idx)}
+                          disabled={isUploading}
+                          className="flex items-center gap-2 rounded-lg bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-200 disabled:opacity-50"
+                        >
+                          {isUploading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <UploadCloud className="h-4 w-4" />
+                          )}
+                          {isUploading
+                            ? t(
+                                "digital_product_passport.sku_creation.uploading",
+                              )
+                            : t(
+                                "digital_product_passport.sku_diagnostics.upload_doc",
+                              )}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
               )}
             </div>
           </div>

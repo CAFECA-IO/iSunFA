@@ -13,6 +13,7 @@ import {
 import {
   IDigitalProductPassportBatch,
   IDigitalProductPassportSku,
+  IDppMissingGap,
 } from "@/interfaces/dpp";
 import { ApiError, API_ERRORS } from "@/lib/utils/error_dictionary";
 import { ApiCode } from "@/lib/utils/status";
@@ -188,14 +189,13 @@ export class DppService {
       "8_critical_raw_materials": { extracted: false },
       "9_material_composition": { extracted: false },
     };
-    let parsedMissingGaps: { module: string; issue: string; impact: string }[] =
-      [
-        {
-          module: "General",
-          issue: "Document format unsupported or content empty.",
-          impact: "High",
-        },
-      ];
+    let parsedMissingGaps: IDppMissingGap[] = [
+      {
+        module: "General",
+        issue: "Document format unsupported or content empty.",
+        impact: "High",
+      },
+    ];
 
     if (fileIds.length > 0) {
       const prompt = `You are a Digital Product Passport (DPP) compliance auditor. Analyze the provided documents for the product.
@@ -337,7 +337,7 @@ ${personaContext}`;
         name: parsedName,
         status: finalStatus,
         modulesData: parsedModulesData as Prisma.InputJsonValue,
-        missingGaps: parsedMissingGaps as Prisma.InputJsonValue,
+        missingGaps: parsedMissingGaps as unknown as Prisma.InputJsonValue,
       });
     } else {
       sku = await this.dppRepo.createSku({
@@ -346,7 +346,7 @@ ${personaContext}`;
         name: parsedName,
         status: finalStatus,
         modulesData: parsedModulesData as Prisma.InputJsonValue,
-        missingGaps: parsedMissingGaps as Prisma.InputJsonValue,
+        missingGaps: parsedMissingGaps as unknown as Prisma.InputJsonValue,
       });
     }
 

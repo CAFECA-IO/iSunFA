@@ -21,6 +21,7 @@ import {
 import DataTable, { IDataTableColumn } from "@/components/common/data_table";
 import { useAuth } from "@/contexts/auth_context";
 import AuthPlaceholder from "@/components/common/auth_placeholder";
+import { DPP_SKU_STATUS } from "@/constants/status";
 
 export default function DppDashboard() {
   const { t } = useTranslation();
@@ -141,7 +142,7 @@ export default function DppDashboard() {
       label: t("common.status"),
       render: (row) => (
         <span
-          className={`rounded-full px-2 py-1 text-[10px] font-bold whitespace-nowrap ${row.status === "READY" ? "bg-emerald-100 text-emerald-700" : row.status === "INCOMPLETE" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}
+          className={`rounded-full px-2 py-1 text-[10px] font-bold whitespace-nowrap ${row.status === DPP_SKU_STATUS.READY ? "bg-emerald-100 text-emerald-700" : row.status === DPP_SKU_STATUS.INCOMPLETE ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}
         >
           {t(`digital_product_passport.sku_diagnostics.status.${row.status}`)}
         </span>
