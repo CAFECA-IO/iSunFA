@@ -32,6 +32,11 @@ export default function DppDashboard() {
   const [batches, setBatches] = useState<IDigitalProductPassportBatch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"sku" | "batch">("sku");
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     if (authLoading || !user) return;
@@ -183,7 +188,7 @@ export default function DppDashboard() {
       label: t("digital_product_passport.batch_creation.manufacture_date"),
       render: (row) => (
         <span className="text-sm text-gray-500">
-          {new Date(row.manufactureDate).toLocaleDateString()}
+          {isMounted ? new Date(row.manufactureDate).toLocaleDateString() : ""}
         </span>
       ),
     },

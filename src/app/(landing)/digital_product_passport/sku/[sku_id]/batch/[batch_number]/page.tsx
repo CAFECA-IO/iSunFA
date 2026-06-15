@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
+
 import { useTranslation } from "@/i18n/i18n_context";
 import { useParams, useRouter } from "next/navigation";
 import useSWR from "swr";
@@ -124,6 +126,11 @@ const fetcher = (url: string) =>
 
 export default function PublicBatchPassportPage() {
   const { t } = useTranslation();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   const router = useRouter();
   const params = useParams();
   const skuId = params.sku_id as string;
@@ -311,7 +318,9 @@ export default function PublicBatchPassportPage() {
                 <span className="text-slate-900">
                   {productInfo.manufacturedDate
                     ? String(productInfo.manufacturedDate)
-                    : new Date(batch.manufactureDate).toLocaleDateString()}
+                    : isMounted
+                      ? new Date(batch.manufactureDate).toLocaleDateString()
+                      : ""}
                 </span>
               </div>
 
