@@ -12,7 +12,7 @@ import {
   Download,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { toPng } from "html-to-image";
+import { useChartExport } from "@/hooks/use_chart_export";
 
 interface IMermaidChartProps {
   chart: string;
@@ -239,53 +239,20 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
   // Info: (20260615 - Julian) 獲取目前作用中的 Mermaid SVG 容器
   const getContainer = () => {
     if (isFullscreen && modalRef.current) {
-      return modalRef.current.querySelector(".mermaid-container");
+      return modalRef.current.querySelector(
+        ".mermaid-container",
+      ) as HTMLElement | null;
     }
-    return viewportRef.current?.querySelector(".mermaid-container");
+    return viewportRef.current?.querySelector(
+      ".mermaid-container",
+    ) as HTMLElement | null;
   };
 
-  // Info: (20260615 - Julian) 匯出成 PNG 圖片
-  const exportPng = async (e?: React.MouseEvent | MouseEvent) => {
-    e?.stopPropagation();
-    const container = getContainer();
-    if (!container) return;
-
-    try {
-      const dataUrl = await toPng(container as HTMLElement, {
-        backgroundColor: "#F8FAFC", // Info: (20260615 - Julian) 圖片底色同 viewport
-        pixelRatio: 5, // Info: (20260615 - Julian) 放大 5 倍提高圖片品質
-      });
-
-      const link = document.createElement("a");
-      link.href = dataUrl;
-      link.download = `mermaid-chart-${Date.now()}.png`;
-      link.click();
-    } catch (error) {
-      console.error("Failed to export PNG", error);
-    }
-  };
-
-  // Info: (20260615 - Julian) 匯出成 SVG 向量圖
-  const exportSvg = (e?: React.MouseEvent | MouseEvent) => {
-    e?.stopPropagation();
-    const container = getContainer();
-    const svgElement = container?.querySelector("svg");
-    if (!svgElement) return;
-
-    const svgClone = svgElement.cloneNode(true) as SVGElement;
-    svgClone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-
-    const svgString = new XMLSerializer().serializeToString(svgClone);
-    const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `mermaid-chart-${Date.now()}.svg`;
-    link.click();
-
-    URL.revokeObjectURL(url);
-  };
+  // Info: (20260615 - Julian) 使用共享 Hook 管理 PNG / SVG 匯出
+  const { exportPng, exportSvg } = useChartExport(
+    () => getContainer(),
+    "mermaid-chart",
+  );
 
   // Info: (20260615 - Julian) 綁定 Viewport 事件，避免 JSX-a11y 警告
   useEffect(() => {
