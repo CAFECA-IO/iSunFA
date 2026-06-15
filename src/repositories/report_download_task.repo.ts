@@ -20,6 +20,11 @@ export const reportDownloadTaskRepo = {
   count(args?: Prisma.ReportDownloadTaskCountArgs): Promise<number> {
     return prisma.reportDownloadTask.count(args);
   },
+  deleteMany(
+    args: Prisma.ReportDownloadTaskDeleteManyArgs,
+  ): Promise<Prisma.BatchPayload> {
+    return prisma.reportDownloadTask.deleteMany(args);
+  },
   disconnect(): Promise<void> {
     return prisma.$disconnect();
   },

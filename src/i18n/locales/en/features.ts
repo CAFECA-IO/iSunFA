@@ -40,6 +40,10 @@ export const features = {
       title: "Smart Receipt Recognition",
       desc: "Automatically extracts and archives receipt information, eliminating the burden of manual data entry.",
     },
+    digital_product_passport_simulator: {
+      title: "Digital Product Passport Simulator",
+      desc: "Provides simulated Digital Product Passport data for testing and demonstration.",
+    },
     digital_product_passport: {
       title: "Digital Product Passport",
       desc: "Create a digital resume of product lifecycle information and carbon footprint, compliant with international standards, to enhance green competitiveness.",

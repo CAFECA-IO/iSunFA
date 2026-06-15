@@ -40,6 +40,10 @@ export const features = {
       title: "AI OCR",
       desc: "領収書の情報を自動的に抽出・分類・アーカイブし、手動入力の負担を排除します。",
     },
+    digital_product_passport_simulator: {
+      title: "デジタル製品パスポートシミュレーター",
+      desc: "テストやデモ用に、模擬的なデジタル製品パスポートのデータを提供します。",
+    },
     digital_product_passport: {
       title: "デジタル製品パスポート",
       desc: "製品のライフサイクル情報とカーボンフットプリントのデジタル履歴を作成し、国際基準に準拠して環境競争力を強化します。",

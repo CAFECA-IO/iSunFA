@@ -39,6 +39,7 @@ export interface IBomPrecursor {
 export interface IProductBom {
   productId: string;
   productName: string;
+  productCategory?: string;
   cnCode: string;
   bom: IBomPrecursor[];
   materialComposition?: {
@@ -97,4 +98,28 @@ export interface ICustomsExportLog {
   NetWeight_kg: number;
   GrossWeight_kg: number;
   FOB_Value_USD: number;
+}
+
+export interface IPrecursorReconciliation {
+  supplierName: string;
+  totalCostNtd: number;
+  inferredWeightKg: number;
+  emissionFactorKgCo2ePerKg: number;
+  totalEmissionsKgCo2e: number;
+}
+
+export interface ISimulatedVoucherLine {
+  id: string;
+  description: string;
+  accountingCode: string;
+  debitAmount: string | number;
+  creditAmount: string | number;
+  vendor?: string;
+}
+
+export interface ISimulatedVoucher {
+  id: string;
+  tradingDate: string;
+  voucherNumber: string;
+  lines: ISimulatedVoucherLine[];
 }

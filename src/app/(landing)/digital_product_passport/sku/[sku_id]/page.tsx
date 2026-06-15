@@ -34,10 +34,11 @@ export default function SkuDiagnosticPage() {
   const params = useParams();
   const skuId = params.sku_id as string;
 
-  const { data: response, isLoading } = useSWR(
-    skuId !== "demo-sku-12345" ? `/api/v1/user/dpp/sku/${skuId}` : null,
-    fetcher,
-  );
+  const {
+    data: response,
+    isLoading,
+    mutate,
+  } = useSWR(`/api/v1/user/dpp/sku/${skuId}`, fetcher);
 
   const sku = response?.payload || null;
 
@@ -45,7 +46,7 @@ export default function SkuDiagnosticPage() {
   const [uploadingGaps, setUploadingGaps] = useState<Record<number, boolean>>(
     {},
   );
-  const [clearedGaps, setClearedGaps] = useState<number[]>([]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeGapIdx, setActiveGapIdx] = useState<number | null>(null);
 
@@ -64,33 +65,34 @@ export default function SkuDiagnosticPage() {
 
     try {
       // Info: (20260514 - Luphia) Upload the file to IPFS
-      await new Promise<string>((resolve, reject) => {
+      const fileId = await new Promise<string>((resolve, reject) => {
         uploadFile(file, {
           onSuccess: (hash) => resolve(hash),
           onError: (err) => reject(new Error(err)),
         });
       });
 
-      // Info: (20260514 - Luphia) Simulate AI extraction complete & gap cleared
-      setTimeout(() => {
-        setClearedGaps((prev) => [...prev, currentIdx]);
-        setUploadingGaps((prev) => ({ ...prev, [currentIdx]: false }));
-      }, 1500); // Info: (20260514 - Luphia) Give a little visual feedback delay
+      // Info: (20260514 - Luphia) Update SKU with supplement and clear the gap
+      await request(`/api/v1/user/dpp/sku/${skuId}`, {
+        method: "PUT",
+        body: JSON.stringify({ fileId }),
+      });
+
+      await mutate();
     } catch (err) {
       console.error("Upload failed", err);
-      setUploadingGaps((prev) => ({ ...prev, [currentIdx]: false }));
       alert(
         t("digital_product_passport.sku_creation.upload_error") ||
           "Failed to upload supplement document.",
       );
     } finally {
+      setUploadingGaps((prev) => ({ ...prev, [currentIdx]: false }));
       setActiveGapIdx(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
-  const originalGaps = sku?.missingGaps || [];
-  const gaps = originalGaps.filter((_, idx) => !clearedGaps.includes(idx));
+  const gaps = sku?.missingGaps || [];
   const isReady = sku
     ? sku.status === DPP_SKU_STATUS.READY || gaps.length === 0
     : gaps.length === 0;
@@ -276,15 +278,12 @@ export default function SkuDiagnosticPage() {
                   </p>
                 </div>
               ) : (
-                originalGaps.map(
+                gaps.map(
                   (
                     gap: { module: string; issue: string; impact: string },
                     idx: number,
                   ) => {
-                    const isCleared = clearedGaps.includes(idx);
                     const isUploading = uploadingGaps[idx];
-
-                    if (isCleared) return null;
 
                     return (
                       <div
