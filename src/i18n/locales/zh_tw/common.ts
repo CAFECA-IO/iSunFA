@@ -104,5 +104,8 @@ export const common = {
     hint_desktop: "按住左鍵拖曳平移 • Ctrl + 滾輪縮放",
     hint_fullscreen: "按住左鍵拖曳平移 • 滾輪縮放 • 按 ESC 鍵關閉",
     preview_title: "流程圖預覽 (Fullscreen Flowchart Preview)",
+    download: "下載圖片",
+    export_png: "下載 PNG",
+    export_svg: "下載 SVG",
   },
 };

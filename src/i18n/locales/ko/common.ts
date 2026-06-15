@@ -109,5 +109,8 @@ export const common = {
     hint_fullscreen:
       "마우스 왼쪽 버튼 드래그로 이동 • 휠로 확대/축소 • ESC 키로 닫기",
     preview_title: "플로우차트 미리보기 (Fullscreen Flowchart Preview)",
+    download: "이미지 다운로드",
+    export_png: "PNG로 내보내기",
+    export_svg: "SVG로 내보내기",
   },
 };

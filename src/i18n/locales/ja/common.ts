@@ -109,5 +109,8 @@ export const common = {
     hint_fullscreen:
       "左クリックドラッグで移動 • ホイールでズーム • ESCキーで閉じる",
     preview_title: "フローチャートプレビュー (Fullscreen Flowchart Preview)",
+    download: "画像をダウンロード",
+    export_png: "PNGで保存",
+    export_svg: "SVGで保存",
   },
 };

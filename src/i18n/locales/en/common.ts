@@ -108,5 +108,8 @@ export const common = {
     hint_fullscreen:
       "Drag with left click to pan • Wheel to zoom • Press ESC to close",
     preview_title: "Flowchart Preview (Fullscreen)",
+    download: "Download Image",
+    export_png: "Export PNG",
+    export_svg: "Export SVG",
   },
 };
