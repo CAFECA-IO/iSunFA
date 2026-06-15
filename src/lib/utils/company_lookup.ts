@@ -165,7 +165,7 @@ export async function lookupCompany(query: string): Promise<ICompanyData[]> {
   cleanTrimmed = cleanTrimmed.replace(/(股份有限公司|有限公司|公司)$/, "");
 
   // Info: (20260320 - Tzuhan) 1. Local DB search (Fastest & most reliable for TWSE/TPEx)
-  // 如果原始 query 有附帶 "(2066)"，就直接嘗試擷取出代碼作為條件
+  // Info: (20260611 - Tzuhan) 如果原始 query 有附帶 "(2066)"，就直接嘗試擷取出代碼作為條件
   const idMatch = trimmed.match(/[（\(](\d+)[）\)]/);
   const possibleId = idMatch ? idMatch[1] : cleanTrimmed;
 
@@ -189,8 +189,8 @@ export async function lookupCompany(query: string): Promise<ICompanyData[]> {
   const abbrResults = lookupByAbbreviation(cleanTrimmed);
   if (abbrResults.length > 0) {
     // Info: (20260612 - Tzuhan) We want stock IDs, but abbreviations have tax IDs.
-    // However, if the local DB didn't find them, it might mean they are not listed or synced.
-    // We will just return the abbreviation result as fallback.
+    // Info: (20260612 - Tzuhan) However, if the local DB didn't find them, it might mean they are not listed or synced.
+    // Info: (20260612 - Tzuhan) We will just return the abbreviation result as fallback.
     return abbrResults;
   }
 

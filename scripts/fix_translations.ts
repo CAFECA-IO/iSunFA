@@ -34,8 +34,8 @@ async function fixFile(fileName: string, dir: string, lang: string) {
   if (!fs.existsSync(fullPath)) return;
 
   const content = fs.readFileSync(fullPath, "utf-8");
-  // Simple heuristic: If it doesn't contain Chinese characters, and lang is not Chinese, we might still want to translate it if it contains English strings that shouldn't be there, but let's just send it.
-  // Actually, to save API calls, we can just send everything and ask the AI to fix untranslated parts.
+  // Info: (20260615 - Tzuhan) Simple heuristic: If it doesn't contain Chinese characters, and lang is not Chinese, we might still want to translate it if it contains English strings that shouldn't be there, but let's just send it.
+  // Info: (20260615 - Tzuhan) Actually, to save API calls, we can just send everything and ask the AI to fix untranslated parts.
 
   const prompt = `
 You are an elite software localization expert.

@@ -121,7 +121,7 @@ export async function convertSpecsToCsv(
     ];
 
     if (groundTruthData) {
-      // General
+      // Info: (20260615 - Tzuhan) General
       if (groundTruthData.general?.gtin) {
         csvLines.push(`General,GTIN,${groundTruthData.general.gtin}`);
       }
@@ -149,7 +149,7 @@ export async function convertSpecsToCsv(
         );
       }
 
-      // Carbon Footprint
+      // Info: (20260615 - Tzuhan) Carbon Footprint
       if (groundTruthData.carbonFootprint) {
         const cf = groundTruthData.carbonFootprint;
         csvLines.push(
@@ -171,7 +171,7 @@ export async function convertSpecsToCsv(
         }
       }
 
-      // Circularity
+      // Info: (20260615 - Tzuhan) Circularity
       if (groundTruthData.circularity?.recycledContentShare) {
         const shares = groundTruthData.circularity.recycledContentShare;
         shares.forEach((share) => {
@@ -188,7 +188,7 @@ export async function convertSpecsToCsv(
         });
       }
 
-      // Material Composition
+      // Info: (20260615 - Tzuhan) Material Composition
       if (groundTruthData.materialComposition) {
         const comp = groundTruthData.materialComposition;
         comp.forEach((mat) => {
@@ -203,7 +203,7 @@ export async function convertSpecsToCsv(
         });
       }
 
-      // Importer Details
+      // Info: (20260615 - Tzuhan) Importer Details
       if (groundTruthData.importer) {
         const imp = groundTruthData.importer;
         csvLines.push(`Logistics,Importer Company Name,${imp.companyName}`);
@@ -213,7 +213,7 @@ export async function convertSpecsToCsv(
         csvLines.push(`Logistics,Importer EORI,${imp.eori}`);
       }
 
-      // Compliance additions
+      // Info: (20260615 - Tzuhan) Compliance additions
       if (groundTruthData.compliance) {
         const comp = groundTruthData.compliance;
         csvLines.push(
@@ -226,7 +226,7 @@ export async function convertSpecsToCsv(
         }
       }
 
-      // Social Impact
+      // Info: (20260615 - Tzuhan) Social Impact
       csvLines.push(`Social,Ethical Sourcing,Yes`);
       csvLines.push(`Social,Labor Standard Compliant,Yes`);
     }
@@ -250,7 +250,7 @@ export async function convertSpecsToCsv(
   }
 }
 
-// Support direct execution
+// Info: (20260615 - Tzuhan) Support direct execution
 if (import.meta.url === `file://${process.argv[1]}`) {
   const stockId = process.argv[2];
   const year = process.argv[3];

@@ -48,10 +48,6 @@ export const runAiBlindTester = async (stockId: string) => {
     include: { lines: true },
   });
 
-  // const esgRecords = await prisma.esgRecord.findMany({
-  //   where: { accountBookId: accountBookId, deletedAt: null, isVerified: true },
-  // });
-
   // Info: (20260507 - Julian) 改用 getEsgRecordsForReport 取得產生碳盤查資料
   const esgRecords = await esgRepo.getEsgRecordsForReport({ accountBookId });
 

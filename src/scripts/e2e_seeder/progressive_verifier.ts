@@ -19,6 +19,7 @@ import { ICashFlowStatement } from "@/interfaces/cash_flow_statement";
 import * as fs from "fs";
 import * as path from "path";
 import { IVoucherLineUI } from "@/interfaces/voucher";
+import { SystemAccountNodes } from "@/constants/system_account_codes";
 
 // Info: (20260601 - Tzuhan) 工具函數：確保必定能抓到會計科目，拒絕 any 或 undefined
 function mustGetAccount(code: string) {
@@ -474,9 +475,7 @@ async function runProgressiveVerification() {
     const bs = generateBalanceSheet(cumulativeLines, 10);
     const cf = generateCashFlowStatement(cumulativeLines, "0");
 
-    // ---------------------------------------------------------
     // Info: (20260601 - Tzuhan) 嚴格斷言 0: 三大表內部所有欄位、小計與總計的數學正確性
-    // ---------------------------------------------------------
     try {
       assertReportIntegrity(bs, is, cf);
     } catch (err) {
@@ -489,9 +488,7 @@ async function runProgressiveVerification() {
       process.exit(1);
     }
 
-    // ---------------------------------------------------------
     // Info: (20260601 - Tzuhan) 嚴格斷言 1: 資產負債表 (BS) 恆等式
-    // ---------------------------------------------------------
     const assets = BigInt(bs.assets.total);
     const liabilities = BigInt(bs.liabilities.total);
     const equity = BigInt(bs.equity.total);
@@ -504,12 +501,12 @@ async function runProgressiveVerification() {
       process.exit(1);
     }
 
-    // ---------------------------------------------------------
     // Info: (20260601 - Tzuhan) 嚴格斷言 2: 損益表 (IS) 與資產負債表 (BS) 勾稽
-    // ---------------------------------------------------------
     const isNetIncome = is.sections.netIncome.total;
     const bsCurrentEarnings =
-      bs.equity.items.find((item) => item.code === "3353")?.amount || "0"; // Info: (20260601 - Tzuhan) 3353 本期損益
+      bs.equity.items.find(
+        (item) => item.code === SystemAccountNodes.CURRENT_PERIOD_EARNINGS,
+      )?.amount || "0"; // Info: (20260601 - Tzuhan) 3353 本期損益
 
     if (isNetIncome !== bsCurrentEarnings) {
       console.error(`\n❌ [致命錯誤] IS 與 BS 勾稽失敗於第 ${i + 1} 張憑證！`);
@@ -519,13 +516,12 @@ async function runProgressiveVerification() {
       process.exit(1);
     }
 
-    // ---------------------------------------------------------
     // Info: (20260601 - Tzuhan) 嚴格斷言 3: 現金流量表 (CF) 與資產負債表 (BS) 勾稽
-    // ---------------------------------------------------------
     const cfEndingCash = cf.summary.endingBalance;
     const bsCash =
-      bs.assets.current.items.find((item) => item.code === "1101")?.amount ||
-      "0"; // 1101 現金及約當現金
+      bs.assets.current.items.find(
+        (item) => item.code === SystemAccountNodes.CASH_EQUIVALENTS,
+      )?.amount || "0"; // 1101 現金及約當現金
 
     if (cfEndingCash !== bsCash) {
       console.error(`\n❌ [致命錯誤] CF 與 BS 勾稽失敗於第 ${i + 1} 張憑證！`);

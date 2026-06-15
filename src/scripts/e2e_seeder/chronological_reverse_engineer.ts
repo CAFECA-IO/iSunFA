@@ -357,9 +357,7 @@ export const runChronologicalEngine = (
   let globalLineId = 1;
   let globalVoucherId = 1;
 
-  // ============================================
   // Info: (20260606 - Tzuhan) Day 0: Realistic Opening Balances
-  // ============================================
   const openingCash = findReportValue(bsList, "現金及約當現金", 3);
   const openingAR = findReportValue(bsList, "應收帳款淨額", 3);
   const openingInv = findReportValue(bsList, "存貨", 3);
@@ -458,9 +456,7 @@ export const runChronologicalEngine = (
     ],
   });
 
-  // ============================================
   // Info: (20260606 - Tzuhan) Manufacturing Hard Vouchers (WIP Flow & VAT)
-  // ============================================
   const MOCK_ELECTRICITY_PRICE = 3.5;
   const MOCK_STEEL_PRICE = 30;
   let totalElectricityCost = 0;
@@ -829,9 +825,7 @@ export const runChronologicalEngine = (
     cogs = MoneyUtil.toDecimal(0);
   }
 
-  // ============================================
   // Info: (20260606 - Tzuhan) Enhanced pushToBuckets
-  // ============================================
   const pushToBuckets = (
     total: Prisma.Decimal,
     count: number,
@@ -1056,7 +1050,7 @@ export const runChronologicalEngine = (
     }
   };
 
-  // Revenue (AR, VAT, 60 Day Settlement)
+  // Info: (20260615 - Tzuhan) Revenue (AR, VAT, 60 Day Settlement)
   pushToBuckets(
     totalRevenue,
     Math.floor(totalTarget * 0.4),
@@ -1068,7 +1062,7 @@ export const runChronologicalEngine = (
     60,
   );
 
-  // COGS (Credit FG, NO VAT, No Settlement)
+  // Info: (20260615 - Tzuhan) COGS (Credit FG, NO VAT, No Settlement)
   pushToBuckets(
     cogs,
     Math.floor(totalTarget * 0.3),
@@ -1080,7 +1074,7 @@ export const runChronologicalEngine = (
     0,
   );
 
-  // Opex (AP, VAT, 30 Day Settlement)
+  // Info: (20260615 - Tzuhan) Opex (AP, VAT, 30 Day Settlement)
   pushToBuckets(
     sellingExp,
     Math.floor(totalTarget * 0.05),
@@ -1112,11 +1106,9 @@ export const runChronologicalEngine = (
     30,
   );
 
-  // ============================================
   // Info: (20260606 - Tzuhan) Monthly Fixed Allocations
-  // ============================================
   for (let month = 0; month < 12; month++) {
-    // Day 5: Salaries
+    // Info: (20260615 - Tzuhan) Day 5: Salaries
     const salaryDay = month * 30 + 5;
     if (salaryDay < daysToSimulate) {
       if (monthlySalary.selling.gt(0)) {
@@ -1334,9 +1326,7 @@ export const runChronologicalEngine = (
     }
   }
 
-  // ============================================
   // Info: (20260606 - Tzuhan) Yearly Income Tax
-  // ============================================
   if (taxExp.gt(0)) {
     dailyBuckets[Math.min(364, daysToSimulate - 1)].push({
       id: `TAX-YEAR`,
@@ -1361,9 +1351,7 @@ export const runChronologicalEngine = (
     });
   }
 
-  // ============================================
   // Info: (20260606 - Tzuhan)  End of Year Inventory Buffer Adjustment
-  // ============================================
   const expectedInventory = new Prisma.Decimal("1234260"); // 113年期末存貨 from FIN_DATA.json
   const currentInventory = new Prisma.Decimal("1166337"); // From Day 0 Opening Balance (112年期末)
   const invDiff = expectedInventory.sub(currentInventory);
@@ -1410,9 +1398,7 @@ export const runChronologicalEngine = (
     });
   }
 
-  // ============================================
   // Info: (20260606 - Tzuhan) Bi-monthly VAT Settlement
-  // ============================================
   let accInputVat = new Prisma.Decimal(0);
   let accOutputVat = new Prisma.Decimal(0);
   for (let day = 0; day < daysToSimulate; day++) {

@@ -103,7 +103,7 @@ export async function POST(request: Request) {
       fs.writeFileSync(tmpSpecsPath, JSON.stringify(specsData, null, 2));
     }
 
-    // Removed incorrect blueprint copy to tmpDir
+    // Info: (20260615 - Tzuhan) Removed incorrect blueprint copy to tmpDir
 
     // Info: (20260612 - Tzuhan) Execute generation scripts on tmp directory
     await convertJsonToCsv(stockId, year, {
@@ -116,7 +116,7 @@ export async function POST(request: Request) {
 
     const zip = new JSZip();
 
-    // 1. boms_and_precursors.csv
+    // Info: (20260615 - Tzuhan) 1. boms_and_precursors.csv
     const generatedCsvPath = path.join(
       tmpMockSourcesDir,
       "boms_and_precursors.csv",
@@ -125,7 +125,7 @@ export async function POST(request: Request) {
       zip.file("boms_and_precursors.csv", fs.readFileSync(generatedCsvPath));
     }
 
-    // 2. product_specs.csv
+    // Info: (20260615 - Tzuhan) 2. product_specs.csv
     const generatedSpecsCsvPath = path.join(
       tmpProductMockDir,
       `${skuId}_product_specs.csv`,
@@ -137,7 +137,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3. fastener_blueprint.png
+    // Info: (20260615 - Tzuhan) 3. fastener_blueprint.png
     const blueprintPathSrc = path.join(
       baseOutputsDir,
       skuId,
@@ -148,7 +148,7 @@ export async function POST(request: Request) {
       zip.file("fastener_blueprint.png", fs.readFileSync(blueprintPathSrc));
     }
 
-    // 4. dpp_compliance_declaration.pdf
+    // Info: (20260615 - Tzuhan) 4. dpp_compliance_declaration.pdf
     const compliancePdfPathSrc = path.join(
       baseOutputsDir,
       skuId,

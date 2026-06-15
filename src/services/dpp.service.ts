@@ -271,14 +271,14 @@ ${personaContext}`;
               "Failed to parse JSON directly. Truncated output? Attempting to fix.",
               jsonErr,
             );
-            // Basic attempt to close truncated JSON object if missing }
+            // Info: (20260615 - Tzuhan) Basic attempt to close truncated JSON object if missing }
             if (!responseText.endsWith("}")) {
               responseText += "}";
             }
             try {
               parsed = JSON.parse(responseText);
             } catch {
-              // Add closing quotes and braces
+              // Info: (20260615 - Tzuhan) Add closing quotes and braces
               responseText = responseText.replace(/[^}"]*$/, "") + '"}';
               try {
                 parsed = JSON.parse(responseText);

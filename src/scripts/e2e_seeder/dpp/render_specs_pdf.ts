@@ -290,7 +290,7 @@ export async function renderSpecsPdf(
   }
 }
 
-// Support direct execution
+// Info: (20260615 - Tzuhan) Support direct execution
 if (import.meta.url === `file://${process.argv[1]}`) {
   const stockId = process.argv[2];
   const year = process.argv[3];

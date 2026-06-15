@@ -197,15 +197,6 @@ export const runCrossValidation = async (stockId: string) => {
     depreciationItem ? depreciationItem.amount : 0,
   );
 
-  // const esgRecords = await prisma.esgRecord.findMany({
-  //   where: {
-  //     accountBookId,
-  //     analysisStatus: "COMPLETED",
-  //     isVerified: true,
-  //     deletedAt: null,
-  //   },
-  // });
-
   // Info: (20260507 - Julian) 改用 getEsgRecordsForReport 取得產生碳盤查資料
   const esgRecords = await esgRepo.getEsgRecordsForReport({ accountBookId });
 

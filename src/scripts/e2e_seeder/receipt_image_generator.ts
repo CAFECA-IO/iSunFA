@@ -388,9 +388,6 @@ export const generateReceiptImages = async (
     process.exit(1);
   }
 
-  // if (fs.existsSync(receiptsDir)) {
-  //   fs.rmSync(receiptsDir, { recursive: true, force: true });
-  // }
   fs.mkdirSync(receiptsDir, { recursive: true });
 
   const vouchers = JSON.parse(
@@ -507,7 +504,7 @@ export const generateReceiptImages = async (
       isBankReceipt,
     };
 
-    // User Update: 現階段先不測髒汙雜訊，純驗證解析邏輯是否正確
+    // Info: (20260615 - Tzuhan) User Update: 現階段先不測髒汙雜訊，純驗證解析邏輯是否正確
     const isNoisy = false; // Math.random() < 0.1;
     if (isNoisy) noiseCount++;
 
