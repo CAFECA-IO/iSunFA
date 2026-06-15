@@ -43,9 +43,9 @@ export default function PdfEditor({
   >;
 }) {
   const { t } = useTranslation();
+
   const contentRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-
   // Info: (20260604 - Julian) md 內容
   const [markdownContext, setMarkdownContext] =
     useState<string>(DEFAULT_CONTENT);
@@ -78,6 +78,27 @@ export default function PdfEditor({
   useEffect(() => {
     markdownRef.current = markdownContext;
   }, [markdownContext]);
+
+  // Info: (20260615 - Julian) 統一的 Toast 控制與 Timer 清理機制，防止重複點擊時計時器互相干擾
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showToast = (text: string, type: ToastType) => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+    setToastMessage({ text, type });
+    toastTimeoutRef.current = setTimeout(() => {
+      setToastMessage(null);
+      toastTimeoutRef.current = null;
+    }, 3000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     // Info: (20260604 - Julian) 頁面載入時，從 localstorage 取得草稿
@@ -129,11 +150,10 @@ export default function PdfEditor({
           safeStorage.removeItem(STORAGE_KEY);
         }
 
-        setToastMessage({
-          type: ToastType.SUCCESS,
-          text: "草稿已手動儲存",
-        });
-        setTimeout(() => setToastMessage(null), 3000);
+        showToast(
+          t("admin_mission_board.pdf_editor.toast_draft_saved")!,
+          ToastType.SUCCESS,
+        );
       }
     };
 
@@ -143,7 +163,9 @@ export default function PdfEditor({
     };
   }, [t]);
 
-  const toggleShareLinkModal = () => setIsShareLinkModalOpen((prev) => !prev);
+  const toggleShareLinkModal = () => {
+    setIsShareLinkModalOpen((prev) => !prev);
+  };
 
   const handleShareClick = async () => {
     if (shareToken) {
@@ -167,14 +189,14 @@ export default function PdfEditor({
       } else {
         setErrorModal({
           isOpen: true,
-          message: t("common.error.default") || "Failed to generate share link",
+          message: t("admin_mission_board.pdf_editor.toast_share_link_failed")!,
         });
       }
     } catch (error) {
       console.error("Share error:", error);
       setErrorModal({
         isOpen: true,
-        message: t("common.error.default") || "Failed to generate share link",
+        message: t("admin_mission_board.pdf_editor.toast_share_link_failed")!,
       });
     } finally {
       setIsSharing(false);
@@ -220,13 +242,10 @@ export default function PdfEditor({
       if (response && response.payload && response.payload.result) {
         const report = response.payload.result;
         setMarkdownContext((prev) => prev + "\n\n" + report);
-
-        // Info: (20260605 - Julian) 顯示成功提示
-        setToastMessage({
-          type: ToastType.SUCCESS,
-          text: t("common.success") || "報告生成並插入成功！",
-        });
-        setTimeout(() => setToastMessage(null), 3000);
+        showToast(
+          t("admin_mission_board.pdf_editor.toast_report_inserted")!,
+          ToastType.SUCCESS,
+        );
       } else {
         setErrorModal({
           isOpen: true,

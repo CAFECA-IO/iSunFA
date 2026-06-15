@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, FC, useRef } from "react";
 import mermaid from "mermaid";
 import { DonutChart, IDonutChartData } from "@/components/common/donut_chart";
 import { ZoomIn, ZoomOut, Maximize2, Minimize2, RotateCcw } from "lucide-react";
+import { useTranslation } from "@/i18n/i18n_context";
 
 interface IMermaidChartProps {
   chart: string;
@@ -15,6 +16,7 @@ interface IPosition {
 }
 
 const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
+  const { t } = useTranslation();
   const viewportRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -339,7 +341,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
   if (!svgStr) {
     return (
       <div className="my-6 flex animate-pulse justify-center p-10 text-gray-500">
-        Rendering Chart...
+        {t("common.mermaid.rendering")}
       </div>
     );
   }
@@ -540,7 +542,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
             type="button"
             onClick={zoomIn}
             className="shrink-0 cursor-pointer rounded-md p-1.5 text-slate-600 transition-colors duration-150 hover:bg-slate-100"
-            title="放大 (Zoom In)"
+            title={t("common.mermaid.zoom_in")!}
           >
             <ZoomIn size={16} />
           </button>
@@ -548,7 +550,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
             type="button"
             onClick={zoomOut}
             className="shrink-0 cursor-pointer rounded-md p-1.5 text-slate-600 transition-colors duration-150 hover:bg-slate-100"
-            title="縮小 (Zoom Out)"
+            title={t("common.mermaid.zoom_out")!}
           >
             <ZoomOut size={16} />
           </button>
@@ -556,7 +558,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
             type="button"
             onClick={resetZoom}
             className="shrink-0 cursor-pointer rounded-md p-1.5 text-slate-600 transition-colors duration-150 hover:bg-slate-100"
-            title="重設 (Reset)"
+            title={t("common.mermaid.reset")!}
           >
             <RotateCcw size={16} />
           </button>
@@ -564,7 +566,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
             type="button"
             onClick={toggleFullscreen}
             className="shrink-0 cursor-pointer rounded-md p-1.5 text-slate-600 transition-colors duration-150 hover:bg-slate-100"
-            title="全螢幕 (Fullscreen)"
+            title={t("common.mermaid.fullscreen")!}
           >
             <Maximize2 size={16} />
           </button>
@@ -572,7 +574,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
 
         {/* Info: (20260615 - Julian) 操作提示 */}
         <div className="mermaid-control-hint pointer-events-none absolute bottom-2 left-3 text-[10px] font-medium text-slate-400">
-          按住左鍵拖曳平移 • Ctrl + 滾輪縮放
+          {t("common.mermaid.hint_desktop")}
         </div>
 
         {/* Info: (20260615 - Julian) 可 transform 的 SVG 容器 */}
@@ -601,7 +603,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
           {/* Info: (20260615 - Julian) 全螢幕 Header */}
           <div className="absolute top-4 left-6 z-10 flex items-center gap-2 font-medium text-slate-900">
             <span className="h-5 w-1 rounded-sm bg-[#FF9800]"></span>
-            <span>流程圖預覽 (Fullscreen Flowchart Preview)</span>
+            <span>{t("common.mermaid.preview_title")}</span>
           </div>
 
           {/* Info: (20260615 - Julian) 全螢幕 Toolbar */}
@@ -610,7 +612,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
               type="button"
               onClick={zoomIn}
               className="shrink-0 cursor-pointer rounded-lg p-1.5 text-slate-300 transition-colors duration-150 hover:bg-slate-700"
-              title="放大 (Zoom In)"
+              title={t("common.mermaid.zoom_in")!}
             >
               <ZoomIn size={20} />
             </button>
@@ -618,7 +620,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
               type="button"
               onClick={zoomOut}
               className="shrink-0 cursor-pointer rounded-lg p-1.5 text-slate-300 transition-colors duration-150 hover:bg-slate-700"
-              title="縮小 (Zoom Out)"
+              title={t("common.mermaid.zoom_out")!}
             >
               <ZoomOut size={20} />
             </button>
@@ -626,7 +628,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
               type="button"
               onClick={resetZoom}
               className="shrink-0 cursor-pointer rounded-lg p-1.5 text-slate-300 transition-colors duration-150 hover:bg-slate-700"
-              title="重設 (Reset)"
+              title={t("common.mermaid.reset")!}
             >
               <RotateCcw size={20} />
             </button>
@@ -634,7 +636,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
               type="button"
               onClick={toggleFullscreen}
               className="ml-1 shrink-0 cursor-pointer rounded-lg border-l border-slate-700 p-1.5 pl-2 text-rose-400 transition-colors duration-150 hover:bg-slate-700 hover:text-rose-300"
-              title="關閉全螢幕 (Close Fullscreen)"
+              title={t("common.mermaid.close_fullscreen")!}
             >
               <Minimize2 size={20} />
             </button>
@@ -642,7 +644,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
 
           {/* Info: (20260615 - Julian) 全螢幕操作提示 */}
           <div className="absolute bottom-4 left-6 text-xs text-slate-600">
-            按住左鍵拖曳平移 • 滾輪縮放 • 按 ESC 鍵關閉
+            {t("common.mermaid.hint_fullscreen")}
           </div>
 
           {/* Info: (20260615 - Julian) 可 transform 的 SVG 容器 */}

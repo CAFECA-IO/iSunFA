@@ -98,4 +98,16 @@ export const common = {
     footer_note:
       "このレポートはAI技術によって生成され、iSunFAスマート炭素会計によって提供されています • ",
   },
+  mermaid: {
+    rendering: "チャートを描画中...",
+    zoom_in: "拡大 (Zoom In)",
+    zoom_out: "縮小 (Zoom Out)",
+    reset: "リセット (Reset)",
+    fullscreen: "全画面表示 (Fullscreen)",
+    close_fullscreen: "全画面表示を閉じる (Close Fullscreen)",
+    hint_desktop: "左クリックドラッグで移動 • Ctrl + ホイールでズーム",
+    hint_fullscreen:
+      "左クリックドラッグで移動 • ホイールでズーム • ESCキーで閉じる",
+    preview_title: "フローチャートプレビュー (Fullscreen Flowchart Preview)",
+  },
 };

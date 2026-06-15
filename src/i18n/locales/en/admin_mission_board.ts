@@ -50,6 +50,9 @@ export const adminMissionBoard = {
   pdf_editor: {
     title: "PDF Editor",
     subtitle: "Write markdown and export as an iSunFA branded PDF.",
+    toast_draft_saved: "Draft saved manually",
+    toast_report_inserted: "Report generated and inserted successfully!",
+    toast_share_link_failed: "Failed to generate share link",
     edit_markdown: "Edit Markdown",
     preview_pdf: "Preview PDF",
     download_pdf: "Download PDF",
