@@ -27,6 +27,19 @@ export class DppService {
     this.fileRepo = new FileRepository();
   }
 
+  // Info: (20260615 - Tzuhan) Initialize and validate GoogleGenerativeAI client
+  private getGenAI(): GoogleGenerativeAI {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new ApiError(
+        "ISDPP008",
+        "GEMINI_API_KEY environment variable is not defined",
+        ApiCode.INTERNAL_SERVER_ERROR,
+      );
+    }
+    return new GoogleGenerativeAI(apiKey);
+  }
+
   public async issueBatch(
     skuId: string,
     userAddress: string,
@@ -241,9 +254,7 @@ ${personaContext}`;
         fileName = lastFileName;
         parsedName = `Product SKU based on ${fileName}`;
         try {
-          const genAI = new GoogleGenerativeAI(
-            process.env.GEMINI_API_KEY as string,
-          );
+          const genAI = this.getGenAI();
           const dppExtractionSchema = this.getDppExtractionSchema();
 
           const model = genAI.getGenerativeModel({
@@ -467,7 +478,7 @@ ${personaContext}`;
       }
     }
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
+    const genAI = this.getGenAI();
     const dppExtractionSchema = this.getDppExtractionSchema();
 
     const model = genAI.getGenerativeModel({
