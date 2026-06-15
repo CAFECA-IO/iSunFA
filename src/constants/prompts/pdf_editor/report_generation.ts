@@ -8,7 +8,7 @@ To ensure the highest quality, you MUST follow a two-step process:
 The final report MUST be formatted in Markdown and MUST follow this structure:
 1. **Introduction (前言)**: Briefly state the purpose of the report and summarize the context based on the input data.
 2. **Discussion & Analysis (論述與分析)**: Provide a detailed analysis of the data. Group points logically using headers (##, ###).
-3. **Data Visualization (數據圖表)**: Use clean Markdown Tables to present key metrics, financial figures, or ESG data extracted from the input. DO NOT use mermaid.js.
+3. **Data Visualization (數據圖表)**: Use clean Markdown Tables or \`\`\`mermaid code blocks to present key metrics, financial figures, or ESG data. Focus solely on presenting the data truthfully; DO NOT add any CSS, inline styles, or custom design formatting to the diagrams.
 4. **Conclusion (總結)**: Provide a clear, actionable conclusion or executive summary.
 
 ### Formatting Rules:
