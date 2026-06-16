@@ -65,7 +65,7 @@ export async function generateProductImage(
       `⏳ [${productId}] 正在呼叫 Imagen 4.0 生成 ${productName} 的藍圖...`,
     );
 
-    const prompt = `A highly detailed engineering mechanical blueprint of a ${productName} (${productCategory}), precise technical drawing, CAD wireframe style, modern dark tech theme with neon blue and cyan accents, extreme detail, top-down and isometric views, without any text, no labels, absolutely no Chinese characters.`;
+    const prompt = `A highly detailed engineering mechanical blueprint of a ${productName} (${productCategory}), precise technical drawing, CAD wireframe style, modern dark tech theme with neon blue and cyan accents, extreme detail, top-down and isometric views, with English labels and dimensions only, absolutely no Chinese characters.`;
 
     let success = false;
 
