@@ -1,5 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import fs from "fs/promises";
+import { jsonOk, jsonFail } from "@/lib/utils/response";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { statSync } from "fs";
 import path from "path";
 
@@ -82,32 +84,26 @@ export async function GET(req: NextRequest) {
     const stockId = searchParams.get("stockId");
     const year = searchParams.get("year");
     if (!stockId || !year) {
-      return NextResponse.json(
-        { error: "Missing stockId or year" },
-        { status: 400 },
-      );
+      return jsonFail(API_ERRORS.VL_MISSING_PARAMS);
     }
 
     const targetDir = path.join(cwd, "data", stockId, year, "outputs");
     try {
       const tree = await buildFileTree(targetDir, cwd);
-      return NextResponse.json(tree);
-    } catch (e: unknown) {
-      return NextResponse.json(
-        { error: e instanceof Error ? e.message : String(e) },
-        { status: 404 },
-      );
+      return jsonOk(tree);
+    } catch {
+      return jsonFail(API_ERRORS.NF_FILE);
     }
   } else if (action === "serve" || action === "download") {
     const filePath = searchParams.get("path");
     if (!filePath) {
-      return NextResponse.json({ error: "Missing path" }, { status: 400 });
+      return jsonFail(API_ERRORS.VL_MISSING_PARAMS);
     }
 
     // Info: (20260608 - Tzuhan) Security check: Prevent Path Traversal
     let absolutePath = path.resolve(cwd, filePath);
     if (!absolutePath.startsWith(path.join(cwd, "data"))) {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+      return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
     }
 
     try {
@@ -128,7 +124,7 @@ export async function GET(req: NextRequest) {
         }
       }
       if (!stats.isFile()) {
-        return NextResponse.json({ error: "Not a file" }, { status: 400 });
+        return jsonFail(API_ERRORS.VA_INVALID_INPUT_DATA);
       }
 
       const mimeType = getMimeType(absolutePath);
@@ -145,11 +141,11 @@ export async function GET(req: NextRequest) {
           `attachment; filename="${path.basename(absolutePath)}"`;
       }
 
-      return new NextResponse(fileBuffer, { headers });
+      return new Response(fileBuffer, { headers });
     } catch {
-      return NextResponse.json({ error: "File not found" }, { status: 404 });
+      return jsonFail(API_ERRORS.NF_FILE);
     }
   }
 
-  return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+  return jsonFail(API_ERRORS.VA_INVALID_INPUT_DATA);
 }
