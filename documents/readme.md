@@ -33,10 +33,10 @@
 
 ### 💡 2. 數位審計知識庫 (Digital Audit Knowledge Base)
 *聚焦於四大會計師級別的底層財報與內控實務：*
-- 🌳 **[報表引擎溯源](compliance_and_audit/01_tree_traversal_reporting_engine.md)**：告別 startsWith，擁抱樹狀溯源。
-- 🔄 **[自動沖銷架構](compliance_and_audit/02_auto_reconciliation_accrual_basis.md)**：從「應計基礎」到「現金流」的完整閉環。
-- 🚧 **[雙軌懸記分流](compliance_and_audit/03_suspense_and_quarantine_guardrails.md)**：財務與 ESG 保守型推估的 ITAC 實務。
-- 🔗 **[跨表指標引擎](compliance_and_audit/04_cross_report_metrics_engine.md)**：破除微服務時代的「財務指標孤島」。
+- 🌳 **[報表引擎溯源](architecture/compliance_and_audit/01_tree_traversal_reporting_engine.md)**：告別 startsWith，擁抱樹狀溯源。
+- 🔄 **[自動沖銷架構](architecture/compliance_and_audit/02_auto_reconciliation_accrual_basis.md)**：從「應計基礎」到「現金流」的完整閉環。
+- 🚧 **[雙軌懸記分流](architecture/compliance_and_audit/03_suspense_and_quarantine_guardrails.md)**：財務與 ESG 保守型推估的 ITAC 實務。
+- 🔗 **[跨表指標引擎](architecture/compliance_and_audit/04_cross_report_metrics_engine.md)**：破除微服務時代的「財務指標孤島」。
 - 🔐 **[內部控制與 ITAC](architecture/compliance_and_audit/internal_control_and_audit_framework.md)**：COSO 框架對應與去中心化仲裁規範。
 - 🌍 **[溫室氣體核算方法論](architecture/compliance_and_audit/esg_methodology_mapping.md)**：GHG Protocol/IFRS S2 對齊與質量守恆查核。
 - 📖 **[碳會計師實務手冊](domain/carbon_accounting_methodology.md)**：記載碳盤查的三大範疇與「黃金決策邏輯」，碳排管線工程師必讀。
@@ -81,30 +81,20 @@
 
 任何核心模組的修改，都必須確保能扛住最高級別的壓力測試與合規查核：
 
-- 💥 **[端到端測試架構設計 (E2E Testing Architecture)](testing_and_qa/e2e_audit_pipeline/e2e_testing_architecture.md)**
-  > 了解系統如何進行 E2E 驗證與對抗式視覺壓力測試。
-- 🏃‍♂️ **[端到端執行指南 (E2E Pipeline Execution Guide)](testing_and_qa/e2e_audit_pipeline/e2e_pipeline_execution_guide.md)**
-  > 從下載真實財報到產出 DPP 黃金數據與 PDF 護照的完整操作步驟。
-- 🌍 **[歐盟 CBAM 碳排追溯與前驅物模擬 (CBAM Seeder)](testing_and_qa/e2e_audit_pipeline/cbam_compliance_seeder.md)**
-  > 詳細解說如何透過 AI 逆向生成符合 CBAM 規範的海關報單、前驅物碳排與委外加工資料。
-- 📦 **[歐盟 DPP 數位產品護照生成架構 (DPP Seeder)](testing_and_qa/e2e_audit_pipeline/dpp_compliance_seeder.md)**
-  > 探討如何自動生成歐盟 DPP 要求的 9 大面向產品履歷、產品規格與物理化學宣告 PDF。
-- 🎯 **[審計與稽核指標指南 (E2E Cross Validation Metrics)](testing_and_qa/e2e_audit_pipeline/guidelines/e2e_cross_validation_metrics.md)**
-  > 紀載系統如何執行 0 誤差的四維度 (財務、碳排、三表勾稽、防禦覆蓋率) 交叉驗證。
-- 🧪 **[整合測試撰寫指南 (Integration Test Guide)](testing_and_qa/integration_test/01_integration_test_guide.md)**
-- 🍪 **[整合測試 Cookie/Session 說明](testing_and_qa/integration_test/00_integration_test_cookie_session_explanation.md)**
+- 💥 **[端到端測試與稽核管線指南 (E2E Testing & Audit Pipeline Guide)](testing_and_qa/e2e_audit_pipeline_guide.md)**
+  > 包含 E2E 測試架構、執行步驟、時序逆推分析、CBAM 碳追溯生成架構、選樣策略與交叉驗證指標。
+- 🧪 **[整合測試與 Cookie/Session 管理指南 (Integration Test & Cookie Session Guide)](testing_and_qa/integration_test_guide.md)**
+  > 指引如何使用 Supertest 對 API 進行整合測試，以及在測試環境中管理 Cookie 與 Session 的原理與最佳實踐。
 
 ---
 
 ## 🔌 第五階段：維運與其他系統模組 (Ops & Compliance)
 
 ### 🚀 系統部署與管理員維運白皮書 (System Deployment & Admin Setup)
-- [01_架構總覽](admin_setup_whitepaper/01_architecture_overview.md) | [02_基礎設施](admin_setup_whitepaper/02_infrastructure_and_nodes.md)
-- [03_鏈上合約](admin_setup_whitepaper/03_onchain_deployment.md) | [04_資料與身分](admin_setup_whitepaper/04_data_and_identity.md) | [05_環境交付](admin_setup_whitepaper/05_environment_finalization.md)
+- **[系統部署與維運白皮書 (Admin Setup Whitepaper)](architecture/admin_setup_whitepaper.md)**
+  > 包含架構總覽、基礎設施與節點驗證、鏈上資產與合約部署、資料與超級管理員身分簽發、環境封裝與鎖定。
 
-### 💼 業務邏輯與法律政策
-- **外部整合**：[外部使用者綁定機制 (External User Binding)](business_and_product/external_user_binding.md)
-- **特定業務邏輯**：[薪資計算機運作機制 (Salary Calculator)](business_and_product/salary_calculator_operating_mechanism/v1_0_0.md)
-- **商業戰略**：[商業藍圖與 GTM 戰略 (GTM Blueprint)](business_and_product/gtm_business_blueprint.md) | [DPP 供應鏈合規索資指南 (Internal Data Strategy)](business_and_product/dpp_b2b_pain_point_sales_strategy.md)
-- **產品設計**：[DPP B2B 核心 UI 開發規劃 (DPP B2B Workspace UI Design)](business_and_product/dpp_b2b_workspace_ui_design.md)
+### 💼 業務領域與法律政策
+- **特定業務領域**：[薪資計算機運作機制 (Salary Calculator)](domain/salary_calculator_mechanism.md)
+  > 薪資計算機採用的所得稅、勞健保與勞退公式及運作邏輯說明。
 - **合規政策**：[服務條款 (Terms of Service)](legal/terms_of_service.md) | [隱私權政策 (Privacy Policy)](legal/privacy_policy.md) | [退款政策 (Refund Policy)](legal/refund_policy.md)
