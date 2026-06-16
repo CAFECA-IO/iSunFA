@@ -743,8 +743,7 @@ export default function DppStartPage() {
           className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
         >
           <option value="2025">
-            {t("digital_product_passport.sidebar_extra.year_prediction") ||
-              "2025 (預測)"}
+            {t("digital_product_passport.sidebar_extra.year_prediction")}
           </option>
           <option value="2024">2024</option>
           <option value="2023">2023</option>

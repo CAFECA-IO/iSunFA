@@ -385,7 +385,7 @@ export default function TeamManagementPage() {
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900">
-              {t("teamManagement.title") || t("sidebar.team")}
+              {t("teamManagement.title")}
             </h1>
             <p className="mt-1 text-sm text-gray-500">
               {t("teamManagement.description")}
@@ -421,7 +421,7 @@ export default function TeamManagementPage() {
                       </h3>
                       <p className="text-xs text-gray-500">
                         From {inv.inviter.name || "Unknown"} as{" "}
-                        {t("teamManagement.roles." + inv.role) || inv.role}
+                        {t("teamManagement.roles." + inv.role)}
                       </p>
                     </div>
                   </div>
@@ -570,8 +570,7 @@ export default function TeamManagementPage() {
                               </select>
                             ) : (
                               <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600">
-                                {t("teamManagement.roles." + member.role) ||
-                                  member.role}
+                                {t("teamManagement.roles." + member.role)}
                               </span>
                             )}
                             {(isOwner ||

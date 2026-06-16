@@ -219,7 +219,7 @@ export default function AnalysisView() {
 
     const payloadItems = [
       {
-        name: t(`analysis.categories.${category.toLowerCase()}`) || category,
+        name: t(`analysis.categories.${category.toLowerCase()}`),
         unitPrice: calculatedCost,
         quantity: 1,
       },

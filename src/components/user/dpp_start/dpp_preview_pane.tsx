@@ -226,12 +226,12 @@ export function DppPreviewPane({
                 <p className="text-lg font-bold text-slate-600">
                   {t(
                     "digital_product_passport.preview_extra.regenerating_title",
-                  ) || "資料生成中..."}
+                  )}
                 </p>
                 <p className="mt-2 text-sm text-slate-400">
                   {t(
                     "digital_product_passport.preview_extra.regenerating_desc",
-                  ) || "AI 正在重新生成此資料，請稍候。"}
+                  )}
                 </p>
               </div>
             ) : fileError ? (

@@ -192,26 +192,21 @@ export function DppLogsNavigator({
               return (
                 <div className="flex flex-col gap-4">
                   {renderBaselineGroup(
-                    t(
-                      "digital_product_passport.simulator.group_manufacturer",
-                    ) || "🏢 製造商 (Manufacturer)",
+                    t("digital_product_passport.simulator.group_manufacturer"),
                     [steps[0]],
                   )}
                   {renderBaselineGroup(
-                    t("digital_product_passport.simulator.group_circularity") ||
-                      "♻️ 循環性與效率政策 (Circularity)",
+                    t("digital_product_passport.simulator.group_circularity"),
                     [steps[1], steps[2]],
                   )}
                   {renderBaselineGroup(
                     t(
                       "digital_product_passport.simulator.group_company_policy",
-                    ) || "🎯 企業營運與政策方針 (Company Policy & Persona)",
+                    ),
                     [steps[3]],
                   )}
                   {renderBaselineGroup(
-                    t(
-                      "digital_product_passport.simulator.group_traceability",
-                    ) || "🔗 供應鏈追溯與物料庫 (Traceability & Material)",
+                    t("digital_product_passport.simulator.group_traceability"),
                     [steps[4]],
                   )}
                 </div>
@@ -221,13 +216,11 @@ export function DppLogsNavigator({
             return (
               <div className="flex flex-col gap-4">
                 {renderBaselineGroup(
-                  t("digital_product_passport.simulator.group_product_specs") ||
-                    "📦 產品規格與工程資料 (Product Specs & Engineering)",
+                  t("digital_product_passport.simulator.group_product_specs"),
                   [steps[5], steps[6]],
                 )}
                 {renderBaselineGroup(
-                  t("digital_product_passport.simulator.group_dpp_core") ||
-                    "📊 LCA 碳排足跡與合規 (LCA Footprint & Compliance)",
+                  t("digital_product_passport.simulator.group_dpp_core"),
                   [steps[7], steps[8]],
                 )}
               </div>

@@ -25,16 +25,11 @@
    > 說明 AI 在系統中的定位。絕對禁止讓 AI 算數學、做業務邏輯判斷，並規範了「混合決策管線 (Hybrid Pipeline)」與「English-First Prompting」。
 4. 🎯 **[數值精度處理規範](engineering_guidelines/numerical_precision_guideline.md)**
    > 說明為何我們在財務與碳排計算中全面棄用原生 `number`，並強制使用 `Prisma.Decimal` 與 `BigInt`。
-5. 🛡️ **[Sprint 1: 企業級混合審計防護網與精度極限重構 (Proof of Work)](engineering_guidelines/sprint1_zero_tolerance_pow.md)**
-   > **Sprint 1 里程碑必讀**！詳述系統如何從概念驗證躍升為 Big 4 查驗級別，全面拔除妥協機制並實作決定論護城河。
+
 
 ---
 
 ## 🏛️ 第二階段：系統架構與藍圖 (Architecture & Blueprint)
-
-### 👑 1. 最高戰略指導 (Master Blueprint)
-- 🗺️ **[iSunFA E2E Core Engine 路線圖 (Roadmap v2)](architecture/e2e_roadmap_v2.md)**
-  > 本專案的最高戰略指導文件。包含了「零捏造」、「財務三表勾稽」、「ESG 質量守恆勾稽」等核心系統防線。
 
 ### 💡 2. 數位審計知識庫 (Digital Audit Knowledge Base)
 *聚焦於四大會計師級別的底層財報與內控實務：*
@@ -94,8 +89,6 @@
   > 詳細解說如何透過 AI 逆向生成符合 CBAM 規範的海關報單、前驅物碳排與委外加工資料。
 - 📦 **[歐盟 DPP 數位產品護照生成架構 (DPP Seeder)](testing_and_qa/e2e_audit_pipeline/dpp_compliance_seeder.md)**
   > 探討如何自動生成歐盟 DPP 要求的 9 大面向產品履歷、產品規格與物理化學宣告 PDF。
-- 🚀 **[2066 5.4 萬筆旗艦級 ESG 擬真數據 PoC 實作戰略 (2066 PoC Blueprint)](testing_and_qa/e2e_audit_pipeline/2066_poc_blueprint.md)**
-  > 詳述捨棄巨量吞吐虛榮指標，改為專注「絕對防禦深度」的管線解耦與防禦演練戰略。
 - 🎯 **[審計與稽核指標指南 (E2E Cross Validation Metrics)](testing_and_qa/e2e_audit_pipeline/guidelines/e2e_cross_validation_metrics.md)**
   > 紀載系統如何執行 0 誤差的四維度 (財務、碳排、三表勾稽、防禦覆蓋率) 交叉驗證。
 - 🧪 **[整合測試撰寫指南 (Integration Test Guide)](testing_and_qa/integration_test/01_integration_test_guide.md)**
@@ -106,7 +99,7 @@
 ## 🔌 第五階段：維運與其他系統模組 (Ops & Compliance)
 
 ### 🚀 系統部署與管理員維運白皮書 (System Deployment & Admin Setup)
-- [00_執行計畫](admin_setup_whitepaper/00_execution_plan.md) | [01_架構總覽](admin_setup_whitepaper/01_architecture_overview.md) | [02_基礎設施](admin_setup_whitepaper/02_infrastructure_and_nodes.md)
+- [01_架構總覽](admin_setup_whitepaper/01_architecture_overview.md) | [02_基礎設施](admin_setup_whitepaper/02_infrastructure_and_nodes.md)
 - [03_鏈上合約](admin_setup_whitepaper/03_onchain_deployment.md) | [04_資料與身分](admin_setup_whitepaper/04_data_and_identity.md) | [05_環境交付](admin_setup_whitepaper/05_environment_finalization.md)
 
 ### 💼 業務邏輯與法律政策

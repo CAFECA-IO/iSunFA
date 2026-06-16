@@ -82,10 +82,7 @@ export default function SkuDiagnosticPage() {
       await mutate();
     } catch (err) {
       console.error("Upload failed", err);
-      alert(
-        t("digital_product_passport.sku_creation.upload_error") ||
-          "Failed to upload supplement document.",
-      );
+      alert(t("digital_product_passport.sku_creation.upload_error"));
     } finally {
       setUploadingGaps((prev) => ({ ...prev, [currentIdx]: false }));
       setActiveGapIdx(null);
@@ -156,10 +153,7 @@ export default function SkuDiagnosticPage() {
           ref={fileInputRef}
           className="hidden"
           onChange={handleFileChange}
-          aria-label={
-            t("digital_product_passport.sku_diagnostics.upload_doc") ||
-            "Upload Supplementary Document"
-          }
+          aria-label={t("digital_product_passport.sku_diagnostics.upload_doc")}
         />
 
         {isReady && (
