@@ -211,7 +211,7 @@ export default function RecordTabModal({
         },
         onError: (err) => {
           console.error("Failed to download file:", err);
-          alert(t("common.error.download_failed") || "Download failed");
+          alert(t("common.error.download_failed"));
         },
       });
     } catch (err) {

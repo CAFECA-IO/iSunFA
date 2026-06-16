@@ -16,6 +16,20 @@ export class DppRepository {
   ): Promise<IDigitalProductPassportSku | null> {
     const sku = await prisma.digitalProductPassportSku.findUnique({
       where: { id: skuId },
+      include: { accountBook: true },
+    });
+    if (!sku) return null;
+    return {
+      ...this.mapSkuToInterface(sku),
+      accountBookName: sku.accountBook.name,
+    };
+  }
+
+  public async getSkuByGtin(
+    gtin: string,
+  ): Promise<IDigitalProductPassportSku | null> {
+    const sku = await prisma.digitalProductPassportSku.findUnique({
+      where: { gtin },
     });
     if (!sku) return null;
     return this.mapSkuToInterface(sku);
@@ -121,6 +135,17 @@ export class DppRepository {
     missingGaps: Prisma.InputJsonValue;
   }): Promise<IDigitalProductPassportSku> {
     const sku = await prisma.digitalProductPassportSku.create({
+      data,
+    });
+    return this.mapSkuToInterface(sku);
+  }
+
+  public async updateSku(
+    skuId: string,
+    data: Prisma.DigitalProductPassportSkuUpdateInput,
+  ): Promise<IDigitalProductPassportSku> {
+    const sku = await prisma.digitalProductPassportSku.update({
+      where: { id: skuId },
       data,
     });
     return this.mapSkuToInterface(sku);

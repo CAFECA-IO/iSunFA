@@ -193,8 +193,7 @@ export default function PaymentModal({
             // Info: (20260302 - Tzuhan) [流程 5-6b: 訂單失敗]
             setError(
               errorMessage ||
-                t("pricing.credits.payment_modal.processing_failed") ||
-                "付款處理失敗。請重試。",
+                t("pricing.credits.payment_modal.processing_failed"),
             );
             setStep(PaymentStep.error);
             return; // Info: (20260303 - Tzuhan) 失敗即終止，不再呼叫 setTimeout
@@ -253,10 +252,7 @@ export default function PaymentModal({
       }
     } catch (err) {
       console.error("Binding failed:", err);
-      setError(
-        t("pricing.credits.payment_modal.processing_failed") ||
-          "付款處理失敗。請重試。",
-      );
+      setError(t("pricing.credits.payment_modal.processing_failed"));
       setStep(PaymentStep.error);
     } finally {
       setLoading(false);
@@ -408,15 +404,11 @@ export default function PaymentModal({
       );
       const errorMessage =
         (err as Error).message ||
-        t("pricing.credits.payment_modal.processing_failed") ||
-        "付款處理失敗。請重試。";
+        t("pricing.credits.payment_modal.processing_failed");
       if (errorMessage !== "OK") {
         setError(errorMessage);
       } else {
-        setError(
-          t("pricing.credits.payment_modal.processing_failed") ||
-            "付款處理失敗。請重試。",
-        );
+        setError(t("pricing.credits.payment_modal.processing_failed"));
       }
       setStep(PaymentStep.error);
     } finally {
@@ -472,9 +464,7 @@ export default function PaymentModal({
                         <div className="flex min-h-[300px] flex-col items-center justify-center py-16">
                           <Loader2 className="mb-4 h-10 w-10 animate-spin text-orange-500" />
                           <p className="font-medium text-gray-500">
-                            {t(
-                              "pricing.credits.payment_modal.syncing_status",
-                            ) || "正在同步您的帳戶狀態..."}
+                            {t("pricing.credits.payment_modal.syncing_status")}
                           </p>
                         </div>
                       ) : (
@@ -490,15 +480,14 @@ export default function PaymentModal({
                               >
                                 {t(
                                   "pricing.credits.payment_modal.processing_title",
-                                ) || "處理中"}
+                                )}
                               </DialogTitle>
 
                               <div className="mt-4 w-full px-4 text-center">
                                 <p className="text-sm text-gray-500">
                                   {t(
                                     "pricing.credits.payment_modal.processing_message",
-                                  ) ||
-                                    "授權已成功，正在發行區塊鏈點數至您的錢包，請稍候..."}
+                                  )}
                                 </p>
                               </div>
                             </div>
@@ -517,10 +506,7 @@ export default function PaymentModal({
                                   <span className="text-sm font-medium text-gray-500">
                                     {t(
                                       "pricing.credits.payment_modal.amount_to_pay",
-                                    ) ||
-                                      t(
-                                        "pricing.credits.payment_modal.amount_paid",
-                                      )}
+                                    )}
                                   </span>
                                   <span className="text-xl font-bold tracking-tight text-gray-900">
                                     {displayPrice || `$${amount}`}
@@ -530,10 +516,7 @@ export default function PaymentModal({
                                   <span className="pt-1 text-sm font-medium text-gray-500">
                                     {t(
                                       "pricing.credits.payment_modal.tokens_to_receive",
-                                    ) ||
-                                      t(
-                                        "pricing.credits.payment_modal.tokens_received",
-                                      )}
+                                    )}
                                   </span>
                                   <div className="flex flex-col items-end text-right">
                                     <span className="text-lg font-bold text-orange-600">
@@ -541,7 +524,7 @@ export default function PaymentModal({
                                       {t(
                                         "pricing.credits.payment_modal.credits_unit_short",
                                         { count: "" },
-                                      ).trim() || "點"}
+                                      ).trim()}
                                     </span>
                                     {bonusCredits !== "0" && (
                                       <span className="mt-1 inline-flex items-center rounded-md bg-orange-50 px-2 py-0.5 text-xs font-semibold text-orange-600 ring-1 ring-orange-600/20 ring-inset">
@@ -552,8 +535,7 @@ export default function PaymentModal({
                                             count:
                                               bonusCredits.toLocaleString(),
                                           },
-                                        ) ||
-                                          `贈送 ${bonusCredits.toLocaleString()} 點`}
+                                        )}
                                       </span>
                                     )}
                                   </div>
@@ -565,7 +547,7 @@ export default function PaymentModal({
                                   <h4 className="flex items-center text-sm font-semibold text-gray-900">
                                     {t(
                                       "pricing.credits.payment_modal.payment_method",
-                                    ) || "付款方式"}
+                                    )}
                                     {loadingPaymentMethods && (
                                       <Loader2 className="ml-2 h-4 w-4 animate-spin text-gray-400" />
                                     )}
@@ -631,11 +613,9 @@ export default function PaymentModal({
                                     <button
                                       type="button"
                                       onClick={handleBindNewCard}
-                                      aria-label={
-                                        t(
-                                          "pricing.credits.payment_modal.bind_new_card",
-                                        ) || "綁定新信用卡"
-                                      }
+                                      aria-label={t(
+                                        "pricing.credits.payment_modal.bind_new_card",
+                                      )}
                                       className="relative flex w-full cursor-pointer rounded-xl border border-gray-200 bg-white p-4 text-left shadow-sm transition-all duration-200 hover:border-orange-300 hover:bg-orange-50/30 focus:outline-none"
                                     >
                                       <div className="flex w-full items-center justify-between">
@@ -658,7 +638,7 @@ export default function PaymentModal({
                                           <span className="text-sm font-semibold text-gray-900">
                                             {t(
                                               "pricing.credits.payment_modal.bind_new_card",
-                                            ) || "綁定新信用卡"}
+                                            )}
                                           </span>
                                         </div>
                                       </div>
@@ -686,9 +666,7 @@ export default function PaymentModal({
                                       htmlFor="tos-payment"
                                       className="flex cursor-pointer flex-wrap items-center gap-x-1 font-medium text-gray-900"
                                     >
-                                      <span>
-                                        {t("auth_modal.tos_agree") || "我同意"}
-                                      </span>
+                                      <span>{t("auth_modal.tos_agree")}</span>
                                       <button
                                         type="button"
                                         className="font-semibold text-orange-600 underline decoration-transparent transition-all hover:text-orange-500 hover:decoration-orange-500"
@@ -697,10 +675,9 @@ export default function PaymentModal({
                                           setLegalDoc("terms_of_service");
                                         }}
                                       >
-                                        {t("auth_modal.tos_link") ||
-                                          "使用條款 (Terms of Service)"}
+                                        {t("auth_modal.tos_link")}
                                       </button>
-                                      <span>{t("auth_modal.and") || "與"}</span>
+                                      <span>{t("auth_modal.and")}</span>
                                       <button
                                         type="button"
                                         className="font-semibold text-orange-600 underline decoration-transparent transition-all hover:text-orange-500 hover:decoration-orange-500"
@@ -709,8 +686,7 @@ export default function PaymentModal({
                                           setLegalDoc("refund_policy");
                                         }}
                                       >
-                                        {t("footer.refund") ||
-                                          "退費政策 (Refund Policy)"}
+                                        {t("footer.refund")}
                                       </button>
                                     </label>
                                   </div>
@@ -772,7 +748,7 @@ export default function PaymentModal({
                               >
                                 {t(
                                   "pricing.credits.payment_modal.success_title",
-                                ) || "購買成功"}
+                                )}
                               </DialogTitle>
 
                               <div className="mt-4 w-full space-y-3 rounded-md border border-gray-200 bg-gray-50 p-4">
@@ -780,7 +756,7 @@ export default function PaymentModal({
                                   <span className="text-sm text-gray-500">
                                     {t(
                                       "pricing.credits.payment_modal.original_credits",
-                                    ) || "原有點數"}
+                                    )}
                                   </span>
                                   <span className="text-base font-medium text-gray-700">
                                     {MoneyUtil.format(originalCredits || "0")}
@@ -790,7 +766,7 @@ export default function PaymentModal({
                                   <span className="text-sm text-gray-500">
                                     {t(
                                       "pricing.credits.payment_modal.amount_paid",
-                                    ) || "支付金額"}
+                                    )}
                                   </span>
                                   <span className="text-base font-medium text-gray-700">
                                     {displayPrice || `$${amount}`}
@@ -800,14 +776,14 @@ export default function PaymentModal({
                                   <span className="text-sm text-gray-500">
                                     {t(
                                       "pricing.credits.payment_modal.tokens_received",
-                                    ) || "獲得點數"}
+                                    )}
                                   </span>
                                   <span className="text-base font-medium text-green-600">
                                     +{baseCredits.toLocaleString()}{" "}
                                     {t(
                                       "pricing.credits.payment_modal.credits_unit_short",
                                       { count: "" },
-                                    ).trim() || "點"}
+                                    ).trim()}
                                     {bonusCredits !== "0" && (
                                       <span className="ml-1 text-sm font-normal">
                                         (
@@ -817,8 +793,7 @@ export default function PaymentModal({
                                             count:
                                               bonusCredits.toLocaleString(),
                                           },
-                                        ) ||
-                                          `活動贈與 ${bonusCredits.toLocaleString()} 點`}
+                                        )}
                                         )
                                       </span>
                                     )}
@@ -828,7 +803,7 @@ export default function PaymentModal({
                                   <span className="text-sm font-medium text-gray-900">
                                     {t(
                                       "pricing.credits.payment_modal.current_credits",
-                                    ) || "現在點數"}
+                                    )}
                                   </span>
                                   <span className="text-lg font-bold text-gray-900">
                                     {(user?.credits || 0).toLocaleString()}
@@ -879,11 +854,7 @@ export default function PaymentModal({
                                   className="inline-flex w-full justify-center rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:from-orange-500 hover:to-orange-400 hover:shadow-lg sm:w-auto"
                                   onClick={handleClose}
                                 >
-                                  {t(
-                                    "pricing.credits.payment_modal.close_btn",
-                                  ) ||
-                                    t("common.close") ||
-                                    "關閉"}
+                                  {t("pricing.credits.payment_modal.close_btn")}
                                 </button>
                               </div>
                             </div>
@@ -901,9 +872,7 @@ export default function PaymentModal({
                                 as="h3"
                                 className="mt-4 text-lg leading-6 font-semibold text-gray-900"
                               >
-                                {t(
-                                  "pricing.credits.payment_modal.error_title",
-                                ) || "購買失敗"}
+                                {t("pricing.credits.payment_modal.error_title")}
                               </DialogTitle>
 
                               <div className="mt-4 w-full text-center">
@@ -911,8 +880,7 @@ export default function PaymentModal({
                                   {error ||
                                     t(
                                       "pricing.credits.payment_modal.processing_failed",
-                                    ) ||
-                                    "付款處理失敗。請重試。"}
+                                    )}
                                 </p>
                               </div>
 
@@ -922,20 +890,14 @@ export default function PaymentModal({
                                   className="inline-flex w-full flex-1 justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-gray-300 transition-all ring-inset hover:bg-gray-50 sm:w-auto sm:flex-none"
                                   onClick={handleClose}
                                 >
-                                  {t(
-                                    "pricing.credits.payment_modal.close_btn",
-                                  ) ||
-                                    t("common.close") ||
-                                    "關閉"}
+                                  {t("pricing.credits.payment_modal.close_btn")}
                                 </button>
                                 <button
                                   type="button"
                                   className="inline-flex w-full flex-1 justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-red-500 sm:w-auto sm:flex-none"
                                   onClick={() => setStep(PaymentStep.confirm)}
                                 >
-                                  {t(
-                                    "pricing.credits.payment_modal.retry_btn",
-                                  ) || "返回重試"}
+                                  {t("pricing.credits.payment_modal.retry_btn")}
                                 </button>
                               </div>
                             </div>
@@ -981,10 +943,7 @@ export default function PaymentModal({
               }
             } catch (err) {
               console.error(err);
-              setError(
-                t("pricing.credits.payment_modal.processing_failed") ||
-                  "付款處理失敗。請重試。",
-              );
+              setError(t("pricing.credits.payment_modal.processing_failed"));
             }
           }}
           initialData={{

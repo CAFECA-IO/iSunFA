@@ -166,7 +166,45 @@ async function main() {
             });
             newTasksCount++;
           } else if (existingTask.status === TaskStatus.SUCCESS) {
-            skipTasksCount++; // Info: (20260409 - Tzuhan) 已成功，略過
+            // Info: (20260610 - Tzuhan) 檢查實體檔案是否還在，如果不在則重置為 PENDING
+            let fileExists = false;
+            // Info: (20260610 - Tzuhan) filePath 可能是在 data/ 或 downloads/
+            const expectedPath1 = path.join(
+              process.cwd(),
+              "data",
+              company.stockId,
+              year.toString(),
+              "inputs",
+              "raw_reports",
+              `${year}_${taskType}.pdf`,
+            );
+            const expectedPath2 = path.join(
+              process.cwd(),
+              "data",
+              company.stockId,
+              year.toString(),
+              "inputs",
+              "golden_data",
+              `${year}_${taskType}.json`,
+            );
+            if (fs.existsSync(expectedPath1) || fs.existsSync(expectedPath2)) {
+              fileExists = true;
+            }
+
+            if (fileExists) {
+              skipTasksCount++; // Info: (20260409 - Tzuhan) 已成功且檔案存在，略過
+            } else {
+              // Info: (20260610 - Tzuhan) 檔案遺失，重新下載
+              await reportDownloadTaskRepo.update({
+                where: { id: existingTask.id },
+                data: {
+                  status: TaskStatus.PENDING,
+                  retryCount: 0,
+                  errorMsg: null,
+                },
+              });
+              resetTasksCount++;
+            }
           } else if (existingTask.status === TaskStatus.FAILED) {
             // Info: (20260409 - Tzuhan) 任務失敗達上限，進行 DLQ 記錄與復活重置
             if (existingTask.retryCount >= 3) {

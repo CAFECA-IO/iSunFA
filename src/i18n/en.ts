@@ -61,6 +61,7 @@ import { adminCarbonEmissionDatabase } from "@/i18n/locales/en/admin_carbon_emis
 import { businessMonitor } from "@/i18n/locales/en/business_monitor";
 import { simulationWorkflow } from "@/i18n/locales/en/simulation_workflow";
 import { netZeroPathway } from "@/i18n/locales/en/net_zero_pathway";
+import { reportDownloader } from "@/i18n/locales/en/report_downloader";
 import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const en = {
@@ -128,4 +129,5 @@ export const en = {
   business_monitor: businessMonitor,
   simulation_workflow: simulationWorkflow,
   net_zero_pathway: netZeroPathway,
+  report_downloader: reportDownloader,
 } satisfies BaseTranslation;

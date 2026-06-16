@@ -17,6 +17,7 @@ import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { uploadFile } from "@/lib/file_operator";
 import { IAccountBook } from "@/interfaces/account_book";
+import { IDigitalProductPassportSku } from "@/interfaces/dpp";
 
 export default function SkuCreatePage() {
   const { t } = useTranslation();
@@ -43,6 +44,21 @@ export default function SkuCreatePage() {
   const [alertTitle, setAlertTitle] = useState("");
   const [accountBooks, setAccountBooks] = useState<IAccountBook[]>([]);
   const [selectedAccountBookId, setSelectedAccountBookId] = useState("");
+  const [skuResult, setSkuResult] = useState<IDigitalProductPassportSku | null>(
+    null,
+  );
+
+  const MODULE_MAPPING: Record<number, string> = {
+    0: "1_product_info",
+    1: "batch_info",
+    2: "2_environmental_impact",
+    3: "3_circularity",
+    4: "6_repairability",
+    5: "7_logistics",
+    6: "4_compliance",
+    7: "5_social_impact",
+    8: "9_material_composition",
+  };
 
   useEffect(() => {
     const fetchAccountBooks = async () => {
@@ -100,20 +116,20 @@ export default function SkuCreatePage() {
 
       const fileIds = await Promise.all(uploadPromises);
 
-      const responseData = await request<IApiResponse<{ id: string }>>(
-        "/api/v1/user/dpp/sku",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            accountBookId: selectedAccountBookId,
-            fileIds,
-          }),
-        },
-      );
+      const responseData = await request<
+        IApiResponse<IDigitalProductPassportSku>
+      >("/api/v1/user/dpp/sku", {
+        method: "POST",
+        body: JSON.stringify({
+          accountBookId: selectedAccountBookId,
+          fileIds,
+        }),
+      });
 
       setIsUploading(false);
 
       if (responseData.success && responseData.payload) {
+        setSkuResult(responseData.payload);
         setIsProcessing(true);
         simulateAIProcessing(responseData.payload.id);
       } else {
@@ -316,6 +332,23 @@ export default function SkuCreatePage() {
 
           <div className="space-y-4">
             {DPP_MODULES.map((module, idx) => {
+              const backendKey = MODULE_MAPPING[idx];
+              let isExtracted = true;
+              if (skuResult && skuResult.modulesData) {
+                if (backendKey === "batch_info") {
+                  isExtracted = true;
+                } else {
+                  const modulesDataRecord = skuResult.modulesData as Record<
+                    string,
+                    { extracted?: boolean }
+                  >;
+                  const val = modulesDataRecord
+                    ? modulesDataRecord[backendKey]
+                    : undefined;
+                  isExtracted = !!val?.extracted;
+                }
+              }
+
               const isDone = currentModuleIdx > idx;
               const isCurrent = currentModuleIdx === idx;
               const isPending = currentModuleIdx < idx;
@@ -326,14 +359,26 @@ export default function SkuCreatePage() {
                   className={`flex items-center gap-3 transition-opacity duration-300 ${isPending && currentModuleIdx !== -1 ? "opacity-40" : "opacity-100"}`}
                 >
                   {isDone ? (
-                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                    isExtracted ? (
+                      <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                    ) : (
+                      <X className="h-5 w-5 text-red-500" />
+                    )
                   ) : isCurrent ? (
                     <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
                   ) : (
                     <Circle className="h-5 w-5 text-gray-300" />
                   )}
                   <span
-                    className={`text-sm font-medium ${isCurrent ? "text-blue-600" : isDone ? "text-gray-900" : "text-gray-500"}`}
+                    className={`text-sm font-medium ${
+                      isCurrent
+                        ? "text-blue-600"
+                        : isDone
+                          ? isExtracted
+                            ? "text-gray-900"
+                            : "text-red-500"
+                          : "text-gray-500"
+                    }`}
                   >
                     {module}
                   </span>

@@ -40,6 +40,10 @@ export const features = {
       title: "憑證管理",
       desc: "自動提取單據資訊並分類歸檔，免除手動輸入作業負擔。",
     },
+    digital_product_passport_simulator: {
+      title: "數據模擬",
+      desc: "提供模擬數位產品護照相關數據，供測試與展示使用。",
+    },
     digital_product_passport: {
       title: "數位產品護照",
       desc: "建立產品全生命週期資訊與碳足跡的數位履歷，符合國際規範，強化綠色競爭力。",

@@ -572,7 +572,7 @@ export default function HistorySection() {
             onClick={fetchHistory}
             disabled={loading}
             className="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-orange-50 hover:text-orange-600 disabled:opacity-50"
-            title={t("common.refresh") || "Refresh"}
+            title={t("common.refresh")}
           >
             <RefreshCw
               className={`h-4 w-4 ${loading ? "animate-spin text-orange-500" : ""}`}
@@ -595,7 +595,7 @@ export default function HistorySection() {
               </button>
             </div>
 
-            <div className="flex flex-1 items-center gap-2.5 overflow-x-auto pb-0 pl-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex flex-1 [scrollbar-width:none] items-center gap-2.5 overflow-x-auto pb-0 pl-4 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               {allTags.map((tag) => {
                 const isSelected = selectedTag === tag;
                 const baseClasses =
@@ -623,11 +623,10 @@ export default function HistorySection() {
               <Sparkles className="h-8 w-8 text-orange-600" />
             </div>
             <h3 className="mb-2 text-lg font-bold text-gray-900">
-              {t("analysis.history.empty_title") || "No Analysis Yet"}
+              {t("analysis.history.empty_title")}
             </h3>
             <p className="mb-6 max-w-sm text-gray-500">
-              {t("analysis.history.empty_description") ||
-                "Start your journey by generating your first financial analysis report using our advanced AI tools."}
+              {t("analysis.history.empty_description")}
             </p>
           </div>
         ) : (
@@ -742,8 +741,7 @@ export default function HistorySection() {
                         ) ? (
                           (item.retryCount || 0) >= 3 ? (
                             <span className="rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs font-bold text-red-600">
-                              {t("analysis.history.contact_admin") ||
-                                "聯絡系統管理員"}
+                              {t("analysis.history.contact_admin")}
                             </span>
                           ) : (
                             <button
@@ -755,7 +753,7 @@ export default function HistorySection() {
                               <RefreshCw
                                 className={`h-3.5 w-3.5 ${retryingReportId === item.reportId ? "animate-spin" : ""}`}
                               />
-                              {t("analysis.history.retry") || "重試"} (
+                              {t("analysis.history.retry")} (
                               {item.retryCount || 0}/3)
                             </button>
                           )
@@ -928,8 +926,7 @@ export default function HistorySection() {
                       ) ? (
                         (item.retryCount || 0) >= 3 ? (
                           <span className="max-w-[120px] truncate rounded-md border border-red-200 bg-red-50 px-2 py-1 text-[10px] font-bold text-red-600">
-                            {t("analysis.history.contact_admin") ||
-                              "聯絡系統管理員"}
+                            {t("analysis.history.contact_admin")}
                           </span>
                         ) : (
                           <button
@@ -941,7 +938,7 @@ export default function HistorySection() {
                             <RefreshCw
                               className={`h-3 w-3 ${retryingReportId === item.reportId ? "animate-spin" : ""}`}
                             />
-                            {t("analysis.history.retry") || "重試"} (
+                            {t("analysis.history.retry")} (
                             {item.retryCount || 0}/3)
                           </button>
                         )

@@ -23,6 +23,8 @@ import {
   Computer,
   Tag,
   Database,
+  FlaskConical,
+  Activity,
 } from "lucide-react";
 
 export const MODULES = [
@@ -43,6 +45,12 @@ export const MODULES = [
 export const PUBLIC_MODULES = [
   { key: "analysis", icon: PieChart, basic: true, nav: true },
   { key: "ai_consultation_room", icon: Bot, basic: true, nav: true },
+  {
+    key: "digital_product_passport_simulator",
+    icon: FlaskConical,
+    basic: true,
+    nav: true,
+  },
   { key: "digital_product_passport", icon: QrCode, basic: true, nav: true },
   { key: "salary_calculator", icon: Wallet, basic: true, nav: true },
   {
@@ -52,7 +60,7 @@ export const PUBLIC_MODULES = [
     nav: true,
   },
   { key: "coupon", icon: Tag, basic: true, nav: false },
-  { key: "business_monitor", icon: Tag, basic: true, nav: true },
+  { key: "business_monitor", icon: Activity, basic: true, nav: true },
 ];
 
 export const ADMIN_MODULES = [
@@ -141,6 +149,8 @@ export function getModuleI18nKey(key: string, isAdminContext: boolean = false) {
       return "features.items.tax.title";
     case "signing":
       return "features.items.signing.title";
+    case "digital_product_passport_simulator":
+      return "features.items.digital_product_passport_simulator.title";
     case "digital_product_passport":
       return "features.items.digital_product_passport.title";
     case "campaign":

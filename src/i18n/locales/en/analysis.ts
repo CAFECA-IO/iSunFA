@@ -52,6 +52,9 @@ export const analysis = {
     label: "Company Name or Tax ID",
     placeholder: "Enter full name, abbreviation, or Tax ID...",
     searching: "Searching...",
+    unsupported_title: "Unsupported Private Enterprise",
+    unsupported_desc:
+      "Currently, the system only supports automatic parsing of public financial and ESG reports for listed companies. For specific enterprise demos, please contact the technical team for manual setup.",
     not_found:
       "Company not found. Please try entering a more complete name or Tax ID.",
     missing_tax_id_desc:
@@ -161,7 +164,10 @@ export const analysis = {
     payment_success: "Payment successful!",
     signing_analysis: "Please sign the analysis request",
     analyzing: "Generating analysis report...",
+    analysis_success: "Report Generated!",
   },
+  generate_title: "Generate Report",
+  confirm_generate_desc: "Payment confirmed. You can now generate your report.",
   success: {
     title: "Analysis Request Submitted",
     message:
