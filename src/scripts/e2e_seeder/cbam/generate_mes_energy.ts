@@ -138,7 +138,7 @@ export async function generateMESLogs(stockId: string, year: string = "2024") {
     workOrderCounter++;
 
     // Info: (20260604 - Tzuhan) 工單排程時間
-    // Info: (20260605 - AI) 使用 YYYY-MM-DD 強制轉換為 UTC 日期以避免時區偏差導致日期倒退到 2024-12-31
+    // Info: (20260605 - Tzuhan) 使用 YYYY-MM-DD 強制轉換為 UTC 日期以避免時區偏差導致日期倒退到 2024-12-31
     const timestamp = new Date(`${year}-01-01`);
     timestamp.setDate(
       timestamp.getDate() +
@@ -177,7 +177,7 @@ export async function generateMESLogs(stockId: string, year: string = "2024") {
       ).toNumber();
       const durationHrs = MoneyUtil.toDecimal(
         (energyKwh / getRandomFloat(10, 50)).toFixed(1),
-      ).toNumber(); // 推算合理加工時數
+      ).toNumber(); // Info: (20260604 - Tzuhan) 推算合理加工時數
 
       // Info: (20260604 - Tzuhan) 模擬每一站的質量耗損
       const scrapWeight = MoneyUtil.toDecimal(
