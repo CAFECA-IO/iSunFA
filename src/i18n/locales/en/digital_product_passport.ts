@@ -190,6 +190,7 @@ export const digitalProductPassport = {
     mode_carbon: "Carbon",
     mode_business: "PR Analysis",
     mode_catalog: "Generate Company Product Catalog (BOM)",
+    product_catalog: "Product Catalog",
     mode_dpp: "Generate Product-Specific DPP",
     product_list: "Product List",
     no_products: "None",

@@ -180,6 +180,7 @@ export const digitalProductPassport = {
     mode_carbon: "碳盘查",
     mode_business: "企业公关分析",
     mode_catalog: "生成企业产品目录 (BOM)",
+    product_catalog: "企业产品目录",
     mode_dpp: "生成此产品专属 DPP",
     product_list: "产品列表",
     no_products: "无",

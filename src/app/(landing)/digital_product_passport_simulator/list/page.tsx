@@ -81,9 +81,10 @@ export default function DppListPage() {
     setModalConfig({
       isOpen: true,
       title: t("digital_product_passport.list.delete_confirm_title"),
-      message: t("digital_product_passport.list.delete_confirm_message")
-        .replace("{{name}}", name)
-        .replace("{{year}}", year),
+      message: t("digital_product_passport.list.delete_confirm_message", {
+        name,
+        year,
+      }),
       confirmText: t("common.delete"),
       cancelText: t("common.cancel"),
       onConfirm: async () => {
@@ -361,10 +362,8 @@ export default function DppListPage() {
                                 <AlertCircle className="h-3.5 w-3.5" />
                               )}
                               {t(
-                                "digital_product_passport.sidebar.mode_catalog",
-                              )
-                                .replace("生成", "")
-                                .replace(" (BOM)", "")}
+                                "digital_product_passport.sidebar.product_catalog",
+                              )}
                             </div>
                           </div>
 

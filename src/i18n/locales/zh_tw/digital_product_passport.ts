@@ -181,6 +181,7 @@ export const digitalProductPassport = {
     mode_carbon: "碳盤查",
     mode_business: "企業公關分析",
     mode_catalog: "生成企業產品型錄 (BOM)",
+    product_catalog: "企業產品型錄",
     mode_dpp: "產生此產品專屬 DPP",
     product_list: "產品列表",
     no_products: "無",

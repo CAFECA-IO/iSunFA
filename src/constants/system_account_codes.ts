@@ -51,8 +51,8 @@ export const SystemAccountNodes = {
   SALES_RETURN: "4170", // Info: (20260615 - Tzuhan)銷貨退回
   SALES_DISCOUNT: "4190", // Info: (20260615 - Tzuhan)銷貨折讓
   DIRECT_LABOR_WAGES: "5122", // Info: (20260615 - Tzuhan)製造費用-薪工
-  INTEREST_INCOME: "7110", // 利息收入
-  EXPECTED_CREDIT_LOSS: "6400", // 預期信用減損損失/利益
-  DEPRECIATION_MANUFACTURING: "5110", // 折舊費用-製造
-  ACCUMULATED_DEPRECIATION_EQUIPMENT: "1613", // 累計折舊-機器設備
+  INTEREST_INCOME: "7110", // Info: (20260615 - Tzuhan) 利息收入
+  EXPECTED_CREDIT_LOSS: "6400", // Info: (20260615 - Tzuhan) 預期信用減損損失/利益
+  DEPRECIATION_MANUFACTURING: "5110", // Info: (20260615 - Tzuhan) 折舊費用-製造
+  ACCUMULATED_DEPRECIATION_EQUIPMENT: "1613", // Info: (20260615 - Tzuhan) 累計折舊-機器設備
 } as const;

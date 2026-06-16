@@ -194,6 +194,7 @@ export const digitalProductPassport = {
     mode_carbon: "炭素計算",
     mode_business: "企業PR分析",
     mode_catalog: "企業製品カタログ（BOM）を生成する",
+    product_catalog: "製品カタログ",
     mode_dpp: "この製品専用のDPPを生成する",
     product_list: "製品リスト",
     no_products: "なし",
