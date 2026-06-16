@@ -150,6 +150,8 @@ export const digitalProductPassport = {
       "No product data available. Please click 'Add Simulated Product SKU' on the top right.",
     group_manufacturer: "Manufacturer",
     ai_extrapolation: "✨ AI Extrapolation",
+    ai_extrapolation_principle:
+      "AI Cross-Year Extrapolation Principle: The system automatically retrieves the previous year's sustainability report baseline and combines it with the latest financial and revenue data, dynamically extrapolating this year's carbon emissions and energy consumption metrics via Large Language Models.",
     header_title: "Enterprise Mock Data Generation Center",
     header_subtitle:
       "Specify a target enterprise to automatically trigger underlying crawlers and AI extraction scripts to build the enterprise persona and foundational files for Digital Product Passports.",

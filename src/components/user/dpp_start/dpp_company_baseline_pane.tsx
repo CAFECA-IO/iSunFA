@@ -52,8 +52,9 @@ export function DppCompanyBaselinePane({
               </span>
               <div className="invisible absolute right-0 bottom-full z-50 mb-2 w-64 opacity-0 transition-all group-hover:visible group-hover:opacity-100">
                 <div className="relative rounded-lg bg-slate-800 p-3 text-xs leading-relaxed font-normal whitespace-normal text-slate-100 shadow-xl">
-                  AI
-                  跨年推估原則：系統自動抓取上一年度的永續報告書基準，並結合本年度最新的財務與營收財報數據，透過大語言模型動態推算出本年度的碳排與能源消耗指標。
+                  {t(
+                    "digital_product_passport.simulator.ai_extrapolation_principle",
+                  )}
                   <div className="absolute top-full right-4 h-2 w-2 -translate-y-1/2 rotate-45 bg-slate-800"></div>
                 </div>
               </div>

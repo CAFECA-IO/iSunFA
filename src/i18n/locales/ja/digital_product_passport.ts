@@ -151,9 +151,11 @@ export const digitalProductPassport = {
   simulator: {
     empty_product_data:
       "製品データがありません。右上の「シミュレーション製品 SKU を追加」をクリックしてください。",
-    group_manufacturer: "メーカー (Manufacturer)",
+    group_manufacturer: "製造者 (Manufacturer)",
     ai_extrapolation: "✨ AI 推定",
-    header_title: "企業モックデータ生成センター",
+    ai_extrapolation_principle:
+      "AI 推定原則：前年度の持続可能性レポートを基準に、最新の財務データと連携し、AIが本年度の炭素排出・エネルギースコアを動的に推定します。",
+    header_title: "企業シミュレーションデータ生成センター",
     header_subtitle:
       "ターゲット企業を指定し、自動的にクローラーとAI抽出スクリプトをトリガーして、デジタル製品パスポート（DPP）の企業ペルソナと基本ファイルを構築します。",
     group_company_policy: "企業運営と方針 (Company Policy & Persona)",

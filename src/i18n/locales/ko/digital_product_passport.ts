@@ -150,6 +150,8 @@ export const digitalProductPassport = {
       "제품 데이터가 없습니다. 우측 상단의 '시뮬레이션 제품 SKU 추가'를 클릭하세요.",
     group_manufacturer: "제조사 (Manufacturer)",
     ai_extrapolation: "✨ AI 추정",
+    ai_extrapolation_principle:
+      "AI 연도별 추정 원칙: 시스템이 전년도 지속가능성 보고서 기준을 자동으로 캡처하고, 금년도 최신 재무 및 매출 데이터를 결합하여 대규모 언어 모델을 통해 금년도의 탄소 배출 및 에너지 소비 지표를 동적으로 추정합니다.",
     header_title: "기업 목업 데이터 생성 센터",
     header_subtitle:
       "대상 기업을 지정하고 크롤러와 AI 추출 스크립트를 자동으로 트리거하여 디지털 제품 여권(DPP)의 기업 페르소나 및 기본 파일을 구축합니다.",

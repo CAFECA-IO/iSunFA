@@ -144,6 +144,8 @@ export const digitalProductPassport = {
     empty_product_data: "目前尚無產品資料，請點擊右上方新增產品 SKU",
     group_manufacturer: "製造商 (Manufacturer)",
     ai_extrapolation: "✨ AI 推估",
+    ai_extrapolation_principle:
+      "AI 跨年推估原則：系統自動抓取上一年度的永續報告書基準，並結合本年度最新的財務與營收財報數據，透過大語言模型動態推算出本年度的碳排與能源消耗指標。",
     header_title: "企業模擬資料生成中心",
     header_subtitle:
       "指定目標企業並自動觸發底層爬蟲與 AI 萃取腳本，以建立數位產品護照的企業畫像與基礎實體檔案。",

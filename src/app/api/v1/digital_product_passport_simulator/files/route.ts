@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
       return jsonFail(API_ERRORS.VL_MISSING_PARAMS);
     }
 
-    const absolutePath = path.resolve(cwd, filePath);
+    const absolutePath = path.resolve(/*turbopackIgnore: true*/ cwd, filePath);
 
     try {
       const { buffer, headers } = await dppSimulatorService.getFileDetails(
