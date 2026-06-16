@@ -6,24 +6,6 @@ import { MoneyUtil } from "@/lib/utils/money";
 import { MeasurementUnit } from "@/constants/enums";
 import { SystemAccountNodes } from "@/constants/system_account_codes";
 
-interface IExtractedContextCache {
-  financial: {
-    travelExpenseRatio: number;
-    utilitiesRatio: number;
-    top3Vendors: string[];
-    depreciationStrategy: string;
-  };
-  esg: {
-    scope1MajorSource: string;
-    scope2MajorSource: string;
-    hasGreenEnergyPurchases: boolean;
-  };
-  simulatedNoise: {
-    suggestedNoiseLevel: string;
-    commonMissingFields: string[];
-  };
-}
-
 interface ISimulatedVoucherLine {
   id: string;
   description: string;
@@ -80,13 +62,13 @@ const findEsgValue = (
   return new Prisma.Decimal(0);
 };
 
-export const generateEsgRecords = (stockId: string) => {
-  const dataDir = path.resolve(process.cwd(), `data/${stockId}/2024`);
+export const generateEsgRecords = (stockId: string, year: string = "2024") => {
+  const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
   const esgDataPath = path.join(
     dataDir,
     "inputs",
     "golden_data",
-    "2024_ESG_METRICS.json",
+    `${year}_ESG_METRICS.json`,
   );
   const cachePath = path.join(
     dataDir,
@@ -115,9 +97,7 @@ export const generateEsgRecords = (stockId: string) => {
   }
 
   const esgData = JSON.parse(fs.readFileSync(esgDataPath, "utf-8"));
-  const contextCache = JSON.parse(
-    fs.readFileSync(cachePath, "utf-8"),
-  ) as IExtractedContextCache;
+
   const vouchers = JSON.parse(
     fs.readFileSync(vouchersPath, "utf-8"),
   ) as ISimulatedVoucher[];
@@ -179,7 +159,7 @@ export const generateEsgRecords = (stockId: string) => {
       line.esgRecords.push({
         id: randomUUID(),
         category: "scope2",
-        source: contextCache.esg.scope2MajorSource || "外購電力",
+        source: "外購電力",
         metricAmount: actualScope2.mul(2000).toString(),
         metricUnit: MeasurementUnit.KWH,
         carbonAmount: actualScope2.toString(),
@@ -221,7 +201,7 @@ export const generateEsgRecords = (stockId: string) => {
       line.esgRecords.push({
         id: randomUUID(),
         category: "scope1",
-        source: contextCache.esg.scope1MajorSource || "公司車輛燃油",
+        source: "公司車輛燃油",
         metricAmount: actualScope1.mul(400).toString(),
         metricUnit: MeasurementUnit.LITER,
         carbonAmount: actualScope1.toString(),
@@ -311,11 +291,16 @@ export const generateEsgRecords = (stockId: string) => {
 // Info: (20260502 - Tzuhan) 如果直接執行此腳本
 if (import.meta.url === `file://${process.argv[1]}`) {
   const targetStock = process.argv[2];
+  let targetYear = "2024";
+  const yearArg = process.argv.find((a) => a.startsWith("--year="));
+  if (yearArg) {
+    targetYear = yearArg.split("=")[1];
+  }
   if (!targetStock) {
     console.error(
-      "Please provide a stock ID. Usage: tsx esg_reverse_engineer.ts 1538",
+      "Please provide a stock ID. Usage: tsx esg_reverse_engineer.ts 1538 [--year=2025]",
     );
     process.exit(1);
   }
-  generateEsgRecords(targetStock);
+  generateEsgRecords(targetStock, targetYear);
 }

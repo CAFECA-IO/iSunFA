@@ -5,21 +5,19 @@ import { Prisma } from "@/generated";
 import { SystemAccountNodes } from "@/constants/system_account_codes";
 
 interface IExtractedContextCache {
-  financial: {
-    travelExpenseRatio: number;
-    utilitiesRatio: number;
-    top3Vendors: string[];
-    top3Customers?: string[];
-    depreciationStrategy: string;
+  historicalBaseline: {
+    revenueScale: string;
+    scope1Emissions: string;
+    scope2Emissions: string;
   };
-  esg: {
-    scope1MajorSource: string;
-    scope2MajorSource: string;
-    hasGreenEnergyPurchases: boolean;
+  supplyChainIntelligence: {
+    upstreamSuppliers: string[];
+    downstreamCustomers: string[];
+    outsourcedProcesses: string[];
   };
-  simulatedNoise: {
-    suggestedNoiseLevel: string;
-    commonMissingFields: string[];
+  costStructureAnalysis: {
+    majorCostComponents: string;
+    majorExpenseComponents: string;
   };
 }
 
@@ -53,9 +51,9 @@ const findReportValue = (
   return row ? parseFinanceNumber(row[1]) : new Prisma.Decimal(0);
 };
 
-const getRandomDate2024 = (): string => {
-  const start = new Date("2024-01-01T00:00:00.000Z").getTime();
-  const end = new Date("2024-12-30T23:59:59.000Z").getTime();
+const getRandomDateForYear = (year: string): string => {
+  const start = new Date(`${year}-01-01T00:00:00.000Z`).getTime();
+  const end = new Date(`${year}-12-30T23:59:59.000Z`).getTime();
   const randomMs = start + Math.random() * (end - start);
   return new Date(randomMs).toISOString();
 };
@@ -67,6 +65,7 @@ const createVoucherBlocks = (
   debitCode: string,
   creditCode: string,
   desc: string,
+  year: string,
   vendor: string | undefined = undefined,
 ): ISimulatedVoucher[] => {
   if (targetAmount.lte(0)) return [];
@@ -99,8 +98,8 @@ const createVoucherBlocks = (
     ];
     vouchers.push({
       id: randomUUID(),
-      tradingDate: getRandomDate2024(),
-      voucherNumber: `${prefix}-2024-${i.toString().padStart(3, "0")}`,
+      tradingDate: getRandomDateForYear(year),
+      voucherNumber: `${prefix}-${year}-${i.toString().padStart(3, "0")}`,
       lines,
     });
   }
@@ -170,7 +169,8 @@ const createDiversifiedVoucherBlocks = (
   prefix: string,
   pool: IAccountPoolItem[],
   creditCode: string, // Info: (20260601 - Tzuhan) The offset account, usually CASH or AR/AP
-  isDebitNormal: boolean = true,
+  isDebitNormal: boolean,
+  year: string,
   vendor: string | undefined = undefined,
 ): ISimulatedVoucher[] => {
   if (targetAmount.lte(0)) return [];
@@ -221,8 +221,8 @@ const createDiversifiedVoucherBlocks = (
 
     vouchers.push({
       id: randomUUID(),
-      tradingDate: getRandomDate2024(),
-      voucherNumber: `${prefix}-2024-${i.toString().padStart(3, "0")}`,
+      tradingDate: getRandomDateForYear(year),
+      voucherNumber: `${prefix}-${year}-${i.toString().padStart(3, "0")}`,
       lines,
     });
   }
@@ -231,14 +231,15 @@ const createDiversifiedVoucherBlocks = (
 
 export const generateFinancialVouchers = (
   stockId: string,
+  year: string = "2024",
   targetVoucherCount?: number,
 ) => {
-  const dataDir = path.resolve(process.cwd(), `data/${stockId}/2024`);
+  const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
   const finDataPath = path.join(
     dataDir,
     "inputs",
     "golden_data",
-    "2024_FIN_DATA.json",
+    `${year}_FIN_DATA.json`,
   );
   const cachePath = path.join(
     dataDir,
@@ -305,7 +306,8 @@ export const generateFinancialVouchers = (
       REVENUE_POOL,
       SystemAccountNodes.CASH_ROOT,
       false, // Info: (20260525 - Tzuhan) Revenue is Credit Normal
-      contextCache.financial.top3Customers?.[0],
+      year,
+      contextCache.supplyChainIntelligence?.downstreamCustomers?.[0],
     ),
   );
   // Info: (20260525 - Tzuhan) 2. COGS (51xx)
@@ -317,6 +319,7 @@ export const generateFinancialVouchers = (
       COGS_POOL,
       SystemAccountNodes.CASH_ROOT,
       true,
+      year,
     ),
   );
   // Info: (20260525 - Tzuhan) 3. Selling (61xx)
@@ -328,6 +331,7 @@ export const generateFinancialVouchers = (
       SELLING_EXP_POOL,
       SystemAccountNodes.CASH_ROOT,
       true,
+      year,
     ),
   );
   // Info: (20260525 - Tzuhan) 4. Admin (62xx)
@@ -339,6 +343,7 @@ export const generateFinancialVouchers = (
       ADMIN_EXP_POOL,
       SystemAccountNodes.CASH_ROOT,
       true,
+      year,
     ),
   );
   // Info: (20260525 - Tzuhan) 5. R&D (63xx)
@@ -350,6 +355,7 @@ export const generateFinancialVouchers = (
       RND_EXP_POOL,
       SystemAccountNodes.CASH_ROOT,
       true,
+      year,
     ),
   );
   // Info: (20260525 - Tzuhan) 6. Interest Revenue (7110)
@@ -361,6 +367,7 @@ export const generateFinancialVouchers = (
       SystemAccountNodes.CASH_ROOT,
       SystemAccountNodes.INTEREST_INCOME,
       "利息收入",
+      year,
     ),
   );
   // Info: (20260525 - Tzuhan) 7. Interest Expense (7510)
@@ -372,6 +379,7 @@ export const generateFinancialVouchers = (
       SystemAccountNodes.INTEREST_EXPENSE_ROOT_ALT,
       SystemAccountNodes.CASH_ROOT,
       "利息費用",
+      year,
     ),
   );
   // Info: (20260525 - Tzuhan) 8. Tax Expense (7950)
@@ -383,6 +391,7 @@ export const generateFinancialVouchers = (
       SystemAccountNodes.TAX_EXPENSE_ROOT,
       SystemAccountNodes.CASH_ROOT,
       "所得稅費用",
+      year,
     ),
   );
 
@@ -397,6 +406,7 @@ export const generateFinancialVouchers = (
           SystemAccountNodes.CASH_ROOT,
           SystemAccountNodes.EXPECTED_CREDIT_LOSS,
           "預期信用減損利益",
+          year,
         ),
       );
     } else {
@@ -408,6 +418,7 @@ export const generateFinancialVouchers = (
           SystemAccountNodes.EXPECTED_CREDIT_LOSS,
           SystemAccountNodes.CASH_ROOT,
           "預期信用減損損失",
+          year,
         ),
       );
     }
@@ -417,7 +428,7 @@ export const generateFinancialVouchers = (
   const fuzzingVouchers: ISimulatedVoucher[] = [
     {
       id: randomUUID(),
-      tradingDate: getRandomDate2024(),
+      tradingDate: getRandomDateForYear(year),
       voucherNumber: "FUZZ-1410",
       lines: [
         {
@@ -438,7 +449,7 @@ export const generateFinancialVouchers = (
     },
     {
       id: randomUUID(),
-      tradingDate: getRandomDate2024(),
+      tradingDate: getRandomDateForYear(year),
       voucherNumber: "FUZZ-2310",
       lines: [
         {
@@ -450,7 +461,7 @@ export const generateFinancialVouchers = (
         },
         {
           id: randomUUID(),
-          description: "收取代收款",
+          description: "收收取款",
           accountingCode: SystemAccountNodes.UNEARNED_REVENUE_ROOT,
           debitAmount: "0",
           creditAmount: "25000",
@@ -459,7 +470,7 @@ export const generateFinancialVouchers = (
     },
     {
       id: randomUUID(),
-      tradingDate: getRandomDate2024(),
+      tradingDate: getRandomDateForYear(year),
       voucherNumber: "FUZZ-1510",
       lines: [
         {
@@ -480,7 +491,7 @@ export const generateFinancialVouchers = (
     },
     {
       id: randomUUID(),
-      tradingDate: getRandomDate2024(),
+      tradingDate: getRandomDateForYear(year),
       voucherNumber: "FUZZ-1780",
       lines: [
         {
@@ -501,7 +512,7 @@ export const generateFinancialVouchers = (
     },
     {
       id: randomUUID(),
-      tradingDate: getRandomDate2024(),
+      tradingDate: getRandomDateForYear(year),
       voucherNumber: "FUZZ-3110",
       lines: [
         {
@@ -522,7 +533,7 @@ export const generateFinancialVouchers = (
     },
     {
       id: randomUUID(),
-      tradingDate: getRandomDate2024(),
+      tradingDate: getRandomDateForYear(year),
       voucherNumber: "FUZZ-3350",
       lines: [
         {
@@ -548,8 +559,8 @@ export const generateFinancialVouchers = (
   if (depreciation.gt(0)) {
     const depreciationVoucher: ISimulatedVoucher = {
       id: randomUUID(),
-      tradingDate: "2024-12-31T23:59:59.000Z",
-      voucherNumber: "ADJ-DEP-2024",
+      tradingDate: `${year}-12-31T23:59:59.000Z`,
+      voucherNumber: `ADJ-DEP-${year}`,
       lines: [
         {
           id: randomUUID(),
@@ -585,14 +596,20 @@ export const generateFinancialVouchers = (
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const targetStock = process.argv[2];
-  const targetCount = process.argv[3]
-    ? parseInt(process.argv[3], 10)
-    : undefined;
+  let targetYear = "2024";
+  const yearArg = process.argv.find((a) => a.startsWith("--year="));
+  if (yearArg) {
+    targetYear = yearArg.split("=")[1];
+  }
+  const targetCount =
+    process.argv[3] && !process.argv[3].startsWith("--")
+      ? parseInt(process.argv[3], 10)
+      : undefined;
   if (!targetStock) {
     console.error(
-      "Please provide a stock ID. Usage: tsx financial_reverse_engineer.ts 1538 [voucherCount]",
+      "Please provide a stock ID. Usage: tsx financial_reverse_engineer.ts 1538 [voucherCount] [--year=2025]",
     );
     process.exit(1);
   }
-  generateFinancialVouchers(targetStock, targetCount);
+  generateFinancialVouchers(targetStock, targetYear, targetCount);
 }

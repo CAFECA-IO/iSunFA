@@ -20,14 +20,14 @@ export const runPipeline = async (
     await extractContextFromPdf(stockId, year);
 
     console.log("\n[2/6] Running Financial Reverse Engineer...");
-    generateFinancialVouchers(stockId);
+    generateFinancialVouchers(stockId, year);
 
     console.log("\n[3/6] Running ESG Reverse Engineer...");
-    generateEsgRecords(stockId);
+    generateEsgRecords(stockId, year);
 
     if (!skipImages) {
       console.log("\n[4/6] Running Receipt Image Generator...");
-      await generateReceiptImages(stockId);
+      await generateReceiptImages(stockId, year);
     } else {
       console.log(
         "\n[4/6] ⏭️ Skipping Receipt Image Generator (--skip-images)...",
@@ -35,10 +35,10 @@ export const runPipeline = async (
     }
 
     console.log("\n[5/6] Running Phase 2 Receipt Analysis (AI Extraction)...");
-    await runPhase2ReceiptAnalysis(stockId, shouldClean);
+    await runPhase2ReceiptAnalysis(stockId, year, shouldClean);
 
     console.log("\n[6/6] Running Enterprise Cross Validator...");
-    await runCrossValidation(stockId);
+    await runCrossValidation(stockId, year);
 
     console.log(`\n✅ [DONE] Pipeline successfully completed for ${stockId}!`);
     console.log(`Check the output in: data/${stockId}/`);

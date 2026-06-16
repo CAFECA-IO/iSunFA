@@ -17,7 +17,9 @@ import {
   Truck,
   Scale,
   Compass,
+  Download,
 } from "lucide-react";
+import Image from "next/image";
 
 interface IRecycledMaterial {
   material: string;
@@ -98,6 +100,8 @@ interface IMaterialCompositionData {
 interface IDppPublicPassport {
   sku: {
     id: string;
+    accountBookId?: string;
+    accountBookName?: string;
     gtin: string;
     name: string;
     status: string;
@@ -234,8 +238,22 @@ export default function PublicBatchPassportPage() {
             陽光智能碳會計
           </span>
         </div>
-        <div className="rounded-full border border-slate-700 bg-slate-800/50 px-3.5 py-1 text-xs font-semibold text-blue-400">
-          Public Passport
+        <div className="flex items-center gap-4">
+          <div className="rounded-full border border-slate-700 bg-slate-800/50 px-3.5 py-1 text-xs font-semibold text-blue-400">
+            Public Passport
+          </div>
+          <button
+            onClick={() => {
+              window.open(
+                `/api/v1/dpp/sku/${skuId}/batch/${batchNumber}/pdf`,
+                "_blank",
+              );
+            }}
+            className="flex items-center gap-1.5 rounded-full bg-blue-600 px-3.5 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-500"
+          >
+            <Download className="h-4 w-4" />
+            Download PDF
+          </button>
         </div>
       </header>
 
@@ -267,6 +285,25 @@ export default function PublicBatchPassportPage() {
               <FileText className="h-4 w-4 text-blue-500" />
               General Information
             </h2>
+
+            {/* Info: (20260616) Render Product Design Image if available via Simulator files API */}
+            {isMounted &&
+              (productInfo.modelNumber || productInfo.productId) && (
+                <div className="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                  <Image
+                    src={`/api/v1/digital_product_passport_simulator/files?action=serve&path=data/${sku.accountBookName || sku.accountBookId}/${new Date(batch.manufactureDate).getFullYear()}/outputs/${productInfo.modelNumber || productInfo.productId}/mock_sources/fastener_blueprint.png`}
+                    alt="Product Design Blueprint"
+                    width={800}
+                    height={256}
+                    unoptimized={true}
+                    className="mx-auto max-h-64 w-full object-contain mix-blend-multiply"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                </div>
+              )}
+
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500">Product Name</span>

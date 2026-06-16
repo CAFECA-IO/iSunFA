@@ -47,9 +47,10 @@ interface ISimulatedVoucher {
 
 export const runPhase2ReceiptAnalysis = async (
   stockId: string,
+  year: string = "2024",
   shouldClean: boolean = false,
 ) => {
-  const dataDir = path.resolve(process.cwd(), `data/${stockId}/2024`);
+  const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
   const receiptsDir = path.join(
     dataDir,
     "inputs",
@@ -70,7 +71,9 @@ export const runPhase2ReceiptAnalysis = async (
   );
 
   if (!fs.existsSync(receiptsDir) || !fs.existsSync(vouchersPath)) {
-    console.error(`[ERROR] Missing receipts or vouchers for ${stockId}.`);
+    console.error(
+      `[ERROR] Missing receipts or vouchers for ${stockId} (${year}).`,
+    );
     process.exit(1);
   }
 
@@ -136,7 +139,7 @@ export const runPhase2ReceiptAnalysis = async (
     update: {},
     create: {
       id: `e2e-book-${stockId}`,
-      name: `[E2E-${stockId}] 2024 Accounting Book`,
+      name: `[E2E-${stockId}] ${year} Accounting Book`,
       country: "TW",
       currency: "TWD",
       rule: "IFRS",
@@ -514,13 +517,18 @@ export const runPhase2ReceiptAnalysis = async (
 // Info: (20260502 - Tzuhan) 如果直接執行此腳本
 if (import.meta.url === `file://${process.argv[1]}`) {
   const targetStock = process.argv[2];
+  let targetYear = "2024";
+  const yearArg = process.argv.find((a) => a.startsWith("--year="));
+  if (yearArg) {
+    targetYear = yearArg.split("=")[1];
+  }
   if (!targetStock) {
     console.error(
-      "Please provide a stock ID. Usage: tsx phase2_runner.ts 1538",
+      "Please provide a stock ID. Usage: tsx phase2_runner.ts 1538 [--year=2025]",
     );
     process.exit(1);
   }
-  runPhase2ReceiptAnalysis(targetStock).then(() => {
+  runPhase2ReceiptAnalysis(targetStock, targetYear).then(() => {
     prisma.$disconnect();
     process.exit(0);
   });

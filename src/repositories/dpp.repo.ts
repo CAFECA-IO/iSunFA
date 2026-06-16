@@ -16,9 +16,13 @@ export class DppRepository {
   ): Promise<IDigitalProductPassportSku | null> {
     const sku = await prisma.digitalProductPassportSku.findUnique({
       where: { id: skuId },
+      include: { accountBook: true },
     });
     if (!sku) return null;
-    return this.mapSkuToInterface(sku);
+    return {
+      ...this.mapSkuToInterface(sku),
+      accountBookName: sku.accountBook.name,
+    };
   }
 
   public async getSkuByGtin(

@@ -105,13 +105,28 @@ export async function GET(req: NextRequest) {
     }
 
     // Info: (20260608 - Tzuhan) Security check: Prevent Path Traversal
-    const absolutePath = path.resolve(cwd, filePath);
+    let absolutePath = path.resolve(cwd, filePath);
     if (!absolutePath.startsWith(path.join(cwd, "data"))) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
     try {
-      const stats = statSync(absolutePath);
+      let stats;
+      try {
+        stats = statSync(absolutePath);
+      } catch (err) {
+        // Info: (20260616) Fallback to 2024 if the current batch year doesn't have mock data
+        const fallbackPath = absolutePath.replace(
+          new RegExp("/data/([^/]+)/\\d{4}/"),
+          "/data/$1/2024/",
+        );
+        if (fallbackPath !== absolutePath) {
+          stats = statSync(fallbackPath);
+          absolutePath = fallbackPath;
+        } else {
+          throw err;
+        }
+      }
       if (!stats.isFile()) {
         return NextResponse.json({ error: "Not a file" }, { status: 400 });
       }

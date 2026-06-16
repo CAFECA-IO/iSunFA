@@ -30,19 +30,22 @@ const findReportValue = (
   return row ? parseFinanceNumber(row[1]) : new Prisma.Decimal(0);
 };
 
-export const runCrossValidation = async (stockId: string) => {
-  const dataDir = path.resolve(process.cwd(), `data/${stockId}/2024`);
+export const runCrossValidation = async (
+  stockId: string,
+  year: string = "2024",
+) => {
+  const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
   const finDataPath = path.join(
     dataDir,
     "inputs",
     "golden_data",
-    "2024_FIN_DATA.json",
+    `${year}_FIN_DATA.json`,
   );
   const esgMetricsPath = path.join(
     dataDir,
     "inputs",
     "golden_data",
-    "2024_ESG_METRICS.json",
+    `${year}_ESG_METRICS.json`,
   );
 
   if (!fs.existsSync(finDataPath)) {
@@ -489,13 +492,18 @@ export const runCrossValidation = async (stockId: string) => {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const targetStock = process.argv[2];
+  let targetYear = "2024";
+  const yearArg = process.argv.find((a) => a.startsWith("--year="));
+  if (yearArg) {
+    targetYear = yearArg.split("=")[1];
+  }
   if (!targetStock) {
     console.error(
-      "Please provide a stock ID. Usage: npx tsx src/scripts/e2e_seeder/cross_validator.ts 1538",
+      "Please provide a stock ID. Usage: npx tsx src/scripts/e2e_seeder/cross_validator.ts 1538 [--year=2025]",
     );
     process.exit(1);
   }
-  runCrossValidation(targetStock)
+  runCrossValidation(targetStock, targetYear)
     .then(() => process.exit(0))
     .catch((e) => {
       console.error(e);
