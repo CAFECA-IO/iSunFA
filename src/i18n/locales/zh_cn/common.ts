@@ -98,4 +98,15 @@ export const common = {
     brand: "阳光智能碳会计",
     footer_note: "本报告由 AI 技术生成，由 iSunFA 阳光智能碳会计提供 • ",
   },
+  mermaid: {
+    rendering: "正在渲染图表...",
+    zoom_in: "放大 (Zoom In)",
+    zoom_out: "缩小 (Zoom Out)",
+    reset: "重设 (Reset)",
+    fullscreen: "全屏幕 (Fullscreen)",
+    close_fullscreen: "关闭全屏幕 (Close Fullscreen)",
+    hint_desktop: "按住左键拖拽平移 • Ctrl + 滚轮缩放",
+    hint_fullscreen: "按住左键拖拽平移 • 滚轮缩放 • 按 ESC 键关闭",
+    preview_title: "流程图预览 (Fullscreen Flowchart Preview)",
+  },
 };
