@@ -11,7 +11,7 @@ const COMMON_ABBREVIATIONS: Record<string, ICompanyData> = {
   聯發科: { taxId: "2454", name: "聯發科技股份有限公司" },
   鴻海: { taxId: "2317", name: "鴻海精密工業股份有限公司" },
   大立光: { taxId: "3008", name: "大立光電股份有限公司" },
-  日月光: { taxId: "3711", name: "日月光投資控股股份有限公司" }, // Updated name
+  日月光: { taxId: "3711", name: "日月光投資控股股份有限公司" },
   台達電: { taxId: "2308", name: "台達電子工業股份有限公司" },
   聯電: { taxId: "2303", name: "聯華電子股份有限公司" },
   廣達: { taxId: "2382", name: "廣達電腦股份有限公司" },
