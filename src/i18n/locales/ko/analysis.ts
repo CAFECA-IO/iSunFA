@@ -165,7 +165,11 @@ export const analysis = {
     payment_success: "결제 성공!",
     signing_analysis: "분석 요청에 서명해 주세요",
     analyzing: "분석 보고서 생성 중...",
+    analysis_success: "보고서가 생성되었습니다!",
   },
+  generate_title: "보고서 생성",
+  confirm_generate_desc:
+    "결제가 확인되었습니다. 이제 보고서를 생성할 수 있습니다.",
   success: {
     title: "분석 요청이 제출되었습니다",
     message:

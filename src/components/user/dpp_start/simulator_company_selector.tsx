@@ -112,9 +112,7 @@ const SimulatorCompanySelector: FC<ISimulatorCompanySelectorProps> = ({
       >
         <span className="flex items-center gap-2 truncate">
           {isLoading ? (
-            <span className="text-slate-400">
-              {t("common.loading") || "載入中..."}
-            </span>
+            <span className="text-slate-400">{t("common.loading")}</span>
           ) : value ? (
             <>
               <Building2 className="h-4 w-4 shrink-0 text-slate-400" />

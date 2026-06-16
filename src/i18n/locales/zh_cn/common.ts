@@ -19,7 +19,9 @@ export const common = {
   end_date: "结束日期",
   error: {
     download_failed: "下载失败",
+    default: "系统错误，请稍后再试",
   },
+  refresh: "重新整理",
   actions: "操作",
   note: "备注",
   optional_in_parentheses: "（选填）",

@@ -11,4 +11,5 @@ export const registrationSteps = {
   success: "アカウントが正常に作成されました！",
   failed: "登録に失敗しました。もう一度お試しください。",
   processing: "処理中...",
+  syncing: "ブロックチェーンと同期中...",
 };

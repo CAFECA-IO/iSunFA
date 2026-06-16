@@ -167,7 +167,10 @@ export const analysis = {
     payment_success: "支払い成功！",
     signing_analysis: "分析リクエストに署名してください",
     analyzing: "分析レポートを作成中...",
+    analysis_success: "レポートが生成されました！",
   },
+  generate_title: "レポートを生成",
+  confirm_generate_desc: "支払いが確認されました。レポートを生成できます。",
   success: {
     title: "分析リクエストが送信されました",
     message:

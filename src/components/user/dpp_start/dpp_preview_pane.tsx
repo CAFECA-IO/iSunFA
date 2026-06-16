@@ -215,7 +215,7 @@ export function DppPreviewPane({
                 className="flex items-center gap-1 rounded-md bg-orange-100 px-3 py-1.5 text-xs font-semibold text-orange-600 transition hover:bg-orange-200"
               >
                 <Download className="h-4 w-4" />
-                {t("common.download") || "下載模擬資料"}
+                {t("common.download")}
               </a>
             </div>
           </div>

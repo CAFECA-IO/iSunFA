@@ -193,8 +193,7 @@ export default function PaymentModal({
             // Info: (20260302 - Tzuhan) [流程 5-6b: 訂單失敗]
             setError(
               errorMessage ||
-                t("pricing.credits.payment_modal.processing_failed") ||
-                "付款處理失敗。請重試。",
+                t("pricing.credits.payment_modal.processing_failed"),
             );
             setStep(PaymentStep.error);
             return; // Info: (20260303 - Tzuhan) 失敗即終止，不再呼叫 setTimeout
@@ -253,10 +252,7 @@ export default function PaymentModal({
       }
     } catch (err) {
       console.error("Binding failed:", err);
-      setError(
-        t("pricing.credits.payment_modal.processing_failed") ||
-          "付款處理失敗。請重試。",
-      );
+      setError(t("pricing.credits.payment_modal.processing_failed"));
       setStep(PaymentStep.error);
     } finally {
       setLoading(false);
@@ -408,15 +404,11 @@ export default function PaymentModal({
       );
       const errorMessage =
         (err as Error).message ||
-        t("pricing.credits.payment_modal.processing_failed") ||
-        "付款處理失敗。請重試。";
+        t("pricing.credits.payment_modal.processing_failed");
       if (errorMessage !== "OK") {
         setError(errorMessage);
       } else {
-        setError(
-          t("pricing.credits.payment_modal.processing_failed") ||
-            "付款處理失敗。請重試。",
-        );
+        setError(t("pricing.credits.payment_modal.processing_failed"));
       }
       setStep(PaymentStep.error);
     } finally {
@@ -686,9 +678,7 @@ export default function PaymentModal({
                                       htmlFor="tos-payment"
                                       className="flex cursor-pointer flex-wrap items-center gap-x-1 font-medium text-gray-900"
                                     >
-                                      <span>
-                                        {t("auth_modal.tos_agree") || "我同意"}
-                                      </span>
+                                      <span>{t("auth_modal.tos_agree")}</span>
                                       <button
                                         type="button"
                                         className="font-semibold text-orange-600 underline decoration-transparent transition-all hover:text-orange-500 hover:decoration-orange-500"
@@ -697,10 +687,9 @@ export default function PaymentModal({
                                           setLegalDoc("terms_of_service");
                                         }}
                                       >
-                                        {t("auth_modal.tos_link") ||
-                                          "使用條款 (Terms of Service)"}
+                                        {t("auth_modal.tos_link")}
                                       </button>
-                                      <span>{t("auth_modal.and") || "與"}</span>
+                                      <span>{t("auth_modal.and")}</span>
                                       <button
                                         type="button"
                                         className="font-semibold text-orange-600 underline decoration-transparent transition-all hover:text-orange-500 hover:decoration-orange-500"
@@ -709,8 +698,7 @@ export default function PaymentModal({
                                           setLegalDoc("refund_policy");
                                         }}
                                       >
-                                        {t("footer.refund") ||
-                                          "退費政策 (Refund Policy)"}
+                                        {t("footer.refund")}
                                       </button>
                                     </label>
                                   </div>
@@ -881,9 +869,7 @@ export default function PaymentModal({
                                 >
                                   {t(
                                     "pricing.credits.payment_modal.close_btn",
-                                  ) ||
-                                    t("common.close") ||
-                                    "關閉"}
+                                  ) || t("common.close")}
                                 </button>
                               </div>
                             </div>
@@ -924,9 +910,7 @@ export default function PaymentModal({
                                 >
                                   {t(
                                     "pricing.credits.payment_modal.close_btn",
-                                  ) ||
-                                    t("common.close") ||
-                                    "關閉"}
+                                  ) || t("common.close")}
                                 </button>
                                 <button
                                   type="button"
@@ -981,10 +965,7 @@ export default function PaymentModal({
               }
             } catch (err) {
               console.error(err);
-              setError(
-                t("pricing.credits.payment_modal.processing_failed") ||
-                  "付款處理失敗。請重試。",
-              );
+              setError(t("pricing.credits.payment_modal.processing_failed"));
             }
           }}
           initialData={{

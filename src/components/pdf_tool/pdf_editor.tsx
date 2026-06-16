@@ -158,14 +158,14 @@ export default function PdfEditor({
       } else {
         setErrorModal({
           isOpen: true,
-          message: t("common.error.default") || "Failed to generate share link",
+          message: t("common.error.default"),
         });
       }
     } catch (error) {
       console.error("Share error:", error);
       setErrorModal({
         isOpen: true,
-        message: t("common.error.default") || "Failed to generate share link",
+        message: t("common.error.default"),
       });
     } finally {
       setIsSharing(false);
@@ -281,7 +281,7 @@ export default function PdfEditor({
         // Info: (20260605 - Julian) 顯示成功提示
         setToastMessage({
           type: "success",
-          text: t("common.success") || "報告生成並插入成功！",
+          text: t("common.success"),
         });
         setTimeout(() => setToastMessage(null), 3000);
       } else {

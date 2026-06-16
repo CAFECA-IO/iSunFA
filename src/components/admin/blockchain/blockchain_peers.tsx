@@ -71,9 +71,7 @@ export default function BlockchainPeers({
         setEnodeUrl("");
         setToastMessage({
           type: "success",
-          text:
-            t("admin_blockchain.page.peer_added_success") ||
-            "Peer added successfully",
+          text: t("admin_blockchain.page.peer_added_success"),
         });
         await mutate();
       }
@@ -102,9 +100,7 @@ export default function BlockchainPeers({
       if (res.success) {
         setToastMessage({
           type: "success",
-          text:
-            t("admin_blockchain.page.peer_added_success") ||
-            "Peer added successfully",
+          text: t("admin_blockchain.page.peer_added_success"),
         });
         await mutate();
       }
@@ -167,11 +163,10 @@ export default function BlockchainPeers({
         </div>
         <div>
           <h2 className="text-lg font-bold text-gray-900">
-            {t("admin_blockchain.page.connected_peers") || "Connected Peers"}
+            {t("admin_blockchain.page.connected_peers")}
           </h2>
           <p className="text-sm text-gray-500">
-            {t("admin_blockchain.page.manage_p2p_network") ||
-              "Manage blockchain P2P network connections."}
+            {t("admin_blockchain.page.manage_p2p_network")}
           </p>
         </div>
       </div>
@@ -182,7 +177,7 @@ export default function BlockchainPeers({
           value={enodeUrl}
           onChange={(e) => setEnodeUrl(e.target.value)}
           placeholder="enode://..."
-          aria-label={t("admin_blockchain.page.add_peer") || "Add Peer"}
+          aria-label={t("admin_blockchain.page.add_peer")}
           className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
         />
         <button
@@ -195,14 +190,14 @@ export default function BlockchainPeers({
           ) : (
             <Plus className="h-4 w-4" />
           )}
-          {t("admin_blockchain.page.add_peer") || "Add Peer"}
+          {t("admin_blockchain.page.add_peer")}
         </button>
       </form>
 
       <div className="space-y-3">
         {displayPeers.length === 0 ? (
           <div className="rounded-lg bg-gray-50 p-6 text-center text-sm text-gray-500">
-            {t("admin_blockchain.page.no_peers") || "No connected peers."}
+            {t("admin_blockchain.page.no_peers")}
           </div>
         ) : (
           displayPeers.map((peer, i) => (

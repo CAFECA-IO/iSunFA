@@ -37,21 +37,17 @@ export function DppCompanyBaselinePane({
 
   const baselineModules = [
     {
-      name:
-        t("digital_product_passport.simulator.baseline_manufacturer") ||
-        "🏢 製造商 (Manufacturer)",
+      name: t("digital_product_passport.simulator.baseline_manufacturer"),
       completed: !!progress?.hasFin,
     },
     {
       name: (
         <span className="flex items-center">
-          {t("digital_product_passport.simulator.baseline_circularity") ||
-            "♻️ 循環性與效率政策 (Circularity)"}
+          {t("digital_product_passport.simulator.baseline_circularity")}
           {progress?.hasEsgExtrapolation && !progress?.hasEsg && (
             <div className="group relative ml-2 flex items-center">
               <span className="flex items-center gap-1 rounded-sm border border-purple-200 bg-purple-100 px-1.5 py-0.5 text-[10px] font-bold text-purple-700">
-                {t("digital_product_passport.simulator.ai_extrapolation") ||
-                  "✨ AI 推估"}
+                {t("digital_product_passport.simulator.ai_extrapolation")}
                 <Info className="h-3 w-3" />
               </span>
               <div className="invisible absolute right-0 bottom-full z-50 mb-2 w-64 opacity-0 transition-all group-hover:visible group-hover:opacity-100">
@@ -68,15 +64,11 @@ export function DppCompanyBaselinePane({
       completed: !!progress?.hasEsg || !!progress?.hasEsgExtrapolation,
     },
     {
-      name:
-        t("digital_product_passport.simulator.baseline_compliance") ||
-        "🎯 企業營運與政策方針 (Company Policy & Persona)",
+      name: t("digital_product_passport.simulator.baseline_compliance"),
       completed: !!progress?.hasPersonaHtml,
     },
     {
-      name:
-        t("digital_product_passport.simulator.baseline_traceability") ||
-        "🔗 供應鏈追溯與物料庫 (Traceability & Material)",
+      name: t("digital_product_passport.simulator.baseline_traceability"),
       completed: !!progress?.hasBom,
     },
   ];
@@ -99,13 +91,11 @@ export function DppCompanyBaselinePane({
       <div className="border-b border-gray-100 bg-slate-50/50 p-5">
         <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
           <Building2 className="h-5 w-5 text-blue-600" />
-          {t("digital_product_passport.simulator.baseline_title") ||
-            "公司公用 Baseline 資料集"}
+          {t("digital_product_passport.simulator.baseline_title")}
         </h2>
         <p className="mt-1 flex text-xs text-gray-500">
           <Lightbulb className="mt-0.5 mr-1.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
-          {t("digital_product_passport.simulator.baseline_desc") ||
-            "此資料集由財報 & ESG 報告反推。作為所有產品模擬的共用基礎。"}
+          {t("digital_product_passport.simulator.baseline_desc")}
         </p>
       </div>
 
@@ -139,8 +129,7 @@ export function DppCompanyBaselinePane({
           className="flex w-full items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 py-2.5 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-100"
         >
           <BarChart2 className="h-4 w-4" />
-          {t("digital_product_passport.simulator.view_baseline_details") ||
-            "查看 Baseline 生成詳情"}
+          {t("digital_product_passport.simulator.view_baseline_details")}
         </button>
         <button
           onClick={onRegenerate}
@@ -149,15 +138,12 @@ export function DppCompanyBaselinePane({
         >
           <Zap className="h-4 w-4" />
           {isGenerating
-            ? t("common.processing") || "處理中..."
+            ? t("common.processing")
             : isBaselineFullyCompleted
-              ? t("digital_product_passport.simulator.regenerate_baseline") ||
-                "重新生成公司公用資料"
+              ? t("digital_product_passport.simulator.regenerate_baseline")
               : hasAnyProgress
-                ? t("digital_product_passport.simulator.continue_baseline") ||
-                  "繼續生成公司公用資料"
-                : t("digital_product_passport.start.start_generation") ||
-                  "⚡ 開始提取企業 Baseline (Start Generation)"}
+                ? t("digital_product_passport.simulator.continue_baseline")
+                : t("digital_product_passport.start.start_generation")}
         </button>
       </div>
     </div>

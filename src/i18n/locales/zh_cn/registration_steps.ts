@@ -11,4 +11,5 @@ export const registrationSteps = {
   success: "账户建立成功！",
   failed: "注册失败，请重试。",
   processing: "处理中...",
+  syncing: "与区块链同步中...",
 };

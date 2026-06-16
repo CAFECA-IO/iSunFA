@@ -65,7 +65,7 @@ export default function FilePreviewModal({
                     as="h3"
                     className="text-xl font-bold text-slate-800"
                   >
-                    {title || t("ocr.preview") || "Preview"}
+                    {title || t("ocr.preview")}
                   </DialogTitle>
                   <button
                     type="button"

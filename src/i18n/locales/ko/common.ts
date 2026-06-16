@@ -20,7 +20,9 @@ export const common = {
   end_date: "종료일",
   error: {
     download_failed: "다운로드 실패",
+    default: "시스템 오류가 발생했습니다. 다시 시도해 주세요.",
   },
+  refresh: "새로고침",
   actions: "작업",
   note: "비고",
   optional_in_parentheses: "선택",

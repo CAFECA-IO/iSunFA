@@ -20,7 +20,9 @@ export const common = {
   end_date: "終了日",
   error: {
     download_failed: "ダウンロードに失敗しました",
+    default: "システムエラーが発生しました。もう一度お試しください。",
   },
+  refresh: "再読み込み",
   actions: "操作",
   note: "備考",
   optional_in_parentheses: "オプション",

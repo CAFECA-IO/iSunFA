@@ -164,7 +164,10 @@ export const analysis = {
     payment_success: "Payment successful!",
     signing_analysis: "Please sign the analysis request",
     analyzing: "Generating analysis report...",
+    analysis_success: "Report Generated!",
   },
+  generate_title: "Generate Report",
+  confirm_generate_desc: "Payment confirmed. You can now generate your report.",
   success: {
     title: "Analysis Request Submitted",
     message:

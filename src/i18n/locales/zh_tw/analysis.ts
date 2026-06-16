@@ -162,7 +162,10 @@ export const analysis = {
     payment_success: "支付成功！",
     signing_analysis: "請簽署分析請求",
     analyzing: "正在生成分析報告...",
+    analysis_success: "報告已生成！",
   },
+  generate_title: "生成報告",
+  confirm_generate_desc: "付款已確認。您現在可以生成您的報告。",
   success: {
     title: "分析請求已提交",
     message: "您的請求已上鏈，報告生成需時，請至歷史報告分頁查看進度。",

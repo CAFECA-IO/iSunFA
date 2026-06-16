@@ -808,9 +808,7 @@ export default function AnalysisView() {
                         }}
                       >
                         <option value="" disabled>
-                          --{" "}
-                          {t("analysis.select_from_account_books") ||
-                            "選擇帳本"}{" "}
+                          -- {t("analysis.select_from_account_books")}
                           --
                         </option>
                         {accountBooks.map((ab) => (
@@ -1070,8 +1068,7 @@ export default function AnalysisView() {
               <div className="flex min-h-full items-center justify-center p-4">
                 <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
                   <h3 className="mb-4 text-lg font-medium text-gray-900">
-                    {t("account_book_selection.form_enterprise_id") ||
-                      "統一編號 (Tax ID)"}
+                    {t("account_book_selection.form_enterprise_id")}
                   </h3>
                   <p className="mb-4 text-sm text-gray-500">
                     {t("analysis.company_input.missing_tax_id_desc", {
@@ -1111,7 +1108,7 @@ export default function AnalysisView() {
                       >
                         {uiState.isUpdatingTaxId
                           ? t("common.loading")
-                          : t("common.confirm") || "確認"}
+                          : t("common.confirm")}
                       </button>
                     </div>
                   </div>

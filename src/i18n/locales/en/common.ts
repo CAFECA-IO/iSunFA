@@ -20,7 +20,9 @@ export const common = {
   end_date: "End Date",
   error: {
     download_failed: "Download failed",
+    default: "System error, please try again later",
   },
+  refresh: "Refresh",
   actions: "Actions",
   note: "Note",
   optional_in_parentheses: "Optional",

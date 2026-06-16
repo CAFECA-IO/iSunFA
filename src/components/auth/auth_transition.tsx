@@ -37,9 +37,7 @@ export default function AuthTransition({ mode, step }: IAuthTransitionProps) {
         case "DEPLOYING":
           return t("registration_steps.deploying");
         case "SYNCING":
-          return (
-            t("registration_steps.syncing") || "Syncing with blockchain..."
-          );
+          return t("registration_steps.syncing");
         case "SUCCESS":
           return t("registration_steps.success");
         case "FAILED":

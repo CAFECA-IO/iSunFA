@@ -36,7 +36,7 @@ export default function BatchDownloadModal({
   const handleDownload = async () => {
     if (!startDate || !endDate) return;
     setIsDownloading(true);
-    setProgressMsg(t("common.loading") || "Fetching...");
+    setProgressMsg(t("common.loading"));
 
     try {
       let currentPage = 1;
@@ -61,7 +61,9 @@ export default function BatchDownloadModal({
 
         const data = await request<
           IApiResponse<{ data: IJournal[]; total: number }>
-        >(`/api/v1/user/account_book/${accountBookId}/journal?${params.toString()}`);
+        >(
+          `/api/v1/user/account_book/${accountBookId}/journal?${params.toString()}`,
+        );
 
         if (data?.payload?.data && data.payload.data.length > 0) {
           allJournals = allJournals.concat(data.payload.data);
@@ -77,15 +79,19 @@ export default function BatchDownloadModal({
       const journalsWithFiles = allJournals.filter((j) => !!j.file?.hash);
 
       if (journalsWithFiles.length === 0) {
-        alert(t("common.no_data") || "No files found.");
+        alert(t("common.no_data"));
         setIsDownloading(false);
         return;
       }
 
-      setProgressMsg(`${t("common.downloading") || "Downloading..."} (0/${journalsWithFiles.length})`);
+      setProgressMsg(
+        `${t("common.downloading")} (0/${journalsWithFiles.length})`,
+      );
       const zip = new JSZip();
 
-      const downloadFileAsync = (hash: string): Promise<{ blob: Blob; filename?: string }> => {
+      const downloadFileAsync = (
+        hash: string,
+      ): Promise<{ blob: Blob; filename?: string }> => {
         return new Promise((resolve, reject) => {
           downloadFile(hash, {
             onSuccess: (blob, filename) => resolve({ blob, filename }),
@@ -121,10 +127,12 @@ export default function BatchDownloadModal({
           console.error(`Failed to download file for journal ${j.id}:`, err);
         }
         count++;
-        setProgressMsg(`${t("common.downloading") || "Downloading..."} (${count}/${journalsWithFiles.length})`);
+        setProgressMsg(
+          `${t("common.downloading")} (${count}/${journalsWithFiles.length})`,
+        );
       }
 
-      setProgressMsg(t("common.zipping") || "Zipping...");
+      setProgressMsg(t("common.zipping"));
       const zipBlob = await zip.generateAsync({ type: "blob" });
       const url = window.URL.createObjectURL(zipBlob);
       const a = document.createElement("a");
@@ -138,7 +146,7 @@ export default function BatchDownloadModal({
       onClose();
     } catch (error) {
       console.error("Batch download failed:", error);
-      alert(t("common.error.download_failed") || "Download failed");
+      alert(t("common.error.download_failed"));
     } finally {
       setIsDownloading(false);
       setProgressMsg("");
@@ -181,7 +189,7 @@ export default function BatchDownloadModal({
                   </DialogTitle>
                   <button
                     type="button"
-                    className="rounded-full p-2 text-slate-400 outline-none transition-colors hover:bg-slate-100 hover:text-slate-600"
+                    className="rounded-full p-2 text-slate-400 transition-colors outline-none hover:bg-slate-100 hover:text-slate-600"
                     onClick={onClose}
                     disabled={isDownloading}
                   >
@@ -191,7 +199,10 @@ export default function BatchDownloadModal({
 
                 <div className="px-6 py-6">
                   <div className="mb-4">
-                    <label htmlFor="start-date" className="mb-1 block text-sm font-medium text-slate-700">
+                    <label
+                      htmlFor="start-date"
+                      className="mb-1 block text-sm font-medium text-slate-700"
+                    >
                       {t("common.start_date")}
                     </label>
                     <input
@@ -201,11 +212,14 @@ export default function BatchDownloadModal({
                       aria-label="common.start_date"
                       onChange={(e) => setStartDate(e.target.value)}
                       disabled={isDownloading}
-                      className="text-gray-800 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-gray-800 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                     />
                   </div>
                   <div className="mb-6">
-                    <label htmlFor="end-date" className="mb-1 block text-sm font-medium text-slate-700">
+                    <label
+                      htmlFor="end-date"
+                      className="mb-1 block text-sm font-medium text-slate-700"
+                    >
                       {t("common.end_date")}
                     </label>
                     <input
@@ -215,7 +229,7 @@ export default function BatchDownloadModal({
                       aria-label="common.end_date"
                       onChange={(e) => setEndDate(e.target.value)}
                       disabled={isDownloading}
-                      className="text-gray-800 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-gray-800 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                     />
                   </div>
 

@@ -150,7 +150,7 @@ export default function PublicBatchPassportPage() {
         <div className="text-center">
           <Loader2 className="mx-auto h-12 w-12 animate-spin text-blue-600" />
           <p className="mt-4 text-sm font-semibold text-slate-600">
-            {t("common.loading") || "Loading Digital Product Passport..."}
+            {t("common.loading")}
           </p>
         </div>
       </div>
