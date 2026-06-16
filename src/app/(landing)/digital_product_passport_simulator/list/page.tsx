@@ -124,12 +124,10 @@ export default function DppListPage() {
       <div className="relative z-10 flex items-start justify-between">
         <div className="flex-1 space-y-2">
           <h1 className="text-2xl font-bold text-gray-900">
-            {t("digital_product_passport.list.simulator_title") ||
-              "DPP 模擬資料產生器"}
+            {t("digital_product_passport.list.simulator_title")}
           </h1>
           <p className="mt-2 text-sm text-gray-500">
-            {t("digital_product_passport.list.simulator_desc") ||
-              "透過公開上市櫃公司財報與永續報告書，自動產生具真實感的數位產品護照 (DPP) 模擬數據源，供展示與測試用途。"}
+            {t("digital_product_passport.list.simulator_desc")}
           </p>
         </div>
         <div>
@@ -143,8 +141,7 @@ export default function DppListPage() {
             className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
           >
             <Plus className="h-4 w-4" />
-            {t("digital_product_passport.list.create_simulation") ||
-              "新增模擬企業"}
+            {t("digital_product_passport.list.create_simulation")}
           </button>
         </div>
       </div>
@@ -158,8 +155,7 @@ export default function DppListPage() {
           <div className="flex flex-1 flex-col items-center justify-center text-gray-500">
             <Building className="mb-4 h-16 w-16 text-gray-300" />
             <p className="text-lg font-medium text-gray-900">
-              {t("digital_product_passport.list.no_simulations") ||
-                "找不到模擬企業。請點擊「新增模擬企業」建立您的第一筆數據。"}
+              {t("digital_product_passport.list.no_simulations")}
             </p>
           </div>
         ) : (
@@ -253,7 +249,7 @@ export default function DppListPage() {
                             <span className="text-sm font-bold text-slate-700">
                               {t(
                                 "digital_product_passport.list.simulation_status",
-                              ) || "模擬狀態"}
+                              )}
                             </span>
 
                             <div className="relative">
@@ -284,7 +280,7 @@ export default function DppListPage() {
                                     }}
                                     role="button"
                                     tabIndex={0}
-                                    aria-label={t("common.close") || "Close"}
+                                    aria-label={t("common.close")}
                                   />
                                   <div className="absolute right-0 bottom-full z-20 mb-2 w-48 rounded-xl border border-slate-200/80 bg-white py-1.5 shadow-lg backdrop-blur-sm">
                                     <button
@@ -337,7 +333,7 @@ export default function DppListPage() {
                                   <span className="ml-1 rounded-sm border border-purple-200 bg-purple-100 px-1 py-0.5 text-[9px] font-bold text-purple-700">
                                     {t(
                                       "digital_product_passport.simulator.ai_extrapolation",
-                                    ) || "✨ AI 推估"}
+                                    )}
                                   </span>
                                 )}
                             </div>
@@ -378,7 +374,7 @@ export default function DppListPage() {
                             <Eye className="h-4 w-4" />
                             {t(
                               "digital_product_passport.list.enter_data_center",
-                            ) || "進入資料中心"}
+                            )}
                           </button>
                         </div>
                       </>
@@ -411,15 +407,13 @@ export default function DppListPage() {
           <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
             <h2 className="mb-6 flex items-center gap-2 text-xl font-bold text-slate-800">
               <Rocket className="h-5 w-5 text-blue-600" />
-              {t("digital_product_passport.start.initialize_simulation") ||
-                "初始化企業模擬數據庫"}
+              {t("digital_product_passport.start.initialize_simulation")}
             </h2>
 
             <div className="space-y-5">
               <div>
                 <label className="mb-1.5 block text-sm font-semibold text-slate-700">
-                  {t("digital_product_passport.start.search_company") ||
-                    "搜尋目標企業"}
+                  {t("digital_product_passport.start.search_company")}
                 </label>
                 <CompanySearchInput
                   value={searchKeyword}
@@ -428,18 +422,15 @@ export default function DppListPage() {
                     setSelectedCompany(null);
                   }}
                   onSelect={setSelectedCompany}
-                  placeholder={
-                    t(
-                      "digital_product_passport.start.search_company_placeholder",
-                    ) || "輸入公司名稱或統一編號..."
-                  }
+                  placeholder={t(
+                    "digital_product_passport.start.search_company_placeholder",
+                  )}
                 />
               </div>
 
               <div>
                 <label className="mb-1.5 block text-sm font-semibold text-slate-700">
-                  {t("digital_product_passport.start.simulation_year") ||
-                    "模擬年份"}
+                  {t("digital_product_passport.start.simulation_year")}
                 </label>
                 <select
                   value={selectedYear}
@@ -458,7 +449,7 @@ export default function DppListPage() {
                 onClick={() => setIsCreateModalOpen(false)}
                 className="rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100"
               >
-                {t("common.cancel") || "取消"}
+                {t("common.cancel")}
               </button>
               <button
                 disabled={!searchKeyword}
@@ -471,8 +462,7 @@ export default function DppListPage() {
                 className="flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50"
               >
                 <Sparkles className="h-4 w-4" />
-                {t("digital_product_passport.start.start_simulation") ||
-                  "開始建立"}
+                {t("digital_product_passport.start.start_simulation")}
               </button>
             </div>
           </div>
