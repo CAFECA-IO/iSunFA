@@ -41,7 +41,7 @@ export const features = {
       desc: "自动提取单据信息并分类归档，全面消除手工录入，大幅削减企业人力成本。",
     },
     digital_product_passport_simulator: {
-      title: "数字产品护照模拟数据生成器",
+      title: "数据模拟",
       desc: "提供数字产品护照的模拟数据，用于测试和演示。",
     },
 

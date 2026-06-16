@@ -41,7 +41,7 @@ export const features = {
       desc: "自動提取單據資訊並分類歸檔，免除手動輸入作業負擔。",
     },
     digital_product_passport_simulator: {
-      title: "數位產品護照模擬資料產生器",
+      title: "數據模擬",
       desc: "提供模擬數位產品護照相關數據，供測試與展示使用。",
     },
     digital_product_passport: {

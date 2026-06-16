@@ -23,6 +23,8 @@ import {
   Computer,
   Tag,
   Database,
+  FlaskConical,
+  Activity,
 } from "lucide-react";
 
 export const MODULES = [
@@ -45,7 +47,7 @@ export const PUBLIC_MODULES = [
   { key: "ai_consultation_room", icon: Bot, basic: true, nav: true },
   {
     key: "digital_product_passport_simulator",
-    icon: QrCode,
+    icon: FlaskConical,
     basic: true,
     nav: true,
   },
@@ -58,7 +60,7 @@ export const PUBLIC_MODULES = [
     nav: true,
   },
   { key: "coupon", icon: Tag, basic: true, nav: false },
-  { key: "business_monitor", icon: Tag, basic: true, nav: true },
+  { key: "business_monitor", icon: Activity, basic: true, nav: true },
 ];
 
 export const ADMIN_MODULES = [

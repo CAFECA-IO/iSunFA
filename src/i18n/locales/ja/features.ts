@@ -41,7 +41,7 @@ export const features = {
       desc: "領収書の情報を自動的に抽出・分類・アーカイブし、手動入力の負担を排除します。",
     },
     digital_product_passport_simulator: {
-      title: "デジタル製品パスポートシミュレーター",
+      title: "データシミュレーション",
       desc: "テストやデモ用に、模擬的なデジタル製品パスポートのデータを提供します。",
     },
     digital_product_passport: {

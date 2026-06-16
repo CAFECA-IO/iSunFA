@@ -41,7 +41,7 @@ export const features = {
       desc: "Automatically extracts and archives receipt information, eliminating the burden of manual data entry.",
     },
     digital_product_passport_simulator: {
-      title: "Digital Product Passport Simulator",
+      title: "Data Simulation",
       desc: "Provides simulated Digital Product Passport data for testing and demonstration.",
     },
     digital_product_passport: {
