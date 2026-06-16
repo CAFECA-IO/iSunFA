@@ -49,6 +49,9 @@ export const adminMissionBoard = {
   pdf_editor: {
     title: "PDF 編輯器",
     subtitle: "編寫 Markdown 內容並匯出為 iSunFA 專屬版型 PDF。",
+    toast_draft_saved: "草稿已手動儲存",
+    toast_report_inserted: "報告生成並插入成功！",
+    toast_share_link_failed: "生成分享連結失敗",
     edit_markdown: "編輯 Markdown",
     preview_pdf: "預覽 PDF",
     download_pdf: "下載 PDF",

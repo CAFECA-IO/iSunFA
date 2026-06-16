@@ -51,6 +51,9 @@ export const adminMissionBoard = {
     title: "PDFエディタ",
     subtitle:
       "マークダウンを記述し、iSunFA専用フォーマットのPDFとしてエクスポートします。",
+    toast_draft_saved: "下書きが手動で保存されました",
+    toast_report_inserted: "レポートの生成と挿入が成功しました！",
+    toast_share_link_failed: "共有リンクの生成に失敗しました",
     edit_markdown: "マークダウンを編集",
     preview_pdf: "PDFをプレビュー",
     download_pdf: "PDF をダウンロード",

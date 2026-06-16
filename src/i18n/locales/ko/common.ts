@@ -98,4 +98,16 @@ export const common = {
     footer_note:
       "본 보고서는 AI 기술로 생성되었으며, iSunFA 스마트 탄소 회계에서 제공합니다 • ",
   },
+  mermaid: {
+    rendering: "차트 렌더링 중...",
+    zoom_in: "확대 (Zoom In)",
+    zoom_out: "축소 (Zoom Out)",
+    reset: "초기화 (Reset)",
+    fullscreen: "전체 화면 (Fullscreen)",
+    close_fullscreen: "전체 화면 닫기 (Close Fullscreen)",
+    hint_desktop: "마우스 왼쪽 버튼 드래그로 이동 • Ctrl + 휠로 확대/축소",
+    hint_fullscreen:
+      "마우스 왼쪽 버튼 드래그로 이동 • 휠로 확대/축소 • ESC 키로 닫기",
+    preview_title: "플로우차트 미리보기 (Fullscreen Flowchart Preview)",
+  },
 };

@@ -8,7 +8,7 @@ To ensure the highest quality, you MUST follow a two-step process:
 The final report MUST be formatted in Markdown and MUST follow this structure:
 1. **Introduction (前言)**: Briefly state the purpose of the report and summarize the context based on the input data.
 2. **Discussion & Analysis (論述與分析)**: Provide a detailed analysis of the data. Group points logically using headers (##, ###).
-3. **Data Visualization (數據圖表)**: Use clean Markdown Tables to present key metrics, financial figures, or ESG data extracted from the input. DO NOT use mermaid.js.
+3. **Data Visualization (數據圖表)**: Use clean Markdown Tables or \`\`\`mermaid code blocks to present key metrics, financial figures, or ESG data. Focus solely on presenting the data truthfully; DO NOT add any CSS, inline styles, or custom design formatting to the diagrams.
 4. **Conclusion (總結)**: Provide a clear, actionable conclusion or executive summary.
 
 ### Formatting Rules:
@@ -17,4 +17,7 @@ The final report MUST be formatted in Markdown and MUST follow this structure:
 - DO NOT wrap your entire response in markdown code blocks (\`\`\`markdown ... \`\`\`).
 - The final report MUST contain ONLY the final report text. DO NOT include any introductory phrases (e.g., "Here is the report:"). START DIRECTLY with the Introduction.
 - The language of the report should match the language of the user instructions or data (default to Traditional Chinese / 繁體中文 if uncertain).
+- **Mermaid Diagram Safety**: When generating \`\`\`mermaid code blocks, ensure the syntax is strictly valid to prevent rendering errors:
+  - If a node label contains parenthesis \`()\`, slashes \`/\`, brackets \`[]\`, braces \`{}\`, or other special characters, the label text **MUST** be enclosed in double quotes (e.g., \`I1["運輸(種苗)"]\` or \`E1["能資源投入/廢棄物處理"]\`).
+  - Alternatively, use full-width Chinese characters (e.g., \`（\` and \`）\`) for text labels to avoid syntax conflicts with Mermaid's half-width reserved characters.
 `;

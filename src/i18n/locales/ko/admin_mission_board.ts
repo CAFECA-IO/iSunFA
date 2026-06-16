@@ -50,6 +50,9 @@ export const adminMissionBoard = {
   pdf_editor: {
     title: "PDF 편집기",
     subtitle: "마크다운을 작성하고 iSunFA 전용 양식의 PDF로 내보냅니다.",
+    toast_draft_saved: "초안이 수동으로 저장되었습니다",
+    toast_report_inserted: "보고서가 성공적으로 생성 및 삽입되었습니다!",
+    toast_share_link_failed: "공유 링크 생성에 실패했습니다",
     edit_markdown: "마크다운 편집",
     preview_pdf: "PDF 미리보기",
     download_pdf: "PDF 다운로드",
