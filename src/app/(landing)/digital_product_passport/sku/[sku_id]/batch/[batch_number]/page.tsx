@@ -223,7 +223,7 @@ export default function PublicBatchPassportPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 antialiased">
-      {/* Premium Header */}
+      {/* Info: (20260612 - Tzuhan) Premium Header */}
       <header className="sticky top-0 z-50 flex items-center justify-between border-b border-slate-800 bg-[#0f172a] px-6 py-4 text-white shadow-md">
         <div className="flex items-center gap-3">
           <span className="text-lg font-bold tracking-wider text-orange-500">
@@ -239,9 +239,9 @@ export default function PublicBatchPassportPage() {
         </div>
       </header>
 
-      {/* Main Container */}
+      {/* Info: (20260612 - Tzuhan) Main Container */}
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:py-12">
-        {/* Verification Status Banner */}
+        {/* Info: (20260612 - Tzuhan) Verification Status Banner */}
         <div className="mb-8 flex flex-col justify-between gap-4 rounded-3xl border border-emerald-100 bg-emerald-50/50 p-6 shadow-sm sm:flex-row sm:items-center">
           <div>
             <div className="flex items-center gap-2 text-emerald-800">
@@ -259,9 +259,9 @@ export default function PublicBatchPassportPage() {
           </div>
         </div>
 
-        {/* Info Grid */}
+        {/* Info: (20260612 - Tzuhan) Info Grid */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {/* Card 1: General Product Information */}
+          {/* Info: (20260612 - Tzuhan) Card 1: General Product Information */}
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
             <h2 className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
               <FileText className="h-4 w-4 text-blue-500" />
@@ -350,7 +350,7 @@ export default function PublicBatchPassportPage() {
             </div>
           </section>
 
-          {/* Card 2: Carbon Footprint Summary */}
+          {/* Info: (20260612 - Tzuhan) Card 2: Carbon Footprint Summary */}
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
             <h2 className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
               <Activity className="h-4 w-4 text-emerald-500" />
@@ -372,7 +372,7 @@ export default function PublicBatchPassportPage() {
                 {String(envImpact.methodology || "ISO 14067 (Cradle-to-Gate)")}
               </div>
 
-              {/* Conic Donut Chart */}
+              {/* Info: (20260612 - Tzuhan) Conic Donut Chart */}
               <div className="my-6 flex items-center justify-center gap-8">
                 <div
                   className="relative flex h-32 w-32 items-center justify-center rounded-full shadow-inner"
@@ -403,7 +403,7 @@ export default function PublicBatchPassportPage() {
                 </div>
               </div>
 
-              {/* Emissions breakdown list */}
+              {/* Info: (20260612 - Tzuhan) Emissions breakdown list */}
               <div className="space-y-2.5 border-t border-slate-100 pt-4 text-sm">
                 <div className="flex justify-between">
                   <span className="text-slate-500">Precursors Emissions</span>
@@ -446,7 +446,7 @@ export default function PublicBatchPassportPage() {
             </div>
           </section>
 
-          {/* Card 3: Circularity & Material Composition */}
+          {/* Info: (20260612 - Tzuhan) Card 3: Circularity & Material Composition */}
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md md:col-span-2">
             <h2 className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
               <Compass className="h-4 w-4 text-orange-500" />
@@ -487,7 +487,7 @@ export default function PublicBatchPassportPage() {
                           </span>
                         </div>
 
-                        {/* Progress Bar */}
+                        {/* Info: (20260612 - Tzuhan) Progress Bar */}
                         <div className="mt-2 flex h-3 w-full overflow-hidden rounded-full bg-slate-200">
                           <div
                             className="bg-orange-500 transition-all duration-500"
@@ -506,7 +506,7 @@ export default function PublicBatchPassportPage() {
                           ></div>
                         </div>
 
-                        {/* Legend */}
+                        {/* Info: (20260612 - Tzuhan) Legend */}
                         <div className="mt-3 flex flex-wrap gap-4 text-[10px] font-bold tracking-wider text-slate-500 uppercase">
                           <div className="flex items-center gap-1.5">
                             <span className="h-2 w-2 rounded-full bg-orange-500"></span>
@@ -581,7 +581,7 @@ export default function PublicBatchPassportPage() {
             </div>
           </section>
 
-          {/* Card 4: Durability & Technical Specs */}
+          {/* Info: (20260612 - Tzuhan) Card 4: Durability & Technical Specs */}
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
             <h2 className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
               <Settings className="h-4 w-4 text-purple-500" />
@@ -621,7 +621,7 @@ export default function PublicBatchPassportPage() {
             </div>
           </section>
 
-          {/* Card 5: Compliance, Certifications & Social Impact */}
+          {/* Info: (20260612 - Tzuhan) Card 5: Compliance, Certifications & Social Impact */}
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
             <h2 className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
               <Scale className="h-4 w-4 text-amber-500" />
@@ -662,7 +662,7 @@ export default function PublicBatchPassportPage() {
                 </span>
               </div>
 
-              {/* Social Impact */}
+              {/* Info: (20260612 - Tzuhan) Social Impact */}
               <div className="mt-4 border-t border-slate-100 pt-4">
                 <h3 className="mb-2 text-xs font-bold text-slate-700">
                   Social Responsibility
@@ -704,7 +704,7 @@ export default function PublicBatchPassportPage() {
             </div>
           </section>
 
-          {/* Card 6: EU Importer / Logistics (if present) */}
+          {/* Info: (20260612 - Tzuhan) Card 6: EU Importer / Logistics (if present) */}
           {(logistics.companyName || logistics.eori) && (
             <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md md:col-span-2">
               <h2 className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
@@ -741,7 +741,7 @@ export default function PublicBatchPassportPage() {
           )}
         </div>
 
-        {/* Footer info/disclaimer */}
+        {/* Info: (20260612 - Tzuhan) Footer info/disclaimer */}
         <footer className="mt-12 border-t border-slate-200 pt-8 text-center text-xs text-slate-400">
           <p className="leading-relaxed">
             * Carbon footprint evaluated according to ISO 14067 / CBAM
