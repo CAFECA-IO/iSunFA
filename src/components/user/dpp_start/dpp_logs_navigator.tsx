@@ -74,7 +74,7 @@ export function DppLogsNavigator({
             className={`flex flex-shrink-0 items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors ${isBaseline ? "border-b-2 border-blue-600 bg-blue-50/50 text-blue-700" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"}`}
           >
             <Building2 className="h-4 w-4" />
-            企業 Baseline
+            {t("digital_product_passport.simulator.baseline_tab")}
           </button>
           {products.map((p) => {
             const isActive = activeTabContext === p.productId;
@@ -132,8 +132,9 @@ export function DppLogsNavigator({
                           <Info className="h-4 w-4 cursor-pointer text-purple-500 hover:text-purple-600" />
                           <div className="invisible absolute bottom-full left-0 z-50 mb-2 w-64 opacity-0 transition-all group-hover:visible group-hover:opacity-100">
                             <div className="relative rounded-lg bg-slate-800 p-3 text-xs leading-relaxed font-normal tracking-wide whitespace-normal text-slate-100 shadow-xl">
-                              確保數據具備高度合理性，並符合 CBAM
-                              申報要求：系統自動抓取上一年度的永續報告書基準，並結合本年度最新的財務與營收財報數據，透過大語言模型動態推算出本年度的碳排指標。
+                              {t(
+                                "digital_product_passport.simulator.cbam_extrapolation_tooltip",
+                              )}
                               <div className="absolute top-full left-2 h-2 w-2 -translate-y-1/2 rotate-45 bg-slate-800"></div>
                             </div>
                           </div>

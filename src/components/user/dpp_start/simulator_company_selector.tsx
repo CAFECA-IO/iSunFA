@@ -120,7 +120,10 @@ const SimulatorCompanySelector: FC<ISimulatorCompanySelectorProps> = ({
             </>
           ) : (
             <span className="text-slate-400">
-              {placeholder || "請選擇已生成的企業..."}
+              {placeholder ||
+                t(
+                  "digital_product_passport.simulator.company_selector_placeholder",
+                )}
             </span>
           )}
         </span>
@@ -135,7 +138,9 @@ const SimulatorCompanySelector: FC<ISimulatorCompanySelectorProps> = ({
               <input
                 ref={inputRef}
                 type="text"
-                placeholder="搜尋企業名稱或統編..."
+                placeholder={t(
+                  "digital_product_passport.simulator.company_selector_search",
+                )}
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 className="w-full rounded-md border border-slate-300 bg-white py-1.5 pr-3 pl-8 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
@@ -164,7 +169,9 @@ const SimulatorCompanySelector: FC<ISimulatorCompanySelectorProps> = ({
             ) : (
               <div className="flex flex-col items-center justify-center gap-2 px-4 py-6 text-center text-sm text-slate-500">
                 <Search className="h-6 w-6 text-slate-300" />
-                找不到符合的已生成企業
+                {t(
+                  "digital_product_passport.simulator.company_selector_not_found",
+                )}
               </div>
             )}
           </div>

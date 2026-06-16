@@ -183,10 +183,19 @@ export const digitalProductPassport = {
     baseline_material: "材料構成の方針 (Material Composition)",
     baseline_title: "企業共通ベースラインデータセット",
     baseline_desc:
-      "このデータセットは財務報告書とESG報告書から逆算されたもので、すべての製品シミュレーションの共通基盤となります。",
+      "このデータセットは財務報告とESG報告から逆算されたものであり、すべての製品シミュレーションの共有基盤として機能します。",
+    baseline_tab: "企業 Baseline",
+    cbam_extrapolation_tooltip:
+      "データの高い合理性を確保し、CBAMの申告要件に準拠：システムは自動的に前年度の持続可能性レポートの基準を抽出し、今年度の最新の財務および収益データと組み合わせて、大規模言語モデルを介して今年度の炭素排出指標を動的に推定します。",
     view_baseline_details: "ベースライン生成の詳細を表示",
     regenerate_baseline: "企業共通データを再生成",
     continue_baseline: "企業共通データの生成を継続",
+    data_complete: "データ完備（ダウンロード可能）",
+    data_incomplete: "データ処理中または不完全",
+    generate_all: "ワンクリックですべてのデータを生成",
+    company_selector_placeholder: "生成された企業を選択してください...",
+    company_selector_search: "企業名または税IDを検索...",
+    company_selector_not_found: "一致する生成された企業が見つかりません",
   },
   sidebar: {
     search_placeholder: "企業名または法人番号で検索...",

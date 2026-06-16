@@ -180,9 +180,18 @@ export const digitalProductPassport = {
     baseline_title: "Company Public Baseline Dataset",
     baseline_desc:
       "This dataset is reverse-engineered from financial and ESG reports. It serves as the shared foundation for all product simulations.",
+    baseline_tab: "Corporate Baseline",
+    cbam_extrapolation_tooltip:
+      "Ensures highly reasonable data compliant with CBAM reporting requirements: The system automatically extracts the previous year's sustainability report baseline and combines it with the latest financial and revenue data to dynamically extrapolate this year's carbon emission metrics via a large language model.",
     view_baseline_details: "View Baseline Generation Details",
     regenerate_baseline: "Regenerate Company Public Data",
     continue_baseline: "Continue Generating Company Public Data",
+    data_complete: "Data complete (Ready for download)",
+    data_incomplete: "Data processing or incomplete",
+    generate_all: "Generate all data with one click",
+    company_selector_placeholder: "Please select a generated enterprise...",
+    company_selector_search: "Search enterprise name or Tax ID...",
+    company_selector_not_found: "No matching generated enterprise found",
   },
   sidebar: {
     search_placeholder: "Search Tax ID...",

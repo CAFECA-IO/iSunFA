@@ -171,9 +171,18 @@ export const digitalProductPassport = {
     baseline_title: "公司公用 Baseline 資料集",
     baseline_desc:
       "此資料集由財報 & ESG 報告反推。作為所有產品模擬的共用基礎。",
+    baseline_tab: "企業 Baseline",
+    cbam_extrapolation_tooltip:
+      "確保數據具備高度合理性，並符合 CBAM 申報要求：系統自動抓取上一年度的永續報告書基準，並結合本年度最新的財務與營收財報數據，透過大語言模型動態推算出本年度的碳排指標。",
     view_baseline_details: "查看 Baseline 生成詳情",
     regenerate_baseline: "重新生成公司公用資料",
     continue_baseline: "繼續生成公司公用資料",
+    data_complete: "資料齊全 (可下載)",
+    data_incomplete: "資料處理中或不完整",
+    generate_all: "一鍵生成全部資料",
+    company_selector_placeholder: "請選擇已生成的企業...",
+    company_selector_search: "搜尋企業名稱或統編...",
+    company_selector_not_found: "找不到符合的已生成企業",
   },
   sidebar: {
     search_placeholder: "搜尋統編...",

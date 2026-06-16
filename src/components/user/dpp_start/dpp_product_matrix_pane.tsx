@@ -94,11 +94,15 @@ export function DppProductMatrixPane({
                     </p>
                     {isComplete ? (
                       <div className="flex items-center gap-1.5 rounded-md bg-emerald-50 px-2 py-1.5 text-xs font-medium text-emerald-600">
-                        <CheckCircle2 className="h-4 w-4" /> 資料齊全 (可下載)
+                        <CheckCircle2 className="h-4 w-4" />{" "}
+                        {t("digital_product_passport.simulator.data_complete")}
                       </div>
                     ) : (
                       <div className="flex items-center gap-1.5 rounded-md bg-amber-50 px-2 py-1.5 text-xs font-medium text-amber-600">
-                        <AlertCircle className="h-4 w-4" /> 資料處理中或不完整
+                        <AlertCircle className="h-4 w-4" />{" "}
+                        {t(
+                          "digital_product_passport.simulator.data_incomplete",
+                        )}
                       </div>
                     )}
                   </div>
@@ -129,7 +133,7 @@ export function DppProductMatrixPane({
                       style={{ animationDuration: "3s" }}
                     >
                       <Zap className="h-4 w-4" />
-                      一鍵生成全部資料
+                      {t("digital_product_passport.simulator.generate_all")}
                     </button>
                   )}
                 </div>

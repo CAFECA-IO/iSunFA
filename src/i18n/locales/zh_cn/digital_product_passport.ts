@@ -169,10 +169,19 @@ export const digitalProductPassport = {
     baseline_material: "材料成分政策 (Material Composition)",
     baseline_title: "公司通用基线数据集",
     baseline_desc:
-      "此数据集由财报和 ESG 报告反向推导，作为所有产品模拟的通用基础。",
-    view_baseline_details: "查看基线生成详情",
+      "此数据集由财报 & ESG 报告反推。作为所有产品模拟的共用基础。",
+    baseline_tab: "企业 Baseline",
+    cbam_extrapolation_tooltip:
+      "确保数据具备高度合理性，并符合 CBAM 申报要求：系统自动抓取上一年度的永续报告书基准，并结合本年度最新的财务与营收财报数据，透过大语言模型动态推算出本年度的碳排指标。",
+    view_baseline_details: "查看 Baseline 生成详情",
     regenerate_baseline: "重新生成公司通用数据",
     continue_baseline: "继续生成公司通用数据",
+    data_complete: "资料齐全 (可下载)",
+    data_incomplete: "资料处理中或不完整",
+    generate_all: "一键生成全部资料",
+    company_selector_placeholder: "请选择已生成的企业...",
+    company_selector_search: "搜索企业名称或统编...",
+    company_selector_not_found: "找不到符合的已生成企业",
   },
   sidebar: {
     search_placeholder: "搜索统编...",

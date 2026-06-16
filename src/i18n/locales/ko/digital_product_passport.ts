@@ -179,10 +179,19 @@ export const digitalProductPassport = {
     baseline_material: "재료 구성 정책 (Material Composition)",
     baseline_title: "회사 공용 베이스라인 데이터 세트",
     baseline_desc:
-      "이 데이터 세트는 재무 보고서 및 ESG 보고서에서 역산출되었습니다. 모든 제품 시뮬레이션의 공통 기반으로 사용됩니다.",
-    view_baseline_details: "베이스라인 생성 세부 정보 보기",
+      "이 데이터 세트는 재무 및 ESG 보고서에서 역설계되었습니다. 모든 제품 시뮬레이션의 공통 기반 역할을 합니다.",
+    baseline_tab: "기업 Baseline",
+    cbam_extrapolation_tooltip:
+      "데이터의 높은 합리성을 보장하고 CBAM 신고 요건 준수: 시스템은 전년도 지속 가능성 보고서 기준을 자동으로 추출하고 이를 올해의 최신 재무 및 수익 데이터와 결합하여 대규모 언어 모델을 통해 올해의 탄소 배출 지표를 동적으로 추정합니다.",
+    view_baseline_details: "기준선 생성 세부정보 보기",
     regenerate_baseline: "회사 공용 데이터 다시 생성",
     continue_baseline: "회사 공용 데이터 생성 계속",
+    data_complete: "데이터 완성 (다운로드 가능)",
+    data_incomplete: "데이터 처리 중이거나 불완전함",
+    generate_all: "원클릭으로 모든 데이터 생성",
+    company_selector_placeholder: "생성된 기업을 선택하세요...",
+    company_selector_search: "기업명 또는 세금 ID 검색...",
+    company_selector_not_found: "일치하는 생성된 기업을 찾을 수 없습니다",
   },
   sidebar: {
     search_placeholder: "사업자 번호 검색...",
