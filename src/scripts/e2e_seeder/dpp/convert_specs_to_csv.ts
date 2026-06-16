@@ -245,7 +245,7 @@ export async function convertSpecsToCsv(
       `Disposal,Instructions,"${(groundTruthData?.durabilityAndRepair?.disposal || specsData.disposal?.instructions || "N/A").replace(/"/g, '""')}"`,
     );
 
-    fs.writeFileSync(outFile, "\uFEFF" + csvLines.join("\n")); // Add BOM for excel support
+    fs.writeFileSync(outFile, "\uFEFF" + csvLines.join("\n")); // Info: (20260615 - Tzuhan) Add BOM for excel support
     console.log(`✅ [${productId}] 生成 CSV 完成: ${outFile}`);
   }
 }
