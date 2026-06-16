@@ -303,7 +303,7 @@ export const generateFinancialVouchers = (
       actualRevBlocks,
       "RV",
       REVENUE_POOL,
-      "1100",
+      SystemAccountNodes.CASH_ROOT,
       false, // Info: (20260525 - Tzuhan) Revenue is Credit Normal
       contextCache.financial.top3Customers?.[0],
     ),
@@ -315,7 +315,7 @@ export const generateFinancialVouchers = (
       actualCogsBlocks,
       "COGS",
       COGS_POOL,
-      "1100",
+      SystemAccountNodes.CASH_ROOT,
       true,
     ),
   );
@@ -326,7 +326,7 @@ export const generateFinancialVouchers = (
       actualSelBlocks,
       "SEL",
       SELLING_EXP_POOL,
-      "1100",
+      SystemAccountNodes.CASH_ROOT,
       true,
     ),
   );
@@ -337,7 +337,7 @@ export const generateFinancialVouchers = (
       actualAdmBlocks,
       "ADM",
       ADMIN_EXP_POOL,
-      "1100",
+      SystemAccountNodes.CASH_ROOT,
       true,
     ),
   );
@@ -348,7 +348,7 @@ export const generateFinancialVouchers = (
       actualRndBlocks,
       "RND",
       RND_EXP_POOL,
-      "1100",
+      SystemAccountNodes.CASH_ROOT,
       true,
     ),
   );
@@ -358,8 +358,8 @@ export const generateFinancialVouchers = (
       interestRev,
       5,
       "INT-RV",
-      "1100",
-      "7110",
+      SystemAccountNodes.CASH_ROOT,
+      SystemAccountNodes.INTEREST_INCOME,
       "利息收入",
     ),
   );
@@ -369,14 +369,21 @@ export const generateFinancialVouchers = (
       interestExp,
       5,
       "INT-EX",
-      "7510",
-      "1100",
+      SystemAccountNodes.INTEREST_EXPENSE_ROOT_ALT,
+      SystemAccountNodes.CASH_ROOT,
       "利息費用",
     ),
   );
   // Info: (20260525 - Tzuhan) 8. Tax Expense (7950)
   vouchers.push(
-    ...createVoucherBlocks(taxExp, 5, "TAX", "7950", "1100", "所得稅費用"),
+    ...createVoucherBlocks(
+      taxExp,
+      5,
+      "TAX",
+      SystemAccountNodes.TAX_EXPENSE_ROOT,
+      SystemAccountNodes.CASH_ROOT,
+      "所得稅費用",
+    ),
   );
 
   if (!creditLoss.isZero()) {
@@ -387,8 +394,8 @@ export const generateFinancialVouchers = (
           creditLoss.abs(),
           1,
           "ECL",
-          "1100",
-          "6400",
+          SystemAccountNodes.CASH_ROOT,
+          SystemAccountNodes.EXPECTED_CREDIT_LOSS,
           "預期信用減損利益",
         ),
       );
@@ -398,8 +405,8 @@ export const generateFinancialVouchers = (
           creditLoss,
           1,
           "ECL",
-          "6400",
-          "1100",
+          SystemAccountNodes.EXPECTED_CREDIT_LOSS,
+          SystemAccountNodes.CASH_ROOT,
           "預期信用減損損失",
         ),
       );
@@ -547,14 +554,14 @@ export const generateFinancialVouchers = (
         {
           id: randomUUID(),
           description: "期末提列製造費用折舊",
-          accountingCode: "5110",
+          accountingCode: SystemAccountNodes.DEPRECIATION_MANUFACTURING,
           debitAmount: depreciation.toString(),
           creditAmount: "0",
         },
         {
           id: randomUUID(),
           description: "累計折舊增加",
-          accountingCode: "1613",
+          accountingCode: SystemAccountNodes.ACCUMULATED_DEPRECIATION_EQUIPMENT,
           debitAmount: "0",
           creditAmount: depreciation.toString(),
         },
