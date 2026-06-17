@@ -113,4 +113,23 @@ export const common = {
     export_png: "PNG로 내보내기",
     export_svg: "SVG로 내보내기",
   },
+  export_settings: {
+    title_voucher: "전표 내보내기",
+    title_esg: "ESG 기록 내보내기",
+    desc_voucher:
+      "선택한 기간 내의 모든 전표와 계정 과목 분개 데이터를 수집하여 표준 CSV 형식의 파일로 내보냅니다. 이를 통해 Excel에서 편집하거나 백업 보관을 간편하게 수행할 수 있습니다.",
+    desc_esg:
+      "선택한 기간 내의 모든 ESG 탄소 발자국 기록을 수집하여 표준 CSV 형식의 파일로 내보냅니다. 이를 통해 Excel에서 분석하거나 백업 보관을 간편하게 수행할 수 있습니다.",
+    select_range: "내보낼 기간 선택",
+    include_unverified_voucher: "'미확인' 전표 포함",
+    include_unverified_esg: "'미확인' ESG 기록 포함",
+    stat_title_voucher: "내보낼 전표 수 예상",
+    stat_title_esg: "내보낼 ESG 기록 수 예상",
+    unit_voucher: "장",
+    unit_esg: "건",
+    exporting: "내보내는 중...",
+    start_export: "내보내기 시작",
+    failed_voucher: "전표 내보내기에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+    failed_esg: "ESG 기록 내보내기에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+  },
 };

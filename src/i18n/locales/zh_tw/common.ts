@@ -108,4 +108,23 @@ export const common = {
     export_png: "下載 PNG",
     export_svg: "下載 SVG",
   },
+  export_settings: {
+    title_voucher: "匯出傳票",
+    title_esg: "匯出 ESG 紀錄",
+    desc_voucher:
+      "系統將彙整選定區間內的所有傳票及其科目分錄，匯出為標準 CSV 格式檔案，方便您於 Excel 進行編輯或備份存檔。",
+    desc_esg:
+      "系統將彙整選定區間內的所有 ESG 碳盤查紀錄，匯出為標準 CSV 格式檔案，方便您於 Excel 進行分析或備份存檔。",
+    select_range: "選擇匯出區間",
+    include_unverified_voucher: "是否包含「未核對」的傳票",
+    include_unverified_esg: "是否包含「未核對」的 ESG 紀錄",
+    stat_title_voucher: "預計匯出傳票數",
+    stat_title_esg: "預計匯出紀錄數",
+    unit_voucher: "張",
+    unit_esg: "筆",
+    exporting: "正在匯出...",
+    start_export: "開始匯出",
+    failed_voucher: "匯出傳票失敗，請稍後再試。",
+    failed_esg: "匯出 ESG 紀錄失敗，請稍後再試。",
+  },
 };

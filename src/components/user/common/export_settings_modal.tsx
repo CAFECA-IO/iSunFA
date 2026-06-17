@@ -146,7 +146,11 @@ export default function ExportSettingsModal({
       onClose();
     } catch (error) {
       console.error(`Failed to export ${type}:`, error);
-      alert(`匯出${type === "voucher" ? "傳票" : "ESG紀錄"}失敗，請稍後再試。`);
+      alert(
+        type === "voucher"
+          ? t("common.export_settings.failed_voucher")
+          : t("common.export_settings.failed_esg"),
+      );
     } finally {
       setIsExporting(false);
     }
@@ -155,16 +159,22 @@ export default function ExportSettingsModal({
   // Info: (20260617 - Julian) 依據類型顯示不同 UI 語系或字句
   const titleText =
     type === "voucher"
-      ? t("voucher.main_view.actions.export") || "匯出傳票"
-      : "匯出 ESG 紀錄";
+      ? t("common.export_settings.title_voucher")
+      : t("common.export_settings.title_esg");
 
   const descriptionText =
     type === "voucher"
-      ? "系統將彙整選定區間內的所有傳票及其科目分錄，匯出為標準 CSV 格式檔案，方便您於 Excel 進行編輯或備份存檔。"
-      : "系統將彙整選定區間內的所有 ESG 碳盤查紀錄，匯出為標準 CSV 格式檔案，方便您於 Excel 進行分析或備份存檔。";
+      ? t("common.export_settings.desc_voucher")
+      : t("common.export_settings.desc_esg");
 
-  const statText = type === "voucher" ? "預計匯出傳票數" : "預計匯出紀錄數";
-  const statUnit = type === "voucher" ? "張" : "筆";
+  const statText =
+    type === "voucher"
+      ? t("common.export_settings.stat_title_voucher")
+      : t("common.export_settings.stat_title_esg");
+  const statUnit =
+    type === "voucher"
+      ? t("common.export_settings.unit_voucher")
+      : t("common.export_settings.unit_esg");
 
   return (
     <Transition show={isOpen} as={Fragment}>
@@ -222,7 +232,7 @@ export default function ExportSettingsModal({
                   {/* Info: (20260617 - Julian) 時間區間選擇 */}
                   <div className="flex flex-col gap-2">
                     <span className="text-xs font-black tracking-wider text-slate-500 uppercase">
-                      選擇匯出區間
+                      {t("common.export_settings.select_range")}
                     </span>
                     <DateRangePicker
                       startDate={startDate}
@@ -247,8 +257,8 @@ export default function ExportSettingsModal({
                       className="cursor-pointer text-sm font-bold text-slate-700 select-none"
                     >
                       {type === "voucher"
-                        ? "是否包含「未核對」的傳票"
-                        : "是否包含「未核對」的 ESG 紀錄"}
+                        ? t("common.export_settings.include_unverified_voucher")
+                        : t("common.export_settings.include_unverified_esg")}
                     </label>
                   </div>
 
@@ -302,12 +312,14 @@ export default function ExportSettingsModal({
                       {isExporting ? (
                         <>
                           <Loader2 className="size-4 shrink-0 animate-spin" />
-                          <span>正在匯出...</span>
+                          <span>{t("common.export_settings.exporting")}</span>
                         </>
                       ) : (
                         <>
                           <Download className="size-4 shrink-0" />
-                          <span>開始匯出</span>
+                          <span>
+                            {t("common.export_settings.start_export")}
+                          </span>
                         </>
                       )}
                     </button>

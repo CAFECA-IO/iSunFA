@@ -112,4 +112,23 @@ export const common = {
     export_png: "Export PNG",
     export_svg: "Export SVG",
   },
+  export_settings: {
+    title_voucher: "Export Vouchers",
+    title_esg: "Export ESG Records",
+    desc_voucher:
+      "The system will compile all vouchers and their account entries within the selected interval and export them to a standard CSV file, making it easy to edit or archive in Excel.",
+    desc_esg:
+      "The system will compile all ESG carbon footprint records within the selected interval and export them to a standard CSV file, making it easy to analyze or archive in Excel.",
+    select_range: "Select Export Date Range",
+    include_unverified_voucher: "Include unverified vouchers",
+    include_unverified_esg: "Include unverified ESG records",
+    stat_title_voucher: "Estimated Vouchers to Export",
+    stat_title_esg: "Estimated ESG Records to Export",
+    unit_voucher: "sheets",
+    unit_esg: "records",
+    exporting: "Exporting...",
+    start_export: "Start Export",
+    failed_voucher: "Failed to export vouchers. Please try again later.",
+    failed_esg: "Failed to export ESG records. Please try again later.",
+  },
 };

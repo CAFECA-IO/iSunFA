@@ -163,7 +163,7 @@ export default function EsgMainView() {
           className="flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-600 lg:text-base"
         >
           <Download className="size-5 shrink-0 lg:size-6" />
-          Export CSV
+          {t("esg_main.export_button")}
         </button>
       </div>
 

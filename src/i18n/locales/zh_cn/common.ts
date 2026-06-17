@@ -108,4 +108,23 @@ export const common = {
     export_png: "下载 PNG",
     export_svg: "下载 SVG",
   },
+  export_settings: {
+    title_voucher: "导出凭证",
+    title_esg: "导出 ESG 记录",
+    desc_voucher:
+      "系统将汇总选定区间内的所有凭证及其科目分录，导出为标准 CSV 格式文件，方便您在 Excel 进行编辑或备份存档。",
+    desc_esg:
+      "系统将汇总选定区间内的所有 ESG 碳盘查记录，导出为标准 CSV 格式文件，方便您在 Excel 进行分析或备份存档。",
+    select_range: "选择导出区间",
+    include_unverified_voucher: "是否包含“未核对”的凭证",
+    include_unverified_esg: "是否包含“未核对”的 ESG 记录",
+    stat_title_voucher: "预计导出凭证数",
+    stat_title_esg: "预计导出记录数",
+    unit_voucher: "张",
+    unit_esg: "笔",
+    exporting: "正在导出...",
+    start_export: "开始导出",
+    failed_voucher: "导出凭证失败，请稍后再试。",
+    failed_esg: "导出 ESG 记录失败，请稍后再试。",
+  },
 };
