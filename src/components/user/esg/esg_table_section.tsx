@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { FileStack, Info, Search } from "lucide-react";
 import Link from "next/link";
-import { IEsgRecordDetail, EsgScope, EsgIntensity } from "@/interfaces/esg";
+import { IEsgRecordDetail } from "@/interfaces/esg";
+import { EsgScope, EsgIntensity } from "@/constants/esg";
 import { EsgRow } from "@/components/user/esg/esg_row";
 import RecordTabModal from "@/components/user/common/record_tab_modal";
 import ConfirmModal from "@/components/common/confirm_modal";

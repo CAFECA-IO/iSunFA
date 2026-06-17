@@ -1,4 +1,4 @@
-import { EsgIntensity, EsgScope } from "@/interfaces/esg";
+import { EsgIntensity, EsgScope } from "@/constants/esg";
 import { IEsgRecordBrief } from "@/interfaces/esg";
 
 // Info: (20260430 - Julian) 排放源的輸入，用於 DB 建立或編輯

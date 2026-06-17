@@ -9,7 +9,6 @@ import {
 import { MoneyUtil } from "@/lib/utils/money";
 import {
   IEsgDashboardSummary,
-  EsgScope,
   IEsgScopeDistributionData,
   IEsgTarget,
   IEsgRecordBrief,
@@ -20,7 +19,7 @@ import {
   IEsgEmissionSourcesSummary,
   IEsgEmissionSourcesUI,
 } from "@/interfaces/emission_sources";
-import { EsgIntensity } from "@/interfaces/esg";
+import { EsgScope, EsgIntensity } from "@/constants/esg";
 import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
 import { CoefficientCategory, ICoefficient } from "@/interfaces/coefficient";
 import {

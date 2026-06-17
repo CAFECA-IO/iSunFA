@@ -3,7 +3,7 @@ import { IPseudoTask } from "@/skills/types";
 // import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
 import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
-import { EsgIntensity } from "@/interfaces/esg";
+import { EsgIntensity } from "@/constants/esg";
 import { MoneyUtil } from "@/lib/utils/money";
 
 export class EsgIntensityEvaluationSkill implements ITaskSkill {

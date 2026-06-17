@@ -1,18 +1,7 @@
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
 import { ICoefficient } from "@/interfaces/coefficient";
-
-export enum EsgScope {
-  SCOPE_1 = "SCOPE_1",
-  SCOPE_2 = "SCOPE_2",
-  SCOPE_3 = "SCOPE_3",
-}
-
-export enum EsgIntensity {
-  LOW = "LOW",
-  MEDIUM = "MEDIUM",
-  HIGH = "HIGH",
-}
+import { EsgScope, EsgIntensity } from "@/constants/esg";
 
 export interface IEsgTotalEmissions {
   value: string;

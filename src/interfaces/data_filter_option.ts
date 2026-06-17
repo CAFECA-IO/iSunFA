@@ -6,7 +6,7 @@ import { VoucherSorting } from "@/constants/sort";
 import {
   EsgScope as ClientEsgScope,
   EsgIntensity as ClientEsgIntensity,
-} from "@/interfaces/esg";
+} from "@/constants/esg";
 
 // Info: (20260505 - Julian) 基礎篩選條件
 export interface IBaseFilterOptions {
