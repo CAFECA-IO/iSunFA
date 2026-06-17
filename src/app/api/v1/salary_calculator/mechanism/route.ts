@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const filePath = path.join(
       process.cwd(),
-      "documents/business_and_product/salary_calculator_operating_mechanism/v1_0_0.md",
+      "documents/domain/salary_calculator_mechanism.md",
     );
     const content = await fs.readFile(filePath, "utf8");
 

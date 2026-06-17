@@ -11,4 +11,5 @@ export const registrationSteps = {
   success: "Account created successfully!",
   failed: "Registration failed. Please try again.",
   processing: "Processing...",
+  syncing: "Syncing with blockchain...",
 };

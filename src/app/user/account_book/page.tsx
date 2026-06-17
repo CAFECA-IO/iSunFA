@@ -49,10 +49,7 @@ export default function UserMainPage() {
     message: "",
   });
 
-  const showAlert = (
-    message: string,
-    title = t("common.notification") || "Notification",
-  ) => {
+  const showAlert = (message: string, title = t("common.notification")) => {
     setConfirmModal({
       isOpen: true,
       title,
@@ -515,13 +512,9 @@ export default function UserMainPage() {
         title={confirmModal.title}
         message={confirmModal.message}
         confirmText={
-          confirmModal.isConfirm
-            ? t("common.confirm") || "Confirm"
-            : t("common.ok") || "OK"
+          confirmModal.isConfirm ? t("common.confirm") : t("common.ok")
         }
-        cancelText={
-          confirmModal.isConfirm ? t("common.cancel") || "Cancel" : undefined
-        }
+        cancelText={confirmModal.isConfirm ? t("common.cancel") : undefined}
         onConfirm={confirmModal.onConfirm}
       />
     </div>

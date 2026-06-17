@@ -58,7 +58,7 @@ package-lock.json
 yarn.lock
 
 # data & local seeding
-data/
+/data/
 /agent.md
 pdfs/
 

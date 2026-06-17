@@ -11,4 +11,5 @@ export const registrationSteps = {
   success: "帳戶建立成功！",
   failed: "註冊失敗，請重試。",
   processing: "處理中...",
+  syncing: "與區塊鏈同步中...",
 };

@@ -8,23 +8,23 @@ export const analysis = {
         "科技 (Technology)、医疗保健 (Healthcare)、金融 (Financials)、非必需消费品 (Consumer Discretionary)、能源 (Energy)。",
       sub_title: "次产业 / 供应链节点 (Sub-industries / Supply Chains)：",
       sub_desc:
-        "半导体制造 (Semiconductor Manufacturing)、IC设计 (IC Design)、电动车电池 (EV Batteries)、云端基础设施 (Cloud Infrastructure)、生技制药 (Biotechnology)。",
+        "半导体制造 (Semiconductor Manufacturing)、IC设计 (IC Design)、电动车电池 (EV Batteries)、云端基础设施 (Cloud Infrastructure)、生物制药 (Biotechnology)。",
       trends_title: "新兴趋势 / 概念股 (Emerging Trends / Concepts)：",
       trends_desc:
         "AI 服务器 (AI Servers)、硅光子 (Silicon Photonics)、固态电池 (Solid-State Batteries)、低轨卫星 (Low Earth Orbit Satellites)、ESG 绿能 (ESG Green Energy)。",
     },
     smart_enterprise_rating: {
       title: "智能企业评级 (Smart Enterprise Rating)",
-      desc: "这个模块的分析层级是「微观个体」，也就是针对单一公司进行财务与信用体检。因此，关键字必须是精确的公司名称、股票代码或统一编号。",
+      desc: "这个模块的分析层级是「微观个体」，也就是针对单一公司进行财务与信用体检。因此，关键字必须是精确的公司名称、股票代码或统一社会信用代码。",
       us_tickers_title: "美股标的 (US Tickers / Company Names)：",
       us_tickers_desc:
         "AAPL 或 Apple (苹果)\nNVDA 或 NVIDIA (英伟达)\nMSFT 或 Microsoft (微软)\nTSLA 或 Tesla (特斯拉)",
-      tw_tickers_title: "台股 / ADR 标的 (若系统支援跨国或美国存托凭证)：",
+      tw_tickers_title: "台股 / ADR 标的 (若系统支持跨国或美国存托凭证)：",
       tw_tickers_desc:
         "TSM (台积电 ADR)\n2330 或 台湾积体电路制造 (若系统包含台湾数据库)",
-      fuzzy_title: "企业属性分类 (若系统支援模糊搜寻)：",
+      fuzzy_title: "企业属性分类 (若系统支持模糊搜索)：",
       fuzzy_desc:
-        "有时也可以输入「苹果供应链」、「Tier 1 车用零组件厂」来筛选出一批目标企业进行批量评级。",
+        "有时也可以输入「苹果供应链」、「Tier 1 车用零部件厂」来筛选出一批目标企业进行批量评级。",
       analyst_view_title: "💡 分析师视角：",
       analyst_view_desc:
         "实务上，管理层最常在这里输入「主要竞争对手」、「关键供应商」或「潜在并购标的」的代码，用以监控供应链断链风险或进行同业财务指标（如 ROE、毛利率）的 Benchmarking（标杆测试）。",
@@ -34,38 +34,41 @@ export const analysis = {
       desc: "这个模块针对的是可交易的「金融资产」与「投资组合」，关键字应为具体的商品代码、基金名称或资产类别。",
       etf_title: "指数型基金 / ETF (ETFs)：",
       etf_desc:
-        "SPY 或 VOO (追踪标普500指数)\nQQQ (追踪纳斯达克100指数)\nTLT (20年期以上美国公债 ETF)",
+        "SPY 或 VOO (追踪标普500指数)\nQQQ (追踪纳斯达克100指数)\nTLT (20年期以上美国国债 ETF)",
       mutual_funds_title: "主动型基金 (Mutual Funds)：",
       mutual_funds_desc:
-        "输入特定基金公司的产品名称，例如：富达全球科技基金、联博全高收。",
+        "输入特定基金公司的产品名称，例如：富达全球科技基金、联博全球高收益债。",
       bonds_title: "特定债券 / 固定收益商品 (Bonds)：",
       bonds_desc:
-        "美国十年期公债 (US 10-Year Treasury)、特定公司的公司债代码（如 Apple 2030 到期公司债）、投资级公司债 (IG Bonds)、高收益债 (High Yield Bonds / Junk Bonds)。",
-      derivatives_title: "衍生性商品或原物料 (Commodities / Derivatives)：",
+        "美国十年期国债 (US 10-Year Treasury)、特定公司的公司债代码（如 Apple 2030 到期公司债）、投资级公司债 (IG Bonds)、高收益债 (High Yield Bonds / Junk Bonds)。",
+      derivatives_title: "衍生品或大宗商品 (Commodities / Derivatives)：",
       derivatives_desc:
-        "黄金 (Gold / GLD)、布兰特原油 (Brent Crude)、比特币 (Bitcoin / IBIT)。",
+        "黄金 (Gold / GLD)、布伦特原油 (Brent Crude)、比特币 (Bitcoin / IBIT)。",
       analyst_view_title: "💡 分析师视角：",
       analyst_view_desc:
-        "在这里输入关键字后，系统通常会吐出夏普值 (Sharpe Ratio)、最大回撤 (Max Drawdown) 等量化风险指标。这对于企业的「财务部」在管理闲置资金（Treasury Management）或配置避险部位时，是非常重要的决策依据。",
+        "在这里输入关键字后，系统通常会输出夏普比率 (Sharpe Ratio)、最大回撤 (Max Drawdown) 等量化风险指标。这对于企业的「财务部」在管理闲置资金（Treasury Management）或配置避险部位时，是非常重要的决策依据。",
     },
   },
   company_input: {
     label: "企业名称或统一社会信用代码",
     placeholder: "输入全称、简称或统一代码...",
     searching: "搜索中...",
+    unsupported_title: "尚未支持此非公开发行企业",
+    unsupported_desc:
+      "目前系统仅支持上市公司的公开财报与 ESG 可持续发展报告自动梳理。若需分析特定企业，请联系技术团队进行手动建档。",
     not_found: "找不到此公司，请尝试输入更完整的全称或统一代码。",
     missing_tax_id_desc:
-      "此账本（{{name}}）尚未设置统一对应代码，内部数据分析需使用统一代码。请在此补齐设置：",
+      "此账本（{{name}}）尚未设置统一社会信用代码，内部数据分析需使用该代码。请在此补齐设置：",
   },
   title: "顾问分析",
   desc: "提供多领域专家企业分析，协助管理层做出明智商业决策。",
   login_to_use: "请登录以使用顾问分析",
-  login_to_generate: "请先登录以产生分析报告",
+  login_to_generate: "请先登录以生成分析报告",
   internal_analysis: "内部数据分析",
   external_analysis: "外部数据分析",
-  addon_bookkeeper: "加购记账士签证",
-  addon_cpa: "加购会计师签证",
-  addon_third_party: "加购第三方查验机构签证",
+  addon_bookkeeper: "加购代理记账服务",
+  addon_cpa: "加购注册会计师鉴证",
+  addon_third_party: "加购第三方机构验证",
   addons_title: "加购项目（可复选）",
   history_reports: "历史报告",
   period_type: "时间单位",
@@ -117,8 +120,8 @@ export const analysis = {
     market_trends: "交易市场趋势",
     industry_development: "产业发展",
     financial_product_rating: "金融商品评级",
-    carbon_health_check: "碳健检",
-    net_zero_emissions: "净零碳排",
+    carbon_health_check: "碳健康检查",
+    net_zero_emissions: "净零排放",
     ai_consulting: "AI 咨询",
     journal_upload: "日记账建档",
     certificate_analysis: "凭证分析",
@@ -147,7 +150,7 @@ export const analysis = {
     },
     empty_title: "尚无分析报告",
     empty_description:
-      "使用我们先进的 A​​I 工具生成您的第一份财务分析报告，开启您的旅程。",
+      "使用我们先进的 AI 工具生成您的第一份财务分析报告，开启您的数据洞察之旅。",
     retry: "重试",
     retry_confirm_title: "确认重试？",
     retry_confirm_desc: "此操作将重新生成分析。确定要继续吗？",
@@ -159,17 +162,21 @@ export const analysis = {
     payment_success: "支付成功！",
     signing_analysis: "请签署分析请求",
     analyzing: "正在生成分析报告...",
+    analysis_success: "报告已生成！",
   },
+  generate_title: "生成报告",
+  confirm_generate_desc: "付款已确认。您现在可以生成您的报告。",
   success: {
     title: "分析请求已提交",
-    message: "您的请求已上链，报告生成需时，请至历史报告分页查看进度。",
+    message:
+      "您的请求已上链，报告生成需要一些时间，请稍后至历史报告页面查看进度。",
     view_tx: "查看交易",
   },
   share: {
     button: "分享报告",
     modal_title: "分享对外公开报告",
     modal_desc:
-      "任何人拥有此链接皆可检视该报告的“摘要与去识别化版本”。机密金额与详细供应商信息已被系统安全隐藏。",
+      "任何人拥有此链接即可查看该报告的“摘要与去识别化版本”。机密金额与详细供应商信息已被系统安全隐藏。",
     copy: "复制",
     copied: "已复制到剪贴板",
     revoke: "撤销此分享链接",
@@ -179,9 +186,9 @@ export const analysis = {
     shared_by: "由 {{name}} 分享",
     security_intercept: "系统安全拦截",
     security_desc: "此类型的报告尚未开放公开分享，或数据格式异常。",
-    cta_title: "想为您的企业产生专属的深度分析报告吗？",
+    cta_title: "想为您的企业生成专属的深度分析报告吗？",
     cta_desc:
-      "iSunFA 透过前沿 AI 技术，为您提供包含碳健检、财务评级、合规审查等全方位智能会计解决方案。",
+      "iSunFA 通过前沿 AI 技术，为您提供包含碳健康检查、财务评级、合规审查等全方位智能会计解决方案。",
     cta_button: "了解 iSunFA 阳光智能会计",
   },
   share_settings: {
@@ -191,10 +198,10 @@ export const analysis = {
       "对外分享前，请务必确认您已取得适当授权。强烈建议选择“去识别化与隐藏金额”，以确保商业机密不外流。",
     hide_data_title: "🛡️ 去识别化与隐藏金额 (强烈建议)",
     hide_data_desc:
-      "将隐藏所有特定凭证、厂商明细与绝对金额大小，仅分享 AI 生成的神经结构与风险评估结论。这能最大程度保护您的商业机密。",
+      "将隐藏所有特定凭证、厂商明细与绝对金额大小，仅分享 AI 生成的分析洞察与风险评估结论。这能最大程度保护您的商业机密。",
     show_data_title: "⚠️ 完整公开包含机密金额",
     show_data_desc:
-      "您的所有会计科目、绝对余额与相关分析将详细公开，任何取得链接的人都能查看完整的内部营运数据。",
-    confirm: "确认并产生链接",
+      "您的所有会计科目、绝对余额与相关分析将详细公开，任何取得链接的人都能查看完整的内部运营数据。",
+    confirm: "确认并生成链接",
   },
 };

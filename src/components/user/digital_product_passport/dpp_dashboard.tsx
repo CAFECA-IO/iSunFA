@@ -21,6 +21,7 @@ import {
 import DataTable, { IDataTableColumn } from "@/components/common/data_table";
 import { useAuth } from "@/contexts/auth_context";
 import AuthPlaceholder from "@/components/common/auth_placeholder";
+import { DPP_SKU_STATUS } from "@/constants/status";
 
 export default function DppDashboard() {
   const { t } = useTranslation();
@@ -32,6 +33,11 @@ export default function DppDashboard() {
   const [batches, setBatches] = useState<IDigitalProductPassportBatch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"sku" | "batch">("sku");
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     if (authLoading || !user) return;
@@ -136,7 +142,7 @@ export default function DppDashboard() {
       label: t("common.status"),
       render: (row) => (
         <span
-          className={`rounded-full px-2 py-1 text-[10px] font-bold whitespace-nowrap ${row.status === "READY" ? "bg-emerald-100 text-emerald-700" : row.status === "INCOMPLETE" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}
+          className={`rounded-full px-2 py-1 text-[10px] font-bold whitespace-nowrap ${row.status === DPP_SKU_STATUS.READY ? "bg-emerald-100 text-emerald-700" : row.status === DPP_SKU_STATUS.INCOMPLETE ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}
         >
           {t(`digital_product_passport.sku_diagnostics.status.${row.status}`)}
         </span>
@@ -183,7 +189,7 @@ export default function DppDashboard() {
       label: t("digital_product_passport.batch_creation.manufacture_date"),
       render: (row) => (
         <span className="text-sm text-gray-500">
-          {new Date(row.manufactureDate).toLocaleDateString()}
+          {isMounted ? new Date(row.manufactureDate).toLocaleDateString() : ""}
         </span>
       ),
     },
@@ -207,13 +213,15 @@ export default function DppDashboard() {
 
   return (
     <div className="w-full space-y-12">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-bold text-gray-900">
-          {t("digital_product_passport.title")}
-        </h1>
-        <p className="mt-2 text-sm text-gray-500">
-          {t("digital_product_passport.description")}
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold text-gray-900">
+            {t("digital_product_passport.title")}
+          </h1>
+          <p className="mt-2 text-sm text-gray-500">
+            {t("digital_product_passport.description")}
+          </p>
+        </div>
       </div>
 
       {user ? (

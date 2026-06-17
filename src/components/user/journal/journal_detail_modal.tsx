@@ -217,7 +217,7 @@ export default function JournalDetailModal({
                   <MarkdownContent content={editText} theme="light" />
                 ) : (
                   <p className="text-sm text-gray-400 italic">
-                    {t("journal.detail_modal.empty") || "Empty"}
+                    {t("journal.detail_modal.empty")}
                   </p>
                 )}
               </div>

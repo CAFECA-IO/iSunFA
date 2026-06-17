@@ -191,14 +191,14 @@ export default function PdfEditor({
       } else {
         setErrorModal({
           isOpen: true,
-          message: t("admin_mission_board.pdf_editor.toast_share_link_failed")!,
+          message: t("admin_mission_board.pdf_editor.toast_share_link_failed"),
         });
       }
     } catch (error) {
       console.error("Share error:", error);
       setErrorModal({
         isOpen: true,
-        message: t("admin_mission_board.pdf_editor.toast_share_link_failed")!,
+        message: t("admin_mission_board.pdf_editor.toast_share_link_failed"),
       });
     } finally {
       setIsSharing(false);
@@ -245,7 +245,7 @@ export default function PdfEditor({
         const report = response.payload.result;
         setMarkdownContext((prev) => prev + "\n\n" + report);
         showToast(
-          t("admin_mission_board.pdf_editor.toast_report_inserted")!,
+          t("admin_mission_board.pdf_editor.toast_report_inserted"),
           ToastType.SUCCESS,
         );
         setAiDataInput("");

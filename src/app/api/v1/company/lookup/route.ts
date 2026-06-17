@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
+    // Info: (20260611 - Tzuhan) 如果原始 query 有附帶 "(2066)"，就直接嘗試擷取出代碼作為條件
     const query = searchParams.get("query");
 
     if (!query) {
