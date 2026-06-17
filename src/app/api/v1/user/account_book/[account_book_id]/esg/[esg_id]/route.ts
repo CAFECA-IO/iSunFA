@@ -119,6 +119,12 @@ export async function PUT(
       ...(reqBody.scope && {
         scope: reqBody.scope.toUpperCase() as ClientEsgScope,
       }),
+      ...(reqBody.ghgProtocolCategory !== undefined && {
+        ghgProtocolCategory: reqBody.ghgProtocolCategory,
+      }),
+      ...(reqBody.isoCategory !== undefined && {
+        isoCategory: reqBody.isoCategory,
+      }),
       ...(reqBody.activityType && { activityType: reqBody.activityType }),
       ...(reqBody.vendor && { vendor: reqBody.vendor }),
       ...(reqBody.amount !== undefined && {

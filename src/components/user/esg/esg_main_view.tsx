@@ -143,7 +143,7 @@ export default function EsgMainView() {
   return (
     <div className="flex max-w-[calc(100vw-30px)] flex-col gap-y-4 px-0 lg:gap-y-6 lg:px-12">
       {/* Info: (20260312 - Julian) Header */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-wrap items-center justify-center gap-4 lg:justify-between">
         <div className="flex flex-col gap-2">
           <h1 className="flex items-center text-base font-bold text-slate-800 lg:text-2xl">
             <Leaf
@@ -160,14 +160,14 @@ export default function EsgMainView() {
         <button
           type="button"
           onClick={() => setIsExportModalOpen(true)}
-          className="flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-600 lg:text-base"
+          className="flex w-fit items-center gap-2 rounded-lg bg-orange-500 px-6 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-600 lg:text-base"
         >
           <Download className="size-5 shrink-0 lg:size-6" />
           {t("esg_main.export_button")}
         </button>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col items-center justify-between gap-4 lg:flex-row">
         {/* Info: (20260413 - Julian) Tab Switch */}
         <div className="grid grid-cols-3 space-x-1 rounded-xl border border-gray-200 bg-gray-100 p-1.5">
           {Object.values(EsgTab).map((tab) => (

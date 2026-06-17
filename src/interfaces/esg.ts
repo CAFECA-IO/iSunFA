@@ -1,7 +1,12 @@
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
 import { ICoefficient } from "@/interfaces/coefficient";
-import { EsgScope, EsgIntensity } from "@/constants/esg";
+import {
+  EsgScope,
+  EsgIntensity,
+  GhgProtocolCategory,
+  Iso14064Category,
+} from "@/constants/esg";
 
 export interface IEsgTotalEmissions {
   value: string;
@@ -47,6 +52,8 @@ export interface IEsgRecordBrief {
 // Info: (20260424 - Julian) 用於「碳盤查紀錄」列表頁
 export interface IEsgRecordDetail extends IEsgRecordBrief {
   scope: EsgScope | null; // Info: (20260424 - Julian) 範疇
+  ghgProtocolCategory?: GhgProtocolCategory | string | null; // Info: (20260618 - Julian) GHG Protocol 子分類
+  isoCategory?: Iso14064Category | string | null; // Info: (20260618 - Julian) ISO 14064-1 子分類
   intensity: EsgIntensity; // Info: (20260424 - Julian) 碳排放強度
   analysisStatus: AIAnalysisStatus | null; // Info: (20260424 - Julian) AI 分析狀態
   fileId: string; // Info: (20260424 - Julian) 檔案 ID 和內容

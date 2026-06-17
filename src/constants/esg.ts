@@ -257,8 +257,8 @@ export const GhgToIsoMapping: Record<GhgProtocolCategory, Iso14064Category> = {
 // Info: (20260617 - Julian) 轉換對應表：ISO 14064-1 類別 -> GHG Protocol 類別
 export const IsoToGhgMapping: Record<Iso14064Category, GhgProtocolCategory[]> =
   {
-    [Iso14064Category.CATEGORY_1]: [GhgProtocolCategory.SCOPE_1_DIRECT],
-    [Iso14064Category.CATEGORY_2]: [GhgProtocolCategory.SCOPE_2_INDIRECT],
+    [Iso14064Category.CATEGORY_1]: [],
+    [Iso14064Category.CATEGORY_2]: [],
     [Iso14064Category.CATEGORY_3]: [
       GhgProtocolCategory.SCOPE_3_CAT_4,
       GhgProtocolCategory.SCOPE_3_CAT_6,

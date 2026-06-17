@@ -16,7 +16,18 @@ import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { IEsgRecordDetail } from "@/interfaces/esg";
-import { EsgScope, EsgIntensity } from "@/constants/esg";
+import {
+  EsgScope,
+  EsgIntensity,
+  GhgProtocolCategory,
+  Iso14064Category,
+  GhgCategoryDetails,
+  IsoCategoryDetails,
+  GhgToIsoMapping,
+  IsoToGhgMapping,
+  EsgActivityTypeToGhgMapping,
+  EsgActivityTypeToIsoMapping,
+} from "@/constants/esg";
 import FilePreviewModal from "@/components/common/file_preview_modal";
 import AiConfidence from "@/components/common/ai_confidence";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -217,39 +228,107 @@ export default function EsgDetailModal({
   };
 
   const handleScopeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    // Info: (20260417 - Julian) 檢查活動類型是否於目前的範疇中，若不是，則更新活動類型
     const newScope = e.target.value as EsgScope;
-    const isValidActivityType = EsgActivityTypeMapping.some(
-      (a) => a.key === formData.activityType && a.scope === newScope,
-    );
 
     setFormData({
       ...formData,
       scope: newScope,
-      activityType: isValidActivityType
-        ? formData.activityType
-        : EsgActivityTypeMapping.find((a) => a.scope === newScope)?.key ||
-          formData.activityType, // Info: (20260417 - Julian) fallback to formData.activityType if not found, though we might want null but the type of activityType is sometimes string
+      ghgProtocolCategory: null,
+      isoCategory: null,
+      activityType: null,
+    });
+  };
+
+  const handleGhgCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newGhgCategory = e.target.value as GhgProtocolCategory;
+    const newScope = GhgCategoryDetails[newGhgCategory].scope;
+    const newIsoCategory = GhgToIsoMapping[newGhgCategory];
+
+    // Info: (20260617 - Julian) 避免選擇 GHG 分類後，其關聯的活動類型被重置
+    const currentActivityTypeGhg =
+      EsgActivityTypeToGhgMapping[formData.activityType as EsgActivityTypeKey];
+    let newActivityType = formData.activityType;
+    if (currentActivityTypeGhg !== newGhgCategory) {
+      const matchingActivity = Object.entries(EsgActivityTypeToGhgMapping).find(
+        ([, cat]) => cat === newGhgCategory,
+      );
+      if (matchingActivity) {
+        newActivityType = matchingActivity[0] as EsgActivityTypeKey;
+      }
+    }
+
+    setFormData({
+      ...formData,
+      scope: newScope,
+      ghgProtocolCategory: newGhgCategory,
+      isoCategory: newIsoCategory,
+      activityType: newActivityType,
+    });
+  };
+
+  const handleIsoCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newIsoCategory = e.target.value as Iso14064Category;
+    const relatedGhgCategories = IsoToGhgMapping[newIsoCategory];
+
+    let newGhgCategory =
+      formData.ghgProtocolCategory as GhgProtocolCategory | null;
+    let newScope = EsgScope.SCOPE_3;
+    if (newIsoCategory === Iso14064Category.CATEGORY_1) {
+      newScope = EsgScope.SCOPE_1;
+    } else if (newIsoCategory === Iso14064Category.CATEGORY_2) {
+      newScope = EsgScope.SCOPE_2;
+    }
+
+    if (relatedGhgCategories && relatedGhgCategories.length > 0) {
+      if (!newGhgCategory || !relatedGhgCategories.includes(newGhgCategory)) {
+        newGhgCategory = relatedGhgCategories[0];
+      }
+    } else {
+      newGhgCategory = null;
+    }
+
+    const currentActivityTypeIso =
+      EsgActivityTypeToIsoMapping[formData.activityType as EsgActivityTypeKey];
+    let newActivityType = formData.activityType;
+    if (currentActivityTypeIso !== newIsoCategory) {
+      const matchingActivity = Object.entries(EsgActivityTypeToIsoMapping).find(
+        ([, cat]) => cat === newIsoCategory,
+      );
+      if (matchingActivity) {
+        newActivityType = matchingActivity[0] as EsgActivityTypeKey;
+      } else {
+        newActivityType = null;
+      }
+    }
+
+    setFormData({
+      ...formData,
+      scope: newScope,
+      ghgProtocolCategory: newGhgCategory,
+      isoCategory: newIsoCategory,
+      activityType: newActivityType,
     });
   };
 
   const handleActivityTypeChange = (
     e: React.ChangeEvent<HTMLSelectElement>,
   ) => {
-    // Info: (20260417 - Julian) 取得活動類型
     const newActivityType = e.target.value as EsgActivityTypeKey;
-    // Info: (20260417 - Julian) 取得對應範疇
-    const relatedScope = EsgActivityTypeMapping.find(
-      (a) => a.key === newActivityType,
-    )?.scope;
+    const rawGhgCategory = EsgActivityTypeToGhgMapping[newActivityType];
+    const newGhgCategory =
+      rawGhgCategory === GhgProtocolCategory.SCOPE_1_DIRECT ||
+      rawGhgCategory === GhgProtocolCategory.SCOPE_2_INDIRECT
+        ? null
+        : rawGhgCategory;
+    const newIsoCategory = EsgActivityTypeToIsoMapping[newActivityType];
+    const newScope = GhgCategoryDetails[rawGhgCategory].scope;
 
     setFormData({
       ...formData,
-      activityType: newActivityType ?? null,
-      // Info: (20260417 - Julian) 若活動類型不屬於目前範疇，則更新範疇
-      ...(relatedScope && formData.scope !== relatedScope
-        ? { scope: relatedScope }
-        : {}),
+      activityType: newActivityType,
+      ghgProtocolCategory: newGhgCategory,
+      isoCategory: newIsoCategory,
+      scope: newScope,
     });
   };
 
@@ -324,6 +403,80 @@ export default function EsgDetailModal({
               <option value={EsgScope.SCOPE_3}>
                 {t("esg_verify.form.scope_3")}
               </option>
+            </select>
+          </div>
+
+          {/* Info: (20260617 - Julian) GHG Protocol Category */}
+          <div>
+            <label
+              htmlFor="ghgCategorySelect"
+              className="mb-1.5 block text-sm font-bold text-slate-500"
+            >
+              {t("esg_verify.form.ghg_category")}
+            </label>
+            <select
+              id="ghgCategorySelect"
+              aria-label={t("esg_verify.form.ghg_category")}
+              value={formData.ghgProtocolCategory || ""}
+              onChange={handleGhgCategoryChange}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
+            >
+              <option value="" disabled>
+                {!formData.scope ||
+                formData.scope === EsgScope.SCOPE_1 ||
+                formData.scope === EsgScope.SCOPE_2 ||
+                formData.isoCategory === Iso14064Category.CATEGORY_6
+                  ? t("esg_verify.form.none") || "無"
+                  : t("esg_verify.form.ghg_category_placeholder") ||
+                    "請選擇 GHG Protocol Category"}
+              </option>
+              {Object.values(GhgProtocolCategory)
+                .filter(
+                  (cat) =>
+                    cat !== GhgProtocolCategory.SCOPE_1_DIRECT &&
+                    cat !== GhgProtocolCategory.SCOPE_2_INDIRECT,
+                )
+                .map((cat) => {
+                  const detail = GhgCategoryDetails[cat];
+                  return (
+                    <option key={cat} value={cat}>
+                      {detail.categoryNumber
+                        ? `Category ${detail.categoryNumber}: `
+                        : ""}
+                      {detail.nameZh} ({detail.nameEn})
+                    </option>
+                  );
+                })}
+            </select>
+          </div>
+
+          {/* Info: (20260618 - Julian) ISO Category */}
+          <div>
+            <label
+              htmlFor="isoCategorySelect"
+              className="mb-1.5 block text-sm font-bold text-slate-500"
+            >
+              {t("esg_verify.form.iso_category")}
+            </label>
+            <select
+              id="isoCategorySelect"
+              aria-label={t("esg_verify.form.iso_category")}
+              value={formData.isoCategory || ""}
+              onChange={handleIsoCategoryChange}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
+            >
+              <option value="" disabled>
+                {t("esg_verify.form.iso_category_placeholder") ||
+                  "請選擇 ISO 14064-1 Category"}
+              </option>
+              {Object.values(Iso14064Category).map((cat) => {
+                const detail = IsoCategoryDetails[cat];
+                return (
+                  <option key={cat} value={cat}>
+                    Category {detail.categoryNumber}: {detail.nameZh}
+                  </option>
+                );
+              })}
             </select>
           </div>
 

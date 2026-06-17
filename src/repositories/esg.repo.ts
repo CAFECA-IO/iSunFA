@@ -635,6 +635,8 @@ export class EsgRepository implements IEsgRepository {
       emissions: record.emissions.toString(),
       emissionSourceTag: record.emissionSourceTag ?? undefined,
       scope: record.scope as EsgScope,
+      ghgProtocolCategory: record.ghgProtocolCategory,
+      isoCategory: record.isoCategory,
       intensity: record.intensity as EsgIntensity,
       analysisStatus: record.analysisStatus as AIAnalysisStatus,
       fileId: record.fileId ?? "",
