@@ -8,6 +8,7 @@ export const SystemAccountNodes = {
   CURRENT_ASSETS_ROOT: "11XX",
   NON_CURRENT_ASSETS_ROOT: "15XX",
   CASH_ROOT: "1100",
+  CASH_EQUIVALENTS: "1101",
   ACCOUNTS_RECEIVABLE_ROOT: "1170",
   INVENTORY_ROOT: "130X",
   PREPAYMENTS_ROOT: "1410",
@@ -19,6 +20,7 @@ export const SystemAccountNodes = {
   LIABILITIES_ROOT: "2XXX",
   CURRENT_LIABILITIES_ROOT: "21XX",
   SHORT_TERM_BORROWINGS: "2100",
+  ACCOUNTS_PAYABLE_ROOT: "2170",
   UNEARNED_REVENUE_ROOT: "2310",
   NON_CURRENT_LIABILITIES_ROOT: "25XX",
 
@@ -31,6 +33,7 @@ export const SystemAccountNodes = {
   // Info: (20260520 - Tzuhan) --- 損益表與現金流量表錨點 ---
   INCOME_ROOT: "4000", // Info: (20260520 - Tzuhan) 營業收入
   COST_ROOT: "5000", // Info: (20260520 - Tzuhan) 營業成本
+  COGS_ROOT: "5111", // Info: (20260605 - Tzuhan) 銷貨成本
   EXPENSE_ROOT: "6000", // Info: (20260520 - Tzuhan) 營業費用
   NON_OP_INCOME_ROOT: "7000", // Info: (20260520 - Tzuhan) 營業外收支
   DISPOSAL_GAIN_ROOT: "7140", // Info: (20260525 - Tzuhan) 處分資產利益
@@ -38,6 +41,18 @@ export const SystemAccountNodes = {
   OTHER_COMPREHENSIVE_INCOME_ROOT: "8000", // Info: (20260520 - Tzuhan) 其他綜合損益
   TAX_EXPENSE_ROOT: "7950", // Info: (20260520 - Tzuhan) 所得稅費用
   INTEREST_EXPENSE_ROOT: "7050", // Info: (20260520 - Tzuhan) 財務成本/利息
-  INTEREST_EXPENSE_ROOT_ALT: "7510", // Info: (20260520 - Tzuhan) 利息費用
-  DIVIDEND_PAYABLE_ROOT: "3350", // Info: (20260520 - Tzuhan) 股利發放相關(未分配盈餘)
+  INTEREST_EXPENSE_ROOT_ALT: "7510", // Info: (20250920 - Tzuhan) 利息費用
+  DIVIDEND_PAYABLE_ROOT: "3350", // Info: (20250920 - Tzuhan) 股利發放相關(未分配盈餘)
+
+  // Info: (20260615 - Tzuhan) --- Seeder / Diagnostic Specific Nodes ---
+  UTILITIES_EXPENSE: "6288", // Info: (20260615 - Tzuhan)水電燃氣費
+  ADMIN_EXPENSE: "6200", // Info: (20260615 - Tzuhan)管理費用
+  TRAVEL_EXPENSE: "6213", // Info: (20260615 - Tzuhan)交通/差旅費
+  SALES_RETURN: "4170", // Info: (20260615 - Tzuhan)銷貨退回
+  SALES_DISCOUNT: "4190", // Info: (20260615 - Tzuhan)銷貨折讓
+  DIRECT_LABOR_WAGES: "5122", // Info: (20260615 - Tzuhan)製造費用-薪工
+  INTEREST_INCOME: "7110", // Info: (20260615 - Tzuhan) 利息收入
+  EXPECTED_CREDIT_LOSS: "6400", // Info: (20260615 - Tzuhan) 預期信用減損損失/利益
+  DEPRECIATION_MANUFACTURING: "5110", // Info: (20260615 - Tzuhan) 折舊費用-製造
+  ACCUMULATED_DEPRECIATION_EQUIPMENT: "1613", // Info: (20260615 - Tzuhan) 累計折舊-機器設備
 } as const;

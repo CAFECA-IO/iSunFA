@@ -26,3 +26,9 @@ export interface IDigitalProductPassportBatch {
   publicUrl: string;
   createdAt: Date;
 }
+
+export interface IDppMissingGap {
+  module: string;
+  issue: string;
+  impact: string;
+}

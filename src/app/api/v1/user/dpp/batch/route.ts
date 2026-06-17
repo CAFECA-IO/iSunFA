@@ -4,6 +4,8 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { DppService } from "@/services/dpp.service";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get("authorization");

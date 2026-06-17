@@ -10,7 +10,9 @@ class LanceDBService {
   // Info: (20260612 - Julian) 全域唯一連線
   private async connect(): Promise<lancedb.Connection> {
     if (this.dbInstance) return this.dbInstance;
-    this.dbInstance = await lancedb.connect(path.resolve(dbUri));
+    this.dbInstance = await lancedb.connect(
+      path.resolve(/*turbopackIgnore: true*/ dbUri),
+    );
     return this.dbInstance;
   }
 

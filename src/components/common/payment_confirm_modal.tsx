@@ -281,7 +281,7 @@ export default function PaymentConfirmModal({
                               onClose();
                             }}
                           >
-                            {t("common.close") || "Close"}
+                            {t("common.close")}
                           </button>
                         ) : (
                           <button

@@ -7,7 +7,7 @@ export const journal = {
   summary: {
     empty: "현재 분개장 데이터가 없습니다",
     today_count: "오늘 생성된 분개장",
-    unit: "건",
+    unit: "-",
     pending: "대조 대기",
     ai_confidence: "AI 평균 신뢰도",
   },

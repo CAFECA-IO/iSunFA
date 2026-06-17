@@ -307,7 +307,7 @@ export default function OrderManagementPage() {
     },
     {
       key: "executionConfidence",
-      label: t("order_management.table.execution_confidence") || "執行信心度",
+      label: t("order_management.table.execution_confidence"),
       render: (record) => {
         if (record.executionConfidence == null) {
           return <span className="text-xs text-gray-400">N/A</span>;

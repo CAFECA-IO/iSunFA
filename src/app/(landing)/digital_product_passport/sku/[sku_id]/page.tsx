@@ -18,10 +18,11 @@ import { DPP_SKU_STATUS } from "@/constants/status";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { uploadFile } from "@/lib/file_operator";
+import { IDppMissingGap } from "@/interfaces/dpp";
 
 interface ISkuPayload {
   status: string;
-  missingGaps?: { module: string; issue: string; impact: string }[];
+  missingGaps?: IDppMissingGap[];
   modulesData?: Record<string, { extracted: boolean }>;
 }
 
@@ -34,10 +35,11 @@ export default function SkuDiagnosticPage() {
   const params = useParams();
   const skuId = params.sku_id as string;
 
-  const { data: response, isLoading } = useSWR(
-    skuId !== "demo-sku-12345" ? `/api/v1/user/dpp/sku/${skuId}` : null,
-    fetcher,
-  );
+  const {
+    data: response,
+    isLoading,
+    mutate,
+  } = useSWR(`/api/v1/user/dpp/sku/${skuId}`, fetcher);
 
   const sku = response?.payload || null;
 
@@ -45,7 +47,7 @@ export default function SkuDiagnosticPage() {
   const [uploadingGaps, setUploadingGaps] = useState<Record<number, boolean>>(
     {},
   );
-  const [clearedGaps, setClearedGaps] = useState<number[]>([]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeGapIdx, setActiveGapIdx] = useState<number | null>(null);
 
@@ -64,33 +66,31 @@ export default function SkuDiagnosticPage() {
 
     try {
       // Info: (20260514 - Luphia) Upload the file to IPFS
-      await new Promise<string>((resolve, reject) => {
+      const fileId = await new Promise<string>((resolve, reject) => {
         uploadFile(file, {
           onSuccess: (hash) => resolve(hash),
           onError: (err) => reject(new Error(err)),
         });
       });
 
-      // Info: (20260514 - Luphia) Simulate AI extraction complete & gap cleared
-      setTimeout(() => {
-        setClearedGaps((prev) => [...prev, currentIdx]);
-        setUploadingGaps((prev) => ({ ...prev, [currentIdx]: false }));
-      }, 1500); // Info: (20260514 - Luphia) Give a little visual feedback delay
+      // Info: (20260514 - Luphia) Update SKU with supplement and clear the gap
+      await request(`/api/v1/user/dpp/sku/${skuId}`, {
+        method: "PUT",
+        body: JSON.stringify({ fileId }),
+      });
+
+      await mutate();
     } catch (err) {
       console.error("Upload failed", err);
-      setUploadingGaps((prev) => ({ ...prev, [currentIdx]: false }));
-      alert(
-        t("digital_product_passport.sku_creation.upload_error") ||
-          "Failed to upload supplement document.",
-      );
+      alert(t("digital_product_passport.sku_creation.upload_error"));
     } finally {
+      setUploadingGaps((prev) => ({ ...prev, [currentIdx]: false }));
       setActiveGapIdx(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
-  const originalGaps = sku?.missingGaps || [];
-  const gaps = originalGaps.filter((_, idx) => !clearedGaps.includes(idx));
+  const gaps = sku?.missingGaps || [];
   const isReady = sku
     ? sku.status === DPP_SKU_STATUS.READY || gaps.length === 0
     : gaps.length === 0;
@@ -153,10 +153,7 @@ export default function SkuDiagnosticPage() {
           ref={fileInputRef}
           className="hidden"
           onChange={handleFileChange}
-          aria-label={
-            t("digital_product_passport.sku_diagnostics.upload_doc") ||
-            "Upload Supplementary Document"
-          }
+          aria-label={t("digital_product_passport.sku_diagnostics.upload_doc")}
         />
 
         {isReady && (
@@ -276,60 +273,52 @@ export default function SkuDiagnosticPage() {
                   </p>
                 </div>
               ) : (
-                originalGaps.map(
-                  (
-                    gap: { module: string; issue: string; impact: string },
-                    idx: number,
-                  ) => {
-                    const isCleared = clearedGaps.includes(idx);
-                    const isUploading = uploadingGaps[idx];
+                gaps.map((gap: IDppMissingGap, idx: number) => {
+                  const isUploading = uploadingGaps[idx];
 
-                    if (isCleared) return null;
-
-                    return (
-                      <div
-                        key={idx}
-                        className="group rounded-2xl border border-amber-200 bg-amber-50/30 p-5 transition hover:border-amber-300 hover:shadow-md"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <div className="mb-2 flex items-center gap-2">
-                              <span className="rounded bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700 uppercase">
-                                {gap.impact}
-                              </span>
-                              <h4 className="font-bold text-gray-900">
-                                {gap.module}
-                              </h4>
-                            </div>
-                            <p className="mb-4 text-sm text-gray-600">
-                              {gap.issue}
-                            </p>
+                  return (
+                    <div
+                      key={idx}
+                      className="group rounded-2xl border border-amber-200 bg-amber-50/30 p-5 transition hover:border-amber-300 hover:shadow-md"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <div className="mb-2 flex items-center gap-2">
+                            <span className="rounded bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700 uppercase">
+                              {gap.impact}
+                            </span>
+                            <h4 className="font-bold text-gray-900">
+                              {gap.module}
+                            </h4>
                           </div>
-                        </div>
-                        <div className="flex justify-end border-t border-amber-200/50 pt-4">
-                          <button
-                            onClick={() => handleTriggerUpload(idx)}
-                            disabled={isUploading}
-                            className="flex items-center gap-2 rounded-lg bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-200 disabled:opacity-50"
-                          >
-                            {isUploading ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <UploadCloud className="h-4 w-4" />
-                            )}
-                            {isUploading
-                              ? t(
-                                  "digital_product_passport.sku_creation.uploading",
-                                )
-                              : t(
-                                  "digital_product_passport.sku_diagnostics.upload_doc",
-                                )}
-                          </button>
+                          <p className="mb-4 text-sm text-gray-600">
+                            {gap.issue}
+                          </p>
                         </div>
                       </div>
-                    );
-                  },
-                )
+                      <div className="flex justify-end border-t border-amber-200/50 pt-4">
+                        <button
+                          onClick={() => handleTriggerUpload(idx)}
+                          disabled={isUploading}
+                          className="flex items-center gap-2 rounded-lg bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-200 disabled:opacity-50"
+                        >
+                          {isUploading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <UploadCloud className="h-4 w-4" />
+                          )}
+                          {isUploading
+                            ? t(
+                                "digital_product_passport.sku_creation.uploading",
+                              )
+                            : t(
+                                "digital_product_passport.sku_diagnostics.upload_doc",
+                              )}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
               )}
             </div>
           </div>

@@ -54,7 +54,7 @@ export const digitalProductPassport = {
     error: "エラーが発生しました",
     title: "生産バッチの発行",
     subtitle:
-      "SKUから遺伝子データを継承して新しいバッチパスポートを作成します：",
+      "SKUから基本データを継承して、新しいバッチパスポートを作成します：",
     batch_number: "バッチ番号",
     batch_number_ph: "例：BATCH-202605-001",
     manufacture_date: "製造日",
@@ -90,5 +90,193 @@ export const digitalProductPassport = {
       AUDITING: "監査中",
       INCOMPLETE: "データ欠落",
     },
+  },
+
+  list: {
+    simulator_title: "DPPシミュレーターデータジェネレーター",
+    simulator_desc:
+      "公開されている財務報告書とサステナビリティ報告書を使用して、デモとテスト用のリアルなデジタル製品パスポート（DPP）モックデータソースを自動生成します。",
+    create_simulation: "新規シミュレーション",
+    enter_data_center: "データセンターへ移動",
+    no_simulations:
+      "シミュレートされた企業が見つかりません。「新規シミュレーション」をクリックして最初のデータセットを作成してください。",
+    delete_confirm_title: "削除の確認",
+    delete_confirm_message:
+      "「{{name}} ({{year}}年)」のシミュレーションデータを削除してもよろしいですか？この操作は元に戻せません。",
+    delete_failed: "削除に失敗しました。後でもう一度お試しください。",
+    simulation_status: "シミュレーションステータス",
+    phase1: "フェーズ1: 基礎データ",
+    esg_download: "ESGダウンロード",
+    esg_extrapolate: "ESG推定",
+    phase23: "フェーズ2 & 3: カタログと製品DPP",
+    product_count: "製品数: ",
+    enter_workspace: "ワークスペースに入る",
+    company_info: "企業情報",
+    progress_status: "進捗状況",
+    action_buttons: "操作ボタン",
+  },
+  start: {
+    initialize_simulation: "企業シミュレーションデータベースの初期化",
+    search_company: "対象企業の検索",
+    search_company_placeholder: "企業名または統一会社番号を入力...",
+    simulation_year: "シミュレーション年",
+    start_simulation: "初期化を開始",
+    start_generation: "推計および分析スクリプトの実行開始",
+    unknown_error: "不明なエラーが発生しました",
+    step1: "1. 財務報告書および公開データの抽出",
+    step2_extrapolate: "2. ESGの年度またぎ推定（タイムマシン）",
+    step2: "2. ESGサステナビリティ報告書および指標の抽出",
+    step3: "3. AI視覚的チャートの抽出 (ai_vision_extractor)",
+    step4: "4. 企業ペルソナの構築 (persona_generator)",
+    step5: "5. BOMおよび前駆体データの構築 (generate_bom_precursors)",
+    step6: "6. 製品仕様の生成 (generate_product_specs)",
+    step7: "7. 製品設計図の生成 (generate_product_image)",
+    step8:
+      "8. LCA およびカーボンフットプリント計算 (generate_lca_ground_truth)",
+    step9:
+      "9. 製品コンプライアンスおよび検証データ生成 (generate_compliance_declaration)",
+    download_failed: "ダウンロードに失敗しました。後でもう一度お試しください！",
+    simulator_title_phase1: "企業シミュレーションデータセンター",
+    simulator_title_phase1_desc:
+      "特定の企業向けの高品質なモックデータを生成し、複数製品の完全な管理プロセスを体験します。",
+    target_enterprise_label: "対象企業: ",
+    year_label: "年度: ",
+    simulation_matrix: "シミュレーションマトリックス",
+    next_step_verify: "次のステップ: 検証",
+    next_step_verify_desc:
+      "製品ごとにシミュレーションデータが生成されました。パッケージをダウンロードし、実際のアップロードプロセスに進んで検証してください。",
+    go_to_create: "パスポート作成へ進む",
+    baseline_details: "ベースライン詳細 (技術コンサルタント向け)",
+  },
+  simulator: {
+    empty_product_data:
+      "製品データがありません。右上の「シミュレーション製品 SKU を追加」をクリックしてください。",
+    group_manufacturer: "製造者 (Manufacturer)",
+    ai_extrapolation: "✨ AI 推定",
+    ai_extrapolation_principle:
+      "AI 推定原則：前年度の持続可能性レポートを基準に、最新の財務データと連携し、AIが本年度の炭素排出・エネルギースコアを動的に推定します。",
+    header_title: "企業シミュレーションデータ生成センター",
+    header_subtitle:
+      "ターゲット企業を指定し、自動的にクローラーとAI抽出スクリプトをトリガーして、デジタル製品パスポート（DPP）の企業ペルソナと基本ファイルを構築します。",
+    group_company_policy: "企業運営と方針 (Company Policy & Persona)",
+    group_traceability:
+      "🔗 サプライチェーンのトレーサビリティとマテリアルライブラリ (Traceability & Material)",
+    group_circularity: "循環性と効率化方針 (Circularity)",
+    group_product_specs:
+      "📦 製品仕様とエンジニアリングデータ (Product Specs & Engineering)",
+    group_dpp_core: "📊 LCA フットプリントとコンプライアンスレポート",
+    matrix_title: "製品ポートフォリオとギャップ設定 (個別)",
+    matrix_desc:
+      "製品SKUごとに異なる欠陥シナリオを設定し、判定を体験してください。",
+    add_sku: "模擬製品SKUを追加",
+    scenario: "シナリオ設定",
+    gap_settings: "ギャップ設定 (この製品固有のデータのみ)",
+    gap_bom: "製品・物流情報 (BOM)",
+    gap_lca: "環境影響レポート (LCA)",
+    download_sku: "SKUファイルパッケージの生成とダウンロード",
+    view_sku_details: "SKUデータの詳細を表示",
+    baseline_manufacturer: "製造業者 (Manufacturer)",
+    baseline_traceability: "サプライチェーン追跡 (Traceability)",
+    baseline_circularity: "循環性と効率性の方針 (Circularity)",
+    baseline_compliance:
+      "技術マニュアル & コンプライアンス監査方針 (Compliance)",
+    baseline_material: "材料構成の方針 (Material Composition)",
+    baseline_title: "企業共通ベースラインデータセット",
+    baseline_desc:
+      "このデータセットは財務報告とESG報告から逆算されたものであり、すべての製品シミュレーションの共有基盤として機能します。",
+    baseline_tab: "企業 Baseline",
+    cbam_extrapolation_tooltip:
+      "データの高い合理性を確保し、CBAMの申告要件に準拠：システムは自動的に前年度の持続可能性レポートの基準を抽出し、今年度の最新の財務および収益データと組み合わせて、大規模言語モデルを介して今年度の炭素排出指標を動的に推定します。",
+    view_baseline_details: "ベースライン生成の詳細を表示",
+    regenerate_baseline: "企業共通データを再生成",
+    continue_baseline: "企業共通データの生成を継続",
+    data_complete: "データ完備（ダウンロード可能）",
+    data_incomplete: "データ処理中または不完全",
+    generate_all: "ワンクリックですべてのデータを生成",
+    company_selector_placeholder: "生成された企業を選択してください...",
+    company_selector_search: "企業名または税IDを検索...",
+    company_selector_not_found: "一致する生成された企業が見つかりません",
+  },
+  sidebar: {
+    search_placeholder: "企業名または法人番号で検索...",
+    select_company_first: "先に企業を選択してください",
+    mode: "モード",
+    mode_accounting: "財務会計",
+    mode_carbon: "炭素計算",
+    mode_business: "企業PR分析",
+    mode_catalog: "企業製品カタログ（BOM）を生成する",
+    product_catalog: "製品カタログ",
+    mode_dpp: "この製品専用のDPPを生成する",
+    product_list: "製品リスト",
+    no_products: "なし",
+    select_product: "製品を選択してください",
+  },
+  preview: {
+    no_file: "プレビューできるファイルがありません",
+    support_formats:
+      "左側のステップを選択してプレビューします（PDF、JSON、PNG、HTMLをサポート）",
+    generating: "生成中...",
+  },
+
+  sidebar_extra: {
+    target_enterprise: "対象企業 (企業名 / 法人番号)",
+    year: "年度",
+    year_prediction: "2025 (年度またぎ推定)",
+    processing: "処理中...",
+    download_reports: "レポートとデータをダウンロード",
+    regenerate_persona: "企業ペルソナを再生成",
+    execute_ai: "AI抽出とペルソナ生成を実行",
+    regenerate_bom: "製品カタログ (BOM) を再生成",
+    generate_bom: "企業製品カタログ (BOM) を生成",
+    select_product_dpp: "製品を選択して単一製品DPPを生成",
+    regenerate_dpp: "単一製品DPPを再生成",
+    generate_dpp: "この製品専用のDPPを生成",
+    pipeline_execution: "パイプライン実行 (Pipeline Execution)",
+    extrapolation_alert_title:
+      "当年度のESGレポートが見つかりません。AI年度またぎ推定 (Time-Machine) が自動適用されました。",
+    extrapolation_alert_desc:
+      "システムは自動的に過去の基準に遡及し、以下のコア原則に基づいて年度またぎの動的シミュレーションを行いました：",
+    extrapolation_bullet1:
+      "マクロ経済予測：世界のインフレ傾向とサプライチェーンの変動要因を適用",
+    extrapolation_bullet2:
+      "収益モメンタム推定：公表された財務報告書の収益モメンタムに基づいて生産能力とエネルギー消費の変化を推定",
+    extrapolation_bullet3:
+      "グリーンエネルギー移行推定：CBAMの圧力下における企業の再生可能エネルギー調達比率の向上と脱炭素経路をシミュレーション",
+    click_to_view: "クリックしてソースファイルを表示",
+  },
+
+  preview_extra: {
+    view_generated_output: "生成された出力を表示",
+    file_not_found: "ファイルが見つかりません",
+    file_not_found_desc:
+      "指定されたファイルが見つかりませんでした。生成ステップでのエラーが原因である可能性があります。このフェーズのデータを再生成してみてください。",
+    regenerate_file: "このデータを再生成する",
+    json_title: "DPP / AI解析データ表示",
+    json_view_desc:
+      "これは構造化データであり、システム統合や分析に適しています。",
+    json_desc:
+      "システムは生のJSONデータを視覚的なコンポーネントに変換して表示しています。",
+    regenerating_title: "データを生成しています...",
+    regenerating_desc: "AIがデータを再生成しています。お待ちください。",
+    waiting_title: "項目を選択してください",
+    waiting_desc:
+      "左側のステップをクリックして関連ファイルまたはデータをプレビューします。",
+    loading: "読み込み中...",
+  },
+  report_downloader: {
+    title: "公開財務およびESGレポートダウンローダー",
+    description:
+      "ティッカーシンボルと年を入力すると、公開情報源から財務およびサステナビリティレポートを自動的にダウンロードします。",
+    target_enterprise: "対象企業",
+    year: "年",
+    downloading: "ダウンロード中...",
+    start_download: "ダウンロード開始",
+    processing_status: "処理ステータス",
+    downloaded_files: "ダウンロードしたファイル",
+    open_new_tab: "新しいタブで開く",
+    save_file: "ファイルを保存",
+    download_failed: "ダウンロードに失敗しました。もう一度お試しください",
+    download_complete: "ダウンロード完了",
+    preparing: "ダウンロードの準備中...",
   },
 };

@@ -53,11 +53,8 @@ export default function BlockchainMintForm({
                 type="number"
                 step="0.0001"
                 min="0.0001"
-                aria-label={t("admin_blockchain.page.amount_aria") || "Amount"}
-                placeholder={
-                  t("admin_blockchain.page.amount_placeholder") ||
-                  "Amount to mint"
-                }
+                aria-label={t("admin_blockchain.page.amount_aria")}
+                placeholder={t("admin_blockchain.page.amount_placeholder")}
                 value={mintAmount}
                 onChange={(e) => setMintAmount(e.target.value)}
                 disabled={!data || isMinting}

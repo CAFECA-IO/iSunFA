@@ -11,4 +11,5 @@ export const registrationSteps = {
   success: "계정이 성공적으로 생성되었습니다!",
   failed: "등록에 실패했습니다. 다시 시도해 주세요.",
   processing: "처리 중...",
+  syncing: "블록체인 동기화 중...",
 };

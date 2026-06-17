@@ -424,12 +424,10 @@ export function SetupSuperAdmin({
       {isActive && (
         <div className="mt-5 mb-5 rounded-lg border border-slate-200 bg-white p-5">
           <h3 className="mb-3 text-sm font-bold tracking-wide text-gray-800">
-            {t("admin_setup.step7.domain_label") ||
-              "Application Origin (NEXT_PUBLIC_APP_URL)"}
+            {t("admin_setup.step7.domain_label")}
           </h3>
           <p className="mb-4 text-xs text-gray-500">
-            {t("admin_setup.step7.domain_hint") ||
-              "Must match your browser's top-level address"}
+            {t("admin_setup.step7.domain_hint")}
           </p>
           <div className="flex gap-2">
             <input
