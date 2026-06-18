@@ -4,8 +4,14 @@ export const logistics = {
     step_mapping: "マッピング",
     step_preview: "プレビュー",
     step_complete: "完了",
-    upload_title: "クリックまたはドラッグしてExcel / CSVをアップロード",
-    upload_desc: ".xlsx, .xls, .csv形式をサポート、最大5,000件を推奨",
+    system_field: "システムフィールド：",
+    mapping_hint: "対応するExcelヘッダーを選択してください",
+    preview_data_title: "上位5件のプレビュー (Preview)",
+    auto_detect: "AI 自動判定",
+    route: "ルート",
+    upload_title:
+      "クリックまたはドラッグしてExcel / CSV / Numbersをアップロード",
+    upload_desc: ".xlsx, .xls, .csv, .numbers形式をサポート、最大5,000件を推奨",
     file_read: "読み込み完了:",
     found_rows:
       "{{count}}件のデータが見つかりました。システムフィールドをExcelのヘッダーにマッピングしてください。",

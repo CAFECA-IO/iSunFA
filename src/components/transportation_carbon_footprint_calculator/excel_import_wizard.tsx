@@ -13,6 +13,7 @@ import {
 import { useTranslation } from "@/i18n/i18n_context";
 import { RouteMode } from "@/constants/analysis";
 import { IMileageItem } from "@/components/transportation_carbon_footprint_calculator/mileage_calculator";
+import DataTable from "@/components/common/data_table";
 
 interface IExcelImportWizardProps {
   onComplete: (items: IMileageItem[]) => void;
@@ -24,9 +25,7 @@ const REQUIRED_FIELDS = [
   { key: "dest", labelKey: "logistics.page.destination" },
 ];
 
-const OPTIONAL_FIELDS = [
-  { key: "mode", labelKey: "logistics.page.transportation_mode" },
-];
+const OPTIONAL_FIELDS: { key: string; labelKey: string }[] = [];
 
 export function ExcelImportWizard({
   onComplete,
@@ -84,12 +83,6 @@ export function ExcelImportWizard({
               lower.includes("目的")
             )
               initialMap["dest"] = header;
-            else if (
-              lower.includes("運輸") ||
-              lower.includes("mode") ||
-              lower.includes("方式")
-            )
-              initialMap["mode"] = header;
           });
           setMapping(initialMap);
 
@@ -214,7 +207,7 @@ export function ExcelImportWizard({
             type="file"
             ref={fileInputRef}
             className="hidden"
-            accept=".xlsx,.xls,.csv"
+            accept=".xlsx,.xls,.csv,.numbers"
             onChange={handleFileUpload}
           />
           <UploadCloud className="mx-auto mb-4 h-12 w-12 text-orange-500" />
@@ -255,11 +248,16 @@ export function ExcelImportWizard({
             {[...REQUIRED_FIELDS, ...OPTIONAL_FIELDS].map((field) => (
               <div key={field.key} className="space-y-2">
                 <label className="block text-sm font-bold text-gray-700">
+                  {t("logistics.import_wizard.system_field")}
                   {t(field.labelKey)}{" "}
                   {REQUIRED_FIELDS.includes(field) && (
                     <span className="text-red-500">*</span>
                   )}
                 </label>
+                <div className="mb-2 flex items-center gap-1 text-xs text-gray-500">
+                  <ArrowRight className="h-3 w-3" />
+                  {t("logistics.import_wizard.mapping_hint")}
+                </div>
                 <select
                   value={mapping[field.key] || ""}
                   onChange={(e) =>
@@ -320,6 +318,29 @@ export function ExcelImportWizard({
                 {t("logistics.import_wizard.import_success")}
               </p>
             </div>
+          </div>
+
+          <div className="mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white">
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
+              <h4 className="text-sm font-bold text-gray-800">
+                {t("logistics.import_wizard.preview_data_title")}
+              </h4>
+            </div>
+            <DataTable
+              data={parsedItems.slice(0, 5)}
+              columns={[
+                { key: "origin", label: t("logistics.page.origin") },
+                { key: "dest", label: t("logistics.page.destination") },
+                {
+                  key: "mode",
+                  label: t("logistics.page.transportation_mode"),
+                  render: (row) =>
+                    (row as IMileageItem).mode ||
+                    t("logistics.import_wizard.auto_detect"),
+                },
+              ]}
+              rowKey={(row) => JSON.stringify(row)}
+            />
           </div>
 
           <div className="flex justify-end gap-3 pt-4">

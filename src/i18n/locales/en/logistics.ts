@@ -4,9 +4,14 @@ export const logistics = {
     step_mapping: "Mapping",
     step_preview: "Preview",
     step_complete: "Complete",
-    upload_title: "Click or drag to upload Excel / CSV",
+    system_field: "System Field: ",
+    mapping_hint: "Please select the corresponding Excel column header",
+    preview_data_title: "Top 5 Rows Preview",
+    auto_detect: "AI Auto Detect",
+    route: "Route",
+    upload_title: "Click or drag to upload Excel / CSV / Numbers file",
     upload_desc:
-      "Supports .xlsx, .xls, .csv formats, max 5,000 rows recommended",
+      "Supports .xlsx, .xls, .csv, .numbers formats. Maximum 5,000 rows recommended",
     file_read: "File read:",
     found_rows:
       "Found {{count}} rows. Please map the system fields to the Excel headers.",
