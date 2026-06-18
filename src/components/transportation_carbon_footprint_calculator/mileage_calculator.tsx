@@ -6,6 +6,7 @@ import { request } from "@/lib/utils/request";
 import { useTranslation } from "@/i18n/i18n_context";
 import ConfirmModal from "@/components/common/confirm_modal";
 import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
+import { ExcelImportWizard } from "@/components/transportation_carbon_footprint_calculator/excel_import_wizard";
 import {
   useOrderTransaction,
   IOrderPayload,
@@ -21,7 +22,7 @@ import { ORDER_TYPE, ORDER_STATUS } from "@/constants/status";
 import { ANALYSIS_BASE_COSTS } from "@/constants/price";
 import { useEffect } from "react";
 
-interface IMileageItem {
+export interface IMileageItem {
   id: string;
   origin: string;
   dest: string;
@@ -56,6 +57,7 @@ export function MileageCalculator({
     title: "",
     message: "",
   });
+  const [showExcelImport, setShowExcelImport] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [currentOrderPayload, setCurrentOrderPayload] =
     useState<IOrderPayload | null>(null);
@@ -267,6 +269,53 @@ export function MileageCalculator({
 
   return (
     <div className="space-y-8 pb-12">
+      {showExcelImport ? (
+        <ExcelImportWizard
+          onComplete={(parsedItems) => {
+            const allItems = [...items, ...parsedItems];
+            setItems(allItems);
+            setShowExcelImport(false);
+
+            const uncalculatedItems = allItems.filter((item) => !item.success);
+            if (uncalculatedItems.length > 0) {
+              setIsCalculating(true);
+              setItems(
+                allItems.map((item) =>
+                  item.success
+                    ? item
+                    : { ...item, loading: true, error: undefined },
+                ),
+              );
+
+              setPollingAction(MILEAGE_ACTION.CALCULATE_BATCH);
+              setCurrentOrderPayload({
+                type: ORDER_TYPE.ANALYSIS,
+                data: {
+                  category: ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT,
+                  action: MILEAGE_ACTION.CALCULATE_BATCH,
+                  items: uncalculatedItems.map((item) => ({
+                    origin: item.origin,
+                    dest: item.dest,
+                    mode: item.mode,
+                  })),
+                },
+              });
+              setIsPaymentModalOpen(true);
+            }
+          }}
+          onCancel={() => setShowExcelImport(false)}
+        />
+      ) : (
+        <div className="mb-4 flex justify-end">
+          <button
+            onClick={() => setShowExcelImport(true)}
+            className="flex items-center gap-2 rounded-lg bg-orange-100 px-6 py-2 font-semibold text-orange-700 transition-colors hover:bg-orange-200"
+          >
+            <FileText className="h-4 w-4" /> {t("logistics.page.batch_import")}
+          </button>
+        </div>
+      )}
+
       <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
         <h2 className="mb-6 flex items-center gap-2 text-lg font-bold text-gray-800">
           <FileText className="h-5 w-5 text-orange-500" />
