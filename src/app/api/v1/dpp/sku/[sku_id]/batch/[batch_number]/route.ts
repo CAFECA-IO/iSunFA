@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { DppService } from "@/services/dpp.service";
-import { ApiCode } from "@/lib/utils/status";
 
 export async function GET(
   request: NextRequest,
@@ -12,11 +11,7 @@ export async function GET(
     const { sku_id: skuId, batch_number: batchNumber } = await params;
 
     if (!skuId || !batchNumber) {
-      return jsonFail({
-        code: "ISDPP009",
-        message: "Missing sku_id or batch_number",
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      return jsonFail(API_ERRORS.VL_MISSING_PARAMS);
     }
 
     const dppService = new DppService();
