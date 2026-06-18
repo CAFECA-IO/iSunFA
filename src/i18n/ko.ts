@@ -1,4 +1,5 @@
 import { digitalProductPassport } from "@/i18n/locales/ko/digital_product_passport";
+import { logistics } from "@/i18n/locales/ko/logistics";
 import { dppUrbanMining } from "@/i18n/locales/ko/dpp_urban_mining";
 import { adminDashboard } from "@/i18n/locales/ko/admin_dashboard";
 import { adminCampaign } from "@/i18n/locales/ko/admin_campaign";
@@ -66,6 +67,7 @@ import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const ko = {
   digital_product_passport: digitalProductPassport,
+  logistics,
   dpp_urban_mining: dppUrbanMining,
   transportation_carbon_footprint_calculator:
     transportationCarbonFootprintCalculator,

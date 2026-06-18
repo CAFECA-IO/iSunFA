@@ -97,7 +97,7 @@ model TeamInvitation {
   inviter        User     @relation("Inviter", fields: [inviterId], references: [id])
   inviteeAddress String   @map("invitee_address")
   role           TeamRole
-  status         String   @default("PENDING") // Info: (20260325 - Agent) PENDING, ACCEPTED, REJECTED
+  status         String   @default("PENDING") // Info: (20260325 - Tzuhan) PENDING, ACCEPTED, REJECTED
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
@@ -358,6 +358,9 @@ model AccountBook {
   // Info: (20260312 - Julian) 帳本對應的 ESG 紀錄
   esgRecords EsgRecord[]
 
+  // Info: (20260618 - Tzuhan) 帳本對應的物流紀錄
+  logisticsRecords LogisticsRecord[]
+
   // Info: (20260322 - Luphia) 帳本對應的各年度 ESG 目標
   esgTargets EsgTarget[]
 
@@ -557,7 +560,35 @@ model EsgRecord {
   // Info: (20260324 - Julian) AI 分析的備註
   aiNote String @default("") @map("ai_note") @db.Text
 
+  // Info: (20260618 - Tzuhan) 關聯的物流紀錄
+  logisticsRecord LogisticsRecord?
+
   @@map("esg_record")
+}
+
+// Info: (20260618 - Tzuhan) 物流碳排引擎：物流明細紀錄與中繼站點
+model LogisticsRecord {
+  id                 String @id @default(uuid())
+  origin             String
+  destination        String
+  waypoints          Json? // Info: (20260618 - Tzuhan) 儲存中繼站陣列
+  weightKg           Float  @map("weight_kg")
+  totalDistanceKm    Float? @map("total_distance_km")
+  transportationMode String @map("transportation_mode")
+  status             String @default("PENDING") // Info: (20260618 - Tzuhan) PENDING, CALCULATED, FAILED
+
+  // Info: (20260618 - Tzuhan) 隸屬的帳本
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  // Info: (20260618 - Tzuhan) 產生之 ESG 紀錄
+  esgRecordId String?    @unique @map("esg_record_id")
+  esgRecord   EsgRecord? @relation(fields: [esgRecordId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("logistics_record")
 }
 
 // Info: (20260322 - Luphia) ESG 各年度目標
