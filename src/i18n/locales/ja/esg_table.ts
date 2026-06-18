@@ -17,6 +17,8 @@ export const esgTable = {
   filter_intensity_all: "全ての強度",
   filter_scope_aria: "スコープで絞り込み",
   filter_scope_all: "全て (Scope 1-3)",
+  filter_ghg_all: "すべての GHG Protocol スコープ",
+  filter_iso_all: "すべての ISO 14064-1 カテゴリー",
   header: {
     voucher: "伝票",
     date: "日付",

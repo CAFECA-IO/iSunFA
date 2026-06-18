@@ -16,6 +16,8 @@ export const esgTable = {
   filter_intensity_all: "All Intensity",
   filter_scope_aria: "Filter by Scope",
   filter_scope_all: "All (Scope 1-3)",
+  filter_ghg_all: "All GHG Protocol Scopes",
+  filter_iso_all: "All ISO 14064-1 Categories",
   header: {
     voucher: "Voucher",
     date: "Date",

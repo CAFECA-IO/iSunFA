@@ -201,6 +201,16 @@ export class EsgRepository implements IEsgRepository {
       andConditions.push({ scope: options.scope as EsgScope });
     }
 
+    // Info: (20260618 - Julian) GHG Protocol 類別過濾
+    if (options.ghgProtocolCategory) {
+      andConditions.push({ ghgProtocolCategory: options.ghgProtocolCategory });
+    }
+
+    // Info: (20260618 - Julian) ISO 14064-1 類別過濾
+    if (options.isoCategory) {
+      andConditions.push({ isoCategory: options.isoCategory });
+    }
+
     // Info: (20260508 - Julian) 年度、月份過濾邏輯
     if (options.year) {
       let startDate: Date;

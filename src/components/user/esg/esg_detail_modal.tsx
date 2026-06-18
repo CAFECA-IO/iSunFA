@@ -54,7 +54,7 @@ export default function EsgDetailModal({
 }: IEsgDetailModalProps) {
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   const [formData, setFormData] = useState<IEsgRecordDetail | null>(null);
   const [originalData, setOriginalData] = useState<IEsgRecordDetail | null>(
@@ -473,7 +473,7 @@ export default function EsgDetailModal({
                 const detail = IsoCategoryDetails[cat];
                 return (
                   <option key={cat} value={cat}>
-                    Category {detail.categoryNumber}: {detail.nameZh}
+                    {language.startsWith("zh") ? detail.nameZh : detail.nameEn}
                   </option>
                 );
               })}

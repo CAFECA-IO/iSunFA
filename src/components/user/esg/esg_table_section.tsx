@@ -4,7 +4,16 @@ import { useState, useEffect, useCallback } from "react";
 import { FileStack, Info, Search } from "lucide-react";
 import Link from "next/link";
 import { IEsgRecordDetail } from "@/interfaces/esg";
-import { EsgScope, EsgIntensity } from "@/constants/esg";
+import {
+  EsgScope,
+  EsgIntensity,
+  GhgProtocolCategory,
+  Iso14064Category,
+  GhgCategoryDetails,
+  IsoCategoryDetails,
+  IsoToGhgMapping,
+  GhgToIsoMapping,
+} from "@/constants/esg";
 import { EsgRow } from "@/components/user/esg/esg_row";
 import RecordTabModal from "@/components/user/common/record_tab_modal";
 import ConfirmModal from "@/components/common/confirm_modal";
@@ -31,7 +40,7 @@ export default function EsgTableSection({
   year = undefined,
   month = undefined,
 }: IEsgTableSectionProps) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
 
@@ -47,6 +56,8 @@ export default function EsgTableSection({
   >("all");
   const [filteredIntensity, setFilteredIntensity] = useState<string>("all");
   const [filteredScope, setFilteredScope] = useState<string>("all");
+  const [filteredGhgCategory, setFilteredGhgCategory] = useState<string>("all");
+  const [filteredIsoCategory, setFilteredIsoCategory] = useState<string>("all");
   const [hideDeleted, setHideDeleted] = useState<boolean>(true);
 
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState<boolean>(false);
@@ -64,6 +75,51 @@ export default function EsgTableSection({
   );
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [isRestoring, setIsRestoring] = useState<boolean>(false);
+
+  const handleScopeFilterChange = (val: string) => {
+    setFilteredScope(val);
+    setFilteredGhgCategory("all");
+    setFilteredIsoCategory("all");
+  };
+
+  const handleGhgFilterChange = (val: string) => {
+    if (val === "all") {
+      setFilteredGhgCategory("all");
+      setFilteredIsoCategory("all");
+      setFilteredScope("all");
+    } else {
+      const ghgCat = val as GhgProtocolCategory;
+      setFilteredGhgCategory(ghgCat);
+      setFilteredScope(GhgCategoryDetails[ghgCat].scope);
+      setFilteredIsoCategory(GhgToIsoMapping[ghgCat]);
+    }
+  };
+
+  const handleIsoFilterChange = (val: string) => {
+    if (val === "all") {
+      setFilteredIsoCategory("all");
+      setFilteredGhgCategory("all");
+      setFilteredScope("all");
+    } else {
+      const isoCat = val as Iso14064Category;
+      setFilteredIsoCategory(isoCat);
+
+      let newScope = EsgScope.SCOPE_3;
+      if (isoCat === Iso14064Category.CATEGORY_1) {
+        newScope = EsgScope.SCOPE_1;
+      } else if (isoCat === Iso14064Category.CATEGORY_2) {
+        newScope = EsgScope.SCOPE_2;
+      }
+      setFilteredScope(newScope);
+
+      const relatedGhg = IsoToGhgMapping[isoCat];
+      if (relatedGhg && relatedGhg.length > 0) {
+        setFilteredGhgCategory(relatedGhg[0]);
+      } else {
+        setFilteredGhgCategory("all");
+      }
+    }
+  };
 
   const searchParams = useSearchParams();
   const openId = searchParams?.get("openId");
@@ -87,6 +143,10 @@ export default function EsgTableSection({
         queryParams.append("intensity", filteredIntensity);
       if (filteredScope && filteredScope !== "all")
         queryParams.append("scope", filteredScope);
+      if (filteredGhgCategory && filteredGhgCategory !== "all")
+        queryParams.append("ghgProtocolCategory", filteredGhgCategory);
+      if (filteredIsoCategory && filteredIsoCategory !== "all")
+        queryParams.append("isoCategory", filteredIsoCategory);
       if (year) queryParams.append("year", year.toString());
       if (month) queryParams.append("month", month.toString());
       if (hideDeleted) queryParams.append("hideDeleted", "true");
@@ -116,6 +176,8 @@ export default function EsgTableSection({
     verifyStatusFilter,
     filteredIntensity,
     filteredScope,
+    filteredGhgCategory,
+    filteredIsoCategory,
     sortOrder,
     year,
     month,
@@ -132,6 +194,8 @@ export default function EsgTableSection({
     verifyStatusFilter,
     filteredIntensity,
     filteredScope,
+    filteredGhgCategory,
+    filteredIsoCategory,
     sortOrder,
     year,
     month,
@@ -344,11 +408,12 @@ export default function EsgTableSection({
   return (
     <div className="flex flex-col gap-4">
       {/* Info: (20260312 - Julian) Toolbar */}
-      <div className="flex flex-wrap justify-center gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row lg:justify-start lg:gap-4">
-        <div className="relative w-full max-w-sm">
+      <div className="flex flex-wrap justify-center gap-x-2 gap-y-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row lg:justify-start lg:gap-x-4">
+        {/* Info: (20260618 - Julian) Search bar */}
+        <div className="relative order-1 w-full lg:order-1 lg:max-w-none lg:flex-1">
           <Search
             size={20}
-            className="absolute top-1/2 left-3.5 -translate-y-1/2 text-slate-400"
+            className="absolute top-1/2 left-3.5 shrink-0 -translate-y-1/2 text-slate-400"
           />
           <input
             type="text"
@@ -359,14 +424,25 @@ export default function EsgTableSection({
             className="w-full rounded-lg border border-slate-300 py-2 pr-4 pl-10 text-sm font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-orange-500 focus:outline-none"
           />
         </div>
+        {/* Info: (20260618 - Julian) 排序切換 */}
+        <div className="order-7 w-[calc(50%-4px)] sm:w-auto lg:order-2 [&>button]:w-full [&>button]:justify-center sm:[&>button]:w-auto">
+          <DateSortButton
+            currentOrder={sortOrder}
+            onOrderChange={(order) => setSortOrder(order)}
+          />
+        </div>
 
+        {/* Info: (20260618 - Julian) 換行（桌機版） */}
+        <div className="order-3 hidden h-0 w-full lg:block" />
+
+        {/* Info: (20260618 - Julian) 驗證狀態篩選 */}
         <select
           aria-label="Filter by verify status"
           value={verifyStatusFilter}
           onChange={(e) =>
             setVerifyStatusFilter(e.target.value as VerifyStatus | "all")
           }
-          className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:px-4 lg:text-sm"
+          className="order-2 w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none sm:w-[130px] lg:order-4 lg:px-4 lg:text-sm"
         >
           <option value="all">
             {t("verify.status.all", { type: t("verify.type.esg") })}
@@ -378,11 +454,12 @@ export default function EsgTableSection({
             {t("verify.status.unverified")}
           </option>
         </select>
+        {/* Info: (20260618 - Julian) 碳排放強度篩選 */}
         <select
           aria-label={t("esg_table.filter_intensity_aria")}
           value={filteredIntensity}
           onChange={(e) => setFilteredIntensity(e.target.value)}
-          className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:px-4 lg:text-sm"
+          className="order-3 w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none sm:w-[120px] lg:order-5 lg:px-4 lg:text-sm"
         >
           <option value="all">{t("esg_table.filter_intensity_all")}</option>
           <option value={EsgIntensity.HIGH}>
@@ -395,11 +472,12 @@ export default function EsgTableSection({
             {t("esg_table.intensity.low")}
           </option>
         </select>
+        {/* Info: (20260618 - Julian) 排放範圍篩選 */}
         <select
           aria-label={t("esg_table.filter_scope_aria")}
           value={filteredScope}
-          onChange={(e) => setFilteredScope(e.target.value)}
-          className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:px-4 lg:text-sm"
+          onChange={(e) => handleScopeFilterChange(e.target.value)}
+          className="order-4 w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none sm:w-[180px] lg:order-6 lg:px-4 lg:text-sm"
         >
           <option value="all">{t("esg_table.filter_scope_all")}</option>
           <option value={EsgScope.SCOPE_1}>
@@ -413,18 +491,62 @@ export default function EsgTableSection({
           </option>
         </select>
 
-        <DateSortButton
-          currentOrder={sortOrder}
-          onOrderChange={(order) => setSortOrder(order)}
-        />
-
-        {/* Info: (20260428 - Julian) 統一驗證鈕的位置 */}
+        {/* Info: (20260618 - Julian) GHG 類別篩選 */}
+        <select
+          aria-label="Filter by GHG category"
+          value={filteredGhgCategory}
+          onChange={(e) => handleGhgFilterChange(e.target.value)}
+          className="order-5 w-full truncate rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none sm:w-[240px] lg:order-8 lg:px-4 lg:text-sm"
+        >
+          <option value="all">
+            {filteredScope === EsgScope.SCOPE_1 ||
+            filteredScope === EsgScope.SCOPE_2 ||
+            filteredIsoCategory === Iso14064Category.CATEGORY_6
+              ? `${t("esg_verify.form.ghg_category")}：${t("esg_verify.form.none") || "無"}`
+              : t("esg_table.filter_ghg_all")}
+          </option>
+          {Object.values(GhgProtocolCategory)
+            .filter(
+              (cat) =>
+                cat !== GhgProtocolCategory.SCOPE_1_DIRECT &&
+                cat !== GhgProtocolCategory.SCOPE_2_INDIRECT,
+            )
+            .map((cat) => {
+              const detail = GhgCategoryDetails[cat];
+              return (
+                <option key={cat} value={cat}>
+                  {detail.categoryNumber
+                    ? `Category ${detail.categoryNumber}: `
+                    : ""}
+                  {detail.nameZh} ({detail.nameEn})
+                </option>
+              );
+            })}
+        </select>
+        {/* Info: (20260618 - Julian) ISO 類別篩選 */}
+        <select
+          aria-label="Filter by ISO category"
+          value={filteredIsoCategory}
+          onChange={(e) => handleIsoFilterChange(e.target.value)}
+          className="order-6 w-full truncate rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none sm:w-[220px] lg:order-9 lg:px-4 lg:text-sm"
+        >
+          <option value="all">{t("esg_table.filter_iso_all")}</option>
+          {Object.values(Iso14064Category).map((cat) => {
+            const detail = IsoCategoryDetails[cat];
+            return (
+              <option key={cat} value={cat}>
+                {language.startsWith("zh") ? detail.nameZh : detail.nameEn}
+              </option>
+            );
+          })}
+        </select>
+        {/* Info: (20260428 - Julian) 一鍵核對按鈕 */}
         <button
           type="button"
           aria-label={t("common.verify_all")}
           onClick={() => setIsVerifyAllConfirmOpen(true)}
           disabled={isLoading || isAllVerified || records.length === 0}
-          className="inline-flex items-center justify-center rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm enabled:hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300 lg:ml-auto"
+          className="order-8 inline-flex w-[calc(50%-4px)] items-center justify-center rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm enabled:hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300 sm:w-auto lg:order-10 lg:ml-auto"
         >
           {t("common.verify_all")}
         </button>

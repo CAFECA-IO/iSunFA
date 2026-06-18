@@ -16,6 +16,8 @@ export const esgTable = {
   filter_intensity_all: "全部强度",
   filter_scope_aria: "依范畴筛选",
   filter_scope_all: "全部范畴 (Scope 1-3)",
+  filter_ghg_all: "全部 GHG Protocol 范畴",
+  filter_iso_all: "全部 ISO 14064-1 类别",
   header: {
     voucher: "凭证",
     date: "日期",

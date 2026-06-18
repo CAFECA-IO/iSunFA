@@ -55,6 +55,8 @@ export interface IEsgRecordFilterOptions extends IBaseFilterOptions {
   verifyStatus?: string | null;
   intensity?: ClientEsgIntensity | string | null;
   scope?: ClientEsgScope | string | null;
+  ghgProtocolCategory?: string | null;
+  isoCategory?: string | null;
   sort?: "asc" | "desc" | null;
   year?: number | null;
   month?: number | null;
