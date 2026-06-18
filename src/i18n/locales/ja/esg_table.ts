@@ -15,7 +15,7 @@ export const esgTable = {
   filter_intensity_aria: "強度フィルター対象",
   ai: { processing: "AI 処理中...", failed: "AI 処理失敗" },
   filter_intensity_all: "全ての強度",
-  filter_scope_aria: "スコープで絞り込み",
+  filter_scope_title: "スコープフィルター",
   filter_scope_all: "全て (Scope 1-3)",
   filter_ghg_all: "すべての GHG Protocol スコープ",
   filter_iso_all: "すべての ISO 14064-1 カテゴリー",
