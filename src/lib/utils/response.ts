@@ -49,6 +49,23 @@ export const jsonFail = (def: IErrorDef, init?: ResponseInit) =>
     ...init,
   });
 
+export const fileOk = (
+  content: string | Blob | ArrayBuffer,
+  filename: string,
+  contentType: string,
+  init?: ResponseInit,
+) => {
+  return new NextResponse(content, {
+    status: 200,
+    ...init,
+    headers: {
+      "Content-Type": contentType,
+      "Content-Disposition": `attachment; filename="${filename}"`,
+      ...init?.headers,
+    },
+  });
+};
+
 function httpStatusOf(code: ApiCode): number {
   switch (code) {
     case ApiCode.SUCCESS:
