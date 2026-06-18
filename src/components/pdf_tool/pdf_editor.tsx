@@ -32,16 +32,16 @@ enum ToastType {
   ERROR = "error",
 }
 
-export default function PdfEditor({
-  setErrorModal,
-}: {
+interface IPdfEditorProps {
   setErrorModal: React.Dispatch<
     React.SetStateAction<{
       isOpen: boolean;
       message: string;
     }>
   >;
-}) {
+}
+
+export default function PdfEditor({ setErrorModal }: IPdfEditorProps) {
   const { t } = useTranslation();
 
   const contentRef = useRef<HTMLDivElement>(null);

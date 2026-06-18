@@ -10,6 +10,7 @@ import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
 import { MOCK_EEIO_COEFFICIENTS } from "@/constants/mock_eeio_coefficients";
 import { EmissionFactorRepo } from "@/repositories/emission_factor.repo";
 import { prisma } from "@/lib/prisma";
+import { GhgProtocolCategory, Iso14064Category } from "@/constants/esg";
 
 export class EsgParsingSkill implements ITaskSkill {
   name = "ESG_PARSING";
@@ -104,6 +105,18 @@ export class EsgParsingSkill implements ITaskSkill {
               "其他未知項目",
             ],
           },
+          ghgProtocolCategory: {
+            type: SchemaType.STRING,
+            description: "GHG Protocol 分類範疇",
+            format: "enum",
+            enum: Object.values(GhgProtocolCategory),
+          },
+          isoCategory: {
+            type: SchemaType.STRING,
+            description: "ISO 14064-1 分類類別",
+            format: "enum",
+            enum: Object.values(Iso14064Category),
+          },
           aiNote: {
             type: SchemaType.STRING,
             description: "AI 分析邏輯",
@@ -118,6 +131,8 @@ export class EsgParsingSkill implements ITaskSkill {
         },
         required: [
           "scope",
+          "ghgProtocolCategory",
+          "isoCategory",
           "activityType",
           "vendor",
           "fallbackCategory",
@@ -266,6 +281,8 @@ export class EsgParsingSkill implements ITaskSkill {
 
       const finalParsed = {
         scope: parsed1.scope,
+        ghgProtocolCategory: parsed1.ghgProtocolCategory,
+        isoCategory: parsed1.isoCategory,
         activityType: parsed1.activityType,
         vendor: parsed1.vendor,
         fallbackCategory: parsed1.fallbackCategory,

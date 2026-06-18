@@ -25,6 +25,8 @@ export interface IDocNode {
     source?: string;
   };
   scope?: string;
+  ghgProtocolCategory?: string;
+  isoCategory?: string;
   activityType?: string;
   vendor?: string;
   vendorTaxId?: string;
