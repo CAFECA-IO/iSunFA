@@ -1,12 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2, Plus, Trash2, Route, Send, FileText } from "lucide-react";
+import { useState, useEffect } from "react";
+import * as xlsx from "xlsx";
+import {
+  Loader2,
+  Plus,
+  Trash2,
+  Route,
+  Send,
+  FileText,
+  UploadCloud,
+} from "lucide-react";
 import { request } from "@/lib/utils/request";
 import { useTranslation } from "@/i18n/i18n_context";
 import ConfirmModal from "@/components/common/confirm_modal";
 import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
-import { ExcelImportWizard } from "@/components/transportation_carbon_footprint_calculator/excel_import_wizard";
 import {
   useOrderTransaction,
   IOrderPayload,
@@ -20,7 +28,6 @@ import {
 import { parseMultipleRoutesFromText } from "@/services/route.smart.service";
 import { ORDER_TYPE, ORDER_STATUS } from "@/constants/status";
 import { ANALYSIS_BASE_COSTS } from "@/constants/price";
-import { useEffect } from "react";
 
 export interface IMileageItem {
   id: string;
@@ -57,7 +64,7 @@ export function MileageCalculator({
     title: "",
     message: "",
   });
-  const [showExcelImport, setShowExcelImport] = useState(false);
+
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [currentOrderPayload, setCurrentOrderPayload] =
     useState<IOrderPayload | null>(null);
@@ -266,56 +273,121 @@ export function MileageCalculator({
   const handleRemove = (id: string) => {
     setItems((prev) => prev.filter((item) => item.id !== id));
   };
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = xlsx.read(bstr, { type: "binary" });
+        const sheetName = wb.SheetNames[0];
+        const sheet = wb.Sheets[sheetName];
+
+        const h = xlsx.utils.sheet_to_json<string[]>(sheet, { header: 1 })[0];
+        if (h && Array.isArray(h)) {
+          const objects = xlsx.utils.sheet_to_json(sheet) as Record<
+            string,
+            unknown
+          >[];
+
+          let originKey = "";
+          let destKey = "";
+          let modeKey = "";
+
+          h.forEach((header) => {
+            const lower = header.toLowerCase();
+            if (
+              lower.includes("起") ||
+              lower.includes("origin") ||
+              lower.includes("出發")
+            )
+              originKey = header;
+            else if (
+              lower.includes("迄") ||
+              lower.includes("dest") ||
+              lower.includes("目的")
+            )
+              destKey = header;
+            else if (lower.includes("模式") || lower.includes("mode"))
+              modeKey = header;
+          });
+
+          // Fallback if auto-detect fails
+          if (!originKey) originKey = h[0];
+          if (!destKey) destKey = h[1];
+
+          const newItems: IMileageItem[] = [];
+          objects.forEach((row) => {
+            const origin = String(row[originKey] || "").trim();
+            const dest = String(row[destKey] || "").trim();
+            const modeRaw = String(row[modeKey] || "")
+              .trim()
+              .toUpperCase();
+
+            let mode: RouteMode | undefined = undefined;
+            if (
+              modeRaw.includes("LAND") ||
+              modeRaw.includes("陸運") ||
+              modeRaw.includes("卡車")
+            )
+              mode = "LAND";
+            else if (
+              modeRaw.includes("SEA") ||
+              modeRaw.includes("海運") ||
+              modeRaw.includes("船")
+            )
+              mode = "SEA_LAND";
+            else if (
+              modeRaw.includes("AIR") ||
+              modeRaw.includes("空運") ||
+              modeRaw.includes("飛機")
+            )
+              mode = "AIR_LAND";
+
+            if (
+              origin &&
+              dest &&
+              origin !== "undefined" &&
+              dest !== "undefined"
+            ) {
+              newItems.push({
+                id: crypto.randomUUID(),
+                origin,
+                dest,
+                mode,
+              });
+            }
+          });
+
+          if (newItems.length > 0) {
+            setItems((prev) => [...prev, ...newItems]);
+          } else {
+            setAlertModal({
+              isOpen: true,
+              title: t("logistics.page.error_title"),
+              message: "無法從檔案中解析出有效的起訖點。",
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Failed to parse file", err);
+        setAlertModal({
+          isOpen: true,
+          title: t("logistics.page.error_title"),
+          message: t("logistics.page.error_load_file"),
+        });
+      }
+    };
+    reader.readAsBinaryString(f);
+
+    // reset input
+    e.target.value = "";
+  };
 
   return (
     <div className="space-y-8 pb-12">
-      {showExcelImport ? (
-        <ExcelImportWizard
-          onComplete={(parsedItems) => {
-            const allItems = [...items, ...parsedItems];
-            setItems(allItems);
-            setShowExcelImport(false);
-
-            const uncalculatedItems = allItems.filter((item) => !item.success);
-            if (uncalculatedItems.length > 0) {
-              setIsCalculating(true);
-              setItems(
-                allItems.map((item) =>
-                  item.success
-                    ? item
-                    : { ...item, loading: true, error: undefined },
-                ),
-              );
-
-              setPollingAction(MILEAGE_ACTION.CALCULATE_BATCH);
-              setCurrentOrderPayload({
-                type: ORDER_TYPE.ANALYSIS,
-                data: {
-                  category: ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT,
-                  action: MILEAGE_ACTION.CALCULATE_BATCH,
-                  items: uncalculatedItems.map((item) => ({
-                    origin: item.origin,
-                    dest: item.dest,
-                    mode: item.mode,
-                  })),
-                },
-              });
-              setIsPaymentModalOpen(true);
-            }
-          }}
-          onCancel={() => setShowExcelImport(false)}
-        />
-      ) : (
-        <div className="mb-4 flex justify-end">
-          <button
-            onClick={() => setShowExcelImport(true)}
-            className="flex items-center gap-2 rounded-lg bg-orange-100 px-6 py-2 font-semibold text-orange-700 transition-colors hover:bg-orange-200"
-          >
-            <FileText className="h-4 w-4" /> {t("logistics.page.batch_import")}
-          </button>
-        </div>
-      )}
-
       <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
         <h2 className="mb-6 flex items-center gap-2 text-lg font-bold text-gray-800">
           <FileText className="h-5 w-5 text-orange-500" />
@@ -450,6 +522,17 @@ export function MileageCalculator({
               "transportation_carbon_footprint_calculator.mileage_calculator.btn_add",
             )}
           </button>
+
+          <label className="flex h-[42px] shrink-0 cursor-pointer items-center justify-center gap-2 rounded-lg bg-orange-50 px-6 text-sm font-semibold whitespace-nowrap text-orange-600 transition-colors hover:bg-orange-100">
+            <UploadCloud className="h-4 w-4" />
+            {t("logistics.page.batch_import")}
+            <input
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              className="hidden"
+              onChange={handleFileUpload}
+            />
+          </label>
         </div>
 
         {items.length > 0 ? (
