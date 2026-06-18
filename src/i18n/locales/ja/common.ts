@@ -113,5 +113,29 @@ export const common = {
     hint_fullscreen:
       "左クリックドラッグで移動 • ホイールでズーム • ESCキーで閉じる",
     preview_title: "フローチャートプレビュー (Fullscreen Flowchart Preview)",
+    download: "画像をダウンロード",
+    export_png: "PNGで保存",
+    export_svg: "SVGで保存",
+  },
+  export_settings: {
+    title_voucher: "伝票のエクスポート",
+    title_esg: "ESG 記録のエクスポート",
+    desc_voucher:
+      "選択した期間内のすべての伝票と勘定科目の仕訳データをまとめ、標準的な CSV 形式のファイルでエクスポートします。これにより、Excel での編集やバックアップ保存が容易になります。",
+    desc_esg:
+      "選択した期間内のすべての ESG 炭素量調査記録をまとめ、標準的な CSV 形式のファイルでエクスポートします。これにより、Excel での分析やバックアップ保存が容易になります。",
+    select_range: "エクスポート期間の選択",
+    include_unverified_voucher: "「未照合」の伝票を含める",
+    include_unverified_esg: "「未照合」の ESG 記録を含める",
+    stat_title_voucher: "エクスポート予定の伝票数",
+    stat_title_esg: "エクスポート予定の記録数",
+    unit_voucher: "枚",
+    unit_esg: "件",
+    exporting: "エクスポート中...",
+    start_export: "エクスポート開始",
+    failed_voucher:
+      "伝票のエクスポートに失敗しました。時間をおいてもう一度お試しください。",
+    failed_esg:
+      "ESG 記録のエクスポートに失敗しました。時間をおいてもう一度お試しください。",
   },
 };

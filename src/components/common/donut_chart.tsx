@@ -1,8 +1,10 @@
-'use client';
+"use client";
 
-import React, { useMemo } from 'react';
-import { PieChart, Pie, Cell, Tooltip } from 'recharts';
-import { useTranslation } from '@/i18n/i18n_context';
+import React, { useMemo, useRef } from "react";
+import { PieChart, Pie, Cell, Tooltip } from "recharts";
+import { useTranslation } from "@/i18n/i18n_context";
+import { Download } from "lucide-react";
+import { useChartExport } from "@/hooks/use_chart_export";
 
 export interface IDonutChartData {
   name: string;
@@ -16,7 +18,14 @@ export interface IDonutChartProps {
 }
 
 // Info: (20260418 - Tzuhan) Vibrant premium palette referencing the mockups
-const DEFAULT_COLORS = ['#FF9800', '#152C5B', '#4F46E5', '#10B981', '#EC4899', '#8B5CF6'];
+const DEFAULT_COLORS = [
+  "#FF9800",
+  "#152C5B",
+  "#4F46E5",
+  "#10B981",
+  "#EC4899",
+  "#8B5CF6",
+];
 
 interface ICustomTooltipPayload {
   name: string;
@@ -32,13 +41,16 @@ interface ICustomTooltipProps {
   payload?: ICustomTooltipPayload[];
 }
 
-const CustomTooltip = ({ active = false, payload = [] }: ICustomTooltipProps) => {
+const CustomTooltip = ({
+  active = false,
+  payload = [],
+}: ICustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
-      <div className="z-100 bg-white/95 backdrop-blur-sm p-3 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100/50">
+      <div className="z-100 rounded-xl border border-gray-100/50 bg-white/95 p-3 shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-sm">
         <p className="text-sm font-semibold text-gray-800">{payload[0].name}</p>
-        <p className="text-sm text-gray-500 mt-0.5">
-          {new Intl.NumberFormat('en-US').format(Number(payload[0].value))} %
+        <p className="mt-0.5 text-sm text-gray-500">
+          {new Intl.NumberFormat("en-US").format(Number(payload[0].value))} %
         </p>
       </div>
     );
@@ -46,10 +58,24 @@ const CustomTooltip = ({ active = false, payload = [] }: ICustomTooltipProps) =>
   return null;
 };
 
-export const DonutChart: React.FC<IDonutChartProps> = ({ title, data, colors = DEFAULT_COLORS }) => {
+export const DonutChart: React.FC<IDonutChartProps> = ({
+  title,
+  data,
+  colors = DEFAULT_COLORS,
+}) => {
   const { t } = useTranslation();
+  const chartRef = useRef<HTMLDivElement>(null);
+
+  // Info: (20260615 - Julian) 使用共享 Hook 管理 DonutChart 匯出
+  const { exportPng, exportSvg } = useChartExport(
+    () => chartRef.current,
+    "donut-chart",
+  );
   // Info: (20260418 - Tzuhan) Calculate total to determine percentages for the custom center text
-  const total = useMemo(() => data.reduce((acc, current) => acc + current.value, 0), [data]);
+  const total = useMemo(
+    () => data.reduce((acc, current) => acc + current.value, 0),
+    [data],
+  );
 
   // Info: (20260418 - Tzuhan) Parse data for percentages
   const enrichedData = useMemo(() => {
@@ -61,33 +87,68 @@ export const DonutChart: React.FC<IDonutChartProps> = ({ title, data, colors = D
 
   // Info: (20260418 - Tzuhan) Find the largest slice for the center emphasis
   const primaryItem = useMemo(() => {
-    if (enrichedData.length === 0) return { name: '', percent: 0 };
-    return enrichedData.reduce((prev, current) => (prev.value > current.value ? prev : current));
+    if (enrichedData.length === 0) return { name: "", percent: 0 };
+    return enrichedData.reduce((prev, current) =>
+      prev.value > current.value ? prev : current,
+    );
   }, [enrichedData]);
 
   // Info: (20260418 - Tzuhan) Truncate name for center label
   const getShortName = (name: string) => {
     // Info: (20260418 - Tzuhan) If it has spaces, maybe take first word, or just substring
-    if (name.length > 5) return name.substring(0, 4) + '..';
+    if (name.length > 5) return name.substring(0, 4) + "..";
     return name;
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-gray-100/60 p-6 my-6 w-full transition-all duration-300 hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] ring-1 ring-black/5 flex flex-col md:flex-row items-center gap-8 break-inside-avoid print:break-inside-avoid">
+    <div
+      ref={chartRef}
+      className="group/donut relative my-6 flex w-full break-inside-avoid flex-col items-center gap-8 rounded-2xl border border-gray-100/60 bg-white p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)] ring-1 ring-black/5 transition-all duration-300 hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] md:flex-row print:break-inside-avoid"
+    >
+      {/* Info: (20260615 - Julian) 下載 toolbar */}
+      <div className="export-exclude absolute top-4 right-4 z-10 hidden items-center rounded-lg border border-slate-200 bg-white/95 px-1.5 py-1.5 shadow-sm transition-opacity duration-200 group-hover/donut:flex print:hidden">
+        <div className="group/download relative shrink-0">
+          <button
+            type="button"
+            className="shrink-0 cursor-pointer rounded-md p-1 text-orange-600 transition-colors duration-150 hover:bg-slate-100"
+            title={t("common.mermaid.download")!}
+          >
+            <Download size={15} />
+          </button>
+          <div className="absolute top-full right-0 z-20 hidden w-20 flex-col pt-1 group-hover/download:flex">
+            <div className="flex flex-col rounded-md border border-slate-200 bg-white py-1 shadow-md">
+              <button
+                type="button"
+                onClick={exportPng}
+                className="w-full px-2.5 py-1.5 text-left text-xs font-bold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800"
+              >
+                {t("common.mermaid.export_png")}
+              </button>
+              <button
+                type="button"
+                onClick={exportSvg}
+                className="w-full px-2.5 py-1.5 text-left text-xs font-bold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800"
+              >
+                {t("common.mermaid.export_svg")}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
       {/* Info: (20260418 - Tzuhan) Chart Section */}
-      <div className="w-full md:w-1/3 flex flex-col items-center justify-center min-w-[220px]">
+      <div className="flex w-full min-w-[220px] flex-col items-center justify-center md:w-1/3">
         {title && (
-          <h3 className="text-[17px] font-bold text-gray-800 mb-6 w-full text-left md:text-center flex items-center gap-2">
+          <h3 className="mb-6 flex w-full items-center gap-2 text-left text-[17px] font-bold text-gray-800 md:text-center">
             <span className="text-orange-500">📊</span> {title}
           </h3>
         )}
-        <div className="relative w-[200px] h-[200px] flex-shrink-0 mx-auto">
+        <div className="relative mx-auto h-[200px] w-[200px] shrink-0">
           {/* Info: (20260418 - Tzuhan) Custom Center UI */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <span className="text-3xl font-black text-[#0B1F45] tracking-tight leading-none">
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-3xl leading-none font-black tracking-tight text-[#0B1F45]">
               {primaryItem.percent}%
             </span>
-            <span className="text-xs font-semibold text-gray-500 mt-1 uppercase tracking-wider">
+            <span className="mt-1 text-xs font-semibold tracking-wider text-gray-500 uppercase">
               {getShortName(primaryItem.name)}
             </span>
           </div>
@@ -103,7 +164,11 @@ export const DonutChart: React.FC<IDonutChartProps> = ({ title, data, colors = D
               stroke="none"
             >
               {enrichedData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={colors[index % colors.length]} className="drop-shadow-sm outline-none hover:opacity-90 transition-opacity" />
+                <Cell
+                  key={`cell-${index}`}
+                  fill={colors[index % colors.length]}
+                  className="drop-shadow-sm transition-opacity outline-none hover:opacity-90"
+                />
               ))}
             </Pie>
             <Tooltip content={<CustomTooltip />} />
@@ -112,20 +177,20 @@ export const DonutChart: React.FC<IDonutChartProps> = ({ title, data, colors = D
       </div>
 
       {/* Info: (20260418 - Tzuhan) Legend & Details Section */}
-      <div className="w-full md:w-2/3 flex flex-col justify-center border-t md:border-t-0 md:border-l border-gray-100 pt-6 md:pt-0 md:pl-10 min-w-0">
+      <div className="flex w-full min-w-0 flex-col justify-center border-t border-gray-100 pt-6 md:w-2/3 md:border-t-0 md:border-l md:pt-0 md:pl-10">
         <div className="space-y-4">
           {enrichedData.map((item, index) => (
-            <div key={index} className="flex items-center group min-w-0">
+            <div key={index} className="group flex min-w-0 items-center">
               <div
-                className="w-4 h-4 rounded-full mr-4 flex-shrink-0 shadow-sm transition-transform group-hover:scale-110 duration-200"
+                className="mr-4 h-4 w-4 shrink-0 rounded-full shadow-sm transition-transform duration-200 group-hover:scale-110"
                 style={{ backgroundColor: colors[index % colors.length] }}
               />
-              <div className="flex-1 flex justify-between items-baseline gap-4 min-w-0">
-                <span className="text-gray-700 font-semibold text-sm leading-tight group-hover:text-gray-900 transition-colors truncate">
+              <div className="flex min-w-0 flex-1 items-baseline justify-between gap-4">
+                <span className="truncate text-sm leading-tight font-semibold text-gray-700 transition-colors group-hover:text-gray-900">
                   {item.name}
                 </span>
-                <div className="flex items-baseline gap-2 flex-shrink-0">
-                  <span className="font-bold text-gray-700 text-sm">
+                <div className="flex shrink-0 items-baseline gap-2">
+                  <span className="text-sm font-bold text-gray-700">
                     {item.percent}%
                   </span>
                 </div>
@@ -133,8 +198,8 @@ export const DonutChart: React.FC<IDonutChartProps> = ({ title, data, colors = D
             </div>
           ))}
         </div>
-        <div className="mt-8 pt-4 border-t border-gray-50 min-w-0">
-          <p className="text-xs text-gray-400 font-medium leading-relaxed break-words whitespace-normal break-all md:break-words">
+        <div className="mt-8 min-w-0 border-t border-gray-50 pt-4">
+          <p className="text-xs leading-relaxed font-medium wrap-break-word break-all whitespace-normal text-gray-400 md:wrap-break-word">
             {t("common.donut_chart.note", { title })}
           </p>
         </div>

@@ -3,8 +3,16 @@
 import { useEffect, useState, useMemo, FC, useRef } from "react";
 import mermaid from "mermaid";
 import { DonutChart, IDonutChartData } from "@/components/common/donut_chart";
-import { ZoomIn, ZoomOut, Maximize2, Minimize2, RotateCcw } from "lucide-react";
+import {
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  Minimize2,
+  RotateCcw,
+  Download,
+} from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
+import { useChartExport } from "@/hooks/use_chart_export";
 
 interface IMermaidChartProps {
   chart: string;
@@ -227,6 +235,24 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
     setScale(1);
     setPosition({ x: 0, y: 0 });
   };
+
+  // Info: (20260615 - Julian) 獲取目前作用中的 Mermaid SVG 容器
+  const getContainer = () => {
+    if (isFullscreen && modalRef.current) {
+      return modalRef.current.querySelector(
+        ".mermaid-container",
+      ) as HTMLElement | null;
+    }
+    return viewportRef.current?.querySelector(
+      ".mermaid-container",
+    ) as HTMLElement | null;
+  };
+
+  // Info: (20260615 - Julian) 使用共享 Hook 管理 PNG / SVG 匯出
+  const { exportPng, exportSvg } = useChartExport(
+    () => getContainer(),
+    "mermaid-chart",
+  );
 
   // Info: (20260615 - Julian) 綁定 Viewport 事件，避免 JSX-a11y 警告
   useEffect(() => {
@@ -544,6 +570,34 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
       >
         {/* Info: (20260615 - Julian) 浮動工具列 */}
         <div className="mermaid-control-btn absolute top-3 right-3 z-10 flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white/95 px-2 py-1.5 opacity-90 shadow-sm backdrop-blur-sm transition-opacity duration-200 group-hover:opacity-100">
+          {/* Info: (20260615 - Julian) 下載選單 */}
+          <div className="group/download relative shrink-0">
+            <button
+              type="button"
+              className="shrink-0 cursor-pointer rounded-md p-1.5 text-orange-600 transition-colors duration-150 hover:bg-slate-100"
+              title={t("common.mermaid.download")!}
+            >
+              <Download size={16} />
+            </button>
+            <div className="absolute top-full right-0 z-20 hidden w-20 flex-col pt-1 group-hover/download:flex">
+              <div className="flex flex-col rounded-md border border-slate-200 bg-white py-1 shadow-md">
+                <button
+                  type="button"
+                  onClick={exportPng}
+                  className="w-full px-2.5 py-1.5 text-left text-xs font-bold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800"
+                >
+                  {t("common.mermaid.export_png")}
+                </button>
+                <button
+                  type="button"
+                  onClick={exportSvg}
+                  className="w-full px-2.5 py-1.5 text-left text-xs font-bold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800"
+                >
+                  {t("common.mermaid.export_svg")}
+                </button>
+              </div>
+            </div>
+          </div>
           <button
             type="button"
             onClick={zoomIn}
@@ -614,10 +668,38 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
 
           {/* Info: (20260615 - Julian) 全螢幕 Toolbar */}
           <div className="mermaid-control-btn absolute top-4 right-6 z-10 flex items-center gap-2 rounded-xl border border-slate-700/80 bg-slate-800/90 px-2.5 py-2 shadow-lg">
+            {/* Info: (20260615 - Julian) 下載選單 */}
+            <div className="group/download relative shrink-0">
+              <button
+                type="button"
+                className="shrink-0 cursor-pointer rounded-lg p-1.5 text-orange-300 transition-colors duration-150 hover:bg-slate-500"
+                title={t("common.mermaid.download")!}
+              >
+                <Download size={20} />
+              </button>
+              <div className="absolute top-full right-0 z-20 hidden w-24 flex-col pt-1.5 group-hover/download:flex">
+                <div className="flex flex-col rounded-lg border border-slate-700 bg-slate-800 py-1 shadow-lg">
+                  <button
+                    type="button"
+                    onClick={exportPng}
+                    className="w-full px-3 py-2 text-left text-sm font-bold text-slate-300 transition-colors hover:bg-slate-500 hover:text-white"
+                  >
+                    {t("common.mermaid.export_png")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={exportSvg}
+                    className="w-full px-3 py-2 text-left text-sm font-bold text-slate-300 transition-colors hover:bg-slate-500 hover:text-white"
+                  >
+                    {t("common.mermaid.export_svg")}
+                  </button>
+                </div>
+              </div>
+            </div>
             <button
               type="button"
               onClick={zoomIn}
-              className="shrink-0 cursor-pointer rounded-lg p-1.5 text-slate-300 transition-colors duration-150 hover:bg-slate-700"
+              className="shrink-0 cursor-pointer rounded-lg p-1.5 text-slate-300 transition-colors duration-150 hover:bg-slate-500"
               title={t("common.mermaid.zoom_in")!}
             >
               <ZoomIn size={20} />
@@ -625,7 +707,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
             <button
               type="button"
               onClick={zoomOut}
-              className="shrink-0 cursor-pointer rounded-lg p-1.5 text-slate-300 transition-colors duration-150 hover:bg-slate-700"
+              className="shrink-0 cursor-pointer rounded-lg p-1.5 text-slate-300 transition-colors duration-150 hover:bg-slate-500"
               title={t("common.mermaid.zoom_out")!}
             >
               <ZoomOut size={20} />
@@ -633,7 +715,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
             <button
               type="button"
               onClick={resetZoom}
-              className="shrink-0 cursor-pointer rounded-lg p-1.5 text-slate-300 transition-colors duration-150 hover:bg-slate-700"
+              className="shrink-0 cursor-pointer rounded-lg p-1.5 text-slate-300 transition-colors duration-150 hover:bg-slate-500"
               title={t("common.mermaid.reset")!}
             >
               <RotateCcw size={20} />
@@ -641,7 +723,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
             <button
               type="button"
               onClick={toggleFullscreen}
-              className="ml-1 shrink-0 cursor-pointer rounded-lg border-l border-slate-700 p-1.5 pl-2 text-rose-400 transition-colors duration-150 hover:bg-slate-700 hover:text-rose-300"
+              className="ml-1 shrink-0 cursor-pointer rounded-lg border-l border-slate-700 p-1.5 pl-2 text-rose-400 transition-colors duration-150 hover:bg-slate-500 hover:text-rose-300"
               title={t("common.mermaid.close_fullscreen")!}
             >
               <Minimize2 size={20} />

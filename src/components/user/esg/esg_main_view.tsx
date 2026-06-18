@@ -1,6 +1,6 @@
 "use client";
 
-import { Leaf, Target } from "lucide-react";
+import { Leaf, Target, Download } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import {
   useParams,
@@ -15,6 +15,7 @@ import EmissionSourcesTab from "@/components/user/esg/emission_sources_tab";
 import EsgSummary from "@/components/user/esg/esg_summary";
 import EsgTableSection from "@/components/user/esg/esg_table_section";
 import EsgTargetModal from "@/components/user/esg/esg_target_modal";
+import ExportSettingsModal from "@/components/user/common/export_settings_modal";
 import { IApiResponse } from "@/lib/utils/response";
 
 enum EsgTab {
@@ -48,6 +49,7 @@ export default function EsgMainView() {
   const currentMonth = new Date().getMonth() + 1;
 
   const [isTargetModalOpen, setIsTargetModalOpen] = useState<boolean>(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [selectedMonth, setSelectedMonth] = useState<number | "">("");
   const [startYear, setStartYear] = useState<number>(currentYear);
@@ -144,13 +146,49 @@ export default function EsgMainView() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-2">
           <h1 className="flex items-center text-base font-bold text-slate-800 lg:text-2xl">
-            <Leaf className="mr-2 h-6 w-6 text-green-500" strokeWidth={2.5} />
+            <Leaf
+              className="mr-2 size-6 shrink-0 text-green-500"
+              strokeWidth={2.5}
+            />
             {t("esg_main.title")}
           </h1>
           <p className="text-xs font-medium text-slate-500 lg:text-sm">
             {t("esg_main.description")}
           </p>
         </div>
+        {/* Info: (20260617 - Julian) Export CSV Button */}
+        <button
+          type="button"
+          onClick={() => setIsExportModalOpen(true)}
+          className="flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-600 lg:text-base"
+        >
+          <Download className="size-5 shrink-0 lg:size-6" />
+          {t("esg_main.export_button")}
+        </button>
+      </div>
+
+      <div className="flex items-center justify-between">
+        {/* Info: (20260413 - Julian) Tab Switch */}
+        <div className="grid grid-cols-3 space-x-1 rounded-xl border border-gray-200 bg-gray-100 p-1.5">
+          {Object.values(EsgTab).map((tab) => (
+            <button
+              key={tab}
+              title={t(`esg_main.tab.${tab.toLowerCase()}`)}
+              type="button"
+              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium transition-all duration-200 lg:px-4 lg:py-2.5 lg:text-sm ${
+                activeTab === tab
+                  ? "bg-white text-orange-600 shadow-sm"
+                  : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
+              }`}
+              onClick={() => handleTabChange(tab)}
+              disabled={tab === activeTab} // Info: (20260420 - Julian) 避免重複 call API
+            >
+              {t(`esg_main.tab.${tab.toLowerCase()}`)}
+            </button>
+          ))}
+        </div>
+
+        {/* Info: (20260617 - Julian) 年度月份篩選 & 設定年度目標 */}
         <div className="flex flex-wrap items-center justify-center gap-3 lg:justify-end">
           <select
             value={selectedYear}
@@ -188,28 +226,18 @@ export default function EsgMainView() {
         </div>
       </div>
 
-      {/* Info: (20260413 - Julian) Tab Switch */}
-      <div className="grid grid-cols-3 space-x-1 rounded-xl border border-gray-200 bg-gray-100 p-1.5 md:ml-auto">
-        {Object.values(EsgTab).map((tab) => (
-          <button
-            key={tab}
-            title={t(`esg_main.tab.${tab.toLowerCase()}`)}
-            type="button"
-            className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium transition-all duration-200 lg:px-4 lg:py-2.5 lg:text-sm ${
-              activeTab === tab
-                ? "bg-white text-orange-600 shadow-sm"
-                : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
-            }`}
-            onClick={() => handleTabChange(tab)}
-            disabled={tab === activeTab} // Info: (20260420 - Julian) 避免重複 call API
-          >
-            {t(`esg_main.tab.${tab.toLowerCase()}`)}
-          </button>
-        ))}
-      </div>
-
       {/* Info: (20260413 - Julian) Tab Content */}
       {tabContent}
+
+      {/* Info: (20260617 - Julian) Export Settings Modal */}
+      {accountBookId && (
+        <ExportSettingsModal
+          isOpen={isExportModalOpen}
+          onClose={() => setIsExportModalOpen(false)}
+          accountBookId={accountBookId}
+          type="esg"
+        />
+      )}
     </div>
   );
 }
