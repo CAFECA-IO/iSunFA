@@ -33,8 +33,19 @@ export function BatchExportRenderer({
     return () => clearTimeout(timer);
   }, [onReady]);
 
-  const originName = item.origin;
-  const destName = item.dest;
+  const formatLocation = (loc: string | { lat: number; lng: number; name?: string }) => {
+    if (typeof loc === "string") return loc;
+    if (loc && typeof loc === "object" && "lat" in loc && "lng" in loc) {
+      if (loc.name) {
+        return `${loc.name} (${Number(loc.lat).toFixed(4)}, ${Number(loc.lng).toFixed(4)})`;
+      }
+      return `${Number(loc.lat).toFixed(4)}, ${Number(loc.lng).toFixed(4)}`;
+    }
+    return "";
+  };
+
+  const originName = formatLocation(item.origin);
+  const destName = formatLocation(item.dest);
   const plan = item.plan;
 
   if (!plan) {
