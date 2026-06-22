@@ -7,17 +7,38 @@ import {
   IEsgRecordFilterOptions,
 } from "@/interfaces/data_filter_option";
 import { VerifyStatus } from "@/constants/verify_status";
+import { accountBookRepo } from "@/repositories/account_book.repo";
+import { teamRepo } from "@/repositories/team.repo";
+import { AppError } from "@/lib/utils/error";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 
 export class ExportService {
+  /**
+   * Info: (20260618 - Julian) 檢查使用者是否有權限存取帳本
+   */
+  private async validateAccess(userId: string, accountBookId: string) {
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
+    if (!accountBook) {
+      throw new AppError(API_ERRORS.NF_ACCOUNT_BOOK);
+    }
+
+    const teamMember = await teamRepo.getTeamMember(userId, accountBook.teamId);
+    if (!teamMember) {
+      throw new AppError(API_ERRORS.AUTH_PERMISSION_DENIED);
+    }
+  }
+
   /**
    * Info: (20260617 - Julian) 將傳票及其分錄匯出為 CSV 字串
    */
   async exportVouchersToCsv(
+    userId: string,
     accountBookId: string,
     startDate?: Date,
     endDate?: Date,
     includeUnverified?: boolean,
   ): Promise<string> {
+    await this.validateAccess(userId, accountBookId);
     const csvHeaders = [
       "傳票編號 (Voucher No)",
       "傳票日期 (Voucher Date)",
@@ -116,11 +137,13 @@ export class ExportService {
    * Info: (20260617 - Julian) 將 ESG 碳盤查紀錄匯出為 CSV 字串
    */
   async exportEsgToCsv(
+    userId: string,
     accountBookId: string,
     startDate?: Date,
     endDate?: Date,
     includeUnverified?: boolean,
   ): Promise<string> {
+    await this.validateAccess(userId, accountBookId);
     const csvHeaders = [
       "紀錄編號 (Record ID)",
       "交易日期 (Trading Date)",
@@ -209,11 +232,13 @@ export class ExportService {
    * Info: (20260617 - Julian) 計算符合匯出條件的傳票總筆數，未選擇區間時為 0
    */
   async countVouchersForExport(
+    userId: string,
     accountBookId: string,
     startDate?: Date,
     endDate?: Date,
     includeUnverified?: boolean,
   ): Promise<number> {
+    await this.validateAccess(userId, accountBookId);
     if (!startDate || !endDate) return 0;
 
     const options: IVoucherFilterOptions = {
@@ -233,11 +258,13 @@ export class ExportService {
    * Info: (20260617 - Julian) 計算符合匯出條件的 ESG 紀錄總筆數，未選擇區間時為 0
    */
   async countEsgForExport(
+    userId: string,
     accountBookId: string,
     startDate?: Date,
     endDate?: Date,
     includeUnverified?: boolean,
   ): Promise<number> {
+    await this.validateAccess(userId, accountBookId);
     if (!startDate || !endDate) return 0;
 
     const options: IEsgRecordFilterOptions = {

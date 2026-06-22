@@ -1,12 +1,10 @@
-// Info: (20260617 - Julian) ESG 紀錄資料匯出 API Endpoint
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
-import { jsonFail } from "@/lib/utils/response";
-import { accountBookRepo } from "@/repositories/account_book.repo";
+import { jsonFail, fileOk } from "@/lib/utils/response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { teamRepo } from "@/repositories/team.repo";
 import { ExportQuerySchema } from "@/validators/export";
 import { exportService } from "@/services/export.service";
+import { AppError } from "@/lib/utils/error";
 
 /**
  * Info: (20260617 - Julian) 匯出 ESG 紀錄 CSV
@@ -23,19 +21,8 @@ export async function GET(
 
     const { account_book_id: accountBookId } = await params;
 
-    // Info: (20260617 - Julian) 檢查帳本是否存在
-    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
-    if (!accountBook) return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
-
-    // Info: (20260617 - Julian) 檢查使用者是否有權限
-    const teamMember = await teamRepo.getTeamMember(
-      sessionUser.id,
-      accountBook.teamId,
-    );
-    if (!teamMember) return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
-
     // Info: (20260617 - Julian) 驗證查詢參數
-    const { searchParams } = new URL(req.url);
+    const { searchParams = new URL(req.url).searchParams } = new URL(req.url);
     const startDateStr = searchParams.get("startDate") || undefined;
     const endDateStr = searchParams.get("endDate") || undefined;
     const includeUnverifiedStr =
@@ -53,6 +40,7 @@ export async function GET(
     const { startDate, endDate, includeUnverified } = parseResult.data;
 
     const csvContent = await exportService.exportEsgToCsv(
+      sessionUser.id,
       accountBookId,
       startDate,
       endDate,
@@ -64,15 +52,20 @@ export async function GET(
     const body = BOM + csvContent;
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
 
-    return new Response(body, {
-      status: 200,
-      headers: {
-        "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="esg_records_${dateStr}.csv"`,
-      },
-    });
+    return fileOk(
+      body,
+      `esg_records_${dateStr}.csv`,
+      "text/csv; charset=utf-8",
+    );
   } catch (error) {
     console.error("ESG export failed:", error);
+    if (error instanceof AppError) {
+      return jsonFail({
+        code: error.apiCode,
+        message: error.message,
+        status: error.code,
+      });
+    }
     return jsonFail(API_ERRORS.IS_DB_FAILED);
   }
 }
