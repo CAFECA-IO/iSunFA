@@ -521,6 +521,8 @@ model EsgRecord {
   deletedAt         DateTime?        @map("deleted_at")
   tradingDate       DateTime         @map("trading_date") // Info: (20260407 - Julian) 交易日期
   scope             EsgScope? // Info: (20260312 - Julian) 範疇 (SCOPE_1, SCOPE_2, SCOPE_3)
+  ghgProtocolCategory String? @map("ghg_protocol_category") // Info: (20260617 - Julian) GHG Protocol 的子分類
+  isoCategory       String? @map("iso_category") // Info: (20260618 - Julian) ISO 14064 的子分類
   activityType      String           @map("activity_type") // Info: (20260312 - Julian) 活動類型
   vendor            String // Info: (20260312 - Julian) 供應商與對象
   amount            Decimal          @default(0) // Info: (20260416 - Julian) 活動數據
@@ -600,7 +602,7 @@ enum TaskStatus {
 model Company {
   stockId      String  @id @map("stock_id") // Info: (20260401 - Tzuhan) 公司代號 (如 "1101")
   name         String  @map("name") // Info: (20260401 - Tzuhan) 公司全稱
-  abbreviation String? @map("abbreviation") // Info: (20260401 - Tzuhan) 公司簡稱 
+  abbreviation String? @map("abbreviation") // Info: (20260401 - Tzuhan) 公司簡稱
   marketType   String  @map("market_type") // Info: (20260401 - Tzuhan) 市場別 ("sii" 或 "otc")
   isActive     Boolean @default(true) @map("is_active") // Info: (20260401 - Tzuhan) 是否持續追蹤 (可手動標記下市公司)
 
@@ -722,7 +724,7 @@ model EmissionSource {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
-  name    String // Info: (20260421 - Julian) 排放源名稱 (e.g., 公司貨車 ABC-1234) 
+  name    String // Info: (20260421 - Julian) 排放源名稱 (e.g., 公司貨車 ABC-1234)
   address String? // Info: (20260421 - Julian) 廠區地址
 
   // ToDo: (20260421 - Julian) 之後會擴充更多欄位

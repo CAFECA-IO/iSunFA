@@ -14,8 +14,10 @@ export const esgTable = {
   search_aria: "搜索供应商、活动类型",
   filter_intensity_aria: "依强度筛选",
   filter_intensity_all: "全部强度",
-  filter_scope_aria: "依范畴筛选",
+  filter_scope_title: "范畴筛选",
   filter_scope_all: "全部范畴 (Scope 1-3)",
+  filter_ghg_all: "全部 GHG Protocol 范畴",
+  filter_iso_all: "全部 ISO 14064-1 类别",
   header: {
     voucher: "凭证",
     date: "日期",

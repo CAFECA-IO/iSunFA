@@ -10,7 +10,8 @@ import {
   Loader2,
   ChartPie,
 } from "lucide-react";
-import { IEsgDashboardSummary, EsgScope } from "@/interfaces/esg";
+import { IEsgDashboardSummary } from "@/interfaces/esg";
+import { EsgScope } from "@/constants/esg";
 import { useParams, usePathname } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";

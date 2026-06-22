@@ -14,8 +14,10 @@ export const esgTable = {
   search_aria: "搜尋供應商、活動類型",
   filter_intensity_aria: "依強度篩選",
   filter_intensity_all: "全部強度",
-  filter_scope_aria: "依範疇篩選",
+  filter_scope_title: "範疇篩選",
   filter_scope_all: "全部範疇 (Scope 1-3)",
+  filter_ghg_all: "全部 GHG Protocol 範疇",
+  filter_iso_all: "全部 ISO 14064-1 類別",
   header: {
     voucher: "憑證",
     date: "日期",

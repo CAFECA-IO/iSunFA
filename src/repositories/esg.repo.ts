@@ -9,7 +9,6 @@ import {
 import { MoneyUtil } from "@/lib/utils/money";
 import {
   IEsgDashboardSummary,
-  EsgScope,
   IEsgScopeDistributionData,
   IEsgTarget,
   IEsgRecordBrief,
@@ -20,7 +19,7 @@ import {
   IEsgEmissionSourcesSummary,
   IEsgEmissionSourcesUI,
 } from "@/interfaces/emission_sources";
-import { EsgIntensity } from "@/interfaces/esg";
+import { EsgScope, EsgIntensity } from "@/constants/esg";
 import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
 import { CoefficientCategory, ICoefficient } from "@/interfaces/coefficient";
 import {
@@ -200,6 +199,16 @@ export class EsgRepository implements IEsgRepository {
     // Info: (20260508 - Julian) 排放範圍過濾
     if (options.scope) {
       andConditions.push({ scope: options.scope as EsgScope });
+    }
+
+    // Info: (20260618 - Julian) GHG Protocol 類別過濾
+    if (options.ghgProtocolCategory) {
+      andConditions.push({ ghgProtocolCategory: options.ghgProtocolCategory });
+    }
+
+    // Info: (20260618 - Julian) ISO 14064-1 類別過濾
+    if (options.isoCategory) {
+      andConditions.push({ isoCategory: options.isoCategory });
     }
 
     // Info: (20260508 - Julian) 年度、月份過濾邏輯
@@ -636,6 +645,8 @@ export class EsgRepository implements IEsgRepository {
       emissions: record.emissions.toString(),
       emissionSourceTag: record.emissionSourceTag ?? undefined,
       scope: record.scope as EsgScope,
+      ghgProtocolCategory: record.ghgProtocolCategory,
+      isoCategory: record.isoCategory,
       intensity: record.intensity as EsgIntensity,
       analysisStatus: record.analysisStatus as AIAnalysisStatus,
       fileId: record.fileId ?? "",

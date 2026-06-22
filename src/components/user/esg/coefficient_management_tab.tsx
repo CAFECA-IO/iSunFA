@@ -149,6 +149,7 @@ export default function CoefficientManagementTab() {
   const [coefficientList, setCoefficientList] = useState<ICoefficient[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [keyword, setKeyword] = useState<string>("");
+  const [debouncedKeyword, setDebouncedKeyword] = useState<string>("");
   const [activeTab, setActiveTab] = useState<ICoefficientTab>("all");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [refreshFlag, setRefreshFlag] = useState<boolean>(false);
@@ -205,6 +206,21 @@ export default function CoefficientManagementTab() {
     setIsAddEditModalOpen(false);
   };
 
+  // Info: (20260618 - Julian) 設定輸入延遲，避免頻繁打 API
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedKeyword(keyword);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [keyword]);
+
+  // Info: (20260618 - Julian) 手動送出搜尋，避免等待防抖延遲並關閉鍵盤
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setDebouncedKeyword(keyword);
+    document.getElementById("coefficient-search-input")?.blur();
+  };
+
   // Info: (20260414 - Julian) 取得係數列表
   useEffect(() => {
     const fetchCoefficientList = async () => {
@@ -213,7 +229,7 @@ export default function CoefficientManagementTab() {
         const data = await request<
           IApiResponse<{ items: ICoefficient[]; total: number }>
         >(
-          `/api/v1/user/account_book/${accountBookId}/esg/coefficient?tab=${activeTab}&search=${keyword}&page=${currentPage}&pageSize=${PAGE_SIZE}`,
+          `/api/v1/user/account_book/${accountBookId}/esg/coefficient?tab=${activeTab}&search=${debouncedKeyword}&page=${currentPage}&pageSize=${PAGE_SIZE}`,
         );
         if (data.payload) {
           setCoefficientList(data.payload.items);
@@ -226,12 +242,12 @@ export default function CoefficientManagementTab() {
       }
     };
     fetchCoefficientList();
-  }, [activeTab, keyword, accountBookId, refreshFlag, currentPage]);
+  }, [activeTab, debouncedKeyword, accountBookId, refreshFlag, currentPage]);
 
   // Info: (20260414 - Julian) 切回合與搜尋條件改變時重置第一頁
   useEffect(() => {
     setCurrentPage(1);
-  }, [activeTab, keyword]);
+  }, [activeTab, debouncedKeyword]);
 
   const tabs = ["all", ...Object.values(CoefficientCategory)].map((tab) => (
     <button
@@ -287,7 +303,10 @@ export default function CoefficientManagementTab() {
       {/* Info: (20260413 - Julian) Toolbar */}
       <div className="flex flex-col gap-x-8 gap-y-2 rounded-xl bg-white p-3 shadow-sm md:flex-row md:p-6">
         {/* Info: (20260413 - Julian) Search */}
-        <div className="flex flex-1 items-center gap-2 rounded-lg bg-gray-50 p-2 lg:px-5 lg:py-3">
+        <form
+          onSubmit={handleSearchSubmit}
+          className="flex flex-1 items-center gap-2 rounded-lg bg-gray-50 p-2 lg:px-5 lg:py-3"
+        >
           <label htmlFor="coefficient-search-input" className="sr-only">
             {t("coefficient.search.label")}
           </label>
@@ -299,9 +318,10 @@ export default function CoefficientManagementTab() {
             placeholder={t("coefficient.search.placeholder")}
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
+            enterKeyHint="search"
             className="w-full bg-transparent text-xs font-medium text-slate-800 outline-none placeholder:text-gray-400 lg:text-base"
           />
-        </div>
+        </form>
         {/* Info: (20260413 - Julian) Add Button */}
         <button
           type="button"

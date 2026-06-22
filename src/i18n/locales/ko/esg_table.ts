@@ -15,8 +15,10 @@ export const esgTable = {
   filter_intensity_aria: "강도 필터 대상",
   ai: { processing: "AI 처리 중...", failed: "AI 처리 실패" },
   filter_intensity_all: "전체 강도",
-  filter_scope_aria: "스코프 필터링",
+  filter_scope_title: "스코프 필터",
   filter_scope_all: "전체 스코프 (Scope 1-3)",
+  filter_ghg_all: "전체 GHG Protocol 범위",
+  filter_iso_all: "전체 ISO 14064-1 범주",
   header: {
     voucher: "전표",
     date: "날짜",

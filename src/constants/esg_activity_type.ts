@@ -1,4 +1,4 @@
-import { EsgScope } from "@/interfaces/esg";
+import { EsgScope } from "@/constants/esg";
 
 export type EsgActivityTypeKey =
   | "STATIONARY_COMBUSTION"

@@ -6,7 +6,7 @@ import { VoucherSorting } from "@/constants/sort";
 import {
   EsgScope as ClientEsgScope,
   EsgIntensity as ClientEsgIntensity,
-} from "@/interfaces/esg";
+} from "@/constants/esg";
 
 // Info: (20260505 - Julian) 基礎篩選條件
 export interface IBaseFilterOptions {
@@ -55,6 +55,8 @@ export interface IEsgRecordFilterOptions extends IBaseFilterOptions {
   verifyStatus?: string | null;
   intensity?: ClientEsgIntensity | string | null;
   scope?: ClientEsgScope | string | null;
+  ghgProtocolCategory?: string | null;
+  isoCategory?: string | null;
   sort?: "asc" | "desc" | null;
   year?: number | null;
   month?: number | null;

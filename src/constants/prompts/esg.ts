@@ -98,6 +98,19 @@ export const getEsgPrompt = (
   【活動類型】請從以下清單中選擇最符合的活動類型，並將該活動類型的 key 填入回傳 JSON 的 \`activityType\` 欄位：
   ${EsgActivityTypeMapping.map((a) => `${a.key}(${a.scope}): ${a.value}，${a.description}`).join("\n")}
 
+  【GHG Protocol 溫室氣體範疇分類】請根據活動類型與憑證內容，選擇最符合的 GHG Protocol 範疇分類，並將 key 填入回傳 JSON 的 \`ghgProtocolCategory\` 欄位。可選值包括：
+  - SCOPE_1_DIRECT: 直接溫室氣體排放 (範疇一)
+  - SCOPE_2_INDIRECT: 能源間接溫室氣體排放 (範疇二)
+  - SCOPE_3_CAT_1 ~ SCOPE_3_CAT_15: 範疇三的 Category 1 到 15 (如：購買商品與服務、資本財、商務差旅、員工通勤等)
+
+  【ISO 14064-1 溫室氣體類別分類】請根據活動類型與憑證內容，選擇最符合的 ISO 14064-1 類別分類，並將 key 填入回傳 JSON 的 \`isoCategory\` 欄位。可選值包括：
+  - CATEGORY_1: 類別一：直接溫室氣體排放與移除
+  - CATEGORY_2: 類別二：輸入能源之間接溫室氣體排放
+  - CATEGORY_3: 類別三：運輸之間接溫室氣體排放
+  - CATEGORY_4: 類別四：組織使用產品之間接溫室氣體排放
+  - CATEGORY_5: 類別五：使用組織產品之間接溫室氣體排放
+  - CATEGORY_6: 類別六：其他來源之間接溫室氣體排放
+
   【活動數據單位】請從以下清單中選擇最符合的活動數據單位，並將該活動數據單位的 key 填入回傳 JSON 的 \`unit\` 欄位。如果沒有合適的單位，請自行新增一個單位，且須和係數的單位一致：
   ${unitListStr}
 

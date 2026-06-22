@@ -121,6 +121,8 @@ export async function GET(
     const verifyStatus = searchParams.get("verifyStatus");
     const intensity = searchParams.get("intensity");
     const scope = searchParams.get("scope");
+    const ghgProtocolCategory = searchParams.get("ghgProtocolCategory");
+    const isoCategory = searchParams.get("isoCategory");
     const sort = searchParams.get("sort") === "asc" ? "asc" : "desc";
     const yearParam = searchParams.get("year");
     const monthParam = searchParams.get("month");
@@ -137,6 +139,8 @@ export async function GET(
       verifyStatus,
       intensity,
       scope,
+      ghgProtocolCategory,
+      isoCategory,
       sort,
       year: yearParam ? parseInt(yearParam, 10) : null,
       month: monthParam ? parseInt(monthParam, 10) : null,

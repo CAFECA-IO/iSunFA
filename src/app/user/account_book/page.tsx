@@ -232,7 +232,7 @@ export default function UserMainPage() {
               <Link
                 key={ab.id}
                 href={`/user/account_book/${ab.id}${uriQuery || "/dashboard"}`}
-                className="group relative block cursor-pointer rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 hover:border-orange-500 hover:shadow-md"
+                className="group relative flex cursor-pointer flex-col justify-between rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 hover:border-orange-500 hover:shadow-md"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-3">

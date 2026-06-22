@@ -692,6 +692,8 @@ export class DocumentSyncRepository {
             fileId: realFileId,
             tradingDate: new Date(ed.tradingDate || Date.now()),
             scope: (ed.scope as EsgScope) || "SCOPE_1",
+            ghgProtocolCategory: ed.ghgProtocolCategory || null,
+            isoCategory: ed.isoCategory || null,
             activityType: ed.activityType || "",
             vendor: ed.vendor || "",
             amount: esgAmount,

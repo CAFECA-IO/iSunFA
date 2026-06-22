@@ -1,28 +1,28 @@
 export const verify = {
   verify_modal: {
-    title: "確認核對？",
+    title: "確認しますか？",
     message:
-      "您確定要核對此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
-    confirm: "確認核對",
+      "この{{type}}を確認しますか？変更内容は保存されます。データが正しいか確認してください。",
+    confirm: "確認完了",
   },
   unverify_modal: {
-    title: "確認退回？",
+    title: "差し戻しますか？",
     message:
-      "您確定要退回此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
-    confirm: "確認退回",
+      "この{{type}}を差し戻しますか？変更内容は保存されます。データが正しいか確認してください。",
+    confirm: "差し戻し完了",
   },
   status: {
-    all: "全部 {{type}}",
-    verified: "已核對",
-    unverified: "待核對",
+    all: "すべて {{type}}",
+    verified: "確認済み",
+    unverified: "未確認",
   },
   button: {
-    unverify: "退回未核對",
-    verify: "核對並存檔",
+    unverify: "差し戻し",
+    verify: "確認して保存",
   },
   type: {
-    journal: "日記帳",
-    voucher: "傳票",
-    esg: "碳排紀錄",
+    journal: "仕訳帳",
+    voucher: "伝票",
+    esg: "炭素排出記録",
   },
 };

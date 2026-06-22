@@ -11,7 +11,7 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import {
   EsgScope as ClientEsgScope,
   EsgIntensity as ClientEsgIntensity,
-} from "@/interfaces/esg";
+} from "@/constants/esg";
 import { MeasurementUnit } from "@/constants/enums";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { IEsgRecordDetail } from "@/interfaces/esg";
@@ -118,6 +118,12 @@ export async function PUT(
       }),
       ...(reqBody.scope && {
         scope: reqBody.scope.toUpperCase() as ClientEsgScope,
+      }),
+      ...(reqBody.ghgProtocolCategory !== undefined && {
+        ghgProtocolCategory: reqBody.ghgProtocolCategory,
+      }),
+      ...(reqBody.isoCategory !== undefined && {
+        isoCategory: reqBody.isoCategory,
       }),
       ...(reqBody.activityType && { activityType: reqBody.activityType }),
       ...(reqBody.vendor && { vendor: reqBody.vendor }),

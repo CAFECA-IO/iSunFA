@@ -13,7 +13,8 @@ import {
   Leaf,
 } from "lucide-react";
 import { numberWithCommas, timestampToString } from "@/lib/utils/common";
-import { IEsgRecordDetail, EsgScope, EsgIntensity } from "@/interfaces/esg";
+import { IEsgRecordDetail } from "@/interfaces/esg";
+import { EsgScope, EsgIntensity } from "@/constants/esg";
 import { FilePreview } from "@/components/common/file_preview";
 import AiConfidence from "@/components/common/ai_confidence";
 import { useTranslation } from "@/i18n/i18n_context";

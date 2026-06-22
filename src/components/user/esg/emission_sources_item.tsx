@@ -5,7 +5,8 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { ChevronDown, Minus, Plus, Edit2 } from "lucide-react";
 import RecordTabModal from "@/components/user/common/record_tab_modal";
 import { IEsgEmissionSourcesUI } from "@/interfaces/emission_sources";
-import { EsgIntensity, IEsgRecordBrief } from "@/interfaces/esg";
+import { IEsgRecordBrief } from "@/interfaces/esg";
+import { EsgIntensity } from "@/constants/esg";
 import { numberWithCommas, timestampToString } from "@/lib/utils/common";
 
 interface IEmissionSourcesItemProps {
@@ -13,7 +14,13 @@ interface IEmissionSourcesItemProps {
   onEdit?: () => void;
 }
 
-const RecordItem = ({ rec, onClick }: { rec: IEsgRecordBrief; onClick: () => void }) => {
+const RecordItem = ({
+  rec,
+  onClick,
+}: {
+  rec: IEsgRecordBrief;
+  onClick: () => void;
+}) => {
   const { t } = useTranslation();
 
   // Info: (20260424 - Julian) 檢查翻譯內容是否與原本的 key 一致，如果是，則代表翻譯不存在或未設定，那就直接使用原本的 activityType
@@ -26,7 +33,10 @@ const RecordItem = ({ rec, onClick }: { rec: IEsgRecordBrief; onClick: () => voi
   }
 
   return (
-    <tr className="cursor-pointer transition-colors hover:bg-orange-50/50" onClick={onClick}>
+    <tr
+      className="cursor-pointer transition-colors hover:bg-orange-50/50"
+      onClick={onClick}
+    >
       <td className="px-5 py-3 text-slate-600">
         {timestampToString(rec.tradingDate).dateWithDash}
       </td>
@@ -47,7 +57,7 @@ const RecordItem = ({ rec, onClick }: { rec: IEsgRecordBrief; onClick: () => voi
 
 export default function EmissionSourcesItem({
   data,
-  onEdit = () => { },
+  onEdit = () => {},
 }: IEmissionSourcesItemProps) {
   const { t } = useTranslation();
 
@@ -127,7 +137,11 @@ export default function EmissionSourcesItem({
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {records.map((rec) => (
-                  <RecordItem key={rec.id} rec={rec} onClick={() => handleRecordClick(rec.id)} />
+                  <RecordItem
+                    key={rec.id}
+                    rec={rec}
+                    onClick={() => handleRecordClick(rec.id)}
+                  />
                 ))}
               </tbody>
             </table>
@@ -147,10 +161,10 @@ export default function EmissionSourcesItem({
         tabIndex={0}
         onClick={toggleOpen}
         onKeyDown={handleKeyDown}
-        className="flex cursor-pointer items-center justify-between rounded-xl p-3 lg:p-6 transition-colors duration-200 hover:bg-orange-50"
+        className="flex cursor-pointer items-center justify-between rounded-xl p-3 transition-colors duration-200 hover:bg-orange-50 lg:p-6"
       >
         <div className="flex items-center gap-4">
-          <div className="flex shrink-0 size-8 lg:size-10 items-center justify-center rounded-lg bg-gray-100 text-slate-800 transition-colors group-hover:bg-white">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-slate-800 transition-colors group-hover:bg-white lg:size-10">
             <ChevronDown
               size={24}
               className={`${isOpen ? "" : "-rotate-90"} transition-all duration-200`}
@@ -183,7 +197,7 @@ export default function EmissionSourcesItem({
           {onEdit && (
             <button
               type="button"
-              className="text-slate-400 p-2 shrink-0 transition-colors duration-200 hover:text-blue-600"
+              className="shrink-0 p-2 text-slate-400 transition-colors duration-200 hover:text-blue-600"
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit();
@@ -192,7 +206,7 @@ export default function EmissionSourcesItem({
               <Edit2 size={18} />
             </button>
           )}
-          <div className="text-slate-400 p-2 shrink-0 transition-colors duration-200 group-hover:text-orange-600">
+          <div className="shrink-0 p-2 text-slate-400 transition-colors duration-200 group-hover:text-orange-600">
             {isOpen ? <Minus size={20} /> : <Plus size={20} />}
           </div>
         </div>
@@ -204,7 +218,7 @@ export default function EmissionSourcesItem({
         }`}
       >
         <div className="overflow-hidden bg-gray-50/50">
-          <div className="lg:p-6 p-3">{groupedRecordList}</div>
+          <div className="p-3 lg:p-6">{groupedRecordList}</div>
         </div>
       </div>
 

@@ -5,6 +5,11 @@ import { fxInterceptorService } from "@/services/fx.interceptor.service";
 import { MoneyUtil } from "@/lib/utils/money";
 import { AccountingEngineService } from "@/services/accounting.engine.service";
 import { EmissionFactorRepo } from "@/repositories/emission_factor.repo";
+import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
+import {
+  EsgActivityTypeToGhgMapping,
+  EsgActivityTypeToIsoMapping,
+} from "@/constants/esg";
 
 export class VoucherPipelineOrchestrator {
   /**
@@ -185,6 +190,17 @@ export class VoucherPipelineOrchestrator {
               fileResult.voucherBase.tradingDate,
             );
         }
+      }
+    }
+
+    if (fileResult.esg && fileResult.esg.activityType) {
+      const actType = fileResult.esg.activityType as EsgActivityTypeKey;
+      if (EsgActivityTypeToGhgMapping[actType]) {
+        fileResult.esg.ghgProtocolCategory =
+          EsgActivityTypeToGhgMapping[actType];
+      }
+      if (EsgActivityTypeToIsoMapping[actType]) {
+        fileResult.esg.isoCategory = EsgActivityTypeToIsoMapping[actType];
       }
     }
 
