@@ -35,12 +35,7 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
     }
 
     if (action === MILEAGE_ACTION.CALCULATE_BATCH) {
-      const items = payload.items as Array<{
-        origin: string | Record<string, unknown>;
-        dest: string | Record<string, unknown>;
-        weightKg?: number;
-        mode?: string;
-      }>;
+      const items = payload.items as Array<{ origin: string | { lat: number; lng: number; name?: string }; dest: string | { lat: number; lng: number; name?: string }; weightKg?: number; mode?: string }>;
       if (!items || !Array.isArray(items))
         throw new Error("Missing items for batch calculation.");
 
@@ -51,10 +46,8 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
           let plan;
 
           if (
-            item.origin?.lat &&
-            item.origin?.lng &&
-            item.dest?.lat &&
-            item.dest?.lng
+            typeof item.origin === "object" && item.origin !== null && "lat" in item.origin && "lng" in item.origin &&
+            typeof item.dest === "object" && item.dest !== null && "lat" in item.dest && "lng" in item.dest
           ) {
             plan = await calculateLogisticsPlan(
               Number(item.origin.lat),
