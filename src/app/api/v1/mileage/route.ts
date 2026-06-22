@@ -1,7 +1,7 @@
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { parseMultipleRoutesFromText } from "@/services/route.smart.service";
-import { calculateMileageFromStrings } from "@/services/route.service";
+import { calculateBatchLogisticsPlan } from "@/services/route.service";
 
 export async function POST(request: Request) {
   try {
@@ -25,17 +25,16 @@ export async function POST(request: Request) {
           message: "Missing items array.",
         });
       }
-
       const results = await Promise.all(
         body.items.map(async (item: { origin: string; dest: string }) => {
           try {
-            const result = await calculateMileageFromStrings(
+            const { plan } = await calculateBatchLogisticsPlan(
               item.origin,
               item.dest,
             );
-            return { ...item, distanceKm: result.distanceKm, success: true };
+            return { ...item, plan, success: true };
           } catch (e) {
-            return { ...item, distanceKm: 0, success: false, error: String(e) };
+            return { ...item, success: false, error: String(e) };
           }
         }),
       );

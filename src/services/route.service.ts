@@ -361,3 +361,17 @@ export async function calculateMileageFromStrings(
     throw err;
   }
 }
+
+export async function calculateBatchLogisticsPlan(
+  originDesc: string,
+  destDesc: string,
+): Promise<{ plan: ILogisticsPlan }> {
+  try {
+    const text = `Origin: ${originDesc}, Dest: ${destDesc}`;
+    const { plan } = await calculateLogisticsPlanFromText(text, 1000);
+    return { plan };
+  } catch (err) {
+    console.error("Batch plan calc error:", err);
+    throw err;
+  }
+}
