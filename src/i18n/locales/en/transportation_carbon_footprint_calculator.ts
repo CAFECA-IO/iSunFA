@@ -62,7 +62,10 @@ export const transportationCarbonFootprintCalculator = {
       "Please login first to use the transportation carbon footprint feature",
     tab_analysis: "Carbon Accounting",
     tab_history: "Historical Reports",
-    tab_mileage: "Mileage Calculation",
+    tab_mileage: "Mileage",
+    empty_plan:
+      "Detailed route plan is not available for this history record. Please regenerate the report.",
+    auto: "Auto Detect",
   },
   history: {
     title: "Historical Analysis Paths",

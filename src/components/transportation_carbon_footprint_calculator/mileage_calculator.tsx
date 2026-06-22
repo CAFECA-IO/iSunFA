@@ -10,7 +10,9 @@ import {
   Send,
   FileText,
   UploadCloud,
+  Settings,
 } from "lucide-react";
+import React from "react";
 import { request } from "@/lib/utils/request";
 import { useTranslation } from "@/i18n/i18n_context";
 import ConfirmModal from "@/components/common/confirm_modal";
@@ -39,6 +41,11 @@ export interface IMileageItem {
   seaDistanceKm?: number;
   airDistanceKm?: number;
   routeGeometry?: string;
+  originLat?: number | string;
+  originLng?: number | string;
+  destLat?: number | string;
+  destLng?: number | string;
+  weightKg?: number | string;
   loading?: boolean;
   error?: string;
   success?: boolean;
@@ -56,9 +63,10 @@ export function MileageCalculator({
   const [aiText, setAiText] = useState("");
   const [isParsing, setIsParsing] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
-  const [newOrigin, setNewOrigin] = useState("");
-  const [newDest, setNewDest] = useState("");
+  const [newRouteDesc, setNewRouteDesc] = useState("");
+  const [isAddingManual, setIsAddingManual] = useState(false);
   const [newMode, setNewMode] = useState<RouteMode | "">("");
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [alertModal, setAlertModal] = useState({
     isOpen: false,
     title: "",
@@ -198,20 +206,44 @@ export function MileageCalculator({
     );
   };
 
-  const handleManualAdd = () => {
-    if (!newOrigin.trim() || !newDest.trim()) return;
-    setItems((prev) => [
-      ...prev,
-      {
+  const toggleRow = (id: string) => {
+    setExpandedRows((prev) => {
+      if (prev.has(id)) return new Set();
+      return new Set([id]);
+    });
+  };
+
+  const handleManualAdd = async () => {
+    if (!newRouteDesc.trim()) return;
+    setIsAddingManual(true);
+    try {
+      const parsed = await parseMultipleRoutesFromText(newRouteDesc);
+      const newItems: IMileageItem[] = parsed.map((item) => ({
         id: crypto.randomUUID(),
-        origin: newOrigin.trim(),
-        dest: newDest.trim(),
-        mode: (newMode as RouteMode) || undefined,
-      },
-    ]);
-    setNewOrigin("");
-    setNewDest("");
-    setNewMode("");
+        origin: item.origin,
+        dest: item.dest,
+        mode: (newMode as RouteMode) || item.mode,
+        originLat: item.originLat,
+        originLng: item.originLng,
+        destLat: item.destLat,
+        destLng: item.destLng,
+        weightKg: item.weightKg,
+      }));
+      setItems((prev) => [...prev, ...newItems]);
+      setNewRouteDesc("");
+      setNewMode("");
+    } catch (err) {
+      console.error(err);
+      setAlertModal({
+        isOpen: true,
+        title: t("transportation_carbon_footprint_calculator.analysis_failed"),
+        message: t(
+          "transportation_carbon_footprint_calculator.mileage_calculator.err_parse_failed",
+        ),
+      });
+    } finally {
+      setIsAddingManual(false);
+    }
   };
 
   const handleParseText = async () => {
@@ -224,6 +256,11 @@ export function MileageCalculator({
         origin: item.origin,
         dest: item.dest,
         mode: item.mode as RouteMode,
+        originLat: item.originLat,
+        originLng: item.originLng,
+        destLat: item.destLat,
+        destLng: item.destLng,
+        weightKg: item.weightKg,
       }));
       setItems((prev) => [...prev, ...newItems]);
       setAiText("");
@@ -232,10 +269,9 @@ export function MileageCalculator({
       setAlertModal({
         isOpen: true,
         title: t("transportation_carbon_footprint_calculator.analysis_failed"),
-        message:
-          t(
-            "transportation_carbon_footprint_calculator.mileage_calculator.err_parse_failed",
-          ) + "，請稍後再試。",
+        message: t(
+          "transportation_carbon_footprint_calculator.mileage_calculator.err_parse_failed",
+        ),
       });
     } finally {
       setIsParsing(false);
@@ -261,9 +297,22 @@ export function MileageCalculator({
         category: ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT,
         action: MILEAGE_ACTION.CALCULATE_BATCH,
         items: uncalculatedItems.map((item) => ({
-          origin: item.origin,
-          dest: item.dest,
+          origin: item.originLat
+            ? {
+                name: item.origin,
+                lat: Number(item.originLat),
+                lng: Number(item.originLng),
+              }
+            : item.origin,
+          dest: item.destLat
+            ? {
+                name: item.dest,
+                lat: Number(item.destLat),
+                lng: Number(item.destLng),
+              }
+            : item.dest,
           mode: item.mode,
+          weightKg: item.weightKg ? Number(item.weightKg) : undefined,
         })),
       },
     });
@@ -277,8 +326,10 @@ export function MileageCalculator({
     const f = e.target.files?.[0];
     if (!f) return;
 
+    setIsParsing(true);
+
     const reader = new FileReader();
-    reader.onload = (evt) => {
+    reader.onload = async (evt) => {
       try {
         const bstr = evt.target?.result;
         const wb = xlsx.read(bstr, { type: "binary" });
@@ -362,7 +413,35 @@ export function MileageCalculator({
           });
 
           if (newItems.length > 0) {
-            setItems((prev) => [...prev, ...newItems]);
+            try {
+              const aiPrompt = newItems
+                .map(
+                  (item) =>
+                    `From ${item.origin} to ${item.dest} ${item.mode ? `(Mode: ${item.mode})` : ""}`,
+                )
+                .join("\n");
+              const parsed = await parseMultipleRoutesFromText(aiPrompt);
+
+              const enhancedItems: IMileageItem[] = parsed.map((item) => ({
+                id: crypto.randomUUID(),
+                origin: item.origin,
+                dest: item.dest,
+                mode: (item.mode as RouteMode) || "LAND",
+                originLat: item.originLat,
+                originLng: item.originLng,
+                destLat: item.destLat,
+                destLng: item.destLng,
+                weightKg: item.weightKg,
+              }));
+
+              setItems((prev) => [...prev, ...enhancedItems]);
+            } catch (aiErr) {
+              console.error(
+                "AI enhancement failed, falling back to basic extraction",
+                aiErr,
+              );
+              setItems((prev) => [...prev, ...newItems]);
+            }
           } else {
             setAlertModal({
               isOpen: true,
@@ -378,6 +457,8 @@ export function MileageCalculator({
           title: t("logistics.page.error_title"),
           message: t("logistics.page.error_load_file"),
         });
+      } finally {
+        setIsParsing(false);
       }
     };
     reader.readAsBinaryString(f);
@@ -433,45 +514,27 @@ export function MileageCalculator({
 
         <div className="mb-6 flex flex-col items-end gap-4 md:flex-row">
           <label
-            htmlFor="mileage_origin"
+            htmlFor="mileage_route_desc"
             className="flex w-full flex-1 flex-col gap-2 md:w-auto"
           >
             <span className="text-sm font-medium text-gray-700">
               {t(
-                "transportation_carbon_footprint_calculator.mileage_calculator.origin_desc",
+                "transportation_carbon_footprint_calculator.ui.route_description",
               )}
             </span>
             <input
-              id="mileage_origin"
+              id="mileage_route_desc"
               type="text"
               aria-label={t(
-                "transportation_carbon_footprint_calculator.mileage_calculator.origin_desc",
+                "transportation_carbon_footprint_calculator.ui.route_description",
               )}
-              value={newOrigin}
-              onChange={(e) => setNewOrigin(e.target.value)}
-              placeholder={`${t("transportation_carbon_footprint_calculator.mileage_calculator.origin_desc")}例如：台北市信義區`}
-              className="w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-900 transition-all focus:ring-2 focus:ring-orange-500 focus:outline-none"
-            />
-          </label>
-          <label
-            htmlFor="mileage_dest"
-            className="flex w-full flex-1 flex-col gap-2 md:w-auto"
-          >
-            <span className="text-sm font-medium text-gray-700">
-              {t(
-                "transportation_carbon_footprint_calculator.mileage_calculator.dest_desc",
+              value={newRouteDesc}
+              onChange={(e) => setNewRouteDesc(e.target.value)}
+              placeholder={t(
+                "transportation_carbon_footprint_calculator.ui.route_placeholder",
               )}
-            </span>
-            <input
-              id="mileage_dest"
-              type="text"
-              aria-label={t(
-                "transportation_carbon_footprint_calculator.mileage_calculator.dest_desc",
-              )}
-              value={newDest}
-              onChange={(e) => setNewDest(e.target.value)}
-              placeholder={`${t("transportation_carbon_footprint_calculator.mileage_calculator.dest_desc")}例如：高雄市左營區`}
-              className="w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-900 transition-all focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              className="w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-900 transition-all focus:ring-2 focus:ring-orange-500 focus:outline-none disabled:bg-gray-50 disabled:opacity-50"
+              disabled={isAddingManual || isCalculating}
             />
           </label>
           <label className="flex w-full shrink-0 flex-col gap-2 md:w-48">
@@ -514,10 +577,14 @@ export function MileageCalculator({
           </label>
           <button
             onClick={handleManualAdd}
-            disabled={!newOrigin.trim() || !newDest.trim()}
+            disabled={!newRouteDesc.trim() || isAddingManual || isCalculating}
             className="flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-6 text-sm font-semibold whitespace-nowrap text-gray-700 hover:bg-gray-50 disabled:opacity-50"
           >
-            <Plus className="h-4 w-4" />{" "}
+            {isAddingManual ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Plus className="h-4 w-4" />
+            )}{" "}
             {t(
               "transportation_carbon_footprint_calculator.mileage_calculator.btn_add",
             )}
@@ -569,141 +636,261 @@ export function MileageCalculator({
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
                 {items.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="transition-colors hover:bg-gray-50"
-                  >
-                    <td className="px-6 py-4 font-medium text-gray-900">
-                      {item.origin}
-                    </td>
-                    <td className="px-6 py-4 font-medium text-gray-900">
-                      {item.dest}
-                    </td>
-                    <td className="px-6 py-4">
-                      {!item.loading && !item.success ? (
-                        <select
-                          value={item.mode || ""}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setItems((prev) =>
-                              prev.map((i) =>
-                                i.id === item.id
-                                  ? {
-                                      ...i,
-                                      mode: val
-                                        ? (val as RouteMode)
-                                        : undefined,
-                                    }
-                                  : i,
-                              ),
-                            );
-                          }}
-                          className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 focus:ring-2 focus:ring-orange-500"
-                        >
-                          <option value="">
+                  <React.Fragment key={item.id}>
+                    <tr className="transition-colors hover:bg-gray-50">
+                      <td className="px-6 py-4 font-medium text-gray-900">
+                        {item.origin}
+                      </td>
+                      <td className="px-6 py-4 font-medium text-gray-900">
+                        {item.dest}
+                      </td>
+                      <td className="px-6 py-4">
+                        {!item.loading && !item.success ? (
+                          <select
+                            value={item.mode || ""}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setItems((prev) =>
+                                prev.map((i) =>
+                                  i.id === item.id
+                                    ? {
+                                        ...i,
+                                        mode: val
+                                          ? (val as RouteMode)
+                                          : undefined,
+                                      }
+                                    : i,
+                                ),
+                              );
+                            }}
+                            className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 focus:ring-2 focus:ring-orange-500"
+                          >
+                            <option value="">
+                              {t(
+                                "transportation_carbon_footprint_calculator.mileage_calculator.mode_auto",
+                              )}
+                            </option>
+                            <option value="LAND">
+                              {t(
+                                "transportation_carbon_footprint_calculator.mileage_calculator.mode_LAND",
+                              )}
+                            </option>
+                            <option value="SEA_LAND">
+                              {t(
+                                "transportation_carbon_footprint_calculator.mileage_calculator.mode_SEA_LAND",
+                              )}
+                            </option>
+                            <option value="AIR_LAND">
+                              {t(
+                                "transportation_carbon_footprint_calculator.mileage_calculator.mode_AIR_LAND",
+                              )}
+                            </option>
+                            <option value="SEA_LAND_AIR">
+                              {t(
+                                "transportation_carbon_footprint_calculator.mileage_calculator.mode_SEA_LAND_AIR",
+                              )}
+                            </option>
+                          </select>
+                        ) : item.mode ? (
+                          <span className="text-sm text-gray-600">
                             {t(
-                              "transportation_carbon_footprint_calculator.mileage_calculator.mode_auto",
+                              `transportation_carbon_footprint_calculator.mileage_calculator.mode_${item.seaDistanceKm && item.airDistanceKm && item.seaDistanceKm > 0 && item.airDistanceKm > 0 ? "SEA_LAND_AIR" : item.mode}`,
                             )}
-                          </option>
-                          <option value="LAND">
-                            {t(
-                              "transportation_carbon_footprint_calculator.mileage_calculator.mode_LAND",
-                            )}
-                          </option>
-                          <option value="SEA_LAND">
-                            {t(
-                              "transportation_carbon_footprint_calculator.mileage_calculator.mode_SEA_LAND",
-                            )}
-                          </option>
-                          <option value="AIR_LAND">
-                            {t(
-                              "transportation_carbon_footprint_calculator.mileage_calculator.mode_AIR_LAND",
-                            )}
-                          </option>
-                          <option value="SEA_LAND_AIR">
-                            {t(
-                              "transportation_carbon_footprint_calculator.mileage_calculator.mode_SEA_LAND_AIR",
-                            )}
-                          </option>
-                        </select>
-                      ) : item.mode ? (
-                        <span className="text-sm text-gray-600">
-                          {t(
-                            `transportation_carbon_footprint_calculator.mileage_calculator.mode_${item.seaDistanceKm && item.airDistanceKm && item.seaDistanceKm > 0 && item.airDistanceKm > 0 ? "SEA_LAND_AIR" : item.mode}`,
-                          )}
-                        </span>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      {item.loading ? (
-                        <span className="flex items-center gap-2 text-gray-400">
-                          <Loader2 className="h-4 w-4 animate-spin" />{" "}
-                          {t(
-                            "transportation_carbon_footprint_calculator.ui.calculating",
-                          )}
-                        </span>
-                      ) : item.success && item.distanceKm !== undefined ? (
-                        <div className="flex flex-col gap-1">
-                          <span className="font-bold text-orange-600">
-                            {item.distanceKm.toLocaleString(undefined, {
-                              maximumFractionDigits: 2,
-                            })}{" "}
-                            km
-                            {/* Info: (20260511 - Luphia) Do not show item.mode string here anymore since we show it in the new column */}
                           </span>
-                          <div className="flex gap-2 text-xs text-gray-500">
-                            {item.landDistanceKm !== undefined && (
-                              <span>
-                                陸:{" "}
-                                {item.landDistanceKm.toLocaleString(undefined, {
-                                  maximumFractionDigits: 1,
-                                })}
-                                km
-                              </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        {item.loading ? (
+                          <span className="flex items-center gap-2 text-gray-400">
+                            <Loader2 className="h-4 w-4 animate-spin" />{" "}
+                            {t(
+                              "transportation_carbon_footprint_calculator.ui.calculating",
                             )}
-                            {item.seaDistanceKm !== undefined && (
-                              <span>
-                                海:{" "}
-                                {item.seaDistanceKm.toLocaleString(undefined, {
-                                  maximumFractionDigits: 1,
-                                })}
-                                km
-                              </span>
-                            )}
-                            {item.airDistanceKm !== undefined && (
-                              <span>
-                                空:{" "}
-                                {item.airDistanceKm.toLocaleString(undefined, {
-                                  maximumFractionDigits: 1,
-                                })}
-                                km
-                              </span>
-                            )}
+                          </span>
+                        ) : item.success && item.distanceKm !== undefined ? (
+                          <div className="flex flex-col gap-1">
+                            <span className="font-bold text-orange-600">
+                              {item.distanceKm.toLocaleString(undefined, {
+                                maximumFractionDigits: 2,
+                              })}{" "}
+                              km
+                              {/* Info: (20260511 - Luphia) Do not show item.mode string here anymore since we show it in the new column */}
+                            </span>
+                            <div className="flex gap-2 text-xs text-gray-500">
+                              {item.landDistanceKm !== undefined && (
+                                <span>
+                                  陸:{" "}
+                                  {item.landDistanceKm.toLocaleString(
+                                    undefined,
+                                    {
+                                      maximumFractionDigits: 1,
+                                    },
+                                  )}
+                                  km
+                                </span>
+                              )}
+                              {item.seaDistanceKm !== undefined && (
+                                <span>
+                                  海:{" "}
+                                  {item.seaDistanceKm.toLocaleString(
+                                    undefined,
+                                    {
+                                      maximumFractionDigits: 1,
+                                    },
+                                  )}
+                                  km
+                                </span>
+                              )}
+                              {item.airDistanceKm !== undefined && (
+                                <span>
+                                  空:{" "}
+                                  {item.airDistanceKm.toLocaleString(
+                                    undefined,
+                                    {
+                                      maximumFractionDigits: 1,
+                                    },
+                                  )}
+                                  km
+                                </span>
+                              )}
+                            </div>
                           </div>
+                        ) : item.error ? (
+                          <span className="text-red-500">{item.error}</span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => toggleRow(item.id)}
+                            className={`rounded-full p-2 transition-colors hover:bg-gray-100 hover:text-gray-700 ${expandedRows.has(item.id) ? "bg-gray-100 text-gray-700" : "text-gray-400"}`}
+                            title={t(
+                              "transportation_carbon_footprint_calculator.ui.advanced_config",
+                            )}
+                          >
+                            <Settings className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleRemove(item.id)}
+                            aria-label={t(
+                              "transportation_carbon_footprint_calculator.mileage_calculator.btn_delete",
+                            )}
+                            className="rounded-full p-2 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                            title={t(
+                              "transportation_carbon_footprint_calculator.mileage_calculator.btn_delete",
+                            )}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </div>
-                      ) : item.error ? (
-                        <span className="text-red-500">{item.error}</span>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => handleRemove(item.id)}
-                        aria-label={t(
-                          "transportation_carbon_footprint_calculator.mileage_calculator.btn_delete",
-                        )}
-                        className="rounded-full p-2 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
-                        title={t(
-                          "transportation_carbon_footprint_calculator.mileage_calculator.btn_delete",
-                        )}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </td>
-                  </tr>
+                      </td>
+                    </tr>
+                    {expandedRows.has(item.id) && (
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="border-b border-gray-100 bg-gray-50/50 p-6"
+                        >
+                          <div className="grid grid-cols-1 gap-5 text-left md:grid-cols-2 lg:grid-cols-5">
+                            {[
+                              {
+                                label: "origin_lat",
+                                value: item.originLat,
+                                setter: (val: number | "") =>
+                                  setItems((prev) =>
+                                    prev.map((i) =>
+                                      i.id === item.id
+                                        ? { ...i, originLat: val }
+                                        : i,
+                                    ),
+                                  ),
+                              },
+                              {
+                                label: "origin_lng",
+                                value: item.originLng,
+                                setter: (val: number | "") =>
+                                  setItems((prev) =>
+                                    prev.map((i) =>
+                                      i.id === item.id
+                                        ? { ...i, originLng: val }
+                                        : i,
+                                    ),
+                                  ),
+                              },
+                              {
+                                label: "dest_lat",
+                                value: item.destLat,
+                                setter: (val: number | "") =>
+                                  setItems((prev) =>
+                                    prev.map((i) =>
+                                      i.id === item.id
+                                        ? { ...i, destLat: val }
+                                        : i,
+                                    ),
+                                  ),
+                              },
+                              {
+                                label: "dest_lng",
+                                value: item.destLng,
+                                setter: (val: number | "") =>
+                                  setItems((prev) =>
+                                    prev.map((i) =>
+                                      i.id === item.id
+                                        ? { ...i, destLng: val }
+                                        : i,
+                                    ),
+                                  ),
+                              },
+                              {
+                                label: "total_weight",
+                                value: item.weightKg,
+                                setter: (val: number | "") =>
+                                  setItems((prev) =>
+                                    prev.map((i) =>
+                                      i.id === item.id
+                                        ? { ...i, weightKg: val }
+                                        : i,
+                                    ),
+                                  ),
+                              },
+                            ].map((field) => (
+                              <label
+                                key={field.label}
+                                className="flex flex-col gap-1.5"
+                              >
+                                <span className="text-sm font-medium text-gray-700">
+                                  {t(
+                                    `transportation_carbon_footprint_calculator.ui.${field.label}`,
+                                  )}
+                                </span>
+                                <input
+                                  type="number"
+                                  step="any"
+                                  value={field.value ?? ""}
+                                  onChange={(e) =>
+                                    field.setter(
+                                      e.target.value
+                                        ? Number(e.target.value)
+                                        : "",
+                                    )
+                                  }
+                                  disabled={item.loading || item.success}
+                                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 transition-all focus:ring-2 focus:ring-orange-500 focus:outline-none disabled:bg-gray-50 disabled:opacity-50"
+                                  placeholder={t(
+                                    "transportation_carbon_footprint_calculator.ui.auto",
+                                  )}
+                                />
+                              </label>
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>

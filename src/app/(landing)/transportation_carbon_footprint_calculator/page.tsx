@@ -707,6 +707,92 @@ function ReportPageContent() {
         }
 
         if (isBatch && batchArray) {
+          batchArray = batchArray.map(
+            (
+              bItem: IMileageBatchResult & {
+                distanceKm?: number;
+                landDistanceKm?: number;
+                seaDistanceKm?: number;
+                airDistanceKm?: number;
+                landGeometry?: string;
+                routeGeometry?: string;
+                seaGeometry?: string;
+                airGeometry?: string;
+                emissions?: string;
+              },
+            ) => {
+              if (!bItem.plan) {
+                const parseGeo = (geoStr: string | null | undefined) => {
+                  if (!geoStr) return null;
+                  try {
+                    return typeof geoStr === "string"
+                      ? JSON.parse(geoStr)
+                      : geoStr;
+                  } catch {
+                    return null;
+                  }
+                };
+
+                const weight = Number(item.weightKg) || 1000;
+                const weightTons = weight / 1000;
+
+                const landDist = bItem.landDistanceKm || bItem.distanceKm || 0;
+                const seaDist = bItem.seaDistanceKm || 0;
+                const airDist = bItem.airDistanceKm || 0;
+
+                const landCo2e = (landDist * 0.11289 * weightTons).toFixed(2);
+                const seaCo2e = (seaDist * 0.01614 * weightTons).toFixed(2);
+                const airCo2e = (airDist * 0.50422 * weightTons).toFixed(2);
+
+                bItem.plan = {
+                  comparisonData: {
+                    success: true,
+                    plans: {
+                      landOnly: {
+                        success: !!landDist && !seaDist && !airDist,
+                        distanceKm: landDist,
+                        co2eKg: landCo2e,
+                        geometry: parseGeo(
+                          bItem.landGeometry || bItem.routeGeometry,
+                        ),
+                      },
+                      sea_multimodal: {
+                        land_origin_to_port: { success: false, geometry: null },
+                        sea_port_to_port: {
+                          success: !!seaDist,
+                          distanceKm: seaDist,
+                          geometry: parseGeo(bItem.seaGeometry),
+                        },
+                        land_port_to_dest: { success: false, geometry: null },
+                        total_co2eKg: (
+                          Number(landCo2e) + Number(seaCo2e)
+                        ).toFixed(2),
+                      },
+                      air_multimodal: {
+                        land_origin_to_airport: {
+                          success: false,
+                          geometry: null,
+                        },
+                        air_airport_to_airport: {
+                          success: !!airDist,
+                          distanceKm: airDist,
+                          geometry: parseGeo(bItem.airGeometry),
+                        },
+                        land_airport_to_dest: {
+                          success: false,
+                          geometry: null,
+                        },
+                        total_co2eKg: (
+                          Number(landCo2e) + Number(airCo2e)
+                        ).toFixed(2),
+                      },
+                    },
+                  },
+                } as unknown as ILogisticsPlan;
+              }
+              return bItem;
+            },
+          );
           setBatchResults(batchArray);
           setPlan(null);
           setActiveTab("mileage");

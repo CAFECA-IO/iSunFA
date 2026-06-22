@@ -35,15 +35,47 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
     }
 
     if (action === MILEAGE_ACTION.CALCULATE_BATCH) {
-      const items = payload.items as Array<{ origin: string; dest: string }>;
+      const items = payload.items as Array<{
+        origin: string | Record<string, unknown>;
+        dest: string | Record<string, unknown>;
+        weightKg?: number;
+        mode?: string;
+      }>;
       if (!items || !Array.isArray(items))
         throw new Error("Missing items for batch calculation.");
 
       const results = [];
       for (const item of items) {
         try {
-          const text = `Origin: ${item.origin}, Dest: ${item.dest}`;
-          const { plan } = await calculateLogisticsPlanFromText(text);
+          const weightKg = item.weightKg ? String(item.weightKg) : "1000";
+          let plan;
+
+          if (
+            item.origin?.lat &&
+            item.origin?.lng &&
+            item.dest?.lat &&
+            item.dest?.lng
+          ) {
+            plan = await calculateLogisticsPlan(
+              Number(item.origin.lat),
+              Number(item.origin.lng),
+              Number(item.dest.lat),
+              Number(item.dest.lng),
+              weightKg,
+            );
+          } else {
+            const originStr =
+              typeof item.origin === "string"
+                ? item.origin
+                : JSON.stringify(item.origin);
+            const destStr =
+              typeof item.dest === "string"
+                ? item.dest
+                : JSON.stringify(item.dest);
+            const text = `Origin: ${originStr}, Dest: ${destStr}`;
+            const res = await calculateLogisticsPlanFromText(text, weightKg);
+            plan = res.plan;
+          }
 
           const landPlan = plan.comparisonData.plans.landOnly;
           const seaPlan = plan.comparisonData.plans.sea_multimodal;
@@ -196,6 +228,7 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
               : undefined,
             seaGeometry: seaGeometry ? JSON.stringify(seaGeometry) : undefined,
             airGeometry: airGeometry ? JSON.stringify(airGeometry) : undefined,
+            plan,
           });
         } catch (err) {
           console.error("Batch item error", err);

@@ -19,8 +19,8 @@ import {
 } from "@/components/transportation_carbon_footprint_calculator/plan_section";
 
 export interface IMileageBatchResult {
-  origin: string;
-  dest: string;
+  origin: string | { lat: number; lng: number; name?: string };
+  dest: string | { lat: number; lng: number; name?: string };
   plan?: ILogisticsPlan;
   mode?: string;
   error?: string;
@@ -49,6 +49,19 @@ export function MileageBatchResults({
   const [selectedRoutesMap, setSelectedRoutesMap] = useState<
     Record<number, Set<RouteType>>
   >({});
+
+  const renderLocation = (
+    loc: string | { lat: number; lng: number; name?: string },
+  ) => {
+    if (typeof loc === "string") return loc;
+    if (loc && typeof loc === "object" && "lat" in loc && "lng" in loc) {
+      if (loc.name) {
+        return `${loc.name} (${Number(loc.lat).toFixed(4)}, ${Number(loc.lng).toFixed(4)})`;
+      }
+      return `${Number(loc.lat).toFixed(4)}, ${Number(loc.lng).toFixed(4)}`;
+    }
+    return JSON.stringify(loc);
+  };
 
   const getSelectedRoutes = (index: number, plan?: ILogisticsPlan) => {
     if (selectedRoutesMap[index]) return selectedRoutesMap[index];
@@ -156,15 +169,29 @@ export function MileageBatchResults({
                     <div className="flex flex-wrap items-center gap-2">
                       <div className="flex items-center gap-1.5 text-sm font-semibold text-gray-700">
                         <MapPin className="h-4 w-4 text-orange-500" />
-                        <span className="max-w-[150px] truncate">
-                          {item.origin}
+                        <span
+                          className="max-w-[150px] truncate"
+                          title={
+                            typeof item.origin === "string"
+                              ? item.origin
+                              : renderLocation(item.origin)
+                          }
+                        >
+                          {renderLocation(item.origin)}
                         </span>
                       </div>
                       <ArrowRight className="h-4 w-4 text-gray-400" />
                       <div className="flex items-center gap-1.5 text-sm font-semibold text-gray-700">
                         <MapPin className="h-4 w-4 text-emerald-500" />
-                        <span className="max-w-[150px] truncate">
-                          {item.dest}
+                        <span
+                          className="max-w-[150px] truncate"
+                          title={
+                            typeof item.dest === "string"
+                              ? item.dest
+                              : renderLocation(item.dest)
+                          }
+                        >
+                          {renderLocation(item.dest)}
                         </span>
                       </div>
                     </div>
