@@ -66,6 +66,6 @@ export async function GET(
         status: error.code,
       });
     }
-    return jsonFail(API_ERRORS.IS_DB_FAILED);
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }
