@@ -13,3 +13,10 @@ export const AiRefineSchema = z.object({
 });
 
 export type AiRefinePayload = z.infer<typeof AiRefineSchema>;
+
+export const AiMermaidModifySchema = z.object({
+  chart: z.string().min(1, "Chart is required"),
+  instruction: z.string().min(1, "Instruction is required"),
+});
+
+export type AiMermaidModifyPayload = z.infer<typeof AiMermaidModifySchema>;

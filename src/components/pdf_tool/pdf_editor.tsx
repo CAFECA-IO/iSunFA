@@ -536,7 +536,11 @@ export default function PdfEditor({ setErrorModal }: IPdfEditorProps) {
 
                   {/* Info: (20260426 - Luphia) Markdown Content */}
                   <div className="max-w-none text-[#374151]">
-                    <MarkdownContent content={markdownContext} theme="light" />
+                    <MarkdownContent
+                      content={markdownContext}
+                      onContentChange={setMarkdownContext}
+                      theme="light"
+                    />
                   </div>
                 </div>
 
