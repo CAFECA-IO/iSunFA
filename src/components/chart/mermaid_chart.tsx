@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo, FC, useRef } from "react";
 import mermaid from "mermaid";
-import { DonutChart, IDonutChartData } from "@/components/common/donut_chart";
+import { DonutChart, DEFAULT_COLORS } from "@/components/common/donut_chart";
 import {
   Download,
   Maximize2,
@@ -15,6 +15,13 @@ import {
 import { useTranslation } from "@/i18n/i18n_context";
 import { useChartExport } from "@/hooks/use_chart_export";
 import { MermaidAiModal } from "@/components/chart/mermaid_ai_modal";
+import {
+  parsePieColors,
+  detectChartType,
+  parseFlowchartNodes,
+  parsePieItems,
+  parsePieData,
+} from "@/lib/utils/mermaid_helpers";
 
 interface IMermaidChartProps {
   chart: string;
@@ -48,99 +55,19 @@ const MermaidChart: FC<IMermaidChartProps> = ({
 
   // Info: (20260623 - Julian) 自動判別目前是哪種圖表類型
   const chartType = useMemo(() => {
-    if (!currentChart) return "unknown";
-    const clean = currentChart.trim().toLowerCase();
-    if (clean.startsWith("pie")) return "pie";
-    if (clean.startsWith("flowchart") || clean.startsWith("graph"))
-      return "flowchart";
-    if (clean.startsWith("sequencediagram")) return "sequence";
-    return "unknown";
+    return detectChartType(currentChart);
   }, [currentChart]);
 
   // Info: (20260623 - Julian) 解析當前 flowchart/graph 中現有的所有節點
   const parsedNodes = useMemo(() => {
     if (chartType !== "flowchart") return [];
-
-    const nodes: { id: string; label: string }[] = [];
-    const lines = currentChart.split("\n");
-    const nodeRegex =
-      /([a-zA-Z0-9_-]+)\s*(?:\["([^"]+)"\]|\[([^\]]+)\]|\("([^"]+)"\)|\(([^)]+)\)|\{"([^"]+)"\}|\{([^}]+)\})/g;
-    const seenIds = new Set<string>();
-
-    lines.forEach((line) => {
-      let match;
-      nodeRegex.lastIndex = 0;
-      while ((match = nodeRegex.exec(line)) !== null) {
-        const id = match[1];
-        if (!seenIds.has(id) && !/^(graph|flowchart|subgraph|end)$/i.test(id)) {
-          seenIds.add(id);
-          const label =
-            match[2] ||
-            match[3] ||
-            match[4] ||
-            match[5] ||
-            match[6] ||
-            match[7] ||
-            id;
-          nodes.push({ id, label });
-        }
-      }
-    });
-
-    const connRegex = /([a-zA-Z0-9_-]+)\s*(-->|==>|-\.-)\s*([a-zA-Z0-9_-]+)/g;
-    lines.forEach((line) => {
-      let match;
-      connRegex.lastIndex = 0;
-      while ((match = connRegex.exec(line)) !== null) {
-        const id1 = match[1];
-        const id2 = match[3];
-        if (
-          !seenIds.has(id1) &&
-          !/^(graph|flowchart|subgraph|end)$/i.test(id1)
-        ) {
-          seenIds.add(id1);
-          nodes.push({ id: id1, label: id1 });
-        }
-        if (
-          !seenIds.has(id2) &&
-          !/^(graph|flowchart|subgraph|end)$/i.test(id2)
-        ) {
-          seenIds.add(id2);
-          nodes.push({ id: id2, label: id2 });
-        }
-      }
-    });
-
-    return nodes;
+    return parseFlowchartNodes(currentChart);
   }, [currentChart, chartType]);
 
   // Info: (20260623 - Julian) 解析當前 pie chart 中現有的所有資料項目
   const parsedPieItems = useMemo(() => {
     if (chartType !== "pie") return [];
-
-    const items: { label: string; value: number }[] = [];
-    const lines = currentChart.split("\n");
-    lines.forEach((line) => {
-      const clean = line.trim();
-      if (clean.includes(":")) {
-        const parts = clean.split(":");
-        if (parts.length >= 2) {
-          let name = parts[0].trim();
-          if (name.startsWith('"') && name.endsWith('"')) {
-            name = name.slice(1, -1);
-          }
-          if (name === "title" || name.startsWith("pie title")) {
-            return;
-          }
-          const valueStr = parts[parts.length - 1].trim();
-          const value = parseFloat(valueStr);
-          if (!isNaN(value)) {
-            items.push({ label: name, value });
-          }
-        }
-      }
-    });
-    return items;
+    return parsePieItems(currentChart);
   }, [currentChart, chartType]);
 
   // Info: (20260615 - Julian) 縮放與位移狀態
@@ -164,39 +91,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({
 
   // Info: (20260418 - Tzuhan) Intercept Mermaid Pie charts and render using our premium Recharts Donut instead
   const parsedPieData = useMemo(() => {
-    if (!currentChart || typeof currentChart !== "string") return null;
-    const cleanChart = currentChart.trim();
-    if (!cleanChart.startsWith("pie")) return null;
-
-    const lines = cleanChart.split("\n");
-    let title = "";
-    const data: IDonutChartData[] = [];
-
-    lines.forEach((line) => {
-      const cleanLine = line.trim();
-      if (cleanLine.startsWith("pie title")) {
-        title = cleanLine.replace("pie title", "").trim();
-      } else if (cleanLine.includes(":")) {
-        const parts = cleanLine.split(":");
-        if (parts.length >= 2) {
-          let name = parts[0].trim();
-          if (name.startsWith('"') && name.endsWith('"')) {
-            name = name.slice(1, -1);
-          }
-          // Info: (20260418 - Tzuhan) Use the last part as value, in case there are multiple colons
-          const valueStr = parts[parts.length - 1].trim();
-          const value = parseFloat(valueStr.replace("%", ""));
-          if (!isNaN(value)) {
-            data.push({ name, value });
-          }
-        }
-      }
-    });
-
-    if (data.length > 0) {
-      return { title, data };
-    }
-    return null;
+    return parsePieData(currentChart);
   }, [currentChart]);
 
   useEffect(() => {
@@ -686,6 +581,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({
           <DonutChart
             title={parsedPieData.title}
             data={parsedPieData.data}
+            colors={parsePieColors(currentChart, DEFAULT_COLORS)}
             onSparklesClick={
               onChartChange ? () => setIsAiModalOpen(true) : undefined
             }

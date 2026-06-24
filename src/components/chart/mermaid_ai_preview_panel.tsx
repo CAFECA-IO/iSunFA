@@ -2,8 +2,13 @@
 
 import { useEffect, useState, useMemo, FC } from "react";
 import mermaid from "mermaid";
-import { DonutChart, IDonutChartData } from "@/components/common/donut_chart";
+import {
+  DonutChart,
+  IDonutChartData,
+  DEFAULT_COLORS,
+} from "@/components/common/donut_chart";
 import { Columns2, Loader2, Rows2, Sparkles } from "lucide-react";
+import { parsePieColors, parsePieData } from "@/lib/utils/mermaid_helpers";
 
 enum PreviewDirective {
   ROW = "ROW",
@@ -20,6 +25,7 @@ interface IMermaidAiPreviewPanelProps {
   onCancel: () => void;
   onGenerate: () => void;
   onAdopt: () => void;
+  currentChart: string;
 }
 
 const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
@@ -32,6 +38,7 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
   onCancel,
   onGenerate,
   onAdopt,
+  currentChart,
 }) => {
   const [previewDirective, setPreviewDirective] = useState<PreviewDirective>(
     PreviewDirective.ROW,
@@ -46,38 +53,7 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
       : "w-[48%] h-full";
 
   const previewPieData = useMemo(() => {
-    if (!newChartPreview || typeof newChartPreview !== "string") return null;
-    const cleanChart = newChartPreview.trim();
-    if (!cleanChart.startsWith("pie")) return null;
-
-    const lines = cleanChart.split("\n");
-    let title = "";
-    const data: IDonutChartData[] = [];
-
-    lines.forEach((line) => {
-      const cleanLine = line.trim();
-      if (cleanLine.startsWith("pie title")) {
-        title = cleanLine.replace("pie title", "").trim();
-      } else if (cleanLine.includes(":")) {
-        const parts = cleanLine.split(":");
-        if (parts.length >= 2) {
-          let name = parts[0].trim();
-          if (name.startsWith('"') && name.endsWith('"')) {
-            name = name.slice(1, -1);
-          }
-          const valueStr = parts[parts.length - 1].trim();
-          const value = parseFloat(valueStr.replace("%", ""));
-          if (!isNaN(value)) {
-            data.push({ name, value });
-          }
-        }
-      }
-    });
-
-    if (data.length > 0) {
-      return { title, data };
-    }
-    return null;
+    return parsePieData(newChartPreview);
   }, [newChartPreview]);
 
   useEffect(() => {
@@ -160,6 +136,7 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
               <DonutChart
                 title={parsedPieData.title}
                 data={parsedPieData.data}
+                colors={parsePieColors(currentChart, DEFAULT_COLORS)}
               />
             ) : (
               <div
@@ -198,6 +175,7 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
                 <DonutChart
                   title={previewPieData.title}
                   data={previewPieData.data}
+                  colors={parsePieColors(newChartPreview, DEFAULT_COLORS)}
                 />
               ) : previewHasError ? (
                 <div className="p-4 text-center">

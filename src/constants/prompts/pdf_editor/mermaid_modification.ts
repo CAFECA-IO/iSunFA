@@ -19,4 +19,13 @@ When styling flowchart nodes based on user requested color names, strictly apply
 - "Red" / "Red (警告紅)": fill:#FEE2E2, stroke:#EF4444, stroke-width:1.5px, color:#991B1B
 - "Green" / "Green (成功綠)": fill:#D1FAE5, stroke:#10B981, stroke-width:1.5px, color:#065F46
 - "Purple" / "Purple (質感紫)": fill:#F3E8FF, stroke:#8B5CF6, stroke-width:1.5px, color:#5B21B6
+
+# Pie Chart Styling & Palette Mapping
+When styling pie charts or setting slice colors based on user instructions (e.g. changing slice color), use the mermaid config directive (%%{init: {"theme": "base", "themeVariables": { "pie1": "#hex", "pie2": "#hex", ... }}}%%) to map color values, or output comments indicating the colors. The colors should map to:
+- "Default (預設配色)": standard theme colors
+- "Navy (海軍藍)": #152C5B
+- "Orange (高光橘)": #FF9800
+- "Red (警告紅)": #EF4444
+- "Green (成功綠)": #10B981
+- "Purple (質感紫)": #8B5CF6
 `;

@@ -107,6 +107,7 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
               onCancel={handleCancel}
               onGenerate={handleGenerate}
               onAdopt={handleAdopt}
+              currentChart={currentChart}
             />
           </DialogPanel>
         </div>

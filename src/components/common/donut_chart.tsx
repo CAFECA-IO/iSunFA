@@ -19,7 +19,7 @@ export interface IDonutChartProps {
 }
 
 // Info: (20260418 - Tzuhan) Vibrant premium palette referencing the mockups
-const DEFAULT_COLORS = [
+export const DEFAULT_COLORS = [
   "#FF9800",
   "#152C5B",
   "#4F46E5",
