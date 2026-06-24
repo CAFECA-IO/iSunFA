@@ -66,7 +66,7 @@ export function MileageBatchResults({
   const getSelectedRoutes = (index: number, plan?: ILogisticsPlan) => {
     if (selectedRoutesMap[index]) return selectedRoutesMap[index];
 
-    // Default selection
+    // Info: (20260618 - Tzuhan) Default selection
     return new Set<RouteType>(
       [
         plan?.comparisonData?.plans?.landOnly?.success ? "land" : null,
