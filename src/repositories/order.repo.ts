@@ -19,6 +19,9 @@ export class OrderRepository {
   async update(args: Prisma.OrderUpdateArgs) {
     return prisma.order.update(args);
   }
+  async count(args?: Prisma.OrderCountArgs) {
+    return prisma.order.count(args);
+  }
   async countAllOrders(): Promise<number> {
     return prisma.order.count();
   }

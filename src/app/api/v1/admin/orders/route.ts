@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { orderRepo } from "@/repositories/order.repo";
-import { orderIssueService } from "@/services/order.issue.service";
+import { getAdminCommissionOrdersPaginated } from "@/services/order.service";
 import { jsonOk } from "@/lib/utils/response";
 
 export async function GET(request: Request) {
@@ -8,26 +7,27 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "15", 10);
+    const search = searchParams.get("search") || "";
+    const type = searchParams.get("type") || "ALL";
+    const executionStatus = searchParams.get("executionStatus") || "ALL";
+    const orderStatus = searchParams.get("orderStatus") || "ALL";
+    const sortBy = searchParams.get("sortBy") || "";
+    const sortOrder = (searchParams.get("sortOrder") || "desc") as
+      | "asc"
+      | "desc";
 
-    const skip = (page - 1) * limit;
-
-    const [totalElements, orders] = await Promise.all([
-      orderRepo.countCommissionOrders(),
-      orderRepo.getAllCommissionOrdersPaginated(skip, limit),
-    ]);
-
-    const mappedOrders =
-      await orderIssueService.getExecutionStatusesForOrders(orders);
-
-    return jsonOk({
-      data: mappedOrders,
-      pagination: {
-        page,
-        limit,
-        totalElements,
-        totalPages: Math.ceil(totalElements / limit),
-      },
+    const result = await getAdminCommissionOrdersPaginated({
+      page,
+      limit,
+      search,
+      type,
+      orderStatus,
+      executionStatus,
+      sortBy,
+      sortOrder,
     });
+
+    return jsonOk(result);
   } catch (error) {
     console.error("Failed to fetch orders:", error);
     return NextResponse.json(
