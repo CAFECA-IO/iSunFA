@@ -429,12 +429,7 @@ export default function OrderManagementPage() {
                 </span>
                 <input
                   type="text"
-                  placeholder={t(
-                    "order_management.filters.search_placeholder",
-                    {
-                      defaultValue: "以關鍵字搜尋用戶、訂單編號",
-                    },
-                  )}
+                  placeholder={t("以關鍵字搜尋用戶、訂單編號")}
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   className="w-full rounded-lg border border-gray-300 bg-white py-2 pr-10 pl-10 text-sm placeholder-gray-400 transition-colors focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
@@ -500,10 +495,12 @@ export default function OrderManagementPage() {
                 className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
               >
                 <option value="ALL">{t("common.all")}</option>
-                <option value="PENDING">PENDING</option>
-                <option value="PAYING">PAYING</option>
-                <option value="PAID">PAID</option>
-                <option value="PAYMENT_FAILED">PAYMENT_FAILED</option>
+                <option value={ORDER_STATUS.PENDING}>PENDING</option>
+                <option value={ORDER_STATUS.PAYING}>PAYING</option>
+                <option value={ORDER_STATUS.PAID}>PAID</option>
+                <option value={ORDER_STATUS.PAYMENT_FAILED}>
+                  PAYMENT_FAILED
+                </option>
                 <option value={ORDER_STATUS.EXECUTING}>
                   {t("order_management.table.processing")}
                 </option>
@@ -513,8 +510,10 @@ export default function OrderManagementPage() {
                 <option value={ORDER_STATUS.FAILED}>
                   {t("order_management.table.failed")}
                 </option>
-                <option value="MINT_FAILED">MINT_FAILED</option>
-                <option value="CANCEL">{t("common.cancel")}</option>
+                <option value={ORDER_STATUS.MINT_FAILED}>MINT_FAILED</option>
+                <option value={ORDER_STATUS.CANCEL}>
+                  {t("common.cancel")}
+                </option>
               </select>
             </div>
 

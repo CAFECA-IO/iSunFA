@@ -1,11 +1,5 @@
 import { useState, ReactNode, Fragment } from "react";
-import {
-  Loader2,
-  ArrowUp,
-  ArrowDown,
-  ChevronDown,
-  ChevronRight,
-} from "lucide-react";
+import { Loader2, ChevronUp, ChevronDown, ChevronRight } from "lucide-react";
 import Pagination from "@/components/common/pagination";
 import { useTranslation } from "@/i18n/i18n_context";
 
@@ -87,7 +81,7 @@ export default function DataTable<T>({
                       : col.align === "center"
                         ? "text-center"
                         : "text-left"
-                  } ${col.sortable ? "cursor-pointer transition-colors select-none hover:bg-gray-100 hover:text-gray-600" : ""} ${col.className || ""}`}
+                  } ${col.sortable ? "group cursor-pointer transition-colors select-none hover:bg-gray-100" : ""} ${col.className || ""}`}
                   onClick={() => {
                     if (col.sortable && onSort) {
                       onSort(col.key);
@@ -97,15 +91,36 @@ export default function DataTable<T>({
                   <div
                     className={`flex items-center gap-1 ${col.align === "right" ? "justify-end" : col.align === "center" ? "justify-center" : "justify-start"}`}
                   >
-                    {col.label}
-                    {col.sortable && sortBy === col.key && (
-                      <span className="text-orange-500">
-                        {sortOrder === "asc" ? (
-                          <ArrowUp className="h-3.5 w-3.5" />
-                        ) : (
-                          <ArrowDown className="h-3.5 w-3.5" />
-                        )}
-                      </span>
+                    <span
+                      className={`transition-colors ease-in-out ${
+                        col.sortable
+                          ? sortBy === col.key
+                            ? "text-orange-500"
+                            : "text-gray-400 group-hover:text-orange-500"
+                          : ""
+                      }`}
+                    >
+                      {col.label}
+                    </span>
+                    {col.sortable && (
+                      <div className="-gap-[2px] flex shrink-0 flex-col pl-2">
+                        <ChevronUp
+                          size={14}
+                          className={`translate-y-[2px] transition-colors ${
+                            sortBy === col.key && sortOrder === "desc"
+                              ? "text-orange-500"
+                              : "text-gray-300"
+                          }`}
+                        />
+                        <ChevronDown
+                          size={14}
+                          className={`translate-y-[-2px] transition-colors ${
+                            sortBy === col.key && sortOrder === "asc"
+                              ? "text-orange-500"
+                              : "text-gray-300"
+                          }`}
+                        />
+                      </div>
                     )}
                   </div>
                 </th>
