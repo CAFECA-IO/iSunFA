@@ -408,7 +408,7 @@ export default function OrderManagementPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 md:py-12 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
         <AdminPageHeader
           icon={List}
@@ -418,9 +418,9 @@ export default function OrderManagementPage() {
 
         {/* Info: (20260624 - Julian) Filters and Search Panel */}
         <div className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-          <div className="grid grid-cols-5 items-end gap-2">
+          <div className="grid grid-cols-1 items-end gap-2 md:grid-cols-5">
             {/* Info: (20260624 - Julian) Search Input */}
-            <div className="col-span-2 flex flex-col gap-1">
+            <div className="col-span-1 flex flex-col gap-1 md:col-span-2">
               <p className="text-xs font-medium text-slate-500">
                 {t("order_management.table.user")} &{" "}
                 {t("order_management.table.order_id")}

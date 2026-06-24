@@ -3,7 +3,7 @@
 import { Fragment } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/i18n/i18n_context";
-import { TextAlignJustify } from "lucide-react";
+import { TextAlignJustify, CreditCard } from "lucide-react";
 import {
   Menu,
   MenuButton,
@@ -20,10 +20,12 @@ export default function HeaderNav() {
     ...PUBLIC_MODULES.filter((module) => module.nav).map((module) => ({
       label: t(getModuleI18nKey(module.key)),
       href: `/${module.key}`,
+      icon: module.icon,
     })),
     {
       label: t("header.pricing"),
       href: "/pricing",
+      icon: CreditCard,
     },
   ];
 
@@ -35,9 +37,12 @@ export default function HeaderNav() {
           <Link
             key={item.label}
             href={item.href}
-            className="text-sm leading-6 font-semibold whitespace-nowrap text-gray-900 transition-colors hover:text-orange-600"
+            className="group flex items-center gap-1 px-2 py-1 text-sm leading-6 font-semibold whitespace-nowrap text-gray-900 transition-colors hover:text-orange-600"
           >
-            {item.label}
+            <item.icon className="size-5 shrink-0" />
+            <p className="max-w-0 overflow-hidden transition-all duration-300 group-hover:max-w-40">
+              {item.label}
+            </p>
           </Link>
         ))}
       </div>
