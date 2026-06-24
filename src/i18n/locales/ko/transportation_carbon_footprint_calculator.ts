@@ -60,7 +60,10 @@ export const transportationCarbonFootprintCalculator = {
     login_to_use: "물류 탄소 발자국 기능을 사용하려면 먼저 로그인하십시오",
     tab_analysis: "탄소 회계",
     tab_history: "과거 보고서",
-    tab_mileage: "마일리지 계산",
+    tab_mileage: "마일리지",
+    empty_plan:
+      "이 기록 데이터에는 상세 경로 플랜이 없습니다. 보고서를 다시 생성해주세요.",
+    auto: "자동 판별",
   },
   history: {
     title: "Historical Analysis Paths",

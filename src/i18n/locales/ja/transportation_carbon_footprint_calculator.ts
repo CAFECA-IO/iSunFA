@@ -62,6 +62,9 @@ export const transportationCarbonFootprintCalculator = {
     tab_analysis: "炭素会計",
     tab_history: "履歴レポート",
     tab_mileage: "マイレージ計算",
+    empty_plan:
+      "この履歴データには詳細なルートプランがありません。レポートを再生成してください。",
+    auto: "自動判定",
   },
   history: {
     title: "Historical Analysis Paths",
