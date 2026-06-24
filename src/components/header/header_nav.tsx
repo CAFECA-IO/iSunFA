@@ -32,7 +32,7 @@ export default function HeaderNav() {
   return (
     <>
       {/* Info: (20260304 - Julian) Desktop Navigation */}
-      <div className="hidden items-center gap-x-3 xl:flex xl:gap-x-8">
+      <div className="hidden items-center gap-x-3 xl:flex">
         {NAV_ITEMS.map((item) => (
           <Link
             key={item.label}
@@ -73,8 +73,9 @@ export default function HeaderNav() {
                 {() => (
                   <Link
                     href={item.href}
-                    className="px-4 py-2 text-sm leading-6 whitespace-normal text-gray-700 transition-colors hover:text-orange-600"
+                    className="flex items-center gap-1 px-4 py-2 text-sm leading-6 whitespace-normal text-gray-700 transition-colors hover:text-orange-600"
                   >
+                    <item.icon size={14} className="shrink-0" />
                     <span>{item.label}</span>
                   </Link>
                 )}
