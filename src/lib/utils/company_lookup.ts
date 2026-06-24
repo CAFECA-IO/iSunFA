@@ -117,7 +117,7 @@ async function getOpenApiCache(): Promise<Map<string, ICompanyData>> {
       }
     } catch (e) {
       console.error("OpenAPI fetch failed:", e);
-      openApiFetchPromise = null; // allow retry
+      openApiFetchPromise = null; // Info: (20260624 - Tzuhan) allow retry
     }
     return map;
   })();
