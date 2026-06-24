@@ -420,16 +420,20 @@ export default function OrderManagementPage() {
         <div className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
           <div className="grid grid-cols-5 items-end gap-2">
             {/* Info: (20260624 - Julian) Search Input */}
-
             <div className="col-span-2 flex flex-col gap-1">
-              <p className="text-xs font-medium text-slate-500">關鍵字搜尋</p>
+              <p className="text-xs font-medium text-slate-500">
+                {t("order_management.table.user")} &{" "}
+                {t("order_management.table.order_id")}
+              </p>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 flex shrink-0 items-center pl-3 text-gray-400">
                   <Search size={16} />
                 </span>
                 <input
                   type="text"
-                  placeholder={t("以關鍵字搜尋用戶、訂單編號")}
+                  placeholder={t(
+                    "order_management.table.search_bar_placeholder",
+                  )}
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   className="w-full rounded-lg border border-gray-300 bg-white py-2 pr-10 pl-10 text-sm placeholder-gray-400 transition-colors focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
@@ -448,7 +452,9 @@ export default function OrderManagementPage() {
 
             {/* Info: (20260624 - Julian) Type Dropdowns */}
             <div className="flex flex-col gap-1">
-              <p className="text-xs font-medium text-slate-500">類型</p>
+              <p className="text-xs font-medium text-slate-500">
+                {t("order_management.table.type")}
+              </p>
               <select
                 value={type}
                 onChange={handleTypeChange}
@@ -488,7 +494,9 @@ export default function OrderManagementPage() {
 
             {/* Info: (20260624 - Julian) Order Status Dropdowns */}
             <div className="flex flex-col gap-1">
-              <p className="text-xs font-medium text-slate-500">訂單狀態</p>
+              <p className="text-xs font-medium text-slate-500">
+                {t("order_management.table.order_status")}
+              </p>
               <select
                 value={orderStatus}
                 onChange={handleOrderStatusChange}
@@ -519,7 +527,9 @@ export default function OrderManagementPage() {
 
             {/* Info: (20260624 - Julian) Execution Status Dropdowns */}
             <div className="flex flex-col gap-1">
-              <p className="text-xs font-medium text-slate-500">執行狀態</p>
+              <p className="text-xs font-medium text-slate-500">
+                {t("order_management.table.execution_status")}
+              </p>
               <select
                 value={executionStatus}
                 onChange={handleExecutionStatusChange}

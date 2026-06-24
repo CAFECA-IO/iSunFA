@@ -24,5 +24,6 @@ export const orderManagement = {
     retry_confirm: "確定要重新執行此訂單嗎？",
     retry_success: "已成功觸發訂單重新執行。",
     retry_failed: "重新執行訂單失敗。",
+    search_bar_placeholder: "以關鍵字搜尋用戶、訂單編號...",
   },
 };

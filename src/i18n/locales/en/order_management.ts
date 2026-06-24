@@ -25,5 +25,6 @@ export const orderManagement = {
     retry_confirm: "Are you sure you want to retry this order?",
     retry_success: "Order retry triggered successfully.",
     retry_failed: "Failed to retry order.",
+    search_bar_placeholder: "Search by keyword, user, or order number...",
   },
 };

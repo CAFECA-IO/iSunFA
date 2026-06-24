@@ -25,5 +25,6 @@ export const orderManagement = {
     retry_confirm: "この注文を再実行してもよろしいですか？",
     retry_success: "注文の再実行が正常にトリガーされました。",
     retry_failed: "注文の再実行に失敗しました。",
+    search_bar_placeholder: "キーワードによるユーザー検索、注文番号検索...",
   },
 };
