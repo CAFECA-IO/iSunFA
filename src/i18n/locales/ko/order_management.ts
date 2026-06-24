@@ -24,5 +24,6 @@ export const orderManagement = {
     retry_confirm: "이 주문을 재실행하시겠습니까?",
     retry_success: "주문 재실행이 성공적으로 트리거되었습니다.",
     retry_failed: "주문 재실행에 실패했습니다.",
+    search_bar_placeholder: "키워드로 사용자 및 주문 번호 검색...",
   },
 };

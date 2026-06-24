@@ -3,7 +3,7 @@
 import { Fragment } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/i18n/i18n_context";
-import { TextAlignJustify } from "lucide-react";
+import { TextAlignJustify, CreditCard } from "lucide-react";
 import {
   Menu,
   MenuButton,
@@ -20,24 +20,29 @@ export default function HeaderNav() {
     ...PUBLIC_MODULES.filter((module) => module.nav).map((module) => ({
       label: t(getModuleI18nKey(module.key)),
       href: `/${module.key}`,
+      icon: module.icon,
     })),
     {
       label: t("header.pricing"),
       href: "/pricing",
+      icon: CreditCard,
     },
   ];
 
   return (
     <>
       {/* Info: (20260304 - Julian) Desktop Navigation */}
-      <div className="hidden items-center gap-x-3 xl:flex xl:gap-x-8">
+      <div className="hidden items-center gap-x-3 xl:flex">
         {NAV_ITEMS.map((item) => (
           <Link
             key={item.label}
             href={item.href}
-            className="text-sm leading-6 font-semibold whitespace-nowrap text-gray-900 transition-colors hover:text-orange-600"
+            className="group flex items-center gap-1 px-2 py-1 text-sm leading-6 font-semibold whitespace-nowrap text-gray-900 transition-colors hover:text-orange-600"
           >
-            {item.label}
+            <item.icon className="size-5 shrink-0" />
+            <p className="max-w-0 overflow-hidden transition-all duration-300 group-hover:max-w-40">
+              {item.label}
+            </p>
           </Link>
         ))}
       </div>
@@ -68,8 +73,9 @@ export default function HeaderNav() {
                 {() => (
                   <Link
                     href={item.href}
-                    className="px-4 py-2 text-sm leading-6 whitespace-normal text-gray-700 transition-colors hover:text-orange-600"
+                    className="flex items-center gap-1 px-4 py-2 text-sm leading-6 whitespace-normal text-gray-700 transition-colors hover:text-orange-600"
                   >
+                    <item.icon size={14} className="shrink-0" />
                     <span>{item.label}</span>
                   </Link>
                 )}

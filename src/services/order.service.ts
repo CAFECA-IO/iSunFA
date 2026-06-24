@@ -18,6 +18,8 @@ import {
   CurrencyUnit,
 } from "@/constants/price";
 import { IJSONObject } from "@/validators/common";
+import { orderIssueService } from "@/services/order.issue.service";
+import { Prisma } from "@/generated";
 
 export async function getOrdersByUserId(userId: string, type?: string | null) {
   const orders = await paymentRepo.getOrdersByUserId(userId, type);
@@ -262,4 +264,151 @@ export async function retryFailedOrder(orderId: string) {
   }
 
   await orderRepo.updateStatus(orderId, ORDER_STATUS.PAID);
+}
+
+export interface IGetAdminCommissionOrdersParams {
+  page: number;
+  limit: number;
+  search: string;
+  type: string;
+  orderStatus: string;
+  executionStatus: string;
+  sortBy: string;
+  sortOrder: "asc" | "desc";
+}
+
+/**
+ * Info: (20260624 - Julian)
+ * Get paginated admin commission orders.
+ */
+export async function getAdminCommissionOrdersPaginated(
+  params: IGetAdminCommissionOrdersParams,
+) {
+  const {
+    page,
+    limit,
+    search,
+    type,
+    orderStatus,
+    executionStatus,
+    sortBy,
+    sortOrder,
+  } = params;
+
+  const where: Prisma.OrderWhereInput = {
+    amount: { lt: 0 },
+  };
+
+  if (search) {
+    where.OR = [
+      { id: { contains: search, mode: "insensitive" } },
+      {
+        user: {
+          OR: [
+            { name: { contains: search, mode: "insensitive" } },
+            { address: { contains: search, mode: "insensitive" } },
+          ],
+        },
+      },
+    ];
+  }
+
+  if (type && type !== "ALL") {
+    where.type = type;
+  }
+
+  if (orderStatus && orderStatus !== "ALL") {
+    where.status = orderStatus;
+  }
+
+  const orderBy: Prisma.OrderOrderByWithRelationInput = {};
+  const direction = sortOrder === "asc" ? "asc" : "desc";
+  if (sortBy === "createdAt") {
+    orderBy.createdAt = direction;
+  } else if (sortBy === "amount") {
+    orderBy.amount = direction;
+  } else if (sortBy === "tokens") {
+    orderBy.tokens = direction;
+  } else if (sortBy === "status") {
+    orderBy.status = direction;
+  } else {
+    orderBy.createdAt = "desc";
+  }
+
+  const isNonDbFilterActive =
+    executionStatus !== "ALL" || sortBy === "executionConfidence";
+
+  let totalElements = 0;
+  let mappedOrders: unknown[] = [];
+
+  if (!isNonDbFilterActive) {
+    const skip = (page - 1) * limit;
+    const [count, orders] = await Promise.all([
+      orderRepo.count({ where }),
+      orderRepo.findMany({
+        where,
+        orderBy,
+        skip,
+        take: limit,
+        include: {
+          user: true,
+          paymentTransactions: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
+          },
+        },
+      }),
+    ]);
+    totalElements = count;
+    mappedOrders =
+      await orderIssueService.getExecutionStatusesForOrders(orders);
+  } else {
+    const allOrders = await orderRepo.findMany({
+      where,
+      orderBy,
+      include: {
+        user: true,
+        paymentTransactions: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+        },
+      },
+    });
+
+    const resolvedOrders =
+      await orderIssueService.getExecutionStatusesForOrders(allOrders);
+
+    let filteredOrders = resolvedOrders;
+
+    if (executionStatus !== "ALL") {
+      filteredOrders = filteredOrders.filter(
+        (o) => o.executionStatus === executionStatus,
+      );
+    }
+
+    if (sortBy === "executionConfidence") {
+      filteredOrders.sort((a, b) => {
+        const confA = a.executionConfidence;
+        const confB = b.executionConfidence;
+        if (confA === null && confB === null) return 0;
+        if (confA === null) return 1;
+        if (confB === null) return -1;
+        return sortOrder === "asc" ? confA - confB : confB - confA;
+      });
+    }
+
+    totalElements = filteredOrders.length;
+    const skip = (page - 1) * limit;
+    mappedOrders = filteredOrders.slice(skip, skip + limit);
+  }
+
+  return {
+    data: mappedOrders,
+    pagination: {
+      page,
+      limit,
+      totalElements,
+      totalPages: Math.ceil(totalElements / limit),
+    },
+  };
 }

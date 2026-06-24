@@ -531,7 +531,7 @@ export default function VoucherTableSection() {
                           />
                           <ChevronDown
                             size={14}
-                            className={`-translate-y-[2px] transition-colors ${isDateAsc ? "text-orange-500" : "text-slate-300"}`}
+                            className={`translate-y-[-2px] transition-colors ${isDateAsc ? "text-orange-500" : "text-slate-300"}`}
                           />
                         </div>
                       </button>
@@ -571,7 +571,7 @@ export default function VoucherTableSection() {
                           />
                           <ChevronDown
                             size={14}
-                            className={`-translate-y-[2px] transition-colors ${isDebitAsc ? "text-orange-500" : "text-slate-300"}`}
+                            className={`translate-y-[-2px] transition-colors ${isDebitAsc ? "text-orange-500" : "text-slate-300"}`}
                           />
                         </div>
                       </button>
@@ -599,7 +599,7 @@ export default function VoucherTableSection() {
                           />
                           <ChevronDown
                             size={14}
-                            className={`-translate-y-[2px] transition-colors ${isCreditAsc ? "text-orange-500" : "text-slate-300"}`}
+                            className={`translate-y-[-2px] transition-colors ${isCreditAsc ? "text-orange-500" : "text-slate-300"}`}
                           />
                         </div>
                       </button>
