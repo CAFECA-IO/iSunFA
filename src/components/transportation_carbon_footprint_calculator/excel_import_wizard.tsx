@@ -149,7 +149,7 @@ export function ExcelImportWizard({
 
   return (
     <div className="mb-8 rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
-      {/* Steps Header */}
+      {/* Info: (20260618 - Tzuhan) Steps Header */}
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div
