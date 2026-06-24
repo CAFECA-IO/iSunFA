@@ -39,7 +39,12 @@ export interface ITransportationParams {
   weightKg?: number | "";
   action?: MileageAction;
   text?: string;
-  items?: Array<{ origin: string; dest: string }>;
+  items?: Array<{
+    origin: string | { lat: number; lng: number };
+    dest: string | { lat: number; lng: number };
+    mode?: string;
+    weightKg?: number;
+  }>;
 }
 
 export interface IOrderParams {

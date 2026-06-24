@@ -38,13 +38,13 @@ import {
   MileageBatchResults,
   type IMileageBatchResult,
 } from "@/components/transportation_carbon_footprint_calculator/mileage_batch_results";
-import { BatchItemReport } from "@/components/transportation_carbon_footprint_calculator/batch_item_report";
 import type { IMapViewerRef } from "@/components/transportation_carbon_footprint_calculator/map_viewer";
 import { ReportLayout } from "@/components/common/report_layout";
 import DataTable, { IDataTableColumn } from "@/components/common/data_table";
 import { useAuth } from "@/contexts/auth_context";
 import AuthPlaceholder from "@/components/common/auth_placeholder";
 import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
+import { BatchExportRenderer } from "@/components/transportation_carbon_footprint_calculator/batch_export_renderer";
 import {
   useOrderTransaction,
   IOrderPayload,
@@ -117,6 +117,9 @@ function ReportPageContent() {
   const [batchResults, setBatchResults] = useState<
     IMileageBatchResult[] | null
   >(null);
+  const [batchSelectedRoutesMap, setBatchSelectedRoutesMap] = useState<
+    Record<number, Set<RouteType>>
+  >({});
   const [exportingIndex, setExportingIndex] = useState<number | null>(null);
   const mapReadyResolver = useRef<(() => void) | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -343,7 +346,13 @@ function ReportPageContent() {
     }
   }, []);
 
-  const handleDownloadPDF = async () => {
+  const handleDownloadPDF = async (
+    singleIndex?: number,
+    selectedRoutesMap?: Record<number, Set<RouteType>>,
+  ) => {
+    if (selectedRoutesMap) {
+      setBatchSelectedRoutesMap(selectedRoutesMap);
+    }
     let originalViewport: string | null = null;
     let viewportMeta: Element | null = null;
     if (batchResults) {
@@ -367,7 +376,32 @@ function ReportPageContent() {
         // Info: (20260511 - Luphia) Wait for React to render the hidden batch components
         await new Promise((resolve) => setTimeout(resolve, 1500));
 
-        if (batchResults.length === 1) {
+        if (singleIndex !== undefined) {
+          setExportingIndex(singleIndex);
+          await new Promise<void>((resolve) => {
+            mapReadyResolver.current = resolve;
+            setTimeout(resolve, 8000);
+          });
+
+          const pageEl = document.getElementById(
+            `batch-report-item-${singleIndex}`,
+          );
+          if (pageEl) {
+            const dataUrl = await htmlToImage.toPng(pageEl, {
+              quality: 0.95,
+              pixelRatio: 2,
+              style: { margin: "0", transform: "none" },
+            });
+            const pdf = new jsPDF("p", "mm", "a4");
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const imgProps = pdf.getImageProperties(dataUrl);
+            const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            pdf.addImage(dataUrl, "PNG", 0, 0, pdfWidth, imgHeight);
+            pdf.save(
+              `iSunFA_Logistics_Carbon_Report_${new Date().getTime()}.pdf`,
+            );
+          }
+        } else if (batchResults.length === 1) {
           setExportingIndex(0);
           await new Promise<void>((resolve) => {
             mapReadyResolver.current = resolve;
@@ -394,7 +428,7 @@ function ReportPageContent() {
           const zip = new JSZip();
 
           const csvRows = [
-            `\uFEFF${t("common.origin")},${t("common.destination")},${t("transportation_carbon_footprint_calculator.mileage_calculator.csv_total_dist")},${t("transportation_carbon_footprint_calculator.mileage_calculator.csv_land_dist")},${t("transportation_carbon_footprint_calculator.mileage_calculator.csv_sea_dist")},${t("transportation_carbon_footprint_calculator.mileage_calculator.csv_air_dist")},${t("transportation_carbon_footprint_calculator.mileage_calculator.col_mode")},${t("transportation_carbon_footprint_calculator.mileage_calculator.csv_pdf_file")}`,
+            `\uFEFFOrigin,Destination,Land Distance (km),Land Emission (kg CO2e),Sea Distance (km),Sea Emission (kg CO2e),Air Distance (km),Air Emission (kg CO2e),Report File`,
           ];
 
           for (let i = 0; i < batchResults.length; i++) {
@@ -424,8 +458,22 @@ function ReportPageContent() {
 
               const filename = `route_${i + 1}.pdf`;
               zip.file(filename, pdf.output("blob"));
+
+              const landPlan = item.plan?.comparisonData?.plans?.landOnly;
+              const seaPlan = item.plan?.comparisonData?.plans?.sea_multimodal;
+              const airPlan = item.plan?.comparisonData?.plans?.air_multimodal;
+
+              const seaDist =
+                (seaPlan?.land_origin_to_port?.distanceKm || 0) +
+                (seaPlan?.sea_port_to_port?.distanceKm || 0) +
+                (seaPlan?.land_port_to_dest?.distanceKm || 0);
+              const airDist =
+                (airPlan?.land_origin_to_airport?.distanceKm || 0) +
+                (airPlan?.air_airport_to_airport?.distanceKm || 0) +
+                (airPlan?.land_airport_to_dest?.distanceKm || 0);
+
               csvRows.push(
-                `${item.origin},${item.dest},${item.distanceKm || 0},${item.landDistanceKm || 0},${item.seaDistanceKm || 0},${item.airDistanceKm || 0},${item.mode},${filename}`,
+                `${item.origin},${item.dest},${landPlan?.distanceKm || 0},${landPlan?.co2eKg || 0},${seaDist},${seaPlan?.total_co2eKg || 0},${airDist},${airPlan?.total_co2eKg || 0},${filename}`,
               );
             }
           }
@@ -659,6 +707,92 @@ function ReportPageContent() {
         }
 
         if (isBatch && batchArray) {
+          batchArray = batchArray.map(
+            (
+              bItem: IMileageBatchResult & {
+                distanceKm?: number;
+                landDistanceKm?: number;
+                seaDistanceKm?: number;
+                airDistanceKm?: number;
+                landGeometry?: string;
+                routeGeometry?: string;
+                seaGeometry?: string;
+                airGeometry?: string;
+                emissions?: string;
+              },
+            ) => {
+              if (!bItem.plan) {
+                const parseGeo = (geoStr: string | null | undefined) => {
+                  if (!geoStr) return null;
+                  try {
+                    return typeof geoStr === "string"
+                      ? JSON.parse(geoStr)
+                      : geoStr;
+                  } catch {
+                    return null;
+                  }
+                };
+
+                const weight = Number(item.weightKg) || 1000;
+                const weightTons = weight / 1000;
+
+                const landDist = bItem.landDistanceKm || bItem.distanceKm || 0;
+                const seaDist = bItem.seaDistanceKm || 0;
+                const airDist = bItem.airDistanceKm || 0;
+
+                const landCo2e = (landDist * 0.11289 * weightTons).toFixed(2);
+                const seaCo2e = (seaDist * 0.01614 * weightTons).toFixed(2);
+                const airCo2e = (airDist * 0.50422 * weightTons).toFixed(2);
+
+                bItem.plan = {
+                  comparisonData: {
+                    success: true,
+                    plans: {
+                      landOnly: {
+                        success: !!landDist && !seaDist && !airDist,
+                        distanceKm: landDist,
+                        co2eKg: landCo2e,
+                        geometry: parseGeo(
+                          bItem.landGeometry || bItem.routeGeometry,
+                        ),
+                      },
+                      sea_multimodal: {
+                        land_origin_to_port: { success: false, geometry: null },
+                        sea_port_to_port: {
+                          success: !!seaDist,
+                          distanceKm: seaDist,
+                          geometry: parseGeo(bItem.seaGeometry),
+                        },
+                        land_port_to_dest: { success: false, geometry: null },
+                        total_co2eKg: (
+                          Number(landCo2e) + Number(seaCo2e)
+                        ).toFixed(2),
+                      },
+                      air_multimodal: {
+                        land_origin_to_airport: {
+                          success: false,
+                          geometry: null,
+                        },
+                        air_airport_to_airport: {
+                          success: !!airDist,
+                          distanceKm: airDist,
+                          geometry: parseGeo(bItem.airGeometry),
+                        },
+                        land_airport_to_dest: {
+                          success: false,
+                          geometry: null,
+                        },
+                        total_co2eKg: (
+                          Number(landCo2e) + Number(airCo2e)
+                        ).toFixed(2),
+                      },
+                    },
+                  },
+                } as unknown as ILogisticsPlan;
+              }
+              return bItem;
+            },
+          );
           setBatchResults(batchArray);
           setPlan(null);
           setActiveTab("mileage");
@@ -1133,6 +1267,7 @@ function ReportPageContent() {
                       onRecalculate={() => setBatchResults(null)}
                       onDownload={handleDownloadPDF}
                       isExporting={isExporting}
+                      exportingIndex={exportingIndex}
                     />
                   ) : (
                     <MileageCalculator
@@ -1141,17 +1276,21 @@ function ReportPageContent() {
                   )}
                 </div>
               )}
-
               {/* Info: (20260511 - Luphia) Render hidden batch items for PDF export sequentially to avoid WebGL context limits */}
               {isExporting &&
                 batchResults &&
                 exportingIndex !== null &&
                 batchResults[exportingIndex] && (
                   <div className="absolute top-[-9999px] left-[-9999px] flex flex-col opacity-0">
-                    <BatchItemReport
+                    <BatchExportRenderer
                       item={batchResults[exportingIndex]}
                       index={exportingIndex}
-                      onMapsReady={handleMapsReady}
+                      total={batchResults.length}
+                      selectedRoutes={
+                        batchSelectedRoutesMap[exportingIndex] ||
+                        new Set(["land", "sea", "air"])
+                      }
+                      onReady={handleMapsReady}
                     />
                   </div>
                 )}

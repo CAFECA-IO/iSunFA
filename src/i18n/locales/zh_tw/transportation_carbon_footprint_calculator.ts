@@ -57,6 +57,8 @@ export const transportationCarbonFootprintCalculator = {
     tab_analysis: "碳排核算",
     tab_history: "歷史報告",
     tab_mileage: "里程核算",
+    empty_plan: "此筆歷史資料無詳細路線方案。請重新產生報告。",
+    auto: "自動判斷",
   },
   history: {
     title: "歷史分析路徑",

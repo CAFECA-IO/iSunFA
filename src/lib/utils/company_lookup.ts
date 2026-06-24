@@ -77,47 +77,60 @@ async function lookupByTaxId(taxId: string): Promise<ICompanyData[]> {
   return [];
 }
 
-async function lookupByDuckDuckGo(keyword: string): Promise<ICompanyData[]> {
-  // Info: (20260320 - Tzuhan) "Google-like" Semantic Search via DuckDuckGo HTML
-  try {
-    const enc = encodeURIComponent(keyword + " 統編 公司");
-    const url = "https://html.duckduckgo.com/html/?q=" + enc;
-    const res = await fetchWithRetry(
-      url,
-      {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
-        },
-      },
-      2,
-      2000,
-      4000,
-    );
+let openApiFetchPromise: Promise<Map<string, ICompanyData>> | null = null;
 
-    if (res.ok) {
-      const html = await res.text();
-      const taxIdMatch =
-        html.match(
-          /(?:統一編號|統編|Business(?:_| )?Accounting(?:_| )?NO)[\s:：]*(\d{8})/i,
-        ) || html.match(/\b(\d{8})\b/);
-      const nameMatch = html.match(
-        /([^<>\s]*股份有限公司|[^<>\s]*有限公司|[^<>\s]*企業社|[^<>\s]*行|[^<>\s]*廠)/,
+async function getOpenApiCache(): Promise<Map<string, ICompanyData>> {
+  if (openApiFetchPromise) {
+    return openApiFetchPromise;
+  }
+
+  openApiFetchPromise = (async () => {
+    const map = new Map<string, ICompanyData>();
+    try {
+      const urls = [
+        "https://openapi.twse.com.tw/v1/opendata/t187ap03_L",
+        "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap03_O",
+      ];
+      const results = await Promise.all(
+        urls.map((url) => fetchWithRetry(url, {}, 3, 1000, 5000)),
       );
+      for (const res of results) {
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            data.forEach((item) => {
+              const stockCode =
+                item["公司代號"] || item["SecuritiesCompanyCode"];
+              const taxId =
+                item["營利事業統一編號"] || item["UnifiedBusinessNo."];
+              const name = item["公司名稱"] || item["CompanyName"];
 
-      if (taxIdMatch && nameMatch && taxIdMatch[1] && nameMatch[1]) {
-        if (nameMatch[1].length >= 3 && nameMatch[1].length <= 30) {
-          return [
-            {
-              taxId: taxIdMatch[1],
-              name: nameMatch[1],
-            },
-          ];
+              if (stockCode && taxId) {
+                map.set(stockCode.trim(), {
+                  taxId: taxId.trim(),
+                  name: (name || "").trim(),
+                });
+              }
+            });
+          }
         }
       }
+    } catch (e) {
+      console.error("OpenAPI fetch failed:", e);
+      openApiFetchPromise = null; // Info: (20260624 - Tzuhan) allow retry
     }
-  } catch (e) {
-    console.error("DuckDuckGo semantic lookup failed:", e);
+    return map;
+  })();
+
+  return openApiFetchPromise;
+}
+
+async function lookupByStockCodeOpenAPI(
+  stockCode: string,
+): Promise<ICompanyData[]> {
+  const map = await getOpenApiCache();
+  if (map.has(stockCode)) {
+    return [map.get(stockCode)!];
   }
   return [];
 }
@@ -199,10 +212,12 @@ export async function lookupCompany(query: string): Promise<ICompanyData[]> {
     return await lookupByTaxId(cleanTrimmed);
   }
 
-  // Info: (20260320 - Tzuhan) 4. Fallback 1: DuckDuckGo Semantic Search
-  const ddgResults = await lookupByDuckDuckGo(cleanTrimmed);
-  if (ddgResults.length > 0) {
-    return ddgResults;
+  // Info: (20260623 - Tzuhan) 4. Fallback 1: Official TWSE/TPEx OpenAPI
+  if (/^\d{4,5}$/.test(cleanTrimmed)) {
+    const openApiResults = await lookupByStockCodeOpenAPI(cleanTrimmed);
+    if (openApiResults.length > 0) {
+      return openApiResults;
+    }
   }
 
   // Info: (20260320 - Tzuhan) 5. Fallback 2: Strict GCIS Name Lookup

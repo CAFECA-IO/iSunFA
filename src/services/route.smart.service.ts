@@ -47,6 +47,7 @@ export async function parseSmartInput(
             2. For exportPort and importPort, identify the closest MAJOR international seaport to origin and dest respectively, and provide its coordinates.
             3. For exportAirport and importAirport, identify the closest MAJOR international cargo airport to origin and dest respectively, and provide its coordinates.
             4. If the weight is mentioned, convert it to kg. If NOT mentioned, default to 1000.
+            5. CRITICAL: If the origin and destination are separated by an ocean or are on different continents (e.g., Japan to USA, Asia to Europe), it is IMPOSSIBLE to use pure land transport. In such cases, if you were to output a mode, it MUST be SEA_LAND, AIR_LAND, or SEA_LAND_AIR. DO NOT assume continuous land connection where none exists.
         `;
 
     const result = await model.generateContent(prompt);
@@ -71,13 +72,16 @@ export async function parseSmartInput(
   }
 }
 
-export async function parseMultipleRoutesFromText(
-  text: string,
-): Promise<
+export async function parseMultipleRoutesFromText(text: string): Promise<
   Array<{
     origin: string;
     dest: string;
     mode?: "LAND" | "SEA_LAND" | "AIR_LAND" | "SEA_LAND_AIR";
+    originLat?: number;
+    originLng?: number;
+    destLat?: number;
+    destLng?: number;
+    weightKg?: number;
   }>
 > {
   try {
@@ -88,8 +92,13 @@ export async function parseMultipleRoutesFromText(
     const prompt = `
             You are a professional logistics AI assistant.
             Extract all distinct transportation routes from the user's description.
-            For each route, identify the origin and destination as a string description (e.g., city name, address), and recommend the BEST transportation mode based on the locations and context.
-            If cross-continental, recommend SEA_LAND or AIR_LAND. If intercontinental with extremely long distance or specific user request, recommend SEA_LAND_AIR. If domestic, recommend LAND.
+            For each route, identify the origin and destination as a string description (e.g., city name, address).
+            CRITICAL: You MUST accurately infer the exact latitude and longitude for both the origin and destination based on their locations. Do NOT omit them. If you are unsure, make your best guess for the city or airport coordinates.
+            Extract the weight or mass of the cargo in kilograms (KG) as a number. Be aware that the input might be conversational text, or it might be tabular/CSV data (e.g., a number under a "Weight" or "Weight(kg)" column). If you see a number corresponding to weight, extract it.
+            Recommend the BEST transportation mode based on the locations and context.
+            CRITICAL MODE RULES: 
+            1. If the origin and destination are separated by an ocean or are on different continents (e.g., Japan to USA, Asia to Europe, Taiwan to USA), it is IMPOSSIBLE to use pure land transport. You MUST forcibly select "SEA_LAND", "AIR_LAND", or "SEA_LAND_AIR". Do NOT recommend "LAND".
+            2. Only recommend "LAND" for domestic routes or continuous landmass routes.
             
             User Request: "${text}"
             
@@ -99,7 +108,12 @@ export async function parseMultipleRoutesFromText(
               {
                   "origin": "String description of origin",
                   "dest": "String description of destination",
-                  "mode": "LAND" | "SEA_LAND" | "AIR_LAND" | "SEA_LAND_AIR"
+                  "mode": "LAND" | "SEA_LAND" | "AIR_LAND" | "SEA_LAND_AIR",
+                  "originLat": 12.34,
+                  "originLng": 56.78,
+                  "destLat": 12.34,
+                  "destLng": 56.78,
+                  "weightKg": 1000
               }
             ]
         `;
@@ -113,7 +127,7 @@ export async function parseMultipleRoutesFromText(
     else if (resultText.startsWith("\`\`\`"))
       resultText = resultText.replace("\`\`\`", "").trim();
 
-    return JSON.parse(resultText) as Array<{ origin: string; dest: string }>;
+    return JSON.parse(resultText);
   } catch (error) {
     console.error("[Action Error] parseMultipleRoutesFromText:", error);
     throw new Error("解析多筆路線時發生錯誤");
