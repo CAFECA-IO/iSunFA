@@ -683,19 +683,13 @@ const MermaidChart: FC<IMermaidChartProps> = ({
 
       {parsedPieData ? (
         <div className="group/donut relative w-full">
-          {onChartChange && (
-            <div className="absolute top-4 right-4 z-10 flex items-center opacity-90 transition-opacity duration-200 group-hover/donut:opacity-100">
-              <button
-                type="button"
-                onClick={() => setIsAiModalOpen(true)}
-                className="cursor-pointer rounded-md border border-slate-200 bg-white p-1.5 text-blue-600 shadow-sm hover:bg-slate-50"
-                title="AI 智慧編輯 (AI Chart Editor)"
-              >
-                <Sparkles size={16} />
-              </button>
-            </div>
-          )}
-          <DonutChart title={parsedPieData.title} data={parsedPieData.data} />
+          <DonutChart
+            title={parsedPieData.title}
+            data={parsedPieData.data}
+            onSparklesClick={
+              onChartChange ? () => setIsAiModalOpen(true) : undefined
+            }
+          />
         </div>
       ) : (
         <div

@@ -10,6 +10,7 @@ import {
   RefreshCcw,
   Sparkles,
   SplinePointer,
+  Trash2,
   X,
 } from "lucide-react";
 
@@ -23,12 +24,141 @@ enum NodeColor {
 }
 
 enum FlowchartTools {
-  ADD_NODE = "addNode",
-  EDIT_NODE = "editNode",
-  ADD_CONNECTION = "addConnection",
-  CHANGE_COLOR = "changeColor",
-  CHANGE_DIRECTION = "changeDirection",
+  ADD_NODE = "addNode", // Info: (20260624 - Julian) 新增節點
+  EDIT_NODE = "editNode", // Info: (20260624 - Julian) 變更節點文字
+  ADD_CONNECTION = "addConnection", // Info: (20260624 - Julian) 變更/新增連線
+  CHANGE_COLOR = "changeColor", // Info: (20260624 - Julian) 變更節點顏色
+  CHANGE_DIRECTION = "changeDirection", // Info: (20260624 - Julian) 變更圖表方向
 }
+
+enum PieTools {
+  ADD_SLICE = "addSlice", // Info: (20260624 - Julian) 新增圓餅
+  EDIT_SLICE = "editSlice", // Info: (20260624 - Julian) 變更圓餅
+  DELETE_SLICE = "deleteSlice", // Info: (20260624 - Julian) 刪除圓餅
+}
+
+// Info: (20260624 - Julian) flowchart 小工具
+const FLOWCHART_TOOLS = [
+  {
+    tool: FlowchartTools.ADD_NODE,
+    icon: CirclePlus,
+    label: "新增節點",
+  },
+  {
+    tool: FlowchartTools.EDIT_NODE,
+    icon: Pencil,
+    label: "變更節點文字",
+  },
+  {
+    tool: FlowchartTools.ADD_CONNECTION,
+    icon: SplinePointer,
+    label: "變更/新增連線",
+  },
+  {
+    tool: FlowchartTools.CHANGE_COLOR,
+    icon: Paintbrush,
+    label: "變更節點顏色",
+  },
+  {
+    tool: FlowchartTools.CHANGE_DIRECTION,
+    icon: RefreshCcw,
+    label: "變更圖表方向",
+  },
+];
+
+// Info: (20260624 - Julian) pie 小工具
+const PIE_TOOLS = [
+  {
+    tool: PieTools.ADD_SLICE,
+    icon: CirclePlus,
+    label: "新增圓餅",
+  },
+  {
+    tool: PieTools.EDIT_SLICE,
+    icon: Pencil,
+    label: "變更圓餅",
+  },
+  {
+    tool: PieTools.DELETE_SLICE,
+    icon: Trash2,
+    label: "刪除圓餅",
+  },
+];
+
+// Info: (20260624 - Julian) 常見修改指令範本，用於插入/覆蓋指令
+const INSTRUCTION_TEMPLATES = {
+  ADD_NODE: {
+    render: (
+      id: string,
+      label: string,
+      fromId?: string,
+      toId?: string,
+      connText?: string,
+    ) => {
+      let inst = `在圖表中新增一個節點，ID 為 "${id}"，文字為 "${label}"`;
+      if (fromId) inst += `，從現有節點 "${fromId}" 連線過來`;
+      if (toId) inst += `，並連線到現有節點 "${toId}"`;
+      if (connText) inst += `，連線上的文字為 "${connText}"`;
+      return inst;
+    },
+  },
+  EDIT_NODE: {
+    match: (line: string, targetNodeId: string) =>
+      line.includes(`將節點 "${targetNodeId}" 的文字改為`),
+    render: (targetNodeId: string, newNodeText: string) =>
+      `將節點 "${targetNodeId}" 的文字改為 "${newNodeText}"`,
+  },
+  ADD_CONNECTION: {
+    match: (line: string, connFromId: string, connToId: string) =>
+      line.includes(`從節點 "${connFromId}" 到 "${connToId}"`),
+    render: (
+      connFromId: string,
+      connToId: string,
+      connType: string,
+      connLabel?: string,
+    ) => {
+      let inst = `建立一條從節點 "${connFromId}" 到 "${connToId}" 的 "${connType}" 連線`;
+      if (connLabel) inst += `，連線上的文字為 "${connLabel}"`;
+      return inst;
+    },
+  },
+  CHANGE_COLOR: {
+    match: (line: string, colorNodeId: string) =>
+      line.includes(`將節點 "${colorNodeId}" 的背景/邊框風格調整為`),
+    render: (colorNodeId: string, colorStyle: string) =>
+      `將節點 "${colorNodeId}" 的背景/邊框風格調整為 "${colorStyle}"`,
+  },
+  CHANGE_DIRECTION: {
+    match: (line: string) => line.includes("將圖表整體方向變更為"),
+    render: (flowDirection: string) => {
+      const dirNames: Record<string, string> = {
+        TD: "由上至下 (TD)",
+        LR: "由左至右 (LR)",
+        BT: "由下至上 (BT)",
+        RL: "由右至左 (RL)",
+      };
+      return `將圖表整體方向變更為 ${dirNames[flowDirection] || flowDirection}`;
+    },
+  },
+  ADD_PIE_SLICE: {
+    render: (label: string, value: string) =>
+      `在圓餅圖中新增一個項目，名稱為 "${label}"，數值/比例為 ${value}`,
+  },
+  EDIT_PIE_SLICE: {
+    match: (line: string, targetLabel: string) =>
+      line.includes(`修改圓餅圖項目 "${targetLabel}" 的數值/比例為`),
+    render: (targetLabel: string, value: string, newLabel?: string) => {
+      let inst = `修改圓餅圖項目 "${targetLabel}" 的數值/比例為 ${value}`;
+      if (newLabel) inst += `，並將其名稱改為 "${newLabel}"`;
+      return inst;
+    },
+  },
+  DELETE_PIE_SLICE: {
+    match: (line: string, targetLabel: string) =>
+      line.includes(`從圓餅圖中刪除項目 "${targetLabel}"`),
+    render: (targetLabel: string) => `從圓餅圖中刪除項目 "${targetLabel}"`,
+  },
+};
 
 interface IMermaidAiControlPanelProps {
   chartType: "pie" | "flowchart" | "sequence" | "unknown";
@@ -47,10 +177,10 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
   parsedPieItems,
   onCancel,
 }) => {
-  // Info: (20260623 - Julian) flowchart and pie quick tools states
+  // Info: (20260623 - Julian) 快速指令工具
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
 
-  // flowchart states
+  // Info: (20260624 - Julian) 分解 flowchart 的元素（節點、連線等）
   const [newNodeId, setNewNodeId] = useState<string>("");
   const [newNodeLabel, setNewNodeLabel] = useState<string>("");
   const [fromNodeId, setFromNodeId] = useState<string>("");
@@ -70,7 +200,7 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
 
   const [flowDirection, setFlowDirection] = useState<string>("TD");
 
-  // pie states
+  // Info: (20260624 - Julian) 分解 pie 的元素（圓餅、數值等）
   const [pieSliceLabel, setPieSliceLabel] = useState<string>("");
   const [pieSliceValue, setPieSliceValue] = useState<string>("");
   const [pieSliceTarget, setPieSliceTarget] = useState<string>("");
@@ -79,34 +209,7 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
   // Info: (20260623 - Julian) 目前支援 pie 和 flowchart 小工具
   const isShowTools = chartType === "pie" || chartType === "flowchart";
 
-  const flowchartTools = [
-    {
-      tool: FlowchartTools.ADD_NODE,
-      icon: CirclePlus,
-      label: "新增節點",
-    },
-    {
-      tool: FlowchartTools.EDIT_NODE,
-      icon: Pencil,
-      label: "變更節點文字",
-    },
-    {
-      tool: FlowchartTools.ADD_CONNECTION,
-      icon: SplinePointer,
-      label: "變更/新增連線",
-    },
-    {
-      tool: FlowchartTools.CHANGE_COLOR,
-      icon: Paintbrush,
-      label: "變更節點顏色",
-    },
-    {
-      tool: FlowchartTools.CHANGE_DIRECTION,
-      icon: RefreshCcw,
-      label: "變更圖表方向",
-    },
-  ];
-
+  // Info: (20260624 - Julian) 插入指令
   const handleInsertInstruction = (text: string) => {
     setAiInstruction((prev) => {
       const trimmed = prev.trim();
@@ -116,14 +219,33 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
     setSelectedTool(null);
   };
 
+  // Info: (20260624 - Julian) 插入指令前，先過濾掉相同類型的舊指令
+  const handleInsertWithFilter = (
+    text: string,
+    filterFn: (line: string) => boolean,
+  ) => {
+    setAiInstruction((prev) => {
+      const lines = prev.split("\n");
+      const filteredLines = lines.filter((line) => !filterFn(line));
+      const clean = filteredLines.join("\n").trim();
+      if (!clean) return text;
+      return clean + "\n" + text;
+    });
+    setSelectedTool(null);
+  };
+
+  // Info: (20260624 - Julian) 插入「新增節點」指令
   const insertAddNode = () => {
     if (!newNodeLabel) return;
     const id =
       newNodeId.trim() || `node_${Math.random().toString(36).substring(2, 6)}`;
-    let inst = `在圖表中新增一個節點，ID 為 "${id}"，文字為 "${newNodeLabel}"`;
-    if (fromNodeId) inst += `，從現有節點 "${fromNodeId}" 連線過來`;
-    if (toNodeId) inst += `，並連線到現有節點 "${toNodeId}"`;
-    if (connText) inst += `，連線上的文字為 "${connText}"`;
+    const inst = INSTRUCTION_TEMPLATES.ADD_NODE.render(
+      id,
+      newNodeLabel,
+      fromNodeId || undefined,
+      toNodeId || undefined,
+      connText || undefined,
+    );
     handleInsertInstruction(inst);
     setNewNodeId("");
     setNewNodeLabel("");
@@ -132,70 +254,99 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
     setConnText("");
   };
 
+  // Info: (20260624 - Julian) 插入「編輯節點」指令
   const insertEditNode = () => {
     if (!targetNodeId || !newNodeText) return;
-    const inst = `將節點 "${targetNodeId}" 的文字改為 "${newNodeText}"`;
-    handleInsertInstruction(inst);
+    const inst = INSTRUCTION_TEMPLATES.EDIT_NODE.render(
+      targetNodeId,
+      newNodeText,
+    );
+    handleInsertWithFilter(inst, (line) =>
+      INSTRUCTION_TEMPLATES.EDIT_NODE.match(line, targetNodeId),
+    );
     setTargetNodeId("");
     setNewNodeText("");
   };
 
+  // Info: (20260624 - Julian) 插入「新增連線」指令
   const insertConnection = () => {
     if (!connFromId || !connToId) return;
-    let inst = `建立一條從節點 "${connFromId}" 到 "${connToId}" 的 "${connType}" 連線`;
-    if (connLabel) inst += `，連線上的文字為 "${connLabel}"`;
-    handleInsertInstruction(inst);
+    const inst = INSTRUCTION_TEMPLATES.ADD_CONNECTION.render(
+      connFromId,
+      connToId,
+      connType,
+      connLabel || undefined,
+    );
+    handleInsertWithFilter(inst, (line) =>
+      INSTRUCTION_TEMPLATES.ADD_CONNECTION.match(line, connFromId, connToId),
+    );
     setConnFromId("");
     setConnToId("");
     setConnLabel("");
   };
 
+  // Info: (20260624 - Julian) 插入「變更節點顏色」指令
   const insertColor = () => {
     if (!colorNodeId || !colorStyle) return;
-    const inst = `將節點 "${colorNodeId}" 的背景/邊框風格調整為 "${colorStyle}"`;
-    handleInsertInstruction(inst);
+    const inst = INSTRUCTION_TEMPLATES.CHANGE_COLOR.render(
+      colorNodeId,
+      colorStyle,
+    );
+    handleInsertWithFilter(inst, (line) =>
+      INSTRUCTION_TEMPLATES.CHANGE_COLOR.match(line, colorNodeId),
+    );
     setColorNodeId("");
   };
 
+  // Info: (20260624 - Julian) 插入「變更圖表方向」指令
   const insertDirection = () => {
     if (!flowDirection) return;
-    const dirNames: Record<string, string> = {
-      TD: "由上至下 (TD)",
-      LR: "由左至右 (LR)",
-      BT: "由下至上 (BT)",
-      RL: "由右至左 (RL)",
-    };
-    const inst = `將圖表整體方向變更為 ${dirNames[flowDirection] || flowDirection}`;
-    handleInsertInstruction(inst);
+    const inst = INSTRUCTION_TEMPLATES.CHANGE_DIRECTION.render(flowDirection);
+    handleInsertWithFilter(inst, (line) =>
+      INSTRUCTION_TEMPLATES.CHANGE_DIRECTION.match(line),
+    );
   };
 
+  // Info: (20260624 - Julian) 插入「新增圓餅」指令
   const insertAddPieSlice = () => {
     if (!pieSliceLabel || !pieSliceValue) return;
-    const inst = `在圓餅圖中新增一個項目，名稱為 "${pieSliceLabel}"，數值/比例為 ${pieSliceValue}`;
+    const inst = INSTRUCTION_TEMPLATES.ADD_PIE_SLICE.render(
+      pieSliceLabel,
+      pieSliceValue,
+    );
     handleInsertInstruction(inst);
     setPieSliceLabel("");
     setPieSliceValue("");
   };
 
+  // Info: (20260624 - Julian) 插入「編輯圓餅」指令
   const insertEditPieSlice = () => {
     if (!pieSliceTarget || !pieSliceValue) return;
-    let inst = `修改圓餅圖項目 "${pieSliceTarget}" 的數值/比例為 ${pieSliceValue}`;
-    if (pieSliceNewLabel) inst += `，並將其名稱改為 "${pieSliceNewLabel}"`;
-    handleInsertInstruction(inst);
+    const inst = INSTRUCTION_TEMPLATES.EDIT_PIE_SLICE.render(
+      pieSliceTarget,
+      pieSliceValue,
+      pieSliceNewLabel || undefined,
+    );
+    handleInsertWithFilter(inst, (line) =>
+      INSTRUCTION_TEMPLATES.EDIT_PIE_SLICE.match(line, pieSliceTarget),
+    );
     setPieSliceTarget("");
     setPieSliceNewLabel("");
     setPieSliceValue("");
   };
 
+  // Info: (20260624 - Julian) 插入「刪除圓餅」指令
   const insertDeletePieSlice = () => {
     if (!pieSliceTarget) return;
-    const inst = `從圓餅圖中刪除項目 "${pieSliceTarget}"`;
-    handleInsertInstruction(inst);
+    const inst = INSTRUCTION_TEMPLATES.DELETE_PIE_SLICE.render(pieSliceTarget);
+    handleInsertWithFilter(inst, (line) =>
+      INSTRUCTION_TEMPLATES.DELETE_PIE_SLICE.match(line, pieSliceTarget),
+    );
     setPieSliceTarget("");
   };
 
-  // Info: (20260622 - Julian) [流程圖] 常用修改工具選單
-  const flowchartToolsMenu = flowchartTools.map((item) => {
+  // Info: (20260622 - Julian) flowchart 常用修改工具選單
+  const flowchartToolsMenu = FLOWCHART_TOOLS.map((item) => {
     const handleClick = () =>
       setSelectedTool(selectedTool === item.tool ? null : item.tool);
 
@@ -216,6 +367,29 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
     );
   });
 
+  // Info: (20260622 - Julian) pie 常用修改工具選單
+  const pieToolsMenu = PIE_TOOLS.map((item) => {
+    const handleClick = () =>
+      setSelectedTool(selectedTool === item.tool ? null : item.tool);
+
+    return (
+      <button
+        key={item.tool}
+        type="button"
+        onClick={handleClick}
+        className={`flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-bold transition-all ${
+          selectedTool === item.tool
+            ? "border-blue-500 bg-blue-50 text-blue-600"
+            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+        }`}
+      >
+        <item.icon size={14} className="shrink-0" />
+        <p>{item.label}</p>
+      </button>
+    );
+  });
+
+  // Info: (20260622 - Julian) 渲染 flowchart 常用修改工具子選單
   const renderFlowchartToolsSubmenu = () => {
     return (
       <>
@@ -422,7 +596,7 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
                 <select
                   id="connToId"
                   value={connToId}
-                  onChange={(e) => setToNodeId(e.target.value)}
+                  onChange={(e) => setConnToId(e.target.value)}
                   className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
                 >
                   <option value="">選擇終點...</option>
@@ -675,55 +849,7 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
             </span>
             <div className="mb-3 flex flex-wrap gap-1.5">
               {chartType === "pie" ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setSelectedTool(
-                        selectedTool === "addPieSlice" ? null : "addPieSlice",
-                      )
-                    }
-                    className={`rounded-lg border px-2.5 py-1.5 text-xs font-bold transition-all ${
-                      selectedTool === "addPieSlice"
-                        ? "border-blue-500 bg-blue-50 text-blue-600"
-                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                    }`}
-                  >
-                    ➕ 新增項目
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setSelectedTool(
-                        selectedTool === "editPieSlice" ? null : "editPieSlice",
-                      )
-                    }
-                    className={`rounded-lg border px-2.5 py-1.5 text-xs font-bold transition-all ${
-                      selectedTool === "editPieSlice"
-                        ? "border-blue-500 bg-blue-50 text-blue-600"
-                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                    }`}
-                  >
-                    ✏️ 修改數值/名稱
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setSelectedTool(
-                        selectedTool === "deletePieSlice"
-                          ? null
-                          : "deletePieSlice",
-                      )
-                    }
-                    className={`rounded-lg border px-2.5 py-1.5 text-xs font-bold transition-all ${
-                      selectedTool === "deletePieSlice"
-                        ? "border-blue-500 bg-blue-50 text-blue-600"
-                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                    }`}
-                  >
-                    ❌ 刪除項目
-                  </button>
-                </>
+                <>{pieToolsMenu}</>
               ) : chartType === "flowchart" ? (
                 <>{flowchartToolsMenu}</>
               ) : null}

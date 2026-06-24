@@ -3,7 +3,7 @@
 import React, { useMemo, useRef } from "react";
 import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import { useTranslation } from "@/i18n/i18n_context";
-import { Download } from "lucide-react";
+import { Download, Sparkles } from "lucide-react";
 import { useChartExport } from "@/hooks/use_chart_export";
 
 export interface IDonutChartData {
@@ -15,6 +15,7 @@ export interface IDonutChartProps {
   title: string;
   data: IDonutChartData[];
   colors?: string[];
+  onSparklesClick?: () => void;
 }
 
 // Info: (20260418 - Tzuhan) Vibrant premium palette referencing the mockups
@@ -62,6 +63,7 @@ export const DonutChart: React.FC<IDonutChartProps> = ({
   title,
   data,
   colors = DEFAULT_COLORS,
+  onSparklesClick = undefined,
 }) => {
   const { t } = useTranslation();
   const chartRef = useRef<HTMLDivElement>(null);
@@ -106,7 +108,17 @@ export const DonutChart: React.FC<IDonutChartProps> = ({
       className="group/donut relative my-6 flex w-full break-inside-avoid flex-col items-center gap-8 rounded-2xl border border-gray-100/60 bg-white p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)] ring-1 ring-black/5 transition-all duration-300 hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] md:flex-row print:break-inside-avoid"
     >
       {/* Info: (20260615 - Julian) 下載 toolbar */}
-      <div className="export-exclude absolute top-4 right-4 z-10 hidden items-center rounded-lg border border-slate-200 bg-white/95 px-1.5 py-1.5 shadow-sm transition-opacity duration-200 group-hover/donut:flex print:hidden">
+      <div className="export-exclude absolute top-4 right-4 z-10 hidden items-center gap-1.5 rounded-lg border border-slate-200 bg-white/95 px-1.5 py-1.5 shadow-sm transition-opacity duration-200 group-hover/donut:flex print:hidden">
+        {onSparklesClick && (
+          <button
+            type="button"
+            onClick={onSparklesClick}
+            className="shrink-0 cursor-pointer rounded-md p-1 text-blue-600 transition-colors duration-150 hover:bg-slate-100"
+            title="AI 智慧編輯 (AI Chart Editor)"
+          >
+            <Sparkles size={15} />
+          </button>
+        )}
         <div className="group/download relative shrink-0">
           <button
             type="button"
