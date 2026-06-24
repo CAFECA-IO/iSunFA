@@ -465,29 +465,19 @@ export default function OrderManagementPage() {
                   {t("analysis.categories.certificate_analysis")}
                 </option>
                 <option value="REGISTRATION_REWARD">
-                  {t("order_management.filters.type_reg_reward", {
-                    defaultValue: "註冊獎勵",
-                  })}
+                  {t("order_management.filters.type_reg_reward")}
                 </option>
                 <option value="CHECK_IN_REWARD">
-                  {t("order_management.filters.type_check_in_reward", {
-                    defaultValue: "簽到獎勵",
-                  })}
+                  {t("order_management.filters.type_check_in_reward")}
                 </option>
                 <option value="ADMIN_ISSUED">
-                  {t("order_management.filters.type_admin_issued", {
-                    defaultValue: "管理員發放",
-                  })}
+                  {t("order_management.filters.type_admin_issued")}
                 </option>
                 <option value="OEN_BINDING">
-                  {t("order_management.filters.type_oen_binding", {
-                    defaultValue: "OEN 綁定",
-                  })}
+                  {t("order_management.filters.type_oen_binding")}
                 </option>
                 <option value="OEN_PAYMENT">
-                  {t("order_management.filters.type_oen_payment", {
-                    defaultValue: "OEN 支付",
-                  })}
+                  {t("order_management.filters.type_oen_payment")}
                 </option>
               </select>
             </div>
