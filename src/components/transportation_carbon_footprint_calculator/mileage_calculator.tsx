@@ -365,7 +365,7 @@ export function MileageCalculator({
               modeKey = header;
           });
 
-          // Fallback if auto-detect fails
+          // Info: (20260618 - Tzuhan) Fallback if auto-detect fails
           if (!originKey) originKey = h[0];
           if (!destKey) destKey = h[1];
 
@@ -463,7 +463,7 @@ export function MileageCalculator({
     };
     reader.readAsBinaryString(f);
 
-    // reset input
+    // Info: (20260618 - Tzuhan) reset input
     e.target.value = "";
   };
 
