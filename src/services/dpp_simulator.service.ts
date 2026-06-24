@@ -371,14 +371,30 @@ export class DppSimulatorService {
         ) => {
           if (isAborted) throw new Error("Stream aborted");
           return new Promise<{ stdout: string }>((resolve, reject) => {
-            const child = spawn(command, args);
+            let actualCmd = command;
+            let actualArgs = args;
+
+            if (command === "npx" && args[0] === "tsx") {
+              const tsxPath = path.resolve(
+                process.cwd(),
+                "node_modules",
+                ".bin",
+                "tsx",
+              );
+              if (fs.existsSync(tsxPath)) {
+                actualCmd = tsxPath;
+                actualArgs = args.slice(1);
+              }
+            }
+
+            const child = spawn(actualCmd, actualArgs);
             activeChild = child;
             let stdoutFull = "";
 
             const heartbeat = setInterval(() => {
               sendEvent({
                 type: "log",
-                message: `⌛ [System] Running ${path.basename(args[1] || command)}...`,
+                message: `⌛ [System] Running ${path.basename(actualArgs[0] || actualCmd)}...`,
               });
             }, 15000);
 
@@ -399,6 +415,16 @@ export class DppSimulatorService {
                   sendEvent({ type: "log", message: `[ERR] ${line.trim()}` });
                 }
               }
+            });
+
+            child.on("error", (err: Error) => {
+              clearInterval(heartbeat);
+              if (activeChild === child) activeChild = null;
+              sendEvent({
+                type: "log",
+                message: `[FATAL ERR] Failed to start process: ${err.message}`,
+              });
+              reject(err);
             });
 
             child.on("close", (code: number) => {
