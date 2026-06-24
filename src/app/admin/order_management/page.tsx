@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { request } from "@/lib/utils/request";
 import AdminPageHeader from "@/components/admin/common/admin_page_header";
-import { List, UserCircle, RefreshCw } from "lucide-react";
+import { List, UserCircle, RefreshCw, Search, X } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import DataTable, { IDataTableColumn } from "@/components/common/data_table";
 import ConfirmModal from "@/components/common/confirm_modal";
@@ -61,6 +61,63 @@ export default function OrderManagementPage() {
     message: string;
   }>({ isOpen: false, message: "" });
 
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [search, setSearch] = useState<string>("");
+  const [type, setType] = useState<string>("ALL");
+  const [executionStatus, setExecutionStatus] = useState<string>("ALL");
+  const [orderStatus, setOrderStatus] = useState<string>("ALL");
+  const [sortBy, setSortBy] = useState<string>("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setSearch(searchInput);
+      setPage(1);
+    }, 500);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchInput]);
+
+  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setType(e.target.value);
+    setPage(1);
+  };
+
+  const handleExecutionStatusChange = (
+    e: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    setExecutionStatus(e.target.value);
+    setPage(1);
+  };
+
+  const handleOrderStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setOrderStatus(e.target.value);
+    setPage(1);
+  };
+
+  const handleSort = (key: string) => {
+    if (sortBy === key) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(key);
+      setSortOrder("desc");
+    }
+    setPage(1);
+  };
+
+  const handleResetFilters = () => {
+    setSearchInput("");
+    setSearch("");
+    setType("ALL");
+    setExecutionStatus("ALL");
+    setOrderStatus("ALL");
+    setSortBy("createdAt");
+    setSortOrder("desc");
+    setPage(1);
+  };
+
   useEffect(() => {
     let ignore = false;
 
@@ -70,6 +127,12 @@ export default function OrderManagementPage() {
         const query = new URLSearchParams({
           page: String(page),
           limit: String(limit),
+          search,
+          type,
+          executionStatus,
+          orderStatus,
+          sortBy,
+          sortOrder,
         });
 
         const res = await request<{
@@ -102,7 +165,16 @@ export default function OrderManagementPage() {
     return () => {
       ignore = true;
     };
-  }, [page, limit]);
+  }, [
+    page,
+    limit,
+    search,
+    type,
+    executionStatus,
+    orderStatus,
+    sortBy,
+    sortOrder,
+  ]);
 
   const handleRetryOrderClick = (orderId: string) => {
     setConfirmModal({ isOpen: true, orderId });
@@ -139,6 +211,7 @@ export default function OrderManagementPage() {
     {
       key: "createdAt",
       label: t("order_management.table.date"),
+      sortable: true,
       render: (record) => (
         <span className="text-sm text-gray-500">
           {formatDate(record.createdAt, "yyyy-MM-dd HH:mm")}
@@ -150,11 +223,11 @@ export default function OrderManagementPage() {
       label: t("order_management.table.user"),
       render: (record) => (
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600">
             {record.user?.name ? (
               record.user.name.substring(0, 2).toUpperCase()
             ) : (
-              <UserCircle className="h-4 w-4" />
+              <UserCircle size={16} />
             )}
           </div>
           <div>
@@ -205,6 +278,7 @@ export default function OrderManagementPage() {
       key: "amount",
       label: t("order_management.table.amount"),
       align: "right",
+      sortable: true,
       render: (record) => (
         <span className="text-sm font-medium text-gray-900">
           {record.unit} {record.amount.toLocaleString()}
@@ -215,6 +289,7 @@ export default function OrderManagementPage() {
       key: "tokens",
       label: t("order_management.table.tokens"),
       align: "right",
+      sortable: true,
       render: (record) => (
         <span className="text-sm font-medium text-gray-900">
           {record.tokens ? record.tokens.toLocaleString() : "-"}
@@ -224,6 +299,7 @@ export default function OrderManagementPage() {
     {
       key: "status",
       label: t("order_management.table.order_status"),
+      sortable: true,
       render: (record) => (
         <div className="flex flex-col items-start gap-2">
           <span
@@ -243,7 +319,7 @@ export default function OrderManagementPage() {
               className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100 focus:outline-none"
               title="Retry Order"
             >
-              <RefreshCw className="h-3 w-3" />
+              <RefreshCw size={12} />
               <span>{t("order_management.table.retry")}</span>
             </button>
           )}
@@ -290,7 +366,7 @@ export default function OrderManagementPage() {
           text = t("order_management.table.failed");
           colorClass = "bg-red-50 text-red-700";
         } else if (record.executionStatus === ORDER_STATUS.CANCEL) {
-          text = "CANCEL";
+          text = t("common.cancel");
           colorClass = "bg-orange-50 text-orange-700";
         }
 
@@ -308,6 +384,7 @@ export default function OrderManagementPage() {
     {
       key: "executionConfidence",
       label: t("order_management.table.execution_confidence"),
+      sortable: true,
       render: (record) => {
         if (record.executionConfidence == null) {
           return <span className="text-xs text-gray-400">N/A</span>;
@@ -339,6 +416,152 @@ export default function OrderManagementPage() {
           subtitle={t("order_management.subtitle")}
         />
 
+        {/* Info: (20260624 - Julian) Filters and Search Panel */}
+        <div className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="grid grid-cols-5 items-end gap-2">
+            {/* Info: (20260624 - Julian) Search Input */}
+
+            <div className="col-span-2 flex flex-col gap-1">
+              <p className="text-xs font-medium text-slate-500">關鍵字搜尋</p>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex shrink-0 items-center pl-3 text-gray-400">
+                  <Search size={16} />
+                </span>
+                <input
+                  type="text"
+                  placeholder={t(
+                    "order_management.filters.search_placeholder",
+                    {
+                      defaultValue: "以關鍵字搜尋用戶、訂單編號",
+                    },
+                  )}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 bg-white py-2 pr-10 pl-10 text-sm placeholder-gray-400 transition-colors focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                />
+                {searchInput && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchInput("")}
+                    className="absolute inset-y-0 right-0 flex shrink-0 items-center pr-3 text-gray-400 hover:text-gray-600"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Info: (20260624 - Julian) Type Dropdowns */}
+            <div className="flex flex-col gap-1">
+              <p className="text-xs font-medium text-slate-500">類型</p>
+              <select
+                value={type}
+                onChange={handleTypeChange}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+              >
+                <option value="ALL">{t("common.all")}</option>
+                <option value="ANALYSIS">
+                  {t("analysis.categories.certificate_analysis")}
+                </option>
+                <option value="REGISTRATION_REWARD">
+                  {t("order_management.filters.type_reg_reward", {
+                    defaultValue: "註冊獎勵",
+                  })}
+                </option>
+                <option value="CHECK_IN_REWARD">
+                  {t("order_management.filters.type_check_in_reward", {
+                    defaultValue: "簽到獎勵",
+                  })}
+                </option>
+                <option value="ADMIN_ISSUED">
+                  {t("order_management.filters.type_admin_issued", {
+                    defaultValue: "管理員發放",
+                  })}
+                </option>
+                <option value="OEN_BINDING">
+                  {t("order_management.filters.type_oen_binding", {
+                    defaultValue: "OEN 綁定",
+                  })}
+                </option>
+                <option value="OEN_PAYMENT">
+                  {t("order_management.filters.type_oen_payment", {
+                    defaultValue: "OEN 支付",
+                  })}
+                </option>
+              </select>
+            </div>
+
+            {/* Info: (20260624 - Julian) Order Status Dropdowns */}
+            <div className="flex flex-col gap-1">
+              <p className="text-xs font-medium text-slate-500">訂單狀態</p>
+              <select
+                value={orderStatus}
+                onChange={handleOrderStatusChange}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+              >
+                <option value="ALL">{t("common.all")}</option>
+                <option value="PENDING">PENDING</option>
+                <option value="PAYING">PAYING</option>
+                <option value="PAID">PAID</option>
+                <option value="PAYMENT_FAILED">PAYMENT_FAILED</option>
+                <option value={ORDER_STATUS.EXECUTING}>
+                  {t("order_management.table.processing")}
+                </option>
+                <option value={ORDER_STATUS.COMPLETED}>
+                  {t("order_management.table.executed")}
+                </option>
+                <option value={ORDER_STATUS.FAILED}>
+                  {t("order_management.table.failed")}
+                </option>
+                <option value="MINT_FAILED">MINT_FAILED</option>
+                <option value="CANCEL">{t("common.cancel")}</option>
+              </select>
+            </div>
+
+            {/* Info: (20260624 - Julian) Execution Status Dropdowns */}
+            <div className="flex flex-col gap-1">
+              <p className="text-xs font-medium text-slate-500">執行狀態</p>
+              <select
+                value={executionStatus}
+                onChange={handleExecutionStatusChange}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+              >
+                <option value="ALL">{t("common.all")}</option>
+                <option value="PENDING">
+                  {t("order_management.table.pending")}
+                </option>
+                <option value="EXECUTING">
+                  {t("order_management.table.processing")}
+                </option>
+                <option value="COMPLETED">
+                  {t("order_management.table.executed")}
+                </option>
+                <option value="FAILED">
+                  {t("order_management.table.failed")}
+                </option>
+                <option value="CANCEL">{t("common.cancel")}</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Info: (20260624 - Julian) Reset Filters Button */}
+          {(searchInput ||
+            type !== "ALL" ||
+            executionStatus !== "ALL" ||
+            orderStatus !== "ALL" ||
+            sortBy !== "createdAt" ||
+            sortOrder !== "desc") && (
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="ml-auto inline-flex items-center justify-center gap-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none md:w-auto"
+            >
+              <X size={16} />
+              <p>{t("common.clear_filters")}</p>
+            </button>
+          )}
+        </div>
+
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <DataTable<IOrderManagementData>
             columns={columns}
@@ -346,6 +569,9 @@ export default function OrderManagementPage() {
             loading={loading}
             pagination={pagination}
             onPageChange={setPage}
+            onSort={handleSort}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
             emptyStateText={t("order_management.table.no_data")}
             rowKey={(record) => record.id}
           />
