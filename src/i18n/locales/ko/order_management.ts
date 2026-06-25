@@ -28,6 +28,14 @@ export const orderManagement = {
     reactivate_confirm: "이 주문을 수동으로 재활성화하시겠습니까?",
     reactivate_success: "주문이 성공적으로 재활성화되었습니다.",
     reactivate_failed: "주문 재활성화에 실패했습니다.",
+    batch_reactivate: "일괄 재활성화",
+    batch_reactivate_confirm:
+      "이 {{count}}개의 주문을 일괄 재활성화하시겠습니까?",
+    batch_reactivate_success:
+      "주문 일괄 재활성화 성공: 성공 {{success}}건, 실패 {{fail}}건.",
+    batch_reactivate_failed: "주문 일괄 재활성화에 실패했습니다.",
+    selected_count: "{{count}}개의 주문 선택됨",
+    cancel_batch: "일괄 취소",
     search_bar_placeholder: "키워드로 사용자 및 주문 번호 검색...",
   },
 };

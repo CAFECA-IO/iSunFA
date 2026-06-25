@@ -269,6 +269,53 @@ export async function retryFailedOrder(orderId: string) {
   await orderRepo.updateStatus(orderId, ORDER_STATUS.PAID);
 }
 
+/**
+ * Info: (20260625 - Julian)
+ * 批次重啟訂單
+ */
+export async function batchReactivateOrders(orderIds: string[]) {
+  const results = {
+    successCount: 0,
+    failCount: 0,
+    errors: [] as { orderId: string; message: string }[],
+  };
+
+  for (const orderId of orderIds) {
+    try {
+      const order = await paymentRepo.getOrderById(orderId);
+      if (!order) {
+        throw new AppError(API_ERRORS.NF_ORDER);
+      }
+
+      if (
+        order.status !== ORDER_STATUS.FAILED &&
+        order.status !== ORDER_STATUS.CANCEL
+      ) {
+        throw new AppError(API_ERRORS.VL_INVALID_ORDER_STATUS);
+      }
+
+      await orderRepo.updateStatus(orderId, ORDER_STATUS.PAID);
+      results.successCount++;
+    } catch (e: unknown) {
+      // Info: (20260625 - Julian) 紀錄失敗的訂單數量
+      results.failCount++;
+      // Info: (20260625 - Julian) 紀錄失敗的訂單錯誤訊息
+      const errorMessage =
+        e instanceof AppError
+          ? e.message
+          : e instanceof Error
+            ? e.message
+            : "Unknown error";
+      results.errors.push({
+        orderId,
+        message: errorMessage,
+      });
+    }
+  }
+
+  return results;
+}
+
 export interface IGetAdminCommissionOrdersParams {
   page: number;
   limit: number;

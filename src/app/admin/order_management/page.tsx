@@ -9,7 +9,24 @@ import DataTable, { IDataTableColumn } from "@/components/common/data_table";
 import ConfirmModal from "@/components/common/confirm_modal";
 import SuccessNotification from "@/components/common/success_notification";
 import { formatDate } from "@/lib/utils/date";
-import { ORDER_STATUS } from "@/constants/status";
+import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
+
+// Info: (20260625 - Julian) 訂單操作
+const ORDER_ACTIONS = {
+  RETRY: "retry",
+  REACTIVATE: "reactivate",
+  BATCH_REACTIVATE: "batch_reactivate",
+} as const;
+
+// Info: (20260625 - Julian) 訂單操作類型
+type OrderActionType = (typeof ORDER_ACTIONS)[keyof typeof ORDER_ACTIONS];
+
+// Info: (20260625 - Julian) 訂單 API 路由
+const ORDER_API_ROUTES = {
+  LIST: (query: string) => `/api/v1/admin/orders?${query}`,
+  RETRY: (id: string) => `/api/v1/admin/orders/${id}/retry`,
+  BATCH_REACTIVATE: "/api/v1/admin/orders/batch_reactivate",
+} as const;
 
 interface IOrderManagementData {
   id: string;
@@ -49,8 +66,32 @@ export default function OrderManagementPage() {
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     orderId: string | null;
-    actionType: "retry" | "reactivate" | null;
-  }>({ isOpen: false, orderId: null, actionType: null });
+    orderIds: string[] | null;
+    actionType: OrderActionType | null;
+  }>({ isOpen: false, orderId: null, orderIds: null, actionType: null });
+
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  const [isBatchMode, setIsBatchMode] = useState<boolean>(false);
+
+  useEffect(() => {
+    setSelectedOrderIds([]);
+  }, [orders]);
+
+  // Info: (20260625 - Julian) 開啟/關閉批量模式
+  const handleToggleBatchMode = () => {
+    setIsBatchMode((prev) => {
+      const next = !prev;
+      if (!next) {
+        setSelectedOrderIds([]);
+      }
+      return next;
+    });
+  };
+
+  // Info: (20260625 - Julian) 判斷是否有可重啟的訂單
+  const hasReactivatableOrders = orders.some(
+    (o) => o.status === ORDER_STATUS.CANCEL || o.status === ORDER_STATUS.FAILED,
+  );
 
   const [alertModal, setAlertModal] = useState<{
     isOpen: boolean;
@@ -146,7 +187,7 @@ export default function OrderManagementPage() {
               totalPages: number;
             };
           };
-        }>(`/api/v1/admin/orders?${query.toString()}`);
+        }>(ORDER_API_ROUTES.LIST(query.toString()));
 
         if (ignore) return;
 
@@ -178,28 +219,86 @@ export default function OrderManagementPage() {
   ]);
 
   const handleRetryOrderClick = (orderId: string) => {
-    setConfirmModal({ isOpen: true, orderId, actionType: "retry" });
+    setConfirmModal({
+      isOpen: true,
+      orderId,
+      orderIds: null,
+      actionType: ORDER_ACTIONS.RETRY,
+    });
   };
 
   const handleReactivateOrderClick = (orderId: string) => {
-    setConfirmModal({ isOpen: true, orderId, actionType: "reactivate" });
+    setConfirmModal({
+      isOpen: true,
+      orderId,
+      orderIds: null,
+      actionType: ORDER_ACTIONS.REACTIVATE,
+    });
   };
 
+  const handleBatchReactivateClick = () => {
+    setConfirmModal({
+      isOpen: true,
+      orderId: null,
+      orderIds: selectedOrderIds,
+      actionType: ORDER_ACTIONS.BATCH_REACTIVATE,
+    });
+  };
+
+  // Info: (20260625 - Julian) 處理重試、重新啟用、批量重啟訂單
   const handleExecuteAction = async () => {
-    if (!confirmModal.orderId || !confirmModal.actionType) return;
-    const { orderId, actionType } = confirmModal;
-    setConfirmModal({ isOpen: false, orderId: null, actionType: null });
+    const { orderId, orderIds, actionType } = confirmModal;
+    if (!actionType) return;
+    setConfirmModal({
+      isOpen: false,
+      orderId: null,
+      orderIds: null,
+      actionType: null,
+    });
+
+    if (actionType === ORDER_ACTIONS.BATCH_REACTIVATE) {
+      if (!orderIds || orderIds.length === 0) return;
+      try {
+        const res = await request<{
+          payload: { successCount: number; failCount: number };
+        }>(ORDER_API_ROUTES.BATCH_REACTIVATE, {
+          method: "POST",
+          body: JSON.stringify({ orderIds }),
+        });
+        if (res.payload) {
+          setSuccessNotif({
+            isOpen: true,
+            message: t("order_management.table.batch_reactivate_success", {
+              success: res.payload.successCount,
+              fail: res.payload.failCount,
+            }),
+          });
+          setSelectedOrderIds([]);
+          setPage(page);
+          window.location.reload();
+        }
+      } catch (e) {
+        console.error(e);
+        setAlertModal({
+          isOpen: true,
+          message: t("order_management.table.batch_reactivate_failed"),
+        });
+      }
+      return;
+    }
+
+    if (!orderId) return;
 
     try {
       const res = await request<{ payload: { success: boolean } }>(
-        `/api/v1/admin/orders/${orderId}/retry`,
+        ORDER_API_ROUTES.RETRY(orderId),
         { method: "POST" },
       );
       if (res.payload?.success) {
         setSuccessNotif({
           isOpen: true,
           message:
-            actionType === "retry"
+            actionType === ORDER_ACTIONS.RETRY
               ? t("order_management.table.retry_success")
               : t("order_management.table.reactivate_success"),
         });
@@ -211,7 +310,7 @@ export default function OrderManagementPage() {
       setAlertModal({
         isOpen: true,
         message:
-          actionType === "retry"
+          actionType === ORDER_ACTIONS.RETRY
             ? t("order_management.table.retry_failed")
             : t("order_management.table.reactivate_failed"),
       });
@@ -219,6 +318,64 @@ export default function OrderManagementPage() {
   };
 
   const columns: IDataTableColumn<IOrderManagementData>[] = [
+    // Info: (20260625 - Julian) 開啟批量模式時，才顯示勾選框
+    ...(isBatchMode
+      ? [
+          {
+            key: "select",
+            label: (
+              <input
+                type="checkbox"
+                checked={
+                  orders.length > 0 &&
+                  orders
+                    .filter(
+                      (o) =>
+                        o.status === ORDER_STATUS.CANCEL ||
+                        o.status === ORDER_STATUS.FAILED,
+                    )
+                    .every((o) => selectedOrderIds.includes(o.id))
+                }
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    const retryableCancelOrders = orders.filter(
+                      (o) =>
+                        o.status === ORDER_STATUS.CANCEL ||
+                        o.status === ORDER_STATUS.FAILED,
+                    );
+                    setSelectedOrderIds(retryableCancelOrders.map((o) => o.id));
+                  } else {
+                    setSelectedOrderIds([]);
+                  }
+                }}
+                className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+              />
+            ),
+            render: (record: IOrderManagementData) => {
+              const canReactivate =
+                record.status === ORDER_STATUS.CANCEL ||
+                record.status === ORDER_STATUS.FAILED;
+              if (!canReactivate) return null;
+              return (
+                <input
+                  type="checkbox"
+                  checked={selectedOrderIds.includes(record.id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedOrderIds((prev) => [...prev, record.id]);
+                    } else {
+                      setSelectedOrderIds((prev) =>
+                        prev.filter((id) => id !== record.id),
+                      );
+                    }
+                  }}
+                  className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                />
+              );
+            },
+          },
+        ]
+      : []),
     {
       key: "createdAt",
       label: t("order_management.table.date"),
@@ -483,22 +640,22 @@ export default function OrderManagementPage() {
                 className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
               >
                 <option value="ALL">{t("common.all")}</option>
-                <option value="ANALYSIS">
+                <option value={ORDER_TYPE.ANALYSIS}>
                   {t("analysis.categories.certificate_analysis")}
                 </option>
-                <option value="REGISTRATION_REWARD">
+                <option value={ORDER_TYPE.REGISTRATION_REWARD}>
                   {t("order_management.filters.type_reg_reward")}
                 </option>
-                <option value="CHECK_IN_REWARD">
+                <option value={ORDER_TYPE.CHECK_IN_REWARD}>
                   {t("order_management.filters.type_check_in_reward")}
                 </option>
-                <option value="ADMIN_ISSUED">
+                <option value={ORDER_TYPE.ADMIN_ISSUED}>
                   {t("order_management.filters.type_admin_issued")}
                 </option>
-                <option value="OEN_BINDING">
+                <option value={ORDER_TYPE.OEN_BINDING}>
                   {t("order_management.filters.type_oen_binding")}
                 </option>
-                <option value="OEN_PAYMENT">
+                <option value={ORDER_TYPE.OEN_PAYMENT}>
                   {t("order_management.filters.type_oen_payment")}
                 </option>
               </select>
@@ -565,22 +722,41 @@ export default function OrderManagementPage() {
             </div>
           </div>
 
-          {/* Info: (20260624 - Julian) Reset Filters Button */}
-          {(searchInput ||
-            type !== "ALL" ||
-            executionStatus !== "ALL" ||
-            orderStatus !== "ALL" ||
-            sortBy !== "createdAt" ||
-            sortOrder !== "desc") && (
+          {/* Info: (20260624 - Julian) Reset & Batch Reactivate Button */}
+          <div className="flex items-center justify-end gap-2">
+            {(searchInput ||
+              type !== "ALL" ||
+              executionStatus !== "ALL" ||
+              orderStatus !== "ALL" ||
+              sortBy !== "createdAt" ||
+              sortOrder !== "desc") && (
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="inline-flex items-center justify-center gap-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none md:w-auto"
+              >
+                <X size={16} />
+                <p>{t("common.clear_filters")}</p>
+              </button>
+            )}
+
             <button
               type="button"
-              onClick={handleResetFilters}
-              className="ml-auto inline-flex items-center justify-center gap-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none md:w-auto"
+              disabled={!hasReactivatableOrders && !isBatchMode}
+              onClick={handleToggleBatchMode}
+              className={`inline-flex items-center justify-center gap-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none ${
+                isBatchMode
+                  ? "border border-orange-300 bg-orange-100 text-orange-700 hover:bg-orange-200"
+                  : !hasReactivatableOrders
+                    ? "cursor-not-allowed border border-gray-200 bg-gray-100 text-gray-400"
+                    : "border border-transparent bg-orange-600 text-white hover:bg-orange-700"
+              }`}
             >
-              <X size={16} />
-              <p>{t("common.clear_filters")}</p>
+              {isBatchMode
+                ? t("order_management.table.cancel_batch")
+                : t("order_management.table.batch_reactivate")}
             </button>
-          )}
+          </div>
         </div>
 
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -602,17 +778,28 @@ export default function OrderManagementPage() {
       <ConfirmModal
         isOpen={confirmModal.isOpen}
         onClose={() =>
-          setConfirmModal({ isOpen: false, orderId: null, actionType: null })
+          setConfirmModal({
+            isOpen: false,
+            orderId: null,
+            orderIds: null,
+            actionType: null,
+          })
         }
         title={
-          confirmModal.actionType === "retry"
-            ? t("order_management.table.retry")
-            : t("order_management.table.reactivate")
+          confirmModal.actionType === ORDER_ACTIONS.BATCH_REACTIVATE
+            ? t("order_management.table.batch_reactivate")
+            : confirmModal.actionType === ORDER_ACTIONS.RETRY
+              ? t("order_management.table.retry")
+              : t("order_management.table.reactivate")
         }
         message={
-          confirmModal.actionType === "retry"
-            ? t("order_management.table.retry_confirm")
-            : t("order_management.table.reactivate_confirm")
+          confirmModal.actionType === ORDER_ACTIONS.BATCH_REACTIVATE
+            ? t("order_management.table.batch_reactivate_confirm", {
+                count: confirmModal.orderIds?.length || 0,
+              })
+            : confirmModal.actionType === ORDER_ACTIONS.RETRY
+              ? t("order_management.table.retry_confirm")
+              : t("order_management.table.reactivate_confirm")
         }
         confirmText={t("common.confirm")}
         cancelText={t("common.cancel")}
@@ -633,6 +820,37 @@ export default function OrderManagementPage() {
         message={successNotif.message}
         onClose={() => setSuccessNotif({ isOpen: false, message: "" })}
       />
+
+      {/* Sleek Floating Batch Action Bar */}
+      {selectedOrderIds.length > 0 && (
+        <div className="animate-in fade-in slide-in-from-bottom-5 fixed bottom-8 left-1/2 z-50 flex -translate-x-1/2 items-center gap-5 rounded-2xl border border-slate-800 bg-slate-900 px-6 py-4 shadow-2xl transition-all duration-300">
+          <div className="flex items-center gap-2 border-r border-slate-700 pr-5">
+            <span className="flex size-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white">
+              {selectedOrderIds.length}
+            </span>
+            <span className="text-sm font-medium text-slate-300">
+              {t("order_management.table.selected_count", {
+                count: selectedOrderIds.length,
+              })}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleBatchReactivateClick}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-orange-600 px-4 py-2 text-xs font-semibold text-white shadow-lg transition-all hover:bg-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-slate-900 focus:outline-none active:translate-y-0.5 active:shadow-none"
+            >
+              <RefreshCw size={12} className="animate-spin-slow" />
+              <span>{t("order_management.table.batch_reactivate")}</span>
+            </button>
+            <button
+              onClick={() => setSelectedOrderIds([])}
+              className="rounded-xl border border-slate-700 bg-transparent px-4 py-2 text-xs font-semibold text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200 focus:outline-none"
+            >
+              {t("common.cancel")}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

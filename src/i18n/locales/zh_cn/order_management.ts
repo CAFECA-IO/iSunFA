@@ -28,6 +28,13 @@ export const orderManagement = {
     reactivate_confirm: "确定要手动重启此订单吗？",
     reactivate_success: "已成功重启订单。",
     reactivate_failed: "重启订单失败。",
+    batch_reactivate: "批量重启",
+    batch_reactivate_confirm: "确定要批量重启这 {{count}} 笔订单吗？",
+    batch_reactivate_success:
+      "成功批量重启订单：成功 {{success}} 笔，失败 {{fail}} 笔。",
+    batch_reactivate_failed: "批量重启订单失败。",
+    selected_count: "已选择 {{count}} 笔订单",
+    cancel_batch: "取消批量",
     search_bar_placeholder: "以关键字搜寻用户、订单编号...",
   },
 };

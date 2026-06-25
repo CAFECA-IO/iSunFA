@@ -30,6 +30,14 @@ export const orderManagement = {
       "Are you sure you want to manually reactivate this order?",
     reactivate_success: "Order reactivated successfully.",
     reactivate_failed: "Failed to reactivate order.",
+    batch_reactivate: "Batch Reactivate",
+    batch_reactivate_confirm:
+      "Are you sure you want to batch reactivate these {{count}} orders?",
+    batch_reactivate_success:
+      "Batch reactivated orders: {{success}} succeeded, {{fail}} failed.",
+    batch_reactivate_failed: "Failed to batch reactivate orders.",
+    selected_count: "Selected {{count}} orders",
+    cancel_batch: "Cancel Batch",
     search_bar_placeholder: "Search by keyword, user, or order number...",
   },
 };
