@@ -25,6 +25,11 @@ export const orderManagement = {
     retry_confirm: "Are you sure you want to retry this order?",
     retry_success: "Order retry triggered successfully.",
     retry_failed: "Failed to retry order.",
+    reactivate: "Reactivate",
+    reactivate_confirm:
+      "Are you sure you want to manually reactivate this order?",
+    reactivate_success: "Order reactivated successfully.",
+    reactivate_failed: "Failed to reactivate order.",
     search_bar_placeholder: "Search by keyword, user, or order number...",
   },
 };

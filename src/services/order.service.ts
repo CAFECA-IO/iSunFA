@@ -259,7 +259,10 @@ export async function retryFailedOrder(orderId: string) {
     throw new AppError(API_ERRORS.NF_ORDER);
   }
 
-  if (order.status !== ORDER_STATUS.FAILED) {
+  if (
+    order.status !== ORDER_STATUS.FAILED &&
+    order.status !== ORDER_STATUS.CANCEL
+  ) {
     throw new AppError(API_ERRORS.VL_INVALID_ORDER_STATUS);
   }
 

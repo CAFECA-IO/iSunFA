@@ -24,6 +24,10 @@ export const orderManagement = {
     retry_confirm: "이 주문을 재실행하시겠습니까?",
     retry_success: "주문 재실행이 성공적으로 트리거되었습니다.",
     retry_failed: "주문 재실행에 실패했습니다.",
+    reactivate: "재활성화",
+    reactivate_confirm: "이 주문을 수동으로 재활성화하시겠습니까?",
+    reactivate_success: "주문이 성공적으로 재활성화되었습니다.",
+    reactivate_failed: "주문 재활성화에 실패했습니다.",
     search_bar_placeholder: "키워드로 사용자 및 주문 번호 검색...",
   },
 };

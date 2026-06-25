@@ -25,6 +25,10 @@ export const orderManagement = {
     retry_confirm: "この注文を再実行してもよろしいですか？",
     retry_success: "注文の再実行が正常にトリガーされました。",
     retry_failed: "注文の再実行に失敗しました。",
+    reactivate: "再有効化",
+    reactivate_confirm: "この注文を手動で再有効化してもよろしいですか？",
+    reactivate_success: "注文が正常に再有効化されました。",
+    reactivate_failed: "注文の再有効化に失敗しました。",
     search_bar_placeholder: "キーワードによるユーザー検索、注文番号検索...",
   },
 };

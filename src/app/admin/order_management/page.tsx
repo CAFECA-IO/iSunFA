@@ -49,7 +49,8 @@ export default function OrderManagementPage() {
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     orderId: string | null;
-  }>({ isOpen: false, orderId: null });
+    actionType: "retry" | "reactivate" | null;
+  }>({ isOpen: false, orderId: null, actionType: null });
 
   const [alertModal, setAlertModal] = useState<{
     isOpen: boolean;
@@ -177,13 +178,17 @@ export default function OrderManagementPage() {
   ]);
 
   const handleRetryOrderClick = (orderId: string) => {
-    setConfirmModal({ isOpen: true, orderId });
+    setConfirmModal({ isOpen: true, orderId, actionType: "retry" });
   };
 
-  const handleExecuteRetry = async () => {
-    if (!confirmModal.orderId) return;
-    const orderId = confirmModal.orderId;
-    setConfirmModal({ isOpen: false, orderId: null });
+  const handleReactivateOrderClick = (orderId: string) => {
+    setConfirmModal({ isOpen: true, orderId, actionType: "reactivate" });
+  };
+
+  const handleExecuteAction = async () => {
+    if (!confirmModal.orderId || !confirmModal.actionType) return;
+    const { orderId, actionType } = confirmModal;
+    setConfirmModal({ isOpen: false, orderId: null, actionType: null });
 
     try {
       const res = await request<{ payload: { success: boolean } }>(
@@ -193,7 +198,10 @@ export default function OrderManagementPage() {
       if (res.payload?.success) {
         setSuccessNotif({
           isOpen: true,
-          message: t("order_management.table.retry_success"),
+          message:
+            actionType === "retry"
+              ? t("order_management.table.retry_success")
+              : t("order_management.table.reactivate_success"),
         });
         setPage(page);
         window.location.reload();
@@ -202,7 +210,10 @@ export default function OrderManagementPage() {
       console.error(e);
       setAlertModal({
         isOpen: true,
-        message: t("order_management.table.retry_failed"),
+        message:
+          actionType === "retry"
+            ? t("order_management.table.retry_failed")
+            : t("order_management.table.reactivate_failed"),
       });
     }
   };
@@ -301,7 +312,7 @@ export default function OrderManagementPage() {
       label: t("order_management.table.order_status"),
       sortable: true,
       render: (record) => (
-        <div className="flex flex-col items-start gap-2">
+        <div className="flex items-center gap-1">
           <span
             className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${
               record.status === ORDER_STATUS.PAID ||
@@ -316,11 +327,22 @@ export default function OrderManagementPage() {
             record.executionStatus === ORDER_STATUS.FAILED) && (
             <button
               onClick={() => handleRetryOrderClick(record.id)}
-              className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100 focus:outline-none"
+              className="inline-flex items-center gap-1 rounded-md bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-500 shadow transition-colors hover:bg-blue-200 focus:outline-none active:translate-y-0.5 active:shadow-none"
               title="Retry Order"
             >
               <RefreshCw size={12} />
               <span>{t("order_management.table.retry")}</span>
+            </button>
+          )}
+          {(record.status === ORDER_STATUS.CANCEL ||
+            record.executionStatus === ORDER_STATUS.CANCEL) && (
+            <button
+              onClick={() => handleReactivateOrderClick(record.id)}
+              className="inline-flex items-center gap-1 rounded-md bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-500 shadow transition-colors hover:bg-blue-200 focus:outline-none active:translate-y-0.5 active:shadow-none"
+              title="Reactivate Order"
+            >
+              <RefreshCw size={12} strokeWidth={2.5} />
+              <span>{t("order_management.table.reactivate")}</span>
             </button>
           )}
         </div>
@@ -579,12 +601,22 @@ export default function OrderManagementPage() {
 
       <ConfirmModal
         isOpen={confirmModal.isOpen}
-        onClose={() => setConfirmModal({ isOpen: false, orderId: null })}
-        title={t("order_management.table.retry")}
-        message={t("order_management.table.retry_confirm")}
+        onClose={() =>
+          setConfirmModal({ isOpen: false, orderId: null, actionType: null })
+        }
+        title={
+          confirmModal.actionType === "retry"
+            ? t("order_management.table.retry")
+            : t("order_management.table.reactivate")
+        }
+        message={
+          confirmModal.actionType === "retry"
+            ? t("order_management.table.retry_confirm")
+            : t("order_management.table.reactivate_confirm")
+        }
         confirmText={t("common.confirm")}
         cancelText={t("common.cancel")}
-        onConfirm={handleExecuteRetry}
+        onConfirm={handleExecuteAction}
       />
 
       <ConfirmModal

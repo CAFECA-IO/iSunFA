@@ -24,6 +24,10 @@ export const orderManagement = {
     retry_confirm: "确定要重新执行此订单吗？",
     retry_success: "已成功触发订单重新执行。",
     retry_failed: "重新执行订单失败。",
+    reactivate: "重启",
+    reactivate_confirm: "确定要手动重启此订单吗？",
+    reactivate_success: "已成功重启订单。",
+    reactivate_failed: "重启订单失败。",
     search_bar_placeholder: "以关键字搜寻用户、订单编号...",
   },
 };
