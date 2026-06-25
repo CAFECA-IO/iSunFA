@@ -9,7 +9,7 @@ import DataTable, { IDataTableColumn } from "@/components/common/data_table";
 import ConfirmModal from "@/components/common/confirm_modal";
 import SuccessNotification from "@/components/common/success_notification";
 import { formatDate } from "@/lib/utils/date";
-import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
+import { ORDER_STATUS } from "@/constants/status";
 
 // Info: (20260625 - Julian) 訂單操作
 const ORDER_ACTIONS = {
@@ -27,6 +27,25 @@ const ORDER_API_ROUTES = {
   RETRY: (id: string) => `/api/v1/admin/orders/${id}/retry`,
   BATCH_REACTIVATE: "/api/v1/admin/orders/batch_reactivate",
 } as const;
+
+// Info: (20260625 - Julian) 訂單類型
+const ORDER_TYPE = {
+  BALANCE_SHEET: "balance_sheet", // Info: (20260625 - Julian) 資產負債表
+  CASH_FLOW: "cash_flow", // Info: (20260625 - Julian) 現金流量表
+  INCOME_STATEMENT: "income_statement", // Info: (20260625 - Julian) 損益表
+  IRSC: "irsc", // Info: (20260625 - Julian) 智能企業評級
+  FINANCIAL_COMPLIANCE: "financial_compliance", // Info: (20260625 - Julian) 財報合規性
+  FINANCIAL_HEALTH: "financial_health", // Info: (20260625 - Julian) 財務健康
+  MARKET_TRENDS: "market_trends", // Info: (20260625 - Julian) 市場趨勢
+  INDUSTRY_DEVELOPMENT: "industry_development", // Info: (20260625 - Julian) 產業趨勢
+  FINANCIAL_PRODUCT_RATING: "financial_product_rating", // Info: (20260625 - Julian) 投資評級
+  CARBON_HEALTH_CHECK: "carbon_health_check", // Info: (20260625 - Julian) 碳健檢
+  NET_ZERO_EMISSIONS: "net_zero_emissions", // Info: (20260625 - Julian) 碳中和
+  AI_CONSULTING: "ai_consulting", // Info: (20260625 - Julian) AI 諮詢
+  JOURNAL_UPLOAD: "journal_upload", // Info: (20260625 - Julian) 日記帳建檔
+  CERTIFICATE_ANALYSIS: "certificate_analysis", // Info: (20260625 - Julian) 憑證分析
+  TRANSPORTATION_CARBON_FOOTPRINT: "transportation_carbon_footprint", // Info: (20260625 - Julian) 運輸碳足跡
+};
 
 interface IOrderManagementData {
   id: string;
@@ -317,6 +336,13 @@ export default function OrderManagementPage() {
     }
   };
 
+  // Info: (20260625 - Julian) 取得訂單類型的顯示文字
+  const getOrderTypeLabel = (type: string) => {
+    const key = `analysis.categories.${type.toLowerCase()}`;
+    const translated = t(key);
+    return translated !== key ? translated : type;
+  };
+
   const columns: IDataTableColumn<IOrderManagementData>[] = [
     // Info: (20260625 - Julian) 開啟批量模式時，才顯示勾選框
     ...(isBatchMode
@@ -424,21 +450,16 @@ export default function OrderManagementPage() {
       key: "type",
       label: t("order_management.table.type"),
       render: (record) => {
-        let display = record.type;
         const orderData = record.data as Record<string, unknown>;
         const dataField = orderData?.data as
           | Record<string, unknown>
           | undefined;
         const rawCat = dataField?.category || orderData?.category;
-
-        if (rawCat) {
-          const cat = String(rawCat);
-          const key = `analysis.categories.${cat.toLowerCase()}`;
-          const translated = t(key);
-          display = translated !== key ? translated : cat;
-        }
+        const category = rawCat ? String(rawCat) : "";
         return (
-          <span className="text-sm font-medium text-gray-700">{display}</span>
+          <span className="text-sm font-medium text-gray-700">
+            {getOrderTypeLabel(category)}
+          </span>
         );
       },
     },
@@ -640,24 +661,11 @@ export default function OrderManagementPage() {
                 className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
               >
                 <option value="ALL">{t("common.all")}</option>
-                <option value={ORDER_TYPE.ANALYSIS}>
-                  {t("analysis.categories.certificate_analysis")}
-                </option>
-                <option value={ORDER_TYPE.REGISTRATION_REWARD}>
-                  {t("order_management.filters.type_reg_reward")}
-                </option>
-                <option value={ORDER_TYPE.CHECK_IN_REWARD}>
-                  {t("order_management.filters.type_check_in_reward")}
-                </option>
-                <option value={ORDER_TYPE.ADMIN_ISSUED}>
-                  {t("order_management.filters.type_admin_issued")}
-                </option>
-                <option value={ORDER_TYPE.OEN_BINDING}>
-                  {t("order_management.filters.type_oen_binding")}
-                </option>
-                <option value={ORDER_TYPE.OEN_PAYMENT}>
-                  {t("order_management.filters.type_oen_payment")}
-                </option>
+                {Object.values(ORDER_TYPE).map((typeVal) => (
+                  <option key={typeVal} value={typeVal}>
+                    {getOrderTypeLabel(typeVal)}
+                  </option>
+                ))}
               </select>
             </div>
 

@@ -349,6 +349,7 @@ export async function getAdminCommissionOrdersPaginated(
     amount: { lt: 0 },
   };
 
+  // Info: (20260625 - Julian) 模糊搜尋訂單 ID、用戶名稱、錢包地址
   if (search) {
     where.OR = [
       { id: { contains: search, mode: "insensitive" } },
@@ -363,14 +364,19 @@ export async function getAdminCommissionOrdersPaginated(
     ];
   }
 
+  // Info: (20260625 - Julian) type 須轉換為大寫，以比對 data.data.category 層
   if (type && type !== "ALL") {
-    where.type = type;
+    where.AND = [
+      { data: { path: ["data", "category"], equals: type.toUpperCase() } },
+    ];
   }
 
+  // Info: (20260625 - Julian) 訂單狀態篩選
   if (orderStatus && orderStatus !== "ALL") {
     where.status = orderStatus;
   }
 
+  // Info: (20260625 - Julian) 排序篩選
   const orderBy: Prisma.OrderOrderByWithRelationInput = {};
   const direction = sortOrder === "asc" ? "asc" : "desc";
   if (sortBy === "createdAt") {
