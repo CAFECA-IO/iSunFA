@@ -35,6 +35,7 @@ export const orderManagement = {
     batch_reactivate_failed: "批量重启订单失败。",
     selected_count: "已选择 {{count}} 笔订单",
     cancel_batch: "取消批量",
+    no_reactivatable_orders: "无可重启订单",
     search_bar_placeholder: "以关键字搜寻用户、订单编号...",
   },
 };

@@ -270,8 +270,9 @@ export async function retryFailedOrder(orderId: string) {
 }
 
 /**
- * Info: (20260625 - Julian)
- * 批次重啟訂單
+ * Info: (20260625 - Julian) 批次重啟訂單
+ * @param orderIds - 訂單 ID 陣列
+ * @returns 成功和失敗的訂單數量以及錯誤訊息
  */
 export async function batchReactivateOrders(orderIds: string[]) {
   const results = {
@@ -328,8 +329,9 @@ export interface IGetAdminCommissionOrdersParams {
 }
 
 /**
- * Info: (20260624 - Julian)
- * Get paginated admin commission orders.
+ * Info: (20260624 - Julian) 取得訂單分頁資料
+ * @param params - 訂單分頁參數
+ * @returns 訂單分頁資料
  */
 export async function getAdminCommissionOrdersPaginated(
   params: IGetAdminCommissionOrdersParams,

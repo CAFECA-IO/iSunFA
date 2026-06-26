@@ -37,6 +37,7 @@ export const orderManagement = {
     batch_reactivate_failed: "注文の一括再有効化に失敗しました。",
     selected_count: "{{count}} 件の注文を選択中",
     cancel_batch: "一括キャンセル",
+    no_reactivatable_orders: "再有効化可能な注文はありません",
     search_bar_placeholder: "キーワードによるユーザー検索、注文番号検索...",
   },
 };

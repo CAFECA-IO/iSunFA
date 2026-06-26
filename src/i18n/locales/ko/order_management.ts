@@ -36,6 +36,7 @@ export const orderManagement = {
     batch_reactivate_failed: "주문 일괄 재활성화에 실패했습니다.",
     selected_count: "{{count}}개의 주문 선택됨",
     cancel_batch: "일괄 취소",
+    no_reactivatable_orders: "재활성화할 수 있는 주문이 없습니다",
     search_bar_placeholder: "키워드로 사용자 및 주문 번호 검색...",
   },
 };

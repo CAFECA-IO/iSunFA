@@ -35,6 +35,7 @@ export const orderManagement = {
     batch_reactivate_failed: "批量重啟訂單失敗。",
     selected_count: "已選擇 {{count}} 筆訂單",
     cancel_batch: "取消批量",
+    no_reactivatable_orders: "無可重啟訂單",
     search_bar_placeholder: "以關鍵字搜尋用戶、訂單編號...",
   },
 };

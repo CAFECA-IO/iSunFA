@@ -38,6 +38,7 @@ export const orderManagement = {
     batch_reactivate_failed: "Failed to batch reactivate orders.",
     selected_count: "Selected {{count}} orders",
     cancel_batch: "Cancel Batch",
+    no_reactivatable_orders: "No reactivatable orders",
     search_bar_placeholder: "Search by keyword, user, or order number...",
   },
 };

@@ -195,7 +195,9 @@ export default function OrderFilter({
         >
           {isBatchMode
             ? t("order_management.table.cancel_batch")
-            : t("order_management.table.batch_reactivate")}
+            : hasReactivatableOrders
+              ? t("order_management.table.batch_reactivate")
+              : t("order_management.table.no_reactivatable_orders")}
         </button>
       </div>
     </div>
