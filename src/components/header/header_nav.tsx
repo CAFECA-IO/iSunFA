@@ -62,12 +62,12 @@ export default function HeaderNav() {
             </MenuButton>
             <Transition
               as={Fragment}
-              enter="transition ease-out duration-100"
-              enterFrom="transform opacity-0 scale-95"
-              enterTo="transform opacity-100 scale-100"
-              leave="transition ease-in duration-75"
-              leaveFrom="transform opacity-100 scale-100"
-              leaveTo="transform opacity-0 scale-95"
+              enter="transition ease-out duration-200 md:duration-100"
+              enterFrom="transform opacity-0 translate-y-full md:translate-y-0 md:scale-95"
+              enterTo="transform opacity-100 translate-y-0 md:scale-100"
+              leave="transition ease-in duration-150 md:duration-75"
+              leaveFrom="transform opacity-100 translate-y-0 md:scale-100"
+              leaveTo="transform opacity-0 translate-y-full md:translate-y-0 md:scale-95"
             >
               <MenuItems className="fixed top-0 left-0 h-screen w-full bg-white">
                 <button

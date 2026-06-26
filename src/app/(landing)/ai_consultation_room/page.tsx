@@ -10,24 +10,28 @@ export default function AccountingAiConsultingPage() {
 
   return (
     <div className="bg-white">
-
-      <main className="relative pt-12 min-h-screen">
-        <div className="flex flex-col text-center items-center gap-2">
-          <h1 className="text-4xl font-bold text-gray-800">
+      <main className="relative min-h-screen pt-12">
+        <div className="flex flex-col items-center gap-2 text-center">
+          <h1 className="text-2xl font-bold text-gray-800 lg:text-4xl">
             {t("ai_consultation_room.title")}
           </h1>
-          <p className="text-gray-400">
+          <p className="text-sm text-gray-400 lg:text-lg">
             {t("ai_consultation_room.subtitle")}
           </p>
         </div>
 
-        <Suspense fallback={<div className="flex h-[500px] items-center justify-center">載入中...</div>}>
+        <Suspense
+          fallback={
+            <div className="flex h-[500px] items-center justify-center">
+              載入中...
+            </div>
+          }
+        >
           <ThreadSection />
         </Suspense>
-        
+
         <AiChat />
       </main>
-
     </div>
   );
 }

@@ -32,7 +32,7 @@ export default function SuccessNotification({
   return (
     <div
       aria-live="assertive"
-      className="pointer-events-none fixed inset-0 z-[100] flex items-end px-4 py-6 sm:items-start sm:p-6 sm:pt-24"
+      className="pointer-events-none fixed inset-0 z-100 flex items-end px-4 py-6 sm:items-start sm:p-6 sm:pt-24"
     >
       <div className="flex w-full flex-col items-center space-y-4 sm:items-end">
         <Transition
@@ -48,10 +48,10 @@ export default function SuccessNotification({
           <div className="pointer-events-auto w-full max-w-sm overflow-hidden rounded-xl bg-white/90 shadow-2xl ring-1 ring-black/5 backdrop-blur-md">
             <div className="p-4">
               <div className="flex items-start">
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
                     <Check
-                      className="h-6 w-6 animate-[bounce_1s_infinite] text-green-600"
+                      className="h-6 w-6 animate-bounce text-green-600"
                       aria-hidden="true"
                     />
                     <span className="absolute inset-0 animate-ping rounded-full bg-green-400 opacity-20"></span>
@@ -61,7 +61,7 @@ export default function SuccessNotification({
                   <p className="text-sm font-semibold text-gray-900">{title}</p>
                   <div className="mt-1 text-sm text-gray-500">{message}</div>
                 </div>
-                <div className="ml-4 flex flex-shrink-0">
+                <div className="ml-4 flex shrink-0">
                   <button
                     type="button"
                     className="inline-flex rounded-md bg-transparent text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
