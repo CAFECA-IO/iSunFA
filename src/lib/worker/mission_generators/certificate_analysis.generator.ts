@@ -1,5 +1,5 @@
 import { ITaskDefinition } from "@/lib/worker/task.generator";
-import { SchemaType } from "@google/generative-ai";
+import { SchemaType } from "@/services/faith.service";
 import {
   IMissionDefinition,
   IMissionParams,

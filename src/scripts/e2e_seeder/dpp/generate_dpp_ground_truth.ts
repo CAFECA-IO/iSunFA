@@ -1,11 +1,11 @@
 import * as fs from "fs";
 import * as path from "path";
 import {
-  GoogleGenerativeAI,
+  FaithService,
   Schema,
   SchemaType,
   GenerativeModel,
-} from "@google/generative-ai";
+} from "@/services/faith.service";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import { prisma } from "@/lib/prisma";
@@ -262,17 +262,17 @@ export async function generateDppGroundTruth(
     return;
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error("Missing GEMINI_API_KEY in .env");
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
+  const apiKey = process.env.AI_SERVICE;
+  if (!apiKey) throw new Error("Missing AI_SERVICE in .env");
+  const genAI = new FaithService(apiKey);
+  const model = genAI.getGenerativeModel({ model: "gemma4:e4b" });
 
   console.log(
     `🚀 [DPP Ground Truth Generator] 開始為 ${stockId} 的 ${products.length} 項產品產出 SKU 級別 DPP 標準答案...`,
   );
 
   const aggregatorModel = genAI.getGenerativeModel({
-    model: "gemini-2.5-pro",
+    model: "gemma4:e4b",
     generationConfig: {
       responseMimeType: "application/json",
       responseSchema: dppGroundTruthSchema,
@@ -309,7 +309,7 @@ export async function generateDppGroundTruth(
     const companyNameZH = company?.name || `Company ${stockId}`;
     const companySymbol = company?.symbol || "";
 
-    const nameModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const nameModel = genAI.getGenerativeModel({ model: "gemma4:e4b" });
     const nameResult = await nameModel.generateContent(`
 你是一個專業的英文翻譯助手。請根據以下台灣上市櫃公司的中文名稱與英文證券簡稱，推導出該公司在真實世界中最合適的英文全稱（例如結尾為 Co., Ltd. 或 Corp.）。
 中文名稱：${companyNameZH}

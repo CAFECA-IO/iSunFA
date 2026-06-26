@@ -40,9 +40,9 @@ export async function generateProductImage(
     `🚀 [Imagen Generator] 開始為 ${stockId} 的 ${products.length} 項產品動態生成 Imagen 4.0 工程藍圖...`,
   );
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.AI_SERVICE;
   if (!apiKey) {
-    console.error("❌ 找不到 GEMINI_API_KEY 環境變數，無法執行 Imagen 4.0。");
+    console.error("❌ 找不到 AI_SERVICE 環境變數，無法執行 Imagen 4.0。");
     process.exit(1);
   }
 

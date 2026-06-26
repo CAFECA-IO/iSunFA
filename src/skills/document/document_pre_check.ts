@@ -35,7 +35,9 @@ export class DocumentPreCheckSkill implements ITaskSkill {
     });
     try {
       const responseSchema = (
-        task.data as { responseSchema?: import("@google/generative-ai").Schema }
+        task.data as {
+          responseSchema?: import("@/services/faith.service").Schema;
+        }
       )?.responseSchema;
       const text = await chatService.generateRawWithImages(
         promptText,

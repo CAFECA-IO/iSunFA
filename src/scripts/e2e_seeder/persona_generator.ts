@@ -1,12 +1,12 @@
 import * as fs from "fs";
 import * as path from "path";
 import {
-  GoogleGenerativeAI,
+  FaithService,
   Schema,
   SchemaType,
   GenerativeModel,
   Part,
-} from "@google/generative-ai";
+} from "@/services/faith.service";
 import * as dotenv from "dotenv";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
@@ -189,11 +189,11 @@ export async function generatePersona(stockId: string, year: string = "2024") {
     return;
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error("Missing GEMINI_API_KEY in .env.local");
+  const apiKey = process.env.AI_SERVICE;
+  if (!apiKey) throw new Error("Missing AI_SERVICE in .env.local");
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
+  const genAI = new FaithService(apiKey);
+  const model = genAI.getGenerativeModel({ model: "gemma4:e4b" });
 
   console.log(`🚀 [Persona Generator] 開始為 ${stockId} 產生企業畫像...`);
 
@@ -251,7 +251,7 @@ ${contextStr}
   console.log(`🔄 Aggregator 正在聚合意見並強制輸出符合 Schema 的 JSON...`);
 
   const aggregatorModel = genAI.getGenerativeModel({
-    model: "gemini-2.5-pro",
+    model: "gemma4:e4b",
     generationConfig: {
       responseMimeType: "application/json",
       responseSchema: personaSchema,

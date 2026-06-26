@@ -4,7 +4,7 @@ import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
 import { UniversalAccountTag } from "@/constants/enums";
 
-import { SchemaType, Schema } from "@google/generative-ai";
+import { SchemaType, Schema } from "@/services/faith.service";
 
 export class VoucherLinesParsingSkill implements ITaskSkill {
   name = "VOUCHER_LINES_PARSING";

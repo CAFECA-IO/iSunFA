@@ -2,7 +2,7 @@ import { ITaskSkill } from "@/skills/types";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
-import { SchemaType, Schema } from "@google/generative-ai";
+import { SchemaType, Schema } from "@/services/faith.service";
 import { EsgGenerationSource, EsgFallbackCategory } from "@/constants/enums";
 import { MeasurementUnit } from "@/constants/enums";
 import { FIAT_CURRENCIES } from "@/constants/country";

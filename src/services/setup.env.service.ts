@@ -63,7 +63,7 @@ export async function getEnvHashChallenge(): Promise<{
 export async function saveExternalConfig(config: {
   appUrl: string;
   gaId: string;
-  geminiKey: string;
+  aiService: string;
   maptilerKey: string;
   oenToken: string;
   oenMerchant: string;
@@ -85,11 +85,11 @@ export async function saveExternalConfig(config: {
         "NEXT_PUBLIC_GA_MEASUREMENT_ID",
         `"${config.gaId}"`,
       );
-    if (config.geminiKey)
+    if (config.aiService)
       content = updateOrAppendEnv(
         content,
-        "GEMINI_API_KEY",
-        `"${config.geminiKey}"`,
+        "AI_SERVICE",
+        `"${config.aiService}"`,
       );
     if (config.maptilerKey)
       content = updateOrAppendEnv(
@@ -112,7 +112,7 @@ export async function saveExternalConfig(config: {
     content = updateOrAppendEnv(content, "REPORT_OUTPUT_DIR", `"reports"`);
     content = updateOrAppendEnv(content, "MISSION_DIR", `"missions"`);
     content = updateOrAppendEnv(content, "ISSUE_DIR", `"issues"`);
-    content = updateOrAppendEnv(content, "MODEL", `"gemini-2.5-pro"`);
+    content = updateOrAppendEnv(content, "FAITH_MODEL", `"gemma4:e4b"`);
 
     saveEnvRawContent(ENV_SETUP_PATH, content);
     return { success: true };
@@ -133,7 +133,7 @@ export async function getExternalConfig() {
         data: {
           appUrl: config.NEXT_PUBLIC_APP_URL || "https://isunfa.localhost",
           gaId: config.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-ZNVVW7JP0N",
-          geminiKey: config.GEMINI_API_KEY || "",
+          aiService: config.AI_SERVICE || "",
           maptilerKey: config.NEXT_PUBLIC_MAPTILER_KEY || "",
           oenToken: config.OEN_ACCESS_TOKEN || "",
           oenMerchant: config.OEN_MERCHANT_ID || "mermer",

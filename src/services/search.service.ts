@@ -1,6 +1,6 @@
 import { spawn } from "child_process";
 import { processManager } from "@/lib/utils/process_manager";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { FaithService } from "@/services/faith.service";
 
 export interface ISearchSummaryParams {
   query: string;
@@ -17,14 +17,14 @@ export interface ISearchResult {
 export class SearchService {
   private readonly imageName = "ghcr.io/puppeteer/puppeteer:latest";
   private readonly timeoutMs = 90000; // Info: (20260407 - Luphia) Allow 90 seconds since we might scrape multiple pages
-  private genAI: GoogleGenerativeAI;
+  private genAI: FaithService;
   private modelName: string;
 
   constructor(apiKey?: string) {
     const key =
-      apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
-    this.genAI = new GoogleGenerativeAI(key);
-    this.modelName = process.env.MODEL || "gemini-1.5-flash";
+      apiKey || process.env.AI_SERVICE || process.env.GOOGLE_API_KEY || "";
+    this.genAI = new FaithService(key);
+    this.modelName = process.env.FAITH_MODEL || "gemma4:e4b";
   }
 
   // Info: (20260407 - Luphia) Spawns a dockerized Puppeteer instance to scrape search engine results and article contents.

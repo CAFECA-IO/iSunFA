@@ -1,19 +1,19 @@
 import {
-  GoogleGenerativeAI,
+  FaithService,
   Part,
   Tool,
   Schema,
   GenerationConfig,
-} from "@google/generative-ai";
+} from "@/services/faith.service";
 import { DirectChatSkill } from "@/skills/chat/direct_chat";
 
 export class ChatService {
-  private genAI: GoogleGenerativeAI;
+  private genAI: FaithService;
   private modelName: string;
 
   constructor(apiKey: string) {
-    this.genAI = new GoogleGenerativeAI(apiKey);
-    this.modelName = process.env.MODEL || "gemini-1.5-flash";
+    this.genAI = new FaithService(apiKey);
+    this.modelName = process.env.FAITH_MODEL || "gemma4:e4b";
   }
 
   async generateResponse(

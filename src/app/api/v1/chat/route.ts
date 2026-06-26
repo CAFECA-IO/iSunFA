@@ -6,10 +6,10 @@ import { ChatService } from "@/services/chat.service";
 export async function POST(request: NextRequest) {
   try {
     const { message, tags, file, mimeType } = await request.json();
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.AI_SERVICE;
 
     if (!apiKey) {
-      console.error("Missing GEMINI_API_KEY");
+      console.error("Missing AI_SERVICE");
       return jsonFail(API_ERRORS.IN_SERVER_CONFIGURATION_ERROR);
     }
 

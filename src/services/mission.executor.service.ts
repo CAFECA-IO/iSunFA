@@ -9,7 +9,7 @@ import { skillRegistry } from "@/skills";
 import { IMissionDefinition } from "@/lib/worker/mission.generator";
 import { ITaskDefinition } from "@/lib/worker/task.generator";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
-import { Schema } from "@google/generative-ai";
+import { Schema } from "@/services/faith.service";
 import { JSONValue } from "@/validators/common";
 
 /**
@@ -27,10 +27,10 @@ export async function processNext() {
   const missionDirBase = setupConfig.MISSION_DIR || "missions";
   const missionDirPath = path.join(process.cwd(), missionDirBase);
 
-  const apiKey = setupConfig.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+  const apiKey = setupConfig.AI_SERVICE || process.env.AI_SERVICE;
   if (!apiKey) {
     console.warn(
-      "[MissionExecutor] Missing GEMINI_API_KEY. Execution might fail if ChatService is required.",
+      "[MissionExecutor] Missing AI_SERVICE. Execution might fail if ChatService is required.",
     );
   }
   const chatService = new ChatService(apiKey || "");

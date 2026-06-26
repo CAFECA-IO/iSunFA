@@ -1,11 +1,11 @@
 import * as fs from "fs";
 import * as path from "path";
 import {
-  GoogleGenerativeAI,
+  FaithService,
   Schema,
   SchemaType,
   GenerativeModel,
-} from "@google/generative-ai";
+} from "@/services/faith.service";
 import * as dotenv from "dotenv";
 import { IProductBom } from "@/interfaces/cbam";
 
@@ -203,9 +203,9 @@ export async function generateProductSpecs(
     `🚀 [DPP Specs Generator] 開始為 ${products.length} 項產品生成規格指南...`,
   );
 
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
+  const genAI = new FaithService(process.env.AI_SERVICE as string);
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-pro",
+    model: "gemma4:e4b",
     generationConfig: {
       temperature: 0.2,
       responseMimeType: "application/json",

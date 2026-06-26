@@ -2,7 +2,7 @@ import { ITaskSkill } from "@/skills/types";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
-import { Schema } from "@google/generative-ai";
+import { Schema } from "@/services/faith.service";
 
 export class VoucherBaseParsingSkill implements ITaskSkill {
   name = "VOUCHER_BASE_PARSING";

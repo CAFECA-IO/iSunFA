@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     return jsonOk({ result });
   } catch (error) {
     console.error("[API] /admin/pdf_editor/refine error:", error);
-    if (error instanceof Error && error.message.includes("GEMINI_API_KEY")) {
+    if (error instanceof Error && error.message.includes("AI_SERVICE")) {
       return jsonFail(API_ERRORS.IN_SERVER_CONFIGURATION_ERROR);
     }
     return jsonFail(API_ERRORS.IS_UNKNOWN);

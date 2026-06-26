@@ -13,9 +13,9 @@ export class PdfEditorService {
     data: string,
     instruction: string = "",
   ): Promise<string> {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.AI_SERVICE;
     if (!apiKey) {
-      throw new Error("Missing GEMINI_API_KEY");
+      throw new Error("Missing AI_SERVICE");
     }
 
     const finalPrompt = `${REPORT_GENERATION_PROMPT}
@@ -44,9 +44,9 @@ ${instruction ? `【額外指示 (Additional Instructions)】：\n${instruction}
     text: string,
     action: string,
   ): Promise<string> {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.AI_SERVICE;
     if (!apiKey) {
-      throw new Error("Missing GEMINI_API_KEY");
+      throw new Error("Missing AI_SERVICE");
     }
 
     const instruction = AI_REFINE_INSTRUCTIONS[action] || action;

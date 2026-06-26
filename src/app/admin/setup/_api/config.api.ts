@@ -61,7 +61,7 @@ export async function isSystemSetupComplete(): Promise<boolean> {
 export async function saveExternalConfig(config: {
   appUrl: string;
   gaId: string;
-  geminiKey: string;
+  aiService: string;
   maptilerKey: string;
   oenToken: string;
   oenMerchant: string;
@@ -74,7 +74,7 @@ export async function getExternalConfig(): Promise<{
   data?: {
     appUrl: string;
     gaId: string;
-    geminiKey: string;
+    aiService: string;
     maptilerKey: string;
     oenToken: string;
     oenMerchant: string;

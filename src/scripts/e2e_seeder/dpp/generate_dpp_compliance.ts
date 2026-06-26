@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { FaithService } from "@/services/faith.service";
 import * as dotenv from "dotenv";
 import { mdToPdf } from "md-to-pdf";
 import { IProductBom } from "@/interfaces/cbam";
@@ -52,9 +52,9 @@ export async function generateDppCompliance(
     `🚀 [DPP Compliance Generator] 開始為 ${stockId} 的 ${products.length} 項產品產生 SKU 級別法規無使用宣告書...`,
   );
 
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
+  const genAI = new FaithService(process.env.AI_SERVICE as string);
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-pro",
+    model: "gemma4:e4b",
     generationConfig: {
       temperature: 0.3,
     },
@@ -67,7 +67,7 @@ export async function generateDppCompliance(
   const companyNameZH = company?.name || `Company ${stockId}`;
   const companySymbol = company?.symbol || "";
 
-  const nameModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+  const nameModel = genAI.getGenerativeModel({ model: "gemma4:e4b" });
   const nameResult = await nameModel.generateContent(`
 你是一個專業的英文翻譯助手。請根據以下台灣上市櫃公司的中文名稱與英文證券簡稱，推導出該公司在真實世界中最合適的英文全稱（例如結尾為 Co., Ltd. 或 Corp.）。
 中文名稱：${companyNameZH}

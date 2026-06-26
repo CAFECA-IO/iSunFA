@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { FaithService } from "@/services/faith.service";
 import { SearchService } from "@/services/search.service";
 
 export interface ISearchChatResult {
@@ -9,16 +9,16 @@ export interface ISearchChatResult {
 }
 
 export class SearchChatService {
-  private genAI: GoogleGenerativeAI;
+  private genAI: FaithService;
   private modelName: string;
   private searchService: SearchService;
 
   constructor(apiKey?: string) {
     // Info: (20260407 - Luphia) Fallback to runtime ENV variables
     const key =
-      apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
-    this.genAI = new GoogleGenerativeAI(key);
-    this.modelName = process.env.MODEL || "gemini-1.5-flash";
+      apiKey || process.env.AI_SERVICE || process.env.GOOGLE_API_KEY || "";
+    this.genAI = new FaithService(key);
+    this.modelName = process.env.FAITH_MODEL || "gemma4:e4b";
     this.searchService = new SearchService(key);
   }
 

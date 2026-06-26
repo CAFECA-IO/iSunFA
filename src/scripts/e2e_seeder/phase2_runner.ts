@@ -179,7 +179,7 @@ export const runPhase2ReceiptAnalysis = async (
 
   const skill = new VoucherLinesParsingSkill();
   const esgSkill = new EsgParsingSkill();
-  const chatService = new ChatService(process.env.GEMINI_API_KEY || "");
+  const chatService = new ChatService(process.env.AI_SERVICE || "");
 
   let correctVoucherCount = 0;
   let correctEsgCount = 0;

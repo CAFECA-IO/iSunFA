@@ -1,4 +1,4 @@
-import { Schema } from "@google/generative-ai";
+import { Schema } from "@/services/faith.service";
 
 // Info: (20260130 - Luphia) Task Definition Interface
 export interface ITaskDefinition {

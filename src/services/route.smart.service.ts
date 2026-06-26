@@ -1,6 +1,6 @@
 "use server";
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { FaithService } from "@/services/faith.service";
 
 export interface ISmartParseResult {
   origin?: { lat: number; lng: number };
@@ -16,13 +16,13 @@ export async function parseSmartInput(
   text: string,
 ): Promise<ISmartParseResult> {
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.AI_SERVICE;
     if (!apiKey) {
-      throw new Error("GEMINI_API_KEY is not set.");
+      throw new Error("AI_SERVICE is not set.");
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const genAI = new FaithService(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemma4:e4b" });
 
     const prompt = `
             You are a professional logistics AI assistant.
@@ -71,9 +71,7 @@ export async function parseSmartInput(
   }
 }
 
-export async function parseMultipleRoutesFromText(
-  text: string,
-): Promise<
+export async function parseMultipleRoutesFromText(text: string): Promise<
   Array<{
     origin: string;
     dest: string;
@@ -81,10 +79,10 @@ export async function parseMultipleRoutesFromText(
   }>
 > {
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) throw new Error("GEMINI_API_KEY is not set.");
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const apiKey = process.env.AI_SERVICE;
+    if (!apiKey) throw new Error("AI_SERVICE is not set.");
+    const genAI = new FaithService(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemma4:e4b" });
     const prompt = `
             You are a professional logistics AI assistant.
             Extract all distinct transportation routes from the user's description.

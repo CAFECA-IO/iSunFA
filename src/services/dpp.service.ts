@@ -5,11 +5,11 @@ import { Prisma } from "@/generated";
 import * as fs from "fs";
 import * as path from "path";
 import {
-  GoogleGenerativeAI,
+  FaithService,
   SchemaType,
   Schema,
   Part,
-} from "@google/generative-ai";
+} from "@/services/faith.service";
 import { mdToPdf } from "md-to-pdf";
 import {
   IDigitalProductPassportBatch,
@@ -29,17 +29,17 @@ export class DppService {
     this.fileRepo = new FileRepository();
   }
 
-  // Info: (20260615 - Tzuhan) Initialize and validate GoogleGenerativeAI client
-  private getGenAI(): GoogleGenerativeAI {
-    const apiKey = process.env.GEMINI_API_KEY;
+  // Info: (20260615 - Tzuhan) Initialize and validate FaithService client
+  private getGenAI(): FaithService {
+    const apiKey = process.env.AI_SERVICE;
     if (!apiKey) {
       throw new ApiError(
-        API_ERRORS.IS_GEMINI_API_KEY_UNDEFINED.code,
-        API_ERRORS.IS_GEMINI_API_KEY_UNDEFINED.message,
-        API_ERRORS.IS_GEMINI_API_KEY_UNDEFINED.status,
+        API_ERRORS.IS_AI_SERVICE_UNDEFINED.code,
+        API_ERRORS.IS_AI_SERVICE_UNDEFINED.message,
+        API_ERRORS.IS_AI_SERVICE_UNDEFINED.status,
       );
     }
-    return new GoogleGenerativeAI(apiKey);
+    return new FaithService(apiKey);
   }
 
   public async issueBatch(
@@ -259,7 +259,7 @@ ${personaContext}`;
           const dppExtractionSchema = this.getDppExtractionSchema();
 
           const model = genAI.getGenerativeModel({
-            model: "gemini-2.5-pro",
+            model: "gemma4:e4b",
             generationConfig: {
               responseMimeType: "application/json",
               responseSchema: dppExtractionSchema,
@@ -483,7 +483,7 @@ ${personaContext}`;
     const dppExtractionSchema = this.getDppExtractionSchema();
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-pro",
+      model: "gemma4:e4b",
       generationConfig: {
         responseMimeType: "application/json",
         responseSchema: dppExtractionSchema,

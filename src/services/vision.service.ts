@@ -1,15 +1,15 @@
-import { GoogleGenerativeAI, Part } from "@google/generative-ai";
+import { FaithService, Part } from "@/services/faith.service";
 
 export class VisionService {
-  private genAI: GoogleGenerativeAI;
+  private genAI: FaithService;
   private modelName: string;
 
   constructor(apiKey?: string) {
     // Info: (20260407 - Luphia) Default to environment variable if no key is provided
     const key =
-      apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
-    this.genAI = new GoogleGenerativeAI(key);
-    this.modelName = process.env.MODEL || "gemini-1.5-flash";
+      apiKey || process.env.AI_SERVICE || process.env.GOOGLE_API_KEY || "";
+    this.genAI = new FaithService(key);
+    this.modelName = process.env.FAITH_MODEL || "gemma4:e4b";
   }
 
   /**

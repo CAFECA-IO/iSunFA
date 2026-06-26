@@ -72,7 +72,7 @@ export function SetupSuperAdmin({
       res = await saveExternalConfig({
         appUrl: appUrlValue,
         gaId: "",
-        geminiKey: "",
+        aiService: "",
         maptilerKey: "",
         oenToken: "",
         oenMerchant: "",

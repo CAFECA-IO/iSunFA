@@ -1,5 +1,5 @@
 import { ITaskSkill } from "@/skills/types";
-import { SchemaType } from "@google/generative-ai";
+import { SchemaType } from "@/services/faith.service";
 import { AI_CONSULTATION_ROOM_PROMPT } from "@/constants/prompts/ai_consultation_room";
 import { ChatService } from "@/services/chat.service";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
@@ -98,7 +98,7 @@ export class AiConsultingSkill implements ITaskSkill {
         promptText,
         imagesForAi,
         true,
-        responseSchema as import("@google/generative-ai").Schema,
+        responseSchema as import("@/services/faith.service").Schema,
       );
       const parsed = JSON.parse(responseText);
       answer = parsed.answer || responseText;

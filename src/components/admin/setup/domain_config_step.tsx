@@ -20,7 +20,7 @@ export function SetupDomainConfig({
     "https://isunfa.localhost",
   );
   const [gaIdValue, setGaIdValue] = useState<string>("G-ZNVVW7JP0N");
-  const [geminiKey, setGeminiKey] = useState<string>("");
+  const [aiService, setAiService] = useState<string>("");
   const [maptilerKey, setMaptilerKey] = useState<string>("");
   const [oenToken, setOenToken] = useState<string>("");
   const [oenMerchant, setOenMerchant] = useState<string>("mermer");
@@ -28,7 +28,7 @@ export function SetupDomainConfig({
   // Info: (20260415 - Luphia) 解構出需要的基本型別值
   const appUrl = envData?.NEXT_PUBLIC_APP_URL;
   const gaId = envData?.NEXT_PUBLIC_GA_MEASUREMENT_ID;
-  const apiGeminiKey = envData?.GEMINI_API_KEY;
+  const apiAiService = envData?.AI_SERVICE;
   const apiMaptilerKey = envData?.NEXT_PUBLIC_MAPTILER_KEY;
   const tokenOen = envData?.OEN_ACCESS_TOKEN;
   const merchantOen = envData?.OEN_MERCHANT_ID;
@@ -38,14 +38,14 @@ export function SetupDomainConfig({
       // Info: (20260415 - Luphia) 只有當這些值存在時，才執行對應的 state 更新
       if (appUrl) setAppUrlValue(appUrl.replace(/^"(.*)"$/, "$1"));
       if (gaId) setGaIdValue(gaId.replace(/^"(.*)"$/, "$1"));
-      if (apiGeminiKey) setGeminiKey(apiGeminiKey.replace(/^"(.*)"$/, "$1"));
+      if (apiAiService) setAiService(apiAiService.replace(/^"(.*)"$/, "$1"));
       if (apiMaptilerKey)
         setMaptilerKey(apiMaptilerKey.replace(/^"(.*)"$/, "$1"));
       if (tokenOen) setOenToken(tokenOen.replace(/^"(.*)"$/, "$1"));
       if (merchantOen) setOenMerchant(merchantOen.replace(/^"(.*)"$/, "$1"));
     }, 0);
     return () => clearTimeout(tId);
-  }, [appUrl, gaId, apiGeminiKey, apiMaptilerKey, tokenOen, merchantOen]);
+  }, [appUrl, gaId, apiAiService, apiMaptilerKey, tokenOen, merchantOen]);
 
   const handleSaveAppUrl = async () => {
     setStatus(StepStatus.LOADING);
@@ -55,7 +55,7 @@ export function SetupDomainConfig({
       res = await saveExternalConfig({
         appUrl: appUrlValue,
         gaId: gaIdValue,
-        geminiKey: geminiKey,
+        aiService: aiService,
         maptilerKey: maptilerKey,
         oenToken: oenToken,
         oenMerchant: oenMerchant,
@@ -91,7 +91,7 @@ export function SetupDomainConfig({
   const isFormValid =
     appUrlValue.trim() !== "" &&
     gaIdValue.trim() !== "" &&
-    geminiKey.trim() !== "" &&
+    aiService.trim() !== "" &&
     maptilerKey.trim() !== "" &&
     oenToken.trim() !== "" &&
     oenMerchant.trim() !== "";
@@ -200,20 +200,20 @@ export function SetupDomainConfig({
               </div>
               <div className="flex flex-1 flex-col gap-1.5 p-5">
                 <label
-                  htmlFor="geminiInput"
+                  htmlFor="aiServiceInput"
                   className="text-xs font-bold tracking-wider text-gray-700 uppercase"
                 >
                   {t("admin_setup.step7.gemini_label")}
                 </label>
                 <input
-                  id="geminiInput"
-                  aria-label="Gemini API Key"
+                  id="aiServiceInput"
+                  aria-label="AI Service Host or Key"
                   type="password"
-                  value={geminiKey}
-                  onChange={(e) => setGeminiKey(e.target.value)}
+                  value={aiService}
+                  onChange={(e) => setAiService(e.target.value)}
                   className="transition- rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                   disabled={status === StepStatus.LOADING}
-                  placeholder="AIzaSy..."
+                  placeholder="http://localhost:20026"
                 />
                 <p className="mt-1 text-[10px] leading-relaxed text-gray-400">
                   {t("admin_setup.step7.gemini_hint")}

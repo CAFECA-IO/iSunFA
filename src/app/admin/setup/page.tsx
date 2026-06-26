@@ -132,7 +132,7 @@ export default function SetupWizardPage() {
               SUPER_ADMIN_PUB_Y: 6,
               NEXT_PUBLIC_APP_URL: 7,
               NEXT_PUBLIC_GA_MEASUREMENT_ID: 7,
-              GEMINI_API_KEY: 7,
+              AI_SERVICE: 7,
               OEN_ACCESS_TOKEN: 7,
               OEN_MERCHANT_ID: 7,
               MODEL: 7,

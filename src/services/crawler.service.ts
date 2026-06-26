@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI, Part } from "@google/generative-ai";
+import { FaithService, Part } from "@/services/faith.service";
 import { SnapshotService } from "@/services/snapshot.service";
 
 // Info: (20260407 - Luphia) Web Crawler Paradigm Interfaces
@@ -26,16 +26,16 @@ export interface ICrawlerJsonResult {
 }
 
 export class CrawlerService {
-  private genAI: GoogleGenerativeAI;
+  private genAI: FaithService;
   private modelName: string;
   private snapshotService: SnapshotService;
 
   constructor(apiKey?: string) {
     // Info: (20260407 - Luphia) Default to environment variable if no key is provided
     const key =
-      apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
-    this.genAI = new GoogleGenerativeAI(key);
-    this.modelName = process.env.MODEL || "gemini-1.5-flash";
+      apiKey || process.env.AI_SERVICE || process.env.GOOGLE_API_KEY || "";
+    this.genAI = new FaithService(key);
+    this.modelName = process.env.FAITH_MODEL || "gemma4:e4b";
     this.snapshotService = new SnapshotService();
   }
 

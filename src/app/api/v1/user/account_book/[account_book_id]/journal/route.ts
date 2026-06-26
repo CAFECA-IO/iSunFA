@@ -53,8 +53,8 @@ export async function POST(
     }
 
     /**
-     * Info: (20260327 - Luphia) 移除 GEMINI_API_KEY 的阻擋檢查
-     * 若目前建立空日記帳不需要呼叫 AI，故移除 GEMINI_API_KEY 的阻擋檢查
+     * Info: (20260327 - Luphia) 移除 AI_SERVICE 的阻擋檢查
+     * 若目前建立空日記帳不需要呼叫 AI，故移除 AI_SERVICE 的阻擋檢查
      * 若後續有需要實際呼叫，建議移至 AI Service 內部做檢查。
      */
 

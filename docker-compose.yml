@@ -53,7 +53,18 @@ services:
     ports:
       - '${OSRM_PORT:-20025}:5000'
 
+  faith:
+    build:
+      context: ./dockerfiles/faith
+    container_name: faith
+    restart: always
+    ports:
+      - '${FAITH_PORT:-20026}:11434'
+    volumes:
+      - faith_data:/root/.ollama
+
 volumes:
   blockchain_data:
   database_data:
+  faith_data:
   storage_data:

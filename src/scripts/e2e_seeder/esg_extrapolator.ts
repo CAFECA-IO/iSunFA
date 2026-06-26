@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { FaithService } from "@/services/faith.service";
 import * as fs from "fs";
 import * as path from "path";
 import { config } from "dotenv";
@@ -6,16 +6,16 @@ import { IExtractedContextCache } from "@/scripts/e2e_seeder/ai_vision_extractor
 
 config();
 
-const apiKey = process.env.GEMINI_API_KEY;
+const apiKey = process.env.AI_SERVICE;
 if (!apiKey) {
-  console.error("FATAL: GEMINI_API_KEY is not set in .env");
+  console.error("FATAL: AI_SERVICE is not set in .env");
   process.exit(1);
 }
 
-const genAI = new GoogleGenerativeAI(apiKey);
+const genAI = new FaithService(apiKey);
 
 const model = genAI.getGenerativeModel({
-  model: "gemini-2.5-pro",
+  model: "gemma4:e4b",
   generationConfig: {
     responseMimeType: "application/json",
   },

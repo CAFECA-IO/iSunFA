@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { FaithService as GoogleGenerativeAI } from "../src/services/faith.service";
 import { config } from "dotenv";
 
 config();

@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { mockReports } from "@/interfaces/business_monitor";
 import { IAIResponse } from "@/interfaces/business_monitor";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { FaithService } from "@/services/faith.service";
 import { jsonOk } from "@/lib/utils/response";
 
 /**
@@ -29,14 +29,14 @@ export async function GET(req: NextRequest) {
   // Info:(20260609 - Julian) 關鍵字與 AI 意圖過濾 (串接 Gemini API)
   if (query) {
     try {
-      const apiKey = process.env.GEMINI_API_KEY;
+      const apiKey = process.env.AI_SERVICE;
       if (!apiKey) {
-        throw new Error("Missing GEMINI_API_KEY");
+        throw new Error("Missing AI_SERVICE");
       }
 
-      const genAI = new GoogleGenerativeAI(apiKey);
+      const genAI = new FaithService(apiKey);
       const model = genAI.getGenerativeModel({
-        model: "gemini-2.5-pro",
+        model: "gemma4:e4b",
         generationConfig: {
           responseMimeType: "application/json",
         },

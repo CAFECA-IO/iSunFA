@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI, Part } from "@google/generative-ai";
+import { FaithService, Part } from "@/services/faith.service";
 import { CoaVectorService } from "@/services/rag/coa_vector.service";
 
 // Info: (20260407 - Luphia) Stage 1. Journal Paradigm
@@ -51,14 +51,14 @@ export interface IEsgExtraction {
 }
 
 export class VisionAccountingService {
-  private genAI: GoogleGenerativeAI;
+  private genAI: FaithService;
   private modelName: string;
 
   constructor(apiKey?: string) {
     const key =
-      apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
-    this.genAI = new GoogleGenerativeAI(key);
-    this.modelName = process.env.MODEL || "gemini-1.5-flash";
+      apiKey || process.env.AI_SERVICE || process.env.GOOGLE_API_KEY || "";
+    this.genAI = new FaithService(key);
+    this.modelName = process.env.FAITH_MODEL || "gemma4:e4b";
   }
 
   // Info: (20260407 - Luphia) Utility

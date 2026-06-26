@@ -1,5 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { GoogleAIFileManager } from "@google/generative-ai/server";
+import { FaithService, GoogleAIFileManager } from "@/services/faith.service";
 import * as fs from "fs";
 import * as path from "path";
 import { spawnSync } from "node:child_process";
@@ -8,18 +7,18 @@ import { config } from "dotenv";
 // Info: (20260502 - Tzuhan) 載入環境變數
 config();
 
-const apiKey = process.env.GEMINI_API_KEY;
+const apiKey = process.env.AI_SERVICE;
 if (!apiKey) {
-  console.error("FATAL: GEMINI_API_KEY is not set in .env");
+  console.error("FATAL: AI_SERVICE is not set in .env");
   process.exit(1);
 }
 
-const genAI = new GoogleGenerativeAI(apiKey);
+const genAI = new FaithService(apiKey);
 const fileManager = new GoogleAIFileManager(apiKey);
 
-// Info: (20260605 - Tzuhan) 升級使用 gemini-2.5-pro 因為我們需要支援原生的 PDF 檔案上傳與高精度的分析
+// Info: (20260605 - Tzuhan) 升級使用 gemma4:e4b 因為我們需要支援原生的 PDF 檔案上傳與高精度的分析
 const model = genAI.getGenerativeModel({
-  model: "gemini-2.5-pro",
+  model: "gemma4:e4b",
   generationConfig: {
     responseMimeType: "application/json",
   },

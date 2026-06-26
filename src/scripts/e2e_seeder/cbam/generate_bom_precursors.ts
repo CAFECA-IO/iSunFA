@@ -1,12 +1,12 @@
 import * as fs from "fs";
 import * as path from "path";
 import {
-  GoogleGenerativeAI,
+  FaithService,
   Schema,
   SchemaType,
   GenerativeModel,
   Part,
-} from "@google/generative-ai";
+} from "@/services/faith.service";
 import {
   ICompanyPersona,
   IPersonaSupplierCategory,
@@ -212,9 +212,9 @@ export async function generateBOMAndPrecursors(
     `🔍 抓取到畫像中的主要原料供應商: ${rawMaterialSuppliers.join(", ")}`,
   );
 
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
+  const genAI = new FaithService(process.env.AI_SERVICE as string);
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-pro",
+    model: "gemma4:e4b",
     generationConfig: {
       temperature: 0.2,
       responseMimeType: "application/json",
