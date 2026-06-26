@@ -49,9 +49,9 @@ export default function SuccessNotification({
             <div className="p-4">
               <div className="flex items-start">
                 <div className="shrink-0">
-                  <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
+                  <div className="relative flex size-10 items-center justify-center rounded-full bg-green-100">
                     <Check
-                      className="h-6 w-6 animate-bounce text-green-600"
+                      className="size-6 shrink-0 animate-bounce text-green-600"
                       aria-hidden="true"
                     />
                     <span className="absolute inset-0 animate-ping rounded-full bg-green-400 opacity-20"></span>
