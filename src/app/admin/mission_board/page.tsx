@@ -265,9 +265,9 @@ export default function AdminMissionBoardPage() {
             className="flex items-center gap-2 rounded-md border border-transparent bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:scale-105 hover:bg-orange-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 active:scale-95 disabled:opacity-50"
           >
             {gcLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="size-4 shrink-0 animate-spin" />
             ) : (
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="size-4 shrink-0" />
             )}
             {t("admin_mission_board.gc.btn_text")}
           </button>

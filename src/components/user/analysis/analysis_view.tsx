@@ -621,7 +621,7 @@ export default function AnalysisView() {
   };
 
   return (
-    <div className="w-full space-y-12">
+    <div className="w-full space-y-4 lg:space-y-12">
       {/* Info: (20260419 - Luphia) Header */}
       <div className="space-y-2">
         <h1 className="text-2xl font-bold text-gray-900">
@@ -633,13 +633,13 @@ export default function AnalysisView() {
       {user ? (
         <>
           {/* Info: (20260419 - Luphia) Tabs */}
-          <div className="mb-8 flex justify-center">
-            <div className="flex rounded-lg bg-gray-100 p-1">
+          <div className="mb-4 flex justify-center lg:mb-8">
+            <div className="grid w-full grid-cols-3 justify-between rounded-lg bg-gray-100 p-1 lg:w-fit">
               {(["internal", "external", "history"] as TabType[]).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`${activeTab === tab ? "bg-white shadow-sm" : "hover:bg-gray-50"} rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200`}
+                  className={`${activeTab === tab ? "bg-white shadow-sm" : "hover:bg-gray-50"} rounded-md px-4 py-2 text-xs font-semibold text-gray-900 transition-all duration-200 lg:px-8 lg:text-sm`}
                 >
                   {t(
                     `analysis.${tab}_${tab === "history" ? "reports" : "analysis"}`,
@@ -651,7 +651,7 @@ export default function AnalysisView() {
 
           {/* Info: (20260419 - Luphia) Main Content */}
           {activeTab !== "history" && (
-            <div className="min-h-[400px] rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
+            <div className="min-h-[400px] rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-900/5 lg:p-6">
               <div className="mx-auto max-w-4xl space-y-8">
                 <div className="space-y-6">
                   {/* Info: (20260419 - Luphia) 1. Period Type */}

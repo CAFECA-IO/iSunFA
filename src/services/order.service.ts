@@ -259,11 +259,62 @@ export async function retryFailedOrder(orderId: string) {
     throw new AppError(API_ERRORS.NF_ORDER);
   }
 
-  if (order.status !== ORDER_STATUS.FAILED) {
+  if (
+    order.status !== ORDER_STATUS.FAILED &&
+    order.status !== ORDER_STATUS.CANCEL
+  ) {
     throw new AppError(API_ERRORS.VL_INVALID_ORDER_STATUS);
   }
 
   await orderRepo.updateStatus(orderId, ORDER_STATUS.PAID);
+}
+
+/**
+ * Info: (20260625 - Julian) 批次重啟訂單
+ * @param orderIds - 訂單 ID 陣列
+ * @returns 成功和失敗的訂單數量以及錯誤訊息
+ */
+export async function batchReactivateOrders(orderIds: string[]) {
+  const results = {
+    successCount: 0,
+    failCount: 0,
+    errors: [] as { orderId: string; message: string }[],
+  };
+
+  for (const orderId of orderIds) {
+    try {
+      const order = await paymentRepo.getOrderById(orderId);
+      if (!order) {
+        throw new AppError(API_ERRORS.NF_ORDER);
+      }
+
+      if (
+        order.status !== ORDER_STATUS.FAILED &&
+        order.status !== ORDER_STATUS.CANCEL
+      ) {
+        throw new AppError(API_ERRORS.VL_INVALID_ORDER_STATUS);
+      }
+
+      await orderRepo.updateStatus(orderId, ORDER_STATUS.PAID);
+      results.successCount++;
+    } catch (e: unknown) {
+      // Info: (20260625 - Julian) 紀錄失敗的訂單數量
+      results.failCount++;
+      // Info: (20260625 - Julian) 紀錄失敗的訂單錯誤訊息
+      const errorMessage =
+        e instanceof AppError
+          ? e.message
+          : e instanceof Error
+            ? e.message
+            : "Unknown error";
+      results.errors.push({
+        orderId,
+        message: errorMessage,
+      });
+    }
+  }
+
+  return results;
 }
 
 export interface IGetAdminCommissionOrdersParams {
@@ -278,8 +329,9 @@ export interface IGetAdminCommissionOrdersParams {
 }
 
 /**
- * Info: (20260624 - Julian)
- * Get paginated admin commission orders.
+ * Info: (20260624 - Julian) 取得訂單分頁資料
+ * @param params - 訂單分頁參數
+ * @returns 訂單分頁資料
  */
 export async function getAdminCommissionOrdersPaginated(
   params: IGetAdminCommissionOrdersParams,
@@ -299,6 +351,7 @@ export async function getAdminCommissionOrdersPaginated(
     amount: { lt: 0 },
   };
 
+  // Info: (20260625 - Julian) 模糊搜尋訂單 ID、用戶名稱、錢包地址
   if (search) {
     where.OR = [
       { id: { contains: search, mode: "insensitive" } },
@@ -313,14 +366,19 @@ export async function getAdminCommissionOrdersPaginated(
     ];
   }
 
+  // Info: (20260625 - Julian) type 須轉換為大寫，以比對 data.data.category 層
   if (type && type !== "ALL") {
-    where.type = type;
+    where.AND = [
+      { data: { path: ["data", "category"], equals: type.toUpperCase() } },
+    ];
   }
 
+  // Info: (20260625 - Julian) 訂單狀態篩選
   if (orderStatus && orderStatus !== "ALL") {
     where.status = orderStatus;
   }
 
+  // Info: (20260625 - Julian) 排序篩選
   const orderBy: Prisma.OrderOrderByWithRelationInput = {};
   const direction = sortOrder === "asc" ? "asc" : "desc";
   if (sortBy === "createdAt") {

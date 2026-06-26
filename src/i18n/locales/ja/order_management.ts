@@ -25,6 +25,19 @@ export const orderManagement = {
     retry_confirm: "この注文を再実行してもよろしいですか？",
     retry_success: "注文の再実行が正常にトリガーされました。",
     retry_failed: "注文の再実行に失敗しました。",
+    reactivate: "再有効化",
+    reactivate_confirm: "この注文を手動で再有効化してもよろしいですか？",
+    reactivate_success: "注文が正常に再有効化されました。",
+    reactivate_failed: "注文の再有効化に失敗しました。",
+    batch_reactivate: "一括再有効化",
+    batch_reactivate_confirm:
+      "これら {{count}} 件の注文を一括で再有効化してもよろしいですか？",
+    batch_reactivate_success:
+      "注文の一括再有効化に成功しました：成功 {{success}} 件、失敗 {{fail}} 件。",
+    batch_reactivate_failed: "注文の一括再有効化に失敗しました。",
+    selected_count: "{{count}} 件の注文を選択中",
+    cancel_batch: "一括キャンセル",
+    no_reactivatable_orders: "再有効化可能な注文はありません",
     search_bar_placeholder: "キーワードによるユーザー検索、注文番号検索...",
   },
 };

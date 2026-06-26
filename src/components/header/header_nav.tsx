@@ -3,7 +3,7 @@
 import { Fragment } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/i18n/i18n_context";
-import { TextAlignJustify, CreditCard } from "lucide-react";
+import { TextAlignJustify, CreditCard, X } from "lucide-react";
 import {
   Menu,
   MenuButton,
@@ -52,37 +52,48 @@ export default function HeaderNav() {
         as="div"
         className="relative z-100 flex flex-col items-center xl:hidden"
       >
-        <MenuButton className="flex items-center gap-x-1 px-2 py-1 text-sm leading-6 font-semibold text-gray-900 transition-colors hover:text-orange-600 focus:outline-none">
-          <TextAlignJustify
-            className="size-5 shrink-0 text-gray-500"
-            aria-hidden="true"
-          />
-        </MenuButton>
-        <Transition
-          as={Fragment}
-          enter="transition ease-out duration-100"
-          enterFrom="transform opacity-0 scale-95"
-          enterTo="transform opacity-100 scale-100"
-          leave="transition ease-in duration-75"
-          leaveFrom="transform opacity-100 scale-100"
-          leaveTo="transform opacity-0 scale-95"
-        >
-          <MenuItems className="ring-opacity-5 absolute top-6 z-10 mt-2 flex w-32 origin-top-right flex-col rounded-md bg-white shadow-lg ring-1 ring-black focus:outline-none">
-            {NAV_ITEMS.map((item) => (
-              <MenuItem key={item.label}>
-                {() => (
-                  <Link
-                    href={item.href}
-                    className="flex items-center gap-1 px-4 py-2 text-sm leading-6 whitespace-normal text-gray-700 transition-colors hover:text-orange-600"
-                  >
-                    <item.icon size={14} className="shrink-0" />
-                    <span>{item.label}</span>
-                  </Link>
-                )}
-              </MenuItem>
-            ))}
-          </MenuItems>
-        </Transition>
+        {({ close }) => (
+          <>
+            <MenuButton className="flex items-center gap-x-1 px-2 py-1 text-sm leading-6 font-semibold text-gray-900 transition-colors hover:text-orange-600 focus:outline-none">
+              <TextAlignJustify
+                className="size-5 shrink-0 text-gray-500"
+                aria-hidden="true"
+              />
+            </MenuButton>
+            <Transition
+              as={Fragment}
+              enter="transition ease-out duration-200 md:duration-100"
+              enterFrom="transform opacity-0 translate-y-full md:translate-y-0 md:scale-95"
+              enterTo="transform opacity-100 translate-y-0 md:scale-100"
+              leave="transition ease-in duration-150 md:duration-75"
+              leaveFrom="transform opacity-100 translate-y-0 md:scale-100"
+              leaveTo="transform opacity-0 translate-y-full md:translate-y-0 md:scale-95"
+            >
+              <MenuItems className="fixed top-0 left-0 h-screen w-full bg-white">
+                <button
+                  type="button"
+                  onClick={close}
+                  className="flex w-full shrink-0 justify-end border-b border-gray-300 px-6 py-4 shadow"
+                >
+                  <X size={24} />
+                </button>
+                {NAV_ITEMS.map((item) => (
+                  <MenuItem key={item.label}>
+                    {() => (
+                      <Link
+                        href={item.href}
+                        className="flex items-center justify-center gap-4 border-b border-gray-300 px-6 py-4 text-sm leading-6 whitespace-normal text-gray-700 transition-colors last:border-none hover:text-orange-600"
+                      >
+                        <item.icon size={14} className="shrink-0" />
+                        <span>{item.label}</span>
+                      </Link>
+                    )}
+                  </MenuItem>
+                ))}
+              </MenuItems>
+            </Transition>
+          </>
+        )}
       </Menu>
     </>
   );

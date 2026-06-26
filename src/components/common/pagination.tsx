@@ -50,7 +50,7 @@ export default function Pagination({
           disabled={currentPage <= 1}
           className="flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <ChevronLeft className="mr-1 h-4 w-4" />
+          <ChevronLeft className="mr-1 size-4 shrink-0" />
           {t("common.pagination.prev")}
         </button>
         <button
@@ -60,7 +60,7 @@ export default function Pagination({
           className="flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         >
           {t("common.pagination.next")}
-          <ChevronRight className="ml-1 h-4 w-4" />
+          <ChevronRight className="ml-1 size-4 shrink-0" />
         </button>
       </div>
 
