@@ -63,8 +63,19 @@ services:
     volumes:
       - faith_data:/root/.ollama
 
+  isunfa:
+    build:
+      context: ./dockerfiles/isunfa
+    container_name: isunfa
+    restart: always
+    ports:
+      - '${ISUNFA_PORT:-10020}:10020'
+    volumes:
+      - isunfa_data:/app/iSunFA
+
 volumes:
   blockchain_data:
   database_data:
   faith_data:
+  isunfa_data:
   storage_data:
