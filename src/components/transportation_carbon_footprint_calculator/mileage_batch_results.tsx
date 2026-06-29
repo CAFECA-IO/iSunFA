@@ -24,6 +24,7 @@ export interface IMileageBatchResult {
   plan?: ILogisticsPlan;
   mode?: string;
   error?: string;
+  waypoints?: string | Array<{ lat: number; lng: number; name?: string }>;
 }
 
 export interface IMileageBatchResultsProps {
@@ -67,6 +68,9 @@ export function MileageBatchResults({
     if (selectedRoutesMap[index]) return selectedRoutesMap[index];
 
     // Info: (20260618 - Tzuhan) Default selection
+    if (plan?.comparisonData?.plans?.custom_multimodal) {
+      return new Set<RouteType>(["custom"]);
+    }
     return new Set<RouteType>(
       [
         plan?.comparisonData?.plans?.landOnly?.success ? "land" : null,
@@ -143,6 +147,8 @@ export function MileageBatchResults({
             const isAirAvailable =
               !!item.plan?.comparisonData?.plans?.air_multimodal
                 ?.air_airport_to_airport?.success;
+            const isCustomAvailable =
+              !!item.plan?.comparisonData?.plans?.custom_multimodal;
 
             return (
               <div
@@ -180,6 +186,34 @@ export function MileageBatchResults({
                           {renderLocation(item.origin)}
                         </span>
                       </div>
+                      {Array.isArray(item.waypoints)
+                        ? item.waypoints.map((wp, i) => (
+                            <div
+                              key={i}
+                              className="flex items-center gap-1.5 text-sm font-semibold text-gray-700"
+                            >
+                              <ArrowRight className="h-4 w-4 text-gray-400" />
+                              <MapPin className="h-4 w-4 text-purple-500" />
+                              <span
+                                className="max-w-[100px] truncate"
+                                title={renderLocation(wp)}
+                              >
+                                {renderLocation(wp)}
+                              </span>
+                            </div>
+                          ))
+                        : item.waypoints && (
+                            <div className="flex items-center gap-1.5 text-sm font-semibold text-gray-700">
+                              <ArrowRight className="h-4 w-4 text-gray-400" />
+                              <MapPin className="h-4 w-4 text-purple-500" />
+                              <span
+                                className="max-w-[150px] truncate"
+                                title={String(item.waypoints)}
+                              >
+                                {String(item.waypoints)}
+                              </span>
+                            </div>
+                          )}
                       <ArrowRight className="h-4 w-4 text-gray-400" />
                       <div className="flex items-center gap-1.5 text-sm font-semibold text-gray-700">
                         <MapPin className="h-4 w-4 text-emerald-500" />
@@ -195,10 +229,14 @@ export function MileageBatchResults({
                         </span>
                       </div>
                     </div>
-                    {item.plan?.comparisonData?.plans?.landOnly?.co2eKg && (
+                    {(item.plan?.comparisonData?.plans?.custom_multimodal
+                      ?.total_co2eKg ||
+                      item.plan?.comparisonData?.plans?.landOnly?.co2eKg) && (
                       <div className="ml-auto hidden items-center gap-2 rounded-lg border border-gray-100 bg-white px-3 py-1 text-sm font-bold text-gray-600 shadow-sm sm:flex">
                         {Number(
-                          item.plan.comparisonData.plans.landOnly.co2eKg,
+                          item.plan.comparisonData.plans.custom_multimodal
+                            ?.total_co2eKg ||
+                            item.plan.comparisonData.plans.landOnly?.co2eKg,
                         ).toLocaleString(undefined, {
                           maximumFractionDigits: 1,
                         })}{" "}
@@ -237,6 +275,23 @@ export function MileageBatchResults({
                 {isExpanded && item.plan && (
                   <div className="border-t border-gray-200 bg-white p-6">
                     <div className="mb-8 flex flex-wrap justify-center gap-3">
+                      {isCustomAvailable && (
+                        <button
+                          onClick={() =>
+                            toggleRoute(index, "custom", item.plan)
+                          }
+                          className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition-all ${
+                            selectedRoutes.has("custom")
+                              ? "border-purple-200 bg-purple-50 text-purple-700"
+                              : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+                          }`}
+                        >
+                          <MapPin className="h-4 w-4" />{" "}
+                          {t(
+                            "transportation_carbon_footprint_calculator.plan_section.title_custom",
+                          ) || "自訂多段路線"}
+                        </button>
+                      )}
                       {isLandAvailable && (
                         <button
                           onClick={() => toggleRoute(index, "land", item.plan)}
@@ -284,8 +339,10 @@ export function MileageBatchResults({
                       )}
                     </div>
                     <div className="flex flex-col gap-16">
-                      {["land", "sea", "air"].map((type) => {
+                      {["custom", "land", "sea", "air"].map((type) => {
                         if (!selectedRoutes.has(type as RouteType)) return null;
+                        if (type === "custom" && !isCustomAvailable)
+                          return null;
                         if (type === "land" && !isLandAvailable) return null;
                         if (type === "sea" && !isSeaAvailable) return null;
                         if (type === "air" && !isAirAvailable) return null;

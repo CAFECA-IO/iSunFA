@@ -221,6 +221,7 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
           results.push({
             origin: item.origin,
             dest: item.dest,
+            waypoints: item.waypoints,
             mode: selectedMode,
             distanceKm: totalDist,
             landDistanceKm: landDist,
@@ -238,6 +239,7 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
           results.push({
             origin: item.origin,
             dest: item.dest,
+            waypoints: item.waypoints,
             error: "Calculation failed",
           });
         }
