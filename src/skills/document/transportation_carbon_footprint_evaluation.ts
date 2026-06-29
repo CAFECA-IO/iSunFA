@@ -35,7 +35,12 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
     }
 
     if (action === MILEAGE_ACTION.CALCULATE_BATCH) {
-      const items = payload.items as Array<{ origin: string | { lat: number; lng: number; name?: string }; dest: string | { lat: number; lng: number; name?: string }; weightKg?: number; mode?: string }>;
+      const items = payload.items as Array<{
+        origin: string | { lat: number; lng: number; name?: string };
+        dest: string | { lat: number; lng: number; name?: string };
+        weightKg?: number;
+        waypoints?: string;
+      }>;
       if (!items || !Array.isArray(items))
         throw new Error("Missing items for batch calculation.");
 
@@ -46,8 +51,14 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
           let plan;
 
           if (
-            typeof item.origin === "object" && item.origin !== null && "lat" in item.origin && "lng" in item.origin &&
-            typeof item.dest === "object" && item.dest !== null && "lat" in item.dest && "lng" in item.dest
+            typeof item.origin === "object" &&
+            item.origin !== null &&
+            "lat" in item.origin &&
+            "lng" in item.origin &&
+            typeof item.dest === "object" &&
+            item.dest !== null &&
+            "lat" in item.dest &&
+            "lng" in item.dest
           ) {
             plan = await calculateLogisticsPlan(
               Number(item.origin.lat),
@@ -55,6 +66,7 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
               Number(item.dest.lat),
               Number(item.dest.lng),
               weightKg,
+              item.waypoints,
             );
           } else {
             const originStr =
@@ -83,21 +95,54 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
           let seaGeometry: unknown = null;
           let airGeometry: unknown = null;
 
-          const forceMode = (item as { mode?: string }).mode;
+          const customPlan = plan.comparisonData.plans.custom_multimodal;
 
-          if (
-            forceMode === ROUTE_MODE.LAND ||
-            (!forceMode && landPlan.success && !landPlan.isFallback)
+          if (customPlan) {
+            selectedMode = "CUSTOM";
+            totalDist = customPlan.total_distanceKm || 0;
+            landDist = 0;
+            seaDist = 0;
+
+            const landGeoms: GeoJSON.Feature[] = [];
+            const seaGeoms: GeoJSON.Feature[] = [];
+
+            for (const seg of customPlan.segments) {
+              if (seg.mode === "LAND") {
+                landDist += seg.distanceKm || 0;
+                if (seg.geometry)
+                  landGeoms.push({
+                    type: "Feature",
+                    geometry: seg.geometry,
+                    properties: {},
+                  });
+              } else if (seg.mode === "SEA") {
+                seaDist += seg.distanceKm || 0;
+                if (seg.geometry)
+                  seaGeoms.push({
+                    type: "Feature",
+                    geometry: seg.geometry,
+                    properties: {},
+                  });
+              }
+            }
+
+            if (landGeoms.length > 0)
+              landGeometry = { type: "FeatureCollection", features: landGeoms };
+            if (seaGeoms.length > 0)
+              seaGeometry = { type: "FeatureCollection", features: seaGeoms };
+          } else if (
+            !item.waypoints &&
+            landPlan.success &&
+            !landPlan.isFallback
           ) {
             selectedMode = ROUTE_MODE.LAND;
             totalDist = landPlan.distanceKm || 0;
             landDist = totalDist;
             landGeometry = landPlan.geometry;
           } else if (
-            forceMode === ROUTE_MODE.SEA_LAND ||
-            (!forceMode &&
-              seaPlan.sea_port_to_port.success &&
-              !seaPlan.sea_port_to_port.isFallback)
+            !item.waypoints &&
+            seaPlan.sea_port_to_port.success &&
+            !seaPlan.sea_port_to_port.isFallback
           ) {
             selectedMode = ROUTE_MODE.SEA_LAND;
             landDist =
@@ -129,10 +174,9 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
               ],
             };
           } else if (
-            forceMode === ROUTE_MODE.AIR_LAND ||
-            (!forceMode &&
-              airPlan.air_airport_to_airport.success &&
-              !airPlan.air_airport_to_airport.isFallback)
+            !item.waypoints &&
+            airPlan.air_airport_to_airport.success &&
+            !airPlan.air_airport_to_airport.isFallback
           ) {
             selectedMode = ROUTE_MODE.AIR_LAND;
             landDist =
@@ -162,44 +206,6 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
                   : []),
               ],
             };
-          } else if (forceMode === ROUTE_MODE.SEA_LAND_AIR) {
-            selectedMode = ROUTE_MODE.SEA_LAND_AIR;
-            if (seaPlan.sea_port_to_port.success) {
-              landDist =
-                (seaPlan.land_origin_to_port.distanceKm || 0) +
-                (seaPlan.land_port_to_dest.distanceKm || 0);
-              seaDist = (seaPlan.sea_port_to_port.distanceKm || 0) * 0.5;
-              airDist = (seaPlan.sea_port_to_port.distanceKm || 0) * 0.5;
-              totalDist = landDist + seaDist + airDist;
-              seaGeometry = seaPlan.sea_port_to_port.geometry;
-              // Info: (20260511 - Luphia) Approximation
-              airGeometry = seaPlan.sea_port_to_port.geometry;
-              landGeometry = {
-                type: "FeatureCollection",
-                features: [
-                  ...(seaPlan.land_origin_to_port.geometry
-                    ? [
-                        {
-                          type: "Feature",
-                          geometry: seaPlan.land_origin_to_port.geometry,
-                        },
-                      ]
-                    : []),
-                  ...(seaPlan.land_port_to_dest.geometry
-                    ? [
-                        {
-                          type: "Feature",
-                          geometry: seaPlan.land_port_to_dest.geometry,
-                        },
-                      ]
-                    : []),
-                ],
-              };
-            } else {
-              totalDist = landPlan.distanceKm || 0;
-              landDist = totalDist;
-              landGeometry = landPlan.geometry;
-            }
           } else {
             // Info: (20260510 - Luphia) fallback to land
             selectedMode = ROUTE_MODE.LAND;

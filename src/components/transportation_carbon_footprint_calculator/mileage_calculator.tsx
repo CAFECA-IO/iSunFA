@@ -23,7 +23,6 @@ import {
 } from "@/hooks/use_order_transaction";
 import {
   ANALYSIS_CATEGORY,
-  type RouteMode,
   MILEAGE_ACTION,
   type MileageAction,
 } from "@/constants/analysis";
@@ -35,7 +34,7 @@ export interface IMileageItem {
   id: string;
   origin: string;
   dest: string;
-  mode?: RouteMode;
+  waypoints?: string;
   distanceKm?: number;
   landDistanceKm?: number;
   seaDistanceKm?: number;
@@ -65,7 +64,7 @@ export function MileageCalculator({
   const [isCalculating, setIsCalculating] = useState(false);
   const [newRouteDesc, setNewRouteDesc] = useState("");
   const [isAddingManual, setIsAddingManual] = useState(false);
-  const [newMode, setNewMode] = useState<RouteMode | "">("");
+  const [newWaypoints, setNewWaypoints] = useState("");
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [alertModal, setAlertModal] = useState({
     isOpen: false,
@@ -222,7 +221,7 @@ export function MileageCalculator({
         id: crypto.randomUUID(),
         origin: item.origin,
         dest: item.dest,
-        mode: (newMode as RouteMode) || item.mode,
+        waypoints: newWaypoints || item.waypoints,
         originLat: item.originLat,
         originLng: item.originLng,
         destLat: item.destLat,
@@ -231,7 +230,7 @@ export function MileageCalculator({
       }));
       setItems((prev) => [...prev, ...newItems]);
       setNewRouteDesc("");
-      setNewMode("");
+      setNewWaypoints("");
     } catch (err) {
       console.error(err);
       setAlertModal({
@@ -255,7 +254,7 @@ export function MileageCalculator({
         id: crypto.randomUUID(),
         origin: item.origin,
         dest: item.dest,
-        mode: item.mode as RouteMode,
+        waypoints: item.waypoints,
         originLat: item.originLat,
         originLng: item.originLng,
         destLat: item.destLat,
@@ -311,7 +310,7 @@ export function MileageCalculator({
                 lng: Number(item.destLng),
               }
             : item.dest,
-          mode: item.mode,
+          waypoints: item.waypoints,
           weightKg: item.weightKg ? Number(item.weightKg) : undefined,
         })),
       },
@@ -377,25 +376,8 @@ export function MileageCalculator({
               .trim()
               .toUpperCase();
 
-            let mode: RouteMode | undefined = undefined;
-            if (
-              modeRaw.includes("LAND") ||
-              modeRaw.includes("陸運") ||
-              modeRaw.includes("卡車")
-            )
-              mode = "LAND";
-            else if (
-              modeRaw.includes("SEA") ||
-              modeRaw.includes("海運") ||
-              modeRaw.includes("船")
-            )
-              mode = "SEA_LAND";
-            else if (
-              modeRaw.includes("AIR") ||
-              modeRaw.includes("空運") ||
-              modeRaw.includes("飛機")
-            )
-              mode = "AIR_LAND";
+            let waypoints: string | undefined = undefined;
+            if (modeRaw) waypoints = modeRaw;
 
             if (
               origin &&
@@ -407,7 +389,7 @@ export function MileageCalculator({
                 id: crypto.randomUUID(),
                 origin,
                 dest,
-                mode,
+                waypoints,
               });
             }
           });
@@ -417,7 +399,7 @@ export function MileageCalculator({
               const aiPrompt = newItems
                 .map(
                   (item) =>
-                    `From ${item.origin} to ${item.dest} ${item.mode ? `(Mode: ${item.mode})` : ""}`,
+                    `From ${item.origin} to ${item.dest} ${item.waypoints ? `(Waypoints: ${item.waypoints})` : ""}`,
                 )
                 .join("\n");
               const parsed = await parseMultipleRoutesFromText(aiPrompt);
@@ -426,7 +408,7 @@ export function MileageCalculator({
                 id: crypto.randomUUID(),
                 origin: item.origin,
                 dest: item.dest,
-                mode: (item.mode as RouteMode) || "LAND",
+                waypoints: item.waypoints,
                 originLat: item.originLat,
                 originLng: item.originLng,
                 destLat: item.destLat,
@@ -539,41 +521,15 @@ export function MileageCalculator({
           </label>
           <label className="flex w-full shrink-0 flex-col gap-2 md:w-48">
             <span className="text-sm font-medium text-gray-700">
-              {t(
-                "transportation_carbon_footprint_calculator.mileage_calculator.col_mode",
-              )}
+              中繼站 (選填) / Waypoints
             </span>
-            <select
-              value={newMode}
-              onChange={(e) => setNewMode(e.target.value as RouteMode | "")}
+            <input
+              type="text"
+              value={newWaypoints}
+              onChange={(e) => setNewWaypoints(e.target.value)}
+              placeholder="e.g. Singapore, Rotterdam"
               className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-gray-900 transition-all focus:ring-2 focus:ring-orange-500 focus:outline-none"
-            >
-              <option value="">
-                {t(
-                  "transportation_carbon_footprint_calculator.mileage_calculator.mode_auto",
-                )}
-              </option>
-              <option value="LAND">
-                {t(
-                  "transportation_carbon_footprint_calculator.mileage_calculator.mode_LAND",
-                )}
-              </option>
-              <option value="SEA_LAND">
-                {t(
-                  "transportation_carbon_footprint_calculator.mileage_calculator.mode_SEA_LAND",
-                )}
-              </option>
-              <option value="AIR_LAND">
-                {t(
-                  "transportation_carbon_footprint_calculator.mileage_calculator.mode_AIR_LAND",
-                )}
-              </option>
-              <option value="SEA_LAND_AIR">
-                {t(
-                  "transportation_carbon_footprint_calculator.mileage_calculator.mode_SEA_LAND_AIR",
-                )}
-              </option>
-            </select>
+            />
           </label>
           <button
             onClick={handleManualAdd}
@@ -618,9 +574,7 @@ export function MileageCalculator({
                     )}
                   </th>
                   <th className="px-6 py-3 font-medium">
-                    {t(
-                      "transportation_carbon_footprint_calculator.mileage_calculator.col_mode",
-                    )}
+                    中繼站設定 / Waypoints
                   </th>
                   <th className="px-6 py-3 font-medium">
                     {t(
@@ -646,8 +600,9 @@ export function MileageCalculator({
                       </td>
                       <td className="px-6 py-4">
                         {!item.loading && !item.success ? (
-                          <select
-                            value={item.mode || ""}
+                          <input
+                            type="text"
+                            value={item.waypoints || ""}
                             onChange={(e) => {
                               const val = e.target.value;
                               setItems((prev) =>
@@ -655,47 +610,18 @@ export function MileageCalculator({
                                   i.id === item.id
                                     ? {
                                         ...i,
-                                        mode: val
-                                          ? (val as RouteMode)
-                                          : undefined,
+                                        waypoints: val || undefined,
                                       }
                                     : i,
                                 ),
                               );
                             }}
-                            className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 focus:ring-2 focus:ring-orange-500"
-                          >
-                            <option value="">
-                              {t(
-                                "transportation_carbon_footprint_calculator.mileage_calculator.mode_auto",
-                              )}
-                            </option>
-                            <option value="LAND">
-                              {t(
-                                "transportation_carbon_footprint_calculator.mileage_calculator.mode_LAND",
-                              )}
-                            </option>
-                            <option value="SEA_LAND">
-                              {t(
-                                "transportation_carbon_footprint_calculator.mileage_calculator.mode_SEA_LAND",
-                              )}
-                            </option>
-                            <option value="AIR_LAND">
-                              {t(
-                                "transportation_carbon_footprint_calculator.mileage_calculator.mode_AIR_LAND",
-                              )}
-                            </option>
-                            <option value="SEA_LAND_AIR">
-                              {t(
-                                "transportation_carbon_footprint_calculator.mileage_calculator.mode_SEA_LAND_AIR",
-                              )}
-                            </option>
-                          </select>
-                        ) : item.mode ? (
+                            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 focus:ring-2 focus:ring-orange-500"
+                            placeholder="e.g. Singapore, Rotterdam"
+                          />
+                        ) : item.waypoints ? (
                           <span className="text-sm text-gray-600">
-                            {t(
-                              `transportation_carbon_footprint_calculator.mileage_calculator.mode_${item.seaDistanceKm && item.airDistanceKm && item.seaDistanceKm > 0 && item.airDistanceKm > 0 ? "SEA_LAND_AIR" : item.mode}`,
-                            )}
+                            {item.waypoints}
                           </span>
                         ) : (
                           <span className="text-gray-400">-</span>
