@@ -67,7 +67,9 @@ export async function parseSmartInput(
   } catch (error) {
     console.error("[Action Error] parseSmartInput:", error);
     throw new Error(
-      error instanceof Error ? error.message : "解析語意時發生錯誤",
+      error instanceof Error
+        ? error.message
+        : "transportation_carbon_footprint_calculator.error.ai_parse_failed",
     );
   }
 }
@@ -76,7 +78,7 @@ export async function parseMultipleRoutesFromText(text: string): Promise<
   Array<{
     origin: string;
     dest: string;
-    waypoints?: string;
+    waypoints?: Array<{ name: string; lat: number; lng: number }>;
     originLat?: number;
     originLng?: number;
     destLat?: number;
@@ -95,7 +97,7 @@ export async function parseMultipleRoutesFromText(text: string): Promise<
             For each route, identify the origin and destination as a string description (e.g., city name, address).
             CRITICAL: You MUST accurately infer the exact latitude and longitude for both the origin and destination based on their locations. Do NOT omit them. If you are unsure, make your best guess for the city or airport coordinates.
             Extract the weight or mass of the cargo in kilograms (KG) as a number. Be aware that the input might be conversational text, or it might be tabular/CSV data (e.g., a number under a "Weight" or "Weight(kg)" column). If you see a number corresponding to weight, extract it.
-            Extract any mentioned waypoints or intermediate stops as a single comma-separated string. If none are mentioned, omit the field or leave it empty.
+            Extract any mentioned waypoints or intermediate stops. For each waypoint, accurately infer its exact latitude and longitude based on the location name. If none are mentioned, omit the field or leave it empty.
             
             User Request: "${text}"
             
@@ -105,7 +107,10 @@ export async function parseMultipleRoutesFromText(text: string): Promise<
               {
                   "origin": "String description of origin",
                   "dest": "String description of destination",
-                  "waypoints": "String description of waypoints (e.g., Singapore, Rotterdam)",
+                  "waypoints": [
+                    { "name": "Singapore", "lat": 1.29, "lng": 103.85 },
+                    { "name": "Rotterdam", "lat": 51.92, "lng": 4.47 }
+                  ],
                   "originLat": 12.34,
                   "originLng": 56.78,
                   "destLat": 12.34,
@@ -127,6 +132,10 @@ export async function parseMultipleRoutesFromText(text: string): Promise<
     return JSON.parse(resultText);
   } catch (error) {
     console.error("[Action Error] parseMultipleRoutesFromText:", error);
-    throw new Error("解析多筆路線時發生錯誤");
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : "transportation_carbon_footprint_calculator.error.ai_parse_failed",
+    );
   }
 }

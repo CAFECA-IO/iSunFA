@@ -109,7 +109,13 @@ export function ExcelImportWizard({
           id: crypto.randomUUID(),
           origin,
           dest,
-          waypoints,
+          waypoints: waypoints
+            ? waypoints
+                .split(",")
+                .map((w) => w.trim())
+                .filter(Boolean)
+                .map((w) => ({ id: crypto.randomUUID(), name: w }))
+            : [],
         });
       } else {
         errCnt++;
@@ -310,7 +316,12 @@ export function ExcelImportWizard({
                 {
                   key: "waypoints",
                   label: "中繼站 / Waypoints (Optional)",
-                  render: (row) => (row as IMileageItem).waypoints || "-",
+                  render: (row) => {
+                    const wps = (row as IMileageItem).waypoints;
+                    return wps && wps.length > 0
+                      ? wps.map((w) => w.name).join(", ")
+                      : "-";
+                  },
                 },
               ]}
               rowKey={(row) => JSON.stringify(row)}

@@ -112,6 +112,19 @@ export const transportationCarbonFootprintCalculator = {
     err_required: "출발지와 목적지 모두 필수입니다",
     err_calc_failed: "계산 실패",
     err_parse_failed: "분석 실패",
+    err_waypoints_incomplete_title: "경유지 데이터가 불완전합니다",
+    err_waypoints_incomplete_msg:
+      "일부 경유지에 위도/경도가 설정되지 않았습니다. 자동 분석을 클릭하거나 수동으로 위도/경도를 입력한 후 다시 시도해주세요.",
+    waypoint_modal_title: "경유지 설정",
+    waypoint_modal_empty: "경유지가 없습니다. 아래 버튼을 클릭하여 추가하세요.",
+    waypoint_modal_placeholder:
+      "장소를 입력하세요 (예: Singapore 또는 Port of Rotterdam)",
+    waypoint_modal_auto_parse: "위도/경도 자동 분석",
+    waypoint_modal_auto_parse_short: "자동 분석",
+    waypoint_modal_lat: "위도 (Latitude)",
+    waypoint_modal_lng: "경도 (Longitude)",
+    waypoint_modal_add: "경유지 추가",
+    waypoint_modal_confirm: "확인",
     empty_list:
       "현재 목록이 없습니다. 추가하거나 텍스트를 붙여넣어 분석하세요.",
     col_mode: "운송 모드",

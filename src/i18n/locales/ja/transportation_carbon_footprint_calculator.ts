@@ -113,6 +113,20 @@ export const transportationCarbonFootprintCalculator = {
     err_required: "出発地と目的地は必須です",
     err_calc_failed: "計算失敗",
     err_parse_failed: "解析失敗",
+    err_waypoints_incomplete_title: "中継地のデータが不完全です",
+    err_waypoints_incomplete_msg:
+      "一部の中継地に緯度・経度が設定されていません。自動解析をクリックするか、手動で入力してから再試行してください。",
+    waypoint_modal_title: "中継地設定",
+    waypoint_modal_empty:
+      "中継地がありません。下のボタンをクリックして追加してください。",
+    waypoint_modal_placeholder:
+      "場所を入力してください（例：Singapore または Port of Rotterdam）",
+    waypoint_modal_auto_parse: "緯度経度を自動解析",
+    waypoint_modal_auto_parse_short: "自動解析",
+    waypoint_modal_lat: "緯度 (Latitude)",
+    waypoint_modal_lng: "経度 (Longitude)",
+    waypoint_modal_add: "中継地を追加",
+    waypoint_modal_confirm: "確定",
     empty_list:
       "リストがありません。手動で追加するかテキストを貼り付けてください。",
     col_mode: "輸送モード",

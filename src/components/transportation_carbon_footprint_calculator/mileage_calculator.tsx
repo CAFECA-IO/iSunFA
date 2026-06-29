@@ -29,12 +29,14 @@ import {
 import { parseMultipleRoutesFromText } from "@/services/route.smart.service";
 import { ORDER_TYPE, ORDER_STATUS } from "@/constants/status";
 import { ANALYSIS_BASE_COSTS } from "@/constants/price";
+import type { IWaypoint } from "@/interfaces/logistics";
+import { WaypointEditModal } from "@/components/transportation_carbon_footprint_calculator/waypoint_edit_modal";
 
 export interface IMileageItem {
   id: string;
   origin: string;
   dest: string;
-  waypoints?: string;
+  waypoints?: IWaypoint[];
   distanceKm?: number;
   landDistanceKm?: number;
   seaDistanceKm?: number;
@@ -64,8 +66,15 @@ export function MileageCalculator({
   const [isCalculating, setIsCalculating] = useState(false);
   const [newRouteDesc, setNewRouteDesc] = useState("");
   const [isAddingManual, setIsAddingManual] = useState(false);
-  const [newWaypoints, setNewWaypoints] = useState("");
+  const [newWaypoints, setNewWaypoints] = useState<IWaypoint[]>([]);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  // Waypoint Edit Modal state
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    itemId: string | null; // "new" for newWaypoints, or item.id
+    waypoints: IWaypoint[];
+  }>({ isOpen: false, itemId: null, waypoints: [] });
   const [alertModal, setAlertModal] = useState({
     isOpen: false,
     title: "",
@@ -221,7 +230,10 @@ export function MileageCalculator({
         id: crypto.randomUUID(),
         origin: item.origin,
         dest: item.dest,
-        waypoints: newWaypoints || item.waypoints,
+        waypoints:
+          newWaypoints.length > 0
+            ? newWaypoints
+            : (item.waypoints as IWaypoint[]),
         originLat: item.originLat,
         originLng: item.originLng,
         destLat: item.destLat,
@@ -230,7 +242,7 @@ export function MileageCalculator({
       }));
       setItems((prev) => [...prev, ...newItems]);
       setNewRouteDesc("");
-      setNewWaypoints("");
+      setNewWaypoints([]);
     } catch (err) {
       console.error(err);
       setAlertModal({
@@ -254,7 +266,10 @@ export function MileageCalculator({
         id: crypto.randomUUID(),
         origin: item.origin,
         dest: item.dest,
-        waypoints: item.waypoints,
+        waypoints: item.waypoints?.map((wp) => ({
+          ...wp,
+          id: crypto.randomUUID(),
+        })),
         originLat: item.originLat,
         originLng: item.originLng,
         destLat: item.destLat,
@@ -281,6 +296,22 @@ export function MileageCalculator({
     if (items.length === 0) return;
     const uncalculatedItems = items.filter((item) => !item.success);
     if (uncalculatedItems.length === 0) return;
+
+    const hasInvalidWaypoints = uncalculatedItems.some((item) =>
+      item.waypoints?.some((w) => w.lat === undefined || w.lng === undefined),
+    );
+    if (hasInvalidWaypoints) {
+      setAlertModal({
+        isOpen: true,
+        title: t(
+          "transportation_carbon_footprint_calculator.mileage_calculator.err_waypoints_incomplete_title",
+        ),
+        message: t(
+          "transportation_carbon_footprint_calculator.mileage_calculator.err_waypoints_incomplete_msg",
+        ),
+      });
+      return;
+    }
 
     setIsCalculating(true);
     setItems((prev) =>
@@ -389,7 +420,13 @@ export function MileageCalculator({
                 id: crypto.randomUUID(),
                 origin,
                 dest,
-                waypoints,
+                waypoints: waypoints
+                  ? waypoints
+                      .split(",")
+                      .map((w) => w.trim())
+                      .filter(Boolean)
+                      .map((w) => ({ id: crypto.randomUUID(), name: w }))
+                  : undefined,
               });
             }
           });
@@ -399,7 +436,7 @@ export function MileageCalculator({
               const aiPrompt = newItems
                 .map(
                   (item) =>
-                    `From ${item.origin} to ${item.dest} ${item.waypoints ? `(Waypoints: ${item.waypoints})` : ""}`,
+                    `From ${item.origin} to ${item.dest} ${item.waypoints && item.waypoints.length > 0 ? `(Waypoints: ${item.waypoints.map((w) => w.name).join(", ")})` : ""}`,
                 )
                 .join("\n");
               const parsed = await parseMultipleRoutesFromText(aiPrompt);
@@ -408,7 +445,10 @@ export function MileageCalculator({
                 id: crypto.randomUUID(),
                 origin: item.origin,
                 dest: item.dest,
-                waypoints: item.waypoints,
+                waypoints: item.waypoints?.map((wp) => ({
+                  ...wp,
+                  id: crypto.randomUUID(),
+                })),
                 originLat: item.originLat,
                 originLng: item.originLng,
                 destLat: item.destLat,
@@ -519,18 +559,30 @@ export function MileageCalculator({
               disabled={isAddingManual || isCalculating}
             />
           </label>
-          <label className="flex w-full shrink-0 flex-col gap-2 md:w-48">
+          <div className="flex w-full shrink-0 flex-col gap-2 md:w-48">
             <span className="text-sm font-medium text-gray-700">
               中繼站 (選填) / Waypoints
             </span>
-            <input
-              type="text"
-              value={newWaypoints}
-              onChange={(e) => setNewWaypoints(e.target.value)}
-              placeholder="e.g. Singapore, Rotterdam"
-              className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-gray-900 transition-all focus:ring-2 focus:ring-orange-500 focus:outline-none"
-            />
-          </label>
+            <button
+              type="button"
+              onClick={() =>
+                setModalConfig({
+                  isOpen: true,
+                  itemId: "new",
+                  waypoints: newWaypoints,
+                })
+              }
+              disabled={isAddingManual || isCalculating}
+              className="flex h-[42px] w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-4 text-sm text-gray-900 transition-all hover:border-gray-300 disabled:opacity-50"
+            >
+              <span className="truncate">
+                {newWaypoints.length > 0
+                  ? newWaypoints.map((w) => w.name).join(", ")
+                  : "設定..."}
+              </span>
+              <Settings className="h-4 w-4 shrink-0 text-gray-400" />
+            </button>
+          </div>
           <button
             onClick={handleManualAdd}
             disabled={!newRouteDesc.trim() || isAddingManual || isCalculating}
@@ -600,28 +652,27 @@ export function MileageCalculator({
                       </td>
                       <td className="px-6 py-4">
                         {!item.loading && !item.success ? (
-                          <input
-                            type="text"
-                            value={item.waypoints || ""}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setItems((prev) =>
-                                prev.map((i) =>
-                                  i.id === item.id
-                                    ? {
-                                        ...i,
-                                        waypoints: val || undefined,
-                                      }
-                                    : i,
-                                ),
-                              );
-                            }}
-                            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 focus:ring-2 focus:ring-orange-500"
-                            placeholder="e.g. Singapore, Rotterdam"
-                          />
-                        ) : item.waypoints ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setModalConfig({
+                                isOpen: true,
+                                itemId: item.id,
+                                waypoints: item.waypoints || [],
+                              })
+                            }
+                            className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 transition-all hover:border-gray-300"
+                          >
+                            <span className="truncate">
+                              {item.waypoints && item.waypoints.length > 0
+                                ? item.waypoints.map((w) => w.name).join(", ")
+                                : "設定..."}
+                            </span>
+                            <Settings className="h-4 w-4 shrink-0 text-gray-400" />
+                          </button>
+                        ) : item.waypoints && item.waypoints.length > 0 ? (
                           <span className="text-sm text-gray-600">
-                            {item.waypoints}
+                            {item.waypoints.map((w) => w.name).join(", ")}
                           </span>
                         ) : (
                           <span className="text-gray-400">-</span>
@@ -887,6 +938,24 @@ export function MileageCalculator({
         status={workflowStatus}
         errorMessage={errorMessage}
         txHash={txHash}
+      />
+
+      <WaypointEditModal
+        isOpen={modalConfig.isOpen}
+        waypoints={modalConfig.waypoints}
+        onClose={() => setModalConfig((prev) => ({ ...prev, isOpen: false }))}
+        onConfirm={(waypoints) => {
+          if (modalConfig.itemId === "new") {
+            setNewWaypoints(waypoints);
+          } else if (modalConfig.itemId) {
+            setItems((prev) =>
+              prev.map((i) =>
+                i.id === modalConfig.itemId ? { ...i, waypoints } : i,
+              ),
+            );
+          }
+        }}
+        disabled={isCalculating}
       />
     </div>
   );

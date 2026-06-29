@@ -1,5 +1,12 @@
 import type { Geometry } from "geojson";
 
+export interface IWaypoint {
+  id: string;
+  name: string;
+  lat?: number;
+  lng?: number;
+}
+
 export interface INearestPortResult {
   id: string;
   name: string;
