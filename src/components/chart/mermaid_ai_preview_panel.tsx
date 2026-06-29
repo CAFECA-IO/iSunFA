@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { parsePieColors, parsePieData } from "@/lib/utils/mermaid_helpers";
 import { useZoomPan } from "@/hooks/use_zoom_pan";
+import { useTranslation } from "@/i18n/i18n_context";
 
 enum PreviewDirective {
   ROW = "ROW",
@@ -37,6 +38,7 @@ interface IZoomableSvgContainerProps {
 const ZoomableSvgContainer: FC<IZoomableSvgContainerProps> = ({
   svgContent,
 }) => {
+  const { t } = useTranslation();
   const {
     scale,
     position,
@@ -49,12 +51,12 @@ const ZoomableSvgContainer: FC<IZoomableSvgContainerProps> = ({
 
   return (
     <div className="relative h-full w-full overflow-hidden select-none">
-      {/* 縮放控制器組件 */}
+      {/* Info: (20260629 - Julian) 縮放控制器組件 */}
       <div className="absolute top-3 right-3 z-10 flex items-center gap-1 rounded-lg border border-slate-200/80 bg-white/90 p-1 shadow-sm backdrop-blur-sm">
         <button
           type="button"
           onClick={zoomIn}
-          title="放大"
+          title={t("chart.mermaid.zoom_in")!}
           className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
         >
           <ZoomIn size={14} />
@@ -62,7 +64,7 @@ const ZoomableSvgContainer: FC<IZoomableSvgContainerProps> = ({
         <button
           type="button"
           onClick={zoomOut}
-          title="縮小"
+          title={t("chart.mermaid.zoom_out")!}
           className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
         >
           <ZoomOut size={14} />
@@ -70,7 +72,7 @@ const ZoomableSvgContainer: FC<IZoomableSvgContainerProps> = ({
         <button
           type="button"
           onClick={resetZoom}
-          title="重設大小"
+          title={t("chart.mermaid.reset")!}
           className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
         >
           <Maximize size={14} />
@@ -81,16 +83,16 @@ const ZoomableSvgContainer: FC<IZoomableSvgContainerProps> = ({
         </span>
       </div>
 
-      {/* 拖曳提示標籤 */}
+      {/* Info: (20260629 - Julian) 拖曳提示標籤 */}
       <div
         className="absolute top-3 left-3 z-10 flex items-center gap-1 rounded border border-slate-100 bg-white/70 p-1 text-[10px] text-slate-400 backdrop-blur-sm"
-        title="按住滑鼠左鍵可拖曳移動"
+        title={t("chart.mermaid.ai_editor.drag_tooltip")!}
       >
         <Move size={10} />
-        <span>拖曳可移動</span>
+        <span>{t("chart.mermaid.ai_editor.drag_tip")}</span>
       </div>
 
-      {/* 渲染畫布區域 */}
+      {/* Info: (20260629 - Julian) 渲染畫布區域 */}
       <div
         className="flex h-full w-full items-center justify-center"
         {...dragHandlers}
@@ -112,7 +114,7 @@ const ZoomableSvgContainer: FC<IZoomableSvgContainerProps> = ({
 };
 
 // ==========================================
-// 2. Main Component
+// Info: (20260629 - Julian) Main Component
 // ==========================================
 interface IMermaidAiPreviewPanelProps {
   svgStr: string;
@@ -139,6 +141,7 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
   onAdopt,
   currentChart,
 }) => {
+  const { t } = useTranslation();
   const [previewDirective, setPreviewDirective] = useState<PreviewDirective>(
     PreviewDirective.ROW,
   );
@@ -190,7 +193,7 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
     <div className="flex h-full w-full flex-col overflow-hidden bg-slate-100 md:w-3/5">
       <div className="flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4">
         <p className="text-sm font-bold text-slate-700">
-          圖表變更預覽對比 (Preview & Comparison)
+          {t("chart.mermaid.ai_editor.preview_compare")}
         </p>
         {/* Info: (20260623 - Julian) 預覽排版切換 */}
         <div className="flex items-center gap-1 rounded-lg bg-gray-200 p-1">
@@ -228,7 +231,7 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
         <div className={`flex flex-col ${previewStyle}`}>
           <div className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-slate-500">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-400"></span>
-            原始圖表 (Before)
+            {t("chart.mermaid.ai_editor.before")}
           </div>
           <div className="relative flex flex-1 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-inner">
             {parsedPieData ? (
@@ -247,21 +250,21 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
         <div className={`flex flex-col ${previewStyle}`}>
           <div className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-slate-500">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-orange-500"></span>
-            修改後預覽 (After)
+            {t("chart.mermaid.ai_editor.after")}
           </div>
           <div className="relative flex flex-1 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-inner">
             {isGenerating ? (
               <div className="flex flex-col items-center gap-2 text-slate-400">
                 <Loader2 size={32} className="animate-spin text-orange-600" />
                 <span className="text-xs font-bold text-orange-600">
-                  AI 正在調整圖表，請稍候...
+                  {t("chart.mermaid.ai_editor.generating")}
                 </span>
               </div>
             ) : apiError ? (
               <div className="p-4 text-center">
                 <div className="mb-1 flex items-center justify-center gap-1 text-xs font-bold text-orange-500">
                   <TriangleAlert size={16} className="shrink-0" />
-                  <span>調整失敗</span>
+                  <span>{t("chart.mermaid.ai_editor.generate_failed")}</span>
                 </div>
                 <span className="block text-[11px] leading-normal text-slate-500">
                   {apiError}
@@ -278,7 +281,7 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
                 <div className="p-4 text-center">
                   <div className="mb-1 flex items-center justify-center gap-1 text-xs font-bold text-red-500">
                     <CircleX size={16} className="shrink-0" />
-                    <span>語法渲染失敗</span>
+                    <span>{t("chart.mermaid.ai_editor.render_failed")}</span>
                   </div>
                   <span className="block max-h-[120px] overflow-y-auto font-mono text-[11px] whitespace-pre-wrap text-slate-400">
                     {newChartPreview}
@@ -294,7 +297,7 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
                   className="mx-auto mb-2 animate-pulse text-slate-300"
                 />
                 <span className="text-xs">
-                  在左側輸入指令並點擊「產生新圖表」即可在此預覽
+                  {t("chart.mermaid.ai_editor.placeholder")}
                 </span>
               </div>
             )}
@@ -309,7 +312,7 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
           onClick={onCancel}
           className="cursor-pointer rounded-xl px-4 py-2 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-100"
         >
-          取消
+          {t("chart.mermaid.ai_editor.cancel")}
         </button>
 
         <button
@@ -321,12 +324,12 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
           {isGenerating ? (
             <>
               <Loader2 size={14} className="animate-spin" />
-              分析中
+              {t("chart.mermaid.ai_editor.generating_btn")}
             </>
           ) : (
             <>
               <Sparkles size={14} />
-              產生新圖表
+              {t("chart.mermaid.ai_editor.generate")}
             </>
           )}
         </button>
@@ -337,7 +340,7 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
             onClick={onAdopt}
             className="cursor-pointer rounded-xl bg-orange-600 px-5 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-orange-500"
           >
-            採用新圖表 (Adopt)
+            {t("chart.mermaid.ai_editor.adopt")}
           </button>
         )}
       </div>

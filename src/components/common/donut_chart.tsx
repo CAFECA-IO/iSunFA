@@ -122,7 +122,7 @@ export const DonutChart: React.FC<IDonutChartProps> = ({
             <button
               type="button"
               className="shrink-0 cursor-pointer rounded-md p-1 text-orange-600 transition-colors duration-150 hover:bg-slate-100"
-              title={t("common.mermaid.download")!}
+              title={t("chart.mermaid.download")!}
             >
               <Download size={15} />
             </button>
@@ -133,14 +133,14 @@ export const DonutChart: React.FC<IDonutChartProps> = ({
                   onClick={exportPng}
                   className="w-full px-2.5 py-1.5 text-left text-xs font-bold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800"
                 >
-                  {t("common.mermaid.export_png")}
+                  {t("chart.mermaid.export_png")}
                 </button>
                 <button
                   type="button"
                   onClick={exportSvg}
                   className="w-full px-2.5 py-1.5 text-left text-xs font-bold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800"
                 >
-                  {t("common.mermaid.export_svg")}
+                  {t("chart.mermaid.export_svg")}
                 </button>
               </div>
             </div>
@@ -213,7 +213,7 @@ export const DonutChart: React.FC<IDonutChartProps> = ({
         </div>
         <div className="mt-8 min-w-0 border-t border-gray-50 pt-4">
           <p className="text-xs leading-relaxed font-medium wrap-break-word break-all whitespace-normal text-gray-400 md:wrap-break-word">
-            {t("common.donut_chart.note", { title })}
+            {t("chart.donut_chart.note", { title })}
           </p>
         </div>
       </div>

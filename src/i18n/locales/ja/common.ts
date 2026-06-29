@@ -89,9 +89,6 @@ export const common = {
     oldest: "古い順",
   },
   share: "共有",
-  donut_chart: {
-    note: "* 円グラフは {{title}} の構成分布を示しています。システムは有効なデータのみを描画し、偏差や未定義の科目は自動的に統合・計算されます。",
-  },
   other: "その他",
   pdf_tool: "PDF ツール",
   please_login: "ログインしてください",
@@ -101,21 +98,6 @@ export const common = {
     brand: "iSunFAスマート炭素会計",
     footer_note:
       "このレポートはAI技術によって生成され、iSunFAスマート炭素会計によって提供されています • ",
-  },
-  mermaid: {
-    rendering: "チャートを描画中...",
-    zoom_in: "拡大 (Zoom In)",
-    zoom_out: "縮小 (Zoom Out)",
-    reset: "リセット (Reset)",
-    fullscreen: "全画面表示 (Fullscreen)",
-    close_fullscreen: "全画面表示を閉じる (Close Fullscreen)",
-    hint_desktop: "左クリックドラッグで移動 • Ctrl + ホイールでズーム",
-    hint_fullscreen:
-      "左クリックドラッグで移動 • ホイールでズーム • ESCキーで閉じる",
-    preview_title: "フローチャートプレビュー (Fullscreen Flowchart Preview)",
-    download: "画像をダウンロード",
-    export_png: "PNGで保存",
-    export_svg: "SVGで保存",
   },
   export_settings: {
     title_voucher: "伝票のエクスポート",

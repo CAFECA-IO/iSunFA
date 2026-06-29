@@ -5,6 +5,7 @@ import { DialogTitle } from "@headlessui/react";
 import { Lightbulb, Sparkles, X } from "lucide-react";
 import { FlowchartToolsSection } from "@/components/chart/flowchart_tools_submenu";
 import { PieToolsSection } from "@/components/chart/pie_tools_submenu";
+import { useTranslation } from "@/i18n/i18n_context";
 
 interface IMermaidAiControlPanelProps {
   chartType: "pie" | "flowchart" | "sequence" | "unknown";
@@ -23,6 +24,7 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
   parsedPieItems,
   onCancel,
 }) => {
+  const { t } = useTranslation();
   // Info: (20260623 - Julian) 快速指令工具
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
 
@@ -41,10 +43,10 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
               as="h3"
               className="text-sm leading-none font-bold text-slate-800"
             >
-              AI 智慧圖表編輯器
+              {t("chart.mermaid.ai_editor.title")}
             </DialogTitle>
             <span className="text-[10px] font-medium text-slate-400">
-              Mermaid AI Chart Assistant
+              {t("chart.mermaid.ai_editor.subtitle")}
             </span>
           </div>
         </div>
@@ -63,24 +65,27 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
           <div className="mb-1 flex items-center gap-1 font-bold">
             <div className="flex items-center gap-1">
               <Lightbulb size={14} strokeWidth={2.5} />
-              <p>AI 指令編寫說明</p>
+              <p>{t("chart.mermaid.ai_editor.instructions_title")}</p>
             </div>
           </div>
           <p className="text-blue-700">
-            使用下方小工具可自動產生指令，您也可以手動修改，例如：
+            {t("chart.mermaid.ai_editor.instructions_desc")}
           </p>
           {chartType === "pie" ? (
             <ul className="mt-1 list-disc space-y-0.5 pl-4 font-medium text-blue-600/90">
-              <li>「新增『辦公室碳排』15%」</li>
-              <li>「將『製造』數值改為 45%，名稱改為『生產製造』」</li>
-              <li>「刪除『其他』區塊」</li>
+              {t<string[]>("chart.mermaid.ai_editor.examples.pie").map(
+                (ex, i) => (
+                  <li key={`pie-ex-${i}`}>「{ex}」</li>
+                ),
+              )}
             </ul>
           ) : (
             <ul className="mt-1 list-disc space-y-0.5 pl-4 font-medium text-blue-600/90">
-              <li>「新增節點 D，從 C 連接過來，連線文字是『核准』」</li>
-              <li>「將 A 的文字改為『填寫申請單』」</li>
-              <li>「將 A 到 B 的連線改為粗線」</li>
-              <li>「將圖表方向變更為由左到右 (LR)」</li>
+              {t<string[]>("chart.mermaid.ai_editor.examples.flowchart").map(
+                (ex, i) => (
+                  <li key={`flow-ex-${i}`}>「{ex}」</li>
+                ),
+              )}
             </ul>
           )}
         </div>
@@ -92,7 +97,7 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
               htmlFor="aiInstructionInput"
               className="text-xs font-bold tracking-wider text-slate-700"
             >
-              AI 編輯指令 (Instruction)
+              {t("chart.mermaid.ai_editor.input_label")}
             </label>
             {aiInstruction && (
               <button
@@ -100,7 +105,7 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
                 onClick={() => setAiInstruction("")}
                 className="text-[11px] font-bold text-slate-400 transition-colors hover:text-rose-500"
               >
-                清空指令
+                {t("chart.mermaid.ai_editor.clear_btn")}
               </button>
             )}
           </div>
@@ -112,8 +117,8 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
             className="w-full rounded-xl border border-slate-200 bg-white p-3 text-xs placeholder-slate-400 focus:border-blue-500 focus:outline-none"
             placeholder={
               chartType === "pie"
-                ? "輸入您的修改指示，例如：新增『其他碳排 12%』..."
-                : "輸入您的修改指示，例如：新增節點『審核完成』並與『起點』連線..."
+                ? t("chart.mermaid.ai_editor.pie_placeholder")!
+                : t("chart.mermaid.ai_editor.flowchart_placeholder")!
             }
           />
         </div>
@@ -122,7 +127,7 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
         {isShowTools && (
           <div className="flex shrink-0 flex-col">
             <span className="mb-2 text-xs font-bold tracking-wider text-slate-700">
-              常用修改工具 (Quick Tools)
+              {t("chart.mermaid.ai_editor.quick_tools")}
             </span>
             {chartType === "pie" ? (
               <PieToolsSection

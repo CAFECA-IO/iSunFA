@@ -2,6 +2,7 @@
 
 import React, { useState, FC } from "react";
 import { CakeSlice, Paintbrush, Slice, Trash2, LucideIcon } from "lucide-react";
+import { useTranslation } from "@/i18n/i18n_context";
 
 // ==========================================
 // Info: (20260629 - Julian) 定義與靜態映射表
@@ -26,31 +27,42 @@ export enum PieTools {
 interface IToolItem {
   tool: PieTools;
   icon: LucideIcon;
-  label: string;
 }
 
 const PIE_TOOLS: IToolItem[] = [
   {
     tool: PieTools.ADD_SLICE,
     icon: CakeSlice,
-    label: "新增項目",
   },
   {
     tool: PieTools.EDIT_SLICE,
     icon: Slice,
-    label: "變更標題/數值",
   },
   {
     tool: PieTools.CHANGE_COLOR,
     icon: Paintbrush,
-    label: "變更項目顏色",
   },
   {
     tool: PieTools.DELETE_SLICE,
     icon: Trash2,
-    label: "刪除項目",
   },
 ];
+
+const PIE_TOOL_TRANSLATION_KEYS: Record<PieTools, string> = {
+  [PieTools.ADD_SLICE]: "chart.mermaid.ai_editor.pie.add_slice",
+  [PieTools.EDIT_SLICE]: "chart.mermaid.ai_editor.pie.edit_slice",
+  [PieTools.CHANGE_COLOR]: "chart.mermaid.ai_editor.pie.change_color",
+  [PieTools.DELETE_SLICE]: "chart.mermaid.ai_editor.pie.delete_slice",
+};
+
+const PIE_COLOR_TRANSLATION_KEYS: Record<PieColor, string> = {
+  [PieColor.DEFAULT]: "chart.mermaid.ai_editor.colors.default",
+  [PieColor.NAVY]: "chart.mermaid.ai_editor.colors.navy",
+  [PieColor.ORANGE]: "chart.mermaid.ai_editor.colors.orange",
+  [PieColor.RED]: "chart.mermaid.ai_editor.colors.red",
+  [PieColor.GREEN]: "chart.mermaid.ai_editor.colors.green",
+  [PieColor.PURPLE]: "chart.mermaid.ai_editor.colors.purple",
+};
 
 const INSTRUCTION_TEMPLATES = {
   ADD_PIE_SLICE: {
@@ -101,6 +113,7 @@ interface IBasePanelProps {
 
 // Info: (20260629 - Julian) 「新增項目」面板
 const AddSlicePanel: FC<IBasePanelProps> = ({ onInsert }) => {
+  const { t } = useTranslation();
   const [pieSliceLabel, setPieSliceLabel] = useState("");
   const [pieSliceValue, setPieSliceValue] = useState("");
   const [pieSliceColor, setPieSliceColor] = useState<PieColor | "">("");
@@ -119,7 +132,7 @@ const AddSlicePanel: FC<IBasePanelProps> = ({ onInsert }) => {
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <CakeSlice size={14} />
-        <p>新增圓餅圖項目</p>
+        <p>{t("chart.mermaid.ai_editor.pie.add_slice_title")}</p>
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
@@ -127,7 +140,7 @@ const AddSlicePanel: FC<IBasePanelProps> = ({ onInsert }) => {
             htmlFor="pieSliceLabel"
             className="text-[10px] font-bold text-slate-500"
           >
-            項目名稱
+            {t("chart.mermaid.ai_editor.pie.slice_name_label")}
           </label>
           <input
             id="pieSliceLabel"
@@ -135,7 +148,9 @@ const AddSlicePanel: FC<IBasePanelProps> = ({ onInsert }) => {
             value={pieSliceLabel}
             onChange={(e) => setPieSliceLabel(e.target.value)}
             className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
-            placeholder="例如: 運輸碳排"
+            placeholder={
+              t("chart.mermaid.ai_editor.pie.slice_name_placeholder")!
+            }
           />
         </div>
         <div>
@@ -143,7 +158,7 @@ const AddSlicePanel: FC<IBasePanelProps> = ({ onInsert }) => {
             htmlFor="pieSliceValue"
             className="text-[10px] font-bold text-slate-500"
           >
-            數值/比例
+            {t("chart.mermaid.ai_editor.pie.slice_value_label")}
           </label>
           <input
             id="pieSliceValue"
@@ -151,15 +166,17 @@ const AddSlicePanel: FC<IBasePanelProps> = ({ onInsert }) => {
             value={pieSliceValue}
             onChange={(e) => setPieSliceValue(e.target.value)}
             className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
-            placeholder="例如: 18.5"
+            placeholder={
+              t("chart.mermaid.ai_editor.pie.slice_value_placeholder")!
+            }
           />
         </div>
         <div className="col-span-2">
           <label
-            htmlFor="pieSliceValue"
+            htmlFor="pieSliceColor"
             className="text-[10px] font-bold text-slate-500"
           >
-            選擇顏色風格
+            {t("chart.mermaid.ai_editor.pie.select_style_label")}
           </label>
           <select
             id="pieSliceColor"
@@ -167,10 +184,12 @@ const AddSlicePanel: FC<IBasePanelProps> = ({ onInsert }) => {
             onChange={(e) => setPieSliceColor(e.target.value as PieColor)}
             className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
           >
-            <option value={""}>由 AI 自動挑選</option>
+            <option value={""}>
+              {t("chart.mermaid.ai_editor.pie.ai_auto_select")}
+            </option>
             {Object.values(PieColor).map((color) => (
               <option key={color} value={color}>
-                {color}
+                {t(PIE_COLOR_TRANSLATION_KEYS[color])}
               </option>
             ))}
           </select>
@@ -182,7 +201,7 @@ const AddSlicePanel: FC<IBasePanelProps> = ({ onInsert }) => {
         disabled={!pieSliceLabel || !pieSliceValue}
         className="w-full cursor-pointer rounded-lg bg-blue-600 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
       >
-        插入指令
+        {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
       </button>
     </div>
   );
@@ -193,6 +212,7 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
   parsedPieItems,
   onInsertWithFilter,
 }) => {
+  const { t } = useTranslation();
   const [pieSliceTarget, setPieSliceTarget] = useState("");
   const [pieSliceNewLabel, setPieSliceNewLabel] = useState("");
   const [pieSliceValue, setPieSliceValue] = useState("");
@@ -213,14 +233,14 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <Slice size={14} />
-        <p>修改項目數值/名稱</p>
+        <p>{t("chart.mermaid.ai_editor.pie.edit_slice_title")}</p>
       </div>
       <div>
         <label
           htmlFor="pieSliceTarget"
           className="text-[10px] font-bold text-slate-500"
         >
-          目標項目
+          {t("chart.mermaid.ai_editor.pie.select_slice_placeholder")}
         </label>
         <select
           id="pieSliceTarget"
@@ -228,7 +248,9 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
           onChange={(e) => setPieSliceTarget(e.target.value)}
           className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
         >
-          <option value="">選擇項目...</option>
+          <option value="">
+            {t("chart.mermaid.ai_editor.pie.select_slice_placeholder")}
+          </option>
           {parsedPieItems.map((item) => (
             <option key={`pie-edit-opt-${item.label}`} value={item.label}>
               {item.label} ({item.value})
@@ -242,7 +264,7 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
             htmlFor="pieSliceNewLabel"
             className="text-[10px] font-bold text-slate-500"
           >
-            新名稱 (選填)
+            {t("chart.mermaid.ai_editor.pie.new_name_label")}
           </label>
           <input
             id="pieSliceNewLabel"
@@ -250,7 +272,7 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
             value={pieSliceNewLabel}
             onChange={(e) => setPieSliceNewLabel(e.target.value)}
             className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
-            placeholder="新名稱"
+            placeholder={t("chart.mermaid.ai_editor.pie.new_name_placeholder")!}
           />
         </div>
         <div>
@@ -258,7 +280,7 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
             htmlFor="pieSliceValueEdit"
             className="text-[10px] font-bold text-slate-500"
           >
-            新數值 (選填)
+            {t("chart.mermaid.ai_editor.pie.new_value_label")}
           </label>
           <input
             id="pieSliceValueEdit"
@@ -266,7 +288,9 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
             value={pieSliceValue}
             onChange={(e) => setPieSliceValue(e.target.value)}
             className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
-            placeholder="例如: 35"
+            placeholder={
+              t("chart.mermaid.ai_editor.pie.new_value_placeholder")!
+            }
           />
         </div>
       </div>
@@ -276,7 +300,7 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
         disabled={!pieSliceTarget || (!pieSliceValue && !pieSliceNewLabel)}
         className="w-full cursor-pointer rounded-lg bg-blue-600 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
       >
-        插入指令
+        {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
       </button>
     </div>
   );
@@ -287,6 +311,7 @@ const ChangeSliceColorPanel: FC<IBasePanelProps> = ({
   parsedPieItems,
   onInsertWithFilter,
 }) => {
+  const { t } = useTranslation();
   const [pieSliceTarget, setPieSliceTarget] = useState("");
   const [pieSliceColor, setPieSliceColor] = useState<PieColor>(
     PieColor.DEFAULT,
@@ -307,14 +332,14 @@ const ChangeSliceColorPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <Paintbrush size={14} />
-        <p>變更項目顏色</p>
+        <p>{t("chart.mermaid.ai_editor.pie.change_color_title")}</p>
       </div>
       <div>
         <label
           htmlFor="pieColorTarget"
           className="text-[10px] font-bold text-slate-500"
         >
-          目標項目
+          {t("chart.mermaid.ai_editor.pie.select_slice_placeholder")}
         </label>
         <select
           id="pieColorTarget"
@@ -322,7 +347,9 @@ const ChangeSliceColorPanel: FC<IBasePanelProps> = ({
           onChange={(e) => setPieSliceTarget(e.target.value)}
           className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
         >
-          <option value="">選擇項目...</option>
+          <option value="">
+            {t("chart.mermaid.ai_editor.pie.select_slice_placeholder")}
+          </option>
           {parsedPieItems.map((item) => (
             <option key={`pie-color-opt-${item.label}`} value={item.label}>
               {item.label}
@@ -335,7 +362,7 @@ const ChangeSliceColorPanel: FC<IBasePanelProps> = ({
           htmlFor="pieSliceColor"
           className="text-[10px] font-bold text-slate-500"
         >
-          選擇顏色風格
+          {t("chart.mermaid.ai_editor.pie.select_color_label")}
         </label>
         <select
           id="pieSliceColor"
@@ -345,7 +372,7 @@ const ChangeSliceColorPanel: FC<IBasePanelProps> = ({
         >
           {Object.values(PieColor).map((color) => (
             <option key={color} value={color}>
-              {color}
+              {t(PIE_COLOR_TRANSLATION_KEYS[color])}
             </option>
           ))}
         </select>
@@ -356,7 +383,7 @@ const ChangeSliceColorPanel: FC<IBasePanelProps> = ({
         disabled={!pieSliceTarget}
         className="w-full cursor-pointer rounded-lg bg-blue-600 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
       >
-        插入指令
+        {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
       </button>
     </div>
   );
@@ -367,6 +394,7 @@ const DeleteSlicePanel: FC<IBasePanelProps> = ({
   parsedPieItems,
   onInsertWithFilter,
 }) => {
+  const { t } = useTranslation();
   const [pieSliceTarget, setPieSliceTarget] = useState("");
 
   const handleSubmit = () => {
@@ -381,14 +409,14 @@ const DeleteSlicePanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <Trash2 size={14} />
-        <p>刪除圓餅圖項目</p>
+        <p>{t("chart.mermaid.ai_editor.pie.delete_slice_title")}</p>
       </div>
       <div>
         <label
           htmlFor="pieSliceTargetDel"
           className="text-[10px] font-bold text-slate-500"
         >
-          選擇目標項目
+          {t("chart.mermaid.ai_editor.pie.select_delete_placeholder")}
         </label>
         <select
           id="pieSliceTargetDel"
@@ -396,7 +424,9 @@ const DeleteSlicePanel: FC<IBasePanelProps> = ({
           onChange={(e) => setPieSliceTarget(e.target.value)}
           className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
         >
-          <option value="">選擇項目...</option>
+          <option value="">
+            {t("chart.mermaid.ai_editor.pie.select_delete_placeholder")}
+          </option>
           {parsedPieItems.map((item) => (
             <option key={`pie-del-opt-${item.label}`} value={item.label}>
               {item.label}
@@ -410,7 +440,7 @@ const DeleteSlicePanel: FC<IBasePanelProps> = ({
         disabled={!pieSliceTarget}
         className="w-full cursor-pointer rounded-lg bg-blue-600 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
       >
-        插入指令
+        {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
       </button>
     </div>
   );
@@ -444,6 +474,8 @@ export const PieToolsSection: FC<IPieToolsSectionProps> = ({
   parsedPieItems,
   setAiInstruction,
 }) => {
+  const { t } = useTranslation();
+
   const handleInsertInstruction = (text: string) => {
     setAiInstruction((prev) => {
       const trimmed = prev.trim();
@@ -495,7 +527,7 @@ export const PieToolsSection: FC<IPieToolsSectionProps> = ({
               }`}
             >
               <item.icon size={14} className="shrink-0" />
-              <p>{item.label}</p>
+              <p>{t(PIE_TOOL_TRANSLATION_KEYS[item.tool])}</p>
             </button>
           );
         })}

@@ -9,6 +9,7 @@ import {
   SplinePointer,
   LucideIcon,
 } from "lucide-react";
+import { useTranslation } from "@/i18n/i18n_context";
 
 // ==========================================
 // Info: (20260629 - Julian) 定義與靜態映射表
@@ -34,36 +35,49 @@ export enum FlowchartTools {
 interface IToolItem {
   tool: FlowchartTools;
   icon: LucideIcon;
-  label: string;
 }
 
 const FLOWCHART_TOOLS: IToolItem[] = [
   {
     tool: FlowchartTools.ADD_NODE,
     icon: CirclePlus,
-    label: "新增節點",
   },
   {
     tool: FlowchartTools.EDIT_NODE,
     icon: Pencil,
-    label: "變更節點文字",
   },
   {
     tool: FlowchartTools.ADD_CONNECTION,
     icon: SplinePointer,
-    label: "變更/新增連線",
   },
   {
     tool: FlowchartTools.CHANGE_COLOR,
     icon: Paintbrush,
-    label: "變更節點顏色",
   },
   {
     tool: FlowchartTools.CHANGE_DIRECTION,
     icon: RefreshCcw,
-    label: "變更圖表方向",
   },
 ];
+
+const FLOWCHART_TOOL_TRANSLATION_KEYS: Record<FlowchartTools, string> = {
+  [FlowchartTools.ADD_NODE]: "chart.mermaid.ai_editor.flowchart.add_node",
+  [FlowchartTools.EDIT_NODE]: "chart.mermaid.ai_editor.flowchart.edit_node",
+  [FlowchartTools.ADD_CONNECTION]: "chart.mermaid.ai_editor.flowchart.add_conn",
+  [FlowchartTools.CHANGE_COLOR]:
+    "chart.mermaid.ai_editor.flowchart.change_color",
+  [FlowchartTools.CHANGE_DIRECTION]:
+    "chart.mermaid.ai_editor.flowchart.change_dir",
+};
+
+const FLOWCHART_COLOR_TRANSLATION_KEYS: Record<NodeColor, string> = {
+  [NodeColor.DEFAULT]: "chart.mermaid.ai_editor.colors.default",
+  [NodeColor.NAVY]: "chart.mermaid.ai_editor.colors.navy",
+  [NodeColor.ORANGE]: "chart.mermaid.ai_editor.colors.orange",
+  [NodeColor.RED]: "chart.mermaid.ai_editor.colors.red",
+  [NodeColor.GREEN]: "chart.mermaid.ai_editor.colors.green",
+  [NodeColor.PURPLE]: "chart.mermaid.ai_editor.colors.purple",
+};
 
 const DIRECTION_NAMES: Record<string, string> = {
   TD: "由上至下 (TD)",
@@ -136,6 +150,7 @@ interface IBasePanelProps {
 
 // Info: (20260629 - Julian) 「新增節點」面板
 const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onInsert }) => {
+  const { t } = useTranslation();
   const [newNodeId, setNewNodeId] = useState("");
   const [newNodeLabel, setNewNodeLabel] = useState("");
   const [fromNodeId, setFromNodeId] = useState("");
@@ -165,7 +180,7 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onInsert }) => {
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <CirclePlus size={14} />
-        <p>新增節點工具</p>
+        <p>{t("chart.mermaid.ai_editor.flowchart.add_node_title")}</p>
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
@@ -173,7 +188,7 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onInsert }) => {
             htmlFor="new-node-id"
             className="text-[10px] font-bold text-slate-500"
           >
-            節點 ID (選填)
+            {t("chart.mermaid.ai_editor.flowchart.node_id_label")}
           </label>
           <input
             id="new-node-id"
@@ -181,7 +196,9 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onInsert }) => {
             value={newNodeId}
             onChange={(e) => handleIdChange(e.target.value)}
             className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
-            placeholder="例如: Node_01"
+            placeholder={
+              t("chart.mermaid.ai_editor.flowchart.node_id_placeholder")!
+            }
           />
         </div>
         <div>
@@ -189,7 +206,7 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onInsert }) => {
             htmlFor="new-node-label"
             className="text-[10px] font-bold text-slate-500"
           >
-            節點名稱 (必填)
+            {t("chart.mermaid.ai_editor.flowchart.node_name_label")}
           </label>
           <input
             id="new-node-label"
@@ -197,7 +214,9 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onInsert }) => {
             value={newNodeLabel}
             onChange={(e) => setNewNodeLabel(e.target.value)}
             className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
-            placeholder="例如: 審核完成"
+            placeholder={
+              t("chart.mermaid.ai_editor.flowchart.node_name_placeholder")!
+            }
           />
         </div>
       </div>
@@ -207,7 +226,7 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onInsert }) => {
             htmlFor="from-node-id"
             className="text-[10px] font-bold text-slate-500"
           >
-            連接起點 (From)
+            {t("chart.mermaid.ai_editor.flowchart.from_label")}
           </label>
           <select
             id="from-node-id"
@@ -228,7 +247,7 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onInsert }) => {
             htmlFor="to-node-id"
             className="text-[10px] font-bold text-slate-500"
           >
-            連接終點 (To)
+            {t("chart.mermaid.ai_editor.flowchart.to_label")}
           </label>
           <select
             id="to-node-id"
@@ -250,7 +269,7 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onInsert }) => {
           htmlFor="conn-text"
           className="text-[10px] font-bold text-slate-500"
         >
-          連線文字 (選填)
+          {t("chart.mermaid.ai_editor.flowchart.conn_text_label")}
         </label>
         <input
           id="conn-text"
@@ -258,7 +277,9 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onInsert }) => {
           value={connText}
           onChange={(e) => setConnText(e.target.value)}
           className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
-          placeholder="例如: 審核通過"
+          placeholder={
+            t("chart.mermaid.ai_editor.flowchart.conn_text_placeholder")!
+          }
         />
       </div>
       <button
@@ -267,7 +288,7 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onInsert }) => {
         disabled={!newNodeLabel}
         className="w-full cursor-pointer rounded-lg bg-blue-600 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
       >
-        插入指令
+        {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
       </button>
     </div>
   );
@@ -278,6 +299,7 @@ const EditNodePanel: FC<IBasePanelProps> = ({
   parsedNodes,
   onInsertWithFilter,
 }) => {
+  const { t } = useTranslation();
   const [targetNodeId, setTargetNodeId] = useState("");
   const [newNodeText, setNewNodeText] = useState("");
 
@@ -296,14 +318,14 @@ const EditNodePanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <Pencil size={14} />
-        <p>變更節點文字工具</p>
+        <p>{t("chart.mermaid.ai_editor.flowchart.edit_node_title")}</p>
       </div>
       <div>
         <label
           htmlFor="target-node-id"
           className="text-[10px] font-bold text-slate-500"
         >
-          選擇目標節點
+          {t("chart.mermaid.ai_editor.flowchart.select_node_placeholder")}
         </label>
         <select
           id="target-node-id"
@@ -311,7 +333,9 @@ const EditNodePanel: FC<IBasePanelProps> = ({
           onChange={(e) => setTargetNodeId(e.target.value)}
           className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
         >
-          <option value="">選擇節點...</option>
+          <option value="">
+            {t("chart.mermaid.ai_editor.flowchart.select_node_placeholder")}
+          </option>
           {parsedNodes.map((n) => (
             <option key={`edit-${n.id}`} value={n.id}>
               {n.label} ({n.id})
@@ -324,7 +348,7 @@ const EditNodePanel: FC<IBasePanelProps> = ({
           htmlFor="new-node-text"
           className="text-[10px] font-bold text-slate-500"
         >
-          新文字
+          {t("chart.mermaid.ai_editor.flowchart.new_text_label")}
         </label>
         <input
           id="new-node-text"
@@ -332,7 +356,9 @@ const EditNodePanel: FC<IBasePanelProps> = ({
           value={newNodeText}
           onChange={(e) => setNewNodeText(e.target.value)}
           className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
-          placeholder="輸入新文字"
+          placeholder={
+            t("chart.mermaid.ai_editor.flowchart.new_text_placeholder")!
+          }
         />
       </div>
       <button
@@ -341,7 +367,7 @@ const EditNodePanel: FC<IBasePanelProps> = ({
         disabled={!targetNodeId || !newNodeText}
         className="w-full cursor-pointer rounded-lg bg-blue-600 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
       >
-        插入指令
+        {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
       </button>
     </div>
   );
@@ -352,6 +378,7 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
   parsedNodes,
   onInsertWithFilter,
 }) => {
+  const { t } = useTranslation();
   const [connFromId, setConnFromId] = useState("");
   const [connToId, setConnToId] = useState("");
   const [connType, setConnType] = useState("-->");
@@ -374,7 +401,7 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <SplinePointer size={14} />
-        <p>變更/新增連線工具</p>
+        <p>{t("chart.mermaid.ai_editor.flowchart.add_conn_title")}</p>
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
@@ -382,7 +409,7 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
             htmlFor="connFromId"
             className="text-[10px] font-bold text-slate-500"
           >
-            起點節點 (From)
+            {t("chart.mermaid.ai_editor.flowchart.select_from_placeholder")}
           </label>
           <select
             id="connFromId"
@@ -390,7 +417,9 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
             onChange={(e) => setConnFromId(e.target.value)}
             className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
           >
-            <option value="">選擇起點...</option>
+            <option value="">
+              {t("chart.mermaid.ai_editor.flowchart.select_from_placeholder")}
+            </option>
             {parsedNodes.map((n) => (
               <option key={`conn-from-${n.id}`} value={n.id}>
                 {n.label} ({n.id})
@@ -403,7 +432,7 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
             htmlFor="connToId"
             className="text-[10px] font-bold text-slate-500"
           >
-            終點節點 (To)
+            {t("chart.mermaid.ai_editor.flowchart.select_to_placeholder")}
           </label>
           <select
             id="connToId"
@@ -411,7 +440,9 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
             onChange={(e) => setConnToId(e.target.value)}
             className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
           >
-            <option value="">選擇終點...</option>
+            <option value="">
+              {t("chart.mermaid.ai_editor.flowchart.select_to_placeholder")}
+            </option>
             {parsedNodes.map((n) => (
               <option key={`conn-to-${n.id}`} value={n.id}>
                 {n.label} ({n.id})
@@ -426,7 +457,7 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
             htmlFor="connType"
             className="text-[10px] font-bold text-slate-500"
           >
-            連線類型
+            {t("chart.mermaid.ai_editor.flowchart.conn_type_label")}
           </label>
           <select
             id="connType"
@@ -434,10 +465,18 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
             onChange={(e) => setConnType(e.target.value)}
             className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
           >
-            <option value="-->">箭頭線 (--&gt;)</option>
-            <option value="==>">粗箭頭 (==&gt;)</option>
-            <option value="-.->">虛線箭頭 (-.-&gt;)</option>
-            <option value="---">實線無箭頭 (---)</option>
+            <option value="-->">
+              {t("chart.mermaid.ai_editor.flowchart.conn_type_arrow")}
+            </option>
+            <option value="==>">
+              {t("chart.mermaid.ai_editor.flowchart.conn_type_bold")}
+            </option>
+            <option value="-.->">
+              {t("chart.mermaid.ai_editor.flowchart.conn_type_dotted")}
+            </option>
+            <option value="---">
+              {t("chart.mermaid.ai_editor.flowchart.conn_type_line")}
+            </option>
           </select>
         </div>
         <div>
@@ -445,7 +484,7 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
             htmlFor="connLabel"
             className="text-[10px] font-bold text-slate-500"
           >
-            連線文字 (選填)
+            {t("chart.mermaid.ai_editor.flowchart.conn_text_label")}
           </label>
           <input
             id="connLabel"
@@ -453,7 +492,9 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
             value={connLabel}
             onChange={(e) => setConnLabel(e.target.value)}
             className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
-            placeholder="例如: 審核中"
+            placeholder={
+              t("chart.mermaid.ai_editor.flowchart.conn_text_placeholder")!
+            }
           />
         </div>
       </div>
@@ -463,7 +504,7 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
         disabled={!connFromId || !connToId}
         className="w-full cursor-pointer rounded-lg bg-blue-600 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
       >
-        插入指令
+        {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
       </button>
     </div>
   );
@@ -474,6 +515,7 @@ const ChangeColorPanel: FC<IBasePanelProps> = ({
   parsedNodes,
   onInsertWithFilter,
 }) => {
+  const { t } = useTranslation();
   const [colorNodeId, setColorNodeId] = useState("");
   const [colorStyle, setColorStyle] = useState<NodeColor>(NodeColor.DEFAULT);
 
@@ -492,14 +534,14 @@ const ChangeColorPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <Paintbrush size={14} />
-        <p>變更節點顏色</p>
+        <p>{t("chart.mermaid.ai_editor.flowchart.change_color_title")}</p>
       </div>
       <div>
         <label
           htmlFor="colorNodeId"
           className="text-[10px] font-bold text-slate-500"
         >
-          目標節點
+          {t("chart.mermaid.ai_editor.flowchart.select_node_placeholder")}
         </label>
         <select
           id="colorNodeId"
@@ -507,7 +549,9 @@ const ChangeColorPanel: FC<IBasePanelProps> = ({
           onChange={(e) => setColorNodeId(e.target.value)}
           className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
         >
-          <option value="">選擇節點...</option>
+          <option value="">
+            {t("chart.mermaid.ai_editor.flowchart.select_node_placeholder")}
+          </option>
           {parsedNodes.map((n) => (
             <option key={`color-btn-${n.id}`} value={n.id}>
               {n.label} ({n.id})
@@ -520,7 +564,7 @@ const ChangeColorPanel: FC<IBasePanelProps> = ({
           htmlFor="colorStyle"
           className="text-[10px] font-bold text-slate-500"
         >
-          選擇風格色系
+          {t("chart.mermaid.ai_editor.flowchart.select_style_label")}
         </label>
         <select
           id="colorStyle"
@@ -530,7 +574,7 @@ const ChangeColorPanel: FC<IBasePanelProps> = ({
         >
           {Object.values(NodeColor).map((color) => (
             <option key={color} value={color}>
-              {color}
+              {t(FLOWCHART_COLOR_TRANSLATION_KEYS[color])}
             </option>
           ))}
         </select>
@@ -541,7 +585,7 @@ const ChangeColorPanel: FC<IBasePanelProps> = ({
         disabled={!colorNodeId}
         className="w-full cursor-pointer rounded-lg bg-blue-600 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
       >
-        插入指令
+        {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
       </button>
     </div>
   );
@@ -549,6 +593,7 @@ const ChangeColorPanel: FC<IBasePanelProps> = ({
 
 // Info: (20260629 - Julian) 「變更方向」面板
 const ChangeDirectionPanel: FC<IBasePanelProps> = ({ onInsertWithFilter }) => {
+  const { t } = useTranslation();
   const [flowDirection, setFlowDirection] = useState("TD");
 
   const handleSubmit = () => {
@@ -563,14 +608,14 @@ const ChangeDirectionPanel: FC<IBasePanelProps> = ({ onInsertWithFilter }) => {
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <RefreshCcw size={14} />
-        <p>變更圖表方向</p>
+        <p>{t("chart.mermaid.ai_editor.flowchart.change_dir_title")}</p>
       </div>
       <div>
         <label
           htmlFor="flowDirection"
           className="text-[10px] font-bold text-slate-500"
         >
-          方向
+          {t("chart.mermaid.ai_editor.flowchart.dir_label")}
         </label>
         <select
           id="flowDirection"
@@ -578,10 +623,18 @@ const ChangeDirectionPanel: FC<IBasePanelProps> = ({ onInsertWithFilter }) => {
           onChange={(e) => setFlowDirection(e.target.value)}
           className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
         >
-          <option value="TD">由上至下 (TD / Top-Down)</option>
-          <option value="LR">由左至右 (LR / Left-to-Right)</option>
-          <option value="BT">由下至上 (BT / Bottom-to-Top)</option>
-          <option value="RL">由右至左 (RL / Right-to-Left)</option>
+          <option value="TD">
+            {t("chart.mermaid.ai_editor.flowchart.dir_td")}
+          </option>
+          <option value="LR">
+            {t("chart.mermaid.ai_editor.flowchart.dir_lr")}
+          </option>
+          <option value="BT">
+            {t("chart.mermaid.ai_editor.flowchart.dir_bt")}
+          </option>
+          <option value="RL">
+            {t("chart.mermaid.ai_editor.flowchart.dir_rl")}
+          </option>
         </select>
       </div>
       <button
@@ -589,7 +642,7 @@ const ChangeDirectionPanel: FC<IBasePanelProps> = ({ onInsertWithFilter }) => {
         onClick={handleSubmit}
         className="w-full cursor-pointer rounded-lg bg-blue-600 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-500"
       >
-        插入指令
+        {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
       </button>
     </div>
   );
@@ -624,6 +677,8 @@ export const FlowchartToolsSection: FC<IFlowchartToolsSectionProps> = ({
   parsedNodes,
   setAiInstruction,
 }) => {
+  const { t } = useTranslation();
+
   const handleInsertInstruction = (text: string) => {
     setAiInstruction((prev) => {
       const trimmed = prev.trim();
@@ -675,7 +730,7 @@ export const FlowchartToolsSection: FC<IFlowchartToolsSectionProps> = ({
               }`}
             >
               <item.icon size={14} className="shrink-0" />
-              <p>{item.label}</p>
+              <p>{t(FLOWCHART_TOOL_TRANSLATION_KEYS[item.tool])}</p>
             </button>
           );
         })}

@@ -63,6 +63,7 @@ import { businessMonitor } from "@/i18n/locales/ja/business_monitor";
 import { simulationWorkflow } from "@/i18n/locales/ja/simulation_workflow";
 import { netZeroPathway } from "@/i18n/locales/ja/net_zero_pathway";
 import { reportDownloader } from "@/i18n/locales/ja/report_downloader";
+import { chart } from "@/i18n/locales/ja/chart";
 import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const ja = {
@@ -75,6 +76,7 @@ export const ja = {
   date,
   currency_alias: currencyAlias,
   common,
+  chart,
   faith,
   cookie_consent: cookieConsent,
   dashboard,
