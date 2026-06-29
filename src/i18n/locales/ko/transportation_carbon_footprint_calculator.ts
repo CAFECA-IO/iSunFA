@@ -72,6 +72,7 @@ export const transportationCarbonFootprintCalculator = {
     mode_land: "육상 운송",
     mode_sea: "해상 운송",
     mode_air: "항공 운송",
+    title_custom: "맞춤형 다중 운송 경로",
     title_land: "육상 운송 계획",
     title_sea: "해상 운송 계획",
     title_air: "항공 운송 계획",

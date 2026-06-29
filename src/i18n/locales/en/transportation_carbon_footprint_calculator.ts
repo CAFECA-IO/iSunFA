@@ -74,6 +74,7 @@ export const transportationCarbonFootprintCalculator = {
     mode_land: "Land Route",
     mode_sea: "Sea Route",
     mode_air: "Air Route",
+    title_custom: "Custom Multimodal Route",
     title_land: "Land Transport Plan",
     title_sea: "Sea Transport Plan",
     title_air: "Air Transport Plan",

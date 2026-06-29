@@ -67,6 +67,7 @@ export const transportationCarbonFootprintCalculator = {
     mode_land: "纯陆运",
     mode_sea: "海运",
     mode_air: "空运",
+    title_custom: "自定义多段路线",
     title_land: "纯陆运专案",
     title_sea: "海运专案",
     title_air: "空运专案",
