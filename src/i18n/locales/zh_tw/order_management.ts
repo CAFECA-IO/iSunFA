@@ -24,5 +24,18 @@ export const orderManagement = {
     retry_confirm: "確定要重新執行此訂單嗎？",
     retry_success: "已成功觸發訂單重新執行。",
     retry_failed: "重新執行訂單失敗。",
+    reactivate: "重啟",
+    reactivate_confirm: "確定要手動重啟此訂單嗎？",
+    reactivate_success: "已成功重啟訂單。",
+    reactivate_failed: "重啟訂單失敗。",
+    batch_reactivate: "批量重啟",
+    batch_reactivate_confirm: "確定要批量重啟這 {{count}} 筆訂單嗎？",
+    batch_reactivate_success:
+      "成功批量重啟訂單：成功 {{success}} 筆，失敗 {{fail}} 筆。",
+    batch_reactivate_failed: "批量重啟訂單失敗。",
+    selected_count: "已選擇 {{count}} 筆訂單",
+    cancel_batch: "取消批量",
+    no_reactivatable_orders: "無可重啟訂單",
+    search_bar_placeholder: "以關鍵字搜尋用戶、訂單編號...",
   },
 };

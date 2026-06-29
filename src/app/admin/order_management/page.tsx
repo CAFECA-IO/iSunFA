@@ -10,6 +10,24 @@ import ConfirmModal from "@/components/common/confirm_modal";
 import SuccessNotification from "@/components/common/success_notification";
 import { formatDate } from "@/lib/utils/date";
 import { ORDER_STATUS } from "@/constants/status";
+import OrderFilter from "@/components/admin/order/order_filter";
+
+// Info: (20260625 - Julian) 訂單操作
+const ORDER_ACTIONS = {
+  RETRY: "retry",
+  REACTIVATE: "reactivate",
+  BATCH_REACTIVATE: "batch_reactivate",
+} as const;
+
+// Info: (20260625 - Julian) 訂單操作類型
+type OrderActionType = (typeof ORDER_ACTIONS)[keyof typeof ORDER_ACTIONS];
+
+// Info: (20260625 - Julian) 訂單 API 路由
+const ORDER_API_ROUTES = {
+  LIST: (query: string) => `/api/v1/admin/orders?${query}`,
+  RETRY: (id: string) => `/api/v1/admin/orders/${id}/retry`,
+  BATCH_REACTIVATE: "/api/v1/admin/orders/batch_reactivate",
+} as const;
 
 interface IOrderManagementData {
   id: string;
@@ -49,7 +67,32 @@ export default function OrderManagementPage() {
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     orderId: string | null;
-  }>({ isOpen: false, orderId: null });
+    orderIds: string[] | null;
+    actionType: OrderActionType | null;
+  }>({ isOpen: false, orderId: null, orderIds: null, actionType: null });
+
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  const [isBatchMode, setIsBatchMode] = useState<boolean>(false);
+
+  useEffect(() => {
+    setSelectedOrderIds([]);
+  }, [orders]);
+
+  // Info: (20260625 - Julian) 開啟/關閉批量模式
+  const handleToggleBatchMode = () => {
+    setIsBatchMode((prev) => {
+      const next = !prev;
+      if (!next) {
+        setSelectedOrderIds([]);
+      }
+      return next;
+    });
+  };
+
+  // Info: (20260625 - Julian) 判斷是否有可重啟的訂單
+  const hasReactivatableOrders = orders.some(
+    (o) => o.status === ORDER_STATUS.CANCEL || o.status === ORDER_STATUS.FAILED,
+  );
 
   const [alertModal, setAlertModal] = useState<{
     isOpen: boolean;
@@ -61,6 +104,63 @@ export default function OrderManagementPage() {
     message: string;
   }>({ isOpen: false, message: "" });
 
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [search, setSearch] = useState<string>("");
+  const [type, setType] = useState<string>("ALL");
+  const [executionStatus, setExecutionStatus] = useState<string>("ALL");
+  const [orderStatus, setOrderStatus] = useState<string>("ALL");
+  const [sortBy, setSortBy] = useState<string>("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setSearch(searchInput);
+      setPage(1);
+    }, 500);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchInput]);
+
+  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setType(e.target.value);
+    setPage(1);
+  };
+
+  const handleExecutionStatusChange = (
+    e: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    setExecutionStatus(e.target.value);
+    setPage(1);
+  };
+
+  const handleOrderStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setOrderStatus(e.target.value);
+    setPage(1);
+  };
+
+  const handleSort = (key: string) => {
+    if (sortBy === key) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(key);
+      setSortOrder("desc");
+    }
+    setPage(1);
+  };
+
+  const handleResetFilters = () => {
+    setSearchInput("");
+    setSearch("");
+    setType("ALL");
+    setExecutionStatus("ALL");
+    setOrderStatus("ALL");
+    setSortBy("createdAt");
+    setSortOrder("desc");
+    setPage(1);
+  };
+
   useEffect(() => {
     let ignore = false;
 
@@ -70,6 +170,12 @@ export default function OrderManagementPage() {
         const query = new URLSearchParams({
           page: String(page),
           limit: String(limit),
+          search,
+          type,
+          executionStatus,
+          orderStatus,
+          sortBy,
+          sortOrder,
         });
 
         const res = await request<{
@@ -82,7 +188,7 @@ export default function OrderManagementPage() {
               totalPages: number;
             };
           };
-        }>(`/api/v1/admin/orders?${query.toString()}`);
+        }>(ORDER_API_ROUTES.LIST(query.toString()));
 
         if (ignore) return;
 
@@ -102,26 +208,100 @@ export default function OrderManagementPage() {
     return () => {
       ignore = true;
     };
-  }, [page, limit]);
+  }, [
+    page,
+    limit,
+    search,
+    type,
+    executionStatus,
+    orderStatus,
+    sortBy,
+    sortOrder,
+  ]);
 
   const handleRetryOrderClick = (orderId: string) => {
-    setConfirmModal({ isOpen: true, orderId });
+    setConfirmModal({
+      isOpen: true,
+      orderId,
+      orderIds: null,
+      actionType: ORDER_ACTIONS.RETRY,
+    });
   };
 
-  const handleExecuteRetry = async () => {
-    if (!confirmModal.orderId) return;
-    const orderId = confirmModal.orderId;
-    setConfirmModal({ isOpen: false, orderId: null });
+  const handleReactivateOrderClick = (orderId: string) => {
+    setConfirmModal({
+      isOpen: true,
+      orderId,
+      orderIds: null,
+      actionType: ORDER_ACTIONS.REACTIVATE,
+    });
+  };
+
+  const handleBatchReactivateClick = () => {
+    setConfirmModal({
+      isOpen: true,
+      orderId: null,
+      orderIds: selectedOrderIds,
+      actionType: ORDER_ACTIONS.BATCH_REACTIVATE,
+    });
+  };
+
+  // Info: (20260625 - Julian) 處理重試、重新啟用、批量重啟訂單
+  const handleExecuteAction = async () => {
+    const { orderId, orderIds, actionType } = confirmModal;
+    if (!actionType) return;
+    setConfirmModal({
+      isOpen: false,
+      orderId: null,
+      orderIds: null,
+      actionType: null,
+    });
+
+    if (actionType === ORDER_ACTIONS.BATCH_REACTIVATE) {
+      if (!orderIds || orderIds.length === 0) return;
+      try {
+        const res = await request<{
+          payload: { successCount: number; failCount: number };
+        }>(ORDER_API_ROUTES.BATCH_REACTIVATE, {
+          method: "POST",
+          body: JSON.stringify({ orderIds }),
+        });
+        if (res.payload) {
+          setSuccessNotif({
+            isOpen: true,
+            message: t("order_management.table.batch_reactivate_success", {
+              success: res.payload.successCount,
+              fail: res.payload.failCount,
+            }),
+          });
+          setSelectedOrderIds([]);
+          setPage(page);
+          window.location.reload();
+        }
+      } catch (e) {
+        console.error(e);
+        setAlertModal({
+          isOpen: true,
+          message: t("order_management.table.batch_reactivate_failed"),
+        });
+      }
+      return;
+    }
+
+    if (!orderId) return;
 
     try {
       const res = await request<{ payload: { success: boolean } }>(
-        `/api/v1/admin/orders/${orderId}/retry`,
+        ORDER_API_ROUTES.RETRY(orderId),
         { method: "POST" },
       );
       if (res.payload?.success) {
         setSuccessNotif({
           isOpen: true,
-          message: t("order_management.table.retry_success"),
+          message:
+            actionType === ORDER_ACTIONS.RETRY
+              ? t("order_management.table.retry_success")
+              : t("order_management.table.reactivate_success"),
         });
         setPage(page);
         window.location.reload();
@@ -130,15 +310,84 @@ export default function OrderManagementPage() {
       console.error(e);
       setAlertModal({
         isOpen: true,
-        message: t("order_management.table.retry_failed"),
+        message:
+          actionType === ORDER_ACTIONS.RETRY
+            ? t("order_management.table.retry_failed")
+            : t("order_management.table.reactivate_failed"),
       });
     }
   };
 
+  // Info: (20260625 - Julian) 取得訂單類型的顯示文字
+  const getOrderTypeLabel = (type: string) => {
+    const key = `analysis.categories.${type.toLowerCase()}`;
+    const translated = t(key);
+    return translated !== key ? translated : type;
+  };
+
   const columns: IDataTableColumn<IOrderManagementData>[] = [
+    // Info: (20260625 - Julian) 開啟批量模式時，才顯示勾選框
+    ...(isBatchMode
+      ? [
+          {
+            key: "select",
+            label: (
+              <input
+                type="checkbox"
+                checked={
+                  orders.length > 0 &&
+                  orders
+                    .filter(
+                      (o) =>
+                        o.status === ORDER_STATUS.CANCEL ||
+                        o.status === ORDER_STATUS.FAILED,
+                    )
+                    .every((o) => selectedOrderIds.includes(o.id))
+                }
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    const retryableCancelOrders = orders.filter(
+                      (o) =>
+                        o.status === ORDER_STATUS.CANCEL ||
+                        o.status === ORDER_STATUS.FAILED,
+                    );
+                    setSelectedOrderIds(retryableCancelOrders.map((o) => o.id));
+                  } else {
+                    setSelectedOrderIds([]);
+                  }
+                }}
+                className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+              />
+            ),
+            render: (record: IOrderManagementData) => {
+              const canReactivate =
+                record.status === ORDER_STATUS.CANCEL ||
+                record.status === ORDER_STATUS.FAILED;
+              if (!canReactivate) return null;
+              return (
+                <input
+                  type="checkbox"
+                  checked={selectedOrderIds.includes(record.id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedOrderIds((prev) => [...prev, record.id]);
+                    } else {
+                      setSelectedOrderIds((prev) =>
+                        prev.filter((id) => id !== record.id),
+                      );
+                    }
+                  }}
+                  className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                />
+              );
+            },
+          },
+        ]
+      : []),
     {
       key: "createdAt",
       label: t("order_management.table.date"),
+      sortable: true,
       render: (record) => (
         <span className="text-sm text-gray-500">
           {formatDate(record.createdAt, "yyyy-MM-dd HH:mm")}
@@ -150,11 +399,11 @@ export default function OrderManagementPage() {
       label: t("order_management.table.user"),
       render: (record) => (
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600">
             {record.user?.name ? (
               record.user.name.substring(0, 2).toUpperCase()
             ) : (
-              <UserCircle className="h-4 w-4" />
+              <UserCircle size={16} />
             )}
           </div>
           <div>
@@ -183,21 +432,16 @@ export default function OrderManagementPage() {
       key: "type",
       label: t("order_management.table.type"),
       render: (record) => {
-        let display = record.type;
         const orderData = record.data as Record<string, unknown>;
         const dataField = orderData?.data as
           | Record<string, unknown>
           | undefined;
         const rawCat = dataField?.category || orderData?.category;
-
-        if (rawCat) {
-          const cat = String(rawCat);
-          const key = `analysis.categories.${cat.toLowerCase()}`;
-          const translated = t(key);
-          display = translated !== key ? translated : cat;
-        }
+        const category = rawCat ? String(rawCat) : "";
         return (
-          <span className="text-sm font-medium text-gray-700">{display}</span>
+          <span className="text-sm font-medium text-gray-700">
+            {getOrderTypeLabel(category)}
+          </span>
         );
       },
     },
@@ -205,6 +449,7 @@ export default function OrderManagementPage() {
       key: "amount",
       label: t("order_management.table.amount"),
       align: "right",
+      sortable: true,
       render: (record) => (
         <span className="text-sm font-medium text-gray-900">
           {record.unit} {record.amount.toLocaleString()}
@@ -215,6 +460,7 @@ export default function OrderManagementPage() {
       key: "tokens",
       label: t("order_management.table.tokens"),
       align: "right",
+      sortable: true,
       render: (record) => (
         <span className="text-sm font-medium text-gray-900">
           {record.tokens ? record.tokens.toLocaleString() : "-"}
@@ -224,8 +470,9 @@ export default function OrderManagementPage() {
     {
       key: "status",
       label: t("order_management.table.order_status"),
+      sortable: true,
       render: (record) => (
-        <div className="flex flex-col items-start gap-2">
+        <div className="flex items-center gap-1">
           <span
             className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${
               record.status === ORDER_STATUS.PAID ||
@@ -240,11 +487,22 @@ export default function OrderManagementPage() {
             record.executionStatus === ORDER_STATUS.FAILED) && (
             <button
               onClick={() => handleRetryOrderClick(record.id)}
-              className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100 focus:outline-none"
+              className="inline-flex items-center gap-1 rounded-md bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-500 shadow transition-colors hover:bg-blue-200 focus:outline-none active:translate-y-0.5 active:shadow-none"
               title="Retry Order"
             >
-              <RefreshCw className="h-3 w-3" />
+              <RefreshCw size={12} />
               <span>{t("order_management.table.retry")}</span>
+            </button>
+          )}
+          {(record.status === ORDER_STATUS.CANCEL ||
+            record.executionStatus === ORDER_STATUS.CANCEL) && (
+            <button
+              onClick={() => handleReactivateOrderClick(record.id)}
+              className="inline-flex items-center gap-1 rounded-md bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-500 shadow transition-colors hover:bg-blue-200 focus:outline-none active:translate-y-0.5 active:shadow-none"
+              title="Reactivate Order"
+            >
+              <RefreshCw size={12} strokeWidth={2.5} />
+              <span>{t("order_management.table.reactivate")}</span>
             </button>
           )}
         </div>
@@ -290,7 +548,7 @@ export default function OrderManagementPage() {
           text = t("order_management.table.failed");
           colorClass = "bg-red-50 text-red-700";
         } else if (record.executionStatus === ORDER_STATUS.CANCEL) {
-          text = "CANCEL";
+          text = t("common.cancel");
           colorClass = "bg-orange-50 text-orange-700";
         }
 
@@ -308,6 +566,7 @@ export default function OrderManagementPage() {
     {
       key: "executionConfidence",
       label: t("order_management.table.execution_confidence"),
+      sortable: true,
       render: (record) => {
         if (record.executionConfidence == null) {
           return <span className="text-xs text-gray-400">N/A</span>;
@@ -331,12 +590,38 @@ export default function OrderManagementPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 md:py-12 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
         <AdminPageHeader
           icon={List}
           title={t("order_management.title")}
           subtitle={t("order_management.subtitle")}
+        />
+
+        <OrderFilter
+          searchInput={searchInput}
+          setSearchInput={setSearchInput}
+          type={type}
+          handleTypeChange={handleTypeChange}
+          orderStatus={orderStatus}
+          handleOrderStatusChange={handleOrderStatusChange}
+          executionStatus={executionStatus}
+          handleExecutionStatusChange={handleExecutionStatusChange}
+          hasActiveFilters={
+            !!(
+              searchInput ||
+              type !== "ALL" ||
+              executionStatus !== "ALL" ||
+              orderStatus !== "ALL" ||
+              sortBy !== "createdAt" ||
+              sortOrder !== "desc"
+            )
+          }
+          handleResetFilters={handleResetFilters}
+          isBatchMode={isBatchMode}
+          handleToggleBatchMode={handleToggleBatchMode}
+          hasReactivatableOrders={hasReactivatableOrders}
+          getOrderTypeLabel={getOrderTypeLabel}
         />
 
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -346,6 +631,9 @@ export default function OrderManagementPage() {
             loading={loading}
             pagination={pagination}
             onPageChange={setPage}
+            onSort={handleSort}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
             emptyStateText={t("order_management.table.no_data")}
             rowKey={(record) => record.id}
           />
@@ -354,12 +642,33 @@ export default function OrderManagementPage() {
 
       <ConfirmModal
         isOpen={confirmModal.isOpen}
-        onClose={() => setConfirmModal({ isOpen: false, orderId: null })}
-        title={t("order_management.table.retry")}
-        message={t("order_management.table.retry_confirm")}
+        onClose={() =>
+          setConfirmModal({
+            isOpen: false,
+            orderId: null,
+            orderIds: null,
+            actionType: null,
+          })
+        }
+        title={
+          confirmModal.actionType === ORDER_ACTIONS.BATCH_REACTIVATE
+            ? t("order_management.table.batch_reactivate")
+            : confirmModal.actionType === ORDER_ACTIONS.RETRY
+              ? t("order_management.table.retry")
+              : t("order_management.table.reactivate")
+        }
+        message={
+          confirmModal.actionType === ORDER_ACTIONS.BATCH_REACTIVATE
+            ? t("order_management.table.batch_reactivate_confirm", {
+                count: confirmModal.orderIds?.length || 0,
+              })
+            : confirmModal.actionType === ORDER_ACTIONS.RETRY
+              ? t("order_management.table.retry_confirm")
+              : t("order_management.table.reactivate_confirm")
+        }
         confirmText={t("common.confirm")}
         cancelText={t("common.cancel")}
-        onConfirm={handleExecuteRetry}
+        onConfirm={handleExecuteAction}
       />
 
       <ConfirmModal
@@ -376,6 +685,37 @@ export default function OrderManagementPage() {
         message={successNotif.message}
         onClose={() => setSuccessNotif({ isOpen: false, message: "" })}
       />
+
+      {/* Info: (20260626 - Julian) 漂浮的批量操作欄 */}
+      {selectedOrderIds.length > 0 && (
+        <div className="animate-in fade-in slide-in-from-bottom-5 fixed bottom-8 left-1/2 z-50 flex -translate-x-1/2 items-center gap-5 rounded-2xl border border-slate-800 bg-slate-900 px-6 py-4 shadow-2xl transition-all duration-300">
+          <div className="flex items-center gap-2 border-r border-slate-700 pr-5">
+            <span className="flex size-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white">
+              {selectedOrderIds.length}
+            </span>
+            <span className="text-sm font-medium text-slate-300">
+              {t("order_management.table.selected_count", {
+                count: selectedOrderIds.length,
+              })}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleBatchReactivateClick}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-orange-600 px-4 py-2 text-xs font-semibold text-white shadow-lg transition-all hover:bg-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-slate-900 focus:outline-none active:translate-y-0.5 active:shadow-none"
+            >
+              <RefreshCw size={12} className="animate-spin-slow" />
+              <span>{t("order_management.table.batch_reactivate")}</span>
+            </button>
+            <button
+              onClick={() => setSelectedOrderIds([])}
+              className="rounded-xl border border-slate-700 bg-transparent px-4 py-2 text-xs font-semibold text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200 focus:outline-none"
+            >
+              {t("common.cancel")}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

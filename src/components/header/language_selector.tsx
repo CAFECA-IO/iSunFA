@@ -34,8 +34,8 @@ export default function LanguageSelector() {
 
   return (
     <Menu as="div" className="relative">
-      <MenuButton className="flex items-center gap-x-1 text-sm leading-6 font-semibold text-gray-900 transition-colors hover:text-orange-600 focus:outline-none">
-        <Globe className="size-5 shrink-0 text-gray-500" aria-hidden="true" />
+      <MenuButton className="flex items-center gap-x-1 text-sm leading-6 font-semibold text-slate-900 transition-colors hover:text-orange-600 focus:outline-none">
+        <Globe className="size-5 shrink-0" aria-hidden="true" />
         <span className="hidden sm:inline">{currentLangLabel}</span>
         <ChevronDown
           className="size-4 shrink-0 text-gray-400"

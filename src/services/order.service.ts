@@ -18,6 +18,8 @@ import {
   CurrencyUnit,
 } from "@/constants/price";
 import { IJSONObject } from "@/validators/common";
+import { orderIssueService } from "@/services/order.issue.service";
+import { Prisma } from "@/generated";
 
 export async function getOrdersByUserId(userId: string, type?: string | null) {
   const orders = await paymentRepo.getOrdersByUserId(userId, type);
@@ -257,9 +259,214 @@ export async function retryFailedOrder(orderId: string) {
     throw new AppError(API_ERRORS.NF_ORDER);
   }
 
-  if (order.status !== ORDER_STATUS.FAILED) {
+  if (
+    order.status !== ORDER_STATUS.FAILED &&
+    order.status !== ORDER_STATUS.CANCEL
+  ) {
     throw new AppError(API_ERRORS.VL_INVALID_ORDER_STATUS);
   }
 
   await orderRepo.updateStatus(orderId, ORDER_STATUS.PAID);
+}
+
+/**
+ * Info: (20260625 - Julian) 批次重啟訂單
+ * @param orderIds - 訂單 ID 陣列
+ * @returns 成功和失敗的訂單數量以及錯誤訊息
+ */
+export async function batchReactivateOrders(orderIds: string[]) {
+  const results = {
+    successCount: 0,
+    failCount: 0,
+    errors: [] as { orderId: string; message: string }[],
+  };
+
+  for (const orderId of orderIds) {
+    try {
+      const order = await paymentRepo.getOrderById(orderId);
+      if (!order) {
+        throw new AppError(API_ERRORS.NF_ORDER);
+      }
+
+      if (
+        order.status !== ORDER_STATUS.FAILED &&
+        order.status !== ORDER_STATUS.CANCEL
+      ) {
+        throw new AppError(API_ERRORS.VL_INVALID_ORDER_STATUS);
+      }
+
+      await orderRepo.updateStatus(orderId, ORDER_STATUS.PAID);
+      results.successCount++;
+    } catch (e: unknown) {
+      // Info: (20260625 - Julian) 紀錄失敗的訂單數量
+      results.failCount++;
+      // Info: (20260625 - Julian) 紀錄失敗的訂單錯誤訊息
+      const errorMessage =
+        e instanceof AppError
+          ? e.message
+          : e instanceof Error
+            ? e.message
+            : "Unknown error";
+      results.errors.push({
+        orderId,
+        message: errorMessage,
+      });
+    }
+  }
+
+  return results;
+}
+
+export interface IGetAdminCommissionOrdersParams {
+  page: number;
+  limit: number;
+  search: string;
+  type: string;
+  orderStatus: string;
+  executionStatus: string;
+  sortBy: string;
+  sortOrder: "asc" | "desc";
+}
+
+/**
+ * Info: (20260624 - Julian) 取得訂單分頁資料
+ * @param params - 訂單分頁參數
+ * @returns 訂單分頁資料
+ */
+export async function getAdminCommissionOrdersPaginated(
+  params: IGetAdminCommissionOrdersParams,
+) {
+  const {
+    page,
+    limit,
+    search,
+    type,
+    orderStatus,
+    executionStatus,
+    sortBy,
+    sortOrder,
+  } = params;
+
+  const where: Prisma.OrderWhereInput = {
+    amount: { lt: 0 },
+  };
+
+  // Info: (20260625 - Julian) 模糊搜尋訂單 ID、用戶名稱、錢包地址
+  if (search) {
+    where.OR = [
+      { id: { contains: search, mode: "insensitive" } },
+      {
+        user: {
+          OR: [
+            { name: { contains: search, mode: "insensitive" } },
+            { address: { contains: search, mode: "insensitive" } },
+          ],
+        },
+      },
+    ];
+  }
+
+  // Info: (20260625 - Julian) type 須轉換為大寫，以比對 data.data.category 層
+  if (type && type !== "ALL") {
+    where.AND = [
+      { data: { path: ["data", "category"], equals: type.toUpperCase() } },
+    ];
+  }
+
+  // Info: (20260625 - Julian) 訂單狀態篩選
+  if (orderStatus && orderStatus !== "ALL") {
+    where.status = orderStatus;
+  }
+
+  // Info: (20260625 - Julian) 排序篩選
+  const orderBy: Prisma.OrderOrderByWithRelationInput = {};
+  const direction = sortOrder === "asc" ? "asc" : "desc";
+  if (sortBy === "createdAt") {
+    orderBy.createdAt = direction;
+  } else if (sortBy === "amount") {
+    orderBy.amount = direction;
+  } else if (sortBy === "tokens") {
+    orderBy.tokens = direction;
+  } else if (sortBy === "status") {
+    orderBy.status = direction;
+  } else {
+    orderBy.createdAt = "desc";
+  }
+
+  const isNonDbFilterActive =
+    executionStatus !== "ALL" || sortBy === "executionConfidence";
+
+  let totalElements = 0;
+  let mappedOrders: unknown[] = [];
+
+  if (!isNonDbFilterActive) {
+    const skip = (page - 1) * limit;
+    const [count, orders] = await Promise.all([
+      orderRepo.count({ where }),
+      orderRepo.findMany({
+        where,
+        orderBy,
+        skip,
+        take: limit,
+        include: {
+          user: true,
+          paymentTransactions: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
+          },
+        },
+      }),
+    ]);
+    totalElements = count;
+    mappedOrders =
+      await orderIssueService.getExecutionStatusesForOrders(orders);
+  } else {
+    const allOrders = await orderRepo.findMany({
+      where,
+      orderBy,
+      include: {
+        user: true,
+        paymentTransactions: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+        },
+      },
+    });
+
+    const resolvedOrders =
+      await orderIssueService.getExecutionStatusesForOrders(allOrders);
+
+    let filteredOrders = resolvedOrders;
+
+    if (executionStatus !== "ALL") {
+      filteredOrders = filteredOrders.filter(
+        (o) => o.executionStatus === executionStatus,
+      );
+    }
+
+    if (sortBy === "executionConfidence") {
+      filteredOrders.sort((a, b) => {
+        const confA = a.executionConfidence;
+        const confB = b.executionConfidence;
+        if (confA === null && confB === null) return 0;
+        if (confA === null) return 1;
+        if (confB === null) return -1;
+        return sortOrder === "asc" ? confA - confB : confB - confA;
+      });
+    }
+
+    totalElements = filteredOrders.length;
+    const skip = (page - 1) * limit;
+    mappedOrders = filteredOrders.slice(skip, skip + limit);
+  }
+
+  return {
+    data: mappedOrders,
+    pagination: {
+      page,
+      limit,
+      totalElements,
+      totalPages: Math.ceil(totalElements / limit),
+    },
+  };
 }

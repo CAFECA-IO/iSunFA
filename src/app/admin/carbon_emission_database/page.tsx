@@ -461,9 +461,9 @@ export default function CarbonEmissionDatabasePage() {
         </div>
 
         {/* Info: (20260608 - Luphia) Combined Unified Filter Panel & Data Table Card */}
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="flex flex-col gap-4">
           {/* Info: (20260608 - Luphia) Filter Panel */}
-          <div className="grid grid-cols-1 gap-3 border-b border-gray-100 bg-gray-50/50 p-4 sm:grid-cols-4 sm:items-center">
+          <div className="grid grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-white p-4 sm:grid-cols-4 sm:items-center">
             <div className="relative col-span-1 sm:col-span-2">
               <Search className="absolute top-2.5 left-3 h-4 w-4 text-gray-400" />
               <input
