@@ -54,8 +54,10 @@ const PIE_TOOLS: IToolItem[] = [
 
 const INSTRUCTION_TEMPLATES = {
   ADD_PIE_SLICE: {
-    render: (label: string, value: string) =>
-      `在圓餅圖中新增一個項目，名稱為 "${label}"，數值/比例為 ${value}`,
+    render: (label: string, value: string, color?: string) =>
+      `在圓餅圖中新增一個項目，名稱為 "${label}"，數值/比例為 ${value}${
+        color ? `，顏色為 "${color}"` : ""
+      }`,
   },
   EDIT_PIE_SLICE: {
     match: (line: string, targetLabel: string) =>
@@ -101,12 +103,14 @@ interface IBasePanelProps {
 const AddSlicePanel: FC<IBasePanelProps> = ({ onInsert }) => {
   const [pieSliceLabel, setPieSliceLabel] = useState("");
   const [pieSliceValue, setPieSliceValue] = useState("");
+  const [pieSliceColor, setPieSliceColor] = useState<PieColor | "">("");
 
   const handleSubmit = () => {
     if (!pieSliceLabel || !pieSliceValue) return;
     const inst = INSTRUCTION_TEMPLATES.ADD_PIE_SLICE.render(
       pieSliceLabel,
       pieSliceValue,
+      pieSliceColor || undefined,
     );
     onInsert(inst);
   };
@@ -149,6 +153,27 @@ const AddSlicePanel: FC<IBasePanelProps> = ({ onInsert }) => {
             className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
             placeholder="例如: 18.5"
           />
+        </div>
+        <div className="col-span-2">
+          <label
+            htmlFor="pieSliceValue"
+            className="text-[10px] font-bold text-slate-500"
+          >
+            選擇顏色風格
+          </label>
+          <select
+            id="pieSliceColor"
+            value={pieSliceColor}
+            onChange={(e) => setPieSliceColor(e.target.value as PieColor)}
+            className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+          >
+            <option value={""}>由 AI 自動挑選</option>
+            {Object.values(PieColor).map((color) => (
+              <option key={color} value={color}>
+                {color}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
       <button

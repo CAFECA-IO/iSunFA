@@ -7,14 +7,113 @@ import {
   IDonutChartData,
   DEFAULT_COLORS,
 } from "@/components/common/donut_chart";
-import { Columns2, Loader2, Rows2, Sparkles } from "lucide-react";
+import {
+  Columns2,
+  Loader2,
+  Rows2,
+  Sparkles,
+  CircleX,
+  TriangleAlert,
+  ZoomIn,
+  ZoomOut,
+  Maximize,
+  Move,
+} from "lucide-react";
 import { parsePieColors, parsePieData } from "@/lib/utils/mermaid_helpers";
+import { useZoomPan } from "@/hooks/use_zoom_pan";
 
 enum PreviewDirective {
   ROW = "ROW",
   COLUMN = "COLUMN",
 }
 
+// ==========================================
+// Info: (20260629 - Julian) 支援縮放與拖曳移動的 SVG 容器
+// ==========================================
+interface IZoomableSvgContainerProps {
+  svgContent: string;
+}
+
+const ZoomableSvgContainer: FC<IZoomableSvgContainerProps> = ({
+  svgContent,
+}) => {
+  const {
+    scale,
+    position,
+    isDragging,
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    dragHandlers,
+  } = useZoomPan({ initialScale: 0.8, minScale: 0.3, maxScale: 3 });
+
+  return (
+    <div className="relative h-full w-full overflow-hidden select-none">
+      {/* 縮放控制器組件 */}
+      <div className="absolute top-3 right-3 z-10 flex items-center gap-1 rounded-lg border border-slate-200/80 bg-white/90 p-1 shadow-sm backdrop-blur-sm">
+        <button
+          type="button"
+          onClick={zoomIn}
+          title="放大"
+          className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+        >
+          <ZoomIn size={14} />
+        </button>
+        <button
+          type="button"
+          onClick={zoomOut}
+          title="縮小"
+          className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+        >
+          <ZoomOut size={14} />
+        </button>
+        <button
+          type="button"
+          onClick={resetZoom}
+          title="重設大小"
+          className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+        >
+          <Maximize size={14} />
+        </button>
+        <div className="mx-1 h-3 w-px bg-slate-200" />
+        <span className="px-1 text-[9px] font-bold text-slate-400">
+          {Math.round(scale * 100)}%
+        </span>
+      </div>
+
+      {/* 拖曳提示標籤 */}
+      <div
+        className="absolute top-3 left-3 z-10 flex items-center gap-1 rounded border border-slate-100 bg-white/70 p-1 text-[10px] text-slate-400 backdrop-blur-sm"
+        title="按住滑鼠左鍵可拖曳移動"
+      >
+        <Move size={10} />
+        <span>拖曳可移動</span>
+      </div>
+
+      {/* 渲染畫布區域 */}
+      <div
+        className="flex h-full w-full items-center justify-center"
+        {...dragHandlers}
+        style={{
+          cursor: isDragging ? "grabbing" : "grab",
+        }}
+      >
+        <div
+          className="flex h-full max-h-[95%] w-full max-w-[95%] items-center justify-center select-none"
+          style={{
+            transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+            transformOrigin: "center",
+          }}
+          dangerouslySetInnerHTML={{ __html: svgContent }}
+        />
+      </div>
+    </div>
+  );
+};
+
+// ==========================================
+// 2. Main Component
+// ==========================================
 interface IMermaidAiPreviewPanelProps {
   svgStr: string;
   parsedPieData: { title: string; data: IDonutChartData[] } | null;
@@ -139,10 +238,7 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
                 colors={parsePieColors(currentChart, DEFAULT_COLORS)}
               />
             ) : (
-              <div
-                className="flex h-full max-h-[95%] w-full max-w-[95%] origin-center scale-[0.8] items-center justify-center select-none"
-                dangerouslySetInnerHTML={{ __html: svgStr }}
-              />
+              <ZoomableSvgContainer svgContent={svgStr} />
             )}
           </div>
         </div>
@@ -163,9 +259,10 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
               </div>
             ) : apiError ? (
               <div className="p-4 text-center">
-                <span className="mb-1 block text-xs font-semibold text-rose-500">
-                  ⚠️ 調整失敗
-                </span>
+                <div className="mb-1 flex items-center justify-center gap-1 text-xs font-bold text-orange-500">
+                  <TriangleAlert size={16} className="shrink-0" />
+                  <span>調整失敗</span>
+                </div>
                 <span className="block text-[11px] leading-normal text-slate-500">
                   {apiError}
                 </span>
@@ -179,18 +276,16 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
                 />
               ) : previewHasError ? (
                 <div className="p-4 text-center">
-                  <span className="mb-1 block text-xs font-bold text-red-500">
-                    ❌ 語法渲染失敗
-                  </span>
+                  <div className="mb-1 flex items-center justify-center gap-1 text-xs font-bold text-red-500">
+                    <CircleX size={16} className="shrink-0" />
+                    <span>語法渲染失敗</span>
+                  </div>
                   <span className="block max-h-[120px] overflow-y-auto font-mono text-[11px] whitespace-pre-wrap text-slate-400">
                     {newChartPreview}
                   </span>
                 </div>
               ) : (
-                <div
-                  className="flex h-full max-h-[95%] w-full max-w-[95%] origin-center scale-[0.8] items-center justify-center select-none"
-                  dangerouslySetInnerHTML={{ __html: previewSvgStr }}
-                />
+                <ZoomableSvgContainer svgContent={previewSvgStr} />
               )
             ) : (
               <div className="text-center text-slate-400">

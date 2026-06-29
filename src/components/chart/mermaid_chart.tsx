@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState, useMemo, FC, useRef } from "react";
+import { useZoomPan } from "@/hooks/use_zoom_pan";
 import mermaid from "mermaid";
 import { DonutChart, DEFAULT_COLORS } from "@/components/common/donut_chart";
 import {
   Download,
+  Maximize,
   Maximize2,
   Minimize2,
-  RotateCcw,
   Sparkles,
   ZoomIn,
   ZoomOut,
@@ -26,11 +27,6 @@ import {
 interface IMermaidChartProps {
   chart: string;
   onChartChange?: (newChart: string) => void;
-}
-
-interface IPosition {
-  x: number;
-  y: number;
 }
 
 const MermaidChart: FC<IMermaidChartProps> = ({
@@ -70,24 +66,21 @@ const MermaidChart: FC<IMermaidChartProps> = ({
     return parsePieItems(currentChart);
   }, [currentChart, chartType]);
 
-  // Info: (20260615 - Julian) 縮放與位移狀態
-  const [scale, setScale] = useState<number>(1);
-  const [position, setPosition] = useState<IPosition>({
-    x: 0,
-    y: 0,
-  });
-  const [isDragging, setIsDragging] = useState<boolean>(false);
-  const [dragStart, setDragStart] = useState<IPosition>({
-    x: 0,
-    y: 0,
-  });
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
-  // Info: (20260615 - Julian) 使用 Ref 快取最新狀態，避免拖曳滑鼠時因 state 更新導致頻繁重新綁定事件監聽器
-  const latestStateRef = useRef({ position, isDragging, dragStart });
-  useEffect(() => {
-    latestStateRef.current = { position, isDragging, dragStart };
-  }, [position, isDragging, dragStart]);
+  // Info: (20260629 - Julian) 使用 Hook 管理縮放與位移狀態
+  const {
+    scale,
+    setScale,
+    position,
+    isDragging,
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    startDrag,
+    updateDrag,
+    endDrag,
+  } = useZoomPan({ initialScale: 1, minScale: 0.5, maxScale: 4 });
 
   // Info: (20260418 - Tzuhan) Intercept Mermaid Pie charts and render using our premium Recharts Donut instead
   const parsedPieData = useMemo(() => {
@@ -203,7 +196,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({
     return () => {
       window.removeEventListener("wheel", handleWheelEvent);
     };
-  }, [isFullscreen]);
+  }, [isFullscreen, setScale]);
 
   // Info: (20260615 - Julian) 按下 ESC 鍵退出全螢幕
   useEffect(() => {
@@ -211,36 +204,18 @@ const MermaidChart: FC<IMermaidChartProps> = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setIsFullscreen(false);
-        setScale(1);
-        setPosition({ x: 0, y: 0 });
+        resetZoom();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isFullscreen]);
-
-  const zoomIn = (e?: React.MouseEvent | MouseEvent) => {
-    e?.stopPropagation();
-    setScale((prev) => Math.min(4, prev + 0.15));
-  };
-
-  const zoomOut = (e?: React.MouseEvent | MouseEvent) => {
-    e?.stopPropagation();
-    setScale((prev) => Math.max(0.5, prev - 0.15));
-  };
-
-  const resetZoom = (e?: React.MouseEvent | MouseEvent) => {
-    e?.stopPropagation();
-    setScale(1);
-    setPosition({ x: 0, y: 0 });
-  };
+  }, [isFullscreen, resetZoom]);
 
   const toggleFullscreen = (e?: React.MouseEvent | MouseEvent) => {
     e?.stopPropagation();
     setIsFullscreen((prev) => !prev);
     // Info: (20260615 - Julian) 重置尺寸與位移
-    setScale(1);
-    setPosition({ x: 0, y: 0 });
+    resetZoom();
   };
 
   // Info: (20260615 - Julian) 獲取目前作用中的 Mermaid SVG 容器
@@ -269,27 +244,11 @@ const MermaidChart: FC<IMermaidChartProps> = ({
     const handleMouseDownNative = (e: MouseEvent) => {
       if (e.button !== 0) return; // Info: (20260615 - Julian) 僅允許左鍵
       if ((e.target as HTMLElement).closest(".mermaid-control-btn")) return;
-      setIsDragging(true);
-      setDragStart({
-        x: e.clientX - latestStateRef.current.position.x,
-        y: e.clientY - latestStateRef.current.dragStart.y,
-      });
+      startDrag(e.clientX, e.clientY);
     };
 
     const handleMouseMoveNative = (e: MouseEvent) => {
-      if (!latestStateRef.current.isDragging) return;
-      setPosition({
-        x: e.clientX - latestStateRef.current.dragStart.x,
-        y: e.clientY - latestStateRef.current.dragStart.y,
-      });
-    };
-
-    const handleMouseUpNative = () => {
-      setIsDragging(false);
-    };
-
-    const handleMouseLeaveNative = () => {
-      setIsDragging(false);
+      updateDrag(e.clientX, e.clientY);
     };
 
     const handleDoubleClickNative = (e: MouseEvent) => {
@@ -299,18 +258,18 @@ const MermaidChart: FC<IMermaidChartProps> = ({
 
     viewport.addEventListener("mousedown", handleMouseDownNative);
     viewport.addEventListener("mousemove", handleMouseMoveNative);
-    viewport.addEventListener("mouseup", handleMouseUpNative);
-    viewport.addEventListener("mouseleave", handleMouseLeaveNative);
+    viewport.addEventListener("mouseup", endDrag);
+    viewport.addEventListener("mouseleave", endDrag);
     viewport.addEventListener("dblclick", handleDoubleClickNative);
 
     return () => {
       viewport.removeEventListener("mousedown", handleMouseDownNative);
       viewport.removeEventListener("mousemove", handleMouseMoveNative);
-      viewport.removeEventListener("mouseup", handleMouseUpNative);
-      viewport.removeEventListener("mouseleave", handleMouseLeaveNative);
+      viewport.removeEventListener("mouseup", endDrag);
+      viewport.removeEventListener("mouseleave", endDrag);
       viewport.removeEventListener("dblclick", handleDoubleClickNative);
     };
-  }, []); // Info: (20260615 - Julian) 僅在掛載時綁定一次
+  }, [startDrag, updateDrag, endDrag, resetZoom]);
 
   // Info: (20260615 - Julian) 綁定 Modal 事件，避免 JSX-a11y 警告
   useEffect(() => {
@@ -321,27 +280,11 @@ const MermaidChart: FC<IMermaidChartProps> = ({
     const handleMouseDownNative = (e: MouseEvent) => {
       if (e.button !== 0) return; // Info: (20260615 - Julian) 僅允許左鍵
       if ((e.target as HTMLElement).closest(".mermaid-control-btn")) return;
-      setIsDragging(true);
-      setDragStart({
-        x: e.clientX - latestStateRef.current.position.x,
-        y: e.clientY - latestStateRef.current.position.y,
-      });
+      startDrag(e.clientX, e.clientY);
     };
 
     const handleMouseMoveNative = (e: MouseEvent) => {
-      if (!latestStateRef.current.isDragging) return;
-      setPosition({
-        x: e.clientX - latestStateRef.current.dragStart.x,
-        y: e.clientY - latestStateRef.current.dragStart.y,
-      });
-    };
-
-    const handleMouseUpNative = () => {
-      setIsDragging(false);
-    };
-
-    const handleMouseLeaveNative = () => {
-      setIsDragging(false);
+      updateDrag(e.clientX, e.clientY);
     };
 
     const handleDoubleClickNative = (e: MouseEvent) => {
@@ -351,18 +294,18 @@ const MermaidChart: FC<IMermaidChartProps> = ({
 
     modal.addEventListener("mousedown", handleMouseDownNative);
     modal.addEventListener("mousemove", handleMouseMoveNative);
-    modal.addEventListener("mouseup", handleMouseUpNative);
-    modal.addEventListener("mouseleave", handleMouseLeaveNative);
+    modal.addEventListener("mouseup", endDrag);
+    modal.addEventListener("mouseleave", endDrag);
     modal.addEventListener("dblclick", handleDoubleClickNative);
 
     return () => {
       modal.removeEventListener("mousedown", handleMouseDownNative);
       modal.removeEventListener("mousemove", handleMouseMoveNative);
-      modal.removeEventListener("mouseup", handleMouseUpNative);
-      modal.removeEventListener("mouseleave", handleMouseLeaveNative);
+      modal.removeEventListener("mouseup", endDrag);
+      modal.removeEventListener("mouseleave", endDrag);
       modal.removeEventListener("dblclick", handleDoubleClickNative);
     };
-  }, [isFullscreen]);
+  }, [isFullscreen, startDrag, updateDrag, endDrag, resetZoom]);
 
   const handleAdopt = (newChart: string) => {
     setCurrentChart(newChart);
@@ -658,7 +601,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({
               className="shrink-0 cursor-pointer rounded-md p-1.5 text-slate-600 transition-colors duration-150 hover:bg-slate-100"
               title={t("common.mermaid.reset")!}
             >
-              <RotateCcw size={16} />
+              <Maximize size={16} />
             </button>
             <button
               type="button"
@@ -768,7 +711,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({
               className="shrink-0 cursor-pointer rounded-lg p-1.5 text-slate-300 transition-colors duration-150 hover:bg-slate-500"
               title={t("common.mermaid.reset")!}
             >
-              <RotateCcw size={20} />
+              <Maximize size={20} />
             </button>
             <button
               type="button"
