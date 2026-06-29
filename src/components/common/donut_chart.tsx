@@ -108,8 +108,8 @@ export const DonutChart: React.FC<IDonutChartProps> = ({
       className="group/donut relative my-6 flex w-full break-inside-avoid flex-col items-center gap-8 rounded-2xl border border-gray-100/60 bg-white p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)] ring-1 ring-black/5 transition-all duration-300 hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] md:flex-row print:break-inside-avoid"
     >
       {/* Info: (20260615 - Julian) 下載 toolbar */}
-      <div className="export-exclude absolute top-4 right-4 z-10 hidden items-center gap-1.5 rounded-lg border border-slate-200 bg-white/95 px-1.5 py-1.5 shadow-sm transition-opacity duration-200 group-hover/donut:flex print:hidden">
-        {onSparklesClick && (
+      {onSparklesClick && (
+        <div className="export-exclude absolute top-4 right-4 z-10 hidden items-center gap-1.5 rounded-lg border border-slate-200 bg-white/95 px-1.5 py-1.5 shadow-sm transition-opacity duration-200 group-hover/donut:flex print:hidden">
           <button
             type="button"
             onClick={onSparklesClick}
@@ -118,35 +118,36 @@ export const DonutChart: React.FC<IDonutChartProps> = ({
           >
             <Sparkles size={15} />
           </button>
-        )}
-        <div className="group/download relative shrink-0">
-          <button
-            type="button"
-            className="shrink-0 cursor-pointer rounded-md p-1 text-orange-600 transition-colors duration-150 hover:bg-slate-100"
-            title={t("common.mermaid.download")!}
-          >
-            <Download size={15} />
-          </button>
-          <div className="absolute top-full right-0 z-20 hidden w-20 flex-col pt-1 group-hover/download:flex">
-            <div className="flex flex-col rounded-md border border-slate-200 bg-white py-1 shadow-md">
-              <button
-                type="button"
-                onClick={exportPng}
-                className="w-full px-2.5 py-1.5 text-left text-xs font-bold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800"
-              >
-                {t("common.mermaid.export_png")}
-              </button>
-              <button
-                type="button"
-                onClick={exportSvg}
-                className="w-full px-2.5 py-1.5 text-left text-xs font-bold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800"
-              >
-                {t("common.mermaid.export_svg")}
-              </button>
+          <div className="group/download relative shrink-0">
+            <button
+              type="button"
+              className="shrink-0 cursor-pointer rounded-md p-1 text-orange-600 transition-colors duration-150 hover:bg-slate-100"
+              title={t("common.mermaid.download")!}
+            >
+              <Download size={15} />
+            </button>
+            <div className="absolute top-full right-0 z-20 hidden w-20 flex-col pt-1 group-hover/download:flex">
+              <div className="flex flex-col rounded-md border border-slate-200 bg-white py-1 shadow-md">
+                <button
+                  type="button"
+                  onClick={exportPng}
+                  className="w-full px-2.5 py-1.5 text-left text-xs font-bold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800"
+                >
+                  {t("common.mermaid.export_png")}
+                </button>
+                <button
+                  type="button"
+                  onClick={exportSvg}
+                  className="w-full px-2.5 py-1.5 text-left text-xs font-bold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800"
+                >
+                  {t("common.mermaid.export_svg")}
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
+
       {/* Info: (20260418 - Tzuhan) Chart Section */}
       <div className="flex w-full min-w-[220px] flex-col items-center justify-center md:w-1/3">
         {title && (

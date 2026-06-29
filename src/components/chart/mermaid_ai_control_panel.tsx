@@ -33,7 +33,7 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
     <div className="flex w-full flex-col overflow-y-auto border-r border-slate-200 bg-slate-50 md:w-2/5">
       <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-5 py-4">
         <div className="flex items-center gap-2">
-          <div className="rounded-lg bg-blue-50 p-1.5 text-blue-600">
+          <div className="shrink-0 rounded-lg bg-blue-50 p-1.5 text-blue-600">
             <Sparkles size={20} />
           </div>
           <div>

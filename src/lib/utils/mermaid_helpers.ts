@@ -88,8 +88,9 @@ export const detectChartType = (
 };
 
 /**
- * Info: (20260624 - Julian)
- * 解析 flowchart/graph 中的所有節點
+ * Info: (20260624 - Julian) 解析 flowchart/graph 中的所有節點
+ * @param chartStr - mermaid 字串
+ * @returns - 節點 id 與標籤 array
  */
 export const parseFlowchartNodes = (
   chartStr: string,
@@ -98,6 +99,7 @@ export const parseFlowchartNodes = (
 
   const nodes: { id: string; label: string }[] = [];
   const lines = chartStr.split("\n");
+  // Info: (20260629 - Julian) 支援以下節點格式：A[B], A[B]{C}, A[B]((C))
   const nodeRegex =
     /([a-zA-Z0-9_-]+)\s*(?:\["([^"]+)"\]|\[([^\]]+)\]|\("([^"]+)"\)|\(([^)]+)\)|\{"([^"]+)"\}|\{([^}]+)\})/g;
   const seenIds = new Set<string>();
