@@ -39,7 +39,7 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
         origin: string | { lat: number; lng: number; name?: string };
         dest: string | { lat: number; lng: number; name?: string };
         weightKg?: number;
-        waypoints?: string;
+        waypoints?: string | Array<{ lat: number; lng: number; name?: string }>;
       }>;
       if (!items || !Array.isArray(items))
         throw new Error("Missing items for batch calculation.");
@@ -78,7 +78,11 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
                 ? item.dest
                 : JSON.stringify(item.dest);
             const text = `Origin: ${originStr}, Dest: ${destStr}`;
-            const res = await calculateLogisticsPlanFromText(text, weightKg);
+            const res = await calculateLogisticsPlanFromText(
+              text,
+              weightKg,
+              item.waypoints,
+            );
             plan = res.plan;
           }
 

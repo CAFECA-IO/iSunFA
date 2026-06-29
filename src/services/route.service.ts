@@ -430,6 +430,7 @@ export async function calculateLogisticsPlan(
 export async function calculateLogisticsPlanFromText(
   text: string,
   externalWeight?: number | string,
+  waypointsDesc?: string | Array<{ lat: number; lng: number; name?: string }>,
 ): Promise<{ plan: ILogisticsPlan; parsed: ISmartParseResult }> {
   const parsed = await parseSmartInput(text);
 
@@ -449,6 +450,7 @@ export async function calculateLogisticsPlanFromText(
     parsed.dest.lat,
     parsed.dest.lng,
     weight,
+    waypointsDesc,
   );
 
   return { plan, parsed };
