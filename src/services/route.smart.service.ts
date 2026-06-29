@@ -76,7 +76,7 @@ export async function parseMultipleRoutesFromText(text: string): Promise<
   Array<{
     origin: string;
     dest: string;
-    mode?: "LAND" | "SEA_LAND" | "AIR_LAND" | "SEA_LAND_AIR";
+    waypoints?: string;
     originLat?: number;
     originLng?: number;
     destLat?: number;
@@ -95,10 +95,7 @@ export async function parseMultipleRoutesFromText(text: string): Promise<
             For each route, identify the origin and destination as a string description (e.g., city name, address).
             CRITICAL: You MUST accurately infer the exact latitude and longitude for both the origin and destination based on their locations. Do NOT omit them. If you are unsure, make your best guess for the city or airport coordinates.
             Extract the weight or mass of the cargo in kilograms (KG) as a number. Be aware that the input might be conversational text, or it might be tabular/CSV data (e.g., a number under a "Weight" or "Weight(kg)" column). If you see a number corresponding to weight, extract it.
-            Recommend the BEST transportation mode based on the locations and context.
-            CRITICAL MODE RULES: 
-            1. If the origin and destination are separated by an ocean or are on different continents (e.g., Japan to USA, Asia to Europe, Taiwan to USA), it is IMPOSSIBLE to use pure land transport. You MUST forcibly select "SEA_LAND", "AIR_LAND", or "SEA_LAND_AIR". Do NOT recommend "LAND".
-            2. Only recommend "LAND" for domestic routes or continuous landmass routes.
+            Extract any mentioned waypoints or intermediate stops as a single comma-separated string. If none are mentioned, omit the field or leave it empty.
             
             User Request: "${text}"
             
@@ -108,7 +105,7 @@ export async function parseMultipleRoutesFromText(text: string): Promise<
               {
                   "origin": "String description of origin",
                   "dest": "String description of destination",
-                  "mode": "LAND" | "SEA_LAND" | "AIR_LAND" | "SEA_LAND_AIR",
+                  "waypoints": "String description of waypoints (e.g., Singapore, Rotterdam)",
                   "originLat": 12.34,
                   "originLng": 56.78,
                   "destLat": 12.34,

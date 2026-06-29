@@ -33,6 +33,11 @@ export interface IComparePlansResponse {
       land_airport_to_dest: ITransportSegment;
       total_co2eKg?: string;
     };
+    custom_multimodal?: {
+      segments: (ITransportSegment & { mode: "LAND" | "SEA"; name?: string })[];
+      total_co2eKg?: string;
+      total_distanceKm?: number;
+    };
   };
 }
 
