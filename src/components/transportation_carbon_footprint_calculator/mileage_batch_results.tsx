@@ -24,6 +24,7 @@ export interface IMileageBatchResult {
   plan?: ILogisticsPlan;
   mode?: string;
   error?: string;
+  // Info: (20260629 - Tzuhan) Support displaying waypoints
   waypoints?: string | Array<{ lat: number; lng: number; name?: string }>;
 }
 
@@ -68,6 +69,7 @@ export function MileageBatchResults({
     if (selectedRoutesMap[index]) return selectedRoutesMap[index];
 
     // Info: (20260618 - Tzuhan) Default selection
+    // Info: (20260629 - Tzuhan) Added custom route mode
     if (plan?.comparisonData?.plans?.custom_multimodal) {
       return new Set<RouteType>(["custom"]);
     }

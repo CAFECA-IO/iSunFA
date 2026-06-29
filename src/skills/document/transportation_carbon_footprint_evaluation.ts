@@ -99,6 +99,7 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
           let seaGeometry: unknown = null;
           let airGeometry: unknown = null;
 
+          // Info: (20260629 - Tzuhan) Process custom multimodal plan if available
           const customPlan = plan.comparisonData.plans.custom_multimodal;
 
           if (customPlan) {
@@ -221,6 +222,7 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
           results.push({
             origin: item.origin,
             dest: item.dest,
+            // Info: (20260629 - Tzuhan) return waypoints back to UI
             waypoints: item.waypoints,
             mode: selectedMode,
             distanceKm: totalDist,

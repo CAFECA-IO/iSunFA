@@ -6,6 +6,7 @@ import { ILogisticsPlan } from "@/interfaces/logistics";
 import { MoneyUtil } from "@/lib/utils/money";
 import { useTranslation } from "@/i18n/i18n_context";
 
+// Info: (20260629 - Tzuhan) Support custom mode
 export type RouteType = "sea" | "air" | "land" | "custom";
 
 export interface ISegment {
@@ -81,6 +82,7 @@ export function PlanSection({
   const isSea = type === "sea";
   const isAir = type === "air";
   const isLand = type === "land";
+  // Info: (20260629 - Tzuhan) Check custom route type
   const isCustom = type === "custom";
   const seaPlan = plan.comparisonData?.plans?.sea_multimodal;
   const airPlan = plan.comparisonData?.plans?.air_multimodal;

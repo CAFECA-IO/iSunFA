@@ -34,7 +34,7 @@ export function WaypointEditModal({
     }
   }, [isOpen, initialWaypoints]);
 
-  // Debounced auto-parse for multiple waypoints
+  // Info: (20260629 - Tzuhan) Debounced auto-parse for multiple waypoints
   React.useEffect(() => {
     if (!isOpen || disabled) return;
 
