@@ -14,14 +14,14 @@ const AiResponseCard: FC<IAiResponseCardProps> = ({ aiResponse, reports }) => {
 
   const handleDownload = (report: IMockReport) => {
     // Info: (20260610 - Julian) 模擬產生檔案 Blob 並觸發瀏覽器下載
-    const dummyContent = `Mock Report Content for ${report.company}\nReport Year: ${report.reportYear}\nPeriod: ${report.period}\nIndustry: ${report.industry}`;
+    const dummyContent = `Mock Report Content for ${report.companyName}\nReport Year: ${report.reportYear}\nPeriod: ${report.period}\nIndustry: ${report.industry}`;
     const blob = new Blob([dummyContent], {
       type: "text/plain;charset=utf-8",
     });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${report.company}_${report.reportYear}永續報告書.txt`;
+    a.download = `${report.companyName}_${report.reportYear}永續報告書.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -34,7 +34,7 @@ const AiResponseCard: FC<IAiResponseCardProps> = ({ aiResponse, reports }) => {
       className="flex items-center text-xs font-medium text-slate-600"
     >
       <p>
-        • {report.company} - {report.title}
+        • {report.companyName} - {report.title}
       </p>
       <div className="mx-2 flex-1 border border-dashed border-slate-400"></div>
       <button
