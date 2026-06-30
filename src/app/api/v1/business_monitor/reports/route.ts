@@ -1,12 +1,14 @@
 import { NextRequest } from "next/server";
-import { mockReports } from "@/interfaces/business_monitor";
-import { IAIResponse } from "@/interfaces/business_monitor";
+import { IAIResponse, IMockReport } from "@/interfaces/business_monitor";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { jsonOk } from "@/lib/utils/response";
+import { lanceDBService } from "@/services/lancedb.service";
+import { mapFileNameToReport } from "@/lib/utils/report_mapper";
+import { ILanceDBRow } from "@/interfaces/lance_db";
 
 /**
  * Info:(20260609 - Julian) 用於開發 Business Monitor 的 Mock API，之後會移除
- * GET /api/v1/mock/reports?query={query}&company={company}&industry={industry}&year={year}&page={page}&pageSize={pageSize}
+ * GET /api/v1/business_monitor/reports?query={query}&company={company}&industry={industry}&year={year}&page={page}&pageSize={pageSize}
  */
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
@@ -23,7 +25,27 @@ export async function GET(req: NextRequest) {
     await new Promise((resolve) => setTimeout(resolve, delayMs));
   }
 
-  let filtered = [...mockReports];
+  // Load unique reports from LanceDB dynamically
+  const table = await lanceDBService.getTable();
+  const allRows = await table
+    .query()
+    .select(["reportId", "companyName"])
+    .toArray();
+
+  const uniqueReports: IMockReport[] = [];
+  const seenIds = new Set<number>();
+
+  allRows.forEach((row) => {
+    const fileName = (row as unknown as ILanceDBRow).reportId;
+    if (!fileName) return;
+    const report = mapFileNameToReport(fileName);
+    if (report && !seenIds.has(report.id)) {
+      seenIds.add(report.id);
+      uniqueReports.push(report);
+    }
+  });
+
+  let filtered = [...uniqueReports];
   let aiResponse: IAIResponse | undefined;
 
   // Info:(20260609 - Julian) 關鍵字與 AI 意圖過濾 (串接 Gemini API)
@@ -42,8 +64,8 @@ export async function GET(req: NextRequest) {
         },
       });
 
-      // Info:(20260609 - Julian) 將 mockReports 當作參考資料餵給 LLM
-      const contextData = mockReports.map((r) => ({
+      // Info:(20260630 - Julian) 將 LanceDB 獨有報告當作參考資料餵給 LLM
+      const contextData = uniqueReports.map((r) => ({
         id: r.id,
         company: r.company,
         title: r.title,

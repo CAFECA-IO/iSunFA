@@ -42,7 +42,7 @@ const ReportDetailPageBody = () => {
       setIsLoading(true);
       try {
         const res = await request<{ payload: IReportDetailPayload }>(
-          `/api/v1/mock/reports/${reportId}`,
+          `/api/v1/business_monitor/reports/${reportId}`,
         );
         if (res?.payload) {
           setPayload(res.payload);

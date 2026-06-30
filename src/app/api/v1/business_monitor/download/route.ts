@@ -9,7 +9,7 @@ import {
 
 /**
  * Info:(20260609 - Julian) 用於開發 Business Monitor 的 Mock API，之後會移除
- * GET /api/v1/mock/download?reportId={reportId}
+ * GET /api/v1/business_monitor/download?reportId={reportId}
  */
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;

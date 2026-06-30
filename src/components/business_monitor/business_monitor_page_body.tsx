@@ -68,7 +68,7 @@ const BusinessMonitorPageBody: FC = () => {
               totalPages: number;
               aiResponse?: IAIResponse;
             };
-          }>("/api/v1/mock/chat", {
+          }>("/api/v1/business_monitor/chat", {
             method: "POST",
             body: JSON.stringify({ question: appliedFilters.query }),
           });
@@ -97,7 +97,7 @@ const BusinessMonitorPageBody: FC = () => {
               totalPages: number;
               aiResponse?: IAIResponse;
             };
-          }>(`/api/v1/mock/reports?${params.toString()}`);
+          }>(`/api/v1/business_monitor/reports?${params.toString()}`);
 
           if (res?.payload) {
             setFilteredReports(res.payload.reports || []);
