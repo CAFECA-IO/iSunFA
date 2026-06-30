@@ -102,3 +102,14 @@ export const SUBSCRIPTION_PLAN_CREDITS = {
   team: 3000,
   business: 30000,
 } as const;
+
+export const BUSINESS_MODEL_PRICE = {
+  CLOUD: 29400,
+  ON_PREMISE: 303660,
+} as const;
+
+export const SOLUTION_PLAN_PRICE = {
+  BASIC: 94500,
+  PRO: 283500,
+  ENTERPRISE: 567000,
+} as const;

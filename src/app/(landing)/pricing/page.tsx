@@ -1,29 +1,26 @@
 "use client";
 
 import { useState, useEffect, ReactNode } from "react";
-
-import Image from "next/image";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/auth_context";
 import { useTranslation } from "@/i18n/i18n_context";
 import { request } from "@/lib/utils/request";
-import { MODULES } from "@/constants/modules";
 import {
-  ENTERPRISE_PLAN_PRICE,
   ANALYSIS_BASE_COSTS,
   REWARD_AMOUNTS,
   SUBSCRIPTION_PLAN_CREDITS,
 } from "@/constants/price";
 import { CREDIT_PLANS } from "@/config/credit_plans";
 import PricingCard from "@/components/pricing/pricing_card";
-import { Check, Minus, Plus, Lock, Loader2 } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { MoneyUtil } from "@/lib/utils/money";
 
 import AuthModal from "@/components/auth/auth_modal";
 import PaymentModal from "@/components/pricing/payment_modal";
 import { PaymentStep } from "@/interfaces/payment";
-
+import BusinessModelSection from "@/components/pricing/business_model_section";
+import SolutionsPricingSection from "@/components/pricing/solutions_pricing_section";
 export default function PricingPage() {
   const { t, language } = useTranslation();
   const { user } = useAuth();
@@ -34,9 +31,11 @@ export default function PricingPage() {
   const activeTab =
     tabParam === "subscription"
       ? "subscription"
-      : tabParam === "buyout"
-        ? "buyout"
-        : "credits";
+      : tabParam === "credits"
+        ? "credits"
+        : tabParam === "solutions"
+          ? "solutions"
+          : "business_model";
   const [billingInterval, setBillingInterval] = useState<"month" | "year">(
     "month",
   );
@@ -70,30 +69,6 @@ export default function PricingPage() {
       ? "free"
       : user.plan
     : undefined;
-
-  // Info: (20260115 - Luphia) Pricing Calculator State
-  const [userCount, setUserCount] = useState(1);
-  const [updateYears, setUpdateYears] = useState(0);
-  const [selectedModules, setSelectedModules] = useState<string[]>(
-    MODULES.filter((m) => m.basic).map((m) => m.key),
-  );
-
-  const toggleModule = (moduleKey: string) => {
-    const targetModule = MODULES.find((m) => m.key === moduleKey);
-    if (targetModule?.basic) return; // Info: (20260117 - Luphia) Cannot toggle basic modules
-
-    setSelectedModules((prev) =>
-      prev.includes(moduleKey)
-        ? prev.filter((k) => k !== moduleKey)
-        : [...prev, moduleKey],
-    );
-  };
-
-  const totalPrice =
-    ENTERPRISE_PLAN_PRICE.MACHINE +
-    userCount * ENTERPRISE_PLAN_PRICE.USER +
-    selectedModules.length * ENTERPRISE_PLAN_PRICE.MODULE +
-    updateYears * ENTERPRISE_PLAN_PRICE.UPDATE;
 
   const showComingSoon = () => {
     if (!user) {
@@ -239,22 +214,26 @@ export default function PricingPage() {
           <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">
             {activeTab === "subscription"
               ? t("pricing.title")
-              : activeTab === "buyout"
-                ? t("pricing.ai_adoption.title")
-                : t("pricing.credits.title")}
+              : activeTab === "business_model"
+                ? t("pricing.business_model.title")
+                : activeTab === "solutions"
+                  ? t("pricing.solutions.title")
+                  : t("pricing.credits.title")}
           </h1>
           <p className="mt-4 text-lg leading-8 text-gray-600">
             {activeTab === "subscription"
               ? t("pricing.subtitle")
-              : activeTab === "buyout"
-                ? t("pricing.ai_adoption.description")
-                : t("pricing.credits.subtitle")}
+              : activeTab === "business_model"
+                ? t("pricing.business_model.subtitle")
+                : activeTab === "solutions"
+                  ? t("pricing.solutions.subtitle")
+                  : t("pricing.credits.subtitle")}
           </p>
         </div>
 
         {/* Info: (20260104 - Luphia) Tab Switcher */}
         <div className="mt-8 flex justify-center">
-          <div className="flex rounded-lg bg-gray-100 p-1">
+          <div className="flex flex-wrap justify-center gap-1 rounded-lg bg-gray-100 p-1 sm:flex-nowrap">
             <button
               onClick={() =>
                 router.push(`${pathname}?tab=credits`, { scroll: false })
@@ -263,7 +242,7 @@ export default function PricingPage() {
                 activeTab === "credits"
                   ? "bg-white shadow-sm"
                   : "hover:bg-gray-50"
-              } rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
+              } rounded-md px-6 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
             >
               {t("pricing.credits.tab_credits")}
             </button>
@@ -275,21 +254,33 @@ export default function PricingPage() {
                 activeTab === "subscription"
                   ? "bg-white shadow-sm"
                   : "hover:bg-gray-50"
-              } rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
+              } rounded-md px-6 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
             >
               {t("pricing.credits.tab_subscription")}
             </button>
             <button
               onClick={() =>
-                router.push(`${pathname}?tab=buyout`, { scroll: false })
+                router.push(`${pathname}?tab=business_model`, { scroll: false })
               }
               className={`${
-                activeTab === "buyout"
+                activeTab === "business_model"
                   ? "bg-white shadow-sm"
                   : "hover:bg-gray-50"
-              } rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
+              } rounded-md px-6 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
             >
-              {t("pricing.credits.tab_buyout")}
+              {t("pricing.business_model.tab")}
+            </button>
+            <button
+              onClick={() =>
+                router.push(`${pathname}?tab=solutions`, { scroll: false })
+              }
+              className={`${
+                activeTab === "solutions"
+                  ? "bg-white shadow-sm"
+                  : "hover:bg-gray-50"
+              } rounded-md px-6 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
+            >
+              {t("pricing.solutions.tab")}
             </button>
           </div>
         </div>
@@ -559,248 +550,12 @@ export default function PricingPage() {
           </>
         )}
 
-        {activeTab === "buyout" && (
-          <div className="mx-auto max-w-7xl px-6 pt-10 pb-24 lg:px-8">
-            {/* Info: (20260115 - Luphia) Enterprise AI Adoption Plan Section */}
-            <div className="rounded-3xl bg-gradient-to-b from-gray-900 to-gray-800 p-1 shadow-2xl ring-1 shadow-orange-900/20 ring-white/10">
-              <div className="rounded-[22px] bg-gray-900/50 px-6 py-8 backdrop-blur-xl sm:px-12 lg:px-12 lg:py-12">
-                <div className="mx-auto flex max-w-2xl flex-col gap-16 lg:mx-0 lg:max-w-none lg:flex-row lg:items-start">
-                  <div className="w-full flex-auto">
-                    <ul className="mt-8 grid grid-cols-1 gap-x-8 gap-y-4 text-base leading-7 text-gray-300 sm:grid-cols-2">
-                      {t<string[]>("pricing.ai_adoption.features").map(
-                        (feature, index) => (
-                          <li key={index} className="flex items-center gap-x-3">
-                            <div className="flex-none rounded-full bg-orange-500/10 p-1">
-                              <Check
-                                className="h-5 w-5 text-orange-400"
-                                aria-hidden="true"
-                              />
-                            </div>
-                            {feature}
-                          </li>
-                        ),
-                      )}
-                    </ul>
+        {activeTab === "business_model" && (
+          <BusinessModelSection onSelect={showComingSoon} />
+        )}
 
-                    {/* Info: (20260117 - Luphia) Add-ons Section */}
-                    <div className="mt-12 border-t border-white/10 pt-10">
-                      <div className="space-y-10">
-                        {/* Info: (20260611 - Luphia) Base Machine */}
-                        <div className="flex flex-col justify-between gap-6 border-b border-white/5 pb-8 sm:flex-row sm:items-center">
-                          <div>
-                            <span className="block text-lg font-medium text-white">
-                              ASUS Ascent GX10
-                            </span>
-                            <span className="mt-1 block text-sm text-gray-400">
-                              {t("pricing.ai_adoption.add_module_price", {
-                                price:
-                                  ENTERPRISE_PLAN_PRICE.MACHINE.toLocaleString(),
-                              })}
-                            </span>
-                          </div>
-                          <div className="flex w-full items-center justify-start sm:w-auto sm:justify-end">
-                            <span className="rounded-lg bg-orange-600/10 px-3 py-1 text-sm font-medium text-orange-400 ring-1 ring-orange-500/20 ring-inset">
-                              {t("pricing.ai_adoption.required")}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Info: (20260117 - Luphia) Additional User */}
-                        <div className="flex flex-col justify-between gap-6 border-b border-white/5 pb-8 sm:flex-row sm:items-center">
-                          <div>
-                            <span className="block text-lg font-medium text-white">
-                              {t("pricing.ai_adoption.user_count")}
-                            </span>
-                            <span className="mt-1 block text-sm text-gray-400">
-                              {t("pricing.ai_adoption.add_user_price", {
-                                price: (
-                                  userCount * ENTERPRISE_PLAN_PRICE.USER
-                                ).toLocaleString(),
-                              })}
-                            </span>
-                          </div>
-                          <div className="flex w-full items-center justify-between gap-x-4 rounded-xl bg-black/20 p-1.5 ring-1 ring-white/10 sm:w-auto">
-                            <button
-                              onClick={() =>
-                                setUserCount((prev) => Math.max(1, prev - 1))
-                              }
-                              className="rounded-lg p-2 text-white transition-all hover:scale-105 hover:bg-white/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
-                              disabled={userCount <= 1}
-                            >
-                              <Minus className="h-5 w-5" />
-                            </button>
-                            <span className="w-12 text-center text-lg font-bold text-white tabular-nums">
-                              {userCount}
-                            </span>
-                            <button
-                              onClick={() => setUserCount((prev) => prev + 1)}
-                              className="rounded-lg p-2 text-white transition-all hover:scale-105 hover:bg-white/10 active:scale-95"
-                            >
-                              <Plus className="h-5 w-5" />
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Info: (20260610 - Luphia) Software Update Service */}
-                        <div className="flex flex-col justify-between gap-6 border-b border-white/5 pb-8 sm:flex-row sm:items-center">
-                          <div>
-                            <span className="block text-lg font-medium text-white">
-                              {t("pricing.ai_adoption.software_update")}
-                            </span>
-                            <span className="mt-1 block text-sm text-gray-400">
-                              {t("pricing.ai_adoption.software_update_price", {
-                                price: (
-                                  updateYears * ENTERPRISE_PLAN_PRICE.UPDATE
-                                ).toLocaleString(),
-                              })}
-                            </span>
-                          </div>
-                          <div className="flex w-full items-center justify-between gap-x-4 rounded-xl bg-black/20 p-1.5 ring-1 ring-white/10 sm:w-auto">
-                            <button
-                              onClick={() =>
-                                setUpdateYears((prev) => Math.max(0, prev - 1))
-                              }
-                              className="rounded-lg p-2 text-white transition-all hover:scale-105 hover:bg-white/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
-                              disabled={updateYears <= 0}
-                            >
-                              <Minus className="h-5 w-5" />
-                            </button>
-                            <span className="w-12 text-center text-lg font-bold text-white tabular-nums">
-                              {updateYears}
-                            </span>
-                            <button
-                              onClick={() =>
-                                setUpdateYears((prev) => Math.min(3, prev + 1))
-                              }
-                              className="rounded-lg p-2 text-white transition-all hover:scale-105 hover:bg-white/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
-                              disabled={updateYears >= 3}
-                            >
-                              <Plus className="h-5 w-5" />
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Info: (20260117 - Luphia) Additional Module */}
-                        <div>
-                          <div className="mb-8 flex items-center justify-between gap-x-4">
-                            <div>
-                              <span className="block text-lg font-medium text-white">
-                                {t("pricing.ai_adoption.add_module")}
-                              </span>
-                              <span className="mt-1 block text-sm text-gray-400">
-                                {t("pricing.ai_adoption.add_module_price", {
-                                  price: (
-                                    selectedModules.length *
-                                    ENTERPRISE_PLAN_PRICE.MODULE
-                                  ).toLocaleString(),
-                                })}
-                              </span>
-                            </div>
-                            <span className="inline-flex items-center rounded-full bg-orange-400/10 px-3 py-1 text-sm font-medium text-orange-400 ring-1 ring-orange-400/20 ring-inset">
-                              {selectedModules.length}{" "}
-                              {t("pricing.ai_adoption.selected")}
-                            </span>
-                          </div>
-                          <ul className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
-                            {MODULES.map((mod) => {
-                              const isSelected = selectedModules.includes(
-                                mod.key,
-                              );
-                              const isMandatory = mod.basic;
-
-                              return (
-                                <li key={mod.key}>
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      !isMandatory && toggleModule(mod.key)
-                                    }
-                                    disabled={isMandatory}
-                                    className={`group relative flex h-full w-full flex-row items-center gap-3 overflow-hidden rounded-lg px-3 py-2.5 text-left transition-all duration-200 ${
-                                      isSelected
-                                        ? "bg-gradient-to-br from-orange-600 to-orange-700 text-white shadow-lg ring-1 shadow-orange-900/20 ring-orange-500"
-                                        : "bg-white/5 text-gray-400 ring-1 ring-white/10 hover:bg-white/10 hover:text-gray-200 hover:ring-white/20"
-                                    } ${isMandatory ? "cursor-not-allowed" : "cursor-pointer active:scale-[0.98]"} `}
-                                  >
-                                    <div
-                                      className={`flex-none rounded-md p-1.5 transition-colors ${isSelected ? "bg-white/20 text-white" : "bg-white/5 text-gray-400 group-hover:text-gray-300"} `}
-                                    >
-                                      <mod.icon className="h-4 w-4" />
-                                    </div>
-                                    <span className="truncate text-sm leading-tight font-medium">
-                                      {t(`features.items.${mod.key}.title`)}
-                                    </span>
-
-                                    {isMandatory && (
-                                      <div className="ml-auto text-white/40">
-                                        <Lock className="h-3.5 w-3.5" />
-                                      </div>
-                                    )}
-                                  </button>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex w-full flex-none flex-col gap-6 lg:sticky lg:top-24 lg:w-96">
-                    <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-gray-800 object-cover shadow-2xl ring-1 ring-white/10">
-                      <Image
-                        src="/images/hardware_lease.webp"
-                        alt="Hardware Lease"
-                        fill
-                        priority
-                        unoptimized
-                        sizes="(max-width: 1024px) 100vw, 384px"
-                        className="object-cover opacity-80 grayscale-[0.2]"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent" />
-                      <div className="absolute right-0 bottom-0 left-0 p-8">
-                        <p className="mb-2 text-sm font-medium text-orange-400">
-                          On-Premise Solution
-                        </p>
-                        <h4 className="mb-2 text-2xl font-bold text-white">
-                          {t("pricing.ai_adoption.local_node")}
-                        </h4>
-                        <p className="text-sm leading-relaxed text-gray-300">
-                          {t("pricing.ai_adoption.local_node_tooltip")}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl bg-white/5 p-6 ring-1 ring-white/10 backdrop-blur-sm">
-                      <div className="flex flex-col gap-y-2">
-                        <span className="text-base leading-7 font-semibold text-gray-300">
-                          {t("pricing.ai_adoption.total_estimated")}
-                        </span>
-                        <div className="flex items-baseline gap-x-2">
-                          <h3 className="text-3xl font-bold tracking-tight text-white">
-                            {t("pricing.currency_prefix")}
-                            {totalPrice.toLocaleString()}
-                          </h3>
-                        </div>
-                      </div>
-
-                      <div className="mt-6">
-                        <button
-                          type="button"
-                          onClick={showComingSoon}
-                          className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 px-6 py-3.5 text-base font-semibold text-white shadow-lg shadow-orange-900/20 transition-all duration-300 hover:scale-[1.02] hover:from-orange-400 hover:to-orange-500 hover:shadow-orange-900/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
-                        >
-                          <span className="relative z-10 flex items-center justify-center gap-2">
-                            {t("pricing.select_plan")}
-                          </span>
-                          <div className="absolute inset-0 -translate-x-full bg-white/20 transition-transform duration-300 group-hover:translate-x-0" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+        {activeTab === "solutions" && (
+          <SolutionsPricingSection onSelect={showComingSoon} />
         )}
 
         {activeTab === "credits" && (
