@@ -442,8 +442,6 @@ export async function calculateLogisticsPlanFromText(
   const weight = MoneyUtil.toDecimal(
     MoneyUtil.parseInput(weightStr),
   ).toString();
-  // We can't parse waypoints easily here from parsed.waypoints, wait, does parsed have waypoints? No. ISmartParseResult doesn't have it.
-  // Actually, we do not support waypoints in calculateLogisticsPlanFromText for now, as it's legacy.
   const plan = await calculateLogisticsPlan(
     parsed.origin.lat,
     parsed.origin.lng,
