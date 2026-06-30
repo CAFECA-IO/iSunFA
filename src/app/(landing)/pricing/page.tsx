@@ -232,8 +232,8 @@ export default function PricingPage() {
         </div>
 
         {/* Info: (20260104 - Luphia) Tab Switcher */}
-        <div className="mt-8 flex justify-center">
-          <div className="flex flex-wrap justify-center gap-1 rounded-lg bg-gray-100 p-1 sm:flex-nowrap">
+        <div className="mt-8 flex justify-center px-4 sm:px-0">
+          <div className="grid w-full max-w-md grid-cols-2 gap-1 rounded-lg bg-gray-100 p-1 sm:flex sm:max-w-none sm:flex-nowrap sm:justify-center">
             <button
               onClick={() =>
                 router.push(`${pathname}?tab=credits`, { scroll: false })
@@ -242,7 +242,7 @@ export default function PricingPage() {
                 activeTab === "credits"
                   ? "bg-white shadow-sm"
                   : "hover:bg-gray-50"
-              } rounded-md px-6 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
+              } w-full rounded-md px-6 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none sm:w-auto`}
             >
               {t("pricing.credits.tab_credits")}
             </button>
@@ -254,7 +254,7 @@ export default function PricingPage() {
                 activeTab === "subscription"
                   ? "bg-white shadow-sm"
                   : "hover:bg-gray-50"
-              } rounded-md px-6 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
+              } w-full rounded-md px-6 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none sm:w-auto`}
             >
               {t("pricing.credits.tab_subscription")}
             </button>
@@ -266,7 +266,7 @@ export default function PricingPage() {
                 activeTab === "business_model"
                   ? "bg-white shadow-sm"
                   : "hover:bg-gray-50"
-              } rounded-md px-6 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
+              } w-full rounded-md px-6 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none sm:w-auto`}
             >
               {t("pricing.business_model.tab")}
             </button>
@@ -278,7 +278,7 @@ export default function PricingPage() {
                 activeTab === "solutions"
                   ? "bg-white shadow-sm"
                   : "hover:bg-gray-50"
-              } rounded-md px-6 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
+              } w-full rounded-md px-6 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none sm:w-auto`}
             >
               {t("pricing.solutions.tab")}
             </button>
