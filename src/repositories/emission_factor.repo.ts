@@ -22,6 +22,7 @@ export class EmissionFactorRepo {
     emissionFactor: string | number;
     source: string;
     category?: string;
+    ghgFactors?: Prisma.JsonValue | unknown;
   } | null> {
     if (!id) return null;
 
@@ -36,6 +37,7 @@ export class EmissionFactorRepo {
         emissionFactor: staticMatch.emissionFactor,
         source: staticMatch.source,
         category: staticMatch.category || "STANDARD",
+        ghgFactors: (staticMatch as Record<string, unknown>).ghgFactors,
       };
     }
 
@@ -52,6 +54,7 @@ export class EmissionFactorRepo {
         emissionFactor: dbMatch.emissionFactor.toString(),
         source: dbMatch.source,
         category: dbMatch.category,
+        ghgFactors: dbMatch.ghgFactors,
       };
     }
 

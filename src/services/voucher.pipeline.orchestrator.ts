@@ -5,6 +5,7 @@ import { fxInterceptorService } from "@/services/fx.interceptor.service";
 import { MoneyUtil } from "@/lib/utils/money";
 import { AccountingEngineService } from "@/services/accounting.engine.service";
 import { EmissionFactorRepo } from "@/repositories/emission_factor.repo";
+import { EsgCalculatorService } from "@/services/esg.calculator.service";
 import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
 import {
   EsgActivityTypeToGhgMapping,
@@ -166,10 +167,22 @@ export class VoucherPipelineOrchestrator {
       );
       if (coef) {
         const convertedEsgAmount = fileResult.esg!.amount;
-        fileResult.esg!.emissions = MoneyUtil.multiply(
-          String(convertedEsgAmount),
-          String(coef.emissionFactor),
+
+        // Info: (20260630 - Tzuhan) 多氣體支援引擎計算
+        const calcResult = EsgCalculatorService.calculateEmissions(
+          convertedEsgAmount || 0,
+          coef,
         );
+
+        fileResult.esg!.emissions = calcResult.emissions;
+
+        if (
+          calcResult.ghgBreakdown &&
+          Object.keys(calcResult.ghgBreakdown).length > 0
+        ) {
+          fileResult.esg!.ghgBreakdown = calcResult.ghgBreakdown;
+          fileResult.esg!.gwpVersion = calcResult.gwpVersion;
+        }
 
         if (coef.source === "Internal_Proxy_Estimation_Based_On_Spend") {
           fileResult.esg!.aiNote =
