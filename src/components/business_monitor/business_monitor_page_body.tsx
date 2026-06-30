@@ -17,6 +17,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { BUSINESS_MONITOR_INDUSTRIES } from "@/constants/business_monitor";
 import ReportItem from "@/components/business_monitor/report_item";
 import AiResponseCard from "@/components/business_monitor/ai_response_card";
+import { MarkdownContent } from "@/components/common/markdown_content";
 
 const BusinessMonitorPageBody: FC = () => {
   const { t } = useTranslation();
@@ -58,30 +59,52 @@ const BusinessMonitorPageBody: FC = () => {
     const fetchReports = async () => {
       setIsLoading(true);
       try {
-        const params = new URLSearchParams();
-        if (appliedFilters.query) params.append("query", appliedFilters.query);
-        if (appliedFilters.company)
-          params.append("company", appliedFilters.company);
-        if (appliedFilters.industry)
-          params.append("industry", appliedFilters.industry);
-        if (appliedFilters.year) params.append("year", appliedFilters.year);
-        params.append("page", currentPage.toString());
-        params.append("pageSize", "8");
+        if (appliedFilters.query) {
+          // Info:(20260609 - Julian) 串接 LLM API
+          const res = await request<{
+            payload: {
+              reports: IMockReport[];
+              total: number;
+              totalPages: number;
+              aiResponse?: IAIResponse;
+            };
+          }>("/api/v1/mock/chat", {
+            method: "POST",
+            body: JSON.stringify({ question: appliedFilters.query }),
+          });
 
-        const res = await request<{
-          payload: {
-            reports: IMockReport[];
-            total: number;
-            totalPages: number;
-            aiResponse?: IAIResponse;
-          };
-        }>(`/api/v1/mock/reports?${params.toString()}`);
+          if (res?.payload) {
+            setFilteredReports(res.payload.reports || []);
+            setTotalCount(res.payload.total || 0);
+            setTotalPages(res.payload.totalPages || 0);
+            setAiResponse(res.payload.aiResponse || null);
+          }
+        } else {
+          // Info:(20260609 - Julian) 串接標準搜尋 API
+          const params = new URLSearchParams();
+          if (appliedFilters.company)
+            params.append("company", appliedFilters.company);
+          if (appliedFilters.industry)
+            params.append("industry", appliedFilters.industry);
+          if (appliedFilters.year) params.append("year", appliedFilters.year);
+          params.append("page", currentPage.toString());
+          params.append("pageSize", "8");
 
-        if (res?.payload) {
-          setFilteredReports(res.payload.reports);
-          setTotalCount(res.payload.total);
-          setTotalPages(res.payload.totalPages);
-          setAiResponse(res.payload.aiResponse || null);
+          const res = await request<{
+            payload: {
+              reports: IMockReport[];
+              total: number;
+              totalPages: number;
+              aiResponse?: IAIResponse;
+            };
+          }>(`/api/v1/mock/reports?${params.toString()}`);
+
+          if (res?.payload) {
+            setFilteredReports(res.payload.reports || []);
+            setTotalCount(res.payload.total || 0);
+            setTotalPages(res.payload.totalPages || 0);
+            setAiResponse(res.payload.aiResponse || null);
+          }
         }
       } catch (err) {
         console.error("Failed to fetch reports", err);
@@ -261,14 +284,16 @@ const BusinessMonitorPageBody: FC = () => {
             <button
               type="button"
               onClick={handleClear}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-6 py-2.5 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50 focus:outline-none lg:w-auto"
+              disabled={isLoading}
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-6 py-2.5 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50 focus:outline-none disabled:cursor-not-allowed disabled:text-slate-400 lg:w-auto"
             >
               {t("business_monitor.filter.clear_filters")}
             </button>
             <button
               type="button"
               onClick={handleSearch}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-600 px-8 py-2.5 text-sm font-bold text-white transition-colors hover:bg-orange-700 focus:outline-none lg:w-auto"
+              disabled={isLoading}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-600 px-8 py-2.5 text-sm font-bold text-white transition-colors hover:bg-orange-700 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-300 lg:w-auto"
             >
               <Search size={16} />
               {t("business_monitor.filter.search_reports")}
@@ -287,7 +312,7 @@ const BusinessMonitorPageBody: FC = () => {
                 </h2>
               </div>
               <div className="rounded-2xl bg-orange-100 px-4 py-2 text-base leading-relaxed font-medium text-slate-800 md:text-xl">
-                {aiResponse.answer}
+                <MarkdownContent content={aiResponse.answer} theme="light" />
               </div>
               {/* Info: (20260610 - Julian) AI 回應 & 參考資料卡片 */}
               <AiResponseCard

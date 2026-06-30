@@ -31,11 +31,12 @@ const AiResponseCard: FC<IAiResponseCardProps> = ({ aiResponse, reports }) => {
   const reportList = reports.map((report) => (
     <div
       key={report.id}
-      className="flex items-center justify-between text-xs font-medium text-slate-600"
+      className="flex items-center text-xs font-medium text-slate-600"
     >
       <p>
-        • {report.company} {report.title}
+        • {report.company} - {report.title}
       </p>
+      <div className="mx-2 flex-1 border border-dashed border-slate-400"></div>
       <button
         type="button"
         onClick={() => handleDownload(report)}
@@ -52,9 +53,7 @@ const AiResponseCard: FC<IAiResponseCardProps> = ({ aiResponse, reports }) => {
         <p className="text-xs font-bold text-orange-800">
           {t("business_monitor.ai_section.data_sources")}
         </p>
-        <div className="mt-1 grid grid-cols-2 gap-x-10 gap-y-2">
-          {reportList}
-        </div>
+        <ul className="mt-1 grid grid-cols-2 gap-x-10 gap-y-2">{reportList}</ul>
       </div>
     )
   );

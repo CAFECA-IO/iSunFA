@@ -595,7 +595,7 @@ export default function HistorySection() {
               </button>
             </div>
 
-            <div className="flex flex-1 [scrollbar-width:none] items-center gap-2.5 overflow-x-auto pb-0 pl-4 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex flex-1 scrollbar-none items-center gap-2.5 overflow-x-auto pb-0 pl-4 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               {allTags.map((tag) => {
                 const isSelected = selectedTag === tag;
                 const baseClasses =
