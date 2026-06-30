@@ -3,8 +3,8 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { lanceDBService } from "@/services/lancedb.service";
 import { ILanceDBRow } from "@/interfaces/lance_db";
-import { IMockReport } from "@/interfaces/business_monitor";
-import { mapFileNameToReport } from "@/lib/utils/report_mapper";
+import { prisma } from "@/lib/prisma";
+import { Report } from "@/generated";
 
 const OLLAMA_HOST = "http://localhost:11434";
 const EMBED_MODEL = "nomic-embed-text";
@@ -175,19 +175,31 @@ ${question}`;
     });
     const llmData = await responseToJSON(llmResponse);
 
-    const matchedReports: IMockReport[] = [];
+    const matchedReports: Report[] = [];
     const seenIds = new Set<number>();
 
-    matchedDocs.forEach((doc) => {
-      const fileName = doc.reportId;
-      if (!fileName) return;
+    for (const doc of matchedDocs) {
+      const reportIdVal = doc.reportId;
+      if (!reportIdVal) continue;
 
-      const report = mapFileNameToReport(fileName);
+      let report: Report | null = null;
+      if (/^\d+$/.test(reportIdVal)) {
+        // It's a Prisma ID
+        report = await prisma.report.findUnique({
+          where: { id: parseInt(reportIdVal, 10) },
+        });
+      } else {
+        // It's a PDF path (older record fallback)
+        report = await prisma.report.findUnique({
+          where: { pdfPath: reportIdVal },
+        });
+      }
+
       if (report && !seenIds.has(report.id)) {
         seenIds.add(report.id);
         matchedReports.push(report);
       }
-    });
+    }
 
     const result = {
       reports: matchedReports,
