@@ -149,11 +149,15 @@ function ReportPageContent() {
   const landMapRef = useRef<IMapViewerRef>(null);
   const seaMapRef = useRef<IMapViewerRef>(null);
   const airMapRef = useRef<IMapViewerRef>(null);
-  const mapRefs = useMemo(
+  const customMapRef = useRef<IMapViewerRef>(null);
+  const mapRefs = useMemo<
+    Record<RouteType, React.RefObject<IMapViewerRef | null>>
+  >(
     () => ({
       land: landMapRef,
       sea: seaMapRef,
       air: airMapRef,
+      custom: customMapRef,
     }),
     [],
   );
@@ -563,7 +567,11 @@ function ReportPageContent() {
         let originalCanvasDisplay = "";
         let targetCanvas: HTMLCanvasElement | null = null;
 
-        if (currentMapRef.current && currentMapRef.current.captureMap) {
+        if (
+          currentMapRef &&
+          currentMapRef.current &&
+          currentMapRef.current.captureMap
+        ) {
           const dataUrl = await currentMapRef.current.captureMap();
           if (dataUrl) {
             targetCanvas = pageEl.querySelector(
