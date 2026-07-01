@@ -1,6 +1,6 @@
 "use server";
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { ChatService } from "@/services/chat.service";
 
 export async function parseWaypointsToCoordinates(
   waypointsDesc: string,
@@ -13,8 +13,7 @@ export async function parseWaypointsToCoordinates(
       throw new Error("GEMINI_API_KEY is not set.");
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const chatService = new ChatService(apiKey);
 
     const prompt = `
             You are a professional logistics AI assistant.
@@ -34,8 +33,10 @@ export async function parseWaypointsToCoordinates(
             ]
         `;
 
-    const result = await model.generateContent(prompt);
-    let resultText = result.response.text().trim();
+    const rawResult = await chatService.generateRaw(prompt, undefined, {
+      modelName: "gemini-2.5-flash",
+    });
+    let resultText = rawResult.trim();
 
     if (resultText.startsWith("\`\`\`json")) {
       resultText = resultText

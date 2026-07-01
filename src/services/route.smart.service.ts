@@ -1,6 +1,6 @@
 "use server";
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { ChatService } from "@/services/chat.service";
 
 export interface ISmartParseResult {
   origin?: { lat: number; lng: number };
@@ -21,8 +21,7 @@ export async function parseSmartInput(
       throw new Error("GEMINI_API_KEY is not set.");
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const chatService = new ChatService(apiKey);
 
     const prompt = `
             You are a professional logistics AI assistant.
@@ -50,8 +49,10 @@ export async function parseSmartInput(
             5. CRITICAL: If the origin and destination are separated by an ocean or are on different continents (e.g., Japan to USA, Asia to Europe), it is IMPOSSIBLE to use pure land transport. In such cases, if you were to output a mode, it MUST be SEA_LAND, AIR_LAND, or SEA_LAND_AIR. DO NOT assume continuous land connection where none exists.
         `;
 
-    const result = await model.generateContent(prompt);
-    let resultText = result.response.text().trim();
+    const rawResult = await chatService.generateRaw(prompt, undefined, {
+      modelName: "gemini-2.5-flash",
+    });
+    let resultText = rawResult.trim();
 
     if (resultText.startsWith("\`\`\`json")) {
       resultText = resultText
@@ -89,8 +90,7 @@ export async function parseMultipleRoutesFromText(text: string): Promise<
   try {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) throw new Error("GEMINI_API_KEY is not set.");
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const chatService = new ChatService(apiKey);
     const prompt = `
             You are a professional logistics AI assistant.
             Extract all distinct transportation routes from the user's description.
@@ -119,8 +119,10 @@ export async function parseMultipleRoutesFromText(text: string): Promise<
               }
             ]
         `;
-    const result = await model.generateContent(prompt);
-    let resultText = result.response.text().trim();
+    const rawResult = await chatService.generateRaw(prompt, undefined, {
+      modelName: "gemini-2.5-flash",
+    });
+    let resultText = rawResult.trim();
     if (resultText.startsWith("\`\`\`json"))
       resultText = resultText
         .replace("\`\`\`json", "")

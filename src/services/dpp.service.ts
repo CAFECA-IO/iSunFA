@@ -4,12 +4,8 @@ import { StorageService } from "@/services/storage.service";
 import { Prisma } from "@/generated";
 import * as fs from "fs";
 import * as path from "path";
-import {
-  GoogleGenerativeAI,
-  SchemaType,
-  Schema,
-  Part,
-} from "@google/generative-ai";
+import { Schema, SchemaType, Part } from "@google/generative-ai";
+import { ChatService } from "@/services/chat.service";
 import { mdToPdf } from "md-to-pdf";
 import {
   IDigitalProductPassportBatch,
@@ -29,8 +25,8 @@ export class DppService {
     this.fileRepo = new FileRepository();
   }
 
-  // Info: (20260615 - Tzuhan) Initialize and validate GoogleGenerativeAI client
-  private getGenAI(): GoogleGenerativeAI {
+  // Info: (20260615 - Tzuhan) Initialize and validate ChatService client
+  private getChatService(): ChatService {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       throw new ApiError(
@@ -39,7 +35,7 @@ export class DppService {
         API_ERRORS.IS_GEMINI_API_KEY_UNDEFINED.status,
       );
     }
-    return new GoogleGenerativeAI(apiKey);
+    return new ChatService(apiKey);
   }
 
   public async issueBatch(
@@ -255,21 +251,16 @@ ${personaContext}`;
         fileName = lastFileName;
         parsedName = `Product SKU based on ${fileName}`;
         try {
-          const genAI = this.getGenAI();
+          const chatService = this.getChatService();
           const dppExtractionSchema = this.getDppExtractionSchema();
 
-          const model = genAI.getGenerativeModel({
-            model: "gemini-2.5-pro",
-            generationConfig: {
-              responseMimeType: "application/json",
-              responseSchema: dppExtractionSchema,
-              temperature: 0.1,
-              maxOutputTokens: 8192,
-            },
+          let responseText = await chatService.generateContent(parts, {
+            modelName: "gemini-2.5-pro",
+            isJson: true,
+            responseSchema: dppExtractionSchema,
+            temperature: 0.1,
+            maxOutputTokens: 8192,
           });
-
-          const result = await model.generateContent(parts);
-          let responseText = result.response.text();
           responseText = responseText
             .replace(/^```(?:json)?\s*/i, "")
             .replace(/\s*```$/i, "")
@@ -479,17 +470,8 @@ ${personaContext}`;
       }
     }
 
-    const genAI = this.getGenAI();
+    const chatService = this.getChatService();
     const dppExtractionSchema = this.getDppExtractionSchema();
-
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-pro",
-      generationConfig: {
-        responseMimeType: "application/json",
-        responseSchema: dppExtractionSchema,
-        temperature: 0.1,
-      },
-    });
 
     const prompt = `You are a Digital Product Passport (DPP) compliance auditor. Analyze the provided supplementary document.
 For each module in modulesData:
@@ -511,8 +493,13 @@ Document File name: ${fileName}`;
       parts.push({ text: `\n\n--- Document Content ---\n${fileContent}` });
     }
 
-    const result = await model.generateContent(parts);
-    const parsed = JSON.parse(result.response.text());
+    const responseText = await chatService.generateContent(parts, {
+      modelName: "gemini-2.5-pro",
+      isJson: true,
+      responseSchema: dppExtractionSchema,
+      temperature: 0.1,
+    });
+    const parsed = JSON.parse(responseText);
 
     const existingModules =
       (skuWithAccess.modulesData as Record<
