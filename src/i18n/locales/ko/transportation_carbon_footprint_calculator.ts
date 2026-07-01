@@ -148,4 +148,9 @@ export const transportationCarbonFootprintCalculator = {
     csv_air_dist: "항공 운송(km)",
     csv_pdf_file: "PDF 파일",
   },
+  map: {
+    maptiler_key_not_set: "MapTiler 키가 설정되지 않았습니다!",
+    origin: "출발지",
+    dest: "도착지",
+  },
 };

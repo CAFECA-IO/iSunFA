@@ -151,4 +151,9 @@ export const transportationCarbonFootprintCalculator = {
     csv_air_dist: "Air (km)",
     csv_pdf_file: "PDF File",
   },
+  map: {
+    maptiler_key_not_set: "MapTiler Key is not set!",
+    origin: "Origin",
+    dest: "Destination",
+  },
 };

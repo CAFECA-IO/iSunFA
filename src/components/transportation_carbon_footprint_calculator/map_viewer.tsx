@@ -12,6 +12,7 @@ import Map, { Source, Layer, MapRef, Marker } from "react-map-gl/maplibre";
 import { MapPin } from "lucide-react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { FeatureCollection, Feature, Geometry } from "geojson";
+import { useTranslation } from "@/i18n/i18n_context";
 
 export interface IMapViewerProps {
   // Info: (20260430 - Tzuhan) 支援多式聯運的 FeatureCollection 或是單一軌跡
@@ -151,6 +152,7 @@ const MapViewerBase = (
   }: IMapViewerProps,
   ref: React.Ref<IMapViewerRef>,
 ) => {
+  const { t } = useTranslation();
   const mapTilerKey = process.env.NEXT_PUBLIC_MAPTILER_KEY;
   const mapInstanceId = useId();
 
@@ -221,7 +223,9 @@ const MapViewerBase = (
   if (!mapTilerKey) {
     return (
       <div className="rounded bg-red-100 p-4 text-red-500">
-        MapTiler Key 尚未設定！
+        {t(
+          "transportation_carbon_footprint_calculator.map.maptiler_key_not_set",
+        )}
       </div>
     );
   }
@@ -290,7 +294,7 @@ const MapViewerBase = (
               <div className="mb-1 flex items-center gap-1 rounded-lg bg-white/90 px-2 py-1 shadow-sm backdrop-blur-sm">
                 <MapPin className="h-3 w-3 text-orange-600" />
                 <span className="text-[10px] font-bold text-gray-800">
-                  起點
+                  {t("transportation_carbon_footprint_calculator.map.origin")}
                 </span>
               </div>
               <div className="h-0 w-0 border-t-[8px] border-r-[6px] border-l-[6px] border-t-white/90 border-r-transparent border-l-transparent"></div>
@@ -308,7 +312,7 @@ const MapViewerBase = (
               <div className="mb-1 flex items-center gap-1 rounded-lg bg-white/90 px-2 py-1 shadow-sm backdrop-blur-sm">
                 <MapPin className="h-3 w-3 text-rose-600" />
                 <span className="text-[10px] font-bold text-gray-800">
-                  終點
+                  {t("transportation_carbon_footprint_calculator.map.dest")}
                 </span>
               </div>
               <div className="h-0 w-0 border-t-[8px] border-r-[6px] border-l-[6px] border-t-white/90 border-r-transparent border-l-transparent"></div>

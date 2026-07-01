@@ -142,4 +142,9 @@ export const transportationCarbonFootprintCalculator = {
     csv_air_dist: "空运(km)",
     csv_pdf_file: "PDF文件",
   },
+  map: {
+    maptiler_key_not_set: "MapTiler Key 尚未设定！",
+    origin: "起点",
+    dest: "终点",
+  },
 };
