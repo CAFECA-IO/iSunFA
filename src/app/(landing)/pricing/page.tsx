@@ -136,6 +136,29 @@ export default function PricingPage() {
     setPaymentModalOpen(true);
   };
 
+  const onSelectCustomPlan = (
+    planId: string,
+    title: string,
+    amount: number,
+    interval?: "month" | "year",
+  ) => {
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+
+    setPendingAmount(amount.toString());
+    setPendingCredits("0"); // Credits are 0 for non-subscription, non-credit purchases
+    setPendingBaseCredits("0");
+    setPendingBonusCredits("0");
+    setPendingDisplayPrice(amount.toString());
+    setPendingTitle(title);
+    setPendingPlanId(planId);
+    setPendingBillingInterval(interval);
+    setModalInitialStep(PaymentStep.confirm);
+    setPaymentModalOpen(true);
+  };
+
   useEffect(() => {
     // Info: (20260302 - Tzuhan) [流程 5-1: 接收應援科技(OEN)回傳結果] 當結帳跳轉 OEN 完畢後，OEN 會將用戶導轉回此頁面，並附帶 URL 查詢參數
     const paymentSuccess = searchParams.get("payment_success");
@@ -591,11 +614,11 @@ export default function PricingPage() {
         )}
 
         {activeTab === "business_model" && (
-          <BusinessModelSection onSelect={showComingSoon} />
+          <BusinessModelSection onSelect={onSelectCustomPlan} />
         )}
 
         {activeTab === "solutions" && (
-          <SolutionsPricingSection onSelect={showComingSoon} />
+          <SolutionsPricingSection onSelect={onSelectCustomPlan} />
         )}
 
         {activeTab === "credits" && (

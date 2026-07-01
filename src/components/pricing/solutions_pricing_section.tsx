@@ -1,9 +1,15 @@
 import React, { useState } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { CheckCircle2, Building, Building2, BuildingIcon } from "lucide-react";
+import { SOLUTION_PLAN_PRICE } from "@/constants/price";
 
 interface ISolutionsPricingSectionProps {
-  onSelect: () => void;
+  onSelect: (
+    planId: string,
+    title: string,
+    amount: number,
+    billingInterval?: "month" | "year",
+  ) => void;
 }
 
 type SolutionTab = "iso14064" | "iso14067" | "carbon_label";
@@ -156,7 +162,13 @@ export default function SolutionsPricingSection({
             </ul>
           </div>
           <button
-            onClick={onSelect}
+            onClick={() =>
+              onSelect(
+                `${activeTab}_basic`,
+                `${currentSolution.title} - 輕量入門級`,
+                SOLUTION_PLAN_PRICE.BASIC,
+              )
+            }
             className="mt-8 block w-full rounded-xl bg-teal-50 px-3 py-3 text-center text-sm font-semibold text-teal-600 transition-colors hover:bg-teal-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
           >
             {t("pricing.select_plan")}
@@ -219,7 +231,13 @@ export default function SolutionsPricingSection({
             </ul>
           </div>
           <button
-            onClick={onSelect}
+            onClick={() =>
+              onSelect(
+                `${activeTab}_pro`,
+                `${currentSolution.title} - 專業成長級`,
+                SOLUTION_PLAN_PRICE.PRO,
+              )
+            }
             className="mt-8 block w-full rounded-xl bg-orange-500 px-3 py-3 text-center text-sm font-semibold text-white shadow-sm transition-colors hover:bg-orange-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
           >
             {t("pricing.select_plan")}
@@ -282,7 +300,13 @@ export default function SolutionsPricingSection({
             </ul>
           </div>
           <button
-            onClick={onSelect}
+            onClick={() =>
+              onSelect(
+                `${activeTab}_enterprise`,
+                `${currentSolution.title} - 旗艦企業級`,
+                SOLUTION_PLAN_PRICE.ENTERPRISE,
+              )
+            }
             className="mt-8 block w-full rounded-xl bg-purple-50 px-3 py-3 text-center text-sm font-semibold text-purple-600 transition-colors hover:bg-purple-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600"
           >
             {t("pricing.select_plan")}

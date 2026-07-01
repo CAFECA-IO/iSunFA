@@ -13,9 +13,11 @@ export const generatePaymentOrderSchema = z.object({
   credits: z
     .union([z.number(), z.string()])
     .transform((val) => Number(val))
-    .refine((val) => val > 0, {
-      message: "Credits must be greater than 0",
-    }),
+    .refine((val) => !isNaN(val) && val >= 0, {
+      message: "Credits must be greater than or equal to 0",
+    })
+    .optional()
+    .default(0),
   paymentMethodId: z.string().min(1),
   unit: z.string().optional(),
   title: z.string().optional(),

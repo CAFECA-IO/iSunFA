@@ -8,9 +8,15 @@ import {
   Database,
   ShieldCheck,
 } from "lucide-react";
+import { BUSINESS_MODEL_PRICE } from "@/constants/price";
 
 interface IBusinessModelSectionProps {
-  onSelect: () => void;
+  onSelect: (
+    planId: string,
+    title: string,
+    amount: number,
+    billingInterval?: "month" | "year",
+  ) => void;
 }
 
 export default function BusinessModelSection({
@@ -69,7 +75,14 @@ export default function BusinessModelSection({
             </ul>
           </div>
           <button
-            onClick={onSelect}
+            onClick={() =>
+              onSelect(
+                "cloud",
+                t("pricing.business_model.cloud.title"),
+                BUSINESS_MODEL_PRICE.CLOUD,
+                "year",
+              )
+            }
             className="mt-8 block w-full rounded-xl bg-orange-50 px-3 py-3 text-center text-sm font-semibold text-orange-600 transition-colors hover:bg-orange-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
           >
             {t("pricing.select_plan")}
@@ -114,7 +127,13 @@ export default function BusinessModelSection({
             </ul>
           </div>
           <button
-            onClick={onSelect}
+            onClick={() =>
+              onSelect(
+                "on_premise",
+                t("pricing.business_model.on_premise.title"),
+                BUSINESS_MODEL_PRICE.ON_PREMISE,
+              )
+            }
             className="mt-8 block w-full rounded-xl bg-white px-3 py-3 text-center text-sm font-semibold text-orange-600 shadow-sm transition-colors hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           >
             {t("pricing.select_plan")}
