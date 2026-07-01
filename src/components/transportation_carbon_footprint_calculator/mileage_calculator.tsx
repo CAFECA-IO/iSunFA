@@ -69,10 +69,9 @@ export function MileageCalculator({
   const [newWaypoints, setNewWaypoints] = useState<IWaypoint[]>([]);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
-  // Waypoint Edit Modal state
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
-    itemId: string | null; // "new" for newWaypoints, or item.id
+    itemId: string | null;
     waypoints: IWaypoint[];
   }>({ isOpen: false, itemId: null, waypoints: [] });
   const [alertModal, setAlertModal] = useState({
