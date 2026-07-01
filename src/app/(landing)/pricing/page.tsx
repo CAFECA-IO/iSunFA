@@ -66,9 +66,9 @@ export default function PricingPage() {
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
   const [pendingTitle, setPendingTitle] = useState<string>("");
   const [pendingPlanId, setPendingPlanId] = useState<string>("");
-  const [pendingBillingInterval, setPendingBillingInterval] = useState<
-    "month" | "year" | undefined
-  >();
+  type PendingBillingIntervalType = "month" | "year" | undefined;
+  const [pendingBillingInterval, setPendingBillingInterval] =
+    useState<PendingBillingIntervalType>();
 
   // Info: (20260119 - Luphia) Allow guest users to select free plan to trigger login
   const currentPlan = user
