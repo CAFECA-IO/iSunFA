@@ -27,7 +27,6 @@ export function WaypointEditModal({
   const [isParsingId, setIsParsingId] = useState<string | null>(null);
   const { t } = useTranslation();
 
-  // Sync state when modal opens
   React.useEffect(() => {
     if (isOpen) {
       setWaypoints(initialWaypoints || []);
@@ -127,7 +126,6 @@ export function WaypointEditModal({
   };
 
   const handleConfirm = () => {
-    // Filter out completely empty waypoints
     const cleaned = waypoints.filter((w) => w.name.trim());
     onConfirm(cleaned);
     onClose();

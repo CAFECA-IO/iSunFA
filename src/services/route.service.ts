@@ -330,7 +330,6 @@ export async function calculateLogisticsPlan(
           const segmentRoute = await getLandRoute(p1, p2);
 
           if (!segmentRoute.success || segmentRoute.isFallback) {
-            // Need sea routing
             const p1Port = await getNearestPort(p1.lat, p1.lng);
             const p2Port = await getNearestPort(p2.lat, p2.lng);
 
@@ -378,11 +377,10 @@ export async function calculateLogisticsPlan(
                 totalCustomCo2e = totalCustomCo2e.plus(c);
                 totalCustomDist += portToP2.distanceKm || 0;
               }
-              continue; // Successfully handled via sea
+              continue;
             }
           }
 
-          // Add pure land route segment
           const c = MoneyUtil.toDecimal(segmentRoute.distanceKm || 0)
             .times(weightTonne)
             .times(factors.LAND);
