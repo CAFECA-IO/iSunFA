@@ -1,5 +1,12 @@
 import type { Geometry } from "geojson";
 
+export interface IWaypoint {
+  id: string;
+  name: string;
+  lat?: number;
+  lng?: number;
+}
+
 export interface INearestPortResult {
   id: string;
   name: string;
@@ -32,6 +39,11 @@ export interface IComparePlansResponse {
       air_airport_to_airport: ITransportSegment;
       land_airport_to_dest: ITransportSegment;
       total_co2eKg?: string;
+    };
+    custom_multimodal?: {
+      segments: (ITransportSegment & { mode: "LAND" | "SEA"; name?: string })[];
+      total_co2eKg?: string;
+      total_distanceKm?: number;
     };
   };
 }

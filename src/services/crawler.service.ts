@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI, Part } from "@google/generative-ai";
+import { ChatService, Part } from "@/services/chat.service";
 import { SnapshotService } from "@/services/snapshot.service";
 
 // Info: (20260407 - Luphia) Web Crawler Paradigm Interfaces
@@ -26,16 +26,14 @@ export interface ICrawlerJsonResult {
 }
 
 export class CrawlerService {
-  private genAI: GoogleGenerativeAI;
-  private modelName: string;
+  private chatService: ChatService;
   private snapshotService: SnapshotService;
 
   constructor(apiKey?: string) {
     // Info: (20260407 - Luphia) Default to environment variable if no key is provided
     const key =
       apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
-    this.genAI = new GoogleGenerativeAI(key);
-    this.modelName = process.env.MODEL || "gemini-1.5-flash";
+    this.chatService = new ChatService(key);
     this.snapshotService = new SnapshotService();
   }
 
@@ -49,7 +47,6 @@ export class CrawlerService {
     systemPrompt: string,
     base64Image: string,
   ): Promise<T> {
-    const model = this.genAI.getGenerativeModel({ model: this.modelName });
     const payload = this.preparePayload(base64Image);
 
     const parts: Part[] = [
@@ -57,16 +54,12 @@ export class CrawlerService {
       { inlineData: { data: payload, mimeType: "image/jpeg" } },
     ];
 
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts }],
-      generationConfig: {
-        responseMimeType: "application/json",
-        temperature: 0.2, // Info: (20260407 - Luphia) Provide slight creativity for summarizing
-      },
+    const responseText = await this.chatService.generateContent(parts, {
+      isJson: true,
+      temperature: 0.2, // Info: (20260407 - Luphia) Provide slight creativity for summarizing
     });
 
-    const responseText = result.response.text().trim();
-    return JSON.parse(responseText) as T;
+    return JSON.parse(responseText.trim()) as T;
   }
 
   /**

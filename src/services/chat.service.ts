@@ -4,8 +4,20 @@ import {
   Tool,
   Schema,
   GenerationConfig,
+  ModelParams,
 } from "@google/generative-ai";
 import { DirectChatSkill } from "@/skills/chat/direct_chat";
+
+export type { Part, Schema, Tool };
+
+export interface IChatGenerationOptions {
+  modelName?: string;
+  temperature?: number;
+  maxOutputTokens?: number;
+  responseSchema?: Schema;
+  isJson?: boolean;
+  tools?: Tool[];
+}
 
 export class ChatService {
   private genAI: GoogleGenerativeAI;
@@ -14,6 +26,46 @@ export class ChatService {
   constructor(apiKey: string) {
     this.genAI = new GoogleGenerativeAI(apiKey);
     this.modelName = process.env.MODEL || "gemini-1.5-flash";
+  }
+
+  /**
+   * Info: (20260701 - Tzuhan)
+   * Universal generateContent interface for all services
+   */
+  async generateContent(
+    parts: Part[],
+    options?: IChatGenerationOptions,
+  ): Promise<string> {
+    const modelName = options?.modelName || this.modelName;
+    const generationConfig: GenerationConfig = {};
+
+    if (options?.temperature !== undefined) {
+      generationConfig.temperature = options.temperature;
+    }
+    if (options?.maxOutputTokens !== undefined) {
+      generationConfig.maxOutputTokens = options.maxOutputTokens;
+    }
+    if (options?.isJson || options?.responseSchema) {
+      generationConfig.responseMimeType = "application/json";
+    }
+    if (options?.responseSchema) {
+      generationConfig.responseSchema = options.responseSchema;
+    }
+
+    const modelOptions: ModelParams = {
+      model: modelName,
+      generationConfig,
+    };
+
+    if (options?.tools && options.tools.length > 0) {
+      modelOptions.tools = options.tools;
+    }
+
+    const model = this.genAI.getGenerativeModel(modelOptions);
+
+    const result = await model.generateContent(parts);
+    const response = await result.response;
+    return response.text();
   }
 
   async generateResponse(
@@ -31,18 +83,8 @@ export class ChatService {
     images?: { data: string; mimeType: string }[],
     isJson: boolean = false,
     responseSchema?: Schema,
+    options?: IChatGenerationOptions,
   ): Promise<string> {
-    const generationConfig: GenerationConfig = {};
-    if (isJson || responseSchema) {
-      generationConfig.responseMimeType = "application/json";
-    }
-    if (responseSchema) {
-      generationConfig.responseSchema = responseSchema;
-    }
-    const model = this.genAI.getGenerativeModel({
-      model: this.modelName,
-      generationConfig,
-    });
     const parts: Part[] = [{ text: prompt }];
 
     if (images && images.length > 0) {
@@ -56,27 +98,23 @@ export class ChatService {
       });
     }
 
-    const result = await model.generateContent(parts);
-    const response = await result.response;
-    return response.text();
+    return this.generateContent(parts, {
+      ...options,
+      isJson: isJson || options?.isJson,
+      responseSchema: responseSchema || options?.responseSchema,
+    });
   }
 
-  async generateRaw(prompt: string, responseSchema?: Schema): Promise<string> {
-    const generationConfig: GenerationConfig = {
-      temperature: 0.2,
-    };
-    if (responseSchema) {
-      generationConfig.responseMimeType = "application/json";
-      generationConfig.responseSchema = responseSchema;
-    }
-
-    const model = this.genAI.getGenerativeModel({
-      model: this.modelName,
-      generationConfig,
+  async generateRaw(
+    prompt: string,
+    responseSchema?: Schema,
+    options?: IChatGenerationOptions,
+  ): Promise<string> {
+    return this.generateContent([{ text: prompt }], {
+      temperature: 0.2, // Info: (20260701 - Tzuhan) Default legacy behavior
+      ...options,
+      responseSchema: responseSchema || options?.responseSchema,
     });
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text();
   }
 
   async countTokens(text: string): Promise<number> {
@@ -89,19 +127,17 @@ export class ChatService {
     }
   }
 
-  async generateRawWithSearch(prompt: string): Promise<string> {
+  async generateRawWithSearch(
+    prompt: string,
+    options?: IChatGenerationOptions,
+  ): Promise<string> {
     // Info: (20260311 - Tzuhan) Use explicitly typed googleSearch tool for Gemini Grounding
     const searchTool = { googleSearch: {} } as Tool & { googleSearch: unknown };
 
-    const model = this.genAI.getGenerativeModel({
-      model: this.modelName,
-      generationConfig: {
-        temperature: 0.2, // Info: (20260311 - Tzuhan) Strict temperature for financial analysis
-      },
-      tools: [searchTool],
+    return this.generateContent([{ text: prompt }], {
+      temperature: 0.2, // Info: (20260701 - Tzuhan) Default strict temperature
+      ...options,
+      tools: [searchTool, ...(options?.tools || [])],
     });
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text();
   }
 }

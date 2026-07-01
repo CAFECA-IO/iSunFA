@@ -1,15 +1,13 @@
-import { GoogleGenerativeAI, Part } from "@google/generative-ai";
+import { ChatService, Part } from "@/services/chat.service";
 
 export class VisionService {
-  private genAI: GoogleGenerativeAI;
-  private modelName: string;
+  private chatService: ChatService;
 
   constructor(apiKey?: string) {
     // Info: (20260407 - Luphia) Default to environment variable if no key is provided
     const key =
       apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
-    this.genAI = new GoogleGenerativeAI(key);
-    this.modelName = process.env.MODEL || "gemini-1.5-flash";
+    this.chatService = new ChatService(key);
   }
 
   /**
@@ -23,8 +21,6 @@ export class VisionService {
     mimeType: string = "image/jpeg",
   ): Promise<string> {
     try {
-      const model = this.genAI.getGenerativeModel({ model: this.modelName });
-
       // Info: (20260407 - Luphia) Automatically strip the data-uri prefix (e.g. "data:image/png;base64,") if it exists
       const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
 
@@ -42,9 +38,8 @@ export class VisionService {
         },
       ];
 
-      const result = await model.generateContent(parts);
-      const response = await result.response;
-      return response.text().trim();
+      const responseText = await this.chatService.generateContent(parts);
+      return responseText.trim();
     } catch (error) {
       console.error(
         "[VisionService] Error converting image to markdown:",

@@ -52,6 +52,7 @@ export const logistics = {
     destination: "Destination",
     weight: "Weight (kg)",
     transportation_mode: "Mode",
+    waypoints: "Waypoints",
     status: "Status",
     no_records: "No logistics records",
     start_import:
