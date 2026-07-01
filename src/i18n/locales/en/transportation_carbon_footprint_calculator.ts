@@ -115,11 +115,15 @@ export const transportationCarbonFootprintCalculator = {
     btn_calculate: "Start Calculation",
     btn_delete: "Delete",
     err_required: "Both origin and destination are required",
-    err_calc_failed: "Calculation Failed",
+    err_calc_failed: "Calculation failed, please try again later.",
     err_parse_failed: "Parsing Failed",
+    err_no_valid_routes: "Could not parse valid origin/destination from file.",
     err_waypoints_incomplete_title: "Incomplete Waypoint Data",
     err_waypoints_incomplete_msg:
       "Some waypoints have missing coordinates. Please use auto-parse or manually enter the coordinates before retrying.",
+    label_waypoints_optional: "Waypoints (Optional)",
+    btn_setup: "Setup...",
+    col_waypoints: "Waypoints",
     waypoint_modal_title: "Waypoint Settings",
     waypoint_modal_empty: "No waypoints. Click the button below to add.",
     waypoint_modal_placeholder:

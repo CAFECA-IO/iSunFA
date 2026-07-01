@@ -68,8 +68,7 @@ export function MileageBatchResults({
   const getSelectedRoutes = (index: number, plan?: ILogisticsPlan) => {
     if (selectedRoutesMap[index]) return selectedRoutesMap[index];
 
-    // Info: (20260618 - Tzuhan) Default selection
-    // Info: (20260629 - Tzuhan) Added custom route mode
+    // Info: (20260629 - Tzuhan) custom route mode
     if (plan?.comparisonData?.plans?.custom_multimodal) {
       return new Set<RouteType>(["custom"]);
     }
@@ -291,7 +290,7 @@ export function MileageBatchResults({
                           <MapPin className="h-4 w-4" />{" "}
                           {t(
                             "transportation_carbon_footprint_calculator.plan_section.title_custom",
-                          ) || "自訂多段路線"}
+                          )}
                         </button>
                       )}
                       {isLandAvailable && (

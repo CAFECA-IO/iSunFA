@@ -165,10 +165,9 @@ export function MileageCalculator({
                 title: t(
                   "transportation_carbon_footprint_calculator.analysis_failed",
                 ),
-                message:
-                  t(
-                    "transportation_carbon_footprint_calculator.mileage_calculator.err_calc_failed",
-                  ) + "，請稍後再試。",
+                message: t(
+                  "transportation_carbon_footprint_calculator.mileage_calculator.err_calc_failed",
+                ),
               });
             }
             return;
@@ -467,7 +466,9 @@ export function MileageCalculator({
             setAlertModal({
               isOpen: true,
               title: t("logistics.page.error_title"),
-              message: "無法從檔案中解析出有效的起訖點。",
+              message: t(
+                "transportation_carbon_footprint_calculator.mileage_calculator.err_no_valid_routes",
+              ),
             });
           }
         }
@@ -560,7 +561,9 @@ export function MileageCalculator({
           </label>
           <div className="flex w-full shrink-0 flex-col gap-2 md:w-48">
             <span className="text-sm font-medium text-gray-700">
-              中繼站 (選填) / Waypoints
+              {t(
+                "transportation_carbon_footprint_calculator.mileage_calculator.label_waypoints_optional",
+              )}
             </span>
             <button
               type="button"
@@ -577,7 +580,9 @@ export function MileageCalculator({
               <span className="truncate">
                 {newWaypoints.length > 0
                   ? newWaypoints.map((w) => w.name).join(", ")
-                  : "設定..."}
+                  : t(
+                      "transportation_carbon_footprint_calculator.mileage_calculator.btn_setup",
+                    )}
               </span>
               <Settings className="h-4 w-4 shrink-0 text-gray-400" />
             </button>
@@ -625,7 +630,9 @@ export function MileageCalculator({
                     )}
                   </th>
                   <th className="px-6 py-3 font-medium">
-                    中繼站設定 / Waypoints
+                    {t(
+                      "transportation_carbon_footprint_calculator.mileage_calculator.col_waypoints",
+                    )}
                   </th>
                   <th className="px-6 py-3 font-medium">
                     {t(
@@ -665,7 +672,9 @@ export function MileageCalculator({
                             <span className="truncate">
                               {item.waypoints && item.waypoints.length > 0
                                 ? item.waypoints.map((w) => w.name).join(", ")
-                                : "設定..."}
+                                : t(
+                                    "transportation_carbon_footprint_calculator.mileage_calculator.btn_setup",
+                                  )}
                             </span>
                             <Settings className="h-4 w-4 shrink-0 text-gray-400" />
                           </button>
@@ -697,7 +706,10 @@ export function MileageCalculator({
                             <div className="flex gap-2 text-xs text-gray-500">
                               {item.landDistanceKm !== undefined && (
                                 <span>
-                                  陸:{" "}
+                                  {t(
+                                    "transportation_carbon_footprint_calculator.mileage_calculator.short_land",
+                                  )}
+                                  :{" "}
                                   {item.landDistanceKm.toLocaleString(
                                     undefined,
                                     {
@@ -709,7 +721,10 @@ export function MileageCalculator({
                               )}
                               {item.seaDistanceKm !== undefined && (
                                 <span>
-                                  海:{" "}
+                                  {t(
+                                    "transportation_carbon_footprint_calculator.mileage_calculator.short_sea",
+                                  )}
+                                  :{" "}
                                   {item.seaDistanceKm.toLocaleString(
                                     undefined,
                                     {
@@ -721,7 +736,10 @@ export function MileageCalculator({
                               )}
                               {item.airDistanceKm !== undefined && (
                                 <span>
-                                  空:{" "}
+                                  {t(
+                                    "transportation_carbon_footprint_calculator.mileage_calculator.short_air",
+                                  )}
+                                  :{" "}
                                   {item.airDistanceKm.toLocaleString(
                                     undefined,
                                     {

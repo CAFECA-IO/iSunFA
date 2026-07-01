@@ -67,7 +67,7 @@ export const transportationCarbonFootprintCalculator = {
     auto: "自動判定",
   },
   history: {
-    title: "Historical Analysis Paths",
+    title: "分析履歴",
   },
   plan_section: {
     mode_land: "陸上輸送",
@@ -112,11 +112,16 @@ export const transportationCarbonFootprintCalculator = {
     btn_calculate: "マイレージ計算開始",
     btn_delete: "削除",
     err_required: "出発地と目的地は必須です",
-    err_calc_failed: "計算失敗",
+    err_calc_failed: "計算に失敗しました。後でもう一度お試しください。",
     err_parse_failed: "解析失敗",
+    err_no_valid_routes:
+      "ファイルから有効な出発地/目的地を解析できませんでした。",
     err_waypoints_incomplete_title: "中継地のデータが不完全です",
     err_waypoints_incomplete_msg:
       "一部の中継地に緯度・経度が設定されていません。自動解析をクリックするか、手動で入力してから再試行してください。",
+    label_waypoints_optional: "中継地 (任意)",
+    btn_setup: "設定...",
+    col_waypoints: "中継地設定",
     waypoint_modal_title: "中継地設定",
     waypoint_modal_empty:
       "中継地がありません。下のボタンをクリックして追加してください。",

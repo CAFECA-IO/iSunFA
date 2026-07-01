@@ -24,7 +24,9 @@ const REQUIRED_FIELDS = [
   { key: "dest", labelKey: "logistics.page.destination" },
 ];
 
-const OPTIONAL_FIELDS: { key: string; labelKey: string }[] = [];
+const OPTIONAL_FIELDS: { key: string; labelKey: string }[] = [
+  { key: "waypoints", labelKey: "logistics.page.waypoints" },
+];
 
 export function ExcelImportWizard({
   onComplete,
@@ -315,7 +317,7 @@ export function ExcelImportWizard({
                 { key: "dest", label: t("logistics.page.destination") },
                 {
                   key: "waypoints",
-                  label: "中繼站 / Waypoints (Optional)",
+                  label: t("logistics.page.waypoints"),
                   render: (row) => {
                     const wps = (row as IMileageItem).waypoints;
                     return wps && wps.length > 0

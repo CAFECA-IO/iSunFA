@@ -61,7 +61,7 @@ export const transportationCarbonFootprintCalculator = {
     auto: "自动判断",
   },
   history: {
-    title: "Historical Analysis Paths",
+    title: "历史分析路径",
   },
   plan_section: {
     mode_land: "纯陆运",
@@ -106,11 +106,15 @@ export const transportationCarbonFootprintCalculator = {
     btn_calculate: "开始核算里程",
     btn_delete: "删除",
     err_required: "起点与终点皆为必填",
-    err_calc_failed: "核算失败",
+    err_calc_failed: "核算失败，请稍后再试。",
     err_parse_failed: "解析失败",
+    err_no_valid_routes: "无法从档案中解析出有效的起讫点。",
     err_waypoints_incomplete_title: "中继站资料不齐全",
     err_waypoints_incomplete_msg:
       "有些中继站尚未设定经纬度，请点击自动解析或手动填写经纬度后再试。",
+    label_waypoints_optional: "中继站 (选填)",
+    btn_setup: "设定...",
+    col_waypoints: "中继站设定",
     waypoint_modal_title: "中继站设定",
     waypoint_modal_empty: "无中继站。点击下方按钮新增。",
     waypoint_modal_placeholder:

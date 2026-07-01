@@ -66,7 +66,7 @@ export const transportationCarbonFootprintCalculator = {
     auto: "자동 판별",
   },
   history: {
-    title: "Historical Analysis Paths",
+    title: "분석 이력",
   },
   plan_section: {
     mode_land: "육상 운송",
@@ -111,11 +111,15 @@ export const transportationCarbonFootprintCalculator = {
     btn_calculate: "마일리지 계산 시작",
     btn_delete: "삭제",
     err_required: "출발지와 목적지 모두 필수입니다",
-    err_calc_failed: "계산 실패",
+    err_calc_failed: "계산에 실패했습니다. 나중에 다시 시도해 주세요.",
     err_parse_failed: "분석 실패",
+    err_no_valid_routes: "파일에서 유효한 출발지/도착지를 분석할 수 없습니다.",
     err_waypoints_incomplete_title: "경유지 데이터가 불완전합니다",
     err_waypoints_incomplete_msg:
       "일부 경유지에 위도/경도가 설정되지 않았습니다. 자동 분석을 클릭하거나 수동으로 위도/경도를 입력한 후 다시 시도해주세요.",
+    label_waypoints_optional: "경유지 (선택 사항)",
+    btn_setup: "설정...",
+    col_waypoints: "경유지 설정",
     waypoint_modal_title: "경유지 설정",
     waypoint_modal_empty: "경유지가 없습니다. 아래 버튼을 클릭하여 추가하세요.",
     waypoint_modal_placeholder:

@@ -106,11 +106,15 @@ export const transportationCarbonFootprintCalculator = {
     btn_calculate: "開始核算里程",
     btn_delete: "刪除",
     err_required: "起點與終點皆為必填",
-    err_calc_failed: "核算失敗",
+    err_calc_failed: "核算失敗，請稍後再試。",
     err_parse_failed: "解析失敗",
+    err_no_valid_routes: "無法從檔案中解析出有效的起訖點。",
     err_waypoints_incomplete_title: "中繼站資料不齊全",
     err_waypoints_incomplete_msg:
       "有些中繼站尚未設定經緯度，請點擊自動解析或手動填寫經緯度後再試。",
+    label_waypoints_optional: "中繼站 (選填)",
+    btn_setup: "設定...",
+    col_waypoints: "中繼站設定",
     waypoint_modal_title: "中繼站設定",
     waypoint_modal_empty: "無中繼站。點擊下方按鈕新增。",
     waypoint_modal_placeholder:
