@@ -1,18 +1,18 @@
 "use client";
 
 import { FC } from "react";
-import { IMockReport, IAIResponse } from "@/interfaces/business_monitor";
+import { IReport, IAIResponse } from "@/interfaces/business_monitor";
 import { useTranslation } from "@/i18n/i18n_context";
 
 interface IAiResponseCardProps {
   aiResponse: IAIResponse;
-  reports: IMockReport[];
+  reports: IReport[];
 }
 
 const AiResponseCard: FC<IAiResponseCardProps> = ({ aiResponse, reports }) => {
   const { t } = useTranslation();
 
-  const handleDownload = (report: IMockReport) => {
+  const handleDownload = (report: IReport) => {
     // Info: (20260610 - Julian) 模擬產生檔案 Blob 並觸發瀏覽器下載
     const dummyContent = `Mock Report Content for ${report.companyName}\nReport Year: ${report.reportYear}\nPeriod: ${report.period}\nIndustry: ${report.industry}`;
     const blob = new Blob([dummyContent], {

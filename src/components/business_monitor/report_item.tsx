@@ -4,11 +4,11 @@ import { FC } from "react";
 import Link from "next/link";
 import { BookmarkCheck } from "lucide-react";
 import { useReportDownload } from "@/hooks/use_report_download";
-import { IMockReport } from "@/interfaces/business_monitor";
+import { IReport } from "@/interfaces/business_monitor";
 import { useTranslation } from "@/i18n/i18n_context";
 
 interface IReportItemProps {
-  report: IMockReport;
+  report: IReport;
   onShowToast: (type: "success" | "error", message: string) => void;
 }
 

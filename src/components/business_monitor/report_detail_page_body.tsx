@@ -20,10 +20,7 @@ import {
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  IMockReport,
-  IReportDetailPayload,
-} from "@/interfaces/business_monitor";
+import { IReport, IReportDetailPayload } from "@/interfaces/business_monitor";
 import { request } from "@/lib/utils/request";
 import { useTranslation } from "@/i18n/i18n_context";
 
@@ -61,7 +58,7 @@ const ReportDetailPageBody = () => {
   const companyReports = payload?.companyReports || [];
   const industryReports = payload?.industryReports || [];
 
-  const handleDownload = (targetReport: IMockReport) => {
+  const handleDownload = (targetReport: IReport) => {
     // Info: (20260610 - Julian) 模擬產生檔案 Blob 並觸發瀏覽器下載
     const dummyContent = `Mock Report Content for ${targetReport.company}\nReport Year: ${targetReport.reportYear}\nPeriod: ${targetReport.period}\nIndustry: ${targetReport.industry}`;
     const blob = new Blob([dummyContent], {

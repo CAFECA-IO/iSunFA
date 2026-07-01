@@ -16,7 +16,7 @@ export interface IAIResponse {
   sourceReportIds: number[];
 }
 
-export interface IMockReport {
+export interface IReport {
   id: number;
   companyName: string; // Info: (20260610 - Julian) 企業名稱
   title: string; // Info: (20260610 - Julian) 報告標題
@@ -32,7 +32,7 @@ export interface IMockReport {
 }
 
 export interface IReportDetailPayload {
-  report: IMockReport;
-  companyReports: IMockReport[];
-  industryReports: IMockReport[];
+  report: IReport;
+  companyReports: IReport[];
+  industryReports: IReport[];
 }

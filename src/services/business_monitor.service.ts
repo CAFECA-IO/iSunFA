@@ -4,7 +4,7 @@ import { lanceDBService } from "@/services/lancedb.service";
 import { ILanceDBRow } from "@/interfaces/lance_db";
 import {
   IAIResponse,
-  IMockReport,
+  IReport,
   IReportDownloadTask,
 } from "@/interfaces/business_monitor";
 import { COMPANY_ALIASES } from "@/constants/company";
@@ -14,7 +14,7 @@ const EMBED_MODEL = "nomic-embed-text";
 const LLM_MODEL = "gemma4:e4b";
 
 interface IChatResponse {
-  reports: IMockReport[];
+  reports: IReport[];
   total: number;
   totalPages: number;
   aiResponse: IAIResponse;
@@ -111,14 +111,14 @@ class BusinessMonitorService {
     }
 
     // Info: (20260701 - Julian) 在呼叫 LLM 之前，先取得關聯的 PostgreSQL Report 記錄，以便注入 metadata 作為 Context
-    const matchedReports: IMockReport[] = [];
+    const matchedReports: IReport[] = [];
     const seenIds = new Set<number>();
 
     for (const doc of matchedDocs) {
       const reportIdVal = doc.reportId;
       if (!reportIdVal) continue;
 
-      let report: IMockReport | null = null;
+      let report: IReport | null = null;
       if (/^\d+$/.test(reportIdVal)) {
         report = await reportRepo.findUnique({
           where: { id: parseInt(reportIdVal, 10) },

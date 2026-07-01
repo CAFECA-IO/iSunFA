@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import Pagination from "@/components/common/pagination";
 import CompanySearchInput from "@/components/common/company_search_input";
-import { IMockReport, IAIResponse } from "@/interfaces/business_monitor";
+import { IReport, IAIResponse } from "@/interfaces/business_monitor";
 import { request } from "@/lib/utils/request";
 import { useTranslation } from "@/i18n/i18n_context";
 import { BUSINESS_MONITOR_INDUSTRIES } from "@/constants/business_monitor";
@@ -48,7 +48,7 @@ const BusinessMonitorPageBody: FC = () => {
   };
 
   // Info:(20260609 - Julian) Data States
-  const [filteredReports, setFilteredReports] = useState<IMockReport[]>([]);
+  const [filteredReports, setFilteredReports] = useState<IReport[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [totalPages, setTotalPages] = useState<number>(1);
@@ -63,7 +63,7 @@ const BusinessMonitorPageBody: FC = () => {
           // Info:(20260609 - Julian) 串接 LLM API
           const res = await request<{
             payload: {
-              reports: IMockReport[];
+              reports: IReport[];
               total: number;
               totalPages: number;
               aiResponse?: IAIResponse;
@@ -92,7 +92,7 @@ const BusinessMonitorPageBody: FC = () => {
 
           const res = await request<{
             payload: {
-              reports: IMockReport[];
+              reports: IReport[];
               total: number;
               totalPages: number;
               aiResponse?: IAIResponse;
