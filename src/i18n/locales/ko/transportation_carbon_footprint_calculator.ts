@@ -152,5 +152,6 @@ export const transportationCarbonFootprintCalculator = {
     maptiler_key_not_set: "MapTiler 키가 설정되지 않았습니다!",
     origin: "출발지",
     dest: "도착지",
+    label: "🟢 ESG 물류 탄소 발자국 추적 (Powered by MapLibre)",
   },
 };

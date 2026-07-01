@@ -228,10 +228,9 @@ export function PlanSection({
       "#F97316",
     );
   } else if (isCustom && customPlan) {
-    titleName =
-      t(
-        "transportation_carbon_footprint_calculator.plan_section.title_custom",
-      ) || "自訂多段路線";
+    titleName = t(
+      "transportation_carbon_footprint_calculator.plan_section.title_custom",
+    );
     themeColor = "text-purple-500";
     themeBg = "bg-purple-100";
     totalCo2e = customPlan.total_co2eKg?.toString() || "0";

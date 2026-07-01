@@ -146,5 +146,6 @@ export const transportationCarbonFootprintCalculator = {
     maptiler_key_not_set: "MapTiler Key 尚未设定！",
     origin: "起点",
     dest: "终点",
+    label: "🟢 ESG 物流碳盘查轨迹 (Powered by MapLibre)",
   },
 };

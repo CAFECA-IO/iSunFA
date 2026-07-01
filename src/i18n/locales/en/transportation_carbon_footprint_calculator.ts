@@ -155,5 +155,6 @@ export const transportationCarbonFootprintCalculator = {
     maptiler_key_not_set: "MapTiler Key is not set!",
     origin: "Origin",
     dest: "Destination",
+    label: "🟢 ESG Logistics Carbon Trace (Powered by MapLibre)",
   },
 };

@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useRef, useEffect, useId } from "react";
+import { useRef, useEffect, useId } from "react";
 import Map, { Source, Layer, MapRef } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { FeatureCollection, Feature, Geometry } from "geojson";
+import { useTranslation } from "@/i18n/i18n_context";
 
 export interface IMapViewerProps {
   // Info: (20260430 - Tzuhan) 支援多式聯運的 FeatureCollection 或是單一軌跡
@@ -90,6 +91,7 @@ export default function MapViewer({
   hideLabel = false,
   fitBoundsPadding = 80,
 }: IMapViewerProps) {
+  const { t } = useTranslation();
   const mapTilerKey = process.env.NEXT_PUBLIC_MAPTILER_KEY;
   const mapInstanceId = useId();
 
@@ -114,13 +116,14 @@ export default function MapViewer({
   if (!mapTilerKey) {
     return (
       <div className="rounded bg-red-100 p-4 text-red-500">
-        MapTiler Key 尚未設定！
+        {t(
+          "transportation_carbon_footprint_calculator.map.maptiler_key_not_set",
+        )}
       </div>
     );
   }
 
-  // Info: (20260430 - Tzuhan) dataviz-light
-  // Info: (20260430 - Tzuhan) （要付費）使用 MapTiler 的 dataviz-light (高對比亮色，且保留國家邊界與地理脈絡) 底圖
+  // Info: (20260430 - Tzuhan) 使用 MapTiler 的 dataviz-light (高對比亮色，且保留國家邊界與地理脈絡)
   const mapStyle = `https://api.maptiler.com/maps/dataviz-light/style.json?key=${mapTilerKey}`;
 
   return (
@@ -171,7 +174,9 @@ export default function MapViewer({
 
       {!hideLabel && (
         <div className="absolute bottom-4 left-4 flex flex-col gap-1 rounded-lg border border-gray-700 bg-black/70 px-4 py-2 text-sm text-white backdrop-blur-sm">
-          <span>🟢 ESG 物流碳盤查軌跡 (Powered by MapLibre)</span>
+          <span>
+            {t("transportation_carbon_footprint_calculator.map.label")}
+          </span>
         </div>
       )}
     </div>

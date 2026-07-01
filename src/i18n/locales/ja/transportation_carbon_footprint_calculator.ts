@@ -155,5 +155,6 @@ export const transportationCarbonFootprintCalculator = {
     maptiler_key_not_set: "MapTilerキーが設定されていません！",
     origin: "出発地",
     dest: "目的地",
+    label: "🟢 ESG物流炭素排出量追跡 (Powered by MapLibre)",
   },
 };
