@@ -56,6 +56,7 @@ export default function PaymentModal({
   orderId,
   title,
   planId,
+  billingInterval,
 }: IPaymentModalProps) {
   const { t } = useTranslation();
   const { user, refreshAuth, loading: authLoading } = useAuth();
@@ -316,6 +317,7 @@ export default function PaymentModal({
           baseCredits,
           bonusCredits,
           planId,
+          billingInterval,
           items: planId
             ? [
                 {

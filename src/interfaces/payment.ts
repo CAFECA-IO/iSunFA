@@ -18,6 +18,11 @@ export type IOenOrderData = {
   paymentId?: string;
   paymentMethodId?: string;
   timestamp?: string;
+  planId?: string;
+  title?: string;
+  billingInterval?: "month" | "year";
+  baseCredits?: string;
+  bonusCredits?: string;
 };
 
 export interface IAIAnalysisOrderFile {
@@ -72,6 +77,7 @@ export interface IPaymentModalProps {
   orderId?: string | null;
   title?: string;
   planId?: string;
+  billingInterval?: "month" | "year";
 }
 
 export interface IOrderWithMission {
