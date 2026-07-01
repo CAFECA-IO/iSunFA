@@ -25,6 +25,8 @@ import AuthModal from "@/components/auth/auth_modal";
 import PaymentModal from "@/components/pricing/payment_modal";
 import { PaymentStep } from "@/interfaces/payment";
 
+type PendingBillingIntervalType = "month" | "year" | undefined;
+
 export default function PricingPage() {
   const { t, language } = useTranslation();
   const { user } = useAuth();
@@ -66,7 +68,6 @@ export default function PricingPage() {
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
   const [pendingTitle, setPendingTitle] = useState<string>("");
   const [pendingPlanId, setPendingPlanId] = useState<string>("");
-  type PendingBillingIntervalType = "month" | "year" | undefined;
   const [pendingBillingInterval, setPendingBillingInterval] =
     useState<PendingBillingIntervalType>();
 
