@@ -66,6 +66,11 @@ export interface IPaymentOrderParams {
   unit: CurrencyUnit;
   credits: number;
   paymentMethodId: string;
+  title?: string;
+  planId?: string;
+  billingInterval?: "month" | "year";
+  baseCredits?: string;
+  bonusCredits?: string;
 }
 
 export async function generateAnalysisOrder(

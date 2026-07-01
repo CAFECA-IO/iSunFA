@@ -13,6 +13,7 @@ import {
   ANALYSIS_BASE_COSTS,
   REWARD_AMOUNTS,
   SUBSCRIPTION_PLAN_CREDITS,
+  SUBSCRIPTION_PLAN_PRICE,
 } from "@/constants/price";
 import { CREDIT_PLANS } from "@/config/credit_plans";
 import PricingCard from "@/components/pricing/pricing_card";
@@ -63,6 +64,11 @@ export default function PricingPage() {
   const [pendingDisplayPrice, setPendingDisplayPrice] = useState("");
   const [pendingTxHash, setPendingTxHash] = useState<string | undefined>();
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
+  const [pendingTitle, setPendingTitle] = useState<string>("");
+  const [pendingPlanId, setPendingPlanId] = useState<string>("");
+  const [pendingBillingInterval, setPendingBillingInterval] = useState<
+    "month" | "year" | undefined
+  >();
 
   // Info: (20260119 - Luphia) Allow guest users to select free plan to trigger login
   const currentPlan = user
@@ -126,6 +132,32 @@ export default function PricingPage() {
         </span>
       ),
     });
+  };
+
+  const onSelectSubscription = (
+    planKey: keyof typeof SUBSCRIPTION_PLAN_PRICE,
+    title: string,
+  ) => {
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+    const amount =
+      SUBSCRIPTION_PLAN_PRICE[planKey][
+        billingInterval === "month" ? "monthly" : "yearly"
+      ].toString();
+    const credits = SUBSCRIPTION_PLAN_CREDITS[planKey].toString();
+
+    setPendingAmount(amount);
+    setPendingCredits(credits);
+    setPendingBaseCredits(credits);
+    setPendingBonusCredits("0");
+    setPendingDisplayPrice(amount);
+    setPendingTitle(title);
+    setPendingPlanId(planKey);
+    setPendingBillingInterval(billingInterval);
+    setModalInitialStep(PaymentStep.confirm);
+    setPaymentModalOpen(true);
   };
 
   useEffect(() => {
@@ -399,7 +431,9 @@ export default function PricingPage() {
                   billingInterval={billingInterval}
                   popular={true}
                   currentPlan={currentPlan}
-                  onSelect={showComingSoon}
+                  onSelect={() =>
+                    onSelectSubscription("team", t("pricing.plans.team.name"))
+                  }
                   features={[
                     {
                       text: t("pricing.plans.team.features.fido"),
@@ -471,7 +505,12 @@ export default function PricingPage() {
                   planKey="business"
                   billingInterval={billingInterval}
                   currentPlan={currentPlan}
-                  onSelect={showComingSoon}
+                  onSelect={() =>
+                    onSelectSubscription(
+                      "business",
+                      t("pricing.plans.business.name"),
+                    )
+                  }
                   features={[
                     {
                       text: t("pricing.plans.business.features.fido"),
@@ -924,6 +963,9 @@ export default function PricingPage() {
           displayPrice={pendingDisplayPrice}
           transactionHash={pendingTxHash}
           orderId={pendingOrderId}
+          title={pendingTitle}
+          planId={pendingPlanId}
+          billingInterval={pendingBillingInterval}
         />
 
         {/* Info: (20260116 - Luphia) Coming Soon Modal */}
