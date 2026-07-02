@@ -190,6 +190,7 @@ export const pricing = {
       use_saved_card: "使用已绑定的信用卡",
       bind_new_card: "绑定新信用卡",
       agree_tos: "我同意使用条款 (Terms of Service) 与退费政策 (Refund Policy)",
+      subscription_reset_note: "每个月未使用的 {{count}} 点将会清零，并于次月重新发放",
     },
   },
   business_model: {
