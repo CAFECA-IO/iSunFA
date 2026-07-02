@@ -29,7 +29,7 @@ export default function BusinessModelSection({
       <div className="mb-16 text-center">
         <span className="mb-4 inline-block rounded-full bg-orange-100 px-4 py-1 text-sm font-semibold tracking-wider text-orange-600 uppercase">
           <span className="mr-2 inline-block h-2 w-2 rounded-full bg-orange-500 align-middle"></span>
-          BUSINESS MODEL
+          {t("pricing.business_model.tag")}
         </span>
         <h2 className="mb-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
           {t("pricing.business_model.title")}
@@ -57,7 +57,9 @@ export default function BusinessModelSection({
               <span className="text-5xl font-bold tracking-tight text-gray-900">
                 29,400
               </span>
-              <span className="text-base text-gray-500">/ 年</span>
+              <span className="text-base text-gray-500">
+                {t("pricing.business_model.per_year")}
+              </span>
             </div>
             <ul className="mt-8 space-y-4 text-sm leading-6 text-gray-600">
               <li className="flex gap-x-3">

@@ -148,7 +148,7 @@ export default function PricingPage() {
     }
 
     setPendingAmount(amount.toString());
-    setPendingCredits("0"); // Credits are 0 for non-subscription, non-credit purchases
+    setPendingCredits("0"); // Info: (20260702 - Tzuhan) Credits are 0 for non-subscription, non-credit purchases
     setPendingBaseCredits("0");
     setPendingBonusCredits("0");
     setPendingDisplayPrice(amount.toString());

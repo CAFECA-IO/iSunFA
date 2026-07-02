@@ -24,6 +24,7 @@ export default function SolutionsPricingSection({
     iso14064: {
       title: t("pricing.solutions.iso14064.title"),
       desc: t("pricing.solutions.iso14064.desc"),
+      type: t("pricing.solutions.iso14064.type"),
       features: [
         t("pricing.solutions.iso14064.f1"),
         t("pricing.solutions.iso14064.f2"),
@@ -34,6 +35,7 @@ export default function SolutionsPricingSection({
     iso14067: {
       title: t("pricing.solutions.iso14067.title"),
       desc: t("pricing.solutions.iso14067.desc"),
+      type: t("pricing.solutions.iso14067.type"),
       features: [
         t("pricing.solutions.iso14067.f1"),
         t("pricing.solutions.iso14067.f2"),
@@ -44,6 +46,7 @@ export default function SolutionsPricingSection({
     carbon_label: {
       title: t("pricing.solutions.carbon_label.title"),
       desc: t("pricing.solutions.carbon_label.desc"),
+      type: t("pricing.solutions.carbon_label.type"),
       features: [
         t("pricing.solutions.carbon_label.f1"),
         t("pricing.solutions.carbon_label.f2"),
@@ -60,7 +63,7 @@ export default function SolutionsPricingSection({
       <div className="mb-10 text-center">
         <span className="mb-4 inline-block rounded-full bg-teal-100 px-4 py-1 text-sm font-semibold tracking-wider text-teal-600 uppercase">
           <span className="mr-2 inline-block h-2 w-2 rounded-full bg-teal-500 align-middle"></span>
-          SOLUTIONS & PRICING
+          {t("pricing.solutions.tag")}
         </span>
         <h2 className="mb-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
           {currentSolution.title}
@@ -114,27 +117,25 @@ export default function SolutionsPricingSection({
                 <Building className="h-5 w-5" />
               </div>
               <span className="rounded-full bg-gray-100 px-3 py-1 text-xs leading-5 font-semibold text-gray-600">
-                微型企業
+                {t("pricing.solutions.tier1.badge")}
               </span>
             </div>
             <h3 className="mb-2 text-2xl font-bold text-gray-900">
-              輕量入門級
+              {t("pricing.solutions.tier1.title")}
             </h3>
             <p className="mb-6 text-sm leading-6 text-gray-500">
-              提供完整的
-              {activeTab === "iso14064"
-                ? "組織碳盤查導入與合規申報"
-                : activeTab === "iso14067"
-                  ? "產品生命週期碳排放計算與建模"
-                  : "碳足跡標章與減碳標章申請輔導"}
-              功能。
+              {t("pricing.solutions.tier1.desc", {
+                type: currentSolution.type,
+              })}
             </p>
             <div className="mt-4 flex items-baseline gap-x-2">
               <span className="text-sm font-semibold text-gray-500">NT$</span>
               <span className="text-4xl font-bold tracking-tight text-gray-900">
                 94,500
               </span>
-              <span className="text-base text-gray-500">/ 案</span>
+              <span className="text-base text-gray-500">
+                {t("pricing.solutions.per_project")}
+              </span>
             </div>
 
             <div className="mt-8 rounded-2xl bg-gray-50 p-4 ring-1 ring-gray-100">
@@ -142,13 +143,21 @@ export default function SolutionsPricingSection({
                 <span className="inline-block h-3 w-3 rounded-full border border-gray-400 text-center text-[8px] leading-[10px]">
                   !
                 </span>
-                適用範疇基準
+                {t("pricing.solutions.criteria_title")}
               </p>
               <div className="grid grid-cols-2 gap-2 text-xs font-medium">
-                <div className="text-gray-500">場域總面積</div>
-                <div className="text-right text-gray-900">≤ 1,000 坪</div>
-                <div className="text-gray-500">年營業额範圍</div>
-                <div className="text-right text-gray-900">≤ 1 億元</div>
+                <div className="text-gray-500">
+                  {t("pricing.solutions.criteria_area")}
+                </div>
+                <div className="text-right text-gray-900">
+                  {t("pricing.solutions.tier1.area")}
+                </div>
+                <div className="text-gray-500">
+                  {t("pricing.solutions.criteria_revenue")}
+                </div>
+                <div className="text-right text-gray-900">
+                  {t("pricing.solutions.tier1.revenue")}
+                </div>
               </div>
             </div>
 
@@ -178,7 +187,7 @@ export default function SolutionsPricingSection({
         {/* Tier 2 */}
         <div className="relative z-10 flex flex-col justify-between rounded-3xl bg-white p-8 shadow-2xl ring-2 ring-orange-500 transition-all duration-300 hover:scale-[1.02] hover:shadow-orange-500/20">
           <div className="absolute -top-4 right-0 left-0 mx-auto w-32 rounded-full bg-gradient-to-r from-orange-400 to-orange-500 px-3 py-1 text-center text-xs font-bold text-white shadow-sm">
-            中小企業
+            {t("pricing.solutions.tier2.badge")}
           </div>
           <div>
             <div className="mb-4 flex items-center justify-between">
@@ -187,23 +196,21 @@ export default function SolutionsPricingSection({
               </div>
             </div>
             <h3 className="mb-2 text-2xl font-bold text-gray-900">
-              專業成長級
+              {t("pricing.solutions.tier2.title")}
             </h3>
             <p className="mb-6 text-sm leading-6 text-gray-500">
-              提供完整的
-              {activeTab === "iso14064"
-                ? "組織碳盤查導入與合規申報"
-                : activeTab === "iso14067"
-                  ? "產品生命週期碳排放計算與建模"
-                  : "碳足跡標章與減碳標章申請輔導"}
-              功能。
+              {t("pricing.solutions.tier2.desc", {
+                type: currentSolution.type,
+              })}
             </p>
             <div className="mt-4 flex items-baseline gap-x-2">
               <span className="text-sm font-semibold text-gray-500">NT$</span>
               <span className="text-4xl font-bold tracking-tight text-gray-900">
                 283,500
               </span>
-              <span className="text-base text-gray-500">/ 案</span>
+              <span className="text-base text-gray-500">
+                {t("pricing.solutions.per_project")}
+              </span>
             </div>
 
             <div className="mt-8 rounded-2xl bg-gray-50 p-4 ring-1 ring-gray-100">
@@ -211,13 +218,21 @@ export default function SolutionsPricingSection({
                 <span className="inline-block h-3 w-3 rounded-full border border-gray-400 text-center text-[8px] leading-[10px]">
                   !
                 </span>
-                適用範疇基準
+                {t("pricing.solutions.criteria_title")}
               </p>
               <div className="grid grid-cols-2 gap-2 text-xs font-medium">
-                <div className="text-gray-500">場域總面積</div>
-                <div className="text-right text-gray-900">1,000 - 5,000 坪</div>
-                <div className="text-gray-500">年營業額範圍</div>
-                <div className="text-right text-gray-900">1 億 - 5 億元</div>
+                <div className="text-gray-500">
+                  {t("pricing.solutions.criteria_area")}
+                </div>
+                <div className="text-right text-gray-900">
+                  {t("pricing.solutions.tier2.area")}
+                </div>
+                <div className="text-gray-500">
+                  {t("pricing.solutions.criteria_revenue")}
+                </div>
+                <div className="text-right text-gray-900">
+                  {t("pricing.solutions.tier2.revenue")}
+                </div>
               </div>
             </div>
 
@@ -252,27 +267,25 @@ export default function SolutionsPricingSection({
                 <BuildingIcon className="h-5 w-5" />
               </div>
               <span className="rounded-full bg-gray-100 px-3 py-1 text-xs leading-5 font-semibold text-gray-600">
-                大型企業
+                {t("pricing.solutions.tier3.badge")}
               </span>
             </div>
             <h3 className="mb-2 text-2xl font-bold text-gray-900">
-              旗艦企業級
+              {t("pricing.solutions.tier3.title")}
             </h3>
             <p className="mb-6 text-sm leading-6 text-gray-500">
-              提供完整的
-              {activeTab === "iso14064"
-                ? "組織碳盤查導入與合規申報"
-                : activeTab === "iso14067"
-                  ? "產品生命週期碳排放計算與建模"
-                  : "碳足跡標章與減碳標章申請輔導"}
-              功能。
+              {t("pricing.solutions.tier3.desc", {
+                type: currentSolution.type,
+              })}
             </p>
             <div className="mt-4 flex items-baseline gap-x-2">
               <span className="text-sm font-semibold text-gray-500">NT$</span>
               <span className="text-4xl font-bold tracking-tight text-gray-900">
                 567,000
               </span>
-              <span className="text-base text-gray-500">/ 案</span>
+              <span className="text-base text-gray-500">
+                {t("pricing.solutions.per_project")}
+              </span>
             </div>
 
             <div className="mt-8 rounded-2xl bg-gray-50 p-4 ring-1 ring-gray-100">
@@ -280,13 +293,21 @@ export default function SolutionsPricingSection({
                 <span className="inline-block h-3 w-3 rounded-full border border-gray-400 text-center text-[8px] leading-[10px]">
                   !
                 </span>
-                適用範疇基準
+                {t("pricing.solutions.criteria_title")}
               </p>
               <div className="grid grid-cols-2 gap-2 text-xs font-medium">
-                <div className="text-gray-500">場域總面積</div>
-                <div className="text-right text-gray-900">≥ 5,000 坪</div>
-                <div className="text-gray-500">年營業額範圍</div>
-                <div className="text-right text-gray-900">≥ 5 億元</div>
+                <div className="text-gray-500">
+                  {t("pricing.solutions.criteria_area")}
+                </div>
+                <div className="text-right text-gray-900">
+                  {t("pricing.solutions.tier3.area")}
+                </div>
+                <div className="text-gray-500">
+                  {t("pricing.solutions.criteria_revenue")}
+                </div>
+                <div className="text-right text-gray-900">
+                  {t("pricing.solutions.tier3.revenue")}
+                </div>
               </div>
             </div>
 

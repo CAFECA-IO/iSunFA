@@ -221,12 +221,39 @@ export const pricing = {
   },
   solutions: {
     tab: "Solutions",
+    tag: "SOLUTIONS & PRICING",
     title: "Solutions & Pricing",
     subtitle:
       "Providing standardized carbon inventory services with consistent contents",
+    per_project: "/ project",
+    criteria_title: "Applicability Criteria",
+    criteria_area: "Total Area",
+    criteria_revenue: "Annual Revenue",
+    tier1: {
+      badge: "Micro Enterprise",
+      title: "Light Starter",
+      area: "≤ 3,300 sq ft",
+      revenue: "≤ $3M USD",
+      desc: "Provides complete {{type}} features.",
+    },
+    tier2: {
+      badge: "SME",
+      title: "Pro Growth",
+      area: "3,300 - 16,500 sq ft",
+      revenue: "$3M - $15M USD",
+      desc: "Provides complete {{type}} features.",
+    },
+    tier3: {
+      badge: "Large Enterprise",
+      title: "Flagship",
+      area: "≥ 16,500 sq ft",
+      revenue: "≥ $15M USD",
+      desc: "Provides complete {{type}} features.",
+    },
     iso14064: {
       tab: "GHG Inventory",
       title: "GHG Inventory Solution (ISO 14064-1)",
+      type: "GHG inventory and compliance reporting",
       desc: "Providing standardized carbon inventory services in three tiers based on facility area and annual revenue.",
       f1: "Cloud AI Auto-Classification of Inventory Data",
       f2: "Auto-Matching with Int./Domestic Emission Factors",
@@ -236,6 +263,7 @@ export const pricing = {
     iso14067: {
       tab: "Carbon Footprint",
       title: "Product Carbon Footprint (ISO 14067)",
+      type: "product lifecycle carbon calculation and modeling",
       desc: "Providing product carbon footprint calculation services in three tiers based on facility area and annual revenue.",
       f1: "Product Lifecycle (Cradle-to-Gate) Carbon Calculation",
       f2: "BOM Material Ratios & Process Factors Integration",
@@ -245,6 +273,7 @@ export const pricing = {
     carbon_label: {
       tab: "Carbon Label",
       title: "Carbon Footprint Label (MOENV)",
+      type: "carbon label and reduction label application guidance",
       desc: "Providing carbon label application guidance in three tiers based on facility area and annual revenue.",
       f1: "Full Guidance on Carbon/Reduction Label Applications",
       f2: "Assistance with Third-Party Verification & Audits",
