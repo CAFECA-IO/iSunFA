@@ -42,6 +42,9 @@ export const teamManagement = {
     errorInvite: "멤버 초대 중 오류 발생",
     errorAccept: "초대 수락 중 오류 발생",
     errorRole: "역할 변경 중 오류 발생",
-    errorRemove: "멤버 삭제 중 오류 발생",
+    errorRemove: "멤버 삭제 실패",
   },
+  scanQrCode: "QR 코드 스캔",
+  scanning: "스캔 중...",
+  cameraError: "카메라에 액세스할 수 없습니다. 권한 설정을 확인하세요.",
 };

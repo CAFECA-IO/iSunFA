@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/auth_context";
 import { getLoginOptions, fido2ClientService } from "@/lib/auth/fido2_client";
 import { request, ApiError } from "@/lib/utils/request";
 import { TeamRole } from "@/constants/team";
+import QrScannerModal from "@/components/common/qr_scanner_modal";
 
 interface IInviteMemberModalProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ export default function InviteMemberModal({
   const [inviteAddress, setInviteAddress] = useState<string>("");
   const [inviteRole, setInviteRole] = useState<TeamRole>(TeamRole.VIEWER);
   const [inviting, setInviting] = useState<boolean>(false);
+  const [isScannerOpen, setIsScannerOpen] = useState<boolean>(false);
 
   const handleInvite = async (e: FormEvent) => {
     e.preventDefault();
@@ -69,6 +71,16 @@ export default function InviteMemberModal({
     }
   };
 
+  // Info: (20260702 - Julian) 處理掃描結果
+  const handleScanSuccess = (decodedText: string) => {
+    // Info: (20260702 - Julian) 整理錢包位址格式
+    let address = decodedText;
+    if (address.toLowerCase().startsWith("ethereum:")) {
+      address = address.split(":")[1].split("@")[0];
+    }
+    setInviteAddress(address);
+  };
+
   return (
     <Dialog
       open={isOpen}
@@ -85,9 +97,9 @@ export default function InviteMemberModal({
               </h3>
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-500"
+                className="shrink-0 text-gray-400 hover:text-gray-500"
               >
-                <X className="size-5 shrink-0" />
+                <X size={24} />
               </button>
             </div>
             <form onSubmit={handleInvite} className="space-y-4">
@@ -112,12 +124,20 @@ export default function InviteMemberModal({
                   />
                   <button
                     type="button"
-                    className="flex shrink-0 items-center justify-center rounded-lg bg-orange-300 p-2 text-slate-800 transition-colors hover:bg-orange-400"
+                    onClick={() => setIsScannerOpen(true)}
+                    disabled={inviting}
+                    className="flex shrink-0 items-center justify-center rounded-lg bg-orange-300 p-2 text-slate-800 transition-colors hover:bg-orange-400 disabled:opacity-50"
+                    title={t("teamManagement.scanQrCode")}
                   >
                     <ScanQrCode size={24} />
                   </button>
                 </div>
               </div>
+              <QrScannerModal
+                isOpen={isScannerOpen}
+                onClose={() => setIsScannerOpen(false)}
+                onScanSuccess={handleScanSuccess}
+              />
               <div>
                 <label
                   htmlFor="invite-role"

@@ -44,4 +44,7 @@ export const teamManagement = {
     errorRole: "更改角色失败",
     errorRemove: "移除成员失败",
   },
+  scanQrCode: "扫描 QR Code",
+  scanning: "正在扫描...",
+  cameraError: "无法存取相机，请检查权限设置。",
 };

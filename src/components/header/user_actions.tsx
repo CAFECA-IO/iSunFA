@@ -263,9 +263,11 @@ export default function UserActions() {
               >
                 {/* Info: (20260702 - Julian) Backdrop for forceOpen mode */}
                 {forceOpen && !showQrCodeModal && (
-                  <div
-                    className="fixed inset-0 -z-10 bg-transparent"
+                  <button
+                    type="button"
+                    className="fixed inset-0 -z-10 cursor-default bg-transparent focus:outline-none"
                     onClick={() => setForceOpen(false)}
+                    aria-label="Close backdrop"
                   />
                 )}
                 {/* Info: (20260423 - Julian) Top User Info */}

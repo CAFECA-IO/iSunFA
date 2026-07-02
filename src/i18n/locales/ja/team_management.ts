@@ -44,4 +44,7 @@ export const teamManagement = {
     errorRole: "役割の変更に失敗しました",
     errorRemove: "メンバーの削除に失敗しました",
   },
+  scanQrCode: "QRコードをスキャン",
+  scanning: "スキャン中...",
+  cameraError: "カメラにアクセスできません。権限設定を確認してください。",
 };

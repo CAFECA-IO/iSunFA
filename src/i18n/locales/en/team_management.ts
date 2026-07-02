@@ -42,6 +42,9 @@ export const teamManagement = {
     errorInvite: "Error inviting member",
     errorAccept: "Error accepting invitation",
     errorRole: "Error changing role",
-    errorRemove: "Error removing member",
+    errorRemove: "Failed to remove member",
   },
+  scanQrCode: "Scan QR Code",
+  scanning: "Scanning...",
+  cameraError: "Cannot access camera, please check permission settings.",
 };
