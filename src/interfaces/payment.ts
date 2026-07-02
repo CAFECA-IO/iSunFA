@@ -78,6 +78,7 @@ export interface IPaymentModalProps {
   title?: string;
   planId?: string;
   billingInterval?: "month" | "year";
+  details?: string[];
 }
 
 export interface IOrderWithMission {

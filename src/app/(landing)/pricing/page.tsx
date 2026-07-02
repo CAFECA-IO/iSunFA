@@ -72,6 +72,7 @@ export default function PricingPage() {
   const [pendingPlanId, setPendingPlanId] = useState<string>("");
   const [pendingBillingInterval, setPendingBillingInterval] =
     useState<PendingBillingIntervalType>();
+  const [pendingDetails, setPendingDetails] = useState<string[] | undefined>();
 
   // Info: (20260115 - Luphia) Pricing Calculator State
   const [userCount, setUserCount] = useState(1);
@@ -155,10 +156,11 @@ export default function PricingPage() {
     setPendingCredits(credits);
     setPendingBaseCredits(credits);
     setPendingBonusCredits("0");
-    setPendingDisplayPrice(amount);
+    setPendingDisplayPrice(`NT$ ${Number(amount).toLocaleString()}`);
     setPendingTitle(title);
     setPendingPlanId(planKey);
     setPendingBillingInterval(billingInterval);
+    setPendingDetails(undefined);
     setModalInitialStep(PaymentStep.confirm);
     setPaymentModalOpen(true);
   };
@@ -168,6 +170,7 @@ export default function PricingPage() {
     title: string,
     amount: number,
     interval?: "month" | "year",
+    details?: string[],
   ) => {
     if (!user) {
       setAuthModalOpen(true);
@@ -178,10 +181,11 @@ export default function PricingPage() {
     setPendingCredits("0"); // Info: (20260702 - Tzuhan) Credits are 0 for non-subscription, non-credit purchases
     setPendingBaseCredits("0");
     setPendingBonusCredits("0");
-    setPendingDisplayPrice(amount.toString());
+    setPendingDisplayPrice(`NT$ ${amount.toLocaleString()}`); // Changed to include currency format
     setPendingTitle(title);
     setPendingPlanId(planId);
     setPendingBillingInterval(interval);
+    setPendingDetails(details);
     setModalInitialStep(PaymentStep.confirm);
     setPaymentModalOpen(true);
   };
@@ -867,13 +871,23 @@ export default function PricingPage() {
                       <div className="mt-6">
                         <button
                           type="button"
-                          onClick={() =>
+                          onClick={() => {
+                            const details = [
+                              "ASUS Ascent GX10",
+                              `${t("pricing.ai_adoption.user_count")}: ${userCount}`,
+                              `${t("pricing.ai_adoption.software_update")}: ${updateYears} 年`,
+                              ...selectedModules.map((modKey) =>
+                                t(`features.items.${modKey}.title`),
+                              ),
+                            ];
                             onSelectCustomPlan(
                               "on_premise",
                               t("pricing.ai_adoption.title"),
                               totalPrice,
-                            )
-                          }
+                              undefined,
+                              details,
+                            );
+                          }}
                           className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 px-6 py-3.5 text-base font-semibold text-white shadow-lg shadow-orange-900/20 transition-all duration-300 hover:scale-[1.02] hover:from-orange-400 hover:to-orange-500 hover:shadow-orange-900/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
                         >
                           <span className="relative z-10 flex items-center justify-center gap-2">
@@ -1018,6 +1032,7 @@ export default function PricingPage() {
           title={pendingTitle}
           planId={pendingPlanId}
           billingInterval={pendingBillingInterval}
+          details={pendingDetails}
         />
 
         {/* Info: (20260116 - Luphia) Coming Soon Modal */}

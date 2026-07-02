@@ -514,34 +514,56 @@ export default function PaymentModal({
                                     {displayPrice || `$${amount}`}
                                   </span>
                                 </div>
-                                <div className="flex items-start justify-between px-2">
-                                  <span className="pt-1 text-sm font-medium text-gray-500">
-                                    {t(
-                                      "pricing.credits.payment_modal.tokens_to_receive",
-                                    )}
-                                  </span>
-                                  <div className="flex flex-col items-end text-right">
-                                    <span className="text-lg font-bold text-orange-600">
-                                      {baseCredits.toLocaleString()}{" "}
+                                {Number(baseCredits) > 0 && (
+                                  <div className="flex items-start justify-between px-2">
+                                    <span className="pt-1 text-sm font-medium text-gray-500">
                                       {t(
-                                        "pricing.credits.payment_modal.credits_unit_short",
-                                        { count: "" },
-                                      ).trim()}
+                                        "pricing.credits.payment_modal.tokens_to_receive",
+                                      )}
                                     </span>
-                                    {bonusCredits !== "0" && (
-                                      <span className="mt-1 inline-flex items-center rounded-md bg-orange-50 px-2 py-0.5 text-xs font-semibold text-orange-600 ring-1 ring-orange-600/20 ring-inset">
-                                        +{" "}
+                                    <div className="flex flex-col items-end text-right">
+                                      <span className="text-lg font-bold text-orange-600">
+                                        {Number(baseCredits).toLocaleString()}{" "}
                                         {t(
-                                          "pricing.credits.payment_modal.bonus_points",
-                                          {
-                                            count:
-                                              bonusCredits.toLocaleString(),
-                                          },
-                                        )}
+                                          "pricing.credits.payment_modal.credits_unit_short",
+                                          { count: "" },
+                                        ).trim()}
                                       </span>
-                                    )}
+                                      {bonusCredits !== "0" && (
+                                        <span className="mt-1 inline-flex items-center rounded-md bg-orange-50 px-2 py-0.5 text-xs font-semibold text-orange-600 ring-1 ring-orange-600/20 ring-inset">
+                                          +{" "}
+                                          {t(
+                                            "pricing.credits.payment_modal.bonus_points",
+                                            {
+                                              count:
+                                                Number(
+                                                  bonusCredits,
+                                                ).toLocaleString(),
+                                            },
+                                          )}
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
+                                )}
+                                {details && details.length > 0 && (
+                                  <div className="flex flex-col px-2">
+                                    <span className="mb-2 text-sm font-medium text-gray-500">
+                                      已選模組
+                                    </span>
+                                    <ul className="space-y-1">
+                                      {details.map((detail, index) => (
+                                        <li
+                                          key={index}
+                                          className="flex items-center text-sm font-medium text-gray-700"
+                                        >
+                                          <CheckCircle2 className="mr-2 h-4 w-4 text-orange-500" />
+                                          {detail}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
                                 {billingInterval && (
                                   <div className="mt-2 rounded-md bg-orange-50 p-3">
                                     <p className="text-xs font-medium text-orange-800">
