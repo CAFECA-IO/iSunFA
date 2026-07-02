@@ -196,6 +196,7 @@ export const pricing = {
       use_saved_card: "Use Saved Card",
       bind_new_card: "Bind New Card",
       agree_tos: "I agree to the Terms of Service and Refund Policy",
+      subscription_reset_note: "Unused {{count}} credits will be cleared each month and re-issued the following month.",
     },
   },
   business_model: {

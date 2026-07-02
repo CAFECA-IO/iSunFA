@@ -542,6 +542,16 @@ export default function PaymentModal({
                                     )}
                                   </div>
                                 </div>
+                                {billingInterval && (
+                                  <div className="mt-2 rounded-md bg-orange-50 p-3">
+                                    <p className="text-xs font-medium text-orange-800">
+                                      {t(
+                                        "pricing.credits.payment_modal.subscription_reset_note",
+                                        { count: baseCredits.toLocaleString() },
+                                      )}
+                                    </p>
+                                  </div>
+                                )}
                               </div>
 
                               {user && (
