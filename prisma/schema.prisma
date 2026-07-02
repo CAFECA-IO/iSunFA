@@ -515,26 +515,28 @@ enum EsgIntensity {
 }
 
 model EsgRecord {
-  id                String           @id @default(uuid())
-  createdAt         DateTime         @default(now()) @map("created_at")
-  updatedAt         DateTime         @updatedAt @map("updated_at")
-  deletedAt         DateTime?        @map("deleted_at")
-  tradingDate       DateTime         @map("trading_date") // Info: (20260407 - Julian) 交易日期
-  scope             EsgScope? // Info: (20260312 - Julian) 範疇 (SCOPE_1, SCOPE_2, SCOPE_3)
-  ghgProtocolCategory String? @map("ghg_protocol_category") // Info: (20260617 - Julian) GHG Protocol 的子分類
-  isoCategory       String? @map("iso_category") // Info: (20260618 - Julian) ISO 14064 的子分類
-  activityType      String           @map("activity_type") // Info: (20260312 - Julian) 活動類型
-  vendor            String // Info: (20260312 - Julian) 供應商與對象
-  amount            Decimal          @default(0) // Info: (20260416 - Julian) 活動數據
-  unit              String // Info: (20260312 - Julian) 單位
-  emissions         Decimal // Info: (20260312 - Julian) 排放量 (KGCO2E)
-  intensity         EsgIntensity? // Info: (20260312 - Julian) 排放強度分類 (LOW, MEDIUM, HIGH)
-  confidence        Int // Info: (20260312 - Julian) AI 信心度
-  dqiScore          Decimal?         @map("dqi_score") // Info: (20260410 - Julian) DQI 數據品質指標
-  isVerified        Boolean          @default(false) @map("is_verified") // Info: (20260318 - Julian) 是否已經驗證
-  analysisStatus    AIAnalysisStatus @default(PENDING) @map("analysis_status") // Info: (20260318 - Julian) AI 分析狀態
-  emissionSourceTag String?          @map("emission_source_tag") // Info: (20260421 - Julian) 排放源標籤（廠）
-  generationSource  String           @default("SYSTEM_DETERMINISTIC") @map("generation_source") // Info: (20260519 - Tzuhan) 紀錄產生來源，用於審計追蹤
+  id                  String           @id @default(uuid())
+  createdAt           DateTime         @default(now()) @map("created_at")
+  updatedAt           DateTime         @updatedAt @map("updated_at")
+  deletedAt           DateTime?        @map("deleted_at")
+  tradingDate         DateTime         @map("trading_date") // Info: (20260407 - Julian) 交易日期
+  scope               EsgScope? // Info: (20260312 - Julian) 範疇 (SCOPE_1, SCOPE_2, SCOPE_3)
+  ghgProtocolCategory String?          @map("ghg_protocol_category") // Info: (20260617 - Julian) GHG Protocol 的子分類
+  isoCategory         String?          @map("iso_category") // Info: (20260618 - Julian) ISO 14064 的子分類
+  activityType        String           @map("activity_type") // Info: (20260312 - Julian) 活動類型
+  vendor              String // Info: (20260312 - Julian) 供應商與對象
+  amount              Decimal          @default(0) // Info: (20260416 - Julian) 活動數據
+  unit                String // Info: (20260312 - Julian) 單位
+  emissions           Decimal // Info: (20260312 - Julian) 排放量 (KGCO2E)
+  ghgBreakdown        Json?            @map("ghg_breakdown") // Info: (20260630 - Tzuhan) 紀錄 7 種溫室氣體的各別公斤數
+  gwpVersion          String?          @map("gwp_version") // Info: (20260630 - Tzuhan) 紀錄計算採用的 GWP 版本 (例如 IPCC_AR6)
+  intensity           EsgIntensity? // Info: (20260312 - Julian) 排放強度分類 (LOW, MEDIUM, HIGH)
+  confidence          Int // Info: (20260312 - Julian) AI 信心度
+  dqiScore            Decimal?         @map("dqi_score") // Info: (20260410 - Julian) DQI 數據品質指標
+  isVerified          Boolean          @default(false) @map("is_verified") // Info: (20260318 - Julian) 是否已經驗證
+  analysisStatus      AIAnalysisStatus @default(PENDING) @map("analysis_status") // Info: (20260318 - Julian) AI 分析狀態
+  emissionSourceTag   String?          @map("emission_source_tag") // Info: (20260421 - Julian) 排放源標籤（廠）
+  generationSource    String           @default("SYSTEM_DETERMINISTIC") @map("generation_source") // Info: (20260519 - Tzuhan) 紀錄產生來源，用於審計追蹤
 
   // Info: (20260312 - Julian) 關聯檔案憑證
   fileId String? @map("file_id")
@@ -670,7 +672,8 @@ model Coefficient {
   name           String
   description    String
   unit           String
-  emissionFactor Decimal @map("emission_factor")
+  emissionFactor Decimal @map("emission_factor") // Info: (20260630 - Tzuhan) 總 CO2e，或無 ghgFactors 時的唯一係數
+  ghgFactors     Json?   @map("ghg_factors") // Info: (20260630 - Tzuhan) 多氣體係數 (CO2, CH4, N2O, NF3, SF6, HFCs, PFCs)
   source         String
 
   // Info: (20260514 - Tzuhan) 前端介面定義的類別 (e.g., STANDARD, CUSTOM)
@@ -958,12 +961,12 @@ model AmortizationSchedule {
 }
 
 model PdfEditorDocument {
-  id          String   @id @default(uuid())
-  token       String   @unique @default(uuid()) // Info: (20260604 - Julian) 分享用的亂碼字串
-  content     String   @db.Text                 // Info: (20260604 - Julian) Markdown 內容
-  isActive    Boolean  @default(true) @map("is_active") // Info: (20260604 - Julian) 支援手動關閉分享
-  createdById String   @map("created_by_id")
-  createdBy   User     @relation("PdfEditorDocumentCreator", fields: [createdById], references: [id])
+  id          String  @id @default(uuid())
+  token       String  @unique @default(uuid()) // Info: (20260604 - Julian) 分享用的亂碼字串
+  content     String  @db.Text // Info: (20260604 - Julian) Markdown 內容
+  isActive    Boolean @default(true) @map("is_active") // Info: (20260604 - Julian) 支援手動關閉分享
+  createdById String  @map("created_by_id")
+  createdBy   User    @relation("PdfEditorDocumentCreator", fields: [createdById], references: [id])
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
