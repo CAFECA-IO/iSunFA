@@ -43,6 +43,8 @@ export const teamManagement = {
     errorAccept: "Error accepting invitation",
     errorRole: "Error changing role",
     errorRemove: "Failed to remove member",
+    invalidAddress:
+      "Invalid Web3 address. It should start with 0x and be 42 characters long.",
   },
   scanQrCode: "Scan QR Code",
   scanning: "Scanning...",

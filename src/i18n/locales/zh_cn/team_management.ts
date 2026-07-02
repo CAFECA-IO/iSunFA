@@ -43,6 +43,7 @@ export const teamManagement = {
     errorAccept: "接受邀请失败",
     errorRole: "更改角色失败",
     errorRemove: "移除成员失败",
+    invalidAddress: "无效的 Web3 钱包地址，格式应为 0x 开头的 42 位字符。",
   },
   scanQrCode: "扫描 QR Code",
   scanning: "正在扫描...",

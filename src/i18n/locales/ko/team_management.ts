@@ -43,6 +43,8 @@ export const teamManagement = {
     errorAccept: "초대 수락 중 오류 발생",
     errorRole: "역할 변경 중 오류 발생",
     errorRemove: "멤버 삭제 실패",
+    invalidAddress:
+      "유효하지 않은 Web3 지갑 주소입니다. 0x로 시작하는 42자여야 합니다.",
   },
   scanQrCode: "QR 코드 스캔",
   scanning: "스캔 중...",

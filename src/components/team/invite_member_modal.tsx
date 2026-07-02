@@ -9,6 +9,7 @@ import { getLoginOptions, fido2ClientService } from "@/lib/auth/fido2_client";
 import { request, ApiError } from "@/lib/utils/request";
 import { TeamRole } from "@/constants/team";
 import QrScannerModal from "@/components/common/qr_scanner_modal";
+import { isAddress } from "viem";
 
 interface IInviteMemberModalProps {
   isOpen: boolean;
@@ -36,6 +37,12 @@ export default function InviteMemberModal({
   const handleInvite = async (e: FormEvent) => {
     e.preventDefault();
     if (!selectedTeamId || !inviteAddress.trim() || !user?.address) return;
+
+    if (!isAddress(inviteAddress.trim())) {
+      showAlert(t("teamManagement.alerts.invalidAddress"));
+      return;
+    }
+
     setInviting(true);
     try {
       const { challenge } = await getLoginOptions(user.address);
@@ -78,7 +85,12 @@ export default function InviteMemberModal({
     if (address.toLowerCase().startsWith("ethereum:")) {
       address = address.split(":")[1].split("@")[0];
     }
-    setInviteAddress(address);
+
+    if (isAddress(address)) {
+      setInviteAddress(address);
+    } else {
+      showAlert(t("teamManagement.alerts.invalidAddress"));
+    }
   };
 
   return (

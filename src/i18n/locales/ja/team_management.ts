@@ -43,6 +43,8 @@ export const teamManagement = {
     errorAccept: "招待の受け入れに失敗しました",
     errorRole: "役割の変更に失敗しました",
     errorRemove: "メンバーの削除に失敗しました",
+    invalidAddress:
+      "無効な Web3 アドレスです。0x で始まる 42 文字である必要があります。",
   },
   scanQrCode: "QRコードをスキャン",
   scanning: "スキャン中...",
