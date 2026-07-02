@@ -101,24 +101,26 @@ class BusinessMonitorService {
     const table = await lanceDBService.getTable();
     let matchedDocs: ILanceDBRow[] = [];
 
-    // Info: (20260702 - Julian) 建立動態過濾條件
-    const whereClauses: string[] = [];
-    if (companyNames.length > 0) {
-      whereClauses.push(
-        `(${companyNames.map((c) => `companyName LIKE '%${c.replace(/'/g, "''")}%'`).join(" OR ")})`,
-      );
+    // Info: (20260702 - Julian) 建立動態過濾條件 (先從 Repo 篩選符合條件的報告 ID)
+    const filteredReports = await reportRepo.findByCriteria(
+      companyNames,
+      reportTypes,
+      years,
+    );
+    const matchedIds = filteredReports.map((r) => String(r.id));
+
+    let combinedWhere = "";
+    if (matchedIds.length > 0) {
+      combinedWhere = `reportId IN (${matchedIds.map((id) => `'${id}'`).join(", ")})`;
+    } else if (
+      companyNames.length > 0 ||
+      reportTypes.length > 0 ||
+      years.length > 0
+    ) {
+      // Info: (20260702 - Julian) 有設定過濾條件但找不到任何報告，直接回傳空結果
+      console.log(`⚠️  [AI Chat] 過濾條件未匹配到任何報告，跳過檢索。`);
+      return { matchedReports: [], context: "" };
     }
-    if (reportTypes.length > 0) {
-      whereClauses.push(
-        `(${reportTypes.map((t) => `title LIKE '%${t.replace(/'/g, "''")}%'`).join(" OR ")})`,
-      );
-    }
-    if (years.length > 0) {
-      whereClauses.push(
-        `(${years.map((y) => `year = '${y.replace(/'/g, "''")}'`).join(" OR ")})`,
-      );
-    }
-    const combinedWhere = whereClauses.join(" AND ");
 
     if (combinedWhere) {
       console.log(`🔍 [AI Chat] 使用過濾條件: ${combinedWhere}`);
@@ -174,10 +176,24 @@ class BusinessMonitorService {
       }
     }
 
-    // Info: (20260701 - Julian) 將 SQL 中繼資料 (Metadata) 格式化為結構化背景知識，確保 LLM 能夠直接回答「資本額」等基本資料
+    // Info: (20260702 - Julian) 將 SQL 中繼資料 (Metadata) 格式化為結構化背景知識
+    // 確保 LLM 能夠直接回答「資本額」等基本資料，並加入寬鬆檢索的提醒標籤
     const reportMetadataContext = matchedReports
-      .map(
-        (r) => `【報告書基本資料（中繼資料）】
+      .map((r) => {
+        const isYearMatch = years.length === 0 || years.includes(r.reportYear);
+        const isTypeMatch =
+          reportTypes.length === 0 ||
+          reportTypes.some((t) => r.title.includes(t));
+
+        let warnings = "";
+        if (!isYearMatch) {
+          warnings += ` [⚠️ 注意：年度不匹配，用戶要求 ${years.join("/")}，此為 ${r.reportYear} 年資料]`;
+        }
+        if (!isTypeMatch) {
+          warnings += ` [⚠️ 注意：類型不匹配，用戶要求 ${reportTypes.join("/")}，此為 ${r.title}]`;
+        }
+
+        return `【報告書基本資料（中繼資料）】${warnings}
 - 公司名稱：${r.companyName}
 - 報告書標題：${r.title}
 - 報告年度：${r.reportYear}
@@ -186,8 +202,8 @@ class BusinessMonitorService {
 - 資本額：${r.capital}
 - 第三方查驗機構：${r.verificationAgency} (查證標準: ${r.verificationStandards})
 - 第三方確信機構：${r.assuranceAgency} (確信標準: ${r.assuranceStandards})
-- 是否經第三方確信：${r.isVerifiedByThirdParty ? "是" : "否"}`,
-      )
+- 是否經第三方確信：${r.isVerifiedByThirdParty ? "是" : "否"}`;
+      })
       .join("\n\n");
 
     // Info: (20260701 - Julian) 將搜尋到的 Markdown 文字片段拼接在一起

@@ -6,14 +6,14 @@ dotenv.config();
 
 /**
  * Info: (20260702 - Julian) 測試腳本：搜尋報告
- * 使用方式: npx tsx scripts/search_report.ts "台積電 2024 ESG"
+ * 使用方式: npx tsx scripts/search_report.ts "問題"
  */
 async function main() {
   const question = process.argv[2];
 
   if (!question) {
     console.error(
-      '❌ 請提供問題內容。範例: npx tsx scripts/search_report.ts "台積電 2024 ESG"',
+      '❌ 請提供問題內容。範例: npx tsx scripts/search_report.ts "台積電 2024 年度財務報告"',
     );
     process.exit(1);
   }
