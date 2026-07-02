@@ -22,8 +22,8 @@ import PaymentModal from "@/components/pricing/payment_modal";
 import { PaymentStep } from "@/interfaces/payment";
 import BusinessModelSection from "@/components/pricing/business_model_section";
 import SolutionsPricingSection from "@/components/pricing/solutions_pricing_section";
+import { PendingBillingIntervalType } from "@/types/pricing";
 
-type PendingBillingIntervalType = "month" | "year" | undefined;
 export default function PricingPage() {
   const { t, language } = useTranslation();
   const { user } = useAuth();

@@ -2,17 +2,7 @@ import React, { useState } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { CheckCircle2, Building, Building2, BuildingIcon } from "lucide-react";
 import { SOLUTION_PLAN_PRICE } from "@/constants/price";
-
-interface ISolutionsPricingSectionProps {
-  onSelect: (
-    planId: string,
-    title: string,
-    amount: number,
-    billingInterval?: "month" | "year",
-  ) => void;
-}
-
-type SolutionTab = "iso14064" | "iso14067" | "carbon_label";
+import { ISolutionsPricingSectionProps, SolutionTab } from "@/types/pricing";
 
 export default function SolutionsPricingSection({
   onSelect,
@@ -71,7 +61,7 @@ export default function SolutionsPricingSection({
         <p className="text-lg text-gray-600">{currentSolution.desc}</p>
       </div>
 
-      {/* Tabs */}
+      {/* Info: (20260702 - Tzuhan) Tabs */}
       <div className="mb-12 flex justify-center">
         <div className="flex flex-wrap justify-center gap-1 rounded-lg bg-gray-100 p-1 sm:flex-nowrap">
           <button
@@ -107,9 +97,9 @@ export default function SolutionsPricingSection({
         </div>
       </div>
 
-      {/* Pricing Cards */}
+      {/* Info: (20260702 - Tzuhan) Pricing Cards */}
       <div className="mx-auto grid max-w-md grid-cols-1 gap-8 lg:max-w-none lg:grid-cols-3">
-        {/* Tier 1 */}
+        {/* Info: (20260702 - Tzuhan) Tier 1 */}
         <div className="flex flex-col justify-between rounded-3xl bg-white p-8 shadow-xl ring-1 ring-gray-200 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
           <div>
             <div className="mb-4 flex items-center justify-between">
@@ -184,7 +174,7 @@ export default function SolutionsPricingSection({
           </button>
         </div>
 
-        {/* Tier 2 */}
+        {/* Info: (20260702 - Tzuhan) Tier 2 */}
         <div className="relative z-10 flex flex-col justify-between rounded-3xl bg-white p-8 shadow-2xl ring-2 ring-orange-500 transition-all duration-300 hover:scale-[1.02] hover:shadow-orange-500/20">
           <div className="absolute -top-4 right-0 left-0 mx-auto w-32 rounded-full bg-gradient-to-r from-orange-400 to-orange-500 px-3 py-1 text-center text-xs font-bold text-white shadow-sm">
             {t("pricing.solutions.tier2.badge")}
@@ -259,7 +249,7 @@ export default function SolutionsPricingSection({
           </button>
         </div>
 
-        {/* Tier 3 */}
+        {/* Info: (20260702 - Tzuhan) Tier 3 */}
         <div className="flex flex-col justify-between rounded-3xl bg-white p-8 shadow-xl ring-1 ring-gray-200 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
           <div>
             <div className="mb-4 flex items-center justify-between">

@@ -9,15 +9,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { BUSINESS_MODEL_PRICE } from "@/constants/price";
-
-interface IBusinessModelSectionProps {
-  onSelect: (
-    planId: string,
-    title: string,
-    amount: number,
-    billingInterval?: "month" | "year",
-  ) => void;
-}
+import { IBusinessModelSectionProps } from "@/types/pricing";
 
 export default function BusinessModelSection({
   onSelect,
@@ -40,7 +32,7 @@ export default function BusinessModelSection({
       </div>
 
       <div className="mx-auto grid max-w-md grid-cols-1 gap-8 lg:max-w-4xl lg:grid-cols-2">
-        {/* Cloud Subscription Card */}
+        {/* Info: (20260702 - Tzuhan) Cloud Subscription Card */}
         <div className="flex flex-col justify-between rounded-3xl bg-white p-8 shadow-xl ring-1 ring-gray-200 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl xl:p-10">
           <div>
             <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
@@ -91,7 +83,7 @@ export default function BusinessModelSection({
           </button>
         </div>
 
-        {/* On-Premise Buyout Card */}
+        {/* Info: (20260702 - Tzuhan) On-Premise Buyout Card */}
         <div className="relative flex flex-col justify-between rounded-3xl bg-gradient-to-br from-orange-500 to-orange-600 p-8 shadow-2xl ring-1 ring-orange-500 transition-all duration-300 hover:scale-[1.02] hover:shadow-orange-500/30 xl:p-10">
           <div>
             <div className="mb-6 flex items-center justify-between">
