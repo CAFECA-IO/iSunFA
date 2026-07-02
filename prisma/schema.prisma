@@ -682,6 +682,10 @@ model Coefficient {
   // Info: (20260514 - Tzuhan) 版本年份，方便未來依年份快速檢索對應的係數庫
   versionYear String? @map("version_year")
 
+  // Info: (20260702 - Tzuhan) [AUDIT FIX] 係數的版本控制與年份標籤 (Version Control)
+  validFrom DateTime? @map("valid_from")
+  validTo   DateTime? @map("valid_to")
+
   // Info: (20260514 - Tzuhan) 人工建立與覆核的 CPA 防線
   isVerified Boolean @default(true) @map("is_verified")
 

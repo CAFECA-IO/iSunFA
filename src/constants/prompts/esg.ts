@@ -4,11 +4,13 @@ import { EsgActivityTypeMapping } from "@/constants/esg_activity_type";
 import { IEmissionSources } from "@/interfaces/emission_sources";
 import { getLanguageByCountry } from "@/constants/country";
 import { CountryCode } from "@/constants/enums";
+import { GL_TO_ISO_MAPPING } from "@/constants/gl_mapping";
 
 export const getEsgPrompt = (
   accountBook?: IAccountBookBase | null,
   coefficients?: Partial<ICoefficient>[],
   emissionSources?: Partial<IEmissionSources>[],
+  accountCode?: string,
 ) => {
   // Info: (20260513 - Tzuhan) 將外部傳入的 coefficients 作為 context (廢除了全域係數的暴力注入)
   const allCoefficients = [...(coefficients || [])];
@@ -89,6 +91,24 @@ export const getEsgPrompt = (
   - 若無符合的排放源歸口，或清單為空，請自行建立一個新的排放源歸口，並將新建立的排放源歸口資訊填入回傳 JSON 的 \`newEmissionSource\` 物件中，同時將 \`emissionSourceId\` 設為 null。
   `;
 
+  // Info: (20260702 - Tzuhan) [AUDIT FIX] 根據會計科目強制鎖定 ISO 類別
+  let isoCategoryInstruction = `
+  【ISO 14064-1 溫室氣體類別分類】請根據活動類型與憑證內容，選擇最符合的 ISO 14064-1 類別分類，並將 key 填入回傳 JSON 的 \`isoCategory\` 欄位。可選值包括：
+  - CATEGORY_1: 類別一：直接溫室氣體排放與移除
+  - CATEGORY_2: 類別二：輸入能源之間接溫室氣體排放
+  - CATEGORY_3: 類別三：運輸之間接溫室氣體排放
+  - CATEGORY_4: 類別四：組織使用產品之間接溫室氣體排放
+  - CATEGORY_5: 類別五：使用組織產品之間接溫室氣體排放
+  - CATEGORY_6: 類別六：其他來源之間接溫室氣體排放`;
+
+  if (accountCode && GL_TO_ISO_MAPPING[accountCode]) {
+    const allowedCategories = GL_TO_ISO_MAPPING[accountCode];
+    isoCategoryInstruction = `
+  【ISO 14064-1 溫室氣體類別分類】(STRICT AUDITOR RULE) 
+  這張憑證的會計科目代碼是 \`${accountCode}\`。你**只能**從以下陣列中挑選一個最適合的類別：\`${JSON.stringify(allowedCategories)}\`。
+  絕對禁止選擇其他類別！請將選出的 key 填入回傳 JSON 的 \`isoCategory\` 欄位。`;
+  }
+
   return `
   請將用戶上傳的憑證（檔案/圖片）解析出碳盤查（Carbon Footprint Verification）相關資訊。${accountBookInfo}${rulesInstruction}
   ${emissionSourcesInstruction}
@@ -102,14 +122,7 @@ export const getEsgPrompt = (
   - SCOPE_1_DIRECT: 直接溫室氣體排放 (範疇一)
   - SCOPE_2_INDIRECT: 能源間接溫室氣體排放 (範疇二)
   - SCOPE_3_CAT_1 ~ SCOPE_3_CAT_15: 範疇三的 Category 1 到 15 (如：購買商品與服務、資本財、商務差旅、員工通勤等)
-
-  【ISO 14064-1 溫室氣體類別分類】請根據活動類型與憑證內容，選擇最符合的 ISO 14064-1 類別分類，並將 key 填入回傳 JSON 的 \`isoCategory\` 欄位。可選值包括：
-  - CATEGORY_1: 類別一：直接溫室氣體排放與移除
-  - CATEGORY_2: 類別二：輸入能源之間接溫室氣體排放
-  - CATEGORY_3: 類別三：運輸之間接溫室氣體排放
-  - CATEGORY_4: 類別四：組織使用產品之間接溫室氣體排放
-  - CATEGORY_5: 類別五：使用組織產品之間接溫室氣體排放
-  - CATEGORY_6: 類別六：其他來源之間接溫室氣體排放
+  ${isoCategoryInstruction}
 
   【活動數據單位】請從以下清單中選擇最符合的活動數據單位，並將該活動數據單位的 key 填入回傳 JSON 的 \`unit\` 欄位。如果沒有合適的單位，請自行新增一個單位，且須和係數的單位一致：
   ${unitListStr}
