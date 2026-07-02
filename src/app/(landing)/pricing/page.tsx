@@ -1,28 +1,31 @@
 "use client";
 
 import { useState, useEffect, ReactNode } from "react";
-
-import Image from "next/image";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/auth_context";
 import { useTranslation } from "@/i18n/i18n_context";
 import { request } from "@/lib/utils/request";
+import Image from "next/image";
+import { Minus, Plus, Lock, Check, Loader2 } from "lucide-react";
 import { MODULES } from "@/constants/modules";
 import {
   ENTERPRISE_PLAN_PRICE,
   ANALYSIS_BASE_COSTS,
   REWARD_AMOUNTS,
   SUBSCRIPTION_PLAN_CREDITS,
+  SUBSCRIPTION_PLAN_PRICE,
 } from "@/constants/price";
 import { CREDIT_PLANS } from "@/config/credit_plans";
 import PricingCard from "@/components/pricing/pricing_card";
-import { Check, Minus, Plus, Lock, Loader2 } from "lucide-react";
+
 import ConfirmModal from "@/components/common/confirm_modal";
 import { MoneyUtil } from "@/lib/utils/money";
 
 import AuthModal from "@/components/auth/auth_modal";
 import PaymentModal from "@/components/pricing/payment_modal";
 import { PaymentStep } from "@/interfaces/payment";
+import SolutionsPricingSection from "@/components/pricing/solutions_pricing_section";
+import { PendingBillingIntervalType } from "@/types/pricing";
 
 export default function PricingPage() {
   const { t, language } = useTranslation();
@@ -34,9 +37,11 @@ export default function PricingPage() {
   const activeTab =
     tabParam === "subscription"
       ? "subscription"
-      : tabParam === "buyout"
-        ? "buyout"
-        : "credits";
+      : tabParam === "credits"
+        ? "credits"
+        : tabParam === "solutions"
+          ? "solutions"
+          : "buyout";
   const [billingInterval, setBillingInterval] = useState<"month" | "year">(
     "month",
   );
@@ -63,13 +68,10 @@ export default function PricingPage() {
   const [pendingDisplayPrice, setPendingDisplayPrice] = useState("");
   const [pendingTxHash, setPendingTxHash] = useState<string | undefined>();
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
-
-  // Info: (20260119 - Luphia) Allow guest users to select free plan to trigger login
-  const currentPlan = user
-    ? user.plan === "personal" || !user.plan
-      ? "free"
-      : user.plan
-    : undefined;
+  const [pendingTitle, setPendingTitle] = useState<string>("");
+  const [pendingPlanId, setPendingPlanId] = useState<string>("");
+  const [pendingBillingInterval, setPendingBillingInterval] =
+    useState<PendingBillingIntervalType>();
 
   // Info: (20260115 - Luphia) Pricing Calculator State
   const [userCount, setUserCount] = useState(1);
@@ -77,6 +79,12 @@ export default function PricingPage() {
   const [selectedModules, setSelectedModules] = useState<string[]>(
     MODULES.filter((m) => m.basic).map((m) => m.key),
   );
+
+  const totalPrice =
+    ENTERPRISE_PLAN_PRICE.MACHINE +
+    userCount * ENTERPRISE_PLAN_PRICE.USER +
+    updateYears * ENTERPRISE_PLAN_PRICE.UPDATE +
+    selectedModules.length * ENTERPRISE_PLAN_PRICE.MODULE;
 
   const toggleModule = (moduleKey: string) => {
     const targetModule = MODULES.find((m) => m.key === moduleKey);
@@ -89,11 +97,12 @@ export default function PricingPage() {
     );
   };
 
-  const totalPrice =
-    ENTERPRISE_PLAN_PRICE.MACHINE +
-    userCount * ENTERPRISE_PLAN_PRICE.USER +
-    selectedModules.length * ENTERPRISE_PLAN_PRICE.MODULE +
-    updateYears * ENTERPRISE_PLAN_PRICE.UPDATE;
+  // Info: (20260119 - Luphia) Allow guest users to select free plan to trigger login
+  const currentPlan = user
+    ? user.plan === "personal" || !user.plan
+      ? "free"
+      : user.plan
+    : undefined;
 
   const showComingSoon = () => {
     if (!user) {
@@ -126,6 +135,55 @@ export default function PricingPage() {
         </span>
       ),
     });
+  };
+
+  const onSelectSubscription = (
+    planKey: keyof typeof SUBSCRIPTION_PLAN_PRICE,
+    title: string,
+  ) => {
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+    const amount =
+      SUBSCRIPTION_PLAN_PRICE[planKey][
+        billingInterval === "month" ? "monthly" : "yearly"
+      ].toString();
+    const credits = SUBSCRIPTION_PLAN_CREDITS[planKey].toString();
+
+    setPendingAmount(amount);
+    setPendingCredits(credits);
+    setPendingBaseCredits(credits);
+    setPendingBonusCredits("0");
+    setPendingDisplayPrice(amount);
+    setPendingTitle(title);
+    setPendingPlanId(planKey);
+    setPendingBillingInterval(billingInterval);
+    setModalInitialStep(PaymentStep.confirm);
+    setPaymentModalOpen(true);
+  };
+
+  const onSelectCustomPlan = (
+    planId: string,
+    title: string,
+    amount: number,
+    interval?: "month" | "year",
+  ) => {
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+
+    setPendingAmount(amount.toString());
+    setPendingCredits("0"); // Info: (20260702 - Tzuhan) Credits are 0 for non-subscription, non-credit purchases
+    setPendingBaseCredits("0");
+    setPendingBonusCredits("0");
+    setPendingDisplayPrice(amount.toString());
+    setPendingTitle(title);
+    setPendingPlanId(planId);
+    setPendingBillingInterval(interval);
+    setModalInitialStep(PaymentStep.confirm);
+    setPaymentModalOpen(true);
   };
 
   useEffect(() => {
@@ -241,20 +299,24 @@ export default function PricingPage() {
               ? t("pricing.title")
               : activeTab === "buyout"
                 ? t("pricing.ai_adoption.title")
-                : t("pricing.credits.title")}
+                : activeTab === "solutions"
+                  ? t("pricing.solutions.title")
+                  : t("pricing.credits.title")}
           </h1>
           <p className="mt-4 text-lg leading-8 text-gray-600">
             {activeTab === "subscription"
               ? t("pricing.subtitle")
               : activeTab === "buyout"
                 ? t("pricing.ai_adoption.description")
-                : t("pricing.credits.subtitle")}
+                : activeTab === "solutions"
+                  ? t("pricing.solutions.subtitle")
+                  : t("pricing.credits.subtitle")}
           </p>
         </div>
 
         {/* Info: (20260104 - Luphia) Tab Switcher */}
-        <div className="mt-8 flex justify-center">
-          <div className="flex rounded-lg bg-gray-100 p-1">
+        <div className="mt-8 flex justify-center px-4 sm:px-0">
+          <div className="grid w-full max-w-md grid-cols-2 gap-1 rounded-lg bg-gray-100 p-1 sm:flex sm:max-w-none sm:flex-nowrap sm:justify-center">
             <button
               onClick={() =>
                 router.push(`${pathname}?tab=credits`, { scroll: false })
@@ -263,7 +325,7 @@ export default function PricingPage() {
                 activeTab === "credits"
                   ? "bg-white shadow-sm"
                   : "hover:bg-gray-50"
-              } rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
+              } w-full rounded-md px-6 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none sm:w-auto`}
             >
               {t("pricing.credits.tab_credits")}
             </button>
@@ -275,21 +337,33 @@ export default function PricingPage() {
                 activeTab === "subscription"
                   ? "bg-white shadow-sm"
                   : "hover:bg-gray-50"
-              } rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
+              } w-full rounded-md px-6 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none sm:w-auto`}
             >
               {t("pricing.credits.tab_subscription")}
             </button>
             <button
               onClick={() =>
-                router.push(`${pathname}?tab=buyout`, { scroll: false })
+                router.push(`${pathname}?tab=business_model`, { scroll: false })
               }
               className={`${
-                activeTab === "buyout"
+                activeTab === "business_model"
                   ? "bg-white shadow-sm"
                   : "hover:bg-gray-50"
-              } rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
+              } w-full rounded-md px-6 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none sm:w-auto`}
             >
-              {t("pricing.credits.tab_buyout")}
+              {t("pricing.business_model.tab")}
+            </button>
+            <button
+              onClick={() =>
+                router.push(`${pathname}?tab=solutions`, { scroll: false })
+              }
+              className={`${
+                activeTab === "solutions"
+                  ? "bg-white shadow-sm"
+                  : "hover:bg-gray-50"
+              } w-full rounded-md px-6 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none sm:w-auto`}
+            >
+              {t("pricing.solutions.tab")}
             </button>
           </div>
         </div>
@@ -399,7 +473,9 @@ export default function PricingPage() {
                   billingInterval={billingInterval}
                   popular={true}
                   currentPlan={currentPlan}
-                  onSelect={showComingSoon}
+                  onSelect={() =>
+                    onSelectSubscription("team", t("pricing.plans.team.name"))
+                  }
                   features={[
                     {
                       text: t("pricing.plans.team.features.fido"),
@@ -471,7 +547,12 @@ export default function PricingPage() {
                   planKey="business"
                   billingInterval={billingInterval}
                   currentPlan={currentPlan}
-                  onSelect={showComingSoon}
+                  onSelect={() =>
+                    onSelectSubscription(
+                      "business",
+                      t("pricing.plans.business.name"),
+                    )
+                  }
                   features={[
                     {
                       text: t("pricing.plans.business.features.fido"),
@@ -786,7 +867,13 @@ export default function PricingPage() {
                       <div className="mt-6">
                         <button
                           type="button"
-                          onClick={showComingSoon}
+                          onClick={() =>
+                            onSelectCustomPlan(
+                              "on_premise",
+                              t("pricing.ai_adoption.title"),
+                              totalPrice,
+                            )
+                          }
                           className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 px-6 py-3.5 text-base font-semibold text-white shadow-lg shadow-orange-900/20 transition-all duration-300 hover:scale-[1.02] hover:from-orange-400 hover:to-orange-500 hover:shadow-orange-900/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
                         >
                           <span className="relative z-10 flex items-center justify-center gap-2">
@@ -801,6 +888,10 @@ export default function PricingPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {activeTab === "solutions" && (
+          <SolutionsPricingSection onSelect={onSelectCustomPlan} />
         )}
 
         {activeTab === "credits" && (
@@ -924,6 +1015,9 @@ export default function PricingPage() {
           displayPrice={pendingDisplayPrice}
           transactionHash={pendingTxHash}
           orderId={pendingOrderId}
+          title={pendingTitle}
+          planId={pendingPlanId}
+          billingInterval={pendingBillingInterval}
         />
 
         {/* Info: (20260116 - Luphia) Coming Soon Modal */}
