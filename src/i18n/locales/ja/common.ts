@@ -120,4 +120,6 @@ export const common = {
     failed_esg:
       "ESG 記録のエクスポートに失敗しました。時間をおいてもう一度お試しください。",
   },
+  qr_code: "QRコード",
+  done: "完了",
 };

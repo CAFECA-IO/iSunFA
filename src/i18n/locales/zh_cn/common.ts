@@ -114,4 +114,6 @@ export const common = {
     failed_voucher: "导出凭证失败，请稍后再试。",
     failed_esg: "导出 ESG 记录失败，请稍后再试。",
   },
+  qr_code: "二维码",
+  done: "完成",
 };

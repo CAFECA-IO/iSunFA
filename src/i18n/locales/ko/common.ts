@@ -118,4 +118,6 @@ export const common = {
     failed_voucher: "전표 내보내기에 실패했습니다. 잠시 후 다시 시도해 주세요.",
     failed_esg: "ESG 기록 내보내기에 실패했습니다. 잠시 후 다시 시도해 주세요.",
   },
+  qr_code: "QR 코드",
+  done: "완료",
 };
