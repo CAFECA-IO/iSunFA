@@ -114,4 +114,6 @@ export const common = {
     failed_voucher: "匯出傳票失敗，請稍後再試。",
     failed_esg: "匯出 ESG 紀錄失敗，請稍後再試。",
   },
+  qr_code: "QR Code",
+  done: "完成",
 };

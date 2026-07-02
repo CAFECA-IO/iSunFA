@@ -117,4 +117,6 @@ export const common = {
     failed_voucher: "Failed to export vouchers. Please try again later.",
     failed_esg: "Failed to export ESG records. Please try again later.",
   },
+  qr_code: "QR Code",
+  done: "Done",
 };
