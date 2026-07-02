@@ -9,15 +9,25 @@ import {
 } from "@/interfaces/business_monitor";
 import { COMPANY_ALIASES } from "@/constants/company";
 
+// Info: (20260702 - Julian) 查詢關鍵字
+export const QUERY_KEYWORDS: Record<string, string[]> = {
+  永續報告書: ["ESG", "永續", "CSR", "碳排放", "節能減碳", "綠色轉型", "環境"],
+  財務報告: ["年報", "財報", "annual report", "報表", "財務"],
+};
+
+// Info: (20260701 - Julian) Ollama 相關參數
 const OLLAMA_HOST = "http://localhost:11434";
 const EMBED_MODEL = "nomic-embed-text";
 const LLM_MODEL = "gemma4:e4b";
+
+const LANCE_DB_CHAT_LIMIT = 3;
 
 interface IChatResponse {
   reports: IReport[];
   total: number;
   totalPages: number;
   aiResponse: IAIResponse;
+  from: "service" | "LLM";
 }
 
 class BusinessMonitorService {
@@ -31,74 +41,11 @@ class BusinessMonitorService {
    * @returns AI 回答
    */
   async chat(question: string): Promise<IChatResponse> {
-    // Info: (20260630 - Julian) 使用 AI 諮詢功能前，先偵測公司名稱
-    const companyNames = await this.detectCompanies(question);
-    console.log(`🤖 [AI Chat] 提問：「${question}」`);
-    console.log(`🤖 [AI Chat] 步驟 1：偵測出的公司名稱：`, companyNames);
-
-    // Info: (20260701 - Julian) 將用戶問題轉換為向量
-    const queryVector = await this.getQueryEmbedding(question);
-
-    // Info: (20260701 - Julian) 到 LanceDB 進行相似度檢索
-    const table = await lanceDBService.getTable();
-    const DISTANCE_THRESHOLD = 350; // Info: (20260701 - Julian) 距離閾值：越小越相似
-    const matchedDocs: ILanceDBRow[] = [];
-
-    if (companyNames.length > 0) {
-      // Info: (20260701 - Julian) 針對每家公司單獨檢索，確保都有結果
-      const companyDocsList: ILanceDBRow[][] = [];
-      const limitPerCompany = 3;
-
-      for (const company of companyNames) {
-        const safeCompany = company.replace(/'/g, "''");
-        const docs = (await table
-          .search(new Float32Array(queryVector))
-          .where(`companyName LIKE '%${safeCompany}%'`)
-          .limit(limitPerCompany)
-          .toArray()) as unknown as ILanceDBRow[];
-
-        console.log(
-          `🔍 [AI Chat] 針對 [${company}] 檢索到 ${docs.length} 筆資料`,
-        );
-
-        // Info: (20260701 - Julian) 過濾距離閾值
-        const filteredDocs = docs.filter(
-          (doc) =>
-            doc._distance !== undefined && doc._distance < DISTANCE_THRESHOLD,
-        );
-        if (filteredDocs.length > 0) {
-          companyDocsList.push(filteredDocs);
-        }
-      }
-
-      // Info: (20260701 - Julian) 交錯合併 (Interleave) 檢索結果
-      let hasMore = true;
-      let index = 0;
-      while (hasMore) {
-        hasMore = false;
-        for (const list of companyDocsList) {
-          if (index < list.length) {
-            matchedDocs.push(list[index]);
-            hasMore = true;
-          }
-        }
-        index++;
-      }
-    } else {
-      // Info: (20260701 - Julian) 退階：無指定公司，進行純向量檢索
-      const rawDocs = (await table
-        .search(new Float32Array(queryVector))
-        .limit(6)
-        .toArray()) as unknown as ILanceDBRow[];
-      const filtered = rawDocs.filter(
-        (doc) =>
-          doc._distance !== undefined && doc._distance < DISTANCE_THRESHOLD,
-      );
-      matchedDocs.push(...filtered);
-    }
+    // Info: (20260702 - Julian) 步驟 1：檢索背景知識
+    const { matchedReports, context } = await this.searchContext(question);
 
     // Info: (20260701 - Julian) 處理搜尋結果為空的情況
-    if (matchedDocs.length === 0) {
+    if (matchedReports.length === 0) {
       return {
         reports: [],
         total: 0,
@@ -107,8 +54,90 @@ class BusinessMonitorService {
           answer: "抱歉，根據目前的報告資料，無法找到足夠相關的數據。",
           sourceReportIds: [],
         },
+        from: "service",
       };
     }
+
+    // Info: (20260702 - Julian) 步驟 2：呼叫 LLM 生成回答
+    const answer = await this.generateAnswer(question, context);
+
+    return {
+      reports: matchedReports,
+      total: matchedReports.length,
+      totalPages: 1,
+      aiResponse: {
+        answer: answer,
+        sourceReportIds: matchedReports.map((r) => r.id),
+      },
+      from: "LLM",
+    };
+  }
+
+  /**
+   * Info: (20260702 - Julian) 檢索背景知識 (RAG Retrieval)
+   * @param question 查詢文字
+   * @returns 匹配的報告與格式化後的 Context
+   */
+  async searchContext(
+    question: string,
+  ): Promise<{ matchedReports: IReport[]; context: string }> {
+    // Info: (20260630 - Julian) 使用 AI 諮詢功能前，先偵測公司名稱
+    const companyNames = await this.detectCompanies(question);
+    console.log(`🤖 [AI Chat] 提問：「${question}」`);
+    console.log(`🤖 [AI Chat] 步驟 1：偵測出的公司名稱：`, companyNames);
+
+    // Info: (20260702 - Julian) 偵測問題類型 (永續 vs 財務)
+    const reportTypes = await this.detectReportType(question);
+    console.log(`🤖 [AI Chat] 步驟 2：偵測出的報告類型：`, reportTypes);
+
+    // Info: (20260702 - Julian) 偵測年份
+    const years = this.detectYears(question);
+    console.log(`🤖 [AI Chat] 步驟 3：偵測出的年份：`, years);
+
+    // Info: (20260701 - Julian) 將用戶問題轉換為向量
+    const queryVector = await this.getQueryEmbedding(question);
+
+    // Info: (20260701 - Julian) 到 LanceDB 進行相似度檢索
+    const table = await lanceDBService.getTable();
+    let matchedDocs: ILanceDBRow[] = [];
+
+    // Info: (20260702 - Julian) 建立動態過濾條件
+    const whereClauses: string[] = [];
+    if (companyNames.length > 0) {
+      whereClauses.push(
+        `(${companyNames.map((c) => `companyName LIKE '%${c.replace(/'/g, "''")}%'`).join(" OR ")})`,
+      );
+    }
+    if (reportTypes.length > 0) {
+      whereClauses.push(
+        `(${reportTypes.map((t) => `title LIKE '%${t.replace(/'/g, "''")}%'`).join(" OR ")})`,
+      );
+    }
+    if (years.length > 0) {
+      whereClauses.push(
+        `(${years.map((y) => `year = '${y.replace(/'/g, "''")}'`).join(" OR ")})`,
+      );
+    }
+    const combinedWhere = whereClauses.join(" AND ");
+
+    if (combinedWhere) {
+      console.log(`🔍 [AI Chat] 使用過濾條件: ${combinedWhere}`);
+
+      // Info: (20260701 - Julian) 執行向量檢索
+      matchedDocs = (await table
+        .vectorSearch(new Float32Array(queryVector))
+        .where(combinedWhere)
+        .limit(LANCE_DB_CHAT_LIMIT)
+        .toArray()) as unknown as ILanceDBRow[];
+    } else {
+      // Info: (20260701 - Julian) 退階：無指定公司與類型
+      matchedDocs = (await table
+        .vectorSearch(new Float32Array(queryVector))
+        .limit(LANCE_DB_CHAT_LIMIT)
+        .toArray()) as unknown as ILanceDBRow[];
+    }
+
+    console.log(`✅ [AI Chat] 最終篩選出 ${matchedDocs.length} 筆資料`);
 
     // Info: (20260701 - Julian) 在呼叫 LLM 之前，先取得關聯的 PostgreSQL Report 記錄，以便注入 metadata 作為 Context
     const matchedReports: IReport[] = [];
@@ -119,19 +148,29 @@ class BusinessMonitorService {
       if (!reportIdVal) continue;
 
       let report: IReport | null = null;
-      if (/^\d+$/.test(reportIdVal)) {
+      if (/^\d+$/.test(String(reportIdVal))) {
+        const numericId = parseInt(String(reportIdVal), 10);
+        console.log(`DEBUG: 嘗試使用 ID 查詢: ${numericId}`);
         report = await reportRepo.findUnique({
-          where: { id: parseInt(reportIdVal, 10) },
+          where: { id: numericId },
         });
       } else {
+        console.log(`DEBUG: 嘗試使用 pdfPath 查詢: ${reportIdVal}`);
         report = await reportRepo.findUnique({
-          where: { pdfPath: reportIdVal },
+          where: { pdfPath: String(reportIdVal) },
         });
       }
 
-      if (report && !seenIds.has(report.id)) {
-        seenIds.add(report.id);
-        matchedReports.push(report);
+      if (report) {
+        console.log(
+          `DEBUG: 找到 Report: ${report.companyName} (ID: ${report.id})`,
+        );
+        if (!seenIds.has(report.id)) {
+          seenIds.add(report.id);
+          matchedReports.push(report);
+        }
+      } else {
+        console.log(`DEBUG: 找不到 Report，ID/Path: ${reportIdVal}`);
       }
     }
 
@@ -160,11 +199,21 @@ class BusinessMonitorService {
       .join("\n\n=== 報告書內文段落 ===\n\n")
       .slice(0, 3500);
 
+    return { matchedReports, context };
+  }
+
+  /**
+   * Info: (20260702 - Julian) 呼叫 LLM 生成回答 (RAG Generation)
+   * @param question 查詢文字
+   * @param context 檢索出的背景知識
+   * @returns AI 回答
+   */
+  async generateAnswer(question: string, context: string): Promise<string> {
     // Info: (20260701 - Julian) 撰寫 RAG Prompt
     const systemPrompt = `你是一個專業的企業報告分析師。請嚴格根據下方提供的【參考資料】來回答使用者的【問題】。
 規則：
 1. 只能根據【參考資料】內的數據與事實回答，切勿憑空捏造或憑空猜測。
-2. 如果【參考資料】中找不到答案，請直接回答：「抱歉，根據目前的報告資料，無法找到相關數據。」，不要嘗試瞎編。
+2. 如果【參考資料】中找不到精確答案，請先說明您已查閱哪些報告書（例如：『我已為您查閱台灣水泥股份有限公司的 2024 年永續報告書，但參考資料中未提及具體資本額數字...』），並提供參考資料中與該主題最相關的內容，切勿憑空捏造。
 3. 如果資料包含表格，請精準解讀表格中的對應欄位。
 4. 不需要開場白（例：根據您提供的【參考資料】...），直接回答問題即可。
 
@@ -183,17 +232,10 @@ ${question}`;
         stream: false,
       }),
     });
-    const llmData = await this.responseToJSON(llmResponse);
-
-    return {
-      reports: matchedReports,
-      total: matchedReports.length,
-      totalPages: 1,
-      aiResponse: {
-        answer: llmData.response,
-        sourceReportIds: matchedReports.map((r) => r.id),
-      },
-    };
+    const llmData = await this.responseToJSON<{ response: string }>(
+      llmResponse,
+    );
+    return llmData.response;
   }
 
   // =========================================================================
@@ -558,7 +600,7 @@ ${query}
           stream: false,
         }),
       });
-      const data = await this.responseToJSON(response);
+      const data = await this.responseToJSON<{ response: string }>(response);
       const rawResponse = data.response;
       const match = rawResponse.match(/\{.*?\}/s);
       const jsonStr = match ? match[0] : rawResponse;
@@ -568,6 +610,38 @@ ${query}
       console.error("❌ 實體擷取或解析失敗:", error);
       return [];
     }
+  }
+
+  /**
+   * Info: (20260701 - Julian) 偵測問題傾向
+   * @param question 問題
+   * @returns 問題類型["永續報告書" | "財務報告"]
+   */
+  private async detectReportType(question: string): Promise<string[]> {
+    const detected: string[] = [];
+    const lowerQuestion = question.toLowerCase();
+
+    for (const [type, keywords] of Object.entries(QUERY_KEYWORDS)) {
+      if (keywords.some((k) => lowerQuestion.includes(k.toLowerCase()))) {
+        detected.push(type);
+      }
+    }
+
+    return detected;
+  }
+
+  /**
+   * Info: (20260702 - Julian) 偵測年份：抓取 19xx、20xx 四位數
+   * @param question 問題
+   * @returns 年份
+   */
+  private detectYears(question: string): string[] {
+    const lowerQuestion = question.toLowerCase();
+    const match = lowerQuestion.match(/\b(19\d{2}|20\d{2})\b/g);
+    if (match) {
+      return match;
+    }
+    return [];
   }
 
   /**
@@ -590,9 +664,11 @@ ${query}
    * @param response Response 物件
    * @returns JSON
    */
-  private async responseToJSON(response: Response) {
+  private async responseToJSON<T = Record<string, unknown>>(
+    response: Response,
+  ): Promise<T> {
     const text = await response.text();
-    return JSON.parse(text);
+    return JSON.parse(text) as T;
   }
 }
 
