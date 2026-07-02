@@ -51,8 +51,8 @@ export default function SolutionsPricingSection({
   return (
     <div className="mx-auto max-w-7xl px-6 pt-10 pb-24 lg:px-8">
       <div className="mb-10 text-center">
-        <span className="mb-4 inline-block rounded-full bg-teal-100 px-4 py-1 text-sm font-semibold tracking-wider text-teal-600 uppercase">
-          <span className="mr-2 inline-block h-2 w-2 rounded-full bg-teal-500 align-middle"></span>
+        <span className="mb-4 inline-block rounded-full bg-orange-100 px-4 py-1 text-sm font-semibold tracking-wider text-orange-600 uppercase">
+          <span className="mr-2 inline-block h-2 w-2 rounded-full bg-orange-500 align-middle"></span>
           {t("pricing.solutions.tag")}
         </span>
         <h2 className="mb-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
@@ -68,7 +68,7 @@ export default function SolutionsPricingSection({
             onClick={() => setActiveTab("iso14064")}
             className={`${
               activeTab === "iso14064"
-                ? "bg-white text-teal-600 shadow-sm"
+                ? "bg-white text-orange-600 shadow-sm"
                 : "text-gray-600 hover:bg-gray-50"
             } rounded-md px-6 py-2.5 text-sm font-semibold transition-all duration-200 focus:outline-none`}
           >
@@ -88,7 +88,7 @@ export default function SolutionsPricingSection({
             onClick={() => setActiveTab("carbon_label")}
             className={`${
               activeTab === "carbon_label"
-                ? "bg-white text-purple-600 shadow-sm"
+                ? "bg-white text-orange-600 shadow-sm"
                 : "text-gray-600 hover:bg-gray-50"
             } rounded-md px-6 py-2.5 text-sm font-semibold transition-all duration-200 focus:outline-none`}
           >
@@ -103,7 +103,7 @@ export default function SolutionsPricingSection({
         <div className="flex flex-col justify-between rounded-3xl bg-white p-8 shadow-xl ring-1 ring-gray-200 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
           <div>
             <div className="mb-4 flex items-center justify-between">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
                 <Building className="h-5 w-5" />
               </div>
               <span className="rounded-full bg-gray-100 px-3 py-1 text-xs leading-5 font-semibold text-gray-600">
@@ -154,7 +154,7 @@ export default function SolutionsPricingSection({
             <ul className="mt-8 space-y-4 text-sm leading-6 text-gray-600">
               {currentSolution.features.map((feature, idx) => (
                 <li key={idx} className="flex gap-x-3">
-                  <CheckCircle2 className="h-6 w-5 flex-none text-teal-500" />
+                  <CheckCircle2 className="h-6 w-5 flex-none text-orange-600" />
                   {feature}
                 </li>
               ))}
@@ -168,7 +168,7 @@ export default function SolutionsPricingSection({
                 SOLUTION_PLAN_PRICE.BASIC,
               )
             }
-            className="mt-8 block w-full rounded-xl bg-teal-50 px-3 py-3 text-center text-sm font-semibold text-teal-600 transition-colors hover:bg-teal-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+            className="mt-8 block w-full rounded-xl bg-orange-50 px-3 py-3 text-center text-sm font-semibold text-orange-600 transition-colors hover:bg-orange-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
           >
             {t("pricing.select_plan")}
           </button>
@@ -229,7 +229,7 @@ export default function SolutionsPricingSection({
             <ul className="mt-8 space-y-4 text-sm leading-6 text-gray-600">
               {currentSolution.features.map((feature, idx) => (
                 <li key={idx} className="flex gap-x-3">
-                  <CheckCircle2 className="h-6 w-5 flex-none text-orange-500" />
+                  <CheckCircle2 className="h-6 w-5 flex-none text-orange-600" />
                   {feature}
                 </li>
               ))}
@@ -253,7 +253,7 @@ export default function SolutionsPricingSection({
         <div className="flex flex-col justify-between rounded-3xl bg-white p-8 shadow-xl ring-1 ring-gray-200 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
           <div>
             <div className="mb-4 flex items-center justify-between">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
                 <BuildingIcon className="h-5 w-5" />
               </div>
               <span className="rounded-full bg-gray-100 px-3 py-1 text-xs leading-5 font-semibold text-gray-600">
@@ -304,7 +304,7 @@ export default function SolutionsPricingSection({
             <ul className="mt-8 space-y-4 text-sm leading-6 text-gray-600">
               {currentSolution.features.map((feature, idx) => (
                 <li key={idx} className="flex gap-x-3">
-                  <CheckCircle2 className="h-6 w-5 flex-none text-purple-500" />
+                  <CheckCircle2 className="h-6 w-5 flex-none text-orange-600" />
                   {feature}
                 </li>
               ))}
@@ -318,7 +318,7 @@ export default function SolutionsPricingSection({
                 SOLUTION_PLAN_PRICE.ENTERPRISE,
               )
             }
-            className="mt-8 block w-full rounded-xl bg-purple-50 px-3 py-3 text-center text-sm font-semibold text-purple-600 transition-colors hover:bg-purple-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600"
+            className="mt-8 block w-full rounded-xl bg-orange-50 px-3 py-3 text-center text-sm font-semibold text-orange-600 transition-colors hover:bg-orange-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
           >
             {t("pricing.select_plan")}
           </button>
