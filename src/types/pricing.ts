@@ -6,6 +6,7 @@ export interface IBusinessModelSectionProps {
     title: string,
     amount: number,
     billingInterval?: "month" | "year",
+    details?: string[],
   ) => void;
 }
 
@@ -15,6 +16,7 @@ export interface ISolutionsPricingSectionProps {
     title: string,
     amount: number,
     billingInterval?: "month" | "year",
+    details?: string[],
   ) => void;
 }
 

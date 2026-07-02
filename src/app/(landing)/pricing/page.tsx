@@ -41,7 +41,7 @@ export default function PricingPage() {
         ? "credits"
         : tabParam === "solutions"
           ? "solutions"
-          : "buyout";
+          : "business_model";
   const [billingInterval, setBillingInterval] = useState<"month" | "year">(
     "month",
   );
@@ -302,7 +302,7 @@ export default function PricingPage() {
           <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">
             {activeTab === "subscription"
               ? t("pricing.title")
-              : activeTab === "buyout"
+              : activeTab === "business_model"
                 ? t("pricing.ai_adoption.title")
                 : activeTab === "solutions"
                   ? t("pricing.solutions.title")
@@ -311,7 +311,7 @@ export default function PricingPage() {
           <p className="mt-4 text-lg leading-8 text-gray-600">
             {activeTab === "subscription"
               ? t("pricing.subtitle")
-              : activeTab === "buyout"
+              : activeTab === "business_model"
                 ? t("pricing.ai_adoption.description")
                 : activeTab === "solutions"
                   ? t("pricing.solutions.subtitle")
@@ -645,7 +645,7 @@ export default function PricingPage() {
           </>
         )}
 
-        {activeTab === "buyout" && (
+        {activeTab === "business_model" && (
           <div className="mx-auto max-w-7xl px-6 pt-10 pb-24 lg:px-8">
             {/* Info: (20260115 - Luphia) Enterprise AI Adoption Plan Section */}
             <div className="rounded-3xl bg-gradient-to-b from-gray-900 to-gray-800 p-1 shadow-2xl ring-1 shadow-orange-900/20 ring-white/10">
