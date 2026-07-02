@@ -4,11 +4,14 @@ import { CheckCircle2, Building, Building2, BuildingIcon } from "lucide-react";
 import { SOLUTION_PLAN_PRICE } from "@/constants/price";
 import { ISolutionsPricingSectionProps, SolutionTab } from "@/types/pricing";
 
+type SizeTier = "basic" | "pro" | "enterprise";
+
 export default function SolutionsPricingSection({
   onSelect,
 }: ISolutionsPricingSectionProps) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<SolutionTab>("iso14064");
+  const [selectedSize, setSelectedSize] = useState<SizeTier>("pro");
 
   const solutions = {
     iso14064: {
@@ -46,279 +49,246 @@ export default function SolutionsPricingSection({
     },
   };
 
+  const sizes = [
+    {
+      id: "basic" as SizeTier,
+      icon: Building,
+      badge: t("pricing.solutions.tier1.badge"),
+      title: t("pricing.solutions.tier1.title"),
+      desc: t("pricing.solutions.tier1.desc", {
+        type: solutions[activeTab].type,
+      }),
+      price: SOLUTION_PLAN_PRICE.BASIC,
+      area: t("pricing.solutions.tier1.area"),
+      revenue: t("pricing.solutions.tier1.revenue"),
+    },
+    {
+      id: "pro" as SizeTier,
+      icon: Building2,
+      badge: t("pricing.solutions.tier2.badge"),
+      title: t("pricing.solutions.tier2.title"),
+      desc: t("pricing.solutions.tier2.desc", {
+        type: solutions[activeTab].type,
+      }),
+      price: SOLUTION_PLAN_PRICE.PRO,
+      area: t("pricing.solutions.tier2.area"),
+      revenue: t("pricing.solutions.tier2.revenue"),
+    },
+    {
+      id: "enterprise" as SizeTier,
+      icon: BuildingIcon,
+      badge: t("pricing.solutions.tier3.badge"),
+      title: t("pricing.solutions.tier3.title"),
+      desc: t("pricing.solutions.tier3.desc", {
+        type: solutions[activeTab].type,
+      }),
+      price: SOLUTION_PLAN_PRICE.ENTERPRISE,
+      area: t("pricing.solutions.tier3.area"),
+      revenue: t("pricing.solutions.tier3.revenue"),
+    },
+  ];
+
   const currentSolution = solutions[activeTab];
+  const currentSizeObj = sizes.find((s) => s.id === selectedSize)!;
+
+  const handleCheckout = () => {
+    // Generate the details array for the payment modal
+    const details = [currentSolution.title, currentSizeObj.title];
+    onSelect(
+      `${activeTab}_${selectedSize}`,
+      `${currentSolution.title} - ${currentSizeObj.title}`,
+      currentSizeObj.price,
+      undefined,
+      details,
+    );
+  };
 
   return (
-    <div className="mx-auto max-w-7xl px-6 pt-10 pb-24 lg:px-8">
-      <div className="mb-10 text-center">
+    <div className="mx-auto max-w-4xl px-6 pt-10 pb-36 lg:px-8">
+      <div className="mb-12 text-center">
         <span className="mb-4 inline-block rounded-full bg-orange-100 px-4 py-1 text-sm font-semibold tracking-wider text-orange-600 uppercase">
           <span className="mr-2 inline-block h-2 w-2 rounded-full bg-orange-500 align-middle"></span>
           {t("pricing.solutions.tag")}
         </span>
         <h2 className="mb-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-          {currentSolution.title}
+          永續解決方案
         </h2>
-        <p className="text-lg text-gray-600">{currentSolution.desc}</p>
+        <p className="text-lg text-gray-600">
+          選擇最適合您企業規模的碳盤查服務
+        </p>
       </div>
 
-      {/* Info: (20260702 - Tzuhan) Tabs */}
-      <div className="mb-12 flex justify-center">
-        <div className="flex flex-wrap justify-center gap-1 rounded-lg bg-gray-100 p-1 sm:flex-nowrap">
-          <button
-            onClick={() => setActiveTab("iso14064")}
-            className={`${
-              activeTab === "iso14064"
-                ? "bg-white text-orange-600 shadow-sm"
-                : "text-gray-600 hover:bg-gray-50"
-            } rounded-md px-6 py-2.5 text-sm font-semibold transition-all duration-200 focus:outline-none`}
-          >
-            {t("pricing.solutions.iso14064.tab")}
-          </button>
-          <button
-            onClick={() => setActiveTab("iso14067")}
-            className={`${
-              activeTab === "iso14067"
-                ? "bg-white text-orange-600 shadow-sm"
-                : "text-gray-600 hover:bg-gray-50"
-            } rounded-md px-6 py-2.5 text-sm font-semibold transition-all duration-200 focus:outline-none`}
-          >
-            {t("pricing.solutions.iso14067.tab")}
-          </button>
-          <button
-            onClick={() => setActiveTab("carbon_label")}
-            className={`${
-              activeTab === "carbon_label"
-                ? "bg-white text-orange-600 shadow-sm"
-                : "text-gray-600 hover:bg-gray-50"
-            } rounded-md px-6 py-2.5 text-sm font-semibold transition-all duration-200 focus:outline-none`}
-          >
-            {t("pricing.solutions.carbon_label.tab")}
-          </button>
-        </div>
+      <div className="space-y-16">
+        {/* Step 1: Solution Type */}
+        <section>
+          <div className="mb-6 flex items-baseline justify-between">
+            <h3 className="text-xl font-bold text-gray-900">1. 選擇服務類型</h3>
+          </div>
+
+          <div className="mb-8 flex justify-center">
+            <div className="flex w-full flex-col gap-2 rounded-[1rem] bg-gray-100 p-1.5 sm:flex-row">
+              <button
+                onClick={() => setActiveTab("iso14064")}
+                className={`flex-1 rounded-xl py-3.5 text-center text-[15px] font-semibold transition-all duration-300 focus:outline-none ${
+                  activeTab === "iso14064"
+                    ? "bg-white text-orange-600 shadow-[0_2px_10px_rgba(0,0,0,0.06)]"
+                    : "text-gray-500 hover:text-gray-900"
+                }`}
+              >
+                {t("pricing.solutions.iso14064.tab")}
+              </button>
+              <button
+                onClick={() => setActiveTab("iso14067")}
+                className={`flex-1 rounded-xl py-3.5 text-center text-[15px] font-semibold transition-all duration-300 focus:outline-none ${
+                  activeTab === "iso14067"
+                    ? "bg-white text-orange-600 shadow-[0_2px_10px_rgba(0,0,0,0.06)]"
+                    : "text-gray-500 hover:text-gray-900"
+                }`}
+              >
+                {t("pricing.solutions.iso14067.tab")}
+              </button>
+              <button
+                onClick={() => setActiveTab("carbon_label")}
+                className={`flex-1 rounded-xl py-3.5 text-center text-[15px] font-semibold transition-all duration-300 focus:outline-none ${
+                  activeTab === "carbon_label"
+                    ? "bg-white text-orange-600 shadow-[0_2px_10px_rgba(0,0,0,0.06)]"
+                    : "text-gray-500 hover:text-gray-900"
+                }`}
+              >
+                {t("pricing.solutions.carbon_label.tab")}
+              </button>
+            </div>
+          </div>
+
+          <div className="rounded-3xl bg-white p-8 shadow-sm ring-1 ring-gray-200">
+            <h4 className="text-2xl font-bold text-gray-900">
+              {currentSolution.title}
+            </h4>
+            <p className="mt-3 text-[15px] leading-relaxed text-gray-600">
+              {currentSolution.desc}
+            </p>
+            <div className="mt-6 border-t border-gray-100 pt-6">
+              <h5 className="mb-4 text-sm font-semibold text-gray-900">
+                服務包含：
+              </h5>
+              <ul className="grid grid-cols-1 gap-y-3 sm:grid-cols-2 sm:gap-x-8">
+                {currentSolution.features.map((feature, idx) => (
+                  <li
+                    key={idx}
+                    className="flex items-start gap-x-3 text-[15px] text-gray-600"
+                  >
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 flex-none text-orange-500" />
+                    <span className="leading-snug">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* Step 2: Enterprise Size */}
+        <section>
+          <div className="mb-6 flex items-baseline justify-between">
+            <h3 className="text-xl font-bold text-gray-900">2. 選擇企業規模</h3>
+          </div>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+            {sizes.map((size) => {
+              const isSelected = selectedSize === size.id;
+              const Icon = size.icon;
+
+              return (
+                <button
+                  key={size.id}
+                  onClick={() => setSelectedSize(size.id)}
+                  className={`group relative flex flex-col items-start rounded-3xl p-6 text-left transition-all duration-300 focus:outline-none ${
+                    isSelected
+                      ? "bg-orange-50/50 shadow-lg ring-2 ring-orange-500"
+                      : "bg-white shadow-sm ring-1 ring-gray-200 hover:bg-gray-50 hover:shadow-md"
+                  }`}
+                >
+                  {size.id === "pro" && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-orange-400 to-orange-500 px-3 py-1 text-xs font-bold tracking-wide text-white shadow-sm">
+                      最受歡迎
+                    </div>
+                  )}
+                  <div
+                    className={`mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-colors ${
+                      isSelected
+                        ? "bg-orange-100 text-orange-600"
+                        : "bg-gray-100 text-gray-500 group-hover:bg-gray-200 group-hover:text-gray-700"
+                    }`}
+                  >
+                    <Icon className="h-7 w-7" />
+                  </div>
+                  <h4
+                    className={`mb-1.5 text-xl font-bold transition-colors ${
+                      isSelected ? "text-orange-900" : "text-gray-900"
+                    }`}
+                  >
+                    {size.title}
+                  </h4>
+                  <span className="mb-6 inline-block rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
+                    {size.badge}
+                  </span>
+
+                  <div className="mt-auto mb-6 w-full border-t border-gray-100 pt-5">
+                    <p className="mb-4 text-xs font-medium text-gray-500">
+                      適用條件：
+                    </p>
+                    <div className="space-y-2.5 text-[13px] font-medium text-gray-500">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">
+                          {t("pricing.solutions.criteria_area")}
+                        </span>
+                        <span className="text-gray-900">{size.area}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">
+                          {t("pricing.solutions.criteria_revenue")}
+                        </span>
+                        <span className="text-gray-900">{size.revenue}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="w-full rounded-2xl bg-white/50 p-3 ring-1 ring-black/5 backdrop-blur-sm">
+                    <div className="flex items-baseline justify-center gap-x-1">
+                      <span className="text-[13px] font-semibold text-gray-500">
+                        NT$
+                      </span>
+                      <span
+                        className={`text-2xl font-bold tracking-tight transition-colors ${
+                          isSelected ? "text-gray-900" : "text-gray-900"
+                        }`}
+                      >
+                        {size.price.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </section>
       </div>
 
-      {/* Info: (20260702 - Tzuhan) Pricing Cards */}
-      <div className="mx-auto grid max-w-md grid-cols-1 gap-8 lg:max-w-none lg:grid-cols-3">
-        {/* Info: (20260702 - Tzuhan) Tier 1 */}
-        <div className="flex flex-col justify-between rounded-3xl bg-white p-8 shadow-xl ring-1 ring-gray-200 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
-          <div>
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
-                <Building className="h-5 w-5" />
-              </div>
-              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs leading-5 font-semibold text-gray-600">
-                {t("pricing.solutions.tier1.badge")}
+      {/* Sticky Bottom Summary Bar */}
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200/80 bg-white/90 p-4 shadow-[0_-8px_30px_-15px_rgba(0,0,0,0.1)] backdrop-blur-xl sm:p-5">
+        <div className="mx-auto flex max-w-4xl items-center justify-between">
+          <div className="flex flex-col">
+            <span className="text-[13px] font-medium text-gray-500">
+              總計費用
+            </span>
+            <div className="flex items-baseline gap-x-1.5">
+              <span className="text-sm font-bold text-gray-900">NT$</span>
+              <span className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+                {currentSizeObj.price.toLocaleString()}
               </span>
             </div>
-            <h3 className="mb-2 text-2xl font-bold text-gray-900">
-              {t("pricing.solutions.tier1.title")}
-            </h3>
-            <p className="mb-6 text-sm leading-6 text-gray-500">
-              {t("pricing.solutions.tier1.desc", {
-                type: currentSolution.type,
-              })}
-            </p>
-            <div className="mt-4 flex items-baseline gap-x-2">
-              <span className="text-sm font-semibold text-gray-500">NT$</span>
-              <span className="text-4xl font-bold tracking-tight text-gray-900">
-                94,500
-              </span>
-              <span className="text-base text-gray-500">
-                {t("pricing.solutions.per_project")}
-              </span>
-            </div>
-
-            <div className="mt-8 rounded-2xl bg-gray-50 p-4 ring-1 ring-gray-100">
-              <p className="mb-3 flex items-center gap-1 text-xs font-semibold text-gray-500">
-                <span className="inline-block h-3 w-3 rounded-full border border-gray-400 text-center text-[8px] leading-[10px]">
-                  !
-                </span>
-                {t("pricing.solutions.criteria_title")}
-              </p>
-              <div className="grid grid-cols-2 gap-2 text-xs font-medium">
-                <div className="text-gray-500">
-                  {t("pricing.solutions.criteria_area")}
-                </div>
-                <div className="text-right text-gray-900">
-                  {t("pricing.solutions.tier1.area")}
-                </div>
-                <div className="text-gray-500">
-                  {t("pricing.solutions.criteria_revenue")}
-                </div>
-                <div className="text-right text-gray-900">
-                  {t("pricing.solutions.tier1.revenue")}
-                </div>
-              </div>
-            </div>
-
-            <ul className="mt-8 space-y-4 text-sm leading-6 text-gray-600">
-              {currentSolution.features.map((feature, idx) => (
-                <li key={idx} className="flex gap-x-3">
-                  <CheckCircle2 className="h-6 w-5 flex-none text-orange-600" />
-                  {feature}
-                </li>
-              ))}
-            </ul>
           </div>
           <button
-            onClick={() =>
-              onSelect(
-                `${activeTab}_basic`,
-                `${currentSolution.title} - 輕量入門級`,
-                SOLUTION_PLAN_PRICE.BASIC,
-              )
-            }
-            className="mt-8 block w-full rounded-xl bg-orange-50 px-3 py-3 text-center text-sm font-semibold text-orange-600 transition-colors hover:bg-orange-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
-          >
-            {t("pricing.select_plan")}
-          </button>
-        </div>
-
-        {/* Info: (20260702 - Tzuhan) Tier 2 */}
-        <div className="relative z-10 flex flex-col justify-between rounded-3xl bg-white p-8 shadow-2xl ring-2 ring-orange-500 transition-all duration-300 hover:scale-[1.02] hover:shadow-orange-500/20">
-          <div className="absolute -top-4 right-0 left-0 mx-auto w-32 rounded-full bg-gradient-to-r from-orange-400 to-orange-500 px-3 py-1 text-center text-xs font-bold text-white shadow-sm">
-            {t("pricing.solutions.tier2.badge")}
-          </div>
-          <div>
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
-                <Building2 className="h-5 w-5" />
-              </div>
-            </div>
-            <h3 className="mb-2 text-2xl font-bold text-gray-900">
-              {t("pricing.solutions.tier2.title")}
-            </h3>
-            <p className="mb-6 text-sm leading-6 text-gray-500">
-              {t("pricing.solutions.tier2.desc", {
-                type: currentSolution.type,
-              })}
-            </p>
-            <div className="mt-4 flex items-baseline gap-x-2">
-              <span className="text-sm font-semibold text-gray-500">NT$</span>
-              <span className="text-4xl font-bold tracking-tight text-gray-900">
-                283,500
-              </span>
-              <span className="text-base text-gray-500">
-                {t("pricing.solutions.per_project")}
-              </span>
-            </div>
-
-            <div className="mt-8 rounded-2xl bg-gray-50 p-4 ring-1 ring-gray-100">
-              <p className="mb-3 flex items-center gap-1 text-xs font-semibold text-gray-500">
-                <span className="inline-block h-3 w-3 rounded-full border border-gray-400 text-center text-[8px] leading-[10px]">
-                  !
-                </span>
-                {t("pricing.solutions.criteria_title")}
-              </p>
-              <div className="grid grid-cols-2 gap-2 text-xs font-medium">
-                <div className="text-gray-500">
-                  {t("pricing.solutions.criteria_area")}
-                </div>
-                <div className="text-right text-gray-900">
-                  {t("pricing.solutions.tier2.area")}
-                </div>
-                <div className="text-gray-500">
-                  {t("pricing.solutions.criteria_revenue")}
-                </div>
-                <div className="text-right text-gray-900">
-                  {t("pricing.solutions.tier2.revenue")}
-                </div>
-              </div>
-            </div>
-
-            <ul className="mt-8 space-y-4 text-sm leading-6 text-gray-600">
-              {currentSolution.features.map((feature, idx) => (
-                <li key={idx} className="flex gap-x-3">
-                  <CheckCircle2 className="h-6 w-5 flex-none text-orange-600" />
-                  {feature}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <button
-            onClick={() =>
-              onSelect(
-                `${activeTab}_pro`,
-                `${currentSolution.title} - 專業成長級`,
-                SOLUTION_PLAN_PRICE.PRO,
-              )
-            }
-            className="mt-8 block w-full rounded-xl bg-orange-500 px-3 py-3 text-center text-sm font-semibold text-white shadow-sm transition-colors hover:bg-orange-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
-          >
-            {t("pricing.select_plan")}
-          </button>
-        </div>
-
-        {/* Info: (20260702 - Tzuhan) Tier 3 */}
-        <div className="flex flex-col justify-between rounded-3xl bg-white p-8 shadow-xl ring-1 ring-gray-200 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
-          <div>
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
-                <BuildingIcon className="h-5 w-5" />
-              </div>
-              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs leading-5 font-semibold text-gray-600">
-                {t("pricing.solutions.tier3.badge")}
-              </span>
-            </div>
-            <h3 className="mb-2 text-2xl font-bold text-gray-900">
-              {t("pricing.solutions.tier3.title")}
-            </h3>
-            <p className="mb-6 text-sm leading-6 text-gray-500">
-              {t("pricing.solutions.tier3.desc", {
-                type: currentSolution.type,
-              })}
-            </p>
-            <div className="mt-4 flex items-baseline gap-x-2">
-              <span className="text-sm font-semibold text-gray-500">NT$</span>
-              <span className="text-4xl font-bold tracking-tight text-gray-900">
-                567,000
-              </span>
-              <span className="text-base text-gray-500">
-                {t("pricing.solutions.per_project")}
-              </span>
-            </div>
-
-            <div className="mt-8 rounded-2xl bg-gray-50 p-4 ring-1 ring-gray-100">
-              <p className="mb-3 flex items-center gap-1 text-xs font-semibold text-gray-500">
-                <span className="inline-block h-3 w-3 rounded-full border border-gray-400 text-center text-[8px] leading-[10px]">
-                  !
-                </span>
-                {t("pricing.solutions.criteria_title")}
-              </p>
-              <div className="grid grid-cols-2 gap-2 text-xs font-medium">
-                <div className="text-gray-500">
-                  {t("pricing.solutions.criteria_area")}
-                </div>
-                <div className="text-right text-gray-900">
-                  {t("pricing.solutions.tier3.area")}
-                </div>
-                <div className="text-gray-500">
-                  {t("pricing.solutions.criteria_revenue")}
-                </div>
-                <div className="text-right text-gray-900">
-                  {t("pricing.solutions.tier3.revenue")}
-                </div>
-              </div>
-            </div>
-
-            <ul className="mt-8 space-y-4 text-sm leading-6 text-gray-600">
-              {currentSolution.features.map((feature, idx) => (
-                <li key={idx} className="flex gap-x-3">
-                  <CheckCircle2 className="h-6 w-5 flex-none text-orange-600" />
-                  {feature}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <button
-            onClick={() =>
-              onSelect(
-                `${activeTab}_enterprise`,
-                `${currentSolution.title} - 旗艦企業級`,
-                SOLUTION_PLAN_PRICE.ENTERPRISE,
-              )
-            }
-            className="mt-8 block w-full rounded-xl bg-orange-50 px-3 py-3 text-center text-sm font-semibold text-orange-600 transition-colors hover:bg-orange-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+            onClick={handleCheckout}
+            className="rounded-full bg-orange-600 px-8 py-3.5 text-[15px] font-bold text-white shadow-md transition-all hover:scale-105 hover:bg-orange-500 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 sm:px-12"
           >
             {t("pricing.select_plan")}
           </button>
