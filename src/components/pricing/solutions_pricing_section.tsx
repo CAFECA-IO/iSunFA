@@ -104,7 +104,7 @@ export default function SolutionsPricingSection({
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-6 pt-10 pb-36 lg:px-8">
+    <div className="mx-auto max-w-4xl px-6 pt-10 pb-24 lg:px-8">
       <div className="mb-12 text-center">
         <h2 className="mb-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
           {t("pricing.solutions.page_title")}
@@ -268,27 +268,25 @@ export default function SolutionsPricingSection({
         </section>
       </div>
 
-      {/* Sticky Bottom Summary Bar */}
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200/80 bg-white/90 p-4 shadow-[0_-8px_30px_-15px_rgba(0,0,0,0.1)] backdrop-blur-xl sm:p-5">
-        <div className="mx-auto flex max-w-4xl items-center justify-between">
-          <div className="flex flex-col">
-            <span className="text-[13px] font-medium text-gray-500">
-              {t("pricing.solutions.total_cost")}
+      {/* Bottom Summary */}
+      <div className="mt-12 flex flex-col items-center justify-between rounded-3xl bg-gray-50 p-8 ring-1 ring-gray-200 sm:flex-row">
+        <div className="mb-6 text-center sm:mb-0 sm:text-left">
+          <span className="text-sm font-medium text-gray-500">
+            {t("pricing.solutions.total_cost")}
+          </span>
+          <div className="mt-1 flex items-baseline justify-center gap-x-2 sm:justify-start">
+            <span className="text-lg font-bold text-gray-900">NT$</span>
+            <span className="text-4xl font-bold tracking-tight text-gray-900">
+              {currentSizeObj.price.toLocaleString()}
             </span>
-            <div className="flex items-baseline gap-x-1.5">
-              <span className="text-sm font-bold text-gray-900">NT$</span>
-              <span className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
-                {currentSizeObj.price.toLocaleString()}
-              </span>
-            </div>
           </div>
-          <button
-            onClick={handleCheckout}
-            className="rounded-full bg-orange-600 px-8 py-3.5 text-[15px] font-bold text-white shadow-md transition-all hover:scale-105 hover:bg-orange-500 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 sm:px-12"
-          >
-            {t("pricing.select_plan")}
-          </button>
         </div>
+        <button
+          onClick={handleCheckout}
+          className="w-full rounded-xl bg-orange-600 px-8 py-4 text-center text-base font-semibold text-white shadow-md transition-all hover:bg-orange-500 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 sm:w-auto sm:px-12"
+        >
+          {t("pricing.select_plan")}
+        </button>
       </div>
     </div>
   );
