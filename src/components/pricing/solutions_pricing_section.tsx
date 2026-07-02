@@ -93,10 +93,10 @@ export default function SolutionsPricingSection({
 
   const handleCheckout = () => {
     // Generate the details array for the payment modal
-    const details = [currentSolution.title, currentSizeObj.title];
+    const details = [currentSolution.title, currentSizeObj.badge];
     onSelect(
       `${activeTab}_${selectedSize}`,
-      `${currentSolution.title} - ${currentSizeObj.title}`,
+      `${currentSolution.title} - ${currentSizeObj.badge}`,
       currentSizeObj.price,
       undefined,
       details,
