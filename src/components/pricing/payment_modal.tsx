@@ -552,13 +552,13 @@ export default function PaymentModal({
                                     <span className="mb-2 text-sm font-medium text-gray-500">
                                       {t("pricing.credits.payment_modal.selected_modules")}
                                     </span>
-                                    <ul className="space-y-1">
+                                    <ul className="max-h-48 space-y-1 overflow-y-auto pr-2">
                                       {details.map((detail, index) => (
                                         <li
                                           key={index}
-                                          className="flex items-center text-sm font-medium text-gray-700"
+                                          className="flex items-start text-sm font-medium text-gray-700"
                                         >
-                                          <CheckCircle2 className="mr-2 h-4 w-4 text-orange-500" />
+                                          <CheckCircle2 className="mr-2 mt-0.5 h-4 w-4 flex-shrink-0 text-orange-500" />
                                           {detail}
                                         </li>
                                       ))}
