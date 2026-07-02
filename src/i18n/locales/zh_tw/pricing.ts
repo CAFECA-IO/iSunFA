@@ -189,8 +189,9 @@ export const pricing = {
       payment_method: "付款方式",
       use_saved_card: "使用已綁定的信用卡",
       bind_new_card: "綁定新信用卡",
-      agree_tos: "我同意使用條款 (Terms of Service) 與退費政策 (Refund Policy)",
+      agree_tos: "我同意服務條款與退款政策",
       subscription_reset_note: "每個月未使用的 {{count}} 點將會清零，並於次月重新發放",
+      selected_modules: "已選模組",
     },
   },
   business_model: {

@@ -57,6 +57,7 @@ export default function PaymentModal({
   title,
   planId,
   billingInterval,
+  details,
 }: IPaymentModalProps) {
   const { t } = useTranslation();
   const { user, refreshAuth, loading: authLoading } = useAuth();
@@ -549,7 +550,7 @@ export default function PaymentModal({
                                 {details && details.length > 0 && (
                                   <div className="flex flex-col px-2">
                                     <span className="mb-2 text-sm font-medium text-gray-500">
-                                      已選模組
+                                      {t("pricing.credits.payment_modal.selected_modules")}
                                     </span>
                                     <ul className="space-y-1">
                                       {details.map((detail, index) => (

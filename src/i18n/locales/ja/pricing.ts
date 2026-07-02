@@ -196,6 +196,7 @@ export const pricing = {
       bind_new_card: "新しいカードを登録",
       agree_tos: "利用規約と返金ポリシーに同意します",
       subscription_reset_note: "未使用の {{count}} ポイントは毎月クリアされ、翌月に再発行されます。",
+      selected_modules: "選択したモジュール",
     },
   },
   business_model: {

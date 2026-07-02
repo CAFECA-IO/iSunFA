@@ -193,6 +193,7 @@ export const pricing = {
       bind_new_card: "Bind New Card",
       agree_tos: "I agree to the Terms of Service and Refund Policy",
       subscription_reset_note: "매월 사용하지 않은 {{count}} 크레딧은 소멸되며, 다음 달에 다시 지급됩니다.",
+      selected_modules: "선택된 모듈",
     },
   },
   business_model: {
