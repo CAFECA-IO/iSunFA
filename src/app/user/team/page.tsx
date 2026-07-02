@@ -17,6 +17,7 @@ import {
 import { Dialog } from "@headlessui/react";
 import { getLoginOptions, fido2ClientService } from "@/lib/auth/fido2_client";
 import ConfirmModal from "@/components/common/confirm_modal";
+import InviteMemberModal from "@/components/team/invite_member_modal";
 import { IAccountBook } from "@/interfaces/account_book";
 
 interface ITeam {
@@ -59,9 +60,6 @@ export default function TeamManagementPage() {
   const [tempName, setTempName] = useState("");
 
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [inviteAddress, setInviteAddress] = useState("");
-  const [inviteRole, setInviteRole] = useState("VIEWER");
-  const [inviting, setInviting] = useState(false);
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newTeamName, setNewTeamName] = useState("");
@@ -238,43 +236,6 @@ export default function TeamManagementPage() {
       } else showAlert(json.message);
     } catch {
       showAlert(t("teamManagement.alerts.errorUpdate"));
-    }
-  };
-
-  const handleInvite = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!selectedTeamId || !inviteAddress.trim() || !user?.address) return;
-    setInviting(true);
-    try {
-      const { challenge } = await getLoginOptions(user.address);
-      const authentication = await fido2ClientService.startLogin({ challenge });
-      const token = localStorage.getItem("dewt");
-      const res = await fetch(
-        `/api/v1/user/team/${selectedTeamId}/invitations`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            address: inviteAddress.trim(),
-            role: inviteRole,
-            authentication,
-          }),
-        },
-      );
-      const json = await res.json();
-      if (json.success) {
-        setInviteAddress("");
-        setIsInviteModalOpen(false);
-        fetchSentInvitations(selectedTeamId);
-        showAlert(t("teamManagement.alerts.inviteSuccess"));
-      } else showAlert(json.message);
-    } catch {
-      showAlert(t("teamManagement.alerts.errorInvite"));
-    } finally {
-      setInviting(false);
     }
   };
 
@@ -714,106 +675,13 @@ export default function TeamManagementPage() {
         </div>
       </Dialog>
 
-      <Dialog
-        open={isInviteModalOpen}
-        onClose={() => !inviting && setIsInviteModalOpen(false)}
-        className="relative z-50"
-      >
-        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  {t("teamManagement.inviteMember")}
-                </h3>
-                <button
-                  onClick={() => setIsInviteModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-500"
-                >
-                  <X className="size-5 shrink-0" />
-                </button>
-              </div>
-              <form onSubmit={handleInvite} className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="invite-address"
-                    className="mb-1 block text-sm font-medium text-gray-700"
-                  >
-                    {t("teamManagement.web3Address")}
-                  </label>
-                  <input
-                    id="invite-address"
-                    type="text"
-                    required
-                    value={inviteAddress}
-                    onChange={(e) => setInviteAddress(e.target.value)}
-                    disabled={inviting}
-                    aria-label={t("teamManagement.web3Address")}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
-                    placeholder="0x123..."
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="invite-role"
-                    className="mb-1 block text-sm font-medium text-gray-700"
-                  >
-                    {t("teamManagement.role")}
-                  </label>
-                  <select
-                    id="invite-role"
-                    value={inviteRole}
-                    onChange={(e) => setInviteRole(e.target.value)}
-                    disabled={inviting}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
-                  >
-                    <option value="OWNER">
-                      {t("teamManagement.roles.OWNER")}
-                    </option>
-                    <option value="ADMIN">
-                      {t("teamManagement.roles.ADMIN")}
-                    </option>
-                    <option value="EDITOR">
-                      {t("teamManagement.roles.EDITOR")}
-                    </option>
-                    <option value="VIEWER">
-                      {t("teamManagement.roles.VIEWER")}
-                    </option>
-                  </select>
-                </div>
-                <div className="mt-2 flex items-start rounded-lg border border-orange-100 bg-orange-50 p-3">
-                  <div className="text-xs text-orange-800">
-                    <span className="mb-1 block font-semibold">
-                      {t("teamManagement.fido2Requirement")}
-                    </span>
-                    {t("teamManagement.fido2RequirementText")}
-                  </div>
-                </div>
-                <div className="mt-6 flex flex-col-reverse justify-end gap-3 sm:flex-row">
-                  <button
-                    type="button"
-                    onClick={() => setIsInviteModalOpen(false)}
-                    disabled={inviting}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto"
-                  >
-                    {t("teamManagement.cancel")}
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={inviting || !inviteAddress.trim()}
-                    className="inline-flex w-full items-center justify-center rounded-lg bg-orange-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50 sm:w-auto"
-                  >
-                    {inviting
-                      ? t("teamManagement.signing")
-                      : t("teamManagement.inviteViaFido2")}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </Dialog>
+      <InviteMemberModal
+        isOpen={isInviteModalOpen}
+        onClose={() => setIsInviteModalOpen(false)}
+        selectedTeamId={selectedTeamId || ""}
+        onSuccess={() => selectedTeamId && fetchSentInvitations(selectedTeamId)}
+        showAlert={showAlert}
+      />
       <ConfirmModal
         isOpen={confirmModal.isOpen}
         onClose={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
