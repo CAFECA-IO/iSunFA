@@ -39,7 +39,7 @@ export default function InviteMemberModal({
     if (!selectedTeamId || !inviteAddress.trim() || !user?.address) return;
 
     if (!isAddress(inviteAddress.trim())) {
-      showAlert(t("teamManagement.alerts.invalidAddress"));
+      showAlert(t("team_management.alerts.invalid_address"));
       return;
     }
 
@@ -64,14 +64,14 @@ export default function InviteMemberModal({
         setInviteAddress("");
         onClose();
         onSuccess();
-        showAlert(t("teamManagement.alerts.inviteSuccess"));
+        showAlert(t("team_management.alerts.invite_success"));
       }
     } catch (err) {
       console.error(err);
       if (err instanceof ApiError) {
         showAlert(err.message);
       } else {
-        showAlert(t("teamManagement.alerts.errorInvite"));
+        showAlert(t("team_management.alerts.error_invite"));
       }
     } finally {
       setInviting(false);
@@ -89,7 +89,7 @@ export default function InviteMemberModal({
     if (isAddress(address)) {
       setInviteAddress(address);
     } else {
-      showAlert(t("teamManagement.alerts.invalidAddress"));
+      showAlert(t("team_management.alerts.invalid_address"));
     }
   };
 
@@ -105,7 +105,7 @@ export default function InviteMemberModal({
           <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg leading-6 font-medium text-gray-900">
-                {t("teamManagement.inviteMember")}
+                {t("team_management.invite_member")}
               </h3>
               <button
                 onClick={onClose}
@@ -120,7 +120,7 @@ export default function InviteMemberModal({
                   htmlFor="invite-address"
                   className="mb-1 block text-sm font-medium text-gray-700"
                 >
-                  {t("teamManagement.web3Address")}
+                  {t("team_management.web3_address")}
                 </label>
                 <div className="flex w-full items-center gap-2">
                   <input
@@ -130,7 +130,7 @@ export default function InviteMemberModal({
                     value={inviteAddress}
                     onChange={(e) => setInviteAddress(e.target.value)}
                     disabled={inviting}
-                    aria-label={t("teamManagement.web3Address")}
+                    aria-label={t("team_management.web3_address")}
                     className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
                     placeholder="0x123..."
                   />
@@ -139,7 +139,7 @@ export default function InviteMemberModal({
                     onClick={() => setIsScannerOpen(true)}
                     disabled={inviting}
                     className="flex shrink-0 items-center justify-center rounded-lg bg-orange-300 p-2 text-slate-800 transition-colors hover:bg-orange-400 disabled:opacity-50"
-                    title={t("teamManagement.scanQrCode")}
+                    title={t("team_management.scan_qr_code")}
                   >
                     <ScanQrCode size={24} />
                   </button>
@@ -155,7 +155,7 @@ export default function InviteMemberModal({
                   htmlFor="invite-role"
                   className="mb-1 block text-sm font-medium text-gray-700"
                 >
-                  {t("teamManagement.role")}
+                  {t("team_management.role")}
                 </label>
                 <select
                   id="invite-role"
@@ -165,25 +165,25 @@ export default function InviteMemberModal({
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
                 >
                   <option value={TeamRole.OWNER}>
-                    {t("teamManagement.roles.OWNER")}
+                    {t("team_management.roles.OWNER")}
                   </option>
                   <option value={TeamRole.ADMIN}>
-                    {t("teamManagement.roles.ADMIN")}
+                    {t("team_management.roles.ADMIN")}
                   </option>
                   <option value={TeamRole.EDITOR}>
-                    {t("teamManagement.roles.EDITOR")}
+                    {t("team_management.roles.EDITOR")}
                   </option>
                   <option value={TeamRole.VIEWER}>
-                    {t("teamManagement.roles.VIEWER")}
+                    {t("team_management.roles.VIEWER")}
                   </option>
                 </select>
               </div>
               <div className="mt-2 flex items-start rounded-lg border border-orange-100 bg-orange-50 p-3">
                 <div className="text-xs text-orange-800">
                   <span className="mb-1 block font-semibold">
-                    {t("teamManagement.fido2Requirement")}
+                    {t("team_management.fido2_requirement")}
                   </span>
-                  {t("teamManagement.fido2RequirementText")}
+                  {t("team_management.fido2_requirement_text")}
                 </div>
               </div>
               <div className="mt-6 flex flex-col-reverse justify-end gap-3 sm:flex-row">
@@ -193,7 +193,7 @@ export default function InviteMemberModal({
                   disabled={inviting}
                   className="w-full rounded-lg border border-gray-300 px-4 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto"
                 >
-                  {t("teamManagement.cancel")}
+                  {t("team_management.cancel")}
                 </button>
                 <button
                   type="submit"
@@ -201,8 +201,8 @@ export default function InviteMemberModal({
                   className="inline-flex w-full items-center justify-center rounded-lg bg-orange-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50 sm:w-auto"
                 >
                   {inviting
-                    ? t("teamManagement.signing")
-                    : t("teamManagement.inviteViaFido2")}
+                    ? t("team_management.signing")
+                    : t("team_management.invite_via_fido2")}
                 </button>
               </div>
             </form>

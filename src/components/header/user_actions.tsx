@@ -416,7 +416,7 @@ export default function UserActions() {
         isOpen={showQrCodeModal}
         onClose={() => setShowQrCodeModal(false)}
         value={user.address}
-        title={t("teamManagement.web3Address")}
+        title={t("team_management.web3_address")}
       />
     </div>
   );

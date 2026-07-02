@@ -202,10 +202,10 @@ export default function TeamManagementPage() {
         setIsCreateModalOpen(false);
         fetchTeams();
         setSelectedTeamId(json.payload.id);
-        showAlert(t("teamManagement.alerts.createSuccess"));
+        showAlert(t("team_management.alerts.create_success"));
       } else showAlert(json.message);
     } catch {
-      showAlert(t("teamManagement.alerts.errorCreate"));
+      showAlert(t("team_management.alerts.error_create"));
     } finally {
       setCreating(false);
     }
@@ -232,10 +232,10 @@ export default function TeamManagementPage() {
           ),
         );
         setEditingName(false);
-        showAlert(t("teamManagement.alerts.updateSuccess"));
+        showAlert(t("team_management.alerts.update_success"));
       } else showAlert(json.message);
     } catch {
-      showAlert(t("teamManagement.alerts.errorUpdate"));
+      showAlert(t("team_management.alerts.error_update"));
     }
   };
 
@@ -261,10 +261,10 @@ export default function TeamManagementPage() {
       if (json.success) {
         fetchPendingInvitations();
         fetchTeams();
-        showAlert(t("teamManagement.alerts.acceptSuccess"));
+        showAlert(t("team_management.alerts.accept_success"));
       } else showAlert(json.message);
     } catch {
-      showAlert(t("teamManagement.alerts.errorAccept"));
+      showAlert(t("team_management.alerts.error_accept"));
     } finally {
       setAcceptingId(null);
     }
@@ -291,16 +291,16 @@ export default function TeamManagementPage() {
       const json = await res.json();
       if (json.success) {
         fetchMembers(selectedTeamId);
-        showAlert(t("teamManagement.alerts.roleSuccess"));
+        showAlert(t("team_management.alerts.role_success"));
       } else showAlert(json.message);
     } catch {
-      showAlert(t("teamManagement.alerts.errorRole"));
+      showAlert(t("team_management.alerts.error_role"));
     }
   };
 
   const handleRemoveMember = (memberId: string) => {
     if (!selectedTeamId) return;
-    showConfirm(t("teamManagement.confirmRemoveLabel"), async () => {
+    showConfirm(t("team_management.confirm_remove_label"), async () => {
       try {
         if (!user?.address) return;
         const { challenge } = await getLoginOptions(user.address);
@@ -321,14 +321,14 @@ export default function TeamManagementPage() {
         );
         const json = await res.json();
         if (json.success) {
-          showAlert(t("teamManagement.alerts.removeSuccess"));
+          showAlert(t("team_management.alerts.remove_success"));
           if (memberId === currentUserMember?.id) {
             setSelectedTeamId(null);
             fetchTeams();
           } else fetchMembers(selectedTeamId);
         } else showAlert(json.message);
       } catch {
-        showAlert(t("teamManagement.alerts.errorRemove"));
+        showAlert(t("team_management.alerts.error_remove"));
       }
     });
   };
@@ -346,10 +346,10 @@ export default function TeamManagementPage() {
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900">
-              {t("teamManagement.title")}
+              {t("team_management.title")}
             </h1>
             <p className="mt-1 text-sm text-gray-500">
-              {t("teamManagement.description")}
+              {t("team_management.description")}
             </p>
           </div>
           <button
@@ -357,14 +357,14 @@ export default function TeamManagementPage() {
             className="inline-flex items-center rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-orange-700"
           >
             <Plus className="mr-2 size-4 shrink-0" />
-            {t("teamManagement.createTeam")}
+            {t("team_management.create_team")}
           </button>
         </div>
 
         {pendingInvitations.length > 0 && (
           <div className="mb-6 rounded-2xl border border-orange-200 bg-orange-50 p-6">
             <h2 className="mb-4 text-lg font-semibold text-orange-900">
-              {t("teamManagement.pendingInvitations")}
+              {t("team_management.pending_invitations")}
             </h2>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {pendingInvitations.map((inv) => (
@@ -382,7 +382,7 @@ export default function TeamManagementPage() {
                       </h3>
                       <p className="text-xs text-gray-500">
                         From {inv.inviter.name || "Unknown"} as{" "}
-                        {t("teamManagement.roles." + inv.role)}
+                        {t("team_management.roles." + inv.role)}
                       </p>
                     </div>
                   </div>
@@ -392,8 +392,8 @@ export default function TeamManagementPage() {
                     className="w-full rounded-lg bg-orange-600 py-2 text-sm font-medium text-white transition-colors hover:bg-orange-700 disabled:opacity-50"
                   >
                     {acceptingId === inv.id
-                      ? t("teamManagement.accepting")
-                      : t("teamManagement.acceptViaFido2")}
+                      ? t("team_management.accepting")
+                      : t("team_management.accept_via_fido2")}
                   </button>
                 </div>
               ))}
@@ -417,7 +417,7 @@ export default function TeamManagementPage() {
             ))}
             {teams.length === 0 && (
               <div className="rounded-xl border bg-white p-4 text-center text-sm text-gray-500 shadow-sm">
-                {t("teamManagement.noTeams")}
+                {t("team_management.no_teams")}
               </div>
             )}
           </div>
@@ -432,7 +432,7 @@ export default function TeamManagementPage() {
                         type="text"
                         value={tempName}
                         onChange={(e) => setTempName(e.target.value)}
-                        aria-label={t("teamManagement.teamName")}
+                        aria-label={t("team_management.team_name")}
                         className="w-full flex-1 rounded-t border-b-2 border-orange-500 bg-gray-50 px-3 py-1.5 text-lg font-semibold text-gray-900 focus:outline-none"
                       />
                       <button
@@ -472,7 +472,7 @@ export default function TeamManagementPage() {
                       className="inline-flex w-full items-center justify-center rounded-lg border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-700 transition-colors hover:bg-orange-100 sm:w-auto"
                     >
                       <Plus className="mr-2 size-4 shrink-0" />{" "}
-                      {t("teamManagement.inviteMember")}
+                      {t("team_management.invite_member")}
                     </button>
                   )}
                 </div>
@@ -498,7 +498,7 @@ export default function TeamManagementPage() {
                                 {member.user?.name || "Anonymous"}
                                 {member.user?.address === user?.address && (
                                   <span className="ml-2 rounded bg-orange-50 px-1.5 py-0.5 text-[10px] text-orange-500">
-                                    {t("teamManagement.you")}
+                                    {t("team_management.you")}
                                   </span>
                                 )}
                               </h3>
@@ -520,18 +520,18 @@ export default function TeamManagementPage() {
                                 className="rounded-md border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 shadow-sm focus:border-orange-500 focus:ring-orange-500"
                               >
                                 <option value="ADMIN">
-                                  {t("teamManagement.roles.ADMIN")}
+                                  {t("team_management.roles.ADMIN")}
                                 </option>
                                 <option value="EDITOR">
-                                  {t("teamManagement.roles.EDITOR")}
+                                  {t("team_management.roles.EDITOR")}
                                 </option>
                                 <option value="VIEWER">
-                                  {t("teamManagement.roles.VIEWER")}
+                                  {t("team_management.roles.VIEWER")}
                                 </option>
                               </select>
                             ) : (
                               <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600">
-                                {t("teamManagement.roles." + member.role)}
+                                {t("team_management.roles." + member.role)}
                               </span>
                             )}
                             {(isOwner ||
@@ -560,7 +560,7 @@ export default function TeamManagementPage() {
                             </div>
                             <div>
                               <h3 className="text-sm font-medium text-gray-500">
-                                {t("teamManagement.pendingInvite")}
+                                {t("team_management.pending_invite")}
                               </h3>
                               <p className="mt-1 w-32 truncate font-mono text-xs break-all text-gray-400">
                                 {inv.inviteeAddress}
@@ -568,7 +568,7 @@ export default function TeamManagementPage() {
                             </div>
                           </div>
                           <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold text-orange-600">
-                            {t("teamManagement.pending")}
+                            {t("team_management.pending")}
                           </span>
                         </div>
                       </div>
@@ -580,7 +580,7 @@ export default function TeamManagementPage() {
                   currentTeam.accountBooks.length > 0 && (
                     <div className="mt-8 border-t border-gray-100 pt-6">
                       <h3 className="mb-4 text-lg font-medium text-gray-900">
-                        {t("teamManagement.accountBooks")}
+                        {t("team_management.account_books")}
                       </h3>
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-2">
                         {currentTeam.accountBooks.map((ab: IAccountBook) => (
@@ -621,7 +621,7 @@ export default function TeamManagementPage() {
             <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  {t("teamManagement.createNewTeam")}
+                  {t("team_management.create_new_team")}
                 </h3>
                 <button
                   onClick={() => setIsCreateModalOpen(false)}
@@ -636,7 +636,7 @@ export default function TeamManagementPage() {
                     htmlFor="team-name"
                     className="mb-1 block text-sm font-medium text-gray-700"
                   >
-                    {t("teamManagement.teamName")}
+                    {t("team_management.team_name")}
                   </label>
                   <input
                     id="team-name"
@@ -645,9 +645,9 @@ export default function TeamManagementPage() {
                     value={newTeamName}
                     onChange={(e) => setNewTeamName(e.target.value)}
                     disabled={creating}
-                    aria-label={t("teamManagement.teamName")}
+                    aria-label={t("team_management.team_name")}
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
-                    placeholder={t("teamManagement.enterTeamName")}
+                    placeholder={t("team_management.enter_team_name")}
                   />
                 </div>
                 <div className="mt-6 flex flex-col-reverse justify-end gap-3 sm:flex-row">
@@ -657,7 +657,7 @@ export default function TeamManagementPage() {
                     disabled={creating}
                     className="w-full rounded-lg border border-gray-300 px-4 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto"
                   >
-                    {t("teamManagement.cancel")}
+                    {t("team_management.cancel")}
                   </button>
                   <button
                     type="submit"
@@ -665,8 +665,8 @@ export default function TeamManagementPage() {
                     className="inline-flex w-full items-center justify-center rounded-lg bg-orange-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50 sm:w-auto"
                   >
                     {creating
-                      ? t("teamManagement.creating")
-                      : t("teamManagement.createTeam")}
+                      ? t("team_management.creating")
+                      : t("team_management.create_team")}
                   </button>
                 </div>
               </form>

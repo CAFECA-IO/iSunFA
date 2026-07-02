@@ -68,7 +68,7 @@ export default function QrScannerModal({
         setIsInitializing(false);
       } catch (err) {
         console.error("Failed to start scanner", err);
-        setCameraError(t("teamManagement.cameraError"));
+        setCameraError(t("team_management.camera_error"));
         setIsInitializing(false);
       }
     },
@@ -101,12 +101,12 @@ export default function QrScannerModal({
 
             await startScanner(initialCameraId);
           } else {
-            setCameraError(t("teamManagement.cameraError"));
+            setCameraError(t("team_management.camera_error"));
             setIsInitializing(false);
           }
         } catch (err) {
           console.error("Error getting cameras", err);
-          setCameraError(t("teamManagement.cameraError"));
+          setCameraError(t("team_management.camera_error"));
           setIsInitializing(false);
         }
       };
@@ -159,7 +159,7 @@ export default function QrScannerModal({
               <Dialog.Panel className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
                 <div className="mb-4 flex items-center justify-between">
                   <Dialog.Title className="text-lg font-bold text-gray-900">
-                    {title || t("teamManagement.scanQrCode")}
+                    {title || t("team_management.scan_qr_code")}
                   </Dialog.Title>
                   <button
                     onClick={onClose}
@@ -175,7 +175,7 @@ export default function QrScannerModal({
                   {isInitializing && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-white">
                       <RefreshCw className="mb-2 size-8 animate-spin text-orange-500" />
-                      <p className="text-sm">{t("teamManagement.scanning")}</p>
+                      <p className="text-sm">{t("team_management.scanning")}</p>
                     </div>
                   )}
 
@@ -187,7 +187,7 @@ export default function QrScannerModal({
                         onClick={onClose}
                         className="mt-4 rounded-lg bg-white/20 px-4 py-2 text-sm font-medium hover:bg-white/30"
                       >
-                        {t("teamManagement.cancel")}
+                        {t("team_management.cancel")}
                       </button>
                     </div>
                   )}

@@ -112,7 +112,7 @@ export const zhCn = {
   voucher,
   verify,
   esg,
-  teamManagement,
+  team_management: teamManagement,
   esg_report: esgReport,
   report_view: reportView,
   cash_flow_statement_view: cashFlowStatementView,
