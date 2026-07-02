@@ -1,6 +1,6 @@
 import { spawn } from "child_process";
 import { processManager } from "@/lib/utils/process_manager";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { ChatService } from "@/services/chat.service";
 
 export interface ISearchSummaryParams {
   query: string;
@@ -17,14 +17,12 @@ export interface ISearchResult {
 export class SearchService {
   private readonly imageName = "ghcr.io/puppeteer/puppeteer:latest";
   private readonly timeoutMs = 90000; // Info: (20260407 - Luphia) Allow 90 seconds since we might scrape multiple pages
-  private genAI: GoogleGenerativeAI;
-  private modelName: string;
+  private chatService: ChatService;
 
   constructor(apiKey?: string) {
     const key =
       apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
-    this.genAI = new GoogleGenerativeAI(key);
-    this.modelName = process.env.MODEL || "gemini-1.5-flash";
+    this.chatService = new ChatService(key);
   }
 
   // Info: (20260407 - Luphia) Spawns a dockerized Puppeteer instance to scrape search engine results and article contents.
@@ -226,19 +224,17 @@ export class SearchService {
       - YOUR SUMMARY MUST ABSOLUTELY BE UNDER OR AROUND ${params.maxSummaryLength} WORDS.
     `;
 
-    const model = this.genAI.getGenerativeModel({ model: this.modelName });
-
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: systemPrompt }] }],
-      generationConfig: {
+    const resultText = await this.chatService.generateContent(
+      [{ text: systemPrompt }],
+      {
         temperature: 0.2, // Info: (20260407 - Luphia) Factually focused
       },
-    });
+    );
 
     return {
       query: params.query,
       scrapedUrls: scrapedContents.map((c) => c.url),
-      summary: result.response.text().trim(),
+      summary: resultText.trim(),
     };
   }
 }

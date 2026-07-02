@@ -46,7 +46,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({
   const [svgStr, setSvgStr] = useState<string>("");
   const [hasError, setHasError] = useState<boolean>(false);
 
-  // AI Modal Open State
+  // Info: (20260623 - Julian) AI Modal Open State
   const [isAiModalOpen, setIsAiModalOpen] = useState<boolean>(false);
 
   // Info: (20260623 - Julian) 自動判別目前是哪種圖表類型

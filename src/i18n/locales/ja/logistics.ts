@@ -52,6 +52,7 @@ export const logistics = {
     destination: "目的地",
     weight: "重量 (kg)",
     transportation_mode: "輸送手段",
+    waypoints: "中継地",
     status: "ステータス",
     no_records: "物流記録がありません",
     start_import:
