@@ -106,10 +106,6 @@ export default function SolutionsPricingSection({
   return (
     <div className="mx-auto max-w-4xl px-6 pt-10 pb-36 lg:px-8">
       <div className="mb-12 text-center">
-        <span className="mb-4 inline-block rounded-full bg-orange-100 px-4 py-1 text-sm font-semibold tracking-wider text-orange-600 uppercase">
-          <span className="mr-2 inline-block h-2 w-2 rounded-full bg-orange-500 align-middle"></span>
-          {t("pricing.solutions.tag")}
-        </span>
         <h2 className="mb-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
           {t("pricing.solutions.page_title")}
         </h2>
