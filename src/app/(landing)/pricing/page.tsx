@@ -273,6 +273,7 @@ export default function PricingPage() {
     if (activeTab === "credits") {
       fetchPlans();
     }
+    setPendingDetails(undefined);
   }, [activeTab]);
 
   const getPrice = (plan: (typeof CREDIT_PLANS)[0]) => {
@@ -875,7 +876,13 @@ export default function PricingPage() {
                             const details = [
                               "ASUS Ascent GX10",
                               `${t("pricing.ai_adoption.user_count")}: ${userCount}`,
-                              `${t("pricing.ai_adoption.software_update")}: ${updateYears} 年`,
+                              ...(updateYears > 0
+                                ? [
+                                    `${t(
+                                      "pricing.ai_adoption.software_update",
+                                    )}: ${updateYears} 年`,
+                                  ]
+                                : []),
                               ...selectedModules.map((modKey) =>
                                 t(`features.items.${modKey}.title`),
                               ),

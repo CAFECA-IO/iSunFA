@@ -221,10 +221,10 @@ export default function SolutionsPricingSection({
                       isSelected ? "text-orange-900" : "text-gray-900"
                     }`}
                   >
-                    {size.title}
+                    {size.badge}
                   </h4>
                   <span className="mb-6 inline-block rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
-                    {size.badge}
+                    {size.title}
                   </span>
 
                   <div className="mt-auto mb-6 w-full border-t border-gray-100 pt-5">
