@@ -176,8 +176,10 @@ class BusinessMonitorService {
       }
     }
 
-    // Info: (20260702 - Julian) 將 SQL 中繼資料 (Metadata) 格式化為結構化背景知識
-    // 確保 LLM 能夠直接回答「資本額」等基本資料，並加入寬鬆檢索的提醒標籤
+    /**
+     * Info: (20260702 - Julian) 將 SQL 中繼資料 (Metadata) 格式化為結構化背景知識
+     * 確保 LLM 能夠直接回答「資本額」等基本資料，並加入寬鬆檢索的提醒標籤
+     */
     const reportMetadataContext = matchedReports
       .map((r) => {
         const isYearMatch = years.length === 0 || years.includes(r.reportYear);
@@ -439,14 +441,14 @@ ${query}
    * @returns ReadableStream
    */
   downloadReport(reportId: string): ReadableStream {
-    const totalBytes = Math.floor(Math.random() * 20 + 10) * 1024 * 1024; // 10MB ~ 30MB
+    const totalBytes = Math.floor(Math.random() * 20 + 10) * 1024 * 1024; // Info: (20260701 - Julian) 10MB ~ 30MB
     let downloadedBytes = 0;
     let status: "downloading" | "completed" = "downloading";
 
     return new ReadableStream({
       async start(controller) {
         const interval = setInterval(() => {
-          const chunk = Math.floor(Math.random() * 2 + 1) * 1024 * 1024; // 1MB ~ 3MB
+          const chunk = Math.floor(Math.random() * 2 + 1) * 1024 * 1024; // Info: (20260701 - Julian) 1MB ~ 3MB
           downloadedBytes += chunk;
 
           if (downloadedBytes >= totalBytes) {
@@ -585,7 +587,7 @@ ${query}
             detected.add(dbReport[0].companyName);
           }
         } catch {
-          // ignore
+          // Info: (20260701 - Julian) ignore
         }
       }
     }
