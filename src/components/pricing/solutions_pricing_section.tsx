@@ -111,10 +111,10 @@ export default function SolutionsPricingSection({
           {t("pricing.solutions.tag")}
         </span>
         <h2 className="mb-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-          永續解決方案
+          {t("pricing.solutions.page_title")}
         </h2>
         <p className="text-lg text-gray-600">
-          選擇最適合您企業規模的碳盤查服務
+          {t("pricing.solutions.description")}
         </p>
       </div>
 
@@ -122,7 +122,7 @@ export default function SolutionsPricingSection({
         {/* Step 1: Solution Type */}
         <section>
           <div className="mb-6 flex items-baseline justify-between">
-            <h3 className="text-xl font-bold text-gray-900">1. 選擇服務類型</h3>
+            <h3 className="text-xl font-bold text-gray-900">{t("pricing.solutions.step1_title")}</h3>
           </div>
 
           <div className="mb-8 flex justify-center">
@@ -169,7 +169,7 @@ export default function SolutionsPricingSection({
             </p>
             <div className="mt-6 border-t border-gray-100 pt-6">
               <h5 className="mb-4 text-sm font-semibold text-gray-900">
-                服務包含：
+                {t("pricing.solutions.includes_title")}
               </h5>
               <ul className="grid grid-cols-1 gap-y-3 sm:grid-cols-2 sm:gap-x-8">
                 {currentSolution.features.map((feature, idx) => (
@@ -189,7 +189,7 @@ export default function SolutionsPricingSection({
         {/* Step 2: Enterprise Size */}
         <section>
           <div className="mb-6 flex items-baseline justify-between">
-            <h3 className="text-xl font-bold text-gray-900">2. 選擇企業規模</h3>
+            <h3 className="text-xl font-bold text-gray-900">{t("pricing.solutions.step2_title")}</h3>
           </div>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
             {sizes.map((size) => {
@@ -208,7 +208,7 @@ export default function SolutionsPricingSection({
                 >
                   {size.id === "pro" && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-orange-400 to-orange-500 px-3 py-1 text-xs font-bold tracking-wide text-white shadow-sm">
-                      最受歡迎
+                      {t("pricing.solutions.most_popular")}
                     </div>
                   )}
                   <div
@@ -233,7 +233,7 @@ export default function SolutionsPricingSection({
 
                   <div className="mt-auto mb-6 w-full border-t border-gray-100 pt-5">
                     <p className="mb-4 text-xs font-medium text-gray-500">
-                      適用條件：
+                      {t("pricing.solutions.criteria_subtitle")}
                     </p>
                     <div className="space-y-2.5 text-[13px] font-medium text-gray-500">
                       <div className="flex items-center justify-between">
@@ -277,7 +277,7 @@ export default function SolutionsPricingSection({
         <div className="mx-auto flex max-w-4xl items-center justify-between">
           <div className="flex flex-col">
             <span className="text-[13px] font-medium text-gray-500">
-              總計費用
+              {t("pricing.solutions.total_cost")}
             </span>
             <div className="flex items-baseline gap-x-1.5">
               <span className="text-sm font-bold text-gray-900">NT$</span>
