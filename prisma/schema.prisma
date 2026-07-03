@@ -971,3 +971,25 @@ model PdfEditorDocument {
   @@index([token])
   @@map("pdf_editor_document")
 }
+
+// Info: (20260630 - Julian) 財務報告/永續報告書，Business Monitor 使用
+model Report {
+  id                     Int      @id @default(autoincrement())
+  companyName            String   @map("company_name")
+  title                  String   @map("title")
+  reportYear             String   @map("report_year")
+  period                 String   @map("period")
+  industry               String   @map("industry")
+  capital                String   @map("capital")
+  verificationAgency     String   @map("verification_agency")
+  verificationStandards  String   @map("verification_standards")
+  assuranceAgency        String   @map("assurance_agency")
+  assuranceStandards     String   @map("assurance_standards")
+  isVerifiedByThirdParty Boolean  @default(false) @map("is_verified_by_third_party")
+  pdfPath                String   @unique @map("pdf_path")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  @@map("report")
+}
+

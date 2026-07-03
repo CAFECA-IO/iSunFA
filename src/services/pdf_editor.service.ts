@@ -4,8 +4,43 @@ import {
   AI_REFINE_INSTRUCTIONS,
   TEXT_REFINEMENT_PROMPT,
 } from "@/constants/prompts/pdf_editor/text_refinement";
+import { MERMAID_MODIFICATION_PROMPT } from "@/constants/prompts/pdf_editor/mermaid_modification";
 
 export class PdfEditorService {
+  /**
+   * Info: (20260623 - Julian) 根據使用者指令修改 Mermaid 圖表
+   */
+  public static async modifyMermaidChart(
+    chart: string,
+    instruction: string,
+  ): Promise<string> {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("Missing GEMINI_API_KEY");
+    }
+
+    const finalPrompt = `${MERMAID_MODIFICATION_PROMPT}
+
+【原始 Mermaid 圖表 (Original Mermaid Chart)】：
+${chart}
+
+【修改指令 (Modification Instruction)】：
+${instruction}
+`;
+
+    const chatService = new ChatService(apiKey);
+    const reply = await chatService.generateRaw(finalPrompt);
+
+    // Info: (20260623 - Julian) 移除 AI 的自我反思過程 (<thinking>...</thinking>) 並確保輸出為純 Mermaid 語法
+    const cleaned = reply
+      .replace(/<thinking>[\s\S]*?<\/thinking>\n*/gi, "")
+      .replace(/```mermaid\n?/gi, "")
+      .replace(/```\n?/gi, "")
+      .trim();
+
+    return cleaned;
+  }
+
   /**
    * Info: (20260605 - Julian) 根據 input 生成結構化的 AI 報告
    */

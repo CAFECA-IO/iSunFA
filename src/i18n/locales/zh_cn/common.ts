@@ -86,9 +86,6 @@ export const common = {
     oldest: "由旧到新",
   },
   share: "分享",
-  donut_chart: {
-    note: "* 环形图呈现核心 {{title}} 的组合分布。系统仅对有效数据进行渲染，若有偏差或未定义科目则自动合并计算。",
-  },
   other: "其他",
   pdf_tool: "PDF 工具",
   please_login: "请先登录",
@@ -97,20 +94,6 @@ export const common = {
   report_layout: {
     brand: "阳光智能碳会计",
     footer_note: "本报告由 AI 技术生成，由 iSunFA 阳光智能碳会计提供 • ",
-  },
-  mermaid: {
-    rendering: "正在渲染图表...",
-    zoom_in: "放大 (Zoom In)",
-    zoom_out: "缩小 (Zoom Out)",
-    reset: "重设 (Reset)",
-    fullscreen: "全屏幕 (Fullscreen)",
-    close_fullscreen: "关闭全屏幕 (Close Fullscreen)",
-    hint_desktop: "按住左键拖拽平移 • Ctrl + 滚轮缩放",
-    hint_fullscreen: "按住左键拖拽平移 • 滚轮缩放 • 按 ESC 键关闭",
-    preview_title: "流程图预览 (Fullscreen Flowchart Preview)",
-    download: "下载图片",
-    export_png: "下载 PNG",
-    export_svg: "下载 SVG",
   },
   export_settings: {
     title_voucher: "导出凭证",
@@ -131,4 +114,6 @@ export const common = {
     failed_voucher: "导出凭证失败，请稍后再试。",
     failed_esg: "导出 ESG 记录失败，请稍后再试。",
   },
+  qr_code: "二维码",
+  done: "完成",
 };

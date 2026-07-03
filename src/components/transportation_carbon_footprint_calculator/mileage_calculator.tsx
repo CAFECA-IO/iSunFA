@@ -23,19 +23,20 @@ import {
 } from "@/hooks/use_order_transaction";
 import {
   ANALYSIS_CATEGORY,
-  type RouteMode,
   MILEAGE_ACTION,
   type MileageAction,
 } from "@/constants/analysis";
 import { parseMultipleRoutesFromText } from "@/services/route.smart.service";
 import { ORDER_TYPE, ORDER_STATUS } from "@/constants/status";
 import { ANALYSIS_BASE_COSTS } from "@/constants/price";
+import type { IWaypoint } from "@/interfaces/logistics";
+import { WaypointEditModal } from "@/components/transportation_carbon_footprint_calculator/waypoint_edit_modal";
 
 export interface IMileageItem {
   id: string;
   origin: string;
   dest: string;
-  mode?: RouteMode;
+  waypoints?: IWaypoint[];
   distanceKm?: number;
   landDistanceKm?: number;
   seaDistanceKm?: number;
@@ -65,8 +66,14 @@ export function MileageCalculator({
   const [isCalculating, setIsCalculating] = useState(false);
   const [newRouteDesc, setNewRouteDesc] = useState("");
   const [isAddingManual, setIsAddingManual] = useState(false);
-  const [newMode, setNewMode] = useState<RouteMode | "">("");
+  const [newWaypoints, setNewWaypoints] = useState<IWaypoint[]>([]);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    itemId: string | null;
+    waypoints: IWaypoint[];
+  }>({ isOpen: false, itemId: null, waypoints: [] });
   const [alertModal, setAlertModal] = useState({
     isOpen: false,
     title: "",
@@ -158,10 +165,9 @@ export function MileageCalculator({
                 title: t(
                   "transportation_carbon_footprint_calculator.analysis_failed",
                 ),
-                message:
-                  t(
-                    "transportation_carbon_footprint_calculator.mileage_calculator.err_calc_failed",
-                  ) + "，請稍後再試。",
+                message: t(
+                  "transportation_carbon_footprint_calculator.mileage_calculator.err_calc_failed",
+                ),
               });
             }
             return;
@@ -222,7 +228,10 @@ export function MileageCalculator({
         id: crypto.randomUUID(),
         origin: item.origin,
         dest: item.dest,
-        mode: (newMode as RouteMode) || item.mode,
+        waypoints:
+          newWaypoints.length > 0
+            ? newWaypoints
+            : (item.waypoints as IWaypoint[]),
         originLat: item.originLat,
         originLng: item.originLng,
         destLat: item.destLat,
@@ -231,7 +240,7 @@ export function MileageCalculator({
       }));
       setItems((prev) => [...prev, ...newItems]);
       setNewRouteDesc("");
-      setNewMode("");
+      setNewWaypoints([]);
     } catch (err) {
       console.error(err);
       setAlertModal({
@@ -255,7 +264,10 @@ export function MileageCalculator({
         id: crypto.randomUUID(),
         origin: item.origin,
         dest: item.dest,
-        mode: item.mode as RouteMode,
+        waypoints: item.waypoints?.map((wp) => ({
+          ...wp,
+          id: crypto.randomUUID(),
+        })),
         originLat: item.originLat,
         originLng: item.originLng,
         destLat: item.destLat,
@@ -282,6 +294,22 @@ export function MileageCalculator({
     if (items.length === 0) return;
     const uncalculatedItems = items.filter((item) => !item.success);
     if (uncalculatedItems.length === 0) return;
+
+    const hasInvalidWaypoints = uncalculatedItems.some((item) =>
+      item.waypoints?.some((w) => w.lat === undefined || w.lng === undefined),
+    );
+    if (hasInvalidWaypoints) {
+      setAlertModal({
+        isOpen: true,
+        title: t(
+          "transportation_carbon_footprint_calculator.mileage_calculator.err_waypoints_incomplete_title",
+        ),
+        message: t(
+          "transportation_carbon_footprint_calculator.mileage_calculator.err_waypoints_incomplete_msg",
+        ),
+      });
+      return;
+    }
 
     setIsCalculating(true);
     setItems((prev) =>
@@ -311,7 +339,7 @@ export function MileageCalculator({
                 lng: Number(item.destLng),
               }
             : item.dest,
-          mode: item.mode,
+          waypoints: item.waypoints,
           weightKg: item.weightKg ? Number(item.weightKg) : undefined,
         })),
       },
@@ -377,25 +405,8 @@ export function MileageCalculator({
               .trim()
               .toUpperCase();
 
-            let mode: RouteMode | undefined = undefined;
-            if (
-              modeRaw.includes("LAND") ||
-              modeRaw.includes("陸運") ||
-              modeRaw.includes("卡車")
-            )
-              mode = "LAND";
-            else if (
-              modeRaw.includes("SEA") ||
-              modeRaw.includes("海運") ||
-              modeRaw.includes("船")
-            )
-              mode = "SEA_LAND";
-            else if (
-              modeRaw.includes("AIR") ||
-              modeRaw.includes("空運") ||
-              modeRaw.includes("飛機")
-            )
-              mode = "AIR_LAND";
+            let waypoints: string | undefined = undefined;
+            if (modeRaw) waypoints = modeRaw;
 
             if (
               origin &&
@@ -407,7 +418,13 @@ export function MileageCalculator({
                 id: crypto.randomUUID(),
                 origin,
                 dest,
-                mode,
+                waypoints: waypoints
+                  ? waypoints
+                      .split(",")
+                      .map((w) => w.trim())
+                      .filter(Boolean)
+                      .map((w) => ({ id: crypto.randomUUID(), name: w }))
+                  : undefined,
               });
             }
           });
@@ -417,7 +434,7 @@ export function MileageCalculator({
               const aiPrompt = newItems
                 .map(
                   (item) =>
-                    `From ${item.origin} to ${item.dest} ${item.mode ? `(Mode: ${item.mode})` : ""}`,
+                    `From ${item.origin} to ${item.dest} ${item.waypoints && item.waypoints.length > 0 ? `(Waypoints: ${item.waypoints.map((w) => w.name).join(", ")})` : ""}`,
                 )
                 .join("\n");
               const parsed = await parseMultipleRoutesFromText(aiPrompt);
@@ -426,7 +443,10 @@ export function MileageCalculator({
                 id: crypto.randomUUID(),
                 origin: item.origin,
                 dest: item.dest,
-                mode: (item.mode as RouteMode) || "LAND",
+                waypoints: item.waypoints?.map((wp) => ({
+                  ...wp,
+                  id: crypto.randomUUID(),
+                })),
                 originLat: item.originLat,
                 originLng: item.originLng,
                 destLat: item.destLat,
@@ -446,7 +466,9 @@ export function MileageCalculator({
             setAlertModal({
               isOpen: true,
               title: t("logistics.page.error_title"),
-              message: "無法從檔案中解析出有效的起訖點。",
+              message: t(
+                "transportation_carbon_footprint_calculator.mileage_calculator.err_no_valid_routes",
+              ),
             });
           }
         }
@@ -537,44 +559,34 @@ export function MileageCalculator({
               disabled={isAddingManual || isCalculating}
             />
           </label>
-          <label className="flex w-full shrink-0 flex-col gap-2 md:w-48">
+          <div className="flex w-full shrink-0 flex-col gap-2 md:w-48">
             <span className="text-sm font-medium text-gray-700">
               {t(
-                "transportation_carbon_footprint_calculator.mileage_calculator.col_mode",
+                "transportation_carbon_footprint_calculator.mileage_calculator.label_waypoints_optional",
               )}
             </span>
-            <select
-              value={newMode}
-              onChange={(e) => setNewMode(e.target.value as RouteMode | "")}
-              className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-gray-900 transition-all focus:ring-2 focus:ring-orange-500 focus:outline-none"
+            <button
+              type="button"
+              onClick={() =>
+                setModalConfig({
+                  isOpen: true,
+                  itemId: "new",
+                  waypoints: newWaypoints,
+                })
+              }
+              disabled={isAddingManual || isCalculating}
+              className="flex h-[42px] w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-4 text-sm text-gray-900 transition-all hover:border-gray-300 disabled:opacity-50"
             >
-              <option value="">
-                {t(
-                  "transportation_carbon_footprint_calculator.mileage_calculator.mode_auto",
-                )}
-              </option>
-              <option value="LAND">
-                {t(
-                  "transportation_carbon_footprint_calculator.mileage_calculator.mode_LAND",
-                )}
-              </option>
-              <option value="SEA_LAND">
-                {t(
-                  "transportation_carbon_footprint_calculator.mileage_calculator.mode_SEA_LAND",
-                )}
-              </option>
-              <option value="AIR_LAND">
-                {t(
-                  "transportation_carbon_footprint_calculator.mileage_calculator.mode_AIR_LAND",
-                )}
-              </option>
-              <option value="SEA_LAND_AIR">
-                {t(
-                  "transportation_carbon_footprint_calculator.mileage_calculator.mode_SEA_LAND_AIR",
-                )}
-              </option>
-            </select>
-          </label>
+              <span className="truncate">
+                {newWaypoints.length > 0
+                  ? newWaypoints.map((w) => w.name).join(", ")
+                  : t(
+                      "transportation_carbon_footprint_calculator.mileage_calculator.btn_setup",
+                    )}
+              </span>
+              <Settings className="h-4 w-4 shrink-0 text-gray-400" />
+            </button>
+          </div>
           <button
             onClick={handleManualAdd}
             disabled={!newRouteDesc.trim() || isAddingManual || isCalculating}
@@ -619,7 +631,7 @@ export function MileageCalculator({
                   </th>
                   <th className="px-6 py-3 font-medium">
                     {t(
-                      "transportation_carbon_footprint_calculator.mileage_calculator.col_mode",
+                      "transportation_carbon_footprint_calculator.mileage_calculator.col_waypoints",
                     )}
                   </th>
                   <th className="px-6 py-3 font-medium">
@@ -646,56 +658,29 @@ export function MileageCalculator({
                       </td>
                       <td className="px-6 py-4">
                         {!item.loading && !item.success ? (
-                          <select
-                            value={item.mode || ""}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setItems((prev) =>
-                                prev.map((i) =>
-                                  i.id === item.id
-                                    ? {
-                                        ...i,
-                                        mode: val
-                                          ? (val as RouteMode)
-                                          : undefined,
-                                      }
-                                    : i,
-                                ),
-                              );
-                            }}
-                            className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 focus:ring-2 focus:ring-orange-500"
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setModalConfig({
+                                isOpen: true,
+                                itemId: item.id,
+                                waypoints: item.waypoints || [],
+                              })
+                            }
+                            className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 transition-all hover:border-gray-300"
                           >
-                            <option value="">
-                              {t(
-                                "transportation_carbon_footprint_calculator.mileage_calculator.mode_auto",
-                              )}
-                            </option>
-                            <option value="LAND">
-                              {t(
-                                "transportation_carbon_footprint_calculator.mileage_calculator.mode_LAND",
-                              )}
-                            </option>
-                            <option value="SEA_LAND">
-                              {t(
-                                "transportation_carbon_footprint_calculator.mileage_calculator.mode_SEA_LAND",
-                              )}
-                            </option>
-                            <option value="AIR_LAND">
-                              {t(
-                                "transportation_carbon_footprint_calculator.mileage_calculator.mode_AIR_LAND",
-                              )}
-                            </option>
-                            <option value="SEA_LAND_AIR">
-                              {t(
-                                "transportation_carbon_footprint_calculator.mileage_calculator.mode_SEA_LAND_AIR",
-                              )}
-                            </option>
-                          </select>
-                        ) : item.mode ? (
+                            <span className="truncate">
+                              {item.waypoints && item.waypoints.length > 0
+                                ? item.waypoints.map((w) => w.name).join(", ")
+                                : t(
+                                    "transportation_carbon_footprint_calculator.mileage_calculator.btn_setup",
+                                  )}
+                            </span>
+                            <Settings className="h-4 w-4 shrink-0 text-gray-400" />
+                          </button>
+                        ) : item.waypoints && item.waypoints.length > 0 ? (
                           <span className="text-sm text-gray-600">
-                            {t(
-                              `transportation_carbon_footprint_calculator.mileage_calculator.mode_${item.seaDistanceKm && item.airDistanceKm && item.seaDistanceKm > 0 && item.airDistanceKm > 0 ? "SEA_LAND_AIR" : item.mode}`,
-                            )}
+                            {item.waypoints.map((w) => w.name).join(", ")}
                           </span>
                         ) : (
                           <span className="text-gray-400">-</span>
@@ -721,7 +706,10 @@ export function MileageCalculator({
                             <div className="flex gap-2 text-xs text-gray-500">
                               {item.landDistanceKm !== undefined && (
                                 <span>
-                                  陸:{" "}
+                                  {t(
+                                    "transportation_carbon_footprint_calculator.mileage_calculator.short_land",
+                                  )}
+                                  :{" "}
                                   {item.landDistanceKm.toLocaleString(
                                     undefined,
                                     {
@@ -733,7 +721,10 @@ export function MileageCalculator({
                               )}
                               {item.seaDistanceKm !== undefined && (
                                 <span>
-                                  海:{" "}
+                                  {t(
+                                    "transportation_carbon_footprint_calculator.mileage_calculator.short_sea",
+                                  )}
+                                  :{" "}
                                   {item.seaDistanceKm.toLocaleString(
                                     undefined,
                                     {
@@ -745,7 +736,10 @@ export function MileageCalculator({
                               )}
                               {item.airDistanceKm !== undefined && (
                                 <span>
-                                  空:{" "}
+                                  {t(
+                                    "transportation_carbon_footprint_calculator.mileage_calculator.short_air",
+                                  )}
+                                  :{" "}
                                   {item.airDistanceKm.toLocaleString(
                                     undefined,
                                     {
@@ -961,6 +955,24 @@ export function MileageCalculator({
         status={workflowStatus}
         errorMessage={errorMessage}
         txHash={txHash}
+      />
+
+      <WaypointEditModal
+        isOpen={modalConfig.isOpen}
+        waypoints={modalConfig.waypoints}
+        onClose={() => setModalConfig((prev) => ({ ...prev, isOpen: false }))}
+        onConfirm={(waypoints) => {
+          if (modalConfig.itemId === "new") {
+            setNewWaypoints(waypoints);
+          } else if (modalConfig.itemId) {
+            setItems((prev) =>
+              prev.map((i) =>
+                i.id === modalConfig.itemId ? { ...i, waypoints } : i,
+              ),
+            );
+          }
+        }}
+        disabled={isCalculating}
       />
     </div>
   );

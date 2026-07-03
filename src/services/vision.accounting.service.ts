@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI, Part } from "@google/generative-ai";
+import { ChatService, Part } from "@/services/chat.service";
 import { CoaVectorService } from "@/services/rag/coa_vector.service";
 
 // Info: (20260407 - Luphia) Stage 1. Journal Paradigm
@@ -51,14 +51,12 @@ export interface IEsgExtraction {
 }
 
 export class VisionAccountingService {
-  private genAI: GoogleGenerativeAI;
-  private modelName: string;
+  private chatService: ChatService;
 
   constructor(apiKey?: string) {
     const key =
       apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
-    this.genAI = new GoogleGenerativeAI(key);
-    this.modelName = process.env.MODEL || "gemini-1.5-flash";
+    this.chatService = new ChatService(key);
   }
 
   // Info: (20260407 - Luphia) Utility
@@ -71,7 +69,6 @@ export class VisionAccountingService {
     base64Image: string,
     auxContext?: string,
   ): Promise<T> {
-    const model = this.genAI.getGenerativeModel({ model: this.modelName });
     const payload = this.preparePayload(base64Image);
 
     let combinedPrompt = systemPrompt;
@@ -84,16 +81,12 @@ export class VisionAccountingService {
       { inlineData: { data: payload, mimeType: "image/jpeg" } },
     ];
 
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts }],
-      generationConfig: {
-        responseMimeType: "application/json",
-        temperature: 0.1, // Info: (20260407 - Luphia) Highly rigid factual grounding
-      },
+    const responseText = await this.chatService.generateContent(parts, {
+      isJson: true,
+      temperature: 0.1, // Info: (20260407 - Luphia) Highly rigid factual grounding
     });
 
-    const responseText = result.response.text().trim();
-    return JSON.parse(responseText) as T;
+    return JSON.parse(responseText.trim()) as T;
   }
 
   // Info: (20260407 - Luphia) Phase 1. Pure Image Foundation Parsing

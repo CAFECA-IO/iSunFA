@@ -148,7 +148,7 @@ export default function CouponDetailModal({
                       <X size={18} />
                     </button>
                     <div className="text-center">
-                      <h2 className="text-lg leading-[1.5] font-bold tracking-tight shadow-black drop-shadow-sm">
+                      <h2 className="text-lg leading-normal font-bold tracking-tight shadow-black drop-shadow-sm">
                         {coupon.campaign.title ||
                           `Coupon #${coupon.campaign.claimCode || "Airdrop"}`}
                       </h2>
@@ -241,7 +241,7 @@ export default function CouponDetailModal({
       <Transition appear show={isConfirmOpen} as={Fragment}>
         <Dialog
           as="div"
-          className="relative z-[60]"
+          className="relative z-60"
           onClose={() => setIsConfirmOpen(false)}
         >
           <TransitionChild

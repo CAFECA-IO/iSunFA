@@ -51,6 +51,7 @@ export const logistics = {
     destination: "도착지",
     weight: "중량 (kg)",
     transportation_mode: "운송 수단",
+    waypoints: "경유지",
     status: "상태",
     no_records: "물류 기록이 없습니다",
     start_import: "위의 버튼을 클릭하여 물류 Excel 파일 가져오기를 시작하세요.",

@@ -67,12 +67,13 @@ export const transportationCarbonFootprintCalculator = {
     auto: "自動判定",
   },
   history: {
-    title: "Historical Analysis Paths",
+    title: "分析履歴",
   },
   plan_section: {
     mode_land: "陸上輸送",
     mode_sea: "海上輸送",
     mode_air: "航空輸送",
+    title_custom: "カスタム複合一貫輸送ルート",
     title_land: "陸上輸送プラン",
     title_sea: "海上輸送プラン",
     title_air: "航空輸送プラン",
@@ -111,8 +112,27 @@ export const transportationCarbonFootprintCalculator = {
     btn_calculate: "マイレージ計算開始",
     btn_delete: "削除",
     err_required: "出発地と目的地は必須です",
-    err_calc_failed: "計算失敗",
+    err_calc_failed: "計算に失敗しました。後でもう一度お試しください。",
     err_parse_failed: "解析失敗",
+    err_no_valid_routes:
+      "ファイルから有効な出発地/目的地を解析できませんでした。",
+    err_waypoints_incomplete_title: "中継地のデータが不完全です",
+    err_waypoints_incomplete_msg:
+      "一部の中継地に緯度・経度が設定されていません。自動解析をクリックするか、手動で入力してから再試行してください。",
+    label_waypoints_optional: "中継地 (任意)",
+    btn_setup: "設定...",
+    col_waypoints: "中継地設定",
+    waypoint_modal_title: "中継地設定",
+    waypoint_modal_empty:
+      "中継地がありません。下のボタンをクリックして追加してください。",
+    waypoint_modal_placeholder:
+      "場所を入力してください（例：Singapore または Port of Rotterdam）",
+    waypoint_modal_auto_parse: "緯度経度を自動解析",
+    waypoint_modal_auto_parse_short: "自動解析",
+    waypoint_modal_lat: "緯度 (Latitude)",
+    waypoint_modal_lng: "経度 (Longitude)",
+    waypoint_modal_add: "中継地を追加",
+    waypoint_modal_confirm: "確定",
     empty_list:
       "リストがありません。手動で追加するかテキストを貼り付けてください。",
     col_mode: "輸送モード",
@@ -130,5 +150,11 @@ export const transportationCarbonFootprintCalculator = {
     csv_sea_dist: "海運(km)",
     csv_air_dist: "空輸(km)",
     csv_pdf_file: "PDFファイル",
+  },
+  map: {
+    maptiler_key_not_set: "MapTilerキーが設定されていません！",
+    origin: "出発地",
+    dest: "目的地",
+    label: "🟢 ESG物流炭素排出量追跡 (Powered by MapLibre)",
   },
 };

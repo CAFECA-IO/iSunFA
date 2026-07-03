@@ -86,9 +86,6 @@ export const common = {
     oldest: "由舊至新",
   },
   share: "分享",
-  donut_chart: {
-    note: "* 圓餅圖呈現核心 {{title}} 之組合分佈。系統僅針對有效數據進行渲染，若有偏離或未定義科目則自動合併計算。",
-  },
   other: "其他",
   pdf_tool: "PDF 工具",
   please_login: "請先登入",
@@ -97,20 +94,6 @@ export const common = {
   report_layout: {
     brand: "陽光智能碳會計",
     footer_note: "本報告透過 AI 技術生成，由 iSunFA 陽光智能碳會計提供 • ",
-  },
-  mermaid: {
-    rendering: "正在渲染圖表...",
-    zoom_in: "放大 (Zoom In)",
-    zoom_out: "縮小 (Zoom Out)",
-    reset: "重設 (Reset)",
-    fullscreen: "全螢幕 (Fullscreen)",
-    close_fullscreen: "關閉全螢幕 (Close Fullscreen)",
-    hint_desktop: "按住左鍵拖曳平移 • Ctrl + 滾輪縮放",
-    hint_fullscreen: "按住左鍵拖曳平移 • 滾輪縮放 • 按 ESC 鍵關閉",
-    preview_title: "流程圖預覽 (Fullscreen Flowchart Preview)",
-    download: "下載圖片",
-    export_png: "下載 PNG",
-    export_svg: "下載 SVG",
   },
   export_settings: {
     title_voucher: "匯出傳票",
@@ -131,4 +114,6 @@ export const common = {
     failed_voucher: "匯出傳票失敗，請稍後再試。",
     failed_esg: "匯出 ESG 紀錄失敗，請稍後再試。",
   },
+  qr_code: "QR Code",
+  done: "完成",
 };
