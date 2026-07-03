@@ -23,14 +23,14 @@ describe("EsgCalculatorService", () => {
 
     const result = EsgCalculatorService.calculateEmissions(100, coefficient);
 
-    // CO2 breakdown: 100 * 1 = 100 kg CO2
-    // CH4 breakdown: 100 * 0.001 = 0.1 kg CH4
+    // Info: (20260703 - Tzuhan) CO2 breakdown: 100 * 1 = 100 kg CO2
+    // Info: (20260703 - Tzuhan) CH4 breakdown: 100 * 0.001 = 0.1 kg CH4
     expect(result.ghgBreakdown).toEqual({
       CO2: "100",
       CH4: "0.1",
     });
 
-    // CO2e total: 100 * 1 (GWP) + 0.1 * 27.9 (GWP) = 100 + 2.79 = 102.79
+    // Info: (20260703 - Tzuhan) CO2e total: 100 * 1 (GWP) + 0.1 * 27.9 (GWP) = 100 + 2.79 = 102.79
     expect(result.emissions).toBe("102.79");
     expect(result.gwpVersion).toBe("IPCC_AR6");
   });
@@ -39,18 +39,18 @@ describe("EsgCalculatorService", () => {
     const coefficient = {
       emissionFactor: 0,
       ghgFactors: {
-        SF6: 1, // Direct weight of SF6
+        SF6: 1, // Info: (20260703 - Tzuhan) Direct weight of SF6
       },
     };
 
     const result = EsgCalculatorService.calculateEmissions(2.5, coefficient);
 
-    // SF6 breakdown: 2.5 * 1 = 2.5 kg SF6
+    // Info: (20260703 - Tzuhan) SF6 breakdown: 2.5 * 1 = 2.5 kg SF6
     expect(result.ghgBreakdown).toEqual({
       SF6: "2.5",
     });
 
-    // CO2e total: 2.5 * 24300 (AR6 GWP) = 60750
+    // Info: (20260703 - Tzuhan) CO2e total: 2.5 * 24300 (AR6 GWP) = 60750
     expect(result.emissions).toBe("60750");
   });
 });

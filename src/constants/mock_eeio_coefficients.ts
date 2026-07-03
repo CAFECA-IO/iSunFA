@@ -56,7 +56,7 @@ export const MOCK_EEIO_COEFFICIENTS = [
     versionYear: "2024_MOCK_FGAS",
     isVerified: true,
     ghgFactors: {
-      SF6: 1, // 1 kg of SF6
+      SF6: 1, // Info: (20260703 - Tzuhan) 1 kg of SF6
     },
   },
 ];
