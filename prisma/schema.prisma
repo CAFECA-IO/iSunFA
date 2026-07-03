@@ -514,6 +514,11 @@ enum EsgIntensity {
   HIGH
 }
 
+enum EsgDqiType {
+  PRIMARY
+  SECONDARY
+}
+
 model EsgRecord {
   id                  String           @id @default(uuid())
   createdAt           DateTime         @default(now()) @map("created_at")
@@ -533,6 +538,7 @@ model EsgRecord {
   intensity           EsgIntensity? // Info: (20260312 - Julian) 排放強度分類 (LOW, MEDIUM, HIGH)
   confidence          Int // Info: (20260312 - Julian) AI 信心度
   dqiScore            Decimal?         @map("dqi_score") // Info: (20260410 - Julian) DQI 數據品質指標
+  dqiType             EsgDqiType       @default(PRIMARY) @map("dqi_type") // Info: (20260703 - Tzuhan) 初級/次級數據標籤
   isVerified          Boolean          @default(false) @map("is_verified") // Info: (20260318 - Julian) 是否已經驗證
   analysisStatus      AIAnalysisStatus @default(PENDING) @map("analysis_status") // Info: (20260318 - Julian) AI 分析狀態
   emissionSourceTag   String?          @map("emission_source_tag") // Info: (20260421 - Julian) 排放源標籤（廠）
@@ -561,7 +567,40 @@ model EsgRecord {
   // Info: (20260324 - Julian) AI 分析的備註
   aiNote String @default("") @map("ai_note") @db.Text
 
+  // Info: (20260703 - Tzuhan) 產品碳足跡分攤紀錄
+  allocations EsgAllocation[]
+
   @@map("esg_record")
+}
+
+// Info: (20260703 - Tzuhan) ISO 14067 產品碳足跡分攤紀錄
+model EsgAllocation {
+  id                 String   @id @default(uuid())
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  // Info: (20260703 - Tzuhan) 分攤來源：對應的大宗 ESG 紀錄
+  esgRecordId        String   @map("esg_record_id")
+  esgRecord          EsgRecord @relation(fields: [esgRecordId], references: [id], onDelete: Cascade)
+
+  // Info: (20260703 - Tzuhan) 分攤對象：對應的產品 SKU
+  skuId              String   @map("sku_id")
+  sku                DigitalProductPassportSku @relation(fields: [skuId], references: [id], onDelete: Cascade)
+
+  // Info: (20260703 - Tzuhan) 分攤比例 (例如 30%)
+  percentage         Decimal
+  // Info: (20260703 - Tzuhan) 分攤基礎 (例如重量、工時等文字描述)
+  basis              String?
+
+  // Info: (20260703 - Tzuhan) 依照比例分攤後的活動數據
+  allocatedAmount    Decimal  @map("allocated_amount")
+  // Info: (20260703 - Tzuhan) 依照比例分攤後的碳排放
+  allocatedEmissions Decimal  @map("allocated_emissions")
+  
+  // Info: (20260703 - Tzuhan) 依照比例分攤後的多氣體明細 (CO2, CH4 等)
+  allocatedGhgBreakdown Json? @map("allocated_ghg_breakdown")
+
+  @@map("esg_allocation")
 }
 
 // Info: (20260322 - Luphia) ESG 各年度目標
@@ -859,6 +898,9 @@ model DigitalProductPassportSku {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   batches DigitalProductPassportBatch[]
+  
+  // Info: (20260703 - Tzuhan) 關聯的碳分攤紀錄
+  allocations EsgAllocation[]
 
   @@map("digital_product_passport_sku")
 }

@@ -9,6 +9,7 @@ import {
   Voucher,
   VoucherLine,
   Coefficient,
+  EsgDqiType,
 } from "@/generated";
 import {
   EsgGenerationSource,
@@ -28,6 +29,8 @@ import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
 import { MOCK_EEIO_COEFFICIENTS } from "@/constants/mock_eeio_coefficients";
 import { CoaVectorSearchService } from "@/services/coa_vector_search.service";
 import { FIAT_CURRENCIES } from "@/constants/country";
+import { UnitConverter } from "@/lib/utils/unit_converter";
+import { EsgCalculatorService } from "@/services/esg.calculator.service";
 
 function parsePrismaDecimal(val: unknown, fieldName: string): Prisma.Decimal {
   if (val === null || val === undefined) {
@@ -595,6 +598,7 @@ export class DocumentSyncRepository {
           );
           let isSuspense = false;
           let recordIsVerified = confidence > 85;
+          let finalDqiType = "PRIMARY";
 
           if (finalCoefficientId) {
             let coefExists: Coefficient | null | undefined =
@@ -635,7 +639,36 @@ export class DocumentSyncRepository {
                   coefExists.source ===
                   "Internal_Proxy_Estimation_Based_On_Spend"
                 ) {
-                  recordIsVerified = false;
+                  finalDqiType = "SECONDARY";
+                  // Info: (20260703 - Tzuhan) [UX FIX] EEIO 重大性豁免與白名單，避免無意義的亮紅燈
+                  const EEIO_WHITELIST = ["計程車", "交通", "停車費", "郵資", "文具", "辦公用品", "雜支", "餐費", "便當", "飲料", "快遞", "高鐵", "台鐵", "客運", "捷運"];
+                  const EEIO_MATERIALITY_THRESHOLD = 3000;
+                  
+                  const activityOrVendor = `${ed.activityType || ""} ${ed.vendor || ""}`.toLowerCase();
+                  const isWhitelisted = EEIO_WHITELIST.some(keyword => activityOrVendor.includes(keyword.toLowerCase()));
+                  const isBelowThreshold = esgAmount.toNumber() < EEIO_MATERIALITY_THRESHOLD;
+
+                  if (!isWhitelisted && !isBelowThreshold) {
+                    recordIsVerified = false;
+                  }
+                }
+
+                // Info: (20260703 - Tzuhan) [UNIT CONVERSION FIX] 單位自動換算，將 AI 萃取的數值轉成係數庫單位，並後端重算碳排
+                try {
+                  const convertedAmount = UnitConverter.convert(esgAmount, docUnit, coefUnit);
+                  const calcResult = EsgCalculatorService.calculateEmissions(
+                    convertedAmount.toNumber(),
+                    coefExists
+                  );
+                  calculatedEmissions = new Prisma.Decimal(calcResult.emissions);
+                  ed.ghgBreakdown = calcResult.ghgBreakdown;
+                  ed.gwpVersion = calcResult.gwpVersion;
+                } catch (convErr) {
+                  isSuspense = true;
+                  finalCoefficientId = null;
+                  ed.aiNote =
+                    (ed.aiNote || "") +
+                    `\n[系統稽核警告] 單位換算失敗 (${(convErr as Error).message})，已阻斷寫入，強制列入懸記。`;
                 }
 
                 if (isStaticMock) {
@@ -708,6 +741,7 @@ export class DocumentSyncRepository {
             emissions: calculatedEmissions,
             intensity: (ed.intensity as EsgIntensity) || null,
             dqiScore: parsePrismaDecimal(ed.dqiScore, "dqiScore"),
+            dqiType: finalDqiType as EsgDqiType,
             confidence,
             isVerified: recordIsVerified,
             aiNote,
