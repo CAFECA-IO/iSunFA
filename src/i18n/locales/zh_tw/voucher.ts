@@ -149,4 +149,28 @@ export const voucher = {
       },
     },
   },
+  account: {
+    empty: "目前尚無會計科目",
+    search: {
+      label: "搜尋科目",
+      placeholder: "搜尋科目代碼或名稱...",
+    },
+    action: {
+      add: "新增自訂科目",
+    },
+    add_modal: {
+      title: "新增自訂會計科目",
+      parent: "父層科目",
+      name: "科目名稱",
+      name_placeholder: "例如：",
+      code: "科目代碼",
+      type: "科目類型",
+      level: "層級",
+    },
+    messages: {
+      create_success: "自訂會計科目已建立",
+      create_failed: "建立失敗，請稍後再試",
+      code_exists: "科目代碼已存在",
+    },
+  },
 };

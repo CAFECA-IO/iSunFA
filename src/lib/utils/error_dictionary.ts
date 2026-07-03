@@ -676,4 +676,26 @@ export const API_ERRORS = {
     message: "Internal Server Error",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
+
+  // Info: (20260703 - Julian) AC: Accounting Account Errors
+  IN_FAILED_TO_FETCH_ACCOUNT: {
+    code: "AC000001",
+    message: "Failed to fetch accounting account",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
+  IN_FAILED_TO_CREATE_ACCOUNT: {
+    code: "AC000002",
+    message: "Failed to create accounting account",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
+  VA_CODE_ALREADY_EXISTS: {
+    code: "AC000003",
+    message: "Account code already exists",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+  NF_PARENT_ACCOUNT: {
+    code: "AC000004",
+    message: "Parent account not found",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
 };

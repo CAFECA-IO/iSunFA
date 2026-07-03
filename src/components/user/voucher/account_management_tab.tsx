@@ -1,97 +1,214 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
-  // Globe,
-  // User,
   Plus,
   Search,
-  // PenLine,
-  // Trash2,
   SearchX,
   Loader2,
+  ChevronRight,
+  ChevronDown,
+  AlertCircle,
+  Pencil,
 } from "lucide-react";
-// import { useParams } from "next/navigation";
-// import { request } from "@/lib/utils/request";
-// import { IApiResponse } from "@/lib/utils/response";
-// import { timestampToString } from "@/lib/utils/common";
-// import ConfirmModal from "@/components/common/confirm_modal";
+import { useParams } from "next/navigation";
+import { request } from "@/lib/utils/request";
+import { IApiResponse } from "@/lib/utils/response";
 import Pagination from "@/components/common/pagination";
-// import AccountAddEditModal from "@/components/user/esg/account_add_edit_modal";
-// import {
-//   AccountCategory,
-//   IAccount,
-//   IAccountInput,
-// } from "@/interfaces/account";
 import { useTranslation } from "@/i18n/i18n_context";
-import { ACCOUNTS, IAccount } from "@/constants/accounts";
-// import { IAccountBook } from "@/interfaces/account_book";
 import { AccountType } from "@/constants/enums";
+import {
+  IAccountingAccount,
+  IAccountingAccountInput,
+} from "@/interfaces/accounting_account";
+import SuccessNotification from "@/components/common/success_notification";
 
-interface IAccountCardProps {
-  account: IAccount;
+// Info: (20260703 - Julian) 定義不同科目類別的顏色
+const ACCOUNT_TYPE_COLORS: Record<
+  string,
+  { bg: string; text: string; border: string }
+> = {
+  [AccountType.ASSET]: {
+    bg: "bg-emerald-50",
+    text: "text-emerald-700",
+    border: "border-emerald-200",
+  },
+  [AccountType.LIABILITY]: {
+    bg: "bg-rose-50",
+    text: "text-rose-700",
+    border: "border-rose-200",
+  },
+  [AccountType.EQUITY]: {
+    bg: "bg-blue-50",
+    text: "text-blue-700",
+    border: "border-blue-200",
+  },
+  [AccountType.REVENUE]: {
+    bg: "bg-amber-50",
+    text: "text-amber-700",
+    border: "border-amber-200",
+  },
+  [AccountType.INCOME]: {
+    bg: "bg-amber-50",
+    text: "text-amber-700",
+    border: "border-amber-200",
+  },
+  [AccountType.EXPENSE]: {
+    bg: "bg-orange-50",
+    text: "text-orange-700",
+    border: "border-orange-200",
+  },
+  [AccountType.COST]: {
+    bg: "bg-orange-50",
+    text: "text-orange-700",
+    border: "border-orange-200",
+  },
+  [AccountType.GAIN_OR_LOSS]: {
+    bg: "bg-violet-50",
+    text: "text-violet-700",
+    border: "border-violet-200",
+  },
+  [AccountType.CASH_FLOW]: {
+    bg: "bg-cyan-50",
+    text: "text-cyan-700",
+    border: "border-cyan-200",
+  },
+  [AccountType.OTHER_COMPREHENSIVE_INCOME]: {
+    bg: "bg-fuchsia-50",
+    text: "text-fuchsia-700",
+    border: "border-fuchsia-200",
+  },
+  [AccountType.OTHER]: {
+    bg: "bg-slate-50",
+    text: "text-slate-700",
+    border: "border-slate-200",
+  },
+};
+
+interface IAccountItemProps {
+  account: IAccountingAccount;
+  level: number;
+  isExpanded: boolean;
+  onToggle: () => void;
+  hasChildren: boolean;
+  onAddChild: () => void;
+  onEdit: () => void;
 }
 
-const AccountCard = ({ account }: IAccountCardProps) => {
-  // const { t } = useTranslation();
+const AccountItem = ({
+  account,
+  level,
+  isExpanded,
+  onToggle,
+  hasChildren,
+  onAddChild,
+  onEdit,
+}: IAccountItemProps) => {
+  const colors = ACCOUNT_TYPE_COLORS[account.type] || ACCOUNT_TYPE_COLORS.other;
 
   return (
     <div
-      key={account.code}
-      className="group flex w-full items-center gap-3 rounded-xl bg-white px-6 py-4 text-left shadow-sm"
+      onClick={onToggle}
+      className={`group flex w-full cursor-pointer items-center gap-3 rounded-xl bg-white px-4 py-3 text-left shadow-sm transition-all hover:bg-gray-50 md:px-6 ${
+        level > 1 ? "border-l-2 border-gray-100" : ""
+      }`}
+      style={{ marginLeft: `${(level - 1) * 24}px` }}
     >
-      <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-green-100 px-3 py-1.5 text-base font-bold text-green-600 transition-all">
-        {account.code}
-      </div>
       <div className="flex items-center gap-2">
-        <div className="flex items-center text-xl font-bold text-slate-700">
-          {account.name}
-        </div>
-        <div className="rounded-md bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-600">
-          {account.type}
+        {hasChildren ? (
+          <div className="flex size-6 items-center justify-center rounded">
+            {isExpanded ? (
+              <ChevronDown size={16} />
+            ) : (
+              <ChevronRight size={16} />
+            )}
+          </div>
+        ) : (
+          <div className="size-6" />
+        )}
+        {account.isCustom && (
+          <div className="rounded-md border border-orange-200 bg-orange-50 px-2 py-0.5 text-[10px] font-medium text-orange-600">
+            Custom
+          </div>
+        )}
+        <div
+          className={`flex shrink-0 items-center justify-center rounded-lg border px-2 py-1.5 text-sm font-bold md:text-base ${colors.bg} ${colors.text} ${colors.border}`}
+        >
+          {account.code}
         </div>
       </div>
-      <div></div>
+      <div className="flex flex-1 items-center justify-between gap-2 overflow-hidden">
+        <div className="flex flex-1 items-center gap-2 overflow-hidden">
+          <div className="truncate text-base font-bold text-slate-700 md:text-lg">
+            {account.name}
+          </div>
+          <div
+            className={`hidden rounded-md border px-2 py-0.5 text-[10px] font-medium md:block ${colors.bg} ${colors.text} ${colors.border}`}
+          >
+            {account.type}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddChild();
+            }}
+            className="flex size-8 items-center justify-center rounded-full bg-green-50 text-green-600 transition-colors hover:bg-green-100"
+            title="新增子科目"
+          >
+            <Plus size={16} />
+          </button>
+          {account.isCustom && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+              className="flex size-8 items-center justify-center rounded-full bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100"
+              title="編輯科目代碼/名稱"
+            >
+              <Pencil size={14} />
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
 
-// enum AccountCategory {
-//   STANDARD = "standard",
-//   CUSTOM = "custom",
-// }
-
 type IAccountTab = AccountType | "all";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 15;
 
 export default function AccountManagementTab() {
-  // const params = useParams();
-  // const accountBookId = params?.account_book_id as string;
+  const params = useParams();
+  const accountBookId = params?.account_book_id as string;
   const { t } = useTranslation();
 
-  const [accountList, setAccountList] = useState<IAccount[]>([]);
-  const [totalPages, setTotalPages] = useState<number>(0);
+  // Data States
+  const [allAccounts, setAllAccounts] = useState<IAccountingAccount[]>([]);
   const [keyword, setKeyword] = useState<string>("");
   const [debouncedKeyword, setDebouncedKeyword] = useState<string>("");
   const [activeTab, setActiveTab] = useState<IAccountTab>("all");
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  // const [refreshFlag, setRefreshFlag] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [expandedCodes, setExpandedCodes] = useState<Set<string>>(new Set());
 
-  // const [isAddEditModalOpen, setIsAddEditModalOpen] = useState<boolean>(false);
-  // const [selectedAccountId, setSelectedAccountId] = useState<string | null>(
-  //   null,
-  // );
-  // const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] =
-  //   useState<boolean>(false);
+  // Form States (Integrated from modal)
+  const [isFormLoading, setIsFormLoading] = useState<boolean>(false);
+  const [showSuccess, setShowSuccess] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [parentInfo, setParentInfo] = useState<string>(""); // 用於顯示父層名稱
+  const [formData, setFormData] = useState<IAccountingAccountInput>({
+    parentCode: "",
+    name: "",
+    code: "",
+  });
 
-  // const clickAddAccount = () => {
-  //   setSelectedAccountId(null);
-  //   setIsAddEditModalOpen(true);
-  // };
-
-  // Info: (20260703 - Julian) 設定輸入延遲，避免頻繁打 API
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedKeyword(keyword);
@@ -99,113 +216,335 @@ export default function AccountManagementTab() {
     return () => clearTimeout(timer);
   }, [keyword]);
 
-  // Info: (20260703 - Julian) 手動送出搜尋，避免等待防抖延遲並關閉鍵盤
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setDebouncedKeyword(keyword);
-    document.getElementById("account-search-input")?.blur();
+  const fetchAccounts = async () => {
+    setIsLoading(true);
+    try {
+      const res = await request<IApiResponse<{ items: IAccountingAccount[] }>>(
+        `/api/v1/user/account_book/${accountBookId}/accounting_account`,
+      );
+      if (res.success && res?.payload?.items) {
+        setAllAccounts(res.payload.items);
+      }
+    } catch (error) {
+      console.error("Failed to fetch accounts", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Info: (20260703 - Julian) 取得係數列表
   useEffect(() => {
-    const newList = ACCOUNTS.TW.filter(
-      (account) => account.type === activeTab || activeTab === "all",
-    )
-      .filter((account) => account.name.includes(debouncedKeyword))
-      .slice(0, PAGE_SIZE);
-    setAccountList(newList);
+    if (accountBookId) {
+      fetchAccounts();
+    }
+  }, [accountBookId]);
 
-    // Info: (20260703 - Julian) 計算總頁數
-    setTotalPages(Math.ceil(ACCOUNTS.TW.length / PAGE_SIZE));
+  const toggleExpand = (code: string) => {
+    const newExpanded = new Set(expandedCodes);
+    if (newExpanded.has(code)) {
+      newExpanded.delete(code);
+    } else {
+      newExpanded.add(code);
+    }
+    setExpandedCodes(newExpanded);
+  };
 
-    setIsLoading(false);
-  }, [activeTab, debouncedKeyword, currentPage]);
+  const handleAddChild = (parentAccount: IAccountingAccount) => {
+    setIsEditing(false);
+    setEditId(null);
+    setParentInfo(`[${parentAccount.code}] ${parentAccount.name}`);
+    setFormData({ parentCode: parentAccount.code, name: "", code: "" });
+    setErrorMessage(null);
+  };
 
-  // Info: (20260703 - Julian) 搜尋條件改變時重置第一頁
-  // useEffect(() => {
-  //   setCurrentPage(1);
-  // }, [activeTab, debouncedKeyword]);
+  const handleEdit = (account: IAccountingAccount) => {
+    setIsEditing(true);
+    setEditId(account.id || null);
 
-  const displayedAccountList = accountList.map((account) => {
-    return <AccountCard key={account.code} account={account} />;
-  });
+    // 找出父層資訊
+    const parent = allAccounts.find((a) => a.code === account.parentCode);
+    if (parent) {
+      setParentInfo(`[${parent.code}] ${parent.name}`);
+    } else {
+      setParentInfo(account.parentCode);
+    }
 
-  const accountSection = isLoading ? (
-    <div className="flex items-center justify-center gap-2 p-20 text-xl font-semibold text-orange-400">
-      <Loader2 className="animate-spin" size={40} />
-    </div>
-  ) : accountList.length > 0 ? (
-    <div className="grid grid-flow-row grid-cols-1 gap-y-4 md:grid-cols-2 md:gap-x-4">
-      {displayedAccountList}
-    </div>
-  ) : (
-    <div className="flex flex-col items-center justify-center gap-2 p-4 text-xl font-semibold text-gray-400">
-      <SearchX size={40} />
-      <p>{t("account.empty")}</p>
-    </div>
+    setFormData({
+      parentCode: account.parentCode,
+      name: account.name,
+      code: account.code,
+    });
+    setErrorMessage(null);
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.parentCode || !formData.name || !formData.code) return;
+
+    setIsFormLoading(true);
+    setErrorMessage(null);
+    try {
+      const url = `/api/v1/user/account_book/${accountBookId}/accounting_account`;
+      const res = isEditing
+        ? await request<IApiResponse<IAccountingAccount>>(url, {
+            method: "PATCH",
+            body: JSON.stringify({ id: editId, input: formData }),
+          })
+        : await request<IApiResponse<{ id: string }>>(url, {
+            method: "POST",
+            body: JSON.stringify({ input: formData }),
+          });
+
+      if (res.success) {
+        setShowSuccess(true);
+        fetchAccounts();
+        setFormData({ parentCode: "", name: "", code: "" });
+        setParentInfo("");
+        setIsEditing(false);
+        setEditId(null);
+      } else {
+        setErrorMessage(res.message || t("account.messages.create_failed"));
+      }
+    } catch (error) {
+      console.error("Error submitting form", error);
+      setErrorMessage(t("account.messages.create_failed"));
+    } finally {
+      setIsFormLoading(false);
+    }
+  };
+
+  const filteredAccounts = useMemo(() => {
+    let list = allAccounts;
+    if (activeTab !== "all") {
+      list = list.filter((acc) => acc.type === activeTab);
+    }
+    if (debouncedKeyword) {
+      list = list.filter(
+        (acc) =>
+          acc.name.includes(debouncedKeyword) ||
+          acc.code.includes(debouncedKeyword),
+      );
+    }
+    return list;
+  }, [allAccounts, activeTab, debouncedKeyword]);
+
+  const visibleAccounts = useMemo(() => {
+    if (debouncedKeyword) return filteredAccounts;
+
+    const result: IAccountingAccount[] = [];
+    const addChildren = (parentCode: string) => {
+      const children = filteredAccounts.filter(
+        (acc) => acc.parentCode === parentCode,
+      );
+      children.forEach((child) => {
+        result.push(child);
+        if (expandedCodes.has(child.code)) {
+          addChildren(child.code);
+        }
+      });
+    };
+
+    const roots = filteredAccounts.filter(
+      (acc) =>
+        acc.level === 1 ||
+        !filteredAccounts.find((p) => p.code === acc.parentCode),
+    );
+
+    roots.forEach((root) => {
+      if (!result.find((r) => r.code === root.code)) {
+        result.push(root);
+        if (expandedCodes.has(root.code)) {
+          addChildren(root.code);
+        }
+      }
+    });
+
+    return result;
+  }, [filteredAccounts, expandedCodes, debouncedKeyword]);
+
+  const totalPages = Math.ceil(visibleAccounts.length / PAGE_SIZE);
+  const paginatedAccounts = visibleAccounts.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
   );
 
   return (
-    <>
-      {/* Info: (20260703 - Julian) Toolbar */}
-      <div className="flex flex-col gap-x-8 gap-y-2 rounded-xl bg-white p-3 shadow-sm md:flex-row md:p-6">
-        {/* Info: (20260703 - Julian) Search */}
-        <form
-          onSubmit={handleSearchSubmit}
-          className="flex flex-1 items-center gap-2 rounded-lg bg-gray-50 p-2 lg:px-5 lg:py-3"
-        >
-          <label htmlFor="account-search-input" className="sr-only">
-            {t("account.search.label")}
-          </label>
-          <Search size={20} className="text-gray-300" />
+    <div className="flex flex-col gap-6">
+      {/* Top Section: Search and Filters */}
+      <div className="flex flex-col gap-4 rounded-xl bg-white p-4 shadow-sm">
+        <div className="relative">
+          <Search
+            size={18}
+            className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
+          />
           <input
-            id="account-search-input"
-            aria-label={t("account.search.label")}
             type="text"
-            placeholder={t("account.search.placeholder")}
+            placeholder={t("voucher.account.search.placeholder")}
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            enterKeyHint="search"
-            className="w-full bg-transparent text-xs font-medium text-slate-800 outline-none placeholder:text-gray-400 lg:text-base"
+            className="w-full rounded-lg border border-slate-200 py-3 pr-4 pl-10 text-sm font-medium transition-all placeholder:text-slate-400 focus:border-orange-500 focus:bg-white focus:ring-1 focus:ring-orange-500 focus:outline-none"
           />
-        </form>
-        {/* Info: (20260703 - Julian) Add Button */}
-        <button
-          type="button"
-          // onClick={clickAddAccount}
-          className="flex items-center justify-center gap-2 rounded-lg bg-orange-500 p-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-orange-600 focus:outline-none lg:px-5 lg:py-3 lg:text-base"
-        >
-          <Plus size={20} />
-          <p>{t("account.action.add")}</p>
-        </button>
-      </div>
-      {/* Info: (20260703 - Julian) Tab Switch */}
-      <div className="relative flex items-center border-b border-gray-200">
-        {Object.values(AccountType).map((tab) => {
-          return (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setActiveTab(tab)}
-              className={`${tab === activeTab ? "border-slate-800 text-slate-800" : "border-transparent text-gray-400"} border-b-2 px-6 py-2 text-base font-semibold transition-all outline-none hover:border-orange-500 hover:text-orange-500`}
-            >
-              {tab.toLowerCase()}
-            </button>
-          );
-        })}
-      </div>
-      {/* <div className="relative flex items-center border-b border-gray-200">
-        {tabs}
-        <div
-          className={`absolute bottom-0 left-0 h-0.5 w-1/3 bg-slate-700 transition-all duration-200 lg:h-1 lg:w-40 ${activeTab === "all" ? "left-0" : activeTab === AccountCategory.STANDARD ? "left-1/3 lg:left-40" : "left-2/3 lg:left-80"} `}
-        ></div>
-      </div> */}
-      {/* Info: (20260703 - Julian) Account Section */}
-      {accountSection}
+        </div>
 
-      {/* Info: (20260703 - Julian) Pagination */}
+        <div className="flex flex-wrap items-center gap-1">
+          <button
+            onClick={() => setActiveTab("all")}
+            className={`${activeTab === "all" ? "bg-slate-800 text-white shadow-md" : "text-slate-500 hover:bg-gray-100"} rounded-lg px-4 py-2 text-xs font-bold transition-all md:text-sm`}
+          >
+            {t("voucher.account_book_selector.all")}
+          </button>
+          {Object.values(AccountType).map((tab) => {
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`${tab === activeTab ? "bg-slate-800 text-white shadow-md" : "text-slate-500 hover:bg-gray-100"} rounded-lg px-4 py-2 text-xs font-bold transition-all md:text-sm`}
+              >
+                {t(`voucher.account_book_selector.types.${tab}`)}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Main Content: List and Panel side by side */}
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+        {/* Left Side: Account List */}
+        <div className="flex flex-1 flex-col gap-2">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="animate-spin text-orange-500" size={40} />
+            </div>
+          ) : paginatedAccounts.length > 0 ? (
+            paginatedAccounts.map((account) => (
+              <AccountItem
+                key={account.code}
+                account={account}
+                level={account.level}
+                isExpanded={expandedCodes.has(account.code)}
+                onToggle={() => toggleExpand(account.code)}
+                hasChildren={allAccounts.some(
+                  (acc) => acc.parentCode === account.code,
+                )}
+                onAddChild={() => handleAddChild(account)}
+                onEdit={() => handleEdit(account)}
+              />
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-slate-200 bg-white py-20 text-slate-400 shadow-sm">
+              <SearchX size={48} strokeWidth={1.5} />
+              <p className="font-medium">{t("voucher.account.empty")}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Right Side: Add/Edit Panel (Embedded) */}
+        <div className="sticky top-24 w-[400px] shrink-0">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg shadow-slate-200/50">
+            <div className="border-b border-slate-50 bg-slate-50/50 px-6 py-4">
+              <h3 className="flex items-center gap-2 text-lg font-bold text-slate-800">
+                {isEditing ? (
+                  <>
+                    <Pencil size={18} className="text-blue-500" />
+                    編輯會計科目
+                  </>
+                ) : (
+                  <>
+                    <Plus size={20} className="text-green-500" />
+                    {t("voucher.account.add_modal.title")}
+                  </>
+                )}
+              </h3>
+            </div>
+
+            <form onSubmit={handleFormSubmit} className="space-y-5 p-6">
+              {errorMessage && (
+                <div className="flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 p-3 text-sm font-medium text-red-600">
+                  <AlertCircle size={18} className="shrink-0" />
+                  {errorMessage}
+                </div>
+              )}
+
+              <div>
+                <label className="mb-1.5 block text-sm font-bold text-slate-700">
+                  {t("voucher.account.add_modal.parent")}
+                </label>
+                <input
+                  type="text"
+                  value={parentInfo}
+                  readOnly
+                  placeholder="請先點擊列表中的「+」或「✎」按鈕"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-medium text-slate-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-sm font-bold text-slate-700">
+                  {t("voucher.account.add_modal.code")}
+                </label>
+                <input
+                  type="text"
+                  value={formData.code}
+                  onChange={(e) =>
+                    setFormData({ ...formData, code: e.target.value })
+                  }
+                  placeholder={t("voucher.account.add_modal.code")}
+                  required
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 transition-all focus:border-orange-500 focus:bg-white focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-bold text-slate-700">
+                  {t("voucher.account.add_modal.name")}
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  placeholder={t("voucher.account.add_modal.name")}
+                  required
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 transition-all focus:border-orange-500 focus:bg-white focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData({ parentCode: "", name: "", code: "" });
+                    setParentInfo("");
+                    setIsEditing(false);
+                    setErrorMessage(null);
+                  }}
+                  className="flex-1 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 transition-all hover:bg-slate-50"
+                >
+                  {t("voucher.detail_modal.actions.clear_all")}
+                </button>
+                <button
+                  type="submit"
+                  disabled={isFormLoading || !formData.parentCode}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-200 transition-all hover:bg-orange-600 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isFormLoading ? (
+                    <Loader2 className="animate-spin" size={18} />
+                  ) : (
+                    t("voucher.detail_modal.actions.confirm")
+                  )}
+                </button>
+              </div>
+              {!formData.parentCode && (
+                <p className="text-center text-xs text-slate-400">
+                  * 請先點擊左側列表中的操作按鈕
+                </p>
+              )}
+            </form>
+          </div>
+        </div>
+      </div>
+
       {totalPages > 1 && (
-        <div className="mt-4">
+        <div>
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -213,23 +552,19 @@ export default function AccountManagementTab() {
           />
         </div>
       )}
-      {/* Info: (20260703 - Julian) Confirm Modal */}
-      {/* <ConfirmModal
-        isOpen={isDeleteConfirmOpen}
-        onClose={() => setIsDeleteConfirmOpen(false)}
-        title={t("account.delete.title")}
-        message={t("account.delete.message")}
-        confirmText={t("common.delete")}
-        cancelText={t("common.cancel")}
-        onConfirm={deleteAccount}
-      /> */}
-      {/* Info: (20260703 - Julian) Add/Edit Modal */}
-      {/* <AccountAddEditModal
-        selectedAccountId={selectedAccountId}
-        isOpen={isAddEditModalOpen}
-        onClose={() => setIsAddEditModalOpen(false)}
-        onConfirm={saveAccount}
-      /> */}
-    </>
+
+      <SuccessNotification
+        show={showSuccess}
+        title={
+          isEditing ? "科目更新成功" : t("account.messages.create_success")
+        }
+        message={
+          isEditing
+            ? "會計科目已成功更新"
+            : t("account.messages.create_success")
+        }
+        onClose={() => setShowSuccess(false)}
+      />
+    </div>
   );
 }
