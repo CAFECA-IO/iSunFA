@@ -23,7 +23,7 @@ export const useReportDownload = () => {
       });
 
       const eventSource = new EventSource(
-        `/api/v1/mock/download?reportId=${reportId}`,
+        `/api/v1/business_monitor/download?reportId=${reportId}`,
       );
 
       eventSource.onmessage = (event) => {

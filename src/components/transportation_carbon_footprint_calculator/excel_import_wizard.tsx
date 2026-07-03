@@ -11,7 +11,6 @@ import {
   Trash2,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { RouteMode } from "@/constants/analysis";
 import { IMileageItem } from "@/components/transportation_carbon_footprint_calculator/mileage_calculator";
 import DataTable from "@/components/common/data_table";
 
@@ -25,7 +24,9 @@ const REQUIRED_FIELDS = [
   { key: "dest", labelKey: "logistics.page.destination" },
 ];
 
-const OPTIONAL_FIELDS: { key: string; labelKey: string }[] = [];
+const OPTIONAL_FIELDS: { key: string; labelKey: string }[] = [
+  { key: "waypoints", labelKey: "logistics.page.waypoints" },
+];
 
 export function ExcelImportWizard({
   onComplete,
@@ -103,37 +104,20 @@ export function ExcelImportWizard({
     rawData.forEach((row) => {
       const origin = String(row[mapping["origin"]] || "").trim();
       const dest = String(row[mapping["dest"]] || "").trim();
-      const modeRaw = String(row[mapping["mode"]] || "")
-        .trim()
-        .toUpperCase();
-
-      // Info: (20260618 - Tzuhan) Auto-detect mode if valid
-      let mode: RouteMode | undefined = undefined;
-      if (
-        modeRaw.includes("LAND") ||
-        modeRaw.includes("陸運") ||
-        modeRaw.includes("卡車")
-      )
-        mode = "LAND";
-      else if (
-        modeRaw.includes("SEA") ||
-        modeRaw.includes("海運") ||
-        modeRaw.includes("船")
-      )
-        mode = "SEA_LAND";
-      else if (
-        modeRaw.includes("AIR") ||
-        modeRaw.includes("空運") ||
-        modeRaw.includes("飛機")
-      )
-        mode = "AIR_LAND";
+      const waypoints = String(row[mapping["waypoints"]] || "").trim();
 
       if (origin && dest && origin !== "undefined" && dest !== "undefined") {
         items.push({
           id: crypto.randomUUID(),
           origin,
           dest,
-          mode,
+          waypoints: waypoints
+            ? waypoints
+                .split(",")
+                .map((w) => w.trim())
+                .filter(Boolean)
+                .map((w) => ({ id: crypto.randomUUID(), name: w }))
+            : [],
         });
       } else {
         errCnt++;
@@ -332,11 +316,14 @@ export function ExcelImportWizard({
                 { key: "origin", label: t("logistics.page.origin") },
                 { key: "dest", label: t("logistics.page.destination") },
                 {
-                  key: "mode",
-                  label: t("logistics.page.transportation_mode"),
-                  render: (row) =>
-                    (row as IMileageItem).mode ||
-                    t("logistics.import_wizard.auto_detect"),
+                  key: "waypoints",
+                  label: t("logistics.page.waypoints"),
+                  render: (row) => {
+                    const wps = (row as IMileageItem).waypoints;
+                    return wps && wps.length > 0
+                      ? wps.map((w) => w.name).join(", ")
+                      : "-";
+                  },
                 },
               ]}
               rowKey={(row) => JSON.stringify(row)}

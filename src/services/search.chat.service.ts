@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { ChatService } from "@/services/chat.service";
 import { SearchService } from "@/services/search.service";
 
 export interface ISearchChatResult {
@@ -9,16 +9,14 @@ export interface ISearchChatResult {
 }
 
 export class SearchChatService {
-  private genAI: GoogleGenerativeAI;
-  private modelName: string;
+  private chatService: ChatService;
   private searchService: SearchService;
 
   constructor(apiKey?: string) {
     // Info: (20260407 - Luphia) Fallback to runtime ENV variables
     const key =
       apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
-    this.genAI = new GoogleGenerativeAI(key);
-    this.modelName = process.env.MODEL || "gemini-1.5-flash";
+    this.chatService = new ChatService(key);
     this.searchService = new SearchService(key);
   }
 
@@ -37,17 +35,16 @@ export class SearchChatService {
       Example: ["query one", "query two"]
     `;
 
-    const model = this.genAI.getGenerativeModel({ model: this.modelName });
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: {
-        responseMimeType: "application/json",
+    const responseText = await this.chatService.generateContent(
+      [{ text: prompt }],
+      {
+        isJson: true,
         temperature: 0.1,
       },
-    });
+    );
 
     try {
-      const parsed = JSON.parse(result.response.text());
+      const parsed = JSON.parse(responseText);
       if (Array.isArray(parsed)) {
         // Info: (20260407 - Luphia) Enforce maximum 3 queries
         return parsed.slice(0, 3);
@@ -161,22 +158,21 @@ export class SearchChatService {
       ${uniqueUrls.join("\n")}
     `;
 
-    const model = this.genAI.getGenerativeModel({ model: this.modelName });
-    const finalResult = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: synthesisPrompt }] }],
-      generationConfig: {
+    const finalAnswer = await this.chatService.generateContent(
+      [{ text: synthesisPrompt }],
+      {
         temperature: 0.3, // Info: (20260407 - Luphia) Slight creative liberty to weave facts elegantly
       },
-    });
+    );
 
-    const finalAnswer = finalResult.response.text().trim();
+    const finalAnswerTrimmed = finalAnswer.trim();
     console.log("[SearchChat Orchestrator] Mission Accomplished!");
 
     return {
       userPrompt,
       derivedQueries: queries,
       referencedUrls: uniqueUrls,
-      finalAnswer,
+      finalAnswer: finalAnswerTrimmed,
     };
   }
 }

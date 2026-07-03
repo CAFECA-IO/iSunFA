@@ -20,10 +20,7 @@ import {
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  IMockReport,
-  IReportDetailPayload,
-} from "@/interfaces/business_monitor";
+import { IReport, IReportDetailPayload } from "@/interfaces/business_monitor";
 import { request } from "@/lib/utils/request";
 import { useTranslation } from "@/i18n/i18n_context";
 
@@ -42,7 +39,7 @@ const ReportDetailPageBody = () => {
       setIsLoading(true);
       try {
         const res = await request<{ payload: IReportDetailPayload }>(
-          `/api/v1/mock/reports/${reportId}`,
+          `/api/v1/business_monitor/reports/${reportId}`,
         );
         if (res?.payload) {
           setPayload(res.payload);
@@ -61,16 +58,16 @@ const ReportDetailPageBody = () => {
   const companyReports = payload?.companyReports || [];
   const industryReports = payload?.industryReports || [];
 
-  const handleDownload = (targetReport: IMockReport) => {
+  const handleDownload = (targetReport: IReport) => {
     // Info: (20260610 - Julian) 模擬產生檔案 Blob 並觸發瀏覽器下載
-    const dummyContent = `Mock Report Content for ${targetReport.company}\nReport Year: ${targetReport.reportYear}\nPeriod: ${targetReport.period}\nIndustry: ${targetReport.industry}`;
+    const dummyContent = `Mock Report Content for ${targetReport.companyName}\nReport Year: ${targetReport.reportYear}\nPeriod: ${targetReport.period}\nIndustry: ${targetReport.industry}`;
     const blob = new Blob([dummyContent], {
       type: "text/plain;charset=utf-8",
     });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${targetReport.company}_${targetReport.reportYear}${t("business_monitor.detail.report_file_suffix")}.txt`;
+    a.download = `${targetReport.companyName}_${targetReport.reportYear}${t("business_monitor.detail.report_file_suffix")}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -118,7 +115,7 @@ const ReportDetailPageBody = () => {
 
                 <div className="flex flex-col gap-2">
                   <h1 className="text-2xl font-black text-slate-900 md:text-4xl">
-                    {report.company}
+                    {report.companyName}
                   </h1>
                   <h2 className="text-xl font-bold text-slate-600 md:text-2xl">
                     {report.title}
@@ -282,7 +279,7 @@ const ReportDetailPageBody = () => {
                     >
                       <div>
                         <h4 className="mb-1 text-base font-bold text-slate-800">
-                          {indReport.company}
+                          {indReport.companyName}
                         </h4>
                         <p className="text-sm font-medium text-slate-500">
                           {t("business_monitor.detail.year_report", {

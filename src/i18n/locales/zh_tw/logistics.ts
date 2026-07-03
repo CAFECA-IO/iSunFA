@@ -49,6 +49,7 @@ export const logistics = {
     destination: "終點",
     weight: "載重 (kg)",
     transportation_mode: "運輸方式",
+    waypoints: "中繼站",
     status: "狀態",
     no_records: "目前沒有物流紀錄",
     start_import: "點擊上方按鈕開始匯入您的物流 Excel 檔案。",

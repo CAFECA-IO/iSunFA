@@ -4,11 +4,11 @@ import { FC } from "react";
 import Link from "next/link";
 import { BookmarkCheck } from "lucide-react";
 import { useReportDownload } from "@/hooks/use_report_download";
-import { IMockReport } from "@/interfaces/business_monitor";
+import { IReport } from "@/interfaces/business_monitor";
 import { useTranslation } from "@/i18n/i18n_context";
 
 interface IReportItemProps {
-  report: IMockReport;
+  report: IReport;
   onShowToast: (type: "success" | "error", message: string) => void;
 }
 
@@ -24,18 +24,18 @@ const ReportItem: FC<IReportItemProps> = ({ report, onShowToast }) => {
         onShowToast(
           "success",
           t("business_monitor.reports.item.toast_download_success", {
-            company: report.company,
+            company: report.companyName,
           }),
         );
         // Info:(20260609 - Julian) 模擬產生檔案 Blob 並觸發瀏覽器下載
-        const dummyContent = `Mock Report Content for ${report.company}\nReport Year: ${report.reportYear}\nPeriod: ${report.period}\nIndustry: ${report.industry}`;
+        const dummyContent = `Mock Report Content for ${report.companyName}\nReport Year: ${report.reportYear}\nPeriod: ${report.period}\nIndustry: ${report.industry}`;
         const blob = new Blob([dummyContent], {
           type: "text/plain;charset=utf-8",
         });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `${report.company}_${report.reportYear}永續報告書.txt`;
+        a.download = `${report.companyName}_${report.reportYear}永續報告書.txt`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -45,7 +45,7 @@ const ReportItem: FC<IReportItemProps> = ({ report, onShowToast }) => {
         onShowToast(
           "error",
           t("business_monitor.reports.item.toast_download_error", {
-            company: report.company,
+            company: report.companyName,
           }),
         ),
     );
@@ -59,7 +59,7 @@ const ReportItem: FC<IReportItemProps> = ({ report, onShowToast }) => {
       <div className="flex items-center justify-between border-b border-orange-100 bg-orange-50 px-4 py-3 md:px-6 md:py-4">
         <div className="flex flex-col gap-1">
           <h3 className="text-xl font-bold text-orange-900">
-            {report.company}
+            {report.companyName}
           </h3>
           <p className="text-sm font-medium text-orange-700">{report.title}</p>
         </div>
@@ -73,7 +73,7 @@ const ReportItem: FC<IReportItemProps> = ({ report, onShowToast }) => {
         )}
       </div>
 
-      <div className="flex flex-col p-4 md:p-6">
+      <div className="flex flex-1 flex-col p-4 md:p-6">
         <div className="mb-6 flex flex-col gap-1 text-sm text-slate-600 md:gap-2">
           <p>
             <span className="font-medium text-slate-700">

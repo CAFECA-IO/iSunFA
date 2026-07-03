@@ -63,6 +63,7 @@ import { businessMonitor } from "@/i18n/locales/zh_cn/business_monitor";
 import { simulationWorkflow } from "@/i18n/locales/zh_cn/simulation_workflow";
 import { netZeroPathway } from "@/i18n/locales/zh_cn/net_zero_pathway";
 import { reportDownloader } from "@/i18n/locales/zh_cn/report_downloader";
+import { chart } from "@/i18n/locales/zh_cn/chart";
 import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const zhCn = {
@@ -75,6 +76,7 @@ export const zhCn = {
   date,
   currency_alias: currencyAlias,
   common,
+  chart,
   faith,
   cookie_consent: cookieConsent,
   dashboard,
@@ -110,7 +112,7 @@ export const zhCn = {
   voucher,
   verify,
   esg,
-  teamManagement,
+  team_management: teamManagement,
   esg_report: esgReport,
   report_view: reportView,
   cash_flow_statement_view: cashFlowStatementView,

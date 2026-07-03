@@ -4,6 +4,7 @@ import {
   parseSmartInput,
   ISmartParseResult,
 } from "@/services/route.smart.service";
+import { parseWaypointsToCoordinates } from "@/services/route.waypoints.service";
 import {
   getNearestPort,
   getNearestAirport,
@@ -184,6 +185,7 @@ export async function calculateLogisticsPlan(
   destLat: number,
   destLng: number,
   weightKg: string | number = "1000",
+  waypointsDesc?: string | Array<{ lat: number; lng: number; name?: string }>,
 ): Promise<ILogisticsPlan> {
   try {
     const [exportPort, importPort, exportAirport, importAirport] =
@@ -211,12 +213,13 @@ export async function calculateLogisticsPlan(
     const dest = { lat: destLat, lng: destLng };
 
     const landOnly = await getLandRoute(origin, dest);
-    if (landOnly.success) {
+    if (landOnly.success && !landOnly.isFallback) {
       landOnly.co2eKg = MoneyUtil.toDecimal(landOnly.distanceKm || 0)
         .times(weightTonne)
         .times(factors.LAND)
         .toString();
     } else {
+      landOnly.success = false;
       landOnly.co2eKg = "0";
     }
 
@@ -288,6 +291,117 @@ export async function calculateLogisticsPlan(
     }
     airPlan.total_co2eKg = airCo2e.toString();
 
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    let custom_multimodal:
+      | {
+          segments: Array<
+            ITransportSegment & { mode: "LAND" | "SEA"; name?: string }
+          >;
+          total_co2eKg: string;
+          total_distanceKm: number;
+        }
+      | undefined = undefined;
+
+    if (waypointsDesc) {
+      let wps: Array<{ lat: number; lng: number; name?: string }> = [];
+      if (typeof waypointsDesc === "string") {
+        wps = await parseWaypointsToCoordinates(waypointsDesc);
+      } else {
+        wps = waypointsDesc;
+      }
+
+      if (wps.length > 0) {
+        const nodes = [
+          { lat: originLat, lng: originLng, name: "Origin" },
+          ...wps,
+          { lat: destLat, lng: destLng, name: "Destination" },
+        ];
+
+        let totalCustomCo2e = MoneyUtil.toDecimal(0);
+        let totalCustomDist = 0;
+        const segments: Array<
+          ITransportSegment & { mode: "LAND" | "SEA"; name?: string }
+        > = [];
+
+        for (let i = 0; i < nodes.length - 1; i++) {
+          const p1 = nodes[i];
+          const p2 = nodes[i + 1];
+
+          const segmentRoute = await getLandRoute(p1, p2);
+
+          if (!segmentRoute.success || segmentRoute.isFallback) {
+            const p1Port = await getNearestPort(p1.lat, p1.lng);
+            const p2Port = await getNearestPort(p2.lat, p2.lng);
+
+            if (p1Port && p2Port) {
+              const p1ToPort = await getLandRoute(p1, p1Port);
+              const portToPort = calculateSeaPath(p1Port, p2Port);
+              const portToP2 = await getLandRoute(p2Port, p2);
+
+              if (p1ToPort.success) {
+                const c = MoneyUtil.toDecimal(p1ToPort.distanceKm || 0)
+                  .times(weightTonne)
+                  .times(factors.LAND);
+                segments.push({
+                  ...p1ToPort,
+                  co2eKg: c.toString(),
+                  name: `Land: ${p1.name || "Point"} -> Port`,
+                  mode: "LAND",
+                });
+                totalCustomCo2e = totalCustomCo2e.plus(c);
+                totalCustomDist += p1ToPort.distanceKm || 0;
+              }
+              if (portToPort.success) {
+                const c = MoneyUtil.toDecimal(portToPort.distanceKm || 0)
+                  .times(weightTonne)
+                  .times(factors.SEA);
+                segments.push({
+                  ...portToPort,
+                  co2eKg: c.toString(),
+                  name: `Sea: Port -> Port`,
+                  mode: "SEA",
+                });
+                totalCustomCo2e = totalCustomCo2e.plus(c);
+                totalCustomDist += portToPort.distanceKm || 0;
+              }
+              if (portToP2.success) {
+                const c = MoneyUtil.toDecimal(portToP2.distanceKm || 0)
+                  .times(weightTonne)
+                  .times(factors.LAND);
+                segments.push({
+                  ...portToP2,
+                  co2eKg: c.toString(),
+                  name: `Land: Port -> ${p2.name || "Point"}`,
+                  mode: "LAND",
+                });
+                totalCustomCo2e = totalCustomCo2e.plus(c);
+                totalCustomDist += portToP2.distanceKm || 0;
+              }
+              continue;
+            }
+          }
+
+          const c = MoneyUtil.toDecimal(segmentRoute.distanceKm || 0)
+            .times(weightTonne)
+            .times(factors.LAND);
+          segments.push({
+            ...segmentRoute,
+            co2eKg: c.toString(),
+            name: `Land: ${p1.name || "Point"} -> ${p2.name || "Point"}`,
+            mode: "LAND",
+          });
+          totalCustomCo2e = totalCustomCo2e.plus(c);
+          totalCustomDist += segmentRoute.distanceKm || 0;
+        }
+
+        custom_multimodal = {
+          segments,
+          total_co2eKg: totalCustomCo2e.toString(),
+          total_distanceKm: totalCustomDist,
+        };
+      }
+    }
+
     const finalPlan: ILogisticsPlan = {
       exportPort,
       importPort,
@@ -299,6 +413,7 @@ export async function calculateLogisticsPlan(
           landOnly,
           sea_multimodal: seaPlan,
           air_multimodal: airPlan,
+          custom_multimodal,
         },
       },
     };
@@ -313,6 +428,7 @@ export async function calculateLogisticsPlan(
 export async function calculateLogisticsPlanFromText(
   text: string,
   externalWeight?: number | string,
+  waypointsDesc?: string | Array<{ lat: number; lng: number; name?: string }>,
 ): Promise<{ plan: ILogisticsPlan; parsed: ISmartParseResult }> {
   const parsed = await parseSmartInput(text);
 
@@ -330,6 +446,7 @@ export async function calculateLogisticsPlanFromText(
     parsed.dest.lat,
     parsed.dest.lng,
     weight,
+    waypointsDesc,
   );
 
   return { plan, parsed };

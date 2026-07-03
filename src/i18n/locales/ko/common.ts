@@ -89,9 +89,6 @@ export const common = {
     oldest: "오래된순",
   },
   share: "공유",
-  donut_chart: {
-    note: "* 원형 차트는 {{title}} 의 구성 분포를 보여줍니다. 시스템은 유효한 데이터만 렌더링하며, 편차나 정의되지 않은 항목은 자동으로 병합되어 계산됩니다.",
-  },
   other: "기타",
   pdf_tool: "PDF 도구",
   please_login: "로그인 해주세요",
@@ -101,21 +98,6 @@ export const common = {
     brand: "iSunFA 스마트 탄소 회계",
     footer_note:
       "본 보고서는 AI 기술로 생성되었으며, iSunFA 스마트 탄소 회계에서 제공합니다 • ",
-  },
-  mermaid: {
-    rendering: "차트 렌더링 중...",
-    zoom_in: "확대 (Zoom In)",
-    zoom_out: "축소 (Zoom Out)",
-    reset: "초기화 (Reset)",
-    fullscreen: "전체 화면 (Fullscreen)",
-    close_fullscreen: "전체 화면 닫기 (Close Fullscreen)",
-    hint_desktop: "마우스 왼쪽 버튼 드래그로 이동 • Ctrl + 휠로 확대/축소",
-    hint_fullscreen:
-      "마우스 왼쪽 버튼 드래그로 이동 • 휠로 확대/축소 • ESC 키로 닫기",
-    preview_title: "플로우차트 미리보기 (Fullscreen Flowchart Preview)",
-    download: "이미지 다운로드",
-    export_png: "PNG로 내보내기",
-    export_svg: "SVG로 내보내기",
   },
   export_settings: {
     title_voucher: "전표 내보내기",
@@ -136,4 +118,6 @@ export const common = {
     failed_voucher: "전표 내보내기에 실패했습니다. 잠시 후 다시 시도해 주세요.",
     failed_esg: "ESG 기록 내보내기에 실패했습니다. 잠시 후 다시 시도해 주세요.",
   },
+  qr_code: "QR 코드",
+  done: "완료",
 };

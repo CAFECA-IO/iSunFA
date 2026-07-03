@@ -4,7 +4,7 @@ import { FC, ComponentPropsWithoutRef, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Image from "next/image";
-import { MermaidChart } from "@/components/common/mermaid_chart";
+import { MermaidChart } from "@/components/chart/mermaid_chart";
 import { useState, useEffect } from "react";
 import { downloadFile } from "@/lib/file_operator";
 
@@ -81,11 +81,13 @@ const AsyncLariaImage = ({
 interface IMarkdownContentProps {
   content: string;
   theme?: "dark" | "light";
+  onContentChange?: (newContent: string) => void;
 }
 
 const MarkdownContent: FC<IMarkdownContentProps> = ({
   content,
   theme = "dark",
+  onContentChange = () => {},
 }) => {
   const isDark = theme === "dark";
   const textColor = isDark ? "text-[#ffffff]" : "text-[#111827]";
@@ -261,7 +263,27 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
       }: ComponentPropsWithoutRef<"code"> & { inline?: boolean }) => {
         const match = /language-(\w+)/.exec(className || "");
         if (!inline && match && match[1] === "mermaid") {
-          return <MermaidChart chart={String(children).replace(/\n$/, "")} />;
+          const chartText = String(children).replace(/\n$/, "");
+          return (
+            <MermaidChart
+              chart={chartText}
+              onChartChange={
+                onContentChange
+                  ? (newChart) => {
+                      const targetBlock = `\`\`\`mermaid\n${chartText}\n\`\`\``;
+                      const newBlock = `\`\`\`mermaid\n${newChart}\n\`\`\``;
+                      if (content.includes(targetBlock)) {
+                        onContentChange(content.replace(targetBlock, newBlock));
+                      } else if (content.includes(chartText)) {
+                        onContentChange(content.replace(chartText, newChart));
+                      } else {
+                        onContentChange(content.replace(chartText, newChart));
+                      }
+                    }
+                  : undefined
+              }
+            />
+          );
         }
         if (inline) {
           return (
@@ -301,6 +323,8 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
       theadBg,
       thText,
       isDark,
+      content,
+      onContentChange,
     ],
   );
 

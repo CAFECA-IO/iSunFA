@@ -4,11 +4,15 @@ import dotenv from "dotenv";
 import LlamaCloud from "@llamaindex/llama-cloud";
 import { lanceDBService } from "@/services/lancedb.service";
 import { ILanceDBRow } from "@/interfaces/lance_db";
+import { prisma } from "@/lib/prisma";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 dotenv.config();
 
 const OLLAMA_EMBED_URL = "http://localhost:11434/api/embeddings";
 const EMBED_MODEL = "nomic-embed-text";
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 // Info: (20260612 - Julian) 輔助函式：呼叫 Ollama 取得 768 維向量
 async function getEmbedding(text: string): Promise<number[]> {
@@ -65,6 +69,63 @@ function chunkMarkdown(text: string, size = 800, overlap = 100): string[] {
   return chunks;
 }
 
+interface IExtractedMetadata {
+  companyName: string;
+  title: string;
+  reportYear: string;
+  period: string;
+  industry: string;
+  capital: string;
+  verificationAgency: string;
+  verificationStandards: string;
+  assuranceAgency: string;
+  assuranceStandards: string;
+  isVerifiedByThirdParty: boolean;
+}
+
+// Info: (20260630 - Julian) 透過 Gemini 萃取報告書詮釋資料
+async function extractMetadata(
+  textSnippet: string,
+  fileName: string,
+): Promise<IExtractedMetadata> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("Missing GEMINI_API_KEY");
+  }
+
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.5-pro",
+    generationConfig: {
+      responseMimeType: "application/json",
+    },
+  });
+
+  const prompt = `你是一個專業的文件分析器。請閱讀下方提供的報告書開頭片段，以及檔案名稱，並萃取出這份報告書的詮釋資料 (Metadata)。
+檔案名稱：${fileName}
+報告書開頭片段：
+${textSnippet}
+
+請嚴格依照此 JSON Schema 格式回傳，不要包含 any 型別或額外的文字或 markdown 標記：
+{
+  "companyName": "字串，企業完整全名 (例如 台灣積體電路製造股份有限公司)",
+  "title": "字串，例如 '2024 年永續報告書' 或 '2024 年第一季合併財務報告'",
+  "reportYear": "字串，如 '2024'",
+  "period": "字串，如 '2024/01/01 ~ 2024/12/31' 或 '2024/01/01 ~ 2024/03/31'",
+  "industry": "字串，例如 '半導體業'、'水泥工業'、'資訊服務業'、'航運業' 等",
+  "capital": "字串，如 '100億以上'、'10億~50億'、'10億以下' 或 '無'",
+  "verificationAgency": "字串，查證機構名稱，沒有則填 '無'",
+  "verificationStandards": "字串，查證採用標準，沒有則填 '無'",
+  "assuranceAgency": "字串，確信機構名稱，沒有則填 '無'",
+  "assuranceStandards": "字串，確信採用標準，沒有則填 '無'",
+  "isVerifiedByThirdParty": 布林值，是否經第三方確信
+}
+`;
+
+  const result = await model.generateContent(prompt);
+  const responseText = result.response.text();
+  return JSON.parse(responseText);
+}
+
 /**
  * Info: (20260612 - Julian)
  * 透過 LanceDB 提供的批次處理功能，對指定目錄下的所有 PDF 檔案執行「OCR 辨識 -> 文字切塊 -> 向量化」流程
@@ -91,25 +152,14 @@ async function runBatchPipeline() {
   for (const file of files) {
     console.log(`\n==============================================`);
 
-    /** ToDo: (20260612 - Julian) 目前 companyName 是直接從檔名提取的，未來須加入 LLM Metadata Extraction (資料萃取) 的機制。
-     * 具體做法如下：
-     * 1. 讓 LLM 自己讀前幾頁： 當 LlamaCloud 把 PDF 轉成 Markdown 之後，我們不要立刻切塊存入 LanceDB。我們先把文件的前 1000~2000 字（通常包含封面、目錄、董事長致詞）丟給一個輕量級的 LLM。
-     * 2. 要求 LLM 判斷公司： 給 LLM 一個 Prompt：「請閱讀以下報告片段，判斷這份報告是屬於哪一家企業的？請回傳該企業的『全名』與『常見簡稱』的 JSON。」
-     * 3. 將萃取結果存入 LanceDB： LLM 回傳 {"fullName": "亞洲水泥股份有限公司", "shortName": "亞泥"} 後，我們再把這兩個精確的名字，當作 Metadata 寫入 LanceDB 的欄位裡。
-     */
-
-    const [companyName, yearStr] = file.split("_");
-    const year = parseInt(yearStr) || 2026;
     const filePath = path.join(pdfDir, file);
 
     try {
-      // Info: (20260612 - Julian) 先檢查是否已經存在於 LanceDB，若有則直接跳過，節省 Embedding 與 API 呼叫時間
-      const existingRows = await table
-        .query()
-        .where(`reportId = '${file.replace(/'/g, "''")}'`)
-        .limit(1)
-        .toArray();
-      if (existingRows.length > 0) {
+      // Info: (20260630 - Julian) 檢查 PostgreSQL 是否已存在此報告書
+      const existingReport = await prisma.report.findUnique({
+        where: { pdfPath: file },
+      });
+      if (existingReport) {
         console.log(`⏭️  [跳過] 檔案 [${file}] 已存在於資料庫中，略過處理。`);
         continue;
       }
@@ -142,6 +192,55 @@ async function runBatchPipeline() {
         fs.writeFileSync(mdCachePath, markdownText);
       }
 
+      // Info: (20260630 - Julian) 步驟 1.5：呼叫 Gemini API 萃取詮釋資料，並寫入 PostgreSQL
+      console.log(`🤖 [1.5/3] 正在呼叫 Gemini API 進行 AI 詮釋資料萃取...`);
+      const textSnippet = markdownText.slice(0, 3000);
+      let meta: IExtractedMetadata;
+
+      try {
+        meta = await extractMetadata(textSnippet, file);
+        console.log(`✨ [1.5/3] 萃取結果：`, JSON.stringify(meta, null, 2));
+      } catch (err) {
+        console.error(`⚠️  AI 詮釋資料萃取失敗，改用預設檔名解析邏輯:`, err);
+        const [fallbackCompany, fallbackYear] = file
+          .replace(".pdf", "")
+          .split("_");
+        meta = {
+          companyName: fallbackCompany || "未知企業",
+          title: "永續報告書",
+          reportYear: fallbackYear || "2024",
+          period: `${fallbackYear || "2024"}/01/01 ~ ${fallbackYear || "2024"}/12/31`,
+          industry: "其他",
+          capital: "100億以上",
+          verificationAgency: "無",
+          verificationStandards: "無",
+          assuranceAgency: "無",
+          assuranceStandards: "無",
+          isVerifiedByThirdParty: false,
+        };
+      }
+
+      const report = await prisma.report.create({
+        data: {
+          companyName: meta.companyName,
+          title: meta.title || `${meta.reportYear} 年永續報告書`,
+          reportYear: meta.reportYear,
+          period: meta.period,
+          industry: meta.industry,
+          capital: meta.capital,
+          verificationAgency: meta.verificationAgency,
+          verificationStandards: meta.verificationStandards,
+          assuranceAgency: meta.assuranceAgency,
+          assuranceStandards: meta.assuranceStandards,
+          isVerifiedByThirdParty: meta.isVerifiedByThirdParty,
+          pdfPath: file,
+        },
+      });
+
+      const reportId = report.id;
+      const companyName = report.companyName;
+      const year = report.reportYear;
+
       // Info: (20260612 - Julian) 將 markdown 依照頁面分隔符號 (---) 拆分成單頁文字
       const pages = markdownText.split(/(?:\r?\n)+---(?:\r?\n)+/);
       console.log(`📄 [2/3] 偵測到 PDF 共有 ${pages.length} 頁。`);
@@ -170,10 +269,10 @@ async function runBatchPipeline() {
           const formattedText = `### 企業: ${companyName} (${year}年報告) [第 ${item.pageNumber} 頁]\n${item.chunk}`;
           const vector = await getEmbedding(formattedText);
           return {
-            id: `${companyName}_${year}_lp_${absoluteIdx}`,
+            id: `report_${reportId}_lp_${absoluteIdx}`,
             vector: new Float32Array(vector),
             text: formattedText,
-            reportId: file,
+            reportId: String(reportId),
             companyName: companyName,
             pageNumber: item.pageNumber,
           };
@@ -186,7 +285,7 @@ async function runBatchPipeline() {
       if (recordsToInsert.length > 0) {
         await table.add(recordsToInsert);
         console.log(
-          `✅ 檔案 [${file}] 匯入成功！已存入 ${recordsToInsert.length} 筆向量資料。`,
+          `✅ 檔案 [${file}] 匯入成功！已存入 PostgreSQL (ID: ${reportId}) 與 LanceDB 共 ${recordsToInsert.length} 筆向量資料。`,
         );
       }
     } catch (error) {

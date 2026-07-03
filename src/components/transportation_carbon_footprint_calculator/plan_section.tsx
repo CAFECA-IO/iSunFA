@@ -6,7 +6,8 @@ import { ILogisticsPlan } from "@/interfaces/logistics";
 import { MoneyUtil } from "@/lib/utils/money";
 import { useTranslation } from "@/i18n/i18n_context";
 
-export type RouteType = "sea" | "air" | "land";
+// Info: (20260629 - Tzuhan) Support custom mode
+export type RouteType = "sea" | "air" | "land" | "custom";
 
 export interface ISegment {
   mode: string;
@@ -81,9 +82,12 @@ export function PlanSection({
   const isSea = type === "sea";
   const isAir = type === "air";
   const isLand = type === "land";
+  // Info: (20260629 - Tzuhan) Check custom route type
+  const isCustom = type === "custom";
   const seaPlan = plan.comparisonData?.plans?.sea_multimodal;
   const airPlan = plan.comparisonData?.plans?.air_multimodal;
   const landPlan = plan.comparisonData?.plans?.landOnly;
+  const customPlan = plan.comparisonData?.plans?.custom_multimodal;
 
   const segments: ISegment[] = [];
   const mapFeatures: GeoJSON.Feature[] = [];
@@ -223,6 +227,39 @@ export function PlanSection({
       "UK DEFRA 2025 (HGV)",
       "#F97316",
     );
+  } else if (isCustom && customPlan) {
+    titleName = t(
+      "transportation_carbon_footprint_calculator.plan_section.title_custom",
+    );
+    themeColor = "text-purple-500";
+    themeBg = "bg-purple-100";
+    totalCo2e = customPlan.total_co2eKg?.toString() || "0";
+    customPlan.segments.forEach((seg) => {
+      const coeff = seg.mode === "LAND" ? 0.11289 : 0.01045;
+      const source =
+        seg.mode === "LAND"
+          ? "UK DEFRA 2025 (HGV)"
+          : "UK DEFRA 2025 (Container ship)";
+      const color = seg.mode === "LAND" ? "#F97316" : "#059669";
+
+      const parts = (seg.name || "").split("->");
+      const from = parts[0]?.trim() || "Point";
+      const to = parts[1]?.trim() || "Point";
+
+      addSegment(
+        seg.mode.toLowerCase(),
+        from,
+        to,
+        {
+          distanceKm: seg.distanceKm,
+          co2eKg: seg.co2eKg,
+          geometry: seg.geometry,
+        },
+        coeff,
+        source,
+        color,
+      );
+    });
   }
 
   if (segments.length === 0) return null; // Info: (20260430 - Tzuhan) 未成功解析該方案或不支持

@@ -63,6 +63,7 @@ import { businessMonitor } from "@/i18n/locales/en/business_monitor";
 import { simulationWorkflow } from "@/i18n/locales/en/simulation_workflow";
 import { netZeroPathway } from "@/i18n/locales/en/net_zero_pathway";
 import { reportDownloader } from "@/i18n/locales/en/report_downloader";
+import { chart } from "@/i18n/locales/en/chart";
 import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const en = {
@@ -73,6 +74,7 @@ export const en = {
     transportationCarbonFootprintCalculator,
   salary_calculator: salaryCalculator,
   common,
+  chart,
   faith,
   cookie_consent: cookieConsent,
   dashboard,
@@ -110,7 +112,7 @@ export const en = {
   esg_target: esgTarget,
   verify,
   esg,
-  teamManagement,
+  team_management: teamManagement,
   esg_report: esgReport,
   report_view: reportView,
   cash_flow_statement_view: cashFlowStatementView,
