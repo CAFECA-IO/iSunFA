@@ -9,7 +9,6 @@ import {
   Voucher,
   VoucherLine,
   Coefficient,
-  EsgDqiType,
 } from "@/generated";
 import {
   EsgGenerationSource,
@@ -741,7 +740,7 @@ export class DocumentSyncRepository {
             emissions: calculatedEmissions,
             intensity: (ed.intensity as EsgIntensity) || null,
             dqiScore: parsePrismaDecimal(ed.dqiScore, "dqiScore"),
-            dqiType: finalDqiType as EsgDqiType,
+            dqiType: finalDqiType,
             confidence,
             isVerified: recordIsVerified,
             aiNote,

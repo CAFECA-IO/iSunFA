@@ -514,10 +514,6 @@ enum EsgIntensity {
   HIGH
 }
 
-enum EsgDqiType {
-  PRIMARY
-  SECONDARY
-}
 
 model EsgRecord {
   id                  String           @id @default(uuid())
@@ -538,7 +534,7 @@ model EsgRecord {
   intensity           EsgIntensity? // Info: (20260312 - Julian) 排放強度分類 (LOW, MEDIUM, HIGH)
   confidence          Int // Info: (20260312 - Julian) AI 信心度
   dqiScore            Decimal?         @map("dqi_score") // Info: (20260410 - Julian) DQI 數據品質指標
-  dqiType             EsgDqiType       @default(PRIMARY) @map("dqi_type") // Info: (20260703 - Tzuhan) 初級/次級數據標籤
+  dqiType             String           @default("PRIMARY") @map("dqi_type") // Info: (20260703 - Tzuhan) 初級/次級數據標籤
   isVerified          Boolean          @default(false) @map("is_verified") // Info: (20260318 - Julian) 是否已經驗證
   analysisStatus      AIAnalysisStatus @default(PENDING) @map("analysis_status") // Info: (20260318 - Julian) AI 分析狀態
   emissionSourceTag   String?          @map("emission_source_tag") // Info: (20260421 - Julian) 排放源標籤（廠）

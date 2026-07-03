@@ -1,7 +1,7 @@
 import { AllocationEngineService } from "@/services/allocation.engine.service";
 import { prisma } from "@/lib/prisma";
 
-// Mock prisma client for unit tests
+
 jest.mock("@/lib/prisma", () => ({
   prisma: {
     esgRecord: {
