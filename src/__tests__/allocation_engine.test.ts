@@ -1,7 +1,6 @@
 import { AllocationEngineService } from "@/services/allocation.engine.service";
 import { prisma } from "@/lib/prisma";
 
-
 jest.mock("@/lib/prisma", () => ({
   prisma: {
     esgRecord: {
@@ -23,11 +22,11 @@ describe("AllocationEngineService", () => {
   });
 
   it("should throw error if total percentage exceeds 100%", async () => {
-    (prisma.esgRecord.findUnique as jest.Mock).mockResolvedValue({
+    (prisma.esgRecord.findUnique as unknown as jest.Mock).mockResolvedValue({
       id: "esg-1",
       amount: 100,
       emissions: 50,
-    });
+    } as unknown);
 
     await expect(
       AllocationEngineService.allocate("esg-1", [
@@ -38,16 +37,18 @@ describe("AllocationEngineService", () => {
   });
 
   it("should successfully allocate emissions to multiple products", async () => {
-    (prisma.esgRecord.findUnique as jest.Mock).mockResolvedValue({
+    (prisma.esgRecord.findUnique as unknown as jest.Mock).mockResolvedValue({
       id: "esg-1",
       amount: 1000,
       emissions: 500,
       ghgBreakdown: { CO2: 400, CH4: 100 },
-    });
+    } as unknown);
 
-    (prisma.digitalProductPassportSku.findUnique as jest.Mock).mockResolvedValue({
+    (
+      prisma.digitalProductPassportSku.findUnique as unknown as jest.Mock
+    ).mockResolvedValue({
       id: "mock-sku",
-    });
+    } as unknown);
 
     await AllocationEngineService.allocate("esg-1", [
       { skuId: "sku-1", percentage: 0.3, basis: "Weight" },

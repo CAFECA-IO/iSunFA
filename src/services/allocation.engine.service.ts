@@ -4,7 +4,7 @@ import { Decimal } from "decimal.js";
 
 export interface IAllocationRule {
   skuId: string;
-  percentage: number | string | Decimal; // e.g. 0.3 for 30%
+  percentage: number | string | Decimal; // Info: (20260703 - Tzuhan) e.g. 0.3 for 30%
   basis?: string;
 }
 
@@ -26,7 +26,7 @@ export class AllocationEngineService {
       throw new Error(`EsgRecord ${esgRecordId} not found`);
     }
 
-    // 1. 驗證比例總和不可超過 100%
+    // Info: (20260703 - Tzuhan) 1. 驗證比例總和不可超過 100%
     let totalPercentage = new Decimal(0);
     const validRules = rules.map((r) => {
       const p = new Decimal(r.percentage);
@@ -41,12 +41,12 @@ export class AllocationEngineService {
       throw new Error("Total allocation percentage cannot exceed 100% (1.0)");
     }
 
-    // 2. 清除舊有的分攤紀錄 (支援重新分攤)
+    // Info: (20260703 - Tzuhan) 2. 清除舊有的分攤紀錄 (支援重新分攤)
     await prisma.esgAllocation.deleteMany({
       where: { esgRecordId },
     });
 
-    // 3. 準備寫入新的分攤紀錄
+    // Info: (20260703 - Tzuhan) 3. 準備寫入新的分攤紀錄
     const originalAmount = new Decimal(esg.amount);
     const originalEmissions = new Decimal(esg.emissions);
     let originalBreakdown: Record<string, string | number> = {};
@@ -55,11 +55,11 @@ export class AllocationEngineService {
     }
 
     for (const rule of validRules) {
-      // 確保目標產品存在
+      // Info: (20260703 - Tzuhan) 確保目標產品存在
       const sku = await prisma.digitalProductPassportSku.findUnique({
         where: { id: rule.skuId },
       });
-      if (!sku) continue; // 或丟出 Error
+      if (!sku) continue; // Info: (20260703 - Tzuhan) 或丟出 Error
 
       const allocatedAmount = originalAmount.mul(rule.percentage);
       const allocatedEmissions = originalEmissions.mul(rule.percentage);

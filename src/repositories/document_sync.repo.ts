@@ -640,12 +640,32 @@ export class DocumentSyncRepository {
                 ) {
                   finalDqiType = "SECONDARY";
                   // Info: (20260703 - Tzuhan) [UX FIX] EEIO 重大性豁免與白名單，避免無意義的亮紅燈
-                  const EEIO_WHITELIST = ["計程車", "交通", "停車費", "郵資", "文具", "辦公用品", "雜支", "餐費", "便當", "飲料", "快遞", "高鐵", "台鐵", "客運", "捷運"];
+                  const EEIO_WHITELIST = [
+                    "計程車",
+                    "交通",
+                    "停車費",
+                    "郵資",
+                    "文具",
+                    "辦公用品",
+                    "雜支",
+                    "餐費",
+                    "便當",
+                    "飲料",
+                    "快遞",
+                    "高鐵",
+                    "台鐵",
+                    "客運",
+                    "捷運",
+                  ];
                   const EEIO_MATERIALITY_THRESHOLD = 3000;
-                  
-                  const activityOrVendor = `${ed.activityType || ""} ${ed.vendor || ""}`.toLowerCase();
-                  const isWhitelisted = EEIO_WHITELIST.some(keyword => activityOrVendor.includes(keyword.toLowerCase()));
-                  const isBelowThreshold = esgAmount.toNumber() < EEIO_MATERIALITY_THRESHOLD;
+
+                  const activityOrVendor =
+                    `${ed.activityType || ""} ${ed.vendor || ""}`.toLowerCase();
+                  const isWhitelisted = EEIO_WHITELIST.some((keyword) =>
+                    activityOrVendor.includes(keyword.toLowerCase()),
+                  );
+                  const isBelowThreshold =
+                    esgAmount.toNumber() < EEIO_MATERIALITY_THRESHOLD;
 
                   if (!isWhitelisted && !isBelowThreshold) {
                     recordIsVerified = false;
@@ -654,12 +674,21 @@ export class DocumentSyncRepository {
 
                 // Info: (20260703 - Tzuhan) [UNIT CONVERSION FIX] 單位自動換算，將 AI 萃取的數值轉成係數庫單位，並後端重算碳排
                 try {
-                  const convertedAmount = UnitConverter.convert(esgAmount, docUnit, coefUnit);
+                  const convertedAmount = UnitConverter.convert(
+                    esgAmount,
+                    docUnit,
+                    coefUnit,
+                  );
                   const calcResult = EsgCalculatorService.calculateEmissions(
                     convertedAmount.toNumber(),
-                    coefExists
+                    {
+                      emissionFactor: coefExists.emissionFactor.toString(),
+                      ghgFactors: coefExists.ghgFactors,
+                    },
                   );
-                  calculatedEmissions = new Prisma.Decimal(calcResult.emissions);
+                  calculatedEmissions = new Prisma.Decimal(
+                    calcResult.emissions,
+                  );
                   ed.ghgBreakdown = calcResult.ghgBreakdown;
                   ed.gwpVersion = calcResult.gwpVersion;
                 } catch (convErr) {
