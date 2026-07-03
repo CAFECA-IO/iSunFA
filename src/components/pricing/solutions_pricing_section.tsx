@@ -118,7 +118,9 @@ export default function SolutionsPricingSection({
         {/* Step 1: Solution Type */}
         <section>
           <div className="mb-6 flex items-baseline justify-between">
-            <h3 className="text-xl font-bold text-gray-900">{t("pricing.solutions.step1_title")}</h3>
+            <h3 className="text-xl font-bold text-gray-900">
+              {t("pricing.solutions.step1_title")}
+            </h3>
           </div>
 
           <div className="mb-8 flex justify-center">
@@ -185,7 +187,9 @@ export default function SolutionsPricingSection({
         {/* Step 2: Enterprise Size */}
         <section>
           <div className="mb-6 flex items-baseline justify-between">
-            <h3 className="text-xl font-bold text-gray-900">{t("pricing.solutions.step2_title")}</h3>
+            <h3 className="text-xl font-bold text-gray-900">
+              {t("pricing.solutions.step2_title")}
+            </h3>
           </div>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
             {sizes.map((size) => {
@@ -202,11 +206,6 @@ export default function SolutionsPricingSection({
                       : "bg-white shadow-sm ring-1 ring-gray-200 hover:bg-gray-50 hover:shadow-md"
                   }`}
                 >
-                  {size.id === "pro" && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-orange-400 to-orange-500 px-3 py-1 text-xs font-bold tracking-wide text-white shadow-sm">
-                      {t("pricing.solutions.most_popular")}
-                    </div>
-                  )}
                   <div
                     className={`mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-colors ${
                       isSelected

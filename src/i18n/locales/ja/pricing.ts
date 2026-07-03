@@ -57,7 +57,7 @@ export const pricing = {
         fido_tooltip:
           "FIDO2 キーの数に基づいてサブスクリプション料金が請求されます",
         credit_limit: "ポイント上限なし",
-        monthly_credits: "毎月 1 日に {{amount}} pt 自動付与",
+        monthly_credits: "毎月自動的に {{amount}} ポイントが付与されます",
         monthly_credits_tooltip: "ポイントの有効期限は 30 日間です",
         consults: "月間最大 {{amount}} 回の質問",
         consults_tooltip: "1 質問につき {{price}} pt",
@@ -79,7 +79,7 @@ export const pricing = {
         fido_tooltip:
           "FIDO2 キーの数に基づいてサブスクリプション料金が請求されます",
         credit_limit: "ポイント上限なし",
-        monthly_credits: "毎月 1 日に {{amount}} pt 自動付与",
+        monthly_credits: "毎月自動的に {{amount}} ポイントが付与されます",
         monthly_credits_tooltip: "ポイントの有効期限は 30 日間です",
         consults: "月間最大 {{amount}} 回の質問",
         consults_tooltip: "1 質問につき {{price}} pt",
@@ -195,7 +195,8 @@ export const pricing = {
       use_saved_card: "登録済みのカードを使用",
       bind_new_card: "新しいカードを登録",
       agree_tos: "利用規約と返金ポリシーに同意します",
-      subscription_reset_note: "未使用の {{count}} ポイントは毎月クリアされ、翌月に再発行されます。",
+      subscription_reset_note:
+        "未使用の {{count}} ポイントは毎月クリアされ、翌月に再発行されます。",
       selected_modules: "選択したモジュール",
     },
   },
@@ -222,7 +223,8 @@ export const pricing = {
   },
   solutions: {
     page_title: "サステナビリティ・ソリューション",
-    description: "企業規模に最適なカーボンフットプリントサービスを選択してください",
+    description:
+      "企業規模に最適なカーボンフットプリントサービスを選択してください",
     step1_title: "1. サービスタイプの選択",
     includes_title: "含まれるもの:",
     step2_title: "2. 企業規模の選択",
@@ -232,8 +234,7 @@ export const pricing = {
     tab: "ソリューション",
     tag: "SOLUTIONS & PRICING",
     title: "各種ソリューション",
-    subtitle:
-      "標準化されたカーボンインベントリサービスを提供し、サービス内容はすべて同じです",
+    subtitle: "標準化された炭素盤査報告書作成サービスを提供",
     per_project: "/ project",
     criteria_title: "Applicability Criteria",
     criteria_area: "Total Area",

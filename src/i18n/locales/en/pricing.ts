@@ -57,8 +57,7 @@ export const pricing = {
         fido_tooltip:
           "Subscription fee charged based on the number of FIDO2 keys",
         credit_limit: "Unlimited Credits",
-        monthly_credits:
-          "Automatically Receive {{amount}} Credits on the 1st of Every Month",
+        monthly_credits: "{{amount}} credits automatically issued every month",
         monthly_credits_tooltip: "Credits are valid for 30 days",
         consults: "Max {{amount}} Consults / Month",
         consults_tooltip: "{{price}} Credits / Consult",
@@ -80,8 +79,7 @@ export const pricing = {
         fido_tooltip:
           "Subscription fee charged based on the number of FIDO2 keys",
         credit_limit: "Unlimited Credits",
-        monthly_credits:
-          "Automatically Receive {{amount}} Credits on the 1st of Every Month",
+        monthly_credits: "{{amount}} credits automatically issued every month",
         monthly_credits_tooltip: "Credits are valid for 30 days",
         consults: "Max {{amount}} Consults / Month",
         consults_tooltip: "{{price}} Credits / Consult",
@@ -196,7 +194,8 @@ export const pricing = {
       use_saved_card: "Use Saved Card",
       bind_new_card: "Bind New Card",
       agree_tos: "I agree to the Terms of Service and Refund Policy",
-      subscription_reset_note: "Unused {{count}} points will be cleared every month and re-issued the next month.",
+      subscription_reset_note:
+        "Unused {{count}} points will be cleared every month and re-issued the next month.",
       selected_modules: "Selected Modules",
     },
   },
@@ -223,7 +222,8 @@ export const pricing = {
   },
   solutions: {
     page_title: "Sustainability Solutions",
-    description: "Choose the carbon footprint service that best fits your enterprise size",
+    description:
+      "Choose the carbon footprint service that best fits your enterprise size",
     step1_title: "1. Choose Service Type",
     includes_title: "Includes:",
     step2_title: "2. Choose Enterprise Size",
@@ -234,7 +234,7 @@ export const pricing = {
     tag: "SOLUTIONS & PRICING",
     title: "Solutions & Pricing",
     subtitle:
-      "Providing standardized carbon inventory services with consistent contents",
+      "Providing standardized carbon inventory report preparation services",
     per_project: "/ project",
     criteria_title: "Applicability Criteria",
     criteria_area: "Total Area",
