@@ -19,6 +19,10 @@ export const voucher = {
       other: "Other",
     },
   },
+  tab: {
+    vouchers: "Vouchers",
+    accounts: "Accounting Subjects",
+  },
   main_view: {
     title: "Smart Voucher Management",
     subtitle:

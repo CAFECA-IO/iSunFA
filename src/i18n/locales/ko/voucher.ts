@@ -19,6 +19,10 @@ export const voucher = {
       other: "기타",
     },
   },
+  tab: {
+    vouchers: "전표 관리",
+    accounts: "회계 과목 관리",
+  },
   main_view: {
     title: "스마트 전표 관리",
     subtitle: "AI가 영수증 인식 결과를 바탕으로 회계 분개를 자동 생성했습니다.",

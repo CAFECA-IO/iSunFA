@@ -19,6 +19,10 @@ export const voucher = {
       other: "その他",
     },
   },
+  tab: {
+    vouchers: "伝票管理",
+    accounts: "会計科目管理",
+  },
   main_view: {
     title: "スマート伝票管理",
     subtitle: "AIは領収書認識結果に基づき自動的に仕訳を作成しました。",

@@ -19,6 +19,10 @@ export const voucher = {
       other: "其他",
     },
   },
+  tab: {
+    vouchers: "傳票管理",
+    accounts: "會計科目管理",
+  },
   main_view: {
     title: "智能傳票管理",
     subtitle: "AI 已根據您的憑證辨識結果自動產生對應的會計分錄。",

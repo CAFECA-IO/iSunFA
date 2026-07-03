@@ -19,6 +19,10 @@ export const voucher = {
       other: "其他",
     },
   },
+  tab: {
+    vouchers: "传票管理",
+    accounts: "会计科目管理",
+  },
   main_view: {
     title: "智能凭证管理",
     subtitle: "AI 已根据您的凭证识别结果自动产生对应的会计分录。",
