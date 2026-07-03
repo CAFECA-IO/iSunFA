@@ -23,6 +23,8 @@ import {
 } from "@/interfaces/accounting_account";
 import SuccessNotification from "@/components/common/success_notification";
 
+// TODO: (20260703 - Julian) ============= 此元件還在施工中 =============
+
 // Info: (20260703 - Julian) 定義不同科目類別的顏色
 const ACCOUNT_TYPE_COLORS: Record<
   string,
@@ -198,6 +200,12 @@ export default function AccountManagementTab() {
   const accountBookId = params?.account_book_id as string;
   const { t } = useTranslation();
 
+  const emptyFormData = {
+    parentCode: "",
+    name: "",
+    code: "",
+  };
+
   // Data States
   const [allAccounts, setAllAccounts] = useState<IAccountingAccount[]>([]);
   const [keyword, setKeyword] = useState<string>("");
@@ -214,11 +222,8 @@ export default function AccountManagementTab() {
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [parentInfo, setParentInfo] = useState<string>(""); // 用於顯示父層名稱
-  const [formData, setFormData] = useState<IAccountingAccountInput>({
-    parentCode: "",
-    name: "",
-    code: "",
-  });
+  const [formData, setFormData] =
+    useState<IAccountingAccountInput>(emptyFormData);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -308,7 +313,7 @@ export default function AccountManagementTab() {
       if (res.success) {
         setShowSuccess(true);
         fetchAccounts();
-        setFormData({ parentCode: "", name: "", code: "" });
+        setFormData(emptyFormData);
         setParentInfo("");
         setIsEditing(false);
         setEditId(null);
@@ -527,7 +532,7 @@ export default function AccountManagementTab() {
                 <button
                   type="button"
                   onClick={() => {
-                    setFormData({ parentCode: "", name: "", code: "" });
+                    setFormData(emptyFormData);
                     setParentInfo("");
                     setIsEditing(false);
                     setErrorMessage(null);
@@ -539,7 +544,7 @@ export default function AccountManagementTab() {
                 <button
                   type="submit"
                   disabled={isFormLoading || !formData.parentCode}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-200 transition-all hover:bg-orange-600 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-bold text-white transition-all focus:ring-2 enabled:hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isFormLoading ? (
                     <Loader2 className="animate-spin" size={18} />
