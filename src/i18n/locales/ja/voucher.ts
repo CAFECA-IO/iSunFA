@@ -149,4 +149,30 @@ export const voucher = {
       },
     },
   },
+  account: {
+    empty: "勘定科目がありません",
+    search: {
+      label: "科目を検索",
+      placeholder: "科目コードや名前を検索...",
+    },
+    action: {
+      add: "カスタム科目を追加",
+    },
+    add_modal: {
+      title: "カスタム勘定科目を追加",
+      parent: "親科目",
+      parent_placeholder: "リストの「+」または「✎」を先にクリックしてください",
+      name: "科目名",
+      name_placeholder: "例：売掛金 - 銀行 A",
+      code: "科目コード",
+      code_placeholder: "例：1234-01",
+      type: "科目タイプ",
+      level: "レベル",
+    },
+    messages: {
+      create_success: "カスタム勘定科目が作成されました",
+      create_failed: "作成に失敗しました。後でもう一度お試しください",
+      code_exists: "科目コードは既に存在します",
+    },
+  },
 };

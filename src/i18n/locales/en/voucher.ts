@@ -152,4 +152,30 @@ export const voucher = {
       },
     },
   },
+  account: {
+    empty: "No accounting subjects found",
+    search: {
+      label: "Search Subjects",
+      placeholder: "Search subject code or name...",
+    },
+    action: {
+      add: "Add Custom Subject",
+    },
+    add_modal: {
+      title: "Add Custom Accounting Subject",
+      parent: "Parent Subject",
+      parent_placeholder: "Please click '+' or '✎' in the list first",
+      name: "Subject Name",
+      name_placeholder: "e.g., Accounts Receivable - Bank A",
+      code: "Subject Code",
+      code_placeholder: "e.g., 1234-01",
+      type: "Subject Type",
+      level: "Level",
+    },
+    messages: {
+      create_success: "Custom accounting subject created",
+      create_failed: "Failed to create, please try again later",
+      code_exists: "Subject code already exists",
+    },
+  },
 };

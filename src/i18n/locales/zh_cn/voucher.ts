@@ -152,4 +152,30 @@ export const voucher = {
       },
     },
   },
+  account: {
+    empty: "目前尚无会计科目",
+    search: {
+      label: "搜索科目",
+      placeholder: "搜索科目代码或名称...",
+    },
+    action: {
+      add: "新增自定义科目",
+    },
+    add_modal: {
+      title: "新增自定义会计科目",
+      parent: "父层科目",
+      parent_placeholder: "请先点击列表中的“+”或“✎”按钮",
+      name: "科目名称",
+      name_placeholder: "例如：应收账款 - 银行 A",
+      code: "科目代码",
+      code_placeholder: "例如：1234-01",
+      type: "科目类型",
+      level: "层级",
+    },
+    messages: {
+      create_success: "自定义会计科目已建立",
+      create_failed: "建立失败，请稍后再试",
+      code_exists: "科目代码已存在",
+    },
+  },
 };

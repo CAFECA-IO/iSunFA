@@ -151,4 +151,30 @@ export const voucher = {
       },
     },
   },
+  account: {
+    empty: "계정 과목이 없습니다",
+    search: {
+      label: "과목 검색",
+      placeholder: "과목 코드 또는 이름 검색...",
+    },
+    action: {
+      add: "사용자 정의 과목 추가",
+    },
+    add_modal: {
+      title: "사용자 정의 계정 과목 추가",
+      parent: "상위 과목",
+      parent_placeholder: "먼저 목록에서 '+' 또는 '✎'를 클릭하세요",
+      name: "과목 이름",
+      name_placeholder: "예: 외상매출금 - A은행",
+      code: "과목 코드",
+      code_placeholder: "예: 1234-01",
+      type: "과목 유형",
+      level: "레벨",
+    },
+    messages: {
+      create_success: "사용자 정의 계정 과목이 생성되었습니다",
+      create_failed: "생성에 실패했습니다. 나중에 다시 시도해주세요",
+      code_exists: "과목 코드가 이미 존재합니다",
+    },
+  },
 };
