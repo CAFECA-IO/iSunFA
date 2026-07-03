@@ -4,7 +4,7 @@ import { MeasurementUnit } from "@/constants/enums";
 
 describe("UnitConverter", () => {
   it("should convert Mass correctly", () => {
-    // Info: (20260703 - Tzuhan)1000 KG -> 1 TONNE
+    // Info: (20260703 - Tzuhan) 1000 KG -> 1 TONNE
     expect(
       UnitConverter.convert(
         1000,
@@ -13,7 +13,7 @@ describe("UnitConverter", () => {
       ).toNumber(),
     ).toBe(1);
 
-    // Info: (20260703 - Tzuhan)1 TONNE -> 1000000 GRAM
+    // Info: (20260703 - Tzuhan) 1 TONNE -> 1000000 GRAM
     expect(
       UnitConverter.convert(
         1,
@@ -24,7 +24,7 @@ describe("UnitConverter", () => {
   });
 
   it("should convert Volume correctly", () => {
-    // Info: (20260703 - Tzuhan)10 GALLON -> ~37.8541 LITER
+    // Info: (20260703 - Tzuhan) 10 GALLON -> ~37.8541 LITER
     expect(
       UnitConverter.convert(
         10,
@@ -33,7 +33,7 @@ describe("UnitConverter", () => {
       ).toNumber(),
     ).toBeCloseTo(37.8541);
 
-    // Info: (20260703 - Tzuhan)1 M3 -> 1000 LITER
+    // Info: (20260703 - Tzuhan) 1 M3 -> 1000 LITER
     expect(
       UnitConverter.convert(
         1,
@@ -53,7 +53,7 @@ describe("UnitConverter", () => {
       ).toNumber(),
     ).toBe(1000);
 
-    // Info: (20260703 - Tzuhan)1 GJ -> 277.778 KWH
+    // Info: (20260703 - Tzuhan) 1 GJ -> 277.778 KWH
     expect(
       UnitConverter.convert(
         1,
