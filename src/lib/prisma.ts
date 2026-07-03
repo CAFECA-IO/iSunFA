@@ -82,9 +82,6 @@ const prisma = basePrisma.$extends({
             checkNoNumber(safeClone);
           }
         }
-        if (operation === 'findUnique' && model === 'Coefficient') {
-          console.log('[DEBUG] findUnique args:', JSON.stringify(args));
-        }
         return query(args);
       },
     },
