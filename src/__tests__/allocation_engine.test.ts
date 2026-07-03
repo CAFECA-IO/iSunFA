@@ -1,3 +1,6 @@
+import { describe, it, expect, beforeEach } from "@jest/globals";
+import type { jest as JestType } from "@jest/globals";
+declare const jest: typeof JestType;
 import { AllocationEngineService } from "@/services/allocation.engine.service";
 import { prisma } from "@/lib/prisma";
 
@@ -22,7 +25,9 @@ describe("AllocationEngineService", () => {
   });
 
   it("should throw error if total percentage exceeds 100%", async () => {
-    (prisma.esgRecord.findUnique as unknown as jest.Mock).mockResolvedValue({
+    (
+      prisma.esgRecord.findUnique as unknown as ReturnType<typeof jest.fn>
+    ).mockResolvedValue({
       id: "esg-1",
       amount: 100,
       emissions: 50,
@@ -37,7 +42,9 @@ describe("AllocationEngineService", () => {
   });
 
   it("should successfully allocate emissions to multiple products", async () => {
-    (prisma.esgRecord.findUnique as unknown as jest.Mock).mockResolvedValue({
+    (
+      prisma.esgRecord.findUnique as unknown as ReturnType<typeof jest.fn>
+    ).mockResolvedValue({
       id: "esg-1",
       amount: 1000,
       emissions: 500,
@@ -45,7 +52,9 @@ describe("AllocationEngineService", () => {
     } as unknown);
 
     (
-      prisma.digitalProductPassportSku.findUnique as unknown as jest.Mock
+      prisma.digitalProductPassportSku.findUnique as unknown as ReturnType<
+        typeof jest.fn
+      >
     ).mockResolvedValue({
       id: "mock-sku",
     } as unknown);
