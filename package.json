@@ -85,7 +85,7 @@
     "@types/file-saver": "^2.0.7",
     "@types/jest": "^30.0.0",
     "@types/jszip": "^3.4.0",
-    "@types/node": "^25",
+    "@types/node": "^26",
     "@types/node-cron": "^3.0.11",
     "@types/pdf-parse": "^1.1.5",
     "@types/react": "^19",
