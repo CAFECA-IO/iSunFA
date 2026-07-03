@@ -161,9 +161,11 @@ export const voucher = {
     add_modal: {
       title: "新增自訂會計科目",
       parent: "父層科目",
+      parent_placeholder: "請先點擊列表中的「+」或「✎」按鈕",
       name: "科目名稱",
-      name_placeholder: "例如：",
+      name_placeholder: "例如：應收帳款 - 銀行 A",
       code: "科目代碼",
+      code_placeholder: "例如：1234-01",
       type: "科目類型",
       level: "層級",
     },

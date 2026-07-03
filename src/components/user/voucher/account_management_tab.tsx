@@ -26,62 +26,73 @@ import SuccessNotification from "@/components/common/success_notification";
 // Info: (20260703 - Julian) 定義不同科目類別的顏色
 const ACCOUNT_TYPE_COLORS: Record<
   string,
-  { bg: string; text: string; border: string }
+  { bg: string; text: string; border: string; tab?: string }
 > = {
   [AccountType.ASSET]: {
     bg: "bg-emerald-50",
     text: "text-emerald-700",
     border: "border-emerald-200",
+    tab: "bg-emerald-500",
   },
   [AccountType.LIABILITY]: {
     bg: "bg-rose-50",
     text: "text-rose-700",
     border: "border-rose-200",
+    tab: "bg-rose-500",
   },
   [AccountType.EQUITY]: {
     bg: "bg-blue-50",
     text: "text-blue-700",
     border: "border-blue-200",
+    tab: "bg-blue-500",
   },
   [AccountType.REVENUE]: {
     bg: "bg-amber-50",
     text: "text-amber-700",
     border: "border-amber-200",
+    tab: "bg-amber-500",
   },
   [AccountType.INCOME]: {
     bg: "bg-amber-50",
     text: "text-amber-700",
     border: "border-amber-200",
+    tab: "bg-amber-500",
   },
   [AccountType.EXPENSE]: {
     bg: "bg-orange-50",
     text: "text-orange-700",
     border: "border-orange-200",
+    tab: "bg-orange-500",
   },
   [AccountType.COST]: {
     bg: "bg-orange-50",
     text: "text-orange-700",
     border: "border-orange-200",
+    tab: "bg-orange-500",
   },
   [AccountType.GAIN_OR_LOSS]: {
     bg: "bg-violet-50",
     text: "text-violet-700",
     border: "border-violet-200",
+    tab: "bg-violet-500",
   },
   [AccountType.CASH_FLOW]: {
     bg: "bg-cyan-50",
     text: "text-cyan-700",
     border: "border-cyan-200",
+    tab: "bg-cyan-500",
   },
   [AccountType.OTHER_COMPREHENSIVE_INCOME]: {
     bg: "bg-fuchsia-50",
     text: "text-fuchsia-700",
     border: "border-fuchsia-200",
+    tab: "bg-fuchsia-500",
   },
   [AccountType.OTHER]: {
     bg: "bg-slate-50",
     text: "text-slate-700",
     border: "border-slate-200",
+    tab: "bg-slate-500",
   },
 };
 
@@ -392,14 +403,14 @@ export default function AccountManagementTab() {
           >
             {t("voucher.account_book_selector.all")}
           </button>
-          {Object.values(AccountType).map((tab) => {
+          {Object.entries(ACCOUNT_TYPE_COLORS).map(([key, value]) => {
             return (
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`${tab === activeTab ? "bg-slate-800 text-white shadow-md" : "text-slate-500 hover:bg-gray-100"} rounded-lg px-4 py-2 text-xs font-bold transition-all md:text-sm`}
+                key={key}
+                onClick={() => setActiveTab(key as AccountType)}
+                className={`${key === activeTab ? `${value.tab} text-white shadow-md` : `text-slate-500 hover:bg-slate-100`} rounded-lg px-4 py-2 text-xs font-bold transition-all md:text-sm`}
               >
-                {t(`voucher.account_book_selector.types.${tab}`)}
+                {t(`voucher.account_book_selector.types.${key}`)}
               </button>
             );
           })}
@@ -440,7 +451,9 @@ export default function AccountManagementTab() {
         {/* Right Side: Add/Edit Panel (Embedded) */}
         <div className="sticky top-24 w-[400px] shrink-0">
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg shadow-slate-200/50">
-            <div className="border-b border-slate-50 bg-slate-50/50 px-6 py-4">
+            <div
+              className={`${isEditing ? "bg-blue-50" : "bg-green-50"} px-6 py-4`}
+            >
               <h3 className="flex items-center gap-2 text-lg font-bold text-slate-800">
                 {isEditing ? (
                   <>
@@ -472,7 +485,9 @@ export default function AccountManagementTab() {
                   type="text"
                   value={parentInfo}
                   readOnly
-                  placeholder="請先點擊列表中的「+」或「✎」按鈕"
+                  placeholder={t(
+                    "voucher.account.add_modal.parent_placeholder",
+                  )}
                   className="w-full rounded-lg border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-medium text-slate-500 outline-none"
                 />
               </div>
@@ -487,7 +502,7 @@ export default function AccountManagementTab() {
                   onChange={(e) =>
                     setFormData({ ...formData, code: e.target.value })
                   }
-                  placeholder={t("voucher.account.add_modal.code")}
+                  placeholder={t("voucher.account.add_modal.code_placeholder")}
                   required
                   className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 transition-all focus:border-orange-500 focus:bg-white focus:ring-1 focus:ring-orange-500 focus:outline-none"
                 />
@@ -502,7 +517,7 @@ export default function AccountManagementTab() {
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  placeholder={t("voucher.account.add_modal.name")}
+                  placeholder={t("voucher.account.add_modal.name_placeholder")}
                   required
                   className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 transition-all focus:border-orange-500 focus:bg-white focus:ring-1 focus:ring-orange-500 focus:outline-none"
                 />
