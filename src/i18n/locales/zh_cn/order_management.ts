@@ -1,6 +1,10 @@
 export const orderManagement = {
   title: "订单管理",
   subtitle: "管理与检阅所有订单、支付状态以及区块链上的执行状态",
+  tabs: {
+    task_management: "任务管理",
+    order_management: "订单管理",
+  },
   table: {
     date: "日期",
     user: "用户",
@@ -37,5 +41,11 @@ export const orderManagement = {
     cancel_batch: "取消批量",
     no_reactivatable_orders: "无可重启订单",
     search_bar_placeholder: "以关键字搜寻用户、订单编号...",
+    update_success: "状态更新成功。",
+    update_failed: "状态更新失败。",
+  },
+  detail: {
+    title: "订单细节",
+    data: "原始资料",
   },
 };

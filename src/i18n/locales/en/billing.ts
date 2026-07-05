@@ -53,4 +53,58 @@ export const billing = {
     source_admin_issued: "Issued by Administrator",
     source_check_in_reward: "Daily Check-in Reward",
   },
+  status: {
+    pending: "Processing",
+    pending_bank_transfer: "Verifying Bank Transfer",
+    paid: "Paid",
+    completed: "Completed",
+    failed: "Payment Failed",
+    cancel: "Cancelled",
+  },
+  types: {
+    BILLING_ON_PREMISE: "On-Premise",
+    BILLING_SOLUTION: "Solution",
+    BILLING_SUBSCRIBE: "Subscription",
+    BILLING_POINT: "Purchase Points",
+  },
+  tracking: {
+    title: "Order Tracking",
+    status: {
+      pending: {
+        title: "Order Submitted",
+        desc: "We have received your order, awaiting bank transfer confirmation",
+      },
+      paid: {
+        title: "Payment Confirmed",
+        desc: "Bank transfer confirmed, preparing for deployment",
+      },
+      executing: {
+        title: "Solution Importing",
+        desc: "Our technical team is setting up the environment and software",
+      },
+      completed: {
+        title: "Deployment Completed",
+        desc: "Solution deployed successfully, you can now start using the service",
+      },
+    },
+  },
+  details: {
+    title: "Order Details",
+    not_found: "Order not found or access denied",
+    back_to_list: "Back to Billing List",
+    summary: "Order Summary",
+    order_date: "Order Date",
+    order_status: "Order Status",
+    items: "Purchased Items",
+    total: "Total",
+    need_help: "Need Help?",
+    help_desc:
+      "If you have any questions about your order, please contact our support team.",
+    contact_support: "Contact Support",
+    contact_email: "Email",
+    contact_phone: "Phone",
+    support_email_subject: "[iSunFA Order Support] Order ID: {{orderId}}",
+    support_email_body:
+      "Hi iSunFA Support Team,\n\nI have a question regarding my order.\nOrder ID: {{orderId}}\nOrder Date: {{orderDate}}\nOrder Items: {{orderItems}}\n\n[My Question]:\n",
+  },
 };

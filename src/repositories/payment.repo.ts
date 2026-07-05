@@ -296,16 +296,25 @@ export class PaymentRepository {
         status: true,
         transactionHash: true,
         data: true,
+        createdAt: true,
+        amount: true,
       },
     });
   }
 
   async getOrdersByUserId(userId: string, type?: string | null) {
+    const where: Prisma.OrderWhereInput = { userId };
+    if (type === "billing") {
+      where.OR = [
+        { type: { startsWith: "BILLING_" } },
+        { type: ORDER_TYPE.OEN_PAYMENT },
+      ];
+    } else if (type) {
+      where.type = type;
+    }
+
     return prisma.order.findMany({
-      where: {
-        userId,
-        ...(type ? { type } : {}),
-      },
+      where,
       include: {
         paymentTransactions: {
           include: {

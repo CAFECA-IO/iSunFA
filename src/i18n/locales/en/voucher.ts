@@ -19,6 +19,10 @@ export const voucher = {
       other: "Other",
     },
   },
+  tab: {
+    vouchers: "Vouchers",
+    accounts: "Accounting Subjects",
+  },
   main_view: {
     title: "Smart Voucher Management",
     subtitle:
@@ -146,6 +150,42 @@ export const voucher = {
         title: "Save Voucher",
         message: "Are you sure you want to save this voucher?",
       },
+    },
+  },
+  account: {
+    custom: "Custom",
+    empty: "No accounting subjects found",
+    search: {
+      label: "Search Subjects",
+      placeholder: "Search subject code or name...",
+    },
+    action: {
+      add: "Add Custom Subject",
+      add_child: "Add Child Subject",
+      edit: "Edit Subject Code/Name",
+    },
+    edit_modal: {
+      title: "Edit Accounting Subject",
+    },
+    add_modal: {
+      title: "Add Custom Accounting Subject",
+      parent: "Parent Subject",
+      parent_placeholder: "Please click '+' or '✎' in the list first",
+      name: "Subject Name",
+      name_placeholder: "e.g., Accounts Receivable - Bank A",
+      code: "Subject Code",
+      code_placeholder: "e.g., 1234-01",
+      type: "Subject Type",
+      level: "Level",
+      click_hint:
+        "* Please click the action button in the list on the left first",
+    },
+    messages: {
+      create_success: "Custom accounting subject created",
+      create_failed: "Failed to create, please try again later",
+      code_exists: "Subject code already exists",
+      update_success: "Subject updated successfully",
+      update_success_msg: "The accounting subject has been updated",
     },
   },
 };

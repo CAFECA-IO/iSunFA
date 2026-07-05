@@ -63,7 +63,10 @@ interface IHistoryItem {
   dest?: { lat: number | ""; lng: number | "" };
   weightKg?: number;
   action?: string;
-  items?: Array<{ origin: string; dest: string }>;
+  items?: Array<{
+    origin: string | { lat: number; lng: number; name?: string };
+    dest: string | { lat: number; lng: number; name?: string };
+  }>;
 }
 
 export default function ReportPage() {
@@ -1342,8 +1345,28 @@ function ReportPageContent() {
                                   <td className="px-4 py-2 text-gray-400">
                                     {index + 1}
                                   </td>
-                                  <td className="px-4 py-2">{item.origin}</td>
-                                  <td className="px-4 py-2">{item.dest}</td>
+                                  <td className="px-4 py-2">
+                                    {typeof item.origin === "string"
+                                      ? item.origin
+                                      : typeof item.origin === "object" &&
+                                          item.origin !== null
+                                        ? item.origin.name ||
+                                          (item.origin.lat
+                                            ? `${item.origin.lat}, ${item.origin.lng}`
+                                            : JSON.stringify(item.origin))
+                                        : ""}
+                                  </td>
+                                  <td className="px-4 py-2">
+                                    {typeof item.dest === "string"
+                                      ? item.dest
+                                      : typeof item.dest === "object" &&
+                                          item.dest !== null
+                                        ? item.dest.name ||
+                                          (item.dest.lat
+                                            ? `${item.dest.lat}, ${item.dest.lng}`
+                                            : JSON.stringify(item.dest))
+                                        : ""}
+                                  </td>
                                 </tr>
                               ))}
                             </tbody>

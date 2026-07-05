@@ -1,31 +1,20 @@
 import React from "react";
 import { Search, X } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { ORDER_STATUS } from "@/constants/status";
+import {
+  ORDER_STATUS,
+  MANAGEMENT_TYPE,
+  ManagementType,
+  ORDER_TYPE_PREFIX,
+} from "@/constants/status";
 
-// Info: (20260625 - Julian) 訂單類型
-export const ORDER_TYPE = {
-  BALANCE_SHEET: "balance_sheet", // Info: (20260625 - Julian) 資產負債表
-  CASH_FLOW: "cash_flow", // Info: (20260625 - Julian) 現金流量表
-  INCOME_STATEMENT: "income_statement", // Info: (20260625 - Julian) 損益表
-  IRSC: "irsc", // Info: (20260625 - Julian) 智能企業評級
-  FINANCIAL_COMPLIANCE: "financial_compliance", // Info: (20260625 - Julian) 財報合規性
-  FINANCIAL_HEALTH: "financial_health", // Info: (20260625 - Julian) 財務健康
-  MARKET_TRENDS: "market_trends", // Info: (20260625 - Julian) 市場趨勢
-  INDUSTRY_DEVELOPMENT: "industry_development", // Info: (20260625 - Julian) 產業趨勢
-  FINANCIAL_PRODUCT_RATING: "financial_product_rating", // Info: (20260625 - Julian) 投資評級
-  CARBON_HEALTH_CHECK: "carbon_health_check", // Info: (20260625 - Julian) 碳健檢
-  NET_ZERO_EMISSIONS: "net_zero_emissions", // Info: (20260625 - Julian) 碳中和
-  AI_CONSULTING: "ai_consulting", // Info: (20260625 - Julian) AI 諮詢
-  JOURNAL_UPLOAD: "journal_upload", // Info: (20260625 - Julian) 日記帳建檔
-  CERTIFICATE_ANALYSIS: "certificate_analysis", // Info: (20260625 - Julian) 憑證分析
-  TRANSPORTATION_CARBON_FOOTPRINT: "transportation_carbon_footprint", // Info: (20260625 - Julian) 運輸碳足跡
-} as const;
+import { ORDER_TYPE } from "@/constants/status";
 
 // Info: (20260626 - Julian) 訂單類型
 export type OrderType = (typeof ORDER_TYPE)[keyof typeof ORDER_TYPE];
 
 interface IOrderFilterProps {
+  managementType: ManagementType;
   searchInput: string;
   setSearchInput: (val: string) => void;
   type: string;
@@ -45,6 +34,7 @@ interface IOrderFilterProps {
 }
 
 export default function OrderFilter({
+  managementType,
   searchInput,
   setSearchInput,
   type,
@@ -105,11 +95,19 @@ export default function OrderFilter({
             className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
           >
             <option value="ALL">{t("common.all")}</option>
-            {Object.values(ORDER_TYPE).map((typeVal) => (
-              <option key={typeVal} value={typeVal}>
-                {getOrderTypeLabel(typeVal)}
-              </option>
-            ))}
+            {Object.values(ORDER_TYPE)
+              .filter((typeVal) => {
+                if (managementType === MANAGEMENT_TYPE.TASK) {
+                  return typeVal === ORDER_TYPE.ANALYSIS;
+                } else {
+                  return typeVal.startsWith(ORDER_TYPE_PREFIX.BILLING);
+                }
+              })
+              .map((typeVal) => (
+                <option key={typeVal} value={typeVal}>
+                  {getOrderTypeLabel(typeVal)}
+                </option>
+              ))}
           </select>
         </div>
 

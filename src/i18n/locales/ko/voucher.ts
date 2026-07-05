@@ -19,6 +19,10 @@ export const voucher = {
       other: "기타",
     },
   },
+  tab: {
+    vouchers: "전표 관리",
+    accounts: "회계 과목 관리",
+  },
   main_view: {
     title: "스마트 전표 관리",
     subtitle: "AI가 영수증 인식 결과를 바탕으로 회계 분개를 자동 생성했습니다.",
@@ -145,6 +149,41 @@ export const voucher = {
         title: "전표 저장",
         message: "전표를 저장하시겠습니까?",
       },
+    },
+  },
+  account: {
+    custom: "사용자 정의",
+    empty: "계정 과목이 없습니다",
+    search: {
+      label: "과목 검색",
+      placeholder: "과목 코드 또는 이름 검색...",
+    },
+    action: {
+      add: "사용자 정의 과목 추가",
+      add_child: "하위 과목 추가",
+      edit: "과목 코드/이름 편집",
+    },
+    edit_modal: {
+      title: "계정 과목 편집",
+    },
+    add_modal: {
+      title: "사용자 정의 계정 과목 추가",
+      parent: "상위 과목",
+      parent_placeholder: "먼저 목록에서 '+' 또는 '✎'를 클릭하세요",
+      name: "과목 이름",
+      name_placeholder: "예: 외상매출금 - A은행",
+      code: "과목 코드",
+      code_placeholder: "예: 1234-01",
+      type: "과목 유형",
+      level: "레벨",
+      click_hint: "* 먼저 왼쪽 목록의 작업 버튼을 클릭하세요",
+    },
+    messages: {
+      create_success: "사용자 정의 계정 과목이 생성되었습니다",
+      create_failed: "생성에 실패했습니다. 나중에 다시 시도해주세요",
+      code_exists: "과목 코드가 이미 존재합니다",
+      update_success: "계정 과목이 성공적으로 업데이트되었습니다",
+      update_success_msg: "계정 과목이 업데이트되었습니다",
     },
   },
 };

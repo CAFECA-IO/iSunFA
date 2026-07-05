@@ -1,6 +1,11 @@
 export const orderManagement = {
   title: "주문 관리",
-  subtitle: "모든 주문, 결제 상태 및 블록체인 실행 상태를 관리하고 검토합니다",
+  subtitle:
+    "모든 주문, 결제 상태 및 블록체인상의 실행 상태를 관리하고 검토합니다",
+  tabs: {
+    task_management: "작업 관리",
+    order_management: "주문 관리",
+  },
   table: {
     date: "날짜",
     user: "사용자",
@@ -38,5 +43,11 @@ export const orderManagement = {
     cancel_batch: "일괄 취소",
     no_reactivatable_orders: "재활성화할 수 있는 주문이 없습니다",
     search_bar_placeholder: "키워드로 사용자 및 주문 번호 검색...",
+    update_success: "상태가 성공적으로 업데이트되었습니다.",
+    update_failed: "상태 업데이트에 실패했습니다.",
+  },
+  detail: {
+    title: "주문 상세",
+    data: "원본 데이터",
   },
 };

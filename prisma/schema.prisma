@@ -58,6 +58,7 @@ model User {
   campaignRegistrations CampaignRegistration[]
   coupons               Coupon[]
   pdfEditorDocuments    PdfEditorDocument[]    @relation("PdfEditorDocumentCreator")
+  accountingAccounts    AccountingAccount[]
 
   @@index([address])
   @@map("user")
@@ -369,6 +370,9 @@ model AccountBook {
 
   // Info: (20260513 - Luphia) 帳本對應的數位產品護照 SKU
   digitalProductPassportSkus DigitalProductPassportSku[]
+
+  // Info: (20260703 - Julian) 帳本對應的客製化會計科目
+  accountingAccounts AccountingAccount[]
 
   @@map("account_book")
 }
@@ -838,6 +842,33 @@ model LogisticsCache {
   // Info: (20260430 - Tzuhan) 建立複合索引以加速查詢
   @@index([originLat, originLng, destLat, destLng, weightKg])
   @@map("logistics_cache")
+}
+
+// Info: (20260703 - Julian) 客製化會計科目
+model AccountingAccount {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  code        String
+  name        String
+  description String?
+  type        String
+  level       Int
+  parentCode  String    @map("parent_code")
+  isDebit     Boolean   @map("is_debit")
+
+  // Info: (20260703 - Julian) 隸屬的帳本
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  // Info: (20260703 - Julian) 建立者
+  userId String? @map("user_id")
+  user   User?   @relation(fields: [userId], references: [id])
+
+  @@unique([accountBookId, code])
+  @@map("accounting_account")
 }
 
 // Info: (20260504 - Agent) Campaign System

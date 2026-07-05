@@ -1,6 +1,10 @@
 export const orderManagement = {
   title: "訂單管理",
   subtitle: "管理與檢閱所有訂單、支付狀態以及區塊鏈上的執行狀態",
+  tabs: {
+    task_management: "任務管理",
+    order_management: "訂單管理",
+  },
   table: {
     date: "日期",
     user: "用戶",
@@ -37,5 +41,11 @@ export const orderManagement = {
     cancel_batch: "取消批量",
     no_reactivatable_orders: "無可重啟訂單",
     search_bar_placeholder: "以關鍵字搜尋用戶、訂單編號...",
+    update_success: "狀態更新成功。",
+    update_failed: "狀態更新失敗。",
+  },
+  detail: {
+    title: "訂單細節",
+    data: "原始資料",
   },
 };

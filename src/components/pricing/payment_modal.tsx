@@ -25,6 +25,8 @@ import {
   IOenCallbackData,
 } from "@/interfaces/payment";
 import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
+import { BANK_TRANSFER } from "@/constants/price";
+import { HTTP_METHOD } from "@/constants/http";
 import { IJSONObject } from "@/validators/common";
 import EditCardModal from "@/components/user/billing/edit_card_modal";
 
@@ -56,6 +58,8 @@ export default function PaymentModal({
   orderId,
   title,
   planId,
+  billingInterval,
+  details,
 }: IPaymentModalProps) {
   const { t } = useTranslation();
   const { user, refreshAuth, loading: authLoading } = useAuth();
@@ -76,10 +80,36 @@ export default function PaymentModal({
     "terms_of_service" | "privacy_policy" | "refund_policy" | null
   >(null);
 
+  const [internalOrderId, setInternalOrderId] = useState<string | null>(
+    orderId || null,
+  );
+
   const [paymentMethods, setPaymentMethods] = useState<IPaymentMethod[]>([]);
   const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false);
   const [requireSetupCard, setRequireSetupCard] =
     useState<IPaymentMethod | null>(null);
+
+  // Info: (20260705 - Luphia) Bank transfer form state
+  const [bankTransferInfo, setBankTransferInfo] = useState({
+    companyName: "",
+    taxId: "",
+    contactPhone: "",
+    mailingAddress: "",
+  });
+
+  const isBankTransferPlan =
+    planId === "on_premise" ||
+    (planId &&
+      (planId.startsWith("iso14064") ||
+        planId.startsWith("iso14067") ||
+        planId.startsWith("carbon_label")));
+
+  const orderType =
+    planId === "on_premise"
+      ? ORDER_TYPE.BILLING_ON_PREMISE
+      : isBankTransferPlan
+        ? ORDER_TYPE.BILLING_SOLUTION
+        : ORDER_TYPE.OEN_PAYMENT;
 
   const wasOpen = useRef(isOpen);
 
@@ -103,7 +133,7 @@ export default function PaymentModal({
           const pmResponse = await request<{
             payload: { paymentMethods: IPaymentMethod[] };
           }>("/api/v1/user/payment_method", {
-            method: "GET",
+            method: HTTP_METHOD.GET,
           });
           if (
             pmResponse &&
@@ -157,17 +187,17 @@ export default function PaymentModal({
 
     // Info: (20260302 - Tzuhan) [流程 5-4: 啟動輪詢] 抽出輪詢邏輯為獨立的非同步函式
     const pollOrderStatus = async () => {
-      // Info: (20260303 - Tzuhan) 若狀態已經不是處理中，或沒有 orderId，或元件已卸載，則直接終止
-      if (step !== "processing" || !orderId || !mounted) return;
+      // Info: (20260303 - Tzuhan) 若狀態已經不是處理中，或沒有 internalOrderId，或元件已卸載，則直接終止
+      if (step !== "processing" || !internalOrderId || !mounted) return;
 
       try {
         // Info: (20260302 - Tzuhan) [流程 5-5: 呼叫訂單狀態 API] 檢查訂單是否更新
         const res = await request<{ payload?: IOrderStatusResponse }>(
-          `/api/v1/user/order/${orderId}`,
+          `/api/v1/user/order/${internalOrderId}`,
         );
 
         console.log(
-          `[PaymentModal] pollOrderStatus: ${orderId}, IOrderStatusResponse res:`,
+          `[PaymentModal] pollOrderStatus: ${internalOrderId}, IOrderStatusResponse res:`,
           res,
         );
 
@@ -219,7 +249,7 @@ export default function PaymentModal({
     };
 
     // Info: (20260303 - Tzuhan) 滿足條件時觸發第一次輪詢
-    if (step === "processing" && orderId) {
+    if (step === "processing" && internalOrderId) {
       pollOrderStatus();
     }
 
@@ -230,7 +260,7 @@ export default function PaymentModal({
         clearTimeout(timeoutId); // Info: (20260303 - Tzuhan) 清除尚未執行的計時器
       }
     };
-  }, [t, step, orderId, refreshAuth, onSuccess]);
+  }, [t, step, internalOrderId, refreshAuth, onSuccess]);
 
   const handleBindNewCard = async () => {
     setLoading(true);
@@ -240,7 +270,7 @@ export default function PaymentModal({
         message?: string;
         payload?: IOenCheckoutResponse;
       }>("/api/v1/user/payment_method", {
-        method: "POST",
+        method: HTTP_METHOD.POST,
       });
       console.log(`[PaymentModal] handleBindNewCard response:`, response);
       if (response.payload?.requireBinding && response.payload.redirectUrl) {
@@ -261,6 +291,61 @@ export default function PaymentModal({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
+    if (isBankTransferPlan && step === PaymentStep.confirm) {
+      setStep(PaymentStep.bank_transfer);
+      return;
+    }
+
+    if (isBankTransferPlan && step === PaymentStep.bank_transfer) {
+      setLoading(true);
+      setError(null);
+      try {
+        // Info: (20260705 - Luphia) Create a pending order for bank transfer
+        const res = await request<{ payload: { orderId: string } }>(
+          "/api/v1/user/order",
+          {
+            method: HTTP_METHOD.POST,
+            body: JSON.stringify({
+              type: orderType, // Info: (20260705 - Luphia) Use the correct type
+              amount,
+              credits,
+              paymentMethodId: BANK_TRANSFER,
+              title,
+              baseCredits,
+              bonusCredits,
+              planId,
+              billingInterval,
+              data: {
+                ...bankTransferInfo,
+                paymentMethod: BANK_TRANSFER,
+              },
+              items: [
+                {
+                  name: title,
+                  quantity: 1,
+                  unitPrice: amount,
+                  amount: amount,
+                  remark: BANK_TRANSFER,
+                },
+              ],
+            }),
+          },
+        );
+
+        if (res.payload?.orderId) {
+          setInternalOrderId(res.payload.orderId);
+        }
+        setStep(PaymentStep.bank_transfer_success);
+      } catch (err) {
+        console.error("Bank transfer submission failed:", err);
+        setError(t("pricing.credits.payment_modal.processing_failed"));
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     // Info: (20260303 - Tzuhan) [流程 2-1: 確認付款] 使用者在付款彈窗中勾選同意條款並點擊確認付款
     setLoading(true);
     setError(null);
@@ -271,7 +356,7 @@ export default function PaymentModal({
       if (user && !user.isVerified) {
         setIsInitializingKyc(true);
         await request("/api/v1/user/kyc", {
-          method: "POST",
+          method: HTTP_METHOD.POST,
           body: JSON.stringify({
             fullName: user.name || "User", // Info: (20260302 - Tzuhan) 傳遞最小資料自動部署身分
             idNumber: "N/A",
@@ -306,9 +391,9 @@ export default function PaymentModal({
       const orderRes = await request<{
         payload: { orderId: string; challenge: string };
       }>("/api/v1/user/order", {
-        method: "POST",
+        method: HTTP_METHOD.POST,
         body: JSON.stringify({
-          type: ORDER_TYPE.OEN_PAYMENT,
+          type: orderType,
           amount,
           credits,
           paymentMethodId: selectedPaymentMethodId,
@@ -316,6 +401,7 @@ export default function PaymentModal({
           baseCredits,
           bonusCredits,
           planId,
+          billingInterval,
           items: planId
             ? [
                 {
@@ -375,7 +461,7 @@ export default function PaymentModal({
         message?: string;
         payload?: IOenCheckoutResponse;
       }>(`/api/v1/user/payment_method/${selectedPaymentMethodId}/checkout`, {
-        method: "POST",
+        method: HTTP_METHOD.POST,
         body: JSON.stringify({
           orderId,
           authentication: {
@@ -444,7 +530,7 @@ export default function PaymentModal({
                 leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                 leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
               >
-                <DialogPanel className="relative transform overflow-hidden rounded-2xl bg-white px-4 pt-5 pb-4 text-left shadow-2xl ring-1 ring-black/5 transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                <DialogPanel className="relative w-full transform overflow-hidden rounded-2xl bg-white px-4 pt-5 pb-4 text-left shadow-2xl ring-1 ring-black/5 transition-all sm:my-8 sm:max-w-lg sm:p-6">
                   <div className="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
                     <button
                       type="button"
@@ -457,8 +543,8 @@ export default function PaymentModal({
                     </button>
                   </div>
 
-                  <div className="w-full sm:flex sm:items-start">
-                    <div className="mt-3 w-full text-center sm:mt-0 sm:ml-4 sm:text-left">
+                  <div className="w-full">
+                    <div className="mt-3 w-full text-left sm:mt-0">
                       {authLoading ||
                       (step === "success" && originalCredits === null) ? (
                         <div className="flex min-h-[300px] flex-col items-center justify-center py-16">
@@ -497,7 +583,7 @@ export default function PaymentModal({
                             <>
                               <DialogTitle
                                 as="h3"
-                                className="text-base leading-6 font-semibold text-gray-900"
+                                className="text-xl font-bold tracking-tight text-gray-900"
                               >
                                 {t("pricing.credits.payment_modal.title")}
                               </DialogTitle>
@@ -512,37 +598,71 @@ export default function PaymentModal({
                                     {displayPrice || `$${amount}`}
                                   </span>
                                 </div>
-                                <div className="flex items-start justify-between px-2">
-                                  <span className="pt-1 text-sm font-medium text-gray-500">
-                                    {t(
-                                      "pricing.credits.payment_modal.tokens_to_receive",
-                                    )}
-                                  </span>
-                                  <div className="flex flex-col items-end text-right">
-                                    <span className="text-lg font-bold text-orange-600">
-                                      {baseCredits.toLocaleString()}{" "}
+                                {Number(baseCredits) > 0 && (
+                                  <div className="flex items-start justify-between px-2">
+                                    <span className="pt-1 text-sm font-medium text-gray-500">
                                       {t(
-                                        "pricing.credits.payment_modal.credits_unit_short",
-                                        { count: "" },
-                                      ).trim()}
+                                        "pricing.credits.payment_modal.tokens_to_receive",
+                                      )}
                                     </span>
-                                    {bonusCredits !== "0" && (
-                                      <span className="mt-1 inline-flex items-center rounded-md bg-orange-50 px-2 py-0.5 text-xs font-semibold text-orange-600 ring-1 ring-orange-600/20 ring-inset">
-                                        +{" "}
+                                    <div className="flex flex-col items-end text-right">
+                                      <span className="text-lg font-bold text-orange-600">
+                                        {Number(baseCredits).toLocaleString()}{" "}
                                         {t(
-                                          "pricing.credits.payment_modal.bonus_points",
-                                          {
-                                            count:
-                                              bonusCredits.toLocaleString(),
-                                          },
-                                        )}
+                                          "pricing.credits.payment_modal.credits_unit_short",
+                                          { count: "" },
+                                        ).trim()}
                                       </span>
-                                    )}
+                                      {bonusCredits !== "0" && (
+                                        <span className="mt-1 inline-flex items-center rounded-md bg-orange-50 px-2 py-0.5 text-xs font-semibold text-orange-600 ring-1 ring-orange-600/20 ring-inset">
+                                          +{" "}
+                                          {t(
+                                            "pricing.credits.payment_modal.bonus_points",
+                                            {
+                                              count:
+                                                Number(
+                                                  bonusCredits,
+                                                ).toLocaleString(),
+                                            },
+                                          )}
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
+                                )}
+                                {details && details.length > 0 && (
+                                  <div className="flex flex-col px-2">
+                                    <span className="mb-2 text-sm font-medium text-gray-500">
+                                      {t(
+                                        "pricing.credits.payment_modal.selected_modules",
+                                      )}
+                                    </span>
+                                    <ul className="max-h-48 space-y-1 overflow-y-auto pr-2">
+                                      {details.map((detail, index) => (
+                                        <li
+                                          key={index}
+                                          className="flex items-start text-sm font-medium text-gray-700"
+                                        >
+                                          <CheckCircle2 className="mt-0.5 mr-2 h-4 w-4 flex-shrink-0 text-orange-500" />
+                                          {detail}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                                {billingInterval && (
+                                  <div className="mt-2 rounded-md bg-orange-50 p-3">
+                                    <p className="text-xs font-medium text-orange-800">
+                                      {t(
+                                        "pricing.credits.payment_modal.subscription_reset_note",
+                                        { count: baseCredits.toLocaleString() },
+                                      )}
+                                    </p>
+                                  </div>
+                                )}
                               </div>
 
-                              {user && (
+                              {user && !isBankTransferPlan && (
                                 <div className="mt-6 space-y-3">
                                   <h4 className="flex items-center text-sm font-semibold text-gray-900">
                                     {t(
@@ -647,6 +767,93 @@ export default function PaymentModal({
                                 </div>
                               )}
 
+                              {isBankTransferPlan && (
+                                <div className="mt-6 rounded-xl border border-orange-200 bg-orange-50/50 p-4">
+                                  <div className="flex items-start gap-3">
+                                    <div className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600">
+                                      <svg
+                                        className="h-6 w-6"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                                        />
+                                      </svg>
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="text-sm font-semibold text-orange-900">
+                                        {t("pricing.bank_transfer.title")}
+                                      </p>
+                                      <p className="mt-1 text-xs text-orange-700">
+                                        {t(
+                                          "pricing.bank_transfer.bank_info_note",
+                                        )}
+                                      </p>
+                                      <div className="mt-3 space-y-2 border-t border-orange-200/50 pt-3">
+                                        <div className="flex justify-between text-[11px] sm:text-xs">
+                                          <span className="text-orange-800/70">
+                                            {t(
+                                              "pricing.bank_transfer.bank_name",
+                                            )}
+                                          </span>
+                                          <span className="text-right font-semibold text-orange-900">
+                                            {t(
+                                              "pricing.bank_transfer.isunfa_bank_name",
+                                            )}{" "}
+                                            (
+                                            {t(
+                                              "pricing.bank_transfer.isunfa_bank_code",
+                                            )}
+                                            )
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between text-[11px] sm:text-xs">
+                                          <span className="text-orange-800/70">
+                                            {t(
+                                              "pricing.bank_transfer.branch_name",
+                                            )}
+                                          </span>
+                                          <span className="text-right font-semibold text-orange-900">
+                                            {t(
+                                              "pricing.bank_transfer.isunfa_branch_name",
+                                            )}
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between text-[11px] sm:text-xs">
+                                          <span className="text-orange-800/70">
+                                            {t(
+                                              "pricing.bank_transfer.account_name",
+                                            )}
+                                          </span>
+                                          <span className="text-right font-semibold text-orange-900">
+                                            {t(
+                                              "pricing.bank_transfer.isunfa_account_name",
+                                            )}
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between text-[11px] sm:text-xs">
+                                          <span className="font-medium text-orange-800/70">
+                                            {t(
+                                              "pricing.bank_transfer.account_number",
+                                            )}
+                                          </span>
+                                          <span className="text-right font-bold text-orange-600">
+                                            {t(
+                                              "pricing.bank_transfer.isunfa_account_number",
+                                            )}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
                               <div className="mt-4 flex flex-col gap-2">
                                 <div className="relative flex items-start">
                                   <div className="flex h-6 items-center">
@@ -703,7 +910,8 @@ export default function PaymentModal({
                                     disabled={
                                       loading ||
                                       !agreedToTerms ||
-                                      paymentMethods.length <= 0
+                                      (!isBankTransferPlan &&
+                                        paymentMethods.length <= 0)
                                     }
                                     className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:from-orange-500 hover:to-orange-400 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:flex-none"
                                   >
@@ -713,12 +921,16 @@ export default function PaymentModal({
                                     {loading
                                       ? isInitializingKyc
                                         ? // Info: (20260302 - Tzuhan) 當正在初始化身分時，顯示符合預期的等待訊息
-                                          "正在初始化身分與建立訂單..."
+                                          t(
+                                            "pricing.credits.payment_modal.initializing_kyc",
+                                          )
                                         : t(
                                             "pricing.credits.payment_modal.processing",
                                           )
                                       : t(
-                                          "pricing.credits.payment_modal.confirm_btn",
+                                          isBankTransferPlan
+                                            ? "common.next"
+                                            : "pricing.credits.payment_modal.confirm_btn",
                                         )}
                                   </button>
                                   <button
@@ -852,6 +1064,241 @@ export default function PaymentModal({
                                 <button
                                   type="button"
                                   className="inline-flex w-full justify-center rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:from-orange-500 hover:to-orange-400 hover:shadow-lg sm:w-auto"
+                                  onClick={handleClose}
+                                >
+                                  {t("pricing.credits.payment_modal.close_btn")}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {step === PaymentStep.bank_transfer && (
+                            <div className="space-y-6">
+                              <DialogTitle
+                                as="h3"
+                                className="text-xl font-bold tracking-tight text-gray-900"
+                              >
+                                {t("pricing.bank_transfer.company_info_title")}
+                              </DialogTitle>
+                              <form
+                                onSubmit={handleSubmit}
+                                className="space-y-5"
+                              >
+                                <div className="space-y-4">
+                                  <div className="space-y-1.5">
+                                    <label
+                                      htmlFor="companyName"
+                                      className="block text-sm font-semibold text-gray-700"
+                                    >
+                                      {t("pricing.bank_transfer.company_name")}
+                                    </label>
+                                    <input
+                                      type="text"
+                                      id="companyName"
+                                      required
+                                      placeholder={t(
+                                        "pricing.bank_transfer.company_name",
+                                      )}
+                                      value={bankTransferInfo.companyName}
+                                      onChange={(e) =>
+                                        setBankTransferInfo({
+                                          ...bankTransferInfo,
+                                          companyName: e.target.value,
+                                        })
+                                      }
+                                      className="block w-full rounded-xl border-gray-200 bg-gray-50/50 px-4 py-3 text-gray-900 transition-all outline-none placeholder:text-gray-400 focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500/20 sm:text-sm"
+                                    />
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    <label
+                                      htmlFor="taxId"
+                                      className="block text-sm font-semibold text-gray-700"
+                                    >
+                                      {t("pricing.bank_transfer.tax_id")}
+                                    </label>
+                                    <input
+                                      type="text"
+                                      id="taxId"
+                                      required
+                                      placeholder={t(
+                                        "pricing.bank_transfer.tax_id",
+                                      )}
+                                      value={bankTransferInfo.taxId}
+                                      onChange={(e) =>
+                                        setBankTransferInfo({
+                                          ...bankTransferInfo,
+                                          taxId: e.target.value,
+                                        })
+                                      }
+                                      className="block w-full rounded-xl border-gray-200 bg-gray-50/50 px-4 py-3 text-gray-900 transition-all outline-none placeholder:text-gray-400 focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500/20 sm:text-sm"
+                                    />
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    <label
+                                      htmlFor="contactPhone"
+                                      className="block text-sm font-semibold text-gray-700"
+                                    >
+                                      {t("pricing.bank_transfer.contact_phone")}
+                                    </label>
+                                    <input
+                                      type="tel"
+                                      id="contactPhone"
+                                      required
+                                      placeholder={t(
+                                        "pricing.bank_transfer.contact_phone",
+                                      )}
+                                      value={bankTransferInfo.contactPhone}
+                                      onChange={(e) =>
+                                        setBankTransferInfo({
+                                          ...bankTransferInfo,
+                                          contactPhone: e.target.value,
+                                        })
+                                      }
+                                      className="block w-full rounded-xl border-gray-200 bg-gray-50/50 px-4 py-3 text-gray-900 transition-all outline-none placeholder:text-gray-400 focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500/20 sm:text-sm"
+                                    />
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    <label
+                                      htmlFor="mailingAddress"
+                                      className="block text-sm font-semibold text-gray-700"
+                                    >
+                                      {t(
+                                        "pricing.bank_transfer.mailing_address",
+                                      )}
+                                    </label>
+                                    <textarea
+                                      id="mailingAddress"
+                                      required
+                                      rows={2}
+                                      placeholder={t(
+                                        "pricing.bank_transfer.mailing_address",
+                                      )}
+                                      value={bankTransferInfo.mailingAddress}
+                                      onChange={(e) =>
+                                        setBankTransferInfo({
+                                          ...bankTransferInfo,
+                                          mailingAddress: e.target.value,
+                                        })
+                                      }
+                                      className="block w-full resize-none rounded-xl border-gray-200 bg-gray-50/50 px-4 py-3 text-gray-900 transition-all outline-none placeholder:text-gray-400 focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500/20 sm:text-sm"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="mt-8 flex flex-col gap-3">
+                                  <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 px-6 py-3.5 text-base font-semibold text-white shadow-lg shadow-orange-600/20 transition-all duration-200 hover:-translate-y-0.5 hover:from-orange-500 hover:to-orange-400 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
+                                  >
+                                    {loading ? (
+                                      <Loader2 className="h-5 w-5 animate-spin" />
+                                    ) : (
+                                      t("pricing.bank_transfer.submit_btn")
+                                    )}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setStep(PaymentStep.confirm)}
+                                    className="inline-flex w-full justify-center rounded-xl bg-white px-6 py-3.5 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-gray-200 transition-all hover:bg-gray-50 hover:ring-gray-300 disabled:cursor-not-allowed disabled:opacity-50"
+                                  >
+                                    {t("common.back")}
+                                  </button>
+                                </div>
+                              </form>
+                            </div>
+                          )}
+
+                          {step === PaymentStep.bank_transfer_success && (
+                            <div className="flex flex-col items-center">
+                              <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <CheckCircle2
+                                  className="h-6 w-6 text-green-600"
+                                  aria-hidden="true"
+                                />
+                              </div>
+                              <DialogTitle
+                                as="h3"
+                                className="mt-4 text-center text-lg leading-6 font-semibold text-gray-900"
+                              >
+                                {t("pricing.bank_transfer.success_message")}
+                              </DialogTitle>
+
+                              <div className="mt-6 w-full space-y-4 rounded-xl border border-gray-200 bg-gray-50 p-6">
+                                <h4 className="border-b border-gray-200 pb-2 text-sm font-bold text-gray-900">
+                                  {t("pricing.bank_transfer.title")}
+                                </h4>
+                                <div className="space-y-3">
+                                  <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">
+                                      {t("pricing.bank_transfer.bank_name")}
+                                    </span>
+                                    <span className="font-medium text-gray-900">
+                                      {t(
+                                        "pricing.bank_transfer.isunfa_bank_name",
+                                      )}{" "}
+                                      (
+                                      {t(
+                                        "pricing.bank_transfer.isunfa_bank_code",
+                                      )}
+                                      )
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">
+                                      {t("pricing.bank_transfer.branch_name")}
+                                    </span>
+                                    <span className="font-medium text-gray-900">
+                                      {t(
+                                        "pricing.bank_transfer.isunfa_branch_name",
+                                      )}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">
+                                      {t("pricing.bank_transfer.account_name")}
+                                    </span>
+                                    <span className="font-medium text-gray-900">
+                                      {t(
+                                        "pricing.bank_transfer.isunfa_account_name",
+                                      )}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">
+                                      {t(
+                                        "pricing.bank_transfer.account_number",
+                                      )}
+                                    </span>
+                                    <span className="font-bold text-orange-600">
+                                      {t(
+                                        "pricing.bank_transfer.isunfa_account_number",
+                                      )}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:justify-end">
+                                <button
+                                  type="button"
+                                  className="inline-flex w-full justify-center rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:from-orange-500 hover:to-orange-400 hover:shadow-lg sm:w-auto"
+                                  onClick={() => {
+                                    window.location.href =
+                                      "/user/billing?tab=orders";
+                                    handleClose();
+                                  }}
+                                >
+                                  {t(
+                                    "pricing.credits.payment_modal.track_order_btn",
+                                    {
+                                      defaultValue: "追蹤訂單",
+                                    },
+                                  )}
+                                </button>
+                                <button
+                                  type="button"
+                                  className="inline-flex w-full justify-center rounded-xl border border-gray-300 bg-white px-6 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:bg-gray-50 sm:w-auto"
                                   onClick={handleClose}
                                 >
                                   {t("pricing.credits.payment_modal.close_btn")}

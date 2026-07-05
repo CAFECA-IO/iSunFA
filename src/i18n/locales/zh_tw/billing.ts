@@ -52,4 +52,57 @@ export const billing = {
     source_admin_issued: "系統管理員發放",
     source_check_in_reward: "每日簽到獎勵",
   },
+  status: {
+    pending: "付款中",
+    pending_bank_transfer: "銀行匯款確認中",
+    paid: "已付款",
+    completed: "已完成",
+    failed: "付款失敗",
+    cancel: "已取消",
+  },
+  types: {
+    BILLING_ON_PREMISE: "本地部署",
+    BILLING_SOLUTION: "解決方案",
+    BILLING_SUBSCRIBE: "訂閱方案",
+    BILLING_POINT: "購買點數",
+  },
+  tracking: {
+    title: "訂單追蹤",
+    status: {
+      pending: {
+        title: "訂單已提交",
+        desc: "我們已收到您的訂單，等待匯款確認",
+      },
+      paid: {
+        title: "款項已確認",
+        desc: "已確認您的匯款，正準備進入部署流程",
+      },
+      executing: {
+        title: "方案導入中",
+        desc: "技術團隊正在為您進行環境建置與軟體導入",
+      },
+      completed: {
+        title: "已完成部署",
+        desc: "方案已成功部署，您可以開始使用服務",
+      },
+    },
+  },
+  details: {
+    title: "訂單詳情",
+    not_found: "訂單不存在或無權限存取",
+    back_to_list: "返回帳單列表",
+    summary: "訂單摘要",
+    order_date: "訂購日期",
+    order_status: "訂單狀態",
+    items: "購買項目",
+    total: "總計",
+    need_help: "需要協助？",
+    help_desc: "若對訂單狀態有任何疑問，請聯繫我們的客服團隊。",
+    contact_support: "聯繫客服",
+    contact_email: "電子信箱",
+    contact_phone: "聯絡電話",
+    support_email_subject: "[iSunFA 訂單支援] 訂單編號: {{orderId}}",
+    support_email_body:
+      "親愛的 iSunFA 客服團隊，\n\n我對於我的訂單有相關疑問。\n訂單編號: {{orderId}}\n訂購日期: {{orderDate}}\n購買項目: {{orderItems}}\n\n[我的問題]:\n",
+  },
 };

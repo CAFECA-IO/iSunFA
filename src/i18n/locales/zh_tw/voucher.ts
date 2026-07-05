@@ -19,6 +19,10 @@ export const voucher = {
       other: "其他",
     },
   },
+  tab: {
+    vouchers: "傳票管理",
+    accounts: "會計科目管理",
+  },
   main_view: {
     title: "智能傳票管理",
     subtitle: "AI 已根據您的憑證辨識結果自動產生對應的會計分錄。",
@@ -143,6 +147,41 @@ export const voucher = {
         title: "儲存傳票",
         message: "您確定要儲存此傳票嗎？",
       },
+    },
+  },
+  account: {
+    custom: "自訂",
+    empty: "目前尚無會計科目",
+    search: {
+      label: "搜尋科目",
+      placeholder: "搜尋科目代碼或名稱...",
+    },
+    action: {
+      add: "新增自訂科目",
+      add_child: "新增子科目",
+      edit: "編輯科目代碼/名稱",
+    },
+    edit_modal: {
+      title: "編輯會計科目",
+    },
+    add_modal: {
+      title: "新增自訂會計科目",
+      parent: "父層科目",
+      parent_placeholder: "請先點擊列表中的「+」或「✎」按鈕",
+      name: "科目名稱",
+      name_placeholder: "例如：應收帳款 - 銀行 A",
+      code: "科目代碼",
+      code_placeholder: "例如：1234-01",
+      type: "科目類型",
+      level: "層級",
+      click_hint: "* 請先點擊左側列表中的操作按鈕",
+    },
+    messages: {
+      create_success: "自訂會計科目已建立",
+      create_failed: "建立失敗，請稍後再試",
+      code_exists: "科目代碼已存在",
+      update_success: "科目更新成功",
+      update_success_msg: "會計科目已成功更新",
     },
   },
 };

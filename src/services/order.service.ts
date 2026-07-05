@@ -11,7 +11,12 @@ import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { orderRepo } from "@/repositories/order.repo";
-import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
+import {
+  ORDER_TYPE,
+  ORDER_STATUS,
+  MANAGEMENT_TYPE,
+  ORDER_TYPE_PREFIX,
+} from "@/constants/status";
 import {
   ANALYSIS_CATEGORY,
   CURRENCY_UNIT,
@@ -62,10 +67,18 @@ export interface IOrderResult {
 }
 
 export interface IPaymentOrderParams {
+  type: string;
   amount: number;
   unit: CurrencyUnit;
   credits: number;
   paymentMethodId: string;
+  title?: string;
+  planId?: string;
+  billingInterval?: "month" | "year";
+  baseCredits?: string;
+  bonusCredits?: string;
+  items?: IJSONObject[];
+  data?: IJSONObject;
 }
 
 export async function generateAnalysisOrder(
@@ -176,6 +189,7 @@ export async function generatePaymentOrder(
     ...params,
     amount: params.amount.toString(),
     timestamp: new Date().toISOString(),
+    items: params.items || params.data?.items,
   };
 
   // Info: (20260305 - Tzuhan) Create challenge from hashed JSON data
@@ -190,7 +204,7 @@ export async function generatePaymentOrder(
   // Info: (20260305 - Tzuhan) Create PENDING order
   const order = await paymentRepo.createOrder({
     userId,
-    type: ORDER_TYPE.OEN_PAYMENT,
+    type: params.type,
     amount: params.amount,
     unit: CURRENCY_UNIT.TWD,
     data: orderData,
@@ -318,6 +332,7 @@ export async function batchReactivateOrders(orderIds: string[]) {
 }
 
 export interface IGetAdminCommissionOrdersParams {
+  managementType: "TASK" | "ORDER" | "ALL";
   page: number;
   limit: number;
   search: string;
@@ -337,6 +352,7 @@ export async function getAdminCommissionOrdersPaginated(
   params: IGetAdminCommissionOrdersParams,
 ) {
   const {
+    managementType,
     page,
     limit,
     search,
@@ -347,9 +363,13 @@ export async function getAdminCommissionOrdersPaginated(
     sortOrder,
   } = params;
 
-  const where: Prisma.OrderWhereInput = {
-    amount: { lt: 0 },
-  };
+  const where: Prisma.OrderWhereInput = {};
+
+  if (managementType === MANAGEMENT_TYPE.TASK) {
+    where.type = ORDER_TYPE.ANALYSIS;
+  } else if (managementType === MANAGEMENT_TYPE.ORDER) {
+    where.type = { startsWith: ORDER_TYPE_PREFIX.BILLING };
+  }
 
   // Info: (20260625 - Julian) 模糊搜尋訂單 ID、用戶名稱、錢包地址
   if (search) {
@@ -469,4 +489,7 @@ export async function getAdminCommissionOrdersPaginated(
       totalPages: Math.ceil(totalElements / limit),
     },
   };
+}
+export async function updateOrderStatus(orderId: string, status: string) {
+  return orderRepo.updateStatus(orderId, status);
 }

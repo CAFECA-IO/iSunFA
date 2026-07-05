@@ -1,0 +1,307 @@
+"use client";
+
+import { useState, useEffect, ReactNode } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useAuth } from "@/contexts/auth_context";
+import { useTranslation } from "@/i18n/i18n_context";
+import { MoneyUtil } from "@/lib/utils/money";
+import { CREDIT_PLANS } from "@/config/credit_plans";
+import { PaymentStep } from "@/interfaces/payment";
+import { PendingBillingIntervalType } from "@/types/pricing";
+import {
+  SUBSCRIPTION_PLAN_CREDITS,
+  SUBSCRIPTION_PLAN_PRICE,
+} from "@/constants/price";
+
+import ConfirmModal from "@/components/common/confirm_modal";
+import AuthModal from "@/components/auth/auth_modal";
+import PaymentModal from "@/components/pricing/payment_modal";
+
+import { PricingProvider } from "@/contexts/pricing_context";
+
+interface IPricingContainerProps {
+  activeTab: "subscription" | "credits" | "on_premise" | "solutions";
+  children: ReactNode;
+}
+
+export default function PricingContainer({
+  activeTab,
+  children,
+}: IPricingContainerProps) {
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const [isAuthModalOpen, setAuthModalOpen] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [modalInitialStep, setModalInitialStep] = useState<PaymentStep>(
+    PaymentStep.confirm,
+  );
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string | ReactNode;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
+
+  const [pendingAmount, setPendingAmount] = useState<string>("0");
+  const [pendingCredits, setPendingCredits] = useState<string>("0");
+  const [pendingBaseCredits, setPendingBaseCredits] = useState<string>("0");
+  const [pendingBonusCredits, setPendingBonusCredits] = useState<string>("0");
+  const [pendingDisplayPrice, setPendingDisplayPrice] = useState("");
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
+  const [pendingTitle, setPendingTitle] = useState<string>("");
+  const [pendingPlanId, setPendingPlanId] = useState<string>("");
+  const [pendingBillingInterval, setPendingBillingInterval] =
+    useState<PendingBillingIntervalType>();
+  const [pendingDetails, setPendingDetails] = useState<string[] | undefined>();
+
+  const onSelectSubscription = (
+    planKey: string,
+    title: string,
+    billingInterval: "month" | "year",
+  ) => {
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+    const amount =
+      SUBSCRIPTION_PLAN_PRICE[planKey as keyof typeof SUBSCRIPTION_PLAN_PRICE][
+        billingInterval === "month" ? "monthly" : "yearly"
+      ].toString();
+    const credits =
+      SUBSCRIPTION_PLAN_CREDITS[
+        planKey as keyof typeof SUBSCRIPTION_PLAN_CREDITS
+      ].toString();
+
+    setPendingAmount(amount);
+    setPendingCredits(credits);
+    setPendingBaseCredits(credits);
+    setPendingBonusCredits("0");
+    setPendingDisplayPrice(`NT$ ${Number(amount).toLocaleString()}`);
+    setPendingTitle(title);
+    setPendingPlanId(planKey);
+    setPendingBillingInterval(billingInterval);
+    setPendingDetails(undefined);
+    setModalInitialStep(PaymentStep.confirm);
+    setPaymentModalOpen(true);
+  };
+
+  const onSelectCustomPlan = (
+    planId: string,
+    title: string,
+    amount: number,
+    interval?: "month" | "year",
+    details?: string[],
+  ) => {
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+
+    setPendingAmount(amount.toString());
+    setPendingCredits("0");
+    setPendingBaseCredits("0");
+    setPendingBonusCredits("0");
+    setPendingDisplayPrice(`NT$ ${amount.toLocaleString()}`);
+    setPendingTitle(title);
+    setPendingPlanId(planId);
+    setPendingBillingInterval(interval);
+    setPendingDetails(details);
+    setModalInitialStep(PaymentStep.confirm);
+    setPaymentModalOpen(true);
+  };
+
+  const onSelectCredit = (
+    plan: (typeof CREDIT_PLANS)[0],
+    displayPrice: string,
+  ) => {
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+
+    const baseCredits = MoneyUtil.toDecimal(plan.price.usd)
+      .times(30)
+      .toNumber();
+    const bonus = plan.credits - baseCredits;
+
+    setPendingAmount(plan.price.twd.toString());
+    setPendingCredits(plan.credits.toString());
+    setPendingBaseCredits(baseCredits.toString());
+    setPendingBonusCredits((bonus > 0 ? bonus : 0).toString());
+    setPendingDisplayPrice(displayPrice);
+    setPendingTitle(t("pricing.credits.title"));
+    setPendingPlanId("");
+    setPendingBillingInterval(undefined);
+    setPendingDetails(undefined);
+    setModalInitialStep(PaymentStep.confirm);
+    setPaymentModalOpen(true);
+  };
+
+  useEffect(() => {
+    const paymentSuccess = searchParams.get("payment_success");
+    const paymentFailure = searchParams.get("payment_failure");
+    if (paymentSuccess === "true") {
+      const qsAmount = MoneyUtil.toDecimal(
+        searchParams.get("amount") || 0,
+      ).toString();
+      const qsCredits = MoneyUtil.toDecimal(
+        searchParams.get("credits") || 0,
+      ).toString();
+      const orderId = searchParams.get("order_id");
+
+      setPendingAmount(qsAmount);
+      setPendingCredits(qsCredits);
+      if (orderId) setPendingOrderId(orderId);
+
+      const matchedPlan = CREDIT_PLANS.find(
+        (p) => p.credits.toString() === qsCredits,
+      );
+      let estimatedBase = qsCredits;
+      let estimatedBonus = "0";
+
+      if (matchedPlan) {
+        estimatedBase = MoneyUtil.toDecimal(matchedPlan.price.usd)
+          .times(30)
+          .toString();
+        estimatedBonus = MoneyUtil.toDecimal(matchedPlan.credits)
+          .minus(estimatedBase)
+          .isPositive()
+          ? MoneyUtil.toDecimal(matchedPlan.credits)
+              .minus(estimatedBase)
+              .toString()
+          : "0";
+      }
+
+      setPendingBaseCredits(estimatedBase);
+      setPendingBonusCredits(estimatedBonus);
+      setModalInitialStep(PaymentStep.processing);
+      setPaymentModalOpen(true);
+
+      const cleanPathname = pathname.split("?")[0];
+      router.replace(cleanPathname, { scroll: false });
+    } else if (paymentFailure === "true") {
+      setModalInitialStep(PaymentStep.error);
+      setPaymentModalOpen(true);
+      const cleanPathname = pathname.split("?")[0];
+      router.replace(cleanPathname, { scroll: false });
+    }
+  }, [searchParams, pathname, router]);
+
+  const tabs = [
+    {
+      id: "credits",
+      label: t("pricing.credits.tab_credits"),
+      path: "/pricing/credits",
+    },
+    {
+      id: "subscription",
+      label: t("pricing.credits.tab_subscription"),
+      path: "/pricing/subscription",
+    },
+    {
+      id: "on_premise",
+      label: t("pricing.on_premise.tab"),
+      path: "/pricing/on_premise",
+    },
+    {
+      id: "solutions",
+      label: t("pricing.solutions.tab"),
+      path: "/pricing/solutions",
+    },
+  ];
+
+  const handleTabClick = (path: string) => {
+    router.push(path, { scroll: false });
+  };
+
+  const contextValue = {
+    onSelectSubscription,
+    onSelectCustomPlan,
+    onSelectCredit,
+    setAuthModalOpen,
+    setConfirmModal,
+  };
+
+  return (
+    <PricingProvider value={contextValue}>
+      <div className="bg-white">
+        <main className="isolate">
+          <div className="relative pt-14 text-center sm:pt-20 lg:pt-32">
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+              {activeTab === "subscription"
+                ? t("pricing.title")
+                : activeTab === "on_premise"
+                  ? t("pricing.on_premise.title")
+                  : activeTab === "solutions"
+                    ? t("pricing.solutions.title")
+                    : t("pricing.credits.title")}
+            </h1>
+            <p className="mt-4 text-lg leading-8 text-gray-600">
+              {activeTab === "subscription"
+                ? t("pricing.subtitle")
+                : activeTab === "on_premise"
+                  ? t("pricing.on_premise.subtitle")
+                  : activeTab === "solutions"
+                    ? t("pricing.solutions.subtitle")
+                    : t("pricing.credits.subtitle")}
+            </p>
+          </div>
+
+          <div className="mt-8 flex justify-center px-4 sm:px-0">
+            <div className="grid max-w-md grid-cols-2 gap-1 rounded-lg bg-gray-100 p-1 sm:flex sm:max-w-none sm:flex-nowrap sm:justify-center">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabClick(tab.path)}
+                  className={`${
+                    activeTab === tab.id
+                      ? "bg-white shadow-sm"
+                      : "hover:bg-gray-50"
+                  } w-full rounded-md px-6 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none sm:w-auto`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="pricing-content-wrapper">{children}</div>
+        </main>
+
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+        />
+        <PaymentModal
+          isOpen={paymentModalOpen}
+          onClose={() => setPaymentModalOpen(false)}
+          onSuccess={() => {}}
+          initialStep={modalInitialStep}
+          amount={pendingAmount}
+          credits={pendingCredits}
+          baseCredits={pendingBaseCredits}
+          bonusCredits={pendingBonusCredits}
+          displayPrice={pendingDisplayPrice}
+          orderId={pendingOrderId}
+          title={pendingTitle}
+          planId={pendingPlanId}
+          billingInterval={pendingBillingInterval}
+          details={pendingDetails}
+        />
+        <ConfirmModal
+          isOpen={confirmModal.isOpen}
+          onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+          title={confirmModal.title}
+          message={confirmModal.message}
+        />
+      </div>
+    </PricingProvider>
+  );
+}
