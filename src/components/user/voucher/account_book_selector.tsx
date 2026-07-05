@@ -14,6 +14,7 @@ import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { ACCOUNTS } from "@/constants/accounts";
 import { IAccountBook } from "@/interfaces/account_book";
+import { AccountType } from "@/constants/enums";
 
 // Info: (20260317 - Julian) IAccount interface type
 export interface IAccount {
@@ -77,11 +78,6 @@ export default function AccountBookSelector({
     const countryKey = accountBook.country as keyof typeof ACCOUNTS;
     return ACCOUNTS[countryKey] || ACCOUNTS.TW;
   }, [accountBook?.country]);
-
-  // Info: (20260317 - Julian) Uniq account types
-  const accountTypes = useMemo(() => {
-    return Array.from(new Set(accountOptions.map((acc) => acc.type)));
-  }, [accountOptions]);
 
   // Info: (20260317 - Julian) Computed list based on keyword search and selected type
   const filteredAccounts = useMemo(() => {
@@ -164,7 +160,7 @@ export default function AccountBookSelector({
                       >
                         {t("voucher.account_book_selector.all")}
                       </button>
-                      {accountTypes.map((type) => (
+                      {Object.values(AccountType).map((type) => (
                         <button
                           key={type}
                           onClick={() => setSelectedType(type)}

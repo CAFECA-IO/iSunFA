@@ -64,7 +64,7 @@ export async function PUT(
     if (!parseResult.success) {
       return jsonFail({
         ...API_ERRORS.VL_SCHEMA_ERROR,
-        message: `Validation Error: ${parseResult.error.errors[0].message} (${parseResult.error.errors[0].path.join(".")})`,
+        message: `Validation Error: ${parseResult.error.issues[0].message} (${parseResult.error.issues[0].path.join(".")})`,
       });
     }
 
