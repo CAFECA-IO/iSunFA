@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { CheckCircle2, Building, Building2, BuildingIcon } from "lucide-react";
+import { CheckCircle2, Building, Building2, House } from "lucide-react";
 import { SOLUTION_PLAN_PRICE } from "@/constants/price";
 import { ISolutionsPricingSectionProps, SolutionTab } from "@/types/pricing";
 
@@ -23,6 +23,8 @@ export default function SolutionsPricingSection({
         t("pricing.solutions.iso14064.f2"),
         t("pricing.solutions.iso14064.f3"),
         t("pricing.solutions.iso14064.f4"),
+        t("pricing.solutions.iso14064.f5"),
+        t("pricing.solutions.iso14064.f6"),
       ],
     },
     iso14067: {
@@ -34,6 +36,8 @@ export default function SolutionsPricingSection({
         t("pricing.solutions.iso14067.f2"),
         t("pricing.solutions.iso14067.f3"),
         t("pricing.solutions.iso14067.f4"),
+        t("pricing.solutions.iso14067.f5"),
+        t("pricing.solutions.iso14067.f6"),
       ],
     },
     carbon_label: {
@@ -45,6 +49,8 @@ export default function SolutionsPricingSection({
         t("pricing.solutions.carbon_label.f2"),
         t("pricing.solutions.carbon_label.f3"),
         t("pricing.solutions.carbon_label.f4"),
+        t("pricing.solutions.carbon_label.f5"),
+        t("pricing.solutions.carbon_label.f6"),
       ],
     },
   };
@@ -52,7 +58,7 @@ export default function SolutionsPricingSection({
   const sizes = [
     {
       id: "basic" as SizeTier,
-      icon: Building,
+      icon: House,
       badge: t("pricing.solutions.tier1.badge"),
       title: t("pricing.solutions.tier1.title"),
       desc: t("pricing.solutions.tier1.desc", {
@@ -64,7 +70,7 @@ export default function SolutionsPricingSection({
     },
     {
       id: "pro" as SizeTier,
-      icon: Building2,
+      icon: Building,
       badge: t("pricing.solutions.tier2.badge"),
       title: t("pricing.solutions.tier2.title"),
       desc: t("pricing.solutions.tier2.desc", {
@@ -76,7 +82,7 @@ export default function SolutionsPricingSection({
     },
     {
       id: "enterprise" as SizeTier,
-      icon: BuildingIcon,
+      icon: Building2,
       badge: t("pricing.solutions.tier3.badge"),
       title: t("pricing.solutions.tier3.title"),
       desc: t("pricing.solutions.tier3.desc", {
@@ -105,17 +111,8 @@ export default function SolutionsPricingSection({
 
   return (
     <div className="mx-auto max-w-4xl px-6 pt-10 pb-24 lg:px-8">
-      <div className="mb-12 text-center">
-        <h2 className="mb-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-          {t("pricing.solutions.page_title")}
-        </h2>
-        <p className="text-lg text-gray-600">
-          {t("pricing.solutions.description")}
-        </p>
-      </div>
-
       <div className="space-y-16">
-        {/* Step 1: Solution Type */}
+        {/* Info: (20260703 - Tzuhan) Step 1: Solution Type */}
         <section>
           <div className="mb-6 flex items-baseline justify-between">
             <h3 className="text-xl font-bold text-gray-900">
@@ -184,7 +181,7 @@ export default function SolutionsPricingSection({
           </div>
         </section>
 
-        {/* Step 2: Enterprise Size */}
+        {/* Info: (20260703 - Tzuhan) Step 2: Enterprise Size */}
         <section>
           <div className="mb-6 flex items-baseline justify-between">
             <h3 className="text-xl font-bold text-gray-900">
@@ -222,9 +219,6 @@ export default function SolutionsPricingSection({
                   >
                     {size.badge}
                   </h4>
-                  <span className="mb-6 inline-block rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
-                    {size.title}
-                  </span>
 
                   <div className="mt-auto mb-6 w-full border-t border-gray-100 pt-5">
                     <p className="mb-4 text-xs font-medium text-gray-500">
@@ -267,7 +261,7 @@ export default function SolutionsPricingSection({
         </section>
       </div>
 
-      {/* Bottom Summary */}
+      {/* Info: (20260703 - Tzuhan) Bottom Summary */}
       <div className="mt-12 flex flex-col items-center justify-between rounded-3xl bg-gray-50 p-8 ring-1 ring-gray-200 sm:flex-row">
         <div className="mb-6 text-center sm:mb-0 sm:text-left">
           <span className="text-sm font-medium text-gray-500">

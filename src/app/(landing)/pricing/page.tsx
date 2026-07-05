@@ -41,7 +41,7 @@ export default function PricingPage() {
         ? "credits"
         : tabParam === "solutions"
           ? "solutions"
-          : "business_model";
+          : "on_premise";
   const [billingInterval, setBillingInterval] = useState<"month" | "year">(
     "month",
   );
@@ -75,6 +75,8 @@ export default function PricingPage() {
   const [pendingDetails, setPendingDetails] = useState<string[] | undefined>();
 
   // Info: (20260115 - Luphia) Pricing Calculator State
+  const [selectedMachine, setSelectedMachine] =
+    useState<keyof typeof ENTERPRISE_PLAN_PRICE.MACHINE>("ASUS_ASCENT_GX10");
   const [userCount, setUserCount] = useState(1);
   const [updateYears, setUpdateYears] = useState(0);
   const [selectedModules, setSelectedModules] = useState<string[]>(
@@ -82,7 +84,7 @@ export default function PricingPage() {
   );
 
   const totalPrice =
-    ENTERPRISE_PLAN_PRICE.MACHINE +
+    ENTERPRISE_PLAN_PRICE.MACHINE[selectedMachine] +
     userCount * ENTERPRISE_PLAN_PRICE.USER +
     updateYears * ENTERPRISE_PLAN_PRICE.UPDATE +
     selectedModules.length * ENTERPRISE_PLAN_PRICE.MODULE;
@@ -302,8 +304,8 @@ export default function PricingPage() {
           <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">
             {activeTab === "subscription"
               ? t("pricing.title")
-              : activeTab === "business_model"
-                ? t("pricing.ai_adoption.title")
+              : activeTab === "on_premise"
+                ? t("pricing.on_premise.title")
                 : activeTab === "solutions"
                   ? t("pricing.solutions.title")
                   : t("pricing.credits.title")}
@@ -311,8 +313,8 @@ export default function PricingPage() {
           <p className="mt-4 text-lg leading-8 text-gray-600">
             {activeTab === "subscription"
               ? t("pricing.subtitle")
-              : activeTab === "business_model"
-                ? t("pricing.ai_adoption.description")
+              : activeTab === "on_premise"
+                ? t("pricing.on_premise.subtitle")
                 : activeTab === "solutions"
                   ? t("pricing.solutions.subtitle")
                   : t("pricing.credits.subtitle")}
@@ -321,7 +323,7 @@ export default function PricingPage() {
 
         {/* Info: (20260104 - Luphia) Tab Switcher */}
         <div className="mt-8 flex justify-center px-4 sm:px-0">
-          <div className="grid w-full max-w-md grid-cols-2 gap-1 rounded-lg bg-gray-100 p-1 sm:flex sm:max-w-none sm:flex-nowrap sm:justify-center">
+          <div className="grid max-w-md grid-cols-2 gap-1 rounded-lg bg-gray-100 p-1 sm:flex sm:max-w-none sm:flex-nowrap sm:justify-center">
             <button
               onClick={() =>
                 router.push(`${pathname}?tab=credits`, { scroll: false })
@@ -348,15 +350,15 @@ export default function PricingPage() {
             </button>
             <button
               onClick={() =>
-                router.push(`${pathname}?tab=business_model`, { scroll: false })
+                router.push(`${pathname}?tab=on_premise`, { scroll: false })
               }
               className={`${
-                activeTab === "business_model"
+                activeTab === "on_premise"
                   ? "bg-white shadow-sm"
                   : "hover:bg-gray-50"
               } w-full rounded-md px-6 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none sm:w-auto`}
             >
-              {t("pricing.business_model.tab")}
+              {t("pricing.on_premise.tab")}
             </button>
             <button
               onClick={() =>
@@ -645,7 +647,7 @@ export default function PricingPage() {
           </>
         )}
 
-        {activeTab === "business_model" && (
+        {activeTab === "on_premise" && (
           <div className="mx-auto max-w-7xl px-6 pt-10 pb-24 lg:px-8">
             {/* Info: (20260115 - Luphia) Enterprise AI Adoption Plan Section */}
             <div className="rounded-3xl bg-gradient-to-b from-gray-900 to-gray-800 p-1 shadow-2xl ring-1 shadow-orange-900/20 ring-white/10">
@@ -675,19 +677,47 @@ export default function PricingPage() {
                         <div className="flex flex-col justify-between gap-6 border-b border-white/5 pb-8 sm:flex-row sm:items-center">
                           <div>
                             <span className="block text-lg font-medium text-white">
-                              ASUS Ascent GX10
+                              {selectedMachine === "X86_5060TI"
+                                ? t("pricing.ai_adoption.machine_x86")
+                                : t("pricing.ai_adoption.machine_gx10")}
                             </span>
                             <span className="mt-1 block text-sm text-gray-400">
                               {t("pricing.ai_adoption.add_module_price", {
                                 price:
-                                  ENTERPRISE_PLAN_PRICE.MACHINE.toLocaleString(),
+                                  ENTERPRISE_PLAN_PRICE.MACHINE[
+                                    selectedMachine
+                                  ].toLocaleString(),
                               })}
                             </span>
-                          </div>
-                          <div className="flex w-full items-center justify-start sm:w-auto sm:justify-end">
-                            <span className="rounded-lg bg-orange-600/10 px-3 py-1 text-sm font-medium text-orange-400 ring-1 ring-orange-500/20 ring-inset">
-                              {t("pricing.ai_adoption.required")}
+                            <span className="mt-1 block text-xs text-orange-400/80 italic">
+                              {selectedMachine === "X86_5060TI"
+                                ? t("pricing.ai_adoption.capacity_x86")
+                                : t("pricing.ai_adoption.capacity_gx10")}
                             </span>
+                          </div>
+                          <div className="flex w-full items-center justify-between gap-x-4 rounded-xl bg-black/20 p-1.5 ring-1 ring-white/10 sm:w-auto">
+                            <button
+                              onClick={() => setSelectedMachine("X86_5060TI")}
+                              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
+                                selectedMachine === "X86_5060TI"
+                                  ? "bg-orange-600 text-white shadow-lg"
+                                  : "text-gray-400 hover:text-white"
+                              }`}
+                            >
+                              X86
+                            </button>
+                            <button
+                              onClick={() =>
+                                setSelectedMachine("ASUS_ASCENT_GX10")
+                              }
+                              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
+                                selectedMachine === "ASUS_ASCENT_GX10"
+                                  ? "bg-orange-600 text-white shadow-lg"
+                                  : "text-gray-400 hover:text-white"
+                              }`}
+                            >
+                              GX10
+                            </button>
                           </div>
                         </div>
 
@@ -874,7 +904,9 @@ export default function PricingPage() {
                           type="button"
                           onClick={() => {
                             const details = [
-                              "ASUS Ascent GX10",
+                              selectedMachine === "X86_5060TI"
+                                ? t("pricing.ai_adoption.machine_x86")
+                                : t("pricing.ai_adoption.machine_gx10"),
                               `${t("pricing.ai_adoption.user_count")}: ${userCount}`,
                               ...(updateYears > 0
                                 ? [

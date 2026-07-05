@@ -76,7 +76,10 @@ export const ANALYSIS_ADDON_COSTS = {
 } as const;
 
 export const ENTERPRISE_PLAN_PRICE = {
-  MACHINE: 10000 * 1.05 * 12,
+  MACHINE: {
+    X86_5060TI: 84000 * 1.05,
+    ASUS_ASCENT_GX10: 168000 * 1.05,
+  },
   USER: 100 * 1.05 * 12,
   MODULE: 2000 * 1.05 * 12,
   UPDATE: 3000 * 1.05 * 12,
