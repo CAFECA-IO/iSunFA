@@ -204,7 +204,7 @@ export async function PATCH(
     const target = accounts.find((acc) => acc.id === id);
 
     if (!target) {
-      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK); // Should be NF_ACCOUNT
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK); // Info: (20260703 - Julian) Should be NF_ACCOUNT
     }
 
     // Info: (20260703 - Julian) 如果要更新 Code，檢查是否衝突
