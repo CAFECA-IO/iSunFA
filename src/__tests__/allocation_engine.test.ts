@@ -70,7 +70,7 @@ describe("AllocationEngineService", () => {
 
     expect(prisma.esgAllocation.create).toHaveBeenCalledTimes(2);
 
-    // sku-1 should get 300 amount, 150 emissions
+    // Info: (20260703 - Tzuhan) sku-1 should get 300 amount, 150 emissions
     expect(prisma.esgAllocation.create).toHaveBeenNthCalledWith(1, {
       data: expect.objectContaining({
         skuId: "sku-1",
@@ -80,7 +80,7 @@ describe("AllocationEngineService", () => {
       }),
     });
 
-    // sku-2 should get 700 amount, 350 emissions
+    // Info: (20260703 - Tzuhan) sku-2 should get 700 amount, 350 emissions
     expect(prisma.esgAllocation.create).toHaveBeenNthCalledWith(2, {
       data: expect.objectContaining({
         skuId: "sku-2",
