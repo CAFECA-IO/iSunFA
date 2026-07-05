@@ -18,6 +18,29 @@ export const pricing = {
   coming_soon_middle: ". Contact us at ",
   coming_soon_email: "contact@isunfa.com",
   coming_soon_suffix: " for the latest offers.",
+  bank_transfer: {
+    method_label: "Bank Transfer",
+    title: "Payment Method",
+    bank_name: "Bank Name",
+    bank_code: "Bank Code",
+    branch_name: "Branch Name",
+    account_name: "Account Name",
+    account_number: "Account Number",
+    company_info_title: "Enter Company Information",
+    company_name: "Company Name",
+    tax_id: "Tax ID / Unified Business Number",
+    contact_phone: "Contact Phone",
+    mailing_address: "Mailing Address",
+    submit_btn: "Submit Order",
+    success_message:
+      "Your order has been submitted. We will contact you shortly to confirm the transfer and contract details.",
+    bank_info_note: "Bank Transfer",
+    isunfa_bank_name: "E.SUN BANK",
+    isunfa_bank_code: "808",
+    isunfa_branch_name: "Zhongxiao Branch",
+    isunfa_account_name: "Cafeca Fintech Co., Ltd.",
+    isunfa_account_number: "0875-940-148720",
+  },
   plans: {
     personal: {
       name: "Free",
@@ -189,6 +212,7 @@ export const pricing = {
       credits_unit: "{{count}} Credits",
       confirm_btn: "Confirm Payment",
       processing: "Processing...",
+      initializing_kyc: "Initializing identity and creating order...",
       processing_title: "Processing",
       processing_message:
         "Authorization successful, issuing blockchain credits to your wallet. Please wait...",
@@ -201,6 +225,28 @@ export const pricing = {
       subscription_reset_note:
         "Credits are valid for 30 days and must be used within this period",
       selected_modules: "Selected Modules",
+      track_order_btn: "Track Order",
+    },
+    tracking: {
+      title: "Order Tracking",
+      status: {
+        pending: {
+          title: "Order Submitted",
+          desc: "We have received your order and are waiting for payment confirmation.",
+        },
+        paid: {
+          title: "Payment Confirmed",
+          desc: "Payment confirmed. Preparing to start the deployment process.",
+        },
+        executing: {
+          title: "Solution Importing",
+          desc: "Technical team is setting up the environment and importing software.",
+        },
+        completed: {
+          title: "Deployment Completed",
+          desc: "Solution successfully deployed. You can now start using the service.",
+        },
+      },
     },
   },
   on_premise: {

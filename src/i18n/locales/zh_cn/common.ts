@@ -41,6 +41,8 @@ export const common = {
   processing: "处理中...",
   save: "保存",
   confirm: "确认",
+  update: "更新",
+  detail: "详情",
   verify_all: "一键核对",
   verify_all_confirm_title: "确认一键核对？",
   verify_all_confirm_desc: "这将会把所有未核对的项目标记为已核对",
@@ -116,4 +118,6 @@ export const common = {
   },
   qr_code: "二维码",
   done: "完成",
+  back: "返回",
+  next: "下一步",
 };

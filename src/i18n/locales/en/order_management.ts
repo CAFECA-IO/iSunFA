@@ -1,7 +1,11 @@
 export const orderManagement = {
   title: "Order Management",
   subtitle:
-    "View and manage all orders, payment statuses, and blockchain execution statuses",
+    "Manage and review all orders, payment statuses, and execution statuses on the blockchain",
+  tabs: {
+    task_management: "Task Management",
+    order_management: "Order Management",
+  },
   table: {
     date: "Date",
     user: "User",
@@ -40,5 +44,11 @@ export const orderManagement = {
     cancel_batch: "Cancel Batch",
     no_reactivatable_orders: "No reactivatable orders",
     search_bar_placeholder: "Search by keyword, user, or order number...",
+    update_success: "Status updated successfully.",
+    update_failed: "Failed to update status.",
+  },
+  detail: {
+    title: "Order Details",
+    data: "Raw Data",
   },
 };

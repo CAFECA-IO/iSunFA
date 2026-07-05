@@ -1,5 +1,7 @@
 import { type AnalysisPeriod } from "@/constants/analysis";
 
+export const BANK_TRANSFER = "bank_transfer";
+
 /**
  * Info: (20260128 - Luphia) Pricing Logic:
  * - Base Cost:

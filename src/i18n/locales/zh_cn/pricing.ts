@@ -18,6 +18,29 @@ export const pricing = {
   coming_soon_middle: "，联系我们以取得最新优惠 ",
   coming_soon_email: "contact@isunfa.com",
   coming_soon_suffix: "",
+  bank_transfer: {
+    method_label: "银行汇款",
+    title: "付款方式",
+    bank_name: "银行名称",
+    bank_code: "银行代码",
+    branch_name: "分行名称",
+    account_name: "户名",
+    account_number: "账号",
+    company_info_title: "填写基本资料",
+    company_name: "公司名称",
+    tax_id: "统一社会信用代码",
+    contact_phone: "联系电话",
+    mailing_address: "收件地址",
+    submit_btn: "提交订单",
+    success_message:
+      "您的订单已提交，我们将尽快与您联系，确认后续汇款及合同事宜。",
+    bank_info_note: "银行汇款",
+    isunfa_bank_name: "玉山银行",
+    isunfa_bank_code: "808",
+    isunfa_branch_name: "忠孝分行",
+    isunfa_account_name: "卡菲卡金融科技股份有限公司",
+    isunfa_account_number: "0875-940-148720",
+  },
   plans: {
     personal: {
       name: "免费版",
@@ -172,10 +195,10 @@ export const pricing = {
     payment_modal: {
       success_title: "购买成功",
       error_title: "购买失败",
-      original_credits: "原有积分",
+      original_credits: "原有点数",
       amount_paid: "支付金额",
-      tokens_received: "获得积分",
-      current_credits: "当前积分",
+      tokens_received: "获得点数",
+      current_credits: "当前点数",
       close_btn: "关闭",
       retry_btn: "返回重试",
       credits_unit_short: "点",
@@ -186,6 +209,7 @@ export const pricing = {
       credits_unit: "{{count}} 点",
       confirm_btn: "确认付款",
       processing: "处理中...",
+      initializing_kyc: "正在初始化身份与建立订单...",
       processing_title: "处理中",
       processing_message: "授权已成功，正在发行区块链点数至您的钱包，请稍候...",
       processing_failed: "付款处理失败。请重试。",
@@ -196,6 +220,28 @@ export const pricing = {
       agree_tos: "我同意使用条款 (Terms of Service) 与退费政策 (Refund Policy)",
       subscription_reset_note: "点数有效时间为 30 日，需在时效内使用完毕",
       selected_modules: "已选模块",
+      track_order_btn: "订单追踪",
+    },
+    tracking: {
+      title: "订单追踪",
+      status: {
+        pending: {
+          title: "订单已提交",
+          desc: "我们已收到您的订单，等待汇款确认",
+        },
+        paid: {
+          title: "款项已确认",
+          desc: "已确认您的汇款，正准备进入部署流程",
+        },
+        executing: {
+          title: "方案导入中",
+          desc: "技术团队正在为您进行环境建置与软件导入",
+        },
+        completed: {
+          title: "已完成部署",
+          desc: "方案已成功部署，您可以开始使用服务",
+        },
+      },
     },
   },
   on_premise: {

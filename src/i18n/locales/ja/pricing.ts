@@ -18,6 +18,29 @@ export const pricing = {
   coming_soon_middle: "に選定されました。最新の特典については ",
   coming_soon_email: "contact@isunfa.com",
   coming_soon_suffix: " までお問い合わせください。",
+  bank_transfer: {
+    method_label: "銀行振込",
+    title: "お支払い方法",
+    bank_name: "銀行名",
+    bank_code: "銀行コード",
+    branch_name: "支店名",
+    account_name: "口座名義",
+    account_number: "口座番号",
+    company_info_title: "基本情報の入力",
+    company_name: "会社名",
+    tax_id: "法人番号 / 統一編號",
+    contact_phone: "電話番号",
+    mailing_address: "送付先住所",
+    submit_btn: "注文を送信",
+    success_message:
+      "注文が送信されました。振込および契約の詳細について、追って担当者よりご連絡いたします。",
+    bank_info_note: "銀行振込",
+    isunfa_bank_name: "玉山銀行 (E.SUN BANK)",
+    isunfa_bank_code: "808",
+    isunfa_branch_name: "忠孝支店",
+    isunfa_account_name: "卡菲卡金融科技股份有限公司",
+    isunfa_account_number: "0875-940-148720",
+  },
   plans: {
     personal: {
       name: "フリープラン",
@@ -181,7 +204,7 @@ export const pricing = {
       tokens_received: "獲得ポイント",
       current_credits: "現在ポイント",
       close_btn: "閉じる",
-      retry_btn: "再試行",
+      retry_btn: "戻って再試行",
       credits_unit_short: "pt",
       bonus_points: "ボーナス {{count}} pts",
       title: "お支払い確認",
@@ -190,6 +213,7 @@ export const pricing = {
       credits_unit: "{{count}} ポイント",
       confirm_btn: "お支払い確定",
       processing: "処理中...",
+      initializing_kyc: "身元を初期化し、注文を作成しています...",
       processing_title: "処理中",
       processing_message:
         "承認が完了しました。ウォレットにブロックチェーンクレジットを発行しています。お待ちください...",
@@ -202,6 +226,28 @@ export const pricing = {
       subscription_reset_note:
         "ポイントの有効期限は30日間です、期限内に使用してください。",
       selected_modules: "選択したモジュール",
+      track_order_btn: "注文追跡",
+    },
+    tracking: {
+      title: "注文追跡",
+      status: {
+        pending: {
+          title: "注文送信済み",
+          desc: "注文を受領しました。振込確認待ちです。",
+        },
+        paid: {
+          title: "入金確認済み",
+          desc: "入金を確認しました。導入プロセスを準備しています。",
+        },
+        executing: {
+          title: "ソリューション導入中",
+          desc: "技術チームが環境構築とソフトウェア導入を行っています。",
+        },
+        completed: {
+          title: "デプロイ完了",
+          desc: "ソリューションのデプロイが完了しました。サービスをご利用いただけます。",
+        },
+      },
     },
   },
   on_premise: {

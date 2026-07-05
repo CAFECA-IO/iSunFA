@@ -51,4 +51,58 @@ export const billing = {
     source_admin_issued: "관리자 지급",
     source_check_in_reward: "일일 출석 보상",
   },
+  status: {
+    pending: "처리 중",
+    pending_bank_transfer: "은행 송금 확인 중",
+    paid: "결제 완료",
+    completed: "완료됨",
+    failed: "결제 실패",
+    cancel: "취소됨",
+  },
+  types: {
+    BILLING_ON_PREMISE: "온프레미스 배포",
+    BILLING_SOLUTION: "솔루션",
+    BILLING_SUBSCRIBE: "구독 플랜",
+    BILLING_POINT: "포인트 구매",
+  },
+  tracking: {
+    title: "주문 추적",
+    status: {
+      pending: {
+        title: "주문 제출됨",
+        desc: "주문이 접수되었습니다. 은행 송금 확인을 기다리는 중입니다.",
+      },
+      paid: {
+        title: "결제 확인됨",
+        desc: "송금이 확인되었습니다. 배포를 준비 중입니다.",
+      },
+      executing: {
+        title: "솔루션 도입 중",
+        desc: "기술 팀이 환경 구축 및 소프트웨어 설치를 진행 중입니다.",
+      },
+      completed: {
+        title: "배포 완료",
+        desc: "솔루션 배포가 완료되었습니다. 이제 서비스를 이용하실 수 있습니다.",
+      },
+    },
+  },
+  details: {
+    title: "주문 상세",
+    not_found: "주문을 찾을 수 없거나 액세스 권한이 없습니다",
+    back_to_list: "청구 목록으로 돌아가기",
+    summary: "주문 요약",
+    order_date: "주문 날짜",
+    order_status: "주문 상태",
+    items: "구매 항목",
+    total: "총계",
+    need_help: "도움이 필요하신가요?",
+    help_desc:
+      "주문 상태에 대해 궁금한 점이 있으시면 고객 지원 팀에 문의해 주세요.",
+    contact_support: "고객 지원 문의",
+    contact_email: "이메일",
+    contact_phone: "전화번호",
+    support_email_subject: "[iSunFA 주문 지원] 주문 번호: {{orderId}}",
+    support_email_body:
+      "안녕하세요 iSunFA 고객 지원 팀,\n\n제 주문에 대해 문의 사항이 있습니다.\n주문 번호: {{orderId}}\n주문 날짜: {{orderDate}}\n구매 항목: {{orderItems}}\n\n[문의 내용]:\n",
+  },
 };

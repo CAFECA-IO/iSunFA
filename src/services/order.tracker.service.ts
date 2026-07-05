@@ -4,6 +4,7 @@ import { orderRepo } from "@/repositories/order.repo";
 import { failOrder } from "@/services/order.service";
 import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 import { ABIS } from "@/config/contracts";
+import { BANK_TRANSFER } from "@/constants/price";
 
 let isScanning = false;
 
@@ -26,6 +27,26 @@ export async function scanPendingTransactions() {
     });
 
     for (const order of stalePendingOrders) {
+      // Info: (20260705 - Luphia) Skip bank transfer orders as they require manual verification
+      // Info: (20260705 - Luphia) Exclude ON_PREMISE and SOLUTION orders from auto-cancellation
+      if (
+        order.type === ORDER_TYPE.BILLING_ON_PREMISE ||
+        order.type === ORDER_TYPE.BILLING_SOLUTION
+      ) {
+        continue;
+      }
+
+      // Info: (20260705 - Luphia) Fallback check for bank transfer in items
+      const orderData = order.data as Record<string, unknown>;
+      const items = (orderData?.items as Record<string, unknown>[]) || [];
+      if (
+        items.some(
+          (item: Record<string, unknown>) => item.remark === BANK_TRANSFER,
+        )
+      ) {
+        continue;
+      }
+
       await orderRepo.update({
         where: { id: order.id },
         data: { status: ORDER_STATUS.CANCEL },

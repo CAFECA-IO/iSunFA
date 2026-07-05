@@ -3,7 +3,7 @@ import { ORDER_TYPE } from "@/constants/status";
 
 // Info: (20260701 - Tzuhan) Validator for creating OEN_PAYMENT orders
 export const generatePaymentOrderSchema = z.object({
-  type: z.literal(ORDER_TYPE.OEN_PAYMENT),
+  type: z.nativeEnum(ORDER_TYPE),
   amount: z
     .union([z.number(), z.string()])
     .transform((val) => Number(val))
@@ -25,4 +25,6 @@ export const generatePaymentOrderSchema = z.object({
   billingInterval: z.enum(["month", "year"]).optional(),
   baseCredits: z.union([z.number(), z.string()]).optional(),
   bonusCredits: z.union([z.number(), z.string()]).optional(),
+  items: z.array(z.any()).optional(),
+  data: z.record(z.any()).optional(),
 });

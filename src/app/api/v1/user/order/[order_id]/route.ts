@@ -43,13 +43,19 @@ export async function GET(
         "Payment processing failed";
     }
 
+    const orderData = (order.data as Record<string, unknown>) || {};
+    const items = orderData.items || [];
+
     // Info: (20260302 - Tzuhan) [流程 4-4: 回傳訂單狀態] 讓前端決定是否繼續輪詢或是轉換 UI 頁面 (前往成功或失敗)
     return jsonOk({
       id: order.id,
       status: order.status,
+      createdAt: order.createdAt,
+      amount: order.amount,
       transactionHash: order.transactionHash,
       errorMessage,
-      data: order.data,
+      data: orderData,
+      items,
     });
   } catch (error) {
     console.error(

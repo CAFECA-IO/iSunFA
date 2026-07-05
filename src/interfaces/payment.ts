@@ -61,6 +61,8 @@ export enum PaymentStep {
   processing = "processing",
   success = "success",
   error = "error",
+  bank_transfer = "bank_transfer",
+  bank_transfer_success = "bank_transfer_success",
 }
 
 export interface IPaymentModalProps {

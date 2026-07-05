@@ -31,13 +31,18 @@ export async function POST(request: NextRequest) {
     // Info: (20260130 - Tzuhan) Ensure user exists in DB before creating order to avoid FK errors
     await webAuthnService.ensureUserSynced(user.address);
 
-    if (type === ORDER_TYPE.OEN_PAYMENT) {
+    if (
+      type === ORDER_TYPE.OEN_PAYMENT ||
+      type === ORDER_TYPE.BILLING_ON_PREMISE ||
+      type === ORDER_TYPE.BILLING_SOLUTION
+    ) {
       const parsed = generatePaymentOrderSchema.safeParse(body);
       if (!parsed.success) {
         return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
       }
 
       const {
+        type: parsedType,
         amount: parsedAmount,
         unit: parsedUnit,
         credits: parsedCredits,
@@ -47,9 +52,12 @@ export async function POST(request: NextRequest) {
         billingInterval: parsedBillingInterval,
         baseCredits: parsedBaseCredits,
         bonusCredits: parsedBonusCredits,
+        items: parsedItems,
+        data: parsedData,
       } = parsed.data;
 
       const result = await generatePaymentOrder(user.id, {
+        type: parsedType,
         amount: parsedAmount,
         unit: (parsedUnit || "TWD") as CurrencyUnit,
         credits: parsedCredits,
@@ -59,6 +67,8 @@ export async function POST(request: NextRequest) {
         billingInterval: parsedBillingInterval,
         baseCredits: String(parsedBaseCredits),
         bonusCredits: String(parsedBonusCredits),
+        items: parsedItems,
+        data: parsedData,
       });
 
       return jsonOk(result);
@@ -128,8 +138,12 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type");
+    const isBilling = searchParams.get("billing") === "true";
 
-    const orders = await getOrdersByUserId(user.id, type);
+    const orders = await getOrdersByUserId(
+      user.id,
+      isBilling ? "billing" : type,
+    );
 
     return jsonOk({ orders });
   } catch (error) {

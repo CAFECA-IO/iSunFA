@@ -28,7 +28,11 @@ export function generateReceiptItems(
         unitPrice: amount.toString(),
         amount: amount.toString(),
         remark:
-          orderData.billingInterval === "year" ? "會員卡年費" : "會員卡月費",
+          orderData.paymentMethod === "bank_transfer"
+            ? "銀行匯款"
+            : orderData.billingInterval === "year"
+              ? "會員卡年費"
+              : "會員卡月費",
       },
     ];
   } else {
