@@ -153,6 +153,7 @@ export const voucher = {
     },
   },
   account: {
+    custom: "Custom",
     empty: "No accounting subjects found",
     search: {
       label: "Search Subjects",
@@ -160,6 +161,11 @@ export const voucher = {
     },
     action: {
       add: "Add Custom Subject",
+      add_child: "Add Child Subject",
+      edit: "Edit Subject Code/Name",
+    },
+    edit_modal: {
+      title: "Edit Accounting Subject",
     },
     add_modal: {
       title: "Add Custom Accounting Subject",
@@ -171,11 +177,15 @@ export const voucher = {
       code_placeholder: "e.g., 1234-01",
       type: "Subject Type",
       level: "Level",
+      click_hint:
+        "* Please click the action button in the list on the left first",
     },
     messages: {
       create_success: "Custom accounting subject created",
       create_failed: "Failed to create, please try again later",
       code_exists: "Subject code already exists",
+      update_success: "Subject updated successfully",
+      update_success_msg: "The accounting subject has been updated",
     },
   },
 };

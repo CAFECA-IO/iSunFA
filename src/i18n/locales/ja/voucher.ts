@@ -150,6 +150,7 @@ export const voucher = {
     },
   },
   account: {
+    custom: "カスタム",
     empty: "勘定科目がありません",
     search: {
       label: "科目を検索",
@@ -157,6 +158,11 @@ export const voucher = {
     },
     action: {
       add: "カスタム科目を追加",
+      add_child: "子科目を追加",
+      edit: "科目コード/名を編集",
+    },
+    edit_modal: {
+      title: "勘定科目を編集",
     },
     add_modal: {
       title: "カスタム勘定科目を追加",
@@ -168,11 +174,14 @@ export const voucher = {
       code_placeholder: "例：1234-01",
       type: "科目タイプ",
       level: "レベル",
+      click_hint: "* 左側のリストの操作ボタンを先にクリックしてください",
     },
     messages: {
       create_success: "カスタム勘定科目が作成されました",
       create_failed: "作成に失敗しました。後でもう一度お試しください",
       code_exists: "科目コードは既に存在します",
+      update_success: "勘定科目が正常に更新されました",
+      update_success_msg: "勘定科目が更新されました",
     },
   },
 };

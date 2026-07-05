@@ -152,6 +152,7 @@ export const voucher = {
     },
   },
   account: {
+    custom: "사용자 정의",
     empty: "계정 과목이 없습니다",
     search: {
       label: "과목 검색",
@@ -159,6 +160,11 @@ export const voucher = {
     },
     action: {
       add: "사용자 정의 과목 추가",
+      add_child: "하위 과목 추가",
+      edit: "과목 코드/이름 편집",
+    },
+    edit_modal: {
+      title: "계정 과목 편집",
     },
     add_modal: {
       title: "사용자 정의 계정 과목 추가",
@@ -170,11 +176,14 @@ export const voucher = {
       code_placeholder: "예: 1234-01",
       type: "과목 유형",
       level: "레벨",
+      click_hint: "* 먼저 왼쪽 목록의 작업 버튼을 클릭하세요",
     },
     messages: {
       create_success: "사용자 정의 계정 과목이 생성되었습니다",
       create_failed: "생성에 실패했습니다. 나중에 다시 시도해주세요",
       code_exists: "과목 코드가 이미 존재합니다",
+      update_success: "계정 과목이 성공적으로 업데이트되었습니다",
+      update_success_msg: "계정 과목이 업데이트되었습니다",
     },
   },
 };
