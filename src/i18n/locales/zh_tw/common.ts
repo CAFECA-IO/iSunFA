@@ -41,6 +41,8 @@ export const common = {
   processing: "處理中...",
   save: "儲存",
   confirm: "確認",
+  update: "更新",
+  detail: "細節",
   verify_all: "一鍵核對",
   verify_all_confirm_title: "確認一鍵核對？",
   verify_all_confirm_desc: "這將會把所有未核對的項目標示為已核對",
@@ -116,4 +118,6 @@ export const common = {
   },
   qr_code: "QR Code",
   done: "完成",
+  back: "返回",
+  next: "下一步",
 };

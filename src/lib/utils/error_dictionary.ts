@@ -698,4 +698,9 @@ export const API_ERRORS = {
     message: "Parent account not found",
     status: ApiCode.NOT_FOUND,
   } as IErrorDef,
+  VA_STATUS_IS_REQUIRED: {
+    code: "VA000038",
+    message: "Status is required",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
 };

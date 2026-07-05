@@ -43,6 +43,8 @@ export const common = {
   processing: "処理中...",
   save: "保存",
   confirm: "確認",
+  update: "更新",
+  detail: "詳細",
   verify_all: "一括確認",
   verify_all_confirm_title: "一括確認しますか？",
   verify_all_confirm_desc:
@@ -122,4 +124,6 @@ export const common = {
   },
   qr_code: "QRコード",
   done: "完了",
+  back: "戻る",
+  next: "次へ",
 };

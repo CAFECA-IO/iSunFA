@@ -8,7 +8,7 @@ import {
   PopoverPanel,
   Transition,
 } from "@headlessui/react";
-import { User, ChevronDown, Copy, Check, X, Book, QrCode } from "lucide-react";
+import { User, ChevronDown, X, Book, QrCode } from "lucide-react";
 import {
   MODULES,
   ADMIN_MODULES,
@@ -30,7 +30,6 @@ export default function UserActions() {
   const { t } = useTranslation();
   const params = useParams();
 
-  const [copiedAddress, setCopiedAddress] = useState<boolean>(false);
   const [accountBook, setAccountBook] = useState<IAccountBook | null>(null);
   const [showQrCodeModal, setShowQrCodeModal] = useState<boolean>(false);
   // Info: (20260702 - Julian) 強制展開選單，用於行動裝置點擊選單按鈕時
@@ -41,14 +40,6 @@ export default function UserActions() {
       setForceOpen(true);
     }
     setShowQrCodeModal((prev) => !prev);
-  };
-
-  const handleCopyAddress = () => {
-    if (user?.address) {
-      navigator.clipboard.writeText(user.address);
-      setCopiedAddress(true);
-      setTimeout(() => setCopiedAddress(false), 2000);
-    }
   };
 
   // Info: (20260601 - Julian) 7 字以上的帳本名稱顯示省略號
@@ -288,31 +279,18 @@ export default function UserActions() {
                             </p>
                             <button
                               type="button"
-                              onClick={handleCopyAddress}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleQrCodeModal();
+                              }}
                               className="p-1 text-gray-400 transition-colors hover:text-orange-500 focus:outline-none md:p-0"
-                              title="Copy Address"
+                              title="Generate Address QR Code"
                             >
-                              {copiedAddress ? (
-                                <Check className="size-4 text-emerald-500 md:size-3" />
-                              ) : (
-                                <Copy className="size-4 md:size-3" />
-                              )}
+                              <QrCode className="size-4 md:size-3" />
                             </button>
                           </div>
                         </div>
                       </div>
-
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleQrCodeModal();
-                        }}
-                        className="rounded-lg bg-orange-200 p-1.5 text-gray-700 transition-colors hover:bg-orange-300 focus:outline-none"
-                        title="Generate Address QR Code"
-                      >
-                        <QrCode className="size-5 md:size-6" />
-                      </button>
                     </div>
 
                     {/* Info: (20260423 - Julian) Desktop right info */}

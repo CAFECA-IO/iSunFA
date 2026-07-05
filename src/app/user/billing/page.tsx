@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslation } from "@/i18n/i18n_context";
 import {
   CreditCard,
@@ -11,12 +12,18 @@ import {
   CheckCircle2,
   Edit2,
   Trash2,
+  ChevronRight,
 } from "lucide-react";
 import { request } from "@/lib/utils/request";
 import { formatDate } from "@/lib/utils/date";
 import EditCardModal from "@/components/user/billing/edit_card_modal";
 import ReceiptPdfDownloader from "@/components/user/billing/receipt_pdf_downloader";
-import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
+import {
+  ORDER_STATUS,
+  ORDER_TYPE,
+  ORDER_TYPE_PREFIX,
+} from "@/constants/status";
+import { BANK_TRANSFER } from "@/constants/price";
 
 type Tab = "orders" | "points" | "cards";
 
@@ -85,6 +92,7 @@ interface IPaymentTransaction {
 
 export default function BillingPage() {
   const { t } = useTranslation();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("orders");
 
   const [loadingOrders, setLoadingOrders] = useState(true);
@@ -119,7 +127,7 @@ export default function BillingPage() {
       setLoadingOrders(true);
       try {
         const res = await request<{ payload: { orders: IOrder[] } }>(
-          `/api/v1/user/order?type=${ORDER_TYPE.OEN_PAYMENT}`,
+          `/api/v1/user/order?billing=true`,
         );
         if (res?.payload) {
           setOrders(res.payload.orders);
@@ -246,6 +254,12 @@ export default function BillingPage() {
       setLoadingTransactions(false);
     }
   };
+
+  const isTrackableOrder = (order: IOrder) => {
+    // Info: (20260705 - Luphia) 只要是 BILLING_ 前綴的訂單皆可追蹤
+    return order.type?.startsWith(ORDER_TYPE_PREFIX.BILLING) || false;
+  };
+
   return (
     <div className="mx-auto max-w-6xl p-4 md:p-8">
       <div className="mb-8">
@@ -322,78 +336,124 @@ export default function BillingPage() {
                       <th className="px-6 py-4 font-medium">
                         {t("billing.table.status")}
                       </th>
+                      <th className="w-10 px-6 py-4 font-medium">
+                        <span className="sr-only">Details</span>
+                      </th>
                       <th className="w-16 px-6 py-4 font-medium">
                         <span className="sr-only">Action</span>
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {orders.map((order) => (
-                      <tr
-                        key={order.id}
-                        className="transition-colors hover:bg-gray-50/50"
-                      >
-                        <td className="px-6 py-4 text-gray-600">
-                          {formatDate(order.createdAt, "yyyy-MM-dd HH:mm")}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="mb-1 font-mono text-xs text-gray-900">
-                            {order.id}
-                          </div>
-                          {order.type === ORDER_TYPE.OEN_PAYMENT ? (
-                            <div className="text-xs text-gray-500">
-                              {t("billing.point_history.source_purchase")}
+                    {orders.map((order) => {
+                      const trackable = isTrackableOrder(order);
+                      return (
+                        <tr
+                          key={order.id}
+                          className={`transition-colors ${trackable ? "cursor-pointer hover:bg-orange-50/50" : "hover:bg-gray-50/50"}`}
+                          onClick={() =>
+                            trackable &&
+                            router.push(`/user/billing/${order.id}`)
+                          }
+                        >
+                          <td className="px-6 py-4 text-gray-600">
+                            {formatDate(order.createdAt, "yyyy-MM-dd HH:mm")}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="mb-1 font-mono text-xs text-gray-900">
+                              {order.id}
                             </div>
-                          ) : (
-                            <div className="text-xs text-gray-500">
-                              {t("billing.point_history.source_analysis", {
-                                defaultValue: "服務消費",
-                              })}
-                            </div>
-                          )}
-                          {order.cardInfo && (
-                            <div className="mt-1 flex items-center gap-1 text-xs text-gray-400">
-                              <CreditCard className="size-3 shrink-0" />
-                              {order.cardInfo.type_name} ••••
-                              {order.cardInfo.last_four}
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 font-medium text-gray-900">
-                          NT$ {order.amount.toLocaleString()}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
-                              order.status === "SUCCESS" ||
-                              order.status === ORDER_STATUS.PAID ||
-                              order.status === ORDER_STATUS.COMPLETED
-                                ? "bg-green-50 text-green-700"
-                                : order.status === ORDER_STATUS.PENDING ||
-                                    order.status === ORDER_STATUS.PAYING
-                                  ? "bg-yellow-50 text-yellow-700"
-                                  : "bg-red-50 text-red-700"
-                            }`}
-                          >
-                            {order.status}
-                          </span>
-                        </td>
-                        <td className="flex justify-end px-6 py-4">
-                          {order.type === ORDER_TYPE.OEN_PAYMENT &&
-                            order.status === "SUCCESS" && (
-                              <ReceiptPdfDownloader
-                                receiptNumber={order.id}
-                                date={order.createdAt}
-                                amount={order.amount}
-                                buyerName={order.buyerName}
-                                buyerTaxId={order.buyerTaxId}
-                                buyerAddress={order.buyerAddress}
-                                items={order.items}
-                              />
+                            {order.items && order.items.length > 0 ? (
+                              <div className="text-xs text-gray-500">
+                                {order.items[0].name}
+                              </div>
+                            ) : (
+                              <div className="text-xs text-gray-500">
+                                {(() => {
+                                  if (
+                                    order.type === ORDER_TYPE.OEN_PAYMENT ||
+                                    order.type === ORDER_TYPE.BILLING_POINT
+                                  ) {
+                                    return t("billing.types.BILLING_POINT");
+                                  }
+                                  const typeKey = `billing.types.${order.type}`;
+                                  const translated = t(typeKey);
+                                  return translated !== typeKey
+                                    ? translated
+                                    : order.type === ORDER_TYPE.ANALYSIS
+                                      ? t(
+                                          "billing.point_history.source_analysis",
+                                        )
+                                      : order.type || "-";
+                                })()}
+                              </div>
                             )}
-                        </td>
-                      </tr>
-                    ))}
+                            {order.cardInfo && (
+                              <div className="mt-1 flex items-center gap-1 text-xs text-gray-400">
+                                <CreditCard className="size-3 shrink-0" />
+                                {order.cardInfo.type_name} ••••
+                                {order.cardInfo.last_four}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 font-medium text-gray-900">
+                            NT$ {Number(order.amount).toLocaleString()}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
+                                order.status === "SUCCESS" ||
+                                order.status === ORDER_STATUS.PAID ||
+                                order.status === ORDER_STATUS.COMPLETED
+                                  ? "bg-green-50 text-green-700"
+                                  : order.status === ORDER_STATUS.PENDING ||
+                                      order.status === ORDER_STATUS.PAYING
+                                    ? "bg-yellow-50 text-yellow-700"
+                                    : "bg-red-50 text-red-700"
+                              }`}
+                            >
+                              {(() => {
+                                const isBankTransfer = order.items?.some(
+                                  (item) => item.remark === BANK_TRANSFER,
+                                );
+                                if (
+                                  isBankTransfer &&
+                                  order.status === ORDER_STATUS.PENDING
+                                ) {
+                                  return t(
+                                    "billing.status.pending_bank_transfer",
+                                  );
+                                }
+                                const statusKey = `billing.status.${order.status.toLowerCase()}`;
+                                const translated = t(statusKey);
+                                return translated !== statusKey
+                                  ? translated
+                                  : order.status;
+                              })()}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            {trackable && (
+                              <ChevronRight className="ml-auto size-5 text-gray-300" />
+                            )}
+                          </td>
+                          <td className="flex justify-end px-6 py-4">
+                            {order.type === ORDER_TYPE.OEN_PAYMENT &&
+                              order.status === "SUCCESS" && (
+                                <ReceiptPdfDownloader
+                                  receiptNumber={order.id}
+                                  date={order.createdAt}
+                                  amount={order.amount}
+                                  buyerName={order.buyerName}
+                                  buyerTaxId={order.buyerTaxId}
+                                  buyerAddress={order.buyerAddress}
+                                  items={order.items}
+                                />
+                              )}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -459,7 +519,7 @@ export default function BillingPage() {
                             className={`px-6 py-4 text-right font-bold ${isPositive ? "text-green-600" : "text-gray-900"}`}
                           >
                             {isPositive ? "+" : ""}
-                            {pt.amount}
+                            {Number(pt.amount).toLocaleString()}
                           </td>
                           <td className="px-6 py-4">
                             {pt.status && (
@@ -660,7 +720,7 @@ export default function BillingPage() {
                                       )}
                                     </td>
                                     <td className="px-6 py-4 font-medium text-gray-900">
-                                      NT$ {tx.amount.toLocaleString()}
+                                      NT$ {Number(tx.amount).toLocaleString()}
                                     </td>
                                     <td className="px-6 py-3">
                                       <span

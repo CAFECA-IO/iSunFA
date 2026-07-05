@@ -43,6 +43,8 @@ export const common = {
   processing: "처리 중...",
   save: "저장",
   confirm: "확인",
+  update: "업데이트",
+  detail: "상세",
   verify_all: "일괄 확인",
   verify_all_confirm_title: "일괄 확인하시겠습니까?",
   verify_all_confirm_desc:
@@ -120,4 +122,6 @@ export const common = {
   },
   qr_code: "QR 코드",
   done: "완료",
+  back: "뒤로",
+  next: "다음",
 };

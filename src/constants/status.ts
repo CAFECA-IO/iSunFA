@@ -34,6 +34,10 @@ export const ORDER_TYPE = {
   ADMIN_ISSUED: "ADMIN_ISSUED",
   CHECK_IN_REWARD: "CHECK_IN_REWARD",
   ANALYSIS: "ANALYSIS",
+  BILLING_ON_PREMISE: "BILLING_ON_PREMISE",
+  BILLING_SOLUTION: "BILLING_SOLUTION",
+  BILLING_SUBSCRIBE: "BILLING_SUBSCRIBE",
+  BILLING_POINT: "BILLING_POINT",
 } as const;
 
 export type OrderType = (typeof ORDER_TYPE)[keyof typeof ORDER_TYPE];
@@ -59,4 +63,17 @@ export const COUPON_STATUS = {
   ACTIVE: "ACTIVE",
   USED: "USED",
   EXPIRED: "EXPIRED",
+} as const;
+
+export const MANAGEMENT_TYPE = {
+  TASK: "TASK",
+  ORDER: "ORDER",
+  ALL: "ALL",
+} as const;
+
+export type ManagementType =
+  (typeof MANAGEMENT_TYPE)[keyof typeof MANAGEMENT_TYPE];
+
+export const ORDER_TYPE_PREFIX = {
+  BILLING: "BILLING_",
 } as const;

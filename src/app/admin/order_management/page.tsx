@@ -9,8 +9,13 @@ import DataTable, { IDataTableColumn } from "@/components/common/data_table";
 import ConfirmModal from "@/components/common/confirm_modal";
 import SuccessNotification from "@/components/common/success_notification";
 import { formatDate } from "@/lib/utils/date";
-import { ORDER_STATUS } from "@/constants/status";
+import {
+  ORDER_STATUS,
+  MANAGEMENT_TYPE,
+  ManagementType,
+} from "@/constants/status";
 import OrderFilter from "@/components/admin/order/order_filter";
+import OrderDetailModal from "@/components/admin/order/order_detail_modal";
 
 // Info: (20260625 - Julian) 訂單操作
 const ORDER_ACTIONS = {
@@ -104,6 +109,14 @@ export default function OrderManagementPage() {
     message: string;
   }>({ isOpen: false, message: "" });
 
+  const [detailModal, setDetailModal] = useState<{
+    isOpen: boolean;
+    order: IOrderManagementData | null;
+  }>({ isOpen: false, order: null });
+
+  const [managementType, setManagementType] = useState<ManagementType>(
+    MANAGEMENT_TYPE.ORDER,
+  );
   const [searchInput, setSearchInput] = useState<string>("");
   const [search, setSearch] = useState<string>("");
   const [type, setType] = useState<string>("ALL");
@@ -168,6 +181,7 @@ export default function OrderManagementPage() {
       setLoading(true);
       try {
         const query = new URLSearchParams({
+          managementType,
           page: String(page),
           limit: String(limit),
           search,
@@ -213,10 +227,11 @@ export default function OrderManagementPage() {
     limit,
     search,
     type,
-    executionStatus,
-    orderStatus,
     sortBy,
     sortOrder,
+    managementType,
+    executionStatus,
+    orderStatus,
   ]);
 
   const handleRetryOrderClick = (orderId: string) => {
@@ -314,6 +329,39 @@ export default function OrderManagementPage() {
           actionType === ORDER_ACTIONS.RETRY
             ? t("order_management.table.retry_failed")
             : t("order_management.table.reactivate_failed"),
+      });
+    }
+  };
+
+  const handleUpdateOrderStatus = async (
+    orderId: string,
+    newStatus: string,
+  ) => {
+    try {
+      await request(`/api/v1/admin/orders/${orderId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: newStatus }),
+      });
+      setSuccessNotif({
+        isOpen: true,
+        message: t("order_management.table.update_success") || "Status updated",
+      });
+      // Info: (20260705 - Luphia) Update local state
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o)),
+      );
+      if (detailModal.order?.id === orderId) {
+        setDetailModal((prev) => ({
+          ...prev,
+          order: prev.order ? { ...prev.order, status: newStatus } : null,
+        }));
+      }
+    } catch (e) {
+      console.error(e);
+      setAlertModal({
+        isOpen: true,
+        message:
+          t("order_management.table.update_failed") || "Failed to update",
       });
     }
   };
@@ -452,7 +500,7 @@ export default function OrderManagementPage() {
       sortable: true,
       render: (record) => (
         <span className="text-sm font-medium text-gray-900">
-          {record.unit} {record.amount.toLocaleString()}
+          {record.unit} {Number(record.amount).toLocaleString()}
         </span>
       ),
     },
@@ -463,7 +511,7 @@ export default function OrderManagementPage() {
       sortable: true,
       render: (record) => (
         <span className="text-sm font-medium text-gray-900">
-          {record.tokens ? record.tokens.toLocaleString() : "-"}
+          {record.tokens ? Number(record.tokens).toLocaleString() : "-"}
         </span>
       ),
     },
@@ -531,61 +579,78 @@ export default function OrderManagementPage() {
         );
       },
     },
+    ...(managementType === MANAGEMENT_TYPE.TASK
+      ? [
+          {
+            key: "executionStatus",
+            label: t("order_management.table.execution_status"),
+            render: (record: IOrderManagementData) => {
+              let text = t("order_management.table.pending");
+              let colorClass = "bg-gray-100 text-gray-600";
+
+              if (record.executionStatus === ORDER_STATUS.COMPLETED) {
+                text = t("order_management.table.executed");
+                colorClass = "bg-purple-50 text-purple-700";
+              } else if (record.executionStatus === ORDER_STATUS.EXECUTING) {
+                text = t("order_management.table.processing");
+                colorClass = "bg-blue-50 text-blue-700";
+              } else if (record.executionStatus === ORDER_STATUS.FAILED) {
+                text = t("order_management.table.failed");
+                colorClass = "bg-red-50 text-red-700";
+              } else if (record.executionStatus === ORDER_STATUS.CANCEL) {
+                text = t("common.cancel");
+                colorClass = "bg-orange-50 text-orange-700";
+              }
+
+              return (
+                <div className="flex flex-col">
+                  <span
+                    className={`inline-flex w-fit items-center justify-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${colorClass}`}
+                  >
+                    {text}
+                  </span>
+                </div>
+              );
+            },
+          },
+          {
+            key: "executionConfidence",
+            label: t("order_management.table.execution_confidence"),
+            sortable: true,
+            render: (record: IOrderManagementData) => {
+              if (record.executionConfidence == null) {
+                return <span className="text-xs text-gray-400">N/A</span>;
+              }
+
+              let colorClass = "bg-red-50 text-red-700";
+              if (record.executionConfidence >= 80)
+                colorClass = "bg-emerald-50 text-emerald-700";
+              else if (record.executionConfidence >= 60)
+                colorClass = "bg-amber-50 text-amber-700";
+
+              return (
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${colorClass}`}
+                >
+                  {record.executionConfidence}%
+                </span>
+              );
+            },
+          },
+        ]
+      : []),
     {
-      key: "executionStatus",
-      label: t("order_management.table.execution_status"),
-      render: (record) => {
-        let text = t("order_management.table.pending");
-        let colorClass = "bg-gray-100 text-gray-600";
-
-        if (record.executionStatus === ORDER_STATUS.COMPLETED) {
-          text = t("order_management.table.executed");
-          colorClass = "bg-purple-50 text-purple-700";
-        } else if (record.executionStatus === ORDER_STATUS.EXECUTING) {
-          text = t("order_management.table.processing");
-          colorClass = "bg-blue-50 text-blue-700";
-        } else if (record.executionStatus === ORDER_STATUS.FAILED) {
-          text = t("order_management.table.failed");
-          colorClass = "bg-red-50 text-red-700";
-        } else if (record.executionStatus === ORDER_STATUS.CANCEL) {
-          text = t("common.cancel");
-          colorClass = "bg-orange-50 text-orange-700";
-        }
-
-        return (
-          <div className="flex flex-col">
-            <span
-              className={`inline-flex w-fit items-center justify-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${colorClass}`}
-            >
-              {text}
-            </span>
-          </div>
-        );
-      },
-    },
-    {
-      key: "executionConfidence",
-      label: t("order_management.table.execution_confidence"),
-      sortable: true,
-      render: (record) => {
-        if (record.executionConfidence == null) {
-          return <span className="text-xs text-gray-400">N/A</span>;
-        }
-
-        let colorClass = "bg-red-50 text-red-700";
-        if (record.executionConfidence >= 80)
-          colorClass = "bg-emerald-50 text-emerald-700";
-        else if (record.executionConfidence >= 60)
-          colorClass = "bg-amber-50 text-amber-700";
-
-        return (
-          <span
-            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${colorClass}`}
-          >
-            {record.executionConfidence}%
-          </span>
-        );
-      },
+      key: "actions",
+      label: t("order_management.table.actions"),
+      align: "center",
+      render: (record) => (
+        <button
+          onClick={() => setDetailModal({ isOpen: true, order: record })}
+          className="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-600 transition-all hover:bg-gray-200 hover:text-gray-900"
+        >
+          {t("common.detail") || "Details"}
+        </button>
+      ),
     },
   ];
 
@@ -598,7 +663,37 @@ export default function OrderManagementPage() {
           subtitle={t("order_management.subtitle")}
         />
 
+        <div className="flex space-x-1 rounded-xl bg-gray-200/50 p-1">
+          <button
+            onClick={() => {
+              setManagementType(MANAGEMENT_TYPE.ORDER);
+              setPage(1);
+            }}
+            className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-bold transition-all duration-200 ${
+              managementType === MANAGEMENT_TYPE.ORDER
+                ? "bg-white text-orange-600 shadow-sm"
+                : "text-gray-500 hover:bg-white/50 hover:text-gray-700"
+            }`}
+          >
+            {t("order_management.tabs.order_management")}
+          </button>
+          <button
+            onClick={() => {
+              setManagementType(MANAGEMENT_TYPE.TASK);
+              setPage(1);
+            }}
+            className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-bold transition-all duration-200 ${
+              managementType === MANAGEMENT_TYPE.TASK
+                ? "bg-white text-orange-600 shadow-sm"
+                : "text-gray-500 hover:bg-white/50 hover:text-gray-700"
+            }`}
+          >
+            {t("order_management.tabs.task_management")}
+          </button>
+        </div>
+
         <OrderFilter
+          managementType={managementType}
           searchInput={searchInput}
           setSearchInput={setSearchInput}
           type={type}
@@ -684,6 +779,13 @@ export default function OrderManagementPage() {
         title="Success"
         message={successNotif.message}
         onClose={() => setSuccessNotif({ isOpen: false, message: "" })}
+      />
+
+      <OrderDetailModal
+        isOpen={detailModal.isOpen}
+        onClose={() => setDetailModal({ isOpen: false, order: null })}
+        order={detailModal.order}
+        onUpdateStatus={handleUpdateOrderStatus}
       />
 
       {/* Info: (20260626 - Julian) 漂浮的批量操作欄 */}
