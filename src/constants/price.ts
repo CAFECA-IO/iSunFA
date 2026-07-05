@@ -1,5 +1,7 @@
 import { type AnalysisPeriod } from "@/constants/analysis";
 
+export const BANK_TRANSFER = "bank_transfer";
+
 /**
  * Info: (20260128 - Luphia) Pricing Logic:
  * - Base Cost:
@@ -76,7 +78,10 @@ export const ANALYSIS_ADDON_COSTS = {
 } as const;
 
 export const ENTERPRISE_PLAN_PRICE = {
-  MACHINE: 10000 * 1.05 * 12,
+  MACHINE: {
+    X86_5060TI: 84000 * 1.05,
+    ASUS_ASCENT_GX10: 168000 * 1.05,
+  },
   USER: 100 * 1.05 * 12,
   MODULE: 2000 * 1.05 * 12,
   UPDATE: 3000 * 1.05 * 12,
@@ -101,4 +106,15 @@ export const SUBSCRIPTION_PLAN_CREDITS = {
   free: 150,
   team: 3000,
   business: 30000,
+} as const;
+
+export const BUSINESS_MODEL_PRICE = {
+  CLOUD: 29400,
+  ON_PREMISE: 303660,
+} as const;
+
+export const SOLUTION_PLAN_PRICE = {
+  BASIC: 94500,
+  PRO: 283500,
+  ENTERPRISE: 567000,
 } as const;

@@ -50,6 +50,60 @@ export const billing = {
     source_registration: "登録報酬",
     source_campaign: "キャンペーン報酬",
     source_admin_issued: "管理者発行",
-    source_check_in_reward: "チェックイン報酬",
+    source_check_in_reward: "ログインボーナス",
+  },
+  status: {
+    pending: "処理中",
+    pending_bank_transfer: "銀行振込確認中",
+    paid: "支払い済み",
+    completed: "完了",
+    failed: "支払い失敗",
+    cancel: "キャンセル済み",
+  },
+  types: {
+    BILLING_ON_PREMISE: "オンプレミス",
+    BILLING_SOLUTION: "ソリューション",
+    BILLING_SUBSCRIBE: "購読プラン",
+    BILLING_POINT: "ポイント購入",
+  },
+  tracking: {
+    title: "注文追跡",
+    status: {
+      pending: {
+        title: "注文済み",
+        desc: "注文を受け付けました。銀行振込の確認待ちです。",
+      },
+      paid: {
+        title: "入金確認済み",
+        desc: "振込が確認されました。デプロイの準備中です。",
+      },
+      executing: {
+        title: "導入中",
+        desc: "技術チームが環境構築とソフトウェアのインストールを行っています。",
+      },
+      completed: {
+        title: "デプロイ完了",
+        desc: "デプロイが完了しました。サービスをご利用いただけます。",
+      },
+    },
+  },
+  details: {
+    title: "注文詳細",
+    not_found: "注文が見つからないか、アクセス権限がありません",
+    back_to_list: "請求一覧に戻る",
+    summary: "注文概要",
+    order_date: "注文日",
+    order_status: "注文ステータス",
+    items: "購入アイテム",
+    total: "合計",
+    need_help: "お困りですか？",
+    help_desc:
+      "注文ステータスに関するご質問は、サポートチームまでお問い合わせください。",
+    contact_support: "サポートに連絡",
+    contact_email: "メールアドレス",
+    contact_phone: "電話番号",
+    support_email_subject: "[iSunFA 注文サポート] 注文番号: {{orderId}}",
+    support_email_body:
+      "iSunFA サポートチーム御中、\n\n注文について質問があります。\n注文番号: {{orderId}}\n注文日: {{orderDate}}\n購入アイテム: {{orderItems}}\n\n[お問い合わせ内容]:\n",
   },
 };

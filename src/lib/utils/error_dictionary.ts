@@ -676,4 +676,9 @@ export const API_ERRORS = {
     message: "Internal Server Error",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
+  VA_STATUS_IS_REQUIRED: {
+    code: "VA000038",
+    message: "Status is required",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
 };

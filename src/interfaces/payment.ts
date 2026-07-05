@@ -18,6 +18,11 @@ export type IOenOrderData = {
   paymentId?: string;
   paymentMethodId?: string;
   timestamp?: string;
+  planId?: string;
+  title?: string;
+  billingInterval?: "month" | "year";
+  baseCredits?: string;
+  bonusCredits?: string;
 };
 
 export interface IAIAnalysisOrderFile {
@@ -56,6 +61,8 @@ export enum PaymentStep {
   processing = "processing",
   success = "success",
   error = "error",
+  bank_transfer = "bank_transfer",
+  bank_transfer_success = "bank_transfer_success",
 }
 
 export interface IPaymentModalProps {
@@ -72,6 +79,8 @@ export interface IPaymentModalProps {
   orderId?: string | null;
   title?: string;
   planId?: string;
+  billingInterval?: "month" | "year";
+  details?: string[];
 }
 
 export interface IOrderWithMission {

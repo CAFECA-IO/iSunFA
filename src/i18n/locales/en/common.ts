@@ -43,6 +43,8 @@ export const common = {
   processing: "Processing...",
   save: "Save",
   confirm: "Confirm",
+  update: "Update",
+  detail: "Detail",
   verify_all: "Verify All",
   verify_all_confirm_title: "Confirm Verify All?",
   verify_all_confirm_desc: "This will mark all unverified items as verified.",
@@ -119,4 +121,6 @@ export const common = {
   },
   qr_code: "QR Code",
   done: "Done",
+  back: "Back",
+  next: "Next",
 };

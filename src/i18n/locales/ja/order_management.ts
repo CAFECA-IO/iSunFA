@@ -1,7 +1,11 @@
 export const orderManagement = {
   title: "注文管理",
   subtitle:
-    "すべての注文、支払いステータス、ブロックチェーンの実行ステータスを管理・確認します",
+    "すべての注文、支払い状況、およびブロックチェーン上の実行ステータスを管理および確認します",
+  tabs: {
+    task_management: "タスク管理",
+    order_management: "注文管理",
+  },
   table: {
     date: "日付",
     user: "ユーザー",
@@ -39,5 +43,11 @@ export const orderManagement = {
     cancel_batch: "一括キャンセル",
     no_reactivatable_orders: "再有効化可能な注文はありません",
     search_bar_placeholder: "キーワードによるユーザー検索、注文番号検索...",
+    update_success: "ステータスが正常に更新されました。",
+    update_failed: "ステータスの更新に失敗しました。",
+  },
+  detail: {
+    title: "注文詳細",
+    data: "元データ",
   },
 };

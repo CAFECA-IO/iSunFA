@@ -76,14 +76,28 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     options?: Record<string, string | number>,
   ): T => {
     const text: unknown = getNestedValue<unknown>(dictionary, key);
-    if (options && typeof text === "string") {
-      let stringText = text;
+    const hasValue = text !== key && text !== undefined;
+    const defaultValue = options?.defaultValue;
+
+    const result = hasValue
+      ? text
+      : defaultValue !== undefined
+        ? defaultValue
+        : text;
+
+    if (options && typeof result === "string") {
+      let stringText = result;
       Object.entries(options).forEach(([k, v]) => {
-        stringText = stringText.replace(new RegExp(`{{${k}}}`, "g"), String(v));
+        if (k !== "defaultValue") {
+          stringText = stringText.replace(
+            new RegExp(`{{${k}}}`, "g"),
+            String(v),
+          );
+        }
       });
       return stringText as T;
     }
-    return text as T;
+    return result as T;
   };
 
   return (
