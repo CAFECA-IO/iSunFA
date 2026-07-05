@@ -3,7 +3,8 @@ import { UnitDimensionMap } from "@/constants/dimension";
 import { PhysicalDimension } from "@/constants/enums";
 import { Decimal } from "decimal.js";
 
-/** Info: (20260703 - Tzuhan) 定義所有單位的基準單位與轉換係數
+/**
+ * Info: (20260703 - Tzuhan) 定義所有單位的基準單位與轉換係數
  * 基準單位：
  * MASS: KG
  * VOLUME: LITER
@@ -82,7 +83,8 @@ export class UnitConverter {
       throw new Error(`Missing conversion rate for ${fromUnit} or ${toUnit}`);
     }
 
-    /** Info: (20260703 - Tzuhan)
+    /**
+     * Info: (20260703 - Tzuhan)
      * 轉換邏輯：先將 fromUnit 轉回基準單位，再除以 toUnit 的係數
      * 例如：GALLON (3.78541) 轉為 LITER (1)
      * 10 GALLON = 10 * 3.78541 / 1 = 37.8541 LITER
