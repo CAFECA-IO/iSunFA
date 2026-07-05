@@ -5,7 +5,7 @@ export interface IAccountingAccount extends IAccount {
   accountBookId?: string; // Info: (20260703 - Julian) 所屬帳本 ID，只有自訂科目有
   createdAt?: number;
   updatedAt?: number;
-  isCustom: boolean; // Use boolean flag to distinguish standard/custom
+  isCustom: boolean; // Info: (20260703 - Julian) Use boolean flag to distinguish standard/custom
 }
 
 export interface IAccountingAccountInput {
