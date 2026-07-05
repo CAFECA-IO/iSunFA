@@ -28,7 +28,7 @@ interface IOrderDetails {
 }
 
 export default function OrderDetailPage() {
-  const { orderId } = useParams();
+  const { order_id: orderId } = useParams();
   const router = useRouter();
   const { t } = useTranslation();
   const [order, setOrder] = useState<IOrderDetails | null>(null);
