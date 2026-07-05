@@ -44,7 +44,7 @@ export class EsgCalculatorService {
     const breakdown: Record<string, string> = {};
 
     const gwpDict =
-      gwpVersion === "IPCC_AR6" ? IPCC_AR6_GWP_100 : IPCC_AR6_GWP_100; // Extendable for AR5 etc.
+      gwpVersion === "IPCC_AR6" ? IPCC_AR6_GWP_100 : IPCC_AR6_GWP_100; // Info: (20260630 - Tzuhan) Extendable for AR5 etc.
 
     const factors = coefficient.ghgFactors as Record<string, number>;
 
