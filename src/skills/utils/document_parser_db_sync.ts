@@ -37,6 +37,8 @@ export interface IDocNode {
   endDate?: string;
   unit?: string;
   emissions?: number | string;
+  ghgBreakdown?: Record<string, unknown>; // Info: (20260702 - Tzuhan) [AUDIT FIX]
+  gwpVersion?: string; // Info: (20260702 - Tzuhan) [AUDIT FIX]
   intensity?: unknown;
   dqiScore?: number | string;
   generationSource?: EsgGenerationSource | string;

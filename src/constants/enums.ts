@@ -34,6 +34,11 @@ export enum PhysicalDimension {
   TRANSPORT = "TRANSPORT",
   MONEY = "MONEY",
   COUNT = "COUNT",
+  AREA = "AREA",
+  TIME = "TIME",
+  TEMPERATURE = "TEMPERATURE",
+  SPEED = "SPEED",
+  INTENSITY = "INTENSITY",
   UNKNOWN = "UNKNOWN",
 }
 

@@ -45,4 +45,18 @@ export const MOCK_EEIO_COEFFICIENTS = [
     versionYear: "2024_MOCK_EEIO",
     isVerified: true,
   },
+  {
+    id: "mock-eeio-5",
+    name: "絕緣氣體逸散 (SF6)",
+    description: "高壓設備絕緣氣體逸散量直接重量輸入 (KG)",
+    unit: "KG",
+    emissionFactor: "0", // Info: (20260630 - Tzuhan) CO2e base is 0, completely relies on ghgFactors
+    source: "Mock_Direct_Gas_Weight",
+    category: "F_GAS_LEAKAGE",
+    versionYear: "2024_MOCK_FGAS",
+    isVerified: true,
+    ghgFactors: {
+      SF6: 1, // Info: (20260703 - Tzuhan) 1 kg of SF6
+    },
+  },
 ];

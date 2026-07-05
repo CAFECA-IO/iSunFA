@@ -81,11 +81,16 @@ export default function QrScannerModal({
         try {
           const devices = await Html5Qrcode.getCameras();
           if (devices && devices.length > 0) {
-            setCameras(devices.map((d) => ({ id: d.id, label: d.label })));
+            setCameras(
+              devices.map((d: { id: string; label: string }) => ({
+                id: d.id,
+                label: d.label,
+              })),
+            );
 
             // Info: (20260702 - Julian) 預設使用後鏡頭
             const backCamera = devices.find(
-              (d) =>
+              (d: { id: string; label: string }) =>
                 d.label.toLowerCase().includes("back") ||
                 d.label.toLowerCase().includes("rear") ||
                 d.label.toLowerCase().includes("environment"),

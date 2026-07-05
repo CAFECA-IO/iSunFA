@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Plus,
   Search,
@@ -122,7 +122,15 @@ const AccountItem = ({
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={onToggle}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onToggle();
+        }
+      }}
       className={`group flex w-full cursor-pointer items-center gap-3 rounded-xl bg-white px-4 py-3 text-left shadow-sm transition-all hover:bg-gray-50 md:px-6 ${
         level > 1 ? "border-l-2 border-gray-100" : ""
       }`}
@@ -233,7 +241,7 @@ export default function AccountManagementTab() {
     return () => clearTimeout(timer);
   }, [keyword]);
 
-  const fetchAccounts = async () => {
+  const fetchAccounts = useCallback(async () => {
     setIsLoading(true);
     try {
       const res = await request<IApiResponse<{ items: IAccountingAccount[] }>>(
@@ -247,13 +255,13 @@ export default function AccountManagementTab() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [accountBookId]);
 
   useEffect(() => {
     if (accountBookId) {
       fetchAccounts();
     }
-  }, [accountBookId]);
+  }, [accountBookId, fetchAccounts]);
 
   const toggleExpand = (code: string) => {
     const newExpanded = new Set(expandedCodes);
