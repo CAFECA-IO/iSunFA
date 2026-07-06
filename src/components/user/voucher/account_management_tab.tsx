@@ -40,6 +40,12 @@ export default function AccountManagementTab() {
     parentCode: "",
     name: "",
     code: "",
+    description: "",
+  };
+
+  const emptyToastContent = {
+    title: "",
+    message: "",
   };
 
   // Info: (20260703 - Julian) Data States
@@ -55,6 +61,10 @@ export default function AccountManagementTab() {
   // Info: (20260703 - Julian) Form States
   const [isFormLoading, setIsFormLoading] = useState<boolean>(false);
   const [showSuccess, setShowSuccess] = useState<boolean>(false);
+  const [toastContent, setToastContent] = useState<{
+    title: string;
+    message: string;
+  }>(emptyToastContent);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -101,12 +111,12 @@ export default function AccountManagementTab() {
   }, [accountBookId, fetchAccounts]);
 
   // Info: (20260706 - Julian) 預設選中第一個主科目
-  useEffect(() => {
-    if (allAccounts.length > 0 && !selectedMainSubject) {
-      const firstSubject = allAccounts.find((acc) => acc.level === 2);
-      if (firstSubject) setSelectedMainSubject(firstSubject);
-    }
-  }, [allAccounts, selectedMainSubject]);
+  // useEffect(() => {
+  //   if (allAccounts.length > 0 && !selectedMainSubject) {
+  //     const firstSubject = allAccounts.find((acc) => acc.level === 2);
+  //     if (firstSubject) setSelectedMainSubject(firstSubject);
+  //   }
+  // }, [allAccounts, selectedMainSubject]);
 
   // Info: (20260706 - Julian) 切換主科目時，重設右欄分頁為第一頁
   useEffect(() => {
@@ -117,32 +127,45 @@ export default function AccountManagementTab() {
     setIsEditing(false);
     setEditId(null);
     setParentInfo(`[${parentAccount.code}] ${parentAccount.name}`);
-    setFormData({ parentCode: parentAccount.code, name: "", code: "" });
+    setFormData({
+      parentCode: parentAccount.code,
+      name: "",
+      code: "",
+      description: "",
+    });
     setErrorMessage(null);
   }, []);
 
   const handleEdit = useCallback(
     (account: IAccountingAccount) => {
+      // Info: (20260706 - Julian) 標準科目不可編輯
+      if (!account.isCustom) return;
+
       setIsEditing(true);
       setEditId(account.id || null);
-      const parent = allAccounts.find((a) => a.code === account.parentCode);
-      setParentInfo(
-        parent ? `[${parent.code}] ${parent.name}` : account.parentCode,
-      );
+      setParentInfo(`[${account.code}] ${account.name}`);
       setFormData({
         parentCode: account.parentCode,
         name: account.name,
         code: account.code,
+        description: account.description || "",
       });
       setErrorMessage(null);
     },
     [allAccounts],
   );
 
-  const handleDelete = useCallback((id: string) => {
-    setDeleteId(id);
-    setIsConfirmModalOpen(true);
-  }, []);
+  const handleDelete = useCallback(
+    (id: string) => {
+      // Info: (20260706 - Julian) 檢查是否為自訂科目 (透過 id 是否存在，因為標準科目沒有資料庫 id)
+      const target = allAccounts.find((acc) => acc.id === id);
+      if (!target || !target.isCustom) return;
+
+      setDeleteId(id);
+      setIsConfirmModalOpen(true);
+    },
+    [allAccounts],
+  );
 
   const confirmDelete = async () => {
     if (!deleteId) return;
@@ -153,10 +176,17 @@ export default function AccountManagementTab() {
         { method: "DELETE" },
       );
       if (res.success) {
+        setToastContent({
+          title: t("voucher.account.messages.delete_success_title"),
+          message: t("voucher.account.messages.delete_success_msg", {
+            code: formData.code,
+            name: formData.name,
+          }),
+        });
         setShowSuccess(true);
         fetchAccounts();
       } else {
-        alert(res.message || "刪除失敗");
+        setErrorMessage("刪除失敗");
       }
     } catch (error) {
       console.error("Error deleting account", error);
@@ -191,6 +221,13 @@ export default function AccountManagementTab() {
           );
 
       if (res.success) {
+        setToastContent({
+          title: t("voucher.account.messages.create_success_title"),
+          message: t("voucher.account.messages.create_success_msg", {
+            code: formData.code,
+            name: formData.name,
+          }),
+        });
         setShowSuccess(true);
         fetchAccounts();
         setFormData(emptyFormData);
@@ -348,11 +385,11 @@ export default function AccountManagementTab() {
               子科目 (
               {selectedMainSubject
                 ? `[${selectedMainSubject.code}] ${selectedMainSubject.name}`
-                : "未選中"}
+                : "未選擇"}
               )
             </div>
             <span className="text-[10px] font-medium text-slate-400">
-              共 {rightList.length} 筆
+              共 {totalSubPages} 頁，{rightList.length} 筆會計科目
             </span>
           </div>
 
@@ -380,7 +417,7 @@ export default function AccountManagementTab() {
           </div>
         </div>
 
-        {/* Info: (20260703 - Julian) Right Column: Form Panel */}
+        {/* Info: (20260703 - Julian) 表單 */}
         <div className="sticky top-24 w-full shrink-0 lg:w-[360px]">
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg shadow-slate-200/50">
             <div
@@ -409,9 +446,12 @@ export default function AccountManagementTab() {
                 </div>
               )}
 
+              {/* Info: (20260706 - Julian) 編輯時顯示自身，新增時顯示父科目 */}
               <div>
                 <label className="mb-1.5 block text-sm font-bold text-slate-700">
-                  {t("voucher.account.add_modal.parent")}
+                  {isEditing
+                    ? "會計科目"
+                    : t("voucher.account.add_modal.parent")}
                 </label>
                 <input
                   type="text"
@@ -423,12 +463,16 @@ export default function AccountManagementTab() {
                   className="w-full rounded-lg border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-medium text-slate-500 outline-none"
                 />
               </div>
-
               <div>
-                <label className="mb-1.5 block text-sm font-bold text-slate-700">
+                <label
+                  htmlFor="account-code"
+                  className="mb-1.5 block text-sm font-bold text-slate-700"
+                >
                   {t("voucher.account.add_modal.code")}
+                  <span className="ml-0.5 text-red-500">*</span>
                 </label>
                 <input
+                  id="account-code"
                   type="text"
                   value={formData.code}
                   onChange={(e) =>
@@ -440,10 +484,15 @@ export default function AccountManagementTab() {
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-bold text-slate-700">
+                <label
+                  htmlFor="account-name"
+                  className="mb-1.5 block text-sm font-bold text-slate-700"
+                >
                   {t("voucher.account.add_modal.name")}
+                  <span className="ml-0.5 text-red-500">*</span>
                 </label>
                 <input
+                  id="account-name"
                   type="text"
                   value={formData.name}
                   onChange={(e) =>
@@ -454,7 +503,24 @@ export default function AccountManagementTab() {
                   className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 transition-all focus:border-orange-500 focus:bg-white focus:ring-1 focus:ring-orange-500 focus:outline-none"
                 />
               </div>
-
+              <div>
+                <label
+                  htmlFor="account-description"
+                  className="mb-1.5 block text-sm font-bold text-slate-700"
+                >
+                  描述
+                </label>
+                <textarea
+                  id="account-description"
+                  rows={3}
+                  value={formData.description || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  placeholder="請輸入會計科目描述"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 transition-all focus:border-orange-500 focus:bg-white focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                />
+              </div>
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
@@ -500,16 +566,8 @@ export default function AccountManagementTab() {
 
       <SuccessNotification
         show={showSuccess}
-        title={
-          isEditing
-            ? t("voucher.account.messages.update_success")
-            : t("voucher.account.messages.create_success")
-        }
-        message={
-          isEditing
-            ? t("voucher.account.messages.update_success_msg")
-            : t("voucher.account.messages.create_success")
-        }
+        title={toastContent.title}
+        message={toastContent.message}
         onClose={() => setShowSuccess(false)}
       />
 

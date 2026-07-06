@@ -8,11 +8,15 @@ import { IAccountingAccountInput } from "@/interfaces/accounting_account";
 
 /**
  * Info: (20260706 - Julian) 更新特定自訂會計科目
- * PATCH /api/v1/user/account_book/:account_book_id/accounting_account/:id
+ * PATCH /api/v1/user/account_book/:account_book_id/accounting_account/:accounting_account_id
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ account_book_id: string; id: string }> },
+  {
+    params,
+  }: {
+    params: Promise<{ account_book_id: string; accounting_account_id: string }>;
+  },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -22,7 +26,10 @@ export async function PATCH(
       return jsonFail(API_ERRORS.NF_USER);
     }
 
-    const { account_book_id: accountBookId, id } = await params;
+    const {
+      account_book_id: accountBookId,
+      accounting_account_id: accountingAccountId,
+    } = await params;
     const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
 
     if (!accountBook) {
@@ -41,7 +48,7 @@ export async function PATCH(
       await accountingAccountRepo.getCustomAccountsByAccountBookId(
         accountBookId,
       );
-    const target = accounts.find((acc) => acc.id === id);
+    const target = accounts.find((acc) => acc.id === accountingAccountId);
 
     if (!target) {
       return jsonFail(API_ERRORS.VA_ACCOUNT_NOT_FOUND);
@@ -58,10 +65,14 @@ export async function PATCH(
       }
     }
 
-    const updated = await accountingAccountRepo.updateCustomAccount(id, {
-      name: input.name,
-      code: input.code,
-    });
+    const updated = await accountingAccountRepo.updateCustomAccount(
+      accountingAccountId,
+      {
+        name: input.name,
+        code: input.code,
+        description: input.description,
+      },
+    );
 
     return jsonOk(updated);
   } catch (error) {
@@ -72,11 +83,15 @@ export async function PATCH(
 
 /**
  * Info: (20260706 - Julian) 刪除特定自訂會計科目
- * DELETE /api/v1/user/account_book/:account_book_id/accounting_account/:id
+ * DELETE /api/v1/user/account_book/:account_book_id/accounting_account/:accounting_account_id
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ account_book_id: string; id: string }> },
+  {
+    params,
+  }: {
+    params: Promise<{ account_book_id: string; accounting_account_id: string }>;
+  },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -86,14 +101,17 @@ export async function DELETE(
       return jsonFail(API_ERRORS.NF_USER);
     }
 
-    const { account_book_id: accountBookId, id } = await params;
+    const {
+      account_book_id: accountBookId,
+      accounting_account_id: accountingAccountId,
+    } = await params;
 
     // Info: (20260706 - Julian) 檢查科目是否存在
     const accounts =
       await accountingAccountRepo.getCustomAccountsByAccountBookId(
         accountBookId,
       );
-    const target = accounts.find((acc) => acc.id === id);
+    const target = accounts.find((acc) => acc.id === accountingAccountId);
 
     if (!target) {
       return jsonFail(API_ERRORS.VA_ACCOUNT_NOT_FOUND);
@@ -105,7 +123,7 @@ export async function DELETE(
       return jsonFail(API_ERRORS.VA_ACCOUNT_HAS_CHILDREN);
     }
 
-    await accountingAccountRepo.deleteCustomAccount(id);
+    await accountingAccountRepo.deleteCustomAccount(accountingAccountId);
     return jsonOk({ success: true });
   } catch (error) {
     console.error("Error deleting accounting account:", error);

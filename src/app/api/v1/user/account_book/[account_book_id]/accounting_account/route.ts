@@ -148,6 +148,7 @@ export async function POST(
     const newAccount = await accountingAccountRepo.createCustomAccount({
       code: input.code,
       name: input.name,
+      description: input.description,
       parentCode: input.parentCode,
       level: parent.level + 1, // Info: (20260703 - Julian) 層級加一
       type: parent.type,

@@ -146,79 +146,87 @@ const SubAccountItem = ({
   onDelete = () => {},
 }: IAccountItemProps) => {
   const { t } = useTranslation();
-  const colors = ACCOUNT_TYPE_COLORS[account.type] || ACCOUNT_TYPE_COLORS.other;
-  const level = account.level;
+  const { level, type, code, name, isCustom, description } = account;
+
+  const colors = ACCOUNT_TYPE_COLORS[type] || ACCOUNT_TYPE_COLORS.other;
   const offset = Math.max(0, level - 3) * 24; // Info: (20260706 - Julian) 子科目縮排效果，每多一層增加 24px
 
-  const handleAdd = (e: React.MouseEvent) => {
+  // Info: (20260706 - Julian) 事件輔助函數：停止冒泡並執行動作
+  const withStopProp = (fn: () => void) => (e: React.MouseEvent) => {
     e.stopPropagation();
-    onAddChild();
+    fn();
   };
+
+  // Info: (20260706 - Julian) 主要動作：自訂科目為編輯，其餘為新增子科目
+  const handleMainAction = isCustom ? onEdit : onAddChild;
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      onAddChild();
+      handleMainAction();
     }
   };
 
   return (
     <div
-      onClick={handleAdd} // Info: (20260706 - Julian) 點擊卡片即可新增子科目
+      onClick={withStopProp(handleMainAction)}
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
-      className={`group relative flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-left shadow-sm transition-all outline-none focus-visible:ring-2 focus-visible:ring-orange-500 md:px-6 ${
-        account.isCustom
-          ? "border-dashed border-orange-300 bg-orange-100"
-          : "border-slate-100 bg-white"
+      className={`group relative flex cursor-pointer items-center gap-3 rounded-xl border bg-white px-4 py-3 text-left shadow-sm transition-all outline-none focus-visible:ring-2 focus-visible:ring-orange-500 md:px-6 ${
+        isCustom ? "border-dashed border-orange-300" : "border-slate-100"
       }`}
       style={{ marginLeft: `${offset}px` }}
     >
+      {isCustom && (
+        <span className="rounded-md bg-orange-100 px-2 py-0.5 text-sm font-bold text-orange-500 uppercase">
+          {t("voucher.account.custom")}
+        </span>
+      )}
       <div
         className={`flex shrink-0 items-center justify-center rounded-lg border px-3 py-1.5 text-sm font-bold md:text-base ${colors.bg} ${colors.text} ${colors.border}`}
       >
-        {account.code}
+        {code}
       </div>
 
+      {/* Info: (20260706 - Julian) 自訂科目的裝飾條 */}
+      {isCustom && (
+        <div className="absolute top-0 bottom-0 -left-1 w-2 rounded-l-xl bg-orange-400" />
+      )}
+
       <div className="flex flex-1 items-center justify-between gap-2 overflow-hidden">
-        <div className="flex flex-1 flex-col items-start gap-0.5 overflow-hidden">
-          <div className="text-base font-bold whitespace-normal text-slate-700">
-            {account.name}
-          </div>
+        <div className="flex flex-col items-start gap-1">
           <div className="flex items-center gap-2">
+            <p className="text-base font-bold whitespace-normal text-slate-700">
+              {name}
+            </p>
             <div
               className={`rounded-md border px-2 py-0.5 text-[10px] font-medium ${colors.bg} ${colors.text} ${colors.border}`}
             >
-              {account.type}
+              {type}
             </div>
-            {account.isCustom && (
-              <span className="text-[10px] font-bold text-orange-500 uppercase">
-                {t("voucher.account.custom")}
-              </span>
-            )}
           </div>
+          <p className="text-xs whitespace-normal text-slate-500">
+            {description}
+          </p>
         </div>
 
-        <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+        <div className="absolute right-2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
           <button
             type="button"
-            onClick={handleAdd}
-            className="flex size-8 items-center justify-center rounded-full bg-green-100 text-green-600 transition-colors hover:bg-green-200"
+            onClick={withStopProp(onAddChild)}
+            className="flex size-8 items-center justify-center rounded-full border border-green-200 bg-green-100 text-green-600 shadow-md transition-colors hover:bg-green-200"
             title={t("voucher.account.action.add_child")}
             aria-label={t("voucher.account.action.add_child")}
           >
             <Plus size={16} />
           </button>
-          {account.isCustom && (
+          {isCustom && (
             <>
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit();
-                }}
-                className="flex size-8 items-center justify-center rounded-full bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100"
+                onClick={withStopProp(onEdit)}
+                className="flex size-8 items-center justify-center rounded-full border border-blue-100 bg-blue-50 text-blue-600 shadow-md transition-colors hover:bg-blue-100"
                 title={t("voucher.account.action.edit")}
                 aria-label={t("voucher.account.action.edit")}
               >
@@ -226,11 +234,8 @@ const SubAccountItem = ({
               </button>
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete?.();
-                }}
-                className="flex size-8 items-center justify-center rounded-full bg-red-50 text-red-600 transition-colors hover:bg-red-100"
+                onClick={withStopProp(onDelete)}
+                className="flex size-8 items-center justify-center rounded-full border border-red-100 bg-red-50 text-red-600 shadow-md transition-colors hover:bg-red-100"
                 title={t("voucher.account.action.delete") || "刪除科目"}
                 aria-label={t("voucher.account.action.delete") || "刪除科目"}
               >
