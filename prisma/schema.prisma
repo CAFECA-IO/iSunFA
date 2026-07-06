@@ -596,7 +596,7 @@ model EsgAllocation {
   allocatedAmount    Decimal  @map("allocated_amount")
   // Info: (20260703 - Tzuhan) 依照比例分攤後的碳排放
   allocatedEmissions Decimal  @map("allocated_emissions")
-  
+
   // Info: (20260703 - Tzuhan) 依照比例分攤後的多氣體明細 (CO2, CH4 等)
   allocatedGhgBreakdown Json? @map("allocated_ghg_breakdown")
 
@@ -844,7 +844,7 @@ model LogisticsCache {
   @@map("logistics_cache")
 }
 
-// Info: (20260703 - Julian) 客製化會計科目
+// Info: (20260703 - Julian) 自訂會計科目
 model AccountingAccount {
   id        String    @id @default(uuid())
   createdAt DateTime  @default(now()) @map("created_at")
@@ -925,7 +925,7 @@ model DigitalProductPassportSku {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   batches DigitalProductPassportBatch[]
-  
+
   // Info: (20260703 - Tzuhan) 關聯的碳分攤紀錄
   allocations EsgAllocation[]
 
