@@ -170,11 +170,13 @@ export default function AccountManagementTab() {
         setShowSuccess(true);
         fetchAccounts();
       } else {
-        setErrorMessage(res.message || "刪除失敗");
+        setErrorMessage(
+          res.message || t("voucher.account.messages.delete_failed"),
+        );
       }
     } catch (error) {
       console.error("Error deleting account", error);
-      setErrorMessage("刪除時發生錯誤");
+      setErrorMessage(t("voucher.account.messages.delete_failed"));
     } finally {
       setIsConfirmModalOpen(false);
       setTargetDeleteAccount(null);
@@ -206,24 +208,41 @@ export default function AccountManagementTab() {
 
       if (res.success) {
         setToastContent({
-          title: t("voucher.account.messages.create_success_title"),
-          message: t("voucher.account.messages.create_success_msg", {
-            code: formData.code,
-            name: formData.name,
-          }),
+          title: isEditing
+            ? t("voucher.account.messages.update_success_title")
+            : t("voucher.account.messages.create_success_title"),
+          message: isEditing
+            ? t("voucher.account.messages.update_success_msg", {
+                code: formData.code,
+                name: formData.name,
+              })
+            : t("voucher.account.messages.create_success_msg", {
+                code: formData.code,
+                name: formData.name,
+              }),
         });
         setShowSuccess(true);
         fetchAccounts();
+        // Info: (20260706 - Julian) 清除表單狀態
         setFormData(emptyFormData);
         setParentInfo("");
         setIsEditing(false);
         setEditId(null);
       } else {
-        setErrorMessage(res.message || t("account.messages.create_failed"));
+        setErrorMessage(
+          res.message ||
+            (isEditing
+              ? t("voucher.account.messages.update_failed")
+              : t("voucher.account.messages.create_failed")),
+        );
       }
     } catch (error) {
-      console.error("Error submitting form", error);
-      setErrorMessage(t("account.messages.create_failed"));
+      console.error("Error submitting account", error);
+      setErrorMessage(
+        isEditing
+          ? t("voucher.account.messages.update_failed")
+          : t("voucher.account.messages.create_failed"),
+      );
     } finally {
       setIsFormLoading(false);
     }
@@ -350,9 +369,9 @@ export default function AccountManagementTab() {
         <div className="flex flex-1 flex-col gap-4 lg:flex-row lg:items-start">
           {/* Info: (20260706 - Julian) Left Column: Category & Main Subjects */}
           <div className="flex w-full flex-col lg:w-[280px] lg:shrink-0">
-            <div className="mb-2 px-2 text-xs font-bold text-slate-400">
-              主科目
-            </div>
+            <h3 className="mb-2 px-2 text-xs font-bold text-slate-400">
+              {t("voucher.account.list_title.main")}
+            </h3>
             <div className="flex max-h-[calc(100vh-320px)] scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent flex-col gap-2 overflow-y-auto rounded-xl bg-slate-200 p-2 hover:scrollbar-thumb-slate-300">
               {isLoading ? (
                 <div className="flex items-center justify-center py-10">
@@ -376,8 +395,10 @@ export default function AccountManagementTab() {
                   />
                 ))
               ) : (
-                <div className="py-10 text-center text-xs text-slate-400">
-                  無匹配科目
+                <div className="py-10 text-center">
+                  <p className="text-sm text-slate-400">
+                    {t("voucher.account.no_matching")}
+                  </p>
                 </div>
               )}
             </div>
@@ -387,14 +408,17 @@ export default function AccountManagementTab() {
           <div className="flex flex-1 flex-col gap-4">
             <div className="flex items-center justify-between gap-4">
               <div className="text-xs font-bold text-slate-400">
-                子科目 (
+                {t("voucher.account.list_title.sub")} (
                 {selectedMainSubject
                   ? `[${selectedMainSubject.code}] ${selectedMainSubject.name}`
-                  : "未選擇"}
+                  : t("voucher.account.not_selected")}
                 )
               </div>
               <span className="text-[10px] font-medium text-slate-400">
-                共 {totalSubPages} 頁，{rightList.length} 筆會計科目
+                {t("voucher.account.total_data", {
+                  pages: totalSubPages,
+                  count: rightList.length,
+                })}
               </span>
             </div>
 
@@ -416,7 +440,12 @@ export default function AccountManagementTab() {
               ) : (
                 <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-slate-200 bg-white py-20 text-slate-400 shadow-sm">
                   <SearchX size={40} strokeWidth={1.5} />
-                  <p className="text-xs font-medium">尚無子科目</p>
+                  <h3 className="mb-1 text-lg font-bold text-slate-700">
+                    {t("voucher.account.no_data_title")}
+                  </h3>
+                  <p className="text-sm text-slate-400">
+                    {t("voucher.account.no_data_desc")}
+                  </p>
                 </div>
               )}
             </div>
@@ -514,7 +543,7 @@ export default function AccountManagementTab() {
                   htmlFor="account-description"
                   className="mb-1.5 block text-sm font-bold text-slate-700"
                 >
-                  描述
+                  {t("voucher.account.add_modal.description")}
                 </label>
                 <textarea
                   id="account-description"
@@ -523,7 +552,9 @@ export default function AccountManagementTab() {
                   onChange={(e) =>
                     setFormData({ ...formData, description: e.target.value })
                   }
-                  placeholder="請輸入會計科目描述"
+                  placeholder={t(
+                    "voucher.account.add_modal.description_placeholder",
+                  )}
                   className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 transition-all focus:border-orange-500 focus:bg-white focus:ring-1 focus:ring-orange-500 focus:outline-none"
                 />
               </div>
@@ -580,10 +611,13 @@ export default function AccountManagementTab() {
       <ConfirmModal
         isOpen={isConfirmModalOpen}
         onClose={() => setIsConfirmModalOpen(false)}
-        title="刪除科目"
-        message="確定要刪除此自訂科目嗎？此動作無法復原。"
-        confirmText="確認刪除"
-        cancelText="取消"
+        title={t("voucher.account.delete_modal.title")}
+        message={t("voucher.account.delete_modal.message", {
+          code: targetDeleteAccount?.code ?? "",
+          name: targetDeleteAccount?.name ?? "",
+        })}
+        confirmText={t("voucher.account.delete_modal.confirm")}
+        cancelText={t("common.cancel")}
         onConfirm={confirmDelete}
       />
     </div>

@@ -236,8 +236,8 @@ const SubAccountItem = ({
                 type="button"
                 onClick={withStopProp(onDelete)}
                 className="flex size-8 items-center justify-center rounded-full border border-red-100 bg-red-50 text-red-600 shadow-md transition-colors hover:bg-red-100"
-                title={t("voucher.account.action.delete") || "刪除科目"}
-                aria-label={t("voucher.account.action.delete") || "刪除科目"}
+                title={t("voucher.account.action.delete")}
+                aria-label={t("voucher.account.action.delete")}
               >
                 <Trash2 size={14} />
               </button>
