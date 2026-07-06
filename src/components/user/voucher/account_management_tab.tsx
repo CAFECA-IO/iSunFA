@@ -27,8 +27,6 @@ import {
   SubAccountItem,
 } from "@/components/user/voucher/account_item";
 
-// TODO: (20260703 - Julian) ============= 此元件還在施工中 =============
-
 const SUB_PAGE_SIZE = 10;
 
 export default function AccountManagementTab() {
@@ -73,7 +71,8 @@ export default function AccountManagementTab() {
     useState<IAccountingAccountInput>(emptyFormData);
 
   // Info: (20260706 - Julian) Modal States
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [targetDeleteAccount, setTargetDeleteAccount] =
+    useState<IAccountingAccount | null>(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
@@ -110,14 +109,6 @@ export default function AccountManagementTab() {
     }
   }, [accountBookId, fetchAccounts]);
 
-  // Info: (20260706 - Julian) 預設選中第一個主科目
-  // useEffect(() => {
-  //   if (allAccounts.length > 0 && !selectedMainSubject) {
-  //     const firstSubject = allAccounts.find((acc) => acc.level === 2);
-  //     if (firstSubject) setSelectedMainSubject(firstSubject);
-  //   }
-  // }, [allAccounts, selectedMainSubject]);
-
   // Info: (20260706 - Julian) 切換主科目時，重設右欄分頁為第一頁
   useEffect(() => {
     setSubPage(1);
@@ -136,64 +127,57 @@ export default function AccountManagementTab() {
     setErrorMessage(null);
   }, []);
 
-  const handleEdit = useCallback(
-    (account: IAccountingAccount) => {
-      // Info: (20260706 - Julian) 標準科目不可編輯
-      if (!account.isCustom) return;
+  const handleEdit = useCallback((account: IAccountingAccount) => {
+    // Info: (20260706 - Julian) 標準科目不可編輯
+    if (!account.isCustom) return;
 
-      setIsEditing(true);
-      setEditId(account.id || null);
-      setParentInfo(`[${account.code}] ${account.name}`);
-      setFormData({
-        parentCode: account.parentCode,
-        name: account.name,
-        code: account.code,
-        description: account.description || "",
-      });
-      setErrorMessage(null);
-    },
-    [allAccounts],
-  );
+    setIsEditing(true);
+    setEditId(account.id || null);
+    setParentInfo(`[${account.code}] ${account.name}`);
+    setFormData({
+      parentCode: account.parentCode,
+      name: account.name,
+      code: account.code,
+      description: account.description || "",
+    });
+    setErrorMessage(null);
+  }, []);
 
-  const handleDelete = useCallback(
-    (id: string) => {
-      // Info: (20260706 - Julian) 檢查是否為自訂科目 (透過 id 是否存在，因為標準科目沒有資料庫 id)
-      const target = allAccounts.find((acc) => acc.id === id);
-      if (!target || !target.isCustom) return;
+  const handleDelete = useCallback((account: IAccountingAccount) => {
+    // Info: (20260706 - Julian) 檢查是否為自訂科目 (透過 id 是否存在，因為標準科目沒有資料庫 id)
+    if (!account.id || !account.isCustom) return;
 
-      setDeleteId(id);
-      setIsConfirmModalOpen(true);
-    },
-    [allAccounts],
-  );
+    setTargetDeleteAccount(account);
+    setIsConfirmModalOpen(true);
+  }, []);
 
   const confirmDelete = async () => {
-    if (!deleteId) return;
+    if (!targetDeleteAccount?.id) return;
 
     try {
       const res = await request<IApiResponse<{ success: boolean }>>(
-        `/api/v1/user/account_book/${accountBookId}/accounting_account/${deleteId}`,
+        `/api/v1/user/account_book/${accountBookId}/accounting_account/${targetDeleteAccount.id}`,
         { method: "DELETE" },
       );
       if (res.success) {
         setToastContent({
           title: t("voucher.account.messages.delete_success_title"),
           message: t("voucher.account.messages.delete_success_msg", {
-            code: formData.code,
-            name: formData.name,
+            code: targetDeleteAccount.code,
+            name: targetDeleteAccount.name,
           }),
         });
         setShowSuccess(true);
         fetchAccounts();
       } else {
-        setErrorMessage("刪除失敗");
+        setErrorMessage(res.message || "刪除失敗");
       }
     } catch (error) {
       console.error("Error deleting account", error);
-      alert("刪除時發生錯誤");
+      setErrorMessage("刪除時發生錯誤");
     } finally {
       setIsConfirmModalOpen(false);
-      setDeleteId(null);
+      setTargetDeleteAccount(null);
     }
   };
 
@@ -247,15 +231,24 @@ export default function AccountManagementTab() {
 
   // Info: (20260706 - Julian) 左欄列表：大類 (L1) 與 主科目 (L2)
   const leftList = useMemo(() => {
+    // Info: (20260706 - Julian) 建立以 parentCode 為 Key 的索引 Map，優化效能
+    const accountMap = new Map<string, IAccountingAccount[]>();
+    allAccounts.forEach((acc) => {
+      if (acc.parentCode) {
+        if (!accountMap.has(acc.parentCode)) accountMap.set(acc.parentCode, []);
+        accountMap.get(acc.parentCode)!.push(acc);
+      }
+    });
+
     const list: (IAccountingAccount & { hasChildren: boolean })[] = [];
+    // Info: (20260706 - Julian) 直接從 allAccounts 找 Level 1，不依賴 parentCode 是否為空，確保根科目能被正確識別
     const roots = allAccounts
       .filter((acc) => acc.level === 1)
       .sort((a, b) => a.code.localeCompare(b.code));
 
     roots.forEach((root) => {
       // Info: (20260706 - Julian) 只有當該大類符合 Tab 或 搜尋關鍵字時才顯示
-      const subjects = allAccounts
-        .filter((acc) => acc.parentCode === root.code)
+      const subjects = (accountMap.get(root.code) || [])
         .filter((acc) => activeTab === "all" || acc.type === activeTab)
         .filter(
           (acc) =>
@@ -268,7 +261,7 @@ export default function AccountManagementTab() {
       if (subjects.length > 0) {
         list.push({ ...root, hasChildren: true });
         subjects.forEach((s) => {
-          const hasChildren = allAccounts.some((a) => a.parentCode === s.code);
+          const hasChildren = accountMap.has(s.code);
           list.push({ ...s, hasChildren });
         });
       }
@@ -279,11 +272,20 @@ export default function AccountManagementTab() {
   // Info: (20260706 - Julian) 右欄列表：選中主科目的子科目 (L3+)
   const rightList = useMemo(() => {
     if (!selectedMainSubject) return [];
+
+    // Info: (20260706 - Julian) 建立索引 Map
+    const accountMap = new Map<string, IAccountingAccount[]>();
+    allAccounts.forEach((acc) => {
+      const parent = acc.parentCode || "ROOT";
+      if (!accountMap.has(parent)) accountMap.set(parent, []);
+      accountMap.get(parent)!.push(acc);
+    });
+
     const result: IAccountingAccount[] = [];
     const addChildren = (parentCode: string) => {
-      const children = allAccounts
-        .filter((acc) => acc.parentCode === parentCode)
-        .sort((a, b) => a.code.localeCompare(b.code));
+      const children = (accountMap.get(parentCode) || []).sort((a, b) =>
+        a.code.localeCompare(b.code),
+      );
       children.forEach((child) => {
         result.push(child);
         addChildren(child.code);
@@ -408,7 +410,7 @@ export default function AccountManagementTab() {
                     account={subAcc}
                     onAddChild={() => handleAddChild(subAcc)}
                     onEdit={() => handleEdit(subAcc)}
-                    onDelete={() => handleDelete(subAcc.id!)}
+                    onDelete={() => handleDelete(subAcc)}
                   />
                 ))
               ) : (
