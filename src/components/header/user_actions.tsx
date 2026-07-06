@@ -88,7 +88,7 @@ export default function UserActions() {
     user.isAdmin || user.role === "SUPER_ADMIN" || user.role === "ADMIN";
 
   // Info: (20260424 - Julian) 功能模組選單
-  const renderModulesMenuItems = (closePopover: () => void) => {
+  const renderModulesMenuItems = (close: () => void) => {
     const publicModuleKeys = new Set(PUBLIC_MODULES.map((m) => m.key));
     const modulesToDisplay = isAdmin
       ? ADMIN_MODULES
@@ -109,8 +109,8 @@ export default function UserActions() {
             <Link
               href={targetPath}
               onClick={() => {
-                closePopover();
                 setForceOpen(false);
+                close();
               }}
               className={`group flex h-full w-full flex-col items-center justify-center rounded-xl bg-white p-2 shadow-sm ring-1 ring-gray-200 transition-all duration-200 hover:bg-orange-50 hover:ring-1 hover:ring-orange-200 md:rounded-lg md:p-3 md:shadow-none md:ring-gray-100`}
             >
@@ -137,7 +137,7 @@ export default function UserActions() {
   };
 
   // Info: (20260502 - Luphia) 小工具選單
-  const renderPublicModulesMenuItems = (closePopover: () => void) => {
+  const renderPublicModulesMenuItems = (close: () => void) => {
     return PUBLIC_MODULES.map((module) => {
       const Icon = module.icon;
       const targetPath = `/${module.key}`;
@@ -147,8 +147,8 @@ export default function UserActions() {
           key={module.key}
           href={targetPath}
           onClick={() => {
-            closePopover();
             setForceOpen(false);
+            close();
           }}
           className={`group flex h-full w-full flex-col items-center justify-center rounded-xl bg-white p-2 shadow-sm ring-1 ring-gray-200 transition-all duration-200 hover:bg-orange-50 hover:ring-1 hover:ring-orange-200 md:rounded-lg md:p-3 md:shadow-none md:ring-gray-100`}
         >
@@ -166,7 +166,7 @@ export default function UserActions() {
   };
 
   // Info: (20260423 - Julian) 系統功能選單
-  const renderSystemMenuItems = (closePopover: () => void) => {
+  const renderSystemMenuItems = (close: () => void) => {
     return SYSTEM_MODULES.filter((action) => {
       if (!action.enable) return false;
       // Info: (20260416 - Luphia) 角色為 ADMIN, SUPER ADMIN 時，系统设置只需顯示登出
@@ -180,8 +180,8 @@ export default function UserActions() {
             <Link
               href={action.href}
               onClick={() => {
-                closePopover();
                 setForceOpen(false);
+                close();
               }}
               className={`group flex h-full w-full flex-col items-center justify-center rounded-xl bg-white p-2 text-center text-xs font-normal text-gray-600 shadow-sm ring-1 ring-gray-200 transition-colors hover:bg-gray-50 md:rounded-lg md:bg-transparent md:font-medium md:shadow-none md:ring-0`}
             >
@@ -195,8 +195,8 @@ export default function UserActions() {
             <button
               onClick={() => {
                 if (action.action === "logout") logout();
-                closePopover();
                 setForceOpen(false);
+                close();
               }}
               className={`group flex h-full w-full flex-col items-center justify-center rounded-xl bg-white p-2 text-center text-xs font-normal text-gray-600 shadow-sm ring-1 ring-gray-200 transition-colors md:rounded-lg md:bg-transparent md:font-medium md:shadow-none md:ring-0 ${action.isDestructive ? "hover:bg-red-50" : "hover:bg-gray-50"}`}
             >

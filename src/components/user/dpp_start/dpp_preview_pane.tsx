@@ -84,7 +84,7 @@ export function DppPreviewPane({
     if (typeof value === "string") {
       // Info: (20260610 - Tzuhan) Check if it looks like an ISO date
       if (/^\d{4}-\d{2}-\d{2}/.test(value)) {
-        return <span className="font-medium text-indigo-600">{value}</span>;
+        return <span className="font-medium text-orange-600">{value}</span>;
       }
       return (
         <span className="break-words whitespace-pre-wrap text-slate-800">
@@ -167,7 +167,7 @@ export function DppPreviewPane({
       <div className="custom-scrollbar h-full overflow-y-auto bg-slate-50 p-4 text-sm text-slate-700 md:p-6">
         <div className="mb-6">
           <h2 className="mb-2 flex items-center text-lg font-bold text-slate-800">
-            <Database className="mr-2 h-5 w-5 text-indigo-500" />
+            <Database className="mr-2 h-5 w-5 text-orange-500" />
             {t("digital_product_passport.preview_extra.json_title")}
           </h2>
           <p className="text-xs text-slate-500">
@@ -222,7 +222,7 @@ export function DppPreviewPane({
           <div className="min-h-0 flex-1 overflow-hidden bg-slate-200 p-0">
             {isGenerating ? (
               <div className="flex flex-1 flex-col items-center justify-center bg-slate-50/50 p-8 text-center text-slate-500">
-                <RefreshCw className="mb-4 h-16 w-16 animate-spin text-blue-500" />
+                <RefreshCw className="mb-4 h-16 w-16 animate-spin text-orange-500" />
                 <p className="text-lg font-bold text-slate-600">
                   {t(
                     "digital_product_passport.preview_extra.regenerating_title",
@@ -248,7 +248,7 @@ export function DppPreviewPane({
                 {onRegenerateFile && (
                   <button
                     onClick={() => onRegenerateFile(selectedFilePath)}
-                    className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-700"
+                    className="flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-700"
                   >
                     <RefreshCw className="h-4 w-4" />
                     {t(

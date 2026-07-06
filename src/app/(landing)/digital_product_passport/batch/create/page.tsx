@@ -216,7 +216,7 @@ export default function GenericBatchCreatePage() {
                   id="sku_select"
                   value={selectedSkuId}
                   onChange={(e) => setSelectedSkuId(e.target.value)}
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                 >
                   <option value="" disabled>
                     ---
@@ -249,7 +249,7 @@ export default function GenericBatchCreatePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, batchNumber: e.target.value })
                   }
-                  className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                 />
               </div>
 
@@ -275,7 +275,7 @@ export default function GenericBatchCreatePage() {
                       manufactureDate: e.target.value,
                     })
                   }
-                  className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                 />
               </div>
 
@@ -299,7 +299,7 @@ export default function GenericBatchCreatePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, facilitySite: e.target.value })
                   }
-                  className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                 />
               </div>
 
@@ -323,14 +323,14 @@ export default function GenericBatchCreatePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, serialRange: e.target.value })
                   }
-                  className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                 />
               </div>
 
               <button
                 onClick={handleSubmit}
                 disabled={isLoading}
-                className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-500 disabled:opacity-50"
+                className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-orange-600 px-6 py-3 font-semibold text-white transition hover:bg-orange-500 disabled:opacity-50"
               >
                 {isLoading ? (
                   <Loader2 className="h-5 w-5 animate-spin" />
@@ -369,11 +369,11 @@ export default function GenericBatchCreatePage() {
             }}
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleFileDrop}
-            className={`group relative flex flex-col items-center justify-center rounded-3xl border-2 border-dashed ${files.length > 0 ? "border-emerald-300 bg-emerald-50/20" : "border-gray-300 bg-gray-50/50"} min-h-[300px] p-8 transition-all hover:border-blue-400 hover:bg-blue-50/30`}
+            className={`group relative flex flex-col items-center justify-center rounded-3xl border-2 border-dashed ${files.length > 0 ? "border-orange-300 bg-orange-50/20" : "border-gray-300 bg-gray-50/50"} min-h-[300px] p-8 transition-all hover:border-orange-400 hover:bg-orange-50/30`}
           >
             {isProcessing ? (
               <div className="flex flex-col items-center text-center">
-                <Loader2 className="mb-4 h-12 w-12 animate-spin text-blue-500" />
+                <Loader2 className="mb-4 h-12 w-12 animate-spin text-orange-500" />
                 <h3 className="mb-2 text-lg font-bold text-gray-900">
                   {t("digital_product_passport.sku_creation.ai_analyzing")}
                 </h3>
@@ -390,7 +390,7 @@ export default function GenericBatchCreatePage() {
                       className="flex items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 shadow-sm"
                     >
                       <div className="flex items-center gap-2 overflow-hidden">
-                        <FileText className="h-4 w-4 shrink-0 text-blue-500" />
+                        <FileText className="h-4 w-4 shrink-0 text-orange-500" />
                         <span className="truncate text-sm font-medium text-gray-700">
                           {f.name}
                         </span>
@@ -410,7 +410,7 @@ export default function GenericBatchCreatePage() {
                 <button
                   onClick={handleSimulateUpload}
                   disabled={isUploading}
-                  className="flex items-center gap-2 rounded-xl bg-blue-600 px-8 py-3 text-sm font-semibold text-white shadow-md shadow-blue-500/20 transition hover:bg-blue-500 disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-xl bg-orange-600 px-8 py-3 text-sm font-semibold text-white shadow-md shadow-orange-500/20 transition hover:bg-orange-500 disabled:opacity-50"
                 >
                   {isUploading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -426,7 +426,7 @@ export default function GenericBatchCreatePage() {
               </div>
             ) : (
               <div className="flex flex-col items-center text-center">
-                <div className="mb-6 rounded-2xl border border-gray-100 bg-white p-5 text-blue-600 shadow-sm transition-transform duration-300 group-hover:scale-110">
+                <div className="mb-6 rounded-2xl border border-gray-100 bg-white p-5 text-orange-600 shadow-sm transition-transform duration-300 group-hover:scale-110">
                   <UploadCloud className="h-10 w-10" />
                 </div>
                 <h3 className="mb-2 text-xl font-bold text-gray-900">

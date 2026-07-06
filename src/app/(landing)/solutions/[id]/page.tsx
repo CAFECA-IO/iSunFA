@@ -328,7 +328,7 @@ function Solution2026p1() {
                 </h3>
                 <div className="mt-4 flex items-baseline gap-x-2">
                   <span className="text-2xl font-bold text-blue-600">
-                    UP TO $ 5,000,000
+                    $ 5,000,000
                   </span>
                   <span className="text-sm text-gray-500">
                     {t("solutions.subsidy_up_to")} 50%
