@@ -1,7 +1,7 @@
 export const digitalProductPassport = {
   title: "數位產品護照",
   description: "管理 B2B 產品 SKU 並發佈生產批次",
-  login_to_use: "請先登入以使用數位產品護照",
+  login_to_use: "請登入以使用數位產品護照",
   define_sku: "定義新 SKU",
   define_sku_desc: "上傳技術文檔供 AI 解析",
   create_sku: "建立 SKU",
@@ -90,10 +90,17 @@ export const digitalProductPassport = {
     simulator_title: "DPP 模擬資料產生器",
     simulator_desc:
       "透過公開上市櫃公司財報與永續報告書，自動產生具真實感的數位產品護照 (DPP) 模擬數據源，供展示與測試用途。",
+    login_to_use: "請登入以使用 DPP 模擬資料產生器",
     create_simulation: "新增模擬企業",
     enter_data_center: "進入資料中心",
     no_simulations:
       "找不到模擬企業。請點擊「新增模擬企業」建立您的第一筆數據。",
+    simulator_no_simulations_desc:
+      "您可以透過搜尋上市櫃公司，自動生成具有真實感的數位產品護照 (DPP) 模擬數據。",
+    year_unit: "年",
+    demo_data_base: "2025 (展示數據基底)",
+    last_year: "2024 (去年度)",
+    previous_year: "2023 (前年度)",
     delete_confirm_title: "確認刪除",
     delete_confirm_message:
       "確定要刪除「{{name}} ({{year}} 年)」的模擬資料嗎？此動作無法復原。",

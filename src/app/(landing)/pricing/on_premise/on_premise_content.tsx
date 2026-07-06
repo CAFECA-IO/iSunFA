@@ -12,7 +12,7 @@ export default function OnPremiseContent() {
   const { onSelectCustomPlan } = usePricing();
   const { t } = useTranslation();
   const [selectedMachine, setSelectedMachine] =
-    useState<keyof typeof ENTERPRISE_PLAN_PRICE.MACHINE>("ASUS_ASCENT_GX10");
+    useState<keyof typeof ENTERPRISE_PLAN_PRICE.MACHINE>("X86_5060TI");
   const [userCount, setUserCount] = useState(1);
   const [updateYears, setUpdateYears] = useState(0);
   const [selectedModules, setSelectedModules] = useState<string[]>(
@@ -66,6 +66,11 @@ export default function OnPremiseContent() {
                         {selectedMachine === "X86_5060TI"
                           ? t("pricing.ai_adoption.machine_x86")
                           : t("pricing.ai_adoption.machine_gx10")}
+                      </span>
+                      <span className="mt-1 block text-sm font-medium text-orange-400/80">
+                        {selectedMachine === "X86_5060TI"
+                          ? t("pricing.ai_adoption.capacity_x86")
+                          : t("pricing.ai_adoption.capacity_gx10")}
                       </span>
                       <span className="mt-1 block text-sm text-gray-400">
                         {t("pricing.ai_adoption.add_module_price", {

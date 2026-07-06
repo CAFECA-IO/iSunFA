@@ -146,7 +146,7 @@ export const pricing = {
     machine_x86: "X86 5060Ti",
     machine_gx10: "ASUS Ascent GX10",
     capacity_x86: "每日可处理约 150 张凭证",
-    capacity_gx10: "每日可处理约 350 张凭证",
+    capacity_gx10: "每日可处理约 300 张凭证",
   },
   credits: {
     title: "弹性购买点数",

@@ -120,4 +120,6 @@ export const common = {
   done: "完成",
   back: "返回",
   next: "下一步",
+  all_solutions: "所有方案",
+  reset: "重置",
 };

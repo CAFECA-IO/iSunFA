@@ -96,10 +96,18 @@ export const digitalProductPassport = {
     simulator_title: "DPPシミュレーターデータジェネレーター",
     simulator_desc:
       "公開されている財務報告書とサステナビリティ報告書を使用して、デモとテスト用のリアルなデジタル製品パスポート（DPP）モックデータソースを自動生成します。",
+    login_to_use:
+      "DPPシミュレーターデータジェネレーターを使用するにはログインしてください",
     create_simulation: "新規シミュレーション",
     enter_data_center: "データセンターへ移動",
     no_simulations:
       "シミュレートされた企業が見つかりません。「新規シミュレーション」をクリックして最初のデータセットを作成してください。",
+    simulator_no_simulations_desc:
+      "上場企業を検索することで、リアリティのあるデジタル製品パスポート（DPP）の模擬データを自動生成できます。",
+    year_unit: "年",
+    demo_data_base: "2025 (デモデータ基盤)",
+    last_year: "2024 (昨年度)",
+    previous_year: "2023 (前年度)",
     delete_confirm_title: "削除の確認",
     delete_confirm_message:
       "「{{name}} ({{year}}年)」のシミュレーションデータを削除してもよろしいですか？この操作は元に戻せません。",

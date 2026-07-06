@@ -64,6 +64,8 @@ import { simulationWorkflow } from "@/i18n/locales/zh_tw/simulation_workflow";
 import { netZeroPathway } from "@/i18n/locales/zh_tw/net_zero_pathway";
 import { reportDownloader } from "@/i18n/locales/zh_tw/report_downloader";
 import { chart } from "@/i18n/locales/zh_tw/chart";
+import { solutions } from "@/i18n/locales/zh_tw/solutions";
+import { applicationManagement } from "@/i18n/locales/zh_tw/application_management";
 
 export const zhTw = {
   digital_product_passport: digitalProductPassport,
@@ -133,6 +135,8 @@ export const zhTw = {
   simulation_workflow: simulationWorkflow,
   net_zero_pathway: netZeroPathway,
   report_downloader: reportDownloader,
+  solutions,
+  application_management: applicationManagement,
 } as const;
 
 export type BaseTranslation = typeof zhTw;

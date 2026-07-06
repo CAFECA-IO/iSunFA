@@ -94,10 +94,17 @@ export const digitalProductPassport = {
     simulator_title: "DPP 시뮬레이터 데이터 생성기",
     simulator_desc:
       "공개 재무 및 지속 가능성 보고서를 사용하여 데모 및 테스트용 디지털 제품 여권(DPP) 모의 데이터 소스를 자동으로 생성합니다.",
+    login_to_use: "DPP 시뮬레이터 데이터 생성기를 사용하려면 로그인해 주세요",
     create_simulation: "새 시뮬레이션",
     enter_data_center: "데이터 센터로 이동",
     no_simulations:
       "시뮬레이션된 기업이 없습니다. '새 시뮬레이션'을 클릭하여 첫 데이터 세트를 생성하세요.",
+    simulator_no_simulations_desc:
+      "상장 기업을 검색하여 실감 나는 디지털 제품 여권(DPP) 시뮬레이션 데이터를 자동으로 생성할 수 있습니다.",
+    year_unit: "년",
+    demo_data_base: "2025 (데모 데이터 베이스)",
+    last_year: "2024 (지난해)",
+    previous_year: "2023 (이전해)",
     delete_confirm_title: "삭제 확인",
     delete_confirm_message:
       "'{{name}} ({{year}}년)'의 시뮬레이션 데이터를 삭제하시겠습니까? 이 작업은 실행 취소할 수 없습니다.",

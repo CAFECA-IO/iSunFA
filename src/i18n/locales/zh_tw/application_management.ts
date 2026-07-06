@@ -1,0 +1,32 @@
+export const applicationManagement = {
+  title: "申請管理",
+  subtitle: "管理與檢閱所有解決方案的申請紀錄與企業聯絡資訊",
+  table: {
+    date: "申請日期",
+    company: "企業名稱",
+    tax_id: "統一編號",
+    solution: "申請方案",
+    contact: "聯絡人",
+    phone: "聯絡電話",
+    email: "電子信箱",
+    id: "申請編號",
+    solution_id: "方案 ID",
+    company_name: "企業名稱",
+    contact_person: "聯絡人",
+    address: "企業地址",
+    message: "補充訊息",
+    status: "處理狀態",
+  },
+  status: {
+    CONTACTING: "聯繫中",
+    EVALUATING: "評估中",
+    CONTRACTING: "簽約中",
+    EXECUTING: "執行中",
+    CLOSED: "已結案",
+    undefined: "聯繫中",
+  },
+  detail: {
+    title: "申請細節",
+    no_message: "無補充訊息",
+  },
+};

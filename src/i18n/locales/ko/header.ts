@@ -1,7 +1,8 @@
 export const header = {
   salary_calculator: "급여 계산기",
   ai_consultation_room: "AI 상담실",
-  pricing: "요금제",
+  pricing: "요금 체계",
+  solutions: "보조금",
   login: "로그인",
   credits: "크레딧",
   logout: "로그아웃",

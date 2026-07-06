@@ -4,10 +4,10 @@ import { API_ERRORS } from "@/lib/utils/error_dictionary";
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { order_id: string } },
+  { params }: { params: Promise<{ order_id: string }> },
 ) {
   try {
-    const { order_id: orderId } = params;
+    const { order_id: orderId } = await params;
     const { status } = await request.json();
 
     if (!status) {

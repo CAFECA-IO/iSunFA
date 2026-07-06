@@ -94,10 +94,17 @@ export const digitalProductPassport = {
     simulator_title: "DPP Simulator Data Generator",
     simulator_desc:
       "Automatically generate realistic Digital Product Passport (DPP) mock data sources using public financial and sustainability reports for demo and testing.",
+    login_to_use: "Please login to use DPP Simulator Data Generator",
     create_simulation: "New Simulation",
     enter_data_center: "Enter Data Center",
     no_simulations:
       "No simulated enterprises found. Click 'New Simulation' to create your first dataset.",
+    simulator_no_simulations_desc:
+      "You can automatically generate realistic Digital Product Passport (DPP) simulation data by searching for listed companies.",
+    year_unit: "",
+    demo_data_base: "2025 (Demo Data Base)",
+    last_year: "2024 (Last Year)",
+    previous_year: "2023 (Previous Year)",
     delete_confirm_title: "Confirm Deletion",
     delete_confirm_message:
       "Are you sure you want to delete the simulation data for '{{name}} ({{year}})'? This action cannot be undone.",
