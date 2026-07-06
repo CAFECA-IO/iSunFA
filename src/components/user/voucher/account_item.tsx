@@ -64,9 +64,9 @@ const CategorySubjectItem = ({
             }`
       }`}
     >
-      {/* Custom Item Accent Bar */}
+      {/* Info: (20260706 - Julian) 自訂科目的裝飾條 */}
       {!isLevel1 && account.isCustom && (
-        <div className="absolute top-0 bottom-0 left-0 w-1 rounded-l-xl bg-orange-400" />
+        <div className="absolute top-0 bottom-0 -left-1 w-2 rounded-l-xl bg-orange-400" />
       )}
 
       {isLevel1 ? (
@@ -103,7 +103,7 @@ const CategorySubjectItem = ({
               />
             )}
           </div>
-          {/* Hover Actions for Level 2 */}
+          {/* Info: (20260706 - Julian) 懸停動作，僅在自訂科目顯示 */}
           <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
             <button
               type="button"
@@ -148,17 +148,27 @@ const SubAccountItem = ({
   const { t } = useTranslation();
   const colors = ACCOUNT_TYPE_COLORS[account.type] || ACCOUNT_TYPE_COLORS.other;
   const level = account.level;
-  const offset = Math.max(0, level - 3) * 24; // 子科目縮排效果，每多一層增加 24px
+  const offset = Math.max(0, level - 3) * 24; // Info: (20260706 - Julian) 子科目縮排效果，每多一層增加 24px
 
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
     onAddChild();
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onAddChild();
+    }
+  };
+
   return (
     <div
-      onClick={handleAdd} // 點擊卡片即可新增子科目
-      className={`group relative flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-left shadow-sm transition-all md:px-6 ${
+      onClick={handleAdd} // Info: (20260706 - Julian) 點擊卡片即可新增子科目
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
+      className={`group relative flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-left shadow-sm transition-all outline-none focus-visible:ring-2 focus-visible:ring-orange-500 md:px-6 ${
         account.isCustom
           ? "border-dashed border-orange-300 bg-orange-100"
           : "border-slate-100 bg-white"

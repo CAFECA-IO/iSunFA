@@ -13,7 +13,7 @@ import {
 import { CountryCode } from "@/constants/enums";
 
 /**
- * Info: (20260703 - Julian) 取得帳本下所有會計科目 (整合標準與客製化)
+ * Info: (20260703 - Julian) 取得帳本下所有會計科目 (整合標準與自訂)
  * GET /api/v1/user/account_book/:account_book_id/accounting_account
  */
 export async function GET(
@@ -45,7 +45,7 @@ export async function GET(
         isCustom: false,
       }));
 
-    // Info: (20260703 - Julian) 取得資料庫中的客製化科目
+    // Info: (20260703 - Julian) 取得資料庫中的自訂科目
     const customAccounts =
       await accountingAccountRepo.getCustomAccountsByAccountBookId(
         accountBookId,
@@ -84,7 +84,7 @@ export async function GET(
 }
 
 /**
- * Info: (20260703 - Julian) 新增客製化會計科目
+ * Info: (20260703 - Julian) 新增自訂會計科目
  * POST /api/v1/user/account_book/:account_book_id/accounting_account
  */
 export async function POST(
@@ -127,7 +127,7 @@ export async function POST(
       return jsonFail(API_ERRORS.VA_CODE_ALREADY_EXISTS);
     }
 
-    // Info: (20260703 - Julian) 取得父層資訊 (先找標準科目，找不到再找客製化科目)
+    // Info: (20260703 - Julian) 取得父層資訊 (先找標準科目，找不到再找自訂科目)
     const country = accountBook.country as CountryCode;
     const standardAccounts: IAccount[] = ACCOUNTS[country] || ACCOUNTS.TW;
     let parent = standardAccounts.find((acc) => acc.code === input.parentCode);
@@ -144,7 +144,7 @@ export async function POST(
       return jsonFail(API_ERRORS.NF_PARENT_ACCOUNT);
     }
 
-    // Info: (20260703 - Julian) 建立客製化科目，繼承父層屬性
+    // Info: (20260703 - Julian) 建立自訂科目，繼承父層屬性
     const newAccount = await accountingAccountRepo.createCustomAccount({
       code: input.code,
       name: input.name,
@@ -160,125 +160,5 @@ export async function POST(
   } catch (error) {
     console.error("Error creating accounting account:", error);
     return jsonFail(API_ERRORS.IN_FAILED_TO_CREATE_ACCOUNT);
-  }
-}
-
-/**
- * Info: (20260703 - Julian) 更新客製化會計科目
- * PATCH /api/v1/user/account_book/:account_book_id/accounting_account
- */
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ account_book_id: string }> },
-) {
-  try {
-    const authHeader = request.headers.get("Authorization");
-    const sessionUser = await getIdentityFromDeWT(authHeader);
-
-    if (!sessionUser) {
-      return jsonFail(API_ERRORS.NF_USER);
-    }
-
-    const { account_book_id: accountBookId } = await params;
-    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
-
-    if (!accountBook) {
-      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
-    }
-
-    const body = await request.json();
-    const {
-      id,
-      input,
-    }: { id: string; input: Partial<IAccountingAccountInput> } = body;
-
-    if (!id || !input) {
-      return jsonFail(API_ERRORS.VA_INVALID_INPUT_DATA);
-    }
-
-    // Info: (20260703 - Julian) 檢查科目是否存在
-    const accounts =
-      await accountingAccountRepo.getCustomAccountsByAccountBookId(
-        accountBookId,
-      );
-    const target = accounts.find((acc) => acc.id === id);
-
-    if (!target) {
-      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK); // Info: (20260703 - Julian) Should be NF_ACCOUNT
-    }
-
-    // Info: (20260703 - Julian) 如果要更新 Code，檢查是否衝突
-    if (input.code && input.code !== target.code) {
-      const existing = await accountingAccountRepo.getCustomAccountByCode(
-        accountBookId,
-        input.code,
-      );
-      if (existing) {
-        return jsonFail(API_ERRORS.VA_CODE_ALREADY_EXISTS);
-      }
-    }
-
-    const updated = await accountingAccountRepo.updateCustomAccount(id, {
-      name: input.name,
-      code: input.code,
-    });
-
-    return jsonOk(updated);
-  } catch (error) {
-    console.error("Error updating accounting account:", error);
-    return jsonFail(API_ERRORS.IS_DB_FAILED);
-  }
-}
-
-/**
- * Info: (20260706 - Julian) 刪除客製化會計科目
- * DELETE /api/v1/user/account_book/:account_book_id/accounting_account
- */
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ account_book_id: string }> },
-) {
-  try {
-    const authHeader = request.headers.get("Authorization");
-    const sessionUser = await getIdentityFromDeWT(authHeader);
-
-    if (!sessionUser) {
-      return jsonFail(API_ERRORS.NF_USER);
-    }
-
-    const { account_book_id: accountBookId } = await params;
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
-
-    if (!id) {
-      return jsonFail(API_ERRORS.VA_INVALID_INPUT_DATA);
-    }
-
-    // Info: (20260706 - Julian) 檢查是否有子科目 (不能刪除有子科目的科目)
-    const accounts =
-      await accountingAccountRepo.getCustomAccountsByAccountBookId(
-        accountBookId,
-      );
-    const target = accounts.find((acc) => acc.id === id);
-
-    if (!target) {
-      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
-    }
-
-    // Info: (20260706 - Julian) 檢查是否被其他科目當成父層
-    const all =
-      await accountingAccountRepo.getCustomAccountsByAccountBookId(
-        accountBookId,
-      );
-    const hasChildren = all.some((acc) => acc.parentCode === target.code);
-    if (hasChildren) {
-      return jsonFail(API_ERRORS.VA_ACCOUNT_HAS_CHILDREN);
-    }
-
-    await accountingAccountRepo.deleteCustomAccount(id);
-    return jsonOk({ success: true });
-  } catch (error) {
-    console.error("Error deleting accounting account:", error);
-    return jsonFail(API_ERRORS.IS_DB_FAILED);
   }
 }

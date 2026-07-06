@@ -149,7 +149,7 @@ export default function AccountManagementTab() {
 
     try {
       const res = await request<IApiResponse<{ success: boolean }>>(
-        `/api/v1/user/account_book/${accountBookId}/accounting_account?id=${deleteId}`,
+        `/api/v1/user/account_book/${accountBookId}/accounting_account/${deleteId}`,
         { method: "DELETE" },
       );
       if (res.success) {
@@ -174,16 +174,21 @@ export default function AccountManagementTab() {
     setIsFormLoading(true);
     setErrorMessage(null);
     try {
-      const url = `/api/v1/user/account_book/${accountBookId}/accounting_account`;
       const res = isEditing
-        ? await request<IApiResponse<IAccountingAccount>>(url, {
-            method: "PATCH",
-            body: JSON.stringify({ id: editId, input: formData }),
-          })
-        : await request<IApiResponse<{ id: string }>>(url, {
-            method: "POST",
-            body: JSON.stringify({ input: formData }),
-          });
+        ? await request<IApiResponse<IAccountingAccount>>(
+            `/api/v1/user/account_book/${accountBookId}/accounting_account/${editId}`,
+            {
+              method: "PATCH",
+              body: JSON.stringify({ input: formData }),
+            },
+          )
+        : await request<IApiResponse<{ id: string }>>(
+            `/api/v1/user/account_book/${accountBookId}/accounting_account`,
+            {
+              method: "POST",
+              body: JSON.stringify({ input: formData }),
+            },
+          );
 
       if (res.success) {
         setShowSuccess(true);
@@ -211,7 +216,7 @@ export default function AccountManagementTab() {
       .sort((a, b) => a.code.localeCompare(b.code));
 
     roots.forEach((root) => {
-      // 只有當該大類符合 Tab 或 搜尋關鍵字時才顯示
+      // Info: (20260706 - Julian) 只有當該大類符合 Tab 或 搜尋關鍵字時才顯示
       const subjects = allAccounts
         .filter((acc) => acc.parentCode === root.code)
         .filter((acc) => activeTab === "all" || acc.type === activeTab)
