@@ -12,4 +12,5 @@ export interface IAccountingAccountInput {
   parentCode: string;
   name: string;
   code: string;
+  description?: string;
 }

@@ -703,4 +703,14 @@ export const API_ERRORS = {
     message: "Status is required",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
+  VA_ACCOUNT_HAS_CHILDREN: {
+    code: "VA000039",
+    message: "Account has children",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+  VA_ACCOUNT_NOT_FOUND: {
+    code: "VA000040",
+    message: "Account not found",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
 };
