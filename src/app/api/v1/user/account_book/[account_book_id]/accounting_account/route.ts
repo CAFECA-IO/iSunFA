@@ -229,3 +229,56 @@ export async function PATCH(
     return jsonFail(API_ERRORS.IS_DB_FAILED);
   }
 }
+
+/**
+ * Info: (20260706 - Julian) 刪除客製化會計科目
+ * DELETE /api/v1/user/account_book/:account_book_id/accounting_account
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ account_book_id: string }> },
+) {
+  try {
+    const authHeader = request.headers.get("Authorization");
+    const sessionUser = await getIdentityFromDeWT(authHeader);
+
+    if (!sessionUser) {
+      return jsonFail(API_ERRORS.NF_USER);
+    }
+
+    const { account_book_id: accountBookId } = await params;
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return jsonFail(API_ERRORS.VA_INVALID_INPUT_DATA);
+    }
+
+    // Info: (20260706 - Julian) 檢查是否有子科目 (不能刪除有子科目的科目)
+    const accounts =
+      await accountingAccountRepo.getCustomAccountsByAccountBookId(
+        accountBookId,
+      );
+    const target = accounts.find((acc) => acc.id === id);
+
+    if (!target) {
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
+    }
+
+    // Info: (20260706 - Julian) 檢查是否被其他科目當成父層
+    const all =
+      await accountingAccountRepo.getCustomAccountsByAccountBookId(
+        accountBookId,
+      );
+    const hasChildren = all.some((acc) => acc.parentCode === target.code);
+    if (hasChildren) {
+      return jsonFail(API_ERRORS.VA_ACCOUNT_HAS_CHILDREN);
+    }
+
+    await accountingAccountRepo.deleteCustomAccount(id);
+    return jsonOk({ success: true });
+  } catch (error) {
+    console.error("Error deleting accounting account:", error);
+    return jsonFail(API_ERRORS.IS_DB_FAILED);
+  }
+}

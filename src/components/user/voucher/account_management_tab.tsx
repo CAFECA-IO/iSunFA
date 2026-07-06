@@ -6,10 +6,10 @@ import {
   Search,
   SearchX,
   Loader2,
-  ChevronRight,
-  ChevronDown,
   AlertCircle,
   Pencil,
+  ChevronRight,
+  Trash2,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
@@ -55,22 +55,22 @@ const ACCOUNT_TYPE_COLORS: Record<
     tab: "bg-amber-500",
   },
   [AccountType.INCOME]: {
-    bg: "bg-amber-50",
-    text: "text-amber-700",
-    border: "border-amber-200",
-    tab: "bg-amber-500",
+    bg: "bg-teal-50",
+    text: "text-teal-700",
+    border: "border-teal-200",
+    tab: "bg-teal-500",
   },
   [AccountType.EXPENSE]: {
-    bg: "bg-orange-50",
-    text: "text-orange-700",
-    border: "border-orange-200",
-    tab: "bg-orange-500",
+    bg: "bg-lime-50",
+    text: "text-lime-700",
+    border: "border-lime-200",
+    tab: "bg-lime-500",
   },
   [AccountType.COST]: {
-    bg: "bg-orange-50",
-    text: "text-orange-700",
-    border: "border-orange-200",
-    tab: "bg-orange-500",
+    bg: "bg-pink-50",
+    text: "text-pink-700",
+    border: "border-pink-200",
+    tab: "bg-pink-500",
   },
   [AccountType.GAIN_OR_LOSS]: {
     bg: "bg-violet-50",
@@ -100,74 +100,152 @@ const ACCOUNT_TYPE_COLORS: Record<
 
 interface IAccountItemProps {
   account: IAccountingAccount;
-  level: number;
-  isExpanded: boolean;
-  onToggle: () => void;
-  hasChildren: boolean;
   onAddChild: () => void;
   onEdit: () => void;
+  onDelete?: () => void;
+  isSelected?: boolean;
+  onClick?: () => void;
+  hasChildren?: boolean;
 }
 
-const AccountItem = ({
+/**
+ * Info: (20260706 - Julian) 大類 (Level 1) 與 主科目 (Level 2) 元件
+ */
+const CategorySubjectItem = ({
   account,
-  level,
-  isExpanded,
-  onToggle,
-  hasChildren,
   onAddChild,
   onEdit,
+  isSelected = false,
+  onClick = () => {},
+  hasChildren = false,
 }: IAccountItemProps) => {
   const { t } = useTranslation();
   const colors = ACCOUNT_TYPE_COLORS[account.type] || ACCOUNT_TYPE_COLORS.other;
+  const isLevel1 = account.level === 1;
+  const canClick = isLevel1 || hasChildren;
 
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={onToggle}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onToggle();
-        }
-      }}
-      className={`group flex w-full cursor-pointer items-center gap-3 rounded-xl bg-white px-4 py-3 text-left shadow-sm transition-all hover:bg-gray-50 md:px-6 ${
-        level > 1 ? "border-l-2 border-gray-100" : ""
+      onClick={canClick ? onClick : undefined}
+      className={`group relative flex items-start gap-3 transition-all ${
+        isLevel1
+          ? "mt-6 mb-2 first:mt-0"
+          : `rounded-xl border px-4 py-4 shadow-sm ${
+              isSelected
+                ? "border-orange-200 bg-orange-50 ring-2 ring-orange-500 ring-offset-2"
+                : `border-slate-100 bg-white ${canClick ? "cursor-pointer hover:bg-gray-50" : "cursor-default"}`
+            } ${account.isCustom ? "border-dashed border-orange-300 bg-orange-100" : ""}`
       }`}
-      style={{ marginLeft: `${(level - 1) * 24}px` }}
     >
-      <div className="flex items-center gap-2">
-        {hasChildren ? (
-          <div className="flex size-6 items-center justify-center rounded">
-            {isExpanded ? (
-              <ChevronDown size={16} />
-            ) : (
-              <ChevronRight size={16} />
+      {isLevel1 ? (
+        <div
+          className={`flex w-full items-center justify-between gap-2 rounded-lg border-b-2 border-slate-700 px-4 py-2.5 text-sm font-black tracking-widest text-white uppercase shadow-md ${colors.tab}`}
+        >
+          <p>{account.name}</p>
+          <p>({account.code})</p>
+        </div>
+      ) : (
+        <>
+          <div
+            className={`flex shrink-0 items-center justify-center rounded-lg border px-2 py-1 text-xs font-black ${colors.bg} ${colors.text} ${colors.border} mt-0.5`}
+          >
+            {account.code}
+          </div>
+          <div className="flex flex-1 items-start justify-between gap-1 overflow-hidden">
+            <div className="flex flex-1 flex-col overflow-hidden">
+              <div className="text-sm leading-relaxed font-bold wrap-break-word text-slate-700">
+                {account.name}
+              </div>
+              {account.isCustom && (
+                <span className="text-[10px] font-bold tracking-tighter text-orange-500 uppercase">
+                  {t("voucher.account.custom")}
+                </span>
+              )}
+            </div>
+            {hasChildren && (
+              <ChevronRight
+                size={16}
+                className={`mt-1 shrink-0 text-slate-300 transition-all ${
+                  isSelected ? "translate-x-1 text-orange-500" : ""
+                }`}
+              />
             )}
           </div>
-        ) : (
-          <div className="size-6" />
-        )}
-        {account.isCustom && (
-          <div className="rounded-md border border-orange-200 bg-orange-50 px-2 py-0.5 text-[10px] font-medium text-orange-600">
-            {t("voucher.account.custom")}
+          {/* Hover Actions for Level 2 */}
+          <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddChild();
+              }}
+              className="flex size-7 items-center justify-center rounded-full bg-green-100 text-green-600 shadow-sm transition-colors hover:bg-green-200"
+              title={t("voucher.account.action.add_child")}
+            >
+              <Plus size={14} />
+            </button>
+            {account.isCustom && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit();
+                }}
+                className="flex size-7 items-center justify-center rounded-full bg-blue-50 text-blue-600 shadow-sm transition-colors hover:bg-blue-100"
+                title={t("voucher.account.action.edit")}
+              >
+                <Pencil size={12} />
+              </button>
+            )}
           </div>
-        )}
-        <div
-          className={`flex shrink-0 items-center justify-center rounded-lg border px-2 py-1.5 text-sm font-bold md:text-base ${colors.bg} ${colors.text} ${colors.border}`}
-        >
-          {account.code}
-        </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+/**
+ * Info: (20260706 - Julian) 子科目 (Level 3+) 元件
+ */
+const SubAccountItem = ({
+  account,
+  onAddChild,
+  onEdit,
+  onDelete = () => {},
+}: IAccountItemProps) => {
+  const { t } = useTranslation();
+  const colors = ACCOUNT_TYPE_COLORS[account.type] || ACCOUNT_TYPE_COLORS.other;
+  const level = account.level;
+
+  return (
+    <div
+      className={`group relative flex items-center gap-3 rounded-xl border px-4 py-3 text-left shadow-sm transition-all md:px-6 ${
+        account.isCustom
+          ? "border-dashed border-orange-300 bg-orange-100"
+          : "border-slate-100 bg-white"
+      }`}
+      style={{ marginLeft: `${(level - 3) * 24}px` }}
+    >
+      <div
+        className={`flex shrink-0 items-center justify-center rounded-lg border px-3 py-1.5 text-sm font-bold md:text-base ${colors.bg} ${colors.text} ${colors.border}`}
+      >
+        {account.code}
       </div>
+
       <div className="flex flex-1 items-center justify-between gap-2 overflow-hidden">
-        <div className="flex flex-1 items-center gap-2 overflow-hidden">
-          <div className="truncate text-base font-bold text-slate-700 md:text-lg">
+        <div className="flex flex-1 flex-col items-start gap-0.5 overflow-hidden">
+          <div className="text-base font-bold whitespace-normal text-slate-700">
             {account.name}
           </div>
-          <div
-            className={`hidden rounded-md border px-2 py-0.5 text-[10px] font-medium md:block ${colors.bg} ${colors.text} ${colors.border}`}
-          >
-            {account.type}
+          <div className="flex items-center gap-2">
+            <div
+              className={`rounded-md border px-2 py-0.5 text-[10px] font-medium ${colors.bg} ${colors.text} ${colors.border}`}
+            >
+              {account.type}
+            </div>
+            {account.isCustom && (
+              <span className="text-[10px] font-bold text-orange-500 uppercase">
+                {t("voucher.account.custom")}
+              </span>
+            )}
           </div>
         </div>
 
@@ -177,22 +255,34 @@ const AccountItem = ({
               e.stopPropagation();
               onAddChild();
             }}
-            className="flex size-8 items-center justify-center rounded-full bg-green-50 text-green-600 transition-colors hover:bg-green-100"
+            className="flex size-8 items-center justify-center rounded-full bg-green-100 text-green-600 transition-colors hover:bg-green-200"
             title={t("voucher.account.action.add_child")}
           >
             <Plus size={16} />
           </button>
           {account.isCustom && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit();
-              }}
-              className="flex size-8 items-center justify-center rounded-full bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100"
-              title={t("voucher.account.action.edit")}
-            >
-              <Pencil size={14} />
-            </button>
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit();
+                }}
+                className="flex size-8 items-center justify-center rounded-full bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100"
+                title={t("voucher.account.action.edit")}
+              >
+                <Pencil size={14} />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete?.();
+                }}
+                className="flex size-8 items-center justify-center rounded-full bg-red-50 text-red-600 transition-colors hover:bg-red-100"
+                title="刪除科目"
+              >
+                <Trash2 size={14} />
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -200,9 +290,7 @@ const AccountItem = ({
   );
 };
 
-type IAccountTab = AccountType | "all";
-
-const PAGE_SIZE = 15;
+const SUB_PAGE_SIZE = 10;
 
 export default function AccountManagementTab() {
   const params = useParams();
@@ -219,18 +307,19 @@ export default function AccountManagementTab() {
   const [allAccounts, setAllAccounts] = useState<IAccountingAccount[]>([]);
   const [keyword, setKeyword] = useState<string>("");
   const [debouncedKeyword, setDebouncedKeyword] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<IAccountTab>("all");
+  const [activeTab, setActiveTab] = useState<AccountType | "all">("all");
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [expandedCodes, setExpandedCodes] = useState<Set<string>>(new Set());
+  const [selectedMainSubject, setSelectedMainSubject] =
+    useState<IAccountingAccount | null>(null);
+  const [subPage, setSubPage] = useState<number>(1);
 
-  // Info: (20260703 - Julian) Form States (Integrated from modal)
+  // Info: (20260703 - Julian) Form States
   const [isFormLoading, setIsFormLoading] = useState<boolean>(false);
   const [showSuccess, setShowSuccess] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [parentInfo, setParentInfo] = useState<string>(""); // 用於顯示父層名稱
+  const [parentInfo, setParentInfo] = useState<string>("");
   const [formData, setFormData] =
     useState<IAccountingAccountInput>(emptyFormData);
 
@@ -238,6 +327,9 @@ export default function AccountManagementTab() {
     const timer = setTimeout(() => {
       setDebouncedKeyword(keyword);
     }, 500);
+
+    // Info: (20260706 - Julian) 用關鍵字搜尋時，把主科目切換回全部，避免搜尋結果被限制
+    setActiveTab("all");
     return () => clearTimeout(timer);
   }, [keyword]);
 
@@ -263,15 +355,18 @@ export default function AccountManagementTab() {
     }
   }, [accountBookId, fetchAccounts]);
 
-  const toggleExpand = (code: string) => {
-    const newExpanded = new Set(expandedCodes);
-    if (newExpanded.has(code)) {
-      newExpanded.delete(code);
-    } else {
-      newExpanded.add(code);
+  // Info: (20260706 - Julian) 預設選中第一個主科目
+  useEffect(() => {
+    if (allAccounts.length > 0 && !selectedMainSubject) {
+      const firstSubject = allAccounts.find((acc) => acc.level === 2);
+      if (firstSubject) setSelectedMainSubject(firstSubject);
     }
-    setExpandedCodes(newExpanded);
-  };
+  }, [allAccounts, selectedMainSubject]);
+
+  // Info: (20260706 - Julian) 切換主科目時，重設右欄分頁為第一頁
+  useEffect(() => {
+    setSubPage(1);
+  }, [selectedMainSubject]);
 
   const handleAddChild = (parentAccount: IAccountingAccount) => {
     setIsEditing(false);
@@ -284,21 +379,36 @@ export default function AccountManagementTab() {
   const handleEdit = (account: IAccountingAccount) => {
     setIsEditing(true);
     setEditId(account.id || null);
-
-    // Info: (20260703 - Julian) 找出父層資訊
     const parent = allAccounts.find((a) => a.code === account.parentCode);
-    if (parent) {
-      setParentInfo(`[${parent.code}] ${parent.name}`);
-    } else {
-      setParentInfo(account.parentCode);
-    }
-
+    setParentInfo(
+      parent ? `[${parent.code}] ${parent.name}` : account.parentCode,
+    );
     setFormData({
       parentCode: account.parentCode,
       name: account.name,
       code: account.code,
     });
     setErrorMessage(null);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("確定要刪除此自訂科目嗎？")) return;
+
+    try {
+      const res = await request<IApiResponse<{ success: boolean }>>(
+        `/api/v1/user/account_book/${accountBookId}/accounting_account?id=${id}`,
+        { method: "DELETE" },
+      );
+      if (res.success) {
+        setShowSuccess(true);
+        fetchAccounts();
+      } else {
+        alert(res.message || "刪除失敗");
+      }
+    } catch (error) {
+      console.error("Error deleting account", error);
+      alert("刪除時發生錯誤");
+    }
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -337,59 +447,58 @@ export default function AccountManagementTab() {
     }
   };
 
-  const filteredAccounts = useMemo(() => {
-    let list = allAccounts;
-    if (activeTab !== "all") {
-      list = list.filter((acc) => acc.type === activeTab);
-    }
-    if (debouncedKeyword) {
-      list = list.filter(
-        (acc) =>
-          acc.name.includes(debouncedKeyword) ||
-          acc.code.includes(debouncedKeyword),
-      );
-    }
+  // Info: (20260706 - Julian) 左欄列表：大類 (L1) 與 主科目 (L2)
+  const leftList = useMemo(() => {
+    const list: (IAccountingAccount & { hasChildren: boolean })[] = [];
+    const roots = allAccounts
+      .filter((acc) => acc.level === 1)
+      .sort((a, b) => a.code.localeCompare(b.code));
+
+    roots.forEach((root) => {
+      // 只有當該大類符合 Tab 或 搜尋關鍵字時才顯示
+      const subjects = allAccounts
+        .filter((acc) => acc.parentCode === root.code)
+        .filter((acc) => activeTab === "all" || acc.type === activeTab)
+        .filter(
+          (acc) =>
+            !debouncedKeyword ||
+            acc.name.toLowerCase().includes(debouncedKeyword.toLowerCase()) ||
+            acc.code.toLowerCase().includes(debouncedKeyword.toLowerCase()),
+        )
+        .sort((a, b) => a.code.localeCompare(b.code));
+
+      if (subjects.length > 0) {
+        list.push({ ...root, hasChildren: true });
+        subjects.forEach((s) => {
+          const hasChildren = allAccounts.some((a) => a.parentCode === s.code);
+          list.push({ ...s, hasChildren });
+        });
+      }
+    });
     return list;
   }, [allAccounts, activeTab, debouncedKeyword]);
 
-  const visibleAccounts = useMemo(() => {
-    if (debouncedKeyword) return filteredAccounts;
-
+  // Info: (20260706 - Julian) 右欄列表：選中主科目的子科目 (L3+)
+  const rightList = useMemo(() => {
+    if (!selectedMainSubject) return [];
     const result: IAccountingAccount[] = [];
     const addChildren = (parentCode: string) => {
-      const children = filteredAccounts.filter(
-        (acc) => acc.parentCode === parentCode,
-      );
+      const children = allAccounts
+        .filter((acc) => acc.parentCode === parentCode)
+        .sort((a, b) => a.code.localeCompare(b.code));
       children.forEach((child) => {
         result.push(child);
-        if (expandedCodes.has(child.code)) {
-          addChildren(child.code);
-        }
+        addChildren(child.code);
       });
     };
-
-    const roots = filteredAccounts.filter(
-      (acc) =>
-        acc.level === 1 ||
-        !filteredAccounts.find((p) => p.code === acc.parentCode),
-    );
-
-    roots.forEach((root) => {
-      if (!result.find((r) => r.code === root.code)) {
-        result.push(root);
-        if (expandedCodes.has(root.code)) {
-          addChildren(root.code);
-        }
-      }
-    });
-
+    addChildren(selectedMainSubject.code);
     return result;
-  }, [filteredAccounts, expandedCodes, debouncedKeyword]);
+  }, [selectedMainSubject, allAccounts]);
 
-  const totalPages = Math.ceil(visibleAccounts.length / PAGE_SIZE);
-  const paginatedAccounts = visibleAccounts.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE,
+  const totalSubPages = Math.ceil(rightList.length / SUB_PAGE_SIZE);
+  const paginatedSubAccounts = rightList.slice(
+    (subPage - 1) * SUB_PAGE_SIZE,
+    subPage * SUB_PAGE_SIZE,
   );
 
   return (
@@ -417,53 +526,93 @@ export default function AccountManagementTab() {
           >
             {t("voucher.account_book_selector.all")}
           </button>
-          {Object.entries(ACCOUNT_TYPE_COLORS).map(([key, value]) => {
-            return (
-              <button
-                key={key}
-                onClick={() => setActiveTab(key as AccountType)}
-                className={`${key === activeTab ? `${value.tab} text-white shadow-md` : `text-slate-500 hover:bg-slate-100`} rounded-lg px-4 py-2 text-xs font-bold transition-all md:text-sm`}
-              >
-                {t(`voucher.account_book_selector.types.${key}`)}
-              </button>
-            );
-          })}
+          {Object.entries(ACCOUNT_TYPE_COLORS).map(([key, value]) => (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key as AccountType)}
+              className={`${key === activeTab ? `${value.tab} text-white shadow-md` : `text-slate-500 hover:bg-slate-100`} rounded-lg px-4 py-2 text-xs font-bold transition-all md:text-sm`}
+            >
+              {t(`voucher.account_book_selector.types.${key}`)}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Info: (20260703 - Julian) Main Content: List and Panel side by side */}
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-        {/* Info: (20260703 - Julian) Left Side: Account List */}
-        <div className="flex flex-1 flex-col gap-2">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="animate-spin text-orange-500" size={40} />
-            </div>
-          ) : paginatedAccounts.length > 0 ? (
-            paginatedAccounts.map((account) => (
-              <AccountItem
-                key={account.code}
-                account={account}
-                level={account.level}
-                isExpanded={expandedCodes.has(account.code)}
-                onToggle={() => toggleExpand(account.code)}
-                hasChildren={allAccounts.some(
-                  (acc) => acc.parentCode === account.code,
-                )}
-                onAddChild={() => handleAddChild(account)}
-                onEdit={() => handleEdit(account)}
-              />
-            ))
-          ) : (
-            <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-slate-200 bg-white py-20 text-slate-400 shadow-sm">
-              <SearchX size={48} strokeWidth={1.5} />
-              <p className="font-medium">{t("voucher.account.empty")}</p>
-            </div>
-          )}
+        {/* Info: (20260706 - Julian) Left Column: Category & Main Subjects */}
+        <div className="flex w-full flex-col lg:w-[280px] lg:shrink-0">
+          <div className="mb-2 px-2 text-xs font-bold text-slate-400">
+            主科目
+          </div>
+          <div className="flex max-h-[calc(100vh-320px)] scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent flex-col gap-2 overflow-y-auto rounded-xl bg-slate-200 p-2 hover:scrollbar-thumb-slate-300">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-10">
+                <Loader2
+                  className="shrink-0 animate-spin text-orange-500"
+                  size={24}
+                />
+              </div>
+            ) : leftList.length > 0 ? (
+              leftList.map((acc) => (
+                <CategorySubjectItem
+                  key={acc.code}
+                  account={acc}
+                  isSelected={selectedMainSubject?.code === acc.code}
+                  onClick={() => acc.level === 2 && setSelectedMainSubject(acc)}
+                  onAddChild={() => handleAddChild(acc)}
+                  onEdit={() => handleEdit(acc)}
+                  hasChildren={acc.hasChildren}
+                />
+              ))
+            ) : (
+              <div className="py-10 text-center text-xs text-slate-400">
+                無匹配科目
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Info: (20260703 - Julian) Right Side: Add/Edit Panel (Embedded) */}
-        <div className="sticky top-24 w-[400px] shrink-0">
+        {/* Info: (20260706 - Julian) Middle Column: Sub Accounts (Level 3+) */}
+        <div className="flex flex-1 flex-col gap-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="text-xs font-bold text-slate-400">
+              子科目 (
+              {selectedMainSubject
+                ? `[${selectedMainSubject.code}] ${selectedMainSubject.name}`
+                : "未選中"}
+              )
+            </div>
+            <span className="text-[10px] font-medium text-slate-400">
+              共 {rightList.length} 筆
+            </span>
+          </div>
+
+          <div className="flex min-h-[400px] flex-col gap-2">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="animate-spin text-orange-500" size={40} />
+              </div>
+            ) : paginatedSubAccounts.length > 0 ? (
+              paginatedSubAccounts.map((subAcc) => (
+                <SubAccountItem
+                  key={subAcc.code}
+                  account={subAcc}
+                  onAddChild={() => handleAddChild(subAcc)}
+                  onEdit={() => handleEdit(subAcc)}
+                  onDelete={() => handleDelete(subAcc.id!)}
+                />
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-slate-200 bg-white py-20 text-slate-400 shadow-sm">
+                <SearchX size={40} strokeWidth={1.5} />
+                <p className="text-xs font-medium">尚無子科目</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Info: (20260703 - Julian) Right Column: Form Panel */}
+        <div className="sticky top-24 w-full shrink-0 lg:w-[360px]">
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg shadow-slate-200/50">
             <div
               className={`${isEditing ? "bg-blue-50" : "bg-green-50"} px-6 py-4`}
@@ -572,14 +721,12 @@ export default function AccountManagementTab() {
         </div>
       </div>
 
-      {totalPages > 1 && (
-        <div>
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
-        </div>
+      {totalSubPages > 1 && (
+        <Pagination
+          currentPage={subPage}
+          totalPages={totalSubPages}
+          onPageChange={setSubPage}
+        />
       )}
 
       <SuccessNotification
