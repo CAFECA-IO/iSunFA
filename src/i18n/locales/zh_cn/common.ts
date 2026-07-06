@@ -121,5 +121,6 @@ export const common = {
   back: "返回",
   next: "下一步",
   all_solutions: "所有方案",
+  all_status: "所有状态",
   reset: "重置",
 };
