@@ -344,84 +344,88 @@ export default function AccountManagementTab() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-        {/* Info: (20260706 - Julian) Left Column: Category & Main Subjects */}
-        <div className="flex w-full flex-col lg:w-[280px] lg:shrink-0">
-          <div className="mb-2 px-2 text-xs font-bold text-slate-400">
-            主科目
-          </div>
-          <div className="flex max-h-[calc(100vh-320px)] scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent flex-col gap-2 overflow-y-auto rounded-xl bg-slate-200 p-2 hover:scrollbar-thumb-slate-300">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-10">
-                <Loader2
-                  className="shrink-0 animate-spin text-orange-500"
-                  size={24}
-                />
-              </div>
-            ) : leftList.length > 0 ? (
-              leftList.map((acc) => (
-                <CategorySubjectItem
-                  key={acc.code}
-                  account={acc}
-                  isSelected={selectedMainSubject?.code === acc.code}
-                  onClick={() => acc.level === 2 && setSelectedMainSubject(acc)}
-                  onAddChild={() => handleAddChild(acc)}
-                  onEdit={() => handleEdit(acc)}
-                  hasChildren={acc.hasChildren}
-                />
-              ))
-            ) : (
-              <div className="py-10 text-center text-xs text-slate-400">
-                無匹配科目
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Info: (20260706 - Julian) Middle Column: Sub Accounts (Level 3+) */}
-        <div className="flex flex-1 flex-col gap-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="text-xs font-bold text-slate-400">
-              子科目 (
-              {selectedMainSubject
-                ? `[${selectedMainSubject.code}] ${selectedMainSubject.name}`
-                : "未選擇"}
-              )
+      <div className="relative flex gap-4">
+        <div className="flex flex-1 flex-col gap-4 lg:flex-row lg:items-start">
+          {/* Info: (20260706 - Julian) Left Column: Category & Main Subjects */}
+          <div className="flex w-full flex-col lg:w-[280px] lg:shrink-0">
+            <div className="mb-2 px-2 text-xs font-bold text-slate-400">
+              主科目
             </div>
-            <span className="text-[10px] font-medium text-slate-400">
-              共 {totalSubPages} 頁，{rightList.length} 筆會計科目
-            </span>
+            <div className="flex max-h-[calc(100vh-320px)] scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent flex-col gap-2 overflow-y-auto rounded-xl bg-slate-200 p-2 hover:scrollbar-thumb-slate-300">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <Loader2
+                    className="shrink-0 animate-spin text-orange-500"
+                    size={24}
+                  />
+                </div>
+              ) : leftList.length > 0 ? (
+                leftList.map((acc) => (
+                  <CategorySubjectItem
+                    key={acc.code}
+                    account={acc}
+                    isSelected={selectedMainSubject?.code === acc.code}
+                    onClick={() =>
+                      acc.level === 2 && setSelectedMainSubject(acc)
+                    }
+                    onAddChild={() => handleAddChild(acc)}
+                    onEdit={() => handleEdit(acc)}
+                    hasChildren={acc.hasChildren}
+                  />
+                ))
+              ) : (
+                <div className="py-10 text-center text-xs text-slate-400">
+                  無匹配科目
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="flex min-h-[400px] flex-col gap-2">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-20">
-                <Loader2 className="animate-spin text-orange-500" size={40} />
+          {/* Info: (20260706 - Julian) Middle Column: Sub Accounts (Level 3+) */}
+          <div className="flex flex-1 flex-col gap-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="text-xs font-bold text-slate-400">
+                子科目 (
+                {selectedMainSubject
+                  ? `[${selectedMainSubject.code}] ${selectedMainSubject.name}`
+                  : "未選擇"}
+                )
               </div>
-            ) : paginatedSubAccounts.length > 0 ? (
-              paginatedSubAccounts.map((subAcc) => (
-                <SubAccountItem
-                  key={subAcc.code}
-                  account={subAcc}
-                  onAddChild={() => handleAddChild(subAcc)}
-                  onEdit={() => handleEdit(subAcc)}
-                  onDelete={() => handleDelete(subAcc.id!)}
-                />
-              ))
-            ) : (
-              <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-slate-200 bg-white py-20 text-slate-400 shadow-sm">
-                <SearchX size={40} strokeWidth={1.5} />
-                <p className="text-xs font-medium">尚無子科目</p>
-              </div>
-            )}
+              <span className="text-[10px] font-medium text-slate-400">
+                共 {totalSubPages} 頁，{rightList.length} 筆會計科目
+              </span>
+            </div>
+
+            <div className="flex min-h-[400px] flex-col gap-2">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-20">
+                  <Loader2 className="animate-spin text-orange-500" size={40} />
+                </div>
+              ) : paginatedSubAccounts.length > 0 ? (
+                paginatedSubAccounts.map((subAcc) => (
+                  <SubAccountItem
+                    key={subAcc.code}
+                    account={subAcc}
+                    onAddChild={() => handleAddChild(subAcc)}
+                    onEdit={() => handleEdit(subAcc)}
+                    onDelete={() => handleDelete(subAcc.id!)}
+                  />
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-slate-200 bg-white py-20 text-slate-400 shadow-sm">
+                  <SearchX size={40} strokeWidth={1.5} />
+                  <p className="text-xs font-medium">尚無子科目</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Info: (20260703 - Julian) 表單 */}
-        <div className="sticky top-24 w-full shrink-0 lg:w-[360px]">
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg shadow-slate-200/50">
+        <div className="sticky top-24 h-fit shrink-0 lg:w-[360px]">
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-lg shadow-slate-200/50">
             <div
-              className={`${isEditing ? "bg-blue-50" : "bg-green-50"} px-6 py-4`}
+              className={`${isEditing ? "bg-blue-50" : "bg-green-50"} rounded-t-2xl px-6 py-4`}
             >
               <h3 className="flex items-center gap-2 text-lg font-bold text-slate-800">
                 {isEditing ? (
@@ -438,7 +442,7 @@ export default function AccountManagementTab() {
               </h3>
             </div>
 
-            <form onSubmit={handleFormSubmit} className="space-y-5 p-6">
+            <form onSubmit={handleFormSubmit} className="space-y-3 px-6 py-4">
               {errorMessage && (
                 <div className="flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 p-3 text-sm font-medium text-red-600">
                   <AlertCircle size={18} className="shrink-0" />
@@ -521,7 +525,7 @@ export default function AccountManagementTab() {
                   className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 transition-all focus:border-orange-500 focus:bg-white focus:ring-1 focus:ring-orange-500 focus:outline-none"
                 />
               </div>
-              <div className="flex gap-3 pt-2">
+              <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
                   onClick={() => {
