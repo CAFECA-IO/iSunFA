@@ -16,10 +16,7 @@ export async function parseSmartInput(
   text: string,
 ): Promise<ISmartParseResult> {
   try {
-    // Info: (20260707 - Julian)
-    // apiKey 的讀取與驗證已移至 ChatService 內部處理，此處直接使用預設建構
     const chatService = new ChatService();
-
     const prompt = `
             You are a professional logistics AI assistant.
             Extract the precise logistics routing coordinates and cargo weight from the user's description.
