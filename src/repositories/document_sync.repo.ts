@@ -601,7 +601,7 @@ export class DocumentSyncRepository {
 
           // Info: (20260707 - Tzuhan) [AI_SPECULATIVE] RAG 查無精確係數時，自動降級推測
           if (!finalCoefficientId && ed.fallbackCategory) {
-            const docUnit = ed.amountUnit || "TWD";
+            const docUnit = ed.unit || "TWD";
             finalCoefficientId =
               await EmissionFactorRepo.findFallbackCoefficient(
                 ed.fallbackCategory,
