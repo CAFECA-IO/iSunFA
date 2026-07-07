@@ -1,3 +1,5 @@
+import { MermaidChartType } from "@/constants/mermaid_chart";
+
 /**
  * Info: (20260624 - Julian)
  * 略過註解與 %%{init...}%% 設定區塊，判斷是否為圓餅圖
@@ -66,25 +68,25 @@ export const parsePieColors = (
 
 /**
  * Info: (20260624 - Julian)
- * 自動判別目前的圖表類型 (pie, flowchart, sequence, unknown)
+ * 自動判別目前的圖表類型 (pie, flowchart, gantt, sequence, unknown)
  */
-export const detectChartType = (
-  chartStr: string,
-): "pie" | "flowchart" | "sequence" | "unknown" => {
-  if (!chartStr || typeof chartStr !== "string") return "unknown";
+export const detectChartType = (chartStr: string): MermaidChartType => {
+  if (!chartStr || typeof chartStr !== "string")
+    return MermaidChartType.UNKNOWN;
   const lines = chartStr.split("\n");
   for (const line of lines) {
     const cleanLine = line.trim().toLowerCase();
     if (!cleanLine || cleanLine.startsWith("%%")) {
       continue;
     }
-    if (cleanLine.startsWith("pie")) return "pie";
+    if (cleanLine.startsWith("pie")) return MermaidChartType.PIE;
     if (cleanLine.startsWith("flowchart") || cleanLine.startsWith("graph"))
-      return "flowchart";
-    if (cleanLine.startsWith("sequencediagram")) return "sequence";
+      return MermaidChartType.FLOWCHART;
+    if (cleanLine.startsWith("sequencediagram"))
+      return MermaidChartType.SEQUENCE;
     break;
   }
-  return "unknown";
+  return MermaidChartType.UNKNOWN;
 };
 
 /**

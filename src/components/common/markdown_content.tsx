@@ -263,7 +263,11 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
       }: ComponentPropsWithoutRef<"code"> & { inline?: boolean }) => {
         const match = /language-(\w+)/.exec(className || "");
         if (!inline && match && match[1] === "mermaid") {
-          const chartText = String(children).replace(/\n$/, "");
+          const chartText = (
+            Array.isArray(children)
+              ? children.join("")
+              : (children?.toString() ?? "")
+          ).replace(/\n$/, "");
           return (
             <MermaidChart
               chart={chartText}

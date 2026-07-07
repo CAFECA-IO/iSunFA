@@ -7,12 +7,13 @@ import { IApiResponse } from "@/lib/utils/response";
 import { IDonutChartData } from "@/components/common/donut_chart";
 import { MermaidAiControlPanel } from "@/components/chart/mermaid_ai_control_panel";
 import { MermaidAiPreviewPanel } from "@/components/chart/mermaid_ai_preview_panel";
+import { MermaidChartType } from "@/constants/mermaid_chart";
 
 interface IMermaidAiModalProps {
   open: boolean;
   onClose: () => void;
   currentChart: string;
-  chartType: "pie" | "flowchart" | "sequence" | "unknown";
+  chartType: MermaidChartType;
   parsedNodes: { id: string; label: string }[];
   parsedPieItems: { label: string; value: number }[];
   svgStr: string;
