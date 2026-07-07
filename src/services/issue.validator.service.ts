@@ -338,14 +338,7 @@ export async function processNext() {
 
             if (!dataError) {
               try {
-                const apiKey = setupConfig.GEMINI_API_KEY;
-                if (!apiKey) {
-                  throw new Error(
-                    "Missing GEMINI_API_KEY in environment for validation.",
-                  );
-                }
-                const chatService = new ChatService(apiKey);
-
+                const chatService = new ChatService();
                 let contentToValidate = resultContent;
                 try {
                   const parsedResult = JSON.parse(resultContent);

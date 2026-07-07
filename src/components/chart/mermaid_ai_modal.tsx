@@ -7,14 +7,17 @@ import { IApiResponse } from "@/lib/utils/response";
 import { IDonutChartData } from "@/components/common/donut_chart";
 import { MermaidAiControlPanel } from "@/components/chart/mermaid_ai_control_panel";
 import { MermaidAiPreviewPanel } from "@/components/chart/mermaid_ai_preview_panel";
+import { MermaidChartType } from "@/constants/mermaid_chart";
+import { IGanttItem } from "@/lib/utils/mermaid_helpers";
 
 interface IMermaidAiModalProps {
   open: boolean;
   onClose: () => void;
   currentChart: string;
-  chartType: "pie" | "flowchart" | "sequence" | "unknown";
+  chartType: MermaidChartType;
   parsedNodes: { id: string; label: string }[];
   parsedPieItems: { label: string; value: number }[];
+  parsedGanttItems: IGanttItem[];
   svgStr: string;
   parsedPieData: { title: string; data: IDonutChartData[] } | null;
   onAdopt: (newChart: string) => void;
@@ -27,6 +30,7 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
   chartType,
   parsedNodes,
   parsedPieItems,
+  parsedGanttItems,
   svgStr,
   parsedPieData,
   onAdopt,
@@ -47,7 +51,8 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
         {
           method: "POST",
           body: JSON.stringify({
-            chart: currentChart,
+            originalChart: currentChart,
+            chartType: chartType,
             instruction: aiInstruction,
           }),
         },
@@ -93,6 +98,7 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
               setAiInstruction={setAiInstruction}
               parsedNodes={parsedNodes}
               parsedPieItems={parsedPieItems}
+              parsedGanttItems={parsedGanttItems}
               onCancel={handleCancel}
             />
 

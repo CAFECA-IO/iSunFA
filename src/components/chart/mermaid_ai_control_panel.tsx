@@ -5,14 +5,18 @@ import { DialogTitle } from "@headlessui/react";
 import { Lightbulb, Sparkles, X } from "lucide-react";
 import { FlowchartToolsSection } from "@/components/chart/flowchart_tools_submenu";
 import { PieToolsSection } from "@/components/chart/pie_tools_submenu";
+import { GanttToolsSection } from "@/components/chart/gantt_tools_submenu";
 import { useTranslation } from "@/i18n/i18n_context";
+import { MermaidChartType } from "@/constants/mermaid_chart";
+import { IGanttItem } from "@/lib/utils/mermaid_helpers";
 
 interface IMermaidAiControlPanelProps {
-  chartType: "pie" | "flowchart" | "sequence" | "unknown";
+  chartType: MermaidChartType;
   aiInstruction: string;
   setAiInstruction: React.Dispatch<React.SetStateAction<string>>;
   parsedNodes: { id: string; label: string }[];
   parsedPieItems: { label: string; value: number }[];
+  parsedGanttItems: IGanttItem[];
   onCancel: () => void;
 }
 
@@ -22,6 +26,7 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
   setAiInstruction,
   parsedNodes,
   parsedPieItems,
+  parsedGanttItems,
   onCancel,
 }) => {
   const { t } = useTranslation();
@@ -29,7 +34,10 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
 
   // Info: (20260623 - Julian) 目前支援 pie 和 flowchart 小工具
-  const isShowTools = chartType === "pie" || chartType === "flowchart";
+  const isShowTools =
+    chartType === MermaidChartType.PIE ||
+    chartType === MermaidChartType.FLOWCHART ||
+    chartType === MermaidChartType.GANTT;
 
   return (
     <div className="flex w-full flex-col overflow-y-auto border-r border-slate-200 bg-slate-50 md:w-2/5">
@@ -71,7 +79,7 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
           <p className="text-blue-700">
             {t("chart.mermaid.ai_editor.instructions_desc")}
           </p>
-          {chartType === "pie" ? (
+          {chartType === MermaidChartType.PIE ? (
             <ul className="mt-1 list-disc space-y-0.5 pl-4 font-medium text-blue-600/90">
               {t<string[]>("chart.mermaid.ai_editor.examples.pie").map(
                 (ex, i) => (
@@ -116,7 +124,7 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
             rows={4}
             className="w-full rounded-xl border border-slate-200 bg-white p-3 text-xs placeholder-slate-400 focus:border-blue-500 focus:outline-none"
             placeholder={
-              chartType === "pie"
+              chartType === MermaidChartType.PIE
                 ? t("chart.mermaid.ai_editor.pie_placeholder")!
                 : t("chart.mermaid.ai_editor.flowchart_placeholder")!
             }
@@ -129,18 +137,25 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
             <span className="mb-2 text-xs font-bold tracking-wider text-slate-700">
               {t("chart.mermaid.ai_editor.quick_tools")}
             </span>
-            {chartType === "pie" ? (
+            {chartType === MermaidChartType.PIE ? (
               <PieToolsSection
                 selectedTool={selectedTool}
                 setSelectedTool={setSelectedTool}
                 parsedPieItems={parsedPieItems}
                 setAiInstruction={setAiInstruction}
               />
-            ) : chartType === "flowchart" ? (
+            ) : chartType === MermaidChartType.FLOWCHART ? (
               <FlowchartToolsSection
                 selectedTool={selectedTool}
                 setSelectedTool={setSelectedTool}
                 parsedNodes={parsedNodes}
+                setAiInstruction={setAiInstruction}
+              />
+            ) : chartType === MermaidChartType.GANTT ? (
+              <GanttToolsSection
+                selectedTool={selectedTool}
+                setSelectedTool={setSelectedTool}
+                parsedGanttItems={parsedGanttItems}
                 setAiInstruction={setAiInstruction}
               />
             ) : null}

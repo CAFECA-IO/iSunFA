@@ -3,6 +3,11 @@
 import React, { useState, FC } from "react";
 import { CakeSlice, Paintbrush, Slice, Trash2, LucideIcon } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
+import {
+  MERMAID_INPUT_STYLE,
+  MERMAID_LABEL_STYLE,
+  MERMAID_SUBMIT_BUTTON_STYLE,
+} from "@/constants/mermaid_chart";
 
 // ==========================================
 // Info: (20260629 - Julian) 定義與靜態映射表
@@ -114,8 +119,8 @@ interface IBasePanelProps {
 // Info: (20260629 - Julian) 「新增項目」面板
 const AddSlicePanel: FC<IBasePanelProps> = ({ onInsert }) => {
   const { t } = useTranslation();
-  const [pieSliceLabel, setPieSliceLabel] = useState("");
-  const [pieSliceValue, setPieSliceValue] = useState("");
+  const [pieSliceLabel, setPieSliceLabel] = useState<string>("");
+  const [pieSliceValue, setPieSliceValue] = useState<string>("");
   const [pieSliceColor, setPieSliceColor] = useState<PieColor | "">("");
 
   const handleSubmit = () => {
@@ -136,53 +141,46 @@ const AddSlicePanel: FC<IBasePanelProps> = ({ onInsert }) => {
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label
-            htmlFor="pieSliceLabel"
-            className="text-[10px] font-bold text-slate-500"
-          >
+          <label htmlFor="pieSliceLabel" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.pie.slice_name_label")}
+            <span className="ml-0.5 text-red-500">*</span>
           </label>
           <input
             id="pieSliceLabel"
             type="text"
             value={pieSliceLabel}
             onChange={(e) => setPieSliceLabel(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+            className={MERMAID_INPUT_STYLE}
             placeholder={
               t("chart.mermaid.ai_editor.pie.slice_name_placeholder")!
             }
           />
         </div>
         <div>
-          <label
-            htmlFor="pieSliceValue"
-            className="text-[10px] font-bold text-slate-500"
-          >
+          <label htmlFor="pieSliceValue" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.pie.slice_value_label")}
+            <span className="ml-0.5 text-red-500">*</span>
           </label>
           <input
             id="pieSliceValue"
             type="text"
             value={pieSliceValue}
             onChange={(e) => setPieSliceValue(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+            className={MERMAID_INPUT_STYLE}
             placeholder={
               t("chart.mermaid.ai_editor.pie.slice_value_placeholder")!
             }
           />
         </div>
         <div className="col-span-2">
-          <label
-            htmlFor="pieSliceColor"
-            className="text-[10px] font-bold text-slate-500"
-          >
+          <label htmlFor="pieSliceColor" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.pie.select_style_label")}
           </label>
           <select
             id="pieSliceColor"
             value={pieSliceColor}
             onChange={(e) => setPieSliceColor(e.target.value as PieColor)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+            className={MERMAID_INPUT_STYLE}
           >
             <option value={""}>
               {t("chart.mermaid.ai_editor.pie.ai_auto_select")}
@@ -199,7 +197,7 @@ const AddSlicePanel: FC<IBasePanelProps> = ({ onInsert }) => {
         type="button"
         onClick={handleSubmit}
         disabled={!pieSliceLabel || !pieSliceValue}
-        className="w-full cursor-pointer rounded-lg bg-blue-600 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
+        className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
         {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
       </button>
@@ -213,9 +211,9 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
   onInsertWithFilter,
 }) => {
   const { t } = useTranslation();
-  const [pieSliceTarget, setPieSliceTarget] = useState("");
-  const [pieSliceNewLabel, setPieSliceNewLabel] = useState("");
-  const [pieSliceValue, setPieSliceValue] = useState("");
+  const [pieSliceTarget, setPieSliceTarget] = useState<string>("");
+  const [pieSliceNewLabel, setPieSliceNewLabel] = useState<string>("");
+  const [pieSliceValue, setPieSliceValue] = useState<string>("");
 
   const handleSubmit = () => {
     if (!pieSliceTarget || (!pieSliceValue && !pieSliceNewLabel)) return;
@@ -236,17 +234,15 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
         <p>{t("chart.mermaid.ai_editor.pie.edit_slice_title")}</p>
       </div>
       <div>
-        <label
-          htmlFor="pieSliceTarget"
-          className="text-[10px] font-bold text-slate-500"
-        >
+        <label htmlFor="pieSliceTarget" className={MERMAID_LABEL_STYLE}>
           {t("chart.mermaid.ai_editor.pie.select_slice_placeholder")}
+          <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
           id="pieSliceTarget"
           value={pieSliceTarget}
           onChange={(e) => setPieSliceTarget(e.target.value)}
-          className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+          className={MERMAID_INPUT_STYLE}
         >
           <option value="">
             {t("chart.mermaid.ai_editor.pie.select_slice_placeholder")}
@@ -260,10 +256,7 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label
-            htmlFor="pieSliceNewLabel"
-            className="text-[10px] font-bold text-slate-500"
-          >
+          <label htmlFor="pieSliceNewLabel" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.pie.new_name_label")}
           </label>
           <input
@@ -271,15 +264,12 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
             type="text"
             value={pieSliceNewLabel}
             onChange={(e) => setPieSliceNewLabel(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+            className={MERMAID_INPUT_STYLE}
             placeholder={t("chart.mermaid.ai_editor.pie.new_name_placeholder")!}
           />
         </div>
         <div>
-          <label
-            htmlFor="pieSliceValueEdit"
-            className="text-[10px] font-bold text-slate-500"
-          >
+          <label htmlFor="pieSliceValueEdit" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.pie.new_value_label")}
           </label>
           <input
@@ -287,7 +277,7 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
             type="text"
             value={pieSliceValue}
             onChange={(e) => setPieSliceValue(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+            className={MERMAID_INPUT_STYLE}
             placeholder={
               t("chart.mermaid.ai_editor.pie.new_value_placeholder")!
             }
@@ -298,7 +288,7 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
         type="button"
         onClick={handleSubmit}
         disabled={!pieSliceTarget || (!pieSliceValue && !pieSliceNewLabel)}
-        className="w-full cursor-pointer rounded-lg bg-blue-600 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
+        className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
         {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
       </button>
@@ -312,7 +302,7 @@ const ChangeSliceColorPanel: FC<IBasePanelProps> = ({
   onInsertWithFilter,
 }) => {
   const { t } = useTranslation();
-  const [pieSliceTarget, setPieSliceTarget] = useState("");
+  const [pieSliceTarget, setPieSliceTarget] = useState<string>("");
   const [pieSliceColor, setPieSliceColor] = useState<PieColor>(
     PieColor.DEFAULT,
   );
@@ -335,17 +325,15 @@ const ChangeSliceColorPanel: FC<IBasePanelProps> = ({
         <p>{t("chart.mermaid.ai_editor.pie.change_color_title")}</p>
       </div>
       <div>
-        <label
-          htmlFor="pieColorTarget"
-          className="text-[10px] font-bold text-slate-500"
-        >
+        <label htmlFor="pieColorTarget" className={MERMAID_LABEL_STYLE}>
           {t("chart.mermaid.ai_editor.pie.select_slice_placeholder")}
+          <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
           id="pieColorTarget"
           value={pieSliceTarget}
           onChange={(e) => setPieSliceTarget(e.target.value)}
-          className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+          className={MERMAID_INPUT_STYLE}
         >
           <option value="">
             {t("chart.mermaid.ai_editor.pie.select_slice_placeholder")}
@@ -358,17 +346,14 @@ const ChangeSliceColorPanel: FC<IBasePanelProps> = ({
         </select>
       </div>
       <div>
-        <label
-          htmlFor="pieSliceColor"
-          className="text-[10px] font-bold text-slate-500"
-        >
+        <label htmlFor="pieSliceColor" className={MERMAID_LABEL_STYLE}>
           {t("chart.mermaid.ai_editor.pie.select_color_label")}
         </label>
         <select
           id="pieSliceColor"
           value={pieSliceColor}
           onChange={(e) => setPieSliceColor(e.target.value as PieColor)}
-          className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+          className={MERMAID_INPUT_STYLE}
         >
           {Object.values(PieColor).map((color) => (
             <option key={color} value={color}>
@@ -381,7 +366,7 @@ const ChangeSliceColorPanel: FC<IBasePanelProps> = ({
         type="button"
         onClick={handleSubmit}
         disabled={!pieSliceTarget}
-        className="w-full cursor-pointer rounded-lg bg-blue-600 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
+        className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
         {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
       </button>
@@ -395,7 +380,7 @@ const DeleteSlicePanel: FC<IBasePanelProps> = ({
   onInsertWithFilter,
 }) => {
   const { t } = useTranslation();
-  const [pieSliceTarget, setPieSliceTarget] = useState("");
+  const [pieSliceTarget, setPieSliceTarget] = useState<string>("");
 
   const handleSubmit = () => {
     if (!pieSliceTarget) return;
@@ -412,17 +397,15 @@ const DeleteSlicePanel: FC<IBasePanelProps> = ({
         <p>{t("chart.mermaid.ai_editor.pie.delete_slice_title")}</p>
       </div>
       <div>
-        <label
-          htmlFor="pieSliceTargetDel"
-          className="text-[10px] font-bold text-slate-500"
-        >
+        <label htmlFor="pieSliceTargetDel" className={MERMAID_LABEL_STYLE}>
           {t("chart.mermaid.ai_editor.pie.select_delete_placeholder")}
+          <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
           id="pieSliceTargetDel"
           value={pieSliceTarget}
           onChange={(e) => setPieSliceTarget(e.target.value)}
-          className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+          className={MERMAID_INPUT_STYLE}
         >
           <option value="">
             {t("chart.mermaid.ai_editor.pie.select_delete_placeholder")}
@@ -438,7 +421,7 @@ const DeleteSlicePanel: FC<IBasePanelProps> = ({
         type="button"
         onClick={handleSubmit}
         disabled={!pieSliceTarget}
-        className="w-full cursor-pointer rounded-lg bg-blue-600 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
+        className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
         {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
       </button>

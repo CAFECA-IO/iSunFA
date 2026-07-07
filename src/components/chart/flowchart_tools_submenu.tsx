@@ -10,6 +10,11 @@ import {
   LucideIcon,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
+import {
+  MERMAID_INPUT_STYLE,
+  MERMAID_LABEL_STYLE,
+  MERMAID_SUBMIT_BUTTON_STYLE,
+} from "@/constants/mermaid_chart";
 
 // ==========================================
 // Info: (20260629 - Julian) 定義與靜態映射表
@@ -151,11 +156,11 @@ interface IBasePanelProps {
 // Info: (20260629 - Julian) 「新增節點」面板
 const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onInsert }) => {
   const { t } = useTranslation();
-  const [newNodeId, setNewNodeId] = useState("");
-  const [newNodeLabel, setNewNodeLabel] = useState("");
-  const [fromNodeId, setFromNodeId] = useState("");
-  const [toNodeId, setToNodeId] = useState("");
-  const [connText, setConnText] = useState("");
+  const [newNodeId, setNewNodeId] = useState<string>("");
+  const [newNodeLabel, setNewNodeLabel] = useState<string>("");
+  const [fromNodeId, setFromNodeId] = useState<string>("");
+  const [toNodeId, setToNodeId] = useState<string>("");
+  const [connText, setConnText] = useState<string>("");
 
   const handleIdChange = (val: string) => {
     // Info: (20260629 - Julian) 限制只能輸入英數、底線、連字號以避免 Mermaid 語法崩潰
@@ -184,10 +189,7 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onInsert }) => {
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label
-            htmlFor="new-node-id"
-            className="text-[10px] font-bold text-slate-500"
-          >
+          <label htmlFor="new-node-id" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.flowchart.node_id_label")}
           </label>
           <input
@@ -195,25 +197,23 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onInsert }) => {
             type="text"
             value={newNodeId}
             onChange={(e) => handleIdChange(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+            className={MERMAID_INPUT_STYLE}
             placeholder={
               t("chart.mermaid.ai_editor.flowchart.node_id_placeholder")!
             }
           />
         </div>
         <div>
-          <label
-            htmlFor="new-node-label"
-            className="text-[10px] font-bold text-slate-500"
-          >
+          <label htmlFor="new-node-label" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.flowchart.node_name_label")}
+            <span className="ml-0.5 text-red-500">*</span>
           </label>
           <input
             id="new-node-label"
             type="text"
             value={newNodeLabel}
             onChange={(e) => setNewNodeLabel(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+            className={MERMAID_INPUT_STYLE}
             placeholder={
               t("chart.mermaid.ai_editor.flowchart.node_name_placeholder")!
             }
@@ -222,17 +222,14 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onInsert }) => {
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label
-            htmlFor="from-node-id"
-            className="text-[10px] font-bold text-slate-500"
-          >
+          <label htmlFor="from-node-id" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.flowchart.from_label")}
           </label>
           <select
             id="from-node-id"
             value={fromNodeId}
             onChange={(e) => setFromNodeId(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+            className={MERMAID_INPUT_STYLE}
           >
             <option value="">(無)</option>
             {parsedNodes.map((n) => (
@@ -243,17 +240,14 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onInsert }) => {
           </select>
         </div>
         <div>
-          <label
-            htmlFor="to-node-id"
-            className="text-[10px] font-bold text-slate-500"
-          >
+          <label htmlFor="to-node-id" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.flowchart.to_label")}
           </label>
           <select
             id="to-node-id"
             value={toNodeId}
             onChange={(e) => setToNodeId(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+            className={MERMAID_INPUT_STYLE}
           >
             <option value="">(無)</option>
             {parsedNodes.map((n) => (
@@ -265,10 +259,7 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onInsert }) => {
         </div>
       </div>
       <div>
-        <label
-          htmlFor="conn-text"
-          className="text-[10px] font-bold text-slate-500"
-        >
+        <label htmlFor="conn-text" className={MERMAID_LABEL_STYLE}>
           {t("chart.mermaid.ai_editor.flowchart.conn_text_label")}
         </label>
         <input
@@ -276,7 +267,7 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onInsert }) => {
           type="text"
           value={connText}
           onChange={(e) => setConnText(e.target.value)}
-          className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+          className={MERMAID_INPUT_STYLE}
           placeholder={
             t("chart.mermaid.ai_editor.flowchart.conn_text_placeholder")!
           }
@@ -286,7 +277,7 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onInsert }) => {
         type="button"
         onClick={handleSubmit}
         disabled={!newNodeLabel}
-        className="w-full cursor-pointer rounded-lg bg-blue-600 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
+        className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
         {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
       </button>
@@ -300,8 +291,8 @@ const EditNodePanel: FC<IBasePanelProps> = ({
   onInsertWithFilter,
 }) => {
   const { t } = useTranslation();
-  const [targetNodeId, setTargetNodeId] = useState("");
-  const [newNodeText, setNewNodeText] = useState("");
+  const [targetNodeId, setTargetNodeId] = useState<string>("");
+  const [newNodeText, setNewNodeText] = useState<string>("");
 
   const handleSubmit = () => {
     if (!targetNodeId || !newNodeText) return;
@@ -321,17 +312,15 @@ const EditNodePanel: FC<IBasePanelProps> = ({
         <p>{t("chart.mermaid.ai_editor.flowchart.edit_node_title")}</p>
       </div>
       <div>
-        <label
-          htmlFor="target-node-id"
-          className="text-[10px] font-bold text-slate-500"
-        >
+        <label htmlFor="target-node-id" className={MERMAID_LABEL_STYLE}>
           {t("chart.mermaid.ai_editor.flowchart.select_node_placeholder")}
+          <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
           id="target-node-id"
           value={targetNodeId}
           onChange={(e) => setTargetNodeId(e.target.value)}
-          className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+          className={MERMAID_INPUT_STYLE}
         >
           <option value="">
             {t("chart.mermaid.ai_editor.flowchart.select_node_placeholder")}
@@ -344,18 +333,16 @@ const EditNodePanel: FC<IBasePanelProps> = ({
         </select>
       </div>
       <div>
-        <label
-          htmlFor="new-node-text"
-          className="text-[10px] font-bold text-slate-500"
-        >
+        <label htmlFor="new-node-text" className={MERMAID_LABEL_STYLE}>
           {t("chart.mermaid.ai_editor.flowchart.new_text_label")}
+          <span className="ml-0.5 text-red-500">*</span>
         </label>
         <input
           id="new-node-text"
           type="text"
           value={newNodeText}
           onChange={(e) => setNewNodeText(e.target.value)}
-          className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+          className={MERMAID_INPUT_STYLE}
           placeholder={
             t("chart.mermaid.ai_editor.flowchart.new_text_placeholder")!
           }
@@ -365,7 +352,7 @@ const EditNodePanel: FC<IBasePanelProps> = ({
         type="button"
         onClick={handleSubmit}
         disabled={!targetNodeId || !newNodeText}
-        className="w-full cursor-pointer rounded-lg bg-blue-600 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
+        className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
         {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
       </button>
@@ -379,10 +366,10 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
   onInsertWithFilter,
 }) => {
   const { t } = useTranslation();
-  const [connFromId, setConnFromId] = useState("");
-  const [connToId, setConnToId] = useState("");
-  const [connType, setConnType] = useState("-->");
-  const [connLabel, setConnLabel] = useState("");
+  const [connFromId, setConnFromId] = useState<string>("");
+  const [connToId, setConnToId] = useState<string>("");
+  const [connType, setConnType] = useState<string>("-->");
+  const [connLabel, setConnLabel] = useState<string>("");
 
   const handleSubmit = () => {
     if (!connFromId || !connToId) return;
@@ -405,17 +392,15 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label
-            htmlFor="connFromId"
-            className="text-[10px] font-bold text-slate-500"
-          >
+          <label htmlFor="connFromId" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.flowchart.select_from_placeholder")}
+            <span className="ml-0.5 text-red-500">*</span>
           </label>
           <select
             id="connFromId"
             value={connFromId}
             onChange={(e) => setConnFromId(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+            className={MERMAID_INPUT_STYLE}
           >
             <option value="">
               {t("chart.mermaid.ai_editor.flowchart.select_from_placeholder")}
@@ -428,17 +413,15 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
           </select>
         </div>
         <div>
-          <label
-            htmlFor="connToId"
-            className="text-[10px] font-bold text-slate-500"
-          >
+          <label htmlFor="connToId" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.flowchart.select_to_placeholder")}
+            <span className="ml-0.5 text-red-500">*</span>
           </label>
           <select
             id="connToId"
             value={connToId}
             onChange={(e) => setConnToId(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+            className={MERMAID_INPUT_STYLE}
           >
             <option value="">
               {t("chart.mermaid.ai_editor.flowchart.select_to_placeholder")}
@@ -453,17 +436,14 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label
-            htmlFor="connType"
-            className="text-[10px] font-bold text-slate-500"
-          >
+          <label htmlFor="connType" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.flowchart.conn_type_label")}
           </label>
           <select
             id="connType"
             value={connType}
             onChange={(e) => setConnType(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+            className={MERMAID_INPUT_STYLE}
           >
             <option value="-->">
               {t("chart.mermaid.ai_editor.flowchart.conn_type_arrow")}
@@ -480,10 +460,7 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
           </select>
         </div>
         <div>
-          <label
-            htmlFor="connLabel"
-            className="text-[10px] font-bold text-slate-500"
-          >
+          <label htmlFor="connLabel" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.flowchart.conn_text_label")}
           </label>
           <input
@@ -491,7 +468,7 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
             type="text"
             value={connLabel}
             onChange={(e) => setConnLabel(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+            className={MERMAID_INPUT_STYLE}
             placeholder={
               t("chart.mermaid.ai_editor.flowchart.conn_text_placeholder")!
             }
@@ -502,7 +479,7 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
         type="button"
         onClick={handleSubmit}
         disabled={!connFromId || !connToId}
-        className="w-full cursor-pointer rounded-lg bg-blue-600 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
+        className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
         {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
       </button>
@@ -516,7 +493,7 @@ const ChangeColorPanel: FC<IBasePanelProps> = ({
   onInsertWithFilter,
 }) => {
   const { t } = useTranslation();
-  const [colorNodeId, setColorNodeId] = useState("");
+  const [colorNodeId, setColorNodeId] = useState<string>("");
   const [colorStyle, setColorStyle] = useState<NodeColor>(NodeColor.DEFAULT);
 
   const handleSubmit = () => {
@@ -537,17 +514,15 @@ const ChangeColorPanel: FC<IBasePanelProps> = ({
         <p>{t("chart.mermaid.ai_editor.flowchart.change_color_title")}</p>
       </div>
       <div>
-        <label
-          htmlFor="colorNodeId"
-          className="text-[10px] font-bold text-slate-500"
-        >
+        <label htmlFor="colorNodeId" className={MERMAID_LABEL_STYLE}>
           {t("chart.mermaid.ai_editor.flowchart.select_node_placeholder")}
+          <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
           id="colorNodeId"
           value={colorNodeId}
           onChange={(e) => setColorNodeId(e.target.value)}
-          className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+          className={MERMAID_INPUT_STYLE}
         >
           <option value="">
             {t("chart.mermaid.ai_editor.flowchart.select_node_placeholder")}
@@ -560,17 +535,14 @@ const ChangeColorPanel: FC<IBasePanelProps> = ({
         </select>
       </div>
       <div>
-        <label
-          htmlFor="colorStyle"
-          className="text-[10px] font-bold text-slate-500"
-        >
+        <label htmlFor="colorStyle" className={MERMAID_LABEL_STYLE}>
           {t("chart.mermaid.ai_editor.flowchart.select_style_label")}
         </label>
         <select
           id="colorStyle"
           value={colorStyle}
           onChange={(e) => setColorStyle(e.target.value as NodeColor)}
-          className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+          className={MERMAID_INPUT_STYLE}
         >
           {Object.values(NodeColor).map((color) => (
             <option key={color} value={color}>
@@ -583,7 +555,7 @@ const ChangeColorPanel: FC<IBasePanelProps> = ({
         type="button"
         onClick={handleSubmit}
         disabled={!colorNodeId}
-        className="w-full cursor-pointer rounded-lg bg-blue-600 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
+        className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
         {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
       </button>
@@ -594,7 +566,7 @@ const ChangeColorPanel: FC<IBasePanelProps> = ({
 // Info: (20260629 - Julian) 「變更方向」面板
 const ChangeDirectionPanel: FC<IBasePanelProps> = ({ onInsertWithFilter }) => {
   const { t } = useTranslation();
-  const [flowDirection, setFlowDirection] = useState("TD");
+  const [flowDirection, setFlowDirection] = useState<string>("TD");
 
   const handleSubmit = () => {
     if (!flowDirection) return;
@@ -611,17 +583,14 @@ const ChangeDirectionPanel: FC<IBasePanelProps> = ({ onInsertWithFilter }) => {
         <p>{t("chart.mermaid.ai_editor.flowchart.change_dir_title")}</p>
       </div>
       <div>
-        <label
-          htmlFor="flowDirection"
-          className="text-[10px] font-bold text-slate-500"
-        >
+        <label htmlFor="flowDirection" className={MERMAID_LABEL_STYLE}>
           {t("chart.mermaid.ai_editor.flowchart.dir_label")}
         </label>
         <select
           id="flowDirection"
           value={flowDirection}
           onChange={(e) => setFlowDirection(e.target.value)}
-          className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+          className={MERMAID_INPUT_STYLE}
         >
           <option value="TD">
             {t("chart.mermaid.ai_editor.flowchart.dir_td")}

@@ -22,7 +22,10 @@ import {
   parseFlowchartNodes,
   parsePieItems,
   parsePieData,
+  parseGanttItems,
+  IGanttItem,
 } from "@/lib/utils/mermaid_helpers";
+import { MermaidChartType } from "@/constants/mermaid_chart";
 
 interface IMermaidChartProps {
   chart: string;
@@ -38,9 +41,9 @@ const MermaidChart: FC<IMermaidChartProps> = ({
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Info: (20260623 - Julian) 維持當前作用的圖表內容 state
-  const [currentChart, setCurrentChart] = useState<string>(chart);
+  const [currentChart, setCurrentChart] = useState<string>(chart || "");
   useEffect(() => {
-    setCurrentChart(chart);
+    setCurrentChart(chart || "");
   }, [chart]);
 
   const [svgStr, setSvgStr] = useState<string>("");
@@ -56,14 +59,20 @@ const MermaidChart: FC<IMermaidChartProps> = ({
 
   // Info: (20260623 - Julian) 解析當前 flowchart/graph 中現有的所有節點
   const parsedNodes = useMemo(() => {
-    if (chartType !== "flowchart") return [];
+    if (chartType !== MermaidChartType.FLOWCHART) return [];
     return parseFlowchartNodes(currentChart);
   }, [currentChart, chartType]);
 
   // Info: (20260623 - Julian) 解析當前 pie chart 中現有的所有資料項目
   const parsedPieItems = useMemo(() => {
-    if (chartType !== "pie") return [];
+    if (chartType !== MermaidChartType.PIE) return [];
     return parsePieItems(currentChart);
+  }, [currentChart, chartType]);
+
+  // Info: (20260707 - Julian) 解析當前 gantt chart 中現有的所有資料項目
+  const parsedGanttItems = useMemo<IGanttItem[]>(() => {
+    if (chartType !== MermaidChartType.GANTT) return [];
+    return parseGanttItems(currentChart);
   }, [currentChart, chartType]);
 
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
@@ -163,7 +172,12 @@ const MermaidChart: FC<IMermaidChartProps> = ({
       }
     };
 
-    if (currentChart && typeof window !== "undefined") {
+    if (
+      currentChart &&
+      currentChart.trim() !== "" &&
+      currentChart !== "undefined" &&
+      typeof window !== "undefined"
+    ) {
       renderChart();
     }
 
@@ -751,6 +765,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({
         chartType={chartType}
         parsedNodes={parsedNodes}
         parsedPieItems={parsedPieItems}
+        parsedGanttItems={parsedGanttItems}
         svgStr={svgStr}
         parsedPieData={parsedPieData}
         onAdopt={handleAdopt}

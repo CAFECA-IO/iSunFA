@@ -5,6 +5,7 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { AiMermaidModifySchema } from "@/validators";
 import { PdfEditorService } from "@/services/pdf_editor.service";
+import { MermaidChartType } from "@/constants/mermaid_chart";
 
 /**
  * Info: (20260623 - Julian) PDF 編輯器智慧化：AI 修改 Mermaid 圖表
@@ -31,11 +32,12 @@ export async function POST(req: NextRequest) {
       return jsonFail(API_ERRORS.VL_MISSING_PARAMS);
     }
 
-    const { chart, instruction } = parsed.data;
+    const { originalChart, chartType, instruction } = parsed.data;
 
     // Info: (20260623 - Julian) 呼叫 Service
     const result = await PdfEditorService.modifyMermaidChart(
-      chart,
+      originalChart,
+      chartType as MermaidChartType,
       instruction,
     );
 

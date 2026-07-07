@@ -16,13 +16,7 @@ export async function parseSmartInput(
   text: string,
 ): Promise<ISmartParseResult> {
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("GEMINI_API_KEY is not set.");
-    }
-
-    const chatService = new ChatService(apiKey);
-
+    const chatService = new ChatService();
     const prompt = `
             You are a professional logistics AI assistant.
             Extract the precise logistics routing coordinates and cargo weight from the user's description.
@@ -88,9 +82,7 @@ export async function parseMultipleRoutesFromText(text: string): Promise<
   }>
 > {
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) throw new Error("GEMINI_API_KEY is not set.");
-    const chatService = new ChatService(apiKey);
+    const chatService = new ChatService();
     const prompt = `
             You are a professional logistics AI assistant.
             Extract all distinct transportation routes from the user's description.

@@ -3,11 +3,8 @@ import { ChatService, Part } from "@/services/chat.service";
 export class VisionService {
   private chatService: ChatService;
 
-  constructor(apiKey?: string) {
-    // Info: (20260407 - Luphia) Default to environment variable if no key is provided
-    const key =
-      apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
-    this.chatService = new ChatService(key);
+  constructor() {
+    this.chatService = new ChatService();
   }
 
   /**
