@@ -2,22 +2,26 @@
 
 import { IEsgReport, IEsgReportDetailedRecord } from "@/interfaces/esg_report";
 import { useTranslation } from "@/i18n/i18n_context";
+import { EsgReportStandard } from "@/constants/esg";
 import { MoneyUtil } from "@/lib/utils/money";
 
 interface IEsgBomTableProps {
   sections: IEsgReport["sections"];
+  reportStandard?: EsgReportStandard;
 }
 
-export default function EsgBomTable({ sections }: IEsgBomTableProps) {
+export default function EsgBomTable({
+  sections,
+  reportStandard = EsgReportStandard.GHG,
+}: IEsgBomTableProps) {
   const { t } = useTranslation();
 
-  // Info: (20260427 - Julian) 渲染範疇一、二、三
+  // Info: (20260707 - Tzuhan) 渲染範疇一、二、三 或 ISO 類別一~六
   const renderScopeGroup = (
     title: string,
     records: IEsgReportDetailedRecord[] = [],
   ) => {
     const displayedRecords =
-      // Info: (20260427 - Julian) 沒有任何排放紀錄
       records.length === 0 ? (
         <tr>
           <td
@@ -69,11 +73,17 @@ export default function EsgBomTable({ sections }: IEsgBomTableProps) {
     );
   };
 
-  // Info: (20260427 - Julian) 檢查是否有任何排放紀錄
   const hasAnyRecords =
-    (sections.scope1.records?.length || 0) > 0 ||
-    (sections.scope2.records?.length || 0) > 0 ||
-    (sections.scope3.records?.length || 0) > 0;
+    reportStandard === EsgReportStandard.GHG
+      ? (sections.scope1.records?.length || 0) > 0 ||
+        (sections.scope2.records?.length || 0) > 0 ||
+        (sections.scope3.records?.length || 0) > 0
+      : (sections.iso1.records?.length || 0) > 0 ||
+        (sections.iso2.records?.length || 0) > 0 ||
+        (sections.iso3.records?.length || 0) > 0 ||
+        (sections.iso4.records?.length || 0) > 0 ||
+        (sections.iso5.records?.length || 0) > 0 ||
+        (sections.iso6.records?.length || 0) > 0;
 
   if (!hasAnyRecords) return null;
 
@@ -106,9 +116,31 @@ export default function EsgBomTable({ sections }: IEsgBomTableProps) {
                 </th>
               </tr>
             </thead>
-            {renderScopeGroup(t("esg_report.scope1"), sections.scope1.records)}
-            {renderScopeGroup(t("esg_report.scope2"), sections.scope2.records)}
-            {renderScopeGroup(t("esg_report.scope3"), sections.scope3.records)}
+            {reportStandard === EsgReportStandard.GHG ? (
+              <>
+                {renderScopeGroup(
+                  t("esg_report.scope1"),
+                  sections.scope1.records,
+                )}
+                {renderScopeGroup(
+                  t("esg_report.scope2"),
+                  sections.scope2.records,
+                )}
+                {renderScopeGroup(
+                  t("esg_report.scope3"),
+                  sections.scope3.records,
+                )}
+              </>
+            ) : (
+              <>
+                {renderScopeGroup(t("esg_report.iso1"), sections.iso1.records)}
+                {renderScopeGroup(t("esg_report.iso2"), sections.iso2.records)}
+                {renderScopeGroup(t("esg_report.iso3"), sections.iso3.records)}
+                {renderScopeGroup(t("esg_report.iso4"), sections.iso4.records)}
+                {renderScopeGroup(t("esg_report.iso5"), sections.iso5.records)}
+                {renderScopeGroup(t("esg_report.iso6"), sections.iso6.records)}
+              </>
+            )}
           </table>
         </div>
       </div>

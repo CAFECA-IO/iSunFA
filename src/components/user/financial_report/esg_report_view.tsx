@@ -16,6 +16,7 @@ import {
   ReportErrorPlaceholder,
 } from "@/components/user/financial_report/report_placeholders";
 import EsgBomTable from "@/components/user/financial_report/esg_bom_table";
+import { EsgReportStandard } from "@/constants/esg";
 
 const EsgReportSection = ({
   titleText,
@@ -101,6 +102,9 @@ export default function EsgReportView({
 
   const [reportData, setReportData] = useState<IEsgReport | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [reportStandard, setReportStandard] = useState<EsgReportStandard>(
+    EsgReportStandard.GHG,
+  );
 
   useEffect(() => {
     if (accountBookId) {
@@ -156,45 +160,107 @@ export default function EsgReportView({
 
   const { metrics, sections } = reportData;
 
-  const keyMetricsData = [
-    {
-      title: t("esg_report.gross_emissions"),
-      value: (
-        <>
-          {numberWithCommas(
-            MoneyUtil.toDecimal(metrics.totalEmissions).toFixed(1),
-          )}
-          <span className="ml-[2px] text-xs font-bold">
-            {t("esg_report.unit")}
-          </span>
-        </>
-      ),
-      description: t("esg_report.gross_desc"),
-      textColor: "text-gray-900",
-      statusGood: true,
-    },
-    {
-      title: t("esg_report.scope1"),
-      value: `${Number(metrics.scope1Proportion).toFixed(1)}%`,
-      description: t("esg_report.scope1_desc"),
-      textColor: "text-gray-900",
-      statusGood: Number(metrics.scope1Proportion) < 30, // Info: (20260406 - Luphia) example benchmark
-    },
-    {
-      title: t("esg_report.scope2"),
-      value: `${Number(metrics.scope2Proportion).toFixed(1)}%`,
-      description: t("esg_report.scope2_desc"),
-      textColor: "text-gray-900",
-      statusGood: true,
-    },
-    {
-      title: t("esg_report.scope3"),
-      value: `${Number(metrics.scope3Proportion).toFixed(1)}%`,
-      description: t("esg_report.scope3_desc"),
-      textColor: "text-gray-900",
-      statusGood: true,
-    },
-  ];
+  const keyMetricsData =
+    reportStandard === EsgReportStandard.GHG
+      ? [
+          {
+            title: t("esg_report.gross_emissions"),
+            value: (
+              <>
+                {numberWithCommas(
+                  MoneyUtil.toDecimal(metrics.totalEmissions).toFixed(1),
+                )}
+                <span className="ml-[2px] text-xs font-bold">
+                  {t("esg_report.unit")}
+                </span>
+              </>
+            ),
+            description: t("esg_report.gross_desc"),
+            textColor: "text-gray-900",
+            statusGood: true,
+          },
+          {
+            title: t("esg_report.scope1"),
+            value: `${Number(metrics.scope1Proportion).toFixed(1)}%`,
+            description: t("esg_report.scope1_desc"),
+            textColor: "text-gray-900",
+            statusGood: Number(metrics.scope1Proportion) < 30, // Info: (20260406 - Luphia) example benchmark
+          },
+          {
+            title: t("esg_report.scope2"),
+            value: `${Number(metrics.scope2Proportion).toFixed(1)}%`,
+            description: t("esg_report.scope2_desc"),
+            textColor: "text-gray-900",
+            statusGood: true,
+          },
+          {
+            title: t("esg_report.scope3"),
+            value: `${Number(metrics.scope3Proportion).toFixed(1)}%`,
+            description: t("esg_report.scope3_desc"),
+            textColor: "text-gray-900",
+            statusGood: true,
+          },
+        ]
+      : [
+          {
+            title: t("esg_report.gross_emissions"),
+            value: (
+              <>
+                {numberWithCommas(
+                  MoneyUtil.toDecimal(metrics.totalEmissions).toFixed(1),
+                )}
+                <span className="ml-[2px] text-xs font-bold">
+                  {t("esg_report.unit")}
+                </span>
+              </>
+            ),
+            description: t("esg_report.gross_desc"),
+            textColor: "text-gray-900",
+            statusGood: true,
+          },
+          {
+            title: t("esg_report.iso1"),
+            value: `${Number(metrics.iso1Proportion).toFixed(1)}%`,
+            description: "",
+            textColor: "text-gray-900",
+            statusGood: true,
+          },
+          {
+            title: t("esg_report.iso2"),
+            value: `${Number(metrics.iso2Proportion).toFixed(1)}%`,
+            description: "",
+            textColor: "text-gray-900",
+            statusGood: true,
+          },
+          {
+            title: t("esg_report.iso3"),
+            value: `${Number(metrics.iso3Proportion).toFixed(1)}%`,
+            description: "",
+            textColor: "text-gray-900",
+            statusGood: true,
+          },
+          {
+            title: t("esg_report.iso4"),
+            value: `${Number(metrics.iso4Proportion).toFixed(1)}%`,
+            description: "",
+            textColor: "text-gray-900",
+            statusGood: true,
+          },
+          {
+            title: t("esg_report.iso5"),
+            value: `${Number(metrics.iso5Proportion).toFixed(1)}%`,
+            description: "",
+            textColor: "text-gray-900",
+            statusGood: true,
+          },
+          {
+            title: t("esg_report.iso6"),
+            value: `${Number(metrics.iso6Proportion).toFixed(1)}%`,
+            description: "",
+            textColor: "text-gray-900",
+            statusGood: true,
+          },
+        ];
 
   const keyMetricsBanner = metrics ? (
     <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4 print:flex">
@@ -227,26 +293,67 @@ export default function EsgReportView({
           </span>
         </div>
 
-        <EsgReportSection
-          titleText={t("esg_report.scope1_title")}
-          titleValue={sections.scope1.total}
-          items={sections.scope1.items}
-          barColor="bg-gray-300"
-        />
-
-        <EsgReportSection
-          titleText={t("esg_report.scope2_title")}
-          titleValue={sections.scope2.total}
-          items={sections.scope2.items}
-          barColor="bg-gray-200"
-        />
-
-        <EsgReportSection
-          titleText={t("esg_report.scope3_title")}
-          titleValue={sections.scope3.total}
-          items={sections.scope3.items}
-          barColor="bg-gray-300"
-        />
+        {reportStandard === EsgReportStandard.GHG ? (
+          <>
+            <EsgReportSection
+              titleText={t("esg_report.scope1_title")}
+              titleValue={sections.scope1.total}
+              items={sections.scope1.items}
+              barColor="bg-gray-300"
+            />
+            <EsgReportSection
+              titleText={t("esg_report.scope2_title")}
+              titleValue={sections.scope2.total}
+              items={sections.scope2.items}
+              barColor="bg-gray-200"
+            />
+            <EsgReportSection
+              titleText={t("esg_report.scope3_title")}
+              titleValue={sections.scope3.total}
+              items={sections.scope3.items}
+              barColor="bg-gray-300"
+            />
+          </>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <EsgReportSection
+              titleText={t("esg_report.iso1_title")}
+              titleValue={sections.iso1.total}
+              items={sections.iso1.items}
+              barColor="bg-gray-300"
+            />
+            <EsgReportSection
+              titleText={t("esg_report.iso2_title")}
+              titleValue={sections.iso2.total}
+              items={sections.iso2.items}
+              barColor="bg-gray-200"
+            />
+            <EsgReportSection
+              titleText={t("esg_report.iso3_title")}
+              titleValue={sections.iso3.total}
+              items={sections.iso3.items}
+              barColor="bg-gray-300"
+            />
+            <EsgReportSection
+              titleText={t("esg_report.iso4_title")}
+              titleValue={sections.iso4.total}
+              items={sections.iso4.items}
+              barColor="bg-gray-200"
+            />
+            <EsgReportSection
+              titleText={t("esg_report.iso5_title")}
+              titleValue={sections.iso5.total}
+              items={sections.iso5.items}
+              barColor="bg-gray-300"
+            />
+            <EsgReportSection
+              titleText={t("esg_report.iso6_title")}
+              titleValue={sections.iso6.total}
+              items={sections.iso6.items}
+              barColor="bg-gray-200"
+            />
+          </div>
+        )}
       </div>
 
       <div className="flex items-center justify-between rounded-xl bg-gray-900 p-6 text-white print:break-inside-avoid">
@@ -269,11 +376,32 @@ export default function EsgReportView({
 
   return (
     <div className="flex w-full flex-col gap-4">
+      <div className="mb-2 flex items-center justify-between print:hidden">
+        <h2 className="text-xl font-black tracking-wide text-gray-800">
+          {t("esg_report.title")}
+        </h2>
+        <div className="flex rounded-lg bg-gray-100 p-1">
+          <button
+            onClick={() => setReportStandard(EsgReportStandard.GHG)}
+            className={`rounded-md px-4 py-1.5 text-sm font-bold transition-all duration-200 ${reportStandard === EsgReportStandard.GHG ? "bg-white text-gray-900 shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
+          >
+            GHG Protocol
+          </button>
+          <button
+            onClick={() => setReportStandard(EsgReportStandard.ISO)}
+            className={`rounded-md px-4 py-1.5 text-sm font-bold transition-all duration-200 ${reportStandard === EsgReportStandard.ISO ? "bg-white text-gray-900 shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
+          >
+            ISO 14064-1
+          </button>
+        </div>
+      </div>
       {keyMetricsBanner}
       {scopeSection}
 
       {/* Info: (20260424 - Julian) 排放細項 BOM 表 */}
-      {sections && <EsgBomTable sections={sections} />}
+      {sections && (
+        <EsgBomTable sections={sections} reportStandard={reportStandard} />
+      )}
     </div>
   );
 }

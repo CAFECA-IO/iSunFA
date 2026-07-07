@@ -3,6 +3,12 @@ export const TAIPOWER_EMISSION_FACTOR_2023 = 0.495;
 
 import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
 
+// Info: (20260707 - Tzuhan) 報表標準
+export enum EsgReportStandard {
+  GHG = "GHG",
+  ISO = "ISO",
+}
+
 // Info: (20260617 - Julian) 碳排放的三大範疇
 export enum EsgScope {
   SCOPE_1 = "SCOPE_1",

@@ -26,6 +26,12 @@ export interface IEsgReportMetrics {
   scope1Proportion: string;
   scope2Proportion: string;
   scope3Proportion: string;
+  iso1Proportion: string;
+  iso2Proportion: string;
+  iso3Proportion: string;
+  iso4Proportion: string;
+  iso5Proportion: string;
+  iso6Proportion: string;
 }
 
 export interface IEsgReport {
@@ -33,6 +39,12 @@ export interface IEsgReport {
     scope1: IEsgReportSection;
     scope2: IEsgReportSection;
     scope3: IEsgReportSection;
+    iso1: IEsgReportSection;
+    iso2: IEsgReportSection;
+    iso3: IEsgReportSection;
+    iso4: IEsgReportSection;
+    iso5: IEsgReportSection;
+    iso6: IEsgReportSection;
     grossEmissions: { total: string | number };
   };
   metrics: IEsgReportMetrics;
