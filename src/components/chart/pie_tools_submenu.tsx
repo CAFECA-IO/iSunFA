@@ -141,6 +141,7 @@ const AddSlicePanel: FC<IBasePanelProps> = ({ onInsert }) => {
             className="text-[10px] font-bold text-slate-500"
           >
             {t("chart.mermaid.ai_editor.pie.slice_name_label")}
+            <span className="ml-0.5 text-red-500">*</span>
           </label>
           <input
             id="pieSliceLabel"
@@ -159,6 +160,7 @@ const AddSlicePanel: FC<IBasePanelProps> = ({ onInsert }) => {
             className="text-[10px] font-bold text-slate-500"
           >
             {t("chart.mermaid.ai_editor.pie.slice_value_label")}
+            <span className="ml-0.5 text-red-500">*</span>
           </label>
           <input
             id="pieSliceValue"
@@ -241,6 +243,7 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
           className="text-[10px] font-bold text-slate-500"
         >
           {t("chart.mermaid.ai_editor.pie.select_slice_placeholder")}
+          <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
           id="pieSliceTarget"
@@ -340,6 +343,7 @@ const ChangeSliceColorPanel: FC<IBasePanelProps> = ({
           className="text-[10px] font-bold text-slate-500"
         >
           {t("chart.mermaid.ai_editor.pie.select_slice_placeholder")}
+          <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
           id="pieColorTarget"
@@ -417,6 +421,7 @@ const DeleteSlicePanel: FC<IBasePanelProps> = ({
           className="text-[10px] font-bold text-slate-500"
         >
           {t("chart.mermaid.ai_editor.pie.select_delete_placeholder")}
+          <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
           id="pieSliceTargetDel"

@@ -156,6 +156,7 @@ interface IBasePanelProps {
 // Info: (20260707 - Julian) 「新增行程」面板
 const AddTaskPanel: FC<IBasePanelProps> = ({ onInsert }) => {
   const { t } = useTranslation();
+  const [ganttSection, setGanttSection] = useState<string>("");
   const [ganttTaskLabel, setGanttTaskLabel] = useState<string>("");
   const [ganttStartDate, setGanttStartDate] = useState<string>("");
   const [ganttEndDate, setGanttEndDate] = useState<string>("");
@@ -176,15 +177,32 @@ const AddTaskPanel: FC<IBasePanelProps> = ({ onInsert }) => {
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <SquarePlus size={14} />
-        <p>{t("chart.mermaid.ai_editor.gantt.add_task_title")}</p>
+        <p>{t("新增行程")}</p>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <div className="col-span-2">
+        <div>
+          <label
+            htmlFor="ganttSection"
+            className="text-[10px] font-bold text-slate-500"
+          >
+            {t("行程群組")}
+          </label>
+          <input
+            id="ganttSection"
+            type="text"
+            value={ganttSection}
+            onChange={(e) => setGanttSection(e.target.value)}
+            className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+            placeholder={t("請填入行程群組")}
+          />
+        </div>
+        <div>
           <label
             htmlFor="ganttTaskLabel"
             className="text-[10px] font-bold text-slate-500"
           >
-            {t("chart.mermaid.ai_editor.gantt.slice_name_label")}
+            {t("行程名稱")}
+            <span className="ml-0.5 text-red-500">*</span>
           </label>
           <input
             id="ganttTaskLabel"
@@ -192,9 +210,7 @@ const AddTaskPanel: FC<IBasePanelProps> = ({ onInsert }) => {
             value={ganttTaskLabel}
             onChange={(e) => setGanttTaskLabel(e.target.value)}
             className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
-            placeholder={
-              t("chart.mermaid.ai_editor.gantt.slice_name_placeholder")!
-            }
+            placeholder={t("請填入行程名稱")!}
           />
         </div>
         <div>
@@ -202,7 +218,8 @@ const AddTaskPanel: FC<IBasePanelProps> = ({ onInsert }) => {
             htmlFor="ganttTaskStartDate"
             className="text-[10px] font-bold text-slate-500"
           >
-            {t("chart.mermaid.ai_editor.gantt.slice_value_label")}
+            {t("開始日期")}
+            <span className="ml-0.5 text-red-500">*</span>
           </label>
           <input
             id="ganttTaskStartDate"
@@ -217,7 +234,8 @@ const AddTaskPanel: FC<IBasePanelProps> = ({ onInsert }) => {
             htmlFor="ganttTaskEndDate"
             className="text-[10px] font-bold text-slate-500"
           >
-            {t("chart.mermaid.ai_editor.gantt.select_style_label")}
+            {t("結束日期")}
+            <span className="ml-0.5 text-red-500">*</span>
           </label>
           <input
             id="ganttTaskEndDate"
@@ -233,7 +251,7 @@ const AddTaskPanel: FC<IBasePanelProps> = ({ onInsert }) => {
           htmlFor="ganttTaskColor"
           className="text-[10px] font-bold text-slate-500"
         >
-          {t("chart.mermaid.ai_editor.gantt.select_style_label")}
+          {t("選擇行程顏色")}
         </label>
         <select
           id="ganttTaskColor"
@@ -241,9 +259,7 @@ const AddTaskPanel: FC<IBasePanelProps> = ({ onInsert }) => {
           onChange={(e) => setGanttTaskColor(e.target.value as GanttColor)}
           className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
         >
-          <option value={""}>
-            {t("chart.mermaid.ai_editor.gantt.ai_auto_select")}
-          </option>
+          <option value={""}>{t("請選擇行程顏色")}</option>
           {Object.values(GanttColor).map((color) => (
             <option key={color} value={color}>
               {t(GANTT_COLOR_TRANSLATION_KEYS[color])}
@@ -311,7 +327,7 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <SquarePen size={14} />
-        <p>{t("chart.mermaid.ai_editor.gantt.edit_task_title")}</p>
+        <p>{t("編輯行程")}</p>
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div className="col-span-2">
@@ -319,7 +335,8 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
             htmlFor="ganttTaskTarget"
             className="text-[10px] font-bold text-slate-500"
           >
-            {t("chart.mermaid.ai_editor.gantt.select_task_placeholder")}
+            {t("選擇要編輯的行程")}
+            <span className="ml-0.5 text-red-500">*</span>
           </label>
           <select
             id="ganttTaskTarget"
@@ -327,9 +344,7 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
             onChange={(e) => setGanttTaskTarget(e.target.value)}
             className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
           >
-            <option value="">
-              {t("chart.mermaid.ai_editor.gantt.select_task_placeholder")}
-            </option>
+            <option value="">{t("請選擇要編輯的行程")}</option>
             {parsedGanttItems
               .filter((item) => item.type === "task")
               .map((item) => (
@@ -345,7 +360,7 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
             htmlFor="ganttNewSection"
             className="text-[10px] font-bold text-slate-500"
           >
-            {t("chart.mermaid.ai_editor.gantt.new_section_label")}
+            {t("變更行程群組")}
           </label>
           <select
             id="ganttNewSection"
@@ -354,9 +369,7 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
             onChange={(e) => setGanttNewSection(e.target.value)}
             className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
           >
-            <option value="">
-              {t("chart.mermaid.ai_editor.gantt.none_section")}
-            </option>
+            <option value="">{t("請選擇要變更的行程群組")}</option>
             {sectionOptions.map((item) => (
               <option
                 key={`gantt-section-opt-${item.label}`}
@@ -372,7 +385,7 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
             htmlFor="ganttNewLabel"
             className="text-[10px] font-bold text-slate-500"
           >
-            {t("chart.mermaid.ai_editor.gantt.new_name_label")}
+            {t("變更行程名稱")}
           </label>
           <input
             id="ganttNewLabel"
@@ -380,9 +393,7 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
             value={ganttNewLabel}
             onChange={(e) => setGanttNewLabel(e.target.value)}
             className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
-            placeholder={
-              t("chart.mermaid.ai_editor.gantt.new_name_placeholder")!
-            }
+            placeholder={t("請輸入新的行程名稱")!}
           />
         </div>
         <div>
@@ -390,7 +401,7 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
             htmlFor="ganttStartDate"
             className="text-[10px] font-bold text-slate-500"
           >
-            {t("chart.mermaid.ai_editor.gantt.new_start_date_label")}
+            {t("變更開始時間")}
           </label>
           <input
             id="ganttStartDate"
@@ -398,9 +409,7 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
             value={ganttStartDate}
             onChange={(e) => setGanttStartDate(e.target.value)}
             className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
-            placeholder={
-              t("chart.mermaid.ai_editor.gantt.new_value_placeholder")!
-            }
+            placeholder={t("請選擇要變更的開始時間")!}
           />
         </div>
         <div>
@@ -408,7 +417,7 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
             htmlFor="ganttEndDate"
             className="text-[10px] font-bold text-slate-500"
           >
-            {t("chart.mermaid.ai_editor.gantt.new_end_date_label")}
+            {t("變更結束時間")}
           </label>
           <input
             id="ganttEndDate"
@@ -416,9 +425,7 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
             value={ganttEndDate}
             onChange={(e) => setGanttEndDate(e.target.value)}
             className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
-            placeholder={
-              t("chart.mermaid.ai_editor.gantt.new_value_placeholder")!
-            }
+            placeholder={t("請選擇要變更的結束時間")!}
           />
         </div>
       </div>
@@ -460,14 +467,15 @@ const ChangeTaskColorPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <PaintRoller size={14} />
-        <p>{t("chart.mermaid.ai_editor.gantt.change_color_title")}</p>
+        <p>{t("變更行程顏色")}</p>
       </div>
       <div>
         <label
           htmlFor="ganttColorTarget"
           className="text-[10px] font-bold text-slate-500"
         >
-          {t("chart.mermaid.ai_editor.gantt.select_task_placeholder")}
+          {t("選擇要變更的行程")}
+          <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
           id="ganttColorTarget"
@@ -475,9 +483,7 @@ const ChangeTaskColorPanel: FC<IBasePanelProps> = ({
           onChange={(e) => setGanttTaskTarget(e.target.value)}
           className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
         >
-          <option value="">
-            {t("chart.mermaid.ai_editor.gantt.select_task_placeholder")}
-          </option>
+          <option value="">{t("請選擇要變更的行程")}</option>
           {parsedGanttItems
             .filter((item) => item.type === "task")
             .map((item) => (
@@ -492,7 +498,8 @@ const ChangeTaskColorPanel: FC<IBasePanelProps> = ({
           htmlFor="ganttTaskColor"
           className="text-[10px] font-bold text-slate-500"
         >
-          {t("chart.mermaid.ai_editor.gantt.select_color_label")}
+          {t("選擇要變更的顏色")}
+          <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
           id="ganttTaskColor"
@@ -546,14 +553,15 @@ const SwapTaskPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <Shuffle size={14} />
-        <p>{t("chart.mermaid.ai_editor.gantt.swap_task_title")}</p>
+        <p>{t("調整行程順序")}</p>
       </div>
       <div>
         <label
           htmlFor="ganttSwapTarget"
           className="text-[10px] font-bold text-slate-500"
         >
-          {t("chart.mermaid.ai_editor.gantt.select_swap_first_placeholder")}
+          {t("請選擇要交換的行程")}
+          <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
           id="ganttSwapTarget"
@@ -561,9 +569,7 @@ const SwapTaskPanel: FC<IBasePanelProps> = ({
           onChange={(e) => setGanttTaskTarget(e.target.value)}
           className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400"
         >
-          <option value="">
-            {t("chart.mermaid.ai_editor.gantt.select_swap_first_placeholder")}
-          </option>
+          <option value="">{t("請選擇要交換的行程")}</option>
           {taskOptions.map((item) => (
             <option key={`gantt-swap-opt1-${item.label}`} value={item.label}>
               {item.section ? `[${item.section}] ` : ""}
@@ -577,7 +583,8 @@ const SwapTaskPanel: FC<IBasePanelProps> = ({
           htmlFor="ganttSwapTarget2"
           className="text-[10px] font-bold text-slate-500"
         >
-          {t("chart.mermaid.ai_editor.gantt.select_swap_second_placeholder")}
+          {t("請選擇要交換的行程")}
+          <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
           id="ganttSwapTarget2"
@@ -585,9 +592,7 @@ const SwapTaskPanel: FC<IBasePanelProps> = ({
           onChange={(e) => setGanttTaskTarget2(e.target.value)}
           className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400"
         >
-          <option value="">
-            {t("chart.mermaid.ai_editor.gantt.select_swap_second_placeholder")}
-          </option>
+          <option value="">{t("請選擇要交換的行程")}</option>
           {taskOptions.map((item) => (
             <option key={`gantt-swap-opt2-${item.label}`} value={item.label}>
               {item.section ? `[${item.section}] ` : ""}
@@ -629,14 +634,15 @@ const DeleteTaskPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <Trash2 size={14} />
-        <p>{t("chart.mermaid.ai_editor.gantt.delete_task_title")}</p>
+        <p>{t("刪除行程")}</p>
       </div>
       <div>
         <label
           htmlFor="ganttTaskTargetDel"
           className="text-[10px] font-bold text-slate-500"
         >
-          {t("chart.mermaid.ai_editor.gantt.select_delete_placeholder")}
+          {t("請選擇要刪除的行程")}
+          <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
           id="ganttTaskTargetDel"
@@ -644,9 +650,7 @@ const DeleteTaskPanel: FC<IBasePanelProps> = ({
           onChange={(e) => setGanttTaskTarget(e.target.value)}
           className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
         >
-          <option value="">
-            {t("chart.mermaid.ai_editor.gantt.select_delete_placeholder")}
-          </option>
+          <option value="">{t("請選擇要刪除的行程")}</option>
           {parsedGanttItems
             .filter((item) => item.type === "task")
             .map((item) => (

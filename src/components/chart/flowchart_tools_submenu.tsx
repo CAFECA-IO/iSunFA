@@ -207,6 +207,7 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onInsert }) => {
             className="text-[10px] font-bold text-slate-500"
           >
             {t("chart.mermaid.ai_editor.flowchart.node_name_label")}
+            <span className="ml-0.5 text-red-500">*</span>
           </label>
           <input
             id="new-node-label"
@@ -326,6 +327,7 @@ const EditNodePanel: FC<IBasePanelProps> = ({
           className="text-[10px] font-bold text-slate-500"
         >
           {t("chart.mermaid.ai_editor.flowchart.select_node_placeholder")}
+          <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
           id="target-node-id"
@@ -349,6 +351,7 @@ const EditNodePanel: FC<IBasePanelProps> = ({
           className="text-[10px] font-bold text-slate-500"
         >
           {t("chart.mermaid.ai_editor.flowchart.new_text_label")}
+          <span className="ml-0.5 text-red-500">*</span>
         </label>
         <input
           id="new-node-text"
@@ -410,6 +413,7 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
             className="text-[10px] font-bold text-slate-500"
           >
             {t("chart.mermaid.ai_editor.flowchart.select_from_placeholder")}
+            <span className="ml-0.5 text-red-500">*</span>
           </label>
           <select
             id="connFromId"
@@ -433,6 +437,7 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
             className="text-[10px] font-bold text-slate-500"
           >
             {t("chart.mermaid.ai_editor.flowchart.select_to_placeholder")}
+            <span className="ml-0.5 text-red-500">*</span>
           </label>
           <select
             id="connToId"
@@ -542,6 +547,7 @@ const ChangeColorPanel: FC<IBasePanelProps> = ({
           className="text-[10px] font-bold text-slate-500"
         >
           {t("chart.mermaid.ai_editor.flowchart.select_node_placeholder")}
+          <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
           id="colorNodeId"
