@@ -25,6 +25,7 @@ import {
   Database,
   FlaskConical,
   Activity,
+  ClipboardList,
 } from "lucide-react";
 
 export const MODULES = [
@@ -67,6 +68,7 @@ export const ADMIN_MODULES = [
   { key: "dashboard", icon: LayoutDashboard, basic: true },
   { key: "mission_board", icon: Target, basic: true },
   { key: "order_management", icon: BadgeCheck, basic: true },
+  { key: "application_management", icon: ClipboardList, basic: true },
   { key: "blockchain", icon: Blocks, basic: true },
   { key: "user", icon: Users, basic: true },
   { key: "billing", icon: CreditCard, basic: true },
@@ -161,6 +163,8 @@ export function getModuleI18nKey(key: string, isAdminContext: boolean = false) {
       return "common.pdf_tool";
     case "carbon_emission_database":
       return "admin_carbon_emission_database.title";
+    case "application_management":
+      return "application_management.title";
     default:
       return `${key}.title`;
   }

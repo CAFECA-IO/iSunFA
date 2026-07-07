@@ -107,7 +107,7 @@ export default function DataTable<T>({
                         <ChevronUp
                           size={14}
                           className={`translate-y-[2px] transition-colors ${
-                            sortBy === col.key && sortOrder === "desc"
+                            sortBy === col.key && sortOrder === "asc"
                               ? "text-orange-500"
                               : "text-gray-300"
                           }`}
@@ -115,7 +115,7 @@ export default function DataTable<T>({
                         <ChevronDown
                           size={14}
                           className={`translate-y-[-2px] transition-colors ${
-                            sortBy === col.key && sortOrder === "asc"
+                            sortBy === col.key && sortOrder === "desc"
                               ? "text-orange-500"
                               : "text-gray-300"
                           }`}

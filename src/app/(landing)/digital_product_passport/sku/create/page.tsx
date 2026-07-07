@@ -197,7 +197,7 @@ export default function SkuCreatePage() {
               id="account_book_select"
               value={selectedAccountBookId}
               onChange={(e) => setSelectedAccountBookId(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-500 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
             >
               <option value="" disabled>
                 ---
@@ -221,11 +221,11 @@ export default function SkuCreatePage() {
             }}
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleFileDrop}
-            className={`group relative flex flex-col items-center justify-center rounded-3xl border-2 border-dashed ${files.length > 0 ? "border-emerald-300 bg-emerald-50/20" : "border-gray-300 bg-gray-50/50"} p-16 transition-all hover:border-blue-400 hover:bg-blue-50/30`}
+            className={`group relative flex flex-col items-center justify-center rounded-3xl border-2 border-dashed ${files.length > 0 ? "border-orange-300 bg-orange-50/20" : "border-gray-300 bg-gray-50/50"} p-16 transition-all hover:border-orange-400 hover:bg-orange-50/30`}
           >
             {isProcessing ? (
               <div className="flex flex-col items-center">
-                <Loader2 className="mb-4 h-12 w-12 animate-spin text-blue-500" />
+                <Loader2 className="mb-4 h-12 w-12 animate-spin text-orange-500" />
                 <h3 className="mb-2 text-lg font-bold text-gray-900">
                   {t("digital_product_passport.sku_creation.ai_analyzing")}
                 </h3>
@@ -241,7 +241,7 @@ export default function SkuCreatePage() {
                       key={i}
                       className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 shadow-sm"
                     >
-                      <FileText className="h-4 w-4 text-blue-500" />
+                      <FileText className="h-4 w-4 text-orange-500" />
                       <span className="max-w-[150px] truncate text-sm font-medium text-gray-700">
                         {f.name}
                       </span>
@@ -260,7 +260,7 @@ export default function SkuCreatePage() {
                 <button
                   onClick={handleSimulateUpload}
                   disabled={isUploading}
-                  className="flex items-center gap-2 rounded-xl bg-blue-600 px-8 py-3 text-sm font-semibold text-white shadow-md shadow-blue-500/20 transition hover:bg-blue-500 disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-xl bg-orange-600 px-8 py-3 text-sm font-semibold text-white shadow-md shadow-orange-500/20 transition hover:bg-orange-500 disabled:opacity-50"
                 >
                   {isUploading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -276,7 +276,7 @@ export default function SkuCreatePage() {
               </div>
             ) : (
               <div className="flex flex-col items-center">
-                <div className="mb-6 rounded-2xl border border-gray-100 bg-white p-5 text-blue-600 shadow-sm transition-transform duration-300 group-hover:scale-110">
+                <div className="mb-6 rounded-2xl border border-gray-100 bg-white p-5 text-orange-600 shadow-sm transition-transform duration-300 group-hover:scale-110">
                   <UploadCloud className="h-10 w-10" />
                 </div>
                 <h3 className="mb-2 text-xl font-bold text-gray-900">
@@ -317,10 +317,10 @@ export default function SkuCreatePage() {
             <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900">
               <span className="relative flex h-3 w-3">
                 {isProcessing && (
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75"></span>
                 )}
                 <span
-                  className={`relative inline-flex h-3 w-3 rounded-full ${isProcessing ? "bg-blue-500" : "bg-gray-300"}`}
+                  className={`relative inline-flex h-3 w-3 rounded-full ${isProcessing ? "bg-orange-500" : "bg-gray-300"}`}
                 ></span>
               </span>
               {t("digital_product_passport.sku_creation.ai_status")}
@@ -365,14 +365,14 @@ export default function SkuCreatePage() {
                       <X className="h-5 w-5 text-red-500" />
                     )
                   ) : isCurrent ? (
-                    <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                    <Loader2 className="h-5 w-5 animate-spin text-orange-500" />
                   ) : (
                     <Circle className="h-5 w-5 text-gray-300" />
                   )}
                   <span
                     className={`text-sm font-medium ${
                       isCurrent
-                        ? "text-blue-600"
+                        ? "text-orange-600"
                         : isDone
                           ? isExtracted
                             ? "text-gray-900"

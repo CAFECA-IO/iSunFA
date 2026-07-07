@@ -126,4 +126,7 @@ export const common = {
   done: "完了",
   back: "戻る",
   next: "次へ",
+  all_solutions: "すべてのソリューション",
+  all_status: "すべてのステータス",
+  reset: "リセット",
 };

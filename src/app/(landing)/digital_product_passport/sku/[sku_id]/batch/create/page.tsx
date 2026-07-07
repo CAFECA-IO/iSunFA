@@ -128,7 +128,7 @@ export default function BatchCreatePage() {
               onChange={(e) =>
                 setFormData({ ...formData, batchNumber: e.target.value })
               }
-              className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
             />
           </div>
 
@@ -151,7 +151,7 @@ export default function BatchCreatePage() {
               onChange={(e) =>
                 setFormData({ ...formData, manufactureDate: e.target.value })
               }
-              className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
             />
           </div>
 
@@ -177,7 +177,7 @@ export default function BatchCreatePage() {
               onChange={(e) =>
                 setFormData({ ...formData, facilitySite: e.target.value })
               }
-              className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
             />
           </div>
 
@@ -201,14 +201,14 @@ export default function BatchCreatePage() {
               onChange={(e) =>
                 setFormData({ ...formData, serialRange: e.target.value })
               }
-              className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
             />
           </div>
 
           <button
             onClick={handleSubmit}
             disabled={isLoading}
-            className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-500 disabled:opacity-50"
+            className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-orange-600 px-6 py-3 font-semibold text-white transition hover:bg-orange-500 disabled:opacity-50"
           >
             {isLoading ? (
               <Loader2 className="h-5 w-5 animate-spin" />

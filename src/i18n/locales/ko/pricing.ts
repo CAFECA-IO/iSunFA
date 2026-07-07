@@ -146,8 +146,8 @@ export const pricing = {
       "로컬 기업 전용 AI 에이전트로, 내부 기업 프라이버시 데이터를 클라우드에 업로드할 필요가 없습니다",
     machine_x86: "X86 5060Ti",
     machine_gx10: "ASUS Ascent GX10",
-    capacity_x86: "일일 약 150개의 증빙 처리 가능",
-    capacity_gx10: "일일 약 350개의 증빙 처리 가능",
+    capacity_x86: "일일 약 150 개의 증빙 처리 가능",
+    capacity_gx10: "일일 약 350 개의 증빙 처리 가능",
   },
   credits: {
     title: "포인트 구매",

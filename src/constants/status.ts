@@ -77,3 +77,11 @@ export type ManagementType =
 export const ORDER_TYPE_PREFIX = {
   BILLING: "BILLING_",
 } as const;
+
+export const APPLICATION_STATUS = {
+  CONTACTING: "CONTACTING",
+  EVALUATING: "EVALUATING",
+  CONTRACTING: "CONTRACTING",
+  EXECUTING: "EXECUTING",
+  CLOSED: "CLOSED",
+} as const;

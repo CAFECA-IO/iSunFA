@@ -45,7 +45,7 @@ export function DppProductMatrixPane({
       <div className="flex items-center justify-between border-b border-gray-100 bg-slate-50/50 p-5">
         <div>
           <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
-            <Network className="h-5 w-5 text-indigo-600" />
+            <Network className="h-5 w-5 text-orange-600" />
             {t("digital_product_passport.simulator.matrix_title")}
           </h2>
           <p className="mt-1 flex text-xs text-gray-500">
@@ -56,7 +56,7 @@ export function DppProductMatrixPane({
         <button
           onClick={onAddSku}
           disabled={isGenerating}
-          className="flex items-center gap-2 rounded-lg border border-blue-600 bg-blue-50 px-3 py-2 text-sm font-bold text-blue-700 shadow-sm transition-colors hover:bg-blue-100 disabled:opacity-50"
+          className="flex items-center gap-2 rounded-lg border border-orange-600 bg-orange-50 px-3 py-2 text-sm font-bold text-orange-700 shadow-sm transition-colors hover:bg-orange-100 disabled:opacity-50"
         >
           <Zap className="h-4 w-4" />
           {t("digital_product_passport.simulator.add_sku")}
@@ -111,7 +111,7 @@ export function DppProductMatrixPane({
                 <div className="space-y-2 border-t border-slate-100 bg-slate-50/50 p-4">
                   <button
                     onClick={() => onViewProductDetails(p.productId)}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 py-2 text-sm font-bold text-blue-700 shadow-sm transition-colors hover:bg-blue-100 disabled:opacity-50"
+                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-orange-200 bg-orange-50 py-2 text-sm font-bold text-orange-700 shadow-sm transition-colors hover:bg-orange-100 disabled:opacity-50"
                   >
                     <Search className="h-4 w-4" />
                     {t("digital_product_passport.simulator.view_sku_details")}
@@ -120,7 +120,7 @@ export function DppProductMatrixPane({
                     <button
                       onClick={() => onDownloadSku(p.productId)}
                       disabled={isGenerating}
-                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-50"
+                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-600 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-700 disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-50"
                     >
                       <DownloadCloud className="h-4 w-4" />
                       {t("digital_product_passport.simulator.download_sku")}

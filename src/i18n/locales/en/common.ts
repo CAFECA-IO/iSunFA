@@ -123,4 +123,7 @@ export const common = {
   done: "Done",
   back: "Back",
   next: "Next",
+  all_solutions: "All Solutions",
+  all_status: "All Status",
+  reset: "Reset",
 };

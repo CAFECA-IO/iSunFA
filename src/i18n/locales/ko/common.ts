@@ -124,4 +124,7 @@ export const common = {
   done: "완료",
   back: "뒤로",
   next: "다음",
+  all_solutions: "모든 솔루션",
+  all_status: "모든 상태",
+  reset: "초기화",
 };

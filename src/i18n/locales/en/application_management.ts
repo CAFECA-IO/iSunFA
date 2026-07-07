@@ -1,0 +1,32 @@
+export const applicationManagement = {
+  title: "Application Management",
+  subtitle: "Manage and review solution applications and contact information",
+  table: {
+    date: "Date",
+    company: "Company",
+    tax_id: "Tax ID",
+    solution: "Solution",
+    contact: "Contact",
+    phone: "Phone",
+    email: "Email",
+    id: "ID",
+    solution_id: "Solution ID",
+    company_name: "Company Name",
+    contact_person: "Contact Person",
+    address: "Address",
+    message: "Message",
+    status: "Status",
+  },
+  status: {
+    CONTACTING: "Contacting",
+    EVALUATING: "Evaluating",
+    CONTRACTING: "Contracting",
+    EXECUTING: "Executing",
+    CLOSED: "Closed",
+    undefined: "Contacting",
+  },
+  detail: {
+    title: "Application Details",
+    no_message: "No message provided",
+  },
+};

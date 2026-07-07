@@ -1,10 +1,13 @@
-// Part 1/5: US EPA GHG Emission Factors Hub (2025) - Table 1 Stationary Combustion (Coal, Solid, Gaseous)
-// 計算公式: CO2(kg) + [CH4(g) * 28 / 1000] + [N2O(g) * 265 / 1000] = kg CO2e
+/**
+ * Info: (20260706 - Luphia) Part 1/5: US EPA GHG Emission Factors Hub (2025) - Table 1 Stationary Combustion (Coal, Solid, Gaseous)
+ * 計算公式: CO2(kg) + [CH4(g) * 28 / 1000] + [N2O(g) * 265 / 1000] = kg CO2e
+ * 單位主要為 short ton (短噸) 或 scf (標準立方英尺)
+ */
 
 import { CoefficientCategory, ICoefficient } from "@/interfaces/coefficient";
 
 export const TRUE_COEFFICIENT_DATA_PART_1: ICoefficient[] = [
-  // --- 煤炭類 (Coal and Coke) ---
+  // Info: (20260706 - Luphia) 煤炭類 (Coal and Coke)
   {
     id: "epa-2025-t1-001",
     name: "無煙煤 (Anthracite) - 固定燃燒",
@@ -106,7 +109,7 @@ export const TRUE_COEFFICIENT_DATA_PART_1: ICoefficient[] = [
     updatedAt: 1737417600.0,
   },
 
-  // --- 其他固體燃料 (Other Fuels - Solid) ---
+  // Info: (20260706 - Luphia) 其他固體燃料 (Other Fuels - Solid)
   {
     id: "epa-2025-t1-010",
     name: "都市固體廢棄物 (Municipal Solid Waste) - 固定燃燒",
@@ -152,7 +155,7 @@ export const TRUE_COEFFICIENT_DATA_PART_1: ICoefficient[] = [
     updatedAt: 1737417600.0,
   },
 
-  // --- 固體生質燃料 (Biomass Fuels - Solid) ---
+  // Info: (20260706 - Luphia) 固體生質燃料 (Biomass Fuels - Solid)
   {
     id: "epa-2025-t1-014",
     name: "農業副產品 (Agricultural Byproducts) - 固定燃燒",
@@ -198,7 +201,7 @@ export const TRUE_COEFFICIENT_DATA_PART_1: ICoefficient[] = [
     updatedAt: 1737417600.0,
   },
 
-  // --- 氣體燃料 (Natural Gas & Other Fuels - Gaseous) ---
+  // Info: (20260706 - Luphia) 氣體燃料 (Natural Gas & Other Fuels - Gaseous)
   {
     id: "epa-2025-t1-018",
     name: "天然氣 (Natural Gas) - 固定燃燒",
@@ -256,7 +259,7 @@ export const TRUE_COEFFICIENT_DATA_PART_1: ICoefficient[] = [
     updatedAt: 1737417600.0,
   },
 
-  // --- 氣體生質能 (Biomass Fuels - Gaseous) ---
+  // Info: (20260706 - Luphia) 氣體生質能 (Biomass Fuels - Gaseous)
   {
     id: "epa-2025-t1-023",
     name: "掩埋場沼氣 (Landfill Gas) - 固定燃燒",
@@ -281,9 +284,11 @@ export const TRUE_COEFFICIENT_DATA_PART_1: ICoefficient[] = [
   },
 ];
 
-// Part 2/5: US EPA GHG Emission Factors Hub (2025) - Table 1 Stationary Combustion (Petroleum Products)
-// 計算公式: CO2(kg) + [CH4(g) * 28 / 1000] + [N2O(g) * 265 / 1000] = kg CO2e
-// 單位皆為 gallon (加侖)
+/**
+ * Info: (20260706 - Luphia) Part 2/5: US EPA GHG Emission Factors Hub (2025) - Table 1 Stationary Combustion (Petroleum Products)
+ * 計算公式: CO2(kg) + [CH4(g) * 28 / 1000] + [N2O(g) * 265 / 1000] = kg CO2e
+ * 單位皆為 gallon (加侖)
+ */
 
 export const TRUE_COEFFICIENT_DATA_PART_2: ICoefficient[] = [
   {
@@ -662,11 +667,13 @@ export const TRUE_COEFFICIENT_DATA_PART_2: ICoefficient[] = [
   },
 ];
 
-// Part 3/5: US EPA GHG Emission Factors Hub (2025) - Table 2 & Table 5 Mobile Combustion
-// 單位主要為 gallon (加侖) 或 scf (標準立方英尺)
+/**
+ * Info: (20260706 - Luphia) Part 3/5: US EPA GHG Emission Factors Hub (2025) - Table 2 & Table 5 Mobile Combustion
+ * 單位主要為 gallon (加侖) 或 scf (標準立方英尺)
+ */
 
 export const TRUE_COEFFICIENT_DATA_PART_3 = [
-  // --- 道路車輛燃油 (On-Road Vehicles) ---
+  // Info: (20260706 - Luphia) 道路車輛燃油 (On-Road Vehicles)
   {
     id: "epa-2025-mobi-001",
     name: "車用汽油 (Motor Gasoline) - 移動燃燒",
@@ -738,7 +745,7 @@ export const TRUE_COEFFICIENT_DATA_PART_3 = [
     updatedAt: 1737417600.0,
   },
 
-  // --- 非道路車輛與重型機具 (Non-Road Vehicles & Equipment) ---
+  // Info: (20260706 - Luphia) 非道路車輛與重型機具 (Non-Road Vehicles & Equipment)
   {
     id: "epa-2025-mobi-007",
     name: "營建與採礦機具 (Construction/Mining) - 柴油",
@@ -788,7 +795,7 @@ export const TRUE_COEFFICIENT_DATA_PART_3 = [
     updatedAt: 1737417600.0,
   },
 
-  // --- 船舶、火車與航空器燃油 (Ships, Locomotives & Aircraft) ---
+  // Info: (20260706 - Luphia) 船舶、火車與航空器燃油 (Ships, Locomotives & Aircraft)
   {
     id: "epa-2025-mobi-011",
     name: "船舶與水上運具 (Ships and Boats) - 柴油",
@@ -850,13 +857,13 @@ export const TRUE_COEFFICIENT_DATA_PART_3 = [
   },
 ];
 
-// Part 4/5: US EPA GHG Emission Factors Hub (2025) - Tables 6, 7, 8, 10 (Electricity, Heat, Transportation, Business Travel)
-// 包含 Scope 2 (外購電力與熱能) 與 Scope 3 (價值鏈物流與差旅)
+/**
+ * Info: (20260706 - Luphia) Part 4/5: US EPA GHG Emission Factors Hub (2025) - Tables 6, 7, 8, 10 (Electricity, Heat, Transportation, Business Travel)
+ * 包含 Scope 2 (外購電力與熱能) 與 Scope 3 (價值鏈物流與差旅)
+ */
 
 export const TRUE_COEFFICIENT_DATA_PART_4: ICoefficient[] = [
-  // ==========================================
-  // Scope 2: 外購電力 (Electricity - US eGRID 2023) - 來自 Table 6
-  // ==========================================
+  // Info: (20260706 - Luphia) Scope 2: 外購電力 (Electricity - US eGRID 2023) - 來自 Table 6
   {
     id: "epa-2025-elec-001",
     name: "美國平均電網排放係數 (US Average)",
@@ -916,9 +923,7 @@ export const TRUE_COEFFICIENT_DATA_PART_4: ICoefficient[] = [
     updatedAt: 1737417600.0,
   },
 
-  // ==========================================
-  // Scope 2: 外購熱能與蒸氣 (Steam and Heat) - 來自 Table 7
-  // ==========================================
+  // Info: (20260706 - Luphia) Scope 2: 外購熱能與蒸氣 (Steam and Heat) - 來自 Table 7
   {
     id: "epa-2025-heat-001",
     name: "外購蒸氣與熱能 (Steam and Heat)",
@@ -932,9 +937,7 @@ export const TRUE_COEFFICIENT_DATA_PART_4: ICoefficient[] = [
     updatedAt: 1737417600.0,
   },
 
-  // ==========================================
-  // Scope 3: 價值鏈物流運輸 (Upstream/Downstream Transportation) - 來自 Table 8
-  // ==========================================
+  // Info: (20260706 - Luphia) Scope 3: 價值鏈物流運輸 (Upstream/Downstream Transportation) - 來自 Table 8
   {
     id: "epa-2025-logi-001",
     name: "中重型貨車物流 (Medium/Heavy-Duty Truck) - 整車包趟",
@@ -993,9 +996,7 @@ export const TRUE_COEFFICIENT_DATA_PART_4: ICoefficient[] = [
     updatedAt: 1737417600.0,
   },
 
-  // ==========================================
-  // Scope 3: 員工通勤與商務差旅 (Employee Commuting & Business Travel) - 來自 Table 10
-  // ==========================================
+  // Info: (20260706 - Luphia) Scope 3: 員工通勤與商務差旅 (Employee Commuting & Business Travel) - 來自 Table 10
   {
     id: "epa-2025-trav-001",
     name: "一般乘用車出差 (Passenger Car)",
@@ -1079,13 +1080,13 @@ export const TRUE_COEFFICIENT_DATA_PART_4: ICoefficient[] = [
   },
 ];
 
-// Part 5/5: US EPA GHG Emission Factors Hub (2025) - Tables 9, 11, 12 (Waste & Global Warming Potentials)
-// 包含 Scope 3 (廢棄物處理) 與 Scope 1 (冷媒與製程氣體逸散)
+/**
+ * Info: (20260706 - Luphia) Part 5/5: US EPA GHG Emission Factors Hub (2025) - Tables 9, 11, 12 (Waste & Global Warming Potentials)
+ * 包含 Scope 3 (廢棄物處理) 與 Scope 1 (冷媒與製程氣體逸散)
+ */
 
 export const TRUE_COEFFICIENT_DATA_PART_5: ICoefficient[] = [
-  // ==========================================
-  // Scope 3: 營運產生之廢棄物 (Waste Generated in Operations) - 來自 Table 9 (WARM 模型)
-  // ==========================================
+  // Info: (20260706 - Luphia) Scope 3: 營運產生之廢棄物 (Waste Generated in Operations) - 來自 Table 9 (WARM 模型)
   {
     id: "epa-2025-wst-001",
     name: "一般混合掩埋垃圾 (Mixed MSW - Landfilled)",
@@ -1177,9 +1178,7 @@ export const TRUE_COEFFICIENT_DATA_PART_5: ICoefficient[] = [
     updatedAt: 1737417600.0,
   },
 
-  // ==========================================
-  // Scope 1: 溫室氣體與冷媒逸散 (Global Warming Potentials) - 來自 Table 11 & 12
-  // ==========================================
+  // Info: (20260706 - Luphia) Scope 1: 溫室氣體與冷媒逸散 (Global Warming Potentials) - 來自 Table 11 & 12
   {
     id: "epa-2025-gwp-001",
     name: "六氟化硫 (SF6) 逸散",
@@ -1253,13 +1252,13 @@ export const TRUE_COEFFICIENT_DATA_PART_5: ICoefficient[] = [
     updatedAt: 1737417600.0,
   },
 ];
-// ==========================================
-// UK DEFRA GHG Conversion Factors (2025)
-// Part 1: 商務差旅 (航空、陸運、海運) 與 飯店住宿 (Scope 3)
-// ==========================================
+/**
+ * Info: (20260706 - Luphia) UK DEFRA GHG Conversion Factors (2025)
+ * Part 1: 商務差旅 (航空、陸運、海運) 與 飯店住宿 (Scope 3)
+ */
 
 export const TRUE_COEFFICIENT_DATA_DEFRA_PART_1: ICoefficient[] = [
-  // --- 商務差旅 - 航空 (Business travel- air) ---
+  // Info: (20260706 - Luphia) 商務差旅 - 航空 (Business travel- air)
   {
     id: "defra-2025-air-001",
     name: "國內航班 (Domestic flight) - 平均艙等",
@@ -1306,7 +1305,7 @@ export const TRUE_COEFFICIENT_DATA_DEFRA_PART_1: ICoefficient[] = [
     updatedAt: 1737417600.0,
   },
 
-  // --- 商務差旅 - 陸運與海運 (Business travel- land & sea) ---
+  // Info: (20260706 - Luphia) 商務差旅 - 陸運與海運 (Business travel- land & sea)
   {
     id: "defra-2025-land-001",
     name: "國家鐵路 (National rail)",
@@ -1374,8 +1373,10 @@ export const TRUE_COEFFICIENT_DATA_DEFRA_PART_1: ICoefficient[] = [
     updatedAt: 1737417600.0,
   },
 
-  // --- 飯店住宿 (Hotel Stay) ---
-  // 注意：DEFRA 提供了各國飯店的平均每晚碳排。我為您挑選了台積電營運最相關的幾個地區。
+  /**
+   * Info: (20260706 - Luphia) 飯店住宿 (Hotel Stay)
+   * 注意：DEFRA 提供了各國飯店的平均每晚碳排。我為您挑選了台積電營運最相關的幾個地區。
+   */
   {
     id: "defra-2025-hotel-001",
     name: "飯店住宿 (Hotel stay) - 台灣 (Taiwan)",
@@ -1433,13 +1434,13 @@ export const TRUE_COEFFICIENT_DATA_DEFRA_PART_1: ICoefficient[] = [
   },
 ];
 
-// ==========================================
-// UK DEFRA GHG Conversion Factors (2025)
-// Part 2: 貨物運輸 (公路貨車、鐵路、海運、空運) - Scope 3
-// ==========================================
+/**
+ * Info: (20260706 - Luphia) UK DEFRA GHG Conversion Factors (2025)
+ * Part 2: 貨物運輸 (公路貨車、鐵路、海運、空運) - Scope 3
+ */
 
 export const TRUE_COEFFICIENT_DATA_DEFRA_PART_2: ICoefficient[] = [
-  // --- 公路運輸 - 小貨車 (Vans) ---
+  // Info: (20260706 - Luphia) 公路運輸 - 小貨車 (Vans)
   {
     id: "defra-2025-frt-001",
     name: "輕型貨車 (Van) - 平均 (3.5噸以下) - 柴油",
@@ -1464,7 +1465,7 @@ export const TRUE_COEFFICIENT_DATA_DEFRA_PART_2: ICoefficient[] = [
     updatedAt: 1737417600.0,
   },
 
-  // --- 公路運輸 - 重型貨車 (HGVs) ---
+  // Info: (20260706 - Luphia) 公路運輸 - 重型貨車 (HGVs)
   {
     id: "defra-2025-frt-003",
     name: "重型大貨車 (HGV) - 全硬體式 (All rigids) - 平均載重",
@@ -1488,7 +1489,7 @@ export const TRUE_COEFFICIENT_DATA_DEFRA_PART_2: ICoefficient[] = [
     updatedAt: 1737417600.0,
   },
 
-  // --- 鐵路貨運 (Freight rail) ---
+  // Info: (20260706 - Luphia) 鐵路貨運 (Freight rail)
   {
     id: "defra-2025-frt-005",
     name: "貨運火車 (Freight train)",
@@ -1501,7 +1502,7 @@ export const TRUE_COEFFICIENT_DATA_DEFRA_PART_2: ICoefficient[] = [
     updatedAt: 1737417600.0,
   },
 
-  // --- 海運 (Sea freight) ---
+  // Info: (20260706 - Luphia) 海運 (Sea freight)
   {
     id: "defra-2025-frt-006",
     name: "平均貨櫃船 (Average container ship)",
@@ -1536,7 +1537,7 @@ export const TRUE_COEFFICIENT_DATA_DEFRA_PART_2: ICoefficient[] = [
     updatedAt: 1737417600.0,
   },
 
-  // --- 空運 (Air freight) ---
+  // Info: (20260706 - Luphia) 空運 (Air freight)
   {
     id: "defra-2025-frt-009",
     name: "國內航空貨運 (Domestic)",
@@ -1571,7 +1572,7 @@ export const TRUE_COEFFICIENT_DATA_DEFRA_PART_2: ICoefficient[] = [
     updatedAt: 1737417600.0,
   },
 
-  // --- 其他運輸相關指標 ---
+  // Info: (20260706 - Luphia) 其他運輸相關指標
   {
     id: "defra-2025-frt-012",
     name: "冷藏運輸加成 (Refrigerated transport) - 貨車",
@@ -1585,13 +1586,13 @@ export const TRUE_COEFFICIENT_DATA_DEFRA_PART_2: ICoefficient[] = [
   },
 ];
 
-// ==========================================
-// UK DEFRA GHG Conversion Factors (2025)
-// Part 3: 物料採購 (Material Use) 與 廢棄物處理 (Waste Disposal) - Scope 3
-// ==========================================
+/**
+ * Info: (20260706 - Luphia) UK DEFRA GHG Conversion Factors (2025)
+ * Part 3: 物料採購 (Material Use) 與 廢棄物處理 (Waste Disposal) - Scope 3
+ */
 
 export const TRUE_COEFFICIENT_DATA_DEFRA_PART_3: ICoefficient[] = [
-  // --- 物料採購 (Material Use) - 塑膠類 (Plastics) ---
+  // Info: (20260706 - Luphia) 物料採購 (Material Use) - 塑膠類 (Plastics)
   {
     id: "defra-2025-mat-001",
     name: "採購塑膠原料 (Average plastics) - 原生材料 (Primary)",
@@ -1649,7 +1650,7 @@ export const TRUE_COEFFICIENT_DATA_DEFRA_PART_3: ICoefficient[] = [
     updatedAt: 1737417600.0,
   },
 
-  // --- 物料採購 (Material Use) - 金屬與其他 (Metals & Others) ---
+  // Info: (20260706 - Luphia) 物料採購 (Material Use) - 金屬與其他 (Metals & Others)
   {
     id: "defra-2025-mat-006",
     name: "採購鋼材 (Steel - average) - 原生金屬",
@@ -1673,9 +1674,11 @@ export const TRUE_COEFFICIENT_DATA_DEFRA_PART_3: ICoefficient[] = [
     updatedAt: 1737417600.0,
   },
 
-  // --- 廢棄物處理 (Waste Disposal) ---
-  // 注意：DEFRA 強調廢棄物回收的減碳效益歸屬於「使用回收料的買方」，
-  // 因此產生廢棄物的企業，其「回收處理」的排碳僅計算「清運到回收廠的物流碳排」，故數值極低。
+  /**
+   * Info: (20260706 - Luphia) 廢棄物處理 (Waste Disposal)
+   * 注意：DEFRA 強調廢棄物回收的減碳效益歸屬於「使用回收料的買方」，
+   * 因此產生廢棄物的企業，其「回收處理」的排碳僅計算「清運到回收廠的物流碳排」，故數值極低。
+   */
   {
     id: "defra-2025-wst-001",
     name: "混合營運廢棄物 (Commercial and industrial waste) - 掩埋 (Landfill)",
@@ -1746,13 +1749,13 @@ export const TRUE_COEFFICIENT_DATA_DEFRA_PART_3: ICoefficient[] = [
   },
 ];
 
-// ==========================================
-// UK DEFRA GHG Conversion Factors (2025)
-// Part 4: 水資源 (Water) 與 居家辦公 (Homeworking) - Scope 3
-// ==========================================
+/**
+ * Info: (20260706 - Luphia) UK DEFRA GHG Conversion Factors (2025)
+ * Part 4: 水資源 (Water) 與 居家辦公 (Homeworking) - Scope 3
+ */
 
 export const TRUE_COEFFICIENT_DATA_DEFRA_PART_4: ICoefficient[] = [
-  // --- 水資源 (Water Supply & Treatment) ---
+  // Info: (20260706 - Luphia) 水資源 (Water Supply & Treatment)
   {
     id: "defra-2025-wat-001",
     name: "自來水供應 (Water supply)",
@@ -1778,7 +1781,7 @@ export const TRUE_COEFFICIENT_DATA_DEFRA_PART_4: ICoefficient[] = [
     updatedAt: 1737417600.0,
   },
 
-  // --- 居家辦公 (Homeworking) ---
+  // Info: (20260706 - Luphia) 居家辦公 (Homeworking)
   {
     id: "defra-2025-hmw-001",
     name: "居家辦公 (Homeworking) - 總耗能 (設備+空調/暖氣)",
@@ -1817,12 +1820,12 @@ export const TRUE_COEFFICIENT_DATA_DEFRA_PART_4: ICoefficient[] = [
   },
 ];
 
-// ==========================================
-// UK DEFRA GHG Conversion Factors (2025)
-// Part 5: 英國本地電網、自有車隊、生質能與範疇外排放 (Scope 1, 2 & Outside of Scopes)
-// ==========================================
+/**
+ * Info: (20260706 - Luphia) UK DEFRA GHG Conversion Factors (2025)
+ * Part 5: 英國本地電網、自有車隊、生質能與範疇外排放 (Scope 1, 2 & Outside of Scopes)
+ */
 export const TRUE_COEFFICIENT_DATA_DEFRA_PART_5: ICoefficient[] = [
-  // --- 英國本地電網與輸配電損耗 (UK electricity & T&D) ---
+  // Info: (20260706 - Luphia) 英國本地電網與輸配電損耗 (UK electricity & T&D)
   {
     id: "defra-2025-ukgrid-001",
     name: "英國外購電力 (UK electricity) - 發電排放",
@@ -1848,7 +1851,7 @@ export const TRUE_COEFFICIENT_DATA_DEFRA_PART_5: ICoefficient[] = [
     updatedAt: 1737417600.0,
   },
 
-  // --- 電動車專用電網 (UK electricity for EVs) ---
+  // Info: (20260706 - Luphia) 電動車專用電網 (UK electricity for EVs)
   {
     id: "defra-2025-ukev-001",
     name: "電動車充電電力 (UK electricity for EVs)",
@@ -1873,7 +1876,7 @@ export const TRUE_COEFFICIENT_DATA_DEFRA_PART_5: ICoefficient[] = [
     updatedAt: 1737417600.0,
   },
 
-  // --- 燃料與生質能 (Fuels & Bioenergy) ---
+  // Info: (20260706 - Luphia) 燃料與生質能 (Fuels & Bioenergy)
   {
     id: "defra-2025-fuel-001",
     name: "天然氣 (Natural gas) - 英國基準",
@@ -1910,7 +1913,7 @@ export const TRUE_COEFFICIENT_DATA_DEFRA_PART_5: ICoefficient[] = [
     updatedAt: 1737417600.0,
   },
 
-  // --- 範疇外排放 (Outside of scopes - Biogenic CO2) ---
+  // Info: (20260706 - Luphia) 範疇外排放 (Outside of scopes - Biogenic CO2)
   // GHG Protocol 嚴格規定：生質能燃燒時釋放的 CO2 雖不計入 Scope 1，但必須在「範疇外 (Outside of Scopes)」獨立揭露！
   {
     id: "defra-2025-out-001",
@@ -1936,7 +1939,7 @@ export const TRUE_COEFFICIENT_DATA_DEFRA_PART_5: ICoefficient[] = [
     updatedAt: 1737417600.0,
   },
 
-  // --- 企業自有乘用車 (Passenger vehicles) ---
+  // Info: (20260706 - Luphia) 企業自有乘用車 (Passenger vehicles)
   {
     id: "defra-2025-veh-001",
     name: "企業自有乘用車 (Average car) - 汽油/柴油平均",
@@ -1961,7 +1964,7 @@ export const TRUE_COEFFICIENT_DATA_DEFRA_PART_5: ICoefficient[] = [
     updatedAt: 1737417600.0,
   },
 
-  // --- 冷媒與其他 (Refrigerant & other) ---
+  // Info: (20260706 - Luphia) 冷媒與其他 (Refrigerant & other)
   {
     id: "defra-2025-ref-001",
     name: "冷媒 R-32 (HFC-32) 逸散 - 英國基準",
@@ -1977,10 +1980,10 @@ export const TRUE_COEFFICIENT_DATA_DEFRA_PART_5: ICoefficient[] = [
 ];
 export const TRUE_COEFFICIENT_DATA_DEFRA_PART_6: ICoefficient[] = [];
 
-// ==========================================
-// 台灣環境部 (MOENV) 產品碳足跡資訊網 係數 (選錄)
-// Part 6: 台灣本地常用能源與資源係數
-// ==========================================
+/**
+ * Info: (20260706 - Luphia) 台灣環境部 (MOENV) 產品碳足跡資訊網 係數 (選錄)
+ * Part 6: 台灣本地常用能源與資源係數
+ */
 
 export const TRUE_COEFFICIENT_DATA_MOENV_PART_6: ICoefficient[] = [
   {
@@ -2052,9 +2055,7 @@ export const TRUE_COEFFICIENT_DATA_MOENV_PART_6: ICoefficient[] = [
   },
 ];
 
-// ==========================================
-// 台灣環境部 (MOENV) 從 taiwan.html 匯入的所有碳係數
-// ==========================================
+// Info: (20260706 - Luphia) 台灣環境部 (MOENV) 從 taiwan.html 匯入的所有碳係數
 
 export const TRUE_COEFFICIENT_DATA_TAIWAN: ICoefficient[] = [
   {

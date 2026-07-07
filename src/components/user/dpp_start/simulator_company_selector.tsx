@@ -108,14 +108,14 @@ const SimulatorCompanySelector: FC<ISimulatorCompanySelectorProps> = ({
         type="button"
         disabled={disabled || isLoading}
         onClick={() => setShowDropdown(!showDropdown)}
-        className="flex w-full items-center justify-between rounded-lg border border-slate-300 bg-white py-2 pr-3 pl-3 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500"
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 py-2.5 text-sm font-bold text-orange-700 transition-colors hover:bg-orange-100 focus:ring-1 focus:ring-orange-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500"
       >
         <span className="flex items-center gap-2 truncate">
           {isLoading ? (
             <span className="text-slate-400">{t("common.loading")}</span>
           ) : value ? (
             <>
-              <Building2 className="h-4 w-4 shrink-0 text-slate-400" />
+              <Building2 className="h-5 w-5 text-orange-600" />
               {value}
             </>
           ) : (
@@ -143,7 +143,7 @@ const SimulatorCompanySelector: FC<ISimulatorCompanySelectorProps> = ({
                 )}
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
-                className="w-full rounded-md border border-slate-300 bg-white py-1.5 pr-3 pl-8 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                className="w-full rounded-md border border-slate-300 bg-white py-1.5 pr-3 pl-8 text-sm text-slate-900 placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
               />
             </div>
           </div>
@@ -158,7 +158,7 @@ const SimulatorCompanySelector: FC<ISimulatorCompanySelectorProps> = ({
                     if (onSelect) onSelect(c);
                     setShowDropdown(false);
                   }}
-                  className="flex w-full cursor-pointer items-center justify-between border-b border-slate-50 px-3 py-2.5 text-left text-sm transition-colors last:border-0 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
+                  className="flex w-full cursor-pointer items-center justify-between border-b border-slate-50 px-3 py-2.5 text-left text-sm transition-colors last:border-0 hover:bg-orange-50 focus:bg-orange-50 focus:outline-none"
                 >
                   <span className="font-semibold text-slate-700">{c.name}</span>
                   <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-400">
