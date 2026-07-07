@@ -1,3 +1,5 @@
+import { Prisma } from "@/generated";
+
 export enum CoefficientCategory {
   STANDARD = "standard",
   CUSTOM = "custom",
@@ -19,6 +21,7 @@ export interface ICoefficient extends ICoefficientInput {
   category: CoefficientCategory | string; // Info: (20260413 - Julian) 公式標籤：自訂、標準
   versionYear?: string | null; // Info: (20260514 - Tzuhan) 版本年份
   isVerified?: boolean; // Info: (20260514 - Tzuhan) CPA 防線
+  uncertaintyPercentage?: string | number | Prisma.Decimal | null; // Info: (20260707 - Tzuhan) 排放係數不確定性
   createdAt: number; // Info: (20260413 - Julian) 建立時間
   updatedAt: number; // Info: (20260413 - Julian) 更新時間
 }

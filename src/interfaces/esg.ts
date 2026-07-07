@@ -66,6 +66,7 @@ export interface IEsgRecordDetail extends IEsgRecordBrief {
   confidence: number; // Info: (20260424 - Julian) AI 信心分數
   isVerified: boolean; // Info: (20260424 - Julian) 是否已驗證
   dqiScore: number; // Info: (20260424 - Julian) 數據品質分數
+  dqiType?: string; // Info: (20260707 - Tzuhan) 數據品質類型 (PRIMARY/SECONDARY)
   coefficient: ICoefficient | null; // Info: (20260424 - Julian) 排放係數
   emissionSource: { id: string; name: string } | null; // Info: (20260429 - Julian) 排放源資訊
   journalId?: string; // Info: (20260424 - Julian) 會計分錄 ID

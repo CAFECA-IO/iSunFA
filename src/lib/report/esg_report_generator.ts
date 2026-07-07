@@ -4,10 +4,17 @@ import {
   IEsgReport,
   IEsgReportItem,
   IEsgReportDetailedRecord,
+  IEsgReportMetrics,
 } from "@/interfaces/esg_report";
 import { IEsgRecordDetail } from "@/interfaces/esg";
 import { MoneyUtil } from "@/lib/utils/money";
-import { Iso14064Category } from "@/constants/esg";
+import {
+  Iso14064Category,
+  DQI_UNCERTAINTY_MAP,
+  DEFAULT_EF_UNCERTAINTY,
+} from "@/constants/esg";
+import { UncertaintyCalculator } from "@/lib/report/uncertainty_calculator";
+import { Prisma } from "@/generated";
 
 const ESG_CATEGORY_MAP: Record<string, "scope1" | "scope2" | "scope3"> = {
   SCOPE_1: "scope1",
@@ -92,6 +99,28 @@ export function generateEsgReport(esgRecords: IEsgRecordDetail[]): IEsgReport {
 
     const dbCoefficient = record.coefficient?.emissionFactor ?? null;
 
+    // Info: (20260707 - Tzuhan) 計算單筆紀錄不確定性
+    let baseUAd = new Prisma.Decimal(0.1); // Fallback
+    if (record.dqiScore) {
+      const dqiKey = MoneyUtil.toDecimal(record.dqiScore).toNumber();
+      if (DQI_UNCERTAINTY_MAP[dqiKey]) {
+        baseUAd = DQI_UNCERTAINTY_MAP[dqiKey];
+      }
+    }
+    const uAd = UncertaintyCalculator.adjustUncertaintyByType(
+      baseUAd,
+      record.dqiType || "SECONDARY",
+    );
+
+    let uEf = DEFAULT_EF_UNCERTAINTY;
+    if (record.coefficient?.uncertaintyPercentage) {
+      // 假設 uncertaintyPercentage = 5.0 代表 5%
+      uEf = new Prisma.Decimal(record.coefficient.uncertaintyPercentage).div(
+        100,
+      );
+    }
+    const uRecord = UncertaintyCalculator.calculateRecordUncertainty(uAd, uEf);
+
     const detailedRecord = {
       id: record.id,
       activityType: name,
@@ -99,6 +128,7 @@ export function generateEsgReport(esgRecords: IEsgRecordDetail[]): IEsgReport {
       unit: record.unit || "",
       emissions: emissionDecimal.toString(),
       emissionFactor: dbCoefficient,
+      uncertaintyPercent: uRecord.mul(100).toNumber(),
     };
 
     // Info: (20260707 - Tzuhan) GHG Protocol 累加
@@ -175,7 +205,7 @@ export function generateEsgReport(esgRecords: IEsgRecordDetail[]): IEsgReport {
   const iso5Items = mapToArray(categoryMap.iso5, totalIso5, "iso5");
   const iso6Items = mapToArray(categoryMap.iso6, totalIso6, "iso6");
 
-  const metrics = {
+  const metrics: IEsgReportMetrics = {
     totalEmissions: totalEmissions.toString(),
     scope1Proportion: totalEmissions.isZero()
       ? "0"
@@ -238,53 +268,81 @@ export function generateEsgReport(esgRecords: IEsgRecordDetail[]): IEsgReport {
       );
   };
 
+  const calculateScopeUncertainty = (
+    records: Omit<IEsgReportDetailedRecord, "percentage">[],
+    scopeTotal: Decimal,
+  ) => {
+    if (scopeTotal.isZero() || records.length === 0)
+      return { percent: 0, absolute: 0 };
+    const items = records.map((r) => ({
+      emissions: new Prisma.Decimal(r.emissions),
+      uncertainty: r.uncertaintyPercent
+        ? new Prisma.Decimal(r.uncertaintyPercent).div(100)
+        : new Prisma.Decimal(0),
+    }));
+    const totalU = UncertaintyCalculator.calculateAggregatedUncertainty(items);
+    return {
+      percent: totalU.mul(100).toNumber(),
+      absolute: totalU
+        .mul(new Prisma.Decimal(scopeTotal.toString()))
+        .toNumber(),
+    };
+  };
+
+  const calculateGrossUncertainty = () => {
+    const allRecords = [
+      ...categoryRecords.scope1,
+      ...categoryRecords.scope2,
+      ...categoryRecords.scope3,
+    ];
+    if (totalEmissions.isZero() || allRecords.length === 0)
+      return { percent: 0, absolute: 0 };
+
+    const items = allRecords.map((r) => ({
+      emissions: new Prisma.Decimal(r.emissions),
+      uncertainty: r.uncertaintyPercent
+        ? new Prisma.Decimal(r.uncertaintyPercent).div(100)
+        : new Prisma.Decimal(0),
+    }));
+    const totalU = UncertaintyCalculator.calculateAggregatedUncertainty(items);
+    return {
+      percent: totalU.mul(100).toNumber(),
+      absolute: totalU
+        .mul(new Prisma.Decimal(totalEmissions.toString()))
+        .toNumber(),
+    };
+  };
+
+  const grossU = calculateGrossUncertainty();
+  metrics.uncertaintyPercent = grossU.percent;
+  metrics.absoluteUncertainty = grossU.absolute;
+
+  const buildSection = (
+    items: IEsgReportItem[],
+    records: Omit<IEsgReportDetailedRecord, "percentage">[],
+    total: Decimal,
+  ) => {
+    const u = calculateScopeUncertainty(records, total);
+    return {
+      items,
+      records: calculateRecords(records, total),
+      total: total.toString(),
+      uncertaintyPercent: u.percent,
+      absoluteUncertainty: u.absolute,
+    };
+  };
+
   return {
     sections: {
-      scope1: {
-        items: scope1Items,
-        records: calculateRecords(categoryRecords.scope1, totalScope1),
-        total: totalScope1.toString(),
-      },
-      scope2: {
-        items: scope2Items,
-        records: calculateRecords(categoryRecords.scope2, totalScope2),
-        total: totalScope2.toString(),
-      },
-      scope3: {
-        items: scope3Items,
-        records: calculateRecords(categoryRecords.scope3, totalScope3),
-        total: totalScope3.toString(),
-      },
-      iso1: {
-        items: iso1Items,
-        records: calculateRecords(categoryRecords.iso1, totalIso1),
-        total: totalIso1.toString(),
-      },
-      iso2: {
-        items: iso2Items,
-        records: calculateRecords(categoryRecords.iso2, totalIso2),
-        total: totalIso2.toString(),
-      },
-      iso3: {
-        items: iso3Items,
-        records: calculateRecords(categoryRecords.iso3, totalIso3),
-        total: totalIso3.toString(),
-      },
-      iso4: {
-        items: iso4Items,
-        records: calculateRecords(categoryRecords.iso4, totalIso4),
-        total: totalIso4.toString(),
-      },
-      iso5: {
-        items: iso5Items,
-        records: calculateRecords(categoryRecords.iso5, totalIso5),
-        total: totalIso5.toString(),
-      },
-      iso6: {
-        items: iso6Items,
-        records: calculateRecords(categoryRecords.iso6, totalIso6),
-        total: totalIso6.toString(),
-      },
+      scope1: buildSection(scope1Items, categoryRecords.scope1, totalScope1),
+      scope2: buildSection(scope2Items, categoryRecords.scope2, totalScope2),
+      scope3: buildSection(scope3Items, categoryRecords.scope3, totalScope3),
+      iso1: buildSection(iso1Items, categoryRecords.iso1, totalIso1),
+      iso2: buildSection(iso2Items, categoryRecords.iso2, totalIso2),
+      iso3: buildSection(iso3Items, categoryRecords.iso3, totalIso3),
+      iso4: buildSection(iso4Items, categoryRecords.iso4, totalIso4),
+      iso5: buildSection(iso5Items, categoryRecords.iso5, totalIso5),
+      iso6: buildSection(iso6Items, categoryRecords.iso6, totalIso6),
       grossEmissions: { total: totalEmissions.toString() },
     },
     metrics,

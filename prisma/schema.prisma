@@ -518,7 +518,6 @@ enum EsgIntensity {
   HIGH
 }
 
-
 model EsgRecord {
   id                  String           @id @default(uuid())
   createdAt           DateTime         @default(now()) @map("created_at")
@@ -575,27 +574,27 @@ model EsgRecord {
 
 // Info: (20260703 - Tzuhan) ISO 14067 產品碳足跡分攤紀錄
 model EsgAllocation {
-  id                 String   @id @default(uuid())
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Info: (20260703 - Tzuhan) 分攤來源：對應的大宗 ESG 紀錄
-  esgRecordId        String   @map("esg_record_id")
-  esgRecord          EsgRecord @relation(fields: [esgRecordId], references: [id], onDelete: Cascade)
+  esgRecordId String    @map("esg_record_id")
+  esgRecord   EsgRecord @relation(fields: [esgRecordId], references: [id], onDelete: Cascade)
 
   // Info: (20260703 - Tzuhan) 分攤對象：對應的產品 SKU
-  skuId              String   @map("sku_id")
-  sku                DigitalProductPassportSku @relation(fields: [skuId], references: [id], onDelete: Cascade)
+  skuId String                    @map("sku_id")
+  sku   DigitalProductPassportSku @relation(fields: [skuId], references: [id], onDelete: Cascade)
 
   // Info: (20260703 - Tzuhan) 分攤比例 (例如 30%)
-  percentage         Decimal
+  percentage Decimal
   // Info: (20260703 - Tzuhan) 分攤基礎 (例如重量、工時等文字描述)
-  basis              String?
+  basis      String?
 
   // Info: (20260703 - Tzuhan) 依照比例分攤後的活動數據
-  allocatedAmount    Decimal  @map("allocated_amount")
+  allocatedAmount    Decimal @map("allocated_amount")
   // Info: (20260703 - Tzuhan) 依照比例分攤後的碳排放
-  allocatedEmissions Decimal  @map("allocated_emissions")
+  allocatedEmissions Decimal @map("allocated_emissions")
 
   // Info: (20260703 - Tzuhan) 依照比例分攤後的多氣體明細 (CO2, CH4 等)
   allocatedGhgBreakdown Json? @map("allocated_ghg_breakdown")
@@ -708,12 +707,13 @@ model Coefficient {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
-  name           String
-  description    String
-  unit           String
-  emissionFactor Decimal @map("emission_factor") // Info: (20260630 - Tzuhan) 總 CO2e，或無 ghgFactors 時的唯一係數
-  ghgFactors     Json?   @map("ghg_factors") // Info: (20260630 - Tzuhan) 多氣體係數 (CO2, CH4, N2O, NF3, SF6, HFCs, PFCs)
-  source         String
+  name                  String
+  description           String
+  unit                  String
+  emissionFactor        Decimal  @map("emission_factor") // Info: (20260630 - Tzuhan) 總 CO2e，或無 ghgFactors 時的唯一係數
+  ghgFactors            Json?    @map("ghg_factors") // Info: (20260630 - Tzuhan) 多氣體係數 (CO2, CH4, N2O, NF3, SF6, HFCs, PFCs)
+  uncertaintyPercentage Decimal? @map("uncertainty_percentage") // Info: (20260707 - Tzuhan) 排放係數不確定性 (%，例如 5.0 代表 ±5%)
+  source                String
 
   // Info: (20260514 - Tzuhan) 前端介面定義的類別 (e.g., STANDARD, CUSTOM)
   category String @default("STANDARD")
@@ -856,8 +856,8 @@ model AccountingAccount {
   description String?
   type        String
   level       Int
-  parentCode  String    @map("parent_code")
-  isDebit     Boolean   @map("is_debit")
+  parentCode  String  @map("parent_code")
+  isDebit     Boolean @map("is_debit")
 
   // Info: (20260703 - Julian) 隸屬的帳本
   accountBookId String      @map("account_book_id")
@@ -1068,4 +1068,3 @@ model Report {
 
   @@map("report")
 }
-

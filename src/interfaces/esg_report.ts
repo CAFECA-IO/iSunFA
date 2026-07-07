@@ -13,12 +13,15 @@ export interface IEsgReportDetailedRecord {
   emissions: string | number;
   emissionFactor: string | null; // Info: (20260512 - Tzuhan) Allow null to prevent greenwashing when originalData is 0
   percentage: string;
+  uncertaintyPercent?: number; // Info: (20260707 - Tzuhan) 不確定性 % (單筆)
 }
 
 export interface IEsgReportSection {
   items: IEsgReportItem[];
   records?: IEsgReportDetailedRecord[];
   total: string | number;
+  uncertaintyPercent?: number; // Info: (20260707 - Tzuhan) 該範疇總不確定性 %
+  absoluteUncertainty?: number; // Info: (20260707 - Tzuhan) 該範疇絕對不確定性 (kgCO2e)
 }
 
 export interface IEsgReportMetrics {
@@ -32,6 +35,8 @@ export interface IEsgReportMetrics {
   iso4Proportion: string;
   iso5Proportion: string;
   iso6Proportion: string;
+  uncertaintyPercent?: number; // Info: (20260707 - Tzuhan) 整份報告總不確定性 %
+  absoluteUncertainty?: number; // Info: (20260707 - Tzuhan) 整份報告絕對不確定性 (kgCO2e)
 }
 
 export interface IEsgReport {

@@ -2,6 +2,7 @@
 export const TAIPOWER_EMISSION_FACTOR_2023 = 0.495;
 
 import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
+import { Prisma } from "@/generated";
 
 // Info: (20260707 - Tzuhan) 報表標準
 export enum EsgReportStandard {
@@ -348,3 +349,18 @@ export const EsgActivityTypeToIsoMapping: Record<
   INVESTMENTS: Iso14064Category.CATEGORY_5,
   WATER_CONSUMPTION: Iso14064Category.CATEGORY_4,
 };
+
+// Info: (20260707 - Tzuhan) DQI (Data Quality Indicator) 對應的不確定性百分比 (簡化版 1-5 級)
+export const DQI_UNCERTAINTY_MAP: Record<number, Prisma.Decimal> = {
+  1: new Prisma.Decimal(0.05), // ±5%
+  2: new Prisma.Decimal(0.1), // ±10%
+  3: new Prisma.Decimal(0.2), // ±20%
+  4: new Prisma.Decimal(0.3), // ±30%
+  5: new Prisma.Decimal(0.5), // ±50%
+};
+
+// Info: (20260707 - Tzuhan) 缺失係數不確定性時的防禦性預設值
+export const DEFAULT_EF_UNCERTAINTY = new Prisma.Decimal(0.1); // 預設 10% 誤差
+
+// Info: (20260707 - Tzuhan) PRIMARY 數據的自動折扣 (打 8 折)
+export const PRIMARY_DATA_DISCOUNT = new Prisma.Decimal(0.8);
