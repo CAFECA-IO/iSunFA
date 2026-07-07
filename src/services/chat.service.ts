@@ -5,8 +5,10 @@ import {
   Schema,
   GenerationConfig,
   ModelParams,
+  SchemaType,
 } from "@google/generative-ai";
 import { DirectChatSkill } from "@/skills/chat/direct_chat";
+import { IEsgReport } from "@/interfaces/esg_report";
 
 export type { Part, Schema, Tool };
 
@@ -139,5 +141,59 @@ export class ChatService {
       ...options,
       tools: [searchTool, ...(options?.tools || [])],
     });
+  }
+
+  async generateEsgNarrative(
+    report: IEsgReport,
+    unverifiedItems: { id: string; note: string; type: string }[],
+    language: string = "zh-TW",
+  ): Promise<string> {
+    const isEnglish = language.toLowerCase().startsWith("en");
+
+    const prompt = `
+你是一位具備 ISO 14064-1 主導稽核員資格的資深會計師。
+請根據以下碳盤查系統產出的數據，以客觀、嚴謹、第三方的語氣撰寫合規的分析論述。
+
+盤查數據總結：
+總碳排放量: ${report.metrics.totalEmissions} kgCO2e
+總不確定性: ${report.metrics.uncertaintyPercent}% (絕對誤差: ${report.metrics.absoluteUncertainty} kgCO2e)
+未經驗證的單據筆數: ${unverifiedItems.length}
+
+各範疇佔比:
+- Scope 1: ${report.metrics.scope1Proportion}%
+- Scope 2: ${report.metrics.scope2Proportion}%
+- Scope 3: ${report.metrics.scope3Proportion}%
+
+要求：
+1. 請以結構化的方式產出「盤查結論 (executiveSummary)」、「邊界與顯著性排除 (materialityExclusion)」及「不確定性分析 (uncertaintyAnalysis)」。
+2. 使用專業稽核術語。
+3. 如果未經驗證的單據大於 0，請在不確定性分析中提及這可能帶來的潛在風險。
+4. ${isEnglish ? "Please generate the narrative strictly in professional auditing English." : "請使用繁體中文撰寫。"}
+    `;
+
+    const responseSchema: Schema = {
+      type: SchemaType.OBJECT,
+      properties: {
+        executiveSummary: {
+          type: SchemaType.STRING,
+          description: "盤查結論的 Markdown 文本",
+        },
+        materialityExclusion: {
+          type: SchemaType.STRING,
+          description: "邊界與顯著性排除的 Markdown 文本",
+        },
+        uncertaintyAnalysis: {
+          type: SchemaType.STRING,
+          description: "不確定性分析的 Markdown 文本",
+        },
+      },
+      required: [
+        "executiveSummary",
+        "materialityExclusion",
+        "uncertaintyAnalysis",
+      ],
+    };
+
+    return this.generateRaw(prompt, responseSchema, { isJson: true });
   }
 }

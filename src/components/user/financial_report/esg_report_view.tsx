@@ -17,6 +17,7 @@ import {
 } from "@/components/user/financial_report/report_placeholders";
 import EsgBomTable from "@/components/user/financial_report/esg_bom_table";
 import { EsgReportStandard } from "@/constants/esg";
+import AiNarrativeSection from "@/components/user/financial_report/ai_narrative_section";
 
 const EsgReportSection = ({
   titleText,
@@ -175,7 +176,23 @@ export default function EsgReportView({
                 </span>
               </>
             ),
-            description: t("esg_report.gross_desc"),
+            description: (
+              <span className="flex flex-col gap-0.5">
+                <span>{t("esg_report.gross_desc")}</span>
+                {metrics.uncertaintyPercent !== undefined &&
+                  metrics.absoluteUncertainty !== undefined && (
+                    <span className="text-orange-500">
+                      ±{metrics.uncertaintyPercent.toFixed(2)}% (±
+                      {numberWithCommas(
+                        MoneyUtil.toDecimal(
+                          metrics.absoluteUncertainty,
+                        ).toFixed(1),
+                      )}{" "}
+                      {t("esg_report.unit")})
+                    </span>
+                  )}
+              </span>
+            ),
             textColor: "text-gray-900",
             statusGood: true,
           },
@@ -214,7 +231,23 @@ export default function EsgReportView({
                 </span>
               </>
             ),
-            description: t("esg_report.gross_desc"),
+            description: (
+              <span className="flex flex-col gap-0.5">
+                <span>{t("esg_report.gross_desc")}</span>
+                {metrics.uncertaintyPercent !== undefined &&
+                  metrics.absoluteUncertainty !== undefined && (
+                    <span className="text-orange-500">
+                      ±{metrics.uncertaintyPercent.toFixed(2)}% (±
+                      {numberWithCommas(
+                        MoneyUtil.toDecimal(
+                          metrics.absoluteUncertainty,
+                        ).toFixed(1),
+                      )}{" "}
+                      {t("esg_report.unit")})
+                    </span>
+                  )}
+              </span>
+            ),
             textColor: "text-gray-900",
             statusGood: true,
           },
@@ -400,7 +433,14 @@ export default function EsgReportView({
 
       {/* Info: (20260424 - Julian) 排放細項 BOM 表 */}
       {sections && (
-        <EsgBomTable sections={sections} reportStandard={reportStandard} />
+        <>
+          <AiNarrativeSection
+            accountBookId={accountBookId}
+            period={period}
+            year={year}
+          />
+          <EsgBomTable sections={sections} reportStandard={reportStandard} />
+        </>
       )}
     </div>
   );

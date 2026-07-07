@@ -6,6 +6,7 @@ export class UncertaintyCalculator {
   private static readonly PRECISION = 6;
 
   /**
+   * Info: (20260707 - Tzuhan)
    * 計算單一筆活動數據折扣後的最終不確定性 (U_AD)
    * @param baseUncertainty 從 DQI 映射得到的基礎不確定性 (e.g. 0.05 for 5%)
    * @param dqiType 數據類型 (PRIMARY / SECONDARY)
@@ -22,6 +23,7 @@ export class UncertaintyCalculator {
   }
 
   /**
+   * Info: (20260707 - Tzuhan)
    * 計算單筆紀錄的總不確定性： U_record = sqrt(U_AD^2 + U_EF^2)
    * @param uAd 活動數據不確定性 (Decimal)
    * @param uEf 排放係數不確定性 (Decimal)
@@ -41,6 +43,7 @@ export class UncertaintyCalculator {
   }
 
   /**
+   * Info: (20260707 - Tzuhan)
    * 計算多筆紀錄加總後的總不確定性 (Error Propagation)
    * 公式: U_total = sqrt( sum( (E_i * U_i)^2 ) ) / sum( E_i )
    * @param items 包含排放量與不確定性的陣列
@@ -54,12 +57,12 @@ export class UncertaintyCalculator {
     }
 
     let sumEmissions = new Prisma.Decimal(0);
-    let sumVariance = new Prisma.Decimal(0); // sum( (E_i * U_i)^2 )
+    let sumVariance = new Prisma.Decimal(0); // Info: (20260707 - Tzuhan) sum( (E_i * U_i)^2 )
 
     for (const item of items) {
       sumEmissions = sumEmissions.add(item.emissions);
 
-      // (E_i * U_i)^2
+      // Info: (20260707 - Tzuhan) (E_i * U_i)^2
       const absoluteUncertainty = item.emissions.mul(item.uncertainty);
       const variance = absoluteUncertainty.pow(2);
       sumVariance = sumVariance.add(variance);

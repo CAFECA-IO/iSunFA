@@ -39,4 +39,14 @@ export const esgReport = {
   iso4_title: "類別四 (組織使用產品之間接排放)",
   iso5_title: "類別五 (使用組織產品之間接排放)",
   iso6_title: "類別六 (其他來源之間接排放)",
+  ai_narrative_title: "AI 稽核論述與不確定性分析",
+  generate_ai_btn: "生成智能合規論述",
+  generating_ai: "正在分析盤查數據並生成論述...",
+  ai_executive_summary: "盤查總結 (Executive Summary)",
+  ai_materiality_exclusion: "顯著性排除說明 (Materiality Exclusion)",
+  ai_uncertainty_analysis: "不確定性分析結論 (Uncertainty Analysis)",
+  uncertainty_range: "總體不確定性 (Uncertainty)",
+  generate_ai_error: "生成論述時發生錯誤，請稍後再試",
+  ai_disclaimer:
+    "本論述由 AI 自動生成，僅供稽核參考，正式申報前請由合格盤查員覆核。",
 };

@@ -40,4 +40,15 @@ export const esgReport = {
   iso4_title: "カテゴリ 4 (製品使用による間接排出)",
   iso5_title: "カテゴリ 5 (その他製品の間接排出)",
   iso6_title: "カテゴリ 6 (その他の間接排出)",
+  ai_narrative_title: "AI監査ナラティブ＆不確実性分析",
+  generate_ai_btn: "インテリジェントコンプライアンスナラティブを生成",
+  generating_ai: "インベントリデータを分析し、ナラティブを生成しています...",
+  ai_executive_summary: "エグゼクティブサマリー",
+  ai_materiality_exclusion: "重要性の除外",
+  ai_uncertainty_analysis: "不確実性分析",
+  uncertainty_range: "全体的な不確実性",
+  generate_ai_error:
+    "ナラティブの生成中にエラーが発生しました。後でもう一度お試しください",
+  ai_disclaimer:
+    "このナラティブはAIによって自動生成されたものであり、監査の参考用です。正式な宣言を行う前に、資格のある監査人に確認を依頼してください。",
 };

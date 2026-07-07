@@ -40,4 +40,15 @@ export const esgReport = {
   iso4_title: "카테고리 4 (제품 사용 간접 배출)",
   iso5_title: "카테고리 5 (기타 제품 간접 배출)",
   iso6_title: "카테고리 6 (기타 간접 배출)",
+  ai_narrative_title: "AI 감사 서술 및 불확실성 분석",
+  generate_ai_btn: "지능형 규정 준수 서술 생성",
+  generating_ai: "인벤토리 데이터를 분석하고 서술을 생성하는 중입니다...",
+  ai_executive_summary: "경영진 요약",
+  ai_materiality_exclusion: "중요성 제외",
+  ai_uncertainty_analysis: "불확실성 분석",
+  uncertainty_range: "전체 불확실성",
+  generate_ai_error:
+    "서술을 생성하는 동안 오류가 발생했습니다. 나중에 다시 시도해 주세요.",
+  ai_disclaimer:
+    "이 서술은 감사를 위한 참고용으로 AI에 의해 자동 생성되었습니다. 공식 선언 전에 자격을 갖춘 감사인에게 검토를 받으십시오.",
 };

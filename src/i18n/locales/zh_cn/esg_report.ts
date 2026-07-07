@@ -39,4 +39,14 @@ export const esgReport = {
   iso4_title: "类别四 (组织使用产品之间接排放)",
   iso5_title: "类别五 (使用组织产品之间接排放)",
   iso6_title: "类别六 (其他来源之间接排放)",
+  ai_narrative_title: "AI 智能合规论述与不确定性分析",
+  generate_ai_btn: "生成智能合规论述",
+  generating_ai: "正在分析盘查数据并生成论述...",
+  ai_executive_summary: "盘查总结",
+  ai_materiality_exclusion: "显著性排除说明",
+  ai_uncertainty_analysis: "不确定性分析结论",
+  uncertainty_range: "整体容错范围",
+  generate_ai_error: "生成论述时发生错误，请稍后再试",
+  ai_disclaimer:
+    "本论述由 AI 自动生成，仅供内部稽核参考，正式宣告前请由合格查核员确认。",
 };
