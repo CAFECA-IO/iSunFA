@@ -118,7 +118,9 @@ export class VoucherPipelineOrchestrator {
       );
 
       if (coef) {
-        const isEEIO = coef.id.startsWith("eeio");
+        const isEEIO =
+          coef.category === "EEIO_PROXY" ||
+          coef.source === "Internal_Proxy_Estimation_Based_On_Spend";
         const esgAmountStr = MoneyUtil.parseInput(
           String(fileResult.esg.amount || "0"),
         );
@@ -184,7 +186,10 @@ export class VoucherPipelineOrchestrator {
           fileResult.esg!.gwpVersion = calcResult.gwpVersion;
         }
 
-        if (coef.source === "Internal_Proxy_Estimation_Based_On_Spend") {
+        if (
+          coef.category === "EEIO_PROXY" ||
+          coef.source === "Internal_Proxy_Estimation_Based_On_Spend"
+        ) {
           fileResult.esg!.aiNote =
             (fileResult.esg!.aiNote || "") +
             "\n*使用內部過渡期 EEIO 係數進行花費基礎估算，非官方直接宣告數值，待查核*";

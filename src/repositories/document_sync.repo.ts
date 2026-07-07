@@ -610,7 +610,9 @@ export class DocumentSyncRepository {
             if (!coefExists) {
               coefExists = [
                 ...ALL_COEFFICIENTS,
-                ...MOCK_EEIO_COEFFICIENTS,
+                ...(process.env.ENABLE_DEMO_DATA === "true"
+                  ? MOCK_EEIO_COEFFICIENTS
+                  : []),
               ].find(
                 (c) => c.id === finalCoefficientId,
               ) as unknown as Coefficient;
@@ -635,8 +637,9 @@ export class DocumentSyncRepository {
                   recordIsVerified = false;
                 }
                 if (
+                  coefExists.category === "EEIO_PROXY" ||
                   coefExists.source ===
-                  "Internal_Proxy_Estimation_Based_On_Spend"
+                    "Internal_Proxy_Estimation_Based_On_Spend"
                 ) {
                   finalDqiType = "SECONDARY";
                   // Info: (20260703 - Tzuhan) [UX FIX] EEIO 重大性豁免與白名單，避免無意義的亮紅燈

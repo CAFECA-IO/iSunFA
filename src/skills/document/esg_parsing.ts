@@ -3,7 +3,7 @@ import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
 import { SchemaType, Schema } from "@google/generative-ai";
-import { EsgGenerationSource, EsgFallbackCategory } from "@/constants/enums";
+import { EsgGenerationSource } from "@/constants/enums";
 import { MeasurementUnit } from "@/constants/enums";
 import { FIAT_CURRENCIES } from "@/constants/country";
 import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
@@ -164,9 +164,13 @@ export class EsgParsingSkill implements ITaskSkill {
 
       // Info: (20260522 - Tzuhan) Combine static and DB coefficients, deduplicating by ID (DB takes precedence)
       const combinedCoefficientsMap = new Map();
-      [...ALL_COEFFICIENTS, ...MOCK_EEIO_COEFFICIENTS].forEach((c) =>
-        combinedCoefficientsMap.set(c.id, c),
-      );
+      const staticCoefficients = [
+        ...ALL_COEFFICIENTS,
+        ...(process.env.ENABLE_DEMO_DATA === "true"
+          ? MOCK_EEIO_COEFFICIENTS
+          : []),
+      ];
+      staticCoefficients.forEach((c) => combinedCoefficientsMap.set(c.id, c));
       dbCoefficients.forEach((c) =>
         combinedCoefficientsMap.set(c.id, {
           ...c,
@@ -174,13 +178,6 @@ export class EsgParsingSkill implements ITaskSkill {
         }),
       );
       const combinedCoefficients = Array.from(combinedCoefficientsMap.values());
-
-      const isServiceCategory = [
-        EsgFallbackCategory.IT_AND_TELECOM,
-        EsgFallbackCategory.ACCOMMODATION_AND_DINING,
-        EsgFallbackCategory.REAL_ESTATE_AND_EQUIPMENT_RENTAL,
-        EsgFallbackCategory.PROFESSIONAL_SERVICES,
-      ].includes(parsed1.fallbackCategory as EsgFallbackCategory);
 
       const scoredCoefficients = combinedCoefficients.map((c) => {
         let score = 0;
@@ -193,11 +190,6 @@ export class EsgParsingSkill implements ITaskSkill {
           if (kw && textToSearch.includes(kw.toLowerCase())) {
             score += 10;
           }
-        }
-
-        // Info: (20260522 - Tzuhan) Dimensional Weighting (量綱加權分數)
-        if (isServiceCategory && c.unit === "TWD") {
-          score += 100; // Info: (20260522 - Tzuhan) 強力引導 AI 選擇 EEIO 係數
         }
 
         return { ...c, score };

@@ -26,7 +26,12 @@ export class EmissionFactorRepo {
   } | null> {
     if (!id) return null;
 
-    const combinedStatic = [...ALL_COEFFICIENTS, ...MOCK_EEIO_COEFFICIENTS];
+    const combinedStatic = [
+      ...ALL_COEFFICIENTS,
+      ...(process.env.ENABLE_DEMO_DATA === "true"
+        ? MOCK_EEIO_COEFFICIENTS
+        : []),
+    ];
     const staticMatch = combinedStatic.find((c) => c.id === id);
     if (staticMatch) {
       return {
@@ -91,7 +96,12 @@ export class EmissionFactorRepo {
     if (officialDbMatches.length > 0) return officialDbMatches[0].id;
 
     // Info: (20260521 - Tzuhan) 軌道二：官方 DB 查無資料，退回系統全域靜態常數檔 (Sprint 1 過渡期墊片)
-    const combinedStatic = [...ALL_COEFFICIENTS, ...MOCK_EEIO_COEFFICIENTS];
+    const combinedStatic = [
+      ...ALL_COEFFICIENTS,
+      ...(process.env.ENABLE_DEMO_DATA === "true"
+        ? MOCK_EEIO_COEFFICIENTS
+        : []),
+    ];
     const staticMatches = combinedStatic
       .filter(
         (c) =>
