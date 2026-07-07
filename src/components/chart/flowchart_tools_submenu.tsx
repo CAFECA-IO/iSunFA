@@ -151,11 +151,11 @@ interface IBasePanelProps {
 // Info: (20260629 - Julian) 「新增節點」面板
 const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onInsert }) => {
   const { t } = useTranslation();
-  const [newNodeId, setNewNodeId] = useState("");
-  const [newNodeLabel, setNewNodeLabel] = useState("");
-  const [fromNodeId, setFromNodeId] = useState("");
-  const [toNodeId, setToNodeId] = useState("");
-  const [connText, setConnText] = useState("");
+  const [newNodeId, setNewNodeId] = useState<string>("");
+  const [newNodeLabel, setNewNodeLabel] = useState<string>("");
+  const [fromNodeId, setFromNodeId] = useState<string>("");
+  const [toNodeId, setToNodeId] = useState<string>("");
+  const [connText, setConnText] = useState<string>("");
 
   const handleIdChange = (val: string) => {
     // Info: (20260629 - Julian) 限制只能輸入英數、底線、連字號以避免 Mermaid 語法崩潰
@@ -300,8 +300,8 @@ const EditNodePanel: FC<IBasePanelProps> = ({
   onInsertWithFilter,
 }) => {
   const { t } = useTranslation();
-  const [targetNodeId, setTargetNodeId] = useState("");
-  const [newNodeText, setNewNodeText] = useState("");
+  const [targetNodeId, setTargetNodeId] = useState<string>("");
+  const [newNodeText, setNewNodeText] = useState<string>("");
 
   const handleSubmit = () => {
     if (!targetNodeId || !newNodeText) return;
@@ -379,10 +379,10 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
   onInsertWithFilter,
 }) => {
   const { t } = useTranslation();
-  const [connFromId, setConnFromId] = useState("");
-  const [connToId, setConnToId] = useState("");
-  const [connType, setConnType] = useState("-->");
-  const [connLabel, setConnLabel] = useState("");
+  const [connFromId, setConnFromId] = useState<string>("");
+  const [connToId, setConnToId] = useState<string>("");
+  const [connType, setConnType] = useState<string>("-->");
+  const [connLabel, setConnLabel] = useState<string>("");
 
   const handleSubmit = () => {
     if (!connFromId || !connToId) return;
@@ -516,7 +516,7 @@ const ChangeColorPanel: FC<IBasePanelProps> = ({
   onInsertWithFilter,
 }) => {
   const { t } = useTranslation();
-  const [colorNodeId, setColorNodeId] = useState("");
+  const [colorNodeId, setColorNodeId] = useState<string>("");
   const [colorStyle, setColorStyle] = useState<NodeColor>(NodeColor.DEFAULT);
 
   const handleSubmit = () => {
@@ -594,7 +594,7 @@ const ChangeColorPanel: FC<IBasePanelProps> = ({
 // Info: (20260629 - Julian) 「變更方向」面板
 const ChangeDirectionPanel: FC<IBasePanelProps> = ({ onInsertWithFilter }) => {
   const { t } = useTranslation();
-  const [flowDirection, setFlowDirection] = useState("TD");
+  const [flowDirection, setFlowDirection] = useState<string>("TD");
 
   const handleSubmit = () => {
     if (!flowDirection) return;

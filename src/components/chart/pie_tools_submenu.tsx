@@ -114,8 +114,8 @@ interface IBasePanelProps {
 // Info: (20260629 - Julian) 「新增項目」面板
 const AddSlicePanel: FC<IBasePanelProps> = ({ onInsert }) => {
   const { t } = useTranslation();
-  const [pieSliceLabel, setPieSliceLabel] = useState("");
-  const [pieSliceValue, setPieSliceValue] = useState("");
+  const [pieSliceLabel, setPieSliceLabel] = useState<string>("");
+  const [pieSliceValue, setPieSliceValue] = useState<string>("");
   const [pieSliceColor, setPieSliceColor] = useState<PieColor | "">("");
 
   const handleSubmit = () => {
@@ -213,9 +213,9 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
   onInsertWithFilter,
 }) => {
   const { t } = useTranslation();
-  const [pieSliceTarget, setPieSliceTarget] = useState("");
-  const [pieSliceNewLabel, setPieSliceNewLabel] = useState("");
-  const [pieSliceValue, setPieSliceValue] = useState("");
+  const [pieSliceTarget, setPieSliceTarget] = useState<string>("");
+  const [pieSliceNewLabel, setPieSliceNewLabel] = useState<string>("");
+  const [pieSliceValue, setPieSliceValue] = useState<string>("");
 
   const handleSubmit = () => {
     if (!pieSliceTarget || (!pieSliceValue && !pieSliceNewLabel)) return;
@@ -312,7 +312,7 @@ const ChangeSliceColorPanel: FC<IBasePanelProps> = ({
   onInsertWithFilter,
 }) => {
   const { t } = useTranslation();
-  const [pieSliceTarget, setPieSliceTarget] = useState("");
+  const [pieSliceTarget, setPieSliceTarget] = useState<string>("");
   const [pieSliceColor, setPieSliceColor] = useState<PieColor>(
     PieColor.DEFAULT,
   );
@@ -395,7 +395,7 @@ const DeleteSlicePanel: FC<IBasePanelProps> = ({
   onInsertWithFilter,
 }) => {
   const { t } = useTranslation();
-  const [pieSliceTarget, setPieSliceTarget] = useState("");
+  const [pieSliceTarget, setPieSliceTarget] = useState<string>("");
 
   const handleSubmit = () => {
     if (!pieSliceTarget) return;

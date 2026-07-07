@@ -82,6 +82,9 @@ export const detectChartType = (chartStr: string): MermaidChartType => {
     if (cleanLine.startsWith("pie")) return MermaidChartType.PIE;
     if (cleanLine.startsWith("flowchart") || cleanLine.startsWith("graph"))
       return MermaidChartType.FLOWCHART;
+    if (cleanLine.startsWith("gantt")) return MermaidChartType.GANTT;
+    if (cleanLine.startsWith("xychart")) return MermaidChartType.XYCHART;
+    if (cleanLine.startsWith("sankey")) return MermaidChartType.SANKEY;
     if (cleanLine.startsWith("sequencediagram"))
       return MermaidChartType.SEQUENCE;
     break;
@@ -219,4 +222,110 @@ export const parsePieData = (
     return { title, data };
   }
   return null;
+};
+
+/**
+ * Info: (20260707 - Julian) 甘特圖資料項目介面
+ */
+export interface IGanttItem {
+  type: "task" | "section";
+  label: string;
+  section?: string; // Info: (20260707 - Julian) 所屬區塊名稱
+  status?: string; // Info: (20260707 - Julian) 狀態標籤 (如 active, crit)
+  id?: string; // Info: (20260707 - Julian) 任務 ID
+  start?: string; // Info: (20260707 - Julian) 開始日期或前置任務 ID
+  end?: string; // Info: (20260707 - Julian) 結束日期或持續時間
+}
+
+/**
+ * Info: (20260707 - Julian)
+ * 解析 gantt chart 的所有項目名稱與屬性
+ */
+export const parseGanttItems = (chartStr: string): IGanttItem[] => {
+  if (!chartStr || typeof chartStr !== "string") return [];
+
+  const items: IGanttItem[] = [];
+  const lines = chartStr.split("\n");
+  let currentSection = ""; // Info: (20260707 - Julian) 預設無區塊 (Global)
+
+  lines.forEach((line) => {
+    const cleanLine = line.trim();
+    if (
+      !cleanLine ||
+      cleanLine.startsWith("%%") ||
+      cleanLine.toLowerCase() === "gantt"
+    )
+      return;
+
+    // Info: (20260707 - Julian) 偵測 Section
+    const sectionMatch = cleanLine.match(/^section\s+(.+)$/i);
+    if (sectionMatch) {
+      currentSection = sectionMatch[1].trim();
+      items.push({
+        type: "section",
+        label: currentSection,
+      });
+      return;
+    }
+
+    // Info: (20260707 - Julian) 偵測 Task (支援格式：Label : [tags,] [start,] end|duration)
+    if (cleanLine.includes(":")) {
+      const colonIndex = cleanLine.indexOf(":");
+      const label = cleanLine.substring(0, colonIndex).trim();
+      const rest = cleanLine.substring(colonIndex + 1).trim();
+
+      const keywords = [
+        "title",
+        "dateformat",
+        "axisformat",
+        "todaymarker",
+        "excludes",
+        "includes",
+        "tickinterval",
+        "weekday",
+      ];
+      if (label && !keywords.includes(label.toLowerCase())) {
+        const parts = rest.split(",").map((p) => p.trim());
+        const tags: string[] = [];
+        let id = "";
+        let start = "";
+        let end = "";
+
+        parts.forEach((part) => {
+          const lower = part.toLowerCase();
+          if (["active", "done", "crit", "milestone"].includes(lower)) {
+            tags.push(lower);
+          } else if (
+            !id &&
+            !start &&
+            !end &&
+            /^[a-zA-Z][a-zA-Z0-9_-]*$/.test(part) &&
+            !part.startsWith("after ") &&
+            !/^\d{4}-\d{2}-\d{2}$/.test(part)
+          ) {
+            id = part;
+          } else if (
+            !start &&
+            (part.startsWith("after ") || /^\d{4}-\d{2}-\d{2}$/.test(part))
+          ) {
+            start = part;
+          } else if (!end) {
+            end = part;
+          }
+        });
+
+        items.push({
+          type: "task",
+          label,
+          section: currentSection,
+          id,
+          status: tags.join(", "),
+          start,
+          end: end || start,
+        });
+      }
+    }
+  });
+
+  return items;
 };

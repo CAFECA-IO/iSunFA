@@ -22,6 +22,8 @@ import {
   parseFlowchartNodes,
   parsePieItems,
   parsePieData,
+  parseGanttItems,
+  IGanttItem,
 } from "@/lib/utils/mermaid_helpers";
 import { MermaidChartType } from "@/constants/mermaid_chart";
 
@@ -65,6 +67,12 @@ const MermaidChart: FC<IMermaidChartProps> = ({
   const parsedPieItems = useMemo(() => {
     if (chartType !== MermaidChartType.PIE) return [];
     return parsePieItems(currentChart);
+  }, [currentChart, chartType]);
+
+  // Info: (20260707 - Julian) 解析當前 gantt chart 中現有的所有資料項目
+  const parsedGanttItems = useMemo<IGanttItem[]>(() => {
+    if (chartType !== MermaidChartType.GANTT) return [];
+    return parseGanttItems(currentChart);
   }, [currentChart, chartType]);
 
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
@@ -757,6 +765,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({
         chartType={chartType}
         parsedNodes={parsedNodes}
         parsedPieItems={parsedPieItems}
+        parsedGanttItems={parsedGanttItems}
         svgStr={svgStr}
         parsedPieData={parsedPieData}
         onAdopt={handleAdopt}

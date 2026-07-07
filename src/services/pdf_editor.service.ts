@@ -4,14 +4,16 @@ import {
   AI_REFINE_INSTRUCTIONS,
   TEXT_REFINEMENT_PROMPT,
 } from "@/constants/prompts/pdf_editor/text_refinement";
-import { MERMAID_MODIFICATION_PROMPT } from "@/constants/prompts/pdf_editor/mermaid_modification";
+import { getMermaidModificationPrompt } from "@/constants/prompts/pdf_editor/mermaid_modification";
+import { MermaidChartType } from "@/constants/mermaid_chart";
 
 export class PdfEditorService {
   /**
    * Info: (20260623 - Julian) 根據使用者指令修改 Mermaid 圖表
    */
   public static async modifyMermaidChart(
-    chart: string,
+    originalChart: string,
+    chartType: MermaidChartType,
     instruction: string,
   ): Promise<string> {
     const apiKey = process.env.GEMINI_API_KEY;
@@ -19,13 +21,13 @@ export class PdfEditorService {
       throw new Error("Missing GEMINI_API_KEY");
     }
 
-    const finalPrompt = `${MERMAID_MODIFICATION_PROMPT}
+    const finalPrompt = `${getMermaidModificationPrompt(chartType)}
 
-【原始 Mermaid 圖表 (Original Mermaid Chart)】：
-${chart}
+    【原始 Mermaid 圖表 (Original Mermaid Chart)】：
+    ${originalChart}
 
-【修改指令 (Modification Instruction)】：
-${instruction}
+    【修改指令 (Modification Instruction)】：
+    ${instruction}
 `;
 
     const chatService = new ChatService(apiKey);

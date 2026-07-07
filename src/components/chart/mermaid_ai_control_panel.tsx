@@ -5,8 +5,10 @@ import { DialogTitle } from "@headlessui/react";
 import { Lightbulb, Sparkles, X } from "lucide-react";
 import { FlowchartToolsSection } from "@/components/chart/flowchart_tools_submenu";
 import { PieToolsSection } from "@/components/chart/pie_tools_submenu";
+import { GanttToolsSection } from "@/components/chart/gantt_tools_submenu";
 import { useTranslation } from "@/i18n/i18n_context";
 import { MermaidChartType } from "@/constants/mermaid_chart";
+import { IGanttItem } from "@/lib/utils/mermaid_helpers";
 
 interface IMermaidAiControlPanelProps {
   chartType: MermaidChartType;
@@ -14,6 +16,7 @@ interface IMermaidAiControlPanelProps {
   setAiInstruction: React.Dispatch<React.SetStateAction<string>>;
   parsedNodes: { id: string; label: string }[];
   parsedPieItems: { label: string; value: number }[];
+  parsedGanttItems: IGanttItem[];
   onCancel: () => void;
 }
 
@@ -23,6 +26,7 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
   setAiInstruction,
   parsedNodes,
   parsedPieItems,
+  parsedGanttItems,
   onCancel,
 }) => {
   const { t } = useTranslation();
@@ -32,7 +36,8 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
   // Info: (20260623 - Julian) 目前支援 pie 和 flowchart 小工具
   const isShowTools =
     chartType === MermaidChartType.PIE ||
-    chartType === MermaidChartType.FLOWCHART;
+    chartType === MermaidChartType.FLOWCHART ||
+    chartType === MermaidChartType.GANTT;
 
   return (
     <div className="flex w-full flex-col overflow-y-auto border-r border-slate-200 bg-slate-50 md:w-2/5">
@@ -144,6 +149,13 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
                 selectedTool={selectedTool}
                 setSelectedTool={setSelectedTool}
                 parsedNodes={parsedNodes}
+                setAiInstruction={setAiInstruction}
+              />
+            ) : chartType === MermaidChartType.GANTT ? (
+              <GanttToolsSection
+                selectedTool={selectedTool}
+                setSelectedTool={setSelectedTool}
+                parsedGanttItems={parsedGanttItems}
                 setAiInstruction={setAiInstruction}
               />
             ) : null}
