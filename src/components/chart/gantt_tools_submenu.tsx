@@ -3,32 +3,29 @@
 import React, { useState, FC } from "react";
 import {
   SquarePlus,
-  PaintRoller,
   SquarePen,
   Trash2,
+  Tag,
   LucideIcon,
   Shuffle,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { IGanttItem } from "@/lib/utils/mermaid_helpers";
+import {
+  MERMAID_INPUT_STYLE,
+  MERMAID_LABEL_STYLE,
+  MERMAID_SUBMIT_BUTTON_STYLE,
+  MERMAID_TOGGLE_BUTTON_STYLE,
+} from "@/constants/mermaid_chart";
 
 // ==========================================
 // Info: (20260707 - Julian) 定義與靜態映射表
 // ==========================================
 
-export enum GanttColor {
-  DEFAULT = "Default (預設灰)",
-  NAVY = "Navy (海軍藍)",
-  ORANGE = "Orange (高光橘)",
-  RED = "Red (警告紅)",
-  GREEN = "Green (成功綠)",
-  PURPLE = "Purple (質感紫)",
-}
-
 export enum GanttTools {
   ADD_TASK = "addTask",
   EDIT_TASK = "editTask",
-  CHANGE_COLOR = "changeColor",
+  CHANGE_TASK_TYPE = "changeTaskType",
   SWAP_TASK = "swapTask",
   DELETE_TASK = "deleteTask",
 }
@@ -48,8 +45,8 @@ const GANTT_TOOLS: IToolItem[] = [
     icon: SquarePen,
   },
   {
-    tool: GanttTools.CHANGE_COLOR,
-    icon: PaintRoller,
+    tool: GanttTools.CHANGE_TASK_TYPE,
+    icon: Tag,
   },
   {
     tool: GanttTools.SWAP_TASK,
@@ -64,31 +61,44 @@ const GANTT_TOOLS: IToolItem[] = [
 const GANTT_TOOL_TRANSLATION_KEYS: Record<GanttTools, string> = {
   [GanttTools.ADD_TASK]: "新增行程",
   [GanttTools.EDIT_TASK]: "編輯行程",
-  [GanttTools.CHANGE_COLOR]: "變更行程顏色",
+  [GanttTools.CHANGE_TASK_TYPE]: "變更行程類型",
   [GanttTools.SWAP_TASK]: "調整任務順序",
   [GanttTools.DELETE_TASK]: "刪除行程",
-};
-
-const GANTT_COLOR_TRANSLATION_KEYS: Record<GanttColor, string> = {
-  [GanttColor.DEFAULT]: "chart.mermaid.ai_editor.colors.default",
-  [GanttColor.NAVY]: "chart.mermaid.ai_editor.colors.navy",
-  [GanttColor.ORANGE]: "chart.mermaid.ai_editor.colors.orange",
-  [GanttColor.RED]: "chart.mermaid.ai_editor.colors.red",
-  [GanttColor.GREEN]: "chart.mermaid.ai_editor.colors.green",
-  [GanttColor.PURPLE]: "chart.mermaid.ai_editor.colors.purple",
 };
 
 const INSTRUCTION_TEMPLATES = {
   ADD_GANTT_TASK: {
     render: (
       label: string,
-      startDate: string,
-      endDate: string,
-      color?: string,
-    ) =>
-      `在甘特圖中新增一個任務，名稱為 "${label}"，起始日為 ${startDate}，結束日為 ${endDate}${
-        color ? `，顏色為 "${color}"` : ""
-      }`,
+      startDate?: string,
+      endDate?: string,
+      isCrit?: boolean,
+      isMilestone?: boolean,
+      isDone?: boolean,
+      predecessor?: string,
+      duration?: string,
+    ) => {
+      let desc = `在甘特圖中新增一個任務，名稱為 "${label}"`;
+      if (predecessor) {
+        desc += `，開始時間設定為在任務 "${predecessor}" 之後`;
+      } else if (startDate) {
+        desc += `，起始日為 ${startDate}`;
+      }
+
+      if (isMilestone) {
+        desc += `，並標記為「里程碑」(Milestone)`;
+      } else {
+        if (isCrit) desc += `，標記為「關鍵路徑」(Critical Path)`;
+        if (isDone) desc += `，標記為「已完成」(done)`;
+        if (duration) {
+          desc += `，工期為 ${duration} 天`;
+        } else if (endDate) {
+          desc += `，結束日為 ${endDate}`;
+        }
+      }
+
+      return desc;
+    },
   },
   EDIT_GANTT_TASK: {
     match: (line: string, targetLabel: string) =>
@@ -99,20 +109,40 @@ const INSTRUCTION_TEMPLATES = {
       endDate?: string,
       newSection?: string,
       newLabel?: string,
+      isCrit?: boolean,
+      isMilestone?: boolean,
+      isDone?: boolean,
+      predecessor?: string,
+      duration?: string,
     ) => {
       const changes: string[] = [];
-
       if (newSection) {
-        changes.push(`搬移到 "${newSection}" 任務群組`);
-      }
-      if (startDate) {
-        changes.push(`起始日改為 ${startDate}`);
-      }
-      if (endDate) {
-        changes.push(`結束日改為 ${endDate}`);
+        changes.push(`行程群組(section)改為 "${newSection}"`);
       }
       if (newLabel) {
         changes.push(`名稱改為 "${newLabel}"`);
+      }
+
+      if (predecessor) {
+        changes.push(`開始時間設定為在任務 "${predecessor}" 之後`);
+      } else if (startDate) {
+        changes.push(`起始日改為 ${startDate}`);
+      }
+
+      if (isMilestone) {
+        changes.push(`標記為「里程碑」(Milestone)`);
+      } else {
+        if (isCrit) {
+          changes.push(`標記為「關鍵路徑」(Critical Path)`);
+        }
+        if (isDone) {
+          changes.push(`標記為「已完成」(done)`);
+        }
+        if (duration) {
+          changes.push(`工期改為 ${duration} 天`);
+        } else if (endDate) {
+          changes.push(`結束日改為 ${endDate}`);
+        }
       }
 
       if (changes.length === 0) return `修改甘特圖任務 "${targetLabel}"`;
@@ -120,11 +150,16 @@ const INSTRUCTION_TEMPLATES = {
       return `修改甘特圖任務 "${targetLabel}"：${changes.join("，")}`;
     },
   },
-  CHANGE_GANTT_COLOR: {
+  CHANGE_GANTT_PROGRESS: {
     match: (line: string, targetLabel: string) =>
-      line.includes(`將甘特圖任務 "${targetLabel}" 的顏色調整為`),
-    render: (targetLabel: string, color: string) =>
-      `將甘特圖任務 "${targetLabel}" 的顏色調整為 "${color}"`,
+      line.includes(`修改甘特圖任務 "${targetLabel}" 的進度`),
+    render: (targetLabel: string, progress: number) => {
+      let desc = `修改甘特圖任務 "${targetLabel}" 的進度：將目前進度設定為 ${progress}%`;
+      if (progress === 100) {
+        desc += `，並標記為「已完成」(done)`;
+      }
+      return desc;
+    },
   },
   SWAP_GANTT_TASK: {
     match: (line: string, targetLabel: string) =>
@@ -133,12 +168,46 @@ const INSTRUCTION_TEMPLATES = {
       return `將甘特圖任務 "${targetLabel}" 與 "${targetLabel2}" 的順序進行互換`;
     },
   },
+  CHANGE_GANTT_TASK_TYPE: {
+    match: (line: string, targetLabel: string) =>
+      line.includes(`變更甘特圖任務 "${targetLabel}" 的類型`),
+    render: (targetLabel: string, type: TaskType) => {
+      const typeMap = {
+        [TaskType.ACTIVE]: "一般任務",
+        [TaskType.CRIT]: "關鍵路徑 (crit)",
+        [TaskType.MILESTONE]: "里程碑 (milestone)",
+        done: "已完成 (done)",
+      };
+      return `變更甘特圖任務 "${targetLabel}" 的類型為「${typeMap[type]}」`;
+    },
+  },
   DELETE_GANTT_TASK: {
     match: (line: string, targetLabel: string) =>
       line.includes(`從甘特圖中刪除任務 "${targetLabel}"`),
     render: (targetLabel: string) => `從甘特圖中刪除任務 "${targetLabel}"`,
   },
 };
+
+// ==========================================
+// Info: (20260707 - Julian) 定義 UI 所使用的列舉
+// ==========================================
+
+enum StartMode {
+  DATE = "date",
+  PREDECESSOR = "predecessor",
+}
+
+enum EndMode {
+  DATE = "date",
+  DURATION = "duration",
+}
+
+enum TaskType {
+  ACTIVE = "active",
+  CRIT = "crit",
+  MILESTONE = "milestone",
+  DONE = "done",
+}
 
 // ==========================================
 // Info: (20260707 - Julian) 將每個工具拆分成子元件(sub-panel)
@@ -153,24 +222,116 @@ interface IBasePanelProps {
   ) => void;
 }
 
+// ==========================================
+// Info: (20260707 - Julian) 內部通用小型組件
+// ==========================================
+
+/** Info: (20260707 - Julian) 元件分段切換按鈕 (例如: 指定日期 vs 跟隨前置) */
+const SegmentedControl: FC<{
+  options: { label: string; value: string }[];
+  value: string;
+  onChange: (val: string) => void;
+  disabled?: boolean;
+}> = ({ options, value, onChange, disabled = false }) => (
+  <div className={MERMAID_TOGGLE_BUTTON_STYLE.container}>
+    {options.map((opt) => (
+      <button
+        key={opt.value}
+        type="button"
+        disabled={disabled}
+        onClick={() => onChange(opt.value)}
+        className={`${MERMAID_TOGGLE_BUTTON_STYLE.button} ${
+          value === opt.value
+            ? MERMAID_TOGGLE_BUTTON_STYLE.active
+            : MERMAID_TOGGLE_BUTTON_STYLE.inactive
+        }`}
+      >
+        {opt.label}
+      </button>
+    ))}
+  </div>
+);
+
+/** Info: (20260707 - Julian) 行程類型單選按鈕組 */
+const TaskTypeRadioGroup: FC<{
+  value: TaskType;
+  onChange: (val: TaskType) => void;
+  name: string;
+  disabled?: boolean;
+}> = ({ value, onChange, name, disabled = false }) => {
+  const { t } = useTranslation();
+  return (
+    <div>
+      <label className={MERMAID_LABEL_STYLE}>{t("行程類型")}</label>
+      <div className="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-2">
+        {[
+          { label: t("一般任務"), value: "normal" },
+          { label: t("已完成任務 (done)"), value: "done" },
+          { label: t("關鍵路徑 (crit)"), value: "crit" },
+          { label: t("里程碑 (milestone)"), value: "milestone" },
+        ].map((opt) => (
+          <label
+            key={opt.value}
+            className={`flex items-center gap-1.5 text-[11px] font-bold text-slate-700 ${
+              disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+            }`}
+          >
+            <input
+              type="radio"
+              name={name}
+              value={opt.value}
+              disabled={disabled}
+              checked={value === opt.value}
+              onChange={() => onChange(opt.value as TaskType)}
+              className="size-3.5 accent-blue-600"
+            />
+            {opt.label}
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // Info: (20260707 - Julian) 「新增行程」面板
-const AddTaskPanel: FC<IBasePanelProps> = ({ onInsert }) => {
+const AddTaskPanel: FC<IBasePanelProps> = ({ parsedGanttItems, onInsert }) => {
   const { t } = useTranslation();
   const [ganttSection, setGanttSection] = useState<string>("");
   const [ganttTaskLabel, setGanttTaskLabel] = useState<string>("");
   const [ganttStartDate, setGanttStartDate] = useState<string>("");
   const [ganttEndDate, setGanttEndDate] = useState<string>("");
-  const [ganttTaskColor, setGanttTaskColor] = useState<GanttColor | "">("");
+  const [ganttPredecessor, setGanttPredecessor] = useState<string>("");
+  const [ganttDuration, setGanttDuration] = useState<string>("");
+  const [ganttTaskType, setGanttTaskType] = useState<TaskType>(TaskType.ACTIVE);
+
+  const [startMode, setStartMode] = useState<StartMode>(StartMode.DATE);
+  const [endMode, setEndMode] = useState<EndMode>(EndMode.DATE);
+
+  const isMilestone = ganttTaskType === TaskType.MILESTONE;
+
+  const submitDisabled =
+    !ganttTaskLabel ||
+    (startMode === StartMode.DATE && !ganttStartDate) ||
+    (startMode === StartMode.PREDECESSOR && !ganttPredecessor) ||
+    (!isMilestone && endMode === EndMode.DATE && !ganttEndDate) ||
+    (!isMilestone && endMode === EndMode.DURATION && !ganttDuration);
 
   const handleSubmit = () => {
-    if (!ganttTaskLabel || !ganttStartDate || !ganttEndDate) return;
-    const inst = INSTRUCTION_TEMPLATES.ADD_GANTT_TASK.render(
+    if (submitDisabled) return;
+    let finalInst = INSTRUCTION_TEMPLATES.ADD_GANTT_TASK.render(
       ganttTaskLabel,
       ganttStartDate,
       ganttEndDate,
-      ganttTaskColor || undefined,
+      ganttTaskType === TaskType.CRIT,
+      isMilestone,
+      ganttTaskType === TaskType.DONE,
+      ganttPredecessor || undefined,
+      ganttDuration || undefined,
     );
-    onInsert(inst);
+    if (ganttSection) {
+      finalInst = `在甘特圖行程群組(section) "${ganttSection}" 下，${finalInst}`;
+    }
+    onInsert(finalInst);
   };
 
   return (
@@ -181,10 +342,7 @@ const AddTaskPanel: FC<IBasePanelProps> = ({ onInsert }) => {
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label
-            htmlFor="ganttSection"
-            className="text-[10px] font-bold text-slate-500"
-          >
+          <label htmlFor="ganttSection" className={MERMAID_LABEL_STYLE}>
             {t("行程群組")}
           </label>
           <input
@@ -192,15 +350,12 @@ const AddTaskPanel: FC<IBasePanelProps> = ({ onInsert }) => {
             type="text"
             value={ganttSection}
             onChange={(e) => setGanttSection(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+            className={MERMAID_INPUT_STYLE}
             placeholder={t("請填入行程群組")}
           />
         </div>
         <div>
-          <label
-            htmlFor="ganttTaskLabel"
-            className="text-[10px] font-bold text-slate-500"
-          >
+          <label htmlFor="ganttTaskLabel" className={MERMAID_LABEL_STYLE}>
             {t("行程名稱")}
             <span className="ml-0.5 text-red-500">*</span>
           </label>
@@ -209,69 +364,121 @@ const AddTaskPanel: FC<IBasePanelProps> = ({ onInsert }) => {
             type="text"
             value={ganttTaskLabel}
             onChange={(e) => setGanttTaskLabel(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+            className={MERMAID_INPUT_STYLE}
             placeholder={t("請填入行程名稱")!}
           />
         </div>
-        <div>
-          <label
-            htmlFor="ganttTaskStartDate"
-            className="text-[10px] font-bold text-slate-500"
-          >
-            {t("開始日期")}
-            <span className="ml-0.5 text-red-500">*</span>
-          </label>
-          <input
-            id="ganttTaskStartDate"
-            type="date"
-            value={ganttStartDate}
-            onChange={(e) => setGanttStartDate(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
-          />
+        <div className="col-span-2">
+          <div className="mb-1.5 flex items-center justify-between">
+            <label className={MERMAID_LABEL_STYLE}>
+              {t("開始時間")}
+              <span className="ml-0.5 text-red-500">*</span>
+            </label>
+            <SegmentedControl
+              value={startMode}
+              onChange={(val) => {
+                setStartMode(val as StartMode);
+                if (val === StartMode.DATE) setGanttPredecessor("");
+                else setGanttStartDate("");
+              }}
+              options={[
+                { label: t("指定日期"), value: StartMode.DATE },
+                { label: t("跟隨前置任務"), value: StartMode.PREDECESSOR },
+              ]}
+            />
+          </div>
+
+          {startMode === StartMode.DATE ? (
+            <input
+              id="ganttTaskStartDate"
+              type="date"
+              value={ganttStartDate}
+              onChange={(e) => setGanttStartDate(e.target.value)}
+              className={MERMAID_INPUT_STYLE}
+            />
+          ) : (
+            <select
+              id="ganttPredecessor"
+              value={ganttPredecessor}
+              onChange={(e) => setGanttPredecessor(e.target.value)}
+              className={MERMAID_INPUT_STYLE}
+            >
+              <option value="">{t("請選擇前置任務")}</option>
+              {parsedGanttItems
+                .filter((item) => item.type === "task")
+                .map((item) => (
+                  <option
+                    key={`gantt-add-pre-opt-${item.label}`}
+                    value={item.label}
+                  >
+                    {item.label}
+                  </option>
+                ))}
+            </select>
+          )}
         </div>
-        <div>
-          <label
-            htmlFor="ganttTaskEndDate"
-            className="text-[10px] font-bold text-slate-500"
-          >
-            {t("結束日期")}
-            <span className="ml-0.5 text-red-500">*</span>
-          </label>
-          <input
-            id="ganttTaskEndDate"
-            type="date"
-            value={ganttEndDate}
-            onChange={(e) => setGanttEndDate(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
-          />
-        </div>
+
+        {!isMilestone && (
+          <div className="col-span-2">
+            <div className="mb-1.5 flex items-center justify-between">
+              <label className={MERMAID_LABEL_STYLE}>
+                {t("結束時間")}
+                <span className="ml-0.5 text-red-500">*</span>
+              </label>
+              <SegmentedControl
+                value={endMode}
+                onChange={(val) => {
+                  setEndMode(val as EndMode);
+                  if (val === EndMode.DATE) setGanttDuration("");
+                  else setGanttEndDate("");
+                }}
+                options={[
+                  { label: t("指定日期"), value: EndMode.DATE },
+                  { label: t("填寫工期天數"), value: "duration" },
+                ]}
+              />
+            </div>
+
+            {endMode === "date" ? (
+              <input
+                id="ganttTaskEndDate"
+                type="date"
+                value={ganttEndDate}
+                onChange={(e) => setGanttEndDate(e.target.value)}
+                className={MERMAID_INPUT_STYLE}
+              />
+            ) : (
+              <input
+                id="ganttDuration"
+                type="number"
+                min="1"
+                value={ganttDuration}
+                onChange={(e) => setGanttDuration(e.target.value)}
+                className={MERMAID_INPUT_STYLE}
+                placeholder={t("填入工期天數 (例: 3)")!}
+              />
+            )}
+          </div>
+        )}
       </div>
-      <div className="col-span-2">
-        <label
-          htmlFor="ganttTaskColor"
-          className="text-[10px] font-bold text-slate-500"
-        >
-          {t("選擇行程顏色")}
-        </label>
-        <select
-          id="ganttTaskColor"
-          value={ganttTaskColor}
-          onChange={(e) => setGanttTaskColor(e.target.value as GanttColor)}
-          className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
-        >
-          <option value={""}>{t("請選擇行程顏色")}</option>
-          {Object.values(GanttColor).map((color) => (
-            <option key={color} value={color}>
-              {t(GANTT_COLOR_TRANSLATION_KEYS[color])}
-            </option>
-          ))}
-        </select>
-      </div>
+
+      <TaskTypeRadioGroup
+        name="ganttAddTaskType"
+        value={ganttTaskType}
+        onChange={(val) => {
+          setGanttTaskType(val as TaskType);
+          if (val === TaskType.MILESTONE) {
+            setGanttEndDate("");
+            setGanttDuration("");
+          }
+        }}
+      />
+
       <button
         type="button"
         onClick={handleSubmit}
-        disabled={!ganttTaskLabel || !ganttStartDate || !ganttEndDate}
-        className="w-full cursor-pointer rounded-lg bg-blue-600 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
+        disabled={submitDisabled}
+        className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
         {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
       </button>
@@ -290,10 +497,30 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
   const [ganttNewLabel, setGanttNewLabel] = useState<string>("");
   const [ganttStartDate, setGanttStartDate] = useState<string>("");
   const [ganttEndDate, setGanttEndDate] = useState<string>("");
+  const [ganttPredecessor, setGanttPredecessor] = useState<string>("");
+  const [ganttDuration, setGanttDuration] = useState<string>("");
+
+  const [startMode, setStartMode] = useState<"date" | "predecessor">("date");
+  const [endMode, setEndMode] = useState<"date" | "duration">("date");
+
+  const isMilestone = false;
 
   const submitDisabled =
     !ganttTaskTarget ||
-    (!ganttStartDate && !ganttEndDate && !ganttNewLabel && !ganttNewSection);
+    (startMode === "date" &&
+      !ganttStartDate &&
+      endMode === "date" &&
+      !ganttEndDate &&
+      !ganttNewLabel &&
+      !ganttNewSection &&
+      !ganttDuration) ||
+    (startMode === "predecessor" &&
+      !ganttPredecessor &&
+      endMode === "date" &&
+      !ganttEndDate &&
+      !ganttNewLabel &&
+      !ganttNewSection &&
+      !ganttDuration);
 
   const handleSubmit = () => {
     if (submitDisabled) return;
@@ -303,6 +530,11 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
       ganttEndDate,
       ganttNewSection,
       ganttNewLabel || undefined,
+      undefined,
+      undefined,
+      undefined,
+      ganttPredecessor || undefined,
+      ganttDuration || undefined,
     );
     onInsertWithFilter(inst, (line) =>
       INSTRUCTION_TEMPLATES.EDIT_GANTT_TASK.match(line, ganttTaskTarget),
@@ -331,10 +563,7 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div className="col-span-2">
-          <label
-            htmlFor="ganttTaskTarget"
-            className="text-[10px] font-bold text-slate-500"
-          >
+          <label htmlFor="ganttTaskTarget" className={MERMAID_LABEL_STYLE}>
             {t("選擇要編輯的行程")}
             <span className="ml-0.5 text-red-500">*</span>
           </label>
@@ -342,7 +571,7 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
             id="ganttTaskTarget"
             value={ganttTaskTarget}
             onChange={(e) => setGanttTaskTarget(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+            className={MERMAID_INPUT_STYLE}
           >
             <option value="">{t("請選擇要編輯的行程")}</option>
             {parsedGanttItems
@@ -356,18 +585,15 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
           </select>
         </div>
         <div>
-          <label
-            htmlFor="ganttNewSection"
-            className="text-[10px] font-bold text-slate-500"
-          >
+          <label htmlFor="ganttNewSection" className={MERMAID_LABEL_STYLE}>
             {t("變更行程群組")}
           </label>
           <select
             id="ganttNewSection"
             value={ganttNewSection}
-            disabled={!isTargetSelected} // Info: (20260707 - Julian) 只有當目標任務被選取時，才能選擇新的分組
+            disabled={!isTargetSelected}
             onChange={(e) => setGanttNewSection(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
+            className={MERMAID_INPUT_STYLE}
           >
             <option value="">{t("請選擇要變更的行程群組")}</option>
             {sectionOptions.map((item) => (
@@ -381,59 +607,115 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
           </select>
         </div>
         <div>
-          <label
-            htmlFor="ganttNewLabel"
-            className="text-[10px] font-bold text-slate-500"
-          >
+          <label htmlFor="ganttNewLabel" className={MERMAID_LABEL_STYLE}>
             {t("變更行程名稱")}
           </label>
           <input
             id="ganttNewLabel"
             type="text"
             value={ganttNewLabel}
+            disabled={!isTargetSelected}
             onChange={(e) => setGanttNewLabel(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+            className={MERMAID_INPUT_STYLE}
             placeholder={t("請輸入新的行程名稱")!}
           />
         </div>
-        <div>
-          <label
-            htmlFor="ganttStartDate"
-            className="text-[10px] font-bold text-slate-500"
-          >
-            {t("變更開始時間")}
-          </label>
-          <input
-            id="ganttStartDate"
-            type="date"
-            value={ganttStartDate}
-            onChange={(e) => setGanttStartDate(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
-            placeholder={t("請選擇要變更的開始時間")!}
-          />
+        <div className="col-span-2">
+          <div className="mb-1.5 flex items-center justify-between">
+            <label className={MERMAID_LABEL_STYLE}>{t("變更開始時間")}</label>
+            <SegmentedControl
+              value={startMode}
+              onChange={(val) => {
+                setStartMode(val as StartMode);
+                if (val === StartMode.DATE) setGanttPredecessor("");
+                else setGanttStartDate("");
+              }}
+              options={[
+                { label: t("指定日期"), value: StartMode.DATE },
+                { label: t("跟隨前置任務"), value: StartMode.PREDECESSOR },
+              ]}
+            />
+          </div>
+
+          {startMode === StartMode.DATE ? (
+            <input
+              type="date"
+              value={ganttStartDate}
+              disabled={!isTargetSelected}
+              onChange={(e) => setGanttStartDate(e.target.value)}
+              className={MERMAID_INPUT_STYLE}
+            />
+          ) : (
+            <select
+              value={ganttPredecessor}
+              disabled={!isTargetSelected}
+              onChange={(e) => setGanttPredecessor(e.target.value)}
+              className={MERMAID_INPUT_STYLE}
+            >
+              <option value="">{t("請選擇前置任務")}</option>
+              {parsedGanttItems
+                .filter(
+                  (item) =>
+                    item.type === "task" && item.label !== ganttTaskTarget,
+                )
+                .map((item) => (
+                  <option
+                    key={`gantt-edit-pre-opt-${item.label}`}
+                    value={item.label}
+                  >
+                    {item.label}
+                  </option>
+                ))}
+            </select>
+          )}
         </div>
-        <div>
-          <label
-            htmlFor="ganttEndDate"
-            className="text-[10px] font-bold text-slate-500"
-          >
-            {t("變更結束時間")}
-          </label>
-          <input
-            id="ganttEndDate"
-            type="date"
-            value={ganttEndDate}
-            onChange={(e) => setGanttEndDate(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
-            placeholder={t("請選擇要變更的結束時間")!}
-          />
-        </div>
+
+        {!isMilestone && (
+          <div className="col-span-2">
+            <div className="mb-1.5 flex items-center justify-between">
+              <label className={MERMAID_LABEL_STYLE}>{t("變更結束時間")}</label>
+              <SegmentedControl
+                value={endMode}
+                onChange={(val) => {
+                  setEndMode(val as EndMode);
+                  if (val === EndMode.DATE) setGanttDuration("");
+                  else setGanttEndDate("");
+                }}
+                options={[
+                  { label: t("指定日期"), value: EndMode.DATE },
+                  { label: t("填寫工期天數"), value: "duration" },
+                ]}
+              />
+            </div>
+
+            {endMode === "date" ? (
+              <input
+                type="date"
+                value={ganttEndDate}
+                disabled={!isTargetSelected}
+                onChange={(e) => setGanttEndDate(e.target.value)}
+                className={MERMAID_INPUT_STYLE}
+              />
+            ) : (
+              <input
+                type="number"
+                min="1"
+                value={ganttDuration}
+                disabled={!isTargetSelected}
+                onChange={(e) => setGanttDuration(e.target.value)}
+                className={MERMAID_INPUT_STYLE}
+                placeholder={t("填入工期天數 (例: 3)")!}
+              />
+            )}
+          </div>
+        )}
       </div>
+
       <button
         type="button"
         onClick={handleSubmit}
         disabled={submitDisabled}
-        className="w-full cursor-pointer rounded-lg bg-blue-600 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
+        className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
         {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
       </button>
@@ -441,84 +723,69 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
   );
 };
 
-// Info: (20260707 - Julian) 「變更行程顏色」面板
-const ChangeTaskColorPanel: FC<IBasePanelProps> = ({
+// Info: (20260707 - Julian) 「變更行程類型」面板
+const ChangeTaskTypePanel: FC<IBasePanelProps> = ({
   parsedGanttItems,
   onInsertWithFilter,
 }) => {
   const { t } = useTranslation();
   const [ganttTaskTarget, setGanttTaskTarget] = useState<string>("");
-  const [ganttTaskColor, setGanttTaskColor] = useState<GanttColor>(
-    GanttColor.DEFAULT,
-  );
+  const [ganttTaskType, setGanttTaskType] = useState<TaskType>(TaskType.ACTIVE);
 
   const handleSubmit = () => {
-    if (!ganttTaskTarget || !ganttTaskColor) return;
-    const inst = INSTRUCTION_TEMPLATES.CHANGE_GANTT_COLOR.render(
+    if (!ganttTaskTarget) return;
+    const inst = INSTRUCTION_TEMPLATES.CHANGE_GANTT_TASK_TYPE.render(
       ganttTaskTarget,
-      ganttTaskColor,
+      ganttTaskType,
     );
     onInsertWithFilter(inst, (line) =>
-      INSTRUCTION_TEMPLATES.CHANGE_GANTT_COLOR.match(line, ganttTaskTarget),
+      INSTRUCTION_TEMPLATES.CHANGE_GANTT_TASK_TYPE.match(line, ganttTaskTarget),
     );
   };
+
+  const isTargetSelected = ganttTaskTarget !== "";
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
-        <PaintRoller size={14} />
-        <p>{t("變更行程顏色")}</p>
+        <Tag size={14} />
+        <p>{t("變更行程類型")}</p>
       </div>
       <div>
-        <label
-          htmlFor="ganttColorTarget"
-          className="text-[10px] font-bold text-slate-500"
-        >
+        <label htmlFor="ganttTypeTarget" className={MERMAID_LABEL_STYLE}>
           {t("選擇要變更的行程")}
           <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
-          id="ganttColorTarget"
+          id="ganttTypeTarget"
           value={ganttTaskTarget}
           onChange={(e) => setGanttTaskTarget(e.target.value)}
-          className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+          className={MERMAID_INPUT_STYLE}
         >
           <option value="">{t("請選擇要變更的行程")}</option>
           {parsedGanttItems
             .filter((item) => item.type === "task")
             .map((item) => (
-              <option key={`gantt-color-opt-${item.label}`} value={item.label}>
+              <option key={`gantt-type-opt-${item.label}`} value={item.label}>
+                {item.section ? `[${item.section}] ` : ""}
                 {item.label}
               </option>
             ))}
         </select>
       </div>
-      <div>
-        <label
-          htmlFor="ganttTaskColor"
-          className="text-[10px] font-bold text-slate-500"
-        >
-          {t("選擇要變更的顏色")}
-          <span className="ml-0.5 text-red-500">*</span>
-        </label>
-        <select
-          id="ganttTaskColor"
-          value={ganttTaskColor}
-          onChange={(e) => setGanttTaskColor(e.target.value as GanttColor)}
-          className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
-        >
-          {Object.values(GanttColor).map((color) => (
-            <option key={color} value={color}>
-              {t(GANTT_COLOR_TRANSLATION_KEYS[color])}
-            </option>
-          ))}
-        </select>
-      </div>
+
+      <TaskTypeRadioGroup
+        name="ganttChangeTaskType"
+        disabled={!isTargetSelected}
+        value={ganttTaskType}
+        onChange={(val) => setGanttTaskType(val)}
+      />
+
       <button
         type="button"
         onClick={handleSubmit}
-        disabled={!ganttTaskTarget}
-        className="w-full cursor-pointer rounded-lg bg-blue-600 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
+        disabled={!isTargetSelected}
+        className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
         {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
       </button>
@@ -556,10 +823,7 @@ const SwapTaskPanel: FC<IBasePanelProps> = ({
         <p>{t("調整行程順序")}</p>
       </div>
       <div>
-        <label
-          htmlFor="ganttSwapTarget"
-          className="text-[10px] font-bold text-slate-500"
-        >
+        <label htmlFor="ganttSwapTarget" className={MERMAID_LABEL_STYLE}>
           {t("請選擇要交換的行程")}
           <span className="ml-0.5 text-red-500">*</span>
         </label>
@@ -567,7 +831,7 @@ const SwapTaskPanel: FC<IBasePanelProps> = ({
           id="ganttSwapTarget"
           value={ganttTaskTarget}
           onChange={(e) => setGanttTaskTarget(e.target.value)}
-          className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400"
+          className={MERMAID_INPUT_STYLE}
         >
           <option value="">{t("請選擇要交換的行程")}</option>
           {taskOptions.map((item) => (
@@ -579,10 +843,7 @@ const SwapTaskPanel: FC<IBasePanelProps> = ({
         </select>
       </div>
       <div>
-        <label
-          htmlFor="ganttSwapTarget2"
-          className="text-[10px] font-bold text-slate-500"
-        >
+        <label htmlFor="ganttSwapTarget2" className={MERMAID_LABEL_STYLE}>
           {t("請選擇要交換的行程")}
           <span className="ml-0.5 text-red-500">*</span>
         </label>
@@ -590,7 +851,7 @@ const SwapTaskPanel: FC<IBasePanelProps> = ({
           id="ganttSwapTarget2"
           value={ganttTaskTarget2}
           onChange={(e) => setGanttTaskTarget2(e.target.value)}
-          className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400"
+          className={MERMAID_INPUT_STYLE}
         >
           <option value="">{t("請選擇要交換的行程")}</option>
           {taskOptions.map((item) => (
@@ -605,7 +866,7 @@ const SwapTaskPanel: FC<IBasePanelProps> = ({
         type="button"
         onClick={handleSubmit}
         disabled={!ganttTaskTarget || !ganttTaskTarget2}
-        className="w-full cursor-pointer rounded-lg bg-blue-600 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
+        className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
         {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
       </button>
@@ -637,10 +898,7 @@ const DeleteTaskPanel: FC<IBasePanelProps> = ({
         <p>{t("刪除行程")}</p>
       </div>
       <div>
-        <label
-          htmlFor="ganttTaskTargetDel"
-          className="text-[10px] font-bold text-slate-500"
-        >
+        <label htmlFor="ganttTaskTargetDel" className={MERMAID_LABEL_STYLE}>
           {t("請選擇要刪除的行程")}
           <span className="ml-0.5 text-red-500">*</span>
         </label>
@@ -648,7 +906,7 @@ const DeleteTaskPanel: FC<IBasePanelProps> = ({
           id="ganttTaskTargetDel"
           value={ganttTaskTarget}
           onChange={(e) => setGanttTaskTarget(e.target.value)}
-          className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+          className={MERMAID_INPUT_STYLE}
         >
           <option value="">{t("請選擇要刪除的行程")}</option>
           {parsedGanttItems
@@ -664,7 +922,7 @@ const DeleteTaskPanel: FC<IBasePanelProps> = ({
         type="button"
         onClick={handleSubmit}
         disabled={!ganttTaskTarget}
-        className="w-full cursor-pointer rounded-lg bg-blue-600 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
+        className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
         {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
       </button>
@@ -679,7 +937,7 @@ const DeleteTaskPanel: FC<IBasePanelProps> = ({
 const GANTT_TOOL_PANELS: Record<GanttTools, FC<IBasePanelProps>> = {
   [GanttTools.ADD_TASK]: AddTaskPanel,
   [GanttTools.EDIT_TASK]: EditTaskPanel,
-  [GanttTools.CHANGE_COLOR]: ChangeTaskColorPanel,
+  [GanttTools.CHANGE_TASK_TYPE]: ChangeTaskTypePanel,
   [GanttTools.SWAP_TASK]: SwapTaskPanel,
   [GanttTools.DELETE_TASK]: DeleteTaskPanel,
 };

@@ -22,17 +22,6 @@ When styling pie charts or setting slice colors based on user instructions (e.g.
 - "Purple (質感紫)": #8B5CF6
 `;
 
-const GANTT_COLOR_MAP = `
-# Gantt Chart Styling & Palette Mapping
-When styling gantt chart tasks based on user requested color names, strictly apply the following styling declarations (using the \`style taskId fill:#hex,stroke:#hex,stroke-width:1.5px,color:#hex\` syntax):
-- "Default" / "Default（預設灰）": fill:#ffffff, stroke:#152C5B, stroke-width:1.5px, color:#152C5B
-- "Navy" / "Navy (海軍藍)": fill:#152C5B, stroke:#152C5B, stroke-width:1.5px, color:#ffffff
-- "Orange" / "Orange (高光橘)": fill:#FFF3E0, stroke:#FF9800, stroke-width:1.5px, color:#152C5B
-- "Red" / "Red (警告紅)": fill:#FEE2E2, stroke:#EF4444, stroke-width:1.5px, color:#991B1B
-- "Green" / "Green (成功綠)": fill:#D1FAE5, stroke:#10B981, stroke-width:1.5px, color:#065F46
-- "Purple" / "Purple (質感紫)": fill:#F3E8FF, stroke:#8B5CF6, stroke-width:1.5px, color:#5B21B6
-`;
-
 export const getMermaidModificationPrompt = (chartType: MermaidChartType) => {
   let colorMap = "";
   switch (chartType) {
@@ -43,7 +32,7 @@ export const getMermaidModificationPrompt = (chartType: MermaidChartType) => {
       colorMap = PIE_COLOR_MAP;
       break;
     case MermaidChartType.GANTT:
-      colorMap = GANTT_COLOR_MAP;
+      colorMap = ""; // Gantt charts do not support per-task custom styling
       break;
     default:
       break;
