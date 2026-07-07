@@ -59,11 +59,11 @@ const GANTT_TOOLS: IToolItem[] = [
 ];
 
 const GANTT_TOOL_TRANSLATION_KEYS: Record<GanttTools, string> = {
-  [GanttTools.ADD_TASK]: "新增行程",
-  [GanttTools.EDIT_TASK]: "編輯行程",
-  [GanttTools.CHANGE_TASK_TYPE]: "變更行程類型",
-  [GanttTools.SWAP_TASK]: "調整任務順序",
-  [GanttTools.DELETE_TASK]: "刪除行程",
+  [GanttTools.ADD_TASK]: "chart.mermaid.ai_editor.gantt.add_task",
+  [GanttTools.EDIT_TASK]: "chart.mermaid.ai_editor.gantt.edit_task",
+  [GanttTools.CHANGE_TASK_TYPE]: "chart.mermaid.ai_editor.gantt.change_type",
+  [GanttTools.SWAP_TASK]: "chart.mermaid.ai_editor.gantt.swap_task",
+  [GanttTools.DELETE_TASK]: "chart.mermaid.ai_editor.gantt.delete_task",
 };
 
 const INSTRUCTION_TEMPLATES = {
@@ -262,13 +262,27 @@ const TaskTypeRadioGroup: FC<{
   const { t } = useTranslation();
   return (
     <div>
-      <label className={MERMAID_LABEL_STYLE}>{t("行程類型")}</label>
+      <label className={MERMAID_LABEL_STYLE}>
+        {t("chart.mermaid.ai_editor.gantt.task_types.label")}
+      </label>
       <div className="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-2">
         {[
-          { label: t("一般任務"), value: "normal" },
-          { label: t("已完成任務 (done)"), value: "done" },
-          { label: t("關鍵路徑 (crit)"), value: "crit" },
-          { label: t("里程碑 (milestone)"), value: "milestone" },
+          {
+            label: t("chart.mermaid.ai_editor.gantt.task_types.normal"),
+            value: "normal",
+          },
+          {
+            label: t("chart.mermaid.ai_editor.gantt.task_types.done"),
+            value: "done",
+          },
+          {
+            label: t("chart.mermaid.ai_editor.gantt.task_types.crit"),
+            value: "crit",
+          },
+          {
+            label: t("chart.mermaid.ai_editor.gantt.task_types.milestone"),
+            value: "milestone",
+          },
         ].map((opt) => (
           <label
             key={opt.value}
@@ -338,12 +352,12 @@ const AddTaskPanel: FC<IBasePanelProps> = ({ parsedGanttItems, onInsert }) => {
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <SquarePlus size={14} />
-        <p>{t("新增行程")}</p>
+        <p>{t("chart.mermaid.ai_editor.gantt.add_task")}</p>
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
           <label htmlFor="ganttSection" className={MERMAID_LABEL_STYLE}>
-            {t("行程群組")}
+            {t("chart.mermaid.ai_editor.gantt.section")}
           </label>
           <input
             id="ganttSection"
@@ -351,12 +365,12 @@ const AddTaskPanel: FC<IBasePanelProps> = ({ parsedGanttItems, onInsert }) => {
             value={ganttSection}
             onChange={(e) => setGanttSection(e.target.value)}
             className={MERMAID_INPUT_STYLE}
-            placeholder={t("請填入行程群組")}
+            placeholder={t("chart.mermaid.ai_editor.gantt.section_placeholder")}
           />
         </div>
         <div>
           <label htmlFor="ganttTaskLabel" className={MERMAID_LABEL_STYLE}>
-            {t("行程名稱")}
+            {t("chart.mermaid.ai_editor.gantt.task_name")}
             <span className="ml-0.5 text-red-500">*</span>
           </label>
           <input
@@ -365,13 +379,15 @@ const AddTaskPanel: FC<IBasePanelProps> = ({ parsedGanttItems, onInsert }) => {
             value={ganttTaskLabel}
             onChange={(e) => setGanttTaskLabel(e.target.value)}
             className={MERMAID_INPUT_STYLE}
-            placeholder={t("請填入行程名稱")!}
+            placeholder={
+              t("chart.mermaid.ai_editor.gantt.task_name_placeholder")!
+            }
           />
         </div>
         <div className="col-span-2">
           <div className="mb-1.5 flex items-center justify-between">
             <label className={MERMAID_LABEL_STYLE}>
-              {t("開始時間")}
+              {t("chart.mermaid.ai_editor.gantt.start_time")}
               <span className="ml-0.5 text-red-500">*</span>
             </label>
             <SegmentedControl
@@ -382,8 +398,14 @@ const AddTaskPanel: FC<IBasePanelProps> = ({ parsedGanttItems, onInsert }) => {
                 else setGanttStartDate("");
               }}
               options={[
-                { label: t("指定日期"), value: StartMode.DATE },
-                { label: t("跟隨前置任務"), value: StartMode.PREDECESSOR },
+                {
+                  label: t("chart.mermaid.ai_editor.gantt.date_fixed"),
+                  value: StartMode.DATE,
+                },
+                {
+                  label: t("chart.mermaid.ai_editor.gantt.follow_predecessor"),
+                  value: StartMode.PREDECESSOR,
+                },
               ]}
             />
           </div>
@@ -403,7 +425,9 @@ const AddTaskPanel: FC<IBasePanelProps> = ({ parsedGanttItems, onInsert }) => {
               onChange={(e) => setGanttPredecessor(e.target.value)}
               className={MERMAID_INPUT_STYLE}
             >
-              <option value="">{t("請選擇前置任務")}</option>
+              <option value="">
+                {t("chart.mermaid.ai_editor.gantt.select_predecessor")}
+              </option>
               {parsedGanttItems
                 .filter((item) => item.type === "task")
                 .map((item) => (
@@ -422,7 +446,7 @@ const AddTaskPanel: FC<IBasePanelProps> = ({ parsedGanttItems, onInsert }) => {
           <div className="col-span-2">
             <div className="mb-1.5 flex items-center justify-between">
               <label className={MERMAID_LABEL_STYLE}>
-                {t("結束時間")}
+                {t("chart.mermaid.ai_editor.gantt.end_time")}
                 <span className="ml-0.5 text-red-500">*</span>
               </label>
               <SegmentedControl
@@ -433,8 +457,14 @@ const AddTaskPanel: FC<IBasePanelProps> = ({ parsedGanttItems, onInsert }) => {
                   else setGanttEndDate("");
                 }}
                 options={[
-                  { label: t("指定日期"), value: EndMode.DATE },
-                  { label: t("填寫工期天數"), value: "duration" },
+                  {
+                    label: t("chart.mermaid.ai_editor.gantt.date_fixed"),
+                    value: EndMode.DATE,
+                  },
+                  {
+                    label: t("chart.mermaid.ai_editor.gantt.duration_days"),
+                    value: "duration",
+                  },
                 ]}
               />
             </div>
@@ -455,7 +485,9 @@ const AddTaskPanel: FC<IBasePanelProps> = ({ parsedGanttItems, onInsert }) => {
                 value={ganttDuration}
                 onChange={(e) => setGanttDuration(e.target.value)}
                 className={MERMAID_INPUT_STYLE}
-                placeholder={t("填入工期天數 (例: 3)")!}
+                placeholder={
+                  t("chart.mermaid.ai_editor.gantt.duration_placeholder")!
+                }
               />
             )}
           </div>
@@ -559,12 +591,12 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <SquarePen size={14} />
-        <p>{t("編輯行程")}</p>
+        <p>{t("chart.mermaid.ai_editor.gantt.edit_task")}</p>
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div className="col-span-2">
           <label htmlFor="ganttTaskTarget" className={MERMAID_LABEL_STYLE}>
-            {t("選擇要編輯的行程")}
+            {t("chart.mermaid.ai_editor.gantt.select_edit_target")}
             <span className="ml-0.5 text-red-500">*</span>
           </label>
           <select
@@ -573,7 +605,9 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
             onChange={(e) => setGanttTaskTarget(e.target.value)}
             className={MERMAID_INPUT_STYLE}
           >
-            <option value="">{t("請選擇要編輯的行程")}</option>
+            <option value="">
+              {t("chart.mermaid.ai_editor.gantt.select_edit_placeholder")}
+            </option>
             {parsedGanttItems
               .filter((item) => item.type === "task")
               .map((item) => (
@@ -586,7 +620,7 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
         </div>
         <div>
           <label htmlFor="ganttNewSection" className={MERMAID_LABEL_STYLE}>
-            {t("變更行程群組")}
+            {t("chart.mermaid.ai_editor.gantt.change_section")}
           </label>
           <select
             id="ganttNewSection"
@@ -595,7 +629,9 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
             onChange={(e) => setGanttNewSection(e.target.value)}
             className={MERMAID_INPUT_STYLE}
           >
-            <option value="">{t("請選擇要變更的行程群組")}</option>
+            <option value="">
+              {t("chart.mermaid.ai_editor.gantt.select_change_section")}
+            </option>
             {sectionOptions.map((item) => (
               <option
                 key={`gantt-section-opt-${item.label}`}
@@ -608,7 +644,7 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
         </div>
         <div>
           <label htmlFor="ganttNewLabel" className={MERMAID_LABEL_STYLE}>
-            {t("變更行程名稱")}
+            {t("chart.mermaid.ai_editor.gantt.change_name")}
           </label>
           <input
             id="ganttNewLabel"
@@ -617,12 +653,16 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
             disabled={!isTargetSelected}
             onChange={(e) => setGanttNewLabel(e.target.value)}
             className={MERMAID_INPUT_STYLE}
-            placeholder={t("請輸入新的行程名稱")!}
+            placeholder={
+              t("chart.mermaid.ai_editor.gantt.new_name_placeholder")!
+            }
           />
         </div>
         <div className="col-span-2">
           <div className="mb-1.5 flex items-center justify-between">
-            <label className={MERMAID_LABEL_STYLE}>{t("變更開始時間")}</label>
+            <label className={MERMAID_LABEL_STYLE}>
+              {t("chart.mermaid.ai_editor.gantt.change_start_time")}
+            </label>
             <SegmentedControl
               value={startMode}
               onChange={(val) => {
@@ -631,8 +671,14 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
                 else setGanttStartDate("");
               }}
               options={[
-                { label: t("指定日期"), value: StartMode.DATE },
-                { label: t("跟隨前置任務"), value: StartMode.PREDECESSOR },
+                {
+                  label: t("chart.mermaid.ai_editor.gantt.date_fixed"),
+                  value: StartMode.DATE,
+                },
+                {
+                  label: t("chart.mermaid.ai_editor.gantt.follow_predecessor"),
+                  value: StartMode.PREDECESSOR,
+                },
               ]}
             />
           </div>
@@ -652,7 +698,9 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
               onChange={(e) => setGanttPredecessor(e.target.value)}
               className={MERMAID_INPUT_STYLE}
             >
-              <option value="">{t("請選擇前置任務")}</option>
+              <option value="">
+                {t("chart.mermaid.ai_editor.gantt.select_predecessor")}
+              </option>
               {parsedGanttItems
                 .filter(
                   (item) =>
@@ -673,7 +721,9 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
         {!isMilestone && (
           <div className="col-span-2">
             <div className="mb-1.5 flex items-center justify-between">
-              <label className={MERMAID_LABEL_STYLE}>{t("變更結束時間")}</label>
+              <label className={MERMAID_LABEL_STYLE}>
+                {t("chart.mermaid.ai_editor.gantt.change_end_time")}
+              </label>
               <SegmentedControl
                 value={endMode}
                 onChange={(val) => {
@@ -682,8 +732,14 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
                   else setGanttEndDate("");
                 }}
                 options={[
-                  { label: t("指定日期"), value: EndMode.DATE },
-                  { label: t("填寫工期天數"), value: "duration" },
+                  {
+                    label: t("chart.mermaid.ai_editor.gantt.date_fixed"),
+                    value: EndMode.DATE,
+                  },
+                  {
+                    label: t("chart.mermaid.ai_editor.gantt.duration_days"),
+                    value: "duration",
+                  },
                 ]}
               />
             </div>
@@ -704,7 +760,9 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
                 disabled={!isTargetSelected}
                 onChange={(e) => setGanttDuration(e.target.value)}
                 className={MERMAID_INPUT_STYLE}
-                placeholder={t("填入工期天數 (例: 3)")!}
+                placeholder={
+                  t("chart.mermaid.ai_editor.gantt.duration_placeholder")!
+                }
               />
             )}
           </div>
@@ -749,11 +807,11 @@ const ChangeTaskTypePanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <Tag size={14} />
-        <p>{t("變更行程類型")}</p>
+        <p>{t("chart.mermaid.ai_editor.gantt.change_type")}</p>
       </div>
       <div>
         <label htmlFor="ganttTypeTarget" className={MERMAID_LABEL_STYLE}>
-          {t("選擇要變更的行程")}
+          {t("chart.mermaid.ai_editor.gantt.select_edit_target")}
           <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
@@ -762,7 +820,9 @@ const ChangeTaskTypePanel: FC<IBasePanelProps> = ({
           onChange={(e) => setGanttTaskTarget(e.target.value)}
           className={MERMAID_INPUT_STYLE}
         >
-          <option value="">{t("請選擇要變更的行程")}</option>
+          <option value="">
+            {t("chart.mermaid.ai_editor.gantt.select_edit_placeholder")}
+          </option>
           {parsedGanttItems
             .filter((item) => item.type === "task")
             .map((item) => (
@@ -820,11 +880,11 @@ const SwapTaskPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <Shuffle size={14} />
-        <p>{t("調整行程順序")}</p>
+        <p>{t("chart.mermaid.ai_editor.gantt.swap_task")}</p>
       </div>
       <div>
         <label htmlFor="ganttSwapTarget" className={MERMAID_LABEL_STYLE}>
-          {t("請選擇要交換的行程")}
+          {t("chart.mermaid.ai_editor.gantt.swap_target_label")}
           <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
@@ -833,7 +893,9 @@ const SwapTaskPanel: FC<IBasePanelProps> = ({
           onChange={(e) => setGanttTaskTarget(e.target.value)}
           className={MERMAID_INPUT_STYLE}
         >
-          <option value="">{t("請選擇要交換的行程")}</option>
+          <option value="">
+            {t("chart.mermaid.ai_editor.gantt.swap_target_label")}
+          </option>
           {taskOptions.map((item) => (
             <option key={`gantt-swap-opt1-${item.label}`} value={item.label}>
               {item.section ? `[${item.section}] ` : ""}
@@ -844,7 +906,7 @@ const SwapTaskPanel: FC<IBasePanelProps> = ({
       </div>
       <div>
         <label htmlFor="ganttSwapTarget2" className={MERMAID_LABEL_STYLE}>
-          {t("請選擇要交換的行程")}
+          {t("chart.mermaid.ai_editor.gantt.swap_target_label")}
           <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
@@ -853,7 +915,9 @@ const SwapTaskPanel: FC<IBasePanelProps> = ({
           onChange={(e) => setGanttTaskTarget2(e.target.value)}
           className={MERMAID_INPUT_STYLE}
         >
-          <option value="">{t("請選擇要交換的行程")}</option>
+          <option value="">
+            {t("chart.mermaid.ai_editor.gantt.swap_target_label")}
+          </option>
           {taskOptions.map((item) => (
             <option key={`gantt-swap-opt2-${item.label}`} value={item.label}>
               {item.section ? `[${item.section}] ` : ""}
@@ -895,11 +959,11 @@ const DeleteTaskPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <Trash2 size={14} />
-        <p>{t("刪除行程")}</p>
+        <p>{t("chart.mermaid.ai_editor.gantt.delete_task")}</p>
       </div>
       <div>
         <label htmlFor="ganttTaskTargetDel" className={MERMAID_LABEL_STYLE}>
-          {t("請選擇要刪除的行程")}
+          {t("chart.mermaid.ai_editor.gantt.delete_target_label")}
           <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
@@ -908,7 +972,9 @@ const DeleteTaskPanel: FC<IBasePanelProps> = ({
           onChange={(e) => setGanttTaskTarget(e.target.value)}
           className={MERMAID_INPUT_STYLE}
         >
-          <option value="">{t("請選擇要刪除的行程")}</option>
+          <option value="">
+            {t("chart.mermaid.ai_editor.gantt.delete_target_label")}
+          </option>
           {parsedGanttItems
             .filter((item) => item.type === "task")
             .map((item) => (
