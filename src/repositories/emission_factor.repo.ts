@@ -2,6 +2,7 @@ import { Prisma } from "@/generated";
 import { prisma } from "@/lib/prisma";
 import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
 import { MOCK_EEIO_COEFFICIENTS } from "@/constants/mock_eeio_coefficients";
+import { verifyDimensionalConsistency } from "@/constants/dimension";
 
 export class EmissionFactorRepo {
   static async getAllGlobalCoefficients(tx?: Prisma.TransactionClient) {
@@ -69,12 +70,14 @@ export class EmissionFactorRepo {
   static async findFallbackCoefficient(
     fallbackTag: string,
     accountBookId: string,
+    docUnit: string,
     tx?: Prisma.TransactionClient,
   ): Promise<string | null> {
     if (!fallbackTag) return null;
 
     const client = tx || prisma;
-    // Info: (20260521 - Tzuhan) 軌道一：優先檢索資料庫的「官方標準數據」(accountBookId: null)
+
+    // Info: (20260707 - Tzuhan) [AI_SPECULATIVE] Fetch all keyword matches from official DB, then filter by strict dimensional consistency.
     const officialDbMatches = await client.coefficient.findMany({
       where: {
         AND: [
@@ -89,11 +92,13 @@ export class EmissionFactorRepo {
         ],
         isVerified: true,
       },
-      orderBy: { emissionFactor: "desc" }, // Info: (20260521 - Tzuhan) 保守原則取最大
-      take: 1,
     });
 
-    if (officialDbMatches.length > 0) return officialDbMatches[0].id;
+    const validOfficial = officialDbMatches
+      .filter((c) => verifyDimensionalConsistency(docUnit, c.unit))
+      .sort((a, b) => Number(b.emissionFactor) - Number(a.emissionFactor));
+
+    if (validOfficial.length > 0) return validOfficial[0].id;
 
     // Info: (20260521 - Tzuhan) 軌道二：官方 DB 查無資料，退回系統全域靜態常數檔 (Sprint 1 過渡期墊片)
     const combinedStatic = [
@@ -105,8 +110,9 @@ export class EmissionFactorRepo {
     const staticMatches = combinedStatic
       .filter(
         (c) =>
-          c.name.includes(fallbackTag) ||
-          (c.description && c.description.includes(fallbackTag)),
+          (c.name.includes(fallbackTag) ||
+            (c.description && c.description.includes(fallbackTag))) &&
+          verifyDimensionalConsistency(docUnit, c.unit),
       )
       .sort((a, b) => Number(b.emissionFactor) - Number(a.emissionFactor));
 
@@ -126,11 +132,13 @@ export class EmissionFactorRepo {
           { deletedAt: null },
         ],
       },
-      orderBy: { emissionFactor: "desc" }, // Info: (20260521 - Tzuhan) 保守原則取最大
-      take: 1,
     });
 
-    if (tenantDbMatches.length > 0) return tenantDbMatches[0].id;
+    const validTenant = tenantDbMatches
+      .filter((c) => verifyDimensionalConsistency(docUnit, c.unit))
+      .sort((a, b) => Number(b.emissionFactor) - Number(a.emissionFactor));
+
+    if (validTenant.length > 0) return validTenant[0].id;
 
     // Info: (20260521 - Tzuhan) 軌道四：徹底無解，退回 null，交由外層觸發 AI_SPECULATIVE_STAGE_3
     return null;

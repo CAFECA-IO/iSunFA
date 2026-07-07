@@ -599,6 +599,26 @@ export class DocumentSyncRepository {
           let recordIsVerified = confidence > 85;
           let finalDqiType = "PRIMARY";
 
+          // Info: (20260707 - Tzuhan) [AI_SPECULATIVE] RAG 查無精確係數時，自動降級推測
+          if (!finalCoefficientId && ed.fallbackCategory) {
+            const docUnit = ed.amountUnit || "TWD";
+            finalCoefficientId =
+              await EmissionFactorRepo.findFallbackCoefficient(
+                ed.fallbackCategory,
+                accountBookId,
+                docUnit,
+                tx as Prisma.TransactionClient,
+              );
+
+            if (finalCoefficientId) {
+              ed.generationSource = EsgGenerationSource.AI_SPECULATIVE;
+              ed.aiNote =
+                (ed.aiNote || "") +
+                `\n[AI_SPECULATIVE] 缺乏精準配對係數，AI 啟動語意降級，自動套用大類 [${ed.fallbackCategory}] 之最高碳排係數（保守原則推測），請務必人工覆核。`;
+              recordIsVerified = false;
+            }
+          }
+
           if (finalCoefficientId) {
             let coefExists: Coefficient | null | undefined =
               await tx.coefficient.findUnique({
