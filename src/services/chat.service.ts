@@ -23,8 +23,25 @@ export class ChatService {
   private genAI: GoogleGenerativeAI;
   private modelName: string;
 
-  constructor(apiKey: string) {
-    this.genAI = new GoogleGenerativeAI(apiKey);
+  /**
+   * Info: (20260707 - Luphia)
+   * 1. API Key 管理中心化：apiKey 改為選填，預設從環境變數讀取。
+   *    組件端與業務邏輯層不再需要負責 apiKey 的讀取與驗證，簡化呼叫流程。
+   * 2. 本地模型支援預留：將 apiKey 讀取移入 Service 內部，是為了未來能根據環境變數
+   *    直接切換至本地模型（如 Ollama）而不需要修改外部呼叫端的代碼。
+   */
+  constructor(apiKey?: string) {
+    const key =
+      apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+
+    if (!key) {
+      // Info: (20260707 - Luphia) 若未來支援純本地模型且不需 Key，此處應改為僅在切換至 Google Provider 時才拋錯
+      throw new Error(
+        "Missing GEMINI_API_KEY or GOOGLE_API_KEY in environment",
+      );
+    }
+
+    this.genAI = new GoogleGenerativeAI(key);
     this.modelName = process.env.MODEL || "gemini-1.5-flash";
   }
 

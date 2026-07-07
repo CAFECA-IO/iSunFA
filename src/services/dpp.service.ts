@@ -12,7 +12,7 @@ import {
   IDigitalProductPassportSku,
   IDppMissingGap,
 } from "@/interfaces/dpp";
-import { ApiError, API_ERRORS } from "@/lib/utils/error_dictionary";
+import { ApiError } from "@/lib/utils/error_dictionary";
 import { ApiCode } from "@/lib/utils/status";
 import { DPP_SKU_STATUS } from "@/constants/status";
 
@@ -25,17 +25,8 @@ export class DppService {
     this.fileRepo = new FileRepository();
   }
 
-  // Info: (20260615 - Tzuhan) Initialize and validate ChatService client
   private getChatService(): ChatService {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new ApiError(
-        API_ERRORS.IS_GEMINI_API_KEY_UNDEFINED.code,
-        API_ERRORS.IS_GEMINI_API_KEY_UNDEFINED.message,
-        API_ERRORS.IS_GEMINI_API_KEY_UNDEFINED.status,
-      );
-    }
-    return new ChatService(apiKey);
+    return new ChatService();
   }
 
   public async issueBatch(

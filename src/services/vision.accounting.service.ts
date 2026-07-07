@@ -53,10 +53,8 @@ export interface IEsgExtraction {
 export class VisionAccountingService {
   private chatService: ChatService;
 
-  constructor(apiKey?: string) {
-    const key =
-      apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
-    this.chatService = new ChatService(key);
+  constructor() {
+    this.chatService = new ChatService();
   }
 
   // Info: (20260407 - Luphia) Utility

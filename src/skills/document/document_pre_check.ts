@@ -2,6 +2,7 @@ import { ITaskSkill } from "@/skills/types";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
+import { Schema } from "@google/generative-ai";
 
 export class DocumentPreCheckSkill implements ITaskSkill {
   name = "DOCUMENT_PRE_CHECK";
@@ -34,9 +35,8 @@ export class DocumentPreCheckSkill implements ITaskSkill {
       error: "AI 前置防呆掃描失敗，請稍後再試",
     });
     try {
-      const responseSchema = (
-        task.data as { responseSchema?: import("@google/generative-ai").Schema }
-      )?.responseSchema;
+      const responseSchema = (task.data as { responseSchema?: Schema })
+        ?.responseSchema;
       const text = await chatService.generateRawWithImages(
         promptText,
         images,

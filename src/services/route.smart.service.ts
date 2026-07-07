@@ -16,12 +16,9 @@ export async function parseSmartInput(
   text: string,
 ): Promise<ISmartParseResult> {
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("GEMINI_API_KEY is not set.");
-    }
-
-    const chatService = new ChatService(apiKey);
+    // Info: (20260707 - Julian)
+    // apiKey 的讀取與驗證已移至 ChatService 內部處理，此處直接使用預設建構
+    const chatService = new ChatService();
 
     const prompt = `
             You are a professional logistics AI assistant.
@@ -88,9 +85,7 @@ export async function parseMultipleRoutesFromText(text: string): Promise<
   }>
 > {
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) throw new Error("GEMINI_API_KEY is not set.");
-    const chatService = new ChatService(apiKey);
+    const chatService = new ChatService();
     const prompt = `
             You are a professional logistics AI assistant.
             Extract all distinct transportation routes from the user's description.
