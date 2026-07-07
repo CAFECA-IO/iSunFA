@@ -106,7 +106,7 @@ export default function SkuDiagnosticPage() {
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
       </div>
     );
   }
@@ -161,7 +161,7 @@ export default function SkuDiagnosticPage() {
             onClick={() =>
               router.push(`/digital_product_passport/sku/${skuId}/batch/create`)
             }
-            className="flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500"
+            className="flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-500"
           >
             <Factory className="h-4 w-4" />{" "}
             {t("digital_product_passport.sku_diagnostics.issue_batch")}
@@ -175,11 +175,11 @@ export default function SkuDiagnosticPage() {
           <div className="relative flex flex-col items-center overflow-hidden rounded-3xl border border-gray-200 bg-white p-8 text-center shadow-sm">
             {/* Info: (20260513 - Luphia) Background decoration */}
             <div
-              className={`absolute -top-24 -right-24 h-48 w-48 rounded-full opacity-10 ${isReady ? "bg-emerald-500" : "bg-amber-500"}`}
+              className={`absolute -top-24 -right-24 h-48 w-48 rounded-full opacity-10 ${isReady ? "bg-orange-500" : "bg-amber-500"}`}
             ></div>
 
             {isReady ? (
-              <div className="mb-6 rounded-full bg-emerald-50 p-6 text-emerald-500 ring-8 ring-emerald-50/50">
+              <div className="mb-6 rounded-full bg-orange-50 p-6 text-orange-500 ring-8 ring-orange-50/50">
                 <ShieldCheck className="h-16 w-16" />
               </div>
             ) : (
@@ -205,7 +205,7 @@ export default function SkuDiagnosticPage() {
 
             <div className="mb-2 h-3 w-full overflow-hidden rounded-full bg-gray-100">
               <div
-                className={`h-3 rounded-full transition-all duration-1000 ${isReady ? "bg-emerald-500" : "bg-amber-500"}`}
+                className={`h-3 rounded-full transition-all duration-1000 ${isReady ? "bg-orange-500" : "bg-amber-500"}`}
                 style={{ width: `${readinessScore}%` }}
               ></div>
             </div>
@@ -213,7 +213,7 @@ export default function SkuDiagnosticPage() {
               <span>
                 {t("digital_product_passport.sku_diagnostics.readiness")}
               </span>
-              <span className={isReady ? "text-emerald-600" : "text-amber-600"}>
+              <span className={isReady ? "text-orange-600" : "text-amber-600"}>
                 {readinessScore}%
               </span>
             </div>
@@ -221,7 +221,7 @@ export default function SkuDiagnosticPage() {
 
           <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
             <h3 className="mb-4 flex items-center gap-2 text-sm font-bold tracking-wider text-gray-900 uppercase">
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" />{" "}
+              <CheckCircle2 className="h-4 w-4 text-orange-500" />{" "}
               {t(
                 "digital_product_passport.sku_diagnostics.successfully_extracted",
               )}
@@ -232,7 +232,7 @@ export default function SkuDiagnosticPage() {
                   key={idx}
                   className="flex items-start gap-2 text-sm text-gray-600"
                 >
-                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400"></span>
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-orange-400"></span>
                   {mod}
                 </li>
               ))}
@@ -262,7 +262,7 @@ export default function SkuDiagnosticPage() {
             <div className="space-y-4">
               {gaps.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="mb-4 rounded-full bg-emerald-50 p-4 text-emerald-500">
+                  <div className="mb-4 rounded-full bg-orange-50 p-4 text-orange-500">
                     <CheckCircle2 className="h-8 w-8" />
                   </div>
                   <h4 className="text-lg font-bold text-gray-900">

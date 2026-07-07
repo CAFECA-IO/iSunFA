@@ -153,7 +153,7 @@ export default function DppDashboard() {
       label: "",
       align: "right",
       render: () => (
-        <div className="text-xs font-semibold text-blue-600 transition hover:text-blue-800">
+        <div className="text-xs font-semibold text-orange-600 transition hover:text-orange-800">
           {t("digital_product_passport.sku_diagnostics.title")} &rarr;
         </div>
       ),
@@ -202,7 +202,7 @@ export default function DppDashboard() {
           href={row.publicUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs font-semibold text-blue-600 transition hover:text-blue-800"
+          className="text-xs font-semibold text-orange-600 transition hover:text-orange-800"
           onClick={(e) => e.stopPropagation()}
         >
           {t("digital_product_passport.view_passport")} &rarr;
@@ -239,10 +239,10 @@ export default function DppDashboard() {
               onClick={() =>
                 router.push(`/digital_product_passport/sku/create`)
               }
-              className="group cursor-pointer rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:border-blue-300 hover:shadow-md"
+              className="group cursor-pointer rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:border-orange-300 hover:shadow-md"
             >
               <div className="mb-4 flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 transition group-hover:bg-blue-100">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-orange-600 transition group-hover:bg-orange-100">
                   <FileText className="h-6 w-6" />
                 </div>
                 <div>
@@ -254,7 +254,7 @@ export default function DppDashboard() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center text-sm font-semibold text-blue-600">
+              <div className="flex items-center text-sm font-semibold text-orange-600">
                 <PlusCircle className="mr-2 h-4 w-4" />{" "}
                 {t("digital_product_passport.create_sku")}
               </div>
@@ -271,10 +271,10 @@ export default function DppDashboard() {
               onClick={() => {
                 router.push(`/digital_product_passport/batch/create`);
               }}
-              className="group cursor-pointer rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:border-emerald-300 hover:shadow-md"
+              className="group cursor-pointer rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:border-orange-300 hover:shadow-md"
             >
               <div className="mb-4 flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 transition group-hover:bg-emerald-100">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-orange-600 transition group-hover:bg-orange-100">
                   <Factory className="h-6 w-6" />
                 </div>
                 <div>
@@ -286,7 +286,7 @@ export default function DppDashboard() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center text-sm font-semibold text-emerald-600">
+              <div className="flex items-center text-sm font-semibold text-orange-600">
                 <PackageOpen className="mr-2 h-4 w-4" />{" "}
                 {t("digital_product_passport.issue_batch")}
               </div>
@@ -297,7 +297,7 @@ export default function DppDashboard() {
             <div className="mb-6 flex flex-col gap-4 border-b border-gray-200 pb-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex gap-6">
                 <button
-                  className={`pb-2 text-lg font-bold transition-colors ${activeTab === "sku" ? "border-b-2 border-blue-600 text-gray-900" : "text-gray-400 hover:text-gray-600"}`}
+                  className={`pb-2 text-lg font-bold transition-colors ${activeTab === "sku" ? "border-b-2 border-orange-600 text-gray-900" : "text-gray-400 hover:text-gray-600"}`}
                   onClick={() => {
                     setActiveTab("sku");
                     setCurrentPage(1);
@@ -307,7 +307,7 @@ export default function DppDashboard() {
                   SKU
                 </button>
                 <button
-                  className={`pb-2 text-lg font-bold transition-colors ${activeTab === "batch" ? "border-b-2 border-blue-600 text-gray-900" : "text-gray-400 hover:text-gray-600"}`}
+                  className={`pb-2 text-lg font-bold transition-colors ${activeTab === "batch" ? "border-b-2 border-orange-600 text-gray-900" : "text-gray-400 hover:text-gray-600"}`}
                   onClick={() => {
                     setActiveTab("batch");
                     setCurrentPage(1);
@@ -324,7 +324,7 @@ export default function DppDashboard() {
                 <input
                   aria-label={t("common.search")}
                   type="text"
-                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 pl-10 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 pl-10 text-sm text-gray-900 focus:border-orange-500 focus:ring-orange-500"
                   placeholder={t("common.search")}
                   value={searchTerm}
                   onChange={(e) => {

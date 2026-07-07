@@ -88,7 +88,7 @@ export default function UserActions() {
     user.isAdmin || user.role === "SUPER_ADMIN" || user.role === "ADMIN";
 
   // Info: (20260424 - Julian) 功能模組選單
-  const modulesMenuItems = (() => {
+  const renderModulesMenuItems = (close: () => void) => {
     const publicModuleKeys = new Set(PUBLIC_MODULES.map((m) => m.key));
     const modulesToDisplay = isAdmin
       ? ADMIN_MODULES
@@ -108,7 +108,10 @@ export default function UserActions() {
           {active ? (
             <Link
               href={targetPath}
-              onClick={() => setForceOpen(false)}
+              onClick={() => {
+                setForceOpen(false);
+                close();
+              }}
               className={`group flex h-full w-full flex-col items-center justify-center rounded-xl bg-white p-2 shadow-sm ring-1 ring-gray-200 transition-all duration-200 hover:bg-orange-50 hover:ring-1 hover:ring-orange-200 md:rounded-lg md:p-3 md:shadow-none md:ring-gray-100`}
             >
               <Icon
@@ -131,10 +134,10 @@ export default function UserActions() {
         </Fragment>
       );
     });
-  })();
+  };
 
   // Info: (20260502 - Luphia) 小工具選單
-  const publicModulesMenuItems = (() => {
+  const renderPublicModulesMenuItems = (close: () => void) => {
     return PUBLIC_MODULES.map((module) => {
       const Icon = module.icon;
       const targetPath = `/${module.key}`;
@@ -143,7 +146,10 @@ export default function UserActions() {
         <Link
           key={module.key}
           href={targetPath}
-          onClick={() => setForceOpen(false)}
+          onClick={() => {
+            setForceOpen(false);
+            close();
+          }}
           className={`group flex h-full w-full flex-col items-center justify-center rounded-xl bg-white p-2 shadow-sm ring-1 ring-gray-200 transition-all duration-200 hover:bg-orange-50 hover:ring-1 hover:ring-orange-200 md:rounded-lg md:p-3 md:shadow-none md:ring-gray-100`}
         >
           <Icon
@@ -157,48 +163,54 @@ export default function UserActions() {
         </Link>
       );
     });
-  })();
+  };
 
   // Info: (20260423 - Julian) 系統功能選單
-  const systemMenuItems = SYSTEM_MODULES.filter((action) => {
-    if (!action.enable) return false;
-    // Info: (20260416 - Luphia) 角色為 ADMIN, SUPER ADMIN 時，系统设置只需顯示登出
-    if (isAdmin && action.action !== "logout") return false;
-    return true;
-  }).map((action) => {
-    const Icon = action.icon;
-    return (
-      <Fragment key={action.id}>
-        {action.href ? (
-          <Link
-            href={action.href}
-            onClick={() => setForceOpen(false)}
-            className={`group flex h-full w-full flex-col items-center justify-center rounded-xl bg-white p-2 text-center text-xs font-normal text-gray-600 shadow-sm ring-1 ring-gray-200 transition-colors hover:bg-gray-50 md:rounded-lg md:bg-transparent md:font-medium md:shadow-none md:ring-0`}
-          >
-            <Icon
-              size={24}
-              className="mb-1 text-gray-400 group-hover:text-gray-600 md:size-5"
-            />
-            {t(action.labelKey)}
-          </Link>
-        ) : (
-          <button
-            onClick={() => {
-              if (action.action === "logout") logout();
-              setForceOpen(false);
-            }}
-            className={`group flex h-full w-full flex-col items-center justify-center rounded-xl bg-white p-2 text-center text-xs font-normal text-gray-600 shadow-sm ring-1 ring-gray-200 transition-colors md:rounded-lg md:bg-transparent md:font-medium md:shadow-none md:ring-0 ${action.isDestructive ? "hover:bg-red-50" : "hover:bg-gray-50"}`}
-          >
-            <Icon
-              size={24}
-              className={`mb-1 text-gray-400 group-hover:text-gray-600 md:size-5 ${action.isDestructive ? "text-red-500" : "text-gray-600"}`}
-            />
-            {t(action.labelKey)}
-          </button>
-        )}
-      </Fragment>
-    );
-  });
+  const renderSystemMenuItems = (close: () => void) => {
+    return SYSTEM_MODULES.filter((action) => {
+      if (!action.enable) return false;
+      // Info: (20260416 - Luphia) 角色為 ADMIN, SUPER ADMIN 時，系统设置只需顯示登出
+      if (isAdmin && action.action !== "logout") return false;
+      return true;
+    }).map((action) => {
+      const Icon = action.icon;
+      return (
+        <Fragment key={action.id}>
+          {action.href ? (
+            <Link
+              href={action.href}
+              onClick={() => {
+                setForceOpen(false);
+                close();
+              }}
+              className={`group flex h-full w-full flex-col items-center justify-center rounded-xl bg-white p-2 text-center text-xs font-normal text-gray-600 shadow-sm ring-1 ring-gray-200 transition-colors hover:bg-gray-50 md:rounded-lg md:bg-transparent md:font-medium md:shadow-none md:ring-0`}
+            >
+              <Icon
+                size={24}
+                className="mb-1 text-gray-400 group-hover:text-gray-600 md:size-5"
+              />
+              {t(action.labelKey)}
+            </Link>
+          ) : (
+            <button
+              onClick={() => {
+                if (action.action === "logout") logout();
+                setForceOpen(false);
+                close();
+              }}
+              className={`group flex h-full w-full flex-col items-center justify-center rounded-xl bg-white p-2 text-center text-xs font-normal text-gray-600 shadow-sm ring-1 ring-gray-200 transition-colors md:rounded-lg md:bg-transparent md:font-medium md:shadow-none md:ring-0 ${action.isDestructive ? "hover:bg-red-50" : "hover:bg-gray-50"}`}
+            >
+              <Icon
+                size={24}
+                className={`mb-1 text-gray-400 group-hover:text-gray-600 md:size-5 ${action.isDestructive ? "text-red-500" : "text-gray-600"}`}
+              />
+              {t(action.labelKey)}
+            </button>
+          )}
+        </Fragment>
+      );
+    });
+  };
 
   return (
     <div className="flex items-center gap-x-4">
@@ -359,7 +371,7 @@ export default function UserActions() {
                       {t("sidebar.modules")}
                     </h3>
                     <div className="grid grid-cols-3 gap-3 md:gap-2">
-                      {modulesMenuItems}
+                      {renderModulesMenuItems(close)}
                     </div>
                   </div>
 
@@ -370,7 +382,7 @@ export default function UserActions() {
                         {t("sidebar.public_modules")}
                       </h3>
                       <div className="grid grid-cols-3 gap-3 md:gap-2">
-                        {publicModulesMenuItems}
+                        {renderPublicModulesMenuItems(close)}
                       </div>
                     </div>
                   )}
@@ -381,7 +393,7 @@ export default function UserActions() {
                       {t("sidebar.system")}
                     </h3>
                     <div className="grid grid-cols-4 gap-3 md:gap-2">
-                      {systemMenuItems}
+                      {renderSystemMenuItems(close)}
                     </div>
                   </div>
                 </div>

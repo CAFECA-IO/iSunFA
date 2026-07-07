@@ -152,7 +152,7 @@ export default function PublicBatchPassportPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="text-center">
-          <Loader2 className="mx-auto h-12 w-12 animate-spin text-blue-600" />
+          <Loader2 className="mx-auto h-12 w-12 animate-spin text-orange-600" />
           <p className="mt-4 text-sm font-semibold text-slate-600">
             {t("common.loading")}
           </p>
@@ -167,18 +167,16 @@ export default function PublicBatchPassportPage() {
         <div className="w-full max-w-md rounded-3xl border border-red-100 bg-white p-8 text-center shadow-lg">
           <AlertCircle className="mx-auto h-16 w-16 text-red-500" />
           <h2 className="mt-6 text-2xl font-bold text-slate-900">
-            Passport Not Found
+            {t("digital_product_passport.public_passport.not_found_title")}
           </h2>
           <p className="mt-2 text-sm text-slate-500">
-            We couldn&apos;t retrieve the Digital Product Passport for this
-            product batch. It may not have been created yet, or the link might
-            be incorrect.
+            {t("digital_product_passport.public_passport.not_found_desc")}
           </p>
           <button
             onClick={() => router.push("/digital_product_passport")}
-            className="mt-8 inline-flex items-center justify-center rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-500"
+            className="mt-8 inline-flex items-center justify-center rounded-xl bg-orange-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-500"
           >
-            Go to Dashboard
+            {t("digital_product_passport.public_passport.go_to_dashboard")}
           </button>
         </div>
       </div>
@@ -235,12 +233,12 @@ export default function PublicBatchPassportPage() {
           </span>
           <span className="text-slate-600">|</span>
           <span className="text-sm font-medium text-slate-300">
-            陽光智能碳會計
+            {t("common.report_layout.brand")}
           </span>
         </div>
         <div className="flex items-center gap-4">
-          <div className="rounded-full border border-slate-700 bg-slate-800/50 px-3.5 py-1 text-xs font-semibold text-blue-400">
-            Public Passport
+          <div className="rounded-full border border-slate-700 bg-slate-800/50 px-3.5 py-1 text-xs font-semibold text-orange-400">
+            {t("digital_product_passport.public_passport.public_passport_tag")}
           </div>
           <button
             onClick={() => {
@@ -249,10 +247,10 @@ export default function PublicBatchPassportPage() {
                 "_blank",
               );
             }}
-            className="flex items-center gap-1.5 rounded-full bg-blue-600 px-3.5 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-500"
+            className="flex items-center gap-1.5 rounded-full bg-orange-600 px-3.5 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-orange-500"
           >
             <Download className="h-4 w-4" />
-            Download PDF
+            {t("digital_product_passport.public_passport.download_pdf")}
           </button>
         </div>
       </header>
@@ -260,19 +258,24 @@ export default function PublicBatchPassportPage() {
       {/* Info: (20260612 - Tzuhan) Main Container */}
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:py-12">
         {/* Info: (20260612 - Tzuhan) Verification Status Banner */}
-        <div className="mb-8 flex flex-col justify-between gap-4 rounded-3xl border border-emerald-100 bg-emerald-50/50 p-6 shadow-sm sm:flex-row sm:items-center">
+        <div className="mb-8 flex flex-col justify-between gap-4 rounded-3xl border border-orange-100 bg-orange-50/50 p-6 shadow-sm sm:flex-row sm:items-center">
           <div>
-            <div className="flex items-center gap-2 text-emerald-800">
-              <ShieldCheck className="h-6 w-6 text-emerald-600" />
-              <h1 className="text-xl font-bold">Digital Product Passport</h1>
+            <div className="flex items-center gap-2 text-orange-800">
+              <ShieldCheck className="h-6 w-6 text-orange-600" />
+              <h1 className="text-xl font-bold">
+                {t(
+                  "digital_product_passport.public_passport.public_passport_tag",
+                )}
+              </h1>
             </div>
             <p className="mt-1 font-mono text-xs text-slate-500">
-              Passport ID: {skuId}-{batchNumber}
+              {t("digital_product_passport.public_passport.passport_id")}:{" "}
+              {skuId}-{batchNumber}
             </p>
           </div>
           <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-extrabold tracking-wider text-white uppercase shadow-sm">
-              ✔ VERIFIED BY TÜV Rheinland
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-600 px-3 py-1.5 text-xs font-extrabold tracking-wider text-white uppercase shadow-sm">
+              ✔ {t("digital_product_passport.public_passport.verified_by")}
             </span>
           </div>
         </div>
@@ -282,8 +285,8 @@ export default function PublicBatchPassportPage() {
           {/* Info: (20260612 - Tzuhan) Card 1: General Product Information */}
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
             <h2 className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
-              <FileText className="h-4 w-4 text-blue-500" />
-              General Information
+              <FileText className="h-4 w-4 text-orange-500" />
+              {t("digital_product_passport.public_passport.general_info")}
             </h2>
 
             {/* Info: (20260616) Render Product Design Image if available via Simulator files API */}
@@ -292,7 +295,9 @@ export default function PublicBatchPassportPage() {
                 <div className="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
                   <Image
                     src={`/api/v1/digital_product_passport_simulator/files?action=serve&path=data/${sku.accountBookName || sku.accountBookId}/${new Date(batch.manufactureDate).getFullYear()}/outputs/${productInfo.modelNumber || productInfo.productId}/mock_sources/fastener_blueprint.png`}
-                    alt="Product Design Blueprint"
+                    alt={t(
+                      "digital_product_passport.public_passport.product_design_blueprint",
+                    )}
                     width={800}
                     height={256}
                     unoptimized={true}
@@ -306,33 +311,45 @@ export default function PublicBatchPassportPage() {
 
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-slate-500">Product Name</span>
+                <span className="text-slate-500">
+                  {t("digital_product_passport.public_passport.product_name")}
+                </span>
                 <span className="font-bold text-slate-900">{sku.name}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-slate-500">Model Number</span>
+                <span className="text-slate-500">
+                  {t("digital_product_passport.public_passport.model_number")}
+                </span>
                 <span className="font-semibold text-slate-900">
                   {String(productInfo.modelNumber || "N/A")}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-slate-500">GTIN</span>
+                <span className="text-slate-500">
+                  {t("digital_product_passport.public_passport.gtin")}
+                </span>
                 <span className="font-mono text-slate-900">{sku.gtin}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-slate-500">CN Code</span>
+                <span className="text-slate-500">
+                  {t("digital_product_passport.public_passport.cn_code")}
+                </span>
                 <span className="font-semibold text-slate-900">
                   {String(productInfo.cnCode || "7318.15")}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-slate-500">Category</span>
+                <span className="text-slate-500">
+                  {t("digital_product_passport.public_passport.category")}
+                </span>
                 <span className="text-slate-950">
                   {String(productInfo.category || "N/A")}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-slate-500">Weight</span>
+                <span className="text-slate-500">
+                  {t("digital_product_passport.public_passport.weight")}
+                </span>
                 <span className="font-semibold text-slate-900">
                   {productInfo.weightKg
                     ? `${Number(productInfo.weightKg)} kg`
@@ -340,7 +357,9 @@ export default function PublicBatchPassportPage() {
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-slate-500">Facility</span>
+                <span className="text-slate-500">
+                  {t("digital_product_passport.public_passport.facility")}
+                </span>
                 <span className="text-right text-slate-900">
                   {String(productInfo.facility || batch.facilitySite)}
                   {productInfo.facilityUNLOCODE && (
@@ -351,7 +370,11 @@ export default function PublicBatchPassportPage() {
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-slate-500">Manufactured Date</span>
+                <span className="text-slate-500">
+                  {t(
+                    "digital_product_passport.public_passport.manufactured_date",
+                  )}
+                </span>
                 <span className="text-slate-900">
                   {productInfo.manufacturedDate
                     ? String(productInfo.manufacturedDate)
@@ -363,12 +386,14 @@ export default function PublicBatchPassportPage() {
 
               <div className="mt-4 border-t border-slate-100 pt-4">
                 <h3 className="mb-2 text-xs font-bold text-slate-700">
-                  Batch details
+                  {t("digital_product_passport.public_passport.batch_details")}
                 </h3>
                 <div className="grid grid-cols-2 gap-4 rounded-2xl bg-slate-50 p-4">
                   <div>
                     <div className="text-[10px] font-semibold text-slate-400 uppercase">
-                      Batch Number
+                      {t(
+                        "digital_product_passport.public_passport.batch_number",
+                      )}
                     </div>
                     <div className="font-mono text-sm font-bold text-slate-800">
                       {batch.batchNumber}
@@ -376,7 +401,9 @@ export default function PublicBatchPassportPage() {
                   </div>
                   <div>
                     <div className="text-[10px] font-semibold text-slate-400 uppercase">
-                      Serial Range
+                      {t(
+                        "digital_product_passport.public_passport.serial_range",
+                      )}
                     </div>
                     <div className="font-mono text-sm font-bold text-slate-800">
                       {batch.serialRange || "N/A"}
@@ -390,11 +417,11 @@ export default function PublicBatchPassportPage() {
           {/* Info: (20260612 - Tzuhan) Card 2: Carbon Footprint Summary */}
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
             <h2 className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
-              <Activity className="h-4 w-4 text-emerald-500" />
-              Carbon Footprint Summary
+              <Activity className="h-4 w-4 text-orange-500" />
+              {t("digital_product_passport.public_passport.carbon_footprint")}
             </h2>
             <div className="text-center">
-              <div className="text-4xl font-extrabold text-emerald-600">
+              <div className="text-4xl font-extrabold text-orange-600">
                 {totalCO2e === 0
                   ? "0.0000"
                   : totalCO2e < 0.0001
@@ -405,8 +432,13 @@ export default function PublicBatchPassportPage() {
                 </span>
               </div>
               <div className="mt-1 text-xs text-slate-400">
-                Methodology:{" "}
-                {String(envImpact.methodology || "ISO 14067 (Cradle-to-Gate)")}
+                {t("digital_product_passport.public_passport.methodology")}{" "}
+                {String(
+                  envImpact.methodology ||
+                    t(
+                      "digital_product_passport.public_passport.cradle_to_gate",
+                    ),
+                )}
               </div>
 
               {/* Info: (20260612 - Tzuhan) Conic Donut Chart */}
@@ -417,25 +449,34 @@ export default function PublicBatchPassportPage() {
                 >
                   <div className="absolute inset-4 flex flex-col items-center justify-center rounded-full bg-white shadow-sm">
                     <span className="text-[9px] font-bold tracking-widest text-slate-400 uppercase">
-                      Cradle
+                      {t("digital_product_passport.public_passport.cradle")}
                     </span>
                     <span className="text-[9px] font-bold tracking-widest text-slate-400 uppercase">
-                      to Gate
+                      {t("digital_product_passport.public_passport.to_gate")}
                     </span>
                   </div>
                 </div>
                 <div className="space-y-2 text-left text-xs font-semibold text-slate-600">
                   <div className="flex items-center gap-2">
                     <span className="h-2.5 w-2.5 rounded-sm bg-orange-500"></span>
-                    <span>Precursors: {prePct.toFixed(1)}%</span>
+                    <span>
+                      {t("digital_product_passport.public_passport.precursors")}
+                      : {prePct.toFixed(1)}%
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-sm bg-blue-500"></span>
-                    <span>Scope 1: {s1Pct.toFixed(1)}%</span>
+                    <span className="h-2.5 w-2.5 rounded-sm bg-orange-500"></span>
+                    <span>
+                      {t("digital_product_passport.public_passport.scope1")}:{" "}
+                      {s1Pct.toFixed(1)}%
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-sm bg-emerald-500"></span>
-                    <span>Scope 2: {s2Pct.toFixed(1)}%</span>
+                    <span className="h-2.5 w-2.5 rounded-sm bg-orange-400"></span>
+                    <span>
+                      {t("digital_product_passport.public_passport.scope2")}:{" "}
+                      {s2Pct.toFixed(1)}%
+                    </span>
                   </div>
                 </div>
               </div>
@@ -443,7 +484,11 @@ export default function PublicBatchPassportPage() {
               {/* Info: (20260612 - Tzuhan) Emissions breakdown list */}
               <div className="space-y-2.5 border-t border-slate-100 pt-4 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Precursors Emissions</span>
+                  <span className="text-slate-500">
+                    {t(
+                      "digital_product_passport.public_passport.precursors_emissions",
+                    )}
+                  </span>
                   <span className="font-semibold text-slate-800">
                     {precursors === 0
                       ? "0.0000"
@@ -455,7 +500,9 @@ export default function PublicBatchPassportPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">
-                    Direct Emissions (Scope 1)
+                    {t(
+                      "digital_product_passport.public_passport.direct_emissions",
+                    )}
                   </span>
                   <span className="font-semibold text-slate-800">
                     {scope1 === 0
@@ -468,7 +515,9 @@ export default function PublicBatchPassportPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">
-                    Indirect Emissions (Scope 2)
+                    {t(
+                      "digital_product_passport.public_passport.indirect_emissions",
+                    )}
                   </span>
                   <span className="font-semibold text-slate-800">
                     {scope2 === 0
@@ -487,16 +536,22 @@ export default function PublicBatchPassportPage() {
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md md:col-span-2">
             <h2 className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
               <Compass className="h-4 w-4 text-orange-500" />
-              Circularity & Material Composition
+              {t(
+                "digital_product_passport.public_passport.circularity_composition",
+              )}
             </h2>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="space-y-4">
                 <h3 className="text-sm font-bold text-slate-700">
-                  Recycled Content Share
+                  {t(
+                    "digital_product_passport.public_passport.recycled_content",
+                  )}
                 </h3>
                 {recycledContentShare.length === 0 ? (
                   <div className="text-xs text-slate-500 italic">
-                    No recycled content data available.
+                    {t(
+                      "digital_product_passport.public_passport.no_recycled_data",
+                    )}
                   </div>
                 ) : (
                   recycledContentShare.map((m, idx) => {
@@ -519,8 +574,11 @@ export default function PublicBatchPassportPage() {
                       >
                         <div className="flex justify-between text-xs font-bold text-slate-800">
                           <span>{m.material}</span>
-                          <span className="text-emerald-600">
-                            Recycled: {totalRecycled.toFixed(1)}%
+                          <span className="text-orange-600">
+                            {t(
+                              "digital_product_passport.public_passport.recycled_label",
+                            )}{" "}
+                            {totalRecycled.toFixed(1)}%
                           </span>
                         </div>
 
@@ -529,17 +587,26 @@ export default function PublicBatchPassportPage() {
                           <div
                             className="bg-orange-500 transition-all duration-500"
                             style={{ width: `${preShare}%` }}
-                            title={`Pre-consumer: ${preShare}%`}
+                            title={t(
+                              "digital_product_passport.public_passport.pre_consumer_val",
+                              { val: preShare },
+                            )}
                           ></div>
                           <div
-                            className="bg-emerald-500 transition-all duration-500"
+                            className="bg-orange-400 transition-all duration-500"
                             style={{ width: `${postShare}%` }}
-                            title={`Post-consumer: ${postShare}%`}
+                            title={t(
+                              "digital_product_passport.public_passport.post_consumer_val",
+                              { val: postShare },
+                            )}
                           ></div>
                           <div
                             className="bg-slate-400 transition-all duration-500"
                             style={{ width: `${primaryShare}%` }}
-                            title={`Primary: ${primaryShare}%`}
+                            title={t(
+                              "digital_product_passport.public_passport.primary_val",
+                              { val: primaryShare },
+                            )}
                           ></div>
                         </div>
 
@@ -547,15 +614,24 @@ export default function PublicBatchPassportPage() {
                         <div className="mt-3 flex flex-wrap gap-4 text-[10px] font-bold tracking-wider text-slate-500 uppercase">
                           <div className="flex items-center gap-1.5">
                             <span className="h-2 w-2 rounded-full bg-orange-500"></span>
-                            Pre-consumer ({preShare.toFixed(1)}%)
+                            {t(
+                              "digital_product_passport.public_passport.pre_consumer",
+                            )}{" "}
+                            ({preShare.toFixed(1)}%)
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-                            Post-consumer ({postShare.toFixed(1)}%)
+                            <span className="h-2 w-2 rounded-full bg-orange-400"></span>
+                            {t(
+                              "digital_product_passport.public_passport.post_consumer",
+                            )}{" "}
+                            ({postShare.toFixed(1)}%)
                           </div>
                           <div className="flex items-center gap-1.5">
                             <span className="h-2 w-2 rounded-full bg-slate-400"></span>
-                            Primary ({primaryShare.toFixed(1)}%)
+                            {t(
+                              "digital_product_passport.public_passport.primary",
+                            )}{" "}
+                            ({primaryShare.toFixed(1)}%)
                           </div>
                         </div>
                       </div>
@@ -566,11 +642,15 @@ export default function PublicBatchPassportPage() {
 
               <div>
                 <h3 className="mb-4 text-sm font-bold text-slate-700">
-                  Chemical Composition
+                  {t(
+                    "digital_product_passport.public_passport.chemical_composition",
+                  )}
                 </h3>
                 {materialComposition.length === 0 ? (
                   <div className="text-xs text-slate-500 italic">
-                    No chemical composition data available.
+                    {t(
+                      "digital_product_passport.public_passport.no_composition_data",
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -600,7 +680,9 @@ export default function PublicBatchPassportPage() {
                 {criticalRawMaterials.length > 0 && (
                   <div className="mt-6">
                     <h4 className="text-slate-450 mb-2 text-xs font-bold tracking-wider uppercase">
-                      Critical Raw Materials
+                      {t(
+                        "digital_product_passport.public_passport.critical_raw_materials",
+                      )}
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {criticalRawMaterials.map((crm, idx) => (
@@ -622,36 +704,48 @@ export default function PublicBatchPassportPage() {
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
             <h2 className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
               <Settings className="h-4 w-4 text-purple-500" />
-              Durability & Repairability
+              {t(
+                "digital_product_passport.public_passport.durability_repairability",
+              )}
             </h2>
             <div className="space-y-4 text-sm">
               <div className="flex justify-between">
-                <span className="text-slate-500">Physical Lifespan</span>
+                <span className="text-slate-500">
+                  {t(
+                    "digital_product_passport.public_passport.physical_lifespan",
+                  )}
+                </span>
                 <span className="font-semibold text-slate-900">
                   {repairability.physicalLifespanYears
-                    ? `${Number(repairability.physicalLifespanYears)} Years`
+                    ? `${Number(repairability.physicalLifespanYears)} ${t("digital_product_passport.public_passport.years")}`
                     : "N/A"}
                 </span>
               </div>
               <div className="space-y-1">
                 <div className="text-xs font-bold text-slate-500 uppercase">
-                  Repairability Instructions
+                  {t(
+                    "digital_product_passport.public_passport.repair_instructions",
+                  )}
                 </div>
                 <p className="rounded-2xl bg-slate-50 p-4.5 text-xs leading-relaxed text-slate-600">
                   {String(
                     repairability.repairability ||
-                      "No special repair instructions.",
+                      t(
+                        "digital_product_passport.public_passport.no_repair_instructions",
+                      ),
                   )}
                 </p>
               </div>
               <div className="space-y-1">
                 <div className="text-xs font-bold text-slate-500 uppercase">
-                  End of Life / Disposal
+                  {t("digital_product_passport.public_passport.end_of_life")}
                 </div>
                 <p className="rounded-2xl bg-slate-50 p-4.5 text-xs leading-relaxed text-slate-600">
                   {String(
                     repairability.disposal ||
-                      "Dispose in accordance with local e-waste regulations.",
+                      t(
+                        "digital_product_passport.public_passport.disposal_desc",
+                      ),
                   )}
                 </p>
               </div>
@@ -662,7 +756,7 @@ export default function PublicBatchPassportPage() {
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
             <h2 className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
               <Scale className="h-4 w-4 text-amber-500" />
-              Compliance & Certifications
+              {t("digital_product_passport.public_passport.compliance_certs")}
             </h2>
             <div className="space-y-4">
               <div className="flex justify-between text-sm">
@@ -670,31 +764,65 @@ export default function PublicBatchPassportPage() {
                 <span className="font-bold">
                   {compliance.iatf16949Compliant ? (
                     <span className="text-emerald-600">
-                      ✅ Compliant (
-                      {String(compliance.iatfCertificateId || "Certified")})
+                      ✅{" "}
+                      {t("digital_product_passport.public_passport.compliant")}{" "}
+                      (
+                      {String(
+                        compliance.iatfCertificateId ||
+                          t(
+                            "digital_product_passport.public_passport.verified",
+                          ),
+                      )}
+                      )
                     </span>
                   ) : (
-                    <span className="text-slate-400">Not Certified</span>
+                    <span className="text-slate-400">
+                      {t(
+                        "digital_product_passport.public_passport.not_certified",
+                      )}
+                    </span>
                   )}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-slate-500">RoHS Compliant</span>
+                <span className="text-slate-500">
+                  {t("digital_product_passport.public_passport.rohs_compliant")}
+                </span>
                 <span className="font-bold">
                   {compliance.rohsCompliant ? (
-                    <span className="text-emerald-600">✅ Compliant</span>
+                    <span className="text-emerald-600">
+                      ✅{" "}
+                      {t("digital_product_passport.public_passport.compliant")}
+                    </span>
                   ) : (
-                    <span className="text-red-550">❌ Non-compliant</span>
+                    <span className="text-red-550">
+                      ❌{" "}
+                      {t(
+                        "digital_product_passport.public_passport.non_compliant",
+                      )}
+                    </span>
                   )}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-slate-500">PFAS Free</span>
+                <span className="text-slate-500">
+                  {t(
+                    "digital_product_passport.public_passport.pfas_free_label",
+                  )}
+                </span>
                 <span className="font-bold">
                   {compliance.pfasFree ? (
-                    <span className="text-emerald-600">✅ PFAS Free</span>
+                    <span className="text-orange-600">
+                      ✅{" "}
+                      {t("digital_product_passport.public_passport.pfas_free")}
+                    </span>
                   ) : (
-                    <span className="text-red-550">❌ Contains PFAS</span>
+                    <span className="text-red-550">
+                      ❌{" "}
+                      {t(
+                        "digital_product_passport.public_passport.contains_pfas",
+                      )}
+                    </span>
                   )}
                 </span>
               </div>
@@ -702,38 +830,50 @@ export default function PublicBatchPassportPage() {
               {/* Info: (20260612 - Tzuhan) Social Impact */}
               <div className="mt-4 border-t border-slate-100 pt-4">
                 <h3 className="mb-2 text-xs font-bold text-slate-700">
-                  Social Responsibility
+                  {t(
+                    "digital_product_passport.public_passport.social_responsibility",
+                  )}
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-3 text-center">
                     <div className="text-slate-450 text-[10px] font-semibold uppercase">
-                      Ethical Sourcing
+                      {t(
+                        "digital_product_passport.public_passport.ethical_sourcing",
+                      )}
                     </div>
                     <div className="mt-1 text-xs font-bold text-slate-800">
                       {socialImpact.ethicalSourcing
-                        ? "✅ Verified"
-                        : "Not Audited"}
+                        ? `✅ ${t("digital_product_passport.public_passport.verified")}`
+                        : t(
+                            "digital_product_passport.public_passport.not_audited",
+                          )}
                     </div>
                   </div>
                   <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-3 text-center">
                     <div className="text-slate-450 text-[10px] font-semibold uppercase">
-                      Labor Standards
+                      {t(
+                        "digital_product_passport.public_passport.labor_standards",
+                      )}
                     </div>
                     <div className="mt-1 text-xs font-bold text-slate-800">
                       {socialImpact.laborStandardCompliant
-                        ? "✅ Compliant"
-                        : "Not Audited"}
+                        ? `✅ ${t("digital_product_passport.public_passport.compliant")}`
+                        : t(
+                            "digital_product_passport.public_passport.not_audited",
+                          )}
                     </div>
                   </div>
                 </div>
               </div>
 
               {compliance.declarationDocument && (
-                <div className="mt-4 rounded-2xl border border-blue-100 bg-blue-50/50 p-4">
+                <div className="mt-4 rounded-2xl border border-orange-100 bg-orange-50/50 p-4">
                   <div className="mb-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                    Attached Declaration Document
+                    {t(
+                      "digital_product_passport.public_passport.attached_declaration",
+                    )}
                   </div>
-                  <div className="truncate font-mono text-xs font-bold text-blue-600">
+                  <div className="truncate font-mono text-xs font-bold text-orange-600">
                     📄 {String(compliance.declarationDocument)}
                   </div>
                 </div>
@@ -745,13 +885,17 @@ export default function PublicBatchPassportPage() {
           {(logistics.companyName || logistics.eori) && (
             <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md md:col-span-2">
               <h2 className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
-                <Truck className="h-4 w-4 text-cyan-600" />
-                EU Importer & Logistics
+                <Truck className="h-4 w-4 text-orange-600" />
+                {t(
+                  "digital_product_passport.public_passport.importer_logistics",
+                )}
               </h2>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
                   <div className="text-slate-450 text-[10px] font-bold tracking-wider uppercase">
-                    Importer Company
+                    {t(
+                      "digital_product_passport.public_passport.importer_company",
+                    )}
                   </div>
                   <div className="mt-1 text-sm font-semibold text-slate-800">
                     {String(logistics.companyName || "N/A")}
@@ -759,7 +903,7 @@ export default function PublicBatchPassportPage() {
                 </div>
                 <div>
                   <div className="text-slate-450 text-[10px] font-bold tracking-wider uppercase">
-                    EORI Number
+                    {t("digital_product_passport.public_passport.eori_number")}
                   </div>
                   <div className="mt-1 font-mono text-sm font-semibold text-slate-800">
                     {String(logistics.eori || "N/A")}
@@ -767,7 +911,9 @@ export default function PublicBatchPassportPage() {
                 </div>
                 <div>
                   <div className="text-slate-450 text-[10px] font-bold tracking-wider uppercase">
-                    Importer Address
+                    {t(
+                      "digital_product_passport.public_passport.importer_address",
+                    )}
                   </div>
                   <div className="text-slate-650 mt-1 text-sm">
                     {String(logistics.address || "N/A")}
@@ -781,23 +927,21 @@ export default function PublicBatchPassportPage() {
         {/* Info: (20260612 - Tzuhan) Footer info/disclaimer */}
         <footer className="mt-12 border-t border-slate-200 pt-8 text-center text-xs text-slate-400">
           <p className="leading-relaxed">
-            * Carbon footprint evaluated according to ISO 14067 / CBAM
-            Implementing Regulation (EU) 2023/1773. System boundary:
-            Cradle-to-Gate.
+            {t("digital_product_passport.public_passport.footer_disclaimer")}
           </p>
           <p className="mt-1">
-            * Subject to Customs Nomenclature (CN) Code:{" "}
+            {t("digital_product_passport.public_passport.footer_cn_code")}{" "}
             <span className="font-semibold">
               {String(productInfo.cnCode || "7318.15")}
             </span>
             .
           </p>
           <p className="text-slate-350 mt-4 font-semibold">
-            Powered by iSunFA Enterprise Carbon Accounting System &bull;
-            Verified via Decentralized Trust Engine
+            {t("digital_product_passport.public_passport.footer_powered_by")}
           </p>
           <p className="mt-8 text-[10px]">
-            &copy; {new Date().getFullYear()} iSunFA. All rights reserved.
+            &copy; {new Date().getFullYear()} iSunFA.{" "}
+            {t("digital_product_passport.public_passport.all_rights_reserved")}
           </p>
         </footer>
       </main>

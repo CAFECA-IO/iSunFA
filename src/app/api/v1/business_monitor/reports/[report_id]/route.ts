@@ -9,7 +9,7 @@ import { businessMonitorService } from "@/services/business_monitor.service";
  */
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { report_id: string } },
+  { params }: { params: Promise<{ report_id: string }> },
 ) {
   try {
     const resolvedParams = await params;

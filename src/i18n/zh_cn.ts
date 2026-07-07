@@ -64,6 +64,8 @@ import { simulationWorkflow } from "@/i18n/locales/zh_cn/simulation_workflow";
 import { netZeroPathway } from "@/i18n/locales/zh_cn/net_zero_pathway";
 import { reportDownloader } from "@/i18n/locales/zh_cn/report_downloader";
 import { chart } from "@/i18n/locales/zh_cn/chart";
+import { solutions } from "@/i18n/locales/zh_cn/solutions";
+import { applicationManagement } from "@/i18n/locales/zh_cn/application_management";
 import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const zhCn = {
@@ -103,13 +105,13 @@ export const zhCn = {
   ai_consultation_section: aiConsultationSection,
   ocr,
   journal,
+  voucher,
   coefficient,
   esg_activity_type: esgActivityType,
   esg_main: esgMain,
   esg_summary: esgSummary,
   esg_table: esgTable,
   esg_verify: esgVerify,
-  voucher,
   verify,
   esg,
   team_management: teamManagement,
@@ -134,4 +136,6 @@ export const zhCn = {
   simulation_workflow: simulationWorkflow,
   net_zero_pathway: netZeroPathway,
   report_downloader: reportDownloader,
+  solutions,
+  application_management: applicationManagement,
 } satisfies BaseTranslation;

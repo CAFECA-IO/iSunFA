@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   X,
   User,
@@ -7,6 +7,7 @@ import {
   Hash,
   FileText,
   Clock,
+  Loader2,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { ORDER_STATUS } from "@/constants/status";
@@ -45,21 +46,23 @@ export default function OrderDetailModal({
 }: IOrderDetailModalProps) {
   const { t } = useTranslation();
   const [updating, setUpdating] = useState(false);
-  const [newStatus, setNewStatus] = useState<string>("");
+  const [localStatus, setLocalStatus] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (order) {
-      setNewStatus(order.status);
+      setLocalStatus(order.status);
     }
   }, [order]);
 
+  const currentStatus = localStatus || order?.status;
   if (!isOpen || !order) return null;
 
-  const handleUpdate = async () => {
-    if (newStatus === order.status) return;
+  const handleUpdate = async (status: string) => {
+    if (status === order.status || updating) return;
     setUpdating(true);
     try {
-      await onUpdateStatus(order.id, newStatus);
+      await onUpdateStatus(order.id, status);
+      setLocalStatus(status);
     } finally {
       setUpdating(false);
     }
@@ -134,25 +137,29 @@ export default function OrderDetailModal({
                 <label className="mb-1 flex items-center gap-2 text-xs font-semibold tracking-wider text-gray-400 uppercase">
                   <Clock size={14} /> {t("order_management.table.order_status")}
                 </label>
-                <div className="flex items-center gap-2">
-                  <select
-                    value={newStatus}
-                    onChange={(e) => setNewStatus(e.target.value)}
-                    className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
-                  >
-                    {statusOptions.map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={handleUpdate}
-                    disabled={updating || newStatus === order.status}
-                    className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-bold text-white transition-all hover:bg-orange-700 disabled:opacity-50"
-                  >
-                    {updating ? "..." : t("common.update") || "Update"}
-                  </button>
+                <div className="flex flex-wrap gap-2">
+                  {statusOptions.map((status) => (
+                    <button
+                      key={status}
+                      disabled={updating}
+                      onClick={() => handleUpdate(status)}
+                      className={`rounded-full px-3 py-1.5 text-xs font-bold transition-all ${
+                        currentStatus === status
+                          ? "bg-orange-50 text-orange-700 ring-1 ring-orange-700/20 ring-inset"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      } disabled:opacity-50`}
+                    >
+                      {status}
+                    </button>
+                  ))}
+                  {updating && (
+                    <div className="ml-2 flex items-center">
+                      <Loader2
+                        className="animate-spin text-orange-500"
+                        size={16}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 

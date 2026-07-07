@@ -1,0 +1,32 @@
+export const applicationManagement = {
+  title: "申請管理",
+  subtitle: "すべてのソリューションの申請記録と企業連絡先の管理と確認",
+  table: {
+    date: "申請日",
+    company: "企業名",
+    tax_id: "統一番号",
+    solution: "申請プラン",
+    contact: "担当者",
+    phone: "電話番号",
+    email: "メールアドレス",
+    id: "申請番号",
+    solution_id: "プラン ID",
+    company_name: "企業名",
+    contact_person: "担当者",
+    address: "企業住所",
+    message: "補足情報",
+    status: "処理ステータス",
+  },
+  status: {
+    CONTACTING: "連絡中",
+    EVALUATING: "評価中",
+    CONTRACTING: "契約中",
+    EXECUTING: "執行中",
+    CLOSED: "終了",
+    undefined: "連絡中",
+  },
+  detail: {
+    title: "申請詳細",
+    no_message: "補足情報なし",
+  },
+};

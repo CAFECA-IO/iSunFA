@@ -707,7 +707,7 @@ export default function DppStartPage() {
 
       <div className="flex shrink-0 items-center gap-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
         <div className="flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-orange-600">
             1
           </div>
           <span className="text-sm font-bold text-slate-700">
@@ -740,7 +740,7 @@ export default function DppStartPage() {
             }
           }}
           disabled={isGenerating}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 disabled:bg-slate-100 disabled:text-slate-500"
         >
           <option value="2025">
             {t("digital_product_passport.sidebar_extra.year_prediction")}
@@ -752,7 +752,7 @@ export default function DppStartPage() {
       </div>
 
       <div className="mb-1 flex shrink-0 items-center gap-2">
-        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600">
+        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-orange-600">
           2
         </div>
         <h2 className="text-sm font-bold text-slate-700">
@@ -794,24 +794,24 @@ export default function DppStartPage() {
         />
       </div>
 
-      <div className="flex shrink-0 items-center justify-between gap-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 shadow-sm">
+      <div className="flex shrink-0 items-center justify-between gap-4 rounded-2xl border border-orange-200 bg-orange-50 p-4 shadow-sm">
         <div>
           <div className="flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600">
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-orange-600">
               3
             </div>
-            <h3 className="text-sm font-bold text-blue-900">
+            <h3 className="text-sm font-bold text-orange-900">
               {t("digital_product_passport.start.next_step_verify")}
             </h3>
           </div>
-          <p className="mt-1 flex items-center text-xs text-blue-800">
+          <p className="mt-1 flex items-center text-xs text-orange-800">
             <Sparkles className="mr-1.5 h-3.5 w-3.5 text-amber-500" />
             {t("digital_product_passport.start.next_step_verify_desc")}
           </p>
         </div>
         <button
           onClick={() => router.push("/digital_product_passport")}
-          className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow transition-colors hover:bg-blue-700"
+          className="flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-2.5 text-sm font-bold text-white shadow transition-colors hover:bg-orange-700"
         >
           <Rocket className="h-4 w-4" />
           {t("digital_product_passport.start.go_to_create")}

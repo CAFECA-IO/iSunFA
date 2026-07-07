@@ -1,0 +1,32 @@
+export const applicationManagement = {
+  title: "신청 관리",
+  subtitle: "모든 솔루션 신청 기록 및 기업 연락처 정보 관리 및 검토",
+  table: {
+    date: "신청일",
+    company: "기업명",
+    tax_id: "사업자 등록번호",
+    solution: "신청 솔루션",
+    contact: "담당자",
+    phone: "전화번호",
+    email: "이메일",
+    id: "신청 번호",
+    solution_id: "솔루션 ID",
+    company_name: "기업명",
+    contact_person: "담당자",
+    address: "기업 주소",
+    message: "추가 메시지",
+    status: "처리 상태",
+  },
+  status: {
+    CONTACTING: "연락 중",
+    EVALUATING: "평가 중",
+    CONTRACTING: "계약 중",
+    EXECUTING: "진행 중",
+    CLOSED: "종료됨",
+    undefined: "연락 중",
+  },
+  detail: {
+    title: "신청 상세",
+    no_message: "추가 메시지 없음",
+  },
+};

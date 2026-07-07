@@ -1,0 +1,32 @@
+export const applicationManagement = {
+  title: "申请管理",
+  subtitle: "管理与检阅所有解决方案的申请记录与企业联系信息",
+  table: {
+    date: "申请日期",
+    company: "企业名称",
+    tax_id: "统一编号",
+    solution: "申请方案",
+    contact: "联系人",
+    phone: "联系电话",
+    email: "电子信箱",
+    id: "申请编号",
+    solution_id: "方案 ID",
+    company_name: "企业名称",
+    contact_person: "联系人",
+    address: "企业地址",
+    message: "补充信息",
+    status: "处理状态",
+  },
+  status: {
+    CONTACTING: "联系中",
+    EVALUATING: "评估中",
+    CONTRACTING: "签约中",
+    EXECUTING: "执行中",
+    CLOSED: "已结案",
+    undefined: "联系中",
+  },
+  detail: {
+    title: "申请细节",
+    no_message: "无补充信息",
+  },
+};

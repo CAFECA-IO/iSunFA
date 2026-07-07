@@ -71,7 +71,7 @@ export function DppLogsNavigator({
         <div className="no-scrollbar flex w-full overflow-x-auto border-b border-gray-200">
           <button
             onClick={() => onTabChange("baseline")}
-            className={`flex flex-shrink-0 items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors ${isBaseline ? "border-b-2 border-blue-600 bg-blue-50/50 text-blue-700" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"}`}
+            className={`flex flex-shrink-0 items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors ${isBaseline ? "border-b-2 border-orange-600 bg-orange-50/50 text-orange-700" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"}`}
           >
             <Building2 className="h-4 w-4" />
             {t("digital_product_passport.simulator.baseline_tab")}
@@ -82,7 +82,7 @@ export function DppLogsNavigator({
               <button
                 key={p.productId}
                 onClick={() => onTabChange(p.productId)}
-                className={`flex flex-shrink-0 items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors ${isActive ? "border-b-2 border-blue-600 bg-blue-50/50 text-blue-700" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"}`}
+                className={`flex flex-shrink-0 items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors ${isActive ? "border-b-2 border-orange-600 bg-orange-50/50 text-orange-700" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"}`}
               >
                 <Package className="h-4 w-4" />
                 {p.productId}

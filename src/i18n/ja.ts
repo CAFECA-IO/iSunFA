@@ -64,6 +64,8 @@ import { simulationWorkflow } from "@/i18n/locales/ja/simulation_workflow";
 import { netZeroPathway } from "@/i18n/locales/ja/net_zero_pathway";
 import { reportDownloader } from "@/i18n/locales/ja/report_downloader";
 import { chart } from "@/i18n/locales/ja/chart";
+import { solutions } from "@/i18n/locales/ja/solutions";
+import { applicationManagement } from "@/i18n/locales/ja/application_management";
 import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const ja = {
@@ -134,4 +136,6 @@ export const ja = {
   simulation_workflow: simulationWorkflow,
   net_zero_pathway: netZeroPathway,
   report_downloader: reportDownloader,
+  solutions,
+  application_management: applicationManagement,
 } satisfies BaseTranslation;

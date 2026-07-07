@@ -1068,3 +1068,21 @@ model Report {
 
   @@map("report")
 }
+
+// Info: (20260706 - Luphia) 方案申請紀錄
+model SolutionApplication {
+  id            String   @id @default(uuid())
+  solutionId    String   @map("solution_id")
+  taxId         String   @map("tax_id")
+  companyName   String   @map("company_name")
+  address       String
+  contactPerson String   @map("contact_person")
+  phone         String
+  email         String
+  message       String?  @db.Text
+  status        String   @default("CONTACTING")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("solution_application")
+}
