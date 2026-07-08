@@ -41,14 +41,6 @@ export const chart = {
         quick_tools: "常用修改工具",
         ai_assistant: "AI 编辑指令",
       },
-      colors: {
-        default: "默认灰 (Default)",
-        navy: "海军蓝 (Navy)",
-        orange: "高光橘 (Orange)",
-        red: "警告红 (Red)",
-        green: "成功绿 (Green)",
-        purple: "質感紫 (Purple)",
-      },
       command_list: "指令列表",
       flowchart: {
         add_node: "新增节点",

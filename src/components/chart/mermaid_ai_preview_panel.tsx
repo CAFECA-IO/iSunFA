@@ -2,11 +2,7 @@
 
 import { useEffect, useState, useMemo, FC } from "react";
 import mermaid from "mermaid";
-import {
-  DonutChart,
-  IDonutChartData,
-  DEFAULT_COLORS,
-} from "@/components/common/donut_chart";
+import { DonutChart, IDonutChartData } from "@/components/common/donut_chart";
 import {
   Columns2,
   Loader2,
@@ -19,7 +15,7 @@ import {
   Maximize,
   Move,
 } from "lucide-react";
-import { parsePieColors, parsePieData } from "@/lib/utils/mermaid_helpers";
+import { parsePieData } from "@/lib/utils/mermaid_helpers";
 import { useZoomPan } from "@/hooks/use_zoom_pan";
 import { useTranslation } from "@/i18n/i18n_context";
 
@@ -127,7 +123,6 @@ interface IMermaidAiPreviewPanelProps {
   onGenerate: () => void;
   onAbort: () => void;
   onAdopt: () => void;
-  currentChart: string;
 }
 
 const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
@@ -141,7 +136,6 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
   onGenerate,
   onAbort,
   onAdopt,
-  currentChart,
 }) => {
   const { t } = useTranslation();
   const [previewDirective, setPreviewDirective] = useState<PreviewDirective>(
@@ -240,7 +234,6 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
               <DonutChart
                 title={parsedPieData.title}
                 data={parsedPieData.data}
-                colors={parsePieColors(currentChart, DEFAULT_COLORS)}
               />
             ) : (
               <ZoomableSvgContainer svgContent={svgStr} />
@@ -277,7 +270,6 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
                 <DonutChart
                   title={previewPieData.title}
                   data={previewPieData.data}
-                  colors={parsePieColors(newChartPreview, DEFAULT_COLORS)}
                 />
               ) : previewHasError ? (
                 <div className="p-4 text-center">

@@ -19,55 +19,6 @@ export const isPieChart = (chartStr: string): boolean => {
 
 /**
  * Info: (20260624 - Julian)
- * 嘗試從 mermaid 設定區塊中提取圓餅圖的顏色定義
- */
-export const parsePieColors = (
-  chartStr: string,
-  defaultColors: string[],
-): string[] => {
-  const colors: string[] = [];
-  for (let i = 0; i < 20; i++) {
-    colors.push(defaultColors[i % defaultColors.length]);
-  }
-
-  const initMatch = chartStr.match(/%%\{init:\s*(\{[\s\S]*?\})\s*\}%%/);
-  if (initMatch) {
-    const configStr = initMatch[1];
-    try {
-      const config = JSON.parse(configStr);
-      const themeVars = config.themeVariables;
-      if (themeVars) {
-        Object.keys(themeVars).forEach((key) => {
-          const match = key.match(/^pie(\d+)$/);
-          if (match) {
-            const index = parseInt(match[1], 10) - 1;
-            if (index >= 0 && index < colors.length) {
-              colors[index] = themeVars[key];
-            }
-          }
-        });
-        return colors;
-      }
-    } catch {
-      // Info: (20260624 - Julian) 忽略並使用 regex 兜底
-    }
-
-    // Info: (20260624 - Julian) 備案：使用 regex 解析顏色
-    const colorMatches = configStr.matchAll(
-      /['"]?pie(\d+)['"]?\s*:\s*['"](#[a-fA-F0-9]{3,8})['"]/gi,
-    );
-    for (const match of colorMatches) {
-      const index = parseInt(match[1], 10) - 1;
-      if (index >= 0 && index < colors.length) {
-        colors[index] = match[2];
-      }
-    }
-  }
-  return colors;
-};
-
-/**
- * Info: (20260624 - Julian)
  * 自動判別目前的圖表類型 (pie, flowchart, gantt, sequence, unknown)
  */
 export const detectChartType = (chartStr: string): MermaidChartType => {
@@ -354,7 +305,7 @@ export const parseGanttItems = (chartStr: string): IGanttItem[] => {
 };
 
 /**
- * Info: (20260708 - Julian) Mermaid 動作類型列舉
+ * Info: (20260708 - Julian) Mermaid 結構化指令類型列舉
  */
 export enum MermaidActionType {
   GANTT_ADD_TASK = "GANTT_ADD_TASK",
@@ -363,24 +314,11 @@ export enum MermaidActionType {
   GANTT_SWAP_TASK = "GANTT_SWAP_TASK",
   PIE_ADD_ITEM = "PIE_ADD_ITEM",
   PIE_EDIT_ITEM = "PIE_EDIT_ITEM",
-  PIE_CHANGE_COLOR = "PIE_CHANGE_COLOR",
   PIE_DELETE_ITEM = "PIE_DELETE_ITEM",
   FLOWCHART_ADD_NODE = "FLOWCHART_ADD_NODE",
   FLOWCHART_EDIT_NODE = "FLOWCHART_EDIT_NODE",
   FLOWCHART_ADD_CONNECTION = "FLOWCHART_ADD_CONNECTION",
-  FLOWCHART_CHANGE_COLOR = "FLOWCHART_CHANGE_COLOR",
   FLOWCHART_CHANGE_DIRECTION = "FLOWCHART_CHANGE_DIRECTION",
-}
-
-/**
- * Info: (20260708 - Julian) 流程圖預設顏色
- */
-export enum FlowchartColor {
-  NAVY = "Navy (海軍藍)",
-  ORANGE = "Orange (高光橘)",
-  RED = "Red (警告紅)",
-  GREEN = "Green (成功綠)",
-  PURPLE = "Purple (質感紫)",
 }
 
 /**
@@ -437,10 +375,6 @@ export type IChartAction = {
       type: MermaidActionType.PIE_EDIT_ITEM;
       payload: { oldLabel: string; newLabel: string; newValue: number };
     }
-  | {
-      type: MermaidActionType.PIE_CHANGE_COLOR;
-      payload: { label: string; color: string };
-    }
   | { type: MermaidActionType.PIE_DELETE_ITEM; payload: { label: string } }
   | {
       type: MermaidActionType.FLOWCHART_ADD_NODE;
@@ -464,10 +398,6 @@ export type IChartAction = {
         connType?: string;
         connLabel?: string;
       };
-    }
-  | {
-      type: MermaidActionType.FLOWCHART_CHANGE_COLOR;
-      payload: { id: string; color: FlowchartColor | string };
     }
   | {
       type: MermaidActionType.FLOWCHART_CHANGE_DIRECTION;
@@ -686,21 +616,6 @@ export const applyFlowchartAction = (
         ? `    ${fromId} ${typeStr.replace(">", "")}|${connLabel}| ${toId}`
         : `    ${fromId} ${typeStr} ${toId}`;
       lines.push(finalConn);
-      break;
-    }
-    case MermaidActionType.FLOWCHART_CHANGE_COLOR: {
-      const { id, color } = action.payload;
-      // 流程圖變更顏色通常使用 style A fill:#fff 或 classDef
-      // 這裡簡單添加 style 指令
-      const colorMap: Record<FlowchartColor | string, string> = {
-        [FlowchartColor.NAVY]: "#000080",
-        [FlowchartColor.ORANGE]: "#ffa500",
-        [FlowchartColor.RED]: "#ff0000",
-        [FlowchartColor.GREEN]: "#008000",
-        [FlowchartColor.PURPLE]: "#800080",
-      };
-      const hex = colorMap[color] || "#cccccc";
-      lines.push(`    style ${id} fill:${hex},stroke:#333,stroke-width:2px`);
       break;
     }
     case MermaidActionType.FLOWCHART_CHANGE_DIRECTION: {

@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo, FC, useRef } from "react";
 import { useZoomPan } from "@/hooks/use_zoom_pan";
 import mermaid from "mermaid";
-import { DonutChart, DEFAULT_COLORS } from "@/components/common/donut_chart";
+import { DonutChart } from "@/components/common/donut_chart";
 import {
   Download,
   Maximize,
@@ -17,7 +17,6 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { useChartExport } from "@/hooks/use_chart_export";
 import { MermaidAiModal } from "@/components/chart/mermaid_ai_modal";
 import {
-  parsePieColors,
   detectChartType,
   parseFlowchartNodes,
   parsePieItems,
@@ -538,7 +537,6 @@ const MermaidChart: FC<IMermaidChartProps> = ({
           <DonutChart
             title={parsedPieData.title}
             data={parsedPieData.data}
-            colors={parsePieColors(currentChart, DEFAULT_COLORS)}
             onSparklesClick={
               onChartChange ? () => setIsAiModalOpen(true) : undefined
             }

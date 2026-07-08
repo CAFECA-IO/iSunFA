@@ -1,18 +1,13 @@
 import React, { useState, FC } from "react";
 import {
   CirclePlus,
-  Paintbrush,
   Pencil,
   RefreshCcw,
   SplinePointer,
   LucideIcon,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
-import {
-  IChartAction,
-  MermaidActionType,
-  FlowchartColor,
-} from "@/lib/utils/mermaid_helpers";
+import { IChartAction, MermaidActionType } from "@/lib/utils/mermaid_helpers";
 import {
   MERMAID_INPUT_STYLE,
   MERMAID_LABEL_STYLE,
@@ -23,20 +18,10 @@ import {
 // Info: (20260629 - Julian) 定義與靜態映射表
 // ==========================================
 
-export enum NodeColor {
-  DEFAULT = "Default（預設灰）",
-  NAVY = FlowchartColor.NAVY,
-  ORANGE = FlowchartColor.ORANGE,
-  RED = FlowchartColor.RED,
-  GREEN = FlowchartColor.GREEN,
-  PURPLE = FlowchartColor.PURPLE,
-}
-
 export enum FlowchartTools {
   ADD_NODE = "addNode",
   EDIT_NODE = "editNode",
   ADD_CONNECTION = "addConnection",
-  CHANGE_COLOR = "changeColor",
   CHANGE_DIRECTION = "changeDirection",
 }
 
@@ -59,10 +44,6 @@ const FLOWCHART_TOOLS: IToolItem[] = [
     icon: SplinePointer,
   },
   {
-    tool: FlowchartTools.CHANGE_COLOR,
-    icon: Paintbrush,
-  },
-  {
     tool: FlowchartTools.CHANGE_DIRECTION,
     icon: RefreshCcw,
   },
@@ -72,19 +53,8 @@ const FLOWCHART_TOOL_TRANSLATION_KEYS: Record<FlowchartTools, string> = {
   [FlowchartTools.ADD_NODE]: "chart.mermaid.ai_editor.flowchart.add_node",
   [FlowchartTools.EDIT_NODE]: "chart.mermaid.ai_editor.flowchart.edit_node",
   [FlowchartTools.ADD_CONNECTION]: "chart.mermaid.ai_editor.flowchart.add_conn",
-  [FlowchartTools.CHANGE_COLOR]:
-    "chart.mermaid.ai_editor.flowchart.change_color",
   [FlowchartTools.CHANGE_DIRECTION]:
     "chart.mermaid.ai_editor.flowchart.change_dir",
-};
-
-const FLOWCHART_COLOR_TRANSLATION_KEYS: Record<NodeColor, string> = {
-  [NodeColor.DEFAULT]: "chart.mermaid.ai_editor.colors.default",
-  [NodeColor.NAVY]: "chart.mermaid.ai_editor.colors.navy",
-  [NodeColor.ORANGE]: "chart.mermaid.ai_editor.colors.orange",
-  [NodeColor.RED]: "chart.mermaid.ai_editor.colors.red",
-  [NodeColor.GREEN]: "chart.mermaid.ai_editor.colors.green",
-  [NodeColor.PURPLE]: "chart.mermaid.ai_editor.colors.purple",
 };
 
 const DIRECTION_NAMES: Record<string, string> = {
@@ -440,84 +410,6 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
   );
 };
 
-// Info: (20260629 - Julian) 「變更節點顏色」面板
-const ChangeColorPanel: FC<IBasePanelProps> = ({
-  parsedNodes,
-  onAddAction,
-}) => {
-  const { t } = useTranslation();
-  const [colorNodeId, setColorNodeId] = useState<string>("");
-  const [colorStyle, setColorStyle] = useState<NodeColor>(NodeColor.DEFAULT);
-
-  const handleSubmit = () => {
-    if (!colorNodeId || !colorStyle) return;
-    onAddAction({
-      id: crypto.randomUUID(),
-      type: MermaidActionType.FLOWCHART_CHANGE_COLOR,
-      description: `變更節點 "${colorNodeId}" 顏色為 ${colorStyle}`,
-      payload: {
-        id: colorNodeId,
-        color: colorStyle as unknown as FlowchartColor,
-      },
-    });
-  };
-
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
-        <Paintbrush size={14} />
-        <p>{t("chart.mermaid.ai_editor.flowchart.change_color_title")}</p>
-      </div>
-      <div>
-        <label htmlFor="colorNodeId" className={MERMAID_LABEL_STYLE}>
-          {t("chart.mermaid.ai_editor.flowchart.select_node_placeholder")}
-          <span className="ml-0.5 text-red-500">*</span>
-        </label>
-        <select
-          id="colorNodeId"
-          value={colorNodeId}
-          onChange={(e) => setColorNodeId(e.target.value)}
-          className={MERMAID_INPUT_STYLE}
-        >
-          <option value="">
-            {t("chart.mermaid.ai_editor.flowchart.select_node_placeholder")}
-          </option>
-          {parsedNodes.map((n) => (
-            <option key={`color-btn-${n.id}`} value={n.id}>
-              {n.label} ({n.id})
-            </option>
-          ))}
-        </select>
-      </div>
-      <div>
-        <label htmlFor="colorStyle" className={MERMAID_LABEL_STYLE}>
-          {t("chart.mermaid.ai_editor.flowchart.select_style_label")}
-        </label>
-        <select
-          id="colorStyle"
-          value={colorStyle}
-          onChange={(e) => setColorStyle(e.target.value as NodeColor)}
-          className={MERMAID_INPUT_STYLE}
-        >
-          {Object.values(NodeColor).map((color) => (
-            <option key={color} value={color}>
-              {t(FLOWCHART_COLOR_TRANSLATION_KEYS[color])}
-            </option>
-          ))}
-        </select>
-      </div>
-      <button
-        type="button"
-        onClick={handleSubmit}
-        disabled={!colorNodeId}
-        className={MERMAID_SUBMIT_BUTTON_STYLE}
-      >
-        {t("chart.mermaid.ai_editor.flowchart.change_color")}
-      </button>
-    </div>
-  );
-};
-
 // Info: (20260629 - Julian) 「變更方向」面板
 const ChangeDirectionPanel: FC<IBasePanelProps> = ({ onAddAction }) => {
   const { t } = useTranslation();
@@ -578,7 +470,6 @@ const TOOL_PANELS: Record<FlowchartTools, FC<IBasePanelProps>> = {
   [FlowchartTools.ADD_NODE]: AddNodePanel,
   [FlowchartTools.EDIT_NODE]: EditNodePanel,
   [FlowchartTools.ADD_CONNECTION]: AddConnectionPanel,
-  [FlowchartTools.CHANGE_COLOR]: ChangeColorPanel,
   [FlowchartTools.CHANGE_DIRECTION]: ChangeDirectionPanel,
 };
 

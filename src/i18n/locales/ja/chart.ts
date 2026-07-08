@@ -43,14 +43,6 @@ export const chart = {
         quick_tools: "よく使う編集ツール",
         ai_assistant: "AI 編集指令",
       },
-      colors: {
-        default: "デフォルトグレー (Default)",
-        navy: "ネイビーブルー (Navy)",
-        orange: "ハイライトオレンジ (Orange)",
-        red: "警告レッド (Red)",
-        green: "成功グリーン (Green)",
-        purple: "質感パープル (Purple)",
-      },
       command_list: "コマンドリスト",
       flowchart: {
         add_node: "ノードを追加",

@@ -149,7 +149,7 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
                         >
                           <div className="flex flex-col">
                             <span className="text-[10px] font-bold tracking-tight text-blue-600 uppercase">
-                              {action.type.split("_").pop()}
+                              {action.type}
                             </span>
                             <span className="text-xs font-medium text-slate-700">
                               {action.description}

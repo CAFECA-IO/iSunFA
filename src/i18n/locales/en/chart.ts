@@ -43,14 +43,6 @@ export const chart = {
         quick_tools: "Quick Tools",
         ai_assistant: "AI Instruction",
       },
-      colors: {
-        default: "Default Gray",
-        navy: "Navy Blue",
-        orange: "Highlight Orange",
-        red: "Warning Red",
-        green: "Success Green",
-        purple: "Premium Purple",
-      },
       command_list: "Command List",
       flowchart: {
         add_node: "Add Node",

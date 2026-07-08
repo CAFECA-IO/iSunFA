@@ -244,7 +244,7 @@ export default function EditPanel({
     <>
       {/* Info: (20260426 - Luphia) Editor Pane */}
       <div
-        className={`relative flex flex-1 flex-col border-r border-gray-200 ${viewMode === "preview" ? "hidden md:flex" : "flex"}`}
+        className={`relative flex-1 flex-col border-r border-gray-200 ${viewMode === "preview" ? "hidden md:flex" : "flex"}`}
       >
         <div className="bg-gray-100 px-4 py-2 text-xs font-bold tracking-wider text-gray-500 uppercase">
           {t("admin_mission_board.pdf_editor.markdown_input")!}

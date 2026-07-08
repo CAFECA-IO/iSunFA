@@ -43,14 +43,6 @@ export const chart = {
         quick_tools: "자주 쓰는 편집 툴",
         ai_assistant: "AI 편집 지시",
       },
-      colors: {
-        default: "기본 그레이 (Default)",
-        navy: "네이비 블루 (Navy)",
-        orange: "하이라이트 오렌지 (Orange)",
-        red: "경고 레드 (Red)",
-        green: "성공 그린 (Green)",
-        purple: "질감 퍼플 (Purple)",
-      },
       command_list: "명령어 리스트",
       flowchart: {
         add_node: "노드 추가",

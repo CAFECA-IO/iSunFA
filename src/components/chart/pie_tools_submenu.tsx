@@ -1,5 +1,5 @@
 import React, { useState, FC } from "react";
-import { CakeSlice, Paintbrush, Slice, Trash2, LucideIcon } from "lucide-react";
+import { CakeSlice, Slice, Trash2, LucideIcon } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { IChartAction, MermaidActionType } from "@/lib/utils/mermaid_helpers";
 import {
@@ -12,19 +12,9 @@ import {
 // Info: (20260629 - Julian) 定義與靜態映射表
 // ==========================================
 
-export enum PieColor {
-  DEFAULT = "Default (預設灰)",
-  NAVY = "Navy (海軍藍)",
-  ORANGE = "Orange (高光橘)",
-  RED = "Red (警告紅)",
-  GREEN = "Green (成功綠)",
-  PURPLE = "Purple (質感紫)",
-}
-
 export enum PieTools {
   ADD_SLICE = "addSlice",
   EDIT_SLICE = "editSlice",
-  CHANGE_COLOR = "changeColor",
   DELETE_SLICE = "deleteSlice",
 }
 
@@ -43,10 +33,6 @@ const PIE_TOOLS: IToolItem[] = [
     icon: Slice,
   },
   {
-    tool: PieTools.CHANGE_COLOR,
-    icon: Paintbrush,
-  },
-  {
     tool: PieTools.DELETE_SLICE,
     icon: Trash2,
   },
@@ -55,17 +41,7 @@ const PIE_TOOLS: IToolItem[] = [
 const PIE_TOOL_TRANSLATION_KEYS: Record<PieTools, string> = {
   [PieTools.ADD_SLICE]: "chart.mermaid.ai_editor.pie.add_slice",
   [PieTools.EDIT_SLICE]: "chart.mermaid.ai_editor.pie.edit_slice",
-  [PieTools.CHANGE_COLOR]: "chart.mermaid.ai_editor.pie.change_color",
   [PieTools.DELETE_SLICE]: "chart.mermaid.ai_editor.pie.delete_slice",
-};
-
-const PIE_COLOR_TRANSLATION_KEYS: Record<PieColor, string> = {
-  [PieColor.DEFAULT]: "chart.mermaid.ai_editor.colors.default",
-  [PieColor.NAVY]: "chart.mermaid.ai_editor.colors.navy",
-  [PieColor.ORANGE]: "chart.mermaid.ai_editor.colors.orange",
-  [PieColor.RED]: "chart.mermaid.ai_editor.colors.red",
-  [PieColor.GREEN]: "chart.mermaid.ai_editor.colors.green",
-  [PieColor.PURPLE]: "chart.mermaid.ai_editor.colors.purple",
 };
 
 // ==========================================
@@ -244,85 +220,6 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
   );
 };
 
-// Info: (20260629 - Julian) 「變更項目顏色」面板
-const ChangeSliceColorPanel: FC<IBasePanelProps> = ({
-  parsedPieItems,
-  onAddAction,
-}) => {
-  const { t } = useTranslation();
-  const [pieSliceTarget, setPieSliceTarget] = useState<string>("");
-  const [pieSliceColor, setPieSliceColor] = useState<PieColor>(
-    PieColor.DEFAULT,
-  );
-
-  const handleSubmit = () => {
-    if (!pieSliceTarget || !pieSliceColor) return;
-    // 目前 Pie 暫不支援結構化顏色編輯，僅保留 UI 或透過 LLM 處理
-    // 為了展示一致性，我們發送一個模擬動作或說明
-    onAddAction({
-      id: crypto.randomUUID(),
-      type: MermaidActionType.PIE_CHANGE_COLOR,
-      description: `變更項目 "${pieSliceTarget}" 顏色為 ${pieSliceColor}`,
-      payload: { label: pieSliceTarget, color: pieSliceColor },
-    });
-  };
-
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
-        <Paintbrush size={14} />
-        <p>{t("chart.mermaid.ai_editor.pie.change_color_title")}</p>
-      </div>
-      <div>
-        <label htmlFor="pieColorTarget" className={MERMAID_LABEL_STYLE}>
-          {t("chart.mermaid.ai_editor.pie.select_slice_placeholder")}
-          <span className="ml-0.5 text-red-500">*</span>
-        </label>
-        <select
-          id="pieColorTarget"
-          value={pieSliceTarget}
-          onChange={(e) => setPieSliceTarget(e.target.value)}
-          className={MERMAID_INPUT_STYLE}
-        >
-          <option value="">
-            {t("chart.mermaid.ai_editor.pie.select_slice_placeholder")}
-          </option>
-          {parsedPieItems.map((item) => (
-            <option key={`pie-color-opt-${item.label}`} value={item.label}>
-              {item.label}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div>
-        <label htmlFor="pieSliceColor" className={MERMAID_LABEL_STYLE}>
-          {t("chart.mermaid.ai_editor.pie.select_color_label")}
-        </label>
-        <select
-          id="pieSliceColor"
-          value={pieSliceColor}
-          onChange={(e) => setPieSliceColor(e.target.value as PieColor)}
-          className={MERMAID_INPUT_STYLE}
-        >
-          {Object.values(PieColor).map((color) => (
-            <option key={color} value={color}>
-              {t(PIE_COLOR_TRANSLATION_KEYS[color])}
-            </option>
-          ))}
-        </select>
-      </div>
-      <button
-        type="button"
-        onClick={handleSubmit}
-        disabled={!pieSliceTarget}
-        className={MERMAID_SUBMIT_BUTTON_STYLE}
-      >
-        {t("chart.mermaid.ai_editor.pie.change_color")}
-      </button>
-    </div>
-  );
-};
-
 // Info: (20260629 - Julian) 「刪除項目」面板
 const DeleteSlicePanel: FC<IBasePanelProps> = ({
   parsedPieItems,
@@ -385,7 +282,6 @@ const DeleteSlicePanel: FC<IBasePanelProps> = ({
 const PIE_TOOL_PANELS: Record<PieTools, FC<IBasePanelProps>> = {
   [PieTools.ADD_SLICE]: AddSlicePanel,
   [PieTools.EDIT_SLICE]: EditSlicePanel,
-  [PieTools.CHANGE_COLOR]: ChangeSliceColorPanel,
   [PieTools.DELETE_SLICE]: DeleteSlicePanel,
 };
 
