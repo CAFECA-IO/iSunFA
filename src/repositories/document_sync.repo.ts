@@ -18,6 +18,7 @@ import {
   CountryCode,
   MeasurementUnit,
 } from "@/constants/enums";
+import { EmissionFactorRepo } from "@/repositories/emission_factor.repo";
 import { verifyDimensionalConsistency } from "@/constants/dimension";
 import { ISyncDocumentResultParams } from "@/skills/utils/document_parser_db_sync";
 import { ACCOUNTS, IAccount } from "@/constants/accounts";
