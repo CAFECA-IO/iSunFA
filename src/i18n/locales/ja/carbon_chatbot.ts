@@ -1,0 +1,32 @@
+export const carbonChatbot = {
+  title: "カーボンインベントリチャットボット",
+  subtitle: "あなた専用の企業カーボン会計士",
+  recent_chats: "最近のチャット",
+  today: "今日",
+  history: "過去のチャット",
+  new_chat: "新しいチャット",
+  ai_thinking: "AIが考え中...",
+  input_placeholder: "質問や回答を入力してください...",
+  report_progress: "レポート作成進捗",
+  report_preview_title: "温室効果ガスインベントリレポートプレビュー",
+  report_empty_title: "レポートはまだ作成されていません",
+  report_empty_desc:
+    "左側のチャットでカーボン会計士とインベントリプロセスを完了してください。システムが自動的に完全なカーボンインベントリリストとレポートをリアルタイムで生成します。",
+  iso_inventory: "ISO 14064-1 インベントリリスト",
+  emission_sources: "排出源の特定",
+  data_activity: "データ活動記録",
+  emission_factors: "排出係数のマッピング",
+  uncertainty: "不確実性評価",
+  ghg_protocol: "GHGプロトコルレポート",
+  scope_analysis: "スコープ 1、2、3 分析",
+  reduction_pathway: "炭素削減経路シミュレーション",
+  system_error:
+    "【システムエラー】申し訳ありません。カーボン会計士サービスへの接続中に問題が発生しました。後でもう一度お試しください。",
+  system_unavailable: "申し訳ありません。現在システムは応答できません。",
+  welcome_message:
+    "こんにちは！私はあなたのAIカーボンインベントリアシスタントです。本日のインベントリを開始するために、インベントリを行う企業名と年度を教えてください。",
+  ai_name: "フェイス (FAITH)",
+  platform_name: "環境インテリジェンスプラットフォーム",
+  system_online: "システムオンライン",
+  database_version: "データベースバージョン",
+};

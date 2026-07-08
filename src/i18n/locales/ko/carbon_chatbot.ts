@@ -1,0 +1,32 @@
+export const carbonChatbot = {
+  title: "탄소 인벤토리 챗봇",
+  subtitle: "귀하만의 기업 탄소 회계사",
+  recent_chats: "최근 대화",
+  today: "오늘",
+  history: "이전 대화",
+  new_chat: "새 대화",
+  ai_thinking: "AI가 생각 중입니다...",
+  input_placeholder: "질문이나 답변을 입력하세요...",
+  report_progress: "보고서 생성 진행률",
+  report_preview_title: "온실가스 인벤토리 보고서 미리보기",
+  report_empty_title: "보고서가 아직 생성되지 않았습니다",
+  report_empty_desc:
+    "왼쪽 채팅창에서 탄소 회계사와 인벤토리 프로세스를 완료해 주세요. 시스템이 자동으로 완전한 탄소 인벤토리 목록과 보고서를 실시간으로 생성합니다.",
+  iso_inventory: "ISO 14064-1 인벤토리 목록",
+  emission_sources: "배출원 식별",
+  data_activity: "데이터 활동 기록",
+  emission_factors: "배출 계수 매핑",
+  uncertainty: "불확실성 평가",
+  ghg_protocol: "GHG 프로토콜 보고서",
+  scope_analysis: "Scope 1, 2, 3 분석",
+  reduction_pathway: "탄소 감축 경로 시뮬레이션",
+  system_error:
+    "[시스템 오류] 죄송합니다. 탄소 회계사 서비스에 연결하는 중 문제가 발생했습니다. 나중에 다시 시도해 주세요.",
+  system_unavailable: "죄송합니다. 현재 시스템이 응답할 수 없습니다.",
+  welcome_message:
+    "안녕하세요! 저는 귀하의 AI 탄소 인벤토리 어시스턴트입니다. 오늘의 인벤토리를 시작하려면 인벤토리할 회사 이름과 연도를 알려주세요.",
+  ai_name: "페이스 (FAITH)",
+  platform_name: "환경 인텔리전스 플랫폼",
+  system_online: "시스템 온라인",
+  database_version: "데이터베이스 버전",
+};

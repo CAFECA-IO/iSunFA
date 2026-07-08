@@ -53,7 +53,7 @@ export default function FidoConfirmModal({
           )}
 
           {children && (
-            <div className="mb-6 space-y-3 rounded-xl border border-gray-100 bg-gray-50 p-4 font-mono text-sm inline-block w-full">
+            <div className="mb-6 inline-block w-full space-y-3 rounded-xl border border-gray-100 bg-gray-50 p-4 font-mono text-sm">
               {children}
             </div>
           )}
@@ -67,21 +67,21 @@ export default function FidoConfirmModal({
               onClick={onClose}
               className="flex-1 rounded-xl border border-gray-300 bg-white py-2.5 font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none"
             >
-              {cancelText || t("common.cancel", { defaultValue: "Cancel" })}
+              {cancelText || t("common.cancel")}
             </button>
             <button
               type="button"
               disabled={isProcessing || disabled}
               onClick={onConfirm}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 font-semibold text-white focus:outline-none focus:ring-4 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:shadow-none transition-colors ${colorMap[colorTheme]}`}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 font-semibold text-white transition-colors focus:ring-4 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-400 disabled:shadow-none ${colorMap[colorTheme]}`}
             >
               {isProcessing ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  {t("common.processing", { defaultValue: "Processing..." })}
+                  {t("common.processing")}
                 </>
               ) : (
-                confirmText || t("common.confirm", { defaultValue: "Confirm via WebAuthn" })
+                confirmText || t("common.confirm")
               )}
             </button>
           </div>
