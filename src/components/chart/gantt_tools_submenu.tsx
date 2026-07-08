@@ -21,8 +21,8 @@ import {
   MERMAID_INPUT_STYLE,
   MERMAID_LABEL_STYLE,
   MERMAID_SUBMIT_BUTTON_STYLE,
-  MERMAID_TOGGLE_BUTTON_STYLE,
 } from "@/constants/mermaid_chart";
+import { SegmentedControl } from "@/components/chart/mermaid_common_components";
 
 // ==========================================
 // Info: (20260707 - Julian) 定義與靜態映射表
@@ -105,32 +105,6 @@ interface IBasePanelProps {
 // ==========================================
 // Info: (20260707 - Julian) 內部通用小型組件
 // ==========================================
-
-/** Info: (20260707 - Julian) 元件分段切換按鈕 (例如: 指定日期 vs 跟隨前置) */
-const SegmentedControl: FC<{
-  options: { label: string; value: string }[];
-  value: string;
-  onChange: (val: string) => void;
-  disabled?: boolean;
-}> = ({ options, value, onChange, disabled = false }) => (
-  <div className={MERMAID_TOGGLE_BUTTON_STYLE.container}>
-    {options.map((opt) => (
-      <button
-        key={opt.value}
-        type="button"
-        disabled={disabled}
-        onClick={() => onChange(opt.value)}
-        className={`${MERMAID_TOGGLE_BUTTON_STYLE.button} ${
-          value === opt.value
-            ? MERMAID_TOGGLE_BUTTON_STYLE.active
-            : MERMAID_TOGGLE_BUTTON_STYLE.inactive
-        }`}
-      >
-        {opt.label}
-      </button>
-    ))}
-  </div>
-);
 
 /** Info: (20260707 - Julian) 行程類型單選按鈕組 */
 const TaskTypeRadioGroup: FC<{
@@ -275,7 +249,7 @@ const AddTaskPanel: FC<IBasePanelProps> = ({
             }
           />
         </div>
-        <div className="col-span-2">
+        <div className="col-span-2 flex flex-col">
           <div className="mb-1.5 flex items-center justify-between">
             <label className={MERMAID_LABEL_STYLE}>
               {t("chart.mermaid.ai_editor.gantt.start_time")}
@@ -334,7 +308,7 @@ const AddTaskPanel: FC<IBasePanelProps> = ({
         </div>
 
         {!isMilestone && (
-          <div className="col-span-2">
+          <div className="col-span-2 flex flex-col">
             <div className="mb-1.5 flex items-center justify-between">
               <label className={MERMAID_LABEL_STYLE}>
                 {t("chart.mermaid.ai_editor.gantt.end_time")}
@@ -496,7 +470,7 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
         <p>{t("chart.mermaid.ai_editor.gantt.edit_task")}</p>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <div className="col-span-2">
+        <div className="col-span-2 flex flex-col">
           <label htmlFor="ganttTaskTarget" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.gantt.select_edit_target")}
             <span className="ml-0.5 text-red-500">*</span>
@@ -560,7 +534,7 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
             }
           />
         </div>
-        <div className="col-span-2">
+        <div className="col-span-2 flex flex-col">
           <div className="mb-1.5 flex items-center justify-between">
             <label className={MERMAID_LABEL_STYLE}>
               {t("chart.mermaid.ai_editor.gantt.change_start_time")}
@@ -621,7 +595,7 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
           )}
         </div>
 
-        <div className="col-span-2">
+        <div className="col-span-2 flex flex-col">
           <div className="mb-1.5 flex items-center justify-between">
             <label className={MERMAID_LABEL_STYLE}>
               {t("chart.mermaid.ai_editor.gantt.change_end_time")}

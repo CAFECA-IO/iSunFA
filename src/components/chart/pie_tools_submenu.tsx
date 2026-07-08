@@ -7,6 +7,7 @@ import {
   MERMAID_LABEL_STYLE,
   MERMAID_SUBMIT_BUTTON_STYLE,
 } from "@/constants/mermaid_chart";
+import { SegmentedControl } from "@/components/chart/mermaid_common_components";
 
 // ==========================================
 // Info: (20260629 - Julian) 定義與靜態映射表
@@ -16,6 +17,11 @@ export enum PieTools {
   ADD_SLICE = "addSlice",
   EDIT_SLICE = "editSlice",
   DELETE_SLICE = "deleteSlice",
+}
+
+enum PieValueMode {
+  VALUE = "value",
+  PROPORTION = "proportion",
 }
 
 interface IToolItem {
@@ -54,20 +60,40 @@ interface IBasePanelProps {
 }
 
 // Info: (20260629 - Julian) 「新增項目」面板
-const AddSlicePanel: FC<IBasePanelProps> = ({ onAddAction }) => {
+const AddSlicePanel: FC<IBasePanelProps> = ({
+  parsedPieItems,
+  onAddAction,
+}) => {
   const { t } = useTranslation();
   const [pieSliceLabel, setPieSliceLabel] = useState<string>("");
   const [pieSliceValue, setPieSliceValue] = useState<string>("");
+  const [valueMode, setValueMode] = useState<PieValueMode>(PieValueMode.VALUE);
+  const isProportion = valueMode === PieValueMode.PROPORTION;
 
   const handleSubmit = () => {
     if (!pieSliceLabel || !pieSliceValue) return;
+
+    let finalValue = parseFloat(pieSliceValue);
+    if (isProportion) {
+      const existingSum = parsedPieItems.reduce((acc, i) => acc + i.value, 0);
+      const p = parseFloat(pieSliceValue);
+      if (p >= 100) {
+        // Info: (20260708 - Julian) 若為 100% 則給予一個極大值或依邏輯處理，此處簡單防呆
+        finalValue = existingSum * 99;
+      } else {
+        finalValue = (p * existingSum) / (100 - p);
+      }
+    }
+
     onAddAction({
       id: crypto.randomUUID(),
       type: MermaidActionType.PIE_ADD_ITEM,
-      description: `新增項目 "${pieSliceLabel}" (${pieSliceValue})`,
+      description: `新增項目 "${pieSliceLabel}" (${
+        isProportion ? pieSliceValue + "%" : pieSliceValue
+      })`,
       payload: {
         label: pieSliceLabel,
-        value: parseFloat(pieSliceValue),
+        value: finalValue,
       },
     });
   };
@@ -79,7 +105,7 @@ const AddSlicePanel: FC<IBasePanelProps> = ({ onAddAction }) => {
         <p>{t("chart.mermaid.ai_editor.pie.add_slice_title")}</p>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <div className="flex flex-col">
+        <div className="col-span-2 flex flex-col">
           <label htmlFor="pieSliceLabel" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.pie.slice_name_label")}
             <span className="ml-0.5 text-red-500">*</span>
@@ -95,19 +121,38 @@ const AddSlicePanel: FC<IBasePanelProps> = ({ onAddAction }) => {
             }
           />
         </div>
-        <div className="flex flex-col">
-          <label htmlFor="pieSliceValue" className={MERMAID_LABEL_STYLE}>
-            {t("chart.mermaid.ai_editor.pie.slice_value_label")}
-            <span className="ml-0.5 text-red-500">*</span>
-          </label>
+        <div className="col-span-2 flex flex-col">
+          <div className="mb-1 flex items-center justify-between">
+            <label htmlFor="pieSliceValue" className={MERMAID_LABEL_STYLE}>
+              {t("chart.mermaid.ai_editor.pie.slice_value_label")}
+              <span className="ml-0.5 text-red-500">*</span>
+            </label>
+            <SegmentedControl
+              value={valueMode}
+              onChange={(val) => setValueMode(val as PieValueMode)}
+              options={[
+                {
+                  label: t("chart.mermaid.ai_editor.pie.value_mode_value"),
+                  value: PieValueMode.VALUE,
+                },
+                {
+                  label: t("chart.mermaid.ai_editor.pie.value_mode_proportion"),
+                  value: PieValueMode.PROPORTION,
+                },
+              ]}
+            />
+          </div>
           <input
             id="pieSliceValue"
-            type="text"
+            type="number"
+            step="any"
             value={pieSliceValue}
             onChange={(e) => setPieSliceValue(e.target.value)}
             className={MERMAID_INPUT_STYLE}
             placeholder={
-              t("chart.mermaid.ai_editor.pie.slice_value_placeholder")!
+              isProportion
+                ? "例如: 25"
+                : t("chart.mermaid.ai_editor.pie.slice_value_placeholder")!
             }
           />
         </div>
@@ -133,11 +178,29 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
   const [pieSliceTarget, setPieSliceTarget] = useState<string>("");
   const [pieSliceNewLabel, setPieSliceNewLabel] = useState<string>("");
   const [pieSliceValue, setPieSliceValue] = useState<string>("");
+  const [valueMode, setValueMode] = useState<PieValueMode>(PieValueMode.VALUE);
+  const isProportion = valueMode === PieValueMode.PROPORTION;
 
   const handleSubmit = () => {
     if (!pieSliceTarget || (!pieSliceValue && !pieSliceNewLabel)) return;
     const targetItem = parsedPieItems.find((i) => i.label === pieSliceTarget);
     if (!targetItem) return;
+
+    let finalValue = pieSliceValue
+      ? parseFloat(pieSliceValue)
+      : targetItem.value;
+
+    if (pieSliceValue && isProportion) {
+      const otherSum = parsedPieItems
+        .filter((i) => i.label !== pieSliceTarget)
+        .reduce((acc, i) => acc + i.value, 0);
+      const p = parseFloat(pieSliceValue);
+      if (p >= 100) {
+        finalValue = otherSum * 99;
+      } else {
+        finalValue = (p * otherSum) / (100 - p);
+      }
+    }
 
     onAddAction({
       id: crypto.randomUUID(),
@@ -146,7 +209,7 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
       payload: {
         oldLabel: pieSliceTarget,
         newLabel: pieSliceNewLabel || pieSliceTarget,
-        newValue: pieSliceValue ? parseFloat(pieSliceValue) : targetItem.value,
+        newValue: finalValue,
       },
     });
   };
@@ -159,7 +222,7 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
       </div>
       <div className="flex flex-col">
         <label htmlFor="pieSliceTarget" className={MERMAID_LABEL_STYLE}>
-          {t("chart.mermaid.ai_editor.pie.select_slice_placeholder")}
+          {t("chart.mermaid.ai_editor.pie.select_slice")}
           <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
@@ -179,7 +242,7 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
         </select>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <div className="flex flex-col">
+        <div className="col-span-2 flex flex-col">
           <label htmlFor="pieSliceNewLabel" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.pie.new_name_label")}
           </label>
@@ -192,18 +255,37 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
             placeholder={t("chart.mermaid.ai_editor.pie.new_name_placeholder")!}
           />
         </div>
-        <div className="flex flex-col">
-          <label htmlFor="pieSliceValueEdit" className={MERMAID_LABEL_STYLE}>
-            {t("chart.mermaid.ai_editor.pie.new_value_label")}
-          </label>
+        <div className="col-span-2 flex flex-col">
+          <div className="mb-1 flex items-center justify-between">
+            <label htmlFor="pieSliceValueEdit" className={MERMAID_LABEL_STYLE}>
+              {t("chart.mermaid.ai_editor.pie.new_value_label")}
+            </label>
+            <SegmentedControl
+              value={valueMode}
+              onChange={(val) => setValueMode(val as PieValueMode)}
+              options={[
+                {
+                  label: t("chart.mermaid.ai_editor.pie.value_mode_value"),
+                  value: PieValueMode.VALUE,
+                },
+                {
+                  label: t("chart.mermaid.ai_editor.pie.value_mode_proportion"),
+                  value: PieValueMode.PROPORTION,
+                },
+              ]}
+            />
+          </div>
           <input
             id="pieSliceValueEdit"
-            type="text"
+            type="number"
+            step="any"
             value={pieSliceValue}
             onChange={(e) => setPieSliceValue(e.target.value)}
             className={MERMAID_INPUT_STYLE}
             placeholder={
-              t("chart.mermaid.ai_editor.pie.new_value_placeholder")!
+              isProportion
+                ? "例如: 25"
+                : t("chart.mermaid.ai_editor.pie.new_value_placeholder")!
             }
           />
         </div>
@@ -248,7 +330,7 @@ const DeleteSlicePanel: FC<IBasePanelProps> = ({
       </div>
       <div className="flex flex-col">
         <label htmlFor="pieSliceTargetDel" className={MERMAID_LABEL_STYLE}>
-          {t("chart.mermaid.ai_editor.pie.select_delete_placeholder")}
+          {t("chart.mermaid.ai_editor.pie.select_delete")}
           <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
