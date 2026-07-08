@@ -446,7 +446,7 @@ export const applyGanttAction = (
           l.trim().toLowerCase().startsWith(`section ${section.toLowerCase()}`),
         );
         if (sectionIndex !== -1) {
-          // 找到該 section 的結尾（下一個 section 或結束）
+          // Info: (20260708 - Julian) 找到該 section 的結尾（下一個 section 或結束）
           let insertIndex = sectionIndex + 1;
           while (
             insertIndex < lines.length &&
@@ -594,12 +594,12 @@ export const applyFlowchartAction = (
     }
     case MermaidActionType.FLOWCHART_EDIT_NODE: {
       const { id, label } = action.payload;
-      // 尋找包含 id[Label] 或 id(Label) 或 id{Label} 格式的行
+      // Info: (20260708 - Julian) 尋找包含 id[Label] 或 id(Label) 或 id{Label} 格式的行
       const index = lines.findIndex((l) =>
         new RegExp(`${id}\\s*(?:\\[|\\(|\\{)`).test(l),
       );
       if (index !== -1) {
-        // 替換括號內的內容
+        // Info: (20260708 - Julian) 替換括號內的內容
         lines[index] = lines[index].replace(
           /(\[|\(|\{).*?(\]|\)|\})/,
           `$1"${label}"$2`,
@@ -610,8 +610,8 @@ export const applyFlowchartAction = (
     case MermaidActionType.FLOWCHART_ADD_CONNECTION: {
       const { fromId, toId, connType, connLabel } = action.payload;
       const typeStr = connType || "-->";
-      // Mermaid 語法中 A -->|Label| B 或 A -- Label --> B
-      // 這裡簡化處理
+      // Info: (20260708 - Julian) Mermaid 語法中 A -->|Label| B 或 A -- Label --> B
+      // Info: (20260708 - Julian) 這裡簡化處理
       const finalConn = connLabel
         ? `    ${fromId} ${typeStr.replace(">", "")}|${connLabel}| ${toId}`
         : `    ${fromId} ${typeStr} ${toId}`;
@@ -620,7 +620,7 @@ export const applyFlowchartAction = (
     }
     case MermaidActionType.FLOWCHART_CHANGE_DIRECTION: {
       const { direction } = action.payload;
-      // 尋找 flowchart TD / graph LR 行並替換
+      // Info: (20260708 - Julian) 尋找 flowchart TD / graph LR 行並替換
       const index = lines.findIndex((l) =>
         /^(flowchart|graph)\s+/i.test(l.trim()),
       );
