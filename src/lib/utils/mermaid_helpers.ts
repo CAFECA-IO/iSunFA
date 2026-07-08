@@ -407,7 +407,8 @@ export type IChartAction = {
   | {
       type: MermaidActionType.GANTT_EDIT_TASK;
       payload: {
-        lineIndex: number;
+        taskLabel: string;
+        taskId?: string;
         label: string;
         status?: string;
         id?: string;
@@ -417,11 +418,16 @@ export type IChartAction = {
     }
   | {
       type: MermaidActionType.GANTT_DELETE_TASK;
-      payload: { lineIndex: number };
+      payload: { taskLabel: string; taskId?: string };
     }
   | {
       type: MermaidActionType.GANTT_SWAP_TASK;
-      payload: { index1: number; index2: number };
+      payload: {
+        taskLabel1: string;
+        taskId1?: string;
+        taskLabel2: string;
+        taskId2?: string;
+      };
     }
   | {
       type: MermaidActionType.PIE_ADD_ITEM;
@@ -527,34 +533,65 @@ export const applyGanttAction = (
     }
 
     case MermaidActionType.GANTT_EDIT_TASK: {
-      const { lineIndex, label, status, id, start, end } = action.payload;
-      if (lineIndex >= 0 && lineIndex < lines.length) {
+      const { taskLabel, taskId, label, status, id, start, end } =
+        action.payload;
+      const index = lines.findIndex((l) => {
+        const clean = l.trim();
+        if (!clean.includes(":")) return false;
+        const currentLabel = clean.split(":")[0].trim();
+        return (
+          currentLabel === taskLabel || (!!taskId && clean.includes(taskId))
+        );
+      });
+
+      if (index !== -1) {
         const taskParts = [];
         if (status) taskParts.push(status);
         if (id) taskParts.push(id);
         if (start) taskParts.push(start);
         if (end) taskParts.push(end);
-        lines[lineIndex] = `    ${label} : ${taskParts.join(", ")}`;
+        lines[index] = `    ${label} : ${taskParts.join(", ")}`;
       }
       break;
     }
 
     case MermaidActionType.GANTT_DELETE_TASK: {
-      const { lineIndex } = action.payload;
-      if (lineIndex >= 0 && lineIndex < lines.length) {
-        lines.splice(lineIndex, 1);
+      const { taskLabel, taskId } = action.payload;
+      const index = lines.findIndex((l) => {
+        const clean = l.trim();
+        if (!clean.includes(":")) return false;
+        const currentLabel = clean.split(":")[0].trim();
+        return (
+          currentLabel === taskLabel || (!!taskId && clean.includes(taskId))
+        );
+      });
+
+      if (index !== -1) {
+        lines.splice(index, 1);
       }
       break;
     }
 
     case MermaidActionType.GANTT_SWAP_TASK: {
-      const { index1, index2 } = action.payload;
-      if (
-        index1 >= 0 &&
-        index1 < lines.length &&
-        index2 >= 0 &&
-        index2 < lines.length
-      ) {
+      const { taskLabel1, taskId1, taskLabel2, taskId2 } = action.payload;
+      const index1 = lines.findIndex((l) => {
+        const clean = l.trim();
+        if (!clean.includes(":")) return false;
+        const currentLabel = clean.split(":")[0].trim();
+        return (
+          currentLabel === taskLabel1 || (!!taskId1 && clean.includes(taskId1))
+        );
+      });
+      const index2 = lines.findIndex((l) => {
+        const clean = l.trim();
+        if (!clean.includes(":")) return false;
+        const currentLabel = clean.split(":")[0].trim();
+        return (
+          currentLabel === taskLabel2 || (!!taskId2 && clean.includes(taskId2))
+        );
+      });
+
+      if (index1 !== -1 && index2 !== -1) {
         const temp = lines[index1];
         lines[index1] = lines[index2];
         lines[index2] = temp;

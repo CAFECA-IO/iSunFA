@@ -37,6 +37,7 @@ export const chart = {
       drag_tip: "Drag to Pan",
       drag_tooltip: "Drag with left click to move",
       clear_btn: "Clear",
+      stop_generating: "Stop",
       ai_assistant_placeholder: "Enter your instructions based on the hint.",
       tabs: {
         quick_tools: "Quick Tools",

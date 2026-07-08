@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, FC } from "react";
+import { useState, useEffect, useMemo, useRef, FC } from "react";
 import { Dialog, DialogBackdrop, DialogPanel } from "@headlessui/react";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -43,6 +43,7 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
 }) => {
   // Info: (20260708 - Julian) 結構化動作狀態
   const [pendingActions, setPendingActions] = useState<IChartAction[]>([]);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const [aiInstruction, setAiInstruction] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -83,6 +84,15 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
 
   const handleGenerate = async () => {
     if (!aiInstruction.trim() || isGenerating) return;
+
+    // Info: (20260708 - Julian) 中斷上一個請求（如果存在）
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setIsGenerating(true);
     setApiError(null);
     try {
@@ -90,6 +100,7 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
         "/api/v1/admin/pdf_editor/mermaid_modify",
         {
           method: "POST",
+          signal: controller.signal,
           body: JSON.stringify({
             originalChart: currentModifiedChart, // Info: (20260708 - Julian) 使用已套用結構化編輯的圖表作為基底
             chartType: chartType,
@@ -100,16 +111,24 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
 
       if (response && response.code === "SUCCESS" && response.payload?.result) {
         setNewChartPreview(response.payload.result);
-      } else {
-        setApiError(response?.message || "AI 圖表生成失敗");
       }
     } catch (error: unknown) {
+      if (error instanceof Error && error.name === "AbortError") {
+        console.log("AI request aborted");
+        return;
+      }
       console.error("AI edit failed:", error);
       const err = error as Error;
       setApiError(err.message || "網路連線異常，請重試");
     } finally {
-      setIsGenerating(false);
     }
+  };
+
+  const handleAbort = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    setIsGenerating(false);
   };
 
   const handleAdopt = () => {
@@ -142,7 +161,6 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
               pendingActions={pendingActions}
               onAddAction={handleAddAction}
               onRemoveAction={handleRemoveAction}
-              onCancel={handleCancel}
             />
 
             {/* Info: (20260623 - Julian) 右側： Mermaid 預覽面板 */}
@@ -155,6 +173,7 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
               apiError={apiError}
               onCancel={handleCancel}
               onGenerate={handleGenerate}
+              onAbort={handleAbort}
               onAdopt={handleAdopt}
               currentChart={currentChart}
             />

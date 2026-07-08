@@ -35,6 +35,7 @@ export const chart = {
       drag_tip: "拖拽可移动",
       drag_tooltip: "按住鼠标左键可拖拽移动",
       clear_btn: "清空指令",
+      stop_generating: "停止生成",
       ai_assistant_placeholder: "依提示输入您的修改指示。",
       tabs: {
         quick_tools: "常用修改工具",

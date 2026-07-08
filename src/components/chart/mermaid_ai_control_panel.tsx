@@ -10,7 +10,6 @@ import {
 import {
   Lightbulb,
   Sparkles,
-  X,
   Wrench,
   MessageSquare,
   Trash2,
@@ -32,7 +31,6 @@ interface IMermaidAiControlPanelProps {
   pendingActions: IChartAction[];
   onAddAction: (action: IChartAction) => void;
   onRemoveAction: (id: string) => void;
-  onCancel: () => void;
 }
 
 const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
@@ -45,7 +43,6 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
   pendingActions,
   onAddAction,
   onRemoveAction,
-  onCancel,
 }) => {
   const { t } = useTranslation();
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
@@ -75,13 +72,6 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
             </span>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-full p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
-        >
-          <X size={18} />
-        </button>
       </div>
 
       <TabGroup className="flex flex-1 flex-col overflow-hidden">

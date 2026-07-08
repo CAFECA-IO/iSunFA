@@ -37,6 +37,7 @@ export const chart = {
       drag_tip: "ドラッグで移動",
       drag_tooltip: "マウスの左ボタンを押したままドラッグして移動",
       clear_btn: "指示をクリア",
+      stop_generating: "停止",
       ai_assistant_placeholder: "指示に従って、変更内容を入力してください。",
       tabs: {
         quick_tools: "よく使う編集ツール",

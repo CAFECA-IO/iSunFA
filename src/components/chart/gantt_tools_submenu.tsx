@@ -465,7 +465,8 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
       type: MermaidActionType.GANTT_EDIT_TASK,
       description: `修改任務 "${ganttTaskTarget}"`,
       payload: {
-        lineIndex: targetItem.lineIndex,
+        taskLabel: targetItem.label,
+        taskId: targetItem.id,
         label: ganttNewLabel || targetItem.label,
         start,
         end,
@@ -702,7 +703,8 @@ const ChangeTaskTypePanel: FC<IBasePanelProps> = ({
       type: MermaidActionType.GANTT_EDIT_TASK,
       description: `變更任務 "${ganttTaskTarget}" 類型`,
       payload: {
-        lineIndex: targetItem.lineIndex,
+        taskLabel: targetItem.label,
+        taskId: targetItem.id,
         label: targetItem.label,
         status:
           ganttTaskType === TaskType.DONE
@@ -791,8 +793,10 @@ const SwapTaskPanel: FC<IBasePanelProps> = ({
       type: MermaidActionType.GANTT_SWAP_TASK,
       description: `對調任務 "${ganttTaskTarget}" 與 "${ganttTaskTarget2}"`,
       payload: {
-        index1: item1.lineIndex,
-        index2: item2.lineIndex,
+        taskLabel1: item1.label,
+        taskId1: item1.id,
+        taskLabel2: item2.label,
+        taskId2: item2.id,
       },
     });
   };
@@ -881,7 +885,8 @@ const DeleteTaskPanel: FC<IBasePanelProps> = ({
       type: MermaidActionType.GANTT_DELETE_TASK,
       description: `刪除任務 "${ganttTaskTarget}"`,
       payload: {
-        lineIndex: targetItem.lineIndex,
+        taskLabel: targetItem.label,
+        taskId: targetItem.id,
       },
     });
   };

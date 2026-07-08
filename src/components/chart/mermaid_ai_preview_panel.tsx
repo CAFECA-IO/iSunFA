@@ -125,6 +125,7 @@ interface IMermaidAiPreviewPanelProps {
   apiError: string | null;
   onCancel: () => void;
   onGenerate: () => void;
+  onAbort: () => void;
   onAdopt: () => void;
   currentChart: string;
 }
@@ -138,6 +139,7 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
   apiError,
   onCancel,
   onGenerate,
+  onAbort,
   onAdopt,
   currentChart,
 }) => {
@@ -309,22 +311,27 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
       <div className="flex shrink-0 items-center justify-end gap-2 border-t border-slate-200 bg-white px-5 py-4">
         <button
           type="button"
+          disabled={isGenerating}
           onClick={onCancel}
-          className="cursor-pointer rounded-xl px-4 py-2 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-100"
+          className="enable:hover:bg-slate-100 cursor-pointer rounded-xl px-4 py-2 text-xs font-bold text-slate-600 transition-colors disabled:text-slate-400"
         >
           {t("chart.mermaid.ai_editor.cancel")}
         </button>
 
         <button
           type="button"
-          onClick={onGenerate}
-          disabled={!aiInstruction.trim() || isGenerating}
-          className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
+          onClick={isGenerating ? onAbort : onGenerate}
+          disabled={!isGenerating && !aiInstruction.trim()}
+          className={`flex cursor-pointer items-center gap-1.5 rounded-xl px-5 py-2 text-xs font-bold shadow-sm transition-all ${
+            isGenerating
+              ? "border border-rose-100 bg-rose-50 text-rose-600 hover:bg-rose-100"
+              : "bg-blue-600 text-white hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
+          }`}
         >
           {isGenerating ? (
             <>
-              <Loader2 size={14} className="animate-spin" />
-              {t("chart.mermaid.ai_editor.generating_btn")}
+              <CircleX size={14} />
+              {t("chart.mermaid.ai_editor.stop_generating")}
             </>
           ) : (
             <>
