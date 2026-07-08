@@ -1,8 +1,7 @@
-"use client";
-
 import React, { useState, FC } from "react";
 import { CakeSlice, Paintbrush, Slice, Trash2, LucideIcon } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
+import { IChartAction, MermaidActionType } from "@/lib/utils/mermaid_helpers";
 import {
   MERMAID_INPUT_STYLE,
   MERMAID_LABEL_STYLE,
@@ -69,68 +68,32 @@ const PIE_COLOR_TRANSLATION_KEYS: Record<PieColor, string> = {
   [PieColor.PURPLE]: "chart.mermaid.ai_editor.colors.purple",
 };
 
-const INSTRUCTION_TEMPLATES = {
-  ADD_PIE_SLICE: {
-    render: (label: string, value: string, color?: string) =>
-      `在圓餅圖中新增一個項目，名稱為 "${label}"，數值/比例為 ${value}${
-        color ? `，顏色為 "${color}"` : ""
-      }`,
-  },
-  EDIT_PIE_SLICE: {
-    match: (line: string, targetLabel: string) =>
-      line.includes(`修改圓餅圖項目 "${targetLabel}"`),
-    render: (targetLabel: string, value?: string, newLabel?: string) => {
-      if (value && newLabel) {
-        return `修改圓餅圖項目 "${targetLabel}" 的數值/比例為 ${value}，並將其名稱改為 "${newLabel}"`;
-      } else if (value) {
-        return `修改圓餅圖項目 "${targetLabel}" 的數值/比例為 ${value}`;
-      } else if (newLabel) {
-        return `修改圓餅圖項目 "${targetLabel}" 的名稱為 "${newLabel}"`;
-      }
-      return "";
-    },
-  },
-  CHANGE_PIE_COLOR: {
-    match: (line: string, targetLabel: string) =>
-      line.includes(`將圓餅圖項目 "${targetLabel}" 的顏色調整為`),
-    render: (targetLabel: string, color: string) =>
-      `將圓餅圖項目 "${targetLabel}" 的顏色調整為 "${color}"`,
-  },
-  DELETE_PIE_SLICE: {
-    match: (line: string, targetLabel: string) =>
-      line.includes(`從圓餅圖中刪除項目 "${targetLabel}"`),
-    render: (targetLabel: string) => `從圓餅圖中刪除項目 "${targetLabel}"`,
-  },
-};
-
 // ==========================================
 // Info: (20260629 - Julian) 將每個工具拆分成子元件(sub-panel)
 // ==========================================
 
 interface IBasePanelProps {
   parsedPieItems: { label: string; value: number }[];
-  onInsert: (text: string) => void;
-  onInsertWithFilter: (
-    text: string,
-    filterFn: (line: string) => boolean,
-  ) => void;
+  onAddAction: (action: IChartAction) => void;
 }
 
 // Info: (20260629 - Julian) 「新增項目」面板
-const AddSlicePanel: FC<IBasePanelProps> = ({ onInsert }) => {
+const AddSlicePanel: FC<IBasePanelProps> = ({ onAddAction }) => {
   const { t } = useTranslation();
   const [pieSliceLabel, setPieSliceLabel] = useState<string>("");
   const [pieSliceValue, setPieSliceValue] = useState<string>("");
-  const [pieSliceColor, setPieSliceColor] = useState<PieColor | "">("");
 
   const handleSubmit = () => {
     if (!pieSliceLabel || !pieSliceValue) return;
-    const inst = INSTRUCTION_TEMPLATES.ADD_PIE_SLICE.render(
-      pieSliceLabel,
-      pieSliceValue,
-      pieSliceColor || undefined,
-    );
-    onInsert(inst);
+    onAddAction({
+      id: crypto.randomUUID(),
+      type: MermaidActionType.PIE_ADD_ITEM,
+      description: `新增項目 "${pieSliceLabel}" (${pieSliceValue})`,
+      payload: {
+        label: pieSliceLabel,
+        value: parseFloat(pieSliceValue),
+      },
+    });
   };
 
   return (
@@ -172,26 +135,6 @@ const AddSlicePanel: FC<IBasePanelProps> = ({ onInsert }) => {
             }
           />
         </div>
-        <div className="col-span-2">
-          <label htmlFor="pieSliceColor" className={MERMAID_LABEL_STYLE}>
-            {t("chart.mermaid.ai_editor.pie.select_style_label")}
-          </label>
-          <select
-            id="pieSliceColor"
-            value={pieSliceColor}
-            onChange={(e) => setPieSliceColor(e.target.value as PieColor)}
-            className={MERMAID_INPUT_STYLE}
-          >
-            <option value={""}>
-              {t("chart.mermaid.ai_editor.pie.ai_auto_select")}
-            </option>
-            {Object.values(PieColor).map((color) => (
-              <option key={color} value={color}>
-                {t(PIE_COLOR_TRANSLATION_KEYS[color])}
-              </option>
-            ))}
-          </select>
-        </div>
       </div>
       <button
         type="button"
@@ -199,7 +142,7 @@ const AddSlicePanel: FC<IBasePanelProps> = ({ onInsert }) => {
         disabled={!pieSliceLabel || !pieSliceValue}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
+        {t("chart.mermaid.ai_editor.pie.add_slice")}
       </button>
     </div>
   );
@@ -208,7 +151,7 @@ const AddSlicePanel: FC<IBasePanelProps> = ({ onInsert }) => {
 // Info: (20260629 - Julian) 「變更標題/數值」面板
 const EditSlicePanel: FC<IBasePanelProps> = ({
   parsedPieItems,
-  onInsertWithFilter,
+  onAddAction,
 }) => {
   const { t } = useTranslation();
   const [pieSliceTarget, setPieSliceTarget] = useState<string>("");
@@ -217,14 +160,19 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
 
   const handleSubmit = () => {
     if (!pieSliceTarget || (!pieSliceValue && !pieSliceNewLabel)) return;
-    const inst = INSTRUCTION_TEMPLATES.EDIT_PIE_SLICE.render(
-      pieSliceTarget,
-      pieSliceValue || undefined,
-      pieSliceNewLabel || undefined,
-    );
-    onInsertWithFilter(inst, (line) =>
-      INSTRUCTION_TEMPLATES.EDIT_PIE_SLICE.match(line, pieSliceTarget),
-    );
+    const targetItem = parsedPieItems.find((i) => i.label === pieSliceTarget);
+    if (!targetItem) return;
+
+    onAddAction({
+      id: crypto.randomUUID(),
+      type: MermaidActionType.PIE_EDIT_ITEM,
+      description: `修改項目 "${pieSliceTarget}"`,
+      payload: {
+        oldLabel: pieSliceTarget,
+        newLabel: pieSliceNewLabel || pieSliceTarget,
+        newValue: pieSliceValue ? parseFloat(pieSliceValue) : targetItem.value,
+      },
+    });
   };
 
   return (
@@ -290,7 +238,7 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
         disabled={!pieSliceTarget || (!pieSliceValue && !pieSliceNewLabel)}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
+        {t("chart.mermaid.ai_editor.pie.edit_slice")}
       </button>
     </div>
   );
@@ -299,7 +247,7 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
 // Info: (20260629 - Julian) 「變更項目顏色」面板
 const ChangeSliceColorPanel: FC<IBasePanelProps> = ({
   parsedPieItems,
-  onInsertWithFilter,
+  onAddAction,
 }) => {
   const { t } = useTranslation();
   const [pieSliceTarget, setPieSliceTarget] = useState<string>("");
@@ -309,13 +257,14 @@ const ChangeSliceColorPanel: FC<IBasePanelProps> = ({
 
   const handleSubmit = () => {
     if (!pieSliceTarget || !pieSliceColor) return;
-    const inst = INSTRUCTION_TEMPLATES.CHANGE_PIE_COLOR.render(
-      pieSliceTarget,
-      pieSliceColor,
-    );
-    onInsertWithFilter(inst, (line) =>
-      INSTRUCTION_TEMPLATES.CHANGE_PIE_COLOR.match(line, pieSliceTarget),
-    );
+    // 目前 Pie 暫不支援結構化顏色編輯，僅保留 UI 或透過 LLM 處理
+    // 為了展示一致性，我們發送一個模擬動作或說明
+    onAddAction({
+      id: crypto.randomUUID(),
+      type: MermaidActionType.PIE_CHANGE_COLOR,
+      description: `變更項目 "${pieSliceTarget}" 顏色為 ${pieSliceColor}`,
+      payload: { label: pieSliceTarget, color: pieSliceColor },
+    });
   };
 
   return (
@@ -368,7 +317,7 @@ const ChangeSliceColorPanel: FC<IBasePanelProps> = ({
         disabled={!pieSliceTarget}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
+        {t("chart.mermaid.ai_editor.pie.change_color")}
       </button>
     </div>
   );
@@ -377,17 +326,21 @@ const ChangeSliceColorPanel: FC<IBasePanelProps> = ({
 // Info: (20260629 - Julian) 「刪除項目」面板
 const DeleteSlicePanel: FC<IBasePanelProps> = ({
   parsedPieItems,
-  onInsertWithFilter,
+  onAddAction,
 }) => {
   const { t } = useTranslation();
   const [pieSliceTarget, setPieSliceTarget] = useState<string>("");
 
   const handleSubmit = () => {
     if (!pieSliceTarget) return;
-    const inst = INSTRUCTION_TEMPLATES.DELETE_PIE_SLICE.render(pieSliceTarget);
-    onInsertWithFilter(inst, (line) =>
-      INSTRUCTION_TEMPLATES.DELETE_PIE_SLICE.match(line, pieSliceTarget),
-    );
+    onAddAction({
+      id: crypto.randomUUID(),
+      type: MermaidActionType.PIE_DELETE_ITEM,
+      description: `刪除項目 "${pieSliceTarget}"`,
+      payload: {
+        label: pieSliceTarget,
+      },
+    });
   };
 
   return (
@@ -423,15 +376,11 @@ const DeleteSlicePanel: FC<IBasePanelProps> = ({
         disabled={!pieSliceTarget}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t("chart.mermaid.ai_editor.flowchart.insert_instruction")}
+        {t("chart.mermaid.ai_editor.pie.delete_slice")}
       </button>
     </div>
   );
 };
-
-// ==========================================
-// Info: (20260629 - Julian) 工具面板元件映射表
-// ==========================================
 
 const PIE_TOOL_PANELS: Record<PieTools, FC<IBasePanelProps>> = {
   [PieTools.ADD_SLICE]: AddSlicePanel,
@@ -440,45 +389,23 @@ const PIE_TOOL_PANELS: Record<PieTools, FC<IBasePanelProps>> = {
   [PieTools.DELETE_SLICE]: DeleteSlicePanel,
 };
 
-// ==========================================
-// Info: (20260629 - Julian) 主元件
-// ==========================================
-
 interface IPieToolsSectionProps {
   selectedTool: string | null;
   setSelectedTool: React.Dispatch<React.SetStateAction<string | null>>;
   parsedPieItems: { label: string; value: number }[];
-  setAiInstruction: React.Dispatch<React.SetStateAction<string>>;
+  onAddAction: (action: IChartAction) => void;
 }
 
 export const PieToolsSection: FC<IPieToolsSectionProps> = ({
   selectedTool,
   setSelectedTool,
   parsedPieItems,
-  setAiInstruction,
+  onAddAction,
 }) => {
   const { t } = useTranslation();
 
-  const handleInsertInstruction = (text: string) => {
-    setAiInstruction((prev) => {
-      const trimmed = prev.trim();
-      if (!trimmed) return text;
-      return trimmed + "\n" + text;
-    });
-    setSelectedTool(null);
-  };
-
-  const handleInsertWithFilter = (
-    text: string,
-    filterFn: (line: string) => boolean,
-  ) => {
-    setAiInstruction((prev) => {
-      const lines = prev.split("\n");
-      const filteredLines = lines.filter((line) => !filterFn(line));
-      const clean = filteredLines.join("\n").trim();
-      if (!clean) return text;
-      return clean + "\n" + text;
-    });
+  const handleAddActionWithReset = (action: IChartAction) => {
+    onAddAction(action);
     setSelectedTool(null);
   };
 
@@ -516,13 +443,11 @@ export const PieToolsSection: FC<IPieToolsSectionProps> = ({
         })}
       </div>
 
-      {/* Info: (20260629 - Julian) 快捷工具子面板 - 透過 Mapping 動態載入 */}
       {ActivePanel && (
         <div className="mt-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <ActivePanel
             parsedPieItems={parsedPieItems}
-            onInsert={handleInsertInstruction}
-            onInsertWithFilter={handleInsertWithFilter}
+            onAddAction={handleAddActionWithReset}
           />
         </div>
       )}

@@ -21,7 +21,6 @@ export const chart = {
       instructions_title: "AI 指令编写说明",
       instructions_desc:
         "使用下方小工具可自动产生指令，您也可以手动修改，例如：",
-      quick_tools: "常用修改工具 (Quick Tools)",
       preview_compare: "图表变更预览对比 (Preview & Comparison)",
       before: "原始图表 (Before)",
       after: "修改后预览 (After)",
@@ -36,10 +35,11 @@ export const chart = {
       drag_tip: "拖拽可移动",
       drag_tooltip: "按住鼠标左键可拖拽移动",
       clear_btn: "清空指令",
-      input_label: "AI 编辑指令 (Instruction)",
-      pie_placeholder: "输入您的修改指示，例如：新增『其他碳排 12%』...",
-      flowchart_placeholder:
-        "输入您的修改指示，例如：新增节点『审核完成』并与『起点』连线...",
+      ai_assistant_placeholder: "依提示输入您的修改指示。",
+      tabs: {
+        quick_tools: "常用修改工具",
+        ai_assistant: "AI 编辑指令",
+      },
       colors: {
         default: "默认灰 (Default)",
         navy: "海军蓝 (Navy)",
@@ -48,19 +48,7 @@ export const chart = {
         green: "成功绿 (Green)",
         purple: "質感紫 (Purple)",
       },
-      examples: {
-        pie: [
-          "新增『办公室碳排』15%",
-          "将『制造』数值改为 45%，名称改为『生产制造』",
-          "删除『其他』区块",
-        ],
-        flowchart: [
-          "新增节点 D，从 C 连接过来，连线文字是『核准』",
-          "将 A 的文字改为『填写申请单』",
-          "将 A 到 B 的连线改为粗线",
-          "将图表方向变更为由左到右 (LR)",
-        ],
-      },
+      command_list: "指令列表",
       flowchart: {
         add_node: "新增节点",
         edit_node: "变更节点文字",

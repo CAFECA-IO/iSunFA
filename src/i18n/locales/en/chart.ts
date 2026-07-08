@@ -22,7 +22,6 @@ export const chart = {
       instructions_title: "AI Instructions Guide",
       instructions_desc:
         "Use the tools below to auto-generate instructions, or write them manually, e.g.:",
-      quick_tools: "Quick Tools",
       preview_compare: "Preview & Comparison",
       before: "Before",
       after: "After",
@@ -38,10 +37,11 @@ export const chart = {
       drag_tip: "Drag to Pan",
       drag_tooltip: "Drag with left click to move",
       clear_btn: "Clear",
-      input_label: "AI Instruction",
-      pie_placeholder: "Enter your request, e.g.: Add 'Other Carbon' 12%...",
-      flowchart_placeholder:
-        "Enter your request, e.g.: Add node 'Approval' and connect from 'Start'...",
+      ai_assistant_placeholder: "Enter your instructions based on the hint.",
+      tabs: {
+        quick_tools: "Quick Tools",
+        ai_assistant: "AI Instruction",
+      },
       colors: {
         default: "Default Gray",
         navy: "Navy Blue",
@@ -50,19 +50,7 @@ export const chart = {
         green: "Success Green",
         purple: "Premium Purple",
       },
-      examples: {
-        pie: [
-          'Add "Office Carbon" 15%',
-          'Change value of "Manufacturing" to 45% and rename to "Production"',
-          'Delete "Other" slice',
-        ],
-        flowchart: [
-          'Add node D, connect from C with connection text "Approved"',
-          'Change text of A to "Fill application form"',
-          "Change connection from A to B to bold",
-          "Change chart direction to Left-to-Right (LR)",
-        ],
-      },
+      command_list: "Command List",
       flowchart: {
         add_node: "Add Node",
         edit_node: "Change Node Text",

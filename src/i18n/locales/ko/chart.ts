@@ -22,7 +22,6 @@ export const chart = {
       instructions_title: "AI 명령어 작성 가이드",
       instructions_desc:
         "아래 툴을 사용해 명령어를 자동으로 생성하거나, 직접 수동으로 수정할 수 있습니다. 예:",
-      quick_tools: "자주 쓰는 편집 툴 (Quick Tools)",
       preview_compare: "차트 변경 미리보기 비교 (Preview & Comparison)",
       before: "기존 차트 (Before)",
       after: "변경 후 미리보기 (After)",
@@ -38,11 +37,11 @@ export const chart = {
       drag_tip: "드래그하여 이동",
       drag_tooltip: "마우스 왼쪽 버튼을 누른 채 드래그하여 이동할 수 있습니다",
       clear_btn: "명령어 초기화",
-      input_label: "AI 편집 명령어 (Instruction)",
-      pie_placeholder:
-        "변경 지시를 입력하세요. 예: 『기타 탄소 배출 12%』 추가...",
-      flowchart_placeholder:
-        "변경 지시를 입력하세요. 예: 노드 『승인 완료』 추가 및 『시작점』 연결...",
+      ai_assistant_placeholder: "힌트에 따라 수정 지시를 입력하십시오.",
+      tabs: {
+        quick_tools: "자주 쓰는 편집 툴",
+        ai_assistant: "AI 편집 지시",
+      },
       colors: {
         default: "기본 그레이 (Default)",
         navy: "네이비 블루 (Navy)",
@@ -51,19 +50,7 @@ export const chart = {
         green: "성공 그린 (Green)",
         purple: "질감 퍼플 (Purple)",
       },
-      examples: {
-        pie: [
-          "『사무실 탄소 배출』 15% 추가",
-          "『제조』 값을 45%로 변경하고 이름을 『생산 제조』로 변경",
-          "『기타』 영역 삭제",
-        ],
-        flowchart: [
-          "노드 D 추가, C에서 연결 및 연결선 텍스트는 『승인』",
-          "A의 텍스트를 『신청서 작성』으로 변경",
-          "A에서 B로의 연결선을 굵은 선으로 변경",
-          "차트 방향을 왼쪽에서 오른쪽(LR)으로 변경",
-        ],
-      },
+      command_list: "명령어 리스트",
       flowchart: {
         add_node: "노드 추가",
         edit_node: "노드 텍스트 변경",

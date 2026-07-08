@@ -22,7 +22,6 @@ export const chart = {
       instructions_title: "AI命令の作成ガイド",
       instructions_desc:
         "下のツールを使用して自動的に指示を生成するか、手動で編集することもできます。例：",
-      quick_tools: "よく使う編集ツール (Quick Tools)",
       preview_compare: "チャート変更プレビュー比較 (Preview & Comparison)",
       before: "元のチャート (Before)",
       after: "変更後プレビュー (After)",
@@ -38,11 +37,11 @@ export const chart = {
       drag_tip: "ドラッグで移動",
       drag_tooltip: "マウスの左ボタンを押したままドラッグして移動",
       clear_btn: "指示をクリア",
-      input_label: "AI編集指示 (Instruction)",
-      pie_placeholder:
-        "変更指示を入力してください。例：『その他炭素排出 12%』を追加...",
-      flowchart_placeholder:
-        "変更指示を入力してください。例：ノード『審査完了』を追加し、『起点』と接続する...",
+      ai_assistant_placeholder: "指示に従って、変更内容を入力してください。",
+      tabs: {
+        quick_tools: "よく使う編集ツール",
+        ai_assistant: "AI 編集指令",
+      },
       colors: {
         default: "デフォルトグレー (Default)",
         navy: "ネイビーブルー (Navy)",
@@ -51,19 +50,7 @@ export const chart = {
         green: "成功グリーン (Green)",
         purple: "質感パープル (Purple)",
       },
-      examples: {
-        pie: [
-          "「オフィス炭素排出 15%」を追加",
-          "「製造」の数値を45%に変更し、名前を「生産製造」に変更",
-          "「その他」セクションを削除",
-        ],
-        flowchart: [
-          "ノード D を追加し、C から接続、接続テキストは「承認」",
-          "A のテキストを「申請書の記入」に変更",
-          "A から B への接続を太線に変更",
-          "チャートの方向を左から右 (LR) に変更",
-        ],
-      },
+      command_list: "コマンドリスト",
       flowchart: {
         add_node: "ノードを追加",
         edit_node: "ノードテキストの変更",
