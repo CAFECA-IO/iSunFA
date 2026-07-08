@@ -21,7 +21,7 @@ export const chart = {
       subtitle: "Mermaid AI Chart Assistant",
       instructions_title: "AI Instructions Guide",
       instructions_desc:
-        "Use the tools below to auto-generate instructions, or write them manually, e.g.:",
+        "Modify precisely using 'Quick Tools' or enter natural language here:",
       preview_compare: "Preview & Comparison",
       before: "Before",
       after: "After",
@@ -80,6 +80,11 @@ export const chart = {
         dir_bt: "Bottom-to-Top (BT)",
         dir_rl: "Right-to-Left (RL)",
         insert_instruction: "Insert Instruction",
+        examples: [
+          "Change the 'In Review' node to orange and bold",
+          "Add a 'Archiving' step after 'Close Case'",
+          "Change the entire chart to a green color scheme",
+        ],
       },
       gantt: {
         add_task: "Add Task",
@@ -87,7 +92,12 @@ export const chart = {
         change_type: "Change Task Type",
         swap_task: "Adjust Task Order",
         delete_task: "Delete Task",
-        section: "Task Section",
+        examples: [
+          "Delay all R&D tasks by two weeks",
+          "Mark the 'Testing' phase as critical path (crit)",
+          "Add a new section named 'Market Research'",
+        ],
+        section: "Task Group",
         section_placeholder: "Enter task section",
         task_name: "Task Name",
         task_name_placeholder: "Enter task name",
@@ -120,7 +130,12 @@ export const chart = {
         add_slice: "Add Slice",
         edit_slice: "Change Title/Value",
         change_color: "Change Slice Color",
-        delete_slice: "Delete Slice",
+        delete_slice: "Delete Item",
+        examples: [
+          "Adjust 'Others' slice to 10%",
+          "Change 'Labor Cost' to red for emphasis",
+          "Hide items with less than 5% proportion",
+        ],
         add_slice_title: "Add Pie Slice",
         slice_name_label: "Slice Name",
         slice_name_placeholder: "e.g., Logistics",

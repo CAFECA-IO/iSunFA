@@ -21,7 +21,7 @@ export const chart = {
       subtitle: "Mermaid AI Chart Assistant",
       instructions_title: "AI命令の作成ガイド",
       instructions_desc:
-        "下のツールを使用して自動的に指示を生成するか、手動で編集することもできます。例：",
+        "「常用ツール」で正確に修正するか、ここに自然言語で指示を入力してください：",
       preview_compare: "チャート変更プレビュー比較 (Preview & Comparison)",
       before: "元のチャート (Before)",
       after: "変更後プレビュー (After)",
@@ -80,14 +80,19 @@ export const chart = {
         dir_bt: "下から上 (BT / Bottom-to-Top)",
         dir_rl: "右から左 (RL / Right-to-Left)",
         insert_instruction: "指示を挿入",
+        examples: [
+          "「審査中」ノードをオレンジ色にして太字にする",
+          "「クローズ」の後に「アーカイブ」ステップを追加する",
+          "グラフ全体を緑系の色調に変更する",
+        ],
       },
       gantt: {
         add_task: "スケジュール追加",
         edit_task: "スケジュール編集",
         change_type: "スケジュールタイプの変更",
         swap_task: "タスク順序の調整",
-        delete_task: "スケジュールの削除",
-        section: "スケジュールグループ",
+        delete_task: "タスクを削除",
+        section: "タスクグループ",
         section_placeholder: "スケジュールグループを入力してください",
         task_name: "スケジュール名",
         task_name_placeholder: "スケジュール名を入力してください",
@@ -115,6 +120,11 @@ export const chart = {
           crit: "クリティカルパス (crit)",
           milestone: "マイルストーン (milestone)",
         },
+        examples: [
+          "すべての開発タスクを2週間延期する",
+          "「テスト段階」をクリティカルパス (crit) としてマークする",
+          "「市場調査」という名前のセクションを追加する",
+        ],
       },
       pie: {
         add_slice: "項目を追加",

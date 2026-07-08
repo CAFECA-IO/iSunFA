@@ -1,12 +1,5 @@
 import { useState, FC } from "react";
-import {
-  DialogTitle,
-  Tab,
-  TabGroup,
-  TabList,
-  TabPanel,
-  TabPanels,
-} from "@headlessui/react";
+import { Tab, TabGroup, TabList, TabPanel, TabPanels } from "@headlessui/react";
 import {
   Lightbulb,
   Sparkles,
@@ -61,12 +54,9 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
             <Sparkles size={20} />
           </div>
           <div>
-            <DialogTitle
-              as="h3"
-              className="text-sm leading-none font-bold text-slate-800"
-            >
+            <h3 className="text-sm leading-none font-bold text-slate-800">
               {t("chart.mermaid.ai_editor.title")}
-            </DialogTitle>
+            </h3>
             <span className="text-[10px] font-medium text-slate-400">
               {t("chart.mermaid.ai_editor.subtitle")}
             </span>
@@ -213,9 +203,18 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
                 <Lightbulb size={14} strokeWidth={2.5} />
                 <p>{t("chart.mermaid.ai_editor.instructions_title")}</p>
               </div>
-              <p className="text-blue-700">
+              <p className="whitespace-normal text-blue-700">
                 {t("chart.mermaid.ai_editor.instructions_desc")}
               </p>
+              <ul className="mt-2 ml-4 list-disc space-y-1 text-[11px] text-blue-600/80">
+                {(
+                  t<string[]>(
+                    `chart.mermaid.ai_editor.${chartType.toLowerCase()}.examples`,
+                  ) || []
+                ).map((example, i) => (
+                  <li key={i}>{example}</li>
+                ))}
+              </ul>
             </div>
           </TabPanel>
         </TabPanels>

@@ -16,14 +16,7 @@ import {
 import { useTranslation } from "@/i18n/i18n_context";
 import { useChartExport } from "@/hooks/use_chart_export";
 import { MermaidAiModal } from "@/components/chart/mermaid_ai_modal";
-import {
-  detectChartType,
-  parseFlowchartNodes,
-  parsePieItems,
-  parsePieData,
-  parseGanttItems,
-  IGanttItem,
-} from "@/lib/utils/mermaid_helpers";
+import { detectChartType, parsePieData } from "@/lib/utils/mermaid_helpers";
 import { MermaidChartType } from "@/constants/mermaid_chart";
 
 interface IMermaidChartProps {
@@ -55,24 +48,6 @@ const MermaidChart: FC<IMermaidChartProps> = ({
   const chartType = useMemo(() => {
     return detectChartType(currentChart);
   }, [currentChart]);
-
-  // Info: (20260623 - Julian) 解析當前 flowchart/graph 中現有的所有節點
-  const parsedNodes = useMemo(() => {
-    if (chartType !== MermaidChartType.FLOWCHART) return [];
-    return parseFlowchartNodes(currentChart);
-  }, [currentChart, chartType]);
-
-  // Info: (20260623 - Julian) 解析當前 pie chart 中現有的所有資料項目
-  const parsedPieItems = useMemo(() => {
-    if (chartType !== MermaidChartType.PIE) return [];
-    return parsePieItems(currentChart);
-  }, [currentChart, chartType]);
-
-  // Info: (20260707 - Julian) 解析當前 gantt chart 中現有的所有資料項目
-  const parsedGanttItems = useMemo<IGanttItem[]>(() => {
-    if (chartType !== MermaidChartType.GANTT) return [];
-    return parseGanttItems(currentChart);
-  }, [currentChart, chartType]);
 
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
@@ -154,9 +129,28 @@ const MermaidChart: FC<IMermaidChartProps> = ({
     });
 
     const renderChart = async () => {
+      const trimmedChart = currentChart.trim();
+      if (!trimmedChart) {
+        if (isCurrent) {
+          setSvgStr("");
+          setHasError(false);
+        }
+        return;
+      }
+
+      // Info: (20260708 - Julian) 檢查是否具備 Mermaid 定義頭部，防止 UnknownDiagramError
+      const type = detectChartType(trimmedChart);
+      if (type === MermaidChartType.UNKNOWN) {
+        console.warn("Unknown diagram type detected, skipping render");
+        if (isCurrent) {
+          setHasError(true);
+        }
+        return;
+      }
+
       try {
         const id = `mermaid-${Math.random().toString(36).substring(2, 9)}`;
-        const { svg } = await mermaid.render(id, currentChart);
+        const { svg } = await mermaid.render(id, trimmedChart);
 
         // Info: (20260615 - Julian) 只有當組件仍處於活躍狀態時，才更新 svg 狀態，防止競態
         if (isCurrent) {
@@ -761,9 +755,6 @@ const MermaidChart: FC<IMermaidChartProps> = ({
         onClose={() => setIsAiModalOpen(false)}
         currentChart={currentChart}
         chartType={chartType}
-        parsedNodes={parsedNodes}
-        parsedPieItems={parsedPieItems}
-        parsedGanttItems={parsedGanttItems}
         svgStr={svgStr}
         parsedPieData={parsedPieData}
         onAdopt={handleAdopt}

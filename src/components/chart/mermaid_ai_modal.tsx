@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef, FC } from "react";
-import { Dialog, DialogBackdrop, DialogPanel } from "@headlessui/react";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { IDonutChartData } from "@/components/common/donut_chart";
@@ -9,11 +8,14 @@ import { MermaidAiControlPanel } from "@/components/chart/mermaid_ai_control_pan
 import { MermaidAiPreviewPanel } from "@/components/chart/mermaid_ai_preview_panel";
 import { MermaidChartType } from "@/constants/mermaid_chart";
 import {
-  IGanttItem,
   IChartAction,
   applyGanttAction,
   applyPieAction,
   applyFlowchartAction,
+  parseFlowchartNodes,
+  parsePieItems,
+  parseGanttItems,
+  parsePieData,
 } from "@/lib/utils/mermaid_helpers";
 
 interface IMermaidAiModalProps {
@@ -21,9 +23,6 @@ interface IMermaidAiModalProps {
   onClose: () => void;
   currentChart: string;
   chartType: MermaidChartType;
-  parsedNodes: { id: string; label: string }[];
-  parsedPieItems: { label: string; value: number }[];
-  parsedGanttItems: IGanttItem[];
   svgStr: string;
   parsedPieData: { title: string; data: IDonutChartData[] } | null;
   onAdopt: (newChart: string) => void;
@@ -34,14 +33,13 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
   onClose,
   currentChart,
   chartType,
-  parsedNodes,
-  parsedPieItems,
-  parsedGanttItems,
   svgStr,
-  parsedPieData,
+  parsedPieData: initialParsedPieData,
   onAdopt,
 }) => {
-  // Info: (20260708 - Julian) 結構化動作狀態
+  // Info: (20260708 - Julian) 內部編輯基底狀態
+  const [internalBaseChart, setInternalBaseChart] =
+    useState<string>(currentChart);
   const [pendingActions, setPendingActions] = useState<IChartAction[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -50,9 +48,27 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
   const [newChartPreview, setNewChartPreview] = useState<string>("");
   const [apiError, setApiError] = useState<string | null>(null);
 
+  // Info: (20260708 - Julian) 當內部基底改變時，重新解析元數據供工具選單使用
+  const currentParsedNodes = useMemo(
+    () => parseFlowchartNodes(internalBaseChart),
+    [internalBaseChart],
+  );
+  const currentParsedPieItems = useMemo(
+    () => parsePieItems(internalBaseChart),
+    [internalBaseChart],
+  );
+  const currentParsedGanttItems = useMemo(
+    () => parseGanttItems(internalBaseChart),
+    [internalBaseChart],
+  );
+  const currentParsedPieData = useMemo(
+    () => parsePieData(internalBaseChart),
+    [internalBaseChart],
+  );
+
   // Info: (20260708 - Julian) 根據目前的 pendingActions 計算修改後的圖表
   const currentModifiedChart = useMemo(() => {
-    let result = currentChart;
+    let result = internalBaseChart;
     pendingActions.forEach((action) => {
       if (chartType === MermaidChartType.GANTT) {
         result = applyGanttAction(result, action);
@@ -63,16 +79,23 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
       }
     });
     return result;
-  }, [currentChart, pendingActions, chartType]);
+  }, [internalBaseChart, pendingActions, chartType]);
 
-  // Info: (20260708 - Julian) 當有結構化變更時，立即更新預覽
+  // Info: (20260708 - Julian) 當有結構化變更或基底變更時，立即更新預覽
   useEffect(() => {
-    if (pendingActions.length > 0) {
-      setNewChartPreview(currentModifiedChart);
-    } else {
+    setNewChartPreview(currentModifiedChart);
+  }, [currentModifiedChart]);
+
+  // Info: (20260708 - Julian) 當 modal 被開啟時，重置所有狀態
+  useEffect(() => {
+    if (open) {
+      setInternalBaseChart(currentChart);
+      setPendingActions([]);
+      setAiInstruction("");
       setNewChartPreview("");
+      setApiError(null);
     }
-  }, [currentModifiedChart, pendingActions.length]);
+  }, [open, currentChart]);
 
   const handleAddAction = (action: IChartAction) => {
     setPendingActions((prev) => [...prev, action]);
@@ -110,7 +133,11 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
       );
 
       if (response && response.code === "SUCCESS" && response.payload?.result) {
-        setNewChartPreview(response.payload.result);
+        // Info: (20260708 - Julian) 將 AI 結果設為新的內部基底，並清空已套用的結構化動作
+        setInternalBaseChart(response.payload.result);
+        setPendingActions([]);
+        setAiInstruction("");
+        setIsGenerating(false);
       }
     } catch (error: unknown) {
       if (error instanceof Error && error.name === "AbortError") {
@@ -120,7 +147,7 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
       console.error("AI edit failed:", error);
       const err = error as Error;
       setApiError(err.message || "網路連線異常，請重試");
-    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -143,43 +170,36 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
     onClose();
   };
 
+  if (!open) return null;
   return (
-    <Dialog open={open} onClose={handleCancel} className="relative z-9999">
-      <DialogBackdrop className="fixed inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" />
+    <div className="fixed inset-0 z-9999 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-md transition-opacity sm:p-6 md:p-10">
+      <div className="relative flex h-[85vh] min-h-[600px] w-full max-w-6xl transform flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-2xl transition-all md:flex-row">
+        <MermaidAiControlPanel
+          chartType={chartType}
+          aiInstruction={aiInstruction}
+          setAiInstruction={setAiInstruction}
+          parsedNodes={currentParsedNodes}
+          parsedPieItems={currentParsedPieItems}
+          parsedGanttItems={currentParsedGanttItems}
+          pendingActions={pendingActions}
+          onAddAction={handleAddAction}
+          onRemoveAction={handleRemoveAction}
+        />
 
-      <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-        <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-6 md:p-10">
-          <DialogPanel className="relative flex h-[85vh] min-h-[600px] w-full max-w-6xl transform flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-2xl transition-all md:flex-row">
-            {/* Info: (20260623 - Julian) 左側： AI 控制面板 */}
-            <MermaidAiControlPanel
-              chartType={chartType}
-              aiInstruction={aiInstruction}
-              setAiInstruction={setAiInstruction}
-              parsedNodes={parsedNodes}
-              parsedPieItems={parsedPieItems}
-              parsedGanttItems={parsedGanttItems}
-              pendingActions={pendingActions}
-              onAddAction={handleAddAction}
-              onRemoveAction={handleRemoveAction}
-            />
-
-            {/* Info: (20260623 - Julian) 右側： Mermaid 預覽面板 */}
-            <MermaidAiPreviewPanel
-              svgStr={svgStr}
-              parsedPieData={parsedPieData}
-              aiInstruction={aiInstruction}
-              isGenerating={isGenerating}
-              newChartPreview={newChartPreview}
-              apiError={apiError}
-              onCancel={handleCancel}
-              onGenerate={handleGenerate}
-              onAbort={handleAbort}
-              onAdopt={handleAdopt}
-            />
-          </DialogPanel>
-        </div>
+        <MermaidAiPreviewPanel
+          svgStr={svgStr}
+          parsedPieData={currentParsedPieData || initialParsedPieData}
+          aiInstruction={aiInstruction}
+          isGenerating={isGenerating}
+          newChartPreview={newChartPreview}
+          apiError={apiError}
+          onCancel={handleCancel}
+          onGenerate={handleGenerate}
+          onAbort={handleAbort}
+          onAdopt={handleAdopt}
+        />
       </div>
-    </Dialog>
+    </div>
   );
 };
 

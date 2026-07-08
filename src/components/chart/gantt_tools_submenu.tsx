@@ -141,7 +141,7 @@ const TaskTypeRadioGroup: FC<{
 }> = ({ value, onChange, name, disabled = false }) => {
   const { t } = useTranslation();
   return (
-    <div>
+    <div className="flex flex-col">
       <label className={MERMAID_LABEL_STYLE}>
         {t("chart.mermaid.ai_editor.gantt.task_types.label")}
       </label>
@@ -246,7 +246,7 @@ const AddTaskPanel: FC<IBasePanelProps> = ({
         <p>{t("chart.mermaid.ai_editor.gantt.add_task")}</p>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <div>
+        <div className="flex flex-col">
           <label htmlFor="ganttSection" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.gantt.section")}
           </label>
@@ -259,7 +259,7 @@ const AddTaskPanel: FC<IBasePanelProps> = ({
             placeholder={t("chart.mermaid.ai_editor.gantt.section_placeholder")}
           />
         </div>
-        <div>
+        <div className="flex flex-col">
           <label htmlFor="ganttTaskLabel" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.gantt.task_name")}
             <span className="ml-0.5 text-red-500">*</span>
@@ -520,7 +520,7 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
               ))}
           </select>
         </div>
-        <div>
+        <div className="flex flex-col">
           <label htmlFor="ganttNewSection" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.gantt.change_section")}
           </label>
@@ -544,7 +544,7 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
             ))}
           </select>
         </div>
-        <div>
+        <div className="flex flex-col">
           <label htmlFor="ganttNewLabel" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.gantt.change_name")}
           </label>
@@ -729,7 +729,7 @@ const ChangeTaskTypePanel: FC<IBasePanelProps> = ({
         <Tag size={14} />
         <p>{t("chart.mermaid.ai_editor.gantt.change_type")}</p>
       </div>
-      <div>
+      <div className="flex flex-col">
         <label htmlFor="ganttTypeTarget" className={MERMAID_LABEL_STYLE}>
           {t("chart.mermaid.ai_editor.gantt.select_edit_target")}
           <span className="ml-0.5 text-red-500">*</span>
@@ -809,7 +809,7 @@ const SwapTaskPanel: FC<IBasePanelProps> = ({
         <Shuffle size={14} />
         <p>{t("chart.mermaid.ai_editor.gantt.swap_task")}</p>
       </div>
-      <div>
+      <div className="flex flex-col">
         <label htmlFor="ganttSwapTarget" className={MERMAID_LABEL_STYLE}>
           {t("chart.mermaid.ai_editor.gantt.swap_target_label")}
           <span className="ml-0.5 text-red-500">*</span>
@@ -831,7 +831,7 @@ const SwapTaskPanel: FC<IBasePanelProps> = ({
           ))}
         </select>
       </div>
-      <div>
+      <div className="flex flex-col">
         <label htmlFor="ganttSwapTarget2" className={MERMAID_LABEL_STYLE}>
           {t("chart.mermaid.ai_editor.gantt.swap_target_label")}
           <span className="ml-0.5 text-red-500">*</span>
@@ -897,7 +897,7 @@ const DeleteTaskPanel: FC<IBasePanelProps> = ({
         <Trash2 size={14} />
         <p>{t("chart.mermaid.ai_editor.gantt.delete_task")}</p>
       </div>
-      <div>
+      <div className="flex flex-col">
         <label htmlFor="ganttTaskTargetDel" className={MERMAID_LABEL_STYLE}>
           {t("chart.mermaid.ai_editor.gantt.delete_target_label")}
           <span className="ml-0.5 text-red-500">*</span>

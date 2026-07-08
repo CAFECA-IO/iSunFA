@@ -113,7 +113,7 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onAddAction }) => {
         <p>{t("chart.mermaid.ai_editor.flowchart.add_node_title")}</p>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <div>
+        <div className="flex flex-col">
           <label htmlFor="new-node-id" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.flowchart.node_id_label")}
           </label>
@@ -128,7 +128,7 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onAddAction }) => {
             }
           />
         </div>
-        <div>
+        <div className="flex flex-col">
           <label htmlFor="new-node-label" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.flowchart.node_name_label")}
             <span className="ml-0.5 text-red-500">*</span>
@@ -146,7 +146,7 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onAddAction }) => {
         </div>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <div>
+        <div className="flex flex-col">
           <label htmlFor="from-node-id" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.flowchart.from_label")}
           </label>
@@ -164,7 +164,7 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onAddAction }) => {
             ))}
           </select>
         </div>
-        <div>
+        <div className="flex flex-col">
           <label htmlFor="to-node-id" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.flowchart.to_label")}
           </label>
@@ -183,7 +183,7 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onAddAction }) => {
           </select>
         </div>
       </div>
-      <div>
+      <div className="flex flex-col">
         <label htmlFor="conn-text" className={MERMAID_LABEL_STYLE}>
           {t("chart.mermaid.ai_editor.flowchart.conn_text_label")}
         </label>
@@ -232,7 +232,7 @@ const EditNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onAddAction }) => {
         <Pencil size={14} />
         <p>{t("chart.mermaid.ai_editor.flowchart.edit_node_title")}</p>
       </div>
-      <div>
+      <div className="flex flex-col">
         <label htmlFor="target-node-id" className={MERMAID_LABEL_STYLE}>
           {t("chart.mermaid.ai_editor.flowchart.select_node_placeholder")}
           <span className="ml-0.5 text-red-500">*</span>
@@ -253,7 +253,7 @@ const EditNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onAddAction }) => {
           ))}
         </select>
       </div>
-      <div>
+      <div className="flex flex-col">
         <label htmlFor="new-node-text" className={MERMAID_LABEL_STYLE}>
           {t("chart.mermaid.ai_editor.flowchart.new_text_label")}
           <span className="ml-0.5 text-red-500">*</span>
@@ -314,7 +314,7 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
         <p>{t("chart.mermaid.ai_editor.flowchart.add_conn_title")}</p>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <div>
+        <div className="flex flex-col">
           <label htmlFor="connFromId" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.flowchart.select_from_placeholder")}
             <span className="ml-0.5 text-red-500">*</span>
@@ -335,7 +335,7 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
             ))}
           </select>
         </div>
-        <div>
+        <div className="flex flex-col">
           <label htmlFor="connToId" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.flowchart.select_to_placeholder")}
             <span className="ml-0.5 text-red-500">*</span>
@@ -358,7 +358,7 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
         </div>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <div>
+        <div className="flex flex-col">
           <label htmlFor="connType" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.flowchart.conn_type_label")}
           </label>
@@ -382,7 +382,7 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
             </option>
           </select>
         </div>
-        <div>
+        <div className="flex flex-col">
           <label htmlFor="connLabel" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.flowchart.conn_text_label")}
           </label>
@@ -431,7 +431,7 @@ const ChangeDirectionPanel: FC<IBasePanelProps> = ({ onAddAction }) => {
         <RefreshCcw size={14} />
         <p>{t("chart.mermaid.ai_editor.flowchart.change_dir_title")}</p>
       </div>
-      <div>
+      <div className="flex flex-col">
         <label htmlFor="flowDirection" className={MERMAID_LABEL_STYLE}>
           {t("chart.mermaid.ai_editor.flowchart.dir_label")}
         </label>

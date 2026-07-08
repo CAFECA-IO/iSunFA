@@ -79,7 +79,7 @@ const AddSlicePanel: FC<IBasePanelProps> = ({ onAddAction }) => {
         <p>{t("chart.mermaid.ai_editor.pie.add_slice_title")}</p>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <div>
+        <div className="flex flex-col">
           <label htmlFor="pieSliceLabel" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.pie.slice_name_label")}
             <span className="ml-0.5 text-red-500">*</span>
@@ -95,7 +95,7 @@ const AddSlicePanel: FC<IBasePanelProps> = ({ onAddAction }) => {
             }
           />
         </div>
-        <div>
+        <div className="flex flex-col">
           <label htmlFor="pieSliceValue" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.pie.slice_value_label")}
             <span className="ml-0.5 text-red-500">*</span>
@@ -157,7 +157,7 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
         <Slice size={14} />
         <p>{t("chart.mermaid.ai_editor.pie.edit_slice_title")}</p>
       </div>
-      <div>
+      <div className="flex flex-col">
         <label htmlFor="pieSliceTarget" className={MERMAID_LABEL_STYLE}>
           {t("chart.mermaid.ai_editor.pie.select_slice_placeholder")}
           <span className="ml-0.5 text-red-500">*</span>
@@ -179,7 +179,7 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
         </select>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <div>
+        <div className="flex flex-col">
           <label htmlFor="pieSliceNewLabel" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.pie.new_name_label")}
           </label>
@@ -192,7 +192,7 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
             placeholder={t("chart.mermaid.ai_editor.pie.new_name_placeholder")!}
           />
         </div>
-        <div>
+        <div className="flex flex-col">
           <label htmlFor="pieSliceValueEdit" className={MERMAID_LABEL_STYLE}>
             {t("chart.mermaid.ai_editor.pie.new_value_label")}
           </label>
@@ -246,7 +246,7 @@ const DeleteSlicePanel: FC<IBasePanelProps> = ({
         <Trash2 size={14} />
         <p>{t("chart.mermaid.ai_editor.pie.delete_slice_title")}</p>
       </div>
-      <div>
+      <div className="flex flex-col">
         <label htmlFor="pieSliceTargetDel" className={MERMAID_LABEL_STYLE}>
           {t("chart.mermaid.ai_editor.pie.select_delete_placeholder")}
           <span className="ml-0.5 text-red-500">*</span>

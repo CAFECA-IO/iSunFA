@@ -20,7 +20,7 @@ export const chart = {
       subtitle: "Mermaid AI Chart Assistant",
       instructions_title: "AI 指令编写说明",
       instructions_desc:
-        "使用下方小工具可自动产生指令，您也可以手动修改，例如：",
+        "您可以通过「常用工具」进行精准修改，或在此输入自然語言下達指令：",
       preview_compare: "图表变更预览对比 (Preview & Comparison)",
       before: "原始图表 (Before)",
       after: "修改后预览 (After)",
@@ -78,6 +78,11 @@ export const chart = {
         dir_bt: "由下至上 (BT / Bottom-to-Top)",
         dir_rl: "由右至左 (RL / Right-to-Left)",
         insert_instruction: "插入指令",
+        examples: [
+          "将「审核中」节点改为橘色并加粗",
+          "在「结案」后增加一个「归档」步骤",
+          "将图表整体改为绿色系",
+        ],
       },
       gantt: {
         add_task: "新增行程",
@@ -85,6 +90,11 @@ export const chart = {
         change_type: "变更行程类型",
         swap_task: "调整任务顺序",
         delete_task: "删除行程",
+        examples: [
+          "将所有研发任务延後两周",
+          "将「测试阶段」标注为关键路径 (crit)",
+          "新增一个名为「市场调研」的区块",
+        ],
         section: "行程群组",
         section_placeholder: "请填入行程群组",
         task_name: "行程名称",

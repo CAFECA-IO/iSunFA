@@ -20,7 +20,7 @@ export const chart = {
       subtitle: "Mermaid AI Chart Assistant",
       instructions_title: "AI 指令編寫說明",
       instructions_desc:
-        "使用下方小工具可自動產生指令，您也可以手動修改，例如：",
+        "您可以透過「常用工具」進行精準修改，或在此輸入自然語言下達指令：",
       preview_compare: "圖表變更預覽對比 (Preview & Comparison)",
       before: "原始圖表 (Before)",
       after: "修改後預覽 (After)",
@@ -78,6 +78,11 @@ export const chart = {
         dir_bt: "由下至上 (BT / Bottom-to-Top)",
         dir_rl: "由右至左 (RL / Right-to-Left)",
         insert_instruction: "插入指令",
+        examples: [
+          "將「審核中」節點改為橘色並加粗",
+          "在「結案」後增加一個「歸檔」步驟",
+          "將圖表整體改為綠色系",
+        ],
       },
       gantt: {
         add_task: "新增行程",
@@ -85,6 +90,11 @@ export const chart = {
         change_type: "變更行程類型",
         swap_task: "調整行程順序",
         delete_task: "刪除行程",
+        examples: [
+          "將所有研發任務延後兩週",
+          "將「測試階段」標註為關鍵路徑 (crit)",
+          "新增一個名為「市場調研」的區塊",
+        ],
         section: "行程群組",
         section_placeholder: "請填入行程群組",
         task_name: "行程名稱",
@@ -119,6 +129,11 @@ export const chart = {
         edit_slice: "變更標題/數值",
         change_color: "變更項目顏色",
         delete_slice: "刪除項目",
+        examples: [
+          "將「其他」項目的比例調整為 10%",
+          "將「人力成本」改為紅色強調",
+          "隱藏占比小於 5% 的項目",
+        ],
         add_slice_title: "新增圓餅圖項目",
         slice_name_label: "項目名稱",
         slice_name_placeholder: "例如: 運輸碳排",
