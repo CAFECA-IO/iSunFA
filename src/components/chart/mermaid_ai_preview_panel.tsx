@@ -2,11 +2,7 @@
 
 import { useEffect, useState, useMemo, FC } from "react";
 import mermaid from "mermaid";
-import {
-  DonutChart,
-  IDonutChartData,
-  DEFAULT_COLORS,
-} from "@/components/common/donut_chart";
+import { DonutChart, IDonutChartData } from "@/components/common/donut_chart";
 import {
   Columns2,
   Loader2,
@@ -19,9 +15,10 @@ import {
   Maximize,
   Move,
 } from "lucide-react";
-import { parsePieColors, parsePieData } from "@/lib/utils/mermaid_helpers";
+import { parsePieData, detectChartType } from "@/lib/utils/mermaid_helpers";
 import { useZoomPan } from "@/hooks/use_zoom_pan";
 import { useTranslation } from "@/i18n/i18n_context";
+import { MermaidChartType } from "@/constants/mermaid_chart";
 
 enum PreviewDirective {
   ROW = "ROW",
@@ -125,8 +122,8 @@ interface IMermaidAiPreviewPanelProps {
   apiError: string | null;
   onCancel: () => void;
   onGenerate: () => void;
+  onAbort: () => void;
   onAdopt: () => void;
-  currentChart: string;
 }
 
 const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
@@ -138,8 +135,8 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
   apiError,
   onCancel,
   onGenerate,
+  onAbort,
   onAdopt,
-  currentChart,
 }) => {
   const { t } = useTranslation();
   const [previewDirective, setPreviewDirective] = useState<PreviewDirective>(
@@ -168,9 +165,27 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
     let isCurrent = true;
 
     const renderPreview = async () => {
+      const trimmed = newChartPreview.trim();
+      if (!trimmed) {
+        if (isCurrent) {
+          setPreviewSvgStr("");
+          setPreviewHasError(false);
+        }
+        return;
+      }
+
+      // Info: (20260708 - Julian) 檢查是否具備 Mermaid 定義頭部
+      const type = detectChartType(trimmed);
+      if (type === MermaidChartType.UNKNOWN) {
+        if (isCurrent) {
+          setPreviewHasError(true);
+        }
+        return;
+      }
+
       try {
         const id = `mermaid-preview-${Math.random().toString(36).substring(2, 9)}`;
-        const { svg } = await mermaid.render(id, newChartPreview);
+        const { svg } = await mermaid.render(id, trimmed);
         if (isCurrent) {
           setPreviewSvgStr(svg);
           setPreviewHasError(false);
@@ -188,6 +203,29 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
       isCurrent = false;
     };
   }, [newChartPreview, previewPieData]);
+
+  const generateButton = isGenerating ? (
+    // Info: (20260708 - Julian) 停止生成按鈕
+    <button
+      type="button"
+      onClick={onAbort}
+      className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-rose-100 bg-rose-50 px-5 py-2 text-xs font-bold text-rose-600 shadow-sm transition-all hover:bg-rose-100"
+    >
+      <CircleX size={14} />
+      {t("chart.mermaid.ai_editor.stop_generating")}
+    </button>
+  ) : (
+    // Info: (20260708 - Julian) 產生新圖表按鈕
+    <button
+      type="button"
+      onClick={onGenerate}
+      disabled={!isGenerating && !aiInstruction.trim()}
+      className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
+    >
+      <Sparkles size={14} />
+      {t("chart.mermaid.ai_editor.generate")}
+    </button>
+  );
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-slate-100 md:w-3/5">
@@ -238,7 +276,6 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
               <DonutChart
                 title={parsedPieData.title}
                 data={parsedPieData.data}
-                colors={parsePieColors(currentChart, DEFAULT_COLORS)}
               />
             ) : (
               <ZoomableSvgContainer svgContent={svgStr} />
@@ -275,7 +312,6 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
                 <DonutChart
                   title={previewPieData.title}
                   data={previewPieData.data}
-                  colors={parsePieColors(newChartPreview, DEFAULT_COLORS)}
                 />
               ) : previewHasError ? (
                 <div className="p-4 text-center">
@@ -309,30 +345,14 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
       <div className="flex shrink-0 items-center justify-end gap-2 border-t border-slate-200 bg-white px-5 py-4">
         <button
           type="button"
+          disabled={isGenerating}
           onClick={onCancel}
-          className="cursor-pointer rounded-xl px-4 py-2 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-100"
+          className="enable:hover:bg-slate-100 cursor-pointer rounded-xl px-4 py-2 text-xs font-bold text-slate-600 transition-colors disabled:text-slate-400"
         >
           {t("chart.mermaid.ai_editor.cancel")}
         </button>
 
-        <button
-          type="button"
-          onClick={onGenerate}
-          disabled={!aiInstruction.trim() || isGenerating}
-          className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
-        >
-          {isGenerating ? (
-            <>
-              <Loader2 size={14} className="animate-spin" />
-              {t("chart.mermaid.ai_editor.generating_btn")}
-            </>
-          ) : (
-            <>
-              <Sparkles size={14} />
-              {t("chart.mermaid.ai_editor.generate")}
-            </>
-          )}
-        </button>
+        {generateButton}
 
         {newChartPreview && !previewHasError && (
           <button

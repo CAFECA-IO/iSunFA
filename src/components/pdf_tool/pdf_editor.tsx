@@ -515,7 +515,7 @@ export default function PdfEditor({ setErrorModal }: IPdfEditorProps) {
                       {t("admin_mission_board.pdf_editor.brand")!}
                     </span>
                   </div>
-                  <span className="inline-flex items-center rounded-full bg-[#3b82f6]/10 px-3 py-1 text-xs font-medium text-[#60a5fa] ring-1 ring-[#60a5fa]/30 ring-inset">
+                  <span className="inline-flex items-center rounded-full bg-[#3b82f6]/10 px-3 py-1 text-center text-xs font-medium text-[#60a5fa] ring-1 ring-[#60a5fa]/30 ring-inset">
                     {t("admin_mission_board.pdf_editor.internal_document")!}
                   </span>
                 </div>
