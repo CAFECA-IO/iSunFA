@@ -7,19 +7,16 @@ import {
   FilePlus,
   GitCommitHorizontal,
   GitCommitVertical,
-  //   SquarePen,
-  //   Trash2,
-  //   Tag,
+  Trash2,
   LucideIcon,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import {
-  // IGanttItem,
   IXYChartData,
   IChartAction,
   MermaidActionType,
-  // GanttItemType,
-  // GanttTaskStatus,
+  XYChartDataType,
+  XYChartAxisType,
 } from "@/lib/utils/mermaid_helpers";
 import {
   MERMAID_INPUT_STYLE,
@@ -38,6 +35,7 @@ export enum XYChartTools {
   CHANGE_Y_AXIS_VALUES = "changeYAxisValues",
   CHANGE_LINE_VALUES = "changeLineValues",
   CHANGE_BAR_VALUES = "changeBarValues",
+  DELETE_SERIES = "deleteSeries",
 }
 
 interface IToolItem {
@@ -66,7 +64,13 @@ const XY_CHART_TOOLS: IToolItem[] = [
     tool: XYChartTools.CHANGE_Y_AXIS_VALUES,
     icon: GitCommitVertical,
   },
+  {
+    tool: XYChartTools.DELETE_SERIES,
+    icon: Trash2,
+  },
 ];
+
+// ToDo: (20260710 - Julian) 補上翻譯檔
 
 const XY_CHART_TOOL_TRANSLATION_KEYS: Record<XYChartTools, string> = {
   [XYChartTools.ADD_SERIES]: "新增數列",
@@ -74,16 +78,8 @@ const XY_CHART_TOOL_TRANSLATION_KEYS: Record<XYChartTools, string> = {
   [XYChartTools.CHANGE_Y_AXIS_VALUES]: "變更 Y 軸",
   [XYChartTools.CHANGE_LINE_VALUES]: "變更折線圖",
   [XYChartTools.CHANGE_BAR_VALUES]: "變更長條圖",
+  [XYChartTools.DELETE_SERIES]: "刪除數列",
 };
-
-// ==========================================
-// Info: (20260709 - Julian) 定義 UI 所使用的列舉
-// ==========================================
-
-enum AxisType {
-  NUMERIC = "numeric",
-  CATEGORY = "category",
-}
 
 // ==========================================
 // Info: (20260707 - Julian) 將每個工具拆分成子元件(sub-panel)
@@ -98,53 +94,32 @@ interface IBasePanelProps {
 // Info: (20260707 - Julian) 內部通用小型組件
 // ==========================================
 
-// Info: (20260710 - Julian) 「新增數列」面板
-const AddSeriesPanel: FC<IBasePanelProps> = ({
-  parsedXYChartData,
-  onAddAction,
-}) => {
+// Info: (20260709 - Julian) 「新增數列」面板
+const AddSeriesPanel: FC<IBasePanelProps> = ({ onAddAction }) => {
   const { t } = useTranslation();
-  const { xAxis } = parsedXYChartData;
 
-  const [xAxisTitle, setXAxisTitle] = useState<string>(xAxis.title || "");
-  const [xAxisType, setXAxisType] = useState<AxisType>(
-    xAxis.categories ? AxisType.CATEGORY : AxisType.NUMERIC,
+  const [dataType, setDataType] = useState<XYChartDataType>(
+    XYChartDataType.BAR,
   );
-  const [xAxisCategories, setXAxisCategories] = useState<string>(
-    xAxis.categories ? xAxis.categories.join(", ") : "",
-  );
-  const [minInput, setMinInput] = useState<string>(
-    xAxis.min !== undefined ? String(xAxis.min) : "",
-  );
-  const [maxInput, setMaxInput] = useState<string>(
-    xAxis.max !== undefined ? String(xAxis.max) : "",
-  );
+  const [nameInput, setNameInput] = useState<string>("");
+  const [series, setSeries] = useState<string>("");
 
   const handleSubmit = () => {
-    const isCategory = xAxisType === AxisType.CATEGORY;
-    const payload: {
-      title?: string;
-      categories?: string[];
-      min?: number;
-      max?: number;
-    } = {};
-
-    if (isCategory) {
-      payload.categories = xAxisCategories
-        .split(",")
-        .map((c) => c.trim())
-        .filter(Boolean);
-    } else {
-      payload.title = xAxisTitle || undefined;
-      payload.min = minInput !== "" ? Number(minInput) : undefined;
-      payload.max = maxInput !== "" ? Number(maxInput) : undefined;
-    }
+    // Info: (20260709 - Julian) 拆解字串，轉成數字，過濾 NaN
+    const data = series
+      .split(",")
+      .map((v) => parseFloat(v.trim()))
+      .filter((n) => !isNaN(n));
 
     onAddAction({
       id: crypto.randomUUID(),
-      type: MermaidActionType.XYCHART_CHANGE_X_AXIS,
-      description: `變更 X 軸設定`,
-      payload,
+      type: MermaidActionType.XYCHART_ADD_SERIES,
+      description: `新增 ${dataType} 數列`,
+      payload: {
+        type: dataType,
+        seriesName: nameInput,
+        data,
+      },
     });
   };
 
@@ -152,90 +127,59 @@ const AddSeriesPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <FilePlus size={14} />
-        <p>{t("變更 X 軸")}</p>
-      </div>
-
-      <div className="flex flex-col">
-        <label htmlFor="xAxisTitle" className={MERMAID_LABEL_STYLE}>
-          {t("X 軸標題")}
-        </label>
-        <input
-          id="xAxisTitle"
-          type="text"
-          value={xAxisTitle}
-          onChange={(e) => setXAxisTitle(e.target.value)}
-          className={MERMAID_INPUT_STYLE}
-          placeholder="e.g. 時間"
-        />
+        <p>{t("新增數列")}</p>
       </div>
 
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <label className={MERMAID_LABEL_STYLE}>{t("X 軸類型")}</label>
+          <label className={MERMAID_LABEL_STYLE}>{t("數列類型")}</label>
           <SegmentedControl
-            value={xAxisType}
-            onChange={(val) => setXAxisType(val as AxisType)}
+            value={dataType}
+            onChange={(val) => setDataType(val as XYChartDataType)}
             options={[
-              { label: t("分類 (Category)"), value: AxisType.CATEGORY },
-              { label: t("數值區間 (Numeric)"), value: AxisType.NUMERIC },
+              { label: t("長條圖"), value: XYChartDataType.BAR },
+              { label: t("折線圖"), value: XYChartDataType.LINE },
             ]}
           />
         </div>
+      </div>
 
-        {xAxisType === AxisType.CATEGORY ? (
-          <div className="flex flex-col">
-            <label htmlFor="xAxisCategories" className={MERMAID_LABEL_STYLE}>
-              {t("分類項目 (以逗號分隔)")}
-              <span className="ml-0.5 text-red-500">*</span>
-            </label>
-            <input
-              id="xAxisCategories"
-              type="text"
-              value={xAxisCategories}
-              onChange={(e) => setXAxisCategories(e.target.value)}
-              className={MERMAID_INPUT_STYLE}
-              placeholder="e.g. 1月, 2月, 3月"
-            />
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col">
-              <label htmlFor="xAxisMin" className={MERMAID_LABEL_STYLE}>
-                {t("最小值")}
-              </label>
-              <input
-                id="xAxisMin"
-                type="number"
-                value={minInput}
-                onChange={(e) => setMinInput(e.target.value)}
-                className={MERMAID_INPUT_STYLE}
-                placeholder="0"
-              />
-            </div>
-            <div className="flex flex-col">
-              <label htmlFor="xAxisMax" className={MERMAID_LABEL_STYLE}>
-                {t("最大值")}
-              </label>
-              <input
-                id="xAxisMax"
-                type="number"
-                value={maxInput}
-                onChange={(e) => setMaxInput(e.target.value)}
-                className={MERMAID_INPUT_STYLE}
-                placeholder="100"
-              />
-            </div>
-          </div>
-        )}
+      <div className="flex flex-col gap-2">
+        <label htmlFor="addSeriesNameInput" className={MERMAID_LABEL_STYLE}>
+          {t("數列名稱")}
+        </label>
+        <input
+          id="addSeriesNameInput"
+          type="text"
+          className={MERMAID_INPUT_STYLE}
+          value={nameInput}
+          placeholder={t("請輸入數列名稱，例如：數列 A...也可省略")}
+          onChange={(e) => setNameInput(e.target.value)}
+        />
+      </div>
+
+      <div className="flex flex-col">
+        <label htmlFor="seriesValuesInput" className={MERMAID_LABEL_STYLE}>
+          {t("數列 (以逗號分隔)")}
+          <span className="ml-0.5 text-red-500">*</span>
+        </label>
+        <input
+          id="seriesValuesInput"
+          type="text"
+          value={series}
+          onChange={(e) => setSeries(e.target.value)}
+          className={MERMAID_INPUT_STYLE}
+          placeholder="e.g. 10, 20, 30"
+        />
       </div>
 
       <button
         type="button"
         onClick={handleSubmit}
-        disabled={xAxisType === AxisType.CATEGORY && !xAxisCategories.trim()}
+        disabled={!series.trim()}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t("套用變更")}
+        {t("新增數列")}
       </button>
     </div>
   );
@@ -250,8 +194,8 @@ const EditXAxisPanel: FC<IBasePanelProps> = ({
   const { xAxis } = parsedXYChartData;
 
   const [xAxisTitle, setXAxisTitle] = useState<string>(xAxis.title || "");
-  const [xAxisType, setXAxisType] = useState<AxisType>(
-    xAxis.categories ? AxisType.CATEGORY : AxisType.NUMERIC,
+  const [xAxisType, setXAxisType] = useState<XYChartAxisType>(
+    xAxis.categories ? XYChartAxisType.CATEGORY : XYChartAxisType.NUMERIC,
   );
   const [xAxisCategories, setXAxisCategories] = useState<string>(
     xAxis.categories ? xAxis.categories.join(", ") : "",
@@ -263,8 +207,12 @@ const EditXAxisPanel: FC<IBasePanelProps> = ({
     xAxis.max !== undefined ? String(xAxis.max) : "",
   );
 
+  const isSubmitDisable =
+    (xAxisType === XYChartAxisType.CATEGORY && !xAxisCategories.trim()) ||
+    (xAxisType === XYChartAxisType.NUMERIC && !minInput && !maxInput);
+
   const handleSubmit = () => {
-    const isCategory = xAxisType === AxisType.CATEGORY;
+    const isCategory = xAxisType === XYChartAxisType.CATEGORY;
     const payload: {
       title?: string;
       categories?: string[];
@@ -317,15 +265,18 @@ const EditXAxisPanel: FC<IBasePanelProps> = ({
           <label className={MERMAID_LABEL_STYLE}>{t("X 軸類型")}</label>
           <SegmentedControl
             value={xAxisType}
-            onChange={(val) => setXAxisType(val as AxisType)}
+            onChange={(val) => setXAxisType(val as XYChartAxisType)}
             options={[
-              { label: t("分類 (Category)"), value: AxisType.CATEGORY },
-              { label: t("數值區間 (Numeric)"), value: AxisType.NUMERIC },
+              { label: t("分類 (Category)"), value: XYChartAxisType.CATEGORY },
+              {
+                label: t("數值區間 (Numeric)"),
+                value: XYChartAxisType.NUMERIC,
+              },
             ]}
           />
         </div>
 
-        {xAxisType === AxisType.CATEGORY ? (
+        {xAxisType === XYChartAxisType.CATEGORY ? (
           <div className="flex flex-col">
             <label htmlFor="xAxisCategories" className={MERMAID_LABEL_STYLE}>
               {t("分類項目 (以逗號分隔)")}
@@ -375,7 +326,7 @@ const EditXAxisPanel: FC<IBasePanelProps> = ({
       <button
         type="button"
         onClick={handleSubmit}
-        disabled={xAxisType === AxisType.CATEGORY && !xAxisCategories.trim()}
+        disabled={isSubmitDisable}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
         {t("套用變更")}
@@ -399,6 +350,8 @@ const EditYAxisPanel: FC<IBasePanelProps> = ({
   const [maxInput, setMaxInput] = useState<string>(
     yAxis.max !== undefined ? String(yAxis.max) : "",
   );
+
+  const isSubmitDisable = !minInput && !maxInput;
 
   const handleSubmit = () => {
     onAddAction({
@@ -467,6 +420,7 @@ const EditYAxisPanel: FC<IBasePanelProps> = ({
       <button
         type="button"
         onClick={handleSubmit}
+        disabled={isSubmitDisable}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
         {t("套用變更")}
@@ -482,11 +436,21 @@ const EditLinePanel: FC<IBasePanelProps> = ({
 }) => {
   const { t } = useTranslation();
   const categories = parsedXYChartData.xAxis.categories || [];
-  const lineSeries = parsedXYChartData.series.filter((s) => s.type === "line");
+  const lineSeries = parsedXYChartData.series.filter(
+    (s) => s.type === XYChartDataType.LINE,
+  );
 
   const [targetIndex, setTargetIndex] = useState<number>(0);
+  const [nameInput, setNameInput] = useState<string>(
+    lineSeries[targetIndex].seriesName,
+  );
+  const [dataType, setDataType] = useState<XYChartDataType>(
+    XYChartDataType.LINE,
+  );
   const [categoryValues, setCategoryValues] = useState<string[]>([]);
   const [rawValues, setRawValues] = useState<string>("");
+
+  const isSubmitDisabled = !rawValues || rawValues.length == 0;
 
   useEffect(() => {
     const selectedSeries = lineSeries[targetIndex];
@@ -525,7 +489,9 @@ const EditLinePanel: FC<IBasePanelProps> = ({
       description: `變更折線圖數值 (數列 #${targetIndex + 1})`,
       payload: {
         seriesIndex: targetIndex,
+        type: dataType,
         data,
+        seriesName: nameInput,
       },
     });
   };
@@ -553,6 +519,34 @@ const EditLinePanel: FC<IBasePanelProps> = ({
         <p>{t("變更折線圖")}</p>
       </div>
 
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <label className={MERMAID_LABEL_STYLE}>{t("數列類型")}</label>
+          <SegmentedControl
+            value={dataType}
+            onChange={(val) => setDataType(val as XYChartDataType)}
+            options={[
+              { label: t("長條圖"), value: XYChartDataType.BAR },
+              { label: t("折線圖"), value: XYChartDataType.LINE },
+            ]}
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <label htmlFor="lineNameInput" className={MERMAID_LABEL_STYLE}>
+          {t("數列名稱")}
+        </label>
+        <input
+          id="lineNameInput"
+          type="text"
+          className={MERMAID_INPUT_STYLE}
+          value={nameInput}
+          placeholder={t("請輸入數列名稱，例如：數列 A...也可省略")}
+          onChange={(e) => setNameInput(e.target.value)}
+        />
+      </div>
+
       <div className="flex flex-col gap-4">
         {lineSeries.length > 1 && (
           <div className="flex flex-col">
@@ -565,9 +559,9 @@ const EditLinePanel: FC<IBasePanelProps> = ({
               onChange={(e) => setTargetIndex(Number(e.target.value))}
               className={MERMAID_INPUT_STYLE}
             >
-              {lineSeries.map((_, idx) => (
-                <option key={`line-opt-${idx}`} value={idx}>
-                  {`折線圖數列 #${idx + 1}`}
+              {lineSeries.map((s) => (
+                <option key={`line-opt-${s.lineIndex}`} value={s.lineIndex}>
+                  {`折線圖數列 #${s.lineIndex}`}
                 </option>
               ))}
             </select>
@@ -619,6 +613,7 @@ const EditLinePanel: FC<IBasePanelProps> = ({
       <button
         type="button"
         onClick={handleSubmit}
+        disabled={isSubmitDisabled}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
         {t("套用變更")}
@@ -634,9 +629,17 @@ const EditBarPanel: FC<IBasePanelProps> = ({
 }) => {
   const { t } = useTranslation();
   const categories = parsedXYChartData.xAxis.categories || [];
-  const barSeries = parsedXYChartData.series.filter((s) => s.type === "bar");
+  const barSeries = parsedXYChartData.series.filter(
+    (s) => s.type === XYChartDataType.BAR,
+  );
 
   const [targetIndex, setTargetIndex] = useState<number>(0);
+  const [nameInput, setNameInput] = useState<string>(
+    barSeries[targetIndex].seriesName,
+  );
+  const [dataType, setDataType] = useState<XYChartDataType>(
+    XYChartDataType.BAR,
+  );
   const [categoryValues, setCategoryValues] = useState<string[]>([]);
   const [rawValues, setRawValues] = useState<string>("");
 
@@ -677,7 +680,9 @@ const EditBarPanel: FC<IBasePanelProps> = ({
       description: `變更長條圖數值 (數列 #${targetIndex + 1})`,
       payload: {
         seriesIndex: targetIndex,
+        type: dataType,
         data,
+        seriesName: nameInput,
       },
     });
   };
@@ -706,6 +711,34 @@ const EditBarPanel: FC<IBasePanelProps> = ({
       </div>
 
       <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <label className={MERMAID_LABEL_STYLE}>{t("數列類型")}</label>
+          <SegmentedControl
+            value={dataType}
+            onChange={(val) => setDataType(val as XYChartDataType)}
+            options={[
+              { label: t("長條圖"), value: XYChartDataType.BAR },
+              { label: t("折線圖"), value: XYChartDataType.LINE },
+            ]}
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <label htmlFor="barNameInput" className={MERMAID_LABEL_STYLE}>
+          {t("數列名稱")}
+        </label>
+        <input
+          id="barNameInput"
+          type="text"
+          className={MERMAID_INPUT_STYLE}
+          value={nameInput}
+          placeholder={t("請輸入數列名稱，例如：數列 A...也可省略")}
+          onChange={(e) => setNameInput(e.target.value)}
+        />
+      </div>
+
+      <div className="flex flex-col gap-4">
         {barSeries.length > 1 && (
           <div className="flex flex-col">
             <label htmlFor="barTarget" className={MERMAID_LABEL_STYLE}>
@@ -717,9 +750,9 @@ const EditBarPanel: FC<IBasePanelProps> = ({
               onChange={(e) => setTargetIndex(Number(e.target.value))}
               className={MERMAID_INPUT_STYLE}
             >
-              {barSeries.map((_, idx) => (
-                <option key={`bar-opt-${idx}`} value={idx}>
-                  {`長條圖數列 #${idx + 1}`}
+              {barSeries.map((s) => (
+                <option key={`bar-opt-${s.lineIndex}`} value={s.lineIndex}>
+                  {`長條圖數列 #${s.lineIndex + 1}`}
                 </option>
               ))}
             </select>
@@ -779,6 +812,71 @@ const EditBarPanel: FC<IBasePanelProps> = ({
   );
 };
 
+// Info: (20260709 - Julian) 「刪除數列」面板
+const DeleteSeriesPanel: FC<IBasePanelProps> = ({
+  parsedXYChartData,
+  onAddAction,
+}) => {
+  const { t } = useTranslation();
+
+  const { series } = parsedXYChartData;
+  const seriesIds = series.map((s) => s.lineIndex);
+
+  const [selectedSeries, setSelectedSeries] = useState<number>(seriesIds[0]);
+
+  const handleSubmit = () => {
+    const payload: { seriesIndex: number } = { seriesIndex: selectedSeries };
+    onAddAction({
+      id: crypto.randomUUID(),
+      type: MermaidActionType.XYCHART_DELETE_SERIES,
+      description: `刪除數列 #${selectedSeries}`,
+      payload,
+    });
+  };
+
+  const seriesOptions = series.map((s, idx) => {
+    const dataType =
+      s.type === XYChartDataType.LINE ? t("折線圖數列") : t("長條圖數列");
+    return (
+      <option key={idx} value={s.lineIndex}>
+        {`${dataType} #${s.lineIndex} (${s.data})`}
+      </option>
+    );
+  });
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
+        <FilePlus size={14} />
+        <p>{t("刪除數列")}</p>
+      </div>
+
+      <div className="flex flex-col">
+        <label htmlFor="seriesSelect" className={MERMAID_LABEL_STYLE}>
+          {t("選擇要刪除的數列")}
+          <span className="ml-0.5 text-red-500">*</span>
+        </label>
+        <select
+          id="seriesSelect"
+          value={selectedSeries}
+          onChange={(e) => setSelectedSeries(Number(e.target.value))}
+          className={MERMAID_INPUT_STYLE}
+        >
+          {seriesOptions}
+        </select>
+      </div>
+
+      <button
+        type="button"
+        onClick={handleSubmit}
+        className={MERMAID_SUBMIT_BUTTON_STYLE}
+      >
+        {t("刪除數列")}
+      </button>
+    </div>
+  );
+};
+
 // ==========================================
 // Info: (20260707 - Julian) 工具面板元件映射表
 // ==========================================
@@ -789,6 +887,7 @@ const XY_CHART_TOOL_PANELS: Record<XYChartTools, FC<IBasePanelProps>> = {
   [XYChartTools.CHANGE_Y_AXIS_VALUES]: EditYAxisPanel,
   [XYChartTools.CHANGE_BAR_VALUES]: EditBarPanel,
   [XYChartTools.CHANGE_LINE_VALUES]: EditLinePanel,
+  [XYChartTools.DELETE_SERIES]: DeleteSeriesPanel,
 };
 
 // ==========================================

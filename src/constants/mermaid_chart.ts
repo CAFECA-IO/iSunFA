@@ -14,7 +14,7 @@ export enum MermaidChartType {
 
 // Info: (20260707 - Julian) Input 與 Select 樣式 (包含 Focus 與 Disabled 狀態)
 export const MERMAID_INPUT_STYLE =
-  "w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400";
+  "w-full rounded-lg border border-slate-200 bg-slate-50/50 px-2 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 placeholder:text-slate-300";
 
 // Info: (20260707 - Julian) Label 樣式
 export const MERMAID_LABEL_STYLE = "text-[10px] font-bold text-slate-500";

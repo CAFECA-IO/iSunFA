@@ -19,6 +19,22 @@ export enum GanttTaskStatus {
 }
 
 /**
+ * Info: (20260709 - Julian) XY 圖表資料類型
+ */
+export enum XYChartDataType {
+  BAR = "bar",
+  LINE = "line",
+}
+
+/**
+ * Info: (20260709 - Julian) XY 圖表軸類型
+ */
+export enum XYChartAxisType {
+  NUMERIC = "numeric",
+  CATEGORY = "category",
+}
+
+/**
  * Info: (20260708 - Julian) Mermaid 結構化指令類型列舉
  */
 export enum MermaidActionType {
@@ -34,10 +50,12 @@ export enum MermaidActionType {
   FLOWCHART_EDIT_NODE = "FLOWCHART_EDIT_NODE",
   FLOWCHART_ADD_CONNECTION = "FLOWCHART_ADD_CONNECTION",
   FLOWCHART_CHANGE_DIRECTION = "FLOWCHART_CHANGE_DIRECTION",
+  XYCHART_ADD_SERIES = "XYCHART_ADD_SERIES",
   XYCHART_CHANGE_X_AXIS = "XYCHART_CHANGE_X_AXIS",
   XYCHART_CHANGE_Y_AXIS = "XYCHART_CHANGE_Y_AXIS",
   XYCHART_CHANGE_LINE_SERIES = "XYCHART_CHANGE_LINE_SERIES",
   XYCHART_CHANGE_BAR_SERIES = "XYCHART_CHANGE_BAR_SERIES",
+  XYCHART_DELETE_SERIES = "XYCHART_DELETE_SERIES",
 }
 
 /**
@@ -50,6 +68,14 @@ export type IChartAction = {
   | {
       type: MermaidActionType.CHANGE_TITLE;
       payload: { title: string };
+    }
+  | {
+      type: MermaidActionType.XYCHART_ADD_SERIES;
+      payload: {
+        seriesName: string;
+        type: XYChartDataType;
+        data: number[];
+      };
     }
   | {
       type: MermaidActionType.XYCHART_CHANGE_X_AXIS;
@@ -71,15 +97,25 @@ export type IChartAction = {
   | {
       type: MermaidActionType.XYCHART_CHANGE_LINE_SERIES;
       payload: {
+        seriesName: string;
         seriesIndex: number;
+        type: XYChartDataType;
         data: number[];
       };
     }
   | {
       type: MermaidActionType.XYCHART_CHANGE_BAR_SERIES;
       payload: {
+        seriesName: string;
         seriesIndex: number;
+        type: XYChartDataType;
         data: number[];
+      };
+    }
+  | {
+      type: MermaidActionType.XYCHART_DELETE_SERIES;
+      payload: {
+        seriesIndex: number;
       };
     }
   | {
@@ -176,7 +212,8 @@ export interface IGanttItem {
  * Info: (20260709 - Julian) XY 圖表數列介面
  */
 export interface IXYChartSeries {
-  type: "bar" | "line";
+  type: XYChartDataType;
+  seriesName: string;
   data: number[];
   lineIndex: number;
 }
@@ -838,12 +875,20 @@ const parseBracketArray = (str: string): string[] => {
 
 /**
  * Info: (20260709 - Julian)
- * 解析 [1, 2.5, 3] 形式的數字數列
+ * 解析 series 名稱與數值 array
  */
-const parseNumberArray = (str: string): number[] => {
-  return parseBracketArray(str)
-    .map((v) => parseFloat(v))
-    .filter((n) => !isNaN(n));
+const parseXYChartSeries = (
+  str: string,
+): { seriesName: string; data: number[] } => {
+  const titleMatch = str.match(/^"([^"]+)"/);
+
+  const series = {
+    seriesName: titleMatch ? titleMatch[1] : "",
+    data: parseBracketArray(str)
+      .map((v) => parseFloat(v))
+      .filter((n) => !isNaN(n)),
+  };
+  return series;
 };
 
 /**
@@ -906,17 +951,17 @@ export const parseXYChartData = (chartStr: string): IXYChartData | null => {
     } else if (/^y-axis\s+/i.test(clean)) {
       yAxis = parseAxisLine(clean, false);
     } else if (/^bar\s+/i.test(clean)) {
-      const data = parseNumberArray(clean);
+      const data = parseXYChartSeries(clean);
       series.push({
-        type: "bar",
-        data,
+        ...data,
+        type: XYChartDataType.BAR,
         lineIndex: index,
       });
     } else if (/^line\s+/i.test(clean)) {
-      const data = parseNumberArray(clean);
+      const data = parseXYChartSeries(clean);
       series.push({
-        type: "line",
-        data,
+        ...data,
+        type: XYChartDataType.LINE,
         lineIndex: index,
       });
     }
@@ -940,6 +985,17 @@ export const applyXYChartAction = (
   const lines = chartStr.split("\n");
 
   switch (action.type) {
+    case MermaidActionType.XYCHART_ADD_SERIES: {
+      const { type, data, seriesName } = action.payload;
+
+      const seriesNameStr = seriesName ? `"${seriesName}" ` : "";
+
+      const newLine = `    ${type} ${seriesNameStr}[${data.join(", ")}]`;
+      // Info: (20260709 - Julian) 插入到最後面，避免影響原本的語法
+      lines.push(newLine);
+      return lines.join("\n");
+    }
+
     case MermaidActionType.XYCHART_CHANGE_X_AXIS: {
       const { title, categories, min, max } = action.payload;
       const index = lines.findIndex((l) => /^\s*x-axis\s+/i.test(l));
@@ -949,7 +1005,8 @@ export const applyXYChartAction = (
       if (categories && categories.length > 0) {
         const formattedCats = categories.map((cat) => {
           const trimmed = cat.trim();
-          return trimmed.includes(" ") ? `"${trimmed}"` : trimmed;
+          const trimmedNum = Number(trimmed);
+          return isNaN(trimmedNum) ? `"${trimmed}"` : trimmedNum;
         });
         newLine = `    x-axis [${formattedCats.join(", ")}]`;
       } else if (min !== undefined && max !== undefined) {
@@ -1021,7 +1078,7 @@ export const applyXYChartAction = (
     case MermaidActionType.XYCHART_CHANGE_BAR_SERIES: {
       const isLine =
         action.type === MermaidActionType.XYCHART_CHANGE_LINE_SERIES;
-      const { seriesIndex, data } = action.payload;
+      const { seriesIndex, data, type, seriesName } = action.payload;
       const targetRegex = isLine ? /^\s*line\s+/i : /^\s*bar\s+/i;
 
       const seriesIndices: number[] = [];
@@ -1031,13 +1088,25 @@ export const applyXYChartAction = (
         }
       });
 
-      const newLine = `    ${isLine ? "line" : "bar"} [${data.join(", ")}]`;
+      const seriesNameStr = seriesName ? `"${seriesName}" ` : "";
+      const newLine = `    ${type} ${seriesNameStr}[${data.join(", ")}]`;
 
       if (seriesIndex < seriesIndices.length) {
         const lineIdx = seriesIndices[seriesIndex];
         lines[lineIdx] = newLine;
       } else {
         lines.push(newLine);
+      }
+      break;
+    }
+
+    case MermaidActionType.XYCHART_DELETE_SERIES: {
+      const { seriesIndex } = action.payload;
+      const index = lines.findIndex((l) =>
+        l.trim().includes(`"${seriesIndex}"`),
+      );
+      if (index !== -1) {
+        lines.splice(index, 1);
       }
       break;
     }
