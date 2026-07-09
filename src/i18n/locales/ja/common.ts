@@ -129,4 +129,5 @@ export const common = {
   all_solutions: "すべてのソリューション",
   all_status: "すべてのステータス",
   reset: "リセット",
+  system_admin: "システム管理者",
 };

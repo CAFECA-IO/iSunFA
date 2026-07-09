@@ -95,6 +95,40 @@ export class ChatService {
     return skill.execute(message, tags, file, mimeType, this);
   }
 
+  /**
+   * Info: (20260708 - Tzuhan) Carbon Chatbot Framework
+   * Dedicated method to handle Carbon Accountant persona conversation
+   */
+  async generateCarbonChatbotResponse(
+    history: { role: "user" | "model"; text: string }[],
+    currentStep?: string,
+    language?: string,
+  ): Promise<string> {
+    const langInstruction = language ? `\\n請務必使用 ${language} 回覆。` : "";
+    const systemInstruction = `你是一個專業的碳會計師 (Carbon Accountant)。你的任務是引導用戶進行溫室氣體盤查。請一步步問問題，引導用戶回答，並在適當的時機請用戶上傳相關資料（如BOM表、能源帳單等）。請保持專業、友善，且每次對話只問一個核心問題以免用戶混淆。${currentStep ? `\\n當前盤查流程節點：【${currentStep}】。請根據此階段的目標來引導對話。` : ""}${langInstruction}`;
+
+    const model = this.genAI.getGenerativeModel({
+      model: this.modelName,
+      systemInstruction: systemInstruction,
+    });
+
+    const contents = history.map((msg) => ({
+      role: msg.role,
+      parts: [{ text: msg.text }],
+    }));
+
+    try {
+      const response = await model.generateContent({ contents });
+      return response.response.text();
+    } catch (error) {
+      console.error(
+        "[ChatService] generateCarbonChatbotResponse error:",
+        error,
+      );
+      throw error;
+    }
+  }
+
   async generateRawWithImages(
     prompt: string,
     images?: { data: string; mimeType: string }[],
