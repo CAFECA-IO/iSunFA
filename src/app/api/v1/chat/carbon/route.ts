@@ -7,7 +7,8 @@ import { ChatService } from "@/services/chat.service";
 // Info: (20260708 - Tzuhan) API Route to handle Carbon Chatbot conversational flow with Gemini backend.
 export async function POST(request: NextRequest) {
   try {
-    const { history, currentStep, language } = await request.json();
+    const { history, currentStep, language, attachments } =
+      await request.json();
 
     if (!history || !Array.isArray(history)) {
       return jsonFail(API_ERRORS.VL_MISSING_PARAMS);
@@ -18,6 +19,7 @@ export async function POST(request: NextRequest) {
       history,
       currentStep,
       language,
+      attachments,
     );
 
     return jsonOk({ reply });

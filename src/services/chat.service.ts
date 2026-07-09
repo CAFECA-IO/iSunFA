@@ -100,22 +100,58 @@ export class ChatService {
    * Dedicated method to handle Carbon Accountant persona conversation
    */
   async generateCarbonChatbotResponse(
+    // Info: (20260709 - Tzuhan) 1. 歷史紀錄維持純文字
     history: { role: "user" | "model"; text: string }[],
     currentStep?: string,
     language?: string,
+    // Info: (20260709 - Tzuhan) 2. 新增第四個參數：接收當次上傳的獨立附件
+    attachments?: { base64: string; type: string }[],
   ): Promise<string> {
-    const langInstruction = language ? `\\n請務必使用 ${language} 回覆。` : "";
-    const systemInstruction = `你是一個專業的碳會計師 (Carbon Accountant)。你的任務是引導用戶進行溫室氣體盤查。請一步步問問題，引導用戶回答，並在適當的時機請用戶上傳相關資料（如BOM表、能源帳單等）。請保持專業、友善，且每次對話只問一個核心問題以免用戶混淆。${currentStep ? `\\n當前盤查流程節點：【${currentStep}】。請根據此階段的目標來引導對話。` : ""}${langInstruction}`;
+    const langInstruction = language ? `\n請務必使用 ${language} 回覆。` : "";
+    const systemInstruction = `你是一個專業的碳會計師 (Carbon Accountant)。你的任務是引導用戶進行溫室氣體盤查。請一步步問問題，引導用戶回答，並在適當的時機請用戶上傳相關資料（如BOM表、能源帳單等）。請保持專業、友善，且每次對話只問一個核心問題以免用戶混淆。${currentStep ? `\n當前盤查流程節點：【${currentStep}】。請根據此階段的目標來引導對話。` : ""}${langInstruction}`;
 
     const model = this.genAI.getGenerativeModel({
       model: this.modelName,
       systemInstruction: systemInstruction,
     });
 
-    const contents = history.map((msg) => ({
-      role: msg.role,
-      parts: [{ text: msg.text }],
-    }));
+    const contents = history.map((msg, index) => {
+      const parts: Part[] = [];
+
+      // Info: (20260709 - Tzuhan) 放入文字訊息 (加入防呆：若無文字則放空字串或預設提示)
+      if (msg.text && msg.text.trim() !== "") {
+        parts.push({ text: msg.text });
+      }
+
+      // Info: (20260709 - Tzuhan) 3. 關鍵邏輯：如果是陣列的「最後一筆」(也就是使用者剛發出的最新訊息)，就把獨立的 attachments 塞進去
+      const isLastMessage = index === history.length - 1;
+
+      if (isLastMessage && attachments && attachments.length > 0) {
+        // Info: (20260709 - Tzuhan) 如果使用者沒打字、只傳了附件，我們偷偷塞一句話引導 AI
+        if (!msg.text || msg.text.trim() === "") {
+          parts.push({ text: "請協助分析我上傳的附件資料。" });
+        }
+
+        // Info: (20260709 - Tzuhan) 將獨立的附件轉為 inlineData 塞入
+        attachments.forEach((att) => {
+          let base64Data = att.base64;
+          if (base64Data.includes(",")) {
+            base64Data = base64Data.split(",")[1];
+          }
+          parts.push({
+            inlineData: {
+              data: base64Data,
+              mimeType: att.type,
+            },
+          });
+        });
+      }
+
+      return {
+        role: msg.role === "model" ? "model" : "user",
+        parts,
+      };
+    });
 
     try {
       const response = await model.generateContent({ contents });

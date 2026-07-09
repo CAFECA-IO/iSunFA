@@ -6,9 +6,11 @@ import {
   IChatSession,
   IChatMessage,
   ChatRoleEnum,
+  IUploadedFileData,
 } from "@/types/carbon_chatbot.types";
 import { INITIAL_SESSIONS } from "@/constants/carbon_chatbot.mock";
 import { useTranslation } from "@/i18n/i18n_context";
+import { uploadFile, fileToBase64 } from "@/lib/file_operator";
 
 export const useCarbonChat = () => {
   const { t, language } = useTranslation();
@@ -19,6 +21,12 @@ export const useCarbonChat = () => {
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
+
+  // Info: (20260709 - Tzuhan) Manage files selected before sending
+  const [pendingAttachments, setPendingAttachments] = useState<
+    IUploadedFileData[]
+  >([]);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const prevMessageCount = useRef<number>(0);
@@ -45,6 +53,15 @@ export const useCarbonChat = () => {
       return updated;
     });
   }, [t]);
+
+  // Info: (20260709 - Tzuhan) Clean up object URLs to prevent memory leak
+  useEffect(() => {
+    return () => {
+      pendingAttachments.forEach((f) => {
+        if (f.previewUrl) URL.revokeObjectURL(f.previewUrl);
+      });
+    };
+  }, [pendingAttachments]);
 
   const activeSession = sessionsData[activeSessionId];
   const sessionsList = Object.values(sessionsData);
@@ -185,13 +202,64 @@ export const useCarbonChat = () => {
     };
   }, [activeSessionId]);
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
+  const handleFilesAdded = async (files: File[]) => {
+    setIsUploading(true);
+    try {
+      const newUploads: IUploadedFileData[] = [];
+      await Promise.all(
+        files.map(async (file) => {
+          const [hashInfo, base64] = await Promise.all([
+            new Promise<{ hash: string }>((resolve, reject) => {
+              uploadFile(file, {
+                onSuccess: (hash) => resolve({ hash }),
+                onError: (error) => reject(error),
+              });
+            }),
+            fileToBase64(file),
+          ]);
+          newUploads.push({
+            id: crypto.randomUUID(),
+            file: {
+              ...file,
+              name: file.name,
+              type: file.type,
+            } as File,
+            previewUrl: file.type.startsWith("image/")
+              ? URL.createObjectURL(file)
+              : null,
+            hash: hashInfo.hash,
+            base64,
+          });
+        }),
+      );
+      setPendingAttachments((prev) => [...prev, ...newUploads]);
+    } catch (error) {
+      console.error("Upload failed", error);
+      setIsError(true);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
+  const handleFileRemoved = (id: string) => {
+    setPendingAttachments((prev) => prev.filter((f) => f.id !== id));
+  };
+
+  const handleSendMessage = async () => {
+    if (
+      (!inputValue.trim() && pendingAttachments.length === 0) ||
+      isLoading ||
+      isUploading
+    )
+      return;
+
+    const currentAttachments = [...pendingAttachments];
     const userMessage: IChatMessage = {
       id: Date.now().toString(),
       sender: ChatRoleEnum.USER,
       text: inputValue,
+      attachments:
+        currentAttachments.length > 0 ? currentAttachments : undefined,
     };
 
     setSessionsData((prev) => {
@@ -202,6 +270,7 @@ export const useCarbonChat = () => {
     });
 
     setInputValue("");
+    setPendingAttachments([]); // Clear pending files after sending
     setIsTyping(true);
     setIsLoading(true);
     setIsError(false);
@@ -221,6 +290,11 @@ export const useCarbonChat = () => {
           history: currentHistory,
           currentStep: activeSession.currentStep,
           language: language,
+          attachments: currentAttachments.map((att) => ({
+            hash: att.hash,
+            base64: att.base64,
+            type: att.file.type,
+          })),
         }),
       });
 
@@ -269,10 +343,14 @@ export const useCarbonChat = () => {
     setActiveSessionId,
     inputValue,
     setInputValue,
+    pendingAttachments,
+    isUploading,
     isTyping,
     isLoading,
     isError,
     handleSendMessage,
+    handleFilesAdded,
+    handleFileRemoved,
     toggleParagraphCompleted,
     toggleParagraphVerified,
     handleMarkdownChange,

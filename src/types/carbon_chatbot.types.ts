@@ -13,16 +13,19 @@ export enum SessionStatusEnum {
   ARCHIVED = "已歸檔",
 }
 
-export interface IAttachment {
-  name: string;
-  size: string;
+export interface IUploadedFileData {
+  id: string;
+  file: File;
+  previewUrl: string | null;
+  hash: string;
+  base64: string;
 }
 
 export interface IChatMessage {
   id: string;
   sender: ChatRoleEnum;
   text: string;
-  attachment?: IAttachment;
+  attachments?: IUploadedFileData[];
 }
 
 export interface IReportCategory {

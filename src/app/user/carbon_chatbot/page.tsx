@@ -16,9 +16,13 @@ export default function CarbonChatbotPage() {
     setActiveSessionId,
     inputValue,
     setInputValue,
+    pendingAttachments,
+    isUploading,
     isTyping,
     isLoading,
     handleSendMessage,
+    handleFilesAdded,
+    handleFileRemoved,
     toggleParagraphCompleted,
     toggleParagraphVerified,
     handleMarkdownChange,
@@ -51,8 +55,12 @@ export default function CarbonChatbotPage() {
             inputValue={inputValue}
             isTyping={isTyping}
             isLoading={isLoading}
+            isUploading={isUploading}
+            pendingAttachments={pendingAttachments}
             onInputChange={setInputValue}
             onSendMessage={handleSendMessage}
+            onFilesAdded={handleFilesAdded}
+            onFileRemoved={handleFileRemoved}
           />
         </div>
 
