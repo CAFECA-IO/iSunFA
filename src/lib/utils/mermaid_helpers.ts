@@ -34,6 +34,10 @@ export enum MermaidActionType {
   FLOWCHART_EDIT_NODE = "FLOWCHART_EDIT_NODE",
   FLOWCHART_ADD_CONNECTION = "FLOWCHART_ADD_CONNECTION",
   FLOWCHART_CHANGE_DIRECTION = "FLOWCHART_CHANGE_DIRECTION",
+  XYCHART_CHANGE_X_AXIS = "XYCHART_CHANGE_X_AXIS",
+  XYCHART_CHANGE_Y_AXIS = "XYCHART_CHANGE_Y_AXIS",
+  XYCHART_CHANGE_LINE_SERIES = "XYCHART_CHANGE_LINE_SERIES",
+  XYCHART_CHANGE_BAR_SERIES = "XYCHART_CHANGE_BAR_SERIES",
 }
 
 /**
@@ -46,6 +50,37 @@ export type IChartAction = {
   | {
       type: MermaidActionType.CHANGE_TITLE;
       payload: { title: string };
+    }
+  | {
+      type: MermaidActionType.XYCHART_CHANGE_X_AXIS;
+      payload: {
+        title?: string;
+        categories?: string[];
+        min?: number;
+        max?: number;
+      };
+    }
+  | {
+      type: MermaidActionType.XYCHART_CHANGE_Y_AXIS;
+      payload: {
+        title?: string;
+        min?: number;
+        max?: number;
+      };
+    }
+  | {
+      type: MermaidActionType.XYCHART_CHANGE_LINE_SERIES;
+      payload: {
+        seriesIndex: number;
+        data: number[];
+      };
+    }
+  | {
+      type: MermaidActionType.XYCHART_CHANGE_BAR_SERIES;
+      payload: {
+        seriesIndex: number;
+        data: number[];
+      };
     }
   | {
       type: MermaidActionType.GANTT_ADD_TASK;
@@ -123,7 +158,6 @@ export type IChartAction = {
       payload: { direction: string };
     }
 );
-
 /**
  * Info: (20260707 - Julian) 甘特圖資料項目介面
  */
@@ -136,6 +170,34 @@ export interface IGanttItem {
   start?: string; // Info: (20260707 - Julian) 開始日期或前置任務 ID
   end?: string; // Info: (20260707 - Julian) 結束日期或持續時間
   lineIndex: number; // Info: (20260708 - Julian) 原始行號，用於結構化編輯
+}
+
+/**
+ * Info: (20260709 - Julian) XY 圖表數列介面
+ */
+export interface IXYChartSeries {
+  type: "bar" | "line";
+  data: number[];
+  lineIndex: number;
+}
+
+/**
+ * Info: (20260709 - Julian) XY 圖表結構介面
+ */
+export interface IXYChartData {
+  title: string;
+  xAxis: {
+    title?: string;
+    categories?: string[];
+    min?: number;
+    max?: number;
+  };
+  yAxis: {
+    title?: string;
+    min?: number;
+    max?: number;
+  };
+  series: IXYChartSeries[];
 }
 
 /**
@@ -738,6 +800,244 @@ export const applyFlowchartAction = (
           /(flowchart|graph)\s+\w+/i,
           `$1 ${direction}`,
         );
+      }
+      break;
+    }
+  }
+
+  return lines.join("\n");
+};
+
+/**
+ * Info: (20260709 - Julian)
+ * 解析 [a, b, "c d"] 形式的數列
+ */
+const parseBracketArray = (str: string): string[] => {
+  const match = str.match(/\[(.*)\]/);
+  if (!match) return [];
+  const content = match[1];
+  const items: string[] = [];
+  let current = "";
+  let insideQuotes = false;
+  for (let i = 0; i < content.length; i++) {
+    const char = content[i];
+    if (char === '"') {
+      insideQuotes = !insideQuotes;
+    } else if (char === "," && !insideQuotes) {
+      items.push(current.trim().replace(/^"|"$/g, ""));
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  if (current) {
+    items.push(current.trim().replace(/^"|"$/g, ""));
+  }
+  return items;
+};
+
+/**
+ * Info: (20260709 - Julian)
+ * 解析 [1, 2.5, 3] 形式的數字數列
+ */
+const parseNumberArray = (str: string): number[] => {
+  return parseBracketArray(str)
+    .map((v) => parseFloat(v))
+    .filter((n) => !isNaN(n));
+};
+
+/**
+ * Info: (20260709 - Julian)
+ * 解析 x-axis 或 y-axis 行
+ */
+const parseAxisLine = (line: string, isXAxis: boolean) => {
+  const prefixRegex = isXAxis ? /^x-axis\s+/i : /^y-axis\s+/i;
+  const clean = line.replace(prefixRegex, "").trim();
+
+  if (clean.startsWith("[")) {
+    return { categories: parseBracketArray(clean) };
+  }
+
+  let title = "";
+  let min: number | undefined;
+  let max: number | undefined;
+
+  let rest = clean;
+  const titleMatch = clean.match(/^"([^"]+)"/);
+  if (titleMatch) {
+    title = titleMatch[1];
+    rest = clean.slice(titleMatch[0].length).trim();
+  } else if (!clean.includes("-->") && !/^\d/.test(clean)) {
+    title = clean;
+    rest = "";
+  }
+
+  const rangeMatch = rest.match(/(-?\d+(?:\.\d+)?)\s*-->\s*(-?\d+(?:\.\d+)?)/);
+  if (rangeMatch) {
+    min = parseFloat(rangeMatch[1]);
+    max = parseFloat(rangeMatch[2]);
+  }
+
+  return { title, min, max };
+};
+
+/**
+ * Info: (20260709 - Julian)
+ * 解析 XY Chart 內容
+ */
+export const parseXYChartData = (chartStr: string): IXYChartData | null => {
+  if (!chartStr || typeof chartStr !== "string") return null;
+
+  const lines = chartStr.split("\n");
+  const isXYChart = lines.some((l) => /^\s*xychart/i.test(l));
+  if (!isXYChart) return null;
+
+  const title = getChartTitle(chartStr);
+  let xAxis: IXYChartData["xAxis"] = {};
+  let yAxis: IXYChartData["yAxis"] = {};
+  const series: IXYChartSeries[] = [];
+
+  lines.forEach((line, index) => {
+    const clean = line.trim();
+    if (!clean || clean.startsWith("%%")) return;
+
+    if (/^x-axis\s+/i.test(clean)) {
+      xAxis = parseAxisLine(clean, true);
+    } else if (/^y-axis\s+/i.test(clean)) {
+      yAxis = parseAxisLine(clean, false);
+    } else if (/^bar\s+/i.test(clean)) {
+      const data = parseNumberArray(clean);
+      series.push({
+        type: "bar",
+        data,
+        lineIndex: index,
+      });
+    } else if (/^line\s+/i.test(clean)) {
+      const data = parseNumberArray(clean);
+      series.push({
+        type: "line",
+        data,
+        lineIndex: index,
+      });
+    }
+  });
+
+  return {
+    title,
+    xAxis,
+    yAxis,
+    series,
+  };
+};
+
+/**
+ * Info: (20260709 - Julian) 應用結構化編輯動作到 XY 圖表
+ */
+export const applyXYChartAction = (
+  chartStr: string,
+  action: IChartAction,
+): string => {
+  const lines = chartStr.split("\n");
+
+  switch (action.type) {
+    case MermaidActionType.XYCHART_CHANGE_X_AXIS: {
+      const { title, categories, min, max } = action.payload;
+      const index = lines.findIndex((l) => /^\s*x-axis\s+/i.test(l));
+
+      // Construct X-axis line
+      let newLine = "";
+      if (categories && categories.length > 0) {
+        const formattedCats = categories.map((cat) => {
+          const trimmed = cat.trim();
+          return trimmed.includes(" ") ? `"${trimmed}"` : trimmed;
+        });
+        newLine = `    x-axis [${formattedCats.join(", ")}]`;
+      } else if (min !== undefined && max !== undefined) {
+        const titleStr = title ? `"${title}" ` : "";
+        newLine = `    x-axis ${titleStr}${min} --> ${max}`;
+      } else if (title) {
+        newLine = `    x-axis "${title}"`;
+      }
+
+      if (newLine) {
+        if (index !== -1) {
+          lines[index] = newLine;
+        } else {
+          let insertIndex = lines.findIndex((l) => /^\s*xychart/i.test(l));
+          if (insertIndex !== -1) {
+            if (
+              insertIndex + 1 < lines.length &&
+              /^\s*title/i.test(lines[insertIndex + 1])
+            ) {
+              insertIndex++;
+            }
+            lines.splice(insertIndex + 1, 0, newLine);
+          } else {
+            lines.push(newLine);
+          }
+        }
+      }
+      break;
+    }
+
+    case MermaidActionType.XYCHART_CHANGE_Y_AXIS: {
+      const { title, min, max } = action.payload;
+      const index = lines.findIndex((l) => /^\s*y-axis\s+/i.test(l));
+
+      let newLine = "";
+      const titleStr = title ? `"${title}"` : "";
+      if (min !== undefined && max !== undefined) {
+        newLine = `    y-axis ${titleStr ? titleStr + " " : ""}${min} --> ${max}`;
+      } else if (titleStr) {
+        newLine = `    y-axis ${titleStr}`;
+      }
+
+      if (newLine) {
+        if (index !== -1) {
+          lines[index] = newLine;
+        } else {
+          let insertIndex = lines.findIndex((l) => /^\s*x-axis/i.test(l));
+          if (insertIndex === -1) {
+            insertIndex = lines.findIndex((l) => /^\s*xychart/i.test(l));
+            if (
+              insertIndex !== -1 &&
+              insertIndex + 1 < lines.length &&
+              /^\s*title/i.test(lines[insertIndex + 1])
+            ) {
+              insertIndex++;
+            }
+          }
+          if (insertIndex !== -1) {
+            lines.splice(insertIndex + 1, 0, newLine);
+          } else {
+            lines.push(newLine);
+          }
+        }
+      }
+      break;
+    }
+
+    case MermaidActionType.XYCHART_CHANGE_LINE_SERIES:
+    case MermaidActionType.XYCHART_CHANGE_BAR_SERIES: {
+      const isLine =
+        action.type === MermaidActionType.XYCHART_CHANGE_LINE_SERIES;
+      const { seriesIndex, data } = action.payload;
+      const targetRegex = isLine ? /^\s*line\s+/i : /^\s*bar\s+/i;
+
+      const seriesIndices: number[] = [];
+      lines.forEach((l, idx) => {
+        if (targetRegex.test(l)) {
+          seriesIndices.push(idx);
+        }
+      });
+
+      const newLine = `    ${isLine ? "line" : "bar"} [${data.join(", ")}]`;
+
+      if (seriesIndex < seriesIndices.length) {
+        const lineIdx = seriesIndices[seriesIndex];
+        lines[lineIdx] = newLine;
+      } else {
+        lines.push(newLine);
       }
       break;
     }

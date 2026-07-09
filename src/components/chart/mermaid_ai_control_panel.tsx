@@ -10,9 +10,14 @@ import {
 import { FlowchartToolsSection } from "@/components/chart/flowchart_tools_submenu";
 import { PieToolsSection } from "@/components/chart/pie_tools_submenu";
 import { GanttToolsSection } from "@/components/chart/gantt_tools_submenu";
+import { XYChartToolsSection } from "@/components/chart/xychart_tools_submenu";
 import { useTranslation } from "@/i18n/i18n_context";
 import { MermaidChartType } from "@/constants/mermaid_chart";
-import { IGanttItem, IChartAction } from "@/lib/utils/mermaid_helpers";
+import {
+  IGanttItem,
+  IChartAction,
+  IXYChartData,
+} from "@/lib/utils/mermaid_helpers";
 
 interface IMermaidAiControlPanelProps {
   chartType: MermaidChartType;
@@ -21,6 +26,7 @@ interface IMermaidAiControlPanelProps {
   parsedNodes: { id: string; label: string }[];
   parsedPieItems: { label: string; value: number }[];
   parsedGanttItems: IGanttItem[];
+  parsedXYChartData: IXYChartData | null;
   pendingActions: IChartAction[];
   onAddAction: (action: IChartAction) => void;
   onRemoveAction: (id: string) => void;
@@ -35,6 +41,7 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
   parsedNodes,
   parsedPieItems,
   parsedGanttItems,
+  parsedXYChartData,
   pendingActions,
   onAddAction,
   onRemoveAction,
@@ -65,7 +72,8 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
   const isShowTools =
     chartType === MermaidChartType.PIE ||
     chartType === MermaidChartType.FLOWCHART ||
-    chartType === MermaidChartType.GANTT;
+    chartType === MermaidChartType.GANTT ||
+    chartType === MermaidChartType.XYCHART;
 
   const instructionKey = `chart.mermaid.ai_editor.${chartType.toLowerCase()}.examples`;
   const examples = t<string[]>(instructionKey) || [];
@@ -137,8 +145,8 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
               <input
                 id="mermaid-title-input"
                 type="text"
-                className="w-full text-sm font-bold text-slate-800 outline-none placeholder:text-slate-400"
-                placeholder="輸入圖表標題"
+                className="w-full text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400"
+                placeholder="輸入圖表標題..."
                 value={localTitle}
                 onChange={(e) => setLocalTitle(e.target.value)}
                 onBlur={commitTitle}
@@ -173,6 +181,13 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
                       selectedTool={selectedTool}
                       setSelectedTool={setSelectedTool}
                       parsedGanttItems={parsedGanttItems}
+                      onAddAction={onAddAction}
+                    />
+                  ) : chartType === MermaidChartType.XYCHART ? (
+                    <XYChartToolsSection
+                      selectedTool={selectedTool}
+                      setSelectedTool={setSelectedTool}
+                      parsedXYChartData={parsedXYChartData}
                       onAddAction={onAddAction}
                     />
                   ) : null}

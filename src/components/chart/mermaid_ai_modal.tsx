@@ -13,10 +13,12 @@ import {
   applyGanttAction,
   applyPieAction,
   applyFlowchartAction,
+  applyXYChartAction,
   parseFlowchartNodes,
   parsePieItems,
   parseGanttItems,
   parsePieData,
+  parseXYChartData,
   getChartTitle,
   updateChartTitle,
 } from "@/lib/utils/mermaid_helpers";
@@ -68,6 +70,10 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
     () => parsePieData(internalBaseChart),
     [internalBaseChart],
   );
+  const currentParsedXYChartData = useMemo(
+    () => parseXYChartData(internalBaseChart),
+    [internalBaseChart],
+  );
 
   // Info: (20260709 - Julian) 計算當前圖表標題
   const currentTitle = useMemo(() => {
@@ -95,6 +101,8 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
         result = applyPieAction(result, action);
       } else if (chartType === MermaidChartType.FLOWCHART) {
         result = applyFlowchartAction(result, action);
+      } else if (chartType === MermaidChartType.XYCHART) {
+        result = applyXYChartAction(result, action);
       }
     });
     return result;
@@ -215,6 +223,7 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
           parsedNodes={currentParsedNodes}
           parsedPieItems={currentParsedPieItems}
           parsedGanttItems={currentParsedGanttItems}
+          parsedXYChartData={currentParsedXYChartData}
           pendingActions={pendingActions}
           onAddAction={handleAddAction}
           onRemoveAction={handleRemoveAction}
