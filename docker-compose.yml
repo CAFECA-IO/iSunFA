@@ -53,7 +53,32 @@ services:
     ports:
       - '${OSRM_PORT:-20025}:5000'
 
+  faith:
+    build:
+      context: ./dockerfiles/faith
+    container_name: faith
+    restart: always
+    ports:
+      - '${FAITH_PORT:-20026}:11434'
+    volumes:
+      - faith_data:/root/.ollama
+
+  chatroom:
+    image: centrifugo/centrifugo:v5
+    container_name: chatroom
+    restart: always
+    ports:
+      - '${CHATROOM_PORT:-20027}:8000'
+    environment:
+      - CENTRIFUGO_TOKEN_HMAC_SECRET_KEY=${CENTRIFUGO_TOKEN_HMAC_SECRET_KEY:-isunfa_token_hmac_secret_key}
+      - CENTRIFUGO_API_KEY=${CENTRIFUGO_API_KEY:-isunfa_api_key}
+      - CENTRIFUGO_ADMIN=true
+      - CENTRIFUGO_ADMIN_PASSWORD=${CENTRIFUGO_ADMIN_PASSWORD:-isunfa_admin_password}
+      - CENTRIFUGO_ADMIN_SECRET=${CENTRIFUGO_ADMIN_SECRET:-isunfa_admin_secret}
+      - CENTRIFUGO_INSECURE=true
+
 volumes:
   blockchain_data:
   database_data:
   storage_data:
+  faith_data:

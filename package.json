@@ -1,6 +1,6 @@
 {
   "name": "isunfa",
-  "version": "0.12.0+153",
+  "version": "0.12.0+155",
   "private": true,
   "type": "module",
   "engines": {
@@ -39,6 +39,7 @@
     "@prisma/client": "^7.8.0",
     "@tailwindcss/typography": "^0.5.19",
     "@types/geojson": "^7946.0.16",
+    "centrifuge": "^5.7.0",
     "cheerio": "^1.2.0",
     "csv-parse": "^7.0.0",
     "csv-stringify": "^6.7.0",
