@@ -250,7 +250,7 @@ export default function CarbonEmissionDatabasePage() {
           );
         }
       },
-      t("common.cancel", { defaultValue: "取消" }),
+      t("common.cancel"),
     );
   };
 
@@ -296,7 +296,7 @@ export default function CarbonEmissionDatabasePage() {
           setImporting(false);
         }
       },
-      t("common.cancel", { defaultValue: "取消" }),
+      t("common.cancel"),
     );
   };
 
@@ -780,7 +780,7 @@ export default function CarbonEmissionDatabasePage() {
                       className="inline-flex justify-center rounded-lg border border-transparent bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 focus:outline-none"
                       onClick={() => setIsModalOpen(false)}
                     >
-                      {t("common.cancel", { defaultValue: "取消" })}
+                      {t("common.cancel")}
                     </button>
                     <button
                       type="button"
