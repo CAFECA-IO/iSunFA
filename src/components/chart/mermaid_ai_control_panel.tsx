@@ -1,4 +1,4 @@
-import { useState, FC } from "react";
+import { useState, useEffect, FC } from "react";
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from "@headlessui/react";
 import {
   Lightbulb,
@@ -24,6 +24,8 @@ interface IMermaidAiControlPanelProps {
   pendingActions: IChartAction[];
   onAddAction: (action: IChartAction) => void;
   onRemoveAction: (id: string) => void;
+  chartTitle: string;
+  onTitleChange: (newTitle: string) => void;
 }
 
 const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
@@ -36,14 +38,48 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
   pendingActions,
   onAddAction,
   onRemoveAction,
+  chartTitle,
+  onTitleChange,
 }) => {
   const { t } = useTranslation();
+  const [localTitle, setLocalTitle] = useState<string>(chartTitle);
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLocalTitle(chartTitle);
+  }, [chartTitle]);
+
+  const commitTitle = () => {
+    if (localTitle !== chartTitle) {
+      onTitleChange(localTitle);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      commitTitle();
+      e.currentTarget.blur();
+    }
+  };
 
   const isShowTools =
     chartType === MermaidChartType.PIE ||
     chartType === MermaidChartType.FLOWCHART ||
     chartType === MermaidChartType.GANTT;
+
+  const instructionKey = `chart.mermaid.ai_editor.${chartType.toLowerCase()}.examples`;
+  const examples = t<string[]>(instructionKey) || [];
+
+  const renderExamples = () => {
+    if (!Array.isArray(examples)) return null;
+    return (
+      <ul className="mt-2 ml-4 list-disc space-y-1 text-[11px] text-blue-600/80">
+        {examples.map((example: string, i: number) => (
+          <li key={i}>{example}</li>
+        ))}
+      </ul>
+    );
+  };
 
   return (
     <div className="flex w-full flex-col overflow-y-auto border-r border-slate-200 bg-slate-50 md:w-2/5">
@@ -92,9 +128,26 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
           </Tab>
         </TabList>
 
-        <TabPanels className="flex-1 overflow-y-auto">
+        <TabPanels className="flex-1 overflow-y-auto p-5">
+          <div className="mb-5 flex flex-col">
+            <span className="mb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
+              圖表標題
+            </span>
+            <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+              <input
+                id="mermaid-title-input"
+                type="text"
+                className="w-full text-sm font-bold text-slate-800 outline-none placeholder:text-slate-400"
+                placeholder="輸入圖表標題"
+                value={localTitle}
+                onChange={(e) => setLocalTitle(e.target.value)}
+                onBlur={commitTitle}
+                onKeyDown={handleKeyDown}
+              />
+            </div>
+          </div>
           {/* Info: (20260708 - Julian) 快速工具 Tab */}
-          <TabPanel className="flex flex-col gap-6 bg-slate-50 p-5 focus:outline-none">
+          <TabPanel className="flex flex-col gap-6 bg-slate-50 focus:outline-none">
             {isShowTools ? (
               <div className="flex flex-col gap-6">
                 <div className="flex flex-col">
@@ -206,15 +259,7 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
               <p className="whitespace-normal text-blue-700">
                 {t("chart.mermaid.ai_editor.instructions_desc")}
               </p>
-              <ul className="mt-2 ml-4 list-disc space-y-1 text-[11px] text-blue-600/80">
-                {(
-                  t<string[]>(
-                    `chart.mermaid.ai_editor.${chartType.toLowerCase()}.examples`,
-                  ) || []
-                ).map((example, i) => (
-                  <li key={i}>{example}</li>
-                ))}
-              </ul>
+              {renderExamples()}
             </div>
           </TabPanel>
         </TabPanels>

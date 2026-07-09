@@ -1,6 +1,144 @@
 import { MermaidChartType } from "@/constants/mermaid_chart";
 
 /**
+ * Info: (20260708 - Julian) 甘特圖項目類型
+ */
+export enum GanttItemType {
+  TASK = "task",
+  SECTION = "section",
+}
+
+/**
+ * Info: (20260708 - Julian) 甘特圖任務狀態
+ */
+export enum GanttTaskStatus {
+  ACTIVE = "active",
+  DONE = "done",
+  CRIT = "crit",
+  MILESTONE = "milestone",
+}
+
+/**
+ * Info: (20260708 - Julian) Mermaid 結構化指令類型列舉
+ */
+export enum MermaidActionType {
+  CHANGE_TITLE = "CHANGE_TITLE",
+  GANTT_ADD_TASK = "GANTT_ADD_TASK",
+  GANTT_EDIT_TASK = "GANTT_EDIT_TASK",
+  GANTT_DELETE_TASK = "GANTT_DELETE_TASK",
+  GANTT_SWAP_TASK = "GANTT_SWAP_TASK",
+  PIE_ADD_ITEM = "PIE_ADD_ITEM",
+  PIE_EDIT_ITEM = "PIE_EDIT_ITEM",
+  PIE_DELETE_ITEM = "PIE_DELETE_ITEM",
+  FLOWCHART_ADD_NODE = "FLOWCHART_ADD_NODE",
+  FLOWCHART_EDIT_NODE = "FLOWCHART_EDIT_NODE",
+  FLOWCHART_ADD_CONNECTION = "FLOWCHART_ADD_CONNECTION",
+  FLOWCHART_CHANGE_DIRECTION = "FLOWCHART_CHANGE_DIRECTION",
+}
+
+/**
+ * Info: (20260708 - Julian) 結構化動作介面 (Discriminated Union)
+ */
+export type IChartAction = {
+  id: string;
+  description: string;
+} & (
+  | {
+      type: MermaidActionType.CHANGE_TITLE;
+      payload: { title: string };
+    }
+  | {
+      type: MermaidActionType.GANTT_ADD_TASK;
+      payload: {
+        label: string;
+        section?: string;
+        status?: string;
+        id?: string;
+        start?: string;
+        end?: string;
+        isCrit?: boolean;
+        isMilestone?: boolean;
+        isDone?: boolean;
+      };
+    }
+  | {
+      type: MermaidActionType.GANTT_EDIT_TASK;
+      payload: {
+        taskLabel: string;
+        taskId?: string;
+        label: string;
+        status?: string;
+        id?: string;
+        start?: string;
+        end?: string;
+      };
+    }
+  | {
+      type: MermaidActionType.GANTT_DELETE_TASK;
+      payload: { taskLabel: string; taskId?: string };
+    }
+  | {
+      type: MermaidActionType.GANTT_SWAP_TASK;
+      payload: {
+        taskLabel1: string;
+        taskId1?: string;
+        taskLabel2: string;
+        taskId2?: string;
+      };
+    }
+  | {
+      type: MermaidActionType.PIE_ADD_ITEM;
+      payload: { label: string; value: number };
+    }
+  | {
+      type: MermaidActionType.PIE_EDIT_ITEM;
+      payload: { oldLabel: string; newLabel: string; newValue: number };
+    }
+  | { type: MermaidActionType.PIE_DELETE_ITEM; payload: { label: string } }
+  | {
+      type: MermaidActionType.FLOWCHART_ADD_NODE;
+      payload: {
+        id: string;
+        label: string;
+        fromId?: string;
+        toId?: string;
+        connText?: string;
+      };
+    }
+  | {
+      type: MermaidActionType.FLOWCHART_EDIT_NODE;
+      payload: { id: string; label: string };
+    }
+  | {
+      type: MermaidActionType.FLOWCHART_ADD_CONNECTION;
+      payload: {
+        fromId: string;
+        toId: string;
+        connType?: string;
+        connLabel?: string;
+      };
+    }
+  | {
+      type: MermaidActionType.FLOWCHART_CHANGE_DIRECTION;
+      payload: { direction: string };
+    }
+);
+
+/**
+ * Info: (20260707 - Julian) 甘特圖資料項目介面
+ */
+export interface IGanttItem {
+  type: GanttItemType;
+  label: string;
+  section?: string; // Info: (20260707 - Julian) 所屬區塊名稱
+  status?: string; // Info: (20260707 - Julian) 狀態標籤 (如 active, crit)
+  id?: string; // Info: (20260707 - Julian) 任務 ID
+  start?: string; // Info: (20260707 - Julian) 開始日期或前置任務 ID
+  end?: string; // Info: (20260707 - Julian) 結束日期或持續時間
+  lineIndex: number; // Info: (20260708 - Julian) 原始行號，用於結構化編輯
+}
+
+/**
  * Info: (20260624 - Julian)
  * 略過註解與 %%{init...}%% 設定區塊，判斷是否為圓餅圖
  */
@@ -41,6 +179,110 @@ export const detectChartType = (chartStr: string): MermaidChartType => {
     break;
   }
   return MermaidChartType.UNKNOWN;
+};
+
+/**
+ * Info: (20260708 - Julian)
+ * 取得圖表標題
+ */
+export const getChartTitle = (chartStr: string): string => {
+  if (!chartStr || typeof chartStr !== "string") return "";
+  const lines = chartStr.split("\n");
+  for (const line of lines) {
+    const cleanLine = line.trim();
+    if (!cleanLine || cleanLine.startsWith("%%")) {
+      continue;
+    }
+    // Info: (20260709 - Julian) 匹配 "pie title My Title", "title My Title", "title: My Title"
+    const match = cleanLine.match(/^(?:(?:\w+)\s+)?title:?\s+(.+)$/i);
+    if (match) {
+      let title = match[1].trim();
+      if (title.startsWith('"') && title.endsWith('"')) {
+        title = title.slice(1, -1);
+      }
+      return title;
+    }
+  }
+  return "";
+};
+
+/**
+ * Info: (20260709 - Julian)
+ * 更新圖表標題
+ */
+export const updateChartTitle = (
+  chartStr: string,
+  newTitle: string,
+): string => {
+  if (!chartStr || typeof chartStr !== "string") return chartStr;
+
+  const chartType = detectChartType(chartStr);
+  const lines = chartStr.split("\n");
+  const cleanTitle = (newTitle || "").trim();
+
+  // Info: (20260709 - Julian) 尋找現有 title 行
+  const titleIndex = lines.findIndex(
+    (l) =>
+      /^(?:(?:\w+)\s+)?title:?\s+/i.test(l.trim()) &&
+      !l.trim().startsWith("%%"),
+  );
+
+  if (titleIndex !== -1) {
+    if (!cleanTitle) {
+      lines.splice(titleIndex, 1);
+    } else {
+      const line = lines[titleIndex];
+      const indentMatch = line.match(/^(\s*)/);
+      const indent = indentMatch ? indentMatch[1] : "";
+
+      const keywordMatch = line.trim().match(/^((?:(?:\w+)\s+)?title:?)\s+/i);
+      const prefix = keywordMatch ? keywordMatch[1] : "title";
+
+      lines[titleIndex] = `${indent}${prefix} ${cleanTitle}`;
+    }
+    return lines.join("\n");
+  }
+
+  // Info: (20260709 - Julian) 若無現有 title，則插入新的 title
+  if (!cleanTitle) return chartStr;
+
+  // Info: (20260709 - Julian) 尋找圖表開始位置
+  let startIndex = -1;
+  for (let i = 0; i < lines.length; i++) {
+    const cleanLine = lines[i].trim();
+    if (!cleanLine || cleanLine.startsWith("%%")) {
+      continue;
+    }
+    startIndex = i;
+    break;
+  }
+
+  if (startIndex !== -1) {
+    const startLine = lines[startIndex];
+    const indentMatch = startLine.match(/^(\s*)/);
+    const indent = indentMatch ? indentMatch[1] : "";
+
+    if (chartType === MermaidChartType.PIE) {
+      lines[startIndex] = `${indent}pie title ${cleanTitle}`;
+    } else if (chartType === MermaidChartType.GANTT) {
+      lines.splice(startIndex + 1, 0, `${indent}    title ${cleanTitle}`);
+    } else if (chartType === MermaidChartType.FLOWCHART) {
+      if (lines[0]?.trim() === "---") {
+        const closeIndex = lines.indexOf("---", 1);
+        if (closeIndex !== -1) {
+          lines.splice(closeIndex, 0, `title: ${cleanTitle}`);
+          return lines.join("\n");
+        }
+      }
+      lines.unshift("---", `title: ${cleanTitle}`, "---");
+    } else {
+      lines.splice(startIndex + 1, 0, `${indent}    title ${cleanTitle}`);
+    }
+  } else {
+    lines.unshift(`title ${cleanTitle}`);
+  }
+
+  return lines.join("\n");
 };
 
 /**
@@ -176,38 +418,6 @@ export const parsePieData = (
 };
 
 /**
- * Info: (20260708 - Julian) 甘特圖項目類型
- */
-export enum GanttItemType {
-  TASK = "task",
-  SECTION = "section",
-}
-
-/**
- * Info: (20260708 - Julian) 甘特圖任務狀態
- */
-export enum GanttTaskStatus {
-  ACTIVE = "active",
-  DONE = "done",
-  CRIT = "crit",
-  MILESTONE = "milestone",
-}
-
-/**
- * Info: (20260707 - Julian) 甘特圖資料項目介面
- */
-export interface IGanttItem {
-  type: GanttItemType;
-  label: string;
-  section?: string; // Info: (20260707 - Julian) 所屬區塊名稱
-  status?: string; // Info: (20260707 - Julian) 狀態標籤 (如 active, crit)
-  id?: string; // Info: (20260707 - Julian) 任務 ID
-  start?: string; // Info: (20260707 - Julian) 開始日期或前置任務 ID
-  end?: string; // Info: (20260707 - Julian) 結束日期或持續時間
-  lineIndex: number; // Info: (20260708 - Julian) 原始行號，用於結構化編輯
-}
-
-/**
  * Info: (20260707 - Julian)
  * 解析 gantt chart 的所有項目名稱與屬性
  */
@@ -303,107 +513,6 @@ export const parseGanttItems = (chartStr: string): IGanttItem[] => {
 
   return items;
 };
-
-/**
- * Info: (20260708 - Julian) Mermaid 結構化指令類型列舉
- */
-export enum MermaidActionType {
-  GANTT_ADD_TASK = "GANTT_ADD_TASK",
-  GANTT_EDIT_TASK = "GANTT_EDIT_TASK",
-  GANTT_DELETE_TASK = "GANTT_DELETE_TASK",
-  GANTT_SWAP_TASK = "GANTT_SWAP_TASK",
-  PIE_ADD_ITEM = "PIE_ADD_ITEM",
-  PIE_EDIT_ITEM = "PIE_EDIT_ITEM",
-  PIE_DELETE_ITEM = "PIE_DELETE_ITEM",
-  FLOWCHART_ADD_NODE = "FLOWCHART_ADD_NODE",
-  FLOWCHART_EDIT_NODE = "FLOWCHART_EDIT_NODE",
-  FLOWCHART_ADD_CONNECTION = "FLOWCHART_ADD_CONNECTION",
-  FLOWCHART_CHANGE_DIRECTION = "FLOWCHART_CHANGE_DIRECTION",
-}
-
-/**
- * Info: (20260708 - Julian) 結構化動作介面 (Discriminated Union)
- */
-export type IChartAction = {
-  id: string;
-  description: string;
-} & (
-  | {
-      type: MermaidActionType.GANTT_ADD_TASK;
-      payload: {
-        label: string;
-        section?: string;
-        status?: string;
-        id?: string;
-        start?: string;
-        end?: string;
-        isCrit?: boolean;
-        isMilestone?: boolean;
-        isDone?: boolean;
-      };
-    }
-  | {
-      type: MermaidActionType.GANTT_EDIT_TASK;
-      payload: {
-        taskLabel: string;
-        taskId?: string;
-        label: string;
-        status?: string;
-        id?: string;
-        start?: string;
-        end?: string;
-      };
-    }
-  | {
-      type: MermaidActionType.GANTT_DELETE_TASK;
-      payload: { taskLabel: string; taskId?: string };
-    }
-  | {
-      type: MermaidActionType.GANTT_SWAP_TASK;
-      payload: {
-        taskLabel1: string;
-        taskId1?: string;
-        taskLabel2: string;
-        taskId2?: string;
-      };
-    }
-  | {
-      type: MermaidActionType.PIE_ADD_ITEM;
-      payload: { label: string; value: number };
-    }
-  | {
-      type: MermaidActionType.PIE_EDIT_ITEM;
-      payload: { oldLabel: string; newLabel: string; newValue: number };
-    }
-  | { type: MermaidActionType.PIE_DELETE_ITEM; payload: { label: string } }
-  | {
-      type: MermaidActionType.FLOWCHART_ADD_NODE;
-      payload: {
-        id: string;
-        label: string;
-        fromId?: string;
-        toId?: string;
-        connText?: string;
-      };
-    }
-  | {
-      type: MermaidActionType.FLOWCHART_EDIT_NODE;
-      payload: { id: string; label: string };
-    }
-  | {
-      type: MermaidActionType.FLOWCHART_ADD_CONNECTION;
-      payload: {
-        fromId: string;
-        toId: string;
-        connType?: string;
-        connLabel?: string;
-      };
-    }
-  | {
-      type: MermaidActionType.FLOWCHART_CHANGE_DIRECTION;
-      payload: { direction: string };
-    }
-);
 
 /**
  * Info: (20260708 - Julian) 應用結構化編輯動作到甘特圖
