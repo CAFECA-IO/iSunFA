@@ -146,7 +146,7 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
                 id="mermaid-title-input"
                 type="text"
                 className="w-full text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400"
-                placeholder="輸入圖表標題..."
+                placeholder={t("chart.mermaid.xychart.chart_title_ph")}
                 value={localTitle}
                 onChange={(e) => setLocalTitle(e.target.value)}
                 onBlur={commitTitle}
