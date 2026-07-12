@@ -55,7 +55,8 @@ export async function convertSpecsToCsv(
   year: string = "2024",
   options?: { baseDirOverride?: string; targetProductId?: string },
 ) {
-  const dataDir = path.resolve(process.cwd(), `data/${stockId}/${year}`);
+  // Info: (20260712 - Luphia) 以靜態 segment 組路徑，讓 Turbopack/NFT 能將檔案追蹤限縮於 data/ 子資料夾（避免整包專案被追蹤）
+  const dataDir = path.join(process.cwd(), "data", stockId, year);
   const baseDir = options?.baseDirOverride || path.join(dataDir, "outputs");
   const mockSourcesDir = path.join(baseDir, "mock_sources");
   const bomPath = path.join(mockSourcesDir, "boms_and_precursors.json");
