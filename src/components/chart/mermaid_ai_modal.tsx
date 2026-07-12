@@ -9,13 +9,18 @@ import { MermaidAiPreviewPanel } from "@/components/chart/mermaid_ai_preview_pan
 import { MermaidChartType } from "@/constants/mermaid_chart";
 import {
   IChartAction,
+  MermaidActionType,
   applyGanttAction,
   applyPieAction,
   applyFlowchartAction,
+  applyXYChartAction,
   parseFlowchartNodes,
   parsePieItems,
   parseGanttItems,
   parsePieData,
+  parseXYChartData,
+  getChartTitle,
+  updateChartTitle,
 } from "@/lib/utils/mermaid_helpers";
 
 interface IMermaidAiModalProps {
@@ -65,17 +70,39 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
     () => parsePieData(internalBaseChart),
     [internalBaseChart],
   );
+  const currentParsedXYChartData = useMemo(
+    () => parseXYChartData(internalBaseChart),
+    [internalBaseChart],
+  );
+
+  // Info: (20260709 - Julian) 計算當前圖表標題
+  const currentTitle = useMemo(() => {
+    const changeTitleAction = pendingActions.find(
+      (a) => a.type === MermaidActionType.CHANGE_TITLE,
+    );
+    if (
+      changeTitleAction &&
+      changeTitleAction.type === MermaidActionType.CHANGE_TITLE
+    ) {
+      return changeTitleAction.payload.title;
+    }
+    return getChartTitle(internalBaseChart);
+  }, [internalBaseChart, pendingActions]);
 
   // Info: (20260708 - Julian) 根據目前的 pendingActions 計算修改後的圖表
   const currentModifiedChart = useMemo(() => {
     let result = internalBaseChart;
     pendingActions.forEach((action) => {
-      if (chartType === MermaidChartType.GANTT) {
+      if (action.type === MermaidActionType.CHANGE_TITLE) {
+        result = updateChartTitle(result, action.payload.title);
+      } else if (chartType === MermaidChartType.GANTT) {
         result = applyGanttAction(result, action);
       } else if (chartType === MermaidChartType.PIE) {
         result = applyPieAction(result, action);
       } else if (chartType === MermaidChartType.FLOWCHART) {
         result = applyFlowchartAction(result, action);
+      } else if (chartType === MermaidChartType.XYCHART) {
+        result = applyXYChartAction(result, action);
       }
     });
     return result;
@@ -103,6 +130,21 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
 
   const handleRemoveAction = (id: string) => {
     setPendingActions((prev) => prev.filter((a) => a.id !== id));
+  };
+
+  const handleTitleChange = (newTitle: string) => {
+    setPendingActions((prev) => {
+      const filtered = prev.filter(
+        (a) => a.type !== MermaidActionType.CHANGE_TITLE,
+      );
+      const titleAction: IChartAction = {
+        id: crypto.randomUUID(),
+        type: MermaidActionType.CHANGE_TITLE,
+        description: `修改圖表標題為 "${newTitle}"`,
+        payload: { title: newTitle },
+      };
+      return [...filtered, titleAction];
+    });
   };
 
   const handleGenerate = async () => {
@@ -181,11 +223,13 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
           parsedNodes={currentParsedNodes}
           parsedPieItems={currentParsedPieItems}
           parsedGanttItems={currentParsedGanttItems}
+          parsedXYChartData={currentParsedXYChartData}
           pendingActions={pendingActions}
           onAddAction={handleAddAction}
           onRemoveAction={handleRemoveAction}
+          chartTitle={currentTitle}
+          onTitleChange={handleTitleChange}
         />
-
         <MermaidAiPreviewPanel
           svgStr={svgStr}
           parsedPieData={currentParsedPieData || initialParsedPieData}
