@@ -1,17 +1,12 @@
 import fs from "fs";
-import fsPromises from "fs/promises";
 import path from "path";
-import { companyRepo } from "@/repositories/company.repo";
 import { reportDownloadTaskRepo } from "@/repositories/report_download_task.repo";
 import { spawn, ChildProcess } from "child_process";
 import { TaskType, TaskStatus } from "@/generated";
 
-export type FileNode = {
-  name: string;
-  path: string;
-  type: "file" | "directory";
-  children?: FileNode[];
-};
+// Info: (20260712 - Luphia) 以執行期組出 tsx 腳本相對路徑，避免 NFT 將字面路徑當模組追蹤
+// Info: (20260712 - Luphia) 這些腳本以 tsx 子行程執行，並非打包目標，故不應被靜態追蹤
+const tsxScript = (...segments: string[]): string => segments.join("/");
 
 export interface ISseEvent {
   type:
@@ -29,286 +24,6 @@ export interface ISseEvent {
 }
 
 export class DppSimulatorService {
-  private getMimeType(filePath: string): string {
-    const ext = path.extname(filePath).toLowerCase();
-    switch (ext) {
-      case ".html":
-        return "text/html";
-      case ".pdf":
-        return "application/pdf";
-      case ".png":
-        return "image/png";
-      case ".jpg":
-      case ".jpeg":
-        return "image/jpeg";
-      case ".csv":
-        return "text/csv";
-      case ".json":
-        return "application/json";
-      case ".md":
-        return "text/markdown";
-      case ".txt":
-        return "text/plain";
-      default:
-        return "application/octet-stream";
-    }
-  }
-
-  public async getFileTree(
-    dirPath: string,
-    rootPath: string,
-  ): Promise<FileNode[]> {
-    const entries = await fsPromises.readdir(dirPath, { withFileTypes: true });
-    const nodes: FileNode[] = [];
-
-    for (const entry of entries) {
-      const fullPath = path.join(dirPath, entry.name);
-      const relPath = path.relative(rootPath, fullPath);
-
-      if (entry.isDirectory()) {
-        const children = await this.getFileTree(fullPath, rootPath);
-        nodes.push({
-          name: entry.name,
-          path: relPath,
-          type: "directory",
-          children,
-        });
-      } else {
-        nodes.push({ name: entry.name, path: relPath, type: "file" });
-      }
-    }
-
-    nodes.sort((a, b) => {
-      if (a.type === b.type) return a.name.localeCompare(b.name);
-      return a.type === "directory" ? -1 : 1;
-    });
-
-    return nodes;
-  }
-
-  public async getFileDetails(
-    absolutePath: string,
-    cwd: string,
-  ): Promise<{ buffer: Buffer; headers: Record<string, string> }> {
-    if (!absolutePath.startsWith(path.join(cwd, "data"))) {
-      throw new Error("Access denied");
-    }
-
-    let stats;
-    let finalPath = absolutePath;
-    try {
-      stats = fs.statSync(finalPath);
-    } catch (err) {
-      const fallbackPath = finalPath.replace(
-        new RegExp("/data/([^/]+)/\\d{4}/"),
-        "/data/$1/2024/",
-      );
-      if (fallbackPath !== finalPath) {
-        stats = fs.statSync(fallbackPath);
-        finalPath = fallbackPath;
-      } else {
-        throw err;
-      }
-    }
-
-    if (!stats.isFile()) {
-      throw new Error("Not a file");
-    }
-
-    const mimeType = this.getMimeType(finalPath);
-    const fileBuffer = await fsPromises.readFile(finalPath);
-
-    const headers: Record<string, string> = {
-      "Content-Type": mimeType,
-      "Content-Length": stats.size.toString(),
-      "Cache-Control": "public, max-age=3600",
-    };
-
-    return { buffer: fileBuffer, headers };
-  }
-
-  public async getSimulatorList() {
-    const cwd = process.cwd();
-    const dataDir = path.join(cwd, "data");
-    const items = [];
-
-    const companies = await companyRepo.findMany();
-    const companyMap = new Map(companies.map((c) => [c.stockId, c.name]));
-
-    if (fs.existsSync(dataDir)) {
-      const stockIds = fs
-        .readdirSync(dataDir)
-        .filter((f) => !f.startsWith("."));
-      for (const stockId of stockIds) {
-        const stockPath = path.join(dataDir, stockId);
-        if (fs.statSync(stockPath).isDirectory()) {
-          const years = fs
-            .readdirSync(stockPath)
-            .filter((f) => !f.startsWith("."));
-          for (const year of years) {
-            const yearPath = path.join(stockPath, year);
-            if (fs.statSync(yearPath).isDirectory()) {
-              const hasFin = fs.existsSync(
-                path.join(
-                  yearPath,
-                  "inputs",
-                  "raw_reports",
-                  `${year}_FIN_REPORT.pdf`,
-                ),
-              );
-              const hasEsg = fs.existsSync(
-                path.join(
-                  yearPath,
-                  "inputs",
-                  "raw_reports",
-                  `${year}_ESG_REPORT.pdf`,
-                ),
-              );
-              const hasPersonaHtml = fs.existsSync(
-                path.join(
-                  yearPath,
-                  "outputs",
-                  `${stockId}_company_persona.html`,
-                ),
-              );
-              const hasVisionCache = fs.existsSync(
-                path.join(
-                  yearPath,
-                  "outputs",
-                  "ai_extracted_context_cache.json",
-                ),
-              );
-              const hasEsgExtrapolation = fs.existsSync(
-                path.join(yearPath, "outputs", "esg_extrapolation.json"),
-              );
-
-              let products: unknown[] = [];
-              const bomFilePath = path.join(
-                yearPath,
-                "outputs",
-                "mock_sources",
-                "boms_and_precursors.json",
-              );
-              const hasBom = fs.existsSync(bomFilePath);
-              if (hasBom) {
-                try {
-                  const bomData = JSON.parse(
-                    fs.readFileSync(bomFilePath, "utf-8"),
-                  );
-                  if (bomData.products) {
-                    products = bomData.products.map(
-                      (p: { productId: string; productName: string }) => {
-                        const productMockDir = path.join(
-                          yearPath,
-                          "outputs",
-                          p.productId,
-                          "mock_sources",
-                        );
-                        const hasSpecs = fs.existsSync(
-                          path.join(
-                            productMockDir,
-                            `${p.productId}_product_specs.json`,
-                          ),
-                        );
-                        const hasImage = fs.existsSync(
-                          path.join(
-                            yearPath,
-                            "outputs",
-                            p.productId,
-                            "mock_sources",
-                            "fastener_blueprint.png",
-                          ),
-                        );
-
-                        let dppGroundTruthFile: string | undefined;
-                        let dppComplianceFile: string | undefined;
-
-                        if (
-                          fs.existsSync(
-                            path.join(
-                              productMockDir,
-                              `${p.productId}_dpp_ground_truth.json`,
-                            ),
-                          )
-                        ) {
-                          dppGroundTruthFile = `data/${stockId}/${year}/outputs/${p.productId}/mock_sources/${p.productId}_dpp_ground_truth.json`;
-                        }
-                        if (
-                          fs.existsSync(
-                            path.join(
-                              productMockDir,
-                              `${p.productId}_dpp_compliance_declaration.md`,
-                            ),
-                          )
-                        ) {
-                          dppComplianceFile = `data/${stockId}/${year}/outputs/${p.productId}/mock_sources/${p.productId}_dpp_compliance_declaration.md`;
-                        }
-
-                        return {
-                          productId: p.productId,
-                          productName: p.productName,
-                          progress: {
-                            hasSpecs,
-                            hasImage,
-                            dppGroundTruthFile,
-                            dppComplianceFile,
-                          },
-                        };
-                      },
-                    );
-                  }
-                } catch (e) {
-                  console.error("Failed to parse bom:", e);
-                }
-              }
-
-              const isComplete = hasFin && hasEsg && hasPersonaHtml && hasBom;
-              const companyName = companyMap.get(stockId) || `企業 ${stockId}`;
-
-              items.push({
-                id: `${stockId}-${year}`,
-                stockId,
-                year,
-                name: companyName,
-                progress: {
-                  hasFin,
-                  hasEsg,
-                  hasPersonaHtml,
-                  hasVisionCache,
-                  hasEsgExtrapolation,
-                  hasBom,
-                  products,
-                },
-                isComplete,
-              });
-            }
-          }
-        }
-      }
-    }
-
-    return items;
-  }
-
-  public async deleteSimulatorData(stockId: string, year: string) {
-    const targetDir = path.join(
-      process.cwd(),
-      "data",
-      stockId,
-      year.toString(),
-    );
-    if (fs.existsSync(targetDir)) {
-      fs.rmSync(targetDir, { recursive: true, force: true });
-    }
-
-    await reportDownloadTaskRepo.deleteMany({
-      where: {
-        stockId,
-        year: parseInt(year),
-      },
-    });
-  }
-
   public createGenerateStream(params: {
     stockId: string;
     year: string;
@@ -371,30 +86,16 @@ export class DppSimulatorService {
         ) => {
           if (isAborted) throw new Error("Stream aborted");
           return new Promise<{ stdout: string }>((resolve, reject) => {
-            let actualCmd = command;
-            let actualArgs = args;
-
-            if (command === "npx" && args[0] === "tsx") {
-              const tsxPath = path.resolve(
-                process.cwd(),
-                "node_modules",
-                ".bin",
-                "tsx",
-              );
-              if (fs.existsSync(tsxPath)) {
-                actualCmd = tsxPath;
-                actualArgs = args.slice(1);
-              }
-            }
-
-            const child = spawn(actualCmd, actualArgs);
+            // Info: (20260712 - Luphia) 一律以 npx tsx 執行 seeder 腳本，不再解析本地 node_modules/.bin/tsx（symlink）
+            // Info: (20260712 - Luphia) 該 symlink 會讓 Turbopack NFT 追蹤 tsx 整包相依而誤判為 whole project；tsx 為專案相依，npx 可直接命中本地版本
+            const child = spawn(command, args);
             activeChild = child;
             let stdoutFull = "";
 
             const heartbeat = setInterval(() => {
               sendEvent({
                 type: "log",
-                message: `⌛ [System] Running ${path.basename(actualArgs[0] || actualCmd)}...`,
+                message: `⌛ [System] Running ${path.basename(args[1] || args[0] || command)}...`,
               });
             }, 15000);
 
@@ -456,7 +157,7 @@ export class DppSimulatorService {
             let downloadError: Error | null = null;
             const downloadPromise = runScript("npx", [
               "tsx",
-              "scripts/auto_download.ts",
+              tsxScript("scripts", "auto_download.ts"),
               `--stockId=${stockId}`,
               `--year=${year}`,
               "--resurrect=0",
@@ -581,7 +282,12 @@ export class DppSimulatorService {
               });
               await runScript("npx", [
                 "tsx",
-                "src/scripts/e2e_seeder/ai_vision_extractor.ts",
+                tsxScript(
+                  "src",
+                  "scripts",
+                  "e2e_seeder",
+                  "ai_vision_extractor.ts",
+                ),
                 stockId,
                 year,
               ]);
@@ -594,7 +300,12 @@ export class DppSimulatorService {
                 "npx",
                 [
                   "tsx",
-                  "src/scripts/e2e_seeder/esg_extrapolator.ts",
+                  tsxScript(
+                    "src",
+                    "scripts",
+                    "e2e_seeder",
+                    "esg_extrapolator.ts",
+                  ),
                   stockId,
                   year,
                 ],
@@ -621,7 +332,12 @@ export class DppSimulatorService {
               });
               await runScript("npx", [
                 "tsx",
-                "src/scripts/e2e_seeder/persona_generator.ts",
+                tsxScript(
+                  "src",
+                  "scripts",
+                  "e2e_seeder",
+                  "persona_generator.ts",
+                ),
                 stockId,
                 year,
                 `--products=${productCount}`,
@@ -630,7 +346,12 @@ export class DppSimulatorService {
               sendEvent({ type: "log", message: `Rendering HTML persona...` });
               await runScript("npx", [
                 "tsx",
-                "src/scripts/e2e_seeder/render_persona_html.ts",
+                tsxScript(
+                  "src",
+                  "scripts",
+                  "e2e_seeder",
+                  "render_persona_html.ts",
+                ),
                 stockId,
                 year,
               ]);
@@ -654,7 +375,13 @@ export class DppSimulatorService {
               "npx",
               [
                 "tsx",
-                "src/scripts/e2e_seeder/cbam/generate_bom_precursors.ts",
+                tsxScript(
+                  "src",
+                  "scripts",
+                  "e2e_seeder",
+                  "cbam",
+                  "generate_bom_precursors.ts",
+                ),
                 stockId,
                 year,
                 productCount.toString(),
@@ -694,7 +421,13 @@ export class DppSimulatorService {
             });
             await runScript("npx", [
               "tsx",
-              "src/scripts/e2e_seeder/dpp/generate_product_specs.ts",
+              tsxScript(
+                "src",
+                "scripts",
+                "e2e_seeder",
+                "dpp",
+                "generate_product_specs.ts",
+              ),
               stockId,
               year,
               ...(productArg ? [productArg] : []),
@@ -713,7 +446,13 @@ export class DppSimulatorService {
             });
             await runScript("npx", [
               "tsx",
-              "src/scripts/e2e_seeder/dpp/generate_product_image.ts",
+              tsxScript(
+                "src",
+                "scripts",
+                "e2e_seeder",
+                "dpp",
+                "generate_product_image.ts",
+              ),
               stockId,
               year,
               ...(productArg ? [productArg] : []),
@@ -728,7 +467,13 @@ export class DppSimulatorService {
             });
             await runScript("npx", [
               "tsx",
-              "src/scripts/e2e_seeder/dpp/generate_dpp_ground_truth.ts",
+              tsxScript(
+                "src",
+                "scripts",
+                "e2e_seeder",
+                "dpp",
+                "generate_dpp_ground_truth.ts",
+              ),
               stockId,
               year,
               ...(productArg ? [productArg] : []),
@@ -743,7 +488,13 @@ export class DppSimulatorService {
             });
             await runScript("npx", [
               "tsx",
-              "src/scripts/e2e_seeder/dpp/generate_dpp_compliance.ts",
+              tsxScript(
+                "src",
+                "scripts",
+                "e2e_seeder",
+                "dpp",
+                "generate_dpp_compliance.ts",
+              ),
               stockId,
               year,
               ...(productArg ? [productArg] : []),
