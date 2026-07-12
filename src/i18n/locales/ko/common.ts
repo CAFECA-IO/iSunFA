@@ -127,4 +127,5 @@ export const common = {
   all_solutions: "모든 솔루션",
   all_status: "모든 상태",
   reset: "초기화",
+  system_admin: "시스템 관리자",
 };
