@@ -121,16 +121,21 @@ export default function PdfEditor({
     };
   }, []);
 
+  const draftLoadedRef = useRef(false);
+
   useEffect(() => {
     // Info: (20260604 - Julian) 頁面載入時，從 localstorage 取得草稿
+    // Info: (20260712 - Luphia) 以 ref 守衛確保僅掛載時載入一次，避免 props 變動時覆蓋編輯中內容
+    if (draftLoadedRef.current) return;
+    draftLoadedRef.current = true;
+
     if (!isEmbedded) {
       const savedDraft = safeStorage.getItem(storageKey);
       if (savedDraft && savedDraft !== DEFAULT_CONTENT) {
         setMarkdownContext(savedDraft);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isEmbedded, storageKey]);
 
   useEffect(() => {
     // Info: (20260604 - Julian) 建立「儲存草稿」函式
