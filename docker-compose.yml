@@ -69,13 +69,14 @@ services:
     restart: always
     ports:
       - '${CHATROOM_PORT:-20027}:8000'
+    command: centrifugo --client_insecure --api_insecure --admin --admin_insecure
     environment:
-      - CENTRIFUGO_TOKEN_HMAC_SECRET_KEY=${CENTRIFUGO_TOKEN_HMAC_SECRET_KEY:-isunfa_token_hmac_secret_key}
-      - CENTRIFUGO_API_KEY=${CENTRIFUGO_API_KEY:-isunfa_api_key}
-      - CENTRIFUGO_ADMIN=true
-      - CENTRIFUGO_ADMIN_PASSWORD=${CENTRIFUGO_ADMIN_PASSWORD:-isunfa_admin_password}
-      - CENTRIFUGO_ADMIN_SECRET=${CENTRIFUGO_ADMIN_SECRET:-isunfa_admin_secret}
-      - CENTRIFUGO_INSECURE=true
+      CENTRIFUGO_TOKEN_HMAC_SECRET_KEY: ${CENTRIFUGO_TOKEN_HMAC_SECRET_KEY:-isunfa_token_hmac_secret_key}
+      CENTRIFUGO_API_KEY: ${CENTRIFUGO_API_KEY:-isunfa_api_key}
+      CENTRIFUGO_ADMIN: "true"
+      CENTRIFUGO_ADMIN_PASSWORD: ${CENTRIFUGO_ADMIN_PASSWORD:-isunfa_admin_password}
+      CENTRIFUGO_ADMIN_SECRET: ${CENTRIFUGO_ADMIN_SECRET:-isunfa_admin_secret}
+      CENTRIFUGO_ALLOWED_ORIGINS: "https://isunfa.localhost http://localhost:3000 http://127.0.0.1:3000"
 
 volumes:
   blockchain_data:
