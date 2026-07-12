@@ -392,7 +392,7 @@ export default function CouponManagementPage() {
           );
 
           showConfirm(
-            t("common.success", { defaultValue: "Success" }),
+            t("common.success"),
             t("admin_coupon.redemption_table.reset_success"),
           );
           fetchRedemptions();
