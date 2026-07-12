@@ -92,7 +92,8 @@ const tslintConfigs = [
       },
     },
     settings: {
-      react: { version: 'detect' },
+      // Info: (20260712 - Luphia) 明確指定 React 版本，避免 eslint-plugin-react 在 ESLint 10 下自動偵測時呼叫已移除的 context.getFilename() 而崩潰
+      react: { version: '19.2.7' },
       'import/resolver': { typescript: {} },
     },
     rules: {
