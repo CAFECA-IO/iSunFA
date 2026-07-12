@@ -135,7 +135,7 @@ export default function DataTable<T>({
                   className="py-16 text-center text-gray-500"
                 >
                   <Loader2 className="mx-auto mb-3 h-6 w-6 animate-spin text-orange-500" />
-                  {t("common.loading", { defaultValue: "Loading..." })}
+                  {t("common.loading")}
                 </td>
               </tr>
             ) : data.length === 0 ? (
@@ -144,8 +144,7 @@ export default function DataTable<T>({
                   colSpan={columns.length}
                   className="py-16 text-center text-gray-400"
                 >
-                  {emptyStateText ||
-                    t("common.no_data", { defaultValue: "No data available" })}
+                  {emptyStateText || t("common.no_data")}
                 </td>
               </tr>
             ) : (
