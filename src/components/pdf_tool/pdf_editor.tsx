@@ -39,9 +39,21 @@ interface IPdfEditorProps {
       message: string;
     }>
   >;
+  layout?: "split" | "toggle";
+  isEmbedded?: boolean;
+  value?: string;
+  onChange?: (val: string) => void;
+  storageKey?: string;
 }
 
-export default function PdfEditor({ setErrorModal }: IPdfEditorProps) {
+export default function PdfEditor({
+  setErrorModal,
+  layout = "split",
+  isEmbedded = false,
+  value = undefined,
+  onChange = undefined,
+  storageKey = STORAGE_KEY,
+}: IPdfEditorProps) {
   const { t } = useTranslation();
 
   const contentRef = useRef<HTMLDivElement>(null);
@@ -81,6 +93,13 @@ export default function PdfEditor({ setErrorModal }: IPdfEditorProps) {
     markdownRef.current = markdownContext;
   }, [markdownContext]);
 
+  // Info: (20260708 - Tzuhan) Sync controlled value
+  useEffect(() => {
+    if (value !== undefined) {
+      setMarkdownContext(value);
+    }
+  }, [value]);
+
   // Info: (20260615 - Julian) 統一的 Toast 控制與 Timer 清理機制，防止重複點擊時計時器互相干擾
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showToast = (text: string, type: ToastType) => {
@@ -102,20 +121,31 @@ export default function PdfEditor({ setErrorModal }: IPdfEditorProps) {
     };
   }, []);
 
+  const draftLoadedRef = useRef(false);
+
   useEffect(() => {
     // Info: (20260604 - Julian) 頁面載入時，從 localstorage 取得草稿
-    const savedDraft = safeStorage.getItem(STORAGE_KEY);
-    if (savedDraft && savedDraft !== DEFAULT_CONTENT) {
-      setMarkdownContext(savedDraft);
-    }
+    // Info: (20260712 - Luphia) 以 ref 守衛確保僅掛載時載入一次，避免 props 變動時覆蓋編輯中內容
+    if (draftLoadedRef.current) return;
+    draftLoadedRef.current = true;
 
+    if (!isEmbedded) {
+      const savedDraft = safeStorage.getItem(storageKey);
+      if (savedDraft && savedDraft !== DEFAULT_CONTENT) {
+        setMarkdownContext(savedDraft);
+      }
+    }
+  }, [isEmbedded, storageKey]);
+
+  useEffect(() => {
     // Info: (20260604 - Julian) 建立「儲存草稿」函式
     const saveDraft = () => {
+      if (isEmbedded) return;
       const currentContent = markdownRef.current;
       if (currentContent && currentContent !== DEFAULT_CONTENT) {
-        safeStorage.setItem(STORAGE_KEY, currentContent);
+        safeStorage.setItem(storageKey, currentContent);
       } else {
-        safeStorage.removeItem(STORAGE_KEY);
+        safeStorage.removeItem(storageKey);
       }
     };
 
@@ -135,7 +165,7 @@ export default function PdfEditor({ setErrorModal }: IPdfEditorProps) {
         abortControllerRef.current.abort();
       }
     };
-  }, []);
+  }, [isEmbedded, storageKey]);
 
   // Info: (20260615 - Julian) 捕捉 Cmd + S / Ctrl + S 快捷鍵，手動儲存草稿到 localStorage
   useEffect(() => {
@@ -145,11 +175,13 @@ export default function PdfEditor({ setErrorModal }: IPdfEditorProps) {
       if (isSaveShortcut) {
         e.preventDefault();
 
-        const currentContent = markdownRef.current;
-        if (currentContent && currentContent !== DEFAULT_CONTENT) {
-          safeStorage.setItem(STORAGE_KEY, currentContent);
-        } else {
-          safeStorage.removeItem(STORAGE_KEY);
+        if (!isEmbedded) {
+          const currentContent = markdownRef.current;
+          if (currentContent && currentContent !== DEFAULT_CONTENT) {
+            safeStorage.setItem(storageKey, currentContent);
+          } else {
+            safeStorage.removeItem(storageKey);
+          }
         }
 
         showToast(
@@ -163,7 +195,7 @@ export default function PdfEditor({ setErrorModal }: IPdfEditorProps) {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [t]);
+  }, [t, isEmbedded, storageKey]);
 
   const toggleShareLinkModal = () => {
     setIsShareLinkModalOpen((prev) => !prev);
@@ -387,7 +419,9 @@ export default function PdfEditor({ setErrorModal }: IPdfEditorProps) {
   };
 
   return (
-    <div className="relative flex h-[800px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <div
+      className={`relative flex flex-col overflow-hidden bg-white shadow-sm ${isEmbedded ? "h-full w-full rounded-none border-0" : "h-[800px] rounded-2xl border border-gray-200"}`}
+    >
       {/* Info: (20260605 - Julian) Toast 訊息 */}
       {toastMessage && (
         <div
@@ -407,8 +441,10 @@ export default function PdfEditor({ setErrorModal }: IPdfEditorProps) {
       )}
 
       {/* Info: (20260426 - Luphia) Editor Toolbar */}
-      <div className="flex flex-col gap-4 border-b border-gray-200 bg-gray-50 p-4">
-        <div className="flex gap-2 lg:hidden">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-200 bg-gray-50 p-4">
+        <div
+          className={`flex flex-wrap gap-2 ${layout === "split" ? "lg:hidden" : ""}`}
+        >
           <button
             onClick={() => setViewMode(PdfToolViewMode.EDIT)}
             className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-all ${
@@ -433,17 +469,19 @@ export default function PdfEditor({ setErrorModal }: IPdfEditorProps) {
           </button>
         </div>
 
-        <div className="flex w-full gap-2">
-          <button
-            onClick={() => setIsAiReportModalOpen(true)}
-            disabled={isAiProcessing}
-            className="mr-auto flex flex-1 flex-col items-center justify-center gap-x-2 gap-y-1 rounded-lg border border-purple-300 bg-purple-100 px-2 py-2 text-xs font-bold text-purple-600 transition-all enabled:hover:bg-purple-200 disabled:cursor-not-allowed disabled:border-gray-400 disabled:bg-gray-400 disabled:text-gray-700 sm:flex-row sm:px-3 lg:flex-none lg:px-5 lg:text-sm"
-          >
-            <Sparkles size={16} className="shrink-0" />
-            <span className="text-center">
-              {t("admin_mission_board.pdf_editor.ai_report_modal.title")}
-            </span>
-          </button>
+        <div className="flex w-full flex-wrap justify-end gap-2 sm:w-auto">
+          {!isEmbedded && (
+            <button
+              onClick={() => setIsAiReportModalOpen(true)}
+              disabled={isAiProcessing}
+              className="mr-auto flex flex-1 flex-col items-center justify-center gap-x-2 gap-y-1 rounded-lg border border-purple-300 bg-purple-100 px-2 py-2 text-xs font-bold text-purple-600 transition-all enabled:hover:bg-purple-200 disabled:cursor-not-allowed disabled:border-gray-400 disabled:bg-gray-400 disabled:text-gray-700 sm:flex-row sm:px-3 lg:flex-none lg:px-5 lg:text-sm"
+            >
+              <Sparkles size={16} className="shrink-0" />
+              <span className="text-center">
+                {t("admin_mission_board.pdf_editor.ai_report_modal.title")}
+              </span>
+            </button>
+          )}
           <button
             onClick={handleDownloadPDF}
             disabled={isGenerating || !markdownContext.trim()}
@@ -456,29 +494,39 @@ export default function PdfEditor({ setErrorModal }: IPdfEditorProps) {
                 : t("admin_mission_board.pdf_editor.download_pdf")!}
             </span>
           </button>
-          <button
-            onClick={handleShareClick}
-            disabled={isGenerating || !markdownContext.trim() || isSharing}
-            className="flex flex-1 flex-col items-center justify-center gap-x-2 gap-y-1 rounded-lg bg-blue-500 px-2 py-2 text-xs font-bold text-white transition-all enabled:hover:bg-blue-400 disabled:cursor-not-allowed disabled:bg-gray-400 sm:flex-row sm:px-3 lg:flex-none lg:px-5 lg:text-sm"
-          >
-            {isSharing ? (
-              <Loader2 size={16} className="shrink-0 animate-spin" />
-            ) : (
-              <Share2 size={16} className="shrink-0" />
-            )}
-            <span className="text-center">
-              {t("admin_mission_board.pdf_editor.share_pdf")}
-            </span>
-          </button>
+          {!isEmbedded && (
+            <button
+              onClick={handleShareClick}
+              disabled={isGenerating || !markdownContext.trim() || isSharing}
+              className="flex flex-1 flex-col items-center justify-center gap-x-2 gap-y-1 rounded-lg bg-blue-500 px-2 py-2 text-xs font-bold text-white transition-all enabled:hover:bg-blue-400 disabled:cursor-not-allowed disabled:bg-gray-400 sm:flex-row sm:px-3 lg:flex-none lg:px-5 lg:text-sm"
+            >
+              {isSharing ? (
+                <Loader2 size={16} className="shrink-0 animate-spin" />
+              ) : (
+                <Share2 size={16} className="shrink-0" />
+              )}
+              <span className="text-center">
+                {t("admin_mission_board.pdf_editor.share_pdf")}
+              </span>
+            </button>
+          )}
         </div>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
         {/* Info: (20260615 - Julian) Edit Panel */}
         <EditPanel
+          layout={layout}
           viewMode={viewMode}
           markdownContext={markdownContext}
-          setMarkdownContext={setMarkdownContext}
+          setMarkdownContext={(val) => {
+            const nextVal =
+              typeof val === "function" ? val(markdownContext) : val;
+            if (value !== undefined && onChange) {
+              onChange(nextVal);
+            }
+            setMarkdownContext(nextVal);
+          }}
           isAiProcessing={isAiProcessing}
           setIsAiProcessing={setIsAiProcessing}
           setShareToken={setShareToken}
@@ -487,7 +535,15 @@ export default function PdfEditor({ setErrorModal }: IPdfEditorProps) {
 
         {/* Info: (20260426 - Luphia) Preview Pane */}
         <div
-          className={`flex flex-1 flex-col overflow-y-auto bg-gray-100 ${viewMode === PdfToolViewMode.EDIT ? "hidden md:flex" : "flex"}`}
+          className={`flex flex-1 flex-col overflow-y-auto bg-gray-100 ${
+            layout === "toggle"
+              ? viewMode === PdfToolViewMode.EDIT
+                ? "hidden"
+                : "flex"
+              : viewMode === PdfToolViewMode.EDIT
+                ? "hidden md:flex"
+                : "flex"
+          }`}
         >
           <div className="sticky top-0 z-10 bg-gray-200 px-4 py-2 text-xs font-bold tracking-wider text-gray-500 uppercase">
             {t("admin_mission_board.pdf_editor.pdf_preview")!}
@@ -538,7 +594,12 @@ export default function PdfEditor({ setErrorModal }: IPdfEditorProps) {
                   <div className="max-w-none text-[#374151]">
                     <MarkdownContent
                       content={markdownContext}
-                      onContentChange={setMarkdownContext}
+                      onContentChange={(val) => {
+                        if (value !== undefined && onChange) {
+                          onChange(val);
+                        }
+                        setMarkdownContext(val);
+                      }}
                       theme="light"
                     />
                   </div>
