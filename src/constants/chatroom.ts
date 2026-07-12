@@ -1,7 +1,10 @@
 // Info: (20260712 - Luphia) Chatroom (Centrifugo) 共用常數
 
-// Info: (20260712 - Luphia) 未設定 NEXT_PUBLIC_CHATROOM_PORT 時的預設連線 port（前後端共用單一來源）
+// Info: (20260712 - Luphia) 前端 dev 直連 Centrifugo 的預設 port（Next 執行於 :3000 時使用；prod 走同源 gateway）
 export const DEFAULT_CHATROOM_PORT = "20027";
+
+// Info: (20260712 - Luphia) 未設定 CHATROOM_URL 時，後端內部直連 Centrifugo 的預設位址（單一來源）
+export const DEFAULT_CHATROOM_URL = `http://127.0.0.1:${DEFAULT_CHATROOM_PORT}`;
 
 // Info: (20260712 - Luphia) 未設定 CENTRIFUGO_API_KEY 時的預設值（與 docker-compose 預設一致，單一來源）
 export const DEFAULT_CENTRIFUGO_API_KEY = "isunfa_api_key";
