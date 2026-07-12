@@ -1,5 +1,11 @@
 export const carbonChatbot = {
   title: "カーボンインベントリチャットボット",
+  menu_title: "スマートGHGインベントリ",
+  unlock_button: "暗号化チャットを開始",
+  unlock_hint:
+    "インベントリ内容を保護するため、この会話はデバイスのセキュリティキーでエンドツーエンド暗号化されます。開始をクリックし認証を一度完了すると、解除され AI の挨拶が届きます。",
+  device_unsupported:
+    "お使いのデバイスまたはブラウザは暗号化に必要なセキュリティキー機能（WebAuthn PRF）に対応していないため、暗号化チャットを利用できません。Android の Chrome や PRF 対応のセキュリティキーなど、対応環境をご利用ください。",
   subtitle: "あなた専用の企業カーボン会計士",
   recent_chats: "最近のチャット",
   today: "今日",
@@ -23,9 +29,7 @@ export const carbonChatbot = {
   system_error:
     "【システムエラー】申し訳ありません。カーボン会計士サービスへの接続中に問題が発生しました。後でもう一度お試しください。",
   system_unavailable: "申し訳ありません。現在システムは応答できません。",
-  welcome_message:
-    "こんにちは！私はあなたのAIカーボンインベントリアシスタントです。本日のインベントリを開始するために、インベントリを行う企業名と年度を教えてください。",
-  ai_name: "フェイス (FAITH)",
+  ai_name: "フェイス",
   platform_name: "環境インテリジェンスプラットフォーム",
   system_online: "システムオンライン",
   database_version: "データベースバージョン",

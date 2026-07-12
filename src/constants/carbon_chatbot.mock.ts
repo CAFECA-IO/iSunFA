@@ -6,23 +6,19 @@ import {
   IChatSession,
   SessionStatusEnum,
 } from "@/types/carbon_chatbot.types";
+import { DEFAULT_SESSION_ID } from "@/constants/carbon_chatbot";
 
 export const INITIAL_SESSIONS: Record<string, IChatSession> = {
-  "2025": {
-    id: "2025",
+  [DEFAULT_SESSION_ID]: {
+    id: DEFAULT_SESSION_ID,
     title: "2025 溫室氣體盤查報告",
     time: "今天",
     status: SessionStatusEnum.IN_PROGRESS,
     statusColor: "text-orange-500 bg-orange-100",
     progress: 10,
     currentStep: "組織邊界鑑定",
-    messages: [
-      {
-        id: "1",
-        sender: ChatRoleEnum.AI,
-        text: "您好！我是您的 AI 碳盤查助手。為了開始今天的盤查工作，請先告訴我您要盤查的企業名稱與年度？",
-      },
-    ],
+    // Info: (20260712 - Luphia) 招呼詞改由進入 channel 後 AI 前置作業產生並經 Centrifugo 回傳，故初始為空
+    messages: [],
     reportData: {
       documentName: "2025_Carbon_Report_Draft_v1.pdf",
       title: "溫室氣體排放量摘要",

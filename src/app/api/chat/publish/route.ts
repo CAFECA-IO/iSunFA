@@ -1,54 +1,26 @@
 import { NextResponse } from "next/server";
+import { publishToCentrifugo } from "@/lib/centrifugo";
 
 export async function POST(request: Request) {
   try {
-    const { channel, sender, text } = await request.json();
-    const apiKey = process.env.CENTRIFUGO_API_KEY || "isunfa_api_key";
-    const chatroomPort = process.env.CHATROOM_PORT || "20027";
+    const { channel, data, sender, text } = await request.json();
 
-    // Call Centrifugo HTTP API
-    const response = await fetch(
-      `http://127.0.0.1:${chatroomPort}/api/publish`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Key": apiKey,
-        },
-        body: JSON.stringify({
-          channel,
-          data: {
-            sender,
-            text,
-            timestamp: new Date().toISOString(),
-          },
-        }),
-      },
-    );
+    // Info: (20260712 - Luphia) 優先使用呼叫端提供的 data；未提供時沿用舊版 { sender, text } 結構
+    const payload = data ?? {
+      sender,
+      text,
+      timestamp: new Date().toISOString(),
+    };
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      return NextResponse.json(
-        { error: `Centrifugo error: ${errorText}` },
-        { status: response.status },
-      );
-    }
-
-    const data = await response.json();
-    if (data?.error) {
-      return NextResponse.json(
-        {
-          error: data.error.message || "Failed to publish message",
-          code: data.error.code,
-        },
-        { status: 502 },
-      );
-    }
-
-    return NextResponse.json({ success: true, data });
+    await publishToCentrifugo(channel, payload);
+    return NextResponse.json({ success: true });
   } catch (error: unknown) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
+    // Info: (20260712 - Luphia) 記錄實際錯誤（連線/TLS/Centrifugo）便於診斷
+    const cause =
+      error instanceof Error && "cause" in error ? error.cause : undefined;
+    console.error("[chat/publish] publish failed:", errorMessage, { cause });
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

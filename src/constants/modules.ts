@@ -27,12 +27,28 @@ import {
   Activity,
   ClipboardList,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
-export const MODULES = [
+// Info: (20260712 - Luphia) 選單模組項目型別；href 為選填，供固定路徑（非帳本綁定）的模組使用
+export interface IModuleItem {
+  key: string;
+  icon: LucideIcon;
+  basic: boolean;
+  nav?: boolean;
+  href?: string;
+}
+
+export const MODULES: IModuleItem[] = [
   { key: "dashboard", icon: LayoutDashboard, basic: true },
   { key: "journal", icon: ScanLine, basic: true },
   { key: "voucher", icon: BookOpen, basic: true },
   { key: "esg", icon: Leaf, basic: true },
+  {
+    key: "carbon_chatbot",
+    icon: Bot,
+    basic: true,
+    href: "/user/carbon_chatbot",
+  },
   { key: "financial_report", icon: FileText, basic: true },
   { key: "analysis", icon: PieChart, basic: true },
   { key: "digital_product_passport", icon: QrCode, basic: true },
@@ -43,7 +59,7 @@ export const MODULES = [
   { key: "salary", icon: Users, basic: false },
 ];
 
-export const PUBLIC_MODULES = [
+export const PUBLIC_MODULES: IModuleItem[] = [
   { key: "analysis", icon: PieChart, basic: true, nav: true },
   { key: "ai_consultation_room", icon: Bot, basic: true, nav: true },
   {
@@ -64,7 +80,7 @@ export const PUBLIC_MODULES = [
   { key: "business_monitor", icon: Activity, basic: true, nav: true },
 ];
 
-export const ADMIN_MODULES = [
+export const ADMIN_MODULES: IModuleItem[] = [
   { key: "dashboard", icon: LayoutDashboard, basic: true },
   { key: "mission_board", icon: Target, basic: true },
   { key: "order_management", icon: BadgeCheck, basic: true },
@@ -165,6 +181,8 @@ export function getModuleI18nKey(key: string, isAdminContext: boolean = false) {
       return "admin_carbon_emission_database.title";
     case "application_management":
       return "application_management.title";
+    case "carbon_chatbot":
+      return "carbon_chatbot.menu_title";
     default:
       return `${key}.title`;
   }

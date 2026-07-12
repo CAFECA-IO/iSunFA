@@ -68,7 +68,7 @@ services:
     container_name: chatroom
     restart: always
     ports:
-      - '${CHATROOM_PORT:-20027}:8000'
+      - '${NEXT_PUBLIC_CHATROOM_PORT:-20027}:8000'
     command: centrifugo --client_insecure --api_insecure --admin --admin_insecure
     environment:
       CENTRIFUGO_TOKEN_HMAC_SECRET_KEY: ${CENTRIFUGO_TOKEN_HMAC_SECRET_KEY:-isunfa_token_hmac_secret_key}

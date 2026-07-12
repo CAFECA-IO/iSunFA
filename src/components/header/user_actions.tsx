@@ -97,11 +97,18 @@ export default function UserActions() {
         );
 
     return modulesToDisplay.map((module) => {
-      const active = isAdmin ? true : isModuleActive(module.key);
+      // Info: (20260712 - Luphia) 帶明確 href 的模組（固定路徑，如碳盤查）一律視為可用，並直接導向該 href
+      const active = module.href
+        ? true
+        : isAdmin
+          ? true
+          : isModuleActive(module.key);
       const Icon = module.icon;
-      const targetPath = isAdmin
-        ? `/admin/${module.key}`
-        : `${accountBookPath}/${module.key}`;
+      const targetPath = module.href
+        ? module.href
+        : isAdmin
+          ? `/admin/${module.key}`
+          : `${accountBookPath}/${module.key}`;
 
       return (
         <Fragment key={module.key}>

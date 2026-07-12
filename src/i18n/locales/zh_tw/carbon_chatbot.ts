@@ -1,5 +1,11 @@
 export const carbonChatbot = {
   title: "碳盤查機器人",
+  menu_title: "智能溫盤",
+  unlock_button: "開始加密對話",
+  unlock_hint:
+    "為保護您的盤查內容，本對話將以裝置的安全金鑰進行端對端加密。點擊開始並完成一次驗證即可解鎖並取得 AI 招呼。",
+  device_unsupported:
+    "您的裝置或瀏覽器不支援加密所需的安全金鑰功能（WebAuthn PRF），暫時無法使用加密對話。建議改用支援的環境，例如 Android 上的 Chrome，或支援 PRF 的實體安全金鑰。",
   subtitle: "您專屬的企業碳會計師 (Carbon Accountant)",
   recent_chats: "最新對話",
   today: "今日",
@@ -22,9 +28,7 @@ export const carbonChatbot = {
   reduction_pathway: "減碳路徑模擬",
   system_error: "【系統錯誤】抱歉，連線到碳會計師服務時發生問題，請稍後再試。",
   system_unavailable: "抱歉，系統目前無法回應。",
-  welcome_message:
-    "您好！我是您的 AI 碳盤查助手。為了開始今天的盤查工作，請先告訴我您要盤查的企業名稱與年度？",
-  ai_name: "費思 (FAITH)",
+  ai_name: "費思",
   platform_name: "環境智能平台",
   system_online: "系統連線中",
   database_version: "數據庫版本",

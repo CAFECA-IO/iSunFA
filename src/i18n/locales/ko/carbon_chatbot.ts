@@ -1,5 +1,11 @@
 export const carbonChatbot = {
   title: "탄소 인벤토리 챗봇",
+  menu_title: "스마트 GHG 인벤토리",
+  unlock_button: "암호화 대화 시작",
+  unlock_hint:
+    "점검 내용을 보호하기 위해 이 대화는 기기의 보안 키로 종단 간 암호화됩니다. 시작을 클릭하고 인증을 한 번 완료하면 잠금이 해제되고 AI 인사를 받습니다.",
+  device_unsupported:
+    "사용 중인 기기 또는 브라우저가 암호화에 필요한 보안 키 기능(WebAuthn PRF)을 지원하지 않아 암호화 채팅을 사용할 수 없습니다. Android의 Chrome 또는 PRF를 지원하는 보안 키 등 지원되는 환경을 사용해 주세요.",
   subtitle: "귀하만의 기업 탄소 회계사",
   recent_chats: "최근 대화",
   today: "오늘",
@@ -23,9 +29,7 @@ export const carbonChatbot = {
   system_error:
     "[시스템 오류] 죄송합니다. 탄소 회계사 서비스에 연결하는 중 문제가 발생했습니다. 나중에 다시 시도해 주세요.",
   system_unavailable: "죄송합니다. 현재 시스템이 응답할 수 없습니다.",
-  welcome_message:
-    "안녕하세요! 저는 귀하의 AI 탄소 인벤토리 어시스턴트입니다. 오늘의 인벤토리를 시작하려면 인벤토리할 회사 이름과 연도를 알려주세요.",
-  ai_name: "페이스 (FAITH)",
+  ai_name: "페이스",
   platform_name: "환경 인텔리전스 플랫폼",
   system_online: "시스템 온라인",
   database_version: "데이터베이스 버전",
