@@ -866,7 +866,7 @@ function ReportPageContent() {
     },
     {
       key: "type",
-      label: t("common.type", { defaultValue: "核算類型" }),
+      label: t("common.type"),
       render: (row) => (
         <span className="font-bold text-gray-700">
           {row.action === "calculate_batch" ? "里程核算" : "碳排核算"}
@@ -896,8 +896,7 @@ function ReportPageContent() {
           return (
             <div className="flex items-center gap-1.5 text-sm text-gray-700">
               <span className="max-w-[200px] truncate text-gray-500 italic">
-                {t("common.multiple_items", { defaultValue: "多筆清單" })} (
-                {row.items?.length || 0})
+                {t("common.multiple_items")} ({row.items?.length || 0})
               </span>
             </div>
           );

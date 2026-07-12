@@ -126,4 +126,5 @@ export const common = {
   all_solutions: "All Solutions",
   all_status: "All Status",
   reset: "Reset",
+  system_admin: "System Admin",
 };

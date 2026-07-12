@@ -995,7 +995,7 @@ export default function AnalysisView() {
               isInternalCompanyAnalysis ? (
                 <div className="mt-4 space-y-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
                   <h4 className="text-sm font-bold text-gray-900">
-                    {t("analysis.addons_title", { defaultValue: "加購項目" })}
+                    {t("analysis.addons_title")}
                   </h4>
                   <div className="space-y-2">
                     {renderAddonsCheckbox(

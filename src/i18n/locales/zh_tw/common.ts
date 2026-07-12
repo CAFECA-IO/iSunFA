@@ -123,4 +123,5 @@ export const common = {
   all_solutions: "所有方案",
   all_status: "所有狀態",
   reset: "重設",
+  system_admin: "系統管理員",
 };
