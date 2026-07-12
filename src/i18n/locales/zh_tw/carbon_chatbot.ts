@@ -28,4 +28,11 @@ export const carbonChatbot = {
   platform_name: "環境智能平台",
   system_online: "系統連線中",
   database_version: "數據庫版本",
+  send_message: "傳送訊息",
+  no_report_data: "目前尚未有報告資料",
+  paragraph_tracker_title: "段落狀態追蹤面板",
+  status_completed: "已完成",
+  status_incomplete: "未完成",
+  status_verified: "已查核",
+  status_unverified: "未查核",
 };

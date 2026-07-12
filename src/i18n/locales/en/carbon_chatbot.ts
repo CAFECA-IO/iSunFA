@@ -29,4 +29,11 @@ export const carbonChatbot = {
   platform_name: "ENVIRONMENTAL INTELLIGENCE PLATFORM",
   system_online: "SYSTEM ONLINE",
   database_version: "Database Version",
+  send_message: "Send message",
+  no_report_data: "No report data available yet",
+  paragraph_tracker_title: "Paragraph Status Tracker",
+  status_completed: "Completed",
+  status_incomplete: "Incomplete",
+  status_verified: "Verified",
+  status_unverified: "Unverified",
 };

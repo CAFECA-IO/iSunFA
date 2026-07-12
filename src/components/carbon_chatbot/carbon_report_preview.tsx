@@ -6,6 +6,7 @@ import PdfEditor from "@/components/pdf_tool/pdf_editor";
 import { useState } from "react";
 
 import { CheckCircle2, Circle, AlertCircle } from "lucide-react";
+import { useTranslation } from "@/i18n/i18n_context";
 
 interface ICarbonReportPreviewProps {
   session?: IChatSession;
@@ -45,6 +46,7 @@ export default function CarbonReportPreview({
   onToggleCompleted = () => {},
   onToggleVerified = () => {},
 }: ICarbonReportPreviewProps) {
+  const { t } = useTranslation();
   const [, setErrorModal] = useState({ isOpen: false, message: "" });
 
   const reportData = session?.reportData;
@@ -53,7 +55,7 @@ export default function CarbonReportPreview({
     return (
       <div className="relative flex h-full w-full flex-1 flex-col items-center justify-center border-l border-gray-200 bg-[#f8fafc] text-gray-400">
         <FileText className="mb-4 h-12 w-12 opacity-20" />
-        <p>目前尚未有報告資料</p>
+        <p>{t("carbon_chatbot.no_report_data")}</p>
       </div>
     );
   }
@@ -67,7 +69,7 @@ export default function CarbonReportPreview({
       {isMock2025 && reportData.paragraphs && (
         <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
           <h3 className="mb-2 text-sm font-bold text-gray-700">
-            段落狀態追蹤面板
+            {t("carbon_chatbot.paragraph_tracker_title")}
           </h3>
           <div className="flex flex-col gap-2">
             {reportData.paragraphs.map((p) => (
@@ -91,7 +93,9 @@ export default function CarbonReportPreview({
                     ) : (
                       <Circle size={14} />
                     )}
-                    {p.isCompleted ? "已完成" : "未完成"}
+                    {p.isCompleted
+                      ? t("carbon_chatbot.status_completed")
+                      : t("carbon_chatbot.status_incomplete")}
                   </button>
                   <button
                     onClick={() => onToggleVerified && onToggleVerified(p.id)}
@@ -102,7 +106,9 @@ export default function CarbonReportPreview({
                     ) : (
                       <AlertCircle size={14} />
                     )}
-                    {p.isVerified ? "已查核" : "未查核"}
+                    {p.isVerified
+                      ? t("carbon_chatbot.status_verified")
+                      : t("carbon_chatbot.status_unverified")}
                   </button>
                 </div>
               </div>

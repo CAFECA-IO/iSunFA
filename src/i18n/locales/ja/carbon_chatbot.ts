@@ -29,4 +29,11 @@ export const carbonChatbot = {
   platform_name: "環境インテリジェンスプラットフォーム",
   system_online: "システムオンライン",
   database_version: "データベースバージョン",
+  send_message: "メッセージを送信",
+  no_report_data: "レポートデータはまだありません",
+  paragraph_tracker_title: "段落ステータストラッカー",
+  status_completed: "完了",
+  status_incomplete: "未完了",
+  status_verified: "検証済み",
+  status_unverified: "未検証",
 };

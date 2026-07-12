@@ -40,7 +40,7 @@ export function ChatInput({
         <button
           onClick={onSendMessage}
           disabled={disabled}
-          aria-label="Send message"
+          aria-label={t("carbon_chatbot.send_message")}
           className="absolute top-1/2 right-2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#ff5a00] text-white shadow-sm transition-colors hover:bg-[#e04f00] disabled:cursor-not-allowed disabled:bg-gray-300"
         >
           <svg

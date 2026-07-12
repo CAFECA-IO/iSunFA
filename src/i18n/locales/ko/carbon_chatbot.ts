@@ -29,4 +29,11 @@ export const carbonChatbot = {
   platform_name: "환경 인텔리전스 플랫폼",
   system_online: "시스템 온라인",
   database_version: "데이터베이스 버전",
+  send_message: "메시지 보내기",
+  no_report_data: "아직 보고서 데이터가 없습니다",
+  paragraph_tracker_title: "단락 상태 추적 패널",
+  status_completed: "완료됨",
+  status_incomplete: "미완료",
+  status_verified: "검증됨",
+  status_unverified: "미검증",
 };
