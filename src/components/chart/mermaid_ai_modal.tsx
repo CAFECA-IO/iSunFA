@@ -22,6 +22,7 @@ import {
   getChartTitle,
   updateChartTitle,
 } from "@/lib/utils/mermaid_helpers";
+import ConfirmModal from "@/components/common/confirm_modal";
 
 interface IMermaidAiModalProps {
   open: boolean;
@@ -52,6 +53,8 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [newChartPreview, setNewChartPreview] = useState<string>("");
   const [apiError, setApiError] = useState<string | null>(null);
+
+  const [isShowWarning, setIsShowWarning] = useState<boolean>(false);
 
   // Info: (20260708 - Julian) 當內部基底改變時，重新解析元數據供工具選單使用
   const currentParsedNodes = useMemo(
@@ -212,9 +215,20 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
     onClose();
   };
 
+  const warningModalToggle = () => setIsShowWarning((prev) => !prev);
+
+  // Info: (20260713 - Julian) 如果正在已編輯狀態，則在點擊取消時彈出關閉提醒
+  const cancelClicker = () => {
+    if (newChartPreview !== "") {
+      warningModalToggle();
+    } else {
+      handleCancel();
+    }
+  };
+
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-9999 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-md transition-opacity sm:p-6 md:p-10">
+    <div className="fixed inset-0 z-8888 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-md transition-opacity sm:p-6 md:p-10">
       <div className="relative flex h-[85vh] min-h-[600px] w-full max-w-6xl transform flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-2xl transition-all md:flex-row">
         <MermaidAiControlPanel
           chartType={chartType}
@@ -237,12 +251,22 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
           isGenerating={isGenerating}
           newChartPreview={newChartPreview}
           apiError={apiError}
-          onCancel={handleCancel}
+          onCancel={cancelClicker}
           onGenerate={handleGenerate}
           onAbort={handleAbort}
           onAdopt={handleAdopt}
         />
       </div>
+
+      <ConfirmModal
+        isOpen={isShowWarning}
+        title="即將關閉 AI 智慧圖表編輯器"
+        message="尚未儲存圖表變更，您確定要關閉 AI 智慧圖表編輯器嗎？"
+        onClose={warningModalToggle}
+        cancelText="取消"
+        confirmText="確認關閉"
+        onConfirm={handleCancel}
+      />
     </div>
   );
 };
