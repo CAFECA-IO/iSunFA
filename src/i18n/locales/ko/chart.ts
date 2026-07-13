@@ -43,6 +43,8 @@ export const chart = {
         quick_tools: "자주 쓰는 편집 툴",
         ai_assistant: "AI 편집 지시",
       },
+      chart_title: "차트 제목",
+      chart_title_placeholder: "예: 프로젝트 진행 흐름",
       command_list: "명령어 리스트",
       flowchart: {
         add_node: "노드 추가",

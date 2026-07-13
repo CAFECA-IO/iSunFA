@@ -43,6 +43,8 @@ export const chart = {
         quick_tools: "Quick Tools",
         ai_assistant: "AI Instruction",
       },
+      chart_title: "Chart Title",
+      chart_title_placeholder: "e.g., Project Progress Flow",
       command_list: "Command List",
       flowchart: {
         add_node: "Add Node",

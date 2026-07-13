@@ -43,6 +43,8 @@ export const chart = {
         quick_tools: "よく使う編集ツール",
         ai_assistant: "AI 編集指令",
       },
+      chart_title: "チャートタイトル",
+      chart_title_placeholder: "例: プロジェクトの進捗フロー",
       command_list: "コマンドリスト",
       flowchart: {
         add_node: "ノードを追加",

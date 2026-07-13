@@ -41,6 +41,8 @@ export const chart = {
         quick_tools: "常用修改工具",
         ai_assistant: "AI 编辑指令",
       },
+      chart_title: "图表标题",
+      chart_title_placeholder: "例如: 专案进度流程",
       command_list: "指令列表",
       flowchart: {
         add_node: "新增节点",
