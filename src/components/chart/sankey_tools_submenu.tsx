@@ -1,10 +1,10 @@
 /* eslint-disable */
 // ToDo: (20260713 - Julian) 這個元件還在開發中
-import React, { useState, FC } from "react";
+import React, { useState, FC, useEffect } from "react";
 import {
   Repeat,
   Tag,
-  Trash2,
+  Eraser,
   TrendingUp,
   Shuffle,
   LucideIcon,
@@ -13,7 +13,8 @@ import { useTranslation } from "@/i18n/i18n_context";
 import {
   IChartAction,
   ISankeyData,
-  MermaidActionType,
+  ISankeyLink,
+  // MermaidActionType,
 } from "@/lib/utils/mermaid_helpers";
 import {
   MERMAID_INPUT_STYLE,
@@ -26,7 +27,7 @@ enum SankeyTools {
   ADD_LINK = "addLink",
   EDIT_LINK = "editLink",
   REVERSE_FLOW = "reverseFlow",
-  CHANGE_NODE_NAME = "changeNodeName",
+  RENAME_NODE = "renameNode",
   DELETE_LINK = "deleteLink",
 }
 
@@ -49,12 +50,12 @@ const SANKEY_TOOLS: IToolItem[] = [
     icon: Repeat,
   },
   {
-    tool: SankeyTools.CHANGE_NODE_NAME,
+    tool: SankeyTools.RENAME_NODE,
     icon: Tag,
   },
   {
     tool: SankeyTools.DELETE_LINK,
-    icon: Trash2,
+    icon: Eraser,
   },
 ];
 
@@ -62,7 +63,7 @@ const SANKEY_TOOL_TRANSLATION_KEYS: Record<SankeyTools, string> = {
   [SankeyTools.ADD_LINK]: "新增流向",
   [SankeyTools.EDIT_LINK]: "編輯流向",
   [SankeyTools.REVERSE_FLOW]: "反轉流向",
-  [SankeyTools.CHANGE_NODE_NAME]: "變更節點名稱",
+  [SankeyTools.RENAME_NODE]: "變更節點名稱",
   [SankeyTools.DELETE_LINK]: "刪除流向",
 };
 
@@ -83,13 +84,16 @@ const AddLinkPanel: FC<IBasePanelProps> = ({
 }) => {
   const { t } = useTranslation();
 
+  const nodeOptions = parsedSankeyData.nodes;
+
   const [formType, setFormType] = useState<NodeType>(NodeType.EXISTING);
   const [formInput, setFormInput] = useState<string>("");
   const [toType, setToType] = useState<NodeType>(NodeType.EXISTING);
   const [toInput, setToInput] = useState<string>("");
   const [newValue, setNewValue] = useState<number>(0);
 
-  const isSubmitDisabled = formInput === "" || toInput === "" || newValue === 0;
+  const isSubmitDisabled =
+    formInput.trim() === "" || toInput.trim() === "" || newValue === 0;
 
   const handleSubmit = () => {
     // onAddAction({
@@ -111,8 +115,8 @@ const AddLinkPanel: FC<IBasePanelProps> = ({
         <TrendingUp size={14} />
         <p>{t("新增流向")}</p>
       </div>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="col-span-2 flex flex-col gap-2">
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between">
             <label htmlFor="addLinkFromLabel" className={MERMAID_LABEL_STYLE}>
               {t("資料來源（From）")}
@@ -144,13 +148,18 @@ const AddLinkPanel: FC<IBasePanelProps> = ({
               className={MERMAID_INPUT_STYLE}
             >
               <option value="">{t("請選擇現有資料來源")}</option>
+              {nodeOptions.map((item) => (
+                <option key={`sankey-add-opt-${item}`} value={item}>
+                  {item}
+                </option>
+              ))}
             </select>
           )}
         </div>
-        <div className="col-span-2 flex flex-col gap-2">
+        <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between">
             <label htmlFor="addLinkToLabel" className={MERMAID_LABEL_STYLE}>
-              {t("流向目的地（To）")}
+              {t("流向目標 （To）")}
               <span className="ml-0.5 text-red-500">*</span>
             </label>
             <SegmentedControl
@@ -179,10 +188,15 @@ const AddLinkPanel: FC<IBasePanelProps> = ({
               className={MERMAID_INPUT_STYLE}
             >
               <option value="">{t("請選擇現有資料來源")}</option>
+              {nodeOptions.map((item) => (
+                <option key={`sankey-add-opt-${item}`} value={item}>
+                  {item}
+                </option>
+              ))}
             </select>
           )}
         </div>
-        <div className="col-span-2 flex flex-col gap-2">
+        <div className="flex flex-col">
           <label htmlFor="addValueLabel" className={MERMAID_LABEL_STYLE}>
             {t("流向數量/權重（Value）")}
             <span className="ml-0.5 text-red-500">*</span>
@@ -214,9 +228,42 @@ const EditLinkPanel: FC<IBasePanelProps> = ({
   onAddAction,
 }) => {
   const { t } = useTranslation();
-  const [sankeySliceTarget, setSankeySliceTarget] = useState<string>("");
-  const [sankeySliceNewLabel, setSankeySliceNewLabel] = useState<string>("");
-  const [sankeySliceValue, setSankeySliceValue] = useState<string>("");
+
+  const linkOptions = parsedSankeyData.links;
+  const nodeOptions = parsedSankeyData.nodes;
+
+  const [selectedLinkId, setSelectedLinkId] = useState<string>("");
+  const [selectedLink, setSelectedLink] = useState<ISankeyLink | null>(null);
+  const [newSource, setNewSource] = useState<string>("");
+  const [newTarget, setNewTarget] = useState<string>("");
+  const [newLinkValue, setNewLinkValue] = useState<number>(0);
+
+  // Info: (20260713 - Julian) 初始 source & target & value
+  const initialSource = selectedLink ? selectedLink.source : "";
+  const initialTarget = selectedLink ? selectedLink.target : "";
+  const initialValue = selectedLink ? selectedLink.value : 0;
+
+  useEffect(() => {
+    const selectedLink = linkOptions.find(
+      (link) => link.lineIndex === Number(selectedLinkId),
+    );
+    setSelectedLink(selectedLink ?? null);
+  }, [selectedLinkId, linkOptions]);
+
+  useEffect(() => {
+    // Info: (20260713 - Julian) 匯入初始值
+    setNewSource(initialSource);
+    setNewTarget(initialTarget);
+    setNewLinkValue(initialValue);
+  }, [selectedLink, initialSource, initialTarget, initialValue]);
+
+  // Info: (20260713 - Julian) 反灰條件
+  const selectDisabled = selectedLinkId.trim() === "";
+  const submitDisabled =
+    selectDisabled ||
+    ((newSource === initialSource || newSource.trim() === "") &&
+      (newTarget === initialTarget || newTarget.trim() === "") &&
+      newLinkValue === initialValue);
 
   const handleSubmit = () => {
     // onAddAction({
@@ -235,94 +282,94 @@ const EditLinkPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <Shuffle size={14} />
-        <p>{t("chart.mermaid.ai_editor.sankey.edit_slice_title")}</p>
-      </div>
-      <div className="flex flex-col">
-        <label htmlFor="sankeySliceTarget" className={MERMAID_LABEL_STYLE}>
-          {t("chart.mermaid.ai_editor.sankey.select_slice")}
-          <span className="ml-0.5 text-red-500">*</span>
-        </label>
-        <select
-          id="sankeySliceTarget"
-          value={sankeySliceTarget}
-          onChange={(e) => setSankeySliceTarget(e.target.value)}
-          className={MERMAID_INPUT_STYLE}
-        >
-          <option value="">
-            {t("chart.mermaid.ai_editor.sankey.select_slice_placeholder")}
-          </option>
-          {/* {parsedSankeyData.map((item) => (
-            <option key={`sankey-edit-opt-${item.label}`} value={item.label}>
-              {item.label} ({item.value})
-            </option>
-          ))} */}
-        </select>
+        <p>{t("編輯流向")}</p>
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div className="col-span-2 flex flex-col">
-          <label htmlFor="sankeySliceNewLabel" className={MERMAID_LABEL_STYLE}>
-            {t("chart.mermaid.ai_editor.sankey.new_name_label")}
+          <label htmlFor="editLinkLabel" className={MERMAID_LABEL_STYLE}>
+            {t("選擇欲編輯的流向")}
+            <span className="ml-0.5 text-red-500">*</span>
           </label>
-          <input
-            id="sankeySliceNewLabel"
-            type="text"
-            value={sankeySliceNewLabel}
-            onChange={(e) => setSankeySliceNewLabel(e.target.value)}
+          <select
+            id="editLinkLabel"
+            value={selectedLinkId}
+            onChange={(e) => setSelectedLinkId(e.target.value)}
             className={MERMAID_INPUT_STYLE}
-            placeholder={
-              t("chart.mermaid.ai_editor.sankey.new_name_placeholder")!
-            }
-          />
+          >
+            <option value="">{t("選擇欲編輯的流向")}</option>
+            {linkOptions.map((item) => (
+              <option
+                key={`sankey-edit-opt-${item.lineIndex}`}
+                value={item.lineIndex}
+              >
+                {item.source} ➡️ {item.target}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col">
+          <label htmlFor="newSourceLabel" className={MERMAID_LABEL_STYLE}>
+            {t("資料來源")}
+          </label>
+          <select
+            id="newSourceLabel"
+            value={newSource}
+            onChange={(e) => setNewSource(e.target.value)}
+            disabled={selectDisabled}
+            className={MERMAID_INPUT_STYLE}
+          >
+            <option value="">{t("請選擇新的資料來源")}</option>
+            {nodeOptions.map((item) => (
+              <option key={`sankey-edit-source-opt-${item}`} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col">
+          <div className="flex items-center justify-between">
+            <label htmlFor="newTargetLabel" className={MERMAID_LABEL_STYLE}>
+              {t("流向目標")}
+            </label>
+          </div>
+          <select
+            id="newTargetLabel"
+            value={newTarget}
+            onChange={(e) => setNewTarget(e.target.value)}
+            disabled={selectDisabled}
+            className={MERMAID_INPUT_STYLE}
+          >
+            <option value="">{t("請選擇新的流向目標")}</option>
+            {nodeOptions.map((item) => (
+              <option key={`sankey-edit-target-opt-${item}`} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="col-span-2 flex flex-col">
-          <div className="mb-1 flex items-center justify-between">
-            <label
-              htmlFor="sankeySliceValueEdit"
-              className={MERMAID_LABEL_STYLE}
-            >
-              {t("chart.mermaid.ai_editor.sankey.new_value_label")}
+          <div className="flex items-center justify-between">
+            <label htmlFor="newLinkValueLabel" className={MERMAID_LABEL_STYLE}>
+              {t("流向數量/權重")}
             </label>
-            {/* <SegmentedControl
-              value={valueMode}
-              onChange={(val) => setValueMode(val as SankeyValueMode)}
-              options={[
-                {
-                  label: t("chart.mermaid.ai_editor.sankey.value_mode_value"),
-                  value: SankeyValueMode.VALUE,
-                },
-                {
-                  label: t(
-                    "chart.mermaid.ai_editor.sankey.value_mode_proportion",
-                  ),
-                  value: SankeyValueMode.PROPORTION,
-                },
-              ]}
-            /> */}
           </div>
           <input
-            id="sankeySliceValueEdit"
+            id="newLinkValueLabel"
             type="number"
-            step="any"
-            value={sankeySliceValue}
-            onChange={(e) => setSankeySliceValue(e.target.value)}
+            value={newLinkValue}
+            onChange={(e) => setNewLinkValue(Number(e.target.value))}
+            disabled={selectDisabled}
             className={MERMAID_INPUT_STYLE}
-            // placeholder={
-            //   isProportion
-            //     ? "例如: 25"
-            //     : t("chart.mermaid.ai_editor.sankey.new_value_placeholder")!
-            // }
           />
         </div>
       </div>
       <button
         type="button"
         onClick={handleSubmit}
-        disabled={
-          !sankeySliceTarget || (!sankeySliceValue && !sankeySliceNewLabel)
-        }
+        disabled={submitDisabled}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t("chart.mermaid.ai_editor.sankey.edit_slice")}
+        {t("套用變更")}
       </button>
     </div>
   );
@@ -334,9 +381,10 @@ const ReverseFlowPanel: FC<IBasePanelProps> = ({
   onAddAction,
 }) => {
   const { t } = useTranslation();
-  const [sankeySliceTarget, setSankeySliceTarget] = useState<string>("");
-  const [sankeySliceNewLabel, setSankeySliceNewLabel] = useState<string>("");
-  const [sankeySliceValue, setSankeySliceValue] = useState<string>("");
+
+  const linkOptions = parsedSankeyData.links;
+
+  const [selectedLinkId, setSelectedLinkId] = useState<string>("");
 
   const handleSubmit = () => {
     // onAddAction({
@@ -355,108 +403,55 @@ const ReverseFlowPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <Repeat size={14} />
-        <p>{t("chart.mermaid.ai_editor.sankey.edit_slice_title")}</p>
+        <p>{t("反轉流向")}</p>
       </div>
       <div className="flex flex-col">
-        <label htmlFor="sankeySliceTarget" className={MERMAID_LABEL_STYLE}>
-          {t("chart.mermaid.ai_editor.sankey.select_slice")}
+        <label htmlFor="reverseLinkLabel" className={MERMAID_LABEL_STYLE}>
+          {t("選擇欲反轉的流向")}
           <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
-          id="sankeySliceTarget"
-          value={sankeySliceTarget}
-          onChange={(e) => setSankeySliceTarget(e.target.value)}
+          id="reverseLinkLabel"
+          value={selectedLinkId}
+          onChange={(e) => setSelectedLinkId(e.target.value)}
           className={MERMAID_INPUT_STYLE}
         >
-          <option value="">
-            {t("chart.mermaid.ai_editor.sankey.select_slice_placeholder")}
-          </option>
-          {/* {parsedSankeyData.map((item) => (
-            <option key={`sankey-edit-opt-${item.label}`} value={item.label}>
-              {item.label} ({item.value})
-            </option>
-          ))} */}
-        </select>
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="col-span-2 flex flex-col">
-          <label htmlFor="sankeySliceNewLabel" className={MERMAID_LABEL_STYLE}>
-            {t("chart.mermaid.ai_editor.sankey.new_name_label")}
-          </label>
-          <input
-            id="sankeySliceNewLabel"
-            type="text"
-            value={sankeySliceNewLabel}
-            onChange={(e) => setSankeySliceNewLabel(e.target.value)}
-            className={MERMAID_INPUT_STYLE}
-            placeholder={
-              t("chart.mermaid.ai_editor.sankey.new_name_placeholder")!
-            }
-          />
-        </div>
-        <div className="col-span-2 flex flex-col">
-          <div className="mb-1 flex items-center justify-between">
-            <label
-              htmlFor="sankeySliceValueEdit"
-              className={MERMAID_LABEL_STYLE}
+          <option value="">{t("選擇欲反轉的流向")}</option>
+          {linkOptions.map((link) => (
+            <option
+              key={`sankey-reverse-opt-${link.lineIndex}`}
+              value={link.lineIndex}
             >
-              {t("chart.mermaid.ai_editor.sankey.new_value_label")}
-            </label>
-            {/* <SegmentedControl
-              value={valueMode}
-              onChange={(val) => setValueMode(val as SankeyValueMode)}
-              options={[
-                {
-                  label: t("chart.mermaid.ai_editor.sankey.value_mode_value"),
-                  value: SankeyValueMode.VALUE,
-                },
-                {
-                  label: t(
-                    "chart.mermaid.ai_editor.sankey.value_mode_proportion",
-                  ),
-                  value: SankeyValueMode.PROPORTION,
-                },
-              ]}
-            /> */}
-          </div>
-          <input
-            id="sankeySliceValueEdit"
-            type="number"
-            step="any"
-            value={sankeySliceValue}
-            onChange={(e) => setSankeySliceValue(e.target.value)}
-            className={MERMAID_INPUT_STYLE}
-            // placeholder={
-            //   isProportion
-            //     ? "例如: 25"
-            //     : t("chart.mermaid.ai_editor.sankey.new_value_placeholder")!
-            // }
-          />
-        </div>
+              {link.source} ➡️ {link.target}
+            </option>
+          ))}
+        </select>
       </div>
       <button
         type="button"
         onClick={handleSubmit}
-        disabled={
-          !sankeySliceTarget || (!sankeySliceValue && !sankeySliceNewLabel)
-        }
+        disabled={!selectedLinkId}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t("chart.mermaid.ai_editor.sankey.edit_slice")}
+        {t("反轉流向")}
       </button>
     </div>
   );
 };
 
 // Info: (20260713 - Julian) 「變更節點名稱」面板
-const ChangeNodeNamePanel: FC<IBasePanelProps> = ({
+const RenameNodePanel: FC<IBasePanelProps> = ({
   parsedSankeyData,
   onAddAction,
 }) => {
   const { t } = useTranslation();
-  const [sankeySliceTarget, setSankeySliceTarget] = useState<string>("");
-  const [sankeySliceNewLabel, setSankeySliceNewLabel] = useState<string>("");
-  const [sankeySliceValue, setSankeySliceValue] = useState<string>("");
+
+  const nodeOptions = parsedSankeyData.nodes;
+
+  const [selectedNode, setSelectedNode] = useState<string>("");
+  const [newName, setNewName] = useState<string>("");
+
+  const submitDisabled = selectedNode.trim() === "" || newName.trim() === "";
 
   const handleSubmit = () => {
     // onAddAction({
@@ -475,94 +470,48 @@ const ChangeNodeNamePanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <Tag size={14} />
-        <p>{t("chart.mermaid.ai_editor.sankey.edit_slice_title")}</p>
+        <p>{t("變更節點名稱")}</p>
       </div>
       <div className="flex flex-col">
-        <label htmlFor="sankeySliceTarget" className={MERMAID_LABEL_STYLE}>
-          {t("chart.mermaid.ai_editor.sankey.select_slice")}
+        <label htmlFor="renameNodeLabel" className={MERMAID_LABEL_STYLE}>
+          {t("選擇欲更名的節點")}
           <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
-          id="sankeySliceTarget"
-          value={sankeySliceTarget}
-          onChange={(e) => setSankeySliceTarget(e.target.value)}
+          id="renameNodeLabel"
+          value={selectedNode}
+          onChange={(e) => setSelectedNode(e.target.value)}
           className={MERMAID_INPUT_STYLE}
         >
-          <option value="">
-            {t("chart.mermaid.ai_editor.sankey.select_slice_placeholder")}
-          </option>
-          {/* {parsedSankeyData.map((item) => (
-            <option key={`sankey-edit-opt-${item.label}`} value={item.label}>
-              {item.label} ({item.value})
+          <option value="">{t("選擇欲更名的節點")}</option>
+          {nodeOptions.map((node) => (
+            <option key={`sankey-rename-opt-${node}`} value={node}>
+              {node}
             </option>
-          ))} */}
+          ))}
         </select>
       </div>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="col-span-2 flex flex-col">
-          <label htmlFor="sankeySliceNewLabel" className={MERMAID_LABEL_STYLE}>
-            {t("chart.mermaid.ai_editor.sankey.new_name_label")}
-          </label>
-          <input
-            id="sankeySliceNewLabel"
-            type="text"
-            value={sankeySliceNewLabel}
-            onChange={(e) => setSankeySliceNewLabel(e.target.value)}
-            className={MERMAID_INPUT_STYLE}
-            placeholder={
-              t("chart.mermaid.ai_editor.sankey.new_name_placeholder")!
-            }
-          />
-        </div>
-        <div className="col-span-2 flex flex-col">
-          <div className="mb-1 flex items-center justify-between">
-            <label
-              htmlFor="sankeySliceValueEdit"
-              className={MERMAID_LABEL_STYLE}
-            >
-              {t("chart.mermaid.ai_editor.sankey.new_value_label")}
-            </label>
-            {/* <SegmentedControl
-              value={valueMode}
-              onChange={(val) => setValueMode(val as SankeyValueMode)}
-              options={[
-                {
-                  label: t("chart.mermaid.ai_editor.sankey.value_mode_value"),
-                  value: SankeyValueMode.VALUE,
-                },
-                {
-                  label: t(
-                    "chart.mermaid.ai_editor.sankey.value_mode_proportion",
-                  ),
-                  value: SankeyValueMode.PROPORTION,
-                },
-              ]}
-            /> */}
-          </div>
-          <input
-            id="sankeySliceValueEdit"
-            type="number"
-            step="any"
-            value={sankeySliceValue}
-            onChange={(e) => setSankeySliceValue(e.target.value)}
-            className={MERMAID_INPUT_STYLE}
-            // placeholder={
-            //   isProportion
-            //     ? "例如: 25"
-            //     : t("chart.mermaid.ai_editor.sankey.new_value_placeholder")!
-            // }
-          />
-        </div>
+      <div className="col-span-2 flex flex-col">
+        <label htmlFor="renameNodeInput" className={MERMAID_LABEL_STYLE}>
+          {t("新名稱")}
+          <span className="ml-0.5 text-red-500">*</span>
+        </label>
+        <input
+          id="renameNodeInput"
+          type="text"
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          className={MERMAID_INPUT_STYLE}
+          placeholder={t("請輸入新的節點名稱")!}
+        />
       </div>
       <button
         type="button"
         onClick={handleSubmit}
-        disabled={
-          !sankeySliceTarget || (!sankeySliceValue && !sankeySliceNewLabel)
-        }
+        disabled={submitDisabled}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t("chart.mermaid.ai_editor.sankey.edit_slice")}
+        {t("變更節點名稱")}
       </button>
     </div>
   );
@@ -574,7 +523,10 @@ const DeleteLinkPanel: FC<IBasePanelProps> = ({
   onAddAction,
 }) => {
   const { t } = useTranslation();
-  const [sankeySliceTarget, setSankeySliceTarget] = useState<string>("");
+
+  const linkOptions = parsedSankeyData.links;
+
+  const [selectedLinkId, setSelectedLinkId] = useState<string>("");
 
   const handleSubmit = () => {
     // if (!sankeySliceTarget) return;
@@ -591,37 +543,38 @@ const DeleteLinkPanel: FC<IBasePanelProps> = ({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
-        <Trash2 size={14} />
-        <p>{t("chart.mermaid.ai_editor.sankey.delete_slice_title")}</p>
+        <Eraser size={14} />
+        <p>{t("刪除流向")}</p>
       </div>
       <div className="flex flex-col">
-        <label htmlFor="sankeySliceTargetDel" className={MERMAID_LABEL_STYLE}>
-          {t("chart.mermaid.ai_editor.sankey.select_delete")}
+        <label htmlFor="reverseLinkLabel" className={MERMAID_LABEL_STYLE}>
+          {t("選擇欲刪除的流向")}
           <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
-          id="sankeySliceTargetDel"
-          value={sankeySliceTarget}
-          onChange={(e) => setSankeySliceTarget(e.target.value)}
+          id="reverseLinkLabel"
+          value={selectedLinkId}
+          onChange={(e) => setSelectedLinkId(e.target.value)}
           className={MERMAID_INPUT_STYLE}
         >
-          <option value="">
-            {t("chart.mermaid.ai_editor.sankey.select_delete_placeholder")}
-          </option>
-          {/* {parsedSankeyData.map((item) => (
-            <option key={`sankey-del-opt-${item.label}`} value={item.label}>
-              {item.label}
+          <option value="">{t("選擇欲刪除的流向")}</option>
+          {linkOptions.map((link) => (
+            <option
+              key={`sankey-delete-opt-${link.lineIndex}`}
+              value={link.lineIndex}
+            >
+              {link.source} ➡️ {link.target}
             </option>
-          ))} */}
+          ))}
         </select>
       </div>
       <button
         type="button"
         onClick={handleSubmit}
-        disabled={!sankeySliceTarget}
+        disabled={!selectedLinkId}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t("chart.mermaid.ai_editor.sankey.delete_slice")}
+        {t("刪除流向")}
       </button>
     </div>
   );
@@ -631,7 +584,7 @@ const SANKEY_TOOL_PANELS: Record<SankeyTools, FC<IBasePanelProps>> = {
   [SankeyTools.ADD_LINK]: AddLinkPanel,
   [SankeyTools.EDIT_LINK]: EditLinkPanel,
   [SankeyTools.REVERSE_FLOW]: ReverseFlowPanel,
-  [SankeyTools.CHANGE_NODE_NAME]: ChangeNodeNamePanel,
+  [SankeyTools.RENAME_NODE]: RenameNodePanel,
   [SankeyTools.DELETE_LINK]: DeleteLinkPanel,
 };
 
@@ -665,7 +618,7 @@ export const SankeyToolsSection: FC<ISankeyToolsSectionProps> = ({
 
   return (
     <>
-      {/* Info: (20260629 - Julian) 快捷工具選擇列 */}
+      {/* Info: (20260713 - Julian) 快捷工具選擇列 */}
       <div className="flex flex-wrap gap-1.5">
         {SANKEY_TOOLS.map((item) => {
           const handleClick = () =>
