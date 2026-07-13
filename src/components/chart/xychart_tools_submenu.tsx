@@ -610,6 +610,7 @@ const EditLinePanel: FC<IBasePanelProps> = ({
           <div className="flex flex-col">
             <label className={MERMAID_LABEL_STYLE}>
               {t("chart.mermaid.ai_editor.xy_chart.target_value_label")}
+              <span className="ml-0.5 text-red-500">*</span>
             </label>
             <div className="grid grid-cols-2 gap-2">
               {categories.map((cat, idx) => (
@@ -804,6 +805,7 @@ const EditBarPanel: FC<IBasePanelProps> = ({
           <div className="flex flex-col gap-2">
             <label className={MERMAID_LABEL_STYLE}>
               {t("chart.mermaid.ai_editor.xy_chart.target_value_label")}
+              <span className="ml-0.5 text-red-500">*</span>
             </label>
             <div className="grid grid-cols-2 gap-2">
               {categories.map((cat, idx) => (

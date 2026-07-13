@@ -238,6 +238,24 @@ export interface IXYChartData {
 }
 
 /**
+ * Info: (20260713 - Julian) 桑基圖連結介面
+ */
+export interface ISankeyLink {
+  source: string;
+  target: string;
+  value: number;
+  lineIndex: number;
+}
+
+/**
+ * Info: (20260713 - Julian) 桑基圖結構介面
+ */
+export interface ISankeyData {
+  links: ISankeyLink[];
+  nodes: string[];
+}
+
+/**
  * Info: (20260624 - Julian)
  * 略過註解與 %%{init...}%% 設定區塊，判斷是否為圓餅圖
  */
@@ -1113,4 +1131,124 @@ export const applyXYChartAction = (
   }
 
   return lines.join("\n");
+};
+
+/**
+ * Info: (20260713 - Julian)
+ * 解析單行 Sankey CSV（支援 RFC 4180 引號與逗號）
+ */
+const parseSankeyCsvLine = (line: string): string[] => {
+  const fields: string[] = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === "," && !inQuotes) {
+      fields.push(current.trim());
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  fields.push(current.trim());
+  return fields;
+};
+
+/**
+ * Info: (20260713 - Julian)
+ * 判斷是否為 Sankey CSV 標題列
+ */
+const isSankeyHeaderRow = (fields: string[]): boolean => {
+  if (fields.length !== 3) return false;
+  const normalized = fields.map((f) => f.toLowerCase());
+  return (
+    normalized[0] === "source" &&
+    normalized[1] === "target" &&
+    normalized[2] === "value"
+  );
+};
+
+/**
+ * Info: (20260713 - Julian)
+ * 判斷是否為桑基圖
+ */
+export const isSankeyChart = (chartStr: string): boolean => {
+  if (!chartStr || typeof chartStr !== "string") return false;
+  const lines = chartStr.split("\n");
+  for (const line of lines) {
+    const cleanLine = line.trim().toLowerCase();
+    if (!cleanLine || cleanLine.startsWith("%%")) {
+      continue;
+    }
+    return cleanLine.startsWith("sankey");
+  }
+  return false;
+};
+
+/**
+ * Info: (20260713 - Julian)
+ * 解析桑基圖的所有連結
+ */
+export const parseSankeyLinks = (chartStr: string): ISankeyLink[] => {
+  if (!chartStr || typeof chartStr !== "string") return [];
+
+  const links: ISankeyLink[] = [];
+  const lines = chartStr.split("\n");
+
+  lines.forEach((line, index) => {
+    const clean = line.trim();
+    if (!clean || clean.startsWith("%%") || /^sankey(-beta)?$/i.test(clean)) {
+      return;
+    }
+
+    const fields = parseSankeyCsvLine(clean);
+    if (fields.length !== 3 || isSankeyHeaderRow(fields)) {
+      return;
+    }
+
+    const value = parseFloat(fields[2]);
+    if (isNaN(value)) {
+      return;
+    }
+
+    links.push({
+      source: fields[0],
+      target: fields[1],
+      value,
+      lineIndex: index,
+    });
+  });
+
+  return links;
+};
+
+/**
+ * Info: (20260713 - Julian)
+ * 解析桑基圖內容
+ */
+export const parseSankeyData = (chartStr: string): ISankeyData | null => {
+  if (!chartStr || typeof chartStr !== "string") return null;
+  if (!isSankeyChart(chartStr)) return null;
+
+  const links = parseSankeyLinks(chartStr);
+  if (links.length === 0) return null;
+
+  const nodeSet = new Set<string>();
+  links.forEach(({ source, target }) => {
+    nodeSet.add(source);
+    nodeSet.add(target);
+  });
+
+  return {
+    links,
+    nodes: Array.from(nodeSet),
+  };
 };

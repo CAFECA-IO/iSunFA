@@ -348,13 +348,6 @@ const MermaidChart: FC<IMermaidChartProps> = ({
     <div className="relative w-full break-inside-avoid print:break-inside-avoid">
       <style>{`
         /* 1. Subgraph Clusters Styling */
-        .mermaid-container .cluster rect {
-          fill: #F8FAFC !important;
-          stroke: #E2E8F0 !important;
-          stroke-width: 1px !important;
-          rx: 10px !important;
-          ry: 10px !important;
-        }
         .mermaid-container .cluster-label span,
         .mermaid-container .cluster-label text,
         .mermaid-container .cluster-label foreignObject {
@@ -370,8 +363,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({
         .mermaid-container .node circle,
         .mermaid-container .node polygon,
         .mermaid-container .node path,
-        .mermaid-container .node .label-container,
-        .mermaid-container .node .basic {
+        .mermaid-container .node .label-container,{
           fill: #ffffff !important;
           stroke: #152C5B !important;
           stroke-width: 1.5px !important;
@@ -380,13 +372,12 @@ const MermaidChart: FC<IMermaidChartProps> = ({
         }
 
         .mermaid-container .node rect {
-          rx: 8px !important;
-          ry: 8px !important;
+          rx: 4px !important;
+          ry: 4px !important;
         }
 
         /* Hover Node Styling on interactive screen */
         @media screen {
-          .mermaid-container .node:hover rect,
           .mermaid-container .node:hover circle,
           .mermaid-container .node:hover polygon,
           .mermaid-container .node:hover path,
