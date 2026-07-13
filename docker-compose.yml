@@ -5,8 +5,8 @@ services:
     container_name: gateway
     restart: always
     ports:
-      - '${GATEWAY_PORT_HTTP:-80}:80'
-      - '${GATEWAY_PORT:-443}:443'
+      - "${GATEWAY_PORT_HTTP:-80}:80"
+      - "${GATEWAY_PORT:-443}:443"
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -15,12 +15,12 @@ services:
     container_name: database
     restart: always
     ports:
-      - '${POSTGRES_PORT:-20021}:5432'
+      - "${POSTGRES_PORT:-20021}:5432"
     environment:
-      POSTGRES_USER:     ${POSTGRES_USER:-isunfa}
+      POSTGRES_USER: ${POSTGRES_USER:-isunfa}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-isunfa}
-      POSTGRES_DB:       ${POSTGRES_DB:-isunfa}
-    volumes:                       
+      POSTGRES_DB: ${POSTGRES_DB:-isunfa}
+    volumes:
       - database_data:/var/lib/postgresql/data
 
   storage:
@@ -29,7 +29,7 @@ services:
     container_name: storage
     restart: always
     ports:
-      - '${STORAGE_PORT:-20022}:10014'
+      - "${STORAGE_PORT:-20022}:10014"
     volumes:
       - storage_data:/root/.ipfs
 
@@ -39,8 +39,8 @@ services:
     container_name: blockchain
     restart: always
     ports:
-      - '${DISCOVERY:-20023}:20023'
-      - '${RPC:-20024}:20024'
+      - "${DISCOVERY:-20023}:20023"
+      - "${RPC:-20024}:20024"
     volumes:
       - blockchain_data:/root/.isuncoin
 
@@ -51,9 +51,36 @@ services:
     container_name: osrm
     restart: always
     ports:
-      - '${OSRM_PORT:-20025}:5000'
+      - "${OSRM_PORT:-20025}:5000"
+
+  faith:
+    build:
+      context: ./dockerfiles/faith
+    container_name: faith
+    restart: always
+    ports:
+      - "${FAITH_PORT:-20026}:11434"
+    volumes:
+      - faith_data:/root/.ollama
+
+  chatroom:
+    image: centrifugo/centrifugo:v5
+    container_name: chatroom
+    restart: always
+    ports:
+      # Info: (20260712 - Luphia) 對外 port 需與 .env 的 CHATROOM_URL port 一致（後端 http://127.0.0.1:<此 port> 內部直連發佈）
+      - "20027:8000"
+    command: centrifugo --client_insecure --api_insecure --admin --admin_insecure
+    environment:
+      CENTRIFUGO_TOKEN_HMAC_SECRET_KEY: ${CENTRIFUGO_TOKEN_HMAC_SECRET_KEY:-isunfa_token_hmac_secret_key}
+      CENTRIFUGO_API_KEY: ${CENTRIFUGO_API_KEY:-isunfa_api_key}
+      CENTRIFUGO_ADMIN: "true"
+      CENTRIFUGO_ADMIN_PASSWORD: ${CENTRIFUGO_ADMIN_PASSWORD:-isunfa_admin_password}
+      CENTRIFUGO_ADMIN_SECRET: ${CENTRIFUGO_ADMIN_SECRET:-isunfa_admin_secret}
+      CENTRIFUGO_ALLOWED_ORIGINS: "https://isunfa.localhost http://localhost:3000 http://127.0.0.1:3000"
 
 volumes:
   blockchain_data:
   database_data:
   storage_data:
+  faith_data:

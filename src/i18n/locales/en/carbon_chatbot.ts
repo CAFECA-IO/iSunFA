@@ -1,5 +1,11 @@
 export const carbonChatbot = {
   title: "Carbon Chatbot",
+  menu_title: "Smart GHG Inventory",
+  unlock_button: "Start encrypted chat",
+  unlock_hint:
+    "To protect your inventory data, this chat is end-to-end encrypted with your device's secure key. Click start and complete one verification to unlock and receive the AI greeting.",
+  device_unsupported:
+    "Your device or browser does not support the secure key feature (WebAuthn PRF) required for encryption, so encrypted chat is unavailable. Please use a supported environment, such as Chrome on Android or a PRF-capable security key.",
   subtitle: "Your personal Enterprise Carbon Accountant",
   recent_chats: "Recent Chats",
   today: "Today",
@@ -23,8 +29,6 @@ export const carbonChatbot = {
   system_error:
     "[System Error] Sorry, there was a problem connecting to the Carbon Accountant service. Please try again later.",
   system_unavailable: "Sorry, the system is currently unavailable to respond.",
-  welcome_message:
-    "Hello! I am your AI Carbon Inventory Assistant. To start today's inventory, please tell me the company name and year?",
   ai_name: "FAITH",
   platform_name: "ENVIRONMENTAL INTELLIGENCE PLATFORM",
   system_online: "SYSTEM ONLINE",

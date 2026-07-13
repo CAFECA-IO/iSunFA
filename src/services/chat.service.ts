@@ -7,6 +7,7 @@ import {
   ModelParams,
 } from "@google/generative-ai";
 import { DirectChatSkill } from "@/skills/chat/direct_chat";
+import { CARBON_CHAT_GREETING_PROMPT } from "@/constants/carbon_chatbot";
 
 export type { Part, Schema, Tool };
 
@@ -127,6 +128,21 @@ export class ChatService {
       );
       throw error;
     }
+  }
+
+  /**
+   * Info: (20260712 - Luphia)
+   * 進入 channel 時的前置作業：以 bootstrap 指令產生開場招呼詞（不含真實對話歷史）
+   */
+  async generateCarbonChatbotGreeting(
+    currentStep?: string,
+    language?: string,
+  ): Promise<string> {
+    return this.generateCarbonChatbotResponse(
+      [{ role: "user", text: CARBON_CHAT_GREETING_PROMPT }],
+      currentStep,
+      language,
+    );
   }
 
   async generateRawWithImages(

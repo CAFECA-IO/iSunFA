@@ -1087,3 +1087,100 @@ model SolutionApplication {
   @@map("solution_application")
 }
 
+// Info: (20260712 - Luphia) 加密聊天室；以公鑰定址，任何人可加密訊息給指定對象
+model Chatroom {
+  id String @id @default(uuid())
+
+  // Info: (20260712 - Luphia) 頻道識別（如 carbon-chat-{address}-{session}）
+  channel String @unique
+
+  // Info: (20260712 - Luphia) 用途分類（如 carbon_chatbot），供不同用途區隔
+  purpose String?
+
+  // Info: (20260712 - Luphia) 建立者/擁有者的公鑰（非內部 FK，維持公鑰定址）
+  ownerPublicKey String? @map("owner_public_key")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  messages       ChatroomMessage[]
+  inventoryState CarbonInventoryState?
+
+  @@map("chatroom")
+}
+
+// Info: (20260712 - Luphia) 碳盤查結構化事實狀態（方案 A：伺服器端明文 Jsonb，供組 prompt／勾稽／報告）
+// Info: (20260712 - Luphia) 敏感事實；存取限伺服器端，未來可依需求升級為加密（設計文件方案 B/C）
+model CarbonInventoryState {
+  id String @id @default(uuid())
+
+  chatroomId String   @unique @map("chatroom_id")
+  chatroom   Chatroom @relation(fields: [chatroomId], references: [id])
+
+  // Info: (20260712 - Luphia) ICarbonInventoryState 的序列化內容
+  state Json
+
+  // Info: (20260712 - Luphia) 樂觀鎖／稽核用版本號
+  version Int @default(0)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("carbon_inventory_state")
+}
+
+// Info: (20260712 - Luphia) 聊天室訊息紀錄；所有通過的訊息皆入庫，且僅保存密文與回推解密金鑰所需的線索
+model ChatroomMessage {
+  id String @id @default(uuid())
+
+  chatroomId String   @map("chatroom_id")
+  chatroom   Chatroom @relation(fields: [chatroomId], references: [id])
+
+  // Info: (20260712 - Luphia) 寄件者公鑰（可為匿名/選填）與收件者公鑰（加密對象）
+  senderPublicKey    String? @map("sender_public_key")
+  recipientPublicKey String  @map("recipient_public_key")
+
+  // Info: (20260712 - Luphia) 僅保存密文（AES-GCM 封裝於 ECIES），不存明文
+  encryptedContent String @map("encrypted_content") @db.Text
+
+  // Info: (20260712 - Luphia) ECIES 臨時公鑰，供收件者以主私鑰做 ECDH 還原對稱金鑰
+  ephemeralPublicKey String? @map("ephemeral_public_key")
+
+  // Info: (20260712 - Luphia) 加解密演算法標記（版本化，便於未來演進）
+  algorithm String @default("ECIES-secp256k1-AES-256-GCM")
+
+  // Info: (20260712 - Luphia) 加密私鑰的「線索」：HD 派生路徑/索引（類 hdwallet），供持主私鑰者回推對應解密金鑰
+  keyDerivationHint String @map("key_derivation_hint")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([chatroomId])
+  @@index([recipientPublicKey])
+  @@map("chatroom_message")
+}
+
+// Info: (20260712 - Luphia) 用戶加密金鑰：公鑰對外公開供他人加密；主私鑰以 passkey PRF 派生金鑰包裝後僅存密文
+model UserEncryptionKey {
+  id String @id @default(uuid())
+
+  // Info: (20260712 - Luphia) 用戶身分（錢包 address，對應 User.address）
+  userAddress String @unique @map("user_address")
+
+  // Info: (20260712 - Luphia) 對外公開的加密主公鑰（供他人以 ECIES 加密給此用戶）
+  encryptionPublicKey String @map("encryption_public_key")
+
+  // Info: (20260712 - Luphia) 以 passkey PRF 派生金鑰包裝後的主私鑰（僅密文入庫，伺服器無法解開）
+  wrappedPrivateKey String @map("wrapped_private_key") @db.Text
+
+  // Info: (20260712 - Luphia) PRF 派生所需的 salt（類 hdwallet 的線索之一，供回推包裝金鑰）
+  prfSalt String @map("prf_salt")
+
+  // Info: (20260712 - Luphia) 包裝/派生演算法標記（版本化）
+  algorithm String @default("WebAuthnPRF-HKDF-AES-256-GCM")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("user_encryption_key")
+}
+

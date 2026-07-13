@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, FC } from "react";
+import React, { useState, useEffect, useMemo, FC } from "react";
 import {
   ChartLine,
   ChartColumnBig,
@@ -441,9 +441,14 @@ const EditLinePanel: FC<IBasePanelProps> = ({
   onAddAction,
 }) => {
   const { t } = useTranslation();
-  const categories = parsedXYChartData.xAxis.categories || [];
-  const lineSeries = parsedXYChartData.series.filter(
-    (s) => s.type === XYChartDataType.LINE,
+  const categories = useMemo(
+    () => parsedXYChartData.xAxis.categories || [],
+    [parsedXYChartData],
+  );
+  const lineSeries = useMemo(
+    () =>
+      parsedXYChartData.series.filter((s) => s.type === XYChartDataType.LINE),
+    [parsedXYChartData],
   );
 
   const [targetIndex, setTargetIndex] = useState<number>(0);
@@ -476,7 +481,7 @@ const EditLinePanel: FC<IBasePanelProps> = ({
         setRawValues("");
       }
     }
-  }, [targetIndex, parsedXYChartData]);
+  }, [targetIndex, categories, lineSeries]);
 
   const handleSubmit = () => {
     const data =
@@ -642,9 +647,14 @@ const EditBarPanel: FC<IBasePanelProps> = ({
   onAddAction,
 }) => {
   const { t } = useTranslation();
-  const categories = parsedXYChartData.xAxis.categories || [];
-  const barSeries = parsedXYChartData.series.filter(
-    (s) => s.type === XYChartDataType.BAR,
+  const categories = useMemo(
+    () => parsedXYChartData.xAxis.categories || [],
+    [parsedXYChartData],
+  );
+  const barSeries = useMemo(
+    () =>
+      parsedXYChartData.series.filter((s) => s.type === XYChartDataType.BAR),
+    [parsedXYChartData],
   );
 
   const [targetIndex, setTargetIndex] = useState<number>(0);
@@ -675,7 +685,7 @@ const EditBarPanel: FC<IBasePanelProps> = ({
         setRawValues("");
       }
     }
-  }, [targetIndex, parsedXYChartData]);
+  }, [targetIndex, categories, barSeries]);
 
   const handleSubmit = () => {
     const data =
