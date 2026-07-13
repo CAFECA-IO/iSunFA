@@ -51,3 +51,6 @@ export const CARBON_INVENTORY_STEP_ORDER: CarbonInventoryStep[] = [
 
 // Info: (20260712 - Luphia) 結構化狀態 schema 版本（便於未來遷移）
 export const CARBON_INVENTORY_STATE_VERSION = 1;
+
+// Info: (20260713 - Tzuhan) 行動版斷點判斷(對齊 Tailwind xl = 1280px):< xl 時目錄/報告採獨占畫面呈現
+export const MOBILE_MEDIA_QUERY = "(max-width: 1279px)";

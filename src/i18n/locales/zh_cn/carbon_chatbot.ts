@@ -39,4 +39,18 @@ export const carbonChatbot = {
   status_incomplete: "未完成",
   status_verified: "已查核",
   status_unverified: "未查核",
+  outline_title: "章节目录",
+  outline_button: "目录",
+  completed_short: "完成",
+  verified_short: "查核",
+  verified_progress: "人工查核进度",
+  jump_aria_label: "跳至此段落",
+  close_outline: "关闭章节目录",
+  data_driven_badge: "数据段落:数字由系统勾稽计算,非 AI 产出",
+  jump_prompt: "请协助我完成「{{section}}」这个段落。",
+  section_placeholder:
+    "本段尚未生成。回到左侧对话告诉碳会计师你想撰写这一段,内容将实时出现在这里。",
+  report_status_draft: "报告状态:草稿(内容由 AI 逐段生成,经人工查核后方可定稿)",
+  report_button: "报告",
+  close_report: "关闭报告",
 };

@@ -37,10 +37,23 @@ export interface IReportCategory {
 
 export interface IReportParagraph {
   id: string;
+  // Info: (20260713 - Tzuhan) 對應 CARBON_REPORT_OUTLINE 的章節分組與數據段落標記
+  chapterId: string;
+  code: string;
   title: string;
   content: string;
   isCompleted: boolean;
   isVerified: boolean;
+  isDataDriven: boolean;
+}
+
+// Info: (20260713 - Tzuhan) 報告段落統計(完成/查核雙軌進度的單一來源)
+export interface IReportProgressStats {
+  completedCount: number;
+  verifiedCount: number;
+  totalCount: number;
+  completedPercent: number;
+  verifiedPercent: number;
 }
 
 export interface IReportData {

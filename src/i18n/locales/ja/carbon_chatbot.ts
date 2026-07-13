@@ -40,4 +40,20 @@ export const carbonChatbot = {
   status_incomplete: "未完了",
   status_verified: "検証済み",
   status_unverified: "未検証",
+  outline_title: "章立て一覧",
+  outline_button: "目次",
+  completed_short: "完了",
+  verified_short: "検証",
+  verified_progress: "人的レビュー進捗",
+  jump_aria_label: "このセクションへ移動",
+  close_outline: "目次を閉じる",
+  data_driven_badge:
+    "データセクション:数値はシステムの決定論エンジンで算出され、AI 生成ではありません",
+  jump_prompt: "「{{section}}」セクションの作成を手伝ってください。",
+  section_placeholder:
+    "このセクションはまだ生成されていません。左側のチャットでカーボン会計士に作成したい旨を伝えると、内容がここにリアルタイムで表示されます。",
+  report_status_draft:
+    "レポートステータス:ドラフト(内容は AI がセクションごとに生成し、人的レビューを経て確定されます)",
+  report_button: "レポート",
+  close_report: "レポートを閉じる",
 };
