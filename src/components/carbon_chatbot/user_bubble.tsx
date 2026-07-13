@@ -1,0 +1,27 @@
+import { User } from "lucide-react";
+import { IChatMessage } from "@/types/carbon_chatbot.types";
+
+export interface IUserBubbleProps {
+  message: IChatMessage;
+}
+import { useTranslation } from "@/i18n/i18n_context";
+
+export function UserBubble({ message }: IUserBubbleProps) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex justify-end gap-4">
+      <div className="flex max-w-xl flex-1 flex-col items-end">
+        <div className="rounded-[24px] rounded-tr-none bg-[#ff5a00] p-5 leading-relaxed font-bold text-white shadow-sm shadow-orange-500/20">
+          {message.text}
+        </div>
+        <div className="mt-2 mr-2 text-xs font-bold text-gray-400">
+          {t("common.system_admin")}
+        </div>
+      </div>
+
+      <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-gray-100 bg-white shadow-sm">
+        <User className="h-5 w-5 text-gray-400" />
+      </div>
+    </div>
+  );
+}

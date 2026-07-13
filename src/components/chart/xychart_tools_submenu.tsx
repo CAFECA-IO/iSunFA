@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, FC } from "react";
+import React, { useState, useEffect, useMemo, FC } from "react";
 import {
   ChartLine,
   ChartColumnBig,
@@ -25,9 +25,7 @@ import {
 } from "@/constants/mermaid_chart";
 import { SegmentedControl } from "@/components/chart/mermaid_common_components";
 
-// ==========================================
 // Info: (20260709 - Julian) 定義與靜態映射表
-// ==========================================
 
 export enum XYChartTools {
   ADD_SERIES = "addSeries",
@@ -70,8 +68,7 @@ const XY_CHART_TOOLS: IToolItem[] = [
   },
 ];
 
-// ToDo: (20260710 - Julian) 補上翻譯檔
-
+// Info: (20260712 - Luphia) 各工具對應的 i18n key，供工具列標籤透過 t() 顯示（翻譯定義於 chart.mermaid.xychart）
 const XY_CHART_TOOL_TRANSLATION_KEYS: Record<XYChartTools, string> = {
   [XYChartTools.ADD_SERIES]: "chart.mermaid.ai_editor.xy_chart.add_series",
   [XYChartTools.CHANGE_X_AXIS_VALUES]:
@@ -86,9 +83,7 @@ const XY_CHART_TOOL_TRANSLATION_KEYS: Record<XYChartTools, string> = {
     "chart.mermaid.ai_editor.xy_chart.delete_series",
 };
 
-// ==========================================
 // Info: (20260707 - Julian) 將每個工具拆分成子元件(sub-panel)
-// ==========================================
 
 interface IBasePanelProps {
   parsedXYChartData: IXYChartData;
@@ -472,9 +467,14 @@ const EditLinePanel: FC<IBasePanelProps> = ({
   onAddAction,
 }) => {
   const { t } = useTranslation();
-  const categories = parsedXYChartData.xAxis.categories || [];
-  const lineSeries = parsedXYChartData.series.filter(
-    (s) => s.type === XYChartDataType.LINE,
+  const categories = useMemo(
+    () => parsedXYChartData.xAxis.categories || [],
+    [parsedXYChartData],
+  );
+  const lineSeries = useMemo(
+    () =>
+      parsedXYChartData.series.filter((s) => s.type === XYChartDataType.LINE),
+    [parsedXYChartData],
   );
 
   const [targetIndex, setTargetIndex] = useState<number>(0);
@@ -512,7 +512,7 @@ const EditLinePanel: FC<IBasePanelProps> = ({
         setRawValues("");
       }
     }
-  }, [targetIndex, parsedXYChartData]);
+  }, [targetIndex, categories, lineSeries, parsedXYChartData]);
 
   const handleSubmit = () => {
     const data =
@@ -670,9 +670,14 @@ const EditBarPanel: FC<IBasePanelProps> = ({
   onAddAction,
 }) => {
   const { t } = useTranslation();
-  const categories = parsedXYChartData.xAxis.categories || [];
-  const barSeries = parsedXYChartData.series.filter(
-    (s) => s.type === XYChartDataType.BAR,
+  const categories = useMemo(
+    () => parsedXYChartData.xAxis.categories || [],
+    [parsedXYChartData],
+  );
+  const barSeries = useMemo(
+    () =>
+      parsedXYChartData.series.filter((s) => s.type === XYChartDataType.BAR),
+    [parsedXYChartData],
   );
 
   const [targetIndex, setTargetIndex] = useState<number>(0);
@@ -708,7 +713,7 @@ const EditBarPanel: FC<IBasePanelProps> = ({
         setRawValues("");
       }
     }
-  }, [targetIndex, parsedXYChartData]);
+  }, [targetIndex, categories, barSeries, parsedXYChartData]);
 
   const handleSubmit = () => {
     const data =
@@ -929,9 +934,7 @@ const DeleteSeriesPanel: FC<IBasePanelProps> = ({
   );
 };
 
-// ==========================================
 // Info: (20260707 - Julian) 工具面板元件映射表
-// ==========================================
 
 const XY_CHART_TOOL_PANELS: Record<XYChartTools, FC<IBasePanelProps>> = {
   [XYChartTools.ADD_SERIES]: AddSeriesPanel,
@@ -942,9 +945,7 @@ const XY_CHART_TOOL_PANELS: Record<XYChartTools, FC<IBasePanelProps>> = {
   [XYChartTools.DELETE_SERIES]: DeleteSeriesPanel,
 };
 
-// ==========================================
 // Info: (20260707 - Julian) 主元件
-// ==========================================
 
 interface IXYChartToolsSectionProps {
   selectedTool: string | null;

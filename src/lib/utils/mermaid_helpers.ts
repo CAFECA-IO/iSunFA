@@ -1020,7 +1020,7 @@ export const applyXYChartAction = (
       const { title, categories, min, max } = action.payload;
       const index = lines.findIndex((l) => /^\s*x-axis\s+/i.test(l));
 
-      // Construct X-axis line
+      // Info: (20260712 - Luphia) Construct X-axis line
       let newLine = "";
       if (categories && categories.length > 0) {
         const formattedCats = categories.map((cat) => {

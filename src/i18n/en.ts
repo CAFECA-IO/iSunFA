@@ -67,6 +67,7 @@ import { chart } from "@/i18n/locales/en/chart";
 import { solutions } from "@/i18n/locales/en/solutions";
 import { applicationManagement } from "@/i18n/locales/en/application_management";
 import type { BaseTranslation } from "@/i18n/zh_tw";
+import { carbonChatbot } from "@/i18n/locales/en/carbon_chatbot";
 
 export const en = {
   digital_product_passport: digitalProductPassport,
@@ -138,4 +139,5 @@ export const en = {
   report_downloader: reportDownloader,
   solutions,
   application_management: applicationManagement,
+  carbon_chatbot: carbonChatbot,
 } satisfies BaseTranslation;

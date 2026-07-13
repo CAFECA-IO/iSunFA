@@ -2,14 +2,14 @@ import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import path from "path";
-import { DppSimulatorService } from "@/services/dpp_simulator.service";
+import { DppSimulatorReadService } from "@/services/dpp_simulator_read.service";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const action = searchParams.get("action");
 
   const cwd = process.cwd();
-  const dppSimulatorService = new DppSimulatorService();
+  const dppSimulatorService = new DppSimulatorReadService();
 
   if (action === "list") {
     const stockId = searchParams.get("stockId");
