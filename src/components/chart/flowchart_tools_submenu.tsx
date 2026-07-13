@@ -18,7 +18,7 @@ import {
 // Info: (20260629 - Julian) 定義與靜態映射表
 // ==========================================
 
-export enum FlowchartTools {
+enum FlowchartTools {
   ADD_NODE = "addNode",
   EDIT_NODE = "editNode",
   ADD_CONNECTION = "addConnection",

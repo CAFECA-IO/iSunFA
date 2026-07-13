@@ -17,7 +17,9 @@ import {
   IGanttItem,
   IChartAction,
   IXYChartData,
+  ISankeyData,
 } from "@/lib/utils/mermaid_helpers";
+import { SankeyToolsSection } from "@/components/chart/sankey_tools_submenu";
 
 interface IMermaidAiControlPanelProps {
   chartType: MermaidChartType;
@@ -27,6 +29,7 @@ interface IMermaidAiControlPanelProps {
   parsedPieItems: { label: string; value: number }[];
   parsedGanttItems: IGanttItem[];
   parsedXYChartData: IXYChartData | null;
+  parsedSankeyData: ISankeyData | null;
   pendingActions: IChartAction[];
   onAddAction: (action: IChartAction) => void;
   onRemoveAction: (id: string) => void;
@@ -42,6 +45,7 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
   parsedPieItems,
   parsedGanttItems,
   parsedXYChartData,
+  parsedSankeyData,
   pendingActions,
   onAddAction,
   onRemoveAction,
@@ -73,7 +77,8 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
     chartType === MermaidChartType.PIE ||
     chartType === MermaidChartType.FLOWCHART ||
     chartType === MermaidChartType.GANTT ||
-    chartType === MermaidChartType.XYCHART;
+    chartType === MermaidChartType.XYCHART ||
+    chartType === MermaidChartType.SANKEY;
 
   const instructionKey = `chart.mermaid.ai_editor.${chartType.toLowerCase()}.examples`;
   const examples = t<string[]>(instructionKey) || [];
@@ -139,14 +144,16 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
         <TabPanels className="flex-1 overflow-y-auto p-5">
           <div className="mb-5 flex flex-col">
             <span className="mb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
-              圖表標題
+              {t("chart.mermaid.ai_editor.chart_title")}
             </span>
             <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
               <input
                 id="mermaid-title-input"
                 type="text"
                 className="w-full text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400"
-                placeholder="輸入圖表標題..."
+                placeholder={t(
+                  "chart.mermaid.ai_editor.chart_title_placeholder",
+                )}
                 value={localTitle}
                 onChange={(e) => setLocalTitle(e.target.value)}
                 onBlur={commitTitle}
@@ -188,6 +195,13 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
                       selectedTool={selectedTool}
                       setSelectedTool={setSelectedTool}
                       parsedXYChartData={parsedXYChartData}
+                      onAddAction={onAddAction}
+                    />
+                  ) : chartType === MermaidChartType.SANKEY ? (
+                    <SankeyToolsSection
+                      selectedTool={selectedTool}
+                      setSelectedTool={setSelectedTool}
+                      parsedSankeyData={parsedSankeyData}
                       onAddAction={onAddAction}
                     />
                   ) : null}
@@ -234,7 +248,7 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
           </TabPanel>
 
           {/* Info: (20260708 - Julian) AI 輔助 Tab */}
-          <TabPanel className="flex flex-col gap-5 p-5 focus:outline-none">
+          <TabPanel className="flex flex-col gap-5 focus:outline-none">
             {/* Info: (20260708 - Julian) AI 輸入 */}
             <div className="flex flex-col">
               <div className="mb-2 flex items-center justify-between">

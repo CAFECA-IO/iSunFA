@@ -21,6 +21,7 @@ import {
   parseXYChartData,
   getChartTitle,
   updateChartTitle,
+  parseSankeyData,
 } from "@/lib/utils/mermaid_helpers";
 import ConfirmModal from "@/components/common/confirm_modal";
 
@@ -77,6 +78,10 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
     () => parseXYChartData(internalBaseChart),
     [internalBaseChart],
   );
+  const currentParsedSankeyData = useMemo(
+    () => parseSankeyData(internalBaseChart),
+    [internalBaseChart],
+  );
 
   // Info: (20260709 - Julian) 計算當前圖表標題
   const currentTitle = useMemo(() => {
@@ -106,6 +111,8 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
         result = applyFlowchartAction(result, action);
       } else if (chartType === MermaidChartType.XYCHART) {
         result = applyXYChartAction(result, action);
+      } else if (chartType === MermaidChartType.SANKEY) {
+        // result =
       }
     });
     return result;
@@ -238,6 +245,7 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
           parsedPieItems={currentParsedPieItems}
           parsedGanttItems={currentParsedGanttItems}
           parsedXYChartData={currentParsedXYChartData}
+          parsedSankeyData={currentParsedSankeyData}
           pendingActions={pendingActions}
           onAddAction={handleAddAction}
           onRemoveAction={handleRemoveAction}

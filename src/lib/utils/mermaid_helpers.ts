@@ -274,7 +274,7 @@ export const isPieChart = (chartStr: string): boolean => {
 
 /**
  * Info: (20260624 - Julian)
- * 自動判別目前的圖表類型 (pie, flowchart, gantt, sequence, unknown)
+ * 自動判別圖表類型
  */
 export const detectChartType = (chartStr: string): MermaidChartType => {
   if (!chartStr || typeof chartStr !== "string")
@@ -289,8 +289,10 @@ export const detectChartType = (chartStr: string): MermaidChartType => {
     if (cleanLine.startsWith("flowchart") || cleanLine.startsWith("graph"))
       return MermaidChartType.FLOWCHART;
     if (cleanLine.startsWith("gantt")) return MermaidChartType.GANTT;
-    if (cleanLine.startsWith("xychart")) return MermaidChartType.XYCHART;
-    if (cleanLine.startsWith("sankey")) return MermaidChartType.SANKEY;
+    if (cleanLine.startsWith("xychart") || cleanLine.startsWith("xychart-beta"))
+      return MermaidChartType.XYCHART;
+    if (cleanLine.startsWith("sankey") || cleanLine.startsWith("sankey-beta"))
+      return MermaidChartType.SANKEY;
     if (cleanLine.startsWith("sequencediagram"))
       return MermaidChartType.SEQUENCE;
     break;

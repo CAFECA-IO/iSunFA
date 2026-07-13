@@ -28,7 +28,7 @@ import { SegmentedControl } from "@/components/chart/mermaid_common_components";
 // Info: (20260707 - Julian) 定義與靜態映射表
 // ==========================================
 
-export enum GanttTools {
+enum GanttTools {
   ADD_TASK = "addTask",
   EDIT_TASK = "editTask",
   CHANGE_TASK_TYPE = "changeTaskType",

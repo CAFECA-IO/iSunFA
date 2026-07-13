@@ -478,9 +478,10 @@ const EditLinePanel: FC<IBasePanelProps> = ({
   );
 
   const [targetIndex, setTargetIndex] = useState<number>(0);
-  const [nameInput, setNameInput] = useState<string>(
-    lineSeries[targetIndex].seriesName ?? "",
-  );
+  const targetData = lineSeries[targetIndex];
+  const initialName = targetData ? targetData.seriesName : "";
+
+  const [nameInput, setNameInput] = useState<string>(initialName);
   const [dataType, setDataType] = useState<XYChartDataType>(
     XYChartDataType.LINE,
   );
@@ -675,9 +676,10 @@ const EditBarPanel: FC<IBasePanelProps> = ({
   );
 
   const [targetIndex, setTargetIndex] = useState<number>(0);
-  const [nameInput, setNameInput] = useState<string>(
-    barSeries[targetIndex].seriesName,
-  );
+  const targetData = barSeries[targetIndex];
+  const initialName = targetData ? targetData.seriesName : "";
+
+  const [nameInput, setNameInput] = useState<string>(initialName);
   const [dataType, setDataType] = useState<XYChartDataType>(
     XYChartDataType.BAR,
   );

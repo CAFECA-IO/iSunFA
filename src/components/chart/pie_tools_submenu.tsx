@@ -13,7 +13,7 @@ import { SegmentedControl } from "@/components/chart/mermaid_common_components";
 // Info: (20260629 - Julian) 定義與靜態映射表
 // ==========================================
 
-export enum PieTools {
+enum PieTools {
   ADD_SLICE = "addSlice",
   EDIT_SLICE = "editSlice",
   DELETE_SLICE = "deleteSlice",
