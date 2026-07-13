@@ -566,7 +566,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({
               >
                 <Download size={16} />
               </button>
-              <div className="absolute top-full right-0 z-20 hidden w-20 flex-col pt-1 group-hover/download:flex">
+              <div className="absolute top-full right-0 z-20 hidden w-auto flex-col pt-1 group-hover/download:flex">
                 <div className="flex flex-col rounded-md border border-slate-200 bg-white py-1 shadow-md">
                   <button
                     type="button"
