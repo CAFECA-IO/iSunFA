@@ -490,6 +490,10 @@ const EditLinePanel: FC<IBasePanelProps> = ({
   const isSubmitDisabled = !rawValues || rawValues.length == 0;
 
   useEffect(() => {
+    const categories = parsedXYChartData.xAxis.categories || [];
+    const lineSeries = parsedXYChartData.series.filter(
+      (s) => s.type === XYChartDataType.LINE,
+    );
     const selectedSeries = lineSeries[targetIndex];
     if (selectedSeries) {
       if (categories.length > 0) {
@@ -680,6 +684,10 @@ const EditBarPanel: FC<IBasePanelProps> = ({
   const [rawValues, setRawValues] = useState<string>("");
 
   useEffect(() => {
+    const categories = parsedXYChartData.xAxis.categories || [];
+    const barSeries = parsedXYChartData.series.filter(
+      (s) => s.type === XYChartDataType.BAR,
+    );
     const selectedSeries = barSeries[targetIndex];
     if (selectedSeries) {
       if (categories.length > 0) {
