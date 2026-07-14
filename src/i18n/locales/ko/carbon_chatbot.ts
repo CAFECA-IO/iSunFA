@@ -50,6 +50,10 @@ export const carbonChatbot = {
   data_driven_badge:
     "데이터 섹션: 수치는 시스템 결정론 엔진에서 계산되며 AI 생성이 아닙니다",
   jump_prompt: "「{{section}}」 섹션 작성을 도와주세요.",
+  draft_generate: "AI로 이 섹션 초안 작성",
+  draft_generating: "초안 생성 중...",
+  draft_failed:
+    "[초안 생성 실패] 「{{section}}」 섹션 초안 생성 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
   section_placeholder:
     "이 섹션은 아직 생성되지 않았습니다. 왼쪽 대화에서 탄소 회계사에게 작성 의사를 알리면 내용이 실시간으로 여기에 표시됩니다.",
   report_status_draft:

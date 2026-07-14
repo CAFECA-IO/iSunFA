@@ -671,6 +671,18 @@ export const API_ERRORS = {
     message: "GEMINI_API_KEY environment variable is not defined",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
+  // Info: (20260714 - Emily) LLM 結構化輸出未通過後端 Zod 護欄(非 JSON 或欄位不符)
+  IS_LLM_OUTPUT_INVALID: {
+    code: "IS000009",
+    message: "LLM structured output failed validation",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
+  // Info: (20260714 - Emily) 段落草稿生成失敗(LLM 呼叫錯誤的包裝,不透傳原始錯誤)
+  IS_PARAGRAPH_DRAFT_FAILED: {
+    code: "IS000010",
+    message: "Failed to generate paragraph draft",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
   IS_UNKNOWN: {
     code: "IS000099",
     message: "Internal Server Error",

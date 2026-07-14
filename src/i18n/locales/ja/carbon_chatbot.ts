@@ -50,6 +50,10 @@ export const carbonChatbot = {
   data_driven_badge:
     "データセクション:数値はシステムの決定論エンジンで算出され、AI 生成ではありません",
   jump_prompt: "「{{section}}」セクションの作成を手伝ってください。",
+  draft_generate: "AI でこのセクションの下書きを作成",
+  draft_generating: "下書きを生成中...",
+  draft_failed:
+    "【下書き生成失敗】「{{section}}」セクションの下書き生成中に問題が発生しました。後ほどお試しください。",
   section_placeholder:
     "このセクションはまだ生成されていません。左側のチャットでカーボン会計士に作成したい旨を伝えると、内容がここにリアルタイムで表示されます。",
   report_status_draft:

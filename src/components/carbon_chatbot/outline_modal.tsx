@@ -18,6 +18,9 @@ interface IOutlineModalProps {
   onJump: (paragraphId: string) => void;
   onToggleVerified: (paragraphId: string) => void;
   onClose: () => void;
+  // Info: (20260714 - Emily) AI 段落草稿生成(透傳給 OutlineTree);行動版生成時不關閉 Modal,以便觀察 spinner
+  draftingParagraphId?: string | null;
+  onGenerateDraft?: (paragraphId: string) => void;
 }
 
 export function OutlineModal({
@@ -27,6 +30,8 @@ export function OutlineModal({
   onJump,
   onToggleVerified,
   onClose,
+  draftingParagraphId = null,
+  onGenerateDraft = undefined,
 }: IOutlineModalProps) {
   const { t } = useTranslation();
 
@@ -93,6 +98,8 @@ export function OutlineModal({
           activeParagraphId={activeParagraphId}
           onJump={handleJump}
           onToggleVerified={onToggleVerified}
+          draftingParagraphId={draftingParagraphId}
+          onGenerateDraft={onGenerateDraft}
         />
       </div>
     </div>

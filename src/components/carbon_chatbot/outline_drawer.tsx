@@ -14,6 +14,9 @@ interface IOutlineDrawerProps {
   onJump: (paragraphId: string) => void;
   onToggleVerified: (paragraphId: string) => void;
   onClose: () => void;
+  // Info: (20260714 - Emily) AI 段落草稿生成(透傳給 OutlineTree)
+  draftingParagraphId?: string | null;
+  onGenerateDraft?: (paragraphId: string) => void;
 }
 
 export function OutlineDrawer({
@@ -22,6 +25,8 @@ export function OutlineDrawer({
   onJump,
   onToggleVerified,
   onClose,
+  draftingParagraphId = null,
+  onGenerateDraft = undefined,
 }: IOutlineDrawerProps) {
   const { t } = useTranslation();
 
@@ -47,6 +52,8 @@ export function OutlineDrawer({
         activeParagraphId={activeParagraphId}
         onJump={onJump}
         onToggleVerified={onToggleVerified}
+        draftingParagraphId={draftingParagraphId}
+        onGenerateDraft={onGenerateDraft}
       />
     </div>
   );

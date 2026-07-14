@@ -1,0 +1,51 @@
+// Info: (20260714 - Emily) Carbon Chatbot 段落草稿生成的 Zod Schema(請求驗證 + LLM 輸出驗證)
+
+import { z } from "zod";
+import { CARBON_REPORT_OUTLINE } from "@/constants/carbon_report_outline";
+import { CARBON_CHAT_AI_CONTEXT_SIZE } from "@/constants/carbon_chatbot";
+import { ChatRoleEnum } from "@/types/carbon_chatbot.types";
+
+// Info: (20260714 - Emily) 段落 id 白名單:僅接受標準大綱內的段落,杜絕捏造的段落編號
+const OUTLINE_PARAGRAPH_IDS = new Set(CARBON_REPORT_OUTLINE.map((s) => s.id));
+
+export const CarbonParagraphDraftRequestSchema = z.object({
+  paragraphId: z
+    .string()
+    .min(1)
+    .refine((id) => OUTLINE_PARAGRAPH_IDS.has(id), {
+      message: "paragraphId is not in the carbon report outline",
+    }),
+  conversationContext: z
+    .array(
+      z.object({
+        role: z.nativeEnum(ChatRoleEnum),
+        text: z.string().min(1).max(4000),
+      }),
+    )
+    .max(CARBON_CHAT_AI_CONTEXT_SIZE),
+  contextFacts: z
+    .array(
+      z.object({
+        label: z.string().min(1).max(200),
+        value: z.string().min(1).max(500),
+        source: z.string().max(200).optional(),
+      }),
+    )
+    .max(50)
+    .optional(),
+  language: z.string().max(20).optional(),
+});
+
+export type CarbonParagraphDraftRequestPayload = z.infer<
+  typeof CarbonParagraphDraftRequestSchema
+>;
+
+// Info: (20260714 - Emily) LLM 結構化輸出的後端護欄:responseSchema 之外再以 Zod 交叉驗證,永不直接採信 LLM 輸出
+export const CarbonParagraphDraftLlmOutputSchema = z.object({
+  content: z.string().min(1),
+  citedFacts: z.array(z.string()).default([]),
+});
+
+export type CarbonParagraphDraftLlmOutput = z.infer<
+  typeof CarbonParagraphDraftLlmOutputSchema
+>;

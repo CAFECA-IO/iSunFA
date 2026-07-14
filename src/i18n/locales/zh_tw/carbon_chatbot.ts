@@ -48,6 +48,10 @@ export const carbonChatbot = {
   close_outline: "關閉章節目錄",
   data_driven_badge: "數據段落:數字由系統勾稽計算,非 AI 產出",
   jump_prompt: "請協助我完成「{{section}}」這個段落。",
+  draft_generate: "AI 撰寫此段草稿",
+  draft_generating: "草稿生成中...",
+  draft_failed:
+    "【草稿生成失敗】「{{section}}」段落草稿生成時發生問題，請稍後再試。",
   section_placeholder:
     "本段尚未生成。回到左側對話告訴碳會計師你想撰寫這一段,內容將即時出現在這裡。",
   report_status_draft: "報告狀態:草稿(內容由 AI 逐段生成,經人工查核後方可定稿)",

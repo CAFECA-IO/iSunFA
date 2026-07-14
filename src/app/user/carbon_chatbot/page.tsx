@@ -32,6 +32,8 @@ export default function CarbonChatbotPage() {
     reportStats,
     activeParagraphId,
     jumpToParagraph,
+    draftingParagraphId,
+    generateParagraphDraft,
     toggleParagraphVerified,
     handleMarkdownChange,
     chatEndRef,
@@ -128,6 +130,8 @@ export default function CarbonChatbotPage() {
             onMarkdownChange={handleMarkdownChange}
             onJumpToParagraph={jumpToParagraph}
             onToggleVerified={toggleParagraphVerified}
+            draftingParagraphId={draftingParagraphId}
+            onGenerateDraft={generateParagraphDraft}
           />
 
           {/* Info: (20260708 - Tzuhan) 進度浮窗 */}
@@ -144,6 +148,8 @@ export default function CarbonChatbotPage() {
           onJump={jumpToParagraph}
           onToggleVerified={toggleParagraphVerified}
           onClose={() => setIsMobileOutlineOpen(false)}
+          draftingParagraphId={draftingParagraphId}
+          onGenerateDraft={generateParagraphDraft}
         />
       )}
 
@@ -172,6 +178,8 @@ export default function CarbonChatbotPage() {
               onMarkdownChange={handleMarkdownChange}
               onJumpToParagraph={jumpToParagraph}
               onToggleVerified={toggleParagraphVerified}
+              draftingParagraphId={draftingParagraphId}
+              onGenerateDraft={generateParagraphDraft}
             />
           </div>
         </div>

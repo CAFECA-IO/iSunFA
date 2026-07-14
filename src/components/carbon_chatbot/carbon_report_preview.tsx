@@ -25,6 +25,9 @@ interface ICarbonReportPreviewProps {
   onMarkdownChange?: (val: string) => void;
   onJumpToParagraph?: (paragraphId: string) => void;
   onToggleVerified?: (paragraphId: string) => void;
+  // Info: (20260714 - Emily) AI 段落草稿生成(透傳給 OutlineDrawer → OutlineTree)
+  draftingParagraphId?: string | null;
+  onGenerateDraft?: (paragraphId: string) => void;
 }
 
 // Info: (20260713 - Tzuhan) 渲染全部 33 段:已生成者顯示內容,未生成者顯示灰色佔位區塊,確保跳段永遠有落點且報告骨架一眼可見
@@ -69,6 +72,8 @@ export default function CarbonReportPreview({
   onMarkdownChange = () => {},
   onJumpToParagraph = () => {},
   onToggleVerified = () => {},
+  draftingParagraphId = null,
+  onGenerateDraft = undefined,
 }: ICarbonReportPreviewProps) {
   const { t } = useTranslation();
   const [, setErrorModal] = useState({ isOpen: false, message: "" });
@@ -154,6 +159,8 @@ export default function CarbonReportPreview({
             onJump={handleDrawerJump}
             onToggleVerified={onToggleVerified}
             onClose={() => setIsDrawerOpen(false)}
+            draftingParagraphId={draftingParagraphId}
+            onGenerateDraft={onGenerateDraft}
           />
         )}
 

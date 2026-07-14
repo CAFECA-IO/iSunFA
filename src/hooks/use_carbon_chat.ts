@@ -11,7 +11,9 @@ import {
 import {
   CARBON_REPORT_OUTLINE,
   CARBON_REPORT_SECTION_COUNT,
+  buildSectionHeading,
 } from "@/constants/carbon_report_outline";
+import { IParagraphDraft } from "@/interfaces/carbon_paragraph_draft";
 import { INITIAL_SESSIONS } from "@/constants/carbon_chatbot.mock";
 import { useTranslation } from "@/i18n/i18n_context";
 import { subscribeChatroom } from "@/lib/chatroom";
@@ -50,6 +52,10 @@ export const useCarbonChat = () => {
   const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
   // Info: (20260713 - Tzuhan) 目前對話正在引導的報告段落(vibe 模式:跳段 = 切換對話目標)
   const [activeParagraphId, setActiveParagraphId] = useState<string | null>(
+    null,
+  );
+  // Info: (20260714 - Emily) 正在生成草稿的段落 id;同一時間只允許一段生成,避免併發寫入報告
+  const [draftingParagraphId, setDraftingParagraphId] = useState<string | null>(
     null,
   );
   // Info: (20260712 - Luphia) 歷史訊息分頁狀態（上卷載入更多）
@@ -243,6 +249,87 @@ export const useCarbonChat = () => {
       );
     },
     [activeSessionId, t],
+  );
+
+  // Info: (20260714 - Emily) 段落草稿生成:呼叫 draft API 由 AI 撰寫敘述,成功後寫入 reportData 並標記完成(查核歸零重簽)
+  const generateParagraphDraft = useCallback(
+    async (paragraphId: string) => {
+      if (draftingParagraphId) return;
+      const sectionIndex = CARBON_REPORT_OUTLINE.findIndex(
+        (s) => s.id === paragraphId,
+      );
+      if (sectionIndex < 0) return;
+      const section = CARBON_REPORT_OUTLINE[sectionIndex];
+
+      setDraftingParagraphId(paragraphId);
+      setActiveParagraphId(paragraphId);
+      try {
+        // Info: (20260714 - Emily) 只取最近 N 則對話供 AI 理解背景,與主對話的 token 控制策略一致
+        const conversationContext = (activeSession?.messages ?? [])
+          .slice(-CARBON_CHAT_AI_CONTEXT_SIZE)
+          .map((msg) => ({ role: msg.sender, text: msg.text }));
+
+        const res = await request<{ payload: IParagraphDraft | null }>(
+          "/api/v1/chat/carbon/draft",
+          {
+            method: "POST",
+            body: JSON.stringify({
+              paragraphId,
+              conversationContext,
+              language,
+            }),
+          },
+        );
+        const draft = res.payload;
+        if (!draft) throw new Error("Empty draft payload");
+
+        setSessionsData((prev) => {
+          const updatedSession = { ...prev[activeSessionId] };
+          const reportData = updatedSession.reportData;
+          if (!reportData?.paragraphs) return prev;
+
+          const heading = buildSectionHeading(section, sectionIndex);
+          const newParagraphs = reportData.paragraphs.map((p) => {
+            if (p.id !== paragraphId) return p;
+            return {
+              ...p,
+              content: `${heading}\n\n${draft.content}`,
+              isCompleted: true,
+              // Info: (20260714 - Emily) 內容更新即重置查核狀態(零信任:先有產出才有查核)
+              isVerified: false,
+            };
+          });
+
+          updatedSession.reportData = {
+            ...reportData,
+            paragraphs: newParagraphs,
+          };
+          return { ...prev, [activeSessionId]: updatedSession };
+        });
+      } catch (error) {
+        console.error("[carbon-chat] paragraph draft failed:", error);
+        appendMessageLocally(
+          {
+            id: crypto.randomUUID(),
+            sender: ChatRoleEnum.AI,
+            text: t("carbon_chatbot.draft_failed", {
+              section: `${section.code} ${section.title}`,
+            }),
+          },
+          0,
+        );
+      } finally {
+        setDraftingParagraphId(null);
+      }
+    },
+    [
+      draftingParagraphId,
+      activeSession,
+      activeSessionId,
+      language,
+      t,
+      appendMessageLocally,
+    ],
   );
 
   // Info: (20260712 - Luphia) 進入時先預抓金鑰紀錄，避免解鎖手勢當下「fetch → PRF」耗掉 user activation
@@ -608,6 +695,8 @@ export const useCarbonChat = () => {
     reportStats,
     activeParagraphId,
     jumpToParagraph,
+    draftingParagraphId,
+    generateParagraphDraft,
     toggleParagraphVerified,
     handleMarkdownChange,
     chatEndRef,

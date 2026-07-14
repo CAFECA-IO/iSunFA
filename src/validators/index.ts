@@ -5,3 +5,4 @@ export * from "@/validators/account_book";
 export * from "@/validators/pdf_editor";
 export * from "@/validators/export";
 export * from "@/validators/order";
+export * from "@/validators/carbon_paragraph_draft";

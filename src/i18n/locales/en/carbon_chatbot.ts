@@ -50,6 +50,10 @@ export const carbonChatbot = {
   data_driven_badge:
     "Data section: figures are reconciled by the deterministic engine, not AI-generated",
   jump_prompt: "Please help me complete the section 「{{section}}」.",
+  draft_generate: "Draft this section with AI",
+  draft_generating: "Generating draft...",
+  draft_failed:
+    "[Draft failed] Something went wrong while drafting 「{{section}}」. Please try again later.",
   section_placeholder:
     "This section has not been generated yet. Tell the Carbon Accountant in the chat that you want to work on it, and the content will appear here in real time.",
   report_status_draft:
