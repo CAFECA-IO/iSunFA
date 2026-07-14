@@ -68,8 +68,8 @@ export const useCarbonChat = () => {
   const [activeSessionId, setActiveSessionId] =
     useState<string>(DEFAULT_SESSION_ID);
   const [inputValue, setInputValue] = useState<string>("");
-  const [isTyping, setIsTyping] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  // Info: (20260714 - Emily) 等待 AI 回覆的 session 集合(per-session 隔離:舊房等待中不影響新房輸入與指示)
+  const [busySessionIds, setBusySessionIds] = useState<Set<string>>(new Set());
   const [isError, setIsError] = useState<boolean>(false);
   // Info: (20260712 - Luphia) 是否已於進入時完成一次手勢解鎖（PRF）；未解鎖前不呼叫 AI、不顯示對話
   const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
@@ -101,6 +101,8 @@ export const useCarbonChat = () => {
   const draftVersionsRef = useRef<Map<string, number>>(new Map());
   // Info: (20260714 - Emily) 已載入過歷史的 channel(切換 session 時各自載一次)
   const loadedChannelsRef = useRef<Set<string>>(new Set());
+  // Info: (20260714 - Emily) 跳段後的草稿觸發目標:送出預填訊息時觸發該段草稿生成(決定性規則,非 LLM 意圖判斷)
+  const pendingDraftParagraphIdRef = useRef<string | null>(null);
   // Info: (20260712 - Luphia) 歷史訊息分頁狀態（上卷載入更多）
   const [hasMoreHistory, setHasMoreHistory] = useState<boolean>(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(false);
@@ -114,9 +116,25 @@ export const useCarbonChat = () => {
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const prevLastMessageIdRef = useRef<string | undefined>(undefined);
-  // Info: (20260712 - Luphia) 等待 AI 回覆經 Centrifugo 回傳的逾時計時器；收到訊息即取消
-  const replyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Info: (20260714 - Emily) 等待 AI 回覆的逾時計時器(per-channel:多聊天室並發等待互不覆蓋)
+  const replyTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
+    new Map(),
+  );
   const prevSessionId = useRef<string>(DEFAULT_SESSION_ID);
+
+  // Info: (20260714 - Emily) 標記/解除 session 等待狀態(單一寫入點)
+  const markSessionBusy = useCallback((sessionId: string, busy: boolean) => {
+    setBusySessionIds((prev) => {
+      if (prev.has(sessionId) === busy) return prev;
+      const next = new Set(prev);
+      if (busy) {
+        next.add(sessionId);
+      } else {
+        next.delete(sessionId);
+      }
+      return next;
+    });
+  }, []);
 
   // Info: (20260712 - Luphia) 用戶主金鑰：經 WebAuthn PRF 解包/註冊後持久化；xpub 供後端加密、xprv 供本地解密
   const masterKeyRef = useRef<IChatroomMasterKey | null>(null);
@@ -128,18 +146,23 @@ export const useCarbonChat = () => {
       return masterKeyRef.current;
     }, []);
 
-  // Info: (20260714 - Emily) 是否仍在等待 AI 回覆:附件管線拉長請求時間後,回覆常在 fetch 返回前就經訂閱送達,
-  // Info: (20260714 - Emily) 此旗標避免 startReplyTimeout 在回覆已到後才啟動計時器,30 秒後誤報系統無回應
-  const pendingReplyRef = useRef<boolean>(false);
+  // Info: (20260714 - Emily) 等待中回覆的 channel 集合:回覆若於 fetch 期間就送達,不再啟動逾時計時器(per-channel)
+  const pendingReplyChannelsRef = useRef<Set<string>>(new Set());
 
   // Info: (20260712 - Luphia) 將訊息直接追加到當前 session 並解除等待狀態（訂閱收訊與 publish 失敗保底共用）
+  // Info: (20260714 - Emily) 閉包綁定建立當下的 session:切換聊天室後,在途回覆仍寫回原房,不污染他房
   const appendMessageLocally = useCallback(
     (message: IChatMessage, progressUpdate: number) => {
-      // Info: (20260712 - Luphia) 有訊息就緒即取消等待逾時計時器
-      pendingReplyRef.current = false;
-      if (replyTimeoutRef.current) {
-        clearTimeout(replyTimeoutRef.current);
-        replyTimeoutRef.current = null;
+      // Info: (20260712 - Luphia) 有訊息就緒即取消該 channel 的等待逾時計時器
+      const channel = buildCarbonChatChannel(
+        user?.address ?? "anonymous",
+        activeSessionId,
+      );
+      pendingReplyChannelsRef.current.delete(channel);
+      const timer = replyTimersRef.current.get(channel);
+      if (timer) {
+        clearTimeout(timer);
+        replyTimersRef.current.delete(channel);
       }
       setSessionsData((prev) => {
         const updatedSession = { ...prev[activeSessionId] };
@@ -156,10 +179,9 @@ export const useCarbonChat = () => {
         }
         return { ...prev, [activeSessionId]: updatedSession };
       });
-      setIsTyping(false);
-      setIsLoading(false);
+      markSessionBusy(activeSessionId, false);
     },
-    [activeSessionId],
+    [activeSessionId, user?.address, markSessionBusy],
   );
 
   // Info: (20260714 - Emily) 解密 envelope 並追加訊息:Centrifugo 訂閱與 HTTP 回帶共用(遞送雙軌,id 去重)
@@ -185,28 +207,36 @@ export const useCarbonChat = () => {
   );
 
   // Info: (20260712 - Luphia) 送出後啟動等待逾時；逾時仍未經訂閱收到回覆即解除等待並提示，避免卡在 typing
+  // Info: (20260714 - Emily) per-channel 計時器:多聊天室並發等待互不覆蓋;閉包綁定發送當下的 channel/session
   const startReplyTimeout = useCallback(() => {
+    const channel = chatChannel;
     // Info: (20260714 - Emily) 回覆已於 fetch 期間送達則不再啟動計時器
-    if (!pendingReplyRef.current) return;
-    if (replyTimeoutRef.current) clearTimeout(replyTimeoutRef.current);
-    replyTimeoutRef.current = setTimeout(() => {
-      replyTimeoutRef.current = null;
-      setIsError(true);
-      appendMessageLocally(
-        {
-          id: crypto.randomUUID(),
-          sender: ChatRoleEnum.AI,
-          text: t("carbon_chatbot.system_unavailable"),
-        },
-        0,
-      );
-    }, CARBON_CHAT_REPLY_TIMEOUT_MS);
-  }, [appendMessageLocally, t]);
+    if (!pendingReplyChannelsRef.current.has(channel)) return;
+    const existing = replyTimersRef.current.get(channel);
+    if (existing) clearTimeout(existing);
+    replyTimersRef.current.set(
+      channel,
+      setTimeout(() => {
+        replyTimersRef.current.delete(channel);
+        setIsError(true);
+        appendMessageLocally(
+          {
+            id: crypto.randomUUID(),
+            sender: ChatRoleEnum.AI,
+            text: t("carbon_chatbot.system_unavailable"),
+          },
+          0,
+        );
+      }, CARBON_CHAT_REPLY_TIMEOUT_MS),
+    );
+  }, [chatChannel, appendMessageLocally, t]);
 
   // Info: (20260712 - Luphia) 卸載時清除逾時計時器
   useEffect(() => {
+    const timers = replyTimersRef.current;
     return () => {
-      if (replyTimeoutRef.current) clearTimeout(replyTimeoutRef.current);
+      timers.forEach((timer) => clearTimeout(timer));
+      timers.clear();
       if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
       if (focusTimerRef.current) clearTimeout(focusTimerRef.current);
     };
@@ -331,6 +361,21 @@ export const useCarbonChat = () => {
     saveSessionsIndex(user.address, entries);
   }, [sessionsData, user?.address]);
 
+  // Info: (20260714 - Emily) 切換聊天室:各室訊息/報告/等待狀態彼此隔離,僅重置跨室共用的暫態 UI
+  // Info: (20260714 - Emily) (輸入框、附件、高亮、跳段目標為輸入層暫態;busy/計時器 per-session 不需重置)
+  const switchSession = useCallback((sessionId: string) => {
+    setActiveSessionId(sessionId);
+    setActiveParagraphId(null);
+    setHighlightedParagraphId(null);
+    setFocusedMessageId(null);
+    setInputValue("");
+    setPendingAttachments([]);
+    setAttachmentError(null);
+    setSaveStatus(null);
+    setIsError(false);
+    pendingDraftParagraphIdRef.current = null;
+  }, []);
+
   // Info: (20260714 - Emily) 新增對話:建立空白 session 並切換;channel 隨 id 變更,歷史/草稿各自獨立
   const createNewSession = useCallback(() => {
     const id = `s${Date.now().toString(36)}`;
@@ -340,9 +385,8 @@ export const useCarbonChat = () => {
       new Date().toLocaleDateString(),
     );
     setSessionsData((prev) => ({ ...prev, [id]: session }));
-    setActiveSessionId(id);
-    setActiveParagraphId(null);
-  }, [t]);
+    switchSession(id);
+  }, [t, switchSession]);
 
   // Info: (20260714 - Emily) 跳至報告段落並短暫高亮(chip 點擊與草稿寫入後的即時回饋共用)
   const jumpToReportParagraph = useCallback((paragraphId: string) => {
@@ -458,9 +502,6 @@ export const useCarbonChat = () => {
       verifiedPercent: Math.round((verifiedCount / totalCount) * 100),
     };
   }, [activeSession]);
-
-  // Info: (20260714 - Emily) 跳段後的草稿觸發目標:送出預填訊息時觸發該段草稿生成(決定性規則,非 LLM 意圖判斷)
-  const pendingDraftParagraphIdRef = useRef<string | null>(null);
 
   // Info: (20260713 - Tzuhan) 跳段(vibe 模式):標記進行中段落、將該段撰寫指引寫入 currentStep 供 AI 引導、預填對話輸入
   const jumpToParagraph = useCallback(
@@ -618,6 +659,10 @@ export const useCarbonChat = () => {
       ? currentMessages[currentMessages.length - 1].id
       : undefined;
 
+  // Info: (20260714 - Emily) 目前聊天室是否等待 AI 回覆(per-session;對外仍以 isTyping/isLoading 名稱輸出)
+  const isTyping = busySessionIds.has(activeSessionId);
+  const isLoading = isTyping;
+
   useEffect(() => {
     // Info: (20260712 - Luphia) 僅在同一 session 出現新的底部訊息(append)或 typing 時捲到底；前置歷史(prepend)不捲動
     const isSameSession = prevSessionId.current === activeSessionId;
@@ -728,12 +773,11 @@ export const useCarbonChat = () => {
       onMessage: decryptAndAppendEnvelope,
       onError: () => {
         setIsError(true);
-        setIsTyping(false);
-        setIsLoading(false);
+        markSessionBusy(activeSessionId, false);
       },
     });
     return unsubscribe;
-  }, [chatChannel, decryptAndAppendEnvelope]);
+  }, [chatChannel, activeSessionId, decryptAndAppendEnvelope, markSessionBusy]);
 
   // Info: (20260714 - Emily) 加入附件:前端 Fail Fast(MIME 白名單/大小/數量),通過者轉 base64 進待送清單
   const addAttachments = useCallback(
@@ -888,10 +932,9 @@ export const useCarbonChat = () => {
     setInputValue("");
     setPendingAttachments([]);
     setAttachmentError(null);
-    setIsTyping(true);
-    setIsLoading(true);
+    markSessionBusy(activeSessionId, true);
     setIsError(false);
-    pendingReplyRef.current = true;
+    pendingReplyChannelsRef.current.add(chatChannel);
 
     // Info: (20260714 - Emily) 跳段後送出且訊息仍指涉該段標題 → 並行觸發段落草稿生成(與聊天回覆互不等待)
     // Info: (20260714 - Emily) 決定性字串規則:預填文字由系統產生;使用者改寫成無關內容則解除,不誤觸發
@@ -995,6 +1038,7 @@ export const useCarbonChat = () => {
     startReplyTimeout,
     chatChannel,
     ensureMasterKeyCached,
+    markSessionBusy,
   ]);
 
   // Info: (20260712 - Luphia) 進入 channel 的一次性手勢：解鎖金鑰(PRF) → 請後端做前置作業並經 Centrifugo 回傳招呼詞
@@ -1037,8 +1081,8 @@ export const useCarbonChat = () => {
   // Info: (20260712 - Luphia) 空 chatroom → 請後端做前置作業產生招呼詞並加密發佈；由訂閱端解密後顯示
   const requestGreeting = useCallback(
     async (recipientPublicKey: string) => {
-      setIsTyping(true);
-      pendingReplyRef.current = true;
+      markSessionBusy(activeSessionId, true);
+      pendingReplyChannelsRef.current.add(chatChannel);
       try {
         // Info: (20260714 - Emily) 改用 request helper:自動帶 DeWT Bearer token(後端已加授權檢查)
         const data = await request<{
@@ -1083,10 +1127,12 @@ export const useCarbonChat = () => {
     [
       chatChannel,
       activeSession,
+      activeSessionId,
       language,
       startReplyTimeout,
       appendMessageLocally,
       decryptAndAppendEnvelope,
+      markSessionBusy,
       t,
     ],
   );
@@ -1115,7 +1161,8 @@ export const useCarbonChat = () => {
     sessionsList,
     activeSession,
     activeSessionId,
-    setActiveSessionId,
+    // Info: (20260714 - Emily) 對外的切換入口為 switchSession(重置跨室暫態 UI),沿用原名稱以維持呼叫端不變
+    setActiveSessionId: switchSession,
     createNewSession,
     saveStatus,
     inputValue,
