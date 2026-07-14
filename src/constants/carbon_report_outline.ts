@@ -329,11 +329,15 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
 
 export const CARBON_REPORT_SECTION_COUNT = CARBON_REPORT_OUTLINE.length;
 
+// Info: (20260714 - Emily) 段落切分標題前綴;報告預覽以此辨識 h3 錨點,與 Markdown 切分規則共用
+export const CARBON_REPORT_SECTION_HEADING_PREFIX = "SECTION";
+
 // Info: (20260713 - Tzuhan) 產生段落在 Markdown 中的切分標題;與 use_carbon_chat 的 `### SECTION` 切分規則耦合,勿任意變更前綴
 export const buildSectionHeadingByTitle = (
   title: string,
   index: number,
-): string => `### SECTION ${String(index + 1).padStart(2, "0")}: ${title}`;
+): string =>
+  `### ${CARBON_REPORT_SECTION_HEADING_PREFIX} ${String(index + 1).padStart(2, "0")}: ${title}`;
 
 export const buildSectionHeading = (
   section: ICarbonReportSection,

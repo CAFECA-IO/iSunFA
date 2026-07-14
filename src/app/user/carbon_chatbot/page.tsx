@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { FileText, ListTree, X } from "lucide-react";
 import { useCarbonChat } from "@/hooks/use_carbon_chat";
+import { MOBILE_MEDIA_QUERY } from "@/constants/carbon_chatbot";
 import { useTranslation } from "@/i18n/i18n_context";
 import { OutlineModal } from "@/components/carbon_chatbot/outline_modal";
 import { ChatHeader } from "@/components/carbon_chatbot/chat_header";
@@ -36,6 +37,10 @@ export default function CarbonChatbotPage() {
     reportStats,
     activeParagraphId,
     jumpToParagraph,
+    highlightedParagraphId,
+    focusedMessageId,
+    jumpToReportParagraph,
+    focusMessageForParagraph,
     draftingParagraphId,
     generateParagraphDraft,
     toggleParagraphVerified,
@@ -48,6 +53,22 @@ export default function CarbonChatbotPage() {
     useState<boolean>(false);
   const [isMobileReportOpen, setIsMobileReportOpen] = useState<boolean>(false);
   const paragraphs = activeSession?.reportData?.paragraphs ?? [];
+
+  // Info: (20260714 - Emily) chip 點擊:跳報告段落並高亮;行動版(<xl)右欄隱藏,改開報告全螢幕覆蓋層
+  const handleChipJump = (paragraphId: string) => {
+    jumpToReportParagraph(paragraphId);
+    if (window.matchMedia(MOBILE_MEDIA_QUERY).matches) {
+      setIsMobileReportOpen(true);
+    }
+  };
+
+  // Info: (20260714 - Emily) 反向連動:點報告段落回跳對話;行動版關閉報告覆蓋層回到對話視圖
+  const handleParagraphHeadingClick = (paragraphId: string) => {
+    focusMessageForParagraph(paragraphId);
+    if (window.matchMedia(MOBILE_MEDIA_QUERY).matches) {
+      setIsMobileReportOpen(false);
+    }
+  };
 
   return (
     <div className="flex h-[calc(100vh-170px)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white text-sm shadow-[0_4px_20px_rgb(0,0,0,0.05)]">
@@ -74,6 +95,8 @@ export default function CarbonChatbotPage() {
                 hasMore={hasMoreHistory}
                 isLoadingMore={isLoadingHistory}
                 onLoadMore={loadMoreHistory}
+                onChipJump={handleChipJump}
+                focusedMessageId={focusedMessageId}
               />
 
               <ChatInput
@@ -140,6 +163,8 @@ export default function CarbonChatbotPage() {
             onToggleVerified={toggleParagraphVerified}
             draftingParagraphId={draftingParagraphId}
             onGenerateDraft={generateParagraphDraft}
+            highlightedParagraphId={highlightedParagraphId}
+            onParagraphHeadingClick={handleParagraphHeadingClick}
           />
 
           {/* Info: (20260708 - Tzuhan) 進度浮窗 */}
@@ -188,6 +213,8 @@ export default function CarbonChatbotPage() {
               onToggleVerified={toggleParagraphVerified}
               draftingParagraphId={draftingParagraphId}
               onGenerateDraft={generateParagraphDraft}
+              highlightedParagraphId={highlightedParagraphId}
+              onParagraphHeadingClick={handleParagraphHeadingClick}
             />
           </div>
         </div>

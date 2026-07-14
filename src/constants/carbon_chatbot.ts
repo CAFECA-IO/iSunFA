@@ -77,6 +77,13 @@ export const CARBON_CHAT_ATTACHMENT_ACCEPT =
 // Info: (20260714 - Emily) 附件→段落管線:單次生成段落數上限(控制延遲與 token 成本)
 export const CARBON_ATTACHMENT_PIPELINE_MAX_PARAGRAPHS = 3;
 
+// Info: (20260714 - Emily) 對話↔報告雙向連動:報告段落錨點 data attribute(以順序法注入 h3,取代標題文字比對)
+export const CARBON_REPORT_PARAGRAPH_ATTR = "data-paragraph-id";
+
+// Info: (20260714 - Emily) 段落高亮與訊息閃爍的持續時間(ms)與高亮底色(orange-100)
+export const CARBON_CHAT_HIGHLIGHT_DURATION_MS = 2000;
+export const CARBON_REPORT_HIGHLIGHT_COLOR = "#ffedd5";
+
 // Info: (20260714 - Emily) 附件對應不到任何段落時的預設落點(2.2 溫室氣體排放源鑑別)
 export const CARBON_ATTACHMENT_FALLBACK_PARAGRAPH_ID = "ch2-2";
 

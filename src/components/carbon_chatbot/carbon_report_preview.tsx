@@ -10,8 +10,15 @@ import {
 } from "@/types/carbon_chatbot.types";
 import PdfEditor from "@/components/pdf_tool/pdf_editor";
 import { PdfToolViewMode } from "@/constants/pdf_tool";
-import { MOBILE_MEDIA_QUERY } from "@/constants/carbon_chatbot";
-import { buildSectionHeadingByTitle } from "@/constants/carbon_report_outline";
+import {
+  MOBILE_MEDIA_QUERY,
+  CARBON_REPORT_PARAGRAPH_ATTR,
+  CARBON_REPORT_HIGHLIGHT_COLOR,
+} from "@/constants/carbon_chatbot";
+import {
+  buildSectionHeadingByTitle,
+  CARBON_REPORT_SECTION_HEADING_PREFIX,
+} from "@/constants/carbon_report_outline";
 import { ReportToolbar } from "@/components/carbon_chatbot/report_toolbar";
 import { OutlineRail } from "@/components/carbon_chatbot/outline_rail";
 import { OutlineDrawer } from "@/components/carbon_chatbot/outline_drawer";
@@ -28,6 +35,9 @@ interface ICarbonReportPreviewProps {
   // Info: (20260714 - Emily) AI 段落草稿生成(透傳給 OutlineDrawer → OutlineTree)
   draftingParagraphId?: string | null;
   onGenerateDraft?: (paragraphId: string) => void;
+  // Info: (20260714 - Emily) 對話↔報告雙向連動:短暫高亮的段落與「點報告段落 → 回跳對話訊息」callback
+  highlightedParagraphId?: string | null;
+  onParagraphHeadingClick?: (paragraphId: string) => void;
 }
 
 // Info: (20260713 - Tzuhan) 渲染全部 33 段:已生成者顯示內容,未生成者顯示灰色佔位區塊,確保跳段永遠有落點且報告骨架一眼可見
@@ -74,6 +84,8 @@ export default function CarbonReportPreview({
   onToggleVerified = () => {},
   draftingParagraphId = null,
   onGenerateDraft = undefined,
+  highlightedParagraphId = null,
+  onParagraphHeadingClick = undefined,
 }: ICarbonReportPreviewProps) {
   const { t } = useTranslation();
   const [, setErrorModal] = useState({ isOpen: false, message: "" });
@@ -88,22 +100,87 @@ export default function CarbonReportPreview({
   );
   const hasOutline = paragraphs.length > 0;
 
-  // Info: (20260713 - Tzuhan) 跳段時將 PDF 預覽捲動至該段標題(以段落標題文字定位);未生成段落亦有佔位落點
+  // Info: (20260714 - Emily) 錨點注入:預覽渲染全部段落且與 33 段依序 1:1,以順序法將段落 id 寫入 SECTION h3
+  // Info: (20260714 - Emily) (取代標題文字比對;Markdown 渲染層不支援原生 HTML,故於渲染後注入 data attribute)
+  useEffect(() => {
+    if (!previewContainerRef.current) return undefined;
+    const timer = setTimeout(() => {
+      const headings =
+        previewContainerRef.current?.querySelectorAll("h3") ?? [];
+      const sectionHeadings = Array.from(headings).filter((h) =>
+        h.textContent?.trim().startsWith(CARBON_REPORT_SECTION_HEADING_PREFIX),
+      );
+      sectionHeadings.forEach((heading, index) => {
+        const paragraph = paragraphs[index];
+        if (!paragraph) return;
+        heading.setAttribute(CARBON_REPORT_PARAGRAPH_ATTR, paragraph.id);
+        // Info: (20260714 - Emily) 反向連動:點報告段落標題 → 回跳對話關聯訊息
+        if (onParagraphHeadingClick) {
+          const el = heading as HTMLElement;
+          el.style.cursor = "pointer";
+          el.onclick = () => onParagraphHeadingClick(paragraph.id);
+        }
+      });
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [paragraphs, onParagraphHeadingClick]);
+
+  // Info: (20260713 - Tzuhan) 跳段時將 PDF 預覽捲動至該段標題;優先用 data 錨點,注入未完成時退回標題文字比對
   useEffect(() => {
     if (!activeParagraphId || !previewContainerRef.current) return undefined;
     const target = paragraphs.find((p) => p.id === activeParagraphId);
     if (!target) return undefined;
 
     const timer = setTimeout(() => {
-      const headings =
-        previewContainerRef.current?.querySelectorAll("h3") ?? [];
-      const match = Array.from(headings).find((h) =>
-        h.textContent?.includes(target.title),
+      const container = previewContainerRef.current;
+      if (!container) return;
+      const anchor = container.querySelector(
+        `[${CARBON_REPORT_PARAGRAPH_ATTR}="${activeParagraphId}"]`,
       );
+      const match =
+        anchor ??
+        Array.from(container.querySelectorAll("h3")).find((h) =>
+          h.textContent?.includes(target.title),
+        ) ??
+        null;
       match?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 150);
+    }, 200);
     return () => clearTimeout(timer);
   }, [activeParagraphId, paragraphs]);
+
+  // Info: (20260714 - Emily) 即時高亮:草稿寫入或 chip 點擊時,段落區塊(標題至下一個 h3/hr)短暫上色後淡出
+  useEffect(() => {
+    if (!highlightedParagraphId || !previewContainerRef.current) {
+      return undefined;
+    }
+    const container = previewContainerRef.current;
+    const applied: HTMLElement[] = [];
+
+    const timer = setTimeout(() => {
+      const heading = container.querySelector(
+        `[${CARBON_REPORT_PARAGRAPH_ATTR}="${highlightedParagraphId}"]`,
+      ) as HTMLElement | null;
+      if (!heading) return;
+
+      let node: Element | null = heading;
+      while (node) {
+        const el = node as HTMLElement;
+        el.style.transition = "background-color 0.5s ease";
+        el.style.backgroundColor = CARBON_REPORT_HIGHLIGHT_COLOR;
+        applied.push(el);
+        node = node.nextElementSibling;
+        if (node && (node.tagName === "H3" || node.tagName === "HR")) break;
+      }
+    }, 250);
+
+    // Info: (20260714 - Emily) highlightedParagraphId 逾時歸零時清除底色,靠 transition 淡出
+    return () => {
+      clearTimeout(timer);
+      applied.forEach((el) => {
+        el.style.backgroundColor = "";
+      });
+    };
+  }, [highlightedParagraphId]);
 
   if (!reportData) {
     return (

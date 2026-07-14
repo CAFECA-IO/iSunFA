@@ -1,13 +1,15 @@
 import { Bot } from "lucide-react";
 import { IChatMessage } from "@/types/carbon_chatbot.types";
 import { AttachmentCard } from "@/components/carbon_chatbot/attachment_card";
+import { ParagraphChip } from "@/components/carbon_chatbot/paragraph_chip";
 
 export interface IAIBubbleProps {
   message: IChatMessage;
+  onChipJump?: (paragraphId: string) => void;
 }
 import { useTranslation } from "@/i18n/i18n_context";
 
-export function AIBubble({ message }: IAIBubbleProps) {
+export function AIBubble({ message, onChipJump = undefined }: IAIBubbleProps) {
   const { t } = useTranslation();
   return (
     <div className="flex gap-4">
@@ -25,6 +27,21 @@ export function AIBubble({ message }: IAIBubbleProps) {
               attachment={attachment}
             />
           ))}
+
+          {/* Info: (20260714 - Emily) 段落 chip:點擊跳至報告對應段落並高亮 */}
+          {onChipJump &&
+            message.relatedParagraphIds &&
+            message.relatedParagraphIds.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {message.relatedParagraphIds.map((paragraphId) => (
+                  <ParagraphChip
+                    key={`${message.id}-${paragraphId}`}
+                    paragraphId={paragraphId}
+                    onJump={onChipJump}
+                  />
+                ))}
+              </div>
+            )}
         </div>
         <div className="mt-2 ml-2 text-xs font-bold text-gray-400">
           {t("carbon_chatbot.ai_name")}

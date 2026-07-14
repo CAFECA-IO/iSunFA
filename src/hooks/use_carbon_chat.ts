@@ -43,6 +43,7 @@ import {
   CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES,
   CARBON_CHAT_MAX_ATTACHMENT_BYTES,
   CARBON_CHAT_MAX_ATTACHMENTS_PER_MESSAGE,
+  CARBON_CHAT_HIGHLIGHT_DURATION_MS,
 } from "@/constants/carbon_chatbot";
 
 export const useCarbonChat = () => {
@@ -71,6 +72,13 @@ export const useCarbonChat = () => {
     IPendingAttachment[]
   >([]);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
+  // Info: (20260714 - Emily) 對話↔報告雙向連動:報告段落高亮與對話訊息閃爍(皆為短暫狀態,逾時自動清除)
+  const [highlightedParagraphId, setHighlightedParagraphId] = useState<
+    string | null
+  >(null);
+  const [focusedMessageId, setFocusedMessageId] = useState<string | null>(null);
+  const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const focusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Info: (20260712 - Luphia) 歷史訊息分頁狀態（上卷載入更多）
   const [hasMoreHistory, setHasMoreHistory] = useState<boolean>(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(false);
@@ -152,7 +160,20 @@ export const useCarbonChat = () => {
   useEffect(() => {
     return () => {
       if (replyTimeoutRef.current) clearTimeout(replyTimeoutRef.current);
+      if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+      if (focusTimerRef.current) clearTimeout(focusTimerRef.current);
     };
+  }, []);
+
+  // Info: (20260714 - Emily) 跳至報告段落並短暫高亮(chip 點擊與草稿寫入後的即時回饋共用)
+  const jumpToReportParagraph = useCallback((paragraphId: string) => {
+    setActiveParagraphId(paragraphId);
+    setHighlightedParagraphId(paragraphId);
+    if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+    highlightTimerRef.current = setTimeout(() => {
+      highlightTimerRef.current = null;
+      setHighlightedParagraphId(null);
+    }, CARBON_CHAT_HIGHLIGHT_DURATION_MS);
   }, []);
 
   // Info: (20260712 - Luphia) 載入歷史訊息（密文→以主私鑰解密）；before 省略為最新一頁，否則載入更舊一頁並前置
@@ -271,6 +292,29 @@ export const useCarbonChat = () => {
     [activeSessionId, t],
   );
 
+  // Info: (20260714 - Emily) 反向連動:點報告段落 → 捲動至最近一則關聯訊息並閃爍;無關聯訊息則 fallback 為跳段引導
+  const focusMessageForParagraph = useCallback(
+    (paragraphId: string) => {
+      const messages = activeSession?.messages ?? [];
+      const related = [...messages]
+        .reverse()
+        .find((msg) => msg.relatedParagraphIds?.includes(paragraphId));
+
+      if (!related) {
+        jumpToParagraph(paragraphId);
+        return;
+      }
+
+      setFocusedMessageId(related.id);
+      if (focusTimerRef.current) clearTimeout(focusTimerRef.current);
+      focusTimerRef.current = setTimeout(() => {
+        focusTimerRef.current = null;
+        setFocusedMessageId(null);
+      }, CARBON_CHAT_HIGHLIGHT_DURATION_MS);
+    },
+    [activeSession, jumpToParagraph],
+  );
+
   // Info: (20260714 - Emily) 將草稿寫入 reportData:補上 SECTION 標頭、標記完成、重置查核(單一寫入點,對話生成與附件管線共用)
   const applyDraftToReport = useCallback(
     (draft: IParagraphDraft) => {
@@ -340,6 +384,8 @@ export const useCarbonChat = () => {
         if (!draft) throw new Error("Empty draft payload");
 
         applyDraftToReport(draft);
+        // Info: (20260714 - Emily) 草稿寫入後即時高亮該段,demo 觀眾可見「對話 → 報告」的即時性
+        jumpToReportParagraph(draft.paragraphId);
       } catch (error) {
         console.error("[carbon-chat] paragraph draft failed:", error);
         appendMessageLocally(
@@ -363,6 +409,7 @@ export const useCarbonChat = () => {
       t,
       appendMessageLocally,
       applyDraftToReport,
+      jumpToReportParagraph,
     ],
   );
 
@@ -698,13 +745,13 @@ export const useCarbonChat = () => {
         throw new Error(data.message || "AI API returned an error");
       }
 
-      // Info: (20260714 - Emily) 附件管線產出的段落草稿:直接寫入報告並將視角切到第一個生成段落
+      // Info: (20260714 - Emily) 附件管線產出的段落草稿:直接寫入報告並將視角切到第一個生成段落(含即時高亮)
       const payload = (data.payload ?? null) as {
         drafts?: IParagraphDraft[];
       } | null;
       if (payload?.drafts && payload.drafts.length > 0) {
         payload.drafts.forEach(applyDraftToReport);
-        setActiveParagraphId(payload.drafts[0].paragraphId);
+        jumpToReportParagraph(payload.drafts[0].paragraphId);
       }
 
       // Info: (20260712 - Luphia) 後端已加密並發佈 AI 回覆到 Centrifugo；由訂閱端解密後顯示，此處不再處理回覆內容
@@ -733,6 +780,7 @@ export const useCarbonChat = () => {
     t,
     appendMessageLocally,
     applyDraftToReport,
+    jumpToReportParagraph,
     startReplyTimeout,
     chatChannel,
     ensureMasterKeyCached,
@@ -851,6 +899,10 @@ export const useCarbonChat = () => {
     reportStats,
     activeParagraphId,
     jumpToParagraph,
+    highlightedParagraphId,
+    focusedMessageId,
+    jumpToReportParagraph,
+    focusMessageForParagraph,
     draftingParagraphId,
     generateParagraphDraft,
     toggleParagraphVerified,
