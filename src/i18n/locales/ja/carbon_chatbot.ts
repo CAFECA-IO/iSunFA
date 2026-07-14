@@ -77,4 +77,5 @@ export const carbonChatbot = {
     "レポートステータス:ドラフト(内容は AI がセクションごとに生成し、人的レビューを経て確定されます)",
   report_button: "レポート",
   close_report: "レポートを閉じる",
+  close_chat: "チャットウィンドウを閉じる",
 };

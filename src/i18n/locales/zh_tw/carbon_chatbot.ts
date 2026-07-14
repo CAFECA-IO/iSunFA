@@ -71,4 +71,5 @@ export const carbonChatbot = {
   report_status_draft: "報告狀態:草稿(內容由 AI 逐段生成,經人工查核後方可定稿)",
   report_button: "報告",
   close_report: "關閉報告",
+  close_chat: "關閉聊天視窗",
 };

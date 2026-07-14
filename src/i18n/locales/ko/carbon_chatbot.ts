@@ -77,4 +77,5 @@ export const carbonChatbot = {
     "보고서 상태: 초안 (내용은 AI가 섹션별로 생성하며 수동 검토 후 확정됩니다)",
   report_button: "보고서",
   close_report: "보고서 닫기",
+  close_chat: "채팅 창 닫기",
 };

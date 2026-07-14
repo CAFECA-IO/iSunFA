@@ -77,4 +77,5 @@ export const carbonChatbot = {
     "Report status: Draft (content is generated section by section by AI and must pass human review before finalization)",
   report_button: "Report",
   close_report: "Close report",
+  close_chat: "Close chat window",
 };

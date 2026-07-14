@@ -5,12 +5,20 @@ import { useTranslation } from "@/i18n/i18n_context";
 
 export interface IChatProgressWidgetProps {
   stats: IReportProgressStats;
+  // Info: (20260714 - Emily) 定位可覆寫:報告主視圖右下已被聊天浮動鈕佔用時改置左下
+  positionClassName?: string;
 }
 
-export function ChatProgressWidget({ stats }: IChatProgressWidgetProps) {
+export function ChatProgressWidget({
+  stats,
+  // Info: (20260714 - Emily) display 一併由此控制(避免與 hidden/md:flex 等響應式覆寫衝突)
+  positionClassName = "right-10 bottom-10 flex",
+}: IChatProgressWidgetProps) {
   const { t } = useTranslation();
   return (
-    <div className="absolute right-10 bottom-10 z-20 flex w-80 items-center gap-5 rounded-2xl bg-[#1e293b] p-5 text-white shadow-2xl">
+    <div
+      className={`absolute ${positionClassName} z-20 w-80 items-center gap-5 rounded-2xl bg-[#1e293b] p-5 text-white shadow-2xl`}
+    >
       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-slate-800 shadow-inner">
         <svg
           className="h-6 w-6 text-[#ff5a00]"
