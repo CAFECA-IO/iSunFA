@@ -14,6 +14,17 @@ export const AI_REPLY_PROGRESS_STEP = 10;
 // Info: (20260712 - Luphia) chatroom 頻道前綴；完整頻道為 `${prefix}-${用戶 address}-${sessionId}`，隔離不同用戶與不同 session
 export const CARBON_CHAT_CHANNEL_PREFIX = "carbon-chat";
 
+// Info: (20260714 - Emily) 頻道組建與所有權檢查:前後端共用同一規則,防止跨用戶讀寫他人頻道
+export const buildCarbonChatChannel = (
+  address: string,
+  sessionId: string,
+): string => `${CARBON_CHAT_CHANNEL_PREFIX}-${address}-${sessionId}`;
+
+export const isCarbonChatChannelOwnedBy = (
+  channel: string,
+  address: string,
+): boolean => channel.startsWith(`${CARBON_CHAT_CHANNEL_PREFIX}-${address}-`);
+
 // Info: (20260712 - Luphia) chatroom 用途分類標記（存於 Chatroom.purpose）
 export const CARBON_CHAT_PURPOSE = "carbon_chatbot";
 

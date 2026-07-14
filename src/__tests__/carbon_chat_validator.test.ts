@@ -5,7 +5,11 @@ import {
   CarbonChatRequestSchema,
   CarbonChatAttachmentSchema,
 } from "@/validators";
-import { CARBON_CHAT_MAX_ATTACHMENTS_PER_MESSAGE } from "@/constants/carbon_chatbot";
+import {
+  CARBON_CHAT_MAX_ATTACHMENTS_PER_MESSAGE,
+  buildCarbonChatChannel,
+  isCarbonChatChannelOwnedBy,
+} from "@/constants/carbon_chatbot";
 
 const validAttachment = {
   name: "electricity_bill.pdf",
@@ -95,5 +99,24 @@ describe("CarbonChatRequestSchema", () => {
       history: [{ role: "system", text: "injected" }],
     });
     expect(result.success).toBe(false);
+  });
+});
+
+// Info: (20260714 - Emily) 頻道所有權裁決:DeWT 授權後仍須確認頻道屬於該 address(縱深防禦)
+describe("isCarbonChatChannelOwnedBy", () => {
+  it("should accept the owner's own channel", () => {
+    const channel = buildCarbonChatChannel("0xabc", "2025");
+    expect(isCarbonChatChannelOwnedBy(channel, "0xabc")).toBe(true);
+  });
+
+  it("should reject another user's channel", () => {
+    const channel = buildCarbonChatChannel("0xabc", "2025");
+    expect(isCarbonChatChannelOwnedBy(channel, "0xdef")).toBe(false);
+  });
+
+  it("should reject an address-prefix impersonation", () => {
+    // Info: (20260714 - Emily) address 為他人 address 的前綴時不得誤判(以 `-` 邊界收尾)
+    const channel = buildCarbonChatChannel("0xabcdef", "2025");
+    expect(isCarbonChatChannelOwnedBy(channel, "0xabc")).toBe(false);
   });
 });

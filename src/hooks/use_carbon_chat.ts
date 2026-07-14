@@ -46,7 +46,7 @@ import { useAuth } from "@/contexts/auth_context";
 import {
   DEFAULT_SESSION_ID,
   SESSION_PROGRESS_MAX,
-  CARBON_CHAT_CHANNEL_PREFIX,
+  buildCarbonChatChannel,
   CARBON_CHAT_REPLY_TIMEOUT_MS,
   CARBON_CHAT_AI_CONTEXT_SIZE,
   CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES,
@@ -106,8 +106,7 @@ export const useCarbonChat = () => {
 
   // Info: (20260712 - Luphia) 依「用途-用戶-session」組出獨立頻道，避免不同用戶或不同盤查 session 的訊息互相干擾
   const chatChannel = useMemo(
-    () =>
-      `${CARBON_CHAT_CHANNEL_PREFIX}-${user?.address ?? "anonymous"}-${activeSessionId}`,
+    () => buildCarbonChatChannel(user?.address ?? "anonymous", activeSessionId),
     [user?.address, activeSessionId],
   );
 
@@ -820,9 +819,13 @@ export const useCarbonChat = () => {
         }));
 
       // Info: (20260712 - Luphia) 傳入頻道與本 session 的加密公鑰(xpub)，由後端加密 AI 回覆並經 Centrifugo 回傳
-      const response = await fetch("/api/v1/chat/carbon", {
+      // Info: (20260714 - Emily) 改用 request helper:自動帶 DeWT Bearer token(後端已加授權檢查)
+      const data = await request<{
+        success: boolean;
+        message: string;
+        payload: { drafts?: IParagraphDraft[] } | null;
+      }>("/api/v1/chat/carbon", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           history: currentHistory,
           currentStep: activeSession.currentStep,
@@ -843,19 +846,12 @@ export const useCarbonChat = () => {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`AI API responded with status ${response.status}`);
-      }
-
-      const data = await response.json();
       if (!data.success) {
         throw new Error(data.message || "AI API returned an error");
       }
 
       // Info: (20260714 - Emily) 附件管線產出的段落草稿:直接寫入報告並將視角切到第一個生成段落(含即時高亮)
-      const payload = (data.payload ?? null) as {
-        drafts?: IParagraphDraft[];
-      } | null;
+      const payload = data.payload;
       if (payload?.drafts && payload.drafts.length > 0) {
         payload.drafts.forEach(applyDraftToReport);
         jumpToReportParagraph(payload.drafts[0].paragraphId);
@@ -936,24 +932,20 @@ export const useCarbonChat = () => {
       setIsTyping(true);
       pendingReplyRef.current = true;
       try {
-        const response = await fetch("/api/v1/chat/carbon", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            init: true,
-            channel: chatChannel,
-            recipientPublicKey,
-            currentStep: activeSession?.currentStep,
-            language,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error(
-            `Greeting init responded with status ${response.status}`,
-          );
-        }
-        const data = await response.json();
+        // Info: (20260714 - Emily) 改用 request helper:自動帶 DeWT Bearer token(後端已加授權檢查)
+        const data = await request<{ success: boolean; message: string }>(
+          "/api/v1/chat/carbon",
+          {
+            method: "POST",
+            body: JSON.stringify({
+              init: true,
+              channel: chatChannel,
+              recipientPublicKey,
+              currentStep: activeSession?.currentStep,
+              language,
+            }),
+          },
+        );
         if (!data.success) {
           throw new Error(data.message || "Greeting init returned an error");
         }

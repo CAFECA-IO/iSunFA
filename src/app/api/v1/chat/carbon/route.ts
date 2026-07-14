@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { ChatService } from "@/services/chat.service";
@@ -8,6 +9,7 @@ import {
   CARBON_CHAT_PURPOSE,
   CARBON_CHAT_AI_CONTEXT_SIZE,
   buildAttachmentDraftSummary,
+  isCarbonChatChannelOwnedBy,
 } from "@/constants/carbon_chatbot";
 import { CarbonChatRequestSchema } from "@/validators";
 import { ChatRoleEnum } from "@/types/carbon_chatbot.types";
@@ -16,7 +18,15 @@ import { IParagraphDraft } from "@/interfaces/carbon_paragraph_draft";
 // Info: (20260708 - Tzuhan) Carbon Chatbot Framework
 // Info: (20260712 - Luphia) 取得 AI 回覆，使用者訊息與 AI 回覆皆加密入庫；AI 回覆另經 Centrifugo 回傳（前端只訂閱）
 // Info: (20260714 - Emily) 手動解構驗證改為集中 Zod validator;新增 attachments(metadata 入加密 payload,base64 不入庫)
+// Info: (20260714 - Emily) DeWT 授權:比照 history route,並檢查 channel 所有權(頻道內含用戶 address)
 export async function POST(request: NextRequest) {
+  const sessionUser = await getIdentityFromDeWT(
+    request.headers.get("Authorization"),
+  );
+  if (!sessionUser) {
+    return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
+  }
+
   let rawBody: unknown;
   try {
     rawBody = await request.json();
@@ -38,6 +48,11 @@ export async function POST(request: NextRequest) {
     init,
     attachments,
   } = parsed.data;
+
+  // Info: (20260714 - Emily) 頻道所有權裁決:只允許讀寫自己 address 前綴的頻道,防跨用戶寫入
+  if (channel && !isCarbonChatChannelOwnedBy(channel, sessionUser.address)) {
+    return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
+  }
 
   try {
     const chatService = new ChatService();

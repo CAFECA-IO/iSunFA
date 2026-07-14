@@ -4,6 +4,7 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { chatroomRepo } from "@/repositories/chatroom.repo";
 import { CHATROOM_HISTORY_PAGE_SIZE } from "@/constants/chatroom";
+import { isCarbonChatChannelOwnedBy } from "@/constants/carbon_chatbot";
 
 // Info: (20260712 - Luphia) 分頁取回聊天室歷史（密文）；進入載入最近一頁，上卷帶 before 載入更舊一頁
 export async function GET(request: NextRequest) {
@@ -19,6 +20,11 @@ export async function GET(request: NextRequest) {
     const channel = searchParams.get("channel");
     if (!channel) {
       return jsonFail(API_ERRORS.VL_MISSING_PARAMS);
+    }
+
+    // Info: (20260714 - Emily) 頻道所有權裁決:歷史雖為密文,仍不允許讀取他人頻道(縱深防禦)
+    if (!isCarbonChatChannelOwnedBy(channel, sessionUser.address)) {
+      return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
     }
 
     const beforeParam = searchParams.get("before");
