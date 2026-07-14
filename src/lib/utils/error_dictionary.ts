@@ -689,6 +689,12 @@ export const API_ERRORS = {
     message: "Failed to generate paragraph draft",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
+  // Info: (20260714 - Emily) LLM 額度耗盡(429/RESOURCE_EXHAUSTED):與一般錯誤區分,前端可提示稍候重試
+  IS_LLM_QUOTA_EXCEEDED: {
+    code: "IS000011",
+    message: "AI service quota exceeded; please retry shortly",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
   IS_UNKNOWN: {
     code: "IS000099",
     message: "Internal Server Error",

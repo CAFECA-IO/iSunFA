@@ -28,6 +28,8 @@ export const carbonChatbot = {
   reduction_pathway: "减碳路径模拟",
   system_error: "【系统错误】抱歉，连线到碳会计师服务时发生问题，请稍后再试。",
   system_unavailable: "抱歉，系统目前无法回应。",
+  ai_quota_exceeded:
+    "【AI 额度已达上限】短时间内请求过多，请稍候一分钟后再试。",
   ai_name: "费思",
   platform_name: "环境智能平台",
   system_online: "系统连线中",

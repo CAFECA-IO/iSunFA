@@ -3,7 +3,7 @@
 // Info: (20260714 - Emily) 邊界:LLM 只撰寫敘述;段落對應由白名單裁決、數值一律引用輸入事實原值,嚴禁 LLM 計算或虛構
 
 import { SchemaType, type Schema } from "@google/generative-ai";
-import { ChatService } from "@/services/chat.service";
+import { ChatService, isLlmQuotaError } from "@/services/chat.service";
 import { ApiError, API_ERRORS } from "@/lib/utils/error_dictionary";
 import {
   CARBON_REPORT_OUTLINE,
@@ -71,13 +71,12 @@ export class ParagraphDraftService {
         { temperature: 0 },
       );
     } catch (error) {
-      // Info: (20260714 - Emily) 包裝 LLM 原始錯誤,不讓 Gemini 錯誤細節噴到前端
+      // Info: (20260714 - Emily) 包裝 LLM 原始錯誤,不讓 Gemini 錯誤細節噴到前端;額度耗盡回專屬錯誤碼
       console.error("[ParagraphDraftService] LLM call failed:", error);
-      throw new ApiError(
-        API_ERRORS.IS_PARAGRAPH_DRAFT_FAILED.code,
-        API_ERRORS.IS_PARAGRAPH_DRAFT_FAILED.message,
-        API_ERRORS.IS_PARAGRAPH_DRAFT_FAILED.status,
-      );
+      const def = isLlmQuotaError(error)
+        ? API_ERRORS.IS_LLM_QUOTA_EXCEEDED
+        : API_ERRORS.IS_PARAGRAPH_DRAFT_FAILED;
+      throw new ApiError(def.code, def.message, def.status);
     }
 
     // Info: (20260714 - Emily) 永不直接採信 LLM 輸出:JSON 解析 + Zod 雙重護欄

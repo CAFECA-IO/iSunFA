@@ -29,6 +29,8 @@ export const carbonChatbot = {
   system_error:
     "【システムエラー】申し訳ありません。カーボン会計士サービスへの接続中に問題が発生しました。後でもう一度お試しください。",
   system_unavailable: "申し訳ありません。現在システムは応答できません。",
+  ai_quota_exceeded:
+    "【AI 利用上限】短時間にリクエストが集中しました。1分ほど待って再試行してください。",
   ai_name: "フェイス",
   platform_name: "環境インテリジェンスプラットフォーム",
   system_online: "システムオンライン",

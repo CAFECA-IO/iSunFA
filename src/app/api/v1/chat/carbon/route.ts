@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
-import { ChatService } from "@/services/chat.service";
+import { ChatService, isLlmQuotaError } from "@/services/chat.service";
 import { chatroomService } from "@/services/chatroom.service";
 import { AttachmentExtractionService } from "@/services/attachment_extraction.service";
 import { ParagraphDraftService } from "@/services/paragraph_draft.service";
@@ -213,6 +213,10 @@ export async function POST(request: NextRequest) {
     return jsonOk({ reply, drafts, degraded });
   } catch (error) {
     console.error("[API] /chat/carbon error:", error);
+    // Info: (20260714 - Emily) 額度耗盡回專屬錯誤碼,前端提示稍候重試(與一般系統錯誤區分)
+    if (isLlmQuotaError(error)) {
+      return jsonFail(API_ERRORS.IS_LLM_QUOTA_EXCEEDED);
+    }
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

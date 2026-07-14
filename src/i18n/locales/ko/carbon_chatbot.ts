@@ -29,6 +29,8 @@ export const carbonChatbot = {
   system_error:
     "[시스템 오류] 죄송합니다. 탄소 회계사 서비스에 연결하는 중 문제가 발생했습니다. 나중에 다시 시도해 주세요.",
   system_unavailable: "죄송합니다. 현재 시스템이 응답할 수 없습니다.",
+  ai_quota_exceeded:
+    "[AI 사용량 한도 도달] 짧은 시간에 요청이 많았습니다. 1분 후 다시 시도해 주세요.",
   ai_name: "페이스",
   platform_name: "환경 인텔리전스 플랫폼",
   system_online: "시스템 온라인",

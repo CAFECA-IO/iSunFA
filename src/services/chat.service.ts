@@ -21,6 +21,17 @@ export interface ICarbonChatStructuredReply {
 // Info: (20260714 - Emily) readyParagraphId 的無段落標記(LLM enum 選項之一)
 const NO_READY_PARAGRAPH = "none";
 
+// Info: (20260714 - Emily) 判斷 LLM 錯誤是否為額度耗盡(429/RESOURCE_EXHAUSTED),供呼叫端回專屬錯誤碼
+export const isLlmQuotaError = (error: unknown): boolean => {
+  if (!(error instanceof Error)) return false;
+  const message = error.message.toLowerCase();
+  return (
+    message.includes("429") ||
+    message.includes("resource_exhausted") ||
+    message.includes("quota")
+  );
+};
+
 // Info: (20260714 - Emily) 聊天回覆 responseSchema:readyParagraphId 以 enum 約束,禁止 LLM 捏造段落 id
 const CARBON_CHAT_REPLY_SCHEMA: Schema = {
   type: SchemaType.OBJECT,

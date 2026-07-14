@@ -40,7 +40,15 @@ import {
   ensureMasterKey,
   prefetchOwnKeyRecord,
 } from "@/lib/chatroom_key_manager";
-import { request } from "@/lib/utils/request";
+import { request, ApiError as RequestApiError } from "@/lib/utils/request";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
+
+// Info: (20260714 - Emily) 判斷 API 失敗是否為 AI 額度耗盡(IS000011),前端提示稍候重試
+const isQuotaApiError = (error: unknown): boolean => {
+  if (!(error instanceof RequestApiError)) return false;
+  const data = error.data as { errorCode?: string } | undefined;
+  return data?.errorCode === API_ERRORS.IS_LLM_QUOTA_EXCEEDED.code;
+};
 import { useAuth } from "@/contexts/auth_context";
 import {
   DEFAULT_SESSION_ID,
@@ -632,9 +640,11 @@ export const useCarbonChat = () => {
           {
             id: crypto.randomUUID(),
             sender: ChatRoleEnum.AI,
-            text: t("carbon_chatbot.draft_failed", {
-              section: `${section.code} ${section.title}`,
-            }),
+            text: isQuotaApiError(error)
+              ? t("carbon_chatbot.ai_quota_exceeded")
+              : t("carbon_chatbot.draft_failed", {
+                  section: `${section.code} ${section.title}`,
+                }),
           },
           0,
         );
@@ -1032,7 +1042,9 @@ export const useCarbonChat = () => {
         {
           id: crypto.randomUUID(),
           sender: ChatRoleEnum.AI,
-          text: t("carbon_chatbot.system_error"),
+          text: isQuotaApiError(error)
+            ? t("carbon_chatbot.ai_quota_exceeded")
+            : t("carbon_chatbot.system_error"),
         },
         0,
       );
