@@ -60,7 +60,7 @@ describe("ParagraphDraftService", () => {
 
   it("should wrap LLM call failures without leaking the raw error", async () => {
     const mockChatService = buildMockChatService(
-      new Error("Gemini quota exceeded: secret internal detail"),
+      new Error("Gemini connection reset: secret internal detail"),
     );
     const service = new ParagraphDraftService(mockChatService);
 
@@ -69,6 +69,21 @@ describe("ParagraphDraftService", () => {
     await expect(promise).rejects.toMatchObject({
       code: API_ERRORS.IS_PARAGRAPH_DRAFT_FAILED.code,
       message: API_ERRORS.IS_PARAGRAPH_DRAFT_FAILED.message,
+    });
+  });
+
+  it("should map quota-exhaustion errors to IS_LLM_QUOTA_EXCEEDED without leaking details", async () => {
+    // Info: (20260715 - Emily) isLlmQuotaError 以訊息關鍵字分類:429/quota 類錯誤需回專屬錯誤碼供前端顯示額度提示
+    const mockChatService = buildMockChatService(
+      new Error("Gemini quota exceeded: secret internal detail"),
+    );
+    const service = new ParagraphDraftService(mockChatService);
+
+    const promise = service.generateParagraphDraft(baseInput);
+    await expect(promise).rejects.toBeInstanceOf(ApiError);
+    await expect(promise).rejects.toMatchObject({
+      code: API_ERRORS.IS_LLM_QUOTA_EXCEEDED.code,
+      message: API_ERRORS.IS_LLM_QUOTA_EXCEEDED.message,
     });
   });
 
