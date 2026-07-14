@@ -5,6 +5,8 @@
 import { SchemaType, type Schema } from "@google/generative-ai";
 import { ChatService } from "@/services/chat.service";
 import { ParagraphDraftService } from "@/services/paragraph_draft.service";
+import { storageService } from "@/services/storage.service";
+import { IAttachment } from "@/types/carbon_chatbot.types";
 import { CARBON_REPORT_OUTLINE } from "@/constants/carbon_report_outline";
 import {
   CARBON_ATTACHMENT_PIPELINE_MAX_PARAGRAPHS,
@@ -92,6 +94,35 @@ export class AttachmentExtractionService {
 
   private getDraftService(): ParagraphDraftService {
     return this.injectedDraftService ?? new ParagraphDraftService();
+  }
+
+  // Info: (20260714 - Emily) 附件持久化:比照 issue/mission 服務以 storageService.uploadLaria 分片入庫,回傳含 cid 的 metadata
+  // Info: (20260714 - Emily) 失敗為 best-effort(cid 缺席不阻斷訊息流程);之後可經 recoverLaria(cid) 取回原檔
+  async persistAttachments(
+    attachments: CarbonChatAttachmentPayload[],
+  ): Promise<IAttachment[]> {
+    return Promise.all(
+      attachments.map(async (attachment) => {
+        const metadata: IAttachment = {
+          name: attachment.name,
+          size: attachment.size,
+          mimeType: attachment.mimeType,
+        };
+        try {
+          const buffer = Buffer.from(attachment.data, "base64");
+          const file = new globalThis.File([buffer], attachment.name, {
+            type: attachment.mimeType,
+          });
+          metadata.cid = await storageService.uploadLaria(file);
+        } catch (error) {
+          console.error(
+            `[AttachmentExtractionService] laria upload failed for ${attachment.name}:`,
+            error,
+          );
+        }
+        return metadata;
+      }),
+    );
   }
 
   // Info: (20260714 - Emily) 單一附件萃取:失敗直接拋錯,由管線層決定降級

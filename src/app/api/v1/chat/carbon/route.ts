@@ -14,7 +14,7 @@ import {
   isCarbonChatChannelOwnedBy,
 } from "@/constants/carbon_chatbot";
 import { CarbonChatRequestSchema } from "@/validators";
-import { ChatRoleEnum } from "@/types/carbon_chatbot.types";
+import { ChatRoleEnum, IAttachment } from "@/types/carbon_chatbot.types";
 import { IParagraphDraft } from "@/interfaces/carbon_paragraph_draft";
 
 // Info: (20260708 - Tzuhan) Carbon Chatbot Framework
@@ -116,15 +116,21 @@ export async function POST(request: NextRequest) {
       }));
 
     // Info: (20260714 - Emily) 附件→段落管線:萃取事實 → 白名單裁決段落 → 生成草稿(真 Gemini + graceful fallback)
+    // Info: (20260714 - Emily) 附件同時以 Laria 分片持久化(uploadLaria → cid),與萃取並行,失敗不阻斷
     let drafts: IParagraphDraft[] = [];
     let degraded = false;
+    let attachmentsMeta: IAttachment[] | undefined;
     if (attachments && attachments.length > 0) {
       const pipeline = new AttachmentExtractionService();
-      const result = await pipeline.runAttachmentToParagraphPipeline({
-        attachments,
-        conversationContext,
-        language,
-      });
+      const [persisted, result] = await Promise.all([
+        pipeline.persistAttachments(attachments),
+        pipeline.runAttachmentToParagraphPipeline({
+          attachments,
+          conversationContext,
+          language,
+        }),
+      ]);
+      attachmentsMeta = persisted;
       drafts = result.drafts;
       degraded = result.degraded;
     }
@@ -168,12 +174,8 @@ export async function POST(request: NextRequest) {
           recipientPublicKey,
           text: lastUserMessage?.text ?? "",
           purpose: CARBON_CHAT_PURPOSE,
-          // Info: (20260714 - Emily) 只入庫 metadata(name/size/mimeType),base64 內容不落地
-          attachments: attachments?.map((a) => ({
-            name: a.name,
-            size: a.size,
-            mimeType: a.mimeType,
-          })),
+          // Info: (20260714 - Emily) 入庫 metadata(name/size/mimeType/cid);原檔已由 Laria 分片保存,可經 cid 取回
+          attachments: attachmentsMeta,
         });
       }
 

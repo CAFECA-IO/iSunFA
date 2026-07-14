@@ -16,11 +16,13 @@ export enum SessionStatusEnum {
   ARCHIVED = "已歸檔",
 }
 
-// Info: (20260714 - Emily) 訊息附件 metadata(size 為人類可讀字串;檔案內容不入庫,僅供 AI 萃取管線即時使用)
+// Info: (20260714 - Emily) 訊息附件 metadata(size 為人類可讀字串)
+// Info: (20260714 - Emily) cid = Laria 分片儲存的 metadata hash(server 端 uploadLaria 產生);可經 recoverLaria 取回原檔
 export interface IAttachment {
   name: string;
   size: string;
   mimeType?: string;
+  cid?: string;
 }
 
 // Info: (20260714 - Emily) 待送出附件(ChatInput 暫存):base64 內容僅存於記憶體,送出後即清除
