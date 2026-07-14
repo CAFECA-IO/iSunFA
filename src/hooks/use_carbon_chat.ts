@@ -294,25 +294,33 @@ export const useCarbonChat = () => {
 
     loadReportDraft(chatChannel, master)
       .then((loaded) => {
-        // Info: (20260714 - Emily) 無草稿 → 版本 0(首存);有草稿 → 記錄版本供樂觀鎖
+        // Info: (20260714 - Emily) 無草稿 → 版本 0(首存);有草稿 → 記錄真實版本供樂觀鎖
         draftVersionsRef.current.set(chatChannel, loaded?.version ?? 0);
-        if (!loaded) return;
+        // Info: (20260714 - Emily) 草稿存在但無法解讀(reportData null):保留版本、不覆寫狀態,並提示保存異常
+        if (loaded && !loaded.reportData) {
+          console.error(
+            "[carbon-chat] report draft exists but is unreadable:",
+            chatChannel,
+          );
+          setSaveStatus("error");
+          return;
+        }
+        if (!loaded?.reportData) return;
+        const restored = loaded.reportData;
         setSessionsData((prev) => {
           const session = prev[sessionIdForChannel];
           if (!session) return prev;
           return {
             ...prev,
-            [sessionIdForChannel]: {
-              ...session,
-              reportData: loaded.reportData,
-            },
+            [sessionIdForChannel]: { ...session, reportData: restored },
           };
         });
       })
       .catch((error) => {
-        // Info: (20260714 - Emily) 還原失敗不阻斷對話;版本未知時保守設 0,首存衝突會被後端擋下
+        // Info: (20260714 - Emily) 還原失敗(API/網路):不設定版本 → 凍結該 channel 的自動保存,
+        // Info: (20260714 - Emily) 避免以空骨架蓋掉 DB 既有草稿;以保存異常提示使用者
         console.error("[carbon-chat] failed to load report draft:", error);
-        draftVersionsRef.current.set(chatChannel, 0);
+        setSaveStatus("error");
       });
   }, [isUnlocked, chatChannel, activeSessionId]);
 

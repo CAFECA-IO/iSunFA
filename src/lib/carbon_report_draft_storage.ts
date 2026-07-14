@@ -26,13 +26,16 @@ import {
 export type ISessionIndexEntry = StoredSessionsIndex["sessions"][number];
 
 export interface ILoadedReportDraft {
-  reportData: IReportData;
+  // Info: (20260714 - Emily) null = 草稿存在但無法解密/驗證(版本仍有效,禁止以版本 0 覆蓋)
+  reportData: IReportData | null;
   version: number;
 }
 
 const REPORT_DRAFT_API = "/api/v1/chat/carbon/report";
 
-// Info: (20260714 - Emily) 取回草稿:GET 密文 → 主私鑰解密 → Zod 驗證(壞資料丟棄回 null,不讓髒資料進狀態)
+// Info: (20260714 - Emily) 取回草稿:GET 密文 → 主私鑰解密 → Zod 驗證
+// Info: (20260714 - Emily) 回傳三態:null = 無草稿(版本 0 可首存);reportData null = 草稿存在但無法解讀
+// Info: (20260714 - Emily) (仍回真實版本,避免呼叫端以版本 0 撞既有草稿造成衝突死循環)
 export const loadReportDraft = async (
   channel: string,
   masterKey: IChatroomMasterKey,
@@ -52,11 +55,13 @@ export const loadReportDraft = async (
       draft.envelope,
     );
     const parsed = CarbonReportDataSchema.safeParse(JSON.parse(plaintext));
-    if (!parsed.success) return null;
-    return { reportData: parsed.data, version: draft.version };
+    return {
+      reportData: parsed.success ? parsed.data : null,
+      version: draft.version,
+    };
   } catch {
-    // Info: (20260714 - Emily) 解密失敗(非本金鑰/密文毀損)一律視為無草稿
-    return null;
+    // Info: (20260714 - Emily) 解密失敗(非本金鑰/密文毀損):內容不可用,但版本仍有效
+    return { reportData: null, version: draft.version };
   }
 };
 
