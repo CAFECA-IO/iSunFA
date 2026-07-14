@@ -395,10 +395,14 @@ export const useCarbonChat = () => {
     };
   }, [activeSession]);
 
+  // Info: (20260714 - Emily) 跳段後的草稿觸發目標:送出預填訊息時觸發該段草稿生成(決定性規則,非 LLM 意圖判斷)
+  const pendingDraftParagraphIdRef = useRef<string | null>(null);
+
   // Info: (20260713 - Tzuhan) 跳段(vibe 模式):標記進行中段落、將該段撰寫指引寫入 currentStep 供 AI 引導、預填對話輸入
   const jumpToParagraph = useCallback(
     (paragraphId: string) => {
       setActiveParagraphId(paragraphId);
+      pendingDraftParagraphIdRef.current = paragraphId;
       const section = CARBON_REPORT_OUTLINE.find((s) => s.id === paragraphId);
       if (!section) return;
 
@@ -839,6 +843,19 @@ export const useCarbonChat = () => {
     setIsError(false);
     pendingReplyRef.current = true;
 
+    // Info: (20260714 - Emily) 跳段後送出且訊息仍指涉該段標題 → 並行觸發段落草稿生成(與聊天回覆互不等待)
+    // Info: (20260714 - Emily) 決定性字串規則:預填文字由系統產生;使用者改寫成無關內容則解除,不誤觸發
+    const pendingDraftId = pendingDraftParagraphIdRef.current;
+    if (pendingDraftId) {
+      pendingDraftParagraphIdRef.current = null;
+      const pendingSection = CARBON_REPORT_OUTLINE.find(
+        (s) => s.id === pendingDraftId,
+      );
+      if (pendingSection && userMessage.text.includes(pendingSection.title)) {
+        generateParagraphDraft(pendingDraftId);
+      }
+    }
+
     try {
       // Info: (20260712 - Luphia) 只取最近 N 則送給 AI 以控 token；畫面仍保有完整歷史
       const currentHistory = [...activeSession.messages, userMessage]
@@ -914,6 +931,7 @@ export const useCarbonChat = () => {
     appendMessageLocally,
     applyDraftToReport,
     jumpToReportParagraph,
+    generateParagraphDraft,
     startReplyTimeout,
     chatChannel,
     ensureMasterKeyCached,
