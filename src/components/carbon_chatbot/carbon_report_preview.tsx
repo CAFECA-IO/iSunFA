@@ -15,6 +15,8 @@ import {
   MOBILE_MEDIA_QUERY,
   CARBON_REPORT_PARAGRAPH_ATTR,
   CARBON_REPORT_HIGHLIGHT_COLOR,
+  CARBON_REPORT_HIGHLIGHTED_ATTR,
+  buildCarbonReportFileName,
 } from "@/constants/carbon_chatbot";
 import {
   buildSectionHeadingByTitle,
@@ -171,6 +173,8 @@ export default function CarbonReportPreview({
         const el = node as HTMLElement;
         el.style.transition = "background-color 0.5s ease";
         el.style.backgroundColor = CARBON_REPORT_HIGHLIGHT_COLOR;
+        // Info: (20260714 - Emily) 標記高亮元素,供下載前清理(高亮不得滲入 PDF)
+        el.setAttribute(CARBON_REPORT_HIGHLIGHTED_ATTR, "true");
         applied.push(el);
         node = node.nextElementSibling;
         if (node && (node.tagName === "H3" || node.tagName === "HR")) break;
@@ -182,9 +186,23 @@ export default function CarbonReportPreview({
       clearTimeout(timer);
       applied.forEach((el) => {
         el.style.backgroundColor = "";
+        el.removeAttribute(CARBON_REPORT_HIGHLIGHTED_ATTR);
       });
     };
   }, [highlightedParagraphId]);
+
+  // Info: (20260714 - Emily) 下載快照前同步清除殘留高亮(React 狀態清除非同步,直接操作 DOM 確保快照乾淨)
+  const handleBeforeDownload = () => {
+    const container = previewContainerRef.current;
+    if (!container) return;
+    container
+      .querySelectorAll<HTMLElement>(`[${CARBON_REPORT_HIGHLIGHTED_ATTR}]`)
+      .forEach((el) => {
+        el.style.transition = "";
+        el.style.backgroundColor = "";
+        el.removeAttribute(CARBON_REPORT_HIGHLIGHTED_ATTR);
+      });
+  };
 
   if (!reportData) {
     return (
@@ -262,6 +280,8 @@ export default function CarbonReportPreview({
             onChange={onMarkdownChange}
             setErrorModal={setErrorModal}
             storageKey={`chatbot_draft_${session.id}`}
+            downloadFileName={buildCarbonReportFileName(session.title)}
+            onBeforeDownload={handleBeforeDownload}
           />
         </div>
       </div>

@@ -83,6 +83,17 @@ export const CARBON_REPORT_PARAGRAPH_ATTR = "data-paragraph-id";
 // Info: (20260714 - Emily) 段落高亮與訊息閃爍的持續時間(ms)與高亮底色(orange-100)
 export const CARBON_CHAT_HIGHLIGHT_DURATION_MS = 2000;
 export const CARBON_REPORT_HIGHLIGHT_COLOR = "#ffedd5";
+// Info: (20260714 - Emily) 高亮元素標記 attribute;下載 PDF 前依此清除,避免高亮滲入輸出
+export const CARBON_REPORT_HIGHLIGHTED_ATTR = "data-carbon-highlighted";
+
+// Info: (20260714 - Emily) 碳報告下載檔名:iSunFA_CarbonReport_{標題}_{YYYYMMDD}.pdf
+export const buildCarbonReportFileName = (title: string): string => {
+  const now = new Date();
+  const ymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+  const safeTitle =
+    title.replace(/[\\/:*?"<>|\s]+/g, "_").slice(0, 40) || "Report";
+  return `iSunFA_CarbonReport_${safeTitle}_${ymd}.pdf`;
+};
 
 // Info: (20260714 - Emily) 報告草稿與 session 索引的 localStorage key 與 schema 版本
 // ToDo: (20260714 - Emily) 後續 DB 化(CarbonReportDraft model + GET/PUT /api/v1/chat/carbon/report)時移除本機儲存

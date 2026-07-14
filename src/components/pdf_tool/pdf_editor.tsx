@@ -51,6 +51,10 @@ interface IPdfEditorProps {
   defaultViewMode?: PdfToolViewMode;
   // Info: (20260713 - Tzuhan) 預覽內容字級變體;嵌入式場景(如 carbon_chatbot)傳 compact 與 app UI 協調
   contentVariant?: MarkdownContentVariant;
+  // Info: (20260714 - Emily) 下載檔名(未指定時維持既有 iSunFA_Document_{timestamp} 格式)
+  downloadFileName?: string;
+  // Info: (20260714 - Emily) 下載快照前的清理 hook(如 carbon_chatbot 移除段落高亮,避免滲入 PDF)
+  onBeforeDownload?: () => void;
 }
 
 export default function PdfEditor({
@@ -62,6 +66,8 @@ export default function PdfEditor({
   storageKey = STORAGE_KEY,
   defaultViewMode = PdfToolViewMode.EDIT,
   contentVariant = "document",
+  downloadFileName = undefined,
+  onBeforeDownload = undefined,
 }: IPdfEditorProps) {
   const { t } = useTranslation();
 
@@ -319,6 +325,9 @@ export default function PdfEditor({
   const handleDownloadPDF = async () => {
     if (!contentRef.current) return;
 
+    // Info: (20260714 - Emily) 快照前清理:呼叫端可移除暫時性視覺狀態(如段落高亮),避免滲入 PDF
+    onBeforeDownload?.();
+
     setIsGenerating(true);
     try {
       const html2pdf = (await import("html2pdf.js")).default;
@@ -331,7 +340,7 @@ export default function PdfEditor({
 
       const opt = {
         margin: 15,
-        filename: `iSunFA_Document_${Date.now()}.pdf`,
+        filename: downloadFileName ?? `iSunFA_Document_${Date.now()}.pdf`,
         image: { type: "jpeg" as const, quality: 0.98 },
         html2canvas: {
           scale: 2,
