@@ -29,6 +29,10 @@ export default function CarbonChatbotPage() {
     isLoadingHistory,
     loadMoreHistory,
     handleSendMessage,
+    pendingAttachments,
+    attachmentError,
+    addAttachments,
+    removeAttachment,
     reportStats,
     activeParagraphId,
     jumpToParagraph,
@@ -78,6 +82,10 @@ export default function CarbonChatbotPage() {
                 isLoading={isLoading}
                 onInputChange={setInputValue}
                 onSendMessage={handleSendMessage}
+                pendingAttachments={pendingAttachments}
+                attachmentError={attachmentError}
+                onAddFiles={addAttachments}
+                onRemoveAttachment={removeAttachment}
               />
 
               {/* Info: (20260713 - Tzuhan) 行動版浮動鈕組:章節目錄 Modal 與報告全螢幕檢視(桌面由右欄操作) */}

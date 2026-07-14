@@ -48,6 +48,11 @@ export const carbonChatbot = {
   close_outline: "關閉章節目錄",
   data_driven_badge: "數據段落:數字由系統勾稽計算,非 AI 產出",
   jump_prompt: "請協助我完成「{{section}}」這個段落。",
+  attach_file: "附加檔案",
+  remove_attachment: "移除附件",
+  attachment_invalid_type: "不支援的檔案類型:{{name}}(僅接受 PNG、JPG、PDF、CSV、XLSX)",
+  attachment_too_large: "檔案過大:{{name}}(單檔上限 {{max}})",
+  attachment_limit: "一則訊息最多附加 {{max}} 個檔案",
   draft_generate: "AI 撰寫此段草稿",
   draft_generating: "草稿生成中...",
   draft_failed:

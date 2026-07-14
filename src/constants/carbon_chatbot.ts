@@ -54,3 +54,22 @@ export const CARBON_INVENTORY_STATE_VERSION = 1;
 
 // Info: (20260713 - Tzuhan) 行動版斷點判斷(對齊 Tailwind xl = 1280px):< xl 時目錄/報告採獨占畫面呈現
 export const MOBILE_MEDIA_QUERY = "(max-width: 1279px)";
+
+// Info: (20260714 - Emily) 聊天附件限制:允許的 MIME 白名單(佐證資料常見格式)、單檔大小上限與單則訊息附件數上限
+export const CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES = [
+  "image/png",
+  "image/jpeg",
+  "application/pdf",
+  "text/csv",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+] as const;
+
+export type CarbonChatAttachmentMimeType =
+  (typeof CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES)[number];
+
+export const CARBON_CHAT_MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+export const CARBON_CHAT_MAX_ATTACHMENTS_PER_MESSAGE = 5;
+
+// Info: (20260714 - Emily) file input 的 accept 屬性(與 MIME 白名單同步)
+export const CARBON_CHAT_ATTACHMENT_ACCEPT =
+  CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES.join(",");

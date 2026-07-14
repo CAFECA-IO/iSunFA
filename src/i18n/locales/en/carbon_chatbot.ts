@@ -50,6 +50,12 @@ export const carbonChatbot = {
   data_driven_badge:
     "Data section: figures are reconciled by the deterministic engine, not AI-generated",
   jump_prompt: "Please help me complete the section 「{{section}}」.",
+  attach_file: "Attach file",
+  remove_attachment: "Remove attachment",
+  attachment_invalid_type:
+    "Unsupported file type: {{name}} (only PNG, JPG, PDF, CSV, XLSX are accepted)",
+  attachment_too_large: "File too large: {{name}} (max {{max}} per file)",
+  attachment_limit: "Up to {{max}} attachments per message",
   draft_generate: "Draft this section with AI",
   draft_generating: "Generating draft...",
   draft_failed:

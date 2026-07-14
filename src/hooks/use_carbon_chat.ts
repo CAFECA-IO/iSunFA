@@ -7,7 +7,12 @@ import {
   IChatMessage,
   IReportProgressStats,
   ChatRoleEnum,
+  IAttachment,
+  IPendingAttachment,
+  PendingAttachmentStatusEnum,
 } from "@/types/carbon_chatbot.types";
+import { fileToBase64 } from "@/lib/file_operator";
+import { formatFileSize } from "@/lib/utils/common";
 import {
   CARBON_REPORT_OUTLINE,
   CARBON_REPORT_SECTION_COUNT,
@@ -35,6 +40,9 @@ import {
   CARBON_CHAT_CHANNEL_PREFIX,
   CARBON_CHAT_REPLY_TIMEOUT_MS,
   CARBON_CHAT_AI_CONTEXT_SIZE,
+  CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES,
+  CARBON_CHAT_MAX_ATTACHMENT_BYTES,
+  CARBON_CHAT_MAX_ATTACHMENTS_PER_MESSAGE,
 } from "@/constants/carbon_chatbot";
 
 export const useCarbonChat = () => {
@@ -58,6 +66,11 @@ export const useCarbonChat = () => {
   const [draftingParagraphId, setDraftingParagraphId] = useState<string | null>(
     null,
   );
+  // Info: (20260714 - Emily) 待送出附件(base64 僅存記憶體,送出後清除)與附件驗證錯誤提示
+  const [pendingAttachments, setPendingAttachments] = useState<
+    IPendingAttachment[]
+  >([]);
+  const [attachmentError, setAttachmentError] = useState<string | null>(null);
   // Info: (20260712 - Luphia) 歷史訊息分頁狀態（上卷載入更多）
   const [hasMoreHistory, setHasMoreHistory] = useState<boolean>(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(false);
@@ -475,8 +488,91 @@ export const useCarbonChat = () => {
     return unsubscribe;
   }, [chatChannel, appendMessageLocally]);
 
+  // Info: (20260714 - Emily) 加入附件:前端 Fail Fast(MIME 白名單/大小/數量),通過者轉 base64 進待送清單
+  const addAttachments = useCallback(
+    (files: File[]) => {
+      setAttachmentError(null);
+
+      const allowedMimeTypes: readonly string[] =
+        CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES;
+      let currentCount = pendingAttachments.length;
+
+      files.forEach((file) => {
+        if (currentCount >= CARBON_CHAT_MAX_ATTACHMENTS_PER_MESSAGE) {
+          setAttachmentError(
+            t("carbon_chatbot.attachment_limit", {
+              max: String(CARBON_CHAT_MAX_ATTACHMENTS_PER_MESSAGE),
+            }),
+          );
+          return;
+        }
+        if (!allowedMimeTypes.includes(file.type)) {
+          setAttachmentError(
+            t("carbon_chatbot.attachment_invalid_type", { name: file.name }),
+          );
+          return;
+        }
+        if (file.size > CARBON_CHAT_MAX_ATTACHMENT_BYTES) {
+          setAttachmentError(
+            t("carbon_chatbot.attachment_too_large", {
+              name: file.name,
+              max: formatFileSize(CARBON_CHAT_MAX_ATTACHMENT_BYTES),
+            }),
+          );
+          return;
+        }
+
+        currentCount += 1;
+        const attachmentId = crypto.randomUUID();
+        setPendingAttachments((prev) => [
+          ...prev,
+          {
+            id: attachmentId,
+            name: file.name,
+            size: formatFileSize(file.size),
+            mimeType: file.type,
+            data: "",
+            status: PendingAttachmentStatusEnum.READING,
+          },
+        ]);
+
+        // Info: (20260714 - Emily) base64 轉換為非同步;完成前 chip 顯示讀取中,失敗標記錯誤但不阻塞其他附件
+        fileToBase64(file)
+          .then((data) => {
+            setPendingAttachments((prev) =>
+              prev.map((a) =>
+                a.id === attachmentId
+                  ? { ...a, data, status: PendingAttachmentStatusEnum.READY }
+                  : a,
+              ),
+            );
+          })
+          .catch(() => {
+            setPendingAttachments((prev) =>
+              prev.map((a) =>
+                a.id === attachmentId
+                  ? { ...a, status: PendingAttachmentStatusEnum.ERROR }
+                  : a,
+              ),
+            );
+          });
+      });
+    },
+    [pendingAttachments.length, t],
+  );
+
+  const removeAttachment = useCallback((attachmentId: string) => {
+    setAttachmentError(null);
+    setPendingAttachments((prev) => prev.filter((a) => a.id !== attachmentId));
+  }, []);
+
   const handleSendMessage = useCallback(async () => {
-    if (!inputValue.trim() || isLoading) return;
+    const readyAttachments = pendingAttachments.filter(
+      (a) => a.status === PendingAttachmentStatusEnum.READY,
+    );
+    // Info: (20260714 - Emily) 有文字或有就緒附件即可送出
+    if ((!inputValue.trim() && readyAttachments.length === 0) || isLoading)
+      return;
 
     // Info: (20260712 - Luphia) 先於使用者手勢內備妥主金鑰（WebAuthn PRF 需 user activation）；不支援裝置直接提示
     let masterKey: IChatroomMasterKey;
@@ -510,10 +606,18 @@ export const useCarbonChat = () => {
       return;
     }
 
+    // Info: (20260714 - Emily) 附件 metadata 隨訊息顯示與入庫;base64 內容僅隨請求送 AI 管線,不入 UI 狀態
+    const attachmentsMeta: IAttachment[] = readyAttachments.map((a) => ({
+      name: a.name,
+      size: a.size,
+      mimeType: a.mimeType,
+    }));
+
     const userMessage: IChatMessage = {
       id: crypto.randomUUID(),
       sender: ChatRoleEnum.USER,
       text: inputValue,
+      ...(attachmentsMeta.length > 0 ? { attachments: attachmentsMeta } : {}),
     };
 
     // Info: (20260713 - Tzuhan) 廢除訊息計次假進度;進度一律由 reportStats 依實際完成段落數推導
@@ -524,6 +628,8 @@ export const useCarbonChat = () => {
     });
 
     setInputValue("");
+    setPendingAttachments([]);
+    setAttachmentError(null);
     setIsTyping(true);
     setIsLoading(true);
     setIsError(false);
@@ -547,6 +653,17 @@ export const useCarbonChat = () => {
           language,
           channel: chatChannel,
           recipientPublicKey: masterKey.extendedPublicKey,
+          // Info: (20260714 - Emily) 附件含 base64 內容:後端僅記錄 metadata,內容供 AI 萃取管線即時使用
+          ...(readyAttachments.length > 0
+            ? {
+                attachments: readyAttachments.map((a) => ({
+                  name: a.name,
+                  size: a.size,
+                  mimeType: a.mimeType,
+                  data: a.data,
+                })),
+              }
+            : {}),
         }),
       });
 
@@ -577,6 +694,7 @@ export const useCarbonChat = () => {
   }, [
     inputValue,
     isLoading,
+    pendingAttachments,
     activeSession,
     activeSessionId,
     language,
@@ -692,6 +810,10 @@ export const useCarbonChat = () => {
     isLoadingHistory,
     loadMoreHistory,
     handleSendMessage,
+    pendingAttachments,
+    attachmentError,
+    addAttachments,
+    removeAttachment,
     reportStats,
     activeParagraphId,
     jumpToParagraph,

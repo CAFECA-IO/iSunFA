@@ -50,6 +50,12 @@ export const carbonChatbot = {
   data_driven_badge:
     "데이터 섹션: 수치는 시스템 결정론 엔진에서 계산되며 AI 생성이 아닙니다",
   jump_prompt: "「{{section}}」 섹션 작성을 도와주세요.",
+  attach_file: "파일 첨부",
+  remove_attachment: "첨부 제거",
+  attachment_invalid_type:
+    "지원하지 않는 파일 형식: {{name}} (PNG, JPG, PDF, CSV, XLSX만 가능)",
+  attachment_too_large: "파일이 너무 큽니다: {{name}} (파일당 최대 {{max}})",
+  attachment_limit: "메시지당 최대 {{max}}개 첨부 가능",
   draft_generate: "AI로 이 섹션 초안 작성",
   draft_generating: "초안 생성 중...",
   draft_failed:

@@ -2,7 +2,7 @@
 import { chatroomRepo } from "@/repositories/chatroom.repo";
 import { publishToCentrifugo } from "@/lib/centrifugo";
 import { eciesEncrypt } from "@/lib/chatroom_ecies";
-import { ChatRoleEnum } from "@/types/carbon_chatbot.types";
+import { ChatRoleEnum, IAttachment } from "@/types/carbon_chatbot.types";
 import { AI_REPLY_PROGRESS_STEP } from "@/constants/carbon_chatbot";
 
 interface IRecordParams {
@@ -14,6 +14,8 @@ interface IRecordParams {
   sender: ChatRoleEnum;
   publish: boolean;
   purpose?: string;
+  // Info: (20260714 - Emily) 附件 metadata(name/size/mimeType);併入加密 payload,重整後可還原附件卡片
+  attachments?: IAttachment[];
 }
 
 export class ChatroomService {
@@ -32,6 +34,10 @@ export class ChatroomService {
           id: crypto.randomUUID(),
           sender: params.sender,
           text: params.text,
+          // Info: (20260714 - Emily) 附件 metadata 併入加密訊息(無附件時不帶欄位,維持 payload 精簡)
+          ...(params.attachments && params.attachments.length > 0
+            ? { attachments: params.attachments }
+            : {}),
         },
         progressUpdate: params.progressUpdate,
       }),
@@ -58,6 +64,7 @@ export class ChatroomService {
     recipientPublicKey: string;
     text: string;
     purpose?: string;
+    attachments?: IAttachment[];
   }) {
     return this.record({
       ...params,
