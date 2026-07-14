@@ -53,7 +53,6 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
 
   const [aiInstruction, setAiInstruction] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [newChartPreview, setNewChartPreview] = useState<string>("");
   const [apiError, setApiError] = useState<string | null>(null);
 
   const [isShowWarning, setIsShowWarning] = useState<boolean>(false);
@@ -119,10 +118,9 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
     return result;
   }, [internalBaseChart, pendingActions, chartType]);
 
-  // Info: (20260708 - Julian) 當有結構化變更或基底變更時，立即更新預覽
-  useEffect(() => {
-    setNewChartPreview(currentModifiedChart);
-  }, [currentModifiedChart]);
+  // Info: (20260714 - Julian) 是否有未儲存的變更（有結構化動作，或 AI 已改動基底）
+  const isDirty =
+    pendingActions.length > 0 || internalBaseChart !== currentChart;
 
   // Info: (20260708 - Julian) 當 modal 被開啟時，重置所有狀態
   useEffect(() => {
@@ -130,7 +128,6 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
       setInternalBaseChart(currentChart);
       setPendingActions([]);
       setAiInstruction("");
-      setNewChartPreview("");
       setApiError(null);
     }
   }, [open, currentChart]);
@@ -190,17 +187,25 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
         setInternalBaseChart(response.payload.result);
         setPendingActions([]);
         setAiInstruction("");
-        setIsGenerating(false);
+      } else {
+        // Info: (20260714 - Julian) 回應非成功（未拋錯），仍需顯示錯誤訊息
+        setApiError("AI 圖表產生失敗，請重試");
       }
     } catch (error: unknown) {
       if (error instanceof Error && error.name === "AbortError") {
+        // Info: (20260714 - Julian) 主動中斷：loading 狀態交由後續請求或 handleAbort 處理
         console.log("AI request aborted");
         return;
       }
       console.error("AI edit failed:", error);
       const err = error as Error;
       setApiError(err.message || "網路連線異常，請重試");
-      setIsGenerating(false);
+    } finally {
+      // Info: (20260714 - Julian) 僅當此請求仍為當前請求時才重設 loading，避免競態覆蓋新請求
+      if (abortControllerRef.current === controller) {
+        setIsGenerating(false);
+        abortControllerRef.current = null;
+      }
     }
   };
 
@@ -212,13 +217,12 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
   };
 
   const handleAdopt = () => {
-    if (!newChartPreview) return;
-    onAdopt(newChartPreview);
+    if (!currentModifiedChart) return;
+    onAdopt(currentModifiedChart);
     handleCancel();
   };
 
   const handleCancel = () => {
-    setNewChartPreview("");
     setAiInstruction("");
     onClose();
   };
@@ -227,7 +231,7 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
 
   // Info: (20260713 - Julian) 如果正在已編輯狀態，則在點擊取消時彈出關閉提醒
   const cancelClicker = () => {
-    if (newChartPreview !== "") {
+    if (isDirty) {
       warningModalToggle();
     } else {
       handleCancel();
@@ -258,7 +262,7 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
           parsedPieData={currentParsedPieData || initialParsedPieData}
           aiInstruction={aiInstruction}
           isGenerating={isGenerating}
-          newChartPreview={newChartPreview}
+          newChartPreview={currentModifiedChart}
           apiError={apiError}
           onCancel={cancelClicker}
           onGenerate={handleGenerate}
