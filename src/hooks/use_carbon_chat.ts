@@ -5,8 +5,13 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import {
   IChatSession,
   IChatMessage,
+  IReportProgressStats,
   ChatRoleEnum,
 } from "@/types/carbon_chatbot.types";
+import {
+  CARBON_REPORT_OUTLINE,
+  CARBON_REPORT_SECTION_COUNT,
+} from "@/constants/carbon_report_outline";
 import { INITIAL_SESSIONS } from "@/constants/carbon_chatbot.mock";
 import { useTranslation } from "@/i18n/i18n_context";
 import { subscribeChatroom } from "@/lib/chatroom";
@@ -24,8 +29,6 @@ import { request } from "@/lib/utils/request";
 import { useAuth } from "@/contexts/auth_context";
 import {
   DEFAULT_SESSION_ID,
-  USER_PROGRESS_MAX,
-  USER_PROGRESS_STEP,
   SESSION_PROGRESS_MAX,
   CARBON_CHAT_CHANNEL_PREFIX,
   CARBON_CHAT_REPLY_TIMEOUT_MS,
@@ -45,6 +48,10 @@ export const useCarbonChat = () => {
   const [isError, setIsError] = useState<boolean>(false);
   // Info: (20260712 - Luphia) 是否已於進入時完成一次手勢解鎖（PRF）；未解鎖前不呼叫 AI、不顯示對話
   const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
+  // Info: (20260713 - Tzuhan) 目前對話正在引導的報告段落(vibe 模式:跳段 = 切換對話目標)
+  const [activeParagraphId, setActiveParagraphId] = useState<string | null>(
+    null,
+  );
   // Info: (20260712 - Luphia) 歷史訊息分頁狀態（上卷載入更多）
   const [hasMoreHistory, setHasMoreHistory] = useState<boolean>(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(false);
@@ -186,9 +193,56 @@ export const useCarbonChat = () => {
 
   const activeSession = sessionsData[activeSessionId];
   // Info: (20260712 - Luphia) 以 useMemo 快取 session 列表，避免每次 render 重建陣列
+  // Info: (20260713 - Tzuhan) 有段落大綱的 session,progress 一律以真實完成段落數推導(廢除訊息計次假進度)
   const sessionsList = useMemo(
-    () => Object.values(sessionsData),
+    () =>
+      Object.values(sessionsData).map((session) => {
+        const paragraphs = session.reportData?.paragraphs;
+        if (!paragraphs || paragraphs.length === 0) return session;
+        const completedCount = paragraphs.filter((p) => p.isCompleted).length;
+        return {
+          ...session,
+          progress: Math.round((completedCount / paragraphs.length) * 100),
+        };
+      }),
     [sessionsData],
+  );
+
+  // Info: (20260713 - Tzuhan) 完成/查核雙軌統計:工具列膠囊與進度浮窗共用的單一來源
+  const reportStats: IReportProgressStats = useMemo(() => {
+    const paragraphs = activeSession?.reportData?.paragraphs ?? [];
+    const totalCount = paragraphs.length || CARBON_REPORT_SECTION_COUNT;
+    const completedCount = paragraphs.filter((p) => p.isCompleted).length;
+    const verifiedCount = paragraphs.filter((p) => p.isVerified).length;
+    return {
+      completedCount,
+      verifiedCount,
+      totalCount,
+      completedPercent: Math.round((completedCount / totalCount) * 100),
+      verifiedPercent: Math.round((verifiedCount / totalCount) * 100),
+    };
+  }, [activeSession]);
+
+  // Info: (20260713 - Tzuhan) 跳段(vibe 模式):標記進行中段落、將該段撰寫指引寫入 currentStep 供 AI 引導、預填對話輸入
+  const jumpToParagraph = useCallback(
+    (paragraphId: string) => {
+      setActiveParagraphId(paragraphId);
+      const section = CARBON_REPORT_OUTLINE.find((s) => s.id === paragraphId);
+      if (!section) return;
+
+      setSessionsData((prev) => {
+        const updatedSession = { ...prev[activeSessionId] };
+        updatedSession.currentStep = `${section.code} ${section.title}：${section.guidance}`;
+        return { ...prev, [activeSessionId]: updatedSession };
+      });
+
+      setInputValue(
+        t("carbon_chatbot.jump_prompt", {
+          section: `${section.code} ${section.title}`,
+        }),
+      );
+    },
+    [activeSessionId, t],
   );
 
   // Info: (20260712 - Luphia) 進入時先預抓金鑰紀錄，避免解鎖手勢當下「fetch → PRF」耗掉 user activation
@@ -223,16 +277,19 @@ export const useCarbonChat = () => {
     prevSessionId.current = activeSessionId;
   }, [lastMessageId, activeSessionId, isTyping]);
 
-  // Info: (20260712 - Luphia) 合併原本重複的 toggleParagraphCompleted / toggleParagraphVerified，改由單一 helper 依欄位切換
-  const toggleParagraphField = useCallback(
-    (paragraphId: string, field: "isCompleted" | "isVerified") => {
+  // Info: (20260713 - Tzuhan) vibe 模式:isCompleted 由系統依生成狀態判定,不開放手動切換;僅保留 isVerified 人工簽核
+  const toggleParagraphVerified = useCallback(
+    (paragraphId: string) => {
       setSessionsData((prev) => {
         const updatedSession = { ...prev[activeSessionId] };
         if (!updatedSession.reportData?.paragraphs) return prev;
 
-        const newParagraphs = updatedSession.reportData.paragraphs.map((p) =>
-          p.id === paragraphId ? { ...p, [field]: !p[field] } : p,
-        );
+        const newParagraphs = updatedSession.reportData.paragraphs.map((p) => {
+          if (p.id !== paragraphId) return p;
+          // Info: (20260713 - Tzuhan) 未生成內容的段落不可簽核(零信任:先有產出才有查核)
+          if (!p.isCompleted) return p;
+          return { ...p, isVerified: !p.isVerified };
+        });
 
         updatedSession.reportData = {
           ...updatedSession.reportData,
@@ -244,62 +301,49 @@ export const useCarbonChat = () => {
     [activeSessionId],
   );
 
-  const toggleParagraphCompleted = useCallback(
-    (paragraphId: string) => toggleParagraphField(paragraphId, "isCompleted"),
-    [toggleParagraphField],
-  );
-
-  const toggleParagraphVerified = useCallback(
-    (paragraphId: string) => toggleParagraphField(paragraphId, "isVerified"),
-    [toggleParagraphField],
-  );
-
   const handleMarkdownChange = useCallback(
     (newMarkdown: string) => {
       setSessionsData((prev) => {
         const updatedSession = { ...prev[activeSessionId] };
         if (!updatedSession.reportData?.paragraphs) return prev;
 
-        // Info: (20260708 - Tzuhan) Regex/Diff 比對法：用標題切分段落並比對
+        // Info: (20260713 - Tzuhan) 以 ### SECTION 切分並僅保留段落區塊(排除文件標頭),
+        // Info: (20260713 - Tzuhan) 同時去除組稿時附加的 --- 分隔線,避免與段落原文比對時誤判為變更
         const blocks = newMarkdown
           .split(/(?=### SECTION)/)
-          .map((s) => s.trim())
-          .filter(Boolean);
-        let hasChanges = false;
-        const newParagraphs = [...updatedSession.reportData.paragraphs];
+          .map((s) => s.replace(/\n+---\s*$/, "").trim())
+          .filter((s) => s.startsWith("### SECTION"));
 
-        // Info: (20260709 - Tzuhan) 防呆機制：如果 Regex 切割出來的區塊數量與原先的段落數量不一致，
-        // Info: (20260709 - Tzuhan) 代表使用者可能誤刪了關鍵的切分標籤 (### SECTION)，為確保資料正確性，直接將所有段落設為未查核。
-        if (blocks.length !== newParagraphs.length) {
-          for (let i = 0; i < newParagraphs.length; i++) {
-            const nextContent = blocks[i] || newParagraphs[i].content;
+        // Info: (20260713 - Tzuhan) 預覽渲染全部段落(未生成者為佔位區塊),故區塊與 33 段依序 1:1 對齊
+        // Info: (20260709 - Tzuhan) 防呆機制:區塊數與段落數不一致,代表使用者可能誤刪切分標籤 (### SECTION),
+        // Info: (20260709 - Tzuhan) 為確保資料正確性,將所有已生成段落設為未查核
+        const isBlockCountMismatched =
+          blocks.length !== updatedSession.reportData.paragraphs.length;
+
+        let hasChanges = false;
+        const newParagraphs = updatedSession.reportData.paragraphs.map(
+          (p, index) => {
+            // Info: (20260713 - Tzuhan) 未生成段落為唯讀佔位,不接受編輯寫入(內容須由 AI 對話生成)
+            if (!p.content) return p;
+            const nextContent = isBlockCountMismatched
+              ? p.content
+              : (blocks[index] ?? p.content);
+
+            const isContentChanged = nextContent !== p.content;
+            const shouldResetVerified =
+              (isContentChanged || isBlockCountMismatched) && p.isVerified;
             // Info: (20260712 - Luphia) 僅在內容或查核狀態確實變動時才更新，避免無謂的狀態變更
-            if (
-              nextContent !== newParagraphs[i].content ||
-              newParagraphs[i].isVerified
-            ) {
-              newParagraphs[i] = {
-                ...newParagraphs[i],
-                content: nextContent,
-                isVerified: false,
-              };
-              hasChanges = true;
-            }
-          }
-        } else {
-          for (let i = 0; i < newParagraphs.length; i++) {
-            const currentBlock = blocks[i] || "";
-            // Info: (20260709 - Tzuhan) 如果內容被修改，重置查核狀態為未查核 (isVerified: false)
-            if (currentBlock !== newParagraphs[i].content) {
-              newParagraphs[i] = {
-                ...newParagraphs[i],
-                content: currentBlock,
-                isVerified: false,
-              };
-              hasChanges = true;
-            }
-          }
-        }
+            if (!isContentChanged && !shouldResetVerified) return p;
+
+            hasChanges = true;
+            return {
+              ...p,
+              content: nextContent,
+              // Info: (20260709 - Tzuhan) 內容被修改,重置查核狀態為未查核 (isVerified: false)
+              isVerified: false,
+            };
+          },
+        );
 
         if (!hasChanges) return prev;
 
@@ -385,13 +429,10 @@ export const useCarbonChat = () => {
       text: inputValue,
     };
 
+    // Info: (20260713 - Tzuhan) 廢除訊息計次假進度;進度一律由 reportStats 依實際完成段落數推導
     setSessionsData((prev) => {
       const updatedSession = { ...prev[activeSessionId] };
       updatedSession.messages = [...updatedSession.messages, userMessage];
-      updatedSession.progress = Math.min(
-        USER_PROGRESS_MAX,
-        updatedSession.progress + USER_PROGRESS_STEP,
-      );
       return { ...prev, [activeSessionId]: updatedSession };
     });
 
@@ -564,7 +605,9 @@ export const useCarbonChat = () => {
     isLoadingHistory,
     loadMoreHistory,
     handleSendMessage,
-    toggleParagraphCompleted,
+    reportStats,
+    activeParagraphId,
+    jumpToParagraph,
     toggleParagraphVerified,
     handleMarkdownChange,
     chatEndRef,

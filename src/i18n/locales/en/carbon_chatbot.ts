@@ -40,4 +40,20 @@ export const carbonChatbot = {
   status_incomplete: "Incomplete",
   status_verified: "Verified",
   status_unverified: "Unverified",
+  outline_title: "Report Outline",
+  outline_button: "Outline",
+  completed_short: "Done",
+  verified_short: "Verified",
+  verified_progress: "Human Review Progress",
+  jump_aria_label: "Jump to this section",
+  close_outline: "Close outline",
+  data_driven_badge:
+    "Data section: figures are reconciled by the deterministic engine, not AI-generated",
+  jump_prompt: "Please help me complete the section 「{{section}}」.",
+  section_placeholder:
+    "This section has not been generated yet. Tell the Carbon Accountant in the chat that you want to work on it, and the content will appear here in real time.",
+  report_status_draft:
+    "Report status: Draft (content is generated section by section by AI and must pass human review before finalization)",
+  report_button: "Report",
+  close_report: "Close report",
 };

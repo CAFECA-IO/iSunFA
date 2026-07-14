@@ -11,7 +11,10 @@ import {
   Sparkles,
   X as XIcon,
 } from "lucide-react";
-import { MarkdownContent } from "@/components/common/markdown_content";
+import {
+  MarkdownContent,
+  MarkdownContentVariant,
+} from "@/components/common/markdown_content";
 import { useTranslation } from "@/i18n/i18n_context";
 import Image from "next/image";
 import { request } from "@/lib/utils/request";
@@ -44,6 +47,10 @@ interface IPdfEditorProps {
   value?: string;
   onChange?: (val: string) => void;
   storageKey?: string;
+  // Info: (20260713 - Tzuhan) 初始檢視模式;未指定時維持 EDIT 以相容既有呼叫點
+  defaultViewMode?: PdfToolViewMode;
+  // Info: (20260713 - Tzuhan) 預覽內容字級變體;嵌入式場景(如 carbon_chatbot)傳 compact 與 app UI 協調
+  contentVariant?: MarkdownContentVariant;
 }
 
 export default function PdfEditor({
@@ -53,6 +60,8 @@ export default function PdfEditor({
   value = undefined,
   onChange = undefined,
   storageKey = STORAGE_KEY,
+  defaultViewMode = PdfToolViewMode.EDIT,
+  contentVariant = "document",
 }: IPdfEditorProps) {
   const { t } = useTranslation();
 
@@ -62,9 +71,7 @@ export default function PdfEditor({
   const [markdownContext, setMarkdownContext] =
     useState<string>(DEFAULT_CONTENT);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [viewMode, setViewMode] = useState<PdfToolViewMode>(
-    PdfToolViewMode.EDIT,
-  );
+  const [viewMode, setViewMode] = useState<PdfToolViewMode>(defaultViewMode);
 
   const [isAiProcessing, setIsAiProcessing] = useState<boolean>(false);
 
@@ -594,6 +601,7 @@ export default function PdfEditor({
                   <div className="max-w-none text-[#374151]">
                     <MarkdownContent
                       content={markdownContext}
+                      variant={contentVariant}
                       onContentChange={(val) => {
                         if (value !== undefined && onChange) {
                           onChange(val);

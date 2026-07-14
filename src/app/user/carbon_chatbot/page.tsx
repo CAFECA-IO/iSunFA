@@ -1,7 +1,10 @@
 "use client";
 
+import { useState } from "react";
+import { FileText, ListTree, X } from "lucide-react";
 import { useCarbonChat } from "@/hooks/use_carbon_chat";
 import { useTranslation } from "@/i18n/i18n_context";
+import { OutlineModal } from "@/components/carbon_chatbot/outline_modal";
 import { ChatHeader } from "@/components/carbon_chatbot/chat_header";
 import { ChatSidebar } from "@/components/carbon_chatbot/chat_sidebar";
 import { ChatArea } from "@/components/carbon_chatbot/chat_area";
@@ -26,11 +29,19 @@ export default function CarbonChatbotPage() {
     isLoadingHistory,
     loadMoreHistory,
     handleSendMessage,
-    toggleParagraphCompleted,
+    reportStats,
+    activeParagraphId,
+    jumpToParagraph,
     toggleParagraphVerified,
     handleMarkdownChange,
     chatEndRef,
   } = useCarbonChat();
+
+  // Info: (20260713 - Tzuhan) 行動版(<xl)右欄預覽隱藏,章節目錄改以 Modal、報告改以全螢幕覆蓋層呈現
+  const [isMobileOutlineOpen, setIsMobileOutlineOpen] =
+    useState<boolean>(false);
+  const [isMobileReportOpen, setIsMobileReportOpen] = useState<boolean>(false);
+  const paragraphs = activeSession?.reportData?.paragraphs ?? [];
 
   return (
     <div className="flex h-[calc(100vh-170px)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white text-sm shadow-[0_4px_20px_rgb(0,0,0,0.05)]">
@@ -66,6 +77,30 @@ export default function CarbonChatbotPage() {
                 onInputChange={setInputValue}
                 onSendMessage={handleSendMessage}
               />
+
+              {/* Info: (20260713 - Tzuhan) 行動版浮動鈕組:章節目錄 Modal 與報告全螢幕檢視(桌面由右欄操作) */}
+              {paragraphs.length > 0 && (
+                <div className="absolute right-4 bottom-24 z-30 flex flex-col items-end gap-2 xl:hidden">
+                  <button
+                    type="button"
+                    aria-label={t("carbon_chatbot.report_button")}
+                    onClick={() => setIsMobileReportOpen(true)}
+                    className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-gray-700 shadow-lg transition-colors hover:bg-gray-50"
+                  >
+                    <FileText size={16} />
+                    {t("carbon_chatbot.report_button")}
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={t("carbon_chatbot.outline_title")}
+                    onClick={() => setIsMobileOutlineOpen(true)}
+                    className="flex items-center gap-1.5 rounded-full bg-[#ff5a00] px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-orange-500/30 transition-colors hover:bg-[#e04f00]"
+                  >
+                    <ListTree size={16} />
+                    {reportStats.completedCount}/{reportStats.totalCount}
+                  </button>
+                </div>
+              )}
             </>
           ) : (
             // Info: (20260712 - Luphia) 進入時需一次手勢解鎖加密金鑰(PRF)，之後才由 AI 前置作業回傳招呼詞
@@ -85,17 +120,62 @@ export default function CarbonChatbotPage() {
         </div>
 
         <div className="relative hidden w-[45%] shrink-0 flex-col bg-[#f8fafc] xl:flex">
+          {/* Info: (20260713 - Tzuhan) 報告 artifact:PDF 預覽為預設模式,含章節導軌與目錄抽屜 */}
           <CarbonReportPreview
             session={activeSession}
+            stats={reportStats}
+            activeParagraphId={activeParagraphId}
             onMarkdownChange={handleMarkdownChange}
-            onToggleCompleted={toggleParagraphCompleted}
+            onJumpToParagraph={jumpToParagraph}
             onToggleVerified={toggleParagraphVerified}
           />
 
           {/* Info: (20260708 - Tzuhan) 進度浮窗 */}
-          <ChatProgressWidget progress={activeSession.progress} />
+          <ChatProgressWidget stats={reportStats} />
         </div>
       </div>
+
+      {/* Info: (20260713 - Tzuhan) 行動版章節目錄 Modal;跳段後自動關閉並回到對話 */}
+      {isMobileOutlineOpen && (
+        <OutlineModal
+          paragraphs={paragraphs}
+          stats={reportStats}
+          activeParagraphId={activeParagraphId}
+          onJump={jumpToParagraph}
+          onToggleVerified={toggleParagraphVerified}
+          onClose={() => setIsMobileOutlineOpen(false)}
+        />
+      )}
+
+      {/* Info: (20260713 - Tzuhan) 行動版報告全螢幕檢視:沿用完整 CarbonReportPreview(含工具列/導軌/抽屜/預覽與編輯切換) */}
+      {/* Info: (20260713 - Tzuhan) z-[60] 高於全站 UserHeader(sticky z-50),避免 header 疊在覆蓋層上方 */}
+      {isMobileReportOpen && (
+        <div className="fixed inset-0 z-[60] flex flex-col bg-white xl:hidden">
+          <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+            <span className="text-sm font-bold text-gray-700">
+              {t("carbon_chatbot.report_preview_title")}
+            </span>
+            <button
+              type="button"
+              aria-label={t("carbon_chatbot.close_report")}
+              onClick={() => setIsMobileReportOpen(false)}
+              className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            >
+              <X size={18} />
+            </button>
+          </div>
+          <div className="flex min-h-0 flex-1">
+            <CarbonReportPreview
+              session={activeSession}
+              stats={reportStats}
+              activeParagraphId={activeParagraphId}
+              onMarkdownChange={handleMarkdownChange}
+              onJumpToParagraph={jumpToParagraph}
+              onToggleVerified={toggleParagraphVerified}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

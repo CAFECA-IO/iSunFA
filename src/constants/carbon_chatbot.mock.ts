@@ -4,9 +4,50 @@
 import {
   ChatRoleEnum,
   IChatSession,
+  IReportParagraph,
   SessionStatusEnum,
 } from "@/types/carbon_chatbot.types";
 import { DEFAULT_SESSION_ID } from "@/constants/carbon_chatbot";
+import {
+  CARBON_REPORT_OUTLINE,
+  buildSectionHeading,
+} from "@/constants/carbon_report_outline";
+
+// Info: (20260713 - Tzuhan) Demo 用已生成段落內容(vibe 模式:內容由 AI 生成後 isCompleted 自動為 true,isVerified 一律待人工簽核)
+const DEMO_PARAGRAPH_BODIES: Record<
+  string,
+  { body: string; isVerified: boolean }
+> = {
+  "ch2-1": {
+    body: "本報告選定 **2025年** 作為溫室氣體盤查之基準年。此年度資料將作為未來減碳目標設定與績效追蹤的基礎。當公司發生實體併購、分拆或計算方法重大改變,且影響超過總排放量 5% 時,將觸發基準年數據重算。",
+    isVerified: true,
+  },
+  "ch1-5": {
+    body: "採用**營運控制權法**(Operational Control Approach)涵蓋總部大樓與新竹廠區,與財務合併報表邊界一致。排除海外銷售辦事處,因其排放量占比小於 1%。",
+    isVerified: false,
+  },
+  "ch2-2": {
+    body: "- **範疇一 (Scope 1)**: 公務車用油(汽油 5,000 公升)、緊急發電機用柴油(500 公升)。\n- **範疇二 (Scope 2)**: 辦公室與廠區外購電力(約 1,200,000 度)。",
+    isVerified: false,
+  },
+};
+
+// Info: (20260713 - Tzuhan) 由標準大綱展開 33 段初始狀態;未生成段落 content 為空字串
+const buildInitialParagraphs = (): IReportParagraph[] =>
+  CARBON_REPORT_OUTLINE.map((section, index) => {
+    const heading = buildSectionHeading(section, index);
+    const demo = DEMO_PARAGRAPH_BODIES[section.id];
+    return {
+      id: section.id,
+      chapterId: section.chapterId,
+      code: section.code,
+      title: `${section.code} ${section.title}`,
+      content: demo ? `${heading}\n\n${demo.body}` : "",
+      isCompleted: Boolean(demo),
+      isVerified: demo?.isVerified ?? false,
+      isDataDriven: section.isDataDriven,
+    };
+  });
 
 export const INITIAL_SESSIONS: Record<string, IChatSession> = {
   [DEFAULT_SESSION_ID]: {
@@ -15,8 +56,8 @@ export const INITIAL_SESSIONS: Record<string, IChatSession> = {
     time: "今天",
     status: SessionStatusEnum.IN_PROGRESS,
     statusColor: "text-orange-500 bg-orange-100",
-    progress: 10,
-    currentStep: "組織邊界鑑定",
+    progress: 9,
+    currentStep: "1.4 氣候治理架構與職責",
     // Info: (20260712 - Luphia) 招呼詞改由進入 channel 後 AI 前置作業產生並經 Centrifugo 回傳，故初始為空
     messages: [],
     reportData: {
@@ -37,32 +78,8 @@ export const INITIAL_SESSIONS: Record<string, IChatSession> = {
           emissions: 594.0,
         },
       ],
-      paragraphs: [
-        {
-          id: "p1",
-          title: "### SECTION 01: 基準年設定",
-          content:
-            "### SECTION 01: 基準年設定\n\n本報告選定 **2025年** 作為溫室氣體盤查之基準年。此年度資料將作為未來減碳目標設定與績效追蹤的基礎。",
-          isCompleted: true,
-          isVerified: true,
-        },
-        {
-          id: "p2",
-          title: "### SECTION 02: 組織邊界鑑定",
-          content:
-            "### SECTION 02: 組織邊界鑑定\n\n採用**營運控制權法**（Operational Control Approach）涵蓋總部大樓與新竹廠區。排除海外銷售辦事處，因其排放量占比小於 1%。",
-          isCompleted: true,
-          isVerified: false,
-        },
-        {
-          id: "p3",
-          title: "### SECTION 03: 排放源與活動數據",
-          content:
-            "### SECTION 03: 排放源與活動數據\n\n- **範疇一 (Category 1)**: 公務車用油 (汽油 5,000 公升)、緊急發電機用柴油 (500 公升)。\n- **範疇二 (Category 2)**: 辦公室與廠區外購電力 (約 1,200,000 度)。",
-          isCompleted: false,
-          isVerified: false,
-        },
-      ],
+      // Info: (20260713 - Tzuhan) 33 段標準大綱展開,含 3 段 demo 已生成內容
+      paragraphs: buildInitialParagraphs(),
       totalEmissions: 679.42,
     },
   },

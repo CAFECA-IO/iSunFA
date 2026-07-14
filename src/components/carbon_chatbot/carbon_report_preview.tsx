@@ -1,26 +1,44 @@
 "use client";
 
-import { FileText } from "lucide-react";
-import { IChatSession } from "@/types/carbon_chatbot.types";
-import PdfEditor from "@/components/pdf_tool/pdf_editor";
-import { useState } from "react";
+// Info: (20260713 - Tzuhan) 報告 artifact 檢視:工具列 + 章節導軌 + 目錄抽屜 + PDF 預覽(default)
+// Info: (20260713 - Tzuhan) vibe 模式:段落由 AI 對話生成後即時出現於預覽;點導軌/目錄跳段會將對話目標切至該段
 
-import { CheckCircle2, Circle, AlertCircle } from "lucide-react";
+import { FileText } from "lucide-react";
+import {
+  IChatSession,
+  IReportProgressStats,
+} from "@/types/carbon_chatbot.types";
+import PdfEditor from "@/components/pdf_tool/pdf_editor";
+import { PdfToolViewMode } from "@/constants/pdf_tool";
+import { MOBILE_MEDIA_QUERY } from "@/constants/carbon_chatbot";
+import { buildSectionHeadingByTitle } from "@/constants/carbon_report_outline";
+import { ReportToolbar } from "@/components/carbon_chatbot/report_toolbar";
+import { OutlineRail } from "@/components/carbon_chatbot/outline_rail";
+import { OutlineDrawer } from "@/components/carbon_chatbot/outline_drawer";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
 
 interface ICarbonReportPreviewProps {
   session?: IChatSession;
+  stats?: IReportProgressStats;
+  activeParagraphId?: string | null;
   onMarkdownChange?: (val: string) => void;
-  onToggleCompleted?: (id: string) => void;
-  onToggleVerified?: (id: string) => void;
+  onJumpToParagraph?: (paragraphId: string) => void;
+  onToggleVerified?: (paragraphId: string) => void;
 }
 
-const generateMarkdownFromParagraphs = (session: IChatSession): string => {
-  const isMock2025 = session.id === "2025";
+// Info: (20260713 - Tzuhan) 渲染全部 33 段:已生成者顯示內容,未生成者顯示灰色佔位區塊,確保跳段永遠有落點且報告骨架一眼可見
+const generateMarkdownFromParagraphs = (
+  session: IChatSession,
+  placeholderHint: string,
+  draftStatusLine: string,
+): string => {
+  const paragraphs = session.reportData?.paragraphs;
 
-  if (!isMock2025 || !session.reportData?.paragraphs) {
+  if (!paragraphs || paragraphs.length === 0) {
     return (
-      `# ${session.reportData?.title || "盤查報告"}\n\n## ${session.reportData?.section || ""}\n\n### 溫室氣體排放量摘要\n\n| 類別 (ISO Category) | 來源說明 | 排放量 (tCO2e) |\n| --- | --- | --- |\n` +
+      // ToDo: (20260713 - Luphia) 報告預覽 markdown 表頭為硬編中文，如需多語系報告請改走 t()
+      `# ${session.reportData?.title || ""}\n\n## ${session.reportData?.section || ""}\n\n### 溫室氣體排放量摘要\n\n| 類別 (ISO Category) | 來源說明 | 排放量 (tCO2e) |\n| --- | --- | --- |\n` +
       (session.reportData?.categories
         ?.map(
           (c) =>
@@ -31,10 +49,15 @@ const generateMarkdownFromParagraphs = (session: IChatSession): string => {
     );
   }
 
-  let md = `# 卡菲卡智慧製造股份有限公司\n## 2025 年度碳盤查報告書 (草案)\n\n<span style="color: gray; font-size: 10px; font-weight: bold; letter-spacing: 0.2em;">REPORT STATUS: DRAFT GENERATED</span>\n\n---\n\n`;
+  // Info: (20260713 - Tzuhan) MarkdownContent 未啟用 rehype-raw,嚴禁在內容層塞原生 HTML;
+  // Info: (20260713 - Tzuhan) 狀態徽章由 ReportToolbar 呈現,文件內僅保留 Markdown 原生語法的草稿聲明(匯出 PDF 亦可見)
+  let md = `# ${session.title}\n\n> _${draftStatusLine}_\n\n---\n\n`;
 
-  session.reportData.paragraphs.forEach((p) => {
-    md += `${p.content}\n\n---\n\n`;
+  paragraphs.forEach((p, index) => {
+    const block =
+      p.content ||
+      `${buildSectionHeadingByTitle(p.title, index)}\n\n> _${placeholderHint}_`;
+    md += `${block}\n\n---\n\n`;
   });
 
   return md;
@@ -42,14 +65,41 @@ const generateMarkdownFromParagraphs = (session: IChatSession): string => {
 
 export default function CarbonReportPreview({
   session = {} as IChatSession,
+  stats = undefined,
+  activeParagraphId = null,
   onMarkdownChange = () => {},
-  onToggleCompleted = () => {},
+  onJumpToParagraph = () => {},
   onToggleVerified = () => {},
 }: ICarbonReportPreviewProps) {
   const { t } = useTranslation();
   const [, setErrorModal] = useState({ isOpen: false, message: "" });
+  const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
+  const previewContainerRef = useRef<HTMLDivElement>(null);
 
   const reportData = session?.reportData;
+  // Info: (20260713 - Tzuhan) useMemo 穩定引用,避免 useEffect 依賴每次 render 變動
+  const paragraphs = useMemo(
+    () => reportData?.paragraphs ?? [],
+    [reportData?.paragraphs],
+  );
+  const hasOutline = paragraphs.length > 0;
+
+  // Info: (20260713 - Tzuhan) 跳段時將 PDF 預覽捲動至該段標題(以段落標題文字定位);未生成段落亦有佔位落點
+  useEffect(() => {
+    if (!activeParagraphId || !previewContainerRef.current) return undefined;
+    const target = paragraphs.find((p) => p.id === activeParagraphId);
+    if (!target) return undefined;
+
+    const timer = setTimeout(() => {
+      const headings =
+        previewContainerRef.current?.querySelectorAll("h3") ?? [];
+      const match = Array.from(headings).find((h) =>
+        h.textContent?.includes(target.title),
+      );
+      match?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [activeParagraphId, paragraphs]);
 
   if (!reportData) {
     return (
@@ -60,71 +110,73 @@ export default function CarbonReportPreview({
     );
   }
 
-  const markdownContent = generateMarkdownFromParagraphs(session);
-  const isMock2025 = session.id === "2025";
+  // Info: (20260713 - Tzuhan) <xl 抽屜為全寬獨占,跳段後自動關閉回到 PDF 落點;xl+ 維持開啟便於連續瀏覽
+  const handleDrawerJump = (paragraphId: string) => {
+    onJumpToParagraph(paragraphId);
+    if (window.matchMedia(MOBILE_MEDIA_QUERY).matches) {
+      setIsDrawerOpen(false);
+    }
+  };
+
+  const markdownContent = generateMarkdownFromParagraphs(
+    session,
+    t("carbon_chatbot.section_placeholder"),
+    t("carbon_chatbot.report_status_draft"),
+  );
 
   return (
     <div className="relative flex h-full w-full flex-1 flex-col border-l border-gray-200 bg-white">
-      {/* Info: (20260708 - Tzuhan) Paragraph Status Tracker UI */}
-      {isMock2025 && reportData.paragraphs && (
-        <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
-          <h3 className="mb-2 text-sm font-bold text-gray-700">
-            {t("carbon_chatbot.paragraph_tracker_title")}
-          </h3>
-          <div className="flex flex-col gap-2">
-            {reportData.paragraphs.map((p) => (
-              <div
-                key={p.id}
-                className="flex items-center justify-between rounded-md bg-white p-2 text-xs shadow-sm ring-1 ring-gray-200"
-              >
-                <span
-                  className="w-1/3 truncate font-medium text-gray-700"
-                  title={p.title}
-                >
-                  {p.title}
-                </span>
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={() => onToggleCompleted && onToggleCompleted(p.id)}
-                    className={`flex items-center gap-1 rounded px-2 py-1 transition-colors ${p.isCompleted ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
-                  >
-                    {p.isCompleted ? (
-                      <CheckCircle2 size={14} />
-                    ) : (
-                      <Circle size={14} />
-                    )}
-                    {p.isCompleted
-                      ? t("carbon_chatbot.status_completed")
-                      : t("carbon_chatbot.status_incomplete")}
-                  </button>
-                  <button
-                    onClick={() => onToggleVerified && onToggleVerified(p.id)}
-                    className={`flex items-center gap-1 rounded px-2 py-1 transition-colors ${p.isVerified ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-700 hover:bg-red-200"}`}
-                  >
-                    {p.isVerified ? (
-                      <CheckCircle2 size={14} />
-                    ) : (
-                      <AlertCircle size={14} />
-                    )}
-                    {p.isVerified
-                      ? t("carbon_chatbot.status_verified")
-                      : t("carbon_chatbot.status_unverified")}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      {hasOutline && stats && (
+        <ReportToolbar
+          documentName={reportData.documentName}
+          stats={stats}
+          status={session.status}
+          statusColor={session.statusColor}
+          isDrawerOpen={isDrawerOpen}
+          onToggleDrawer={() => setIsDrawerOpen((prev) => !prev)}
+        />
       )}
 
-      <PdfEditor
-        layout="toggle"
-        isEmbedded={true}
-        value={markdownContent}
-        onChange={onMarkdownChange}
-        setErrorModal={setErrorModal}
-        storageKey={`chatbot_draft_${session.id}`}
-      />
+      <div className="flex min-h-0 flex-1">
+        {/* Info: (20260713 - Tzuhan) <xl 且抽屜開啟時隱藏導軌,讓目錄獨占畫面 */}
+        {hasOutline && (
+          <OutlineRail
+            paragraphs={paragraphs}
+            activeParagraphId={activeParagraphId}
+            onJump={onJumpToParagraph}
+            className={isDrawerOpen ? "hidden xl:flex" : ""}
+          />
+        )}
+
+        {hasOutline && isDrawerOpen && (
+          <OutlineDrawer
+            paragraphs={paragraphs}
+            activeParagraphId={activeParagraphId}
+            onJump={handleDrawerJump}
+            onToggleVerified={onToggleVerified}
+            onClose={() => setIsDrawerOpen(false)}
+          />
+        )}
+
+        {/* Info: (20260713 - Tzuhan) <xl 且抽屜開啟時隱藏 PDF 區,避免與全寬目錄擠壓並排 */}
+        <div
+          ref={previewContainerRef}
+          className={`min-w-0 flex-1 overflow-y-auto ${
+            isDrawerOpen ? "hidden xl:block" : ""
+          }`}
+        >
+          <PdfEditor
+            layout="toggle"
+            isEmbedded={true}
+            defaultViewMode={PdfToolViewMode.PREVIEW}
+            contentVariant="compact"
+            value={markdownContent}
+            onChange={onMarkdownChange}
+            setErrorModal={setErrorModal}
+            storageKey={`chatbot_draft_${session.id}`}
+          />
+        </div>
+      </div>
     </div>
   );
 }

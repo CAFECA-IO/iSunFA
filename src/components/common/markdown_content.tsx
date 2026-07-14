@@ -78,18 +78,31 @@ const AsyncLariaImage = ({
   );
 };
 
+// Info: (20260713 - Tzuhan) 字級變體:document 為 A4 文件級(預設,匯出 PDF 用);compact 為嵌入式 UI 級(與 app text-sm 基準協調)
+export type MarkdownContentVariant = "document" | "compact";
+
 interface IMarkdownContentProps {
   content: string;
   theme?: "dark" | "light";
+  variant?: MarkdownContentVariant;
   onContentChange?: (newContent: string) => void;
 }
 
 const MarkdownContent: FC<IMarkdownContentProps> = ({
   content,
   theme = "dark",
+  variant = "document",
   onContentChange = () => {},
 }) => {
   const isDark = theme === "dark";
+  // Info: (20260713 - Tzuhan) compact 全面降一級,body 固定 text-sm;以明確 class 輸出,避免與外層 CSS 覆寫打架
+  const isCompact = variant === "compact";
+  const h1Size = isCompact ? "text-xl" : "text-2xl";
+  const h2Size = isCompact ? "text-lg" : "text-xl";
+  const h3Size = isCompact ? "text-base" : "text-lg";
+  const h4Size = isCompact ? "text-sm" : "text-base";
+  const h5Size = isCompact ? "text-xs" : "text-sm";
+  const bodySize = isCompact ? "text-sm" : "";
   const textColor = isDark ? "text-[#ffffff]" : "text-[#111827]";
   const secondaryTextColor = isDark ? "text-[#E0E0E0]" : "text-[#374151]";
   const linkColor = isDark ? "text-[#64B5F6]" : "text-[#2563eb]";
@@ -104,7 +117,7 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
     () => ({
       h1: ({ children, ...props }: ComponentPropsWithoutRef<"h1">) => (
         <h1
-          className={`mt-5 mb-3 flex items-center gap-2 border-b ${borderColor} pb-2 text-2xl font-bold ${textColor}`}
+          className={`mt-5 mb-3 flex items-center gap-2 border-b ${borderColor} pb-2 ${h1Size} font-bold ${textColor}`}
           {...props}
         >
           {children}
@@ -112,7 +125,7 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
       ),
       h2: ({ children, ...props }: ComponentPropsWithoutRef<"h2">) => (
         <h2
-          className={`mt-4 mb-2 flex items-center gap-2 text-xl font-bold ${textColor}`}
+          className={`mt-4 mb-2 flex items-center gap-2 ${h2Size} font-bold ${textColor}`}
           {...props}
         >
           <span
@@ -122,13 +135,16 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
         </h2>
       ),
       h3: ({ children, ...props }: ComponentPropsWithoutRef<"h3">) => (
-        <h3 className={`mt-3 mb-1.5 text-lg font-bold ${textColor}`} {...props}>
+        <h3
+          className={`mt-3 mb-1.5 ${h3Size} font-bold ${textColor}`}
+          {...props}
+        >
           {children}
         </h3>
       ),
       h4: ({ children, ...props }: ComponentPropsWithoutRef<"h4">) => (
         <h4
-          className={`mt-3 mb-1.5 text-base font-semibold ${textColor}`}
+          className={`mt-3 mb-1.5 ${h4Size} font-semibold ${textColor}`}
           {...props}
         >
           {children}
@@ -136,14 +152,17 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
       ),
       h5: ({ children, ...props }: ComponentPropsWithoutRef<"h5">) => (
         <h5
-          className={`mt-2 mb-1 text-sm font-semibold ${textColor}`}
+          className={`mt-2 mb-1 ${h5Size} font-semibold ${textColor}`}
           {...props}
         >
           {children}
         </h5>
       ),
       h6: ({ children, ...props }: ComponentPropsWithoutRef<"h6">) => (
-        <h6 className={`mt-2 mb-1 text-sm font-medium ${textColor}`} {...props}>
+        <h6
+          className={`mt-2 mb-1 ${h5Size} font-medium ${textColor}`}
+          {...props}
+        >
           {children}
         </h6>
       ),
@@ -153,13 +172,16 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
         </strong>
       ),
       ul: ({ children, ...props }: ComponentPropsWithoutRef<"ul">) => (
-        <ul className={`mb-3 list-disc pl-6 ${secondaryTextColor}`} {...props}>
+        <ul
+          className={`mb-3 list-disc pl-6 ${bodySize} ${secondaryTextColor}`}
+          {...props}
+        >
           {children}
         </ul>
       ),
       ol: ({ children, ...props }: ComponentPropsWithoutRef<"ol">) => (
         <ol
-          className={`mb-3 list-decimal pl-6 ${secondaryTextColor}`}
+          className={`mb-3 list-decimal pl-6 ${bodySize} ${secondaryTextColor}`}
           {...props}
         >
           {children}
@@ -176,7 +198,10 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
         );
       },
       p: ({ children, ...props }: ComponentPropsWithoutRef<"p">) => (
-        <p className={`mb-3 leading-relaxed ${secondaryTextColor}`} {...props}>
+        <p
+          className={`mb-3 leading-relaxed ${bodySize} ${secondaryTextColor}`}
+          {...props}
+        >
           {children}
         </p>
       ),
@@ -195,7 +220,7 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
         ...props
       }: ComponentPropsWithoutRef<"blockquote">) => (
         <blockquote
-          className={`my-3 rounded-r-lg border-l-4 border-[#FF9800] ${blockquoteBg} px-4 py-3 italic ${blockquoteText} break-inside-avoid print:break-inside-avoid`}
+          className={`my-3 rounded-r-lg border-l-4 border-[#FF9800] ${blockquoteBg} px-4 py-3 italic ${bodySize} ${blockquoteText} break-inside-avoid print:break-inside-avoid`}
           {...props}
         >
           {children}
@@ -329,6 +354,12 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
       isDark,
       content,
       onContentChange,
+      h1Size,
+      h2Size,
+      h3Size,
+      h4Size,
+      h5Size,
+      bodySize,
     ],
   );
 

@@ -40,4 +40,20 @@ export const carbonChatbot = {
   status_incomplete: "미완료",
   status_verified: "검증됨",
   status_unverified: "미검증",
+  outline_title: "목차",
+  outline_button: "목차",
+  completed_short: "완료",
+  verified_short: "검증",
+  verified_progress: "수동 검토 진행률",
+  jump_aria_label: "이 섹션으로 이동",
+  close_outline: "목차 닫기",
+  data_driven_badge:
+    "데이터 섹션: 수치는 시스템 결정론 엔진에서 계산되며 AI 생성이 아닙니다",
+  jump_prompt: "「{{section}}」 섹션 작성을 도와주세요.",
+  section_placeholder:
+    "이 섹션은 아직 생성되지 않았습니다. 왼쪽 대화에서 탄소 회계사에게 작성 의사를 알리면 내용이 실시간으로 여기에 표시됩니다.",
+  report_status_draft:
+    "보고서 상태: 초안 (내용은 AI가 섹션별로 생성하며 수동 검토 후 확정됩니다)",
+  report_button: "보고서",
+  close_report: "보고서 닫기",
 };
