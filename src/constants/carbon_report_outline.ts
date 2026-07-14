@@ -15,6 +15,7 @@ export interface ICarbonReportSection {
   isDataDriven: boolean;
 }
 
+// ToDo: (20260713 - Luphia) 章節 title 為硬編中文，將顯示於大綱導覽 UI；如需多語系報告請抽為 i18n key（guidance 屬注入 AI 的 prompt data，可留）
 export const CARBON_REPORT_CHAPTERS: ICarbonReportChapter[] = [
   { id: "ch1", title: "第一章 組織與治理概況" },
   { id: "ch2", title: "第二章 報告邊界" },
@@ -29,6 +30,7 @@ export const CARBON_REPORT_CHAPTERS: ICarbonReportChapter[] = [
   { id: "ch11", title: "第十一章 參考文獻" },
 ];
 
+// ToDo: (20260713 - Luphia) 各段落 title 為硬編中文，將顯示於大綱導覽 UI；如需多語系報告請抽為 i18n key（同 CARBON_REPORT_CHAPTERS）
 export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
   {
     id: "ch1-intro",
