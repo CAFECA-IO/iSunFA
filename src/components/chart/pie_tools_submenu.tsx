@@ -8,6 +8,7 @@ import {
   MERMAID_SUBMIT_BUTTON_STYLE,
 } from "@/constants/mermaid_chart";
 import { SegmentedControl } from "@/components/chart/mermaid_common_components";
+import { useDecimalInput } from "@/hooks/use_decimal_input";
 
 // ==========================================
 // Info: (20260629 - Julian) 定義與靜態映射表
@@ -66,17 +67,20 @@ const AddSlicePanel: FC<IBasePanelProps> = ({
 }) => {
   const { t } = useTranslation();
   const [pieSliceLabel, setPieSliceLabel] = useState<string>("");
-  const [pieSliceValue, setPieSliceValue] = useState<string>("");
   const [valueMode, setValueMode] = useState<PieValueMode>(PieValueMode.VALUE);
+
   const isProportion = valueMode === PieValueMode.PROPORTION;
 
-  const handleSubmit = () => {
-    if (!pieSliceLabel || !pieSliceValue) return;
+  // Info: (20260714 - Julian) 圓餅圖數值：只允許數字與小數點
+  const pieSliceValue = useDecimalInput();
 
-    let finalValue = parseFloat(pieSliceValue);
+  const handleSubmit = () => {
+    if (!pieSliceLabel || !pieSliceValue.value) return;
+
+    let finalValue = parseFloat(pieSliceValue.value);
     if (isProportion) {
       const existingSum = parsedPieItems.reduce((acc, i) => acc + i.value, 0);
-      const p = parseFloat(pieSliceValue);
+      const p = parseFloat(pieSliceValue.value);
       if (p >= 100) {
         // Info: (20260708 - Julian) 若為 100% 則給予一個極大值或依邏輯處理，此處簡單防呆
         finalValue = existingSum * 99;
@@ -89,7 +93,7 @@ const AddSlicePanel: FC<IBasePanelProps> = ({
       id: crypto.randomUUID(),
       type: MermaidActionType.PIE_ADD_ITEM,
       description: `新增項目 "${pieSliceLabel}" (${
-        isProportion ? pieSliceValue + "%" : pieSliceValue
+        isProportion ? pieSliceValue.value + "%" : pieSliceValue.value
       })`,
       payload: {
         label: pieSliceLabel,
@@ -144,10 +148,10 @@ const AddSlicePanel: FC<IBasePanelProps> = ({
           </div>
           <input
             id="pieSliceValue"
-            type="number"
-            step="any"
-            value={pieSliceValue}
-            onChange={(e) => setPieSliceValue(e.target.value)}
+            type="text"
+            inputMode="decimal"
+            value={pieSliceValue.value}
+            onChange={pieSliceValue.onChange}
             className={MERMAID_INPUT_STYLE}
             placeholder={
               isProportion
@@ -160,7 +164,7 @@ const AddSlicePanel: FC<IBasePanelProps> = ({
       <button
         type="button"
         onClick={handleSubmit}
-        disabled={!pieSliceLabel || !pieSliceValue}
+        disabled={!pieSliceLabel || !pieSliceValue.value}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
         {t("chart.mermaid.ai_editor.pie.add_slice")}
@@ -177,24 +181,27 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
   const { t } = useTranslation();
   const [pieSliceTarget, setPieSliceTarget] = useState<string>("");
   const [pieSliceNewLabel, setPieSliceNewLabel] = useState<string>("");
-  const [pieSliceValue, setPieSliceValue] = useState<string>("");
   const [valueMode, setValueMode] = useState<PieValueMode>(PieValueMode.VALUE);
+
   const isProportion = valueMode === PieValueMode.PROPORTION;
 
+  // Info: (20260714 - Julian) 圓餅圖數值：只允許數字與小數點
+  const pieSliceValue = useDecimalInput();
+
   const handleSubmit = () => {
-    if (!pieSliceTarget || (!pieSliceValue && !pieSliceNewLabel)) return;
+    if (!pieSliceTarget || (!pieSliceValue.value && !pieSliceNewLabel)) return;
     const targetItem = parsedPieItems.find((i) => i.label === pieSliceTarget);
     if (!targetItem) return;
 
-    let finalValue = pieSliceValue
-      ? parseFloat(pieSliceValue)
+    let finalValue = pieSliceValue.value
+      ? parseFloat(pieSliceValue.value)
       : targetItem.value;
 
-    if (pieSliceValue && isProportion) {
+    if (pieSliceValue.value && isProportion) {
       const otherSum = parsedPieItems
         .filter((i) => i.label !== pieSliceTarget)
         .reduce((acc, i) => acc + i.value, 0);
-      const p = parseFloat(pieSliceValue);
+      const p = parseFloat(pieSliceValue.value);
       if (p >= 100) {
         finalValue = otherSum * 99;
       } else {
@@ -277,10 +284,10 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
           </div>
           <input
             id="pieSliceValueEdit"
-            type="number"
-            step="any"
-            value={pieSliceValue}
-            onChange={(e) => setPieSliceValue(e.target.value)}
+            type="text"
+            inputMode="decimal"
+            value={pieSliceValue.value}
+            onChange={pieSliceValue.onChange}
             className={MERMAID_INPUT_STYLE}
             placeholder={
               isProportion
@@ -293,7 +300,9 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
       <button
         type="button"
         onClick={handleSubmit}
-        disabled={!pieSliceTarget || (!pieSliceValue && !pieSliceNewLabel)}
+        disabled={
+          !pieSliceTarget || (!pieSliceValue.value && !pieSliceNewLabel)
+        }
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
         {t("chart.mermaid.ai_editor.pie.edit_slice")}

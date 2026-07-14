@@ -24,6 +24,7 @@ import {
   MERMAID_SUBMIT_BUTTON_STYLE,
 } from "@/constants/mermaid_chart";
 import { SegmentedControl } from "@/components/chart/mermaid_common_components";
+import { useDecimalInput, isDecimalInput } from "@/hooks/use_decimal_input";
 
 // Info: (20260709 - Julian) 定義與靜態映射表
 
@@ -219,16 +220,21 @@ const EditXAxisPanel: FC<IBasePanelProps> = ({
   const [xAxisCategories, setXAxisCategories] = useState<string>(
     xAxis.categories ? xAxis.categories.join(", ") : "",
   );
-  const [minInput, setMinInput] = useState<string>(
+  // Info: (20260714 - Julian) 座標軸範圍可為負，故 allowNegative 為 true
+  const minInput = useDecimalInput(
     xAxis.min !== undefined ? String(xAxis.min) : "",
+    { allowNegative: true },
   );
-  const [maxInput, setMaxInput] = useState<string>(
+  const maxInput = useDecimalInput(
     xAxis.max !== undefined ? String(xAxis.max) : "",
+    { allowNegative: true },
   );
 
   const isSubmitDisable =
     (xAxisType === XYChartAxisType.CATEGORY && !xAxisCategories.trim()) ||
-    (xAxisType === XYChartAxisType.NUMERIC && !minInput && !maxInput);
+    (xAxisType === XYChartAxisType.NUMERIC &&
+      !minInput.value &&
+      !maxInput.value);
 
   const handleSubmit = () => {
     const isCategory = xAxisType === XYChartAxisType.CATEGORY;
@@ -246,8 +252,8 @@ const EditXAxisPanel: FC<IBasePanelProps> = ({
         .filter(Boolean);
     } else {
       payload.title = xAxisTitle || undefined;
-      payload.min = minInput !== "" ? Number(minInput) : undefined;
-      payload.max = maxInput !== "" ? Number(maxInput) : undefined;
+      payload.min = minInput.value !== "" ? Number(minInput.value) : undefined;
+      payload.max = maxInput.value !== "" ? Number(maxInput.value) : undefined;
     }
 
     onAddAction({
@@ -331,9 +337,9 @@ const EditXAxisPanel: FC<IBasePanelProps> = ({
               </label>
               <input
                 id="xAxisMin"
-                type="number"
-                value={minInput}
-                onChange={(e) => setMinInput(e.target.value)}
+                type="text"
+                value={minInput.value}
+                onChange={minInput.onChange}
                 className={MERMAID_INPUT_STYLE}
                 placeholder="0"
               />
@@ -344,9 +350,9 @@ const EditXAxisPanel: FC<IBasePanelProps> = ({
               </label>
               <input
                 id="xAxisMax"
-                type="number"
-                value={maxInput}
-                onChange={(e) => setMaxInput(e.target.value)}
+                type="text"
+                value={maxInput.value}
+                onChange={maxInput.onChange}
                 className={MERMAID_INPUT_STYLE}
                 placeholder="100"
               />
@@ -376,14 +382,18 @@ const EditYAxisPanel: FC<IBasePanelProps> = ({
   const { yAxis } = parsedXYChartData;
 
   const [yAxisTitle, setYAxisTitle] = useState<string>(yAxis.title || "");
-  const [minInput, setMinInput] = useState<string>(
+
+  // Info: (20260714 - Julian) 座標軸範圍可為負，故 allowNegative 為 true
+  const minInput = useDecimalInput(
     yAxis.min !== undefined ? String(yAxis.min) : "",
+    { allowNegative: true },
   );
-  const [maxInput, setMaxInput] = useState<string>(
+  const maxInput = useDecimalInput(
     yAxis.max !== undefined ? String(yAxis.max) : "",
+    { allowNegative: true },
   );
 
-  const isSubmitDisable = !minInput && !maxInput;
+  const isSubmitDisable = !minInput.value && !maxInput.value;
 
   const handleSubmit = () => {
     onAddAction({
@@ -392,8 +402,8 @@ const EditYAxisPanel: FC<IBasePanelProps> = ({
       description: `變更 Y 軸設定`,
       payload: {
         title: yAxisTitle || undefined,
-        min: minInput !== "" ? Number(minInput) : undefined,
-        max: maxInput !== "" ? Number(maxInput) : undefined,
+        min: minInput.value !== "" ? Number(minInput.value) : undefined,
+        max: maxInput.value !== "" ? Number(maxInput.value) : undefined,
       },
     });
   };
@@ -428,9 +438,9 @@ const EditYAxisPanel: FC<IBasePanelProps> = ({
             </label>
             <input
               id="yAxisMin"
-              type="number"
-              value={minInput}
-              onChange={(e) => setMinInput(e.target.value)}
+              type="text"
+              value={minInput.value}
+              onChange={minInput.onChange}
               className={MERMAID_INPUT_STYLE}
             />
           </div>
@@ -440,9 +450,9 @@ const EditYAxisPanel: FC<IBasePanelProps> = ({
             </label>
             <input
               id="yAxisMax"
-              type="number"
-              value={maxInput}
-              onChange={(e) => setMaxInput(e.target.value)}
+              type="text"
+              value={maxInput.value}
+              onChange={maxInput.onChange}
               className={MERMAID_INPUT_STYLE}
             />
           </div>
@@ -539,6 +549,8 @@ const EditLinePanel: FC<IBasePanelProps> = ({
   };
 
   const handleCategoryValueChange = (idx: number, val: string) => {
+    // Info: (20260714 - Julian) 只允許數字與小數點（數列值可為負），非法輸入直接忽略
+    if (!isDecimalInput(val, true)) return;
     setCategoryValues((prev) => {
       const copy = [...prev];
       copy[idx] = val;
@@ -620,7 +632,7 @@ const EditLinePanel: FC<IBasePanelProps> = ({
                     {cat}
                   </span>
                   <input
-                    type="number"
+                    type="text"
                     value={categoryValues[idx] ?? ""}
                     onChange={(e) =>
                       handleCategoryValueChange(idx, e.target.value)
@@ -740,6 +752,8 @@ const EditBarPanel: FC<IBasePanelProps> = ({
   };
 
   const handleCategoryValueChange = (idx: number, val: string) => {
+    // Info: (20260714 - Julian) 只允許數字與小數點（數列值可為負），非法輸入直接忽略
+    if (!isDecimalInput(val, true)) return;
     setCategoryValues((prev) => {
       const copy = [...prev];
       copy[idx] = val;
@@ -821,7 +835,7 @@ const EditBarPanel: FC<IBasePanelProps> = ({
                     {cat}
                   </span>
                   <input
-                    type="number"
+                    type="text"
                     value={categoryValues[idx] ?? ""}
                     onChange={(e) =>
                       handleCategoryValueChange(idx, e.target.value)
