@@ -40,6 +40,18 @@ export class ChatroomRepository {
     });
   }
 
+  // Info: (20260714 - Emily) 依頻道前綴列出聊天室(sessions 列表);前綴含用戶 address,寫入時已由路由層裁決所有權
+  async listChatroomsByChannelPrefix(channelPrefix: string, purpose?: string) {
+    return prisma.chatroom.findMany({
+      where: {
+        channel: { startsWith: channelPrefix },
+        ...(purpose ? { purpose } : {}),
+      },
+      orderBy: { createdAt: "desc" },
+      select: { channel: true, createdAt: true, updatedAt: true },
+    });
+  }
+
   // Info: (20260712 - Luphia) 依聊天室分頁列出訊息（密文，供前端以主私鑰解密）
   // Info: (20260712 - Luphia) 取「早於 before」的最新 limit 則（desc）；before 省略即取最新一頁
   async listMessagesByChannel(channel: string, limit: number, before?: Date) {

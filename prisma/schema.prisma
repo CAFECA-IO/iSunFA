@@ -1106,6 +1106,8 @@ model Chatroom {
   messages       ChatroomMessage[]
   inventoryState CarbonInventoryState?
 
+  // Info: (20260714 - Emily) 供「依擁有者列出聊天室」的 sessions 查詢
+  @@index([ownerPublicKey])
   @@map("chatroom")
 }
 
@@ -1154,7 +1156,8 @@ model ChatroomMessage {
 
   createdAt DateTime @default(now()) @map("created_at")
 
-  @@index([chatroomId])
+  // Info: (20260714 - Emily) 複合索引對齊 history 分頁查詢(chatroomId + createdAt desc 取代單欄索引)
+  @@index([chatroomId, createdAt])
   @@index([recipientPublicKey])
   @@map("chatroom_message")
 }

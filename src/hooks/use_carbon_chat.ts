@@ -184,27 +184,47 @@ export const useCarbonChat = () => {
     };
   }, []);
 
-  // Info: (20260714 - Emily) 進入時載入本機 sessions 索引,重建歷史 session 骨架(標題/時間;內容各自延遲還原)
+  // Info: (20260714 - Emily) sessions 以 DB Chatroom 為 single source of truth(換裝置/清瀏覽器不再出現殭屍房間)
+  // Info: (20260714 - Emily) 標題衍生自密文首訊(server 讀不到),localStorage 索引降級為標題快取
   const sessionsIndexLoadedRef = useRef<boolean>(false);
   useEffect(() => {
     if (!user?.address || sessionsIndexLoadedRef.current) return;
     sessionsIndexLoadedRef.current = true;
-    const index = loadSessionsIndex(user.address);
-    if (!index || index.length === 0) return;
-    setSessionsData((prev) => {
-      const next = { ...prev };
-      index.forEach((entry) => {
-        if (!next[entry.id]) {
-          next[entry.id] = createChatSession(
-            entry.id,
-            entry.title,
-            entry.createdAt,
-          );
-        }
+    const titleCache = new Map(
+      (loadSessionsIndex(user.address) ?? []).map((entry) => [
+        entry.id,
+        entry,
+      ]),
+    );
+
+    request<{
+      payload: {
+        sessions: { sessionId: string; createdAt: string }[];
+      } | null;
+    }>("/api/v1/chat/carbon/sessions")
+      .then((res) => {
+        const sessions = res.payload?.sessions ?? [];
+        if (sessions.length === 0) return;
+        setSessionsData((prev) => {
+          const next = { ...prev };
+          sessions.forEach((entry) => {
+            if (!entry.sessionId || next[entry.sessionId]) return;
+            const cached = titleCache.get(entry.sessionId);
+            next[entry.sessionId] = createChatSession(
+              entry.sessionId,
+              cached?.title ?? t("carbon_chatbot.new_session_title"),
+              cached?.createdAt ??
+                new Date(entry.createdAt).toLocaleDateString(),
+            );
+          });
+          return next;
+        });
+      })
+      .catch((error) => {
+        // Info: (20260714 - Emily) 列表載入失敗不阻斷(仍可用預設 session 對話)
+        console.error("[carbon-chat] failed to load sessions:", error);
       });
-      return next;
-    });
-  }, [user?.address]);
+  }, [user?.address, t]);
 
   // Info: (20260714 - Emily) 切至 session 時還原本機報告草稿(每 channel 只還原一次,之後以記憶體狀態為準)
   useEffect(() => {
@@ -312,6 +332,16 @@ export const useCarbonChat = () => {
           session.messages = before
             ? [...decrypted, ...session.messages]
             : decrypted;
+          // Info: (20260714 - Emily) DB 還原的房間無標題快取時,以首則使用者訊息補標題(僅預設標題可覆寫)
+          const firstUserMessage = session.messages.find(
+            (m) => m.sender === ChatRoleEnum.USER,
+          );
+          if (
+            firstUserMessage?.text &&
+            session.title === t("carbon_chatbot.new_session_title")
+          ) {
+            session.title = firstUserMessage.text.trim().slice(0, 24);
+          }
           return { ...prev, [activeSessionId]: session };
         });
 
@@ -324,7 +354,7 @@ export const useCarbonChat = () => {
         setIsLoadingHistory(false);
       }
     },
-    [chatChannel, activeSessionId],
+    [chatChannel, activeSessionId, t],
   );
 
   // Info: (20260712 - Luphia) 上卷載入更舊一頁
