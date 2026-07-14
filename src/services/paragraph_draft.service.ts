@@ -2,8 +2,13 @@
 // Info: (20260714 - Emily) 職責:依 CARBON_REPORT_OUTLINE 的段落 guidance + 對話上下文 + 已確認事實,由 LLM 撰寫段落敘述草稿
 // Info: (20260714 - Emily) 邊界:LLM 只撰寫敘述;段落對應由白名單裁決、數值一律引用輸入事實原值,嚴禁 LLM 計算或虛構
 
-import { SchemaType, type Schema } from "@google/generative-ai";
-import { ChatService, isLlmQuotaError } from "@/services/chat.service";
+// Info: (20260714 - Emily) AI 串接單一閘道:SDK 型別與呼叫一律經 chat.service,本檔不直接依賴 @google/generative-ai
+import {
+  ChatService,
+  isLlmQuotaError,
+  SchemaType,
+  type Schema,
+} from "@/services/chat.service";
 import { ApiError, API_ERRORS } from "@/lib/utils/error_dictionary";
 import {
   CARBON_REPORT_OUTLINE,

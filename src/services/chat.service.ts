@@ -51,6 +51,9 @@ const CARBON_CHAT_REPLY_SCHEMA: Schema = {
 };
 
 export type { Part, Schema, Tool };
+// Info: (20260714 - Emily) SchemaType 一併由此 re-export:所有 AI 串接(含 responseSchema 定義)統一經 chat.service,
+// Info: (20260714 - Emily) 其他服務不得直接 import @google/generative-ai(未來切換本地模型只需改本檔)
+export { SchemaType };
 
 export interface IChatGenerationOptions {
   modelName?: string;

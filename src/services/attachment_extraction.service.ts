@@ -2,8 +2,8 @@
 // Info: (20260714 - Emily) 職責:Gemini 萃取附件事實(字串原樣,不換算) → 白名單裁決建議段落 → 呼叫 ParagraphDraftService 生成草稿
 // Info: (20260714 - Emily) 降級策略(graceful fallback):解析失敗或對應不到段落時,以檔名事實 + 預設段落生成通用草稿,不中斷流程
 
-import { SchemaType, type Schema } from "@google/generative-ai";
-import { ChatService } from "@/services/chat.service";
+// Info: (20260714 - Emily) AI 串接單一閘道:SDK 型別與呼叫一律經 chat.service,本檔不直接依賴 @google/generative-ai
+import { ChatService, SchemaType, type Schema } from "@/services/chat.service";
 import { ParagraphDraftService } from "@/services/paragraph_draft.service";
 import { storageService, StorageService } from "@/services/storage.service";
 import { IAttachment } from "@/types/carbon_chatbot.types";
