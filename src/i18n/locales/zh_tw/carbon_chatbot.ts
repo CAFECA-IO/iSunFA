@@ -72,4 +72,5 @@ export const carbonChatbot = {
   report_button: "報告",
   close_report: "關閉報告",
   close_chat: "關閉聊天視窗",
+  progress_collapse: "收合進度浮窗",
 };

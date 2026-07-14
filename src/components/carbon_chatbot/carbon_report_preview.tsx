@@ -270,10 +270,11 @@ export default function CarbonReportPreview({
             isDrawerOpen ? "hidden xl:block" : ""
           }`}
         >
+          {/* Info: (20260714 - Emily) 報告成為主視圖後寬度足夠,改 split 讓編輯與預覽水平並排(窄螢幕自動退回切換模式) */}
           <PdfEditor
-            layout="toggle"
+            layout="split"
             isEmbedded={true}
-            defaultViewMode={PdfToolViewMode.PREVIEW}
+            defaultViewMode={PdfToolViewMode.EDIT}
             contentVariant="compact"
             value={markdownContent}
             onChange={onMarkdownChange}

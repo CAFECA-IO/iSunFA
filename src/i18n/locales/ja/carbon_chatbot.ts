@@ -78,4 +78,5 @@ export const carbonChatbot = {
   report_button: "レポート",
   close_report: "レポートを閉じる",
   close_chat: "チャットウィンドウを閉じる",
+  progress_collapse: "進捗ウィジェットを折りたたむ",
 };

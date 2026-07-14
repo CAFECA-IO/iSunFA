@@ -78,4 +78,5 @@ export const carbonChatbot = {
   report_button: "Report",
   close_report: "Close report",
   close_chat: "Close chat window",
+  progress_collapse: "Collapse progress widget",
 };

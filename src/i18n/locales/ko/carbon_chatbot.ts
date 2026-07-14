@@ -78,4 +78,5 @@ export const carbonChatbot = {
   report_button: "보고서",
   close_report: "보고서 닫기",
   close_chat: "채팅 창 닫기",
+  progress_collapse: "진행률 위젯 접기",
 };
