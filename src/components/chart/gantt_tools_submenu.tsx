@@ -23,6 +23,7 @@ import {
   MERMAID_SUBMIT_BUTTON_STYLE,
 } from "@/constants/mermaid_chart";
 import { SegmentedControl } from "@/components/chart/mermaid_common_components";
+import { useDecimalInput } from "@/hooks/use_decimal_input";
 
 // ==========================================
 // Info: (20260707 - Julian) 定義與靜態映射表
@@ -172,11 +173,12 @@ const AddTaskPanel: FC<IBasePanelProps> = ({
   const [ganttStartDate, setGanttStartDate] = useState<string>("");
   const [ganttEndDate, setGanttEndDate] = useState<string>("");
   const [ganttPredecessor, setGanttPredecessor] = useState<string>("");
-  const [ganttDuration, setGanttDuration] = useState<string>("");
   const [ganttTaskType, setGanttTaskType] = useState<TaskType>(TaskType.ACTIVE);
-
   const [startMode, setStartMode] = useState<StartMode>(StartMode.DATE);
   const [endMode, setEndMode] = useState<EndMode>(EndMode.DATE);
+
+  // Info: (20260714 - Julian) 工期天數：只允許數字與小數點
+  const ganttDuration = useDecimalInput();
 
   const isMilestone = ganttTaskType === TaskType.MILESTONE;
 
@@ -185,7 +187,7 @@ const AddTaskPanel: FC<IBasePanelProps> = ({
     (startMode === StartMode.DATE && !ganttStartDate) ||
     (startMode === StartMode.PREDECESSOR && !ganttPredecessor) ||
     (!isMilestone && endMode === EndMode.DATE && !ganttEndDate) ||
-    (!isMilestone && endMode === EndMode.DURATION && !ganttDuration);
+    (!isMilestone && endMode === EndMode.DURATION && !ganttDuration.value);
 
   const handleSubmit = () => {
     if (submitDisabled) return;
@@ -195,7 +197,7 @@ const AddTaskPanel: FC<IBasePanelProps> = ({
         ? `after ${ganttPredecessor}`
         : ganttStartDate;
     const end =
-      endMode === EndMode.DURATION ? `${ganttDuration}d` : ganttEndDate;
+      endMode === EndMode.DURATION ? `${ganttDuration.value}d` : ganttEndDate;
 
     onAddAction({
       id: crypto.randomUUID(),
@@ -318,7 +320,7 @@ const AddTaskPanel: FC<IBasePanelProps> = ({
                 value={endMode}
                 onChange={(val) => {
                   setEndMode(val as EndMode);
-                  if (val === EndMode.DATE) setGanttDuration("");
+                  if (val === EndMode.DATE) ganttDuration.setValue("");
                   else setGanttEndDate("");
                 }}
                 options={[
@@ -345,10 +347,10 @@ const AddTaskPanel: FC<IBasePanelProps> = ({
             ) : (
               <input
                 id="ganttDuration"
-                type="number"
-                min="1"
-                value={ganttDuration}
-                onChange={(e) => setGanttDuration(e.target.value)}
+                type="text"
+                inputMode="numeric"
+                value={ganttDuration.value}
+                onChange={ganttDuration.onChange}
                 className={MERMAID_INPUT_STYLE}
                 placeholder={
                   t("chart.mermaid.ai_editor.gantt.duration_placeholder")!
@@ -366,7 +368,7 @@ const AddTaskPanel: FC<IBasePanelProps> = ({
           setGanttTaskType(val as TaskType);
           if (val === TaskType.MILESTONE) {
             setGanttEndDate("");
-            setGanttDuration("");
+            ganttDuration.setValue("");
           }
         }}
       />
@@ -395,10 +397,11 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
   const [ganttStartDate, setGanttStartDate] = useState<string>("");
   const [ganttEndDate, setGanttEndDate] = useState<string>("");
   const [ganttPredecessor, setGanttPredecessor] = useState<string>("");
-  const [ganttDuration, setGanttDuration] = useState<string>("");
-
   const [startMode, setStartMode] = useState<"date" | "predecessor">("date");
   const [endMode, setEndMode] = useState<"date" | "duration">("date");
+
+  // Info: (20260714 - Julian) 工期天數：只允許數字與小數點
+  const ganttDuration = useDecimalInput();
 
   const submitDisabled =
     !ganttTaskTarget ||
@@ -408,14 +411,14 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
       !ganttEndDate &&
       !ganttNewLabel &&
       !ganttNewSection &&
-      !ganttDuration) ||
+      !ganttDuration.value) ||
     (startMode === "predecessor" &&
       !ganttPredecessor &&
       endMode === "date" &&
       !ganttEndDate &&
       !ganttNewLabel &&
       !ganttNewSection &&
-      !ganttDuration);
+      !ganttDuration.value);
 
   const handleSubmit = () => {
     if (submitDisabled) return;
@@ -430,8 +433,8 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
         ? `after ${ganttPredecessor}`
         : ganttStartDate || targetItem.start;
     const end =
-      endMode === "duration" && ganttDuration
-        ? `${ganttDuration}d`
+      endMode === "duration" && ganttDuration.value
+        ? `${ganttDuration.value}d`
         : ganttEndDate || targetItem.end;
 
     onAddAction({
@@ -604,7 +607,7 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
               value={endMode}
               onChange={(val) => {
                 setEndMode(val as EndMode);
-                if (val === EndMode.DATE) setGanttDuration("");
+                if (val === EndMode.DATE) ganttDuration.setValue("");
                 else setGanttEndDate("");
               }}
               options={[
@@ -630,11 +633,11 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
             />
           ) : (
             <input
-              type="number"
-              min="1"
-              value={ganttDuration}
+              type="text"
+              inputMode="numeric"
+              value={ganttDuration.value}
               disabled={!isTargetSelected}
-              onChange={(e) => setGanttDuration(e.target.value)}
+              onChange={ganttDuration.onChange}
               className={MERMAID_INPUT_STYLE}
               placeholder={
                 t("chart.mermaid.ai_editor.gantt.duration_placeholder")!
