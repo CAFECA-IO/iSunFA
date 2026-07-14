@@ -66,10 +66,14 @@ export const CARBON_INVENTORY_STATE_VERSION = 1;
 // Info: (20260713 - Tzuhan) 行動版斷點判斷(對齊 Tailwind xl = 1280px):< xl 時目錄/報告採獨占畫面呈現
 export const MOBILE_MEDIA_QUERY = "(max-width: 1279px)";
 
-// Info: (20260714 - Emily) 聊天附件限制:允許的 MIME 白名單(佐證資料常見格式)、單檔大小上限與單則訊息附件數上限
+// Info: (20260714 - Emily) 聊天附件限制:允許的 MIME 白名單(佐證資料常見格式,影像比照 FaithAgent 放寬)、單檔大小上限與單則附件數上限
 export const CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES = [
   "image/png",
   "image/jpeg",
+  "image/webp",
+  "image/gif",
+  "image/heic",
+  "image/heif",
   "application/pdf",
   "text/csv",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -78,8 +82,12 @@ export const CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES = [
 export type CarbonChatAttachmentMimeType =
   (typeof CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES)[number];
 
-export const CARBON_CHAT_MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+// Info: (20260714 - Emily) 比照 FaithAgent 不擋一般大檔;50MB 為保護記憶體的軟上限(JSON base64 傳輸)
+export const CARBON_CHAT_MAX_ATTACHMENT_BYTES = 50 * 1024 * 1024;
 export const CARBON_CHAT_MAX_ATTACHMENTS_PER_MESSAGE = 5;
+
+// Info: (20260714 - Emily) Gemini inlineData 單請求約 20MB 上限;超過此安全值的附件直接走降級(不送必失敗的萃取呼叫)
+export const CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES = 14 * 1024 * 1024;
 
 // Info: (20260714 - Emily) file input 的 accept 屬性(與 MIME 白名單同步)
 export const CARBON_CHAT_ATTACHMENT_ACCEPT =

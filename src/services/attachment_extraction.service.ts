@@ -11,6 +11,7 @@ import { CARBON_REPORT_OUTLINE } from "@/constants/carbon_report_outline";
 import {
   CARBON_ATTACHMENT_PIPELINE_MAX_PARAGRAPHS,
   CARBON_ATTACHMENT_FALLBACK_PARAGRAPH_ID,
+  CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES,
 } from "@/constants/carbon_chatbot";
 import { CarbonAttachmentExtractionLlmOutputSchema } from "@/validators";
 import type { CarbonChatAttachmentPayload } from "@/validators";
@@ -181,6 +182,18 @@ ${OUTLINE_CATALOG}
 
     // Info: (20260714 - Emily) 逐附件循序處理,維持結果順序可預期(demo 附件數上限 5,延遲可接受)
     for (const attachment of input.attachments) {
+      // Info: (20260714 - Emily) 決定性防線:超過 Gemini inline 安全值的大檔直接降級,不送必失敗的萃取呼叫
+      const approxBytes = Math.floor((attachment.data.length * 3) / 4);
+      if (approxBytes > CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES) {
+        degraded = true;
+        allFacts.push({
+          label: "上傳檔案",
+          value: attachment.name,
+          source: attachment.name,
+        });
+        pushId(CARBON_ATTACHMENT_FALLBACK_PARAGRAPH_ID);
+        continue;
+      }
       try {
         const extraction = await this.extractFactsFromAttachment(attachment);
         allFacts.push(...extraction.facts);
