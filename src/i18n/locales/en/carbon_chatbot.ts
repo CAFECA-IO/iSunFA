@@ -63,6 +63,8 @@ export const carbonChatbot = {
     "Unsupported file type: {{name}} (only PNG, JPG, PDF, CSV, XLSX are accepted)",
   attachment_too_large: "File too large: {{name}} (max {{max}} per file)",
   attachment_limit: "Up to {{max}} attachments per message",
+  attachment_upload_failed:
+    "Attachment upload failed: {{name}}; remove it and try again",
   draft_generate: "Draft this section with AI",
   draft_generating: "Generating draft...",
   draft_failed:

@@ -59,6 +59,7 @@ export const carbonChatbot = {
   attachment_invalid_type: "不支援的檔案類型:{{name}}(僅接受 PNG、JPG、PDF、CSV、XLSX)",
   attachment_too_large: "檔案過大:{{name}}(單檔上限 {{max}})",
   attachment_limit: "一則訊息最多附加 {{max}} 個檔案",
+  attachment_upload_failed: "附件上傳失敗:{{name}},請移除後重試",
   draft_generate: "AI 撰寫此段草稿",
   draft_generating: "草稿生成中...",
   draft_failed:

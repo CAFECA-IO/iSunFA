@@ -25,7 +25,7 @@ export interface IAttachment {
   cid?: string;
 }
 
-// Info: (20260714 - Emily) 待送出附件(ChatInput 暫存):base64 內容僅存於記憶體,送出後即清除
+// Info: (20260714 - Emily) 待送出附件(ChatInput 暫存):選檔即上傳 Laria,READY 時持有 cid;送出訊息只帶 metadata
 export enum PendingAttachmentStatusEnum {
   READING = "reading",
   READY = "ready",
@@ -37,7 +37,7 @@ export interface IPendingAttachment {
   name: string;
   size: string;
   mimeType: string;
-  data: string;
+  cid: string;
   status: PendingAttachmentStatusEnum;
 }
 

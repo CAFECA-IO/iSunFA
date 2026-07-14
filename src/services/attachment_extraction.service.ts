@@ -5,7 +5,7 @@
 import { SchemaType, type Schema } from "@google/generative-ai";
 import { ChatService } from "@/services/chat.service";
 import { ParagraphDraftService } from "@/services/paragraph_draft.service";
-import { storageService } from "@/services/storage.service";
+import { storageService, StorageService } from "@/services/storage.service";
 import { IAttachment } from "@/types/carbon_chatbot.types";
 import { CARBON_REPORT_OUTLINE } from "@/constants/carbon_report_outline";
 import {
@@ -14,7 +14,6 @@ import {
   CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES,
 } from "@/constants/carbon_chatbot";
 import { CarbonAttachmentExtractionLlmOutputSchema } from "@/validators";
-import type { CarbonChatAttachmentPayload } from "@/validators";
 import {
   IAttachmentExtraction,
   IAttachmentPipelineResult,
@@ -71,22 +70,33 @@ const EXTRACTION_RESPONSE_SCHEMA: Schema = {
 };
 
 interface IPipelineInput {
-  attachments: CarbonChatAttachmentPayload[];
+  // Info: (20260714 - Emily) 附件為 metadata+cid(檔案已於選檔時上傳 Laria);內容由管線經 recoverLaria 取回
+  attachments: IAttachment[];
   conversationContext: IParagraphDraftInput["conversationContext"];
   language?: string;
+}
+
+// Info: (20260714 - Emily) 萃取來源:自 Laria 取回後的檔案內容(base64)
+interface IExtractionSource {
+  name: string;
+  mimeType: string;
+  data: string;
 }
 
 export class AttachmentExtractionService {
   // Info: (20260714 - Emily) 依賴延遲建立(避免 import 階段因缺 API Key 拋錯),測試時可注入 mock
   private readonly injectedChatService?: ChatService;
   private readonly injectedDraftService?: ParagraphDraftService;
+  private readonly injectedStorageService?: StorageService;
 
   constructor(
     chatService?: ChatService,
     paragraphDraftService?: ParagraphDraftService,
+    injectedStorageService?: StorageService,
   ) {
     this.injectedChatService = chatService;
     this.injectedDraftService = paragraphDraftService;
+    this.injectedStorageService = injectedStorageService;
   }
 
   private getChatService(): ChatService {
@@ -97,38 +107,13 @@ export class AttachmentExtractionService {
     return this.injectedDraftService ?? new ParagraphDraftService();
   }
 
-  // Info: (20260714 - Emily) 附件持久化:比照 issue/mission 服務以 storageService.uploadLaria 分片入庫,回傳含 cid 的 metadata
-  // Info: (20260714 - Emily) 失敗為 best-effort(cid 缺席不阻斷訊息流程);之後可經 recoverLaria(cid) 取回原檔
-  async persistAttachments(
-    attachments: CarbonChatAttachmentPayload[],
-  ): Promise<IAttachment[]> {
-    return Promise.all(
-      attachments.map(async (attachment) => {
-        const metadata: IAttachment = {
-          name: attachment.name,
-          size: attachment.size,
-          mimeType: attachment.mimeType,
-        };
-        try {
-          const buffer = Buffer.from(attachment.data, "base64");
-          const file = new globalThis.File([buffer], attachment.name, {
-            type: attachment.mimeType,
-          });
-          metadata.cid = await storageService.uploadLaria(file);
-        } catch (error) {
-          console.error(
-            `[AttachmentExtractionService] laria upload failed for ${attachment.name}:`,
-            error,
-          );
-        }
-        return metadata;
-      }),
-    );
+  private getStorageService(): StorageService {
+    return this.injectedStorageService ?? storageService;
   }
 
   // Info: (20260714 - Emily) 單一附件萃取:失敗直接拋錯,由管線層決定降級
   async extractFactsFromAttachment(
-    attachment: CarbonChatAttachmentPayload,
+    attachment: IExtractionSource,
   ): Promise<IAttachmentExtraction> {
     const prompt = `你是一位專業碳會計師的資料萃取助手。請閱讀附件(檔名: ${attachment.name}),萃取與溫室氣體盤查相關的事實。
 
@@ -180,22 +165,46 @@ ${OUTLINE_CATALOG}
       if (!orderedIds.includes(id)) orderedIds.push(id);
     };
 
+    // Info: (20260714 - Emily) 降級共用:以檔名為事實 + 預設段落,不中斷 demo
+    const degradeWithFilename = (name: string) => {
+      degraded = true;
+      allFacts.push({ label: "上傳檔案", value: name, source: name });
+      pushId(CARBON_ATTACHMENT_FALLBACK_PARAGRAPH_ID);
+    };
+
     // Info: (20260714 - Emily) 逐附件循序處理,維持結果順序可預期(demo 附件數上限 5,延遲可接受)
     for (const attachment of input.attachments) {
-      // Info: (20260714 - Emily) 決定性防線:超過 Gemini inline 安全值的大檔直接降級,不送必失敗的萃取呼叫
-      const approxBytes = Math.floor((attachment.data.length * 3) / 4);
-      if (approxBytes > CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES) {
-        degraded = true;
-        allFacts.push({
-          label: "上傳檔案",
-          value: attachment.name,
-          source: attachment.name,
-        });
-        pushId(CARBON_ATTACHMENT_FALLBACK_PARAGRAPH_ID);
+      // Info: (20260714 - Emily) 無 cid(上傳失敗的殘留)直接降級
+      if (!attachment.cid) {
+        degradeWithFilename(attachment.name);
         continue;
       }
+
+      // Info: (20260714 - Emily) 自 Laria 取回原檔;取回失敗降級
+      let buffer: Buffer;
       try {
-        const extraction = await this.extractFactsFromAttachment(attachment);
+        buffer = await this.getStorageService().recoverLaria(attachment.cid);
+      } catch (error) {
+        console.error(
+          `[AttachmentExtractionService] laria recover failed for ${attachment.name}:`,
+          error,
+        );
+        degradeWithFilename(attachment.name);
+        continue;
+      }
+
+      // Info: (20260714 - Emily) 決定性防線:超過 Gemini inline 安全值的大檔直接降級,不送必失敗的萃取呼叫
+      if (buffer.length > CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES) {
+        degradeWithFilename(attachment.name);
+        continue;
+      }
+
+      try {
+        const extraction = await this.extractFactsFromAttachment({
+          name: attachment.name,
+          mimeType: attachment.mimeType ?? "application/octet-stream",
+          data: buffer.toString("base64"),
+        });
         allFacts.push(...extraction.facts);
 
         if (
@@ -209,18 +218,12 @@ ${OUTLINE_CATALOG}
           extraction.suggestedParagraphIds.forEach(pushId);
         }
       } catch (error) {
-        // Info: (20260714 - Emily) 解析失敗(如 Gemini 斷線、不支援格式):以檔名為事實降級生成,不中斷 demo
+        // Info: (20260714 - Emily) 解析失敗(如 Gemini 斷線、不支援格式):降級生成
         console.error(
           `[AttachmentExtractionService] extraction failed for ${attachment.name}:`,
           error,
         );
-        degraded = true;
-        allFacts.push({
-          label: "上傳檔案",
-          value: attachment.name,
-          source: attachment.name,
-        });
-        pushId(CARBON_ATTACHMENT_FALLBACK_PARAGRAPH_ID);
+        degradeWithFilename(attachment.name);
       }
     }
 

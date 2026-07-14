@@ -4,20 +4,14 @@ import { z } from "zod";
 import {
   CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES,
   CARBON_CHAT_MAX_ATTACHMENTS_PER_MESSAGE,
-  CARBON_CHAT_MAX_ATTACHMENT_BYTES,
 } from "@/constants/carbon_chatbot";
-
-// Info: (20260714 - Emily) base64 膨脹係數約 4/3,再留緩衝;超過即拒收(Fail Fast,不讓超大 payload 進服務層)
-const MAX_ATTACHMENT_BASE64_LENGTH = Math.ceil(
-  (CARBON_CHAT_MAX_ATTACHMENT_BYTES * 4) / 3 + 1024,
-);
 
 export const CarbonChatAttachmentSchema = z.object({
   name: z.string().min(1).max(255),
   size: z.string().min(1).max(20),
   mimeType: z.enum(CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES),
-  // Info: (20260714 - Emily) base64 檔案內容:僅供 AI 萃取管線即時使用,不入庫
-  data: z.string().min(1).max(MAX_ATTACHMENT_BASE64_LENGTH),
+  // Info: (20260714 - Emily) Laria metadata hash:檔案已於選檔時上傳,訊息只帶引用;內容由管線經 recoverLaria 取回
+  cid: z.string().min(1).max(200),
 });
 
 export type CarbonChatAttachmentPayload = z.infer<

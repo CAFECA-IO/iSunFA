@@ -1,0 +1,52 @@
+// Info: (20260714 - Emily) 聊天附件上傳端點:multipart 收檔 → Laria 分片持久化 → 回傳 cid
+// Info: (20260714 - Emily) 取代 base64-in-JSON 傳輸(大檔會撐爆請求 body);訊息只帶 metadata+cid,內容由管線經 recoverLaria 取回
+
+import { NextRequest } from "next/server";
+import { getIdentityFromDeWT } from "@/lib/auth/dewt";
+import { jsonOk, jsonFail } from "@/lib/utils/response";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { storageService } from "@/services/storage.service";
+import { formatFileSize } from "@/lib/utils/common";
+import {
+  CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES,
+  CARBON_CHAT_MAX_ATTACHMENT_BYTES,
+} from "@/constants/carbon_chatbot";
+
+export async function POST(request: NextRequest) {
+  try {
+    const sessionUser = await getIdentityFromDeWT(
+      request.headers.get("Authorization"),
+    );
+    if (!sessionUser) {
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
+    }
+
+    const formData = await request.formData();
+    const file = formData.get("file");
+    if (!(file instanceof File)) {
+      return jsonFail(API_ERRORS.VA_NO_FILE_UPLOADED);
+    }
+
+    // Info: (20260714 - Emily) 服務端複驗(前端 Fail Fast 之外的防線):MIME 白名單與大小上限
+    const allowedMimeTypes: readonly string[] =
+      CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES;
+    if (!allowedMimeTypes.includes(file.type)) {
+      return jsonFail(API_ERRORS.VA_INVALID_DOCUMENT_TYPE);
+    }
+    if (file.size > CARBON_CHAT_MAX_ATTACHMENT_BYTES) {
+      return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
+    }
+
+    const cid = await storageService.uploadLaria(file);
+
+    return jsonOk({
+      name: file.name,
+      size: formatFileSize(file.size),
+      mimeType: file.type,
+      cid,
+    });
+  } catch (error) {
+    console.error("[API] /chat/carbon/attachment POST error:", error);
+    return jsonFail(API_ERRORS.IS_UPLOAD_FAILED);
+  }
+}

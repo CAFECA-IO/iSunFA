@@ -115,22 +115,18 @@ export async function POST(request: NextRequest) {
         text: item.text,
       }));
 
-    // Info: (20260714 - Emily) 附件→段落管線:萃取事實 → 白名單裁決段落 → 生成草稿(真 Gemini + graceful fallback)
-    // Info: (20260714 - Emily) 附件同時以 Laria 分片持久化(uploadLaria → cid),與萃取並行,失敗不阻斷
+    // Info: (20260714 - Emily) 附件→段落管線:附件已於選檔時上傳 Laria(僅帶 metadata+cid),
+    // Info: (20260714 - Emily) 管線經 recoverLaria 取回內容 → 萃取 → 白名單裁決 → 生成草稿(graceful fallback)
     let drafts: IParagraphDraft[] = [];
     let degraded = false;
-    let attachmentsMeta: IAttachment[] | undefined;
+    const attachmentsMeta: IAttachment[] | undefined = attachments;
     if (attachments && attachments.length > 0) {
       const pipeline = new AttachmentExtractionService();
-      const [persisted, result] = await Promise.all([
-        pipeline.persistAttachments(attachments),
-        pipeline.runAttachmentToParagraphPipeline({
-          attachments,
-          conversationContext,
-          language,
-        }),
-      ]);
-      attachmentsMeta = persisted;
+      const result = await pipeline.runAttachmentToParagraphPipeline({
+        attachments,
+        conversationContext,
+        language,
+      });
       drafts = result.drafts;
       degraded = result.degraded;
     }
@@ -174,7 +170,7 @@ export async function POST(request: NextRequest) {
           recipientPublicKey,
           text: lastUserMessage?.text ?? "",
           purpose: CARBON_CHAT_PURPOSE,
-          // Info: (20260714 - Emily) 入庫 metadata(name/size/mimeType/cid);原檔已由 Laria 分片保存,可經 cid 取回
+          // Info: (20260714 - Emily) 入庫 metadata(name/size/mimeType/cid);原檔已於選檔時由 Laria 分片保存
           attachments: attachmentsMeta,
         });
       }

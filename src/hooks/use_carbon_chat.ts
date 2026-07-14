@@ -11,7 +11,6 @@ import {
   IPendingAttachment,
   PendingAttachmentStatusEnum,
 } from "@/types/carbon_chatbot.types";
-import { fileToBase64 } from "@/lib/file_operator";
 import { formatFileSize } from "@/lib/utils/common";
 import {
   CARBON_REPORT_OUTLINE,
@@ -830,29 +829,43 @@ export const useCarbonChat = () => {
             name: file.name,
             size: formatFileSize(file.size),
             mimeType: file.type,
-            data: "",
+            cid: "",
             status: PendingAttachmentStatusEnum.READING,
           },
         ]);
 
-        // Info: (20260714 - Emily) base64 轉換為非同步;完成前 chip 顯示讀取中,失敗標記錯誤但不阻塞其他附件
-        fileToBase64(file)
-          .then((data) => {
+        // Info: (20260714 - Emily) 選檔即以 multipart 上傳(server 端 Laria 分片持久化取得 cid);
+        // Info: (20260714 - Emily) 訊息送出只帶 metadata+cid,避免大檔 base64 撐爆 JSON body
+        const formData = new FormData();
+        formData.append("file", file);
+        request<{ payload: { cid: string } | null }>(
+          "/api/v1/chat/carbon/attachment",
+          { method: "POST", body: formData },
+        )
+          .then((res) => {
+            const cid = res.payload?.cid;
+            if (!cid) throw new Error("Empty attachment upload payload");
             setPendingAttachments((prev) =>
               prev.map((a) =>
                 a.id === attachmentId
-                  ? { ...a, data, status: PendingAttachmentStatusEnum.READY }
+                  ? { ...a, cid, status: PendingAttachmentStatusEnum.READY }
                   : a,
               ),
             );
           })
-          .catch(() => {
+          .catch((error) => {
+            console.error("[carbon-chat] attachment upload failed:", error);
             setPendingAttachments((prev) =>
               prev.map((a) =>
                 a.id === attachmentId
                   ? { ...a, status: PendingAttachmentStatusEnum.ERROR }
                   : a,
               ),
+            );
+            setAttachmentError(
+              t("carbon_chatbot.attachment_upload_failed", {
+                name: file.name,
+              }),
             );
           });
       });
@@ -905,11 +918,12 @@ export const useCarbonChat = () => {
       return;
     }
 
-    // Info: (20260714 - Emily) 附件 metadata 隨訊息顯示與入庫;base64 內容僅隨請求送 AI 管線,不入 UI 狀態
+    // Info: (20260714 - Emily) 附件已於選檔時上傳 Laria;訊息只帶 metadata+cid(內容由後端管線經 recoverLaria 取回)
     const attachmentsMeta: IAttachment[] = readyAttachments.map((a) => ({
       name: a.name,
       size: a.size,
       mimeType: a.mimeType,
+      cid: a.cid,
     }));
 
     const userMessage: IChatMessage = {
@@ -983,16 +997,9 @@ export const useCarbonChat = () => {
           language,
           channel: chatChannel,
           recipientPublicKey: masterKey.extendedPublicKey,
-          // Info: (20260714 - Emily) 附件含 base64 內容:後端僅記錄 metadata,內容供 AI 萃取管線即時使用
-          ...(readyAttachments.length > 0
-            ? {
-                attachments: readyAttachments.map((a) => ({
-                  name: a.name,
-                  size: a.size,
-                  mimeType: a.mimeType,
-                  data: a.data,
-                })),
-              }
+          // Info: (20260714 - Emily) 附件只帶 metadata+cid(檔案已在 Laria);請求 body 維持輕量
+          ...(attachmentsMeta.length > 0
+            ? { attachments: attachmentsMeta }
             : {}),
         }),
       });

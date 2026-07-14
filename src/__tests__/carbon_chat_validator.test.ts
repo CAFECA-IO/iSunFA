@@ -15,7 +15,7 @@ const validAttachment = {
   name: "electricity_bill.pdf",
   size: "1.2 MB",
   mimeType: "application/pdf",
-  data: "JVBERi0xLjQKJcOkw7zDtsOf",
+  cid: "cid-metadata-hash",
 };
 
 describe("CarbonChatAttachmentSchema", () => {
@@ -33,10 +33,10 @@ describe("CarbonChatAttachmentSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("should reject empty base64 data", () => {
+  it("should reject an empty cid", () => {
     const result = CarbonChatAttachmentSchema.safeParse({
       ...validAttachment,
-      data: "",
+      cid: "",
     });
     expect(result.success).toBe(false);
   });
