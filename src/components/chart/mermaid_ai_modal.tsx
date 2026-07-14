@@ -10,19 +10,14 @@ import { MermaidChartType } from "@/constants/mermaid_chart";
 import {
   IChartAction,
   MermaidActionType,
-  applyGanttAction,
-  applyPieAction,
-  applyFlowchartAction,
-  applyXYChartAction,
-  applySankeyAction,
+  applyChartAction,
   parseFlowchartNodes,
   parsePieItems,
   parseGanttItems,
   parsePieData,
   parseXYChartData,
-  getChartTitle,
-  updateChartTitle,
   parseSankeyData,
+  getChartTitle,
 } from "@/lib/utils/mermaid_helpers";
 import ConfirmModal from "@/components/common/confirm_modal";
 
@@ -57,31 +52,40 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
 
   const [isShowWarning, setIsShowWarning] = useState<boolean>(false);
 
-  // Info: (20260708 - Julian) 當內部基底改變時，重新解析元數據供工具選單使用
-  const currentParsedNodes = useMemo(
-    () => parseFlowchartNodes(internalBaseChart),
-    [internalBaseChart],
-  );
-  const currentParsedPieItems = useMemo(
-    () => parsePieItems(internalBaseChart),
-    [internalBaseChart],
-  );
-  const currentParsedGanttItems = useMemo(
-    () => parseGanttItems(internalBaseChart),
-    [internalBaseChart],
-  );
-  const currentParsedPieData = useMemo(
-    () => parsePieData(internalBaseChart),
-    [internalBaseChart],
-  );
-  const currentParsedXYChartData = useMemo(
-    () => parseXYChartData(internalBaseChart),
-    [internalBaseChart],
-  );
-  const currentParsedSankeyData = useMemo(
-    () => parseSankeyData(internalBaseChart),
-    [internalBaseChart],
-  );
+  // Info: (20260714 - Julian) 依 chartType 只解析當前類型所需的元數據，避免每次都全跑六種 parser
+  const parsedMeta = useMemo(() => {
+    const meta = {
+      nodes: [] as ReturnType<typeof parseFlowchartNodes>,
+      pieItems: [] as ReturnType<typeof parsePieItems>,
+      ganttItems: [] as ReturnType<typeof parseGanttItems>,
+      pieData: null as ReturnType<typeof parsePieData>,
+      xyChartData: null as ReturnType<typeof parseXYChartData>,
+      sankeyData: null as ReturnType<typeof parseSankeyData>,
+    };
+
+    switch (chartType) {
+      case MermaidChartType.FLOWCHART:
+        meta.nodes = parseFlowchartNodes(internalBaseChart);
+        break;
+      case MermaidChartType.PIE:
+        meta.pieItems = parsePieItems(internalBaseChart);
+        meta.pieData = parsePieData(internalBaseChart);
+        break;
+      case MermaidChartType.GANTT:
+        meta.ganttItems = parseGanttItems(internalBaseChart);
+        break;
+      case MermaidChartType.XYCHART:
+        meta.xyChartData = parseXYChartData(internalBaseChart);
+        break;
+      case MermaidChartType.SANKEY:
+        meta.sankeyData = parseSankeyData(internalBaseChart);
+        break;
+      default:
+        break;
+    }
+
+    return meta;
+  }, [internalBaseChart, chartType]);
 
   // Info: (20260709 - Julian) 計算當前圖表標題
   const currentTitle = useMemo(() => {
@@ -98,25 +102,14 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
   }, [internalBaseChart, pendingActions]);
 
   // Info: (20260708 - Julian) 根據目前的 pendingActions 計算修改後的圖表
-  const currentModifiedChart = useMemo(() => {
-    let result = internalBaseChart;
-    pendingActions.forEach((action) => {
-      if (action.type === MermaidActionType.CHANGE_TITLE) {
-        result = updateChartTitle(result, action.payload.title);
-      } else if (chartType === MermaidChartType.GANTT) {
-        result = applyGanttAction(result, action);
-      } else if (chartType === MermaidChartType.PIE) {
-        result = applyPieAction(result, action);
-      } else if (chartType === MermaidChartType.FLOWCHART) {
-        result = applyFlowchartAction(result, action);
-      } else if (chartType === MermaidChartType.XYCHART) {
-        result = applyXYChartAction(result, action);
-      } else if (chartType === MermaidChartType.SANKEY) {
-        result = applySankeyAction(result, action);
-      }
-    });
-    return result;
-  }, [internalBaseChart, pendingActions, chartType]);
+  const currentModifiedChart = useMemo(
+    () =>
+      pendingActions.reduce(
+        (result, action) => applyChartAction(chartType, result, action),
+        internalBaseChart,
+      ),
+    [internalBaseChart, pendingActions, chartType],
+  );
 
   // Info: (20260714 - Julian) 是否有未儲存的變更（有結構化動作，或 AI 已改動基底）
   const isDirty =
@@ -246,11 +239,11 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
           chartType={chartType}
           aiInstruction={aiInstruction}
           setAiInstruction={setAiInstruction}
-          parsedNodes={currentParsedNodes}
-          parsedPieItems={currentParsedPieItems}
-          parsedGanttItems={currentParsedGanttItems}
-          parsedXYChartData={currentParsedXYChartData}
-          parsedSankeyData={currentParsedSankeyData}
+          parsedNodes={parsedMeta.nodes}
+          parsedPieItems={parsedMeta.pieItems}
+          parsedGanttItems={parsedMeta.ganttItems}
+          parsedXYChartData={parsedMeta.xyChartData}
+          parsedSankeyData={parsedMeta.sankeyData}
           pendingActions={pendingActions}
           onAddAction={handleAddAction}
           onRemoveAction={handleRemoveAction}
@@ -259,7 +252,7 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
         />
         <MermaidAiPreviewPanel
           svgStr={svgStr}
-          parsedPieData={currentParsedPieData || initialParsedPieData}
+          parsedPieData={parsedMeta.pieData || initialParsedPieData}
           aiInstruction={aiInstruction}
           isGenerating={isGenerating}
           newChartPreview={currentModifiedChart}

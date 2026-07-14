@@ -1419,3 +1419,34 @@ const getSankeyLineFields = (rawLine: string): string[] | null => {
   }
   return fields;
 };
+
+/**
+ * Info: (20260714 - Julian)
+ * 統一的圖表動作分派器：依 chartType 將單一 IChartAction 套用到圖表字串。
+ * CHANGE_TITLE 為跨圖表類型共用動作，優先處理；未知類型則原樣返回。
+ */
+export const applyChartAction = (
+  chartType: MermaidChartType,
+  chartStr: string,
+  action: IChartAction,
+): string => {
+  // Info: (20260714 - Julian) 標題變更不分圖表類型，統一處理
+  if (action.type === MermaidActionType.CHANGE_TITLE) {
+    return updateChartTitle(chartStr, action.payload.title);
+  }
+
+  switch (chartType) {
+    case MermaidChartType.GANTT:
+      return applyGanttAction(chartStr, action);
+    case MermaidChartType.PIE:
+      return applyPieAction(chartStr, action);
+    case MermaidChartType.FLOWCHART:
+      return applyFlowchartAction(chartStr, action);
+    case MermaidChartType.XYCHART:
+      return applyXYChartAction(chartStr, action);
+    case MermaidChartType.SANKEY:
+      return applySankeyAction(chartStr, action);
+    default:
+      return chartStr;
+  }
+};
