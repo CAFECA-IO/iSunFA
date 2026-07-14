@@ -56,6 +56,11 @@ export enum MermaidActionType {
   XYCHART_CHANGE_LINE_SERIES = "XYCHART_CHANGE_LINE_SERIES",
   XYCHART_CHANGE_BAR_SERIES = "XYCHART_CHANGE_BAR_SERIES",
   XYCHART_DELETE_SERIES = "XYCHART_DELETE_SERIES",
+  SANKEY_ADD_LINK = "SANKEY_ADD_LINK",
+  SANKEY_EDIT_LINK = "SANKEY_EDIT_LINK",
+  SANKEY_REVERSE_FLOW = "SANKEY_REVERSE_FLOW",
+  SANKEY_RENAME_NODE = "SANKEY_RENAME_NODE",
+  SANKEY_DELETE_LINK = "SANKEY_DELETE_LINK",
 }
 
 /**
@@ -193,6 +198,36 @@ export type IChartAction = {
       type: MermaidActionType.FLOWCHART_CHANGE_DIRECTION;
       payload: { direction: string };
     }
+  | {
+      // Info: (20260714 - Julian) 新增流向（來源、目標、權重）
+      type: MermaidActionType.SANKEY_ADD_LINK;
+      payload: { source: string; target: string; value: number };
+    }
+  | {
+      // Info: (20260714 - Julian) 編輯流向：以 lineIndex 定位，覆寫來源/目標/權重
+      type: MermaidActionType.SANKEY_EDIT_LINK;
+      payload: {
+        lineIndex: number;
+        source: string;
+        target: string;
+        value: number;
+      };
+    }
+  | {
+      // Info: (20260714 - Julian) 反轉流向：交換來源與目標
+      type: MermaidActionType.SANKEY_REVERSE_FLOW;
+      payload: { lineIndex: number };
+    }
+  | {
+      // Info: (20260714 - Julian) 變更節點名稱：更新所有含該節點的流向
+      type: MermaidActionType.SANKEY_RENAME_NODE;
+      payload: { oldName: string; newName: string };
+    }
+  | {
+      // Info: (20260714 - Julian) 刪除流向：以 lineIndex 定位
+      type: MermaidActionType.SANKEY_DELETE_LINK;
+      payload: { lineIndex: number };
+    }
 );
 /**
  * Info: (20260707 - Julian) 甘特圖資料項目介面
@@ -238,6 +273,24 @@ export interface IXYChartData {
 }
 
 /**
+ * Info: (20260713 - Julian) 桑基圖連結介面
+ */
+export interface ISankeyLink {
+  source: string;
+  target: string;
+  value: number;
+  lineIndex: number;
+}
+
+/**
+ * Info: (20260713 - Julian) 桑基圖結構介面
+ */
+export interface ISankeyData {
+  links: ISankeyLink[];
+  nodes: string[];
+}
+
+/**
  * Info: (20260624 - Julian)
  * 略過註解與 %%{init...}%% 設定區塊，判斷是否為圓餅圖
  */
@@ -256,7 +309,7 @@ export const isPieChart = (chartStr: string): boolean => {
 
 /**
  * Info: (20260624 - Julian)
- * 自動判別目前的圖表類型 (pie, flowchart, gantt, sequence, unknown)
+ * 自動判別圖表類型
  */
 export const detectChartType = (chartStr: string): MermaidChartType => {
   if (!chartStr || typeof chartStr !== "string")
@@ -271,8 +324,10 @@ export const detectChartType = (chartStr: string): MermaidChartType => {
     if (cleanLine.startsWith("flowchart") || cleanLine.startsWith("graph"))
       return MermaidChartType.FLOWCHART;
     if (cleanLine.startsWith("gantt")) return MermaidChartType.GANTT;
-    if (cleanLine.startsWith("xychart")) return MermaidChartType.XYCHART;
-    if (cleanLine.startsWith("sankey")) return MermaidChartType.SANKEY;
+    if (cleanLine.startsWith("xychart") || cleanLine.startsWith("xychart-beta"))
+      return MermaidChartType.XYCHART;
+    if (cleanLine.startsWith("sankey") || cleanLine.startsWith("sankey-beta"))
+      return MermaidChartType.SANKEY;
     if (cleanLine.startsWith("sequencediagram"))
       return MermaidChartType.SEQUENCE;
     break;
@@ -846,6 +901,95 @@ export const applyFlowchartAction = (
 };
 
 /**
+ * Info: (20260714 - Julian) 應用結構化編輯動作到桑基圖
+ * 說明：流向（link）以 parseSankeyLinks 產生的 lineIndex 定位，節點以名稱比對。
+ */
+export const applySankeyAction = (
+  chartStr: string,
+  action: IChartAction,
+): string => {
+  const lines = chartStr.split("\n");
+
+  switch (action.type) {
+    case MermaidActionType.SANKEY_ADD_LINK: {
+      // Info: (20260714 - Julian) 附加到最後，避免影響既有行的 lineIndex
+      const { source, target, value } = action.payload;
+      lines.push(buildSankeyLine(source, target, value));
+      break;
+    }
+
+    case MermaidActionType.SANKEY_EDIT_LINK: {
+      const { lineIndex, source, target, value } = action.payload;
+      if (
+        lineIndex >= 0 &&
+        lineIndex < lines.length &&
+        getSankeyLineFields(lines[lineIndex])
+      ) {
+        lines[lineIndex] = buildSankeyLine(source, target, value);
+      }
+      break;
+    }
+
+    case MermaidActionType.SANKEY_REVERSE_FLOW: {
+      const { lineIndex } = action.payload;
+      if (lineIndex >= 0 && lineIndex < lines.length) {
+        const fields = getSankeyLineFields(lines[lineIndex]);
+        if (fields) {
+          // Info: (20260714 - Julian) 交換來源與目標，權重不變
+          lines[lineIndex] = buildSankeyLine(
+            fields[1],
+            fields[0],
+            parseFloat(fields[2]),
+          );
+        }
+      }
+      break;
+    }
+
+    case MermaidActionType.SANKEY_RENAME_NODE: {
+      const { oldName, newName } = action.payload;
+      if (oldName && newName && oldName !== newName) {
+        lines.forEach((line, index) => {
+          const fields = getSankeyLineFields(line);
+          if (!fields) return;
+          let changed = false;
+          if (fields[0] === oldName) {
+            fields[0] = newName;
+            changed = true;
+          }
+          if (fields[1] === oldName) {
+            fields[1] = newName;
+            changed = true;
+          }
+          if (changed) {
+            lines[index] = buildSankeyLine(
+              fields[0],
+              fields[1],
+              parseFloat(fields[2]),
+            );
+          }
+        });
+      }
+      break;
+    }
+
+    case MermaidActionType.SANKEY_DELETE_LINK: {
+      const { lineIndex } = action.payload;
+      if (
+        lineIndex >= 0 &&
+        lineIndex < lines.length &&
+        getSankeyLineFields(lines[lineIndex])
+      ) {
+        lines.splice(lineIndex, 1);
+      }
+      break;
+    }
+  }
+
+  return lines.join("\n");
+};
+
+/**
  * Info: (20260709 - Julian)
  * 解析 [a, b, "c d"] 形式的數列
  */
@@ -1113,4 +1257,196 @@ export const applyXYChartAction = (
   }
 
   return lines.join("\n");
+};
+
+/**
+ * Info: (20260713 - Julian)
+ * 解析單行 Sankey CSV（支援 RFC 4180 引號與逗號）
+ */
+const parseSankeyCsvLine = (line: string): string[] => {
+  const fields: string[] = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === "," && !inQuotes) {
+      fields.push(current.trim());
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  fields.push(current.trim());
+  return fields;
+};
+
+/**
+ * Info: (20260713 - Julian)
+ * 判斷是否為 Sankey CSV 標題列
+ */
+const isSankeyHeaderRow = (fields: string[]): boolean => {
+  if (fields.length !== 3) return false;
+  const normalized = fields.map((f) => f.toLowerCase());
+  return (
+    normalized[0] === "source" &&
+    normalized[1] === "target" &&
+    normalized[2] === "value"
+  );
+};
+
+/**
+ * Info: (20260713 - Julian)
+ * 判斷是否為桑基圖
+ */
+export const isSankeyChart = (chartStr: string): boolean => {
+  if (!chartStr || typeof chartStr !== "string") return false;
+  const lines = chartStr.split("\n");
+  for (const line of lines) {
+    const cleanLine = line.trim().toLowerCase();
+    if (!cleanLine || cleanLine.startsWith("%%")) {
+      continue;
+    }
+    return cleanLine.startsWith("sankey");
+  }
+  return false;
+};
+
+/**
+ * Info: (20260713 - Julian)
+ * 解析桑基圖的所有連結
+ */
+export const parseSankeyLinks = (chartStr: string): ISankeyLink[] => {
+  if (!chartStr || typeof chartStr !== "string") return [];
+
+  const links: ISankeyLink[] = [];
+  const lines = chartStr.split("\n");
+
+  lines.forEach((line, index) => {
+    const clean = line.trim();
+    if (!clean || clean.startsWith("%%") || /^sankey(-beta)?$/i.test(clean)) {
+      return;
+    }
+
+    const fields = parseSankeyCsvLine(clean);
+    if (fields.length !== 3 || isSankeyHeaderRow(fields)) {
+      return;
+    }
+
+    const value = parseFloat(fields[2]);
+    if (isNaN(value)) {
+      return;
+    }
+
+    links.push({
+      source: fields[0],
+      target: fields[1],
+      value,
+      lineIndex: index,
+    });
+  });
+
+  return links;
+};
+
+/**
+ * Info: (20260713 - Julian)
+ * 解析桑基圖內容
+ */
+export const parseSankeyData = (chartStr: string): ISankeyData | null => {
+  if (!chartStr || typeof chartStr !== "string") return null;
+  if (!isSankeyChart(chartStr)) return null;
+
+  const links = parseSankeyLinks(chartStr);
+  if (links.length === 0) return null;
+
+  const nodeSet = new Set<string>();
+  links.forEach(({ source, target }) => {
+    nodeSet.add(source);
+    nodeSet.add(target);
+  });
+
+  return {
+    links,
+    nodes: Array.from(nodeSet),
+  };
+};
+
+/**
+ * Info: (20260714 - Julian)
+ * 將單一欄位序列化為 Sankey CSV（RFC 4180）；
+ * 若含逗號、雙引號、換行或前後空白，則以雙引號包夾並將內部引號跳脫為 ""
+ */
+const formatSankeyCsvField = (field: string): string => {
+  const needsQuote = /[",\r\n]/.test(field) || field !== field.trim();
+  return needsQuote ? `"${field.replace(/"/g, '""')}"` : field;
+};
+
+/**
+ * Info: (20260714 - Julian)
+ * 組合單行 Sankey CSV（source,target,value）
+ */
+const buildSankeyLine = (
+  source: string,
+  target: string,
+  value: number,
+): string =>
+  `${formatSankeyCsvField(source)},${formatSankeyCsvField(target)},${value}`;
+
+/**
+ * Info: (20260714 - Julian)
+ * 判斷指定原始行是否為可編輯的 Sankey 流向資料行；
+ * 是則回傳解析後的 [source, target, value] 欄位，否則回傳 null
+ */
+const getSankeyLineFields = (rawLine: string): string[] | null => {
+  const clean = rawLine.trim();
+  if (!clean || clean.startsWith("%%") || /^sankey(-beta)?$/i.test(clean)) {
+    return null;
+  }
+  const fields = parseSankeyCsvLine(clean);
+  if (fields.length !== 3 || isSankeyHeaderRow(fields)) {
+    return null;
+  }
+  if (isNaN(parseFloat(fields[2]))) {
+    return null;
+  }
+  return fields;
+};
+
+/**
+ * Info: (20260714 - Julian)
+ * 統一的圖表動作分派器：依 chartType 將單一 IChartAction 套用到圖表字串。
+ * CHANGE_TITLE 為跨圖表類型共用動作，優先處理；未知類型則原樣返回。
+ */
+export const applyChartAction = (
+  chartType: MermaidChartType,
+  chartStr: string,
+  action: IChartAction,
+): string => {
+  // Info: (20260714 - Julian) 標題變更不分圖表類型，統一處理
+  if (action.type === MermaidActionType.CHANGE_TITLE) {
+    return updateChartTitle(chartStr, action.payload.title);
+  }
+
+  switch (chartType) {
+    case MermaidChartType.GANTT:
+      return applyGanttAction(chartStr, action);
+    case MermaidChartType.PIE:
+      return applyPieAction(chartStr, action);
+    case MermaidChartType.FLOWCHART:
+      return applyFlowchartAction(chartStr, action);
+    case MermaidChartType.XYCHART:
+      return applyXYChartAction(chartStr, action);
+    case MermaidChartType.SANKEY:
+      return applySankeyAction(chartStr, action);
+    default:
+      return chartStr;
+  }
 };

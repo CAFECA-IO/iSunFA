@@ -18,7 +18,7 @@ import {
 // Info: (20260629 - Julian) 定義與靜態映射表
 // ==========================================
 
-export enum FlowchartTools {
+enum FlowchartTools {
   ADD_NODE = "addNode",
   EDIT_NODE = "editNode",
   ADD_CONNECTION = "addConnection",
@@ -57,13 +57,6 @@ const FLOWCHART_TOOL_TRANSLATION_KEYS: Record<FlowchartTools, string> = {
     "chart.mermaid.ai_editor.flowchart.change_dir",
 };
 
-const DIRECTION_NAMES: Record<string, string> = {
-  TD: "由上至下 (TD)",
-  LR: "由左至右 (LR)",
-  BT: "由下至上 (BT)",
-  RL: "由右至左 (RL)",
-};
-
 // ==========================================
 // Info: (20260629 - Julian) 將每個工具拆分成子元件(sub-panel)
 // ==========================================
@@ -95,7 +88,10 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onAddAction }) => {
     onAddAction({
       id: crypto.randomUUID(),
       type: MermaidActionType.FLOWCHART_ADD_NODE,
-      description: `新增節點 "${newNodeLabel}" (${cleanId})`,
+      description: t("chart.mermaid.ai_editor.flowchart.action_add_node", {
+        label: newNodeLabel,
+        id: cleanId,
+      }),
       payload: {
         id: cleanId,
         label: newNodeLabel,
@@ -221,7 +217,10 @@ const EditNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onAddAction }) => {
     onAddAction({
       id: crypto.randomUUID(),
       type: MermaidActionType.FLOWCHART_EDIT_NODE,
-      description: `修改節點 "${targetNodeId}" 文字為 "${newNodeText}"`,
+      description: t("chart.mermaid.ai_editor.flowchart.action_edit_node", {
+        id: targetNodeId,
+        text: newNodeText,
+      }),
       payload: { id: targetNodeId, label: newNodeText },
     });
   };
@@ -297,7 +296,10 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: MermaidActionType.FLOWCHART_ADD_CONNECTION,
-      description: `建立連線從 "${connFromId}" 到 "${connToId}"`,
+      description: t("chart.mermaid.ai_editor.flowchart.action_add_conn", {
+        from: connFromId,
+        to: connToId,
+      }),
       payload: {
         fromId: connFromId,
         toId: connToId,
@@ -420,7 +422,11 @@ const ChangeDirectionPanel: FC<IBasePanelProps> = ({ onAddAction }) => {
     onAddAction({
       id: crypto.randomUUID(),
       type: MermaidActionType.FLOWCHART_CHANGE_DIRECTION,
-      description: `變更圖表方向為 ${DIRECTION_NAMES[flowDirection] || flowDirection}`,
+      description: t("chart.mermaid.ai_editor.flowchart.action_change_dir", {
+        dir: t(
+          `chart.mermaid.ai_editor.flowchart.dir_${flowDirection.toLowerCase()}`,
+        ),
+      }),
       payload: { direction: flowDirection },
     });
   };
