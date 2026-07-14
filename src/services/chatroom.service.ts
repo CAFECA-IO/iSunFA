@@ -3,6 +3,7 @@ import { chatroomRepo } from "@/repositories/chatroom.repo";
 import { publishToCentrifugo } from "@/lib/centrifugo";
 import { eciesEncrypt } from "@/lib/chatroom_ecies";
 import { ChatRoleEnum, IAttachment } from "@/types/carbon_chatbot.types";
+import { IParagraphDraft } from "@/interfaces/carbon_paragraph_draft";
 import { AI_REPLY_PROGRESS_STEP } from "@/constants/carbon_chatbot";
 
 interface IRecordParams {
@@ -18,6 +19,8 @@ interface IRecordParams {
   attachments?: IAttachment[];
   // Info: (20260714 - Emily) 訊息關聯的報告段落 id;併入加密 payload,重整後段落 chip 可還原
   relatedParagraphIds?: string[];
+  // Info: (20260714 - Emily) 隨訊息遞送的段落草稿:報告更新不依賴 HTTP 回應存活(長請求中斷時草稿仍經訊息通道送達)
+  drafts?: IParagraphDraft[];
 }
 
 export class ChatroomService {
@@ -47,6 +50,9 @@ export class ChatroomService {
             : {}),
         },
         progressUpdate: params.progressUpdate,
+        ...(params.drafts && params.drafts.length > 0
+          ? { drafts: params.drafts }
+          : {}),
       }),
     );
 
@@ -97,6 +103,7 @@ export class ChatroomService {
     text: string;
     purpose?: string;
     relatedParagraphIds?: string[];
+    drafts?: IParagraphDraft[];
   }) {
     return this.record({
       ...params,

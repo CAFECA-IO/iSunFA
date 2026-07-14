@@ -191,28 +191,6 @@ export const useCarbonChat = () => {
     [activeSessionId, user?.address, markSessionBusy],
   );
 
-  // Info: (20260714 - Emily) 解密 envelope 並追加訊息:Centrifugo 訂閱與 HTTP 回帶共用(遞送雙軌,id 去重)
-  const decryptAndAppendEnvelope = useCallback(
-    async (envelope: IEciesEnvelope) => {
-      const master = masterKeyRef.current;
-      if (!master) return;
-      try {
-        const plaintext = await eciesDecrypt(
-          master.extendedPrivateKey,
-          envelope,
-        );
-        const { message, progressUpdate } = JSON.parse(plaintext) as {
-          message: IChatMessage;
-          progressUpdate: number;
-        };
-        appendMessageLocally(message, progressUpdate);
-      } catch {
-        // Info: (20260712 - Luphia) 解密失敗代表非本用戶/非本金鑰的訊息（如惡意跨訂閱），直接忽略
-      }
-    },
-    [appendMessageLocally],
-  );
-
   // Info: (20260712 - Luphia) 送出後啟動等待逾時；逾時仍未經訂閱收到回覆即解除等待並提示，避免卡在 typing
   // Info: (20260714 - Emily) per-channel 計時器:多聊天室並發等待互不覆蓋;閉包綁定發送當下的 channel/session
   const startReplyTimeout = useCallback(() => {
@@ -414,6 +392,43 @@ export const useCarbonChat = () => {
     }, CARBON_CHAT_HIGHLIGHT_DURATION_MS);
   }, []);
 
+  // Info: (20260714 - Emily) 將草稿寫入 reportData:標記完成、重置查核(單一寫入點,對話生成與附件管線共用)
+  // Info: (20260714 - Emily) content 只存內文;`### {標題}` 標頭由報告預覽組稿時產生,格式變更不需資料遷移
+  // Info: (20260714 - Emily) onlyIfEmpty:歷史還原補寫時只填空白段落,避免覆蓋使用者後續的編輯
+  const applyDraftToReport = useCallback(
+    (draft: IParagraphDraft, options?: { onlyIfEmpty?: boolean }) => {
+      const section = CARBON_REPORT_OUTLINE.find(
+        (s) => s.id === draft.paragraphId,
+      );
+      if (!section) return;
+
+      setSessionsData((prev) => {
+        const updatedSession = { ...prev[activeSessionId] };
+        const reportData = updatedSession.reportData;
+        if (!reportData?.paragraphs) return prev;
+
+        const newParagraphs = reportData.paragraphs.map((p) => {
+          if (p.id !== draft.paragraphId) return p;
+          if (options?.onlyIfEmpty && p.content) return p;
+          return {
+            ...p,
+            content: draft.content,
+            isCompleted: true,
+            // Info: (20260714 - Emily) 內容更新即重置查核狀態(零信任:先有產出才有查核)
+            isVerified: false,
+          };
+        });
+
+        updatedSession.reportData = {
+          ...reportData,
+          paragraphs: newParagraphs,
+        };
+        return { ...prev, [activeSessionId]: updatedSession };
+      });
+    },
+    [activeSessionId],
+  );
+
   // Info: (20260712 - Luphia) 載入歷史訊息（密文→以主私鑰解密）；before 省略為最新一頁，否則載入更舊一頁並前置
   const loadHistory = useCallback(
     async (before?: string): Promise<number> => {
@@ -435,20 +450,29 @@ export const useCarbonChat = () => {
         if (!payload) return 0;
 
         const decrypted: IChatMessage[] = [];
+        const historyDrafts: IParagraphDraft[] = [];
         for (const envelope of payload.messages) {
           try {
             const plaintext = await eciesDecrypt(
               master.extendedPrivateKey,
               envelope,
             );
-            const { message } = JSON.parse(plaintext) as {
+            const { message, drafts } = JSON.parse(plaintext) as {
               message: IChatMessage;
+              drafts?: IParagraphDraft[];
             };
             decrypted.push(message);
+            // Info: (20260714 - Emily) 歷史訊息隨附的草稿收集起來補寫空白段落(報告 DB 保存失敗時的保底)
+            if (drafts && drafts.length > 0) historyDrafts.push(...drafts);
           } catch {
             // Info: (20260712 - Luphia) 個別訊息解密失敗則略過
           }
         }
+
+        // Info: (20260714 - Emily) 只填空白段落(onlyIfEmpty):不覆蓋 DB 草稿還原或使用者編輯後的內容
+        historyDrafts.forEach((draft) =>
+          applyDraftToReport(draft, { onlyIfEmpty: true }),
+        );
 
         setSessionsData((prev) => {
           const session = { ...prev[activeSessionId] };
@@ -477,7 +501,7 @@ export const useCarbonChat = () => {
         setIsLoadingHistory(false);
       }
     },
-    [chatChannel, activeSessionId, t],
+    [chatChannel, activeSessionId, t, applyDraftToReport],
   );
 
   // Info: (20260712 - Luphia) 上卷載入更舊一頁
@@ -564,39 +588,40 @@ export const useCarbonChat = () => {
     [activeSession, jumpToParagraph],
   );
 
-  // Info: (20260714 - Emily) 將草稿寫入 reportData:標記完成、重置查核(單一寫入點,對話生成與附件管線共用)
-  // Info: (20260714 - Emily) content 只存內文;`### {標題}` 標頭由報告預覽組稿時產生,格式變更不需資料遷移
-  const applyDraftToReport = useCallback(
-    (draft: IParagraphDraft) => {
-      const section = CARBON_REPORT_OUTLINE.find(
-        (s) => s.id === draft.paragraphId,
-      );
-      if (!section) return;
-
-      setSessionsData((prev) => {
-        const updatedSession = { ...prev[activeSessionId] };
-        const reportData = updatedSession.reportData;
-        if (!reportData?.paragraphs) return prev;
-
-        const newParagraphs = reportData.paragraphs.map((p) => {
-          if (p.id !== draft.paragraphId) return p;
-          return {
-            ...p,
-            content: draft.content,
-            isCompleted: true,
-            // Info: (20260714 - Emily) 內容更新即重置查核狀態(零信任:先有產出才有查核)
-            isVerified: false,
-          };
-        });
-
-        updatedSession.reportData = {
-          ...reportData,
-          paragraphs: newParagraphs,
+  // Info: (20260714 - Emily) 解密 envelope 並追加訊息:Centrifugo 訂閱與 HTTP 回帶共用(遞送雙軌,id 去重)
+  // Info: (20260714 - Emily) 訊息隨附的段落草稿在此套用:報告更新不依賴 HTTP 回應存活(長請求中斷也到得了)
+  const processedDraftMessageIdsRef = useRef<Set<string>>(new Set());
+  const decryptAndAppendEnvelope = useCallback(
+    async (envelope: IEciesEnvelope) => {
+      const master = masterKeyRef.current;
+      if (!master) return;
+      try {
+        const plaintext = await eciesDecrypt(
+          master.extendedPrivateKey,
+          envelope,
+        );
+        const { message, progressUpdate, drafts } = JSON.parse(plaintext) as {
+          message: IChatMessage;
+          progressUpdate: number;
+          drafts?: IParagraphDraft[];
         };
-        return { ...prev, [activeSessionId]: updatedSession };
-      });
+        appendMessageLocally(message, progressUpdate);
+
+        // Info: (20260714 - Emily) 同一則訊息可能經 HTTP 與訂閱雙軌抵達,以訊息 id 確保草稿只套用一次
+        if (
+          drafts &&
+          drafts.length > 0 &&
+          !processedDraftMessageIdsRef.current.has(message.id)
+        ) {
+          processedDraftMessageIdsRef.current.add(message.id);
+          drafts.forEach((draft) => applyDraftToReport(draft));
+          jumpToReportParagraph(drafts[0].paragraphId);
+        }
+      } catch {
+        // Info: (20260712 - Luphia) 解密失敗代表非本用戶/非本金鑰的訊息（如惡意跨訂閱），直接忽略
+      }
     },
-    [activeSessionId],
+    [appendMessageLocally, applyDraftToReport, jumpToReportParagraph],
   );
 
   // Info: (20260714 - Emily) 段落草稿生成:呼叫 draft API 由 AI 撰寫敘述,成功後寫入 reportData 並標記完成(查核歸零重簽)
@@ -1018,14 +1043,9 @@ export const useCarbonChat = () => {
         throw new Error(data.message || "AI API returned an error");
       }
 
-      // Info: (20260714 - Emily) 附件管線產出的段落草稿:直接寫入報告並將視角切到第一個生成段落(含即時高亮)
+      // Info: (20260714 - Emily) HTTP 回帶的密文訊息直接解密顯示(草稿隨摘要訊息一起套用);
+      // Info: (20260714 - Emily) Centrifugo 訂閱若也送達,由訊息 id 去重(草稿亦以訊息 id 防重複套用)
       const payload = data.payload;
-      if (payload?.drafts && payload.drafts.length > 0) {
-        payload.drafts.forEach(applyDraftToReport);
-        jumpToReportParagraph(payload.drafts[0].paragraphId);
-      }
-
-      // Info: (20260714 - Emily) HTTP 回帶的密文回覆直接解密顯示;Centrifugo 訂閱若也送達,由訊息 id 去重
       if (payload?.envelopes) {
         for (const envelope of payload.envelopes) {
           await decryptAndAppendEnvelope(envelope);
@@ -1058,8 +1078,6 @@ export const useCarbonChat = () => {
     language,
     t,
     appendMessageLocally,
-    applyDraftToReport,
-    jumpToReportParagraph,
     generateParagraphDraft,
     decryptAndAppendEnvelope,
     startReplyTimeout,

@@ -203,6 +203,8 @@ export async function POST(request: NextRequest) {
           text: summaryText,
           purpose: CARBON_CHAT_PURPOSE,
           relatedParagraphIds: drafts.map((d) => d.paragraphId),
+          // Info: (20260714 - Emily) 草稿隨加密訊息遞送:長請求 HTTP 中斷時,報告更新仍經 Centrifugo/歷史送達
+          drafts,
         });
         envelopes.push(summaryEnvelope);
       }
