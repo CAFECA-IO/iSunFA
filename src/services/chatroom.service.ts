@@ -61,7 +61,13 @@ export class ChatroomService {
     });
 
     if (params.publish) {
-      await publishToCentrifugo(params.channel, envelope);
+      // Info: (20260714 - Emily) 廣播為 best-effort:主要遞送已改為 HTTP 回帶 envelope,
+      // Info: (20260714 - Emily) Centrifugo 斷線不應讓整個請求 500(訊息已入庫,僅損失多分頁即時同步)
+      try {
+        await publishToCentrifugo(params.channel, envelope);
+      } catch (error) {
+        console.error("[ChatroomService] centrifugo publish failed:", error);
+      }
     }
 
     return envelope;
