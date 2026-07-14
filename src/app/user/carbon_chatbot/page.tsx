@@ -100,10 +100,10 @@ export default function CarbonChatbotPage() {
           saveStatus={saveStatus}
         />
 
-        {/* Info: (20260714 - Emily) 進度浮窗改置左下:右下保留給聊天浮動鈕/視窗;窄螢幕隱藏避免遮擋內容 */}
+        {/* Info: (20260714 - Emily) 進度浮窗僅 xl+ 顯示(小螢幕會遮擋編輯區,且工具列膠囊已有同數據);置左下讓出聊天鈕 */}
         <ChatProgressWidget
           stats={reportStats}
-          positionClassName="left-10 bottom-10 hidden md:flex"
+          positionClassName="left-10 bottom-10 hidden xl:flex"
         />
       </div>
 

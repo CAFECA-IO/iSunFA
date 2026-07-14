@@ -55,6 +55,8 @@ interface IPdfEditorProps {
   downloadFileName?: string;
   // Info: (20260714 - Emily) 下載快照前的清理 hook(如 carbon_chatbot 移除段落高亮,避免滲入 PDF)
   onBeforeDownload?: () => void;
+  // Info: (20260714 - Emily) split 佈局的並排斷點:預設 md(既有行為);嵌入場景空間較擠時可設 lg,平板寬度退回單欄切換
+  splitBreakpoint?: "md" | "lg";
 }
 
 export default function PdfEditor({
@@ -68,6 +70,7 @@ export default function PdfEditor({
   contentVariant = "document",
   downloadFileName = undefined,
   onBeforeDownload = undefined,
+  splitBreakpoint = "md",
 }: IPdfEditorProps) {
   const { t } = useTranslation();
 
@@ -533,6 +536,7 @@ export default function PdfEditor({
         {/* Info: (20260615 - Julian) Edit Panel */}
         <EditPanel
           layout={layout}
+          splitBreakpoint={splitBreakpoint}
           viewMode={viewMode}
           markdownContext={markdownContext}
           setMarkdownContext={(val) => {
@@ -557,7 +561,9 @@ export default function PdfEditor({
                 ? "hidden"
                 : "flex"
               : viewMode === PdfToolViewMode.EDIT
-                ? "hidden md:flex"
+                ? splitBreakpoint === "lg"
+                  ? "hidden lg:flex"
+                  : "hidden md:flex"
                 : "flex"
           }`}
         >

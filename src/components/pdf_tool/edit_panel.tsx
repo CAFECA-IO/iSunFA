@@ -24,6 +24,8 @@ interface IAiSuggestion {
 
 interface IEditPanelProps {
   layout?: "split" | "toggle";
+  // Info: (20260714 - Emily) split 佈局的並排斷點:預設 md(既有行為);嵌入場景可設 lg,平板寬度退回單欄
+  splitBreakpoint?: "md" | "lg";
   viewMode: PdfToolViewMode;
   markdownContext: string;
   setMarkdownContext: React.Dispatch<React.SetStateAction<string>>;
@@ -40,6 +42,7 @@ interface IEditPanelProps {
 
 export default function EditPanel({
   layout = "split",
+  splitBreakpoint = "md",
   viewMode,
   markdownContext,
   setMarkdownContext,
@@ -252,7 +255,9 @@ export default function EditPanel({
               ? "hidden"
               : "flex"
             : viewMode === "preview"
-              ? "hidden md:flex"
+              ? splitBreakpoint === "lg"
+                ? "hidden lg:flex"
+                : "hidden md:flex"
               : "flex"
         }`}
       >
