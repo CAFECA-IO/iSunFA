@@ -148,3 +148,30 @@ export const buildAttachmentDraftSummary = (
     ATTACHMENT_SUMMARY_TEMPLATES["zh-TW"];
   return template(count, sections, degraded);
 };
+
+// Info: (20260714 - Emily) 對話蒐集完成後寫入段落的摘要訊息模板(決定性產生,不經 LLM)
+const CHAT_DRAFT_SUMMARY_TEMPLATES: Record<
+  string,
+  (sections: string) => string
+> = {
+  "zh-TW": (sections) =>
+    `已完成段落草稿並寫入報告：${sections}。請於報告預覽檢視並查核。`,
+  "zh-CN": (sections) =>
+    `已完成段落草稿并写入报告：${sections}。请于报告预览查看并核对。`,
+  en: (sections) =>
+    `Section draft completed and written to the report: ${sections}. Please review it in the report preview.`,
+  ja: (sections) =>
+    `セクション下書きを作成しレポートに反映しました:${sections}。レポートプレビューでご確認ください。`,
+  ko: (sections) =>
+    `섹션 초안을 작성하여 보고서에 반영했습니다: ${sections}. 보고서 미리보기에서 확인해 주세요.`,
+};
+
+export const buildChatDraftSummary = (
+  language: string | undefined,
+  sections: string,
+): string => {
+  const template =
+    CHAT_DRAFT_SUMMARY_TEMPLATES[language ?? ""] ??
+    CHAT_DRAFT_SUMMARY_TEMPLATES["zh-TW"];
+  return template(sections);
+};

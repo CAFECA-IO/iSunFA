@@ -5,10 +5,12 @@ import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { ChatService } from "@/services/chat.service";
 import { chatroomService } from "@/services/chatroom.service";
 import { AttachmentExtractionService } from "@/services/attachment_extraction.service";
+import { ParagraphDraftService } from "@/services/paragraph_draft.service";
 import {
   CARBON_CHAT_PURPOSE,
   CARBON_CHAT_AI_CONTEXT_SIZE,
   buildAttachmentDraftSummary,
+  buildChatDraftSummary,
   isCarbonChatChannelOwnedBy,
 } from "@/constants/carbon_chatbot";
 import { CarbonChatRequestSchema } from "@/validators";
@@ -98,23 +100,26 @@ export async function POST(request: NextRequest) {
           })
         : history;
 
-    const reply = await chatService.generateCarbonChatbotResponse(
-      historyForAi,
-      currentStep,
-      language,
-    );
+    // Info: (20260714 - Emily) 結構化回覆:對話內容 + 段落完成訊號(readyParagraphId 已經白名單裁決)
+    const { reply, readyParagraphId } =
+      await chatService.generateCarbonChatbotStructuredResponse(
+        historyForAi,
+        currentStep,
+        language,
+      );
+
+    const conversationContext = history
+      .slice(-CARBON_CHAT_AI_CONTEXT_SIZE)
+      .map((item) => ({
+        role: item.role === "user" ? ChatRoleEnum.USER : ChatRoleEnum.AI,
+        text: item.text,
+      }));
 
     // Info: (20260714 - Emily) 附件→段落管線:萃取事實 → 白名單裁決段落 → 生成草稿(真 Gemini + graceful fallback)
     let drafts: IParagraphDraft[] = [];
     let degraded = false;
     if (attachments && attachments.length > 0) {
       const pipeline = new AttachmentExtractionService();
-      const conversationContext = history
-        .slice(-CARBON_CHAT_AI_CONTEXT_SIZE)
-        .map((item) => ({
-          role: item.role === "user" ? ChatRoleEnum.USER : ChatRoleEnum.AI,
-          text: item.text,
-        }));
       const result = await pipeline.runAttachmentToParagraphPipeline({
         attachments,
         conversationContext,
@@ -122,6 +127,33 @@ export async function POST(request: NextRequest) {
       });
       drafts = result.drafts;
       degraded = result.degraded;
+    }
+
+    // Info: (20260714 - Emily) 對話蒐集完成的段落:自動生成草稿寫入報告(打斷「無限訪談迴圈」的出口)
+    if (
+      readyParagraphId &&
+      !drafts.some((d) => d.paragraphId === readyParagraphId)
+    ) {
+      try {
+        const draftService = new ParagraphDraftService();
+        const draft = await draftService.generateParagraphDraft({
+          paragraphId: readyParagraphId,
+          // Info: (20260714 - Emily) 帶入 AI 最新彙整回覆,草稿以彙整後的資訊為準
+          conversationContext: [
+            ...conversationContext,
+            { role: ChatRoleEnum.AI, text: reply },
+          ],
+          language,
+        });
+        drafts.push(draft);
+      } catch (draftError) {
+        // Info: (20260714 - Emily) 草稿失敗不阻斷對話,僅標記降級(用戶可用目錄的 AI 撰寫鈕重試)
+        console.error(
+          "[API] /chat/carbon ready-paragraph draft failed:",
+          draftError,
+        );
+        degraded = true;
+      }
     }
 
     // Info: (20260712 - Luphia) 有頻道與收件者公鑰時，記錄使用者訊息並記錄+發佈 AI 回覆；否則直接回傳（相容用）
@@ -155,17 +187,22 @@ export async function POST(request: NextRequest) {
       const envelopes = [replyEnvelope];
 
       // Info: (20260714 - Emily) 草稿摘要為決定性模板訊息(不經 LLM),帶 relatedParagraphIds 供段落 chip 還原
+      // Info: (20260714 - Emily) 模板依來源選擇:有附件用附件版,純對話蒐集完成用對話版
       if (drafts.length > 0) {
         const sections = drafts.map((d) => d.title).join("、");
+        const summaryText =
+          attachments && attachments.length > 0
+            ? buildAttachmentDraftSummary(
+                language,
+                drafts.length,
+                sections,
+                degraded,
+              )
+            : buildChatDraftSummary(language, sections);
         const summaryEnvelope = await chatroomService.recordAndPublishAiReply({
           channel,
           recipientPublicKey,
-          text: buildAttachmentDraftSummary(
-            language,
-            drafts.length,
-            sections,
-            degraded,
-          ),
+          text: summaryText,
           purpose: CARBON_CHAT_PURPOSE,
           relatedParagraphIds: drafts.map((d) => d.paragraphId),
         });

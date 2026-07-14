@@ -56,3 +56,14 @@ export const CarbonChatRequestSchema = z
   );
 
 export type CarbonChatRequestPayload = z.infer<typeof CarbonChatRequestSchema>;
+
+// Info: (20260714 - Emily) 聊天回覆的結構化輸出:reply 為對話內容;readyParagraphId 為「資訊已蒐集齊全可寫入報告」的段落 id
+// Info: (20260714 - Emily) id 是否合法由服務層白名單裁決,此處僅驗證型別
+export const CarbonChatStructuredReplySchema = z.object({
+  reply: z.string().min(1),
+  readyParagraphId: z.string().max(50),
+});
+
+export type CarbonChatStructuredReply = z.infer<
+  typeof CarbonChatStructuredReplySchema
+>;
