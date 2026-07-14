@@ -99,10 +99,15 @@ export const useCarbonChat = () => {
       return masterKeyRef.current;
     }, []);
 
+  // Info: (20260714 - Emily) 是否仍在等待 AI 回覆:附件管線拉長請求時間後,回覆常在 fetch 返回前就經訂閱送達,
+  // Info: (20260714 - Emily) 此旗標避免 startReplyTimeout 在回覆已到後才啟動計時器,30 秒後誤報系統無回應
+  const pendingReplyRef = useRef<boolean>(false);
+
   // Info: (20260712 - Luphia) 將訊息直接追加到當前 session 並解除等待狀態（訂閱收訊與 publish 失敗保底共用）
   const appendMessageLocally = useCallback(
     (message: IChatMessage, progressUpdate: number) => {
       // Info: (20260712 - Luphia) 有訊息就緒即取消等待逾時計時器
+      pendingReplyRef.current = false;
       if (replyTimeoutRef.current) {
         clearTimeout(replyTimeoutRef.current);
         replyTimeoutRef.current = null;
@@ -126,6 +131,8 @@ export const useCarbonChat = () => {
 
   // Info: (20260712 - Luphia) 送出後啟動等待逾時；逾時仍未經訂閱收到回覆即解除等待並提示，避免卡在 typing
   const startReplyTimeout = useCallback(() => {
+    // Info: (20260714 - Emily) 回覆已於 fetch 期間送達則不再啟動計時器
+    if (!pendingReplyRef.current) return;
     if (replyTimeoutRef.current) clearTimeout(replyTimeoutRef.current);
     replyTimeoutRef.current = setTimeout(() => {
       replyTimeoutRef.current = null;
@@ -264,6 +271,42 @@ export const useCarbonChat = () => {
     [activeSessionId, t],
   );
 
+  // Info: (20260714 - Emily) 將草稿寫入 reportData:補上 SECTION 標頭、標記完成、重置查核(單一寫入點,對話生成與附件管線共用)
+  const applyDraftToReport = useCallback(
+    (draft: IParagraphDraft) => {
+      const sectionIndex = CARBON_REPORT_OUTLINE.findIndex(
+        (s) => s.id === draft.paragraphId,
+      );
+      if (sectionIndex < 0) return;
+      const section = CARBON_REPORT_OUTLINE[sectionIndex];
+
+      setSessionsData((prev) => {
+        const updatedSession = { ...prev[activeSessionId] };
+        const reportData = updatedSession.reportData;
+        if (!reportData?.paragraphs) return prev;
+
+        const heading = buildSectionHeading(section, sectionIndex);
+        const newParagraphs = reportData.paragraphs.map((p) => {
+          if (p.id !== draft.paragraphId) return p;
+          return {
+            ...p,
+            content: `${heading}\n\n${draft.content}`,
+            isCompleted: true,
+            // Info: (20260714 - Emily) 內容更新即重置查核狀態(零信任:先有產出才有查核)
+            isVerified: false,
+          };
+        });
+
+        updatedSession.reportData = {
+          ...reportData,
+          paragraphs: newParagraphs,
+        };
+        return { ...prev, [activeSessionId]: updatedSession };
+      });
+    },
+    [activeSessionId],
+  );
+
   // Info: (20260714 - Emily) 段落草稿生成:呼叫 draft API 由 AI 撰寫敘述,成功後寫入 reportData 並標記完成(查核歸零重簽)
   const generateParagraphDraft = useCallback(
     async (paragraphId: string) => {
@@ -296,29 +339,7 @@ export const useCarbonChat = () => {
         const draft = res.payload;
         if (!draft) throw new Error("Empty draft payload");
 
-        setSessionsData((prev) => {
-          const updatedSession = { ...prev[activeSessionId] };
-          const reportData = updatedSession.reportData;
-          if (!reportData?.paragraphs) return prev;
-
-          const heading = buildSectionHeading(section, sectionIndex);
-          const newParagraphs = reportData.paragraphs.map((p) => {
-            if (p.id !== paragraphId) return p;
-            return {
-              ...p,
-              content: `${heading}\n\n${draft.content}`,
-              isCompleted: true,
-              // Info: (20260714 - Emily) 內容更新即重置查核狀態(零信任:先有產出才有查核)
-              isVerified: false,
-            };
-          });
-
-          updatedSession.reportData = {
-            ...reportData,
-            paragraphs: newParagraphs,
-          };
-          return { ...prev, [activeSessionId]: updatedSession };
-        });
+        applyDraftToReport(draft);
       } catch (error) {
         console.error("[carbon-chat] paragraph draft failed:", error);
         appendMessageLocally(
@@ -338,10 +359,10 @@ export const useCarbonChat = () => {
     [
       draftingParagraphId,
       activeSession,
-      activeSessionId,
       language,
       t,
       appendMessageLocally,
+      applyDraftToReport,
     ],
   );
 
@@ -633,6 +654,7 @@ export const useCarbonChat = () => {
     setIsTyping(true);
     setIsLoading(true);
     setIsError(false);
+    pendingReplyRef.current = true;
 
     try {
       // Info: (20260712 - Luphia) 只取最近 N 則送給 AI 以控 token；畫面仍保有完整歷史
@@ -675,6 +697,16 @@ export const useCarbonChat = () => {
       if (!data.success) {
         throw new Error(data.message || "AI API returned an error");
       }
+
+      // Info: (20260714 - Emily) 附件管線產出的段落草稿:直接寫入報告並將視角切到第一個生成段落
+      const payload = (data.payload ?? null) as {
+        drafts?: IParagraphDraft[];
+      } | null;
+      if (payload?.drafts && payload.drafts.length > 0) {
+        payload.drafts.forEach(applyDraftToReport);
+        setActiveParagraphId(payload.drafts[0].paragraphId);
+      }
+
       // Info: (20260712 - Luphia) 後端已加密並發佈 AI 回覆到 Centrifugo；由訂閱端解密後顯示，此處不再處理回覆內容
       // Info: (20260712 - Luphia) 啟動等待逾時，避免「已發佈但未收到」時卡在 typing
       startReplyTimeout();
@@ -700,6 +732,7 @@ export const useCarbonChat = () => {
     language,
     t,
     appendMessageLocally,
+    applyDraftToReport,
     startReplyTimeout,
     chatChannel,
     ensureMasterKeyCached,
@@ -746,6 +779,7 @@ export const useCarbonChat = () => {
 
     // Info: (20260712 - Luphia) 空 chatroom → 請後端做前置作業產生招呼詞並加密發佈；由訂閱端解密後顯示
     setIsTyping(true);
+    pendingReplyRef.current = true;
     try {
       const response = await fetch("/api/v1/chat/carbon", {
         method: "POST",

@@ -3,8 +3,15 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { ChatService } from "@/services/chat.service";
 import { chatroomService } from "@/services/chatroom.service";
-import { CARBON_CHAT_PURPOSE } from "@/constants/carbon_chatbot";
+import { AttachmentExtractionService } from "@/services/attachment_extraction.service";
+import {
+  CARBON_CHAT_PURPOSE,
+  CARBON_CHAT_AI_CONTEXT_SIZE,
+  buildAttachmentDraftSummary,
+} from "@/constants/carbon_chatbot";
 import { CarbonChatRequestSchema } from "@/validators";
+import { ChatRoleEnum } from "@/types/carbon_chatbot.types";
+import { IParagraphDraft } from "@/interfaces/carbon_paragraph_draft";
 
 // Info: (20260708 - Tzuhan) Carbon Chatbot Framework
 // Info: (20260712 - Luphia) 取得 AI 回覆，使用者訊息與 AI 回覆皆加密入庫；AI 回覆另經 Centrifugo 回傳（前端只訂閱）
@@ -81,6 +88,26 @@ export async function POST(request: NextRequest) {
       language,
     );
 
+    // Info: (20260714 - Emily) 附件→段落管線:萃取事實 → 白名單裁決段落 → 生成草稿(真 Gemini + graceful fallback)
+    let drafts: IParagraphDraft[] = [];
+    let degraded = false;
+    if (attachments && attachments.length > 0) {
+      const pipeline = new AttachmentExtractionService();
+      const conversationContext = history
+        .slice(-CARBON_CHAT_AI_CONTEXT_SIZE)
+        .map((item) => ({
+          role: item.role === "user" ? ChatRoleEnum.USER : ChatRoleEnum.AI,
+          text: item.text,
+        }));
+      const result = await pipeline.runAttachmentToParagraphPipeline({
+        attachments,
+        conversationContext,
+        language,
+      });
+      drafts = result.drafts;
+      degraded = result.degraded;
+    }
+
     // Info: (20260712 - Luphia) 有頻道與收件者公鑰時，記錄使用者訊息並記錄+發佈 AI 回覆；否則直接回傳（相容用）
     if (channel && recipientPublicKey) {
       const lastUserMessage = [...history]
@@ -109,10 +136,27 @@ export async function POST(request: NextRequest) {
         purpose: CARBON_CHAT_PURPOSE,
       });
 
-      return jsonOk({ published: true });
+      // Info: (20260714 - Emily) 草稿摘要為決定性模板訊息(不經 LLM),帶 relatedParagraphIds 供段落 chip 還原
+      if (drafts.length > 0) {
+        const sections = drafts.map((d) => d.title).join("、");
+        await chatroomService.recordAndPublishAiReply({
+          channel,
+          recipientPublicKey,
+          text: buildAttachmentDraftSummary(
+            language,
+            drafts.length,
+            sections,
+            degraded,
+          ),
+          purpose: CARBON_CHAT_PURPOSE,
+          relatedParagraphIds: drafts.map((d) => d.paragraphId),
+        });
+      }
+
+      return jsonOk({ published: true, drafts, degraded });
     }
 
-    return jsonOk({ reply });
+    return jsonOk({ reply, drafts, degraded });
   } catch (error) {
     console.error("[API] /chat/carbon error:", error);
     return jsonFail(API_ERRORS.IS_UNKNOWN);

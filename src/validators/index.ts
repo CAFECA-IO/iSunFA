@@ -7,3 +7,4 @@ export * from "@/validators/export";
 export * from "@/validators/order";
 export * from "@/validators/carbon_paragraph_draft";
 export * from "@/validators/carbon_chat";
+export * from "@/validators/carbon_attachment_extraction";

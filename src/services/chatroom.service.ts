@@ -16,6 +16,8 @@ interface IRecordParams {
   purpose?: string;
   // Info: (20260714 - Emily) 附件 metadata(name/size/mimeType);併入加密 payload,重整後可還原附件卡片
   attachments?: IAttachment[];
+  // Info: (20260714 - Emily) 訊息關聯的報告段落 id;併入加密 payload,重整後段落 chip 可還原
+  relatedParagraphIds?: string[];
 }
 
 export class ChatroomService {
@@ -37,6 +39,10 @@ export class ChatroomService {
           // Info: (20260714 - Emily) 附件 metadata 併入加密訊息(無附件時不帶欄位,維持 payload 精簡)
           ...(params.attachments && params.attachments.length > 0
             ? { attachments: params.attachments }
+            : {}),
+          ...(params.relatedParagraphIds &&
+          params.relatedParagraphIds.length > 0
+            ? { relatedParagraphIds: params.relatedParagraphIds }
             : {}),
         },
         progressUpdate: params.progressUpdate,
@@ -81,6 +87,7 @@ export class ChatroomService {
     recipientPublicKey: string;
     text: string;
     purpose?: string;
+    relatedParagraphIds?: string[];
   }) {
     return this.record({
       ...params,

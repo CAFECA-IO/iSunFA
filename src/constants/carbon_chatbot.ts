@@ -73,3 +73,38 @@ export const CARBON_CHAT_MAX_ATTACHMENTS_PER_MESSAGE = 5;
 // Info: (20260714 - Emily) file input 的 accept 屬性(與 MIME 白名單同步)
 export const CARBON_CHAT_ATTACHMENT_ACCEPT =
   CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES.join(",");
+
+// Info: (20260714 - Emily) 附件→段落管線:單次生成段落數上限(控制延遲與 token 成本)
+export const CARBON_ATTACHMENT_PIPELINE_MAX_PARAGRAPHS = 3;
+
+// Info: (20260714 - Emily) 附件對應不到任何段落時的預設落點(2.2 溫室氣體排放源鑑別)
+export const CARBON_ATTACHMENT_FALLBACK_PARAGRAPH_ID = "ch2-2";
+
+// Info: (20260714 - Emily) 附件草稿摘要訊息模板(後端決定性產生,不經 LLM);key 對齊前端 Language 型別
+const ATTACHMENT_SUMMARY_TEMPLATES: Record<
+  string,
+  (count: number, sections: string, degraded: boolean) => string
+> = {
+  "zh-TW": (count, sections, degraded) =>
+    `已根據附件生成 ${count} 個段落草稿：${sections}。請於報告預覽檢視並查核。${degraded ? "（部分附件解析降級，以通用範本生成，請人工確認內容）" : ""}`,
+  "zh-CN": (count, sections, degraded) =>
+    `已根据附件生成 ${count} 个段落草稿：${sections}。请于报告预览查看并核对。${degraded ? "（部分附件解析降级，以通用范本生成，请人工确认内容）" : ""}`,
+  en: (count, sections, degraded) =>
+    `Generated ${count} section draft(s) from your attachment(s): ${sections}. Please review them in the report preview.${degraded ? " (Some attachments could not be fully parsed; generic templates were used — please verify the content.)" : ""}`,
+  ja: (count, sections, degraded) =>
+    `添付ファイルから ${count} 件のセクション下書きを生成しました：${sections}。レポートプレビューでご確認ください。${degraded ? "（一部の添付ファイルは解析できなかったため汎用テンプレートで生成しました。内容をご確認ください。）" : ""}`,
+  ko: (count, sections, degraded) =>
+    `첨부파일을 기반으로 ${count}개의 섹션 초안을 생성했습니다: ${sections}. 보고서 미리보기에서 확인해 주세요.${degraded ? " (일부 첨부파일은 완전히 해석하지 못해 일반 템플릿으로 생성했습니다. 내용을 확인해 주세요.)" : ""}`,
+};
+
+export const buildAttachmentDraftSummary = (
+  language: string | undefined,
+  count: number,
+  sections: string,
+  degraded: boolean,
+): string => {
+  const template =
+    ATTACHMENT_SUMMARY_TEMPLATES[language ?? ""] ??
+    ATTACHMENT_SUMMARY_TEMPLATES["zh-TW"];
+  return template(count, sections, degraded);
+};

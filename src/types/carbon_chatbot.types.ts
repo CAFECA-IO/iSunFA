@@ -44,6 +44,8 @@ export interface IChatMessage {
   sender: ChatRoleEnum;
   text: string;
   attachments?: IAttachment[];
+  // Info: (20260714 - Emily) 此訊息關聯的報告段落 id(outline id);段落 chip 與雙向連動的資料來源
+  relatedParagraphIds?: string[];
 }
 
 export interface IReportCategory {
