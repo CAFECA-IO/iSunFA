@@ -329,18 +329,14 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
 
 export const CARBON_REPORT_SECTION_COUNT = CARBON_REPORT_OUTLINE.length;
 
-// Info: (20260714 - Emily) 段落切分標題前綴;報告預覽以此辨識 h3 錨點,與 Markdown 切分規則共用
-export const CARBON_REPORT_SECTION_HEADING_PREFIX = "SECTION";
+// Info: (20260714 - Emily) 段落切分標題:`### {段落標題}`(標題含章節編號且全 33 段唯一,可作切分與錨點依據)
+// Info: (20260714 - Emily) 移除舊 `SECTION NN:` 內部標記,不再滲入使用者可見的報告與 PDF
+export const buildSectionHeadingByTitle = (title: string): string =>
+  `### ${title}`;
 
-// Info: (20260713 - Tzuhan) 產生段落在 Markdown 中的切分標題;與 use_carbon_chat 的 `### SECTION` 切分規則耦合,勿任意變更前綴
-export const buildSectionHeadingByTitle = (
-  title: string,
-  index: number,
-): string =>
-  `### ${CARBON_REPORT_SECTION_HEADING_PREFIX} ${String(index + 1).padStart(2, "0")}: ${title}`;
+export const buildSectionHeading = (section: ICarbonReportSection): string =>
+  buildSectionHeadingByTitle(`${section.code} ${section.title}`);
 
-export const buildSectionHeading = (
-  section: ICarbonReportSection,
-  index: number,
-): string =>
-  buildSectionHeadingByTitle(`${section.code} ${section.title}`, index);
+// Info: (20260714 - Emily) 去除內文開頭殘留的 h3 標頭(相容舊格式草稿:content 曾內嵌 `### SECTION NN:` 標頭)
+export const stripLeadingSectionHeading = (content: string): string =>
+  content.replace(/^###[^\n]*\n+/, "").trim();

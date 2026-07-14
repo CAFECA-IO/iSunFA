@@ -16,7 +16,6 @@ import { formatFileSize } from "@/lib/utils/common";
 import {
   CARBON_REPORT_OUTLINE,
   CARBON_REPORT_SECTION_COUNT,
-  buildSectionHeading,
 } from "@/constants/carbon_report_outline";
 import { IParagraphDraft } from "@/interfaces/carbon_paragraph_draft";
 import {
@@ -509,26 +508,25 @@ export const useCarbonChat = () => {
     [activeSession, jumpToParagraph],
   );
 
-  // Info: (20260714 - Emily) 將草稿寫入 reportData:補上 SECTION 標頭、標記完成、重置查核(單一寫入點,對話生成與附件管線共用)
+  // Info: (20260714 - Emily) 將草稿寫入 reportData:標記完成、重置查核(單一寫入點,對話生成與附件管線共用)
+  // Info: (20260714 - Emily) content 只存內文;`### {標題}` 標頭由報告預覽組稿時產生,格式變更不需資料遷移
   const applyDraftToReport = useCallback(
     (draft: IParagraphDraft) => {
-      const sectionIndex = CARBON_REPORT_OUTLINE.findIndex(
+      const section = CARBON_REPORT_OUTLINE.find(
         (s) => s.id === draft.paragraphId,
       );
-      if (sectionIndex < 0) return;
-      const section = CARBON_REPORT_OUTLINE[sectionIndex];
+      if (!section) return;
 
       setSessionsData((prev) => {
         const updatedSession = { ...prev[activeSessionId] };
         const reportData = updatedSession.reportData;
         if (!reportData?.paragraphs) return prev;
 
-        const heading = buildSectionHeading(section, sectionIndex);
         const newParagraphs = reportData.paragraphs.map((p) => {
           if (p.id !== draft.paragraphId) return p;
           return {
             ...p,
-            content: `${heading}\n\n${draft.content}`,
+            content: draft.content,
             isCompleted: true,
             // Info: (20260714 - Emily) 內容更新即重置查核狀態(零信任:先有產出才有查核)
             isVerified: false,
@@ -669,15 +667,17 @@ export const useCarbonChat = () => {
         const updatedSession = { ...prev[activeSessionId] };
         if (!updatedSession.reportData?.paragraphs) return prev;
 
-        // Info: (20260713 - Tzuhan) 以 ### SECTION 切分並僅保留段落區塊(排除文件標頭),
+        // Info: (20260714 - Emily) 以 `### ` 標題切分並僅保留段落區塊(排除文件標頭),
         // Info: (20260713 - Tzuhan) 同時去除組稿時附加的 --- 分隔線,避免與段落原文比對時誤判為變更
+        // Info: (20260714 - Emily) 區塊去掉首行標頭後只留內文(content 僅存內文,標頭由組稿時產生)
         const blocks = newMarkdown
-          .split(/(?=### SECTION)/)
+          .split(/(?=^### )/m)
           .map((s) => s.replace(/\n+---\s*$/, "").trim())
-          .filter((s) => s.startsWith("### SECTION"));
+          .filter((s) => s.startsWith("### "))
+          .map((s) => s.replace(/^###[^\n]*\n*/, "").trim());
 
         // Info: (20260713 - Tzuhan) 預覽渲染全部段落(未生成者為佔位區塊),故區塊與 33 段依序 1:1 對齊
-        // Info: (20260709 - Tzuhan) 防呆機制:區塊數與段落數不一致,代表使用者可能誤刪切分標籤 (### SECTION),
+        // Info: (20260709 - Tzuhan) 防呆機制:區塊數與段落數不一致,代表使用者可能誤刪切分標題,
         // Info: (20260709 - Tzuhan) 為確保資料正確性,將所有已生成段落設為未查核
         const isBlockCountMismatched =
           blocks.length !== updatedSession.reportData.paragraphs.length;
@@ -687,9 +687,10 @@ export const useCarbonChat = () => {
           (p, index) => {
             // Info: (20260713 - Tzuhan) 未生成段落為唯讀佔位,不接受編輯寫入(內容須由 AI 對話生成)
             if (!p.content) return p;
-            const nextContent = isBlockCountMismatched
-              ? p.content
-              : (blocks[index] ?? p.content);
+            // Info: (20260714 - Emily) 編輯後內文為空(僅剩標頭)視為誤刪,保留原內容避免段落退回未生成狀態
+            const editedBody = blocks[index];
+            const nextContent =
+              isBlockCountMismatched || !editedBody ? p.content : editedBody;
 
             const isContentChanged = nextContent !== p.content;
             const shouldResetVerified =

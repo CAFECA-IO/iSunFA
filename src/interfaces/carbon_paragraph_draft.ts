@@ -28,7 +28,7 @@ export interface IParagraphDraft {
   paragraphId: string;
   code: string;
   title: string;
-  // Info: (20260714 - Emily) Markdown 內文,不含 `### SECTION` 切分標頭(標頭由前端 buildSectionHeading 組裝)
+  // Info: (20260714 - Emily) Markdown 內文,不含 h3 標頭(`### {段落標題}` 由報告預覽組稿時產生)
   content: string;
   // Info: (20260714 - Emily) 內文實際引用的事實描述,供前端溯源顯示
   citedFacts: string[];

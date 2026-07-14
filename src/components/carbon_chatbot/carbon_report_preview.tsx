@@ -20,7 +20,7 @@ import {
 } from "@/constants/carbon_chatbot";
 import {
   buildSectionHeadingByTitle,
-  CARBON_REPORT_SECTION_HEADING_PREFIX,
+  stripLeadingSectionHeading,
 } from "@/constants/carbon_report_outline";
 import { ReportToolbar } from "@/components/carbon_chatbot/report_toolbar";
 import { OutlineRail } from "@/components/carbon_chatbot/outline_rail";
@@ -70,11 +70,12 @@ const generateMarkdownFromParagraphs = (
   // Info: (20260713 - Tzuhan) 狀態徽章由 ReportToolbar 呈現,文件內僅保留 Markdown 原生語法的草稿聲明(匯出 PDF 亦可見)
   let md = `# ${session.title}\n\n> _${draftStatusLine}_\n\n---\n\n`;
 
-  paragraphs.forEach((p, index) => {
-    const block =
-      p.content ||
-      `${buildSectionHeadingByTitle(p.title, index)}\n\n> _${placeholderHint}_`;
-    md += `${block}\n\n---\n\n`;
+  // Info: (20260714 - Emily) 標頭一律由 p.title 組出;content 只存內文(stripLeadingSectionHeading 相容舊格式殘留標頭)
+  paragraphs.forEach((p) => {
+    const body = p.content
+      ? stripLeadingSectionHeading(p.content)
+      : `> _${placeholderHint}_`;
+    md += `${buildSectionHeadingByTitle(p.title)}\n\n${body}\n\n---\n\n`;
   });
 
   return md;
@@ -106,25 +107,23 @@ export default function CarbonReportPreview({
   );
   const hasOutline = paragraphs.length > 0;
 
-  // Info: (20260714 - Emily) 錨點注入:預覽渲染全部段落且與 33 段依序 1:1,以順序法將段落 id 寫入 SECTION h3
-  // Info: (20260714 - Emily) (取代標題文字比對;Markdown 渲染層不支援原生 HTML,故於渲染後注入 data attribute)
+  // Info: (20260714 - Emily) 錨點注入:段落標題全 33 段唯一,以「h3 文字 = 段落標題」對應注入段落 id
+  // Info: (20260714 - Emily) (Markdown 渲染層不支援原生 HTML,故於渲染後注入 data attribute)
   useEffect(() => {
     if (!previewContainerRef.current) return undefined;
     const timer = setTimeout(() => {
+      const titleToId = new Map(paragraphs.map((p) => [p.title, p.id]));
       const headings =
         previewContainerRef.current?.querySelectorAll("h3") ?? [];
-      const sectionHeadings = Array.from(headings).filter((h) =>
-        h.textContent?.trim().startsWith(CARBON_REPORT_SECTION_HEADING_PREFIX),
-      );
-      sectionHeadings.forEach((heading, index) => {
-        const paragraph = paragraphs[index];
-        if (!paragraph) return;
-        heading.setAttribute(CARBON_REPORT_PARAGRAPH_ATTR, paragraph.id);
+      Array.from(headings).forEach((heading) => {
+        const paragraphId = titleToId.get(heading.textContent?.trim() ?? "");
+        if (!paragraphId) return;
+        heading.setAttribute(CARBON_REPORT_PARAGRAPH_ATTR, paragraphId);
         // Info: (20260714 - Emily) 反向連動:點報告段落標題 → 回跳對話關聯訊息
         if (onParagraphHeadingClick) {
           const el = heading as HTMLElement;
           el.style.cursor = "pointer";
-          el.onclick = () => onParagraphHeadingClick(paragraph.id);
+          el.onclick = () => onParagraphHeadingClick(paragraphId);
         }
       });
     }, 150);
