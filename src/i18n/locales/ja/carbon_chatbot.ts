@@ -53,7 +53,10 @@ export const carbonChatbot = {
   new_session_title: "新しいインベントリ対話",
   save_saving: "保存中...",
   save_saved: "保存済み",
-  save_local_hint: "レポート下書きはこのブラウザに保存されます",
+  save_local_hint: "レポート下書きは暗号化してクラウドに保存されます",
+  save_failed: "保存に失敗しました",
+  save_failed_hint:
+    "保存失敗:別のタブが下書きを更新した可能性があります。ページを再読み込みしてください",
   attach_file: "ファイルを添付",
   remove_attachment: "添付を削除",
   attachment_invalid_type:

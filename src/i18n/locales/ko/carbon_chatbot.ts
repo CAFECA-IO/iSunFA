@@ -53,7 +53,10 @@ export const carbonChatbot = {
   new_session_title: "새 인벤토리 대화",
   save_saving: "저장 중...",
   save_saved: "저장됨",
-  save_local_hint: "보고서 초안은 이 브라우저에 저장됩니다",
+  save_local_hint: "보고서 초안은 암호화되어 클라우드에 저장됩니다",
+  save_failed: "저장 실패",
+  save_failed_hint:
+    "저장 실패: 다른 탭에서 초안을 업데이트했을 수 있습니다. 페이지를 새로고침해 주세요",
   attach_file: "파일 첨부",
   remove_attachment: "첨부 제거",
   attachment_invalid_type:

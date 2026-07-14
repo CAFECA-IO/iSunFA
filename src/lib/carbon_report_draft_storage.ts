@@ -1,81 +1,123 @@
 "use client";
 
-// Info: (20260714 - Emily) 報告草稿 + sessions 索引的本機儲存模組(demo 階段採 localStorage)
-// Info: (20260714 - Emily) 介面設計與未來 DB API(GET/PUT /api/v1/chat/carbon/report)對齊,呼叫端不感知儲存實作
-// ToDo: (20260714 - Emily) DB 化(仿 CarbonInventoryState:CarbonReportDraft model + version 樂觀鎖)時抽換本模組實作
+// Info: (20260714 - Emily) 報告草稿儲存模組:DB E2EE 版(取代 localStorage 草稿)
+// Info: (20260714 - Emily) 前端以主公鑰(xpub)加密後 PUT、以 PRF 解鎖之主私鑰解密 GET 回來的密文;server 全程不見明文
+// Info: (20260714 - Emily) sessions 標題快取仍留 localStorage(標題衍生自密文首訊,server 無法提供)
 
 import { IReportData } from "@/types/carbon_chatbot.types";
 import {
+  eciesEncrypt,
+  eciesDecrypt,
+  type IEciesEnvelope,
+  type IChatroomMasterKey,
+} from "@/lib/chatroom_ecies";
+import { request, ApiError } from "@/lib/utils/request";
+import {
   CARBON_REPORT_DRAFT_STORAGE_VERSION,
-  buildCarbonReportDraftKey,
   buildCarbonSessionsIndexKey,
 } from "@/constants/carbon_chatbot";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import {
-  StoredReportDraftSchema,
+  CarbonReportDataSchema,
   StoredSessionsIndexSchema,
   StoredSessionsIndex,
 } from "@/validators";
 
 export type ISessionIndexEntry = StoredSessionsIndex["sessions"][number];
 
+export interface ILoadedReportDraft {
+  reportData: IReportData;
+  version: number;
+}
+
+const REPORT_DRAFT_API = "/api/v1/chat/carbon/report";
+
+// Info: (20260714 - Emily) 取回草稿:GET 密文 → 主私鑰解密 → Zod 驗證(壞資料丟棄回 null,不讓髒資料進狀態)
+export const loadReportDraft = async (
+  channel: string,
+  masterKey: IChatroomMasterKey,
+): Promise<ILoadedReportDraft | null> => {
+  const res = await request<{
+    payload: {
+      draft: { envelope: IEciesEnvelope; version: number } | null;
+    } | null;
+  }>(REPORT_DRAFT_API, { query: { channel } });
+
+  const draft = res.payload?.draft;
+  if (!draft) return null;
+
+  try {
+    const plaintext = await eciesDecrypt(
+      masterKey.extendedPrivateKey,
+      draft.envelope,
+    );
+    const parsed = CarbonReportDataSchema.safeParse(JSON.parse(plaintext));
+    if (!parsed.success) return null;
+    return { reportData: parsed.data, version: draft.version };
+  } catch {
+    // Info: (20260714 - Emily) 解密失敗(非本金鑰/密文毀損)一律視為無草稿
+    return null;
+  }
+};
+
+// Info: (20260714 - Emily) 保存草稿:明文序列化 → xpub 加密 → PUT(帶樂觀鎖版本);回傳新版本
+export const saveReportDraft = async (
+  channel: string,
+  masterKey: IChatroomMasterKey,
+  reportData: IReportData,
+  version: number,
+): Promise<number> => {
+  const envelope = await eciesEncrypt(
+    masterKey.extendedPublicKey,
+    JSON.stringify(reportData),
+  );
+
+  const res = await request<{ payload: { version: number } | null }>(
+    REPORT_DRAFT_API,
+    {
+      method: "PUT",
+      body: JSON.stringify({
+        channel,
+        version,
+        recipientPublicKey: masterKey.extendedPublicKey,
+        envelope,
+      }),
+    },
+  );
+
+  if (!res.payload) throw new Error("Empty save draft payload");
+  return res.payload.version;
+};
+
+// Info: (20260714 - Emily) 判斷保存失敗是否為樂觀鎖衝突(他端已更新,呼叫端應重新載入)
+export const isDraftVersionConflict = (error: unknown): boolean => {
+  if (!(error instanceof ApiError)) return false;
+  const data = error.data as { errorCode?: string } | undefined;
+  return data?.errorCode === API_ERRORS.VL_DRAFT_VERSION_CONFLICT.code;
+};
+
+// Info: (20260714 - Emily) --- sessions 標題快取(localStorage) ---
 const isBrowser = (): boolean => typeof window !== "undefined";
 
-// Info: (20260714 - Emily) 讀取共用:JSON + Zod 驗證,壞資料直接移除並回 null(Fail Fast,不讓髒資料進狀態)
-const readValidated = <T>(
-  key: string,
-  parse: (raw: unknown) => T | null,
-): T | null => {
+export const loadSessionsIndex = (
+  address: string,
+): ISessionIndexEntry[] | null => {
   if (!isBrowser()) return null;
+  const key = buildCarbonSessionsIndexKey(address);
   const raw = window.localStorage.getItem(key);
   if (!raw) return null;
   try {
-    const result = parse(JSON.parse(raw));
-    if (result === null) window.localStorage.removeItem(key);
-    return result;
+    const parsed = StoredSessionsIndexSchema.safeParse(JSON.parse(raw));
+    if (!parsed.success) {
+      window.localStorage.removeItem(key);
+      return null;
+    }
+    return parsed.data.sessions;
   } catch {
     window.localStorage.removeItem(key);
     return null;
   }
 };
-
-export const loadReportDraft = (channel: string): IReportData | null =>
-  readValidated(buildCarbonReportDraftKey(channel), (raw) => {
-    const parsed = StoredReportDraftSchema.safeParse(raw);
-    return parsed.success ? parsed.data.reportData : null;
-  });
-
-export const saveReportDraft = (
-  channel: string,
-  reportData: IReportData,
-): void => {
-  if (!isBrowser()) return;
-  try {
-    window.localStorage.setItem(
-      buildCarbonReportDraftKey(channel),
-      JSON.stringify({
-        version: CARBON_REPORT_DRAFT_STORAGE_VERSION,
-        savedAt: new Date().toISOString(),
-        reportData,
-      }),
-    );
-  } catch (error) {
-    // Info: (20260714 - Emily) 寫入失敗(如容量滿)僅記錄,不中斷對話流程
-    console.error("[carbon-report-storage] save draft failed:", error);
-  }
-};
-
-export const clearReportDraft = (channel: string): void => {
-  if (!isBrowser()) return;
-  window.localStorage.removeItem(buildCarbonReportDraftKey(channel));
-};
-
-export const loadSessionsIndex = (
-  address: string,
-): ISessionIndexEntry[] | null =>
-  readValidated(buildCarbonSessionsIndexKey(address), (raw) => {
-    const parsed = StoredSessionsIndexSchema.safeParse(raw);
-    return parsed.success ? parsed.data.sessions : null;
-  });
 
 export const saveSessionsIndex = (
   address: string,

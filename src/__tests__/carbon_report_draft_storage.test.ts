@@ -1,15 +1,119 @@
-// Info: (20260714 - Emily) localStorage 報告草稿/sessions 索引儲存模組測試:round-trip、壞資料 Fail Fast、版本不符丟棄
-// Info: (20260714 - Emily) jest 為 node 環境(未裝 jsdom),以記憶體 stub 模擬 window.localStorage
+// Info: (20260714 - Emily) 報告草稿 DB 化測試:service 樂觀鎖衝突包裝 + PUT schema + sessions 標題快取(localStorage stub)
 
 import {
   describe,
   it,
   expect,
+  jest,
   beforeEach,
   beforeAll,
   afterAll,
 } from "@jest/globals";
+import { CarbonReportDraftService } from "@/services/carbon_report_draft.service";
+import { CarbonReportDraftRepository } from "@/repositories/carbon_report_draft.repo";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import {
+  CarbonReportDraftPutSchema,
+  CarbonReportDataSchema,
+} from "@/validators";
+import { buildInitialParagraphs } from "@/constants/carbon_chatbot.session";
 
+const CHANNEL = "carbon-chat-0xtest-2025";
+
+const putPayload = {
+  channel: CHANNEL,
+  version: 0,
+  recipientPublicKey: "xpub-test",
+  envelope: {
+    encryptedContent: "base64-ciphertext",
+    ephemeralPublicKey: "0x04abc",
+    keyDerivationHint: "m/1/2",
+    algorithm: "ECIES-secp256k1-AES-256-GCM",
+  },
+};
+
+const buildMockRepo = (
+  upsertResult: { version: number } | null | Error,
+): CarbonReportDraftRepository => {
+  const upsertByChannel = jest.fn<() => Promise<unknown>>();
+  if (upsertResult instanceof Error) {
+    upsertByChannel.mockRejectedValue(upsertResult);
+  } else {
+    upsertByChannel.mockResolvedValue(upsertResult);
+  }
+  return {
+    upsertByChannel,
+    findByChannel: jest.fn(),
+  } as unknown as CarbonReportDraftRepository;
+};
+
+describe("CarbonReportDraftService.saveDraft", () => {
+  it("should return the new version on success", async () => {
+    const service = new CarbonReportDraftService(buildMockRepo({ version: 3 }));
+    await expect(service.saveDraft(putPayload)).resolves.toEqual({
+      version: 3,
+    });
+  });
+
+  it("should raise a version conflict when the repo reports a stale version", async () => {
+    const service = new CarbonReportDraftService(buildMockRepo(null));
+    await expect(service.saveDraft(putPayload)).rejects.toMatchObject({
+      code: API_ERRORS.VL_DRAFT_VERSION_CONFLICT.code,
+    });
+  });
+
+  it("should wrap raw Prisma errors as IS_DB_FAILED", async () => {
+    const service = new CarbonReportDraftService(
+      buildMockRepo(new Error("Unique constraint P2002 secret detail")),
+    );
+    await expect(service.saveDraft(putPayload)).rejects.toMatchObject({
+      code: API_ERRORS.IS_DB_FAILED.code,
+      message: API_ERRORS.IS_DB_FAILED.message,
+    });
+  });
+});
+
+describe("CarbonReportDraftPutSchema", () => {
+  it("should accept a valid put payload", () => {
+    expect(CarbonReportDraftPutSchema.safeParse(putPayload).success).toBe(true);
+  });
+
+  it("should reject a negative version", () => {
+    const result = CarbonReportDraftPutSchema.safeParse({
+      ...putPayload,
+      version: -1,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("should reject an empty ciphertext", () => {
+    const result = CarbonReportDraftPutSchema.safeParse({
+      ...putPayload,
+      envelope: { ...putPayload.envelope, encryptedContent: "" },
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("CarbonReportDataSchema", () => {
+  it("should accept a decrypted report data payload", () => {
+    const result = CarbonReportDataSchema.safeParse({
+      documentName: "Carbon_Report_Draft_2025.pdf",
+      title: "2025 溫室氣體盤查報告",
+      section: "",
+      categories: [],
+      paragraphs: buildInitialParagraphs(),
+      totalEmissions: 0,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("should reject tampered plaintext (fail fast before entering state)", () => {
+    expect(CarbonReportDataSchema.safeParse({ bad: true }).success).toBe(false);
+  });
+});
+
+// Info: (20260714 - Emily) sessions 標題快取仍走 localStorage,以記憶體 stub 驗證 round-trip 與壞資料丟棄
 const createLocalStorageStub = (): Storage => {
   let store: Record<string, string> = {};
   return {
@@ -30,104 +134,41 @@ const createLocalStorageStub = (): Storage => {
   } as Storage;
 };
 
-beforeAll(() => {
-  Object.defineProperty(globalThis, "window", {
-    value: { localStorage: createLocalStorageStub() },
-    configurable: true,
-    writable: true,
+describe("sessions index cache", () => {
+  beforeAll(() => {
+    Object.defineProperty(globalThis, "window", {
+      value: { localStorage: createLocalStorageStub() },
+      configurable: true,
+      writable: true,
+    });
   });
-});
 
-afterAll(() => {
-  delete (globalThis as { window?: unknown }).window;
-});
-import {
-  loadReportDraft,
-  saveReportDraft,
-  clearReportDraft,
-  loadSessionsIndex,
-  saveSessionsIndex,
-} from "@/lib/carbon_report_draft_storage";
-import {
-  buildCarbonReportDraftKey,
-  buildCarbonSessionsIndexKey,
-} from "@/constants/carbon_chatbot";
-import { buildInitialParagraphs } from "@/constants/carbon_chatbot.session";
-import { IReportData } from "@/types/carbon_chatbot.types";
+  afterAll(() => {
+    delete (globalThis as { window?: unknown }).window;
+  });
 
-const CHANNEL = "carbon-chat-0xtest-2025";
-const ADDRESS = "0xtest";
-
-const buildReportData = (): IReportData => ({
-  documentName: "Carbon_Report_Draft_2025.pdf",
-  title: "2025 溫室氣體盤查報告",
-  section: "",
-  categories: [],
-  paragraphs: buildInitialParagraphs(),
-  totalEmissions: 0,
-});
-
-describe("carbon_report_draft_storage", () => {
   beforeEach(() => {
     window.localStorage.clear();
   });
 
-  it("should round-trip a report draft", () => {
-    const data = buildReportData();
-    saveReportDraft(CHANNEL, data);
-    expect(loadReportDraft(CHANNEL)).toEqual(data);
-  });
-
-  it("should return null when no draft exists", () => {
-    expect(loadReportDraft(CHANNEL)).toBeNull();
-  });
-
-  it("should discard and remove tampered data (fail fast)", () => {
-    const key = buildCarbonReportDraftKey(CHANNEL);
-    window.localStorage.setItem(key, "{not-json");
-    expect(loadReportDraft(CHANNEL)).toBeNull();
-    expect(window.localStorage.getItem(key)).toBeNull();
-
-    window.localStorage.setItem(
-      key,
-      JSON.stringify({ version: 1, savedAt: "x", reportData: { bad: true } }),
+  it("should round-trip the sessions index and reject tampered entries", async () => {
+    const { loadSessionsIndex, saveSessionsIndex } = await import(
+      "@/lib/carbon_report_draft_storage"
     );
-    expect(loadReportDraft(CHANNEL)).toBeNull();
-    expect(window.localStorage.getItem(key)).toBeNull();
-  });
+    const { buildCarbonSessionsIndexKey } = await import(
+      "@/constants/carbon_chatbot"
+    );
 
-  it("should discard drafts with a mismatched schema version", () => {
-    const key = buildCarbonReportDraftKey(CHANNEL);
-    saveReportDraft(CHANNEL, buildReportData());
-    const stored = JSON.parse(window.localStorage.getItem(key) as string);
-    stored.version = 999;
-    window.localStorage.setItem(key, JSON.stringify(stored));
-    expect(loadReportDraft(CHANNEL)).toBeNull();
-  });
-
-  it("should clear a draft", () => {
-    saveReportDraft(CHANNEL, buildReportData());
-    clearReportDraft(CHANNEL);
-    expect(loadReportDraft(CHANNEL)).toBeNull();
-  });
-
-  it("should isolate drafts per channel", () => {
-    const data = buildReportData();
-    saveReportDraft(CHANNEL, data);
-    expect(loadReportDraft("carbon-chat-0xtest-other")).toBeNull();
-  });
-
-  it("should round-trip the sessions index and reject tampered entries", () => {
     const sessions = [
       { id: "2025", title: "2025 溫室氣體盤查報告", createdAt: "2026/7/14" },
     ];
-    saveSessionsIndex(ADDRESS, sessions);
-    expect(loadSessionsIndex(ADDRESS)).toEqual(sessions);
+    saveSessionsIndex("0xtest", sessions);
+    expect(loadSessionsIndex("0xtest")).toEqual(sessions);
 
     window.localStorage.setItem(
-      buildCarbonSessionsIndexKey(ADDRESS),
+      buildCarbonSessionsIndexKey("0xtest"),
       JSON.stringify({ version: 1, sessions: [{ id: "" }] }),
     );
-    expect(loadSessionsIndex(ADDRESS)).toBeNull();
+    expect(loadSessionsIndex("0xtest")).toBeNull();
   });
 });

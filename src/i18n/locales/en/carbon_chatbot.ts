@@ -53,7 +53,10 @@ export const carbonChatbot = {
   new_session_title: "New inventory chat",
   save_saving: "Saving...",
   save_saved: "Saved",
-  save_local_hint: "Report draft is stored in this browser",
+  save_local_hint: "Report draft is encrypted and saved to the cloud",
+  save_failed: "Save failed",
+  save_failed_hint:
+    "Save failed: another tab may have updated the draft; reload to get the latest version",
   attach_file: "Attach file",
   remove_attachment: "Remove attachment",
   attachment_invalid_type:

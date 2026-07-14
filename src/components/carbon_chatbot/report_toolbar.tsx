@@ -2,7 +2,7 @@
 
 // Info: (20260713 - Tzuhan) 報告工具列:文件名 + 完成/查核雙軌進度膠囊 + 章節目錄開關
 
-import { FileText, ListTree, Check, Loader2 } from "lucide-react";
+import { FileText, ListTree, Check, Loader2, AlertTriangle } from "lucide-react";
 import { IReportProgressStats } from "@/types/carbon_chatbot.types";
 import { ReportSaveStatus } from "@/hooks/use_carbon_chat";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -47,21 +47,34 @@ export function ReportToolbar({
         </span>
       )}
 
-      {/* Info: (20260714 - Emily) 本機保存指示:tooltip 註明草稿儲存於本機(demo 為 localStorage) */}
+      {/* Info: (20260714 - Emily) 草稿保存指示(E2EE 入庫);error = 保存失敗或他端已更新(版本衝突) */}
       {saveStatus && (
         <span
-          title={t("carbon_chatbot.save_local_hint")}
+          title={
+            saveStatus === "error"
+              ? t("carbon_chatbot.save_failed_hint")
+              : t("carbon_chatbot.save_local_hint")
+          }
           className="flex shrink-0 items-center gap-1 text-[11px] font-medium text-gray-400"
         >
-          {saveStatus === "saving" ? (
+          {saveStatus === "saving" && (
             <>
               <Loader2 size={11} className="animate-spin" />
               {t("carbon_chatbot.save_saving")}
             </>
-          ) : (
+          )}
+          {saveStatus === "saved" && (
             <>
               <Check size={11} className="text-green-600" />
               {t("carbon_chatbot.save_saved")}
+            </>
+          )}
+          {saveStatus === "error" && (
+            <>
+              <AlertTriangle size={11} className="text-red-500" />
+              <span className="text-red-500">
+                {t("carbon_chatbot.save_failed")}
+              </span>
             </>
           )}
         </span>

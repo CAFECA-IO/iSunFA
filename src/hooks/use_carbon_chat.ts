@@ -26,6 +26,7 @@ import {
 import {
   loadReportDraft,
   saveReportDraft,
+  isDraftVersionConflict,
   loadSessionsIndex,
   saveSessionsIndex,
 } from "@/lib/carbon_report_draft_storage";
@@ -56,8 +57,8 @@ import {
   CARBON_REPORT_AUTOSAVE_DEBOUNCE_MS,
 } from "@/constants/carbon_chatbot";
 
-// Info: (20260714 - Emily) 報告草稿保存狀態(工具列顯示;null = 尚無變更)
-export type ReportSaveStatus = "saving" | "saved" | null;
+// Info: (20260714 - Emily) 報告草稿保存狀態(工具列顯示;null = 尚無變更;error = 保存失敗/版本衝突)
+export type ReportSaveStatus = "saving" | "saved" | "error" | null;
 
 export const useCarbonChat = () => {
   const { t, language } = useTranslation();
@@ -97,6 +98,8 @@ export const useCarbonChat = () => {
   const [saveStatus, setSaveStatus] = useState<ReportSaveStatus>(null);
   const restoredChannelsRef = useRef<Set<string>>(new Set());
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Info: (20260714 - Emily) 各 channel 草稿的樂觀鎖版本(讀取時記下,保存成功後更新)
+  const draftVersionsRef = useRef<Map<string, number>>(new Map());
   // Info: (20260714 - Emily) 已載入過歷史的 channel(切換 session 時各自載一次)
   const loadedChannelsRef = useRef<Set<string>>(new Set());
   // Info: (20260712 - Luphia) 歷史訊息分頁狀態（上卷載入更多）
@@ -252,35 +255,71 @@ export const useCarbonChat = () => {
       });
   }, [user?.address, t]);
 
-  // Info: (20260714 - Emily) 切至 session 時還原本機報告草稿(每 channel 只還原一次,之後以記憶體狀態為準)
+  // Info: (20260714 - Emily) 切至 session 時自 DB 還原報告草稿(密文 → 主私鑰解密;需先解鎖,每 channel 只還原一次)
   useEffect(() => {
+    const master = masterKeyRef.current;
+    if (!isUnlocked || !master) return;
     if (restoredChannelsRef.current.has(chatChannel)) return;
     restoredChannelsRef.current.add(chatChannel);
-    const draft = loadReportDraft(chatChannel);
-    if (!draft) return;
-    setSessionsData((prev) => {
-      const session = prev[activeSessionId];
-      if (!session) return prev;
-      return { ...prev, [activeSessionId]: { ...session, reportData: draft } };
-    });
-  }, [chatChannel, activeSessionId]);
+    const sessionIdForChannel = activeSessionId;
 
-  // Info: (20260714 - Emily) 報告草稿 debounce 自動保存;還原完成前不保存,避免空骨架覆蓋既有草稿
+    loadReportDraft(chatChannel, master)
+      .then((loaded) => {
+        // Info: (20260714 - Emily) 無草稿 → 版本 0(首存);有草稿 → 記錄版本供樂觀鎖
+        draftVersionsRef.current.set(chatChannel, loaded?.version ?? 0);
+        if (!loaded) return;
+        setSessionsData((prev) => {
+          const session = prev[sessionIdForChannel];
+          if (!session) return prev;
+          return {
+            ...prev,
+            [sessionIdForChannel]: {
+              ...session,
+              reportData: loaded.reportData,
+            },
+          };
+        });
+      })
+      .catch((error) => {
+        // Info: (20260714 - Emily) 還原失敗不阻斷對話;版本未知時保守設 0,首存衝突會被後端擋下
+        console.error("[carbon-chat] failed to load report draft:", error);
+        draftVersionsRef.current.set(chatChannel, 0);
+      });
+  }, [isUnlocked, chatChannel, activeSessionId]);
+
+  // Info: (20260714 - Emily) 報告草稿 debounce 自動保存(前端加密 → PUT);還原完成前不保存,避免空骨架覆蓋既有草稿
   const activeReportData = sessionsData[activeSessionId]?.reportData;
   useEffect(() => {
     if (!activeReportData) return undefined;
     if (!restoredChannelsRef.current.has(chatChannel)) return undefined;
+    if (!draftVersionsRef.current.has(chatChannel)) return undefined;
+    const master = masterKeyRef.current;
+    if (!master) return undefined;
+
     setSaveStatus("saving");
     if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
     autosaveTimerRef.current = setTimeout(() => {
       autosaveTimerRef.current = null;
-      saveReportDraft(chatChannel, activeReportData);
-      setSaveStatus("saved");
+      const expectedVersion = draftVersionsRef.current.get(chatChannel) ?? 0;
+      saveReportDraft(chatChannel, master, activeReportData, expectedVersion)
+        .then((newVersion) => {
+          draftVersionsRef.current.set(chatChannel, newVersion);
+          setSaveStatus("saved");
+        })
+        .catch((error) => {
+          // Info: (20260714 - Emily) 樂觀鎖衝突 = 他端已更新,不 silent overwrite;一律以 error 提示重整取得最新
+          if (isDraftVersionConflict(error)) {
+            console.warn("[carbon-chat] draft version conflict:", chatChannel);
+          } else {
+            console.error("[carbon-chat] failed to save report draft:", error);
+          }
+          setSaveStatus("error");
+        });
     }, CARBON_REPORT_AUTOSAVE_DEBOUNCE_MS);
     return () => {
       if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
     };
-  }, [activeReportData, chatChannel]);
+  }, [activeReportData, chatChannel, isUnlocked]);
 
   // Info: (20260714 - Emily) sessions 索引持久化(id/標題/建立時間;訊息內容已由 DB 密文保存,不重複入本機)
   useEffect(() => {

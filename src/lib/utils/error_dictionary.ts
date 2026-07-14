@@ -557,6 +557,12 @@ export const API_ERRORS = {
     message: "Voucher debits and credits are imbalanced",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
+  // Info: (20260714 - Emily) 報告草稿樂觀鎖衝突(另一分頁/裝置已更新,須重新載入)
+  VL_DRAFT_VERSION_CONFLICT: {
+    code: "VL000017",
+    message: "Report draft version conflict; reload the latest draft",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
 
   // Info: (20260421 - Luphia) NF: Not Found Resources (000001 ~ 000099)
   NF_USER: {
