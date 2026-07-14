@@ -100,7 +100,10 @@ const AddLinkPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: MermaidActionType.SANKEY_ADD_LINK,
-      description: `新增流向 "${formInput} ➡️ ${toInput}"`,
+      description: t("chart.mermaid.ai_editor.sankey.action_add_link", {
+        source: formInput,
+        target: toInput,
+      }),
       payload: {
         source: formInput,
         target: toInput,
@@ -295,7 +298,10 @@ const EditLinkPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: MermaidActionType.SANKEY_EDIT_LINK,
-      description: `修改項目 "${newSource} ➡️ ${newTarget}"`,
+      description: t("chart.mermaid.ai_editor.sankey.action_edit_link", {
+        source: newSource,
+        target: newTarget,
+      }),
       payload: {
         lineIndex: Number(selectedLinkId),
         source: newSource,
@@ -451,7 +457,10 @@ const ReverseFlowPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: MermaidActionType.SANKEY_REVERSE_FLOW,
-      description: `反轉流向 "${selectedTarget} ➡️ ${selectedSource}"`,
+      description: t("chart.mermaid.ai_editor.sankey.action_reverse_flow", {
+        source: selectedSource,
+        target: selectedTarget,
+      }),
       payload: { lineIndex: Number(selectedLinkId) },
     });
   };
@@ -516,7 +525,10 @@ const RenameNodePanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: MermaidActionType.SANKEY_RENAME_NODE,
-      description: `變更節點名稱 "${selectedNode} ➡️ ${newName}"`,
+      description: t("chart.mermaid.ai_editor.sankey.action_rename_node", {
+        oldName: selectedNode,
+        newName: newName,
+      }),
       payload: {
         oldName: selectedNode,
         newName: newName,
@@ -606,7 +618,10 @@ const DeleteLinkPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: MermaidActionType.SANKEY_DELETE_LINK,
-      description: `刪除流向 "${selectedSource} ➡️ ${selectedTarget}"`,
+      description: t("chart.mermaid.ai_editor.sankey.action_delete_link", {
+        source: selectedSource,
+        target: selectedTarget,
+      }),
       payload: { lineIndex: Number(selectedLinkId) },
     });
   };

@@ -202,7 +202,9 @@ const AddTaskPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: MermaidActionType.GANTT_ADD_TASK,
-      description: `新增任務 "${ganttTaskLabel}"`,
+      description: t("chart.mermaid.ai_editor.gantt.action_add_task", {
+        label: ganttTaskLabel,
+      }),
       payload: {
         label: ganttTaskLabel,
         section: ganttSection || undefined,
@@ -440,7 +442,9 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: MermaidActionType.GANTT_EDIT_TASK,
-      description: `修改任務 "${ganttTaskTarget}"`,
+      description: t("chart.mermaid.ai_editor.gantt.action_edit_task", {
+        target: ganttTaskTarget,
+      }),
       payload: {
         taskLabel: targetItem.label,
         taskId: targetItem.id,
@@ -678,7 +682,9 @@ const ChangeTaskTypePanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: MermaidActionType.GANTT_EDIT_TASK,
-      description: `變更任務 "${ganttTaskTarget}" 類型`,
+      description: t("chart.mermaid.ai_editor.gantt.action_change_type", {
+        target: ganttTaskTarget,
+      }),
       payload: {
         taskLabel: targetItem.label,
         taskId: targetItem.id,
@@ -768,7 +774,10 @@ const SwapTaskPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: MermaidActionType.GANTT_SWAP_TASK,
-      description: `對調任務 "${ganttTaskTarget}" 與 "${ganttTaskTarget2}"`,
+      description: t("chart.mermaid.ai_editor.gantt.action_swap_task", {
+        a: ganttTaskTarget,
+        b: ganttTaskTarget2,
+      }),
       payload: {
         taskLabel1: item1.label,
         taskId1: item1.id,
@@ -860,7 +869,9 @@ const DeleteTaskPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: MermaidActionType.GANTT_DELETE_TASK,
-      description: `刪除任務 "${ganttTaskTarget}"`,
+      description: t("chart.mermaid.ai_editor.gantt.action_delete_task", {
+        target: ganttTaskTarget,
+      }),
       payload: {
         taskLabel: targetItem.label,
         taskId: targetItem.id,

@@ -144,7 +144,9 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
       const titleAction: IChartAction = {
         id: crypto.randomUUID(),
         type: MermaidActionType.CHANGE_TITLE,
-        description: `修改圖表標題為 "${newTitle}"`,
+        description: t("chart.mermaid.ai_editor.action_change_title", {
+          title: newTitle,
+        }),
         payload: { title: newTitle },
       };
       return [...filtered, titleAction];

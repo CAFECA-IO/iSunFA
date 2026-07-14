@@ -136,7 +136,13 @@ const AddSeriesPanel: FC<IBasePanelProps> = ({ onAddAction }) => {
     onAddAction({
       id: crypto.randomUUID(),
       type: MermaidActionType.XYCHART_ADD_SERIES,
-      description: `新增 ${dataType} 數列`,
+      description: t("chart.mermaid.ai_editor.xychart.action_add_series", {
+        type: t(
+          dataType === XYChartDataType.BAR
+            ? "chart.mermaid.ai_editor.xychart.data_type_bar"
+            : "chart.mermaid.ai_editor.xychart.data_type_line",
+        ),
+      }),
       payload: {
         type: dataType,
         seriesName: nameInput,
@@ -260,7 +266,7 @@ const EditXAxisPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: MermaidActionType.XYCHART_CHANGE_X_AXIS,
-      description: `變更 X 軸設定`,
+      description: t("chart.mermaid.ai_editor.xychart.action_change_x_axis"),
       payload,
     });
   };
@@ -398,7 +404,7 @@ const EditYAxisPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: MermaidActionType.XYCHART_CHANGE_Y_AXIS,
-      description: `變更 Y 軸設定`,
+      description: t("chart.mermaid.ai_editor.xychart.action_change_y_axis"),
       payload: {
         title: yAxisTitle || undefined,
         min: minInput.value !== "" ? Number(minInput.value) : undefined,
@@ -537,7 +543,9 @@ const EditLinePanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: MermaidActionType.XYCHART_CHANGE_LINE_SERIES,
-      description: `變更折線圖數值 (數列 #${targetIndex + 1})`,
+      description: t("chart.mermaid.ai_editor.xychart.action_change_line", {
+        index: targetIndex + 1,
+      }),
       payload: {
         seriesIndex: targetIndex,
         type: dataType,
@@ -740,7 +748,9 @@ const EditBarPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: MermaidActionType.XYCHART_CHANGE_BAR_SERIES,
-      description: `變更長條圖數值 (數列 #${targetIndex + 1})`,
+      description: t("chart.mermaid.ai_editor.xychart.action_change_bar", {
+        index: targetIndex + 1,
+      }),
       payload: {
         seriesIndex: targetIndex,
         type: dataType,
@@ -893,7 +903,9 @@ const DeleteSeriesPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: MermaidActionType.XYCHART_DELETE_SERIES,
-      description: `刪除數列 #${selectedSeries}`,
+      description: t("chart.mermaid.ai_editor.xychart.action_delete_series", {
+        index: selectedSeries,
+      }),
       payload,
     });
   };

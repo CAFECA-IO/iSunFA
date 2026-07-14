@@ -92,9 +92,10 @@ const AddSlicePanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: MermaidActionType.PIE_ADD_ITEM,
-      description: `新增項目 "${pieSliceLabel}" (${
-        isProportion ? pieSliceValue.value + "%" : pieSliceValue.value
-      })`,
+      description: t("chart.mermaid.ai_editor.pie.action_add_slice", {
+        label: pieSliceLabel,
+        value: isProportion ? pieSliceValue.value + "%" : pieSliceValue.value,
+      }),
       payload: {
         label: pieSliceLabel,
         value: finalValue,
@@ -212,7 +213,9 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: MermaidActionType.PIE_EDIT_ITEM,
-      description: `修改項目 "${pieSliceTarget}"`,
+      description: t("chart.mermaid.ai_editor.pie.action_edit_slice", {
+        target: pieSliceTarget,
+      }),
       payload: {
         oldLabel: pieSliceTarget,
         newLabel: pieSliceNewLabel || pieSliceTarget,
@@ -324,7 +327,9 @@ const DeleteSlicePanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: MermaidActionType.PIE_DELETE_ITEM,
-      description: `刪除項目 "${pieSliceTarget}"`,
+      description: t("chart.mermaid.ai_editor.pie.action_delete_slice", {
+        target: pieSliceTarget,
+      }),
       payload: {
         label: pieSliceTarget,
       },
