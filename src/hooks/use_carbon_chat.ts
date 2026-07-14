@@ -19,7 +19,16 @@ import {
   buildSectionHeading,
 } from "@/constants/carbon_report_outline";
 import { IParagraphDraft } from "@/interfaces/carbon_paragraph_draft";
-import { INITIAL_SESSIONS } from "@/constants/carbon_chatbot.mock";
+import {
+  createDefaultSessions,
+  createChatSession,
+} from "@/constants/carbon_chatbot.session";
+import {
+  loadReportDraft,
+  saveReportDraft,
+  loadSessionsIndex,
+  saveSessionsIndex,
+} from "@/lib/carbon_report_draft_storage";
 import { useTranslation } from "@/i18n/i18n_context";
 import { subscribeChatroom } from "@/lib/chatroom";
 import {
@@ -44,13 +53,18 @@ import {
   CARBON_CHAT_MAX_ATTACHMENT_BYTES,
   CARBON_CHAT_MAX_ATTACHMENTS_PER_MESSAGE,
   CARBON_CHAT_HIGHLIGHT_DURATION_MS,
+  CARBON_REPORT_AUTOSAVE_DEBOUNCE_MS,
 } from "@/constants/carbon_chatbot";
+
+// Info: (20260714 - Emily) 報告草稿保存狀態(工具列顯示;null = 尚無變更)
+export type ReportSaveStatus = "saving" | "saved" | null;
 
 export const useCarbonChat = () => {
   const { t, language } = useTranslation();
   const { user } = useAuth();
-  const [sessionsData, setSessionsData] =
-    useState<Record<string, IChatSession>>(INITIAL_SESSIONS);
+  const [sessionsData, setSessionsData] = useState<
+    Record<string, IChatSession>
+  >(() => createDefaultSessions());
   const [activeSessionId, setActiveSessionId] =
     useState<string>(DEFAULT_SESSION_ID);
   const [inputValue, setInputValue] = useState<string>("");
@@ -79,6 +93,12 @@ export const useCarbonChat = () => {
   const [focusedMessageId, setFocusedMessageId] = useState<string | null>(null);
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const focusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Info: (20260714 - Emily) 報告草稿保存狀態與「已還原草稿的 channel」集合(還原前禁止自動保存,避免空骨架覆蓋既有草稿)
+  const [saveStatus, setSaveStatus] = useState<ReportSaveStatus>(null);
+  const restoredChannelsRef = useRef<Set<string>>(new Set());
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Info: (20260714 - Emily) 已載入過歷史的 channel(切換 session 時各自載一次)
+  const loadedChannelsRef = useRef<Set<string>>(new Set());
   // Info: (20260712 - Luphia) 歷史訊息分頁狀態（上卷載入更多）
   const [hasMoreHistory, setHasMoreHistory] = useState<boolean>(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(false);
@@ -164,6 +184,82 @@ export const useCarbonChat = () => {
       if (focusTimerRef.current) clearTimeout(focusTimerRef.current);
     };
   }, []);
+
+  // Info: (20260714 - Emily) 進入時載入本機 sessions 索引,重建歷史 session 骨架(標題/時間;內容各自延遲還原)
+  const sessionsIndexLoadedRef = useRef<boolean>(false);
+  useEffect(() => {
+    if (!user?.address || sessionsIndexLoadedRef.current) return;
+    sessionsIndexLoadedRef.current = true;
+    const index = loadSessionsIndex(user.address);
+    if (!index || index.length === 0) return;
+    setSessionsData((prev) => {
+      const next = { ...prev };
+      index.forEach((entry) => {
+        if (!next[entry.id]) {
+          next[entry.id] = createChatSession(
+            entry.id,
+            entry.title,
+            entry.createdAt,
+          );
+        }
+      });
+      return next;
+    });
+  }, [user?.address]);
+
+  // Info: (20260714 - Emily) 切至 session 時還原本機報告草稿(每 channel 只還原一次,之後以記憶體狀態為準)
+  useEffect(() => {
+    if (restoredChannelsRef.current.has(chatChannel)) return;
+    restoredChannelsRef.current.add(chatChannel);
+    const draft = loadReportDraft(chatChannel);
+    if (!draft) return;
+    setSessionsData((prev) => {
+      const session = prev[activeSessionId];
+      if (!session) return prev;
+      return { ...prev, [activeSessionId]: { ...session, reportData: draft } };
+    });
+  }, [chatChannel, activeSessionId]);
+
+  // Info: (20260714 - Emily) 報告草稿 debounce 自動保存;還原完成前不保存,避免空骨架覆蓋既有草稿
+  const activeReportData = sessionsData[activeSessionId]?.reportData;
+  useEffect(() => {
+    if (!activeReportData) return undefined;
+    if (!restoredChannelsRef.current.has(chatChannel)) return undefined;
+    setSaveStatus("saving");
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    autosaveTimerRef.current = setTimeout(() => {
+      autosaveTimerRef.current = null;
+      saveReportDraft(chatChannel, activeReportData);
+      setSaveStatus("saved");
+    }, CARBON_REPORT_AUTOSAVE_DEBOUNCE_MS);
+    return () => {
+      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    };
+  }, [activeReportData, chatChannel]);
+
+  // Info: (20260714 - Emily) sessions 索引持久化(id/標題/建立時間;訊息內容已由 DB 密文保存,不重複入本機)
+  useEffect(() => {
+    if (!user?.address || !sessionsIndexLoadedRef.current) return;
+    const entries = Object.values(sessionsData).map((s) => ({
+      id: s.id,
+      title: s.title,
+      createdAt: s.time,
+    }));
+    saveSessionsIndex(user.address, entries);
+  }, [sessionsData, user?.address]);
+
+  // Info: (20260714 - Emily) 新增對話:建立空白 session 並切換;channel 隨 id 變更,歷史/草稿各自獨立
+  const createNewSession = useCallback(() => {
+    const id = `s${Date.now().toString(36)}`;
+    const session = createChatSession(
+      id,
+      t("carbon_chatbot.new_session_title"),
+      new Date().toLocaleDateString(),
+    );
+    setSessionsData((prev) => ({ ...prev, [id]: session }));
+    setActiveSessionId(id);
+    setActiveParagraphId(null);
+  }, [t]);
 
   // Info: (20260714 - Emily) 跳至報告段落並短暫高亮(chip 點擊與草稿寫入後的即時回饋共用)
   const jumpToReportParagraph = useCallback((paragraphId: string) => {
@@ -691,6 +787,17 @@ export const useCarbonChat = () => {
     // Info: (20260713 - Tzuhan) 廢除訊息計次假進度;進度一律由 reportStats 依實際完成段落數推導
     setSessionsData((prev) => {
       const updatedSession = { ...prev[activeSessionId] };
+      // Info: (20260714 - Emily) 新對話以首則使用者訊息摘要為標題(demo 精度:截前 24 字)
+      const hasUserMessage = updatedSession.messages.some(
+        (m) => m.sender === ChatRoleEnum.USER,
+      );
+      if (
+        !hasUserMessage &&
+        inputValue.trim() &&
+        updatedSession.title === t("carbon_chatbot.new_session_title")
+      ) {
+        updatedSession.title = inputValue.trim().slice(0, 24);
+      }
       updatedSession.messages = [...updatedSession.messages, userMessage];
       return { ...prev, [activeSessionId]: updatedSession };
     });
@@ -790,9 +897,9 @@ export const useCarbonChat = () => {
   const initializeChat = useCallback(async () => {
     if (isUnlocked) return;
 
-    let masterKey: IChatroomMasterKey;
     try {
-      masterKey = await ensureMasterKeyCached();
+      // Info: (20260714 - Emily) 解鎖後主金鑰存於 masterKeyRef,歷史載入/招呼詞由 channel 載入 effect 接手
+      await ensureMasterKeyCached();
     } catch (keyError) {
       if (keyError instanceof ChatroomUnsupportedDeviceError) {
         appendMessageLocally(
@@ -820,67 +927,81 @@ export const useCarbonChat = () => {
 
     setIsUnlocked(true);
     setIsError(false);
+    // Info: (20260714 - Emily) 歷史載入與招呼詞改由 channel 載入 effect 統一處理(切換 session 亦適用)
+  }, [isUnlocked, ensureMasterKeyCached, appendMessageLocally, t]);
 
-    // Info: (20260712 - Luphia) 進入時載入最近一頁歷史；已有內容則不需招呼詞
-    const historyCount = await loadHistory();
-    if (historyCount > 0) return;
+  // Info: (20260712 - Luphia) 空 chatroom → 請後端做前置作業產生招呼詞並加密發佈；由訂閱端解密後顯示
+  const requestGreeting = useCallback(
+    async (recipientPublicKey: string) => {
+      setIsTyping(true);
+      pendingReplyRef.current = true;
+      try {
+        const response = await fetch("/api/v1/chat/carbon", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            init: true,
+            channel: chatChannel,
+            recipientPublicKey,
+            currentStep: activeSession?.currentStep,
+            language,
+          }),
+        });
 
-    // Info: (20260712 - Luphia) 空 chatroom → 請後端做前置作業產生招呼詞並加密發佈；由訂閱端解密後顯示
-    setIsTyping(true);
-    pendingReplyRef.current = true;
-    try {
-      const response = await fetch("/api/v1/chat/carbon", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          init: true,
-          channel: chatChannel,
-          recipientPublicKey: masterKey.extendedPublicKey,
-          currentStep: activeSession.currentStep,
-          language,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `Greeting init responded with status ${response.status}`,
+        if (!response.ok) {
+          throw new Error(
+            `Greeting init responded with status ${response.status}`,
+          );
+        }
+        const data = await response.json();
+        if (!data.success) {
+          throw new Error(data.message || "Greeting init returned an error");
+        }
+        // Info: (20260712 - Luphia) 啟動等待逾時，避免招呼詞「已發佈但未收到」時卡在 typing
+        startReplyTimeout();
+      } catch (error) {
+        console.error("[carbon-chat] greeting init failed:", error);
+        setIsError(true);
+        appendMessageLocally(
+          {
+            id: crypto.randomUUID(),
+            sender: ChatRoleEnum.AI,
+            text: t("carbon_chatbot.system_error"),
+          },
+          0,
         );
       }
-      const data = await response.json();
-      if (!data.success) {
-        throw new Error(data.message || "Greeting init returned an error");
-      }
-      // Info: (20260712 - Luphia) 啟動等待逾時，避免招呼詞「已發佈但未收到」時卡在 typing
-      startReplyTimeout();
-    } catch (error) {
-      console.error("[carbon-chat] greeting init failed:", error);
-      setIsError(true);
-      appendMessageLocally(
-        {
-          id: crypto.randomUUID(),
-          sender: ChatRoleEnum.AI,
-          text: t("carbon_chatbot.system_error"),
-        },
-        0,
-      );
-    }
-  }, [
-    isUnlocked,
-    ensureMasterKeyCached,
-    appendMessageLocally,
-    startReplyTimeout,
-    loadHistory,
-    t,
-    chatChannel,
-    activeSession,
-    language,
-  ]);
+    },
+    [chatChannel, activeSession, language, startReplyTimeout, appendMessageLocally, t],
+  );
+
+  // Info: (20260714 - Emily) channel 載入 effect:解鎖後(含切換/新增 session)各 channel 載一次歷史,空房間請 AI 招呼
+  useEffect(() => {
+    const master = masterKeyRef.current;
+    if (!isUnlocked || !master) return;
+    if (loadedChannelsRef.current.has(chatChannel)) return;
+    loadedChannelsRef.current.add(chatChannel);
+
+    loadHistory()
+      .then((count) => {
+        if (count === 0) {
+          return requestGreeting(master.extendedPublicKey);
+        }
+        return undefined;
+      })
+      .catch((error) => {
+        console.error("[carbon-chat] channel load failed:", error);
+        setIsError(true);
+      });
+  }, [isUnlocked, chatChannel, loadHistory, requestGreeting]);
 
   return {
     sessionsList,
     activeSession,
     activeSessionId,
     setActiveSessionId,
+    createNewSession,
+    saveStatus,
     inputValue,
     setInputValue,
     isTyping,

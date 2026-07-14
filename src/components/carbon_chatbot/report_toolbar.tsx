@@ -2,8 +2,9 @@
 
 // Info: (20260713 - Tzuhan) 報告工具列:文件名 + 完成/查核雙軌進度膠囊 + 章節目錄開關
 
-import { FileText, ListTree } from "lucide-react";
+import { FileText, ListTree, Check, Loader2 } from "lucide-react";
 import { IReportProgressStats } from "@/types/carbon_chatbot.types";
+import { ReportSaveStatus } from "@/hooks/use_carbon_chat";
 import { useTranslation } from "@/i18n/i18n_context";
 
 interface IReportToolbarProps {
@@ -14,6 +15,8 @@ interface IReportToolbarProps {
   // Info: (20260713 - Tzuhan) 報告狀態徽章(取代舊 Markdown 內嵌 HTML 的狀態列)
   status?: string;
   statusColor?: string;
+  // Info: (20260714 - Emily) 報告草稿本機保存狀態(null = 尚無變更)
+  saveStatus?: ReportSaveStatus;
 }
 
 export function ReportToolbar({
@@ -23,6 +26,7 @@ export function ReportToolbar({
   onToggleDrawer,
   status = undefined,
   statusColor = undefined,
+  saveStatus = null,
 }: IReportToolbarProps) {
   const { t } = useTranslation();
 
@@ -40,6 +44,26 @@ export function ReportToolbar({
           className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${statusColor ?? "bg-gray-100 text-gray-500"}`}
         >
           {status}
+        </span>
+      )}
+
+      {/* Info: (20260714 - Emily) 本機保存指示:tooltip 註明草稿儲存於本機(demo 為 localStorage) */}
+      {saveStatus && (
+        <span
+          title={t("carbon_chatbot.save_local_hint")}
+          className="flex shrink-0 items-center gap-1 text-[11px] font-medium text-gray-400"
+        >
+          {saveStatus === "saving" ? (
+            <>
+              <Loader2 size={11} className="animate-spin" />
+              {t("carbon_chatbot.save_saving")}
+            </>
+          ) : (
+            <>
+              <Check size={11} className="text-green-600" />
+              {t("carbon_chatbot.save_saved")}
+            </>
+          )}
         </span>
       )}
 

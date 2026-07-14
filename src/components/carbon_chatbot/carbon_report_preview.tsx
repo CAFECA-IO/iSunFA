@@ -8,6 +8,7 @@ import {
   IChatSession,
   IReportProgressStats,
 } from "@/types/carbon_chatbot.types";
+import { ReportSaveStatus } from "@/hooks/use_carbon_chat";
 import PdfEditor from "@/components/pdf_tool/pdf_editor";
 import { PdfToolViewMode } from "@/constants/pdf_tool";
 import {
@@ -38,6 +39,8 @@ interface ICarbonReportPreviewProps {
   // Info: (20260714 - Emily) 對話↔報告雙向連動:短暫高亮的段落與「點報告段落 → 回跳對話訊息」callback
   highlightedParagraphId?: string | null;
   onParagraphHeadingClick?: (paragraphId: string) => void;
+  // Info: (20260714 - Emily) 報告草稿本機保存狀態(透傳給 ReportToolbar)
+  saveStatus?: ReportSaveStatus;
 }
 
 // Info: (20260713 - Tzuhan) 渲染全部 33 段:已生成者顯示內容,未生成者顯示灰色佔位區塊,確保跳段永遠有落點且報告骨架一眼可見
@@ -86,6 +89,7 @@ export default function CarbonReportPreview({
   onGenerateDraft = undefined,
   highlightedParagraphId = null,
   onParagraphHeadingClick = undefined,
+  saveStatus = null,
 }: ICarbonReportPreviewProps) {
   const { t } = useTranslation();
   const [, setErrorModal] = useState({ isOpen: false, message: "" });
@@ -215,6 +219,7 @@ export default function CarbonReportPreview({
           statusColor={session.statusColor}
           isDrawerOpen={isDrawerOpen}
           onToggleDrawer={() => setIsDrawerOpen((prev) => !prev)}
+          saveStatus={saveStatus}
         />
       )}
 

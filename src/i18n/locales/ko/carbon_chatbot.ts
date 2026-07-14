@@ -50,6 +50,10 @@ export const carbonChatbot = {
   data_driven_badge:
     "데이터 섹션: 수치는 시스템 결정론 엔진에서 계산되며 AI 생성이 아닙니다",
   jump_prompt: "「{{section}}」 섹션 작성을 도와주세요.",
+  new_session_title: "새 인벤토리 대화",
+  save_saving: "저장 중...",
+  save_saved: "저장됨",
+  save_local_hint: "보고서 초안은 이 브라우저에 저장됩니다",
   attach_file: "파일 첨부",
   remove_attachment: "첨부 제거",
   attachment_invalid_type:

@@ -50,6 +50,10 @@ export const carbonChatbot = {
   data_driven_badge:
     "Data section: figures are reconciled by the deterministic engine, not AI-generated",
   jump_prompt: "Please help me complete the section 「{{section}}」.",
+  new_session_title: "New inventory chat",
+  save_saving: "Saving...",
+  save_saved: "Saved",
+  save_local_hint: "Report draft is stored in this browser",
   attach_file: "Attach file",
   remove_attachment: "Remove attachment",
   attachment_invalid_type:

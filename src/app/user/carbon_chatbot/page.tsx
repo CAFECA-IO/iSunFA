@@ -20,6 +20,8 @@ export default function CarbonChatbotPage() {
     activeSession,
     activeSessionId,
     setActiveSessionId,
+    createNewSession,
+    saveStatus,
     inputValue,
     setInputValue,
     isTyping,
@@ -81,6 +83,7 @@ export default function CarbonChatbotPage() {
           sessionsList={sessionsList}
           activeSessionId={activeSessionId}
           onSelectSession={setActiveSessionId}
+          onNewChat={createNewSession}
         />
 
         {/* Info: (20260708 - Tzuhan) 中欄：對話區 */}
@@ -165,6 +168,7 @@ export default function CarbonChatbotPage() {
             onGenerateDraft={generateParagraphDraft}
             highlightedParagraphId={highlightedParagraphId}
             onParagraphHeadingClick={handleParagraphHeadingClick}
+            saveStatus={saveStatus}
           />
 
           {/* Info: (20260708 - Tzuhan) 進度浮窗 */}
@@ -215,6 +219,7 @@ export default function CarbonChatbotPage() {
               onGenerateDraft={generateParagraphDraft}
               highlightedParagraphId={highlightedParagraphId}
               onParagraphHeadingClick={handleParagraphHeadingClick}
+              saveStatus={saveStatus}
             />
           </div>
         </div>

@@ -84,6 +84,17 @@ export const CARBON_REPORT_PARAGRAPH_ATTR = "data-paragraph-id";
 export const CARBON_CHAT_HIGHLIGHT_DURATION_MS = 2000;
 export const CARBON_REPORT_HIGHLIGHT_COLOR = "#ffedd5";
 
+// Info: (20260714 - Emily) 報告草稿與 session 索引的 localStorage key 與 schema 版本
+// ToDo: (20260714 - Emily) 後續 DB 化(CarbonReportDraft model + GET/PUT /api/v1/chat/carbon/report)時移除本機儲存
+export const CARBON_REPORT_DRAFT_STORAGE_VERSION = 1;
+export const buildCarbonReportDraftKey = (channel: string): string =>
+  `carbon_report_draft_${channel}`;
+export const buildCarbonSessionsIndexKey = (address: string): string =>
+  `carbon_chat_sessions_${address}`;
+
+// Info: (20260714 - Emily) 報告草稿自動保存的 debounce 間隔(ms)
+export const CARBON_REPORT_AUTOSAVE_DEBOUNCE_MS = 2000;
+
 // Info: (20260714 - Emily) 附件對應不到任何段落時的預設落點(2.2 溫室氣體排放源鑑別)
 export const CARBON_ATTACHMENT_FALLBACK_PARAGRAPH_ID = "ch2-2";
 

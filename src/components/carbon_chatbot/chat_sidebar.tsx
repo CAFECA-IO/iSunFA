@@ -5,6 +5,8 @@ interface IChatSidebarProps {
   sessionsList: IChatSession[];
   activeSessionId: string;
   onSelectSession: (id: string) => void;
+  // Info: (20260714 - Emily) 新增對話(建立空白 session 並切換)
+  onNewChat?: () => void;
 }
 
 import { useTranslation } from "@/i18n/i18n_context";
@@ -13,12 +15,17 @@ export function ChatSidebar({
   sessionsList,
   activeSessionId,
   onSelectSession,
+  onNewChat = undefined,
 }: IChatSidebarProps) {
   const { t } = useTranslation();
   return (
     <div className="relative hidden w-[280px] shrink-0 flex-col border-r border-gray-200 bg-white lg:flex">
       <div className="p-5 pb-2">
-        <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#ff5a00] py-3 text-[15px] font-bold text-white shadow-md shadow-orange-500/20 transition-colors hover:bg-[#e04f00]">
+        <button
+          type="button"
+          onClick={onNewChat}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#ff5a00] py-3 text-[15px] font-bold text-white shadow-md shadow-orange-500/20 transition-colors hover:bg-[#e04f00]"
+        >
           <Plus className="h-4 w-4" />
           {t("carbon_chatbot.new_chat")}
         </button>
