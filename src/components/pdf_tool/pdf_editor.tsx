@@ -570,7 +570,8 @@ export default function PdfEditor({
           <div className="sticky top-0 z-10 bg-gray-200 px-4 py-2 text-xs font-bold tracking-wider text-gray-500 uppercase">
             {t("admin_mission_board.pdf_editor.pdf_preview")!}
           </div>
-          <div className="flex min-h-full justify-center p-8">
+          {/* Info: (20260714 - Emily) 手機縮小外距讓 A4 預覽用滿寬度,md+ 維持原留白 */}
+          <div className="flex min-h-full justify-center p-3 md:p-8">
             {/* Info: (20260426 - Luphia) A4 Document Container */}
             <div className="mx-auto min-h-[297mm] w-full max-w-[210mm] border border-gray-300 bg-white text-black shadow-md">
               <div

@@ -247,7 +247,8 @@ export default function CarbonReportPreview({
             paragraphs={paragraphs}
             activeParagraphId={activeParagraphId}
             onJump={onJumpToParagraph}
-            className={isDrawerOpen ? "hidden xl:flex" : ""}
+            // Info: (20260714 - Emily) 手機(<md)隱藏導軌讓出預覽寬度,目錄改由工具列抽屜提供
+            className={isDrawerOpen ? "hidden xl:flex" : "hidden md:flex"}
           />
         )}
 
@@ -271,11 +272,12 @@ export default function CarbonReportPreview({
           }`}
         >
           {/* Info: (20260714 - Emily) 報告成為主視圖後寬度足夠,改 split 讓編輯與預覽水平並排 */}
-          {/* Info: (20260714 - Emily) splitBreakpoint=lg:平板寬度(md~lg)退回單欄+切換鈕,避免雙欄擁擠 */}
+          {/* Info: (20260714 - Emily) splitBreakpoint=lg:平板/手機退回單欄+切換鈕,避免雙欄擁擠 */}
+          {/* Info: (20260714 - Emily) 預設 PREVIEW:窄螢幕單欄先看報告;lg+ split 雙欄不受 viewMode 影響照樣同顯 */}
           <PdfEditor
             layout="split"
             isEmbedded={true}
-            defaultViewMode={PdfToolViewMode.EDIT}
+            defaultViewMode={PdfToolViewMode.PREVIEW}
             contentVariant="compact"
             splitBreakpoint="lg"
             value={markdownContent}
