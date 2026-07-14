@@ -20,6 +20,7 @@ import {
   getChartTitle,
 } from "@/lib/utils/mermaid_helpers";
 import ConfirmModal from "@/components/common/confirm_modal";
+import { useTranslation } from "@/i18n/i18n_context";
 
 interface IMermaidAiModalProps {
   open: boolean;
@@ -40,6 +41,8 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
   parsedPieData: initialParsedPieData,
   onAdopt,
 }) => {
+  const { t } = useTranslation();
+
   // Info: (20260708 - Julian) 內部編輯基底狀態
   const [internalBaseChart, setInternalBaseChart] =
     useState<string>(currentChart);
@@ -266,11 +269,11 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
 
       <ConfirmModal
         isOpen={isShowWarning}
-        title="即將關閉 AI 智慧圖表編輯器"
-        message="尚未儲存圖表變更，您確定要關閉 AI 智慧圖表編輯器嗎？"
+        title={t("chart.mermaid.ai_editor.close_warning_title")}
+        message={t("chart.mermaid.ai_editor.close_warning_message")}
         onClose={warningModalToggle}
-        cancelText="取消"
-        confirmText="確認關閉"
+        cancelText={t("chart.mermaid.ai_editor.close_warning_cancel")}
+        confirmText={t("chart.mermaid.ai_editor.close_warning_confirm")}
         onConfirm={handleCancel}
       />
     </div>

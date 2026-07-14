@@ -71,17 +71,16 @@ const XY_CHART_TOOLS: IToolItem[] = [
 
 // Info: (20260712 - Luphia) 各工具對應的 i18n key，供工具列標籤透過 t() 顯示（翻譯定義於 chart.mermaid.xychart）
 const XY_CHART_TOOL_TRANSLATION_KEYS: Record<XYChartTools, string> = {
-  [XYChartTools.ADD_SERIES]: "chart.mermaid.ai_editor.xy_chart.add_series",
+  [XYChartTools.ADD_SERIES]: "chart.mermaid.ai_editor.xychart.add_series",
   [XYChartTools.CHANGE_X_AXIS_VALUES]:
-    "chart.mermaid.ai_editor.xy_chart.change_x_axis_values",
+    "chart.mermaid.ai_editor.xychart.change_x_axis_values",
   [XYChartTools.CHANGE_Y_AXIS_VALUES]:
-    "chart.mermaid.ai_editor.xy_chart.change_y_axis_values",
+    "chart.mermaid.ai_editor.xychart.change_y_axis_values",
   [XYChartTools.CHANGE_LINE_VALUES]:
-    "chart.mermaid.ai_editor.xy_chart.change_line_values",
+    "chart.mermaid.ai_editor.xychart.change_line_values",
   [XYChartTools.CHANGE_BAR_VALUES]:
-    "chart.mermaid.ai_editor.xy_chart.change_bar_values",
-  [XYChartTools.DELETE_SERIES]:
-    "chart.mermaid.ai_editor.xy_chart.delete_series",
+    "chart.mermaid.ai_editor.xychart.change_bar_values",
+  [XYChartTools.DELETE_SERIES]: "chart.mermaid.ai_editor.xychart.delete_series",
 };
 
 // Info: (20260707 - Julian) 將每個工具拆分成子元件(sub-panel)
@@ -105,11 +104,11 @@ const DataTypeSwitch: FC<{
       onChange={onChangeHandler}
       options={[
         {
-          label: t("chart.mermaid.ai_editor.xy_chart.data_type_bar"),
+          label: t("chart.mermaid.ai_editor.xychart.data_type_bar"),
           value: XYChartDataType.BAR,
         },
         {
-          label: t("chart.mermaid.ai_editor.xy_chart.data_type_line"),
+          label: t("chart.mermaid.ai_editor.xychart.data_type_line"),
           value: XYChartDataType.LINE,
         },
       ]}
@@ -150,19 +149,21 @@ const AddSeriesPanel: FC<IBasePanelProps> = ({ onAddAction }) => {
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <FilePlus size={14} />
-        <p>{t("chart.mermaid.ai_editor.xy_chart.add_series")}</p>
+        <p>{t("chart.mermaid.ai_editor.xychart.add_series")}</p>
       </div>
 
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <label className={MERMAID_LABEL_STYLE}>{t("數列類型")}</label>
+          <label className={MERMAID_LABEL_STYLE}>
+            {t("chart.mermaid.ai_editor.xychart.data_type_label")}
+          </label>
           <DataTypeSwitch dataType={dataType} setDataType={setDataType} />
         </div>
       </div>
 
       <div className="flex flex-col gap-2">
         <label htmlFor="addSeriesNameInput" className={MERMAID_LABEL_STYLE}>
-          {t("chart.mermaid.ai_editor.xy_chart.series_name")}
+          {t("chart.mermaid.ai_editor.xychart.series_name")}
         </label>
         <input
           id="addSeriesNameInput"
@@ -170,7 +171,7 @@ const AddSeriesPanel: FC<IBasePanelProps> = ({ onAddAction }) => {
           className={MERMAID_INPUT_STYLE}
           value={nameInput}
           placeholder={t(
-            "chart.mermaid.ai_editor.xy_chart.series_name_placeholder",
+            "chart.mermaid.ai_editor.xychart.series_name_placeholder",
           )}
           onChange={(e) => setNameInput(e.target.value)}
         />
@@ -178,7 +179,7 @@ const AddSeriesPanel: FC<IBasePanelProps> = ({ onAddAction }) => {
 
       <div className="flex flex-col">
         <label htmlFor="seriesValuesInput" className={MERMAID_LABEL_STYLE}>
-          {t("chart.mermaid.ai_editor.xy_chart.series_value")}
+          {t("chart.mermaid.ai_editor.xychart.series_value")}
           <span className="ml-0.5 text-red-500">*</span>
         </label>
         <input
@@ -188,7 +189,7 @@ const AddSeriesPanel: FC<IBasePanelProps> = ({ onAddAction }) => {
           onChange={(e) => setSeries(e.target.value)}
           className={MERMAID_INPUT_STYLE}
           placeholder={t(
-            "chart.mermaid.ai_editor.xy_chart.series_value_placeholder",
+            "chart.mermaid.ai_editor.xychart.series_value_placeholder",
           )}
         />
       </div>
@@ -199,7 +200,7 @@ const AddSeriesPanel: FC<IBasePanelProps> = ({ onAddAction }) => {
         disabled={!series.trim()}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t("chart.mermaid.ai_editor.xy_chart.add_series")}
+        {t("chart.mermaid.ai_editor.xychart.add_series")}
       </button>
     </div>
   );
@@ -268,12 +269,12 @@ const EditXAxisPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <GitCommitHorizontal size={14} />
-        <p>{t("chart.mermaid.ai_editor.xy_chart.change_x_axis_values")}</p>
+        <p>{t("chart.mermaid.ai_editor.xychart.change_x_axis_values")}</p>
       </div>
 
       <div className="flex flex-col">
         <label htmlFor="xAxisTitle" className={MERMAID_LABEL_STYLE}>
-          {t("chart.mermaid.ai_editor.xy_chart.x_axis_title")}
+          {t("chart.mermaid.ai_editor.xychart.x_axis_title")}
         </label>
         <input
           id="xAxisTitle"
@@ -282,7 +283,7 @@ const EditXAxisPanel: FC<IBasePanelProps> = ({
           onChange={(e) => setXAxisTitle(e.target.value)}
           className={MERMAID_INPUT_STYLE}
           placeholder={t(
-            "chart.mermaid.ai_editor.xy_chart.x_axis_title_placeholder",
+            "chart.mermaid.ai_editor.xychart.x_axis_title_placeholder",
           )}
         />
       </div>
@@ -290,7 +291,7 @@ const EditXAxisPanel: FC<IBasePanelProps> = ({
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <label className={MERMAID_LABEL_STYLE}>
-            {t("chart.mermaid.ai_editor.xy_chart.x_axis_type_label")}
+            {t("chart.mermaid.ai_editor.xychart.x_axis_type_label")}
           </label>
           <SegmentedControl
             value={xAxisType}
@@ -298,14 +299,12 @@ const EditXAxisPanel: FC<IBasePanelProps> = ({
             options={[
               {
                 label: t(
-                  "chart.mermaid.ai_editor.xy_chart.x_axis_type_category",
+                  "chart.mermaid.ai_editor.xychart.x_axis_type_category",
                 ),
                 value: XYChartAxisType.CATEGORY,
               },
               {
-                label: t(
-                  "chart.mermaid.ai_editor.xy_chart.x_axis_type_numeric",
-                ),
+                label: t("chart.mermaid.ai_editor.xychart.x_axis_type_numeric"),
                 value: XYChartAxisType.NUMERIC,
               },
             ]}
@@ -315,7 +314,7 @@ const EditXAxisPanel: FC<IBasePanelProps> = ({
         {xAxisType === XYChartAxisType.CATEGORY ? (
           <div className="flex flex-col">
             <label htmlFor="xAxisCategories" className={MERMAID_LABEL_STYLE}>
-              {t("chart.mermaid.ai_editor.xy_chart.categories_label")}
+              {t("chart.mermaid.ai_editor.xychart.categories_label")}
               <span className="ml-0.5 text-red-500">*</span>
             </label>
             <input
@@ -325,7 +324,7 @@ const EditXAxisPanel: FC<IBasePanelProps> = ({
               onChange={(e) => setXAxisCategories(e.target.value)}
               className={MERMAID_INPUT_STYLE}
               placeholder={t(
-                "chart.mermaid.ai_editor.xy_chart.categories_label_placeholder",
+                "chart.mermaid.ai_editor.xychart.categories_label_placeholder",
               )}
             />
           </div>
@@ -333,7 +332,7 @@ const EditXAxisPanel: FC<IBasePanelProps> = ({
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col">
               <label htmlFor="xAxisMin" className={MERMAID_LABEL_STYLE}>
-                {t("chart.mermaid.ai_editor.xy_chart.min_value_label")}
+                {t("chart.mermaid.ai_editor.xychart.min_value_label")}
               </label>
               <input
                 id="xAxisMin"
@@ -346,7 +345,7 @@ const EditXAxisPanel: FC<IBasePanelProps> = ({
             </div>
             <div className="flex flex-col">
               <label htmlFor="xAxisMax" className={MERMAID_LABEL_STYLE}>
-                {t("chart.mermaid.ai_editor.xy_chart.max_value_label")}
+                {t("chart.mermaid.ai_editor.xychart.max_value_label")}
               </label>
               <input
                 id="xAxisMax"
@@ -367,7 +366,7 @@ const EditXAxisPanel: FC<IBasePanelProps> = ({
         disabled={isSubmitDisable}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t("chart.mermaid.ai_editor.xy_chart.apply_changes_btn")}
+        {t("chart.mermaid.ai_editor.xychart.apply_changes_btn")}
       </button>
     </div>
   );
@@ -412,13 +411,13 @@ const EditYAxisPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <GitCommitVertical size={14} />
-        <p>{t("chart.mermaid.ai_editor.xy_chart.change_y_axis_values")}</p>
+        <p>{t("chart.mermaid.ai_editor.xychart.change_y_axis_values")}</p>
       </div>
 
       <div className="flex flex-col gap-2">
         <div className="flex flex-col">
           <label htmlFor="yAxisTitle" className={MERMAID_LABEL_STYLE}>
-            {t("chart.mermaid.ai_editor.xy_chart.y_axis_title")}
+            {t("chart.mermaid.ai_editor.xychart.y_axis_title")}
           </label>
           <input
             id="yAxisTitle"
@@ -427,14 +426,14 @@ const EditYAxisPanel: FC<IBasePanelProps> = ({
             onChange={(e) => setYAxisTitle(e.target.value)}
             className={MERMAID_INPUT_STYLE}
             placeholder={t(
-              "chart.mermaid.ai_editor.xy_chart.y_axis_title_placeholder",
+              "chart.mermaid.ai_editor.xychart.y_axis_title_placeholder",
             )}
           />
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div className="flex flex-col">
             <label htmlFor="yAxisMin" className={MERMAID_LABEL_STYLE}>
-              {t("chart.mermaid.ai_editor.xy_chart.min_value_label")}
+              {t("chart.mermaid.ai_editor.xychart.min_value_label")}
             </label>
             <input
               id="yAxisMin"
@@ -446,7 +445,7 @@ const EditYAxisPanel: FC<IBasePanelProps> = ({
           </div>
           <div className="flex flex-col">
             <label htmlFor="yAxisMax" className={MERMAID_LABEL_STYLE}>
-              {t("chart.mermaid.ai_editor.xy_chart.max_value_label")}
+              {t("chart.mermaid.ai_editor.xychart.max_value_label")}
             </label>
             <input
               id="yAxisMax"
@@ -465,7 +464,7 @@ const EditYAxisPanel: FC<IBasePanelProps> = ({
         disabled={isSubmitDisable}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t("chart.mermaid.ai_editor.xy_chart.apply_changes_btn")}
+        {t("chart.mermaid.ai_editor.xychart.apply_changes_btn")}
       </button>
     </div>
   );
@@ -561,7 +560,7 @@ const EditLinePanel: FC<IBasePanelProps> = ({
   if (lineSeries.length === 0) {
     return (
       <div className="py-4 text-center text-xs text-slate-400">
-        {t("chart.mermaid.ai_editor.xy_chart.no_line_chart_data")}
+        {t("chart.mermaid.ai_editor.xychart.no_line_chart_data")}
       </div>
     );
   }
@@ -570,13 +569,13 @@ const EditLinePanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <ChartLine size={14} />
-        <p>{t("chart.mermaid.ai_editor.xy_chart.change_line_values")}</p>
+        <p>{t("chart.mermaid.ai_editor.xychart.change_line_values")}</p>
       </div>
 
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <label className={MERMAID_LABEL_STYLE}>
-            {t("chart.mermaid.ai_editor.xy_chart.data_type_label")}
+            {t("chart.mermaid.ai_editor.xychart.data_type_label")}
           </label>
           <DataTypeSwitch dataType={dataType} setDataType={setDataType} />
         </div>
@@ -584,7 +583,7 @@ const EditLinePanel: FC<IBasePanelProps> = ({
 
       <div className="flex flex-col gap-2">
         <label htmlFor="lineNameInput" className={MERMAID_LABEL_STYLE}>
-          {t("chart.mermaid.ai_editor.xy_chart.series_name")}
+          {t("chart.mermaid.ai_editor.xychart.series_name")}
         </label>
         <input
           id="lineNameInput"
@@ -592,7 +591,7 @@ const EditLinePanel: FC<IBasePanelProps> = ({
           className={MERMAID_INPUT_STYLE}
           value={nameInput}
           placeholder={t(
-            "chart.mermaid.ai_editor.xy_chart.series_name_placeholder",
+            "chart.mermaid.ai_editor.xychart.series_name_placeholder",
           )}
           onChange={(e) => setNameInput(e.target.value)}
         />
@@ -602,7 +601,7 @@ const EditLinePanel: FC<IBasePanelProps> = ({
         {lineSeries.length > 1 && (
           <div className="flex flex-col">
             <label htmlFor="lineTarget" className={MERMAID_LABEL_STYLE}>
-              {t("chart.mermaid.ai_editor.xy_chart.line_target_label")}
+              {t("chart.mermaid.ai_editor.xychart.line_target_label")}
             </label>
             <select
               id="lineTarget"
@@ -622,7 +621,7 @@ const EditLinePanel: FC<IBasePanelProps> = ({
         {categories.length > 0 ? (
           <div className="flex flex-col">
             <label className={MERMAID_LABEL_STYLE}>
-              {t("chart.mermaid.ai_editor.xy_chart.target_value_label")}
+              {t("chart.mermaid.ai_editor.xychart.target_value_label")}
               <span className="ml-0.5 text-red-500">*</span>
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -647,7 +646,7 @@ const EditLinePanel: FC<IBasePanelProps> = ({
         ) : (
           <div className="flex flex-col">
             <label htmlFor="lineRawValues" className={MERMAID_LABEL_STYLE}>
-              {t("chart.mermaid.ai_editor.xy_chart.series_value")}
+              {t("chart.mermaid.ai_editor.xychart.series_value")}
               <span className="ml-0.5 text-red-500">*</span>
             </label>
             <input
@@ -657,7 +656,7 @@ const EditLinePanel: FC<IBasePanelProps> = ({
               onChange={(e) => setRawValues(e.target.value)}
               className={MERMAID_INPUT_STYLE}
               placeholder={t(
-                "chart.mermaid.ai_editor.xy_chart.series_value_placeholder",
+                "chart.mermaid.ai_editor.xychart.series_value_placeholder",
               )}
             />
           </div>
@@ -670,7 +669,7 @@ const EditLinePanel: FC<IBasePanelProps> = ({
         disabled={isSubmitDisabled}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t("chart.mermaid.ai_editor.xy_chart.apply_changes_btn")}
+        {t("chart.mermaid.ai_editor.xychart.apply_changes_btn")}
       </button>
     </div>
   );
@@ -764,7 +763,7 @@ const EditBarPanel: FC<IBasePanelProps> = ({
   if (barSeries.length === 0) {
     return (
       <div className="py-4 text-center text-xs text-slate-400">
-        {t("chart.mermaid.ai_editor.xy_chart.no_bar_chart_data")}
+        {t("chart.mermaid.ai_editor.xychart.no_bar_chart_data")}
       </div>
     );
   }
@@ -773,13 +772,13 @@ const EditBarPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <ChartColumnBig size={14} />
-        <p>{t("chart.mermaid.ai_editor.xy_chart.change_bar_values")}</p>
+        <p>{t("chart.mermaid.ai_editor.xychart.change_bar_values")}</p>
       </div>
 
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <label className={MERMAID_LABEL_STYLE}>
-            {t("chart.mermaid.ai_editor.xy_chart.data_type_label")}
+            {t("chart.mermaid.ai_editor.xychart.data_type_label")}
           </label>
           <DataTypeSwitch dataType={dataType} setDataType={setDataType} />
         </div>
@@ -787,7 +786,7 @@ const EditBarPanel: FC<IBasePanelProps> = ({
 
       <div className="flex flex-col gap-2">
         <label htmlFor="barNameInput" className={MERMAID_LABEL_STYLE}>
-          {t("chart.mermaid.ai_editor.xy_chart.series_name")}
+          {t("chart.mermaid.ai_editor.xychart.series_name")}
         </label>
         <input
           id="barNameInput"
@@ -795,7 +794,7 @@ const EditBarPanel: FC<IBasePanelProps> = ({
           className={MERMAID_INPUT_STYLE}
           value={nameInput}
           placeholder={t(
-            "chart.mermaid.ai_editor.xy_chart.series_name_placeholder",
+            "chart.mermaid.ai_editor.xychart.series_name_placeholder",
           )}
           onChange={(e) => setNameInput(e.target.value)}
         />
@@ -805,7 +804,7 @@ const EditBarPanel: FC<IBasePanelProps> = ({
         {barSeries.length > 1 && (
           <div className="flex flex-col">
             <label htmlFor="barTarget" className={MERMAID_LABEL_STYLE}>
-              {t("chart.mermaid.ai_editor.xy_chart.bar_target_label")}
+              {t("chart.mermaid.ai_editor.xychart.bar_target_label")}
             </label>
             <select
               id="barTarget"
@@ -825,7 +824,7 @@ const EditBarPanel: FC<IBasePanelProps> = ({
         {categories.length > 0 ? (
           <div className="flex flex-col gap-2">
             <label className={MERMAID_LABEL_STYLE}>
-              {t("chart.mermaid.ai_editor.xy_chart.target_value_label")}
+              {t("chart.mermaid.ai_editor.xychart.target_value_label")}
               <span className="ml-0.5 text-red-500">*</span>
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -849,7 +848,7 @@ const EditBarPanel: FC<IBasePanelProps> = ({
         ) : (
           <div className="flex flex-col">
             <label htmlFor="barRawValues" className={MERMAID_LABEL_STYLE}>
-              {t("chart.mermaid.ai_editor.xy_chart.series_value")}
+              {t("chart.mermaid.ai_editor.xychart.series_value")}
               <span className="ml-0.5 text-red-500">*</span>
             </label>
             <input
@@ -859,7 +858,7 @@ const EditBarPanel: FC<IBasePanelProps> = ({
               onChange={(e) => setRawValues(e.target.value)}
               className={MERMAID_INPUT_STYLE}
               placeholder={t(
-                "chart.mermaid.ai_editor.xy_chart.series_value_placeholder",
+                "chart.mermaid.ai_editor.xychart.series_value_placeholder",
               )}
             />
           </div>
@@ -871,7 +870,7 @@ const EditBarPanel: FC<IBasePanelProps> = ({
         onClick={handleSubmit}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t("chart.mermaid.ai_editor.xy_chart.apply_changes_btn")}
+        {t("chart.mermaid.ai_editor.xychart.apply_changes_btn")}
       </button>
     </div>
   );
@@ -902,10 +901,10 @@ const DeleteSeriesPanel: FC<IBasePanelProps> = ({
   const seriesOptions = series.map((s, idx) => {
     const dataLabel =
       s.type === XYChartDataType.LINE
-        ? t("chart.mermaid.ai_editor.xy_chart.line_target_value", {
+        ? t("chart.mermaid.ai_editor.xychart.line_target_value", {
             index: s.lineIndex,
           })
-        : t("chart.mermaid.ai_editor.xy_chart.bar_target_value", {
+        : t("chart.mermaid.ai_editor.xychart.bar_target_value", {
             index: s.lineIndex,
           });
     return (
@@ -919,12 +918,12 @@ const DeleteSeriesPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <FilePlus size={14} />
-        <p>{t("chart.mermaid.ai_editor.xy_chart.delete_series")}</p>
+        <p>{t("chart.mermaid.ai_editor.xychart.delete_series")}</p>
       </div>
 
       <div className="flex flex-col">
         <label htmlFor="seriesSelect" className={MERMAID_LABEL_STYLE}>
-          {t("chart.mermaid.ai_editor.xy_chart.delete_series_label")}
+          {t("chart.mermaid.ai_editor.xychart.delete_series_label")}
           <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
@@ -942,7 +941,7 @@ const DeleteSeriesPanel: FC<IBasePanelProps> = ({
         onClick={handleSubmit}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t("chart.mermaid.ai_editor.xy_chart.delete_series")}
+        {t("chart.mermaid.ai_editor.xychart.delete_series")}
       </button>
     </div>
   );

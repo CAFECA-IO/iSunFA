@@ -363,7 +363,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({
         .mermaid-container .node circle,
         .mermaid-container .node polygon,
         .mermaid-container .node path,
-        .mermaid-container .node .label-container,{
+        .mermaid-container .node .label-container {
           fill: #ffffff !important;
           stroke: #152C5B !important;
           stroke-width: 1.5px !important;
