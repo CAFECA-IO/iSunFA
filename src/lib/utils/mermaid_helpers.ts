@@ -56,6 +56,11 @@ export enum MermaidActionType {
   XYCHART_CHANGE_LINE_SERIES = "XYCHART_CHANGE_LINE_SERIES",
   XYCHART_CHANGE_BAR_SERIES = "XYCHART_CHANGE_BAR_SERIES",
   XYCHART_DELETE_SERIES = "XYCHART_DELETE_SERIES",
+  SANKEY_ADD_LINK = "SANKEY_ADD_LINK",
+  SANKEY_EDIT_LINK = "SANKEY_EDIT_LINK",
+  SANKEY_REVERSE_FLOW = "SANKEY_REVERSE_FLOW",
+  SANKEY_RENAME_NODE = "SANKEY_RENAME_NODE",
+  SANKEY_DELETE_LINK = "SANKEY_DELETE_LINK",
 }
 
 /**
@@ -192,6 +197,36 @@ export type IChartAction = {
   | {
       type: MermaidActionType.FLOWCHART_CHANGE_DIRECTION;
       payload: { direction: string };
+    }
+  | {
+      // Info: (20260714 - Julian) 新增流向（來源、目標、權重）
+      type: MermaidActionType.SANKEY_ADD_LINK;
+      payload: { source: string; target: string; value: number };
+    }
+  | {
+      // Info: (20260714 - Julian) 編輯流向：以 lineIndex 定位，覆寫來源/目標/權重
+      type: MermaidActionType.SANKEY_EDIT_LINK;
+      payload: {
+        lineIndex: number;
+        source: string;
+        target: string;
+        value: number;
+      };
+    }
+  | {
+      // Info: (20260714 - Julian) 反轉流向：交換來源與目標
+      type: MermaidActionType.SANKEY_REVERSE_FLOW;
+      payload: { lineIndex: number };
+    }
+  | {
+      // Info: (20260714 - Julian) 變更節點名稱：更新所有含該節點的流向
+      type: MermaidActionType.SANKEY_RENAME_NODE;
+      payload: { oldName: string; newName: string };
+    }
+  | {
+      // Info: (20260714 - Julian) 刪除流向：以 lineIndex 定位
+      type: MermaidActionType.SANKEY_DELETE_LINK;
+      payload: { lineIndex: number };
     }
 );
 /**
@@ -866,6 +901,95 @@ export const applyFlowchartAction = (
 };
 
 /**
+ * Info: (20260714 - Julian) 應用結構化編輯動作到桑基圖
+ * 說明：流向（link）以 parseSankeyLinks 產生的 lineIndex 定位，節點以名稱比對。
+ */
+export const applySankeyAction = (
+  chartStr: string,
+  action: IChartAction,
+): string => {
+  const lines = chartStr.split("\n");
+
+  switch (action.type) {
+    case MermaidActionType.SANKEY_ADD_LINK: {
+      // Info: (20260714 - Julian) 附加到最後，避免影響既有行的 lineIndex
+      const { source, target, value } = action.payload;
+      lines.push(buildSankeyLine(source, target, value));
+      break;
+    }
+
+    case MermaidActionType.SANKEY_EDIT_LINK: {
+      const { lineIndex, source, target, value } = action.payload;
+      if (
+        lineIndex >= 0 &&
+        lineIndex < lines.length &&
+        getSankeyLineFields(lines[lineIndex])
+      ) {
+        lines[lineIndex] = buildSankeyLine(source, target, value);
+      }
+      break;
+    }
+
+    case MermaidActionType.SANKEY_REVERSE_FLOW: {
+      const { lineIndex } = action.payload;
+      if (lineIndex >= 0 && lineIndex < lines.length) {
+        const fields = getSankeyLineFields(lines[lineIndex]);
+        if (fields) {
+          // Info: (20260714 - Julian) 交換來源與目標，權重不變
+          lines[lineIndex] = buildSankeyLine(
+            fields[1],
+            fields[0],
+            parseFloat(fields[2]),
+          );
+        }
+      }
+      break;
+    }
+
+    case MermaidActionType.SANKEY_RENAME_NODE: {
+      const { oldName, newName } = action.payload;
+      if (oldName && newName && oldName !== newName) {
+        lines.forEach((line, index) => {
+          const fields = getSankeyLineFields(line);
+          if (!fields) return;
+          let changed = false;
+          if (fields[0] === oldName) {
+            fields[0] = newName;
+            changed = true;
+          }
+          if (fields[1] === oldName) {
+            fields[1] = newName;
+            changed = true;
+          }
+          if (changed) {
+            lines[index] = buildSankeyLine(
+              fields[0],
+              fields[1],
+              parseFloat(fields[2]),
+            );
+          }
+        });
+      }
+      break;
+    }
+
+    case MermaidActionType.SANKEY_DELETE_LINK: {
+      const { lineIndex } = action.payload;
+      if (
+        lineIndex >= 0 &&
+        lineIndex < lines.length &&
+        getSankeyLineFields(lines[lineIndex])
+      ) {
+        lines.splice(lineIndex, 1);
+      }
+      break;
+    }
+  }
+
+  return lines.join("\n");
+};
+
+/**
  * Info: (20260709 - Julian)
  * 解析 [a, b, "c d"] 形式的數列
  */
@@ -1253,4 +1377,45 @@ export const parseSankeyData = (chartStr: string): ISankeyData | null => {
     links,
     nodes: Array.from(nodeSet),
   };
+};
+
+/**
+ * Info: (20260714 - Julian)
+ * 將單一欄位序列化為 Sankey CSV（RFC 4180）；
+ * 若含逗號、雙引號、換行或前後空白，則以雙引號包夾並將內部引號跳脫為 ""
+ */
+const formatSankeyCsvField = (field: string): string => {
+  const needsQuote = /[",\r\n]/.test(field) || field !== field.trim();
+  return needsQuote ? `"${field.replace(/"/g, '""')}"` : field;
+};
+
+/**
+ * Info: (20260714 - Julian)
+ * 組合單行 Sankey CSV（source,target,value）
+ */
+const buildSankeyLine = (
+  source: string,
+  target: string,
+  value: number,
+): string =>
+  `${formatSankeyCsvField(source)},${formatSankeyCsvField(target)},${value}`;
+
+/**
+ * Info: (20260714 - Julian)
+ * 判斷指定原始行是否為可編輯的 Sankey 流向資料行；
+ * 是則回傳解析後的 [source, target, value] 欄位，否則回傳 null
+ */
+const getSankeyLineFields = (rawLine: string): string[] | null => {
+  const clean = rawLine.trim();
+  if (!clean || clean.startsWith("%%") || /^sankey(-beta)?$/i.test(clean)) {
+    return null;
+  }
+  const fields = parseSankeyCsvLine(clean);
+  if (fields.length !== 3 || isSankeyHeaderRow(fields)) {
+    return null;
+  }
+  if (isNaN(parseFloat(fields[2]))) {
+    return null;
+  }
+  return fields;
 };

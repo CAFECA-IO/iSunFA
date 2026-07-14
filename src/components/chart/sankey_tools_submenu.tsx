@@ -1,5 +1,3 @@
-/* eslint-disable */
-// ToDo: (20260713 - Julian) 這個元件還在開發中
 import React, { useState, FC, useEffect } from "react";
 import {
   Repeat,
@@ -14,7 +12,7 @@ import {
   IChartAction,
   ISankeyData,
   ISankeyLink,
-  // MermaidActionType,
+  MermaidActionType,
 } from "@/lib/utils/mermaid_helpers";
 import {
   MERMAID_INPUT_STYLE,
@@ -22,6 +20,7 @@ import {
   MERMAID_SUBMIT_BUTTON_STYLE,
 } from "@/constants/mermaid_chart";
 import { SegmentedControl } from "@/components/chart/mermaid_common_components";
+import { useDecimalInput } from "@/hooks/use_decimal_input";
 
 enum SankeyTools {
   ADD_LINK = "addLink",
@@ -90,23 +89,24 @@ const AddLinkPanel: FC<IBasePanelProps> = ({
   const [formInput, setFormInput] = useState<string>("");
   const [toType, setToType] = useState<NodeType>(NodeType.EXISTING);
   const [toInput, setToInput] = useState<string>("");
-  const [newValue, setNewValue] = useState<number>(0);
+
+  // Info: (20260714 - Julian) 流向數量/權重：只允許數字與小數點（詳見 useDecimalInput）
+  const newValue = useDecimalInput("0");
 
   const isSubmitDisabled =
-    formInput.trim() === "" || toInput.trim() === "" || newValue === 0;
+    formInput.trim() === "" || toInput.trim() === "" || newValue.numValue === 0;
 
   const handleSubmit = () => {
-    // onAddAction({
-    //   id: crypto.randomUUID(),
-    //   type: MermaidActionType.SANKEY_ADD_ITEM,
-    //   description: `新增項目 "${sankeySliceLabel}" (${
-    //     isProportion ? sankeySliceValue + "%" : sankeySliceValue
-    //   })`,
-    //   payload: {
-    //     label: sankeySliceLabel,
-    //     value: finalValue,
-    //   },
-    // });
+    onAddAction({
+      id: crypto.randomUUID(),
+      type: MermaidActionType.SANKEY_ADD_LINK,
+      description: `新增流向 "${formInput} ➡️ ${toInput}"`,
+      payload: {
+        source: formInput,
+        target: toInput,
+        value: newValue.numValue,
+      },
+    });
   };
 
   return (
@@ -203,9 +203,11 @@ const AddLinkPanel: FC<IBasePanelProps> = ({
           </label>
           <input
             id="addValueLabel"
-            type="number"
-            value={newValue}
-            onChange={(e) => setNewValue(Number(e.target.value))}
+            type="text"
+            // Info: (20260714 - Julian) 保持 type="text" 以維持 UX，改用 inputMode 呼出數字鍵盤
+            inputMode="decimal"
+            value={newValue.value}
+            onChange={newValue.onChange}
             className={MERMAID_INPUT_STYLE}
           />
         </div>
@@ -257,25 +259,30 @@ const EditLinkPanel: FC<IBasePanelProps> = ({
     setNewLinkValue(initialValue);
   }, [selectedLink, initialSource, initialTarget, initialValue]);
 
+  // Info: (20260714 - Julian) 來源與目標不可為同一節點
+  const isSameNode = newSource.trim() !== "" && newSource === newTarget;
+
   // Info: (20260713 - Julian) 反灰條件
   const selectDisabled = selectedLinkId.trim() === "";
   const submitDisabled =
     selectDisabled ||
+    isSameNode ||
     ((newSource === initialSource || newSource.trim() === "") &&
       (newTarget === initialTarget || newTarget.trim() === "") &&
       newLinkValue === initialValue);
 
   const handleSubmit = () => {
-    // onAddAction({
-    //   id: crypto.randomUUID(),
-    //   type: MermaidActionType.SANKEY_EDIT_ITEM,
-    //   description: `修改項目 "${sankeySliceTarget}"`,
-    //   payload: {
-    //     oldLabel: sankeySliceTarget,
-    //     newLabel: sankeySliceNewLabel || sankeySliceTarget,
-    //     newValue: finalValue,
-    //   },
-    // });
+    onAddAction({
+      id: crypto.randomUUID(),
+      type: MermaidActionType.SANKEY_EDIT_LINK,
+      description: `修改項目 "${newSource} ➡️ ${newTarget}"`,
+      payload: {
+        lineIndex: Number(selectedLinkId),
+        source: newSource,
+        target: newTarget,
+        value: newLinkValue,
+      },
+    });
   };
 
   return (
@@ -320,7 +327,12 @@ const EditLinkPanel: FC<IBasePanelProps> = ({
           >
             <option value="">{t("請選擇新的資料來源")}</option>
             {nodeOptions.map((item) => (
-              <option key={`sankey-edit-source-opt-${item}`} value={item}>
+              <option
+                key={`sankey-edit-source-opt-${item}`}
+                value={item}
+                // Info: (20260714 - Julian) 停用已被「流向目標」選取的節點，避免來源與目標相同
+                disabled={item === newTarget}
+              >
                 {item}
               </option>
             ))}
@@ -341,12 +353,23 @@ const EditLinkPanel: FC<IBasePanelProps> = ({
           >
             <option value="">{t("請選擇新的流向目標")}</option>
             {nodeOptions.map((item) => (
-              <option key={`sankey-edit-target-opt-${item}`} value={item}>
+              <option
+                key={`sankey-edit-target-opt-${item}`}
+                value={item}
+                // Info: (20260714 - Julian) 停用已被「資料來源」選取的節點，避免來源與目標相同
+                disabled={item === newSource}
+              >
                 {item}
               </option>
             ))}
           </select>
         </div>
+        {/* Info: (20260714 - Julian) 來源與目標相同時的提示 */}
+        {isSameNode && (
+          <p className="col-span-2 text-[10px] font-bold text-red-500">
+            {t("資料來源與流向目標不可相同")}
+          </p>
+        )}
         <div className="col-span-2 flex flex-col">
           <div className="flex items-center justify-between">
             <label htmlFor="newLinkValueLabel" className={MERMAID_LABEL_STYLE}>
@@ -355,7 +378,7 @@ const EditLinkPanel: FC<IBasePanelProps> = ({
           </div>
           <input
             id="newLinkValueLabel"
-            type="number"
+            type="text"
             value={newLinkValue}
             onChange={(e) => setNewLinkValue(Number(e.target.value))}
             disabled={selectDisabled}
@@ -385,18 +408,26 @@ const ReverseFlowPanel: FC<IBasePanelProps> = ({
   const linkOptions = parsedSankeyData.links;
 
   const [selectedLinkId, setSelectedLinkId] = useState<string>("");
+  const [selectedLink, setSelectedLink] = useState<ISankeyLink | null>(null);
+
+  // Info: (20260714 - Julian) 選擇 source & target
+  const selectedSource = selectedLink ? selectedLink.source : "";
+  const selectedTarget = selectedLink ? selectedLink.target : "";
+
+  useEffect(() => {
+    const selectedLink = linkOptions.find(
+      (link) => link.lineIndex === Number(selectedLinkId),
+    );
+    setSelectedLink(selectedLink ?? null);
+  }, [selectedLinkId, linkOptions]);
 
   const handleSubmit = () => {
-    // onAddAction({
-    //   id: crypto.randomUUID(),
-    //   type: MermaidActionType.SANKEY_EDIT_ITEM,
-    //   description: `修改項目 "${sankeySliceTarget}"`,
-    //   payload: {
-    //     oldLabel: sankeySliceTarget,
-    //     newLabel: sankeySliceNewLabel || sankeySliceTarget,
-    //     newValue: finalValue,
-    //   },
-    // });
+    onAddAction({
+      id: crypto.randomUUID(),
+      type: MermaidActionType.SANKEY_REVERSE_FLOW,
+      description: `反轉流向 "${selectedTarget} ➡️ ${selectedSource}"`,
+      payload: { lineIndex: Number(selectedLinkId) },
+    });
   };
 
   return (
@@ -454,16 +485,15 @@ const RenameNodePanel: FC<IBasePanelProps> = ({
   const submitDisabled = selectedNode.trim() === "" || newName.trim() === "";
 
   const handleSubmit = () => {
-    // onAddAction({
-    //   id: crypto.randomUUID(),
-    //   type: MermaidActionType.SANKEY_EDIT_ITEM,
-    //   description: `修改項目 "${sankeySliceTarget}"`,
-    //   payload: {
-    //     oldLabel: sankeySliceTarget,
-    //     newLabel: sankeySliceNewLabel || sankeySliceTarget,
-    //     newValue: finalValue,
-    //   },
-    // });
+    onAddAction({
+      id: crypto.randomUUID(),
+      type: MermaidActionType.SANKEY_RENAME_NODE,
+      description: `變更節點名稱 "${selectedNode} ➡️ ${newName}"`,
+      payload: {
+        oldName: selectedNode,
+        newName: newName,
+      },
+    });
   };
 
   return (
@@ -527,17 +557,26 @@ const DeleteLinkPanel: FC<IBasePanelProps> = ({
   const linkOptions = parsedSankeyData.links;
 
   const [selectedLinkId, setSelectedLinkId] = useState<string>("");
+  const [selectedLink, setSelectedLink] = useState<ISankeyLink | null>(null);
+
+  // Info: (20260714 - Julian) 選擇 source & target
+  const selectedSource = selectedLink ? selectedLink.source : "";
+  const selectedTarget = selectedLink ? selectedLink.target : "";
+
+  useEffect(() => {
+    const selectedLink = linkOptions.find(
+      (link) => link.lineIndex === Number(selectedLinkId),
+    );
+    setSelectedLink(selectedLink ?? null);
+  }, [selectedLinkId, linkOptions]);
 
   const handleSubmit = () => {
-    // if (!sankeySliceTarget) return;
-    // onAddAction({
-    //   id: crypto.randomUUID(),
-    //   type: MermaidActionType.SANKEY_DELETE_ITEM,
-    //   description: `刪除項目 "${sankeySliceTarget}"`,
-    //   payload: {
-    //     label: sankeySliceTarget,
-    //   },
-    // });
+    onAddAction({
+      id: crypto.randomUUID(),
+      type: MermaidActionType.SANKEY_DELETE_LINK,
+      description: `刪除流向 "${selectedSource} ➡️ ${selectedTarget}"`,
+      payload: { lineIndex: Number(selectedLinkId) },
+    });
   };
 
   return (

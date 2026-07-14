@@ -14,6 +14,7 @@ import {
   applyPieAction,
   applyFlowchartAction,
   applyXYChartAction,
+  applySankeyAction,
   parseFlowchartNodes,
   parsePieItems,
   parseGanttItems,
@@ -112,7 +113,7 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
       } else if (chartType === MermaidChartType.XYCHART) {
         result = applyXYChartAction(result, action);
       } else if (chartType === MermaidChartType.SANKEY) {
-        // result =
+        result = applySankeyAction(result, action);
       }
     });
     return result;
