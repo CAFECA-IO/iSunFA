@@ -66,13 +66,14 @@ export async function POST(request: NextRequest) {
         currentStep,
         language,
       );
-      await chatroomService.recordAndPublishAiReply({
+      // Info: (20260714 - Emily) envelope 隨 HTTP 回帶:Centrifugo 遞送失效時前端仍可解密顯示(以訊息 id 去重)
+      const greetingEnvelope = await chatroomService.recordAndPublishAiReply({
         channel,
         recipientPublicKey,
         text: greeting,
         purpose: CARBON_CHAT_PURPOSE,
       });
-      return jsonOk({ published: true });
+      return jsonOk({ published: true, envelopes: [greetingEnvelope] });
     }
 
     if (!history) {
@@ -144,17 +145,19 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      await chatroomService.recordAndPublishAiReply({
+      // Info: (20260714 - Emily) envelope 隨 HTTP 回帶:Centrifugo 遞送失效時前端仍可解密顯示(以訊息 id 去重)
+      const replyEnvelope = await chatroomService.recordAndPublishAiReply({
         channel,
         recipientPublicKey,
         text: reply,
         purpose: CARBON_CHAT_PURPOSE,
       });
+      const envelopes = [replyEnvelope];
 
       // Info: (20260714 - Emily) 草稿摘要為決定性模板訊息(不經 LLM),帶 relatedParagraphIds 供段落 chip 還原
       if (drafts.length > 0) {
         const sections = drafts.map((d) => d.title).join("、");
-        await chatroomService.recordAndPublishAiReply({
+        const summaryEnvelope = await chatroomService.recordAndPublishAiReply({
           channel,
           recipientPublicKey,
           text: buildAttachmentDraftSummary(
@@ -166,9 +169,10 @@ export async function POST(request: NextRequest) {
           purpose: CARBON_CHAT_PURPOSE,
           relatedParagraphIds: drafts.map((d) => d.paragraphId),
         });
+        envelopes.push(summaryEnvelope);
       }
 
-      return jsonOk({ published: true, drafts, degraded });
+      return jsonOk({ published: true, envelopes, drafts, degraded });
     }
 
     return jsonOk({ reply, drafts, degraded });

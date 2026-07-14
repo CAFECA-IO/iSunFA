@@ -141,6 +141,10 @@ export const useCarbonChat = () => {
       }
       setSessionsData((prev) => {
         const updatedSession = { ...prev[activeSessionId] };
+        // Info: (20260714 - Emily) 以訊息 id 去重:HTTP 回帶與 Centrifugo 訂閱可能送達同一則訊息
+        if (updatedSession.messages.some((m) => m.id === message.id)) {
+          return prev;
+        }
         updatedSession.messages = [...updatedSession.messages, message];
         if (progressUpdate) {
           updatedSession.progress = Math.min(
@@ -154,6 +158,28 @@ export const useCarbonChat = () => {
       setIsLoading(false);
     },
     [activeSessionId],
+  );
+
+  // Info: (20260714 - Emily) 解密 envelope 並追加訊息:Centrifugo 訂閱與 HTTP 回帶共用(遞送雙軌,id 去重)
+  const decryptAndAppendEnvelope = useCallback(
+    async (envelope: IEciesEnvelope) => {
+      const master = masterKeyRef.current;
+      if (!master) return;
+      try {
+        const plaintext = await eciesDecrypt(
+          master.extendedPrivateKey,
+          envelope,
+        );
+        const { message, progressUpdate } = JSON.parse(plaintext) as {
+          message: IChatMessage;
+          progressUpdate: number;
+        };
+        appendMessageLocally(message, progressUpdate);
+      } catch {
+        // Info: (20260712 - Luphia) 解密失敗代表非本用戶/非本金鑰的訊息（如惡意跨訂閱），直接忽略
+      }
+    },
+    [appendMessageLocally],
   );
 
   // Info: (20260712 - Luphia) 送出後啟動等待逾時；逾時仍未經訂閱收到回覆即解除等待並提示，避免卡在 typing
@@ -658,24 +684,8 @@ export const useCarbonChat = () => {
   useEffect(() => {
     const unsubscribe = subscribeChatroom<IEciesEnvelope>({
       channel: chatChannel,
-      onMessage: async (envelope) => {
-        // Info: (20260712 - Luphia) 主金鑰尚未就緒（未經 PRF 解鎖）前無法解密，先略過
-        const master = masterKeyRef.current;
-        if (!master) return;
-        try {
-          const plaintext = await eciesDecrypt(
-            master.extendedPrivateKey,
-            envelope,
-          );
-          const { message, progressUpdate } = JSON.parse(plaintext) as {
-            message: IChatMessage;
-            progressUpdate: number;
-          };
-          appendMessageLocally(message, progressUpdate);
-        } catch {
-          // Info: (20260712 - Luphia) 解密失敗代表非本用戶/非本金鑰的訊息（如惡意跨訂閱），直接忽略
-        }
-      },
+      // Info: (20260712 - Luphia) 主金鑰尚未就緒（未經 PRF 解鎖）前無法解密，先略過(decryptAndAppendEnvelope 內建防護)
+      onMessage: decryptAndAppendEnvelope,
       onError: () => {
         setIsError(true);
         setIsTyping(false);
@@ -683,7 +693,7 @@ export const useCarbonChat = () => {
       },
     });
     return unsubscribe;
-  }, [chatChannel, appendMessageLocally]);
+  }, [chatChannel, decryptAndAppendEnvelope]);
 
   // Info: (20260714 - Emily) 加入附件:前端 Fail Fast(MIME 白名單/大小/數量),通過者轉 base64 進待送清單
   const addAttachments = useCallback(
@@ -870,7 +880,10 @@ export const useCarbonChat = () => {
       const data = await request<{
         success: boolean;
         message: string;
-        payload: { drafts?: IParagraphDraft[] } | null;
+        payload: {
+          drafts?: IParagraphDraft[];
+          envelopes?: IEciesEnvelope[];
+        } | null;
       }>("/api/v1/chat/carbon", {
         method: "POST",
         body: JSON.stringify({
@@ -904,8 +917,14 @@ export const useCarbonChat = () => {
         jumpToReportParagraph(payload.drafts[0].paragraphId);
       }
 
-      // Info: (20260712 - Luphia) 後端已加密並發佈 AI 回覆到 Centrifugo；由訂閱端解密後顯示，此處不再處理回覆內容
-      // Info: (20260712 - Luphia) 啟動等待逾時，避免「已發佈但未收到」時卡在 typing
+      // Info: (20260714 - Emily) HTTP 回帶的密文回覆直接解密顯示;Centrifugo 訂閱若也送達,由訊息 id 去重
+      if (payload?.envelopes) {
+        for (const envelope of payload.envelopes) {
+          await decryptAndAppendEnvelope(envelope);
+        }
+      }
+
+      // Info: (20260712 - Luphia) 啟動等待逾時，避免「已發佈但未收到」時卡在 typing(回覆已回帶時為 no-op)
       startReplyTimeout();
     } catch (error) {
       // Info: (20260712 - Luphia) 此區塊代表「取得 AI 回覆」階段失敗（如 /api/v1/chat/carbon 錯誤）
@@ -932,6 +951,7 @@ export const useCarbonChat = () => {
     applyDraftToReport,
     jumpToReportParagraph,
     generateParagraphDraft,
+    decryptAndAppendEnvelope,
     startReplyTimeout,
     chatChannel,
     ensureMasterKeyCached,
@@ -981,21 +1001,29 @@ export const useCarbonChat = () => {
       pendingReplyRef.current = true;
       try {
         // Info: (20260714 - Emily) 改用 request helper:自動帶 DeWT Bearer token(後端已加授權檢查)
-        const data = await request<{ success: boolean; message: string }>(
-          "/api/v1/chat/carbon",
-          {
-            method: "POST",
-            body: JSON.stringify({
-              init: true,
-              channel: chatChannel,
-              recipientPublicKey,
-              currentStep: activeSession?.currentStep,
-              language,
-            }),
-          },
-        );
+        const data = await request<{
+          success: boolean;
+          message: string;
+          payload: { envelopes?: IEciesEnvelope[] } | null;
+        }>("/api/v1/chat/carbon", {
+          method: "POST",
+          body: JSON.stringify({
+            init: true,
+            channel: chatChannel,
+            recipientPublicKey,
+            currentStep: activeSession?.currentStep,
+            language,
+          }),
+        });
         if (!data.success) {
           throw new Error(data.message || "Greeting init returned an error");
+        }
+
+        // Info: (20260714 - Emily) 招呼詞密文隨 HTTP 回帶,直接解密顯示(訂閱重複由 id 去重)
+        if (data.payload?.envelopes) {
+          for (const envelope of data.payload.envelopes) {
+            await decryptAndAppendEnvelope(envelope);
+          }
         }
         // Info: (20260712 - Luphia) 啟動等待逾時，避免招呼詞「已發佈但未收到」時卡在 typing
         startReplyTimeout();
@@ -1012,7 +1040,15 @@ export const useCarbonChat = () => {
         );
       }
     },
-    [chatChannel, activeSession, language, startReplyTimeout, appendMessageLocally, t],
+    [
+      chatChannel,
+      activeSession,
+      language,
+      startReplyTimeout,
+      appendMessageLocally,
+      decryptAndAppendEnvelope,
+      t,
+    ],
   );
 
   // Info: (20260714 - Emily) channel 載入 effect:解鎖後(含切換/新增 session)各 channel 載一次歷史,空房間請 AI 招呼

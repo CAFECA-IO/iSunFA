@@ -22,6 +22,7 @@ interface IRecordParams {
 
 export class ChatroomService {
   // Info: (20260712 - Luphia) 加密後入庫（僅密文），並視需要發佈到 Centrifugo
+  // Info: (20260714 - Emily) 回傳 envelope 供 HTTP 回應直接帶回:Centrifugo 遞送失效時前端仍可解密顯示(訂閱重複由前端以訊息 id 去重)
   private async record(params: IRecordParams) {
     const chatroom = await chatroomRepo.findOrCreateByChannel(
       params.channel,
@@ -62,6 +63,8 @@ export class ChatroomService {
     if (params.publish) {
       await publishToCentrifugo(params.channel, envelope);
     }
+
+    return envelope;
   }
 
   // Info: (20260712 - Luphia) 記錄使用者訊息（加密入庫、不發佈，前端已就地顯示）
