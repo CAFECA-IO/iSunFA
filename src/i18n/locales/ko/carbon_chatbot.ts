@@ -69,6 +69,8 @@ export const carbonChatbot = {
     "첨부파일 업로드 실패: {{name}}. 제거 후 다시 시도해 주세요",
   draft_generate: "AI로 이 섹션 초안 작성",
   draft_generating: "초안 생성 중...",
+  draft_generating_section:
+    "「{{section}}」 초안 생성 중입니다. 완료되면 보고서에 반영됩니다…",
   draft_failed:
     "[초안 생성 실패] 「{{section}}」 섹션 초안 생성 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
   section_placeholder:

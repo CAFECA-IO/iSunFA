@@ -69,6 +69,8 @@ export const carbonChatbot = {
     "添付ファイルのアップロードに失敗しました:{{name}}。削除して再試行してください",
   draft_generate: "AI でこのセクションの下書きを作成",
   draft_generating: "下書きを生成中...",
+  draft_generating_section:
+    "「{{section}}」の下書きを生成中です。完成後レポートに反映されます…",
   draft_failed:
     "【下書き生成失敗】「{{section}}」セクションの下書き生成中に問題が発生しました。後ほどお試しください。",
   section_placeholder:

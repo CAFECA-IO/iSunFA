@@ -69,6 +69,8 @@ export const carbonChatbot = {
     "Attachment upload failed: {{name}}; remove it and try again",
   draft_generate: "Draft this section with AI",
   draft_generating: "Generating draft...",
+  draft_generating_section:
+    "Drafting 「{{section}}」 — it will be written to the report when ready…",
   draft_failed:
     "[Draft failed] Something went wrong while drafting 「{{section}}」. Please try again later.",
   section_placeholder:

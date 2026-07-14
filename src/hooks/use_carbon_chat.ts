@@ -61,10 +61,18 @@ import {
   CARBON_CHAT_MAX_ATTACHMENTS_PER_MESSAGE,
   CARBON_CHAT_HIGHLIGHT_DURATION_MS,
   CARBON_REPORT_AUTOSAVE_DEBOUNCE_MS,
+  CARBON_DRAFT_NOTICE_DISMISS_MS,
 } from "@/constants/carbon_chatbot";
 
 // Info: (20260714 - Emily) 報告草稿保存狀態(工具列顯示;null = 尚無變更;error = 保存失敗/版本衝突)
 export type ReportSaveStatus = "saving" | "saved" | "error" | null;
+
+// Info: (20260714 - Emily) 草稿生成狀態列(顯示於輸入框上方):生成中 loading、失敗短暫提示後自動消失
+// Info: (20260714 - Emily) 草稿為並行任務,失敗不以對話氣泡表達(氣泡先於回覆出現會造成 UX 混淆)
+export interface IDraftNotice {
+  type: "loading" | "error";
+  text: string;
+}
 
 export const useCarbonChat = () => {
   const { t, language } = useTranslation();
@@ -86,6 +94,11 @@ export const useCarbonChat = () => {
   );
   // Info: (20260714 - Emily) 正在生成草稿的段落 id;同一時間只允許一段生成,避免併發寫入報告
   const [draftingParagraphId, setDraftingParagraphId] = useState<string | null>(
+    null,
+  );
+  // Info: (20260714 - Emily) 草稿狀態列(loading/error);error 自動清除
+  const [draftNotice, setDraftNotice] = useState<IDraftNotice | null>(null);
+  const draftNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
   // Info: (20260714 - Emily) 待送出附件(base64 僅存記憶體,送出後清除)與附件驗證錯誤提示
@@ -224,6 +237,9 @@ export const useCarbonChat = () => {
       timers.clear();
       if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
       if (focusTimerRef.current) clearTimeout(focusTimerRef.current);
+      if (draftNoticeTimerRef.current) {
+        clearTimeout(draftNoticeTimerRef.current);
+      }
     };
   }, []);
 
@@ -366,6 +382,7 @@ export const useCarbonChat = () => {
     setAttachmentError(null);
     setSaveStatus(null);
     setIsError(false);
+    setDraftNotice(null);
     pendingDraftParagraphIdRef.current = null;
   }, []);
 
@@ -636,6 +653,17 @@ export const useCarbonChat = () => {
 
       setDraftingParagraphId(paragraphId);
       setActiveParagraphId(paragraphId);
+      // Info: (20260714 - Emily) 生成中顯示狀態列(非對話氣泡):與聊天回覆並行,不打斷對話流
+      if (draftNoticeTimerRef.current) {
+        clearTimeout(draftNoticeTimerRef.current);
+        draftNoticeTimerRef.current = null;
+      }
+      setDraftNotice({
+        type: "loading",
+        text: t("carbon_chatbot.draft_generating_section", {
+          section: `${section.code} ${section.title}`,
+        }),
+      });
       try {
         // Info: (20260714 - Emily) 只取最近 N 則對話供 AI 理解背景,與主對話的 token 控制策略一致
         const conversationContext = (activeSession?.messages ?? [])
@@ -659,20 +687,22 @@ export const useCarbonChat = () => {
         applyDraftToReport(draft);
         // Info: (20260714 - Emily) 草稿寫入後即時高亮該段,demo 觀眾可見「對話 → 報告」的即時性
         jumpToReportParagraph(draft.paragraphId);
+        setDraftNotice(null);
       } catch (error) {
+        // Info: (20260714 - Emily) 失敗以狀態列短暫提示(自動消失),不插對話氣泡(回覆稍後到達會造成前後矛盾)
         console.error("[carbon-chat] paragraph draft failed:", error);
-        appendMessageLocally(
-          {
-            id: crypto.randomUUID(),
-            sender: ChatRoleEnum.AI,
-            text: isQuotaApiError(error)
-              ? t("carbon_chatbot.ai_quota_exceeded")
-              : t("carbon_chatbot.draft_failed", {
-                  section: `${section.code} ${section.title}`,
-                }),
-          },
-          0,
-        );
+        setDraftNotice({
+          type: "error",
+          text: isQuotaApiError(error)
+            ? t("carbon_chatbot.ai_quota_exceeded")
+            : t("carbon_chatbot.draft_failed", {
+                section: `${section.code} ${section.title}`,
+              }),
+        });
+        draftNoticeTimerRef.current = setTimeout(() => {
+          draftNoticeTimerRef.current = null;
+          setDraftNotice(null);
+        }, CARBON_DRAFT_NOTICE_DISMISS_MS);
       } finally {
         setDraftingParagraphId(null);
       }
@@ -682,7 +712,6 @@ export const useCarbonChat = () => {
       activeSession,
       language,
       t,
-      appendMessageLocally,
       applyDraftToReport,
       jumpToReportParagraph,
     ],
@@ -1233,6 +1262,7 @@ export const useCarbonChat = () => {
     jumpToReportParagraph,
     focusMessageForParagraph,
     draftingParagraphId,
+    draftNotice,
     generateParagraphDraft,
     toggleParagraphVerified,
     handleMarkdownChange,

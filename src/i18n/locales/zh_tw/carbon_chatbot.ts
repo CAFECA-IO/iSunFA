@@ -64,6 +64,7 @@ export const carbonChatbot = {
   attachment_upload_failed: "附件上傳失敗:{{name}},請移除後重試",
   draft_generate: "AI 撰寫此段草稿",
   draft_generating: "草稿生成中...",
+  draft_generating_section: "「{{section}}」草稿生成中,完成後將寫入報告…",
   draft_failed:
     "【草稿生成失敗】「{{section}}」段落草稿生成時發生問題，請稍後再試。",
   section_placeholder:

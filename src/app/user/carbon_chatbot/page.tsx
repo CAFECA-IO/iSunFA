@@ -45,6 +45,7 @@ export default function CarbonChatbotPage() {
     jumpToReportParagraph,
     focusMessageForParagraph,
     draftingParagraphId,
+    draftNotice,
     generateParagraphDraft,
     toggleParagraphVerified,
     handleMarkdownChange,
@@ -135,6 +136,7 @@ export default function CarbonChatbotPage() {
               attachmentError={attachmentError}
               onAddFiles={addAttachments}
               onRemoveAttachment={removeAttachment}
+              draftNotice={draftNotice}
             />
           </>
         ) : (

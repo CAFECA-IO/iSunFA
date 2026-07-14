@@ -6,6 +6,7 @@ import {
   IPendingAttachment,
   PendingAttachmentStatusEnum,
 } from "@/types/carbon_chatbot.types";
+import { IDraftNotice } from "@/hooks/use_carbon_chat";
 import { CARBON_CHAT_ATTACHMENT_ACCEPT } from "@/constants/carbon_chatbot";
 import { useTranslation } from "@/i18n/i18n_context";
 
@@ -19,6 +20,8 @@ export interface IChatInputProps {
   attachmentError?: string | null;
   onAddFiles?: (files: File[]) => void;
   onRemoveAttachment?: (attachmentId: string) => void;
+  // Info: (20260714 - Emily) 草稿生成狀態列(loading/error):並行任務不以對話氣泡表達,避免與回覆順序矛盾
+  draftNotice?: IDraftNotice | null;
 }
 
 export function ChatInput({
@@ -31,6 +34,7 @@ export function ChatInput({
   attachmentError = null,
   onAddFiles = undefined,
   onRemoveAttachment = undefined,
+  draftNotice = null,
 }: IChatInputProps) {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -117,6 +121,22 @@ export function ChatInput({
       {attachmentError && (
         <div className="mx-auto mb-2 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-600">
           {attachmentError}
+        </div>
+      )}
+
+      {/* Info: (20260714 - Emily) 草稿生成狀態列:生成中 loading、失敗短暫提示後自動消失 */}
+      {draftNotice && (
+        <div
+          className={`mx-auto mb-2 flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold ${
+            draftNotice.type === "loading"
+              ? "bg-orange-50 text-[#e04f00]"
+              : "bg-red-50 text-red-600"
+          }`}
+        >
+          {draftNotice.type === "loading" && (
+            <Loader2 size={12} className="shrink-0 animate-spin" />
+          )}
+          {draftNotice.text}
         </div>
       )}
 
