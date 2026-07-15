@@ -97,6 +97,10 @@ export const carbonChatbot = {
   activity_ledger_collapse: "活動データを折りたたむ",
   activity_source: "出典:{{source}}",
   activity_source_chat: "出典:会話",
+  activity_co2e: "CO2e:{{value}} kg",
+  activity_pending_factor:
+    "⚠ 保留:信頼できる係数がないか単位不一致のため推定しません",
+  activity_total_co2e: "総排出量(照合済み)",
   inventory_step_ORG_PROFILE: "ステップ:企業基本情報(名称/年度)",
   inventory_step_ORG_BOUNDARY: "ステップ:組織境界の設定",
   inventory_step_EMISSION_SOURCES: "ステップ:排出源の特定",

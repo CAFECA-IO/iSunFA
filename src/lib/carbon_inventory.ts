@@ -5,6 +5,7 @@ import {
   ICarbonInventoryState,
   IActivityRecord,
   IInventoryExtraction,
+  IComputedLedger,
 } from "@/types/carbon_chatbot.types";
 import {
   CarbonInventoryStep,
@@ -23,7 +24,8 @@ export const createEmptyInventoryState = (): ICarbonInventoryState => ({
 });
 
 // Info: (20260716 - Emily) 去重鍵:同排放源+同數量+同單位+同範疇視為同一筆(重送訊息/重傳附件不重複記帳)
-const activityDedupeKey = (a: IActivityRecord): string =>
+// Info: (20260716 - Emily) #6519 起 export:計算總表以同一把鍵對齊活動與計算結果
+export const activityDedupeKey = (a: IActivityRecord): string =>
   [a.scopeCategory, a.sourceName.trim().toLowerCase(), a.quantity.trim(), a.unit]
     .join("|");
 
@@ -122,4 +124,35 @@ export const describeInventoryStep = (
     CARBON_INVENTORY_MIN_ACTIVITY_RECORDS - state.activities.length;
   if (activityGap > 0) missing.push(`活動數據(尚缺約 ${activityGap} 筆)`);
   return `${state.step}${missing.length > 0 ? `;待蒐集:${missing.join("、")}` : ""}`;
+};
+
+/**
+ * Info: (20260716 - Emily) #6519 掛回計算總表:
+ * - 依 activityKey 回填各活動的 emissionFactor/factorSource(決定性,同鍵對齊)
+ * - computedLedger 整包存入 state;步驟由 computeInventoryStep 重算
+ *   (全部活動有係數 → EMISSION_FACTORS 完成 → 推進 REVIEW)
+ */
+export const applyComputedLedger = (
+  state: ICarbonInventoryState,
+  ledger: IComputedLedger,
+): ICarbonInventoryState => {
+  const factorByKey = new Map(
+    ledger.entries.map((entry) => [entry.activityKey, entry.factor]),
+  );
+  const next: ICarbonInventoryState = {
+    ...state,
+    activities: state.activities.map((activity) => {
+      const factor = factorByKey.get(activityDedupeKey(activity));
+      if (!factor) return activity;
+      return {
+        ...activity,
+        emissionFactor: factor.value,
+        factorSource: factor.source,
+      };
+    }),
+    computedLedger: ledger,
+    updatedAt: new Date().toISOString(),
+  };
+  next.step = computeInventoryStep(next);
+  return next;
 };

@@ -13,6 +13,7 @@ import {
   ICarbonInventoryState,
   IInventoryExtraction,
   IActivityRecord,
+  IComputedLedger,
 } from "@/types/carbon_chatbot.types";
 import { formatFileSize } from "@/lib/utils/common";
 import {
@@ -28,6 +29,8 @@ import {
   createEmptyInventoryState,
   mergeInventoryExtraction,
   describeInventoryStep,
+  applyComputedLedger,
+  activityDedupeKey,
 } from "@/lib/carbon_inventory";
 import {
   loadInventoryState,
@@ -458,6 +461,44 @@ export const useCarbonChat = () => {
       }
     };
   }, [activeInventoryState, chatChannel, isUnlocked]);
+
+  // Info: (20260716 - Emily) #6519 決定論 CO2e 計算:活動集合變更時呼叫 /calculate,結果掛回 state
+  // Info: (20260716 - Emily) 簽章 guard 防迴圈:applyComputedLedger 只回填係數不改活動鍵,簽章不變不重算
+  const lastCalcSignatureRef = useRef<Map<string, string>>(new Map());
+  useEffect(() => {
+    if (!activeInventoryState || activeInventoryState.activities.length === 0) {
+      return;
+    }
+    const signature = activeInventoryState.activities
+      .map(activityDedupeKey)
+      .sort()
+      .join(";");
+    if (lastCalcSignatureRef.current.get(chatChannel) === signature) return;
+    lastCalcSignatureRef.current.set(chatChannel, signature);
+
+    const channelAtRequest = chatChannel;
+    request<{ payload: { ledger: IComputedLedger } | null }>(
+      "/api/v1/chat/carbon/calculate",
+      {
+        method: "POST",
+        body: JSON.stringify({ activities: activeInventoryState.activities }),
+      },
+    )
+      .then((res) => {
+        const ledger = res.payload?.ledger;
+        if (!ledger) return;
+        setInventoryStates((prev) => {
+          const base = prev[channelAtRequest];
+          if (!base) return prev;
+          return { ...prev, [channelAtRequest]: applyComputedLedger(base, ledger) };
+        });
+      })
+      .catch((error) => {
+        // Info: (20260716 - Emily) 計算失敗不阻斷對話;清簽章讓下次活動變更重試
+        console.error("[carbon-chat] co2e calculation failed:", error);
+        lastCalcSignatureRef.current.delete(channelAtRequest);
+      });
+  }, [activeInventoryState, chatChannel]);
 
   // Info: (20260716 - Emily) #6518 合併萃取結果進狀態帳本(去重/推進由 lib/carbon_inventory 決定性裁決)
   // Info: (20260716 - Emily) 閉包綁定建立當下的 channel:在途回覆寫回原房

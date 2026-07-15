@@ -5,6 +5,7 @@ import { z } from "zod";
 import { GhgProtocolCategory } from "@/constants/esg";
 import { MeasurementUnit } from "@/constants/enums";
 import { CarbonInventoryStep } from "@/constants/carbon_chatbot";
+import { CARBON_CALCULATE_MAX_ACTIVITIES } from "@/constants/carbon_calculation";
 import { CarbonReportDraftPutSchema } from "@/validators/carbon_report_storage";
 
 // Info: (20260716 - Emily) 單筆活動數據:scopeCategory/unit 以 nativeEnum 鎖死;quantity 原樣字串(嚴禁在此轉數字)
@@ -31,6 +32,58 @@ export type CarbonInventoryExtractionPayload = z.infer<
   typeof CarbonInventoryExtractionSchema
 >;
 
+// Info: (20260716 - Emily) #6519 計算請求:活動明細(上限護欄);計算為決定論,無 LLM
+export const CarbonCalculateRequestSchema = z.object({
+  activities: z
+    .array(
+      CarbonActivityRecordSchema.extend({
+        emissionFactor: z.string().max(50).optional(),
+        factorSource: z.string().max(200).optional(),
+      }),
+    )
+    .min(1)
+    .max(CARBON_CALCULATE_MAX_ACTIVITIES),
+});
+export type CarbonCalculateRequestPayload = z.infer<
+  typeof CarbonCalculateRequestSchema
+>;
+
+// Info: (20260716 - Emily) #6519 計算總表(前端解密後驗證用;數值皆字串化 Decimal)
+const FactorSnapshotSchema = z.object({
+  factorId: z.string().max(100),
+  name: z.string().max(300),
+  value: z.string().max(50),
+  unit: z.string().max(50),
+  source: z.string().max(300),
+});
+
+export const ComputedLedgerSchema = z.object({
+  entries: z.array(
+    z.object({
+      activityKey: z.string().max(300),
+      scopeCategory: z.nativeEnum(GhgProtocolCategory),
+      sourceName: z.string().max(100),
+      quantityRaw: z.string().max(50),
+      convertedQuantity: z.string().max(60),
+      convertedUnit: z.string().max(50),
+      co2eKg: z.string().max(60),
+      ghgBreakdown: z.record(z.string(), z.string()).optional(),
+      gwpVersion: z.string().max(30).optional(),
+      factor: FactorSnapshotSchema,
+    }),
+  ),
+  pending: z.array(
+    z.object({
+      activityKey: z.string().max(300),
+      sourceName: z.string().max(100),
+      reason: z.string().max(50),
+    }),
+  ),
+  scopeSubtotals: z.record(z.string(), z.string()),
+  totalCo2eKg: z.string().max(60),
+  computedAt: z.string().max(50),
+});
+
 // Info: (20260716 - Emily) 前端解密後的狀態驗證(壞資料 Fail Fast 丟棄,不入 React 狀態)
 export const CarbonInventoryStateSchema = z.object({
   step: z.nativeEnum(CarbonInventoryStep),
@@ -45,6 +98,7 @@ export const CarbonInventoryStateSchema = z.object({
       factorSource: z.string().max(200).optional(),
     }),
   ),
+  computedLedger: ComputedLedgerSchema.optional(),
   notes: z.array(z.string().max(500)).optional(),
   updatedAt: z.string().max(50),
   version: z.number().int().min(0),

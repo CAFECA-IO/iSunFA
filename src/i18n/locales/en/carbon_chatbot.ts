@@ -96,6 +96,10 @@ export const carbonChatbot = {
   activity_ledger_collapse: "Collapse activity ledger",
   activity_source: "Source: {{source}}",
   activity_source_chat: "Source: conversation",
+  activity_co2e: "CO2e: {{value}} kg",
+  activity_pending_factor:
+    "⚠ Pending: no reliable factor or unit mismatch; no estimate will be fabricated",
+  activity_total_co2e: "Total emissions (reconciled)",
   inventory_step_ORG_PROFILE: "Step: Organization profile (name/year)",
   inventory_step_ORG_BOUNDARY: "Step: Organizational boundary",
   inventory_step_EMISSION_SOURCES: "Step: Emission source identification",
