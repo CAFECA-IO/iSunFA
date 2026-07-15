@@ -21,7 +21,11 @@ import {
   isCarbonChatChannelOwnedBy,
 } from "@/constants/carbon_chatbot";
 import { CarbonChatRequestSchema } from "@/validators";
-import { ChatRoleEnum, IAttachment } from "@/types/carbon_chatbot.types";
+import {
+  ChatRoleEnum,
+  IAttachment,
+  IActivityRecord,
+} from "@/types/carbon_chatbot.types";
 import { IParagraphDraft } from "@/interfaces/carbon_paragraph_draft";
 
 // Info: (20260708 - Tzuhan) Carbon Chatbot Framework
@@ -114,7 +118,8 @@ export async function POST(request: NextRequest) {
         : history;
 
     // Info: (20260714 - Emily) 結構化回覆:對話內容 + 段落完成訊號(readyParagraphId 已經白名單裁決)
-    const { reply, readyParagraphId } =
+    // Info: (20260716 - Emily) #6518:extraction 為已裁決的事實萃取,回帶前端合併進盤查狀態帳本
+    const { reply, readyParagraphId, extraction } =
       await chatService.generateCarbonChatbotStructuredResponse(
         historyForAi,
         currentStep,
@@ -132,6 +137,7 @@ export async function POST(request: NextRequest) {
     // Info: (20260714 - Emily) 管線經 recoverLaria 取回內容 → 萃取 → 白名單裁決 → 生成草稿(graceful fallback)
     let drafts: IParagraphDraft[] = [];
     let degraded = false;
+    let attachmentActivities: IActivityRecord[] = [];
     const attachmentsMeta: IAttachment[] | undefined = attachments;
     if (attachments && attachments.length > 0) {
       const pipeline = new AttachmentExtractionService();
@@ -142,6 +148,7 @@ export async function POST(request: NextRequest) {
       });
       drafts = result.drafts;
       degraded = result.degraded;
+      attachmentActivities = result.activities;
     }
 
     // Info: (20260714 - Emily) 對話蒐集完成的段落:自動生成草稿寫入報告(打斷「無限訪談迴圈」的出口)
@@ -221,10 +228,17 @@ export async function POST(request: NextRequest) {
         envelopes.push(summaryEnvelope);
       }
 
-      return jsonOk({ published: true, envelopes, drafts, degraded });
+      return jsonOk({
+        published: true,
+        envelopes,
+        drafts,
+        degraded,
+        extraction,
+        attachmentActivities,
+      });
     }
 
-    return jsonOk({ reply, drafts, degraded });
+    return jsonOk({ reply, drafts, degraded, extraction, attachmentActivities });
   } catch (error) {
     logger.error(`[API] /chat/carbon error: ${JSON.stringify(error)}`);
     // Info: (20260714 - Emily) 額度耗盡回專屬錯誤碼,前端提示稍候重試(與一般系統錯誤區分)

@@ -88,6 +88,7 @@ export interface IReportData {
 }
 
 // Info: (20260712 - Luphia) 單筆活動數據（數值以字串保存，計算時於服務層轉 Decimal，避免浮點誤差）
+// Info: (20260716 - Emily) #6518:unit 收斂為 MeasurementUnit enum;source 記出處(訊息/附件檔名)供零捏造溯源
 export interface IActivityRecord {
   scopeCategory: GhgProtocolCategory;
   sourceName: string;
@@ -96,6 +97,15 @@ export interface IActivityRecord {
   emissionFactor?: string;
   factorSource?: string;
   confidence?: "high" | "medium" | "low";
+  source?: string;
+}
+
+// Info: (20260716 - Emily) #6518 LLM 事實萃取結果(已經 Zod + 白名單裁決;year 由 TS 決定性轉數字)
+export interface IInventoryExtraction {
+  company?: string;
+  year?: number;
+  boundaryApproach?: ICarbonInventoryState["boundaryApproach"];
+  activities: IActivityRecord[];
 }
 
 // Info: (20260712 - Luphia) 碳盤查結構化事實狀態：AI 的長期記憶與報告的資料來源（取代重播逐字對話）

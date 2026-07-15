@@ -10,6 +10,9 @@ import {
   IAttachment,
   IPendingAttachment,
   PendingAttachmentStatusEnum,
+  ICarbonInventoryState,
+  IInventoryExtraction,
+  IActivityRecord,
 } from "@/types/carbon_chatbot.types";
 import { formatFileSize } from "@/lib/utils/common";
 import {
@@ -21,6 +24,15 @@ import {
   createDefaultSessions,
   createChatSession,
 } from "@/constants/carbon_chatbot.session";
+import {
+  createEmptyInventoryState,
+  mergeInventoryExtraction,
+  describeInventoryStep,
+} from "@/lib/carbon_inventory";
+import {
+  loadInventoryState,
+  saveInventoryState,
+} from "@/lib/carbon_inventory_storage";
 import {
   loadReportDraft,
   saveReportDraft,
@@ -122,6 +134,15 @@ export const useCarbonChat = () => {
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Info: (20260714 - Emily) 各 channel 草稿的樂觀鎖版本(讀取時記下,保存成功後更新)
   const draftVersionsRef = useRef<Map<string, number>>(new Map());
+  // Info: (20260716 - Emily) #6518 盤查狀態帳本(per-channel):活動數據 + 決定性步驟;E2EE 入庫比照報告草稿
+  const [inventoryStates, setInventoryStates] = useState<
+    Record<string, ICarbonInventoryState>
+  >({});
+  const inventoryVersionsRef = useRef<Map<string, number>>(new Map());
+  const inventoryRestoredChannelsRef = useRef<Set<string>>(new Set());
+  const inventoryAutosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   // Info: (20260714 - Emily) 已載入過歷史的 channel(切換 session 時各自載一次)
   const loadedChannelsRef = useRef<Set<string>>(new Set());
   // Info: (20260714 - Emily) 跳段後的草稿觸發目標:送出預填訊息時觸發該段草稿生成(決定性規則,非 LLM 意圖判斷)
@@ -364,6 +385,103 @@ export const useCarbonChat = () => {
       if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
     };
   }, [activeReportData, chatChannel, isUnlocked]);
+
+  // Info: (20260716 - Emily) #6518 切至 session 時自 DB 還原盤查狀態(三態協定比照報告草稿)
+  useEffect(() => {
+    const master = masterKeyRef.current;
+    if (!isUnlocked || !master) return;
+    if (inventoryRestoredChannelsRef.current.has(chatChannel)) return;
+    inventoryRestoredChannelsRef.current.add(chatChannel);
+
+    loadInventoryState(chatChannel, master)
+      .then((loaded) => {
+        inventoryVersionsRef.current.set(chatChannel, loaded?.version ?? 0);
+        if (loaded && !loaded.state) {
+          // Info: (20260716 - Emily) 記錄存在但不可讀:保留真實版本,不以空狀態覆蓋
+          console.error(
+            "[carbon-chat] inventory state exists but is unreadable:",
+            chatChannel,
+          );
+          return;
+        }
+        if (!loaded?.state) return;
+        const restored = loaded.state;
+        setInventoryStates((prev) => ({ ...prev, [chatChannel]: restored }));
+      })
+      .catch((error) => {
+        // Info: (20260716 - Emily) 還原失敗不設版本 → 凍結該 channel 的狀態自動保存,防空狀態蓋庫
+        console.error("[carbon-chat] failed to load inventory state:", error);
+      });
+  }, [isUnlocked, chatChannel]);
+
+  // Info: (20260716 - Emily) #6518 盤查狀態 debounce 自動保存(前端加密 → PUT;樂觀鎖)
+  const activeInventoryState = inventoryStates[chatChannel];
+  useEffect(() => {
+    if (!activeInventoryState) return undefined;
+    if (!inventoryRestoredChannelsRef.current.has(chatChannel)) return undefined;
+    if (!inventoryVersionsRef.current.has(chatChannel)) return undefined;
+    const master = masterKeyRef.current;
+    if (!master) return undefined;
+
+    if (inventoryAutosaveTimerRef.current) {
+      clearTimeout(inventoryAutosaveTimerRef.current);
+    }
+    inventoryAutosaveTimerRef.current = setTimeout(() => {
+      inventoryAutosaveTimerRef.current = null;
+      const expectedVersion = inventoryVersionsRef.current.get(chatChannel) ?? 0;
+      saveInventoryState(
+        chatChannel,
+        master,
+        activeInventoryState,
+        expectedVersion,
+      )
+        .then((newVersion) => {
+          inventoryVersionsRef.current.set(chatChannel, newVersion);
+        })
+        .catch((error) => {
+          if (isDraftVersionConflict(error)) {
+            console.warn(
+              "[carbon-chat] inventory version conflict:",
+              chatChannel,
+            );
+          } else {
+            console.error(
+              "[carbon-chat] failed to save inventory state:",
+              error,
+            );
+          }
+        });
+    }, CARBON_REPORT_AUTOSAVE_DEBOUNCE_MS);
+    return () => {
+      if (inventoryAutosaveTimerRef.current) {
+        clearTimeout(inventoryAutosaveTimerRef.current);
+      }
+    };
+  }, [activeInventoryState, chatChannel, isUnlocked]);
+
+  // Info: (20260716 - Emily) #6518 合併萃取結果進狀態帳本(去重/推進由 lib/carbon_inventory 決定性裁決)
+  // Info: (20260716 - Emily) 閉包綁定建立當下的 channel:在途回覆寫回原房
+  const applyInventoryExtraction = useCallback(
+    (extraction: IInventoryExtraction | null | undefined, source?: string) => {
+      if (!extraction) return;
+      const channel = buildCarbonChatChannel(
+        user?.address ?? "anonymous",
+        activeSessionId,
+      );
+      setInventoryStates((prev) => {
+        const base = prev[channel] ?? createEmptyInventoryState();
+        const merged = mergeInventoryExtraction(base, extraction, source);
+        const orgUnchanged =
+          merged.state.company === base.company &&
+          merged.state.year === base.year &&
+          merged.state.boundaryApproach === base.boundaryApproach;
+        // Info: (20260716 - Emily) 無實質變化不換參考,避免觸發無意義的 autosave
+        if (merged.addedCount === 0 && orgUnchanged) return prev;
+        return { ...prev, [channel]: merged.state };
+      });
+    },
+    [user?.address, activeSessionId],
+  );
 
   // Info: (20260714 - Emily) sessions 索引持久化(id/標題/建立時間;訊息內容已由 DB 密文保存,不重複入本機)
   useEffect(() => {
@@ -1070,12 +1188,19 @@ export const useCarbonChat = () => {
         payload: {
           drafts?: IParagraphDraft[];
           envelopes?: IEciesEnvelope[];
+          extraction?: IInventoryExtraction | null;
+          attachmentActivities?: IActivityRecord[];
         } | null;
       }>("/api/v1/chat/carbon", {
         method: "POST",
         body: JSON.stringify({
           history: currentHistory,
-          currentStep: activeSession.currentStep,
+          // Info: (20260716 - Emily) #6518:currentStep 改餵狀態機真值(跳段指引仍優先)
+          currentStep:
+            activeSession.currentStep ||
+            describeInventoryStep(
+              inventoryStates[chatChannel] ?? createEmptyInventoryState(),
+            ),
           language,
           channel: chatChannel,
           recipientPublicKey: masterKey.extendedPublicKey,
@@ -1093,6 +1218,13 @@ export const useCarbonChat = () => {
       // Info: (20260714 - Emily) HTTP 回帶的密文訊息直接解密顯示(草稿隨摘要訊息一起套用);
       // Info: (20260714 - Emily) Centrifugo 訂閱若也送達,由訊息 id 去重(草稿亦以訊息 id 防重複套用)
       const payload = data.payload;
+
+      // Info: (20260716 - Emily) #6518 事實入帳:對話萃取 + 附件活動數據合併進狀態帳本(去重由引擎裁決)
+      applyInventoryExtraction(payload?.extraction, userMessage.text.slice(0, 80));
+      if (payload?.attachmentActivities && payload.attachmentActivities.length > 0) {
+        applyInventoryExtraction({ activities: payload.attachmentActivities });
+      }
+
       if (payload?.envelopes) {
         for (const envelope of payload.envelopes) {
           await decryptAndAppendEnvelope(envelope);
@@ -1138,6 +1270,8 @@ export const useCarbonChat = () => {
     chatChannel,
     ensureMasterKeyCached,
     markSessionBusy,
+    applyInventoryExtraction,
+    inventoryStates,
   ]);
 
   // Info: (20260712 - Luphia) 進入 channel 的一次性手勢：解鎖金鑰(PRF) → 請後端做前置作業並經 Centrifugo 回傳招呼詞
@@ -1280,6 +1414,8 @@ export const useCarbonChat = () => {
     addAttachments,
     removeAttachment,
     reportStats,
+    // Info: (20260716 - Emily) #6518 盤查狀態帳本(活動數據 + 決定性步驟),供記錄卡顯示
+    inventoryState: activeInventoryState ?? createEmptyInventoryState(),
     activeParagraphId,
     jumpToParagraph,
     highlightedParagraphId,

@@ -90,4 +90,18 @@ export const carbonChatbot = {
   close_report: "レポートを閉じる",
   close_chat: "チャットウィンドウを閉じる",
   progress_collapse: "進捗ウィジェットを折りたたむ",
+  activity_ledger_title: "活動データ台帳",
+  activity_ledger_pill: "活動データ {{count}} 件",
+  activity_ledger_empty:
+    "活動データはまだありません。チャットで電力使用量や燃料消費量を伝えるか、請求書をアップロードすると自動記録されます。",
+  activity_ledger_collapse: "活動データを折りたたむ",
+  activity_source: "出典:{{source}}",
+  activity_source_chat: "出典:会話",
+  inventory_step_ORG_PROFILE: "ステップ:企業基本情報(名称/年度)",
+  inventory_step_ORG_BOUNDARY: "ステップ:組織境界の設定",
+  inventory_step_EMISSION_SOURCES: "ステップ:排出源の特定",
+  inventory_step_ACTIVITY_DATA: "ステップ:活動データ収集",
+  inventory_step_EMISSION_FACTORS: "ステップ:排出係数の対応付け",
+  inventory_step_REVIEW: "ステップ:照合とレビュー",
+  inventory_step_COMPLETED: "インベントリデータ収集完了",
 };

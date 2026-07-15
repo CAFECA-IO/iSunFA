@@ -89,4 +89,18 @@ export const carbonChatbot = {
   close_report: "Close report",
   close_chat: "Close chat window",
   progress_collapse: "Collapse progress widget",
+  activity_ledger_title: "Activity Data Ledger",
+  activity_ledger_pill: "{{count}} activity records",
+  activity_ledger_empty:
+    "No activity data yet. Provide figures like electricity or fuel usage in the chat, or upload bills, and they will be recorded here automatically.",
+  activity_ledger_collapse: "Collapse activity ledger",
+  activity_source: "Source: {{source}}",
+  activity_source_chat: "Source: conversation",
+  inventory_step_ORG_PROFILE: "Step: Organization profile (name/year)",
+  inventory_step_ORG_BOUNDARY: "Step: Organizational boundary",
+  inventory_step_EMISSION_SOURCES: "Step: Emission source identification",
+  inventory_step_ACTIVITY_DATA: "Step: Activity data collection",
+  inventory_step_EMISSION_FACTORS: "Step: Emission factor mapping",
+  inventory_step_REVIEW: "Step: Reconciliation & review",
+  inventory_step_COMPLETED: "Inventory data collection completed",
 };

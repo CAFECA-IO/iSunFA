@@ -11,6 +11,7 @@ import { ChatSidebar } from "@/components/carbon_chatbot/chat_sidebar";
 import { ChatArea } from "@/components/carbon_chatbot/chat_area";
 import { ChatInput } from "@/components/carbon_chatbot/chat_input";
 import { ChatProgressWidget } from "@/components/carbon_chatbot/chat_progress_widget";
+import { ActivityLedger } from "@/components/carbon_chatbot/activity_ledger";
 import { CarbonChatWidget } from "@/components/carbon_chatbot/carbon_chat_widget";
 import CarbonReportPreview from "@/components/carbon_chatbot/carbon_report_preview";
 
@@ -38,6 +39,7 @@ export default function CarbonChatbotPage() {
     addAttachments,
     removeAttachment,
     reportStats,
+    inventoryState,
     activeParagraphId,
     jumpToParagraph,
     highlightedParagraphId,
@@ -105,6 +107,12 @@ export default function CarbonChatbotPage() {
         <ChatProgressWidget
           stats={reportStats}
           positionClassName="left-10 bottom-10 hidden xl:flex"
+        />
+
+        {/* Info: (20260716 - Emily) #6518 活動數據記錄卡:預設收合藥丸,疊於進度浮窗上方(xl+) */}
+        <ActivityLedger
+          state={inventoryState}
+          positionClassName="left-10 bottom-24 hidden xl:flex"
         />
       </div>
 

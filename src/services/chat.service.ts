@@ -18,13 +18,22 @@ import {
   LLM_TIMEOUT_ERROR_MARKER,
   LlmTaskKeyEnum,
 } from "@/constants/llm";
-import { CarbonChatStructuredReplySchema } from "@/validators";
+import {
+  CarbonChatStructuredReplySchema,
+  CarbonActivityRecordSchema,
+  CarbonInventoryExtractionSchema,
+} from "@/validators";
+import { GhgProtocolCategory } from "@/constants/esg";
+import { MeasurementUnit } from "@/constants/enums";
+import { IInventoryExtraction } from "@/types/carbon_chatbot.types";
 import { logger } from "@/lib/utils/logger";
 
 // Info: (20260714 - Emily) 結構化聊天回覆:readyParagraphId 已通過白名單裁決(非法/none 一律為 null)
+// Info: (20260716 - Emily) #6518:extraction 為已裁決的事實萃取(壞欄位逐筆丟棄),null = 本輪無可萃取
 export interface ICarbonChatStructuredReply {
   reply: string;
   readyParagraphId: string | null;
+  extraction: IInventoryExtraction | null;
 }
 
 // Info: (20260714 - Emily) readyParagraphId 的無段落標記(LLM enum 選項之一)
@@ -58,6 +67,52 @@ const CARBON_CHAT_REPLY_SCHEMA: Schema = {
       format: "enum",
       enum: [...CARBON_REPORT_OUTLINE.map((s) => s.id), NO_READY_PARAGRAPH],
       description: "資訊已蒐集齊全可寫入報告的段落 id;尚未齊全時為 none",
+    },
+    // Info: (20260716 - Emily) #6518 事實萃取:enum 鎖死範疇/單位,數值原樣字串(嚴禁換算),TS 端再白名單複驗
+    extraction: {
+      type: SchemaType.OBJECT,
+      description: "本輪用戶訊息中可萃取的盤查事實;無則各欄位省略",
+      properties: {
+        company: { type: SchemaType.STRING, description: "企業名稱(用戶原文)" },
+        year: { type: SchemaType.STRING, description: "盤查年度(西元,原樣數字字串)" },
+        boundaryApproach: {
+          type: SchemaType.STRING,
+          format: "enum",
+          enum: ["operational_control", "financial_control", "equity_share"],
+        },
+        activities: {
+          type: SchemaType.ARRAY,
+          items: {
+            type: SchemaType.OBJECT,
+            properties: {
+              scopeCategory: {
+                type: SchemaType.STRING,
+                format: "enum",
+                enum: Object.values(GhgProtocolCategory),
+              },
+              sourceName: {
+                type: SchemaType.STRING,
+                description: "排放源名稱(如:外購電力、公務車柴油)",
+              },
+              quantity: {
+                type: SchemaType.STRING,
+                description: "數量,連同千分位原樣照抄,嚴禁換算或加總",
+              },
+              unit: {
+                type: SchemaType.STRING,
+                format: "enum",
+                enum: Object.values(MeasurementUnit),
+              },
+              confidence: {
+                type: SchemaType.STRING,
+                format: "enum",
+                enum: ["high", "medium", "low"],
+              },
+            },
+            required: ["scopeCategory", "sourceName", "quantity", "unit"],
+          },
+        },
+      },
     },
   },
   required: ["reply", "readyParagraphId"],
@@ -247,8 +302,54 @@ export class ChatService {
 - 用戶已提供當前段落所需的關鍵資訊,或明確同意/確認你彙整的內容時 → 填該段落的 id(只能從下方清單挑選)
 - 資訊尚未齊全、仍在追問時 → 填 "${NO_READY_PARAGRAPH}"
 - 填入段落 id 後,系統會自動將該段草稿寫入右側報告;此時請在 reply 告知用戶「本段已寫入報告,可於右側預覽檢視」,不要把完整草稿貼在對話中,也不要再重複詢問同一段落。
+【事實萃取機制】每輪回覆的 extraction 欄位,依下列規則萃取「用戶本輪訊息」中的盤查事實:
+- 企業名稱、盤查年度(西元)、組織邊界方法:用戶明確提供時填入,原文照抄,不確定就省略。
+- activities:用戶提供的活動數據(如用電量、油耗)。quantity 連同千分位「原樣照抄」為字串,嚴禁換算單位、加總或推導;單位只能從 unit 列舉挑選,對不上就整筆省略。
+- 你是萃取器不是計算機:任何需要計算的內容一律不填。沒有可萃取的事實時 extraction 省略。
 【段落清單】
 ${outlineCatalog}${langInstruction}`;
+  }
+
+  /**
+   * Info: (20260716 - Emily) 萃取結果裁決(#6518):逐筆 Zod 驗證,壞欄位丟棄該筆而非整包作廢;
+   * 全空回 null。enum 已在 responseSchema 鎖死,此處為 TS 端第二道白名單(永不直接採信 LLM)。
+   */
+  private adjudicateInventoryExtraction(
+    value: unknown,
+  ): IInventoryExtraction | null {
+    if (!value || typeof value !== "object") return null;
+    const candidate = value as { activities?: unknown };
+    const rawActivities = Array.isArray(candidate.activities)
+      ? candidate.activities
+      : [];
+    const activities = rawActivities.flatMap((item) => {
+      const parsed = CarbonActivityRecordSchema.safeParse(item);
+      return parsed.success ? [parsed.data] : [];
+    });
+    if (rawActivities.length !== activities.length) {
+      logger.warn("inventory extraction dropped invalid activities", {
+        dropped: rawActivities.length - activities.length,
+      });
+    }
+    const orgParsed = CarbonInventoryExtractionSchema.safeParse({
+      ...value,
+      activities: [],
+    });
+    const org = orgParsed.success ? orgParsed.data : { activities: [] };
+    if (
+      !org.company &&
+      !org.year &&
+      !org.boundaryApproach &&
+      activities.length === 0
+    ) {
+      return null;
+    }
+    return {
+      company: org.company,
+      year: org.year,
+      boundaryApproach: org.boundaryApproach,
+      activities,
+    };
   }
 
   /**
@@ -292,16 +393,22 @@ ${outlineCatalog}${langInstruction}`;
 
     // Info: (20260714 - Emily) 永不直接採信 LLM 輸出:JSON + Zod 護欄;解析失敗降級為純文字回覆(不中斷對話)
     try {
-      const parsed = CarbonChatStructuredReplySchema.parse(JSON.parse(raw));
+      const rawParsed: unknown = JSON.parse(raw);
+      const parsed = CarbonChatStructuredReplySchema.parse(rawParsed);
       const isValidParagraph = CARBON_REPORT_OUTLINE.some(
         (s) => s.id === parsed.readyParagraphId,
+      );
+      // Info: (20260716 - Emily) #6518:extraction 逐筆裁決(獨立於 reply 護欄,萃取壞掉不影響對話)
+      const extraction = this.adjudicateInventoryExtraction(
+        (rawParsed as { extraction?: unknown }).extraction,
       );
       return {
         reply: parsed.reply,
         readyParagraphId: isValidParagraph ? parsed.readyParagraphId : null,
+        extraction,
       };
     } catch {
-      return { reply: raw, readyParagraphId: null };
+      return { reply: raw, readyParagraphId: null, extraction: null };
     }
   }
 

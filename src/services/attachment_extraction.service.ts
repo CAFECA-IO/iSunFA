@@ -12,14 +12,19 @@ import {
 import { logger } from "@/lib/utils/logger";
 import { ParagraphDraftService } from "@/services/paragraph_draft.service";
 import { storageService, StorageService } from "@/services/storage.service";
-import { IAttachment } from "@/types/carbon_chatbot.types";
+import { IAttachment, IActivityRecord } from "@/types/carbon_chatbot.types";
 import { CARBON_REPORT_OUTLINE } from "@/constants/carbon_report_outline";
 import {
   CARBON_ATTACHMENT_PIPELINE_MAX_PARAGRAPHS,
   CARBON_ATTACHMENT_FALLBACK_PARAGRAPH_ID,
   CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES,
 } from "@/constants/carbon_chatbot";
-import { CarbonAttachmentExtractionLlmOutputSchema } from "@/validators";
+import {
+  CarbonAttachmentExtractionLlmOutputSchema,
+  CarbonActivityRecordSchema,
+} from "@/validators";
+import { GhgProtocolCategory } from "@/constants/esg";
+import { MeasurementUnit } from "@/constants/enums";
 import {
   IAttachmentExtraction,
   IAttachmentPipelineResult,
@@ -70,6 +75,36 @@ const EXTRACTION_RESPONSE_SCHEMA: Schema = {
       type: SchemaType.STRING,
       format: "enum",
       enum: ["high", "medium", "low"],
+    },
+    // Info: (20260716 - Emily) #6518 活動數據:enum 鎖死範疇/單位,數值原樣字串(嚴禁換算)
+    activities: {
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          scopeCategory: {
+            type: SchemaType.STRING,
+            format: "enum",
+            enum: Object.values(GhgProtocolCategory),
+          },
+          sourceName: { type: SchemaType.STRING },
+          quantity: {
+            type: SchemaType.STRING,
+            description: "數量原樣照抄,嚴禁換算或加總",
+          },
+          unit: {
+            type: SchemaType.STRING,
+            format: "enum",
+            enum: Object.values(MeasurementUnit),
+          },
+          confidence: {
+            type: SchemaType.STRING,
+            format: "enum",
+            enum: ["high", "medium", "low"],
+          },
+        },
+        required: ["scopeCategory", "sourceName", "quantity", "unit"],
+      },
     },
   },
   required: ["facts", "suggestedParagraphIds", "confidence"],
@@ -129,7 +164,8 @@ export class AttachmentExtractionService {
 3. source 填檔名。
 4. 從下列報告段落中挑選此附件內容最相關的段落 id(最多 3 個),只能使用列表中的 id:
 ${OUTLINE_CATALOG}
-5. confidence:內容清晰完整為 high,部分可辨識為 medium,幾乎無法辨識為 low。`;
+5. confidence:內容清晰完整為 high,部分可辨識為 medium,幾乎無法辨識為 low。
+6. activities:附件中的活動數據(如用電度數、油品公升數)。quantity 原樣照抄為字串,嚴禁換算或加總;單位只能從列舉挑選,對不上就整筆省略。`;
 
     const raw = await this.getChatService().generateRawWithImages(
       prompt,
@@ -154,6 +190,16 @@ ${OUTLINE_CATALOG}
       OUTLINE_PARAGRAPH_ID_SET.has(id),
     );
 
+    // Info: (20260716 - Emily) #6518 活動數據逐筆裁決:壞欄位丟該筆不廢全包;source 記檔名供溯源
+    const activities: IActivityRecord[] = (parsed.activities ?? []).flatMap(
+      (item) => {
+        const record = CarbonActivityRecordSchema.safeParse(item);
+        return record.success
+          ? [{ ...record.data, source: attachment.name }]
+          : [];
+      },
+    );
+
     return {
       facts: parsed.facts.map((fact) => ({
         ...fact,
@@ -161,6 +207,7 @@ ${OUTLINE_CATALOG}
       })),
       suggestedParagraphIds: validIds,
       confidence: parsed.confidence,
+      activities,
     };
   }
 
@@ -170,6 +217,7 @@ ${OUTLINE_CATALOG}
   ): Promise<IAttachmentPipelineResult> {
     let degraded = false;
     const allFacts: IContextFact[] = [];
+    const allActivities: IActivityRecord[] = [];
     const orderedIds: string[] = [];
 
     const pushId = (id: string) => {
@@ -216,6 +264,7 @@ ${OUTLINE_CATALOG}
           data: buffer.toString("base64"),
         });
         allFacts.push(...extraction.facts);
+        allActivities.push(...extraction.activities);
 
         if (
           extraction.suggestedParagraphIds.length === 0 ||
@@ -260,6 +309,6 @@ ${OUTLINE_CATALOG}
       }
     }
 
-    return { drafts, facts: allFacts, degraded };
+    return { drafts, facts: allFacts, degraded, activities: allActivities };
   }
 }

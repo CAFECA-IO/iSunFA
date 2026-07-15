@@ -90,4 +90,18 @@ export const carbonChatbot = {
   close_report: "보고서 닫기",
   close_chat: "채팅 창 닫기",
   progress_collapse: "진행률 위젯 접기",
+  activity_ledger_title: "활동 데이터 장부",
+  activity_ledger_pill: "활동 데이터 {{count}}건",
+  activity_ledger_empty:
+    "활동 데이터가 아직 없습니다. 채팅에서 전력 사용량, 연료 사용량 등을 알려주거나 청구서를 업로드하면 자동으로 기록됩니다.",
+  activity_ledger_collapse: "활동 데이터 접기",
+  activity_source: "출처: {{source}}",
+  activity_source_chat: "출처: 대화",
+  inventory_step_ORG_PROFILE: "단계: 기업 기본 정보(명칭/연도)",
+  inventory_step_ORG_BOUNDARY: "단계: 조직 경계 설정",
+  inventory_step_EMISSION_SOURCES: "단계: 배출원 식별",
+  inventory_step_ACTIVITY_DATA: "단계: 활동 데이터 수집",
+  inventory_step_EMISSION_FACTORS: "단계: 배출 계수 매핑",
+  inventory_step_REVIEW: "단계: 대사 및 검토",
+  inventory_step_COMPLETED: "인벤토리 데이터 수집 완료",
 };
