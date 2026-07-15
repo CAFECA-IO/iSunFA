@@ -31,6 +31,7 @@ export const carbonChatbot = {
   system_unavailable: "Sorry, the system is currently unavailable to respond.",
   ai_quota_exceeded:
     "[AI quota reached] Too many requests in a short time; please wait a minute and try again.",
+  ai_timeout: "[AI timeout] The request took too long; please try again.",
   ai_name: "FAITH",
   platform_name: "ENVIRONMENTAL INTELLIGENCE PLATFORM",
   system_online: "SYSTEM ONLINE",

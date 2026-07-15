@@ -3,7 +3,11 @@ import { logger } from "@/lib/utils/logger";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
-import { ChatService, isLlmQuotaError } from "@/services/chat.service";
+import {
+  ChatService,
+  isLlmQuotaError,
+  isLlmTimeoutError,
+} from "@/services/chat.service";
 import { chatroomService } from "@/services/chatroom.service";
 import { AttachmentExtractionService } from "@/services/attachment_extraction.service";
 import { ParagraphDraftService } from "@/services/paragraph_draft.service";
@@ -217,6 +221,10 @@ export async function POST(request: NextRequest) {
     // Info: (20260714 - Emily) 額度耗盡回專屬錯誤碼,前端提示稍候重試(與一般系統錯誤區分)
     if (isLlmQuotaError(error)) {
       return jsonFail(API_ERRORS.IS_LLM_QUOTA_EXCEEDED);
+    }
+    // Info: (20260716 - Emily) 同步路徑逾時(#6515):前端提示重試,與一般系統錯誤區分
+    if (isLlmTimeoutError(error)) {
+      return jsonFail(API_ERRORS.IS_LLM_TIMEOUT);
     }
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }

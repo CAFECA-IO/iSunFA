@@ -701,6 +701,12 @@ export const API_ERRORS = {
     message: "AI service quota exceeded; please retry shortly",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
+  // Info: (20260716 - Emily) 同步路徑 LLM 逾時(#6515):後端不得無限期掛著;與一般錯誤區分,前端提示重試
+  IS_LLM_TIMEOUT: {
+    code: "IS000012",
+    message: "AI service timed out; please retry",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
   IS_UNKNOWN: {
     code: "IS000099",
     message: "Internal Server Error",

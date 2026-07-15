@@ -30,6 +30,7 @@ export const carbonChatbot = {
   system_unavailable: "抱歉，系統目前無法回應。",
   ai_quota_exceeded:
     "【AI 額度已達上限】短時間內請求過多，請稍候一分鐘後再試。",
+  ai_timeout: "【AI 回應逾時】系統處理時間過長,請再試一次。",
   ai_name: "費思",
   platform_name: "環境智能平台",
   system_online: "系統連線中",

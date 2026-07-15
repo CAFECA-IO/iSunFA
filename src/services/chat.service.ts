@@ -6,11 +6,20 @@ import {
   SchemaType,
   GenerationConfig,
   ModelParams,
+  GenerateContentResult,
 } from "@google/generative-ai";
 import { DirectChatSkill } from "@/skills/chat/direct_chat";
 import { CARBON_CHAT_GREETING_PROMPT } from "@/constants/carbon_chatbot";
 import { CARBON_REPORT_OUTLINE } from "@/constants/carbon_report_outline";
+import {
+  DEFAULT_GEMINI_MODEL,
+  LLM_SYNC_TIMEOUT_MS,
+  LLM_TEMPERATURE,
+  LLM_TIMEOUT_ERROR_MARKER,
+  LlmTaskKeyEnum,
+} from "@/constants/llm";
 import { CarbonChatStructuredReplySchema } from "@/validators";
+import { logger } from "@/lib/utils/logger";
 
 // Info: (20260714 - Emily) 結構化聊天回覆:readyParagraphId 已通過白名單裁決(非法/none 一律為 null)
 export interface ICarbonChatStructuredReply {
@@ -31,6 +40,10 @@ export const isLlmQuotaError = (error: unknown): boolean => {
     message.includes("quota")
   );
 };
+
+// Info: (20260716 - Emily) 判斷 LLM 錯誤是否為同步路徑逾時(#6515),供 route/service 層映射 IS_LLM_TIMEOUT
+export const isLlmTimeoutError = (error: unknown): boolean =>
+  error instanceof Error && error.message.startsWith(LLM_TIMEOUT_ERROR_MARKER);
 
 // Info: (20260714 - Emily) 聊天回覆 responseSchema:readyParagraphId 以 enum 約束,禁止 LLM 捏造段落 id
 const CARBON_CHAT_REPLY_SCHEMA: Schema = {
@@ -62,6 +75,13 @@ export interface IChatGenerationOptions {
   responseSchema?: Schema;
   isJson?: boolean;
   tools?: Tool[];
+  /**
+   * Info: (20260716 - Emily) 同步 HTTP 路徑專用防護(#6515)。
+   * timeoutMs:後端逾時上限,未提供則不啟用(executor 走檔案狀態機重試,行為零改變)。
+   * taskKey:提供時記錄一筆用量 log,欄位對齊 execution_log.json 以便成本聚合。
+   */
+  timeoutMs?: number;
+  taskKey?: LlmTaskKeyEnum;
 }
 
 export class ChatService {
@@ -87,7 +107,73 @@ export class ChatService {
     }
 
     this.genAI = new GoogleGenerativeAI(key);
-    this.modelName = process.env.MODEL || "gemini-1.5-flash";
+    this.modelName = process.env.MODEL || DEFAULT_GEMINI_MODEL;
+  }
+
+  /**
+   * Info: (20260716 - Emily) 同步路徑防護執行器(#6515):
+   * 1. timeoutMs 提供時以 Promise.race 限時,逾時拋帶識別標記的錯誤(isLlmTimeoutError 可辨識);
+   *    SDK 呼叫無法真正中斷,但 HTTP 回應即刻釋放,不再無限期佔連線。
+   * 2. taskKey 提供時寫一筆用量 log:欄位名對齊 execution_log.json(taskKey/inputTokens/
+   *    outputTokens/totalTokens),token 數優先取 SDK usageMetadata(零額外 API 呼叫)。
+   * 兩者皆未提供時行為與裸呼叫完全相同 — executor 與既有呼叫端零改變。
+   */
+  private async invokeGuarded(
+    exec: () => Promise<GenerateContentResult>,
+    guards: {
+      timeoutMs?: number;
+      taskKey?: LlmTaskKeyEnum;
+      modelName: string;
+    },
+  ): Promise<GenerateContentResult> {
+    const { timeoutMs, taskKey, modelName } = guards;
+    const startedAt = Date.now();
+
+    const race = async (): Promise<GenerateContentResult> => {
+      if (!timeoutMs) return exec();
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () =>
+            reject(
+              new Error(`${LLM_TIMEOUT_ERROR_MARKER}: exceeded ${timeoutMs}ms`),
+            ),
+          timeoutMs,
+        );
+      });
+      try {
+        return await Promise.race([exec(), timeoutPromise]);
+      } finally {
+        if (timer) clearTimeout(timer);
+      }
+    };
+
+    try {
+      const result = await race();
+      if (taskKey) {
+        const usage = result.response.usageMetadata;
+        logger.info("llm sync usage", {
+          taskKey,
+          model: modelName,
+          inputTokens: usage?.promptTokenCount ?? 0,
+          outputTokens: usage?.candidatesTokenCount ?? 0,
+          totalTokens: usage?.totalTokenCount ?? 0,
+          latencyMs: Date.now() - startedAt,
+          outcome: "success",
+        });
+      }
+      return result;
+    } catch (error) {
+      if (taskKey) {
+        logger.error("llm sync usage", {
+          taskKey,
+          model: modelName,
+          latencyMs: Date.now() - startedAt,
+          outcome: isLlmTimeoutError(error) ? "timeout" : "error",
+        });
+      }
+      throw error;
+    }
   }
 
   /**
@@ -125,7 +211,12 @@ export class ChatService {
 
     const model = this.genAI.getGenerativeModel(modelOptions);
 
-    const result = await model.generateContent(parts);
+    // Info: (20260716 - Emily) 經防護執行器呼叫;未帶 timeoutMs/taskKey 時行為與原裸呼叫相同
+    const result = await this.invokeGuarded(() => model.generateContent(parts), {
+      timeoutMs: options?.timeoutMs,
+      taskKey: options?.taskKey,
+      modelName,
+    });
     const response = await result.response;
     return response.text();
   }
@@ -169,6 +260,7 @@ ${outlineCatalog}${langInstruction}`;
     history: { role: "user" | "model"; text: string }[],
     currentStep?: string,
     language?: string,
+    taskKey: LlmTaskKeyEnum = LlmTaskKeyEnum.CARBON_CHAT,
   ): Promise<ICarbonChatStructuredReply> {
     const model = this.genAI.getGenerativeModel({
       model: this.modelName,
@@ -187,7 +279,15 @@ ${outlineCatalog}${langInstruction}`;
       parts: [{ text: msg.text }],
     }));
 
-    const response = await model.generateContent({ contents });
+    // Info: (20260716 - Emily) 同步聊天路徑:45s 逾時 + 用量記錄(#6515)
+    const response = await this.invokeGuarded(
+      () => model.generateContent({ contents }),
+      {
+        timeoutMs: LLM_SYNC_TIMEOUT_MS,
+        taskKey,
+        modelName: this.modelName,
+      },
+    );
     const raw = response.response.text();
 
     // Info: (20260714 - Emily) 永不直接採信 LLM 輸出:JSON + Zod 護欄;解析失敗降級為純文字回覆(不中斷對話)
@@ -218,6 +318,7 @@ ${outlineCatalog}${langInstruction}`;
       [{ role: "user", text: CARBON_CHAT_GREETING_PROMPT }],
       currentStep,
       language,
+      LlmTaskKeyEnum.CARBON_GREETING,
     );
     return structured.reply;
   }
@@ -255,7 +356,7 @@ ${outlineCatalog}${langInstruction}`;
     options?: IChatGenerationOptions,
   ): Promise<string> {
     return this.generateContent([{ text: prompt }], {
-      temperature: 0.2, // Info: (20260701 - Tzuhan) Default legacy behavior
+      temperature: LLM_TEMPERATURE.CHAT, // Info: (20260701 - Tzuhan) Default legacy behavior
       ...options,
       responseSchema: responseSchema || options?.responseSchema,
     });
@@ -279,7 +380,7 @@ ${outlineCatalog}${langInstruction}`;
     const searchTool = { googleSearch: {} } as Tool & { googleSearch: unknown };
 
     return this.generateContent([{ text: prompt }], {
-      temperature: 0.2, // Info: (20260701 - Tzuhan) Default strict temperature
+      temperature: LLM_TEMPERATURE.CHAT, // Info: (20260701 - Tzuhan) Default strict temperature
       ...options,
       tools: [searchTool, ...(options?.tools || [])],
     });

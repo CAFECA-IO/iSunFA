@@ -4,6 +4,11 @@
 
 // Info: (20260714 - Emily) AI 串接單一閘道:SDK 型別與呼叫一律經 chat.service,本檔不直接依賴 @google/generative-ai
 import { ChatService, SchemaType, type Schema } from "@/services/chat.service";
+import {
+  LLM_EXTRACTION_TIMEOUT_MS,
+  LLM_TEMPERATURE,
+  LlmTaskKeyEnum,
+} from "@/constants/llm";
 import { logger } from "@/lib/utils/logger";
 import { ParagraphDraftService } from "@/services/paragraph_draft.service";
 import { storageService, StorageService } from "@/services/storage.service";
@@ -131,7 +136,12 @@ ${OUTLINE_CATALOG}
       [{ data: attachment.data, mimeType: attachment.mimeType }],
       true,
       EXTRACTION_RESPONSE_SCHEMA,
-      { temperature: 0 },
+      {
+        // Info: (20260716 - Emily) 萃取 Temperature = 0;大附件 inline 萃取較慢,逾時 120s(#6515)
+        temperature: LLM_TEMPERATURE.EXTRACTION,
+        timeoutMs: LLM_EXTRACTION_TIMEOUT_MS,
+        taskKey: LlmTaskKeyEnum.ATTACHMENT_EXTRACTION,
+      },
     );
 
     // Info: (20260714 - Emily) 永不直接採信 LLM 輸出:JSON + Zod 雙重護欄(失敗拋錯 → 管線降級)
