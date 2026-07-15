@@ -707,6 +707,12 @@ export const API_ERRORS = {
     message: "AI service timed out; please retry",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
+  // Info: (20260716 - Emily) API 限流(#6516):IS000012 預留給 #6515 的 IS_LLM_TIMEOUT,本碼取 13 避免撞號
+  IS_RATE_LIMITED: {
+    code: "IS000013",
+    message: "Too many requests; please slow down and retry",
+    status: ApiCode.RATE_LIMIT,
+  } as IErrorDef,
   IS_UNKNOWN: {
     code: "IS000099",
     message: "Internal Server Error",

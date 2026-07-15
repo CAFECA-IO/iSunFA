@@ -31,6 +31,7 @@ export const carbonChatbot = {
   ai_quota_exceeded:
     "【AI 額度已達上限】短時間內請求過多，請稍候一分鐘後再試。",
   ai_timeout: "【AI 回應逾時】系統處理時間過長,請再試一次。",
+  rate_limited: "【操作過於頻繁】已達使用頻率上限,請稍候片刻再試。",
   ai_name: "費思",
   platform_name: "環境智能平台",
   system_online: "系統連線中",

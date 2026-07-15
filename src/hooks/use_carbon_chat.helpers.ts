@@ -18,6 +18,13 @@ export const isTimeoutApiError = (error: unknown): boolean => {
   return data?.errorCode === API_ERRORS.IS_LLM_TIMEOUT.code;
 };
 
+// Info: (20260716 - Emily) 判斷 API 失敗是否為限流(IS000013/HTTP 429),前端提示放慢操作(#6516)
+export const isRateLimitedApiError = (error: unknown): boolean => {
+  if (!(error instanceof RequestApiError)) return false;
+  const data = error.data as { errorCode?: string } | undefined;
+  return data?.errorCode === API_ERRORS.IS_RATE_LIMITED.code;
+};
+
 // Info: (20260715 - Luphia) 將預覽 Markdown 以 `### ` 標題切分為各段落內文(純字串處理)
 // Info: (20260714 - Emily) 僅保留段落區塊(排除文件標頭)、去除組稿附加的 --- 分隔線、並去掉首行標頭只留內文
 export const splitReportMarkdownIntoBlocks = (markdown: string): string[] =>
