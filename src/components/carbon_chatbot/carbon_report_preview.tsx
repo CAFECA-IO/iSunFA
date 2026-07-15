@@ -55,6 +55,7 @@ const generateMarkdownFromParagraphs = (
 
   if (!paragraphs || paragraphs.length === 0) {
     return (
+      // ToDo: (20260713 - Luphia) 報告預覽 markdown 表頭為硬編中文，如需多語系報告請改走 t()
       `# ${session.reportData?.title || ""}\n\n## ${session.reportData?.section || ""}\n\n### 溫室氣體排放量摘要\n\n| 類別 (ISO Category) | 來源說明 | 排放量 (tCO2e) |\n| --- | --- | --- |\n` +
       (session.reportData?.categories
         ?.map(

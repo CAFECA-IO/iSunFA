@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, FC } from "react";
-import mermaid from "mermaid";
+import { useState, useMemo, FC } from "react";
 import { DonutChart, IDonutChartData } from "@/components/common/donut_chart";
 import {
   Columns2,
@@ -15,10 +14,10 @@ import {
   Maximize,
   Move,
 } from "lucide-react";
-import { parsePieData, detectChartType } from "@/lib/utils/mermaid_helpers";
+import { parsePieData } from "@/lib/utils/mermaid_helpers";
 import { useZoomPan } from "@/hooks/use_zoom_pan";
+import { useMermaidRender } from "@/hooks/use_mermaid_render";
 import { useTranslation } from "@/i18n/i18n_context";
-import { MermaidChartType } from "@/constants/mermaid_chart";
 
 enum PreviewDirective {
   ROW = "ROW",
@@ -143,9 +142,6 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
     PreviewDirective.ROW,
   );
 
-  const [previewSvgStr, setPreviewSvgStr] = useState<string>("");
-  const [previewHasError, setPreviewHasError] = useState<boolean>(false);
-
   const previewStyle =
     previewDirective === PreviewDirective.ROW
       ? "h-[48%] min-h-[220px] w-full"
@@ -155,54 +151,11 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
     return parsePieData(newChartPreview);
   }, [newChartPreview]);
 
-  useEffect(() => {
-    if (!newChartPreview || previewPieData) {
-      setPreviewSvgStr("");
-      setPreviewHasError(false);
-      return;
-    }
-
-    let isCurrent = true;
-
-    const renderPreview = async () => {
-      const trimmed = newChartPreview.trim();
-      if (!trimmed) {
-        if (isCurrent) {
-          setPreviewSvgStr("");
-          setPreviewHasError(false);
-        }
-        return;
-      }
-
-      // Info: (20260708 - Julian) 檢查是否具備 Mermaid 定義頭部
-      const type = detectChartType(trimmed);
-      if (type === MermaidChartType.UNKNOWN) {
-        if (isCurrent) {
-          setPreviewHasError(true);
-        }
-        return;
-      }
-
-      try {
-        const id = `mermaid-preview-${Math.random().toString(36).substring(2, 9)}`;
-        const { svg } = await mermaid.render(id, trimmed);
-        if (isCurrent) {
-          setPreviewSvgStr(svg);
-          setPreviewHasError(false);
-        }
-      } catch (error) {
-        console.error("Preview Mermaid rendering failed", error);
-        if (isCurrent) {
-          setPreviewHasError(true);
-        }
-      }
-    };
-
-    renderPreview();
-    return () => {
-      isCurrent = false;
-    };
-  }, [newChartPreview, previewPieData]);
+  // Info: (20260714 - Julian) 圓餅圖改由 DonutChart 呈現，故略過 mermaid 渲染
+  const { svg: previewSvgStr, hasError: previewHasError } = useMermaidRender(
+    newChartPreview,
+    !!previewPieData,
+  );
 
   const generateButton = isGenerating ? (
     // Info: (20260708 - Julian) 停止生成按鈕
@@ -219,13 +172,83 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
     <button
       type="button"
       onClick={onGenerate}
-      disabled={!isGenerating && !aiInstruction.trim()}
+      disabled={!aiInstruction.trim()}
       className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400"
     >
       <Sparkles size={14} />
       {t("chart.mermaid.ai_editor.generate")}
     </button>
   );
+
+  // Info: (20260714 - Julian) 「修改後」預覽區內容：以優先序早退，取代多層巢狀三元運算
+  const renderAfterPreview = () => {
+    // Info: (20260714 - Julian) 生成中
+    if (isGenerating) {
+      return (
+        <div className="flex flex-col items-center gap-2 text-slate-400">
+          <Loader2 size={32} className="animate-spin text-orange-600" />
+          <span className="text-xs font-bold text-orange-600">
+            {t("chart.mermaid.ai_editor.generating")}
+          </span>
+        </div>
+      );
+    }
+
+    // Info: (20260714 - Julian) API 產生失敗
+    if (apiError) {
+      return (
+        <div className="p-4 text-center">
+          <div className="mb-1 flex items-center justify-center gap-1 text-xs font-bold text-orange-500">
+            <TriangleAlert size={16} className="shrink-0" />
+            <span>{t("chart.mermaid.ai_editor.generate_failed")}</span>
+          </div>
+          <span className="block text-[11px] leading-normal text-slate-500">
+            {apiError}
+          </span>
+        </div>
+      );
+    }
+
+    // Info: (20260714 - Julian) 尚無預覽內容
+    if (!newChartPreview) {
+      return (
+        <div className="text-center text-slate-400">
+          <Sparkles
+            size={24}
+            className="mx-auto mb-2 animate-pulse text-slate-300"
+          />
+          <span className="text-xs">
+            {t("chart.mermaid.ai_editor.placeholder")}
+          </span>
+        </div>
+      );
+    }
+
+    // Info: (20260714 - Julian) 圓餅圖改由 DonutChart 呈現
+    if (previewPieData) {
+      return (
+        <DonutChart title={previewPieData.title} data={previewPieData.data} />
+      );
+    }
+
+    // Info: (20260714 - Julian) Mermaid 渲染失敗，顯示原始定義供除錯
+    if (previewHasError) {
+      return (
+        <div className="p-4 text-center">
+          <div className="mb-1 flex items-center justify-center gap-1 text-xs font-bold text-red-500">
+            <CircleX size={16} className="shrink-0" />
+            <span>{t("chart.mermaid.ai_editor.render_failed")}</span>
+          </div>
+          <span className="block max-h-[120px] overflow-y-auto font-mono text-[11px] whitespace-pre-wrap text-slate-400">
+            {newChartPreview}
+          </span>
+        </div>
+      );
+    }
+
+    // Info: (20260714 - Julian) 正常渲染的 SVG
+    return <ZoomableSvgContainer svgContent={previewSvgStr} />;
+  };
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-slate-100 md:w-3/5">
@@ -290,53 +313,7 @@ const MermaidAiPreviewPanel: FC<IMermaidAiPreviewPanelProps> = ({
             {t("chart.mermaid.ai_editor.after")}
           </div>
           <div className="relative flex flex-1 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-inner">
-            {isGenerating ? (
-              <div className="flex flex-col items-center gap-2 text-slate-400">
-                <Loader2 size={32} className="animate-spin text-orange-600" />
-                <span className="text-xs font-bold text-orange-600">
-                  {t("chart.mermaid.ai_editor.generating")}
-                </span>
-              </div>
-            ) : apiError ? (
-              <div className="p-4 text-center">
-                <div className="mb-1 flex items-center justify-center gap-1 text-xs font-bold text-orange-500">
-                  <TriangleAlert size={16} className="shrink-0" />
-                  <span>{t("chart.mermaid.ai_editor.generate_failed")}</span>
-                </div>
-                <span className="block text-[11px] leading-normal text-slate-500">
-                  {apiError}
-                </span>
-              </div>
-            ) : newChartPreview ? (
-              previewPieData ? (
-                <DonutChart
-                  title={previewPieData.title}
-                  data={previewPieData.data}
-                />
-              ) : previewHasError ? (
-                <div className="p-4 text-center">
-                  <div className="mb-1 flex items-center justify-center gap-1 text-xs font-bold text-red-500">
-                    <CircleX size={16} className="shrink-0" />
-                    <span>{t("chart.mermaid.ai_editor.render_failed")}</span>
-                  </div>
-                  <span className="block max-h-[120px] overflow-y-auto font-mono text-[11px] whitespace-pre-wrap text-slate-400">
-                    {newChartPreview}
-                  </span>
-                </div>
-              ) : (
-                <ZoomableSvgContainer svgContent={previewSvgStr} />
-              )
-            ) : (
-              <div className="text-center text-slate-400">
-                <Sparkles
-                  size={24}
-                  className="mx-auto mb-2 animate-pulse text-slate-300"
-                />
-                <span className="text-xs">
-                  {t("chart.mermaid.ai_editor.placeholder")}
-                </span>
-              </div>
-            )}
+            {renderAfterPreview()}
           </div>
         </div>
       </div>
