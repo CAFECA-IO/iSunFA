@@ -45,11 +45,13 @@ import {
 } from "@/lib/chatroom_key_manager";
 import { request } from "@/lib/utils/request";
 import {
+  getApiErrorCode,
   isQuotaApiError,
   isRateLimitedApiError,
   isTimeoutApiError,
   splitReportMarkdownIntoBlocks,
 } from "@/hooks/use_carbon_chat.helpers";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { useAuth } from "@/contexts/auth_context";
 import {
   DEFAULT_SESSION_ID,
@@ -928,11 +930,25 @@ export const useCarbonChat = () => {
                   : a,
               ),
             );
-            setAttachmentError(
-              t("carbon_chatbot.attachment_upload_failed", {
+            // Info: (20260716 - Emily) 安全裁決(型別不符/掃毒/配額)給專屬文案(#6517),其餘為一般上傳失敗
+            const errorCode = getApiErrorCode(error);
+            let errorText = t("carbon_chatbot.attachment_upload_failed", {
+              name: file.name,
+            });
+            if (errorCode === API_ERRORS.IS_ATTACHMENT_TYPE_MISMATCH.code) {
+              errorText = t("carbon_chatbot.attachment_type_mismatch", {
                 name: file.name,
-              }),
-            );
+              });
+            } else if (errorCode === API_ERRORS.IS_ATTACHMENT_INFECTED.code) {
+              errorText = t("carbon_chatbot.attachment_infected", {
+                name: file.name,
+              });
+            } else if (
+              errorCode === API_ERRORS.IS_STORAGE_QUOTA_EXCEEDED.code
+            ) {
+              errorText = t("carbon_chatbot.storage_quota_exceeded");
+            }
+            setAttachmentError(errorText);
           });
       });
     },

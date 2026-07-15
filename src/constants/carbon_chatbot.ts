@@ -88,6 +88,14 @@ export type CarbonChatAttachmentMimeType =
 
 // Info: (20260714 - Emily) 比照 FaithAgent 不擋一般大檔;50MB 為保護記憶體的軟上限(JSON base64 傳輸)
 export const CARBON_CHAT_MAX_ATTACHMENT_BYTES = 50 * 1024 * 1024;
+
+/**
+ * Info: (20260716 - Emily) 每使用者(address)附件儲存配額:5GB(#6517)。
+ * 刻意用常數而非 env:.env 受 FIDO2 簽章鎖定(admin_setup_whitepaper.md),
+ * 新增 env key 需超管重簽儀式;配額調整走 code change + release,留下可稽核軌跡。
+ * BigInt 對齊 numerical_precision_guideline(累計值,與 DB BigInt 欄位同型別比較)。
+ */
+export const CARBON_STORAGE_QUOTA_BYTES = BigInt(5) * BigInt(1024 ** 3);
 export const CARBON_CHAT_MAX_ATTACHMENTS_PER_MESSAGE = 5;
 
 // Info: (20260714 - Emily) Gemini inlineData 單請求約 20MB 上限;超過此安全值的附件直接走降級(不送必失敗的萃取呼叫)

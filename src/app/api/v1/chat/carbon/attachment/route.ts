@@ -7,8 +7,8 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { enforceCarbonRateLimit } from "@/lib/rate_limiter";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { API_ERRORS } from "@/lib/utils/error_dictionary";
-import { storageService } from "@/services/storage.service";
+import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
+import { AttachmentSecurityService } from "@/services/attachment_security.service";
 import { formatFileSize } from "@/lib/utils/common";
 import {
   CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES,
@@ -47,7 +47,12 @@ export async function POST(request: NextRequest) {
       return jsonFail(API_ERRORS.VA_FILE_TOO_LARGE);
     }
 
-    const cid = await storageService.uploadLaria(file);
+    // Info: (20260716 - Emily) 附件安全管線(#6517):magic bytes → 掃毒 → 配額(5GB) → Laria 上傳 → 記帳
+    const securityService = new AttachmentSecurityService();
+    const { cid } = await securityService.processUpload({
+      address: sessionUser.address,
+      file,
+    });
 
     return jsonOk({
       name: file.name,
@@ -56,6 +61,14 @@ export async function POST(request: NextRequest) {
       cid,
     });
   } catch (error) {
+    // Info: (20260716 - Emily) 服務層裁決(型別不符/掃毒命中/配額耗盡)原碼透傳,其餘包裝為上傳失敗
+    if (error instanceof ApiError) {
+      return jsonFail({
+        code: error.code,
+        message: error.message,
+        status: error.status,
+      });
+    }
     logger.error(
       `[API] /chat/carbon/attachment POST error: ${JSON.stringify(error)}`,
     );
