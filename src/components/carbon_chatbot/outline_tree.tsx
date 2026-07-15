@@ -11,6 +11,8 @@ import {
   CircleDot,
   ShieldCheck,
   Database,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import { IReportParagraph } from "@/types/carbon_chatbot.types";
 import { CARBON_REPORT_CHAPTERS } from "@/constants/carbon_report_outline";
@@ -21,6 +23,9 @@ interface IOutlineTreeProps {
   activeParagraphId: string | null;
   onJump: (paragraphId: string) => void;
   onToggleVerified: (paragraphId: string) => void;
+  // Info: (20260714 - Emily) AI 段落草稿生成:正在生成的段落 id(同時間僅一段)與觸發 callback
+  draftingParagraphId?: string | null;
+  onGenerateDraft?: (paragraphId: string) => void;
 }
 
 const statusIcon = (paragraph: IReportParagraph, isActive: boolean) => {
@@ -36,6 +41,8 @@ export function OutlineTree({
   activeParagraphId,
   onJump,
   onToggleVerified,
+  draftingParagraphId = null,
+  onGenerateDraft = undefined,
 }: IOutlineTreeProps) {
   const { t } = useTranslation();
   const activeChapterId = paragraphs.find(
@@ -114,6 +121,33 @@ export function OutlineTree({
                           {p.title}
                         </span>
                       </button>
+
+                      {/* Info: (20260714 - Emily) AI 撰寫此段:生成中顯示 spinner;任一段生成中即全部停用,避免併發寫入 */}
+                      {onGenerateDraft && (
+                        <button
+                          type="button"
+                          disabled={draftingParagraphId !== null}
+                          onClick={() => onGenerateDraft(p.id)}
+                          title={
+                            draftingParagraphId === p.id
+                              ? t("carbon_chatbot.draft_generating")
+                              : t("carbon_chatbot.draft_generate")
+                          }
+                          className={`shrink-0 rounded p-0.5 transition-colors ${
+                            draftingParagraphId === p.id
+                              ? "text-[#ff5a00]"
+                              : draftingParagraphId
+                                ? "cursor-not-allowed text-gray-200"
+                                : "text-gray-300 hover:bg-orange-50 hover:text-[#ff5a00]"
+                          }`}
+                        >
+                          {draftingParagraphId === p.id ? (
+                            <Loader2 size={13} className="animate-spin" />
+                          ) : (
+                            <Sparkles size={13} />
+                          )}
+                        </button>
+                      )}
 
                       {/* Info: (20260713 - Tzuhan) 數據段落標記:數字由後端決定論管線勾稽,非 LLM 產出 */}
                       {p.isDataDriven && (

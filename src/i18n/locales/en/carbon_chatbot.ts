@@ -29,6 +29,8 @@ export const carbonChatbot = {
   system_error:
     "[System Error] Sorry, there was a problem connecting to the Carbon Accountant service. Please try again later.",
   system_unavailable: "Sorry, the system is currently unavailable to respond.",
+  ai_quota_exceeded:
+    "[AI quota reached] Too many requests in a short time; please wait a minute and try again.",
   ai_name: "FAITH",
   platform_name: "ENVIRONMENTAL INTELLIGENCE PLATFORM",
   system_online: "SYSTEM ONLINE",
@@ -50,10 +52,33 @@ export const carbonChatbot = {
   data_driven_badge:
     "Data section: figures are reconciled by the deterministic engine, not AI-generated",
   jump_prompt: "Please help me complete the section 「{{section}}」.",
+  new_session_title: "New inventory chat",
+  save_saving: "Saving...",
+  save_saved: "Saved",
+  save_local_hint: "Report draft is encrypted and saved to the cloud",
+  save_failed: "Save failed",
+  save_failed_hint:
+    "Save failed: another tab may have updated the draft; reload to get the latest version",
+  attach_file: "Attach file",
+  remove_attachment: "Remove attachment",
+  attachment_invalid_type:
+    "Unsupported file type: {{name}} (only PNG, JPG, PDF, CSV, XLSX are accepted)",
+  attachment_too_large: "File too large: {{name}} (max {{max}} per file)",
+  attachment_limit: "Up to {{max}} attachments per message",
+  attachment_upload_failed:
+    "Attachment upload failed: {{name}}; remove it and try again",
+  draft_generate: "Draft this section with AI",
+  draft_generating: "Generating draft...",
+  draft_generating_section:
+    "Drafting 「{{section}}」 — it will be written to the report when ready…",
+  draft_failed:
+    "[Draft failed] Something went wrong while drafting 「{{section}}」. Please try again later.",
   section_placeholder:
     "This section has not been generated yet. Tell the Carbon Accountant in the chat that you want to work on it, and the content will appear here in real time.",
   report_status_draft:
     "Report status: Draft (content is generated section by section by AI and must pass human review before finalization)",
   report_button: "Report",
   close_report: "Close report",
+  close_chat: "Close chat window",
+  progress_collapse: "Collapse progress widget",
 };

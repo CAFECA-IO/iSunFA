@@ -1,8 +1,10 @@
 // Info: (20260712 - Luphia) Chatroom 服務層：協調加密 → 入庫 → 發佈，確保所有通過訊息都以密文留存
 import { chatroomRepo } from "@/repositories/chatroom.repo";
+import { logger } from "@/lib/utils/logger";
 import { publishToCentrifugo } from "@/lib/centrifugo";
 import { eciesEncrypt } from "@/lib/chatroom_ecies";
-import { ChatRoleEnum } from "@/types/carbon_chatbot.types";
+import { ChatRoleEnum, IAttachment } from "@/types/carbon_chatbot.types";
+import { IParagraphDraft } from "@/interfaces/carbon_paragraph_draft";
 import { AI_REPLY_PROGRESS_STEP } from "@/constants/carbon_chatbot";
 
 interface IRecordParams {
@@ -14,10 +16,17 @@ interface IRecordParams {
   sender: ChatRoleEnum;
   publish: boolean;
   purpose?: string;
+  // Info: (20260714 - Emily) 附件 metadata(name/size/mimeType);併入加密 payload,重整後可還原附件卡片
+  attachments?: IAttachment[];
+  // Info: (20260714 - Emily) 訊息關聯的報告段落 id;併入加密 payload,重整後段落 chip 可還原
+  relatedParagraphIds?: string[];
+  // Info: (20260714 - Emily) 隨訊息遞送的段落草稿:報告更新不依賴 HTTP 回應存活(長請求中斷時草稿仍經訊息通道送達)
+  drafts?: IParagraphDraft[];
 }
 
 export class ChatroomService {
   // Info: (20260712 - Luphia) 加密後入庫（僅密文），並視需要發佈到 Centrifugo
+  // Info: (20260714 - Emily) 回傳 envelope 供 HTTP 回應直接帶回:Centrifugo 遞送失效時前端仍可解密顯示(訂閱重複由前端以訊息 id 去重)
   private async record(params: IRecordParams) {
     const chatroom = await chatroomRepo.findOrCreateByChannel(
       params.channel,
@@ -32,8 +41,19 @@ export class ChatroomService {
           id: crypto.randomUUID(),
           sender: params.sender,
           text: params.text,
+          // Info: (20260714 - Emily) 附件 metadata 併入加密訊息(無附件時不帶欄位,維持 payload 精簡)
+          ...(params.attachments && params.attachments.length > 0
+            ? { attachments: params.attachments }
+            : {}),
+          ...(params.relatedParagraphIds &&
+          params.relatedParagraphIds.length > 0
+            ? { relatedParagraphIds: params.relatedParagraphIds }
+            : {}),
         },
         progressUpdate: params.progressUpdate,
+        ...(params.drafts && params.drafts.length > 0
+          ? { drafts: params.drafts }
+          : {}),
       }),
     );
 
@@ -48,8 +68,18 @@ export class ChatroomService {
     });
 
     if (params.publish) {
-      await publishToCentrifugo(params.channel, envelope);
+      // Info: (20260714 - Emily) 廣播為 best-effort:主要遞送已改為 HTTP 回帶 envelope,
+      // Info: (20260714 - Emily) Centrifugo 斷線不應讓整個請求 500(訊息已入庫,僅損失多分頁即時同步)
+      try {
+        await publishToCentrifugo(params.channel, envelope);
+      } catch (error) {
+        logger.error(
+          `[ChatroomService] centrifugo publish failed: ${JSON.stringify(error)}`,
+        );
+      }
     }
+
+    return envelope;
   }
 
   // Info: (20260712 - Luphia) 記錄使用者訊息（加密入庫、不發佈，前端已就地顯示）
@@ -58,6 +88,7 @@ export class ChatroomService {
     recipientPublicKey: string;
     text: string;
     purpose?: string;
+    attachments?: IAttachment[];
   }) {
     return this.record({
       ...params,
@@ -74,6 +105,8 @@ export class ChatroomService {
     recipientPublicKey: string;
     text: string;
     purpose?: string;
+    relatedParagraphIds?: string[];
+    drafts?: IParagraphDraft[];
   }) {
     return this.record({
       ...params,

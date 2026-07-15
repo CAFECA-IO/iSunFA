@@ -16,16 +16,38 @@ export enum SessionStatusEnum {
   ARCHIVED = "已歸檔",
 }
 
+// Info: (20260714 - Emily) 訊息附件 metadata(size 為人類可讀字串)
+// Info: (20260714 - Emily) cid = Laria 分片儲存的 metadata hash(server 端 uploadLaria 產生);可經 recoverLaria 取回原檔
 export interface IAttachment {
   name: string;
   size: string;
+  mimeType?: string;
+  cid?: string;
+}
+
+// Info: (20260714 - Emily) 待送出附件(ChatInput 暫存):選檔即上傳 Laria,READY 時持有 cid;送出訊息只帶 metadata
+export enum PendingAttachmentStatusEnum {
+  READING = "reading",
+  READY = "ready",
+  ERROR = "error",
+}
+
+export interface IPendingAttachment {
+  id: string;
+  name: string;
+  size: string;
+  mimeType: string;
+  cid: string;
+  status: PendingAttachmentStatusEnum;
 }
 
 export interface IChatMessage {
   id: string;
   sender: ChatRoleEnum;
   text: string;
-  attachment?: IAttachment;
+  attachments?: IAttachment[];
+  // Info: (20260714 - Emily) 此訊息關聯的報告段落 id(outline id);段落 chip 與雙向連動的資料來源
+  relatedParagraphIds?: string[];
 }
 
 export interface IReportCategory {

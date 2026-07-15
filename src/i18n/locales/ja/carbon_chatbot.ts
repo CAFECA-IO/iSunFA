@@ -29,6 +29,8 @@ export const carbonChatbot = {
   system_error:
     "【システムエラー】申し訳ありません。カーボン会計士サービスへの接続中に問題が発生しました。後でもう一度お試しください。",
   system_unavailable: "申し訳ありません。現在システムは応答できません。",
+  ai_quota_exceeded:
+    "【AI 利用上限】短時間にリクエストが集中しました。1分ほど待って再試行してください。",
   ai_name: "フェイス",
   platform_name: "環境インテリジェンスプラットフォーム",
   system_online: "システムオンライン",
@@ -50,10 +52,33 @@ export const carbonChatbot = {
   data_driven_badge:
     "データセクション:数値はシステムの決定論エンジンで算出され、AI 生成ではありません",
   jump_prompt: "「{{section}}」セクションの作成を手伝ってください。",
+  new_session_title: "新しいインベントリ対話",
+  save_saving: "保存中...",
+  save_saved: "保存済み",
+  save_local_hint: "レポート下書きは暗号化してクラウドに保存されます",
+  save_failed: "保存に失敗しました",
+  save_failed_hint:
+    "保存失敗:別のタブが下書きを更新した可能性があります。ページを再読み込みしてください",
+  attach_file: "ファイルを添付",
+  remove_attachment: "添付を削除",
+  attachment_invalid_type:
+    "未対応のファイル形式です:{{name}}(PNG、JPG、PDF、CSV、XLSX のみ対応)",
+  attachment_too_large: "ファイルが大きすぎます:{{name}}(1ファイル上限 {{max}})",
+  attachment_limit: "1メッセージに添付できるのは最大 {{max}} 件です",
+  attachment_upload_failed:
+    "添付ファイルのアップロードに失敗しました:{{name}}。削除して再試行してください",
+  draft_generate: "AI でこのセクションの下書きを作成",
+  draft_generating: "下書きを生成中...",
+  draft_generating_section:
+    "「{{section}}」の下書きを生成中です。完成後レポートに反映されます…",
+  draft_failed:
+    "【下書き生成失敗】「{{section}}」セクションの下書き生成中に問題が発生しました。後ほどお試しください。",
   section_placeholder:
     "このセクションはまだ生成されていません。左側のチャットでカーボン会計士に作成したい旨を伝えると、内容がここにリアルタイムで表示されます。",
   report_status_draft:
     "レポートステータス:ドラフト(内容は AI がセクションごとに生成し、人的レビューを経て確定されます)",
   report_button: "レポート",
   close_report: "レポートを閉じる",
+  close_chat: "チャットウィンドウを閉じる",
+  progress_collapse: "進捗ウィジェットを折りたたむ",
 };

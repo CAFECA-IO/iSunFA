@@ -1,4 +1,4 @@
-import { RefObject, useRef, useLayoutEffect } from "react";
+import { RefObject, useRef, useLayoutEffect, useEffect } from "react";
 import { Bot, MoreHorizontal, Loader2 } from "lucide-react";
 import { IChatMessage, ChatRoleEnum } from "@/types/carbon_chatbot.types";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -13,6 +13,9 @@ export interface IChatAreaProps {
   hasMore?: boolean;
   isLoadingMore?: boolean;
   onLoadMore: () => void;
+  // Info: (20260714 - Emily) 對話↔報告雙向連動:chip 點擊跳報告、反向連動時閃爍的目標訊息
+  onChipJump?: (paragraphId: string) => void;
+  focusedMessageId?: string | null;
 }
 
 // Info: (20260712 - Luphia) 捲到距頂多少 px 內即觸發載入更舊訊息
@@ -26,6 +29,8 @@ export function ChatArea({
   hasMore = false,
   isLoadingMore = false,
   onLoadMore,
+  onChipJump = undefined,
+  focusedMessageId = null,
 }: IChatAreaProps) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -52,6 +57,15 @@ export function ChatArea({
     }
   }, [messages.length]);
 
+  // Info: (20260714 - Emily) 反向連動:報告段落點擊後捲動至關聯訊息(閃爍樣式由 wrapper class 呈現)
+  useEffect(() => {
+    if (!focusedMessageId || !containerRef.current) return;
+    const target = containerRef.current.querySelector(
+      `[data-message-id="${focusedMessageId}"]`,
+    );
+    target?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [focusedMessageId]);
+
   return (
     <div
       ref={containerRef}
@@ -65,13 +79,24 @@ export function ChatArea({
         </div>
       )}
 
-      {messages.map((msg) =>
-        msg.sender === ChatRoleEnum.USER ? (
-          <UserBubble key={msg.id} message={msg} />
-        ) : (
-          <AIBubble key={msg.id} message={msg} />
-        ),
-      )}
+      {messages.map((msg) => (
+        // Info: (20260714 - Emily) data-message-id 為反向連動錨點;閃爍以短暫 ring + 底色呈現
+        <div
+          key={msg.id}
+          data-message-id={msg.id}
+          className={`rounded-3xl transition-all duration-500 ${
+            focusedMessageId === msg.id
+              ? "bg-orange-50 ring-2 ring-[#ff5a00]/50"
+              : ""
+          }`}
+        >
+          {msg.sender === ChatRoleEnum.USER ? (
+            <UserBubble message={msg} />
+          ) : (
+            <AIBubble message={msg} onChipJump={onChipJump} />
+          )}
+        </div>
+      ))}
 
       {(isTyping || isLoading) && (
         <div className="flex gap-4">

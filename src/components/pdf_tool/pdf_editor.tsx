@@ -51,6 +51,12 @@ interface IPdfEditorProps {
   defaultViewMode?: PdfToolViewMode;
   // Info: (20260713 - Tzuhan) 預覽內容字級變體;嵌入式場景(如 carbon_chatbot)傳 compact 與 app UI 協調
   contentVariant?: MarkdownContentVariant;
+  // Info: (20260714 - Emily) 下載檔名(未指定時維持既有 iSunFA_Document_{timestamp} 格式)
+  downloadFileName?: string;
+  // Info: (20260714 - Emily) 下載快照前的清理 hook(如 carbon_chatbot 移除段落高亮,避免滲入 PDF)
+  onBeforeDownload?: () => void;
+  // Info: (20260714 - Emily) split 佈局的並排斷點:預設 md(既有行為);嵌入場景空間較擠時可設 lg,平板寬度退回單欄切換
+  splitBreakpoint?: "md" | "lg";
 }
 
 export default function PdfEditor({
@@ -62,6 +68,9 @@ export default function PdfEditor({
   storageKey = STORAGE_KEY,
   defaultViewMode = PdfToolViewMode.EDIT,
   contentVariant = "document",
+  downloadFileName = undefined,
+  onBeforeDownload = undefined,
+  splitBreakpoint = "md",
 }: IPdfEditorProps) {
   const { t } = useTranslation();
 
@@ -319,6 +328,9 @@ export default function PdfEditor({
   const handleDownloadPDF = async () => {
     if (!contentRef.current) return;
 
+    // Info: (20260714 - Emily) 快照前清理:呼叫端可移除暫時性視覺狀態(如段落高亮),避免滲入 PDF
+    onBeforeDownload?.();
+
     setIsGenerating(true);
     try {
       const html2pdf = (await import("html2pdf.js")).default;
@@ -331,7 +343,7 @@ export default function PdfEditor({
 
       const opt = {
         margin: 15,
-        filename: `iSunFA_Document_${Date.now()}.pdf`,
+        filename: downloadFileName ?? `iSunFA_Document_${Date.now()}.pdf`,
         image: { type: "jpeg" as const, quality: 0.98 },
         html2canvas: {
           scale: 2,
@@ -524,6 +536,7 @@ export default function PdfEditor({
         {/* Info: (20260615 - Julian) Edit Panel */}
         <EditPanel
           layout={layout}
+          splitBreakpoint={splitBreakpoint}
           viewMode={viewMode}
           markdownContext={markdownContext}
           setMarkdownContext={(val) => {
@@ -548,14 +561,17 @@ export default function PdfEditor({
                 ? "hidden"
                 : "flex"
               : viewMode === PdfToolViewMode.EDIT
-                ? "hidden md:flex"
+                ? splitBreakpoint === "lg"
+                  ? "hidden lg:flex"
+                  : "hidden md:flex"
                 : "flex"
           }`}
         >
           <div className="sticky top-0 z-10 bg-gray-200 px-4 py-2 text-xs font-bold tracking-wider text-gray-500 uppercase">
             {t("admin_mission_board.pdf_editor.pdf_preview")!}
           </div>
-          <div className="flex min-h-full justify-center p-8">
+          {/* Info: (20260714 - Emily) 手機縮小外距讓 A4 預覽用滿寬度,md+ 維持原留白 */}
+          <div className="flex min-h-full justify-center p-3 md:p-8">
             {/* Info: (20260426 - Luphia) A4 Document Container */}
             <div className="mx-auto min-h-[297mm] w-full max-w-[210mm] border border-gray-300 bg-white text-black shadow-md">
               <div

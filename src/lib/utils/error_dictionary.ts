@@ -143,6 +143,12 @@ export const API_ERRORS = {
     message: "File is required",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
+  // Info: (20260715 - Luphia) 附件大小超過上限（語意明確，取代先前借用的 VL_SCHEMA_ERROR）
+  VA_FILE_TOO_LARGE: {
+    code: "VA000041",
+    message: "File is too large",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
   IN_FAILED_TO_CREATE_AI_ANALYSIS: {
     code: "IN000012",
     message: "Failed to create AI analysis",
@@ -557,6 +563,12 @@ export const API_ERRORS = {
     message: "Voucher debits and credits are imbalanced",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
+  // Info: (20260714 - Emily) 報告草稿樂觀鎖衝突(另一分頁/裝置已更新,須重新載入)
+  VL_DRAFT_VERSION_CONFLICT: {
+    code: "VL000017",
+    message: "Report draft version conflict; reload the latest draft",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
 
   // Info: (20260421 - Luphia) NF: Not Found Resources (000001 ~ 000099)
   NF_USER: {
@@ -669,6 +681,24 @@ export const API_ERRORS = {
   IS_GEMINI_API_KEY_UNDEFINED: {
     code: "IS000008",
     message: "GEMINI_API_KEY environment variable is not defined",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
+  // Info: (20260714 - Emily) LLM 結構化輸出未通過後端 Zod 護欄(非 JSON 或欄位不符)
+  IS_LLM_OUTPUT_INVALID: {
+    code: "IS000009",
+    message: "LLM structured output failed validation",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
+  // Info: (20260714 - Emily) 段落草稿生成失敗(LLM 呼叫錯誤的包裝,不透傳原始錯誤)
+  IS_PARAGRAPH_DRAFT_FAILED: {
+    code: "IS000010",
+    message: "Failed to generate paragraph draft",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
+  // Info: (20260714 - Emily) LLM 額度耗盡(429/RESOURCE_EXHAUSTED):與一般錯誤區分,前端可提示稍候重試
+  IS_LLM_QUOTA_EXCEEDED: {
+    code: "IS000011",
+    message: "AI service quota exceeded; please retry shortly",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
   IS_UNKNOWN: {

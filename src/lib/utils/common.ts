@@ -89,3 +89,11 @@ export function formatTime(timestamp: number, now: number) {
 export function numberWithCommas(number: MoneyValue, maxDecimals: number = 2) {
   return MoneyUtil.formatDynamic(number, maxDecimals);
 }
+
+// Info: (20260714 - Emily) 檔案大小人類可讀格式(顯示用途,非財務精度,原生 number 即可)
+export function formatFileSize(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes < 0) return "0 B";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
