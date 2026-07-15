@@ -143,6 +143,12 @@ export const API_ERRORS = {
     message: "File is required",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
+  // Info: (20260715 - Luphia) 附件大小超過上限（語意明確，取代先前借用的 VL_SCHEMA_ERROR）
+  VA_FILE_TOO_LARGE: {
+    code: "VA000041",
+    message: "File is too large",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
   IN_FAILED_TO_CREATE_AI_ANALYSIS: {
     code: "IN000012",
     message: "Failed to create AI analysis",

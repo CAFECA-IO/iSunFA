@@ -2,6 +2,7 @@
 // Info: (20260714 - Emily) 只回 channel metadata;標題衍生自密文首訊,由前端解密後自行補上(server 讀不到明文)
 
 import { NextRequest } from "next/server";
+import { logger } from "@/lib/utils/logger";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
@@ -36,7 +37,9 @@ export async function GET(request: NextRequest) {
 
     return jsonOk({ sessions });
   } catch (error) {
-    console.error("[API] /chat/carbon/sessions GET error:", error);
+    logger.error(
+      `[API] /chat/carbon/sessions GET error: ${JSON.stringify(error)}`,
+    );
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

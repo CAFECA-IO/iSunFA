@@ -1,5 +1,6 @@
 // Info: (20260712 - Luphia) Chatroom 服務層：協調加密 → 入庫 → 發佈，確保所有通過訊息都以密文留存
 import { chatroomRepo } from "@/repositories/chatroom.repo";
+import { logger } from "@/lib/utils/logger";
 import { publishToCentrifugo } from "@/lib/centrifugo";
 import { eciesEncrypt } from "@/lib/chatroom_ecies";
 import { ChatRoleEnum, IAttachment } from "@/types/carbon_chatbot.types";
@@ -72,7 +73,9 @@ export class ChatroomService {
       try {
         await publishToCentrifugo(params.channel, envelope);
       } catch (error) {
-        console.error("[ChatroomService] centrifugo publish failed:", error);
+        logger.error(
+          `[ChatroomService] centrifugo publish failed: ${JSON.stringify(error)}`,
+        );
       }
     }
 

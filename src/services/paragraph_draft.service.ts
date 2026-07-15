@@ -2,6 +2,7 @@
 // Info: (20260714 - Emily) 職責:依 CARBON_REPORT_OUTLINE 的段落 guidance + 對話上下文 + 已確認事實,由 LLM 撰寫段落敘述草稿
 // Info: (20260714 - Emily) 邊界:LLM 只撰寫敘述;段落對應由白名單裁決、數值一律引用輸入事實原值,嚴禁 LLM 計算或虛構
 
+import { logger } from "@/lib/utils/logger";
 // Info: (20260714 - Emily) AI 串接單一閘道:SDK 型別與呼叫一律經 chat.service,本檔不直接依賴 @google/generative-ai
 import {
   ChatService,
@@ -77,7 +78,9 @@ export class ParagraphDraftService {
       );
     } catch (error) {
       // Info: (20260714 - Emily) 包裝 LLM 原始錯誤,不讓 Gemini 錯誤細節噴到前端;額度耗盡回專屬錯誤碼
-      console.error("[ParagraphDraftService] LLM call failed:", error);
+      logger.error(
+        `[ParagraphDraftService] LLM call failed: ${JSON.stringify(error)}`,
+      );
       const def = isLlmQuotaError(error)
         ? API_ERRORS.IS_LLM_QUOTA_EXCEEDED
         : API_ERRORS.IS_PARAGRAPH_DRAFT_FAILED;

@@ -15,6 +15,7 @@ import { request, ApiError } from "@/lib/utils/request";
 import {
   CARBON_REPORT_DRAFT_STORAGE_VERSION,
   buildCarbonSessionsIndexKey,
+  buildCarbonReportDraftKey,
 } from "@/constants/carbon_chatbot";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import {
@@ -101,8 +102,65 @@ export const isDraftVersionConflict = (error: unknown): boolean => {
   return data?.errorCode === API_ERRORS.VL_DRAFT_VERSION_CONFLICT.code;
 };
 
-// Info: (20260714 - Emily) --- sessions 標題快取(localStorage) ---
+// Info: (20260715 - Luphia) --- 未存檔安全快取(localStorage);DB 為權威來源,本快取僅防 debounce 保存前意外遺失 ---
 const isBrowser = (): boolean => typeof window !== "undefined";
+
+// Info: (20260715 - Luphia) 編輯後立即寫入本機安全快取(明文限本機,信任邊界為使用者裝置;E2EE 針對的是 server)
+export const saveLocalDraftBackup = (
+  channel: string,
+  reportData: IReportData,
+): void => {
+  if (!isBrowser()) return;
+  try {
+    window.localStorage.setItem(
+      buildCarbonReportDraftKey(channel),
+      JSON.stringify({
+        version: CARBON_REPORT_DRAFT_STORAGE_VERSION,
+        reportData,
+      }),
+    );
+  } catch (error) {
+    console.error(
+      "[carbon-report-storage] save local draft backup failed:",
+      error,
+    );
+  }
+};
+
+// Info: (20260715 - Luphia) 讀取本機安全快取(還原時若存在代表上次未確認保存,應優先復原);格式不符即清除回 null
+export const loadLocalDraftBackup = (channel: string): IReportData | null => {
+  if (!isBrowser()) return null;
+  const key = buildCarbonReportDraftKey(channel);
+  const raw = window.localStorage.getItem(key);
+  if (!raw) return null;
+  try {
+    const outer = JSON.parse(raw) as { reportData?: unknown };
+    const parsed = CarbonReportDataSchema.safeParse(outer.reportData);
+    if (!parsed.success) {
+      window.localStorage.removeItem(key);
+      return null;
+    }
+    return parsed.data;
+  } catch {
+    window.localStorage.removeItem(key);
+    return null;
+  }
+};
+
+// Info: (20260715 - Luphia) DB 確認保存後清除本機快取(內容已安全落地,不再需要救援副本)
+export const clearLocalDraftBackup = (channel: string): void => {
+  if (!isBrowser()) return;
+  try {
+    window.localStorage.removeItem(buildCarbonReportDraftKey(channel));
+  } catch (error) {
+    console.error(
+      "[carbon-report-storage] clear local draft backup failed:",
+      error,
+    );
+  }
+};
+
+// Info: (20260714 - Emily) --- sessions 標題快取(localStorage) ---
 
 export const loadSessionsIndex = (
   address: string,

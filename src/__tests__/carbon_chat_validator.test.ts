@@ -119,4 +119,13 @@ describe("isCarbonChatChannelOwnedBy", () => {
     const channel = buildCarbonChatChannel("0xabcdef", "2025");
     expect(isCarbonChatChannelOwnedBy(channel, "0xabc")).toBe(false);
   });
+
+  it("should match regardless of address checksum casing", () => {
+    // Info: (20260715 - Luphia) 頻道以 checksum 位址組建、DeWT 回傳小寫位址(或反之)時仍須視為同一擁有者
+    const channel = buildCarbonChatChannel("0xAbCdEf", "2025");
+    expect(isCarbonChatChannelOwnedBy(channel, "0xabcdef")).toBe(true);
+    expect(isCarbonChatChannelOwnedBy(channel.toLowerCase(), "0xABCDEF")).toBe(
+      true,
+    );
+  });
 });

@@ -2,6 +2,7 @@
 // Info: (20260714 - Emily) 純端口:授權 → 頻道所有權 → 驗證 → Service;明文只存在於前端
 
 import { NextRequest } from "next/server";
+import { logger } from "@/lib/utils/logger";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
@@ -37,7 +38,9 @@ export async function GET(request: NextRequest) {
         status: error.status,
       });
     }
-    console.error("[API] /chat/carbon/report GET error:", error);
+    logger.error(
+      `[API] /chat/carbon/report GET error: ${JSON.stringify(error)}`,
+    );
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }
@@ -77,7 +80,9 @@ export async function PUT(request: NextRequest) {
         status: error.status,
       });
     }
-    console.error("[API] /chat/carbon/report PUT error:", error);
+    logger.error(
+      `[API] /chat/carbon/report PUT error: ${JSON.stringify(error)}`,
+    );
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

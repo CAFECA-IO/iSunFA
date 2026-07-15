@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { logger } from "@/lib/utils/logger";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
@@ -54,7 +55,9 @@ export async function GET(request: NextRequest) {
       hasMore: rowsDesc.length === limit,
     });
   } catch (error) {
-    console.error("[API] /chat/carbon/history GET error:", error);
+    logger.error(
+      `[API] /chat/carbon/history GET error: ${JSON.stringify(error)}`,
+    );
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

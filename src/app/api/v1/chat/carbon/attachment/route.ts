@@ -2,6 +2,7 @@
 // Info: (20260714 - Emily) 取代 base64-in-JSON 傳輸(大檔會撐爆請求 body);訊息只帶 metadata+cid,內容由管線經 recoverLaria 取回
 
 import { NextRequest } from "next/server";
+import { logger } from "@/lib/utils/logger";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
       return jsonFail(API_ERRORS.VA_INVALID_DOCUMENT_TYPE);
     }
     if (file.size > CARBON_CHAT_MAX_ATTACHMENT_BYTES) {
-      return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
+      return jsonFail(API_ERRORS.VA_FILE_TOO_LARGE);
     }
 
     const cid = await storageService.uploadLaria(file);
@@ -46,7 +47,9 @@ export async function POST(request: NextRequest) {
       cid,
     });
   } catch (error) {
-    console.error("[API] /chat/carbon/attachment POST error:", error);
+    logger.error(
+      `[API] /chat/carbon/attachment POST error: ${JSON.stringify(error)}`,
+    );
     return jsonFail(API_ERRORS.IS_UPLOAD_FAILED);
   }
 }

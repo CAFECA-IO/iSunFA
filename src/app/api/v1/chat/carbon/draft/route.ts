@@ -1,6 +1,7 @@
 // Info: (20260714 - Emily) Carbon Chatbot 段落草稿生成端點(純端口:授權 → 驗證 → 呼叫 Service → 格式化回應)
 
 import { NextRequest } from "next/server";
+import { logger } from "@/lib/utils/logger";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
         status: error.status,
       });
     }
-    console.error("[API] /chat/carbon/draft error:", error);
+    logger.error(`[API] /chat/carbon/draft error: ${JSON.stringify(error)}`);
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

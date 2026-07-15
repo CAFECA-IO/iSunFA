@@ -20,10 +20,14 @@ export const buildCarbonChatChannel = (
   sessionId: string,
 ): string => `${CARBON_CHAT_CHANNEL_PREFIX}-${address}-${sessionId}`;
 
+// Info: (20260715 - Luphia) 位址為 hex，EIP-55 checksum 僅差在大小寫；兩端統一轉小寫比對，避免 checksum 格式差異誤拒合法擁有者
 export const isCarbonChatChannelOwnedBy = (
   channel: string,
   address: string,
-): boolean => channel.startsWith(`${CARBON_CHAT_CHANNEL_PREFIX}-${address}-`);
+): boolean =>
+  channel
+    .toLowerCase()
+    .startsWith(`${CARBON_CHAT_CHANNEL_PREFIX}-${address.toLowerCase()}-`);
 
 // Info: (20260712 - Luphia) chatroom 用途分類標記（存於 Chatroom.purpose）
 export const CARBON_CHAT_PURPOSE = "carbon_chatbot";
@@ -115,7 +119,7 @@ export const buildCarbonReportFileName = (title: string): string => {
 };
 
 // Info: (20260714 - Emily) 報告草稿與 session 索引的 localStorage key 與 schema 版本
-// ToDo: (20260714 - Emily) 後續 DB 化(CarbonReportDraft model + GET/PUT /api/v1/chat/carbon/report)時移除本機儲存
+// Info: (20260715 - Luphia) 草稿權威來源已是 DB(E2EE);此 key 改作「未存檔安全快取」——編輯後即寫入本機,DB 確認保存後立即刪除,避免 debounce 保存前發生意外(當機/關頁)導致內容丟失
 export const CARBON_REPORT_DRAFT_STORAGE_VERSION = 1;
 export const buildCarbonReportDraftKey = (channel: string): string =>
   `carbon_report_draft_${channel}`;

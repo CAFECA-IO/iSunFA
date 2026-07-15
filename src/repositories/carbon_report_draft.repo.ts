@@ -1,6 +1,7 @@
 // Info: (20260714 - Emily) CarbonReportDraft 資料存取層(唯一碰 Prisma);僅存密文,version 樂觀鎖
 
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated";
 
 export interface IUpsertReportDraftParams {
   channel: string;
@@ -51,9 +52,20 @@ export class CarbonReportDraftRepository {
     if (!existing) {
       // Info: (20260714 - Emily) 首存:呼叫端讀取到的版本必須是 0(從未存過)
       if (params.expectedVersion !== 0) return null;
-      return prisma.carbonReportDraft.create({
-        data: { chatroomId: chatroom.id, ...envelopeData, version: 1 },
-      });
+      try {
+        return await prisma.carbonReportDraft.create({
+          data: { chatroomId: chatroom.id, ...envelopeData, version: 1 },
+        });
+      } catch (error) {
+        // Info: (20260715 - Luphia) 併發首存競態:另一端已先建立(chatroomId unique, P2002),視為版本衝突回 null,交由服務層轉衝突錯誤而非 DB 錯誤
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2002"
+        ) {
+          return null;
+        }
+        throw error;
+      }
     }
 
     // Info: (20260714 - Emily) updateMany 以 version 條件原子更新;count 0 = 他端已改版(衝突)

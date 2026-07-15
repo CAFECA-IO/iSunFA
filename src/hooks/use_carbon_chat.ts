@@ -27,6 +27,9 @@ import {
   isDraftVersionConflict,
   loadSessionsIndex,
   saveSessionsIndex,
+  saveLocalDraftBackup,
+  loadLocalDraftBackup,
+  clearLocalDraftBackup,
 } from "@/lib/carbon_report_draft_storage";
 import { useTranslation } from "@/i18n/i18n_context";
 import { subscribeChatroom } from "@/lib/chatroom";
@@ -40,15 +43,11 @@ import {
   ensureMasterKey,
   prefetchOwnKeyRecord,
 } from "@/lib/chatroom_key_manager";
-import { request, ApiError as RequestApiError } from "@/lib/utils/request";
-import { API_ERRORS } from "@/lib/utils/error_dictionary";
-
-// Info: (20260714 - Emily) 判斷 API 失敗是否為 AI 額度耗盡(IS000011),前端提示稍候重試
-const isQuotaApiError = (error: unknown): boolean => {
-  if (!(error instanceof RequestApiError)) return false;
-  const data = error.data as { errorCode?: string } | undefined;
-  return data?.errorCode === API_ERRORS.IS_LLM_QUOTA_EXCEEDED.code;
-};
+import { request } from "@/lib/utils/request";
+import {
+  isQuotaApiError,
+  splitReportMarkdownIntoBlocks,
+} from "@/hooks/use_carbon_chat.helpers";
 import { useAuth } from "@/contexts/auth_context";
 import {
   DEFAULT_SESSION_ID,
@@ -250,10 +249,7 @@ export const useCarbonChat = () => {
     if (!user?.address || sessionsIndexLoadedRef.current) return;
     sessionsIndexLoadedRef.current = true;
     const titleCache = new Map(
-      (loadSessionsIndex(user.address) ?? []).map((entry) => [
-        entry.id,
-        entry,
-      ]),
+      (loadSessionsIndex(user.address) ?? []).map((entry) => [entry.id, entry]),
     );
 
     request<{
@@ -297,8 +293,10 @@ export const useCarbonChat = () => {
       .then((loaded) => {
         // Info: (20260714 - Emily) 無草稿 → 版本 0(首存);有草稿 → 記錄真實版本供樂觀鎖
         draftVersionsRef.current.set(chatChannel, loaded?.version ?? 0);
+        // Info: (20260715 - Luphia) 本機安全快取若存在,代表上次編輯尚未確認保存(意外中斷);優先復原以免內容遺失,後續自動保存會推回 DB 並清除快取
+        const localBackup = loadLocalDraftBackup(chatChannel);
         // Info: (20260714 - Emily) 草稿存在但無法解讀(reportData null):保留版本、不覆寫狀態,並提示保存異常
-        if (loaded && !loaded.reportData) {
+        if (loaded && !loaded.reportData && !localBackup) {
           console.error(
             "[carbon-chat] report draft exists but is unreadable:",
             chatChannel,
@@ -306,8 +304,8 @@ export const useCarbonChat = () => {
           setSaveStatus("error");
           return;
         }
-        if (!loaded?.reportData) return;
-        const restored = loaded.reportData;
+        const restored = localBackup ?? loaded?.reportData;
+        if (!restored) return;
         setSessionsData((prev) => {
           const session = prev[sessionIdForChannel];
           if (!session) return prev;
@@ -335,6 +333,8 @@ export const useCarbonChat = () => {
     if (!master) return undefined;
 
     setSaveStatus("saving");
+    // Info: (20260715 - Luphia) 內容一有變更即先寫本機安全快取(不等 debounce);萬一保存前當機/關頁,下次還原時可救回
+    saveLocalDraftBackup(chatChannel, activeReportData);
     if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
     autosaveTimerRef.current = setTimeout(() => {
       autosaveTimerRef.current = null;
@@ -343,6 +343,8 @@ export const useCarbonChat = () => {
         .then((newVersion) => {
           draftVersionsRef.current.set(chatChannel, newVersion);
           setSaveStatus("saved");
+          // Info: (20260715 - Luphia) DB 已確認保存,內容安全落地,刪除本機安全快取
+          clearLocalDraftBackup(chatChannel);
         })
         .catch((error) => {
           // Info: (20260714 - Emily) 樂觀鎖衝突 = 他端已更新,不 silent overwrite;一律以 error 提示重整取得最新
@@ -783,14 +785,8 @@ export const useCarbonChat = () => {
         const updatedSession = { ...prev[activeSessionId] };
         if (!updatedSession.reportData?.paragraphs) return prev;
 
-        // Info: (20260714 - Emily) 以 `### ` 標題切分並僅保留段落區塊(排除文件標頭),
-        // Info: (20260713 - Tzuhan) 同時去除組稿時附加的 --- 分隔線,避免與段落原文比對時誤判為變更
-        // Info: (20260714 - Emily) 區塊去掉首行標頭後只留內文(content 僅存內文,標頭由組稿時產生)
-        const blocks = newMarkdown
-          .split(/(?=^### )/m)
-          .map((s) => s.replace(/\n+---\s*$/, "").trim())
-          .filter((s) => s.startsWith("### "))
-          .map((s) => s.replace(/^###[^\n]*\n*/, "").trim());
+        // Info: (20260715 - Luphia) 切分邏輯抽至 use_carbon_chat.helpers（純函式，可單元測試）
+        const blocks = splitReportMarkdownIntoBlocks(newMarkdown);
 
         // Info: (20260713 - Tzuhan) 預覽渲染全部段落(未生成者為佔位區塊),故區塊與 33 段依序 1:1 對齊
         // Info: (20260709 - Tzuhan) 防呆機制:區塊數與段落數不一致,代表使用者可能誤刪切分標題,

@@ -1,6 +1,7 @@
 // Info: (20260714 - Emily) 報告草稿服務:讀寫協調 + 錯誤包裝(不讓 Prisma 原始錯誤噴到前端)
 // Info: (20260714 - Emily) 草稿為 E2EE 密文,本服務不接觸明文;版本樂觀鎖衝突以 VL_DRAFT_VERSION_CONFLICT 回報
 
+import { logger } from "@/lib/utils/logger";
 import {
   carbonReportDraftRepo,
   CarbonReportDraftRepository,
@@ -42,7 +43,9 @@ export class CarbonReportDraftService {
         updatedAt: draft.updatedAt,
       };
     } catch (error) {
-      console.error("[CarbonReportDraftService] getDraft failed:", error);
+      logger.error(
+        `[CarbonReportDraftService] getDraft failed: ${JSON.stringify(error)}`,
+      );
       throw new ApiError(
         API_ERRORS.IS_DB_FAILED.code,
         API_ERRORS.IS_DB_FAILED.message,
@@ -67,7 +70,9 @@ export class CarbonReportDraftService {
         expectedVersion: payload.version,
       });
     } catch (error) {
-      console.error("[CarbonReportDraftService] saveDraft failed:", error);
+      logger.error(
+        `[CarbonReportDraftService] saveDraft failed: ${JSON.stringify(error)}`,
+      );
       throw new ApiError(
         API_ERRORS.IS_DB_FAILED.code,
         API_ERRORS.IS_DB_FAILED.message,

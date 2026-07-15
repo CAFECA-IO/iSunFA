@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { logger } from "@/lib/utils/logger";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
@@ -90,8 +91,7 @@ export async function POST(request: NextRequest) {
         ? history.map((item, index) => {
             const isLastUserMessage =
               item.role === "user" &&
-              index ===
-                history.map((h) => h.role).lastIndexOf("user");
+              index === history.map((h) => h.role).lastIndexOf("user");
             if (!isLastUserMessage) return item;
             return {
               ...item,
@@ -150,9 +150,8 @@ export async function POST(request: NextRequest) {
         drafts.push(draft);
       } catch (draftError) {
         // Info: (20260714 - Emily) 草稿失敗不阻斷對話,僅標記降級(用戶可用目錄的 AI 撰寫鈕重試)
-        console.error(
-          "[API] /chat/carbon ready-paragraph draft failed:",
-          draftError,
+        logger.error(
+          `[API] /chat/carbon ready-paragraph draft failed: ${JSON.stringify(draftError)}`,
         );
         degraded = true;
       }
@@ -214,7 +213,7 @@ export async function POST(request: NextRequest) {
 
     return jsonOk({ reply, drafts, degraded });
   } catch (error) {
-    console.error("[API] /chat/carbon error:", error);
+    logger.error(`[API] /chat/carbon error: ${JSON.stringify(error)}`);
     // Info: (20260714 - Emily) 額度耗盡回專屬錯誤碼,前端提示稍候重試(與一般系統錯誤區分)
     if (isLlmQuotaError(error)) {
       return jsonFail(API_ERRORS.IS_LLM_QUOTA_EXCEEDED);

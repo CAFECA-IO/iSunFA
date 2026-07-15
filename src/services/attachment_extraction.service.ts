@@ -4,6 +4,7 @@
 
 // Info: (20260714 - Emily) AI 串接單一閘道:SDK 型別與呼叫一律經 chat.service,本檔不直接依賴 @google/generative-ai
 import { ChatService, SchemaType, type Schema } from "@/services/chat.service";
+import { logger } from "@/lib/utils/logger";
 import { ParagraphDraftService } from "@/services/paragraph_draft.service";
 import { storageService, StorageService } from "@/services/storage.service";
 import { IAttachment } from "@/types/carbon_chatbot.types";
@@ -185,9 +186,8 @@ ${OUTLINE_CATALOG}
       try {
         buffer = await this.getStorageService().recoverLaria(attachment.cid);
       } catch (error) {
-        console.error(
-          `[AttachmentExtractionService] laria recover failed for ${attachment.name}:`,
-          error,
+        logger.error(
+          `[AttachmentExtractionService] laria recover failed for ${attachment.name}: ${JSON.stringify(error)}`,
         );
         degradeWithFilename(attachment.name);
         continue;
@@ -219,9 +219,8 @@ ${OUTLINE_CATALOG}
         }
       } catch (error) {
         // Info: (20260714 - Emily) 解析失敗(如 Gemini 斷線、不支援格式):降級生成
-        console.error(
-          `[AttachmentExtractionService] extraction failed for ${attachment.name}:`,
-          error,
+        logger.error(
+          `[AttachmentExtractionService] extraction failed for ${attachment.name}: ${JSON.stringify(error)}`,
         );
         degradeWithFilename(attachment.name);
       }
@@ -244,9 +243,8 @@ ${OUTLINE_CATALOG}
         drafts.push(draft);
       } catch (error) {
         // Info: (20260714 - Emily) 單段生成失敗僅跳過該段並標記降級,其餘段落照常產出
-        console.error(
-          `[AttachmentExtractionService] draft failed for ${paragraphId}:`,
-          error,
+        logger.error(
+          `[AttachmentExtractionService] draft failed for ${paragraphId}: ${JSON.stringify(error)}`,
         );
         degraded = true;
       }
