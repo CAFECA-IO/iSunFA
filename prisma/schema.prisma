@@ -1216,3 +1216,13 @@ model UserEncryptionKey {
   @@map("user_encryption_key")
 }
 
+// Info: (20260716 - Emily) 每使用者附件儲存用量(#6517):配額檢查 O(1) 讀;bytes 用 BigInt(精度規範)
+model UserStorageUsage {
+  id        Int      @id @default(autoincrement())
+  address   String   @unique
+  usedBytes BigInt   @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_storage_usage")
+}

@@ -70,6 +70,11 @@ export const carbonChatbot = {
   attachment_limit: "Up to {{max}} attachments per message",
   attachment_upload_failed:
     "Attachment upload failed: {{name}}; remove it and try again",
+  attachment_type_mismatch:
+    "File content does not match its extension: {{name}} (rejected as disguised file)",
+  attachment_infected: "Malicious content detected: {{name}} (rejected)",
+  storage_quota_exceeded:
+    "Storage is full (5GB limit); please remove old attachments and retry",
   draft_generate: "Draft this section with AI",
   draft_generating: "Generating draft...",
   draft_generating_section:

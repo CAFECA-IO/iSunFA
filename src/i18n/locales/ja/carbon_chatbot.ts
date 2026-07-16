@@ -71,6 +71,11 @@ export const carbonChatbot = {
   attachment_limit: "1メッセージに添付できるのは最大 {{max}} 件です",
   attachment_upload_failed:
     "添付ファイルのアップロードに失敗しました:{{name}}。削除して再試行してください",
+  attachment_type_mismatch:
+    "ファイル内容が拡張子と一致しません:{{name}}(偽装ファイルの疑いのため拒否)",
+  attachment_infected: "悪意のあるコンテンツを検出:{{name}}(拒否しました)",
+  storage_quota_exceeded:
+    "ストレージが満杯です(上限 5GB)。古い添付ファイルを削除して再試行してください",
   draft_generate: "AI でこのセクションの下書きを作成",
   draft_generating: "下書きを生成中...",
   draft_generating_section:

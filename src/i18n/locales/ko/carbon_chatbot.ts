@@ -71,6 +71,11 @@ export const carbonChatbot = {
   attachment_limit: "메시지당 최대 {{max}}개 첨부 가능",
   attachment_upload_failed:
     "첨부파일 업로드 실패: {{name}}. 제거 후 다시 시도해 주세요",
+  attachment_type_mismatch:
+    "파일 내용이 확장자와 일치하지 않습니다: {{name}}(위장 파일 의심, 거부됨)",
+  attachment_infected: "악성 콘텐츠 감지: {{name}}(거부됨)",
+  storage_quota_exceeded:
+    "저장 공간이 가득 찼습니다(상한 5GB). 오래된 첨부 파일을 삭제 후 다시 시도해 주세요",
   draft_generate: "AI로 이 섹션 초안 작성",
   draft_generating: "초안 생성 중...",
   draft_generating_section:

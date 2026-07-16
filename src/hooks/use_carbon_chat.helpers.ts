@@ -18,6 +18,13 @@ export const isTimeoutApiError = (error: unknown): boolean => {
   return data?.errorCode === API_ERRORS.IS_LLM_TIMEOUT.code;
 };
 
+// Info: (20260716 - Emily) 取出 API 失敗的錯誤碼(無法辨識回 null),供呼叫端對應專屬文案(#6517)
+export const getApiErrorCode = (error: unknown): string | null => {
+  if (!(error instanceof RequestApiError)) return null;
+  const data = error.data as { errorCode?: string } | undefined;
+  return data?.errorCode ?? null;
+};
+
 // Info: (20260716 - Emily) 判斷 API 失敗是否為限流(IS000013/HTTP 429),前端提示放慢操作(#6516)
 export const isRateLimitedApiError = (error: unknown): boolean => {
   if (!(error instanceof RequestApiError)) return false;
