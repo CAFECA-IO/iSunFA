@@ -116,6 +116,9 @@ export const useCarbonChat = () => {
   const [isError, setIsError] = useState<boolean>(false);
   // Info: (20260712 - Luphia) 是否已於進入時完成一次手勢解鎖（PRF）；未解鎖前不呼叫 AI、不顯示對話
   const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
+  // Info: (20260716 - Emily) render 期不可讀 ref(react-hooks/refs):金鑰以 state 快照對外暴露(解鎖時設定)
+  const [unlockedMasterKey, setUnlockedMasterKey] =
+    useState<IChatroomMasterKey | null>(null);
   // Info: (20260713 - Tzuhan) 目前對話正在引導的報告段落(vibe 模式:跳段 = 切換對話目標)
   const [activeParagraphId, setActiveParagraphId] = useState<string | null>(
     null,
@@ -374,6 +377,21 @@ export const useCarbonChat = () => {
         console.error("[carbon-chat] failed to load account books:", error);
       });
   }, [user?.address]);
+
+  // Info: (20260716 - Emily) UAT:帳本成員查看報告的入口 — 列出帳本全部碳盤查會話(含他人;server 驗成員資格)
+  const fetchBookSessions = useCallback(async (accountBookId: string) => {
+    const res = await request<{
+      payload: {
+        sessions: {
+          sessionId: string;
+          channel: string;
+          createdAt: string;
+          isOwn: boolean;
+        }[];
+      } | null;
+    }>(`/api/v1/chat/carbon/sessions?accountBookId=${accountBookId}`);
+    return res.payload?.sessions ?? [];
+  }, []);
 
   // Info: (20260716 - Emily) #52 綁定會話至帳本(POST sessions);成功後記入存取中繼資料
   const bindSessionToBook = useCallback(
@@ -1984,6 +2002,7 @@ export const useCarbonChat = () => {
     }
 
     setIsUnlocked(true);
+      setUnlockedMasterKey(masterKeyRef.current);
     setIsError(false);
     // Info: (20260714 - Emily) 歷史載入與招呼詞改由 channel 載入 effect 統一處理(切換 session 亦適用)
   }, [isUnlocked, ensureMasterKeyCached, appendMessageLocally, t]);
@@ -2100,6 +2119,9 @@ export const useCarbonChat = () => {
       accountBookId: null,
       canEdit: true,
     },
+    // Info: (20260716 - Emily) UAT 帳本報告入口:列會話 + 檢視器編輯需本人金鑰(未解鎖為 null → 唯讀)
+    fetchBookSessions,
+    masterKey: unlockedMasterKey,
     // Info: (20260716 - Emily) #6518 盤查狀態帳本(活動數據 + 決定性步驟),供記錄卡顯示
     inventoryState: activeInventoryState ?? createEmptyInventoryState(),
     activeParagraphId,
