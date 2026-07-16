@@ -50,7 +50,6 @@ import {
   saveSessionsIndex,
   saveLocalDraftBackup,
   loadLocalDraftBackup,
-  clearLocalDraftBackup,
 } from "@/lib/carbon_report_draft_storage";
 import { useTranslation } from "@/i18n/i18n_context";
 import { subscribeChatroom } from "@/lib/chatroom";
@@ -419,6 +418,31 @@ export const useCarbonChat = () => {
     });
   }, [isUnlocked, bindSessionToBook]);
 
+  // Info: (20260716 - Emily) UAT P0:本機常駐快取「即刻水合」— 不需金鑰,refresh 後解鎖前內容即可見。
+  // Info: (20260716 - Emily) 僅在該 session 仍為空骨架時套用(絕不覆蓋已還原/已編輯內容);DB 還原隨後比版本裁決
+  const hydratedChannelsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (hydratedChannelsRef.current.has(chatChannel)) return;
+    hydratedChannelsRef.current.add(chatChannel);
+    const backup = loadLocalDraftBackup(chatChannel);
+    if (!backup) return;
+    const sessionIdForChannel = activeSessionId;
+    setSessionsData((prev) => {
+      const session = prev[sessionIdForChannel];
+      const reportData = session?.reportData;
+      if (!session || !reportData) return prev;
+      // Info: (20260716 - Emily) 空骨架判定:無全文且所有段落皆未生成
+      const isSkeleton =
+        !reportData.rawMarkdown &&
+        (reportData.paragraphs ?? []).every((p) => !p.content);
+      if (!isSkeleton) return prev;
+      return {
+        ...prev,
+        [sessionIdForChannel]: { ...session, reportData: backup.reportData },
+      };
+    });
+  }, [chatChannel, activeSessionId]);
+
   // Info: (20260714 - Emily) 切至 session 時自 DB 還原報告草稿(密文 → 主私鑰解密;需先解鎖,每 channel 只還原一次)
   useEffect(() => {
     const master = masterKeyRef.current;
@@ -443,7 +467,9 @@ export const useCarbonChat = () => {
             },
           }));
         }
-        // Info: (20260715 - Luphia) 本機安全快取若存在,代表上次編輯尚未確認保存(意外中斷);優先復原以免內容遺失,後續自動保存會推回 DB 並清除快取
+        // Info: (20260716 - Emily) 常駐快取與 DB 比版本取新者:
+        // Info: (20260716 - Emily) 快取版本 >= DB 版本 = 本機有未上雲的較新編輯(隨後 autosave 會推回);
+        // Info: (20260716 - Emily) DB 較新(他裝置更新過)= 以 DB 為準,快取隨 autosave 覆寫
         const localBackup = loadLocalDraftBackup(chatChannel);
         // Info: (20260714 - Emily) 草稿存在但無法解讀(reportData null):保留版本、不覆寫狀態,並提示保存異常
         if (loaded && !loaded.reportData && !localBackup) {
@@ -454,7 +480,12 @@ export const useCarbonChat = () => {
           setSaveStatus("error");
           return;
         }
-        const restored = localBackup ?? loaded?.reportData;
+        const preferBackup =
+          localBackup &&
+          localBackup.draftVersion >= (loaded?.version ?? 0);
+        const restored = preferBackup
+          ? localBackup.reportData
+          : (loaded?.reportData ?? localBackup?.reportData);
         if (!restored) return;
         setSessionsData((prev) => {
           const session = prev[sessionIdForChannel];
@@ -480,7 +511,11 @@ export const useCarbonChat = () => {
     // Info: (20260715 - Luphia) 內容一有變更即先寫本機安全快取(不等 debounce);萬一保存前當機/關頁,下次還原時可救回
     // Info: (20260716 - Emily) #50 提到所有雲端保存 guard 之前:本機快取不需金鑰,
     // Info: (20260716 - Emily) 未解鎖的新聊天室貼上內容也先落地,解鎖後由還原流程撿回並自動推入 DB
-    saveLocalDraftBackup(chatChannel, activeReportData);
+    saveLocalDraftBackup(
+      chatChannel,
+      activeReportData,
+      draftVersionsRef.current.get(chatChannel) ?? 0,
+    );
     // Info: (20260716 - Emily) #52 無編輯權(帳本 VIEWER)不觸發保存(server 亦會 403,此為第一道)
     if (sessionAccess[chatChannel]?.canEdit === false) return undefined;
     const master = masterKeyRef.current;
@@ -510,8 +545,8 @@ export const useCarbonChat = () => {
         .then((newVersion) => {
           draftVersionsRef.current.set(chatChannel, newVersion);
           setSaveStatus("saved");
-          // Info: (20260715 - Luphia) DB 已確認保存,內容安全落地,刪除本機安全快取
-          clearLocalDraftBackup(chatChannel);
+          // Info: (20260716 - Emily) UAT P0:快取常駐(refresh 後解鎖前即刻可見),僅同步版本號
+          saveLocalDraftBackup(chatChannel, activeReportData, newVersion);
         })
         .catch((error) => {
           // Info: (20260714 - Emily) 樂觀鎖衝突 = 他端已更新,不 silent overwrite;一律以 error 提示重整取得最新

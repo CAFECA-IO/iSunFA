@@ -126,13 +126,19 @@ export const isDraftVersionConflict = (error: unknown): boolean => {
   return data?.errorCode === API_ERRORS.VL_DRAFT_VERSION_CONFLICT.code;
 };
 
-// Info: (20260715 - Luphia) --- 未存檔安全快取(localStorage);DB 為權威來源,本快取僅防 debounce 保存前意外遺失 ---
+// Info: (20260715 - Luphia) --- 本機快取(localStorage);DB 為權威來源 ---
+// Info: (20260716 - Emily) UAT P0 修正:快取改「常駐」(雲端保存後不再清除,僅更新版本)。
+// Info: (20260716 - Emily) 個人 E2EE 會話在解鎖前無法解密 DB 草稿,refresh 後畫面全空被認定為資料遺失;
+// Info: (20260716 - Emily) 常駐快取讓內容於解鎖前即刻可見(明文限本機,信任邊界為使用者裝置),
+// Info: (20260716 - Emily) 解鎖後與 DB 比版本取新者,跨裝置一致性仍由 DB 樂觀鎖保證
 const isBrowser = (): boolean => typeof window !== "undefined";
 
 // Info: (20260715 - Luphia) 編輯後立即寫入本機安全快取(明文限本機,信任邊界為使用者裝置;E2EE 針對的是 server)
+// Info: (20260716 - Emily) draftVersion = 內容對應的 DB 樂觀鎖版本(0 = 尚未上雲),供還原時與 DB 比新舊
 export const saveLocalDraftBackup = (
   channel: string,
   reportData: IReportData,
+  draftVersion: number = 0,
 ): void => {
   if (!isBrowser()) return;
   try {
@@ -140,6 +146,7 @@ export const saveLocalDraftBackup = (
       buildCarbonReportDraftKey(channel),
       JSON.stringify({
         version: CARBON_REPORT_DRAFT_STORAGE_VERSION,
+        draftVersion,
         reportData,
       }),
     );
@@ -151,27 +158,42 @@ export const saveLocalDraftBackup = (
   }
 };
 
-// Info: (20260715 - Luphia) 讀取本機安全快取(還原時若存在代表上次未確認保存,應優先復原);格式不符即清除回 null
-export const loadLocalDraftBackup = (channel: string): IReportData | null => {
+export interface ILocalDraftBackup {
+  reportData: IReportData;
+  // Info: (20260716 - Emily) 內容對應的 DB 版本(舊格式快取無此欄 → 0,視為未上雲)
+  draftVersion: number;
+}
+
+// Info: (20260716 - Emily) 讀取本機常駐快取;格式不符即清除回 null
+export const loadLocalDraftBackup = (
+  channel: string,
+): ILocalDraftBackup | null => {
   if (!isBrowser()) return null;
   const key = buildCarbonReportDraftKey(channel);
   const raw = window.localStorage.getItem(key);
   if (!raw) return null;
   try {
-    const outer = JSON.parse(raw) as { reportData?: unknown };
+    const outer = JSON.parse(raw) as {
+      reportData?: unknown;
+      draftVersion?: unknown;
+    };
     const parsed = CarbonReportDataSchema.safeParse(outer.reportData);
     if (!parsed.success) {
       window.localStorage.removeItem(key);
       return null;
     }
-    return parsed.data;
+    return {
+      reportData: parsed.data,
+      draftVersion:
+        typeof outer.draftVersion === "number" ? outer.draftVersion : 0,
+    };
   } catch {
     window.localStorage.removeItem(key);
     return null;
   }
 };
 
-// Info: (20260715 - Luphia) DB 確認保存後清除本機快取(內容已安全落地,不再需要救援副本)
+// Info: (20260716 - Emily) 清除本機快取(會話刪除等情境用;一般保存流程不再清除 — 快取常駐)
 export const clearLocalDraftBackup = (channel: string): void => {
   if (!isBrowser()) return;
   try {
