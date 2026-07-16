@@ -28,7 +28,7 @@ import { MeasurementUnit } from "@/constants/enums";
 import { IInventoryExtraction } from "@/types/carbon_chatbot.types";
 import { logger } from "@/lib/utils/logger";
 
-// Info: (20260714 - Emily) 結構化聊天回覆:readyParagraphId 已通過白名單裁決(非法/none 一律為 null)
+// Info: (20260714 - Emily) 結構化聊天回覆: readyParagraphId 已通過白名單裁決(非法/none 一律為 null)
 // Info: (20260716 - Emily) #6518:extraction 為已裁決的事實萃取(壞欄位逐筆丟棄),null = 本輪無可萃取
 export interface ICarbonChatStructuredReply {
   reply: string;
@@ -39,7 +39,7 @@ export interface ICarbonChatStructuredReply {
 // Info: (20260714 - Emily) readyParagraphId 的無段落標記(LLM enum 選項之一)
 const NO_READY_PARAGRAPH = "none";
 
-// Info: (20260714 - Emily) 判斷 LLM 錯誤是否為額度耗盡(429/RESOURCE_EXHAUSTED),供呼叫端回專屬錯誤碼
+// Info: (20260714 - Emily) 判斷 LLM 錯誤是否為額度耗盡(429/RESOURCE_EXHAUSTED)，供呼叫端回專屬錯誤碼
 export const isLlmQuotaError = (error: unknown): boolean => {
   if (!(error instanceof Error)) return false;
   const message = error.message.toLowerCase();
@@ -50,11 +50,11 @@ export const isLlmQuotaError = (error: unknown): boolean => {
   );
 };
 
-// Info: (20260716 - Emily) 判斷 LLM 錯誤是否為同步路徑逾時(#6515),供 route/service 層映射 IS_LLM_TIMEOUT
+// Info: (20260716 - Emily) 判斷 LLM 錯誤是否為同步路徑逾時(#6515)，供 route/service 層映射 IS_LLM_TIMEOUT
 export const isLlmTimeoutError = (error: unknown): boolean =>
   error instanceof Error && error.message.startsWith(LLM_TIMEOUT_ERROR_MARKER);
 
-// Info: (20260714 - Emily) 聊天回覆 responseSchema:readyParagraphId 以 enum 約束,禁止 LLM 捏造段落 id
+// Info: (20260714 - Emily) 聊天回覆 responseSchema:readyParagraphId 以 enum 約束，禁止 LLM 捏造段落 id
 const CARBON_CHAT_REPLY_SCHEMA: Schema = {
   type: SchemaType.OBJECT,
   properties: {
@@ -66,7 +66,7 @@ const CARBON_CHAT_REPLY_SCHEMA: Schema = {
       type: SchemaType.STRING,
       format: "enum",
       enum: [...CARBON_REPORT_OUTLINE.map((s) => s.id), NO_READY_PARAGRAPH],
-      description: "資訊已蒐集齊全可寫入報告的段落 id;尚未齊全時為 none",
+      description: "資訊已蒐集齊全可寫入報告的段落 id；尚未齊全時為 none",
     },
     // Info: (20260716 - Emily) #6518 事實萃取: enum 鎖死範疇/單位，數值原樣字串(嚴禁換算),TS 端再白名單複驗
     extraction: {
@@ -313,10 +313,10 @@ export class ChatService {
       (s) => `${s.id}: ${s.code} ${s.title}`,
     ).join("\n");
     return `你是一個專業的碳會計師 (Carbon Accountant)。你的任務是引導用戶進行溫室氣體盤查。請一步步問問題，引導用戶回答，並在適當的時機請用戶上傳相關資料（如BOM表、能源帳單等）。請保持專業、友善，且每次對話只問一個核心問題以免用戶混淆。${currentStep ? `\n當前盤查流程節點：【${currentStep}】。請根據此階段的目標來引導對話。` : ""}
-【報告寫入機制】你的回覆一律為 JSON:reply 填對話內容;readyParagraphId 依下列規則填寫:
-- 用戶已提供當前段落所需的關鍵資訊,或明確同意/確認你彙整的內容時 → 填該段落的 id(只能從下方清單挑選)
+【報告寫入機制】你的回覆一律為 JSON:reply 填對話內容；readyParagraphId 依下列規則填寫:
+- 用戶已提供當前段落所需的關鍵資訊，或明確同意/確認你彙整的內容時 → 填該段落的 id(只能從下方清單挑選)
 - 資訊尚未齊全、仍在追問時 → 填 "${NO_READY_PARAGRAPH}"
-- 填入段落 id 後,系統會自動將該段草稿寫入右側報告;此時請在 reply 告知用戶「本段已寫入報告,可於右側預覽檢視」,不要把完整草稿貼在對話中,也不要再重複詢問同一段落。
+- 填入段落 id 後，系統會自動將該段草稿寫入右側報告；此時請在 reply 告知用戶「本段已寫入報告，可於右側預覽檢視」，不要把完整草稿貼在對話中，也不要再重複詢問同一段落。
 【事實萃取機制】每輪回覆的 extraction 欄位，依下列規則萃取「用戶本輪訊息」中的盤查事實:
 - 企業名稱、盤查年度(西元)、組織邊界方法: 用戶明確提供時填入，原文照抄，不確定就省略。
 - activities: 用戶提供的活動數據(如用電量、油耗)。quantity 連同千分位「原樣照抄」為字串，嚴禁換算單位、加總或推導；單位只能從 unit 列舉挑選，對不上就整筆省略。
@@ -407,7 +407,7 @@ ${outlineCatalog}${langInstruction}`;
     );
     const raw = response.response.text();
 
-    // Info: (20260714 - Emily) 永不直接採信 LLM 輸出，JSON + Zod 護欄;解析失敗降級為純文字回覆(不中斷對話)
+    // Info: (20260714 - Emily) 永不直接採信 LLM 輸出，JSON + Zod 護欄；解析失敗降級為純文字回覆(不中斷對話)
     try {
       const rawParsed: unknown = JSON.parse(raw);
       const parsed = CarbonChatStructuredReplySchema.parse(rawParsed);
