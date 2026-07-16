@@ -32,6 +32,8 @@ export enum LlmTaskKeyEnum {
   CARBON_GREETING = "CARBON_GREETING",
   PARAGRAPH_DRAFT = "PARAGRAPH_DRAFT",
   ATTACHMENT_EXTRACTION = "ATTACHMENT_EXTRACTION",
+  // Info: (20260716 - Emily) #56 整份報告匯入(切段對應大綱)
+  REPORT_IMPORT = "REPORT_IMPORT",
 }
 
 // Info: (20260716 - Emily) timeout 錯誤的識別標記(type guard 用,避免比對自由字串)

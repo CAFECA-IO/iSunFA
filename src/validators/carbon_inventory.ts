@@ -117,3 +117,21 @@ export const CarbonSessionBindSchema = z.object({
   recipientPublicKey: z.string().min(1).max(300),
 });
 export type CarbonSessionBindPayload = z.infer<typeof CarbonSessionBindSchema>;
+
+// Info: (20260716 - Emily) #56 報告匯入 LLM 輸出(responseSchema 之外的第二道防線);
+// Info: (20260716 - Emily) paragraphId 僅驗型別,白名單複驗於服務層(非法者降入 unmapped 不丟棄)
+export const CarbonReportImportLlmOutputSchema = z.object({
+  segments: z
+    .array(
+      z.object({
+        paragraphId: z.string().max(50),
+        content: z.string().min(1).max(50_000),
+      }),
+    )
+    .max(100),
+  unmapped: z.array(z.string().max(50_000)).max(100),
+  activities: z.array(z.unknown()).max(50).optional(),
+});
+export type CarbonReportImportLlmOutput = z.infer<
+  typeof CarbonReportImportLlmOutputSchema
+>;

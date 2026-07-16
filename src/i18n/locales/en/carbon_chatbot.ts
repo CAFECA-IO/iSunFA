@@ -93,6 +93,17 @@ export const carbonChatbot = {
   revision_discard: "Discard",
   revision_generating: "Generating revision for 「{{section}}」…",
   revision_failed: "[Revision failed] Could not generate a revision; please retry later.",
+  import_button: "Import report",
+  import_title: "Import report: {{name}}",
+  import_overwrite_warning: "Will overwrite existing content",
+  import_unmapped:
+    "Content not matching the outline ({{count}} blocks; not imported, handle in chat)",
+  import_reset_note:
+    "Verification resets for imported paragraphs; {{activities}} activity records will be re-reconciled",
+  import_apply: "Import selected ({{count}})",
+  import_parsing: "Parsing 「{{name}}」; a per-paragraph preview will follow…",
+  import_empty: "[Import failed] Nothing in the file maps to the outline.",
+  import_failed: "[Import failed] Could not parse the report; please retry later.",
   section_placeholder:
     "This section has not been generated yet. Tell the Carbon Accountant in the chat that you want to work on it, and the content will appear here in real time.",
   report_status_draft:

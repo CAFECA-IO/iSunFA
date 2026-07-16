@@ -25,6 +25,7 @@ import {
   IContextFact,
 } from "@/interfaces/carbon_paragraph_draft";
 import { IPendingRevision } from "@/components/carbon_chatbot/revision_preview";
+import { IPendingImport } from "@/components/carbon_chatbot/import_preview";
 import {
   createDefaultSessions,
   createChatSession,
@@ -125,6 +126,10 @@ export const useCarbonChat = () => {
   // Info: (20260716 - Emily) #55 待確認修訂(對照卡):null = 無;確認後才寫入報告
   const [pendingRevision, setPendingRevision] =
     useState<IPendingRevision | null>(null);
+  // Info: (20260716 - Emily) #56 待確認匯入(逐段勾選):null = 無;確認後才寫入報告與活動帳本
+  const [pendingImport, setPendingImport] = useState<IPendingImport | null>(
+    null,
+  );
   const draftNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -156,6 +161,8 @@ export const useCarbonChat = () => {
   >([]);
   // Info: (20260716 - Emily) #52 未解鎖時建立的帳本會話:綁定請求需 xpub,解鎖後補送
   const pendingBindsRef = useRef<Map<string, string>>(new Map());
+  // Info: (20260716 - Emily) #56 匯入預覽期間暫存的活動數據(確認時才入帳本)
+  const importActivitiesRef = useRef<IActivityRecord[]>([]);
 
   // Info: (20260716 - Emily) #6518 盤查狀態帳本(per-channel):活動數據 + 決定性步驟;E2EE 入庫比照報告草稿
   const [inventoryStates, setInventoryStates] = useState<
@@ -732,6 +739,7 @@ export const useCarbonChat = () => {
     setIsError(false);
     setDraftNotice(null);
     setPendingRevision(null);
+    setPendingImport(null);
     pendingDraftParagraphIdRef.current = null;
   }, []);
 
@@ -760,6 +768,138 @@ export const useCarbonChat = () => {
       highlightTimerRef.current = null;
       setHighlightedParagraphId(null);
     }, CARBON_CHAT_HIGHLIGHT_DURATION_MS);
+  }, []);
+
+  // Info: (20260716 - Emily) #56 上傳整份報告 → 匯入預覽(不直接寫入;查核重置與數字重勾稽於確認時執行)
+  const importReportFile = useCallback(
+    async (file: File) => {
+      setDraftNotice({
+        type: "loading",
+        text: t("carbon_chatbot.import_parsing", { name: file.name }),
+      });
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("language", language);
+        const res = await request<{
+          payload: {
+            segments: {
+              paragraphId: string;
+              title: string;
+              content: string;
+            }[];
+            unmapped: string[];
+            activities: IActivityRecord[];
+          } | null;
+        }>("/api/v1/chat/carbon/import", { method: "POST", body: formData });
+        setDraftNotice(null);
+        const payload = res.payload;
+        if (!payload || payload.segments.length === 0) {
+          setDraftNotice({
+            type: "error",
+            text: t("carbon_chatbot.import_empty"),
+          });
+          draftNoticeTimerRef.current = setTimeout(() => {
+            draftNoticeTimerRef.current = null;
+            setDraftNotice(null);
+          }, CARBON_DRAFT_NOTICE_DISMISS_MS);
+          return;
+        }
+        const paragraphs =
+          sessionsData[activeSessionId]?.reportData?.paragraphs ?? [];
+        const existingIds = new Set(
+          paragraphs.filter((p) => p.content).map((p) => p.id),
+        );
+        // Info: (20260716 - Emily) 匯入的活動數據於確認時合併,先隨預覽暫存
+        importActivitiesRef.current = payload.activities;
+        setPendingImport({
+          fileName: file.name,
+          items: payload.segments.map((segment) => ({
+            ...segment,
+            hasExisting: existingIds.has(segment.paragraphId),
+            checked: true,
+          })),
+          unmapped: payload.unmapped,
+          activityCount: payload.activities.length,
+        });
+      } catch (error) {
+        console.error("[carbon-chat] report import failed:", error);
+        setDraftNotice({
+          type: "error",
+          text: t("carbon_chatbot.import_failed"),
+        });
+        draftNoticeTimerRef.current = setTimeout(() => {
+          draftNoticeTimerRef.current = null;
+          setDraftNotice(null);
+        }, CARBON_DRAFT_NOTICE_DISMISS_MS);
+      }
+    },
+    [sessionsData, activeSessionId, language, t],
+  );
+
+  const toggleImportItem = useCallback((paragraphId: string) => {
+    setPendingImport((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        items: prev.items.map((item) =>
+          item.paragraphId === paragraphId
+            ? { ...item, checked: !item.checked }
+            : item,
+        ),
+      };
+    });
+  }, []);
+
+  // Info: (20260716 - Emily) #56 套用匯入:勾選段落寫入(查核一律重置);活動數據入帳本交 /calculate 重勾稽
+  const applyPendingImport = useCallback(() => {
+    if (!pendingImport) return;
+    const selected = pendingImport.items.filter((item) => item.checked);
+    if (selected.length === 0) return;
+    const contentById = new Map(
+      selected.map((item) => [item.paragraphId, item.content]),
+    );
+    setSessionsData((prev) => {
+      const session = prev[activeSessionId];
+      if (!session?.reportData?.paragraphs) return prev;
+      return {
+        ...prev,
+        [activeSessionId]: {
+          ...session,
+          reportData: {
+            ...session.reportData,
+            paragraphs: session.reportData.paragraphs.map((p) => {
+              const imported = contentById.get(p.id);
+              if (imported === undefined) return p;
+              // Info: (20260716 - Emily) 匯入內容原樣落地;查核重置(匯入的舊報告不可信任為已驗證)
+              return {
+                ...p,
+                content: imported,
+                isCompleted: true,
+                isVerified: false,
+              };
+            }),
+          },
+        },
+      };
+    });
+    const activities = importActivitiesRef.current;
+    if (activities.length > 0) {
+      applyInventoryExtraction({ activities });
+    }
+    importActivitiesRef.current = [];
+    setPendingImport(null);
+    jumpToReportParagraph(selected[0].paragraphId);
+  }, [
+    pendingImport,
+    activeSessionId,
+    applyInventoryExtraction,
+    jumpToReportParagraph,
+  ]);
+
+  const discardPendingImport = useCallback(() => {
+    importActivitiesRef.current = [];
+    setPendingImport(null);
   }, []);
 
   // Info: (20260716 - Emily) #55 套用修訂:寫入段落(取消查核)並高亮;人工 gate 的唯一落地點
@@ -1733,6 +1873,12 @@ export const useCarbonChat = () => {
     pendingRevision,
     applyPendingRevision,
     discardPendingRevision,
+    // Info: (20260716 - Emily) #56 報告匯入(逐段勾選確認)
+    pendingImport,
+    importReportFile,
+    toggleImportItem,
+    applyPendingImport,
+    discardPendingImport,
     generateParagraphDraft,
     toggleParagraphVerified,
     handleMarkdownChange,

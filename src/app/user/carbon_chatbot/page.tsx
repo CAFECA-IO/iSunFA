@@ -15,6 +15,7 @@ import { ActivityLedger } from "@/components/carbon_chatbot/activity_ledger";
 import { CarbonChatWidget } from "@/components/carbon_chatbot/carbon_chat_widget";
 import CarbonReportPreview from "@/components/carbon_chatbot/carbon_report_preview";
 import { RevisionPreview } from "@/components/carbon_chatbot/revision_preview";
+import { ImportPreview } from "@/components/carbon_chatbot/import_preview";
 
 export default function CarbonChatbotPage() {
   const { t } = useTranslation();
@@ -54,6 +55,11 @@ export default function CarbonChatbotPage() {
     pendingRevision,
     applyPendingRevision,
     discardPendingRevision,
+    pendingImport,
+    importReportFile,
+    toggleImportItem,
+    applyPendingImport,
+    discardPendingImport,
     generateParagraphDraft,
     toggleParagraphVerified,
     handleMarkdownChange,
@@ -109,6 +115,7 @@ export default function CarbonChatbotPage() {
           onParagraphHeadingClick={handleParagraphHeadingClick}
           saveStatus={saveStatus}
           readOnly={!activeSessionAccess.canEdit}
+          onImportReport={importReportFile}
         />
 
         {/* Info: (20260714 - Emily) 進度浮窗僅 xl+ 顯示(小螢幕會遮擋編輯區,且工具列膠囊已有同數據);置左下讓出聊天鈕 */}
@@ -171,6 +178,16 @@ export default function CarbonChatbotPage() {
           </div>
         )}
       </CarbonChatWidget>
+
+      {/* Info: (20260716 - Emily) #56 匯入預覽卡:逐段勾選確認後才寫入 */}
+      {pendingImport && (
+        <ImportPreview
+          pendingImport={pendingImport}
+          onToggleItem={toggleImportItem}
+          onApply={applyPendingImport}
+          onDiscard={discardPendingImport}
+        />
+      )}
 
       {/* Info: (20260716 - Emily) #55 修訂對照卡:AI 修改既有段落必經人工確認 */}
       {pendingRevision && (

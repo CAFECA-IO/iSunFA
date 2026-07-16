@@ -2,7 +2,15 @@
 
 // Info: (20260713 - Tzuhan) 報告工具列:文件名 + 完成/查核雙軌進度膠囊 + 章節目錄開關
 
-import { FileText, ListTree, Check, Loader2, AlertTriangle } from "lucide-react";
+import { useRef } from "react";
+import {
+  FileText,
+  ListTree,
+  Check,
+  Loader2,
+  AlertTriangle,
+  FileUp,
+} from "lucide-react";
 import { IReportProgressStats } from "@/types/carbon_chatbot.types";
 import { ReportSaveStatus } from "@/hooks/use_carbon_chat";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -19,6 +27,8 @@ interface IReportToolbarProps {
   saveStatus?: ReportSaveStatus;
   // Info: (20260716 - Emily) #52 唯讀徽章(帳本 VIEWER 閱覽他人報告)
   readOnly?: boolean;
+  // Info: (20260716 - Emily) #56 匯入整份報告(pdf/md/txt);唯讀時隱藏
+  onImportReport?: (file: File) => void;
 }
 
 export function ReportToolbar({
@@ -30,8 +40,10 @@ export function ReportToolbar({
   statusColor = undefined,
   saveStatus = null,
   readOnly = false,
+  onImportReport = undefined,
 }: IReportToolbarProps) {
   const { t } = useTranslation();
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   return (
     <div className="flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-2.5">
@@ -64,6 +76,31 @@ export function ReportToolbar({
             <>
               <Loader2 size={11} className="animate-spin" />
               {t("carbon_chatbot.save_saving")}
+            </>
+          )}
+          {onImportReport && !readOnly && (
+            <>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept=".pdf,.md,.txt,application/pdf,text/markdown,text/plain"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) onImportReport(file);
+                  // Info: (20260716 - Emily) 清空 value,允許重選同一檔案
+                  e.target.value = "";
+                }}
+              />
+              <button
+                type="button"
+                title={t("carbon_chatbot.import_button")}
+                onClick={() => importInputRef.current?.click()}
+                className="flex shrink-0 items-center gap-1 rounded-full border border-gray-200 px-2.5 py-1 text-[11px] font-bold text-gray-500 transition-colors hover:border-orange-200 hover:text-[#ff5a00]"
+              >
+                <FileUp size={12} />
+                {t("carbon_chatbot.import_button")}
+              </button>
             </>
           )}
           {readOnly && (

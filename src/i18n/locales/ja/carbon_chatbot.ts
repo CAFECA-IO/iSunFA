@@ -94,6 +94,17 @@ export const carbonChatbot = {
   revision_discard: "破棄",
   revision_generating: "「{{section}}」の修正案を生成中…",
   revision_failed: "【修正失敗】修正案を生成できませんでした。後でもう一度お試しください。",
+  import_button: "レポートをインポート",
+  import_title: "レポートのインポート:{{name}}",
+  import_overwrite_warning: "既存の内容を上書きします",
+  import_unmapped:
+    "アウトラインに対応しない内容({{count}} 件。インポートされません)",
+  import_reset_note:
+    "インポートした段落の検証状態はリセットされます。{{activities}} 件の活動データは再照合されます",
+  import_apply: "選択をインポート({{count}})",
+  import_parsing: "「{{name}}」を解析中。完了後に段落ごとのプレビューを表示します…",
+  import_empty: "【インポート失敗】アウトラインに対応する内容がありません。",
+  import_failed: "【インポート失敗】解析に失敗しました。後でもう一度お試しください。",
   section_placeholder:
     "このセクションはまだ生成されていません。左側のチャットでカーボン会計士に作成したい旨を伝えると、内容がここにリアルタイムで表示されます。",
   report_status_draft:

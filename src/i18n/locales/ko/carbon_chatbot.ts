@@ -94,6 +94,16 @@ export const carbonChatbot = {
   revision_discard: "폐기",
   revision_generating: "「{{section}}」 수정 제안 생성 중…",
   revision_failed: "[수정 실패] 수정 제안을 생성할 수 없습니다. 나중에 다시 시도해 주세요.",
+  import_button: "보고서 가져오기",
+  import_title: "보고서 가져오기: {{name}}",
+  import_overwrite_warning: "기존 내용을 덮어씁니다",
+  import_unmapped: "목차에 대응하지 않는 내용({{count}}건, 가져오지 않음)",
+  import_reset_note:
+    "가져온 단락의 검증 상태는 초기화됩니다. 활동 데이터 {{activities}}건은 재대사됩니다",
+  import_apply: "선택 항목 가져오기({{count}})",
+  import_parsing: "「{{name}}」 분석 중. 완료 후 단락별 미리보기가 표시됩니다…",
+  import_empty: "[가져오기 실패] 목차에 대응하는 내용이 없습니다.",
+  import_failed: "[가져오기 실패] 보고서 분석에 실패했습니다. 나중에 다시 시도해 주세요.",
   section_placeholder:
     "이 섹션은 아직 생성되지 않았습니다. 왼쪽 대화에서 탄소 회계사에게 작성 의사를 알리면 내용이 실시간으로 여기에 표시됩니다.",
   report_status_draft:
