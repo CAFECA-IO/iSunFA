@@ -30,7 +30,7 @@ export const carbonChatbot = {
   system_unavailable: "抱歉，系統目前無法回應。",
   ai_quota_exceeded:
     "【AI 額度已達上限】短時間內請求過多，請稍候一分鐘後再試。",
-  ai_timeout: "【AI 回應逾時】系統處理時間過長,請再試一次。",
+  ai_timeout: "【AI 回應逾時】系統處理時間過長，請再試一次。",
   ai_name: "費思",
   platform_name: "環境智能平台",
   system_online: "系統連線中",
@@ -59,7 +59,8 @@ export const carbonChatbot = {
   save_failed_hint: "保存失敗:可能有其他分頁已更新草稿,請重整頁面取得最新版本",
   attach_file: "附加檔案",
   remove_attachment: "移除附件",
-  attachment_invalid_type: "不支援的檔案類型:{{name}}(僅接受 PNG、JPG、PDF、CSV、XLSX)",
+  attachment_invalid_type:
+    "不支援的檔案類型:{{name}}(僅接受 PNG、JPG、PDF、CSV、XLSX)",
   attachment_too_large: "檔案過大:{{name}}(單檔上限 {{max}})",
   attachment_limit: "一則訊息最多附加 {{max}} 個檔案",
   attachment_upload_failed: "附件上傳失敗:{{name}},請移除後重試",
