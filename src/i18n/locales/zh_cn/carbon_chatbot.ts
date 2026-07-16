@@ -61,10 +61,10 @@ export const carbonChatbot = {
   attach_file: "附加文件",
   remove_attachment: "移除附件",
   attachment_invalid_type:
-    "不支持的文件类型:{{name}}(仅接受 PNG、JPG、PDF、CSV、XLSX)",
-  attachment_too_large: "文件过大:{{name}}(单文件上限 {{max}})",
+    "不支持的文件类型：{{name}}(仅接受 PNG、JPG、PDF、CSV、XLSX)",
+  attachment_too_large: "文件过大：{{name}}(单文件上限 {{max}})",
   attachment_limit: "一条消息最多附加 {{max}} 个文件",
-  attachment_upload_failed: "附件上传失败:{{name}},请移除后重试",
+  attachment_upload_failed: "附件上传失败：{{name}},请移除后重试",
   draft_generate: "AI 撰写此段草稿",
   draft_generating: "草稿生成中...",
   draft_generating_section: "「{{section}}」草稿生成中,完成后将写入报告…",
@@ -72,7 +72,7 @@ export const carbonChatbot = {
     "【草稿生成失败】「{{section}}」段落草稿生成时发生问题，请稍后再试。",
   section_placeholder:
     "本段尚未生成。回到左侧对话告诉碳会计师你想撰写这一段,内容将实时出现在这里。",
-  report_status_draft: "报告状态:草稿(内容由 AI 逐段生成,经人工查核后方可定稿)",
+  report_status_draft: "报告状态：草稿(内容由 AI 逐段生成,经人工查核后方可定稿)",
   report_button: "报告",
   close_report: "关闭报告",
   close_chat: "关闭聊天窗口",
