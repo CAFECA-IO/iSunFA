@@ -4,6 +4,8 @@
 import { NextRequest } from "next/server";
 import { logger } from "@/lib/utils/logger";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
+import { enforceCarbonRateLimit } from "@/lib/rate_limiter";
+import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { chatroomRepo } from "@/repositories/chatroom.repo";
@@ -20,6 +22,13 @@ export async function GET(request: NextRequest) {
     if (!sessionUser) {
       return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
+
+    // Info: (20260716 - Emily) 限流(#6516):DeWT 驗證後、業務邏輯前 Fail Fast
+    const limited = enforceCarbonRateLimit(
+      sessionUser.address,
+      RateLimitBucketEnum.READ,
+    );
+    if (limited) return limited;
 
     // Info: (20260714 - Emily) 前綴即所有權:頻道格式 carbon-chat-{address}-{sessionId},只列本人頻道
     const channelPrefix = buildCarbonChatChannel(sessionUser.address, "");

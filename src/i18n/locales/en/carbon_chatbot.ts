@@ -31,6 +31,9 @@ export const carbonChatbot = {
   system_unavailable: "Sorry, the system is currently unavailable to respond.",
   ai_quota_exceeded:
     "[AI quota reached] Too many requests in a short time; please wait a minute and try again.",
+  ai_timeout: "[AI timeout] The request took too long; please try again.",
+  rate_limited:
+    "[Rate limited] You have hit the usage limit; please wait a moment and retry.",
   ai_name: "FAITH",
   platform_name: "ENVIRONMENTAL INTELLIGENCE PLATFORM",
   system_online: "SYSTEM ONLINE",
@@ -67,6 +70,11 @@ export const carbonChatbot = {
   attachment_limit: "Up to {{max}} attachments per message",
   attachment_upload_failed:
     "Attachment upload failed: {{name}}; remove it and try again",
+  attachment_type_mismatch:
+    "File content does not match its extension: {{name}} (rejected as disguised file)",
+  attachment_infected: "Malicious content detected: {{name}} (rejected)",
+  storage_quota_exceeded:
+    "Storage is full (5GB limit); please remove old attachments and retry",
   draft_generate: "Draft this section with AI",
   draft_generating: "Generating draft...",
   draft_generating_section:
@@ -81,4 +89,22 @@ export const carbonChatbot = {
   close_report: "Close report",
   close_chat: "Close chat window",
   progress_collapse: "Collapse progress widget",
+  activity_ledger_title: "Activity Data Ledger",
+  activity_ledger_pill: "{{count}} activity records",
+  activity_ledger_empty:
+    "No activity data yet. Provide figures like electricity or fuel usage in the chat, or upload bills, and they will be recorded here automatically.",
+  activity_ledger_collapse: "Collapse activity ledger",
+  activity_source: "Source: {{source}}",
+  activity_source_chat: "Source: conversation",
+  activity_co2e: "CO2e: {{value}} kg",
+  activity_pending_factor:
+    "⚠ Pending: no reliable factor or unit mismatch; no estimate will be fabricated",
+  activity_total_co2e: "Total emissions (reconciled)",
+  inventory_step_ORG_PROFILE: "Step: Organization profile (name/year)",
+  inventory_step_ORG_BOUNDARY: "Step: Organizational boundary",
+  inventory_step_EMISSION_SOURCES: "Step: Emission source identification",
+  inventory_step_ACTIVITY_DATA: "Step: Activity data collection",
+  inventory_step_EMISSION_FACTORS: "Step: Emission factor mapping",
+  inventory_step_REVIEW: "Step: Reconciliation & review",
+  inventory_step_COMPLETED: "Inventory data collection completed",
 };

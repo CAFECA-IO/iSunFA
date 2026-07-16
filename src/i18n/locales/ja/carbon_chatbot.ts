@@ -31,6 +31,10 @@ export const carbonChatbot = {
   system_unavailable: "申し訳ありません。現在システムは応答できません。",
   ai_quota_exceeded:
     "【AI 利用上限】短時間にリクエストが集中しました。1分ほど待って再試行してください。",
+  ai_timeout:
+    "【AI応答タイムアウト】処理に時間がかかりすぎました。もう一度お試しください。",
+  rate_limited:
+    "【操作が頻繁すぎます】利用上限に達しました。しばらくしてから再試行してください。",
   ai_name: "フェイス",
   platform_name: "環境インテリジェンスプラットフォーム",
   system_online: "システムオンライン",
@@ -67,6 +71,11 @@ export const carbonChatbot = {
   attachment_limit: "1メッセージに添付できるのは最大 {{max}} 件です",
   attachment_upload_failed:
     "添付ファイルのアップロードに失敗しました:{{name}}。削除して再試行してください",
+  attachment_type_mismatch:
+    "ファイル内容が拡張子と一致しません:{{name}}(偽装ファイルの疑いのため拒否)",
+  attachment_infected: "悪意のあるコンテンツを検出:{{name}}(拒否しました)",
+  storage_quota_exceeded:
+    "ストレージが満杯です(上限 5GB)。古い添付ファイルを削除して再試行してください",
   draft_generate: "AI でこのセクションの下書きを作成",
   draft_generating: "下書きを生成中...",
   draft_generating_section:
@@ -81,4 +90,22 @@ export const carbonChatbot = {
   close_report: "レポートを閉じる",
   close_chat: "チャットウィンドウを閉じる",
   progress_collapse: "進捗ウィジェットを折りたたむ",
+  activity_ledger_title: "活動データ台帳",
+  activity_ledger_pill: "活動データ {{count}} 件",
+  activity_ledger_empty:
+    "活動データはまだありません。チャットで電力使用量や燃料消費量を伝えるか、請求書をアップロードすると自動記録されます。",
+  activity_ledger_collapse: "活動データを折りたたむ",
+  activity_source: "出典:{{source}}",
+  activity_source_chat: "出典:会話",
+  activity_co2e: "CO2e:{{value}} kg",
+  activity_pending_factor:
+    "⚠ 保留:信頼できる係数がないか単位不一致のため推定しません",
+  activity_total_co2e: "総排出量(照合済み)",
+  inventory_step_ORG_PROFILE: "ステップ:企業基本情報(名称/年度)",
+  inventory_step_ORG_BOUNDARY: "ステップ:組織境界の設定",
+  inventory_step_EMISSION_SOURCES: "ステップ:排出源の特定",
+  inventory_step_ACTIVITY_DATA: "ステップ:活動データ収集",
+  inventory_step_EMISSION_FACTORS: "ステップ:排出係数の対応付け",
+  inventory_step_REVIEW: "ステップ:照合とレビュー",
+  inventory_step_COMPLETED: "インベントリデータ収集完了",
 };

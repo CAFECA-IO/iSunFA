@@ -701,6 +701,36 @@ export const API_ERRORS = {
     message: "AI service quota exceeded; please retry shortly",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
+  // Info: (20260716 - Emily) 同步路徑 LLM 逾時(#6515):後端不得無限期掛著;與一般錯誤區分,前端提示重試
+  IS_LLM_TIMEOUT: {
+    code: "IS000012",
+    message: "AI service timed out; please retry",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
+  // Info: (20260716 - Emily) API 限流(#6516):IS000012 預留給 #6515 的 IS_LLM_TIMEOUT,本碼取 13 避免撞號
+  IS_RATE_LIMITED: {
+    code: "IS000013",
+    message: "Too many requests; please slow down and retry",
+    status: ApiCode.RATE_LIMIT,
+  } as IErrorDef,
+  // Info: (20260716 - Emily) 附件安全(#6517): 檔頭與宣告 MIME 不符(疑似偽裝檔)
+  IS_ATTACHMENT_TYPE_MISMATCH: {
+    code: "IS000014",
+    message: "File content does not match its declared type",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+  // Info: (20260716 - Emily) 附件安全(#6517): 掃毒命中
+  IS_ATTACHMENT_INFECTED: {
+    code: "IS000015",
+    message: "File rejected by malware scan",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+  // Info: (20260716 - Emily) 附件安全(#6517): 儲存配額耗盡(每 address 5GB 常數)
+  IS_STORAGE_QUOTA_EXCEEDED: {
+    code: "IS000016",
+    message: "Storage quota exceeded",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
   IS_UNKNOWN: {
     code: "IS000099",
     message: "Internal Server Error",
