@@ -35,7 +35,7 @@ interface ILariaMetadata {
   sha256?: string;
 }
 
-// Info: (20251028 - Luphia) 檢查檔案是否存在;Info: (20260715 - Emily) 改為 Fail Fast,失敗即 throw
+// Info: (20251028 - Luphia) 檢查檔案是否存在，失敗即 throw
 async function validateFileExists(filePath: string): Promise<Stats> {
   const stats: Stats = await fs.stat(filePath);
   if (!stats.isFile() || stats.size === 0) {
