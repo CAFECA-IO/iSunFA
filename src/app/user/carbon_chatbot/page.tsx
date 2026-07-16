@@ -14,6 +14,7 @@ import { ChatProgressWidget } from "@/components/carbon_chatbot/chat_progress_wi
 import { ActivityLedger } from "@/components/carbon_chatbot/activity_ledger";
 import { CarbonChatWidget } from "@/components/carbon_chatbot/carbon_chat_widget";
 import CarbonReportPreview from "@/components/carbon_chatbot/carbon_report_preview";
+import { RevisionPreview } from "@/components/carbon_chatbot/revision_preview";
 
 export default function CarbonChatbotPage() {
   const { t } = useTranslation();
@@ -50,6 +51,9 @@ export default function CarbonChatbotPage() {
     focusMessageForParagraph,
     draftingParagraphId,
     draftNotice,
+    pendingRevision,
+    applyPendingRevision,
+    discardPendingRevision,
     generateParagraphDraft,
     toggleParagraphVerified,
     handleMarkdownChange,
@@ -167,6 +171,15 @@ export default function CarbonChatbotPage() {
           </div>
         )}
       </CarbonChatWidget>
+
+      {/* Info: (20260716 - Emily) #55 修訂對照卡:AI 修改既有段落必經人工確認 */}
+      {pendingRevision && (
+        <RevisionPreview
+          revision={pendingRevision}
+          onApply={applyPendingRevision}
+          onDiscard={discardPendingRevision}
+        />
+      )}
     </div>
   );
 }

@@ -86,6 +86,14 @@ export const carbonChatbot = {
     "「{{section}}」の下書きを生成中です。完成後レポートに反映されます…",
   draft_failed:
     "【下書き生成失敗】「{{section}}」セクションの下書き生成中に問題が発生しました。後ほどお試しください。",
+  revision_title: "修正案:{{section}}",
+  revision_original: "原文",
+  revision_revised: "修正後",
+  revision_cited_facts: "引用した事実",
+  revision_apply: "修正を適用",
+  revision_discard: "破棄",
+  revision_generating: "「{{section}}」の修正案を生成中…",
+  revision_failed: "【修正失敗】修正案を生成できませんでした。後でもう一度お試しください。",
   section_placeholder:
     "このセクションはまだ生成されていません。左側のチャットでカーボン会計士に作成したい旨を伝えると、内容がここにリアルタイムで表示されます。",
   report_status_draft:

@@ -86,6 +86,14 @@ export const carbonChatbot = {
     "「{{section}}」 초안 생성 중입니다. 완료되면 보고서에 반영됩니다…",
   draft_failed:
     "[초안 생성 실패] 「{{section}}」 섹션 초안 생성 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+  revision_title: "수정 제안: {{section}}",
+  revision_original: "원문",
+  revision_revised: "수정 후",
+  revision_cited_facts: "인용 사실",
+  revision_apply: "수정 적용",
+  revision_discard: "폐기",
+  revision_generating: "「{{section}}」 수정 제안 생성 중…",
+  revision_failed: "[수정 실패] 수정 제안을 생성할 수 없습니다. 나중에 다시 시도해 주세요.",
   section_placeholder:
     "이 섹션은 아직 생성되지 않았습니다. 왼쪽 대화에서 탄소 회계사에게 작성 의사를 알리면 내용이 실시간으로 여기에 표시됩니다.",
   report_status_draft:

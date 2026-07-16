@@ -20,7 +20,11 @@ import {
   CARBON_REPORT_OUTLINE,
   CARBON_REPORT_SECTION_COUNT,
 } from "@/constants/carbon_report_outline";
-import { IParagraphDraft } from "@/interfaces/carbon_paragraph_draft";
+import {
+  IParagraphDraft,
+  IContextFact,
+} from "@/interfaces/carbon_paragraph_draft";
+import { IPendingRevision } from "@/components/carbon_chatbot/revision_preview";
 import {
   createDefaultSessions,
   createChatSession,
@@ -118,6 +122,9 @@ export const useCarbonChat = () => {
   );
   // Info: (20260714 - Emily) 草稿狀態列(loading/error);error 自動清除
   const [draftNotice, setDraftNotice] = useState<IDraftNotice | null>(null);
+  // Info: (20260716 - Emily) #55 待確認修訂(對照卡):null = 無;確認後才寫入報告
+  const [pendingRevision, setPendingRevision] =
+    useState<IPendingRevision | null>(null);
   const draftNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -642,6 +649,64 @@ export const useCarbonChat = () => {
     [user?.address, activeSessionId],
   );
 
+  // Info: (20260716 - Emily) #55 發起段落修訂:附件事實 + 使用者指示 + 既有原文 → 修訂稿(對照卡確認制)
+  const requestParagraphRevision = useCallback(
+    async (
+      paragraphId: string,
+      instruction: string,
+      facts: IContextFact[],
+    ) => {
+      const paragraph = sessionsData[
+        activeSessionId
+      ]?.reportData?.paragraphs?.find((p) => p.id === paragraphId);
+      // Info: (20260716 - Emily) 無既有內容不可修訂(空白段落走草稿生成路徑)
+      if (!paragraph?.content) return;
+
+      const section = CARBON_REPORT_OUTLINE.find((o) => o.id === paragraphId);
+      setDraftNotice({
+        type: "loading",
+        text: t("carbon_chatbot.revision_generating", {
+          section: paragraph.title,
+        }),
+      });
+      try {
+        const res = await request<{
+          payload: { content: string; citedFacts: string[] } | null;
+        }>("/api/v1/chat/carbon/draft", {
+          method: "POST",
+          body: JSON.stringify({
+            paragraphId,
+            conversationContext: [],
+            contextFacts: facts,
+            language,
+            existingContent: paragraph.content,
+            instruction,
+          }),
+        });
+        setDraftNotice(null);
+        if (!res.payload) return;
+        setPendingRevision({
+          paragraphId,
+          title: section ? `${section.code} ${section.title}` : paragraph.title,
+          original: paragraph.content,
+          revised: res.payload.content,
+          citedFacts: res.payload.citedFacts ?? [],
+        });
+      } catch (error) {
+        console.error("[carbon-chat] paragraph revision failed:", error);
+        setDraftNotice({
+          type: "error",
+          text: t("carbon_chatbot.revision_failed"),
+        });
+        draftNoticeTimerRef.current = setTimeout(() => {
+          draftNoticeTimerRef.current = null;
+          setDraftNotice(null);
+        }, CARBON_DRAFT_NOTICE_DISMISS_MS);
+      }
+    },
+    [sessionsData, activeSessionId, language, t],
+  );
+
   // Info: (20260714 - Emily) sessions 索引持久化(id/標題/建立時間;訊息內容已由 DB 密文保存,不重複入本機)
   useEffect(() => {
     if (!user?.address || !sessionsIndexLoadedRef.current) return;
@@ -666,6 +731,7 @@ export const useCarbonChat = () => {
     setSaveStatus(null);
     setIsError(false);
     setDraftNotice(null);
+    setPendingRevision(null);
     pendingDraftParagraphIdRef.current = null;
   }, []);
 
@@ -696,6 +762,36 @@ export const useCarbonChat = () => {
     }, CARBON_CHAT_HIGHLIGHT_DURATION_MS);
   }, []);
 
+  // Info: (20260716 - Emily) #55 套用修訂:寫入段落(取消查核)並高亮;人工 gate 的唯一落地點
+  const applyPendingRevision = useCallback(() => {
+    if (!pendingRevision) return;
+    const { paragraphId, revised } = pendingRevision;
+    setSessionsData((prev) => {
+      const session = prev[activeSessionId];
+      if (!session?.reportData?.paragraphs) return prev;
+      return {
+        ...prev,
+        [activeSessionId]: {
+          ...session,
+          reportData: {
+            ...session.reportData,
+            paragraphs: session.reportData.paragraphs.map((p) =>
+              p.id === paragraphId
+                ? { ...p, content: revised, isVerified: false }
+                : p,
+            ),
+          },
+        },
+      };
+    });
+    setPendingRevision(null);
+    jumpToReportParagraph(paragraphId);
+  }, [pendingRevision, activeSessionId, jumpToReportParagraph]);
+
+  const discardPendingRevision = useCallback(() => {
+    setPendingRevision(null);
+  }, []);
+
   // Info: (20260714 - Emily) 將草稿寫入 reportData:標記完成、重置查核(單一寫入點,對話生成與附件管線共用)
   // Info: (20260714 - Emily) content 只存內文;`### {標題}` 標頭由報告預覽組稿時產生,格式變更不需資料遷移
   // Info: (20260714 - Emily) onlyIfEmpty:歷史還原補寫時只填空白段落,避免覆蓋使用者後續的編輯
@@ -707,8 +803,8 @@ export const useCarbonChat = () => {
       if (!section) return;
 
       setSessionsData((prev) => {
-        const updatedSession = { ...prev[activeSessionId] };
-        const reportData = updatedSession.reportData;
+        const session = prev[activeSessionId];
+        const reportData = session?.reportData;
         if (!reportData?.paragraphs) return prev;
 
         const newParagraphs = reportData.paragraphs.map((p) => {
@@ -723,11 +819,14 @@ export const useCarbonChat = () => {
           };
         });
 
-        updatedSession.reportData = {
-          ...reportData,
-          paragraphs: newParagraphs,
+        // Info: (20260716 - Emily) 純 immutable 構造(react-hooks/immutability):不對 spread 副本再賦值
+        return {
+          ...prev,
+          [activeSessionId]: {
+            ...session,
+            reportData: { ...reportData, paragraphs: newParagraphs },
+          },
         };
-        return { ...prev, [activeSessionId]: updatedSession };
       });
     },
     [activeSessionId],
@@ -1378,6 +1477,8 @@ export const useCarbonChat = () => {
           envelopes?: IEciesEnvelope[];
           extraction?: IInventoryExtraction | null;
           attachmentActivities?: IActivityRecord[];
+          revisionParagraphId?: string | null;
+          attachmentFacts?: IContextFact[];
         } | null;
       }>("/api/v1/chat/carbon", {
         method: "POST",
@@ -1417,6 +1518,15 @@ export const useCarbonChat = () => {
         for (const envelope of payload.envelopes) {
           await decryptAndAppendEnvelope(envelope);
         }
+      }
+
+      // Info: (20260716 - Emily) #55 修訂請求:以使用者原話為指示、附件事實為佐證,產生對照卡
+      if (payload?.revisionParagraphId) {
+        void requestParagraphRevision(
+          payload.revisionParagraphId,
+          userMessage.text,
+          payload.attachmentFacts ?? [],
+        );
       }
 
       // Info: (20260712 - Luphia) 啟動等待逾時，避免「已發佈但未收到」時卡在 typing(回覆已回帶時為 no-op)
@@ -1460,6 +1570,7 @@ export const useCarbonChat = () => {
     markSessionBusy,
     applyInventoryExtraction,
     inventoryStates,
+    requestParagraphRevision,
   ]);
 
   // Info: (20260712 - Luphia) 進入 channel 的一次性手勢：解鎖金鑰(PRF) → 請後端做前置作業並經 Centrifugo 回傳招呼詞
@@ -1618,6 +1729,10 @@ export const useCarbonChat = () => {
     focusMessageForParagraph,
     draftingParagraphId,
     draftNotice,
+    // Info: (20260716 - Emily) #55 修訂對照卡(確認/捨棄)
+    pendingRevision,
+    applyPendingRevision,
+    discardPendingRevision,
     generateParagraphDraft,
     toggleParagraphVerified,
     handleMarkdownChange,

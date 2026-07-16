@@ -85,6 +85,14 @@ export const carbonChatbot = {
     "Drafting 「{{section}}」 — it will be written to the report when ready…",
   draft_failed:
     "[Draft failed] Something went wrong while drafting 「{{section}}」. Please try again later.",
+  revision_title: "Revision suggestion: {{section}}",
+  revision_original: "Original",
+  revision_revised: "Revised",
+  revision_cited_facts: "Cited facts",
+  revision_apply: "Apply revision",
+  revision_discard: "Discard",
+  revision_generating: "Generating revision for 「{{section}}」…",
+  revision_failed: "[Revision failed] Could not generate a revision; please retry later.",
   section_placeholder:
     "This section has not been generated yet. Tell the Carbon Accountant in the chat that you want to work on it, and the content will appear here in real time.",
   report_status_draft:

@@ -75,6 +75,14 @@ export const carbonChatbot = {
   draft_generating_section: "「{{section}}」草稿生成中,完成后将写入报告…",
   draft_failed:
     "【草稿生成失败】「{{section}}」段落草稿生成时发生问题，请稍后再试。",
+  revision_title: "修订建议:{{section}}",
+  revision_original: "原文",
+  revision_revised: "修订后",
+  revision_cited_facts: "引用事实",
+  revision_apply: "应用修订",
+  revision_discard: "舍弃",
+  revision_generating: "「{{section}}」修订建议生成中…",
+  revision_failed: "【修订失败】无法生成修订建议,请稍后再试。",
   section_placeholder:
     "本段尚未生成。回到左侧对话告诉碳会计师你想撰写这一段,内容将实时出现在这里。",
   report_status_draft: "报告状态:草稿(内容由 AI 逐段生成,经人工查核后方可定稿)",
