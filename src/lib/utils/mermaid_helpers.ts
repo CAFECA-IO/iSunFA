@@ -1396,7 +1396,7 @@ const formatSankeyCsvField = (field: string): string => {
 const buildSankeyLine = (
   source: string,
   target: string,
-  value: number,
+  value: number | string,
 ): string =>
   `${formatSankeyCsvField(source)},${formatSankeyCsvField(target)},${value}`;
 
@@ -1468,10 +1468,16 @@ export interface ISankeyAlias {
 const hasNonAsciiForSankey = (name: string): boolean => /[^ -~]/.test(name);
 
 /**
- * Info: (20260716 - Julian) 將文字內容中的 XML 特殊字元跳脫，供還原進 SVG text 使用
+ * Info: (20260716 - Julian) 將文字內容中的 XML 特殊字元跳脫，供還原進 SVG 使用。
+ * 一併跳脫引號：佔位可能落在屬性值（aria-label／title）內，原名若含引號不致破壞屬性。
  */
 const escapeXmlText = (text: string): string =>
-  text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 
 /**
  * Info: (20260716 - Julian)
@@ -1513,10 +1519,11 @@ export const aliasNonAsciiSankeyNodes = (
   const lines = chartStr.split("\n").map((line) => {
     const fields = getSankeyLineFields(line);
     if (!fields) return line;
+    // Info: (20260716 - Julian) 僅替換節點名稱，權重值原樣保留（避免 parseFloat 改動精度／格式）
     return buildSankeyLine(
       aliasName(fields[0]),
       aliasName(fields[1]),
-      parseFloat(fields[2]),
+      fields[2],
     );
   });
 
