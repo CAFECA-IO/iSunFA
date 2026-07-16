@@ -7,6 +7,7 @@ import {
   ANALYSIS_BASE_COSTS,
   SUBSCRIPTION_PLAN_CREDITS,
 } from "@/constants/price";
+import { CARBON_STORAGE_QUOTA_GB_BY_PLAN } from "@/constants/carbon_chatbot";
 import { usePricing } from "@/contexts/pricing_context";
 import { useAuth } from "@/contexts/auth_context";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -148,6 +149,9 @@ export default function SubscriptionContent() {
                 }),
                 tooltip: t("pricing.plans.free.features.ai_overage_tooltip"),
               },
+              t("pricing.plans.free.features.storage", {
+                gb: CARBON_STORAGE_QUOTA_GB_BY_PLAN.free,
+              }),
             ]}
             onSelect={showComingSoon}
           />
@@ -221,6 +225,9 @@ export default function SubscriptionContent() {
               },
               t("pricing.plans.team.features.analytics"),
               t("pricing.plans.team.features.support"),
+              t("pricing.plans.team.features.storage", {
+                gb: CARBON_STORAGE_QUOTA_GB_BY_PLAN.team,
+              }),
             ]}
           />
           <PricingCard
@@ -307,6 +314,9 @@ export default function SubscriptionContent() {
                   "pricing.plans.business.features.custom_tools_tooltip",
                 ),
               },
+              t("pricing.plans.business.features.storage", {
+                gb: CARBON_STORAGE_QUOTA_GB_BY_PLAN.business,
+              }),
             ]}
           />
         </div>

@@ -31,6 +31,10 @@ export const carbonChatbot = {
   system_unavailable: "죄송합니다. 현재 시스템이 응답할 수 없습니다.",
   ai_quota_exceeded:
     "[AI 사용량 한도 도달] 짧은 시간에 요청이 많았습니다. 1분 후 다시 시도해 주세요.",
+  ai_timeout:
+    "[AI 응답 시간 초과] 처리 시간이 너무 깁니다. 다시 시도해 주세요.",
+  rate_limited:
+    "[요청 과다] 사용 한도에 도달했습니다. 잠시 후 다시 시도해 주세요.",
   ai_name: "페이스",
   platform_name: "환경 인텔리전스 플랫폼",
   system_online: "시스템 온라인",
@@ -67,6 +71,11 @@ export const carbonChatbot = {
   attachment_limit: "메시지당 최대 {{max}}개 첨부 가능",
   attachment_upload_failed:
     "첨부파일 업로드 실패: {{name}}. 제거 후 다시 시도해 주세요",
+  attachment_type_mismatch:
+    "파일 내용이 확장자와 일치하지 않습니다: {{name}}(위장 파일 의심, 거부됨)",
+  attachment_infected: "악성 콘텐츠 감지: {{name}}(거부됨)",
+  storage_quota_exceeded:
+    "저장 공간이 가득 찼습니다(상한 5GB). 오래된 첨부 파일을 삭제 후 다시 시도해 주세요",
   draft_generate: "AI로 이 섹션 초안 작성",
   draft_generating: "초안 생성 중...",
   draft_generating_section:
@@ -81,4 +90,22 @@ export const carbonChatbot = {
   close_report: "보고서 닫기",
   close_chat: "채팅 창 닫기",
   progress_collapse: "진행률 위젯 접기",
+  activity_ledger_title: "활동 데이터 장부",
+  activity_ledger_pill: "활동 데이터 {{count}}건",
+  activity_ledger_empty:
+    "활동 데이터가 아직 없습니다. 채팅에서 전력 사용량, 연료 사용량 등을 알려주거나 청구서를 업로드하면 자동으로 기록됩니다.",
+  activity_ledger_collapse: "활동 데이터 접기",
+  activity_source: "출처: {{source}}",
+  activity_source_chat: "출처: 대화",
+  activity_co2e: "CO2e: {{value}} kg",
+  activity_pending_factor:
+    "⚠ 보류: 신뢰할 수 있는 계수가 없거나 단위 불일치로 추정하지 않습니다",
+  activity_total_co2e: "총 배출량(대사 완료)",
+  inventory_step_ORG_PROFILE: "단계: 기업 기본 정보(명칭/연도)",
+  inventory_step_ORG_BOUNDARY: "단계: 조직 경계 설정",
+  inventory_step_EMISSION_SOURCES: "단계: 배출원 식별",
+  inventory_step_ACTIVITY_DATA: "단계: 활동 데이터 수집",
+  inventory_step_EMISSION_FACTORS: "단계: 배출 계수 매핑",
+  inventory_step_REVIEW: "단계: 대사 및 검토",
+  inventory_step_COMPLETED: "인벤토리 데이터 수집 완료",
 };

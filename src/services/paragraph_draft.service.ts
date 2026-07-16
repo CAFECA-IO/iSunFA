@@ -7,9 +7,15 @@ import { logger } from "@/lib/utils/logger";
 import {
   ChatService,
   isLlmQuotaError,
+  isLlmTimeoutError,
   SchemaType,
   type Schema,
 } from "@/services/chat.service";
+import {
+  LLM_SYNC_TIMEOUT_MS,
+  LLM_TEMPERATURE,
+  LlmTaskKeyEnum,
+} from "@/constants/llm";
 import { ApiError, API_ERRORS } from "@/lib/utils/error_dictionary";
 import {
   CARBON_REPORT_OUTLINE,
@@ -71,19 +77,24 @@ export class ParagraphDraftService {
     let raw: string;
     try {
       // Info: (20260714 - Emily) 資料萃取/撰寫任務 Temperature = 0,確保可重現
+      // Info: (20260716 - Emily) 同步路徑防護(#6515):45s 逾時 + 用量記錄
       raw = await this.getChatService().generateRaw(
         prompt,
         DRAFT_RESPONSE_SCHEMA,
-        { temperature: 0 },
+        {
+          temperature: LLM_TEMPERATURE.EXTRACTION,
+          timeoutMs: LLM_SYNC_TIMEOUT_MS,
+          taskKey: LlmTaskKeyEnum.PARAGRAPH_DRAFT,
+        },
       );
     } catch (error) {
-      // Info: (20260714 - Emily) 包裝 LLM 原始錯誤,不讓 Gemini 錯誤細節噴到前端;額度耗盡回專屬錯誤碼
+      // Info: (20260714 - Emily) 包裝 LLM 原始錯誤,不讓 Gemini 錯誤細節噴到前端;額度耗盡/逾時回專屬錯誤碼
       logger.error(
         `[ParagraphDraftService] LLM call failed: ${JSON.stringify(error)}`,
       );
-      const def = isLlmQuotaError(error)
-        ? API_ERRORS.IS_LLM_QUOTA_EXCEEDED
-        : API_ERRORS.IS_PARAGRAPH_DRAFT_FAILED;
+      let def = API_ERRORS.IS_PARAGRAPH_DRAFT_FAILED;
+      if (isLlmQuotaError(error)) def = API_ERRORS.IS_LLM_QUOTA_EXCEEDED;
+      else if (isLlmTimeoutError(error)) def = API_ERRORS.IS_LLM_TIMEOUT;
       throw new ApiError(def.code, def.message, def.status);
     }
 

@@ -1,5 +1,5 @@
-// Info: (20260714 - Emily) 報告草稿端點(E2EE 密文):GET 取回、PUT 保存(version 樂觀鎖)
-// Info: (20260714 - Emily) 純端口:授權 → 頻道所有權 → 驗證 → Service;明文只存在於前端
+// Info: (20260716 - Emily) 盤查狀態帳本端點(#6518,E2EE 密文):GET 取回、PUT 保存(version 樂觀鎖)
+// Info: (20260716 - Emily) 純端口: 授權 → 限流 → 頻道所有權 → 驗證 → Service；明文只存在於前端
 
 import { NextRequest } from "next/server";
 import { logger } from "@/lib/utils/logger";
@@ -8,8 +8,8 @@ import { enforceCarbonRateLimit } from "@/lib/rate_limiter";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
-import { CarbonReportDraftPutSchema } from "@/validators";
-import { CarbonReportDraftService } from "@/services/carbon_report_draft.service";
+import { CarbonInventoryStatePutSchema } from "@/validators";
+import { CarbonInventoryStateService } from "@/services/carbon_inventory_state.service";
 import { isCarbonChatChannelOwnedBy } from "@/constants/carbon_chatbot";
 
 export async function GET(request: NextRequest) {
@@ -21,7 +21,6 @@ export async function GET(request: NextRequest) {
       return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
-    // Info: (20260716 - Emily) 限流(#6516):DeWT 驗證後、業務邏輯前 Fail Fast
     const limited = enforceCarbonRateLimit(
       sessionUser.address,
       RateLimitBucketEnum.READ,
@@ -36,9 +35,9 @@ export async function GET(request: NextRequest) {
       return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
     }
 
-    const service = new CarbonReportDraftService();
-    const draft = await service.getDraft(channel);
-    return jsonOk({ draft });
+    const service = new CarbonInventoryStateService();
+    const state = await service.getState(channel);
+    return jsonOk({ state });
   } catch (error) {
     if (error instanceof ApiError) {
       return jsonFail({
@@ -48,7 +47,7 @@ export async function GET(request: NextRequest) {
       });
     }
     logger.error(
-      `[API] /chat/carbon/report GET error: ${JSON.stringify(error)}`,
+      `[API] /chat/carbon/inventory GET error: ${JSON.stringify(error)}`,
     );
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
@@ -63,7 +62,6 @@ export async function PUT(request: NextRequest) {
       return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
-    // Info: (20260716 - Emily) 限流(#6516):DeWT 驗證後、業務邏輯前 Fail Fast
     const limited = enforceCarbonRateLimit(
       sessionUser.address,
       RateLimitBucketEnum.SAVE,
@@ -77,7 +75,7 @@ export async function PUT(request: NextRequest) {
       return jsonFail(API_ERRORS.VL_INVALID_JSON);
     }
 
-    const parsed = CarbonReportDraftPutSchema.safeParse(rawBody);
+    const parsed = CarbonInventoryStatePutSchema.safeParse(rawBody);
     if (!parsed.success) {
       return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
     }
@@ -85,8 +83,8 @@ export async function PUT(request: NextRequest) {
       return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
     }
 
-    const service = new CarbonReportDraftService();
-    const result = await service.saveDraft(parsed.data);
+    const service = new CarbonInventoryStateService();
+    const result = await service.saveState(parsed.data);
     return jsonOk(result);
   } catch (error) {
     if (error instanceof ApiError) {
@@ -97,7 +95,7 @@ export async function PUT(request: NextRequest) {
       });
     }
     logger.error(
-      `[API] /chat/carbon/report PUT error: ${JSON.stringify(error)}`,
+      `[API] /chat/carbon/inventory PUT error: ${JSON.stringify(error)}`,
     );
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }

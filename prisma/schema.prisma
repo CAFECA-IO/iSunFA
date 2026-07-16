@@ -1148,8 +1148,15 @@ model CarbonInventoryState {
   chatroomId String   @unique @map("chatroom_id")
   chatroom   Chatroom @relation(fields: [chatroomId], references: [id])
 
-  // Info: (20260712 - Luphia) ICarbonInventoryState 的序列化內容
-  state Json
+  // Info: (20260716 - Emily) #6518 改密文 envelope(比照 CarbonReportDraft):
+  // Info: (20260716 - Emily) 原明文 state Json 違反本模組 E2EE 慣例;table 無資料,無遷移負擔
+  encryptedContent String @map("encrypted_content") @db.Text
+
+  ephemeralPublicKey String? @map("ephemeral_public_key")
+  keyDerivationHint  String  @map("key_derivation_hint")
+  algorithm          String  @default("ECIES-secp256k1-AES-256-GCM")
+
+  recipientPublicKey String @map("recipient_public_key")
 
   // Info: (20260712 - Luphia) 樂觀鎖／稽核用版本號
   version Int @default(0)
@@ -1216,3 +1223,13 @@ model UserEncryptionKey {
   @@map("user_encryption_key")
 }
 
+// Info: (20260716 - Emily) 每使用者附件儲存用量(#6517):配額檢查 O(1) 讀;bytes 用 BigInt(精度規範)
+model UserStorageUsage {
+  id        Int      @id @default(autoincrement())
+  address   String   @unique
+  usedBytes BigInt   @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_storage_usage")
+}
