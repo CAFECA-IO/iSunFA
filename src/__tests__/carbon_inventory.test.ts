@@ -35,7 +35,7 @@ describe("mergeInventoryExtraction", () => {
     expect(m1.addedCount).toBe(1);
     expect(m1.state.activities[0].source).toBe("電費單.pdf");
 
-    // Info: (20260716 - Emily) 同排放源+數量+單位+範疇 = 同一筆;重傳不重複記帳
+    // Info: (20260716 - Emily) 同排放源+數量+單位+範疇 = 同一筆；重傳不重複記帳
     const m2 = mergeInventoryExtraction(m1.state, {
       activities: [electricity()],
     });
@@ -92,7 +92,7 @@ describe("computeInventoryStep (deterministic state machine)", () => {
     );
     expect(computeInventoryStep(s)).toBe(CarbonInventoryStep.EMISSION_FACTORS);
 
-    // Info: (20260716 - Emily) 全部有係數 → REVIEW(REVIEW 出口由 #6520 質量守恆裁決,現階段不可能 COMPLETED)
+    // Info: (20260716 - Emily) 全部有係數 → REVIEW(REVIEW 出口由 #6520 質量守恆裁決，現階段不可能 COMPLETED)
     s.activities = s.activities.map((a) => ({ ...a, emissionFactor: "0.495" }));
     expect(computeInventoryStep(s)).toBe(CarbonInventoryStep.REVIEW);
   });

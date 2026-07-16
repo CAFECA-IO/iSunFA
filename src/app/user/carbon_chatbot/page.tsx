@@ -109,7 +109,7 @@ export default function CarbonChatbotPage() {
           positionClassName="left-10 bottom-10 hidden xl:flex"
         />
 
-        {/* Info: (20260716 - Emily) #6518 活動數據記錄卡:預設收合藥丸,疊於進度浮窗上方(xl+) */}
+        {/* Info: (20260716 - Emily) #6518 活動數據記錄卡: 預設收合藥丸，疊於進度浮窗上方(xl+) */}
         <ActivityLedger
           state={inventoryState}
           positionClassName="left-10 bottom-24 hidden xl:flex"

@@ -100,7 +100,7 @@ export interface IActivityRecord {
   source?: string;
 }
 
-// Info: (20260716 - Emily) #6518 LLM 事實萃取結果(已經 Zod + 白名單裁決;year 由 TS 決定性轉數字)
+// Info: (20260716 - Emily) #6518 LLM 事實萃取結果(已經 Zod + 白名單裁決；year 由 TS 決定性轉數字)
 export interface IInventoryExtraction {
   company?: string;
   year?: number;

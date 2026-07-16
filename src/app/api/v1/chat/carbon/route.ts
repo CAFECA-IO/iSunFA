@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
         : history;
 
     // Info: (20260714 - Emily) 結構化回覆:對話內容 + 段落完成訊號(readyParagraphId 已經白名單裁決)
-    // Info: (20260716 - Emily) #6518:extraction 為已裁決的事實萃取,回帶前端合併進盤查狀態帳本
+    // Info: (20260716 - Emily) #6518:extraction 為已裁決的事實萃取，回帶前端合併進盤查狀態帳本
     const { reply, readyParagraphId, extraction } =
       await chatService.generateCarbonChatbotStructuredResponse(
         historyForAi,
@@ -238,7 +238,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return jsonOk({ reply, drafts, degraded, extraction, attachmentActivities });
+    return jsonOk({
+      reply,
+      drafts,
+      degraded,
+      extraction,
+      attachmentActivities,
+    });
   } catch (error) {
     logger.error(`[API] /chat/carbon error: ${JSON.stringify(error)}`);
     // Info: (20260714 - Emily) 額度耗盡回專屬錯誤碼,前端提示稍候重試(與一般系統錯誤區分)

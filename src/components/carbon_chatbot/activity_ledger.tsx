@@ -1,6 +1,6 @@
-// Info: (20260716 - Emily) 活動數據記錄卡(#6518):顯示狀態帳本中的活動數據與盤查步驟
-// Info: (20260716 - Emily) 零捏造溯源:每筆顯示出處(訊息片段/附件檔名);數值為原樣字串,不做任何格式化運算
-// Info: (20260716 - Emily) 預設收合為藥丸(RWD 教訓:浮窗不可遮擋報告視線)
+// Info: (20260716 - Emily) 活動數據記錄卡(#6518): 顯示狀態帳本中的活動數據與盤查步驟
+// Info: (20260716 - Emily) 零捏造溯源: 每筆顯示出處(訊息片段/附件檔名)；數值為原樣字串，不做任何格式化運算
+// Info: (20260716 - Emily) 預設收合為藥丸(RWD 教訓: 浮窗不可遮擋報告視線)
 
 import { useState } from "react";
 import { ClipboardList, Minus } from "lucide-react";
@@ -54,7 +54,7 @@ export function ActivityLedger({
         </button>
       </div>
 
-      {/* Info: (20260716 - Emily) 步驟真值來自決定性狀態機(computeInventoryStep),非 LLM 判斷 */}
+      {/* Info: (20260716 - Emily) 步驟真值來自決定性狀態機(computeInventoryStep)，非 LLM 判斷 */}
       <div className="mb-2 rounded-lg bg-orange-50 px-2 py-1 text-[11px] font-bold text-[#e04f00]">
         {t(`carbon_chatbot.inventory_step_${state.step}`)}
       </div>

@@ -1,5 +1,5 @@
 // Info: (20260716 - Emily) 盤查狀態帳本端點(#6518,E2EE 密文):GET 取回、PUT 保存(version 樂觀鎖)
-// Info: (20260716 - Emily) 純端口:授權 → 限流 → 頻道所有權 → 驗證 → Service;明文只存在於前端
+// Info: (20260716 - Emily) 純端口: 授權 → 限流 → 頻道所有權 → 驗證 → Service；明文只存在於前端
 
 import { NextRequest } from "next/server";
 import { logger } from "@/lib/utils/logger";

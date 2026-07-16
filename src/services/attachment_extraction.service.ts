@@ -76,7 +76,7 @@ const EXTRACTION_RESPONSE_SCHEMA: Schema = {
       format: "enum",
       enum: ["high", "medium", "low"],
     },
-    // Info: (20260716 - Emily) #6518 活動數據:enum 鎖死範疇/單位,數值原樣字串(嚴禁換算)
+    // Info: (20260716 - Emily) #6518 活動數據: enum 鎖死範疇/單位，數值原樣字串(嚴禁換算)
     activities: {
       type: SchemaType.ARRAY,
       items: {
@@ -90,7 +90,7 @@ const EXTRACTION_RESPONSE_SCHEMA: Schema = {
           sourceName: { type: SchemaType.STRING },
           quantity: {
             type: SchemaType.STRING,
-            description: "數量原樣照抄,嚴禁換算或加總",
+            description: "數量原樣照抄，嚴禁換算或加總",
           },
           unit: {
             type: SchemaType.STRING,
@@ -164,8 +164,8 @@ export class AttachmentExtractionService {
 3. source 填檔名。
 4. 從下列報告段落中挑選此附件內容最相關的段落 id(最多 3 個),只能使用列表中的 id:
 ${OUTLINE_CATALOG}
-5. confidence:內容清晰完整為 high,部分可辨識為 medium,幾乎無法辨識為 low。
-6. activities:附件中的活動數據(如用電度數、油品公升數)。quantity 原樣照抄為字串,嚴禁換算或加總;單位只能從列舉挑選,對不上就整筆省略。`;
+5. confidence: 內容清晰完整為 high，部分可辨識為 medium，幾乎無法辨識為 low。
+6. activities: 附件中的活動數據(如用電度數、油品公升數)。quantity 原樣照抄為字串，嚴禁換算或加總；單位只能從列舉挑選，對不上就整筆省略。`;
 
     const raw = await this.getChatService().generateRawWithImages(
       prompt,
@@ -190,7 +190,7 @@ ${OUTLINE_CATALOG}
       OUTLINE_PARAGRAPH_ID_SET.has(id),
     );
 
-    // Info: (20260716 - Emily) #6518 活動數據逐筆裁決:壞欄位丟該筆不廢全包;source 記檔名供溯源
+    // Info: (20260716 - Emily) #6518 活動數據逐筆裁決: 壞欄位丟該筆不廢全包；source 記檔名供溯源
     const activities: IActivityRecord[] = (parsed.activities ?? []).flatMap(
       (item) => {
         const record = CarbonActivityRecordSchema.safeParse(item);

@@ -68,15 +68,15 @@ const CARBON_CHAT_REPLY_SCHEMA: Schema = {
       enum: [...CARBON_REPORT_OUTLINE.map((s) => s.id), NO_READY_PARAGRAPH],
       description: "資訊已蒐集齊全可寫入報告的段落 id;尚未齊全時為 none",
     },
-    // Info: (20260716 - Emily) #6518 事實萃取:enum 鎖死範疇/單位,數值原樣字串(嚴禁換算),TS 端再白名單複驗
+    // Info: (20260716 - Emily) #6518 事實萃取: enum 鎖死範疇/單位，數值原樣字串(嚴禁換算),TS 端再白名單複驗
     extraction: {
       type: SchemaType.OBJECT,
-      description: "本輪用戶訊息中可萃取的盤查事實;無則各欄位省略",
+      description: "本輪用戶訊息中可萃取的盤查事實；無則各欄位省略",
       properties: {
         company: { type: SchemaType.STRING, description: "企業名稱(用戶原文)" },
         year: {
           type: SchemaType.STRING,
-          description: "盤查年度(西元,原樣數字字串)",
+          description: "盤查年度(西元，原樣數字字串)",
         },
         boundaryApproach: {
           type: SchemaType.STRING,
@@ -95,11 +95,11 @@ const CARBON_CHAT_REPLY_SCHEMA: Schema = {
               },
               sourceName: {
                 type: SchemaType.STRING,
-                description: "排放源名稱(如:外購電力、公務車柴油)",
+                description: "排放源名稱(如: 外購電力、公務車柴油)",
               },
               quantity: {
                 type: SchemaType.STRING,
-                description: "數量,連同千分位原樣照抄,嚴禁換算或加總",
+                description: "數量，連同千分位原樣照抄，嚴禁換算或加總",
               },
               unit: {
                 type: SchemaType.STRING,
@@ -317,17 +317,17 @@ export class ChatService {
 - 用戶已提供當前段落所需的關鍵資訊,或明確同意/確認你彙整的內容時 → 填該段落的 id(只能從下方清單挑選)
 - 資訊尚未齊全、仍在追問時 → 填 "${NO_READY_PARAGRAPH}"
 - 填入段落 id 後,系統會自動將該段草稿寫入右側報告;此時請在 reply 告知用戶「本段已寫入報告,可於右側預覽檢視」,不要把完整草稿貼在對話中,也不要再重複詢問同一段落。
-【事實萃取機制】每輪回覆的 extraction 欄位,依下列規則萃取「用戶本輪訊息」中的盤查事實:
-- 企業名稱、盤查年度(西元)、組織邊界方法:用戶明確提供時填入,原文照抄,不確定就省略。
-- activities:用戶提供的活動數據(如用電量、油耗)。quantity 連同千分位「原樣照抄」為字串,嚴禁換算單位、加總或推導;單位只能從 unit 列舉挑選,對不上就整筆省略。
-- 你是萃取器不是計算機:任何需要計算的內容一律不填。沒有可萃取的事實時 extraction 省略。
+【事實萃取機制】每輪回覆的 extraction 欄位，依下列規則萃取「用戶本輪訊息」中的盤查事實:
+- 企業名稱、盤查年度(西元)、組織邊界方法: 用戶明確提供時填入，原文照抄，不確定就省略。
+- activities: 用戶提供的活動數據(如用電量、油耗)。quantity 連同千分位「原樣照抄」為字串，嚴禁換算單位、加總或推導；單位只能從 unit 列舉挑選，對不上就整筆省略。
+- 你是萃取器不是計算機: 任何需要計算的內容一律不填。沒有可萃取的事實時 extraction 省略。
 【段落清單】
 ${outlineCatalog}${langInstruction}`;
   }
 
   /**
-   * Info: (20260716 - Emily) 萃取結果裁決(#6518):逐筆 Zod 驗證,壞欄位丟棄該筆而非整包作廢;
-   * 全空回 null。enum 已在 responseSchema 鎖死,此處為 TS 端第二道白名單(永不直接採信 LLM)。
+   * Info: (20260716 - Emily) 萃取結果裁決(#6518): 逐筆 Zod 驗證，壞欄位丟棄該筆而非整包作廢；
+   * 全空回 null。enum 已在 responseSchema 鎖死，此處為 TS 端第二道白名單(永不直接採信 LLM)。
    */
   private adjudicateInventoryExtraction(
     value: unknown,
@@ -414,7 +414,7 @@ ${outlineCatalog}${langInstruction}`;
       const isValidParagraph = CARBON_REPORT_OUTLINE.some(
         (s) => s.id === parsed.readyParagraphId,
       );
-      // Info: (20260716 - Emily) #6518:extraction 逐筆裁決(獨立於 reply 護欄,萃取壞掉不影響對話)
+      // Info: (20260716 - Emily) #6518:extraction 逐筆裁決(獨立於 reply 護欄，萃取壞掉不影響對話)
       const extraction = this.adjudicateInventoryExtraction(
         (rawParsed as { extraction?: unknown }).extraction,
       );
