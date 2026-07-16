@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       cid,
     });
   } catch (error) {
-    // Info: (20260716 - Emily) 服務層裁決(型別不符/掃毒命中/配額耗盡)原碼透傳,其餘包裝為上傳失敗
+    // Info: (20260716 - Emily) 服務層裁決(型別不符/掃毒命中/配額耗盡)原碼透傳，其餘包裝為上傳失敗
     if (error instanceof ApiError) {
       return jsonFail({
         code: error.code,

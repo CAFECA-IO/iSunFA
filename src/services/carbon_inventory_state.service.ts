@@ -1,5 +1,5 @@
-// Info: (20260716 - Emily) 盤查狀態帳本服務(#6518):讀寫協調 + 錯誤包裝(比照 CarbonReportDraftService)
-// Info: (20260716 - Emily) 狀態為 E2EE 密文,本服務不接觸明文;merge 與狀態機在前端(lib/carbon_inventory)執行
+// Info: (20260716 - Emily) 盤查狀態帳本服務(#6518): 讀寫協調 + 錯誤包裝(比照 CarbonReportDraftService)
+// Info: (20260716 - Emily) 狀態為 E2EE 密文，本服務不接觸明文；merge 與狀態機在前端(lib/carbon_inventory)執行
 
 import { logger } from "@/lib/utils/logger";
 import {
@@ -24,9 +24,7 @@ export interface IInventoryStateRecord {
 export class CarbonInventoryStateService {
   private readonly repo: CarbonInventoryStateRepository;
 
-  constructor(
-    repo: CarbonInventoryStateRepository = carbonInventoryStateRepo,
-  ) {
+  constructor(repo: CarbonInventoryStateRepository = carbonInventoryStateRepo) {
     this.repo = repo;
   }
 
@@ -82,7 +80,7 @@ export class CarbonInventoryStateService {
       );
     }
 
-    // Info: (20260716 - Emily) 樂觀鎖衝突:他端已更新,呼叫端須重新載入(不 silent overwrite)
+    // Info: (20260716 - Emily) 樂觀鎖衝突: 他端已更新，呼叫端須重新載入(不 silent overwrite)
     if (!saved) {
       throw new ApiError(
         API_ERRORS.VL_DRAFT_VERSION_CONFLICT.code,

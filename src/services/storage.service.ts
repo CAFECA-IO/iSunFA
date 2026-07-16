@@ -3,7 +3,7 @@ import path from "path";
 import { promises as fs } from "fs";
 import { tmpdir } from "os";
 import { randomUUID } from "crypto";
-import { encodeFile } from "@/lib/laria";
+import { encodeFile, TOTAL_SHARDS, DATA_SHARDS } from "@/lib/laria";
 
 export interface IStorageUploadResponse {
   hash: string;
@@ -96,7 +96,8 @@ export class StorageService {
 
       // Info: (20260128 - Luphia) 4. Upload shards
       const shardHashes: string[] = [];
-      const shardCount = 8; // Info: (20260128 - Luphia) We know Laria configuration is 5 + 3 = 8
+      // Info: (20260715 - Emily) 切片數以 laria 常數為唯一來源,消除魔法數字 8
+      const shardCount = TOTAL_SHARDS;
 
       for (let i = 1; i <= shardCount; i++) {
         const shardName = `shard-${i}.bin`;
@@ -183,25 +184,51 @@ export class StorageService {
 
       const shardSize = metaObj.shardSize || metaObj.algorithm?.shardSize;
 
-      // Info: (20260213 - Julian) 寫入 metadata.json (recoverFile 需要它)
+      // Info: (20260715 - Emily) rsVersion/sha256 必須透傳,recoverFile 依此判斷舊檔降級與完整性驗證
       await fs.writeFile(
         path.join(outputDir, "metadata.json"),
-        JSON.stringify({ originalFileSize, shardSize }),
+        JSON.stringify({
+          originalFileSize,
+          shardSize,
+          rsVersion: metaObj.rsVersion,
+          sha256: metaObj.sha256,
+        }),
       );
 
-      // Info: (20260213 - Julian) 2. Download Shards
-      for (let i = 0; i < shards.length; i++) {
-        const shardHash = shards[i];
-        const shardRes = await fetch(`${domain}/api/v1/file/${shardHash}`);
-        if (!shardRes.ok) {
-          throw new Error(
-            `Failed to fetch shard ${i + 1}: ${shardRes.statusText}`,
+      /**
+       * Info: (20260715 - Emily) 2. Download Shards — 容忍部分切片下載失敗:
+       * 真 RS 只需 DATA_SHARDS (5) 個切片即可還原,單一切片失敗不再讓整體恢復中止;
+       * 失敗的切片不落地,recoverFile 視為遺失並自動重建。
+       */
+      let downloadedShards = 0;
+      const downloadResults = await Promise.allSettled(
+        shards.map(async (shardHash: string, i: number) => {
+          const shardRes = await fetch(`${domain}/api/v1/file/${shardHash}`);
+          if (!shardRes.ok) {
+            throw new Error(
+              `Failed to fetch shard ${i + 1}: ${shardRes.statusText}`,
+            );
+          }
+          const shardBuffer = Buffer.from(await shardRes.arrayBuffer());
+          await fs.writeFile(
+            path.join(outputDir, `shard-${i + 1}.bin`),
+            shardBuffer,
+          );
+        }),
+      );
+      downloadResults.forEach((result, i) => {
+        if (result.status === "fulfilled") {
+          downloadedShards++;
+        } else {
+          console.warn(
+            `[StorageService] shard ${i + 1} download failed, will rely on RS reconstruction:`,
+            result.reason,
           );
         }
-        const shardBuffer = Buffer.from(await shardRes.arrayBuffer());
-        await fs.writeFile(
-          path.join(outputDir, `shard-${i + 1}.bin`),
-          shardBuffer,
+      });
+      if (downloadedShards < DATA_SHARDS) {
+        throw new Error(
+          `Laria recovery impossible: only ${downloadedShards}/${shards.length} shards downloaded (need ${DATA_SHARDS}).`,
         );
       }
 
