@@ -138,7 +138,7 @@ describe("CarbonCalculationService.computeLedger", () => {
     const b = await service.computeLedger(input);
     expect(a.entries).toEqual(b.entries);
     expect(a.totalCo2eKg).toBe(b.totalCo2eKg);
-    expect(a.totalCo2eKg).toBe("988000"); // 592800 + 395200
+    expect(a.totalCo2eKg).toBe("988000"); // Info: (20260716 - Emily) 592800 + 395200
   });
 });
 
