@@ -88,7 +88,7 @@ export interface IReportData {
 }
 
 // Info: (20260712 - Luphia) 單筆活動數據（數值以字串保存，計算時於服務層轉 Decimal，避免浮點誤差）
-// Info: (20260716 - Emily) #6518:unit 收斂為 MeasurementUnit enum;source 記出處(訊息/附件檔名)供零捏造溯源
+// Info: (20260716 - Emily) #6518: unit 收斂為 MeasurementUnit enum;source 記出處(訊息/附件檔名)供零捏造溯源
 export interface IActivityRecord {
   scopeCategory: GhgProtocolCategory;
   sourceName: string;
@@ -100,7 +100,46 @@ export interface IActivityRecord {
   source?: string;
 }
 
-// Info: (20260716 - Emily) #6518 LLM 事實萃取結果(已經 Zod + 白名單裁決；year 由 TS 決定性轉數字)
+// Info: (20260716 - Emily) #6519 係數快照: 計算當下凍結採用的係數(稽核軌跡地基)
+export interface IFactorSnapshot {
+  factorId: string;
+  name: string;
+  value: string;
+  unit: string;
+  source: string;
+}
+
+// Info: (20260716 - Emily) #6519 單筆計算結果: 全部數值為字串化 Decimal,禁止 number 運算
+export interface IComputedLedgerEntry {
+  activityKey: string;
+  scopeCategory: GhgProtocolCategory;
+  sourceName: string;
+  quantityRaw: string;
+  convertedQuantity: string;
+  convertedUnit: string;
+  co2eKg: string;
+  ghgBreakdown?: Record<string, string>;
+  gwpVersion?: string;
+  factor: IFactorSnapshot;
+}
+
+// Info: (20260716 - Emily) #6519 待補清單: 無法決定性裁決的活動(絕不猜值)
+export interface IPendingLedgerEntry {
+  activityKey: string;
+  sourceName: string;
+  reason: string;
+}
+
+// Info: (20260716 - Emily) #6519 計算總表: 決定論引擎輸出,掛回 E2EE state
+export interface IComputedLedger {
+  entries: IComputedLedgerEntry[];
+  pending: IPendingLedgerEntry[];
+  scopeSubtotals: Record<string, string>;
+  totalCo2eKg: string;
+  computedAt: string;
+}
+
+// Info: (20260716 - Emily) #6518 LLM 事實萃取結果(已經 Zod + 白名單裁決;year 由 TS 決定性轉數字)
 export interface IInventoryExtraction {
   company?: string;
   year?: number;
@@ -118,6 +157,8 @@ export interface ICarbonInventoryState {
     | "financial_control"
     | "equity_share";
   activities: IActivityRecord[];
+  // Info: (20260716 - Emily) #6519 決定論引擎的計算總表(隨 state E2EE 入庫)
+  computedLedger?: IComputedLedger;
   notes?: string[];
   updatedAt: string;
   version: number;

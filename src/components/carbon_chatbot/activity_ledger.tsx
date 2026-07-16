@@ -5,6 +5,7 @@
 import { useState } from "react";
 import { ClipboardList, Minus } from "lucide-react";
 import { ICarbonInventoryState } from "@/types/carbon_chatbot.types";
+import { activityDedupeKey } from "@/lib/carbon_inventory";
 import { useTranslation } from "@/i18n/i18n_context";
 
 export interface IActivityLedgerProps {
@@ -20,6 +21,14 @@ export function ActivityLedger({
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   const count = state.activities.length;
+  // Info: (20260716 - Emily) #6519 計算結果對照表(activityKey → entry);數值為字串化 Decimal,原樣渲染不格式化
+  const ledger = state.computedLedger;
+  const entryByKey = new Map(
+    (ledger?.entries ?? []).map((entry) => [entry.activityKey, entry]),
+  );
+  const pendingKeys = new Set(
+    (ledger?.pending ?? []).map((entry) => entry.activityKey),
+  );
 
   if (!isExpanded) {
     return (
@@ -88,9 +97,39 @@ export function ActivityLedger({
                 </span>
                 <span className="shrink-0">{activity.scopeCategory}</span>
               </div>
+              {/* Info: (20260716 - Emily) #6519 每筆 CO2e(決定論引擎產出)或待補標記 */}
+              {(() => {
+                const key = activityDedupeKey(activity);
+                const entry = entryByKey.get(key);
+                if (entry) {
+                  return (
+                    <div className="mt-0.5 text-[10px] font-bold text-emerald-700">
+                      {t("carbon_chatbot.activity_co2e", {
+                        value: entry.co2eKg,
+                      })}
+                    </div>
+                  );
+                }
+                if (pendingKeys.has(key)) {
+                  return (
+                    <div className="mt-0.5 text-[10px] font-bold text-amber-600">
+                      {t("carbon_chatbot.activity_pending_factor")}
+                    </div>
+                  );
+                }
+                return null;
+              })()}
             </li>
           ))}
         </ul>
+      )}
+
+      {/* Info: (20260716 - Emily) #6519 總計:字串化 Decimal 原樣顯示(無 .toFixed/number 運算) */}
+      {ledger && (
+        <div className="mt-2 flex items-center justify-between rounded-lg bg-emerald-50 px-2 py-1.5 text-xs font-bold text-emerald-800">
+          <span>{t("carbon_chatbot.activity_total_co2e")}</span>
+          <span className="font-mono">{ledger.totalCo2eKg} kgCO2e</span>
+        </div>
       )}
     </div>
   );

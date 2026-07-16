@@ -97,6 +97,10 @@ export const carbonChatbot = {
   activity_ledger_collapse: "활동 데이터 접기",
   activity_source: "출처: {{source}}",
   activity_source_chat: "출처: 대화",
+  activity_co2e: "CO2e: {{value}} kg",
+  activity_pending_factor:
+    "⚠ 보류: 신뢰할 수 있는 계수가 없거나 단위 불일치로 추정하지 않습니다",
+  activity_total_co2e: "총 배출량(대사 완료)",
   inventory_step_ORG_PROFILE: "단계: 기업 기본 정보(명칭/연도)",
   inventory_step_ORG_BOUNDARY: "단계: 조직 경계 설정",
   inventory_step_EMISSION_SOURCES: "단계: 배출원 식별",
