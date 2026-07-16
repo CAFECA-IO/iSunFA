@@ -1,19 +1,27 @@
 /**
  * Info: (20260716 - Emily) 檔案內容簽章驗證(magic bytes,#6517)。
- * 瀏覽器宣告的 MIME(file.type)可任意偽造;本模組以檔頭實際 bytes 驗證宣告格式,
- * 防止「.exe 改名 .pdf」類的偽裝上傳。純 TS 實作,不引第三方庫。
+ * 瀏覽器宣告的 MIME(file.type)可任意偽造；本模組以檔頭實際 bytes 驗證宣告格式，
+ * 防止「.exe 改名 .pdf」類的偽裝上傳。純 TS 實作，不引第三方庫。
  * 支援清單對齊 CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES。
  */
 
 // Info: (20260716 - Emily) 文本啟發式的檢查長度:取檔案前 8KB 判斷是否為合法文字內容
 const TEXT_SNIFF_BYTES = 8 * 1024;
 
-const startsWith = (buffer: Uint8Array, magic: number[], offset = 0): boolean => {
+const startsWith = (
+  buffer: Uint8Array,
+  magic: number[],
+  offset = 0,
+): boolean => {
   if (buffer.length < offset + magic.length) return false;
   return magic.every((byte, i) => buffer[offset + i] === byte);
 };
 
-const startsWithAscii = (buffer: Uint8Array, text: string, offset = 0): boolean =>
+const startsWithAscii = (
+  buffer: Uint8Array,
+  text: string,
+  offset = 0,
+): boolean =>
   startsWith(
     buffer,
     Array.from(text).map((c) => c.charCodeAt(0)),
@@ -56,10 +64,13 @@ const isPlausibleTextFile = (buffer: Uint8Array): boolean => {
 
 // Info: (20260716 - Emily) 宣告 MIME → 檔頭驗證器(白名單制:未知宣告一律不通過)
 const SIGNATURE_VALIDATORS: Record<string, (buffer: Uint8Array) => boolean> = {
-  "image/png": (b) => startsWith(b, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+  "image/png": (b) =>
+    startsWith(b, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
   "image/jpeg": (b) => startsWith(b, [0xff, 0xd8, 0xff]),
-  "image/webp": (b) => startsWithAscii(b, "RIFF") && startsWithAscii(b, "WEBP", 8),
-  "image/gif": (b) => startsWithAscii(b, "GIF87a") || startsWithAscii(b, "GIF89a"),
+  "image/webp": (b) =>
+    startsWithAscii(b, "RIFF") && startsWithAscii(b, "WEBP", 8),
+  "image/gif": (b) =>
+    startsWithAscii(b, "GIF87a") || startsWithAscii(b, "GIF89a"),
   "image/heic": isHeifFamily,
   "image/heif": isHeifFamily,
   "application/pdf": (b) => startsWithAscii(b, "%PDF-"),
@@ -71,7 +82,7 @@ const SIGNATURE_VALIDATORS: Record<string, (buffer: Uint8Array) => boolean> = {
 
 /**
  * Info: (20260716 - Emily) 驗證檔案實際內容是否符合宣告的 MIME type。
- * @returns true = 檔頭與宣告一致;false = 不一致或宣告型別不在支援清單(Fail Fast)
+ * @returns true = 檔頭與宣告一致；false = 不一致或宣告型別不在支援清單(Fail Fast)
  */
 export const matchesDeclaredMimeType = (
   buffer: Uint8Array,
