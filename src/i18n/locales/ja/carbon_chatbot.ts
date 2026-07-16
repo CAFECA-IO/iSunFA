@@ -31,6 +31,8 @@ export const carbonChatbot = {
   system_unavailable: "申し訳ありません。現在システムは応答できません。",
   ai_quota_exceeded:
     "【AI 利用上限】短時間にリクエストが集中しました。1分ほど待って再試行してください。",
+  ai_timeout:
+    "【AI応答タイムアウト】処理に時間がかかりすぎました。もう一度お試しください。",
   ai_name: "フェイス",
   platform_name: "環境インテリジェンスプラットフォーム",
   system_online: "システムオンライン",

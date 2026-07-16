@@ -31,6 +31,8 @@ export const carbonChatbot = {
   system_unavailable: "죄송합니다. 현재 시스템이 응답할 수 없습니다.",
   ai_quota_exceeded:
     "[AI 사용량 한도 도달] 짧은 시간에 요청이 많았습니다. 1분 후 다시 시도해 주세요.",
+  ai_timeout:
+    "[AI 응답 시간 초과] 처리 시간이 너무 깁니다. 다시 시도해 주세요.",
   ai_name: "페이스",
   platform_name: "환경 인텔리전스 플랫폼",
   system_online: "시스템 온라인",
