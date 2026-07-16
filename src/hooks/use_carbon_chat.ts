@@ -64,7 +64,8 @@ import {
   isQuotaApiError,
   isRateLimitedApiError,
   isTimeoutApiError,
-  splitReportMarkdownIntoBlocks,
+  splitReportMarkdownSections,
+  alignReportSections,
 } from "@/hooks/use_carbon_chat.helpers";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { useAuth } from "@/contexts/auth_context";
@@ -83,7 +84,8 @@ import {
 } from "@/constants/carbon_chatbot";
 
 // Info: (20260714 - Emily) 報告草稿保存狀態(工具列顯示;null = 尚無變更;error = 保存失敗/版本衝突)
-export type ReportSaveStatus = "saving" | "saved" | "error" | null;
+// Info: (20260716 - Emily) #50 新增 local:未解鎖/未還原前內容僅落本機安全快取,解鎖後自動推入 DB
+export type ReportSaveStatus = "saving" | "saved" | "error" | "local" | null;
 
 // Info: (20260714 - Emily) 草稿生成狀態列(顯示於輸入框上方):生成中 loading、失敗短暫提示後自動消失
 // Info: (20260714 - Emily) 草稿為並行任務,失敗不以對話氣泡表達(氣泡先於回覆出現會造成 UX 混淆)
@@ -355,14 +357,22 @@ export const useCarbonChat = () => {
   const activeReportData = sessionsData[activeSessionId]?.reportData;
   useEffect(() => {
     if (!activeReportData) return undefined;
-    if (!restoredChannelsRef.current.has(chatChannel)) return undefined;
-    if (!draftVersionsRef.current.has(chatChannel)) return undefined;
+    // Info: (20260715 - Luphia) 內容一有變更即先寫本機安全快取(不等 debounce);萬一保存前當機/關頁,下次還原時可救回
+    // Info: (20260716 - Emily) #50 提到所有雲端保存 guard 之前:本機快取不需金鑰,
+    // Info: (20260716 - Emily) 未解鎖的新聊天室貼上內容也先落地,解鎖後由還原流程撿回並自動推入 DB
+    saveLocalDraftBackup(chatChannel, activeReportData);
     const master = masterKeyRef.current;
-    if (!master) return undefined;
+    const canCloudSave =
+      restoredChannelsRef.current.has(chatChannel) &&
+      draftVersionsRef.current.has(chatChannel) &&
+      Boolean(master);
+    if (!canCloudSave || !master) {
+      // Info: (20260716 - Emily) #50 明確告知使用者「僅暫存本機」,避免誤以為已上雲
+      setSaveStatus("local");
+      return undefined;
+    }
 
     setSaveStatus("saving");
-    // Info: (20260715 - Luphia) 內容一有變更即先寫本機安全快取(不等 debounce);萬一保存前當機/關頁,下次還原時可救回
-    saveLocalDraftBackup(chatChannel, activeReportData);
     if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
     autosaveTimerRef.current = setTimeout(() => {
       autosaveTimerRef.current = null;
@@ -952,30 +962,49 @@ export const useCarbonChat = () => {
         const updatedSession = { ...prev[activeSessionId] };
         if (!updatedSession.reportData?.paragraphs) return prev;
 
-        // Info: (20260715 - Luphia) 切分邏輯抽至 use_carbon_chat.helpers（純函式，可單元測試）
-        const blocks = splitReportMarkdownIntoBlocks(newMarkdown);
-
-        // Info: (20260713 - Tzuhan) 預覽渲染全部段落(未生成者為佔位區塊),故區塊與 33 段依序 1:1 對齊
-        // Info: (20260709 - Tzuhan) 防呆機制:區塊數與段落數不一致,代表使用者可能誤刪切分標題,
-        // Info: (20260709 - Tzuhan) 為確保資料正確性,將所有已生成段落設為未查核
-        const isBlockCountMismatched =
-          blocks.length !== updatedSession.reportData.paragraphs.length;
+        // Info: (20260716 - Emily) #50 改標題對齊(取代區塊數 1:1 對位):
+        // Info: (20260716 - Emily) 舊防呆在區塊數不符時「整批丟棄編輯」— 貼上任何自訂標題即觸發,為資料遺失主因;
+        // Info: (20260716 - Emily) 新制以段落標題精確對齊,未知內容併入前段保留,誤刪段落者保原文並取消查核
+        const split = splitReportMarkdownSections(newMarkdown);
+        const aligned = alignReportSections(
+          updatedSession.reportData.paragraphs.map((p) => p.title),
+          split,
+        );
 
         let hasChanges = false;
         const newParagraphs = updatedSession.reportData.paragraphs.map(
           (p, index) => {
-            // Info: (20260713 - Tzuhan) 未生成段落為唯讀佔位,不接受編輯寫入(內容須由 AI 對話生成)
-            if (!p.content) return p;
+            if (!aligned.has(index)) {
+              // Info: (20260716 - Emily) 段落(含標題)自文本消失 = 誤刪:保留原內容,已查核者取消查核
+              if (p.content && p.isVerified) {
+                hasChanges = true;
+                return { ...p, isVerified: false };
+              }
+              return p;
+            }
+            const body = aligned.get(index) ?? "";
+            // Info: (20260716 - Emily) 佔位段落未被觸碰(body 仍為 > _提示_ 引言)→ 維持未生成
+            const isUntouchedPlaceholder =
+              !p.content && /^>\s*_[^_]*_$/.test(body.trim());
+            if (isUntouchedPlaceholder) return p;
             // Info: (20260714 - Emily) 編輯後內文為空(僅剩標頭)視為誤刪,保留原內容避免段落退回未生成狀態
-            const editedBody = blocks[index];
-            const nextContent =
-              isBlockCountMismatched || !editedBody ? p.content : editedBody;
+            const nextContent = body.trim() ? body : p.content;
+
+            // Info: (20260716 - Emily) #50 佔位段落接受「貼上填充」:使用者提供的內容即為事實來源,
+            // Info: (20260716 - Emily) 填充後標記完成、未查核(與 AI 生成同一查核閘門)
+            if (!p.content && nextContent) {
+              hasChanges = true;
+              return {
+                ...p,
+                content: nextContent,
+                isCompleted: true,
+                isVerified: false,
+              };
+            }
 
             const isContentChanged = nextContent !== p.content;
-            const shouldResetVerified =
-              (isContentChanged || isBlockCountMismatched) && p.isVerified;
             // Info: (20260712 - Luphia) 僅在內容或查核狀態確實變動時才更新，避免無謂的狀態變更
-            if (!isContentChanged && !shouldResetVerified) return p;
+            if (!isContentChanged) return p;
 
             hasChanges = true;
             return {

@@ -59,6 +59,8 @@ export const carbonChatbot = {
   new_session_title: "새 인벤토리 대화",
   save_saving: "저장 중...",
   save_saved: "저장됨",
+  save_local:
+    "로컬에 임시 저장됨. 암호화 채팅 잠금 해제 후 클라우드에 자동 저장됩니다",
   save_local_hint: "보고서 초안은 암호화되어 클라우드에 저장됩니다",
   save_failed: "저장 실패",
   save_failed_hint:

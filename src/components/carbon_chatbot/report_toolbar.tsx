@@ -63,6 +63,15 @@ export function ReportToolbar({
               {t("carbon_chatbot.save_saving")}
             </>
           )}
+          {saveStatus === "local" && (
+            <>
+              {/* Info: (20260716 - Emily) #50 未解鎖前僅本機暫存:琥珀色提示,解鎖後自動轉雲端保存 */}
+              <AlertTriangle size={11} className="text-amber-500" />
+              <span className="text-amber-600">
+                {t("carbon_chatbot.save_local")}
+              </span>
+            </>
+          )}
           {saveStatus === "saved" && (
             <>
               <Check size={11} className="text-green-600" />

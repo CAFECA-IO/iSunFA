@@ -58,6 +58,8 @@ export const carbonChatbot = {
   new_session_title: "New inventory chat",
   save_saving: "Saving...",
   save_saved: "Saved",
+  save_local:
+    "Saved locally; will sync to the cloud after you unlock the encrypted chat",
   save_local_hint: "Report draft is encrypted and saved to the cloud",
   save_failed: "Save failed",
   save_failed_hint:

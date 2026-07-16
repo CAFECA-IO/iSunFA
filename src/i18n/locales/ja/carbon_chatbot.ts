@@ -59,6 +59,8 @@ export const carbonChatbot = {
   new_session_title: "新しいインベントリ対話",
   save_saving: "保存中...",
   save_saved: "保存済み",
+  save_local:
+    "ローカルに一時保存済み。暗号化チャットのロック解除後にクラウドへ自動保存されます",
   save_local_hint: "レポート下書きは暗号化してクラウドに保存されます",
   save_failed: "保存に失敗しました",
   save_failed_hint:

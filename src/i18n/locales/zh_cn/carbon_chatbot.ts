@@ -55,6 +55,7 @@ export const carbonChatbot = {
   new_session_title: "新的盘查对话",
   save_saving: "保存中...",
   save_saved: "已保存",
+  save_local: "已暂存于本机,解锁加密对话后将自动保存至云端",
   save_local_hint: "报告草稿已加密保存至云端",
   save_failed: "保存失败",
   save_failed_hint: "保存失败:可能有其他标签页已更新草稿,请刷新页面获取最新版本",
