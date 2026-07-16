@@ -30,7 +30,8 @@ export interface IFactorLookup {
     id: string;
     name: string;
     unit: string;
-    emissionFactor: string | number;
+    // Info: (20260716 - Emily) 邊界收斂為字串(Decimal-as-string): facade 內全程不碰 number，杜絕浮點精度流失
+    emissionFactor: string;
     source: string;
     ghgFactors?: unknown;
   } | null>;
@@ -40,7 +41,15 @@ const defaultFactorLookup: IFactorLookup = {
   // Info: (20260716 - Emily) chatbot 為個人模型無 accountBookId,傳空字串 → 租戶軌自然落空,官方/靜態軌照常
   findFallbackCoefficientId: (keyword) =>
     EmissionFactorRepo.findFallbackCoefficient(keyword, ""),
-  getCoefficientById: (id) => EmissionFactorRepo.getCoefficientById(id),
+  // Info: (20260716 - Emily) 上游可能回 number(靜態字典)，於介面邊界一次性字串化，之後 facade 全程字串
+  getCoefficientById: async (id) => {
+    const coefficient = await EmissionFactorRepo.getCoefficientById(id);
+    if (!coefficient) return null;
+    return {
+      ...coefficient,
+      emissionFactor: String(coefficient.emissionFactor),
+    };
+  },
 };
 
 /**
@@ -153,13 +162,11 @@ export class CarbonCalculationService {
       }
 
       // Info: (20260716 - Emily) 傳字串進 calculator,不經 number 中轉(修正 voucher 管線的 .toNumber() 風險)
-      const result: ICalculationResult = EsgCalculatorService.calculateEmissions(
-        convertedQuantity,
-        {
-          emissionFactor: String(coefficient.emissionFactor),
+      const result: ICalculationResult =
+        EsgCalculatorService.calculateEmissions(convertedQuantity, {
+          emissionFactor: coefficient.emissionFactor,
           ghgFactors: coefficient.ghgFactors,
-        },
-      );
+        });
 
       entries.push({
         activityKey,
@@ -174,7 +181,7 @@ export class CarbonCalculationService {
         factor: {
           factorId: coefficient.id,
           name: coefficient.name,
-          value: String(coefficient.emissionFactor),
+          value: coefficient.emissionFactor,
           unit: coefficient.unit,
           source: coefficient.source,
         },
