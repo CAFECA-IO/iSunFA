@@ -8,9 +8,11 @@ export interface IUpsertInventoryStateParams {
   channel: string;
   purpose?: string;
   recipientPublicKey: string;
-  encryptedContent: string;
+  // Info: (20260716 - Emily) #52 雙模式:個人會話存密文 envelope,帳本會話存 plainContent(擇一)
+  encryptedContent?: string | null;
+  plainContent?: string | null;
   ephemeralPublicKey?: string | null;
-  keyDerivationHint: string;
+  keyDerivationHint?: string | null;
   algorithm: string;
   // Info: (20260716 - Emily) 呼叫端讀取時的版本;不符即回 null(由服務層轉為衝突錯誤)
   expectedVersion: number;
@@ -40,9 +42,10 @@ export class CarbonInventoryStateRepository {
 
     const envelopeData = {
       recipientPublicKey: params.recipientPublicKey,
-      encryptedContent: params.encryptedContent,
+      encryptedContent: params.encryptedContent ?? null,
+      plainContent: params.plainContent ?? null,
       ephemeralPublicKey: params.ephemeralPublicKey ?? null,
-      keyDerivationHint: params.keyDerivationHint,
+      keyDerivationHint: params.keyDerivationHint ?? null,
       algorithm: params.algorithm,
     };
 

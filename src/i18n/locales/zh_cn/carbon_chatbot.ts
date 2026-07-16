@@ -11,6 +11,8 @@ export const carbonChatbot = {
   today: "今日",
   history: "历史对话",
   new_chat: "新增对话",
+  new_chat_personal: "个人会话(端对端加密)",
+  read_only: "只读(账本查看权限)",
   ai_thinking: "AI 思考中...",
   input_placeholder: "输入您的问题或回复...",
   report_progress: "报告产出进度",

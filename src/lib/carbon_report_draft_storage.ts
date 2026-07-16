@@ -30,6 +30,9 @@ export interface ILoadedReportDraft {
   // Info: (20260714 - Emily) null = 草稿存在但無法解密/驗證(版本仍有效,禁止以版本 0 覆蓋)
   reportData: IReportData | null;
   version: number;
+  // Info: (20260716 - Emily) #52 存取中繼資料:canEdit=false 時前端進唯讀;accountBookId 決定保存模式
+  canEdit: boolean;
+  accountBookId: string | null;
 }
 
 const REPORT_DRAFT_API = "/api/v1/chat/carbon/report";
@@ -37,58 +40,79 @@ const REPORT_DRAFT_API = "/api/v1/chat/carbon/report";
 // Info: (20260714 - Emily) 取回草稿:GET 密文 → 主私鑰解密 → Zod 驗證
 // Info: (20260714 - Emily) 回傳三態:null = 無草稿(版本 0 可首存);reportData null = 草稿存在但無法解讀
 // Info: (20260714 - Emily) (仍回真實版本,避免呼叫端以版本 0 撞既有草稿造成衝突死循環)
+// Info: (20260716 - Emily) #52 雙模式讀取:帳本會話回 plainContent(無需金鑰,VIEWER 亦可讀);
+// Info: (20260716 - Emily) 個人會話回 envelope(需主私鑰解密)— masterKey 因此改為可空
 export const loadReportDraft = async (
   channel: string,
-  masterKey: IChatroomMasterKey,
+  masterKey: IChatroomMasterKey | null,
 ): Promise<ILoadedReportDraft | null> => {
   const res = await request<{
     payload: {
-      draft: { envelope: IEciesEnvelope; version: number } | null;
+      draft: {
+        envelope: IEciesEnvelope | null;
+        plainContent: string | null;
+        version: number;
+      } | null;
+      access: { canEdit: boolean; accountBookId: string | null } | null;
     } | null;
   }>(REPORT_DRAFT_API, { query: { channel } });
 
   const draft = res.payload?.draft;
+  const access = res.payload?.access ?? { canEdit: true, accountBookId: null };
   if (!draft) return null;
 
   try {
-    const plaintext = await eciesDecrypt(
-      masterKey.extendedPrivateKey,
-      draft.envelope,
-    );
+    let plaintext: string;
+    if (draft.plainContent !== null) {
+      plaintext = draft.plainContent;
+    } else if (draft.envelope && masterKey) {
+      plaintext = await eciesDecrypt(
+        masterKey.extendedPrivateKey,
+        draft.envelope,
+      );
+    } else {
+      // Info: (20260716 - Emily) 個人密文但無金鑰(未解鎖):內容不可用,版本仍有效
+      return { reportData: null, version: draft.version, ...access };
+    }
     const parsed = CarbonReportDataSchema.safeParse(JSON.parse(plaintext));
     return {
       reportData: parsed.success ? parsed.data : null,
       version: draft.version,
+      ...access,
     };
   } catch {
     // Info: (20260714 - Emily) 解密失敗(非本金鑰/密文毀損):內容不可用,但版本仍有效
-    return { reportData: null, version: draft.version };
+    return { reportData: null, version: draft.version, ...access };
   }
 };
 
 // Info: (20260714 - Emily) 保存草稿:明文序列化 → xpub 加密 → PUT(帶樂觀鎖版本);回傳新版本
+// Info: (20260716 - Emily) #52 雙模式保存:帳本會話送明文(模型 A);個人會話維持 E2EE envelope
 export const saveReportDraft = async (
   channel: string,
   masterKey: IChatroomMasterKey,
   reportData: IReportData,
   version: number,
+  accountBookId: string | null = null,
 ): Promise<number> => {
-  const envelope = await eciesEncrypt(
-    masterKey.extendedPublicKey,
-    JSON.stringify(reportData),
-  );
-
-  const res = await request<{ payload: { version: number } | null }>(
-    REPORT_DRAFT_API,
-    {
-      method: "PUT",
-      body: JSON.stringify({
+  const serialized = JSON.stringify(reportData);
+  const body = accountBookId
+    ? {
         channel,
         version,
         recipientPublicKey: masterKey.extendedPublicKey,
-        envelope,
-      }),
-    },
+        plainContent: serialized,
+      }
+    : {
+        channel,
+        version,
+        recipientPublicKey: masterKey.extendedPublicKey,
+        envelope: await eciesEncrypt(masterKey.extendedPublicKey, serialized),
+      };
+
+  const res = await request<{ payload: { version: number } | null }>(
+    REPORT_DRAFT_API,
+    { method: "PUT", body: JSON.stringify(body) },
   );
 
   if (!res.payload) throw new Error("Empty save draft payload");

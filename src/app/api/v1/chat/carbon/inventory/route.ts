@@ -10,7 +10,10 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { CarbonInventoryStatePutSchema } from "@/validators";
 import { CarbonInventoryStateService } from "@/services/carbon_inventory_state.service";
-import { isCarbonChatChannelOwnedBy } from "@/constants/carbon_chatbot";
+import {
+  resolveCarbonAccess,
+  CarbonAccessLevelEnum,
+} from "@/lib/carbon_access";
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,13 +34,23 @@ export async function GET(request: NextRequest) {
     if (!channel) {
       return jsonFail(API_ERRORS.VL_MISSING_PARAMS);
     }
-    if (!isCarbonChatChannelOwnedBy(channel, sessionUser.address)) {
+    // Info: (20260716 - Emily) #52 存取裁決:個人會話限擁有者;帳本會話依 TeamRole(VIEWER 可閱覽)
+    const access = await resolveCarbonAccess(
+      sessionUser.address,
+      channel,
+      CarbonAccessLevelEnum.VIEW,
+    );
+    if (!access.allowed) {
       return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
     }
 
     const service = new CarbonInventoryStateService();
     const state = await service.getState(channel);
-    return jsonOk({ state });
+    // Info: (20260716 - Emily) #52 回傳存取中繼資料:canEdit 供前端切唯讀、accountBookId 供切保存模式
+    return jsonOk({
+      state,
+      access: { canEdit: access.canEdit, accountBookId: access.accountBookId },
+    });
   } catch (error) {
     if (error instanceof ApiError) {
       return jsonFail({
@@ -79,7 +92,13 @@ export async function PUT(request: NextRequest) {
     if (!parsed.success) {
       return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
     }
-    if (!isCarbonChatChannelOwnedBy(parsed.data.channel, sessionUser.address)) {
+    // Info: (20260716 - Emily) #52 寫入需編輯權(帳本會話 EDITOR 以上;個人會話限擁有者)
+    const access = await resolveCarbonAccess(
+      sessionUser.address,
+      parsed.data.channel,
+      CarbonAccessLevelEnum.EDIT,
+    );
+    if (!access.allowed) {
       return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
     }
 

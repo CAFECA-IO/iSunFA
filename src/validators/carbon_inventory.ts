@@ -109,3 +109,11 @@ export const CarbonInventoryStatePutSchema = CarbonReportDraftPutSchema;
 export type CarbonInventoryStatePutPayload = z.infer<
   typeof CarbonInventoryStatePutSchema
 >;
+
+// Info: (20260716 - Emily) #52 帳本會話綁定請求
+export const CarbonSessionBindSchema = z.object({
+  sessionId: z.string().min(1).max(50),
+  accountBookId: z.string().min(1).max(100),
+  recipientPublicKey: z.string().min(1).max(300),
+});
+export type CarbonSessionBindPayload = z.infer<typeof CarbonSessionBindSchema>;

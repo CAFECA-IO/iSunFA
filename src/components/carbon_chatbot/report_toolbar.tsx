@@ -17,6 +17,8 @@ interface IReportToolbarProps {
   statusColor?: string;
   // Info: (20260714 - Emily) 報告草稿本機保存狀態(null = 尚無變更)
   saveStatus?: ReportSaveStatus;
+  // Info: (20260716 - Emily) #52 唯讀徽章(帳本 VIEWER 閱覽他人報告)
+  readOnly?: boolean;
 }
 
 export function ReportToolbar({
@@ -27,6 +29,7 @@ export function ReportToolbar({
   status = undefined,
   statusColor = undefined,
   saveStatus = null,
+  readOnly = false,
 }: IReportToolbarProps) {
   const { t } = useTranslation();
 
@@ -62,6 +65,11 @@ export function ReportToolbar({
               <Loader2 size={11} className="animate-spin" />
               {t("carbon_chatbot.save_saving")}
             </>
+          )}
+          {readOnly && (
+            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold text-gray-500">
+              {t("carbon_chatbot.read_only")}
+            </span>
           )}
           {saveStatus === "local" && (
             <>

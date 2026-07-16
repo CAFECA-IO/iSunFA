@@ -43,6 +43,8 @@ interface ICarbonReportPreviewProps {
   onParagraphHeadingClick?: (paragraphId: string) => void;
   // Info: (20260714 - Emily) 報告草稿本機保存狀態(透傳給 ReportToolbar)
   saveStatus?: ReportSaveStatus;
+  // Info: (20260716 - Emily) #52 唯讀(帳本 VIEWER):編輯回呼由 hook 擋下,此 prop 供工具列顯示唯讀徽章
+  readOnly?: boolean;
 }
 
 // Info: (20260713 - Tzuhan) 渲染全部 33 段:已生成者顯示內容,未生成者顯示灰色佔位區塊,確保跳段永遠有落點且報告骨架一眼可見
@@ -94,6 +96,7 @@ export default function CarbonReportPreview({
   highlightedParagraphId = null,
   onParagraphHeadingClick = undefined,
   saveStatus = null,
+  readOnly = false,
 }: ICarbonReportPreviewProps) {
   const { t } = useTranslation();
   const [, setErrorModal] = useState({ isOpen: false, message: "" });
@@ -231,6 +234,7 @@ export default function CarbonReportPreview({
     <div className="relative flex h-full w-full flex-1 flex-col border-l border-gray-200 bg-white">
       {hasOutline && stats && (
         <ReportToolbar
+        readOnly={readOnly}
           documentName={reportData.documentName}
           stats={stats}
           status={session.status}

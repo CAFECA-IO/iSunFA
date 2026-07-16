@@ -11,12 +11,14 @@ import { CARBON_CHAT_PURPOSE } from "@/constants/carbon_chatbot";
 import { CarbonInventoryStatePutPayload } from "@/validators";
 
 export interface IInventoryStateRecord {
+  // Info: (20260716 - Emily) #52 雙模式回傳:個人會話 envelope 有值、帳本會話 plainContent 有值
   envelope: {
     encryptedContent: string;
     ephemeralPublicKey: string | null;
     keyDerivationHint: string;
     algorithm: string;
-  };
+  } | null;
+  plainContent: string | null;
   version: number;
   updatedAt: Date;
 }
@@ -35,12 +37,16 @@ export class CarbonInventoryStateService {
       const record = await this.repo.findByChannel(channel);
       if (!record) return null;
       return {
-        envelope: {
-          encryptedContent: record.encryptedContent,
-          ephemeralPublicKey: record.ephemeralPublicKey,
-          keyDerivationHint: record.keyDerivationHint,
-          algorithm: record.algorithm,
-        },
+        envelope:
+          record.encryptedContent && record.keyDerivationHint
+            ? {
+                encryptedContent: record.encryptedContent,
+                ephemeralPublicKey: record.ephemeralPublicKey,
+                keyDerivationHint: record.keyDerivationHint,
+                algorithm: record.algorithm,
+              }
+            : null,
+        plainContent: record.plainContent ?? null,
         version: record.version,
         updatedAt: record.updatedAt,
       };
@@ -65,10 +71,12 @@ export class CarbonInventoryStateService {
         channel: payload.channel,
         purpose: CARBON_CHAT_PURPOSE,
         recipientPublicKey: payload.recipientPublicKey,
-        encryptedContent: payload.envelope.encryptedContent,
-        ephemeralPublicKey: payload.envelope.ephemeralPublicKey ?? null,
-        keyDerivationHint: payload.envelope.keyDerivationHint,
-        algorithm: payload.envelope.algorithm,
+        encryptedContent: payload.envelope?.encryptedContent ?? null,
+        plainContent: payload.plainContent ?? null,
+        ephemeralPublicKey: payload.envelope?.ephemeralPublicKey ?? null,
+        keyDerivationHint: payload.envelope?.keyDerivationHint ?? null,
+        // Info: (20260716 - Emily) #52 帳本模式無 ECIES envelope,algorithm 僅個人模式有意義
+        algorithm: payload.envelope?.algorithm ?? "NONE",
         expectedVersion: payload.version,
       });
     } catch (error) {

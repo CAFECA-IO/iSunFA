@@ -11,6 +11,8 @@ export const carbonChatbot = {
   today: "Today",
   history: "History",
   new_chat: "New Chat",
+  new_chat_personal: "Personal chat (end-to-end encrypted)",
+  read_only: "Read-only (account book viewer)",
   ai_thinking: "AI is thinking...",
   input_placeholder: "Type your question or response...",
   report_progress: "Report Progress",
