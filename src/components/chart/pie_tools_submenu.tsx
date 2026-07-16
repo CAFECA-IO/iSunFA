@@ -1,7 +1,11 @@
-import React, { useState, FC } from "react";
+import React, { useState, useMemo, FC } from "react";
 import { CakeSlice, Slice, Trash2, LucideIcon } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { IChartAction, MermaidActionType } from "@/lib/utils/mermaid_helpers";
+import {
+  IChartAction,
+  MermaidActionType,
+  parsePieItems,
+} from "@/lib/utils/mermaid_helpers";
 import {
   MERMAID_INPUT_STYLE,
   MERMAID_LABEL_STYLE,
@@ -384,17 +388,20 @@ const PIE_TOOL_PANELS: Record<PieTools, FC<IBasePanelProps>> = {
 interface IPieToolsSectionProps {
   selectedTool: string | null;
   setSelectedTool: React.Dispatch<React.SetStateAction<string | null>>;
-  parsedPieItems: { label: string; value: number }[];
+  chart: string;
   onAddAction: (action: IChartAction) => void;
 }
 
 export const PieToolsSection: FC<IPieToolsSectionProps> = ({
   selectedTool,
   setSelectedTool,
-  parsedPieItems,
+  chart,
   onAddAction,
 }) => {
   const { t } = useTranslation();
+
+  // Info: (20260716 - Julian) 元件自行解析所需資料，父層只需傳入圖表字串
+  const parsedPieItems = useMemo(() => parsePieItems(chart), [chart]);
 
   const handleAddActionWithReset = (action: IChartAction) => {
     onAddAction(action);

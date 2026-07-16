@@ -17,6 +17,7 @@ import {
   MermaidActionType,
   XYChartDataType,
   XYChartAxisType,
+  parseXYChartData,
 } from "@/lib/utils/mermaid_helpers";
 import {
   MERMAID_INPUT_STYLE,
@@ -975,17 +976,20 @@ const XY_CHART_TOOL_PANELS: Record<XYChartTools, FC<IBasePanelProps>> = {
 interface IXYChartToolsSectionProps {
   selectedTool: string | null;
   setSelectedTool: React.Dispatch<React.SetStateAction<string | null>>;
-  parsedXYChartData: IXYChartData | null;
+  chart: string;
   onAddAction: (action: IChartAction) => void;
 }
 
 export const XYChartToolsSection: FC<IXYChartToolsSectionProps> = ({
   selectedTool,
   setSelectedTool,
-  parsedXYChartData,
+  chart,
   onAddAction,
 }) => {
   const { t } = useTranslation();
+
+  // Info: (20260716 - Julian) 元件自行解析所需資料，父層只需傳入圖表字串
+  const parsedXYChartData = useMemo(() => parseXYChartData(chart), [chart]);
 
   const handleAddActionWithReset = (action: IChartAction) => {
     onAddAction(action);

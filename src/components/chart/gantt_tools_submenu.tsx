@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, FC } from "react";
+import React, { useState, useMemo, FC } from "react";
 import {
   SquarePlus,
   SquarePen,
@@ -16,6 +16,7 @@ import {
   MermaidActionType,
   GanttItemType,
   GanttTaskStatus,
+  parseGanttItems,
 } from "@/lib/utils/mermaid_helpers";
 import {
   MERMAID_INPUT_STYLE,
@@ -939,17 +940,20 @@ const GANTT_TOOL_PANELS: Record<GanttTools, FC<IBasePanelProps>> = {
 interface IGanttToolsSectionProps {
   selectedTool: string | null;
   setSelectedTool: React.Dispatch<React.SetStateAction<string | null>>;
-  parsedGanttItems: IGanttItem[];
+  chart: string;
   onAddAction: (action: IChartAction) => void;
 }
 
 export const GanttToolsSection: FC<IGanttToolsSectionProps> = ({
   selectedTool,
   setSelectedTool,
-  parsedGanttItems,
+  chart,
   onAddAction,
 }) => {
   const { t } = useTranslation();
+
+  // Info: (20260716 - Julian) 元件自行解析所需資料，父層只需傳入圖表字串
+  const parsedGanttItems = useMemo(() => parseGanttItems(chart), [chart]);
 
   const handleAddActionWithReset = (action: IChartAction) => {
     onAddAction(action);

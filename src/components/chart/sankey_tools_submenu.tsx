@@ -1,4 +1,4 @@
-import React, { useState, FC, useEffect } from "react";
+import React, { useState, useMemo, FC, useEffect } from "react";
 import {
   Repeat,
   Tag,
@@ -13,6 +13,7 @@ import {
   ISankeyData,
   ISankeyLink,
   MermaidActionType,
+  parseSankeyData,
 } from "@/lib/utils/mermaid_helpers";
 import {
   MERMAID_INPUT_STYLE,
@@ -679,17 +680,20 @@ const SANKEY_TOOL_PANELS: Record<SankeyTools, FC<IBasePanelProps>> = {
 interface ISankeyToolsSectionProps {
   selectedTool: string | null;
   setSelectedTool: React.Dispatch<React.SetStateAction<string | null>>;
-  parsedSankeyData: ISankeyData | null;
+  chart: string;
   onAddAction: (action: IChartAction) => void;
 }
 
 export const SankeyToolsSection: FC<ISankeyToolsSectionProps> = ({
   selectedTool,
   setSelectedTool,
-  parsedSankeyData,
+  chart,
   onAddAction,
 }) => {
   const { t } = useTranslation();
+
+  // Info: (20260716 - Julian) 元件自行解析所需資料，父層只需傳入圖表字串
+  const parsedSankeyData = useMemo(() => parseSankeyData(chart), [chart]);
 
   const handleAddActionWithReset = (action: IChartAction) => {
     onAddAction(action);
