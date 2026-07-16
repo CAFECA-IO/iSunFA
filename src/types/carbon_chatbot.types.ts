@@ -80,6 +80,12 @@ export interface IReportProgressStats {
 
 export interface IReportData {
   documentName: string;
+  /**
+   * Info: (20260716 - Emily) 報告全文的權威來源(使用者所見即所存,零改動保證):
+   * 存在時預覽直接渲染本欄,不重組大綱骨架;paragraphs 降為 derived view(進度/chip/查核)。
+   * AI 草稿/修訂/匯入寫入時以標題 patch 本欄對應段落,不重排使用者的文件結構。
+   */
+  rawMarkdown?: string;
   title: string;
   section: string;
   categories: IReportCategory[];
@@ -167,6 +173,8 @@ export interface ICarbonInventoryState {
 export interface IChatSession {
   id: string;
   title: string;
+  // Info: (20260716 - Emily) 使用者自訂標題:true 時首訊衍生標題不得覆蓋
+  isTitleCustom?: boolean;
   time: string;
   status: SessionStatusEnum;
   statusColor: string;

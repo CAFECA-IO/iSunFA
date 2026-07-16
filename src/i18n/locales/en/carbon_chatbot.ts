@@ -12,6 +12,8 @@ export const carbonChatbot = {
   history: "History",
   new_chat: "New Chat",
   new_chat_personal: "Personal chat (end-to-end encrypted)",
+  rename_session: "Rename chat",
+  rename_document: "Rename report file",
   read_only: "Read-only (account book viewer)",
   ai_thinking: "AI is thinking...",
   input_placeholder: "Type your question or response...",

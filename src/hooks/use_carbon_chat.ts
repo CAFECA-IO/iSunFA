@@ -71,6 +71,7 @@ import {
   isTimeoutApiError,
   splitReportMarkdownSections,
   alignReportSections,
+  patchMarkdownSection,
 } from "@/hooks/use_carbon_chat.helpers";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { useAuth } from "@/contexts/auth_context";
@@ -338,12 +339,16 @@ export const useCarbonChat = () => {
           sessions.forEach((entry) => {
             if (!entry.sessionId || next[entry.sessionId]) return;
             const cached = titleCache.get(entry.sessionId);
-            next[entry.sessionId] = createChatSession(
-              entry.sessionId,
-              cached?.title ?? t("carbon_chatbot.new_session_title"),
-              cached?.createdAt ??
-                new Date(entry.createdAt).toLocaleDateString(),
-            );
+            next[entry.sessionId] = {
+              ...createChatSession(
+                entry.sessionId,
+                cached?.title ?? t("carbon_chatbot.new_session_title"),
+                cached?.createdAt ??
+                  new Date(entry.createdAt).toLocaleDateString(),
+              ),
+              // Info: (20260716 - Emily) 自訂標題旗標隨快取還原(首訊衍生不覆蓋)
+              isTitleCustom: cached?.isTitleCustom ?? false,
+            };
           });
           return next;
         });
@@ -721,6 +726,7 @@ export const useCarbonChat = () => {
       id: s.id,
       title: s.title,
       createdAt: s.time,
+      isTitleCustom: s.isTitleCustom,
     }));
     saveSessionsIndex(user.address, entries);
   }, [sessionsData, user?.address]);
@@ -742,6 +748,40 @@ export const useCarbonChat = () => {
     setPendingImport(null);
     pendingDraftParagraphIdRef.current = null;
   }, []);
+
+  // Info: (20260716 - Emily) 對話改名:設自訂旗標(首訊衍生不再覆蓋);sessions 索引 effect 自動持久化
+  const renameSession = useCallback((sessionId: string, title: string) => {
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    setSessionsData((prev) => {
+      const session = prev[sessionId];
+      if (!session) return prev;
+      return {
+        ...prev,
+        [sessionId]: { ...session, title: trimmed, isTitleCustom: true },
+      };
+    });
+  }, []);
+
+  // Info: (20260716 - Emily) 報告檔名改名:入 reportData(隨草稿持久化);下載檔名跟隨
+  const renameReportDocument = useCallback(
+    (documentName: string) => {
+      const trimmed = documentName.trim();
+      if (!trimmed) return;
+      setSessionsData((prev) => {
+        const session = prev[activeSessionId];
+        if (!session?.reportData) return prev;
+        return {
+          ...prev,
+          [activeSessionId]: {
+            ...session,
+            reportData: { ...session.reportData, documentName: trimmed },
+          },
+        };
+      });
+    },
+    [activeSessionId],
+  );
 
   // Info: (20260714 - Emily) 新增對話:建立空白 session 並切換;channel 隨 id 變更,歷史/草稿各自獨立
   // Info: (20260716 - Emily) #52 可選綁定帳本:綁定後報告歸屬帳本(明文模式),不綁為個人會話(E2EE)
@@ -862,12 +902,23 @@ export const useCarbonChat = () => {
     setSessionsData((prev) => {
       const session = prev[activeSessionId];
       if (!session?.reportData?.paragraphs) return prev;
+      // Info: (20260716 - Emily) 報告保真:逐段 patch rawMarkdown(權威來源存在時)
+      let nextRaw = session.reportData.rawMarkdown;
+      if (nextRaw) {
+        session.reportData.paragraphs.forEach((p) => {
+          const imported = contentById.get(p.id);
+          if (imported !== undefined && nextRaw) {
+            nextRaw = patchMarkdownSection(nextRaw, p.title, imported);
+          }
+        });
+      }
       return {
         ...prev,
         [activeSessionId]: {
           ...session,
           reportData: {
             ...session.reportData,
+            rawMarkdown: nextRaw,
             paragraphs: session.reportData.paragraphs.map((p) => {
               const imported = contentById.get(p.id);
               if (imported === undefined) return p;
@@ -909,12 +960,25 @@ export const useCarbonChat = () => {
     setSessionsData((prev) => {
       const session = prev[activeSessionId];
       if (!session?.reportData?.paragraphs) return prev;
+      const targetTitle = session.reportData.paragraphs.find(
+        (p) => p.id === paragraphId,
+      )?.title;
+      // Info: (20260716 - Emily) 報告保真:同步 patch rawMarkdown(權威來源)
+      const nextRaw =
+        session.reportData.rawMarkdown && targetTitle
+          ? patchMarkdownSection(
+              session.reportData.rawMarkdown,
+              targetTitle,
+              revised,
+            )
+          : session.reportData.rawMarkdown;
       return {
         ...prev,
         [activeSessionId]: {
           ...session,
           reportData: {
             ...session.reportData,
+            rawMarkdown: nextRaw,
             paragraphs: session.reportData.paragraphs.map((p) =>
               p.id === paragraphId
                 ? { ...p, content: revised, isVerified: false }
@@ -959,12 +1023,29 @@ export const useCarbonChat = () => {
           };
         });
 
+        // Info: (20260716 - Emily) 報告保真:rawMarkdown 存在時以標題 patch 對應段落(不重排文件結構)
+        const targetTitle = newParagraphs.find(
+          (p) => p.id === draft.paragraphId,
+        )?.title;
+        const nextRaw =
+          reportData.rawMarkdown && targetTitle
+            ? patchMarkdownSection(
+                reportData.rawMarkdown,
+                targetTitle,
+                draft.content,
+              )
+            : reportData.rawMarkdown;
+
         // Info: (20260716 - Emily) 純 immutable 構造(react-hooks/immutability):不對 spread 副本再賦值
         return {
           ...prev,
           [activeSessionId]: {
             ...session,
-            reportData: { ...reportData, paragraphs: newParagraphs },
+            reportData: {
+              ...reportData,
+              rawMarkdown: nextRaw,
+              paragraphs: newParagraphs,
+            },
           },
         };
       });
@@ -1028,6 +1109,7 @@ export const useCarbonChat = () => {
           );
           if (
             firstUserMessage?.text &&
+            !session.isTitleCustom &&
             session.title === t("carbon_chatbot.new_session_title")
           ) {
             session.title = firstUserMessage.text.trim().slice(0, 24);
@@ -1373,10 +1455,15 @@ export const useCarbonChat = () => {
           },
         );
 
-        if (!hasChanges) return prev;
+        // Info: (20260716 - Emily) 報告保真:rawMarkdown 權威來源 — 使用者存什麼渲染什麼,
+        // Info: (20260716 - Emily) 段落對齊僅更新 derived view(進度/chip/查核),絕不重組使用者的文件結構
+        const isRawChanged =
+          updatedSession.reportData.rawMarkdown !== newMarkdown;
+        if (!hasChanges && !isRawChanged) return prev;
 
         updatedSession.reportData = {
           ...updatedSession.reportData,
+          rawMarkdown: newMarkdown,
           paragraphs: newParagraphs,
         };
         return { ...prev, [activeSessionId]: updatedSession };
@@ -1570,6 +1657,7 @@ export const useCarbonChat = () => {
       if (
         !hasUserMessage &&
         inputValue.trim() &&
+        !updatedSession.isTitleCustom &&
         updatedSession.title === t("carbon_chatbot.new_session_title")
       ) {
         updatedSession.title = inputValue.trim().slice(0, 24);
@@ -1837,6 +1925,9 @@ export const useCarbonChat = () => {
     setActiveSessionId: switchSession,
     createNewSession,
     saveStatus,
+    // Info: (20260716 - Emily) 命名:對話改名 + 報告檔名改名
+    renameSession,
+    renameReportDocument,
     inputValue,
     setInputValue,
     isTyping,

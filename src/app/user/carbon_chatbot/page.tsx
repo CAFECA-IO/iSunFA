@@ -26,6 +26,8 @@ export default function CarbonChatbotPage() {
     setActiveSessionId,
     createNewSession,
     saveStatus,
+    renameSession,
+    renameReportDocument,
     inputValue,
     setInputValue,
     isTyping,
@@ -98,6 +100,7 @@ export default function CarbonChatbotPage() {
         onSelectSession={setActiveSessionId}
         onNewChat={createNewSession}
         accountBooks={accountBooks}
+        onRenameSession={renameSession}
       />
 
       {/* Info: (20260714 - Emily) 報告為主視圖:佔滿剩餘寬度,窄螢幕單欄直向捲動(目錄由工具列抽屜提供) */}
@@ -116,6 +119,7 @@ export default function CarbonChatbotPage() {
           saveStatus={saveStatus}
           readOnly={!activeSessionAccess.canEdit}
           onImportReport={importReportFile}
+          onRenameDocument={renameReportDocument}
         />
 
         {/* Info: (20260714 - Emily) 進度浮窗僅 xl+ 顯示(小螢幕會遮擋編輯區,且工具列膠囊已有同數據);置左下讓出聊天鈕 */}

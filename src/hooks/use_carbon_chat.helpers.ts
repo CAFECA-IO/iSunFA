@@ -144,3 +144,52 @@ export const alignReportSections = (
 
   return aligned;
 };
+
+/**
+ * Info: (20260716 - Emily) 以標題 patch 報告全文的對應段落(rawMarkdown 權威來源的唯一寫入方式):
+ * - fence-aware:程式碼圍欄內的 ### 不視為段落邊界
+ * - 標題存在 → 僅替換該段內文(標題行與其後結構原樣保留)
+ * - 標題不存在 → 附加於文末(不重排使用者的既有結構)
+ */
+export const patchMarkdownSection = (
+  markdown: string,
+  headingTitle: string,
+  newBody: string,
+): string => {
+  const lines = markdown.split("\n");
+  const heading = `### ${headingTitle.trim()}`;
+  let inFence = false;
+  let start = -1;
+  let end = lines.length;
+
+  for (let i = 0; i < lines.length; i++) {
+    if (/^\s*(```|~~~)/.test(lines[i])) inFence = !inFence;
+    if (inFence) continue;
+    if (start === -1 && lines[i].trim() === heading) {
+      start = i;
+      continue;
+    }
+    if (start !== -1 && lines[i].startsWith("### ")) {
+      end = i;
+      break;
+    }
+  }
+
+  if (start === -1) {
+    // Info: (20260716 - Emily) 標題不存在:附加於文末,不動既有內容
+    return `${markdown.replace(/\n+$/, "")}\n\n${heading}\n\n${newBody}\n`;
+  }
+
+  // Info: (20260716 - Emily) 保留段落間的 --- 分隔線(若原本有):偵測區段尾端的分隔線
+  const section = lines.slice(start + 1, end);
+  const hasDivider = section.some((line) => line.trim() === "---");
+  const replacement = [
+    lines[start],
+    "",
+    newBody,
+    ...(hasDivider ? ["", "---"] : []),
+  ];
+  return [...lines.slice(0, start), ...replacement, "", ...lines.slice(end)]
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n");
+};

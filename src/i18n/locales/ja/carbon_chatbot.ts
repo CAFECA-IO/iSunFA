@@ -12,6 +12,8 @@ export const carbonChatbot = {
   history: "過去のチャット",
   new_chat: "新しいチャット",
   new_chat_personal: "個人チャット(エンドツーエンド暗号化)",
+  rename_session: "チャット名を変更",
+  rename_document: "レポートファイル名を変更",
   read_only: "閲覧のみ(帳簿ビューア権限)",
   ai_thinking: "AIが考え中...",
   input_placeholder: "質問や回答を入力してください...",

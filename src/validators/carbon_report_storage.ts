@@ -30,6 +30,8 @@ export const CarbonReportDataSchema = z.object({
   categories: z.array(ReportCategorySchema),
   paragraphs: z.array(ReportParagraphSchema).optional(),
   totalEmissions: z.number(),
+  // Info: (20260716 - Emily) 報告全文權威來源(零改動保證;上限對齊密文欄位)
+  rawMarkdown: z.string().max(2_000_000).optional(),
 });
 
 export type CarbonReportDataPayload = z.infer<typeof CarbonReportDataSchema>;
@@ -70,6 +72,8 @@ export const StoredSessionsIndexSchema = z.object({
         id: z.string().min(1).max(50),
         title: z.string().max(200),
         createdAt: z.string().max(50),
+        // Info: (20260716 - Emily) 使用者自訂標題旗標(重整後首訊衍生不得覆蓋)
+        isTitleCustom: z.boolean().optional(),
       }),
     )
     .max(100),

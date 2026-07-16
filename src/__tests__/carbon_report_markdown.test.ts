@@ -4,6 +4,7 @@ import { describe, it, expect } from "@jest/globals";
 import {
   splitReportMarkdownSections,
   alignReportSections,
+  patchMarkdownSection,
 } from "@/hooks/use_carbon_chat.helpers";
 
 const TITLES = ["1.1 組織概況", "1.2 盤查邊界", "3.2 範疇二排放"];
@@ -96,5 +97,51 @@ describe("alignReportSections (zero-loss round-trip)", () => {
     );
     // Info: (20260716 - Emily) 佔位引言原樣回傳,由 hook 判定「未觸碰 → 維持未生成」
     expect(aligned.get(1)).toBe("> _本段尚未生成_");
+  });
+});
+
+describe("patchMarkdownSection (rawMarkdown authoritative source)", () => {
+  const DOC = `# 我的自訂報告
+
+自訂前言,不可被動到。
+
+### 1.1 組織概況
+
+原本的內文。
+
+---
+
+### 我的自訂章節
+
+自訂內容也不可被動到。
+`;
+
+  it("should replace only the target section body and keep the document structure", () => {
+    const patched = patchMarkdownSection(DOC, "1.1 組織概況", "AI 更新後的內文。");
+    // Info: (20260716 - Emily) 使用者結構零改動:標頭/前言/自訂章節原樣
+    expect(patched).toContain("# 我的自訂報告");
+    expect(patched).toContain("自訂前言,不可被動到。");
+    expect(patched).toContain("### 我的自訂章節");
+    expect(patched).toContain("自訂內容也不可被動到。");
+    expect(patched).toContain("AI 更新後的內文。");
+    expect(patched).not.toContain("原本的內文。");
+    // Info: (20260716 - Emily) 段落分隔線保留
+    expect(patched).toContain("---");
+  });
+
+  it("should append at the end when the heading does not exist", () => {
+    const patched = patchMarkdownSection(DOC, "3.2 範疇二排放", "新段落內文。");
+    expect(patched).toContain("### 3.2 範疇二排放");
+    expect(patched.indexOf("### 3.2 範疇二排放")).toBeGreaterThan(
+      patched.indexOf("### 我的自訂章節"),
+    );
+    expect(patched).toContain("原本的內文。");
+  });
+
+  it("should not treat ### inside code fences as section boundaries", () => {
+    const doc = "### 1.1 組織概況\n\n```\n### 假標題\n```\n內文尾。\n";
+    const patched = patchMarkdownSection(doc, "1.1 組織概況", "新內文。");
+    expect(patched).toContain("新內文。");
+    expect(patched).not.toContain("內文尾。");
   });
 });

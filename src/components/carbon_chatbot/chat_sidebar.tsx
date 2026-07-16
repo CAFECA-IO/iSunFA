@@ -7,6 +7,7 @@ import {
   Settings,
   BookOpen,
   User,
+  Pencil,
 } from "lucide-react";
 import { IChatSession } from "@/types/carbon_chatbot.types";
 
@@ -25,6 +26,8 @@ interface IChatSidebarProps {
   onNewChat?: (accountBookId?: string) => void;
   // Info: (20260716 - Emily) #52 使用者可綁定的帳本;空陣列時點擊直接建個人會話(不出選單)
   accountBooks?: IAccountBookOption[];
+  // Info: (20260716 - Emily) 對話改名(自訂標題持久化,首訊衍生不再覆蓋)
+  onRenameSession?: (sessionId: string, title: string) => void;
 }
 
 import { useTranslation } from "@/i18n/i18n_context";
@@ -35,10 +38,22 @@ export function ChatSidebar({
   onSelectSession,
   onNewChat = undefined,
   accountBooks = [],
+  onRenameSession = undefined,
 }: IChatSidebarProps) {
   const { t } = useTranslation();
   // Info: (20260716 - Emily) #52 新增對話選單開闔(有帳本時才出現)
   const [isNewChatMenuOpen, setIsNewChatMenuOpen] = useState<boolean>(false);
+  // Info: (20260716 - Emily) 改名編輯狀態(session id + 草稿值;Enter/blur 提交,Esc 取消)
+  const [editing, setEditing] = useState<{ id: string; value: string } | null>(
+    null,
+  );
+
+  const commitRename = () => {
+    if (editing && editing.value.trim()) {
+      onRenameSession?.(editing.id, editing.value);
+    }
+    setEditing(null);
+  };
 
   const handleNewChatClick = () => {
     if (accountBooks.length === 0) {
@@ -129,10 +144,48 @@ export function ChatSidebar({
                   >
                     <MessageSquare className="h-4 w-4" />
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-[13px] font-bold text-gray-800">
-                      {s.title}
-                    </div>
+                  <div className="group min-w-0 flex-1">
+                    {editing?.id === s.id ? (
+                      <input
+                        type="text"
+                        value={editing.value}
+                        // Info: (20260716 - Emily) callback ref 聚焦(jsx-a11y 禁 autoFocus prop;編輯模式為使用者主動觸發)
+          ref={(node) => node?.focus()}
+                        aria-label={t("carbon_chatbot.rename_session")}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) =>
+                          setEditing({ id: s.id, value: e.target.value })
+                        }
+                        onBlur={commitRename}
+                        onKeyDown={(e) => {
+                          e.stopPropagation();
+                          if (e.key === "Enter") commitRename();
+                          if (e.key === "Escape") setEditing(null);
+                        }}
+                        className="w-full rounded border border-orange-200 px-1.5 py-0.5 text-[13px] font-bold text-gray-800 outline-none focus:border-[#ff5a00]"
+                      />
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <span className="truncate text-[13px] font-bold text-gray-800">
+                          {s.title}
+                        </span>
+                        {onRenameSession && (
+                          <button
+                            type="button"
+                            aria-label={t("carbon_chatbot.rename_session")}
+                            title={t("carbon_chatbot.rename_session")}
+                            onClick={(e) => {
+                              // Info: (20260716 - Emily) 不觸發卡片的切換對話
+                              e.stopPropagation();
+                              setEditing({ id: s.id, value: s.title });
+                            }}
+                            className="shrink-0 rounded p-0.5 text-gray-300 opacity-0 transition-opacity group-hover:opacity-100 hover:text-[#ff5a00]"
+                          >
+                            <Pencil size={11} />
+                          </button>
+                        )}
+                      </div>
+                    )}
                     <div className="mt-1.5 flex items-center justify-between">
                       <span className="flex items-center gap-1 text-[11px] font-medium text-gray-400">
                         <Clock className="h-3 w-3" />

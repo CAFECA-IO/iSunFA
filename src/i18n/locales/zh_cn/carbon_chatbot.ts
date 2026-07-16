@@ -12,6 +12,8 @@ export const carbonChatbot = {
   history: "历史对话",
   new_chat: "新增对话",
   new_chat_personal: "个人会话(端对端加密)",
+  rename_session: "重命名对话",
+  rename_document: "重命名报告文件名",
   read_only: "只读(账本查看权限)",
   ai_thinking: "AI 思考中...",
   input_placeholder: "输入您的问题或回复...",
