@@ -94,6 +94,10 @@ export const carbonChatbot = {
   import_parsing: "「{{name}}」解析中,完成后将显示逐段预览…",
   import_empty: "【导入失败】文件中没有可对应到大纲的内容。",
   import_failed: "【导入失败】报告解析发生问题,请稍后再试。",
+  attachments_processing: "附件解析中(提取事实与生成草稿),大型文件可能需要一至两分钟…",
+  import_suggest: "「{{name}}」看起来是整份报告。要导入为报告起点,还是作为佐证附件?",
+  import_suggest_import: "导入报告",
+  import_suggest_attach: "作为附件发送",
   section_placeholder:
     "本段尚未生成。回到左侧对话告诉碳会计师你想撰写这一段,内容将实时出现在这里。",
   report_status_draft: "报告状态:草稿(内容由 AI 逐段生成,经人工查核后方可定稿)",

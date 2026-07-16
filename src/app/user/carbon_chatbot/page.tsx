@@ -62,6 +62,10 @@ export default function CarbonChatbotPage() {
     toggleImportItem,
     applyPendingImport,
     discardPendingImport,
+    importCandidate,
+    confirmImportCandidate,
+    attachImportCandidate,
+    dismissImportCandidate,
     generateParagraphDraft,
     toggleParagraphVerified,
     handleMarkdownChange,
@@ -164,6 +168,10 @@ export default function CarbonChatbotPage() {
               onAddFiles={addAttachments}
               onRemoveAttachment={removeAttachment}
               draftNotice={draftNotice}
+              importCandidate={importCandidate}
+              onConfirmImportCandidate={confirmImportCandidate}
+              onAttachImportCandidate={attachImportCandidate}
+              onDismissImportCandidate={dismissImportCandidate}
             />
           </>
         ) : (

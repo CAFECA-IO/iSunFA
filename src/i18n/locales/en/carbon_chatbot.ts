@@ -106,6 +106,12 @@ export const carbonChatbot = {
   import_parsing: "Parsing 「{{name}}」; a per-paragraph preview will follow…",
   import_empty: "[Import failed] Nothing in the file maps to the outline.",
   import_failed: "[Import failed] Could not parse the report; please retry later.",
+  attachments_processing:
+    "Processing attachments (extracting facts and drafting); large files may take a minute or two…",
+  import_suggest:
+    "「{{name}}」 looks like a full report. Import it as the report baseline, or send it as supporting evidence?",
+  import_suggest_import: "Import report",
+  import_suggest_attach: "Send as attachment",
   section_placeholder:
     "This section has not been generated yet. Tell the Carbon Accountant in the chat that you want to work on it, and the content will appear here in real time.",
   report_status_draft:

@@ -94,6 +94,10 @@ export const carbonChatbot = {
   import_parsing: "「{{name}}」解析中,完成後將顯示逐段預覽…",
   import_empty: "【匯入失敗】檔案中沒有可對應到大綱的內容。",
   import_failed: "【匯入失敗】報告解析發生問題,請稍後再試。",
+  attachments_processing: "附件解析中(萃取事實與生成草稿),大型檔案可能需要一至兩分鐘…",
+  import_suggest: "「{{name}}」看起來是整份報告。要匯入為報告起點,還是作為佐證附件?",
+  import_suggest_import: "匯入報告",
+  import_suggest_attach: "作為附件傳送",
   section_placeholder:
     "本段尚未生成。回到左側對話告訴碳會計師你想撰寫這一段,內容將即時出現在這裡。",
   report_status_draft: "報告狀態:草稿(內容由 AI 逐段生成,經人工查核後方可定稿)",

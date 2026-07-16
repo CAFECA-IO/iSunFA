@@ -107,6 +107,12 @@ export const carbonChatbot = {
   import_parsing: "「{{name}}」を解析中。完了後に段落ごとのプレビューを表示します…",
   import_empty: "【インポート失敗】アウトラインに対応する内容がありません。",
   import_failed: "【インポート失敗】解析に失敗しました。後でもう一度お試しください。",
+  attachments_processing:
+    "添付ファイルを解析中(事実抽出とドラフト生成)。大きなファイルは1〜2分かかることがあります…",
+  import_suggest:
+    "「{{name}}」はレポート全体のようです。レポートの起点としてインポートしますか、それとも証憑として送信しますか?",
+  import_suggest_import: "レポートをインポート",
+  import_suggest_attach: "添付として送信",
   section_placeholder:
     "このセクションはまだ生成されていません。左側のチャットでカーボン会計士に作成したい旨を伝えると、内容がここにリアルタイムで表示されます。",
   report_status_draft:

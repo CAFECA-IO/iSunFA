@@ -80,6 +80,8 @@ import {
   SESSION_PROGRESS_MAX,
   buildCarbonChatChannel,
   CARBON_CHAT_REPLY_TIMEOUT_MS,
+  CARBON_CHAT_REPLY_TIMEOUT_WITH_ATTACHMENTS_MS,
+  CARBON_IMPORT_SUGGEST_MIN_BYTES,
   CARBON_CHAT_AI_CONTEXT_SIZE,
   CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES,
   CARBON_CHAT_MAX_ATTACHMENT_BYTES,
@@ -131,6 +133,8 @@ export const useCarbonChat = () => {
   const [pendingImport, setPendingImport] = useState<IPendingImport | null>(
     null,
   );
+  // Info: (20260716 - Emily) #56 匯入導流:聊天附件疑似整份報告時的候選(File 保留供直接匯入)
+  const [importCandidate, setImportCandidate] = useState<File | null>(null);
   const draftNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -261,7 +265,7 @@ export const useCarbonChat = () => {
 
   // Info: (20260712 - Luphia) 送出後啟動等待逾時；逾時仍未經訂閱收到回覆即解除等待並提示，避免卡在 typing
   // Info: (20260714 - Emily) per-channel 計時器:多聊天室並發等待互不覆蓋;閉包綁定發送當下的 channel/session
-  const startReplyTimeout = useCallback(() => {
+  const startReplyTimeout = useCallback((timeoutMs: number = CARBON_CHAT_REPLY_TIMEOUT_MS) => {
     const channel = chatChannel;
     // Info: (20260714 - Emily) 回覆已於 fetch 期間送達則不再啟動計時器
     if (!pendingReplyChannelsRef.current.has(channel)) return;
@@ -280,7 +284,7 @@ export const useCarbonChat = () => {
           },
           0,
         );
-      }, CARBON_CHAT_REPLY_TIMEOUT_MS),
+      }, timeoutMs),
     );
   }, [chatChannel, appendMessageLocally, t]);
 
@@ -1488,8 +1492,20 @@ export const useCarbonChat = () => {
 
   // Info: (20260714 - Emily) 加入附件:前端 Fail Fast(MIME 白名單/大小/數量),通過者轉 base64 進待送清單
   const addAttachments = useCallback(
-    (files: File[]) => {
+    (files: File[], options?: { skipImportCheck?: boolean }) => {
       setAttachmentError(null);
+
+      // Info: (20260716 - Emily) #56 匯入導流(UAT:使用者把整份報告當佐證附件上傳 → 聊天管線超時):
+      // Info: (20260716 - Emily) 單一大型 pdf 疑似整份報告,先問要「匯入報告」還是「作為佐證附件」
+      if (
+        !options?.skipImportCheck &&
+        files.length === 1 &&
+        files[0].type === "application/pdf" &&
+        files[0].size >= CARBON_IMPORT_SUGGEST_MIN_BYTES
+      ) {
+        setImportCandidate(files[0]);
+        return;
+      }
 
       const allowedMimeTypes: readonly string[] =
         CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES;
@@ -1586,6 +1602,25 @@ export const useCarbonChat = () => {
     },
     [pendingAttachments.length, t],
   );
+
+  // Info: (20260716 - Emily) #56 匯入導流出口:走整份匯入(預覽卡)或仍作佐證附件
+  const confirmImportCandidate = useCallback(() => {
+    if (!importCandidate) return;
+    const file = importCandidate;
+    setImportCandidate(null);
+    void importReportFile(file);
+  }, [importCandidate, importReportFile]);
+
+  const attachImportCandidate = useCallback(() => {
+    if (!importCandidate) return;
+    const file = importCandidate;
+    setImportCandidate(null);
+    addAttachments([file], { skipImportCheck: true });
+  }, [importCandidate, addAttachments]);
+
+  const dismissImportCandidate = useCallback(() => {
+    setImportCandidate(null);
+  }, []);
 
   const removeAttachment = useCallback((attachmentId: string) => {
     setAttachmentError(null);
@@ -1697,6 +1732,14 @@ export const useCarbonChat = () => {
 
       // Info: (20260712 - Luphia) 傳入頻道與本 session 的加密公鑰(xpub)，由後端加密 AI 回覆並經 Centrifugo 回傳
       // Info: (20260714 - Emily) 改用 request helper:自動帶 DeWT Bearer token(後端已加授權檢查)
+      // Info: (20260716 - Emily) 附件解析為長工(在 chat 請求內執行):以狀態列告知,避免使用者誤判卡死
+      if (attachmentsMeta.length > 0) {
+        setDraftNotice({
+          type: "loading",
+          text: t("carbon_chatbot.attachments_processing"),
+        });
+      }
+
       const data = await request<{
         success: boolean;
         message: string;
@@ -1735,6 +1778,8 @@ export const useCarbonChat = () => {
       // Info: (20260714 - Emily) HTTP 回帶的密文訊息直接解密顯示(草稿隨摘要訊息一起套用);
       // Info: (20260714 - Emily) Centrifugo 訂閱若也送達,由訊息 id 去重(草稿亦以訊息 id 防重複套用)
       const payload = data.payload;
+      // Info: (20260716 - Emily) 附件管線完成(回應已達),清除解析中提示
+      if (attachmentsMeta.length > 0) setDraftNotice(null);
 
       // Info: (20260716 - Emily) #6518 事實入帳:對話萃取 + 附件活動數據合併進狀態帳本(去重由引擎裁決)
       applyInventoryExtraction(payload?.extraction, userMessage.text.slice(0, 80));
@@ -1758,10 +1803,16 @@ export const useCarbonChat = () => {
       }
 
       // Info: (20260712 - Luphia) 啟動等待逾時，避免「已發佈但未收到」時卡在 typing(回覆已回帶時為 no-op)
-      startReplyTimeout();
+      // Info: (20260716 - Emily) 帶附件時管線含萃取/草稿生成,等待窗加長(UAT:30s 誤報系統錯誤)
+      startReplyTimeout(
+        attachmentsMeta.length > 0
+          ? CARBON_CHAT_REPLY_TIMEOUT_WITH_ATTACHMENTS_MS
+          : CARBON_CHAT_REPLY_TIMEOUT_MS,
+      );
     } catch (error) {
       // Info: (20260712 - Luphia) 此區塊代表「取得 AI 回覆」階段失敗（如 /api/v1/chat/carbon 錯誤）
       console.error("[carbon-chat] Failed to obtain AI response:", error);
+      setDraftNotice(null);
       setIsError(true);
       // Info: (20260716 - Emily) 額度/逾時/限流分別給專屬文案(#6515/#6516),其餘為一般系統錯誤
       let errorText = t("carbon_chatbot.system_error");
@@ -1970,6 +2021,11 @@ export const useCarbonChat = () => {
     toggleImportItem,
     applyPendingImport,
     discardPendingImport,
+    // Info: (20260716 - Emily) #56 匯入導流(聊天附件疑似整份報告)
+    importCandidate,
+    confirmImportCandidate,
+    attachImportCandidate,
+    dismissImportCandidate,
     generateParagraphDraft,
     toggleParagraphVerified,
     handleMarkdownChange,

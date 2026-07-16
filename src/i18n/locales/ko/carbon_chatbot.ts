@@ -106,6 +106,12 @@ export const carbonChatbot = {
   import_parsing: "「{{name}}」 분석 중. 완료 후 단락별 미리보기가 표시됩니다…",
   import_empty: "[가져오기 실패] 목차에 대응하는 내용이 없습니다.",
   import_failed: "[가져오기 실패] 보고서 분석에 실패했습니다. 나중에 다시 시도해 주세요.",
+  attachments_processing:
+    "첨부 파일 분석 중(사실 추출 및 초안 생성). 대용량 파일은 1~2분 걸릴 수 있습니다…",
+  import_suggest:
+    "「{{name}}」은(는) 전체 보고서로 보입니다. 보고서 기점으로 가져올까요, 증빙 첨부로 보낼까요?",
+  import_suggest_import: "보고서 가져오기",
+  import_suggest_attach: "첨부로 보내기",
   section_placeholder:
     "이 섹션은 아직 생성되지 않았습니다. 왼쪽 대화에서 탄소 회계사에게 작성 의사를 알리면 내용이 실시간으로 여기에 표시됩니다.",
   report_status_draft:
