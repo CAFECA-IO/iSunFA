@@ -17,6 +17,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { useChartExport } from "@/hooks/use_chart_export";
 import { MermaidAiModal } from "@/components/chart/mermaid_ai_modal";
 import { detectChartType, parsePieData } from "@/lib/utils/mermaid_helpers";
+import { renderMermaid } from "@/lib/utils/mermaid_render";
 import { MermaidChartType } from "@/constants/mermaid_chart";
 
 interface IMermaidChartProps {
@@ -150,7 +151,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({
 
       try {
         const id = `mermaid-${Math.random().toString(36).substring(2, 9)}`;
-        const { svg } = await mermaid.render(id, trimmedChart);
+        const { svg } = await renderMermaid(id, trimmedChart);
 
         // Info: (20260615 - Julian) 只有當組件仍處於活躍狀態時，才更新 svg 狀態，防止競態
         if (isCurrent) {
@@ -359,7 +360,6 @@ const MermaidChart: FC<IMermaidChartProps> = ({
         }
 
         /* 2. Process Nodes Styling */
-        .mermaid-container .node rect,
         .mermaid-container .node circle,
         .mermaid-container .node polygon,
         .mermaid-container .node path,

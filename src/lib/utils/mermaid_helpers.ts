@@ -1450,3 +1450,103 @@ export const applyChartAction = (
       return chartStr;
   }
 };
+
+/**
+ * Info: (20260716 - Julian) Sankey 節點名稱與 ASCII 佔位的對照
+ */
+export interface ISankeyAlias {
+  token: string;
+  name: string;
+}
+
+/**
+ * Info: (20260716 - Julian)
+ * 是否含 Mermaid Sankey 文法無法處理的字元。
+ * Mermaid 11.x 的 Sankey lexer 僅接受 ASCII 可見字元
+ * [ -~]（含引號內），故任何非此範圍字元（如中文）皆需替換為佔位。
+ */
+const hasNonAsciiForSankey = (name: string): boolean => /[^ -~]/.test(name);
+
+/**
+ * Info: (20260716 - Julian) 將文字內容中的 XML 特殊字元跳脫，供還原進 SVG text 使用
+ */
+const escapeXmlText = (text: string): string =>
+  text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/**
+ * Info: (20260716 - Julian)
+ * 將 Sankey 定義中含非 ASCII 的節點名稱替換為 ASCII 佔位，繞過 Mermaid Sankey
+ * 只支援 ASCII 的限制。回傳替換後的定義與對照表；若無需替換則原樣返回、aliases 為空。
+ * 註：節點元素 id 由 Mermaid 以 Uid 序號產生，名稱僅出現在 SVG <text> 標籤，
+ * 故渲染後可安全地以字串替換把佔位換回原始名稱（見 restoreSankeyLabels）。
+ */
+export const aliasNonAsciiSankeyNodes = (
+  chartStr: string,
+): { chart: string; aliases: ISankeyAlias[] } => {
+  if (!chartStr || !isSankeyChart(chartStr)) {
+    return { chart: chartStr, aliases: [] };
+  }
+
+  const nameToToken = new Map<string, string>();
+  let salt = 0;
+
+  // Info: (20260716 - Julian) 產生不與原始內容衝突的 ASCII 佔位
+  const makeToken = (index: number): string => {
+    let token = `cjkNode${index}Zz`;
+    while (chartStr.includes(token)) {
+      salt += 1;
+      token = `cjkNode${index}s${salt}Zz`;
+    }
+    return token;
+  };
+
+  const aliasName = (name: string): string => {
+    if (!hasNonAsciiForSankey(name)) return name;
+    let token = nameToToken.get(name);
+    if (!token) {
+      token = makeToken(nameToToken.size);
+      nameToToken.set(name, token);
+    }
+    return token;
+  };
+
+  const lines = chartStr.split("\n").map((line) => {
+    const fields = getSankeyLineFields(line);
+    if (!fields) return line;
+    return buildSankeyLine(
+      aliasName(fields[0]),
+      aliasName(fields[1]),
+      parseFloat(fields[2]),
+    );
+  });
+
+  const aliases: ISankeyAlias[] = Array.from(nameToToken.entries()).map(
+    ([name, token]) => ({ token, name }),
+  );
+
+  // Info: (20260716 - Julian) 無需替換時保持原字串，避免無謂的格式正規化
+  return {
+    chart: aliases.length > 0 ? lines.join("\n") : chartStr,
+    aliases,
+  };
+};
+
+/**
+ * Info: (20260716 - Julian)
+ * 把 aliasNonAsciiSankeyNodes 產生的 ASCII 佔位在渲染後的 SVG 中還原為原始名稱。
+ * 由長到短替換以避免佔位互為子字串；名稱以 XML 跳脫後才寫回 text 內容。
+ */
+export const restoreSankeyLabels = (
+  svg: string,
+  aliases: ISankeyAlias[],
+): string => {
+  if (!svg || aliases.length === 0) return svg;
+
+  const sorted = [...aliases].sort((a, b) => b.token.length - a.token.length);
+
+  let result = svg;
+  sorted.forEach(({ token, name }) => {
+    result = result.split(token).join(escapeXmlText(name));
+  });
+  return result;
+};
