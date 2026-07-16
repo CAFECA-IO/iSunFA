@@ -1,8 +1,6 @@
 /**
- * Info: (20260715 - Emily) 真實 Reed-Solomon Erasure Code 實作(GF(2^8) + Cauchy 生成矩陣)。
- * 回應 laria.ts 既有 ToDo(20251028 - Luphia):取代零填充的模擬實作。
- * 選型結論見 documents/architecture/decisions/adr_012_laria_reed_solomon.md:
- * 純 TS 零依賴(無 native/WASM 供應鏈與 segfault 風險),benchmark 4MB×8 encode 約 73ms。
+ * Info: (20260715 - Emily) Reed-Solomon Erasure Code(GF(2^8) + Cauchy 生成矩陣)。純 TS 零依賴。
+ * 選型與 benchmark 見 documents/architecture/decisions/adr_012_laria_reed_solomon.md。
  * 數學性質:系統矩陣 [I; Cauchy],Cauchy 矩陣任意方子陣非奇異,故任取 k 列必可逆,
  * 保證「任意遺失 ≤ parityShards 個切片」皆可精確還原。
  */
@@ -34,7 +32,8 @@ const gfMul = (a: number, b: number): number => {
 };
 
 const gfInv = (a: number): number => {
-  if (a === 0) throw new Error("[ReedSolomonErasure] GF(2^8) zero has no inverse");
+  if (a === 0)
+    throw new Error("[ReedSolomonErasure] GF(2^8) zero has no inverse");
   return EXP_TABLE[GF_ORDER - LOG_TABLE[a]];
 };
 
@@ -107,12 +106,21 @@ export class ReedSolomonErasure {
   // Info: (20260715 - Emily) 系統生成矩陣 [I(k); Cauchy(m×k)],C[j][i] = 1/((k+j) ⊕ i)
   private readonly matrix: Uint8Array[];
 
+  /**
+   * Info: (20260716 - Luphia) 反矩陣快取:key 為存活切片索引簽章(如 "0,1,2,5,6")。
+   * 串流還原時整檔遺失樣態固定,同一組存活切片每個 stripe 都會重算 invertMatrix(O(k^3)),
+   * 快取後大檔多 stripe 只需求逆一次。樣態組合有限,記憶體開銷可忽略。
+   */
+  private readonly inverseCache: Map<string, Uint8Array[]> = new Map();
+
   constructor(dataShards: number, parityShards: number) {
     if (dataShards <= 0 || parityShards <= 0) {
       throw new Error("[ReedSolomonErasure] shard counts must be positive");
     }
     if (dataShards + parityShards > GF_SIZE) {
-      throw new Error("[ReedSolomonErasure] dataShards + parityShards must be <= 256");
+      throw new Error(
+        "[ReedSolomonErasure] dataShards + parityShards must be <= 256",
+      );
     }
     this.dataShards = dataShards;
     this.parityShards = parityShards;
@@ -141,16 +149,20 @@ export class ReedSolomonErasure {
       if (!shard) continue;
       if (size === -1) size = shard.length;
       if (shard.length !== size) {
-        throw new Error("[ReedSolomonErasure] all shards must have identical length");
+        throw new Error(
+          "[ReedSolomonErasure] all shards must have identical length",
+        );
       }
     }
-    if (size <= 0) throw new Error("[ReedSolomonErasure] no shard data provided");
+    if (size <= 0)
+      throw new Error("[ReedSolomonErasure] no shard data provided");
     return size;
   }
 
   /**
-   * Info: (20260715 - Emily) 就地計算 parity:呼叫端提供 k 個資料切片 + m 個已配置的 parity buffer。
-   * 介面與原模擬類別相同(laria.ts 呼叫端零改動)。
+   * Info: (20260715 - Emily) 就地計算 parity。
+   * 傳入長度必為 totalShards 的陣列:前 k 個為資料切片,後 m 個為已配置(等長)的 parity buffer,
+   * 呼叫後 parity buffer 會被填入計算結果。所有切片長度須一致。
    */
   async encode(shards: Buffer[]): Promise<void> {
     if (shards.length !== this.totalShards) {
@@ -171,8 +183,8 @@ export class ReedSolomonErasure {
   }
 
   /**
-   * Info: (20260715 - Emily) 就地還原:null 代表遺失切片。存活切片 >= dataShards 即可全數重建,
-   * 不足時 throw(絕不靜默回傳髒資料 — 取代舊模擬實作的零填充行為)。
+   * Info: (20260715 - Emily) 就地還原:傳入長度必為 totalShards 的陣列,遺失的切片以 null 表示。
+   * 存活切片 >= dataShards 即可重建全部遺失切片(就地寫回原陣列);不足時 throw,不回傳未完整重建的資料。
    */
   async reconstruct(shards: (Buffer | null)[]): Promise<void> {
     if (shards.length !== this.totalShards) {
@@ -181,7 +193,11 @@ export class ReedSolomonErasure {
       );
     }
     const presentIdx: number[] = [];
-    for (let i = 0; i < this.totalShards && presentIdx.length < this.dataShards; i++) {
+    for (
+      let i = 0;
+      i < this.totalShards && presentIdx.length < this.dataShards;
+      i++
+    ) {
       if (shards[i]) presentIdx.push(i);
     }
     const presentTotal = shards.reduce((acc, s) => acc + (s ? 1 : 0), 0);
@@ -196,9 +212,14 @@ export class ReedSolomonErasure {
 
     await yieldEventLoop();
 
-    // Info: (20260715 - Emily) 取存活切片對應的 k 列生成矩陣求逆,重建遺失的資料切片
-    const subMatrix = presentIdx.map((i) => this.matrix[i]);
-    const inverse = invertMatrix(subMatrix, this.dataShards);
+    // Info: (20260716 - Luphia) 取存活切片對應的 k 列生成矩陣求逆(以簽章快取,避免逐 stripe 重算)
+    const cacheKey = presentIdx.join(",");
+    let inverse = this.inverseCache.get(cacheKey);
+    if (!inverse) {
+      const subMatrix = presentIdx.map((i) => this.matrix[i]);
+      inverse = invertMatrix(subMatrix, this.dataShards);
+      this.inverseCache.set(cacheKey, inverse);
+    }
     for (let d = 0; d < this.dataShards; d++) {
       if (shards[d]) continue;
       const out = Buffer.alloc(size);

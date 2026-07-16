@@ -127,7 +127,9 @@ describe("encodeFile / recoverFile", () => {
     const content = await prepareEncodedFile();
     const meta = await readMetadata();
     expect(meta.rsVersion).toBe(LARIA_RS_VERSION);
-    expect(meta.sha256).toBe(createHash("sha256").update(content).digest("hex"));
+    expect(meta.sha256).toBe(
+      createHash("sha256").update(content).digest("hex"),
+    );
 
     await recoverFile(shardsDir, recoveredPath);
     expect((await fs.readFile(recoveredPath)).equals(content)).toBe(true);
@@ -198,7 +200,7 @@ describe("encodeFile / recoverFile", () => {
       await downgradeToLegacy();
       await fs.rm(path.join(shardsDir, "shard-2.bin"));
       await expect(recoverFile(shardsDir, recoveredPath)).rejects.toThrow(
-        /舊版檔案/,
+        /遺失資料切片/,
       );
     });
   });
