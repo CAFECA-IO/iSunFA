@@ -1,6 +1,6 @@
 /**
  * Info: (20260716 - Emily) 檔案內容簽章驗證(magic bytes,#6517)。
- * 瀏覽器宣告的 MIME(file.type)可任意偽造;本模組以檔頭實際 bytes 驗證宣告格式，
+ * 瀏覽器宣告的 MIME(file.type)可任意偽造；本模組以檔頭實際 bytes 驗證宣告格式，
  * 防止「.exe 改名 .pdf」類的偽裝上傳。純 TS 實作，不引第三方庫。
  * 支援清單對齊 CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES。
  */
@@ -82,7 +82,7 @@ const SIGNATURE_VALIDATORS: Record<string, (buffer: Uint8Array) => boolean> = {
 
 /**
  * Info: (20260716 - Emily) 驗證檔案實際內容是否符合宣告的 MIME type。
- * @returns true = 檔頭與宣告一致;false = 不一致或宣告型別不在支援清單(Fail Fast)
+ * @returns true = 檔頭與宣告一致；false = 不一致或宣告型別不在支援清單(Fail Fast)
  */
 export const matchesDeclaredMimeType = (
   buffer: Uint8Array,

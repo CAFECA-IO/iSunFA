@@ -4,7 +4,7 @@
 import { prisma } from "@/lib/prisma";
 
 export const userStorageUsageRepo = {
-  // Info: (20260716 - Emily) 讀取目前用量;無記錄視為 0
+  // Info: (20260716 - Emily) 讀取目前用量；無記錄視為 0
   async getUsedBytes(address: string): Promise<bigint> {
     const record = await prisma.userStorageUsage.findUnique({
       where: { address },
