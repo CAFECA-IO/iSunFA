@@ -1,5 +1,5 @@
-// Info: (20260716 - Emily) 附件安全管線(#6517):內容簽章驗證 → 掃毒 → 配額 → Laria 上傳 → 記帳
-// Info: (20260716 - Emily) 職責:route 只呼叫 processUpload;所有裁決與 DB/儲存協調收斂於此(三層架構)
+// Info: (20260716 - Emily) 附件安全管線(#6517): 內容簽章驗證 → 掃毒 → 配額 → Laria 上傳 → 記帳
+// Info: (20260716 - Emily) 職責: route 只呼叫 processUpload;所有裁決與 DB/儲存協調收斂於此(三層架構)
 
 import { ApiError, API_ERRORS } from "@/lib/utils/error_dictionary";
 import { logger } from "@/lib/utils/logger";
@@ -31,7 +31,7 @@ export class AttachmentSecurityService {
 
   private readonly usageRepo: IUsageRepo;
 
-  // Info: (20260716 - Emily) 依賴全部可注入:單元測試不需 ClamAV/Laria/DB
+  // Info: (20260716 - Emily) 依賴全部可注入: 單元測試不需 ClamAV/Laria/DB
   constructor(deps?: {
     scanner?: IVirusScanner;
     storage?: StorageService;
@@ -68,7 +68,7 @@ export class AttachmentSecurityService {
 
     const scanResult = await this.scanner.scan(buffer);
     if (scanResult.status === VirusScanStatusEnum.INFECTED) {
-      // Info: (20260716 - Emily) 掃出惡意內容:拒收 + 告警(不回傳簽名細節給前端)
+      // Info: (20260716 - Emily) 掃出惡意內容: 拒收 + 告警(不回傳簽名細節給前端)
       logger.error("attachment rejected by virus scanner", {
         address,
         name: file.name,

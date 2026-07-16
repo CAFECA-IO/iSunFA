@@ -59,6 +59,7 @@ export const pricing = {
       name: "免費版",
       desc: "適合個人使用者",
       features: {
+        storage: "儲存空間 {{gb}} GB",
         fido: "1 組 FIDO2 金鑰",
         credit_limit: "點數上限 500 點",
         daily_credits: "每日登入發放 {{amount}} 點點數",
@@ -76,6 +77,7 @@ export const pricing = {
       name: "團隊版",
       desc: "適合成長中的團隊",
       features: {
+        storage: "儲存空間 {{gb}} GB",
         fido: "無限 FIDO2 金鑰",
         fido_tooltip: "根據 fido2 金鑰數量收取訂閱費",
         credit_limit: "點數無上限",
@@ -97,6 +99,7 @@ export const pricing = {
       name: "企業版",
       desc: "適合大型機構與事務所",
       features: {
+        storage: "儲存空間 {{gb}} GB",
         fido: "無限 FIDO2 金鑰",
         fido_tooltip: "根據 fido2 金鑰數量收取訂閱費",
         credit_limit: "點數無上限",

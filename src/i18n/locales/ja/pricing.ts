@@ -59,6 +59,7 @@ export const pricing = {
       name: "フリープラン",
       desc: "個人ユーザー向け",
       features: {
+        storage: "ストレージ {{gb}} GB",
         fido: "FIDO2 キー 1個",
         credit_limit: "ポイント上限 500 pt",
         daily_credits: "毎日ログインで {{amount}} pt 付与",
@@ -76,6 +77,7 @@ export const pricing = {
       name: "チームプラン",
       desc: "成長中のチーム向け",
       features: {
+        storage: "ストレージ {{gb}} GB",
         fido: "無制限の FIDO2 キー",
         fido_tooltip:
           "FIDO2 キーの数に基づいてサブスクリプション料金が請求されます",
@@ -98,6 +100,7 @@ export const pricing = {
       name: "エンタープライズ",
       desc: "大規模な組織向け",
       features: {
+        storage: "ストレージ {{gb}} GB",
         fido: "無制限の FIDO2 キー",
         fido_tooltip:
           "FIDO2 キーの数に基づいてサブスクリプション料金が請求されます",

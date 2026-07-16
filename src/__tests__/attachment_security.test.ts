@@ -1,4 +1,4 @@
-// Info: (20260716 - Emily) 附件安全測試(#6517):magic bytes 裁決、掃毒攔截/fail-open、配額邊界、記帳時機
+// Info: (20260716 - Emily) 附件安全測試(#6517): magic bytes 裁決、掃毒攔截/fail-open、配額邊界、記帳時機
 
 import { describe, it, expect, jest } from "@jest/globals";
 import { matchesDeclaredMimeType } from "@/lib/file_signature";
@@ -22,7 +22,7 @@ describe("matchesDeclaredMimeType", () => {
     ["image/jpeg", [0xff, 0xd8, 0xff, 0xe0], true],
     ["image/gif", [0x47, 0x49, 0x46, 0x38, 0x39, 0x61], true], // GIF89a
     [XLSX_MIME, [0x50, 0x4b, 0x03, 0x04, 0x14], true], // ZIP PK
-    // Info: (20260716 - Emily) 偽裝:EXE(MZ)宣告成 PDF → 拒
+    // Info: (20260716 - Emily) 偽裝: EXE(MZ)宣告成 PDF → 拒
     ["application/pdf", [0x4d, 0x5a, 0x90, 0x00], false],
     // Info: (20260716 - Emily) PNG 宣告成 JPEG → 拒
     ["image/jpeg", [0x89, 0x50, 0x4e, 0x47], false],
@@ -51,12 +51,15 @@ describe("matchesDeclaredMimeType", () => {
 
   it("should reject undeclared mime types (whitelist)", () => {
     expect(
-      matchesDeclaredMimeType(Uint8Array.from([0x4d, 0x5a]), "application/x-exe"),
+      matchesDeclaredMimeType(
+        Uint8Array.from([0x4d, 0x5a]),
+        "application/x-exe",
+      ),
     ).toBe(false);
   });
 });
 
-// Info: (20260716 - Emily) service 測試:全依賴注入,不觸 ClamAV/Laria/DB
+// Info: (20260716 - Emily) service 測試: 全依賴注入,不觸 ClamAV/Laria/DB
 const buildFile = (bytes: number[], name: string, type: string): File =>
   new File([Uint8Array.from(bytes)], name, { type });
 
@@ -67,9 +70,11 @@ const buildDeps = (overrides?: {
   usedBytes?: bigint;
 }) => {
   const scanner: IVirusScanner = {
-    scan: jest.fn<() => Promise<IVirusScanResult>>().mockResolvedValue(
-      overrides?.scanResult ?? { status: VirusScanStatusEnum.CLEAN },
-    ),
+    scan: jest
+      .fn<() => Promise<IVirusScanResult>>()
+      .mockResolvedValue(
+        overrides?.scanResult ?? { status: VirusScanStatusEnum.CLEAN },
+      ),
   };
   const storage = {
     uploadLaria: jest.fn<() => Promise<string>>().mockResolvedValue("cid-123"),
