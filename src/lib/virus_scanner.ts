@@ -1,9 +1,9 @@
 /**
  * Info: (20260716 - Emily) 病毒掃描介面與 ClamAV 實作(#6517)。
- * 介面先行:未配置 ClamAV 時為 skipped(no-op),部署環境接 ClamAV sidecar 即啟用。
- * ⚠️ env 簽章制約(admin_setup_whitepaper.md):啟用需將 CLAMAV_HOST/CLAMAV_PORT
- * 寫入 .env,而 .env 受 FIDO2 簽章鎖定 — 必須由超級管理員經 /admin/setup
- * 重新簽署封裝,嚴禁手動編輯(會觸發 SIGNATURE_MISMATCH 系統鎖定)。
+ * 介面先行: 未配置 ClamAV 時為 skipped(no-op)，部署環境接 ClamAV sidecar 即啟用。
+ * ⚠️ env 簽章制約(admin_setup_whitepaper.md): 啟用需將 CLAMAV_HOST/CLAMAV_PORT
+ * 寫入 .env，而 .env 受 FIDO2 簽章鎖定 — 必須由超級管理員經 /admin/setup
+ * 重新簽署封裝，嚴禁手動編輯(會觸發 SIGNATURE_MISMATCH 系統鎖定)。
  */
 
 import net from "net";
@@ -12,9 +12,9 @@ import { logger } from "@/lib/utils/logger";
 export enum VirusScanStatusEnum {
   CLEAN = "CLEAN",
   INFECTED = "INFECTED",
-  // Info: (20260716 - Emily) 未配置掃描器:依 fail-open 策略放行(拒收會讓掃毒器缺席 = 全站不能上傳)
+  // Info: (20260716 - Emily) 未配置掃描器: 依 fail-open 策略放行(拒收會讓掃毒器缺席 = 全站不能上傳)
   SKIPPED = "SKIPPED",
-  // Info: (20260716 - Emily) 掃描器故障:fail-open 放行 + 告警(可用性優先,故障需監控告警修復)
+  // Info: (20260716 - Emily) 掃描器故障: fail-open 放行 + 告警(可用性優先，故障需監控告警修復)
   ERROR = "ERROR",
 }
 
@@ -79,7 +79,11 @@ export class ClamAvScanner implements IVirusScanner {
 
       socket.on("connect", () => {
         socket.write("zINSTREAM\0");
-        for (let offset = 0; offset < buffer.length; offset += CLAMAV_CHUNK_SIZE) {
+        for (
+          let offset = 0;
+          offset < buffer.length;
+          offset += CLAMAV_CHUNK_SIZE
+        ) {
           const chunk = buffer.subarray(offset, offset + CLAMAV_CHUNK_SIZE);
           const sizeHeader = Buffer.alloc(4);
           sizeHeader.writeUInt32BE(chunk.length, 0);
@@ -101,7 +105,7 @@ export class ClamAvScanner implements IVirusScanner {
   }
 }
 
-// Info: (20260716 - Emily) 未配置時的 no-op:首次呼叫記一次 warn,避免掃毒缺席無人知曉
+// Info: (20260716 - Emily) 未配置時的 no-op: 首次呼叫記一次 warn，避免掃毒缺席無人知曉
 export class NoopVirusScanner implements IVirusScanner {
   private warned = false;
 
@@ -116,7 +120,7 @@ export class NoopVirusScanner implements IVirusScanner {
   }
 }
 
-// Info: (20260716 - Emily) 工廠:CLAMAV_HOST 已簽入 env 時啟用 ClamAV,否則 no-op
+// Info: (20260716 - Emily) 工廠: CLAMAV_HOST 已簽入 env 時啟用 ClamAV，否則 no-op
 export const createVirusScanner = (): IVirusScanner => {
   const host = process.env.CLAMAV_HOST;
   if (!host) return new NoopVirusScanner();

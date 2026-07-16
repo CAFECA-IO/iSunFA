@@ -1,4 +1,4 @@
-// Info: (20260716 - Emily) 附件安全測試(#6517):magic bytes 裁決、掃毒攔截/fail-open、配額邊界、記帳時機
+// Info: (20260716 - Emily) 附件安全測試(#6517): magic bytes 裁決、掃毒攔截/fail-open、配額邊界、記帳時機
 
 import { describe, it, expect, jest } from "@jest/globals";
 import { matchesDeclaredMimeType } from "@/lib/file_signature";
@@ -17,12 +17,12 @@ const XLSX_MIME =
 
 describe("matchesDeclaredMimeType", () => {
   const cases: [string, number[], boolean][] = [
-    ["application/pdf", [0x25, 0x50, 0x44, 0x46, 0x2d, 0x31], true], // %PDF-1
+    ["application/pdf", [0x25, 0x50, 0x44, 0x46, 0x2d, 0x31], true], // Info: (20260716 - Emily) %PDF-1 檔頭
     ["image/png", [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1], true],
     ["image/jpeg", [0xff, 0xd8, 0xff, 0xe0], true],
-    ["image/gif", [0x47, 0x49, 0x46, 0x38, 0x39, 0x61], true], // GIF89a
-    [XLSX_MIME, [0x50, 0x4b, 0x03, 0x04, 0x14], true], // ZIP PK
-    // Info: (20260716 - Emily) 偽裝:EXE(MZ)宣告成 PDF → 拒
+    ["image/gif", [0x47, 0x49, 0x46, 0x38, 0x39, 0x61], true], // Info: (20260716 - Emily) GIF89a 檔頭
+    [XLSX_MIME, [0x50, 0x4b, 0x03, 0x04, 0x14], true], // Info: (20260716 - Emily) ZIP(PK)檔頭，XLSX 容器
+    // Info: (20260716 - Emily) 偽裝: EXE(MZ)宣告成 PDF → 拒
     ["application/pdf", [0x4d, 0x5a, 0x90, 0x00], false],
     // Info: (20260716 - Emily) PNG 宣告成 JPEG → 拒
     ["image/jpeg", [0x89, 0x50, 0x4e, 0x47], false],
@@ -51,12 +51,15 @@ describe("matchesDeclaredMimeType", () => {
 
   it("should reject undeclared mime types (whitelist)", () => {
     expect(
-      matchesDeclaredMimeType(Uint8Array.from([0x4d, 0x5a]), "application/x-exe"),
+      matchesDeclaredMimeType(
+        Uint8Array.from([0x4d, 0x5a]),
+        "application/x-exe",
+      ),
     ).toBe(false);
   });
 });
 
-// Info: (20260716 - Emily) service 測試:全依賴注入,不觸 ClamAV/Laria/DB
+// Info: (20260716 - Emily) service 測試: 全依賴注入，不觸 ClamAV/Laria/DB
 const buildFile = (bytes: number[], name: string, type: string): File =>
   new File([Uint8Array.from(bytes)], name, { type });
 
@@ -67,9 +70,11 @@ const buildDeps = (overrides?: {
   usedBytes?: bigint;
 }) => {
   const scanner: IVirusScanner = {
-    scan: jest.fn<() => Promise<IVirusScanResult>>().mockResolvedValue(
-      overrides?.scanResult ?? { status: VirusScanStatusEnum.CLEAN },
-    ),
+    scan: jest
+      .fn<() => Promise<IVirusScanResult>>()
+      .mockResolvedValue(
+        overrides?.scanResult ?? { status: VirusScanStatusEnum.CLEAN },
+      ),
   };
   const storage = {
     uploadLaria: jest.fn<() => Promise<string>>().mockResolvedValue("cid-123"),
@@ -144,7 +149,7 @@ describe("AttachmentSecurityService", () => {
 
   it("should enforce the 5GB quota boundary", async () => {
     const file = buildFile(PDF_BYTES, "bill.pdf", "application/pdf");
-    // Info: (20260716 - Emily) 剩餘空間恰好差 1 byte → 拒;恰好足夠 → 過
+    // Info: (20260716 - Emily) 剩餘空間恰好差 1 byte → 拒；恰好足夠 → 過
     const overQuota = buildDeps({
       usedBytes: CARBON_STORAGE_QUOTA_BYTES - BigInt(file.size) + BigInt(1),
     });

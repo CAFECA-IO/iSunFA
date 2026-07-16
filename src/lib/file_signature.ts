@@ -5,7 +5,7 @@
  * 支援清單對齊 CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES。
  */
 
-// Info: (20260716 - Emily) 文本啟發式的檢查長度:取檔案前 8KB 判斷是否為合法文字內容
+// Info: (20260716 - Emily) 文本啟發式的檢查長度: 取檔案前 8KB 判斷是否為合法文字內容
 const TEXT_SNIFF_BYTES = 8 * 1024;
 
 const startsWith = (
@@ -50,8 +50,8 @@ const isHeifFamily = (buffer: Uint8Array): boolean => {
 };
 
 /**
- * Info: (20260716 - Emily) CSV 無 magic bytes,以文本啟發式判定:
- * 前 8KB 不得含 NUL(二進位標記),且不得命中任何已知二進位格式檔頭。
+ * Info: (20260716 - Emily) CSV 無 magic bytes，以文本啟發式判定:
+ * 前 8KB 不得含 NUL(二進位標記)，且不得命中任何已知二進位格式檔頭。
  */
 const isPlausibleTextFile = (buffer: Uint8Array): boolean => {
   const head = buffer.subarray(0, TEXT_SNIFF_BYTES);
@@ -62,7 +62,7 @@ const isPlausibleTextFile = (buffer: Uint8Array): boolean => {
   return true;
 };
 
-// Info: (20260716 - Emily) 宣告 MIME → 檔頭驗證器(白名單制:未知宣告一律不通過)
+// Info: (20260716 - Emily) 宣告 MIME → 檔頭驗證器(白名單制: 未知宣告一律不通過)
 const SIGNATURE_VALIDATORS: Record<string, (buffer: Uint8Array) => boolean> = {
   "image/png": (b) =>
     startsWith(b, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),

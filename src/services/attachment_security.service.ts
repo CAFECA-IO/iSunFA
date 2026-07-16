@@ -31,7 +31,7 @@ export class AttachmentSecurityService {
 
   private readonly usageRepo: IUsageRepo;
 
-  // Info: (20260716 - Emily) 依賴全部可注入:單元測試不需 ClamAV/Laria/DB
+  // Info: (20260716 - Emily) 依賴全部可注入: 單元測試不需 ClamAV/Laria/DB
   constructor(deps?: {
     scanner?: IVirusScanner;
     storage?: StorageService;
@@ -68,7 +68,7 @@ export class AttachmentSecurityService {
 
     const scanResult = await this.scanner.scan(buffer);
     if (scanResult.status === VirusScanStatusEnum.INFECTED) {
-      // Info: (20260716 - Emily) 掃出惡意內容:拒收 + 告警(不回傳簽名細節給前端)
+      // Info: (20260716 - Emily) 掃出惡意內容: 拒收 + 告警(不回傳簽名細節給前端)
       logger.error("attachment rejected by virus scanner", {
         address,
         name: file.name,
