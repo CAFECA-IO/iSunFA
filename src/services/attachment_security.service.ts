@@ -43,9 +43,9 @@ export class AttachmentSecurityService {
   }
 
   /**
-   * Info: (20260716 - Emily) Fail Fast 順序(失敗不留殘料,通過才上傳):
+   * Info: (20260716 - Emily) Fail Fast 順序(失敗不留殘料，通過才上傳):
    * 1. magic bytes vs 宣告 MIME(防偽裝檔) 2. 掃毒(infected 拒收;未配置/故障 fail-open + 告警)
-   * 3. 配額(5GB 常數,見 CARBON_STORAGE_QUOTA_BYTES 註解) 4. uploadLaria 5. 用量記帳
+   * 3. 配額(5GB 常數，見 CARBON_STORAGE_QUOTA_BYTES 註解) 4. uploadLaria 5. 用量記帳
    */
   async processUpload(
     input: IAttachmentUploadInput,

@@ -1,7 +1,7 @@
 /**
  * Info: (20260716 - Emily) 檔案內容簽章驗證(magic bytes,#6517)。
- * 瀏覽器宣告的 MIME(file.type)可任意偽造;本模組以檔頭實際 bytes 驗證宣告格式,
- * 防止「.exe 改名 .pdf」類的偽裝上傳。純 TS 實作,不引第三方庫。
+ * 瀏覽器宣告的 MIME(file.type)可任意偽造;本模組以檔頭實際 bytes 驗證宣告格式，
+ * 防止「.exe 改名 .pdf」類的偽裝上傳。純 TS 實作，不引第三方庫。
  * 支援清單對齊 CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES。
  */
 
@@ -50,8 +50,8 @@ const isHeifFamily = (buffer: Uint8Array): boolean => {
 };
 
 /**
- * Info: (20260716 - Emily) CSV 無 magic bytes,以文本啟發式判定:
- * 前 8KB 不得含 NUL(二進位標記),且不得命中任何已知二進位格式檔頭。
+ * Info: (20260716 - Emily) CSV 無 magic bytes，以文本啟發式判定:
+ * 前 8KB 不得含 NUL(二進位標記)，且不得命中任何已知二進位格式檔頭。
  */
 const isPlausibleTextFile = (buffer: Uint8Array): boolean => {
   const head = buffer.subarray(0, TEXT_SNIFF_BYTES);
