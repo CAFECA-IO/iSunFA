@@ -1914,7 +1914,7 @@ export const TRUE_COEFFICIENT_DATA_DEFRA_PART_5: ICoefficient[] = [
   },
 
   // Info: (20260706 - Luphia) 範疇外排放 (Outside of scopes - Biogenic CO2)
-  // GHG Protocol 嚴格規定：生質能燃燒時釋放的 CO2 雖不計入 Scope 1，但必須在「範疇外 (Outside of Scopes)」獨立揭露！
+  // Info: (20260706 - Luphia) GHG Protocol 嚴格規定：生質能燃燒時釋放的 CO2 雖不計入 Scope 1，但必須在「範疇外 (Outside of Scopes)」獨立揭露
   {
     id: "defra-2025-out-001",
     name: "生物源二氧化碳 (Biogenic CO2) - 生質柴油 (Biodiesel ME)",
