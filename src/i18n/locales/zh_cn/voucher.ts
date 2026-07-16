@@ -210,5 +210,11 @@ export const voucher = {
       update_failed: "更新失败，请稍后再试",
       delete_failed: "删除失败，请稍后再试",
     },
+    back_to_voucher: "返回传票管理",
+    mobile_tab: {
+      main_subject: "选择主科目",
+      sub_account: "选择会计科目",
+      custom_form: "自订会计科目",
+    },
   },
 };

@@ -212,5 +212,11 @@ export const voucher = {
       update_failed: "Failed to update, please try again later",
       delete_failed: "Failed to delete, please try again later",
     },
+    back_to_voucher: "Back To Vouchers",
+    mobile_tab: {
+      main_subject: "Main Subject",
+      sub_account: "Sub-account",
+      custom_form: "Custom Subject",
+    },
   },
 };
