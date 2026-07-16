@@ -4,6 +4,8 @@
 import { NextRequest } from "next/server";
 import { logger } from "@/lib/utils/logger";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
+import { enforceCarbonRateLimit } from "@/lib/rate_limiter";
+import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { CarbonReportDraftPutSchema } from "@/validators";
@@ -18,6 +20,13 @@ export async function GET(request: NextRequest) {
     if (!sessionUser) {
       return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
+
+    // Info: (20260716 - Emily) 限流(#6516):DeWT 驗證後、業務邏輯前 Fail Fast
+    const limited = enforceCarbonRateLimit(
+      sessionUser.address,
+      RateLimitBucketEnum.READ,
+    );
+    if (limited) return limited;
 
     const channel = request.nextUrl.searchParams.get("channel");
     if (!channel) {
@@ -53,6 +62,13 @@ export async function PUT(request: NextRequest) {
     if (!sessionUser) {
       return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
+
+    // Info: (20260716 - Emily) 限流(#6516):DeWT 驗證後、業務邏輯前 Fail Fast
+    const limited = enforceCarbonRateLimit(
+      sessionUser.address,
+      RateLimitBucketEnum.SAVE,
+    );
+    if (limited) return limited;
 
     let rawBody: unknown;
     try {

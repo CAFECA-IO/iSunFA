@@ -33,6 +33,8 @@ export const carbonChatbot = {
     "[AI 사용량 한도 도달] 짧은 시간에 요청이 많았습니다. 1분 후 다시 시도해 주세요.",
   ai_timeout:
     "[AI 응답 시간 초과] 처리 시간이 너무 깁니다. 다시 시도해 주세요.",
+  rate_limited:
+    "[요청 과다] 사용 한도에 도달했습니다. 잠시 후 다시 시도해 주세요.",
   ai_name: "페이스",
   platform_name: "환경 인텔리전스 플랫폼",
   system_online: "시스템 온라인",

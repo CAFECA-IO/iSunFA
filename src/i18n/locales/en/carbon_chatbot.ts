@@ -32,6 +32,8 @@ export const carbonChatbot = {
   ai_quota_exceeded:
     "[AI quota reached] Too many requests in a short time; please wait a minute and try again.",
   ai_timeout: "[AI timeout] The request took too long; please try again.",
+  rate_limited:
+    "[Rate limited] You have hit the usage limit; please wait a moment and retry.",
   ai_name: "FAITH",
   platform_name: "ENVIRONMENTAL INTELLIGENCE PLATFORM",
   system_online: "SYSTEM ONLINE",

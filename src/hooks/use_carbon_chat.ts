@@ -46,6 +46,7 @@ import {
 import { request } from "@/lib/utils/request";
 import {
   isQuotaApiError,
+  isRateLimitedApiError,
   isTimeoutApiError,
   splitReportMarkdownIntoBlocks,
 } from "@/hooks/use_carbon_chat.helpers";
@@ -694,7 +695,7 @@ export const useCarbonChat = () => {
       } catch (error) {
         // Info: (20260714 - Emily) 失敗以狀態列短暫提示(自動消失),不插對話氣泡(回覆稍後到達會造成前後矛盾)
         console.error("[carbon-chat] paragraph draft failed:", error);
-        // Info: (20260716 - Emily) 額度/逾時分別給專屬文案(#6515),其餘為一般草稿失敗
+        // Info: (20260716 - Emily) 額度/逾時/限流分別給專屬文案(#6515/#6516),其餘為一般草稿失敗
         let noticeText = t("carbon_chatbot.draft_failed", {
           section: `${section.code} ${section.title}`,
         });
@@ -702,6 +703,8 @@ export const useCarbonChat = () => {
           noticeText = t("carbon_chatbot.ai_quota_exceeded");
         } else if (isTimeoutApiError(error)) {
           noticeText = t("carbon_chatbot.ai_timeout");
+        } else if (isRateLimitedApiError(error)) {
+          noticeText = t("carbon_chatbot.rate_limited");
         }
         setDraftNotice({ type: "error", text: noticeText });
         draftNoticeTimerRef.current = setTimeout(() => {
@@ -1086,12 +1089,14 @@ export const useCarbonChat = () => {
       // Info: (20260712 - Luphia) 此區塊代表「取得 AI 回覆」階段失敗（如 /api/v1/chat/carbon 錯誤）
       console.error("[carbon-chat] Failed to obtain AI response:", error);
       setIsError(true);
-      // Info: (20260716 - Emily) 額度/逾時分別給專屬文案(#6515),其餘為一般系統錯誤
+      // Info: (20260716 - Emily) 額度/逾時/限流分別給專屬文案(#6515/#6516),其餘為一般系統錯誤
       let errorText = t("carbon_chatbot.system_error");
       if (isQuotaApiError(error)) {
         errorText = t("carbon_chatbot.ai_quota_exceeded");
       } else if (isTimeoutApiError(error)) {
         errorText = t("carbon_chatbot.ai_timeout");
+      } else if (isRateLimitedApiError(error)) {
+        errorText = t("carbon_chatbot.rate_limited");
       }
       appendMessageLocally(
         {

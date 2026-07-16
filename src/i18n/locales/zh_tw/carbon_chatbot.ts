@@ -30,6 +30,7 @@ export const carbonChatbot = {
   system_unavailable: "抱歉，系統目前無法回應。",
   ai_quota_exceeded:
     "【AI 額度已達上限】短時間內請求過多，請稍候一分鐘後再試。",
+  rate_limited: "【操作過於頻繁】已達使用頻率上限，請稍候片刻再試。",
   ai_timeout: "【AI 回應逾時】系統處理時間過長，請再試一次。",
   ai_name: "費思",
   platform_name: "環境智能平台",
@@ -71,7 +72,8 @@ export const carbonChatbot = {
     "【草稿生成失敗】「{{section}}」段落草稿生成時發生問題，請稍後再試。",
   section_placeholder:
     "本段尚未生成。回到左側對話告訴碳會計師你想撰寫這一段,內容將即時出現在這裡。",
-  report_status_draft: "報告狀態：草稿(內容由 AI 逐段生成,經人工查核後方可定稿)",
+  report_status_draft:
+    "報告狀態：草稿(內容由 AI 逐段生成,經人工查核後方可定稿)",
   report_button: "報告",
   close_report: "關閉報告",
   close_chat: "關閉聊天視窗",
