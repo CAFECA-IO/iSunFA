@@ -15,6 +15,7 @@ import {
   CARBON_CHAT_MAX_ATTACHMENT_BYTES,
   CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES,
 } from "@/constants/carbon_chatbot";
+import { CARBON_REPORT_CHAPTERS } from "@/constants/carbon_report_outline";
 
 // Info: (20260716 - Emily) 匯入格式白名單:pdf(inline 萃取)與 md/純文字(直讀);
 // Info: (20260716 - Emily) docx 需先轉換管線,Gemini inline 不支援 — 列於 #56 後續,不在本清單
@@ -45,6 +46,19 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get("file");
     const language = formData.get("language");
+    // Info: (20260716 - Emily) 逐章模式參數(前端迴圈):chapterId 需在合法章節清單內
+    const chapterIdRaw = formData.get("chapterId");
+    const chapterId =
+      typeof chapterIdRaw === "string" && chapterIdRaw.length > 0
+        ? chapterIdRaw
+        : undefined;
+    if (
+      chapterId &&
+      !CARBON_REPORT_CHAPTERS.some((chapter) => chapter.id === chapterId)
+    ) {
+      return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
+    }
+    const extractActivities = formData.get("extractActivities") !== "false";
     if (!(file instanceof File)) {
       return jsonFail(API_ERRORS.VA_NO_FILE_UPLOADED);
     }
@@ -79,6 +93,7 @@ export async function POST(request: NextRequest) {
         isText,
       },
       typeof language === "string" ? language : undefined,
+      { chapterId, extractActivities },
     );
 
     return jsonOk(result);

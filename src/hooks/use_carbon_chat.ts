@@ -19,6 +19,7 @@ import { formatFileSize } from "@/lib/utils/common";
 import {
   CARBON_REPORT_OUTLINE,
   CARBON_REPORT_SECTION_COUNT,
+  CARBON_REPORT_CHAPTERS,
 } from "@/constants/carbon_report_outline";
 import {
   IParagraphDraft,
@@ -817,28 +818,90 @@ export const useCarbonChat = () => {
   // Info: (20260716 - Emily) #56 上傳整份報告 → 匯入預覽(不直接寫入;查核重置與數字重勾稽於確認時執行)
   const importReportFile = useCallback(
     async (file: File) => {
-      setDraftNotice({
-        type: "loading",
-        text: t("carbon_chatbot.import_parsing", { name: file.name }),
-      });
+      // Info: (20260716 - Emily) 逐章解析(UAT:整份真實報告單次呼叫受 output token 上限,只回少數段落):
+      // Info: (20260716 - Emily) pdf 或大檔逐章呼叫(11 章),進度即時顯示;小型文字檔維持單發
+      const useChunked =
+        file.type === "application/pdf" ||
+        file.size >= CARBON_IMPORT_SUGGEST_MIN_BYTES;
+      const chapters = useChunked ? CARBON_REPORT_CHAPTERS : [null];
+
+      interface IImportChunkPayload {
+        segments: { paragraphId: string; title: string; content: string }[];
+        unmapped: string[];
+        activities?: IActivityRecord[];
+      }
+
+      const mergedByParagraph = new Map<
+        string,
+        { title: string; parts: string[] }
+      >();
+      const mergedUnmapped: string[] = [];
+      let mergedActivities: IActivityRecord[] = [];
+      const failedChapters: string[] = [];
+
       try {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("language", language);
-        const res = await request<{
-          payload: {
-            segments: {
-              paragraphId: string;
-              title: string;
-              content: string;
-            }[];
-            unmapped: string[];
-            activities: IActivityRecord[];
-          } | null;
-        }>("/api/v1/chat/carbon/import", { method: "POST", body: formData });
+        // Info: (20260716 - Emily) 循序處理:每章一次 LLM 呼叫;單章失敗記錄後續行(不整批作廢)
+        await chapters.reduce(async (previous, chapter, index) => {
+          await previous;
+          setDraftNotice({
+            type: "loading",
+            text: chapter
+              ? t("carbon_chatbot.import_parsing_chapter", {
+                  name: file.name,
+                  current: index + 1,
+                  total: chapters.length,
+                })
+              : t("carbon_chatbot.import_parsing", { name: file.name }),
+          });
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("language", language);
+          if (chapter) formData.append("chapterId", chapter.id);
+          // Info: (20260716 - Emily) 活動數據僅首章呼叫萃取,避免逐章重複入帳
+          formData.append("extractActivities", index === 0 ? "true" : "false");
+          try {
+            const res = await request<{ payload: IImportChunkPayload | null }>(
+              "/api/v1/chat/carbon/import",
+              { method: "POST", body: formData },
+            );
+            const chunk = res.payload;
+            if (!chunk) return;
+            chunk.segments.forEach((segment) => {
+              const bucket = mergedByParagraph.get(segment.paragraphId) ?? {
+                title: segment.title,
+                parts: [],
+              };
+              bucket.parts.push(segment.content);
+              mergedByParagraph.set(segment.paragraphId, bucket);
+            });
+            mergedUnmapped.push(...chunk.unmapped);
+            if (index === 0 && chunk.activities) {
+              mergedActivities = chunk.activities;
+            }
+          } catch (chunkError) {
+            console.error(
+              "[carbon-chat] import chapter failed:",
+              chapter?.id,
+              chunkError,
+            );
+            if (chapter) failedChapters.push(chapter.title);
+            else throw chunkError;
+          }
+        }, Promise.resolve());
+
         setDraftNotice(null);
-        const payload = res.payload;
-        if (!payload || payload.segments.length === 0) {
+        const payload = {
+          segments: Array.from(mergedByParagraph.entries()).map(
+            ([paragraphId, bucket]) => ({
+              paragraphId,
+              title: bucket.title,
+              content: bucket.parts.join("\n\n").trim(),
+            }),
+          ),
+          unmapped: mergedUnmapped,
+          activities: mergedActivities,
+        };
+        if (payload.segments.length === 0) {
           setDraftNotice({
             type: "error",
             text: t("carbon_chatbot.import_empty"),
@@ -865,6 +928,7 @@ export const useCarbonChat = () => {
           })),
           unmapped: payload.unmapped,
           activityCount: payload.activities.length,
+          failedChapters,
         });
       } catch (error) {
         console.error("[carbon-chat] report import failed:", error);

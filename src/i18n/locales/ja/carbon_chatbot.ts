@@ -105,6 +105,10 @@ export const carbonChatbot = {
     "インポートした段落の検証状態はリセットされます。{{activities}} 件の活動データは再照合されます",
   import_apply: "選択をインポート({{count}})",
   import_parsing: "「{{name}}」を解析中。完了後に段落ごとのプレビューを表示します…",
+  import_parsing_chapter:
+    "「{{name}}」を章ごとに解析中({{current}}/{{total}})。完全なレポートは数分かかります…",
+  import_failed_chapters:
+    "次の章は解析に失敗しました。後で再インポートで補完できます:{{chapters}}",
   import_empty: "【インポート失敗】アウトラインに対応する内容がありません。",
   import_failed: "【インポート失敗】解析に失敗しました。後でもう一度お試しください。",
   attachments_processing:

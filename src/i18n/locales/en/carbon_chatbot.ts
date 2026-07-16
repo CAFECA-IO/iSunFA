@@ -104,6 +104,10 @@ export const carbonChatbot = {
     "Verification resets for imported paragraphs; {{activities}} activity records will be re-reconciled",
   import_apply: "Import selected ({{count}})",
   import_parsing: "Parsing 「{{name}}」; a per-paragraph preview will follow…",
+  import_parsing_chapter:
+    "Parsing 「{{name}}」 chapter by chapter ({{current}}/{{total}}); a full report takes a few minutes…",
+  import_failed_chapters:
+    "These chapters failed to parse and can be re-imported later: {{chapters}}",
   import_empty: "[Import failed] Nothing in the file maps to the outline.",
   import_failed: "[Import failed] Could not parse the report; please retry later.",
   attachments_processing:

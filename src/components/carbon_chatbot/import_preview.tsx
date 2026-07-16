@@ -19,6 +19,8 @@ export interface IPendingImport {
   unmapped: string[];
   // Info: (20260716 - Emily) 匯入的活動數據筆數(顯示用;實際合併於確認時執行)
   activityCount: number;
+  // Info: (20260716 - Emily) 逐章解析失敗的章節名(可重新匯入補齊;空陣列 = 全部成功)
+  failedChapters: string[];
 }
 
 export interface IImportPreviewProps {
@@ -84,6 +86,15 @@ export function ImportPreview({
               </div>
             </label>
           ))}
+
+          {pendingImport.failedChapters.length > 0 && (
+            <div className="flex items-center gap-1.5 rounded-xl bg-amber-50 p-3 text-[11px] font-bold text-amber-700">
+              <AlertTriangle size={12} className="shrink-0" />
+              {t("carbon_chatbot.import_failed_chapters", {
+                chapters: pendingImport.failedChapters.join("、"),
+              })}
+            </div>
+          )}
 
           {pendingImport.unmapped.length > 0 && (
             <div className="rounded-xl bg-gray-50 p-3">

@@ -9,7 +9,10 @@ import {
   LLM_TEMPERATURE,
   LlmTaskKeyEnum,
 } from "@/constants/llm";
-import { CARBON_REPORT_OUTLINE } from "@/constants/carbon_report_outline";
+import {
+  CARBON_REPORT_OUTLINE,
+  ICarbonReportSection,
+} from "@/constants/carbon_report_outline";
 import { GhgProtocolCategory } from "@/constants/esg";
 import { MeasurementUnit } from "@/constants/enums";
 import {
@@ -36,8 +39,24 @@ export interface IReportImportResult {
   activities: IActivityRecord[];
 }
 
+/**
+ * Info: (20260716 - Emily) 逐章匯入(UAT:整份真實報告單次呼叫受 output token 上限所限,只回少數段落):
+ * schema 依「本次範圍的段落」動態建構 — 全綱(小檔單發)或單章(前端逐章迴圈);
+ * activities 僅第一章呼叫時萃取,避免 11 章重複入帳
+ */
+const buildImportResponseSchema = (
+  sections: ICarbonReportSection[],
+  withActivities: boolean,
+): Schema => {
+  const schema = buildBaseImportSchema(sections);
+  if (!withActivities) {
+    delete (schema.properties as Record<string, unknown>).activities;
+  }
+  return schema;
+};
+
 // Info: (20260716 - Emily) LLM 輸出約束:段落 id 以 enum 鎖死;內容原樣照抄
-const IMPORT_RESPONSE_SCHEMA: Schema = {
+const buildBaseImportSchema = (sections: ICarbonReportSection[]): Schema => ({
   type: SchemaType.OBJECT,
   properties: {
     segments: {
@@ -48,7 +67,7 @@ const IMPORT_RESPONSE_SCHEMA: Schema = {
           paragraphId: {
             type: SchemaType.STRING,
             format: "enum",
-            enum: CARBON_REPORT_OUTLINE.map((s) => s.id),
+            enum: sections.map((section) => section.id),
           },
           content: {
             type: SchemaType.STRING,
@@ -91,11 +110,12 @@ const IMPORT_RESPONSE_SCHEMA: Schema = {
     },
   },
   required: ["segments", "unmapped"],
-};
+});
 
-const OUTLINE_CATALOG = CARBON_REPORT_OUTLINE.map(
-  (s) => `${s.id}: ${s.code} ${s.title} — ${s.guidance}`,
-).join("\n");
+const buildOutlineCatalog = (sections: ICarbonReportSection[]): string =>
+  sections
+    .map((section) => `${section.id}: ${section.code} ${section.title} — ${section.guidance}`)
+    .join("\n");
 
 const SECTION_BY_ID = new Map(CARBON_REPORT_OUTLINE.map((s) => [s.id, s]));
 
@@ -123,17 +143,40 @@ export class ReportImportService {
   async importReport(
     source: IReportImportSource,
     language?: string,
+    options?: {
+      // Info: (20260716 - Emily) 逐章模式:僅對應該章段落(前端迴圈逐章呼叫,突破單次 output 上限)
+      chapterId?: string;
+      // Info: (20260716 - Emily) 僅首次呼叫萃取活動數據(避免逐章重複入帳)
+      extractActivities?: boolean;
+    },
   ): Promise<IReportImportResult> {
+    const scopedSections = options?.chapterId
+      ? CARBON_REPORT_OUTLINE.filter(
+          (section) => section.chapterId === options.chapterId,
+        )
+      : CARBON_REPORT_OUTLINE;
+    if (scopedSections.length === 0) {
+      throw new ApiError(
+        API_ERRORS.VL_SCHEMA_ERROR.code,
+        API_ERRORS.VL_SCHEMA_ERROR.message,
+        API_ERRORS.VL_SCHEMA_ERROR.status,
+      );
+    }
+    const withActivities = options?.extractActivities ?? true;
+    const scopeRule = options?.chapterId
+      ? "5. 本次只處理下列段落範圍:與範圍無關的內容一律忽略(其他章節另行處理),不要放入 unmapped;unmapped 僅放「疑似屬本範圍但對不上細段」的原文。"
+      : "";
+
     const prompt = `你是一位專業碳會計師的文件整理助手。使用者上傳了一份既有的溫室氣體盤查報告,請將其內容切段並對應到標準大綱。
 
 【對應規則】
 1. content 逐字照抄原文,嚴禁改寫、摘要、翻譯或補充任何文字。
 2. paragraphId 只能從下方大綱挑選;對不上任何段落的內容放入 unmapped(同樣原樣照抄)。
-3. activities:報告中的活動數據(用電量、油耗等),quantity 原樣照抄為字串,嚴禁換算;單位對不上列舉就整筆省略。
-4. 語言:${language ?? "zh-TW"}(僅影響你對標題語意的理解,內容一律照抄)。
+3. ${withActivities ? "activities:報告中的活動數據(用電量、油耗等),quantity 原樣照抄為字串,嚴禁換算;單位對不上列舉就整筆省略。" : "本次呼叫不需要萃取活動數據。"}
+4. 語言:${language ?? "zh-TW"}(僅影響你對標題語意的理解,內容一律照抄)。${scopeRule}
 
 【標準大綱】
-${OUTLINE_CATALOG}${source.isText ? `\n\n【報告原文】\n${source.data}` : ""}`;
+${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\n${source.data}` : ""}`;
 
     let raw: string;
     try {
@@ -143,11 +186,13 @@ ${OUTLINE_CATALOG}${source.isText ? `\n\n【報告原文】\n${source.data}` : "
           ? undefined
           : [{ data: source.data, mimeType: source.mimeType }],
         true,
-        IMPORT_RESPONSE_SCHEMA,
+        buildImportResponseSchema(scopedSections, withActivities),
         {
           temperature: LLM_TEMPERATURE.EXTRACTION,
           timeoutMs: LLM_EXTRACTION_TIMEOUT_MS,
           taskKey: LlmTaskKeyEnum.REPORT_IMPORT,
+          // Info: (20260716 - Emily) 原樣照抄需要大輸出空間:拉滿單次輸出上限
+          maxOutputTokens: 8192,
         },
       );
     } catch (error) {
@@ -173,11 +218,12 @@ ${OUTLINE_CATALOG}${source.isText ? `\n\n【報告原文】\n${source.data}` : "
       );
     }
 
-    // Info: (20260716 - Emily) 白名單複驗:非法段落 id 的內容降入 unmapped(不丟棄);同段多片段串接
+    // Info: (20260716 - Emily) 白名單複驗:非法/範圍外段落 id 的內容降入 unmapped(不丟棄);同段多片段串接
+    const scopedIds = new Set(scopedSections.map((section) => section.id));
     const contentById = new Map<string, string[]>();
     const unmapped: string[] = [...parsed.unmapped];
     parsed.segments.forEach((segment) => {
-      if (!SECTION_BY_ID.has(segment.paragraphId)) {
+      if (!scopedIds.has(segment.paragraphId)) {
         unmapped.push(segment.content);
         return;
       }

@@ -3,7 +3,10 @@
 import { describe, it, expect, jest } from "@jest/globals";
 import { ReportImportService } from "@/services/report_import.service";
 import { ChatService } from "@/services/chat.service";
-import { CARBON_REPORT_OUTLINE } from "@/constants/carbon_report_outline";
+import {
+  CARBON_REPORT_OUTLINE,
+  CARBON_REPORT_CHAPTERS,
+} from "@/constants/carbon_report_outline";
 import { GhgProtocolCategory } from "@/constants/esg";
 import { MeasurementUnit } from "@/constants/enums";
 
@@ -107,5 +110,41 @@ describe("ReportImportService", () => {
     expect(pdfSpy.mock.calls[0][1]).toEqual([
       { data: "cGRmLWJhc2U2NA==", mimeType: "application/pdf" },
     ]);
+  });
+});
+
+describe("ReportImportService chapter-scoped mode (chunked import)", () => {
+  it("should scope the catalog to the chapter and demote out-of-scope ids to unmapped", async () => {
+    const chapter = CARBON_REPORT_CHAPTERS[0];
+    const inChapter = CARBON_REPORT_OUTLINE.filter(
+      (s) => s.chapterId === chapter.id,
+    );
+    const outOfChapter = CARBON_REPORT_OUTLINE.find(
+      (s) => s.chapterId !== chapter.id,
+    );
+    const { service, spy } = buildService({
+      segments: [
+        { paragraphId: inChapter[0].id, content: "本章內文" },
+        // Info: (20260716 - Emily) 範圍外 id(即使是合法大綱段落)必須降入 unmapped
+        { paragraphId: outOfChapter?.id ?? "x", content: "他章內文" },
+      ],
+      unmapped: [],
+    });
+
+    const result = await service.importReport(textSource(), "zh-TW", {
+      chapterId: chapter.id,
+      extractActivities: false,
+    });
+
+    expect(result.segments.map((s) => s.paragraphId)).toEqual([
+      inChapter[0].id,
+    ]);
+    expect(result.unmapped).toEqual(["他章內文"]);
+    // Info: (20260716 - Emily) prompt 只含本章段落目錄與範圍規則
+    const prompt = spy.mock.calls[0][0];
+    expect(prompt).toContain(inChapter[0].id);
+    expect(prompt).not.toContain(outOfChapter?.id ?? "___");
+    expect(prompt).toContain("本次只處理下列段落範圍");
+    expect(prompt).toContain("本次呼叫不需要萃取活動數據");
   });
 });

@@ -104,6 +104,10 @@ export const carbonChatbot = {
     "가져온 단락의 검증 상태는 초기화됩니다. 활동 데이터 {{activities}}건은 재대사됩니다",
   import_apply: "선택 항목 가져오기({{count}})",
   import_parsing: "「{{name}}」 분석 중. 완료 후 단락별 미리보기가 표시됩니다…",
+  import_parsing_chapter:
+    "「{{name}}」 장별 분석 중({{current}}/{{total}}). 전체 보고서는 몇 분 걸립니다…",
+  import_failed_chapters:
+    "다음 장은 분석에 실패했습니다. 나중에 다시 가져오기로 보완할 수 있습니다: {{chapters}}",
   import_empty: "[가져오기 실패] 목차에 대응하는 내용이 없습니다.",
   import_failed: "[가져오기 실패] 보고서 분석에 실패했습니다. 나중에 다시 시도해 주세요.",
   attachments_processing:
