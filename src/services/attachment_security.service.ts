@@ -1,5 +1,5 @@
-// Info: (20260716 - Emily) 附件安全管線(#6517):內容簽章驗證 → 掃毒 → 配額 → Laria 上傳 → 記帳
-// Info: (20260716 - Emily) 職責:route 只呼叫 processUpload;所有裁決與 DB/儲存協調收斂於此(三層架構)
+// Info: (20260716 - Emily) 附件安全管線(#6517): 內容簽章驗證 → 掃毒 → 配額 → Laria 上傳 → 記帳
+// Info: (20260716 - Emily) 職責: route 只呼叫 processUpload;所有裁決與 DB/儲存協調收斂於此(三層架構)
 
 import { ApiError, API_ERRORS } from "@/lib/utils/error_dictionary";
 import { logger } from "@/lib/utils/logger";
@@ -31,7 +31,7 @@ export class AttachmentSecurityService {
 
   private readonly usageRepo: IUsageRepo;
 
-  // Info: (20260716 - Emily) 依賴全部可注入:單元測試不需 ClamAV/Laria/DB
+  // Info: (20260716 - Emily) 依賴全部可注入: 單元測試不需 ClamAV/Laria/DB
   constructor(deps?: {
     scanner?: IVirusScanner;
     storage?: StorageService;
@@ -43,9 +43,9 @@ export class AttachmentSecurityService {
   }
 
   /**
-   * Info: (20260716 - Emily) Fail Fast 順序(失敗不留殘料,通過才上傳):
+   * Info: (20260716 - Emily) Fail Fast 順序(失敗不留殘料，通過才上傳):
    * 1. magic bytes vs 宣告 MIME(防偽裝檔) 2. 掃毒(infected 拒收;未配置/故障 fail-open + 告警)
-   * 3. 配額(5GB 常數,見 CARBON_STORAGE_QUOTA_BYTES 註解) 4. uploadLaria 5. 用量記帳
+   * 3. 配額(5GB 常數，見 CARBON_STORAGE_QUOTA_BYTES 註解) 4. uploadLaria 5. 用量記帳
    */
   async processUpload(
     input: IAttachmentUploadInput,
@@ -68,7 +68,7 @@ export class AttachmentSecurityService {
 
     const scanResult = await this.scanner.scan(buffer);
     if (scanResult.status === VirusScanStatusEnum.INFECTED) {
-      // Info: (20260716 - Emily) 掃出惡意內容:拒收 + 告警(不回傳簽名細節給前端)
+      // Info: (20260716 - Emily) 掃出惡意內容: 拒收 + 告警(不回傳簽名細節給前端)
       logger.error("attachment rejected by virus scanner", {
         address,
         name: file.name,

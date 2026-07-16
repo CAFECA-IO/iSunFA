@@ -59,6 +59,7 @@ export const pricing = {
       name: "Free",
       desc: "Perfect for individuals",
       features: {
+        storage: "{{gb}} GB storage",
         fido: "1 FIDO2 Key",
         credit_limit: "Credit Limit: 500 Credits",
         daily_credits: "{{amount}} Credits on Daily Login",
@@ -76,6 +77,7 @@ export const pricing = {
       name: "Team",
       desc: "For growing teams",
       features: {
+        storage: "{{gb}} GB storage",
         fido: "Unlimited FIDO2 Keys",
         fido_tooltip:
           "Subscription fee charged based on the number of FIDO2 keys",
@@ -98,6 +100,7 @@ export const pricing = {
       name: "Enterprise",
       desc: "For large scale operations",
       features: {
+        storage: "{{gb}} GB storage",
         fido: "Unlimited FIDO2 Keys",
         fido_tooltip:
           "Subscription fee charged based on the number of FIDO2 keys",

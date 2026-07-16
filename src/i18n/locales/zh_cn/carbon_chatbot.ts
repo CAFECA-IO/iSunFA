@@ -30,8 +30,8 @@ export const carbonChatbot = {
   system_unavailable: "抱歉，系统目前无法回应。",
   ai_quota_exceeded:
     "【AI 额度已达上限】短时间内请求过多，请稍候一分钟后再试。",
-  ai_timeout: "【AI 响应超时】系统处理时间过长,请再试一次。",
-  rate_limited: "【操作过于频繁】已达使用频率上限,请稍候片刻再试。",
+  rate_limited: "【操作过于频繁】已达使用频率上限，请稍候片刻再试。",
+  ai_timeout: "【AI 响应超时】系统处理时间过长，请再试一次。",
   ai_name: "费思",
   platform_name: "环境智能平台",
   system_online: "系统连线中",
@@ -57,11 +57,13 @@ export const carbonChatbot = {
   save_saved: "已保存",
   save_local_hint: "报告草稿已加密保存至云端",
   save_failed: "保存失败",
-  save_failed_hint: "保存失败:可能有其他标签页已更新草稿,请刷新页面获取最新版本",
+  save_failed_hint:
+    "保存失败:可能有其他标签页已更新草稿,请刷新页面获取最新版本",
   attach_file: "附加文件",
   remove_attachment: "移除附件",
-  attachment_invalid_type: "不支持的文件类型:{{name}}(仅接受 PNG、JPG、PDF、CSV、XLSX)",
-  attachment_too_large: "文件过大:{{name}}(单文件上限 {{max}})",
+  attachment_invalid_type:
+    "不支持的文件类型：{{name}}(仅接受 PNG、JPG、PDF、CSV、XLSX)",
+  attachment_too_large: "文件过大：{{name}}(单文件上限 {{max}})",
   attachment_limit: "一条消息最多附加 {{max}} 个文件",
   attachment_upload_failed: "附件上传失败:{{name}},请移除后重试",
   attachment_type_mismatch: "文件内容与扩展名不符:{{name}}(疑似伪装文件,已拒收)",
@@ -74,7 +76,8 @@ export const carbonChatbot = {
     "【草稿生成失败】「{{section}}」段落草稿生成时发生问题，请稍后再试。",
   section_placeholder:
     "本段尚未生成。回到左侧对话告诉碳会计师你想撰写这一段,内容将实时出现在这里。",
-  report_status_draft: "报告状态:草稿(内容由 AI 逐段生成,经人工查核后方可定稿)",
+  report_status_draft:
+    "报告状态：草稿(内容由 AI 逐段生成,经人工查核后方可定稿)",
   report_button: "报告",
   close_report: "关闭报告",
   close_chat: "关闭聊天窗口",

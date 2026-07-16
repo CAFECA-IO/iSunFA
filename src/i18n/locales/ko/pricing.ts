@@ -60,6 +60,7 @@ export const pricing = {
       name: "무료 버전",
       desc: "개인 사용자용",
       features: {
+        storage: "저장 공간 {{gb}} GB",
         fido: "FIDO2 키 1개",
         credit_limit: "크레딧 한도: 500 크레딧",
         daily_credits: "매일 로그인 시 {{amount}} 크레딧 지급",
@@ -77,6 +78,7 @@ export const pricing = {
       name: "팀 버전",
       desc: "성장하는 팀을 위해",
       features: {
+        storage: "저장 공간 {{gb}} GB",
         fido: "무제한 FIDO2 키",
         fido_tooltip: "FIDO2 키 수량에 따라 구독료가 부과됩니다",
         credit_limit: "크레딧 무제한",
@@ -98,6 +100,7 @@ export const pricing = {
       name: "엔터프라이즈",
       desc: "대규모 조직을 위해",
       features: {
+        storage: "저장 공간 {{gb}} GB",
         fido: "무제한 FIDO2 키",
         fido_tooltip: "FIDO2 키 수량에 따라 구독료가 부과됩니다",
         credit_limit: "크레딧 무제한",
