@@ -53,7 +53,7 @@ const CategorySubjectItem = ({
       className={`group relative flex items-start gap-3 transition-all outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${
         isLevel1
           ? "mt-6 mb-2 first:mt-0"
-          : `rounded-xl border px-4 py-4 shadow-sm ${
+          : `rounded-xl border p-4 lg:shadow-sm ${
               isSelected
                 ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500 ring-offset-2"
                 : `border-slate-100 bg-white ${canClick ? "cursor-pointer hover:bg-gray-50" : "cursor-default"}`
@@ -104,7 +104,7 @@ const CategorySubjectItem = ({
             )}
           </div>
           {/* Info: (20260706 - Julian) 懸停動作，僅在自訂科目顯示 */}
-          <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+          <div className="absolute top-2 right-2 flex items-center gap-1 opacity-100 transition-opacity group-hover:opacity-100 lg:opacity-0">
             <button
               type="button"
               onClick={(e) => {
@@ -183,10 +183,18 @@ const SubAccountItem = ({
           {t("voucher.account.custom")}
         </span>
       )}
-      <div
-        className={`flex shrink-0 items-center justify-center rounded-lg border px-3 py-1.5 text-sm font-bold md:text-base ${colors.bg} ${colors.text} ${colors.border}`}
-      >
-        {code}
+      <div className="flex flex-col gap-2">
+        <div
+          className={`flex shrink-0 items-center justify-center rounded-lg border px-3 py-1.5 text-sm font-bold md:text-base ${colors.bg} ${colors.text} ${colors.border}`}
+        >
+          {code}
+        </div>
+        <div
+          // Info: (20260716 - Julian) 手機版 Type
+          className={`block rounded-md border px-2 py-0.5 text-center text-[10px] font-medium lg:hidden ${colors.bg} ${colors.text} ${colors.border}`}
+        >
+          {type}
+        </div>
       </div>
 
       {/* Info: (20260706 - Julian) 自訂科目的裝飾條 */}
@@ -201,7 +209,8 @@ const SubAccountItem = ({
               {name}
             </p>
             <div
-              className={`rounded-md border px-2 py-0.5 text-[10px] font-medium ${colors.bg} ${colors.text} ${colors.border}`}
+              // Info: (20260716 - Julian) 電腦版 Type
+              className={`hidden rounded-md border px-2 py-0.5 text-[10px] font-medium lg:block ${colors.bg} ${colors.text} ${colors.border}`}
             >
               {type}
             </div>
@@ -211,7 +220,7 @@ const SubAccountItem = ({
           </p>
         </div>
 
-        <div className="absolute right-2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+        <div className="relative right-2 flex items-center gap-1 opacity-100 transition-opacity group-hover:opacity-100 lg:absolute lg:opacity-0">
           <button
             type="button"
             onClick={withStopProp(onAddChild)}

@@ -1,4 +1,4 @@
-import React, { useState, FC } from "react";
+import React, { useState, useMemo, FC } from "react";
 import {
   CirclePlus,
   Pencil,
@@ -7,7 +7,11 @@ import {
   LucideIcon,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { IChartAction, MermaidActionType } from "@/lib/utils/mermaid_helpers";
+import {
+  IChartAction,
+  MermaidActionType,
+  parseFlowchartNodes,
+} from "@/lib/utils/mermaid_helpers";
 import {
   MERMAID_INPUT_STYLE,
   MERMAID_LABEL_STYLE,
@@ -482,17 +486,20 @@ const TOOL_PANELS: Record<FlowchartTools, FC<IBasePanelProps>> = {
 interface IFlowchartToolsSectionProps {
   selectedTool: string | null;
   setSelectedTool: React.Dispatch<React.SetStateAction<string | null>>;
-  parsedNodes: { id: string; label: string }[];
+  chart: string;
   onAddAction: (action: IChartAction) => void;
 }
 
 export const FlowchartToolsSection: FC<IFlowchartToolsSectionProps> = ({
   selectedTool,
   setSelectedTool,
-  parsedNodes,
+  chart,
   onAddAction,
 }) => {
   const { t } = useTranslation();
+
+  // Info: (20260716 - Julian) 元件自行解析所需資料，父層只需傳入圖表字串
+  const parsedNodes = useMemo(() => parseFlowchartNodes(chart), [chart]);
 
   const handleAddActionWithReset = (action: IChartAction) => {
     onAddAction(action);

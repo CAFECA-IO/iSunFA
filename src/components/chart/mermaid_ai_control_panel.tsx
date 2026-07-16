@@ -13,23 +13,15 @@ import { GanttToolsSection } from "@/components/chart/gantt_tools_submenu";
 import { XYChartToolsSection } from "@/components/chart/xychart_tools_submenu";
 import { useTranslation } from "@/i18n/i18n_context";
 import { MermaidChartType } from "@/constants/mermaid_chart";
-import {
-  IGanttItem,
-  IChartAction,
-  IXYChartData,
-  ISankeyData,
-} from "@/lib/utils/mermaid_helpers";
+import { IChartAction } from "@/lib/utils/mermaid_helpers";
 import { SankeyToolsSection } from "@/components/chart/sankey_tools_submenu";
 
 interface IMermaidAiControlPanelProps {
   chartType: MermaidChartType;
   aiInstruction: string;
   setAiInstruction: React.Dispatch<React.SetStateAction<string>>;
-  parsedNodes: { id: string; label: string }[];
-  parsedPieItems: { label: string; value: number }[];
-  parsedGanttItems: IGanttItem[];
-  parsedXYChartData: IXYChartData | null;
-  parsedSankeyData: ISankeyData | null;
+  // Info: (20260716 - Julian) 只傳圖表字串，各 ToolsSection 自行解析所需資料
+  chart: string;
   pendingActions: IChartAction[];
   onAddAction: (action: IChartAction) => void;
   onRemoveAction: (id: string) => void;
@@ -41,11 +33,7 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
   chartType,
   aiInstruction,
   setAiInstruction,
-  parsedNodes,
-  parsedPieItems,
-  parsedGanttItems,
-  parsedXYChartData,
-  parsedSankeyData,
+  chart,
   pendingActions,
   onAddAction,
   onRemoveAction,
@@ -179,35 +167,35 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
                     <PieToolsSection
                       selectedTool={selectedTool}
                       setSelectedTool={setSelectedTool}
-                      parsedPieItems={parsedPieItems}
+                      chart={chart}
                       onAddAction={onAddAction}
                     />
                   ) : chartType === MermaidChartType.FLOWCHART ? (
                     <FlowchartToolsSection
                       selectedTool={selectedTool}
                       setSelectedTool={setSelectedTool}
-                      parsedNodes={parsedNodes}
+                      chart={chart}
                       onAddAction={onAddAction}
                     />
                   ) : chartType === MermaidChartType.GANTT ? (
                     <GanttToolsSection
                       selectedTool={selectedTool}
                       setSelectedTool={setSelectedTool}
-                      parsedGanttItems={parsedGanttItems}
+                      chart={chart}
                       onAddAction={onAddAction}
                     />
                   ) : chartType === MermaidChartType.XYCHART ? (
                     <XYChartToolsSection
                       selectedTool={selectedTool}
                       setSelectedTool={setSelectedTool}
-                      parsedXYChartData={parsedXYChartData}
+                      chart={chart}
                       onAddAction={onAddAction}
                     />
                   ) : chartType === MermaidChartType.SANKEY ? (
                     <SankeyToolsSection
                       selectedTool={selectedTool}
                       setSelectedTool={setSelectedTool}
-                      parsedSankeyData={parsedSankeyData}
+                      chart={chart}
                       onAddAction={onAddAction}
                     />
                   ) : null}

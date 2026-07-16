@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import mermaid from "mermaid";
 import { detectChartType } from "@/lib/utils/mermaid_helpers";
+import { renderMermaid } from "@/lib/utils/mermaid_render";
 import { MermaidChartType } from "@/constants/mermaid_chart";
 
 /**
@@ -48,7 +48,7 @@ export const useMermaidRender = (
     const render = async () => {
       try {
         const id = `mermaid-preview-${Math.random().toString(36).substring(2, 9)}`;
-        const { svg: rendered } = await mermaid.render(id, trimmed);
+        const { svg: rendered } = await renderMermaid(id, trimmed);
         if (isCurrent) {
           setSvg(rendered);
           setHasError(false);

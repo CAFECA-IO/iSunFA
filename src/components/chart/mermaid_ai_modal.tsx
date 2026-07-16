@@ -11,12 +11,7 @@ import {
   IChartAction,
   MermaidActionType,
   applyChartAction,
-  parseFlowchartNodes,
-  parsePieItems,
-  parseGanttItems,
   parsePieData,
-  parseXYChartData,
-  parseSankeyData,
   getChartTitle,
 } from "@/lib/utils/mermaid_helpers";
 import ConfirmModal from "@/components/common/confirm_modal";
@@ -55,40 +50,11 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
 
   const [isShowWarning, setIsShowWarning] = useState<boolean>(false);
 
-  // Info: (20260714 - Julian) 依 chartType 只解析當前類型所需的元數據，避免每次都全跑六種 parser
-  const parsedMeta = useMemo(() => {
-    const meta = {
-      nodes: [] as ReturnType<typeof parseFlowchartNodes>,
-      pieItems: [] as ReturnType<typeof parsePieItems>,
-      ganttItems: [] as ReturnType<typeof parseGanttItems>,
-      pieData: null as ReturnType<typeof parsePieData>,
-      xyChartData: null as ReturnType<typeof parseXYChartData>,
-      sankeyData: null as ReturnType<typeof parseSankeyData>,
-    };
-
-    switch (chartType) {
-      case MermaidChartType.FLOWCHART:
-        meta.nodes = parseFlowchartNodes(internalBaseChart);
-        break;
-      case MermaidChartType.PIE:
-        meta.pieItems = parsePieItems(internalBaseChart);
-        meta.pieData = parsePieData(internalBaseChart);
-        break;
-      case MermaidChartType.GANTT:
-        meta.ganttItems = parseGanttItems(internalBaseChart);
-        break;
-      case MermaidChartType.XYCHART:
-        meta.xyChartData = parseXYChartData(internalBaseChart);
-        break;
-      case MermaidChartType.SANKEY:
-        meta.sankeyData = parseSankeyData(internalBaseChart);
-        break;
-      default:
-        break;
-    }
-
-    return meta;
-  }, [internalBaseChart, chartType]);
+  // Info: (20260716 - Julian) 僅預覽的圓餅圖需要解析後資料；其餘工具資料改由各 ToolsSection 自行解析
+  const currentParsedPieData = useMemo(
+    () => parsePieData(internalBaseChart),
+    [internalBaseChart],
+  );
 
   // Info: (20260709 - Julian) 計算當前圖表標題
   const currentTitle = useMemo(() => {
@@ -244,11 +210,7 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
           chartType={chartType}
           aiInstruction={aiInstruction}
           setAiInstruction={setAiInstruction}
-          parsedNodes={parsedMeta.nodes}
-          parsedPieItems={parsedMeta.pieItems}
-          parsedGanttItems={parsedMeta.ganttItems}
-          parsedXYChartData={parsedMeta.xyChartData}
-          parsedSankeyData={parsedMeta.sankeyData}
+          chart={internalBaseChart}
           pendingActions={pendingActions}
           onAddAction={handleAddAction}
           onRemoveAction={handleRemoveAction}
@@ -257,7 +219,7 @@ const MermaidAiModal: FC<IMermaidAiModalProps> = ({
         />
         <MermaidAiPreviewPanel
           svgStr={svgStr}
-          parsedPieData={parsedMeta.pieData || initialParsedPieData}
+          parsedPieData={currentParsedPieData || initialParsedPieData}
           aiInstruction={aiInstruction}
           isGenerating={isGenerating}
           newChartPreview={currentModifiedChart}

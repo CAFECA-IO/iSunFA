@@ -208,5 +208,11 @@ export const voucher = {
       update_failed: "更新に失敗しました",
       delete_failed: "削除に失敗しました",
     },
+    back_to_voucher: "返回傳票管理",
+    mobile_tab: {
+      main_subject: "選擇主科目",
+      sub_account: "選擇會計科目",
+      custom_form: "自訂會計科目",
+    },
   },
 };

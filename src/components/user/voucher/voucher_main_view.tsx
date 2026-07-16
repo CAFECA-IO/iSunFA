@@ -56,7 +56,9 @@ export default function VoucherMainView() {
         <VoucherTableSection />
       </>
     ) : (
-      <AccountManagementTab />
+      <AccountManagementTab
+        backToMainTab={() => handleTabChange(VoucherTab.VOUCHERS)}
+      />
     );
 
   return (
