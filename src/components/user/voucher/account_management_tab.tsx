@@ -8,6 +8,8 @@ import {
   Loader2,
   AlertCircle,
   Pencil,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
@@ -27,11 +29,22 @@ import {
   SubAccountItem,
 } from "@/components/user/voucher/account_item";
 
+enum MobileTab {
+  MAIN_SUBJECT = "main_subject",
+  SUB_ACCOUNT = "sub_account",
+  CUSTOM_FORM = "custom_form",
+}
+
 const SUB_PAGE_SIZE = 10;
 
-export default function AccountManagementTab() {
+export default function AccountManagementTab({
+  backToMainTab,
+}: {
+  backToMainTab: () => void;
+}) {
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
+
   const { t } = useTranslation();
 
   const emptyFormData = {
@@ -75,17 +88,10 @@ export default function AccountManagementTab() {
     useState<IAccountingAccount | null>(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState<boolean>(false);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedKeyword(keyword);
-    }, 500);
-
-    // Info: (20260706 - Julian) 關鍵字變更後，Tab 切回到 All
-    if (keyword && !debouncedKeyword) {
-      setActiveTab("all");
-    }
-    return () => clearTimeout(timer);
-  }, [keyword, debouncedKeyword]);
+  // Info: (20260716 - Julian) Mobile States
+  const [currentMobileTab, setCurrentMobileTab] = useState<MobileTab>(
+    MobileTab.MAIN_SUBJECT,
+  );
 
   const fetchAccounts = useCallback(async () => {
     setIsLoading(true);
@@ -109,10 +115,35 @@ export default function AccountManagementTab() {
     }
   }, [accountBookId, fetchAccounts]);
 
-  // Info: (20260706 - Julian) 切換主科目時，重設右欄分頁為第一頁
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedKeyword(keyword);
+    }, 500);
+
+    // Info: (20260706 - Julian) 關鍵字變更後，Tab 切回到 All
+    if (keyword && !debouncedKeyword) {
+      setActiveTab("all");
+    }
+    return () => clearTimeout(timer);
+  }, [keyword, debouncedKeyword]);
+
+  useEffect(() => {
+    // Info: (20260706 - Julian) [Desktop] 切換主科目時，重設右欄分頁為第一頁
     setSubPage(1);
+
+    // Info: (20260706 - Julian) [Mobile] 切換主科目時，重設右欄分頁為第一頁
+    if (!!selectedMainSubject) {
+      setCurrentMobileTab(MobileTab.SUB_ACCOUNT);
+    } else {
+      setCurrentMobileTab(MobileTab.MAIN_SUBJECT);
+    }
   }, [selectedMainSubject]);
+
+  useEffect(() => {
+    if (!!parentInfo) {
+      setCurrentMobileTab(MobileTab.CUSTOM_FORM);
+    }
+  }, [parentInfo]);
 
   const handleAddChild = useCallback((parentAccount: IAccountingAccount) => {
     setIsEditing(false);
@@ -288,7 +319,7 @@ export default function AccountManagementTab() {
     return list;
   }, [allAccounts, activeTab, debouncedKeyword]);
 
-  // Info: (20260706 - Julian) 右欄列表：選中主科目的子科目 (L3+)
+  // Info: (20260706 - Julian) 中欄列表：選中主科目的子科目 (L3+)
   const rightList = useMemo(() => {
     if (!selectedMainSubject) return [];
 
@@ -326,270 +357,269 @@ export default function AccountManagementTab() {
     };
   }, [rightList, subPage]);
 
-  return (
-    <div className="flex flex-col gap-6">
-      {/* Info: (20260703 - Julian) Top Section: Search and Filters */}
-      <div className="flex flex-col gap-4 rounded-xl bg-white p-4 shadow-sm">
-        <div className="relative">
-          <Search
-            size={18}
-            className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
-          />
-          <input
-            type="text"
-            placeholder={t("voucher.account.search.placeholder")}
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 py-3 pr-4 pl-10 text-sm font-medium transition-all placeholder:text-slate-400 focus:border-orange-500 focus:bg-white focus:ring-1 focus:ring-orange-500 focus:outline-none"
-          />
-        </div>
+  // Info: (20260716 - Julian) 主科目列表
+  const mainSubjectList = isLoading ? (
+    <div className="flex items-center justify-center py-10">
+      <Loader2 className="shrink-0 animate-spin text-orange-500" size={24} />
+    </div>
+  ) : leftList.length > 0 ? (
+    leftList.map((acc) => (
+      <CategorySubjectItem
+        key={acc.code}
+        account={acc}
+        isSelected={selectedMainSubject?.code === acc.code}
+        onClick={() => acc.level === 2 && setSelectedMainSubject(acc)}
+        onAddChild={() => handleAddChild(acc)}
+        onEdit={() => handleEdit(acc)}
+        hasChildren={acc.hasChildren}
+      />
+    ))
+  ) : (
+    <div className="py-10 text-center">
+      <p className="text-sm text-slate-400">
+        {t("voucher.account.no_matching")}
+      </p>
+    </div>
+  );
 
-        <div className="flex flex-wrap items-center gap-1">
-          <button
-            type="button"
-            onClick={() => setActiveTab("all")}
-            className={`${activeTab === "all" ? "bg-slate-800 text-white shadow-md" : "text-slate-500 hover:bg-gray-100"} rounded-lg px-4 py-2 text-xs font-bold transition-all md:text-sm`}
-          >
-            {t("voucher.account_book_selector.all")}
-          </button>
-          {Object.entries(ACCOUNT_TYPE_COLORS).map(([key, value]) => (
-            <button
-              type="button"
-              key={key}
-              onClick={() => setActiveTab(key as AccountType)}
-              className={`${key === activeTab ? `${value.tab} text-white shadow-md` : `text-slate-500 hover:bg-slate-100`} rounded-lg px-4 py-2 text-xs font-bold transition-all md:text-sm`}
-            >
-              {t(`voucher.account_book_selector.types.${key}`)}
-            </button>
-          ))}
-        </div>
+  // Info: (20260716 - Julian) 子科目列表
+  const subAccountList = isLoading ? (
+    <div className="flex items-center justify-center py-20">
+      <Loader2 className="animate-spin text-orange-500" size={40} />
+    </div>
+  ) : paginatedSubAccounts.length > 0 ? (
+    paginatedSubAccounts.map((subAcc) => (
+      <SubAccountItem
+        key={subAcc.code}
+        account={subAcc}
+        onAddChild={() => handleAddChild(subAcc)}
+        onEdit={() => handleEdit(subAcc)}
+        onDelete={() => handleDelete(subAcc)}
+      />
+    ))
+  ) : (
+    <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-slate-200 bg-white py-20 text-slate-400 shadow-sm">
+      <SearchX size={40} strokeWidth={1.5} />
+      <h3 className="mb-1 text-lg font-bold text-slate-700">
+        {t("voucher.account.no_data_title")}
+      </h3>
+      <p className="text-sm text-slate-400">
+        {t("voucher.account.no_data_desc")}
+      </p>
+    </div>
+  );
+
+  // Info: (20260716 - Julian) 新增/編輯自訂科目的表單
+  const accountForm = (
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-lg shadow-slate-200/50">
+      <div
+        className={`${isEditing ? "bg-blue-50" : "bg-green-50"} rounded-t-2xl px-6 py-4`}
+      >
+        <h3 className="flex items-center gap-2 text-lg font-bold text-slate-800">
+          {isEditing ? (
+            <>
+              <Pencil size={18} className="text-blue-500" />
+              {t("voucher.account.edit_modal.title")}
+            </>
+          ) : (
+            <>
+              <Plus size={20} className="text-green-500" />
+              {t("voucher.account.add_modal.title")}
+            </>
+          )}
+        </h3>
       </div>
 
-      <div className="relative flex gap-4">
-        <div className="flex flex-1 flex-col gap-4 lg:flex-row lg:items-start">
-          {/* Info: (20260706 - Julian) Left Column: Category & Main Subjects */}
-          <div className="flex w-full flex-col lg:w-[280px] lg:shrink-0">
-            <h3 className="mb-2 px-2 text-xs font-bold text-slate-400">
-              {t("voucher.account.list_title.main")}
-            </h3>
-            <div className="flex max-h-[calc(100vh-320px)] scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent flex-col gap-2 overflow-y-auto rounded-xl bg-slate-200 p-2 hover:scrollbar-thumb-slate-300">
-              {isLoading ? (
-                <div className="flex items-center justify-center py-10">
-                  <Loader2
-                    className="shrink-0 animate-spin text-orange-500"
-                    size={24}
-                  />
-                </div>
-              ) : leftList.length > 0 ? (
-                leftList.map((acc) => (
-                  <CategorySubjectItem
-                    key={acc.code}
-                    account={acc}
-                    isSelected={selectedMainSubject?.code === acc.code}
-                    onClick={() =>
-                      acc.level === 2 && setSelectedMainSubject(acc)
-                    }
-                    onAddChild={() => handleAddChild(acc)}
-                    onEdit={() => handleEdit(acc)}
-                    hasChildren={acc.hasChildren}
-                  />
-                ))
-              ) : (
-                <div className="py-10 text-center">
-                  <p className="text-sm text-slate-400">
-                    {t("voucher.account.no_matching")}
-                  </p>
-                </div>
-              )}
-            </div>
+      <form onSubmit={handleFormSubmit} className="space-y-3 px-6 py-4">
+        {errorMessage && (
+          <div className="flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 p-3 text-sm font-medium text-red-600">
+            <AlertCircle size={18} className="shrink-0" />
+            {errorMessage}
           </div>
+        )}
 
-          {/* Info: (20260706 - Julian) Middle Column: Sub Accounts (Level 3+) */}
-          <div className="flex flex-1 flex-col gap-4">
-            <div className="flex items-center justify-between gap-4">
-              <div className="text-xs font-bold text-slate-400">
-                {t("voucher.account.list_title.sub")} (
-                {selectedMainSubject
-                  ? `[${selectedMainSubject.code}] ${selectedMainSubject.name}`
-                  : t("voucher.account.not_selected")}
-                )
-              </div>
-              <span className="text-[10px] font-medium text-slate-400">
-                {t("voucher.account.total_data", {
-                  pages: totalSubPages,
-                  count: rightList.length,
-                })}
-              </span>
-            </div>
+        {/* Info: (20260706 - Julian) 編輯時顯示自身，新增時顯示父科目 */}
+        <div>
+          <label className="mb-1.5 block text-sm font-bold text-slate-700">
+            {isEditing ? "會計科目" : t("voucher.account.add_modal.parent")}
+          </label>
+          <input
+            type="text"
+            value={parentInfo}
+            readOnly
+            placeholder={t("voucher.account.add_modal.parent_placeholder")}
+            className="w-full rounded-lg border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-medium text-slate-500 outline-none"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="account-code"
+            className="mb-1.5 block text-sm font-bold text-slate-700"
+          >
+            {t("voucher.account.add_modal.code")}
+            <span className="ml-0.5 text-red-500">*</span>
+          </label>
+          <input
+            id="account-code"
+            type="text"
+            value={formData.code}
+            onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+            placeholder={t("voucher.account.add_modal.code_placeholder")}
+            required
+            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 transition-all focus:border-orange-500 focus:bg-white focus:ring-1 focus:ring-orange-500 focus:outline-none"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="account-name"
+            className="mb-1.5 block text-sm font-bold text-slate-700"
+          >
+            {t("voucher.account.add_modal.name")}
+            <span className="ml-0.5 text-red-500">*</span>
+          </label>
+          <input
+            id="account-name"
+            type="text"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            placeholder={t("voucher.account.add_modal.name_placeholder")}
+            required
+            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 transition-all focus:border-orange-500 focus:bg-white focus:ring-1 focus:ring-orange-500 focus:outline-none"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="account-description"
+            className="mb-1.5 block text-sm font-bold text-slate-700"
+          >
+            {t("voucher.account.add_modal.description")}
+          </label>
+          <textarea
+            id="account-description"
+            rows={3}
+            value={formData.description || ""}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
+            placeholder={t("voucher.account.add_modal.description_placeholder")}
+            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 transition-all focus:border-orange-500 focus:bg-white focus:ring-1 focus:ring-orange-500 focus:outline-none"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              setFormData(emptyFormData);
+              setParentInfo("");
+              setIsEditing(false);
+              setErrorMessage(null);
+            }}
+            className="flex-1 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 transition-all hover:bg-slate-50"
+          >
+            {t("voucher.detail_modal.actions.clear_all")}
+          </button>
+          <button
+            type="submit"
+            disabled={isFormLoading || !formData.parentCode}
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-bold text-white transition-all focus:ring-2 enabled:hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isFormLoading ? (
+              <Loader2 className="animate-spin" size={18} />
+            ) : (
+              t("voucher.detail_modal.actions.confirm")
+            )}
+          </button>
+        </div>
+        {!formData.parentCode && (
+          <p className="text-center text-xs text-slate-400">
+            {t("voucher.account.add_modal.click_hint")}
+          </p>
+        )}
+      </form>
+    </div>
+  );
 
-            <div className="flex min-h-[400px] flex-col gap-2">
-              {isLoading ? (
-                <div className="flex items-center justify-center py-20">
-                  <Loader2 className="animate-spin text-orange-500" size={40} />
-                </div>
-              ) : paginatedSubAccounts.length > 0 ? (
-                paginatedSubAccounts.map((subAcc) => (
-                  <SubAccountItem
-                    key={subAcc.code}
-                    account={subAcc}
-                    onAddChild={() => handleAddChild(subAcc)}
-                    onEdit={() => handleEdit(subAcc)}
-                    onDelete={() => handleDelete(subAcc)}
-                  />
-                ))
-              ) : (
-                <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-slate-200 bg-white py-20 text-slate-400 shadow-sm">
-                  <SearchX size={40} strokeWidth={1.5} />
-                  <h3 className="mb-1 text-lg font-bold text-slate-700">
-                    {t("voucher.account.no_data_title")}
-                  </h3>
-                  <p className="text-sm text-slate-400">
-                    {t("voucher.account.no_data_desc")}
-                  </p>
-                </div>
-              )}
-            </div>
+  // Info: (20260716 - Julian) 篩選
+  const filterSection = (
+    <div className="flex flex-col gap-2 lg:gap-4 lg:rounded-xl lg:bg-white lg:p-4 lg:shadow-sm">
+      <div className="relative">
+        <Search
+          size={18}
+          className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
+        />
+        <input
+          type="text"
+          placeholder={t("voucher.account.search.placeholder")}
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          className="w-full rounded-lg border border-slate-200 py-3 pr-4 pl-10 text-sm font-medium transition-all placeholder:text-slate-400 focus:border-orange-500 focus:bg-white focus:ring-1 focus:ring-orange-500 focus:outline-none"
+        />
+      </div>
+
+      <div className="relative flex items-center gap-1 overflow-x-auto py-2 shadow-[inset_-5px_0_6px_-4px_gray] lg:flex-wrap lg:py-0 lg:shadow-none">
+        <button
+          type="button"
+          onClick={() => setActiveTab("all")}
+          className={`${activeTab === "all" ? "bg-slate-800 text-white shadow-md" : "text-slate-500 hover:bg-gray-100"} rounded-lg px-4 py-2 text-xs font-bold whitespace-nowrap transition-all md:text-sm`}
+        >
+          {t("voucher.account_book_selector.all")}
+        </button>
+        {Object.entries(ACCOUNT_TYPE_COLORS).map(([key, value]) => (
+          <button
+            type="button"
+            key={key}
+            onClick={() => setActiveTab(key as AccountType)}
+            className={`${key === activeTab ? `${value.tab} text-white shadow-md` : `text-slate-500 hover:bg-slate-100`} rounded-lg px-4 py-2 text-xs font-bold whitespace-nowrap transition-all md:text-sm`}
+          >
+            {t(`voucher.account_book_selector.types.${key}`)}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  const desktopLayout = (
+    <div className="hidden flex-col gap-6 lg:flex">
+      {/* Info: (20260703 - Julian) Top Section: Search and Filters */}
+      {filterSection}
+
+      <div className="relative flex w-auto gap-4">
+        {/* Info: (20260706 - Julian) Left Column: Category & Main Subjects */}
+        <div className="flex flex-col">
+          <h3 className="mb-2 px-2 text-xs font-bold text-slate-400">
+            {t("voucher.account.list_title.main")}
+          </h3>
+          <div className="flex max-h-[calc(100vh-320px)] w-[300px] scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent flex-col gap-2 overflow-y-auto rounded-xl bg-slate-200 p-2 hover:scrollbar-thumb-slate-300">
+            {mainSubjectList}
           </div>
         </div>
 
-        {/* Info: (20260703 - Julian) 表單 */}
-        <div className="sticky top-24 h-fit shrink-0 lg:w-[360px]">
-          <div className="rounded-2xl border border-slate-200 bg-white shadow-lg shadow-slate-200/50">
-            <div
-              className={`${isEditing ? "bg-blue-50" : "bg-green-50"} rounded-t-2xl px-6 py-4`}
-            >
-              <h3 className="flex items-center gap-2 text-lg font-bold text-slate-800">
-                {isEditing ? (
-                  <>
-                    <Pencil size={18} className="text-blue-500" />
-                    {t("voucher.account.edit_modal.title")}
-                  </>
-                ) : (
-                  <>
-                    <Plus size={20} className="text-green-500" />
-                    {t("voucher.account.add_modal.title")}
-                  </>
-                )}
-              </h3>
+        {/* Info: (20260706 - Julian) Middle Column: Sub Accounts (Level 3+) */}
+        <div className="flex flex-1 flex-col gap-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="text-xs font-bold text-slate-400">
+              {t("voucher.account.list_title.sub")} (
+              {selectedMainSubject
+                ? `[${selectedMainSubject.code}] ${selectedMainSubject.name}`
+                : t("voucher.account.not_selected")}
+              )
             </div>
-
-            <form onSubmit={handleFormSubmit} className="space-y-3 px-6 py-4">
-              {errorMessage && (
-                <div className="flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 p-3 text-sm font-medium text-red-600">
-                  <AlertCircle size={18} className="shrink-0" />
-                  {errorMessage}
-                </div>
-              )}
-
-              {/* Info: (20260706 - Julian) 編輯時顯示自身，新增時顯示父科目 */}
-              <div>
-                <label className="mb-1.5 block text-sm font-bold text-slate-700">
-                  {isEditing
-                    ? "會計科目"
-                    : t("voucher.account.add_modal.parent")}
-                </label>
-                <input
-                  type="text"
-                  value={parentInfo}
-                  readOnly
-                  placeholder={t(
-                    "voucher.account.add_modal.parent_placeholder",
-                  )}
-                  className="w-full rounded-lg border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-medium text-slate-500 outline-none"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="account-code"
-                  className="mb-1.5 block text-sm font-bold text-slate-700"
-                >
-                  {t("voucher.account.add_modal.code")}
-                  <span className="ml-0.5 text-red-500">*</span>
-                </label>
-                <input
-                  id="account-code"
-                  type="text"
-                  value={formData.code}
-                  onChange={(e) =>
-                    setFormData({ ...formData, code: e.target.value })
-                  }
-                  placeholder={t("voucher.account.add_modal.code_placeholder")}
-                  required
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 transition-all focus:border-orange-500 focus:bg-white focus:ring-1 focus:ring-orange-500 focus:outline-none"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="account-name"
-                  className="mb-1.5 block text-sm font-bold text-slate-700"
-                >
-                  {t("voucher.account.add_modal.name")}
-                  <span className="ml-0.5 text-red-500">*</span>
-                </label>
-                <input
-                  id="account-name"
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  placeholder={t("voucher.account.add_modal.name_placeholder")}
-                  required
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 transition-all focus:border-orange-500 focus:bg-white focus:ring-1 focus:ring-orange-500 focus:outline-none"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="account-description"
-                  className="mb-1.5 block text-sm font-bold text-slate-700"
-                >
-                  {t("voucher.account.add_modal.description")}
-                </label>
-                <textarea
-                  id="account-description"
-                  rows={3}
-                  value={formData.description || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  placeholder={t(
-                    "voucher.account.add_modal.description_placeholder",
-                  )}
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 transition-all focus:border-orange-500 focus:bg-white focus:ring-1 focus:ring-orange-500 focus:outline-none"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormData(emptyFormData);
-                    setParentInfo("");
-                    setIsEditing(false);
-                    setErrorMessage(null);
-                  }}
-                  className="flex-1 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 transition-all hover:bg-slate-50"
-                >
-                  {t("voucher.detail_modal.actions.clear_all")}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isFormLoading || !formData.parentCode}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-bold text-white transition-all focus:ring-2 enabled:hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isFormLoading ? (
-                    <Loader2 className="animate-spin" size={18} />
-                  ) : (
-                    t("voucher.detail_modal.actions.confirm")
-                  )}
-                </button>
-              </div>
-              {!formData.parentCode && (
-                <p className="text-center text-xs text-slate-400">
-                  {t("voucher.account.add_modal.click_hint")}
-                </p>
-              )}
-            </form>
+            <span className="text-[10px] font-medium text-slate-400">
+              {t("voucher.account.total_data", {
+                pages: totalSubPages,
+                count: rightList.length,
+              })}
+            </span>
           </div>
+
+          <div className="flex min-h-[400px] flex-col gap-2">
+            {subAccountList}
+          </div>
+        </div>
+
+        {/* Info: (20260703 - Julian) Right Column: Form */}
+        <div className="sticky top-24 h-fit w-[360px] shrink-0">
+          {accountForm}
         </div>
       </div>
 
@@ -621,5 +651,111 @@ export default function AccountManagementTab() {
         onConfirm={confirmDelete}
       />
     </div>
+  );
+
+  return (
+    <>
+      {/* Info: (20260716 - Julian) 電腦版排版 */}
+      {desktopLayout}
+
+      {/* Info: (20260716 - Julian) 手機版排版 */}
+      <div className="fixed top-0 left-0 z-200 flex h-screen w-screen bg-black/80 lg:hidden">
+        <div className="absolute bottom-0 flex h-[95vh] w-screen flex-col gap-4 rounded-t-lg bg-white p-4">
+          {/* Info: (20260716 - Julian) 返回鍵 */}
+          <button
+            type="button"
+            onClick={backToMainTab}
+            className="flex shrink-0 items-center gap-2 text-slate-500 hover:text-slate-800"
+          >
+            <ChevronLeft size={24} />
+            <p className="text-sm">返回傳票管理</p>
+          </button>
+          <div className="flex items-center justify-center py-2 text-sm">
+            {Object.entries(MobileTab).map(([key, value], index) => {
+              // Info: (20260716 - Julian) 最後一項沒有箭頭
+              const isNotLast = index !== 2;
+              const isActive = currentMobileTab === value;
+              const handleClick = () => setCurrentMobileTab(value as MobileTab);
+              return (
+                <>
+                  <button
+                    key={`${key}-btn`}
+                    type="button"
+                    onClick={handleClick}
+                    className={`${isActive ? "text-orange-500" : "text-slate-500 hover:text-orange-500"} shrink-0 px-2`}
+                  >
+                    {value}
+                  </button>
+                  {isNotLast && (
+                    <ChevronRight
+                      key={`${key}-chevron`}
+                      size={14}
+                      className="shrink-0 text-slate-800"
+                    />
+                  )}
+                </>
+              );
+            })}
+            {/* <button
+              type="button"
+              onClick={() => setCurrentMobileTab(MobileTab.CATEGORY)}
+              className="shrink-0 text-slate-500 hover:text-orange-500"
+            >
+              選擇分類
+            </button>
+            <ChevronRight size={14} className="shrink-0 text-slate-800" />
+            <button
+              type="button"
+              onClick={() => setCurrentMobileTab(MobileTab.MAIN_SUBJECT)}
+              className="shrink-0 text-slate-500 hover:text-orange-500"
+            >
+              選擇主科目
+            </button>
+            <ChevronRight size={14} className="shrink-0 text-slate-800" />
+            <button
+              type="button"
+              onClick={() => setCurrentMobileTab(MobileTab.SUB_ACCOUNT)}
+              className="shrink-0 text-slate-500 hover:text-orange-500"
+            >
+              選擇會計科目
+            </button>
+            <ChevronRight size={14} className="shrink-0 text-slate-800" />
+            <button
+              type="button"
+              onClick={() => setCurrentMobileTab(MobileTab.CUSTOM_FORM)}
+              className="shrink-0 text-slate-500 hover:text-orange-500"
+            >
+              自訂會計科目
+            </button> */}
+          </div>
+
+          <div className="max-w-[95vw]">
+            <div className="flex h-[calc(80vh-30px)] w-full">
+              {/* Info: (20260716 - Julian) 主科目列表 */}
+              {currentMobileTab === MobileTab.MAIN_SUBJECT && (
+                <div className="flex w-full shrink-0 flex-col gap-2">
+                  {filterSection}
+                  <div className="flex flex-1 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent flex-col gap-2 overflow-y-auto rounded-xl bg-slate-200 p-2 hover:scrollbar-thumb-slate-300">
+                    {mainSubjectList}
+                  </div>
+                </div>
+              )}
+              {/* Info: (20260716 - Julian) 子科目列表 */}
+              {currentMobileTab === MobileTab.SUB_ACCOUNT && (
+                <div className="flex w-full shrink-0 flex-col">
+                  <div className="flex flex-col gap-2">{subAccountList}</div>
+                </div>
+              )}
+              {/* Info: (20260716 - Julian) 表單 */}
+              {currentMobileTab === MobileTab.CUSTOM_FORM && (
+                <div className="flex w-full shrink-0 flex-col">
+                  {accountForm}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
