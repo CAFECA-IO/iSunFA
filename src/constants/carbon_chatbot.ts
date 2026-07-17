@@ -39,6 +39,14 @@ export const CARBON_CHAT_GREETING_PROMPT =
 // Info: (20260712 - Luphia) 送出後等待 AI 回覆經 Centrifugo 回傳的逾時（ms）；逾時未收到即解除等待並提示，避免卡在 typing
 export const CARBON_CHAT_REPLY_TIMEOUT_MS = 30000;
 
+// Info: (20260716 - Emily) 帶附件的回覆等待:chat route 內含附件萃取/草稿生成(多次 LLM 呼叫),
+// Info: (20260716 - Emily) 30 秒會在管線完成前誤報系統錯誤(UAT 實測);對齊 extraction 120s + 餘裕
+export const CARBON_CHAT_REPLY_TIMEOUT_WITH_ATTACHMENTS_MS = 180_000;
+
+// Info: (20260716 - Emily) #56 匯入導流門檻:聊天附件為 pdf 且達此大小,疑似整份報告 →
+// Info: (20260716 - Emily) 建議改走「匯入報告」(佐證附件通常是單張帳單,遠小於此)
+export const CARBON_IMPORT_SUGGEST_MIN_BYTES = 4 * 1024 * 1024;
+
 // Info: (20260712 - Luphia) 送給 AI 的對話上下文只取最近 N 則，控制 token 成本與延遲（不影響畫面顯示的完整歷史）
 export const CARBON_CHAT_AI_CONTEXT_SIZE = 20;
 

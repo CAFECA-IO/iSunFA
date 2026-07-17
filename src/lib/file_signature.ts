@@ -78,6 +78,12 @@ const SIGNATURE_VALIDATORS: Record<string, (buffer: Uint8Array) => boolean> = {
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": (b) =>
     startsWith(b, [0x50, 0x4b, 0x03, 0x04]),
   "text/csv": isPlausibleTextFile,
+  // Info: (20260716 - Emily) #56 報告匯入格式:md/純文字走文本啟發式;docx 為 ZIP 容器(OOXML)
+  "text/markdown": isPlausibleTextFile,
+  "text/plain": isPlausibleTextFile,
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": (
+    b,
+  ) => startsWith(b, [0x50, 0x4b, 0x03, 0x04]),
 };
 
 /**

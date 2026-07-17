@@ -34,6 +34,8 @@ export interface ICarbonChatStructuredReply {
   reply: string;
   readyParagraphId: string | null;
   extraction: IInventoryExtraction | null;
+  // Info: (20260716 - Emily) #55 修訂請求:使用者要求「依附件/指示修改既有段落」時的目標段落(白名單裁決後)
+  revisionParagraphId: string | null;
 }
 
 // Info: (20260714 - Emily) readyParagraphId 的無段落標記(LLM enum 選項之一)
@@ -67,6 +69,14 @@ const CARBON_CHAT_REPLY_SCHEMA: Schema = {
       format: "enum",
       enum: [...CARBON_REPORT_OUTLINE.map((s) => s.id), NO_READY_PARAGRAPH],
       description: "資訊已蒐集齊全可寫入報告的段落 id；尚未齊全時為 none",
+    },
+    // Info: (20260716 - Emily) #55 修訂請求:僅當使用者明確要求「修改/更新既有段落」時填段落 id,否則 none
+    revisionParagraphId: {
+      type: SchemaType.STRING,
+      format: "enum",
+      enum: [...CARBON_REPORT_OUTLINE.map((s) => s.id), NO_READY_PARAGRAPH],
+      description:
+        "使用者要求依附件或指示『修改既有段落』時填該段 id;非修改請求一律 none",
     },
     // Info: (20260716 - Emily) #6518 事實萃取: enum 鎖死範疇/單位，數值原樣字串(嚴禁換算),TS 端再白名單複驗
     extraction: {
@@ -317,6 +327,7 @@ export class ChatService {
 - 用戶已提供當前段落所需的關鍵資訊，或明確同意/確認你彙整的內容時 → 填該段落的 id(只能從下方清單挑選)
 - 資訊尚未齊全、仍在追問時 → 填 "${NO_READY_PARAGRAPH}"
 - 填入段落 id 後，系統會自動將該段草稿寫入右側報告；此時請在 reply 告知用戶「本段已寫入報告，可於右側預覽檢視」，不要把完整草稿貼在對話中，也不要再重複詢問同一段落。
+【段落修訂機制】使用者上傳新附件或明確要求「更新/修改某段」時 → revisionParagraphId 填該段 id(只能從段落清單挑選)，reply 告知「已產生修訂建議，請於預覽卡確認」；非修改請求一律填 "none"，且不要在 reply 貼修訂內容(由系統以對照卡呈現)。
 【事實萃取機制】每輪回覆的 extraction 欄位，依下列規則萃取「用戶本輪訊息」中的盤查事實:
 - 企業名稱、盤查年度(西元)、組織邊界方法: 用戶明確提供時填入，原文照抄，不確定就省略。
 - activities: 用戶提供的活動數據(如用電量、油耗)。quantity 連同千分位「原樣照抄」為字串，嚴禁換算單位、加總或推導；單位只能從 unit 列舉挑選，對不上就整筆省略。
@@ -418,13 +429,27 @@ ${outlineCatalog}${langInstruction}`;
       const extraction = this.adjudicateInventoryExtraction(
         (rawParsed as { extraction?: unknown }).extraction,
       );
+      // Info: (20260716 - Emily) #55:修訂目標同樣經白名單裁決(enum 之外的值一律視為無請求)
+      const rawRevision = (rawParsed as { revisionParagraphId?: unknown })
+        .revisionParagraphId;
+      const revisionParagraphId = CARBON_REPORT_OUTLINE.some(
+        (s) => s.id === rawRevision,
+      )
+        ? (rawRevision as string)
+        : null;
       return {
         reply: parsed.reply,
         readyParagraphId: isValidParagraph ? parsed.readyParagraphId : null,
         extraction,
+        revisionParagraphId,
       };
     } catch {
-      return { reply: raw, readyParagraphId: null, extraction: null };
+      return {
+        reply: raw,
+        readyParagraphId: null,
+        extraction: null,
+        revisionParagraphId: null,
+      };
     }
   }
 

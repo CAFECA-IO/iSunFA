@@ -19,8 +19,14 @@ import { formatFileSize } from "@/lib/utils/common";
 import {
   CARBON_REPORT_OUTLINE,
   CARBON_REPORT_SECTION_COUNT,
+  CARBON_REPORT_CHAPTERS,
 } from "@/constants/carbon_report_outline";
-import { IParagraphDraft } from "@/interfaces/carbon_paragraph_draft";
+import {
+  IParagraphDraft,
+  IContextFact,
+} from "@/interfaces/carbon_paragraph_draft";
+import { IPendingRevision } from "@/components/carbon_chatbot/revision_preview";
+import { IPendingImport } from "@/components/carbon_chatbot/import_preview";
 import {
   createDefaultSessions,
   createChatSession,
@@ -44,7 +50,6 @@ import {
   saveSessionsIndex,
   saveLocalDraftBackup,
   loadLocalDraftBackup,
-  clearLocalDraftBackup,
 } from "@/lib/carbon_report_draft_storage";
 import { useTranslation } from "@/i18n/i18n_context";
 import { subscribeChatroom } from "@/lib/chatroom";
@@ -64,7 +69,9 @@ import {
   isQuotaApiError,
   isRateLimitedApiError,
   isTimeoutApiError,
-  splitReportMarkdownIntoBlocks,
+  splitReportMarkdownSections,
+  alignReportSections,
+  patchMarkdownSection,
 } from "@/hooks/use_carbon_chat.helpers";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { useAuth } from "@/contexts/auth_context";
@@ -73,6 +80,8 @@ import {
   SESSION_PROGRESS_MAX,
   buildCarbonChatChannel,
   CARBON_CHAT_REPLY_TIMEOUT_MS,
+  CARBON_CHAT_REPLY_TIMEOUT_WITH_ATTACHMENTS_MS,
+  CARBON_IMPORT_SUGGEST_MIN_BYTES,
   CARBON_CHAT_AI_CONTEXT_SIZE,
   CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES,
   CARBON_CHAT_MAX_ATTACHMENT_BYTES,
@@ -82,8 +91,9 @@ import {
   CARBON_DRAFT_NOTICE_DISMISS_MS,
 } from "@/constants/carbon_chatbot";
 
-// Info: (20260714 - Emily) 報告草稿保存狀態(工具列顯示；null = 尚無變更；error = 保存失敗/版本衝突)
-export type ReportSaveStatus = "saving" | "saved" | "error" | null;
+// Info: (20260714 - Emily) 報告草稿保存狀態(工具列顯示;null = 尚無變更;error = 保存失敗/版本衝突)
+// Info: (20260716 - Emily) #50 新增 local:未解鎖/未還原前內容僅落本機安全快取,解鎖後自動推入 DB
+export type ReportSaveStatus = "saving" | "saved" | "error" | "local" | null;
 
 // Info: (20260714 - Emily) 草稿生成狀態列(顯示於輸入框上方): 生成中 loading、失敗短暫提示後自動消失
 // Info: (20260714 - Emily) 草稿為並行任務，失敗不以對話氣泡表達(氣泡先於回覆出現會造成 UX 混淆)
@@ -106,7 +116,10 @@ export const useCarbonChat = () => {
   const [isError, setIsError] = useState<boolean>(false);
   // Info: (20260712 - Luphia) 是否已於進入時完成一次手勢解鎖（PRF）；未解鎖前不呼叫 AI、不顯示對話
   const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
-  // Info: (20260713 - Tzuhan) 目前對話正在引導的報告段落(vibe 模式: 跳段 = 切換對話目標)
+  // Info: (20260716 - Emily) render 期不可讀 ref(react-hooks/refs):金鑰以 state 快照對外暴露(解鎖時設定)
+  const [unlockedMasterKey, setUnlockedMasterKey] =
+    useState<IChatroomMasterKey | null>(null);
+  // Info: (20260713 - Tzuhan) 目前對話正在引導的報告段落(vibe 模式:跳段 = 切換對話目標)
   const [activeParagraphId, setActiveParagraphId] = useState<string | null>(
     null,
   );
@@ -116,6 +129,15 @@ export const useCarbonChat = () => {
   );
   // Info: (20260714 - Emily) 草稿狀態列(loading/error);error 自動清除
   const [draftNotice, setDraftNotice] = useState<IDraftNotice | null>(null);
+  // Info: (20260716 - Emily) #55 待確認修訂(對照卡):null = 無;確認後才寫入報告
+  const [pendingRevision, setPendingRevision] =
+    useState<IPendingRevision | null>(null);
+  // Info: (20260716 - Emily) #56 待確認匯入(逐段勾選):null = 無;確認後才寫入報告與活動帳本
+  const [pendingImport, setPendingImport] = useState<IPendingImport | null>(
+    null,
+  );
+  // Info: (20260716 - Emily) #56 匯入導流:聊天附件疑似整份報告時的候選(File 保留供直接匯入)
+  const [importCandidate, setImportCandidate] = useState<File | null>(null);
   const draftNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -137,7 +159,20 @@ export const useCarbonChat = () => {
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Info: (20260714 - Emily) 各 channel 草稿的樂觀鎖版本(讀取時記下，保存成功後更新)
   const draftVersionsRef = useRef<Map<string, number>>(new Map());
-  // Info: (20260716 - Emily) #6518 盤查狀態帳本(per-channel): 活動數據 + 決定性步驟；E2EE 入庫比照報告草稿
+  // Info: (20260716 - Emily) #52 各 channel 的存取中繼資料:accountBookId(決定保存模式)與 canEdit(唯讀切換)
+  const [sessionAccess, setSessionAccess] = useState<
+    Record<string, { accountBookId: string | null; canEdit: boolean }>
+  >({});
+  // Info: (20260716 - Emily) #52 使用者可綁定的帳本清單(新增對話選單用)
+  const [accountBooks, setAccountBooks] = useState<
+    { id: string; name: string }[]
+  >([]);
+  // Info: (20260716 - Emily) #52 未解鎖時建立的帳本會話:綁定請求需 xpub,解鎖後補送
+  const pendingBindsRef = useRef<Map<string, string>>(new Map());
+  // Info: (20260716 - Emily) #56 匯入預覽期間暫存的活動數據(確認時才入帳本)
+  const importActivitiesRef = useRef<IActivityRecord[]>([]);
+
+  // Info: (20260716 - Emily) #6518 盤查狀態帳本(per-channel):活動數據 + 決定性步驟;E2EE 入庫比照報告草稿
   const [inventoryStates, setInventoryStates] = useState<
     Record<string, ICarbonInventoryState>
   >({});
@@ -232,8 +267,8 @@ export const useCarbonChat = () => {
   );
 
   // Info: (20260712 - Luphia) 送出後啟動等待逾時；逾時仍未經訂閱收到回覆即解除等待並提示，避免卡在 typing
-  // Info: (20260714 - Emily) per-channel 計時器: 多聊天室並發等待互不覆蓋；閉包綁定發送當下的 channel/session
-  const startReplyTimeout = useCallback(() => {
+  // Info: (20260714 - Emily) per-channel 計時器:多聊天室並發等待互不覆蓋;閉包綁定發送當下的 channel/session
+  const startReplyTimeout = useCallback((timeoutMs: number = CARBON_CHAT_REPLY_TIMEOUT_MS) => {
     const channel = chatChannel;
     // Info: (20260714 - Emily) 回覆已於 fetch 期間送達則不再啟動計時器
     if (!pendingReplyChannelsRef.current.has(channel)) return;
@@ -252,7 +287,7 @@ export const useCarbonChat = () => {
           },
           0,
         );
-      }, CARBON_CHAT_REPLY_TIMEOUT_MS),
+      }, timeoutMs),
     );
   }, [chatChannel, appendMessageLocally, t]);
 
@@ -282,23 +317,45 @@ export const useCarbonChat = () => {
 
     request<{
       payload: {
-        sessions: { sessionId: string; createdAt: string }[];
+        sessions: {
+          sessionId: string;
+          channel: string;
+          createdAt: string;
+          accountBookId?: string | null;
+        }[];
       } | null;
     }>("/api/v1/chat/carbon/sessions")
       .then((res) => {
         const sessions = res.payload?.sessions ?? [];
         if (sessions.length === 0) return;
+        // Info: (20260716 - Emily) #52 記錄各會話的帳本綁定(決定保存/還原模式)
+        setSessionAccess((prev) => {
+          const next = { ...prev };
+          sessions.forEach((entry) => {
+            if (entry.accountBookId) {
+              next[entry.channel] = {
+                accountBookId: entry.accountBookId,
+                canEdit: next[entry.channel]?.canEdit ?? true,
+              };
+            }
+          });
+          return next;
+        });
         setSessionsData((prev) => {
           const next = { ...prev };
           sessions.forEach((entry) => {
             if (!entry.sessionId || next[entry.sessionId]) return;
             const cached = titleCache.get(entry.sessionId);
-            next[entry.sessionId] = createChatSession(
-              entry.sessionId,
-              cached?.title ?? t("carbon_chatbot.new_session_title"),
-              cached?.createdAt ??
-                new Date(entry.createdAt).toLocaleDateString(),
-            );
+            next[entry.sessionId] = {
+              ...createChatSession(
+                entry.sessionId,
+                cached?.title ?? t("carbon_chatbot.new_session_title"),
+                cached?.createdAt ??
+                  new Date(entry.createdAt).toLocaleDateString(),
+              ),
+              // Info: (20260716 - Emily) 自訂標題旗標隨快取還原(首訊衍生不覆蓋)
+              isTitleCustom: cached?.isTitleCustom ?? false,
+            };
           });
           return next;
         });
@@ -309,19 +366,128 @@ export const useCarbonChat = () => {
       });
   }, [user?.address, t]);
 
-  // Info: (20260714 - Emily) 切至 session 時自 DB 還原報告草稿(密文 → 主私鑰解密；需先解鎖，每 channel 只還原一次)
+  // Info: (20260716 - Emily) #52 載入可綁定帳本(失敗不阻斷:僅影響新增對話的帳本選單)
+  useEffect(() => {
+    if (!user?.address) return;
+    request<{ payload: { id: string; name: string }[] | null }>(
+      "/api/v1/user/account_book",
+    )
+      .then((res) => setAccountBooks(res.payload ?? []))
+      .catch((error) => {
+        console.error("[carbon-chat] failed to load account books:", error);
+      });
+  }, [user?.address]);
+
+  // Info: (20260716 - Emily) UAT:帳本成員查看報告的入口 — 列出帳本全部碳盤查會話(含他人;server 驗成員資格)
+  const fetchBookSessions = useCallback(async (accountBookId: string) => {
+    const res = await request<{
+      payload: {
+        sessions: {
+          sessionId: string;
+          channel: string;
+          createdAt: string;
+          isOwn: boolean;
+        }[];
+      } | null;
+    }>(`/api/v1/chat/carbon/sessions?accountBookId=${accountBookId}`);
+    return res.payload?.sessions ?? [];
+  }, []);
+
+  // Info: (20260716 - Emily) #52 綁定會話至帳本(POST sessions);成功後記入存取中繼資料
+  const bindSessionToBook = useCallback(
+    async (sessionId: string, accountBookId: string) => {
+      const master = masterKeyRef.current;
+      if (!master) {
+        // Info: (20260716 - Emily) 需 xpub 作 chatroom ownerPublicKey:未解鎖先排隊,解鎖後補送
+        pendingBindsRef.current.set(sessionId, accountBookId);
+        return;
+      }
+      try {
+        const res = await request<{
+          payload: { channel: string; accountBookId: string } | null;
+        }>("/api/v1/chat/carbon/sessions", {
+          method: "POST",
+          body: JSON.stringify({
+            sessionId,
+            accountBookId,
+            recipientPublicKey: master.extendedPublicKey,
+          }),
+        });
+        const bound = res.payload;
+        if (!bound) return;
+        setSessionAccess((prev) => ({
+          ...prev,
+          [bound.channel]: { accountBookId: bound.accountBookId, canEdit: true },
+        }));
+      } catch (error) {
+        console.error("[carbon-chat] failed to bind account book:", error);
+      }
+    },
+    [],
+  );
+
+  // Info: (20260716 - Emily) #52 解鎖後補送排隊中的綁定請求
+  useEffect(() => {
+    if (!isUnlocked || pendingBindsRef.current.size === 0) return;
+    const pending = Array.from(pendingBindsRef.current.entries());
+    pendingBindsRef.current.clear();
+    pending.forEach(([sessionId, accountBookId]) => {
+      void bindSessionToBook(sessionId, accountBookId);
+    });
+  }, [isUnlocked, bindSessionToBook]);
+
+  // Info: (20260716 - Emily) UAT P0:本機常駐快取「即刻水合」— 不需金鑰,refresh 後解鎖前內容即可見。
+  // Info: (20260716 - Emily) 僅在該 session 仍為空骨架時套用(絕不覆蓋已還原/已編輯內容);DB 還原隨後比版本裁決
+  const hydratedChannelsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (hydratedChannelsRef.current.has(chatChannel)) return;
+    hydratedChannelsRef.current.add(chatChannel);
+    const backup = loadLocalDraftBackup(chatChannel);
+    if (!backup) return;
+    const sessionIdForChannel = activeSessionId;
+    setSessionsData((prev) => {
+      const session = prev[sessionIdForChannel];
+      const reportData = session?.reportData;
+      if (!session || !reportData) return prev;
+      // Info: (20260716 - Emily) 空骨架判定:無全文且所有段落皆未生成
+      const isSkeleton =
+        !reportData.rawMarkdown &&
+        (reportData.paragraphs ?? []).every((p) => !p.content);
+      if (!isSkeleton) return prev;
+      return {
+        ...prev,
+        [sessionIdForChannel]: { ...session, reportData: backup.reportData },
+      };
+    });
+  }, [chatChannel, activeSessionId]);
+
+  // Info: (20260714 - Emily) 切至 session 時自 DB 還原報告草稿(密文 → 主私鑰解密;需先解鎖,每 channel 只還原一次)
   useEffect(() => {
     const master = masterKeyRef.current;
-    if (!isUnlocked || !master) return;
+    // Info: (20260716 - Emily) #52 帳本會話為明文模式,未解鎖亦可還原(VIEWER 閱覽動線);個人會話仍需金鑰
+    const isBookBound = Boolean(sessionAccess[chatChannel]?.accountBookId);
+    if (!isBookBound && (!isUnlocked || !master)) return;
     if (restoredChannelsRef.current.has(chatChannel)) return;
     restoredChannelsRef.current.add(chatChannel);
     const sessionIdForChannel = activeSessionId;
 
-    loadReportDraft(chatChannel, master)
+    loadReportDraft(chatChannel, master ?? null)
       .then((loaded) => {
         // Info: (20260714 - Emily) 無草稿 → 版本 0(首存)；有草稿 → 記錄真實版本供樂觀鎖
         draftVersionsRef.current.set(chatChannel, loaded?.version ?? 0);
-        // Info: (20260715 - Luphia) 本機安全快取若存在，代表上次編輯尚未確認保存(意外中斷)；優先復原以免內容遺失，後續自動保存會推回 DB 並清除快取
+        // Info: (20260716 - Emily) #52 以 server 裁決結果更新存取中繼資料(canEdit=false → 前端唯讀)
+        if (loaded) {
+          setSessionAccess((prev) => ({
+            ...prev,
+            [chatChannel]: {
+              accountBookId: loaded.accountBookId,
+              canEdit: loaded.canEdit,
+            },
+          }));
+        }
+        // Info: (20260716 - Emily) 常駐快取與 DB 比版本取新者:
+        // Info: (20260716 - Emily) 快取版本 >= DB 版本 = 本機有未上雲的較新編輯(隨後 autosave 會推回);
+        // Info: (20260716 - Emily) DB 較新(他裝置更新過)= 以 DB 為準,快取隨 autosave 覆寫
         const localBackup = loadLocalDraftBackup(chatChannel);
         // Info: (20260714 - Emily) 草稿存在但無法解讀(reportData null): 保留版本、不覆寫狀態，並提示保存異常
         if (loaded && !loaded.reportData && !localBackup) {
@@ -332,7 +498,12 @@ export const useCarbonChat = () => {
           setSaveStatus("error");
           return;
         }
-        const restored = localBackup ?? loaded?.reportData;
+        const preferBackup =
+          localBackup &&
+          localBackup.draftVersion >= (loaded?.version ?? 0);
+        const restored = preferBackup
+          ? localBackup.reportData
+          : (loaded?.reportData ?? localBackup?.reportData);
         if (!restored) return;
         setSessionsData((prev) => {
           const session = prev[sessionIdForChannel];
@@ -349,30 +520,51 @@ export const useCarbonChat = () => {
         console.error("[carbon-chat] failed to load report draft:", error);
         setSaveStatus("error");
       });
-  }, [isUnlocked, chatChannel, activeSessionId]);
+  }, [isUnlocked, chatChannel, activeSessionId, sessionAccess]);
 
   // Info: (20260714 - Emily) 報告草稿 debounce 自動保存(前端加密 → PUT)；還原完成前不保存，避免空骨架覆蓋既有草稿
   const activeReportData = sessionsData[activeSessionId]?.reportData;
   useEffect(() => {
     if (!activeReportData) return undefined;
-    if (!restoredChannelsRef.current.has(chatChannel)) return undefined;
-    if (!draftVersionsRef.current.has(chatChannel)) return undefined;
+    // Info: (20260715 - Luphia) 內容一有變更即先寫本機安全快取(不等 debounce);萬一保存前當機/關頁,下次還原時可救回
+    // Info: (20260716 - Emily) #50 提到所有雲端保存 guard 之前:本機快取不需金鑰,
+    // Info: (20260716 - Emily) 未解鎖的新聊天室貼上內容也先落地,解鎖後由還原流程撿回並自動推入 DB
+    saveLocalDraftBackup(
+      chatChannel,
+      activeReportData,
+      draftVersionsRef.current.get(chatChannel) ?? 0,
+    );
+    // Info: (20260716 - Emily) #52 無編輯權(帳本 VIEWER)不觸發保存(server 亦會 403,此為第一道)
+    if (sessionAccess[chatChannel]?.canEdit === false) return undefined;
     const master = masterKeyRef.current;
-    if (!master) return undefined;
+    const canCloudSave =
+      restoredChannelsRef.current.has(chatChannel) &&
+      draftVersionsRef.current.has(chatChannel) &&
+      Boolean(master);
+    if (!canCloudSave || !master) {
+      // Info: (20260716 - Emily) #50 明確告知使用者「僅暫存本機」,避免誤以為已上雲
+      setSaveStatus("local");
+      return undefined;
+    }
 
     setSaveStatus("saving");
-    // Info: (20260715 - Luphia) 內容一有變更即先寫本機安全快取(不等 debounce)；萬一保存前當機/關頁，下次還原時可救回
-    saveLocalDraftBackup(chatChannel, activeReportData);
     if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
     autosaveTimerRef.current = setTimeout(() => {
       autosaveTimerRef.current = null;
       const expectedVersion = draftVersionsRef.current.get(chatChannel) ?? 0;
-      saveReportDraft(chatChannel, master, activeReportData, expectedVersion)
+      // Info: (20260716 - Emily) #52 帳本會話走明文保存(模型 A);個人會話維持 E2EE
+      saveReportDraft(
+        chatChannel,
+        master,
+        activeReportData,
+        expectedVersion,
+        sessionAccess[chatChannel]?.accountBookId ?? null,
+      )
         .then((newVersion) => {
           draftVersionsRef.current.set(chatChannel, newVersion);
           setSaveStatus("saved");
-          // Info: (20260715 - Luphia) DB 已確認保存，內容安全落地，刪除本機安全快取
-          clearLocalDraftBackup(chatChannel);
+          // Info: (20260716 - Emily) UAT P0:快取常駐(refresh 後解鎖前即刻可見),僅同步版本號
+          saveLocalDraftBackup(chatChannel, activeReportData, newVersion);
         })
         .catch((error) => {
           // Info: (20260714 - Emily) 樂觀鎖衝突 = 他端已更新，不 silent overwrite；一律以 error 提示重整取得最新
@@ -387,16 +579,18 @@ export const useCarbonChat = () => {
     return () => {
       if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
     };
-  }, [activeReportData, chatChannel, isUnlocked]);
+  }, [activeReportData, chatChannel, isUnlocked, sessionAccess]);
 
   // Info: (20260716 - Emily) #6518 切至 session 時自 DB 還原盤查狀態(三態協定比照報告草稿)
   useEffect(() => {
     const master = masterKeyRef.current;
-    if (!isUnlocked || !master) return;
+    // Info: (20260716 - Emily) #52 帳本會話明文模式免金鑰(同報告還原)
+    const isBookBound = Boolean(sessionAccess[chatChannel]?.accountBookId);
+    if (!isBookBound && (!isUnlocked || !master)) return;
     if (inventoryRestoredChannelsRef.current.has(chatChannel)) return;
     inventoryRestoredChannelsRef.current.add(chatChannel);
 
-    loadInventoryState(chatChannel, master)
+    loadInventoryState(chatChannel, master ?? null)
       .then((loaded) => {
         inventoryVersionsRef.current.set(chatChannel, loaded?.version ?? 0);
         if (loaded && !loaded.state) {
@@ -415,7 +609,7 @@ export const useCarbonChat = () => {
         // Info: (20260716 - Emily) 還原失敗不設版本 → 凍結該 channel 的狀態自動保存，防空狀態蓋庫
         console.error("[carbon-chat] failed to load inventory state:", error);
       });
-  }, [isUnlocked, chatChannel]);
+  }, [isUnlocked, chatChannel, sessionAccess]);
 
   // Info: (20260716 - Emily) #6518 盤查狀態 debounce 自動保存(前端加密 → PUT；樂觀鎖)
   const activeInventoryState = inventoryStates[chatChannel];
@@ -439,6 +633,7 @@ export const useCarbonChat = () => {
         master,
         activeInventoryState,
         expectedVersion,
+        sessionAccess[chatChannel]?.accountBookId ?? null,
       )
         .then((newVersion) => {
           inventoryVersionsRef.current.set(chatChannel, newVersion);
@@ -462,7 +657,7 @@ export const useCarbonChat = () => {
         clearTimeout(inventoryAutosaveTimerRef.current);
       }
     };
-  }, [activeInventoryState, chatChannel, isUnlocked]);
+  }, [activeInventoryState, chatChannel, isUnlocked, sessionAccess]);
 
   // Info: (20260716 - Emily) #6519 決定論 CO2e 計算:活動集合變更時呼叫 /calculate,結果掛回 state
   // Info: (20260716 - Emily) 簽章 guard 防迴圈:applyComputedLedger 只回填係數不改活動鍵,簽章不變不重算
@@ -526,13 +721,72 @@ export const useCarbonChat = () => {
     [user?.address, activeSessionId],
   );
 
-  // Info: (20260714 - Emily) sessions 索引持久化(id/標題/建立時間；訊息內容已由 DB 密文保存，不重複入本機)
+  // Info: (20260716 - Emily) #55 發起段落修訂:附件事實 + 使用者指示 + 既有原文 → 修訂稿(對照卡確認制)
+  const requestParagraphRevision = useCallback(
+    async (
+      paragraphId: string,
+      instruction: string,
+      facts: IContextFact[],
+    ) => {
+      const paragraph = sessionsData[
+        activeSessionId
+      ]?.reportData?.paragraphs?.find((p) => p.id === paragraphId);
+      // Info: (20260716 - Emily) 無既有內容不可修訂(空白段落走草稿生成路徑)
+      if (!paragraph?.content) return;
+
+      const section = CARBON_REPORT_OUTLINE.find((o) => o.id === paragraphId);
+      setDraftNotice({
+        type: "loading",
+        text: t("carbon_chatbot.revision_generating", {
+          section: paragraph.title,
+        }),
+      });
+      try {
+        const res = await request<{
+          payload: { content: string; citedFacts: string[] } | null;
+        }>("/api/v1/chat/carbon/draft", {
+          method: "POST",
+          body: JSON.stringify({
+            paragraphId,
+            conversationContext: [],
+            contextFacts: facts,
+            language,
+            existingContent: paragraph.content,
+            instruction,
+          }),
+        });
+        setDraftNotice(null);
+        if (!res.payload) return;
+        setPendingRevision({
+          paragraphId,
+          title: section ? `${section.code} ${section.title}` : paragraph.title,
+          original: paragraph.content,
+          revised: res.payload.content,
+          citedFacts: res.payload.citedFacts ?? [],
+        });
+      } catch (error) {
+        console.error("[carbon-chat] paragraph revision failed:", error);
+        setDraftNotice({
+          type: "error",
+          text: t("carbon_chatbot.revision_failed"),
+        });
+        draftNoticeTimerRef.current = setTimeout(() => {
+          draftNoticeTimerRef.current = null;
+          setDraftNotice(null);
+        }, CARBON_DRAFT_NOTICE_DISMISS_MS);
+      }
+    },
+    [sessionsData, activeSessionId, language, t],
+  );
+
+  // Info: (20260714 - Emily) sessions 索引持久化(id/標題/建立時間;訊息內容已由 DB 密文保存,不重複入本機)
   useEffect(() => {
     if (!user?.address || !sessionsIndexLoadedRef.current) return;
     const entries = Object.values(sessionsData).map((s) => ({
       id: s.id,
       title: s.title,
       createdAt: s.time,
+      isTitleCustom: s.isTitleCustom,
     }));
     saveSessionsIndex(user.address, entries);
   }, [sessionsData, user?.address]);
@@ -550,11 +804,48 @@ export const useCarbonChat = () => {
     setSaveStatus(null);
     setIsError(false);
     setDraftNotice(null);
+    setPendingRevision(null);
+    setPendingImport(null);
     pendingDraftParagraphIdRef.current = null;
   }, []);
 
-  // Info: (20260714 - Emily) 新增對話: 建立空白 session 並切換；channel 隨 id 變更，歷史/草稿各自獨立
-  const createNewSession = useCallback(() => {
+  // Info: (20260716 - Emily) 對話改名:設自訂旗標(首訊衍生不再覆蓋);sessions 索引 effect 自動持久化
+  const renameSession = useCallback((sessionId: string, title: string) => {
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    setSessionsData((prev) => {
+      const session = prev[sessionId];
+      if (!session) return prev;
+      return {
+        ...prev,
+        [sessionId]: { ...session, title: trimmed, isTitleCustom: true },
+      };
+    });
+  }, []);
+
+  // Info: (20260716 - Emily) 報告檔名改名:入 reportData(隨草稿持久化);下載檔名跟隨
+  const renameReportDocument = useCallback(
+    (documentName: string) => {
+      const trimmed = documentName.trim();
+      if (!trimmed) return;
+      setSessionsData((prev) => {
+        const session = prev[activeSessionId];
+        if (!session?.reportData) return prev;
+        return {
+          ...prev,
+          [activeSessionId]: {
+            ...session,
+            reportData: { ...session.reportData, documentName: trimmed },
+          },
+        };
+      });
+    },
+    [activeSessionId],
+  );
+
+  // Info: (20260714 - Emily) 新增對話:建立空白 session 並切換;channel 隨 id 變更,歷史/草稿各自獨立
+  // Info: (20260716 - Emily) #52 可選綁定帳本:綁定後報告歸屬帳本(明文模式),不綁為個人會話(E2EE)
+  const createNewSession = useCallback((accountBookId?: string) => {
     const id = `s${Date.now().toString(36)}`;
     const session = createChatSession(
       id,
@@ -563,7 +854,10 @@ export const useCarbonChat = () => {
     );
     setSessionsData((prev) => ({ ...prev, [id]: session }));
     switchSession(id);
-  }, [t, switchSession]);
+    if (accountBookId) {
+      void bindSessionToBook(id, accountBookId);
+    }
+  }, [t, switchSession, bindSessionToBook]);
 
   // Info: (20260714 - Emily) 跳至報告段落並短暫高亮(chip 點擊與草稿寫入後的即時回饋共用)
   const jumpToReportParagraph = useCallback((paragraphId: string) => {
@@ -576,9 +870,258 @@ export const useCarbonChat = () => {
     }, CARBON_CHAT_HIGHLIGHT_DURATION_MS);
   }, []);
 
-  // Info: (20260714 - Emily) 將草稿寫入 reportData: 標記完成、重置查核(單一寫入點，對話生成與附件管線共用)
-  // Info: (20260714 - Emily) content 只存內文；`### {標題}` 標頭由報告預覽組稿時產生，格式變更不需資料遷移
-  // Info: (20260714 - Emily) onlyIfEmpty: 歷史還原補寫時只填空白段落，避免覆蓋使用者後續的編輯
+  // Info: (20260716 - Emily) #56 上傳整份報告 → 匯入預覽(不直接寫入;查核重置與數字重勾稽於確認時執行)
+  const importReportFile = useCallback(
+    async (file: File) => {
+      // Info: (20260716 - Emily) 逐章解析(UAT:整份真實報告單次呼叫受 output token 上限,只回少數段落):
+      // Info: (20260716 - Emily) pdf 或大檔逐章呼叫(11 章),進度即時顯示;小型文字檔維持單發
+      const useChunked =
+        file.type === "application/pdf" ||
+        file.size >= CARBON_IMPORT_SUGGEST_MIN_BYTES;
+      const chapters = useChunked ? CARBON_REPORT_CHAPTERS : [null];
+
+      interface IImportChunkPayload {
+        segments: { paragraphId: string; title: string; content: string }[];
+        unmapped: string[];
+        activities?: IActivityRecord[];
+      }
+
+      const mergedByParagraph = new Map<
+        string,
+        { title: string; parts: string[] }
+      >();
+      const mergedUnmapped: string[] = [];
+      let mergedActivities: IActivityRecord[] = [];
+      const failedChapters: string[] = [];
+
+      try {
+        // Info: (20260716 - Emily) 循序處理:每章一次 LLM 呼叫;單章失敗記錄後續行(不整批作廢)
+        await chapters.reduce(async (previous, chapter, index) => {
+          await previous;
+          setDraftNotice({
+            type: "loading",
+            text: chapter
+              ? t("carbon_chatbot.import_parsing_chapter", {
+                  name: file.name,
+                  current: index + 1,
+                  total: chapters.length,
+                })
+              : t("carbon_chatbot.import_parsing", { name: file.name }),
+          });
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("language", language);
+          if (chapter) formData.append("chapterId", chapter.id);
+          // Info: (20260716 - Emily) 活動數據僅首章呼叫萃取,避免逐章重複入帳
+          formData.append("extractActivities", index === 0 ? "true" : "false");
+          try {
+            const res = await request<{ payload: IImportChunkPayload | null }>(
+              "/api/v1/chat/carbon/import",
+              { method: "POST", body: formData },
+            );
+            const chunk = res.payload;
+            if (!chunk) return;
+            chunk.segments.forEach((segment) => {
+              const bucket = mergedByParagraph.get(segment.paragraphId) ?? {
+                title: segment.title,
+                parts: [],
+              };
+              bucket.parts.push(segment.content);
+              mergedByParagraph.set(segment.paragraphId, bucket);
+            });
+            mergedUnmapped.push(...chunk.unmapped);
+            if (index === 0 && chunk.activities) {
+              mergedActivities = chunk.activities;
+            }
+          } catch (chunkError) {
+            console.error(
+              "[carbon-chat] import chapter failed:",
+              chapter?.id,
+              chunkError,
+            );
+            if (chapter) failedChapters.push(chapter.title);
+            else throw chunkError;
+          }
+        }, Promise.resolve());
+
+        setDraftNotice(null);
+        const payload = {
+          segments: Array.from(mergedByParagraph.entries()).map(
+            ([paragraphId, bucket]) => ({
+              paragraphId,
+              title: bucket.title,
+              content: bucket.parts.join("\n\n").trim(),
+            }),
+          ),
+          unmapped: mergedUnmapped,
+          activities: mergedActivities,
+        };
+        if (payload.segments.length === 0) {
+          setDraftNotice({
+            type: "error",
+            text: t("carbon_chatbot.import_empty"),
+          });
+          draftNoticeTimerRef.current = setTimeout(() => {
+            draftNoticeTimerRef.current = null;
+            setDraftNotice(null);
+          }, CARBON_DRAFT_NOTICE_DISMISS_MS);
+          return;
+        }
+        const paragraphs =
+          sessionsData[activeSessionId]?.reportData?.paragraphs ?? [];
+        const existingIds = new Set(
+          paragraphs.filter((p) => p.content).map((p) => p.id),
+        );
+        // Info: (20260716 - Emily) 匯入的活動數據於確認時合併,先隨預覽暫存
+        importActivitiesRef.current = payload.activities;
+        setPendingImport({
+          fileName: file.name,
+          items: payload.segments.map((segment) => ({
+            ...segment,
+            hasExisting: existingIds.has(segment.paragraphId),
+            checked: true,
+          })),
+          unmapped: payload.unmapped,
+          activityCount: payload.activities.length,
+          failedChapters,
+        });
+      } catch (error) {
+        console.error("[carbon-chat] report import failed:", error);
+        setDraftNotice({
+          type: "error",
+          text: t("carbon_chatbot.import_failed"),
+        });
+        draftNoticeTimerRef.current = setTimeout(() => {
+          draftNoticeTimerRef.current = null;
+          setDraftNotice(null);
+        }, CARBON_DRAFT_NOTICE_DISMISS_MS);
+      }
+    },
+    [sessionsData, activeSessionId, language, t],
+  );
+
+  const toggleImportItem = useCallback((paragraphId: string) => {
+    setPendingImport((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        items: prev.items.map((item) =>
+          item.paragraphId === paragraphId
+            ? { ...item, checked: !item.checked }
+            : item,
+        ),
+      };
+    });
+  }, []);
+
+  // Info: (20260716 - Emily) #56 套用匯入:勾選段落寫入(查核一律重置);活動數據入帳本交 /calculate 重勾稽
+  const applyPendingImport = useCallback(() => {
+    if (!pendingImport) return;
+    const selected = pendingImport.items.filter((item) => item.checked);
+    if (selected.length === 0) return;
+    const contentById = new Map(
+      selected.map((item) => [item.paragraphId, item.content]),
+    );
+    setSessionsData((prev) => {
+      const session = prev[activeSessionId];
+      if (!session?.reportData?.paragraphs) return prev;
+      // Info: (20260716 - Emily) 報告保真:逐段 patch rawMarkdown(權威來源存在時)
+      let nextRaw = session.reportData.rawMarkdown;
+      if (nextRaw) {
+        session.reportData.paragraphs.forEach((p) => {
+          const imported = contentById.get(p.id);
+          if (imported !== undefined && nextRaw) {
+            nextRaw = patchMarkdownSection(nextRaw, p.title, imported);
+          }
+        });
+      }
+      return {
+        ...prev,
+        [activeSessionId]: {
+          ...session,
+          reportData: {
+            ...session.reportData,
+            rawMarkdown: nextRaw,
+            paragraphs: session.reportData.paragraphs.map((p) => {
+              const imported = contentById.get(p.id);
+              if (imported === undefined) return p;
+              // Info: (20260716 - Emily) 匯入內容原樣落地;查核重置(匯入的舊報告不可信任為已驗證)
+              return {
+                ...p,
+                content: imported,
+                isCompleted: true,
+                isVerified: false,
+              };
+            }),
+          },
+        },
+      };
+    });
+    const activities = importActivitiesRef.current;
+    if (activities.length > 0) {
+      applyInventoryExtraction({ activities });
+    }
+    importActivitiesRef.current = [];
+    setPendingImport(null);
+    jumpToReportParagraph(selected[0].paragraphId);
+  }, [
+    pendingImport,
+    activeSessionId,
+    applyInventoryExtraction,
+    jumpToReportParagraph,
+  ]);
+
+  const discardPendingImport = useCallback(() => {
+    importActivitiesRef.current = [];
+    setPendingImport(null);
+  }, []);
+
+  // Info: (20260716 - Emily) #55 套用修訂:寫入段落(取消查核)並高亮;人工 gate 的唯一落地點
+  const applyPendingRevision = useCallback(() => {
+    if (!pendingRevision) return;
+    const { paragraphId, revised } = pendingRevision;
+    setSessionsData((prev) => {
+      const session = prev[activeSessionId];
+      if (!session?.reportData?.paragraphs) return prev;
+      const targetTitle = session.reportData.paragraphs.find(
+        (p) => p.id === paragraphId,
+      )?.title;
+      // Info: (20260716 - Emily) 報告保真:同步 patch rawMarkdown(權威來源)
+      const nextRaw =
+        session.reportData.rawMarkdown && targetTitle
+          ? patchMarkdownSection(
+              session.reportData.rawMarkdown,
+              targetTitle,
+              revised,
+            )
+          : session.reportData.rawMarkdown;
+      return {
+        ...prev,
+        [activeSessionId]: {
+          ...session,
+          reportData: {
+            ...session.reportData,
+            rawMarkdown: nextRaw,
+            paragraphs: session.reportData.paragraphs.map((p) =>
+              p.id === paragraphId
+                ? { ...p, content: revised, isVerified: false }
+                : p,
+            ),
+          },
+        },
+      };
+    });
+    setPendingRevision(null);
+    jumpToReportParagraph(paragraphId);
+  }, [pendingRevision, activeSessionId, jumpToReportParagraph]);
+
+  const discardPendingRevision = useCallback(() => {
+    setPendingRevision(null);
+  }, []);
+
+  // Info: (20260714 - Emily) 將草稿寫入 reportData:標記完成、重置查核(單一寫入點,對話生成與附件管線共用)
+  // Info: (20260714 - Emily) content 只存內文;`### {標題}` 標頭由報告預覽組稿時產生,格式變更不需資料遷移
+  // Info: (20260714 - Emily) onlyIfEmpty:歷史還原補寫時只填空白段落,避免覆蓋使用者後續的編輯
   const applyDraftToReport = useCallback(
     (draft: IParagraphDraft, options?: { onlyIfEmpty?: boolean }) => {
       const section = CARBON_REPORT_OUTLINE.find(
@@ -587,8 +1130,8 @@ export const useCarbonChat = () => {
       if (!section) return;
 
       setSessionsData((prev) => {
-        const updatedSession = { ...prev[activeSessionId] };
-        const reportData = updatedSession.reportData;
+        const session = prev[activeSessionId];
+        const reportData = session?.reportData;
         if (!reportData?.paragraphs) return prev;
 
         const newParagraphs = reportData.paragraphs.map((p) => {
@@ -603,11 +1146,31 @@ export const useCarbonChat = () => {
           };
         });
 
-        updatedSession.reportData = {
-          ...reportData,
-          paragraphs: newParagraphs,
+        // Info: (20260716 - Emily) 報告保真:rawMarkdown 存在時以標題 patch 對應段落(不重排文件結構)
+        const targetTitle = newParagraphs.find(
+          (p) => p.id === draft.paragraphId,
+        )?.title;
+        const nextRaw =
+          reportData.rawMarkdown && targetTitle
+            ? patchMarkdownSection(
+                reportData.rawMarkdown,
+                targetTitle,
+                draft.content,
+              )
+            : reportData.rawMarkdown;
+
+        // Info: (20260716 - Emily) 純 immutable 構造(react-hooks/immutability):不對 spread 副本再賦值
+        return {
+          ...prev,
+          [activeSessionId]: {
+            ...session,
+            reportData: {
+              ...reportData,
+              rawMarkdown: nextRaw,
+              paragraphs: newParagraphs,
+            },
+          },
         };
-        return { ...prev, [activeSessionId]: updatedSession };
       });
     },
     [activeSessionId],
@@ -669,6 +1232,7 @@ export const useCarbonChat = () => {
           );
           if (
             firstUserMessage?.text &&
+            !session.isTitleCustom &&
             session.title === t("carbon_chatbot.new_session_title")
           ) {
             session.title = firstUserMessage.text.trim().slice(0, 24);
@@ -950,34 +1514,59 @@ export const useCarbonChat = () => {
 
   const handleMarkdownChange = useCallback(
     (newMarkdown: string) => {
+      // Info: (20260716 - Emily) #52 唯讀(帳本 VIEWER):忽略編輯,內容以 server 版本為準
+      const channel = buildCarbonChatChannel(
+        user?.address ?? "anonymous",
+        activeSessionId,
+      );
+      if (sessionAccess[channel]?.canEdit === false) return;
       setSessionsData((prev) => {
         const updatedSession = { ...prev[activeSessionId] };
         if (!updatedSession.reportData?.paragraphs) return prev;
 
-        // Info: (20260715 - Luphia) 切分邏輯抽至 use_carbon_chat.helpers（純函式，可單元測試）
-        const blocks = splitReportMarkdownIntoBlocks(newMarkdown);
-
-        // Info: (20260713 - Tzuhan) 預覽渲染全部段落(未生成者為佔位區塊)，故區塊與 33 段依序 1:1 對齊
-        // Info: (20260709 - Tzuhan) 防呆機制: 區塊數與段落數不一致，代表使用者可能誤刪切分標題，
-        // Info: (20260709 - Tzuhan) 為確保資料正確性，將所有已生成段落設為未查核
-        const isBlockCountMismatched =
-          blocks.length !== updatedSession.reportData.paragraphs.length;
+        // Info: (20260716 - Emily) #50 改標題對齊(取代區塊數 1:1 對位):
+        // Info: (20260716 - Emily) 舊防呆在區塊數不符時「整批丟棄編輯」— 貼上任何自訂標題即觸發,為資料遺失主因;
+        // Info: (20260716 - Emily) 新制以段落標題精確對齊,未知內容併入前段保留,誤刪段落者保原文並取消查核
+        const split = splitReportMarkdownSections(newMarkdown);
+        const aligned = alignReportSections(
+          updatedSession.reportData.paragraphs.map((p) => p.title),
+          split,
+        );
 
         let hasChanges = false;
         const newParagraphs = updatedSession.reportData.paragraphs.map(
           (p, index) => {
-            // Info: (20260713 - Tzuhan) 未生成段落為唯讀佔位，不接受編輯寫入(內容須由 AI 對話生成)
-            if (!p.content) return p;
-            // Info: (20260714 - Emily) 編輯後內文為空(僅剩標頭)視為誤刪，保留原內容避免段落退回未生成狀態
-            const editedBody = blocks[index];
-            const nextContent =
-              isBlockCountMismatched || !editedBody ? p.content : editedBody;
+            if (!aligned.has(index)) {
+              // Info: (20260716 - Emily) 段落(含標題)自文本消失 = 誤刪:保留原內容,已查核者取消查核
+              if (p.content && p.isVerified) {
+                hasChanges = true;
+                return { ...p, isVerified: false };
+              }
+              return p;
+            }
+            const body = aligned.get(index) ?? "";
+            // Info: (20260716 - Emily) 佔位段落未被觸碰(body 仍為 > _提示_ 引言)→ 維持未生成
+            const isUntouchedPlaceholder =
+              !p.content && /^>\s*_[^_]*_$/.test(body.trim());
+            if (isUntouchedPlaceholder) return p;
+            // Info: (20260714 - Emily) 編輯後內文為空(僅剩標頭)視為誤刪,保留原內容避免段落退回未生成狀態
+            const nextContent = body.trim() ? body : p.content;
+
+            // Info: (20260716 - Emily) #50 佔位段落接受「貼上填充」:使用者提供的內容即為事實來源,
+            // Info: (20260716 - Emily) 填充後標記完成、未查核(與 AI 生成同一查核閘門)
+            if (!p.content && nextContent) {
+              hasChanges = true;
+              return {
+                ...p,
+                content: nextContent,
+                isCompleted: true,
+                isVerified: false,
+              };
+            }
 
             const isContentChanged = nextContent !== p.content;
-            const shouldResetVerified =
-              (isContentChanged || isBlockCountMismatched) && p.isVerified;
             // Info: (20260712 - Luphia) 僅在內容或查核狀態確實變動時才更新，避免無謂的狀態變更
-            if (!isContentChanged && !shouldResetVerified) return p;
+            if (!isContentChanged) return p;
 
             hasChanges = true;
             return {
@@ -989,16 +1578,21 @@ export const useCarbonChat = () => {
           },
         );
 
-        if (!hasChanges) return prev;
+        // Info: (20260716 - Emily) 報告保真:rawMarkdown 權威來源 — 使用者存什麼渲染什麼,
+        // Info: (20260716 - Emily) 段落對齊僅更新 derived view(進度/chip/查核),絕不重組使用者的文件結構
+        const isRawChanged =
+          updatedSession.reportData.rawMarkdown !== newMarkdown;
+        if (!hasChanges && !isRawChanged) return prev;
 
         updatedSession.reportData = {
           ...updatedSession.reportData,
+          rawMarkdown: newMarkdown,
           paragraphs: newParagraphs,
         };
         return { ...prev, [activeSessionId]: updatedSession };
       });
     },
-    [activeSessionId],
+    [activeSessionId, sessionAccess, user?.address],
   );
 
   // Info: (20260712 - Luphia) 訂閱 chatroom 頻道，接收並解密 AI 回覆等即時訊息（取代原本的 mock CustomEvent）
@@ -1017,8 +1611,20 @@ export const useCarbonChat = () => {
 
   // Info: (20260714 - Emily) 加入附件: 前端 Fail Fast(MIME 白名單/大小/數量)，通過者轉 base64 進待送清單
   const addAttachments = useCallback(
-    (files: File[]) => {
+    (files: File[], options?: { skipImportCheck?: boolean }) => {
       setAttachmentError(null);
+
+      // Info: (20260716 - Emily) #56 匯入導流(UAT:使用者把整份報告當佐證附件上傳 → 聊天管線超時):
+      // Info: (20260716 - Emily) 單一大型 pdf 疑似整份報告,先問要「匯入報告」還是「作為佐證附件」
+      if (
+        !options?.skipImportCheck &&
+        files.length === 1 &&
+        files[0].type === "application/pdf" &&
+        files[0].size >= CARBON_IMPORT_SUGGEST_MIN_BYTES
+      ) {
+        setImportCandidate(files[0]);
+        return;
+      }
 
       const allowedMimeTypes: readonly string[] =
         CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES;
@@ -1116,6 +1722,25 @@ export const useCarbonChat = () => {
     [pendingAttachments.length, t],
   );
 
+  // Info: (20260716 - Emily) #56 匯入導流出口:走整份匯入(預覽卡)或仍作佐證附件
+  const confirmImportCandidate = useCallback(() => {
+    if (!importCandidate) return;
+    const file = importCandidate;
+    setImportCandidate(null);
+    void importReportFile(file);
+  }, [importCandidate, importReportFile]);
+
+  const attachImportCandidate = useCallback(() => {
+    if (!importCandidate) return;
+    const file = importCandidate;
+    setImportCandidate(null);
+    addAttachments([file], { skipImportCheck: true });
+  }, [importCandidate, addAttachments]);
+
+  const dismissImportCandidate = useCallback(() => {
+    setImportCandidate(null);
+  }, []);
+
   const removeAttachment = useCallback((attachmentId: string) => {
     setAttachmentError(null);
     setPendingAttachments((prev) => prev.filter((a) => a.id !== attachmentId));
@@ -1186,6 +1811,7 @@ export const useCarbonChat = () => {
       if (
         !hasUserMessage &&
         inputValue.trim() &&
+        !updatedSession.isTitleCustom &&
         updatedSession.title === t("carbon_chatbot.new_session_title")
       ) {
         updatedSession.title = inputValue.trim().slice(0, 24);
@@ -1224,7 +1850,15 @@ export const useCarbonChat = () => {
         }));
 
       // Info: (20260712 - Luphia) 傳入頻道與本 session 的加密公鑰(xpub)，由後端加密 AI 回覆並經 Centrifugo 回傳
-      // Info: (20260714 - Emily) 改用 request helper: 自動帶 DeWT Bearer token(後端已加授權檢查)
+      // Info: (20260714 - Emily) 改用 request helper:自動帶 DeWT Bearer token(後端已加授權檢查)
+      // Info: (20260716 - Emily) 附件解析為長工(在 chat 請求內執行):以狀態列告知,避免使用者誤判卡死
+      if (attachmentsMeta.length > 0) {
+        setDraftNotice({
+          type: "loading",
+          text: t("carbon_chatbot.attachments_processing"),
+        });
+      }
+
       const data = await request<{
         success: boolean;
         message: string;
@@ -1233,6 +1867,8 @@ export const useCarbonChat = () => {
           envelopes?: IEciesEnvelope[];
           extraction?: IInventoryExtraction | null;
           attachmentActivities?: IActivityRecord[];
+          revisionParagraphId?: string | null;
+          attachmentFacts?: IContextFact[];
         } | null;
       }>("/api/v1/chat/carbon", {
         method: "POST",
@@ -1261,6 +1897,8 @@ export const useCarbonChat = () => {
       // Info: (20260714 - Emily) HTTP 回帶的密文訊息直接解密顯示(草稿隨摘要訊息一起套用);
       // Info: (20260714 - Emily) Centrifugo 訂閱若也送達，由訊息 id 去重(草稿亦以訊息 id 防重複套用)
       const payload = data.payload;
+      // Info: (20260716 - Emily) 附件管線完成(回應已達),清除解析中提示
+      if (attachmentsMeta.length > 0) setDraftNotice(null);
 
       // Info: (20260716 - Emily) #6518 事實入帳: 對話萃取 + 附件活動數據合併進狀態帳本(去重由引擎裁決)
       applyInventoryExtraction(
@@ -1280,11 +1918,26 @@ export const useCarbonChat = () => {
         }
       }
 
+      // Info: (20260716 - Emily) #55 修訂請求:以使用者原話為指示、附件事實為佐證,產生對照卡
+      if (payload?.revisionParagraphId) {
+        void requestParagraphRevision(
+          payload.revisionParagraphId,
+          userMessage.text,
+          payload.attachmentFacts ?? [],
+        );
+      }
+
       // Info: (20260712 - Luphia) 啟動等待逾時，避免「已發佈但未收到」時卡在 typing(回覆已回帶時為 no-op)
-      startReplyTimeout();
+      // Info: (20260716 - Emily) 帶附件時管線含萃取/草稿生成,等待窗加長(UAT:30s 誤報系統錯誤)
+      startReplyTimeout(
+        attachmentsMeta.length > 0
+          ? CARBON_CHAT_REPLY_TIMEOUT_WITH_ATTACHMENTS_MS
+          : CARBON_CHAT_REPLY_TIMEOUT_MS,
+      );
     } catch (error) {
       // Info: (20260712 - Luphia) 此區塊代表「取得 AI 回覆」階段失敗（如 /api/v1/chat/carbon 錯誤）
       console.error("[carbon-chat] Failed to obtain AI response:", error);
+      setDraftNotice(null);
       setIsError(true);
       // Info: (20260716 - Emily) 額度/逾時/限流分別給專屬文案(#6515/#6516)，其餘為一般系統錯誤
       let errorText = t("carbon_chatbot.system_error");
@@ -1321,6 +1974,7 @@ export const useCarbonChat = () => {
     markSessionBusy,
     applyInventoryExtraction,
     inventoryStates,
+    requestParagraphRevision,
   ]);
 
   // Info: (20260712 - Luphia) 進入 channel 的一次性手勢：解鎖金鑰(PRF) → 請後端做前置作業並經 Centrifugo 回傳招呼詞
@@ -1356,6 +2010,7 @@ export const useCarbonChat = () => {
     }
 
     setIsUnlocked(true);
+      setUnlockedMasterKey(masterKeyRef.current);
     setIsError(false);
     // Info: (20260714 - Emily) 歷史載入與招呼詞改由 channel 載入 effect 統一處理(切換 session 亦適用)
   }, [isUnlocked, ensureMasterKeyCached, appendMessageLocally, t]);
@@ -1447,6 +2102,9 @@ export const useCarbonChat = () => {
     setActiveSessionId: switchSession,
     createNewSession,
     saveStatus,
+    // Info: (20260716 - Emily) 命名:對話改名 + 報告檔名改名
+    renameSession,
+    renameReportDocument,
     inputValue,
     setInputValue,
     isTyping,
@@ -1463,7 +2121,16 @@ export const useCarbonChat = () => {
     addAttachments,
     removeAttachment,
     reportStats,
-    // Info: (20260716 - Emily) #6518 盤查狀態帳本(活動數據 + 決定性步驟)，供記錄卡顯示
+    // Info: (20260716 - Emily) #52 帳本清單與當前會話存取資訊(唯讀切換/新增對話選單)
+    accountBooks,
+    activeSessionAccess: sessionAccess[chatChannel] ?? {
+      accountBookId: null,
+      canEdit: true,
+    },
+    // Info: (20260716 - Emily) UAT 帳本報告入口:列會話 + 檢視器編輯需本人金鑰(未解鎖為 null → 唯讀)
+    fetchBookSessions,
+    masterKey: unlockedMasterKey,
+    // Info: (20260716 - Emily) #6518 盤查狀態帳本(活動數據 + 決定性步驟),供記錄卡顯示
     inventoryState: activeInventoryState ?? createEmptyInventoryState(),
     activeParagraphId,
     jumpToParagraph,
@@ -1473,6 +2140,21 @@ export const useCarbonChat = () => {
     focusMessageForParagraph,
     draftingParagraphId,
     draftNotice,
+    // Info: (20260716 - Emily) #55 修訂對照卡(確認/捨棄)
+    pendingRevision,
+    applyPendingRevision,
+    discardPendingRevision,
+    // Info: (20260716 - Emily) #56 報告匯入(逐段勾選確認)
+    pendingImport,
+    importReportFile,
+    toggleImportItem,
+    applyPendingImport,
+    discardPendingImport,
+    // Info: (20260716 - Emily) #56 匯入導流(聊天附件疑似整份報告)
+    importCandidate,
+    confirmImportCandidate,
+    attachImportCandidate,
+    dismissImportCandidate,
     generateParagraphDraft,
     toggleParagraphVerified,
     handleMarkdownChange,
