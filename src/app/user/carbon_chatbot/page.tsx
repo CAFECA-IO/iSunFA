@@ -65,6 +65,7 @@ export default function CarbonChatbotPage() {
     toggleImportItem,
     applyPendingImport,
     discardPendingImport,
+    retryFailedImportChapters,
     importCandidate,
     confirmImportCandidate,
     attachImportCandidate,
@@ -215,6 +216,7 @@ export default function CarbonChatbotPage() {
           onToggleItem={toggleImportItem}
           onApply={applyPendingImport}
           onDiscard={discardPendingImport}
+          onRetryFailed={retryFailedImportChapters}
         />
       )}
 

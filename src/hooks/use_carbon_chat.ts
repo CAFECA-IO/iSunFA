@@ -171,6 +171,8 @@ export const useCarbonChat = () => {
   const pendingBindsRef = useRef<Map<string, string>>(new Map());
   // Info: (20260716 - Emily) #56 匯入預覽期間暫存的活動數據(確認時才入帳本)
   const importActivitiesRef = useRef<IActivityRecord[]>([]);
+  // Info: (20260717 - Emily) #56 重試用:最近一次匯入的原始檔(失敗章節重跑無需重選檔)
+  const lastImportFileRef = useRef<File | null>(null);
 
   // Info: (20260716 - Emily) #6518 盤查狀態帳本(per-channel):活動數據 + 決定性步驟;E2EE 入庫比照報告草稿
   const [inventoryStates, setInventoryStates] = useState<
@@ -870,93 +872,161 @@ export const useCarbonChat = () => {
     }, CARBON_CHAT_HIGHLIGHT_DURATION_MS);
   }, []);
 
-  // Info: (20260716 - Emily) #56 上傳整份報告 → 匯入預覽(不直接寫入;查核重置與數字重勾稽於確認時執行)
-  const importReportFile = useCallback(
-    async (file: File) => {
-      // Info: (20260716 - Emily) 逐章解析(UAT:整份真實報告單次呼叫受 output token 上限,只回少數段落):
-      // Info: (20260716 - Emily) pdf 或大檔逐章呼叫(11 章),進度即時顯示;小型文字檔維持單發
-      const useChunked =
-        file.type === "application/pdf" ||
-        file.size >= CARBON_IMPORT_SUGGEST_MIN_BYTES;
-      const chapters = useChunked ? CARBON_REPORT_CHAPTERS : [null];
-
+  // Info: (20260717 - Emily) #56 逐章解析執行器:有限並行(2 workers,兼顧速度與 LLM 限流),
+  // Info: (20260717 - Emily) 結果依章節順序合併(決定性),單章失敗記錄後續行;進度以完成數回報
+  const runImportChapters = useCallback(
+    async (
+      file: File,
+      chapters: { id: string; title: string }[],
+      extractActivitiesOnFirst: boolean,
+    ) => {
       interface IImportChunkPayload {
         segments: { paragraphId: string; title: string; content: string }[];
         unmapped: string[];
         activities?: IActivityRecord[];
       }
+      const results: (IImportChunkPayload | null)[] = new Array(
+        chapters.length,
+      ).fill(null);
+      const failed: { id: string; title: string }[] = [];
+      let nextIndex = 0;
+      let completedCount = 0;
 
-      const mergedByParagraph = new Map<
-        string,
-        { title: string; parts: string[] }
-      >();
-      const mergedUnmapped: string[] = [];
-      let mergedActivities: IActivityRecord[] = [];
-      const failedChapters: string[] = [];
+      const reportProgress = () => {
+        setDraftNotice({
+          type: "loading",
+          text: t("carbon_chatbot.import_parsing_chapter", {
+            name: file.name,
+            current: completedCount,
+            total: chapters.length,
+          }),
+        });
+      };
+      reportProgress();
+
+      // Info: (20260717 - Emily) worker 以遞迴取號(每 worker 同時只跑一章;深度上限 = 章節數 11,無堆疊風險)
+      const processNext = async (): Promise<void> => {
+        const index = nextIndex;
+        nextIndex += 1;
+        if (index >= chapters.length) return;
+        const chapter = chapters[index];
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("language", language);
+        formData.append("chapterId", chapter.id);
+        formData.append(
+          "extractActivities",
+          extractActivitiesOnFirst && index === 0 ? "true" : "false",
+        );
+        try {
+          const res = await request<{ payload: IImportChunkPayload | null }>(
+            "/api/v1/chat/carbon/import",
+            { method: "POST", body: formData },
+          );
+          results[index] = res.payload;
+        } catch (chunkError) {
+          console.error(
+            "[carbon-chat] import chapter failed:",
+            chapter.id,
+            chunkError,
+          );
+          failed.push(chapter);
+        }
+        completedCount += 1;
+        reportProgress();
+        await processNext();
+      };
+      // Info: (20260717 - Emily) 並行度 2:11 章耗時約減半;仍留限流餘裕(LLM bucket 12/min)
+      await Promise.all([processNext(), processNext()]);
+
+      const segmentsById = new Map<string, { title: string; parts: string[] }>();
+      const unmapped: string[] = [];
+      let activities: IActivityRecord[] = [];
+      results.forEach((chunk) => {
+        if (!chunk) return;
+        chunk.segments.forEach((segment) => {
+          const bucket = segmentsById.get(segment.paragraphId) ?? {
+            title: segment.title,
+            parts: [],
+          };
+          bucket.parts.push(segment.content);
+          segmentsById.set(segment.paragraphId, bucket);
+        });
+        unmapped.push(...chunk.unmapped);
+        if (chunk.activities && chunk.activities.length > 0) {
+          activities = chunk.activities;
+        }
+      });
+
+      return {
+        segments: Array.from(segmentsById.entries()).map(
+          ([paragraphId, bucket]) => ({
+            paragraphId,
+            title: bucket.title,
+            content: bucket.parts.join("\n\n").trim(),
+          }),
+        ),
+        unmapped,
+        activities,
+        failed,
+      };
+    },
+    [language, t],
+  );
+
+  // Info: (20260716 - Emily) #56 上傳整份報告 → 匯入預覽(不直接寫入;查核重置與數字重勾稽於確認時執行)
+  const importReportFile = useCallback(
+    async (file: File) => {
+      lastImportFileRef.current = file;
+      // Info: (20260716 - Emily) 逐章解析(UAT:整份真實報告單次呼叫受 output token 上限,只回少數段落):
+      // Info: (20260717 - Emily) pdf 或大檔逐章(11 章,並行度 2);小型文字檔單發
+      const useChunked =
+        file.type === "application/pdf" ||
+        file.size >= CARBON_IMPORT_SUGGEST_MIN_BYTES;
+      const chapters = useChunked
+        ? CARBON_REPORT_CHAPTERS.map((chapter) => ({
+            id: chapter.id,
+            title: chapter.title,
+          }))
+        : [];
 
       try {
-        // Info: (20260716 - Emily) 循序處理:每章一次 LLM 呼叫;單章失敗記錄後續行(不整批作廢)
-        await chapters.reduce(async (previous, chapter, index) => {
-          await previous;
+        let payload: {
+          segments: { paragraphId: string; title: string; content: string }[];
+          unmapped: string[];
+          activities: IActivityRecord[];
+        };
+        let failedChapters: { id: string; title: string }[] = [];
+
+        if (useChunked) {
+          const result = await runImportChapters(file, chapters, true);
+          payload = result;
+          failedChapters = result.failed;
+        } else {
+          // Info: (20260717 - Emily) 小型文字檔:單發全綱呼叫
           setDraftNotice({
             type: "loading",
-            text: chapter
-              ? t("carbon_chatbot.import_parsing_chapter", {
-                  name: file.name,
-                  current: index + 1,
-                  total: chapters.length,
-                })
-              : t("carbon_chatbot.import_parsing", { name: file.name }),
+            text: t("carbon_chatbot.import_parsing", { name: file.name }),
           });
           const formData = new FormData();
           formData.append("file", file);
           formData.append("language", language);
-          if (chapter) formData.append("chapterId", chapter.id);
-          // Info: (20260716 - Emily) 活動數據僅首章呼叫萃取,避免逐章重複入帳
-          formData.append("extractActivities", index === 0 ? "true" : "false");
-          try {
-            const res = await request<{ payload: IImportChunkPayload | null }>(
-              "/api/v1/chat/carbon/import",
-              { method: "POST", body: formData },
-            );
-            const chunk = res.payload;
-            if (!chunk) return;
-            chunk.segments.forEach((segment) => {
-              const bucket = mergedByParagraph.get(segment.paragraphId) ?? {
-                title: segment.title,
-                parts: [],
-              };
-              bucket.parts.push(segment.content);
-              mergedByParagraph.set(segment.paragraphId, bucket);
-            });
-            mergedUnmapped.push(...chunk.unmapped);
-            if (index === 0 && chunk.activities) {
-              mergedActivities = chunk.activities;
-            }
-          } catch (chunkError) {
-            console.error(
-              "[carbon-chat] import chapter failed:",
-              chapter?.id,
-              chunkError,
-            );
-            if (chapter) failedChapters.push(chapter.title);
-            else throw chunkError;
-          }
-        }, Promise.resolve());
+          const res = await request<{
+            payload: {
+              segments: {
+                paragraphId: string;
+                title: string;
+                content: string;
+              }[];
+              unmapped: string[];
+              activities: IActivityRecord[];
+            } | null;
+          }>("/api/v1/chat/carbon/import", { method: "POST", body: formData });
+          payload = res.payload ?? { segments: [], unmapped: [], activities: [] };
+        }
 
         setDraftNotice(null);
-        const payload = {
-          segments: Array.from(mergedByParagraph.entries()).map(
-            ([paragraphId, bucket]) => ({
-              paragraphId,
-              title: bucket.title,
-              content: bucket.parts.join("\n\n").trim(),
-            }),
-          ),
-          unmapped: mergedUnmapped,
-          activities: mergedActivities,
-        };
-        if (payload.segments.length === 0) {
+        if (payload.segments.length === 0 && failedChapters.length === 0) {
           setDraftNotice({
             type: "error",
             text: t("carbon_chatbot.import_empty"),
@@ -997,8 +1067,40 @@ export const useCarbonChat = () => {
         }, CARBON_DRAFT_NOTICE_DISMISS_MS);
       }
     },
-    [sessionsData, activeSessionId, language, t],
+    [sessionsData, activeSessionId, language, t, runImportChapters],
   );
+
+  // Info: (20260717 - Emily) #56 只重跑失敗章節,結果合併進現有預覽(檔案取自暫存 ref)
+  const retryFailedImportChapters = useCallback(async () => {
+    const file = lastImportFileRef.current;
+    const failed = pendingImport?.failedChapters ?? [];
+    if (!file || failed.length === 0 || !pendingImport) return;
+
+    const result = await runImportChapters(file, failed, false);
+    setDraftNotice(null);
+    setPendingImport((prev) => {
+      if (!prev) return prev;
+      const itemByParagraph = new Map(
+        prev.items.map((item) => [item.paragraphId, item]),
+      );
+      result.segments.forEach((segment) => {
+        const existing = itemByParagraph.get(segment.paragraphId);
+        itemByParagraph.set(segment.paragraphId, {
+          paragraphId: segment.paragraphId,
+          title: segment.title,
+          content: segment.content,
+          hasExisting: existing?.hasExisting ?? false,
+          checked: existing?.checked ?? true,
+        });
+      });
+      return {
+        ...prev,
+        items: Array.from(itemByParagraph.values()),
+        unmapped: [...prev.unmapped, ...result.unmapped],
+        failedChapters: result.failed,
+      };
+    });
+  }, [pendingImport, runImportChapters]);
 
   const toggleImportItem = useCallback((paragraphId: string) => {
     setPendingImport((prev) => {
@@ -2150,6 +2252,7 @@ export const useCarbonChat = () => {
     toggleImportItem,
     applyPendingImport,
     discardPendingImport,
+    retryFailedImportChapters,
     // Info: (20260716 - Emily) #56 匯入導流(聊天附件疑似整份報告)
     importCandidate,
     confirmImportCandidate,
