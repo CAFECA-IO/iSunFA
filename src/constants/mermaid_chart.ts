@@ -4,6 +4,10 @@ export enum MermaidChartType {
   GANTT = "gantt", // Info: (20260707 - Julian) 甘特圖
   XYCHART = "xychart", // Info: (20260707 - Julian) 折線圖
   SANKEY = "sankey", // Info: (20260707 - Julian) 桑基圖
+  MATRIX = "matrix", // Info: (20260717 - Julian) 矩陣圖
+  TORNADO = "tornado", // Info: (20260717 - Julian) 龍捲風圖
+  HISTOGRAM = "histogram", // Info: (20260717 - Julian) 直方圖
+  BOX = "box", // Info: (20260717 - Julian) 箱形圖／盒鬚圖
   SEQUENCE = "sequence",
   UNKNOWN = "unknown",
 }
