@@ -5,6 +5,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Image from "next/image";
 import { MermaidChart } from "@/components/chart/mermaid_chart";
+import { CustomChart } from "@/components/chart/custom_chart";
+import { detectCustomChartType } from "@/lib/utils/custom_chart_parser";
 import { useState, useEffect } from "react";
 import { downloadFile } from "@/lib/file_operator";
 
@@ -286,13 +288,23 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
         children,
         ...props
       }: ComponentPropsWithoutRef<"code"> & { inline?: boolean }) => {
-        const match = /language-(\w+)/.exec(className || "");
-        if (!inline && match && match[1] === "mermaid") {
-          const chartText = (
-            Array.isArray(children)
-              ? children.join("")
-              : (children?.toString() ?? "")
+        // Info: (20260717 - Julian) 允許帶連字號的語言標籤（如 custom-matrix）
+        const match = /language-([\w-]+)/.exec(className || "");
+        const fenceLang = match?.[1] ?? "";
+        const getFenceText = () =>
+          (Array.isArray(children)
+            ? children.join("")
+            : (children?.toString() ?? "")
           ).replace(/\n$/, "");
+
+        // Info: (20260717 - Julian) 攔截自訂圖表標籤，交由 CustomChart 解析渲染
+        const customType = !inline ? detectCustomChartType(fenceLang) : null;
+        if (customType) {
+          return <CustomChart type={customType} raw={getFenceText()} />;
+        }
+
+        if (!inline && match && match[1] === "mermaid") {
+          const chartText = getFenceText();
           return (
             <MermaidChart
               chart={chartText}
