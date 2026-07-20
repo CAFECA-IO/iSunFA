@@ -8,7 +8,7 @@ interface IHistogramChartProps {
   ast: ICustomHistogramAst;
 }
 
-// Info: (20260720 - Julian) SVG 版面常數（固定 viewBox，交由 ChartShell 等比縮放）
+// Info: (20260720 - Julian) SVG 版面常數（固定 viewBox）
 const VIEW_W = 720;
 const VIEW_H = 460;
 const MARGIN_TOP = 56; // Info: (20260720 - Julian) 標題

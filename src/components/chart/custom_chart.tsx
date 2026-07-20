@@ -7,6 +7,7 @@ import { ChartShell } from "@/components/chart/chart_shell";
 import { MatrixChart } from "@/components/chart/matrix_chart";
 import { TornadoChart } from "@/components/chart/tornado_chart";
 import { HistogramChart } from "@/components/chart/histogram_chart";
+import { BoxChart } from "@/components/chart/box_chart";
 
 interface ICustomChartProps {
   type: CustomChartType;
@@ -53,6 +54,12 @@ const CustomChart: FC<ICustomChartProps> = ({ type, raw }) => {
       return (
         <ChartShell>
           <HistogramChart ast={ast} />
+        </ChartShell>
+      );
+    case CustomChartType.BOX:
+      return (
+        <ChartShell>
+          <BoxChart ast={ast} />
         </ChartShell>
       );
     default:

@@ -8,7 +8,7 @@ interface IMatrixChartProps {
   ast: ICustomMatrixAst;
 }
 
-// Info: (20260720 - Julian) SVG 版面常數（固定 viewBox，交由容器等比縮放）
+// Info: (20260720 - Julian) SVG 版面常數（固定 viewBox）
 const VIEW_W = 720;
 const VIEW_H = 600;
 const PLOT_LEFT = 96;
