@@ -7,7 +7,11 @@ import { DonutChart } from "@/components/common/donut_chart";
 import { useTranslation } from "@/i18n/i18n_context";
 import { ChartShell } from "@/components/chart/chart_shell";
 import { MermaidAiModal } from "@/components/chart/mermaid_ai_modal";
-import { detectChartType, parsePieData } from "@/lib/utils/mermaid_helpers";
+import {
+  detectChartType,
+  parsePieData,
+  getChartTitle,
+} from "@/lib/utils/mermaid_helpers";
 import { renderMermaid } from "@/lib/utils/mermaid_render";
 import { MermaidChartType } from "@/constants/mermaid_chart";
 
@@ -43,6 +47,12 @@ const MermaidChart: FC<IMermaidChartProps> = ({
   const chartType = useMemo(() => {
     return detectChartType(currentChart);
   }, [currentChart]);
+
+  // Info: (20260720 - Julian) 下載檔名跟隨圖表標題；無標題則退回預設
+  const exportFileName = useMemo(
+    () => getChartTitle(currentChart).trim() || "mermaid-chart",
+    [currentChart],
+  );
 
   // Info: (20260418 - Tzuhan) Intercept Mermaid Pie charts and render using our premium Recharts Donut instead
   const parsedPieData = useMemo(() => {
@@ -340,7 +350,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({
       ) : (
         <ChartShell
           actions={aiAction}
-          exportFileName="mermaid-chart"
+          exportFileName={exportFileName}
           contentClassName="mermaid-container"
           fullscreenTitle={t("chart.mermaid.preview_title") ?? undefined}
           minScale={MERMAID_MIN_SCALE}

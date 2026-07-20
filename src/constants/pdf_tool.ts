@@ -117,4 +117,8 @@ export const PDF_PRINT_STYLE = `
       width: 100% !important;
       overflow: visible !important;
   }
+  /* 匯出 PDF 時，boxplot 平時 hover 才顯示的數值一併顯示 */
+  #pdf-content .box-values {
+      opacity: 1 !important;
+  }
 `;

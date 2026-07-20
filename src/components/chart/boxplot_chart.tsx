@@ -101,7 +101,7 @@ const BoxplotChart: FC<IBoxplotChartProps> = ({ ast }) => {
       role="img"
       aria-label={title ?? "Box plot"}
     >
-      {/* Info: (20260720 - Julian) hover：顯示五數綜合與離群點數值（列印時顯示全部數據） */}
+      {/* Info: (20260720 - Julian) hover：顯示五數綜合與離群點數值 */}
       <style>{`
         .box-item { cursor: pointer; }
         .box-values { opacity: 0; transition: opacity 0.12s ease; }
@@ -111,8 +111,9 @@ const BoxplotChart: FC<IBoxplotChartProps> = ({ ast }) => {
           .box-item:hover rect { stroke: #FF9800; fill: #FF9800; }
           .box-item:hover circle { fill: #FF9800; }
         }
-        @media printer {
-          .box-item .box-values { opacity: 1; }
+        /* Info: (20260720 - Julian) 列印時顯示全部數據（下載匯出則由 export-reveal 內聯開啟） */
+        @media print {
+          .box-values { opacity: 1 !important; }
         }
       `}</style>
 
@@ -267,8 +268,8 @@ const BoxplotChart: FC<IBoxplotChartProps> = ({ ast }) => {
               />
             ))}
 
-            {/* Info: (20260720 - Julian) hover 才顯示的數值（五數綜合 + 離群點），白色描邊確保可讀 */}
-            <g className="box-values">
+            {/* Info: (20260720 - Julian) hover 才顯示的數值（五數綜合 + 離群點），白色描邊確保可讀；export-reveal 讓下載匯出時強制顯示 */}
+            <g className="box-values export-reveal">
               {stats.map((s, si) => (
                 <text
                   key={`box-${idx}-stat-${si}`}
