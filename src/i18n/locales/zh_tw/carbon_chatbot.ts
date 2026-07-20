@@ -135,6 +135,23 @@ export const carbonChatbot = {
   articulation_equation:
     "期初+採購-期末 = {{expected}} {{unit}}，帳上消耗 = {{actual}} {{unit}}，缺口 = {{gap}} {{unit}}",
   articulation_plausibility_warning: "數量超出合理量級，請確認：{{source}}",
+  report_table_detail_heading: "排放源明細",
+  report_table_col_source: "排放源",
+  report_table_col_scope: "範疇",
+  report_table_col_quantity: "活動數據",
+  report_table_col_factor: "排放係數（來源）",
+  report_table_col_co2e: "排放量 (kgCO2e)",
+  report_table_subtotal_heading: "範疇小計",
+  report_table_total: "總排放量",
+  report_table_insufficient:
+    "（資料不足，補齊活動數據後由系統自動生成數據表格）",
+  report_table_frozen:
+    "⚠ 質量守恆勾稽未通過，數據表格已凍結。請於對話中澄清庫存缺口後，表格將自動生成。",
+  report_table_pending_note: "註：尚有 {count} 筆活動數據待補係數，未計入下表。",
+  data_table_refreshed: "數據表格已隨活動數據更新，請重新查核相關段落",
+  data_badge_reconciled: "數據段落：已勾稽 ✓（數字由決定論引擎產出）",
+  data_badge_violated: "數據段落：質量守恆違反 ⚠（表格已凍結，待澄清）",
+  data_badge_insufficient: "數據段落：數據不足（補齊活動數據後自動生成）",
   inventory_step_ORG_PROFILE: "步驟: 企業基本資料（名稱／年度）",
   inventory_step_ORG_BOUNDARY: "步驟: 組織邊界設定",
   inventory_step_EMISSION_SOURCES: "步驟: 排放源鑑別",

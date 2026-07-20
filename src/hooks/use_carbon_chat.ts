@@ -14,7 +14,16 @@ import {
   IInventoryExtraction,
   IActivityRecord,
   IComputedLedger,
+  IReportCategory,
 } from "@/types/carbon_chatbot.types";
+import {
+  buildCarbonDataTable,
+  stripLlmTables,
+  injectDataTable,
+  hasInjectedDataTable,
+  deriveDataBadgeState,
+  type ICarbonDataTableLabels,
+} from "@/lib/carbon_report_table.builder";
 import { formatFileSize } from "@/lib/utils/common";
 import {
   CARBON_REPORT_OUTLINE,
@@ -98,8 +107,9 @@ export type ReportSaveStatus = "saving" | "saved" | "error" | "local" | null;
 
 // Info: (20260714 - Emily) 草稿生成狀態列(顯示於輸入框上方): 生成中 loading、失敗短暫提示後自動消失
 // Info: (20260714 - Emily) 草稿為並行任務，失敗不以對話氣泡表達(氣泡先於回覆出現會造成 UX 混淆)
+// Info: (20260720 - Emily) #23 新增 info:數據表格隨活動數據自動更新的非阻斷提示
 export interface IDraftNotice {
-  type: "loading" | "error";
+  type: "loading" | "error" | "info";
   text: string;
 }
 
@@ -616,6 +626,29 @@ export const useCarbonChat = () => {
 
   // Info: (20260716 - Emily) #6518 盤查狀態 debounce 自動保存(前端加密 → PUT；樂觀鎖)
   const activeInventoryState = inventoryStates[chatChannel];
+
+  // Info: (20260720 - Emily) #23 數據表格文案(i18n;數字本身與語言無關,一律引擎字串)
+  const dataTableLabels: ICarbonDataTableLabels = useMemo(
+    () => ({
+      detailHeading: t("carbon_chatbot.report_table_detail_heading"),
+      colSource: t("carbon_chatbot.report_table_col_source"),
+      colScope: t("carbon_chatbot.report_table_col_scope"),
+      colQuantity: t("carbon_chatbot.report_table_col_quantity"),
+      colFactor: t("carbon_chatbot.report_table_col_factor"),
+      colCo2e: t("carbon_chatbot.report_table_col_co2e"),
+      subtotalHeading: t("carbon_chatbot.report_table_subtotal_heading"),
+      total: t("carbon_chatbot.report_table_total"),
+      insufficient: t("carbon_chatbot.report_table_insufficient"),
+      frozen: t("carbon_chatbot.report_table_frozen"),
+      pendingNote: t("carbon_chatbot.report_table_pending_note"),
+    }),
+    [t],
+  );
+
+  // Info: (20260720 - Emily) #23 數據段落勾稽徽章三態(目錄樹顯示;由 ledger 決定性裁決)
+  const dataBadgeState = deriveDataBadgeState(
+    activeInventoryState?.computedLedger,
+  );
   useEffect(() => {
     if (!activeInventoryState) return undefined;
     if (!inventoryRestoredChannelsRef.current.has(chatChannel))
@@ -1234,12 +1267,24 @@ export const useCarbonChat = () => {
   // Info: (20260714 - Emily) 將草稿寫入 reportData:標記完成、重置查核(單一寫入點,對話生成與附件管線共用)
   // Info: (20260714 - Emily) content 只存內文;`### {標題}` 標頭由報告預覽組稿時產生,格式變更不需資料遷移
   // Info: (20260714 - Emily) onlyIfEmpty:歷史還原補寫時只填空白段落,避免覆蓋使用者後續的編輯
+  // Info: (20260720 - Emily) #23 數據段落組裝制:LLM 只留敘述(夾帶表格一律丟棄),
+  // Info: (20260720 - Emily) 表格由 TS 從 computedLedger 決定性產出注入(守恆違反 → 凍結告警取代)
   const applyDraftToReport = useCallback(
     (draft: IParagraphDraft, options?: { onlyIfEmpty?: boolean }) => {
       const section = CARBON_REPORT_OUTLINE.find(
         (s) => s.id === draft.paragraphId,
       );
       if (!section) return;
+
+      const content = section.isDataDriven
+        ? injectDataTable(
+            stripLlmTables(draft.content),
+            buildCarbonDataTable(
+              activeInventoryState?.computedLedger,
+              dataTableLabels,
+            ),
+          )
+        : draft.content;
 
       setSessionsData((prev) => {
         const session = prev[activeSessionId];
@@ -1251,7 +1296,7 @@ export const useCarbonChat = () => {
           if (options?.onlyIfEmpty && p.content) return p;
           return {
             ...p,
-            content: draft.content,
+            content,
             isCompleted: true,
             // Info: (20260714 - Emily) 內容更新即重置查核狀態(零信任: 先有產出才有查核)
             isVerified: false,
@@ -1264,11 +1309,7 @@ export const useCarbonChat = () => {
         )?.title;
         const nextRaw =
           reportData.rawMarkdown && targetTitle
-            ? patchMarkdownSection(
-                reportData.rawMarkdown,
-                targetTitle,
-                draft.content,
-              )
+            ? patchMarkdownSection(reportData.rawMarkdown, targetTitle, content)
             : reportData.rawMarkdown;
 
         // Info: (20260716 - Emily) 純 immutable 構造(react-hooks/immutability):不對 spread 副本再賦值
@@ -1285,8 +1326,99 @@ export const useCarbonChat = () => {
         };
       });
     },
-    [activeSessionId],
+    [activeSessionId, activeInventoryState?.computedLedger, dataTableLabels],
   );
+
+  /**
+   * Info: (20260720 - Emily) #23 重算連動:computedLedger 更新 →
+   * 1. 已注入表格的數據段落自動重注入(敘述零改動,查核重置)
+   * 2. categories/totalEmissions 接引擎真值(字串化 Decimal,廢除空殼佔位)
+   * computedAt 戳記 guard 防重複執行;表格內容相同時不換參考(不觸發 autosave)
+   */
+  const lastLedgerStampRef = useRef<Map<string, string>>(new Map());
+  useEffect(() => {
+    const ledger = activeInventoryState?.computedLedger;
+    if (!ledger) return;
+    if (lastLedgerStampRef.current.get(chatChannel) === ledger.computedAt) {
+      return;
+    }
+    lastLedgerStampRef.current.set(chatChannel, ledger.computedAt);
+
+    const tableBlock = buildCarbonDataTable(ledger, dataTableLabels);
+    const nextCategories: IReportCategory[] = Object.entries(
+      ledger.scopeSubtotals,
+    ).map(([scope, subtotal]) => ({
+      id: scope,
+      name: scope,
+      description: "",
+      emissions: subtotal,
+    }));
+
+    let tableRefreshed = false;
+    setSessionsData((prev) => {
+      const session = prev[activeSessionId];
+      const reportData = session?.reportData;
+      if (!reportData?.paragraphs) return prev;
+
+      let nextRaw = reportData.rawMarkdown;
+      let paragraphsChanged = false;
+      const nextParagraphs = reportData.paragraphs.map((p) => {
+        if (!p.isDataDriven || !p.content || !hasInjectedDataTable(p.content)) {
+          return p;
+        }
+        const nextContent = injectDataTable(p.content, tableBlock);
+        if (nextContent === p.content) return p;
+        paragraphsChanged = true;
+        if (nextRaw) {
+          nextRaw = patchMarkdownSection(nextRaw, p.title, nextContent);
+        }
+        // Info: (20260720 - Emily) 數字變動即重置查核(零信任:數據更新需重新人工確認)
+        return { ...p, content: nextContent, isVerified: false };
+      });
+
+      const totalsChanged =
+        reportData.totalEmissions !== ledger.totalCo2eKg ||
+        JSON.stringify(reportData.categories) !==
+          JSON.stringify(nextCategories);
+      if (!paragraphsChanged && !totalsChanged) return prev;
+      tableRefreshed = paragraphsChanged;
+      return {
+        ...prev,
+        [activeSessionId]: {
+          ...session,
+          reportData: {
+            ...reportData,
+            rawMarkdown: nextRaw,
+            paragraphs: nextParagraphs,
+            categories: nextCategories,
+            totalEmissions: ledger.totalCo2eKg,
+          },
+        },
+      };
+    });
+
+    // Info: (20260720 - Emily) 高亮提示(非阻斷 info,自動消失):數據表格已隨活動數據更新
+    // Info: (20260720 - Emily) setState 後同步讀 flag:updater 於 React 18 同步執行,此處可安全讀取
+    if (tableRefreshed) {
+      setDraftNotice({
+        type: "info",
+        text: t("carbon_chatbot.data_table_refreshed"),
+      });
+      if (draftNoticeTimerRef.current) {
+        clearTimeout(draftNoticeTimerRef.current);
+      }
+      draftNoticeTimerRef.current = setTimeout(() => {
+        draftNoticeTimerRef.current = null;
+        setDraftNotice(null);
+      }, CARBON_DRAFT_NOTICE_DISMISS_MS);
+    }
+  }, [
+    activeInventoryState?.computedLedger,
+    chatChannel,
+    activeSessionId,
+    dataTableLabels,
+    t,
+  ]);
 
   // Info: (20260712 - Luphia) 載入歷史訊息（密文→以主私鑰解密）；before 省略為最新一頁，否則載入更舊一頁並前置
   const loadHistory = useCallback(
@@ -2244,6 +2376,8 @@ export const useCarbonChat = () => {
     masterKey: unlockedMasterKey,
     // Info: (20260716 - Emily) #6518 盤查狀態帳本(活動數據 + 決定性步驟),供記錄卡顯示
     inventoryState: activeInventoryState ?? createEmptyInventoryState(),
+    // Info: (20260720 - Emily) #23 數據段落勾稽徽章三態(已勾稽/守恆違反/數據不足)
+    dataBadgeState,
     activeParagraphId,
     jumpToParagraph,
     highlightedParagraphId,

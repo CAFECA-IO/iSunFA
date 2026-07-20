@@ -151,6 +151,26 @@ export const carbonChatbot = {
     "기초+구매-기말 = {{expected}} {{unit}}, 장부상 소비 = {{actual}} {{unit}}, 차이 = {{gap}} {{unit}}",
   articulation_plausibility_warning:
     "수량이 합리적 범위를 초과했습니다. 확인해 주세요: {{source}}",
+  report_table_detail_heading: "배출원 명세",
+  report_table_col_source: "배출원",
+  report_table_col_scope: "스코프",
+  report_table_col_quantity: "활동 데이터",
+  report_table_col_factor: "배출계수(출처)",
+  report_table_col_co2e: "배출량 (kgCO2e)",
+  report_table_subtotal_heading: "스코프별 소계",
+  report_table_total: "총 배출량",
+  report_table_insufficient:
+    "(데이터 부족: 활동 데이터가 완성되면 시스템이 표를 자동 생성합니다)",
+  report_table_frozen:
+    "⚠ 질량 보존 검증에 통과하지 못해 데이터 표가 동결되었습니다. 대화에서 재고 차이를 해명하면 자동으로 생성됩니다.",
+  report_table_pending_note:
+    "참고: {count}건의 활동 데이터가 계수 대기 중으로 본 표에 포함되지 않았습니다.",
+  data_table_refreshed:
+    "데이터 표가 활동 데이터에 맞춰 갱신되었습니다. 해당 섹션을 다시 확인해 주세요",
+  data_badge_reconciled: "데이터 섹션: 대사 완료 ✓ (수치는 결정론 엔진 산출)",
+  data_badge_violated: "데이터 섹션: 질량 보존 위반 ⚠ (표 동결, 해명 대기)",
+  data_badge_insufficient:
+    "데이터 섹션: 데이터 부족 (활동 데이터 완성 시 자동 생성)",
   inventory_step_ORG_PROFILE: "단계: 기업 기본 정보(명칭/연도)",
   inventory_step_ORG_BOUNDARY: "단계: 조직 경계 설정",
   inventory_step_EMISSION_SOURCES: "단계: 배출원 식별",

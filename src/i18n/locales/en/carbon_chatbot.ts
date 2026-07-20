@@ -151,6 +151,28 @@ export const carbonChatbot = {
     "Opening + purchased - closing = {{expected}} {{unit}}, recorded consumption = {{actual}} {{unit}}, gap = {{gap}} {{unit}}",
   articulation_plausibility_warning:
     "Quantity exceeds a plausible range, please verify: {{source}}",
+  report_table_detail_heading: "Emission source details",
+  report_table_col_source: "Source",
+  report_table_col_scope: "Scope",
+  report_table_col_quantity: "Activity data",
+  report_table_col_factor: "Emission factor (source)",
+  report_table_col_co2e: "Emissions (kgCO2e)",
+  report_table_subtotal_heading: "Scope subtotals",
+  report_table_total: "Total emissions",
+  report_table_insufficient:
+    "(Insufficient data — the table will be generated automatically once activity data is complete)",
+  report_table_frozen:
+    "⚠ Mass conservation check failed; the data table is frozen. Clarify the inventory gap in the chat and the table will be generated automatically.",
+  report_table_pending_note:
+    "Note: {count} activity record(s) still await emission factors and are excluded from this table.",
+  data_table_refreshed:
+    "Data tables were refreshed from the activity ledger — please re-verify the affected sections",
+  data_badge_reconciled:
+    "Data section: reconciled ✓ (figures produced by the deterministic engine)",
+  data_badge_violated:
+    "Data section: mass conservation violated ⚠ (table frozen pending clarification)",
+  data_badge_insufficient:
+    "Data section: insufficient data (generated automatically once activity data is complete)",
   inventory_step_ORG_PROFILE: "Step: Organization profile (name/year)",
   inventory_step_ORG_BOUNDARY: "Step: Organizational boundary",
   inventory_step_EMISSION_SOURCES: "Step: Emission source identification",

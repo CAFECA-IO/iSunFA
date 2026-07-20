@@ -152,6 +152,26 @@ export const carbonChatbot = {
     "期首+購入-期末 = {{expected}} {{unit}}、記録上の消費 = {{actual}} {{unit}}、差異 = {{gap}} {{unit}}",
   articulation_plausibility_warning:
     "数量が妥当な範囲を超えています。ご確認ください：{{source}}",
+  report_table_detail_heading: "排出源明細",
+  report_table_col_source: "排出源",
+  report_table_col_scope: "スコープ",
+  report_table_col_quantity: "活動データ",
+  report_table_col_factor: "排出係数（出典）",
+  report_table_col_co2e: "排出量 (kgCO2e)",
+  report_table_subtotal_heading: "スコープ別小計",
+  report_table_total: "総排出量",
+  report_table_insufficient:
+    "（データ不足：活動データが揃い次第、システムが自動的に表を生成します）",
+  report_table_frozen:
+    "⚠ 質量保存チェックに未合格のため、データ表は凍結されています。チャットで在庫差異を明確にすると自動的に生成されます。",
+  report_table_pending_note:
+    "注：{count} 件の活動データは係数待ちのため、本表に含まれていません。",
+  data_table_refreshed:
+    "データ表が活動データに合わせて更新されました。該当セクションを再確認してください",
+  data_badge_reconciled: "データセクション：照合済み ✓（数値は決定論エンジン産出）",
+  data_badge_violated: "データセクション：質量保存違反 ⚠（表は凍結中）",
+  data_badge_insufficient:
+    "データセクション：データ不足（活動データが揃い次第自動生成）",
   inventory_step_ORG_PROFILE: "ステップ:企業基本情報(名称/年度)",
   inventory_step_ORG_BOUNDARY: "ステップ:組織境界の設定",
   inventory_step_EMISSION_SOURCES: "ステップ:排出源の特定",

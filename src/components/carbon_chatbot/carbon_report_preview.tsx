@@ -22,6 +22,7 @@ import {
   buildSectionHeadingByTitle,
   stripLeadingSectionHeading,
 } from "@/constants/carbon_report_outline";
+import { CarbonDataBadgeStateEnum } from "@/lib/carbon_report_table.builder";
 import { ReportToolbar } from "@/components/carbon_chatbot/report_toolbar";
 import { OutlineRail } from "@/components/carbon_chatbot/outline_rail";
 import { OutlineDrawer } from "@/components/carbon_chatbot/outline_drawer";
@@ -49,6 +50,8 @@ interface ICarbonReportPreviewProps {
   onImportReport?: (file: File) => void;
   // Info: (20260716 - Emily) 報告檔名改名(透傳工具列)
   onRenameDocument?: (documentName: string) => void;
+  // Info: (20260720 - Emily) #23 數據段落勾稽三態(透傳 OutlineDrawer → OutlineTree)
+  dataBadgeState?: CarbonDataBadgeStateEnum;
 }
 
 // Info: (20260713 - Tzuhan) 渲染全部 33 段:已生成者顯示內容,未生成者顯示灰色佔位區塊,確保跳段永遠有落點且報告骨架一眼可見
@@ -63,13 +66,12 @@ const generateMarkdownFromParagraphs = (
     return (
       // ToDo: (20260713 - Luphia) 報告預覽 markdown 表頭為硬編中文，如需多語系報告請改走 t()
       `# ${session.reportData?.title || ""}\n\n## ${session.reportData?.section || ""}\n\n### 溫室氣體排放量摘要\n\n| 類別 (ISO Category) | 來源說明 | 排放量 (tCO2e) |\n| --- | --- | --- |\n` +
+      // Info: (20260720 - Emily) #23 移除 .toFixed(numerical_precision_guideline):
+      // Info: (20260720 - Emily) emissions/totalEmissions 為引擎字串化 Decimal,直接渲染
       (session.reportData?.categories
-        ?.map(
-          (c) =>
-            `| **${c.name}** | ${c.description} | ${c.emissions.toFixed(2)} |`,
-        )
+        ?.map((c) => `| **${c.name}** | ${c.description} | ${c.emissions} |`)
         .join("\n") || "") +
-      `\n\n**TOTAL GROSS EMISSIONS: ${session.reportData?.totalEmissions?.toFixed(2) || 0}**`
+      `\n\n**TOTAL GROSS EMISSIONS: ${session.reportData?.totalEmissions || "0"}**`
     );
   }
 
@@ -103,6 +105,7 @@ export default function CarbonReportPreview({
   readOnly = false,
   onImportReport = undefined,
   onRenameDocument = undefined,
+  dataBadgeState = undefined,
 }: ICarbonReportPreviewProps) {
   const { t } = useTranslation();
   const [, setErrorModal] = useState({ isOpen: false, message: "" });
@@ -277,6 +280,7 @@ export default function CarbonReportPreview({
             onClose={() => setIsDrawerOpen(false)}
             draftingParagraphId={draftingParagraphId}
             onGenerateDraft={onGenerateDraft}
+            dataBadgeState={dataBadgeState}
           />
         )}
 

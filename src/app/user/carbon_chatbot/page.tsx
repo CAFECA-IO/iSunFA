@@ -46,6 +46,7 @@ export default function CarbonChatbotPage() {
     reportStats,
     accountBooks,
     activeSessionAccess,
+    dataBadgeState,
     fetchBookSessions,
     masterKey,
     inventoryState,
@@ -132,6 +133,7 @@ export default function CarbonChatbotPage() {
           readOnly={!activeSessionAccess.canEdit}
           onImportReport={importReportFile}
           onRenameDocument={renameReportDocument}
+          dataBadgeState={dataBadgeState}
         />
 
         {/* Info: (20260716 - Emily) UAT 重疊修正:左下浮窗改單一堆疊容器(活動帳本在上、進度在下),

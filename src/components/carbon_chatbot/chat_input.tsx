@@ -177,7 +177,9 @@ export function ChatInput({
           className={`mx-auto mb-2 flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold ${
             draftNotice.type === "loading"
               ? "bg-orange-50 text-[#e04f00]"
-              : "bg-red-50 text-red-600"
+              : draftNotice.type === "info"
+                ? "bg-teal-50 text-teal-700"
+                : "bg-red-50 text-red-600"
           }`}
         >
           {draftNotice.type === "loading" && (

@@ -55,11 +55,13 @@ export interface IChatMessage {
   relatedParagraphIds?: string[];
 }
 
+// Info: (20260720 - Emily) #23 emissions 改字串化 Decimal:值取自 computedLedger.scopeSubtotals,
+// Info: (20260720 - Emily) 全程不經 number(ADR 003);顯示端直接渲染,禁 .toFixed
 export interface IReportCategory {
   id: string;
   name: string;
   description: string;
-  emissions: number;
+  emissions: string;
 }
 
 export interface IReportParagraph {
@@ -95,7 +97,8 @@ export interface IReportData {
   section: string;
   categories: IReportCategory[];
   paragraphs?: IReportParagraph[];
-  totalEmissions: number;
+  // Info: (20260720 - Emily) #23 接真值:computedLedger.totalCo2eKg(字串化 Decimal,kg)
+  totalEmissions: string;
 }
 
 // Info: (20260712 - Luphia) 單筆活動數據（數值以字串保存，計算時於服務層轉 Decimal，避免浮點誤差）
