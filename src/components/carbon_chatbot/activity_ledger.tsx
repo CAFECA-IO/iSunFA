@@ -15,7 +15,7 @@ export interface IActivityLedgerProps {
 
 export function ActivityLedger({
   state,
-  positionClassName = "left-10 bottom-28 hidden xl:flex",
+  positionClassName = "absolute left-10 bottom-28 hidden xl:flex",
 }: IActivityLedgerProps) {
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
@@ -36,7 +36,7 @@ export function ActivityLedger({
         type="button"
         title={t("carbon_chatbot.activity_ledger_title")}
         onClick={() => setIsExpanded(true)}
-        className={`absolute ${positionClassName} z-20 items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold text-gray-700 shadow-lg ring-1 ring-gray-200 transition-transform hover:scale-105`}
+        className={`${positionClassName} z-20 items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold text-gray-700 shadow-lg ring-1 ring-gray-200 transition-transform hover:scale-105`}
       >
         <ClipboardList size={14} className="text-[#ff5a00]" />
         {t("carbon_chatbot.activity_ledger_pill", { count })}
@@ -46,7 +46,7 @@ export function ActivityLedger({
 
   return (
     <div
-      className={`absolute ${positionClassName} z-20 w-80 flex-col rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-gray-200`}
+      className={`${positionClassName} z-20 w-80 flex-col rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-gray-200`}
     >
       <div className="mb-2 flex items-center justify-between">
         <span className="flex items-center gap-2 text-xs font-bold text-gray-700">
