@@ -152,6 +152,11 @@ export const carbonChatbot = {
   data_badge_reconciled: "数据段落：已核对 ✓（数字由确定性引擎产出）",
   data_badge_violated: "数据段落：质量守恒违反 ⚠（表格已冻结，待澄清）",
   data_badge_insufficient: "数据段落：数据不足（补齐活动数据后自动生成）",
+  chart_scope_pie_title: "各范畴排放占比 (kgCO2e)",
+  chart_scope_bar_title: "各范畴排放量 (kgCO2e)",
+  chart_insufficient: "（数据不足，补齐活动数据后由系统自动生成图表）",
+  chart_frozen:
+    "⚠ 质量守恒核对未通过，图表已冻结。请于对话中澄清库存缺口后，图表将自动生成。",
   inventory_step_ORG_PROFILE: "步骤: 企业基本资料（名称／年度）",
   inventory_step_ORG_BOUNDARY: "步骤: 组织边界设定",
   inventory_step_EMISSION_SOURCES: "步骤: 排放源识别",

@@ -24,6 +24,14 @@ import {
   deriveDataBadgeState,
   type ICarbonDataTableLabels,
 } from "@/lib/carbon_report_table.builder";
+import {
+  buildCarbonChartBlock,
+  insertCarbonChartBlock,
+  hasCarbonChartBlocks,
+  refreshCarbonChartBlocks,
+  type ICarbonChartLabels,
+} from "@/lib/carbon_report_chart.builder";
+import { CarbonChartTemplateEnum } from "@/constants/carbon_report_charts";
 import { formatFileSize } from "@/lib/utils/common";
 import {
   CARBON_REPORT_OUTLINE,
@@ -649,6 +657,18 @@ export const useCarbonChat = () => {
   const dataBadgeState = deriveDataBadgeState(
     activeInventoryState?.computedLedger,
   );
+
+  // Info: (20260720 - Emily) #51 圖表文案(i18n;數值本身一律引擎產出,與語言無關)
+  const chartLabels: ICarbonChartLabels = useMemo(
+    () => ({
+      pieTitle: t("carbon_chatbot.chart_scope_pie_title"),
+      barTitle: t("carbon_chatbot.chart_scope_bar_title"),
+      axisCo2e: "kgCO2e",
+      insufficient: t("carbon_chatbot.chart_insufficient"),
+      frozen: t("carbon_chatbot.chart_frozen"),
+    }),
+    [t],
+  );
   useEffect(() => {
     if (!activeInventoryState) return undefined;
     if (!inventoryRestoredChannelsRef.current.has(chatChannel))
@@ -1264,6 +1284,70 @@ export const useCarbonChat = () => {
     setPendingRevision(null);
   }, []);
 
+  /**
+   * Info: (20260720 - Emily) #51 插入模板圖表至段落:
+   * 圖表區塊由白名單模板從 computedLedger 決定性產出(LLM 只裁決了「哪張圖、放哪段」);
+   * 同模板已存在 → 原地替換不疊加;rawMarkdown 同步 patch(權威來源);插入後跳段高亮
+   */
+  const insertChartIntoParagraph = useCallback(
+    (templateId: CarbonChartTemplateEnum, paragraphId: string) => {
+      const block = buildCarbonChartBlock(
+        templateId,
+        activeInventoryState?.computedLedger,
+        chartLabels,
+        dataTableLabels,
+      );
+      setSessionsData((prev) => {
+        const session = prev[activeSessionId];
+        const reportData = session?.reportData;
+        if (!reportData?.paragraphs) return prev;
+        const target = reportData.paragraphs.find((p) => p.id === paragraphId);
+        if (!target) return prev;
+        const nextContent = insertCarbonChartBlock(
+          target.content,
+          templateId,
+          block,
+        );
+        const nextRaw = reportData.rawMarkdown
+          ? patchMarkdownSection(
+              reportData.rawMarkdown,
+              target.title,
+              nextContent,
+            )
+          : reportData.rawMarkdown;
+        return {
+          ...prev,
+          [activeSessionId]: {
+            ...session,
+            reportData: {
+              ...reportData,
+              rawMarkdown: nextRaw,
+              paragraphs: reportData.paragraphs.map((p) =>
+                p.id === paragraphId
+                  ? {
+                      ...p,
+                      content: nextContent,
+                      isCompleted: true,
+                      // Info: (20260720 - Emily) 內容更新即重置查核(零信任)
+                      isVerified: false,
+                    }
+                  : p,
+              ),
+            },
+          },
+        };
+      });
+      jumpToReportParagraph(paragraphId);
+    },
+    [
+      activeSessionId,
+      activeInventoryState?.computedLedger,
+      chartLabels,
+      dataTableLabels,
+      jumpToReportParagraph,
+    ],
+  );
+
   // Info: (20260714 - Emily) 將草稿寫入 reportData:標記完成、重置查核(單一寫入點,對話生成與附件管線共用)
   // Info: (20260714 - Emily) content 只存內文;`### {標題}` 標頭由報告預覽組稿時產生,格式變更不需資料遷移
   // Info: (20260714 - Emily) onlyIfEmpty:歷史還原補寫時只填空白段落,避免覆蓋使用者後續的編輯
@@ -1363,10 +1447,20 @@ export const useCarbonChat = () => {
       let nextRaw = reportData.rawMarkdown;
       let paragraphsChanged = false;
       const nextParagraphs = reportData.paragraphs.map((p) => {
-        if (!p.isDataDriven || !p.content || !hasInjectedDataTable(p.content)) {
-          return p;
+        if (!p.content) return p;
+        let nextContent = p.content;
+        if (p.isDataDriven && hasInjectedDataTable(nextContent)) {
+          nextContent = injectDataTable(nextContent, tableBlock);
         }
-        const nextContent = injectDataTable(p.content, tableBlock);
+        // Info: (20260720 - Emily) #51 模板圖表同步重建(任何段落;白名單逐一檢查,敘述零改動)
+        if (hasCarbonChartBlocks(nextContent)) {
+          nextContent = refreshCarbonChartBlocks(
+            nextContent,
+            ledger,
+            chartLabels,
+            dataTableLabels,
+          );
+        }
         if (nextContent === p.content) return p;
         paragraphsChanged = true;
         if (nextRaw) {
@@ -1417,6 +1511,7 @@ export const useCarbonChat = () => {
     chatChannel,
     activeSessionId,
     dataTableLabels,
+    chartLabels,
     t,
   ]);
 
@@ -2112,6 +2207,10 @@ export const useCarbonChat = () => {
           extraction?: IInventoryExtraction | null;
           attachmentActivities?: IActivityRecord[];
           revisionParagraphId?: string | null;
+          chartRequest?: {
+            templateId: CarbonChartTemplateEnum;
+            paragraphId: string;
+          } | null;
           attachmentFacts?: IContextFact[];
         } | null;
       }>("/api/v1/chat/carbon", {
@@ -2171,6 +2270,14 @@ export const useCarbonChat = () => {
         );
       }
 
+      // Info: (20260720 - Emily) #51 圖表請求(已經雙 enum 白名單裁決):由模板從勾稽數據產圖插入
+      if (payload?.chartRequest) {
+        insertChartIntoParagraph(
+          payload.chartRequest.templateId,
+          payload.chartRequest.paragraphId,
+        );
+      }
+
       // Info: (20260712 - Luphia) 啟動等待逾時，避免「已發佈但未收到」時卡在 typing(回覆已回帶時為 no-op)
       // Info: (20260716 - Emily) 帶附件時管線含萃取/草稿生成,等待窗加長(UAT:30s 誤報系統錯誤)
       startReplyTimeout(
@@ -2219,6 +2326,7 @@ export const useCarbonChat = () => {
     applyInventoryExtraction,
     inventoryStates,
     requestParagraphRevision,
+    insertChartIntoParagraph,
   ]);
 
   // Info: (20260712 - Luphia) 進入 channel 的一次性手勢：解鎖金鑰(PRF) → 請後端做前置作業並經 Centrifugo 回傳招呼詞

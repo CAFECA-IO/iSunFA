@@ -173,6 +173,12 @@ export const carbonChatbot = {
     "Data section: mass conservation violated ⚠ (table frozen pending clarification)",
   data_badge_insufficient:
     "Data section: insufficient data (generated automatically once activity data is complete)",
+  chart_scope_pie_title: "Emissions share by scope (kgCO2e)",
+  chart_scope_bar_title: "Emissions by scope (kgCO2e)",
+  chart_insufficient:
+    "(Insufficient data — the chart will be generated automatically once activity data is complete)",
+  chart_frozen:
+    "⚠ Mass conservation check failed; the chart is frozen. Clarify the inventory gap in the chat and it will be generated automatically.",
   inventory_step_ORG_PROFILE: "Step: Organization profile (name/year)",
   inventory_step_ORG_BOUNDARY: "Step: Organizational boundary",
   inventory_step_EMISSION_SOURCES: "Step: Emission source identification",

@@ -171,6 +171,12 @@ export const carbonChatbot = {
   data_badge_violated: "데이터 섹션: 질량 보존 위반 ⚠ (표 동결, 해명 대기)",
   data_badge_insufficient:
     "데이터 섹션: 데이터 부족 (활동 데이터 완성 시 자동 생성)",
+  chart_scope_pie_title: "스코프별 배출 비중 (kgCO2e)",
+  chart_scope_bar_title: "스코프별 배출량 (kgCO2e)",
+  chart_insufficient:
+    "(데이터 부족: 활동 데이터가 완성되면 시스템이 차트를 자동 생성합니다)",
+  chart_frozen:
+    "⚠ 질량 보존 검증에 통과하지 못해 차트가 동결되었습니다. 대화에서 재고 차이를 해명하면 자동으로 생성됩니다.",
   inventory_step_ORG_PROFILE: "단계: 기업 기본 정보(명칭/연도)",
   inventory_step_ORG_BOUNDARY: "단계: 조직 경계 설정",
   inventory_step_EMISSION_SOURCES: "단계: 배출원 식별",

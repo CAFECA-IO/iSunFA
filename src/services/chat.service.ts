@@ -26,6 +26,7 @@ import {
 } from "@/validators";
 import { GhgProtocolCategory } from "@/constants/esg";
 import { MeasurementUnit } from "@/constants/enums";
+import { CarbonChartTemplateEnum } from "@/constants/carbon_report_charts";
 import { IInventoryExtraction } from "@/types/carbon_chatbot.types";
 import { logger } from "@/lib/utils/logger";
 
@@ -37,6 +38,11 @@ export interface ICarbonChatStructuredReply {
   extraction: IInventoryExtraction | null;
   // Info: (20260716 - Emily) #55 修訂請求:使用者要求「依附件/指示修改既有段落」時的目標段落(白名單裁決後)
   revisionParagraphId: string | null;
+  // Info: (20260720 - Emily) #51 圖表請求(雙 enum 白名單裁決後):LLM 只裁決「哪張圖、放哪段」,數值零參與
+  chartRequest: {
+    templateId: CarbonChartTemplateEnum;
+    paragraphId: string;
+  } | null;
 }
 
 // Info: (20260714 - Emily) readyParagraphId 的無段落標記(LLM enum 選項之一)
@@ -78,6 +84,28 @@ const CARBON_CHAT_REPLY_SCHEMA: Schema = {
       enum: [...CARBON_REPORT_OUTLINE.map((s) => s.id), NO_READY_PARAGRAPH],
       description:
         "使用者要求依附件或指示『修改既有段落』時填該段 id;非修改請求一律 none",
+    },
+    // Info: (20260720 - Emily) #51 圖表請求:雙 enum 鎖死(模板白名單 × 段落清單);數值由系統產出
+    chartRequest: {
+      type: SchemaType.OBJECT,
+      description:
+        "使用者明確要求在指定段落加入圖表/表格時填寫;非圖表請求省略本欄位",
+      properties: {
+        templateId: {
+          type: SchemaType.STRING,
+          format: "enum",
+          enum: Object.values(CarbonChartTemplateEnum),
+          description:
+            "SCOPE_PIE=各範疇占比圓餅圖;SCOPE_BAR=各範疇長條圖;SOURCE_TABLE=排放源明細表",
+        },
+        paragraphId: {
+          type: SchemaType.STRING,
+          format: "enum",
+          enum: CARBON_REPORT_OUTLINE.map((s) => s.id),
+          description: "圖表插入的目標段落 id(只能從段落清單挑選)",
+        },
+      },
+      required: ["templateId", "paragraphId"],
     },
     // Info: (20260716 - Emily) #6518 事實萃取: enum 鎖死範疇/單位，數值原樣字串(嚴禁換算),TS 端再白名單複驗
     extraction: {
@@ -373,6 +401,7 @@ export class ChatService {
 - 資訊尚未齊全、仍在追問時 → 填 "${NO_READY_PARAGRAPH}"
 - 填入段落 id 後，系統會自動將該段草稿寫入右側報告；此時請在 reply 告知用戶「本段已寫入報告，可於右側預覽檢視」，不要把完整草稿貼在對話中，也不要再重複詢問同一段落。
 【段落修訂機制】使用者上傳新附件或明確要求「更新/修改某段」時 → revisionParagraphId 填該段 id(只能從段落清單挑選)，reply 告知「已產生修訂建議，請於預覽卡確認」；非修改請求一律填 "none"，且不要在 reply 貼修訂內容(由系統以對照卡呈現)。
+【圖表機制】使用者明確要求「在某段加圖表/表格」(如「在 3.2 加各範疇占比圓餅圖」)時 → chartRequest 填模板與目標段落(皆只能從列舉挑選)，reply 告知「圖表已由系統依勾稽數據插入該段」；圖表數值由系統決定性產出，嚴禁你在 reply 自繪任何圖表或表格；非圖表請求省略 chartRequest。
 【事實萃取機制】每輪回覆的 extraction 欄位，依下列規則萃取「用戶本輪訊息」中的盤查事實:
 - 企業名稱、盤查年度(西元)、組織邊界方法: 用戶明確提供時填入，原文照抄，不確定就省略。
 - activities: 用戶提供的活動數據(如用電量、油耗)。quantity 連同千分位「原樣照抄」為字串，嚴禁換算單位、加總或推導；單位只能從 unit 列舉挑選，對不上就整筆省略。
@@ -499,11 +528,29 @@ ${outlineCatalog}${langInstruction}`;
       )
         ? (rawRevision as string)
         : null;
+      // Info: (20260720 - Emily) #51:圖表請求雙欄位皆須通過白名單,任一非法即視為無請求(永不猜)
+      const rawChart = (rawParsed as { chartRequest?: unknown }).chartRequest;
+      const chartCandidate =
+        rawChart && typeof rawChart === "object"
+          ? (rawChart as { templateId?: unknown; paragraphId?: unknown })
+          : null;
+      const chartRequest =
+        chartCandidate &&
+        (Object.values(CarbonChartTemplateEnum) as unknown[]).includes(
+          chartCandidate.templateId,
+        ) &&
+        CARBON_REPORT_OUTLINE.some((s) => s.id === chartCandidate.paragraphId)
+          ? {
+              templateId: chartCandidate.templateId as CarbonChartTemplateEnum,
+              paragraphId: chartCandidate.paragraphId as string,
+            }
+          : null;
       return {
         reply: parsed.reply,
         readyParagraphId: isValidParagraph ? parsed.readyParagraphId : null,
         extraction,
         revisionParagraphId,
+        chartRequest,
       };
     } catch {
       return {
@@ -511,6 +558,7 @@ ${outlineCatalog}${langInstruction}`;
         readyParagraphId: null,
         extraction: null,
         revisionParagraphId: null,
+        chartRequest: null,
       };
     }
   }

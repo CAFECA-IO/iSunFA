@@ -172,6 +172,12 @@ export const carbonChatbot = {
   data_badge_violated: "データセクション：質量保存違反 ⚠（表は凍結中）",
   data_badge_insufficient:
     "データセクション：データ不足（活動データが揃い次第自動生成）",
+  chart_scope_pie_title: "スコープ別排出割合 (kgCO2e)",
+  chart_scope_bar_title: "スコープ別排出量 (kgCO2e)",
+  chart_insufficient:
+    "（データ不足：活動データが揃い次第、システムがグラフを自動生成します）",
+  chart_frozen:
+    "⚠ 質量保存チェックに未合格のため、グラフは凍結されています。チャットで在庫差異を明確にすると自動的に生成されます。",
   inventory_step_ORG_PROFILE: "ステップ:企業基本情報(名称/年度)",
   inventory_step_ORG_BOUNDARY: "ステップ:組織境界の設定",
   inventory_step_EMISSION_SOURCES: "ステップ:排出源の特定",

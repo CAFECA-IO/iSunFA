@@ -122,7 +122,8 @@ export async function POST(request: NextRequest) {
 
     // Info: (20260714 - Emily) 結構化回覆: 對話內容 + 段落完成訊號(readyParagraphId 已經白名單裁決)
     // Info: (20260716 - Emily) #6518:extraction 為已裁決的事實萃取，回帶前端合併進盤查狀態帳本
-    const { reply, readyParagraphId, extraction, revisionParagraphId } =
+    // Info: (20260720 - Emily) #51 chartRequest 為已裁決的圖表請求(雙 enum 白名單),透傳前端由模板產圖
+    const { reply, readyParagraphId, extraction, revisionParagraphId, chartRequest } =
       await chatService.generateCarbonChatbotStructuredResponse(
         historyForAi,
         currentStep,
@@ -244,6 +245,7 @@ export async function POST(request: NextRequest) {
         extraction,
         attachmentActivities,
         revisionParagraphId,
+        chartRequest,
         attachmentFacts,
       });
     }
@@ -255,6 +257,7 @@ export async function POST(request: NextRequest) {
       extraction,
       attachmentActivities,
       revisionParagraphId,
+      chartRequest,
       attachmentFacts,
     });
   } catch (error) {
