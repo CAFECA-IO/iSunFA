@@ -32,7 +32,6 @@ const CONFIG_KEYS_BY_TYPE: Record<CustomChartType, Set<string>> = {
   ]),
   [CustomChartType.TORNADO]: new Set<string>([
     CustomChartConfigKey.TITLE,
-    CustomChartConfigKey.BASELINE,
     CustomChartConfigKey.UNIT,
   ]),
   [CustomChartType.HISTOGRAM]: new Set<string>([
@@ -81,6 +80,15 @@ const optionalNumber = (
   raw: string | undefined,
   ctx: string,
 ): number | undefined => (raw === undefined ? undefined : toNumber(raw, ctx));
+
+/**
+ * Info: (20260720 - Julian) 判斷欄位是否為有效數字（供龍捲風圖偵測標題列 vs 資料列，不做計算）
+ */
+const isNumericField = (raw: string | undefined): boolean => {
+  if (raw === undefined) return false;
+  const trimmed = raw.trim();
+  return trimmed !== "" && Number.isFinite(Number(trimmed));
+};
 
 /**
  * Info: (20260717 - Julian)
@@ -196,36 +204,52 @@ const buildTornado = (
 ): ICustomTornadoAst => {
   const title = config.get(CustomChartConfigKey.TITLE) || undefined;
   const unit = config.get(CustomChartConfigKey.UNIT) || undefined;
-  const baselineRaw = config.get(CustomChartConfigKey.BASELINE);
-  if (baselineRaw === undefined) {
+
+  // Info: (20260720 - Julian)
+  // 依欄位自動偵測標題列：首列若第 2、3 欄皆非數字，視為數列名稱標題列（category, leftSeries, rightSeries）；
+  // 否則視為無標題列，數列名稱套用預設值。標題列不吃掉任何資料。
+  const firstFields = parseCsvLine(dataLines[0]);
+  const hasHeader =
+    firstFields.length >= 3 &&
+    !isNumericField(firstFields[1]) &&
+    !isNumericField(firstFields[2]);
+
+  // Info: (20260720 - Julian) 數列名稱選填：有標題列才取，未填則留 undefined（不顯示圖例）
+  const leftSeries = hasHeader ? firstFields[1].trim() || undefined : undefined;
+  const rightSeries = hasHeader
+    ? firstFields[2].trim() || undefined
+    : undefined;
+
+  const rows = hasHeader ? dataLines.slice(1) : dataLines;
+  if (rows.length === 0) {
     throw new CustomChartParseError(
-      CustomChartParseErrorCode.INVALID_NUMBER,
-      "龍捲風圖缺少 baseline 設定",
+      CustomChartParseErrorCode.NO_DATA_ROWS,
+      "龍捲風圖僅有標題列，缺少資料列",
     );
   }
-  const baseline = toNumber(baselineRaw, "baseline");
 
-  const bars = dataLines.map((line) => {
+  const bars = rows.map((line) => {
     const f = parseCsvLine(line);
     if (f.length !== 3) {
       throw malformed(
-        `龍捲風資料列需 3 欄（variable, low, high）：「${line}」`,
+        `龍捲風資料列需 3 欄（category, ${leftSeries ?? "left"}, ${rightSeries ?? "right"}）：「${line}」`,
       );
     }
-    const variable = f[0];
-    if (!variable) throw malformed(`龍捲風資料列缺少變數名稱：「${line}」`);
+    const category = f[0].trim();
+    if (!category) throw malformed(`龍捲風資料列缺少項目名稱：「${line}」`);
     return {
-      variable,
-      low: toNumber(f[1], "low"),
-      high: toNumber(f[2], "high"),
+      category,
+      left: toNumber(f[1], leftSeries ?? "left"),
+      right: toNumber(f[2], rightSeries ?? "right"),
     };
   });
 
   return {
     type: CustomChartType.TORNADO,
     ...(title ? { title } : {}),
-    baseline,
     ...(unit ? { unit } : {}),
+    ...(leftSeries ? { leftSeries } : {}),
+    ...(rightSeries ? { rightSeries } : {}),
     bars,
   };
 };
@@ -331,14 +355,15 @@ const matrixSchema = z.object({
 const tornadoSchema = z.object({
   type: z.literal(CustomChartType.TORNADO),
   title: z.string().optional(),
-  baseline: z.number(),
   unit: z.string().optional(),
+  leftSeries: z.string().min(1).optional(),
+  rightSeries: z.string().min(1).optional(),
   bars: z
     .array(
       z.object({
-        variable: z.string().min(1),
-        low: z.number(),
-        high: z.number(),
+        category: z.string().min(1),
+        left: z.number(),
+        right: z.number(),
       }),
     )
     .min(1),

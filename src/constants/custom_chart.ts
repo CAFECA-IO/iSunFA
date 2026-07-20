@@ -20,7 +20,6 @@ export enum CustomChartConfigKey {
   Y_AXIS = "yaxis",
   X_SCALE = "xscale",
   Y_SCALE = "yscale",
-  BASELINE = "baseline",
   UNIT = "unit",
 }
 

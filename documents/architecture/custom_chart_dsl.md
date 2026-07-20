@@ -58,10 +58,15 @@ yAxis: 短期 ↔ 長期
 
 AST:`{ type, title?, xAxis:{min?,max?,scale?}, yAxis:{min?,max?,scale?}, points:[{label,x,y,group?}] }`。無分隔符的軸文字歸為 `max` 端。
 
-### 4.2 custom-tornado(敏感度)
+### 4.2 custom-tornado(成對雙數列 / butterfly)
 
-設定:`title`、`baseline`(必填數值)、`unit`。資料列:`variable, low, high`(**絕對結果值**)。
-AST:`{ type, title?, baseline, unit?, bars:[{variable,low,high}] }`。排序屬渲染層,AST 保留原始順序。
+顏色代表**兩個數列**(例如兩個年度),而非以基準值劃分高低;每列的左右長條各自從中心向外延伸。
+
+設定:`title`、`unit`(皆選填)。
+資料首列為**選填標題列**:`category, leftSeriesName, rightSeriesName`,由 parser **依欄位自動偵測**(首列第 2、3 欄皆非數字即視為標題列,提供數列名稱供圖例)。數列名稱須為非數字(用 `Prices (2019)`、`FY2019`、`2019年`,而非純 `2019`);**未填標題列則不顯示圖例**。
+其餘資料列:`category, leftValue, rightValue`,`category`(標籤)**必填**,各值為該數列自身數值,不做任何計算。
+AST:`{ type, title?, unit?, leftSeries?, rightSeries?, bars:[{category,left,right}] }`。
+排序(依 `left+right` 遞減,最長者置頂呈龍捲風收斂外型)屬渲染層,AST 保留原始順序。
 
 ### 4.3 custom-histogram(已分箱)
 
@@ -102,7 +107,7 @@ AST:`{ type, title?, yAxis?, unit?, boxes:[{label,min,q1,median,q3,max,outliers?
 
 ## 8. Phase 2(待辦)
 
-- 實作 `custom-tornado` / `custom-histogram` / `custom-box` 三個渲染元件(tornado 依 |high−low| 排序等),同樣包進 `ChartShell`。
+- 實作 `custom-histogram` / `custom-box` 渲染元件,同樣包進 `ChartShell`。(`custom-tornado` 已完成,成對雙數列、依 `left+right` 排序。)
 - **共用外殼收斂(ChartShell 統一)**:待自訂圖表要開發「下載 PNG/SVG、AI 助手、全螢幕」時,將這些能力補進 `ChartShell`(全螢幕 + export ref/callback + `actions` 工具列插槽),再由 `MermaidChart` 與自訂圖表**同時**改用 `ChartShell`,消除 `mermaid_chart.tsx` 內建 viewport 的重複實作。
   - Mermaid 專屬部分(`.mermaid-container` CSS 上色、`dangerouslySetInnerHTML` SVG 字串、export target、列印媒體規則、Mermaid 版 AI modal)留在 `MermaidChart`,透過 `children` + `actions` 插槽注入。
   - 由兩個真實 consumer(各自的下載/AI)驅動 `ChartShell` API,一次到位;遷移後需在本機驗證全螢幕/匯出/列印/拖曳等互動(無法於 CI/純型別檢查覆蓋)。

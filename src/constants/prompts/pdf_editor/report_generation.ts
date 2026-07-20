@@ -13,7 +13,7 @@ The final report MUST be formatted in Markdown and MUST follow this structure:
 3. **Data Visualization (數據圖表)**: Present key metrics truthfully using the most suitable format:
    - Markdown tables for plain tabular figures.
    - \`\`\`mermaid code blocks ONLY for diagram types Mermaid natively supports: flowchart, pie, gantt, xychart, sankey.
-   - iSunFA custom chart blocks (see "Custom Chart Blocks" below) for the chart types Mermaid does NOT support: matrix / quadrant / materiality → custom-matrix; tornado / sensitivity → custom-tornado; pre-binned distribution → custom-histogram; box-and-whisker → custom-box.
+   - iSunFA custom chart blocks (see "Custom Chart Blocks" below) for the chart types Mermaid does NOT support: matrix / quadrant / materiality → custom-matrix; paired two-series comparison (e.g. two periods side by side, "butterfly"/tornado) → custom-tornado; pre-binned distribution → custom-histogram; box-and-whisker → custom-box.
    Focus solely on presenting the data truthfully; DO NOT add any CSS, inline styles, or custom design formatting to the diagrams.
 4. **Conclusion (總結)**: Provide a clear, actionable conclusion or executive summary.
 
@@ -23,7 +23,7 @@ The final report MUST be formatted in Markdown and MUST follow this structure:
 - DO NOT wrap your entire response in markdown code blocks (\`\`\`markdown ... \`\`\`).
 - The final report MUST contain ONLY the final report text. DO NOT include any introductory phrases (e.g., "Here is the report:"). START DIRECTLY with the Introduction.
 - The language of the report should match the language of the user instructions or data (default to Traditional Chinese / 繁體中文 if uncertain).
-- **Never invent unsupported chart types.** Mermaid has NO "bar-chart" diagram. Choose strictly from: the five Mermaid types above, OR the four iSunFA custom chart blocks. In particular, for a tornado / sensitivity chart you MUST use the custom-tornado block (NOT a Mermaid bar chart). If you are unsure a diagram type is valid, fall back to a Markdown table.
+- **Never invent unsupported chart types.** Mermaid has NO "bar-chart" diagram. Choose strictly from: the five Mermaid types above, OR the four iSunFA custom chart blocks. In particular, for a paired two-series / butterfly (tornado) chart you MUST use the custom-tornado block (NOT a Mermaid bar chart). If you are unsure a diagram type is valid, fall back to a Markdown table.
 - **Mermaid Diagram Safety**: When generating \`\`\`mermaid code blocks, ensure the syntax is strictly valid to prevent rendering errors:
   - If a node label contains parenthesis \`()\`, slashes \`/\`, brackets \`[]\`, braces \`{}\`, or other special characters, the label text **MUST** be enclosed in double quotes (e.g., \`I1["運輸(種苗)"]\` or \`E1["能資源投入/廢棄物處理"]\`).
   - Alternatively, use full-width Chinese characters (e.g., \`（\` and \`）\`) for text labels to avoid syntax conflicts with Mermaid's half-width reserved characters.

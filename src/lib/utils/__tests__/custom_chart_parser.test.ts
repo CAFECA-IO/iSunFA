@@ -68,26 +68,61 @@ describe("parseCustomChart - matrix", () => {
   });
 });
 
-describe("parseCustomChart - tornado", () => {
-  it("should parse baseline (incl. negative) and absolute low/high bars", () => {
+describe("parseCustomChart - tornado (paired two-series)", () => {
+  it("should auto-detect series names from the header row and parse left/right bars", () => {
     const raw = [
-      "title: NPV 敏感度",
-      "baseline: -50",
-      "unit: 萬元",
-      "折現率, 1250, 780",
-      "匯率, 1050, 940",
+      "title: 各項目價格比較",
+      "unit: 元",
+      "項目, Prices (2019), Prices (2020)",
+      "F, 9000, 8800",
+      "D, 6800, 6500",
     ].join("\n");
     const result = parseCustomChart(CustomChartType.TORNADO, raw);
     expect(result.ok).toBe(true);
     if (!result.ok || result.ast.type !== CustomChartType.TORNADO) return;
-    expect(result.ast.baseline).toBe(-50);
-    expect(result.ast.unit).toBe("萬元");
+    expect(result.ast.leftSeries).toBe("Prices (2019)");
+    expect(result.ast.rightSeries).toBe("Prices (2020)");
+    expect(result.ast.unit).toBe("元");
     expect(result.ast.bars).toHaveLength(2);
     expect(result.ast.bars[0]).toEqual({
-      variable: "折現率",
-      low: 1250,
-      high: 780,
+      category: "F",
+      left: 9000,
+      right: 8800,
     });
+  });
+
+  it("should leave series names undefined when no header row is present", () => {
+    const raw = ["折現率, 1250, 780", "匯率, 1050, 940"].join("\n");
+    const result = parseCustomChart(CustomChartType.TORNADO, raw);
+    expect(result.ok).toBe(true);
+    if (!result.ok || result.ast.type !== CustomChartType.TORNADO) return;
+    expect(result.ast.leftSeries).toBeUndefined();
+    expect(result.ast.rightSeries).toBeUndefined();
+    expect(result.ast.bars).toHaveLength(2);
+    expect(result.ast.bars[0]).toEqual({
+      category: "折現率",
+      left: 1250,
+      right: 780,
+    });
+  });
+
+  it("should require the category label (reject 2-col rows)", () => {
+    const raw = ["項目, 售價, 成本", "100, 80"].join("\n");
+    const result = parseCustomChart(CustomChartType.TORNADO, raw);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.code).toBe(CustomChartParseErrorCode.MALFORMED_ROW);
+    }
+  });
+
+  it("should fail when only a header row is present (no data rows)", () => {
+    const raw = "項目, 2019, 2020"; // Info: (20260720 - Julian) header 判定為 2019/2020 皆數字→非 header，視為單筆資料
+    const result = parseCustomChart(CustomChartType.TORNADO, raw);
+    expect(result.ok).toBe(true); // 這其實是一筆有效資料列（category=項目）
+    const raw2 = "項目, 售價, 成本"; // 全非數字→視為 header，無資料列
+    const r2 = parseCustomChart(CustomChartType.TORNADO, raw2);
+    expect(r2.ok).toBe(false);
+    if (!r2.ok) expect(r2.code).toBe(CustomChartParseErrorCode.NO_DATA_ROWS);
   });
 });
 
@@ -159,9 +194,12 @@ describe("parseCustomChart - fault tolerance (never throws, returns ok:false)", 
     if (!r.ok) expect(r.code).toBe(CustomChartParseErrorCode.MALFORMED_ROW);
   });
 
-  it("should fail when tornado baseline is missing", () => {
-    const r = parseCustomChart(CustomChartType.TORNADO, "折現率, 1, 2");
+  it("should fail on malformed tornado row (wrong column count)", () => {
+    const r = parseCustomChart(
+      CustomChartType.TORNADO,
+      ["項目, 售價, 成本", "A, 1"].join("\n"),
+    );
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.code).toBe(CustomChartParseErrorCode.INVALID_NUMBER);
+    if (!r.ok) expect(r.code).toBe(CustomChartParseErrorCode.MALFORMED_ROW);
   });
 });

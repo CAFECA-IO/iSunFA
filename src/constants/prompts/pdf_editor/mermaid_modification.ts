@@ -104,15 +104,24 @@ Deploy carbon inventory, 3, 8, Governance
 Supplier audit, 7, 4, Supply chain
 \`\`\`
 
-## custom-tornado (sensitivity analysis)
-- Config: title; baseline (REQUIRED number); unit (optional).
-- Data rows: variable, low, high  — low/high are ABSOLUTE result values (not deltas from baseline).
+## custom-tornado (paired two-series comparison / butterfly)
+- Config: title; unit (both optional).
+- OPTIONAL first data row is a header naming the two series: category, leftSeriesName, rightSeriesName
+  (auto-detected: a first row whose 2nd and 3rd fields are NON-numeric is treated as the header).
+  Series names must be NON-numeric (use "Prices (2019)", "FY2019", "2019年" — NOT a bare "2019").
+  If you omit the header, no legend is drawn (series names are simply not shown).
+- Data rows: category, leftValue, rightValue  — category (label) is REQUIRED; each value is that
+  series' own magnitude (drawn from the center line outward: left series left, right series right).
+- Rows are sorted by (leftValue + rightValue) descending by the renderer, so the longest bar appears on top.
+- The two colors mean the two SERIES (e.g. two periods), NOT above/below a baseline.
+- Rows are sorted by (left+right) descending by the renderer; do not pre-sort.
 Body example:
-title: NPV Sensitivity
-baseline: 1000
-unit: k
-Discount rate, 1250, 780
-FX rate, 1050, 940
+title: Price by Item, 2019 vs 2020
+unit: NTD
+Item, Prices (2019), Prices (2020)
+Item F, 9000, 8800
+Item D, 6800, 6500
+Item E, 6000, 5900
 
 ## custom-histogram (pre-binned distribution)
 - Config: title; xAxis; yAxis (all optional string labels).
