@@ -56,6 +56,16 @@ export const splitReportMarkdownSections = (
   const lines = markdown.split("\n");
   const sections: IMarkdownSection[] = [];
   const preambleLines: string[] = [];
+  // Info: (20260720 - Emily) flush 以參數傳入(而非閉包讀取):closure 內賦值會讓 TS 對閉包外的
+  // Info: (20260720 - Emily) narrowing 失效(推成 never),參數化後型別收窄在函式邊界內完成
+  const flushSection = (open: { heading: string; lines: string[] } | null) => {
+    if (open) {
+      sections.push({
+        heading: open.heading,
+        body: stripTrailingDivider(open.lines),
+      });
+    }
+  };
   let current: { heading: string; lines: string[] } | null = null;
   let inFence = false;
 
@@ -63,12 +73,7 @@ export const splitReportMarkdownSections = (
     // Info: (20260716 - Emily) 圍欄開闔(``` 或 ~~~):圍欄內任何行都不觸發段落切分
     if (/^\s*(```|~~~)/.test(line)) inFence = !inFence;
     if (!inFence && line.startsWith("### ")) {
-      if (current) {
-        sections.push({
-          heading: current.heading,
-          body: stripTrailingDivider(current.lines),
-        });
-      }
+      flushSection(current);
       current = { heading: line.slice(4).trim(), lines: [] };
       return;
     }
@@ -78,12 +83,7 @@ export const splitReportMarkdownSections = (
       preambleLines.push(line);
     }
   });
-  if (current) {
-    sections.push({
-      heading: current.heading,
-      body: stripTrailingDivider(current.lines),
-    });
-  }
+  flushSection(current);
   return { preamble: preambleLines.join("\n").trim(), sections };
 };
 

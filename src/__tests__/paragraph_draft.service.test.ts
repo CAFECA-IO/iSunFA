@@ -110,12 +110,14 @@ describe("ParagraphDraftService", () => {
 
 describe("ParagraphDraftService revision mode (#55)", () => {
   it("should build a minimal-change revision prompt with original content and instruction", async () => {
-    const generateRaw = jest.fn<() => Promise<string>>().mockResolvedValue(
-      JSON.stringify({
-        content: "修訂後的段落內文。",
-        citedFacts: ["外購電力: 1,300,000 度"],
-      }),
-    );
+    const generateRaw = jest
+      .fn<(prompt: string) => Promise<string>>()
+      .mockResolvedValue(
+        JSON.stringify({
+          content: "修訂後的段落內文。",
+          citedFacts: ["外購電力: 1,300,000 度"],
+        }),
+      );
     const mockChatService = { generateRaw } as unknown as ChatService;
     const service = new ParagraphDraftService(mockChatService);
 
@@ -128,7 +130,7 @@ describe("ParagraphDraftService revision mode (#55)", () => {
 
     expect(draft.content).toBe("修訂後的段落內文。");
     // Info: (20260716 - Emily) 修訂 prompt 必含:原文、指示、最小變更規則、禁止無佐證新數字
-    const prompt = generateRaw.mock.calls[0]?.[0] as unknown as string;
+    const prompt = generateRaw.mock.calls[0]?.[0] ?? "";
     expect(prompt).toContain("既有段落原文。");
     expect(prompt).toContain("依新版帳單更新用電量描述");
     expect(prompt).toContain("最小變更");

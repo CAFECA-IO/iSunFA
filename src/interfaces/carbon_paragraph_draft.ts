@@ -22,6 +22,10 @@ export interface IParagraphDraftInput {
   conversationContext: IParagraphDraftContextMessage[];
   contextFacts?: IContextFact[];
   language?: string;
+  // Info: (20260720 - Emily) #55 修訂模式(兩者皆有值時啟用):既有段落原文 + 使用者修訂指示;
+  // Info: (20260720 - Emily) 修訂稿不直接落地,由前端對照卡人工確認後才寫入報告
+  existingContent?: string;
+  instruction?: string;
 }
 
 export interface IParagraphDraft {
