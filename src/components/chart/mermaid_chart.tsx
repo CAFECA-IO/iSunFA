@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useMemo, FC } from "react";
 import mermaid from "mermaid";
-import { Sparkles } from "lucide-react";
 import { DonutChart } from "@/components/common/donut_chart";
 import { useTranslation } from "@/i18n/i18n_context";
 import { ChartShell } from "@/components/chart/chart_shell";
@@ -198,18 +197,6 @@ const MermaidChart: FC<IMermaidChartProps> = ({
     }
   }
 
-  // Info: (20260720 - Julian) AI 智慧編輯按鈕，透過 ChartShell 的 actions 插槽注入工具列
-  const aiAction = onChartChange ? (
-    <button
-      type="button"
-      onClick={() => setIsAiModalOpen(true)}
-      className="shrink-0 cursor-pointer rounded-md p-1.5 text-blue-600 transition-colors hover:bg-slate-100"
-      title="AI 智慧編輯 (AI Chart Editor)"
-    >
-      <Sparkles size={16} />
-    </button>
-  ) : undefined;
-
   return (
     <div className="relative w-full break-inside-avoid print:break-inside-avoid">
       <style>{`
@@ -349,7 +336,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({
         </div>
       ) : (
         <ChartShell
-          actions={aiAction}
+          openAiModal={() => setIsAiModalOpen(true)}
           exportFileName={exportFileName}
           contentClassName="mermaid-container"
           fullscreenTitle={t("chart.mermaid.preview_title") ?? undefined}

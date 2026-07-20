@@ -9,6 +9,7 @@ import {
   Minimize2,
   Move,
   Download,
+  Sparkles,
 } from "lucide-react";
 import { useZoomPan } from "@/hooks/use_zoom_pan";
 import { useChartExport } from "@/hooks/use_chart_export";
@@ -16,8 +17,8 @@ import { useTranslation } from "@/i18n/i18n_context";
 
 interface IChartShellProps {
   children: ReactNode;
-  // Info: (20260720 - Julian) 工具列動作插槽（注入 AI 助手等按鈕，排在下載 / 縮放之前；未提供則不顯示）
-  actions?: ReactNode;
+  // Info: (20260720 - Julian) 開啟 AI 助手 Modal
+  openAiModal: () => void;
   // Info: (20260720 - Julian) 提供檔名即啟用「下載 PNG / SVG」選單（匯出目前作用中的內容容器）
   exportFileName?: string;
   // Info: (20260720 - Julian) 是否顯示全螢幕切換（預設開啟）
@@ -37,13 +38,13 @@ const CONTENT_CLASS = "chart-shell-content";
 
 /**
  * Info: (20260720 - Julian)
- * 圖表共用外殼：一般 Mermaid 與自訂圖表（matrix/tornado/histogram/box）共用同一容器。
+ * 圖表共用外殼：一般 Mermaid 與自訂圖表（matrix/tornado/histogram/boxplot）共用同一容器。
  * 提供灰底容器、Ctrl/⌘ + 滾輪縮放、拖曳平移、全螢幕、下載選單與操作提示；
- * 工具列以 actions slot 承接 AI 助手等後續功能，為自訂圖表 AI 輔助工具預留接點。
+ * 工具列內建 AI 助手按鈕，點擊呼叫 openAiModal 開啟各自的 AI 編輯 Modal。
  */
 const ChartShell: FC<IChartShellProps> = ({
   children,
-  actions = <></>,
+  openAiModal,
   exportFileName = "chart",
   enableFullscreen = true,
   fullscreenTitle = "",
@@ -123,12 +124,17 @@ const ChartShell: FC<IChartShellProps> = ({
   // Info: (20260720 - Julian) 工具列（一般與全螢幕共用）
   const toolbar = (
     <div className="chart-shell-toolbar absolute top-3 right-3 z-10 flex items-center gap-1 rounded-lg border border-slate-200/80 bg-white/95 p-1 shadow-sm backdrop-blur-sm">
-      {actions && (
-        <>
-          {actions}
-          <div className="mx-0.5 h-3 w-px bg-slate-200" />
-        </>
-      )}
+      <>
+        <button
+          type="button"
+          onClick={openAiModal}
+          className="shrink-0 cursor-pointer rounded-md p-1.5 text-blue-600 transition-colors hover:bg-slate-100"
+          title="AI 智慧編輯 (AI Chart Editor)"
+        >
+          <Sparkles size={16} />
+        </button>
+        <div className="mx-0.5 h-3 w-px bg-slate-200" />
+      </>
       {exportFileName && (
         <>
           <div className="group/download relative shrink-0">
