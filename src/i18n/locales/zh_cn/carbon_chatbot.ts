@@ -130,6 +130,11 @@ export const carbonChatbot = {
   activity_co2e: "CO2e: {{value}} kg",
   activity_pending_factor: "⚠ 待补: 查无可靠系数或单位不符,不予推估",
   activity_total_co2e: "总排放量（已核对）",
+  articulation_passed: "质量守恒核对通过",
+  articulation_violation: "质量守恒违反：{{material}}",
+  articulation_equation:
+    "期初+采购-期末 = {{expected}} {{unit}}，账上消耗 = {{actual}} {{unit}}，缺口 = {{gap}} {{unit}}",
+  articulation_plausibility_warning: "数量超出合理量级，请确认：{{source}}",
   inventory_step_ORG_PROFILE: "步骤: 企业基本资料（名称／年度）",
   inventory_step_ORG_BOUNDARY: "步骤: 组织边界设定",
   inventory_step_EMISSION_SOURCES: "步骤: 排放源识别",

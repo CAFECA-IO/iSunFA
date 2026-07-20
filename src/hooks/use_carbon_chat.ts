@@ -37,6 +37,7 @@ import {
   describeInventoryStep,
   applyComputedLedger,
   activityDedupeKey,
+  stockRecordDedupeKey,
 } from "@/lib/carbon_inventory";
 import {
   loadInventoryState,
@@ -668,8 +669,14 @@ export const useCarbonChat = () => {
     if (!activeInventoryState || activeInventoryState.activities.length === 0) {
       return;
     }
-    const signature = activeInventoryState.activities
-      .map(activityDedupeKey)
+    // Info: (20260720 - Emily) #6520 簽章納入庫存紀錄:期初/採購/期末變更也要重跑勾稽
+    const signature = [
+      ...activeInventoryState.activities.map(activityDedupeKey),
+      ...(activeInventoryState.stockRecords ?? []).map(
+        (r) =>
+          `stock:${stockRecordDedupeKey(r)}|${r.openingQuantity}|${r.purchasedQuantity}|${r.closingQuantity}`,
+      ),
+    ]
       .sort()
       .join(";");
     if (lastCalcSignatureRef.current.get(chatChannel) === signature) return;
@@ -680,7 +687,10 @@ export const useCarbonChat = () => {
       "/api/v1/chat/carbon/calculate",
       {
         method: "POST",
-        body: JSON.stringify({ activities: activeInventoryState.activities }),
+        body: JSON.stringify({
+          activities: activeInventoryState.activities,
+          stockRecords: activeInventoryState.stockRecords ?? [],
+        }),
       },
     )
       .then((res) => {

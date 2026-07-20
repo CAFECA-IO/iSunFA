@@ -145,6 +145,12 @@ export const carbonChatbot = {
   activity_pending_factor:
     "⚠ 보류: 신뢰할 수 있는 계수가 없거나 단위 불일치로 추정하지 않습니다",
   activity_total_co2e: "총 배출량(대사 완료)",
+  articulation_passed: "질량 보존 검증 통과",
+  articulation_violation: "질량 보존 위반: {{material}}",
+  articulation_equation:
+    "기초+구매-기말 = {{expected}} {{unit}}, 장부상 소비 = {{actual}} {{unit}}, 차이 = {{gap}} {{unit}}",
+  articulation_plausibility_warning:
+    "수량이 합리적 범위를 초과했습니다. 확인해 주세요: {{source}}",
   inventory_step_ORG_PROFILE: "단계: 기업 기본 정보(명칭/연도)",
   inventory_step_ORG_BOUNDARY: "단계: 조직 경계 설정",
   inventory_step_EMISSION_SOURCES: "단계: 배출원 식별",

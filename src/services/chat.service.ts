@@ -22,6 +22,7 @@ import {
   CarbonChatStructuredReplySchema,
   CarbonActivityRecordSchema,
   CarbonInventoryExtractionSchema,
+  CarbonStockRecordSchema,
 } from "@/validators";
 import { GhgProtocolCategory } from "@/constants/esg";
 import { MeasurementUnit } from "@/constants/enums";
@@ -123,6 +124,43 @@ const CARBON_CHAT_REPLY_SCHEMA: Schema = {
               },
             },
             required: ["scopeCategory", "sourceName", "quantity", "unit"],
+          },
+        },
+        // Info: (20260720 - Emily) #6520 物料庫存紀錄:期初/採購/期末原樣字串,供質量守恆勾稽
+        stockRecords: {
+          type: SchemaType.ARRAY,
+          items: {
+            type: SchemaType.OBJECT,
+            properties: {
+              materialName: {
+                type: SchemaType.STRING,
+                description: "物料名稱,須與活動數據的排放源名稱一致(如: 柴油)",
+              },
+              openingQuantity: {
+                type: SchemaType.STRING,
+                description: "期初庫存量,原樣照抄,嚴禁換算",
+              },
+              purchasedQuantity: {
+                type: SchemaType.STRING,
+                description: "本期採購量,原樣照抄,嚴禁換算",
+              },
+              closingQuantity: {
+                type: SchemaType.STRING,
+                description: "期末庫存量,原樣照抄,嚴禁換算",
+              },
+              unit: {
+                type: SchemaType.STRING,
+                format: "enum",
+                enum: Object.values(MeasurementUnit),
+              },
+            },
+            required: [
+              "materialName",
+              "openingQuantity",
+              "purchasedQuantity",
+              "closingQuantity",
+              "unit",
+            ],
           },
         },
       },
@@ -338,7 +376,8 @@ export class ChatService {
 【事實萃取機制】每輪回覆的 extraction 欄位，依下列規則萃取「用戶本輪訊息」中的盤查事實:
 - 企業名稱、盤查年度(西元)、組織邊界方法: 用戶明確提供時填入，原文照抄，不確定就省略。
 - activities: 用戶提供的活動數據(如用電量、油耗)。quantity 連同千分位「原樣照抄」為字串，嚴禁換算單位、加總或推導；單位只能從 unit 列舉挑選，對不上就整筆省略。
-- 你是萃取器不是計算機: 任何需要計算的內容一律不填。沒有可萃取的事實時 extraction 省略。
+- stockRecords: 用戶提供「期初庫存、本期採購、期末庫存」三值齊全的物料(燃料/原料)時填入，數值原樣照抄；materialName 須與該物料在活動數據中的排放源名稱一致；三值不齊全就整筆省略，嚴禁以 0 補位。
+- 你是萃取器不是計算機: 任何需要計算的內容一律不填(含庫存缺口、消耗量推算)。沒有可萃取的事實時 extraction 省略。
 【段落清單】
 ${outlineCatalog}${langInstruction}`;
   }
@@ -351,7 +390,7 @@ ${outlineCatalog}${langInstruction}`;
     value: unknown,
   ): IInventoryExtraction | null {
     if (!value || typeof value !== "object") return null;
-    const candidate = value as { activities?: unknown };
+    const candidate = value as { activities?: unknown; stockRecords?: unknown };
     const rawActivities = Array.isArray(candidate.activities)
       ? candidate.activities
       : [];
@@ -364,16 +403,31 @@ ${outlineCatalog}${langInstruction}`;
         dropped: rawActivities.length - activities.length,
       });
     }
+    // Info: (20260720 - Emily) #6520 庫存紀錄同標準裁決:逐筆驗證,壞欄位丟該筆不作廢整包
+    const rawStockRecords = Array.isArray(candidate.stockRecords)
+      ? candidate.stockRecords
+      : [];
+    const stockRecords = rawStockRecords.flatMap((item) => {
+      const parsed = CarbonStockRecordSchema.safeParse(item);
+      return parsed.success ? [parsed.data] : [];
+    });
+    if (rawStockRecords.length !== stockRecords.length) {
+      logger.warn("inventory extraction dropped invalid stock records", {
+        dropped: rawStockRecords.length - stockRecords.length,
+      });
+    }
     const orgParsed = CarbonInventoryExtractionSchema.safeParse({
       ...value,
       activities: [],
+      stockRecords: [],
     });
     const org = orgParsed.success ? orgParsed.data : { activities: [] };
     if (
       !org.company &&
       !org.year &&
       !org.boundaryApproach &&
-      activities.length === 0
+      activities.length === 0 &&
+      stockRecords.length === 0
     ) {
       return null;
     }
@@ -382,6 +436,7 @@ ${outlineCatalog}${langInstruction}`;
       year: org.year,
       boundaryApproach: org.boundaryApproach,
       activities,
+      stockRecords: stockRecords.length > 0 ? stockRecords : undefined,
     };
   }
 

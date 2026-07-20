@@ -3,6 +3,11 @@
 
 import { GhgProtocolCategory } from "@/constants/esg";
 import { CarbonInventoryStep } from "@/constants/carbon_chatbot";
+import {
+  ArticulationStatusEnum,
+  ArticulationViolationReasonEnum,
+  ArticulationWarningReasonEnum,
+} from "@/constants/carbon_articulation";
 
 export enum ChatRoleEnum {
   USER = "user",
@@ -106,6 +111,49 @@ export interface IActivityRecord {
   source?: string;
 }
 
+/**
+ * Info: (20260720 - Emily) #6520 可盤點物料庫存紀錄(質量守恆等式的左側資料):
+ * 期初庫存 + 本期採購 = 本期投入(消耗) + 期末庫存。
+ * 數值以字串保存(嚴禁 number 運算);消耗側由同名活動數據(sourceName)加總對照。
+ */
+export interface IMaterialStockRecord {
+  materialName: string;
+  openingQuantity: string;
+  purchasedQuantity: string;
+  closingQuantity: string;
+  unit: string;
+  source?: string;
+}
+
+// Info: (20260720 - Emily) #6520 單筆守恆違反明細(等式兩側 Decimal 字串值透明呈現,審計可追溯)
+export interface IArticulationViolation {
+  materialName: string;
+  unit: string;
+  reason: ArticulationViolationReasonEnum;
+  // Info: (20260720 - Emily) 預期消耗 = 期初 + 採購 - 期末;實際消耗 = 同名活動數據加總
+  expectedConsumption: string;
+  actualConsumption: string;
+  gap: string;
+}
+
+// Info: (20260720 - Emily) #6520 合理性警示(非庫存類超出物理量級邊界;僅警示不凍結)
+export interface IArticulationWarning {
+  activityKey: string;
+  sourceName: string;
+  reason: ArticulationWarningReasonEnum;
+  quantity: string;
+  plausibleMax: string;
+  unit: string;
+}
+
+// Info: (20260720 - Emily) #6520 勾稽結果:REVIEW 步驟出口與 #23 數據段落凍結的唯一裁決來源
+export interface IArticulationResult {
+  status: ArticulationStatusEnum;
+  violations: IArticulationViolation[];
+  warnings: IArticulationWarning[];
+  checkedAt: string;
+}
+
 // Info: (20260716 - Emily) #6519 係數快照: 計算當下凍結採用的係數(稽核軌跡地基)
 export interface IFactorSnapshot {
   factorId: string;
@@ -143,6 +191,8 @@ export interface IComputedLedger {
   scopeSubtotals: Record<string, string>;
   totalCo2eKg: string;
   computedAt: string;
+  // Info: (20260720 - Emily) #6520 質量守恆勾稽結果(/calculate 一併回傳,隨 ledger E2EE 入庫)
+  articulation?: IArticulationResult;
 }
 
 // Info: (20260716 - Emily) #6518 LLM 事實萃取結果(已經 Zod + 白名單裁決;year 由 TS 決定性轉數字)
@@ -151,6 +201,8 @@ export interface IInventoryExtraction {
   year?: number;
   boundaryApproach?: ICarbonInventoryState["boundaryApproach"];
   activities: IActivityRecord[];
+  // Info: (20260720 - Emily) #6520 可盤點物料庫存紀錄(期初/採購/期末;守恆等式的驗證資料)
+  stockRecords?: IMaterialStockRecord[];
 }
 
 // Info: (20260712 - Luphia) 碳盤查結構化事實狀態：AI 的長期記憶與報告的資料來源（取代重播逐字對話）
@@ -163,6 +215,8 @@ export interface ICarbonInventoryState {
     | "financial_control"
     | "equity_share";
   activities: IActivityRecord[];
+  // Info: (20260720 - Emily) #6520 物料庫存紀錄(守恆檢核資料;與 activities 同軌合併去重)
+  stockRecords?: IMaterialStockRecord[];
   // Info: (20260716 - Emily) #6519 決定論引擎的計算總表(隨 state E2EE 入庫)
   computedLedger?: IComputedLedger;
   notes?: string[];

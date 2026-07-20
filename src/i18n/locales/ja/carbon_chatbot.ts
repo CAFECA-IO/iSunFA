@@ -146,6 +146,12 @@ export const carbonChatbot = {
   activity_pending_factor:
     "⚠ 保留:信頼できる係数がないか単位不一致のため推定しません",
   activity_total_co2e: "総排出量(照合済み)",
+  articulation_passed: "質量保存チェックに合格しました",
+  articulation_violation: "質量保存違反：{{material}}",
+  articulation_equation:
+    "期首+購入-期末 = {{expected}} {{unit}}、記録上の消費 = {{actual}} {{unit}}、差異 = {{gap}} {{unit}}",
+  articulation_plausibility_warning:
+    "数量が妥当な範囲を超えています。ご確認ください：{{source}}",
   inventory_step_ORG_PROFILE: "ステップ:企業基本情報(名称/年度)",
   inventory_step_ORG_BOUNDARY: "ステップ:組織境界の設定",
   inventory_step_EMISSION_SOURCES: "ステップ:排出源の特定",

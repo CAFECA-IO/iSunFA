@@ -145,6 +145,12 @@ export const carbonChatbot = {
   activity_pending_factor:
     "⚠ Pending: no reliable factor or unit mismatch; no estimate will be fabricated",
   activity_total_co2e: "Total emissions (reconciled)",
+  articulation_passed: "Mass conservation check passed",
+  articulation_violation: "Mass conservation violated: {{material}}",
+  articulation_equation:
+    "Opening + purchased - closing = {{expected}} {{unit}}, recorded consumption = {{actual}} {{unit}}, gap = {{gap}} {{unit}}",
+  articulation_plausibility_warning:
+    "Quantity exceeds a plausible range, please verify: {{source}}",
   inventory_step_ORG_PROFILE: "Step: Organization profile (name/year)",
   inventory_step_ORG_BOUNDARY: "Step: Organizational boundary",
   inventory_step_EMISSION_SOURCES: "Step: Emission source identification",

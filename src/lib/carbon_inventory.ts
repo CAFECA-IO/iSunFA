@@ -6,12 +6,14 @@ import {
   IActivityRecord,
   IInventoryExtraction,
   IComputedLedger,
+  IMaterialStockRecord,
 } from "@/types/carbon_chatbot.types";
 import {
   CarbonInventoryStep,
   CARBON_INVENTORY_STEP_ORDER,
   CARBON_INVENTORY_STATE_VERSION,
 } from "@/constants/carbon_chatbot";
+import { ArticulationStatusEnum } from "@/constants/carbon_articulation";
 
 // Info: (20260716 - Emily) ACTIVITY_DATA 完成門檻: 至少 N 筆完整活動數據(門檻為決定性常數，不由 LLM 判斷)
 export const CARBON_INVENTORY_MIN_ACTIVITY_RECORDS = 3;
@@ -32,6 +34,10 @@ export const activityDedupeKey = (a: IActivityRecord): string =>
     a.quantity.trim(),
     a.unit,
   ].join("|");
+
+// Info: (20260720 - Emily) #6520 庫存紀錄去重鍵:同物料 + 同單位視為同一筆(後到的萃取不覆蓋人工確認值)
+export const stockRecordDedupeKey = (r: IMaterialStockRecord): string =>
+  [r.materialName.trim().toLowerCase(), r.unit].join("|");
 
 export interface IMergeResult {
   state: ICarbonInventoryState;
@@ -62,16 +68,36 @@ export const mergeInventoryExtraction = (
     added.push(record);
   });
 
+  // Info: (20260720 - Emily) #6520 庫存紀錄同軌合併(去重鍵:物料+單位;重送不重複記帳)
+  const existingStockKeys = new Set(
+    (state.stockRecords ?? []).map(stockRecordDedupeKey),
+  );
+  const addedStock: IMaterialStockRecord[] = [];
+  (extraction.stockRecords ?? []).forEach((record) => {
+    const withSource: IMaterialStockRecord = {
+      ...record,
+      source: record.source ?? source,
+    };
+    const key = stockRecordDedupeKey(withSource);
+    if (existingStockKeys.has(key)) return;
+    existingStockKeys.add(key);
+    addedStock.push(withSource);
+  });
+
   const next: ICarbonInventoryState = {
     ...state,
     company: state.company ?? extraction.company,
     year: state.year ?? extraction.year,
     boundaryApproach: state.boundaryApproach ?? extraction.boundaryApproach,
     activities: [...state.activities, ...added],
+    stockRecords:
+      addedStock.length > 0
+        ? [...(state.stockRecords ?? []), ...addedStock]
+        : state.stockRecords,
     updatedAt: new Date().toISOString(),
   };
   next.step = computeInventoryStep(next);
-  return { state: next, addedCount: added.length };
+  return { state: next, addedCount: added.length + addedStock.length };
 };
 
 // Info: (20260716 - Emily) 各步驟完成條件(決定性；EMISSION_FACTORS/REVIEW 的出口由 #21/#22 引擎解鎖)
@@ -98,8 +124,15 @@ const isStepComplete = (
         state.activities.every((a) => Boolean(a.emissionFactor))
       );
     case CarbonInventoryStep.REVIEW:
-      // Info: (20260716 - Emily) 勾稽通過才算完成；由 #6520(質量守恆護欄)裁決
-      return false;
+      // Info: (20260720 - Emily) #6520 勾稽出口:計算總表存在、無待補、守恆非違反(NOT_APPLICABLE =
+      // Info: (20260720 - Emily) 純電力/運輸盤查的合法情境,視為通過;VIOLATED 凍結直到使用者澄清)
+      return Boolean(
+        state.computedLedger &&
+          state.computedLedger.pending.length === 0 &&
+          state.computedLedger.articulation &&
+          state.computedLedger.articulation.status !==
+            ArticulationStatusEnum.VIOLATED,
+      );
     default:
       return false;
   }
@@ -117,6 +150,7 @@ export const computeInventoryStep = (
 };
 
 // Info: (20260716 - Emily) 供 persona 的步驟描述(餵給 LLM 的 currentStep 真值，取代自由字串)
+// Info: (20260720 - Emily) #6520 守恆違反時附上等式事實(TS 決定性產生;LLM 只負責措辭向使用者追問澄清)
 export const describeInventoryStep = (state: ICarbonInventoryState): string => {
   const missing: string[] = [];
   if (!state.company) missing.push("企業名稱");
@@ -125,7 +159,18 @@ export const describeInventoryStep = (state: ICarbonInventoryState): string => {
   const activityGap =
     CARBON_INVENTORY_MIN_ACTIVITY_RECORDS - state.activities.length;
   if (activityGap > 0) missing.push(`活動數據(尚缺約 ${activityGap} 筆)`);
-  return `${state.step}${missing.length > 0 ? `；待蒐集: ${missing.join("、")}` : ""}`;
+
+  const violations = state.computedLedger?.articulation?.violations ?? [];
+  const violationBlock =
+    violations.length > 0
+      ? `；【質量守恆勾稽違反,請以會計師身份向用戶追問缺口原因,嚴禁自行推測數字】${violations
+          .map(
+            (v) =>
+              `${v.materialName}: 期初+採購-期末=${v.expectedConsumption} ${v.unit},帳上消耗=${v.actualConsumption} ${v.unit},缺口=${v.gap} ${v.unit}`,
+          )
+          .join("；")}`
+      : "";
+  return `${state.step}${missing.length > 0 ? `；待蒐集: ${missing.join("、")}` : ""}${violationBlock}`;
 };
 
 /**

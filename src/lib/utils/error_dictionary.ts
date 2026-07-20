@@ -737,6 +737,12 @@ export const API_ERRORS = {
     message: "Failed to import the report",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
+  // Info: (20260720 - Emily) #6520 質量守恆勾稽違反:報告數據段落凍結,待使用者澄清缺口(防漂綠護欄)
+  IS_MASS_CONSERVATION_VIOLATED: {
+    code: "IS000018",
+    message: "Mass conservation check failed; data sections are frozen",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
   IS_UNKNOWN: {
     code: "IS000099",
     message: "Internal Server Error",
