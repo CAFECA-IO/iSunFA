@@ -134,8 +134,14 @@ describe("injectDataTable / hasInjectedDataTable", () => {
     expect(v1.startsWith("敘述文字。")).toBe(true);
 
     // Info: (20260720 - Emily) 重算後替換錨點區塊:敘述零改動,新數字生效
+    // Info: (20260720 - Emily) entries 明細也要換新值,否則明細列仍印舊 co2e(測試資料須自洽)
+    const baseLedger = buildLedger();
     const updated = buildCarbonDataTable(
-      buildLedger({ totalCo2eKg: "999", scopeSubtotals: { S2: "999" } }),
+      buildLedger({
+        entries: [{ ...baseLedger.entries[0], co2eKg: "999" }],
+        totalCo2eKg: "999",
+        scopeSubtotals: { S2: "999" },
+      }),
     );
     const v2 = injectDataTable(v1, updated);
     expect(v2).toContain("999");

@@ -15,7 +15,8 @@ import {
   ArticulationViolationReasonEnum,
   ArticulationWarningReasonEnum,
 } from "@/constants/carbon_articulation";
-import { parseActivityQuantity } from "@/services/carbon_calculation.service";
+// Info: (20260720 - Emily) 從零依賴 lib 取用(不 import calculation service:它連動 EmissionFactorRepo → prisma)
+import { parseActivityQuantity } from "@/lib/carbon_quantity";
 import { activityDedupeKey } from "@/lib/carbon_inventory";
 import {
   IActivityRecord,
