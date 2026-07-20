@@ -13,7 +13,7 @@ The final report MUST be formatted in Markdown and MUST follow this structure:
 3. **Data Visualization (數據圖表)**: Present key metrics truthfully using the most suitable format:
    - Markdown tables for plain tabular figures.
    - \`\`\`mermaid code blocks ONLY for diagram types Mermaid natively supports: flowchart, pie, gantt, xychart, sankey.
-   - iSunFA custom chart blocks (see "Custom Chart Blocks" below) for the chart types Mermaid does NOT support: matrix / quadrant / materiality → custom-matrix; paired two-series comparison (e.g. two periods side by side, "butterfly"/tornado) → custom-tornado; pre-binned distribution → custom-histogram; box-and-whisker → custom-box.
+   - iSunFA custom chart blocks (see "Custom Chart Blocks" below) for the chart types Mermaid does NOT support: matrix / quadrant / materiality → custom-matrix; paired two-series comparison (e.g. two periods side by side, "butterfly"/tornado) → custom-tornado; pre-binned distribution → custom-histogram; box-and-whisker → custom-boxplot.
    Focus solely on presenting the data truthfully; DO NOT add any CSS, inline styles, or custom design formatting to the diagrams.
 4. **Conclusion (總結)**: Provide a clear, actionable conclusion or executive summary.
 

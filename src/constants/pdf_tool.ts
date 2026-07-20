@@ -89,13 +89,13 @@ export const PDF_PRINT_STYLE = `
       margin-bottom: 0 !important;
   }
 
-  /* 隱藏 mermaid 的輔助元件 */
-  .mermaid-control-btn, .mermaid-control-hint {
+  /* 隱藏共用圖表外殼（ChartShell）的輔助元件 */
+  .chart-shell-toolbar, .chart-shell-hint, .chart-shell-backdrop {
       display:none!important;
   }
 
-  /* 確保匯出 PDF 時，Mermaid 圖表自動回正、清除縮放平移並完全展開 */
-  #pdf-content .mermaid-interactive-viewport {
+  /* 確保匯出 PDF 時，圖表（Mermaid 與自訂圖表）自動回正、清除縮放平移並完全展開 */
+  #pdf-content .chart-shell-viewport {
       border: none !important;
       background: transparent !important;
       height: auto !important;
@@ -103,14 +103,14 @@ export const PDF_PRINT_STYLE = `
       border-radius: 0 !important;
       box-shadow: none !important;
   }
-  #pdf-content .mermaid-container {
+  #pdf-content .chart-shell-content {
       transform: none !important;
       transition: none !important;
       width: 100% !important;
       height: auto !important;
       display: block !important;
   }
-  #pdf-content .mermaid-container svg {
+  #pdf-content .chart-shell-content svg {
       max-height: none !important;
       max-width: 100% !important;
       height: auto !important;

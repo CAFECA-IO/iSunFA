@@ -78,7 +78,7 @@ export interface ICustomBoxItem {
 }
 
 export interface ICustomBoxAst {
-  type: CustomChartType.BOX;
+  type: CustomChartType.BOXPLOT;
   title?: string;
   yAxis?: string;
   unit?: string;

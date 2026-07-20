@@ -1,20 +1,11 @@
 "use client";
 
-import { useEffect, useState, useMemo, FC, useRef } from "react";
-import { useZoomPan } from "@/hooks/use_zoom_pan";
+import { useEffect, useState, useMemo, FC } from "react";
 import mermaid from "mermaid";
+import { Sparkles } from "lucide-react";
 import { DonutChart } from "@/components/common/donut_chart";
-import {
-  Download,
-  Maximize,
-  Maximize2,
-  Minimize2,
-  Sparkles,
-  ZoomIn,
-  ZoomOut,
-} from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { useChartExport } from "@/hooks/use_chart_export";
+import { ChartShell } from "@/components/chart/chart_shell";
 import { MermaidAiModal } from "@/components/chart/mermaid_ai_modal";
 import { detectChartType, parsePieData } from "@/lib/utils/mermaid_helpers";
 import { renderMermaid } from "@/lib/utils/mermaid_render";
@@ -25,13 +16,16 @@ interface IMermaidChartProps {
   onChartChange?: (newChart: string) => void;
 }
 
+// Info: (20260720 - Julian) Mermaid 縮放範圍（沿用原本手感，較自訂圖表大）
+const MERMAID_MIN_SCALE = 0.5;
+const MERMAID_MAX_SCALE = 4;
+const MERMAID_WHEEL_STEP = 0.05;
+
 const MermaidChart: FC<IMermaidChartProps> = ({
   chart,
   onChartChange = undefined,
 }) => {
   const { t } = useTranslation();
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const modalRef = useRef<HTMLDivElement>(null);
 
   // Info: (20260623 - Julian) 維持當前作用的圖表內容 state
   const [currentChart, setCurrentChart] = useState<string>(chart || "");
@@ -49,22 +43,6 @@ const MermaidChart: FC<IMermaidChartProps> = ({
   const chartType = useMemo(() => {
     return detectChartType(currentChart);
   }, [currentChart]);
-
-  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
-
-  // Info: (20260629 - Julian) 使用 Hook 管理縮放與位移狀態
-  const {
-    scale,
-    setScale,
-    position,
-    isDragging,
-    zoomIn,
-    zoomOut,
-    resetZoom,
-    startDrag,
-    updateDrag,
-    endDrag,
-  } = useZoomPan({ initialScale: 1, minScale: 0.5, maxScale: 4 });
 
   // Info: (20260418 - Tzuhan) Intercept Mermaid Pie charts and render using our premium Recharts Donut instead
   const parsedPieData = useMemo(() => {
@@ -180,141 +158,6 @@ const MermaidChart: FC<IMermaidChartProps> = ({
     };
   }, [currentChart, parsedPieData]);
 
-  // Info: (20260615 - Julian) 透過 false 監聽器來控制縮放與平移滾輪
-  useEffect(() => {
-    const handleWheelEvent = (e: WheelEvent) => {
-      const isOverViewport = viewportRef.current?.contains(e.target as Node);
-      const isOverModal = modalRef.current?.contains(e.target as Node);
-
-      const shouldZoom = isFullscreen
-        ? isOverModal
-        : isOverViewport && (e.ctrlKey || e.metaKey);
-
-      if (shouldZoom) {
-        e.preventDefault();
-        const zoomFactor = 0.05;
-        const direction = e.deltaY < 0 ? 1 : -1;
-        setScale((prev) =>
-          Math.max(0.5, Math.min(4, prev + direction * zoomFactor)),
-        );
-      }
-    };
-
-    window.addEventListener("wheel", handleWheelEvent, { passive: false });
-    return () => {
-      window.removeEventListener("wheel", handleWheelEvent);
-    };
-  }, [isFullscreen, setScale]);
-
-  // Info: (20260615 - Julian) 按下 ESC 鍵退出全螢幕
-  useEffect(() => {
-    if (!isFullscreen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setIsFullscreen(false);
-        resetZoom();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isFullscreen, resetZoom]);
-
-  const toggleFullscreen = (e?: React.MouseEvent | MouseEvent) => {
-    e?.stopPropagation();
-    setIsFullscreen((prev) => !prev);
-    // Info: (20260615 - Julian) 重置尺寸與位移
-    resetZoom();
-  };
-
-  // Info: (20260615 - Julian) 獲取目前作用中的 Mermaid SVG 容器
-  const getContainer = () => {
-    if (isFullscreen && modalRef.current) {
-      return modalRef.current.querySelector(
-        ".mermaid-container",
-      ) as HTMLElement | null;
-    }
-    return viewportRef.current?.querySelector(
-      ".mermaid-container",
-    ) as HTMLElement | null;
-  };
-
-  // Info: (20260615 - Julian) 使用共享 Hook 管理 PNG / SVG 匯出
-  const { exportPng, exportSvg } = useChartExport(
-    () => getContainer(),
-    "mermaid-chart",
-  );
-
-  // Info: (20260615 - Julian) 綁定 Viewport 事件，避免 JSX-a11y 警告
-  useEffect(() => {
-    const viewport = viewportRef.current;
-    if (!viewport) return;
-
-    const handleMouseDownNative = (e: MouseEvent) => {
-      if (e.button !== 0) return; // Info: (20260615 - Julian) 僅允許左鍵
-      if ((e.target as HTMLElement).closest(".mermaid-control-btn")) return;
-      startDrag(e.clientX, e.clientY);
-    };
-
-    const handleMouseMoveNative = (e: MouseEvent) => {
-      updateDrag(e.clientX, e.clientY);
-    };
-
-    const handleDoubleClickNative = (e: MouseEvent) => {
-      if ((e.target as HTMLElement).closest(".mermaid-control-btn")) return;
-      resetZoom();
-    };
-
-    viewport.addEventListener("mousedown", handleMouseDownNative);
-    viewport.addEventListener("mousemove", handleMouseMoveNative);
-    viewport.addEventListener("mouseup", endDrag);
-    viewport.addEventListener("mouseleave", endDrag);
-    viewport.addEventListener("dblclick", handleDoubleClickNative);
-
-    return () => {
-      viewport.removeEventListener("mousedown", handleMouseDownNative);
-      viewport.removeEventListener("mousemove", handleMouseMoveNative);
-      viewport.removeEventListener("mouseup", endDrag);
-      viewport.removeEventListener("mouseleave", endDrag);
-      viewport.removeEventListener("dblclick", handleDoubleClickNative);
-    };
-  }, [startDrag, updateDrag, endDrag, resetZoom]);
-
-  // Info: (20260615 - Julian) 綁定 Modal 事件，避免 JSX-a11y 警告
-  useEffect(() => {
-    if (!isFullscreen) return;
-    const modal = modalRef.current;
-    if (!modal) return;
-
-    const handleMouseDownNative = (e: MouseEvent) => {
-      if (e.button !== 0) return; // Info: (20260615 - Julian) 僅允許左鍵
-      if ((e.target as HTMLElement).closest(".mermaid-control-btn")) return;
-      startDrag(e.clientX, e.clientY);
-    };
-
-    const handleMouseMoveNative = (e: MouseEvent) => {
-      updateDrag(e.clientX, e.clientY);
-    };
-
-    const handleDoubleClickNative = (e: MouseEvent) => {
-      if ((e.target as HTMLElement).closest(".mermaid-control-btn")) return;
-      resetZoom();
-    };
-
-    modal.addEventListener("mousedown", handleMouseDownNative);
-    modal.addEventListener("mousemove", handleMouseMoveNative);
-    modal.addEventListener("mouseup", endDrag);
-    modal.addEventListener("mouseleave", endDrag);
-    modal.addEventListener("dblclick", handleDoubleClickNative);
-
-    return () => {
-      modal.removeEventListener("mousedown", handleMouseDownNative);
-      modal.removeEventListener("mousemove", handleMouseMoveNative);
-      modal.removeEventListener("mouseup", endDrag);
-      modal.removeEventListener("mouseleave", endDrag);
-      modal.removeEventListener("dblclick", handleDoubleClickNative);
-    };
-  }, [isFullscreen, startDrag, updateDrag, endDrag, resetZoom]);
-
   const handleAdopt = (newChart: string) => {
     setCurrentChart(newChart);
     if (onChartChange) {
@@ -344,6 +187,18 @@ const MermaidChart: FC<IMermaidChartProps> = ({
       );
     }
   }
+
+  // Info: (20260720 - Julian) AI 智慧編輯按鈕，透過 ChartShell 的 actions 插槽注入工具列
+  const aiAction = onChartChange ? (
+    <button
+      type="button"
+      onClick={() => setIsAiModalOpen(true)}
+      className="shrink-0 cursor-pointer rounded-md p-1.5 text-blue-600 transition-colors hover:bg-slate-100"
+      title="AI 智慧編輯 (AI Chart Editor)"
+    >
+      <Sparkles size={16} />
+    </button>
+  ) : undefined;
 
   return (
     <div className="relative w-full break-inside-avoid print:break-inside-avoid">
@@ -450,67 +305,22 @@ const MermaidChart: FC<IMermaidChartProps> = ({
           background-color: transparent !important;
         }
 
-        /* 6. Layout Viewport & Print Media Configurations */
+        /* 6. SVG responsiveness inside the shared shell */
         @media screen {
-          .mermaid-interactive-viewport {
-            position: relative;
-            width: 100%;
-            height: 520px;
-            border: 1px solid #E2E8F0;
-            background-color: #F8FAFC;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-          }
-          .mermaid-interactive-viewport:hover {
-            border-color: #CBD5E1;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.02);
-          }
-
-          /* Full SVG responsiveness inside viewport */
           .mermaid-container svg {
             max-width: 95% !important;
             max-height: 95% !important;
             width: auto !important;
             height: auto !important;
             margin: 0 auto;
-            pointer-events: none; /* Let dragging bubble to viewport */
+            pointer-events: none; /* Let dragging bubble to the shell viewport */
           }
           .mermaid-container svg * {
-            pointer-events: auto; /* Re-enable for nodes hover */
+            pointer-events: auto; /* Re-enable for node hover */
           }
         }
 
         @media print {
-          .mermaid-interactive-viewport {
-            border: none !important;
-            background: transparent !important;
-            height: auto !important;
-            overflow: visible !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
-          }
-          .mermaid-control-btn,
-          .mermaid-control-hint,
-          .mermaid-modal-backdrop {
-            display: none !important;
-          }
-          .mermaid-container {
-            transform: none !important;
-            transition: none !important;
-            width: 100% !important;
-            height: auto !important;
-            display: block !important;
-          }
-          .mermaid-container svg {
-            max-height: none !important;
-            max-width: 100% !important;
-            height: auto !important;
-            width: 100% !important;
-            overflow: visible !important;
-          }
-          /* Ensure high contrast print colors */
           .mermaid-container .node rect {
             filter: none !important;
           }
@@ -528,216 +338,20 @@ const MermaidChart: FC<IMermaidChartProps> = ({
           />
         </div>
       ) : (
-        <div
-          ref={viewportRef}
-          className="mermaid-interactive-viewport group select-none"
-          style={{
-            cursor: isDragging ? "grabbing" : "grab",
-          }}
+        <ChartShell
+          actions={aiAction}
+          exportFileName="mermaid-chart"
+          contentClassName="mermaid-container"
+          fullscreenTitle={t("chart.mermaid.preview_title") ?? undefined}
+          minScale={MERMAID_MIN_SCALE}
+          maxScale={MERMAID_MAX_SCALE}
+          wheelStep={MERMAID_WHEEL_STEP}
         >
-          {/* Info: (20260615 - Julian) 浮動工具列 */}
-          <div className="mermaid-control-btn absolute top-3 right-3 z-10 flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white/95 px-2 py-1.5 opacity-90 shadow-sm backdrop-blur-sm transition-opacity duration-200 group-hover:opacity-100">
-            {/* Info: (20260622 - Julian) AI 指令 */}
-            {onChartChange && (
-              <button
-                type="button"
-                onClick={() => setIsAiModalOpen(true)}
-                className="shrink-0 cursor-pointer rounded-md p-1.5 text-blue-600 transition-colors duration-150 hover:bg-slate-100"
-                title="AI 智慧編輯 (AI Chart Editor)"
-              >
-                <Sparkles size={16} />
-              </button>
-            )}
-            {/* Info: (20260615 - Julian) 下載選單 */}
-            <div className="group/download relative shrink-0">
-              <button
-                type="button"
-                className="shrink-0 cursor-pointer rounded-md p-1.5 text-orange-600 transition-colors duration-150 hover:bg-slate-100"
-                title={t("chart.mermaid.download")!}
-              >
-                <Download size={16} />
-              </button>
-              <div className="absolute top-full right-0 z-20 hidden w-auto flex-col pt-1 group-hover/download:flex">
-                <div className="flex flex-col rounded-md border border-slate-200 bg-white py-1 shadow-md">
-                  <button
-                    type="button"
-                    onClick={exportPng}
-                    className="w-full px-2.5 py-1.5 text-left text-xs font-bold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800"
-                  >
-                    {t("chart.mermaid.export_png")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={exportSvg}
-                    className="w-full px-2.5 py-1.5 text-left text-xs font-bold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800"
-                  >
-                    {t("chart.mermaid.export_svg")}
-                  </button>
-                </div>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={zoomIn}
-              className="shrink-0 cursor-pointer rounded-md p-1.5 text-slate-600 transition-colors duration-150 hover:bg-slate-100"
-              title={t("chart.mermaid.zoom_in")!}
-            >
-              <ZoomIn size={16} />
-            </button>
-            <button
-              type="button"
-              onClick={zoomOut}
-              className="shrink-0 cursor-pointer rounded-md p-1.5 text-slate-600 transition-colors duration-150 hover:bg-slate-100"
-              title={t("chart.mermaid.zoom_out")!}
-            >
-              <ZoomOut size={16} />
-            </button>
-            <button
-              type="button"
-              onClick={resetZoom}
-              className="shrink-0 cursor-pointer rounded-md p-1.5 text-slate-600 transition-colors duration-150 hover:bg-slate-100"
-              title={t("chart.mermaid.reset")!}
-            >
-              <Maximize size={16} />
-            </button>
-            <button
-              type="button"
-              onClick={toggleFullscreen}
-              className="shrink-0 cursor-pointer rounded-md p-1.5 text-slate-600 transition-colors duration-150 hover:bg-slate-100"
-              title={t("chart.mermaid.fullscreen")!}
-            >
-              <Maximize2 size={16} />
-            </button>
-          </div>
-
-          {/* Info: (20260615 - Julian) 操作提示 */}
-          <div className="mermaid-control-hint pointer-events-none absolute bottom-2 left-3 text-[10px] font-medium text-slate-400">
-            {t("chart.mermaid.hint_desktop")}
-          </div>
-
-          {/* Info: (20260615 - Julian) 可 transform 的 SVG 容器 */}
           <div
-            className="mermaid-container flex h-full w-full items-center justify-center"
-            style={{
-              transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-              transformOrigin: "center center",
-              transition: isDragging
-                ? "none"
-                : "transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-            }}
+            className="flex h-full w-full items-center justify-center"
             dangerouslySetInnerHTML={{ __html: svgStr }}
           />
-        </div>
-      )}
-
-      {/* Info: (20260615 - Julian) 全螢幕預覽 */}
-      {isFullscreen && (
-        <div
-          ref={modalRef}
-          className="mermaid-modal-backdrop fixed inset-0 z-9999 flex items-center justify-center bg-slate-300 p-6 backdrop-blur-md select-none"
-          style={{
-            cursor: isDragging ? "grabbing" : "grab",
-          }}
-        >
-          {/* Info: (20260615 - Julian) 全螢幕 Header */}
-          <div className="absolute top-4 left-6 z-10 flex items-center gap-2 font-medium text-slate-900">
-            <span className="h-5 w-1 rounded-sm bg-[#FF9800]"></span>
-            <span>{t("chart.mermaid.preview_title")}</span>
-          </div>
-
-          {/* Info: (20260615 - Julian) 全螢幕 Toolbar */}
-          <div className="mermaid-control-btn absolute top-4 right-6 z-10 flex items-center gap-2 rounded-xl border border-slate-700/80 bg-slate-800/90 px-2.5 py-2 shadow-lg">
-            {/* Info: (20260622 - Julian) AI 指令 */}
-            {onChartChange && (
-              <button
-                type="button"
-                onClick={() => setIsAiModalOpen(true)}
-                className="cursor-lg shrink-0 rounded-lg p-1.5 text-blue-400 transition-colors duration-150 hover:bg-slate-700"
-                title="AI 智慧編輯 (AI Chart Editor)"
-              >
-                <Sparkles size={20} />
-              </button>
-            )}
-            {/* Info: (20260615 - Julian) 下載選單 */}
-            <div className="group/download relative shrink-0">
-              <button
-                type="button"
-                className="shrink-0 cursor-pointer rounded-lg p-1.5 text-orange-300 transition-colors duration-150 hover:bg-slate-500"
-                title={t("chart.mermaid.download")!}
-              >
-                <Download size={20} />
-              </button>
-              <div className="absolute top-full right-0 z-20 hidden w-24 flex-col pt-1.5 group-hover/download:flex">
-                <div className="flex flex-col rounded-lg border border-slate-700 bg-slate-800 py-1 shadow-lg">
-                  <button
-                    type="button"
-                    onClick={exportPng}
-                    className="w-full px-3 py-2 text-left text-sm font-bold text-slate-300 transition-colors hover:bg-slate-500 hover:text-white"
-                  >
-                    {t("chart.mermaid.export_png")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={exportSvg}
-                    className="w-full px-3 py-2 text-left text-sm font-bold text-slate-300 transition-colors hover:bg-slate-500 hover:text-white"
-                  >
-                    {t("chart.mermaid.export_svg")}
-                  </button>
-                </div>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={zoomIn}
-              className="shrink-0 cursor-pointer rounded-lg p-1.5 text-slate-300 transition-colors duration-150 hover:bg-slate-500"
-              title={t("chart.mermaid.zoom_in")!}
-            >
-              <ZoomIn size={20} />
-            </button>
-            <button
-              type="button"
-              onClick={zoomOut}
-              className="shrink-0 cursor-pointer rounded-lg p-1.5 text-slate-300 transition-colors duration-150 hover:bg-slate-500"
-              title={t("chart.mermaid.zoom_out")!}
-            >
-              <ZoomOut size={20} />
-            </button>
-            <button
-              type="button"
-              onClick={resetZoom}
-              className="shrink-0 cursor-pointer rounded-lg p-1.5 text-slate-300 transition-colors duration-150 hover:bg-slate-500"
-              title={t("chart.mermaid.reset")!}
-            >
-              <Maximize size={20} />
-            </button>
-            <button
-              type="button"
-              onClick={toggleFullscreen}
-              className="ml-1 shrink-0 cursor-pointer rounded-lg border-l border-slate-700 p-1.5 pl-2 text-rose-400 transition-colors duration-150 hover:bg-slate-500 hover:text-rose-300"
-              title={t("chart.mermaid.close_fullscreen")!}
-            >
-              <Minimize2 size={20} />
-            </button>
-          </div>
-
-          {/* Info: (20260615 - Julian) 全螢幕操作提示 */}
-          <div className="absolute bottom-4 left-6 text-xs text-slate-600">
-            {t("chart.mermaid.hint_fullscreen")}
-          </div>
-
-          {/* Info: (20260615 - Julian) 可 transform 的 SVG 容器 */}
-          <div
-            className="mermaid-container flex h-full w-full items-center justify-center"
-            style={{
-              transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-              transformOrigin: "center center",
-              transition: isDragging
-                ? "none"
-                : "transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-            }}
-            dangerouslySetInnerHTML={{ __html: svgStr }}
-          />
-        </div>
+        </ChartShell>
       )}
 
       {/* Info: (20260623 - Julian) AI 智慧編輯 Modal */}

@@ -23,11 +23,15 @@ describe("detectCustomChartType", () => {
     expect(detectCustomChartType("custom-histogram")).toBe(
       CustomChartType.HISTOGRAM,
     );
-    expect(detectCustomChartType("custom-box")).toBe(CustomChartType.BOX);
+    expect(detectCustomChartType("custom-boxplot")).toBe(
+      CustomChartType.BOXPLOT,
+    );
   });
 
   it("should be trim/case tolerant and reject non-custom langs", () => {
-    expect(detectCustomChartType("  Custom-Box ")).toBe(CustomChartType.BOX);
+    expect(detectCustomChartType("  Custom-Boxplot ")).toBe(
+      CustomChartType.BOXPLOT,
+    );
     expect(detectCustomChartType("mermaid")).toBeNull();
     expect(detectCustomChartType("")).toBeNull();
   });
@@ -174,9 +178,9 @@ describe("parseCustomChart - box", () => {
       "研發部, 1200, 3500, 5000, 7800, 12000",
       '業務部, 900, 2800.5, 4200, 9500, 21000, "25000;28000"',
     ].join("\n");
-    const result = parseCustomChart(CustomChartType.BOX, raw);
+    const result = parseCustomChart(CustomChartType.BOXPLOT, raw);
     expect(result.ok).toBe(true);
-    if (!result.ok || result.ast.type !== CustomChartType.BOX) return;
+    if (!result.ok || result.ast.type !== CustomChartType.BOXPLOT) return;
     expect(result.ast.boxes[0]).toEqual({
       label: "研發部",
       min: 1200,
@@ -210,7 +214,7 @@ describe("parseCustomChart - fault tolerance (never throws, returns ok:false)", 
   });
 
   it("should fail on malformed row (wrong column count)", () => {
-    const r = parseCustomChart(CustomChartType.BOX, "A, 1, 2, 3");
+    const r = parseCustomChart(CustomChartType.BOXPLOT, "A, 1, 2, 3");
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.code).toBe(CustomChartParseErrorCode.MALFORMED_ROW);
   });

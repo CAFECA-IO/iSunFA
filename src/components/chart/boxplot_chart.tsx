@@ -3,7 +3,7 @@
 import { FC, useMemo } from "react";
 import { ICustomBoxAst } from "@/interfaces/custom_chart";
 
-interface IBoxChartProps {
+interface IBoxplotChartProps {
   ast: ICustomBoxAst;
 }
 
@@ -52,7 +52,7 @@ const niceNum = (range: number, round: boolean): number => {
   return nf * 10 ** exp;
 };
 
-const BoxChart: FC<IBoxChartProps> = ({ ast }) => {
+const BoxplotChart: FC<IBoxplotChartProps> = ({ ast }) => {
   const { title, yAxis, unit, boxes } = ast;
 
   // Info: (20260720 - Julian) y 軸域：涵蓋所有五數綜合與離群點，取 nice 上下界與級距（渲染層職責）
@@ -101,14 +101,18 @@ const BoxChart: FC<IBoxChartProps> = ({ ast }) => {
       role="img"
       aria-label={title ?? "Box plot"}
     >
-      {/* Info: (20260720 - Julian) hover：顯示五數綜合與離群點數值（僅螢幕，避免列印殘影） */}
+      {/* Info: (20260720 - Julian) hover：顯示五數綜合與離群點數值（列印時顯示全部數據） */}
       <style>{`
         .box-item { cursor: pointer; }
         .box-values { opacity: 0; transition: opacity 0.12s ease; }
-        .box-label:hover { fill: #EA580C; }
         @media screen {
+          .box-label:hover { fill: #EA580C; }
           .box-item:hover .box-values { opacity: 1; }
           .box-item:hover rect { stroke: #FF9800; fill: #FF9800; }
+          .box-item:hover circle { fill: #FF9800; }
+        }
+        @media printer {
+          .box-item .box-values { opacity: 1; }
         }
       `}</style>
 
@@ -253,6 +257,7 @@ const BoxChart: FC<IBoxChartProps> = ({ ast }) => {
             {(box.outliers ?? []).map((o, oi) => (
               <circle
                 key={`box-${idx}-outlier-${oi}`}
+                className="box-outlier"
                 cx={cx}
                 cy={toY(o)}
                 r={3}
@@ -337,4 +342,4 @@ const BoxChart: FC<IBoxChartProps> = ({ ast }) => {
   );
 };
 
-export { BoxChart };
+export { BoxplotChart };

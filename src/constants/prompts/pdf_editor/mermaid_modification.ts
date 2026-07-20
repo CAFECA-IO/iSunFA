@@ -76,7 +76,7 @@ export const CUSTOM_CHART_RULES = `
 # Custom Chart Blocks (iSunFA DSL)
 Besides Mermaid, iSunFA supports four custom chart types rendered from fenced code blocks.
 When one of these fits better than Mermaid, emit a fenced block whose language tag is EXACTLY one of:
-custom-matrix, custom-tornado, custom-histogram, custom-box.
+custom-matrix, custom-tornado, custom-histogram, custom-boxplot.
 
 ## Shared Syntax
 - The fenced language tag decides the chart type; do NOT repeat the type inside the body.
@@ -137,7 +137,7 @@ trend: normal
 0-10, 12
 10-20, 34
 
-## custom-box (box-and-whisker, five-number summary)
+## custom-boxplot (box-and-whisker, five-number summary)
 - Config: title; yAxis; unit (all optional).
 - Data rows: label, min, q1, median, q3, max[, "outliers"]
   The five-number summary must come directly from the data; do NOT compute quartiles yourself.

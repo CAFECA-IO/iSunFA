@@ -41,7 +41,7 @@ const CONFIG_KEYS_BY_TYPE: Record<CustomChartType, Set<string>> = {
     CustomChartConfigKey.Y_AXIS,
     CustomChartConfigKey.TREND,
   ]),
-  [CustomChartType.BOX]: new Set<string>([
+  [CustomChartType.BOXPLOT]: new Set<string>([
     CustomChartConfigKey.TITLE,
     CustomChartConfigKey.Y_AXIS,
     CustomChartConfigKey.UNIT,
@@ -336,7 +336,7 @@ const buildBox = (
   });
 
   return {
-    type: CustomChartType.BOX,
+    type: CustomChartType.BOXPLOT,
     ...(title ? { title } : {}),
     ...(yAxis ? { yAxis } : {}),
     ...(unit ? { unit } : {}),
@@ -397,7 +397,7 @@ const histogramSchema = z.object({
 });
 
 const boxSchema = z.object({
-  type: z.literal(CustomChartType.BOX),
+  type: z.literal(CustomChartType.BOXPLOT),
   title: z.string().optional(),
   yAxis: z.string().optional(),
   unit: z.string().optional(),
@@ -420,7 +420,7 @@ const SCHEMA_BY_TYPE: Record<CustomChartType, z.ZodTypeAny> = {
   [CustomChartType.MATRIX]: matrixSchema,
   [CustomChartType.TORNADO]: tornadoSchema,
   [CustomChartType.HISTOGRAM]: histogramSchema,
-  [CustomChartType.BOX]: boxSchema,
+  [CustomChartType.BOXPLOT]: boxSchema,
 };
 
 const BUILDER_BY_TYPE: Record<
@@ -430,7 +430,7 @@ const BUILDER_BY_TYPE: Record<
   [CustomChartType.MATRIX]: buildMatrix,
   [CustomChartType.TORNADO]: buildTornado,
   [CustomChartType.HISTOGRAM]: buildHistogram,
-  [CustomChartType.BOX]: buildBox,
+  [CustomChartType.BOXPLOT]: buildBox,
 };
 
 /**

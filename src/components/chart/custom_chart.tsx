@@ -7,11 +7,18 @@ import { ChartShell } from "@/components/chart/chart_shell";
 import { MatrixChart } from "@/components/chart/matrix_chart";
 import { TornadoChart } from "@/components/chart/tornado_chart";
 import { HistogramChart } from "@/components/chart/histogram_chart";
-import { BoxChart } from "@/components/chart/box_chart";
+import { BoxplotChart } from "@/components/chart/boxplot_chart";
 
 interface ICustomChartProps {
   type: CustomChartType;
   raw: string;
+}
+
+enum ExportFileName {
+  MATRIX = "matrix-chart",
+  TORNADO = "tornado-chart",
+  HISTOGRAM = "histogram-chart",
+  BOXPLOT = "boxplot-chart",
 }
 
 /**
@@ -36,30 +43,30 @@ const CustomChart: FC<ICustomChartProps> = ({ type, raw }) => {
 
   const { ast } = result;
 
-  // Info: (20260720 - Julian) 依類型分派到各圖表渲染；尚未實作者暫以 AST 佔位呈現
+  // Info: (20260720 - Julian) 依類型分派到各圖表渲染；共用 ChartShell（下載 / 全螢幕 / 未來 AI 插槽）
   switch (ast.type) {
     case CustomChartType.MATRIX:
       return (
-        <ChartShell>
+        <ChartShell exportFileName={ExportFileName.MATRIX}>
           <MatrixChart ast={ast} />
         </ChartShell>
       );
     case CustomChartType.TORNADO:
       return (
-        <ChartShell>
+        <ChartShell exportFileName={ExportFileName.TORNADO}>
           <TornadoChart ast={ast} />
         </ChartShell>
       );
     case CustomChartType.HISTOGRAM:
       return (
-        <ChartShell>
+        <ChartShell exportFileName={ExportFileName.HISTOGRAM}>
           <HistogramChart ast={ast} />
         </ChartShell>
       );
-    case CustomChartType.BOX:
+    case CustomChartType.BOXPLOT:
       return (
-        <ChartShell>
-          <BoxChart ast={ast} />
+        <ChartShell exportFileName={ExportFileName.BOXPLOT}>
+          <BoxplotChart ast={ast} />
         </ChartShell>
       );
     default:

@@ -8,7 +8,7 @@ export enum CustomChartType {
   MATRIX = "custom-matrix",
   TORNADO = "custom-tornado",
   HISTOGRAM = "custom-histogram",
-  BOX = "custom-box",
+  BOXPLOT = "custom-boxplot",
 }
 
 /**
