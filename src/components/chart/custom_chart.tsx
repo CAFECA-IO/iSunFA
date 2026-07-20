@@ -3,6 +3,8 @@
 import { FC, useMemo } from "react";
 import { CustomChartType } from "@/constants/custom_chart";
 import { parseCustomChart } from "@/lib/utils/custom_chart_parser";
+import { ChartShell } from "@/components/chart/chart_shell";
+import { MatrixChart } from "@/components/chart/matrix_chart";
 
 interface ICustomChartProps {
   type: CustomChartType;
@@ -29,12 +31,23 @@ const CustomChart: FC<ICustomChartProps> = ({ type, raw }) => {
     );
   }
 
-  // Info: (20260716 - Julian) 暫以 AST 佔位呈現；下一階段替換為各圖表渲染
-  return (
-    <pre className="my-4 overflow-x-auto rounded-lg border border-slate-200 bg-slate-50 p-4 font-mono text-[11px] text-slate-600">
-      {JSON.stringify(result.ast, null, 2)}
-    </pre>
-  );
+  const { ast } = result;
+
+  // Info: (20260720 - Julian) 依類型分派到各圖表渲染；尚未實作者暫以 AST 佔位呈現
+  switch (ast.type) {
+    case CustomChartType.MATRIX:
+      return (
+        <ChartShell>
+          <MatrixChart ast={ast} />
+        </ChartShell>
+      );
+    default:
+      return (
+        <pre className="my-4 overflow-x-auto rounded-lg border border-slate-200 bg-slate-50 p-4 font-mono text-[11px] text-slate-600">
+          {JSON.stringify(ast, null, 2)}
+        </pre>
+      );
+  }
 };
 
 export { CustomChart };

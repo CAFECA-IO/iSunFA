@@ -89,11 +89,21 @@ AST:`{ type, title?, yAxis?, unit?, boxes:[{label,min,q1,median,q3,max,outliers?
 | `src/interfaces/custom_chart.ts`                      | AST 與解析結果型別                               |
 | `src/lib/utils/csv.ts`                                | 共用 RFC 4180 CSV 單行解析                       |
 | `src/lib/utils/custom_chart_parser.ts`                | `detectCustomChartType`、`parseCustomChart` 核心 |
-| `src/components/chart/custom_chart.tsx`               | 攔截後的容器(Phase 1 為解析 + 錯誤/佔位殼)       |
+| `src/components/chart/custom_chart.tsx`               | 攔截後的容器:解析 → 依 type 分派到各圖表元件     |
+| `src/components/chart/chart_shell.tsx`                | 共用外殼:灰底 viewport、縮放/平移、提示、actions 插槽 |
+| `src/components/chart/matrix_chart.tsx`               | matrix 渲染(純 SVG、雙極軸、象限底色、群組配色) |
 | `src/components/common/markdown_content.tsx`          | Markdown 攔截點                                  |
 | `src/lib/utils/__tests__/custom_chart_parser.test.ts` | 決定論 + 防呆單元測試                            |
 
-## 7. Phase 2(待辦)
+## 7. 渲染與共用外殼進度
 
-- 各圖表以 `ICustomChartAst` 實作實際繪製(matrix 雙極軸、象限底色、群組配色;tornado 依 |high−low| 排序等)。
+- **已完成**:`custom-matrix` 以 `matrix_chart.tsx` 渲染;所有自訂圖表包在共用外殼 `chart_shell.tsx`(灰底、Ctrl/⌘+滾輪縮放、拖曳平移、操作提示,與 `MermaidChart` 視覺一致)。
+- **矩陣圖座標規則**:中性中心對齊繪圖區正中心——含負值以 `0` 為原點取對稱域,全非負則中心落在區間中點;十字軸通過中心。
+
+## 8. Phase 2(待辦)
+
+- 實作 `custom-tornado` / `custom-histogram` / `custom-box` 三個渲染元件(tornado 依 |high−low| 排序等),同樣包進 `ChartShell`。
+- **共用外殼收斂(ChartShell 統一)**:待自訂圖表要開發「下載 PNG/SVG、AI 助手、全螢幕」時,將這些能力補進 `ChartShell`(全螢幕 + export ref/callback + `actions` 工具列插槽),再由 `MermaidChart` 與自訂圖表**同時**改用 `ChartShell`,消除 `mermaid_chart.tsx` 內建 viewport 的重複實作。
+  - Mermaid 專屬部分(`.mermaid-container` CSS 上色、`dangerouslySetInnerHTML` SVG 字串、export target、列印媒體規則、Mermaid 版 AI modal)留在 `MermaidChart`,透過 `children` + `actions` 插槽注入。
+  - 由兩個真實 consumer(各自的下載/AI)驅動 `ChartShell` API,一次到位;遷移後需在本機驗證全螢幕/匯出/列印/拖曳等互動(無法於 CI/純型別檢查覆蓋)。
 - 視需要新增互動編輯(對應 mermaid AI 編輯器)。
