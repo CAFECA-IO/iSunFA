@@ -107,7 +107,7 @@ AST:`{ type, title?, yAxis?, unit?, boxes:[{label,min,q1,median,q3,max,outliers?
 
 ## 8. Phase 2(待辦)
 
-- 實作 `custom-histogram` / `custom-box` 渲染元件,同樣包進 `ChartShell`。(`custom-tornado` 已完成,成對雙數列、依 `left+right` 排序。)
+- 實作 `custom-box` 渲染元件,同樣包進 `ChartShell`。(`custom-tornado` 成對雙數列、`custom-histogram` 已分箱直方圖均已完成。)
 - **共用外殼收斂(ChartShell 統一)**:待自訂圖表要開發「下載 PNG/SVG、AI 助手、全螢幕」時,將這些能力補進 `ChartShell`(全螢幕 + export ref/callback + `actions` 工具列插槽),再由 `MermaidChart` 與自訂圖表**同時**改用 `ChartShell`,消除 `mermaid_chart.tsx` 內建 viewport 的重複實作。
   - Mermaid 專屬部分(`.mermaid-container` CSS 上色、`dangerouslySetInnerHTML` SVG 字串、export target、列印媒體規則、Mermaid 版 AI modal)留在 `MermaidChart`,透過 `children` + `actions` 插槽注入。
   - 由兩個真實 consumer(各自的下載/AI)驅動 `ChartShell` API,一次到位;遷移後需在本機驗證全螢幕/匯出/列印/拖曳等互動(無法於 CI/純型別檢查覆蓋)。

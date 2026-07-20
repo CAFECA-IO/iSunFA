@@ -6,6 +6,7 @@ import { parseCustomChart } from "@/lib/utils/custom_chart_parser";
 import { ChartShell } from "@/components/chart/chart_shell";
 import { MatrixChart } from "@/components/chart/matrix_chart";
 import { TornadoChart } from "@/components/chart/tornado_chart";
+import { HistogramChart } from "@/components/chart/histogram_chart";
 
 interface ICustomChartProps {
   type: CustomChartType;
@@ -46,6 +47,12 @@ const CustomChart: FC<ICustomChartProps> = ({ type, raw }) => {
       return (
         <ChartShell>
           <TornadoChart ast={ast} />
+        </ChartShell>
+      );
+    case CustomChartType.HISTOGRAM:
+      return (
+        <ChartShell>
+          <HistogramChart ast={ast} />
         </ChartShell>
       );
     default:
