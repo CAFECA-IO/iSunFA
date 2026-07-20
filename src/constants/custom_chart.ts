@@ -21,6 +21,16 @@ export enum CustomChartConfigKey {
   X_SCALE = "xscale",
   Y_SCALE = "yscale",
   UNIT = "unit",
+  TREND = "trend",
+}
+
+/**
+ * Info: (20260720 - Julian)
+ * 直方圖可疊加的趨勢線類型（選填）。目前僅支援常態分佈曲線。
+ * 曲線由渲染層依實際 count 決定論計算（加權平均/標準差），非 LLM 產生、非捏造資料。
+ */
+export enum HistogramTrendType {
+  NORMAL = "normal",
 }
 
 /**

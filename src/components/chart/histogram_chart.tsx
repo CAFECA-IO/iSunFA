@@ -2,6 +2,7 @@
 
 import { FC, useMemo } from "react";
 import { ICustomHistogramAst } from "@/interfaces/custom_chart";
+import { HistogramTrendType } from "@/constants/custom_chart";
 
 interface IHistogramChartProps {
   ast: ICustomHistogramAst;
@@ -27,6 +28,8 @@ const ROTATE_SLOT_W = 56; // Info: (20260720 - Julian) 每格寬度小於此值�
 
 // Info: (20260720 - Julian) 長條色 + hover 色（沿用設計系統）
 const COLOR_BAR = "#152C5B";
+const COLOR_TREND = "#FF9800"; // Info: (20260720 - Julian) 常態趨勢線色（橘）
+const TREND_SAMPLES = 120; // Info: (20260720 - Julian) 曲線取樣點數（越多越平滑）
 
 // Info: (20260720 - Julian) 數值格式化（千分位、最多三位小數），避免浮點雜訊
 const formatValue = (n: number): string =>
@@ -51,15 +54,36 @@ const niceNum = (range: number, round: boolean): number => {
 };
 
 const HistogramChart: FC<IHistogramChartProps> = ({ ast }) => {
-  const { title, xAxis, yAxis, bins } = ast;
+  const { title, xAxis, yAxis, trend, bins } = ast;
 
-  // Info: (20260720 - Julian) y 軸刻度：由最大 count 推導 nice 上限與級距（渲染層職責）
+  // Info: (20260720 - Julian)
+  // 常態趨勢線的加權統計（以「分箱序號 index」為 x、count 為權重，決定論計算）。
+  // 用序號而非解析標籤數值，避免對非數值標籤做臆測；純呈現輔助，不改資料。
+  const normalStats = useMemo(() => {
+    if (trend !== HistogramTrendType.NORMAL) return null;
+    const total = bins.reduce((sum, b) => sum + b.count, 0);
+    if (total <= 0) return null;
+    const mean = bins.reduce((sum, b, i) => sum + i * b.count, 0) / total;
+    const variance =
+      bins.reduce((sum, b, i) => sum + b.count * (i - mean) ** 2, 0) / total;
+    const std = Math.sqrt(variance);
+    if (std <= 0) return null; // Info: (20260720 - Julian) 無離散度（單箱）不畫曲線
+    // Info: (20260720 - Julian) 以 count 尺度呈現：期望次數 = total × pdf(index)，峰值於 mean
+    const peak = total / (std * Math.sqrt(2 * Math.PI));
+    return { total, mean, std, peak };
+  }, [trend, bins]);
+
+  // Info: (20260720 - Julian) y 軸刻度：涵蓋最大 count 與趨勢線峰值，推導 nice 上限與級距
   const { niceMax, step } = useMemo(() => {
-    const rawMax = Math.max(1, ...bins.map((b) => b.count));
+    const rawMax = Math.max(
+      1,
+      ...bins.map((b) => b.count),
+      normalStats?.peak ?? 0,
+    );
     const stepValue = niceNum(rawMax / TICK_COUNT, true);
     const max = Math.ceil(rawMax / stepValue) * stepValue;
     return { niceMax: max, step: stepValue };
-  }, [bins]);
+  }, [bins, normalStats]);
 
   const ticks = useMemo(() => {
     const list: number[] = [];
@@ -73,6 +97,23 @@ const HistogramChart: FC<IHistogramChartProps> = ({ ast }) => {
   const slotW = PLOT_W / bins.length;
   const barW = Math.max(1, slotW - SLOT_GAP);
   const rotateLabels = slotW < ROTATE_SLOT_W;
+
+  // Info: (20260720 - Julian)
+  // 常態曲線路徑：index 域 [-0.5, n-0.5] 對映繪圖區左右緣，逐點取樣後連成平滑折線。
+  const trendPath = useMemo(() => {
+    if (!normalStats) return null;
+    const { mean, std, peak } = normalStats;
+    const n = bins.length;
+    const points: string[] = [];
+    for (let s = 0; s <= TREND_SAMPLES; s += 1) {
+      const xi = -0.5 + (s / TREND_SAMPLES) * n;
+      const screenX = PLOT_LEFT + ((xi + 0.5) / n) * PLOT_W;
+      const count = peak * Math.exp(-((xi - mean) ** 2) / (2 * std ** 2));
+      const y = PLOT_BOTTOM - (count / niceMax) * PLOT_H;
+      points.push(`${screenX.toFixed(2)},${y.toFixed(2)}`);
+    }
+    return `M${points.join(" L")}`;
+  }, [normalStats, bins.length, niceMax]);
 
   return (
     // Info: (20260720 - Julian) 外層灰底縮放平移容器由 ChartShell 提供，此處只回傳 SVG
@@ -205,6 +246,18 @@ const HistogramChart: FC<IHistogramChartProps> = ({ ast }) => {
           </g>
         );
       })}
+
+      {/* Info: (20260720 - Julian) 常態分佈趨勢線（疊加於長條之上）+ 圖例 */}
+      {trendPath && (
+        <path
+          d={trendPath}
+          fill="none"
+          stroke={COLOR_TREND}
+          strokeWidth={2.5}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+      )}
 
       {/* Info: (20260720 - Julian) x 軸標題 */}
       {xAxis && (

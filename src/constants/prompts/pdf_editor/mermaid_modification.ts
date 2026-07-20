@@ -124,12 +124,16 @@ Item D, 6800, 6500
 Item E, 6000, 5900
 
 ## custom-histogram (pre-binned distribution)
-- Config: title; xAxis; yAxis (all optional string labels).
+- Config: title; xAxis; yAxis (all optional string labels); trend (optional; only value: normal).
+- trend: normal overlays a smooth normal-distribution curve. The renderer computes mean/std
+  deterministically from the counts (over bin order); do NOT compute or invent curve values.
+  Only add it for ORDERED numeric bins (not arbitrary categories).
 - Data rows: bin, count  — bins MUST already be aggregated; do NOT bin raw data yourself.
 Body example:
 title: Amount Distribution
 xAxis: Range (k)
 yAxis: Count
+trend: normal
 0-10, 12
 10-20, 34
 

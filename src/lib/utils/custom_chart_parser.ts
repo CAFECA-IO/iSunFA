@@ -3,6 +3,7 @@ import {
   CustomChartType,
   CustomChartConfigKey,
   CustomChartParseErrorCode,
+  HistogramTrendType,
   CUSTOM_CHART_COMMENT_PREFIX,
   CUSTOM_CHART_AXIS_SEPARATORS,
 } from "@/constants/custom_chart";
@@ -38,6 +39,7 @@ const CONFIG_KEYS_BY_TYPE: Record<CustomChartType, Set<string>> = {
     CustomChartConfigKey.TITLE,
     CustomChartConfigKey.X_AXIS,
     CustomChartConfigKey.Y_AXIS,
+    CustomChartConfigKey.TREND,
   ]),
   [CustomChartType.BOX]: new Set<string>([
     CustomChartConfigKey.TITLE,
@@ -262,6 +264,19 @@ const buildHistogram = (
   const xAxis = config.get(CustomChartConfigKey.X_AXIS) || undefined;
   const yAxis = config.get(CustomChartConfigKey.Y_AXIS) || undefined;
 
+  // Info: (20260720 - Julian) 選填趨勢線：僅接受列舉值，未知值 fail fast，不靜默忽略
+  const trendRaw = config.get(CustomChartConfigKey.TREND)?.toLowerCase();
+  let trend: HistogramTrendType | undefined;
+  if (trendRaw !== undefined) {
+    const match = Object.values(HistogramTrendType).find((t) => t === trendRaw);
+    if (!match) {
+      throw malformed(
+        `不支援的 trend 類型：「${trendRaw}」（目前僅支援 ${HistogramTrendType.NORMAL}）`,
+      );
+    }
+    trend = match;
+  }
+
   const bins = dataLines.map((line) => {
     const f = parseCsvLine(line);
     if (f.length !== 2) {
@@ -277,6 +292,7 @@ const buildHistogram = (
     ...(title ? { title } : {}),
     ...(xAxis ? { xAxis } : {}),
     ...(yAxis ? { yAxis } : {}),
+    ...(trend ? { trend } : {}),
     bins,
   };
 };
@@ -374,6 +390,7 @@ const histogramSchema = z.object({
   title: z.string().optional(),
   xAxis: z.string().optional(),
   yAxis: z.string().optional(),
+  trend: z.nativeEnum(HistogramTrendType).optional(),
   bins: z
     .array(z.object({ label: z.string().min(1), count: z.number() }))
     .min(1),

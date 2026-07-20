@@ -70,8 +70,9 @@ AST:`{ type, title?, unit?, leftSeries?, rightSeries?, bars:[{category,left,righ
 
 ### 4.3 custom-histogram(已分箱)
 
-設定:`title`、`xAxis`、`yAxis`(皆為字串標籤)。資料列:`bin, count`。
-AST:`{ type, title?, xAxis?, yAxis?, bins:[{label,count}] }`。不支援原始數列自動分箱。
+設定:`title`、`xAxis`、`yAxis`(皆為字串標籤)、`trend`(選填,目前僅 `normal`)。資料列:`bin, count`。
+`trend: normal` 會疊加平滑常態分佈曲線:渲染層以「分箱序號為 x、count 為權重」決定論計算加權平均/標準差,再依 count 尺度(峰值 = total∕(σ√2π))畫線;LLM 不計算、不捏造曲線值,僅適用有序數值分箱。
+AST:`{ type, title?, xAxis?, yAxis?, trend?, bins:[{label,count}] }`。不支援原始數列自動分箱。
 
 ### 4.4 custom-box(盒鬚圖,五數綜合)
 

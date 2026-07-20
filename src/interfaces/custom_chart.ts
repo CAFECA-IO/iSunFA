@@ -1,6 +1,7 @@
 import {
   CustomChartType,
   CustomChartParseErrorCode,
+  HistogramTrendType,
 } from "@/constants/custom_chart";
 
 /**
@@ -61,6 +62,7 @@ export interface ICustomHistogramAst {
   title?: string;
   xAxis?: string;
   yAxis?: string;
+  trend?: HistogramTrendType; // Info: (20260720 - Julian) 選填趨勢線（如常態分佈）
   bins: ICustomHistogramBin[];
 }
 

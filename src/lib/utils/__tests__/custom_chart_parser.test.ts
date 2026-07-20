@@ -145,6 +145,27 @@ describe("parseCustomChart - histogram", () => {
   });
 });
 
+describe("parseCustomChart - histogram trend", () => {
+  it("should parse the optional trend: normal config", () => {
+    const raw = ["title: 分布", "trend: normal", "0-10, 12", "10-20, 34"].join(
+      "\n",
+    );
+    const result = parseCustomChart(CustomChartType.HISTOGRAM, raw);
+    expect(result.ok).toBe(true);
+    if (!result.ok || result.ast.type !== CustomChartType.HISTOGRAM) return;
+    expect(result.ast.trend).toBe("normal");
+  });
+
+  it("should reject an unsupported trend value", () => {
+    const raw = ["trend: gaussian", "0-10, 12"].join("\n");
+    const result = parseCustomChart(CustomChartType.HISTOGRAM, raw);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.code).toBe(CustomChartParseErrorCode.MALFORMED_ROW);
+    }
+  });
+});
+
 describe("parseCustomChart - box", () => {
   it("should parse five-number summary, decimals, and optional quoted outliers", () => {
     const raw = [
