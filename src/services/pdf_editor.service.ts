@@ -49,6 +49,7 @@ export class PdfEditorService {
   public static async generateAiReport(
     data: string,
     instruction: string = "",
+    signal?: AbortSignal,
   ): Promise<string> {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -64,7 +65,12 @@ ${instruction ? `【額外指示 (Additional Instructions)】：\n${instruction}
 `;
 
     const chatService = new ChatService(apiKey);
-    const reply = await chatService.generateRaw(finalPrompt);
+    // Info: (20260720 - Julian) 傳入 signal，使用者中止時連底層 LLM 請求一起取消
+    const reply = await chatService.generateRaw(
+      finalPrompt,
+      undefined,
+      signal ? { signal } : undefined,
+    );
 
     // Info: (20260608 - Julian) 過濾掉 AI 的自我反思過程 (<thinking>...</thinking>)
     const finalReport = reply

@@ -325,6 +325,11 @@ export default function PdfEditor({
     }
   };
 
+  // Info: (20260720 - Julian) 中止進行中的 AI 報告生成請求（供子元件「中斷思考」按鈕呼叫）
+  const handleStopAi = () => {
+    abortControllerRef.current?.abort();
+  };
+
   const handleDownloadPDF = async () => {
     if (!contentRef.current) return;
 
@@ -551,6 +556,7 @@ export default function PdfEditor({
           setIsAiProcessing={setIsAiProcessing}
           setShareToken={setShareToken}
           setErrorModal={setErrorModal}
+          onStopAi={handleStopAi}
         />
 
         {/* Info: (20260426 - Luphia) Preview Pane */}

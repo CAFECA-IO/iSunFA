@@ -34,11 +34,19 @@ export async function POST(req: NextRequest) {
     // Info: (20260605 - Julian) 提取參數
     const { data, instruction } = parsed.data;
 
-    // Info: (20260605 - Julian) 呼叫 service
-    const result = await PdfEditorService.generateAiReport(data, instruction);
+    // Info: (20260720 - Julian) 呼叫 service，並傳入 req.signal 讓使用者中止時連底層 LLM 一起取消
+    const result = await PdfEditorService.generateAiReport(
+      data,
+      instruction,
+      req.signal,
+    );
 
     return jsonOk({ result });
   } catch (error) {
+    // Info: (20260720 - Julian) 使用者中止：客戶端已離線，無需視為錯誤或噪音記錄
+    if (req.signal.aborted) {
+      return jsonFail(API_ERRORS.IS_UNKNOWN);
+    }
     console.error("[API] /admin/pdf_editor/report_generate error:", error);
     if (error instanceof Error && error.message.includes("GEMINI_API_KEY")) {
       return jsonFail(API_ERRORS.IN_SERVER_CONFIGURATION_ERROR);
