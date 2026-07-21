@@ -71,6 +71,7 @@ const ChartShell: FC<IChartShellProps> = ({
   } = useZoomPan({ initialScale, minScale, maxScale });
 
   // Info: (20260720 - Julian) Ctrl/⌘ + 滾輪縮放；全螢幕時於 modal 內直接滾輪縮放
+  // ToDo: (20260721 - Luphia) 每個 ChartShell 實例各自綁 window wheel 監聽，多圖表報告頁會有 N 個 handler 同時觸發，考慮共用單一監聽或改綁 viewport
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
       const overViewport = viewportRef.current?.contains(e.target as Node);
@@ -129,7 +130,7 @@ const ChartShell: FC<IChartShellProps> = ({
           type="button"
           onClick={openAiModal}
           className="shrink-0 cursor-pointer rounded-md p-1.5 text-blue-600 transition-colors hover:bg-slate-100"
-          title="AI 智慧編輯 (AI Chart Editor)"
+          title={t("chart.mermaid.ai_edit")!}
         >
           <Sparkles size={16} />
         </button>
@@ -283,6 +284,7 @@ const ChartShell: FC<IChartShellProps> = ({
         {canvas}
       </div>
 
+      {/* ToDo: (20260721 - Luphia) 全螢幕 backdrop z-9999 高於 CustomChartAiModal z-8888，全螢幕下點 AI 助手會被此層蓋住而無法操作；需驗證並調整堆疊順序 */}
       {isFullscreen && enableFullscreen && (
         <div
           ref={modalRef}

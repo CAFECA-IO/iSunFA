@@ -15,6 +15,7 @@ interface ICustomChartProps {
   raw: string;
 }
 
+// ToDo: (20260721 - Luphia) 用於 switch 分派的 enum 依規範宜集中至 src/constants/（PreviewDirective 同）
 enum ExportFileName {
   MATRIX = "matrix-chart",
   TORNADO = "tornado-chart",

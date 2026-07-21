@@ -44,6 +44,7 @@ export async function POST(req: NextRequest) {
     return jsonOk({ result });
   } catch (error) {
     // Info: (20260720 - Julian) 使用者中止：客戶端已離線，無需視為錯誤或噪音記錄
+    // ToDo: (20260721 - Luphia) 中止回傳 IS_UNKNOWN 語意不精確，建議新增專屬 aborted 錯誤碼以區隔真正的未知錯誤
     if (req.signal.aborted) {
       return jsonFail(API_ERRORS.IS_UNKNOWN);
     }

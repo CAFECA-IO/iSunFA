@@ -1,9 +1,11 @@
 import { timestampToString } from "@/lib/utils/common";
 import { toPng } from "html-to-image";
 
-// Info: (20260720 - Julian)
-// 淨化下載檔名：移除檔名保留字元、將空白收斂為底線，避免圖表標題含 / : * 等造成下載失敗。
-// 保留中日文等一般字元。全空則退回預設 "chart"。
+/**
+ * Info: (20260720 - Julian)
+ * 淨化下載檔名：移除檔名保留字元、將空白收斂為底線，避免圖表標題含 / : * 等造成下載失敗。
+ * 保留中日文等一般字元。全空則退回預設 "chart"。
+ */
 const sanitizeFileName = (name: string): string => {
   const cleaned = name
     .replace(/[\\/:*?"<>|]/g, "") // Info: (20260720 - Julian) 移除檔名保留字元
@@ -13,9 +15,11 @@ const sanitizeFileName = (name: string): string => {
   return cleaned || "chart";
 };
 
-// Info: (20260720 - Julian)
-// 匯出（PNG / SVG）前，暫時以內聯 opacity 強制顯示標記為 .export-reveal 的元素
-// （如 boxplot 平時 hover 才顯示的五數綜合），確保「下載時顯示全部數據」；匯出後還原原狀。
+/**
+ * Info: (20260720 - Julian)
+ * 匯出（PNG / SVG）前，暫時以內聯 opacity 強制顯示標記為 .export-reveal 的元素
+ * （如 boxplot 平時 hover 才顯示的五數綜合），確保「下載時顯示全部數據」；匯出後還原原狀。
+ */
 const EXPORT_REVEAL_SELECTOR = ".export-reveal";
 const revealForExport = (container: HTMLElement): (() => void) => {
   const els = Array.from(
@@ -39,8 +43,9 @@ export function useChartExport(
   // Info: (20260720 - Julian) 檔名前綴一律淨化（可能來自圖表標題）
   const safePrefix = sanitizeFileName(filenamePrefix);
 
-  // Info: (20260720 - Julian) 日期字串
-  const dateStr = timestampToString(Date.now() / 1000).dateWithDash;
+  // Info: (20260721 - Luphia) 日期字串於匯出當下計算，避免元件長開跨午夜時沿用舊日期
+  const getDateStr = (): string =>
+    timestampToString(Date.now() / 1000).dateWithDash;
 
   // Info: (20260615 - Julian) 匯出成 PNG 圖片
   const exportPng = async (e?: React.MouseEvent | MouseEvent) => {
@@ -67,7 +72,7 @@ export function useChartExport(
 
       const link = document.createElement("a");
       link.href = dataUrl;
-      link.download = `${safePrefix}_${dateStr}.png`;
+      link.download = `${safePrefix}_${getDateStr()}.png`;
       link.click();
     } catch (error) {
       console.error("Failed to export PNG", error);
@@ -99,7 +104,7 @@ export function useChartExport(
 
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${safePrefix}-${dateStr}.svg`;
+      link.download = `${safePrefix}_${getDateStr()}.svg`;
       link.click();
 
       URL.revokeObjectURL(url);
