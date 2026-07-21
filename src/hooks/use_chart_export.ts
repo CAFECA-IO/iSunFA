@@ -1,9 +1,11 @@
 import { timestampToString } from "@/lib/utils/common";
 import { toPng } from "html-to-image";
 
-// Info: (20260720 - Julian)
-// 淨化下載檔名：移除檔名保留字元、將空白收斂為底線，避免圖表標題含 / : * 等造成下載失敗。
-// 保留中日文等一般字元。全空則退回預設 "chart"。
+/**
+ * Info: (20260720 - Julian)
+ * 淨化下載檔名：移除檔名保留字元、將空白收斂為底線，避免圖表標題含 / : * 等造成下載失敗。
+ * 保留中日文等一般字元。全空則退回預設 "chart"。
+ */
 const sanitizeFileName = (name: string): string => {
   const cleaned = name
     .replace(/[\\/:*?"<>|]/g, "") // Info: (20260720 - Julian) 移除檔名保留字元
@@ -13,9 +15,11 @@ const sanitizeFileName = (name: string): string => {
   return cleaned || "chart";
 };
 
-// Info: (20260720 - Julian)
-// 匯出（PNG / SVG）前，暫時以內聯 opacity 強制顯示標記為 .export-reveal 的元素
-// （如 boxplot 平時 hover 才顯示的五數綜合），確保「下載時顯示全部數據」；匯出後還原原狀。
+/**
+ * Info: (20260720 - Julian)
+ * 匯出（PNG / SVG）前，暫時以內聯 opacity 強制顯示標記為 .export-reveal 的元素
+ * （如 boxplot 平時 hover 才顯示的五數綜合），確保「下載時顯示全部數據」；匯出後還原原狀。
+ */
 const EXPORT_REVEAL_SELECTOR = ".export-reveal";
 const revealForExport = (container: HTMLElement): (() => void) => {
   const els = Array.from(
