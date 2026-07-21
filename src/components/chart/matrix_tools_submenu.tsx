@@ -77,7 +77,7 @@ const MATRIX_TOOL_TRANSLATION_KEYS: Record<MatrixTools, string> = {
   [MatrixTools.ADD_ITEM]: "新增項目",
   [MatrixTools.EDIT_ITEM]: "編輯項目",
   [MatrixTools.EDIT_AXIS]: "編輯軸線",
-  [MatrixTools.EDIT_GROUP]: "編輯群組",
+  [MatrixTools.EDIT_GROUP]: "編輯項目分組",
   [MatrixTools.CHANGE_QUADRANT_COLOR]: "變更象限顏色",
   [MatrixTools.DELETE_ITEM]: "刪除項目",
 };
@@ -185,12 +185,12 @@ const AddItemPanel: FC<IBasePanelProps> = ({
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between">
             <label htmlFor="newItemGroupLabel" className={MERMAID_LABEL_STYLE}>
-              {t("項目群組")}
+              {t("項目分組")}
             </label>
             <SegmentedControl
               options={[
-                { value: GroupType.EXISTING, label: t("選擇現有群組") },
-                { value: GroupType.NEW, label: t("新增群組") },
+                { value: GroupType.EXISTING, label: t("選擇現有分組") },
+                { value: GroupType.NEW, label: t("新增分組") },
               ]}
               value={groupType}
               onChange={(val) => setGroupType(val as GroupType)}
@@ -203,7 +203,7 @@ const AddItemPanel: FC<IBasePanelProps> = ({
               value={selectedGroup}
               onChange={(e) => setSelectedGroup(e.target.value)}
               className={MERMAID_INPUT_STYLE}
-              placeholder={t("請填入新的群組名稱")!}
+              placeholder={t("請填入新的分組名稱")!}
             />
           ) : (
             <select
@@ -212,7 +212,7 @@ const AddItemPanel: FC<IBasePanelProps> = ({
               onChange={(e) => setSelectedGroup(e.target.value)}
               className={MERMAID_INPUT_STYLE}
             >
-              <option value="">{t("請選擇現有群組")}</option>
+              <option value="">{t("請選擇現有分組")}</option>
               {groupOptions.map((item) => (
                 <option key={`matrix-add-opt-${item}`} value={item}>
                   {item}
@@ -401,17 +401,17 @@ const EditItemPanel: FC<IBasePanelProps> = ({
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between">
             <label htmlFor="editItemGroupLabel" className={MERMAID_LABEL_STYLE}>
-              {t("項目群組")}
+              {t("項目分組")}
             </label>
             <SegmentedControl
               options={[
                 {
                   value: GroupType.EXISTING,
-                  label: t("選擇現有群組"),
+                  label: t("選擇現有分組"),
                 },
                 {
                   value: GroupType.NEW,
-                  label: t("新增群組"),
+                  label: t("新增分組"),
                 },
               ]}
               value={groupType}
@@ -425,7 +425,7 @@ const EditItemPanel: FC<IBasePanelProps> = ({
               value={selectedGroup}
               onChange={(e) => setSelectedGroup(e.target.value)}
               className={MERMAID_INPUT_STYLE}
-              placeholder={t("請填入新的群組名稱")!}
+              placeholder={t("請填入新的分組名稱")!}
             />
           ) : (
             <select
@@ -434,7 +434,7 @@ const EditItemPanel: FC<IBasePanelProps> = ({
               onChange={(e) => setSelectedGroup(e.target.value)}
               className={MERMAID_INPUT_STYLE}
             >
-              <option value="">{t("請選擇現有群組")}</option>
+              <option value="">{t("請選擇現有分組")}</option>
               {groupOptions.map((item) => (
                 <option key={`matrix-add-opt-${item}`} value={item}>
                   {item}
@@ -558,7 +558,7 @@ const EditAxisPanel: FC<IBasePanelProps> = ({
   );
 };
 
-// Info: (20260721 - Julian) 「編輯群組」面板
+// Info: (20260721 - Julian) 「編輯項目分組」面板
 const EditGroupPanel: FC<IBasePanelProps> = ({
   parsedMatrixData,
   onAddAction,
@@ -572,11 +572,11 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
   } = parsedMatrixData;
 
   const [selectedGroup, setSelectedGroup] = useState<string>("");
-  // Info: (20260721 - Julian) 以行號集合表示群組最終成員，避免物件參照比對
+  // Info: (20260721 - Julian) 以行號集合表示分組最終成員，避免物件參照比對
   const [memberIndexes, setMemberIndexes] = useState<number[]>([]);
   const [color, setColor] = useState<string>("");
 
-  // Info: (20260721 - Julian) 選取群組後匯入初始成員與顏色
+  // Info: (20260721 - Julian) 選取分組後匯入初始成員與顏色
   useEffect(() => {
     if (selectedGroup) {
       setMemberIndexes(
@@ -596,7 +596,7 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
       checked ? [...prev, lineIndex] : prev.filter((i) => i !== lineIndex),
     );
 
-  // Info: (20260721 - Julian) 成員清空代表解散群組
+  // Info: (20260721 - Julian) 成員清空代表解散分組
   const isEmptyGroup = selectedGroup !== "" && memberIndexes.length === 0;
 
   const handleSubmit = () => {
@@ -605,8 +605,8 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
       id: crypto.randomUUID(),
       type: MatrixActionType.EDIT_GROUP,
       description: isEmptyGroup
-        ? `刪除群組「${selectedGroup}」`
-        : `編輯群組「${selectedGroup}」（${memberIndexes.length} 個項目${
+        ? `刪除分組「${selectedGroup}」`
+        : `編輯分組「${selectedGroup}」（${memberIndexes.length} 個項目${
             color ? `，顏色 ${color}` : ""
           }）`,
       payload: {
@@ -621,13 +621,13 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <Network size={14} />
-        <p>{t("編輯群組")}</p>
+        <p>{t("編輯項目分組")}</p>
       </div>
 
-      {/* Info: (20260721 - Julian) 選擇群組 */}
+      {/* Info: (20260721 - Julian) 選擇分組 */}
       <div className="flex flex-col">
         <label htmlFor="editGroupLabel" className={MERMAID_LABEL_STYLE}>
-          {t("選擇欲編輯的群組")}
+          {t("選擇欲編輯的分組")}
           <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
@@ -636,7 +636,7 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
           onChange={(e) => setSelectedGroup(e.target.value)}
           className={MERMAID_INPUT_STYLE}
         >
-          <option value="">{t("選擇欲編輯的群組")}</option>
+          <option value="">{t("選擇欲編輯的分組")}</option>
           {groupOptions.map((group) => (
             <option key={`matrix-group-opt-${group}`} value={group}>
               {group}
@@ -647,19 +647,19 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
 
       {!selectedGroup ? (
         <div className="flex flex-col items-center gap-1 rounded-lg bg-slate-100 p-4">
-          <p className="text-xs font-semibold text-slate-500">請選擇群組</p>
+          <p className="text-xs font-semibold text-slate-500">請選擇分組</p>
         </div>
       ) : (
         <>
-          {/* Info: (20260721 - Julian) 群組顏色 */}
+          {/* Info: (20260721 - Julian) 分組顏色 */}
           <div className="flex flex-col gap-1.5">
-            <p className={MERMAID_LABEL_STYLE}>{t("群組顏色")}</p>
+            <p className={MERMAID_LABEL_STYLE}>{t("分組顏色")}</p>
             <MatrixColorPicker value={color} onChange={setColor} />
           </div>
 
-          {/* Info: (20260721 - Julian) 群組成員（勾選代表屬於此群組） */}
+          {/* Info: (20260721 - Julian) 分組成員（勾選代表屬於此分組） */}
           <div className="flex flex-col gap-1.5">
-            <p className={MERMAID_LABEL_STYLE}>{t("群組成員")}</p>
+            <p className={MERMAID_LABEL_STYLE}>{t("分組成員")}</p>
             <div className="flex max-h-44 flex-col gap-2 overflow-y-auto rounded-lg border border-slate-200 p-2.5">
               {itemOptions.map((item) => (
                 <Checkbox
@@ -675,10 +675,10 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
           {isEmptyGroup && (
             <div className="flex flex-col items-center gap-1 rounded-lg bg-rose-50 p-3">
               <p className="text-xs font-semibold text-slate-800">
-                群組內暫無選擇項目
+                分組內暫無選擇項目
               </p>
               <p className="text-[10px] text-red-500">
-                注意：此狀態下套用變更，群組將被刪除
+                注意：此狀態下套用變更，分組將被刪除
               </p>
             </div>
           )}
