@@ -57,6 +57,7 @@ export const chart = {
     download: "Download Image",
     export_png: "Export PNG",
     export_svg: "Export SVG",
+    ai_edit: "AI Smart Edit (AI Chart Editor)",
     ai_editor: {
       title: "AI Chart Editor",
       subtitle: "Mermaid AI Chart Assistant",
@@ -302,6 +303,48 @@ export const chart = {
         new_name_placeholder: "Enter the new node name",
         select_link_to_delete: "Select the flow to delete",
       },
+    },
+  },
+  custom_chart: {
+    title: "AI Smart Chart Editor",
+    mock_badge: "Mock",
+    close: "Close",
+    tab_quick_tools: "Quick Tools",
+    tab_ai_command: "AI Command",
+    quick_tools_developing:
+      "Quick editing tools for this chart are under development",
+    quick_tools_hint: 'You can use the "AI Command" on the right to edit',
+    instruction_label: "AI Editing Instruction",
+    clear: "Clear",
+    instruction_placeholder:
+      'Describe the change in natural language, e.g. sort bars from large to small, change the title to "Q1 Distribution"…',
+    examples_title: "Example Instructions",
+    preview_compare: "Change Preview Comparison",
+    layout_row: "Top-bottom view",
+    layout_column: "Side-by-side view",
+    before: "Before",
+    after: "After",
+    generating: "Generating…",
+    mock_notice:
+      "AI generation for custom charts is still under development (mock). This is a UI preview and will not change the chart.",
+    after_placeholder:
+      "Enter an instruction and generate to preview the modified chart",
+    cancel: "Cancel",
+    generate: "Generate",
+    examples: {
+      matrix: [
+        "Change the axis labels to English",
+        'Add a data point "Supply chain audit"',
+      ],
+      tornado: [
+        "Rename the left/right series to 2023 / 2024",
+        "Sort by impact from large to small",
+      ],
+      histogram: [
+        "Overlay a normal distribution trend line",
+        'Change the title to "Amount Distribution"',
+      ],
+      boxplot: ["Add a box for another department", "Change the unit to USD"],
     },
   },
 };

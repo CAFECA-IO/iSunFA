@@ -2,7 +2,7 @@
 
 > **Date**: 2026-07-17
 > **Author**: Julian
-> **Status**: Active (Phase 1 — 解析與攔截；渲染留待 Phase 2)
+> **Status**: Active (Phase 1 解析攔截 + Phase 2 四圖渲染與 ChartShell 統一外殼皆已完成)
 
 ---
 
@@ -12,7 +12,7 @@
 
 本階段(Phase 1)只實作**攔截 + 解析 + 錯誤/佔位外殼**;各圖表的實際繪製為 Phase 2。
 
-支援類型(fence 語言即類型):`custom-matrix`、`custom-tornado`、`custom-histogram`、`custom-box`。
+支援類型(fence 語言即類型):`custom-matrix`、`custom-tornado`、`custom-histogram`、`custom-boxplot`。
 
 ## 2. 攔截流程
 
@@ -58,17 +58,23 @@ yAxis: 短期 ↔ 長期
 
 AST:`{ type, title?, xAxis:{min?,max?,scale?}, yAxis:{min?,max?,scale?}, points:[{label,x,y,group?}] }`。無分隔符的軸文字歸為 `max` 端。
 
-### 4.2 custom-tornado(敏感度)
+### 4.2 custom-tornado(成對雙數列 / butterfly)
 
-設定:`title`、`baseline`(必填數值)、`unit`。資料列:`variable, low, high`(**絕對結果值**)。
-AST:`{ type, title?, baseline, unit?, bars:[{variable,low,high}] }`。排序屬渲染層,AST 保留原始順序。
+顏色代表**兩個數列**(例如兩個年度),而非以基準值劃分高低;每列的左右長條各自從中心向外延伸。
+
+設定:`title`、`unit`(皆選填)。
+資料首列為**選填標題列**:`category, leftSeriesName, rightSeriesName`,由 parser **依欄位自動偵測**(首列第 2、3 欄皆非數字即視為標題列,提供數列名稱供圖例)。數列名稱須為非數字(用 `Prices (2019)`、`FY2019`、`2019年`,而非純 `2019`);**未填標題列則不顯示圖例**。
+其餘資料列:`category, leftValue, rightValue`,`category`(標籤)**必填**,各值為該數列自身數值,不做任何計算。
+AST:`{ type, title?, unit?, leftSeries?, rightSeries?, bars:[{category,left,right}] }`。
+排序(依 `left+right` 遞減,最長者置頂呈龍捲風收斂外型)屬渲染層,AST 保留原始順序。
 
 ### 4.3 custom-histogram(已分箱)
 
-設定:`title`、`xAxis`、`yAxis`(皆為字串標籤)。資料列:`bin, count`。
-AST:`{ type, title?, xAxis?, yAxis?, bins:[{label,count}] }`。不支援原始數列自動分箱。
+設定:`title`、`xAxis`、`yAxis`(皆為字串標籤)、`trend`(選填,目前僅 `normal`)。資料列:`bin, count`。
+`trend: normal` 會疊加平滑常態分佈曲線:渲染層以「分箱序號為 x、count 為權重」決定論計算加權平均/標準差,再依 count 尺度(峰值 = total∕(σ√2π))畫線;LLM 不計算、不捏造曲線值,僅適用有序數值分箱。
+AST:`{ type, title?, xAxis?, yAxis?, trend?, bins:[{label,count}] }`。不支援原始數列自動分箱。
 
-### 4.4 custom-box(盒鬚圖,五數綜合)
+### 4.4 custom-boxplot(盒鬚圖,五數綜合)
 
 設定:`title`、`yAxis`、`unit`。資料列:`label, min, q1, median, q3, max [, "outliers"]`(離群值選填,第 7 欄以 `;` 分隔並用引號包夾)。
 AST:`{ type, title?, yAxis?, unit?, boxes:[{label,min,q1,median,q3,max,outliers?}] }`。不支援原始數列自動算四分位。
@@ -83,17 +89,29 @@ AST:`{ type, title?, yAxis?, unit?, boxes:[{label,min,q1,median,q3,max,outliers?
 
 ## 6. 相關檔案
 
-| 檔案                                                  | 職責                                             |
-| ----------------------------------------------------- | ------------------------------------------------ |
-| `src/constants/custom_chart.ts`                       | 類型 / 設定 key / 錯誤碼 / 分隔符 enum、const    |
-| `src/interfaces/custom_chart.ts`                      | AST 與解析結果型別                               |
-| `src/lib/utils/csv.ts`                                | 共用 RFC 4180 CSV 單行解析                       |
-| `src/lib/utils/custom_chart_parser.ts`                | `detectCustomChartType`、`parseCustomChart` 核心 |
-| `src/components/chart/custom_chart.tsx`               | 攔截後的容器(Phase 1 為解析 + 錯誤/佔位殼)       |
-| `src/components/common/markdown_content.tsx`          | Markdown 攔截點                                  |
-| `src/lib/utils/__tests__/custom_chart_parser.test.ts` | 決定論 + 防呆單元測試                            |
+| 檔案                                                  | 職責                                                  |
+| ----------------------------------------------------- | ----------------------------------------------------- |
+| `src/constants/custom_chart.ts`                       | 類型 / 設定 key / 錯誤碼 / 分隔符 enum、const         |
+| `src/interfaces/custom_chart.ts`                      | AST 與解析結果型別                                    |
+| `src/lib/utils/csv.ts`                                | 共用 RFC 4180 CSV 單行解析                            |
+| `src/lib/utils/custom_chart_parser.ts`                | `detectCustomChartType`、`parseCustomChart` 核心      |
+| `src/components/chart/custom_chart.tsx`               | 攔截後的容器:解析 → 依 type 分派到各圖表元件          |
+| `src/components/chart/chart_shell.tsx`                | 共用外殼:灰底 viewport、縮放/平移、提示、actions 插槽 |
+| `src/components/chart/matrix_chart.tsx`               | matrix 渲染(純 SVG、雙極軸、象限底色、群組配色)       |
+| `src/components/common/markdown_content.tsx`          | Markdown 攔截點                                       |
+| `src/lib/utils/__tests__/custom_chart_parser.test.ts` | 決定論 + 防呆單元測試                                 |
 
-## 7. Phase 2(待辦)
+## 7. 渲染與共用外殼進度
 
-- 各圖表以 `ICustomChartAst` 實作實際繪製(matrix 雙極軸、象限底色、群組配色;tornado 依 |high−low| 排序等)。
-- 視需要新增互動編輯(對應 mermaid AI 編輯器)。
+- **已完成**:`custom-matrix` 以 `matrix_chart.tsx` 渲染;所有自訂圖表包在共用外殼 `chart_shell.tsx`(灰底、Ctrl/⌘+滾輪縮放、拖曳平移、操作提示,與 `MermaidChart` 視覺一致)。
+- **矩陣圖座標規則**:中性中心對齊繪圖區正中心——含負值以 `0` 為原點取對稱域,全非負則中心落在區間中點;十字軸通過中心。
+
+## 8. Phase 2
+
+- 四種自訂圖表(`custom-matrix`、`custom-tornado`、`custom-histogram`、`custom-boxplot`)渲染元件均已完成,皆包進 `ChartShell`。
+- **共用外殼收斂(ChartShell 統一)已完成**:`ChartShell` 現為 Mermaid 與自訂圖表的唯一外殼,提供灰底容器、Ctrl/⌘ + 滾輪縮放、拖曳平移、全螢幕、下載選單(`useChartExport`)、操作提示與列印安全樣式;工具列以 `actions` 插槽承接 AI 助手等按鈕。
+  - `ChartShell` props:`actions`(工具列插槽)、`exportFileName`(給值即啟用下載)、`enableFullscreen`、`fullscreenTitle`、`contentClassName`、`initialScale`/`minScale`/`maxScale`/`wheelStep`。
+  - 匯出/列印以可縮放容器的 `.chart-shell-content` 為錨點;`pdf_tool.ts` 的 PDF 匯出樣式已改指向 `.chart-shell-*`。
+  - `MermaidChart` 已改為把 SVG 以 `children` 放入 `ChartShell`,並用 `contentClassName="mermaid-container"` 讓 mermaid 專屬上色 CSS 生效、AI 按鈕經 `actions` 注入;pie 仍走 `DonutChart` 不進外殼。
+  - **後續自訂圖表 AI 輔助工具**:直接在 `custom_chart.tsx` 對各 `ChartShell` 傳入 `actions`(AI 按鈕)即可,與 Mermaid 同一路徑。
+  - 注意:全螢幕/匯出/列印/拖曳等互動需於本機瀏覽器驗證(型別檢查無法覆蓋)。

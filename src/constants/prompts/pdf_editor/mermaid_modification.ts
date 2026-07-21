@@ -76,7 +76,7 @@ export const CUSTOM_CHART_RULES = `
 # Custom Chart Blocks (iSunFA DSL)
 Besides Mermaid, iSunFA supports four custom chart types rendered from fenced code blocks.
 When one of these fits better than Mermaid, emit a fenced block whose language tag is EXACTLY one of:
-custom-matrix, custom-tornado, custom-histogram, custom-box.
+custom-matrix, custom-tornado, custom-histogram, custom-boxplot.
 
 ## Shared Syntax
 - The fenced language tag decides the chart type; do NOT repeat the type inside the body.
@@ -104,27 +104,40 @@ Deploy carbon inventory, 3, 8, Governance
 Supplier audit, 7, 4, Supply chain
 \`\`\`
 
-## custom-tornado (sensitivity analysis)
-- Config: title; baseline (REQUIRED number); unit (optional).
-- Data rows: variable, low, high  — low/high are ABSOLUTE result values (not deltas from baseline).
+## custom-tornado (paired two-series comparison / butterfly)
+- Config: title; unit (both optional).
+- OPTIONAL first data row is a header naming the two series: category, leftSeriesName, rightSeriesName
+  (auto-detected: a first row whose 2nd and 3rd fields are NON-numeric is treated as the header).
+  Series names must be NON-numeric (use "Prices (2019)", "FY2019", "2019年" — NOT a bare "2019").
+  If you omit the header, no legend is drawn (series names are simply not shown).
+- Data rows: category, leftValue, rightValue  — category (label) is REQUIRED; each value is that
+  series' own magnitude (drawn from the center line outward: left series left, right series right).
+- Rows are sorted by (leftValue + rightValue) descending by the renderer, so the longest bar appears on top.
+- The two colors mean the two SERIES (e.g. two periods), NOT above/below a baseline.
+- Rows are sorted by (left+right) descending by the renderer; do not pre-sort.
 Body example:
-title: NPV Sensitivity
-baseline: 1000
-unit: k
-Discount rate, 1250, 780
-FX rate, 1050, 940
+title: Price by Item, 2019 vs 2020
+unit: NTD
+Item, Prices (2019), Prices (2020)
+Item F, 9000, 8800
+Item D, 6800, 6500
+Item E, 6000, 5900
 
 ## custom-histogram (pre-binned distribution)
-- Config: title; xAxis; yAxis (all optional string labels).
+- Config: title; xAxis; yAxis (all optional string labels); trend (optional; only value: normal).
+- trend: normal overlays a smooth normal-distribution curve. The renderer computes mean/std
+  deterministically from the counts (over bin order); do NOT compute or invent curve values.
+  Only add it for ORDERED numeric bins (not arbitrary categories).
 - Data rows: bin, count  — bins MUST already be aggregated; do NOT bin raw data yourself.
 Body example:
 title: Amount Distribution
 xAxis: Range (k)
 yAxis: Count
+trend: normal
 0-10, 12
 10-20, 34
 
-## custom-box (box-and-whisker, five-number summary)
+## custom-boxplot (box-and-whisker, five-number summary)
 - Config: title; yAxis; unit (all optional).
 - Data rows: label, min, q1, median, q3, max[, "outliers"]
   The five-number summary must come directly from the data; do NOT compute quartiles yourself.

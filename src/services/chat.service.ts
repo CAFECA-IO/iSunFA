@@ -143,6 +143,8 @@ export interface IChatGenerationOptions {
    */
   timeoutMs?: number;
   taskKey?: LlmTaskKeyEnum;
+  // Info: (20260720 - Julian) 傳入呼叫端的 AbortSignal，使用者中止時一併取消底層 LLM 請求
+  signal?: AbortSignal;
 }
 
 export class ChatService {
@@ -278,9 +280,14 @@ export class ChatService {
 
     const model = this.genAI.getGenerativeModel(modelOptions);
 
+    // Info: (20260720 - Julian) 有 signal 才帶 requestOptions，讓底層 fetch 可被中止
+    const requestOptions = options?.signal
+      ? { signal: options.signal }
+      : undefined;
+
     // Info: (20260716 - Emily) 經防護執行器呼叫，未帶 timeoutMs 或 taskKey 時行為與原裸呼叫相同
     const result = await this.invokeGuarded(
-      () => model.generateContent(parts),
+      () => model.generateContent(parts, requestOptions),
       {
         timeoutMs: options?.timeoutMs,
         taskKey: options?.taskKey,

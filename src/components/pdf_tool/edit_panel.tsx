@@ -38,6 +38,8 @@ interface IEditPanelProps {
       message: string;
     }>
   >;
+  // Info: (20260720 - Julian) 中止父層擁有的 AI 請求（如報告生成）；本地文字微調由自身 controller 處理
+  onStopAi?: () => void;
 }
 
 export default function EditPanel({
@@ -50,6 +52,7 @@ export default function EditPanel({
   setIsAiProcessing,
   setShareToken,
   setErrorModal,
+  onStopAi = () => {},
 }: IEditPanelProps) {
   const { t } = useTranslation();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -216,9 +219,12 @@ export default function EditPanel({
         <button
           type="button"
           onClick={() => {
+            // Info: (20260720 - Julian) 中止本地文字微調請求
             if (abortControllerRef.current) {
               abortControllerRef.current.abort();
             }
+            // Info: (20260720 - Julian) 一併中止父層的 AI 請求（如報告生成），避免按了沒反應
+            onStopAi?.();
           }}
           className="flex items-center gap-2 rounded-full border border-gray-200 px-6 py-1.5 text-xs font-bold text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700"
         >

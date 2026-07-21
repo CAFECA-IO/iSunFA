@@ -1,6 +1,7 @@
 import {
   CustomChartType,
   CustomChartParseErrorCode,
+  HistogramTrendType,
 } from "@/constants/custom_chart";
 
 /**
@@ -34,18 +35,19 @@ export interface ICustomMatrixAst {
   points: ICustomMatrixPoint[];
 }
 
-// Info: (20260716 - Julian) 龍捲風圖（敏感度分析），low/high 為絕對結果值
+// Info: (20260720 - Julian) 龍捲風圖（成對雙數列比較，butterfly）：left/right 為兩數列各自數值，以中心向左右延伸
 export interface ICustomTornadoBar {
-  variable: string;
-  low: number;
-  high: number;
+  category: string; // Info: (20260720 - Julian) 列標籤（必填）
+  left: number; // Info: (20260720 - Julian) 左側數列數值（繪製長度依此，不做任何計算）
+  right: number; // Info: (20260720 - Julian) 右側數列數值
 }
 
 export interface ICustomTornadoAst {
   type: CustomChartType.TORNADO;
   title?: string;
-  baseline: number;
   unit?: string;
+  leftSeries?: string; // Info: (20260720 - Julian) 左側數列名稱（選填；未填則不顯示圖例）
+  rightSeries?: string; // Info: (20260720 - Julian) 右側數列名稱（選填；未填則不顯示圖例）
   bars: ICustomTornadoBar[];
 }
 
@@ -60,6 +62,7 @@ export interface ICustomHistogramAst {
   title?: string;
   xAxis?: string;
   yAxis?: string;
+  trend?: HistogramTrendType; // Info: (20260720 - Julian) 選填趨勢線（如常態分佈）
   bins: ICustomHistogramBin[];
 }
 
@@ -75,7 +78,7 @@ export interface ICustomBoxItem {
 }
 
 export interface ICustomBoxAst {
-  type: CustomChartType.BOX;
+  type: CustomChartType.BOXPLOT;
   title?: string;
   yAxis?: string;
   unit?: string;
