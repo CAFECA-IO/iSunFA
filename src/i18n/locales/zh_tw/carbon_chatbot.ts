@@ -157,6 +157,7 @@ export const carbonChatbot = {
   chart_insufficient: "（資料不足，補齊活動數據後由系統自動生成圖表）",
   chart_frozen:
     "⚠ 質量守恆勾稽未通過，圖表已凍結。請於對話中澄清庫存缺口後，圖表將自動生成。",
+  chart_sankey_chat_node: "憑證外的來源（對話/附件申報）",
   book_records_import_button: "從帳本匯入憑證數據",
   book_records_importing: "正在從帳本匯入已認列的憑證級碳排數據…",
   book_records_imported: "已從帳本匯入 {{count}} 筆憑證級活動數據（重複者自動略過）",

@@ -96,7 +96,7 @@ const CARBON_CHAT_REPLY_SCHEMA: Schema = {
           format: "enum",
           enum: Object.values(CarbonChartTemplateEnum),
           description:
-            "SCOPE_PIE=各範疇占比圓餅圖;SCOPE_BAR=各範疇長條圖;SOURCE_TABLE=排放源明細表",
+            "SCOPE_PIE=各範疇占比圓餅圖;SCOPE_BAR=各範疇長條圖;SOURCE_TABLE=排放源明細表;EMISSION_SANKEY=碳流量桑基圖(憑證→排放源→範疇)",
         },
         paragraphId: {
           type: SchemaType.STRING,

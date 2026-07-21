@@ -178,6 +178,7 @@ export const carbonChatbot = {
     "（データ不足：活動データが揃い次第、システムがグラフを自動生成します）",
   chart_frozen:
     "⚠ 質量保存チェックに未合格のため、グラフは凍結されています。チャットで在庫差異を明確にすると自動的に生成されます。",
+  chart_sankey_chat_node: "チャット/添付による申告",
   book_records_import_button: "帳簿から証憑データをインポート",
   book_records_importing: "帳簿から認識済みの証憑レベル排出データをインポート中…",
   book_records_imported:

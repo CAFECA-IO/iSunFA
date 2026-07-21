@@ -666,6 +666,7 @@ export const useCarbonChat = () => {
       axisCo2e: "kgCO2e",
       insufficient: t("carbon_chatbot.chart_insufficient"),
       frozen: t("carbon_chatbot.chart_frozen"),
+      sankeyChatNode: t("carbon_chatbot.chart_sankey_chat_node"),
     }),
     [t],
   );

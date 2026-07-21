@@ -108,6 +108,65 @@ describe("buildCarbonChartBlock", () => {
   });
 });
 
+describe("EMISSION_SANKEY (#53 憑證→排放源→Scope 碳流量)", () => {
+  const voucherEntry = (
+    id: string,
+    co2e: string,
+  ): IComputedLedger["entries"][number] => ({
+    ...buildLedger().entries[0],
+    activityKey: `k-${id}`,
+    co2eKg: co2e,
+    evidence: { esgRecordId: `esg-${id}`, voucherId: `voucher-${id}` },
+  });
+
+  it("should render voucher → source → scope flows with engine values verbatim", () => {
+    const block = buildCarbonChartBlock(
+      CarbonChartTemplateEnum.EMISSION_SANKEY,
+      buildLedger({
+        entries: [voucherEntry("aaaa1111", "1000"), voucherEntry("bbbb2222", "235")],
+        scopeSubtotals: { [GhgProtocolCategory.SCOPE_2_INDIRECT]: "1235" },
+      }),
+    );
+    expect(block).toContain("sankey-beta");
+    // Info: (20260720 - Emily) 憑證層:每張憑證一條流量(節點名含 voucher id 尾碼)
+    expect(block).toContain('"外購電力 #aaaa1111","外購電力",1000');
+    expect(block).toContain('"外購電力 #bbbb2222","外購電力",235');
+    // Info: (20260720 - Emily) 排放源層:同源加總 → Scope(總流入=總流出,守恆視覺化)
+    expect(block).toContain('"外購電力","SCOPE_2_INDIRECT",1235');
+  });
+
+  it("should aggregate the chat-declared node and drop the voucher layer beyond the node guard", () => {
+    // Info: (20260720 - Emily) 無憑證來源 → 聚合為「對話/附件申報」節點?非也:無任何憑證時直接兩層
+    const noEvidence = buildCarbonChartBlock(
+      CarbonChartTemplateEnum.EMISSION_SANKEY,
+      buildLedger(),
+    );
+    expect(noEvidence).toContain('"外購電力","SCOPE_2_INDIRECT"');
+    expect(noEvidence).not.toContain(" #");
+
+    // Info: (20260720 - Emily) 混合來源:對話申報紀錄聚合為單一節點
+    const mixed = buildCarbonChartBlock(
+      CarbonChartTemplateEnum.EMISSION_SANKEY,
+      buildLedger({
+        entries: [voucherEntry("cccc3333", "1000"), buildLedger().entries[0]],
+      }),
+    );
+    expect(mixed).toContain('"對話/附件申報"');
+
+    // Info: (20260720 - Emily) >30 憑證 → 略過憑證層(毛線團護欄)
+    const many = buildCarbonChartBlock(
+      CarbonChartTemplateEnum.EMISSION_SANKEY,
+      buildLedger({
+        entries: Array.from({ length: 31 }, (_, i) =>
+          voucherEntry(`v${i}`, "10"),
+        ),
+      }),
+    );
+    expect(many).not.toContain(" #");
+    expect(many).toContain('"外購電力","SCOPE_2_INDIRECT"');
+  });
+});
+
 describe("insertCarbonChartBlock / refreshCarbonChartBlocks", () => {
   it("should append once and replace in place on re-insert (no stacking)", () => {
     const narrative = "本段敘述。";

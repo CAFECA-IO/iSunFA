@@ -177,6 +177,7 @@ export const carbonChatbot = {
     "(데이터 부족: 활동 데이터가 완성되면 시스템이 차트를 자동 생성합니다)",
   chart_frozen:
     "⚠ 질량 보존 검증에 통과하지 못해 차트가 동결되었습니다. 대화에서 재고 차이를 해명하면 자동으로 생성됩니다.",
+  chart_sankey_chat_node: "대화/첨부로 신고됨",
   book_records_import_button: "장부에서 증빙 데이터 가져오기",
   book_records_importing: "장부에서 인식된 증빙 수준 배출 데이터를 가져오는 중…",
   book_records_imported:
