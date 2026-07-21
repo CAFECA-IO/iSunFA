@@ -30,8 +30,11 @@ export interface ISkippedEsgRecord {
   reason: CarbonEsgSkipReasonEnum;
 }
 
+// Info: (20260720 - Emily) 匯入用活動 + 顯示用驗證旗標(#54 證據鏈列的 已驗證/未驗證 徽章)
+export type IBookEsgActivity = IActivityRecord & { isVerified?: boolean };
+
 export interface IBookEsgActivitiesResult {
-  activities: IActivityRecord[];
+  activities: IBookEsgActivity[];
   skipped: ISkippedEsgRecord[];
 }
 
@@ -86,7 +89,7 @@ export class CarbonEsgLinkService {
       );
     }
 
-    const activities: IActivityRecord[] = [];
+    const activities: IBookEsgActivity[] = [];
     const skipped: ISkippedEsgRecord[] = [];
 
     records.forEach((record) => {
@@ -144,6 +147,7 @@ export class CarbonEsgLinkService {
         journalId: record.journalId,
         fileId: record.fileId || undefined,
         precomputedCo2eKg: record.emissions,
+        isVerified: record.isVerified,
       });
     });
 

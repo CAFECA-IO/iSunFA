@@ -32,6 +32,11 @@ import {
   type ICarbonChartLabels,
 } from "@/lib/carbon_report_chart.builder";
 import { CarbonChartTemplateEnum } from "@/constants/carbon_report_charts";
+import {
+  CARBON_EVIDENCE_CHAPTER_ID,
+  buildEvidenceChainBlock,
+  hasEvidenceChainBlock,
+} from "@/constants/carbon_evidence";
 import { formatFileSize } from "@/lib/utils/common";
 import {
   CARBON_REPORT_OUTLINE,
@@ -1427,7 +1432,7 @@ export const useCarbonChat = () => {
       );
       if (!section) return;
 
-      const content = section.isDataDriven
+      let content = section.isDataDriven
         ? injectDataTable(
             stripLlmTables(draft.content),
             buildCarbonDataTable(
@@ -1436,6 +1441,18 @@ export const useCarbonChat = () => {
             ),
           )
         : draft.content;
+
+      // Info: (20260720 - Emily) #54 第三章數據段落 + 帳本會話 → 自動附掛證據鏈區塊
+      // Info: (20260720 - Emily) (fence 只存帳本位址;數據由元件實時問 API,層層下鑽至單一憑證)
+      const boundBookId = sessionAccess[chatChannel]?.accountBookId;
+      if (
+        section.chapterId === CARBON_EVIDENCE_CHAPTER_ID &&
+        section.isDataDriven &&
+        boundBookId &&
+        !hasEvidenceChainBlock(content)
+      ) {
+        content = `${content}\n\n${buildEvidenceChainBlock(boundBookId)}`;
+      }
 
       setSessionsData((prev) => {
         const session = prev[activeSessionId];
@@ -1477,7 +1494,13 @@ export const useCarbonChat = () => {
         };
       });
     },
-    [activeSessionId, activeInventoryState?.computedLedger, dataTableLabels],
+    [
+      activeSessionId,
+      activeInventoryState?.computedLedger,
+      dataTableLabels,
+      sessionAccess,
+      chatChannel,
+    ],
   );
 
   /**
