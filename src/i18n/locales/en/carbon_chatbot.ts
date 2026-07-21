@@ -11,6 +11,19 @@ export const carbonChatbot = {
   today: "Today",
   history: "History",
   new_chat: "New Chat",
+  new_chat_personal: "Personal chat (end-to-end encrypted)",
+  rename_session: "Rename chat",
+  rename_document: "Rename report file",
+  read_only: "Read-only (account book viewer)",
+  book_reports_title: "Account book reports (shared)",
+  book_no_sessions: "No carbon reports in this account book yet",
+  book_session_own: "My inventory chat ({{date}})",
+  book_session_member: "Member report ({{date}})",
+  book_report_viewer_title: "Account book carbon report",
+  book_report_editable: "Editable (book editor role)",
+  book_report_empty: "This session has no report content yet.",
+  book_chat_hidden_note:
+    "Chat history is personally end-to-end encrypted; only the report is shared with book members",
   ai_thinking: "AI is thinking...",
   input_placeholder: "Type your question or response...",
   report_progress: "Report Progress",
@@ -58,6 +71,8 @@ export const carbonChatbot = {
   new_session_title: "New inventory chat",
   save_saving: "Saving...",
   save_saved: "Saved",
+  save_local:
+    "Saved locally; will sync to the cloud after you unlock the encrypted chat",
   save_local_hint: "Report draft is encrypted and saved to the cloud",
   save_failed: "Save failed",
   save_failed_hint:
@@ -81,6 +96,36 @@ export const carbonChatbot = {
     "Drafting 「{{section}}」 — it will be written to the report when ready…",
   draft_failed:
     "[Draft failed] Something went wrong while drafting 「{{section}}」. Please try again later.",
+  revision_title: "Revision suggestion: {{section}}",
+  revision_original: "Original",
+  revision_revised: "Revised",
+  revision_cited_facts: "Cited facts",
+  revision_apply: "Apply revision",
+  revision_discard: "Discard",
+  revision_generating: "Generating revision for 「{{section}}」…",
+  revision_failed: "[Revision failed] Could not generate a revision; please retry later.",
+  import_button: "Import report",
+  import_title: "Import report: {{name}}",
+  import_overwrite_warning: "Will overwrite existing content",
+  import_unmapped:
+    "Content not matching the outline ({{count}} blocks; not imported, handle in chat)",
+  import_reset_note:
+    "Verification resets for imported paragraphs; {{activities}} activity records will be re-reconciled",
+  import_apply: "Import selected ({{count}})",
+  import_parsing: "Parsing 「{{name}}」; a per-paragraph preview will follow…",
+  import_parsing_chapter:
+    "Parsing 「{{name}}」 chapter by chapter ({{current}}/{{total}} done, in parallel); a full report takes a few minutes…",
+  import_failed_chapters:
+    "These chapters failed to parse and can be re-imported later: {{chapters}}",
+  import_retry_failed: "Retry failed chapters",
+  import_empty: "[Import failed] Nothing in the file maps to the outline.",
+  import_failed: "[Import failed] Could not parse the report; please retry later.",
+  attachments_processing:
+    "Processing attachments (extracting facts and drafting); large files may take a minute or two…",
+  import_suggest:
+    "「{{name}}」 looks like a full report. Import it as the report baseline, or send it as supporting evidence?",
+  import_suggest_import: "Import report",
+  import_suggest_attach: "Send as attachment",
   section_placeholder:
     "This section has not been generated yet. Tell the Carbon Accountant in the chat that you want to work on it, and the content will appear here in real time.",
   report_status_draft:

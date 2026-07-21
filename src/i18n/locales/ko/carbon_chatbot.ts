@@ -11,6 +11,19 @@ export const carbonChatbot = {
   today: "오늘",
   history: "이전 대화",
   new_chat: "새 대화",
+  new_chat_personal: "개인 채팅(종단 간 암호화)",
+  rename_session: "대화 이름 바꾸기",
+  rename_document: "보고서 파일명 바꾸기",
+  read_only: "읽기 전용(장부 열람 권한)",
+  book_reports_title: "장부 보고서(팀 공유)",
+  book_no_sessions: "이 장부에는 아직 탄소 보고서가 없습니다",
+  book_session_own: "내 인벤토리 채팅({{date}})",
+  book_session_member: "구성원 보고서({{date}})",
+  book_report_viewer_title: "장부 탄소 보고서",
+  book_report_editable: "편집 가능(장부 편집자 권한)",
+  book_report_empty: "이 세션에는 아직 보고서 내용이 없습니다.",
+  book_chat_hidden_note:
+    "채팅 기록은 개인 종단 간 암호화입니다. 보고서만 장부 구성원과 공유됩니다",
   ai_thinking: "AI가 생각 중입니다...",
   input_placeholder: "질문이나 답변을 입력하세요...",
   report_progress: "보고서 생성 진행률",
@@ -59,6 +72,8 @@ export const carbonChatbot = {
   new_session_title: "새 인벤토리 대화",
   save_saving: "저장 중...",
   save_saved: "저장됨",
+  save_local:
+    "로컬에 임시 저장됨. 암호화 채팅 잠금 해제 후 클라우드에 자동 저장됩니다",
   save_local_hint: "보고서 초안은 암호화되어 클라우드에 저장됩니다",
   save_failed: "저장 실패",
   save_failed_hint:
@@ -82,6 +97,35 @@ export const carbonChatbot = {
     "「{{section}}」 초안 생성 중입니다. 완료되면 보고서에 반영됩니다…",
   draft_failed:
     "[초안 생성 실패] 「{{section}}」 섹션 초안 생성 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+  revision_title: "수정 제안: {{section}}",
+  revision_original: "원문",
+  revision_revised: "수정 후",
+  revision_cited_facts: "인용 사실",
+  revision_apply: "수정 적용",
+  revision_discard: "폐기",
+  revision_generating: "「{{section}}」 수정 제안 생성 중…",
+  revision_failed: "[수정 실패] 수정 제안을 생성할 수 없습니다. 나중에 다시 시도해 주세요.",
+  import_button: "보고서 가져오기",
+  import_title: "보고서 가져오기: {{name}}",
+  import_overwrite_warning: "기존 내용을 덮어씁니다",
+  import_unmapped: "목차에 대응하지 않는 내용({{count}}건, 가져오지 않음)",
+  import_reset_note:
+    "가져온 단락의 검증 상태는 초기화됩니다. 활동 데이터 {{activities}}건은 재대사됩니다",
+  import_apply: "선택 항목 가져오기({{count}})",
+  import_parsing: "「{{name}}」 분석 중. 완료 후 단락별 미리보기가 표시됩니다…",
+  import_parsing_chapter:
+    "「{{name}}」 장별 분석 중({{current}}/{{total}} 완료, 병렬 처리). 전체 보고서는 몇 분 걸립니다…",
+  import_failed_chapters:
+    "다음 장은 분석에 실패했습니다. 나중에 다시 가져오기로 보완할 수 있습니다: {{chapters}}",
+  import_retry_failed: "실패한 장 재시도",
+  import_empty: "[가져오기 실패] 목차에 대응하는 내용이 없습니다.",
+  import_failed: "[가져오기 실패] 보고서 분석에 실패했습니다. 나중에 다시 시도해 주세요.",
+  attachments_processing:
+    "첨부 파일 분석 중(사실 추출 및 초안 생성). 대용량 파일은 1~2분 걸릴 수 있습니다…",
+  import_suggest:
+    "「{{name}}」은(는) 전체 보고서로 보입니다. 보고서 기점으로 가져올까요, 증빙 첨부로 보낼까요?",
+  import_suggest_import: "보고서 가져오기",
+  import_suggest_attach: "첨부로 보내기",
   section_placeholder:
     "이 섹션은 아직 생성되지 않았습니다. 왼쪽 대화에서 탄소 회계사에게 작성 의사를 알리면 내용이 실시간으로 여기에 표시됩니다.",
   report_status_draft:

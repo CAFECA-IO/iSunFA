@@ -30,23 +30,34 @@ export const CarbonReportDataSchema = z.object({
   categories: z.array(ReportCategorySchema),
   paragraphs: z.array(ReportParagraphSchema).optional(),
   totalEmissions: z.number(),
+  // Info: (20260716 - Emily) 報告全文權威來源(零改動保證;上限對齊密文欄位)
+  rawMarkdown: z.string().max(2_000_000).optional(),
 });
 
 export type CarbonReportDataPayload = z.infer<typeof CarbonReportDataSchema>;
 
-// Info: (20260714 - Emily) PUT /api/v1/chat/carbon/report 請求:前端已加密,server 只驗封裝形狀與大小
-export const CarbonReportDraftPutSchema = z.object({
-  channel: z.string().min(1).max(200),
-  // Info: (20260714 - Emily) 樂觀鎖:讀取時的版本;不符即 VL_DRAFT_VERSION_CONFLICT
-  version: z.number().int().min(0),
-  recipientPublicKey: z.string().min(1).max(300),
-  envelope: z.object({
-    encryptedContent: z.string().min(1).max(2_000_000),
-    ephemeralPublicKey: z.string().max(300).optional(),
-    keyDerivationHint: z.string().min(1).max(200),
-    algorithm: z.string().min(1).max(100),
-  }),
-});
+// Info: (20260714 - Emily) PUT /api/v1/chat/carbon/report 請求:server 只驗封裝形狀與大小
+// Info: (20260716 - Emily) #52 雙模式:個人會話帶 envelope(E2EE);帳本會話帶 plainContent(模型 A,
+// Info: (20260716 - Emily) at-rest 加密由 DB 層承擔)— 恰好擇一,兩者皆有/皆無均拒
+export const CarbonReportDraftPutSchema = z
+  .object({
+    channel: z.string().min(1).max(200),
+    // Info: (20260714 - Emily) 樂觀鎖:讀取時的版本;不符即 VL_DRAFT_VERSION_CONFLICT
+    version: z.number().int().min(0),
+    recipientPublicKey: z.string().min(1).max(300),
+    envelope: z
+      .object({
+        encryptedContent: z.string().min(1).max(2_000_000),
+        ephemeralPublicKey: z.string().max(300).optional(),
+        keyDerivationHint: z.string().min(1).max(200),
+        algorithm: z.string().min(1).max(100),
+      })
+      .optional(),
+    plainContent: z.string().min(1).max(2_000_000).optional(),
+  })
+  .refine((data) => Boolean(data.envelope) !== Boolean(data.plainContent), {
+    message: "exactly one of envelope or plainContent is required",
+  });
 
 export type CarbonReportDraftPutPayload = z.infer<
   typeof CarbonReportDraftPutSchema
@@ -61,6 +72,8 @@ export const StoredSessionsIndexSchema = z.object({
         id: z.string().min(1).max(50),
         title: z.string().max(200),
         createdAt: z.string().max(50),
+        // Info: (20260716 - Emily) 使用者自訂標題旗標(重整後首訊衍生不得覆蓋)
+        isTitleCustom: z.boolean().optional(),
       }),
     )
     .max(100),

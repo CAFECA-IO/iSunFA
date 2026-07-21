@@ -11,6 +11,19 @@ export const carbonChatbot = {
   today: "今日",
   history: "過去のチャット",
   new_chat: "新しいチャット",
+  new_chat_personal: "個人チャット(エンドツーエンド暗号化)",
+  rename_session: "チャット名を変更",
+  rename_document: "レポートファイル名を変更",
+  read_only: "閲覧のみ(帳簿ビューア権限)",
+  book_reports_title: "帳簿レポート(チーム共有)",
+  book_no_sessions: "この帳簿にはまだ排出量レポートがありません",
+  book_session_own: "自分のインベントリチャット({{date}})",
+  book_session_member: "メンバーのレポート({{date}})",
+  book_report_viewer_title: "帳簿の排出量レポート",
+  book_report_editable: "編集可(帳簿エディター権限)",
+  book_report_empty: "このセッションにはまだレポート内容がありません。",
+  book_chat_hidden_note:
+    "チャット履歴は個人のエンドツーエンド暗号化。共有されるのはレポートのみです",
   ai_thinking: "AIが考え中...",
   input_placeholder: "質問や回答を入力してください...",
   report_progress: "レポート作成進捗",
@@ -59,6 +72,8 @@ export const carbonChatbot = {
   new_session_title: "新しいインベントリ対話",
   save_saving: "保存中...",
   save_saved: "保存済み",
+  save_local:
+    "ローカルに一時保存済み。暗号化チャットのロック解除後にクラウドへ自動保存されます",
   save_local_hint: "レポート下書きは暗号化してクラウドに保存されます",
   save_failed: "保存に失敗しました",
   save_failed_hint:
@@ -82,6 +97,36 @@ export const carbonChatbot = {
     "「{{section}}」の下書きを生成中です。完成後レポートに反映されます…",
   draft_failed:
     "【下書き生成失敗】「{{section}}」セクションの下書き生成中に問題が発生しました。後ほどお試しください。",
+  revision_title: "修正案:{{section}}",
+  revision_original: "原文",
+  revision_revised: "修正後",
+  revision_cited_facts: "引用した事実",
+  revision_apply: "修正を適用",
+  revision_discard: "破棄",
+  revision_generating: "「{{section}}」の修正案を生成中…",
+  revision_failed: "【修正失敗】修正案を生成できませんでした。後でもう一度お試しください。",
+  import_button: "レポートをインポート",
+  import_title: "レポートのインポート:{{name}}",
+  import_overwrite_warning: "既存の内容を上書きします",
+  import_unmapped:
+    "アウトラインに対応しない内容({{count}} 件。インポートされません)",
+  import_reset_note:
+    "インポートした段落の検証状態はリセットされます。{{activities}} 件の活動データは再照合されます",
+  import_apply: "選択をインポート({{count}})",
+  import_parsing: "「{{name}}」を解析中。完了後に段落ごとのプレビューを表示します…",
+  import_parsing_chapter:
+    "「{{name}}」を章ごとに解析中({{current}}/{{total}} 完了、並行処理)。完全なレポートは数分かかります…",
+  import_failed_chapters:
+    "次の章は解析に失敗しました。後で再インポートで補完できます:{{chapters}}",
+  import_retry_failed: "失敗した章を再試行",
+  import_empty: "【インポート失敗】アウトラインに対応する内容がありません。",
+  import_failed: "【インポート失敗】解析に失敗しました。後でもう一度お試しください。",
+  attachments_processing:
+    "添付ファイルを解析中(事実抽出とドラフト生成)。大きなファイルは1〜2分かかることがあります…",
+  import_suggest:
+    "「{{name}}」はレポート全体のようです。レポートの起点としてインポートしますか、それとも証憑として送信しますか?",
+  import_suggest_import: "レポートをインポート",
+  import_suggest_attach: "添付として送信",
   section_placeholder:
     "このセクションはまだ生成されていません。左側のチャットでカーボン会計士に作成したい旨を伝えると、内容がここにリアルタイムで表示されます。",
   report_status_draft:

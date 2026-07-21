@@ -34,6 +34,9 @@ export const CarbonParagraphDraftRequestSchema = z.object({
     .max(50)
     .optional(),
   language: z.string().max(20).optional(),
+  // Info: (20260716 - Emily) #55 修訂模式:兩者皆有 = 修訂既有段落(僅依指示與事實修改,其餘保留原文)
+  existingContent: z.string().min(1).max(20_000).optional(),
+  instruction: z.string().min(1).max(2_000).optional(),
 });
 
 export type CarbonParagraphDraftRequestPayload = z.infer<

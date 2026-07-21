@@ -15,7 +15,7 @@ export interface IChatProgressWidgetProps {
 
 export function ChatProgressWidget({
   stats,
-  positionClassName = "right-10 bottom-10 flex",
+  positionClassName = "absolute right-10 bottom-10 flex",
 }: IChatProgressWidgetProps) {
   const { t } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
@@ -27,7 +27,7 @@ export function ChatProgressWidget({
         type="button"
         title={t("carbon_chatbot.report_progress")}
         onClick={() => setIsCollapsed(false)}
-        className={`absolute ${positionClassName} z-20 items-center gap-2 rounded-full bg-[#1e293b] px-4 py-2 text-xs font-bold text-white shadow-2xl transition-transform hover:scale-105`}
+        className={`${positionClassName} z-20 items-center gap-2 rounded-full bg-[#1e293b] px-4 py-2 text-xs font-bold text-white shadow-2xl transition-transform hover:scale-105`}
       >
         <TrendingUp size={14} className="text-[#ff5a00]" />
         {stats.completedCount}/{stats.totalCount}
@@ -37,7 +37,7 @@ export function ChatProgressWidget({
 
   return (
     <div
-      className={`absolute ${positionClassName} z-20 w-80 items-center gap-5 rounded-2xl bg-[#1e293b] p-5 text-white shadow-2xl`}
+      className={`${positionClassName} z-20 w-80 items-center gap-5 rounded-2xl bg-[#1e293b] p-5 text-white shadow-2xl`}
     >
       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-slate-800 shadow-inner">
         <TrendingUp className="h-6 w-6 text-[#ff5a00]" />
