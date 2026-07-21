@@ -6,6 +6,7 @@ import {
   HistogramTrendType,
   CUSTOM_CHART_COMMENT_PREFIX,
   CUSTOM_CHART_AXIS_SEPARATORS,
+  HEX_COLOR_REGEX,
 } from "@/constants/custom_chart";
 import {
   ICustomChartAxis,
@@ -179,6 +180,9 @@ const buildMatrix = (
     yScale,
   );
 
+  // Info: (20260721 - Julian) 群組 → 顏色（第 5 欄）；同群組以「首個非空顏色」為準，維持決定論
+  const groupColors: Record<string, string> = {};
+
   const points = dataLines.map((line) => {
     const f = parseCsvLine(line);
     if (f.length < 3) {
@@ -187,6 +191,18 @@ const buildMatrix = (
     const label = f[0];
     if (!label) throw malformed(`矩陣資料列缺少標籤：「${line}」`);
     const group = f[3]?.trim() || undefined;
+
+    // Info: (20260721 - Julian) 顏色為選填第 5 欄；非法 HEX fail fast（比照 trend 的嚴格策略）
+    const color = f[4]?.trim();
+    if (color) {
+      if (!HEX_COLOR_REGEX.test(color)) {
+        throw malformed(`矩陣資料列的群組顏色非有效 HEX：「${color}」`);
+      }
+      if (group && groupColors[group] === undefined) {
+        groupColors[group] = color;
+      }
+    }
+
     const base = { label, x: toNumber(f[1], "x"), y: toNumber(f[2], "y") };
     return group ? { ...base, group } : base;
   });
@@ -197,6 +213,7 @@ const buildMatrix = (
     xAxis,
     yAxis,
     points,
+    ...(Object.keys(groupColors).length > 0 ? { groupColors } : {}),
   };
 };
 
@@ -366,6 +383,7 @@ const matrixSchema = z.object({
       }),
     )
     .min(1),
+  groupColors: z.record(z.string(), z.string()).optional(),
 });
 
 const tornadoSchema = z.object({

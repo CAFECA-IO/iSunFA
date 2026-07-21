@@ -46,18 +46,24 @@ const formatCsvField = (field: string): string => {
 
 /**
  * Info: (20260721 - Julian)
- * 組合一行矩陣資料列（label, x, y[, group]）。座標原樣輸出（不做任何運算）。
+ * 組合一行矩陣資料列（label, x, y[, group[, color]]）。座標原樣輸出（不做任何運算）。
+ * 顏色為群組層級屬性，僅在有群組時才輸出（無群組的點不帶顏色）。
  */
 const buildMatrixDataLine = (
   label: string,
   x: number,
   y: number,
   group?: string,
+  color?: string,
 ): string => {
-  const base = `${formatCsvField(label)}, ${x}, ${y}`;
-  return group && group.trim() !== ""
-    ? `${base}, ${formatCsvField(group)}`
-    : base;
+  let line = `${formatCsvField(label)}, ${x}, ${y}`;
+  if (group && group.trim() !== "") {
+    line += `, ${formatCsvField(group)}`;
+    if (color && color.trim() !== "") {
+      line += `, ${formatCsvField(color)}`;
+    }
+  }
+  return line;
 };
 
 /**
@@ -159,10 +165,17 @@ export const parseMatrixData = (raw: string): IMatrixParseResult => {
   const groups = collectGroups(items);
   const result = parseCustomChart(CustomChartType.MATRIX, raw);
   if (result.ok && result.ast.type === CustomChartType.MATRIX) {
-    const { title, xAxis, yAxis } = result.ast;
-    return { items, groups, xAxis, yAxis, ...(title ? { title } : {}) };
+    const { title, xAxis, yAxis, groupColors } = result.ast;
+    return {
+      items,
+      groups,
+      groupColors: groupColors ?? {},
+      xAxis,
+      yAxis,
+      ...(title ? { title } : {}),
+    };
   }
-  return { items, groups, xAxis: {}, yAxis: {} };
+  return { items, groups, groupColors: {}, xAxis: {}, yAxis: {} };
 };
 
 /**
@@ -240,7 +253,11 @@ export const applyMatrixAction = (
       if (lineIndex < 0 || lineIndex >= lines.length) break;
       const fields = getMatrixLineFields(lines[lineIndex]);
       if (!fields) break;
-      lines[lineIndex] = buildMatrixDataLine(label, x, y, group);
+      // Info: (20260721 - Julian) 群組未變才保留原顏色；改群組時捨棄顏色，讓其套用新群組的顏色
+      const prevGroup = fields[3]?.trim() || undefined;
+      const prevColor = fields[4]?.trim() || undefined;
+      const color = group && group === prevGroup ? prevColor : undefined;
+      lines[lineIndex] = buildMatrixDataLine(label, x, y, group, color);
       break;
     }
 
@@ -256,6 +273,35 @@ export const applyMatrixAction = (
         CustomChartConfigKey.Y_AXIS,
         buildAxisValue(yMin ?? "", yMax ?? ""),
       );
+      break;
+    }
+
+    case MatrixActionType.EDIT_GROUP: {
+      // Info: (20260721 - Julian) 一次套用成員組成與顏色：
+      // - 成員列：設群組為 group，並套用顏色（有提供 color 則統一；否則沿用原屬此群組時的既有顏色）
+      // - 原屬此群組但不在成員清單者：移出群組（清除群組與顏色，成為未分組點）
+      // - 其餘資料列不動
+      const { group, memberLineIndexes, color } = action.payload;
+      if (!group) break;
+      const memberSet = new Set(memberLineIndexes);
+      lines.forEach((line, idx) => {
+        const fields = getMatrixLineFields(line);
+        if (!fields) return;
+        const curGroup = fields[3]?.trim() || undefined;
+        const label = fields[0];
+        const x = Number(fields[1]);
+        const y = Number(fields[2]);
+
+        if (memberSet.has(idx)) {
+          const keptColor =
+            curGroup === group ? fields[4]?.trim() || undefined : undefined;
+          const rowColor = color && color.trim() !== "" ? color : keptColor;
+          lines[idx] = buildMatrixDataLine(label, x, y, group, rowColor);
+        } else if (curGroup === group) {
+          // Info: (20260721 - Julian) 移出群組 → 取消分組（連同顏色一併清除）
+          lines[idx] = buildMatrixDataLine(label, x, y);
+        }
+      });
       break;
     }
 

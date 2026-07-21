@@ -48,6 +48,14 @@ export enum MatrixActionType {
 }
 
 /**
+ * Info: (20260721 - Julian)
+ * 群組顏色的 HEX 格式驗證（#RGB / #RRGGBB / #RRGGBBAA）。
+ * 顏色存於矩陣資料列的第 5 欄，parser 以此驗證，非法值 fail fast。
+ */
+export const HEX_COLOR_REGEX =
+  /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
+
+/**
  * Info: (20260717 - Julian) 解析失敗的錯誤碼（供 render fallback 與除錯使用）
  */
 export enum CustomChartParseErrorCode {

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, FC } from "react";
 import {
+  Grid2x2,
   MapPinPen,
   MapPinPlusInside,
   MapPinX,
@@ -18,6 +19,8 @@ import {
   MERMAID_SUBMIT_BUTTON_STYLE,
 } from "@/constants/mermaid_chart";
 import { SegmentedControl } from "@/components/chart/mermaid_common_components";
+import { DEFAULT_COLORS } from "@/components/common/donut_chart";
+import { Checkbox } from "@/components/common/checkbox";
 
 // Info: (20260721 - Julian) 坐標範圍數值
 const RANGE_STEP = 10;
@@ -34,6 +37,7 @@ enum MatrixTools {
   EDIT_ITEM = "editItem",
   EDIT_AXIS = "editAxis",
   EDIT_GROUP = "editGroup",
+  CHANGE_QUADRANT_COLOR = "changeQuadrantColor",
   DELETE_ITEM = "deleteItem",
 }
 
@@ -60,6 +64,10 @@ const MATRIX_TOOLS: IToolItem[] = [
     icon: Network,
   },
   {
+    tool: MatrixTools.CHANGE_QUADRANT_COLOR,
+    icon: Grid2x2,
+  },
+  {
     tool: MatrixTools.DELETE_ITEM,
     icon: MapPinX,
   },
@@ -70,6 +78,7 @@ const MATRIX_TOOL_TRANSLATION_KEYS: Record<MatrixTools, string> = {
   [MatrixTools.EDIT_ITEM]: "編輯項目",
   [MatrixTools.EDIT_AXIS]: "編輯軸線",
   [MatrixTools.EDIT_GROUP]: "編輯群組",
+  [MatrixTools.CHANGE_QUADRANT_COLOR]: "變更象限顏色",
   [MatrixTools.DELETE_ITEM]: "刪除項目",
 };
 
@@ -556,17 +565,55 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const groupOptions = parsedMatrixData.groups;
+  const {
+    items: itemOptions,
+    groups: groupOptions,
+    groupColors,
+  } = parsedMatrixData;
 
   const [selectedGroup, setSelectedGroup] = useState<string>("");
+  // Info: (20260721 - Julian) 以行號集合表示群組最終成員，避免物件參照比對
+  const [memberIndexes, setMemberIndexes] = useState<number[]>([]);
+  const [color, setColor] = useState<string>("");
+
+  // Info: (20260721 - Julian) 選取群組後匯入初始成員與顏色
+  useEffect(() => {
+    if (selectedGroup) {
+      setMemberIndexes(
+        itemOptions
+          .filter((i) => i.group === selectedGroup)
+          .map((i) => i.lineIndex),
+      );
+      setColor(groupColors[selectedGroup] ?? "");
+    } else {
+      setMemberIndexes([]);
+      setColor("");
+    }
+  }, [selectedGroup, itemOptions, groupColors]);
+
+  const toggleMember = (lineIndex: number, checked: boolean) =>
+    setMemberIndexes((prev) =>
+      checked ? [...prev, lineIndex] : prev.filter((i) => i !== lineIndex),
+    );
+
+  // Info: (20260721 - Julian) 成員清空代表解散群組
+  const isEmptyGroup = selectedGroup !== "" && memberIndexes.length === 0;
 
   const handleSubmit = () => {
-    // if (!selectedItem) return;
+    if (!selectedGroup) return;
     onAddAction({
       id: crypto.randomUUID(),
       type: MatrixActionType.EDIT_GROUP,
-      description: `編輯群組「${selectedGroup}」`,
-      payload: { group: selectedGroup },
+      description: isEmptyGroup
+        ? `刪除群組「${selectedGroup}」`
+        : `編輯群組「${selectedGroup}」（${memberIndexes.length} 個項目${
+            color ? `，顏色 ${color}` : ""
+          }）`,
+      payload: {
+        group: selectedGroup,
+        memberLineIndexes: memberIndexes,
+        ...(color.trim() !== "" ? { color } : {}),
+      },
     });
   };
 
@@ -576,6 +623,8 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
         <Network size={14} />
         <p>{t("編輯群組")}</p>
       </div>
+
+      {/* Info: (20260721 - Julian) 選擇群組 */}
       <div className="flex flex-col">
         <label htmlFor="editGroupLabel" className={MERMAID_LABEL_STYLE}>
           {t("選擇欲編輯的群組")}
@@ -595,6 +644,47 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
           ))}
         </select>
       </div>
+
+      {!selectedGroup ? (
+        <div className="flex flex-col items-center gap-1 rounded-lg bg-slate-100 p-4">
+          <p className="text-xs font-semibold text-slate-500">請選擇群組</p>
+        </div>
+      ) : (
+        <>
+          {/* Info: (20260721 - Julian) 群組顏色 */}
+          <div className="flex flex-col gap-1.5">
+            <p className={MERMAID_LABEL_STYLE}>{t("群組顏色")}</p>
+            <MatrixColorPicker value={color} onChange={setColor} />
+          </div>
+
+          {/* Info: (20260721 - Julian) 群組成員（勾選代表屬於此群組） */}
+          <div className="flex flex-col gap-1.5">
+            <p className={MERMAID_LABEL_STYLE}>{t("群組成員")}</p>
+            <div className="flex max-h-44 flex-col gap-2 overflow-y-auto rounded-lg border border-slate-200 p-2.5">
+              {itemOptions.map((item) => (
+                <Checkbox
+                  key={`matrix-edit-group-item-opt-${item.lineIndex}`}
+                  checked={memberIndexes.includes(item.lineIndex)}
+                  onChange={(checked) => toggleMember(item.lineIndex, checked)}
+                  label={`${item.label}（${item.x}, ${item.y}）`}
+                />
+              ))}
+            </div>
+          </div>
+
+          {isEmptyGroup && (
+            <div className="flex flex-col items-center gap-1 rounded-lg bg-rose-50 p-3">
+              <p className="text-xs font-semibold text-slate-800">
+                群組內暫無選擇項目
+              </p>
+              <p className="text-[10px] text-red-500">
+                注意：此狀態下套用變更，群組將被刪除
+              </p>
+            </div>
+          )}
+        </>
+      )}
+
       <button
         type="button"
         onClick={handleSubmit}
@@ -674,11 +764,61 @@ const DeleteItemPanel: FC<IBasePanelProps> = ({
   );
 };
 
+// Info: (20260721 - Julian)
+// 簡易選色盤：預設調色盤色票（與自動配色一致）+ 原生色票輸入供自訂 HEX。
+// 受控元件，value 為目前 HEX（空字串代表尚未選色），onChange 回傳選定 HEX。
+const MatrixColorPicker: FC<{
+  value: string;
+  onChange: (hex: string) => void;
+}> = ({ value, onChange }) => (
+  <div className="flex flex-wrap items-center gap-1.5">
+    {DEFAULT_COLORS.map((color) => (
+      <button
+        key={`matrix-swatch-${color}`}
+        type="button"
+        aria-label={color}
+        onClick={() => onChange(color)}
+        className={`h-7 w-7 rounded-md border-2 transition ${
+          value.toLowerCase() === color.toLowerCase()
+            ? "border-slate-800"
+            : "border-transparent hover:border-slate-300"
+        }`}
+        style={{ backgroundColor: color }}
+      />
+    ))}
+    {/* Info: (20260721 - Julian) 自訂顏色：原生色票 input（回傳小寫 HEX） */}
+    <span
+      className="relative block h-7 w-7 shrink-0 overflow-hidden rounded-md border-2 border-dashed border-slate-300"
+      title="自訂顏色"
+    >
+      <input
+        type="color"
+        aria-label="自訂顏色"
+        value={value || "#000000"}
+        onChange={(e) => onChange(e.target.value)}
+        className="absolute -inset-1 h-[calc(100%+12px)] w-[calc(100%+12px)] cursor-pointer"
+      />
+    </span>
+  </div>
+);
+
+// Info: (20260721 - Julian) 「變更象限顏色」面板
+// ToDo: (20260721 - Julian) 實作四象限背景顏色設定工具
+const ChangeQuadrantColorPanel: FC<IBasePanelProps> = () => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex h-24 items-center justify-center text-xs text-slate-400">
+      {t("此工具開發中")}
+    </div>
+  );
+};
+
 const MATRIX_TOOL_PANELS: Record<MatrixTools, FC<IBasePanelProps>> = {
   [MatrixTools.ADD_ITEM]: AddItemPanel,
   [MatrixTools.EDIT_ITEM]: EditItemPanel,
   [MatrixTools.EDIT_AXIS]: EditAxisPanel,
   [MatrixTools.EDIT_GROUP]: EditGroupPanel,
+  [MatrixTools.CHANGE_QUADRANT_COLOR]: ChangeQuadrantColorPanel,
   [MatrixTools.DELETE_ITEM]: DeleteItemPanel,
 };
 

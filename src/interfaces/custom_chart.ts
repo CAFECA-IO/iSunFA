@@ -34,6 +34,8 @@ export interface ICustomMatrixAst {
   xAxis: ICustomChartAxis;
   yAxis: ICustomChartAxis;
   points: ICustomMatrixPoint[];
+  // Info: (20260721 - Julian) 群組 → HEX 顏色對照（存於資料列第 5 欄；未指定的群組由渲染層套用預設調色盤）
+  groupColors?: Record<string, string>;
 }
 
 /**
@@ -55,6 +57,7 @@ export interface IMatrixParseResult {
   yAxis: ICustomChartAxis;
   items: IMatrixItem[];
   groups: string[]; // Info: (20260721 - Julian) 依首次出現順序去重的群組清單（對應 ISankeyData.nodes）
+  groupColors: Record<string, string>; // Info: (20260721 - Julian) 群組 → HEX 顏色對照（供選色盤預填目前顏色；無設定則為空物件）
 }
 
 /**
@@ -88,9 +91,11 @@ export type IMatrixAction = {
       payload: { xMin?: string; xMax?: string; yMin?: string; yMax?: string };
     }
   | {
-      // Info: (20260721 - Julian) 編輯群組：移除或加入資料點
+      // Info: (20260721 - Julian) 編輯群組：一次套用「成員組成」與「群組顏色」。
+      // memberLineIndexes 為最終應屬於此群組的資料列行號；未列入而原屬此群組者將被移出（取消分組）。
+      // color 選填：提供時將該群組所有成員的第 5 欄顏色統一為此 HEX；空／未提供則保留各列既有顏色。
       type: MatrixActionType.EDIT_GROUP;
-      payload: { group: string };
+      payload: { group: string; memberLineIndexes: number[]; color?: string };
     }
   | {
       // Info: (20260721 - Julian) 刪除資料點：以 lineIndex 定位
