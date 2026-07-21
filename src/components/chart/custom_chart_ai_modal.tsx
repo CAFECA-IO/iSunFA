@@ -28,7 +28,7 @@ interface ICustomChartAiModalProps {
 // Info: (20260720 - Julian) mock 模擬「思考」耗時（毫秒），純前端計時，不呼叫後端
 const MOCK_THINKING_MS = 800;
 
-// Info: (20260721 - Luphia) 各類型對應的 i18n 指令範例 key（chart.custom_chart.examples.*）
+// Info: (20260721 - Julian) 各類型對應的 i18n 指令範例 key（chart.custom_chart.examples.*）
 const EXAMPLE_KEY_BY_TYPE: Record<CustomChartType, string> = {
   [CustomChartType.MATRIX]: "matrix",
   [CustomChartType.TORNADO]: "tornado",
@@ -49,7 +49,7 @@ enum PreviewDirective {
  * 右側：變更前後預覽對比。
  * 目前「產生」為 mock：模擬思考後回報開發中，不呼叫後端、不變更圖表。
  */
-// ToDo: (20260721 - Luphia) 本 Modal 為 mock：「產生」與「常用工具」為佔位，串接後端前建議以 feature flag 隱藏，避免生產環境顯示無功能按鈕
+// ToDo: (20260721 - Julian) 本 Modal 為 mock：「產生」與「常用工具」為佔位，串接後端前建議以 feature flag 隱藏，避免生產環境顯示無功能按鈕
 const CustomChartAiModal: FC<ICustomChartAiModalProps> = ({
   open,
   onClose,
@@ -135,7 +135,7 @@ const CustomChartAiModal: FC<ICustomChartAiModalProps> = ({
       <div className="relative flex h-[85vh] max-h-[720px] min-h-[560px] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl md:flex-row">
         {/* Info: (20260720 - Julian) 左側：常用工具 + AI 指令 */}
         <div className="flex w-full flex-col overflow-hidden border-r border-slate-200 bg-slate-50 md:w-2/5">
-          {/* Header */}
+          {/* Info: (20260721 - Julian) Header */}
           <div className="flex shrink-0 items-center justify-between bg-white px-5 py-4">
             <div className="flex items-center gap-2">
               <div className="shrink-0 rounded-lg bg-blue-50 p-1.5 text-blue-600">
@@ -296,7 +296,7 @@ const CustomChartAiModal: FC<ICustomChartAiModalProps> = ({
                 : "flex-col"
             }`}
           >
-            {/* 修改前 */}
+            {/* Info: (20260721 - Julian) 修改前 */}
             <div className={`flex flex-col ${previewStyle}`}>
               <div className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-slate-500">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-400" />
@@ -307,7 +307,7 @@ const CustomChartAiModal: FC<ICustomChartAiModalProps> = ({
               </div>
             </div>
 
-            {/* 修改後 */}
+            {/* Info: (20260721 - Julian) 修改後 */}
             <div className={`flex flex-col ${previewStyle}`}>
               <div className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-slate-500">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-orange-500" />
@@ -319,7 +319,7 @@ const CustomChartAiModal: FC<ICustomChartAiModalProps> = ({
             </div>
           </div>
 
-          {/* Footer */}
+          {/* Info: (20260721 - Julian) Footer */}
           <div className="flex shrink-0 items-center justify-end gap-2 border-t border-slate-200 bg-white px-5 py-4">
             <button
               type="button"

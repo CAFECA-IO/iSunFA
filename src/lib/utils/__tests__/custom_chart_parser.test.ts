@@ -122,8 +122,10 @@ describe("parseCustomChart - tornado (paired two-series)", () => {
   it("should fail when only a header row is present (no data rows)", () => {
     const raw = "項目, 2019, 2020"; // Info: (20260720 - Julian) header 判定為 2019/2020 皆數字→非 header，視為單筆資料
     const result = parseCustomChart(CustomChartType.TORNADO, raw);
-    expect(result.ok).toBe(true); // 這其實是一筆有效資料列（category=項目）
-    const raw2 = "項目, 售價, 成本"; // 全非數字→視為 header，無資料列
+    // Info: (20260721 - Julian) 這其實是一筆有效資料列（category=項目）
+    expect(result.ok).toBe(true);
+    // Info: (20260721 - Julian) 全非數字→視為 header，無資料列
+    const raw2 = "項目, 售價, 成本";
     const r2 = parseCustomChart(CustomChartType.TORNADO, raw2);
     expect(r2.ok).toBe(false);
     if (!r2.ok) expect(r2.code).toBe(CustomChartParseErrorCode.NO_DATA_ROWS);
