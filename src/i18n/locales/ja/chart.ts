@@ -57,6 +57,7 @@ export const chart = {
     download: "画像をダウンロード",
     export_png: "PNGで保存",
     export_svg: "SVGで保存",
+    ai_edit: "AI スマート編集 (AI Chart Editor)",
     ai_editor: {
       title: "AIスマートチャートエディタ",
       subtitle: "Mermaid AI Chart Assistant",
@@ -303,6 +304,47 @@ export const chart = {
         new_name_placeholder: "新しいノード名を入力",
         select_link_to_delete: "削除するフローを選択",
       },
+    },
+  },
+  custom_chart: {
+    title: "AI スマートチャート編集",
+    mock_badge: "Mock",
+    close: "閉じる",
+    tab_quick_tools: "よく使うツール",
+    tab_ai_command: "AI コマンド",
+    quick_tools_developing: "このチャートのよく使う編集ツールは開発中です",
+    quick_tools_hint: "右側の「AI コマンド」で編集できます",
+    instruction_label: "AI 編集コマンド",
+    clear: "クリア",
+    instruction_placeholder:
+      "変更したい内容を自然言語で入力してください。例：棒を大きい順に並べ替える、タイトルを「Q1 分布」に変更…",
+    examples_title: "コマンド例",
+    preview_compare: "変更プレビュー比較",
+    layout_row: "上下比較",
+    layout_column: "左右比較",
+    before: "変更前",
+    after: "変更後",
+    generating: "生成中…",
+    mock_notice:
+      "カスタムチャートの AI 生成はまだ開発中です（mock）。これは UI プレビューであり、チャートは変更されません。",
+    after_placeholder:
+      "コマンドを入力して生成すると、変更後のチャートをプレビューできます",
+    cancel: "キャンセル",
+    generate: "生成",
+    examples: {
+      matrix: [
+        "軸ラベルを日本語に変更",
+        "データポイント「サプライチェーン監査」を追加",
+      ],
+      tornado: [
+        "左右の系列名を 2023 / 2024 に変更",
+        "影響度の大きい順に並べ替え",
+      ],
+      histogram: [
+        "正規分布のトレンドラインを重ねる",
+        "タイトルを「金額分布」に変更",
+      ],
+      boxplot: ["別の部門の箱を追加", "単位を新台湾ドルに変更"],
     },
   },
 };

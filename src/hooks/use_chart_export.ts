@@ -39,8 +39,9 @@ export function useChartExport(
   // Info: (20260720 - Julian) 檔名前綴一律淨化（可能來自圖表標題）
   const safePrefix = sanitizeFileName(filenamePrefix);
 
-  // Info: (20260720 - Julian) 日期字串
-  const dateStr = timestampToString(Date.now() / 1000).dateWithDash;
+  // Info: (20260721 - Luphia) 日期字串於匯出當下計算，避免元件長開跨午夜時沿用舊日期
+  const getDateStr = (): string =>
+    timestampToString(Date.now() / 1000).dateWithDash;
 
   // Info: (20260615 - Julian) 匯出成 PNG 圖片
   const exportPng = async (e?: React.MouseEvent | MouseEvent) => {
@@ -67,7 +68,7 @@ export function useChartExport(
 
       const link = document.createElement("a");
       link.href = dataUrl;
-      link.download = `${safePrefix}_${dateStr}.png`;
+      link.download = `${safePrefix}_${getDateStr()}.png`;
       link.click();
     } catch (error) {
       console.error("Failed to export PNG", error);
@@ -99,7 +100,7 @@ export function useChartExport(
 
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${safePrefix}-${dateStr}.svg`;
+      link.download = `${safePrefix}_${getDateStr()}.svg`;
       link.click();
 
       URL.revokeObjectURL(url);

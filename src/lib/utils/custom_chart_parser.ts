@@ -210,6 +210,7 @@ const buildTornado = (
   // Info: (20260720 - Julian)
   // 依欄位自動偵測標題列：首列若第 2、3 欄皆非數字，視為數列名稱標題列（category, leftSeries, rightSeries）；
   // 否則視為無標題列，數列名稱套用預設值。標題列不吃掉任何資料。
+  // ToDo: (20260721 - Luphia) 數列名稱為純數字（如 bare year 2019）時會被誤判為資料列，靜默產生錯誤的單筆長條而非報錯；考慮更嚴謹的 header 判定或加上警示
   const firstFields = parseCsvLine(dataLines[0]);
   const hasHeader =
     firstFields.length >= 3 &&

@@ -57,6 +57,7 @@ export const chart = {
     download: "이미지 다운로드",
     export_png: "PNG로 내보내기",
     export_svg: "SVG로 내보내기",
+    ai_edit: "AI 스마트 편집 (AI Chart Editor)",
     ai_editor: {
       title: "AI 스마트 차트 에디터",
       subtitle: "Mermaid AI Chart Assistant",
@@ -303,6 +304,44 @@ export const chart = {
         new_name_placeholder: "새 노드 이름을 입력하세요",
         select_link_to_delete: "삭제할 흐름을 선택하세요",
       },
+    },
+  },
+  custom_chart: {
+    title: "AI 스마트 차트 편집",
+    mock_badge: "Mock",
+    close: "닫기",
+    tab_quick_tools: "자주 쓰는 도구",
+    tab_ai_command: "AI 명령",
+    quick_tools_developing: "이 차트의 자주 쓰는 편집 도구는 개발 중입니다",
+    quick_tools_hint: "오른쪽 「AI 명령」을 사용하여 편집할 수 있습니다",
+    instruction_label: "AI 편집 명령",
+    clear: "지우기",
+    instruction_placeholder:
+      "원하는 수정을 자연어로 설명하세요. 예: 막대를 큰 순서대로 정렬, 제목을 「Q1 분포」로 변경…",
+    examples_title: "명령 예시",
+    preview_compare: "변경 미리보기 비교",
+    layout_row: "상하 비교",
+    layout_column: "좌우 비교",
+    before: "변경 전",
+    after: "변경 후",
+    generating: "생성 중…",
+    mock_notice:
+      "사용자 지정 차트의 AI 생성은 아직 개발 중입니다(mock). 이것은 UI 미리보기이며 차트를 변경하지 않습니다.",
+    after_placeholder:
+      "명령을 입력하고 생성하면 수정된 차트를 미리 볼 수 있습니다",
+    cancel: "취소",
+    generate: "생성",
+    examples: {
+      matrix: [
+        "축 레이블을 한국어로 변경",
+        "데이터 포인트 「공급망 감사」 추가",
+      ],
+      tornado: [
+        "좌우 계열 이름을 2023 / 2024로 변경",
+        "영향도가 큰 순서대로 정렬",
+      ],
+      histogram: ["정규분포 추세선 추가", "제목을 「금액 분포」로 변경"],
+      boxplot: ["다른 부서의 상자 추가", "단위를 원화로 변경"],
     },
   },
 };
