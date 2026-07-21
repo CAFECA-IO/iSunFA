@@ -27,13 +27,17 @@ export const createEmptyInventoryState = (): ICarbonInventoryState => ({
 
 // Info: (20260716 - Emily) 去重鍵: 同排放源 + 同數量 + 同單位 + 同範疇視為同一筆（重送訊息／重傳附件不重複記帳）
 // Info: (20260716 - Emily) #6519 起 export: 計算總表以同一把鍵對齊活動與計算結果
+// Info: (20260720 - Emily) #53 憑證匯入紀錄以 esgRecordId 為鍵:兩張同額同源的憑證是兩筆事實
+// Info: (20260720 - Emily) (內容鍵會誤併),且穩定 id 讓「重新整理匯入」天然冪等
 export const activityDedupeKey = (a: IActivityRecord): string =>
-  [
-    a.scopeCategory,
-    a.sourceName.trim().toLowerCase(),
-    a.quantity.trim(),
-    a.unit,
-  ].join("|");
+  a.esgRecordId
+    ? `esg|${a.esgRecordId}`
+    : [
+        a.scopeCategory,
+        a.sourceName.trim().toLowerCase(),
+        a.quantity.trim(),
+        a.unit,
+      ].join("|");
 
 // Info: (20260720 - Emily) #6520 庫存紀錄去重鍵:同物料 + 同單位視為同一筆(後到的萃取不覆蓋人工確認值)
 export const stockRecordDedupeKey = (r: IMaterialStockRecord): string =>

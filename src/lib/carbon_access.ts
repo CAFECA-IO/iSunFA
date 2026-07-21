@@ -88,3 +88,18 @@ export const canBindAccountBook = async (
   );
   return role !== null && EDIT_CAPABLE_ROLES.includes(role);
 };
+
+/**
+ * Info: (20260720 - Emily) #53 帳本層級的閱覽裁決(不經 channel):任一 TeamRole 皆可讀
+ * (esg-records 匯入/證據鏈端點用;與 #52 報告閱覽同一權限語意)
+ */
+export const canViewAccountBook = async (
+  userAddress: string,
+  accountBookId: string,
+): Promise<boolean> => {
+  const role = await accountBookRepo.getMemberRoleByAddress(
+    accountBookId,
+    userAddress,
+  );
+  return role !== null;
+};

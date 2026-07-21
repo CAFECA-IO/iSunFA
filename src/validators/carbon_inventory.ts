@@ -22,6 +22,12 @@ export const CarbonActivityRecordSchema = z.object({
   unit: z.nativeEnum(MeasurementUnit),
   confidence: z.enum(["high", "medium", "low"]).optional(),
   source: z.string().max(200).optional(),
+  // Info: (20260720 - Emily) #53 憑證聯動結構化引用(帳本匯入路徑;LLM responseSchema 無此欄位)
+  esgRecordId: z.string().max(100).optional(),
+  voucherId: z.string().max(100).optional(),
+  journalId: z.string().max(100).optional(),
+  fileId: z.string().max(100).optional(),
+  precomputedCo2eKg: z.string().max(60).optional(),
 });
 
 // Info: (20260720 - Emily) #6520 物料庫存紀錄: 質量守恆等式資料;數值原樣字串(解析於 articulation 服務)
@@ -93,6 +99,15 @@ export const ComputedLedgerSchema = z.object({
       ghgBreakdown: z.record(z.string(), z.string()).optional(),
       gwpVersion: z.string().max(30).optional(),
       factor: FactorSnapshotSchema,
+      // Info: (20260720 - Emily) #53 證據引用(憑證匯入的活動才有)
+      evidence: z
+        .object({
+          esgRecordId: z.string().max(100),
+          voucherId: z.string().max(100).optional(),
+          journalId: z.string().max(100).optional(),
+          fileId: z.string().max(100).optional(),
+        })
+        .optional(),
     }),
   ),
   pending: z.array(

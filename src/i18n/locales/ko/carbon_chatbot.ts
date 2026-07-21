@@ -177,6 +177,23 @@ export const carbonChatbot = {
     "(데이터 부족: 활동 데이터가 완성되면 시스템이 차트를 자동 생성합니다)",
   chart_frozen:
     "⚠ 질량 보존 검증에 통과하지 못해 차트가 동결되었습니다. 대화에서 재고 차이를 해명하면 자동으로 생성됩니다.",
+  book_records_import_button: "장부에서 증빙 데이터 가져오기",
+  book_records_importing: "장부에서 인식된 증빙 수준 배출 데이터를 가져오는 중…",
+  book_records_imported:
+    "장부에서 {{count}}건의 증빙 수준 활동 데이터를 가져왔습니다(중복은 자동 생략)",
+  book_records_imported_with_skips:
+    "{{count}}건 가져옴; {{skipped}}건은 스코프/단위를 매핑할 수 없어 생략했습니다. ESG 페이지에서 보완해 주세요",
+  book_records_import_failed: "장부 가져오기에 실패했습니다. 다시 시도해 주세요",
+  activity_open_evidence: "증빙 보기 ↗",
+  evidence_chain_title: "배출 증거 체인(클릭하여 단계별 확장, 최소 단위는 단일 증빙)",
+  evidence_chain_loading: "장부 증빙 데이터를 불러오는 중…",
+  evidence_chain_empty: "이 장부에는 아직 인식된 배출 데이터가 없습니다",
+  evidence_chain_error: "증빙 데이터 로드 실패(장부 열람 권한을 확인해 주세요)",
+  evidence_chain_records: "증빙 {{count}}건",
+  evidence_chain_formula: "{{quantity}} {{unit}} × {{factor}} = {{co2e}} kgCO2e",
+  evidence_chain_total: "총 배출량",
+  evidence_chain_verified: "검증됨",
+  evidence_chain_unverified: "미검증",
   inventory_step_ORG_PROFILE: "단계: 기업 기본 정보(명칭/연도)",
   inventory_step_ORG_BOUNDARY: "단계: 조직 경계 설정",
   inventory_step_EMISSION_SOURCES: "단계: 배출원 식별",

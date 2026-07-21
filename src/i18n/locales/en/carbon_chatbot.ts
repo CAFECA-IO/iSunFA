@@ -179,6 +179,26 @@ export const carbonChatbot = {
     "(Insufficient data — the chart will be generated automatically once activity data is complete)",
   chart_frozen:
     "⚠ Mass conservation check failed; the chart is frozen. Clarify the inventory gap in the chat and it will be generated automatically.",
+  book_records_import_button: "Import voucher data from the book",
+  book_records_importing:
+    "Importing recognized voucher-level emission records from the account book…",
+  book_records_imported:
+    "Imported {{count}} voucher-level activity record(s) from the book (duplicates skipped automatically)",
+  book_records_imported_with_skips:
+    "Imported {{count}} record(s); {{skipped}} skipped because scope/unit could not be mapped — please complete them on the ESG page",
+  book_records_import_failed: "Import from the account book failed; please retry",
+  activity_open_evidence: "View voucher ↗",
+  evidence_chain_title:
+    "Emission evidence chain (click to expand layer by layer, down to a single voucher)",
+  evidence_chain_loading: "Loading voucher data from the account book…",
+  evidence_chain_empty: "No recognized emission records in this account book yet",
+  evidence_chain_error:
+    "Failed to load voucher data (check your account book viewing permission)",
+  evidence_chain_records: "{{count}} voucher record(s)",
+  evidence_chain_formula: "{{quantity}} {{unit}} × {{factor}} = {{co2e}} kgCO2e",
+  evidence_chain_total: "Total emissions",
+  evidence_chain_verified: "Verified",
+  evidence_chain_unverified: "Unverified",
   inventory_step_ORG_PROFILE: "Step: Organization profile (name/year)",
   inventory_step_ORG_BOUNDARY: "Step: Organizational boundary",
   inventory_step_EMISSION_SOURCES: "Step: Emission source identification",

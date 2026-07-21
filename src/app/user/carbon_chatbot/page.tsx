@@ -17,6 +17,14 @@ import CarbonReportPreview from "@/components/carbon_chatbot/carbon_report_previ
 import { RevisionPreview } from "@/components/carbon_chatbot/revision_preview";
 import { ImportPreview } from "@/components/carbon_chatbot/import_preview";
 import { BookReportViewer } from "@/components/carbon_chatbot/book_report_viewer";
+// Info: (20260720 - Emily) #54 憑證下鑽:重用財報線的四分頁憑證檢視器(journal/voucher/esg/原始檔)
+import dynamic from "next/dynamic";
+import { IActivityRecord } from "@/types/carbon_chatbot.types";
+
+const RecordTabModal = dynamic(
+  () => import("@/components/user/common/record_tab_modal"),
+  { ssr: false },
+);
 
 export default function CarbonChatbotPage() {
   const { t } = useTranslation();
@@ -47,6 +55,8 @@ export default function CarbonChatbotPage() {
     accountBooks,
     activeSessionAccess,
     dataBadgeState,
+    importBookEsgRecords,
+    isImportingBookRecords,
     fetchBookSessions,
     masterKey,
     inventoryState,
@@ -81,6 +91,10 @@ export default function CarbonChatbotPage() {
   const [isChatOpen, setIsChatOpen] = useState<boolean>(true);
   // Info: (20260716 - Emily) UAT 帳本報告檢視器:開啟中的他人會話 channel(null = 關閉)
   const [viewerChannel, setViewerChannel] = useState<string | null>(null);
+  // Info: (20260720 - Emily) #54 憑證下鑽:開啟中的證據引用(null = 關閉);來自活動帳本列或證據鏈元件
+  const [evidenceTarget, setEvidenceTarget] = useState<IActivityRecord | null>(
+    null,
+  );
 
   // Info: (20260714 - Emily) chip 點擊: 跳報告段落並高亮；行動版聊天視窗全螢幕，先收起讓報告可見
   const handleChipJump = (paragraphId: string) => {
@@ -142,6 +156,11 @@ export default function CarbonChatbotPage() {
           <ActivityLedger
             state={inventoryState}
             positionClassName="relative flex"
+            onImportFromBook={
+              activeSessionAccess.accountBookId ? importBookEsgRecords : undefined
+            }
+            isImportingFromBook={isImportingBookRecords}
+            onOpenEvidence={setEvidenceTarget}
           />
           <ChatProgressWidget
             stats={reportStats}
@@ -228,6 +247,21 @@ export default function CarbonChatbotPage() {
           revision={pendingRevision}
           onApply={applyPendingRevision}
           onDiscard={discardPendingRevision}
+        />
+      )}
+
+      {/* Info: (20260720 - Emily) #54 憑證下鑽:四分頁檢視器(voucher 優先;無傳票的紀錄落 esg 分頁) */}
+      {evidenceTarget && (
+        <RecordTabModal
+          isOpen
+          onClose={() => setEvidenceTarget(null)}
+          defaultTab={evidenceTarget.voucherId ? "voucher" : "esg"}
+          voucherId={evidenceTarget.voucherId ?? null}
+          journalId={evidenceTarget.journalId ?? null}
+          esgId={evidenceTarget.esgRecordId ?? null}
+          file={
+            evidenceTarget.fileId ? { id: evidenceTarget.fileId } : undefined
+          }
         />
       )}
     </div>

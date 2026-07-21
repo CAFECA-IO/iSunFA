@@ -97,6 +97,36 @@ export class CarbonCalculationService {
     for (const activity of activities) {
       const activityKey = activityDedupeKey(activity);
 
+      // Info: (20260720 - Emily) #53 憑證管線紀錄:emissions 為同一決定論引擎已算好的產物,
+      // Info: (20260720 - Emily) 直採不重算不重選係數(重算 = 兩套結果互相衝突的風險);
+      // Info: (20260720 - Emily) 係數快照取憑證管線凍結值,evidence 帶證據鏈外鍵供 #54 下鑽
+      if (activity.precomputedCo2eKg && activity.esgRecordId) {
+        entries.push({
+          activityKey,
+          scopeCategory: activity.scopeCategory,
+          sourceName: activity.sourceName,
+          quantityRaw: activity.quantity,
+          convertedQuantity:
+            parseActivityQuantity(activity.quantity) ?? activity.quantity,
+          convertedUnit: activity.unit,
+          co2eKg: activity.precomputedCo2eKg,
+          factor: {
+            factorId: `esg-record:${activity.esgRecordId}`,
+            name: activity.factorSource ?? "ESG pipeline snapshot",
+            value: activity.emissionFactor ?? "-",
+            unit: activity.unit,
+            source: activity.factorSource ?? "voucher pipeline",
+          },
+          evidence: {
+            esgRecordId: activity.esgRecordId,
+            voucherId: activity.voucherId,
+            journalId: activity.journalId,
+            fileId: activity.fileId,
+          },
+        });
+        continue;
+      }
+
       const parsedQuantity = parseActivityQuantity(activity.quantity);
       if (!parsedQuantity) {
         pending.push({
