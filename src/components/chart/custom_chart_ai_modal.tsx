@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useState, useEffect } from "react";
+import { FC, useState, useEffect, useMemo } from "react";
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from "@headlessui/react";
 import {
   Sparkles,
@@ -12,9 +12,13 @@ import {
   Rows2,
   Columns2,
   Send,
+  Trash2,
 } from "lucide-react";
 import { CustomChartType } from "@/constants/custom_chart";
+import { IMatrixAction } from "@/interfaces/custom_chart";
+import { applyMatrixAction } from "@/lib/utils/custom_matrix_editor";
 import { CustomChartCanvas } from "@/components/chart/custom_chart_canvas";
+import { MatrixToolsSection } from "@/components/chart/matrix_tools_submenu";
 
 interface ICustomChartAiModalProps {
   open: boolean;
@@ -61,11 +65,31 @@ const CustomChartAiModal: FC<ICustomChartAiModalProps> = ({
   chartTitle = "",
   raw,
 }) => {
+  const [selectedTool, setSelectedTool] = useState<string | null>(null);
+
   const [instruction, setInstruction] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [previewDirective, setPreviewDirective] = useState<PreviewDirective>(
     PreviewDirective.ROW,
+  );
+
+  // Info: (20260721 - Julian) 矩陣圖常用工具的結構化編輯動作（暫存清單）
+  const [pendingActions, setPendingActions] = useState<IMatrixAction[]>([]);
+
+  // Info: (20260721 - Julian) 目前僅矩陣圖支援結構化工具編輯
+  const isMatrix = chartType === CustomChartType.MATRIX;
+
+  // Info: (20260721 - Julian) 依序套用暫存動作，決定論算出修改後的 DSL（不呼叫後端）
+  const modifiedRaw = useMemo(
+    () =>
+      isMatrix
+        ? pendingActions.reduce(
+            (result, action) => applyMatrixAction(result, action),
+            raw,
+          )
+        : raw,
+    [isMatrix, pendingActions, raw],
   );
 
   // Info: (20260720 - Julian) 開啟時重置狀態
@@ -75,8 +99,18 @@ const CustomChartAiModal: FC<ICustomChartAiModalProps> = ({
       setIsGenerating(false);
       setNotice(null);
       setPreviewDirective(PreviewDirective.ROW);
+      setSelectedTool(null);
+      setPendingActions([]);
     }
   }, [open]);
+
+  const handleAddAction = (action: IMatrixAction) => {
+    setPendingActions((prev) => [...prev, action]);
+  };
+
+  const handleRemoveAction = (id: string) => {
+    setPendingActions((prev) => prev.filter((a) => a.id !== id));
+  };
 
   if (!open) return null;
 
@@ -117,13 +151,19 @@ const CustomChartAiModal: FC<ICustomChartAiModalProps> = ({
         </div>
       );
     }
+    // Info: (20260721 - Julian) 有結構化編輯動作時，即時預覽套用後的圖表
+    if (isMatrix && pendingActions.length > 0) {
+      return <CustomChartCanvas type={chartType} raw={modifiedRaw} />;
+    }
     return (
       <div className="text-center text-slate-400">
         <Sparkles
           size={24}
           className="mx-auto mb-2 animate-pulse text-slate-300"
         />
-        <span className="text-xs">輸入指令並產生，即可預覽修改後的圖表</span>
+        <span className="text-xs">
+          使用常用工具或輸入 AI 指令，即可預覽修改後的圖表
+        </span>
       </div>
     );
   };
@@ -191,15 +231,55 @@ const CustomChartAiModal: FC<ICustomChartAiModalProps> = ({
             </TabList>
 
             <TabPanels className="flex-1 overflow-y-auto p-5">
-              {/* Info: (20260720 - Julian) 常用工具 Tab（本輪先佔位，各類型小工具後續實作） */}
-              <TabPanel className="focus:outline-none">
-                <div className="flex h-40 flex-col items-center justify-center gap-2 text-center text-slate-400">
-                  <Wrench size={24} className="text-slate-300" />
-                  <span className="text-xs">此圖表的常用修改工具開發中</span>
-                  <span className="text-[11px] text-slate-300">
-                    可先使用右側「AI 指令」進行編輯
-                  </span>
-                </div>
+              {/* Info: (20260721 - Julian) 常用工具 Tab（矩陣圖已實作，其餘類型待後續逐一實作） */}
+              <TabPanel className="flex flex-col gap-6 focus:outline-none">
+                {isMatrix ? (
+                  <>
+                    <MatrixToolsSection
+                      selectedTool={selectedTool}
+                      setSelectedTool={setSelectedTool}
+                      chart={raw}
+                      onAddAction={handleAddAction}
+                    />
+
+                    {/* Info: (20260721 - Julian) 結構化動作暫存清單 */}
+                    {pendingActions.length > 0 && (
+                      <div className="flex flex-col border-t border-slate-200 pt-5">
+                        <span className="mb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
+                          已套用的變更
+                        </span>
+                        <div className="flex flex-col gap-2">
+                          {pendingActions.map((action) => (
+                            <div
+                              key={action.id}
+                              className="flex items-center justify-between rounded-lg border border-blue-100 bg-white p-3 shadow-sm"
+                            >
+                              <div className="flex flex-col">
+                                <span className="text-[10px] font-bold tracking-tight text-blue-600 uppercase">
+                                  {action.type}
+                                </span>
+                                <span className="text-xs font-medium text-slate-700">
+                                  {action.description}
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveAction(action.id)}
+                                className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-500"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex h-40 items-center justify-center text-center text-xs text-slate-400">
+                    此圖表類型的常用工具開發中
+                  </div>
+                )}
               </TabPanel>
 
               {/* Info: (20260720 - Julian) AI 指令 Tab */}

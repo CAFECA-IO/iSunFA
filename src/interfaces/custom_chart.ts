@@ -2,6 +2,7 @@ import {
   CustomChartType,
   CustomChartParseErrorCode,
   HistogramTrendType,
+  MatrixActionType,
 } from "@/constants/custom_chart";
 
 /**
@@ -34,6 +35,69 @@ export interface ICustomMatrixAst {
   yAxis: ICustomChartAxis;
   points: ICustomMatrixPoint[];
 }
+
+/**
+ * Info: (20260721 - Julian)
+ * 矩陣圖資料點（含原始行號），供結構化編輯以 lineIndex 精準定位 DSL 中的資料列。
+ * lineIndex 為 raw.split("\n") 的絕對索引（沿用 mermaid ISankeyLink 的定位設計）。
+ */
+export interface IMatrixItem extends ICustomMatrixPoint {
+  lineIndex: number;
+}
+
+/**
+ * Info: (20260721 - Julian)
+ * 矩陣圖工具列所需的解析結果：資料點（帶行號）與兩軸雙極端點文字。
+ */
+export interface IMatrixParseResult {
+  title?: string;
+  xAxis: ICustomChartAxis;
+  yAxis: ICustomChartAxis;
+  items: IMatrixItem[];
+  groups: string[]; // Info: (20260721 - Julian) 依首次出現順序去重的群組清單（對應 ISankeyData.nodes）
+}
+
+/**
+ * Info: (20260721 - Julian)
+ * 矩陣圖結構化編輯動作（Discriminated Union，以 type 為判別因子）。
+ * 對應 matrix_tools_submenu 的四項工具，由 applyMatrixAction 決定論套用。
+ */
+export type IMatrixAction = {
+  id: string;
+  description: string;
+} & (
+  | {
+      // Info: (20260721 - Julian) 新增資料點（標題、X/Y 座標、群組）
+      type: MatrixActionType.ADD_ITEM;
+      payload: { label: string; x: number; y: number; group: string };
+    }
+  | {
+      // Info: (20260721 - Julian) 編輯資料點：以 lineIndex 定位，覆寫標題、座標與群組
+      type: MatrixActionType.EDIT_ITEM;
+      payload: {
+        lineIndex: number;
+        label: string;
+        x: number;
+        y: number;
+        group: string;
+      };
+    }
+  | {
+      // Info: (20260721 - Julian) 編輯雙極軸端點文字（皆選填；空字串代表移除該軸設定）
+      type: MatrixActionType.EDIT_AXIS;
+      payload: { xMin?: string; xMax?: string; yMin?: string; yMax?: string };
+    }
+  | {
+      // Info: (20260721 - Julian) 編輯群組：移除或加入資料點
+      type: MatrixActionType.EDIT_GROUP;
+      payload: { group: string };
+    }
+  | {
+      // Info: (20260721 - Julian) 刪除資料點：以 lineIndex 定位
+      type: MatrixActionType.DELETE_ITEM;
+      payload: { lineIndex: number };
+    }
+);
 
 // Info: (20260720 - Julian) 龍捲風圖（成對雙數列比較，butterfly）：left/right 為兩數列各自數值，以中心向左右延伸
 export interface ICustomTornadoBar {
