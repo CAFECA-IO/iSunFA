@@ -29,7 +29,8 @@ import { Checkbox } from "@/components/common/checkbox";
 import { DEFAULT_QUADRANT_COLORS } from "@/components/chart/matrix_chart";
 import ColorPicker from "@/components/common/color_picker";
 
-// ToDo: (20260721 - Julian) 補上翻譯檔
+// Info: (20260722 - Julian) 矩陣工具 i18n key 前綴，字面值收斂於 locale 檔
+const MATRIX_I18N_PREFIX = "chart.custom_chart.matrix";
 
 // Info: (20260721 - Julian) 坐標範圍數值
 const RANGE_STEP = 10;
@@ -38,10 +39,10 @@ const RANGE_MIN = -100;
 
 // Info: (20260721 - Julian) 四象限標籤（Q1..Q4，對應渲染順序：右上、左上、左下、右下）
 const QUADRANT_LABELS = [
-  { label: "第一象限（右上）", rotate: "rotate-0" },
-  { label: "第二象限（左上）", rotate: "rotate-270" },
-  { label: "第三象限（左下）", rotate: "rotate-180" },
-  { label: "第四象限（右下）", rotate: "rotate-90" },
+  { labelKey: `${MATRIX_I18N_PREFIX}.quadrant_1`, rotate: "rotate-0" },
+  { labelKey: `${MATRIX_I18N_PREFIX}.quadrant_2`, rotate: "rotate-270" },
+  { labelKey: `${MATRIX_I18N_PREFIX}.quadrant_3`, rotate: "rotate-180" },
+  { labelKey: `${MATRIX_I18N_PREFIX}.quadrant_4`, rotate: "rotate-90" },
 ];
 
 enum GroupType {
@@ -91,12 +92,12 @@ const MATRIX_TOOLS: IToolItem[] = [
 ];
 
 const MATRIX_TOOL_TRANSLATION_KEYS: Record<MatrixTools, string> = {
-  [MatrixTools.ADD_ITEM]: "新增項目",
-  [MatrixTools.EDIT_ITEM]: "編輯項目",
-  [MatrixTools.EDIT_AXIS]: "編輯軸線",
-  [MatrixTools.EDIT_GROUP]: "編輯項目分組",
-  [MatrixTools.CHANGE_QUADRANT_COLOR]: "變更象限顏色",
-  [MatrixTools.DELETE_ITEM]: "刪除項目",
+  [MatrixTools.ADD_ITEM]: `${MATRIX_I18N_PREFIX}.add_item`,
+  [MatrixTools.EDIT_ITEM]: `${MATRIX_I18N_PREFIX}.edit_item`,
+  [MatrixTools.EDIT_AXIS]: `${MATRIX_I18N_PREFIX}.edit_axis`,
+  [MatrixTools.EDIT_GROUP]: `${MATRIX_I18N_PREFIX}.edit_group`,
+  [MatrixTools.CHANGE_QUADRANT_COLOR]: `${MATRIX_I18N_PREFIX}.change_quadrant_color`,
+  [MatrixTools.DELETE_ITEM]: `${MATRIX_I18N_PREFIX}.delete_item`,
 };
 
 interface IBasePanelProps {
@@ -127,7 +128,11 @@ const AddItemPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: MatrixActionType.ADD_ITEM,
-      description: `新增項目「${label}」(${xCoord}, ${yCoord})`,
+      description: t(`${MATRIX_I18N_PREFIX}.action_add_item`, {
+        label,
+        x: xCoord,
+        y: yCoord,
+      }),
       payload: { label, x: xCoord, y: yCoord, group: selectedGroup },
     });
   };
@@ -136,12 +141,12 @@ const AddItemPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <MapPinPlusInside size={14} />
-        <p>{t("新增項目")}</p>
+        <p>{t(`${MATRIX_I18N_PREFIX}.add_item`)}</p>
       </div>
       <div className="flex flex-col gap-2">
         <div className="flex flex-col">
           <label htmlFor="newTitleLabel" className={MERMAID_LABEL_STYLE}>
-            {t("項目標題")}
+            {t(`${MATRIX_I18N_PREFIX}.item_title`)}
             <span className="ml-0.5 text-red-500">*</span>
           </label>
           <input
@@ -150,12 +155,12 @@ const AddItemPanel: FC<IBasePanelProps> = ({
             value={titleInput}
             onChange={(e) => setTitleInput(e.target.value)}
             className={MERMAID_INPUT_STYLE}
-            placeholder="請輸入項目標題"
+            placeholder={t(`${MATRIX_I18N_PREFIX}.item_title_placeholder`)!}
           />
         </div>
         <div className="flex flex-col gap-1">
           <label htmlFor="newXCoord" className={MERMAID_LABEL_STYLE}>
-            {t("X 軸坐標")}
+            {t(`${MATRIX_I18N_PREFIX}.x_coord`)}
             <span className="ml-0.5 text-red-500">*</span>
           </label>
           <div className="flex flex-col">
@@ -178,7 +183,7 @@ const AddItemPanel: FC<IBasePanelProps> = ({
         </div>
         <div className="flex flex-col gap-1">
           <label htmlFor="newYCoord" className={MERMAID_LABEL_STYLE}>
-            {t("Y 軸坐標")}
+            {t(`${MATRIX_I18N_PREFIX}.y_coord`)}
             <span className="ml-0.5 text-red-500">*</span>
           </label>
           <div className="flex flex-col">
@@ -202,12 +207,18 @@ const AddItemPanel: FC<IBasePanelProps> = ({
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between">
             <label htmlFor="newItemGroupLabel" className={MERMAID_LABEL_STYLE}>
-              {t("項目分組")}
+              {t(`${MATRIX_I18N_PREFIX}.item_group`)}
             </label>
             <SegmentedControl
               options={[
-                { value: GroupType.EXISTING, label: t("選擇現有分組") },
-                { value: GroupType.NEW, label: t("新增分組") },
+                {
+                  value: GroupType.EXISTING,
+                  label: t(`${MATRIX_I18N_PREFIX}.select_existing_group`),
+                },
+                {
+                  value: GroupType.NEW,
+                  label: t(`${MATRIX_I18N_PREFIX}.new_group`),
+                },
               ]}
               value={groupType}
               onChange={(val) => setGroupType(val as GroupType)}
@@ -220,18 +231,20 @@ const AddItemPanel: FC<IBasePanelProps> = ({
               value={selectedGroup}
               onChange={(e) => setSelectedGroup(e.target.value)}
               className={MERMAID_INPUT_STYLE}
-              placeholder={t("請填入新的分組名稱")!}
+              placeholder={t(`${MATRIX_I18N_PREFIX}.new_group_placeholder`)!}
             />
           ) : (
             <select
-              id="addLinkFromLabel"
+              id="newItemGroupLabel"
               value={selectedGroup}
               onChange={(e) => setSelectedGroup(e.target.value)}
               className={MERMAID_INPUT_STYLE}
             >
-              <option value="">{t("請選擇現有分組")}</option>
+              <option value="">
+                {t(`${MATRIX_I18N_PREFIX}.select_existing_group_placeholder`)}
+              </option>
               {groupOptions.map((item) => (
-                <option key={`matrix-add-opt-${item}`} value={item}>
+                <option key={`matrix-add-group-opt-${item}`} value={item}>
                   {item}
                 </option>
               ))}
@@ -245,7 +258,7 @@ const AddItemPanel: FC<IBasePanelProps> = ({
         disabled={isSubmitDisabled}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t("新增項目")}
+        {t(`${MATRIX_I18N_PREFIX}.add_item`)}
       </button>
     </div>
   );
@@ -315,7 +328,11 @@ const EditItemPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: MatrixActionType.EDIT_ITEM,
-      description: `編輯項目「${label}」(${xCoord}, ${yCoord})`,
+      description: t(`${MATRIX_I18N_PREFIX}.action_edit_item`, {
+        label,
+        x: xCoord,
+        y: yCoord,
+      }),
       payload: {
         lineIndex: selectedItem.lineIndex,
         label,
@@ -330,12 +347,12 @@ const EditItemPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <MapPinPen size={14} />
-        <p>{t("編輯項目")}</p>
+        <p>{t(`${MATRIX_I18N_PREFIX}.edit_item`)}</p>
       </div>
       <div className="flex flex-col gap-2">
         <div className="flex flex-col">
           <label htmlFor="editIdLabel" className={MERMAID_LABEL_STYLE}>
-            {t("選擇欲編輯的項目")}
+            {t(`${MATRIX_I18N_PREFIX}.select_edit_item`)}
             <span className="ml-0.5 text-red-500">*</span>
           </label>
           <select
@@ -344,7 +361,9 @@ const EditItemPanel: FC<IBasePanelProps> = ({
             onChange={(e) => setSelectedId(e.target.value)}
             className={MERMAID_INPUT_STYLE}
           >
-            <option value="">{t("選擇欲編輯的項目")}</option>
+            <option value="">
+              {t(`${MATRIX_I18N_PREFIX}.select_edit_item`)}
+            </option>
             {itemOptions.map((item) => (
               <option
                 key={`matrix-edit-opt-${item.lineIndex}`}
@@ -357,7 +376,7 @@ const EditItemPanel: FC<IBasePanelProps> = ({
         </div>
         <div className="flex flex-col">
           <label htmlFor="editTitleLabel" className={MERMAID_LABEL_STYLE}>
-            {t("項目標題")}
+            {t(`${MATRIX_I18N_PREFIX}.item_title`)}
           </label>
           <input
             id="editTitleLabel"
@@ -366,12 +385,12 @@ const EditItemPanel: FC<IBasePanelProps> = ({
             value={titleInput}
             onChange={(e) => setTitleInput(e.target.value)}
             className={MERMAID_INPUT_STYLE}
-            placeholder="請輸入項目標題"
+            placeholder={t(`${MATRIX_I18N_PREFIX}.item_title_placeholder`)!}
           />
         </div>
         <div className="flex flex-col gap-1">
           <label htmlFor="editXCoord" className={MERMAID_LABEL_STYLE}>
-            {t("X 軸坐標")}
+            {t(`${MATRIX_I18N_PREFIX}.x_coord`)}
           </label>
           <div className="flex flex-col">
             <input
@@ -394,7 +413,7 @@ const EditItemPanel: FC<IBasePanelProps> = ({
         </div>
         <div className="flex flex-col gap-1">
           <label htmlFor="editYCoord" className={MERMAID_LABEL_STYLE}>
-            {t("Y 軸坐標")}
+            {t(`${MATRIX_I18N_PREFIX}.y_coord`)}
           </label>
           <div className="flex flex-col">
             <input
@@ -418,17 +437,17 @@ const EditItemPanel: FC<IBasePanelProps> = ({
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between">
             <label htmlFor="editItemGroupLabel" className={MERMAID_LABEL_STYLE}>
-              {t("項目分組")}
+              {t(`${MATRIX_I18N_PREFIX}.item_group`)}
             </label>
             <SegmentedControl
               options={[
                 {
                   value: GroupType.EXISTING,
-                  label: t("選擇現有分組"),
+                  label: t(`${MATRIX_I18N_PREFIX}.select_existing_group`),
                 },
                 {
                   value: GroupType.NEW,
-                  label: t("新增分組"),
+                  label: t(`${MATRIX_I18N_PREFIX}.new_group`),
                 },
               ]}
               value={groupType}
@@ -442,18 +461,22 @@ const EditItemPanel: FC<IBasePanelProps> = ({
               value={selectedGroup}
               onChange={(e) => setSelectedGroup(e.target.value)}
               className={MERMAID_INPUT_STYLE}
-              placeholder={t("請填入新的分組名稱")!}
+              disabled={isUnselected}
+              placeholder={t(`${MATRIX_I18N_PREFIX}.new_group_placeholder`)!}
             />
           ) : (
             <select
-              id="addLinkFromLabel"
+              id="editItemGroupLabel"
               value={selectedGroup}
               onChange={(e) => setSelectedGroup(e.target.value)}
               className={MERMAID_INPUT_STYLE}
+              disabled={isUnselected}
             >
-              <option value="">{t("請選擇現有分組")}</option>
+              <option value="">
+                {t(`${MATRIX_I18N_PREFIX}.select_existing_group_placeholder`)}
+              </option>
               {groupOptions.map((item) => (
-                <option key={`matrix-add-opt-${item}`} value={item}>
+                <option key={`matrix-edit-group-opt-${item}`} value={item}>
                   {item}
                 </option>
               ))}
@@ -467,7 +490,7 @@ const EditItemPanel: FC<IBasePanelProps> = ({
         disabled={isSubmitDisabled}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t("套用變更")}
+        {t(`${MATRIX_I18N_PREFIX}.apply_changes`)}
       </button>
     </div>
   );
@@ -504,7 +527,7 @@ const EditAxisPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: MatrixActionType.EDIT_AXIS,
-      description: "編輯座標軸端點文字",
+      description: t(`${MATRIX_I18N_PREFIX}.action_edit_axis`),
       payload: {
         xMin: xMinInput.trim(),
         xMax: xMaxInput.trim(),
@@ -518,17 +541,19 @@ const EditAxisPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <Move size={14} />
-        <p>{t("編輯軸線")}</p>
+        <p>{t(`${MATRIX_I18N_PREFIX}.edit_axis`)}</p>
       </div>
       <div className="flex flex-col gap-2">
         <div className="flex flex-col">
-          <p className={MERMAID_LABEL_STYLE}>{t("X 軸說明文字")}</p>
+          <p className={MERMAID_LABEL_STYLE}>
+            {t(`${MATRIX_I18N_PREFIX}.x_axis_desc`)}
+          </p>
           <div className="flex items-center gap-2">
             <input
               type="text"
               value={xMinInput}
               onChange={(e) => setXMinInput(e.target.value)}
-              placeholder="可留白"
+              placeholder={t(`${MATRIX_I18N_PREFIX}.axis_placeholder`)!}
               className={MERMAID_INPUT_STYLE}
             />
             <MoveRight size={24} className="shrink-0" />
@@ -536,20 +561,22 @@ const EditAxisPanel: FC<IBasePanelProps> = ({
               type="text"
               value={xMaxInput}
               onChange={(e) => setXMaxInput(e.target.value)}
-              placeholder="可留白"
+              placeholder={t(`${MATRIX_I18N_PREFIX}.axis_placeholder`)!}
               className={MERMAID_INPUT_STYLE}
             />
           </div>
         </div>
         <div className="flex flex-col"></div>
         <div className="flex flex-col">
-          <p className={MERMAID_LABEL_STYLE}>{t("Y 軸說明文字")}</p>
+          <p className={MERMAID_LABEL_STYLE}>
+            {t(`${MATRIX_I18N_PREFIX}.y_axis_desc`)}
+          </p>
           <div className="flex items-center gap-2">
             <input
               type="text"
               value={yMinInput}
               onChange={(e) => setYMinInput(e.target.value)}
-              placeholder="可留白"
+              placeholder={t(`${MATRIX_I18N_PREFIX}.axis_placeholder`)!}
               className={MERMAID_INPUT_STYLE}
             />
             <MoveRight size={24} className="shrink-0" />
@@ -557,7 +584,7 @@ const EditAxisPanel: FC<IBasePanelProps> = ({
               type="text"
               value={yMaxInput}
               onChange={(e) => setYMaxInput(e.target.value)}
-              placeholder="可留白"
+              placeholder={t(`${MATRIX_I18N_PREFIX}.axis_placeholder`)!}
               className={MERMAID_INPUT_STYLE}
             />
           </div>
@@ -569,7 +596,7 @@ const EditAxisPanel: FC<IBasePanelProps> = ({
         disabled={isSubmitDisabled}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t("套用變更")}
+        {t(`${MATRIX_I18N_PREFIX}.apply_changes`)}
       </button>
     </div>
   );
@@ -622,10 +649,19 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
       id: crypto.randomUUID(),
       type: MatrixActionType.EDIT_GROUP,
       description: isEmptyGroup
-        ? `刪除分組「${selectedGroup}」`
-        : `編輯分組「${selectedGroup}」（${memberIndexes.length} 個項目${
-            color ? `，顏色 ${color}` : ""
-          }）`,
+        ? t(`${MATRIX_I18N_PREFIX}.action_delete_group`, {
+            group: selectedGroup,
+          })
+        : color.trim() !== ""
+          ? t(`${MATRIX_I18N_PREFIX}.action_edit_group_with_color`, {
+              group: selectedGroup,
+              count: memberIndexes.length,
+              color,
+            })
+          : t(`${MATRIX_I18N_PREFIX}.action_edit_group`, {
+              group: selectedGroup,
+              count: memberIndexes.length,
+            }),
       payload: {
         group: selectedGroup,
         memberLineIndexes: memberIndexes,
@@ -638,13 +674,13 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <Network size={14} />
-        <p>{t("編輯項目分組")}</p>
+        <p>{t(`${MATRIX_I18N_PREFIX}.edit_group`)}</p>
       </div>
 
       {/* Info: (20260721 - Julian) 選擇分組 */}
       <div className="flex flex-col">
         <label htmlFor="editGroupLabel" className={MERMAID_LABEL_STYLE}>
-          {t("選擇欲編輯的分組")}
+          {t(`${MATRIX_I18N_PREFIX}.select_edit_group`)}
           <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
@@ -653,7 +689,9 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
           onChange={(e) => setSelectedGroup(e.target.value)}
           className={MERMAID_INPUT_STYLE}
         >
-          <option value="">{t("選擇欲編輯的分組")}</option>
+          <option value="">
+            {t(`${MATRIX_I18N_PREFIX}.select_edit_group`)}
+          </option>
           {groupOptions.map((group) => (
             <option key={`matrix-group-opt-${group}`} value={group}>
               {group}
@@ -664,13 +702,17 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
 
       {!selectedGroup ? (
         <div className="flex flex-col items-center gap-1 rounded-lg bg-slate-100 p-4">
-          <p className="text-xs font-semibold text-slate-500">請選擇分組</p>
+          <p className="text-xs font-semibold text-slate-500">
+            {t(`${MATRIX_I18N_PREFIX}.please_select_group`)}
+          </p>
         </div>
       ) : (
         <>
           {/* Info: (20260721 - Julian) 分組顏色 */}
           <div className="flex flex-col gap-1.5">
-            <p className={MERMAID_LABEL_STYLE}>{t("分組顏色")}</p>
+            <p className={MERMAID_LABEL_STYLE}>
+              {t(`${MATRIX_I18N_PREFIX}.group_color`)}
+            </p>
             <ColorPicker
               colorOptions={DEFAULT_COLORS}
               value={color}
@@ -680,7 +722,9 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
 
           {/* Info: (20260721 - Julian) 分組成員（勾選代表屬於此分組） */}
           <div className="flex flex-col gap-1.5">
-            <p className={MERMAID_LABEL_STYLE}>{t("分組成員")}</p>
+            <p className={MERMAID_LABEL_STYLE}>
+              {t(`${MATRIX_I18N_PREFIX}.group_members`)}
+            </p>
             <div className="flex max-h-44 flex-col gap-2 overflow-y-auto rounded-lg border border-slate-200 p-2.5">
               {itemOptions.map((item) => (
                 <Checkbox
@@ -696,10 +740,10 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
           {isEmptyGroup && (
             <div className="flex flex-col items-center gap-1 rounded-lg bg-rose-50 p-3">
               <p className="text-xs font-semibold text-slate-800">
-                分組內暫無選擇項目
+                {t(`${MATRIX_I18N_PREFIX}.empty_group_title`)}
               </p>
               <p className="text-[10px] text-red-500">
-                注意：此狀態下套用變更，分組將被刪除
+                {t(`${MATRIX_I18N_PREFIX}.empty_group_warning`)}
               </p>
             </div>
           )}
@@ -712,7 +756,7 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
         disabled={!selectedGroup}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t("套用變更")}
+        {t(`${MATRIX_I18N_PREFIX}.apply_changes`)}
       </button>
     </div>
   );
@@ -743,7 +787,9 @@ const DeleteItemPanel: FC<IBasePanelProps> = ({
       onAddAction({
         id: crypto.randomUUID(),
         type: MatrixActionType.DELETE_ITEM,
-        description: `刪除項目「${selectedItem.label}」`,
+        description: t(`${MATRIX_I18N_PREFIX}.action_delete_item`, {
+          label: selectedItem.label,
+        }),
         payload: { lineIndex: selectedItem.lineIndex },
       });
       return;
@@ -752,7 +798,9 @@ const DeleteItemPanel: FC<IBasePanelProps> = ({
       onAddAction({
         id: crypto.randomUUID(),
         type: MatrixActionType.DELETE_ITEM,
-        description: `刪除分組「${selectedGroup}」`,
+        description: t(`${MATRIX_I18N_PREFIX}.action_delete_group`, {
+          group: selectedGroup,
+        }),
         payload: { group: selectedGroup },
       });
     }
@@ -762,11 +810,11 @@ const DeleteItemPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <MapPinX size={14} />
-        <p>{t("刪除項目")}</p>
+        <p>{t(`${MATRIX_I18N_PREFIX}.delete_item`)}</p>
       </div>
       <div className="flex flex-col">
         <label htmlFor="deleteItemLabel" className={MERMAID_LABEL_STYLE}>
-          {t("選擇欲刪除的項目")}
+          {t(`${MATRIX_I18N_PREFIX}.select_delete_item`)}
           <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
@@ -775,7 +823,9 @@ const DeleteItemPanel: FC<IBasePanelProps> = ({
           onChange={(e) => setSelectedId(e.target.value)}
           className={MERMAID_INPUT_STYLE}
         >
-          <option value="">{t("選擇欲刪除的項目")}</option>
+          <option value="">
+            {t(`${MATRIX_I18N_PREFIX}.select_delete_item`)}
+          </option>
           {itemOptions.map((item) => (
             <option
               key={`matrix-delete-opt-${item.lineIndex}`}
@@ -788,7 +838,7 @@ const DeleteItemPanel: FC<IBasePanelProps> = ({
       </div>
       <div className="flex flex-col">
         <label htmlFor="deleteGroupLabel" className={MERMAID_LABEL_STYLE}>
-          {t("選擇欲刪除的分組")}
+          {t(`${MATRIX_I18N_PREFIX}.select_delete_group`)}
           <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
@@ -797,7 +847,9 @@ const DeleteItemPanel: FC<IBasePanelProps> = ({
           onChange={(e) => setSelectedGroup(e.target.value)}
           className={MERMAID_INPUT_STYLE}
         >
-          <option value="">{t("選擇欲刪除的分組")}</option>
+          <option value="">
+            {t(`${MATRIX_I18N_PREFIX}.select_delete_group`)}
+          </option>
           {groupOptions.map((group) => (
             <option key={`matrix-delete-group-opt-${group}`} value={group}>
               {group}
@@ -811,7 +863,7 @@ const DeleteItemPanel: FC<IBasePanelProps> = ({
         disabled={isSubmitDisabled}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t("刪除項目")}
+        {t(`${MATRIX_I18N_PREFIX}.delete_item`)}
       </button>
     </div>
   );
@@ -844,7 +896,7 @@ const ChangeQuadrantColorPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: MatrixActionType.CHANGE_QUADRANT_COLOR,
-      description: "變更象限底色",
+      description: t(`${MATRIX_I18N_PREFIX}.action_change_quadrant_color`),
       payload: { colors },
     });
   };
@@ -853,17 +905,17 @@ const ChangeQuadrantColorPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <Grid2x2 size={14} />
-        <p>{t("變更象限顏色")}</p>
+        <p>{t(`${MATRIX_I18N_PREFIX}.change_quadrant_color`)}</p>
       </div>
       <div className="flex flex-col gap-3">
         {QUADRANT_LABELS.map((l, i) => (
           <div
-            key={`matrix-quadrant-${l.label}`}
+            key={`matrix-quadrant-${l.labelKey}`}
             className="flex flex-col gap-1.5"
           >
             <div className="flex items-center gap-1 text-slate-500">
               <Blocks size={14} className={`shrink-0 ${l.rotate}`} />
-              <p className={MERMAID_LABEL_STYLE}>{t(l.label)}</p>
+              <p className={MERMAID_LABEL_STYLE}>{t(l.labelKey)}</p>
             </div>
             <ColorPicker
               colorOptions={BACKGROUND_COLOR_OPTIONS}
@@ -879,7 +931,7 @@ const ChangeQuadrantColorPanel: FC<IBasePanelProps> = ({
         disabled={isSubmitDisabled}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t("套用變更")}
+        {t(`${MATRIX_I18N_PREFIX}.apply_changes`)}
       </button>
     </div>
   );
