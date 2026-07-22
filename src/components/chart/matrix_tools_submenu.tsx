@@ -820,7 +820,12 @@ const DeleteItemPanel: FC<IBasePanelProps> = ({
         <select
           id="deleteItemLabel"
           value={selectedId}
-          onChange={(e) => setSelectedId(e.target.value)}
+          // Info: (20260721 - Julian) 擇一：選項目時清除分組選取，選分組時停用本選單
+          disabled={!!selectedGroup}
+          onChange={(e) => {
+            setSelectedId(e.target.value);
+            setSelectedGroup("");
+          }}
           className={MERMAID_INPUT_STYLE}
         >
           <option value="">
@@ -844,7 +849,12 @@ const DeleteItemPanel: FC<IBasePanelProps> = ({
         <select
           id="deleteGroupLabel"
           value={selectedGroup}
-          onChange={(e) => setSelectedGroup(e.target.value)}
+          // Info: (20260721 - Julian) 擇一：選分組時清除項目選取，選項目時停用本選單
+          disabled={!!selectedItem}
+          onChange={(e) => {
+            setSelectedGroup(e.target.value);
+            setSelectedId("");
+          }}
           className={MERMAID_INPUT_STYLE}
         >
           <option value="">

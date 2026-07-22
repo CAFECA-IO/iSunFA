@@ -15,6 +15,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { CustomChartType } from "@/constants/custom_chart";
+import { PreviewDirective } from "@/constants/chart_ui";
 import { IMatrixAction } from "@/interfaces/custom_chart";
 import { applyMatrixAction } from "@/lib/utils/custom_matrix_editor";
 import { CustomChartCanvas } from "@/components/chart/custom_chart_canvas";
@@ -39,12 +40,6 @@ const EXAMPLE_KEY_BY_TYPE: Record<CustomChartType, string> = {
   [CustomChartType.HISTOGRAM]: "histogram",
   [CustomChartType.BOXPLOT]: "boxplot",
 };
-
-// Info: (20260720 - Julian) 預覽排版方向
-enum PreviewDirective {
-  ROW = "ROW",
-  COLUMN = "COLUMN",
-}
 
 /**
  * Info: (20260720 - Julian)

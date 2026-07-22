@@ -1,7 +1,10 @@
 "use client";
 
 import { FC, ReactNode, useMemo, useState } from "react";
-import { CustomChartType } from "@/constants/custom_chart";
+import {
+  CustomChartType,
+  CustomChartExportName,
+} from "@/constants/custom_chart";
 import { parseCustomChart } from "@/lib/utils/custom_chart_parser";
 import { ChartShell } from "@/components/chart/chart_shell";
 import { CustomChartAiModal } from "@/components/chart/custom_chart_ai_modal";
@@ -13,14 +16,6 @@ import { BoxplotChart } from "@/components/chart/boxplot_chart";
 interface ICustomChartProps {
   type: CustomChartType;
   raw: string;
-}
-
-// ToDo: (20260721 - Luphia) 用於 switch 分派的 enum 依規範宜集中至 src/constants/（PreviewDirective 同）
-enum ExportFileName {
-  MATRIX = "matrix-chart",
-  TORNADO = "tornado-chart",
-  HISTOGRAM = "histogram-chart",
-  BOXPLOT = "boxplot-chart",
 }
 
 /**
@@ -55,19 +50,19 @@ const CustomChart: FC<ICustomChartProps> = ({ type, raw }) => {
   switch (ast.type) {
     case CustomChartType.MATRIX:
       chartNode = <MatrixChart ast={ast} />;
-      exportFileName = titleFileName || ExportFileName.MATRIX;
+      exportFileName = titleFileName || CustomChartExportName.MATRIX;
       break;
     case CustomChartType.TORNADO:
       chartNode = <TornadoChart ast={ast} />;
-      exportFileName = titleFileName || ExportFileName.TORNADO;
+      exportFileName = titleFileName || CustomChartExportName.TORNADO;
       break;
     case CustomChartType.HISTOGRAM:
       chartNode = <HistogramChart ast={ast} />;
-      exportFileName = titleFileName || ExportFileName.HISTOGRAM;
+      exportFileName = titleFileName || CustomChartExportName.HISTOGRAM;
       break;
     case CustomChartType.BOXPLOT:
       chartNode = <BoxplotChart ast={ast} />;
-      exportFileName = titleFileName || ExportFileName.BOXPLOT;
+      exportFileName = titleFileName || CustomChartExportName.BOXPLOT;
       break;
     default:
       // Info: (20260720 - Julian) 未知類型：以 AST JSON 佔位，不進外殼

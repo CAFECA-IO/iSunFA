@@ -12,6 +12,17 @@ export enum CustomChartType {
 }
 
 /**
+ * Info: (20260721 - Julian)
+ * 各自訂圖表類型的下載預設檔名（未提供圖表標題時的 fallback）。
+ */
+export enum CustomChartExportName {
+  MATRIX = "matrix-chart",
+  TORNADO = "tornado-chart",
+  HISTOGRAM = "histogram-chart",
+  BOXPLOT = "boxplot-chart",
+}
+
+/**
  * Info: (20260717 - Julian) 自訂圖表 DSL 的設定列 key，避免魔法字串
  */
 export enum CustomChartConfigKey {

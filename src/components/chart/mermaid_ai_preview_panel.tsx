@@ -18,11 +18,7 @@ import { parsePieData } from "@/lib/utils/mermaid_helpers";
 import { useZoomPan } from "@/hooks/use_zoom_pan";
 import { useMermaidRender } from "@/hooks/use_mermaid_render";
 import { useTranslation } from "@/i18n/i18n_context";
-
-enum PreviewDirective {
-  ROW = "ROW",
-  COLUMN = "COLUMN",
-}
+import { PreviewDirective } from "@/constants/chart_ui";
 
 // ==========================================
 // Info: (20260629 - Julian) 支援縮放與拖曳移動的 SVG 容器
