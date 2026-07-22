@@ -279,6 +279,8 @@ export function EvidenceChain({ accountBookId }: IEvidenceChainProps) {
           file={
             evidenceTarget.fileId ? { id: evidenceTarget.fileId } : undefined
           }
+          // Info: (20260721 - Emily) UAT:報告可在非 account_book 路徑開啟,帳本 id 由 prop 注入
+          accountBookId={accountBookId}
         />
       )}
     </div>

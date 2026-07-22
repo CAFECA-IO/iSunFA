@@ -19,6 +19,8 @@ interface IJournalDetailModalProps {
   journal?: IJournal | null;
   journalId?: string | null;
   onUpdate: (updatedJournal: IJournal) => void;
+  // Info: (20260721 - Emily) 帳本 id 可由 prop 注入(碳盤查頁等非 account_book 路徑;未提供時沿用 URL)
+  accountBookId?: string | null;
 }
 
 export default function JournalDetailModal({
@@ -27,12 +29,15 @@ export default function JournalDetailModal({
   journal = undefined,
   journalId = undefined,
   onUpdate,
+  accountBookId: accountBookIdProp = undefined,
 }: IJournalDetailModalProps) {
   const { t } = useTranslation();
   const params = useParams();
 
   // Info: (20260309 - Julian) 從 URL 取得帳簿 ID
-  const accountBookId = params?.account_book_id as string;
+  // Info: (20260721 - Emily) prop 優先:carbon_chatbot 頁不在 account_book 路徑下,URL 取不到
+  const accountBookId =
+    accountBookIdProp ?? (params?.account_book_id as string);
 
   const [fetchedJournal, setFetchedJournal] = useState<IJournal | null>(null);
   const activeJournal = journal || fetchedJournal;

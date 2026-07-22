@@ -60,6 +60,8 @@ interface IRecordTabModalProps {
   voucherId?: string | null;
   esgId?: string | null;
   file?: { id: string; hash?: string; fileName?: string } | null;
+  // Info: (20260721 - Emily) 帳本 id 可由 prop 注入(碳盤查頁等非 account_book 路徑;未提供時各分頁沿用 URL)
+  accountBookId?: string | null;
   onJournalUpdate?: (journal: IJournal) => void;
   onVoucherUpdate?: (voucher: IVoucher) => void;
   onEsgUpdate?: (esg: IEsgRecordDetail) => void;
@@ -76,6 +78,7 @@ export default function RecordTabModal({
   voucherId: initialVoucherId = undefined,
   esgId: initialEsgId = undefined,
   file: initialFile = undefined,
+  accountBookId = undefined,
   onJournalUpdate = undefined,
   onVoucherUpdate = undefined,
   onEsgUpdate = undefined,
@@ -371,6 +374,7 @@ export default function RecordTabModal({
                           onClose={onClose}
                           journalId={journalId}
                           onUpdate={handleJournalUpdate}
+                          accountBookId={accountBookId}
                         />
                       </div>
                     )}
@@ -388,6 +392,7 @@ export default function RecordTabModal({
                           onClose={onClose}
                           voucherId={voucherId}
                           onUpdate={handleVoucherUpdate}
+                          accountBookId={accountBookId}
                         />
                       </div>
                     )}
@@ -405,6 +410,7 @@ export default function RecordTabModal({
                           onClose={onClose}
                           esgId={esgId}
                           onSave={handleEsgUpdate}
+                          accountBookId={accountBookId}
                         />
                       </div>
                     )}

@@ -262,6 +262,8 @@ export default function CarbonChatbotPage() {
           file={
             evidenceTarget.fileId ? { id: evidenceTarget.fileId } : undefined
           }
+          // Info: (20260721 - Emily) UAT:本頁不在 account_book 路徑下,帳本 id 必須由 prop 注入
+          accountBookId={activeSessionAccess.accountBookId}
         />
       )}
     </div>
