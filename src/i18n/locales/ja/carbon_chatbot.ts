@@ -189,7 +189,7 @@ export const carbonChatbot = {
   book_records_imported:
     "帳簿から {{count}} 件の証憑レベル活動データをインポートしました(重複は自動スキップ)",
   book_records_imported_with_skips:
-    "{{count}} 件をインポート。{{skipped}} 件はスコープ/単位が対応できずスキップしました。ESG ページで補完してください",
+    "{{count}} 件をインポート。{{skipped}} 件は GHG スコープを判定できずスキップしました。ESG ページでスコープまたは活動タイプを設定してください",
   book_records_import_failed: "帳簿からのインポートに失敗しました。再試行してください",
   activity_open_evidence: "証憑を表示 ↗",
   evidence_chain_title: "排出証拠チェーン(クリックで段階的に展開、最小単位は単一証憑)",

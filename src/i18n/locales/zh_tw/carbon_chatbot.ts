@@ -167,7 +167,7 @@ export const carbonChatbot = {
   book_records_importing: "正在從帳本匯入已認列的憑證級碳排數據…",
   book_records_imported: "已從帳本匯入 {{count}} 筆憑證級活動數據（重複者自動略過）",
   book_records_imported_with_skips:
-    "已從帳本匯入 {{count}} 筆；{{skipped}} 筆因範疇/單位無法對應而略過，請至 ESG 頁補齊",
+    "已從帳本匯入 {{count}} 筆；{{skipped}} 筆因無法判定 GHG 範疇而略過，請至 ESG 頁補選範疇或活動類型",
   book_records_import_failed: "從帳本匯入失敗，請稍後再試",
   activity_open_evidence: "查看憑證 ↗",
   evidence_chain_title: "排放證據鏈（點擊逐層展開，最細至單一憑證）",

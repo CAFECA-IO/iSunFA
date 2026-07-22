@@ -193,7 +193,7 @@ export const carbonChatbot = {
   book_records_imported:
     "Imported {{count}} voucher-level activity record(s) from the book (duplicates skipped automatically)",
   book_records_imported_with_skips:
-    "Imported {{count}} record(s); {{skipped}} skipped because scope/unit could not be mapped — please complete them on the ESG page",
+    "Imported {{count}} record(s); {{skipped}} skipped because the GHG scope could not be determined — set the scope or activity type on the ESG page",
   book_records_import_failed: "Import from the account book failed; please retry",
   activity_open_evidence: "View voucher ↗",
   evidence_chain_title:

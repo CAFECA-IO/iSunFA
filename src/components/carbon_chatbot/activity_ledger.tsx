@@ -93,7 +93,7 @@ export function ActivityLedger({
           type="button"
           disabled={isImportingFromBook}
           onClick={onImportFromBook}
-          className="mb-2 flex items-center justify-center gap-1.5 rounded-lg bg-teal-50 px-2 py-1.5 text-[11px] font-bold text-teal-700 ring-1 ring-teal-100 transition-colors hover:bg-teal-100 disabled:cursor-not-allowed disabled:opacity-60"
+          className="mb-2 flex items-center justify-center gap-1.5 rounded-lg bg-orange-50 px-2 py-1.5 text-[11px] font-bold text-[#e04f00] ring-1 ring-orange-100 transition-colors hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isImportingFromBook ? (
             <Loader2 size={12} className="animate-spin" />
@@ -129,7 +129,7 @@ export function ActivityLedger({
                   <button
                     type="button"
                     onClick={() => onOpenEvidence(activity)}
-                    className="truncate font-bold text-teal-600 underline-offset-2 hover:underline"
+                    className="truncate font-bold text-[#e04f00] underline-offset-2 hover:underline"
                   >
                     {t("carbon_chatbot.activity_open_evidence")}
                   </button>

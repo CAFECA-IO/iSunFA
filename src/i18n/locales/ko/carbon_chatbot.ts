@@ -188,7 +188,7 @@ export const carbonChatbot = {
   book_records_imported:
     "장부에서 {{count}}건의 증빙 수준 활동 데이터를 가져왔습니다(중복은 자동 생략)",
   book_records_imported_with_skips:
-    "{{count}}건 가져옴; {{skipped}}건은 스코프/단위를 매핑할 수 없어 생략했습니다. ESG 페이지에서 보완해 주세요",
+    "{{count}}건 가져옴; {{skipped}}건은 GHG 스코프를 판정할 수 없어 생략했습니다. ESG 페이지에서 스코프 또는 활동 유형을 설정해 주세요",
   book_records_import_failed: "장부 가져오기에 실패했습니다. 다시 시도해 주세요",
   activity_open_evidence: "증빙 보기 ↗",
   evidence_chain_title: "배출 증거 체인(클릭하여 단계별 확장, 최소 단위는 단일 증빙)",

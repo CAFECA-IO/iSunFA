@@ -145,14 +145,14 @@ export function EvidenceChain({ accountBookId }: IEvidenceChainProps) {
   }
 
   return (
-    <div className="my-4 overflow-hidden rounded-xl border border-teal-100 bg-white text-sm">
+    <div className="my-4 overflow-hidden rounded-xl border border-orange-100 bg-white text-sm">
       {/* Info: (20260720 - Emily) 第 0 層:總排放(全部憑證的並聯總和) */}
-      <div className="flex items-center justify-between gap-2 border-b border-teal-100 bg-teal-50/60 px-4 py-2.5">
-        <span className="flex items-center gap-1.5 text-xs font-bold text-teal-800">
+      <div className="flex items-center justify-between gap-2 border-b border-orange-100 bg-orange-50/60 px-4 py-2.5">
+        <span className="flex items-center gap-1.5 text-xs font-bold text-[#9a3412]">
           <Link2 size={13} />
           {t("carbon_chatbot.evidence_chain_title")}
         </span>
-        <span className="shrink-0 font-mono text-xs font-bold text-teal-800">
+        <span className="shrink-0 font-mono text-xs font-bold text-[#9a3412]">
           {t("carbon_chatbot.evidence_chain_total")}:{" "}
           {MoneyUtil.formatDynamic(total, 3)} kgCO2e
         </span>
@@ -233,11 +233,11 @@ export function EvidenceChain({ accountBookId }: IEvidenceChainProps) {
                           key={record.esgRecordId ?? record.source}
                           type="button"
                           onClick={() => setEvidenceTarget(record)}
-                          className="ml-5 flex w-[calc(100%-1.25rem)] items-center gap-2 rounded-md px-3 py-1.5 text-left transition-colors hover:bg-teal-50"
+                          className="ml-5 flex w-[calc(100%-1.25rem)] items-center gap-2 rounded-md px-3 py-1.5 text-left transition-colors hover:bg-orange-50"
                         >
                           {record.isVerified ? (
                             <span title={t("carbon_chatbot.evidence_chain_verified")}>
-                              <ShieldCheck size={11} className="shrink-0 text-teal-600" />
+                              <ShieldCheck size={11} className="shrink-0 text-green-600" />
                             </span>
                           ) : (
                             <span title={t("carbon_chatbot.evidence_chain_unverified")}>
@@ -255,7 +255,7 @@ export function EvidenceChain({ accountBookId }: IEvidenceChainProps) {
                               ),
                             })}
                           </span>
-                          <span className="shrink-0 text-[10px] font-bold text-teal-600">
+                          <span className="shrink-0 text-[10px] font-bold text-[#e04f00]">
                             {record.source}
                           </span>
                         </button>
