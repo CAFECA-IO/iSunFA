@@ -91,9 +91,11 @@ export type IMatrixAction = {
       payload: { xMin?: string; xMax?: string; yMin?: string; yMax?: string };
     }
   | {
-      // Info: (20260721 - Julian) 編輯群組：一次套用「成員組成」與「群組顏色」。
-      // memberLineIndexes 為最終應屬於此群組的資料列行號；未列入而原屬此群組者將被移出（取消分組）。
-      // color 選填：提供時將該群組所有成員的第 5 欄顏色統一為此 HEX；空／未提供則保留各列既有顏色。
+      /**
+       * Info: (20260721 - Julian) 編輯群組：一次套用「成員組成」與「群組顏色」。
+       * memberLineIndexes 為最終應屬於此群組的資料列行號；未列入而原屬此群組者將被移出（取消分組）。
+       * color 選填：提供時將該群組所有成員的第 5 欄顏色統一為此 HEX；空／未提供則保留各列既有顏色。
+       */
       type: MatrixActionType.EDIT_GROUP;
       payload: { group: string; memberLineIndexes: number[]; color?: string };
     }

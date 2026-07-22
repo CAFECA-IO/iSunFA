@@ -74,9 +74,13 @@ const MATRIX_TOOLS: IToolItem[] = [
 ];
 
 /**
- * ToDo: (20260722 - Luphia) i18n 破功：此處與本檔所有 t("中文") 呼叫都把中文字面量當成 key，
- * getNestedValue 找不到對應路徑就原樣回傳，導致 5 種語系（en/ja/ko/zh_cn/zh_tw）全部只顯示中文。
- * 應比照同 PR Sankey 的 chart.mermaid.ai_editor.sankey.* 慣例，改用正式 key 並補齊 5 份 locale 檔。
+ * ToDo: (20260722 - Luphia) 修正 i18n：本檔目前所有 t("中文") 呼叫都把中文字面量當成 key，
+ * getNestedValue 找不到對應路徑便原樣回傳，導致 5 種語系（en/ja/ko/zh_cn/zh_tw）全部只顯示中文。
+ * 修正步驟：
+ * 1. 在 src/i18n/locales/{en,ja,ko,zh_cn,zh_tw}/chart.ts 新增 chart.mermaid.ai_editor.matrix.* 系列 key（比照 sankey.*）。
+ * 2. 本檔所有 t("中文")（工具名、面板標題、欄位標籤、按鈕文字）改用正式 key。
+ * 3. 未經 t() 的硬編字串（placeholder「請輸入項目標題」「可留白」「自訂顏色」與純文字提示「請選擇分組」「分組內暫無選擇項目」等）一併改用 t() + key。
+ * 4. 下方 MATRIX_TOOL_TRANSLATION_KEYS 的值改為 key 字串（名稱亦應正名，非中文標籤）。
  */
 const MATRIX_TOOL_TRANSLATION_KEYS: Record<MatrixTools, string> = {
   [MatrixTools.ADD_ITEM]: "新增項目",
@@ -776,9 +780,11 @@ const DeleteItemPanel: FC<IBasePanelProps> = ({
   );
 };
 
-// Info: (20260721 - Julian)
-// 簡易選色盤：預設調色盤色票（與自動配色一致）+ 原生色票輸入供自訂 HEX。
-// 受控元件，value 為目前 HEX（空字串代表尚未選色），onChange 回傳選定 HEX。
+/**
+ * Info: (20260721 - Julian)
+ * 簡易選色盤：預設調色盤色票（與自動配色一致）+ 原生色票輸入供自訂 HEX。
+ * 受控元件，value 為目前 HEX（空字串代表尚未選色），onChange 回傳選定 HEX。
+ */
 const MatrixColorPicker: FC<{
   value: string;
   onChange: (hex: string) => void;

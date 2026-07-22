@@ -30,9 +30,11 @@ import { parseCustomChart } from "@/lib/utils/custom_chart_parser";
  * 正是專案護欄哲學該覆蓋的目標；請補上單元測試，含 parse→edit→parse round-trip 與 CSV 逗號/引號跳脫邊界。
  */
 
-// Info: (20260721 - Julian)
-// 矩陣圖的設定列 key（對應 custom_chart_parser 的 CONFIG_KEYS_BY_TYPE[MATRIX]）；
-// 以列舉值組成，避免魔法字串。用來在編輯時區分「設定列」與「資料列」。
+/**
+ * Info: (20260721 - Julian)
+ * 矩陣圖的設定列 key（對應 custom_chart_parser 的 CONFIG_KEYS_BY_TYPE[MATRIX]）；
+ * 以列舉值組成，避免魔法字串。用來在編輯時區分「設定列」與「資料列」。
+ */
 const MATRIX_CONFIG_KEYS: ReadonlySet<string> = new Set<string>([
   CustomChartConfigKey.TITLE,
   CustomChartConfigKey.X_AXIS,
@@ -287,10 +289,12 @@ export const applyMatrixAction = (
     }
 
     case MatrixActionType.EDIT_GROUP: {
-      // Info: (20260721 - Julian) 一次套用成員組成與顏色：
-      // - 成員列：設群組為 group，並套用顏色（有提供 color 則統一；否則沿用原屬此群組時的既有顏色）
-      // - 原屬此群組但不在成員清單者：移出群組（清除群組與顏色，成為未分組點）
-      // - 其餘資料列不動
+      /**
+       * Info: (20260721 - Julian) 一次套用成員組成與顏色：
+       * - 成員列：設群組為 group，並套用顏色（有提供 color 則統一；否則沿用原屬此群組時的既有顏色）
+       * - 原屬此群組但不在成員清單者：移出群組（清除群組與顏色，成為未分組點）
+       * - 其餘資料列不動
+       */
       const { group, memberLineIndexes, color } = action.payload;
       if (!group) break;
       const memberSet = new Set(memberLineIndexes);
