@@ -74,3 +74,20 @@ export const CUSTOM_CHART_COMMENT_PREFIX = "%%";
 
 // Info: (20260717 - Julian) 雙極軸分隔符（左為 min 端、右為 max 端）；VS16 變體於 parser 內先行移除
 export const CUSTOM_CHART_AXIS_SEPARATORS: readonly string[] = ["↔", "<->"];
+
+/**
+ * Info: (20260722 - Julian)
+ * 背景色
+ * 以低彩度、高明度的淺色為主，適合作為背景不干擾前景資料點與文字。
+ */
+export const BACKGROUND_COLOR_OPTIONS = [
+  "#FDECEC", // 淺紅
+  "#FEF3E0", // 淺橘
+  "#FEF9E7", // 淺黃
+  "#EAF6EC", // 淺綠
+  "#E6F4F1", // 淺青
+  "#E8F0FE", // 淺藍
+  "#F0EBFA", // 淺紫
+  "#F4F4F5", // 淺灰
+  "#FFFFFF", // 白
+];

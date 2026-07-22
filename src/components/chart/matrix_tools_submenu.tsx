@@ -11,18 +11,23 @@ import {
   LucideIcon,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { MatrixActionType } from "@/constants/custom_chart";
+import {
+  MatrixActionType,
+  BACKGROUND_COLOR_OPTIONS,
+} from "@/constants/custom_chart";
 import { IMatrixAction, IMatrixParseResult } from "@/interfaces/custom_chart";
 import { parseMatrixData } from "@/lib/utils/custom_matrix_editor";
 import {
   MERMAID_INPUT_STYLE,
   MERMAID_LABEL_STYLE,
   MERMAID_SUBMIT_BUTTON_STYLE,
+  MERMAID_RANGE_STYLE,
 } from "@/constants/mermaid_chart";
 import { SegmentedControl } from "@/components/chart/mermaid_common_components";
 import { DEFAULT_COLORS } from "@/components/common/donut_chart";
 import { Checkbox } from "@/components/common/checkbox";
 import { DEFAULT_QUADRANT_COLORS } from "@/components/chart/matrix_chart";
+import ColorPicker from "@/components/common/color_picker";
 
 // ToDo: (20260721 - Julian) 補上翻譯檔
 
@@ -30,20 +35,6 @@ import { DEFAULT_QUADRANT_COLORS } from "@/components/chart/matrix_chart";
 const RANGE_STEP = 10;
 const RANGE_MAX = 100;
 const RANGE_MIN = -100;
-
-// Info: (20260721 - Julian)
-// 象限底色候選：以低彩度、高明度的淺色為主，適合作為背景不干擾前景資料點與文字。
-const QUADRANT_COLOR_OPTIONS = [
-  "#FDECEC", // 淺紅
-  "#FEF3E0", // 淺橘
-  "#FEF9E7", // 淺黃
-  "#EAF6EC", // 淺綠
-  "#E6F4F1", // 淺青
-  "#E8F0FE", // 淺藍
-  "#F0EBFA", // 淺紫
-  "#F4F4F5", // 淺灰
-  "#FFFFFF", // 白
-];
 
 // Info: (20260721 - Julian) 四象限標籤（Q1..Q4，對應渲染順序：右上、左上、左下、右下）
 const QUADRANT_LABELS = [
@@ -113,48 +104,6 @@ interface IBasePanelProps {
   onAddAction: (action: IMatrixAction) => void;
 }
 
-// Info: (20260722 - Julian) 預設為白色
-const INITIAL_COLOR_HEX = "#FFFFFF";
-
-// Info: (20260721 - Julian)
-// 簡易選色盤：預設調色盤色票（與自動配色一致）+ 原生色票輸入供自訂 HEX。
-// 受控元件，value 為目前 HEX（空字串代表尚未選色），onChange 回傳選定 HEX。
-const MatrixColorPicker: FC<{
-  colorOptions: string[];
-  value: string;
-  onChange: (hex: string) => void;
-}> = ({ colorOptions, value, onChange }) => (
-  <div className="flex flex-wrap items-center gap-1.5">
-    {colorOptions.map((color) => (
-      <button
-        key={`matrix-swatch-${color}`}
-        type="button"
-        aria-label={color}
-        onClick={() => onChange(color)}
-        className={`size-7 rounded-md border-2 transition ${
-          value.toLowerCase() === color.toLowerCase()
-            ? "border-slate-800"
-            : "border-transparent hover:border-slate-300"
-        }`}
-        style={{ backgroundColor: color }}
-      />
-    ))}
-    {/* Info: (20260721 - Julian) 自訂顏色：原生色票 input（回傳小寫 HEX） */}
-    <span
-      className="relative block size-7 shrink-0 overflow-hidden rounded-md border-2 border-dashed border-slate-300"
-      title="自訂顏色"
-    >
-      <input
-        type="color"
-        aria-label="自訂顏色"
-        value={value || INITIAL_COLOR_HEX}
-        onChange={(e) => onChange(e.target.value)}
-        className="absolute h-full w-full scale-200 cursor-pointer"
-      />
-    </span>
-  </div>
-);
-
 // Info: (20260721 - Julian) 「新增項目」面板
 const AddItemPanel: FC<IBasePanelProps> = ({
   parsedMatrixData,
@@ -218,7 +167,7 @@ const AddItemPanel: FC<IBasePanelProps> = ({
               step={RANGE_STEP}
               value={xCoord}
               onChange={(e) => setXCoord(Number(e.target.value))}
-              className=""
+              className={MERMAID_RANGE_STYLE}
             />
             <div className="grid grid-cols-3 text-[10px] text-slate-500">
               <p className="text-left">{xAxis.min}</p>
@@ -241,7 +190,7 @@ const AddItemPanel: FC<IBasePanelProps> = ({
               step={RANGE_STEP}
               value={yCoord}
               onChange={(e) => setYCoord(Number(e.target.value))}
-              className=""
+              className={MERMAID_RANGE_STYLE}
             />
             <div className="grid grid-cols-3 text-[10px] text-slate-500">
               <p className="text-left">{yAxis.min}</p>
@@ -434,7 +383,7 @@ const EditItemPanel: FC<IBasePanelProps> = ({
               step={RANGE_STEP}
               value={xCoord}
               onChange={(e) => setXCoord(Number(e.target.value))}
-              className=""
+              className={MERMAID_RANGE_STYLE}
             />
             <div className="grid grid-cols-3 text-[10px] text-slate-500">
               <p className="text-left">{xAxis.min}</p>
@@ -457,7 +406,7 @@ const EditItemPanel: FC<IBasePanelProps> = ({
               step={RANGE_STEP}
               value={yCoord}
               onChange={(e) => setYCoord(Number(e.target.value))}
-              className=""
+              className={MERMAID_RANGE_STYLE}
             />
             <div className="grid grid-cols-3 text-[10px] text-slate-500">
               <p className="text-left">{yAxis.min}</p>
@@ -722,7 +671,7 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
           {/* Info: (20260721 - Julian) 分組顏色 */}
           <div className="flex flex-col gap-1.5">
             <p className={MERMAID_LABEL_STYLE}>{t("分組顏色")}</p>
-            <MatrixColorPicker
+            <ColorPicker
               colorOptions={DEFAULT_COLORS}
               value={color}
               onChange={setColor}
@@ -916,8 +865,8 @@ const ChangeQuadrantColorPanel: FC<IBasePanelProps> = ({
               <Blocks size={14} className={`shrink-0 ${l.rotate}`} />
               <p className={MERMAID_LABEL_STYLE}>{t(l.label)}</p>
             </div>
-            <MatrixColorPicker
-              colorOptions={QUADRANT_COLOR_OPTIONS}
+            <ColorPicker
+              colorOptions={BACKGROUND_COLOR_OPTIONS}
               value={colors[i]}
               onChange={(hex) => setColorAt(i, hex)}
             />
