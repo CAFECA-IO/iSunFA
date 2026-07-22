@@ -73,6 +73,11 @@ const MATRIX_TOOLS: IToolItem[] = [
   },
 ];
 
+/**
+ * ToDo: (20260722 - Luphia) i18n 破功：此處與本檔所有 t("中文") 呼叫都把中文字面量當成 key，
+ * getNestedValue 找不到對應路徑就原樣回傳，導致 5 種語系（en/ja/ko/zh_cn/zh_tw）全部只顯示中文。
+ * 應比照同 PR Sankey 的 chart.mermaid.ai_editor.sankey.* 慣例，改用正式 key 並補齊 5 份 locale 檔。
+ */
 const MATRIX_TOOL_TRANSLATION_KEYS: Record<MatrixTools, string> = {
   [MatrixTools.ADD_ITEM]: "新增項目",
   [MatrixTools.EDIT_ITEM]: "編輯項目",
@@ -127,6 +132,7 @@ const AddItemPanel: FC<IBasePanelProps> = ({
             {t("項目標題")}
             <span className="ml-0.5 text-red-500">*</span>
           </label>
+          {/* ToDo: (20260722 - Luphia) 本檔多處 placeholder（「請輸入項目標題」「可留白」「自訂顏色」等）與純文字提示未經 t()，需一併抽成 i18n key */}
           <input
             id="newTitleLabel"
             type="text"
@@ -206,6 +212,7 @@ const AddItemPanel: FC<IBasePanelProps> = ({
               placeholder={t("請填入新的分組名稱")!}
             />
           ) : (
+            // ToDo: (20260722 - Luphia) id="addLinkFromLabel" 為 Sankey 複製殘留，與 label htmlFor="newItemGroupLabel" 不符，且跨面板重複；應改為對應的唯一 id
             <select
               id="addLinkFromLabel"
               value={selectedGroup}
@@ -281,6 +288,10 @@ const EditItemPanel: FC<IBasePanelProps> = ({
   const isUnselected = !selectedItem;
 
   // Info: (20260721 - Julian) 尚未變更表單
+  /**
+   * ToDo: (20260722 - Luphia) 未分組項目 group 為 undefined，selectedGroup 初始為 ""，
+   * "" === undefined 恆為 false，導致剛選取的未分組項目被誤判為「已變更」而解鎖提交；兩側需正規化後再比對。
+   */
   const isUnchanged =
     !!selectedItem &&
     titleInput.trim() === selectedItem.label &&
@@ -428,6 +439,7 @@ const EditItemPanel: FC<IBasePanelProps> = ({
               placeholder={t("請填入新的分組名稱")!}
             />
           ) : (
+            // ToDo: (20260722 - Luphia) id="addLinkFromLabel" 為 Sankey 複製殘留，與 label htmlFor="editItemGroupLabel" 不符，且與 AddItemPanel 重複；應改為對應的唯一 id
             <select
               id="addLinkFromLabel"
               value={selectedGroup}
@@ -804,6 +816,7 @@ const MatrixColorPicker: FC<{
 
 // Info: (20260721 - Julian) 「變更象限顏色」面板
 // ToDo: (20260721 - Julian) 實作四象限背景顏色設定工具
+// ToDo: (20260722 - Luphia) 在功能實作完成前，MATRIX_TOOLS 應先隱藏此工具按鈕，避免使用者點到只顯示「開發中」的空面板（dead UI）
 const ChangeQuadrantColorPanel: FC<IBasePanelProps> = () => {
   const { t } = useTranslation();
   return (

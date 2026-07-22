@@ -20,6 +20,16 @@ import { parseCustomChart } from "@/lib/utils/custom_chart_parser";
  * 附加式新增以避免影響既有行號，純字串操作、決定論、不呼叫 LLM、不做數值計算。
  */
 
+/**
+ * ToDo: (20260722 - Luphia) DELETE_ITEM 以 splice 移除資料列會位移其後所有 lineIndex；
+ * 當呼叫端（modal）以固定的原始 lineIndex 連續套用多個動作時，刪除後的編輯/刪除會打到錯誤資料列。
+ * 應在此明確約定套用順序（如刪除延後），或改以穩定 id 定位，並於呼叫端配合以 modifiedRaw 重新解析。
+ */
+/**
+ * ToDo: (20260722 - Luphia) parseMatrixItems / applyMatrixAction / buildAxisValue / formatCsvField 皆為純決定論函式，
+ * 正是專案護欄哲學該覆蓋的目標；請補上單元測試，含 parse→edit→parse round-trip 與 CSV 逗號/引號跳脫邊界。
+ */
+
 // Info: (20260721 - Julian)
 // 矩陣圖的設定列 key（對應 custom_chart_parser 的 CONFIG_KEYS_BY_TYPE[MATRIX]）；
 // 以列舉值組成，避免魔法字串。用來在編輯時區分「設定列」與「資料列」。

@@ -79,6 +79,12 @@ const CustomChartAiModal: FC<ICustomChartAiModalProps> = ({
   const isMatrix = chartType === CustomChartType.MATRIX;
 
   // Info: (20260721 - Julian) 依序套用暫存動作，決定論算出修改後的 DSL（不呼叫後端）
+  /**
+   * ToDo: (20260722 - Luphia) stacked-actions 定位風險：MatrixToolsSection 以原始 raw 解析選單，
+   * 但動作以 reduce 累積套用；DELETE_ITEM 會 splice 位移後續 lineIndex，
+   * 故「先刪除、後編輯/刪除」時，用原始 raw 算出的 lineIndex 會打到錯誤資料列。
+   * 應改為以 modifiedRaw 解析面板（反映累積狀態），或將刪除延後套用，或改用穩定 id 取代 lineIndex 定位。
+   */
   const modifiedRaw = useMemo(
     () =>
       isMatrix
@@ -162,6 +168,7 @@ const CustomChartAiModal: FC<ICustomChartAiModalProps> = ({
           size={24}
           className="mx-auto mb-2 animate-pulse text-slate-300"
         />
+        {/* ToDo: (20260722 - Luphia) 硬編中文字串，且此處原本使用 t("chart.custom_chart.after_placeholder")；應改回 i18n key（並補齊各語系）而非寫死中文 */}
         <span className="text-xs">
           使用常用工具或輸入 AI 指令，即可預覽修改後的圖表
         </span>
@@ -244,8 +251,10 @@ const CustomChartAiModal: FC<ICustomChartAiModalProps> = ({
                     />
 
                     {/* Info: (20260721 - Julian) 結構化動作暫存清單 */}
+                    {/* ToDo: (20260722 - Luphia) modifiedRaw 目前僅用於預覽，尚無「套用/儲存」把結果寫回；結構化編輯無法真正提交，待補提交流程 */}
                     {pendingActions.length > 0 && (
                       <div className="flex flex-col border-t border-slate-200 pt-5">
+                        {/* ToDo: (20260722 - Luphia) 硬編中文「已套用的變更」，改用 i18n key */}
                         <span className="mb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
                           已套用的變更
                         </span>
@@ -277,6 +286,7 @@ const CustomChartAiModal: FC<ICustomChartAiModalProps> = ({
                     )}
                   </>
                 ) : (
+                  // ToDo: (20260722 - Luphia) 硬編中文「此圖表類型的常用工具開發中」，改用 i18n key
                   <div className="flex h-40 items-center justify-center text-center text-xs text-slate-400">
                     此圖表類型的常用工具開發中
                   </div>
