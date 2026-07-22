@@ -4,6 +4,7 @@ import { FC, ReactNode, useEffect, useMemo, useState } from "react";
 import {
   CustomChartType,
   CustomChartExportName,
+  CUSTOM_CHART_AI_ENABLED,
 } from "@/constants/custom_chart";
 import { parseCustomChart } from "@/lib/utils/custom_chart_parser";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -96,17 +97,22 @@ const CustomChart: FC<ICustomChartProps> = ({ type, raw }) => {
     <>
       <ChartShell
         exportFileName={exportFileName}
-        openAiModal={() => setIsAiModalOpen(true)}
+        openAiModal={
+          CUSTOM_CHART_AI_ENABLED ? () => setIsAiModalOpen(true) : undefined
+        }
       >
         {chartNode}
       </ChartShell>
-      <AiChartEditorModal
-        open={isAiModalOpen}
-        onClose={() => setIsAiModalOpen(false)}
-        currentChart={currentRaw}
-        onAdopt={setCurrentRaw}
-        adapter={adapter}
-      />
+      {/* Info: (20260721 - Julian) 自訂圖表 AI 編輯器為 mock，功能旗標關閉時不掛載 */}
+      {CUSTOM_CHART_AI_ENABLED && (
+        <AiChartEditorModal
+          open={isAiModalOpen}
+          onClose={() => setIsAiModalOpen(false)}
+          currentChart={currentRaw}
+          onAdopt={setCurrentRaw}
+          adapter={adapter}
+        />
+      )}
     </>
   );
 };

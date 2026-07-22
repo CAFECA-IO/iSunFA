@@ -1,20 +1,13 @@
 import { useState, useEffect, FC } from "react";
-import { Tab, TabGroup, TabList, TabPanel, TabPanels } from "@headlessui/react";
-import {
-  Lightbulb,
-  Sparkles,
-  Wrench,
-  MessageSquare,
-  Trash2,
-} from "lucide-react";
 import { FlowchartToolsSection } from "@/components/chart/flowchart_tools_submenu";
 import { PieToolsSection } from "@/components/chart/pie_tools_submenu";
 import { GanttToolsSection } from "@/components/chart/gantt_tools_submenu";
 import { XYChartToolsSection } from "@/components/chart/xychart_tools_submenu";
+import { SankeyToolsSection } from "@/components/chart/sankey_tools_submenu";
+import { ChartEditorControlShell } from "@/components/chart/ai_chart_editor/chart_editor_control_shell";
 import { useTranslation } from "@/i18n/i18n_context";
 import { MermaidChartType } from "@/constants/mermaid_chart";
 import { IChartAction } from "@/lib/utils/mermaid_helpers";
-import { SankeyToolsSection } from "@/components/chart/sankey_tools_submenu";
 
 interface IMermaidAiControlPanelProps {
   chartType: MermaidChartType;
@@ -29,6 +22,10 @@ interface IMermaidAiControlPanelProps {
   onTitleChange: (newTitle: string) => void;
 }
 
+/**
+ * Info: (20260721 - Julian)
+ * mermaid 控制台：提供標題編輯與各圖表類型的工具區塊，版面外殼由 ChartEditorControlShell 共用。
+ */
 const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
   chartType,
   aiInstruction,
@@ -71,223 +68,103 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
     chartType === MermaidChartType.XYCHART ||
     chartType === MermaidChartType.SANKEY;
 
-  const instructionKey = `chart.mermaid.ai_editor.${chartType.toLowerCase()}.examples`;
-  const examples = t<string[]>(instructionKey) || [];
+  const examples =
+    t<string[]>(
+      `chart.mermaid.ai_editor.${chartType.toLowerCase()}.examples`,
+    ) || [];
 
-  const renderExamples = () => {
-    if (!Array.isArray(examples)) return null;
-    return (
-      <ul className="mt-2 ml-4 list-disc space-y-1 text-[11px] text-blue-600/80">
-        {examples.map((example: string, i: number) => (
-          <li key={i}>{example}</li>
-        ))}
-      </ul>
-    );
-  };
+  // Info: (20260721 - Julian) 標題編輯（Sankey 除外）
+  const titleSlot = isShowTitle ? (
+    <div className="mb-5 flex flex-col gap-2">
+      <span className="text-xs font-bold tracking-wider text-slate-500 uppercase">
+        {t("chart.mermaid.ai_editor.chart_title")}
+      </span>
+      <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+        <input
+          id="mermaid-title-input"
+          type="text"
+          className="w-full text-sm font-semibold text-slate-800 outline-none placeholder:font-normal placeholder:text-slate-400"
+          placeholder={t("chart.mermaid.ai_editor.chart_title_placeholder")}
+          value={localTitle}
+          onChange={(e) => setLocalTitle(e.target.value)}
+          onBlur={commitTitle}
+          onKeyDown={handleKeyDown}
+        />
+      </div>
+    </div>
+  ) : undefined;
+
+  // Info: (20260721 - Julian) 工具區塊：依 chartType 分派；無工具則顯示佔位
+  const toolsSlot = isShowTools ? (
+    <div className="flex flex-col">
+      <span className="mb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
+        {t("chart.mermaid.ai_editor.tabs.quick_tools")}
+      </span>
+      {chartType === MermaidChartType.PIE ? (
+        <PieToolsSection
+          selectedTool={selectedTool}
+          setSelectedTool={setSelectedTool}
+          chart={chart}
+          onAddAction={onAddAction}
+        />
+      ) : chartType === MermaidChartType.FLOWCHART ? (
+        <FlowchartToolsSection
+          selectedTool={selectedTool}
+          setSelectedTool={setSelectedTool}
+          chart={chart}
+          onAddAction={onAddAction}
+        />
+      ) : chartType === MermaidChartType.GANTT ? (
+        <GanttToolsSection
+          selectedTool={selectedTool}
+          setSelectedTool={setSelectedTool}
+          chart={chart}
+          onAddAction={onAddAction}
+        />
+      ) : chartType === MermaidChartType.XYCHART ? (
+        <XYChartToolsSection
+          selectedTool={selectedTool}
+          setSelectedTool={setSelectedTool}
+          chart={chart}
+          onAddAction={onAddAction}
+        />
+      ) : chartType === MermaidChartType.SANKEY ? (
+        <SankeyToolsSection
+          selectedTool={selectedTool}
+          setSelectedTool={setSelectedTool}
+          chart={chart}
+          onAddAction={onAddAction}
+        />
+      ) : null}
+    </div>
+  ) : (
+    <div className="flex h-40 items-center justify-center text-xs text-slate-400">
+      {t("chart.mermaid.ai_editor.no_tools_available")}
+    </div>
+  );
 
   return (
-    <div className="flex w-full flex-col overflow-y-auto border-r border-slate-200 bg-slate-50 md:w-2/5">
-      {/* Info: (20260708 - Julian) Header */}
-      <div className="flex shrink-0 items-center justify-between bg-white px-5 py-4">
-        <div className="flex items-center gap-2">
-          <div className="shrink-0 rounded-lg bg-blue-50 p-1.5 text-blue-600">
-            <Sparkles size={20} />
-          </div>
-          <div>
-            <h3 className="text-sm leading-none font-bold text-slate-800">
-              {t("chart.mermaid.ai_editor.title")}
-            </h3>
-            <span className="text-[10px] font-medium text-slate-400">
-              {t("chart.mermaid.ai_editor.subtitle")}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <TabGroup className="flex flex-1 flex-col overflow-hidden">
-        <TabList className="grid shrink-0 grid-cols-2 gap-1 bg-white px-5">
-          <Tab
-            className={({ selected }) =>
-              `flex items-center justify-center gap-2 rounded-t-2xl border-x border-t border-slate-200 px-4 py-3 text-xs font-bold transition-all focus:outline-none ${
-                selected
-                  ? "bg-slate-50 text-slate-700"
-                  : "bg-white text-slate-400 hover:text-slate-600"
-              }`
-            }
-          >
-            <Wrench size={14} />
-            {t("chart.mermaid.ai_editor.tabs.quick_tools")}
-          </Tab>
-          <Tab
-            className={({ selected }) =>
-              `flex items-center justify-center gap-2 rounded-t-2xl border-x border-t border-slate-200 px-4 py-3 text-xs font-bold transition-all focus:outline-none ${
-                selected
-                  ? "bg-slate-50 text-slate-700"
-                  : "bg-white text-slate-400 hover:text-slate-600"
-              }`
-            }
-          >
-            <MessageSquare size={14} />
-            {t("chart.mermaid.ai_editor.tabs.ai_assistant")}
-          </Tab>
-        </TabList>
-
-        <TabPanels className="flex-1 overflow-y-auto p-5">
-          {/* Info: (20260713 - Julian) 圖表標題 Input */}
-          {isShowTitle && (
-            <div className="mb-5 flex flex-col gap-2">
-              <span className="text-xs font-bold tracking-wider text-slate-500 uppercase">
-                {t("chart.mermaid.ai_editor.chart_title")}
-              </span>
-              <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-                <input
-                  id="mermaid-title-input"
-                  type="text"
-                  className="w-full text-sm font-semibold text-slate-800 outline-none placeholder:font-normal placeholder:text-slate-400"
-                  placeholder={t(
-                    "chart.mermaid.ai_editor.chart_title_placeholder",
-                  )}
-                  value={localTitle}
-                  onChange={(e) => setLocalTitle(e.target.value)}
-                  onBlur={commitTitle}
-                  onKeyDown={handleKeyDown}
-                />
-              </div>
-            </div>
-          )}
-          {/* Info: (20260708 - Julian) 快速工具 Tab */}
-          <TabPanel className="flex flex-col gap-6 bg-slate-50 focus:outline-none">
-            {isShowTools ? (
-              <div className="flex flex-col gap-6">
-                <div className="flex flex-col">
-                  <span className="mb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
-                    {t("chart.mermaid.ai_editor.tabs.quick_tools")}
-                  </span>
-                  {chartType === MermaidChartType.PIE ? (
-                    <PieToolsSection
-                      selectedTool={selectedTool}
-                      setSelectedTool={setSelectedTool}
-                      chart={chart}
-                      onAddAction={onAddAction}
-                    />
-                  ) : chartType === MermaidChartType.FLOWCHART ? (
-                    <FlowchartToolsSection
-                      selectedTool={selectedTool}
-                      setSelectedTool={setSelectedTool}
-                      chart={chart}
-                      onAddAction={onAddAction}
-                    />
-                  ) : chartType === MermaidChartType.GANTT ? (
-                    <GanttToolsSection
-                      selectedTool={selectedTool}
-                      setSelectedTool={setSelectedTool}
-                      chart={chart}
-                      onAddAction={onAddAction}
-                    />
-                  ) : chartType === MermaidChartType.XYCHART ? (
-                    <XYChartToolsSection
-                      selectedTool={selectedTool}
-                      setSelectedTool={setSelectedTool}
-                      chart={chart}
-                      onAddAction={onAddAction}
-                    />
-                  ) : chartType === MermaidChartType.SANKEY ? (
-                    <SankeyToolsSection
-                      selectedTool={selectedTool}
-                      setSelectedTool={setSelectedTool}
-                      chart={chart}
-                      onAddAction={onAddAction}
-                    />
-                  ) : null}
-                </div>
-
-                {/* Info: (20260708 - Julian) 結構化動作列表 */}
-                {pendingActions.length > 0 && (
-                  <div className="flex flex-col border-t border-slate-200 pt-5">
-                    <span className="mb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
-                      {t("chart.mermaid.ai_editor.command_list")}
-                    </span>
-                    <div className="flex flex-col gap-2">
-                      {pendingActions.map((action) => (
-                        <div
-                          key={action.id}
-                          className="flex items-center justify-between rounded-lg border border-blue-100 bg-white p-3 shadow-sm"
-                        >
-                          <div className="flex flex-col">
-                            <span className="text-[10px] font-bold tracking-tight text-blue-600 uppercase">
-                              {action.type}
-                            </span>
-                            <span className="text-xs font-medium text-slate-700">
-                              {action.description}
-                            </span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => onRemoveAction(action.id)}
-                            className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-500"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex h-40 items-center justify-center text-xs text-slate-400">
-                {t("chart.mermaid.ai_editor.no_tools_available")}
-              </div>
-            )}
-          </TabPanel>
-
-          {/* Info: (20260708 - Julian) AI 輔助 Tab */}
-          <TabPanel className="flex flex-col gap-5 focus:outline-none">
-            {/* Info: (20260708 - Julian) AI 輸入 */}
-            <div className="flex flex-col">
-              <div className="mb-2 flex items-center justify-between">
-                <label
-                  htmlFor="aiInstructionInput"
-                  className="text-xs font-bold tracking-wider text-slate-500"
-                >
-                  {t("chart.mermaid.ai_editor.tabs.ai_assistant")}
-                </label>
-                {aiInstruction && (
-                  <button
-                    type="button"
-                    onClick={() => setAiInstruction("")}
-                    className="text-[11px] font-bold text-slate-400 transition-colors hover:text-rose-500"
-                  >
-                    {t("chart.mermaid.ai_editor.clear_btn")}
-                  </button>
-                )}
-              </div>
-              <textarea
-                id="aiInstructionInput"
-                value={aiInstruction}
-                onChange={(e) => setAiInstruction(e.target.value)}
-                rows={6}
-                className="w-full rounded-xl border border-slate-200 bg-white p-4 text-xs placeholder-slate-400 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                placeholder={t(
-                  "chart.mermaid.ai_editor.ai_assistant_placeholder",
-                )}
-              />
-            </div>
-            {/* Info: (20260708 - Julian) 說明 */}
-            <div className="shrink-0 rounded-xl border border-blue-100 bg-blue-50/50 p-4 text-xs leading-relaxed text-blue-800">
-              <div className="mb-1 flex items-center gap-1 font-bold">
-                <Lightbulb size={14} strokeWidth={2.5} />
-                <p>{t("chart.mermaid.ai_editor.instructions_title")}</p>
-              </div>
-              <p className="whitespace-normal text-blue-700">
-                {t("chart.mermaid.ai_editor.instructions_desc")}
-              </p>
-              {renderExamples()}
-            </div>
-          </TabPanel>
-        </TabPanels>
-      </TabGroup>
-    </div>
+    <ChartEditorControlShell
+      headerTitle={t("chart.mermaid.ai_editor.title")}
+      headerSubtitle={t("chart.mermaid.ai_editor.subtitle")}
+      tabToolsLabel={t("chart.mermaid.ai_editor.tabs.quick_tools")}
+      tabAiLabel={t("chart.mermaid.ai_editor.tabs.ai_assistant")}
+      titleSlot={titleSlot}
+      toolsSlot={toolsSlot}
+      pendingActions={pendingActions}
+      onRemoveAction={onRemoveAction}
+      commandListLabel={t("chart.mermaid.ai_editor.command_list")}
+      aiInstruction={aiInstruction}
+      setAiInstruction={setAiInstruction}
+      instructionLabel={t("chart.mermaid.ai_editor.tabs.ai_assistant")}
+      clearLabel={t("chart.mermaid.ai_editor.clear_btn")}
+      instructionPlaceholder={t(
+        "chart.mermaid.ai_editor.ai_assistant_placeholder",
+      )}
+      tipTitle={t("chart.mermaid.ai_editor.instructions_title")}
+      tipDesc={t("chart.mermaid.ai_editor.instructions_desc")}
+      examples={examples}
+    />
   );
 };
 

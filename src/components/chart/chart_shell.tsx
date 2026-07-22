@@ -17,8 +17,8 @@ import { useTranslation } from "@/i18n/i18n_context";
 
 interface IChartShellProps {
   children: ReactNode;
-  // Info: (20260720 - Julian) 開啟 AI 助手 Modal
-  openAiModal: () => void;
+  // Info: (20260721 - Julian) 開啟 AI 助手 Modal；未提供則不顯示 AI 按鈕（如自訂圖表 AI 未啟用時）
+  openAiModal?: () => void;
   // Info: (20260720 - Julian) 提供檔名即啟用「下載 PNG / SVG」選單（匯出目前作用中的內容容器）
   exportFileName?: string;
   // Info: (20260720 - Julian) 是否顯示全螢幕切換（預設開啟）
@@ -44,7 +44,7 @@ const CONTENT_CLASS = "chart-shell-content";
  */
 const ChartShell: FC<IChartShellProps> = ({
   children,
-  openAiModal,
+  openAiModal = undefined,
   exportFileName = "chart",
   enableFullscreen = true,
   fullscreenTitle = "",
@@ -119,23 +119,31 @@ const ChartShell: FC<IChartShellProps> = ({
     resetZoom();
   };
 
+  // Info: (20260721 - Julian) 開 AI 助手前先退出全螢幕，避免全螢幕 backdrop（z-9999）蓋住 Modal（z-8888）
+  const handleOpenAiModal = () => {
+    setIsFullscreen(false);
+    openAiModal?.();
+  };
+
   const controlBtn =
     "shrink-0 cursor-pointer rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700";
 
   // Info: (20260720 - Julian) 工具列（一般與全螢幕共用）
   const toolbar = (
     <div className="chart-shell-toolbar absolute top-3 right-3 z-10 flex items-center gap-1 rounded-lg border border-slate-200/80 bg-white/95 p-1 shadow-sm backdrop-blur-sm">
-      <>
-        <button
-          type="button"
-          onClick={openAiModal}
-          className="shrink-0 cursor-pointer rounded-md p-1.5 text-blue-600 transition-colors hover:bg-slate-100"
-          title={t("chart.mermaid.ai_edit")!}
-        >
-          <Sparkles size={16} />
-        </button>
-        <div className="mx-0.5 h-3 w-px bg-slate-200" />
-      </>
+      {openAiModal && (
+        <>
+          <button
+            type="button"
+            onClick={handleOpenAiModal}
+            className="shrink-0 cursor-pointer rounded-md p-1.5 text-blue-600 transition-colors hover:bg-slate-100"
+            title={t("chart.mermaid.ai_edit")!}
+          >
+            <Sparkles size={16} />
+          </button>
+          <div className="mx-0.5 h-3 w-px bg-slate-200" />
+        </>
+      )}
       {exportFileName && (
         <>
           <div className="group/download relative shrink-0">
@@ -284,7 +292,7 @@ const ChartShell: FC<IChartShellProps> = ({
         {canvas}
       </div>
 
-      {/* ToDo: (20260722 - Julian) 全螢幕 backdrop z-9999 高於 AiChartEditorModal z-8888，全螢幕下點 AI 助手會被此層蓋住而無法操作；建議開 AI 時先退出全螢幕（見 merge plan §12-T3） */}
+      {/* Info: (20260721 - Julian) 全螢幕預覽（AI 助手於 handleOpenAiModal 先退出全螢幕，避免 z 疊放衝突） */}
       {isFullscreen && enableFullscreen && (
         <div
           ref={modalRef}
