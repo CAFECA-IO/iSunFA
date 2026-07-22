@@ -153,7 +153,8 @@ src/lib/utils/custom_chart_editor.ts // applyCustomChartAction 分派器（含 m
 
 **Phase 4 — 清理 ✅ 完成 (2026-07-21)**
 - ✅ **T3 z-index**：`ChartShell` 於 `handleOpenAiModal` 開 AI 前先 `setIsFullscreen(false)`，避免全螢幕 backdrop（`z-9999`）蓋住 Modal（`z-8888`）；移除該 ToDo 註解。
-- ✅ **T1 mock feature flag（採方案 A：隱整個自訂 AI 編輯器）**：新增 `CUSTOM_CHART_AI_ENABLED: boolean`（預設 `false`）。`ChartShell.openAiModal` 改選填、未提供則不顯示 AI 按鈕；`CustomChart` 於旗標關閉時不傳 `openAiModal`、不掛載 `AiChartEditorModal`。mermaid 恆顯示、不受影響。待後端就緒改 `true` 上線。
+- ✅ **T1（最終定案：不 gate Sparkles）**：先前一度以 `CUSTOM_CHART_AI_ENABLED` 隱整個自訂編輯器，後依產品決策**改回不 gate**——自訂圖表 Sparkles 恆顯示、編輯器恆掛載（旗標常數已移除）。改以「無常用工具時只顯示 AI 指令」處理未完成度（見下）。`ChartShell.openAiModal` 維持選填（未提供才不顯示按鈕）。
+- ✅ **控制台無工具模式**：`ChartEditorControlShell` 新增 `hasTools`；為 `false` 時去掉「常用工具 / AI 指令」分頁，左欄只顯示 AI 指令。custom `hasTools = isMatrix || isTornado`（histogram/boxplot 目前無工具 → 只顯示 AI 指令）；mermaid `hasTools = isShowTools`。
 - ✅ 死碼檢查：四個自訂編輯器模組 + canvas 皆仍被引用（旗標關閉是條件掛載，非死碼），無檔案可刪。
 - ✅ 文件更新：本計畫狀態、§11 決策點、§12 ToDo 表。
 - 🟡 **T4（`ChartShell` 每實例各綁 window wheel 監聽）**：與本合併弱相關，未處理，續留 ToDo 追蹤（見 §12-T4）。
@@ -204,7 +205,7 @@ Phase 1、2 完成即達成「單一通用 modal + 兩 adapter」的主要目標
 1. ✅ i18n 採 **A**（保留兩套 key、adapter 傳已翻譯字串）。
 2. ✅ 遷移後：`custom_chart_ai_modal.tsx` **刪除**；`mermaid_ai_modal.tsx` 保留為**薄包裝**（對外 API 不變）。
 3. ✅ **納入 Phase 3**（收斂 control/preview 子元件為兩個 shell）——已完成。
-4. ✅ mock 產生**以 feature flag 隱藏**：採「隱整個自訂 AI 編輯器」（`CUSTOM_CHART_AI_ENABLED`，預設 `false`）。
+4. ✅ mock 產生**不以 feature flag 隱藏**（最終定案）：Sparkles 恆顯示；改以「無常用工具時左欄只顯示 AI 指令、去分頁」處理未完成度。旗標常數已移除。
 
 ---
 
@@ -214,7 +215,7 @@ Phase 1、2 完成即達成「單一通用 modal + 兩 adapter」的主要目標
 
 | # | 位置 | 內容摘要 | 與合併關係 | 處置 |
 |---|---|---|---|---|
-| T1 | ~~`custom_chart_ai_modal.tsx:56`~~（檔案已刪，改由 custom adapter） | 本 Modal 為 mock：「產生」為佔位，串接後端前以 feature flag 隱藏 | 直接相關：合併後由 adapter `isMock` 承接 | ✅ **Phase 4 完成**：新增 `CUSTOM_CHART_AI_ENABLED`（預設 `false`）；旗標關閉時自訂圖表不顯示 AI 入口、不掛載編輯器（隱整個自訂 AI 編輯器）。待後端就緒改 `true`。 |
+| T1 | ~~`custom_chart_ai_modal.tsx:56`~~（檔案已刪，改由 custom adapter） | 本 Modal 為 mock：「產生」為佔位，串接後端前以 feature flag 隱藏 | 直接相關：合併後由 adapter `isMock` 承接 | ✅ **最終定案：不 gate**。曾以 `CUSTOM_CHART_AI_ENABLED` 隱整個編輯器，後依產品決策改回不 gate（Sparkles 恆顯示、常數已移除）。未完成度改以「無工具時只顯示 AI 指令」呈現；adapter `isMock` 仍顯示 Mock 徽章。 |
 | T2 | `custom_chart.tsx:18` (Luphia) | switch 分派用的 `ExportFileName`（及 `PreviewDirective`）enum 宜集中至 `src/constants/` | 間接：屬圖表區規範債 | ✅ **Phase 0 完成**：`ExportFileName`→`custom_chart.ts` 的 `CustomChartExportName`；`PreviewDirective`→新 `chart_ui.ts`（mermaid/custom 共用）。ToDo 已移除。 |
 | T3 | `chart_shell.tsx` (Luphia) | 全螢幕 backdrop `z-9999` 高於 AI Modal `z-8888`，全螢幕下點 AI 助手被蓋住 | 直接相關：合併後通用 modal 的 z-index 一致性 | ✅ **Phase 4 完成**：`ChartShell.handleOpenAiModal` 於開 AI 前 `setIsFullscreen(false)`，避免疊放衝突；ToDo 已移除。 |
 | T4 | `chart_shell.tsx:74` (Luphia) | 每個 `ChartShell` 各自綁 `window` wheel 監聽，多圖表報告頁會有 N 個 handler | 相鄰技術債（非合併必需） | 🟡 **未處理（保留 ToDo）**：與本合併弱相關，未在 Phase 4 動；日後改綁 viewport 或共用單一監聽時再處理。 |
