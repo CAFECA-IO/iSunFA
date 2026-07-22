@@ -1,10 +1,10 @@
 "use client";
 
 import { FC, useState } from "react";
-import { Wrench } from "lucide-react";
 import { CustomChartType } from "@/constants/custom_chart";
 import { IMatrixAction } from "@/interfaces/custom_chart";
 import { MatrixToolsSection } from "@/components/chart/matrix_tools_submenu";
+import { TornadoToolsSection } from "@/components/chart/tornado_tools_submenu";
 import { ChartEditorControlShell } from "@/components/chart/ai_chart_editor/chart_editor_control_shell";
 import { useTranslation } from "@/i18n/i18n_context";
 
@@ -47,12 +47,13 @@ const CustomEditorControlPanel: FC<ICustomEditorControlPanelProps> = ({
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
 
   const isMatrix = chartType === CustomChartType.MATRIX;
+  const isTornado = chartType === CustomChartType.TORNADO;
   const examples =
     t<string[]>(
       `chart.custom_chart.examples.${EXAMPLE_KEY_BY_TYPE[chartType]}`,
     ) || [];
 
-  // Info: (20260721 - Julian) 工具區塊：矩陣圖已實作，其餘類型顯示「開發中」佔位
+  // Info: (20260721 - Julian) 工具區塊：矩陣、龍捲風已實作；其餘類型 hasTools=false，不會用到此 slot
   const toolsSlot = isMatrix ? (
     <MatrixToolsSection
       selectedTool={selectedTool}
@@ -60,21 +61,21 @@ const CustomEditorControlPanel: FC<ICustomEditorControlPanelProps> = ({
       chart={chart}
       onAddAction={onAddAction}
     />
-  ) : (
-    <div className="flex h-40 flex-col items-center justify-center gap-2 text-center text-xs text-slate-400">
-      <Wrench size={24} className="text-slate-300" />
-      <span>{t("chart.custom_chart.quick_tools_developing")}</span>
-      <span className="text-[11px] text-slate-300">
-        {t("chart.custom_chart.quick_tools_hint")}
-      </span>
-    </div>
-  );
+  ) : isTornado ? (
+    <TornadoToolsSection
+      selectedTool={selectedTool}
+      setSelectedTool={setSelectedTool}
+      chart={chart}
+      onAddAction={onAddAction}
+    />
+  ) : null;
 
   return (
     <ChartEditorControlShell
       headerTitle={t("chart.custom_chart.title")}
       headerSubtitle={`${chartType}${chartSubtitle ? ` · ${chartSubtitle}` : ""}`}
       mockBadge={isMock ? t("chart.custom_chart.mock_badge") : undefined}
+      hasTools={isMatrix || isTornado}
       tabToolsLabel={t("chart.custom_chart.tab_quick_tools")}
       tabAiLabel={t("chart.custom_chart.tab_ai_command")}
       toolsSlot={toolsSlot}

@@ -147,6 +147,7 @@ const MermaidAiControlPanel: FC<IMermaidAiControlPanelProps> = ({
     <ChartEditorControlShell
       headerTitle={t("chart.mermaid.ai_editor.title")}
       headerSubtitle={t("chart.mermaid.ai_editor.subtitle")}
+      hasTools={isShowTools}
       tabToolsLabel={t("chart.mermaid.ai_editor.tabs.quick_tools")}
       tabAiLabel={t("chart.mermaid.ai_editor.tabs.ai_assistant")}
       titleSlot={titleSlot}

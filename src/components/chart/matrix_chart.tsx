@@ -3,6 +3,10 @@
 import { FC, useMemo } from "react";
 import { ICustomMatrixAst } from "@/interfaces/custom_chart";
 import { DEFAULT_COLORS } from "@/components/common/donut_chart";
+import {
+  DEFAULT_QUADRANT_COLORS,
+  NEUTRAL_POINT,
+} from "@/constants/custom_chart";
 
 interface IMatrixChartProps {
   ast: ICustomMatrixAst;
@@ -17,17 +21,6 @@ const PLOT_SIZE = 440; // Info: (20260720 - Julian) 正方形繪圖區，矩陣�
 const PLOT_RIGHT = PLOT_LEFT + PLOT_SIZE;
 const PLOT_BOTTOM = PLOT_TOP + PLOT_SIZE;
 const LEGEND_X = PLOT_RIGHT + 24;
-
-// Info: (20260720 - Julian) 無群組時的中性點色
-const NEUTRAL_POINT = "#64748B";
-
-// Info: (20260721 - Julian) 四象限預設底色（Q1..Q4：右上、左上、左下、右下）；DSL 未指定時採用
-export const DEFAULT_QUADRANT_COLORS = [
-  "#FEF9E7",
-  "#FEF9E7",
-  "#FEF9E7",
-  "#FEF9E7",
-];
 
 const clamp = (v: number, min: number, max: number): number =>
   Math.max(min, Math.min(max, v));

@@ -26,7 +26,7 @@ import {
 import { SegmentedControl } from "@/components/chart/mermaid_common_components";
 import { DEFAULT_COLORS } from "@/components/common/donut_chart";
 import { Checkbox } from "@/components/common/checkbox";
-import { DEFAULT_QUADRANT_COLORS } from "@/components/chart/matrix_chart";
+import { DEFAULT_QUADRANT_COLORS } from "@/constants/custom_chart";
 import ColorPicker from "@/components/common/color_picker";
 
 // Info: (20260722 - Julian) 矩陣工具 i18n key 前綴，字面值收斂於 locale 檔

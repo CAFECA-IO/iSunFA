@@ -13,14 +13,6 @@ export enum CustomChartType {
 
 /**
  * Info: (20260721 - Julian)
- * 自訂圖表 AI 編輯器（含常用工具與 mock 產生）的功能旗標。
- * 目前產生流程為 mock、僅矩陣圖有工具，故預設關閉：關閉時不顯示 AI 助手入口與編輯器。
- * 待後端 AI 產生管線與各類型工具就緒後改為 true 上線。
- */
-export const CUSTOM_CHART_AI_ENABLED: boolean = false;
-
-/**
- * Info: (20260721 - Julian)
  * 各自訂圖表類型的下載預設檔名（未提供圖表標題時的 fallback）。
  */
 export enum CustomChartExportName {
@@ -109,4 +101,15 @@ export const BACKGROUND_COLOR_OPTIONS = [
   "#F0EBFA", // 淺紫
   "#F4F4F5", // 淺灰
   "#FFFFFF", // 白
+];
+
+// Info: (20260720 - Julian) 無群組時的中性點色
+export const NEUTRAL_POINT = "#64748B";
+
+// Info: (20260721 - Julian) 四象限預設底色
+export const DEFAULT_QUADRANT_COLORS = [
+  "#FEF9E7",
+  "#FEF9E7",
+  "#FEF9E7",
+  "#FEF9E7",
 ];
