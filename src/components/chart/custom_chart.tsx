@@ -1,13 +1,15 @@
 "use client";
 
-import { FC, ReactNode, useMemo, useState } from "react";
+import { FC, ReactNode, useEffect, useMemo, useState } from "react";
 import {
   CustomChartType,
   CustomChartExportName,
 } from "@/constants/custom_chart";
 import { parseCustomChart } from "@/lib/utils/custom_chart_parser";
+import { useTranslation } from "@/i18n/i18n_context";
 import { ChartShell } from "@/components/chart/chart_shell";
-import { CustomChartAiModal } from "@/components/chart/custom_chart_ai_modal";
+import { AiChartEditorModal } from "@/components/chart/ai_chart_editor/ai_chart_editor_modal";
+import { createCustomEditorAdapter } from "@/components/chart/ai_chart_editor/adapters/custom_editor_adapter";
 import { MatrixChart } from "@/components/chart/matrix_chart";
 import { TornadoChart } from "@/components/chart/tornado_chart";
 import { HistogramChart } from "@/components/chart/histogram_chart";
@@ -21,11 +23,28 @@ interface ICustomChartProps {
 /**
  * Info: (20260716 - Julian)
  * 自訂圖表容器：解析 DSL → 依類型分派渲染，統一包進共用外殼 ChartShell
- * （下載 / 全螢幕 / AI 助手），並掛上自訂圖表的 AI 編輯 Modal（目前為 mock）。
+ * （下載 / 全螢幕 / AI 助手）。AI 編輯沿用通用化的 AiChartEditorModal（custom adapter，產生為 mock）。
  */
 const CustomChart: FC<ICustomChartProps> = ({ type, raw }) => {
-  const result = useMemo(() => parseCustomChart(type, raw), [type, raw]);
+  const { t } = useTranslation();
+
+  // Info: (20260721 - Julian) 本地圖表內容（供 AI 採用後更新；raw prop 變動時同步）
+  const [currentRaw, setCurrentRaw] = useState<string>(raw);
+  useEffect(() => {
+    setCurrentRaw(raw);
+  }, [raw]);
+
   const [isAiModalOpen, setIsAiModalOpen] = useState<boolean>(false);
+
+  const result = useMemo(
+    () => parseCustomChart(type, currentRaw),
+    [type, currentRaw],
+  );
+
+  const adapter = useMemo(
+    () => createCustomEditorAdapter({ chartType: type, t }),
+    [type, t],
+  );
 
   if (!result.ok) {
     // Info: (20260716 - Julian) 解析失敗顯示錯誤態，避免整份 Markdown 崩潰
@@ -81,12 +100,12 @@ const CustomChart: FC<ICustomChartProps> = ({ type, raw }) => {
       >
         {chartNode}
       </ChartShell>
-      <CustomChartAiModal
+      <AiChartEditorModal
         open={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
-        chartType={ast.type}
-        chartTitle={ast.title}
-        raw={raw}
+        currentChart={currentRaw}
+        onAdopt={setCurrentRaw}
+        adapter={adapter}
       />
     </>
   );

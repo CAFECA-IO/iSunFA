@@ -357,6 +357,7 @@ export const chart = {
     close: "閉じる",
     tab_quick_tools: "よく使うツール",
     tab_ai_command: "AI コマンド",
+    applied_changes: "適用された変更",
     quick_tools_developing: "このチャートのよく使う編集ツールは開発中です",
     quick_tools_hint: "右側の「AI コマンド」で編集できます",
     instruction_label: "AI 編集コマンド",
@@ -376,6 +377,8 @@ export const chart = {
       "コマンドを入力して生成すると、変更後のチャートをプレビューできます",
     cancel: "キャンセル",
     generate: "生成",
+    stop_generating: "生成を停止",
+    adopt: "採用",
     examples: {
       matrix: [
         "軸ラベルを日本語に変更",

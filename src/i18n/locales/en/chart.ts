@@ -356,6 +356,7 @@ export const chart = {
     close: "Close",
     tab_quick_tools: "Quick Tools",
     tab_ai_command: "AI Command",
+    applied_changes: "Applied changes",
     quick_tools_developing:
       "Quick editing tools for this chart are under development",
     quick_tools_hint: 'You can use the "AI Command" on the right to edit',
@@ -376,6 +377,8 @@ export const chart = {
       "Enter an instruction and generate to preview the modified chart",
     cancel: "Cancel",
     generate: "Generate",
+    stop_generating: "Stop generating",
+    adopt: "Adopt",
     examples: {
       matrix: [
         "Change the axis labels to English",

@@ -284,7 +284,7 @@ const ChartShell: FC<IChartShellProps> = ({
         {canvas}
       </div>
 
-      {/* ToDo: (20260721 - Luphia) 全螢幕 backdrop z-9999 高於 CustomChartAiModal z-8888，全螢幕下點 AI 助手會被此層蓋住而無法操作；需驗證並調整堆疊順序 */}
+      {/* ToDo: (20260722 - Julian) 全螢幕 backdrop z-9999 高於 AiChartEditorModal z-8888，全螢幕下點 AI 助手會被此層蓋住而無法操作；建議開 AI 時先退出全螢幕（見 merge plan §12-T3） */}
       {isFullscreen && enableFullscreen && (
         <div
           ref={modalRef}

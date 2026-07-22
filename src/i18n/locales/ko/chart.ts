@@ -357,6 +357,7 @@ export const chart = {
     close: "닫기",
     tab_quick_tools: "자주 쓰는 도구",
     tab_ai_command: "AI 명령",
+    applied_changes: "적용된 변경 사항",
     quick_tools_developing: "이 차트의 자주 쓰는 편집 도구는 개발 중입니다",
     quick_tools_hint: "오른쪽 「AI 명령」을 사용하여 편집할 수 있습니다",
     instruction_label: "AI 편집 명령",
@@ -376,6 +377,8 @@ export const chart = {
       "명령을 입력하고 생성하면 수정된 차트를 미리 볼 수 있습니다",
     cancel: "취소",
     generate: "생성",
+    stop_generating: "생성 중지",
+    adopt: "채택",
     examples: {
       matrix: [
         "축 레이블을 한국어로 변경",

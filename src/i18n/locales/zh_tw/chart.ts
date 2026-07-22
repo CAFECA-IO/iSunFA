@@ -353,6 +353,7 @@ export const chart = {
     close: "關閉",
     tab_quick_tools: "常用工具",
     tab_ai_command: "AI 指令",
+    applied_changes: "已套用的變更",
     quick_tools_developing: "此圖表的常用修改工具開發中",
     quick_tools_hint: "可先使用右側「AI 指令」進行編輯",
     instruction_label: "AI 編輯指令",
@@ -371,6 +372,8 @@ export const chart = {
     after_placeholder: "輸入指令並產生，即可預覽修改後的圖表",
     cancel: "取消",
     generate: "產生",
+    stop_generating: "停止產生",
+    adopt: "採用",
     examples: {
       matrix: ["把座標軸標籤改成中文", "新增一個資料點「供應鏈稽核」"],
       tornado: ["把左右數列名稱改為 2023 / 2024", "依影響幅度由大到小排序"],

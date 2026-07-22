@@ -566,7 +566,6 @@ const EditAxisPanel: FC<IBasePanelProps> = ({
             />
           </div>
         </div>
-        <div className="flex flex-col"></div>
         <div className="flex flex-col">
           <p className={MERMAID_LABEL_STYLE}>
             {t(`${MATRIX_I18N_PREFIX}.y_axis_desc`)}
