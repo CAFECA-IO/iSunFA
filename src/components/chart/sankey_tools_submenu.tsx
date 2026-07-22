@@ -634,12 +634,12 @@ const DeleteLinkPanel: FC<IBasePanelProps> = ({
         <p>{t("chart.mermaid.ai_editor.sankey.delete_link")}</p>
       </div>
       <div className="flex flex-col">
-        <label htmlFor="reverseLinkLabel" className={MERMAID_LABEL_STYLE}>
+        <label htmlFor="deleteLinkLabel" className={MERMAID_LABEL_STYLE}>
           {t("chart.mermaid.ai_editor.sankey.select_link_to_delete")}
           <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
-          id="reverseLinkLabel"
+          id="deleteLinkLabel"
           value={selectedLinkId}
           onChange={(e) => setSelectedLinkId(e.target.value)}
           className={MERMAID_INPUT_STYLE}

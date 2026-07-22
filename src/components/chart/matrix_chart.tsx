@@ -54,20 +54,28 @@ const getDomain = (
 };
 
 const MatrixChart: FC<IMatrixChartProps> = ({ ast }) => {
-  const { title, xAxis, yAxis, points } = ast;
+  const { title, xAxis, yAxis, points, groupColors: customColors } = ast;
 
-  // Info: (20260720 - Julian) 群組 → 顏色對照（依首次出現順序，循環套用調色盤）
+  /**
+   * Info: (20260721 - Julian) 群組 → 顏色對照：優先採用使用者指定色，其餘依首次出現順序套用預設調色盤。
+   * 調色盤索引只在「未指定色」的群組才遞增，避免自訂色影響其他群組的自動配色。
+   */
   const groupColors = useMemo(() => {
     const map = new Map<string, string>();
     let i = 0;
     points.forEach((p) => {
       if (p.group && !map.has(p.group)) {
-        map.set(p.group, DEFAULT_COLORS[i % DEFAULT_COLORS.length]);
-        i += 1;
+        const custom = customColors?.[p.group];
+        if (custom) {
+          map.set(p.group, custom);
+        } else {
+          map.set(p.group, DEFAULT_COLORS[i % DEFAULT_COLORS.length]);
+          i += 1;
+        }
       }
     });
     return map;
-  }, [points]);
+  }, [points, customColors]);
 
   const xDomain = useMemo(
     () =>

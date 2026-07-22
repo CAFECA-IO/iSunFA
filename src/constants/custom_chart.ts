@@ -34,6 +34,28 @@ export enum HistogramTrendType {
 }
 
 /**
+ * Info: (20260721 - Julian)
+ * 矩陣圖結構化編輯的動作類型列舉（供 matrix_tools_submenu 的四項工具使用）。
+ * 對應到 custom-matrix DSL 的資料列（item）與雙極軸（axis）操作，
+ * 所有編輯皆為決定論字串操作，不呼叫 LLM、不做數值計算。
+ */
+export enum MatrixActionType {
+  ADD_ITEM = "MATRIX_ADD_ITEM",
+  EDIT_ITEM = "MATRIX_EDIT_ITEM",
+  EDIT_AXIS = "MATRIX_EDIT_AXIS",
+  EDIT_GROUP = "MATRIX_EDIT_GROUP",
+  DELETE_ITEM = "MATRIX_DELETE_ITEM",
+}
+
+/**
+ * Info: (20260721 - Julian)
+ * 群組顏色的 HEX 格式驗證（#RGB / #RRGGBB / #RRGGBBAA）。
+ * 顏色存於矩陣資料列的第 5 欄，parser 以此驗證，非法值 fail fast。
+ */
+export const HEX_COLOR_REGEX =
+  /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
+
+/**
  * Info: (20260717 - Julian) 解析失敗的錯誤碼（供 render fallback 與除錯使用）
  */
 export enum CustomChartParseErrorCode {
