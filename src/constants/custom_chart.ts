@@ -22,6 +22,7 @@ export enum CustomChartConfigKey {
   Y_SCALE = "yscale",
   UNIT = "unit",
   TREND = "trend",
+  QUADRANT_COLORS = "quadrantcolors", // Info: (20260721 - Julian) 矩陣圖四象限底色（Q1..Q4，逗號分隔 HEX）
 }
 
 /**
@@ -44,6 +45,7 @@ export enum MatrixActionType {
   EDIT_ITEM = "MATRIX_EDIT_ITEM",
   EDIT_AXIS = "MATRIX_EDIT_AXIS",
   EDIT_GROUP = "MATRIX_EDIT_GROUP",
+  CHANGE_QUADRANT_COLOR = "MATRIX_CHANGE_QUADRANT_COLOR",
   DELETE_ITEM = "MATRIX_DELETE_ITEM",
 }
 

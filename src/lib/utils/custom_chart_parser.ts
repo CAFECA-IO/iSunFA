@@ -31,6 +31,7 @@ const CONFIG_KEYS_BY_TYPE: Record<CustomChartType, Set<string>> = {
     CustomChartConfigKey.Y_AXIS,
     CustomChartConfigKey.X_SCALE,
     CustomChartConfigKey.Y_SCALE,
+    CustomChartConfigKey.QUADRANT_COLORS,
   ]),
   [CustomChartType.TORNADO]: new Set<string>([
     CustomChartConfigKey.TITLE,
@@ -180,6 +181,20 @@ const buildMatrix = (
     yScale,
   );
 
+  // Info: (20260721 - Julian) 四象限底色（選填）：逗號分隔 HEX，逐一驗證，非法值 fail fast
+  const quadrantRaw = config.get(CustomChartConfigKey.QUADRANT_COLORS);
+  const quadrantColors = quadrantRaw
+    ? parseCsvLine(quadrantRaw)
+        .map((c) => c.trim())
+        .filter((c) => c !== "")
+        .map((c) => {
+          if (!HEX_COLOR_REGEX.test(c)) {
+            throw malformed(`象限底色非有效 HEX：「${c}」`);
+          }
+          return c;
+        })
+    : [];
+
   // Info: (20260721 - Julian) 群組 → 顏色（第 5 欄）；同群組以「首個非空顏色」為準，維持決定論
   const groupColors: Record<string, string> = {};
 
@@ -214,6 +229,7 @@ const buildMatrix = (
     yAxis,
     points,
     ...(Object.keys(groupColors).length > 0 ? { groupColors } : {}),
+    ...(quadrantColors.length > 0 ? { quadrantColors } : {}),
   };
 };
 
@@ -387,6 +403,7 @@ const matrixSchema = z.object({
     )
     .min(1),
   groupColors: z.record(z.string(), z.string()).optional(),
+  quadrantColors: z.array(z.string()).optional(),
 });
 
 const tornadoSchema = z.object({

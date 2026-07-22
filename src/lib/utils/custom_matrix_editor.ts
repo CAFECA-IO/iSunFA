@@ -29,6 +29,7 @@ const MATRIX_CONFIG_KEYS: ReadonlySet<string> = new Set<string>([
   CustomChartConfigKey.Y_AXIS,
   CustomChartConfigKey.X_SCALE,
   CustomChartConfigKey.Y_SCALE,
+  CustomChartConfigKey.QUADRANT_COLORS,
 ]);
 
 // Info: (20260721 - Julian) 雙極軸序列化採用的分隔符（左為 min 端、右為 max 端）
@@ -165,17 +166,25 @@ export const parseMatrixData = (raw: string): IMatrixParseResult => {
   const groups = collectGroups(items);
   const result = parseCustomChart(CustomChartType.MATRIX, raw);
   if (result.ok && result.ast.type === CustomChartType.MATRIX) {
-    const { title, xAxis, yAxis, groupColors } = result.ast;
+    const { title, xAxis, yAxis, groupColors, quadrantColors } = result.ast;
     return {
       items,
       groups,
       groupColors: groupColors ?? {},
+      quadrantColors: quadrantColors ?? [],
       xAxis,
       yAxis,
       ...(title ? { title } : {}),
     };
   }
-  return { items, groups, groupColors: {}, xAxis: {}, yAxis: {} };
+  return {
+    items,
+    groups,
+    groupColors: {},
+    quadrantColors: [],
+    xAxis: {},
+    yAxis: {},
+  };
 };
 
 /**
@@ -194,12 +203,12 @@ const buildAxisValue = (min: string, max: string): string => {
 
 /**
  * Info: (20260721 - Julian)
- * 更新（或插入／移除）指定的軸設定列。value 為空字串時移除該設定列。
- * 直接就地修改傳入的 lines 陣列。
+ * 更新（或插入／移除）指定的設定列（key: value）。value 為空字串時移除該設定列。
+ * 直接就地修改傳入的 lines 陣列。供軸線、象限底色等所有設定列共用。
  */
-const setAxisLine = (
+const setConfigLine = (
   lines: string[],
-  key: CustomChartConfigKey.X_AXIS | CustomChartConfigKey.Y_AXIS,
+  key: CustomChartConfigKey,
   value: string,
 ): void => {
   const idx = lines.findIndex((line) => {
@@ -263,16 +272,27 @@ export const applyMatrixAction = (
 
     case MatrixActionType.EDIT_AXIS: {
       const { xMin, yMin, xMax, yMax } = action.payload;
-      setAxisLine(
+      setConfigLine(
         lines,
         CustomChartConfigKey.X_AXIS,
         buildAxisValue(xMin ?? "", xMax ?? ""),
       );
-      setAxisLine(
+      setConfigLine(
         lines,
         CustomChartConfigKey.Y_AXIS,
         buildAxisValue(yMin ?? "", yMax ?? ""),
       );
+      break;
+    }
+
+    case MatrixActionType.CHANGE_QUADRANT_COLOR: {
+      // Info: (20260721 - Julian) 以單一設定列存 Q1..Q4 底色（逗號分隔 HEX）
+      const { colors } = action.payload;
+      const value = colors
+        .map((c) => c.trim())
+        .filter((c) => c !== "")
+        .join(", ");
+      setConfigLine(lines, CustomChartConfigKey.QUADRANT_COLORS, value);
       break;
     }
 
@@ -306,14 +326,29 @@ export const applyMatrixAction = (
     }
 
     case MatrixActionType.DELETE_ITEM: {
-      const { lineIndex } = action.payload;
+      const { lineIndex, group } = action.payload;
+
+      // Info: (20260721 - Julian) 刪除單一項目（以 lineIndex 定位；注意 0 為合法行號）
       if (
+        lineIndex !== undefined &&
         lineIndex >= 0 &&
         lineIndex < lines.length &&
         getMatrixLineFields(lines[lineIndex])
       ) {
         lines.splice(lineIndex, 1);
       }
+
+      // Info: (20260721 - Julian) 刪除整個分組：移除該分組所有資料列（連同其資料點）。
+      // 由後往前刪除以避免 splice 造成的索引位移。
+      if (group) {
+        for (let i = lines.length - 1; i >= 0; i -= 1) {
+          const fields = getMatrixLineFields(lines[i]);
+          if (fields && (fields[3]?.trim() || "") === group) {
+            lines.splice(i, 1);
+          }
+        }
+      }
+
       break;
     }
 

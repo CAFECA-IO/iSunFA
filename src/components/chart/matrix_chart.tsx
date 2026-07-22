@@ -21,6 +21,14 @@ const LEGEND_X = PLOT_RIGHT + 24;
 // Info: (20260720 - Julian) 無群組時的中性點色
 const NEUTRAL_POINT = "#64748B";
 
+// Info: (20260721 - Julian) 四象限預設底色（Q1..Q4：右上、左上、左下、右下）；DSL 未指定時採用
+export const DEFAULT_QUADRANT_COLORS = [
+  "#FEF9E7",
+  "#FEF9E7",
+  "#FEF9E7",
+  "#FEF9E7",
+];
+
 const clamp = (v: number, min: number, max: number): number =>
   Math.max(min, Math.min(max, v));
 
@@ -54,7 +62,18 @@ const getDomain = (
 };
 
 const MatrixChart: FC<IMatrixChartProps> = ({ ast }) => {
-  const { title, xAxis, yAxis, points, groupColors: customColors } = ast;
+  const {
+    title,
+    xAxis,
+    yAxis,
+    points,
+    groupColors: customColors,
+    quadrantColors,
+  } = ast;
+
+  // Info: (20260721 - Julian) 四象限底色：DSL 指定優先，缺項退回預設（Q1..Q4：右上、左上、左下、右下）
+  const quadrantFill = (index: number): string =>
+    quadrantColors?.[index] ?? DEFAULT_QUADRANT_COLORS[index];
 
   // Info: (20260721 - Julian) 群組 → 顏色對照：優先採用使用者指定色，其餘依首次出現順序套用預設調色盤。
   // 調色盤索引只在「未指定色」的群組才遞增，避免自訂色影響其他群組的自動配色。
@@ -162,28 +181,28 @@ const MatrixChart: FC<IMatrixChartProps> = ({ ast }) => {
         y={PLOT_TOP}
         width={PLOT_RIGHT - midX}
         height={midY - PLOT_TOP}
-        fill="#FFE6B5" // Info: (20260720 - Julian) 第一象限，暖色調
+        fill={quadrantFill(0)} // Info: (20260721 - Julian) 第一象限（右上）
       />
       <rect
         x={PLOT_LEFT}
         y={PLOT_TOP}
         width={midX - PLOT_LEFT}
         height={midY - PLOT_TOP}
-        fill="#F1F0EE" // Info: (20260720 - Julian) 第二象限
+        fill={quadrantFill(1)} // Info: (20260721 - Julian) 第二象限（左上）
       />
       <rect
         x={PLOT_LEFT}
         y={midY}
         width={midX - PLOT_LEFT}
         height={PLOT_BOTTOM - midY}
-        fill="#E9E8E7" // Info: (20260720 - Julian) 第三象限
+        fill={quadrantFill(2)} // Info: (20260721 - Julian) 第三象限（左下）
       />
       <rect
         x={midX}
         y={midY}
         width={PLOT_RIGHT - midX}
         height={PLOT_BOTTOM - midY}
-        fill="#F1F0EE" // Info: (20260720 - Julian) 第四象限
+        fill={quadrantFill(3)} // Info: (20260721 - Julian) 第四象限（右下）
       />
 
       {/* Info: (20260720 - Julian) 中央十字軸：原點交會於繪圖區中心，箭頭指向高值端 */}

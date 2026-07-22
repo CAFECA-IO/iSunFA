@@ -36,6 +36,8 @@ export interface ICustomMatrixAst {
   points: ICustomMatrixPoint[];
   // Info: (20260721 - Julian) 群組 → HEX 顏色對照（存於資料列第 5 欄；未指定的群組由渲染層套用預設調色盤）
   groupColors?: Record<string, string>;
+  // Info: (20260721 - Julian) 四象限底色（Q1..Q4，index 0=右上、1=左上、2=左下、3=右下）；缺項由渲染層套用預設
+  quadrantColors?: string[];
 }
 
 /**
@@ -58,6 +60,7 @@ export interface IMatrixParseResult {
   items: IMatrixItem[];
   groups: string[]; // Info: (20260721 - Julian) 依首次出現順序去重的群組清單（對應 ISankeyData.nodes）
   groupColors: Record<string, string>; // Info: (20260721 - Julian) 群組 → HEX 顏色對照（供選色盤預填目前顏色；無設定則為空物件）
+  quadrantColors: string[]; // Info: (20260721 - Julian) 四象限底色（Q1..Q4，供選色盤預填；無設定則為空陣列）
 }
 
 /**
@@ -98,9 +101,14 @@ export type IMatrixAction = {
       payload: { group: string; memberLineIndexes: number[]; color?: string };
     }
   | {
-      // Info: (20260721 - Julian) 刪除資料點：以 lineIndex 定位
+      // Info: (20260721 - Julian) 變更四象限底色：colors 依序對應 Q1..Q4（右上、左上、左下、右下）
+      type: MatrixActionType.CHANGE_QUADRANT_COLOR;
+      payload: { colors: string[] };
+    }
+  | {
+      // Info: (20260721 - Julian) 刪除資料點：以 lineIndex 或 group 定位
       type: MatrixActionType.DELETE_ITEM;
-      payload: { lineIndex: number };
+      payload: { lineIndex?: number; group?: string };
     }
 );
 
