@@ -278,7 +278,11 @@ export function EvidenceChain({ accountBookId }: IEvidenceChainProps) {
           esgId={evidenceTarget.esgRecordId ?? null}
           file={
             evidenceTarget.fileId
-              ? { id: evidenceTarget.fileId, hash: evidenceTarget.fileHash }
+              ? {
+                  id: evidenceTarget.fileId,
+                  hash: evidenceTarget.fileHash,
+                  fileName: evidenceTarget.fileName,
+                }
               : undefined
           }
           // Info: (20260721 - Emily) UAT:報告可在非 account_book 路徑開啟,帳本 id 由 prop 注入

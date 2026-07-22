@@ -31,7 +31,10 @@ import {
   refreshCarbonChartBlocks,
   type ICarbonChartLabels,
 } from "@/lib/carbon_report_chart.builder";
-import { CarbonChartTemplateEnum } from "@/constants/carbon_report_charts";
+import {
+  CarbonChartTemplateEnum,
+  CARBON_AUTO_SANKEY_PARAGRAPH_ID,
+} from "@/constants/carbon_report_charts";
 import {
   CARBON_EVIDENCE_CHAPTER_ID,
   buildEvidenceChainBlock,
@@ -1406,6 +1409,24 @@ export const useCarbonChat = () => {
           )
         : draft.content;
 
+      // Info: (20260721 - Emily) UAT:排放總量匯總段自動附掛碳流量桑基圖(憑證→排放源→Scope);
+      // Info: (20260721 - Emily) mermaid 原始碼進 Markdown 輸入區,PDF 預覽同步渲染;重算連動自動重繪
+      if (
+        section.id === CARBON_AUTO_SANKEY_PARAGRAPH_ID &&
+        (activeInventoryState?.computedLedger?.entries.length ?? 0) > 0
+      ) {
+        content = insertCarbonChartBlock(
+          content,
+          CarbonChartTemplateEnum.EMISSION_SANKEY,
+          buildCarbonChartBlock(
+            CarbonChartTemplateEnum.EMISSION_SANKEY,
+            activeInventoryState?.computedLedger,
+            chartLabels,
+            dataTableLabels,
+          ),
+        );
+      }
+
       // Info: (20260720 - Emily) #54 第三章數據段落 + 帳本會話 → 自動附掛證據鏈區塊
       // Info: (20260720 - Emily) (fence 只存帳本位址;數據由元件實時問 API,層層下鑽至單一憑證)
       const boundBookId = sessionAccess[chatChannel]?.accountBookId;
@@ -1462,6 +1483,7 @@ export const useCarbonChat = () => {
       activeSessionId,
       activeInventoryState?.computedLedger,
       dataTableLabels,
+      chartLabels,
       sessionAccess,
       chatChannel,
     ],

@@ -150,8 +150,9 @@ export class CarbonEsgLinkService {
         voucherId: record.voucherId,
         journalId: record.journalId,
         fileId: record.fileId || undefined,
-        // Info: (20260721 - Emily) 原始憑證檔 hash(RecordTabModal 憑此啟用「原始憑證」分頁)
+        // Info: (20260721 - Emily) 原始憑證檔 hash/檔名(RecordTabModal 憑此啟用「原始憑證」分頁與下載檔名)
         fileHash: record.file?.hash,
+        fileName: record.file?.fileName,
         precomputedCo2eKg: record.emissions,
         isVerified: record.isVerified,
       });
