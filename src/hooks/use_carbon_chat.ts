@@ -1676,18 +1676,32 @@ export const useCarbonChat = () => {
   const activeSession = sessionsData[activeSessionId];
   // Info: (20260712 - Luphia) 以 useMemo 快取 session 列表，避免每次 render 重建陣列
   // Info: (20260713 - Tzuhan) 有段落大綱的 session,progress 一律以真實完成段落數推導(廢除訊息計次假進度)
+  // Info: (20260722 - Emily) UAT:帳本會話與個人會話必須在列表上可辨識 —
+  // Info: (20260722 - Emily) 依 sessionAccess 附上綁定帳本名稱(boundBookName;個人會話為 undefined)
   const sessionsList = useMemo(
     () =>
       Object.values(sessionsData).map((session) => {
+        const channel = buildCarbonChatChannel(
+          user?.address ?? "anonymous",
+          session.id,
+        );
+        const boundBookId = sessionAccess[channel]?.accountBookId;
+        const boundBookName = boundBookId
+          ? (accountBooks.find((book) => book.id === boundBookId)?.name ??
+            boundBookId)
+          : undefined;
         const paragraphs = session.reportData?.paragraphs;
-        if (!paragraphs || paragraphs.length === 0) return session;
-        const completedCount = paragraphs.filter((p) => p.isCompleted).length;
-        return {
-          ...session,
-          progress: Math.round((completedCount / paragraphs.length) * 100),
-        };
+        const progress =
+          paragraphs && paragraphs.length > 0
+            ? Math.round(
+                (paragraphs.filter((p) => p.isCompleted).length /
+                  paragraphs.length) *
+                  100,
+              )
+            : session.progress;
+        return { ...session, progress, boundBookName };
       }),
-    [sessionsData],
+    [sessionsData, sessionAccess, accountBooks, user?.address],
   );
 
   // Info: (20260713 - Tzuhan) 完成/查核雙軌統計: 工具列膠囊與進度浮窗共用的單一來源
