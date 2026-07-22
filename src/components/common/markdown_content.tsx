@@ -129,6 +129,17 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
   const theadBg = isDark ? "bg-[#ffffff]/5" : "bg-[#f9fafb]";
   const thText = isDark ? "text-[#FFB74D]" : "text-[#c2410c]";
 
+  /**
+   * Info: (20260722 - Emily) 顯示層剝除 HTML 註解(UAT:錨點註解外洩至預覽/PDF)。
+   * 未啟用 rehype-raw 時 react-markdown 會把 HTML 註解當純文字印出;
+   * 系統以註解作段落錨點(carbon-data-table / carbon-chart 等,重算連動據此替換),
+   * 錨點必須留在原文、只在渲染時隱藏 — 僅影響顯示,不動資料。
+   */
+  const displayContent = useMemo(
+    () => content.replace(/<!--[\s\S]*?-->/g, ""),
+    [content],
+  );
+
   const components = useMemo(
     () => ({
       h1: ({ children, ...props }: ComponentPropsWithoutRef<"h1">) => (
@@ -400,7 +411,7 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
 
   const result = (
     <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
-      {content}
+      {displayContent}
     </ReactMarkdown>
   );
 

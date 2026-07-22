@@ -691,6 +691,16 @@ export const useCarbonChat = () => {
     activeInventoryState?.computedLedger,
   );
 
+  /**
+   * Info: (20260722 - Emily) UAT 修正:草稿落地時的 ledger 一律讀 ref(非 closure)。
+   * 匯入 → 自動生成草稿為長流程(LLM 10~45s),/calculate 在其間返回;
+   * 舊 closure 捕獲的空 ledger 會讓表格印佔位、桑基圖被跳過 — ref 永遠是當下真值。
+   */
+  const computedLedgerRef = useRef<IComputedLedger | undefined>(undefined);
+  useEffect(() => {
+    computedLedgerRef.current = activeInventoryState?.computedLedger;
+  }, [activeInventoryState?.computedLedger]);
+
   // Info: (20260720 - Emily) #51 圖表文案(i18n;數值本身一律引擎產出,與語言無關)
   const chartLabels: ICarbonChartLabels = useMemo(
     () => ({
@@ -1399,13 +1409,13 @@ export const useCarbonChat = () => {
       );
       if (!section) return;
 
+      // Info: (20260722 - Emily) UAT:讀 ref 取當下 ledger(匯入→自動草稿的長流程中,
+      // Info: (20260722 - Emily) closure 捕獲的舊空 ledger 會讓表格印佔位、桑基圖被跳過)
+      const ledgerNow = computedLedgerRef.current;
       let content = section.isDataDriven
         ? injectDataTable(
             stripLlmTables(draft.content),
-            buildCarbonDataTable(
-              activeInventoryState?.computedLedger,
-              dataTableLabels,
-            ),
+            buildCarbonDataTable(ledgerNow, dataTableLabels),
           )
         : draft.content;
 
@@ -1413,14 +1423,14 @@ export const useCarbonChat = () => {
       // Info: (20260721 - Emily) mermaid 原始碼進 Markdown 輸入區,PDF 預覽同步渲染;重算連動自動重繪
       if (
         section.id === CARBON_AUTO_SANKEY_PARAGRAPH_ID &&
-        (activeInventoryState?.computedLedger?.entries.length ?? 0) > 0
+        (ledgerNow?.entries.length ?? 0) > 0
       ) {
         content = insertCarbonChartBlock(
           content,
           CarbonChartTemplateEnum.EMISSION_SANKEY,
           buildCarbonChartBlock(
             CarbonChartTemplateEnum.EMISSION_SANKEY,
-            activeInventoryState?.computedLedger,
+            ledgerNow,
             chartLabels,
             dataTableLabels,
           ),
@@ -1481,7 +1491,6 @@ export const useCarbonChat = () => {
     },
     [
       activeSessionId,
-      activeInventoryState?.computedLedger,
       dataTableLabels,
       chartLabels,
       sessionAccess,
@@ -1527,6 +1536,23 @@ export const useCarbonChat = () => {
         let nextContent = p.content;
         if (p.isDataDriven && hasInjectedDataTable(nextContent)) {
           nextContent = injectDataTable(nextContent, tableBlock);
+        }
+        // Info: (20260722 - Emily) UAT:草稿先落地、ledger 後到 → 匯總段補插桑基圖(錨點冪等)
+        if (
+          p.id === CARBON_AUTO_SANKEY_PARAGRAPH_ID &&
+          ledger.entries.length > 0 &&
+          !hasCarbonChartBlocks(nextContent)
+        ) {
+          nextContent = insertCarbonChartBlock(
+            nextContent,
+            CarbonChartTemplateEnum.EMISSION_SANKEY,
+            buildCarbonChartBlock(
+              CarbonChartTemplateEnum.EMISSION_SANKEY,
+              ledger,
+              chartLabels,
+              dataTableLabels,
+            ),
+          );
         }
         // Info: (20260720 - Emily) #51 模板圖表同步重建(任何段落;白名單逐一檢查,敘述零改動)
         if (hasCarbonChartBlocks(nextContent)) {

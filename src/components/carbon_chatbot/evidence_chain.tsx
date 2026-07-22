@@ -244,7 +244,8 @@ export function EvidenceChain({ accountBookId }: IEvidenceChainProps) {
                               <ShieldAlert size={11} className="shrink-0 text-amber-500" />
                             </span>
                           )}
-                          <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-gray-600">
+                          {/* Info: (20260722 - Emily) UAT:公式不得截斷(串聯推導是審計重點)→ 允許換行 */}
+                          <span className="min-w-0 flex-1 font-mono text-[11px] break-all whitespace-normal text-gray-600">
                             {t("carbon_chatbot.evidence_chain_formula", {
                               quantity: MoneyUtil.formatDynamic(record.quantity, 3),
                               unit: record.unit,
@@ -255,8 +256,14 @@ export function EvidenceChain({ accountBookId }: IEvidenceChainProps) {
                               ),
                             })}
                           </span>
-                          <span className="shrink-0 text-[10px] font-bold text-[#e04f00]">
-                            {record.source}
+                          {/* Info: (20260722 - Emily) UAT:憑證 id 顯示尾碼(全碼擠壓公式;title 保留全碼) */}
+                          <span
+                            title={record.source}
+                            className="shrink-0 text-[10px] font-bold text-[#e04f00]"
+                          >
+                            {record.voucherId
+                              ? `#${record.voucherId.slice(-8)}`
+                              : `#${(record.esgRecordId ?? "").slice(-8)}`}
                           </span>
                         </button>
                       ))}
