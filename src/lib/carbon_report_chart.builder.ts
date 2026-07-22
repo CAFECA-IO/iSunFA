@@ -30,6 +30,8 @@ export interface ICarbonChartLabels {
   frozen: string;
   // Info: (20260720 - Emily) #53 桑基圖:非憑證來源(對話/附件申報)的聚合節點名
   sankeyChatNode: string;
+  // Info: (20260722 - Emily) UAT:範疇 enum 值不可讀 → 顯示名 formatter(未提供時原樣輸出)
+  formatScope?: (scope: string) => string;
 }
 
 export const CARBON_CHART_DEFAULT_LABELS: ICarbonChartLabels = {
@@ -50,8 +52,13 @@ const buildScopePie = (
   ledger: IComputedLedger,
   labels: ICarbonChartLabels,
 ): string => {
+  const scopeLabel = (scope: string): string =>
+    labels.formatScope?.(scope) ?? scope;
   const rows = Object.entries(ledger.scopeSubtotals)
-    .map(([scope, subtotal]) => `    "${scope}" : ${chartValue(subtotal)}`)
+    .map(
+      ([scope, subtotal]) =>
+        `    "${scopeLabel(scope)}" : ${chartValue(subtotal)}`,
+    )
     .join("\n");
   return `\`\`\`mermaid\npie title ${labels.pieTitle}\n${rows}\n\`\`\``;
 };
@@ -100,8 +107,9 @@ const buildEmissionSankey = (
   });
   bySource.forEach((value, key) => {
     const sourceName = key.slice(0, key.lastIndexOf("|"));
+    const scopeName = labels.formatScope?.(value.scope) ?? value.scope;
     rows.push(
-      `${quote(sourceName)},${quote(value.scope)},${chartValue(value.total)}`,
+      `${quote(sourceName)},${quote(scopeName)},${chartValue(value.total)}`,
     );
   });
 
@@ -112,7 +120,9 @@ const buildScopeBar = (
   ledger: IComputedLedger,
   labels: ICarbonChartLabels,
 ): string => {
-  const scopes = Object.keys(ledger.scopeSubtotals);
+  const scopes = Object.keys(ledger.scopeSubtotals).map(
+    (scope) => labels.formatScope?.(scope) ?? scope,
+  );
   const values = Object.values(ledger.scopeSubtotals).map(chartValue);
   return [
     "```mermaid",

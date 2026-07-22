@@ -35,6 +35,7 @@ import {
   CarbonChartTemplateEnum,
   CARBON_AUTO_SANKEY_PARAGRAPH_ID,
 } from "@/constants/carbon_report_charts";
+import { formatGhgCategoryLabel } from "@/constants/esg";
 import {
   CARBON_EVIDENCE_CHAPTER_ID,
   buildEvidenceChainBlock,
@@ -682,8 +683,10 @@ export const useCarbonChat = () => {
       insufficient: t("carbon_chatbot.report_table_insufficient"),
       frozen: t("carbon_chatbot.report_table_frozen"),
       pendingNote: t("carbon_chatbot.report_table_pending_note"),
+      // Info: (20260722 - Emily) UAT:範疇顯示名(enum 值不可讀)
+      formatScope: (scope: string) => formatGhgCategoryLabel(scope, language),
     }),
-    [t],
+    [t, language],
   );
 
   // Info: (20260720 - Emily) #23 數據段落勾稽徽章三態(目錄樹顯示;由 ledger 決定性裁決)
@@ -710,8 +713,10 @@ export const useCarbonChat = () => {
       insufficient: t("carbon_chatbot.chart_insufficient"),
       frozen: t("carbon_chatbot.chart_frozen"),
       sankeyChatNode: t("carbon_chatbot.chart_sankey_chat_node"),
+      // Info: (20260722 - Emily) UAT:範疇顯示名(enum 值不可讀)
+      formatScope: (scope: string) => formatGhgCategoryLabel(scope, language),
     }),
-    [t],
+    [t, language],
   );
   useEffect(() => {
     if (!activeInventoryState) return undefined;
@@ -1537,23 +1542,6 @@ export const useCarbonChat = () => {
         if (p.isDataDriven && hasInjectedDataTable(nextContent)) {
           nextContent = injectDataTable(nextContent, tableBlock);
         }
-        // Info: (20260722 - Emily) UAT:草稿先落地、ledger 後到 → 匯總段補插桑基圖(錨點冪等)
-        if (
-          p.id === CARBON_AUTO_SANKEY_PARAGRAPH_ID &&
-          ledger.entries.length > 0 &&
-          !hasCarbonChartBlocks(nextContent)
-        ) {
-          nextContent = insertCarbonChartBlock(
-            nextContent,
-            CarbonChartTemplateEnum.EMISSION_SANKEY,
-            buildCarbonChartBlock(
-              CarbonChartTemplateEnum.EMISSION_SANKEY,
-              ledger,
-              chartLabels,
-              dataTableLabels,
-            ),
-          );
-        }
         // Info: (20260720 - Emily) #51 模板圖表同步重建(任何段落;白名單逐一檢查,敘述零改動)
         if (hasCarbonChartBlocks(nextContent)) {
           nextContent = refreshCarbonChartBlocks(
@@ -1615,6 +1603,61 @@ export const useCarbonChat = () => {
     dataTableLabels,
     chartLabels,
     t,
+  ]);
+
+  /**
+   * Info: (20260722 - Emily) UAT:匯總段(3.6)桑基圖補位 — 獨立 effect,不依賴重算戳記。
+   * 涵蓋所有時序:草稿先落地 ledger 後到、既有會話還原、切換會話。
+   * 冪等護欄:插入後 hasCarbonChartBlocks 為真,後續執行一律 no-op(不會迴圈)。
+   */
+  useEffect(() => {
+    const ledger = activeInventoryState?.computedLedger;
+    if (!ledger || ledger.entries.length === 0) return;
+    const reportData = sessionsData[activeSessionId]?.reportData;
+    const target = reportData?.paragraphs?.find(
+      (p) => p.id === CARBON_AUTO_SANKEY_PARAGRAPH_ID,
+    );
+    if (!target?.content || hasCarbonChartBlocks(target.content)) return;
+
+    const nextContent = insertCarbonChartBlock(
+      target.content,
+      CarbonChartTemplateEnum.EMISSION_SANKEY,
+      buildCarbonChartBlock(
+        CarbonChartTemplateEnum.EMISSION_SANKEY,
+        ledger,
+        chartLabels,
+        dataTableLabels,
+      ),
+    );
+    setSessionsData((prev) => {
+      const session = prev[activeSessionId];
+      const prevReport = session?.reportData;
+      if (!prevReport?.paragraphs) return prev;
+      const nextRaw = prevReport.rawMarkdown
+        ? patchMarkdownSection(prevReport.rawMarkdown, target.title, nextContent)
+        : prevReport.rawMarkdown;
+      return {
+        ...prev,
+        [activeSessionId]: {
+          ...session,
+          reportData: {
+            ...prevReport,
+            rawMarkdown: nextRaw,
+            paragraphs: prevReport.paragraphs.map((p) =>
+              p.id === CARBON_AUTO_SANKEY_PARAGRAPH_ID
+                ? { ...p, content: nextContent, isVerified: false }
+                : p,
+            ),
+          },
+        },
+      };
+    });
+  }, [
+    activeInventoryState?.computedLedger,
+    sessionsData,
+    activeSessionId,
+    chartLabels,
+    dataTableLabels,
   ]);
 
   // Info: (20260712 - Luphia) 載入歷史訊息（密文→以主私鑰解密）；before 省略為最新一頁，否則載入更舊一頁並前置

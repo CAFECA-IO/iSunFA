@@ -91,7 +91,11 @@ export default function RecordTabModal({
   const [activeTab, setActiveTab] = useState<RecordTabType>(defaultTab);
 
   // Info: (20260327 - Luphia) 記錄已點擊過/已掛載的 Tabs，避免切換 Tab 時遺失資料或重複打 API
-  const [mountedTabs, setMountedTabs] = useState<Set<RecordTabType>>(new Set());
+  // Info: (20260722 - Emily) 初始即掛載預設分頁:條件掛載的呼叫端(isOpen 自始為 true)
+  // Info: (20260722 - Emily) 不會經歷 false→true 開啟轉場,原本的空 Set 會讓預設分頁一片空白
+  const [mountedTabs, setMountedTabs] = useState<Set<RecordTabType>>(
+    new Set([defaultTab]),
+  );
 
   const [journalId, setJournalId] = useState<string | null | undefined>(
     initialJournalId,

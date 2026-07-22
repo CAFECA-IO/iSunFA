@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { request } from "@/lib/utils/request";
 import { MoneyUtil } from "@/lib/utils/money";
+import { formatGhgCategoryLabel } from "@/constants/esg";
 import { IActivityRecord } from "@/types/carbon_chatbot.types";
 import { useTranslation } from "@/i18n/i18n_context";
 
@@ -82,7 +83,7 @@ const groupActivities = (activities: IEvidenceActivity[]): IScopeGroup[] => {
 };
 
 export function EvidenceChain({ accountBookId }: IEvidenceChainProps) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [activities, setActivities] = useState<IEvidenceActivity[] | null>(
     null,
   );
@@ -178,8 +179,9 @@ export function EvidenceChain({ accountBookId }: IEvidenceChainProps) {
               ) : (
                 <ChevronRight size={13} className="shrink-0 text-gray-400" />
               )}
+              {/* Info: (20260722 - Emily) UAT:範疇顯示名(enum 值不可讀,沿用系統 GhgCategoryDetails) */}
               <span className="min-w-0 flex-1 truncate text-xs font-bold text-gray-800">
-                {group.scope}
+                {formatGhgCategoryLabel(group.scope, language)}
               </span>
               <span className="shrink-0 text-[10px] text-gray-400">
                 {t("carbon_chatbot.evidence_chain_records", {

@@ -234,6 +234,19 @@ export const IsoCategoryDetails: Record<Iso14064Category, IIsoCategoryDetail> =
   };
 
 // Info: (20260617 - Julian) 轉換對應表：GHG Protocol 類別 -> ISO 14064-1 類別
+/**
+ * Info: (20260722 - Emily) GHG 範疇顯示名(UAT:報告/證據鏈直接印 enum 值不可讀):
+ * 沿用 esg_detail_modal 的語言慣例(zh 系 → nameZh,其餘 → nameEn);未知值原樣返回不猜
+ */
+export const formatGhgCategoryLabel = (
+  category: string,
+  language: string,
+): string => {
+  const detail = GhgCategoryDetails[category as GhgProtocolCategory];
+  if (!detail) return category;
+  return language.startsWith("zh") ? detail.nameZh : detail.nameEn;
+};
+
 export const GhgToIsoMapping: Record<GhgProtocolCategory, Iso14064Category> = {
   [GhgProtocolCategory.SCOPE_1_DIRECT]: Iso14064Category.CATEGORY_1,
   [GhgProtocolCategory.SCOPE_2_INDIRECT]: Iso14064Category.CATEGORY_2,

@@ -32,6 +32,8 @@ export interface ICarbonDataTableLabels {
   insufficient: string;
   frozen: string;
   pendingNote: string;
+  // Info: (20260722 - Emily) UAT:範疇 enum 值不可讀 → 顯示名 formatter(未提供時原樣輸出)
+  formatScope?: (scope: string) => string;
 }
 
 export const CARBON_DATA_TABLE_DEFAULT_LABELS: ICarbonDataTableLabels = {
@@ -91,9 +93,11 @@ export const buildCarbonDataTable = (
     `| ${labels.colSource} | ${labels.colScope} | ${labels.colQuantity} | ${labels.colFactor} | ${labels.colCo2e} |`,
   );
   lines.push("| --- | --- | --- | --- | ---: |");
+  const scopeLabel = (scope: string): string =>
+    labels.formatScope?.(scope) ?? scope;
   ledger.entries.forEach((entry) => {
     lines.push(
-      `| ${entry.sourceName} | ${entry.scopeCategory} | ${MoneyUtil.formatDynamic(entry.convertedQuantity, 3)} ${entry.convertedUnit} | ${entry.factor.value}(${entry.factor.source}) | ${MoneyUtil.formatDynamic(entry.co2eKg, 3)} |`,
+      `| ${entry.sourceName} | ${scopeLabel(entry.scopeCategory)} | ${MoneyUtil.formatDynamic(entry.convertedQuantity, 3)} ${entry.convertedUnit} | ${entry.factor.value}(${entry.factor.source}) | ${MoneyUtil.formatDynamic(entry.co2eKg, 3)} |`,
     );
   });
 
@@ -103,7 +107,9 @@ export const buildCarbonDataTable = (
   lines.push(`| ${labels.colScope} | ${labels.colCo2e} |`);
   lines.push("| --- | ---: |");
   Object.entries(ledger.scopeSubtotals).forEach(([scope, subtotal]) => {
-    lines.push(`| ${scope} | ${MoneyUtil.formatDynamic(subtotal, 3)} |`);
+    lines.push(
+      `| ${scopeLabel(scope)} | ${MoneyUtil.formatDynamic(subtotal, 3)} |`,
+    );
   });
   lines.push(
     `| **${labels.total}** | **${MoneyUtil.formatDynamic(ledger.totalCo2eKg, 3)}** |`,
