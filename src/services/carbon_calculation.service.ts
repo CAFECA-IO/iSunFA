@@ -16,6 +16,7 @@ import {
   CarbonPendingReasonEnum,
 } from "@/constants/carbon_calculation";
 import { activityDedupeKey } from "@/lib/carbon_inventory";
+import { parseActivityQuantity } from "@/lib/carbon_quantity";
 import {
   IActivityRecord,
   IComputedLedger,
@@ -52,18 +53,9 @@ const defaultFactorLookup: IFactorLookup = {
   },
 };
 
-/**
- * Info: (20260716 - Emily) 數量字串決定性解析:全形轉半形、去千分位/空白;
- * 合法格式僅「非負十進位數」;其餘(科學記號/負數/文字)回 null → 待補,絕不猜。
- */
-export const parseActivityQuantity = (raw: string): string | null => {
-  const halfWidth = raw.replace(/[０-９．]/g, (ch) =>
-    ch === "．" ? "." : String.fromCharCode(ch.charCodeAt(0) - 0xfee0),
-  );
-  const cleaned = halfWidth.replace(/[,\s，]/g, "");
-  if (!/^\d+(\.\d+)?$/.test(cleaned)) return null;
-  return cleaned;
-};
+// Info: (20260720 - Emily) 數量解析抽至零依賴 lib(#6520 純邏輯呼叫端不得連動 prisma);
+// Info: (20260720 - Emily) re-export 維持既有呼叫端不變
+export { parseActivityQuantity };
 
 // Info: (20260716 - Emily) 係數單位正規化:完整字串或括號內代碼比對別名表;無法正規化回 null
 export const normalizeCoefficientUnit = (
@@ -104,6 +96,36 @@ export class CarbonCalculationService {
     // Info: (20260716 - Emily) 循序處理維持結果順序決定性(筆數上限已由 validator 護欄)
     for (const activity of activities) {
       const activityKey = activityDedupeKey(activity);
+
+      // Info: (20260720 - Emily) #53 憑證管線紀錄:emissions 為同一決定論引擎已算好的產物,
+      // Info: (20260720 - Emily) 直採不重算不重選係數(重算 = 兩套結果互相衝突的風險);
+      // Info: (20260720 - Emily) 係數快照取憑證管線凍結值,evidence 帶證據鏈外鍵供 #54 下鑽
+      if (activity.precomputedCo2eKg && activity.esgRecordId) {
+        entries.push({
+          activityKey,
+          scopeCategory: activity.scopeCategory,
+          sourceName: activity.sourceName,
+          quantityRaw: activity.quantity,
+          convertedQuantity:
+            parseActivityQuantity(activity.quantity) ?? activity.quantity,
+          convertedUnit: activity.unit,
+          co2eKg: activity.precomputedCo2eKg,
+          factor: {
+            factorId: `esg-record:${activity.esgRecordId}`,
+            name: activity.factorSource ?? "ESG pipeline snapshot",
+            value: activity.emissionFactor ?? "-",
+            unit: activity.unit,
+            source: activity.factorSource ?? "voucher pipeline",
+          },
+          evidence: {
+            esgRecordId: activity.esgRecordId,
+            voucherId: activity.voucherId,
+            journalId: activity.journalId,
+            fileId: activity.fileId,
+          },
+        });
+        continue;
+      }
 
       const parsedQuantity = parseActivityQuantity(activity.quantity);
       if (!parsedQuantity) {

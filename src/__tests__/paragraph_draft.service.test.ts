@@ -108,6 +108,49 @@ describe("ParagraphDraftService", () => {
   });
 });
 
+describe("ParagraphDraftService revision mode (#55)", () => {
+  it("should build a minimal-change revision prompt with original content and instruction", async () => {
+    const generateRaw = jest
+      .fn<(prompt: string) => Promise<string>>()
+      .mockResolvedValue(
+        JSON.stringify({
+          content: "修訂後的段落內文。",
+          citedFacts: ["外購電力: 1,300,000 度"],
+        }),
+      );
+    const mockChatService = { generateRaw } as unknown as ChatService;
+    const service = new ParagraphDraftService(mockChatService);
+
+    const draft = await service.generateParagraphDraft({
+      ...baseInput,
+      existingContent: "既有段落原文。",
+      instruction: "依新版帳單更新用電量描述",
+      contextFacts: [{ label: "外購電力", value: "1,300,000 度" }],
+    });
+
+    expect(draft.content).toBe("修訂後的段落內文。");
+    // Info: (20260716 - Emily) 修訂 prompt 必含:原文、指示、最小變更規則、禁止無佐證新數字
+    const prompt = generateRaw.mock.calls[0]?.[0] ?? "";
+    expect(prompt).toContain("既有段落原文。");
+    expect(prompt).toContain("依新版帳單更新用電量描述");
+    expect(prompt).toContain("最小變更");
+    expect(prompt).toContain("嚴禁引入無佐證的新數字");
+  });
+
+  it("should keep whitelist adjudication in revision mode", async () => {
+    const mockChatService = buildMockChatService("{}");
+    const service = new ParagraphDraftService(mockChatService);
+    await expect(
+      service.generateParagraphDraft({
+        ...baseInput,
+        paragraphId: "fabricated-section",
+        existingContent: "原文",
+        instruction: "改一下",
+      }),
+    ).rejects.toMatchObject({ code: API_ERRORS.VL_SCHEMA_ERROR.code });
+  });
+});
+
 describe("CarbonParagraphDraftRequestSchema", () => {
   it("should accept a valid request payload", () => {
     const result = CarbonParagraphDraftRequestSchema.safeParse({

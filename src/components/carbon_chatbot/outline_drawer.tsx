@@ -5,6 +5,7 @@
 
 import { X } from "lucide-react";
 import { IReportParagraph } from "@/types/carbon_chatbot.types";
+import { CarbonDataBadgeStateEnum } from "@/lib/carbon_report_table.builder";
 import { OutlineTree } from "@/components/carbon_chatbot/outline_tree";
 import { useTranslation } from "@/i18n/i18n_context";
 
@@ -17,6 +18,8 @@ interface IOutlineDrawerProps {
   // Info: (20260714 - Emily) AI 段落草稿生成(透傳給 OutlineTree)
   draftingParagraphId?: string | null;
   onGenerateDraft?: (paragraphId: string) => void;
+  // Info: (20260720 - Emily) #23 數據段落勾稽三態(透傳給 OutlineTree)
+  dataBadgeState?: CarbonDataBadgeStateEnum;
 }
 
 export function OutlineDrawer({
@@ -27,6 +30,7 @@ export function OutlineDrawer({
   onClose,
   draftingParagraphId = null,
   onGenerateDraft = undefined,
+  dataBadgeState = undefined,
 }: IOutlineDrawerProps) {
   const { t } = useTranslation();
 
@@ -54,6 +58,7 @@ export function OutlineDrawer({
         onToggleVerified={onToggleVerified}
         draftingParagraphId={draftingParagraphId}
         onGenerateDraft={onGenerateDraft}
+        dataBadgeState={dataBadgeState}
       />
     </div>
   );

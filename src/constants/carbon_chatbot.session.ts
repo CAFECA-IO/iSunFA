@@ -44,7 +44,8 @@ export const createChatSession = (
     section: "",
     categories: [],
     paragraphs: buildInitialParagraphs(),
-    totalEmissions: 0,
+    // Info: (20260720 - Emily) #23 字串化 Decimal(接 computedLedger 真值前的初始值)
+    totalEmissions: "0",
   },
 });
 

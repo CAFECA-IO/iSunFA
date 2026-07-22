@@ -731,6 +731,18 @@ export const API_ERRORS = {
     message: "Storage quota exceeded",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
+  // Info: (20260716 - Emily) #56 報告匯入失敗(LLM 呼叫錯誤的包裝,不透傳原始錯誤)
+  IS_REPORT_IMPORT_FAILED: {
+    code: "IS000017",
+    message: "Failed to import the report",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
+  // Info: (20260720 - Emily) #6520 質量守恆勾稽違反:報告數據段落凍結,待使用者澄清缺口(防漂綠護欄)
+  IS_MASS_CONSERVATION_VIOLATED: {
+    code: "IS000018",
+    message: "Mass conservation check failed; data sections are frozen",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
   IS_UNKNOWN: {
     code: "IS000099",
     message: "Internal Server Error",

@@ -22,9 +22,11 @@ import {
   CarbonChatStructuredReplySchema,
   CarbonActivityRecordSchema,
   CarbonInventoryExtractionSchema,
+  CarbonStockRecordSchema,
 } from "@/validators";
 import { GhgProtocolCategory } from "@/constants/esg";
 import { MeasurementUnit } from "@/constants/enums";
+import { CarbonChartTemplateEnum } from "@/constants/carbon_report_charts";
 import { IInventoryExtraction } from "@/types/carbon_chatbot.types";
 import { logger } from "@/lib/utils/logger";
 
@@ -34,6 +36,13 @@ export interface ICarbonChatStructuredReply {
   reply: string;
   readyParagraphId: string | null;
   extraction: IInventoryExtraction | null;
+  // Info: (20260716 - Emily) #55 修訂請求:使用者要求「依附件/指示修改既有段落」時的目標段落(白名單裁決後)
+  revisionParagraphId: string | null;
+  // Info: (20260720 - Emily) #51 圖表請求(雙 enum 白名單裁決後):LLM 只裁決「哪張圖、放哪段」,數值零參與
+  chartRequest: {
+    templateId: CarbonChartTemplateEnum;
+    paragraphId: string;
+  } | null;
 }
 
 // Info: (20260714 - Emily) readyParagraphId 的無段落標記(LLM enum 選項之一)
@@ -67,6 +76,36 @@ const CARBON_CHAT_REPLY_SCHEMA: Schema = {
       format: "enum",
       enum: [...CARBON_REPORT_OUTLINE.map((s) => s.id), NO_READY_PARAGRAPH],
       description: "資訊已蒐集齊全可寫入報告的段落 id；尚未齊全時為 none",
+    },
+    // Info: (20260716 - Emily) #55 修訂請求:僅當使用者明確要求「修改/更新既有段落」時填段落 id,否則 none
+    revisionParagraphId: {
+      type: SchemaType.STRING,
+      format: "enum",
+      enum: [...CARBON_REPORT_OUTLINE.map((s) => s.id), NO_READY_PARAGRAPH],
+      description:
+        "使用者要求依附件或指示『修改既有段落』時填該段 id;非修改請求一律 none",
+    },
+    // Info: (20260720 - Emily) #51 圖表請求:雙 enum 鎖死(模板白名單 × 段落清單);數值由系統產出
+    chartRequest: {
+      type: SchemaType.OBJECT,
+      description:
+        "使用者明確要求在指定段落加入圖表/表格時填寫;非圖表請求省略本欄位",
+      properties: {
+        templateId: {
+          type: SchemaType.STRING,
+          format: "enum",
+          enum: Object.values(CarbonChartTemplateEnum),
+          description:
+            "SCOPE_PIE=各範疇占比圓餅圖;SCOPE_BAR=各範疇長條圖;SOURCE_TABLE=排放源明細表;EMISSION_SANKEY=碳流量桑基圖(憑證→排放源→範疇)",
+        },
+        paragraphId: {
+          type: SchemaType.STRING,
+          format: "enum",
+          enum: CARBON_REPORT_OUTLINE.map((s) => s.id),
+          description: "圖表插入的目標段落 id(只能從段落清單挑選)",
+        },
+      },
+      required: ["templateId", "paragraphId"],
     },
     // Info: (20260716 - Emily) #6518 事實萃取: enum 鎖死範疇/單位，數值原樣字串(嚴禁換算),TS 端再白名單複驗
     extraction: {
@@ -113,6 +152,43 @@ const CARBON_CHAT_REPLY_SCHEMA: Schema = {
               },
             },
             required: ["scopeCategory", "sourceName", "quantity", "unit"],
+          },
+        },
+        // Info: (20260720 - Emily) #6520 物料庫存紀錄:期初/採購/期末原樣字串,供質量守恆勾稽
+        stockRecords: {
+          type: SchemaType.ARRAY,
+          items: {
+            type: SchemaType.OBJECT,
+            properties: {
+              materialName: {
+                type: SchemaType.STRING,
+                description: "物料名稱,須與活動數據的排放源名稱一致(如: 柴油)",
+              },
+              openingQuantity: {
+                type: SchemaType.STRING,
+                description: "期初庫存量,原樣照抄,嚴禁換算",
+              },
+              purchasedQuantity: {
+                type: SchemaType.STRING,
+                description: "本期採購量,原樣照抄,嚴禁換算",
+              },
+              closingQuantity: {
+                type: SchemaType.STRING,
+                description: "期末庫存量,原樣照抄,嚴禁換算",
+              },
+              unit: {
+                type: SchemaType.STRING,
+                format: "enum",
+                enum: Object.values(MeasurementUnit),
+              },
+            },
+            required: [
+              "materialName",
+              "openingQuantity",
+              "purchasedQuantity",
+              "closingQuantity",
+              "unit",
+            ],
           },
         },
       },
@@ -324,10 +400,13 @@ export class ChatService {
 - 用戶已提供當前段落所需的關鍵資訊，或明確同意/確認你彙整的內容時 → 填該段落的 id(只能從下方清單挑選)
 - 資訊尚未齊全、仍在追問時 → 填 "${NO_READY_PARAGRAPH}"
 - 填入段落 id 後，系統會自動將該段草稿寫入右側報告；此時請在 reply 告知用戶「本段已寫入報告，可於右側預覽檢視」，不要把完整草稿貼在對話中，也不要再重複詢問同一段落。
+【段落修訂機制】使用者上傳新附件或明確要求「更新/修改某段」時 → revisionParagraphId 填該段 id(只能從段落清單挑選)，reply 告知「已產生修訂建議，請於預覽卡確認」；非修改請求一律填 "none"，且不要在 reply 貼修訂內容(由系統以對照卡呈現)。
+【圖表機制】使用者明確要求「在某段加圖表/表格」(如「在 3.2 加各範疇占比圓餅圖」)時 → chartRequest 填模板與目標段落(皆只能從列舉挑選)，reply 告知「圖表已由系統依勾稽數據插入該段」；圖表數值由系統決定性產出，嚴禁你在 reply 自繪任何圖表或表格；非圖表請求省略 chartRequest。
 【事實萃取機制】每輪回覆的 extraction 欄位，依下列規則萃取「用戶本輪訊息」中的盤查事實:
 - 企業名稱、盤查年度(西元)、組織邊界方法: 用戶明確提供時填入，原文照抄，不確定就省略。
 - activities: 用戶提供的活動數據(如用電量、油耗)。quantity 連同千分位「原樣照抄」為字串，嚴禁換算單位、加總或推導；單位只能從 unit 列舉挑選，對不上就整筆省略。
-- 你是萃取器不是計算機: 任何需要計算的內容一律不填。沒有可萃取的事實時 extraction 省略。
+- stockRecords: 用戶提供「期初庫存、本期採購、期末庫存」三值齊全的物料(燃料/原料)時填入，數值原樣照抄；materialName 須與該物料在活動數據中的排放源名稱一致；三值不齊全就整筆省略，嚴禁以 0 補位。
+- 你是萃取器不是計算機: 任何需要計算的內容一律不填(含庫存缺口、消耗量推算)。沒有可萃取的事實時 extraction 省略。
 【段落清單】
 ${outlineCatalog}${langInstruction}`;
   }
@@ -340,7 +419,7 @@ ${outlineCatalog}${langInstruction}`;
     value: unknown,
   ): IInventoryExtraction | null {
     if (!value || typeof value !== "object") return null;
-    const candidate = value as { activities?: unknown };
+    const candidate = value as { activities?: unknown; stockRecords?: unknown };
     const rawActivities = Array.isArray(candidate.activities)
       ? candidate.activities
       : [];
@@ -353,16 +432,31 @@ ${outlineCatalog}${langInstruction}`;
         dropped: rawActivities.length - activities.length,
       });
     }
+    // Info: (20260720 - Emily) #6520 庫存紀錄同標準裁決:逐筆驗證,壞欄位丟該筆不作廢整包
+    const rawStockRecords = Array.isArray(candidate.stockRecords)
+      ? candidate.stockRecords
+      : [];
+    const stockRecords = rawStockRecords.flatMap((item) => {
+      const parsed = CarbonStockRecordSchema.safeParse(item);
+      return parsed.success ? [parsed.data] : [];
+    });
+    if (rawStockRecords.length !== stockRecords.length) {
+      logger.warn("inventory extraction dropped invalid stock records", {
+        dropped: rawStockRecords.length - stockRecords.length,
+      });
+    }
     const orgParsed = CarbonInventoryExtractionSchema.safeParse({
       ...value,
       activities: [],
+      stockRecords: [],
     });
     const org = orgParsed.success ? orgParsed.data : { activities: [] };
     if (
       !org.company &&
       !org.year &&
       !org.boundaryApproach &&
-      activities.length === 0
+      activities.length === 0 &&
+      stockRecords.length === 0
     ) {
       return null;
     }
@@ -371,6 +465,7 @@ ${outlineCatalog}${langInstruction}`;
       year: org.year,
       boundaryApproach: org.boundaryApproach,
       activities,
+      stockRecords: stockRecords.length > 0 ? stockRecords : undefined,
     };
   }
 
@@ -425,13 +520,46 @@ ${outlineCatalog}${langInstruction}`;
       const extraction = this.adjudicateInventoryExtraction(
         (rawParsed as { extraction?: unknown }).extraction,
       );
+      // Info: (20260716 - Emily) #55:修訂目標同樣經白名單裁決(enum 之外的值一律視為無請求)
+      const rawRevision = (rawParsed as { revisionParagraphId?: unknown })
+        .revisionParagraphId;
+      const revisionParagraphId = CARBON_REPORT_OUTLINE.some(
+        (s) => s.id === rawRevision,
+      )
+        ? (rawRevision as string)
+        : null;
+      // Info: (20260720 - Emily) #51:圖表請求雙欄位皆須通過白名單,任一非法即視為無請求(永不猜)
+      const rawChart = (rawParsed as { chartRequest?: unknown }).chartRequest;
+      const chartCandidate =
+        rawChart && typeof rawChart === "object"
+          ? (rawChart as { templateId?: unknown; paragraphId?: unknown })
+          : null;
+      const chartRequest =
+        chartCandidate &&
+        (Object.values(CarbonChartTemplateEnum) as unknown[]).includes(
+          chartCandidate.templateId,
+        ) &&
+        CARBON_REPORT_OUTLINE.some((s) => s.id === chartCandidate.paragraphId)
+          ? {
+              templateId: chartCandidate.templateId as CarbonChartTemplateEnum,
+              paragraphId: chartCandidate.paragraphId as string,
+            }
+          : null;
       return {
         reply: parsed.reply,
         readyParagraphId: isValidParagraph ? parsed.readyParagraphId : null,
         extraction,
+        revisionParagraphId,
+        chartRequest,
       };
     } catch {
-      return { reply: raw, readyParagraphId: null, extraction: null };
+      return {
+        reply: raw,
+        readyParagraphId: null,
+        extraction: null,
+        revisionParagraphId: null,
+        chartRequest: null,
+      };
     }
   }
 

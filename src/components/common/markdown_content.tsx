@@ -7,8 +7,22 @@ import Image from "next/image";
 import { MermaidChart } from "@/components/chart/mermaid_chart";
 import { CustomChart } from "@/components/chart/custom_chart";
 import { detectCustomChartType } from "@/lib/utils/custom_chart_parser";
+import {
+  CARBON_EVIDENCE_FENCE_LANG,
+  parseEvidenceFence,
+} from "@/constants/carbon_evidence";
 import { useState, useEffect } from "react";
 import { downloadFile } from "@/lib/file_operator";
+import dynamic from "next/dynamic";
+
+// Info: (20260720 - Emily) #54 證據鏈元件動態載入:含 RecordTabModal 依賴鏈,不拖累一般 markdown 渲染
+const EvidenceChain = dynamic(
+  () =>
+    import("@/components/carbon_chatbot/evidence_chain").then(
+      (mod) => mod.EvidenceChain,
+    ),
+  { ssr: false },
+);
 
 const AsyncLariaImage = ({
   src,
@@ -301,6 +315,15 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
         const customType = !inline ? detectCustomChartType(fenceLang) : null;
         if (customType) {
           return <CustomChart type={customType} raw={getFenceText()} />;
+        }
+
+        // Info: (20260720 - Emily) #54 證據鏈 fence:層層下鑽至單一憑證(數據實時問 API,
+        // Info: (20260720 - Emily) 帳本閱覽權限由 server 裁決);格式不符退回一般程式碼區塊呈現
+        if (!inline && fenceLang === CARBON_EVIDENCE_FENCE_LANG) {
+          const accountBookId = parseEvidenceFence(getFenceText());
+          if (accountBookId) {
+            return <EvidenceChain accountBookId={accountBookId} />;
+          }
         }
 
         if (!inline && match && match[1] === "mermaid") {

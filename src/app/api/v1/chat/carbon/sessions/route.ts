@@ -12,7 +12,11 @@ import { chatroomRepo } from "@/repositories/chatroom.repo";
 import {
   CARBON_CHAT_PURPOSE,
   buildCarbonChatChannel,
+  isCarbonChatChannelOwnedBy,
 } from "@/constants/carbon_chatbot";
+import { CarbonSessionBindSchema } from "@/validators";
+import { canBindAccountBook } from "@/lib/carbon_access";
+import { accountBookRepo } from "@/repositories/account_book.repo";
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,8 +34,36 @@ export async function GET(request: NextRequest) {
     );
     if (limited) return limited;
 
-    // Info: (20260714 - Emily) 前綴即所有權:頻道格式 carbon-chat-{address}-{sessionId},只列本人頻道
     const channelPrefix = buildCarbonChatChannel(sessionUser.address, "");
+
+    // Info: (20260716 - Emily) #52 帳本閱覽動線:帶 accountBookId 時列出該帳本全部會話;
+    // Info: (20260716 - Emily) 需為團隊成員(VIEWER 含),非成員不得枚舉;逐會話內容授權由 report/inventory GET 再裁決
+    const accountBookId = request.nextUrl.searchParams.get("accountBookId");
+    if (accountBookId) {
+      const role = await accountBookRepo.getMemberRoleByAddress(
+        accountBookId,
+        sessionUser.address,
+      );
+      if (!role) {
+        return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
+      }
+      const bookRooms = await chatroomRepo.listChatroomsByAccountBookId(
+        accountBookId,
+        CARBON_CHAT_PURPOSE,
+      );
+      const sessions = bookRooms.map((room) => ({
+        sessionId: room.channel.split("-").pop() ?? room.channel,
+        channel: room.channel,
+        createdAt: room.createdAt,
+        updatedAt: room.updatedAt,
+        accountBookId: room.accountBookId,
+        // Info: (20260716 - Emily) 是否為本人會話(前端據此決定聊天面板可用性)
+        isOwn: isCarbonChatChannelOwnedBy(room.channel, sessionUser.address),
+      }));
+      return jsonOk({ sessions });
+    }
+
+    // Info: (20260714 - Emily) 前綴即所有權:頻道格式 carbon-chat-{address}-{sessionId},只列本人頻道
     const chatrooms = await chatroomRepo.listChatroomsByChannelPrefix(
       channelPrefix,
       CARBON_CHAT_PURPOSE,
@@ -42,12 +74,80 @@ export async function GET(request: NextRequest) {
       channel: room.channel,
       createdAt: room.createdAt,
       updatedAt: room.updatedAt,
+      accountBookId: room.accountBookId,
+      isOwn: true,
     }));
 
     return jsonOk({ sessions });
   } catch (error) {
     logger.error(
       `[API] /chat/carbon/sessions GET error: ${JSON.stringify(error)}`,
+    );
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
+  }
+}
+
+/**
+ * Info: (20260716 - Emily) #52 建立/綁定帳本會話:
+ * POST { sessionId, accountBookId, recipientPublicKey } — 需為該帳本 EDITOR 以上;
+ * 已綁定其他帳本者拒絕改綁(報告歸屬不可漂移,審計原則)
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const sessionUser = await getIdentityFromDeWT(
+      request.headers.get("Authorization"),
+    );
+    if (!sessionUser) {
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
+    }
+
+    const limited = enforceCarbonRateLimit(
+      sessionUser.address,
+      RateLimitBucketEnum.SAVE,
+    );
+    if (limited) return limited;
+
+    let rawBody: unknown;
+    try {
+      rawBody = await request.json();
+    } catch {
+      return jsonFail(API_ERRORS.VL_INVALID_JSON);
+    }
+    const parsed = CarbonSessionBindSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
+    }
+
+    const channel = buildCarbonChatChannel(
+      sessionUser.address,
+      parsed.data.sessionId,
+    );
+
+    // Info: (20260716 - Emily) 綁定 = 寫入行為,需 EDITOR 以上
+    const allowed = await canBindAccountBook(
+      sessionUser.address,
+      parsed.data.accountBookId,
+    );
+    if (!allowed) {
+      return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
+    }
+
+    // Info: (20260716 - Emily) 不可改綁:既有綁定與請求不符即拒
+    const existing = await chatroomRepo.findAccountBookIdByChannel(channel);
+    if (existing && existing !== parsed.data.accountBookId) {
+      return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
+    }
+
+    await chatroomRepo.bindAccountBook(
+      channel,
+      CARBON_CHAT_PURPOSE,
+      parsed.data.recipientPublicKey,
+      parsed.data.accountBookId,
+    );
+    return jsonOk({ channel, accountBookId: parsed.data.accountBookId });
+  } catch (error) {
+    logger.error(
+      `[API] /chat/carbon/sessions POST error: ${JSON.stringify(error)}`,
     );
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }

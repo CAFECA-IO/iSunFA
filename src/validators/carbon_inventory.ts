@@ -6,6 +6,12 @@ import { GhgProtocolCategory } from "@/constants/esg";
 import { MeasurementUnit } from "@/constants/enums";
 import { CarbonInventoryStep } from "@/constants/carbon_chatbot";
 import { CARBON_CALCULATE_MAX_ACTIVITIES } from "@/constants/carbon_calculation";
+import {
+  CARBON_ARTICULATION_MAX_STOCK_RECORDS,
+  ArticulationStatusEnum,
+  ArticulationViolationReasonEnum,
+  ArticulationWarningReasonEnum,
+} from "@/constants/carbon_articulation";
 import { CarbonReportDraftPutSchema } from "@/validators/carbon_report_storage";
 
 // Info: (20260716 - Emily) 單筆活動數據: scopeCategory/unit 以 nativeEnum 鎖死；quantity 原樣字串(嚴禁在此轉數字)
@@ -15,6 +21,22 @@ export const CarbonActivityRecordSchema = z.object({
   quantity: z.string().min(1).max(50),
   unit: z.nativeEnum(MeasurementUnit),
   confidence: z.enum(["high", "medium", "low"]).optional(),
+  source: z.string().max(200).optional(),
+  // Info: (20260720 - Emily) #53 憑證聯動結構化引用(帳本匯入路徑;LLM responseSchema 無此欄位)
+  esgRecordId: z.string().max(100).optional(),
+  voucherId: z.string().max(100).optional(),
+  journalId: z.string().max(100).optional(),
+  fileId: z.string().max(100).optional(),
+  precomputedCo2eKg: z.string().max(60).optional(),
+});
+
+// Info: (20260720 - Emily) #6520 物料庫存紀錄: 質量守恆等式資料;數值原樣字串(解析於 articulation 服務)
+export const CarbonStockRecordSchema = z.object({
+  materialName: z.string().min(1).max(100),
+  openingQuantity: z.string().min(1).max(50),
+  purchasedQuantity: z.string().min(1).max(50),
+  closingQuantity: z.string().min(1).max(50),
+  unit: z.nativeEnum(MeasurementUnit),
   source: z.string().max(200).optional(),
 });
 
@@ -26,6 +48,8 @@ export const CarbonInventoryExtractionSchema = z.object({
     .enum(["operational_control", "financial_control", "equity_share"])
     .optional(),
   activities: z.array(CarbonActivityRecordSchema).max(20).default([]),
+  // Info: (20260720 - Emily) #6520 庫存紀錄萃取(期初/採購/期末;守恆檢核的資料來源)
+  stockRecords: z.array(CarbonStockRecordSchema).max(20).optional(),
 });
 
 export type CarbonInventoryExtractionPayload = z.infer<
@@ -43,6 +67,11 @@ export const CarbonCalculateRequestSchema = z.object({
     )
     .min(1)
     .max(CARBON_CALCULATE_MAX_ACTIVITIES),
+  // Info: (20260720 - Emily) #6520 庫存紀錄一併送檢:計算 + 守恆勾稽同一請求(結果掛回 ledger.articulation)
+  stockRecords: z
+    .array(CarbonStockRecordSchema)
+    .max(CARBON_ARTICULATION_MAX_STOCK_RECORDS)
+    .optional(),
 });
 export type CarbonCalculateRequestPayload = z.infer<
   typeof CarbonCalculateRequestSchema
@@ -70,6 +99,15 @@ export const ComputedLedgerSchema = z.object({
       ghgBreakdown: z.record(z.string(), z.string()).optional(),
       gwpVersion: z.string().max(30).optional(),
       factor: FactorSnapshotSchema,
+      // Info: (20260720 - Emily) #53 證據引用(憑證匯入的活動才有)
+      evidence: z
+        .object({
+          esgRecordId: z.string().max(100),
+          voucherId: z.string().max(100).optional(),
+          journalId: z.string().max(100).optional(),
+          fileId: z.string().max(100).optional(),
+        })
+        .optional(),
     }),
   ),
   pending: z.array(
@@ -82,6 +120,33 @@ export const ComputedLedgerSchema = z.object({
   scopeSubtotals: z.record(z.string(), z.string()),
   totalCo2eKg: z.string().max(60),
   computedAt: z.string().max(50),
+  // Info: (20260720 - Emily) #6520 勾稽結果(等式兩側值透明保存,審計可追溯)
+  articulation: z
+    .object({
+      status: z.nativeEnum(ArticulationStatusEnum),
+      violations: z.array(
+        z.object({
+          materialName: z.string().max(100),
+          unit: z.string().max(50),
+          reason: z.nativeEnum(ArticulationViolationReasonEnum),
+          expectedConsumption: z.string().max(60),
+          actualConsumption: z.string().max(60),
+          gap: z.string().max(60),
+        }),
+      ),
+      warnings: z.array(
+        z.object({
+          activityKey: z.string().max(300),
+          sourceName: z.string().max(100),
+          reason: z.nativeEnum(ArticulationWarningReasonEnum),
+          quantity: z.string().max(60),
+          plausibleMax: z.string().max(60),
+          unit: z.string().max(50),
+        }),
+      ),
+      checkedAt: z.string().max(50),
+    })
+    .optional(),
 });
 
 // Info: (20260716 - Emily) 前端解密後的狀態驗證（壞資料 Fail Fast 丟棄，不入 React 狀態）
@@ -98,6 +163,8 @@ export const CarbonInventoryStateSchema = z.object({
       factorSource: z.string().max(200).optional(),
     }),
   ),
+  // Info: (20260720 - Emily) #6520 物料庫存紀錄(隨 state E2EE 保存)
+  stockRecords: z.array(CarbonStockRecordSchema).optional(),
   computedLedger: ComputedLedgerSchema.optional(),
   notes: z.array(z.string().max(500)).optional(),
   updatedAt: z.string().max(50),
@@ -108,4 +175,30 @@ export const CarbonInventoryStateSchema = z.object({
 export const CarbonInventoryStatePutSchema = CarbonReportDraftPutSchema;
 export type CarbonInventoryStatePutPayload = z.infer<
   typeof CarbonInventoryStatePutSchema
+>;
+
+// Info: (20260716 - Emily) #52 帳本會話綁定請求
+export const CarbonSessionBindSchema = z.object({
+  sessionId: z.string().min(1).max(50),
+  accountBookId: z.string().min(1).max(100),
+  recipientPublicKey: z.string().min(1).max(300),
+});
+export type CarbonSessionBindPayload = z.infer<typeof CarbonSessionBindSchema>;
+
+// Info: (20260716 - Emily) #56 報告匯入 LLM 輸出(responseSchema 之外的第二道防線);
+// Info: (20260716 - Emily) paragraphId 僅驗型別,白名單複驗於服務層(非法者降入 unmapped 不丟棄)
+export const CarbonReportImportLlmOutputSchema = z.object({
+  segments: z
+    .array(
+      z.object({
+        paragraphId: z.string().max(50),
+        content: z.string().min(1).max(50_000),
+      }),
+    )
+    .max(100),
+  unmapped: z.array(z.string().max(50_000)).max(100),
+  activities: z.array(z.unknown()).max(50).optional(),
+});
+export type CarbonReportImportLlmOutput = z.infer<
+  typeof CarbonReportImportLlmOutputSchema
 >;

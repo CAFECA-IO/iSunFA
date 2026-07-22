@@ -22,6 +22,7 @@ import {
   buildSectionHeadingByTitle,
   stripLeadingSectionHeading,
 } from "@/constants/carbon_report_outline";
+import { CarbonDataBadgeStateEnum } from "@/lib/carbon_report_table.builder";
 import { ReportToolbar } from "@/components/carbon_chatbot/report_toolbar";
 import { OutlineRail } from "@/components/carbon_chatbot/outline_rail";
 import { OutlineDrawer } from "@/components/carbon_chatbot/outline_drawer";
@@ -43,6 +44,14 @@ interface ICarbonReportPreviewProps {
   onParagraphHeadingClick?: (paragraphId: string) => void;
   // Info: (20260714 - Emily) 報告草稿本機保存狀態(透傳給 ReportToolbar)
   saveStatus?: ReportSaveStatus;
+  // Info: (20260716 - Emily) #52 唯讀(帳本 VIEWER):編輯回呼由 hook 擋下,此 prop 供工具列顯示唯讀徽章
+  readOnly?: boolean;
+  // Info: (20260716 - Emily) #56 匯入整份報告(透傳工具列)
+  onImportReport?: (file: File) => void;
+  // Info: (20260716 - Emily) 報告檔名改名(透傳工具列)
+  onRenameDocument?: (documentName: string) => void;
+  // Info: (20260720 - Emily) #23 數據段落勾稽三態(透傳 OutlineDrawer → OutlineTree)
+  dataBadgeState?: CarbonDataBadgeStateEnum;
 }
 
 // Info: (20260713 - Tzuhan) 渲染全部 33 段:已生成者顯示內容,未生成者顯示灰色佔位區塊,確保跳段永遠有落點且報告骨架一眼可見
@@ -57,13 +66,12 @@ const generateMarkdownFromParagraphs = (
     return (
       // ToDo: (20260713 - Luphia) 報告預覽 markdown 表頭為硬編中文，如需多語系報告請改走 t()
       `# ${session.reportData?.title || ""}\n\n## ${session.reportData?.section || ""}\n\n### 溫室氣體排放量摘要\n\n| 類別 (ISO Category) | 來源說明 | 排放量 (tCO2e) |\n| --- | --- | --- |\n` +
+      // Info: (20260720 - Emily) #23 移除 .toFixed(numerical_precision_guideline):
+      // Info: (20260720 - Emily) emissions/totalEmissions 為引擎字串化 Decimal,直接渲染
       (session.reportData?.categories
-        ?.map(
-          (c) =>
-            `| **${c.name}** | ${c.description} | ${c.emissions.toFixed(2)} |`,
-        )
+        ?.map((c) => `| **${c.name}** | ${c.description} | ${c.emissions} |`)
         .join("\n") || "") +
-      `\n\n**TOTAL GROSS EMISSIONS: ${session.reportData?.totalEmissions?.toFixed(2) || 0}**`
+      `\n\n**TOTAL GROSS EMISSIONS: ${session.reportData?.totalEmissions || "0"}**`
     );
   }
 
@@ -94,6 +102,10 @@ export default function CarbonReportPreview({
   highlightedParagraphId = null,
   onParagraphHeadingClick = undefined,
   saveStatus = null,
+  readOnly = false,
+  onImportReport = undefined,
+  onRenameDocument = undefined,
+  dataBadgeState = undefined,
 }: ICarbonReportPreviewProps) {
   const { t } = useTranslation();
   const [, setErrorModal] = useState({ isOpen: false, message: "" });
@@ -221,7 +233,10 @@ export default function CarbonReportPreview({
     }
   };
 
-  const markdownContent = generateMarkdownFromParagraphs(
+  // Info: (20260716 - Emily) 報告保真:rawMarkdown(使用者所見即所存)優先;無則以大綱組稿骨架起始
+  const markdownContent =
+    reportData?.rawMarkdown ??
+    generateMarkdownFromParagraphs(
     session,
     t("carbon_chatbot.section_placeholder"),
     t("carbon_chatbot.report_status_draft"),
@@ -231,6 +246,9 @@ export default function CarbonReportPreview({
     <div className="relative flex h-full w-full flex-1 flex-col border-l border-gray-200 bg-white">
       {hasOutline && stats && (
         <ReportToolbar
+        readOnly={readOnly}
+        onImportReport={onImportReport}
+        onRenameDocument={onRenameDocument}
           documentName={reportData.documentName}
           stats={stats}
           status={session.status}
@@ -262,6 +280,7 @@ export default function CarbonReportPreview({
             onClose={() => setIsDrawerOpen(false)}
             draftingParagraphId={draftingParagraphId}
             onGenerateDraft={onGenerateDraft}
+            dataBadgeState={dataBadgeState}
           />
         )}
 
@@ -285,7 +304,11 @@ export default function CarbonReportPreview({
             onChange={onMarkdownChange}
             setErrorModal={setErrorModal}
             storageKey={`chatbot_draft_${session.id}`}
-            downloadFileName={buildCarbonReportFileName(session.title)}
+            // Info: (20260716 - Emily) 下載檔名跟隨使用者自訂的報告檔名(可於工具列改名)
+            downloadFileName={
+              reportData?.documentName ??
+              buildCarbonReportFileName(session.title)
+            }
             onBeforeDownload={handleBeforeDownload}
           />
         </div>

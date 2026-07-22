@@ -14,6 +14,17 @@ import { ChatProgressWidget } from "@/components/carbon_chatbot/chat_progress_wi
 import { ActivityLedger } from "@/components/carbon_chatbot/activity_ledger";
 import { CarbonChatWidget } from "@/components/carbon_chatbot/carbon_chat_widget";
 import CarbonReportPreview from "@/components/carbon_chatbot/carbon_report_preview";
+import { RevisionPreview } from "@/components/carbon_chatbot/revision_preview";
+import { ImportPreview } from "@/components/carbon_chatbot/import_preview";
+import { BookReportViewer } from "@/components/carbon_chatbot/book_report_viewer";
+// Info: (20260720 - Emily) #54 憑證下鑽:重用財報線的四分頁憑證檢視器(journal/voucher/esg/原始檔)
+import dynamic from "next/dynamic";
+import { IActivityRecord } from "@/types/carbon_chatbot.types";
+
+const RecordTabModal = dynamic(
+  () => import("@/components/user/common/record_tab_modal"),
+  { ssr: false },
+);
 
 export default function CarbonChatbotPage() {
   const { t } = useTranslation();
@@ -24,6 +35,8 @@ export default function CarbonChatbotPage() {
     setActiveSessionId,
     createNewSession,
     saveStatus,
+    renameSession,
+    renameReportDocument,
     inputValue,
     setInputValue,
     isTyping,
@@ -39,6 +52,13 @@ export default function CarbonChatbotPage() {
     addAttachments,
     removeAttachment,
     reportStats,
+    accountBooks,
+    activeSessionAccess,
+    dataBadgeState,
+    importBookEsgRecords,
+    isImportingBookRecords,
+    fetchBookSessions,
+    masterKey,
     inventoryState,
     activeParagraphId,
     jumpToParagraph,
@@ -48,6 +68,19 @@ export default function CarbonChatbotPage() {
     focusMessageForParagraph,
     draftingParagraphId,
     draftNotice,
+    pendingRevision,
+    applyPendingRevision,
+    discardPendingRevision,
+    pendingImport,
+    importReportFile,
+    toggleImportItem,
+    applyPendingImport,
+    discardPendingImport,
+    retryFailedImportChapters,
+    importCandidate,
+    confirmImportCandidate,
+    attachImportCandidate,
+    dismissImportCandidate,
     generateParagraphDraft,
     toggleParagraphVerified,
     handleMarkdownChange,
@@ -56,6 +89,12 @@ export default function CarbonChatbotPage() {
 
   // Info: (20260714 - Emily) 聊天浮動視窗開關；預設開啟讓解鎖入口可見
   const [isChatOpen, setIsChatOpen] = useState<boolean>(true);
+  // Info: (20260716 - Emily) UAT 帳本報告檢視器:開啟中的他人會話 channel(null = 關閉)
+  const [viewerChannel, setViewerChannel] = useState<string | null>(null);
+  // Info: (20260720 - Emily) #54 憑證下鑽:開啟中的證據引用(null = 關閉);來自活動帳本列或證據鏈元件
+  const [evidenceTarget, setEvidenceTarget] = useState<IActivityRecord | null>(
+    null,
+  );
 
   // Info: (20260714 - Emily) chip 點擊: 跳報告段落並高亮；行動版聊天視窗全螢幕，先收起讓報告可見
   const handleChipJump = (paragraphId: string) => {
@@ -85,6 +124,10 @@ export default function CarbonChatbotPage() {
         activeSessionId={activeSessionId}
         onSelectSession={setActiveSessionId}
         onNewChat={createNewSession}
+        accountBooks={accountBooks}
+        onRenameSession={renameSession}
+        onFetchBookSessions={fetchBookSessions}
+        onOpenBookReport={setViewerChannel}
       />
 
       {/* Info: (20260714 - Emily) 報告為主視圖: 佔滿剩餘寬度，窄螢幕單欄直向捲動(目錄由工具列抽屜提供) */}
@@ -101,19 +144,29 @@ export default function CarbonChatbotPage() {
           highlightedParagraphId={highlightedParagraphId}
           onParagraphHeadingClick={handleParagraphHeadingClick}
           saveStatus={saveStatus}
+          readOnly={!activeSessionAccess.canEdit}
+          onImportReport={importReportFile}
+          onRenameDocument={renameReportDocument}
+          dataBadgeState={dataBadgeState}
         />
 
-        {/* Info: (20260714 - Emily) 進度浮窗僅 xl+ 顯示(小螢幕會遮擋編輯區，且工具列膠囊已有同數據)；置左下讓出聊天鈕 */}
-        <ChatProgressWidget
-          stats={reportStats}
-          positionClassName="left-10 bottom-10 hidden xl:flex"
-        />
-
-        {/* Info: (20260716 - Emily) #6518 活動數據記錄卡: 預設收合藥丸，疊於進度浮窗上方(xl+) */}
-        <ActivityLedger
-          state={inventoryState}
-          positionClassName="left-10 bottom-24 hidden xl:flex"
-        />
+        {/* Info: (20260716 - Emily) UAT 重疊修正:左下浮窗改單一堆疊容器(活動帳本在上、進度在下),
+            展開/收合皆佔文檔流不再互相覆蓋。意義:藥丸 = 活動數據帳本(#6518),面板 = 報告產出/查核進度 */}
+        <div className="absolute bottom-10 left-10 z-20 hidden flex-col items-start gap-2 xl:flex">
+          <ActivityLedger
+            state={inventoryState}
+            positionClassName="relative flex"
+            onImportFromBook={
+              activeSessionAccess.accountBookId ? importBookEsgRecords : undefined
+            }
+            isImportingFromBook={isImportingBookRecords}
+            onOpenEvidence={setEvidenceTarget}
+          />
+          <ChatProgressWidget
+            stats={reportStats}
+            positionClassName="relative flex"
+          />
+        </div>
       </div>
 
       {/* Info: (20260714 - Emily) 碳盤查聊天浮動視窗(FaithAgent 式外殼，引擎為 use_carbon_chat，功能全保留) */}
@@ -145,6 +198,10 @@ export default function CarbonChatbotPage() {
               onAddFiles={addAttachments}
               onRemoveAttachment={removeAttachment}
               draftNotice={draftNotice}
+              importCandidate={importCandidate}
+              onConfirmImportCandidate={confirmImportCandidate}
+              onAttachImportCandidate={attachImportCandidate}
+              onDismissImportCandidate={dismissImportCandidate}
             />
           </>
         ) : (
@@ -163,6 +220,50 @@ export default function CarbonChatbotPage() {
           </div>
         )}
       </CarbonChatWidget>
+
+      {/* Info: (20260716 - Emily) UAT 帳本報告檢視器:他人會話僅共享報告,聊天記錄個人加密不可見 */}
+      {viewerChannel && (
+        <BookReportViewer
+          channel={viewerChannel}
+          masterKey={masterKey}
+          onClose={() => setViewerChannel(null)}
+        />
+      )}
+
+      {/* Info: (20260716 - Emily) #56 匯入預覽卡:逐段勾選確認後才寫入 */}
+      {pendingImport && (
+        <ImportPreview
+          pendingImport={pendingImport}
+          onToggleItem={toggleImportItem}
+          onApply={applyPendingImport}
+          onDiscard={discardPendingImport}
+          onRetryFailed={retryFailedImportChapters}
+        />
+      )}
+
+      {/* Info: (20260716 - Emily) #55 修訂對照卡:AI 修改既有段落必經人工確認 */}
+      {pendingRevision && (
+        <RevisionPreview
+          revision={pendingRevision}
+          onApply={applyPendingRevision}
+          onDiscard={discardPendingRevision}
+        />
+      )}
+
+      {/* Info: (20260720 - Emily) #54 憑證下鑽:四分頁檢視器(voucher 優先;無傳票的紀錄落 esg 分頁) */}
+      {evidenceTarget && (
+        <RecordTabModal
+          isOpen
+          onClose={() => setEvidenceTarget(null)}
+          defaultTab={evidenceTarget.voucherId ? "voucher" : "esg"}
+          voucherId={evidenceTarget.voucherId ?? null}
+          journalId={evidenceTarget.journalId ?? null}
+          esgId={evidenceTarget.esgRecordId ?? null}
+          file={
+            evidenceTarget.fileId ? { id: evidenceTarget.fileId } : undefined
+          }
+        />
+      )}
     </div>
   );
 }

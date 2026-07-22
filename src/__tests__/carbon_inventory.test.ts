@@ -9,6 +9,10 @@ import {
   CARBON_INVENTORY_MIN_ACTIVITY_RECORDS,
 } from "@/lib/carbon_inventory";
 import { CarbonInventoryStep } from "@/constants/carbon_chatbot";
+import {
+  ArticulationStatusEnum,
+  ArticulationViolationReasonEnum,
+} from "@/constants/carbon_articulation";
 import { GhgProtocolCategory } from "@/constants/esg";
 import { MeasurementUnit } from "@/constants/enums";
 import {
@@ -92,9 +96,105 @@ describe("computeInventoryStep (deterministic state machine)", () => {
     );
     expect(computeInventoryStep(s)).toBe(CarbonInventoryStep.EMISSION_FACTORS);
 
-    // Info: (20260716 - Emily) 全部有係數 → REVIEW(REVIEW 出口由 #6520 質量守恆裁決，現階段不可能 COMPLETED)
+    // Info: (20260716 - Emily) 全部有係數 → REVIEW
     s.activities = s.activities.map((a) => ({ ...a, emissionFactor: "0.495" }));
     expect(computeInventoryStep(s)).toBe(CarbonInventoryStep.REVIEW);
+
+    // Info: (20260720 - Emily) #6520 REVIEW 出口:計算總表無待補 + 守恆勾稽非違反 → COMPLETED
+    const passedLedger = {
+      entries: [],
+      pending: [],
+      scopeSubtotals: {},
+      totalCo2eKg: "0",
+      computedAt: new Date().toISOString(),
+    };
+    s.computedLedger = {
+      ...passedLedger,
+      articulation: {
+        status: ArticulationStatusEnum.VIOLATED,
+        violations: [
+          {
+            materialName: "柴油",
+            unit: MeasurementUnit.LITER,
+            reason:
+              ArticulationViolationReasonEnum.MASS_GAP_EXCEEDS_TOLERANCE,
+            expectedConsumption: "150",
+            actualConsumption: "200",
+            gap: "50",
+          },
+        ],
+        warnings: [],
+        checkedAt: new Date().toISOString(),
+      },
+    };
+    expect(computeInventoryStep(s)).toBe(CarbonInventoryStep.REVIEW);
+
+    s.computedLedger = {
+      ...passedLedger,
+      articulation: {
+        status: ArticulationStatusEnum.PASSED,
+        violations: [],
+        warnings: [],
+        checkedAt: new Date().toISOString(),
+      },
+    };
+    expect(computeInventoryStep(s)).toBe(CarbonInventoryStep.COMPLETED);
+  });
+
+  it("should merge stock records with dedupe and surface violation facts to the persona", () => {
+    const s0 = createEmptyInventoryState();
+    const stock = {
+      materialName: "柴油",
+      openingQuantity: "100",
+      purchasedQuantity: "50",
+      closingQuantity: "0",
+      unit: MeasurementUnit.LITER,
+    };
+    const m1 = mergeInventoryExtraction(s0, {
+      activities: [],
+      stockRecords: [stock],
+    });
+    expect(m1.addedCount).toBe(1);
+    expect(m1.state.stockRecords).toHaveLength(1);
+
+    // Info: (20260720 - Emily) 同物料+單位 = 同一筆,後到的萃取不覆蓋
+    const m2 = mergeInventoryExtraction(m1.state, {
+      activities: [],
+      stockRecords: [{ ...stock, openingQuantity: "999" }],
+    });
+    expect(m2.addedCount).toBe(0);
+    expect(m2.state.stockRecords?.[0].openingQuantity).toBe("100");
+
+    // Info: (20260720 - Emily) 守恆違反 → persona 描述附等式事實(TS 產生,LLM 只措辭)
+    const violated = {
+      ...m2.state,
+      computedLedger: {
+        entries: [],
+        pending: [],
+        scopeSubtotals: {},
+        totalCo2eKg: "0",
+        computedAt: new Date().toISOString(),
+        articulation: {
+          status: ArticulationStatusEnum.VIOLATED,
+          violations: [
+            {
+              materialName: "柴油",
+              unit: MeasurementUnit.LITER,
+              reason:
+                ArticulationViolationReasonEnum.MASS_GAP_EXCEEDS_TOLERANCE,
+              expectedConsumption: "150",
+              actualConsumption: "200",
+              gap: "50",
+            },
+          ],
+          warnings: [],
+          checkedAt: new Date().toISOString(),
+        },
+      },
+    };
+    const description = describeInventoryStep(violated);
+    expect(description).toContain("質量守恆勾稽違反");
+    expect(description).toContain("缺口=50");
   });
 
   it("should describe missing prerequisites for the persona", () => {
