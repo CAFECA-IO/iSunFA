@@ -180,6 +180,13 @@ export const carbonChatbot = {
   chart_frozen:
     "⚠ Mass conservation check failed; the chart is frozen. Clarify the inventory gap in the chat and it will be generated automatically.",
   chart_sankey_chat_node: "Declared in chat/attachments",
+  book_bind_pending_unlock:
+    "Book session created. Unlock the encrypted chat to complete the binding (voucher import and the evidence chain require it)",
+  book_bind_done:
+    "Account book bound — you can now import voucher data from the activity ledger",
+  book_bind_denied:
+    "Binding failed: an Editor role or above is required on this account book",
+  book_bind_failed: "Failed to bind the account book; please retry",
   book_records_import_button: "Import voucher data from the book",
   book_records_importing:
     "Importing recognized voucher-level emission records from the account book…",

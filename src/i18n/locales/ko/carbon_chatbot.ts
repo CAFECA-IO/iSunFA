@@ -178,6 +178,11 @@ export const carbonChatbot = {
   chart_frozen:
     "⚠ 질량 보존 검증에 통과하지 못해 차트가 동결되었습니다. 대화에서 재고 차이를 해명하면 자동으로 생성됩니다.",
   chart_sankey_chat_node: "대화/첨부로 신고됨",
+  book_bind_pending_unlock:
+    "장부 세션이 생성되었습니다. 암호화 대화를 잠금 해제하면 장부 바인딩이 완료됩니다(증빙 가져오기와 증거 체인은 바인딩 후 사용 가능)",
+  book_bind_done: "장부 바인딩 완료. 활동 데이터 카드에서 증빙 데이터를 가져올 수 있습니다",
+  book_bind_denied: "장부 바인딩 실패: 이 장부의 Editor 이상 권한이 필요합니다",
+  book_bind_failed: "장부 바인딩에 실패했습니다. 다시 시도해 주세요",
   book_records_import_button: "장부에서 증빙 데이터 가져오기",
   book_records_importing: "장부에서 인식된 증빙 수준 배출 데이터를 가져오는 중…",
   book_records_imported:

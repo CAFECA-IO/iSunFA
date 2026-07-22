@@ -158,6 +158,11 @@ export const carbonChatbot = {
   chart_frozen:
     "⚠ 质量守恒核对未通过，图表已冻结。请于对话中澄清库存缺口后，图表将自动生成。",
   chart_sankey_chat_node: "凭证外的来源（对话/附件申报）",
+  book_bind_pending_unlock:
+    "账本会话已建立。请先解锁加密对话以完成账本绑定（导入凭证数据与证据链功能需绑定后才可用）",
+  book_bind_done: "账本绑定完成，可从活动数据卡导入凭证数据",
+  book_bind_denied: "账本绑定失败：需要该账本 Editor 以上的权限",
+  book_bind_failed: "账本绑定失败，请稍后再试",
   book_records_import_button: "从账本导入凭证数据",
   book_records_importing: "正在从账本导入已认列的凭证级碳排数据…",
   book_records_imported: "已从账本导入 {{count}} 笔凭证级活动数据（重复者自动略过）",

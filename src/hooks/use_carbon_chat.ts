@@ -420,12 +420,18 @@ export const useCarbonChat = () => {
   }, []);
 
   // Info: (20260716 - Emily) #52 綁定會話至帳本(POST sessions);成功後記入存取中繼資料
+  // Info: (20260720 - Emily) UAT 回饋:排隊與失敗都要對使用者說話(先前靜默,匯入按鈕不出現無從排查)
   const bindSessionToBook = useCallback(
     async (sessionId: string, accountBookId: string) => {
       const master = masterKeyRef.current;
       if (!master) {
         // Info: (20260716 - Emily) 需 xpub 作 chatroom ownerPublicKey:未解鎖先排隊,解鎖後補送
         pendingBindsRef.current.set(sessionId, accountBookId);
+        // Info: (20260720 - Emily) 明示排隊狀態:帳本功能(匯入/證據鏈)要等解鎖綁定完成才可用
+        setDraftNotice({
+          type: "info",
+          text: t("carbon_chatbot.book_bind_pending_unlock"),
+        });
         return;
       }
       try {
@@ -445,11 +451,30 @@ export const useCarbonChat = () => {
           ...prev,
           [bound.channel]: { accountBookId: bound.accountBookId, canEdit: true },
         }));
+        setDraftNotice({
+          type: "info",
+          text: t("carbon_chatbot.book_bind_done"),
+        });
+        if (draftNoticeTimerRef.current) {
+          clearTimeout(draftNoticeTimerRef.current);
+        }
+        draftNoticeTimerRef.current = setTimeout(() => {
+          draftNoticeTimerRef.current = null;
+          setDraftNotice(null);
+        }, CARBON_DRAFT_NOTICE_DISMISS_MS);
       } catch (error) {
         console.error("[carbon-chat] failed to bind account book:", error);
+        // Info: (20260720 - Emily) 綁定失敗最常見原因:角色不足(server 需 EDITOR 以上)
+        setDraftNotice({
+          type: "error",
+          text:
+            getApiErrorCode(error) === API_ERRORS.AUTH_PERMISSION_DENIED.code
+              ? t("carbon_chatbot.book_bind_denied")
+              : t("carbon_chatbot.book_bind_failed"),
+        });
       }
     },
-    [],
+    [t],
   );
 
   // Info: (20260716 - Emily) #52 解鎖後補送排隊中的綁定請求

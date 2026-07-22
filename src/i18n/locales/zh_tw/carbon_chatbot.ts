@@ -158,6 +158,11 @@ export const carbonChatbot = {
   chart_frozen:
     "⚠ 質量守恆勾稽未通過，圖表已凍結。請於對話中澄清庫存缺口後，圖表將自動生成。",
   chart_sankey_chat_node: "憑證外的來源（對話/附件申報）",
+  book_bind_pending_unlock:
+    "帳本會話已建立。請先解鎖加密對話以完成帳本綁定（匯入憑證數據與證據鏈功能需綁定後才可用）",
+  book_bind_done: "帳本綁定完成，可從活動數據卡匯入憑證數據",
+  book_bind_denied: "帳本綁定失敗：需要該帳本 Editor 以上的權限",
+  book_bind_failed: "帳本綁定失敗，請稍後再試",
   book_records_import_button: "從帳本匯入憑證數據",
   book_records_importing: "正在從帳本匯入已認列的憑證級碳排數據…",
   book_records_imported: "已從帳本匯入 {{count}} 筆憑證級活動數據（重複者自動略過）",
