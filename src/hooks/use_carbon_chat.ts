@@ -817,71 +817,10 @@ export const useCarbonChat = () => {
     [user?.address, activeSessionId],
   );
 
-  /**
-   * Info: (20260720 - Emily) #53 從帳本匯入憑證級活動數據:
-   * 帳本(voucher → EsgRecord)已認列的碳排事實直接入活動帳本 — 報告以財報/憑證為依據。
-   * 冪等:去重鍵為 esgRecordId,重按 = 重新整理(只補新認列的);合併後 /calculate 簽章
-   * 變更自動重跑(precomputed 直採 + 守恆勾稽)。無法映射者(skipped)明示提示,絕不靜默。
-   */
+  // Info: (20260721 - Emily) #53 匯入狀態(定義於此供 UI;主邏輯 importBookEsgRecords 移至
+  // Info: (20260721 - Emily) generateParagraphDraft 之後 — 匯入成功需自動生成數據段落草稿)
   const [isImportingBookRecords, setIsImportingBookRecords] =
     useState<boolean>(false);
-  const importBookEsgRecords = useCallback(async () => {
-    const accountBookId = sessionAccess[chatChannel]?.accountBookId;
-    if (!accountBookId || isImportingBookRecords) return;
-    setIsImportingBookRecords(true);
-    setDraftNotice({
-      type: "loading",
-      text: t("carbon_chatbot.book_records_importing"),
-    });
-    try {
-      const res = await request<{
-        payload: {
-          activities: IActivityRecord[];
-          skipped: { esgRecordId: string; sourceName: string }[];
-        } | null;
-      }>("/api/v1/chat/carbon/esg-records", {
-        query: { accountBookId },
-      });
-      const activities = res.payload?.activities ?? [];
-      const skippedCount = res.payload?.skipped.length ?? 0;
-      if (activities.length > 0) {
-        applyInventoryExtraction({ activities });
-      }
-      setDraftNotice({
-        type: "info",
-        text:
-          skippedCount > 0
-            ? t("carbon_chatbot.book_records_imported_with_skips", {
-                count: activities.length,
-                skipped: skippedCount,
-              })
-            : t("carbon_chatbot.book_records_imported", {
-                count: activities.length,
-              }),
-      });
-    } catch (error) {
-      console.error("[carbon-chat] book esg import failed:", error);
-      setDraftNotice({
-        type: "error",
-        text: t("carbon_chatbot.book_records_import_failed"),
-      });
-    } finally {
-      setIsImportingBookRecords(false);
-      if (draftNoticeTimerRef.current) {
-        clearTimeout(draftNoticeTimerRef.current);
-      }
-      draftNoticeTimerRef.current = setTimeout(() => {
-        draftNoticeTimerRef.current = null;
-        setDraftNotice(null);
-      }, CARBON_DRAFT_NOTICE_DISMISS_MS);
-    }
-  }, [
-    sessionAccess,
-    chatChannel,
-    isImportingBookRecords,
-    applyInventoryExtraction,
-    t,
-  ]);
 
   // Info: (20260716 - Emily) #55 發起段落修訂:附件事實 + 使用者指示 + 既有原文 → 修訂稿(對照卡確認制)
   const requestParagraphRevision = useCallback(
@@ -1905,6 +1844,96 @@ export const useCarbonChat = () => {
       jumpToReportParagraph,
     ],
   );
+
+  /**
+   * Info: (20260720 - Emily) #53 從帳本匯入憑證級活動數據:
+   * 帳本(voucher → EsgRecord)已認列的碳排事實直接入活動帳本 — 報告以財報/憑證為依據。
+   * 冪等:去重鍵為 esgRecordId,重按 = 重新整理(只補新認列的);合併後 /calculate 簽章
+   * 變更自動重跑(precomputed 直採 + 守恆勾稽)。無法映射者(skipped)明示提示,絕不靜默。
+   * Info: (20260721 - Emily) UAT:匯入成功後自動生成第三章數據段落草稿(僅空白段落) —
+   * 敘述由 AI 撰寫、表格/證據鏈由 applyDraftToReport 決定性注入,Markdown 與 PDF 隨之同步;
+   * ledger 計算稍後返回時,#23 重算連動會自動把佔位表格換成真值(敘述零改動)
+   */
+  const importBookEsgRecords = useCallback(async () => {
+    const accountBookId = sessionAccess[chatChannel]?.accountBookId;
+    if (!accountBookId || isImportingBookRecords) return;
+    setIsImportingBookRecords(true);
+    setDraftNotice({
+      type: "loading",
+      text: t("carbon_chatbot.book_records_importing"),
+    });
+    let importedCount = 0;
+    try {
+      const res = await request<{
+        payload: {
+          activities: IActivityRecord[];
+          skipped: { esgRecordId: string; sourceName: string }[];
+        } | null;
+      }>("/api/v1/chat/carbon/esg-records", {
+        query: { accountBookId },
+      });
+      const activities = res.payload?.activities ?? [];
+      const skippedCount = res.payload?.skipped.length ?? 0;
+      importedCount = activities.length;
+      if (activities.length > 0) {
+        applyInventoryExtraction({ activities });
+      }
+      setDraftNotice({
+        type: "info",
+        text:
+          skippedCount > 0
+            ? t("carbon_chatbot.book_records_imported_with_skips", {
+                count: activities.length,
+                skipped: skippedCount,
+              })
+            : t("carbon_chatbot.book_records_imported", {
+                count: activities.length,
+              }),
+      });
+    } catch (error) {
+      console.error("[carbon-chat] book esg import failed:", error);
+      setDraftNotice({
+        type: "error",
+        text: t("carbon_chatbot.book_records_import_failed"),
+      });
+    } finally {
+      setIsImportingBookRecords(false);
+      if (draftNoticeTimerRef.current) {
+        clearTimeout(draftNoticeTimerRef.current);
+      }
+      draftNoticeTimerRef.current = setTimeout(() => {
+        draftNoticeTimerRef.current = null;
+        setDraftNotice(null);
+      }, CARBON_DRAFT_NOTICE_DISMISS_MS);
+    }
+
+    // Info: (20260721 - Emily) 自動撰寫數據段落(逐段循序:同一時間僅一段生成的既有約束):
+    // 只填「尚無內容」的第三章數據段落,絕不覆蓋使用者已有的編輯
+    if (importedCount > 0) {
+      const paragraphs =
+        sessionsData[activeSessionId]?.reportData?.paragraphs ?? [];
+      const emptyDataSections = CARBON_REPORT_OUTLINE.filter(
+        (s) =>
+          s.chapterId === CARBON_EVIDENCE_CHAPTER_ID &&
+          s.isDataDriven &&
+          !paragraphs.find((p) => p.id === s.id)?.content,
+      );
+      // Info: (20260721 - Emily) 循序 reduce(專案禁 await-in-loop):前段完成才開下一段
+      await emptyDataSections.reduce(async (previous, section) => {
+        await previous;
+        await generateParagraphDraft(section.id);
+      }, Promise.resolve());
+    }
+  }, [
+    sessionAccess,
+    chatChannel,
+    isImportingBookRecords,
+    applyInventoryExtraction,
+    t,
+    sessionsData,
+    activeSessionId,
+    generateParagraphDraft,
+  ]);
 
   // Info: (20260712 - Luphia) 進入時先預抓金鑰紀錄，避免解鎖手勢當下「fetch → PRF」耗掉 user activation
   useEffect(() => {

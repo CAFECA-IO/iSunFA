@@ -53,6 +53,7 @@ const CarbonActivityRecordShape = z.object({
   voucherId: z.string().max(100).optional(),
   journalId: z.string().max(100).optional(),
   fileId: z.string().max(100).optional(),
+  fileHash: z.string().max(200).optional(),
   precomputedCo2eKg: z.string().max(60).optional(),
 });
 
