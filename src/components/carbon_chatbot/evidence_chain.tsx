@@ -237,7 +237,7 @@ export function EvidenceChain({ accountBookId }: IEvidenceChainProps) {
                         >
                           {record.isVerified ? (
                             <span title={t("carbon_chatbot.evidence_chain_verified")}>
-                              <ShieldCheck size={11} className="shrink-0 text-green-600" />
+                              <ShieldCheck size={11} className="shrink-0 text-[#e04f00]" />
                             </span>
                           ) : (
                             <span title={t("carbon_chatbot.evidence_chain_unverified")}>

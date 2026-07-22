@@ -150,7 +150,8 @@ export function ActivityLedger({
                 const entry = entryByKey.get(key);
                 if (entry) {
                   return (
-                    <div className="mt-0.5 text-[10px] font-bold text-emerald-700">
+                    // Info: (20260721 - Emily) UAT:emerald 非 iSunFA 色盤,數據值改中性灰
+                    <div className="mt-0.5 text-[10px] font-bold text-gray-600">
                       {t("carbon_chatbot.activity_co2e", {
                         value: entry.co2eKg,
                       })}
@@ -172,8 +173,9 @@ export function ActivityLedger({
       )}
 
       {/* Info: (20260716 - Emily) #6519 總計:字串化 Decimal 原樣顯示(無 .toFixed/number 運算) */}
+      {/* Info: (20260721 - Emily) UAT:emerald 非 iSunFA 色盤,改橘色系(與品牌一致) */}
       {ledger && (
-        <div className="mt-2 flex items-center justify-between rounded-lg bg-emerald-50 px-2 py-1.5 text-xs font-bold text-emerald-800">
+        <div className="mt-2 flex items-center justify-between rounded-lg bg-orange-50 px-2 py-1.5 text-xs font-bold text-[#9a3412]">
           <span>{t("carbon_chatbot.activity_total_co2e")}</span>
           <span className="font-mono">{ledger.totalCo2eKg} kgCO2e</span>
         </div>
@@ -181,7 +183,7 @@ export function ActivityLedger({
 
       {/* Info: (20260720 - Emily) #6520 質量守恆勾稽:violation 明細透明呈現(等式兩側值,審計可追溯) */}
       {ledger?.articulation?.status === ArticulationStatusEnum.PASSED && (
-        <div className="mt-1.5 flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2 py-1.5 text-[11px] font-bold text-emerald-700">
+        <div className="mt-1.5 flex items-center gap-1.5 rounded-lg bg-orange-50 px-2 py-1.5 text-[11px] font-bold text-[#9a3412]">
           <ShieldCheck size={12} className="shrink-0" />
           {t("carbon_chatbot.articulation_passed")}
         </div>
