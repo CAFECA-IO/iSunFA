@@ -24,6 +24,7 @@ import { parseCustomChart } from "@/lib/utils/custom_chart_parser";
 const TORNADO_CONFIG_KEYS: ReadonlySet<string> = new Set<string>([
   CustomChartConfigKey.TITLE,
   CustomChartConfigKey.UNIT,
+  CustomChartConfigKey.MODE,
   CustomChartConfigKey.BASELINE,
   CustomChartConfigKey.LEFT_COLOR,
   CustomChartConfigKey.RIGHT_COLOR,
@@ -148,6 +149,7 @@ export const parseTornadoData = (raw: string): ITornadoParseResult => {
     const {
       title,
       unit,
+      mode,
       baseline,
       leftSeries,
       rightSeries,
@@ -159,6 +161,7 @@ export const parseTornadoData = (raw: string): ITornadoParseResult => {
       hasHeader,
       title,
       unit,
+      mode,
       baseline,
       leftSeries,
       rightSeries,
@@ -215,7 +218,7 @@ const setConfigLine = (
 };
 
 /**
- * Info: (20260722 - Julian)
+ * Info: (20260723 - Julian)
  * 將單一結構化動作決定論地套用到龍捲風圖 DSL 字串，回傳新字串（不變更輸入）。
  * 未知類型或定位失敗時原樣返回（Fail Safe）。
  */
@@ -226,13 +229,17 @@ export const applyTornadoAction = (
   const lines = raw.split("\n");
 
   switch (action.type) {
-    case TornadoActionType.EDIT_BASELINE: {
-      const { baseline, unit } = action.payload;
-      if (baseline !== undefined) {
-        setConfigLine(lines, CustomChartConfigKey.BASELINE, String(baseline));
+    case TornadoActionType.EDIT_SETTINGS: {
+      // Info: (20260723 - Julian) 圖表設定：型別、單位、基準值（皆選填；unit 空字串移除）
+      const { mode, unit, baseline } = action.payload;
+      if (mode !== undefined) {
+        setConfigLine(lines, CustomChartConfigKey.MODE, mode);
       }
       if (unit !== undefined) {
         setConfigLine(lines, CustomChartConfigKey.UNIT, unit.trim());
+      }
+      if (baseline !== undefined) {
+        setConfigLine(lines, CustomChartConfigKey.BASELINE, String(baseline));
       }
       break;
     }

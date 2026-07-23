@@ -7,6 +7,7 @@ import {
   CUSTOM_CHART_COMMENT_PREFIX,
   CUSTOM_CHART_AXIS_SEPARATORS,
   HEX_COLOR_REGEX,
+  TornadoMode,
 } from "@/constants/custom_chart";
 import {
   ICustomChartAxis,
@@ -36,6 +37,7 @@ const CONFIG_KEYS_BY_TYPE: Record<CustomChartType, Set<string>> = {
   [CustomChartType.TORNADO]: new Set<string>([
     CustomChartConfigKey.TITLE,
     CustomChartConfigKey.UNIT,
+    CustomChartConfigKey.MODE,
     CustomChartConfigKey.BASELINE,
     CustomChartConfigKey.LEFT_COLOR,
     CustomChartConfigKey.RIGHT_COLOR,
@@ -242,6 +244,21 @@ const buildTornado = (
 ): ICustomTornadoAst => {
   const title = config.get(CustomChartConfigKey.TITLE) || undefined;
   const unit = config.get(CustomChartConfigKey.UNIT) || undefined;
+
+  // Info: (20260723 - Julian) 圖表型別（選填）：未設定＝compare；未知值 fail fast（比照 trend 嚴格策略）
+  const modeRaw = config.get(CustomChartConfigKey.MODE)?.trim().toLowerCase();
+  let mode: TornadoMode | undefined;
+  if (modeRaw !== undefined && modeRaw !== "") {
+    const matched = Object.values(TornadoMode).find((m) => m === modeRaw);
+    if (!matched) {
+      throw malformed(
+        `不支援的龍捲風圖型別：「${modeRaw}」（僅支援 ${TornadoMode.COMPARE} / ${TornadoMode.SENSITIVITY}）`,
+      );
+    }
+    mode = matched;
+  }
+
+  // Info: (20260723 - Julian) 敏感度型中心基準值（選填）
   const baseline = optionalNumber(
     config.get(CustomChartConfigKey.BASELINE),
     "baseline",
@@ -314,6 +331,7 @@ const buildTornado = (
     type: CustomChartType.TORNADO,
     ...(title ? { title } : {}),
     ...(unit ? { unit } : {}),
+    ...(mode ? { mode } : {}),
     ...(baseline !== undefined ? { baseline } : {}),
     ...(leftSeries ? { leftSeries } : {}),
     ...(rightSeries ? { rightSeries } : {}),
@@ -441,6 +459,7 @@ const tornadoSchema = z.object({
   type: z.literal(CustomChartType.TORNADO),
   title: z.string().optional(),
   unit: z.string().optional(),
+  mode: z.nativeEnum(TornadoMode).optional(),
   baseline: z.number().optional(),
   leftSeries: z.string().min(1).optional(),
   rightSeries: z.string().min(1).optional(),

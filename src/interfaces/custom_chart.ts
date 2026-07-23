@@ -4,6 +4,7 @@ import {
   HistogramTrendType,
   MatrixActionType,
   TornadoActionType,
+  TornadoMode,
 } from "@/constants/custom_chart";
 
 /**
@@ -126,7 +127,8 @@ export interface ICustomTornadoAst {
   type: CustomChartType.TORNADO;
   title?: string;
   unit?: string;
-  baseline?: number; // Info: (20260723 - Julian) 基準線數值（選填；渲染於中心參考）
+  mode?: TornadoMode; // Info: (20260723 - Julian) 圖表型別（未設定＝compare 比較型）
+  baseline?: number; // Info: (20260723 - Julian) 敏感度型的中心基準值（compare 型忽略）
   leftSeries?: string; // Info: (20260720 - Julian) 左側數列名稱（選填；未填則不顯示圖例）
   rightSeries?: string; // Info: (20260720 - Julian) 右側數列名稱（選填；未填則不顯示圖例）
   leftColor?: string; // Info: (20260723 - Julian) 左數列顏色 HEX（選填；未填採預設）
@@ -150,6 +152,7 @@ export interface ITornadoItem extends ICustomTornadoBar {
 export interface ITornadoParseResult {
   title?: string;
   unit?: string;
+  mode?: TornadoMode;
   baseline?: number;
   leftSeries?: string;
   rightSeries?: string;
@@ -168,9 +171,10 @@ export type ITornadoAction = {
   description: string;
 } & (
   | {
-      // Info: (20260723 - Julian) 編輯基準線：baseline 與 unit 皆選填；unit 空字串代表移除設定
-      type: TornadoActionType.EDIT_BASELINE;
-      payload: { baseline?: number; unit?: string };
+      // Info: (20260723 - Julian) 圖表設定：型別（mode）、單位（unit）、基準值（baseline，敏感度型用）
+      // 皆選填；unit 空字串代表移除設定；baseline 僅在敏感度型有意義
+      type: TornadoActionType.EDIT_SETTINGS;
+      payload: { mode?: TornadoMode; unit?: string; baseline?: number };
     }
   | {
       // Info: (20260723 - Julian) 新增分析項目（category, 左值, 右值）

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, FC } from "react";
 import {
-  UnfoldHorizontal,
+  Settings2,
   ListPlus,
   PencilLine,
   SwatchBook,
@@ -8,7 +8,7 @@ import {
   LucideIcon,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { TornadoActionType } from "@/constants/custom_chart";
+import { TornadoActionType, TornadoMode } from "@/constants/custom_chart";
 import { ITornadoAction, ITornadoParseResult } from "@/interfaces/custom_chart";
 import { parseTornadoData } from "@/lib/utils/custom_tornado_editor";
 import {
@@ -16,6 +16,7 @@ import {
   MERMAID_LABEL_STYLE,
   MERMAID_SUBMIT_BUTTON_STYLE,
 } from "@/constants/mermaid_chart";
+import { SegmentedControl } from "@/components/chart/mermaid_common_components";
 import { DEFAULT_COLORS } from "@/components/common/donut_chart";
 import ColorPicker from "@/components/common/color_picker";
 
@@ -24,7 +25,7 @@ const isFiniteNumberStr = (s: string): boolean =>
   s.trim() !== "" && Number.isFinite(Number(s));
 
 enum TornadoTools {
-  EDIT_BASELINE = "editBaseline",
+  EDIT_SETTINGS = "editSettings",
   ADD_ITEM = "addItem",
   EDIT_ITEM = "editItem",
   EDIT_GROUP = "editGroup",
@@ -38,8 +39,8 @@ interface IToolItem {
 
 const TORNADO_TOOLS: IToolItem[] = [
   {
-    tool: TornadoTools.EDIT_BASELINE,
-    icon: UnfoldHorizontal,
+    tool: TornadoTools.EDIT_SETTINGS,
+    icon: Settings2,
   },
   {
     tool: TornadoTools.ADD_ITEM,
@@ -60,7 +61,7 @@ const TORNADO_TOOLS: IToolItem[] = [
 ];
 
 const TORNADO_TOOL_TRANSLATION_KEYS: Record<TornadoTools, string> = {
-  [TornadoTools.EDIT_BASELINE]: `編輯基準線`,
+  [TornadoTools.EDIT_SETTINGS]: `圖表設定`,
   [TornadoTools.ADD_ITEM]: `新增分析項目`,
   [TornadoTools.EDIT_ITEM]: `編輯項目數值`,
   [TornadoTools.EDIT_GROUP]: `編輯項目分組`,
@@ -72,61 +73,71 @@ interface IBasePanelProps {
   onAddAction: (action: ITornadoAction) => void;
 }
 
-// Info: (20260723 - Julian) 「編輯基準線」面板：設定基準線數值與單位
-const EditBaselinePanel: FC<IBasePanelProps> = ({
+// Info: (20260723 - Julian) 「圖表設定」面板：切換圖表型別（比較型／敏感度型）、單位、基準值
+const ChartSettingsPanel: FC<IBasePanelProps> = ({
   parsedTornadoData,
   onAddAction,
 }) => {
   const { t } = useTranslation();
 
-  const { baseline, unit } = parsedTornadoData;
-  const initialBaseline = baseline !== undefined ? String(baseline) : "";
+  const { mode, unit, baseline } = parsedTornadoData;
+  const initialMode = mode ?? TornadoMode.COMPARE;
   const initialUnit = unit ?? "";
+  const initialBaseline = baseline !== undefined ? String(baseline) : "";
 
-  const [valueInput, setValueInput] = useState<string>(initialBaseline);
+  const [modeInput, setModeInput] = useState<TornadoMode>(initialMode);
   const [unitInput, setUnitInput] = useState<string>(initialUnit);
+  const [baselineInput, setBaselineInput] = useState<string>(initialBaseline);
 
-  // Info: (20260723 - Julian) 基準線可留白（代表不變更），有填則須為有效數字
+  const isSensitivity = modeInput === TornadoMode.SENSITIVITY;
+
+  // Info: (20260723 - Julian) 敏感度型的基準值可留白，有填則須為有效數字
   const isBaselineValid =
-    valueInput.trim() === "" || isFiniteNumberStr(valueInput);
+    !isSensitivity ||
+    baselineInput.trim() === "" ||
+    isFiniteNumberStr(baselineInput);
   const isUnchanged =
-    valueInput.trim() === initialBaseline.trim() &&
-    unitInput.trim() === initialUnit.trim();
-  const isSubmitDisabled = !isBaselineValid || isUnchanged;
+    modeInput === initialMode &&
+    unitInput.trim() === initialUnit.trim() &&
+    baselineInput.trim() === initialBaseline.trim();
+  const isSubmitDisabled = isUnchanged || !isBaselineValid;
 
   const handleSubmit = () => {
     if (isSubmitDisabled) return;
     const nextBaseline =
-      valueInput.trim() === "" ? undefined : Number(valueInput);
+      isSensitivity && baselineInput.trim() !== ""
+        ? Number(baselineInput)
+        : undefined;
     onAddAction({
       id: crypto.randomUUID(),
-      type: TornadoActionType.EDIT_BASELINE,
-      description: `編輯基準線${
-        nextBaseline !== undefined ? ` 為 ${nextBaseline}` : ""
-      }${unitInput.trim() ? `（${unitInput.trim()}）` : ""}`,
-      payload: { baseline: nextBaseline, unit: unitInput.trim() },
+      type: TornadoActionType.EDIT_SETTINGS,
+      description: `圖表設定（${
+        isSensitivity ? t(`敏感度型`) : t(`比較型`)
+      }${unitInput.trim() ? `・${unitInput.trim()}` : ""}）`,
+      payload: {
+        mode: modeInput,
+        unit: unitInput.trim(),
+        ...(nextBaseline !== undefined ? { baseline: nextBaseline } : {}),
+      },
     });
   };
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
-        <UnfoldHorizontal size={14} />
-        <p>{t(`編輯基準線`)}</p>
+        <Settings2 size={14} />
+        <p>{t(`圖表設定`)}</p>
       </div>
       <div className="flex flex-col gap-2">
-        <div className="flex flex-col">
-          <label htmlFor="editBaselineLabel" className={MERMAID_LABEL_STYLE}>
-            {t(`基準線數值`)}
-          </label>
-          <input
-            id="editBaselineLabel"
-            type="text"
-            inputMode="decimal"
-            value={valueInput}
-            onChange={(e) => setValueInput(e.target.value)}
-            className={MERMAID_INPUT_STYLE}
-            placeholder={t(`可留白`)!}
+        <div className="flex items-center justify-between gap-1">
+          <label className={MERMAID_LABEL_STYLE}>{t(`圖表型別`)}</label>
+          <SegmentedControl
+            options={[
+              { value: TornadoMode.COMPARE, label: t(`比較型`) },
+              { value: TornadoMode.SENSITIVITY, label: t(`敏感度型`) },
+            ]}
+            value={modeInput}
+            onChange={(val) => setModeInput(val as TornadoMode)}
           />
         </div>
         <div className="flex flex-col">
@@ -142,6 +153,23 @@ const EditBaselinePanel: FC<IBasePanelProps> = ({
             placeholder={t(`可留白`)!}
           />
         </div>
+        {/* Info: (20260723 - Julian) 基準值僅敏感度型有意義 */}
+        {isSensitivity && (
+          <div className="flex flex-col">
+            <label htmlFor="editBaselineLabel" className={MERMAID_LABEL_STYLE}>
+              {t(`基準值`)}
+            </label>
+            <input
+              id="editBaselineLabel"
+              type="text"
+              inputMode="decimal"
+              value={baselineInput}
+              onChange={(e) => setBaselineInput(e.target.value)}
+              className={MERMAID_INPUT_STYLE}
+              placeholder={t(`可留白`)!}
+            />
+          </div>
+        )}
       </div>
       <button
         type="button"
@@ -162,7 +190,11 @@ const AddItemPanel: FC<IBasePanelProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const { leftSeries, rightSeries } = parsedTornadoData;
+  const { mode, leftSeries, rightSeries } = parsedTornadoData;
+  const isSensitivity = mode === TornadoMode.SENSITIVITY;
+  const leftLabel = leftSeries || (isSensitivity ? t(`負向偏移`) : t(`數值 A`));
+  const rightLabel =
+    rightSeries || (isSensitivity ? t(`正向偏移`) : t(`數值 B`));
 
   const [titleInput, setTitleInput] = useState<string>("");
   const [leftValueInput, setLeftValueInput] = useState<string>("");
@@ -211,7 +243,7 @@ const AddItemPanel: FC<IBasePanelProps> = ({
         </div>
         <div className="flex flex-col">
           <label htmlFor="newLeftValueLabel" className={MERMAID_LABEL_STYLE}>
-            {leftSeries || t(`數值 A`)}
+            {leftLabel}
             <span className="ml-0.5 text-red-500">*</span>
           </label>
           <input
@@ -225,7 +257,7 @@ const AddItemPanel: FC<IBasePanelProps> = ({
         </div>
         <div className="flex flex-col">
           <label htmlFor="newRightValueLabel" className={MERMAID_LABEL_STYLE}>
-            {rightSeries || t(`數值 B`)}
+            {rightLabel}
             <span className="ml-0.5 text-red-500">*</span>
           </label>
           <input
@@ -257,7 +289,16 @@ const EditItemPanel: FC<IBasePanelProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const { bars: itemOptions, leftSeries, rightSeries } = parsedTornadoData;
+  const {
+    mode,
+    bars: itemOptions,
+    leftSeries,
+    rightSeries,
+  } = parsedTornadoData;
+  const isSensitivity = mode === TornadoMode.SENSITIVITY;
+  const leftLabel = leftSeries || (isSensitivity ? t(`負向偏移`) : t(`數值 A`));
+  const rightLabel =
+    rightSeries || (isSensitivity ? t(`正向偏移`) : t(`數值 B`));
 
   const [selectedId, setSelectedId] = useState<string>("");
   const [titleInput, setTitleInput] = useState<string>("");
@@ -357,7 +398,7 @@ const EditItemPanel: FC<IBasePanelProps> = ({
         </div>
         <div className="flex flex-col">
           <label htmlFor="editLeftValueLabel" className={MERMAID_LABEL_STYLE}>
-            {leftSeries || t(`數值 A`)}
+            {leftLabel}
           </label>
           <input
             id="editLeftValueLabel"
@@ -371,7 +412,7 @@ const EditItemPanel: FC<IBasePanelProps> = ({
         </div>
         <div className="flex flex-col">
           <label htmlFor="editRightValueLabel" className={MERMAID_LABEL_STYLE}>
-            {rightSeries || t(`數值 B`)}
+            {rightLabel}
           </label>
           <input
             id="editRightValueLabel"
@@ -580,7 +621,7 @@ const DeleteItemPanel: FC<IBasePanelProps> = ({
 };
 
 const TORNADO_TOOL_PANELS: Record<TornadoTools, FC<IBasePanelProps>> = {
-  [TornadoTools.EDIT_BASELINE]: EditBaselinePanel,
+  [TornadoTools.EDIT_SETTINGS]: ChartSettingsPanel,
   [TornadoTools.ADD_ITEM]: AddItemPanel,
   [TornadoTools.EDIT_ITEM]: EditItemPanel,
   [TornadoTools.EDIT_GROUP]: EditGroupPanel,

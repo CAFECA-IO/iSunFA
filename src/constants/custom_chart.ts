@@ -34,9 +34,22 @@ export enum CustomChartConfigKey {
   UNIT = "unit",
   TREND = "trend",
   QUADRANT_COLORS = "quadrantcolors", // Info: (20260721 - Julian) 矩陣圖四象限底色（Q1..Q4，逗號分隔 HEX）
-  BASELINE = "baseline", // Info: (20260723 - Julian) 龍捲風圖基準線數值
   LEFT_COLOR = "leftcolor", // Info: (20260723 - Julian) 龍捲風圖左數列顏色 HEX
   RIGHT_COLOR = "rightcolor", // Info: (20260723 - Julian) 龍捲風圖右數列顏色 HEX
+  MODE = "mode", // Info: (20260723 - Julian) 龍捲風圖型別（compare 比較型 / sensitivity 敏感度型）
+  BASELINE = "baseline", // Info: (20260723 - Julian) 龍捲風圖敏感度型的中心基準值
+}
+
+/**
+ * Info: (20260723 - Julian)
+ * 龍捲風圖型別：
+ * - COMPARE：比較型（蝴蝶圖），中心為左右兩數列分隔線，兩側各自從 0 起算。
+ * - SENSITIVITY：敏感度型，中心為 baseline，兩數值解讀為相對基準的負向／正向偏移（±）。
+ * 兩型共用同一雙側外觀，僅語意與中心標籤不同。未設定時預設 COMPARE。
+ */
+export enum TornadoMode {
+  COMPARE = "compare",
+  SENSITIVITY = "sensitivity",
 }
 
 /**
@@ -70,7 +83,7 @@ export enum MatrixActionType {
  * 所有編輯皆為決定論字串操作，不呼叫 LLM、不做數值計算。
  */
 export enum TornadoActionType {
-  EDIT_BASELINE = "TORNADO_EDIT_BASELINE",
+  EDIT_SETTINGS = "TORNADO_EDIT_SETTINGS",
   ADD_ITEM = "TORNADO_ADD_ITEM",
   EDIT_ITEM = "TORNADO_EDIT_ITEM",
   EDIT_GROUP = "TORNADO_EDIT_GROUP",
