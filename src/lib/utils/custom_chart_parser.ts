@@ -36,6 +36,9 @@ const CONFIG_KEYS_BY_TYPE: Record<CustomChartType, Set<string>> = {
   [CustomChartType.TORNADO]: new Set<string>([
     CustomChartConfigKey.TITLE,
     CustomChartConfigKey.UNIT,
+    CustomChartConfigKey.BASELINE,
+    CustomChartConfigKey.LEFT_COLOR,
+    CustomChartConfigKey.RIGHT_COLOR,
   ]),
   [CustomChartType.HISTOGRAM]: new Set<string>([
     CustomChartConfigKey.TITLE,
@@ -239,6 +242,31 @@ const buildTornado = (
 ): ICustomTornadoAst => {
   const title = config.get(CustomChartConfigKey.TITLE) || undefined;
   const unit = config.get(CustomChartConfigKey.UNIT) || undefined;
+  const baseline = optionalNumber(
+    config.get(CustomChartConfigKey.BASELINE),
+    "baseline",
+  );
+
+  // Info: (20260723 - Julian) 數列顏色（選填）：非法 HEX fail fast（比照群組顏色的嚴格策略）
+  const parseSeriesColor = (
+    raw: string | undefined,
+    ctx: string,
+  ): string | undefined => {
+    const color = raw?.trim();
+    if (!color) return undefined;
+    if (!HEX_COLOR_REGEX.test(color)) {
+      throw malformed(`龍捲風「${ctx}」顏色非有效 HEX：「${color}」`);
+    }
+    return color;
+  };
+  const leftColor = parseSeriesColor(
+    config.get(CustomChartConfigKey.LEFT_COLOR),
+    "leftColor",
+  );
+  const rightColor = parseSeriesColor(
+    config.get(CustomChartConfigKey.RIGHT_COLOR),
+    "rightColor",
+  );
 
   /**
    * Info: (20260720 - Julian)
@@ -286,8 +314,11 @@ const buildTornado = (
     type: CustomChartType.TORNADO,
     ...(title ? { title } : {}),
     ...(unit ? { unit } : {}),
+    ...(baseline !== undefined ? { baseline } : {}),
     ...(leftSeries ? { leftSeries } : {}),
     ...(rightSeries ? { rightSeries } : {}),
+    ...(leftColor ? { leftColor } : {}),
+    ...(rightColor ? { rightColor } : {}),
     bars,
   };
 };
@@ -410,8 +441,11 @@ const tornadoSchema = z.object({
   type: z.literal(CustomChartType.TORNADO),
   title: z.string().optional(),
   unit: z.string().optional(),
+  baseline: z.number().optional(),
   leftSeries: z.string().min(1).optional(),
   rightSeries: z.string().min(1).optional(),
+  leftColor: z.string().optional(),
+  rightColor: z.string().optional(),
   bars: z
     .array(
       z.object({

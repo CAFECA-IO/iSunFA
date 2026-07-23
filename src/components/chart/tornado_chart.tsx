@@ -28,16 +28,25 @@ const COLOR_RIGHT = "#FF9800";
 // Info: (20260720 - Julian) 數值標籤：內嵌 / 外置的字寬估算與配色
 const CHAR_W = 6.5; // Info: (20260720 - Julian) fontSize 11 下每字元約略寬度（含逗號）
 const LABEL_PAD = 4; // Info: (20260720 - Julian) 數值標籤與長條端點間距（越小越貼近）
-const TEXT_ON_DARK = "#FFFFFF"; // Info: (20260720 - Julian) 深藍段（左數列）上的字色
-const TEXT_ON_LIGHT = "#7A3E00"; // Info: (20260720 - Julian) 橘段（右數列）上的字色，確保對比
-const TEXT_OUTSIDE = "#64748B"; // Info: (20260720 - Julian) 放不下改置於 bar 外，白底上的 slate 字
 
 // Info: (20260720 - Julian) 數值格式化（千分位、最多三位小數），避免浮點雜訊
 const formatValue = (n: number): string =>
   n.toLocaleString(undefined, { maximumFractionDigits: 3 });
 
 const TornadoChart: FC<ITornadoChartProps> = ({ ast }) => {
-  const { title, unit, leftSeries, rightSeries, bars } = ast;
+  const { title, unit, baseline, leftSeries, rightSeries, bars } = ast;
+
+  // Info: (20260723 - Julian) 數列顏色：DSL 指定優先，否則採預設（左深藍、右橘）
+  const colorLeft = ast.leftColor ?? COLOR_LEFT;
+  const colorRight = ast.rightColor ?? COLOR_RIGHT;
+
+  // Info: (20260723 - Julian) 中心參考標籤：基準線與單位擇有者顯示（以直線分隔）
+  const centerLabel = [
+    baseline !== undefined ? `基準 ${formatValue(baseline)}` : null,
+    unit ? `單位：${unit}` : null,
+  ]
+    .filter((s): s is string => s !== null)
+    .join("　｜　");
 
   // Info: (20260720 - Julian) 依左右合計由大到小排序，呈現龍捲風收斂外型（渲染層職責，不動 AST）
   const sortedBars = useMemo(
@@ -56,8 +65,8 @@ const TornadoChart: FC<ITornadoChartProps> = ({ ast }) => {
 
   // Info: (20260720 - Julian) 圖例項目：僅顯示有填名稱的數列；皆未填則不畫圖例、亦不留底部空間
   const legendItems = [
-    leftSeries ? { name: leftSeries, color: COLOR_LEFT } : null,
-    rightSeries ? { name: rightSeries, color: COLOR_RIGHT } : null,
+    leftSeries ? { name: leftSeries, color: colorLeft } : null,
+    rightSeries ? { name: rightSeries, color: colorRight } : null,
   ].filter((item): item is { name: string; color: string } => item !== null);
 
   const plotBottom = MARGIN_TOP + sortedBars.length * ROW_H;
@@ -103,7 +112,7 @@ const TornadoChart: FC<ITornadoChartProps> = ({ ast }) => {
         strokeWidth={1.5}
         strokeDasharray="4 3"
       />
-      {unit && (
+      {centerLabel && (
         <text
           x={CENTER_X}
           y={MARGIN_TOP - 8}
@@ -111,7 +120,7 @@ const TornadoChart: FC<ITornadoChartProps> = ({ ast }) => {
           className="fill-slate-400"
           fontSize={12}
         >
-          {`單位：${unit}`}
+          {centerLabel}
         </text>
       )}
 
@@ -141,7 +150,7 @@ const TornadoChart: FC<ITornadoChartProps> = ({ ast }) => {
                 y={barY}
                 width={leftW}
                 height={BAR_H}
-                fill={COLOR_LEFT}
+                fill={colorLeft}
                 rx={2}
               />
             )}
@@ -152,7 +161,7 @@ const TornadoChart: FC<ITornadoChartProps> = ({ ast }) => {
                 y={barY}
                 width={rightW}
                 height={BAR_H}
-                fill={COLOR_RIGHT}
+                fill={colorRight}
                 rx={2}
               />
             )}
@@ -174,8 +183,9 @@ const TornadoChart: FC<ITornadoChartProps> = ({ ast }) => {
               x={leftFits ? leftStart + LABEL_PAD : leftStart - LABEL_PAD}
               y={barCenterY + 4}
               textAnchor={leftFits ? "start" : "end"}
-              fill={leftFits ? TEXT_ON_DARK : TEXT_OUTSIDE}
-              fontSize={11}
+              fill="#64748B"
+              filter={leftFits ? "invert(1)" : ""}
+              fontSize={12}
               fontWeight={leftFits ? 600 : 400}
             >
               {leftLabel}
@@ -185,8 +195,9 @@ const TornadoChart: FC<ITornadoChartProps> = ({ ast }) => {
               x={rightFits ? rightEnd - LABEL_PAD : rightEnd + LABEL_PAD}
               y={barCenterY + 4}
               textAnchor={rightFits ? "end" : "start"}
-              fill={rightFits ? TEXT_ON_LIGHT : TEXT_OUTSIDE}
-              fontSize={11}
+              fill="#64748B"
+              filter={leftFits ? "invert(1)" : ""}
+              fontSize={12}
               fontWeight={rightFits ? 600 : 400}
             >
               {rightLabel}

@@ -34,6 +34,9 @@ export enum CustomChartConfigKey {
   UNIT = "unit",
   TREND = "trend",
   QUADRANT_COLORS = "quadrantcolors", // Info: (20260721 - Julian) 矩陣圖四象限底色（Q1..Q4，逗號分隔 HEX）
+  BASELINE = "baseline", // Info: (20260723 - Julian) 龍捲風圖基準線數值
+  LEFT_COLOR = "leftcolor", // Info: (20260723 - Julian) 龍捲風圖左數列顏色 HEX
+  RIGHT_COLOR = "rightcolor", // Info: (20260723 - Julian) 龍捲風圖右數列顏色 HEX
 }
 
 /**
@@ -58,6 +61,20 @@ export enum MatrixActionType {
   EDIT_GROUP = "MATRIX_EDIT_GROUP",
   CHANGE_QUADRANT_COLOR = "MATRIX_CHANGE_QUADRANT_COLOR",
   DELETE_ITEM = "MATRIX_DELETE_ITEM",
+}
+
+/**
+ * Info: (20260722 - Julian)
+ * 龍捲風圖結構化編輯的動作類型列舉（供 tornado_tools_submenu 的五項工具使用）。
+ * 對應到 custom-tornado DSL 的設定列（baseline/unit/顏色）、資料列（item）與數列標頭（group）操作，
+ * 所有編輯皆為決定論字串操作，不呼叫 LLM、不做數值計算。
+ */
+export enum TornadoActionType {
+  EDIT_BASELINE = "TORNADO_EDIT_BASELINE",
+  ADD_ITEM = "TORNADO_ADD_ITEM",
+  EDIT_ITEM = "TORNADO_EDIT_ITEM",
+  EDIT_GROUP = "TORNADO_EDIT_GROUP",
+  DELETE_ITEM = "TORNADO_DELETE_ITEM",
 }
 
 /**

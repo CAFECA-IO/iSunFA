@@ -1,7 +1,7 @@
 "use client";
 
 import { CustomChartType } from "@/constants/custom_chart";
-import { IMatrixAction } from "@/interfaces/custom_chart";
+import { ICustomChartAction } from "@/interfaces/custom_chart";
 import { parseCustomChart } from "@/lib/utils/custom_chart_parser";
 import { applyCustomChartAction } from "@/lib/utils/custom_chart_editor";
 import { CustomEditorControlPanel } from "@/components/chart/custom_editor_control_panel";
@@ -29,7 +29,7 @@ interface ICreateCustomEditorAdapterParams {
 export const createCustomEditorAdapter = ({
   chartType,
   t,
-}: ICreateCustomEditorAdapterParams): IChartEditorAdapter<IMatrixAction> => ({
+}: ICreateCustomEditorAdapterParams): IChartEditorAdapter<ICustomChartAction> => ({
   isMock: true,
 
   applyAction: (chart, action) =>

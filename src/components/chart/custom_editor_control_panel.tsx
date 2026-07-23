@@ -2,7 +2,7 @@
 
 import { FC, useState } from "react";
 import { CustomChartType } from "@/constants/custom_chart";
-import { IMatrixAction } from "@/interfaces/custom_chart";
+import { ICustomChartAction } from "@/interfaces/custom_chart";
 import { MatrixToolsSection } from "@/components/chart/matrix_tools_submenu";
 import { TornadoToolsSection } from "@/components/chart/tornado_tools_submenu";
 import { ChartEditorControlShell } from "@/components/chart/ai_chart_editor/chart_editor_control_shell";
@@ -23,8 +23,8 @@ interface ICustomEditorControlPanelProps {
   chart: string;
   aiInstruction: string;
   setAiInstruction: (value: string) => void;
-  pendingActions: IMatrixAction[];
-  onAddAction: (action: IMatrixAction) => void;
+  pendingActions: ICustomChartAction[];
+  onAddAction: (action: ICustomChartAction) => void;
   onRemoveAction: (id: string) => void;
 }
 
