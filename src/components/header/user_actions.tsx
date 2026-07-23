@@ -205,11 +205,11 @@ export default function UserActions() {
                 setForceOpen(false);
                 close();
               }}
-              className={`group flex h-full w-full flex-col items-center justify-center rounded-xl bg-white p-2 text-center text-xs font-normal text-gray-600 shadow-sm ring-1 ring-gray-200 transition-colors md:rounded-lg md:bg-transparent md:font-medium md:shadow-none md:ring-0 ${action.isDestructive ? "hover:bg-red-50" : "hover:bg-gray-50"}`}
+              className={`group flex h-full w-full flex-col items-center justify-center rounded-xl bg-white p-2 text-center text-xs font-normal shadow-sm ring-1 ring-gray-200 transition-colors md:rounded-lg md:bg-transparent md:font-medium md:shadow-none md:ring-0 ${action.isDestructive ? "hover:bg-red-50" : "hover:bg-gray-50"}`}
             >
               <Icon
                 size={24}
-                className={`mb-1 text-gray-400 group-hover:text-gray-600 md:size-5 ${action.isDestructive ? "text-red-500" : "text-gray-600"}`}
+                className={`mb-1 md:size-5 ${action.isDestructive ? "text-red-500" : "text-gray-600"}`}
               />
               {t(action.labelKey)}
             </button>

@@ -158,7 +158,6 @@ const AddItemPanel: FC<IBasePanelProps> = ({
             {t(`${MATRIX_I18N_PREFIX}.item_title`)}
             <span className="ml-0.5 text-red-500">*</span>
           </label>
-          {/* ToDo: (20260722 - Luphia) 本檔多處 placeholder（「請輸入項目標題」「可留白」「自訂顏色」等）與純文字提示未經 t()，需一併抽成 i18n key */}
           <input
             id="newTitleLabel"
             type="text"
@@ -244,7 +243,6 @@ const AddItemPanel: FC<IBasePanelProps> = ({
               placeholder={t(`${MATRIX_I18N_PREFIX}.new_group_placeholder`)!}
             />
           ) : (
-            // ToDo: (20260722 - Luphia) id="addLinkFromLabel" 為 Sankey 複製殘留，與 label htmlFor="newItemGroupLabel" 不符，且跨面板重複；應改為對應的唯一 id
             <select
               id="newItemGroupLabel"
               value={selectedGroup}
@@ -331,7 +329,7 @@ const EditItemPanel: FC<IBasePanelProps> = ({
     titleInput.trim() === selectedItem.label &&
     xCoord === selectedItem.x &&
     yCoord === selectedItem.y &&
-    selectedGroup === selectedItem.group;
+    selectedGroup.trim() === selectedItem.group?.toString();
 
   // Info: (20260721 - Julian) 鎖定提交按鈕
   const isSubmitDisabled =

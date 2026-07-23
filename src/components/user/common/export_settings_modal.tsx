@@ -14,7 +14,7 @@ import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import DateRangePicker from "@/components/common/date_range_picker";
 
-enum ExportType {
+export enum ExportType {
   VOUCHER = "voucher",
   ESG = "esg",
 }

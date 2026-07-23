@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Plus,
   Search,
@@ -672,9 +672,8 @@ export default function AccountManagementTab({
             const isActive = currentMobileTab === value;
             const handleClick = () => setCurrentMobileTab(value as MobileTab);
             return (
-              <>
+              <React.Fragment key={key}>
                 <button
-                  key={`${key}-btn`}
                   type="button"
                   onClick={handleClick}
                   className={`${isActive ? "text-orange-500" : "text-slate-500 hover:text-orange-500"} shrink-0 px-2`}
@@ -682,13 +681,9 @@ export default function AccountManagementTab({
                   {t(`voucher.account.mobile_tab.${value}`)}
                 </button>
                 {isNotLast && (
-                  <ChevronRight
-                    key={`${key}-chevron`}
-                    size={14}
-                    className="shrink-0 text-slate-800"
-                  />
+                  <ChevronRight size={14} className="shrink-0 text-slate-800" />
                 )}
-              </>
+              </React.Fragment>
             );
           })}
         </div>
