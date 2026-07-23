@@ -21,6 +21,9 @@ import { DEFAULT_COLORS } from "@/components/common/donut_chart";
 import ColorPicker from "@/components/common/color_picker";
 import { useDecimalInput } from "@/hooks/use_decimal_input";
 
+// Info: (20260723 - Julian) 龍捲風工具 i18n key 前綴，字面值收斂於 locale 檔
+const TORNADO_I18N_PREFIX = "chart.custom_chart.tornado";
+
 enum TornadoTools {
   EDIT_SETTINGS = "editSettings",
   ADD_ITEM = "addItem",
@@ -58,11 +61,11 @@ const TORNADO_TOOLS: IToolItem[] = [
 ];
 
 const TORNADO_TOOL_TRANSLATION_KEYS: Record<TornadoTools, string> = {
-  [TornadoTools.EDIT_SETTINGS]: `圖表設定`,
-  [TornadoTools.ADD_ITEM]: `新增分析項目`,
-  [TornadoTools.EDIT_ITEM]: `編輯項目數值`,
-  [TornadoTools.EDIT_GROUP]: `編輯項目分組`,
-  [TornadoTools.DELETE_ITEM]: `刪除分析項目`,
+  [TornadoTools.EDIT_SETTINGS]: `${TORNADO_I18N_PREFIX}.edit_settings`,
+  [TornadoTools.ADD_ITEM]: `${TORNADO_I18N_PREFIX}.add_item`,
+  [TornadoTools.EDIT_ITEM]: `${TORNADO_I18N_PREFIX}.edit_item`,
+  [TornadoTools.EDIT_GROUP]: `${TORNADO_I18N_PREFIX}.edit_group`,
+  [TornadoTools.DELETE_ITEM]: `${TORNADO_I18N_PREFIX}.delete_item`,
 };
 
 interface IBasePanelProps {
@@ -108,9 +111,18 @@ const ChartSettingsPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: TornadoActionType.EDIT_SETTINGS,
-      description: `圖表設定（${
-        isSensitivity ? t(`敏感度型`) : t(`比較型`)
-      }${unitInput.trim() ? `・${unitInput.trim()}` : ""}）`,
+      description: unitInput.trim()
+        ? t(`${TORNADO_I18N_PREFIX}.action_edit_settings_with_unit`, {
+            mode: isSensitivity
+              ? t(`${TORNADO_I18N_PREFIX}.sensitivity`)
+              : t(`${TORNADO_I18N_PREFIX}.compare`),
+            unit: unitInput.trim(),
+          })
+        : t(`${TORNADO_I18N_PREFIX}.action_edit_settings`, {
+            mode: isSensitivity
+              ? t(`${TORNADO_I18N_PREFIX}.sensitivity`)
+              : t(`${TORNADO_I18N_PREFIX}.compare`),
+          }),
       payload: {
         mode: modeInput,
         unit: unitInput.trim(),
@@ -123,15 +135,23 @@ const ChartSettingsPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <Settings2 size={14} />
-        <p>{t(`圖表設定`)}</p>
+        <p>{t(`${TORNADO_I18N_PREFIX}.edit_settings`)}</p>
       </div>
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between gap-1">
-          <label className={MERMAID_LABEL_STYLE}>{t(`圖表型別`)}</label>
+          <label className={MERMAID_LABEL_STYLE}>
+            {t(`${TORNADO_I18N_PREFIX}.chart_type`)}
+          </label>
           <SegmentedControl
             options={[
-              { value: TornadoMode.COMPARE, label: t(`比較型`) },
-              { value: TornadoMode.SENSITIVITY, label: t(`敏感度型`) },
+              {
+                value: TornadoMode.COMPARE,
+                label: t(`${TORNADO_I18N_PREFIX}.compare`),
+              },
+              {
+                value: TornadoMode.SENSITIVITY,
+                label: t(`${TORNADO_I18N_PREFIX}.sensitivity`),
+              },
             ]}
             value={modeInput}
             onChange={(val) => setModeInput(val as TornadoMode)}
@@ -139,7 +159,7 @@ const ChartSettingsPanel: FC<IBasePanelProps> = ({
         </div>
         <div className="flex flex-col">
           <label htmlFor="editUnitLabel" className={MERMAID_LABEL_STYLE}>
-            {t(`單位`)}
+            {t(`${TORNADO_I18N_PREFIX}.unit`)}
           </label>
           <input
             id="editUnitLabel"
@@ -147,14 +167,14 @@ const ChartSettingsPanel: FC<IBasePanelProps> = ({
             value={unitInput}
             onChange={(e) => setUnitInput(e.target.value)}
             className={MERMAID_INPUT_STYLE}
-            placeholder={t(`可留白`)!}
+            placeholder={t(`${TORNADO_I18N_PREFIX}.optional_placeholder`)!}
           />
         </div>
         {/* Info: (20260723 - Julian) 基準值僅敏感度型有意義 */}
         {isSensitivity && (
           <div className="flex flex-col">
             <label htmlFor="editBaselineLabel" className={MERMAID_LABEL_STYLE}>
-              {t(`基準值`)}
+              {t(`${TORNADO_I18N_PREFIX}.baseline`)}
             </label>
             <input
               id="editBaselineLabel"
@@ -163,7 +183,7 @@ const ChartSettingsPanel: FC<IBasePanelProps> = ({
               value={baselineField.value}
               onChange={baselineField.onChange}
               className={MERMAID_INPUT_STYLE}
-              placeholder={t(`可留白`)!}
+              placeholder={t(`${TORNADO_I18N_PREFIX}.optional_placeholder`)!}
             />
           </div>
         )}
@@ -174,7 +194,7 @@ const ChartSettingsPanel: FC<IBasePanelProps> = ({
         disabled={isSubmitDisabled}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t(`套用變更`)}
+        {t(`${TORNADO_I18N_PREFIX}.apply_changes`)}
       </button>
     </div>
   );
@@ -189,9 +209,16 @@ const AddItemPanel: FC<IBasePanelProps> = ({
 
   const { mode, leftSeries, rightSeries } = parsedTornadoData;
   const isSensitivity = mode === TornadoMode.SENSITIVITY;
-  const leftLabel = leftSeries || (isSensitivity ? t(`負向偏移`) : t(`數值 A`));
+  const leftLabel =
+    leftSeries ||
+    (isSensitivity
+      ? t(`${TORNADO_I18N_PREFIX}.negative_offset`)
+      : t(`${TORNADO_I18N_PREFIX}.left_legend`));
   const rightLabel =
-    rightSeries || (isSensitivity ? t(`正向偏移`) : t(`數值 B`));
+    rightSeries ||
+    (isSensitivity
+      ? t(`${TORNADO_I18N_PREFIX}.positive_offset`)
+      : t(`${TORNADO_I18N_PREFIX}.right_legend`));
 
   const [titleInput, setTitleInput] = useState<string>("");
   // Info: (20260723 - Julian) 左右數值：只允許數字與小數點（可為負）
@@ -207,7 +234,7 @@ const AddItemPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: TornadoActionType.ADD_ITEM,
-      description: `新增項目「${category}」`,
+      description: t(`${TORNADO_I18N_PREFIX}.action_add_item`, { category }),
       payload: {
         category,
         left: leftValue.numValue,
@@ -220,12 +247,12 @@ const AddItemPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <ListPlus size={14} />
-        <p>{t(`新增分析項目`)}</p>
+        <p>{t(`${TORNADO_I18N_PREFIX}.add_item`)}</p>
       </div>
       <div className="flex flex-col gap-2">
         <div className="flex flex-col">
           <label htmlFor="newTitleLabel" className={MERMAID_LABEL_STYLE}>
-            {t(`項目標題`)}
+            {t(`${TORNADO_I18N_PREFIX}.item_title`)}
             <span className="ml-0.5 text-red-500">*</span>
           </label>
           <input
@@ -234,7 +261,7 @@ const AddItemPanel: FC<IBasePanelProps> = ({
             value={titleInput}
             onChange={(e) => setTitleInput(e.target.value)}
             className={MERMAID_INPUT_STYLE}
-            placeholder={t(`請輸入新項目標題`)!}
+            placeholder={t(`${TORNADO_I18N_PREFIX}.item_title_placeholder`)!}
           />
         </div>
         <div className="flex flex-col">
@@ -274,7 +301,7 @@ const AddItemPanel: FC<IBasePanelProps> = ({
         disabled={isSubmitDisabled}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t(`新增分析項目`)}
+        {t(`${TORNADO_I18N_PREFIX}.add_item`)}
       </button>
     </div>
   );
@@ -294,9 +321,16 @@ const EditItemPanel: FC<IBasePanelProps> = ({
     rightSeries,
   } = parsedTornadoData;
   const isSensitivity = mode === TornadoMode.SENSITIVITY;
-  const leftLabel = leftSeries || (isSensitivity ? t(`負向偏移`) : t(`數值 A`));
+  const leftLabel =
+    leftSeries ||
+    (isSensitivity
+      ? t(`${TORNADO_I18N_PREFIX}.negative_offset`)
+      : t(`${TORNADO_I18N_PREFIX}.left_legend`));
   const rightLabel =
-    rightSeries || (isSensitivity ? t(`正向偏移`) : t(`數值 B`));
+    rightSeries ||
+    (isSensitivity
+      ? t(`${TORNADO_I18N_PREFIX}.positive_offset`)
+      : t(`${TORNADO_I18N_PREFIX}.right_legend`));
 
   const [selectedId, setSelectedId] = useState<string>("");
   const [titleInput, setTitleInput] = useState<string>("");
@@ -338,7 +372,7 @@ const EditItemPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: TornadoActionType.EDIT_ITEM,
-      description: `編輯項目「${category}」`,
+      description: t(`${TORNADO_I18N_PREFIX}.action_edit_item`, { category }),
       payload: {
         lineIndex: selectedItem.lineIndex,
         category,
@@ -352,12 +386,12 @@ const EditItemPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <PencilLine size={14} />
-        <p>{t(`編輯項目數值`)}</p>
+        <p>{t(`${TORNADO_I18N_PREFIX}.edit_item`)}</p>
       </div>
       <div className="flex flex-col gap-2">
         <div className="flex flex-col">
           <label htmlFor="editIdLabel" className={MERMAID_LABEL_STYLE}>
-            {t(`選擇欲編輯的項目`)}
+            {t(`${TORNADO_I18N_PREFIX}.select_edit_item`)}
             <span className="ml-0.5 text-red-500">*</span>
           </label>
           <select
@@ -366,7 +400,9 @@ const EditItemPanel: FC<IBasePanelProps> = ({
             onChange={(e) => handleSelect(e.target.value)}
             className={MERMAID_INPUT_STYLE}
           >
-            <option value="">{t(`選擇欲編輯的項目`)}</option>
+            <option value="">
+              {t(`${TORNADO_I18N_PREFIX}.select_edit_item`)}
+            </option>
             {itemOptions.map((item) => (
               <option
                 key={`tornado-edit-opt-${item.lineIndex}`}
@@ -379,7 +415,7 @@ const EditItemPanel: FC<IBasePanelProps> = ({
         </div>
         <div className="flex flex-col">
           <label htmlFor="editTitleLabel" className={MERMAID_LABEL_STYLE}>
-            {t(`項目標題`)}
+            {t(`${TORNADO_I18N_PREFIX}.item_title`)}
           </label>
           <input
             id="editTitleLabel"
@@ -388,7 +424,7 @@ const EditItemPanel: FC<IBasePanelProps> = ({
             value={titleInput}
             onChange={(e) => setTitleInput(e.target.value)}
             className={MERMAID_INPUT_STYLE}
-            placeholder={t(`請輸入新項目標題`)!}
+            placeholder={t(`${TORNADO_I18N_PREFIX}.item_title_placeholder`)!}
           />
         </div>
         <div className="flex flex-col">
@@ -428,7 +464,7 @@ const EditItemPanel: FC<IBasePanelProps> = ({
         disabled={isSubmitDisabled}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t(`套用變更`)}
+        {t(`${TORNADO_I18N_PREFIX}.apply_changes`)}
       </button>
     </div>
   );
@@ -471,7 +507,10 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: TornadoActionType.EDIT_GROUP,
-      description: `編輯數列分組「${leftTitleInput.trim()} / ${rightTitleInput.trim()}」`,
+      description: t(`${TORNADO_I18N_PREFIX}.action_edit_group`, {
+        left: leftTitleInput.trim(),
+        right: rightTitleInput.trim(),
+      }),
       payload: {
         leftSeries: leftTitleInput.trim(),
         rightSeries: rightTitleInput.trim(),
@@ -487,7 +526,7 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <SwatchBook size={14} />
-        <p>{t(`編輯項目分組`)}</p>
+        <p>{t(`${TORNADO_I18N_PREFIX}.edit_group`)}</p>
       </div>
       <div className="flex gap-2">
         <div className="flex flex-1 flex-col gap-2">
@@ -496,7 +535,7 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
               htmlFor="editLeftTitleValueLabel"
               className={MERMAID_LABEL_STYLE}
             >
-              {t(`左側數值`)}
+              {t(`${TORNADO_I18N_PREFIX}.left_legend`)}
               <span className="ml-0.5 text-red-500">*</span>
             </label>
             <input
@@ -520,7 +559,7 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
               htmlFor="editRightTitleValueLabel"
               className={MERMAID_LABEL_STYLE}
             >
-              {t(`右側數值`)}
+              {t(`${TORNADO_I18N_PREFIX}.right_legend`)}
               <span className="ml-0.5 text-red-500">*</span>
             </label>
             <input
@@ -544,7 +583,7 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
         disabled={isSubmitDisabled}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t(`套用變更`)}
+        {t(`${TORNADO_I18N_PREFIX}.apply_changes`)}
       </button>
     </div>
   );
@@ -572,7 +611,9 @@ const DeleteItemPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: TornadoActionType.DELETE_ITEM,
-      description: `刪除項目「${selectedItem.category}」`,
+      description: t(`${TORNADO_I18N_PREFIX}.action_delete_item`, {
+        category: selectedItem.category,
+      }),
       payload: { lineIndex: selectedItem.lineIndex },
     });
   };
@@ -581,11 +622,11 @@ const DeleteItemPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <Trash2 size={14} />
-        <p>{t(`刪除分析項目`)}</p>
+        <p>{t(`${TORNADO_I18N_PREFIX}.delete_item`)}</p>
       </div>
       <div className="flex flex-col">
         <label htmlFor="deleteItemLabel" className={MERMAID_LABEL_STYLE}>
-          {t(`選擇欲刪除的分析項目`)}
+          {t(`${TORNADO_I18N_PREFIX}.select_delete_item`)}
           <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
@@ -594,7 +635,9 @@ const DeleteItemPanel: FC<IBasePanelProps> = ({
           onChange={(e) => setSelectedId(e.target.value)}
           className={MERMAID_INPUT_STYLE}
         >
-          <option value="">{t(`選擇欲刪除的分析項目`)}</option>
+          <option value="">
+            {t(`${TORNADO_I18N_PREFIX}.select_delete_item`)}
+          </option>
           {itemOptions.map((item) => (
             <option
               key={`tornado-delete-opt-${item.lineIndex}`}
@@ -611,7 +654,7 @@ const DeleteItemPanel: FC<IBasePanelProps> = ({
         disabled={!selectedItem}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t(`刪除分析項目`)}
+        {t(`${TORNADO_I18N_PREFIX}.delete_item`)}
       </button>
     </div>
   );
