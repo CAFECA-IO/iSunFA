@@ -14,11 +14,16 @@ import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import DateRangePicker from "@/components/common/date_range_picker";
 
+enum ExportType {
+  VOUCHER = "voucher",
+  ESG = "esg",
+}
+
 interface IExportSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   accountBookId: string;
-  type: "voucher" | "esg";
+  type: ExportType;
 }
 
 export default function ExportSettingsModal({
@@ -39,32 +44,32 @@ export default function ExportSettingsModal({
   // Info: (20260617 - Julian) 計算中 / 匯出中 / 筆數為 0 則無法提交
   const isSubmitDisabled = isCounting || isExporting || count === 0;
 
-  // Info: (20260617 - Julian) 依所選時間區間及核對狀態篩選，向後端查詢符合條件的總筆數，未選擇區間則為 0
+  // Info: (20260617 - Julian) 依所選時間區間及核對狀態篩選，向後端查詢符合條件的總筆數，未選擇區間則顯示全部
   const fetchCount = useCallback(async () => {
     if (!accountBookId || !isOpen) return;
-
-    if (!startDate || !endDate) {
-      setCount(0);
-      return;
-    }
 
     setIsCounting(true);
     try {
       const searchParams = new URLSearchParams();
-      const [sy, sm, sd] = startDate.split("-").map(Number);
-      const start = new Date(sy, sm - 1, sd, 0, 0, 0, 0);
-      searchParams.append("startDate", start.toISOString());
 
-      const [ey, em, ed] = endDate.split("-").map(Number);
-      const end = new Date(ey, em - 1, ed, 23, 59, 59, 999);
-      searchParams.append("endDate", end.toISOString());
+      if (startDate) {
+        const [sy, sm, sd] = startDate.split("-").map(Number);
+        const start = new Date(sy, sm - 1, sd, 0, 0, 0, 0);
+        searchParams.append("startDate", start.toISOString());
+      }
+
+      if (endDate) {
+        const [ey, em, ed] = endDate.split("-").map(Number);
+        const end = new Date(ey, em - 1, ed, 23, 59, 59, 999);
+        searchParams.append("endDate", end.toISOString());
+      }
 
       if (includeUnverified) {
         searchParams.append("includeUnverified", "true");
       }
 
       const endpoint =
-        type === "voucher"
+        type === ExportType.VOUCHER
           ? `/api/v1/user/account_book/${accountBookId}/voucher/export/count?${searchParams.toString()}`
           : `/api/v1/user/account_book/${accountBookId}/esg/export/count?${searchParams.toString()}`;
 
@@ -105,7 +110,7 @@ export default function ExportSettingsModal({
       }
 
       const endpoint =
-        type === "voucher"
+        type === ExportType.VOUCHER
           ? `/api/v1/user/account_book/${accountBookId}/voucher/export?${searchParams.toString()}`
           : `/api/v1/user/account_book/${accountBookId}/esg/export?${searchParams.toString()}`;
 
@@ -132,7 +137,7 @@ export default function ExportSettingsModal({
         .slice(0, 10)
         .replace(/-/g, "");
       const fileName =
-        type === "voucher"
+        type === ExportType.VOUCHER
           ? `vouchers_${dateSuffix}.csv`
           : `esg_records_${dateSuffix}.csv`;
 
@@ -147,7 +152,7 @@ export default function ExportSettingsModal({
     } catch (error) {
       console.error(`Failed to export ${type}:`, error);
       alert(
-        type === "voucher"
+        type === ExportType.VOUCHER
           ? t("common.export_settings.failed_voucher")
           : t("common.export_settings.failed_esg"),
       );
@@ -158,21 +163,21 @@ export default function ExportSettingsModal({
 
   // Info: (20260617 - Julian) 依據類型顯示不同 UI 語系或字句
   const titleText =
-    type === "voucher"
+    type === ExportType.VOUCHER
       ? t("common.export_settings.title_voucher")
       : t("common.export_settings.title_esg");
 
   const descriptionText =
-    type === "voucher"
+    type === ExportType.VOUCHER
       ? t("common.export_settings.desc_voucher")
       : t("common.export_settings.desc_esg");
 
   const statText =
-    type === "voucher"
+    type === ExportType.VOUCHER
       ? t("common.export_settings.stat_title_voucher")
       : t("common.export_settings.stat_title_esg");
   const statUnit =
-    type === "voucher"
+    type === ExportType.VOUCHER
       ? t("common.export_settings.unit_voucher")
       : t("common.export_settings.unit_esg");
 
@@ -256,7 +261,7 @@ export default function ExportSettingsModal({
                       htmlFor="include-unverified-checkbox"
                       className="cursor-pointer text-sm font-bold text-slate-700 select-none"
                     >
-                      {type === "voucher"
+                      {type === ExportType.VOUCHER
                         ? t("common.export_settings.include_unverified_voucher")
                         : t("common.export_settings.include_unverified_esg")}
                     </label>
