@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, FC } from "react";
+import React, { useState, useMemo, FC } from "react";
 import {
   Settings2,
   ListPlus,
@@ -19,10 +19,7 @@ import {
 import { SegmentedControl } from "@/components/chart/mermaid_common_components";
 import { DEFAULT_COLORS } from "@/components/common/donut_chart";
 import ColorPicker from "@/components/common/color_picker";
-
-// Info: (20260723 - Julian) 數值字串是否為有效有限數字
-const isFiniteNumberStr = (s: string): boolean =>
-  s.trim() !== "" && Number.isFinite(Number(s));
+import { useDecimalInput } from "@/hooks/use_decimal_input";
 
 enum TornadoTools {
   EDIT_SETTINGS = "editSettings",
@@ -87,26 +84,26 @@ const ChartSettingsPanel: FC<IBasePanelProps> = ({
 
   const [modeInput, setModeInput] = useState<TornadoMode>(initialMode);
   const [unitInput, setUnitInput] = useState<string>(initialUnit);
-  const [baselineInput, setBaselineInput] = useState<string>(initialBaseline);
+
+  // Info: (20260723 - Julian) 基準值：只允許數字與小數點（可為負，如負的 base-case NPV）
+  const baselineField = useDecimalInput(initialBaseline, {
+    allowNegative: true,
+  });
 
   const isSensitivity = modeInput === TornadoMode.SENSITIVITY;
 
-  // Info: (20260723 - Julian) 敏感度型的基準值可留白，有填則須為有效數字
-  const isBaselineValid =
-    !isSensitivity ||
-    baselineInput.trim() === "" ||
-    isFiniteNumberStr(baselineInput);
+  // Info: (20260723 - Julian) 基準值由 useDecimalInput 保證僅含數字，故只需比對是否有變更
   const isUnchanged =
     modeInput === initialMode &&
     unitInput.trim() === initialUnit.trim() &&
-    baselineInput.trim() === initialBaseline.trim();
-  const isSubmitDisabled = isUnchanged || !isBaselineValid;
+    baselineField.value.trim() === initialBaseline.trim();
+  const isSubmitDisabled = isUnchanged;
 
   const handleSubmit = () => {
     if (isSubmitDisabled) return;
     const nextBaseline =
-      isSensitivity && baselineInput.trim() !== ""
-        ? Number(baselineInput)
+      isSensitivity && !baselineField.isEmpty
+        ? baselineField.numValue
         : undefined;
     onAddAction({
       id: crypto.randomUUID(),
@@ -163,8 +160,8 @@ const ChartSettingsPanel: FC<IBasePanelProps> = ({
               id="editBaselineLabel"
               type="text"
               inputMode="decimal"
-              value={baselineInput}
-              onChange={(e) => setBaselineInput(e.target.value)}
+              value={baselineField.value}
+              onChange={baselineField.onChange}
               className={MERMAID_INPUT_STYLE}
               placeholder={t(`可留白`)!}
             />
@@ -197,13 +194,12 @@ const AddItemPanel: FC<IBasePanelProps> = ({
     rightSeries || (isSensitivity ? t(`正向偏移`) : t(`數值 B`));
 
   const [titleInput, setTitleInput] = useState<string>("");
-  const [leftValueInput, setLeftValueInput] = useState<string>("");
-  const [rightValueInput, setRightValueInput] = useState<string>("");
+  // Info: (20260723 - Julian) 左右數值：只允許數字與小數點（可為負）
+  const leftValue = useDecimalInput("", { allowNegative: true });
+  const rightValue = useDecimalInput("", { allowNegative: true });
 
   const isSubmitDisabled =
-    titleInput.trim() === "" ||
-    !isFiniteNumberStr(leftValueInput) ||
-    !isFiniteNumberStr(rightValueInput);
+    titleInput.trim() === "" || leftValue.isEmpty || rightValue.isEmpty;
 
   const handleSubmit = () => {
     if (isSubmitDisabled) return;
@@ -214,8 +210,8 @@ const AddItemPanel: FC<IBasePanelProps> = ({
       description: `新增項目「${category}」`,
       payload: {
         category,
-        left: Number(leftValueInput),
-        right: Number(rightValueInput),
+        left: leftValue.numValue,
+        right: rightValue.numValue,
       },
     });
   };
@@ -250,9 +246,10 @@ const AddItemPanel: FC<IBasePanelProps> = ({
             id="newLeftValueLabel"
             type="text"
             inputMode="decimal"
-            value={leftValueInput}
-            onChange={(e) => setLeftValueInput(e.target.value)}
+            value={leftValue.value}
+            onChange={leftValue.onChange}
             className={MERMAID_INPUT_STYLE}
+            placeholder="0"
           />
         </div>
         <div className="flex flex-col">
@@ -264,9 +261,10 @@ const AddItemPanel: FC<IBasePanelProps> = ({
             id="newRightValueLabel"
             type="text"
             inputMode="decimal"
-            value={rightValueInput}
-            onChange={(e) => setRightValueInput(e.target.value)}
+            value={rightValue.value}
+            onChange={rightValue.onChange}
             className={MERMAID_INPUT_STYLE}
+            placeholder="0"
           />
         </div>
       </div>
@@ -302,8 +300,9 @@ const EditItemPanel: FC<IBasePanelProps> = ({
 
   const [selectedId, setSelectedId] = useState<string>("");
   const [titleInput, setTitleInput] = useState<string>("");
-  const [leftValueInput, setLeftValueInput] = useState<string>("");
-  const [rightValueInput, setRightValueInput] = useState<string>("");
+  // Info: (20260723 - Julian) 左右數值：只允許數字與小數點（可為負）
+  const leftValue = useDecimalInput("", { allowNegative: true });
+  const rightValue = useDecimalInput("", { allowNegative: true });
 
   const selectedItem = useMemo(
     () =>
@@ -311,30 +310,26 @@ const EditItemPanel: FC<IBasePanelProps> = ({
     [itemOptions, selectedId],
   );
 
-  // Info: (20260723 - Julian) 選取後匯入初始值
-  useEffect(() => {
-    if (selectedItem) {
-      setTitleInput(selectedItem.category);
-      setLeftValueInput(String(selectedItem.left));
-      setRightValueInput(String(selectedItem.right));
-    } else {
-      setTitleInput("");
-      setLeftValueInput("");
-      setRightValueInput("");
-    }
-  }, [selectedItem]);
+  // Info: (20260723 - Julian) 於選取事件匯入初始值（不使用 effect，避免 hook setter 非穩定造成的依賴問題）
+  const handleSelect = (id: string) => {
+    setSelectedId(id);
+    const item = itemOptions.find((i) => i.lineIndex === Number(id)) ?? null;
+    setTitleInput(item ? item.category : "");
+    leftValue.setValue(item ? String(item.left) : "");
+    rightValue.setValue(item ? String(item.right) : "");
+  };
 
   const isUnselected = !selectedItem;
   const isUnchanged =
     !!selectedItem &&
     titleInput.trim() === selectedItem.category &&
-    Number(leftValueInput) === selectedItem.left &&
-    Number(rightValueInput) === selectedItem.right;
+    leftValue.numValue === selectedItem.left &&
+    rightValue.numValue === selectedItem.right;
   const isSubmitDisabled =
     isUnselected ||
     titleInput.trim() === "" ||
-    !isFiniteNumberStr(leftValueInput) ||
-    !isFiniteNumberStr(rightValueInput) ||
+    leftValue.isEmpty ||
+    rightValue.isEmpty ||
     isUnchanged;
 
   const handleSubmit = () => {
@@ -347,8 +342,8 @@ const EditItemPanel: FC<IBasePanelProps> = ({
       payload: {
         lineIndex: selectedItem.lineIndex,
         category,
-        left: Number(leftValueInput),
-        right: Number(rightValueInput),
+        left: leftValue.numValue,
+        right: rightValue.numValue,
       },
     });
   };
@@ -368,7 +363,7 @@ const EditItemPanel: FC<IBasePanelProps> = ({
           <select
             id="editIdLabel"
             value={selectedId}
-            onChange={(e) => setSelectedId(e.target.value)}
+            onChange={(e) => handleSelect(e.target.value)}
             className={MERMAID_INPUT_STYLE}
           >
             <option value="">{t(`選擇欲編輯的項目`)}</option>
@@ -405,9 +400,10 @@ const EditItemPanel: FC<IBasePanelProps> = ({
             type="text"
             inputMode="decimal"
             disabled={isUnselected}
-            value={leftValueInput}
-            onChange={(e) => setLeftValueInput(e.target.value)}
+            value={leftValue.value}
+            onChange={leftValue.onChange}
             className={MERMAID_INPUT_STYLE}
+            placeholder="0"
           />
         </div>
         <div className="flex flex-col">
@@ -419,9 +415,10 @@ const EditItemPanel: FC<IBasePanelProps> = ({
             type="text"
             inputMode="decimal"
             disabled={isUnselected}
-            value={rightValueInput}
-            onChange={(e) => setRightValueInput(e.target.value)}
+            value={rightValue.value}
+            onChange={rightValue.onChange}
             className={MERMAID_INPUT_STYLE}
+            placeholder="0"
           />
         </div>
       </div>
@@ -499,7 +496,7 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
               htmlFor="editLeftTitleValueLabel"
               className={MERMAID_LABEL_STYLE}
             >
-              {t(`數值 A`)}
+              {t(`左側數值`)}
               <span className="ml-0.5 text-red-500">*</span>
             </label>
             <input
@@ -523,7 +520,7 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
               htmlFor="editRightTitleValueLabel"
               className={MERMAID_LABEL_STYLE}
             >
-              {t(`數值 B`)}
+              {t(`右側數值`)}
               <span className="ml-0.5 text-red-500">*</span>
             </label>
             <input

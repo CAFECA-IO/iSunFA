@@ -91,7 +91,7 @@ const AddLinkPanel: FC<IBasePanelProps> = ({
   const [toType, setToType] = useState<NodeType>(NodeType.EXISTING);
   const [toInput, setToInput] = useState<string>("");
 
-  // Info: (20260714 - Julian) 流向數量/權重：只允許數字與小數點（詳見 useDecimalInput）
+  // Info: (20260714 - Julian) 流向數量/權重：只允許數字與小數點
   const newValue = useDecimalInput("0");
 
   const isSubmitDisabled =
