@@ -28,6 +28,7 @@ import { jsPDF } from "jspdf";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { ILogisticsPlan } from "@/interfaces/logistics";
+import { getRouteApplicability } from "@/lib/utils/route_applicability";
 import { request } from "@/lib/utils/request";
 import {
   PlanSection,
@@ -535,10 +536,9 @@ function ReportPageContent() {
         }
       });
 
-      const routesToExport = ["land", "sea", "air"].filter(
-        (type) =>
-          selectedRoutes.has(type as RouteType) &&
-          (type !== "land" || isLandAvailable),
+      // Info: (20260724 - Tzuhan) 匯出範圍以適用性引擎為準,不適用的方案(如國內路線的海空運)一律排除
+      const routesToExport = (["land", "sea", "air"] as const).filter(
+        (type) => selectedRoutes.has(type) && routeApplicability[type],
       );
 
       // Info: (20260501 - Luphia) 手動處理分頁
@@ -672,19 +672,16 @@ function ReportPageContent() {
     }
   };
 
-  // Info: (20260430 - Tzuhan) 判斷是否真的有純陸運 (如果只是起終點直線 fallback，coordinates.length 會是 2，代表無真實陸地路徑)
-  const isLandAvailable = useMemo(() => {
-    if (!plan) return true;
-    const land = plan.comparisonData?.plans?.landOnly;
-    if (!land?.success) return false;
-    if (
-      land.geometry?.type === "LineString" &&
-      land.geometry.coordinates.length <= 2
-    ) {
-      return false;
-    }
-    return true;
-  }, [plan]);
+  // Info: (20260724 - Tzuhan) 運輸方式適用性收斂到單一決定論引擎(route_applicability.ts):
+  // Info: (20260724 - Tzuhan) 陸運沿用原「直線 fallback 非真實路徑」判斷;海空運新增「國內/短程屏蔽」規則(需求一)
+  const routeApplicability = useMemo(
+    () =>
+      plan
+        ? getRouteApplicability(plan)
+        : { land: true, sea: true, air: true, custom: false },
+    [plan],
+  );
+  const isLandAvailable = routeApplicability.land;
 
   const isLocked = loading; // Info: (20260430 - Tzuhan) 只有在「運算中」才反灰，算完後重新開放輸入以便用戶微調再算一次
 
@@ -1405,47 +1402,56 @@ function ReportPageContent() {
                               "transportation_carbon_footprint_calculator.ui.land_route",
                             )}
                           </button>
-                          <button
-                            onClick={() => toggleRoute("sea")}
-                            disabled={!plan || loading}
-                            className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition-all ${
-                              loading
-                                ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400 opacity-60"
-                                : selectedRoutes.has("sea")
-                                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                  : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
-                            }`}
-                          >
-                            <Ship className="h-4 w-4" />{" "}
-                            {t(
-                              "transportation_carbon_footprint_calculator.ui.sea_route",
-                            )}
-                          </button>
-                          <button
-                            onClick={() => toggleRoute("air")}
-                            disabled={!plan || loading}
-                            className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition-all ${
-                              loading
-                                ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400 opacity-60"
-                                : selectedRoutes.has("air")
-                                  ? "border-blue-200 bg-blue-50 text-blue-700"
-                                  : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
-                            }`}
-                          >
-                            <Plane className="h-4 w-4" />{" "}
-                            {t(
-                              "transportation_carbon_footprint_calculator.ui.air_route",
-                            )}
-                          </button>
+                          {/* Info: (20260724 - Tzuhan) 需求一:國內/短程路線(適用性引擎判定)直接屏蔽海運選項,不以 disabled 呈現 */}
+                          {routeApplicability.sea && (
+                            <button
+                              onClick={() => toggleRoute("sea")}
+                              disabled={!plan || loading}
+                              className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition-all ${
+                                loading
+                                  ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400 opacity-60"
+                                  : selectedRoutes.has("sea")
+                                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                    : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+                              }`}
+                            >
+                              <Ship className="h-4 w-4" />{" "}
+                              {t(
+                                "transportation_carbon_footprint_calculator.ui.sea_route",
+                              )}
+                            </button>
+                          )}
+                          {/* Info: (20260724 - Tzuhan) 空運選項同海運:不適用即屏蔽 */}
+                          {routeApplicability.air && (
+                            <button
+                              onClick={() => toggleRoute("air")}
+                              disabled={!plan || loading}
+                              className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition-all ${
+                                loading
+                                  ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400 opacity-60"
+                                  : selectedRoutes.has("air")
+                                    ? "border-blue-200 bg-blue-50 text-blue-700"
+                                    : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+                              }`}
+                            >
+                              <Plane className="h-4 w-4" />{" "}
+                              {t(
+                                "transportation_carbon_footprint_calculator.ui.air_route",
+                              )}
+                            </button>
+                          )}
                         </div>
                       )}
 
                       {/* Info: (20260501 - Luphia) 根據選擇的路線，動態渲染 */}
                       {(() => {
-                        const routesToRender = ["land", "sea", "air"].filter(
+                        // Info: (20260724 - Tzuhan) 僅渲染適用的方案(與匯出範圍同一判斷來源)
+                        const routesToRender = (
+                          ["land", "sea", "air"] as const
+                        ).filter(
                           (type) =>
-                            selectedRoutes.has(type as RouteType) &&
-                            (type !== "land" || isLandAvailable),
+                            selectedRoutes.has(type) &&
+                            routeApplicability[type],
                         );
 
                         const getModeName = (mode: string) =>

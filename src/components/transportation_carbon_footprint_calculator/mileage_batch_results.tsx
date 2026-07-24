@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { ILogisticsPlan } from "@/interfaces/logistics";
+import { getRouteApplicability } from "@/lib/utils/route_applicability";
 import {
   PlanSection,
   RouteType,
@@ -68,20 +69,18 @@ export function MileageBatchResults({
   const getSelectedRoutes = (index: number, plan?: ILogisticsPlan) => {
     if (selectedRoutesMap[index]) return selectedRoutesMap[index];
 
+    // Info: (20260724 - Tzuhan) 預設勾選改以適用性引擎為準(需求一:國內/短程路線不預帶海空運)
+    const applicability = getRouteApplicability(plan);
+
     // Info: (20260629 - Tzuhan) custom route mode
-    if (plan?.comparisonData?.plans?.custom_multimodal) {
+    if (applicability.custom) {
       return new Set<RouteType>(["custom"]);
     }
     return new Set<RouteType>(
       [
-        plan?.comparisonData?.plans?.landOnly?.success ? "land" : null,
-        plan?.comparisonData?.plans?.sea_multimodal?.sea_port_to_port?.success
-          ? "sea"
-          : null,
-        plan?.comparisonData?.plans?.air_multimodal?.air_airport_to_airport
-          ?.success
-          ? "air"
-          : null,
+        applicability.land ? "land" : null,
+        applicability.sea ? "sea" : null,
+        applicability.air ? "air" : null,
       ].filter(Boolean) as RouteType[],
     );
   };
@@ -140,16 +139,12 @@ export function MileageBatchResults({
             const isExpanded = expandedIndex === index;
             const selectedRoutes = getSelectedRoutes(index, item.plan);
 
-            const isLandAvailable =
-              !!item.plan?.comparisonData?.plans?.landOnly?.success;
-            const isSeaAvailable =
-              !!item.plan?.comparisonData?.plans?.sea_multimodal
-                ?.sea_port_to_port?.success;
-            const isAirAvailable =
-              !!item.plan?.comparisonData?.plans?.air_multimodal
-                ?.air_airport_to_airport?.success;
-            const isCustomAvailable =
-              !!item.plan?.comparisonData?.plans?.custom_multimodal;
+            // Info: (20260724 - Tzuhan) 可選方案統一由適用性引擎推導,取代原本各欄位 success 的散落判斷
+            const applicability = getRouteApplicability(item.plan);
+            const isLandAvailable = applicability.land;
+            const isSeaAvailable = applicability.sea;
+            const isAirAvailable = applicability.air;
+            const isCustomAvailable = applicability.custom;
 
             return (
               <div
