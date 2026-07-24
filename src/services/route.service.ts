@@ -13,6 +13,7 @@ import { calculateSeaPath } from "@/lib/utils/route.sea";
 import { calculateAirPath } from "@/lib/utils/route.air";
 import { ILogisticsPlan, ITransportSegment } from "@/interfaces/logistics";
 import { getRouteApplicability } from "@/lib/utils/route_applicability";
+import { EMISSION_FACTORS } from "@/constants/logistics";
 import { MoneyUtil } from "@/lib/utils/money";
 
 function calculateDistanceKm(
@@ -201,11 +202,8 @@ export async function calculateLogisticsPlan(
       throw new Error("無法找到匹配的進出口節點 (海港或機場缺失)");
     }
 
-    const factors = {
-      SEA: 0.01045,
-      AIR: 0.6023,
-      LAND: 0.11289,
-    };
+    // Info: (20260724 - Tzuhan) 排放係數改用 EMISSION_FACTORS 單一來源(需求三:消除多處硬編碼版本不一致)
+    const factors = EMISSION_FACTORS;
 
     const weightTonne = MoneyUtil.toDecimal(weightKg)
       .dividedBy(1000)

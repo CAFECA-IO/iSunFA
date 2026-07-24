@@ -4,6 +4,12 @@ import MapViewer, {
 } from "@/components/transportation_carbon_footprint_calculator/map_viewer";
 import { ILogisticsPlan } from "@/interfaces/logistics";
 import { MoneyUtil } from "@/lib/utils/money";
+// Info: (20260724 - Tzuhan) 排放係數改用單一來源常數,消除元件內硬編碼(需求三:計算透明度)
+import {
+  EMISSION_FACTORS,
+  EMISSION_FACTOR_SOURCES,
+  EMISSION_FACTOR_UNIT,
+} from "@/constants/logistics";
 import { useTranslation } from "@/i18n/i18n_context";
 
 // Info: (20260629 - Tzuhan) Support custom mode
@@ -17,7 +23,8 @@ export interface ISegment {
   distUnit?: string;
   emissions?: string;
   emissionsUnit: string;
-  coefficient: number;
+  // Info: (20260724 - Tzuhan) 係數以字串保存(對齊 EMISSION_FACTORS 的 Decimal 字串格式)
+  coefficient: string;
   coefficientUnit: string;
   coefficientSource: string;
   geometry?: GeoJSON.Geometry | null;
@@ -101,7 +108,7 @@ export function PlanSection({
     from: string,
     to: string,
     legData: ILegData,
-    coefficient: number,
+    coefficient: string,
     coefficientSource: string,
     color: string,
   ) => {
@@ -115,7 +122,7 @@ export function PlanSection({
       emissions: legData.co2eKg?.toString() || "0",
       emissionsUnit: "kg CO₂e",
       coefficient,
-      coefficientUnit: "kg CO₂e / t-km",
+      coefficientUnit: EMISSION_FACTOR_UNIT,
       coefficientSource,
       geometry: legData.geometry,
       isFallback: legData.isFallback,
@@ -141,8 +148,8 @@ export function PlanSection({
       t("transportation_carbon_footprint_calculator.plan_section.origin"),
       t("transportation_carbon_footprint_calculator.plan_section.dest"),
       landPlan,
-      0.11289,
-      "UK DEFRA 2025 (HGV)",
+      EMISSION_FACTORS.LAND,
+      EMISSION_FACTOR_SOURCES.LAND,
       "#F97316",
     );
   } else if (isSea && seaPlan) {
@@ -163,8 +170,8 @@ export function PlanSection({
       t("transportation_carbon_footprint_calculator.plan_section.origin"),
       portOut,
       seaPlan.land_origin_to_port,
-      0.11289,
-      "UK DEFRA 2025 (HGV)",
+      EMISSION_FACTORS.LAND,
+      EMISSION_FACTOR_SOURCES.LAND,
       "#F97316",
     );
     addSegment(
@@ -172,8 +179,8 @@ export function PlanSection({
       portOut,
       portIn,
       seaPlan.sea_port_to_port,
-      0.01045,
-      "UK DEFRA 2025 (Container ship)",
+      EMISSION_FACTORS.SEA,
+      EMISSION_FACTOR_SOURCES.SEA,
       "#059669",
     );
     addSegment(
@@ -181,8 +188,8 @@ export function PlanSection({
       portIn,
       t("transportation_carbon_footprint_calculator.plan_section.dest"),
       seaPlan.land_port_to_dest,
-      0.11289,
-      "UK DEFRA 2025 (HGV)",
+      EMISSION_FACTORS.LAND,
+      EMISSION_FACTOR_SOURCES.LAND,
       "#F97316",
     );
   } else if (isAir && airPlan) {
@@ -205,8 +212,8 @@ export function PlanSection({
       t("transportation_carbon_footprint_calculator.plan_section.origin"),
       airportOut,
       airPlan.land_origin_to_airport,
-      0.11289,
-      "UK DEFRA 2025 (HGV)",
+      EMISSION_FACTORS.LAND,
+      EMISSION_FACTOR_SOURCES.LAND,
       "#F97316",
     );
     addSegment(
@@ -214,8 +221,8 @@ export function PlanSection({
       airportOut,
       airportIn,
       airPlan.air_airport_to_airport,
-      0.6023,
-      "UK DEFRA 2025 (Long-haul)",
+      EMISSION_FACTORS.AIR,
+      EMISSION_FACTOR_SOURCES.AIR,
       "#2563EB",
     );
     addSegment(
@@ -223,8 +230,8 @@ export function PlanSection({
       airportIn,
       t("transportation_carbon_footprint_calculator.plan_section.dest"),
       airPlan.land_airport_to_dest,
-      0.11289,
-      "UK DEFRA 2025 (HGV)",
+      EMISSION_FACTORS.LAND,
+      EMISSION_FACTOR_SOURCES.LAND,
       "#F97316",
     );
   } else if (isCustom && customPlan) {
@@ -235,11 +242,12 @@ export function PlanSection({
     themeBg = "bg-purple-100";
     totalCo2e = customPlan.total_co2eKg?.toString() || "0";
     customPlan.segments.forEach((seg) => {
-      const coeff = seg.mode === "LAND" ? 0.11289 : 0.01045;
+      const coeff =
+        seg.mode === "LAND" ? EMISSION_FACTORS.LAND : EMISSION_FACTORS.SEA;
       const source =
         seg.mode === "LAND"
-          ? "UK DEFRA 2025 (HGV)"
-          : "UK DEFRA 2025 (Container ship)";
+          ? EMISSION_FACTOR_SOURCES.LAND
+          : EMISSION_FACTOR_SOURCES.SEA;
       const color = seg.mode === "LAND" ? "#F97316" : "#059669";
 
       const parts = (seg.name || "").split("->");
@@ -341,7 +349,7 @@ export function PlanSection({
                   )}
                 </span>
                 <span className="font-medium">
-                  0.01045{" "}
+                  {EMISSION_FACTORS.SEA}{" "}
                   <span className="text-[10px] text-gray-400">
                     kg CO2e / t-km
                   </span>
@@ -355,7 +363,7 @@ export function PlanSection({
                   )}
                 </span>
                 <span className="font-medium">
-                  0.6023{" "}
+                  {EMISSION_FACTORS.AIR}{" "}
                   <span className="text-[10px] text-gray-400">
                     kg CO2e / t-km
                   </span>
@@ -369,7 +377,7 @@ export function PlanSection({
                   )}
                 </span>
                 <span className="font-medium">
-                  0.11289{" "}
+                  {EMISSION_FACTORS.LAND}{" "}
                   <span className="text-[10px] text-gray-400">
                     kg CO2e / t-km
                   </span>
