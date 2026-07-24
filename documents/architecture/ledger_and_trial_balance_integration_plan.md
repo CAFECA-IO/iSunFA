@@ -114,7 +114,7 @@ DeWT 認證 (getIdentityFromDeWT)
 |---|---|---|
 | 修改 | `src/constants/sort.ts` | 新增 `TrialBalanceSorting`、`LedgerSorting` |
 | 新增 | `src/constants/ledger.ts` | `LabelType` 列舉 |
-| 修改 | `src/repositories/voucher.repo.ts`（必要時） | 薄查詢方法；優先重用 `getVouchersByFilter` |
+| ~~修改~~ | ~~`src/repositories/voucher.repo.ts`~~ | **不需要**：純重用 `getVouchersByFilter`（見 §10.6） |
 | 新增 | `src/lib/report/trial_balance_generator.ts` | 試算表純函式產生器（`MoneyUtil` + `AccountUtil`） |
 | 新增 | `src/lib/report/ledger_generator.ts` | 分類帳純函式產生器 |
 | 新增 | `src/validators/trial_balance.ts`、`ledger.ts`（+ `index.ts` 匯出） | Zod 驗證 |
@@ -203,6 +203,38 @@ DeWT 認證 (getIdentityFromDeWT)
 2. Schema 無 `Voucher.no`（傳票編號）欄位；分類帳 CSV「傳票編號」需以 `voucher.id` 或衍生流水號呈現（**決策點**，建議先用 `voucher.id`）。
 3. `IVoucherLineUI.amount` 為 `number | bigint | string` 聯集；所有讀取一律 `MoneyUtil.toDecimal()` 過水，禁止直接運算。
 4. COA 字典選擇依 `accountBook.currency` / 國別對應 `ACCOUNTS`；查詢仍以 `accountBookId` 隔離。
+
+## 10.6 Phase 1 對齊結論（2026-07-24，已確認）
+
+**結論：報表所需資料源皆已存在且可直接重用，無需新增 Repository 程式碼。**
+
+- **傳票 / 分錄**：重用 `voucherRepo.getVouchersByFilter({ accountBookId, hideDeleted: true, startDate?, endDate? })`，回傳 `IVoucher[]`（含 `lineItems.lines`、`tradingDate`、`isVerified`）。
+  - **不傳 `page` / `limit`**：`getVouchersByFilter` 的分頁作用在**傳票層**；試算表/分類帳必須先取期間全量傳票，於**報表列層**（試算表以科目、分類帳以逐筆）產生後再分頁。
+  - 不傳 `verifyStatus` → 未核對分錄一併納入（符合懸記守則）；`hideDeleted: true` 過濾軟刪除；`accountBookId` 達成租戶隔離。
+- **COA 字典**：重用 `accountingAccountService.getAccountingAccounts(accountBookId)`（**不帶 search/type**，取完整字典），回傳 `IAccountingAccount[]`（`extends IAccount`，含 `code/parentCode/level/isDebit`），可直接作為 `AccountUtil.isDescendantOf(target, root, dictionary)` 的字典。內部已依 `accountBook.country` 選 `ACCOUNTS[country] || ACCOUNTS.TW` 並合併自訂科目，故自訂子科目可正確參與樹狀上捲。
+- 資料流的組裝（auth → accountBook → 取傳票 → 取 COA 字典 → 呼叫產生器）比照既有 `.../report/route.ts` 於 route 內完成，產生器維持純函式。
+
+> 據此，§5 檔案清單中「修改 `voucher.repo.ts`」一項改為 **不需要**（純重用）。
+
+---
+
+## 10.7 Phase 2 完成紀錄（2026-07-24，試算表後端）
+
+**已建立**
+- `src/interfaces/trial_balance.ts`：`ITrialBalanceItem` / `ITrialBalanceTotal` / `ITrialBalance` / `ITrialBalanceOptions`（金額皆字串）。
+- `src/lib/report/trial_balance_generator.ts`：純函式 `generateTrialBalance(vouchers, dictionary, options)` 與 `getDefault401Period()`。
+  - 全程 `MoneyUtil`/`Decimal`；沿 `parentCode` 父指標樹狀上捲（`AccountUtil.getAccount`，無 startsWith）；納入未核對分錄；Fail-Fast 借貸平衡；缺代碼/方向即阻斷。
+  - 總計由葉節點加總，避免上捲父節點重複計算。
+- `src/validators/trial_balance.ts`（+ `index.ts` 匯出）：`startDate?/endDate?/sorting?/page/pageSize`。
+- `src/app/api/v1/user/account_book/[account_book_id]/trial_balance/route.ts`：`GET`，重用 `voucherRepo.getVouchersByFilter`（不分頁、不濾 isVerified）+ `accountingAccountService.getAccountingAccounts`（完整 COA 字典），科目列層分頁。
+
+**驗證**
+- ESLint 零警告；`tsc --noEmit` 於新檔零錯誤。
+- 產生器單元測試 `src/lib/report/__tests__/trial_balance_generator.test.ts`（Jest；本沙箱因離線無法跑 Next SWC，另以 TypeScript transpile harness 離線驗證 11 項全數 PASS：三期間平衡、樹狀上捲、ending=beginning+midterm、不平衡拋錯、缺代碼拋錯）。
+
+**待辦（後續階段）**
+- 期間預設 `getDefault401Period` 以系統當下時間計算，未來若需依帳本會計年度調整再議。
+- CSV 匯出（階段 4）與前端（階段 6）尚未實作。
 
 ---
 
