@@ -238,6 +238,25 @@ DeWT 認證 (getIdentityFromDeWT)
 
 ---
 
+## 10.8 Phase 3 完成紀錄（2026-07-24，分類帳後端）
+
+**已建立**
+- `src/interfaces/ledger.ts`：`ILedgerItem` / `ILedgerTotal` / `ILedger` / `ILedgerOptions`。
+- `src/lib/report/ledger_generator.ts`：純函式 `generateLedger(vouchers, dictionary, options)`。
+  - 科目區間為使用者指定的字典序範圍；帳別 (labelType) 以 COA「是否為葉節點」判定（DETAILED=葉、GENERAL=具子科目），**非** `-`/前綴。
+  - running balance 於固定 (科目→日期→傳票) 標準順序累計以確保決定論，顯示排序另行套用；全程 `MoneyUtil`。
+  - `voucherNumber` 暫以 `voucher.id` 呈現（Schema 無獨立傳票編號）。
+- `src/validators/ledger.ts`（+ `index.ts` 匯出）：`startDate/endDate`（必填）、`startAccountNo?/endAccountNo?/labelType/sorting?/page/pageSize`。
+- `src/app/api/v1/user/account_book/[account_book_id]/ledger/route.ts`：`GET`，明細列層分頁，資料源與權限比照 report route。
+
+**驗證**
+- ESLint 零警告；`tsc --noEmit` 於新檔零錯誤。
+- 單元測試 `src/lib/report/__tests__/ledger_generator.test.ts`（Jest）；並以離線 transpile harness 驗證 6 項全數 PASS：ALL 4 列、running balance（1000→600）、借貸總額 1400=1400、DETAILED 全葉保留、GENERAL 為空、科目區間過濾。
+
+**待辦**：CSV 匯出（階段 4）、前端（階段 6）。若日後導入正式傳票編號欄位，`voucherNumber` 需改採該欄位。
+
+---
+
 ## 10. 驗證計劃
 
 - **單元**：三段切割、樹狀上捲、running balance、`calculateTotals`、`MoneyUtil` 精度、邊界科目前綴陷阱、含懸記平衡。
