@@ -13,8 +13,10 @@ import { LedgerSorting } from "@/constants/sort";
  *
  * 設計要點（對齊 documents/ 規範）：
  * 1. 金額全程以 Decimal (MoneyUtil) 運算，輸出為字串（ADR 003）。
- * 2. 帳別 (labelType) 以 COA 樹狀結構「是否為葉節點」判定（DETAILED=葉；GENERAL=具子科目），
- *    嚴禁以科目代碼是否含 "-" 或前綴硬判（見 01_tree_traversal_reporting_engine.md）。
+ * 2. 帳別 (labelType) 以 COA 樹狀結構判定，嚴禁以代碼是否含 "-" 或前綴硬判（見 01_tree_traversal_reporting_engine.md）：
+ *    - DETAILED（明細分類帳）：僅保留葉節點（末層明細科目）之過帳。
+ *    - GENERAL（總分類帳）：將葉節點過帳沿 parentCode 上捲歸屬至其父（總帳）科目，逐筆呈現、餘額於父科目累計。
+ *    - ALL：不過濾、不上捲，依原過帳科目呈現。
  * 3. 未核對 (isVerified=false) 之懸記分錄一併納入（見 03_suspense_and_quarantine_guardrails.md）。
  * 4. 唯讀 Consumer：不寫 DB、不重算沖銷/匯率/稅務（SoD，ADR 009）。
  * 5. running balance 於固定的 (科目→日期) 標準順序累計，確保餘額決定論；顯示排序另行套用。
@@ -41,15 +43,34 @@ function buildParentCodeSet(dictionary: IAccount[]): Set<string> {
   return parents;
 }
 
-// Info: (20260724 - Julian) 依帳別判定是否保留該科目（葉節點=DETAILED；非葉=GENERAL）
-function matchesLabelType(
+/**
+ * Info: (20260724 - Julian) 依帳別解析該過帳「是否納入」與「歸屬顯示科目」。
+ * - DETAILED：僅納入葉節點過帳，顯示於原科目。
+ * - GENERAL：全數納入；葉節點過帳上捲歸屬至其父（總帳）科目，非葉或無父則保留自身。
+ * - ALL：全數納入，顯示於原科目。
+ */
+function resolveLabel(
   code: string,
   labelType: LabelType,
+  dictionary: IAccount[],
   parentCodeSet: Set<string>,
-): boolean {
-  if (labelType === LabelType.ALL) return true;
+): { include: boolean; displayCode: string } {
   const isLeaf = !parentCodeSet.has(code);
-  return labelType === LabelType.DETAILED ? isLeaf : !isLeaf;
+
+  if (labelType === LabelType.DETAILED) {
+    return { include: isLeaf, displayCode: code };
+  }
+
+  if (labelType === LabelType.GENERAL) {
+    const parentCode = AccountUtil.getAccount(code, dictionary)?.parentCode;
+    const parentExists =
+      !!parentCode && !!AccountUtil.getAccount(parentCode, dictionary);
+    const displayCode = isLeaf && parentExists ? parentCode! : code;
+    return { include: true, displayCode };
+  }
+
+  // Info: (20260724 - Julian) LabelType.ALL
+  return { include: true, displayCode: code };
 }
 
 // Info: (20260724 - Julian) 使用者指定的科目代碼區間（含），以字典序比較
@@ -105,21 +126,34 @@ export function generateLedger(
         );
       }
 
-      // Info: (20260724 - Julian) 套用科目區間與帳別過濾
-      if (!inAccountRange(code, startAccountNo, endAccountNo)) return;
-      if (!matchesLabelType(code, labelType, parentCodeSet)) return;
+      // Info: (20260724 - Julian) 依帳別決定是否納入與歸屬顯示科目（GENERAL 上捲至父科目）
+      const { include, displayCode } = resolveLabel(
+        code,
+        labelType,
+        dictionary,
+        parentCodeSet,
+      );
+      if (!include) return;
+
+      // Info: (20260724 - Julian) 科目區間過濾套用於顯示科目（使用者所見）
+      if (!inAccountRange(displayCode, startAccountNo, endAccountNo)) return;
 
       const amount = MoneyUtil.toDecimal(line.amount);
-      const account = AccountUtil.getAccount(code, dictionary);
+      const displayAccount = AccountUtil.getAccount(displayCode, dictionary);
+      // Info: (20260724 - Julian) 上捲後名稱取父科目；未上捲時可退回原分錄名稱
+      const accountingTitle =
+        displayAccount?.name ||
+        (displayCode === code
+          ? line.accounting?.name || line.particular || code
+          : displayCode);
 
       rawEntries.push({
         voucherId: voucher.id,
         voucherDate: voucher.tradingDate,
         voucherNumber: voucher.id,
         voucherType: voucher.tradingType ?? null,
-        code,
-        accountingTitle:
-          account?.name || line.accounting?.name || line.particular || code,
+        code: displayCode,
+        accountingTitle,
         particulars: line.particular || "",
         debit: line.isDebit ? amount : new Decimal(0),
         credit: line.isDebit ? new Decimal(0) : amount,

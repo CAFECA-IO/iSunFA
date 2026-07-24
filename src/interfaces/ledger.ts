@@ -40,7 +40,8 @@ export interface ILedger {
 /**
  * Info: (20260724 - Julian) 分類帳產生器選項。
  * startAccountNo / endAccountNo 為使用者指定的科目代碼區間（含）。
- * labelType 以 COA 樹狀結構的葉節點判定（DETAILED=葉節點；GENERAL=具子科目之科目），非字串前綴。
+ * labelType 以 COA 樹狀結構判定（非字串前綴）：DETAILED=僅末層明細科目；
+ * GENERAL=將明細過帳上捲歸屬至父（總帳）科目；ALL=不過濾不上捲。
  */
 export interface ILedgerOptions {
   startAccountNo?: string;

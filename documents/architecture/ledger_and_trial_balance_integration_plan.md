@@ -30,7 +30,7 @@
 | 4 | 試算表 / 分類帳 CSV 匯出 | ✅ 完成 |
 | 5 | 測試強化 + 獨立對抗性複核 + 修正 | ✅ 完成 |
 | — | 待產品決策事項（C2 / M3 / M4） | ⏳ 待確認 |
-| 6 | 前端 UI | ⛔ 未動工（本次不含） |
+| 6 | 前端 UI（傳票頁新增 tab） | 📋 已規劃（見 §12），待實作 |
 
 詳細實作歷程見 §9；待決策事項見 §8。
 
@@ -129,9 +129,9 @@ GET .../account_book/:id/{trial_balance|ledger}
 
 | 代號 | 事項 | 現況 | 建議 |
 |---|---|---|---|
-| **C2** | 分類帳 `LabelType.GENERAL`（總帳）語意 | 目前僅保留非葉科目；因過帳多落在葉節點，GENERAL 幾乎為空 | 將葉科目過帳上捲至其總帳（父）科目彙總呈現；語意確認後實作 |
+| ~~**C2**~~ | ~~分類帳 `LabelType.GENERAL`（總分類帳）語意~~ | **已定案並實作（2026-07-24）** | **採「上捲彙總」**：GENERAL 將葉節點過帳沿 `parentCode` 歸屬至其父（總帳）科目，逐筆呈現、running balance 以父科目累計；借貸總額與 ALL 一致。（DETAILED=僅葉節點、ALL=不過濾不上捲）已補測試（離線 8 項全 PASS） |
 | **M3** | 分類帳 running balance 未含期初 (B/F) 餘額 | 目前為期間相對餘額 | 導入開帳以來累計之期初餘額（與現金流量表同屬 Roadmap） |
-| **M4** | 試算表六欄為「發生額累計」而非「淨餘額」 | 與舊版設計一致；CSV 表頭用「餘額」字樣 | 確認是否改為淨額呈現或調整表頭字樣 |
+| ~~**M4**~~ | ~~試算表六欄用語~~ | **已定案（2026-07-24）** | **沿用舊版用語，維持「期初/期中/期末 借方/貸方餘額」字樣**（現況已符合，無需改碼） |
 | **M6** | `AccountUtil.dictionaryCache` 以陣列參考為鍵，每請求新陣列致快取不命中 | 既有 `AccountUtil` 議題，非本功能引入 | 改以帳本/國別為快取鍵（於 AccountUtil 層處理） |
 
 ---
@@ -148,6 +148,7 @@ GET .../account_book/:id/{trial_balance|ledger}
   - **M2（已修）**：決定論護欄錯誤由 `IS_DB_FAILED` 改回 `VA_INVALID_INPUT_DATA`，保留審計訊號。
   - **M5（已修）**：`startDate/endDate` 加嚴格日期驗證（`Date.parse` refine）。
   - **M7（已修）**：CSV 文字欄位加公式注入中和（`= + - @` 前置 `'`，金額欄不套用以保負數）；列分隔改為 CRLF。
+- **C2 改良（2026-07-24，已實作）**：分類帳 `GENERAL` 由「純過濾（近乎空）」改為「上捲彙總」——葉節點過帳沿 `parentCode` 歸屬至父（總帳）科目，逐筆呈現、餘額於父科目累計、借貸總額與 ALL 一致。更新 `ledger_generator.ts`（新增 `resolveLabel`）與單元測試，離線 harness 8 項全 PASS。
 
 ---
 
@@ -177,8 +178,64 @@ GET .../account_book/:id/{trial_balance|ledger}
 
 ---
 
-## 12. 後續（Phase 6：前端 UI，本次不含）
+## 12. Phase 6：前端 UI 施行計劃
 
-- App Router 頁面 `src/app/user/account_book/[account_book_id]/{trial_balance,ledger}/page.tsx`。
-- i18n（`src/i18n/locales/*`）、日期/科目選擇器、清單/列印/CSV 下載。
-- 串接本文件已交付之 GET 清單與 export 端點。
+### 12.1 決策與方針
+
+經討論確定：**分類帳與試算表以 tab 形式併入既有「傳票」頁**（`VoucherMainView`），而非另開獨立路由。理由：傳票頁本就採 `?tab=` 模式（現有「傳票管理 / 會計科目管理」兩 tab），三者同源於傳票資料、共用帳本與日期脈絡，合併符合既有慣例且集中入口。
+
+- **路由**：沿用既有 `?tab=` 機制 → `/voucher?tab=ledger`、`/voucher?tab=trial_balance`（可深層連結）。
+- **前提條件**（避免語意錯位）：
+  1. 頁面標題/副標**隨 active tab 動態切換**（現為靜態「智能傳票管理」）。
+  2. 每個 tab 各自 render **獨立唯讀 view 元件**；報表邏輯不滲入傳票 CRUD 元件。
+  3. 匯出按鈕**依 tab 切換行為**（傳票走既有 `ExportSettingsModal`；報表 tab 直接下載對應 `/export` CSV）。
+
+### 12.2 檔案清單（新增 / 修改）
+
+| 動作 | 檔案 | 說明 |
+|---|---|---|
+| 修改 | `src/components/user/voucher/voucher_main_view.tsx` | `VoucherTab` enum 增 `LEDGER`、`TRIAL_BALANCE`；tab bar 由 2 欄改 4 欄；標題/副標/匯出行為依 active tab 切換；render 對應 view |
+| 新增 | `src/components/user/ledger/ledger_view.tsx` | 分類帳唯讀視圖：日期區間 + 科目區間 + 帳別(LabelType) + 排序(LedgerSorting) + 分頁 + CSV 下載 |
+| 新增 | `src/components/user/trial_balance/trial_balance_view.tsx` | 試算表唯讀視圖：日期區間 + 排序(TrialBalanceSorting) + 樹狀表格（子科目展開/收合）+ 分頁 + CSV 下載 |
+| 修改（或新增）| `src/i18n/locales/{en,zh_tw,zh_cn,ja,ko}/voucher.ts` | 新增 tab 標籤、各 tab 標題/副標、報表欄位表頭、篩選器、空狀態等文案（5 語系） |
+| 重用 | `src/components/common/date_range_picker.tsx` | 直接重用（props：`startDate`/`endDate`/setter） |
+| 重用 | 科目選擇（`account_management_tab` / 既有科目選單元件）| 供分類帳科目區間選擇；無合適元件則以科目代碼輸入框替代 |
+
+> 型別直接 import 後端已交付之 `ITrialBalance`/`ITrialBalanceItem`、`ILedger`/`ILedgerItem`（`@/interfaces/*`）作為 API 回應型別，前後端契約一致。
+
+### 12.3 資料串接
+
+- 沿用 `voucher_table_section.tsx` 相同慣例：`fetch("/api/v1/user/account_book/{id}/{ledger|trial_balance}?...")` → 解析 `IApiResponse`。
+- 金額為 Decimal 字串，**顯示時**以 `MoneyUtil.format`/`formatDynamic` 加千分位（渲染層才轉換，符合精度規範）。
+- 分頁沿用後端回傳的 `page/pageSize/totalCount/totalPages`；`note.total`、`note.currencyAlias` 顯示於合計列/頁尾。
+- 篩選狀態（日期、科目區間、帳別、排序、頁碼）以 `useState` 管理，變更即重新請求（比照表格區既有模式）。
+
+### 12.4 各 tab 視圖重點
+
+- **試算表 tab**：日期區間（分界/截止）；表格六欄（期初/期中/期末 × 借/貸）+ 科目編號/名稱；子科目以樹狀縮排、可展開收合（對應 `subAccounts`）；末列顯示合計並標示借貸平衡；CSV 下載鈕呼叫 `.../trial_balance/export`。
+- **分類帳 tab**：日期區間（必填）；科目區間選擇；帳別切換（全部/總帳/明細）；排序（科目/日期）；逐筆列出 傳票編號/日期/摘要/借/貸/餘額；頁尾借貸總額；CSV 下載呼叫 `.../ledger/export`。
+
+### 12.5 驗收
+
+- 兩 tab 可由 `?tab=` 深層連結進入；標題/副標隨 tab 正確切換。
+- 報表為唯讀（無編輯/刪除入口）；串接正確、分頁正常、CSV 可下載。
+- i18n 5 語系齊備；RWD（含 `mobile_tab`）正常。
+- ESLint 零警告、`tsc --noEmit` 零錯誤；比照 `balance_sheet` 前端風格。
+
+### 12.6 注意事項
+
+- **標題語意**：務必動態化，避免「試算表」顯示在「智能傳票管理」標題下。
+- **試算表金額用語（M4，已定案）**：沿用舊版「期初/期中/期末 借方/貸方餘額」字樣，前端表頭與後端一致，無需再議。
+- **分類帳 GENERAL（C2，已定案並實作）**：GENERAL 已採「上捲彙總」，前端「總帳」tab 可直接顯示彙總後之總帳科目，三個帳別（全部/總帳/明細）皆可開放。
+
+### 12.7 期程估算
+
+| 項目 | 估時 |
+|---|---|
+| voucher_main_view tab 擴充 + 標題動態化 | 0.5 天 |
+| 試算表 view（含樹狀表格） | 2–3 天 |
+| 分類帳 view（含科目區間/帳別） | 2–3 天 |
+| i18n 5 語系 + RWD + 驗收 | 1–1.5 天 |
+| **前端合計** | **約 5.5–8 天** |
+
+> 依賴：建議先解決 §8 之 C2（總帳語意）與 M4（金額字樣），以免前端返工。

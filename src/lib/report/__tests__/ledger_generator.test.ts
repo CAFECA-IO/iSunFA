@@ -5,11 +5,13 @@ import { IVoucher } from "@/interfaces/voucher";
 import { LabelType } from "@/constants/ledger";
 import { LedgerSorting } from "@/constants/sort";
 
-// Info: (20260724 - Julian) COA 字典：1100 為 1101/1102 之父（非葉）；1101/1102/3110 為葉節點
+// Info: (20260724 - Julian) COA 字典：1100 為 1101/1102 之父、31XX 為 3110 之父（皆非葉）；1101/1102/3110 為葉節點
+// Info: (20260724 - Julian) GENERAL 上捲需父科目存在於字典，故父節點 1100 / 31XX 皆須納入
 const dictionary: IAccount[] = [
   { code: "1100", name: "現金及約當現金", parentCode: "11XX" },
   { code: "1101", name: "庫存現金", parentCode: "1100" },
   { code: "1102", name: "零用金", parentCode: "1100" },
+  { code: "31XX", name: "股本", parentCode: "3XXX" },
   { code: "3110", name: "普通股股本", parentCode: "31XX" },
 ].map((a) => ({ ...a, description: "", type: "", level: 0, isDebit: true }));
 
@@ -87,13 +89,33 @@ describe("generateLedger", () => {
       labelType: LabelType.DETAILED,
     });
     expect(detailed.items.length).toBe(4);
+    expect(
+      detailed.items.every((i) => ["1101", "1102", "3110"].includes(i.code)),
+    ).toBe(true);
+  });
 
-    // Info: (20260724 - Julian) GENERAL 僅保留非葉科目；本例過帳科目皆為葉，故為空
+  it("帳別 GENERAL 將明細過帳上捲至父（總帳）科目", () => {
     const general = generateLedger(vouchers, dictionary, {
       ...baseOptions,
       labelType: LabelType.GENERAL,
     });
-    expect(general.items.length).toBe(0);
+    // Info: (20260724 - Julian) 4 筆過帳全數保留，但科目歸屬至父：1101/1102 → 1100，3110 → 31XX
+    expect(general.items.length).toBe(4);
+    expect(general.items.every((i) => ["1100", "31XX"].includes(i.code))).toBe(
+      true,
+    );
+    expect(
+      general.items.some((i) => ["1101", "1102", "3110"].includes(i.code)),
+    ).toBe(false);
+
+    // Info: (20260724 - Julian) 1100 累計：+1000(A) −400(B/1101) +400(B/1102) = 1000
+    const cash1100 = general.items.filter((i) => i.code === "1100");
+    expect(cash1100.length).toBe(3);
+    expect(cash1100[cash1100.length - 1].balance).toBe("1000");
+
+    // Info: (20260724 - Julian) 借貸總額與 ALL 相同（僅重新歸屬，未增減）
+    expect(general.total.totalDebit).toBe("1400");
+    expect(general.total.totalCredit).toBe("1400");
   });
 
   it("空期間（無傳票）回傳空清單且總計為零", () => {
