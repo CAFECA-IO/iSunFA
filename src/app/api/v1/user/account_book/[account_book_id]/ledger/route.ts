@@ -2,6 +2,7 @@ import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { accountBookRepo } from "@/repositories/account_book.repo";
+import { teamRepo } from "@/repositories/team.repo";
 import { voucherRepo } from "@/repositories/voucher.repo";
 import { accountingAccountService } from "@/services/accounting_account.service";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
@@ -34,6 +35,15 @@ export async function GET(
     const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
     if (!accountBook) {
       return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
+    }
+
+    // Info: (20260724 - Julian) 團隊成員權限檢查（租戶隔離），比照 dashboard 端點
+    const teamMember = await teamRepo.getTeamMember(
+      sessionUser.id,
+      accountBook.teamId,
+    );
+    if (!teamMember) {
+      return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
     }
 
     // Info: (20260724 - Julian) 驗證查詢參數
@@ -103,6 +113,10 @@ export async function GET(
     });
   } catch (error) {
     console.error("Get ledger failed", error);
+    // Info: (20260724 - Julian) 資料整合性錯誤不應偽裝為 DB 失敗
+    if (error instanceof Error && /Data Integrity/.test(error.message)) {
+      return jsonFail(API_ERRORS.VA_INVALID_INPUT_DATA);
+    }
     return jsonFail(API_ERRORS.IS_DB_FAILED);
   }
 }

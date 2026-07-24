@@ -96,6 +96,42 @@ describe("generateLedger", () => {
     expect(general.items.length).toBe(0);
   });
 
+  it("空期間（無傳票）回傳空清單且總計為零", () => {
+    const ledger = generateLedger([], dictionary, baseOptions);
+    expect(ledger.items).toHaveLength(0);
+    expect(ledger.total.totalDebit).toBe("0");
+    expect(ledger.total.totalCredit).toBe("0");
+  });
+
+  it("多科目 running balance 互不干擾", () => {
+    const ledger = generateLedger(vouchers, dictionary, baseOptions);
+    // Info: (20260724 - Julian) 1102 僅一筆借 400，餘額應為 400（不受 1101 影響）
+    const petty = ledger.items.filter((i) => i.code === "1102");
+    expect(petty).toHaveLength(1);
+    expect(petty[0].balance).toBe("400");
+  });
+
+  it("排序 DATE_DESC：依傳票日期由新到舊", () => {
+    const ledger = generateLedger(vouchers, dictionary, {
+      ...baseOptions,
+      sorting: LedgerSorting.DATE_DESC,
+    });
+    // Info: (20260724 - Julian) B(03-10) 應排在 A(03-05) 之前
+    expect(ledger.items[0].voucherDate).toBeGreaterThanOrEqual(
+      ledger.items[ledger.items.length - 1].voucherDate,
+    );
+  });
+
+  it("科目區間單邊（僅 startAccountNo=1102）", () => {
+    const ledger = generateLedger(vouchers, dictionary, {
+      ...baseOptions,
+      startAccountNo: "1102",
+    });
+    // Info: (20260724 - Julian) 僅保留 code >= 1102 者：1102 與 3110
+    expect(ledger.items.every((i) => i.code >= "1102")).toBe(true);
+    expect(ledger.items.some((i) => i.code === "1101")).toBe(false);
+  });
+
   it("缺乏會計代碼或借貸方向時阻斷輸出", () => {
     const broken = [
       {

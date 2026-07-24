@@ -6,6 +6,13 @@ function csvCell(value: string | number): string {
   return `"${String(value).replace(/"/g, '""')}"`;
 }
 
+// Info: (20260724 - Julian) 文字欄位防 CSV 公式注入：以 = + - @ 開頭者前置單引號中和（不套用於金額欄避免破壞負數）
+function csvText(value: string): string {
+  const raw = String(value);
+  const safe = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
+  return `"${safe.replace(/"/g, '""')}"`;
+}
+
 // Info: (20260724 - Julian) 分類帳 CSV 表頭（中英雙語，對齊既有匯出風格）
 const LEDGER_CSV_HEADERS = [
   "科目編號 (Account Code)",
@@ -30,12 +37,12 @@ export function buildLedgerCsv(ledger: ILedger): string {
   ledger.items.forEach((item) => {
     rows.push(
       [
-        csvCell(item.code),
-        csvCell(item.accountingTitle),
-        csvCell(item.voucherNumber),
+        csvText(item.code),
+        csvText(item.accountingTitle),
+        csvText(item.voucherNumber),
         csvCell(timestampToString(item.voucherDate).dateWithDash),
-        csvCell(item.voucherType ?? ""),
-        csvCell(item.particulars),
+        csvText(item.voucherType ?? ""),
+        csvText(item.particulars),
         csvCell(item.debitAmount),
         csvCell(item.creditAmount),
         csvCell(item.balance),
@@ -58,5 +65,6 @@ export function buildLedgerCsv(ledger: ILedger): string {
     ].join(","),
   );
 
-  return rows.join("\n");
+  // Info: (20260724 - Julian) RFC 4180 以 CRLF 分隔列
+  return rows.join("\r\n");
 }

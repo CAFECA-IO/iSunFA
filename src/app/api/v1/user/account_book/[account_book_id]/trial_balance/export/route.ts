@@ -2,6 +2,7 @@ import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonFail, fileOk } from "@/lib/utils/response";
 import { accountBookRepo } from "@/repositories/account_book.repo";
+import { teamRepo } from "@/repositories/team.repo";
 import { voucherRepo } from "@/repositories/voucher.repo";
 import { accountingAccountService } from "@/services/accounting_account.service";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
@@ -35,6 +36,15 @@ export async function GET(
     const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
     if (!accountBook) {
       return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
+    }
+
+    // Info: (20260724 - Julian) 團隊成員權限檢查（租戶隔離），比照 dashboard 端點
+    const teamMember = await teamRepo.getTeamMember(
+      sessionUser.id,
+      accountBook.teamId,
+    );
+    if (!teamMember) {
+      return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
     }
 
     const searchParams = request.nextUrl.searchParams;
@@ -80,6 +90,13 @@ export async function GET(
     );
   } catch (error) {
     console.error("Trial balance export failed", error);
+    // Info: (20260724 - Julian) 決定論護欄（借貸不平衡/資料整合性）錯誤不應偽裝為 DB 失敗
+    if (
+      error instanceof Error &&
+      /Imbalance|Data Integrity/.test(error.message)
+    ) {
+      return jsonFail(API_ERRORS.VA_INVALID_INPUT_DATA);
+    }
     return jsonFail(API_ERRORS.IS_DB_FAILED);
   }
 }

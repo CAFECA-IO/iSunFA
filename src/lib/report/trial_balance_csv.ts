@@ -5,6 +5,13 @@ function csvCell(value: string | number): string {
   return `"${String(value).replace(/"/g, '""')}"`;
 }
 
+// Info: (20260724 - Julian) 文字欄位防 CSV 公式注入：以 = + - @ 開頭者前置單引號中和（不套用於金額欄避免破壞負數）
+function csvText(value: string): string {
+  const raw = String(value);
+  const safe = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
+  return `"${safe.replace(/"/g, '""')}"`;
+}
+
 // Info: (20260724 - Julian) 試算表 CSV 表頭（中英雙語，對齊既有匯出風格）
 const TRIAL_BALANCE_CSV_HEADERS = [
   "科目編號 (Account Code)",
@@ -41,8 +48,8 @@ export function buildTrialBalanceCsv(trialBalance: ITrialBalance): string {
   flattenItems(trialBalance.items).forEach((item) => {
     rows.push(
       [
-        csvCell(item.code),
-        csvCell(item.name),
+        csvText(item.code),
+        csvText(item.name),
         csvCell(item.beginningDebit),
         csvCell(item.beginningCredit),
         csvCell(item.midtermDebit),
@@ -68,5 +75,6 @@ export function buildTrialBalanceCsv(trialBalance: ITrialBalance): string {
     ].join(","),
   );
 
-  return rows.join("\n");
+  // Info: (20260724 - Julian) RFC 4180 以 CRLF 分隔列
+  return rows.join("\r\n");
 }

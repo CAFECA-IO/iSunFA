@@ -133,4 +133,67 @@ describe("generateTrialBalance", () => {
       /Data Integrity Violation/,
     );
   });
+
+  it("空期間（無傳票）回傳空清單且總計為零並平衡", () => {
+    const tb = generateTrialBalance([], dictionary, options);
+    expect(tb.items).toHaveLength(0);
+    expect(tb.total.endingDebit).toBe("0");
+    expect(tb.total.endingCredit).toBe("0");
+  });
+
+  it("邊界日：交易日等於分界日應歸入期中（beginning 為 date < start）", () => {
+    const boundaryVouchers: IVoucher[] = [
+      makeVoucher("E", "2026-03-01T00:00:00", [
+        { code: "1101", name: "庫存現金", amount: 500, isDebit: true },
+        { code: "3110", name: "普通股股本", amount: 500, isDebit: false },
+      ]),
+    ];
+    const tb = generateTrialBalance(boundaryVouchers, dictionary, options);
+    expect(tb.total.beginningDebit).toBe("0");
+    expect(tb.total.midtermDebit).toBe("500");
+    expect(tb.total.endingDebit).toBe("500");
+  });
+
+  it("前綴陷阱：科目 1410 依 parentCode 上捲至 11XX，而非以代碼前綴歸類", () => {
+    // Info: (20260724 - Julian) 1410 前綴為 "14"，但 parentCode 指向 11XX 流動資產
+    const trapDict: IAccount[] = [
+      { code: "1XXX", name: "資產", parentCode: "" },
+      { code: "11XX", name: "流動資產", parentCode: "1XXX" },
+      { code: "1410", name: "預付費用", parentCode: "11XX" },
+      { code: "3XXX", name: "權益", parentCode: "" },
+      { code: "3110", name: "普通股股本", parentCode: "3XXX" },
+    ].map((a) => ({
+      ...a,
+      description: "",
+      type: "",
+      level: 0,
+      isDebit: true,
+    }));
+
+    const trapVouchers: IVoucher[] = [
+      makeVoucher("F", "2026-03-15", [
+        { code: "1410", name: "預付費用", amount: 800, isDebit: true },
+        { code: "3110", name: "普通股股本", amount: 800, isDebit: false },
+      ]),
+    ];
+
+    const tb = generateTrialBalance(trapVouchers, trapDict, options);
+    const asset = tb.items.find((i) => i.code === "1XXX")!;
+    const currentAssets = asset.subAccounts.find((i) => i.code === "11XX")!;
+    // Info: (20260724 - Julian) 1410 應計入 11XX，且不存在任何 "14XX" 前綴桶
+    expect(currentAssets.endingDebit).toBe("800");
+    expect(
+      currentAssets.subAccounts.find((i) => i.code === "1410"),
+    ).toBeDefined();
+    expect(tb.items.find((i) => i.code === "14XX")).toBeUndefined();
+  });
+
+  it("排序 ENDING_DEBIT_DESC：頂層依期末借方由大到小", () => {
+    const tb = generateTrialBalance(vouchers, dictionary, {
+      ...options,
+      sorting: TrialBalanceSorting.ENDING_DEBIT_DESC,
+    });
+    // Info: (20260724 - Julian) 1XXX(1300 借) 應排在 3XXX(0 借) 之前
+    expect(tb.items[0].code).toBe("1XXX");
+  });
 });

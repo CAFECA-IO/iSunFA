@@ -273,6 +273,28 @@ DeWT 認證 (getIdentityFromDeWT)
 
 ---
 
+## 10.10 Phase 5 完成紀錄（2026-07-24，測試與獨立驗證）
+
+**單元測試擴充**（`src/lib/report/__tests__/`）
+- `trial_balance_generator.test.ts`：新增 空期間、邊界日（交易日=分界日歸期中）、前綴陷阱（1410 依 parentCode 上捲至 11XX，非以 "14" 前綴分類）、排序 ENDING_DEBIT_DESC。
+- `ledger_generator.test.ts`：新增 空期間、多科目 running balance 互不干擾、DATE_DESC、單邊科目區間。
+- 新增 `trial_balance_csv.test.ts`、`ledger_csv.test.ts`（表頭欄數、攤平、跳脫、合計、日期格式）。
+- 離線 harness 驗證全數 PASS（generator 8 項 + CSV 8 項 + 邊界 8 項 + 硬化 7 項）。
+
+**獨立對抗性複核（subagent）與修正**
+- **C1（CRITICAL，已修）**：四支 route 原僅檢查帳本存在、未驗團隊成員 → 跨租戶資料外洩。已比照 `dashboard/route.ts` 加入 `teamRepo.getTeamMember(sessionUser.id, accountBook.teamId)`，失敗回 `AUTH_PERMISSION_DENIED`。
+- **M2（已修）**：決定論護欄（借貸不平衡 / 資料整合性）錯誤原被 catch 成 `IS_DB_FAILED`，已改為回 `VA_INVALID_INPUT_DATA`，保留審計訊號。
+- **M5（已修）**：`startDate/endDate` 加嚴格日期驗證（`Date.parse` refine），避免 NaN 造成期間靜默誤判。
+- **M7（已修，硬化）**：CSV 文字欄位新增公式注入中和（`= + - @` 開頭前置 `'`），金額欄不套用以保負數；列分隔改為 RFC 4180 的 CRLF。
+
+**待決策（未實作，需產品確認，見下）**
+- **C2**：分類帳 `LabelType.GENERAL` 目前僅保留非葉科目；因過帳多在葉節點，GENERAL 幾乎為空。正解需將葉科目上捲至總帳科目彙總 — 語意待產品確認後再實作。
+- **M3**：分類帳 running balance 未含期初 (B/F) 餘額，目前為期間相對餘額（與現金流量表同為 Roadmap 待辦）。
+- **M4**：試算表六欄為「發生額累計」而非「淨餘額」，與舊版設計一致；CSV 表頭用「餘額」字樣，若產品要求淨額或改字樣需調整。
+- **M6**：`AccountUtil.dictionaryCache` 以陣列參考為鍵，每請求新陣列導致快取不命中（既有 AccountUtil 議題，非本功能引入）。
+
+---
+
 ## 10. 驗證計劃
 
 - **單元**：三段切割、樹狀上捲、running balance、`calculateTotals`、`MoneyUtil` 精度、邊界科目前綴陷阱、含懸記平衡。
