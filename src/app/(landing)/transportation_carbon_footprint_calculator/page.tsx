@@ -61,6 +61,10 @@ import {
   IOrderPayload,
 } from "@/hooks/use_order_transaction";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
+import {
+  TRANSPORT_CALCULATOR_QUERY_PARAM,
+  HISTORY_VIEW_STATE_STORAGE_KEY,
+} from "@/constants/logistics";
 import { ORDER_TYPE } from "@/constants/status";
 import { ANALYSIS_BASE_COSTS } from "@/constants/price";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -105,19 +109,60 @@ function ReportPageContent() {
   const pathname = usePathname();
 
   const activeTab =
-    searchParams?.get("tab") === "history"
+    searchParams?.get(TRANSPORT_CALCULATOR_QUERY_PARAM.TAB) === "history"
       ? "history"
-      : searchParams?.get("tab") === "mileage"
+      : searchParams?.get(TRANSPORT_CALCULATOR_QUERY_PARAM.TAB) === "mileage"
         ? "mileage"
         : "analysis";
 
+  // Info: (20260724 - Tzuhan) 歷史清單瀏覽狀態(展開列)受控化,配合 sessionStorage 保存/還原(需求四)
+  const [historyExpandedKeys, setHistoryExpandedKeys] = useState<Set<string>>(
+    new Set(),
+  );
+
+  /**
+   * Info: (20260724 - Tzuhan) 需求四:tab 切換由 router.replace 改為 router.push。
+   * replace 會覆寫 ?tab=history 的 history entry,導致載入歷史後按「上一頁」直接跳出頁面;
+   * push 讓瀏覽器導覽語意完整(上一頁精準返回清單)。僅初始化/正規化情境用 replace。
+   * analysisId 一併寫入 URL,讓載入的報告檢視可刷新重現、可前進返回。
+   */
   const setActiveTab = useCallback(
-    (tab: "analysis" | "history" | "mileage") => {
+    (
+      tab: "analysis" | "history" | "mileage",
+      options?: { replace?: boolean; analysisId?: string },
+    ) => {
+      // Info: (20260724 - Tzuhan) 離開 history tab 時暫存捲動位置與展開列,返回時還原
+      if (activeTab === "history" && tab !== "history") {
+        try {
+          sessionStorage.setItem(
+            HISTORY_VIEW_STATE_STORAGE_KEY,
+            JSON.stringify({
+              scrollY: window.scrollY,
+              expandedKeys: Array.from(historyExpandedKeys),
+            }),
+          );
+        } catch {
+          // Info: (20260724 - Tzuhan) sessionStorage 不可用(如隱私模式)時靜默略過,僅影響瀏覽狀態還原
+        }
+      }
       const params = new URLSearchParams(searchParams?.toString() || "");
-      params.set("tab", tab);
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      params.set(TRANSPORT_CALCULATOR_QUERY_PARAM.TAB, tab);
+      if (options?.analysisId) {
+        params.set(
+          TRANSPORT_CALCULATOR_QUERY_PARAM.ANALYSIS_ID,
+          options.analysisId,
+        );
+      } else {
+        params.delete(TRANSPORT_CALCULATOR_QUERY_PARAM.ANALYSIS_ID);
+      }
+      const url = `${pathname}?${params.toString()}`;
+      if (options?.replace) {
+        router.replace(url, { scroll: false });
+      } else {
+        router.push(url, { scroll: false });
+      }
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams, activeTab, historyExpandedKeys],
   );
 
   const [aiInput, setAiInput] = useState(
@@ -225,6 +270,29 @@ function ReportPageContent() {
 
     return () => clearInterval(interval);
   }, [hasExecuting, fetchHistory]);
+
+  // Info: (20260724 - Tzuhan) 返回 history tab 時還原捲動位置與展開列(需求四)
+  useEffect(() => {
+    if (activeTab !== "history") return;
+    try {
+      const raw = sessionStorage.getItem(HISTORY_VIEW_STATE_STORAGE_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw) as {
+        scrollY?: number;
+        expandedKeys?: string[];
+      };
+      if (Array.isArray(saved.expandedKeys)) {
+        setHistoryExpandedKeys(new Set(saved.expandedKeys));
+      }
+      if (typeof saved.scrollY === "number") {
+        const targetY = saved.scrollY;
+        // Info: (20260724 - Tzuhan) 等清單渲染完成再捲動,避免內容高度不足捲不到位
+        setTimeout(() => window.scrollTo({ top: targetY }), 50);
+      }
+    } catch {
+      // Info: (20260724 - Tzuhan) 暫存毀損時放棄還原,不影響功能
+    }
+  }, [activeTab]);
 
   const calculateFootprint = useCallback(async () => {
     setAiInput("");
@@ -773,79 +841,107 @@ function ReportPageContent() {
   const isLocked = loading; // Info: (20260430 - Tzuhan) 只有在「運算中」才反灰，算完後重新開放輸入以便用戶微調再算一次
 
   // Info: (20260724 - Tzuhan) 回傳載入的資料型態("batch" | "single"),供匯出選單決定範圍;失敗回傳 false
-  const handleLoadHistory = async (
-    item: IHistoryItem,
-  ): Promise<"batch" | "single" | false> => {
-    setLoading(true);
-    setError(null);
-    setPlan(null);
-    setBatchResults(null);
-    try {
-      const res = await request<{ payload: { result: string } }>(
-        `/api/v1/user/analysis/${item.id}`,
-      );
-      if (res?.payload?.result) {
-        const parsed = JSON.parse(res.payload.result);
-        let isBatch = Array.isArray(parsed);
-        let batchArray: IMileageBatchResult[] | null = null;
+  // Info: (20260724 - Tzuhan) navigate=false 供「URL 帶 analysisId 的自動載入」使用,避免重複寫入瀏覽歷史(需求四)
+  // Info: (20260724 - Tzuhan) useCallback 包裝供 analysisId 自動載入 effect 作為穩定依賴
+  const handleLoadHistory = useCallback(
+    async (
+      item: IHistoryItem,
+      options?: { navigate?: boolean },
+    ): Promise<"batch" | "single" | false> => {
+      const shouldNavigate = options?.navigate !== false;
+      setLoading(true);
+      setError(null);
+      setPlan(null);
+      setBatchResults(null);
+      try {
+        const res = await request<{ payload: { result: string } }>(
+          `/api/v1/user/analysis/${item.id}`,
+        );
+        if (res?.payload?.result) {
+          const parsed = JSON.parse(res.payload.result);
+          let isBatch = Array.isArray(parsed);
+          let batchArray: IMileageBatchResult[] | null = null;
 
-        if (!isBatch && parsed && typeof parsed === "object") {
-          if ("0" in parsed) {
-            isBatch = true;
-            const items: IMileageBatchResult[] = [];
-            let i = 0;
-            while (String(i) in parsed) {
-              items.push(parsed[String(i)] as IMileageBatchResult);
-              i++;
+          if (!isBatch && parsed && typeof parsed === "object") {
+            if ("0" in parsed) {
+              isBatch = true;
+              const items: IMileageBatchResult[] = [];
+              let i = 0;
+              while (String(i) in parsed) {
+                items.push(parsed[String(i)] as IMileageBatchResult);
+                i++;
+              }
+              batchArray = items;
             }
-            batchArray = items;
+          } else if (isBatch) {
+            batchArray = parsed;
           }
-        } else if (isBatch) {
-          batchArray = parsed;
-        }
 
-        if (isBatch && batchArray) {
-          // Info: (20260724 - Tzuhan) 需求三:legacy 重建抽至 logistics_report.ts 純函數,
-          // Info: (20260724 - Tzuhan) 改用 Decimal 與 EMISSION_FACTORS 單一來源(修正舊版 0.01614/0.50422 錯誤係數)
-          batchArray = batchArray.map((bItem: ILegacyBatchItem) => {
-            if (!bItem.plan) {
-              bItem.plan = buildPlanFromLegacyBatchItem(
-                bItem,
-                item.weightKg || 1000,
-              );
-            }
-            return bItem;
-          });
-          setBatchResults(batchArray);
-          setPlan(null);
-          setActiveTab("mileage");
-        } else {
-          setPlan(parsed);
-          setBatchResults(null);
-          setActiveTab("analysis");
-        }
-        setOrigin(item.origin || { lat: "", lng: "" });
-        setDest(item.dest || { lat: "", lng: "" });
-        setWeightKg(item.weightKg || "");
-
-        setTimeout(() => {
-          if (scrollTargetRef.current) {
-            scrollTargetRef.current.scrollIntoView({
-              behavior: "smooth",
-              block: "start",
+          if (isBatch && batchArray) {
+            // Info: (20260724 - Tzuhan) 需求三:legacy 重建抽至 logistics_report.ts 純函數,
+            // Info: (20260724 - Tzuhan) 改用 Decimal 與 EMISSION_FACTORS 單一來源(修正舊版 0.01614/0.50422 錯誤係數)
+            batchArray = batchArray.map((bItem: ILegacyBatchItem) => {
+              if (!bItem.plan) {
+                bItem.plan = buildPlanFromLegacyBatchItem(
+                  bItem,
+                  item.weightKg || 1000,
+                );
+              }
+              return bItem;
             });
+            setBatchResults(batchArray);
+            setPlan(null);
+            // Info: (20260724 - Tzuhan) push + analysisId:上一頁可精準返回清單,前進/刷新可重現此檢視(需求四)
+            if (shouldNavigate)
+              setActiveTab("mileage", { analysisId: item.id });
+          } else {
+            setPlan(parsed);
+            setBatchResults(null);
+            if (shouldNavigate)
+              setActiveTab("analysis", { analysisId: item.id });
           }
-        }, 100);
-        return isBatch && batchArray ? "batch" : "single";
+          setOrigin(item.origin || { lat: "", lng: "" });
+          setDest(item.dest || { lat: "", lng: "" });
+          setWeightKg(item.weightKg || "");
+
+          setTimeout(() => {
+            if (scrollTargetRef.current) {
+              scrollTargetRef.current.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              });
+            }
+          }, 100);
+          return isBatch && batchArray ? "batch" : "single";
+        }
+      } catch (err) {
+        console.error("Failed to load history", err);
+        setError("無法載入歷史報告");
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error("Failed to load history", err);
-      setError("無法載入歷史報告");
-    } finally {
-      setLoading(false);
+      return false;
+    },
+    [setActiveTab],
+  );
+
+  // Info: (20260724 - Tzuhan) URL 帶 analysisId 時自動載入該筆(刷新/前進可重現載入的報告檢視,需求四)
+  const analysisIdParam = searchParams?.get(
+    TRANSPORT_CALCULATOR_QUERY_PARAM.ANALYSIS_ID,
+  );
+  const loadedAnalysisIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!analysisIdParam) {
+      loadedAnalysisIdRef.current = null;
+      return;
     }
-    return false;
-  };
+    if (loadedAnalysisIdRef.current === analysisIdParam) return;
+    const target = history.find((row) => row.id === analysisIdParam);
+    if (!target || target.status?.toUpperCase() !== "COMPLETED") return;
+    loadedAnalysisIdRef.current = analysisIdParam;
+    // Info: (20260724 - Tzuhan) URL 已含 analysisId,載入時不再寫入瀏覽歷史
+    handleLoadHistory(target, { navigate: false });
+  }, [analysisIdParam, history, handleLoadHistory]);
 
   const historyColumns: IDataTableColumn<IHistoryItem>[] = [
     {
@@ -1353,6 +1449,8 @@ function ReportPageContent() {
                     columns={historyColumns}
                     data={history}
                     rowKey={(row) => row.id}
+                    expandedKeys={historyExpandedKeys}
+                    onExpandedKeysChange={setHistoryExpandedKeys}
                     rowExpandable={(row) =>
                       row.action === "calculate_batch" &&
                       row.items !== undefined &&

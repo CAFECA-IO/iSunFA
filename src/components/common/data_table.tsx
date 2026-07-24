@@ -31,6 +31,9 @@ export interface IDataTableProps<T> {
   onRowClick?: (row: T) => void;
   expandedRowRender?: (row: T) => ReactNode;
   rowExpandable?: (row: T) => boolean;
+  // Info: (20260724 - Tzuhan) 選用的受控展開狀態:呼叫端需要保存/還原展開列時傳入(未傳則沿用內部狀態,完全向下相容)
+  expandedKeys?: Set<string>;
+  onExpandedKeysChange?: (keys: Set<string>) => void;
 }
 
 export default function DataTable<T>({
@@ -47,18 +50,23 @@ export default function DataTable<T>({
   onRowClick = undefined,
   expandedRowRender = undefined,
   rowExpandable = undefined,
+  expandedKeys = undefined,
+  onExpandedKeysChange = undefined,
 }: IDataTableProps<T>) {
   const { t } = useTranslation();
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [internalExpandedRows, setInternalExpandedRows] = useState<Set<string>>(
+    new Set(),
+  );
+  // Info: (20260724 - Tzuhan) 受控優先:呼叫端傳入 expandedKeys 時以其為準
+  const expandedRows = expandedKeys ?? internalExpandedRows;
 
   const toggleRow = (key: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setExpandedRows((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
+    const next = new Set(expandedRows);
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    if (onExpandedKeysChange) onExpandedKeysChange(next);
+    if (expandedKeys === undefined) setInternalExpandedRows(next);
   };
 
   return (

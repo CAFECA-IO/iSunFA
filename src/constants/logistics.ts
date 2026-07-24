@@ -41,3 +41,18 @@ export const EXPORT_PLAN_FILE_SUFFIX = {
 } as const;
 
 export type ExportPlanRouteType = keyof typeof EXPORT_PLAN_FILE_SUFFIX;
+
+/**
+ * Info: (20260724 - Tzuhan) 運輸計算器頁面的 URL query param 名稱(需求四:歷史導覽以 URL 為狀態來源)
+ */
+export const TRANSPORT_CALCULATOR_QUERY_PARAM = {
+  TAB: "tab",
+  ANALYSIS_ID: "analysisId",
+} as const;
+
+/**
+ * Info: (20260724 - Tzuhan) 歷史清單瀏覽狀態(捲動位置/展開列)的 sessionStorage key
+ * 僅存 UI 狀態,不存業務資料;分頁關閉即清空
+ */
+export const HISTORY_VIEW_STATE_STORAGE_KEY =
+  "transport_calculator_history_view_state";
