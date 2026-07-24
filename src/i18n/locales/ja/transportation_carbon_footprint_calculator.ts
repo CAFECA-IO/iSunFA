@@ -157,4 +157,18 @@ export const transportationCarbonFootprintCalculator = {
     dest: "目的地",
     label: "🟢 ESG物流炭素排出量追跡 (Powered by MapLibre)",
   },
+  // Info: (20260724 - Tzuhan) エクスポート選択モーダル(要件2)
+  export_options: {
+    title: "エクスポートするプランを選択",
+    description:
+      "エクスポートするプランを選択してください。このルートに適用可能なプランのみ表示されます。",
+    plan_land: "陸運のみ",
+    plan_sea: "海運を含む（海陸複合輸送）",
+    plan_air: "空運を含む（空陸複合輸送）",
+    plan_custom: "カスタム複合輸送",
+    split_hint:
+      "各プランは個別のPDFとして出力され、複数ファイルはZIPにまとめられます。",
+    confirm: "エクスポート",
+    progress: "レポートを生成中 {{current}} / {{total}}...",
+  },
 };

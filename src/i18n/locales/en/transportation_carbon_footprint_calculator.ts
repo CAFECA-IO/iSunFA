@@ -157,4 +157,18 @@ export const transportationCarbonFootprintCalculator = {
     dest: "Destination",
     label: "🟢 ESG Logistics Carbon Trace (Powered by MapLibre)",
   },
+  // Info: (20260724 - Tzuhan) Export options modal (requirement 2)
+  export_options: {
+    title: "Select Plans to Export",
+    description:
+      "Check the plan types to export. Only plans applicable to this route are listed.",
+    plan_land: "Land Only",
+    plan_sea: "Including Sea (Sea-Land Multimodal)",
+    plan_air: "Including Air (Air-Land Multimodal)",
+    plan_custom: "Custom Multimodal",
+    split_hint:
+      "Each plan is exported as a separate PDF; multiple files are bundled into a ZIP.",
+    confirm: "Export",
+    progress: "Generating report {{current}} / {{total}}...",
+  },
 };

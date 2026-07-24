@@ -46,6 +46,11 @@ import { useAuth } from "@/contexts/auth_context";
 import AuthPlaceholder from "@/components/common/auth_placeholder";
 import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
 import { BatchExportRenderer } from "@/components/transportation_carbon_footprint_calculator/batch_export_renderer";
+import { ExportOptionsModal } from "@/components/transportation_carbon_footprint_calculator/export_options_modal";
+import {
+  buildExportFileName,
+  captureElementToPdf,
+} from "@/lib/utils/pdf_export";
 import {
   useOrderTransaction,
   IOrderPayload,
@@ -121,10 +126,21 @@ function ReportPageContent() {
   const [batchResults, setBatchResults] = useState<
     IMileageBatchResult[] | null
   >(null);
-  const [batchSelectedRoutesMap, setBatchSelectedRoutesMap] = useState<
-    Record<number, Set<RouteType>>
-  >({});
   const [exportingIndex, setExportingIndex] = useState<number | null>(null);
+  // Info: (20260724 - Tzuhan) 需求二:一次只渲染/截圖一個 (路線, 方案) 組合,每個方案產出獨立 PDF
+  const [exportingPlanType, setExportingPlanType] = useState<RouteType | null>(
+    null,
+  );
+  // Info: (20260724 - Tzuhan) 匯出勾選選單的目標範圍:整批 / 單一路線 / 單筆分析報告
+  const [exportModalTarget, setExportModalTarget] = useState<{
+    scope: "batch" | "single-route" | "report";
+    index?: number;
+  } | null>(null);
+  // Info: (20260724 - Tzuhan) 匯出進度(第 x / y 份),顯示於匯出覆蓋層
+  const [exportProgress, setExportProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
   const mapReadyResolver = useRef<(() => void) | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<IHistoryItem[]>([]);
@@ -354,154 +370,204 @@ function ReportPageContent() {
     }
   }, []);
 
-  const handleDownloadPDF = async (
-    singleIndex?: number,
-    selectedRoutesMap?: Record<number, Set<RouteType>>,
-  ) => {
-    if (selectedRoutesMap) {
-      setBatchSelectedRoutesMap(selectedRoutesMap);
+  // Info: (20260724 - Tzuhan) \u904B\u8F38\u65B9\u5F0F\u9069\u7528\u6027\u6536\u6582\u5230\u55AE\u4E00\u6C7A\u5B9A\u8AD6\u5F15\u64CE(route_applicability.ts):
+  // Info: (20260724 - Tzuhan) \u9678\u904B\u6CBF\u7528\u539F\u300C\u76F4\u7DDA fallback \u975E\u771F\u5BE6\u8DEF\u5F91\u300D\u5224\u65B7;\u6D77\u7A7A\u904B\u65B0\u589E\u300C\u570B\u5167/\u77ED\u7A0B\u5C4F\u853D\u300D\u898F\u5247(\u9700\u6C42\u4E00)
+  const routeApplicability = useMemo(
+    () =>
+      plan
+        ? getRouteApplicability(plan)
+        : { land: true, sea: true, air: true, custom: false },
+    [plan],
+  );
+  const isLandAvailable = routeApplicability.land;
+
+  // Info: (20260724 - Tzuhan) \u6A94\u540D\u7528\u5730\u9EDE\u6A19\u7C64(\u5EA7\u6A19\u7269\u4EF6\u53D6 name,\u5426\u5247\u4EE5\u5EA7\u6A19\u5B57\u4E32\u5448\u73FE)
+  const getLocationLabel = (
+    loc: string | { lat: number; lng: number; name?: string },
+  ): string => {
+    if (typeof loc === "string") return loc;
+    if (loc && typeof loc === "object" && "lat" in loc && "lng" in loc) {
+      return loc.name || `${loc.lat}_${loc.lng}`;
     }
+    return "";
+  };
+
+  // Info: (20260724 - Tzuhan) \u9700\u6C42\u4E8C:\u532F\u51FA\u5165\u53E3\u4E00\u5F8B\u5148\u958B\u52FE\u9078\u9078\u55AE,\u532F\u51FA\u7BC4\u570D\u7531\u4F7F\u7528\u8005\u660E\u78BA\u52FE\u9078(\u8207\u756B\u9762\u6AA2\u8996\u72C0\u614B\u89E3\u8026)
+  const handleExportRequest = (singleIndex?: number) => {
+    if (batchResults) {
+      setExportModalTarget(
+        singleIndex !== undefined
+          ? { scope: "single-route", index: singleIndex }
+          : { scope: "batch" },
+      );
+    } else if (plan) {
+      setExportModalTarget({ scope: "report" });
+    }
+  };
+
+  // Info: (20260724 - Tzuhan) \u52FE\u9078\u9078\u55AE\u53EF\u9078\u9805:\u50C5\u5217\u51FA\u9069\u7528\u6027\u5F15\u64CE\u5224\u5B9A\u70BA\u9069\u7528\u7684\u65B9\u6848(\u6574\u6279\u53D6\u806F\u96C6)
+  const exportAvailablePlans = useMemo<RouteType[]>(() => {
+    if (!exportModalTarget) return [];
+    if (exportModalTarget.scope === "report") {
+      return (["land", "sea", "air"] as const).filter(
+        (type) => routeApplicability[type],
+      );
+    }
+    const targets =
+      exportModalTarget.scope === "single-route" &&
+      exportModalTarget.index !== undefined
+        ? [batchResults?.[exportModalTarget.index]]
+        : (batchResults ?? []);
+    const union = new Set<RouteType>();
+    targets.forEach((item) => {
+      if (!item) return;
+      const applicability = getRouteApplicability(item.plan);
+      (["custom", "land", "sea", "air"] as const).forEach((type) => {
+        if (applicability[type]) union.add(type);
+      });
+    });
+    return Array.from(union);
+  }, [exportModalTarget, batchResults, routeApplicability]);
+
+  /**
+   * Info: (20260724 - Tzuhan) \u6279\u6B21\u532F\u51FA:\u6BCF\u500B (\u8DEF\u7DDA, \u65B9\u6848) \u7D44\u5408\u6E32\u67D3 \u2192 \u622A\u5716 \u2192 \u7368\u7ACB PDF(\u9700\u6C42\u4E8C)
+   * \u55AE\u6A94\u76F4\u63A5\u4E0B\u8F09;\u591A\u6A94\u9023\u540C summary.csv \u6253\u5305 zip
+   */
+  const executeBatchExport = async (
+    indices: number[],
+    selectedPlans: Set<RouteType>,
+  ) => {
+    if (!batchResults) return;
     let originalViewport: string | null = null;
     let viewportMeta: Element | null = null;
-    if (batchResults) {
-      try {
-        setIsExporting(true);
+    try {
+      setIsExporting(true);
 
-        viewportMeta = document.querySelector('meta[name="viewport"]');
-        setExportingIndex(null);
-        mapReadyResolver.current = null;
-        if (viewportMeta) {
-          originalViewport = viewportMeta.getAttribute("content");
-        } else {
-          viewportMeta = document.createElement("meta");
-          viewportMeta.setAttribute("name", "viewport");
-          document.head.appendChild(viewportMeta);
-        }
-        if (window.innerWidth < 1024) {
-          viewportMeta.setAttribute("content", "width=1024");
-        }
-
-        // Info: (20260511 - Luphia) Wait for React to render the hidden batch components
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-
-        if (singleIndex !== undefined) {
-          setExportingIndex(singleIndex);
-          await new Promise<void>((resolve) => {
-            mapReadyResolver.current = resolve;
-            setTimeout(resolve, 8000);
-          });
-
-          const pageEl = document.getElementById(
-            `batch-report-item-${singleIndex}`,
-          );
-          if (pageEl) {
-            const dataUrl = await htmlToImage.toPng(pageEl, {
-              quality: 0.95,
-              pixelRatio: 2,
-              style: { margin: "0", transform: "none" },
-            });
-            const pdf = new jsPDF("p", "mm", "a4");
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const imgProps = pdf.getImageProperties(dataUrl);
-            const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
-            pdf.addImage(dataUrl, "PNG", 0, 0, pdfWidth, imgHeight);
-            pdf.save(
-              `iSunFA_Logistics_Carbon_Report_${new Date().getTime()}.pdf`,
-            );
-          }
-        } else if (batchResults.length === 1) {
-          setExportingIndex(0);
-          await new Promise<void>((resolve) => {
-            mapReadyResolver.current = resolve;
-            setTimeout(resolve, 8000);
-          });
-
-          const pageEl = document.getElementById(`batch-report-item-0`);
-          if (pageEl) {
-            const dataUrl = await htmlToImage.toPng(pageEl, {
-              quality: 0.95,
-              pixelRatio: 2,
-              style: { margin: "0", transform: "none" },
-            });
-            const pdf = new jsPDF("p", "mm", "a4");
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const imgProps = pdf.getImageProperties(dataUrl);
-            const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
-            pdf.addImage(dataUrl, "PNG", 0, 0, pdfWidth, imgHeight);
-            pdf.save(
-              `iSunFA_Logistics_Carbon_Report_${new Date().getTime()}.pdf`,
-            );
-          }
-        } else {
-          const zip = new JSZip();
-
-          const csvRows = [
-            `\uFEFFOrigin,Destination,Land Distance (km),Land Emission (kg CO2e),Sea Distance (km),Sea Emission (kg CO2e),Air Distance (km),Air Emission (kg CO2e),Report File`,
-          ];
-
-          for (let i = 0; i < batchResults.length; i++) {
-            setExportingIndex(i);
-            // Info: (20260511 - Luphia) Wait for the BatchItemReport to fully render and capture its internal MapViewers
-            await new Promise<void>((resolve) => {
-              mapReadyResolver.current = resolve;
-              // Info: (20260511 - Luphia) Fallback timeout just in case WebGL or capture fails to respond
-              setTimeout(resolve, 8000);
-            });
-
-            const item = batchResults[i];
-            const pageEl = document.getElementById(`batch-report-item-${i}`);
-            if (pageEl) {
-              const dataUrl = await htmlToImage.toPng(pageEl, {
-                quality: 0.95,
-                pixelRatio: 2,
-                style: { margin: "0", transform: "none" },
-              });
-
-              const pdf = new jsPDF("p", "mm", "a4");
-              const pdfWidth = pdf.internal.pageSize.getWidth();
-              const imgProps = pdf.getImageProperties(dataUrl);
-              const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-              pdf.addImage(dataUrl, "PNG", 0, 0, pdfWidth, imgHeight);
-
-              const filename = `route_${i + 1}.pdf`;
-              zip.file(filename, pdf.output("blob"));
-
-              const landPlan = item.plan?.comparisonData?.plans?.landOnly;
-              const seaPlan = item.plan?.comparisonData?.plans?.sea_multimodal;
-              const airPlan = item.plan?.comparisonData?.plans?.air_multimodal;
-
-              const seaDist =
-                (seaPlan?.land_origin_to_port?.distanceKm || 0) +
-                (seaPlan?.sea_port_to_port?.distanceKm || 0) +
-                (seaPlan?.land_port_to_dest?.distanceKm || 0);
-              const airDist =
-                (airPlan?.land_origin_to_airport?.distanceKm || 0) +
-                (airPlan?.air_airport_to_airport?.distanceKm || 0) +
-                (airPlan?.land_airport_to_dest?.distanceKm || 0);
-
-              csvRows.push(
-                `${item.origin},${item.dest},${landPlan?.distanceKm || 0},${landPlan?.co2eKg || 0},${seaDist},${seaPlan?.total_co2eKg || 0},${airDist},${airPlan?.total_co2eKg || 0},${filename}`,
-              );
-            }
-          }
-
-          zip.file("summary.csv", csvRows.join("\n"));
-          const content = await zip.generateAsync({ type: "blob" });
-          saveAs(content, `batch_report_${new Date().getTime()}.zip`);
-        }
-      } catch (err) {
-        console.error("Export zip failed", err);
-      } finally {
-        if (viewportMeta && originalViewport !== null) {
-          viewportMeta.setAttribute("content", originalViewport);
-        }
-        setIsExporting(false);
+      viewportMeta = document.querySelector('meta[name="viewport"]');
+      setExportingIndex(null);
+      setExportingPlanType(null);
+      mapReadyResolver.current = null;
+      if (viewportMeta) {
+        originalViewport = viewportMeta.getAttribute("content");
+      } else {
+        viewportMeta = document.createElement("meta");
+        viewportMeta.setAttribute("name", "viewport");
+        document.head.appendChild(viewportMeta);
       }
-      return;
-    }
+      if (window.innerWidth < 1024) {
+        viewportMeta.setAttribute("content", "width=1024");
+      }
 
-    // Info: (20260511 - Luphia) Default flow for single report
+      // Info: (20260511 - Luphia) Wait for React to render the hidden batch components
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      // Info: (20260724 - Tzuhan) \u5C55\u958B (\u8DEF\u7DDA, \u65B9\u6848) \u5DE5\u4F5C\u6E05\u55AE:\u6BCF\u689D\u8DEF\u7DDA\u53EA\u532F\u51FA\u300C\u4F7F\u7528\u8005\u52FE\u9078 \u2229 \u8A72\u8DEF\u7DDA\u9069\u7528\u300D\u7684\u65B9\u6848
+      const jobs: Array<{ index: number; type: RouteType }> = [];
+      indices.forEach((index) => {
+        const applicability = getRouteApplicability(batchResults[index]?.plan);
+        (["custom", "land", "sea", "air"] as const).forEach((type) => {
+          if (selectedPlans.has(type) && applicability[type]) {
+            jobs.push({ index, type });
+          }
+        });
+      });
+
+      const files: Array<{ index: number; filename: string; blob: Blob }> = [];
+      for (let j = 0; j < jobs.length; j++) {
+        const job = jobs[j];
+        setExportProgress({ current: j + 1, total: jobs.length });
+        setExportingIndex(job.index);
+        setExportingPlanType(job.type);
+        // Info: (20260511 - Luphia) Wait for the BatchItemReport to fully render and capture its internal MapViewers
+        await new Promise<void>((resolve) => {
+          mapReadyResolver.current = resolve;
+          // Info: (20260511 - Luphia) Fallback timeout just in case WebGL or capture fails to respond
+          setTimeout(resolve, 8000);
+        });
+
+        const pageEl = document.getElementById(
+          `batch-report-item-${job.index}`,
+        );
+        if (!pageEl) continue;
+
+        const item = batchResults[job.index];
+        const pdf = await captureElementToPdf(pageEl);
+        const filename = buildExportFileName(
+          job.index,
+          job.type,
+          getLocationLabel(item.origin),
+          getLocationLabel(item.dest),
+        );
+        files.push({ index: job.index, filename, blob: pdf.output("blob") });
+      }
+
+      if (files.length === 0) return;
+
+      if (files.length === 1) {
+        saveAs(files[0].blob, files[0].filename);
+        return;
+      }
+
+      const zip = new JSZip();
+      files.forEach((file) => {
+        zip.file(file.filename, file.blob);
+      });
+
+      // Info: (20260724 - Tzuhan) \u6574\u6279\u532F\u51FA\u9644 summary.csv;Report Files \u6B04\u5217\u51FA\u8A72\u8DEF\u7DDA\u7684\u6240\u6709\u7368\u7ACB PDF
+      // ToDo: (20260724 - Tzuhan) CSV \u6B04\u4F4D\u6309\u65B9\u6848\u5206\u5217\u8207\u9010\u6BB5\u5C55\u958B\u7531 issue 03 \u8655\u7406
+      if (indices.length > 1) {
+        const csvRows = [
+          `\uFEFFOrigin,Destination,Land Distance (km),Land Emission (kg CO2e),Sea Distance (km),Sea Emission (kg CO2e),Air Distance (km),Air Emission (kg CO2e),Report Files`,
+        ];
+        indices.forEach((i) => {
+          const item = batchResults[i];
+          if (!item) return;
+          const landPlan = item.plan?.comparisonData?.plans?.landOnly;
+          const seaPlan = item.plan?.comparisonData?.plans?.sea_multimodal;
+          const airPlan = item.plan?.comparisonData?.plans?.air_multimodal;
+
+          const seaDist =
+            (seaPlan?.land_origin_to_port?.distanceKm || 0) +
+            (seaPlan?.sea_port_to_port?.distanceKm || 0) +
+            (seaPlan?.land_port_to_dest?.distanceKm || 0);
+          const airDist =
+            (airPlan?.land_origin_to_airport?.distanceKm || 0) +
+            (airPlan?.air_airport_to_airport?.distanceKm || 0) +
+            (airPlan?.land_airport_to_dest?.distanceKm || 0);
+
+          const routeFiles = files
+            .filter((file) => file.index === i)
+            .map((file) => file.filename)
+            .join("; ");
+          csvRows.push(
+            `${item.origin},${item.dest},${landPlan?.distanceKm || 0},${landPlan?.co2eKg || 0},${seaDist},${seaPlan?.total_co2eKg || 0},${airDist},${airPlan?.total_co2eKg || 0},${routeFiles}`,
+          );
+        });
+        zip.file("summary.csv", csvRows.join("\n"));
+      }
+
+      const content = await zip.generateAsync({ type: "blob" });
+      saveAs(content, `batch_report_${new Date().getTime()}.zip`);
+    } catch (err) {
+      console.error("Export zip failed", err);
+    } finally {
+      if (viewportMeta && originalViewport !== null) {
+        viewportMeta.setAttribute("content", originalViewport);
+      }
+      setExportingIndex(null);
+      setExportingPlanType(null);
+      setExportProgress(null);
+      setIsExporting(false);
+    }
+  };
+
+  /**
+   * Info: (20260724 - Tzuhan) \u55AE\u7B46\u5206\u6790\u5831\u544A\u532F\u51FA:\u6CBF\u7528\u65E2\u6709 WebGL \u622A\u5716 workaround,
+   * \u4F46\u6539\u70BA\u300C\u4E00\u500B\u65B9\u6848\u4E00\u4EFD\u7368\u7ACB PDF\u300D(\u9700\u6C42\u4E8C),\u591A\u6A94\u6253\u5305 zip
+   */
+  const executeReportExport = async (selectedPlans: Set<RouteType>) => {
+    let originalViewport: string | null = null;
+    let viewportMeta: Element | null = null;
     try {
       setIsExporting(true); // Info: (20260501 - Luphia) 觸發重新渲染，隱藏控制面板並顯示各分頁 Header/Footer
 
@@ -536,18 +602,17 @@ function ReportPageContent() {
         }
       });
 
-      // Info: (20260724 - Tzuhan) 匯出範圍以適用性引擎為準,不適用的方案(如國內路線的海空運)一律排除
+      // Info: (20260724 - Tzuhan) 匯出範圍=使用者勾選 ∩ 適用性引擎判定(需求一+二),與畫面檢視狀態脫鉤
       const routesToExport = (["land", "sea", "air"] as const).filter(
-        (type) => selectedRoutes.has(type) && routeApplicability[type],
+        (type) => selectedPlans.has(type) && routeApplicability[type],
       );
 
-      // Info: (20260501 - Luphia) 手動處理分頁
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
+      // Info: (20260724 - Tzuhan) 需求二:一個方案一份獨立 PDF,不再合併分頁
+      const files: Array<{ filename: string; blob: Blob }> = [];
 
       for (let i = 0; i < routesToExport.length; i++) {
         const routeType = routesToExport[i];
+        setExportProgress({ current: i + 1, total: routesToExport.length });
         const pageEl = document.getElementById(`pdf-page-${routeType}`);
         if (!pageEl) continue;
 
@@ -621,13 +686,14 @@ function ReportPageContent() {
         pageEl.style.width = oldWidth;
         pageEl.style.maxWidth = oldMaxWidth;
 
+        // Info: (20260724 - Tzuhan) 每個方案建立獨立 PDF(需求二)
+        const pdf = new jsPDF("p", "mm", "a4");
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+
         const elWidth = 1024;
         const elHeight = pageEl.offsetHeight;
         const imgHeightInMm = (elHeight * pdfWidth) / elWidth;
-
-        if (i > 0) {
-          pdf.addPage();
-        }
 
         let heightLeft = imgHeightInMm;
         let position = 0;
@@ -642,6 +708,16 @@ function ReportPageContent() {
           pdf.addImage(imgData, "JPEG", 0, position, pdfWidth, imgHeightInMm);
           heightLeft -= pdfHeight;
         }
+
+        files.push({
+          filename: buildExportFileName(
+            0,
+            routeType,
+            origin.lat !== "" ? `${origin.lat}_${origin.lng}` : undefined,
+            dest.lat !== "" ? `${dest.lat}_${dest.lng}` : undefined,
+          ),
+          blob: pdf.output("blob"),
+        });
       }
 
       // Info: (20260501 - Luphia) 還原 class
@@ -649,8 +725,20 @@ function ReportPageContent() {
         el.className = className;
       });
 
-      const timestamp = new Date().getTime();
-      pdf.save(`iSunFA_Logistics_Carbon_Report_${timestamp}.pdf`);
+      // Info: (20260724 - Tzuhan) 單檔直接下載;多方案打包 zip,嚴禁合併於同一份文件
+      if (files.length === 1) {
+        saveAs(files[0].blob, files[0].filename);
+      } else if (files.length > 1) {
+        const zip = new JSZip();
+        files.forEach((file) => {
+          zip.file(file.filename, file.blob);
+        });
+        const content = await zip.generateAsync({ type: "blob" });
+        saveAs(
+          content,
+          `iSunFA_Logistics_Carbon_Report_${new Date().getTime()}.zip`,
+        );
+      }
     } catch (err) {
       console.error("Failed to generate PDF", err);
       alert(
@@ -668,24 +756,35 @@ function ReportPageContent() {
           originalViewport || "width=device-width, initial-scale=1",
         );
       }
+      setExportProgress(null);
       setIsExporting(false);
     }
   };
 
-  // Info: (20260724 - Tzuhan) 運輸方式適用性收斂到單一決定論引擎(route_applicability.ts):
-  // Info: (20260724 - Tzuhan) 陸運沿用原「直線 fallback 非真實路徑」判斷;海空運新增「國內/短程屏蔽」規則(需求一)
-  const routeApplicability = useMemo(
-    () =>
-      plan
-        ? getRouteApplicability(plan)
-        : { land: true, sea: true, air: true, custom: false },
-    [plan],
-  );
-  const isLandAvailable = routeApplicability.land;
+  // Info: (20260724 - Tzuhan) 勾選選單確認 → 依目標範圍分派至批次或單筆匯出流程
+  const handleExportConfirm = async (selectedPlans: Set<RouteType>) => {
+    const target = exportModalTarget;
+    setExportModalTarget(null);
+    if (!target) return;
+
+    if (target.scope === "report") {
+      await executeReportExport(selectedPlans);
+      return;
+    }
+    if (!batchResults) return;
+    const indices =
+      target.scope === "single-route" && target.index !== undefined
+        ? [target.index]
+        : batchResults.map((_, index) => index);
+    await executeBatchExport(indices, selectedPlans);
+  };
 
   const isLocked = loading; // Info: (20260430 - Tzuhan) 只有在「運算中」才反灰，算完後重新開放輸入以便用戶微調再算一次
 
-  const handleLoadHistory = async (item: IHistoryItem) => {
+  // Info: (20260724 - Tzuhan) 回傳載入的資料型態("batch" | "single"),供匯出選單決定範圍;失敗回傳 false
+  const handleLoadHistory = async (
+    item: IHistoryItem,
+  ): Promise<"batch" | "single" | false> => {
     setLoading(true);
     setError(null);
     setPlan(null);
@@ -821,7 +920,7 @@ function ReportPageContent() {
             });
           }
         }, 100);
-        return true;
+        return isBatch && batchArray ? "batch" : "single";
       }
     } catch (err) {
       console.error("Failed to load history", err);
@@ -977,8 +1076,15 @@ function ReportPageContent() {
             <button
               onClick={async () => {
                 const loaded = await handleLoadHistory(row);
+                // Info: (20260724 - Tzuhan) 載入完成後開啟匯出勾選選單(需求二),不再直接匯出全部
                 if (loaded) {
-                  setTimeout(() => handleDownloadPDF(), 1000);
+                  setTimeout(
+                    () =>
+                      setExportModalTarget({
+                        scope: loaded === "batch" ? "batch" : "report",
+                      }),
+                    1000,
+                  );
                 }
               }}
               disabled={loading || isExporting || !isCompleted}
@@ -1053,10 +1159,32 @@ function ReportPageContent() {
             )}
           </p>
 
+          {/* Info: (20260724 - Tzuhan) 匯出進度:第 x / y 份獨立 PDF(需求二) */}
+          {exportProgress && (
+            <p className="mt-4 text-sm font-semibold text-gray-600">
+              {t(
+                "transportation_carbon_footprint_calculator.export_options.progress",
+                {
+                  current: exportProgress.current,
+                  total: exportProgress.total,
+                },
+              )}
+            </p>
+          )}
+
           <div className="mt-8 h-2 w-64 max-w-full overflow-hidden rounded-full border border-gray-200 bg-gray-100">
             <div className="h-full w-full origin-left scale-x-50 animate-[pulse_1.5s_ease-in-out_infinite] rounded-full bg-orange-500"></div>
           </div>
         </div>
+      )}
+
+      {/* Info: (20260724 - Tzuhan) 匯出勾選選單(需求二):可複選方案,每個方案產出獨立 PDF */}
+      {exportModalTarget && (
+        <ExportOptionsModal
+          availablePlans={exportAvailablePlans}
+          onConfirm={handleExportConfirm}
+          onClose={() => setExportModalTarget(null)}
+        />
       )}
 
       <div className="relative z-10 mx-auto w-full max-w-7xl flex-1 space-y-12">
@@ -1272,7 +1400,7 @@ function ReportPageContent() {
                     <MileageBatchResults
                       batchResults={batchResults}
                       onRecalculate={() => setBatchResults(null)}
-                      onDownload={handleDownloadPDF}
+                      onDownload={handleExportRequest}
                       isExporting={isExporting}
                       exportingIndex={exportingIndex}
                     />
@@ -1284,19 +1412,19 @@ function ReportPageContent() {
                 </div>
               )}
               {/* Info: (20260511 - Luphia) Render hidden batch items for PDF export sequentially to avoid WebGL context limits */}
+              {/* Info: (20260724 - Tzuhan) 需求二:以 (路線, 方案) 為渲染單位,key 強制 remount 以重新觸發 onReady */}
               {isExporting &&
                 batchResults &&
                 exportingIndex !== null &&
+                exportingPlanType !== null &&
                 batchResults[exportingIndex] && (
                   <div className="absolute top-[-9999px] left-[-9999px] flex flex-col opacity-0">
                     <BatchExportRenderer
+                      key={`${exportingIndex}-${exportingPlanType}`}
                       item={batchResults[exportingIndex]}
                       index={exportingIndex}
                       total={batchResults.length}
-                      selectedRoutes={
-                        batchSelectedRoutesMap[exportingIndex] ||
-                        new Set(["land", "sea", "air"])
-                      }
+                      selectedRoutes={new Set([exportingPlanType])}
                       onReady={handleMapsReady}
                     />
                   </div>

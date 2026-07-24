@@ -32,10 +32,8 @@ export interface IMileageBatchResult {
 export interface IMileageBatchResultsProps {
   batchResults: IMileageBatchResult[];
   onRecalculate: () => void;
-  onDownload: (
-    index?: number,
-    selectedOptions?: Record<number, Set<RouteType>>,
-  ) => void;
+  // Info: (20260724 - Tzuhan) 匯出範圍改由匯出勾選選單決定(需求二),不再傳遞畫面檢視狀態
+  onDownload: (index?: number) => void;
   isExporting: boolean;
   exportingIndex: number | null;
 }
@@ -121,7 +119,7 @@ export function MileageBatchResults({
               )}
             </button>
             <button
-              onClick={() => onDownload(undefined, selectedRoutesMap)}
+              onClick={() => onDownload(undefined)}
               disabled={isExporting}
               className="flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-orange-500 disabled:opacity-50"
             >
@@ -244,7 +242,7 @@ export function MileageBatchResults({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        onDownload(index, selectedRoutesMap);
+                        onDownload(index);
                       }}
                       disabled={isExporting}
                       className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50 hover:text-orange-600 disabled:opacity-50"

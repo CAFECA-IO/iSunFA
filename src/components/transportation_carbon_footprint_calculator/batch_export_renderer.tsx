@@ -5,7 +5,7 @@ import {
   PlanSection,
   RouteType,
 } from "@/components/transportation_carbon_footprint_calculator/plan_section";
-import { Truck, Ship, Plane } from "lucide-react";
+import { Truck, Ship, Plane, MapPin } from "lucide-react";
 import { IMileageBatchResult } from "@/components/transportation_carbon_footprint_calculator/mileage_batch_results";
 import { getRouteApplicability } from "@/lib/utils/route_applicability";
 
@@ -62,7 +62,8 @@ export function BatchExportRenderer({
   // Info: (20260724 - Tzuhan) 匯出內容與畫面顯示共用同一適用性引擎,確保 PDF 不出現不適用的方案(需求一)
   const applicability = getRouteApplicability(plan);
 
-  const routesToRender = (["land", "sea", "air"] as const).filter(
+  // Info: (20260724 - Tzuhan) 補上 custom 方案支援(原本被排除導致自訂聯運匯出空白 PDF)
+  const routesToRender = (["custom", "land", "sea", "air"] as const).filter(
     (type) => selectedRoutes.has(type) && applicability[type],
   );
 
@@ -71,7 +72,11 @@ export function BatchExportRenderer({
       ? t("transportation_carbon_footprint_calculator.pdf.mode_land")
       : mode === "sea"
         ? t("transportation_carbon_footprint_calculator.pdf.mode_sea")
-        : t("transportation_carbon_footprint_calculator.pdf.mode_air");
+        : mode === "air"
+          ? t("transportation_carbon_footprint_calculator.pdf.mode_air")
+          : t(
+              "transportation_carbon_footprint_calculator.plan_section.title_custom",
+            );
 
   return (
     <div id={`batch-report-item-${index}`} className="flex flex-col">
@@ -99,8 +104,10 @@ export function BatchExportRenderer({
                     <Truck className="h-6 w-6 text-orange-500" />
                   ) : type === "sea" ? (
                     <Ship className="h-6 w-6 text-emerald-500" />
-                  ) : (
+                  ) : type === "air" ? (
                     <Plane className="h-6 w-6 text-blue-500" />
+                  ) : (
+                    <MapPin className="h-6 w-6 text-purple-500" />
                   )}
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">

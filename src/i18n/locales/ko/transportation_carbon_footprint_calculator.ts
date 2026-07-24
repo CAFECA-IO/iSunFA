@@ -154,4 +154,17 @@ export const transportationCarbonFootprintCalculator = {
     dest: "도착지",
     label: "🟢 ESG 물류 탄소 발자국 추적 (Powered by MapLibre)",
   },
+  // Info: (20260724 - Tzuhan) 내보내기 선택 모달(요구사항 2)
+  export_options: {
+    title: "내보낼 플랜 선택",
+    description:
+      "내보낼 플랜 유형을 선택하세요. 이 경로에 적용 가능한 플랜만 표시됩니다.",
+    plan_land: "육상 운송만",
+    plan_sea: "해상 포함（해륙 복합운송）",
+    plan_air: "항공 포함（공륙 복합운송）",
+    plan_custom: "사용자 지정 복합운송",
+    split_hint: "각 플랜은 개별 PDF로 출력되며, 여러 파일은 ZIP으로 묶입니다.",
+    confirm: "내보내기",
+    progress: "보고서 생성 중 {{current}} / {{total}}...",
+  },
 };

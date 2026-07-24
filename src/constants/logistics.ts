@@ -28,3 +28,16 @@ export const EMISSION_FACTOR_SOURCES = {
  */
 export const MIN_SEA_LEG_DISTANCE_KM = 10;
 export const MIN_AIR_LEG_DISTANCE_KM = 100;
+
+/**
+ * Info: (20260724 - Tzuhan) 匯出方案類型 → PDF 檔名後綴(需求二:一份 PDF 一個方案,檔名可辨識)
+ * key 對齊 RouteType("land" | "sea" | "air" | "custom")
+ */
+export const EXPORT_PLAN_FILE_SUFFIX = {
+  land: "land_only",
+  sea: "sea_multimodal",
+  air: "air_multimodal",
+  custom: "custom_multimodal",
+} as const;
+
+export type ExportPlanRouteType = keyof typeof EXPORT_PLAN_FILE_SUFFIX;
