@@ -28,6 +28,40 @@ export enum VoucherSorting {
 }
 
 /**
+ * Info: (20260724 - Julian)
+ * 試算表 (Trial Balance) 報表排序選項。沿用 VoucherSorting 的 `field_direction` 慣例，
+ * 供 GET /trial_balance 的 `sorting` 查詢參數使用；預設以科目編號遞增 (CODE_ASC)。
+ */
+export enum TrialBalanceSorting {
+  CODE_ASC = "code_asc",
+  CODE_DESC = "code_desc",
+  BEGINNING_DEBIT_DESC = "beginning_debit_desc",
+  BEGINNING_DEBIT_ASC = "beginning_debit_asc",
+  BEGINNING_CREDIT_DESC = "beginning_credit_desc",
+  BEGINNING_CREDIT_ASC = "beginning_credit_asc",
+  MIDTERM_DEBIT_DESC = "midterm_debit_desc",
+  MIDTERM_DEBIT_ASC = "midterm_debit_asc",
+  MIDTERM_CREDIT_DESC = "midterm_credit_desc",
+  MIDTERM_CREDIT_ASC = "midterm_credit_asc",
+  ENDING_DEBIT_DESC = "ending_debit_desc",
+  ENDING_DEBIT_ASC = "ending_debit_asc",
+  ENDING_CREDIT_DESC = "ending_credit_desc",
+  ENDING_CREDIT_ASC = "ending_credit_asc",
+}
+
+/**
+ * Info: (20260724 - Julian)
+ * 分類帳 (Ledger) 報表排序選項。分類帳為逐筆明細並累計 running balance，
+ * 預設以科目編號 + 傳票日期遞增 (CODE_ASC) 以確保餘額累計順序正確。
+ */
+export enum LedgerSorting {
+  CODE_ASC = "code_asc",
+  CODE_DESC = "code_desc",
+  DATE_ASC = "date_asc",
+  DATE_DESC = "date_desc",
+}
+
+/**
  * Info: (20241104 - Murky)
  * @description this enum is for sort option in `FilterSection`
  */

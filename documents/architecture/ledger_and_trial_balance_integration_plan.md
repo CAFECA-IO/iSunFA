@@ -183,6 +183,29 @@ DeWT 認證 (getIdentityFromDeWT)
 
 ---
 
+## 10.5 Phase 0 對齊結論（2026-07-24，已實作）
+
+已完成研讀與常數建置，結論如下：
+
+**已建立**
+- `src/constants/sort.ts`：新增 `TrialBalanceSorting`、`LedgerSorting`（沿用 `VoucherSorting` 的 `field_direction` 慣例）。
+- `src/constants/ledger.ts`：新增 `LabelType`（GENERAL/DETAILED/ALL）。
+- 兩檔 ESLint 零警告。
+
+**慣例確認**
+- 報表產生器為 `src/lib/report/*_generator.ts` 純函式；route 以 `voucherRepo.getVouchersByFilter({ accountBookId, hideDeleted:true, ... })` 取資料後呼叫產生器。
+- 分類/上捲用 `AccountUtil.isDescendantOf(targetCode, rootCode, dictionary)`（`@/lib/utils/account_util`），其沿 `parentCode` **向上遍歷父指標**（非字串前綴），完全合規。
+- COA 字典：`ACCOUNTS[country]`（`@/constants/accounts`，如 `TW_ACCOUNTS: IAccount[]`，欄位 `code/name/type/level/parentCode/isDebit`）。租戶自訂科目需以 `accountingAccountRepo.getCustomAccountsByAccountBookId` 合併進字典，子科目才會納入樹。
+- `SystemAccountNodes` 已備 資產/負債/權益/收入/成本/費用 等根節點，對試算表分類充分；試算表上捲主要依賴 COA 字典 + `parentCode` adjacency（皆已存在），**無需新增根節點**。若未來分組需缺項，補 metadata，不得以前綴替代。
+
+**設計修正（影響階段 2/3，需納入）**
+1. `IVoucherLineUI`（`{ id, accountingCode, accounting, particular, amount, isDebit }`）**不帶** 傳票日期與傳票識別；平坦化 `lineItems`（資產負債表用法）會遺失傳票脈絡。故 **試算表與分類帳的產生器須接收 `IVoucher[]`（或 {voucher, line} 配對）**，以取得 `voucher.tradingDate`（期間切割 / running balance 排序）與傳票識別。此點與 §3 資料流不同，以本結論為準。
+2. Schema 無 `Voucher.no`（傳票編號）欄位；分類帳 CSV「傳票編號」需以 `voucher.id` 或衍生流水號呈現（**決策點**，建議先用 `voucher.id`）。
+3. `IVoucherLineUI.amount` 為 `number | bigint | string` 聯集；所有讀取一律 `MoneyUtil.toDecimal()` 過水，禁止直接運算。
+4. COA 字典選擇依 `accountBook.currency` / 國別對應 `ACCOUNTS`；查詢仍以 `accountBookId` 隔離。
+
+---
+
 ## 10. 驗證計劃
 
 - **單元**：三段切割、樹狀上捲、running balance、`calculateTotals`、`MoneyUtil` 精度、邊界科目前綴陷阱、含懸記平衡。
