@@ -7,6 +7,7 @@ import {
 } from "@/components/transportation_carbon_footprint_calculator/plan_section";
 import { Truck, Ship, Plane } from "lucide-react";
 import { IMileageBatchResult } from "@/components/transportation_carbon_footprint_calculator/mileage_batch_results";
+import { getRouteApplicability } from "@/lib/utils/route_applicability";
 
 interface IBatchExportRendererProps {
   item: IMileageBatchResult;
@@ -33,7 +34,9 @@ export function BatchExportRenderer({
     return () => clearTimeout(timer);
   }, [onReady]);
 
-  const formatLocation = (loc: string | { lat: number; lng: number; name?: string }) => {
+  const formatLocation = (
+    loc: string | { lat: number; lng: number; name?: string },
+  ) => {
     if (typeof loc === "string") return loc;
     if (loc && typeof loc === "object" && "lat" in loc && "lng" in loc) {
       if (loc.name) {
@@ -56,21 +59,11 @@ export function BatchExportRenderer({
     );
   }
 
-  const isLandAvailable = !!plan.comparisonData?.plans?.landOnly?.success;
-  const isSeaAvailable =
-    !!plan.comparisonData?.plans?.sea_multimodal?.sea_port_to_port?.success;
-  const isAirAvailable =
-    !!plan.comparisonData?.plans?.air_multimodal?.air_airport_to_airport
-      ?.success;
+  // Info: (20260724 - Tzuhan) 匯出內容與畫面顯示共用同一適用性引擎,確保 PDF 不出現不適用的方案(需求一)
+  const applicability = getRouteApplicability(plan);
 
-  const routesToRender = ["land", "sea", "air"].filter(
-    (type) =>
-      selectedRoutes.has(type as RouteType) &&
-      (type === "land"
-        ? isLandAvailable
-        : type === "sea"
-          ? isSeaAvailable
-          : isAirAvailable),
+  const routesToRender = (["land", "sea", "air"] as const).filter(
+    (type) => selectedRoutes.has(type) && applicability[type],
   );
 
   const getModeName = (mode: string) =>

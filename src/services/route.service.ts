@@ -12,6 +12,7 @@ import {
 import { calculateSeaPath } from "@/lib/utils/route.sea";
 import { calculateAirPath } from "@/lib/utils/route.air";
 import { ILogisticsPlan, ITransportSegment } from "@/interfaces/logistics";
+import { getRouteApplicability } from "@/lib/utils/route_applicability";
 import { MoneyUtil } from "@/lib/utils/money";
 
 function calculateDistanceKm(
@@ -417,6 +418,14 @@ export async function calculateLogisticsPlan(
         },
       },
     };
+
+    // Info: (20260724 - Tzuhan) 決定論適用性判斷:陸運可直達且更短(如國內路線)時屏蔽海運/空運方案
+    // Info: (20260724 - Tzuhan) 旗標為單一真實來源,前端據此隱藏選項;判斷規則見 route_applicability.ts
+    const applicability = getRouteApplicability(finalPlan);
+    finalPlan.comparisonData.plans.sea_multimodal.isApplicable =
+      applicability.sea;
+    finalPlan.comparisonData.plans.air_multimodal.isApplicable =
+      applicability.air;
 
     return finalPlan;
   } catch (error) {
