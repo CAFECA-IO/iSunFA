@@ -52,6 +52,11 @@ import {
   captureElementToPdf,
 } from "@/lib/utils/pdf_export";
 import {
+  buildBatchSummaryCsv,
+  buildPlanFromLegacyBatchItem,
+  type ILegacyBatchItem,
+} from "@/lib/utils/logistics_report";
+import {
   useOrderTransaction,
   IOrderPayload,
 } from "@/hooks/use_order_transaction";
@@ -513,37 +518,23 @@ function ReportPageContent() {
         zip.file(file.filename, file.blob);
       });
 
-      // Info: (20260724 - Tzuhan) \u6574\u6279\u532F\u51FA\u9644 summary.csv;Report Files \u6B04\u5217\u51FA\u8A72\u8DEF\u7DDA\u7684\u6240\u6709\u7368\u7ACB PDF
-      // ToDo: (20260724 - Tzuhan) CSV \u6B04\u4F4D\u6309\u65B9\u6848\u5206\u5217\u8207\u9010\u6BB5\u5C55\u958B\u7531 issue 03 \u8655\u7406
+      // Info: (20260724 - Tzuhan) \u9700\u6C42\u4E09:summary.csv \u6309\u65B9\u6848\u5206\u6B04\u3001\u9010\u6BB5\u5C55\u958B,\u7531 logistics_report.ts \u7D14\u51FD\u6578\u751F\u6210
       if (indices.length > 1) {
-        const csvRows = [
-          `\uFEFFOrigin,Destination,Land Distance (km),Land Emission (kg CO2e),Sea Distance (km),Sea Emission (kg CO2e),Air Distance (km),Air Emission (kg CO2e),Report Files`,
-        ];
-        indices.forEach((i) => {
-          const item = batchResults[i];
-          if (!item) return;
-          const landPlan = item.plan?.comparisonData?.plans?.landOnly;
-          const seaPlan = item.plan?.comparisonData?.plans?.sea_multimodal;
-          const airPlan = item.plan?.comparisonData?.plans?.air_multimodal;
-
-          const seaDist =
-            (seaPlan?.land_origin_to_port?.distanceKm || 0) +
-            (seaPlan?.sea_port_to_port?.distanceKm || 0) +
-            (seaPlan?.land_port_to_dest?.distanceKm || 0);
-          const airDist =
-            (airPlan?.land_origin_to_airport?.distanceKm || 0) +
-            (airPlan?.air_airport_to_airport?.distanceKm || 0) +
-            (airPlan?.land_airport_to_dest?.distanceKm || 0);
-
-          const routeFiles = files
-            .filter((file) => file.index === i)
-            .map((file) => file.filename)
-            .join("; ");
-          csvRows.push(
-            `${item.origin},${item.dest},${landPlan?.distanceKm || 0},${landPlan?.co2eKg || 0},${seaDist},${seaPlan?.total_co2eKg || 0},${airDist},${airPlan?.total_co2eKg || 0},${routeFiles}`,
-          );
+        const filesByRouteIndex = new Map<number, string[]>();
+        files.forEach((file) => {
+          const list = filesByRouteIndex.get(file.index) || [];
+          list.push(file.filename);
+          filesByRouteIndex.set(file.index, list);
         });
-        zip.file("summary.csv", csvRows.join("\n"));
+        zip.file(
+          "summary.csv",
+          buildBatchSummaryCsv(
+            batchResults,
+            indices,
+            filesByRouteIndex,
+            weightKg !== "" ? weightKg : 1000,
+          ),
+        );
       }
 
       const content = await zip.generateAsync({ type: "blob" });
@@ -814,92 +805,17 @@ function ReportPageContent() {
         }
 
         if (isBatch && batchArray) {
-          batchArray = batchArray.map(
-            (
-              bItem: IMileageBatchResult & {
-                distanceKm?: number;
-                landDistanceKm?: number;
-                seaDistanceKm?: number;
-                airDistanceKm?: number;
-                landGeometry?: string;
-                routeGeometry?: string;
-                seaGeometry?: string;
-                airGeometry?: string;
-                emissions?: string;
-              },
-            ) => {
-              if (!bItem.plan) {
-                const parseGeo = (geoStr: string | null | undefined) => {
-                  if (!geoStr) return null;
-                  try {
-                    return typeof geoStr === "string"
-                      ? JSON.parse(geoStr)
-                      : geoStr;
-                  } catch {
-                    return null;
-                  }
-                };
-
-                const weight = Number(item.weightKg) || 1000;
-                const weightTons = weight / 1000;
-
-                const landDist = bItem.landDistanceKm || bItem.distanceKm || 0;
-                const seaDist = bItem.seaDistanceKm || 0;
-                const airDist = bItem.airDistanceKm || 0;
-
-                const landCo2e = (landDist * 0.11289 * weightTons).toFixed(2);
-                const seaCo2e = (seaDist * 0.01614 * weightTons).toFixed(2);
-                const airCo2e = (airDist * 0.50422 * weightTons).toFixed(2);
-
-                bItem.plan = {
-                  comparisonData: {
-                    success: true,
-                    plans: {
-                      landOnly: {
-                        success: !!landDist && !seaDist && !airDist,
-                        distanceKm: landDist,
-                        co2eKg: landCo2e,
-                        geometry: parseGeo(
-                          bItem.landGeometry || bItem.routeGeometry,
-                        ),
-                      },
-                      sea_multimodal: {
-                        land_origin_to_port: { success: false, geometry: null },
-                        sea_port_to_port: {
-                          success: !!seaDist,
-                          distanceKm: seaDist,
-                          geometry: parseGeo(bItem.seaGeometry),
-                        },
-                        land_port_to_dest: { success: false, geometry: null },
-                        total_co2eKg: (
-                          Number(landCo2e) + Number(seaCo2e)
-                        ).toFixed(2),
-                      },
-                      air_multimodal: {
-                        land_origin_to_airport: {
-                          success: false,
-                          geometry: null,
-                        },
-                        air_airport_to_airport: {
-                          success: !!airDist,
-                          distanceKm: airDist,
-                          geometry: parseGeo(bItem.airGeometry),
-                        },
-                        land_airport_to_dest: {
-                          success: false,
-                          geometry: null,
-                        },
-                        total_co2eKg: (
-                          Number(landCo2e) + Number(airCo2e)
-                        ).toFixed(2),
-                      },
-                    },
-                  },
-                } as unknown as ILogisticsPlan;
-              }
-              return bItem;
-            },
-          );
+          // Info: (20260724 - Tzuhan) 需求三:legacy 重建抽至 logistics_report.ts 純函數,
+          // Info: (20260724 - Tzuhan) 改用 Decimal 與 EMISSION_FACTORS 單一來源(修正舊版 0.01614/0.50422 錯誤係數)
+          batchArray = batchArray.map((bItem: ILegacyBatchItem) => {
+            if (!bItem.plan) {
+              bItem.plan = buildPlanFromLegacyBatchItem(
+                bItem,
+                item.weightKg || 1000,
+              );
+            }
+            return bItem;
+          });
           setBatchResults(batchArray);
           setPlan(null);
           setActiveTab("mileage");
