@@ -257,6 +257,22 @@ DeWT 認證 (getIdentityFromDeWT)
 
 ---
 
+## 10.9 Phase 4 完成紀錄（2026-07-24，CSV 匯出）
+
+**已建立**
+- `src/lib/report/trial_balance_csv.ts`：`buildTrialBalanceCsv(trialBalance)` 純函式，樹狀科目深度優先攤平 + 合計列，8 欄中英雙語表頭。
+- `src/lib/report/ledger_csv.ts`：`buildLedgerCsv(ledger)` 純函式，9 欄 + 合計列，日期以 `timestampToString().dateWithDash` 轉 YYYY-MM-DD。
+- `.../trial_balance/export/route.ts`、`.../ledger/export/route.ts`：`GET`，比照既有 voucher/export（`fileOk` + UTF-8 BOM `﻿`），全量匯出（不分頁），資料源與權限比照清單端點。
+- CSV 欄位以 RFC 4180 雙引號包夾、內部 `"` 跳脫為 `""`（與 `export.service.ts` 一致）。
+
+**驗證**
+- ESLint 零警告；`tsc --noEmit` 於新檔零錯誤。
+- 離線 harness 驗證 8 項全數 PASS：TB 8 欄表頭 / 父子攤平 / 合計列 / 引號跳脫；Ledger 9 欄 / 日期格式 / 含逗號欄位加引號 / 合計列。
+
+**待辦**：前端（階段 6）。CSV 目前以 `GET` 提供（與 voucher/export 一致）；若日後需大量欄位選擇，再比照 export.service 擴充。
+
+---
+
 ## 10. 驗證計劃
 
 - **單元**：三段切割、樹狀上捲、running balance、`calculateTotals`、`MoneyUtil` 精度、邊界科目前綴陷阱、含懸記平衡。
