@@ -11,9 +11,11 @@ interface IColorPickerProps {
   onChange: (hex: string) => void;
 }
 
-// Info: (20260722 - Julian)
-// 簡易選色盤：預設調色盤色票 + 原生色票輸入供自訂 HEX。
-// 受控元件，value 為目前 HEX（空字串代表尚未選色），onChange 回傳選定 HEX。
+/**
+ * Info: (20260722 - Julian)
+ * 簡易選色盤：預設調色盤色票 + 原生色票輸入供自訂 HEX。
+ * 受控元件，value 為目前 HEX（空字串代表尚未選色），onChange 回傳選定 HEX。
+ */
 const ColorPicker: FC<IColorPickerProps> = ({
   colorOptions,
   value,

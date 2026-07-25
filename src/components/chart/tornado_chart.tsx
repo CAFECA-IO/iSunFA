@@ -195,8 +195,10 @@ const TornadoChart: FC<ITornadoChartProps> = ({ ast }) => {
           const loX = sx(bar.lo);
           const hiX = sx(bar.hi);
 
-          // Info: (20260723 - Julian) 以基準切分區間：低於基準段用 colorLeft、高於基準段用 colorRight
-          // 以繪圖座標比較（避免 baseline 可能為 undefined 的型別問題）
+          /**
+           * Info: (20260723 - Julian) 以基準切分區間：低於基準段用 colorLeft、高於基準段用 colorRight
+           * 以繪圖座標比較（避免 baseline 可能為 undefined 的型別問題）
+           */
           const segments: { x: number; w: number; fill: string }[] = [];
           if (hasBaseline && loX < baseX && baseX < hiX) {
             segments.push({ x: loX, w: baseX - loX, fill: colorLeft });

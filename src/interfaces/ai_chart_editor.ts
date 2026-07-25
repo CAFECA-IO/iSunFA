@@ -82,8 +82,10 @@ export interface IChartEditorAdapter<TAction extends IChartEditorAction> {
     signal: AbortSignal,
   ) => Promise<string>;
 
-  // Info: (20260721 - Julian) 左欄 / 右欄元件（以 JSX element 渲染，非在 render 期間呼叫函式，
-  // 避免傳入讀取 ref 的 handler 觸發 react-hooks/refs 誤判）。可包既有的 mermaid / custom panel。
+  /**
+   * Info: (20260721 - Julian) 左欄 / 右欄元件（以 JSX element 渲染，非在 render 期間呼叫函式，
+   * 避免傳入讀取 ref 的 handler 觸發 react-hooks/refs 誤判）。可包既有的 mermaid / custom panel。
+   */
   ControlPanel: FC<IChartEditorControlContext<TAction>>;
   PreviewPanel: FC<IChartEditorPreviewContext>;
 
