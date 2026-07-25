@@ -104,24 +104,49 @@ Deploy carbon inventory, 3, 8, Governance
 Supplier audit, 7, 4, Supply chain
 \`\`\`
 
-## custom-tornado (paired two-series comparison / butterfly)
-- Config: title; unit (both optional).
-- OPTIONAL first data row is a header naming the two series: category, leftSeriesName, rightSeriesName
+## custom-tornado (two modes: comparison butterfly OR sensitivity)
+- Config keys (all optional, case-insensitive): title; unit; mode; baseline.
+- mode: exactly "compare" or "sensitivity". If omitted, "compare" is assumed. Any other value is rejected.
+- baseline: a single number. Only meaningful in sensitivity mode; ignored in compare mode.
+- OPTIONAL first data row is a header naming the two series: category, leftName, rightName
   (auto-detected: a first row whose 2nd and 3rd fields are NON-numeric is treated as the header).
-  Series names must be NON-numeric (use "Prices (2019)", "FY2019", "2019年" — NOT a bare "2019").
-  If you omit the header, no legend is drawn (series names are simply not shown).
-- Data rows: category, leftValue, rightValue  — category (label) is REQUIRED; each value is that
-  series' own magnitude (drawn from the center line outward: left series left, right series right).
-- Rows are sorted by (leftValue + rightValue) descending by the renderer, so the longest bar appears on top.
+  Series names must be NON-numeric (use "FY2019" / "2019年" — NOT a bare "2019").
+- Data rows: category, valueA, valueB — category (label) is REQUIRED; valueA/valueB are numbers.
+  The renderer sorts rows itself; do NOT pre-sort. Keep every number sourced from the data.
+
+### mode: compare (default) — paired two-series butterfly
+- valueA = left-series magnitude, valueB = right-series magnitude; bars grow from the center line
+  outward (left series to the left, right series to the right). The center line only divides the two series.
 - The two colors mean the two SERIES (e.g. two periods), NOT above/below a baseline.
-- Rows are sorted by (left+right) descending by the renderer; do not pre-sort.
+- Renderer sorts rows by (valueA + valueB) descending; header, if omitted, means no legend.
 Body example:
+mode: compare
 title: Price by Item, 2019 vs 2020
 unit: NTD
 Item, Prices (2019), Prices (2020)
 Item F, 9000, 8800
 Item D, 6800, 6500
-Item E, 6000, 5900
+
+### mode: sensitivity — sensitivity / uncertainty tornado
+- Purpose: show how an output (e.g. base-case NPV) varies when each factor swings pessimistic vs optimistic.
+- REQUIRES "baseline: <number>" (the base-case output value).
+- valueA / valueB are the two RESULT values under that factor's swing (pessimistic and optimistic OUTCOMES),
+  on the SAME absolute scale as baseline. For a meaningful chart they should BRACKET the baseline (one below,
+  one above) — but only use values present in the data; NEVER fabricate or adjust numbers to force bracketing.
+  If the source only has ~magnitudes that do not relate to a base-case value, use compare mode instead.
+- Renderer: draws each bar from min(valueA,valueB) to max(valueA,valueB) on an absolute value axis, draws a
+  vertical reference line at baseline, colors the below-baseline and above-baseline segments in two preset colors,
+  and sorts rows by range width |valueA - valueB| descending. Legend reads "below/above baseline"
+  (the series-name header is optional here and is not shown in the legend).
+Body example:
+mode: sensitivity
+title: NPV Sensitivity
+unit: NTD
+baseline: 10000000
+Factor, Pessimistic, Optimistic
+Sales price, 8500000, 12100000
+Raw material cost, 8800000, 11200000
+Discount rate, 9200000, 10600000
 
 ## custom-histogram (pre-binned distribution)
 - Config: title; xAxis; yAxis (all optional string labels); trend (optional; only value: normal).

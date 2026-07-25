@@ -83,7 +83,7 @@ const CategorySubjectItem = ({
           >
             {account.code}
           </div>
-          <div className="flex flex-1 items-start justify-between gap-1 overflow-hidden">
+          <div className="flex flex-1 items-center justify-between gap-1 overflow-hidden lg:items-start">
             <div className="flex flex-1 flex-col overflow-hidden">
               <div className="text-sm leading-relaxed font-bold wrap-break-word text-slate-700">
                 {account.name}
@@ -96,15 +96,14 @@ const CategorySubjectItem = ({
             </div>
             {hasChildren && (
               <ChevronRight
-                size={16}
-                className={`mt-1 shrink-0 text-slate-300 transition-all ${
+                className={`size-6 shrink-0 text-slate-700 transition-all lg:size-4 lg:text-slate-300 ${
                   isSelected ? "translate-x-1 text-orange-500" : ""
                 }`}
               />
             )}
           </div>
           {/* Info: (20260706 - Julian) 懸停動作，僅在自訂科目顯示 */}
-          <div className="absolute top-2 right-2 flex items-center gap-1 opacity-100 transition-opacity group-hover:opacity-100 lg:opacity-0">
+          <div className="relative flex items-center gap-1 opacity-100 transition-opacity group-hover:opacity-100 lg:absolute lg:top-2 lg:right-2 lg:opacity-0">
             <button
               type="button"
               onClick={(e) => {
@@ -173,7 +172,7 @@ const SubAccountItem = ({
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
-      className={`group relative flex cursor-pointer items-center gap-3 rounded-xl border bg-white px-4 py-3 text-left shadow-sm transition-all outline-none focus-visible:ring-2 focus-visible:ring-orange-500 md:px-6 ${
+      className={`group relative flex cursor-pointer items-center gap-1 rounded-xl border bg-white px-4 py-3 text-left shadow-sm transition-all outline-none focus-visible:ring-2 focus-visible:ring-orange-500 md:px-6 lg:gap-3 ${
         isCustom ? "border-dashed border-orange-300" : "border-slate-100"
       }`}
       style={{ marginLeft: `${offset}px` }}
@@ -183,15 +182,15 @@ const SubAccountItem = ({
           {t("voucher.account.custom")}
         </span>
       )}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col items-center gap-x-2 gap-y-1">
         <div
-          className={`flex shrink-0 items-center justify-center rounded-lg border px-3 py-1.5 text-sm font-bold md:text-base ${colors.bg} ${colors.text} ${colors.border}`}
+          className={`flex shrink-0 items-center justify-center rounded-md border px-2 py-0.5 text-[10px] font-bold md:text-base lg:rounded-lg lg:px-3 lg:py-1.5 lg:text-sm ${colors.bg} ${colors.text} ${colors.border}`}
         >
           {code}
         </div>
         <div
           // Info: (20260716 - Julian) 手機版 Type
-          className={`block rounded-md border px-2 py-0.5 text-center text-[10px] font-medium lg:hidden ${colors.bg} ${colors.text} ${colors.border}`}
+          className={`block rounded-md border px-1.5 py-0.5 text-center text-[10px] font-medium lg:hidden ${colors.bg} ${colors.text} ${colors.border}`}
         >
           {type}
         </div>
@@ -202,10 +201,10 @@ const SubAccountItem = ({
         <div className="absolute top-0 bottom-0 -left-1 w-2 rounded-l-xl bg-orange-400" />
       )}
 
-      <div className="flex flex-1 items-center justify-between gap-2 overflow-hidden">
+      <div className="flex flex-1 items-center justify-between gap-2 lg:overflow-hidden">
         <div className="flex flex-col items-start gap-1">
           <div className="flex items-center gap-2">
-            <p className="text-base font-bold whitespace-normal text-slate-700">
+            <p className="text-sm font-bold whitespace-normal text-slate-700 lg:text-base">
               {name}
             </p>
             <div
