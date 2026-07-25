@@ -52,6 +52,10 @@ export const features = {
       title: "Carbon Inventory",
       desc: "Accurately converts activity data into carbon emissions to manage compliance risks and costs.",
     },
+    carbon_chatbot: {
+      title: "Smart GHG Inventory",
+      desc: "Chat with an AI carbon accountant to complete your GHG inventory and auto-generate a compliant carbon report.",
+    },
     pos: {
       title: "Smart POS",
       desc: "Real-time integration of sales and collection data, automating accounting entries and providing operational analysis to improve checkout efficiency and accuracy.",

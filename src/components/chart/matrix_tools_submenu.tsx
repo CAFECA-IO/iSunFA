@@ -91,15 +91,6 @@ const MATRIX_TOOLS: IToolItem[] = [
   },
 ];
 
-/**
- * ToDo: (20260722 - Luphia) 修正 i18n：本檔目前所有 t("中文") 呼叫都把中文字面量當成 key，
- * getNestedValue 找不到對應路徑便原樣回傳，導致 5 種語系（en/ja/ko/zh_cn/zh_tw）全部只顯示中文。
- * 修正步驟：
- * 1. 在 src/i18n/locales/{en,ja,ko,zh_cn,zh_tw}/chart.ts 新增 chart.mermaid.ai_editor.matrix.* 系列 key（比照 sankey.*）。
- * 2. 本檔所有 t("中文")（工具名、面板標題、欄位標籤、按鈕文字）改用正式 key。
- * 3. 未經 t() 的硬編字串（placeholder「請輸入項目標題」「可留白」「自訂顏色」與純文字提示「請選擇分組」「分組內暫無選擇項目」等）一併改用 t() + key。
- * 4. 下方 MATRIX_TOOL_TRANSLATION_KEYS 的值改為 key 字串（名稱亦應正名，非中文標籤）。
- */
 const MATRIX_TOOL_TRANSLATION_KEYS: Record<MatrixTools, string> = {
   [MatrixTools.ADD_ITEM]: `${MATRIX_I18N_PREFIX}.add_item`,
   [MatrixTools.EDIT_ITEM]: `${MATRIX_I18N_PREFIX}.edit_item`,
@@ -319,17 +310,13 @@ const EditItemPanel: FC<IBasePanelProps> = ({
   // Info: (20260721 - Julian) 尚未選擇項目
   const isUnselected = !selectedItem;
 
-  // Info: (20260721 - Julian) 尚未變更表單
-  /**
-   * ToDo: (20260722 - Luphia) 未分組項目 group 為 undefined，selectedGroup 初始為 ""，
-   * "" === undefined 恆為 false，導致剛選取的未分組項目被誤判為「已變更」而解鎖提交；兩側需正規化後再比對。
-   */
+  // Info: (20260722 - Luphia) 尚未變更表單；未分組項目 group 為 undefined，正規化為空字串再比對，避免誤判為已變更
   const isUnchanged =
     !!selectedItem &&
     titleInput.trim() === selectedItem.label &&
     xCoord === selectedItem.x &&
     yCoord === selectedItem.y &&
-    selectedGroup.trim() === selectedItem.group?.toString();
+    selectedGroup.trim() === (selectedItem.group ?? "");
 
   // Info: (20260721 - Julian) 鎖定提交按鈕
   const isSubmitDisabled =
@@ -478,7 +465,6 @@ const EditItemPanel: FC<IBasePanelProps> = ({
               placeholder={t(`${MATRIX_I18N_PREFIX}.new_group_placeholder`)!}
             />
           ) : (
-            // ToDo: (20260722 - Luphia) id="addLinkFromLabel" 為 Sankey 複製殘留，與 label htmlFor="editItemGroupLabel" 不符，且與 AddItemPanel 重複；應改為對應的唯一 id
             <select
               id="editItemGroupLabel"
               value={selectedGroup}

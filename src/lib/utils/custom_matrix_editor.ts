@@ -21,16 +21,6 @@ import { parseCustomChart } from "@/lib/utils/custom_chart_parser";
  */
 
 /**
- * ToDo: (20260722 - Luphia) DELETE_ITEM 以 splice 移除資料列會位移其後所有 lineIndex；
- * 當呼叫端（modal）以固定的原始 lineIndex 連續套用多個動作時，刪除後的編輯/刪除會打到錯誤資料列。
- * 應在此明確約定套用順序（如刪除延後），或改以穩定 id 定位，並於呼叫端配合以 modifiedRaw 重新解析。
- */
-/**
- * ToDo: (20260722 - Luphia) parseMatrixItems / applyMatrixAction / buildAxisValue / formatCsvField 皆為純決定論函式，
- * 正是專案護欄哲學該覆蓋的目標；請補上單元測試，含 parse→edit→parse round-trip 與 CSV 逗號/引號跳脫邊界。
- */
-
-/**
  * Info: (20260721 - Julian)
  * 矩陣圖的設定列 key（對應 custom_chart_parser 的 CONFIG_KEYS_BY_TYPE[MATRIX]）；
  * 以列舉值組成，避免魔法字串。用來在編輯時區分「設定列」與「資料列」。
@@ -251,124 +241,166 @@ const setConfigLine = (
 };
 
 /**
- * Info: (20260721 - Julian)
- * 將單一結構化動作決定論地套用到矩陣圖 DSL 字串，回傳新字串（不變更輸入）。
- * 未知類型或定位失敗時原樣返回，確保 render 不崩潰（Fail Safe）。
+ * Info: (20260725 - Luphia)
+ * 將「一批」結構化動作決定論地套用到矩陣圖 DSL 字串，回傳新字串（不變更輸入）。
+ *
+ * 穩定索引策略（解決 stacked-actions 的 lineIndex 位移問題）：
+ * 動作攜帶的 lineIndex／memberLineIndexes 皆以「原始 raw」的行號為準。若逐一 splice 刪除，
+ * 會使後續動作的行號失準（先刪後編會打到錯誤資料列）。故本函式在整批套用期間「不 splice 原始行」：
+ *   1. 資料列動作：編輯就地覆寫、新增附加於尾端、刪除僅標記 tombstone；原始行號整批維持不變。
+ *   2. 全部資料列動作完成後，才一次實體移除被標記刪除的原始行。
+ *   3. 設定列動作（軸線／象限底色）最後才套用：僅影響設定列，且可能插入新設定列，
+ *      延後到資料列索引不再被引用之後，避免插入造成的位移。
+ * 資料列與設定列互不重疊，重排兩者相對順序不影響結果，故此策略為決定論且與單一動作語意一致。
+ * 定位失敗或已刪除的目標一律略過（Fail Safe），確保 render 不崩潰。
  */
-export const applyMatrixAction = (
+export const applyMatrixActions = (
   raw: string,
-  action: IMatrixAction,
+  actions: readonly IMatrixAction[],
 ): string => {
   const lines = raw.split("\n");
+  const originalLength = lines.length;
+  // Info: (20260725 - Luphia) 被標記刪除的「原始行號」集合；套用期間不 splice，維持索引穩定
+  const deleted = new Set<number>();
+  // Info: (20260725 - Luphia) 設定列動作延後套用（見上方策略第 3 點）
+  const configActions: IMatrixAction[] = [];
 
-  switch (action.type) {
-    case MatrixActionType.ADD_ITEM: {
-      // Info: (20260721 - Julian) 附加到最後，避免影響既有資料列的 lineIndex
-      const { label, x, y, group } = action.payload;
-      lines.push(buildMatrixDataLine(label, x, y, group));
-      break;
+  // Info: (20260725 - Luphia) 原始行號 idx 是否可作為資料列編輯／刪除目標（在原始範圍內、未刪除、確為資料列）
+  const isTargetableDataLine = (idx: number): boolean =>
+    Number.isInteger(idx) &&
+    idx >= 0 &&
+    idx < originalLength &&
+    !deleted.has(idx) &&
+    getMatrixLineFields(lines[idx]) !== null;
+
+  actions.forEach((action) => {
+    switch (action.type) {
+      case MatrixActionType.ADD_ITEM: {
+        // Info: (20260721 - Julian) 附加到尾端，附加行不佔用原始行號，不影響既有 lineIndex
+        const { label, x, y, group } = action.payload;
+        lines.push(buildMatrixDataLine(label, x, y, group));
+        break;
+      }
+
+      case MatrixActionType.EDIT_ITEM: {
+        const { lineIndex, label, x, y, group } = action.payload;
+        if (!isTargetableDataLine(lineIndex)) break;
+        const fields = getMatrixLineFields(lines[lineIndex])!;
+        // Info: (20260721 - Julian) 群組未變才保留原顏色；改群組時捨棄顏色，讓其套用新群組的顏色
+        const prevGroup = fields[3]?.trim() || undefined;
+        const prevColor = fields[4]?.trim() || undefined;
+        const color = group && group === prevGroup ? prevColor : undefined;
+        lines[lineIndex] = buildMatrixDataLine(label, x, y, group, color);
+        break;
+      }
+
+      case MatrixActionType.EDIT_GROUP: {
+        /**
+         * Info: (20260721 - Julian) 一次套用成員組成與顏色：
+         * - 成員列：設群組為 group，並套用顏色（有提供 color 則統一；否則沿用原屬此群組時的既有顏色）
+         * - 原屬此群組但不在成員清單者：移出群組（清除群組與顏色，成為未分組點）
+         * - 其餘資料列不動
+         * memberLineIndexes 以原始行號為準，故僅巡覽原始行（附加行不參與分組編輯）。
+         */
+        const { group, memberLineIndexes, color } = action.payload;
+        if (!group) break;
+        const memberSet = new Set(memberLineIndexes);
+        for (let idx = 0; idx < originalLength; idx += 1) {
+          if (!deleted.has(idx)) {
+            const fields = getMatrixLineFields(lines[idx]);
+            if (fields) {
+              const curGroup = fields[3]?.trim() || undefined;
+              const label = fields[0];
+              const x = Number(fields[1]);
+              const y = Number(fields[2]);
+              if (memberSet.has(idx)) {
+                const keptColor =
+                  curGroup === group
+                    ? fields[4]?.trim() || undefined
+                    : undefined;
+                const rowColor =
+                  color && color.trim() !== "" ? color : keptColor;
+                lines[idx] = buildMatrixDataLine(label, x, y, group, rowColor);
+              } else if (curGroup === group) {
+                // Info: (20260721 - Julian) 移出群組 → 取消分組（連同顏色一併清除）
+                lines[idx] = buildMatrixDataLine(label, x, y);
+              }
+            }
+          }
+        }
+        break;
+      }
+
+      case MatrixActionType.DELETE_ITEM: {
+        const { lineIndex, group } = action.payload;
+
+        // Info: (20260721 - Julian) 刪除單一項目（以 lineIndex 定位；0 為合法行號）；僅標記，不 splice
+        if (lineIndex !== undefined && isTargetableDataLine(lineIndex)) {
+          deleted.add(lineIndex);
+        }
+
+        // Info: (20260721 - Julian) 刪除整個分組：標記該分組所有資料列
+        if (group) {
+          for (let i = 0; i < originalLength; i += 1) {
+            if (!deleted.has(i)) {
+              const fields = getMatrixLineFields(lines[i]);
+              if (fields && (fields[3]?.trim() || "") === group) {
+                deleted.add(i);
+              }
+            }
+          }
+        }
+
+        break;
+      }
+
+      case MatrixActionType.EDIT_AXIS:
+      case MatrixActionType.CHANGE_QUADRANT_COLOR: {
+        // Info: (20260725 - Luphia) 設定列動作延後套用
+        configActions.push(action);
+        break;
+      }
+
+      default:
+        break;
     }
+  });
 
-    case MatrixActionType.EDIT_ITEM: {
-      const { lineIndex, label, x, y, group } = action.payload;
-      if (lineIndex < 0 || lineIndex >= lines.length) break;
-      const fields = getMatrixLineFields(lines[lineIndex]);
-      if (!fields) break;
-      // Info: (20260721 - Julian) 群組未變才保留原顏色；改群組時捨棄顏色，讓其套用新群組的顏色
-      const prevGroup = fields[3]?.trim() || undefined;
-      const prevColor = fields[4]?.trim() || undefined;
-      const color = group && group === prevGroup ? prevColor : undefined;
-      lines[lineIndex] = buildMatrixDataLine(label, x, y, group, color);
-      break;
-    }
+  // Info: (20260725 - Luphia) 資料列動作完成 → 一次實體移除被標記刪除的原始行（附加行不在集合中，一律保留）
+  const materialized = lines.filter((_, idx) => !deleted.has(idx));
 
-    case MatrixActionType.EDIT_AXIS: {
+  // Info: (20260725 - Luphia) 最後套用設定列動作（此時資料列索引已不再被引用，插入設定列不致位移）
+  configActions.forEach((action) => {
+    if (action.type === MatrixActionType.EDIT_AXIS) {
       const { xMin, yMin, xMax, yMax } = action.payload;
       setConfigLine(
-        lines,
+        materialized,
         CustomChartConfigKey.X_AXIS,
         buildAxisValue(xMin ?? "", xMax ?? ""),
       );
       setConfigLine(
-        lines,
+        materialized,
         CustomChartConfigKey.Y_AXIS,
         buildAxisValue(yMin ?? "", yMax ?? ""),
       );
-      break;
-    }
-
-    case MatrixActionType.CHANGE_QUADRANT_COLOR: {
+    } else if (action.type === MatrixActionType.CHANGE_QUADRANT_COLOR) {
       // Info: (20260721 - Julian) 以單一設定列存 Q1..Q4 底色（逗號分隔 HEX）
       const { colors } = action.payload;
       const value = colors
         .map((c) => c.trim())
         .filter((c) => c !== "")
         .join(", ");
-      setConfigLine(lines, CustomChartConfigKey.QUADRANT_COLORS, value);
-      break;
+      setConfigLine(materialized, CustomChartConfigKey.QUADRANT_COLORS, value);
     }
+  });
 
-    case MatrixActionType.EDIT_GROUP: {
-      /**
-       * Info: (20260721 - Julian) 一次套用成員組成與顏色：
-       * - 成員列：設群組為 group，並套用顏色（有提供 color 則統一；否則沿用原屬此群組時的既有顏色）
-       * - 原屬此群組但不在成員清單者：移出群組（清除群組與顏色，成為未分組點）
-       * - 其餘資料列不動
-       */
-      const { group, memberLineIndexes, color } = action.payload;
-      if (!group) break;
-      const memberSet = new Set(memberLineIndexes);
-      lines.forEach((line, idx) => {
-        const fields = getMatrixLineFields(line);
-        if (!fields) return;
-        const curGroup = fields[3]?.trim() || undefined;
-        const label = fields[0];
-        const x = Number(fields[1]);
-        const y = Number(fields[2]);
-
-        if (memberSet.has(idx)) {
-          const keptColor =
-            curGroup === group ? fields[4]?.trim() || undefined : undefined;
-          const rowColor = color && color.trim() !== "" ? color : keptColor;
-          lines[idx] = buildMatrixDataLine(label, x, y, group, rowColor);
-        } else if (curGroup === group) {
-          // Info: (20260721 - Julian) 移出群組 → 取消分組（連同顏色一併清除）
-          lines[idx] = buildMatrixDataLine(label, x, y);
-        }
-      });
-      break;
-    }
-
-    case MatrixActionType.DELETE_ITEM: {
-      const { lineIndex, group } = action.payload;
-
-      // Info: (20260721 - Julian) 刪除單一項目（以 lineIndex 定位；注意 0 為合法行號）
-      if (
-        lineIndex !== undefined &&
-        lineIndex >= 0 &&
-        lineIndex < lines.length &&
-        getMatrixLineFields(lines[lineIndex])
-      ) {
-        lines.splice(lineIndex, 1);
-      }
-
-      // Info: (20260721 - Julian) 刪除整個分組：移除該分組所有資料列（連同其資料點）。
-      // 由後往前刪除以避免 splice 造成的索引位移。
-      if (group) {
-        for (let i = lines.length - 1; i >= 0; i -= 1) {
-          const fields = getMatrixLineFields(lines[i]);
-          if (fields && (fields[3]?.trim() || "") === group) {
-            lines.splice(i, 1);
-          }
-        }
-      }
-
-      break;
-    }
-
-    default:
-      return raw;
-  }
-
-  return lines.join("\n");
+  return materialized.join("\n");
 };
+
+/**
+ * Info: (20260721 - Julian)
+ * 將單一結構化動作決定論地套用到矩陣圖 DSL 字串，回傳新字串（不變更輸入）。
+ * 委派批次引擎，語意與 applyMatrixActions 完全一致（保留既有呼叫端 API）。
+ */
+export const applyMatrixAction = (raw: string, action: IMatrixAction): string =>
+  applyMatrixActions(raw, [action]);
