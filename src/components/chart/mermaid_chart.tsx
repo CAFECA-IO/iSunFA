@@ -138,8 +138,10 @@ const MermaidChart: FC<IMermaidChartProps> = ({
         return;
       }
 
-      // Info: (20260722 - Julian) 渲染前先以 parse 驗證語法
-      // suppressErrors 讓解析失敗回傳 false ，退回原始 code block，而非拋錯或注入爆炸圖
+      /**
+       * Info: (20260722 - Julian) 渲染前先以 parse 驗證語法
+       * suppressErrors 讓解析失敗回傳 false ，退回原始 code block，而非拋錯或注入爆炸圖
+       */
       try {
         const parseResult = await mermaid.parse(trimmedChart, {
           suppressErrors: true,
