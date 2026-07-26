@@ -54,19 +54,11 @@ export class ExportService {
       "審核狀態 (Status)",
     ];
 
-    if (!startDate || !endDate) {
-      return csvHeaders.join(",");
-    }
+    const options: IVoucherFilterOptions = { accountBookId };
 
-    const options: IVoucherFilterOptions = {
-      accountBookId,
-      startDate,
-      endDate,
-    };
-
-    if (!includeUnverified) {
-      options.verifyStatus = VerifyStatus.VERIFIED;
-    }
+    if (startDate) options.startDate = startDate;
+    if (endDate) options.endDate = endDate;
+    if (!includeUnverified) options.verifyStatus = VerifyStatus.VERIFIED;
 
     const vouchers = await voucherRepo.getVouchersByFilter(options);
 
@@ -104,7 +96,7 @@ export class ExportService {
         csvRows.push(row.join(","));
       } else {
         lines.forEach((line, index) => {
-          const lineIndex = index + 1;
+          const lineIndex = `${v.id}_${index + 1}`;
           const code = line.accounting?.code || "";
           const name = line.accounting?.name || "";
           const particular = (line.particular || "").replace(/"/g, '""');
@@ -163,19 +155,11 @@ export class ExportService {
       "AI 分析備註 (AI Note)",
     ];
 
-    if (!startDate || !endDate) {
-      return csvHeaders.join(",");
-    }
+    const options: IEsgRecordFilterOptions = { accountBookId };
 
-    const options: IEsgRecordFilterOptions = {
-      accountBookId,
-      startDate,
-      endDate,
-    };
-
-    if (!includeUnverified) {
-      options.verifyStatus = VerifyStatus.VERIFIED;
-    }
+    if (startDate) options.startDate = startDate;
+    if (endDate) options.endDate = endDate;
+    if (!includeUnverified) options.verifyStatus = VerifyStatus.VERIFIED;
 
     const records = await esgRepo.getEsgRecordsByFilter(options);
 
@@ -229,7 +213,7 @@ export class ExportService {
   }
 
   /**
-   * Info: (20260617 - Julian) 計算符合匯出條件的傳票總筆數，未選擇區間時為 0
+   * Info: (20260617 - Julian) 計算符合匯出條件的傳票總筆數，未選擇區間則顯示全部
    */
   async countVouchersForExport(
     userId: string,
@@ -239,17 +223,12 @@ export class ExportService {
     includeUnverified?: boolean,
   ): Promise<number> {
     await this.validateAccess(userId, accountBookId);
-    if (!startDate || !endDate) return 0;
 
-    const options: IVoucherFilterOptions = {
-      accountBookId,
-      startDate,
-      endDate,
-    };
+    const options: IVoucherFilterOptions = { accountBookId };
 
-    if (!includeUnverified) {
-      options.verifyStatus = VerifyStatus.VERIFIED;
-    }
+    if (startDate) options.startDate = startDate;
+    if (endDate) options.endDate = endDate;
+    if (!includeUnverified) options.verifyStatus = VerifyStatus.VERIFIED;
 
     return await voucherRepo.countVouchersByFilter(options);
   }
@@ -265,17 +244,12 @@ export class ExportService {
     includeUnverified?: boolean,
   ): Promise<number> {
     await this.validateAccess(userId, accountBookId);
-    if (!startDate || !endDate) return 0;
 
-    const options: IEsgRecordFilterOptions = {
-      accountBookId,
-      startDate,
-      endDate,
-    };
+    const options: IEsgRecordFilterOptions = { accountBookId };
 
-    if (!includeUnverified) {
-      options.verifyStatus = VerifyStatus.VERIFIED;
-    }
+    if (startDate) options.startDate = startDate;
+    if (endDate) options.endDate = endDate;
+    if (!includeUnverified) options.verifyStatus = VerifyStatus.VERIFIED;
 
     return await esgRepo.countEsgRecordsByFilter(options);
   }

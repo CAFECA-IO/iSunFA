@@ -37,7 +37,7 @@ export const Checkbox: FC<ICheckboxProps> = ({
       onChange={(e) => onChange(e.target.checked)}
       className="peer sr-only"
     />
-    <span className="flex size-4 shrink-0 items-center justify-center rounded-[5px] border border-slate-300 bg-white text-white transition-colors peer-checked:border-blue-600 peer-checked:bg-blue-600 peer-hover:border-blue-400 peer-focus-visible:ring-2 peer-focus-visible:ring-blue-500/40 peer-disabled:border-slate-200 peer-disabled:bg-slate-100">
+    <span className="flex size-4 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-white text-white transition-colors peer-checked:border-indigo-400 peer-checked:bg-indigo-400 peer-hover:border-indigo-300 peer-focus-visible:ring-2 peer-focus-visible:ring-indigo-400/40 peer-disabled:border-slate-200 peer-disabled:bg-slate-100">
       <Check size={12} strokeWidth={3} />
     </span>
     {label !== undefined && <span className="select-none">{label}</span>}

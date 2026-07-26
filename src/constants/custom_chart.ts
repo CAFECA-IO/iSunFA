@@ -12,6 +12,17 @@ export enum CustomChartType {
 }
 
 /**
+ * Info: (20260721 - Julian)
+ * 各自訂圖表類型的下載預設檔名（未提供圖表標題時的 fallback）。
+ */
+export enum CustomChartExportName {
+  MATRIX = "matrix-chart",
+  TORNADO = "tornado-chart",
+  HISTOGRAM = "histogram-chart",
+  BOXPLOT = "boxplot-chart",
+}
+
+/**
  * Info: (20260717 - Julian) 自訂圖表 DSL 的設定列 key，避免魔法字串
  */
 export enum CustomChartConfigKey {
@@ -22,6 +33,23 @@ export enum CustomChartConfigKey {
   Y_SCALE = "yscale",
   UNIT = "unit",
   TREND = "trend",
+  QUADRANT_COLORS = "quadrantcolors", // Info: (20260721 - Julian) 矩陣圖四象限底色（Q1..Q4，逗號分隔 HEX）
+  LEFT_COLOR = "leftcolor", // Info: (20260723 - Julian) 龍捲風圖左數列顏色 HEX
+  RIGHT_COLOR = "rightcolor", // Info: (20260723 - Julian) 龍捲風圖右數列顏色 HEX
+  MODE = "mode", // Info: (20260723 - Julian) 龍捲風圖型別（compare 比較型 / sensitivity 敏感度型）
+  BASELINE = "baseline", // Info: (20260723 - Julian) 龍捲風圖敏感度型的中心基準值
+}
+
+/**
+ * Info: (20260723 - Julian)
+ * 龍捲風圖型別：
+ * - COMPARE：比較型（蝴蝶圖），中心為左右兩數列分隔線，兩側各自從 0 起算。
+ * - SENSITIVITY：敏感度型，中心為 baseline，兩數值解讀為相對基準的負向／正向偏移（±）。
+ * 兩型共用同一雙側外觀，僅語意與中心標籤不同。未設定時預設 COMPARE。
+ */
+export enum TornadoMode {
+  COMPARE = "compare",
+  SENSITIVITY = "sensitivity",
 }
 
 /**
@@ -44,7 +72,22 @@ export enum MatrixActionType {
   EDIT_ITEM = "MATRIX_EDIT_ITEM",
   EDIT_AXIS = "MATRIX_EDIT_AXIS",
   EDIT_GROUP = "MATRIX_EDIT_GROUP",
+  CHANGE_QUADRANT_COLOR = "MATRIX_CHANGE_QUADRANT_COLOR",
   DELETE_ITEM = "MATRIX_DELETE_ITEM",
+}
+
+/**
+ * Info: (20260722 - Julian)
+ * 龍捲風圖結構化編輯的動作類型列舉（供 tornado_tools_submenu 的五項工具使用）。
+ * 對應到 custom-tornado DSL 的設定列（baseline/unit/顏色）、資料列（item）與數列標頭（group）操作，
+ * 所有編輯皆為決定論字串操作，不呼叫 LLM、不做數值計算。
+ */
+export enum TornadoActionType {
+  EDIT_SETTINGS = "TORNADO_EDIT_SETTINGS",
+  ADD_ITEM = "TORNADO_ADD_ITEM",
+  EDIT_ITEM = "TORNADO_EDIT_ITEM",
+  EDIT_GROUP = "TORNADO_EDIT_GROUP",
+  DELETE_ITEM = "TORNADO_DELETE_ITEM",
 }
 
 /**
@@ -72,3 +115,31 @@ export const CUSTOM_CHART_COMMENT_PREFIX = "%%";
 
 // Info: (20260717 - Julian) 雙極軸分隔符（左為 min 端、右為 max 端）；VS16 變體於 parser 內先行移除
 export const CUSTOM_CHART_AXIS_SEPARATORS: readonly string[] = ["↔", "<->"];
+
+/**
+ * Info: (20260722 - Julian)
+ * 背景色
+ * 以低彩度、高明度的淺色為主，適合作為背景不干擾前景資料點與文字。
+ */
+export const BACKGROUND_COLOR_OPTIONS = [
+  "#FDECEC", // 淺紅
+  "#FEF3E0", // 淺橘
+  "#FEF9E7", // 淺黃
+  "#EAF6EC", // 淺綠
+  "#E6F4F1", // 淺青
+  "#E8F0FE", // 淺藍
+  "#F0EBFA", // 淺紫
+  "#F4F4F5", // 淺灰
+  "#FFFFFF", // 白
+];
+
+// Info: (20260720 - Julian) 無群組時的中性點色
+export const NEUTRAL_POINT = "#64748B";
+
+// Info: (20260721 - Julian) 四象限預設底色
+export const DEFAULT_QUADRANT_COLORS = [
+  "#FEF9E7",
+  "#FEF9E7",
+  "#FEF9E7",
+  "#FEF9E7",
+];

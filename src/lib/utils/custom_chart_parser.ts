@@ -7,6 +7,7 @@ import {
   CUSTOM_CHART_COMMENT_PREFIX,
   CUSTOM_CHART_AXIS_SEPARATORS,
   HEX_COLOR_REGEX,
+  TornadoMode,
 } from "@/constants/custom_chart";
 import {
   ICustomChartAxis,
@@ -31,10 +32,15 @@ const CONFIG_KEYS_BY_TYPE: Record<CustomChartType, Set<string>> = {
     CustomChartConfigKey.Y_AXIS,
     CustomChartConfigKey.X_SCALE,
     CustomChartConfigKey.Y_SCALE,
+    CustomChartConfigKey.QUADRANT_COLORS,
   ]),
   [CustomChartType.TORNADO]: new Set<string>([
     CustomChartConfigKey.TITLE,
     CustomChartConfigKey.UNIT,
+    CustomChartConfigKey.MODE,
+    CustomChartConfigKey.BASELINE,
+    CustomChartConfigKey.LEFT_COLOR,
+    CustomChartConfigKey.RIGHT_COLOR,
   ]),
   [CustomChartType.HISTOGRAM]: new Set<string>([
     CustomChartConfigKey.TITLE,
@@ -180,6 +186,20 @@ const buildMatrix = (
     yScale,
   );
 
+  // Info: (20260721 - Julian) 四象限底色（選填）：逗號分隔 HEX，逐一驗證，非法值 fail fast
+  const quadrantRaw = config.get(CustomChartConfigKey.QUADRANT_COLORS);
+  const quadrantColors = quadrantRaw
+    ? parseCsvLine(quadrantRaw)
+        .map((c) => c.trim())
+        .filter((c) => c !== "")
+        .map((c) => {
+          if (!HEX_COLOR_REGEX.test(c)) {
+            throw malformed(`象限底色非有效 HEX：「${c}」`);
+          }
+          return c;
+        })
+    : [];
+
   // Info: (20260721 - Julian) 群組 → 顏色（第 5 欄）；同群組以「首個非空顏色」為準，維持決定論
   const groupColors: Record<string, string> = {};
 
@@ -214,6 +234,7 @@ const buildMatrix = (
     yAxis,
     points,
     ...(Object.keys(groupColors).length > 0 ? { groupColors } : {}),
+    ...(quadrantColors.length > 0 ? { quadrantColors } : {}),
   };
 };
 
@@ -223,6 +244,46 @@ const buildTornado = (
 ): ICustomTornadoAst => {
   const title = config.get(CustomChartConfigKey.TITLE) || undefined;
   const unit = config.get(CustomChartConfigKey.UNIT) || undefined;
+
+  // Info: (20260723 - Julian) 圖表型別（選填）：未設定＝compare；未知值 fail fast（比照 trend 嚴格策略）
+  const modeRaw = config.get(CustomChartConfigKey.MODE)?.trim().toLowerCase();
+  let mode: TornadoMode | undefined;
+  if (modeRaw !== undefined && modeRaw !== "") {
+    const matched = Object.values(TornadoMode).find((m) => m === modeRaw);
+    if (!matched) {
+      throw malformed(
+        `不支援的龍捲風圖型別：「${modeRaw}」（僅支援 ${TornadoMode.COMPARE} / ${TornadoMode.SENSITIVITY}）`,
+      );
+    }
+    mode = matched;
+  }
+
+  // Info: (20260723 - Julian) 敏感度型中心基準值（選填）
+  const baseline = optionalNumber(
+    config.get(CustomChartConfigKey.BASELINE),
+    "baseline",
+  );
+
+  // Info: (20260723 - Julian) 數列顏色（選填）：非法 HEX fail fast（比照群組顏色的嚴格策略）
+  const parseSeriesColor = (
+    raw: string | undefined,
+    ctx: string,
+  ): string | undefined => {
+    const color = raw?.trim();
+    if (!color) return undefined;
+    if (!HEX_COLOR_REGEX.test(color)) {
+      throw malformed(`龍捲風「${ctx}」顏色非有效 HEX：「${color}」`);
+    }
+    return color;
+  };
+  const leftColor = parseSeriesColor(
+    config.get(CustomChartConfigKey.LEFT_COLOR),
+    "leftColor",
+  );
+  const rightColor = parseSeriesColor(
+    config.get(CustomChartConfigKey.RIGHT_COLOR),
+    "rightColor",
+  );
 
   /**
    * Info: (20260720 - Julian)
@@ -270,8 +331,12 @@ const buildTornado = (
     type: CustomChartType.TORNADO,
     ...(title ? { title } : {}),
     ...(unit ? { unit } : {}),
+    ...(mode ? { mode } : {}),
+    ...(baseline !== undefined ? { baseline } : {}),
     ...(leftSeries ? { leftSeries } : {}),
     ...(rightSeries ? { rightSeries } : {}),
+    ...(leftColor ? { leftColor } : {}),
+    ...(rightColor ? { rightColor } : {}),
     bars,
   };
 };
@@ -387,14 +452,19 @@ const matrixSchema = z.object({
     )
     .min(1),
   groupColors: z.record(z.string(), z.string()).optional(),
+  quadrantColors: z.array(z.string()).optional(),
 });
 
 const tornadoSchema = z.object({
   type: z.literal(CustomChartType.TORNADO),
   title: z.string().optional(),
   unit: z.string().optional(),
+  mode: z.nativeEnum(TornadoMode).optional(),
+  baseline: z.number().optional(),
   leftSeries: z.string().min(1).optional(),
   rightSeries: z.string().min(1).optional(),
+  leftColor: z.string().optional(),
+  rightColor: z.string().optional(),
   bars: z
     .array(
       z.object({

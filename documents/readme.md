@@ -47,6 +47,9 @@
 - ☁️ **[主權雲端與災難復原](architecture/security_and_web3/sovereign_cloud_security_drp.md)**：HA/DR 與 ISO 標準對齊。
 - 🔒 **[機密隔離與 FHE 加密](architecture/security_and_web3/zkp_privacy_preserving.md)**：全同態加密 (FHE) 與金鑰管理 (計畫中)。
 
+### 🧩 3.5 功能整合計畫 (Feature Integration Plans)
+- **[分類帳與試算表整合施行計劃 (Ledger & Trial Balance Integration Plan)](architecture/ledger_and_trial_balance_integration_plan.md)**：於既有報表引擎慣例上新增兩支唯讀報表（樹狀溯源 + MoneyUtil + 懸記納入）。
+
 ### 📌 4. 架構決策紀錄 (Architecture Decision Records, ADRs)
 *追蹤重大架構變更背後的歷史脈絡與取捨：*
 - **[ADR 001: The Great Purge](architecture/decisions/001_precision_refactor_removals.md)**：精準度重構，全面拔除幻覺。

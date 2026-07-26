@@ -3,6 +3,8 @@ import {
   CustomChartParseErrorCode,
   HistogramTrendType,
   MatrixActionType,
+  TornadoActionType,
+  TornadoMode,
 } from "@/constants/custom_chart";
 
 /**
@@ -36,6 +38,8 @@ export interface ICustomMatrixAst {
   points: ICustomMatrixPoint[];
   // Info: (20260721 - Julian) 群組 → HEX 顏色對照（存於資料列第 5 欄；未指定的群組由渲染層套用預設調色盤）
   groupColors?: Record<string, string>;
+  // Info: (20260721 - Julian) 四象限底色（Q1..Q4，index 0=右上、1=左上、2=左下、3=右下）；缺項由渲染層套用預設
+  quadrantColors?: string[];
 }
 
 /**
@@ -58,6 +62,7 @@ export interface IMatrixParseResult {
   items: IMatrixItem[];
   groups: string[]; // Info: (20260721 - Julian) 依首次出現順序去重的群組清單（對應 ISankeyData.nodes）
   groupColors: Record<string, string>; // Info: (20260721 - Julian) 群組 → HEX 顏色對照（供選色盤預填目前顏色；無設定則為空物件）
+  quadrantColors: string[]; // Info: (20260721 - Julian) 四象限底色（Q1..Q4，供選色盤預填；無設定則為空陣列）
 }
 
 /**
@@ -100,9 +105,14 @@ export type IMatrixAction = {
       payload: { group: string; memberLineIndexes: number[]; color?: string };
     }
   | {
-      // Info: (20260721 - Julian) 刪除資料點：以 lineIndex 定位
+      // Info: (20260721 - Julian) 變更四象限底色：colors 依序對應 Q1..Q4（右上、左上、左下、右下）
+      type: MatrixActionType.CHANGE_QUADRANT_COLOR;
+      payload: { colors: string[] };
+    }
+  | {
+      // Info: (20260721 - Julian) 刪除資料點：以 lineIndex 或 group 定位
       type: MatrixActionType.DELETE_ITEM;
-      payload: { lineIndex: number };
+      payload: { lineIndex?: number; group?: string };
     }
 );
 
@@ -117,10 +127,86 @@ export interface ICustomTornadoAst {
   type: CustomChartType.TORNADO;
   title?: string;
   unit?: string;
+  mode?: TornadoMode; // Info: (20260723 - Julian) 圖表型別（未設定＝compare 比較型）
+  baseline?: number; // Info: (20260723 - Julian) 敏感度型的中心基準值（compare 型忽略）
   leftSeries?: string; // Info: (20260720 - Julian) 左側數列名稱（選填；未填則不顯示圖例）
   rightSeries?: string; // Info: (20260720 - Julian) 右側數列名稱（選填；未填則不顯示圖例）
+  leftColor?: string; // Info: (20260723 - Julian) 左數列顏色 HEX（選填；未填採預設）
+  rightColor?: string; // Info: (20260723 - Julian) 右數列顏色 HEX（選填；未填採預設）
   bars: ICustomTornadoBar[];
 }
+
+/**
+ * Info: (20260723 - Julian)
+ * 龍捲風圖資料列（含原始行號），供編輯／刪除工具以 lineIndex 精準定位 DSL 中的資料列。
+ */
+export interface ITornadoItem extends ICustomTornadoBar {
+  lineIndex: number;
+}
+
+/**
+ * Info: (20260723 - Julian)
+ * 龍捲風圖工具列所需的解析結果：資料列（帶行號）＋數列標頭名稱／顏色＋基準線／單位。
+ * hasHeader 標記 DSL 是否已有數列標頭列，供 EDIT_GROUP 決定改寫或插入。
+ */
+export interface ITornadoParseResult {
+  title?: string;
+  unit?: string;
+  mode?: TornadoMode;
+  baseline?: number;
+  leftSeries?: string;
+  rightSeries?: string;
+  leftColor?: string;
+  rightColor?: string;
+  bars: ITornadoItem[];
+  hasHeader: boolean;
+}
+
+/**
+ * Info: (20260723 - Julian)
+ * 龍捲風圖結構化編輯動作（Discriminated Union，以 type 為判別因子），由 applyTornadoAction 決定論套用。
+ */
+export type ITornadoAction = {
+  id: string;
+  description: string;
+} & (
+  | {
+      // Info: (20260723 - Julian) 圖表設定：型別（mode）、單位（unit）、基準值（baseline，敏感度型用）
+      // 皆選填；unit 空字串代表移除設定；baseline 僅在敏感度型有意義
+      type: TornadoActionType.EDIT_SETTINGS;
+      payload: { mode?: TornadoMode; unit?: string; baseline?: number };
+    }
+  | {
+      // Info: (20260723 - Julian) 新增分析項目（category, 左值, 右值）
+      type: TornadoActionType.ADD_ITEM;
+      payload: { category: string; left: number; right: number };
+    }
+  | {
+      // Info: (20260723 - Julian) 編輯項目數值：以 lineIndex 定位，覆寫名稱與左右數值
+      type: TornadoActionType.EDIT_ITEM;
+      payload: {
+        lineIndex: number;
+        category: string;
+        left: number;
+        right: number;
+      };
+    }
+  | {
+      // Info: (20260723 - Julian) 編輯數列分組：設定左右數列名稱（標頭列）與顏色（設定列）
+      type: TornadoActionType.EDIT_GROUP;
+      payload: {
+        leftSeries: string;
+        rightSeries: string;
+        leftColor?: string;
+        rightColor?: string;
+      };
+    }
+  | {
+      // Info: (20260723 - Julian) 刪除分析項目：以 lineIndex 定位
+      type: TornadoActionType.DELETE_ITEM;
+      payload: { lineIndex: number };
+    }
+);
 
 // Info: (20260716 - Julian) 直方圖（已分箱，parser 不自動分箱）
 export interface ICustomHistogramBin {
@@ -164,6 +250,13 @@ export type ICustomChartAst =
   | ICustomTornadoAst
   | ICustomHistogramAst
   | ICustomBoxAst;
+
+/**
+ * Info: (20260723 - Julian)
+ * 所有自訂圖表結構化編輯動作的聯集，供通用 AI 編輯器（adapter / dispatcher）承載。
+ * 各 apply 引擎依 chartType 取用對應子集。
+ */
+export type ICustomChartAction = IMatrixAction | ITornadoAction;
 
 /**
  * Info: (20260716 - Julian)
