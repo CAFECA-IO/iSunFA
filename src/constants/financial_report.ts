@@ -3,7 +3,7 @@ export enum ReportType {
   CASH_FLOW = "cash_flow_statement",
   INCOME_STATEMENT = "income_statement",
   ESG_REPORT = "esg_report",
-  // TRIAL_BALANCE = "trial_balance",
+  TRIAL_BALANCE = "trial_balance",
 }
 
 export enum ReportPeriod {

@@ -46,6 +46,7 @@ import { esgReport } from "@/i18n/locales/zh_tw/esg_report";
 import { reportView } from "@/i18n/locales/zh_tw/report_view";
 import { cashFlowStatementView } from "@/i18n/locales/zh_tw/cash_flow_statement_view";
 import { balanceSheetView } from "@/i18n/locales/zh_tw/balance_sheet_view";
+import { trialBalanceView } from "@/i18n/locales/zh_tw/trial_balance_view";
 import { incomeStatementView } from "@/i18n/locales/zh_tw/income_statement_view";
 import { adminSetup } from "@/i18n/locales/zh_tw/admin_setup";
 import { adminMember } from "@/i18n/locales/zh_tw/admin_member";
@@ -119,6 +120,7 @@ export const zhTw = {
   report_view: reportView,
   cash_flow_statement_view: cashFlowStatementView,
   balance_sheet_view: balanceSheetView,
+  trial_balance_view: trialBalanceView,
   income_statement_view: incomeStatementView,
   admin_setup: adminSetup,
   admin_member: adminMember,

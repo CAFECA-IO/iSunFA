@@ -13,12 +13,14 @@ export const reportView = {
     "必要なパラメータを設定すると、iSunFAがレポートを作成します。",
   unknown_account_book: "(不明な帳簿)",
   period_unit: "期間: {{period}} ｜ 単位: {{currency}}",
-  unverified_warning: "警告: レポートに {{count}} 件の「未確認」項目が含まれています。確認するには以下のリンクをクリックしてください。",
+  unverified_warning:
+    "警告: レポートに {{count}} 件の「未確認」項目が含まれています。確認するには以下のリンクをクリックしてください。",
   types: {
     balance_sheet: "貸借対照表",
     cash_flow: "キャッシュフロー計算書",
     income_statement: "損益計算書",
     esg_report: "ESGレポート",
+    trial_balance: "試算表",
   },
   periods: {
     allyear: "通期",

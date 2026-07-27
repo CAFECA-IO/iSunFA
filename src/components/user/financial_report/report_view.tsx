@@ -9,6 +9,7 @@ import BalanceSheetView from "@/components/user/financial_report/balance_sheet_v
 import CashFlowSheetView from "@/components/user/financial_report/cash_flow_statement_view";
 import IncomeStatementView from "@/components/user/financial_report/income_statement_view";
 import EsgReportView from "@/components/user/financial_report/esg_report_view";
+import TrialBalanceView from "@/components/user/financial_report/trial_balance_view";
 import { numberWithCommas } from "@/lib/utils/common";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -81,6 +82,8 @@ export default function ReportView() {
         return t("report_view.types.income_statement");
       case ReportType.ESG_REPORT:
         return t("report_view.types.esg_report");
+      case ReportType.TRIAL_BALANCE:
+        return t("report_view.types.trial_balance");
       default:
         return "";
     }
@@ -279,6 +282,14 @@ export default function ReportView() {
             onUnverifiedItemsChange={setUnverifiedItems}
           />
         );
+      case ReportType.TRIAL_BALANCE:
+        return (
+          <TrialBalanceView
+            period={generatedConfig.period}
+            year={generatedConfig.year}
+            onUnverifiedItemsChange={setUnverifiedItems}
+          />
+        );
       default:
         return null;
     }
@@ -312,6 +323,7 @@ export default function ReportView() {
         className="ml-auto flex items-center gap-2 print:hidden"
       >
         <button
+          id="download-report-btn"
           type="button"
           onClick={handleDownload}
           className="rounded-xl border border-gray-200 bg-white p-3 text-gray-500 transition-colors outline-none hover:bg-gray-50 hover:text-gray-800 active:bg-gray-100"

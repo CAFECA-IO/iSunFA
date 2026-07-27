@@ -13,12 +13,14 @@ export const reportView = {
     "Set the required parameters, and iSunFA will generate the report.",
   unknown_account_book: "(Unknown Account Book)",
   period_unit: "Period: {{period}} | Unit: {{currency}}",
-  unverified_warning: "Warning: There are {{count}} 'unverified' items in the report. Click the links below to view and verify them.",
+  unverified_warning:
+    "Warning: There are {{count}} 'unverified' items in the report. Click the links below to view and verify them.",
   types: {
     balance_sheet: "Balance Sheet",
     cash_flow: "Cash Flow Statement",
     income_statement: "Income Statement",
     esg_report: "ESG Report",
+    trial_balance: "Trial Balance",
   },
   periods: {
     allyear: "Full Year",

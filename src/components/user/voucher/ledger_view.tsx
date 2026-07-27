@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { Search, Loader2, ChevronDown } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { request } from "@/lib/utils/request";
@@ -63,11 +63,25 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
 
+  // Info: (20260727 - Julian) 由試算表 drill-down 帶入的初始篩選（?code=&labelType=）
+  const searchParams = useSearchParams();
+  const initialCode = searchParams.get("code") ?? "";
+  // Info: (20260727 - Julian) 試算表總帳節點 drill-down 帶入的科目類別篩選（deep-link 專用）
+  const accountType = searchParams.get("accountType") ?? "";
+  const initialLabelType = (() => {
+    const lt = searchParams.get("labelType");
+    return lt === LabelType.GENERAL ||
+      lt === LabelType.DETAILED ||
+      lt === LabelType.ALL
+      ? (lt as LabelType)
+      : LabelType.ALL;
+  })();
+
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
-  const [labelType, setLabelType] = useState<LabelType>(LabelType.ALL);
-  const [keyword, setKeyword] = useState<string>("");
-  const [debouncedKeyword, setDebouncedKeyword] = useState<string>("");
+  const [labelType, setLabelType] = useState<LabelType>(initialLabelType);
+  const [keyword, setKeyword] = useState<string>(initialCode);
+  const [debouncedKeyword, setDebouncedKeyword] = useState<string>(initialCode);
   const [balanceOp, setBalanceOp] = useState<BalanceComparator>(
     BalanceComparator.GTE,
   );
@@ -107,6 +121,7 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
         labelType,
         sorting,
         keyword: debouncedKeyword,
+        accountType,
         balanceOp,
         balanceValue: debouncedBalanceValue,
       },
@@ -118,6 +133,7 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
     labelType,
     sorting,
     debouncedKeyword,
+    accountType,
     balanceOp,
     debouncedBalanceValue,
   ]);
@@ -144,6 +160,7 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
             labelType,
             sorting,
             keyword: debouncedKeyword || undefined,
+            accountType: accountType || undefined,
             balanceOp,
             balanceValue: debouncedBalanceValue || undefined,
             pageSize: PAGE_SIZE,
@@ -169,6 +186,7 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
     labelType,
     sorting,
     debouncedKeyword,
+    accountType,
     balanceOp,
     debouncedBalanceValue,
   ]);
