@@ -32,6 +32,8 @@ export const voucher = {
       keyword: "Keyword",
       keyword_placeholder: "Account, particulars, or voucher no.",
       sort: "Sort",
+      balance: "Balance amount",
+      balance_placeholder: "Amount",
     },
     label_type: {
       all: "All",
@@ -43,6 +45,13 @@ export const voucher = {
       code_desc: "Account code ↓",
       date_asc: "Date ↑",
       date_desc: "Date ↓",
+      balance_asc: "Balance ↑",
+      balance_desc: "Balance ↓",
+    },
+    balance_op: {
+      gte: "At least (≥)",
+      lte: "At most (≤)",
+      eq: "Equals (=)",
     },
     summary: {
       currency: "Currency",

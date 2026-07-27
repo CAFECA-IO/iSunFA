@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { LabelType } from "@/constants/ledger";
+import { LabelType, BalanceComparator } from "@/constants/ledger";
 import { LedgerSorting } from "@/constants/sort";
 
 // Info: (20260727 - Julian) 可解析為有效日期的字串（避免 NaN 造成靜默期間誤判）
@@ -14,6 +14,8 @@ export const LedgerQuerySchema = z.object({
   startAccountNo: z.string().optional(),
   endAccountNo: z.string().optional(),
   keyword: z.string().optional(),
+  balanceOp: z.nativeEnum(BalanceComparator).optional(),
+  balanceValue: z.string().optional(),
   labelType: z.nativeEnum(LabelType).default(LabelType.ALL),
   sorting: z.nativeEnum(LedgerSorting).optional(),
   page: z.coerce.number().int().positive().default(1),

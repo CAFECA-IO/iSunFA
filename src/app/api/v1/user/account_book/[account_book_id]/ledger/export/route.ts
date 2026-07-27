@@ -51,6 +51,8 @@ export async function GET(
       startAccountNo: searchParams.get("startAccountNo") ?? undefined,
       endAccountNo: searchParams.get("endAccountNo") ?? undefined,
       keyword: searchParams.get("keyword") ?? undefined,
+      balanceOp: searchParams.get("balanceOp") ?? undefined,
+      balanceValue: searchParams.get("balanceValue") ?? undefined,
       labelType: searchParams.get("labelType") ?? undefined,
       sorting: searchParams.get("sorting") ?? undefined,
     });
@@ -63,6 +65,8 @@ export async function GET(
       startAccountNo,
       endAccountNo,
       keyword,
+      balanceOp,
+      balanceValue,
       labelType,
       sorting,
     } = parsed.data;
@@ -83,6 +87,8 @@ export async function GET(
       startAccountNo,
       endAccountNo,
       keyword,
+      balanceOp,
+      balanceValue,
       labelType,
       sorting,
       currencyAlias: accountBook.currency,

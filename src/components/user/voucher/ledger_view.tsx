@@ -8,7 +8,7 @@ import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { timestampToString } from "@/lib/utils/common";
 import { MoneyUtil } from "@/lib/utils/money";
-import { LabelType } from "@/constants/ledger";
+import { LabelType, BalanceComparator } from "@/constants/ledger";
 import { LedgerSorting } from "@/constants/sort";
 import { ILedgerItem, ILedgerTotal } from "@/interfaces/ledger";
 import { ACCOUNT_TYPE_COLORS } from "@/constants/accounting_account";
@@ -44,6 +44,13 @@ const SORT_OPTIONS: LedgerSorting[] = [
   LedgerSorting.CODE_DESC,
   LedgerSorting.DATE_ASC,
   LedgerSorting.DATE_DESC,
+  LedgerSorting.BALANCE_ASC,
+  LedgerSorting.BALANCE_DESC,
+];
+const BALANCE_OP_OPTIONS: BalanceComparator[] = [
+  BalanceComparator.GTE,
+  BalanceComparator.LTE,
+  BalanceComparator.EQ,
 ];
 
 // Info: (20260727 - Julian) 金額為 0 顯示破折號，否則加千分位
@@ -61,6 +68,12 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
   const [labelType, setLabelType] = useState<LabelType>(LabelType.ALL);
   const [keyword, setKeyword] = useState<string>("");
   const [debouncedKeyword, setDebouncedKeyword] = useState<string>("");
+  const [balanceOp, setBalanceOp] = useState<BalanceComparator>(
+    BalanceComparator.GTE,
+  );
+  const [balanceValue, setBalanceValue] = useState<string>("");
+  const [debouncedBalanceValue, setDebouncedBalanceValue] =
+    useState<string>("");
   const [sorting, setSorting] = useState<LedgerSorting>(LedgerSorting.CODE_ASC);
 
   const [items, setItems] = useState<ILedgerItem[]>([]);
@@ -76,12 +89,27 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
     return () => clearTimeout(timer);
   }, [keyword]);
 
+  // Info: (20260727 - Julian) 餘額金額 debounce
+  useEffect(() => {
+    const timer = setTimeout(
+      () => setDebouncedBalanceValue(balanceValue.trim()),
+      400,
+    );
+    return () => clearTimeout(timer);
+  }, [balanceValue]);
+
   // Info: (20260727 - Julian) 將目前條件上報父層供匯出
   useEffect(() => {
     onExportParamsChange({
       startDate,
       endDate,
-      extraParams: { labelType, sorting, keyword: debouncedKeyword },
+      extraParams: {
+        labelType,
+        sorting,
+        keyword: debouncedKeyword,
+        balanceOp,
+        balanceValue: debouncedBalanceValue,
+      },
     });
   }, [
     onExportParamsChange,
@@ -90,6 +118,8 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
     labelType,
     sorting,
     debouncedKeyword,
+    balanceOp,
+    debouncedBalanceValue,
   ]);
 
   // Info: (20260727 - Julian) 將 YYYY-MM-DD 轉為當日起訖的 ISO
@@ -114,6 +144,8 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
             labelType,
             sorting,
             keyword: debouncedKeyword || undefined,
+            balanceOp,
+            balanceValue: debouncedBalanceValue || undefined,
             pageSize: PAGE_SIZE,
           },
         },
@@ -130,7 +162,16 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [accountBookId, startDate, endDate, labelType, sorting, debouncedKeyword]);
+  }, [
+    accountBookId,
+    startDate,
+    endDate,
+    labelType,
+    sorting,
+    debouncedKeyword,
+    balanceOp,
+    debouncedBalanceValue,
+  ]);
 
   useEffect(() => {
     fetchLedger();
@@ -202,6 +243,39 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
           />
         </div>
 
+        {/* Info: (20260727 - Julian) 餘額金額區間（運算子 + 數值） */}
+        <div className="flex flex-col gap-1">
+          <span className="text-xs font-medium text-slate-500">
+            {t("voucher.ledger.filters.balance")}
+          </span>
+          <div className="flex items-end gap-2">
+            <input
+              type="number"
+              value={balanceValue}
+              onChange={(e) => setBalanceValue(e.target.value)}
+              onWheel={(e) => e.currentTarget.blur()} // Info: (20260727 - Julian) 封鎖滾輪事件
+              placeholder={t("voucher.ledger.filters.balance_placeholder")}
+              className="w-32 rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none placeholder:text-slate-400"
+            />
+            <div className="flex rounded-lg bg-slate-100 text-[10px]">
+              {BALANCE_OP_OPTIONS.map((op) => (
+                <button
+                  key={op}
+                  type="button"
+                  onClick={() => setBalanceOp(op)}
+                  className={`rounded-sm px-1 py-0.5 whitespace-nowrap transition-colors ${
+                    balanceOp === op
+                      ? "bg-orange-50 font-bold text-orange-700"
+                      : "text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  {t(`voucher.ledger.balance_op.${op}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
         <div className="flex flex-col gap-1">
           <span className="text-xs font-medium text-slate-500">
             {t("voucher.ledger.filters.sort")}
@@ -220,14 +294,14 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
         </div>
       </div>
 
-      {/* Info: (20260727 - Julian) 帳別篩選 與 借貸總額 同一水平列 */}
+      {/* Info: (20260727 - Julian) 帳別篩選 與 借貸總額 */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         {/* Info: (20260727 - Julian) 帳別 */}
         <div className="flex flex-col gap-1">
           <span className="text-xs font-medium text-slate-500">
             {t("voucher.ledger.filters.label")}
           </span>
-          <div className="flex overflow-hidden rounded-lg border border-slate-200 text-sm">
+          <div className="flex overflow-hidden rounded-lg border border-slate-200 bg-white text-sm">
             {LABEL_OPTIONS.map((option) => (
               <button
                 key={option}
@@ -236,7 +310,7 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
                 className={`px-4 py-2.5 transition-colors ${
                   labelType === option
                     ? "bg-orange-50 font-bold text-orange-700"
-                    : "text-slate-600 hover:bg-slate-50"
+                    : "text-slate-600 hover:text-orange-500"
                 }`}
               >
                 {t(`voucher.ledger.label_type.${option}`)}
@@ -302,7 +376,7 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
                 <button
                   type="button"
                   onClick={() => toggleCollapse(group.code)}
-                  className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${colors.bg} ${colors.text}`}
+                  className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:cursor-pointer ${colors.bg} ${colors.text}`}
                 >
                   <ChevronDown
                     size={20}
@@ -328,12 +402,37 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
                     <div
                       className={`overflow-x-auto border-t ${colors.border}`}
                     >
-                      <table className="w-full border-collapse text-sm">
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="border-b border-slate-200 bg-slate-200 text-xs font-normal text-slate-500">
+                            <th className="px-3 py-1 text-left">
+                              {t("voucher.ledger.headers.voucher_no")}
+                            </th>
+                            <th className="px-3 py-1 text-left">
+                              {t("voucher.ledger.headers.date")}
+                            </th>
+                            <th className="px-3 py-1 text-left">
+                              {t("voucher.ledger.headers.type")}
+                            </th>
+                            <th className="px-3 py-1 text-left">
+                              {t("voucher.ledger.headers.particulars")}
+                            </th>
+                            <th className="px-3 py-1 text-center">
+                              {t("voucher.ledger.headers.debit")}
+                            </th>
+                            <th className="px-3 py-1 text-center">
+                              {t("voucher.ledger.headers.credit")}
+                            </th>
+                            <th className="px-3 py-1 text-center">
+                              {t("voucher.ledger.headers.balance")}
+                            </th>
+                          </tr>
+                        </thead>
                         <tbody>
                           {group.rows.map((row, idx) => (
                             <tr
                               key={`${group.code}-${idx}`}
-                              className="border-t border-slate-100 first:border-t-0"
+                              className="border-t border-slate-100 text-sm first:border-t-0"
                             >
                               <td className="px-3 py-2 text-xs text-slate-500">
                                 {row.voucherNumber}

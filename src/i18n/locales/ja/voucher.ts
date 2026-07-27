@@ -32,6 +32,8 @@ export const voucher = {
       keyword: "キーワード",
       keyword_placeholder: "科目・摘要・伝票番号",
       sort: "並び替え",
+      balance: "残高金額",
+      balance_placeholder: "金額",
     },
     label_type: {
       all: "すべて",
@@ -43,6 +45,13 @@ export const voucher = {
       code_desc: "科目コード ↓",
       date_asc: "日付 ↑",
       date_desc: "日付 ↓",
+      balance_asc: "残高 ↑",
+      balance_desc: "残高 ↓",
+    },
+    balance_op: {
+      gte: "以上",
+      lte: "以下",
+      eq: "等しい",
     },
     summary: {
       currency: "通貨",

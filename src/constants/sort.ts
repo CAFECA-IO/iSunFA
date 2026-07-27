@@ -59,6 +59,8 @@ export enum LedgerSorting {
   CODE_DESC = "code_desc",
   DATE_ASC = "date_asc",
   DATE_DESC = "date_desc",
+  BALANCE_ASC = "balance_asc",
+  BALANCE_DESC = "balance_desc",
 }
 
 /**

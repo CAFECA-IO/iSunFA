@@ -32,6 +32,8 @@ export const voucher = {
       keyword: "关键字",
       keyword_placeholder: "科目、摘要或凭证编号",
       sort: "排序",
+      balance: "余额金额",
+      balance_placeholder: "金额",
     },
     label_type: {
       all: "全部",
@@ -43,6 +45,13 @@ export const voucher = {
       code_desc: "科目编号 ↓",
       date_asc: "日期 ↑",
       date_desc: "日期 ↓",
+      balance_asc: "余额 ↑",
+      balance_desc: "余额 ↓",
+    },
+    balance_op: {
+      gte: "以上",
+      lte: "以下",
+      eq: "相等",
     },
     summary: {
       currency: "币别",

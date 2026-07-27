@@ -32,6 +32,8 @@ export const voucher = {
       keyword: "關鍵字",
       keyword_placeholder: "科目、摘要或傳票編號",
       sort: "排序",
+      balance: "餘額金額",
+      balance_placeholder: "金額",
     },
     label_type: {
       all: "全部",
@@ -43,6 +45,13 @@ export const voucher = {
       code_desc: "科目編號 ↓",
       date_asc: "日期 ↑",
       date_desc: "日期 ↓",
+      balance_asc: "餘額 ↑",
+      balance_desc: "餘額 ↓",
+    },
+    balance_op: {
+      gte: "以上",
+      lte: "以下",
+      eq: "相等",
     },
     summary: {
       currency: "幣別",

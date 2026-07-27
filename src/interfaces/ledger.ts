@@ -1,4 +1,4 @@
-import { LabelType } from "@/constants/ledger";
+import { LabelType, BalanceComparator } from "@/constants/ledger";
 import { LedgerSorting } from "@/constants/sort";
 
 /**
@@ -53,4 +53,7 @@ export interface ILedgerOptions {
   currencyAlias: string;
   // Info: (20260727 - Julian) 關鍵字：比對 科目編號/會計科目/摘要/傳票編號（於產出列後過濾）
   keyword?: string;
+  // Info: (20260727 - Julian) 餘額金額區間篩選（於產出列後過濾）：比較運算子與比較值
+  balanceOp?: BalanceComparator;
+  balanceValue?: string;
 }

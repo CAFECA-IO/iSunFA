@@ -4,7 +4,7 @@ import { IVoucher } from "@/interfaces/voucher";
 import { ILedger, ILedgerItem, ILedgerOptions } from "@/interfaces/ledger";
 import { MoneyUtil } from "@/lib/utils/money";
 import { AccountUtil } from "@/lib/utils/account_util";
-import { LabelType } from "@/constants/ledger";
+import { LabelType, BalanceComparator } from "@/constants/ledger";
 import { LedgerSorting } from "@/constants/sort";
 
 /**
@@ -99,10 +99,34 @@ function buildComparator(
       return (a, b) => a.voucherDate - b.voucherDate;
     case LedgerSorting.DATE_DESC:
       return (a, b) => b.voucherDate - a.voucherDate;
+    case LedgerSorting.BALANCE_ASC:
+      return (a, b) =>
+        MoneyUtil.toDecimal(a.balance).comparedTo(
+          MoneyUtil.toDecimal(b.balance),
+        );
+    case LedgerSorting.BALANCE_DESC:
+      return (a, b) =>
+        MoneyUtil.toDecimal(b.balance).comparedTo(
+          MoneyUtil.toDecimal(a.balance),
+        );
     case LedgerSorting.CODE_ASC:
     default:
       return byCodeThenDateAsc;
   }
+}
+
+// Info: (20260727 - Julian) 餘額金額區間比對；以「絕對值」比較（例如查 1000 以下＝ |餘額| ∈ 0~1000），避免大額負數被誤納
+function matchesBalance(
+  balance: string,
+  op: BalanceComparator,
+  value: string,
+): boolean {
+  const cmp = MoneyUtil.toDecimal(balance)
+    .abs()
+    .comparedTo(MoneyUtil.toDecimal(value).abs());
+  if (op === BalanceComparator.GTE) return cmp >= 0;
+  if (op === BalanceComparator.LTE) return cmp <= 0;
+  return cmp === 0;
 }
 
 // Info: (20260727 - Julian) 關鍵字比對（不分大小寫）：科目編號/會計科目/摘要/傳票編號
@@ -122,8 +146,15 @@ export function generateLedger(
   dictionary: IAccount[],
   options: ILedgerOptions,
 ): ILedger {
-  const { startAccountNo, endAccountNo, labelType, currencyAlias, keyword } =
-    options;
+  const {
+    startAccountNo,
+    endAccountNo,
+    labelType,
+    currencyAlias,
+    keyword,
+    balanceOp,
+    balanceValue,
+  } = options;
   const sorting = options.sorting ?? LedgerSorting.CODE_ASC;
   const parentCodeSet = buildParentCodeSet(dictionary);
 
@@ -217,6 +248,13 @@ export function generateLedger(
   // Info: (20260727 - Julian) 關鍵字於「產出列」過濾（餘額不受影響，仍為各科目真實累計值）
   if (keyword && keyword.trim()) {
     items = items.filter((item) => matchesKeyword(item, keyword));
+  }
+
+  // Info: (20260727 - Julian) 餘額金額區間於「產出列」過濾（餘額仍為各科目真實累計值）
+  if (balanceOp && balanceValue !== undefined && balanceValue.trim() !== "") {
+    items = items.filter((item) =>
+      matchesBalance(item.balance, balanceOp, balanceValue),
+    );
   }
 
   // Info: (20260727 - Julian) 借貸總額取「顯示列」加總，與畫面/匯出一致

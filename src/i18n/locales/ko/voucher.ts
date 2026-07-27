@@ -32,6 +32,8 @@ export const voucher = {
       keyword: "키워드",
       keyword_placeholder: "과목, 적요 또는 전표 번호",
       sort: "정렬",
+      balance: "잔액 금액",
+      balance_placeholder: "금액",
     },
     label_type: {
       all: "전체",
@@ -43,6 +45,13 @@ export const voucher = {
       code_desc: "과목 코드 ↓",
       date_asc: "날짜 ↑",
       date_desc: "날짜 ↓",
+      balance_asc: "잔액 ↑",
+      balance_desc: "잔액 ↓",
+    },
+    balance_op: {
+      gte: "이상",
+      lte: "이하",
+      eq: "같음",
     },
     summary: {
       currency: "통화",
