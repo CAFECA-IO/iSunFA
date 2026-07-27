@@ -46,6 +46,7 @@ export default function CarbonChatbotPage() {
     reportStats,
     accountBooks,
     activeSessionAccess,
+    dataBadgeState,
     fetchBookSessions,
     masterKey,
     inventoryState,
@@ -65,6 +66,7 @@ export default function CarbonChatbotPage() {
     toggleImportItem,
     applyPendingImport,
     discardPendingImport,
+    retryFailedImportChapters,
     importCandidate,
     confirmImportCandidate,
     attachImportCandidate,
@@ -75,12 +77,12 @@ export default function CarbonChatbotPage() {
     chatEndRef,
   } = useCarbonChat();
 
-  // Info: (20260714 - Tzuhan) 聊天浮動視窗開關;預設開啟讓解鎖入口可見
+  // Info: (20260714 - Tzuhan) 聊天浮動視窗開關；預設開啟讓解鎖入口可見
   const [isChatOpen, setIsChatOpen] = useState<boolean>(true);
   // Info: (20260716 - Tzuhan) UAT 帳本報告檢視器:開啟中的他人會話 channel(null = 關閉)
   const [viewerChannel, setViewerChannel] = useState<string | null>(null);
 
-  // Info: (20260714 - Tzuhan) chip 點擊:跳報告段落並高亮;行動版聊天視窗全螢幕,先收起讓報告可見
+  // Info: (20260714 - Tzuhan) chip 點擊: 跳報告段落並高亮；行動版聊天視窗全螢幕，先收起讓報告可見
   const handleChipJump = (paragraphId: string) => {
     jumpToReportParagraph(paragraphId);
     if (window.matchMedia(MOBILE_MEDIA_QUERY).matches) {
@@ -88,13 +90,13 @@ export default function CarbonChatbotPage() {
     }
   };
 
-  // Info: (20260714 - Tzuhan) 反向連動:點報告段落回跳對話訊息;開啟聊天視窗讓閃爍訊息可見
+  // Info: (20260714 - Tzuhan) 反向連動: 點報告段落回跳對話訊息；開啟聊天視窗讓閃爍訊息可見
   const handleParagraphHeadingClick = (paragraphId: string) => {
     focusMessageForParagraph(paragraphId);
     setIsChatOpen(true);
   };
 
-  // Info: (20260714 - Tzuhan) 跳段引導(目錄/佔位點擊):預填輸入並開啟聊天視窗
+  // Info: (20260714 - Tzuhan) 跳段引導(目錄/佔位點擊): 預填輸入並開啟聊天視窗
   const handleJumpToParagraph = (paragraphId: string) => {
     jumpToParagraph(paragraphId);
     setIsChatOpen(true);
@@ -114,7 +116,7 @@ export default function CarbonChatbotPage() {
         onOpenBookReport={setViewerChannel}
       />
 
-      {/* Info: (20260714 - Tzuhan) 報告為主視圖:佔滿剩餘寬度,窄螢幕單欄直向捲動(目錄由工具列抽屜提供) */}
+      {/* Info: (20260714 - Tzuhan) 報告為主視圖: 佔滿剩餘寬度，窄螢幕單欄直向捲動(目錄由工具列抽屜提供) */}
       <div className="relative flex min-w-0 flex-1 flex-col bg-[#f8fafc]">
         <CarbonReportPreview
           session={activeSession}
@@ -131,6 +133,7 @@ export default function CarbonChatbotPage() {
           readOnly={!activeSessionAccess.canEdit}
           onImportReport={importReportFile}
           onRenameDocument={renameReportDocument}
+          dataBadgeState={dataBadgeState}
         />
 
         {/* Info: (20260716 - Tzuhan) UAT 重疊修正:左下浮窗改單一堆疊容器(活動帳本在上、進度在下),
@@ -147,7 +150,7 @@ export default function CarbonChatbotPage() {
         </div>
       </div>
 
-      {/* Info: (20260714 - Tzuhan) 碳盤查聊天浮動視窗(FaithAgent 式外殼,引擎為 use_carbon_chat,功能全保留) */}
+      {/* Info: (20260714 - Tzuhan) 碳盤查聊天浮動視窗(FaithAgent 式外殼，引擎為 use_carbon_chat，功能全保留) */}
       <CarbonChatWidget
         isOpen={isChatOpen}
         onToggle={() => setIsChatOpen((prev) => !prev)}
@@ -215,6 +218,7 @@ export default function CarbonChatbotPage() {
           onToggleItem={toggleImportItem}
           onApply={applyPendingImport}
           onDiscard={discardPendingImport}
+          onRetryFailed={retryFailedImportChapters}
         />
       )}
 

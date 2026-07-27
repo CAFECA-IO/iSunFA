@@ -8,7 +8,8 @@ const ReportCategorySchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string(),
-  emissions: z.number(),
+  // Info: (20260720 - Tzuhan) #23 改字串化 Decimal;coerce 相容既有草稿的 number(0)不 Fail Fast 丟棄
+  emissions: z.coerce.string().max(60),
 });
 
 const ReportParagraphSchema = z.object({
@@ -29,7 +30,8 @@ export const CarbonReportDataSchema = z.object({
   section: z.string(),
   categories: z.array(ReportCategorySchema),
   paragraphs: z.array(ReportParagraphSchema).optional(),
-  totalEmissions: z.number(),
+  // Info: (20260720 - Tzuhan) #23 改字串化 Decimal;coerce 相容既有草稿的 number
+  totalEmissions: z.coerce.string().max(60),
   // Info: (20260716 - Tzuhan) 報告全文權威來源(零改動保證;上限對齊密文欄位)
   rawMarkdown: z.string().max(2_000_000).optional(),
 });

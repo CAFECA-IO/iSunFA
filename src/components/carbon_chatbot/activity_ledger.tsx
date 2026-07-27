@@ -1,11 +1,12 @@
-// Info: (20260716 - Tzuhan) 活動數據記錄卡(#6518):顯示狀態帳本中的活動數據與盤查步驟
-// Info: (20260716 - Tzuhan) 零捏造溯源:每筆顯示出處(訊息片段/附件檔名);數值為原樣字串,不做任何格式化運算
-// Info: (20260716 - Tzuhan) 預設收合為藥丸(RWD 教訓:浮窗不可遮擋報告視線)
+// Info: (20260716 - Tzuhan) 活動數據記錄卡(#6518): 顯示狀態帳本中的活動數據與盤查步驟
+// Info: (20260716 - Tzuhan) 零捏造溯源: 每筆顯示出處(訊息片段/附件檔名)；數值為原樣字串，不做任何格式化運算
+// Info: (20260716 - Tzuhan) 預設收合為藥丸(RWD 教訓: 浮窗不可遮擋報告視線)
 
 import { useState } from "react";
-import { ClipboardList, Minus } from "lucide-react";
+import { ClipboardList, Minus, AlertTriangle, ShieldCheck } from "lucide-react";
 import { ICarbonInventoryState } from "@/types/carbon_chatbot.types";
 import { activityDedupeKey } from "@/lib/carbon_inventory";
+import { ArticulationStatusEnum } from "@/constants/carbon_articulation";
 import { useTranslation } from "@/i18n/i18n_context";
 
 export interface IActivityLedgerProps {
@@ -63,7 +64,7 @@ export function ActivityLedger({
         </button>
       </div>
 
-      {/* Info: (20260716 - Tzuhan) 步驟真值來自決定性狀態機(computeInventoryStep),非 LLM 判斷 */}
+      {/* Info: (20260716 - Tzuhan) 步驟真值來自決定性狀態機(computeInventoryStep)，非 LLM 判斷 */}
       <div className="mb-2 rounded-lg bg-orange-50 px-2 py-1 text-[11px] font-bold text-[#e04f00]">
         {t(`carbon_chatbot.inventory_step_${state.step}`)}
       </div>
@@ -131,6 +132,46 @@ export function ActivityLedger({
           <span className="font-mono">{ledger.totalCo2eKg} kgCO2e</span>
         </div>
       )}
+
+      {/* Info: (20260720 - Tzuhan) #6520 質量守恆勾稽:violation 明細透明呈現(等式兩側值,審計可追溯) */}
+      {ledger?.articulation?.status === ArticulationStatusEnum.PASSED && (
+        <div className="mt-1.5 flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2 py-1.5 text-[11px] font-bold text-emerald-700">
+          <ShieldCheck size={12} className="shrink-0" />
+          {t("carbon_chatbot.articulation_passed")}
+        </div>
+      )}
+      {(ledger?.articulation?.violations ?? []).map((violation) => (
+        <div
+          key={`${violation.materialName}-${violation.unit}`}
+          className="mt-1.5 rounded-lg bg-red-50 px-2 py-1.5 text-[11px] text-red-700"
+        >
+          <div className="flex items-center gap-1.5 font-bold">
+            <AlertTriangle size={12} className="shrink-0" />
+            {t("carbon_chatbot.articulation_violation", {
+              material: violation.materialName,
+            })}
+          </div>
+          <div className="mt-0.5 font-mono text-[10px]">
+            {t("carbon_chatbot.articulation_equation", {
+              expected: violation.expectedConsumption,
+              actual: violation.actualConsumption,
+              gap: violation.gap,
+              unit: violation.unit,
+            })}
+          </div>
+        </div>
+      ))}
+      {(ledger?.articulation?.warnings ?? []).map((warning) => (
+        <div
+          key={warning.activityKey}
+          className="mt-1.5 flex items-center gap-1.5 rounded-lg bg-amber-50 px-2 py-1.5 text-[11px] font-bold text-amber-700"
+        >
+          <AlertTriangle size={12} className="shrink-0" />
+          {t("carbon_chatbot.articulation_plausibility_warning", {
+            source: warning.sourceName,
+          })}
+        </div>
+      ))}
     </div>
   );
 }

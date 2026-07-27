@@ -97,13 +97,32 @@ export type CarbonChatAttachmentMimeType =
 // Info: (20260714 - Tzuhan) 比照 FaithAgent 不擋一般大檔;50MB 為保護記憶體的軟上限(JSON base64 傳輸)
 export const CARBON_CHAT_MAX_ATTACHMENT_BYTES = 50 * 1024 * 1024;
 
+// Info: (20260716 - Tzuhan) 位元組換算基數（1 GiB），供配額 GB → BigInt bytes 換算
+const BYTES_PER_GB = BigInt(1024 ** 3);
+
 /**
- * Info: (20260716 - Tzuhan) 每使用者(address)附件儲存配額:5GB(#6517)。
- * 刻意用常數而非 env:.env 受 FIDO2 簽章鎖定(admin_setup_whitepaper.md),
- * 新增 env key 需超管重簽儀式;配額調整走 code change + release,留下可稽核軌跡。
- * BigInt 對齊 numerical_precision_guideline(累計值,與 DB BigInt 欄位同型別比較)。
+ * Info: (20260716 - Tzuhan) 每使用者（address）附件儲存配額，依訂閱方案分階（#6517）。
+ * 對應 SUBSCRIPTION_PLAN_PRICE 的 free/team/business 三階，顯示於 /pricing/subscription。
+ * 刻意用常數而非 env: .env 受 FIDO2 簽章鎖定（admin_setup_whitepaper.md），
+ * 新增 env key 需超管重簽儀式；配額調整走 code change + release，留下可稽核軌跡。
+ * GB 為單一數值來源（前端顯示用），bytes 由其換算（BigInt 對齊 numerical_precision_guideline，
+ * 累計值與 DB BigInt 欄位同型別比較）。
  */
-export const CARBON_STORAGE_QUOTA_BYTES = BigInt(5) * BigInt(1024 ** 3);
+export const CARBON_STORAGE_QUOTA_GB_BY_PLAN = {
+  free: 5,
+  team: 20,
+  business: 50,
+} as const;
+
+export const CARBON_STORAGE_QUOTA_BYTES_BY_PLAN = {
+  free: BigInt(CARBON_STORAGE_QUOTA_GB_BY_PLAN.free) * BYTES_PER_GB,
+  team: BigInt(CARBON_STORAGE_QUOTA_GB_BY_PLAN.team) * BYTES_PER_GB,
+  business: BigInt(CARBON_STORAGE_QUOTA_GB_BY_PLAN.business) * BYTES_PER_GB,
+} as const;
+
+// Info: (20260716 - Tzuhan) 目前上傳強制執行採單一預設（free 階）；依方案分階強制執行為後續 issue
+export const CARBON_STORAGE_QUOTA_BYTES =
+  CARBON_STORAGE_QUOTA_BYTES_BY_PLAN.free;
 export const CARBON_CHAT_MAX_ATTACHMENTS_PER_MESSAGE = 5;
 
 // Info: (20260714 - Tzuhan) Gemini inlineData 單請求約 20MB 上限;超過此安全值的附件直接走降級(不送必失敗的萃取呼叫)

@@ -1,7 +1,14 @@
 // Info: (20260716 - Tzuhan) #52 碳盤查存取裁決測試:個人/帳本雙軌 × 角色 × 讀寫層級矩陣
-// Info: (20260716 - Tzuhan) jest.mock 由 jest 自動 hoist 至 import 前,故 import 可正常置頂(不需關閉 lint 規則)
+// Info: (20260717 - Tzuhan) 重要:next/jest(SWC)只 hoist「全域 jest」的 jest.mock 呼叫;
+// Info: (20260717 - Tzuhan) 若 jest 是 @jest/globals 的 import 綁定,mock 不會被 hoist → 真實 prisma
+// Info: (20260717 - Tzuhan) 先被載入(pg Pool 開啟導致 worker 無法退出、mockReset 不存在)。
+// Info: (20260717 - Tzuhan) 故比照 allocation_engine.test.ts:declare 全域 jest,只 import 型別。
 
-import { describe, it, expect, jest, beforeEach } from "@jest/globals";
+import { describe, it, expect, beforeEach } from "@jest/globals";
+import type { jest as JestType } from "@jest/globals";
+
+declare const jest: typeof JestType;
+
 import { prisma } from "@/lib/prisma";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import {
@@ -18,11 +25,11 @@ jest.mock("@/repositories/account_book.repo", () => ({
 }));
 
 // Info: (20260716 - Tzuhan) mock 取用(型別化,不使用 any)
-const mockFindUnique = prisma.chatroom.findUnique as unknown as jest.Mock<
-  () => Promise<{ accountBookId: string | null } | null>
+const mockFindUnique = prisma.chatroom.findUnique as unknown as ReturnType<
+  typeof jest.fn<() => Promise<{ accountBookId: string | null } | null>>
 >;
-const mockGetRole = accountBookRepo.getMemberRoleByAddress as unknown as jest.Mock<
-  () => Promise<string | null>
+const mockGetRole = accountBookRepo.getMemberRoleByAddress as unknown as ReturnType<
+  typeof jest.fn<() => Promise<string | null>>
 >;
 
 const OWNER_ADDRESS = "0xaaa";

@@ -44,21 +44,13 @@ export interface IReportImportResult {
  * schema 依「本次範圍的段落」動態建構 — 全綱(小檔單發)或單章(前端逐章迴圈);
  * activities 僅第一章呼叫時萃取,避免 11 章重複入帳
  */
+// Info: (20260716 - Tzuhan) LLM 輸出約束:段落 id 以 enum 鎖死;內容原樣照抄
+// Info: (20260720 - Tzuhan) 改為條件組裝(withActivities)取代 delete 突變 — Schema 為聯合型別,delete 不過型別檢查
 const buildImportResponseSchema = (
   sections: ICarbonReportSection[],
   withActivities: boolean,
 ): Schema => {
-  const schema = buildBaseImportSchema(sections);
-  if (!withActivities) {
-    delete (schema.properties as Record<string, unknown>).activities;
-  }
-  return schema;
-};
-
-// Info: (20260716 - Tzuhan) LLM 輸出約束:段落 id 以 enum 鎖死;內容原樣照抄
-const buildBaseImportSchema = (sections: ICarbonReportSection[]): Schema => ({
-  type: SchemaType.OBJECT,
-  properties: {
+  const properties: Record<string, Schema> = {
     segments: {
       type: SchemaType.ARRAY,
       items: {
@@ -84,7 +76,9 @@ const buildBaseImportSchema = (sections: ICarbonReportSection[]): Schema => ({
         description: "無法對應任何大綱段落的原文片段(原樣照抄)",
       },
     },
-    activities: {
+  };
+  if (withActivities) {
+    properties.activities = {
       type: SchemaType.ARRAY,
       items: {
         type: SchemaType.OBJECT,
@@ -107,10 +101,14 @@ const buildBaseImportSchema = (sections: ICarbonReportSection[]): Schema => ({
         },
         required: ["scopeCategory", "sourceName", "quantity", "unit"],
       },
-    },
-  },
-  required: ["segments", "unmapped"],
-});
+    };
+  }
+  return {
+    type: SchemaType.OBJECT,
+    properties,
+    required: ["segments", "unmapped"],
+  };
+};
 
 const buildOutlineCatalog = (sections: ICarbonReportSection[]): string =>
   sections

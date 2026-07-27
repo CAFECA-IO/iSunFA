@@ -114,9 +114,10 @@ export const carbonChatbot = {
   import_apply: "Import selected ({{count}})",
   import_parsing: "Parsing 「{{name}}」; a per-paragraph preview will follow…",
   import_parsing_chapter:
-    "Parsing 「{{name}}」 chapter by chapter ({{current}}/{{total}}); a full report takes a few minutes…",
+    "Parsing 「{{name}}」 chapter by chapter ({{current}}/{{total}} done, in parallel); a full report takes a few minutes…",
   import_failed_chapters:
     "These chapters failed to parse and can be re-imported later: {{chapters}}",
+  import_retry_failed: "Retry failed chapters",
   import_empty: "[Import failed] Nothing in the file maps to the outline.",
   import_failed: "[Import failed] Could not parse the report; please retry later.",
   attachments_processing:
@@ -144,6 +145,40 @@ export const carbonChatbot = {
   activity_pending_factor:
     "⚠ Pending: no reliable factor or unit mismatch; no estimate will be fabricated",
   activity_total_co2e: "Total emissions (reconciled)",
+  articulation_passed: "Mass conservation check passed",
+  articulation_violation: "Mass conservation violated: {{material}}",
+  articulation_equation:
+    "Opening + purchased - closing = {{expected}} {{unit}}, recorded consumption = {{actual}} {{unit}}, gap = {{gap}} {{unit}}",
+  articulation_plausibility_warning:
+    "Quantity exceeds a plausible range, please verify: {{source}}",
+  report_table_detail_heading: "Emission source details",
+  report_table_col_source: "Source",
+  report_table_col_scope: "Scope",
+  report_table_col_quantity: "Activity data",
+  report_table_col_factor: "Emission factor (source)",
+  report_table_col_co2e: "Emissions (kgCO2e)",
+  report_table_subtotal_heading: "Scope subtotals",
+  report_table_total: "Total emissions",
+  report_table_insufficient:
+    "(Insufficient data — the table will be generated automatically once activity data is complete)",
+  report_table_frozen:
+    "⚠ Mass conservation check failed; the data table is frozen. Clarify the inventory gap in the chat and the table will be generated automatically.",
+  report_table_pending_note:
+    "Note: {count} activity record(s) still await emission factors and are excluded from this table.",
+  data_table_refreshed:
+    "Data tables were refreshed from the activity ledger — please re-verify the affected sections",
+  data_badge_reconciled:
+    "Data section: reconciled ✓ (figures produced by the deterministic engine)",
+  data_badge_violated:
+    "Data section: mass conservation violated ⚠ (table frozen pending clarification)",
+  data_badge_insufficient:
+    "Data section: insufficient data (generated automatically once activity data is complete)",
+  chart_scope_pie_title: "Emissions share by scope (kgCO2e)",
+  chart_scope_bar_title: "Emissions by scope (kgCO2e)",
+  chart_insufficient:
+    "(Insufficient data — the chart will be generated automatically once activity data is complete)",
+  chart_frozen:
+    "⚠ Mass conservation check failed; the chart is frozen. Clarify the inventory gap in the chat and it will be generated automatically.",
   inventory_step_ORG_PROFILE: "Step: Organization profile (name/year)",
   inventory_step_ORG_BOUNDARY: "Step: Organizational boundary",
   inventory_step_EMISSION_SOURCES: "Step: Emission source identification",

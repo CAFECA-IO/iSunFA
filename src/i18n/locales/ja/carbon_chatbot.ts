@@ -115,9 +115,10 @@ export const carbonChatbot = {
   import_apply: "選択をインポート({{count}})",
   import_parsing: "「{{name}}」を解析中。完了後に段落ごとのプレビューを表示します…",
   import_parsing_chapter:
-    "「{{name}}」を章ごとに解析中({{current}}/{{total}})。完全なレポートは数分かかります…",
+    "「{{name}}」を章ごとに解析中({{current}}/{{total}} 完了、並行処理)。完全なレポートは数分かかります…",
   import_failed_chapters:
     "次の章は解析に失敗しました。後で再インポートで補完できます:{{chapters}}",
+  import_retry_failed: "失敗した章を再試行",
   import_empty: "【インポート失敗】アウトラインに対応する内容がありません。",
   import_failed: "【インポート失敗】解析に失敗しました。後でもう一度お試しください。",
   attachments_processing:
@@ -145,6 +146,38 @@ export const carbonChatbot = {
   activity_pending_factor:
     "⚠ 保留:信頼できる係数がないか単位不一致のため推定しません",
   activity_total_co2e: "総排出量(照合済み)",
+  articulation_passed: "質量保存チェックに合格しました",
+  articulation_violation: "質量保存違反：{{material}}",
+  articulation_equation:
+    "期首+購入-期末 = {{expected}} {{unit}}、記録上の消費 = {{actual}} {{unit}}、差異 = {{gap}} {{unit}}",
+  articulation_plausibility_warning:
+    "数量が妥当な範囲を超えています。ご確認ください：{{source}}",
+  report_table_detail_heading: "排出源明細",
+  report_table_col_source: "排出源",
+  report_table_col_scope: "スコープ",
+  report_table_col_quantity: "活動データ",
+  report_table_col_factor: "排出係数（出典）",
+  report_table_col_co2e: "排出量 (kgCO2e)",
+  report_table_subtotal_heading: "スコープ別小計",
+  report_table_total: "総排出量",
+  report_table_insufficient:
+    "（データ不足：活動データが揃い次第、システムが自動的に表を生成します）",
+  report_table_frozen:
+    "⚠ 質量保存チェックに未合格のため、データ表は凍結されています。チャットで在庫差異を明確にすると自動的に生成されます。",
+  report_table_pending_note:
+    "注：{count} 件の活動データは係数待ちのため、本表に含まれていません。",
+  data_table_refreshed:
+    "データ表が活動データに合わせて更新されました。該当セクションを再確認してください",
+  data_badge_reconciled: "データセクション：照合済み ✓（数値は決定論エンジン産出）",
+  data_badge_violated: "データセクション：質量保存違反 ⚠（表は凍結中）",
+  data_badge_insufficient:
+    "データセクション：データ不足（活動データが揃い次第自動生成）",
+  chart_scope_pie_title: "スコープ別排出割合 (kgCO2e)",
+  chart_scope_bar_title: "スコープ別排出量 (kgCO2e)",
+  chart_insufficient:
+    "（データ不足：活動データが揃い次第、システムがグラフを自動生成します）",
+  chart_frozen:
+    "⚠ 質量保存チェックに未合格のため、グラフは凍結されています。チャットで在庫差異を明確にすると自動的に生成されます。",
   inventory_step_ORG_PROFILE: "ステップ:企業基本情報(名称/年度)",
   inventory_step_ORG_BOUNDARY: "ステップ:組織境界の設定",
   inventory_step_EMISSION_SOURCES: "ステップ:排出源の特定",

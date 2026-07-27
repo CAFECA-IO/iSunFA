@@ -713,19 +713,19 @@ export const API_ERRORS = {
     message: "Too many requests; please slow down and retry",
     status: ApiCode.RATE_LIMIT,
   } as IErrorDef,
-  // Info: (20260716 - Tzuhan) 附件安全(#6517):檔頭與宣告 MIME 不符(疑似偽裝檔)
+  // Info: (20260716 - Tzuhan) 附件安全(#6517): 檔頭與宣告 MIME 不符(疑似偽裝檔)
   IS_ATTACHMENT_TYPE_MISMATCH: {
     code: "IS000014",
     message: "File content does not match its declared type",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
-  // Info: (20260716 - Tzuhan) 附件安全(#6517):掃毒命中
+  // Info: (20260716 - Tzuhan) 附件安全(#6517): 掃毒命中
   IS_ATTACHMENT_INFECTED: {
     code: "IS000015",
     message: "File rejected by malware scan",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
-  // Info: (20260716 - Tzuhan) 附件安全(#6517):儲存配額耗盡(每 address 5GB 常數)
+  // Info: (20260716 - Tzuhan) 附件安全(#6517): 儲存配額耗盡(每 address 5GB 常數)
   IS_STORAGE_QUOTA_EXCEEDED: {
     code: "IS000016",
     message: "Storage quota exceeded",
@@ -736,6 +736,12 @@ export const API_ERRORS = {
     code: "IS000017",
     message: "Failed to import the report",
     status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
+  // Info: (20260720 - Tzuhan) #6520 質量守恆勾稽違反:報告數據段落凍結,待使用者澄清缺口(防漂綠護欄)
+  IS_MASS_CONSERVATION_VIOLATED: {
+    code: "IS000018",
+    message: "Mass conservation check failed; data sections are frozen",
+    status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
   IS_UNKNOWN: {
     code: "IS000099",

@@ -1,7 +1,7 @@
 // Info: (20260716 - Tzuhan) #56 報告匯入預覽卡:逐段勾選確認後才寫入(與 #55 修訂卡同風格、同人工 gate 原則)
 // Info: (20260716 - Tzuhan) unmapped 桶原樣呈現不丟棄;已有內容的段落顯示覆蓋警告;匯入段落查核一律重置
 
-import { FileUp, Check, X, AlertTriangle } from "lucide-react";
+import { FileUp, Check, X, AlertTriangle, RotateCcw } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 
 export interface IPendingImportItem {
@@ -19,8 +19,8 @@ export interface IPendingImport {
   unmapped: string[];
   // Info: (20260716 - Tzuhan) 匯入的活動數據筆數(顯示用;實際合併於確認時執行)
   activityCount: number;
-  // Info: (20260716 - Tzuhan) 逐章解析失敗的章節名(可重新匯入補齊;空陣列 = 全部成功)
-  failedChapters: string[];
+  // Info: (20260717 - Tzuhan) 逐章解析失敗的章節(id 供重試呼叫、title 供顯示;空陣列 = 全部成功)
+  failedChapters: { id: string; title: string }[];
 }
 
 export interface IImportPreviewProps {
@@ -28,6 +28,8 @@ export interface IImportPreviewProps {
   onToggleItem: (paragraphId: string) => void;
   onApply: () => void;
   onDiscard: () => void;
+  // Info: (20260717 - Tzuhan) 只重跑失敗章節並合併進本預覽(檔案由 hook 暫存,無需重選)
+  onRetryFailed?: () => void;
 }
 
 export function ImportPreview({
@@ -35,6 +37,7 @@ export function ImportPreview({
   onToggleItem,
   onApply,
   onDiscard,
+  onRetryFailed = undefined,
 }: IImportPreviewProps) {
   const { t } = useTranslation();
   const checkedCount = pendingImport.items.filter((i) => i.checked).length;
@@ -90,9 +93,23 @@ export function ImportPreview({
           {pendingImport.failedChapters.length > 0 && (
             <div className="flex items-center gap-1.5 rounded-xl bg-amber-50 p-3 text-[11px] font-bold text-amber-700">
               <AlertTriangle size={12} className="shrink-0" />
-              {t("carbon_chatbot.import_failed_chapters", {
-                chapters: pendingImport.failedChapters.join("、"),
-              })}
+              <span className="min-w-0 flex-1">
+                {t("carbon_chatbot.import_failed_chapters", {
+                  chapters: pendingImport.failedChapters
+                    .map((chapter) => chapter.title)
+                    .join("、"),
+                })}
+              </span>
+              {onRetryFailed && (
+                <button
+                  type="button"
+                  onClick={onRetryFailed}
+                  className="flex shrink-0 items-center gap-1 rounded-full bg-white px-2.5 py-1 font-bold text-amber-700 ring-1 ring-amber-200 transition-colors hover:bg-amber-100"
+                >
+                  <RotateCcw size={11} />
+                  {t("carbon_chatbot.import_retry_failed")}
+                </button>
+              )}
             </div>
           )}
 
