@@ -503,7 +503,7 @@ function ReportPageContent() {
   }, [exportModalTarget, batchResults, routeApplicability]);
 
   /**
-   * Info: (20260724 - Tzuhan) \u6279\u6B21\u532F\u51FA:\u6BCF\u500B (\u8DEF\u7DDA, \u65B9\u6848) \u7D44\u5408\u6E32\u67D3 \u2192 \u622A\u5716 \u2192 \u7368\u7ACB PDF(\u9700\u6C42\u4E8C)
+   * Info: (20260724 - Tzuhan) 批次匯出:每個 (路線, 方案) 組合渲染 → 截圖 → 獨立 PDF(需求二)
    * \u55AE\u6A94\u76F4\u63A5\u4E0B\u8F09;\u591A\u6A94\u9023\u540C summary.csv \u6253\u5305 zip
    */
   const executeBatchExport = async (
@@ -621,7 +621,7 @@ function ReportPageContent() {
   };
 
   /**
-   * Info: (20260724 - Tzuhan) \u55AE\u7B46\u5206\u6790\u5831\u544A\u532F\u51FA:\u6CBF\u7528\u65E2\u6709 WebGL \u622A\u5716 workaround,
+   * Info: (20260724 - Tzuhan) 單筆分析報告匯出:沿用既有 WebGL 截圖 workaround,
    * \u4F46\u6539\u70BA\u300C\u4E00\u500B\u65B9\u6848\u4E00\u4EFD\u7368\u7ACB PDF\u300D(\u9700\u6C42\u4E8C),\u591A\u6A94\u6253\u5305 zip
    */
   const executeReportExport = async (selectedPlans: Set<RouteType>) => {
