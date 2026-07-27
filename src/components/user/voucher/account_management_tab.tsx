@@ -259,6 +259,8 @@ export default function AccountManagementTab({
         setParentInfo("");
         setIsEditing(false);
         setEditId(null);
+        // Info: (20260727 - Julian) 切換手機版 tab
+        setCurrentMobileTab(MobileTab.SUB_ACCOUNT);
       } else {
         setErrorMessage(
           res.message ||
