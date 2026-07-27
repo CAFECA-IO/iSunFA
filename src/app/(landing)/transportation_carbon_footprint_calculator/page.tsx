@@ -443,8 +443,8 @@ function ReportPageContent() {
     }
   }, []);
 
-  // Info: (20260724 - Tzuhan) \u904B\u8F38\u65B9\u5F0F\u9069\u7528\u6027\u6536\u6582\u5230\u55AE\u4E00\u6C7A\u5B9A\u8AD6\u5F15\u64CE(route_applicability.ts):
-  // Info: (20260724 - Tzuhan) \u9678\u904B\u6CBF\u7528\u539F\u300C\u76F4\u7DDA fallback \u975E\u771F\u5BE6\u8DEF\u5F91\u300D\u5224\u65B7;\u6D77\u7A7A\u904B\u65B0\u589E\u300C\u570B\u5167/\u77ED\u7A0B\u5C4F\u853D\u300D\u898F\u5247(\u9700\u6C42\u4E00)
+  // Info: (20260724 - Tzuhan) 運輸方式適用性收斂到單一決定論引擎(route_applicability.ts):
+  // Info: (20260724 - Tzuhan) 陸運沿用原「直線 fallback 非真實路徑」判斷;海空運新增「國內/短程屏蔽」規則(需求一)
   const routeApplicability = useMemo(
     () =>
       plan
@@ -454,7 +454,7 @@ function ReportPageContent() {
   );
   const isLandAvailable = routeApplicability.land;
 
-  // Info: (20260724 - Tzuhan) \u6A94\u540D\u7528\u5730\u9EDE\u6A19\u7C64(\u5EA7\u6A19\u7269\u4EF6\u53D6 name,\u5426\u5247\u4EE5\u5EA7\u6A19\u5B57\u4E32\u5448\u73FE)
+  // Info: (20260724 - Tzuhan) 檔名用地點標籤(座標物件取 name,否則以座標字串呈現)
   const getLocationLabel = (
     loc: string | { lat: number; lng: number; name?: string },
   ): string => {
@@ -465,7 +465,7 @@ function ReportPageContent() {
     return "";
   };
 
-  // Info: (20260724 - Tzuhan) \u9700\u6C42\u4E8C:\u532F\u51FA\u5165\u53E3\u4E00\u5F8B\u5148\u958B\u52FE\u9078\u9078\u55AE,\u532F\u51FA\u7BC4\u570D\u7531\u4F7F\u7528\u8005\u660E\u78BA\u52FE\u9078(\u8207\u756B\u9762\u6AA2\u8996\u72C0\u614B\u89E3\u8026)
+  // Info: (20260724 - Tzuhan) 需求二:匯出入口一律先開勾選選單,匯出範圍由使用者明確勾選(與畫面檢視狀態解耦)
   const handleExportRequest = (singleIndex?: number) => {
     if (batchResults) {
       setExportModalTarget(
@@ -478,7 +478,7 @@ function ReportPageContent() {
     }
   };
 
-  // Info: (20260724 - Tzuhan) \u52FE\u9078\u9078\u55AE\u53EF\u9078\u9805:\u50C5\u5217\u51FA\u9069\u7528\u6027\u5F15\u64CE\u5224\u5B9A\u70BA\u9069\u7528\u7684\u65B9\u6848(\u6574\u6279\u53D6\u806F\u96C6)
+  // Info: (20260724 - Tzuhan) 勾選選單可選項:僅列出適用性引擎判定為適用的方案(整批取聯集)
   const exportAvailablePlans = useMemo<RouteType[]>(() => {
     if (!exportModalTarget) return [];
     if (exportModalTarget.scope === "report") {
@@ -534,7 +534,7 @@ function ReportPageContent() {
       // Info: (20260511 - Luphia) Wait for React to render the hidden batch components
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      // Info: (20260724 - Tzuhan) \u5C55\u958B (\u8DEF\u7DDA, \u65B9\u6848) \u5DE5\u4F5C\u6E05\u55AE:\u6BCF\u689D\u8DEF\u7DDA\u53EA\u532F\u51FA\u300C\u4F7F\u7528\u8005\u52FE\u9078 \u2229 \u8A72\u8DEF\u7DDA\u9069\u7528\u300D\u7684\u65B9\u6848
+      // Info: (20260724 - Tzuhan) 展開 (路線, 方案) 工作清單:每條路線只匯出「使用者勾選 ∩ 該路線適用」的方案
       const jobs: Array<{ index: number; type: RouteType }> = [];
       indices.forEach((index) => {
         const applicability = getRouteApplicability(batchResults[index]?.plan);
@@ -586,7 +586,7 @@ function ReportPageContent() {
         zip.file(file.filename, file.blob);
       });
 
-      // Info: (20260724 - Tzuhan) \u9700\u6C42\u4E09:summary.csv \u6309\u65B9\u6848\u5206\u6B04\u3001\u9010\u6BB5\u5C55\u958B,\u7531 logistics_report.ts \u7D14\u51FD\u6578\u751F\u6210
+      // Info: (20260724 - Tzuhan) 需求三:summary.csv 按方案分欄、逐段展開,由 logistics_report.ts 純函數生成
       if (indices.length > 1) {
         const filesByRouteIndex = new Map<number, string[]>();
         files.forEach((file) => {
