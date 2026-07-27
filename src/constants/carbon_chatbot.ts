@@ -47,6 +47,10 @@ export const CARBON_CHAT_REPLY_TIMEOUT_WITH_ATTACHMENTS_MS = 180_000;
 // Info: (20260716 - Tzuhan) 建議改走「匯入報告」(佐證附件通常是單張帳單,遠小於此)
 export const CARBON_IMPORT_SUGGEST_MIN_BYTES = 4 * 1024 * 1024;
 
+// Info: (20260727 - Tzuhan) #57 純文字/Markdown 的匯入導流門檻:文字版整份報告遠小於 PDF(64KB ≈ 3 萬中文字),
+// Info: (20260727 - Tzuhan) 低於此值視為一般佐證附件,不觸發「匯入報告?」詢問
+export const CARBON_IMPORT_SUGGEST_TEXT_MIN_BYTES = 64 * 1024;
+
 // Info: (20260712 - Luphia) 送給 AI 的對話上下文只取最近 N 則，控制 token 成本與延遲（不影響畫面顯示的完整歷史）
 export const CARBON_CHAT_AI_CONTEXT_SIZE = 20;
 
@@ -89,6 +93,9 @@ export const CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES = [
   "application/pdf",
   "text/csv",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  // Info: (20260727 - Tzuhan) #57 純文字/Markdown:報告匯入常見格式(匯入 API 本已支援,補齊聊天入口)
+  "text/plain",
+  "text/markdown",
 ] as const;
 
 export type CarbonChatAttachmentMimeType =

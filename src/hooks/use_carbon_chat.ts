@@ -109,6 +109,7 @@ import {
   CARBON_CHAT_REPLY_TIMEOUT_MS,
   CARBON_CHAT_REPLY_TIMEOUT_WITH_ATTACHMENTS_MS,
   CARBON_IMPORT_SUGGEST_MIN_BYTES,
+  CARBON_IMPORT_SUGGEST_TEXT_MIN_BYTES,
   CARBON_CHAT_AI_CONTEXT_SIZE,
   CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES,
   CARBON_CHAT_MAX_ATTACHMENT_BYTES,
@@ -298,28 +299,31 @@ export const useCarbonChat = () => {
 
   // Info: (20260712 - Luphia) 送出後啟動等待逾時；逾時仍未經訂閱收到回覆即解除等待並提示，避免卡在 typing
   // Info: (20260714 - Tzuhan) per-channel 計時器:多聊天室並發等待互不覆蓋;閉包綁定發送當下的 channel/session
-  const startReplyTimeout = useCallback((timeoutMs: number = CARBON_CHAT_REPLY_TIMEOUT_MS) => {
-    const channel = chatChannel;
-    // Info: (20260714 - Tzuhan) 回覆已於 fetch 期間送達則不再啟動計時器
-    if (!pendingReplyChannelsRef.current.has(channel)) return;
-    const existing = replyTimersRef.current.get(channel);
-    if (existing) clearTimeout(existing);
-    replyTimersRef.current.set(
-      channel,
-      setTimeout(() => {
-        replyTimersRef.current.delete(channel);
-        setIsError(true);
-        appendMessageLocally(
-          {
-            id: crypto.randomUUID(),
-            sender: ChatRoleEnum.AI,
-            text: t("carbon_chatbot.system_unavailable"),
-          },
-          0,
-        );
-      }, timeoutMs),
-    );
-  }, [chatChannel, appendMessageLocally, t]);
+  const startReplyTimeout = useCallback(
+    (timeoutMs: number = CARBON_CHAT_REPLY_TIMEOUT_MS) => {
+      const channel = chatChannel;
+      // Info: (20260714 - Tzuhan) 回覆已於 fetch 期間送達則不再啟動計時器
+      if (!pendingReplyChannelsRef.current.has(channel)) return;
+      const existing = replyTimersRef.current.get(channel);
+      if (existing) clearTimeout(existing);
+      replyTimersRef.current.set(
+        channel,
+        setTimeout(() => {
+          replyTimersRef.current.delete(channel);
+          setIsError(true);
+          appendMessageLocally(
+            {
+              id: crypto.randomUUID(),
+              sender: ChatRoleEnum.AI,
+              text: t("carbon_chatbot.system_unavailable"),
+            },
+            0,
+          );
+        }, timeoutMs),
+      );
+    },
+    [chatChannel, appendMessageLocally, t],
+  );
 
   // Info: (20260712 - Luphia) 卸載時清除逾時計時器
   useEffect(() => {
@@ -453,7 +457,10 @@ export const useCarbonChat = () => {
         if (!bound) return;
         setSessionAccess((prev) => ({
           ...prev,
-          [bound.channel]: { accountBookId: bound.accountBookId, canEdit: true },
+          [bound.channel]: {
+            accountBookId: bound.accountBookId,
+            canEdit: true,
+          },
         }));
         setDraftNotice({
           type: "info",
@@ -554,8 +561,7 @@ export const useCarbonChat = () => {
           return;
         }
         const preferBackup =
-          localBackup &&
-          localBackup.draftVersion >= (loaded?.version ?? 0);
+          localBackup && localBackup.draftVersion >= (loaded?.version ?? 0);
         const restored = preferBackup
           ? localBackup.reportData
           : (loaded?.reportData ?? localBackup?.reportData);
@@ -801,7 +807,10 @@ export const useCarbonChat = () => {
         setInventoryStates((prev) => {
           const base = prev[channelAtRequest];
           if (!base) return prev;
-          return { ...prev, [channelAtRequest]: applyComputedLedger(base, ledger) };
+          return {
+            ...prev,
+            [channelAtRequest]: applyComputedLedger(base, ledger),
+          };
         });
       })
       .catch((error) => {
@@ -842,11 +851,7 @@ export const useCarbonChat = () => {
 
   // Info: (20260716 - Tzuhan) #55 發起段落修訂:附件事實 + 使用者指示 + 既有原文 → 修訂稿(對照卡確認制)
   const requestParagraphRevision = useCallback(
-    async (
-      paragraphId: string,
-      instruction: string,
-      facts: IContextFact[],
-    ) => {
+    async (paragraphId: string, instruction: string, facts: IContextFact[]) => {
       const paragraph = sessionsData[
         activeSessionId
       ]?.reportData?.paragraphs?.find((p) => p.id === paragraphId);
@@ -964,19 +969,22 @@ export const useCarbonChat = () => {
 
   // Info: (20260714 - Tzuhan) 新增對話:建立空白 session 並切換;channel 隨 id 變更,歷史/草稿各自獨立
   // Info: (20260716 - Tzuhan) #52 可選綁定帳本:綁定後報告歸屬帳本(明文模式),不綁為個人會話(E2EE)
-  const createNewSession = useCallback((accountBookId?: string) => {
-    const id = `s${Date.now().toString(36)}`;
-    const session = createChatSession(
-      id,
-      t("carbon_chatbot.new_session_title"),
-      new Date().toLocaleDateString(),
-    );
-    setSessionsData((prev) => ({ ...prev, [id]: session }));
-    switchSession(id);
-    if (accountBookId) {
-      void bindSessionToBook(id, accountBookId);
-    }
-  }, [t, switchSession, bindSessionToBook]);
+  const createNewSession = useCallback(
+    (accountBookId?: string) => {
+      const id = `s${Date.now().toString(36)}`;
+      const session = createChatSession(
+        id,
+        t("carbon_chatbot.new_session_title"),
+        new Date().toLocaleDateString(),
+      );
+      setSessionsData((prev) => ({ ...prev, [id]: session }));
+      switchSession(id);
+      if (accountBookId) {
+        void bindSessionToBook(id, accountBookId);
+      }
+    },
+    [t, switchSession, bindSessionToBook],
+  );
 
   // Info: (20260714 - Tzuhan) 跳至報告段落並短暫高亮(chip 點擊與草稿寫入後的即時回饋共用)
   const jumpToReportParagraph = useCallback((paragraphId: string) => {
@@ -1056,7 +1064,10 @@ export const useCarbonChat = () => {
       // Info: (20260717 - Tzuhan) 並行度 2:11 章耗時約減半;仍留限流餘裕(LLM bucket 12/min)
       await Promise.all([processNext(), processNext()]);
 
-      const segmentsById = new Map<string, { title: string; parts: string[] }>();
+      const segmentsById = new Map<
+        string,
+        { title: string; parts: string[] }
+      >();
       const unmapped: string[] = [];
       let activities: IActivityRecord[] = [];
       results.forEach((chunk) => {
@@ -1087,6 +1098,66 @@ export const useCarbonChat = () => {
         activities,
         failed,
       };
+    },
+    [language, t],
+  );
+
+  // Info: (20260727 - Tzuhan) #57 草稿補齊執行器:對「原樣匯入後仍空白」的段落,依同一份上傳文件請 LLM 撰寫草稿。
+  // Info: (20260727 - Tzuhan) 依章分批(沿用逐章模式的 output 上限考量),依序執行;單批失敗記錄後續行(補齊為 best-effort,不阻斷預覽)
+  const runGapFillSections = useCallback(
+    async (
+      file: File,
+      missingSectionIds: string[],
+      fileName: string,
+    ): Promise<{ paragraphId: string; title: string; content: string }[]> => {
+      const missingSet = new Set(missingSectionIds);
+      const batches = CARBON_REPORT_CHAPTERS.map((chapter) =>
+        CARBON_REPORT_OUTLINE.filter(
+          (section) =>
+            section.chapterId === chapter.id && missingSet.has(section.id),
+        ).map((section) => section.id),
+      ).filter((ids) => ids.length > 0);
+
+      const drafted: {
+        paragraphId: string;
+        title: string;
+        content: string;
+      }[] = [];
+      for (let index = 0; index < batches.length; index++) {
+        setDraftNotice({
+          type: "loading",
+          text: t("carbon_chatbot.import_drafting_sections", {
+            name: fileName,
+            current: index + 1,
+            total: batches.length,
+          }),
+        });
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("language", language);
+        formData.append("mode", "draft");
+        formData.append("sectionIds", JSON.stringify(batches[index]));
+        try {
+          // Info: (20260727 - Tzuhan) 循序呼叫(非並行):草稿補齊在匯入 11 章之後,保留 LLM 限流餘裕
+          const res = await request<{
+            payload: {
+              segments: {
+                paragraphId: string;
+                title: string;
+                content: string;
+              }[];
+            } | null;
+          }>("/api/v1/chat/carbon/import", { method: "POST", body: formData });
+          drafted.push(...(res.payload?.segments ?? []));
+        } catch (gapError) {
+          console.error(
+            "[carbon-chat] gap-fill batch failed:",
+            batches[index],
+            gapError,
+          );
+        }
+      }
+      return drafted;
     },
     [language, t],
   );
@@ -1139,7 +1210,11 @@ export const useCarbonChat = () => {
               activities: IActivityRecord[];
             } | null;
           }>("/api/v1/chat/carbon/import", { method: "POST", body: formData });
-          payload = res.payload ?? { segments: [], unmapped: [], activities: [] };
+          payload = res.payload ?? {
+            segments: [],
+            unmapped: [],
+            activities: [],
+          };
         }
 
         setDraftNotice(null);
@@ -1159,15 +1234,47 @@ export const useCarbonChat = () => {
         const existingIds = new Set(
           paragraphs.filter((p) => p.content).map((p) => p.id),
         );
+
+        // Info: (20260727 - Tzuhan) #57 完成全部小節:原樣匯入 + 既有內容之外仍空白的段落,
+        // Info: (20260727 - Tzuhan) 依同一份文件補 AI 草稿(預覽中標記,與逐字原文區隔;人工確認才寫入)
+        const importedIds = new Set(
+          payload.segments.map((segment) => segment.paragraphId),
+        );
+        const missingSectionIds = CARBON_REPORT_OUTLINE.filter(
+          (section) =>
+            !importedIds.has(section.id) && !existingIds.has(section.id),
+        ).map((section) => section.id);
+        let draftedSegments: {
+          paragraphId: string;
+          title: string;
+          content: string;
+        }[] = [];
+        if (missingSectionIds.length > 0) {
+          draftedSegments = await runGapFillSections(
+            file,
+            missingSectionIds,
+            file.name,
+          );
+        }
+        setDraftNotice(null);
+
         // Info: (20260716 - Tzuhan) 匯入的活動數據於確認時合併,先隨預覽暫存
         importActivitiesRef.current = payload.activities;
         setPendingImport({
           fileName: file.name,
-          items: payload.segments.map((segment) => ({
-            ...segment,
-            hasExisting: existingIds.has(segment.paragraphId),
-            checked: true,
-          })),
+          items: [
+            ...payload.segments.map((segment) => ({
+              ...segment,
+              hasExisting: existingIds.has(segment.paragraphId),
+              checked: true,
+            })),
+            ...draftedSegments.map((segment) => ({
+              ...segment,
+              hasExisting: false,
+              checked: true,
+              isDraft: true,
+            })),
+          ],
           unmapped: payload.unmapped,
           activityCount: payload.activities.length,
           failedChapters,
@@ -1184,7 +1291,14 @@ export const useCarbonChat = () => {
         }, CARBON_DRAFT_NOTICE_DISMISS_MS);
       }
     },
-    [sessionsData, activeSessionId, language, t, runImportChapters],
+    [
+      sessionsData,
+      activeSessionId,
+      language,
+      t,
+      runImportChapters,
+      runGapFillSections,
+    ],
   );
 
   // Info: (20260717 - Tzuhan) #56 只重跑失敗章節,結果合併進現有預覽(檔案取自暫存 ref)
@@ -1494,13 +1608,7 @@ export const useCarbonChat = () => {
         };
       });
     },
-    [
-      activeSessionId,
-      dataTableLabels,
-      chartLabels,
-      sessionAccess,
-      chatChannel,
-    ],
+    [activeSessionId, dataTableLabels, chartLabels, sessionAccess, chatChannel],
   );
 
   /**
@@ -1634,7 +1742,11 @@ export const useCarbonChat = () => {
       const prevReport = session?.reportData;
       if (!prevReport?.paragraphs) return prev;
       const nextRaw = prevReport.rawMarkdown
-        ? patchMarkdownSection(prevReport.rawMarkdown, target.title, nextContent)
+        ? patchMarkdownSection(
+            prevReport.rawMarkdown,
+            target.title,
+            nextContent,
+          )
         : prevReport.rawMarkdown;
       return {
         ...prev,
@@ -2204,11 +2316,20 @@ export const useCarbonChat = () => {
 
       // Info: (20260716 - Tzuhan) #56 匯入導流(UAT:使用者把整份報告當佐證附件上傳 → 聊天管線超時):
       // Info: (20260716 - Tzuhan) 單一大型 pdf 疑似整份報告,先問要「匯入報告」還是「作為佐證附件」
+      // Info: (20260727 - Tzuhan) #57 擴及 .txt/.md:文字版報告門檻較低(文字遠比 PDF 精簡)
+      const isImportCandidate = (file: File): boolean => {
+        if (file.type === "application/pdf") {
+          return file.size >= CARBON_IMPORT_SUGGEST_MIN_BYTES;
+        }
+        if (file.type === "text/plain" || file.type === "text/markdown") {
+          return file.size >= CARBON_IMPORT_SUGGEST_TEXT_MIN_BYTES;
+        }
+        return false;
+      };
       if (
         !options?.skipImportCheck &&
         files.length === 1 &&
-        files[0].type === "application/pdf" &&
-        files[0].size >= CARBON_IMPORT_SUGGEST_MIN_BYTES
+        isImportCandidate(files[0])
       ) {
         setImportCandidate(files[0]);
         return;
@@ -2611,7 +2732,7 @@ export const useCarbonChat = () => {
     }
 
     setIsUnlocked(true);
-      setUnlockedMasterKey(masterKeyRef.current);
+    setUnlockedMasterKey(masterKeyRef.current);
     setIsError(false);
     // Info: (20260714 - Tzuhan) 歷史載入與招呼詞改由 channel 載入 effect 統一處理(切換 session 亦適用)
   }, [isUnlocked, ensureMasterKeyCached, appendMessageLocally, t]);

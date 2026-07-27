@@ -15,7 +15,10 @@ import {
   CARBON_CHAT_MAX_ATTACHMENT_BYTES,
   CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES,
 } from "@/constants/carbon_chatbot";
-import { CARBON_REPORT_CHAPTERS } from "@/constants/carbon_report_outline";
+import {
+  CARBON_REPORT_CHAPTERS,
+  CARBON_REPORT_OUTLINE,
+} from "@/constants/carbon_report_outline";
 
 // Info: (20260716 - Tzuhan) 匯入格式白名單:pdf(inline 萃取)與 md/純文字(直讀);
 // Info: (20260716 - Tzuhan) docx 需先轉換管線,Gemini inline 不支援 — 列於 #56 後續,不在本清單
@@ -59,6 +62,35 @@ export async function POST(request: NextRequest) {
       return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
     }
     const extractActivities = formData.get("extractActivities") !== "false";
+    // Info: (20260727 - Tzuhan) #57 草稿補齊模式:mode=draft + sectionIds(JSON 陣列,白名單複驗於此與服務層)
+    const mode = formData.get("mode") === "draft" ? "draft" : "verbatim";
+    let draftSectionIds: string[] = [];
+    if (mode === "draft") {
+      const sectionIdsRaw = formData.get("sectionIds");
+      if (typeof sectionIdsRaw !== "string") {
+        return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
+      }
+      try {
+        const parsed: unknown = JSON.parse(sectionIdsRaw);
+        if (
+          !Array.isArray(parsed) ||
+          parsed.length === 0 ||
+          parsed.length > CARBON_REPORT_OUTLINE.length ||
+          !parsed.every((id) => typeof id === "string")
+        ) {
+          return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
+        }
+        const validIds = new Set(
+          CARBON_REPORT_OUTLINE.map((section) => section.id),
+        );
+        if (!parsed.every((id) => validIds.has(id))) {
+          return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
+        }
+        draftSectionIds = parsed;
+      } catch {
+        return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
+      }
+    }
     if (!(file instanceof File)) {
       return jsonFail(API_ERRORS.VA_NO_FILE_UPLOADED);
     }
@@ -85,13 +117,25 @@ export async function POST(request: NextRequest) {
 
     const isText = TEXT_MIME_TYPES.includes(file.type);
     const service = new ReportImportService();
+    const source = {
+      name: file.name,
+      mimeType: file.type,
+      data: isText ? buffer.toString("utf-8") : buffer.toString("base64"),
+      isText,
+    };
+
+    // Info: (20260727 - Tzuhan) #57 草稿補齊:回傳形狀與匯入一致(unmapped/activities 恆空),前端共用合併邏輯
+    if (mode === "draft") {
+      const segments = await service.draftMissingSections(
+        source,
+        draftSectionIds,
+        typeof language === "string" ? language : undefined,
+      );
+      return jsonOk({ segments, unmapped: [], activities: [] });
+    }
+
     const result = await service.importReport(
-      {
-        name: file.name,
-        mimeType: file.type,
-        data: isText ? buffer.toString("utf-8") : buffer.toString("base64"),
-        isText,
-      },
+      source,
       typeof language === "string" ? language : undefined,
       { chapterId, extractActivities },
     );

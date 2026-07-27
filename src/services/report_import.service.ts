@@ -17,6 +17,7 @@ import { GhgProtocolCategory } from "@/constants/esg";
 import { MeasurementUnit } from "@/constants/enums";
 import {
   CarbonReportImportLlmOutputSchema,
+  CarbonReportGapFillLlmOutputSchema,
   CarbonActivityRecordSchema,
 } from "@/validators";
 import { ApiError, API_ERRORS } from "@/lib/utils/error_dictionary";
@@ -110,9 +111,41 @@ const buildImportResponseSchema = (
   };
 };
 
+// Info: (20260727 - Tzuhan) #57 草稿補齊 responseSchema:段落 id 以 enum 鎖死;內容為「依據原文撰寫的草稿」
+const buildGapFillResponseSchema = (
+  sections: ICarbonReportSection[],
+): Schema => ({
+  type: SchemaType.OBJECT,
+  properties: {
+    segments: {
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          paragraphId: {
+            type: SchemaType.STRING,
+            format: "enum",
+            enum: sections.map((section) => section.id),
+          },
+          content: {
+            type: SchemaType.STRING,
+            description:
+              "段落草稿(Markdown),100~300 字;所有事實必須出自報告原文,缺漏以(待補: 說明)佔位",
+          },
+        },
+        required: ["paragraphId", "content"],
+      },
+    },
+  },
+  required: ["segments"],
+});
+
 const buildOutlineCatalog = (sections: ICarbonReportSection[]): string =>
   sections
-    .map((section) => `${section.id}: ${section.code} ${section.title} — ${section.guidance}`)
+    .map(
+      (section) =>
+        `${section.id}: ${section.code} ${section.title} — ${section.guidance}`,
+    )
     .join("\n");
 
 const SECTION_BY_ID = new Map(CARBON_REPORT_OUTLINE.map((s) => [s.id, s]));
@@ -245,12 +278,109 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
     const activities: IActivityRecord[] = (parsed.activities ?? []).flatMap(
       (item) => {
         const record = CarbonActivityRecordSchema.safeParse(item);
-        return record.success
-          ? [{ ...record.data, source: source.name }]
-          : [];
+        return record.success ? [{ ...record.data, source: source.name }] : [];
       },
     );
 
     return { segments, unmapped, activities };
+  }
+
+  /**
+   * Info: (20260727 - Tzuhan) #57 草稿補齊:匯入(原樣照抄)後仍空白的段落,依上傳文件撰寫草稿。
+   * 與 importReport 的鐵律區隔:本方法「允許改寫與摘要」,但事實與數值只能出自報告原文;
+   * 缺漏資訊以「(待補: 說明)」佔位;數據段落不得自產表格與加總(由決定論引擎產出)。
+   * 產出僅供匯入預覽,標記為 AI 草稿,人工確認後才寫入且查核一律重置。
+   */
+  async draftMissingSections(
+    source: IReportImportSource,
+    sectionIds: string[],
+    language?: string,
+  ): Promise<IImportedSegment[]> {
+    const idSet = new Set(sectionIds);
+    const scopedSections = CARBON_REPORT_OUTLINE.filter((section) =>
+      idSet.has(section.id),
+    );
+    if (scopedSections.length === 0) {
+      throw new ApiError(
+        API_ERRORS.VL_SCHEMA_ERROR.code,
+        API_ERRORS.VL_SCHEMA_ERROR.message,
+        API_ERRORS.VL_SCHEMA_ERROR.status,
+      );
+    }
+
+    const dataDrivenIds = scopedSections
+      .filter((section) => section.isDataDriven)
+      .map((section) => section.id);
+
+    const prompt = `你是一位專業碳會計師,負責依據使用者上傳的既有溫室氣體盤查報告,為報告書標準大綱中「缺漏的段落」撰寫草稿。
+
+【撰寫規則】
+1. 每個列出的段落各撰寫一段草稿(Markdown,100~300 字),不含章節編號與段落標題。
+2. 所有事實、數值、名稱、年份必須出自報告原文;報告中找不到的資訊以「(待補: 說明)」佔位,嚴禁虛構。
+3. 嚴禁自行計算、換算、加總或推導任何數字。
+4. 允許改寫與摘要原文以符合段落撰寫目標(此點與逐字匯入不同)。
+5. ${dataDrivenIds.length > 0 ? `下列段落為數據段落:不得自行產生統計表格或加總數字,僅撰寫方法說明文字,並在表格應出現處保留「(數據表格由系統產出)」佔位:${dataDrivenIds.join(", ")}。` : "本範圍無數據段落。"}
+6. 語言:${language ?? "zh-TW"}。
+7. 報告原文完全沒有相關資訊的段落,仍需輸出草稿:以撰寫目標為骨架、全部關鍵資訊以「(待補: 說明)」佔位。
+
+【待撰寫段落】
+${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\n${source.data}` : ""}`;
+
+    let raw: string;
+    try {
+      raw = await this.getChatService().generateRawWithImages(
+        prompt,
+        source.isText
+          ? undefined
+          : [{ data: source.data, mimeType: source.mimeType }],
+        true,
+        buildGapFillResponseSchema(scopedSections),
+        {
+          temperature: LLM_TEMPERATURE.EXTRACTION,
+          timeoutMs: LLM_EXTRACTION_TIMEOUT_MS,
+          taskKey: LlmTaskKeyEnum.REPORT_IMPORT,
+          maxOutputTokens: 8192,
+        },
+      );
+    } catch (error) {
+      logger.error(
+        `[ReportImportService] gap-fill LLM call failed: ${JSON.stringify(error)}`,
+      );
+      throw new ApiError(
+        API_ERRORS.IS_REPORT_IMPORT_FAILED.code,
+        API_ERRORS.IS_REPORT_IMPORT_FAILED.message,
+        API_ERRORS.IS_REPORT_IMPORT_FAILED.status,
+      );
+    }
+
+    // Info: (20260727 - Tzuhan) 永不直接採信 LLM 輸出:JSON + Zod 雙重護欄
+    let parsed;
+    try {
+      parsed = CarbonReportGapFillLlmOutputSchema.parse(JSON.parse(raw));
+    } catch {
+      throw new ApiError(
+        API_ERRORS.IS_LLM_OUTPUT_INVALID.code,
+        API_ERRORS.IS_LLM_OUTPUT_INVALID.message,
+        API_ERRORS.IS_LLM_OUTPUT_INVALID.status,
+      );
+    }
+
+    // Info: (20260727 - Tzuhan) 白名單複驗:範圍外段落 id 直接捨棄(草稿非原文,無保留價值);同段多片段串接
+    const contentById = new Map<string, string[]>();
+    parsed.segments.forEach((segment) => {
+      if (!idSet.has(segment.paragraphId)) return;
+      const bucket = contentById.get(segment.paragraphId) ?? [];
+      bucket.push(segment.content);
+      contentById.set(segment.paragraphId, bucket);
+    });
+
+    return Array.from(contentById.entries()).map(([paragraphId, parts]) => {
+      const section = SECTION_BY_ID.get(paragraphId);
+      return {
+        paragraphId,
+        title: section ? `${section.code} ${section.title}` : paragraphId,
+        content: parts.join("\n\n").trim(),
+      };
+    });
   }
 }

@@ -1,7 +1,14 @@
 // Info: (20260716 - Tzuhan) #56 報告匯入預覽卡:逐段勾選確認後才寫入(與 #55 修訂卡同風格、同人工 gate 原則)
 // Info: (20260716 - Tzuhan) unmapped 桶原樣呈現不丟棄;已有內容的段落顯示覆蓋警告;匯入段落查核一律重置
 
-import { FileUp, Check, X, AlertTriangle, RotateCcw } from "lucide-react";
+import {
+  FileUp,
+  Check,
+  X,
+  AlertTriangle,
+  RotateCcw,
+  Sparkles,
+} from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 
 export interface IPendingImportItem {
@@ -11,6 +18,8 @@ export interface IPendingImportItem {
   // Info: (20260716 - Tzuhan) 目標段落已有內容(匯入將覆蓋,需醒目警告)
   hasExisting: boolean;
   checked: boolean;
+  // Info: (20260727 - Tzuhan) #57 AI 草稿補齊段落(非逐字原文):預覽需明確標記,與原樣匯入區隔
+  isDraft?: boolean;
 }
 
 export interface IPendingImport {
@@ -80,6 +89,12 @@ export function ImportPreview({
                     <span className="flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-600">
                       <AlertTriangle size={10} />
                       {t("carbon_chatbot.import_overwrite_warning")}
+                    </span>
+                  )}
+                  {item.isDraft && (
+                    <span className="flex shrink-0 items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-bold text-purple-600">
+                      <Sparkles size={10} />
+                      {t("carbon_chatbot.import_draft_badge")}
                     </span>
                   )}
                 </div>

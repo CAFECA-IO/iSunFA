@@ -103,10 +103,14 @@ export const carbonChatbot = {
   revision_apply: "Apply revision",
   revision_discard: "Discard",
   revision_generating: "Generating revision for 「{{section}}」…",
-  revision_failed: "[Revision failed] Could not generate a revision; please retry later.",
+  revision_failed:
+    "[Revision failed] Could not generate a revision; please retry later.",
   import_button: "Import report",
   import_title: "Import report: {{name}}",
   import_overwrite_warning: "Will overwrite existing content",
+  import_drafting_sections:
+    'Drafting missing sections for "{{name}}" (batch {{current}}/{{total}}, grounded in the uploaded file)…',
+  import_draft_badge: "AI Draft",
   import_unmapped:
     "Content not matching the outline ({{count}} blocks; not imported, handle in chat)",
   import_reset_note:
@@ -119,7 +123,8 @@ export const carbonChatbot = {
     "These chapters failed to parse and can be re-imported later: {{chapters}}",
   import_retry_failed: "Retry failed chapters",
   import_empty: "[Import failed] Nothing in the file maps to the outline.",
-  import_failed: "[Import failed] Could not parse the report; please retry later.",
+  import_failed:
+    "[Import failed] Could not parse the report; please retry later.",
   attachments_processing:
     "Processing attachments (extracting facts and drafting); large files may take a minute or two…",
   import_suggest:
@@ -194,16 +199,19 @@ export const carbonChatbot = {
     "Imported {{count}} voucher-level activity record(s) from the book (duplicates skipped automatically)",
   book_records_imported_with_skips:
     "Imported {{count}} record(s); {{skipped}} skipped because the GHG scope could not be determined — set the scope or activity type on the ESG page",
-  book_records_import_failed: "Import from the account book failed; please retry",
+  book_records_import_failed:
+    "Import from the account book failed; please retry",
   activity_open_evidence: "View voucher ↗",
   evidence_chain_title:
     "Emission evidence chain (click to expand layer by layer, down to a single voucher)",
   evidence_chain_loading: "Loading voucher data from the account book…",
-  evidence_chain_empty: "No recognized emission records in this account book yet",
+  evidence_chain_empty:
+    "No recognized emission records in this account book yet",
   evidence_chain_error:
     "Failed to load voucher data (check your account book viewing permission)",
   evidence_chain_records: "{{count}} voucher record(s)",
-  evidence_chain_formula: "{{quantity}} {{unit}} × {{factor}} = {{co2e}} kgCO2e",
+  evidence_chain_formula:
+    "{{quantity}} {{unit}} × {{factor}} = {{co2e}} kgCO2e",
   evidence_chain_total: "Total emissions",
   evidence_chain_verified: "Verified",
   evidence_chain_unverified: "Unverified",

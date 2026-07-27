@@ -82,7 +82,8 @@ export const carbonChatbot = {
   remove_attachment: "添付を削除",
   attachment_invalid_type:
     "未対応のファイル形式です:{{name}}(PNG、JPG、PDF、CSV、XLSX のみ対応)",
-  attachment_too_large: "ファイルが大きすぎます:{{name}}(1ファイル上限 {{max}})",
+  attachment_too_large:
+    "ファイルが大きすぎます:{{name}}(1ファイル上限 {{max}})",
   attachment_limit: "1メッセージに添付できるのは最大 {{max}} 件です",
   attachment_upload_failed:
     "添付ファイルのアップロードに失敗しました:{{name}}。削除して再試行してください",
@@ -104,23 +105,29 @@ export const carbonChatbot = {
   revision_apply: "修正を適用",
   revision_discard: "破棄",
   revision_generating: "「{{section}}」の修正案を生成中…",
-  revision_failed: "【修正失敗】修正案を生成できませんでした。後でもう一度お試しください。",
+  revision_failed:
+    "【修正失敗】修正案を生成できませんでした。後でもう一度お試しください。",
   import_button: "レポートをインポート",
   import_title: "レポートのインポート:{{name}}",
   import_overwrite_warning: "既存の内容を上書きします",
+  import_drafting_sections:
+    "「{{name}}」の欠落セクションをAIドラフトで補完中(第 {{current}}/{{total}} バッチ、アップロード文書に基づく)…",
+  import_draft_badge: "AIドラフト",
   import_unmapped:
     "アウトラインに対応しない内容({{count}} 件。インポートされません)",
   import_reset_note:
     "インポートした段落の検証状態はリセットされます。{{activities}} 件の活動データは再照合されます",
   import_apply: "選択をインポート({{count}})",
-  import_parsing: "「{{name}}」を解析中。完了後に段落ごとのプレビューを表示します…",
+  import_parsing:
+    "「{{name}}」を解析中。完了後に段落ごとのプレビューを表示します…",
   import_parsing_chapter:
     "「{{name}}」を章ごとに解析中({{current}}/{{total}} 完了、並行処理)。完全なレポートは数分かかります…",
   import_failed_chapters:
     "次の章は解析に失敗しました。後で再インポートで補完できます:{{chapters}}",
   import_retry_failed: "失敗した章を再試行",
   import_empty: "【インポート失敗】アウトラインに対応する内容がありません。",
-  import_failed: "【インポート失敗】解析に失敗しました。後でもう一度お試しください。",
+  import_failed:
+    "【インポート失敗】解析に失敗しました。後でもう一度お試しください。",
   attachments_processing:
     "添付ファイルを解析中(事実抽出とドラフト生成)。大きなファイルは1〜2分かかることがあります…",
   import_suggest:
@@ -168,7 +175,8 @@ export const carbonChatbot = {
     "注：{count} 件の活動データは係数待ちのため、本表に含まれていません。",
   data_table_refreshed:
     "データ表が活動データに合わせて更新されました。該当セクションを再確認してください",
-  data_badge_reconciled: "データセクション：照合済み ✓（数値は決定論エンジン産出）",
+  data_badge_reconciled:
+    "データセクション：照合済み ✓（数値は決定論エンジン産出）",
   data_badge_violated: "データセクション：質量保存違反 ⚠（表は凍結中）",
   data_badge_insufficient:
     "データセクション：データ不足（活動データが揃い次第自動生成）",
@@ -181,23 +189,29 @@ export const carbonChatbot = {
   chart_sankey_chat_node: "チャット/添付による申告",
   book_bind_pending_unlock:
     "帳簿セッションを作成しました。暗号化チャットのロックを解除すると帳簿バインドが完了します(証憑インポートと証拠チェーンはバインド後に利用可能)",
-  book_bind_done: "帳簿バインド完了。活動データカードから証憑データをインポートできます",
+  book_bind_done:
+    "帳簿バインド完了。活動データカードから証憑データをインポートできます",
   book_bind_denied: "帳簿バインド失敗:この帳簿の Editor 以上の権限が必要です",
   book_bind_failed: "帳簿バインドに失敗しました。再試行してください",
   book_records_import_button: "帳簿から証憑データをインポート",
-  book_records_importing: "帳簿から認識済みの証憑レベル排出データをインポート中…",
+  book_records_importing:
+    "帳簿から認識済みの証憑レベル排出データをインポート中…",
   book_records_imported:
     "帳簿から {{count}} 件の証憑レベル活動データをインポートしました(重複は自動スキップ)",
   book_records_imported_with_skips:
     "{{count}} 件をインポート。{{skipped}} 件は GHG スコープを判定できずスキップしました。ESG ページでスコープまたは活動タイプを設定してください",
-  book_records_import_failed: "帳簿からのインポートに失敗しました。再試行してください",
+  book_records_import_failed:
+    "帳簿からのインポートに失敗しました。再試行してください",
   activity_open_evidence: "証憑を表示 ↗",
-  evidence_chain_title: "排出証拠チェーン(クリックで段階的に展開、最小単位は単一証憑)",
+  evidence_chain_title:
+    "排出証拠チェーン(クリックで段階的に展開、最小単位は単一証憑)",
   evidence_chain_loading: "帳簿の証憑データを読み込み中…",
   evidence_chain_empty: "この帳簿にはまだ認識済みの排出データがありません",
-  evidence_chain_error: "証憑データの読み込みに失敗しました(帳簿の閲覧権限をご確認ください)",
+  evidence_chain_error:
+    "証憑データの読み込みに失敗しました(帳簿の閲覧権限をご確認ください)",
   evidence_chain_records: "証憑 {{count}} 件",
-  evidence_chain_formula: "{{quantity}} {{unit}} × {{factor}} = {{co2e}} kgCO2e",
+  evidence_chain_formula:
+    "{{quantity}} {{unit}} × {{factor}} = {{co2e}} kgCO2e",
   evidence_chain_total: "総排出量",
   evidence_chain_verified: "検証済み",
   evidence_chain_unverified: "未検証",

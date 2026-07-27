@@ -99,17 +99,24 @@ export const carbonChatbot = {
   import_button: "导入报告",
   import_title: "导入报告:{{name}}",
   import_overwrite_warning: "将覆盖既有内容",
+  import_drafting_sections:
+    "「{{name}}」缺漏小节 AI 草稿补齐中(第 {{current}}/{{total}} 批,依据上传文件撰写)…",
+  import_draft_badge: "AI 草稿",
   import_unmapped: "无法对应大纲的内容({{count}} 段,不会导入,可于对话中处理)",
-  import_reset_note: "导入段落的核对状态将重置;{{activities}} 笔活动数据将入账并重新核对",
+  import_reset_note:
+    "导入段落的核对状态将重置;{{activities}} 笔活动数据将入账并重新核对",
   import_apply: "导入勾选({{count}})",
   import_parsing: "「{{name}}」解析中,完成后将显示逐段预览…",
-  import_parsing_chapter: "「{{name}}」逐章解析中(已完成 {{current}}/{{total}} 章,并行处理),完整报告约需数分钟…",
+  import_parsing_chapter:
+    "「{{name}}」逐章解析中(已完成 {{current}}/{{total}} 章,并行处理),完整报告约需数分钟…",
   import_failed_chapters: "以下章节解析失败,可稍后重新导入补齐:{{chapters}}",
   import_retry_failed: "重试失败章节",
   import_empty: "【导入失败】文件中没有可对应到大纲的内容。",
   import_failed: "【导入失败】报告解析发生问题,请稍后再试。",
-  attachments_processing: "附件解析中(提取事实与生成草稿),大型文件可能需要一至两分钟…",
-  import_suggest: "「{{name}}」看起来是整份报告。要导入为报告起点,还是作为佐证附件?",
+  attachments_processing:
+    "附件解析中(提取事实与生成草稿),大型文件可能需要一至两分钟…",
+  import_suggest:
+    "「{{name}}」看起来是整份报告。要导入为报告起点,还是作为佐证附件?",
   import_suggest_import: "导入报告",
   import_suggest_attach: "作为附件发送",
   section_placeholder:
@@ -147,7 +154,8 @@ export const carbonChatbot = {
     "（数据不足，补齐活动数据后由系统自动生成数据表格）",
   report_table_frozen:
     "⚠ 质量守恒核对未通过，数据表格已冻结。请于对话中澄清库存缺口后，表格将自动生成。",
-  report_table_pending_note: "注：尚有 {count} 笔活动数据待补系数，未计入下表。",
+  report_table_pending_note:
+    "注：尚有 {count} 笔活动数据待补系数，未计入下表。",
   data_table_refreshed: "数据表格已随活动数据更新，请重新核对相关段落",
   data_badge_reconciled: "数据段落：已核对 ✓（数字由确定性引擎产出）",
   data_badge_violated: "数据段落：质量守恒违反 ⚠（表格已冻结，待澄清）",
@@ -165,7 +173,8 @@ export const carbonChatbot = {
   book_bind_failed: "账本绑定失败，请稍后再试",
   book_records_import_button: "从账本导入凭证数据",
   book_records_importing: "正在从账本导入已认列的凭证级碳排数据…",
-  book_records_imported: "已从账本导入 {{count}} 笔凭证级活动数据（重复者自动略过）",
+  book_records_imported:
+    "已从账本导入 {{count}} 笔凭证级活动数据（重复者自动略过）",
   book_records_imported_with_skips:
     "已从账本导入 {{count}} 笔；{{skipped}} 笔因无法判定 GHG 范畴而略过，请至 ESG 页补选范畴或活动类型",
   book_records_import_failed: "从账本导入失败，请稍后再试",
@@ -175,7 +184,8 @@ export const carbonChatbot = {
   evidence_chain_empty: "此账本尚无已认列的碳排数据",
   evidence_chain_error: "凭证数据加载失败（请确认账本查看权限）",
   evidence_chain_records: "{{count}} 笔凭证",
-  evidence_chain_formula: "{{quantity}} {{unit}} × {{factor}} = {{co2e}} kgCO2e",
+  evidence_chain_formula:
+    "{{quantity}} {{unit}} × {{factor}} = {{co2e}} kgCO2e",
   evidence_chain_total: "总排放量",
   evidence_chain_verified: "已验证",
   evidence_chain_unverified: "未验证",

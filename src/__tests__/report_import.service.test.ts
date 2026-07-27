@@ -148,3 +148,40 @@ describe("ReportImportService chapter-scoped mode (chunked import)", () => {
     expect(prompt).toContain("本次呼叫不需要萃取活動數據");
   });
 });
+
+// Info: (20260727 - Tzuhan) #57 草稿補齊:白名單複驗、範圍外捨棄、同段串接、prompt 含草稿規則
+describe("ReportImportService.draftMissingSections", () => {
+  it("should return drafts only for requested sections and discard out-of-scope ids", async () => {
+    const { service, spy } = buildService({
+      segments: [
+        { paragraphId: VALID_ID, content: "依原文撰寫的草稿。" },
+        { paragraphId: VALID_ID_2, content: "範圍外草稿,應被捨棄。" },
+        { paragraphId: VALID_ID, content: "同段第二片段。" },
+      ],
+    });
+
+    const drafts = await service.draftMissingSections(
+      textSource(),
+      [VALID_ID],
+      "zh-TW",
+    );
+
+    expect(drafts).toHaveLength(1);
+    expect(drafts[0].paragraphId).toBe(VALID_ID);
+    expect(drafts[0].content).toBe("依原文撰寫的草稿。\n\n同段第二片段。");
+    // Info: (20260727 - Tzuhan) prompt 必須載明草稿規則:允許改寫但事實僅限原文、缺漏以(待補)佔位
+    const prompt = spy.mock.calls[0][0];
+    expect(prompt).toContain("待補");
+    expect(prompt).toContain("嚴禁自行計算");
+  });
+
+  it("should reject empty or unknown section id lists", async () => {
+    const { service } = buildService({ segments: [] });
+    await expect(
+      service.draftMissingSections(textSource(), [], "zh-TW"),
+    ).rejects.toThrow();
+    await expect(
+      service.draftMissingSections(textSource(), ["not-in-outline"], "zh-TW"),
+    ).rejects.toThrow();
+  });
+});

@@ -232,3 +232,19 @@ export const CarbonReportImportLlmOutputSchema = z.object({
 export type CarbonReportImportLlmOutput = z.infer<
   typeof CarbonReportImportLlmOutputSchema
 >;
+
+// Info: (20260727 - Tzuhan) #57 草稿補齊 LLM 輸出:匯入後仍空白的段落,依上傳文件撰寫草稿(非照抄);
+// Info: (20260727 - Tzuhan) paragraphId 僅驗型別,白名單複驗於服務層
+export const CarbonReportGapFillLlmOutputSchema = z.object({
+  segments: z
+    .array(
+      z.object({
+        paragraphId: z.string().max(50),
+        content: z.string().min(1).max(50_000),
+      }),
+    )
+    .max(100),
+});
+export type CarbonReportGapFillLlmOutput = z.infer<
+  typeof CarbonReportGapFillLlmOutputSchema
+>;
