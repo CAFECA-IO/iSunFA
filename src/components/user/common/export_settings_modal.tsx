@@ -17,13 +17,46 @@ import DateRangePicker from "@/components/common/date_range_picker";
 export enum ExportType {
   VOUCHER = "voucher",
   ESG = "esg",
+  LEDGER = "ledger",
 }
+
+// Info: (20260727 - Julian) 各匯出型別的端點路徑、檔名前綴、i18n 後綴與是否顯示「包含未核對」
+const EXPORT_CONFIG: Record<
+  ExportType,
+  { path: string; filePrefix: string; i18n: string; showUnverified: boolean }
+> = {
+  [ExportType.VOUCHER]: {
+    path: "voucher",
+    filePrefix: "vouchers",
+    i18n: "voucher",
+    showUnverified: true,
+  },
+  [ExportType.ESG]: {
+    path: "esg",
+    filePrefix: "esg_records",
+    i18n: "esg",
+    showUnverified: true,
+  },
+  [ExportType.LEDGER]: {
+    path: "ledger",
+    filePrefix: "ledger",
+    i18n: "ledger",
+    showUnverified: false,
+  },
+};
+
+// Info: (20260727 - Julian) 穩定的空額外查詢預設值，避免每次 render 產生新物件觸發重抓
+const EMPTY_EXTRA_PARAMS: Record<string, string> = {};
 
 interface IExportSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   accountBookId: string;
   type: ExportType;
+  // Info: (20260727 - Julian) 報表型別可帶入已選日期與額外查詢（keyword/labelType/sorting）
+  initialStartDate?: string;
+  initialEndDate?: string;
+  extraParams?: Record<string, string>;
 }
 
 export default function ExportSettingsModal({
@@ -31,12 +64,25 @@ export default function ExportSettingsModal({
   onClose,
   accountBookId,
   type,
+  initialStartDate = "",
+  initialEndDate = "",
+  extraParams = EMPTY_EXTRA_PARAMS,
 }: IExportSettingsModalProps) {
   const { t } = useTranslation();
 
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
+  const config = EXPORT_CONFIG[type];
+
+  const [startDate, setStartDate] = useState<string>(initialStartDate);
+  const [endDate, setEndDate] = useState<string>(initialEndDate);
   const [includeUnverified, setIncludeUnverified] = useState<boolean>(false);
+
+  // Info: (20260727 - Julian) 每次開啟時以呼叫端帶入的日期重新初始化（報表型別沿用畫面已選區間）
+  useEffect(() => {
+    if (isOpen) {
+      setStartDate(initialStartDate);
+      setEndDate(initialEndDate);
+    }
+  }, [isOpen, initialStartDate, initialEndDate]);
   const [count, setCount] = useState<number>(0);
   const [isCounting, setIsCounting] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
@@ -64,14 +110,18 @@ export default function ExportSettingsModal({
         searchParams.append("endDate", end.toISOString());
       }
 
-      if (includeUnverified) {
+      if (config.showUnverified && includeUnverified) {
         searchParams.append("includeUnverified", "true");
       }
 
-      const endpoint =
-        type === ExportType.VOUCHER
-          ? `/api/v1/user/account_book/${accountBookId}/voucher/export/count?${searchParams.toString()}`
-          : `/api/v1/user/account_book/${accountBookId}/esg/export/count?${searchParams.toString()}`;
+      // Info: (20260727 - Julian) 報表型別的額外查詢（keyword/labelType/sorting）
+      if (extraParams) {
+        Object.entries(extraParams).forEach(([key, value]) => {
+          if (value) searchParams.append(key, value);
+        });
+      }
+
+      const endpoint = `/api/v1/user/account_book/${accountBookId}/${config.path}/export/count?${searchParams.toString()}`;
 
       const res = await request<IApiResponse<{ count: number }>>(endpoint);
       if (res.payload) {
@@ -82,7 +132,16 @@ export default function ExportSettingsModal({
     } finally {
       setIsCounting(false);
     }
-  }, [accountBookId, isOpen, startDate, endDate, type, includeUnverified]);
+  }, [
+    accountBookId,
+    isOpen,
+    startDate,
+    endDate,
+    type,
+    config,
+    includeUnverified,
+    extraParams,
+  ]);
 
   // Info: (20260617 - Julian) 當時間區間或核對狀態篩選改變，重新計算總數
   useEffect(() => {
@@ -105,14 +164,18 @@ export default function ExportSettingsModal({
         const end = new Date(y, m - 1, d, 23, 59, 59, 999);
         searchParams.append("endDate", end.toISOString());
       }
-      if (includeUnverified) {
+      if (config.showUnverified && includeUnverified) {
         searchParams.append("includeUnverified", "true");
       }
 
-      const endpoint =
-        type === ExportType.VOUCHER
-          ? `/api/v1/user/account_book/${accountBookId}/voucher/export?${searchParams.toString()}`
-          : `/api/v1/user/account_book/${accountBookId}/esg/export?${searchParams.toString()}`;
+      // Info: (20260727 - Julian) 報表型別的額外查詢（keyword/labelType/sorting）
+      if (extraParams) {
+        Object.entries(extraParams).forEach(([key, value]) => {
+          if (value) searchParams.append(key, value);
+        });
+      }
+
+      const endpoint = `/api/v1/user/account_book/${accountBookId}/${config.path}/export?${searchParams.toString()}`;
 
       const token =
         typeof window !== "undefined" ? localStorage.getItem("dewt") : null;
@@ -136,10 +199,7 @@ export default function ExportSettingsModal({
         .toISOString()
         .slice(0, 10)
         .replace(/-/g, "");
-      const fileName =
-        type === ExportType.VOUCHER
-          ? `vouchers_${dateSuffix}.csv`
-          : `esg_records_${dateSuffix}.csv`;
+      const fileName = `${config.filePrefix}_${dateSuffix}.csv`;
 
       link.setAttribute("href", url);
       link.setAttribute("download", fileName);
@@ -151,35 +211,17 @@ export default function ExportSettingsModal({
       onClose();
     } catch (error) {
       console.error(`Failed to export ${type}:`, error);
-      alert(
-        type === ExportType.VOUCHER
-          ? t("common.export_settings.failed_voucher")
-          : t("common.export_settings.failed_esg"),
-      );
+      alert(t(`common.export_settings.failed_${config.i18n}`));
     } finally {
       setIsExporting(false);
     }
   };
 
-  // Info: (20260617 - Julian) 依據類型顯示不同 UI 語系或字句
-  const titleText =
-    type === ExportType.VOUCHER
-      ? t("common.export_settings.title_voucher")
-      : t("common.export_settings.title_esg");
-
-  const descriptionText =
-    type === ExportType.VOUCHER
-      ? t("common.export_settings.desc_voucher")
-      : t("common.export_settings.desc_esg");
-
-  const statText =
-    type === ExportType.VOUCHER
-      ? t("common.export_settings.stat_title_voucher")
-      : t("common.export_settings.stat_title_esg");
-  const statUnit =
-    type === ExportType.VOUCHER
-      ? t("common.export_settings.unit_voucher")
-      : t("common.export_settings.unit_esg");
+  // Info: (20260727 - Julian) 依型別的 i18n 後綴取對應文案
+  const titleText = t(`common.export_settings.title_${config.i18n}`);
+  const descriptionText = t(`common.export_settings.desc_${config.i18n}`);
+  const statText = t(`common.export_settings.stat_title_${config.i18n}`);
+  const statUnit = t(`common.export_settings.unit_${config.i18n}`);
 
   return (
     <Transition show={isOpen} as={Fragment}>
@@ -248,24 +290,26 @@ export default function ExportSettingsModal({
                     />
                   </div>
 
-                  {/* Info: (20260617 - Julian) 選擇是否包含未核對資料 */}
-                  <div className="group flex items-center gap-2">
-                    <input
-                      id="include-unverified-checkbox"
-                      type="checkbox"
-                      checked={includeUnverified}
-                      onChange={(e) => setIncludeUnverified(e.target.checked)}
-                      className="flex size-4 cursor-pointer appearance-none items-center justify-center rounded border border-orange-500 bg-white group-hover:bg-orange-100 checked:bg-orange-500 checked:after:font-[system-ui] checked:after:text-sm checked:after:font-black checked:after:text-white checked:after:content-['✓']"
-                    />
-                    <label
-                      htmlFor="include-unverified-checkbox"
-                      className="cursor-pointer text-sm font-bold text-slate-700 select-none"
-                    >
-                      {type === ExportType.VOUCHER
-                        ? t("common.export_settings.include_unverified_voucher")
-                        : t("common.export_settings.include_unverified_esg")}
-                    </label>
-                  </div>
+                  {/* Info: (20260727 - Julian) 選擇是否包含未核對資料（報表型別本就全納入，故隱藏） */}
+                  {config.showUnverified && (
+                    <div className="group flex items-center gap-2">
+                      <input
+                        id="include-unverified-checkbox"
+                        type="checkbox"
+                        checked={includeUnverified}
+                        onChange={(e) => setIncludeUnverified(e.target.checked)}
+                        className="flex size-4 cursor-pointer appearance-none items-center justify-center rounded border border-orange-500 bg-white group-hover:bg-orange-100 checked:bg-orange-500 checked:after:font-[system-ui] checked:after:text-sm checked:after:font-black checked:after:text-white checked:after:content-['✓']"
+                      />
+                      <label
+                        htmlFor="include-unverified-checkbox"
+                        className="cursor-pointer text-sm font-bold text-slate-700 select-none"
+                      >
+                        {t(
+                          `common.export_settings.include_unverified_${config.i18n}`,
+                        )}
+                      </label>
+                    </div>
+                  )}
 
                   {/* Info: (20260617 - Julian) 傳票數/紀錄數統計 */}
                   <div className="flex items-center justify-between">

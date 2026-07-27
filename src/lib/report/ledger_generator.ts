@@ -28,6 +28,7 @@ interface IRawEntry {
   voucherNumber: string;
   voucherType: string | null;
   code: string;
+  accountType: string;
   accountingTitle: string;
   particulars: string;
   debit: Decimal;
@@ -166,6 +167,7 @@ export function generateLedger(
         voucherNumber: voucher.id,
         voucherType: voucher.tradingType ?? null,
         code: displayCode,
+        accountType: displayAccount?.type ?? "",
         accountingTitle,
         particulars: line.particular || "",
         debit: line.isDebit ? amount : new Decimal(0),
@@ -198,6 +200,7 @@ export function generateLedger(
       voucherNumber: entry.voucherNumber,
       voucherType: entry.voucherType,
       code: entry.code,
+      accountType: entry.accountType,
       accountingTitle: entry.accountingTitle,
       particulars: entry.particulars,
       debitAmount: entry.debit.toString(),

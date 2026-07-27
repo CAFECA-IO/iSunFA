@@ -118,6 +118,12 @@ export const common = {
     start_export: "Start Export",
     failed_voucher: "Failed to export vouchers. Please try again later.",
     failed_esg: "Failed to export ESG records. Please try again later.",
+    title_ledger: "Export Ledger",
+    desc_ledger:
+      "The system will compile the ledger entries and balances for the current filters and export them to a standard CSV file, making it easy to analyze or archive in Excel.",
+    stat_title_ledger: "Estimated Rows to Export",
+    unit_ledger: "rows",
+    failed_ledger: "Failed to export ledger. Please try again later.",
   },
   qr_code: "QR Code",
   done: "Done",

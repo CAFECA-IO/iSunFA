@@ -14,6 +14,7 @@ describe("buildLedgerCsv", () => {
         voucherNumber: "A",
         voucherType: "income",
         code: "1101",
+        accountType: "asset",
         accountingTitle: "庫存現金",
         particulars: "初始, 資金",
         debitAmount: "1000",

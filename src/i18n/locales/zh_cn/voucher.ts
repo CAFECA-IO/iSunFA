@@ -22,10 +22,52 @@ export const voucher = {
   tab: {
     vouchers: "传票管理",
     accounts: "会计科目管理",
+    ledger: "分类账",
+  },
+  ledger: {
+    export: "导出 CSV",
+    filters: {
+      date: "日期区间",
+      label: "账别",
+      keyword: "关键字",
+      keyword_placeholder: "科目、摘要或凭证编号",
+      sort: "排序",
+    },
+    label_type: {
+      all: "全部",
+      general: "总账",
+      detailed: "明细",
+    },
+    sort: {
+      code_asc: "科目编号 ↑",
+      code_desc: "科目编号 ↓",
+      date_asc: "日期 ↑",
+      date_desc: "日期 ↓",
+    },
+    summary: {
+      currency: "币别",
+      total_debit: "借方总额",
+      total_credit: "贷方总额",
+    },
+    headers: {
+      voucher_no: "凭证编号",
+      date: "日期",
+      type: "类型",
+      particulars: "摘要",
+      debit: "借方",
+      credit: "贷方",
+      balance: "余额",
+    },
+    empty: {
+      select_date: "请选择日期区间以查看分类账",
+      no_data: "查无分录",
+    },
   },
   main_view: {
     title: "智能凭证管理",
     subtitle: "AI 已根据您的凭证识别结果自动产生对应的会计分录。",
+    title_ledger: "智能账务管理",
+    subtitle_ledger: "查看各科目的分类账明细与余额。",
     actions: {
       export: "导出凭证",
       add: "新增凭证",

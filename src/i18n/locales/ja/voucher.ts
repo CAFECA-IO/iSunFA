@@ -22,10 +22,52 @@ export const voucher = {
   tab: {
     vouchers: "伝票管理",
     accounts: "会計科目管理",
+    ledger: "総勘定元帳",
+  },
+  ledger: {
+    export: "CSV エクスポート",
+    filters: {
+      date: "期間",
+      label: "元帳区分",
+      keyword: "キーワード",
+      keyword_placeholder: "科目・摘要・伝票番号",
+      sort: "並び替え",
+    },
+    label_type: {
+      all: "すべて",
+      general: "総勘定",
+      detailed: "明細",
+    },
+    sort: {
+      code_asc: "科目コード ↑",
+      code_desc: "科目コード ↓",
+      date_asc: "日付 ↑",
+      date_desc: "日付 ↓",
+    },
+    summary: {
+      currency: "通貨",
+      total_debit: "借方合計",
+      total_credit: "貸方合計",
+    },
+    headers: {
+      voucher_no: "伝票番号",
+      date: "日付",
+      type: "種類",
+      particulars: "摘要",
+      debit: "借方",
+      credit: "貸方",
+      balance: "残高",
+    },
+    empty: {
+      select_date: "期間を選択すると元帳が表示されます",
+      no_data: "仕訳が見つかりません",
+    },
   },
   main_view: {
     title: "スマート伝票管理",
     subtitle: "AIは領収書認識結果に基づき自動的に仕訳を作成しました。",
+    title_ledger: "スマート会計管理",
+    subtitle_ledger: "科目ごとの元帳明細と残高を確認できます。",
     actions: {
       export: "エクスポート",
       add: "伝票を追加",

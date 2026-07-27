@@ -115,6 +115,12 @@ export const common = {
     start_export: "開始匯出",
     failed_voucher: "匯出傳票失敗，請稍後再試。",
     failed_esg: "匯出 ESG 紀錄失敗，請稍後再試。",
+    title_ledger: "匯出分類帳",
+    desc_ledger:
+      "系統將彙整目前篩選條件下的分類帳明細與餘額，匯出為標準 CSV 格式檔案，方便您於 Excel 進行分析或備份存檔。",
+    stat_title_ledger: "預計匯出筆數",
+    unit_ledger: "筆",
+    failed_ledger: "匯出分類帳失敗，請稍後再試。",
   },
   qr_code: "QR Code",
   done: "完成",

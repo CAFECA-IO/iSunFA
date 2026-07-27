@@ -13,6 +13,8 @@ export interface ILedgerItem {
   voucherNumber: string;
   voucherType: string | null;
   code: string;
+  // Info: (20260727 - Julian) 科目類別（AccountType），供前端依類別著色
+  accountType: string;
   accountingTitle: string;
   particulars: string;
   debitAmount: string;
