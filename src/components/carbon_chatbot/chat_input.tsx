@@ -1,7 +1,7 @@
-// Info: (20260714 - Emily) 對話輸入列:純文字 + 附件(按鈕/拖放),附件驗證與 base64 轉換邏輯集中於 use_carbon_chat
+// Info: (20260714 - Tzuhan) 對話輸入列:純文字 + 附件(按鈕/拖放),附件驗證與 base64 轉換邏輯集中於 use_carbon_chat
 
 import { KeyboardEvent, DragEvent, useRef, useState } from "react";
-import { Paperclip, X, Loader2, FileText } from "lucide-react";
+import { Paperclip, X, Loader2, FileText, FileUp } from "lucide-react";
 import {
   IPendingAttachment,
   PendingAttachmentStatusEnum,
@@ -20,8 +20,13 @@ export interface IChatInputProps {
   attachmentError?: string | null;
   onAddFiles?: (files: File[]) => void;
   onRemoveAttachment?: (attachmentId: string) => void;
-  // Info: (20260714 - Emily) 草稿生成狀態列(loading/error):並行任務不以對話氣泡表達,避免與回覆順序矛盾
+  // Info: (20260714 - Tzuhan) 草稿生成狀態列(loading/error):並行任務不以對話氣泡表達,避免與回覆順序矛盾
   draftNotice?: IDraftNotice | null;
+  // Info: (20260716 - Tzuhan) #56 匯入導流:疑似整份報告的附件候選(擇一:匯入報告/仍作附件)
+  importCandidate?: File | null;
+  onConfirmImportCandidate?: () => void;
+  onAttachImportCandidate?: () => void;
+  onDismissImportCandidate?: () => void;
 }
 
 export function ChatInput({
@@ -35,6 +40,10 @@ export function ChatInput({
   onAddFiles = undefined,
   onRemoveAttachment = undefined,
   draftNotice = null,
+  importCandidate = null,
+  onConfirmImportCandidate = undefined,
+  onAttachImportCandidate = undefined,
+  onDismissImportCandidate = undefined,
 }: IChatInputProps) {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -47,7 +56,7 @@ export function ChatInput({
     (a) => a.status === PendingAttachmentStatusEnum.READING,
   );
 
-  // Info: (20260714 - Emily) 有文字或有就緒附件即可送出;附件讀取中暫不可送,避免漏附件
+  // Info: (20260714 - Tzuhan) 有文字或有就緒附件即可送出;附件讀取中暫不可送,避免漏附件
   const disabled =
     (!inputValue.trim() && !hasReadyAttachment) ||
     isTyping ||
@@ -63,11 +72,11 @@ export function ChatInput({
   const handleFilesSelected = (files: FileList | null) => {
     if (!files || files.length === 0 || !onAddFiles) return;
     onAddFiles(Array.from(files));
-    // Info: (20260714 - Emily) 清空 input value,允許重選同一檔案
+    // Info: (20260714 - Tzuhan) 清空 input value,允許重選同一檔案
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // Info: (20260714 - Emily) 拖放事件掛在原生互動元素(文字輸入框)上,滿足 jsx-a11y;鍵盤使用者以附件按鈕為替代路徑
+  // Info: (20260714 - Tzuhan) 拖放事件掛在原生互動元素(文字輸入框)上,滿足 jsx-a11y;鍵盤使用者以附件按鈕為替代路徑
   const handleDrop = (e: DragEvent<HTMLInputElement>) => {
     e.preventDefault();
     setIsDragOver(false);
@@ -81,7 +90,7 @@ export function ChatInput({
 
   return (
     <div className="absolute right-6 bottom-6 left-6 z-10">
-      {/* Info: (20260714 - Emily) 待送附件 chips:可移除;讀取中顯示 spinner */}
+      {/* Info: (20260714 - Tzuhan) 待送附件 chips:可移除;讀取中顯示 spinner */}
       {pendingAttachments.length > 0 && (
         <div className="mx-auto mb-2 flex flex-wrap gap-2">
           {pendingAttachments.map((attachment) => (
@@ -117,14 +126,52 @@ export function ChatInput({
         </div>
       )}
 
-      {/* Info: (20260714 - Emily) 附件驗證錯誤提示(前端 Fail Fast:非法類型/超大檔在此擋下) */}
+      {/* Info: (20260714 - Tzuhan) 附件驗證錯誤提示(前端 Fail Fast:非法類型/超大檔在此擋下) */}
       {attachmentError && (
         <div className="mx-auto mb-2 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-600">
           {attachmentError}
         </div>
       )}
 
-      {/* Info: (20260714 - Emily) 草稿生成狀態列:生成中 loading、失敗短暫提示後自動消失 */}
+      {/* Info: (20260716 - Tzuhan) #56 匯入導流:大型 pdf 疑似整份報告,聊天萃取管線會超時 → 建議走匯入 */}
+      {importCandidate && (
+        <div className="mx-auto mb-2 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-xs">
+          <div className="flex min-w-0 items-center gap-1.5 font-bold text-[#e04f00]">
+            <FileUp size={12} className="shrink-0" />
+            <span className="min-w-0 truncate">
+              {t("carbon_chatbot.import_suggest", {
+                name: importCandidate.name,
+              })}
+            </span>
+          </div>
+          <div className="mt-1.5 flex gap-2">
+            <button
+              type="button"
+              onClick={onConfirmImportCandidate}
+              className="rounded-full bg-[#ff5a00] px-3 py-1 font-bold text-white transition-colors hover:bg-[#e04f00]"
+            >
+              {t("carbon_chatbot.import_suggest_import")}
+            </button>
+            <button
+              type="button"
+              onClick={onAttachImportCandidate}
+              className="rounded-full border border-gray-200 bg-white px-3 py-1 font-bold text-gray-600 transition-colors hover:bg-gray-50"
+            >
+              {t("carbon_chatbot.import_suggest_attach")}
+            </button>
+            <button
+              type="button"
+              aria-label={t("carbon_chatbot.revision_discard")}
+              onClick={onDismissImportCandidate}
+              className="ml-auto rounded-full p-1 text-gray-400 hover:bg-white"
+            >
+              <X size={12} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Info: (20260714 - Tzuhan) 草稿生成狀態列:生成中 loading、失敗短暫提示後自動消失 */}
       {draftNotice && (
         <div
           className={`mx-auto mb-2 flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold ${

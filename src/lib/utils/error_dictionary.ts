@@ -563,7 +563,7 @@ export const API_ERRORS = {
     message: "Voucher debits and credits are imbalanced",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
-  // Info: (20260714 - Emily) 報告草稿樂觀鎖衝突(另一分頁/裝置已更新,須重新載入)
+  // Info: (20260714 - Tzuhan) 報告草稿樂觀鎖衝突(另一分頁/裝置已更新,須重新載入)
   VL_DRAFT_VERSION_CONFLICT: {
     code: "VL000017",
     message: "Report draft version conflict; reload the latest draft",
@@ -683,53 +683,59 @@ export const API_ERRORS = {
     message: "GEMINI_API_KEY environment variable is not defined",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
-  // Info: (20260714 - Emily) LLM 結構化輸出未通過後端 Zod 護欄(非 JSON 或欄位不符)
+  // Info: (20260714 - Tzuhan) LLM 結構化輸出未通過後端 Zod 護欄(非 JSON 或欄位不符)
   IS_LLM_OUTPUT_INVALID: {
     code: "IS000009",
     message: "LLM structured output failed validation",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
-  // Info: (20260714 - Emily) 段落草稿生成失敗(LLM 呼叫錯誤的包裝,不透傳原始錯誤)
+  // Info: (20260714 - Tzuhan) 段落草稿生成失敗(LLM 呼叫錯誤的包裝,不透傳原始錯誤)
   IS_PARAGRAPH_DRAFT_FAILED: {
     code: "IS000010",
     message: "Failed to generate paragraph draft",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
-  // Info: (20260714 - Emily) LLM 額度耗盡(429/RESOURCE_EXHAUSTED):與一般錯誤區分,前端可提示稍候重試
+  // Info: (20260714 - Tzuhan) LLM 額度耗盡(429/RESOURCE_EXHAUSTED):與一般錯誤區分,前端可提示稍候重試
   IS_LLM_QUOTA_EXCEEDED: {
     code: "IS000011",
     message: "AI service quota exceeded; please retry shortly",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
-  // Info: (20260716 - Emily) 同步路徑 LLM 逾時(#6515):後端不得無限期掛著;與一般錯誤區分,前端提示重試
+  // Info: (20260716 - Tzuhan) 同步路徑 LLM 逾時(#6515):後端不得無限期掛著;與一般錯誤區分,前端提示重試
   IS_LLM_TIMEOUT: {
     code: "IS000012",
     message: "AI service timed out; please retry",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
-  // Info: (20260716 - Emily) API 限流(#6516):IS000012 預留給 #6515 的 IS_LLM_TIMEOUT,本碼取 13 避免撞號
+  // Info: (20260716 - Tzuhan) API 限流(#6516):IS000012 預留給 #6515 的 IS_LLM_TIMEOUT,本碼取 13 避免撞號
   IS_RATE_LIMITED: {
     code: "IS000013",
     message: "Too many requests; please slow down and retry",
     status: ApiCode.RATE_LIMIT,
   } as IErrorDef,
-  // Info: (20260716 - Emily) 附件安全(#6517): 檔頭與宣告 MIME 不符(疑似偽裝檔)
+  // Info: (20260716 - Tzuhan) 附件安全(#6517):檔頭與宣告 MIME 不符(疑似偽裝檔)
   IS_ATTACHMENT_TYPE_MISMATCH: {
     code: "IS000014",
     message: "File content does not match its declared type",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
-  // Info: (20260716 - Emily) 附件安全(#6517): 掃毒命中
+  // Info: (20260716 - Tzuhan) 附件安全(#6517):掃毒命中
   IS_ATTACHMENT_INFECTED: {
     code: "IS000015",
     message: "File rejected by malware scan",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
-  // Info: (20260716 - Emily) 附件安全(#6517): 儲存配額耗盡(每 address 5GB 常數)
+  // Info: (20260716 - Tzuhan) 附件安全(#6517):儲存配額耗盡(每 address 5GB 常數)
   IS_STORAGE_QUOTA_EXCEEDED: {
     code: "IS000016",
     message: "Storage quota exceeded",
     status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+  // Info: (20260716 - Tzuhan) #56 報告匯入失敗(LLM 呼叫錯誤的包裝,不透傳原始錯誤)
+  IS_REPORT_IMPORT_FAILED: {
+    code: "IS000017",
+    message: "Failed to import the report",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
   IS_UNKNOWN: {
     code: "IS000099",

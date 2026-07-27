@@ -1,5 +1,5 @@
-// Info: (20260716 - Emily) 碳盤查狀態帳本引擎(#6518): 純函式、同構(前端 merge/推進 + 後端驗證共用)
-// Info: (20260716 - Emily) 職責邊界: LLM 只萃取(原樣字串)；合併去重與步驟推進全部由本模組決定性裁決
+// Info: (20260716 - Tzuhan) 碳盤查狀態帳本引擎(#6518): 純函式、同構(前端 merge/推進 + 後端驗證共用)
+// Info: (20260716 - Tzuhan) 職責邊界: LLM 只萃取(原樣字串)；合併去重與步驟推進全部由本模組決定性裁決
 
 import {
   ICarbonInventoryState,
@@ -13,7 +13,7 @@ import {
   CARBON_INVENTORY_STATE_VERSION,
 } from "@/constants/carbon_chatbot";
 
-// Info: (20260716 - Emily) ACTIVITY_DATA 完成門檻: 至少 N 筆完整活動數據(門檻為決定性常數，不由 LLM 判斷)
+// Info: (20260716 - Tzuhan) ACTIVITY_DATA 完成門檻: 至少 N 筆完整活動數據(門檻為決定性常數，不由 LLM 判斷)
 export const CARBON_INVENTORY_MIN_ACTIVITY_RECORDS = 3;
 
 export const createEmptyInventoryState = (): ICarbonInventoryState => ({
@@ -23,8 +23,8 @@ export const createEmptyInventoryState = (): ICarbonInventoryState => ({
   version: CARBON_INVENTORY_STATE_VERSION,
 });
 
-// Info: (20260716 - Emily) 去重鍵: 同排放源 + 同數量 + 同單位 + 同範疇視為同一筆（重送訊息／重傳附件不重複記帳）
-// Info: (20260716 - Emily) #6519 起 export: 計算總表以同一把鍵對齊活動與計算結果
+// Info: (20260716 - Tzuhan) 去重鍵: 同排放源 + 同數量 + 同單位 + 同範疇視為同一筆（重送訊息／重傳附件不重複記帳）
+// Info: (20260716 - Tzuhan) #6519 起 export: 計算總表以同一把鍵對齊活動與計算結果
 export const activityDedupeKey = (a: IActivityRecord): string =>
   [
     a.scopeCategory,
@@ -39,7 +39,7 @@ export interface IMergeResult {
 }
 
 /**
- * Info: (20260716 - Emily) 合併萃取結果進狀態帳本:
+ * Info: (20260716 - Tzuhan) 合併萃取結果進狀態帳本:
  * - 組織欄位(company/year/boundary)只在空缺時填入，不覆蓋既有值(人工確認優先於後到的萃取)
  * - 活動數據以去重鍵合併；數值字串原樣保存，本函式不做任何換算
  * - 步驟由 computeInventoryStep 重算(唯一推進點)
@@ -74,7 +74,7 @@ export const mergeInventoryExtraction = (
   return { state: next, addedCount: added.length };
 };
 
-// Info: (20260716 - Emily) 各步驟完成條件(決定性；EMISSION_FACTORS/REVIEW 的出口由 #21/#22 引擎解鎖)
+// Info: (20260716 - Tzuhan) 各步驟完成條件(決定性；EMISSION_FACTORS/REVIEW 的出口由 #21/#22 引擎解鎖)
 const isStepComplete = (
   step: CarbonInventoryStep,
   state: ICarbonInventoryState,
@@ -92,20 +92,20 @@ const isStepComplete = (
         state.activities.every((a) => a.quantity.trim() && a.unit)
       );
     case CarbonInventoryStep.EMISSION_FACTORS:
-      // Info: (20260716 - Emily) 需每筆活動皆有係數對應；由 #6519(決定論 CO2e 引擎)填入後解鎖
+      // Info: (20260716 - Tzuhan) 需每筆活動皆有係數對應；由 #6519(決定論 CO2e 引擎)填入後解鎖
       return (
         state.activities.length > 0 &&
         state.activities.every((a) => Boolean(a.emissionFactor))
       );
     case CarbonInventoryStep.REVIEW:
-      // Info: (20260716 - Emily) 勾稽通過才算完成；由 #6520(質量守恆護欄)裁決
+      // Info: (20260716 - Tzuhan) 勾稽通過才算完成；由 #6520(質量守恆護欄)裁決
       return false;
     default:
       return false;
   }
 };
 
-// Info: (20260716 - Emily) 唯一推進點: 回傳第一個未完成步驟(全過 = COMPLETED);LLM 無法說服系統跳步
+// Info: (20260716 - Tzuhan) 唯一推進點: 回傳第一個未完成步驟(全過 = COMPLETED);LLM 無法說服系統跳步
 export const computeInventoryStep = (
   state: ICarbonInventoryState,
 ): CarbonInventoryStep => {
@@ -116,7 +116,7 @@ export const computeInventoryStep = (
   return CarbonInventoryStep.COMPLETED;
 };
 
-// Info: (20260716 - Emily) 供 persona 的步驟描述(餵給 LLM 的 currentStep 真值，取代自由字串)
+// Info: (20260716 - Tzuhan) 供 persona 的步驟描述(餵給 LLM 的 currentStep 真值，取代自由字串)
 export const describeInventoryStep = (state: ICarbonInventoryState): string => {
   const missing: string[] = [];
   if (!state.company) missing.push("企業名稱");
@@ -129,7 +129,7 @@ export const describeInventoryStep = (state: ICarbonInventoryState): string => {
 };
 
 /**
- * Info: (20260716 - Emily) #6519 掛回計算總表:
+ * Info: (20260716 - Tzuhan) #6519 掛回計算總表:
  * - 依 activityKey 回填各活動的 emissionFactor/factorSource(決定性,同鍵對齊)
  * - computedLedger 整包存入 state;步驟由 computeInventoryStep 重算
  *   (全部活動有係數 → EMISSION_FACTORS 完成 → 推進 REVIEW)

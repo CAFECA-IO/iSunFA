@@ -1,6 +1,6 @@
-// Info: (20260716 - Emily) 決定論 CO2e 計算端點(#6519):活動明細 → 計算總表(含係數快照與待補清單)
-// Info: (20260716 - Emily) 純端口:授權 → 限流(READ,無 LLM 呼叫) → 驗證 → facade;
-// Info: (20260716 - Emily) 計算為無狀態決定論(冪等),結果由前端合併進 E2EE state,server 不落地明文
+// Info: (20260716 - Tzuhan) 決定論 CO2e 計算端點(#6519):活動明細 → 計算總表(含係數快照與待補清單)
+// Info: (20260716 - Tzuhan) 純端口:授權 → 限流(READ,無 LLM 呼叫) → 驗證 → facade;
+// Info: (20260716 - Tzuhan) 計算為無狀態決定論(冪等),結果由前端合併進 E2EE state,server 不落地明文
 
 import { NextRequest } from "next/server";
 import { logger } from "@/lib/utils/logger";

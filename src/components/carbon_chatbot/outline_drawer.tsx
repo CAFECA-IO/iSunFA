@@ -14,7 +14,7 @@ interface IOutlineDrawerProps {
   onJump: (paragraphId: string) => void;
   onToggleVerified: (paragraphId: string) => void;
   onClose: () => void;
-  // Info: (20260714 - Emily) AI 段落草稿生成(透傳給 OutlineTree)
+  // Info: (20260714 - Tzuhan) AI 段落草稿生成(透傳給 OutlineTree)
   draftingParagraphId?: string | null;
   onGenerateDraft?: (paragraphId: string) => void;
 }

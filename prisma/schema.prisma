@@ -347,6 +347,9 @@ model AccountBook {
   // Info: (20260508 - Tzuhan) 面額 (預設 10)
   parValue Float @default(10) @map("par_value")
 
+  // Info: (20260716 - Tzuhan) #52 帳本的碳盤查會話(報告/狀態經 chatroom 綁定)
+  chatrooms Chatroom[]
+
   // Info: (20260305 - Julian) 一個帳本可以有多個憑證
   journals Journal[]
 
@@ -1091,6 +1094,10 @@ model SolutionApplication {
 model Chatroom {
   id String @id @default(uuid())
 
+  // Info: (20260716 - Tzuhan) #52 碳盤查報告歸屬帳本(模型 A):null = 個人會話(相容舊資料)
+  accountBookId String?      @map("account_book_id")
+  accountBook   AccountBook? @relation(fields: [accountBookId], references: [id])
+
   // Info: (20260712 - Luphia) 頻道識別（如 carbon-chat-{address}-{session}）
   channel String @unique
 
@@ -1107,31 +1114,36 @@ model Chatroom {
   inventoryState CarbonInventoryState?
   reportDraft    CarbonReportDraft?
 
-  // Info: (20260714 - Emily) 供「依擁有者列出聊天室」的 sessions 查詢
+  // Info: (20260714 - Tzuhan) 供「依擁有者列出聊天室」的 sessions 查詢
   @@index([ownerPublicKey])
+  @@index([accountBookId])
   @@map("chatroom")
 }
 
-// Info: (20260714 - Emily) 碳盤查報告草稿(E2EE at rest,仿 ChatroomMessage 封裝):每 chatroom 一筆,version 樂觀鎖
-// Info: (20260714 - Emily) 僅存密文;前端以主公鑰(xpub)加密上傳、以 PRF 解鎖之主私鑰解密,server 無法解讀內容
+// Info: (20260714 - Tzuhan) 碳盤查報告草稿(E2EE at rest,仿 ChatroomMessage 封裝):每 chatroom 一筆,version 樂觀鎖
+// Info: (20260714 - Tzuhan) 僅存密文;前端以主公鑰(xpub)加密上傳、以 PRF 解鎖之主私鑰解密,server 無法解讀內容
 model CarbonReportDraft {
   id String @id @default(uuid())
 
   chatroomId String   @unique @map("chatroom_id")
   chatroom   Chatroom @relation(fields: [chatroomId], references: [id])
 
-  // Info: (20260714 - Emily) base64(iv + 密文):IReportData 的序列化密文
-  encryptedContent String @map("encrypted_content") @db.Text
+  // Info: (20260714 - Tzuhan) base64(iv + 密文):IReportData 的序列化密文
+  // Info: (20260716 - Tzuhan) #52 帳本模式(模型 A)改存 plainContent,envelope 欄位轉 optional(舊個人資料相容)
+  encryptedContent String? @map("encrypted_content") @db.Text
 
-  // Info: (20260714 - Emily) ECIES 臨時公鑰與 HD 派生線索(同 ChatroomMessage 欄位語意)
+  // Info: (20260716 - Tzuhan) #52 帳本模式明文(伺服器端 at-rest 加密由 DB 層承擔,對齊 Journal/Voucher 信任等級)
+  plainContent String? @map("plain_content") @db.Text
+
+  // Info: (20260714 - Tzuhan) ECIES 臨時公鑰與 HD 派生線索(同 ChatroomMessage 欄位語意)
   ephemeralPublicKey String? @map("ephemeral_public_key")
-  keyDerivationHint  String  @map("key_derivation_hint")
+  keyDerivationHint  String? @map("key_derivation_hint")
   algorithm          String  @default("ECIES-secp256k1-AES-256-GCM")
 
-  // Info: (20260714 - Emily) 加密對象(用戶主公鑰)
+  // Info: (20260714 - Tzuhan) 加密對象(用戶主公鑰)
   recipientPublicKey String @map("recipient_public_key")
 
-  // Info: (20260714 - Emily) 樂觀鎖:PUT 需帶讀取時的版本,不符即拒絕(防雙分頁 silent overwrite)
+  // Info: (20260714 - Tzuhan) 樂觀鎖:PUT 需帶讀取時的版本,不符即拒絕(防雙分頁 silent overwrite)
   version Int @default(0)
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -1148,12 +1160,15 @@ model CarbonInventoryState {
   chatroomId String   @unique @map("chatroom_id")
   chatroom   Chatroom @relation(fields: [chatroomId], references: [id])
 
-  // Info: (20260716 - Emily) #6518 改密文 envelope(比照 CarbonReportDraft):
-  // Info: (20260716 - Emily) 原明文 state Json 違反本模組 E2EE 慣例;table 無資料,無遷移負擔
-  encryptedContent String @map("encrypted_content") @db.Text
+  // Info: (20260716 - Tzuhan) #6518 改密文 envelope(比照 CarbonReportDraft):
+  // Info: (20260716 - Tzuhan) 原明文 state Json 違反本模組 E2EE 慣例;table 無資料,無遷移負擔
+  // Info: (20260716 - Tzuhan) #52 帳本模式改存 plainContent,envelope 欄位轉 optional
+  encryptedContent String? @map("encrypted_content") @db.Text
+
+  plainContent String? @map("plain_content") @db.Text
 
   ephemeralPublicKey String? @map("ephemeral_public_key")
-  keyDerivationHint  String  @map("key_derivation_hint")
+  keyDerivationHint  String? @map("key_derivation_hint")
   algorithm          String  @default("ECIES-secp256k1-AES-256-GCM")
 
   recipientPublicKey String @map("recipient_public_key")
@@ -1192,7 +1207,7 @@ model ChatroomMessage {
 
   createdAt DateTime @default(now()) @map("created_at")
 
-  // Info: (20260714 - Emily) 複合索引對齊 history 分頁查詢(chatroomId + createdAt desc 取代單欄索引)
+  // Info: (20260714 - Tzuhan) 複合索引對齊 history 分頁查詢(chatroomId + createdAt desc 取代單欄索引)
   @@index([chatroomId, createdAt])
   @@index([recipientPublicKey])
   @@map("chatroom_message")
@@ -1223,7 +1238,7 @@ model UserEncryptionKey {
   @@map("user_encryption_key")
 }
 
-// Info: (20260716 - Emily) 每使用者附件儲存用量(#6517):配額檢查 O(1) 讀;bytes 用 BigInt(精度規範)
+// Info: (20260716 - Tzuhan) 每使用者附件儲存用量(#6517):配額檢查 O(1) 讀;bytes 用 BigInt(精度規範)
 model UserStorageUsage {
   id        Int      @id @default(autoincrement())
   address   String   @unique

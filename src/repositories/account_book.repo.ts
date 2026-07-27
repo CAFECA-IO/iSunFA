@@ -79,6 +79,23 @@ export class AccountBookRepository {
     });
   }
 
+  /**
+   * Info: (20260716 - Tzuhan) #52 取得使用者於帳本所屬團隊的角色(非成員回 null)
+   * 供碳盤查報告權限裁決:VIEWER 可閱覽、EDITOR 以上可編輯
+   */
+  async getMemberRoleByAddress(accountBookId: string, userAddress: string) {
+    const member = await prisma.teamMember.findFirst({
+      where: {
+        user: { address: userAddress },
+        team: {
+          accountBooks: { some: { id: accountBookId, deletedAt: null } },
+        },
+      },
+      select: { role: true },
+    });
+    return member?.role ?? null;
+  }
+
   async listTeamsAccountBooksByTeamId(teamId: string) {
     // Info: (20260306 - Luphia) 查詢特定團隊時過濾掉已刪除帳本
     const accountBooks = await prisma.accountBook.findMany({

@@ -16,11 +16,11 @@ export function AIBubble({ message, onChipJump = undefined }: IAIBubbleProps) {
       <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#ff5a00] shadow-sm">
         <Bot className="h-6 w-6 text-white" />
       </div>
-      <div className="flex max-w-xl flex-1 flex-col">
-        <div className="rounded-[24px] rounded-tl-none border-2 border-gray-100 bg-white p-5 leading-relaxed font-medium text-gray-800 shadow-sm">
+      <div className="flex min-w-0 max-w-xl flex-1 flex-col">
+        <div className="rounded-[24px] rounded-tl-none border-2 border-gray-100 bg-white p-5 leading-relaxed font-medium text-gray-800 shadow-sm min-w-0 max-w-full break-words">
           {message.text}
 
-          {/* Info: (20260714 - Emily) 附件卡片抽為共用 AttachmentCard,並支援多附件 */}
+          {/* Info: (20260714 - Tzuhan) 附件卡片抽為共用 AttachmentCard,並支援多附件 */}
           {message.attachments?.map((attachment) => (
             <AttachmentCard
               key={`${message.id}-${attachment.name}`}
@@ -28,7 +28,7 @@ export function AIBubble({ message, onChipJump = undefined }: IAIBubbleProps) {
             />
           ))}
 
-          {/* Info: (20260714 - Emily) 段落 chip:點擊跳至報告對應段落並高亮 */}
+          {/* Info: (20260714 - Tzuhan) 段落 chip:點擊跳至報告對應段落並高亮 */}
           {onChipJump &&
             message.relatedParagraphIds &&
             message.relatedParagraphIds.length > 0 && (

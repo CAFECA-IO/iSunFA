@@ -11,11 +11,12 @@ export function UserBubble({ message }: IUserBubbleProps) {
   const { t } = useTranslation();
   return (
     <div className="flex justify-end gap-4">
-      <div className="flex max-w-xl flex-1 flex-col items-end">
-        <div className="rounded-[24px] rounded-tr-none bg-[#ff5a00] p-5 leading-relaxed font-bold text-white shadow-sm shadow-orange-500/20">
+      {/* Info: (20260716 - Tzuhan) min-w-0 + max-w-full:長檔名/長字串不得撐破聊天視窗(UAT 破版修正) */}
+      <div className="flex min-w-0 max-w-xl flex-1 flex-col items-end">
+        <div className="min-w-0 max-w-full rounded-[24px] rounded-tr-none bg-[#ff5a00] p-5 leading-relaxed font-bold break-words text-white shadow-sm shadow-orange-500/20">
           {message.text}
 
-          {/* Info: (20260714 - Emily) 使用者上傳的附件卡片(與 AIBubble 共用 AttachmentCard) */}
+          {/* Info: (20260714 - Tzuhan) 使用者上傳的附件卡片(與 AIBubble 共用 AttachmentCard) */}
           {message.attachments?.map((attachment) => (
             <AttachmentCard
               key={`${message.id}-${attachment.name}`}

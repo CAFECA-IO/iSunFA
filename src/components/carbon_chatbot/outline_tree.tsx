@@ -23,7 +23,7 @@ interface IOutlineTreeProps {
   activeParagraphId: string | null;
   onJump: (paragraphId: string) => void;
   onToggleVerified: (paragraphId: string) => void;
-  // Info: (20260714 - Emily) AI 段落草稿生成:正在生成的段落 id(同時間僅一段)與觸發 callback
+  // Info: (20260714 - Tzuhan) AI 段落草稿生成:正在生成的段落 id(同時間僅一段)與觸發 callback
   draftingParagraphId?: string | null;
   onGenerateDraft?: (paragraphId: string) => void;
 }
@@ -122,7 +122,7 @@ export function OutlineTree({
                         </span>
                       </button>
 
-                      {/* Info: (20260714 - Emily) AI 撰寫此段:生成中顯示 spinner;任一段生成中即全部停用,避免併發寫入 */}
+                      {/* Info: (20260714 - Tzuhan) AI 撰寫此段:生成中顯示 spinner;任一段生成中即全部停用,避免併發寫入 */}
                       {onGenerateDraft && (
                         <button
                           type="button"

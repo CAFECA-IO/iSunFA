@@ -1,5 +1,5 @@
-// Info: (20260716 - Emily) 碳盤查狀態帳本 Zod Schema(#6518)
-// Info: (20260716 - Emily) LLM 萃取結果的白名單護欄(enum 鎖死) + E2EE 狀態封裝的形狀驗證
+// Info: (20260716 - Tzuhan) 碳盤查狀態帳本 Zod Schema(#6518)
+// Info: (20260716 - Tzuhan) LLM 萃取結果的白名單護欄(enum 鎖死) + E2EE 狀態封裝的形狀驗證
 
 import { z } from "zod";
 import { GhgProtocolCategory } from "@/constants/esg";
@@ -8,7 +8,7 @@ import { CarbonInventoryStep } from "@/constants/carbon_chatbot";
 import { CARBON_CALCULATE_MAX_ACTIVITIES } from "@/constants/carbon_calculation";
 import { CarbonReportDraftPutSchema } from "@/validators/carbon_report_storage";
 
-// Info: (20260716 - Emily) 單筆活動數據: scopeCategory/unit 以 nativeEnum 鎖死；quantity 原樣字串(嚴禁在此轉數字)
+// Info: (20260716 - Tzuhan) 單筆活動數據:scopeCategory/unit 以 nativeEnum 鎖死;quantity 原樣字串(嚴禁在此轉數字)
 export const CarbonActivityRecordSchema = z.object({
   scopeCategory: z.nativeEnum(GhgProtocolCategory),
   sourceName: z.string().min(1).max(100),
@@ -18,7 +18,7 @@ export const CarbonActivityRecordSchema = z.object({
   source: z.string().max(200).optional(),
 });
 
-// Info: (20260716 - Emily) LLM 萃取輸出: year 為字串原樣，由此決定性轉數字(1990-2100 合理性邊界)
+// Info: (20260716 - Tzuhan) LLM 萃取輸出:year 為字串原樣,由此決定性轉數字(1990-2100 合理性邊界)
 export const CarbonInventoryExtractionSchema = z.object({
   company: z.string().min(1).max(100).optional(),
   year: z.coerce.number().int().min(1990).max(2100).optional(),
@@ -32,7 +32,7 @@ export type CarbonInventoryExtractionPayload = z.infer<
   typeof CarbonInventoryExtractionSchema
 >;
 
-// Info: (20260716 - Emily) #6519 計算請求: 活動明細（上限護欄）；計算為決定論，無 LLM
+// Info: (20260716 - Tzuhan) #6519 計算請求:活動明細(上限護欄);計算為決定論,無 LLM
 export const CarbonCalculateRequestSchema = z.object({
   activities: z
     .array(
@@ -48,7 +48,7 @@ export type CarbonCalculateRequestPayload = z.infer<
   typeof CarbonCalculateRequestSchema
 >;
 
-// Info: (20260716 - Emily) #6519 計算總表（前端解密後驗證用；數值皆字串化 Decimal）
+// Info: (20260716 - Tzuhan) #6519 計算總表(前端解密後驗證用;數值皆字串化 Decimal)
 const FactorSnapshotSchema = z.object({
   factorId: z.string().max(100),
   name: z.string().max(300),
@@ -84,7 +84,7 @@ export const ComputedLedgerSchema = z.object({
   computedAt: z.string().max(50),
 });
 
-// Info: (20260716 - Emily) 前端解密後的狀態驗證（壞資料 Fail Fast 丟棄，不入 React 狀態）
+// Info: (20260716 - Tzuhan) 前端解密後的狀態驗證(壞資料 Fail Fast 丟棄,不入 React 狀態)
 export const CarbonInventoryStateSchema = z.object({
   step: z.nativeEnum(CarbonInventoryStep),
   company: z.string().max(100).optional(),
@@ -104,8 +104,34 @@ export const CarbonInventoryStateSchema = z.object({
   version: z.number().int().min(0),
 });
 
-// Info: (20260716 - Emily) PUT /inventory 與報告草稿同封裝（密文形狀相同），直接共用 schema 語意化別名
+// Info: (20260716 - Tzuhan) PUT /inventory 與報告草稿同封裝(密文形狀相同),直接共用 schema 語意化別名
 export const CarbonInventoryStatePutSchema = CarbonReportDraftPutSchema;
 export type CarbonInventoryStatePutPayload = z.infer<
   typeof CarbonInventoryStatePutSchema
+>;
+
+// Info: (20260716 - Tzuhan) #52 帳本會話綁定請求
+export const CarbonSessionBindSchema = z.object({
+  sessionId: z.string().min(1).max(50),
+  accountBookId: z.string().min(1).max(100),
+  recipientPublicKey: z.string().min(1).max(300),
+});
+export type CarbonSessionBindPayload = z.infer<typeof CarbonSessionBindSchema>;
+
+// Info: (20260716 - Tzuhan) #56 報告匯入 LLM 輸出(responseSchema 之外的第二道防線);
+// Info: (20260716 - Tzuhan) paragraphId 僅驗型別,白名單複驗於服務層(非法者降入 unmapped 不丟棄)
+export const CarbonReportImportLlmOutputSchema = z.object({
+  segments: z
+    .array(
+      z.object({
+        paragraphId: z.string().max(50),
+        content: z.string().min(1).max(50_000),
+      }),
+    )
+    .max(100),
+  unmapped: z.array(z.string().max(50_000)).max(100),
+  activities: z.array(z.unknown()).max(50).optional(),
+});
+export type CarbonReportImportLlmOutput = z.infer<
+  typeof CarbonReportImportLlmOutputSchema
 >;

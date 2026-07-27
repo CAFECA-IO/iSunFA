@@ -1,6 +1,6 @@
-// Info: (20260716 - Emily) 活動數據記錄卡(#6518): 顯示狀態帳本中的活動數據與盤查步驟
-// Info: (20260716 - Emily) 零捏造溯源: 每筆顯示出處(訊息片段/附件檔名)；數值為原樣字串，不做任何格式化運算
-// Info: (20260716 - Emily) 預設收合為藥丸(RWD 教訓: 浮窗不可遮擋報告視線)
+// Info: (20260716 - Tzuhan) 活動數據記錄卡(#6518):顯示狀態帳本中的活動數據與盤查步驟
+// Info: (20260716 - Tzuhan) 零捏造溯源:每筆顯示出處(訊息片段/附件檔名);數值為原樣字串,不做任何格式化運算
+// Info: (20260716 - Tzuhan) 預設收合為藥丸(RWD 教訓:浮窗不可遮擋報告視線)
 
 import { useState } from "react";
 import { ClipboardList, Minus } from "lucide-react";
@@ -15,13 +15,13 @@ export interface IActivityLedgerProps {
 
 export function ActivityLedger({
   state,
-  positionClassName = "left-10 bottom-28 hidden xl:flex",
+  positionClassName = "absolute left-10 bottom-28 hidden xl:flex",
 }: IActivityLedgerProps) {
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   const count = state.activities.length;
-  // Info: (20260716 - Emily) #6519 計算結果對照表(activityKey → entry);數值為字串化 Decimal,原樣渲染不格式化
+  // Info: (20260716 - Tzuhan) #6519 計算結果對照表(activityKey → entry);數值為字串化 Decimal,原樣渲染不格式化
   const ledger = state.computedLedger;
   const entryByKey = new Map(
     (ledger?.entries ?? []).map((entry) => [entry.activityKey, entry]),
@@ -36,7 +36,7 @@ export function ActivityLedger({
         type="button"
         title={t("carbon_chatbot.activity_ledger_title")}
         onClick={() => setIsExpanded(true)}
-        className={`absolute ${positionClassName} z-20 items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold text-gray-700 shadow-lg ring-1 ring-gray-200 transition-transform hover:scale-105`}
+        className={`${positionClassName} z-20 items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold text-gray-700 shadow-lg ring-1 ring-gray-200 transition-transform hover:scale-105`}
       >
         <ClipboardList size={14} className="text-[#ff5a00]" />
         {t("carbon_chatbot.activity_ledger_pill", { count })}
@@ -46,7 +46,7 @@ export function ActivityLedger({
 
   return (
     <div
-      className={`absolute ${positionClassName} z-20 w-80 flex-col rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-gray-200`}
+      className={`${positionClassName} z-20 w-80 flex-col rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-gray-200`}
     >
       <div className="mb-2 flex items-center justify-between">
         <span className="flex items-center gap-2 text-xs font-bold text-gray-700">
@@ -63,7 +63,7 @@ export function ActivityLedger({
         </button>
       </div>
 
-      {/* Info: (20260716 - Emily) 步驟真值來自決定性狀態機(computeInventoryStep)，非 LLM 判斷 */}
+      {/* Info: (20260716 - Tzuhan) 步驟真值來自決定性狀態機(computeInventoryStep),非 LLM 判斷 */}
       <div className="mb-2 rounded-lg bg-orange-50 px-2 py-1 text-[11px] font-bold text-[#e04f00]">
         {t(`carbon_chatbot.inventory_step_${state.step}`)}
       </div>
@@ -97,7 +97,7 @@ export function ActivityLedger({
                 </span>
                 <span className="shrink-0">{activity.scopeCategory}</span>
               </div>
-              {/* Info: (20260716 - Emily) #6519 每筆 CO2e(決定論引擎產出)或待補標記 */}
+              {/* Info: (20260716 - Tzuhan) #6519 每筆 CO2e(決定論引擎產出)或待補標記 */}
               {(() => {
                 const key = activityDedupeKey(activity);
                 const entry = entryByKey.get(key);
@@ -124,7 +124,7 @@ export function ActivityLedger({
         </ul>
       )}
 
-      {/* Info: (20260716 - Emily) #6519 總計:字串化 Decimal 原樣顯示(無 .toFixed/number 運算) */}
+      {/* Info: (20260716 - Tzuhan) #6519 總計:字串化 Decimal 原樣顯示(無 .toFixed/number 運算) */}
       {ledger && (
         <div className="mt-2 flex items-center justify-between rounded-lg bg-emerald-50 px-2 py-1.5 text-xs font-bold text-emerald-800">
           <span>{t("carbon_chatbot.activity_total_co2e")}</span>

@@ -35,14 +35,20 @@ interface ICarbonReportPreviewProps {
   onMarkdownChange?: (val: string) => void;
   onJumpToParagraph?: (paragraphId: string) => void;
   onToggleVerified?: (paragraphId: string) => void;
-  // Info: (20260714 - Emily) AI 段落草稿生成(透傳給 OutlineDrawer → OutlineTree)
+  // Info: (20260714 - Tzuhan) AI 段落草稿生成(透傳給 OutlineDrawer → OutlineTree)
   draftingParagraphId?: string | null;
   onGenerateDraft?: (paragraphId: string) => void;
-  // Info: (20260714 - Emily) 對話↔報告雙向連動:短暫高亮的段落與「點報告段落 → 回跳對話訊息」callback
+  // Info: (20260714 - Tzuhan) 對話↔報告雙向連動:短暫高亮的段落與「點報告段落 → 回跳對話訊息」callback
   highlightedParagraphId?: string | null;
   onParagraphHeadingClick?: (paragraphId: string) => void;
-  // Info: (20260714 - Emily) 報告草稿本機保存狀態(透傳給 ReportToolbar)
+  // Info: (20260714 - Tzuhan) 報告草稿本機保存狀態(透傳給 ReportToolbar)
   saveStatus?: ReportSaveStatus;
+  // Info: (20260716 - Tzuhan) #52 唯讀(帳本 VIEWER):編輯回呼由 hook 擋下,此 prop 供工具列顯示唯讀徽章
+  readOnly?: boolean;
+  // Info: (20260716 - Tzuhan) #56 匯入整份報告(透傳工具列)
+  onImportReport?: (file: File) => void;
+  // Info: (20260716 - Tzuhan) 報告檔名改名(透傳工具列)
+  onRenameDocument?: (documentName: string) => void;
 }
 
 // Info: (20260713 - Tzuhan) 渲染全部 33 段:已生成者顯示內容,未生成者顯示灰色佔位區塊,確保跳段永遠有落點且報告骨架一眼可見
@@ -71,7 +77,7 @@ const generateMarkdownFromParagraphs = (
   // Info: (20260713 - Tzuhan) 狀態徽章由 ReportToolbar 呈現,文件內僅保留 Markdown 原生語法的草稿聲明(匯出 PDF 亦可見)
   let md = `# ${session.title}\n\n> _${draftStatusLine}_\n\n---\n\n`;
 
-  // Info: (20260714 - Emily) 標頭一律由 p.title 組出;content 只存內文(stripLeadingSectionHeading 相容舊格式殘留標頭)
+  // Info: (20260714 - Tzuhan) 標頭一律由 p.title 組出;content 只存內文(stripLeadingSectionHeading 相容舊格式殘留標頭)
   paragraphs.forEach((p) => {
     const body = p.content
       ? stripLeadingSectionHeading(p.content)
@@ -94,6 +100,9 @@ export default function CarbonReportPreview({
   highlightedParagraphId = null,
   onParagraphHeadingClick = undefined,
   saveStatus = null,
+  readOnly = false,
+  onImportReport = undefined,
+  onRenameDocument = undefined,
 }: ICarbonReportPreviewProps) {
   const { t } = useTranslation();
   const [, setErrorModal] = useState({ isOpen: false, message: "" });
@@ -108,8 +117,8 @@ export default function CarbonReportPreview({
   );
   const hasOutline = paragraphs.length > 0;
 
-  // Info: (20260714 - Emily) 錨點注入:段落標題全 33 段唯一,以「h3 文字 = 段落標題」對應注入段落 id
-  // Info: (20260714 - Emily) (Markdown 渲染層不支援原生 HTML,故於渲染後注入 data attribute)
+  // Info: (20260714 - Tzuhan) 錨點注入:段落標題全 33 段唯一,以「h3 文字 = 段落標題」對應注入段落 id
+  // Info: (20260714 - Tzuhan) (Markdown 渲染層不支援原生 HTML,故於渲染後注入 data attribute)
   useEffect(() => {
     if (!previewContainerRef.current) return undefined;
     const timer = setTimeout(() => {
@@ -120,7 +129,7 @@ export default function CarbonReportPreview({
         const paragraphId = titleToId.get(heading.textContent?.trim() ?? "");
         if (!paragraphId) return;
         heading.setAttribute(CARBON_REPORT_PARAGRAPH_ATTR, paragraphId);
-        // Info: (20260714 - Emily) 反向連動:點報告段落標題 → 回跳對話關聯訊息
+        // Info: (20260714 - Tzuhan) 反向連動:點報告段落標題 → 回跳對話關聯訊息
         if (onParagraphHeadingClick) {
           const el = heading as HTMLElement;
           el.style.cursor = "pointer";
@@ -154,7 +163,7 @@ export default function CarbonReportPreview({
     return () => clearTimeout(timer);
   }, [activeParagraphId, paragraphs]);
 
-  // Info: (20260714 - Emily) 即時高亮:草稿寫入或 chip 點擊時,段落區塊(標題至下一個 h3/hr)短暫上色後淡出
+  // Info: (20260714 - Tzuhan) 即時高亮:草稿寫入或 chip 點擊時,段落區塊(標題至下一個 h3/hr)短暫上色後淡出
   useEffect(() => {
     if (!highlightedParagraphId || !previewContainerRef.current) {
       return undefined;
@@ -173,7 +182,7 @@ export default function CarbonReportPreview({
         const el = node as HTMLElement;
         el.style.transition = "background-color 0.5s ease";
         el.style.backgroundColor = CARBON_REPORT_HIGHLIGHT_COLOR;
-        // Info: (20260714 - Emily) 標記高亮元素,供下載前清理(高亮不得滲入 PDF)
+        // Info: (20260714 - Tzuhan) 標記高亮元素,供下載前清理(高亮不得滲入 PDF)
         el.setAttribute(CARBON_REPORT_HIGHLIGHTED_ATTR, "true");
         applied.push(el);
         node = node.nextElementSibling;
@@ -181,7 +190,7 @@ export default function CarbonReportPreview({
       }
     }, 250);
 
-    // Info: (20260714 - Emily) highlightedParagraphId 逾時歸零時清除底色,靠 transition 淡出
+    // Info: (20260714 - Tzuhan) highlightedParagraphId 逾時歸零時清除底色,靠 transition 淡出
     return () => {
       clearTimeout(timer);
       applied.forEach((el) => {
@@ -191,7 +200,7 @@ export default function CarbonReportPreview({
     };
   }, [highlightedParagraphId]);
 
-  // Info: (20260714 - Emily) 下載快照前同步清除殘留高亮(React 狀態清除非同步,直接操作 DOM 確保快照乾淨)
+  // Info: (20260714 - Tzuhan) 下載快照前同步清除殘留高亮(React 狀態清除非同步,直接操作 DOM 確保快照乾淨)
   const handleBeforeDownload = () => {
     const container = previewContainerRef.current;
     if (!container) return;
@@ -221,7 +230,10 @@ export default function CarbonReportPreview({
     }
   };
 
-  const markdownContent = generateMarkdownFromParagraphs(
+  // Info: (20260716 - Tzuhan) 報告保真:rawMarkdown(使用者所見即所存)優先;無則以大綱組稿骨架起始
+  const markdownContent =
+    reportData?.rawMarkdown ??
+    generateMarkdownFromParagraphs(
     session,
     t("carbon_chatbot.section_placeholder"),
     t("carbon_chatbot.report_status_draft"),
@@ -231,6 +243,9 @@ export default function CarbonReportPreview({
     <div className="relative flex h-full w-full flex-1 flex-col border-l border-gray-200 bg-white">
       {hasOutline && stats && (
         <ReportToolbar
+        readOnly={readOnly}
+        onImportReport={onImportReport}
+        onRenameDocument={onRenameDocument}
           documentName={reportData.documentName}
           stats={stats}
           status={session.status}
@@ -248,7 +263,7 @@ export default function CarbonReportPreview({
             paragraphs={paragraphs}
             activeParagraphId={activeParagraphId}
             onJump={onJumpToParagraph}
-            // Info: (20260714 - Emily) 手機(<md)隱藏導軌讓出預覽寬度,目錄改由工具列抽屜提供
+            // Info: (20260714 - Tzuhan) 手機(<md)隱藏導軌讓出預覽寬度,目錄改由工具列抽屜提供
             className={isDrawerOpen ? "hidden xl:flex" : "hidden md:flex"}
           />
         )}
@@ -272,9 +287,9 @@ export default function CarbonReportPreview({
             isDrawerOpen ? "hidden xl:block" : ""
           }`}
         >
-          {/* Info: (20260714 - Emily) 報告成為主視圖後寬度足夠,改 split 讓編輯與預覽水平並排 */}
-          {/* Info: (20260714 - Emily) splitBreakpoint=lg:平板/手機退回單欄+切換鈕,避免雙欄擁擠 */}
-          {/* Info: (20260714 - Emily) 預設 PREVIEW:窄螢幕單欄先看報告;lg+ split 雙欄不受 viewMode 影響照樣同顯 */}
+          {/* Info: (20260714 - Tzuhan) 報告成為主視圖後寬度足夠,改 split 讓編輯與預覽水平並排 */}
+          {/* Info: (20260714 - Tzuhan) splitBreakpoint=lg:平板/手機退回單欄+切換鈕,避免雙欄擁擠 */}
+          {/* Info: (20260714 - Tzuhan) 預設 PREVIEW:窄螢幕單欄先看報告;lg+ split 雙欄不受 viewMode 影響照樣同顯 */}
           <PdfEditor
             layout="split"
             isEmbedded={true}
@@ -285,7 +300,11 @@ export default function CarbonReportPreview({
             onChange={onMarkdownChange}
             setErrorModal={setErrorModal}
             storageKey={`chatbot_draft_${session.id}`}
-            downloadFileName={buildCarbonReportFileName(session.title)}
+            // Info: (20260716 - Tzuhan) 下載檔名跟隨使用者自訂的報告檔名(可於工具列改名)
+            downloadFileName={
+              reportData?.documentName ??
+              buildCarbonReportFileName(session.title)
+            }
             onBeforeDownload={handleBeforeDownload}
           />
         </div>
