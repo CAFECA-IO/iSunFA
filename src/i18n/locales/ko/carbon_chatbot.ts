@@ -178,12 +178,17 @@ export const carbonChatbot = {
   chart_frozen:
     "⚠ 질량 보존 검증에 통과하지 못해 차트가 동결되었습니다. 대화에서 재고 차이를 해명하면 자동으로 생성됩니다.",
   chart_sankey_chat_node: "대화/첨부로 신고됨",
+  book_bind_pending_unlock:
+    "장부 세션이 생성되었습니다. 암호화 대화를 잠금 해제하면 장부 바인딩이 완료됩니다(증빙 가져오기와 증거 체인은 바인딩 후 사용 가능)",
+  book_bind_done: "장부 바인딩 완료. 활동 데이터 카드에서 증빙 데이터를 가져올 수 있습니다",
+  book_bind_denied: "장부 바인딩 실패: 이 장부의 Editor 이상 권한이 필요합니다",
+  book_bind_failed: "장부 바인딩에 실패했습니다. 다시 시도해 주세요",
   book_records_import_button: "장부에서 증빙 데이터 가져오기",
   book_records_importing: "장부에서 인식된 증빙 수준 배출 데이터를 가져오는 중…",
   book_records_imported:
     "장부에서 {{count}}건의 증빙 수준 활동 데이터를 가져왔습니다(중복은 자동 생략)",
   book_records_imported_with_skips:
-    "{{count}}건 가져옴; {{skipped}}건은 스코프/단위를 매핑할 수 없어 생략했습니다. ESG 페이지에서 보완해 주세요",
+    "{{count}}건 가져옴; {{skipped}}건은 GHG 스코프를 판정할 수 없어 생략했습니다. ESG 페이지에서 스코프 또는 활동 유형을 설정해 주세요",
   book_records_import_failed: "장부 가져오기에 실패했습니다. 다시 시도해 주세요",
   activity_open_evidence: "증빙 보기 ↗",
   evidence_chain_title: "배출 증거 체인(클릭하여 단계별 확장, 최소 단위는 단일 증빙)",

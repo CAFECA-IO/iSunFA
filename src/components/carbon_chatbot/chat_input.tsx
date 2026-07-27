@@ -178,7 +178,7 @@ export function ChatInput({
             draftNotice.type === "loading"
               ? "bg-orange-50 text-[#e04f00]"
               : draftNotice.type === "info"
-                ? "bg-teal-50 text-teal-700"
+                ? "bg-orange-50 text-[#9a3412]"
                 : "bg-red-50 text-red-600"
           }`}
         >

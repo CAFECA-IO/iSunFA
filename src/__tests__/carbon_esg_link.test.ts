@@ -74,22 +74,22 @@ describe("CarbonEsgLinkService", () => {
     });
   });
 
-  it("should skip unmappable records with explicit reasons (never guess)", async () => {
+  it("should skip only truly undeterminable scopes with explicit reasons (never guess)", async () => {
     const result = await buildService([
-      // Info: (20260720 - Tzuhan) SCOPE_3 無子分類:15 類不可代猜
+      // Info: (20260720 - Tzuhan) 裸 SCOPE_3 且無活動類型:15 類不可代猜
       baseRecord({
         id: "esg-2",
         ghgProtocolCategory: null,
+        activityType: null,
         scope: "SCOPE_3" as IEsgRecordDetail["scope"],
       }),
-      // Info: (20260720 - Tzuhan) 單位無法正規化
-      baseRecord({ id: "esg-3", unit: "桶" }),
       // Info: (20260720 - Tzuhan) 分析未完成
       baseRecord({ id: "esg-4", analysisStatus: AIAnalysisStatus.PROCESSING }),
       // Info: (20260720 - Tzuhan) SCOPE_1/2 無歧義,可由 scope 補位
       baseRecord({
         id: "esg-5",
         ghgProtocolCategory: null,
+        activityType: null,
         scope: "SCOPE_1" as IEsgRecordDetail["scope"],
       }),
     ]).listBookActivities("book-1");
@@ -104,14 +104,57 @@ describe("CarbonEsgLinkService", () => {
         reason: CarbonEsgSkipReasonEnum.UNMAPPED_SCOPE,
       }),
       expect.objectContaining({
-        esgRecordId: "esg-3",
-        reason: CarbonEsgSkipReasonEnum.UNMAPPED_UNIT,
-      }),
-      expect.objectContaining({
         esgRecordId: "esg-4",
         reason: CarbonEsgSkipReasonEnum.NOT_COMPLETED,
       }),
     ]);
+  });
+
+  it("should import spend-based service records: scope from activity type, monetary unit verbatim (Emily UAT)", async () => {
+    // Info: (20260721 - Tzuhan) 服務型紀錄:單位 TWD、範疇未選、活動類型「購買商品與服務」
+    const result = await buildService([
+      baseRecord({
+        id: "esg-6",
+        ghgProtocolCategory: null,
+        scope: null,
+        activityType: "PURCHASED_GOODS" as IEsgRecordDetail["activityType"],
+        unit: "TWD",
+        amount: "38223",
+        emissions: "17.2",
+      }),
+    ]).listBookActivities("book-1");
+
+    expect(result.skipped).toHaveLength(0);
+    expect(result.activities[0]).toMatchObject({
+      scopeCategory: GhgProtocolCategory.SCOPE_3_CAT_1,
+      quantity: "38223",
+      unit: "TWD",
+      precomputedCo2eKg: "17.2",
+    });
+  });
+});
+
+describe("activity unit guard (validators)", () => {
+  it("should allow monetary units only for voucher-linked records", async () => {
+    const { CarbonCalculateRequestSchema } = await import("@/validators");
+    const base = {
+      scopeCategory: GhgProtocolCategory.SCOPE_3_CAT_1,
+      sourceName: "資訊與通訊服務",
+      quantity: "38223",
+      unit: "TWD",
+    };
+    // Info: (20260721 - Tzuhan) 憑證匯入(有 esgRecordId + precomputed):金額單位放行
+    expect(
+      CarbonCalculateRequestSchema.safeParse({
+        activities: [
+          { ...base, esgRecordId: "esg-1", precomputedCo2eKg: "17.2" },
+        ],
+      }).success,
+    ).toBe(true);
+    // Info: (20260721 - Tzuhan) 對話申報(無憑證引用):單位必須是 MeasurementUnit(換算引擎邊界)
+    expect(
+      CarbonCalculateRequestSchema.safeParse({ activities: [base] }).success,
+    ).toBe(false);
   });
 });
 

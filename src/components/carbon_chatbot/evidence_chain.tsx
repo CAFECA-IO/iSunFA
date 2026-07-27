@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { request } from "@/lib/utils/request";
 import { MoneyUtil } from "@/lib/utils/money";
+import { formatGhgCategoryLabel } from "@/constants/esg";
 import { IActivityRecord } from "@/types/carbon_chatbot.types";
 import { useTranslation } from "@/i18n/i18n_context";
 
@@ -82,7 +83,7 @@ const groupActivities = (activities: IEvidenceActivity[]): IScopeGroup[] => {
 };
 
 export function EvidenceChain({ accountBookId }: IEvidenceChainProps) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [activities, setActivities] = useState<IEvidenceActivity[] | null>(
     null,
   );
@@ -145,14 +146,14 @@ export function EvidenceChain({ accountBookId }: IEvidenceChainProps) {
   }
 
   return (
-    <div className="my-4 overflow-hidden rounded-xl border border-teal-100 bg-white text-sm">
+    <div className="my-4 overflow-hidden rounded-xl border border-orange-100 bg-white text-sm">
       {/* Info: (20260720 - Tzuhan) 第 0 層:總排放(全部憑證的並聯總和) */}
-      <div className="flex items-center justify-between gap-2 border-b border-teal-100 bg-teal-50/60 px-4 py-2.5">
-        <span className="flex items-center gap-1.5 text-xs font-bold text-teal-800">
+      <div className="flex items-center justify-between gap-2 border-b border-orange-100 bg-orange-50/60 px-4 py-2.5">
+        <span className="flex items-center gap-1.5 text-xs font-bold text-[#9a3412]">
           <Link2 size={13} />
           {t("carbon_chatbot.evidence_chain_title")}
         </span>
-        <span className="shrink-0 font-mono text-xs font-bold text-teal-800">
+        <span className="shrink-0 font-mono text-xs font-bold text-[#9a3412]">
           {t("carbon_chatbot.evidence_chain_total")}:{" "}
           {MoneyUtil.formatDynamic(total, 3)} kgCO2e
         </span>
@@ -178,8 +179,9 @@ export function EvidenceChain({ accountBookId }: IEvidenceChainProps) {
               ) : (
                 <ChevronRight size={13} className="shrink-0 text-gray-400" />
               )}
+              {/* Info: (20260722 - Tzuhan) UAT:範疇顯示名(enum 值不可讀,沿用系統 GhgCategoryDetails) */}
               <span className="min-w-0 flex-1 truncate text-xs font-bold text-gray-800">
-                {group.scope}
+                {formatGhgCategoryLabel(group.scope, language)}
               </span>
               <span className="shrink-0 text-[10px] text-gray-400">
                 {t("carbon_chatbot.evidence_chain_records", {
@@ -233,18 +235,19 @@ export function EvidenceChain({ accountBookId }: IEvidenceChainProps) {
                           key={record.esgRecordId ?? record.source}
                           type="button"
                           onClick={() => setEvidenceTarget(record)}
-                          className="ml-5 flex w-[calc(100%-1.25rem)] items-center gap-2 rounded-md px-3 py-1.5 text-left transition-colors hover:bg-teal-50"
+                          className="ml-5 flex w-[calc(100%-1.25rem)] items-center gap-2 rounded-md px-3 py-1.5 text-left transition-colors hover:bg-orange-50"
                         >
                           {record.isVerified ? (
                             <span title={t("carbon_chatbot.evidence_chain_verified")}>
-                              <ShieldCheck size={11} className="shrink-0 text-teal-600" />
+                              <ShieldCheck size={11} className="shrink-0 text-[#e04f00]" />
                             </span>
                           ) : (
                             <span title={t("carbon_chatbot.evidence_chain_unverified")}>
                               <ShieldAlert size={11} className="shrink-0 text-amber-500" />
                             </span>
                           )}
-                          <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-gray-600">
+                          {/* Info: (20260722 - Tzuhan) UAT:公式不得截斷(串聯推導是審計重點)→ 允許換行 */}
+                          <span className="min-w-0 flex-1 font-mono text-[11px] break-all whitespace-normal text-gray-600">
                             {t("carbon_chatbot.evidence_chain_formula", {
                               quantity: MoneyUtil.formatDynamic(record.quantity, 3),
                               unit: record.unit,
@@ -255,8 +258,14 @@ export function EvidenceChain({ accountBookId }: IEvidenceChainProps) {
                               ),
                             })}
                           </span>
-                          <span className="shrink-0 text-[10px] font-bold text-teal-600">
-                            {record.source}
+                          {/* Info: (20260722 - Tzuhan) UAT:憑證 id 顯示尾碼(全碼擠壓公式;title 保留全碼) */}
+                          <span
+                            title={record.source}
+                            className="shrink-0 text-[10px] font-bold text-[#e04f00]"
+                          >
+                            {record.voucherId
+                              ? `#${record.voucherId.slice(-8)}`
+                              : `#${(record.esgRecordId ?? "").slice(-8)}`}
                           </span>
                         </button>
                       ))}
@@ -277,8 +286,16 @@ export function EvidenceChain({ accountBookId }: IEvidenceChainProps) {
           journalId={evidenceTarget.journalId ?? null}
           esgId={evidenceTarget.esgRecordId ?? null}
           file={
-            evidenceTarget.fileId ? { id: evidenceTarget.fileId } : undefined
+            evidenceTarget.fileId
+              ? {
+                  id: evidenceTarget.fileId,
+                  hash: evidenceTarget.fileHash,
+                  fileName: evidenceTarget.fileName,
+                }
+              : undefined
           }
+          // Info: (20260721 - Tzuhan) UAT:報告可在非 account_book 路徑開啟,帳本 id 由 prop 注入
+          accountBookId={accountBookId}
         />
       )}
     </div>

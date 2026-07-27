@@ -179,12 +179,17 @@ export const carbonChatbot = {
   chart_frozen:
     "⚠ 質量保存チェックに未合格のため、グラフは凍結されています。チャットで在庫差異を明確にすると自動的に生成されます。",
   chart_sankey_chat_node: "チャット/添付による申告",
+  book_bind_pending_unlock:
+    "帳簿セッションを作成しました。暗号化チャットのロックを解除すると帳簿バインドが完了します(証憑インポートと証拠チェーンはバインド後に利用可能)",
+  book_bind_done: "帳簿バインド完了。活動データカードから証憑データをインポートできます",
+  book_bind_denied: "帳簿バインド失敗:この帳簿の Editor 以上の権限が必要です",
+  book_bind_failed: "帳簿バインドに失敗しました。再試行してください",
   book_records_import_button: "帳簿から証憑データをインポート",
   book_records_importing: "帳簿から認識済みの証憑レベル排出データをインポート中…",
   book_records_imported:
     "帳簿から {{count}} 件の証憑レベル活動データをインポートしました(重複は自動スキップ)",
   book_records_imported_with_skips:
-    "{{count}} 件をインポート。{{skipped}} 件はスコープ/単位が対応できずスキップしました。ESG ページで補完してください",
+    "{{count}} 件をインポート。{{skipped}} 件は GHG スコープを判定できずスキップしました。ESG ページでスコープまたは活動タイプを設定してください",
   book_records_import_failed: "帳簿からのインポートに失敗しました。再試行してください",
   activity_open_evidence: "証憑を表示 ↗",
   evidence_chain_title: "排出証拠チェーン(クリックで段階的に展開、最小単位は単一証憑)",

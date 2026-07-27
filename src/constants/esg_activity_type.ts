@@ -1,4 +1,4 @@
-import { EsgScope } from "@/constants/esg";
+import { EsgScope, GhgProtocolCategory } from "@/constants/esg";
 
 export type EsgActivityTypeKey =
   | "STATIONARY_COMBUSTION"
@@ -180,3 +180,37 @@ export const EsgActivityTypeMapping: IEsgActivityType[] = [
     description: "如：自來水用量",
   },
 ];
+
+/**
+ * Info: (20260721 - Tzuhan) 活動類型 → GHG Protocol 範疇/類別的決定性映射(#53):
+ * 每個活動類型在 GHG Protocol 下的歸類是標準定義、無歧義 — 紀錄未標範疇時據此補位,
+ * 不必因欄位缺漏而無法入報告(水資源依 GHG Protocol 慣例歸 Cat 1 採購商品與服務)。
+ */
+export const EsgActivityTypeGhgCategoryMap: Record<
+  EsgActivityTypeKey,
+  GhgProtocolCategory
+> = {
+  STATIONARY_COMBUSTION: GhgProtocolCategory.SCOPE_1_DIRECT,
+  MOBILE_COMBUSTION: GhgProtocolCategory.SCOPE_1_DIRECT,
+  FUGITIVE_EMISSION: GhgProtocolCategory.SCOPE_1_DIRECT,
+  PROCESS_EMISSION: GhgProtocolCategory.SCOPE_1_DIRECT,
+  ELECTRICITY_USAGE: GhgProtocolCategory.SCOPE_2_INDIRECT,
+  HEAT_AND_STEAM: GhgProtocolCategory.SCOPE_2_INDIRECT,
+  PURCHASED_COOLING: GhgProtocolCategory.SCOPE_2_INDIRECT,
+  PURCHASED_GOODS: GhgProtocolCategory.SCOPE_3_CAT_1,
+  CAPITAL_GOODS: GhgProtocolCategory.SCOPE_3_CAT_2,
+  FUEL_AND_ENERGY_RELATED_ACTIVITIES: GhgProtocolCategory.SCOPE_3_CAT_3,
+  UPSTREAM_LOGISTICS: GhgProtocolCategory.SCOPE_3_CAT_4,
+  WASTE_DISPOSAL: GhgProtocolCategory.SCOPE_3_CAT_5,
+  BUSINESS_TRAVEL: GhgProtocolCategory.SCOPE_3_CAT_6,
+  EMPLOYEE_COMMUTING: GhgProtocolCategory.SCOPE_3_CAT_7,
+  UPSTREAM_LEASED_ASSETS: GhgProtocolCategory.SCOPE_3_CAT_8,
+  DOWNSTREAM_LOGISTICS: GhgProtocolCategory.SCOPE_3_CAT_9,
+  PROCESSING_OF_SOLD_PRODUCTS: GhgProtocolCategory.SCOPE_3_CAT_10,
+  USE_OF_SOLD_PRODUCTS: GhgProtocolCategory.SCOPE_3_CAT_11,
+  END_OF_LIFE_TREATMENT_OF_SOLD_PRODUCTS: GhgProtocolCategory.SCOPE_3_CAT_12,
+  DOWNSTREAM_LEASED_ASSETS: GhgProtocolCategory.SCOPE_3_CAT_13,
+  FRANCHISES: GhgProtocolCategory.SCOPE_3_CAT_14,
+  INVESTMENTS: GhgProtocolCategory.SCOPE_3_CAT_15,
+  WATER_CONSUMPTION: GhgProtocolCategory.SCOPE_3_CAT_1,
+};

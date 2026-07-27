@@ -31,7 +31,11 @@ import {
   refreshCarbonChartBlocks,
   type ICarbonChartLabels,
 } from "@/lib/carbon_report_chart.builder";
-import { CarbonChartTemplateEnum } from "@/constants/carbon_report_charts";
+import {
+  CarbonChartTemplateEnum,
+  CARBON_AUTO_SANKEY_PARAGRAPH_ID,
+} from "@/constants/carbon_report_charts";
+import { formatGhgCategoryLabel } from "@/constants/esg";
 import {
   CARBON_EVIDENCE_CHAPTER_ID,
   buildEvidenceChainBlock,
@@ -420,12 +424,18 @@ export const useCarbonChat = () => {
   }, []);
 
   // Info: (20260716 - Tzuhan) #52 綁定會話至帳本(POST sessions);成功後記入存取中繼資料
+  // Info: (20260720 - Tzuhan) UAT 回饋:排隊與失敗都要對使用者說話(先前靜默,匯入按鈕不出現無從排查)
   const bindSessionToBook = useCallback(
     async (sessionId: string, accountBookId: string) => {
       const master = masterKeyRef.current;
       if (!master) {
         // Info: (20260716 - Tzuhan) 需 xpub 作 chatroom ownerPublicKey:未解鎖先排隊,解鎖後補送
         pendingBindsRef.current.set(sessionId, accountBookId);
+        // Info: (20260720 - Tzuhan) 明示排隊狀態:帳本功能(匯入/證據鏈)要等解鎖綁定完成才可用
+        setDraftNotice({
+          type: "info",
+          text: t("carbon_chatbot.book_bind_pending_unlock"),
+        });
         return;
       }
       try {
@@ -445,11 +455,30 @@ export const useCarbonChat = () => {
           ...prev,
           [bound.channel]: { accountBookId: bound.accountBookId, canEdit: true },
         }));
+        setDraftNotice({
+          type: "info",
+          text: t("carbon_chatbot.book_bind_done"),
+        });
+        if (draftNoticeTimerRef.current) {
+          clearTimeout(draftNoticeTimerRef.current);
+        }
+        draftNoticeTimerRef.current = setTimeout(() => {
+          draftNoticeTimerRef.current = null;
+          setDraftNotice(null);
+        }, CARBON_DRAFT_NOTICE_DISMISS_MS);
       } catch (error) {
         console.error("[carbon-chat] failed to bind account book:", error);
+        // Info: (20260720 - Tzuhan) 綁定失敗最常見原因:角色不足(server 需 EDITOR 以上)
+        setDraftNotice({
+          type: "error",
+          text:
+            getApiErrorCode(error) === API_ERRORS.AUTH_PERMISSION_DENIED.code
+              ? t("carbon_chatbot.book_bind_denied")
+              : t("carbon_chatbot.book_bind_failed"),
+        });
       }
     },
-    [],
+    [t],
   );
 
   // Info: (20260716 - Tzuhan) #52 解鎖後補送排隊中的綁定請求
@@ -654,14 +683,26 @@ export const useCarbonChat = () => {
       insufficient: t("carbon_chatbot.report_table_insufficient"),
       frozen: t("carbon_chatbot.report_table_frozen"),
       pendingNote: t("carbon_chatbot.report_table_pending_note"),
+      // Info: (20260722 - Tzuhan) UAT:範疇顯示名(enum 值不可讀)
+      formatScope: (scope: string) => formatGhgCategoryLabel(scope, language),
     }),
-    [t],
+    [t, language],
   );
 
   // Info: (20260720 - Tzuhan) #23 數據段落勾稽徽章三態(目錄樹顯示;由 ledger 決定性裁決)
   const dataBadgeState = deriveDataBadgeState(
     activeInventoryState?.computedLedger,
   );
+
+  /**
+   * Info: (20260722 - Tzuhan) UAT 修正:草稿落地時的 ledger 一律讀 ref(非 closure)。
+   * 匯入 → 自動生成草稿為長流程(LLM 10~45s),/calculate 在其間返回;
+   * 舊 closure 捕獲的空 ledger 會讓表格印佔位、桑基圖被跳過 — ref 永遠是當下真值。
+   */
+  const computedLedgerRef = useRef<IComputedLedger | undefined>(undefined);
+  useEffect(() => {
+    computedLedgerRef.current = activeInventoryState?.computedLedger;
+  }, [activeInventoryState?.computedLedger]);
 
   // Info: (20260720 - Tzuhan) #51 圖表文案(i18n;數值本身一律引擎產出,與語言無關)
   const chartLabels: ICarbonChartLabels = useMemo(
@@ -672,8 +713,10 @@ export const useCarbonChat = () => {
       insufficient: t("carbon_chatbot.chart_insufficient"),
       frozen: t("carbon_chatbot.chart_frozen"),
       sankeyChatNode: t("carbon_chatbot.chart_sankey_chat_node"),
+      // Info: (20260722 - Tzuhan) UAT:範疇顯示名(enum 值不可讀)
+      formatScope: (scope: string) => formatGhgCategoryLabel(scope, language),
     }),
-    [t],
+    [t, language],
   );
   useEffect(() => {
     if (!activeInventoryState) return undefined;
@@ -792,71 +835,10 @@ export const useCarbonChat = () => {
     [user?.address, activeSessionId],
   );
 
-  /**
-   * Info: (20260720 - Tzuhan) #53 從帳本匯入憑證級活動數據:
-   * 帳本(voucher → EsgRecord)已認列的碳排事實直接入活動帳本 — 報告以財報/憑證為依據。
-   * 冪等:去重鍵為 esgRecordId,重按 = 重新整理(只補新認列的);合併後 /calculate 簽章
-   * 變更自動重跑(precomputed 直採 + 守恆勾稽)。無法映射者(skipped)明示提示,絕不靜默。
-   */
+  // Info: (20260721 - Tzuhan) #53 匯入狀態(定義於此供 UI;主邏輯 importBookEsgRecords 移至
+  // Info: (20260721 - Tzuhan) generateParagraphDraft 之後 — 匯入成功需自動生成數據段落草稿)
   const [isImportingBookRecords, setIsImportingBookRecords] =
     useState<boolean>(false);
-  const importBookEsgRecords = useCallback(async () => {
-    const accountBookId = sessionAccess[chatChannel]?.accountBookId;
-    if (!accountBookId || isImportingBookRecords) return;
-    setIsImportingBookRecords(true);
-    setDraftNotice({
-      type: "loading",
-      text: t("carbon_chatbot.book_records_importing"),
-    });
-    try {
-      const res = await request<{
-        payload: {
-          activities: IActivityRecord[];
-          skipped: { esgRecordId: string; sourceName: string }[];
-        } | null;
-      }>("/api/v1/chat/carbon/esg-records", {
-        query: { accountBookId },
-      });
-      const activities = res.payload?.activities ?? [];
-      const skippedCount = res.payload?.skipped.length ?? 0;
-      if (activities.length > 0) {
-        applyInventoryExtraction({ activities });
-      }
-      setDraftNotice({
-        type: "info",
-        text:
-          skippedCount > 0
-            ? t("carbon_chatbot.book_records_imported_with_skips", {
-                count: activities.length,
-                skipped: skippedCount,
-              })
-            : t("carbon_chatbot.book_records_imported", {
-                count: activities.length,
-              }),
-      });
-    } catch (error) {
-      console.error("[carbon-chat] book esg import failed:", error);
-      setDraftNotice({
-        type: "error",
-        text: t("carbon_chatbot.book_records_import_failed"),
-      });
-    } finally {
-      setIsImportingBookRecords(false);
-      if (draftNoticeTimerRef.current) {
-        clearTimeout(draftNoticeTimerRef.current);
-      }
-      draftNoticeTimerRef.current = setTimeout(() => {
-        draftNoticeTimerRef.current = null;
-        setDraftNotice(null);
-      }, CARBON_DRAFT_NOTICE_DISMISS_MS);
-    }
-  }, [
-    sessionAccess,
-    chatChannel,
-    isImportingBookRecords,
-    applyInventoryExtraction,
-    t,
-  ]);
 
   // Info: (20260716 - Tzuhan) #55 發起段落修訂:附件事實 + 使用者指示 + 既有原文 → 修訂稿(對照卡確認制)
   const requestParagraphRevision = useCallback(
@@ -1432,15 +1414,33 @@ export const useCarbonChat = () => {
       );
       if (!section) return;
 
+      // Info: (20260722 - Tzuhan) UAT:讀 ref 取當下 ledger(匯入→自動草稿的長流程中,
+      // Info: (20260722 - Tzuhan) closure 捕獲的舊空 ledger 會讓表格印佔位、桑基圖被跳過)
+      const ledgerNow = computedLedgerRef.current;
       let content = section.isDataDriven
         ? injectDataTable(
             stripLlmTables(draft.content),
-            buildCarbonDataTable(
-              activeInventoryState?.computedLedger,
-              dataTableLabels,
-            ),
+            buildCarbonDataTable(ledgerNow, dataTableLabels),
           )
         : draft.content;
+
+      // Info: (20260721 - Tzuhan) UAT:排放總量匯總段自動附掛碳流量桑基圖(憑證→排放源→Scope);
+      // Info: (20260721 - Tzuhan) mermaid 原始碼進 Markdown 輸入區,PDF 預覽同步渲染;重算連動自動重繪
+      if (
+        section.id === CARBON_AUTO_SANKEY_PARAGRAPH_ID &&
+        (ledgerNow?.entries.length ?? 0) > 0
+      ) {
+        content = insertCarbonChartBlock(
+          content,
+          CarbonChartTemplateEnum.EMISSION_SANKEY,
+          buildCarbonChartBlock(
+            CarbonChartTemplateEnum.EMISSION_SANKEY,
+            ledgerNow,
+            chartLabels,
+            dataTableLabels,
+          ),
+        );
+      }
 
       // Info: (20260720 - Tzuhan) #54 第三章數據段落 + 帳本會話 → 自動附掛證據鏈區塊
       // Info: (20260720 - Tzuhan) (fence 只存帳本位址;數據由元件實時問 API,層層下鑽至單一憑證)
@@ -1496,8 +1496,8 @@ export const useCarbonChat = () => {
     },
     [
       activeSessionId,
-      activeInventoryState?.computedLedger,
       dataTableLabels,
+      chartLabels,
       sessionAccess,
       chatChannel,
     ],
@@ -1605,6 +1605,61 @@ export const useCarbonChat = () => {
     t,
   ]);
 
+  /**
+   * Info: (20260722 - Tzuhan) UAT:匯總段(3.6)桑基圖補位 — 獨立 effect,不依賴重算戳記。
+   * 涵蓋所有時序:草稿先落地 ledger 後到、既有會話還原、切換會話。
+   * 冪等護欄:插入後 hasCarbonChartBlocks 為真,後續執行一律 no-op(不會迴圈)。
+   */
+  useEffect(() => {
+    const ledger = activeInventoryState?.computedLedger;
+    if (!ledger || ledger.entries.length === 0) return;
+    const reportData = sessionsData[activeSessionId]?.reportData;
+    const target = reportData?.paragraphs?.find(
+      (p) => p.id === CARBON_AUTO_SANKEY_PARAGRAPH_ID,
+    );
+    if (!target?.content || hasCarbonChartBlocks(target.content)) return;
+
+    const nextContent = insertCarbonChartBlock(
+      target.content,
+      CarbonChartTemplateEnum.EMISSION_SANKEY,
+      buildCarbonChartBlock(
+        CarbonChartTemplateEnum.EMISSION_SANKEY,
+        ledger,
+        chartLabels,
+        dataTableLabels,
+      ),
+    );
+    setSessionsData((prev) => {
+      const session = prev[activeSessionId];
+      const prevReport = session?.reportData;
+      if (!prevReport?.paragraphs) return prev;
+      const nextRaw = prevReport.rawMarkdown
+        ? patchMarkdownSection(prevReport.rawMarkdown, target.title, nextContent)
+        : prevReport.rawMarkdown;
+      return {
+        ...prev,
+        [activeSessionId]: {
+          ...session,
+          reportData: {
+            ...prevReport,
+            rawMarkdown: nextRaw,
+            paragraphs: prevReport.paragraphs.map((p) =>
+              p.id === CARBON_AUTO_SANKEY_PARAGRAPH_ID
+                ? { ...p, content: nextContent, isVerified: false }
+                : p,
+            ),
+          },
+        },
+      };
+    });
+  }, [
+    activeInventoryState?.computedLedger,
+    sessionsData,
+    activeSessionId,
+    chartLabels,
+    dataTableLabels,
+  ]);
+
   // Info: (20260712 - Luphia) 載入歷史訊息（密文→以主私鑰解密）；before 省略為最新一頁，否則載入更舊一頁並前置
   const loadHistory = useCallback(
     async (before?: string): Promise<number> => {
@@ -1690,18 +1745,32 @@ export const useCarbonChat = () => {
   const activeSession = sessionsData[activeSessionId];
   // Info: (20260712 - Luphia) 以 useMemo 快取 session 列表，避免每次 render 重建陣列
   // Info: (20260713 - Tzuhan) 有段落大綱的 session,progress 一律以真實完成段落數推導(廢除訊息計次假進度)
+  // Info: (20260722 - Tzuhan) UAT:帳本會話與個人會話必須在列表上可辨識 —
+  // Info: (20260722 - Tzuhan) 依 sessionAccess 附上綁定帳本名稱(boundBookName;個人會話為 undefined)
   const sessionsList = useMemo(
     () =>
       Object.values(sessionsData).map((session) => {
+        const channel = buildCarbonChatChannel(
+          user?.address ?? "anonymous",
+          session.id,
+        );
+        const boundBookId = sessionAccess[channel]?.accountBookId;
+        const boundBookName = boundBookId
+          ? (accountBooks.find((book) => book.id === boundBookId)?.name ??
+            boundBookId)
+          : undefined;
         const paragraphs = session.reportData?.paragraphs;
-        if (!paragraphs || paragraphs.length === 0) return session;
-        const completedCount = paragraphs.filter((p) => p.isCompleted).length;
-        return {
-          ...session,
-          progress: Math.round((completedCount / paragraphs.length) * 100),
-        };
+        const progress =
+          paragraphs && paragraphs.length > 0
+            ? Math.round(
+                (paragraphs.filter((p) => p.isCompleted).length /
+                  paragraphs.length) *
+                  100,
+              )
+            : session.progress;
+        return { ...session, progress, boundBookName };
       }),
-    [sessionsData],
+    [sessionsData, sessionAccess, accountBooks, user?.address],
   );
 
   // Info: (20260713 - Tzuhan) 完成/查核雙軌統計: 工具列膠囊與進度浮窗共用的單一來源
@@ -1880,6 +1949,96 @@ export const useCarbonChat = () => {
       jumpToReportParagraph,
     ],
   );
+
+  /**
+   * Info: (20260720 - Tzuhan) #53 從帳本匯入憑證級活動數據:
+   * 帳本(voucher → EsgRecord)已認列的碳排事實直接入活動帳本 — 報告以財報/憑證為依據。
+   * 冪等:去重鍵為 esgRecordId,重按 = 重新整理(只補新認列的);合併後 /calculate 簽章
+   * 變更自動重跑(precomputed 直採 + 守恆勾稽)。無法映射者(skipped)明示提示,絕不靜默。
+   * Info: (20260721 - Tzuhan) UAT:匯入成功後自動生成第三章數據段落草稿(僅空白段落) —
+   * 敘述由 AI 撰寫、表格/證據鏈由 applyDraftToReport 決定性注入,Markdown 與 PDF 隨之同步;
+   * ledger 計算稍後返回時,#23 重算連動會自動把佔位表格換成真值(敘述零改動)
+   */
+  const importBookEsgRecords = useCallback(async () => {
+    const accountBookId = sessionAccess[chatChannel]?.accountBookId;
+    if (!accountBookId || isImportingBookRecords) return;
+    setIsImportingBookRecords(true);
+    setDraftNotice({
+      type: "loading",
+      text: t("carbon_chatbot.book_records_importing"),
+    });
+    let importedCount = 0;
+    try {
+      const res = await request<{
+        payload: {
+          activities: IActivityRecord[];
+          skipped: { esgRecordId: string; sourceName: string }[];
+        } | null;
+      }>("/api/v1/chat/carbon/esg-records", {
+        query: { accountBookId },
+      });
+      const activities = res.payload?.activities ?? [];
+      const skippedCount = res.payload?.skipped.length ?? 0;
+      importedCount = activities.length;
+      if (activities.length > 0) {
+        applyInventoryExtraction({ activities });
+      }
+      setDraftNotice({
+        type: "info",
+        text:
+          skippedCount > 0
+            ? t("carbon_chatbot.book_records_imported_with_skips", {
+                count: activities.length,
+                skipped: skippedCount,
+              })
+            : t("carbon_chatbot.book_records_imported", {
+                count: activities.length,
+              }),
+      });
+    } catch (error) {
+      console.error("[carbon-chat] book esg import failed:", error);
+      setDraftNotice({
+        type: "error",
+        text: t("carbon_chatbot.book_records_import_failed"),
+      });
+    } finally {
+      setIsImportingBookRecords(false);
+      if (draftNoticeTimerRef.current) {
+        clearTimeout(draftNoticeTimerRef.current);
+      }
+      draftNoticeTimerRef.current = setTimeout(() => {
+        draftNoticeTimerRef.current = null;
+        setDraftNotice(null);
+      }, CARBON_DRAFT_NOTICE_DISMISS_MS);
+    }
+
+    // Info: (20260721 - Tzuhan) 自動撰寫數據段落(逐段循序:同一時間僅一段生成的既有約束):
+    // 只填「尚無內容」的第三章數據段落,絕不覆蓋使用者已有的編輯
+    if (importedCount > 0) {
+      const paragraphs =
+        sessionsData[activeSessionId]?.reportData?.paragraphs ?? [];
+      const emptyDataSections = CARBON_REPORT_OUTLINE.filter(
+        (s) =>
+          s.chapterId === CARBON_EVIDENCE_CHAPTER_ID &&
+          s.isDataDriven &&
+          !paragraphs.find((p) => p.id === s.id)?.content,
+      );
+      // Info: (20260721 - Tzuhan) 循序 reduce(專案禁 await-in-loop):前段完成才開下一段
+      await emptyDataSections.reduce(async (previous, section) => {
+        await previous;
+        await generateParagraphDraft(section.id);
+      }, Promise.resolve());
+    }
+  }, [
+    sessionAccess,
+    chatChannel,
+    isImportingBookRecords,
+    applyInventoryExtraction,
+    t,
+    sessionsData,
+    activeSessionId,
+    generateParagraphDraft,
+  ]);
 
   // Info: (20260712 - Luphia) 進入時先預抓金鑰紀錄，避免解鎖手勢當下「fetch → PRF」耗掉 user activation
   useEffect(() => {

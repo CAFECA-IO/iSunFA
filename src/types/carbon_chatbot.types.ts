@@ -121,6 +121,10 @@ export interface IActivityRecord {
   voucherId?: string;
   journalId?: string;
   fileId?: string;
+  // Info: (20260721 - Tzuhan) 原始憑證檔 hash/檔名:RecordTabModal 的原始憑證分頁憑此啟用預覽/下載
+  // Info: (20260721 - Tzuhan) (detail modal 載入時不回填 file,須開門即備妥)
+  fileHash?: string;
+  fileName?: string;
   // Info: (20260720 - Tzuhan) #53 憑證管線已算好的排放量(kgCO2e,字串 Decimal):
   // Info: (20260720 - Tzuhan) 同一決定論引擎產物,計算 facade 直採不重算(不重選係數,零衝突)
   precomputedCo2eKg?: string;

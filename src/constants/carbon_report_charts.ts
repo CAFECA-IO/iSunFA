@@ -18,6 +18,10 @@ export enum CarbonChartTemplateEnum {
 // Info: (20260720 - Tzuhan) 桑基圖憑證節點上限:超過即略過憑證層(排放源→Scope),避免不可讀的毛線團
 export const CARBON_SANKEY_MAX_EVIDENCE_NODES = 30;
 
+// Info: (20260721 - Tzuhan) UAT:排放總量匯總段(3.6)草稿生成時自動附掛碳流量桑基圖 —
+// Info: (20260721 - Tzuhan) mermaid 原始碼落在 Markdown 輸入區,PDF 預覽區同步渲染
+export const CARBON_AUTO_SANKEY_PARAGRAPH_ID = "ch3-6";
+
 // Info: (20260720 - Tzuhan) 圖表區塊錨點(HTML 註解,渲染不可見):重算連動依此替換,敘述零改動
 export const CARBON_CHART_ANCHOR_PREFIX = "carbon-chart";
 

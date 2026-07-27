@@ -21,7 +21,8 @@ export interface IAccountBookOption {
 }
 
 interface IChatSidebarProps {
-  sessionsList: IChatSession[];
+  // Info: (20260722 - Tzuhan) UAT:boundBookName 有值 = 帳本會話(列表以圖示+帳本名 chip 區隔個人會話)
+  sessionsList: (IChatSession & { boundBookName?: string })[];
   activeSessionId: string;
   onSelectSession: (id: string) => void;
   // Info: (20260714 - Tzuhan) 新增對話(建立空白 session 並切換)
@@ -182,7 +183,12 @@ export function ChatSidebar({
                         : "border border-gray-100 bg-white text-gray-400"
                     }`}
                   >
-                    <MessageSquare className="h-4 w-4" />
+                    {/* Info: (20260722 - Tzuhan) UAT:帳本會話與個人會話的視覺區隔(帳本=書本圖示) */}
+                    {s.boundBookName ? (
+                      <BookOpen className="h-4 w-4" />
+                    ) : (
+                      <MessageSquare className="h-4 w-4" />
+                    )}
                   </div>
                   <div className="group min-w-0 flex-1">
                     {editing?.id === s.id ? (
@@ -236,6 +242,18 @@ export function ChatSidebar({
                       >
                         {s.status}
                       </span>
+                      {/* Info: (20260722 - Tzuhan) UAT:帳本會話 chip(帳本名;個人會話不顯示) */}
+                      {s.boundBookName && (
+                        <span
+                          title={s.boundBookName}
+                          className="flex min-w-0 items-center gap-0.5 rounded-full bg-orange-50 px-2 py-0.5 text-[9px] font-bold text-[#e04f00] ring-1 ring-orange-100"
+                        >
+                          <BookOpen size={9} className="shrink-0" />
+                          <span className="max-w-[7rem] truncate">
+                            {s.boundBookName}
+                          </span>
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

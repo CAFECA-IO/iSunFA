@@ -15,11 +15,37 @@ import {
 import { CarbonReportDraftPutSchema } from "@/validators/carbon_report_storage";
 
 // Info: (20260716 - Tzuhan) 單筆活動數據: scopeCategory/unit 以 nativeEnum 鎖死；quantity 原樣字串(嚴禁在此轉數字)
-export const CarbonActivityRecordSchema = z.object({
+/**
+ * Info: (20260721 - Tzuhan) 單位護欄(UAT 修正):
+ * - 對話/附件萃取的活動:unit 必須是 MeasurementUnit(決定性換算引擎的輸入邊界)
+ * - 憑證匯入的活動(esgRecordId + precomputedCo2eKg):排放量直採不重算,
+ *   金額基準(spend-based,如 TWD)等非物理單位原樣放行(僅顯示用)
+ */
+const activityUnitGuard = (
+  record: { unit: string; esgRecordId?: string; precomputedCo2eKg?: string },
+  ctx: z.RefinementCtx,
+) => {
+  const isVoucherLinked = Boolean(
+    record.esgRecordId && record.precomputedCo2eKg,
+  );
+  if (
+    !isVoucherLinked &&
+    !(Object.values(MeasurementUnit) as string[]).includes(record.unit)
+  ) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["unit"],
+      message: "unit must be a MeasurementUnit for non-voucher records",
+    });
+  }
+};
+
+// Info: (20260721 - Tzuhan) shape 供 extend(ZodEffects 不可 extend);對外 schema 一律掛 unit 護欄
+const CarbonActivityRecordShape = z.object({
   scopeCategory: z.nativeEnum(GhgProtocolCategory),
   sourceName: z.string().min(1).max(100),
   quantity: z.string().min(1).max(50),
-  unit: z.nativeEnum(MeasurementUnit),
+  unit: z.string().min(1).max(50),
   confidence: z.enum(["high", "medium", "low"]).optional(),
   source: z.string().max(200).optional(),
   // Info: (20260720 - Tzuhan) #53 憑證聯動結構化引用(帳本匯入路徑;LLM responseSchema 無此欄位)
@@ -27,8 +53,12 @@ export const CarbonActivityRecordSchema = z.object({
   voucherId: z.string().max(100).optional(),
   journalId: z.string().max(100).optional(),
   fileId: z.string().max(100).optional(),
+  fileHash: z.string().max(200).optional(),
   precomputedCo2eKg: z.string().max(60).optional(),
 });
+
+export const CarbonActivityRecordSchema =
+  CarbonActivityRecordShape.superRefine(activityUnitGuard);
 
 // Info: (20260720 - Tzuhan) #6520 物料庫存紀錄: 質量守恆等式資料;數值原樣字串(解析於 articulation 服務)
 export const CarbonStockRecordSchema = z.object({
@@ -60,10 +90,10 @@ export type CarbonInventoryExtractionPayload = z.infer<
 export const CarbonCalculateRequestSchema = z.object({
   activities: z
     .array(
-      CarbonActivityRecordSchema.extend({
+      CarbonActivityRecordShape.extend({
         emissionFactor: z.string().max(50).optional(),
         factorSource: z.string().max(200).optional(),
-      }),
+      }).superRefine(activityUnitGuard),
     )
     .min(1)
     .max(CARBON_CALCULATE_MAX_ACTIVITIES),
@@ -158,10 +188,10 @@ export const CarbonInventoryStateSchema = z.object({
     .enum(["operational_control", "financial_control", "equity_share"])
     .optional(),
   activities: z.array(
-    CarbonActivityRecordSchema.extend({
+    CarbonActivityRecordShape.extend({
       emissionFactor: z.string().max(50).optional(),
       factorSource: z.string().max(200).optional(),
-    }),
+    }).superRefine(activityUnitGuard),
   ),
   // Info: (20260720 - Tzuhan) #6520 物料庫存紀錄(隨 state E2EE 保存)
   stockRecords: z.array(CarbonStockRecordSchema).optional(),

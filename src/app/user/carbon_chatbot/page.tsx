@@ -260,8 +260,16 @@ export default function CarbonChatbotPage() {
           journalId={evidenceTarget.journalId ?? null}
           esgId={evidenceTarget.esgRecordId ?? null}
           file={
-            evidenceTarget.fileId ? { id: evidenceTarget.fileId } : undefined
+            evidenceTarget.fileId
+              ? {
+                  id: evidenceTarget.fileId,
+                  hash: evidenceTarget.fileHash,
+                  fileName: evidenceTarget.fileName,
+                }
+              : undefined
           }
+          // Info: (20260721 - Tzuhan) UAT:本頁不在 account_book 路徑下,帳本 id 必須由 prop 注入
+          accountBookId={activeSessionAccess.accountBookId}
         />
       )}
     </div>

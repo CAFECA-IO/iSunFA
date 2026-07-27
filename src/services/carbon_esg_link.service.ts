@@ -9,19 +9,21 @@ import { logger } from "@/lib/utils/logger";
 import { esgRepo } from "@/repositories/esg.repo";
 import { ApiError, API_ERRORS } from "@/lib/utils/error_dictionary";
 import { GhgProtocolCategory } from "@/constants/esg";
+import { EsgActivityTypeGhgCategoryMap } from "@/constants/esg_activity_type";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { normalizeCoefficientUnit } from "@/services/carbon_calculation.service";
 import { IActivityRecord } from "@/types/carbon_chatbot.types";
 import { IEsgRecordDetail } from "@/interfaces/esg";
 
 // Info: (20260720 - Tzuhan) 跳過原因(決定性列舉;回傳給前端明示,使用者可回 ESG 頁補資料)
+// Info: (20260721 - Tzuhan) UAT:UNMAPPED_UNIT 移除 — precomputed 紀錄不重算,金額基準(TWD)等
+// Info: (20260721 - Tzuhan) 非物理單位僅作顯示,原樣保留即可,不構成跳過理由
 export enum CarbonEsgSkipReasonEnum {
   // Info: (20260720 - Tzuhan) AI 分析未完成(PENDING/PROCESSING/FAILED)的紀錄不可入報告
   NOT_COMPLETED = "NOT_COMPLETED",
-  // Info: (20260720 - Tzuhan) SCOPE_3 未標 GHG Protocol 子分類:15 類不可代猜
+  // Info: (20260720 - Tzuhan) 範疇無法決定性判定(無 GHG 子分類、無活動類型映射、scope 缺漏或為
+  // Info: (20260720 - Tzuhan) 裸 SCOPE_3):15 類不可代猜
   UNMAPPED_SCOPE = "UNMAPPED_SCOPE",
-  // Info: (20260720 - Tzuhan) 單位無法正規化為 MeasurementUnit
-  UNMAPPED_UNIT = "UNMAPPED_UNIT",
 }
 
 export interface ISkippedEsgRecord {
@@ -44,7 +46,12 @@ const SCOPE_FALLBACK_MAP: Record<string, GhgProtocolCategory> = {
   SCOPE_2: GhgProtocolCategory.SCOPE_2_INDIRECT,
 };
 
-// Info: (20260720 - Tzuhan) 範疇裁決:優先用紀錄自帶的 GHG Protocol 子分類(enum 白名單複驗)
+/**
+ * Info: (20260720 - Tzuhan) 範疇裁決(決定性優先序):
+ * 1. 紀錄自帶的 GHG Protocol 子分類(enum 白名單複驗)
+ * 2. 活動類型 → GHG 範疇標準映射(UAT:服務型紀錄常只填活動類型,如「購買商品與服務」= Cat 1)
+ * 3. 裸 SCOPE_1/2(無歧義);裸 SCOPE_3 不可代猜 15 類 → null(跳過)
+ */
 const resolveScopeCategory = (
   record: IEsgRecordDetail,
 ): GhgProtocolCategory | null => {
@@ -54,6 +61,9 @@ const resolveScopeCategory = (
     (Object.values(GhgProtocolCategory) as string[]).includes(declared)
   ) {
     return declared as GhgProtocolCategory;
+  }
+  if (record.activityType && EsgActivityTypeGhgCategoryMap[record.activityType]) {
+    return EsgActivityTypeGhgCategoryMap[record.activityType];
   }
   if (record.scope && SCOPE_FALLBACK_MAP[record.scope]) {
     return SCOPE_FALLBACK_MAP[record.scope];
@@ -118,15 +128,9 @@ export class CarbonEsgLinkService {
         return;
       }
 
-      const unit = normalizeCoefficientUnit(record.unit);
-      if (!unit) {
-        skipped.push({
-          esgRecordId: record.id,
-          sourceName,
-          reason: CarbonEsgSkipReasonEnum.UNMAPPED_UNIT,
-        });
-        return;
-      }
+      // Info: (20260721 - Tzuhan) 單位:可正規化者取 MeasurementUnit(利於分組/守恆對齊);
+      // Info: (20260721 - Tzuhan) 金額基準等非物理單位原樣保留 — precomputed 不重算,單位僅顯示用
+      const unit = normalizeCoefficientUnit(record.unit) ?? record.unit;
 
       activities.push({
         scopeCategory,
@@ -146,6 +150,9 @@ export class CarbonEsgLinkService {
         voucherId: record.voucherId,
         journalId: record.journalId,
         fileId: record.fileId || undefined,
+        // Info: (20260721 - Tzuhan) 原始憑證檔 hash/檔名(RecordTabModal 憑此啟用「原始憑證」分頁與下載檔名)
+        fileHash: record.file?.hash,
+        fileName: record.file?.fileName,
         precomputedCo2eKg: record.emissions,
         isVerified: record.isVerified,
       });
