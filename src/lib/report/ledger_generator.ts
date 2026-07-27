@@ -153,6 +153,7 @@ export function generateLedger(
     currencyAlias,
     keyword,
     accountType,
+    rootCode,
     balanceOp,
     balanceValue,
   } = options;
@@ -249,6 +250,13 @@ export function generateLedger(
   // Info: (20260727 - Julian) 科目類別於「產出列」過濾（供試算表總帳節點 drill-down）
   if (accountType && accountType.trim()) {
     items = items.filter((item) => item.accountType === accountType);
+  }
+
+  // Info: (20260727 - Julian) 科目子樹於「產出列」過濾：保留 rootCode 及其所有子孫（含虛擬集計根如 1XXX），供試算表統馭科目 drill-down。各科目餘額仍為獨立累計之真實值
+  if (rootCode && rootCode.trim()) {
+    items = items.filter((item) =>
+      AccountUtil.isDescendantOf(item.code, rootCode, dictionary),
+    );
   }
 
   // Info: (20260727 - Julian) 關鍵字於「產出列」過濾（餘額不受影響，仍為各科目真實累計值）

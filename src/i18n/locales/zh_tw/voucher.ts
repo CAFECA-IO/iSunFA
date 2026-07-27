@@ -67,6 +67,7 @@ export const voucher = {
       credit: "貸方",
       balance: "餘額",
     },
+    view_detail: "點擊查看傳票明細",
     empty: {
       no_data: "查無分錄",
     },

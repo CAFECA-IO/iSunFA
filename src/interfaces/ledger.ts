@@ -55,6 +55,8 @@ export interface ILedgerOptions {
   keyword?: string;
   // Info: (20260727 - Julian) 科目類別篩選（AccountType，供試算表總帳節點 drill-down；於產出列後過濾）
   accountType?: string;
+  // Info: (20260727 - Julian) 科目子樹根代碼：僅保留該科目及其所有子孫過帳（isDescendantOf），供試算表統馭科目 drill-down；於產出列後過濾
+  rootCode?: string;
   // Info: (20260727 - Julian) 餘額金額區間篩選（於產出列後過濾）：比較運算子與比較值
   balanceOp?: BalanceComparator;
   balanceValue?: string;

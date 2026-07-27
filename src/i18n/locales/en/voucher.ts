@@ -67,6 +67,7 @@ export const voucher = {
       credit: "Credit",
       balance: "Balance",
     },
+    view_detail: "Click to view voucher details",
     empty: {
       no_data: "No entries found",
     },

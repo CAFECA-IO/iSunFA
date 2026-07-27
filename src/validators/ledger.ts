@@ -15,6 +15,8 @@ export const LedgerQuerySchema = z.object({
   endAccountNo: z.string().optional(),
   keyword: z.string().optional(),
   accountType: z.string().optional(),
+  // Info: (20260727 - Julian) 科目子樹根代碼（試算表統馭科目 drill-down）
+  rootCode: z.string().optional(),
   balanceOp: z.nativeEnum(BalanceComparator).optional(),
   balanceValue: z.string().optional(),
   labelType: z.nativeEnum(LabelType).default(LabelType.ALL),

@@ -1,8 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { Fragment, useState, useEffect, useCallback, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { useParams, useSearchParams } from "next/navigation";
-import { Search, Loader2, ChevronDown } from "lucide-react";
+import {
+  Dialog,
+  DialogPanel,
+  Transition,
+  TransitionChild,
+} from "@headlessui/react";
+import { Search, Loader2, ChevronDown, X } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -13,6 +20,12 @@ import { LedgerSorting } from "@/constants/sort";
 import { ILedgerItem, ILedgerTotal } from "@/interfaces/ledger";
 import { ACCOUNT_TYPE_COLORS } from "@/constants/accounting_account";
 import DateRangePicker from "@/components/common/date_range_picker";
+
+// Info: (20260727 - Julian) 點擊分錄開啟傳票詳情（延後載入，避免拖慢分類帳首屏）
+const VoucherDetailModal = dynamic(
+  () => import("@/components/user/voucher/voucher_detail_modal"),
+  { ssr: false },
+);
 
 interface ILedgerResponse {
   data: ILedgerItem[];
@@ -68,6 +81,8 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
   const initialCode = searchParams.get("code") ?? "";
   // Info: (20260727 - Julian) 試算表總帳節點 drill-down 帶入的科目類別篩選（deep-link 專用）
   const accountType = searchParams.get("accountType") ?? "";
+  // Info: (20260727 - Julian) 試算表統馭科目 drill-down 帶入的科目子樹根代碼（含該科目及所有子孫；deep-link 專用）
+  const rootCode = searchParams.get("rootCode") ?? "";
   const initialLabelType = (() => {
     const lt = searchParams.get("labelType");
     return lt === LabelType.GENERAL ||
@@ -96,6 +111,10 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   // Info: (20260727 - Julian) 已折疊的科目群組（存放 code）
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  // Info: (20260727 - Julian) 目前開啟的傳票詳情（drill-down 至 VoucherDetailModal）
+  const [selectedVoucherId, setSelectedVoucherId] = useState<string | null>(
+    null,
+  );
 
   // Info: (20260727 - Julian) 關鍵字 debounce，避免逐字打字即打 API
   useEffect(() => {
@@ -122,6 +141,7 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
         sorting,
         keyword: debouncedKeyword,
         accountType,
+        rootCode,
         balanceOp,
         balanceValue: debouncedBalanceValue,
       },
@@ -134,6 +154,7 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
     sorting,
     debouncedKeyword,
     accountType,
+    rootCode,
     balanceOp,
     debouncedBalanceValue,
   ]);
@@ -161,6 +182,7 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
             sorting,
             keyword: debouncedKeyword || undefined,
             accountType: accountType || undefined,
+            rootCode: rootCode || undefined,
             balanceOp,
             balanceValue: debouncedBalanceValue || undefined,
             pageSize: PAGE_SIZE,
@@ -187,6 +209,7 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
     sorting,
     debouncedKeyword,
     accountType,
+    rootCode,
     balanceOp,
     debouncedBalanceValue,
   ]);
@@ -450,7 +473,12 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
                           {group.rows.map((row, idx) => (
                             <tr
                               key={`${group.code}-${idx}`}
-                              className="border-t border-slate-100 text-sm first:border-t-0"
+                              // Info: (20260727 - Julian) 點擊該列開啟傳票詳情，供會計師查核
+                              onClick={() =>
+                                setSelectedVoucherId(row.voucherId)
+                              }
+                              title={t("voucher.ledger.view_detail")}
+                              className="cursor-pointer border-t border-slate-100 text-sm transition-colors first:border-t-0 hover:bg-orange-50/60"
                             >
                               <td className="px-3 py-2 text-xs text-slate-500">
                                 {row.voucherNumber}
@@ -488,6 +516,65 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
           })}
         </div>
       )}
+
+      {/* Info: (20260727 - Julian) 傳票詳情彈窗；背景遮罩 + 置中，更新後重抓分類帳以反映餘額變動 */}
+      <Transition show={!!selectedVoucherId} as={Fragment}>
+        <Dialog
+          as="div"
+          className="relative z-200"
+          onClose={() => setSelectedVoucherId(null)}
+        >
+          <TransitionChild
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" />
+          </TransitionChild>
+
+          <div className="fixed inset-0 z-201 w-screen overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <TransitionChild
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                enterTo="opacity-100 translate-y-0 sm:scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+                leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              >
+                {/* Info: (20260727 - Julian) VoucherContent 為 h-full，容器需給定固定高度才能內部捲動 */}
+                <DialogPanel className="relative flex h-[85vh] max-h-[90vh] w-full max-w-4xl transform flex-col overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all">
+                  <div className="flex items-center justify-end px-3 py-1">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedVoucherId(null)}
+                      className="shrink-0 p-2 text-slate-500 hover:text-slate-700"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+                  {selectedVoucherId && (
+                    <VoucherDetailModal
+                      isOpen={true}
+                      onClose={() => setSelectedVoucherId(null)}
+                      voucherId={selectedVoucherId}
+                      onUpdate={() => {
+                        setSelectedVoucherId(null);
+                        fetchLedger();
+                      }}
+                    />
+                  )}
+                </DialogPanel>
+              </TransitionChild>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
     </div>
   );
 }

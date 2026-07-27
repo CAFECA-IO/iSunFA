@@ -169,20 +169,15 @@ export default function TrialBalanceView({
           </thead>
           <tbody>
             {rows.map(({ item, level }) => {
-              // Info: (20260727 - Julian) 明確科目編號(全數字)→ &code=；集計根(含 X 等非數字，如 1XXX/11XX)→ &accountType=
-              const isConcreteCode = /^\d+$/.test(item.code);
-              const ledgerHref =
-                isConcreteCode || !item.accountType
-                  ? `/user/account_book/${accountBookId}/voucher?tab=ledger&code=${encodeURIComponent(
-                      item.code,
-                    )}&labelType=${
-                      item.subAccounts.length > 0
-                        ? LabelType.GENERAL
-                        : LabelType.ALL
-                    }`
-                  : `/user/account_book/${accountBookId}/voucher?tab=ledger&accountType=${encodeURIComponent(
-                      item.accountType,
-                    )}`;
+              // Info: (20260727 - Julian) 統馭(集計)科目(有子科目)→ &rootCode=（含該科目及所有子孫，以總帳上捲呈現）；末階明細科目(無子科目)→ &code=（逐筆）
+              const hasChildren = item.subAccounts.length > 0;
+              const ledgerHref = hasChildren
+                ? `/user/account_book/${accountBookId}/voucher?tab=ledger&rootCode=${encodeURIComponent(
+                    item.code,
+                  )}&labelType=${LabelType.GENERAL}`
+                : `/user/account_book/${accountBookId}/voucher?tab=ledger&code=${encodeURIComponent(
+                    item.code,
+                  )}&labelType=${LabelType.ALL}`;
               return (
                 <tr
                   key={item.code}
@@ -195,6 +190,7 @@ export default function TrialBalanceView({
                     {/* Info: (20260727 - Julian) 點擊科目跳轉至分類帳（drill-down）；父科目以總帳(上捲)呈現 */}
                     <Link
                       href={ledgerHref}
+                      target="_blank"
                       title={t("trial_balance_view.view_ledger", {
                         code: item.code,
                       })}

@@ -67,6 +67,7 @@ export const voucher = {
       credit: "貸方",
       balance: "残高",
     },
+    view_detail: "クリックで伝票詳細を表示",
     empty: {
       no_data: "仕訳が見つかりません",
     },

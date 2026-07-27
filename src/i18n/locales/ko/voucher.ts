@@ -67,6 +67,7 @@ export const voucher = {
       credit: "대변",
       balance: "잔액",
     },
+    view_detail: "클릭하여 전표 상세 보기",
     empty: {
       no_data: "분개를 찾을 수 없습니다",
     },
