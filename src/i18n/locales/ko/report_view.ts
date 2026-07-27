@@ -15,6 +15,8 @@ export const reportView = {
   period_unit: "기간: {{period}} | 단위: {{currency}}",
   unverified_warning:
     "경고: 보고서에 {{count}}개의 '미확인' 항목이 있습니다. 확인하려면 아래 링크를 클릭하십시오.",
+  export_pdf: "PDF 내보내기",
+  export_csv: "CSV 내보내기",
   types: {
     balance_sheet: "대차대조표",
     cash_flow: "현금흐름표",

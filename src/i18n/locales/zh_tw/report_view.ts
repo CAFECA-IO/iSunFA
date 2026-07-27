@@ -14,6 +14,8 @@ export const reportView = {
   period_unit: "期間：{{period}} ｜ 單位：{{currency}}",
   unverified_warning:
     "警告：目前報表中包含 {{count}} 筆「尚未覆核」的資料。點擊以下單據即可跳轉至對應頁面進行確認。",
+  export_pdf: "匯出 PDF",
+  export_csv: "匯出 CSV",
   types: {
     balance_sheet: "資產負債表",
     cash_flow: "現金流量表",

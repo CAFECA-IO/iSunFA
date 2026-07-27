@@ -10,8 +10,6 @@ import { numberWithCommas } from "@/lib/utils/common";
 import { MoneyUtil } from "@/lib/utils/money";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
 import { ITrialBalance, ITrialBalanceItem } from "@/interfaces/trial_balance";
-import { buildTrialBalanceCsv } from "@/lib/report/trial_balance_csv";
-import { Download } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import {
   ReportLoadingPlaceholder,
@@ -42,12 +40,15 @@ export default function TrialBalanceView({
   period,
   year,
   onUnverifiedItemsChange = () => {},
+  onDataLoaded = () => {},
 }: {
   period: ReportPeriod;
   year: number;
   onUnverifiedItemsChange?: (
     items: { id: string; note: string; type: string }[],
   ) => void;
+  // Info: (20260727 - Julian) 將取得的試算表資料上報給 ReportView（供匯出 CSV）
+  onDataLoaded?: (data: ITrialBalance | null) => void;
 }) {
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
@@ -74,6 +75,7 @@ export default function TrialBalanceView({
         );
         if (res.payload) {
           setReportData(res.payload.report);
+          onDataLoaded(res.payload.report);
           if (res.payload.unverifiedItems !== undefined) {
             onUnverifiedItemsChange(res.payload.unverifiedItems);
           }
@@ -85,7 +87,7 @@ export default function TrialBalanceView({
       }
     };
     fetchReport();
-  }, [accountBookId, period, year, onUnverifiedItemsChange]);
+  }, [accountBookId, period, year, onUnverifiedItemsChange, onDataLoaded]);
 
   if (isLoading) {
     return (
@@ -108,21 +110,6 @@ export default function TrialBalanceView({
   const rows = flattenItems(reportData.items);
   const { total } = reportData;
 
-  // Info: (20260727 - Julian) 由已取得的報表資料於前端產生 CSV 並下載（含 UTF-8 BOM，防 Excel 中文亂碼）
-  const handleExportCsv = () => {
-    const csv = "\uFEFF" + buildTrialBalanceCsv(reportData);
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    link.href = url;
-    link.download = `trial_balance_${dateStr}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
   const numberCellClass =
     "px-2 py-2 text-right font-mono text-xs text-gray-700 lg:px-4 lg:text-sm print:text-xs";
   const headerCellClass =
@@ -130,18 +117,6 @@ export default function TrialBalanceView({
 
   return (
     <div className="flex flex-col gap-2">
-      {/* Info: (20260727 - Julian) 匯出 CSV（列印/PDF 時排除） */}
-      <div data-html2canvas-ignore className="flex justify-end print:hidden">
-        <button
-          type="button"
-          onClick={handleExportCsv}
-          className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
-        >
-          <Download size={18} />
-          {t("trial_balance_view.export_csv")}
-        </button>
-      </div>
-
       <div className="overflow-x-auto rounded-xl border border-gray-100 bg-white p-2 lg:p-4">
         <table className="w-full border-collapse text-sm print:text-xs">
           <thead>

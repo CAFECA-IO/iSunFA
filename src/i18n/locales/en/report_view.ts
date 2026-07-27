@@ -15,6 +15,8 @@ export const reportView = {
   period_unit: "Period: {{period}} | Unit: {{currency}}",
   unverified_warning:
     "Warning: There are {{count}} 'unverified' items in the report. Click the links below to view and verify them.",
+  export_pdf: "Export PDF",
+  export_csv: "Export CSV",
   types: {
     balance_sheet: "Balance Sheet",
     cash_flow: "Cash Flow Statement",
