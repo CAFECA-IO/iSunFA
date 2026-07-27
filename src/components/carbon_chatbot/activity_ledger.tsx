@@ -3,8 +3,18 @@
 // Info: (20260716 - Tzuhan) 預設收合為藥丸(RWD 教訓: 浮窗不可遮擋報告視線)
 
 import { useState } from "react";
-import { ClipboardList, Minus, AlertTriangle, ShieldCheck } from "lucide-react";
-import { ICarbonInventoryState } from "@/types/carbon_chatbot.types";
+import {
+  ClipboardList,
+  Minus,
+  AlertTriangle,
+  ShieldCheck,
+  BookCopy,
+  Loader2,
+} from "lucide-react";
+import {
+  ICarbonInventoryState,
+  IActivityRecord,
+} from "@/types/carbon_chatbot.types";
 import { activityDedupeKey } from "@/lib/carbon_inventory";
 import { ArticulationStatusEnum } from "@/constants/carbon_articulation";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -12,11 +22,19 @@ import { useTranslation } from "@/i18n/i18n_context";
 export interface IActivityLedgerProps {
   state: ICarbonInventoryState;
   positionClassName?: string;
+  // Info: (20260720 - Tzuhan) #53 憑證聯動:帳本會話才提供「從帳本匯入」(callback 未提供 = 個人會話)
+  onImportFromBook?: () => void;
+  isImportingFromBook?: boolean;
+  // Info: (20260720 - Tzuhan) #54 憑證下鑽:點有憑證引用的紀錄開啟 RecordTabModal(callback 由頁面提供)
+  onOpenEvidence?: (activity: IActivityRecord) => void;
 }
 
 export function ActivityLedger({
   state,
   positionClassName = "absolute left-10 bottom-28 hidden xl:flex",
+  onImportFromBook = undefined,
+  isImportingFromBook = false,
+  onOpenEvidence = undefined,
 }: IActivityLedgerProps) {
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
@@ -69,6 +87,23 @@ export function ActivityLedger({
         {t(`carbon_chatbot.inventory_step_${state.step}`)}
       </div>
 
+      {/* Info: (20260720 - Tzuhan) #53 從帳本匯入:憑證管線已認列的碳排事實直接入帳(冪等,重按=重新整理) */}
+      {onImportFromBook && (
+        <button
+          type="button"
+          disabled={isImportingFromBook}
+          onClick={onImportFromBook}
+          className="mb-2 flex items-center justify-center gap-1.5 rounded-lg bg-teal-50 px-2 py-1.5 text-[11px] font-bold text-teal-700 ring-1 ring-teal-100 transition-colors hover:bg-teal-100 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isImportingFromBook ? (
+            <Loader2 size={12} className="animate-spin" />
+          ) : (
+            <BookCopy size={12} />
+          )}
+          {t("carbon_chatbot.book_records_import_button")}
+        </button>
+      )}
+
       {count === 0 ? (
         <p className="py-3 text-center text-xs text-gray-400">
           {t("carbon_chatbot.activity_ledger_empty")}
@@ -89,13 +124,24 @@ export function ActivityLedger({
                 </span>
               </div>
               <div className="mt-0.5 flex items-center justify-between gap-2 text-[10px] text-gray-400">
-                <span className="truncate">
-                  {activity.source
-                    ? t("carbon_chatbot.activity_source", {
-                        source: activity.source,
-                      })
-                    : t("carbon_chatbot.activity_source_chat")}
-                </span>
+                {/* Info: (20260720 - Tzuhan) #53/#54 憑證引用紀錄:來源改為可點,開啟憑證檢視(RecordTabModal) */}
+                {activity.esgRecordId && onOpenEvidence ? (
+                  <button
+                    type="button"
+                    onClick={() => onOpenEvidence(activity)}
+                    className="truncate font-bold text-teal-600 underline-offset-2 hover:underline"
+                  >
+                    {t("carbon_chatbot.activity_open_evidence")}
+                  </button>
+                ) : (
+                  <span className="truncate">
+                    {activity.source
+                      ? t("carbon_chatbot.activity_source", {
+                          source: activity.source,
+                        })
+                      : t("carbon_chatbot.activity_source_chat")}
+                  </span>
+                )}
                 <span className="shrink-0">{activity.scopeCategory}</span>
               </div>
               {/* Info: (20260716 - Tzuhan) #6519 每筆 CO2e(決定論引擎產出)或待補標記 */}

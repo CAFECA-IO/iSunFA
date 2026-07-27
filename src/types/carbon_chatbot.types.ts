@@ -112,6 +112,18 @@ export interface IActivityRecord {
   factorSource?: string;
   confidence?: "high" | "medium" | "low";
   source?: string;
+  /**
+   * Info: (20260720 - Tzuhan) #53 憑證聯動:結構化證據引用(帳本匯入時由後端填入;
+   * LLM 萃取永不填 — responseSchema 無此欄位)。esgRecordId 為證據鏈根、
+   * voucherId/journalId/fileId 供 RecordTabModal 憑證下鑽(#54)。
+   */
+  esgRecordId?: string;
+  voucherId?: string;
+  journalId?: string;
+  fileId?: string;
+  // Info: (20260720 - Tzuhan) #53 憑證管線已算好的排放量(kgCO2e,字串 Decimal):
+  // Info: (20260720 - Tzuhan) 同一決定論引擎產物,計算 facade 直採不重算(不重選係數,零衝突)
+  precomputedCo2eKg?: string;
 }
 
 /**
@@ -178,6 +190,13 @@ export interface IComputedLedgerEntry {
   ghgBreakdown?: Record<string, string>;
   gwpVersion?: string;
   factor: IFactorSnapshot;
+  // Info: (20260720 - Tzuhan) #53 證據引用(桑基圖與 #54 證據鏈下鑽的資料來源;對話申報者無)
+  evidence?: {
+    esgRecordId: string;
+    voucherId?: string;
+    journalId?: string;
+    fileId?: string;
+  };
 }
 
 // Info: (20260716 - Tzuhan) #6519 待補清單: 無法決定性裁決的活動(絕不猜值)

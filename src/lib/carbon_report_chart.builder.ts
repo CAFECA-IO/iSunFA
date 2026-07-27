@@ -12,6 +12,7 @@ import {
   buildChartAnchorStart,
   buildChartAnchorEnd,
   CARBON_CHART_ANCHOR_PREFIX,
+  CARBON_SANKEY_MAX_EVIDENCE_NODES,
 } from "@/constants/carbon_report_charts";
 import {
   buildCarbonDataTable,
@@ -27,6 +28,8 @@ export interface ICarbonChartLabels {
   axisCo2e: string;
   insufficient: string;
   frozen: string;
+  // Info: (20260720 - Tzuhan) #53 桑基圖:非憑證來源(對話/附件申報)的聚合節點名
+  sankeyChatNode: string;
 }
 
 export const CARBON_CHART_DEFAULT_LABELS: ICarbonChartLabels = {
@@ -36,6 +39,7 @@ export const CARBON_CHART_DEFAULT_LABELS: ICarbonChartLabels = {
   insufficient: "(資料不足,補齊活動數據後由系統自動生成圖表)",
   frozen:
     "⚠ 質量守恆勾稽未通過,圖表已凍結。請於對話中澄清庫存缺口後,圖表將自動生成。",
+  sankeyChatNode: "對話/附件申報",
 };
 
 // Info: (20260720 - Tzuhan) mermaid 數值:引擎 Decimal 字串正規化(去千分位疑慮,不經 number)
@@ -50,6 +54,58 @@ const buildScopePie = (
     .map(([scope, subtotal]) => `    "${scope}" : ${chartValue(subtotal)}`)
     .join("\n");
   return `\`\`\`mermaid\npie title ${labels.pieTitle}\n${rows}\n\`\`\``;
+};
+
+/**
+ * Info: (20260720 - Tzuhan) #53 碳流量桑基圖:憑證(voucher)→ 排放源 → Scope 三層流量;
+ * 非憑證來源聚合為單一「對話/附件申報」節點;每條流量 = 該紀錄 CO2e(引擎原值);
+ * 憑證節點超過上限 → 略過憑證層(排放源 → Scope 兩層),保持可讀性。
+ * mermaid sankey-beta 為 CSV 語法,節點名一律引號包裹(名稱含逗號不破格式)。
+ */
+const buildEmissionSankey = (
+  ledger: IComputedLedger,
+  labels: ICarbonChartLabels,
+): string => {
+  const quote = (name: string): string => `"${name.replace(/"/g, "'")}"`;
+  const rows: string[] = [];
+
+  const evidenceEntries = ledger.entries.filter((e) => e.evidence?.voucherId);
+  const withEvidenceLayer =
+    evidenceEntries.length > 0 &&
+    evidenceEntries.length <= CARBON_SANKEY_MAX_EVIDENCE_NODES;
+
+  // Info: (20260720 - Tzuhan) 第一層:憑證/申報來源 → 排放源(值 = 單筆 CO2e)
+  if (withEvidenceLayer) {
+    ledger.entries.forEach((entry) => {
+      // Info: (20260720 - Tzuhan) 節點名帶憑證 id 尾碼(cuid 尾段才有區別度;首段為時間戳易撞名)
+      const origin = entry.evidence?.voucherId
+        ? `${entry.sourceName} #${entry.evidence.voucherId.slice(-8)}`
+        : labels.sankeyChatNode;
+      rows.push(
+        `${quote(origin)},${quote(entry.sourceName)},${chartValue(entry.co2eKg)}`,
+      );
+    });
+  }
+
+  // Info: (20260720 - Tzuhan) 第二層:排放源 → Scope(同源加總,MoneyUtil 字串累加)
+  const bySource = new Map<string, { scope: string; total: string }>();
+  ledger.entries.forEach((entry) => {
+    const key = `${entry.sourceName}|${entry.scopeCategory}`;
+    const current = bySource.get(key) ?? {
+      scope: entry.scopeCategory,
+      total: "0",
+    };
+    current.total = MoneyUtil.add(current.total, entry.co2eKg);
+    bySource.set(key, current);
+  });
+  bySource.forEach((value, key) => {
+    const sourceName = key.slice(0, key.lastIndexOf("|"));
+    rows.push(
+      `${quote(sourceName)},${quote(value.scope)},${chartValue(value.total)}`,
+    );
+  });
+
+  return ["```mermaid", "sankey-beta", "", ...rows, "```"].join("\n");
 };
 
 const buildScopeBar = (
@@ -94,6 +150,8 @@ export const buildCarbonChartBlock = (
       return wrap(buildScopePie(ledger, labels));
     case CarbonChartTemplateEnum.SCOPE_BAR:
       return wrap(buildScopeBar(ledger, labels));
+    case CarbonChartTemplateEnum.EMISSION_SANKEY:
+      return wrap(buildEmissionSankey(ledger, labels));
     case CarbonChartTemplateEnum.SOURCE_TABLE:
     default:
       // Info: (20260720 - Tzuhan) 明細表復用 #23 產生器(去其外層錨點,改包本模板錨點避免雙重替換)

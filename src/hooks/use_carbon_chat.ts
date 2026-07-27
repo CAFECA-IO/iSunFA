@@ -32,6 +32,11 @@ import {
   type ICarbonChartLabels,
 } from "@/lib/carbon_report_chart.builder";
 import { CarbonChartTemplateEnum } from "@/constants/carbon_report_charts";
+import {
+  CARBON_EVIDENCE_CHAPTER_ID,
+  buildEvidenceChainBlock,
+  hasEvidenceChainBlock,
+} from "@/constants/carbon_evidence";
 import { formatFileSize } from "@/lib/utils/common";
 import {
   CARBON_REPORT_OUTLINE,
@@ -666,6 +671,7 @@ export const useCarbonChat = () => {
       axisCo2e: "kgCO2e",
       insufficient: t("carbon_chatbot.chart_insufficient"),
       frozen: t("carbon_chatbot.chart_frozen"),
+      sankeyChatNode: t("carbon_chatbot.chart_sankey_chat_node"),
     }),
     [t],
   );
@@ -785,6 +791,72 @@ export const useCarbonChat = () => {
     },
     [user?.address, activeSessionId],
   );
+
+  /**
+   * Info: (20260720 - Tzuhan) #53 從帳本匯入憑證級活動數據:
+   * 帳本(voucher → EsgRecord)已認列的碳排事實直接入活動帳本 — 報告以財報/憑證為依據。
+   * 冪等:去重鍵為 esgRecordId,重按 = 重新整理(只補新認列的);合併後 /calculate 簽章
+   * 變更自動重跑(precomputed 直採 + 守恆勾稽)。無法映射者(skipped)明示提示,絕不靜默。
+   */
+  const [isImportingBookRecords, setIsImportingBookRecords] =
+    useState<boolean>(false);
+  const importBookEsgRecords = useCallback(async () => {
+    const accountBookId = sessionAccess[chatChannel]?.accountBookId;
+    if (!accountBookId || isImportingBookRecords) return;
+    setIsImportingBookRecords(true);
+    setDraftNotice({
+      type: "loading",
+      text: t("carbon_chatbot.book_records_importing"),
+    });
+    try {
+      const res = await request<{
+        payload: {
+          activities: IActivityRecord[];
+          skipped: { esgRecordId: string; sourceName: string }[];
+        } | null;
+      }>("/api/v1/chat/carbon/esg-records", {
+        query: { accountBookId },
+      });
+      const activities = res.payload?.activities ?? [];
+      const skippedCount = res.payload?.skipped.length ?? 0;
+      if (activities.length > 0) {
+        applyInventoryExtraction({ activities });
+      }
+      setDraftNotice({
+        type: "info",
+        text:
+          skippedCount > 0
+            ? t("carbon_chatbot.book_records_imported_with_skips", {
+                count: activities.length,
+                skipped: skippedCount,
+              })
+            : t("carbon_chatbot.book_records_imported", {
+                count: activities.length,
+              }),
+      });
+    } catch (error) {
+      console.error("[carbon-chat] book esg import failed:", error);
+      setDraftNotice({
+        type: "error",
+        text: t("carbon_chatbot.book_records_import_failed"),
+      });
+    } finally {
+      setIsImportingBookRecords(false);
+      if (draftNoticeTimerRef.current) {
+        clearTimeout(draftNoticeTimerRef.current);
+      }
+      draftNoticeTimerRef.current = setTimeout(() => {
+        draftNoticeTimerRef.current = null;
+        setDraftNotice(null);
+      }, CARBON_DRAFT_NOTICE_DISMISS_MS);
+    }
+  }, [
+    sessionAccess,
+    chatChannel,
+    isImportingBookRecords,
+    applyInventoryExtraction,
+    t,
+  ]);
 
   // Info: (20260716 - Tzuhan) #55 發起段落修訂:附件事實 + 使用者指示 + 既有原文 → 修訂稿(對照卡確認制)
   const requestParagraphRevision = useCallback(
@@ -1360,7 +1432,7 @@ export const useCarbonChat = () => {
       );
       if (!section) return;
 
-      const content = section.isDataDriven
+      let content = section.isDataDriven
         ? injectDataTable(
             stripLlmTables(draft.content),
             buildCarbonDataTable(
@@ -1369,6 +1441,18 @@ export const useCarbonChat = () => {
             ),
           )
         : draft.content;
+
+      // Info: (20260720 - Tzuhan) #54 第三章數據段落 + 帳本會話 → 自動附掛證據鏈區塊
+      // Info: (20260720 - Tzuhan) (fence 只存帳本位址;數據由元件實時問 API,層層下鑽至單一憑證)
+      const boundBookId = sessionAccess[chatChannel]?.accountBookId;
+      if (
+        section.chapterId === CARBON_EVIDENCE_CHAPTER_ID &&
+        section.isDataDriven &&
+        boundBookId &&
+        !hasEvidenceChainBlock(content)
+      ) {
+        content = `${content}\n\n${buildEvidenceChainBlock(boundBookId)}`;
+      }
 
       setSessionsData((prev) => {
         const session = prev[activeSessionId];
@@ -1410,7 +1494,13 @@ export const useCarbonChat = () => {
         };
       });
     },
-    [activeSessionId, activeInventoryState?.computedLedger, dataTableLabels],
+    [
+      activeSessionId,
+      activeInventoryState?.computedLedger,
+      dataTableLabels,
+      sessionAccess,
+      chatChannel,
+    ],
   );
 
   /**
@@ -2486,6 +2576,9 @@ export const useCarbonChat = () => {
     inventoryState: activeInventoryState ?? createEmptyInventoryState(),
     // Info: (20260720 - Tzuhan) #23 數據段落勾稽徽章三態(已勾稽/守恆違反/數據不足)
     dataBadgeState,
+    // Info: (20260720 - Tzuhan) #53 憑證聯動:從帳本匯入已認列的活動數據(僅帳本會話可用)
+    importBookEsgRecords,
+    isImportingBookRecords,
     activeParagraphId,
     jumpToParagraph,
     highlightedParagraphId,
