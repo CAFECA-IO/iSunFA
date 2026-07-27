@@ -223,8 +223,11 @@ export function generateTrialBalance(
     if (!nodeMap.has(code)) nodeMap.set(code, zeroAmounts());
     return nodeMap.get(code)!;
   };
+  // Info: (20260727 - Julian) nodeTypeMap：節點科目類別；集計根(如 1XXX/11XX)不在字典時，由葉科目往上傳播
+  const nodeTypeMap = new Map<string, string>();
 
   leafMap.forEach((amounts, leafCode) => {
+    const leafType = AccountUtil.getAccount(leafCode, dictionary)?.type ?? "";
     const chain = getSelfAndAncestorCodes(leafCode, dictionary);
     chain.forEach((code) => {
       const node = ensureNode(code);
@@ -232,6 +235,12 @@ export function generateTrialBalance(
       node.beginningCredit = node.beginningCredit.plus(amounts.beginningCredit);
       node.midtermDebit = node.midtermDebit.plus(amounts.midtermDebit);
       node.midtermCredit = node.midtermCredit.plus(amounts.midtermCredit);
+
+      // Info: (20260727 - Julian) 節點自身在字典有類別則用之，否則沿用葉科目類別作為 fallback
+      const ownType = AccountUtil.getAccount(code, dictionary)?.type;
+      if (ownType) nodeTypeMap.set(code, String(ownType));
+      else if (!nodeTypeMap.has(code) && leafType)
+        nodeTypeMap.set(code, String(leafType));
     });
   });
 
@@ -254,6 +263,7 @@ export function generateTrialBalance(
     nodeItemMap.set(code, {
       code,
       name,
+      accountType: String(account?.type ?? nodeTypeMap.get(code) ?? ""),
       beginningDebit: amounts.beginningDebit.toString(),
       beginningCredit: amounts.beginningCredit.toString(),
       midtermDebit: amounts.midtermDebit.toString(),

@@ -14,6 +14,7 @@ export const LedgerQuerySchema = z.object({
   startAccountNo: z.string().optional(),
   endAccountNo: z.string().optional(),
   keyword: z.string().optional(),
+  accountType: z.string().optional(),
   balanceOp: z.nativeEnum(BalanceComparator).optional(),
   balanceValue: z.string().optional(),
   labelType: z.nativeEnum(LabelType).default(LabelType.ALL),

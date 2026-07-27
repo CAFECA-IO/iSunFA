@@ -152,6 +152,7 @@ export function generateLedger(
     labelType,
     currencyAlias,
     keyword,
+    accountType,
     balanceOp,
     balanceValue,
   } = options;
@@ -244,6 +245,11 @@ export function generateLedger(
   let items = canonical
     .map((entry) => itemByRef.get(entry)!)
     .sort(buildComparator(sorting));
+
+  // Info: (20260727 - Julian) 科目類別於「產出列」過濾（供試算表總帳節點 drill-down）
+  if (accountType && accountType.trim()) {
+    items = items.filter((item) => item.accountType === accountType);
+  }
 
   // Info: (20260727 - Julian) 關鍵字於「產出列」過濾（餘額不受影響，仍為各科目真實累計值）
   if (keyword && keyword.trim()) {

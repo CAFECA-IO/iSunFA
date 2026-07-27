@@ -10,5 +10,4 @@ export * from "@/validators/carbon_chat";
 export * from "@/validators/carbon_attachment_extraction";
 export * from "@/validators/carbon_report_storage";
 export * from "@/validators/carbon_inventory";
-export * from "@/validators/trial_balance";
 export * from "@/validators/ledger";

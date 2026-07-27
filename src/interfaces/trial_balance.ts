@@ -10,6 +10,8 @@ import { TrialBalanceSorting } from "@/constants/sort";
 export interface ITrialBalanceItem {
   code: string;
   name: string;
+  // Info: (20260727 - Julian) 科目類別（AccountType），供 drill-down 與著色
+  accountType: string;
   beginningDebit: string;
   beginningCredit: string;
   midtermDebit: string;

@@ -8,8 +8,11 @@ import { generateBalanceSheet } from "@/lib/report/balance_sheet_generator";
 import { generateCashFlowStatement } from "@/lib/report/cash_flow_statement_generator";
 import { generateIncomeStatement } from "@/lib/report/income_statement_generator";
 import { generateEsgReport } from "@/lib/report/esg_report_generator";
+import { generateTrialBalance } from "@/lib/report/trial_balance_generator";
 import { esgRepo } from "@/repositories/esg.repo";
 import { voucherRepo } from "@/repositories/voucher.repo";
+import { accountingAccountService } from "@/services/accounting_account.service";
+import { IAccount } from "@/constants/accounts";
 
 /**
  * Info: (20260330 - Julian) 取得財務報表
@@ -115,12 +118,22 @@ export async function GET(
       // Info: (20260514 - Tzuhan) 取消 isVerified 限制，將未核對的傳票也納入財報計算，以反映最真實的狀況
       hideDeleted: true, // Info: (20260504 - Tzuhan) ⚠️修復：排除被軟刪除的傳票
       startDate:
-        reportType !== ReportType.BALANCE_SHEET
+        // Info: (20260727 - Julian) 資產負債表與試算表需自開帳起算（含期初），故不限制 gte 起始日
+        reportType !== ReportType.BALANCE_SHEET &&
+        reportType !== ReportType.TRIAL_BALANCE
           ? getTradingDateRange().start
           : undefined,
       endDate: getTradingDateRange().end,
     });
     const lineItems = vouchers.map((voucher) => voucher.lineItems.lines).flat();
+
+    // Info: (20260727 - Julian) 試算表需完整 COA 字典（標準+自訂）供樹狀上捲
+    const coaDictionary =
+      reportType === ReportType.TRIAL_BALANCE
+        ? ((await accountingAccountService.getAccountingAccounts(
+            accountBook.id,
+          )) as IAccount[])
+        : [];
 
     // Info: (20260330 - Julian) 取得報表資料
     const getReportData = () => {
@@ -134,6 +147,13 @@ export async function GET(
           );
         case ReportType.INCOME_STATEMENT:
           return generateIncomeStatement(lineItems);
+        // Info: (20260727 - Julian) 試算表：以期間起始日為期初/期中分界、截止日為累計截止
+        case ReportType.TRIAL_BALANCE:
+          return generateTrialBalance(vouchers, coaDictionary, {
+            startDate: getTradingDateRange().start,
+            endDate: getTradingDateRange().end,
+            currencyAlias: accountBook.currency,
+          });
         default:
           return {};
       }
