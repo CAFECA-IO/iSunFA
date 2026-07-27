@@ -1,6 +1,6 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
-import { jsonFail, fileOk } from "@/lib/utils/response";
+import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { teamRepo } from "@/repositories/team.repo";
 import { voucherRepo } from "@/repositories/voucher.repo";
@@ -9,14 +9,11 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { IAccount } from "@/constants/accounts";
 import { LedgerQuerySchema } from "@/validators/ledger";
 import { generateLedger } from "@/lib/report/ledger_generator";
-import { buildLedgerCsv } from "@/lib/report/ledger_csv";
 
 /**
- * Info: (20260727 - Julian) 匯出分類帳 CSV
- * GET /api/v1/user/account_book/:account_book_id/ledger/export
- *   ?startDate={ISO}&endDate={ISO}&startAccountNo=&endAccountNo=&labelType=&sorting=
- *
- * 匯出全量（不分頁）；資料源與權限比照清單端點（不過濾 isVerified）。
+ * Info: (20260727 - Julian) 計算分類帳匯出筆數
+ * GET /api/v1/user/account_book/:account_book_id/ledger/export/count
+ *   ?startDate&endDate&keyword&labelType&sorting
  */
 export async function GET(
   request: NextRequest,
@@ -35,7 +32,6 @@ export async function GET(
       return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
-    // Info: (20260727 - Julian) 團隊成員權限檢查（租戶隔離），比照 dashboard 端點
     const teamMember = await teamRepo.getTeamMember(
       sessionUser.id,
       accountBook.teamId,
@@ -88,14 +84,10 @@ export async function GET(
       currencyAlias: accountBook.currency,
     });
 
-    // Info: (20260727 - Julian) 加入 UTF-8 BOM，避免 Excel 開啟 CSV 中文亂碼
-    const csv = "\uFEFF" + buildLedgerCsv(ledger);
-    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-
-    return fileOk(csv, `ledger_${dateStr}.csv`, "text/csv; charset=utf-8");
+    // Info: (20260727 - Julian) 匯出筆數 = 分類帳明細列數
+    return jsonOk({ count: ledger.items.length });
   } catch (error) {
-    console.error("Ledger export failed", error);
-    // Info: (20260727 - Julian) 資料整合性錯誤不應偽裝為 DB 失敗
+    console.error("Ledger export count failed", error);
     if (error instanceof Error && /Data Integrity/.test(error.message)) {
       return jsonFail(API_ERRORS.VA_INVALID_INPUT_DATA);
     }

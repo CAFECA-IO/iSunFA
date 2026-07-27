@@ -14,7 +14,7 @@ import {
 } from "@/lib/report/trial_balance_generator";
 
 /**
- * Info: (20260724 - Julian) 取得試算表 (Trial Balance)
+ * Info: (20260727 - Julian) 取得試算表 (Trial Balance)
  * GET /api/v1/user/account_book/:account_book_id/trial_balance
  *   ?startDate={ISO}&endDate={ISO}&sorting={TrialBalanceSorting}&page={n}&pageSize={n}
  *
@@ -26,21 +26,21 @@ export async function GET(
   { params }: { params: Promise<{ account_book_id: string }> },
 ) {
   try {
-    // Info: (20260724 - Julian) 驗證身分
+    // Info: (20260727 - Julian) 驗證身分
     const authHeader = request.headers.get("Authorization");
     const sessionUser = await getIdentityFromDeWT(authHeader);
     if (!sessionUser) {
       return jsonFail(API_ERRORS.NF_USER);
     }
 
-    // Info: (20260724 - Julian) 取得帳本（租戶隔離根）
+    // Info: (20260727 - Julian) 取得帳本（租戶隔離根）
     const { account_book_id: accountBookId } = await params;
     const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
     if (!accountBook) {
       return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
-    // Info: (20260724 - Julian) 團隊成員權限檢查（租戶隔離），比照 dashboard 端點
+    // Info: (20260727 - Julian) 團隊成員權限檢查（租戶隔離），比照 dashboard 端點
     const teamMember = await teamRepo.getTeamMember(
       sessionUser.id,
       accountBook.teamId,
@@ -49,7 +49,7 @@ export async function GET(
       return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
     }
 
-    // Info: (20260724 - Julian) 驗證查詢參數
+    // Info: (20260727 - Julian) 驗證查詢參數
     const searchParams = request.nextUrl.searchParams;
     const parsed = TrialBalanceQuerySchema.safeParse({
       startDate: searchParams.get("startDate") ?? undefined,
@@ -63,24 +63,24 @@ export async function GET(
     }
     const { startDate, endDate, sorting, page, pageSize } = parsed.data;
 
-    // Info: (20260724 - Julian) 未指定期間時，以當下 401 申報週期為預設
+    // Info: (20260727 - Julian) 未指定期間時，以當下 401 申報週期為預設
     const { periodBegin, periodEnd } = getDefault401Period();
     const periodStart = startDate ? new Date(startDate) : periodBegin;
     const periodEndDate = endDate ? new Date(endDate) : periodEnd;
 
-    // Info: (20260724 - Julian) 取得截止日前之全部傳票（不分頁、不過濾 isVerified）
+    // Info: (20260727 - Julian) 取得截止日前之全部傳票（不分頁、不過濾 isVerified）
     const vouchers = await voucherRepo.getVouchersByFilter({
       accountBookId: accountBook.id,
       hideDeleted: true,
       endDate: periodEndDate,
     });
 
-    // Info: (20260724 - Julian) 取得完整 COA 字典（標準 + 自訂，不帶 search/type）供樹狀上捲
+    // Info: (20260727 - Julian) 取得完整 COA 字典（標準 + 自訂，不帶 search/type）供樹狀上捲
     const dictionary = (await accountingAccountService.getAccountingAccounts(
       accountBook.id,
     )) as IAccount[];
 
-    // Info: (20260724 - Julian) 產生試算表（純函式；MoneyUtil + AccountUtil；Fail Fast 借貸平衡）
+    // Info: (20260727 - Julian) 產生試算表（純函式；MoneyUtil + AccountUtil；Fail Fast 借貸平衡）
     const trialBalance = generateTrialBalance(vouchers, dictionary, {
       startDate: periodStart,
       endDate: periodEndDate,
@@ -88,7 +88,7 @@ export async function GET(
       sorting,
     });
 
-    // Info: (20260724 - Julian) 於科目列層分頁
+    // Info: (20260727 - Julian) 於科目列層分頁
     const totalCount = trialBalance.items.length;
     const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
     const start = (page - 1) * pageSize;
@@ -107,7 +107,7 @@ export async function GET(
     });
   } catch (error) {
     console.error("Get trial balance failed", error);
-    // Info: (20260724 - Julian) 決定論護欄（借貸不平衡/資料整合性）錯誤不應偽裝為 DB 失敗
+    // Info: (20260727 - Julian) 決定論護欄（借貸不平衡/資料整合性）錯誤不應偽裝為 DB 失敗
     if (
       error instanceof Error &&
       /Imbalance|Data Integrity/.test(error.message)

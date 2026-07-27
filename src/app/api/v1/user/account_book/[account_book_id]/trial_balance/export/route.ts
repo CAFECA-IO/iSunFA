@@ -15,7 +15,7 @@ import {
 import { buildTrialBalanceCsv } from "@/lib/report/trial_balance_csv";
 
 /**
- * Info: (20260724 - Julian) 匯出試算表 CSV
+ * Info: (20260727 - Julian) 匯出試算表 CSV
  * GET /api/v1/user/account_book/:account_book_id/trial_balance/export
  *   ?startDate={ISO}&endDate={ISO}&sorting={TrialBalanceSorting}
  *
@@ -38,7 +38,7 @@ export async function GET(
       return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
-    // Info: (20260724 - Julian) 團隊成員權限檢查（租戶隔離），比照 dashboard 端點
+    // Info: (20260727 - Julian) 團隊成員權限檢查（租戶隔離），比照 dashboard 端點
     const teamMember = await teamRepo.getTeamMember(
       sessionUser.id,
       accountBook.teamId,
@@ -79,7 +79,7 @@ export async function GET(
       sorting,
     });
 
-    // Info: (20260724 - Julian) 加入 UTF-8 BOM，避免 Excel 開啟 CSV 中文亂碼
+    // Info: (20260727 - Julian) 加入 UTF-8 BOM，避免 Excel 開啟 CSV 中文亂碼
     const csv = "\uFEFF" + buildTrialBalanceCsv(trialBalance);
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
 
@@ -90,7 +90,7 @@ export async function GET(
     );
   } catch (error) {
     console.error("Trial balance export failed", error);
-    // Info: (20260724 - Julian) 決定論護欄（借貸不平衡/資料整合性）錯誤不應偽裝為 DB 失敗
+    // Info: (20260727 - Julian) 決定論護欄（借貸不平衡/資料整合性）錯誤不應偽裝為 DB 失敗
     if (
       error instanceof Error &&
       /Imbalance|Data Integrity/.test(error.message)

@@ -5,8 +5,8 @@ import { IVoucher } from "@/interfaces/voucher";
 import { LabelType } from "@/constants/ledger";
 import { LedgerSorting } from "@/constants/sort";
 
-// Info: (20260724 - Julian) COA 字典：1100 為 1101/1102 之父、31XX 為 3110 之父（皆非葉）；1101/1102/3110 為葉節點
-// Info: (20260724 - Julian) GENERAL 上捲需父科目存在於字典，故父節點 1100 / 31XX 皆須納入
+// Info: (20260727 - Julian) COA 字典：1100 為 1101/1102 之父、31XX 為 3110 之父（皆非葉）；1101/1102/3110 為葉節點
+// Info: (20260727 - Julian) GENERAL 上捲需父科目存在於字典，故父節點 1100 / 31XX 皆須納入
 const dictionary: IAccount[] = [
   { code: "1100", name: "現金及約當現金", parentCode: "11XX" },
   { code: "1101", name: "庫存現金", parentCode: "1100" },
@@ -60,14 +60,14 @@ describe("generateLedger", () => {
   it("running balance 依科目累計正確", () => {
     const ledger = generateLedger(vouchers, dictionary, baseOptions);
     const cash = ledger.items.filter((i) => i.code === "1101");
-    // Info: (20260724 - Julian) 1101：借 1000 -> 餘 1000；貸 400 -> 餘 600
+    // Info: (20260727 - Julian) 1101：借 1000 -> 餘 1000；貸 400 -> 餘 600
     expect(cash[0].balance).toBe("1000");
     expect(cash[1].balance).toBe("600");
   });
 
   it("借貸總額正確且平衡", () => {
     const ledger = generateLedger(vouchers, dictionary, baseOptions);
-    // Info: (20260724 - Julian) 借: 1000 + 400 = 1400；貸: 1000 + 400 = 1400
+    // Info: (20260727 - Julian) 借: 1000 + 400 = 1400；貸: 1000 + 400 = 1400
     expect(ledger.total.totalDebit).toBe("1400");
     expect(ledger.total.totalCredit).toBe("1400");
   });
@@ -83,7 +83,7 @@ describe("generateLedger", () => {
   });
 
   it("帳別 DETAILED 僅保留葉節點科目", () => {
-    // Info: (20260724 - Julian) 過帳明細共 4 筆 (A:1101,3110 / B:1101,1102)，皆為葉節點，故 DETAILED 全保留
+    // Info: (20260727 - Julian) 過帳明細共 4 筆 (A:1101,3110 / B:1101,1102)，皆為葉節點，故 DETAILED 全保留
     const detailed = generateLedger(vouchers, dictionary, {
       ...baseOptions,
       labelType: LabelType.DETAILED,
@@ -99,7 +99,7 @@ describe("generateLedger", () => {
       ...baseOptions,
       labelType: LabelType.GENERAL,
     });
-    // Info: (20260724 - Julian) 4 筆過帳全數保留，但科目歸屬至父：1101/1102 → 1100，3110 → 31XX
+    // Info: (20260727 - Julian) 4 筆過帳全數保留，但科目歸屬至父：1101/1102 → 1100，3110 → 31XX
     expect(general.items.length).toBe(4);
     expect(general.items.every((i) => ["1100", "31XX"].includes(i.code))).toBe(
       true,
@@ -108,12 +108,12 @@ describe("generateLedger", () => {
       general.items.some((i) => ["1101", "1102", "3110"].includes(i.code)),
     ).toBe(false);
 
-    // Info: (20260724 - Julian) 1100 累計：+1000(A) −400(B/1101) +400(B/1102) = 1000
+    // Info: (20260727 - Julian) 1100 累計：+1000(A) −400(B/1101) +400(B/1102) = 1000
     const cash1100 = general.items.filter((i) => i.code === "1100");
     expect(cash1100.length).toBe(3);
     expect(cash1100[cash1100.length - 1].balance).toBe("1000");
 
-    // Info: (20260724 - Julian) 借貸總額與 ALL 相同（僅重新歸屬，未增減）
+    // Info: (20260727 - Julian) 借貸總額與 ALL 相同（僅重新歸屬，未增減）
     expect(general.total.totalDebit).toBe("1400");
     expect(general.total.totalCredit).toBe("1400");
   });
@@ -127,7 +127,7 @@ describe("generateLedger", () => {
 
   it("多科目 running balance 互不干擾", () => {
     const ledger = generateLedger(vouchers, dictionary, baseOptions);
-    // Info: (20260724 - Julian) 1102 僅一筆借 400，餘額應為 400（不受 1101 影響）
+    // Info: (20260727 - Julian) 1102 僅一筆借 400，餘額應為 400（不受 1101 影響）
     const petty = ledger.items.filter((i) => i.code === "1102");
     expect(petty).toHaveLength(1);
     expect(petty[0].balance).toBe("400");
@@ -138,7 +138,7 @@ describe("generateLedger", () => {
       ...baseOptions,
       sorting: LedgerSorting.DATE_DESC,
     });
-    // Info: (20260724 - Julian) B(03-10) 應排在 A(03-05) 之前
+    // Info: (20260727 - Julian) B(03-10) 應排在 A(03-05) 之前
     expect(ledger.items[0].voucherDate).toBeGreaterThanOrEqual(
       ledger.items[ledger.items.length - 1].voucherDate,
     );
@@ -149,9 +149,23 @@ describe("generateLedger", () => {
       ...baseOptions,
       startAccountNo: "1102",
     });
-    // Info: (20260724 - Julian) 僅保留 code >= 1102 者：1102 與 3110
+    // Info: (20260727 - Julian) 僅保留 code >= 1102 者：1102 與 3110
     expect(ledger.items.every((i) => i.code >= "1102")).toBe(true);
     expect(ledger.items.some((i) => i.code === "1101")).toBe(false);
+  });
+
+  it("關鍵字過濾：僅保留符合科目/摘要/傳票編號之列，餘額仍為真實累計", () => {
+    const ledger = generateLedger(vouchers, dictionary, {
+      ...baseOptions,
+      keyword: "零用金",
+    });
+    // Info: (20260727 - Julian) 僅 1102 零用金該列命中
+    expect(ledger.items.length).toBe(1);
+    expect(ledger.items[0].code).toBe("1102");
+    expect(ledger.items[0].balance).toBe("400");
+    // Info: (20260727 - Julian) 總額取顯示列
+    expect(ledger.total.totalDebit).toBe("400");
+    expect(ledger.total.totalCredit).toBe("0");
   });
 
   it("缺乏會計代碼或借貸方向時阻斷輸出", () => {

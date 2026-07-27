@@ -11,7 +11,7 @@ import { LedgerQuerySchema } from "@/validators/ledger";
 import { generateLedger } from "@/lib/report/ledger_generator";
 
 /**
- * Info: (20260724 - Julian) 取得分類帳 (Ledger)
+ * Info: (20260727 - Julian) 取得分類帳 (Ledger)
  * GET /api/v1/user/account_book/:account_book_id/ledger
  *   ?startDate={ISO}&endDate={ISO}&startAccountNo=&endAccountNo=&labelType=&sorting=&page=&pageSize=
  *
@@ -23,21 +23,21 @@ export async function GET(
   { params }: { params: Promise<{ account_book_id: string }> },
 ) {
   try {
-    // Info: (20260724 - Julian) 驗證身分
+    // Info: (20260727 - Julian) 驗證身分
     const authHeader = request.headers.get("Authorization");
     const sessionUser = await getIdentityFromDeWT(authHeader);
     if (!sessionUser) {
       return jsonFail(API_ERRORS.NF_USER);
     }
 
-    // Info: (20260724 - Julian) 取得帳本（租戶隔離根）
+    // Info: (20260727 - Julian) 取得帳本（租戶隔離根）
     const { account_book_id: accountBookId } = await params;
     const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
     if (!accountBook) {
       return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
-    // Info: (20260724 - Julian) 團隊成員權限檢查（租戶隔離），比照 dashboard 端點
+    // Info: (20260727 - Julian) 團隊成員權限檢查（租戶隔離），比照 dashboard 端點
     const teamMember = await teamRepo.getTeamMember(
       sessionUser.id,
       accountBook.teamId,
@@ -46,13 +46,14 @@ export async function GET(
       return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
     }
 
-    // Info: (20260724 - Julian) 驗證查詢參數
+    // Info: (20260727 - Julian) 驗證查詢參數
     const searchParams = request.nextUrl.searchParams;
     const parsed = LedgerQuerySchema.safeParse({
       startDate: searchParams.get("startDate") ?? undefined,
       endDate: searchParams.get("endDate") ?? undefined,
       startAccountNo: searchParams.get("startAccountNo") ?? undefined,
       endAccountNo: searchParams.get("endAccountNo") ?? undefined,
+      keyword: searchParams.get("keyword") ?? undefined,
       labelType: searchParams.get("labelType") ?? undefined,
       sorting: searchParams.get("sorting") ?? undefined,
       page: searchParams.get("page") ?? undefined,
@@ -66,35 +67,38 @@ export async function GET(
       endDate,
       startAccountNo,
       endAccountNo,
+      keyword,
       labelType,
       sorting,
       page,
       pageSize,
     } = parsed.data;
 
-    // Info: (20260724 - Julian) 取得期間內全部傳票（不分頁、不過濾 isVerified）
+    // Info: (20260727 - Julian) 取得期間內全部傳票（不分頁、不過濾 isVerified）
     const vouchers = await voucherRepo.getVouchersByFilter({
       accountBookId: accountBook.id,
       hideDeleted: true,
-      startDate: new Date(startDate),
-      endDate: new Date(endDate),
+      // Info: (20260727 - Julian) 日期為可選；未指定則取全部（比照傳票管理）
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
     });
 
-    // Info: (20260724 - Julian) 取得完整 COA 字典（標準 + 自訂）供帳別葉節點判定
+    // Info: (20260727 - Julian) 取得完整 COA 字典（標準 + 自訂）供帳別葉節點判定
     const dictionary = (await accountingAccountService.getAccountingAccounts(
       accountBook.id,
     )) as IAccount[];
 
-    // Info: (20260724 - Julian) 產生分類帳（純函式；MoneyUtil running balance）
+    // Info: (20260727 - Julian) 產生分類帳（純函式；MoneyUtil running balance）
     const ledger = generateLedger(vouchers, dictionary, {
       startAccountNo,
       endAccountNo,
+      keyword,
       labelType,
       sorting,
       currencyAlias: accountBook.currency,
     });
 
-    // Info: (20260724 - Julian) 於明細列層分頁
+    // Info: (20260727 - Julian) 於明細列層分頁
     const totalCount = ledger.items.length;
     const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
     const start = (page - 1) * pageSize;
@@ -113,7 +117,7 @@ export async function GET(
     });
   } catch (error) {
     console.error("Get ledger failed", error);
-    // Info: (20260724 - Julian) 資料整合性錯誤不應偽裝為 DB 失敗
+    // Info: (20260727 - Julian) 資料整合性錯誤不應偽裝為 DB 失敗
     if (error instanceof Error && /Data Integrity/.test(error.message)) {
       return jsonFail(API_ERRORS.VA_INVALID_INPUT_DATA);
     }

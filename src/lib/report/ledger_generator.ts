@@ -8,7 +8,7 @@ import { LabelType } from "@/constants/ledger";
 import { LedgerSorting } from "@/constants/sort";
 
 /**
- * Info: (20260724 - Julian)
+ * Info: (20260727 - Julian)
  * 分類帳 (Ledger) 純函式產生器。
  *
  * 設計要點（對齊 documents/ 規範）：
@@ -34,7 +34,7 @@ interface IRawEntry {
   credit: Decimal;
 }
 
-// Info: (20260724 - Julian) 建立「具子科目之科目代碼」集合：凡被其他科目指為 parentCode 者即非葉節點
+// Info: (20260727 - Julian) 建立「具子科目之科目代碼」集合：凡被其他科目指為 parentCode 者即非葉節點
 function buildParentCodeSet(dictionary: IAccount[]): Set<string> {
   const parents = new Set<string>();
   dictionary.forEach((account) => {
@@ -44,7 +44,7 @@ function buildParentCodeSet(dictionary: IAccount[]): Set<string> {
 }
 
 /**
- * Info: (20260724 - Julian) 依帳別解析該過帳「是否納入」與「歸屬顯示科目」。
+ * Info: (20260727 - Julian) 依帳別解析該過帳「是否納入」與「歸屬顯示科目」。
  * - DETAILED：僅納入葉節點過帳，顯示於原科目。
  * - GENERAL：全數納入；葉節點過帳上捲歸屬至其父（總帳）科目，非葉或無父則保留自身。
  * - ALL：全數納入，顯示於原科目。
@@ -69,11 +69,11 @@ function resolveLabel(
     return { include: true, displayCode };
   }
 
-  // Info: (20260724 - Julian) LabelType.ALL
+  // Info: (20260727 - Julian) LabelType.ALL
   return { include: true, displayCode: code };
 }
 
-// Info: (20260724 - Julian) 使用者指定的科目代碼區間（含），以字典序比較
+// Info: (20260727 - Julian) 使用者指定的科目代碼區間（含），以字典序比較
 function inAccountRange(
   code: string,
   startAccountNo?: string,
@@ -104,29 +104,42 @@ function buildComparator(
   }
 }
 
+// Info: (20260727 - Julian) 關鍵字比對（不分大小寫）：科目編號/會計科目/摘要/傳票編號
+function matchesKeyword(item: ILedgerItem, keyword: string): boolean {
+  const kw = keyword.trim().toLowerCase();
+  if (!kw) return true;
+  return (
+    item.code.toLowerCase().includes(kw) ||
+    item.accountingTitle.toLowerCase().includes(kw) ||
+    item.particulars.toLowerCase().includes(kw) ||
+    item.voucherNumber.toLowerCase().includes(kw)
+  );
+}
+
 export function generateLedger(
   vouchers: IVoucher[],
   dictionary: IAccount[],
   options: ILedgerOptions,
 ): ILedger {
-  const { startAccountNo, endAccountNo, labelType, currencyAlias } = options;
+  const { startAccountNo, endAccountNo, labelType, currencyAlias, keyword } =
+    options;
   const sorting = options.sorting ?? LedgerSorting.CODE_ASC;
   const parentCodeSet = buildParentCodeSet(dictionary);
 
-  // Info: (20260724 - Julian) 攤平傳票分錄為原始明細
+  // Info: (20260727 - Julian) 攤平傳票分錄為原始明細
   const rawEntries: IRawEntry[] = [];
   vouchers.forEach((voucher) => {
     voucher.lineItems.lines.forEach((line) => {
       const code = line.accountingCode || line.accounting?.code;
 
-      // Info: (20260724 - Julian) [AUDIT FIX] 缺乏會計代碼或借貸方向者一律阻斷，禁止沉默丟失
+      // Info: (20260727 - Julian) [AUDIT FIX] 缺乏會計代碼或借貸方向者一律阻斷，禁止沉默丟失
       if (!code || line.isDebit === null) {
         throw new Error(
           `[Data Integrity Violation] 分類帳發現無法勾稽的傳票明細，缺乏會計代碼或借貸方向 (Line ID: ${line.id})`,
         );
       }
 
-      // Info: (20260724 - Julian) 依帳別決定是否納入與歸屬顯示科目（GENERAL 上捲至父科目）
+      // Info: (20260727 - Julian) 依帳別決定是否納入與歸屬顯示科目（GENERAL 上捲至父科目）
       const { include, displayCode } = resolveLabel(
         code,
         labelType,
@@ -135,12 +148,12 @@ export function generateLedger(
       );
       if (!include) return;
 
-      // Info: (20260724 - Julian) 科目區間過濾套用於顯示科目（使用者所見）
+      // Info: (20260727 - Julian) 科目區間過濾套用於顯示科目（使用者所見）
       if (!inAccountRange(displayCode, startAccountNo, endAccountNo)) return;
 
       const amount = MoneyUtil.toDecimal(line.amount);
       const displayAccount = AccountUtil.getAccount(displayCode, dictionary);
-      // Info: (20260724 - Julian) 上捲後名稱取父科目；未上捲時可退回原分錄名稱
+      // Info: (20260727 - Julian) 上捲後名稱取父科目；未上捲時可退回原分錄名稱
       const accountingTitle =
         displayAccount?.name ||
         (displayCode === code
@@ -161,7 +174,7 @@ export function generateLedger(
     });
   });
 
-  // Info: (20260724 - Julian) 以固定順序 (科目→日期→傳票) 累計 running balance，確保餘額決定論
+  // Info: (20260727 - Julian) 以固定順序 (科目→日期→傳票) 累計 running balance，確保餘額決定論
   const canonical = [...rawEntries].sort(
     (a, b) =>
       a.code.localeCompare(b.code) ||
@@ -169,20 +182,15 @@ export function generateLedger(
       a.voucherId.localeCompare(b.voucherId),
   );
 
+  // Info: (20260727 - Julian) running balance 以「全量」於標準順序計算，確保餘額決定論
   const balanceByCode = new Map<string, Decimal>();
   const itemByRef = new Map<IRawEntry, ILedgerItem>();
 
-  let totalDebit = new Decimal(0);
-  let totalCredit = new Decimal(0);
-
   canonical.forEach((entry) => {
     const prev = balanceByCode.get(entry.code) ?? new Decimal(0);
-    // Info: (20260724 - Julian) running balance = 前餘額 + 借方 - 貸方
+    // Info: (20260727 - Julian) running balance = 前餘額 + 借方 - 貸方
     const balance = prev.plus(entry.debit).minus(entry.credit);
     balanceByCode.set(entry.code, balance);
-
-    totalDebit = totalDebit.plus(entry.debit);
-    totalCredit = totalCredit.plus(entry.credit);
 
     itemByRef.set(entry, {
       voucherId: entry.voucherId,
@@ -198,10 +206,23 @@ export function generateLedger(
     });
   });
 
-  // Info: (20260724 - Julian) 依顯示排序輸出（餘額已於標準順序計算完畢）
-  const items = canonical
+  // Info: (20260727 - Julian) 依顯示排序輸出（餘額已於標準順序計算完畢）
+  let items = canonical
     .map((entry) => itemByRef.get(entry)!)
     .sort(buildComparator(sorting));
+
+  // Info: (20260727 - Julian) 關鍵字於「產出列」過濾（餘額不受影響，仍為各科目真實累計值）
+  if (keyword && keyword.trim()) {
+    items = items.filter((item) => matchesKeyword(item, keyword));
+  }
+
+  // Info: (20260727 - Julian) 借貸總額取「顯示列」加總，與畫面/匯出一致
+  let totalDebit = new Decimal(0);
+  let totalCredit = new Decimal(0);
+  items.forEach((item) => {
+    totalDebit = totalDebit.plus(MoneyUtil.toDecimal(item.debitAmount));
+    totalCredit = totalCredit.plus(MoneyUtil.toDecimal(item.creditAmount));
+  });
 
   return {
     currencyAlias,
