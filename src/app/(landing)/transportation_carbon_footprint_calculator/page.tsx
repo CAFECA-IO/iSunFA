@@ -504,7 +504,7 @@ function ReportPageContent() {
 
   /**
    * Info: (20260724 - Tzuhan) 批次匯出:每個 (路線, 方案) 組合渲染 → 截圖 → 獨立 PDF(需求二)
-   * \u55AE\u6A94\u76F4\u63A5\u4E0B\u8F09;\u591A\u6A94\u9023\u540C summary.csv \u6253\u5305 zip
+   * 單檔直接下載;多檔連同 summary.csv 打包 zip
    */
   const executeBatchExport = async (
     indices: number[],
@@ -622,7 +622,7 @@ function ReportPageContent() {
 
   /**
    * Info: (20260724 - Tzuhan) 單筆分析報告匯出:沿用既有 WebGL 截圖 workaround,
-   * \u4F46\u6539\u70BA\u300C\u4E00\u500B\u65B9\u6848\u4E00\u4EFD\u7368\u7ACB PDF\u300D(\u9700\u6C42\u4E8C),\u591A\u6A94\u6253\u5305 zip
+   * 但改為「一個方案一份獨立 PDF」(需求二),多檔打包 zip
    */
   const executeReportExport = async (selectedPlans: Set<RouteType>) => {
     let originalViewport: string | null = null;
