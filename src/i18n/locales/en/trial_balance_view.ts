@@ -1,6 +1,5 @@
 export const trialBalanceView = {
   view_ledger: "View ledger for {{code}}",
-  export_csv: "Export CSV",
   loading_title: "Generating trial balance",
   loading_desc:
     "Compiling beginning, midterm, and ending debit/credit balances by account...",

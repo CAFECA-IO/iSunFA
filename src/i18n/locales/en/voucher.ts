@@ -68,7 +68,6 @@ export const voucher = {
       balance: "Balance",
     },
     empty: {
-      select_date: "Select a date range to view the ledger",
       no_data: "No entries found",
     },
   },

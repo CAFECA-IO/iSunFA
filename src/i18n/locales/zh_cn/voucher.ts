@@ -68,7 +68,6 @@ export const voucher = {
       balance: "余额",
     },
     empty: {
-      select_date: "请选择日期区间以查看分类账",
       no_data: "查无分录",
     },
   },

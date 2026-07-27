@@ -68,7 +68,6 @@ export const voucher = {
       balance: "잔액",
     },
     empty: {
-      select_date: "기간을 선택하면 원장이 표시됩니다",
       no_data: "분개를 찾을 수 없습니다",
     },
   },

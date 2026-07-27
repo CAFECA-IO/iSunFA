@@ -68,7 +68,6 @@ export const voucher = {
       balance: "残高",
     },
     empty: {
-      select_date: "期間を選択すると元帳が表示されます",
       no_data: "仕訳が見つかりません",
     },
   },

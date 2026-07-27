@@ -68,7 +68,6 @@ export const voucher = {
       balance: "餘額",
     },
     empty: {
-      select_date: "請選擇日期區間以檢視分類帳",
       no_data: "查無分錄",
     },
   },

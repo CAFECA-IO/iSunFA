@@ -1,6 +1,5 @@
 export const trialBalanceView = {
   view_ledger: "{{code}} の元帳を表示",
-  export_csv: "CSV エクスポート",
   loading_title: "試算表を生成中",
   loading_desc: "科目ごとの期首・期中・期末の借方/貸方残高を集計しています...",
   no_data: "試算表データがありません",
