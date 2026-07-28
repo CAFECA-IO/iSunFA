@@ -2,7 +2,7 @@
 
 > 類型：重構（Roadmap）／優先級：中高（架構債，且為既有遷移遺漏的根因）
 > 建立日：20260728 ／ 提出者：Julian
-> 狀態：待排期
+> 狀態：**已實施（20260728）** —— 新增 `account_book_access.guard.ts`、`ledger.service.ts`、`report.service.ts`；四支 route 改為純端口（0 個 repo import）。tsc/eslint 乾淨。
 
 ---
 

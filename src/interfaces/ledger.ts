@@ -41,6 +41,18 @@ export interface ILedger {
 }
 
 /**
+ * Info: (20260728 - Julian) 分類帳清單 API 的分頁結果（LedgerService.getLedger 回傳；與 route 回應結構一致）。
+ */
+export interface ILedgerPageResult {
+  data: ILedgerItem[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  note: { currencyAlias: string; total: ILedgerTotal };
+}
+
+/**
  * Info: (20260727 - Julian) 分類帳產生器選項。
  * startAccountNo / endAccountNo 為使用者指定的科目代碼區間（含）。
  * labelType 以 COA 樹狀結構判定（非字串前綴）：DETAILED=僅末層明細科目；
