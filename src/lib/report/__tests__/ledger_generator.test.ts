@@ -193,4 +193,66 @@ describe("generateLedger", () => {
       /Data Integrity Violation/,
     );
   });
+
+  // Info: (20260727 - Julian) rootCode 子樹過濾（試算表統馭科目 drill-down）：以 AccountUtil.isDescendantOf 沿 parentCode 判定，涵蓋該科目及所有子孫，解決點統馭科目「查無分錄」
+  describe("rootCode 子樹過濾", () => {
+    it("統馭科目 1100：僅保留其子孫 1101/1102，排除他樹的 3110", () => {
+      const ledger = generateLedger(vouchers, dictionary, {
+        ...baseOptions,
+        rootCode: "1100",
+      });
+      expect(ledger.items.every((i) => ["1101", "1102"].includes(i.code))).toBe(
+        true,
+      );
+      expect(ledger.items.some((i) => i.code === "3110")).toBe(false);
+      // Info: (20260727 - Julian) 1101 兩筆(A,B) + 1102 一筆(B) = 3 筆
+      expect(ledger.items).toHaveLength(3);
+    });
+
+    it("虛擬集計根 11XX（不在字典）：仍能沿 parentCode 命中子樹 1101/1102", () => {
+      // Info: (20260727 - Julian) 1101→1100→11XX 命中；3110→31XX→3XXX 無 11XX，故排除
+      const ledger = generateLedger(vouchers, dictionary, {
+        ...baseOptions,
+        rootCode: "11XX",
+      });
+      expect(ledger.items.every((i) => ["1101", "1102"].includes(i.code))).toBe(
+        true,
+      );
+      expect(ledger.items.some((i) => i.code === "3110")).toBe(false);
+      expect(ledger.items.length).toBeGreaterThan(0);
+    });
+
+    it("GENERAL 上捲後仍以子樹歸屬：rootCode=1100 只留上捲後的 1100（含自身），排除 31XX", () => {
+      const ledger = generateLedger(vouchers, dictionary, {
+        ...baseOptions,
+        labelType: LabelType.GENERAL,
+        rootCode: "1100",
+      });
+      expect(ledger.items.every((i) => i.code === "1100")).toBe(true);
+      expect(ledger.items.some((i) => i.code === "31XX")).toBe(false);
+      // Info: (20260727 - Julian) 1101/1102 三筆過帳上捲至 1100
+      expect(ledger.items).toHaveLength(3);
+      // Info: (20260727 - Julian) 1100 最終累計 +1000 −400 +400 = 1000
+      expect(ledger.items[ledger.items.length - 1].balance).toBe("1000");
+    });
+
+    it("末階葉節點 1101 作為 rootCode：僅回傳自身、不含同層 1102", () => {
+      const ledger = generateLedger(vouchers, dictionary, {
+        ...baseOptions,
+        rootCode: "1101",
+      });
+      expect(ledger.items.every((i) => i.code === "1101")).toBe(true);
+      expect(ledger.items).toHaveLength(2);
+    });
+
+    it("rootCode 無任何子孫（不存在的科目）→ 空清單且總計為零", () => {
+      const ledger = generateLedger(vouchers, dictionary, {
+        ...baseOptions,
+        rootCode: "9999",
+      });
+      expect(ledger.items).toHaveLength(0);
+      expect(ledger.total.totalDebit).toBe("0");
+      expect(ledger.total.totalCredit).toBe("0");
+    });
+  });
 });
