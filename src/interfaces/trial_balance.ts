@@ -1,4 +1,5 @@
 import { TrialBalanceSorting } from "@/constants/sort";
+import { AccountType } from "@/constants/enums";
 
 /**
  * Info: (20260724 - Julian)
@@ -10,8 +11,8 @@ import { TrialBalanceSorting } from "@/constants/sort";
 export interface ITrialBalanceItem {
   code: string;
   name: string;
-  // Info: (20260727 - Julian) 科目類別（AccountType），供 drill-down 與著色
-  accountType: string;
+  // Info: (20260728 - Julian) 科目類別；集計根等無明確類別者為 null（取代空字串哨兵，遵守 §3）
+  accountType: AccountType | null;
   beginningDebit: string;
   beginningCredit: string;
   midtermDebit: string;

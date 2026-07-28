@@ -1,5 +1,6 @@
 import { LabelType, BalanceComparator } from "@/constants/ledger";
 import { LedgerSorting } from "@/constants/sort";
+import { AccountType } from "@/constants/enums";
 
 /**
  * Info: (20260727 - Julian)
@@ -13,8 +14,8 @@ export interface ILedgerItem {
   voucherNumber: string;
   voucherType: string | null;
   code: string;
-  // Info: (20260727 - Julian) 科目類別（AccountType），供前端依類別著色
-  accountType: string;
+  // Info: (20260728 - Julian) 科目類別；無明確類別者為 null（取代空字串哨兵，遵守 §3）。供前端依類別著色
+  accountType: AccountType | null;
   accountingTitle: string;
   particulars: string;
   debitAmount: string;

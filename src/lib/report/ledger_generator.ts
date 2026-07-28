@@ -6,6 +6,7 @@ import { MoneyUtil } from "@/lib/utils/money";
 import { AccountUtil } from "@/lib/utils/account_util";
 import { LabelType, BalanceComparator } from "@/constants/ledger";
 import { LedgerSorting } from "@/constants/sort";
+import { AccountType, toAccountType } from "@/constants/enums";
 
 /**
  * Info: (20260727 - Julian)
@@ -28,7 +29,7 @@ interface IRawEntry {
   voucherNumber: string;
   voucherType: string | null;
   code: string;
-  accountType: string;
+  accountType: AccountType | null;
   accountingTitle: string;
   particulars: string;
   debit: Decimal;
@@ -85,8 +86,10 @@ function inAccountRange(
   return true;
 }
 
+// Info: (20260728 - Julian) balanceOf 由呼叫端提供已快取之 Decimal，避免排序期間 O(n log n) 次重複 parse
 function buildComparator(
   sorting: LedgerSorting,
+  balanceOf: (item: ILedgerItem) => Decimal,
 ): (a: ILedgerItem, b: ILedgerItem) => number {
   const byCodeThenDateAsc = (a: ILedgerItem, b: ILedgerItem) =>
     a.code.localeCompare(b.code) || a.voucherDate - b.voucherDate;
@@ -100,15 +103,9 @@ function buildComparator(
     case LedgerSorting.DATE_DESC:
       return (a, b) => b.voucherDate - a.voucherDate;
     case LedgerSorting.BALANCE_ASC:
-      return (a, b) =>
-        MoneyUtil.toDecimal(a.balance).comparedTo(
-          MoneyUtil.toDecimal(b.balance),
-        );
+      return (a, b) => balanceOf(a).comparedTo(balanceOf(b));
     case LedgerSorting.BALANCE_DESC:
-      return (a, b) =>
-        MoneyUtil.toDecimal(b.balance).comparedTo(
-          MoneyUtil.toDecimal(a.balance),
-        );
+      return (a, b) => balanceOf(b).comparedTo(balanceOf(a));
     case LedgerSorting.CODE_ASC:
     default:
       return byCodeThenDateAsc;
@@ -116,14 +113,13 @@ function buildComparator(
 }
 
 // Info: (20260727 - Julian) 餘額金額區間比對；以「絕對值」比較（例如查 1000 以下＝ |餘額| ∈ 0~1000），避免大額負數被誤納
+// Info: (20260728 - Julian) balance 為已快取之 Decimal、valueAbs 為預先計算之 |比較值|，避免逐列重複 parse
 function matchesBalance(
-  balance: string,
+  balance: Decimal,
   op: BalanceComparator,
-  value: string,
+  valueAbs: Decimal,
 ): boolean {
-  const cmp = MoneyUtil.toDecimal(balance)
-    .abs()
-    .comparedTo(MoneyUtil.toDecimal(value).abs());
+  const cmp = balance.abs().comparedTo(valueAbs);
   if (op === BalanceComparator.GTE) return cmp >= 0;
   if (op === BalanceComparator.LTE) return cmp <= 0;
   return cmp === 0;
@@ -200,7 +196,7 @@ export function generateLedger(
         voucherNumber: voucher.id,
         voucherType: voucher.tradingType ?? null,
         code: displayCode,
-        accountType: displayAccount?.type ?? "",
+        accountType: toAccountType(displayAccount?.type),
         accountingTitle,
         particulars: line.particular || "",
         debit: line.isDebit ? amount : new Decimal(0),
@@ -220,6 +216,11 @@ export function generateLedger(
   // Info: (20260727 - Julian) running balance 以「全量」於標準順序計算，確保餘額決定論
   const balanceByCode = new Map<string, Decimal>();
   const itemByRef = new Map<IRawEntry, ILedgerItem>();
+  // Info: (20260728 - Julian) 每列 Decimal 快取（借/貸/餘額），供排序、餘額過濾與總額加總重用，避免重複 parse
+  const amountCache = new Map<
+    ILedgerItem,
+    { debit: Decimal; credit: Decimal; balance: Decimal }
+  >();
 
   canonical.forEach((entry) => {
     const prev = balanceByCode.get(entry.code) ?? new Decimal(0);
@@ -227,7 +228,7 @@ export function generateLedger(
     const balance = prev.plus(entry.debit).minus(entry.credit);
     balanceByCode.set(entry.code, balance);
 
-    itemByRef.set(entry, {
+    const item: ILedgerItem = {
       voucherId: entry.voucherId,
       voucherDate: entry.voucherDate,
       voucherNumber: entry.voucherNumber,
@@ -239,13 +240,23 @@ export function generateLedger(
       debitAmount: entry.debit.toString(),
       creditAmount: entry.credit.toString(),
       balance: balance.toString(),
+    };
+    itemByRef.set(entry, item);
+    amountCache.set(item, {
+      debit: entry.debit,
+      credit: entry.credit,
+      balance,
     });
   });
+
+  // Info: (20260728 - Julian) 存取快取 Decimal（呼叫端保證 item 來自本次 canonical 建列）
+  const balanceOf = (item: ILedgerItem): Decimal =>
+    amountCache.get(item)!.balance;
 
   // Info: (20260727 - Julian) 依顯示排序輸出（餘額已於標準順序計算完畢）
   let items = canonical
     .map((entry) => itemByRef.get(entry)!)
-    .sort(buildComparator(sorting));
+    .sort(buildComparator(sorting, balanceOf));
 
   // Info: (20260727 - Julian) 科目類別於「產出列」過濾（供試算表總帳節點 drill-down）
   if (accountType && accountType.trim()) {
@@ -266,8 +277,10 @@ export function generateLedger(
 
   // Info: (20260727 - Julian) 餘額金額區間於「產出列」過濾（餘額仍為各科目真實累計值）
   if (balanceOp && balanceValue !== undefined && balanceValue.trim() !== "") {
+    // Info: (20260728 - Julian) 比較值絕對值僅計算一次；每列取快取餘額 Decimal
+    const valueAbs = MoneyUtil.toDecimal(balanceValue).abs();
     items = items.filter((item) =>
-      matchesBalance(item.balance, balanceOp, balanceValue),
+      matchesBalance(amountCache.get(item)!.balance, balanceOp, valueAbs),
     );
   }
 
@@ -275,8 +288,9 @@ export function generateLedger(
   let totalDebit = new Decimal(0);
   let totalCredit = new Decimal(0);
   items.forEach((item) => {
-    totalDebit = totalDebit.plus(MoneyUtil.toDecimal(item.debitAmount));
-    totalCredit = totalCredit.plus(MoneyUtil.toDecimal(item.creditAmount));
+    const amt = amountCache.get(item)!;
+    totalDebit = totalDebit.plus(amt.debit);
+    totalCredit = totalCredit.plus(amt.credit);
   });
 
   return {

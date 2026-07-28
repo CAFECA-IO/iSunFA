@@ -2,8 +2,10 @@ import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { accountBookRepo } from "@/repositories/account_book.repo";
+import { teamRepo } from "@/repositories/team.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
+import { ReportQuerySchema } from "@/validators/report";
 import { generateBalanceSheet } from "@/lib/report/balance_sheet_generator";
 import { generateCashFlowStatement } from "@/lib/report/cash_flow_statement_generator";
 import { generateIncomeStatement } from "@/lib/report/income_statement_generator";
@@ -41,15 +43,31 @@ export async function GET(
       return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
+    // Info: (20260728 - Julian) 租戶隔離：驗證使用者為該帳本所屬 team 成員，避免任意登入者讀取他人財報（比照 ledger 系列 route）
+    const teamMember = await teamRepo.getTeamMember(
+      sessionUser.id,
+      accountBook.teamId,
+    );
+    if (!teamMember) {
+      return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
+    }
+
+    // Info: (20260728 - Julian) 集中式 Zod 驗證，取代未驗證的 as 斷言（遵守 §2）
     const searchParams = request.nextUrl.searchParams;
-    const reportType = searchParams.get("reportType") as ReportType;
-    const period = searchParams.get("period") as ReportPeriod;
-    const yearParam = searchParams.get("year");
+    const parsed = ReportQuerySchema.safeParse({
+      reportType: searchParams.get("reportType") ?? undefined,
+      period: searchParams.get("period") ?? undefined,
+      year: searchParams.get("year") ?? undefined,
+      sorting: searchParams.get("sorting") ?? undefined,
+    });
+    if (!parsed.success) {
+      return jsonFail(API_ERRORS.VA_QUERY_PARAMETER_IS_REQUIRED);
+    }
+    const { reportType, period, year, sorting } = parsed.data;
 
     // Info: (20260331 - Julian) 取得期間 Date
     const getTradingDateRange: () => { start: Date; end: Date } = () => {
-      const thisYear = new Date().getFullYear();
-      const selectedYear = yearParam ? parseInt(yearParam, 10) : thisYear;
+      const selectedYear = year ?? new Date().getFullYear();
 
       const allYearRange = {
         start: new Date(Date.UTC(selectedYear, 0, 1, 0, 0, 0)),
@@ -153,6 +171,8 @@ export async function GET(
             startDate: getTradingDateRange().start,
             endDate: getTradingDateRange().end,
             currencyAlias: accountBook.currency,
+            // Info: (20260728 - Julian) 傳入驗證後的排序（原遷移遺漏，導致 TrialBalanceSorting 失效）
+            sorting,
           });
         default:
           return {};

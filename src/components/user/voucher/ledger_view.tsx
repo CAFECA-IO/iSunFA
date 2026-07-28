@@ -18,6 +18,7 @@ import { MoneyUtil } from "@/lib/utils/money";
 import { LabelType, BalanceComparator } from "@/constants/ledger";
 import { LedgerSorting } from "@/constants/sort";
 import { ILedgerItem, ILedgerTotal } from "@/interfaces/ledger";
+import { AccountType } from "@/constants/enums";
 import { ACCOUNT_TYPE_COLORS } from "@/constants/accounting_account";
 import DateRangePicker from "@/components/common/date_range_picker";
 
@@ -69,6 +70,14 @@ const BALANCE_OP_OPTIONS: BalanceComparator[] = [
 // Info: (20260727 - Julian) 金額為 0 顯示破折號，否則加千分位
 function formatAmount(value: string): string {
   return MoneyUtil.toDecimal(value).isZero() ? "−" : MoneyUtil.format(value);
+}
+
+// Info: (20260728 - Julian) 將 YYYY-MM-DD 轉為當日起訖的 ISO（純函式、無 state 閉包，置於模組層避免每次 render 重建）
+function toIso(date: string, endOfDay: boolean): string {
+  const [y, m, d] = date.split("-").map(Number);
+  return endOfDay
+    ? new Date(y, m - 1, d, 23, 59, 59, 999).toISOString()
+    : new Date(y, m - 1, d, 0, 0, 0, 0).toISOString();
 }
 
 export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
@@ -159,14 +168,6 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
     debouncedBalanceValue,
   ]);
 
-  // Info: (20260727 - Julian) 將 YYYY-MM-DD 轉為當日起訖的 ISO
-  const toIso = (date: string, endOfDay: boolean): string => {
-    const [y, m, d] = date.split("-").map(Number);
-    return endOfDay
-      ? new Date(y, m - 1, d, 23, 59, 59, 999).toISOString()
-      : new Date(y, m - 1, d, 0, 0, 0, 0).toISOString();
-  };
-
   const fetchLedger = useCallback(async () => {
     if (!accountBookId) return;
     setIsLoading(true);
@@ -233,7 +234,7 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
     const result: {
       code: string;
       title: string;
-      type: string;
+      type: AccountType | null;
       rows: ILedgerItem[];
     }[] = [];
     items.forEach((item) => {
@@ -407,7 +408,8 @@ export default function LedgerView({ onExportParamsChange }: ILedgerViewProps) {
             const isCollapsed = collapsed.has(group.code);
             // Info: (20260727 - Julian) 依科目類別著色（比照會計科目管理）
             const colors =
-              ACCOUNT_TYPE_COLORS[group.type] || ACCOUNT_TYPE_COLORS.other;
+              ACCOUNT_TYPE_COLORS[group.type ?? ""] ||
+              ACCOUNT_TYPE_COLORS.other;
             return (
               <div
                 key={group.code}

@@ -86,12 +86,17 @@
 - **離線 sandbox**：無法跑 Jest（Next SWC arm64 缺），但可用 transpile harness 以**真實引擎 + 真 `TW_ACCOUNTS`** 預驗每個案例的斷言數字（前輪已用此法驗證 generator 行為 11/11）。
 - `eslint` / `tsc --noEmit` 須乾淨。
 
-## 6. 待決策
+## 6. 實作狀態
 
-- **實作範圍**：三需求全做，或先做需求 1b（試算表⇄分類帳勾稽，最具稽核價值）？
+- **三需求全做（已完成）**：`src/lib/report/__tests__/trial_balance_articulation.test.ts`，6 案例涵蓋 1a/1b/2a/2c/3a/3b；ESLint、tsc 乾淨；transpile harness 以真實引擎 + 真 `TW_ACCOUNTS` 驗證全部斷言 **22/22 通過**。
 
 ## 7. 範圍外（本規劃不含）
 
 - API route handler（DeWT/HTTP/權限）測試 —— 無先例，不硬寫。
-- `report` route 租戶隔離缺口 —— 屬 route 行為議題，另案討論。
 - SuperTest integration —— 待設施落地。
+
+## 8. 附記：`report` route 已修復之缺口（相關，非本測試產出）
+
+- **租戶隔離（安全）**：原缺 team 成員驗證，任何登入者知 `accountBookId` 即可讀任意帳本財報。已補 `teamRepo.getTeamMember(sessionUser.id, accountBook.teamId)` → 非成員回 `AUTH_PERMISSION_DENIED`（比照 ledger 系列 route，位於 `switch(reportType)` 前，涵蓋所有報表分支）。
+- **排序失效**：遷移遺漏未將 `sorting` 傳入 `generateTrialBalance`，`TrialBalanceSorting` 形同虛設。已補回 `sorting`。
+- **未驗證輸入**：原以 `searchParams.get(...) as ReportType` 直接斷言。已新增 `ReportQuerySchema`（`src/validators/report.ts`）集中 Zod 驗證，`safeParse` 失敗回 `VA_QUERY_PARAMETER_IS_REQUIRED`（遵守 §2 零容忍未驗證外部輸入）。

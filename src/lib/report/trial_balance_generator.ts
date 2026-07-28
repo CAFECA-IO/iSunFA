@@ -9,6 +9,7 @@ import {
 import { MoneyUtil } from "@/lib/utils/money";
 import { AccountUtil } from "@/lib/utils/account_util";
 import { TrialBalanceSorting } from "@/constants/sort";
+import { AccountType, toAccountType } from "@/constants/enums";
 
 /**
  * Info: (20260724 - Julian)
@@ -37,46 +38,6 @@ const zeroAmounts = (): IMutableAmounts => ({
   midtermDebit: new Decimal(0),
   midtermCredit: new Decimal(0),
 });
-
-/**
- * Info: (20260724 - Julian)
- * 取得預設的當下 401 申報週期（台灣每兩個月為一期）。
- * periodBegin 作為「期初 / 期中」分界；periodEnd 作為累計截止日。
- */
-export function getDefault401Period(reference: Date = new Date()): {
-  periodBegin: Date;
-  periodEnd: Date;
-} {
-  const year = reference.getFullYear();
-  const month = reference.getMonth() + 1; // Info: (20260724 - Julian) getMonth() 從 0 起算
-
-  let startMonth: number;
-  let endMonth: number;
-  if (month <= 2) {
-    startMonth = 1;
-    endMonth = 2;
-  } else if (month <= 4) {
-    startMonth = 3;
-    endMonth = 4;
-  } else if (month <= 6) {
-    startMonth = 5;
-    endMonth = 6;
-  } else if (month <= 8) {
-    startMonth = 7;
-    endMonth = 8;
-  } else if (month <= 10) {
-    startMonth = 9;
-    endMonth = 10;
-  } else {
-    startMonth = 11;
-    endMonth = 12;
-  }
-
-  // Info: (20260724 - Julian) periodBegin 為該期第一天 00:00；periodEnd 為該期最後一天 23:59:59
-  const periodBegin = new Date(year, startMonth - 1, 1, 0, 0, 0, 0);
-  const periodEnd = new Date(year, endMonth, 0, 23, 59, 59, 999);
-  return { periodBegin, periodEnd };
-}
 
 /**
  * Info: (20260724 - Julian)
@@ -224,10 +185,12 @@ export function generateTrialBalance(
     return nodeMap.get(code)!;
   };
   // Info: (20260727 - Julian) nodeTypeMap：節點科目類別；集計根(如 1XXX/11XX)不在字典時，由葉科目往上傳播
-  const nodeTypeMap = new Map<string, string>();
+  const nodeTypeMap = new Map<string, AccountType>();
 
   leafMap.forEach((amounts, leafCode) => {
-    const leafType = AccountUtil.getAccount(leafCode, dictionary)?.type ?? "";
+    const leafType = toAccountType(
+      AccountUtil.getAccount(leafCode, dictionary)?.type,
+    );
     const chain = getSelfAndAncestorCodes(leafCode, dictionary);
     chain.forEach((code) => {
       const node = ensureNode(code);
@@ -237,10 +200,12 @@ export function generateTrialBalance(
       node.midtermCredit = node.midtermCredit.plus(amounts.midtermCredit);
 
       // Info: (20260727 - Julian) 節點自身在字典有類別則用之，否則沿用葉科目類別作為 fallback
-      const ownType = AccountUtil.getAccount(code, dictionary)?.type;
-      if (ownType) nodeTypeMap.set(code, String(ownType));
+      const ownType = toAccountType(
+        AccountUtil.getAccount(code, dictionary)?.type,
+      );
+      if (ownType) nodeTypeMap.set(code, ownType);
       else if (!nodeTypeMap.has(code) && leafType)
-        nodeTypeMap.set(code, String(leafType));
+        nodeTypeMap.set(code, leafType);
     });
   });
 
@@ -263,7 +228,8 @@ export function generateTrialBalance(
     nodeItemMap.set(code, {
       code,
       name,
-      accountType: String(account?.type ?? nodeTypeMap.get(code) ?? ""),
+      accountType:
+        toAccountType(account?.type) ?? nodeTypeMap.get(code) ?? null,
       beginningDebit: amounts.beginningDebit.toString(),
       beginningCredit: amounts.beginningCredit.toString(),
       midtermDebit: amounts.midtermDebit.toString(),

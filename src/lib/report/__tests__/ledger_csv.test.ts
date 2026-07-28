@@ -1,6 +1,7 @@
 import { describe, it, expect } from "@jest/globals";
 import { buildLedgerCsv } from "@/lib/report/ledger_csv";
 import { ILedger } from "@/interfaces/ledger";
+import { AccountType } from "@/constants/enums";
 
 describe("buildLedgerCsv", () => {
   const ledger: ILedger = {
@@ -14,7 +15,7 @@ describe("buildLedgerCsv", () => {
         voucherNumber: "A",
         voucherType: "income",
         code: "1101",
-        accountType: "asset",
+        accountType: AccountType.ASSET,
         accountingTitle: "庫存現金",
         particulars: "初始, 資金",
         debitAmount: "1000",

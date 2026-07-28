@@ -2,7 +2,7 @@ import { describe, it, expect } from "@jest/globals";
 import { generateLedger } from "@/lib/report/ledger_generator";
 import { IAccount } from "@/constants/accounts";
 import { IVoucher } from "@/interfaces/voucher";
-import { LabelType } from "@/constants/ledger";
+import { LabelType, BalanceComparator } from "@/constants/ledger";
 import { LedgerSorting } from "@/constants/sort";
 
 // Info: (20260727 - Julian) COA 字典：1100 為 1101/1102 之父、31XX 為 3110 之父（皆非葉）；1101/1102/3110 為葉節點
@@ -254,5 +254,117 @@ describe("generateLedger", () => {
       expect(ledger.total.totalDebit).toBe("0");
       expect(ledger.total.totalCredit).toBe("0");
     });
+  });
+});
+
+// Info: (20260728 - Julian) 篩選與排序：accountType 過濾與欄位傳播、餘額區間（絕對值語意）、餘額排序、關鍵字
+describe("generateLedger — 篩選與排序", () => {
+  // Info: (20260728 - Julian) 具科目類別的字典（type 有值），供 accountType 過濾與欄位傳播驗證
+  const typedDict: IAccount[] = [
+    { code: "1101", name: "庫存現金", parentCode: "1100", type: "asset" },
+    { code: "1102", name: "零用金", parentCode: "1100", type: "asset" },
+    { code: "4111", name: "銷貨收入", parentCode: "4100", type: "revenue" },
+  ].map((a) => ({ ...a, description: "", level: 0, isDebit: true }));
+
+  // Info: (20260728 - Julian) 1102：借 400、再借 600（餘額 400→1000）；4111：貸 400、貸 600（餘額 -400→-1000）
+  const vouchers: IVoucher[] = [
+    makeVoucher("F1", "2026-03-01", [
+      { code: "1102", name: "零用金", amount: 400, isDebit: true },
+      { code: "4111", name: "銷貨收入", amount: 400, isDebit: false },
+    ]),
+    makeVoucher("F2", "2026-03-05", [
+      { code: "1102", name: "零用金", amount: 600, isDebit: true },
+      { code: "4111", name: "銷貨收入", amount: 600, isDebit: false },
+    ]),
+  ];
+
+  const base = {
+    labelType: LabelType.ALL,
+    sorting: LedgerSorting.CODE_ASC,
+    currencyAlias: "TWD",
+  };
+
+  it("accountType 過濾：僅保留該類別科目，且 accountType 欄位正確傳播", () => {
+    const asset = generateLedger(vouchers, typedDict, {
+      ...base,
+      accountType: "asset",
+    });
+    expect(asset.items.length).toBe(2);
+    expect(asset.items.every((i) => i.code === "1102")).toBe(true);
+    // Info: (20260728 - Julian) 欄位傳播：由字典帶出的 type
+    expect(asset.items.every((i) => i.accountType === "asset")).toBe(true);
+
+    const revenue = generateLedger(vouchers, typedDict, {
+      ...base,
+      accountType: "revenue",
+    });
+    expect(revenue.items.every((i) => i.code === "4111")).toBe(true);
+    expect(revenue.items.every((i) => i.accountType === "revenue")).toBe(true);
+  });
+
+  it("餘額區間 LTE 採絕對值語意：|餘額| ≤ 值 才保留（負餘額以絕對值判定）", () => {
+    // Info: (20260728 - Julian) 各列餘額：1102=400,1000；4111=-400,-1000。|·|≤500 → 僅 400 與 -400 保留
+    const ledger = generateLedger(vouchers, typedDict, {
+      ...base,
+      balanceOp: BalanceComparator.LTE,
+      balanceValue: "500",
+    });
+    const balances = ledger.items.map((i) => i.balance).sort();
+    expect(balances).toEqual(["-400", "400"]);
+    // Info: (20260728 - Julian) 關鍵：-1000 若用原值比較會被 LTE 500 誤收，絕對值語意下必須排除
+    expect(ledger.items.some((i) => i.balance === "-1000")).toBe(false);
+  });
+
+  it("餘額區間 EQ 採絕對值語意：|餘額| = 值（正負同額皆命中）", () => {
+    const ledger = generateLedger(vouchers, typedDict, {
+      ...base,
+      balanceOp: BalanceComparator.EQ,
+      balanceValue: "1000",
+    });
+    const balances = ledger.items.map((i) => i.balance).sort();
+    expect(balances).toEqual(["-1000", "1000"]);
+  });
+
+  it("餘額區間 GTE 採絕對值語意：|餘額| ≥ 值", () => {
+    const ledger = generateLedger(vouchers, typedDict, {
+      ...base,
+      balanceOp: BalanceComparator.GTE,
+      balanceValue: "500",
+    });
+    const balances = ledger.items.map((i) => i.balance).sort();
+    expect(balances).toEqual(["-1000", "1000"]);
+  });
+
+  it("餘額排序採原值（非絕對值）：BALANCE_ASC 由負至正、BALANCE_DESC 反之", () => {
+    const asc = generateLedger(vouchers, typedDict, {
+      ...base,
+      sorting: LedgerSorting.BALANCE_ASC,
+    });
+    expect(asc.items.map((i) => i.balance)).toEqual([
+      "-1000",
+      "-400",
+      "400",
+      "1000",
+    ]);
+
+    const desc = generateLedger(vouchers, typedDict, {
+      ...base,
+      sorting: LedgerSorting.BALANCE_DESC,
+    });
+    expect(desc.items.map((i) => i.balance)).toEqual([
+      "1000",
+      "400",
+      "-400",
+      "-1000",
+    ]);
+  });
+
+  it("關鍵字比對會計科目名稱：僅保留命中列，餘額仍為真實累計", () => {
+    const ledger = generateLedger(vouchers, typedDict, {
+      ...base,
+      keyword: "銷貨",
+    });
+    expect(ledger.items.length).toBe(2);
+    expect(ledger.items.every((i) => i.code === "4111")).toBe(true);
   });
 });
