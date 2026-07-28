@@ -2,11 +2,12 @@ import { describe, it, expect } from "@jest/globals";
 import { generateLedger } from "@/lib/report/ledger_generator";
 import { IAccount } from "@/constants/accounts";
 import { IVoucher } from "@/interfaces/voucher";
-import { LabelType } from "@/constants/ledger";
+import { LabelType, BalanceComparator } from "@/constants/ledger";
 import { LedgerSorting } from "@/constants/sort";
+import { AccountType } from "@/constants/enums";
 
-// Info: (20260724 - Julian) COA 字典：1100 為 1101/1102 之父、31XX 為 3110 之父（皆非葉）；1101/1102/3110 為葉節點
-// Info: (20260724 - Julian) GENERAL 上捲需父科目存在於字典，故父節點 1100 / 31XX 皆須納入
+// Info: (20260727 - Julian) COA 字典：1100 為 1101/1102 之父、31XX 為 3110 之父（皆非葉）；1101/1102/3110 為葉節點
+// Info: (20260727 - Julian) GENERAL 上捲需父科目存在於字典，故父節點 1100 / 31XX 皆須納入
 const dictionary: IAccount[] = [
   { code: "1100", name: "現金及約當現金", parentCode: "11XX" },
   { code: "1101", name: "庫存現金", parentCode: "1100" },
@@ -60,14 +61,14 @@ describe("generateLedger", () => {
   it("running balance 依科目累計正確", () => {
     const ledger = generateLedger(vouchers, dictionary, baseOptions);
     const cash = ledger.items.filter((i) => i.code === "1101");
-    // Info: (20260724 - Julian) 1101：借 1000 -> 餘 1000；貸 400 -> 餘 600
+    // Info: (20260727 - Julian) 1101：借 1000 -> 餘 1000；貸 400 -> 餘 600
     expect(cash[0].balance).toBe("1000");
     expect(cash[1].balance).toBe("600");
   });
 
   it("借貸總額正確且平衡", () => {
     const ledger = generateLedger(vouchers, dictionary, baseOptions);
-    // Info: (20260724 - Julian) 借: 1000 + 400 = 1400；貸: 1000 + 400 = 1400
+    // Info: (20260727 - Julian) 借: 1000 + 400 = 1400；貸: 1000 + 400 = 1400
     expect(ledger.total.totalDebit).toBe("1400");
     expect(ledger.total.totalCredit).toBe("1400");
   });
@@ -83,7 +84,7 @@ describe("generateLedger", () => {
   });
 
   it("帳別 DETAILED 僅保留葉節點科目", () => {
-    // Info: (20260724 - Julian) 過帳明細共 4 筆 (A:1101,3110 / B:1101,1102)，皆為葉節點，故 DETAILED 全保留
+    // Info: (20260727 - Julian) 過帳明細共 4 筆 (A:1101,3110 / B:1101,1102)，皆為葉節點，故 DETAILED 全保留
     const detailed = generateLedger(vouchers, dictionary, {
       ...baseOptions,
       labelType: LabelType.DETAILED,
@@ -99,7 +100,7 @@ describe("generateLedger", () => {
       ...baseOptions,
       labelType: LabelType.GENERAL,
     });
-    // Info: (20260724 - Julian) 4 筆過帳全數保留，但科目歸屬至父：1101/1102 → 1100，3110 → 31XX
+    // Info: (20260727 - Julian) 4 筆過帳全數保留，但科目歸屬至父：1101/1102 → 1100，3110 → 31XX
     expect(general.items.length).toBe(4);
     expect(general.items.every((i) => ["1100", "31XX"].includes(i.code))).toBe(
       true,
@@ -108,12 +109,12 @@ describe("generateLedger", () => {
       general.items.some((i) => ["1101", "1102", "3110"].includes(i.code)),
     ).toBe(false);
 
-    // Info: (20260724 - Julian) 1100 累計：+1000(A) −400(B/1101) +400(B/1102) = 1000
+    // Info: (20260727 - Julian) 1100 累計：+1000(A) −400(B/1101) +400(B/1102) = 1000
     const cash1100 = general.items.filter((i) => i.code === "1100");
     expect(cash1100.length).toBe(3);
     expect(cash1100[cash1100.length - 1].balance).toBe("1000");
 
-    // Info: (20260724 - Julian) 借貸總額與 ALL 相同（僅重新歸屬，未增減）
+    // Info: (20260727 - Julian) 借貸總額與 ALL 相同（僅重新歸屬，未增減）
     expect(general.total.totalDebit).toBe("1400");
     expect(general.total.totalCredit).toBe("1400");
   });
@@ -127,7 +128,7 @@ describe("generateLedger", () => {
 
   it("多科目 running balance 互不干擾", () => {
     const ledger = generateLedger(vouchers, dictionary, baseOptions);
-    // Info: (20260724 - Julian) 1102 僅一筆借 400，餘額應為 400（不受 1101 影響）
+    // Info: (20260727 - Julian) 1102 僅一筆借 400，餘額應為 400（不受 1101 影響）
     const petty = ledger.items.filter((i) => i.code === "1102");
     expect(petty).toHaveLength(1);
     expect(petty[0].balance).toBe("400");
@@ -138,7 +139,7 @@ describe("generateLedger", () => {
       ...baseOptions,
       sorting: LedgerSorting.DATE_DESC,
     });
-    // Info: (20260724 - Julian) B(03-10) 應排在 A(03-05) 之前
+    // Info: (20260727 - Julian) B(03-10) 應排在 A(03-05) 之前
     expect(ledger.items[0].voucherDate).toBeGreaterThanOrEqual(
       ledger.items[ledger.items.length - 1].voucherDate,
     );
@@ -149,9 +150,23 @@ describe("generateLedger", () => {
       ...baseOptions,
       startAccountNo: "1102",
     });
-    // Info: (20260724 - Julian) 僅保留 code >= 1102 者：1102 與 3110
+    // Info: (20260727 - Julian) 僅保留 code >= 1102 者：1102 與 3110
     expect(ledger.items.every((i) => i.code >= "1102")).toBe(true);
     expect(ledger.items.some((i) => i.code === "1101")).toBe(false);
+  });
+
+  it("關鍵字過濾：僅保留符合科目/摘要/傳票編號之列，餘額仍為真實累計", () => {
+    const ledger = generateLedger(vouchers, dictionary, {
+      ...baseOptions,
+      keyword: "零用金",
+    });
+    // Info: (20260727 - Julian) 僅 1102 零用金該列命中
+    expect(ledger.items.length).toBe(1);
+    expect(ledger.items[0].code).toBe("1102");
+    expect(ledger.items[0].balance).toBe("400");
+    // Info: (20260727 - Julian) 總額取顯示列
+    expect(ledger.total.totalDebit).toBe("400");
+    expect(ledger.total.totalCredit).toBe("0");
   });
 
   it("缺乏會計代碼或借貸方向時阻斷輸出", () => {
@@ -178,5 +193,291 @@ describe("generateLedger", () => {
     expect(() => generateLedger(broken, dictionary, baseOptions)).toThrow(
       /Data Integrity Violation/,
     );
+  });
+
+  // Info: (20260727 - Julian) rootCode 子樹過濾（試算表統馭科目 drill-down）：以 AccountUtil.isDescendantOf 沿 parentCode 判定，涵蓋該科目及所有子孫，解決點統馭科目「查無分錄」
+  describe("rootCode 子樹過濾", () => {
+    it("統馭科目 1100：僅保留其子孫 1101/1102，排除他樹的 3110", () => {
+      const ledger = generateLedger(vouchers, dictionary, {
+        ...baseOptions,
+        rootCode: "1100",
+      });
+      expect(ledger.items.every((i) => ["1101", "1102"].includes(i.code))).toBe(
+        true,
+      );
+      expect(ledger.items.some((i) => i.code === "3110")).toBe(false);
+      // Info: (20260727 - Julian) 1101 兩筆(A,B) + 1102 一筆(B) = 3 筆
+      expect(ledger.items).toHaveLength(3);
+    });
+
+    it("虛擬集計根 11XX（不在字典）：仍能沿 parentCode 命中子樹 1101/1102", () => {
+      // Info: (20260727 - Julian) 1101→1100→11XX 命中；3110→31XX→3XXX 無 11XX，故排除
+      const ledger = generateLedger(vouchers, dictionary, {
+        ...baseOptions,
+        rootCode: "11XX",
+      });
+      expect(ledger.items.every((i) => ["1101", "1102"].includes(i.code))).toBe(
+        true,
+      );
+      expect(ledger.items.some((i) => i.code === "3110")).toBe(false);
+      expect(ledger.items.length).toBeGreaterThan(0);
+    });
+
+    it("GENERAL 上捲後仍以子樹歸屬：rootCode=1100 只留上捲後的 1100（含自身），排除 31XX", () => {
+      const ledger = generateLedger(vouchers, dictionary, {
+        ...baseOptions,
+        labelType: LabelType.GENERAL,
+        rootCode: "1100",
+      });
+      expect(ledger.items.every((i) => i.code === "1100")).toBe(true);
+      expect(ledger.items.some((i) => i.code === "31XX")).toBe(false);
+      // Info: (20260727 - Julian) 1101/1102 三筆過帳上捲至 1100
+      expect(ledger.items).toHaveLength(3);
+      // Info: (20260727 - Julian) 1100 最終累計 +1000 −400 +400 = 1000
+      expect(ledger.items[ledger.items.length - 1].balance).toBe("1000");
+    });
+
+    it("末階葉節點 1101 作為 rootCode：僅回傳自身、不含同層 1102", () => {
+      const ledger = generateLedger(vouchers, dictionary, {
+        ...baseOptions,
+        rootCode: "1101",
+      });
+      expect(ledger.items.every((i) => i.code === "1101")).toBe(true);
+      expect(ledger.items).toHaveLength(2);
+    });
+
+    it("rootCode 無任何子孫（不存在的科目）→ 空清單且總計為零", () => {
+      const ledger = generateLedger(vouchers, dictionary, {
+        ...baseOptions,
+        rootCode: "9999",
+      });
+      expect(ledger.items).toHaveLength(0);
+      expect(ledger.total.totalDebit).toBe("0");
+      expect(ledger.total.totalCredit).toBe("0");
+    });
+  });
+});
+
+// Info: (20260728 - Julian) 篩選與排序：accountType 過濾與欄位傳播、餘額區間（絕對值語意）、餘額排序、關鍵字
+describe("generateLedger — 篩選與排序", () => {
+  // Info: (20260728 - Julian) 具科目類別與正常餘額方向的字典（4111 收入為貸方科目 isDebit=false）
+  const typedDict: IAccount[] = [
+    { code: "1101", name: "庫存現金", parentCode: "1100", type: "asset" },
+    { code: "1102", name: "零用金", parentCode: "1100", type: "asset" },
+    { code: "4111", name: "銷貨收入", parentCode: "4100", type: "revenue" },
+  ].map((a) => ({
+    ...a,
+    description: "",
+    level: 0,
+    isDebit: a.code !== "4111",
+  }));
+
+  const base = {
+    labelType: LabelType.ALL,
+    sorting: LedgerSorting.CODE_ASC,
+    currencyAlias: "TWD",
+  };
+
+  // Info: (20260728 - Julian) accountType/keyword 用：資產 1101 對貸 收入 4111
+  const acctVouchers: IVoucher[] = [
+    makeVoucher("A1", "2026-03-01", [
+      { code: "1101", name: "庫存現金", amount: 400, isDebit: true },
+      { code: "4111", name: "銷貨收入", amount: 400, isDebit: false },
+    ]),
+    makeVoucher("A2", "2026-03-05", [
+      { code: "1101", name: "庫存現金", amount: 600, isDebit: true },
+      { code: "4111", name: "銷貨收入", amount: 600, isDebit: false },
+    ]),
+  ];
+
+  // Info: (20260728 - Julian) balance/sorting 用：1101 借方餘額(正) 對 1102 資產貸餘(負)，以正負值驗證絕對值語意
+  // Info: (20260728 - Julian) 各列餘額：1101=400,1000；1102(資產異常貸餘)=-400,-1000
+  const balVouchers: IVoucher[] = [
+    makeVoucher("B1", "2026-03-01", [
+      { code: "1101", name: "庫存現金", amount: 400, isDebit: true },
+      { code: "1102", name: "零用金", amount: 400, isDebit: false },
+    ]),
+    makeVoucher("B2", "2026-03-05", [
+      { code: "1101", name: "庫存現金", amount: 600, isDebit: true },
+      { code: "1102", name: "零用金", amount: 600, isDebit: false },
+    ]),
+  ];
+
+  it("accountType 過濾：僅保留該類別科目，且 accountType 欄位正確傳播", () => {
+    const asset = generateLedger(acctVouchers, typedDict, {
+      ...base,
+      accountType: AccountType.ASSET,
+    });
+    expect(asset.items.length).toBe(2);
+    expect(asset.items.every((i) => i.code === "1101")).toBe(true);
+    // Info: (20260728 - Julian) 欄位傳播：由字典帶出的 type
+    expect(asset.items.every((i) => i.accountType === "asset")).toBe(true);
+
+    const revenue = generateLedger(acctVouchers, typedDict, {
+      ...base,
+      accountType: AccountType.REVENUE,
+    });
+    expect(revenue.items.every((i) => i.code === "4111")).toBe(true);
+    expect(revenue.items.every((i) => i.accountType === "revenue")).toBe(true);
+  });
+
+  it("餘額區間 LTE 採絕對值語意：|餘額| ≤ 值 才保留（負餘額以絕對值判定）", () => {
+    const ledger = generateLedger(balVouchers, typedDict, {
+      ...base,
+      balanceOp: BalanceComparator.LTE,
+      balanceValue: "500",
+    });
+    expect(ledger.items.map((i) => i.balance).sort()).toEqual(["-400", "400"]);
+    // Info: (20260728 - Julian) 關鍵：-1000 若用原值比較會被 LTE 500 誤收，絕對值語意下必須排除
+    expect(ledger.items.some((i) => i.balance === "-1000")).toBe(false);
+  });
+
+  it("餘額區間 EQ 採絕對值語意：|餘額| = 值（正負同額皆命中）", () => {
+    const ledger = generateLedger(balVouchers, typedDict, {
+      ...base,
+      balanceOp: BalanceComparator.EQ,
+      balanceValue: "1000",
+    });
+    expect(ledger.items.map((i) => i.balance).sort()).toEqual([
+      "-1000",
+      "1000",
+    ]);
+  });
+
+  it("餘額區間 GTE 採絕對值語意：|餘額| ≥ 值", () => {
+    const ledger = generateLedger(balVouchers, typedDict, {
+      ...base,
+      balanceOp: BalanceComparator.GTE,
+      balanceValue: "500",
+    });
+    expect(ledger.items.map((i) => i.balance).sort()).toEqual([
+      "-1000",
+      "1000",
+    ]);
+  });
+
+  it("餘額排序採原值（非絕對值）：BALANCE_ASC 由負至正、BALANCE_DESC 反之", () => {
+    const asc = generateLedger(balVouchers, typedDict, {
+      ...base,
+      sorting: LedgerSorting.BALANCE_ASC,
+    });
+    expect(asc.items.map((i) => i.balance)).toEqual([
+      "-1000",
+      "-400",
+      "400",
+      "1000",
+    ]);
+
+    const desc = generateLedger(balVouchers, typedDict, {
+      ...base,
+      sorting: LedgerSorting.BALANCE_DESC,
+    });
+    expect(desc.items.map((i) => i.balance)).toEqual([
+      "1000",
+      "400",
+      "-400",
+      "-1000",
+    ]);
+  });
+
+  it("排序 CODE_DESC：科目編號由大到小（1102 排在 1101 之前）", () => {
+    const codes = generateLedger(balVouchers, typedDict, {
+      ...base,
+      sorting: LedgerSorting.CODE_DESC,
+    }).items.map((i) => i.code);
+    expect(codes[0]).toBe("1102");
+    expect(codes.indexOf("1102")).toBeLessThan(codes.lastIndexOf("1101"));
+  });
+
+  it("排序 DATE_ASC：依傳票日期由舊到新（單調不遞減）", () => {
+    const dates = generateLedger(balVouchers, typedDict, {
+      ...base,
+      sorting: LedgerSorting.DATE_ASC,
+    }).items.map((i) => i.voucherDate);
+    for (let i = 1; i < dates.length; i += 1) {
+      expect(dates[i]).toBeGreaterThanOrEqual(dates[i - 1]);
+    }
+  });
+
+  it("關鍵字比對會計科目名稱：僅保留命中列", () => {
+    const ledger = generateLedger(acctVouchers, typedDict, {
+      ...base,
+      keyword: "銷貨",
+    });
+    expect(ledger.items.length).toBe(2);
+    expect(ledger.items.every((i) => i.code === "4111")).toBe(true);
+  });
+});
+
+// Info: (20260728 - Julian) 滾動餘額方向（需求1）與排序穩定性（需求2）
+describe("generateLedger — 餘額方向與排序穩定性", () => {
+  // Info: (20260728 - Julian) 資產 1101（借方）+ 負債 2310（貸方），驗證方向差異
+  const dirDict: IAccount[] = [
+    {
+      code: "1101",
+      name: "庫存現金",
+      parentCode: "1100",
+      type: "asset",
+      isDebit: true,
+    },
+    {
+      code: "2310",
+      name: "預收款",
+      parentCode: "2XXX",
+      type: "liability",
+      isDebit: false,
+    },
+  ].map((a) => ({ ...a, description: "", level: 0 }));
+
+  const base = {
+    labelType: LabelType.ALL,
+    sorting: LedgerSorting.CODE_ASC,
+    currencyAlias: "TWD",
+  };
+
+  it("滾動餘額依科目屬性方向（資產借加貸減、負債貸加借減，皆顯示為正值）", () => {
+    const vouchers: IVoucher[] = [
+      makeVoucher("D1", "2026-03-01", [
+        { code: "1101", name: "庫存現金", amount: 1000, isDebit: true },
+        { code: "2310", name: "預收款", amount: 1000, isDebit: false },
+      ]),
+      makeVoucher("D2", "2026-03-02", [
+        { code: "2310", name: "預收款", amount: 300, isDebit: true },
+        { code: "1101", name: "庫存現金", amount: 300, isDebit: false },
+      ]),
+    ];
+    const ledger = generateLedger(vouchers, dirDict, base);
+    const asset = ledger.items.filter((i) => i.code === "1101");
+    const liability = ledger.items.filter((i) => i.code === "2310");
+    // Info: (20260728 - Julian) 資產 1101：借 1000→1000、貸 300→700（借加貸減）
+    expect(asset.map((i) => i.balance)).toEqual(["1000", "700"]);
+    // Info: (20260728 - Julian) 負債 2310：貸 1000→1000、借 300→700（貸加借減，正值而非負值）
+    expect(liability.map((i) => i.balance)).toEqual(["1000", "700"]);
+  });
+
+  it("同日期多筆分錄以 voucherId 顯式打破平手，排序完全決定論（與輸入順序無關）", () => {
+    const one = (id: string): IVoucher =>
+      makeVoucher(id, "2026-03-01", [
+        { code: "1101", name: "庫存現金", amount: 100, isDebit: true },
+        { code: "2310", name: "預收款", amount: 100, isDebit: false },
+      ]);
+    const opts = { ...base, sorting: LedgerSorting.DATE_ASC };
+    const forward = generateLedger(
+      [one("V1"), one("V2"), one("V3")],
+      dirDict,
+      opts,
+    )
+      .items.filter((i) => i.code === "1101")
+      .map((i) => i.voucherId);
+    const reversed = generateLedger(
+      [one("V3"), one("V2"), one("V1")],
+      dirDict,
+      opts,
+    )
+      .items.filter((i) => i.code === "1101")
+      .map((i) => i.voucherId);
+    // Info: (20260728 - Julian) 同日期同科目一律依 voucherId 升冪，兩種輸入順序結果一致
+    expect(forward).toEqual(["V1", "V2", "V3"]);
+    expect(reversed).toEqual(["V1", "V2", "V3"]);
   });
 });

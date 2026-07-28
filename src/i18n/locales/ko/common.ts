@@ -119,6 +119,12 @@ export const common = {
     start_export: "내보내기 시작",
     failed_voucher: "전표 내보내기에 실패했습니다. 잠시 후 다시 시도해 주세요.",
     failed_esg: "ESG 기록 내보내기에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+    title_ledger: "원장 내보내기",
+    desc_ledger:
+      "현재 필터 조건의 원장 명세와 잔액을 수집하여 표준 CSV 형식의 파일로 내보냅니다. 이를 통해 Excel에서 분석하거나 백업 보관을 간편하게 수행할 수 있습니다.",
+    stat_title_ledger: "내보낼 행 수 예상",
+    unit_ledger: "건",
+    failed_ledger: "원장 내보내기에 실패했습니다. 잠시 후 다시 시도해 주세요.",
   },
   qr_code: "QR 코드",
   done: "완료",

@@ -22,11 +22,62 @@ export const voucher = {
   tab: {
     vouchers: "Vouchers",
     accounts: "Accounting Subjects",
+    ledger: "Ledger",
+  },
+  ledger: {
+    export: "Export CSV",
+    filters: {
+      date: "Date range",
+      label: "Ledger type",
+      keyword: "Keyword",
+      keyword_placeholder: "Account, particulars, or voucher no.",
+      sort: "Sort",
+      balance: "Balance amount",
+      balance_placeholder: "Amount",
+    },
+    label_type: {
+      all: "All",
+      general: "General",
+      detailed: "Detailed",
+    },
+    sort: {
+      code_asc: "Account code ↑",
+      code_desc: "Account code ↓",
+      date_asc: "Date ↑",
+      date_desc: "Date ↓",
+      balance_asc: "Balance ↑",
+      balance_desc: "Balance ↓",
+    },
+    balance_op: {
+      gte: "At least (≥)",
+      lte: "At most (≤)",
+      eq: "Equals (=)",
+    },
+    summary: {
+      currency: "Currency",
+      total_debit: "Total debit",
+      total_credit: "Total credit",
+    },
+    headers: {
+      voucher_no: "Voucher no.",
+      date: "Date",
+      type: "Type",
+      particulars: "Particulars",
+      debit: "Debit",
+      credit: "Credit",
+      balance: "Balance",
+    },
+    view_detail: "Click to view voucher details",
+    empty: {
+      no_data: "No entries found",
+    },
   },
   main_view: {
     title: "Smart Voucher Management",
     subtitle:
       "AI has automatically generated corresponding accounting entries based on your receipt recognition results.",
+    title_ledger: "Smart Accounting",
+    subtitle_ledger: "View ledger entries and balances by account.",
     actions: {
       export: "Export Vouchers",
       add: "Add Voucher",

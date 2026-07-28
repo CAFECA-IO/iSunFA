@@ -22,10 +22,61 @@ export const voucher = {
   tab: {
     vouchers: "전표 관리",
     accounts: "회계 과목 관리",
+    ledger: "원장",
+  },
+  ledger: {
+    export: "CSV 내보내기",
+    filters: {
+      date: "기간",
+      label: "원장 구분",
+      keyword: "키워드",
+      keyword_placeholder: "과목, 적요 또는 전표 번호",
+      sort: "정렬",
+      balance: "잔액 금액",
+      balance_placeholder: "금액",
+    },
+    label_type: {
+      all: "전체",
+      general: "총계정",
+      detailed: "명세",
+    },
+    sort: {
+      code_asc: "과목 코드 ↑",
+      code_desc: "과목 코드 ↓",
+      date_asc: "날짜 ↑",
+      date_desc: "날짜 ↓",
+      balance_asc: "잔액 ↑",
+      balance_desc: "잔액 ↓",
+    },
+    balance_op: {
+      gte: "이상",
+      lte: "이하",
+      eq: "같음",
+    },
+    summary: {
+      currency: "통화",
+      total_debit: "차변 합계",
+      total_credit: "대변 합계",
+    },
+    headers: {
+      voucher_no: "전표 번호",
+      date: "날짜",
+      type: "유형",
+      particulars: "적요",
+      debit: "차변",
+      credit: "대변",
+      balance: "잔액",
+    },
+    view_detail: "클릭하여 전표 상세 보기",
+    empty: {
+      no_data: "분개를 찾을 수 없습니다",
+    },
   },
   main_view: {
     title: "스마트 전표 관리",
     subtitle: "AI가 영수증 인식 결과를 바탕으로 회계 분개를 자동 생성했습니다.",
+    title_ledger: "스마트 회계 관리",
+    subtitle_ledger: "과목별 원장 명세와 잔액을 확인합니다.",
     actions: {
       export: "전표 내보내기",
       add: "전표 추가",

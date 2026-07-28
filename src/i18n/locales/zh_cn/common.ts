@@ -115,6 +115,12 @@ export const common = {
     start_export: "开始导出",
     failed_voucher: "导出凭证失败，请稍后再试。",
     failed_esg: "导出 ESG 记录失败，请稍后再试。",
+    title_ledger: "导出分类账",
+    desc_ledger:
+      "系统将汇总当前筛选条件下的分类账明细与余额，导出为标准 CSV 格式文件，方便您在 Excel 进行分析或备份存档。",
+    stat_title_ledger: "预计导出笔数",
+    unit_ledger: "笔",
+    failed_ledger: "导出分类账失败，请稍后再试。",
   },
   qr_code: "二维码",
   done: "完成",

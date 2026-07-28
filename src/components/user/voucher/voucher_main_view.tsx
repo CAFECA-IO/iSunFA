@@ -10,15 +10,16 @@ import {
 import { useTranslation } from "@/i18n/i18n_context";
 import VoucherSummary from "@/components/user/voucher/voucher_summary";
 import VoucherTableSection from "@/components/user/voucher/voucher_table_section";
-import ExportSettingsModal, {
-  ExportType,
-} from "@/components/user/common/export_settings_modal";
+import ExportSettingsModal from "@/components/user/common/export_settings_modal";
 import AccountManagementTab from "@/components/user/voucher/account_management_tab";
+import LedgerView from "@/components/user/voucher/ledger_view";
 import { Download } from "lucide-react";
+import { ExportCsvType } from "@/constants/enums";
 
 enum VoucherTab {
   VOUCHERS = "vouchers",
   ACCOUNTS = "accounts",
+  LEDGER = "ledger",
 }
 
 export default function VoucherMainView() {
@@ -28,6 +29,13 @@ export default function VoucherMainView() {
 
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
 
+  // Info: (20260727 - Julian) 分類帳目前的匯出條件（由 LedgerView 上報），供共用匯出 Modal 使用
+  const [ledgerExportParams, setLedgerExportParams] = useState<{
+    startDate: string;
+    endDate: string;
+    extraParams: Record<string, string>;
+  } | null>(null);
+
   // Info: (20260703 - Julian) 取得 URL 參數中的 tab
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -35,8 +43,9 @@ export default function VoucherMainView() {
 
   // Info: (20260703 - Julian) 從 URL 參數取得 tab，預設顯示 records
   const tabParams = useSearchParams().get("tab");
-  const activeTab =
-    tabParams === "accounts" ? VoucherTab.ACCOUNTS : VoucherTab.VOUCHERS;
+  let activeTab = VoucherTab.VOUCHERS;
+  if (tabParams === "accounts") activeTab = VoucherTab.ACCOUNTS;
+  else if (tabParams === "ledger") activeTab = VoucherTab.LEDGER;
 
   const handleTabChange = (tab: VoucherTab) => {
     // Info: (20260703 - Julian) 複製目前的 URLSearchParams，再把 tab 的參數加上去
@@ -49,19 +58,49 @@ export default function VoucherMainView() {
     });
   };
 
-  const tabContent =
-    activeTab === VoucherTab.VOUCHERS ? (
-      <>
-        {/* Info: (20260316 - Julian) Summary */}
-        <VoucherSummary />
-        {/* Info: (20260316 - Julian) Table Section */}
-        <VoucherTableSection />
-      </>
-    ) : (
-      <AccountManagementTab
-        backToMainTab={() => handleTabChange(VoucherTab.VOUCHERS)}
-      />
-    );
+  // Info: (20260727 - Julian) 目前 tab
+  const isLedger = activeTab === VoucherTab.LEDGER;
+
+  // Info: (20260727 - Julian) UI 文字
+  const titleText = isLedger
+    ? t("voucher.main_view.title_ledger")
+    : t("voucher.main_view.title");
+  const subtitleText = isLedger
+    ? t("voucher.main_view.subtitle_ledger")
+    : t("voucher.main_view.subtitle");
+  const downloadText = isLedger
+    ? t("voucher.ledger.export")
+    : t("voucher.main_view.actions.export");
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      // Info: (20260727 - Julian) 傳票管理
+      case VoucherTab.VOUCHERS:
+        return (
+          <>
+            {/* Info: (20260316 - Julian) Summary */}
+            <VoucherSummary />
+            {/* Info: (20260316 - Julian) Table Section */}
+            <VoucherTableSection />
+          </>
+        );
+
+      // Info: (20260727 - Julian) 會計科目管理
+      case VoucherTab.ACCOUNTS:
+        return (
+          <AccountManagementTab
+            backToMainTab={() => handleTabChange(VoucherTab.VOUCHERS)}
+          />
+        );
+
+      // Info: (20260727 - Julian) 分類帳
+      case VoucherTab.LEDGER:
+        return <LedgerView onExportParamsChange={setLedgerExportParams} />;
+
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="flex max-w-[calc(100vw-30px)] flex-col gap-y-4 px-0 lg:gap-y-6 lg:px-12">
@@ -70,10 +109,10 @@ export default function VoucherMainView() {
         {/* Info: (20260617 - Julian) Title */}
         <div className="flex flex-col gap-2">
           <h1 className="flex items-center text-base font-bold text-slate-800 lg:text-2xl">
-            {t("voucher.main_view.title")}
+            {titleText}
           </h1>
           <p className="text-xs font-medium text-slate-500 lg:text-sm">
-            {t("voucher.main_view.subtitle")}
+            {subtitleText}
           </p>
         </div>
         {/* Info: (20260617 - Julian) Export CSV Button */}
@@ -83,12 +122,12 @@ export default function VoucherMainView() {
           className="flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-600 lg:text-base"
         >
           <Download className="size-5 shrink-0 lg:size-6" />
-          {t("voucher.main_view.actions.export")}
+          {downloadText}
         </button>
       </div>
 
       {/* Info: (20260703 - Julian) Tab Switch */}
-      <div className="grid w-full grid-cols-2 space-x-1 rounded-xl border border-gray-200 bg-gray-100 p-1.5 lg:w-fit">
+      <div className="grid w-full grid-cols-3 space-x-1 rounded-xl border border-gray-200 bg-gray-100 p-1.5 lg:w-fit">
         {Object.values(VoucherTab).map((tab) => (
           <button
             key={tab}
@@ -108,15 +147,20 @@ export default function VoucherMainView() {
       </div>
 
       {/* Info: (20260703 - Julian) Tab Content */}
-      {tabContent}
+      {renderTabContent()}
 
-      {/* Info: (20260617 - Julian) Export Settings Modal */}
+      {/* Info: (20260727 - Julian) Export Settings Modal */}
       {accountBookId && (
         <ExportSettingsModal
           isOpen={isExportModalOpen}
           onClose={() => setIsExportModalOpen(false)}
           accountBookId={accountBookId}
-          type={ExportType.VOUCHER}
+          type={isLedger ? ExportCsvType.LEDGER : ExportCsvType.VOUCHER}
+          initialStartDate={
+            isLedger ? ledgerExportParams?.startDate : undefined
+          }
+          initialEndDate={isLedger ? ledgerExportParams?.endDate : undefined}
+          extraParams={isLedger ? ledgerExportParams?.extraParams : undefined}
         />
       )}
     </div>

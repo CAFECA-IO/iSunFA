@@ -141,6 +141,23 @@ export enum AccountType {
   OTHER = "other",
 }
 
+// Info: (20260728 - Julian) 將寬鬆的 AccountType | string 收斂為嚴格 AccountType；非有效列舉值回 null（取代空字串哨兵，遵守 §3 拒絕魔法字串）
+const ACCOUNT_TYPE_VALUES = new Set<string>(Object.values(AccountType));
+export function toAccountType(
+  value: string | AccountType | null | undefined,
+): AccountType | null {
+  return value != null && ACCOUNT_TYPE_VALUES.has(value)
+    ? (value as AccountType)
+    : null;
+}
+
+// Info: (20260728 - Julian) 匯出 CSV 項目
+export enum ExportCsvType {
+  VOUCHER = "voucher",
+  ESG = "esg",
+  LEDGER = "ledger",
+}
+
 export enum NonEmissiveTransactionType {
   INCOME = "income",
   RECEIPT = "receipt",

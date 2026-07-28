@@ -13,3 +13,16 @@ export enum LabelType {
   DETAILED = "detailed",
   ALL = "all",
 }
+
+/**
+ * Info: (20260727 - Julian)
+ * 分類帳「餘額金額」篩選的比較運算子：
+ * - GTE：以上（>=）
+ * - LTE：以下（<=）
+ * - EQ：相等（==）
+ */
+export enum BalanceComparator {
+  GTE = "gte",
+  LTE = "lte",
+  EQ = "eq",
+}

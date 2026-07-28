@@ -12,12 +12,16 @@ export const reportView = {
   empty_report_desc: "请设定需要的报表参数，iSunFA 马上为您产出报表",
   unknown_account_book: "(未知的帐簿)",
   period_unit: "期间：{{period}} ｜ 单位：{{currency}}",
-  unverified_warning: "警告：目前报表中包含 {{count}} 笔「尚未覆核」的数据。点击以下单据即可跳转至对应页面进行确认。",
+  unverified_warning:
+    "警告：目前报表中包含 {{count}} 笔「尚未覆核」的数据。点击以下单据即可跳转至对应页面进行确认。",
+  export_pdf: "导出 PDF",
+  export_csv: "导出 CSV",
   types: {
     balance_sheet: "资产负债表",
     cash_flow: "现金流量表",
     income_statement: "综合损益表",
     esg_report: "碳盘查报告书",
+    trial_balance: "试算表",
   },
   periods: {
     allyear: "全年度",

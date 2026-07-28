@@ -1,8 +1,9 @@
-import { LabelType } from "@/constants/ledger";
+import { LabelType, BalanceComparator } from "@/constants/ledger";
 import { LedgerSorting } from "@/constants/sort";
+import { AccountType } from "@/constants/enums";
 
 /**
- * Info: (20260724 - Julian)
+ * Info: (20260727 - Julian)
  * 分類帳 (Ledger) 逐筆明細列。金額一律以 Decimal 字串呈現（ADR 003）。
  * balance 為該科目截至此列的 running balance（借方為正、貸方為負累計）。
  * voucherNumber 目前以 voucher.id 呈現（Schema 無獨立傳票編號欄位）。
@@ -13,6 +14,8 @@ export interface ILedgerItem {
   voucherNumber: string;
   voucherType: string | null;
   code: string;
+  // Info: (20260728 - Julian) 科目類別；無明確類別者為 null（取代空字串哨兵，遵守 §3）。供前端依類別著色
+  accountType: AccountType | null;
   accountingTitle: string;
   particulars: string;
   debitAmount: string;
@@ -21,7 +24,7 @@ export interface ILedgerItem {
 }
 
 /**
- * Info: (20260724 - Julian) 分類帳借貸總額。
+ * Info: (20260727 - Julian) 分類帳借貸總額。
  */
 export interface ILedgerTotal {
   totalDebit: string;
@@ -29,7 +32,7 @@ export interface ILedgerTotal {
 }
 
 /**
- * Info: (20260724 - Julian) 分類帳產生器輸出。
+ * Info: (20260727 - Julian) 分類帳產生器輸出。
  */
 export interface ILedger {
   currencyAlias: string;
@@ -38,7 +41,19 @@ export interface ILedger {
 }
 
 /**
- * Info: (20260724 - Julian) 分類帳產生器選項。
+ * Info: (20260728 - Julian) 分類帳清單 API 的分頁結果（LedgerService.getLedger 回傳；與 route 回應結構一致）。
+ */
+export interface ILedgerPageResult {
+  data: ILedgerItem[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  note: { currencyAlias: string; total: ILedgerTotal };
+}
+
+/**
+ * Info: (20260727 - Julian) 分類帳產生器選項。
  * startAccountNo / endAccountNo 為使用者指定的科目代碼區間（含）。
  * labelType 以 COA 樹狀結構判定（非字串前綴）：DETAILED=僅末層明細科目；
  * GENERAL=將明細過帳上捲歸屬至父（總帳）科目；ALL=不過濾不上捲。
@@ -49,4 +64,13 @@ export interface ILedgerOptions {
   labelType: LabelType;
   sorting?: LedgerSorting;
   currencyAlias: string;
+  // Info: (20260727 - Julian) 關鍵字：比對 科目編號/會計科目/摘要/傳票編號（於產出列後過濾）
+  keyword?: string;
+  // Info: (20260728 - Julian) 科目類別篩選（AccountType，供試算表總帳節點 drill-down；於產出列後過濾）
+  accountType?: AccountType;
+  // Info: (20260727 - Julian) 科目子樹根代碼：僅保留該科目及其所有子孫過帳（isDescendantOf），供試算表統馭科目 drill-down；於產出列後過濾
+  rootCode?: string;
+  // Info: (20260727 - Julian) 餘額金額區間篩選（於產出列後過濾）：比較運算子與比較值
+  balanceOp?: BalanceComparator;
+  balanceValue?: string;
 }

@@ -21,16 +21,16 @@
 
 ## 2. 交付狀態總覽
 
-| 階段 | 內容 | 狀態 |
-|---|---|---|
-| 0 | 對齊與設計、常數建置 | ✅ 完成 |
-| 1 | 報表資料源（確認純重用，無新增 repo） | ✅ 完成 |
-| 2 | 試算表 generator + validator + API | ✅ 完成 |
-| 3 | 分類帳 generator + validator + API | ✅ 完成 |
-| 4 | 試算表 / 分類帳 CSV 匯出 | ✅ 完成 |
-| 5 | 測試強化 + 獨立對抗性複核 + 修正 | ✅ 完成 |
-| — | 待產品決策事項（C2 / M3 / M4） | ⏳ 待確認 |
-| 6 | 前端 UI（傳票頁新增 tab） | 📋 已規劃（見 §12），待實作 |
+| 階段 | 內容                                  | 狀態                                                        |
+| ---- | ------------------------------------- | ----------------------------------------------------------- |
+| 0    | 對齊與設計、常數建置                  | ✅ 完成                                                     |
+| 1    | 報表資料源（確認純重用，無新增 repo） | ✅ 完成                                                     |
+| 2    | 試算表 generator + validator + API    | ✅ 完成                                                     |
+| 3    | 分類帳 generator + validator + API    | ✅ 完成                                                     |
+| 4    | 試算表 / 分類帳 CSV 匯出              | ✅ 完成                                                     |
+| 5    | 測試強化 + 獨立對抗性複核 + 修正      | ✅ 完成                                                     |
+| —    | 待產品決策事項（C2 / M3 / M4）        | ⏳ 待確認                                                   |
+| 6    | 前端 UI（傳票頁新增 tab）             | 🚧 進行中：分類帳 tab 已完成（見 §12.8）；試算表 tab 待實作 |
 
 詳細實作歷程見 §9；待決策事項見 §8。
 
@@ -38,20 +38,20 @@
 
 ## 3. 必須遵守的既有規範
 
-| 規範來源 | 對本功能的約束 |
-|---|---|
-| `coding_guidelines.md` §1 三層架構 | API route 僅端口；報表運算為純函式產生器；DB 只在 Repository。 |
-| `coding_guidelines.md` §2 型別安全 | 零 `any`；DTO/型別置於 `src/interfaces`；Zod 一律在 `src/validators/` 並由 `index.ts` 匯出，route 只 `safeParse`。 |
-| `coding_guidelines.md` §3 Clean Code | 全 `@/` 絕對路徑；狀態字串一律進 `src/constants/`（禁魔法字串）；註解走 `annotation.md` 格式。 |
-| `coding_guidelines.md` §5 Fail Fast | 產生器對違反會計恆等式（借貸不平衡）與資料整合性缺失即 `throw`。 |
-| `annotation.md` | 註解僅 `Info:` / `ToDo:` / `Deprecated:`，格式 `// 類型: (YYYYMMDD - 作者) 訊息`。 |
-| `numerical_precision_guideline.md` §2 | 報表/財會領域全面使用 `MoneyUtil`(Decimal.js)；生 `BigInt` 只限 Web3 領域，報表內嚴禁。 |
-| `numerical_precision_guideline.md` §3 | 嚴禁手動 `Number(amount)` 或手動把 `BigInt` 轉字串；靠全域 `BigInt.prototype.toJSON` 序列化盾。 |
-| `01_tree_traversal_reporting_engine.md` | 絕對禁止 `startsWith` / 科目代碼前綴分類；一律用 `AccountUtil` 沿 `parentCode` 父指標樹狀溯源。 |
-| `03_suspense_and_quarantine_guardrails.md` | 報表**不得**只取 `isVerified = true`；懸記/未核對分錄須納入，否則試算表借貸失衡。 |
-| `04_cross_report_metrics_engine.md` | 單一報表引擎不跨表通靈；除法先擋分母為零，禁 `Infinity`/`NaN`。 |
-| `domain_models.md` / ADR 005 | 所有查詢以 `accountBookId` 為租戶隔離根；嚴禁綁 `Company`。 |
-| ADR 009 (SoD) | 報表為唯讀 Consumer：不寫 DB、不重算沖銷/匯率/稅務，只讀已洗淨資料再彙總。 |
+| 規範來源                                   | 對本功能的約束                                                                                                     |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `coding_guidelines.md` §1 三層架構         | API route 僅端口；報表運算為純函式產生器；DB 只在 Repository。                                                     |
+| `coding_guidelines.md` §2 型別安全         | 零 `any`；DTO/型別置於 `src/interfaces`；Zod 一律在 `src/validators/` 並由 `index.ts` 匯出，route 只 `safeParse`。 |
+| `coding_guidelines.md` §3 Clean Code       | 全 `@/` 絕對路徑；狀態字串一律進 `src/constants/`（禁魔法字串）；註解走 `annotation.md` 格式。                     |
+| `coding_guidelines.md` §5 Fail Fast        | 產生器對違反會計恆等式（借貸不平衡）與資料整合性缺失即 `throw`。                                                   |
+| `annotation.md`                            | 註解僅 `Info:` / `ToDo:` / `Deprecated:`，格式 `// 類型: (YYYYMMDD - 作者) 訊息`。                                 |
+| `numerical_precision_guideline.md` §2      | 報表/財會領域全面使用 `MoneyUtil`(Decimal.js)；生 `BigInt` 只限 Web3 領域，報表內嚴禁。                            |
+| `numerical_precision_guideline.md` §3      | 嚴禁手動 `Number(amount)` 或手動把 `BigInt` 轉字串；靠全域 `BigInt.prototype.toJSON` 序列化盾。                    |
+| `01_tree_traversal_reporting_engine.md`    | 絕對禁止 `startsWith` / 科目代碼前綴分類；一律用 `AccountUtil` 沿 `parentCode` 父指標樹狀溯源。                    |
+| `03_suspense_and_quarantine_guardrails.md` | 報表**不得**只取 `isVerified = true`；懸記/未核對分錄須納入，否則試算表借貸失衡。                                  |
+| `04_cross_report_metrics_engine.md`        | 單一報表引擎不跨表通靈；除法先擋分母為零，禁 `Infinity`/`NaN`。                                                    |
+| `domain_models.md` / ADR 005               | 所有查詢以 `accountBookId` 為租戶隔離根；嚴禁綁 `Company`。                                                        |
+| ADR 009 (SoD)                              | 報表為唯讀 Consumer：不寫 DB、不重算沖銷/匯率/稅務，只讀已洗淨資料再彙總。                                         |
 
 ---
 
@@ -81,6 +81,7 @@ GET .../account_book/:id/{trial_balance|ledger}
 ```
 
 **要點**：
+
 - 產生器接收 `IVoucher[]`（非平坦化 lines），因 `IVoucherLineUI` 不帶傳票日期/識別，而期間切割與 running balance 需 `voucher.tradingDate`。
 - 分頁必須在報表列層，不可下推至 `getVouchersByFilter` 的傳票層分頁。
 - 產生器一律放 `src/lib/report/`，與 `balance_sheet_generator.ts` 等同層同風格。
@@ -90,20 +91,20 @@ GET .../account_book/:id/{trial_balance|ledger}
 
 ## 6. 已交付檔案清單
 
-| 動作 | 檔案 | 說明 |
-|---|---|---|
-| 修改 | `src/constants/sort.ts` | 新增 `TrialBalanceSorting`、`LedgerSorting`（沿用 `VoucherSorting` 的 `field_direction` 慣例） |
-| 新增 | `src/constants/ledger.ts` | `LabelType`（GENERAL/DETAILED/ALL） |
-| 新增 | `src/interfaces/trial_balance.ts` | `ITrialBalanceItem` / `ITrialBalanceTotal` / `ITrialBalance` / `ITrialBalanceOptions`（金額皆字串） |
-| 新增 | `src/interfaces/ledger.ts` | `ILedgerItem` / `ILedgerTotal` / `ILedger` / `ILedgerOptions` |
-| 新增 | `src/lib/report/trial_balance_generator.ts` | 試算表純函式產生器 + `getDefault401Period()` |
-| 新增 | `src/lib/report/ledger_generator.ts` | 分類帳純函式產生器 |
-| 新增 | `src/lib/report/trial_balance_csv.ts` | 試算表 CSV 建構器（樹狀攤平 + 合計） |
-| 新增 | `src/lib/report/ledger_csv.ts` | 分類帳 CSV 建構器 |
-| 新增 | `src/validators/trial_balance.ts`、`src/validators/ledger.ts`（+ `index.ts` 匯出） | Zod 驗證（含嚴格日期） |
-| 新增 | `.../account_book/[account_book_id]/trial_balance/route.ts`、`.../export/route.ts` | GET 清單 + CSV |
-| 新增 | `.../account_book/[account_book_id]/ledger/route.ts`、`.../export/route.ts` | GET 清單 + CSV |
-| 新增 | `src/lib/report/__tests__/{trial_balance,ledger}_generator.test.ts`、`{trial_balance,ledger}_csv.test.ts` | 單元測試 |
+| 動作 | 檔案                                                                                                      | 說明                                                                                                |
+| ---- | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| 修改 | `src/constants/sort.ts`                                                                                   | 新增 `TrialBalanceSorting`、`LedgerSorting`（沿用 `VoucherSorting` 的 `field_direction` 慣例）      |
+| 新增 | `src/constants/ledger.ts`                                                                                 | `LabelType`（GENERAL/DETAILED/ALL）                                                                 |
+| 新增 | `src/interfaces/trial_balance.ts`                                                                         | `ITrialBalanceItem` / `ITrialBalanceTotal` / `ITrialBalance` / `ITrialBalanceOptions`（金額皆字串） |
+| 新增 | `src/interfaces/ledger.ts`                                                                                | `ILedgerItem` / `ILedgerTotal` / `ILedger` / `ILedgerOptions`                                       |
+| 新增 | `src/lib/report/trial_balance_generator.ts`                                                               | 試算表純函式產生器 + `getDefault401Period()`                                                        |
+| 新增 | `src/lib/report/ledger_generator.ts`                                                                      | 分類帳純函式產生器                                                                                  |
+| 新增 | `src/lib/report/trial_balance_csv.ts`                                                                     | 試算表 CSV 建構器（樹狀攤平 + 合計）                                                                |
+| 新增 | `src/lib/report/ledger_csv.ts`                                                                            | 分類帳 CSV 建構器                                                                                   |
+| 新增 | `src/validators/trial_balance.ts`、`src/validators/ledger.ts`（+ `index.ts` 匯出）                        | Zod 驗證（含嚴格日期）                                                                              |
+| 新增 | `.../account_book/[account_book_id]/trial_balance/route.ts`、`.../export/route.ts`                        | GET 清單 + CSV                                                                                      |
+| 新增 | `.../account_book/[account_book_id]/ledger/route.ts`、`.../export/route.ts`                               | GET 清單 + CSV                                                                                      |
+| 新增 | `src/lib/report/__tests__/{trial_balance,ledger}_generator.test.ts`、`{trial_balance,ledger}_csv.test.ts` | 單元測試                                                                                            |
 
 > **不需要** Prisma migration（會計模型已存在）；亦**未新增** Repository 程式碼（純重用 `getVouchersByFilter` 與 `accountingAccountService.getAccountingAccounts`）。若日後為查詢效能新增索引（如 `Voucher.tradingDate`），另開 migration 並同步本文件。
 
@@ -127,12 +128,12 @@ GET .../account_book/:id/{trial_balance|ledger}
 
 ## 8. 待決策事項（未實作，需產品確認）
 
-| 代號 | 事項 | 現況 | 建議 |
-|---|---|---|---|
-| ~~**C2**~~ | ~~分類帳 `LabelType.GENERAL`（總分類帳）語意~~ | **已定案並實作（2026-07-24）** | **採「上捲彙總」**：GENERAL 將葉節點過帳沿 `parentCode` 歸屬至其父（總帳）科目，逐筆呈現、running balance 以父科目累計；借貸總額與 ALL 一致。（DETAILED=僅葉節點、ALL=不過濾不上捲）已補測試（離線 8 項全 PASS） |
-| **M3** | 分類帳 running balance 未含期初 (B/F) 餘額 | 目前為期間相對餘額 | 導入開帳以來累計之期初餘額（與現金流量表同屬 Roadmap） |
-| ~~**M4**~~ | ~~試算表六欄用語~~ | **已定案（2026-07-24）** | **沿用舊版用語，維持「期初/期中/期末 借方/貸方餘額」字樣**（現況已符合，無需改碼） |
-| **M6** | `AccountUtil.dictionaryCache` 以陣列參考為鍵，每請求新陣列致快取不命中 | 既有 `AccountUtil` 議題，非本功能引入 | 改以帳本/國別為快取鍵（於 AccountUtil 層處理） |
+| 代號       | 事項                                                                   | 現況                                  | 建議                                                                                                                                                                                                             |
+| ---------- | ---------------------------------------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~~**C2**~~ | ~~分類帳 `LabelType.GENERAL`（總分類帳）語意~~                         | **已定案並實作（2026-07-24）**        | **採「上捲彙總」**：GENERAL 將葉節點過帳沿 `parentCode` 歸屬至其父（總帳）科目，逐筆呈現、running balance 以父科目累計；借貸總額與 ALL 一致。（DETAILED=僅葉節點、ALL=不過濾不上捲）已補測試（離線 8 項全 PASS） |
+| **M3**     | 分類帳 running balance 未含期初 (B/F) 餘額                             | 目前為期間相對餘額                    | 導入開帳以來累計之期初餘額（與現金流量表同屬 Roadmap）                                                                                                                                                           |
+| ~~**M4**~~ | ~~試算表六欄用語~~                                                     | **已定案（2026-07-24）**              | **沿用舊版用語，維持「期初/期中/期末 借方/貸方餘額」字樣**（現況已符合，無需改碼）                                                                                                                               |
+| **M6**     | `AccountUtil.dictionaryCache` 以陣列參考為鍵，每請求新陣列致快取不命中 | 既有 `AccountUtil` 議題，非本功能引入 | 改以帳本/國別為快取鍵（於 AccountUtil 層處理）                                                                                                                                                                   |
 
 ---
 
@@ -165,20 +166,95 @@ GET .../account_book/:id/{trial_balance|ledger}
 
 ## 11. 期程估算（後端，實際對照）
 
-| 階段 | 內容 | 原估 |
-|---|---|---|
-| 0 | 對齊與設計 | 0.5 天 |
-| 1 | 資料源確認 | 0.5–1 天 |
-| 2 | 試算表 | 2–3 天 |
-| 3 | 分類帳 | 1.5–2 天 |
-| 4 | CSV 匯出 | 1 天 |
-| 5 | 測試與驗證 | 1.5–2 天 |
-| **後端合計** | | **約 7–9.5 天** |
-| 6（後續） | 前端 UI | +4–7 天（另行估算） |
+| 階段         | 內容       | 原估                |
+| ------------ | ---------- | ------------------- |
+| 0            | 對齊與設計 | 0.5 天              |
+| 1            | 資料源確認 | 0.5–1 天            |
+| 2            | 試算表     | 2–3 天              |
+| 3            | 分類帳     | 1.5–2 天            |
+| 4            | CSV 匯出   | 1 天                |
+| 5            | 測試與驗證 | 1.5–2 天            |
+| **後端合計** |            | **約 7–9.5 天**     |
+| 6（後續）    | 前端 UI    | +4–7 天（另行估算） |
 
 ---
 
-## 12. Phase 6：前端 UI 施行計劃
+## 13. 試算表歸屬調整：改列入「報表編制」（2026-07-27，打掉重做）
+
+**決策**：試算表在會計上屬「報表」而非帳簿操作，故從原先「傳票頁 tab」方案改為**「報表編制 (財務報表)」的一個 `ReportType`**，與資產負債表/損益表/現金流量表同一流程（`ReportType` + `ReportPeriod` + PDF 列印）。分類帳仍維持在傳票頁 tab（屬帳簿）。
+
+**打掉（刪除）**：獨立的試算表 API 與 CSV 一式——
+`.../trial_balance/route.ts`、`.../trial_balance/export/route.ts`、`src/lib/report/trial_balance_csv.ts`（+ 測試）、`src/validators/trial_balance.ts`（+ `validators/index.ts` 匯出）。報表編制以 PDF 輸出，故不需 CSV 端點。
+
+**保留（報表引擎）**：`src/lib/report/trial_balance_generator.ts`（+ 測試）、`src/interfaces/trial_balance.ts`、`TrialBalanceSorting`（產生器預設排序用）。
+
+**重做（納入報表編制）**：
+
+- `constants/financial_report.ts`：啟用 `ReportType.TRIAL_BALANCE`。
+- `.../report/route.ts`：試算表比照資產負債表自開帳起算（不限 gte）；取完整 COA 字典；`getReportData` 新增 `TRIAL_BALANCE` → `generateTrialBalance(vouchers, dictionary, { startDate: 期間起始, endDate: 期間截止, currencyAlias })`。回傳沿用 `{ report, unverifiedItems }`。
+- `report_view.tsx`：`getReportTitle` 與 `renderReportView` 新增 `TRIAL_BALANCE` → `<TrialBalanceView period year onUnverifiedItemsChange/>`；報表種類下拉自動出現「試算表」。
+- 新增 `src/components/user/financial_report/trial_balance_view.tsx`：期初/期中/期末×借貸六欄 + 科目樹狀縮排 + 合計列，載入/空狀態沿用 `report_placeholders`，未核對分錄回報側欄，PDF 由既有 `report-content-to-print` 列印。
+- i18n 5 語系：新增 `report_view.types.trial_balance` 與 `trial_balance_view` 命名空間（`i18n/{lang}.ts` 註冊）。
+
+**驗證**：ESLint 零警告、`tsc` 於本功能檔零錯誤、無殘留對已刪檔的引用；產生器邏輯不變（先前離線測試仍有效）。期間語意：`ReportPeriod`（年+季/全年）的起始日作為期初/期中分界、截止日作為累計截止。
+
+---
+
+## 13.5 試算表 ⇄ 分類帳 超連結（Drill-down，已實作）
+
+### 目標情境
+
+會計師於「報表編制 ➔ 試算表」看到某科目餘額異常時，**點擊該科目的代碼或名稱**，系統即跳轉至「傳票管理 ➔ 分類帳」並自動篩選出該科目（含其子孫）明細，一鍵溯源；於分類帳再**點擊任一分錄**即可就地開啟該傳票詳情查核。
+
+### 連結機制（依節點型態分流）
+
+`TrialBalanceView` 的科目「代碼 / 名稱」為可點擊連結，依「是否為統馭（集計）科目」分兩種：
+
+- **統馭（集計）科目（`item.subAccounts.length > 0`）→ `&rootCode=`**：
+  `/voucher?tab=ledger&rootCode={code}&labelType=general`
+  - 涵蓋該科目**及其所有子孫**之過帳（含虛擬集計根如 `1XXX`），分類帳以總帳（上捲）呈現。
+  - 例：點「7000 營業外收入及支出」→ `rootCode=7000`，顯示 7000 子樹全部明細（不會誤撈 income 類其他根如 `6500`）。
+- **末階明細科目（`item.subAccounts.length === 0`）→ `&code=`**：
+  `/voucher?tab=ledger&code={code}&labelType=all`
+  - 葉節點確有直接過帳，逐筆呈現（`code`→分類帳 `keyword` 初值）。
+
+> **為何改用 `rootCode` 取代舊的 `accountType` 分流**：
+>
+> - 舊法「全數字→`&code=`；含 X→`&accountType=`」對**中間集計節點**（如全數字的 `7000`）會走 `&code=7000` 精確比對而「查無分錄」（統馭科目本身不記過帳）。
+> - 若退化成 `&accountType=income` 又**範圍過廣**（income 橫跨 `6500`/`7000` 兩根），語義失真。
+> - `rootCode` 以 `AccountUtil.isDescendantOf(item.code, rootCode, dictionary)` 沿 `parentCode` 逐層判定子孫，對**任何層級**（頂層 `1XXX`、中間 `7000`、末階）皆精準，正是會計實務「統馭科目→明細帳彙總」語義。因 `isDescendantOf` 為字串比對，虛擬集計根 `1XXX`（`1100→11XX→1XXX`）亦可直接作 `rootCode`，故**無需維護 `AccountType→根代碼` 對照表**。
+
+**目的地（分類帳）**：`LedgerView` 掛載時讀 URL query（`code`→`keyword` 初值、`rootCode`、`labelType`、`accountType`），自動觸發查詢。`rootCode` 為 deep-link 專用篩選（於產出列後以 `isDescendantOf` 比對子樹），後端 `LedgerQuerySchema`/`generateLedger`/三支 route 皆已支援。`accountType` 分流已由 `rootCode` 取代並停用（後端欄位保留，惟試算表不再產生該連結）。
+
+（可選）帶入期間：將報表所選 `ReportPeriod` 換算為 `startDate/endDate` 一併帶入；未帶則分類帳顯示全部。
+
+### 分錄 ➔ 傳票詳情（VoucherDetailModal）
+
+分類帳每筆分錄列可點擊，開啟 `VoucherDetailModal`（以 HeadlessUI `Dialog`／`DialogPanel` 包成置中彈出視窗、含背景遮罩與 Esc/點擊背景關閉）供會計師就地查核傳票；編輯儲存後（`onUpdate`）自動重抓分類帳以反映餘額變動。`VoucherDetailModal` 以 `next/dynamic`（`ssr: false`）延後載入，避免拖慢分類帳首屏。
+
+### 實作狀態（已完成）
+
+1. `TrialBalanceView`：科目代碼/名稱為 `next/link`，依 `item.subAccounts.length` 分流 `rootCode`（統馭）/`code`（末階）。
+2. `LedgerView`：`useSearchParams` 讀 `code`/`rootCode`/`labelType`/`accountType`，帶入查詢與匯出 `extraParams`；分錄列點擊開啟 `VoucherDetailModal`。
+3. 後端：`ILedgerOptions`／`LedgerQuerySchema`／`generateLedger` 及三支 route（列表／匯出／計數）支援 `rootCode`（`AccountUtil.isDescendantOf` 子樹過濾，於產出列後）。
+4. i18n：科目連結 `title`（「檢視 {code} 的分類帳」）與分錄列 `view_detail`（「點擊查看傳票明細」）5 語系。
+
+### 注意事項
+
+- **子樹 vs 前綴**：`rootCode` 以樹狀子孫關係判定，不受代碼前綴雜訊影響（COA 中存在 type 與 code 開頭不一致的節點）。
+- **統馭科目**：務必帶 `labelType=general`，以總帳上捲呈現子樹彙總。
+- **餘額決定論**：`rootCode` 於產出列後過濾，各科目 running balance 仍以全量、標準順序 (科目→日期→傳票) 累計，過濾不影響餘額正確性。
+
+### 驗收
+
+- 試算表點「7000 營業外收入及支出」→ 分類帳列出 7000 子樹全部明細（非查無）；點末階科目 → 逐筆。
+- 分類帳點任一分錄 → 彈出該傳票詳情；編輯儲存後餘額即更新。
+- 離線 harness 驗證 `generateLedger` 之 `rootCode` 子樹過濾（含 7000／更細 7010 子樹、排除無關科目）6/6 通過。
+- 深層連結可直接分享（重整後篩選仍在）。
+
+---
+
+## 12. Phase 6：前端 UI 施行計劃（分類帳）
 
 ### 12.1 決策與方針
 
@@ -188,18 +264,27 @@ GET .../account_book/:id/{trial_balance|ledger}
 - **前提條件**（避免語意錯位）：
   1. 頁面標題/副標**隨 active tab 動態切換**（現為靜態「智能傳票管理」）。
   2. 每個 tab 各自 render **獨立唯讀 view 元件**；報表邏輯不滲入傳票 CRUD 元件。
-  3. 匯出按鈕**依 tab 切換行為**（傳票走既有 `ExportSettingsModal`；報表 tab 直接下載對應 `/export` CSV）。
+  3. 匯出按鈕**統一走擴充後的 `ExportSettingsModal`**：於 `ExportType` 新增 `LEDGER`（後續 `TRIAL_BALANCE`），把現有 `type === VOUCHER ? … : …` 三元式重構為 **type→設定（端點/檔名/欄位/i18n）對照表**；報表型別隱藏「包含未核對」選項（報表本就全納入）。
+
+### 12.1a 需搭配的後端小幅擴充（因 UI 調整而生）
+
+1. **分類帳關鍵字搜尋**：`LedgerQuerySchema`、`ledger/route.ts`、`ledger_generator.ts` 新增 `keyword`；於產生器**產出列後**依 `code / accountingTitle / particulars / voucherNumber` 過濾（running balance 仍以全量計算，總額取顯示列）。`getVouchersByFilter` 已支援 voucher 層 `keyword`，但為涵蓋科目名稱採產生器層過濾。
+2. **分類帳匯出筆數**：新增 `.../ledger/export/count/route.ts` 回傳 `{ count }`，供 `ExportSettingsModal` 預覽筆數；`ledger/export` 亦接受 `keyword` 使匯出與畫面一致。
+3. 移除 UI 的科目區間後，後端 `startAccountNo/endAccountNo` 仍保留為可選參數（未使用、不影響）。
 
 ### 12.2 檔案清單（新增 / 修改）
 
-| 動作 | 檔案 | 說明 |
-|---|---|---|
-| 修改 | `src/components/user/voucher/voucher_main_view.tsx` | `VoucherTab` enum 增 `LEDGER`、`TRIAL_BALANCE`；tab bar 由 2 欄改 4 欄；標題/副標/匯出行為依 active tab 切換；render 對應 view |
-| 新增 | `src/components/user/ledger/ledger_view.tsx` | 分類帳唯讀視圖：日期區間 + 科目區間 + 帳別(LabelType) + 排序(LedgerSorting) + 分頁 + CSV 下載 |
-| 新增 | `src/components/user/trial_balance/trial_balance_view.tsx` | 試算表唯讀視圖：日期區間 + 排序(TrialBalanceSorting) + 樹狀表格（子科目展開/收合）+ 分頁 + CSV 下載 |
-| 修改（或新增）| `src/i18n/locales/{en,zh_tw,zh_cn,ja,ko}/voucher.ts` | 新增 tab 標籤、各 tab 標題/副標、報表欄位表頭、篩選器、空狀態等文案（5 語系） |
-| 重用 | `src/components/common/date_range_picker.tsx` | 直接重用（props：`startDate`/`endDate`/setter） |
-| 重用 | 科目選擇（`account_management_tab` / 既有科目選單元件）| 供分類帳科目區間選擇；無合適元件則以科目代碼輸入框替代 |
+| 動作           | 檔案                                                                                                                                                  | 說明                                                                                                                                |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 修改           | `src/components/user/voucher/voucher_main_view.tsx`                                                                                                   | `VoucherTab` enum 增 `LEDGER`、`TRIAL_BALANCE`；tab bar 由 2 欄改 4 欄；標題/副標/匯出行為依 active tab 切換；render 對應 view      |
+| 新增           | `src/components/user/ledger/ledger_view.tsx`                                                                                                          | 分類帳唯讀視圖：日期區間 + 帳別(LabelType) + **關鍵字搜尋** + 排序(LedgerSorting) + `Pagination` + 匯出（開 `ExportSettingsModal`） |
+| 新增           | `src/components/user/trial_balance/trial_balance_view.tsx`                                                                                            | 試算表唯讀視圖：日期區間 + 排序(TrialBalanceSorting) + 樹狀表格（子科目展開/收合）+ `Pagination` + 匯出                             |
+| 修改           | `src/components/user/common/export_settings_modal.tsx`                                                                                                | `ExportType` 增 `LEDGER`；三元式重構為 type→設定對照表；報表型別隱藏「包含未核對」；接關鍵字                                        |
+| 修改           | `src/app/api/v1/user/account_book/[account_book_id]/ledger/{route,export/route}.ts`、`src/validators/ledger.ts`、`src/lib/report/ledger_generator.ts` | 新增 `keyword` 篩選（見 §12.1a）                                                                                                    |
+| 新增           | `src/app/api/v1/user/account_book/[account_book_id]/ledger/export/count/route.ts`                                                                     | 回傳 `{ count }` 供匯出筆數預覽                                                                                                     |
+| 修改（或新增） | `src/i18n/locales/{en,zh_tw,zh_cn,ja,ko}/voucher.ts`                                                                                                  | 新增 tab 標籤、各 tab 標題/副標、報表欄位表頭、篩選器、空狀態等文案（5 語系）                                                       |
+| 重用           | `src/components/common/date_range_picker.tsx`                                                                                                         | 直接重用（props：`startDate`/`endDate`/setter）                                                                                     |
+| 重用           | `src/components/common/pagination.tsx`                                                                                                                | props：`{ currentPage, totalPages, onPageChange }`                                                                                  |
 
 > 型別直接 import 後端已交付之 `ITrialBalance`/`ITrialBalanceItem`、`ILedger`/`ILedgerItem`（`@/interfaces/*`）作為 API 回應型別，前後端契約一致。
 
@@ -207,13 +292,13 @@ GET .../account_book/:id/{trial_balance|ledger}
 
 - 沿用 `voucher_table_section.tsx` 相同慣例：`fetch("/api/v1/user/account_book/{id}/{ledger|trial_balance}?...")` → 解析 `IApiResponse`。
 - 金額為 Decimal 字串，**顯示時**以 `MoneyUtil.format`/`formatDynamic` 加千分位（渲染層才轉換，符合精度規範）。
-- 分頁沿用後端回傳的 `page/pageSize/totalCount/totalPages`；`note.total`、`note.currencyAlias` 顯示於合計列/頁尾。
-- 篩選狀態（日期、科目區間、帳別、排序、頁碼）以 `useState` 管理，變更即重新請求（比照表格區既有模式）。
+- 分頁使用共用 `Pagination` 元件（`currentPage/totalPages/onPageChange`），資料取自後端 `page/pageSize/totalCount/totalPages`；`note.total`、`note.currencyAlias` 顯示於合計列/頁尾。
+- 篩選狀態（日期、帳別、關鍵字、排序、頁碼）以 `useState` 管理，變更即重新請求（關鍵字建議 debounce，比照 `voucher_table_section` 的 `debouncedKeyWord`）。
 
 ### 12.4 各 tab 視圖重點
 
 - **試算表 tab**：日期區間（分界/截止）；表格六欄（期初/期中/期末 × 借/貸）+ 科目編號/名稱；子科目以樹狀縮排、可展開收合（對應 `subAccounts`）；末列顯示合計並標示借貸平衡；CSV 下載鈕呼叫 `.../trial_balance/export`。
-- **分類帳 tab**：日期區間（必填）；科目區間選擇；帳別切換（全部/總帳/明細）；排序（科目/日期）；逐筆列出 傳票編號/日期/摘要/借/貸/餘額；頁尾借貸總額；CSV 下載呼叫 `.../ledger/export`。
+- **分類帳 tab**：日期區間（必填）；帳別切換（全部/總帳/明細）；**關鍵字搜尋**（科目編號/名稱、摘要、傳票編號，debounce）；排序（科目/日期）；依科目分組逐筆列出 傳票編號/日期/類型/摘要/借/貸/餘額；`Pagination`；頁尾借貸總額；匯出經 `ExportSettingsModal`。（**不含**科目區間）
 
 ### 12.5 驗收
 
@@ -228,14 +313,47 @@ GET .../account_book/:id/{trial_balance|ledger}
 - **試算表金額用語（M4，已定案）**：沿用舊版「期初/期中/期末 借方/貸方餘額」字樣，前端表頭與後端一致，無需再議。
 - **分類帳 GENERAL（C2，已定案並實作）**：GENERAL 已採「上捲彙總」，前端「總帳」tab 可直接顯示彙總後之總帳科目，三個帳別（全部/總帳/明細）皆可開放。
 
+### 12.8 分類帳 tab 完成紀錄（2026-07-24）
+
+**後端小擴充（已實作）**
+
+- 分類帳 `keyword`：`ILedgerOptions`/`LedgerQuerySchema`/`ledger route`/`ledger/export`/新 `ledger/export/count` 皆接 `keyword`；`ledger_generator` 於產出列後依 `code/accountingTitle/particulars/voucherNumber` 過濾，running balance 仍全量計算、總額取顯示列。單元測試 + 離線 harness 全 PASS。
+- 新增 `.../ledger/export/count/route.ts` 回傳 `{ count }`。
+
+**ExportSettingsModal 擴充（已實作）**
+
+- `ExportCsvType` 增 `LEDGER`；三元式重構為 `EXPORT_CONFIG` 對照表（端點/檔名/i18n/showUnverified）；新增 `initialStartDate`/`initialEndDate`/`extraParams` props；報表型別隱藏「包含未核對」。5 語系 common 新增 `title_ledger`/`desc_ledger`/`stat_title_ledger`/`unit_ledger`/`failed_ledger`。
+
+**前端（已實作）**
+
+- `src/components/user/ledger/ledger_view.tsx`：日期區間 + 帳別(全部/總帳/明細) + 關鍵字(debounce) + 排序；依科目分組表格；`Pagination`；借貸總額卡；匯出經 `ExportSettingsModal`（type=LEDGER，帶入日期與 extraParams）。金額 `MoneyUtil.format`（渲染層）。
+- `voucher_main_view.tsx`：`VoucherTab` 增 `LEDGER`、tab bar 改 3 欄、報表 tab 隱藏傳票 header（分類帳自帶標題/匯出）。
+- i18n 5 語系新增 `voucher.tab.ledger`、`voucher.main_view.title_ledger/subtitle_ledger`、`voucher.ledger.*`。
+
+**驗證**：新增/修改檔 ESLint 零警告、`tsc --noEmit` 於本功能檔零錯誤（專案既有他處錯誤與本功能無關）。因離線無法跑 Next dev/Jest，未做瀏覽器實測，建議於開發環境做一次 UI 驗收。
+
+**UI 整併與樣式（2026-07-27）**
+
+- 匯出改為**單一共用 `ExportSettingsModal`**（置於 `VoucherMainView`）：依 active tab 決定 `type`（VOUCHER/LEDGER）與帶入條件；`LedgerView` 透過 `onExportParamsChange` 上報目前篩選（日期/keyword/labelType/sorting），並移除自身 header/匯出鈕/Modal（header 已整併至 `VoucherMainView`，標題/副標/匯出文字隨 tab 動態切換）。
+- `LedgerView` 表格樣式比照 `VoucherTableSection`：白底 toolbar、`bg-slate-100` 大寫表頭、科目代碼 pill、交易類型徽章、金額右對齊且 0 顯示「−」、科目群組標題、合計列、`numberWithCommas`。
+
+**行為調整（2026-07-27）**
+
+- 分類帳日期改為**可選**：未選日期時比照傳票管理**顯示全部**（validator `startDate/endDate` optional；list/export/count route 未帶日期即不加 `tradingDate` 條件；`ledger_view` 移除日期必填 gate 與「請選日期」空狀態、匯出鈕不再 disabled）。
+- 全功能檔註解時間戳統一為 `20260727`。
+
+**待辦**：試算表 tab（`trial_balance_view.tsx` + `ExportType.TRIAL_BALANCE` + `?tab=trial_balance`）。
+
 ### 12.7 期程估算
 
-| 項目 | 估時 |
-|---|---|
-| voucher_main_view tab 擴充 + 標題動態化 | 0.5 天 |
-| 試算表 view（含樹狀表格） | 2–3 天 |
-| 分類帳 view（含科目區間/帳別） | 2–3 天 |
-| i18n 5 語系 + RWD + 驗收 | 1–1.5 天 |
-| **前端合計** | **約 5.5–8 天** |
+| 項目                                               | 估時          |
+| -------------------------------------------------- | ------------- |
+| 後端小幅擴充（分類帳 keyword + export/count）      | 0.5 天        |
+| `ExportSettingsModal` 擴充（type 對照表 + LEDGER） | 0.5 天        |
+| voucher_main_view tab 擴充 + 標題動態化            | 0.5 天        |
+| 試算表 view（含樹狀表格）                          | 2–3 天        |
+| 分類帳 view（帳別/關鍵字/分頁/匯出）               | 2–3 天        |
+| i18n 5 語系 + RWD + 驗收                           | 1–1.5 天      |
+| **前端合計**                                       | **約 7–9 天** |
 
 > 依賴：建議先解決 §8 之 C2（總帳語意）與 M4（金額字樣），以免前端返工。

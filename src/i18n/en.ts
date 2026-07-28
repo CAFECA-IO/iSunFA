@@ -46,6 +46,7 @@ import { esgReport } from "@/i18n/locales/en/esg_report";
 import { reportView } from "@/i18n/locales/en/report_view";
 import { cashFlowStatementView } from "@/i18n/locales/en/cash_flow_statement_view";
 import { balanceSheetView } from "@/i18n/locales/en/balance_sheet_view";
+import { trialBalanceView } from "@/i18n/locales/en/trial_balance_view";
 import { incomeStatementView } from "@/i18n/locales/en/income_statement_view";
 import { adminSetup } from "@/i18n/locales/en/admin_setup";
 import { adminMember } from "@/i18n/locales/en/admin_member";
@@ -120,6 +121,7 @@ export const en = {
   report_view: reportView,
   cash_flow_statement_view: cashFlowStatementView,
   balance_sheet_view: balanceSheetView,
+  trial_balance_view: trialBalanceView,
   income_statement_view: incomeStatementView,
   admin_setup: adminSetup,
   admin_member: adminMember,

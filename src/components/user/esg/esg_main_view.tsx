@@ -15,10 +15,9 @@ import EmissionSourcesTab from "@/components/user/esg/emission_sources_tab";
 import EsgSummary from "@/components/user/esg/esg_summary";
 import EsgTableSection from "@/components/user/esg/esg_table_section";
 import EsgTargetModal from "@/components/user/esg/esg_target_modal";
-import ExportSettingsModal, {
-  ExportType,
-} from "@/components/user/common/export_settings_modal";
+import ExportSettingsModal from "@/components/user/common/export_settings_modal";
 import { IApiResponse } from "@/lib/utils/response";
+import { ExportCsvType } from "@/constants/enums";
 
 enum EsgTab {
   RECORDS = "records",
@@ -237,7 +236,7 @@ export default function EsgMainView() {
           isOpen={isExportModalOpen}
           onClose={() => setIsExportModalOpen(false)}
           accountBookId={accountBookId}
-          type={ExportType.ESG}
+          type={ExportCsvType.ESG}
         />
       )}
     </div>

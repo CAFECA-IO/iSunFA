@@ -22,10 +22,61 @@ export const voucher = {
   tab: {
     vouchers: "傳票管理",
     accounts: "會計科目管理",
+    ledger: "分類帳",
+  },
+  ledger: {
+    export: "匯出 CSV",
+    filters: {
+      date: "日期區間",
+      label: "帳別",
+      keyword: "關鍵字",
+      keyword_placeholder: "科目、摘要或傳票編號",
+      sort: "排序",
+      balance: "餘額金額",
+      balance_placeholder: "金額",
+    },
+    label_type: {
+      all: "全部",
+      general: "總帳",
+      detailed: "明細",
+    },
+    sort: {
+      code_asc: "科目編號 ↑",
+      code_desc: "科目編號 ↓",
+      date_asc: "日期 ↑",
+      date_desc: "日期 ↓",
+      balance_asc: "餘額 ↑",
+      balance_desc: "餘額 ↓",
+    },
+    balance_op: {
+      gte: "以上",
+      lte: "以下",
+      eq: "相等",
+    },
+    summary: {
+      currency: "幣別",
+      total_debit: "借方總額",
+      total_credit: "貸方總額",
+    },
+    headers: {
+      voucher_no: "傳票編號",
+      date: "日期",
+      type: "類型",
+      particulars: "摘要",
+      debit: "借方",
+      credit: "貸方",
+      balance: "餘額",
+    },
+    view_detail: "點擊查看傳票明細",
+    empty: {
+      no_data: "查無分錄",
+    },
   },
   main_view: {
     title: "智能傳票管理",
     subtitle: "AI 已根據您的憑證辨識結果自動產生對應的會計分錄。",
+    title_ledger: "智能帳務管理",
+    subtitle_ledger: "檢視各科目的分類帳明細與餘額。",
     actions: {
       export: "匯出傳票",
       add: "新增傳票",

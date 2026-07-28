@@ -9,10 +9,13 @@ import BalanceSheetView from "@/components/user/financial_report/balance_sheet_v
 import CashFlowSheetView from "@/components/user/financial_report/cash_flow_statement_view";
 import IncomeStatementView from "@/components/user/financial_report/income_statement_view";
 import EsgReportView from "@/components/user/financial_report/esg_report_view";
+import TrialBalanceView from "@/components/user/financial_report/trial_balance_view";
 import { numberWithCommas } from "@/lib/utils/common";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { downloadHtmlAsPdf } from "@/lib/utils/pdf";
+import { buildTrialBalanceCsv } from "@/lib/report/trial_balance_csv";
+import { ITrialBalance } from "@/interfaces/trial_balance";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
 import { useTranslation } from "@/i18n/i18n_context";
 
@@ -42,6 +45,9 @@ export default function ReportView() {
   const [unverifiedItems, setUnverifiedItems] = useState<
     { id: string; note: string; type: string }[]
   >([]);
+  // Info: (20260727 - Julian) 試算表資料（由 TrialBalanceView 上報），供匯出 CSV 使用
+  const [trialBalanceData, setTrialBalanceData] =
+    useState<ITrialBalance | null>(null);
 
   // Info: (20260401 - Julian) 從 API 取得「帳簿名稱」
   useEffect(() => {
@@ -81,6 +87,8 @@ export default function ReportView() {
         return t("report_view.types.income_statement");
       case ReportType.ESG_REPORT:
         return t("report_view.types.esg_report");
+      case ReportType.TRIAL_BALANCE:
+        return t("report_view.types.trial_balance");
       default:
         return "";
     }
@@ -146,6 +154,24 @@ export default function ReportView() {
       // Info: (20260331 - Julian) 顯示錯誤訊息
       console.error("Error generating PDF:", error);
     }
+  };
+
+  // Info: (20260727 - Julian) 試算表匯出 CSV
+  const isTrialBalance = generatedConfig?.type === ReportType.TRIAL_BALANCE;
+
+  const handleExportCsv = () => {
+    if (!trialBalanceData) return;
+    const csv = "\uFEFF" + buildTrialBalanceCsv(trialBalanceData);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    link.href = url;
+    link.download = `trial_balance_${dateStr}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   // Info: (20260330 - Julian) 產出報表
@@ -279,6 +305,15 @@ export default function ReportView() {
             onUnverifiedItemsChange={setUnverifiedItems}
           />
         );
+      case ReportType.TRIAL_BALANCE:
+        return (
+          <TrialBalanceView
+            period={generatedConfig.period}
+            year={generatedConfig.year}
+            onUnverifiedItemsChange={setUnverifiedItems}
+            onDataLoaded={setTrialBalanceData}
+          />
+        );
       default:
         return null;
     }
@@ -312,11 +347,15 @@ export default function ReportView() {
         className="ml-auto flex items-center gap-2 print:hidden"
       >
         <button
+          id="download-report-btn"
           type="button"
-          onClick={handleDownload}
-          className="rounded-xl border border-gray-200 bg-white p-3 text-gray-500 transition-colors outline-none hover:bg-gray-50 hover:text-gray-800 active:bg-gray-100"
+          onClick={isTrialBalance ? handleExportCsv : handleDownload}
+          className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-bold text-gray-600 transition-colors outline-none hover:bg-gray-50 hover:text-gray-800 active:bg-gray-100"
         >
           <Download size={20} />
+          {isTrialBalance
+            ? t("report_view.export_csv")
+            : t("report_view.export_pdf")}
         </button>
       </div>
 

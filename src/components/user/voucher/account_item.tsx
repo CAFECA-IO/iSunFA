@@ -172,13 +172,13 @@ const SubAccountItem = ({
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
-      className={`group relative flex cursor-pointer items-center gap-1 rounded-xl border bg-white px-4 py-3 text-left shadow-sm transition-all outline-none focus-visible:ring-2 focus-visible:ring-orange-500 md:px-6 lg:gap-3 ${
+      className={`group relative flex cursor-pointer items-center gap-1 overflow-hidden rounded-xl border bg-white px-4 py-3 text-left shadow-sm transition-all outline-none focus-visible:ring-2 focus-visible:ring-orange-500 md:px-6 lg:gap-3 ${
         isCustom ? "border-dashed border-orange-300" : "border-slate-100"
       }`}
       style={{ marginLeft: `${offset}px` }}
     >
       {isCustom && (
-        <span className="rounded-md bg-orange-100 px-2 py-0.5 text-sm font-bold text-orange-500 uppercase">
+        <span className="rounded-md bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orange-500 uppercase lg:text-sm">
           {t("voucher.account.custom")}
         </span>
       )}
@@ -198,7 +198,7 @@ const SubAccountItem = ({
 
       {/* Info: (20260706 - Julian) 自訂科目的裝飾條 */}
       {isCustom && (
-        <div className="absolute top-0 bottom-0 -left-1 w-2 rounded-l-xl bg-orange-400" />
+        <div className="absolute top-0 bottom-0 -left-1 w-3 rounded-l-xl bg-orange-400" />
       )}
 
       <div className="flex flex-1 items-center justify-between gap-2 lg:overflow-hidden">
