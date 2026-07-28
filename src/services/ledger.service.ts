@@ -1,4 +1,3 @@
-import { IAccount } from "@/constants/accounts";
 import { ILedger, ILedgerPageResult } from "@/interfaces/ledger";
 import { ILedgerQuery } from "@/validators/ledger";
 import { voucherRepo } from "@/repositories/voucher.repo";
@@ -26,9 +25,9 @@ async function buildLedger(
     endDate: query.endDate ? new Date(query.endDate) : undefined,
   });
 
-  const dictionary = (await accountingAccountService.getAccountingAccounts(
+  const dictionary = await accountingAccountService.getAccountingAccounts(
     accountBook.id,
-  )) as IAccount[];
+  );
 
   return generateLedger(vouchers, dictionary, {
     startAccountNo: query.startAccountNo,

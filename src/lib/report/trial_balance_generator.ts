@@ -10,6 +10,7 @@ import { MoneyUtil } from "@/lib/utils/money";
 import { AccountUtil } from "@/lib/utils/account_util";
 import { TrialBalanceSorting } from "@/constants/sort";
 import { AccountType, toAccountType } from "@/constants/enums";
+import { DataIntegrityError } from "@/lib/report/report_errors";
 
 /**
  * Info: (20260724 - Julian)
@@ -151,7 +152,7 @@ export function generateTrialBalance(
 
       // Info: (20260724 - Julian) [AUDIT FIX] 缺乏會計代碼或借貸方向者一律阻斷，禁止沉默丟失
       if (!code || line.isDebit === null) {
-        throw new Error(
+        throw new DataIntegrityError(
           `[Data Integrity Violation] 試算表發現無法勾稽的傳票明細，缺乏會計代碼或借貸方向 (Line ID: ${line.id})`,
         );
       }

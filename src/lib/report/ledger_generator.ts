@@ -7,6 +7,7 @@ import { AccountUtil } from "@/lib/utils/account_util";
 import { LabelType, BalanceComparator } from "@/constants/ledger";
 import { LedgerSorting } from "@/constants/sort";
 import { AccountType, toAccountType } from "@/constants/enums";
+import { DataIntegrityError } from "@/lib/report/report_errors";
 
 /**
  * Info: (20260727 - Julian)
@@ -173,7 +174,7 @@ export function generateLedger(
 
       // Info: (20260727 - Julian) [AUDIT FIX] 缺乏會計代碼或借貸方向者一律阻斷，禁止沉默丟失
       if (!code || line.isDebit === null) {
-        throw new Error(
+        throw new DataIntegrityError(
           `[Data Integrity Violation] 分類帳發現無法勾稽的傳票明細，缺乏會計代碼或借貸方向 (Line ID: ${line.id})`,
         );
       }

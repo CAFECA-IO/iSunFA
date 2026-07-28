@@ -8,6 +8,7 @@ import { Decimal } from "decimal.js";
 import { TW_ACCOUNTS } from "@/constants/accounts/tw";
 import { AccountUtil } from "@/lib/utils/account_util";
 import { SystemAccountNodes } from "@/constants/system_account_codes";
+import { DataIntegrityError } from "@/lib/report/report_errors";
 
 export function generateIncomeStatement(
   lineItems: IVoucherLineUI[],
@@ -28,7 +29,7 @@ export function generateIncomeStatement(
 
     // Info: (20260518 - Tzuhan) [AUDIT FIX] 拔除沉默丟失，改為 CPA 級別阻斷防護
     if (!code || line.isDebit === null) {
-      throw new Error(
+      throw new DataIntegrityError(
         `[Data Integrity Violation] 發現無法勾稽的傳票明細，缺乏會計代碼或借貸方向 (Line ID: ${line.id})`,
       );
     }
@@ -154,7 +155,7 @@ export function generateIncomeStatement(
        * 攔截 9 (其他綜合損益) 或任何未知 4~9 科目
        * 杜絕靜默遺失導致與資產負債表 (BS) 結轉的本期損益無法勾稽
        */
-      throw new Error(
+      throw new DataIntegrityError(
         `[Data Integrity Violation] 損益表遇到無法歸類的代碼，可能是尚未支援的其他綜合損益科目 (Code: ${code}, Line ID: ${line.id})`,
       );
     }

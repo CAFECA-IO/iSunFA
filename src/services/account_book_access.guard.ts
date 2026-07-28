@@ -1,6 +1,7 @@
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { teamRepo } from "@/repositories/team.repo";
 import { API_ERRORS, IErrorDef } from "@/lib/utils/error_dictionary";
+import { DataIntegrityError } from "@/lib/report/report_errors";
 
 // Info: (20260728 - Julian) Service 層以具名 Error message 表示可映射之網域錯誤（取代散落 route 的哨兵字串）
 export const SERVICE_ERROR = {
@@ -45,10 +46,10 @@ export function mapServiceError(error: unknown): IErrorDef {
     if (error.message === SERVICE_ERROR.AUTH_PERMISSION_DENIED) {
       return API_ERRORS.AUTH_PERMISSION_DENIED;
     }
-    // Info: (20260728 - Julian) 資料整合性違規（generator 決定論護欄）不應偽裝為 DB 失敗
-    if (/Data Integrity/.test(error.message)) {
-      return API_ERRORS.VA_INVALID_INPUT_DATA;
-    }
+  }
+  // Info: (20260728 - Julian) 資料整合性違規（generator 決定論護欄）以具名類別判定，不偽裝為 DB 失敗
+  if (error instanceof DataIntegrityError) {
+    return API_ERRORS.VA_INVALID_INPUT_DATA;
   }
   return API_ERRORS.IS_DB_FAILED;
 }

@@ -1,4 +1,3 @@
-import { IAccount } from "@/constants/accounts";
 import { IReportResult } from "@/interfaces/report";
 import { IReportQuery } from "@/validators/report";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
@@ -14,6 +13,9 @@ import { generateTrialBalance } from "@/lib/report/trial_balance_generator";
 import { ExportCsvType } from "@/constants/enums";
 
 const DEFAULT_AI_NOTE = "Unknown";
+
+// Info: (20260728 - Julian) 現金流量表期初現金餘額；目前固定為 0，待 Roadmap V2 Sprint 2 支援期初餘額後改為實際值
+const OPENING_CASH_BALANCE = 0;
 
 export const reportService = {
   /**
@@ -93,6 +95,9 @@ export const reportService = {
       };
     }
 
+    // Info: (20260728 - Julian) 期間僅計算一次，避免重複 new Date
+    const range = getTradingDateRange();
+
     // Info: (20260728 - Julian) 資產負債表與試算表自開帳起算（含期初），故不限制 gte 起始日；損益表與現金流量表計當期發生額，需限制 gte
     const vouchers = await voucherRepo.getVouchersByFilter({
       accountBookId: accountBook.id,
@@ -100,18 +105,16 @@ export const reportService = {
       startDate:
         reportType !== ReportType.BALANCE_SHEET &&
         reportType !== ReportType.TRIAL_BALANCE
-          ? getTradingDateRange().start
+          ? range.start
           : undefined,
-      endDate: getTradingDateRange().end,
+      endDate: range.end,
     });
     const lineItems = vouchers.map((voucher) => voucher.lineItems.lines).flat();
 
     // Info: (20260728 - Julian) 試算表需完整 COA 字典（標準 + 自訂）供樹狀上捲
     const coaDictionary =
       reportType === ReportType.TRIAL_BALANCE
-        ? ((await accountingAccountService.getAccountingAccounts(
-            accountBook.id,
-          )) as IAccount[])
+        ? await accountingAccountService.getAccountingAccounts(accountBook.id)
         : [];
 
     const unverifiedItems = vouchers
@@ -138,7 +141,7 @@ export const reportService = {
         return {
           ...base,
           reportType,
-          report: generateCashFlowStatement(lineItems, 0),
+          report: generateCashFlowStatement(lineItems, OPENING_CASH_BALANCE),
         };
       case ReportType.INCOME_STATEMENT:
         return {
@@ -151,8 +154,8 @@ export const reportService = {
           ...base,
           reportType,
           report: generateTrialBalance(vouchers, coaDictionary, {
-            startDate: getTradingDateRange().start,
-            endDate: getTradingDateRange().end,
+            startDate: range.start,
+            endDate: range.end,
             currencyAlias: accountBook.currency,
             sorting,
           }),
