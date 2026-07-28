@@ -84,9 +84,13 @@ export class IssueRecorderService {
           }
 
           // Info: (20260506 - Luphia) Read mission.json to get the exact orderId
+          // Info: (20260728 - Tzuhan) 優先序:analysis.orderId → context.json 的 orderId(發單時寫入,唯一可靠關聯)
+          // Info: (20260728 - Tzuhan) → mission.json(舊資料)→ mission contains 反查(最後手段,可能誤配重複 taskId 的舊單)
           let orderId = "";
           if (analysis) {
             orderId = analysis.orderId;
+          } else if (typeof localContextObj.orderId === "string") {
+            orderId = localContextObj.orderId;
           } else {
             try {
               const missionContent = await fs.readFile(
@@ -113,11 +117,21 @@ export class IssueRecorderService {
             });
           } else {
             // Info: (20260506 - Luphia) Fallback for older missions
-            order = await orderRepo.findFirst({
+            // Info: (20260728 - Tzuhan) 防呆:taskId 為鏈上流水號,本地鏈重置後會重複 —
+            // Info: (20260728 - Tzuhan) 多筆匹配時取最新建立者並警告(舊行為 findFirst 無排序,曾誤配舊單)
+            const candidates = await orderRepo.findMany({
               where: {
                 mission: { contains: `"${taskId}"` },
               },
+              orderBy: { createdAt: "desc" },
+              take: 2,
             });
+            if (candidates.length > 1) {
+              console.warn(
+                `[MissionRecorder] ⚠️ Task ID ${taskId} matches multiple orders (stale chain reset?); using the newest.`,
+              );
+            }
+            order = candidates[0] ?? null;
           }
 
           if (!order) {
