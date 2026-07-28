@@ -447,6 +447,19 @@ export function PlanSection({
                           })}{" "}
                           {seg.distUnit || "KM"}
                         </span>
+                        {/* Info: (20260728 - Tzuhan) issue 07:直線 fallback 估算值必須誠實標示(UI 與 PDF 匯出同步生效),嚴禁以確定值姿態呈現 */}
+                        {seg.isFallback && (
+                          <span
+                            title={t(
+                              "transportation_carbon_footprint_calculator.plan_section.fallback_estimate_hint",
+                            )}
+                            className="ml-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-600 ring-1 ring-amber-200"
+                          >
+                            {t(
+                              "transportation_carbon_footprint_calculator.plan_section.fallback_estimate_badge",
+                            )}
+                          </span>
+                        )}
                       </div>
                       <div className="mt-1 text-sm font-medium text-gray-500">
                         {t(

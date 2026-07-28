@@ -93,6 +93,9 @@ export const transportationCarbonFootprintCalculator = {
     est_mileage: "推定走行距離:",
     emission_coefficient: "排出係数:",
     carbon_emissions: "炭素排出量",
+    fallback_estimate_badge: "概算値",
+    fallback_estimate_hint:
+      "道路ネットワークデータが未整備の地域のため、直線距離×1.2で概算",
   },
   mileage_calculator: {
     title_paste: "テキストを貼り付けてAI解析",
