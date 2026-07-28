@@ -134,7 +134,7 @@ export function BatchExportRenderer({
             <PlanSection
               type={type as RouteType}
               plan={plan}
-              weightKg={1000}
+              weightKg={item.weightKg ?? 1000}
               isExporting={true}
             />
           </ReportLayout>
