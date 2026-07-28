@@ -16,8 +16,6 @@ interface IChartEditorControlShellProps {
   headerTitle: string;
   headerSubtitle: string;
   mockBadge?: string; // Info: (20260721 - Julian) 提供則於標題後顯示 Mock 徽章
-  // Info: (20260721 - Julian) 是否有常用工具；false 時不顯示分頁，左側只呈現 AI 指令
-  hasTools: boolean;
   // Info: (20260721 - Julian) 分頁標籤
   tabToolsLabel: string;
   tabAiLabel: string;
@@ -50,7 +48,6 @@ const ChartEditorControlShell: FC<IChartEditorControlShellProps> = ({
   headerTitle,
   headerSubtitle,
   mockBadge = "",
-  hasTools,
   tabToolsLabel,
   tabAiLabel,
   titleSlot = null,
@@ -146,16 +143,6 @@ const ChartEditorControlShell: FC<IChartEditorControlShellProps> = ({
       </div>
     </div>
   );
-
-  // Info: (20260721 - Julian) 無常用工具：去掉分頁，只顯示 AI 指令
-  if (!hasTools) {
-    return (
-      <div className="flex w-full flex-col overflow-y-auto border-r border-slate-200 bg-slate-50 md:w-2/5">
-        {header}
-        <div className="flex-1 overflow-y-auto p-5">{aiSection}</div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex w-full flex-col overflow-y-auto border-r border-slate-200 bg-slate-50 md:w-2/5">
