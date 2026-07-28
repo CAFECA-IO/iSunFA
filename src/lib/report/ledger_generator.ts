@@ -20,7 +20,8 @@ import { AccountType, toAccountType } from "@/constants/enums";
  *    - ALL：不過濾、不上捲，依原過帳科目呈現。
  * 3. 未核對 (isVerified=false) 之懸記分錄一併納入（見 03_suspense_and_quarantine_guardrails.md）。
  * 4. 唯讀 Consumer：不寫 DB、不重算沖銷/匯率/稅務（SoD，ADR 009）。
- * 5. running balance 於固定的 (科目→日期) 標準順序累計，確保餘額決定論；顯示排序另行套用。
+ * 5. running balance 於固定的 (科目→日期→傳票) 標準順序累計，確保餘額決定論；顯示排序另行套用。
+ * 6. running balance 依科目正常餘額方向呈現（借方科目借加貸減、貸方科目貸加借減），使負債/權益/收入亦顯示為正值（比照傳統明細分類帳）。
  */
 
 interface IRawEntry {
@@ -34,6 +35,8 @@ interface IRawEntry {
   particulars: string;
   debit: Decimal;
   credit: Decimal;
+  // Info: (20260728 - Julian) 科目正常餘額方向：true=借方科目(資產/費用)、false=貸方科目(負債/權益/收入)；不在字典時預設借方
+  accountIsDebit: boolean;
 }
 
 // Info: (20260727 - Julian) 建立「具子科目之科目代碼」集合：凡被其他科目指為 parentCode 者即非葉節點
@@ -91,24 +94,30 @@ function buildComparator(
   sorting: LedgerSorting,
   balanceOf: (item: ILedgerItem) => Decimal,
 ): (a: ILedgerItem, b: ILedgerItem) => number {
-  const byCodeThenDateAsc = (a: ILedgerItem, b: ILedgerItem) =>
-    a.code.localeCompare(b.code) || a.voucherDate - b.voucherDate;
+  // Info: (20260728 - Julian) 末順位一律以 voucherId 打破平手，確保任何排序下行順序完全決定論（避免滾動餘額因排序跳動而視覺錯亂）
+  const tie = (a: ILedgerItem, b: ILedgerItem) =>
+    a.voucherId.localeCompare(b.voucherId);
 
   switch (sorting) {
     case LedgerSorting.CODE_DESC:
       return (a, b) =>
-        b.code.localeCompare(a.code) || a.voucherDate - b.voucherDate;
+        b.code.localeCompare(a.code) ||
+        a.voucherDate - b.voucherDate ||
+        tie(a, b);
     case LedgerSorting.DATE_ASC:
-      return (a, b) => a.voucherDate - b.voucherDate;
+      return (a, b) => a.voucherDate - b.voucherDate || tie(a, b);
     case LedgerSorting.DATE_DESC:
-      return (a, b) => b.voucherDate - a.voucherDate;
+      return (a, b) => b.voucherDate - a.voucherDate || tie(a, b);
     case LedgerSorting.BALANCE_ASC:
-      return (a, b) => balanceOf(a).comparedTo(balanceOf(b));
+      return (a, b) => balanceOf(a).comparedTo(balanceOf(b)) || tie(a, b);
     case LedgerSorting.BALANCE_DESC:
-      return (a, b) => balanceOf(b).comparedTo(balanceOf(a));
+      return (a, b) => balanceOf(b).comparedTo(balanceOf(a)) || tie(a, b);
     case LedgerSorting.CODE_ASC:
     default:
-      return byCodeThenDateAsc;
+      return (a, b) =>
+        a.code.localeCompare(b.code) ||
+        a.voucherDate - b.voucherDate ||
+        tie(a, b);
   }
 }
 
@@ -201,6 +210,7 @@ export function generateLedger(
         particulars: line.particular || "",
         debit: line.isDebit ? amount : new Decimal(0),
         credit: line.isDebit ? new Decimal(0) : amount,
+        accountIsDebit: displayAccount?.isDebit ?? true,
       });
     });
   });
@@ -224,8 +234,11 @@ export function generateLedger(
 
   canonical.forEach((entry) => {
     const prev = balanceByCode.get(entry.code) ?? new Decimal(0);
-    // Info: (20260727 - Julian) running balance = 前餘額 + 借方 - 貸方
-    const balance = prev.plus(entry.debit).minus(entry.credit);
+    // Info: (20260728 - Julian) running balance 依科目正常餘額方向累計：借方科目=借加貸減；貸方科目=貸加借減，使餘額為正常方向之正值
+    const delta = entry.accountIsDebit
+      ? entry.debit.minus(entry.credit)
+      : entry.credit.minus(entry.debit);
+    const balance = prev.plus(delta);
     balanceByCode.set(entry.code, balance);
 
     const item: ILedgerItem = {

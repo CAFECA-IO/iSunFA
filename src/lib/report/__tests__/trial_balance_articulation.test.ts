@@ -50,9 +50,14 @@ const dec = (v: string): Decimal => new Decimal(v || "0");
 const eq = (a: string, b: string): boolean => dec(a).equals(dec(b));
 const sum = (...xs: string[]): string =>
   xs.reduce((acc, x) => acc.plus(dec(x)), new Decimal(0)).toString();
-// Info: (20260728 - Julian) 試算表某科目「淨額」= 借方發生額 − 貸方發生額（等同分類帳 running balance）
-const net = (item: ITrialBalanceItem): string =>
-  dec(item.endingDebit).minus(dec(item.endingCredit)).toString();
+// Info: (20260728 - Julian) 試算表某科目對映分類帳之「正常餘額方向淨額」：借方科目 借−貸；貸方科目 貸−借
+const tbDirectionalBalance = (
+  item: ITrialBalanceItem,
+  isDebit: boolean,
+): string =>
+  isDebit
+    ? dec(item.endingDebit).minus(dec(item.endingCredit)).toString()
+    : dec(item.endingCredit).minus(dec(item.endingDebit)).toString();
 
 function findNode(
   items: ITrialBalanceItem[],
@@ -83,7 +88,7 @@ describe("試算表勾稽與恆等式測試 (Trial Balance Articulation)", () =>
   // ==========================================================================
   // Info: (20260728 - Julian) 需求 1a：子科目餘額加總 == 主科目彙總金額（逐層樹狀上捲）
   // ==========================================================================
-  it("需求1a：主科目 1100 彙總 == 子科目 1101 + 1103，且逐層上捲一致", () => {
+  it("主科目 1100 彙總 == 子科目 1101 + 1103，且逐層上捲一致", () => {
     const vouchers = [
       makeVoucher("R1A-1", "2026-03-01T10:00:00Z", [
         { code: "1101", amount: "3500", isDebit: true },
@@ -120,7 +125,7 @@ describe("試算表勾稽與恆等式測試 (Trial Balance Articulation)", () =>
   // ==========================================================================
   // Info: (20260728 - Julian) 需求 1b：試算表期末餘額 == 分類帳最終行結餘（跨引擎勾稽）
   // ==========================================================================
-  it("需求1b：每個葉科目的試算表期末淨額 == 分類帳最終行結餘", () => {
+  it("每個葉科目的試算表期末淨額 == 分類帳最終行結餘", () => {
     const vouchers = [
       makeVoucher("R1B-1", "2026-03-01T10:00:00Z", [
         { code: "1101", amount: "100000", isDebit: true },
@@ -147,19 +152,25 @@ describe("試算表勾稽與恆等式測試 (Trial Balance Articulation)", () =>
     for (const code of ["1101", "3110", "4111", "6210"]) {
       const tbLeaf = findNode(tb.items, code);
       const ledgerBalance = ledgerFinalBalance(ledger, code);
+      const account = TW_ACCOUNTS.find((a) => a.code === code);
       expect(tbLeaf).toBeDefined();
       expect(ledgerBalance).toBeDefined();
-      // Info: (20260728 - Julian) 試算表淨額(借−貸) 必須等於分類帳 running balance 最終值
-      expect(eq(net(tbLeaf!), ledgerBalance!)).toBe(true);
+      expect(account).toBeDefined();
+      // Info: (20260728 - Julian) 試算表依科目正常餘額方向之淨額，必須等於分類帳 running balance 最終值
+      expect(
+        eq(tbDirectionalBalance(tbLeaf!, account!.isDebit), ledgerBalance!),
+      ).toBe(true);
     }
-    // Info: (20260728 - Julian) 具體值：1101 = 100000 + 50000 − 30000 = 120000
+    // Info: (20260728 - Julian) 具體值：1101 資產 = 100000 + 50000 − 30000 = 120000（借加貸減）
     expect(eq(ledgerFinalBalance(ledger, "1101")!, "120000")).toBe(true);
+    // Info: (20260728 - Julian) 3110 權益（貸方科目）貸加借減，顯示為正值 100000
+    expect(eq(ledgerFinalBalance(ledger, "3110")!, "100000")).toBe(true);
   });
 
   // ==========================================================================
   // Info: (20260728 - Julian) 需求 2：借貸絕對平衡，差異須精準為 0
   // ==========================================================================
-  it("需求2a：多類科目複合傳票，期初/期中/期末借貸差異皆精準為 0", () => {
+  it("多類科目複合傳票，期初/期中/期末借貸差異皆精準為 0", () => {
     const vouchers = [
       makeVoucher("R2-1", "2026-02-01T10:00:00Z", [
         { code: "1101", amount: "100000", isDebit: true },
@@ -194,7 +205,7 @@ describe("試算表勾稽與恆等式測試 (Trial Balance Articulation)", () =>
     expect(eq(tb.total.endingDebit, "188000")).toBe(true);
   });
 
-  it("需求2c：極端大數與小數混合，借貸差異仍精準為 0（防浮點）", () => {
+  it("極端大數與小數混合，借貸差異仍精準為 0（防浮點）", () => {
     const vouchers = [
       makeVoucher("R2C-1", "2026-03-01T10:00:00Z", [
         { code: "1101", amount: "9007199254740990", isDebit: true },
@@ -216,7 +227,7 @@ describe("試算表勾稽與恆等式測試 (Trial Balance Articulation)", () =>
   // ==========================================================================
   // Info: (20260728 - Julian) 需求 3：動態結轉與期間切換 —— 實帳戶期初承接上期期末
   // ==========================================================================
-  it("需求3a：查 2 月起試算表時，實帳戶(資產/負債/權益)期初餘額精準承接 1 月期末", () => {
+  it("查 2 月起試算表時，實帳戶(資產/負債/權益)期初餘額精準承接 1 月期末", () => {
     const vouchers = [
       // Info: (20260728 - Julian) 1 月：資產 1101 / 權益 3110、資產 1103 / 負債 2310
       makeVoucher("R3-JAN-1", "2026-01-10T10:00:00Z", [
@@ -260,7 +271,7 @@ describe("試算表勾稽與恆等式測試 (Trial Balance Articulation)", () =>
     expect(eq(findNode(feb.items, "1101")!.beginningDebit, "1000")).toBe(true);
   });
 
-  it("需求3b：動態新增 2 月傳票後即時更新，試算表仍維持借貸平衡", () => {
+  it("動態新增 2 月傳票後即時更新，試算表仍維持借貸平衡", () => {
     const base = [
       makeVoucher("R3B-JAN", "2026-01-10T10:00:00Z", [
         { code: "1101", amount: "1000", isDebit: true },
@@ -304,5 +315,42 @@ describe("試算表勾稽與恆等式測試 (Trial Balance Articulation)", () =>
     expect(
       dec(after.total.endingDebit).minus(after.total.endingCredit).isZero(),
     ).toBe(true);
+  });
+
+  // ==========================================================================
+  // Info: (20260728 - Julian) 需求 3（延伸）：跨科目跳轉一致性 —— 分類帳筆數/加總 == 試算表該科目
+  // ==========================================================================
+  it("分類帳科目的借貸發生額加總與筆數，與試算表該科目完全對得起來", () => {
+    const vouchers = [
+      makeVoucher("R3C-1", "2026-03-01T10:00:00Z", [
+        { code: "1101", amount: "100000", isDebit: true },
+        { code: "4111", amount: "100000", isDebit: false },
+      ]),
+      makeVoucher("R3C-2", "2026-03-10T10:00:00Z", [
+        { code: "6210", amount: "30000", isDebit: true },
+        { code: "1101", amount: "30000", isDebit: false },
+      ]),
+    ];
+    const tb = generateTrialBalance(vouchers, TW_ACCOUNTS, FULL_YEAR);
+    const ledger = generateLedger(vouchers, TW_ACCOUNTS, {
+      labelType: LabelType.ALL,
+      sorting: LedgerSorting.CODE_ASC,
+      currencyAlias: "TWD",
+    });
+
+    for (const code of ["1101", "4111", "6210"]) {
+      const tbLeaf = findNode(tb.items, code)!;
+      const rows = ledger.items.filter((i) => i.code === code);
+      const sumDebit = rows
+        .reduce((acc, r) => acc.plus(dec(r.debitAmount)), new Decimal(0))
+        .toString();
+      const sumCredit = rows
+        .reduce((acc, r) => acc.plus(dec(r.creditAmount)), new Decimal(0))
+        .toString();
+      // Info: (20260728 - Julian) 分類帳借貸發生額加總 == 試算表期末借貸；不對稱即代表過濾條件有漏洞
+      expect(rows.length).toBeGreaterThan(0);
+      expect(eq(sumDebit, tbLeaf.endingDebit)).toBe(true);
+      expect(eq(sumCredit, tbLeaf.endingCredit)).toBe(true);
+    }
   });
 });
