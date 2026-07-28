@@ -90,13 +90,44 @@ const domesticItem: IMileageBatchResult = {
   } as unknown as ILogisticsPlan,
 };
 
+// Info: (20260728 - Tzuhan) issue 07:接駁陸段為直線 fallback(OSRM 圖資範圍外),距離須標示 * 估算值
+const fallbackFeederItem: IMileageBatchResult = {
+  origin: "Paris",
+  dest: "Berlin",
+  plan: {
+    exportPort: null,
+    importPort: null,
+    exportAirport: null,
+    importAirport: null,
+    comparisonData: {
+      success: true,
+      plans: {
+        landOnly: { success: false, distanceKm: 0, geometry: null },
+        sea_multimodal: {
+          land_origin_to_port: { ...leg(30, "16.93"), isFallback: true },
+          sea_port_to_port: leg(800, "41.80"),
+          land_port_to_dest: { ...leg(40, "22.58"), isFallback: true },
+          total_co2eKg: "81.31",
+        },
+        air_multimodal: {
+          land_origin_to_airport: { ...leg(25, "14.11"), isFallback: true },
+          air_airport_to_airport: leg(690, "2077.94"),
+          land_airport_to_dest: { ...leg(30, "16.93"), isFallback: true },
+          total_co2eKg: "2108.98",
+        },
+      },
+    },
+  } as unknown as ILogisticsPlan,
+};
+
 describe("buildBatchSummaryCsv", () => {
   const csv = buildBatchSummaryCsv(
-    [crossSeaItem, domesticItem],
-    [0, 1],
+    [crossSeaItem, domesticItem, fallbackFeederItem],
+    [0, 1, 2],
     new Map([
       [0, ["route_1_sea_multimodal.pdf", "route_1_air_multimodal.pdf"]],
       [1, ["route_2_land_only.pdf"]],
+      [2, ["route_3_sea_multimodal.pdf"]],
     ]),
     5000,
   );
@@ -136,6 +167,16 @@ describe("buildBatchSummaryCsv", () => {
       expect(cells[i]).toBe("N/A");
     }
     expect(cells[3]).toBe("350.00");
+  });
+
+  it("直線 fallback 距離加 * 後綴且檔頭揭露說明(issue 07)", () => {
+    expect(lines[0]).toContain("* = estimated distance");
+    const row = lines[4];
+    // Info: (20260728 - Tzuhan) 接駁陸段為 fallback → 標 *;真實海運主段不標
+    expect(row).toContain("30.00*");
+    expect(row).toContain("40.00*");
+    expect(row).toContain(",800.00,");
+    expect(row).not.toContain("800.00*");
   });
 
   it("Report Files 欄列出該路線的獨立 PDF 檔名", () => {

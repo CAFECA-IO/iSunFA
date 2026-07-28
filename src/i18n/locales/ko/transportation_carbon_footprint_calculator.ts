@@ -92,6 +92,9 @@ export const transportationCarbonFootprintCalculator = {
     est_mileage: "예상 주행 거리:",
     emission_coefficient: "배출 계수:",
     carbon_emissions: "탄소 배출량",
+    fallback_estimate_badge: "추정치",
+    fallback_estimate_hint:
+      "도로 네트워크 데이터가 없는 지역으로, 직선거리 ×1.2로 추정",
   },
   mileage_calculator: {
     title_paste: "AI 분석을 위해 텍스트 붙여넣기",

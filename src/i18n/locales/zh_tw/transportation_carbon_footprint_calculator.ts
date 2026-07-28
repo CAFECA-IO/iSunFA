@@ -87,6 +87,8 @@ export const transportationCarbonFootprintCalculator = {
     est_mileage: "預估里程:",
     emission_coefficient: "排放係數:",
     carbon_emissions: "碳排放量",
+    fallback_estimate_badge: "估算值",
+    fallback_estimate_hint: "路網圖資未涵蓋此區域,以直線距離 ×1.2 推估",
   },
   mileage_calculator: {
     title_paste: "貼上文本自動解析",

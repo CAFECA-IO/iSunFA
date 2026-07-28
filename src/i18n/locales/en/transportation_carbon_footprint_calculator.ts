@@ -96,6 +96,9 @@ export const transportationCarbonFootprintCalculator = {
     est_mileage: "Estimated Mileage:",
     emission_coefficient: "Emission Coefficient:",
     carbon_emissions: "Carbon Emissions",
+    fallback_estimate_badge: "Estimated",
+    fallback_estimate_hint:
+      "Road network data does not cover this area; estimated as straight-line distance × 1.2",
   },
   mileage_calculator: {
     title_paste: "Paste Text for AI Parsing",

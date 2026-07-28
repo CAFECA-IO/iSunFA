@@ -4,7 +4,7 @@
 // Info: (20260724 - Tzuhan) 每格皆可用公開係數重算驗證(可追溯性),不適用方案輸出 N/A 而非誤導性的 0
 
 import type { Geometry } from "geojson";
-import { ILogisticsPlan } from "@/interfaces/logistics";
+import { ILogisticsPlan, ITransportSegment } from "@/interfaces/logistics";
 import { IMileageBatchResult } from "@/components/transportation_carbon_footprint_calculator/mileage_batch_results";
 import { getRouteApplicability } from "@/lib/utils/route_applicability";
 import { MoneyUtil } from "@/lib/utils/money";
@@ -142,6 +142,10 @@ const formatLocation = (
 const formatDistance = (distanceKm?: number): string =>
   MoneyUtil.toDecimal(distanceKm || 0).toFixed(2);
 
+// Info: (20260728 - Tzuhan) issue 07:直線 fallback 估算距離以 * 後綴標示(檔頭 # 行說明),估算值不得偽裝成確定值
+const formatLegDistance = (leg?: ITransportSegment): string =>
+  `${MoneyUtil.toDecimal(leg?.distanceKm || 0).toFixed(2)}${leg?.isFallback ? "*" : ""}`;
+
 const formatCo2e = (co2eKg?: string | number): string =>
   co2eKg === undefined || co2eKg === null ? "0" : String(co2eKg);
 
@@ -163,7 +167,8 @@ export function buildBatchSummaryCsv(
   const metaLine =
     `# Formula: CO2e(kg) = distance(km) x weight(t) x factor; ` +
     `Factors (kg CO2e/t-km): LAND ${EMISSION_FACTORS.LAND}, SEA ${EMISSION_FACTORS.SEA}, AIR ${EMISSION_FACTORS.AIR}; ` +
-    `Source: UK DEFRA 2025; Weight: ${weight} kg`;
+    `Source: UK DEFRA 2025; Weight: ${weight} kg; ` +
+    `* = estimated distance (road network data unavailable; straight-line x 1.2)`;
 
   const header = [
     "Origin",
@@ -198,7 +203,7 @@ export function buildBatchSummaryCsv(
 
     const landCells = applicability.land
       ? [
-          formatDistance(plans?.landOnly?.distanceKm),
+          formatLegDistance(plans?.landOnly),
           formatCo2e(plans?.landOnly?.co2eKg),
         ]
       : [NOT_APPLICABLE, NOT_APPLICABLE];
@@ -206,11 +211,11 @@ export function buildBatchSummaryCsv(
     const seaPlan = plans?.sea_multimodal;
     const seaCells = applicability.sea
       ? [
-          formatDistance(seaPlan?.land_origin_to_port?.distanceKm),
+          formatLegDistance(seaPlan?.land_origin_to_port),
           formatCo2e(seaPlan?.land_origin_to_port?.co2eKg),
-          formatDistance(seaPlan?.sea_port_to_port?.distanceKm),
+          formatLegDistance(seaPlan?.sea_port_to_port),
           formatCo2e(seaPlan?.sea_port_to_port?.co2eKg),
-          formatDistance(seaPlan?.land_port_to_dest?.distanceKm),
+          formatLegDistance(seaPlan?.land_port_to_dest),
           formatCo2e(seaPlan?.land_port_to_dest?.co2eKg),
           formatCo2e(seaPlan?.total_co2eKg),
         ]
@@ -219,11 +224,11 @@ export function buildBatchSummaryCsv(
     const airPlan = plans?.air_multimodal;
     const airCells = applicability.air
       ? [
-          formatDistance(airPlan?.land_origin_to_airport?.distanceKm),
+          formatLegDistance(airPlan?.land_origin_to_airport),
           formatCo2e(airPlan?.land_origin_to_airport?.co2eKg),
-          formatDistance(airPlan?.air_airport_to_airport?.distanceKm),
+          formatLegDistance(airPlan?.air_airport_to_airport),
           formatCo2e(airPlan?.air_airport_to_airport?.co2eKg),
-          formatDistance(airPlan?.land_airport_to_dest?.distanceKm),
+          formatLegDistance(airPlan?.land_airport_to_dest),
           formatCo2e(airPlan?.land_airport_to_dest?.co2eKg),
           formatCo2e(airPlan?.total_co2eKg),
         ]
