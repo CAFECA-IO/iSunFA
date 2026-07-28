@@ -4,7 +4,9 @@ import { describe, it, expect } from "@jest/globals";
 import {
   buildBatchSummaryCsv,
   buildPlanFromLegacyBatchItem,
+  getHeadlineCo2e,
 } from "@/lib/utils/logistics_report";
+import { ROUTE_MODE } from "@/constants/analysis";
 import { EMISSION_FACTORS } from "@/constants/logistics";
 import { MoneyUtil } from "@/lib/utils/money";
 import { ILogisticsPlan, ITransportSegment } from "@/interfaces/logistics";
@@ -34,6 +36,7 @@ const leg = (
 const crossSeaItem: IMileageBatchResult = {
   origin: "台北市, 信義區",
   dest: "Shanghai",
+  mode: ROUTE_MODE.SEA_LAND,
   plan: {
     exportPort: null,
     importPort: null,
@@ -64,6 +67,7 @@ const crossSeaItem: IMileageBatchResult = {
 const domesticItem: IMileageBatchResult = {
   origin: "Taipei",
   dest: "Kaohsiung",
+  mode: ROUTE_MODE.LAND,
   plan: {
     exportPort: null,
     importPort: null,
@@ -94,6 +98,7 @@ const domesticItem: IMileageBatchResult = {
 const fallbackFeederItem: IMileageBatchResult = {
   origin: "Paris",
   dest: "Berlin",
+  mode: ROUTE_MODE.SEA_LAND,
   // Info: (20260728 - Tzuhan) issue 08:自帶每列重量,CSV Weight 欄應顯示 3000 而非批次參數
   weightKg: 3000,
   plan: {
@@ -231,5 +236,35 @@ describe("buildPlanFromLegacyBatchItem", () => {
     expect(
       plan.comparisonData.plans.air_multimodal.air_airport_to_airport.success,
     ).toBe(false);
+  });
+});
+
+// Info: (20260728 - Tzuhan) issue 09:批次標頭碳排徽章取值(修正聯運路線恆顯示 0)
+describe("getHeadlineCo2e", () => {
+  it("SEA_LAND 取海運方案總計而非 landOnly 的 0", () => {
+    const headline = getHeadlineCo2e(crossSeaItem);
+    expect(headline?.value).toBe("81.31");
+    expect(headline?.isEstimated).toBe(false);
+  });
+
+  it("LAND 取陸運方案", () => {
+    const headline = getHeadlineCo2e(domesticItem);
+    expect(headline?.value).toBe("197.56");
+    expect(headline?.isEstimated).toBe(false);
+  });
+
+  it("所選方案含 fallback 接駁段時標示估算", () => {
+    const headline = getHeadlineCo2e(fallbackFeederItem);
+    expect(headline?.value).toBe("81.31");
+    expect(headline?.isEstimated).toBe(true);
+  });
+
+  it("無 mode 時依適用性引擎推導(跨海 → 海運總計)", () => {
+    const headline = getHeadlineCo2e({ ...crossSeaItem, mode: undefined });
+    expect(headline?.value).toBe("81.31");
+  });
+
+  it("無 plan 回傳 null", () => {
+    expect(getHeadlineCo2e({ origin: "A", dest: "B" })).toBeNull();
   });
 });

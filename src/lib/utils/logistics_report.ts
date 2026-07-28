@@ -9,6 +9,7 @@ import { IMileageBatchResult } from "@/components/transportation_carbon_footprin
 import { getRouteApplicability } from "@/lib/utils/route_applicability";
 import { MoneyUtil } from "@/lib/utils/money";
 import { EMISSION_FACTORS } from "@/constants/logistics";
+import { ROUTE_MODE } from "@/constants/analysis";
 
 const NOT_APPLICABLE = "N/A";
 
@@ -117,6 +118,87 @@ export function buildPlanFromLegacyBatchItem(
       },
     },
   } as unknown as ILogisticsPlan;
+}
+
+/**
+ * Info: (20260728 - Tzuhan) issue 09:批次清單標頭碳排徽章的單一取值來源。
+ * 舊邏輯只讀 custom || landOnly,聯運路線的 landOnly.co2eKg 為 "0" → 徽章恆顯示 0。
+ * 優先序:custom 方案 → item.mode 對應方案總計 → 適用性引擎的第一個適用方案;
+ * isEstimated:所選方案含直線 fallback 段(徽章加 ~ 前綴,估算值不偽裝確定值)
+ */
+export interface IHeadlineCo2e {
+  value: string;
+  isEstimated: boolean;
+}
+
+export function getHeadlineCo2e(
+  item: IMileageBatchResult,
+): IHeadlineCo2e | null {
+  const plans = item.plan?.comparisonData?.plans;
+  if (!plans) return null;
+
+  const seaLegs = [
+    plans.sea_multimodal?.land_origin_to_port,
+    plans.sea_multimodal?.sea_port_to_port,
+    plans.sea_multimodal?.land_port_to_dest,
+  ];
+  const airLegs = [
+    plans.air_multimodal?.land_origin_to_airport,
+    plans.air_multimodal?.air_airport_to_airport,
+    plans.air_multimodal?.land_airport_to_dest,
+  ];
+
+  type Candidate = {
+    value?: string | number;
+    legs: (ITransportSegment | undefined)[];
+  };
+  const landCandidate: Candidate = {
+    value: plans.landOnly?.co2eKg,
+    legs: [plans.landOnly],
+  };
+  const seaCandidate: Candidate = {
+    value: plans.sea_multimodal?.total_co2eKg,
+    legs: seaLegs,
+  };
+  const airCandidate: Candidate = {
+    value: plans.air_multimodal?.total_co2eKg,
+    legs: airLegs,
+  };
+
+  let chosen: Candidate | null = null;
+  if (plans.custom_multimodal) {
+    // Info: (20260728 - Tzuhan) 自訂聯運存在時優先(沿用舊行為);custom 段的 fallback 旗標一併檢查
+    chosen = {
+      value: plans.custom_multimodal.total_co2eKg,
+      legs: plans.custom_multimodal.segments ?? [],
+    };
+  } else if (item.mode === ROUTE_MODE.LAND) {
+    chosen = landCandidate;
+  } else if (item.mode === ROUTE_MODE.SEA_LAND) {
+    chosen = seaCandidate;
+  } else if (
+    item.mode === ROUTE_MODE.AIR_LAND ||
+    item.mode === ROUTE_MODE.SEA_LAND_AIR
+  ) {
+    chosen = airCandidate;
+  }
+
+  // Info: (20260728 - Tzuhan) 無 mode(或 mode 對應方案無值)時,依適用性引擎取第一個適用方案
+  if (!chosen || chosen.value === undefined || chosen.value === null) {
+    const applicability = getRouteApplicability(item.plan);
+    if (applicability.land) chosen = landCandidate;
+    else if (applicability.sea) chosen = seaCandidate;
+    else if (applicability.air) chosen = airCandidate;
+    else chosen = null;
+  }
+
+  if (!chosen || chosen.value === undefined || chosen.value === null) {
+    return null;
+  }
+  return {
+    value: String(chosen.value),
+    isEstimated: chosen.legs.some((legItem) => legItem?.isFallback),
+  };
 }
 
 /**
