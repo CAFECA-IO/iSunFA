@@ -27,6 +27,8 @@ export interface IMileageBatchResult {
   error?: string;
   // Info: (20260629 - Tzuhan) Support displaying waypoints
   waypoints?: string | Array<{ lat: number; lng: number; name?: string }>;
+  // Info: (20260728 - Tzuhan) issue 08:每列實際計算重量(plan 內 CO2e 以此計);舊資料缺漏時下游 fallback 1000
+  weightKg?: number;
 }
 
 export interface IMileageBatchResultsProps {
@@ -346,7 +348,7 @@ export function MileageBatchResults({
                             <PlanSection
                               type={type as RouteType}
                               plan={item.plan!}
-                              weightKg={1000}
+                              weightKg={item.weightKg ?? 1000}
                               isExporting={
                                 isExporting && exportingIndex === index
                               }

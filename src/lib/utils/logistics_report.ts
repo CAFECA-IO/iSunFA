@@ -162,12 +162,13 @@ export function buildBatchSummaryCsv(
   filesByRouteIndex: Map<number, string[]>,
   weightKg: number | string,
 ): string {
-  const weight = Number(weightKg) || 1000;
+  // Info: (20260728 - Tzuhan) issue 08:每列用自己的實際計算重量;舊資料缺漏時退回批次參數
+  const fallbackWeight = Number(weightKg) || 1000;
 
   const metaLine =
     `# Formula: CO2e(kg) = distance(km) x weight(t) x factor; ` +
     `Factors (kg CO2e/t-km): LAND ${EMISSION_FACTORS.LAND}, SEA ${EMISSION_FACTORS.SEA}, AIR ${EMISSION_FACTORS.AIR}; ` +
-    `Source: UK DEFRA 2025; Weight: ${weight} kg; ` +
+    `Source: UK DEFRA 2025; Weight column = per-route weight (kg) used in calculation; ` +
     `* = estimated distance (road network data unavailable; straight-line x 1.2)`;
 
   const header = [
@@ -245,7 +246,7 @@ export function buildBatchSummaryCsv(
     return [
       escapeCsv(formatLocation(item.origin)),
       escapeCsv(formatLocation(item.dest)),
-      String(weight),
+      String(Number(item.weightKg) || fallbackWeight),
       ...landCells,
       ...seaCells,
       ...airCells,

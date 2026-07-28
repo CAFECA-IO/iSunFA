@@ -94,6 +94,8 @@ const domesticItem: IMileageBatchResult = {
 const fallbackFeederItem: IMileageBatchResult = {
   origin: "Paris",
   dest: "Berlin",
+  // Info: (20260728 - Tzuhan) issue 08:自帶每列重量,CSV Weight 欄應顯示 3000 而非批次參數
+  weightKg: 3000,
   plan: {
     exportPort: null,
     importPort: null,
@@ -177,6 +179,13 @@ describe("buildBatchSummaryCsv", () => {
     expect(row).toContain("40.00*");
     expect(row).toContain(",800.00,");
     expect(row).not.toContain("800.00*");
+  });
+
+  it("Weight 欄用每列實際重量,缺漏時退回批次參數(issue 08)", () => {
+    expect(lines[0]).toContain("Weight column = per-route weight");
+    // Info: (20260728 - Tzuhan) 第 2 列(index 0/1)無自帶重量 → fallback 5000;第 4 列自帶 3000
+    expect(lines[2].split(",")[3]).toBe("5000");
+    expect(lines[4].split(",")[2]).toBe("3000");
   });
 
   it("Report Files 欄列出該路線的獨立 PDF 檔名", () => {
