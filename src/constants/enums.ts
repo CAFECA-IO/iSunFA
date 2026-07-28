@@ -151,6 +151,13 @@ export function toAccountType(
     : null;
 }
 
+// Info: (20260728 - Julian) 匯出 CSV 項目
+export enum ExportCsvType {
+  VOUCHER = "voucher",
+  ESG = "esg",
+  LEDGER = "ledger",
+}
+
 export enum NonEmissiveTransactionType {
   INCOME = "income",
   RECEIPT = "receipt",

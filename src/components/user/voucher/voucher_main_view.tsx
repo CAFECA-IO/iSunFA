@@ -10,12 +10,11 @@ import {
 import { useTranslation } from "@/i18n/i18n_context";
 import VoucherSummary from "@/components/user/voucher/voucher_summary";
 import VoucherTableSection from "@/components/user/voucher/voucher_table_section";
-import ExportSettingsModal, {
-  ExportType,
-} from "@/components/user/common/export_settings_modal";
+import ExportSettingsModal from "@/components/user/common/export_settings_modal";
 import AccountManagementTab from "@/components/user/voucher/account_management_tab";
 import LedgerView from "@/components/user/voucher/ledger_view";
 import { Download } from "lucide-react";
+import { ExportCsvType } from "@/constants/enums";
 
 enum VoucherTab {
   VOUCHERS = "vouchers",
@@ -156,7 +155,7 @@ export default function VoucherMainView() {
           isOpen={isExportModalOpen}
           onClose={() => setIsExportModalOpen(false)}
           accountBookId={accountBookId}
-          type={isLedger ? ExportType.LEDGER : ExportType.VOUCHER}
+          type={isLedger ? ExportCsvType.LEDGER : ExportCsvType.VOUCHER}
           initialStartDate={
             isLedger ? ledgerExportParams?.startDate : undefined
           }

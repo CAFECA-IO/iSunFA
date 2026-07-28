@@ -13,31 +13,26 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import DateRangePicker from "@/components/common/date_range_picker";
-
-export enum ExportType {
-  VOUCHER = "voucher",
-  ESG = "esg",
-  LEDGER = "ledger",
-}
+import { ExportCsvType } from "@/constants/enums";
 
 // Info: (20260727 - Julian) 各匯出型別的端點路徑、檔名前綴、i18n 後綴與是否顯示「包含未核對」
 const EXPORT_CONFIG: Record<
-  ExportType,
+  ExportCsvType,
   { path: string; filePrefix: string; i18n: string; showUnverified: boolean }
 > = {
-  [ExportType.VOUCHER]: {
+  [ExportCsvType.VOUCHER]: {
     path: "voucher",
     filePrefix: "vouchers",
     i18n: "voucher",
     showUnverified: true,
   },
-  [ExportType.ESG]: {
+  [ExportCsvType.ESG]: {
     path: "esg",
     filePrefix: "esg_records",
     i18n: "esg",
     showUnverified: true,
   },
-  [ExportType.LEDGER]: {
+  [ExportCsvType.LEDGER]: {
     path: "ledger",
     filePrefix: "ledger",
     i18n: "ledger",
@@ -52,7 +47,7 @@ interface IExportSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   accountBookId: string;
-  type: ExportType;
+  type: ExportCsvType;
   // Info: (20260727 - Julian) 報表型別可帶入已選日期與額外查詢（keyword/labelType/sorting）
   initialStartDate?: string;
   initialEndDate?: string;

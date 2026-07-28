@@ -11,6 +11,9 @@ import { generateCashFlowStatement } from "@/lib/report/cash_flow_statement_gene
 import { generateIncomeStatement } from "@/lib/report/income_statement_generator";
 import { generateEsgReport } from "@/lib/report/esg_report_generator";
 import { generateTrialBalance } from "@/lib/report/trial_balance_generator";
+import { ExportCsvType } from "@/constants/enums";
+
+const DEFAULT_AI_NOTE = "Unknown";
 
 export const reportService = {
   /**
@@ -77,12 +80,13 @@ export const reportService = {
         .filter((e) => !e.isVerified)
         .map((e) => ({
           id: e.id,
-          note: e.aiNote || "Unknown",
-          type: "esg",
+          note: e.aiNote || DEFAULT_AI_NOTE,
+          type: ExportCsvType.ESG,
         }));
 
       const report = generateEsgReport(esgRecords);
       return {
+        reportType: ReportType.ESG_REPORT,
         report,
         unverifiedCount: unverifiedItems.length,
         unverifiedItems,
@@ -110,39 +114,52 @@ export const reportService = {
           )) as IAccount[])
         : [];
 
-    const getReportData = (): object => {
-      switch (reportType) {
-        case ReportType.BALANCE_SHEET:
-          return generateBalanceSheet(lineItems, accountBook.parValue);
-        case ReportType.CASH_FLOW:
-          return generateCashFlowStatement(lineItems, 0);
-        case ReportType.INCOME_STATEMENT:
-          return generateIncomeStatement(lineItems);
-        case ReportType.TRIAL_BALANCE:
-          return generateTrialBalance(vouchers, coaDictionary, {
-            startDate: getTradingDateRange().start,
-            endDate: getTradingDateRange().end,
-            currencyAlias: accountBook.currency,
-            sorting,
-          });
-        default:
-          return {};
-      }
-    };
-
-    const report = getReportData();
     const unverifiedItems = vouchers
       .filter((v) => !v.isVerified)
       .map((v) => ({
         id: v.id,
-        note: v.note || v.aiNote || "Unknown",
-        type: "voucher",
+        note: v.note || v.aiNote || DEFAULT_AI_NOTE,
+        type: ExportCsvType.VOUCHER,
       }));
-
-    return {
-      report,
+    const base = {
       unverifiedCount: unverifiedItems.length,
       unverifiedItems,
     };
+
+    // Info: (20260728 - Julian) 依 reportType 回傳可判別聯集分支；reportType 已由 Schema 驗證且 ESG 已前置處理
+    switch (reportType) {
+      case ReportType.BALANCE_SHEET:
+        return {
+          ...base,
+          reportType,
+          report: generateBalanceSheet(lineItems, accountBook.parValue),
+        };
+      case ReportType.CASH_FLOW:
+        return {
+          ...base,
+          reportType,
+          report: generateCashFlowStatement(lineItems, 0),
+        };
+      case ReportType.INCOME_STATEMENT:
+        return {
+          ...base,
+          reportType,
+          report: generateIncomeStatement(lineItems),
+        };
+      case ReportType.TRIAL_BALANCE:
+        return {
+          ...base,
+          reportType,
+          report: generateTrialBalance(vouchers, coaDictionary, {
+            startDate: getTradingDateRange().start,
+            endDate: getTradingDateRange().end,
+            currencyAlias: accountBook.currency,
+            sorting,
+          }),
+        };
+      default:
+        // Info: (20260728 - Julian) 不可達（reportType 已窮舉），保留 Fail Fast 防呆
+        throw new Error("UNSUPPORTED_REPORT_TYPE");
+    }
   },
 };

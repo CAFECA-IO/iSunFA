@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { LabelType, BalanceComparator } from "@/constants/ledger";
 import { LedgerSorting } from "@/constants/sort";
+import { AccountType } from "@/constants/enums";
 
 // Info: (20260727 - Julian) 可解析為有效日期的字串（避免 NaN 造成靜默期間誤判）
 const validDateString = z
@@ -14,7 +15,8 @@ export const LedgerQuerySchema = z.object({
   startAccountNo: z.string().optional(),
   endAccountNo: z.string().optional(),
   keyword: z.string().optional(),
-  accountType: z.string().optional(),
+  // Info: (20260728 - Julian) 科目類別以 enum 驗證，非法值直接擋下（比照 balanceOp/labelType/sorting）
+  accountType: z.nativeEnum(AccountType).optional(),
   // Info: (20260727 - Julian) 科目子樹根代碼（試算表統馭科目 drill-down）
   rootCode: z.string().optional(),
   balanceOp: z.nativeEnum(BalanceComparator).optional(),

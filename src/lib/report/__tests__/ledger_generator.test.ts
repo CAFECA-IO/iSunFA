@@ -4,6 +4,7 @@ import { IAccount } from "@/constants/accounts";
 import { IVoucher } from "@/interfaces/voucher";
 import { LabelType, BalanceComparator } from "@/constants/ledger";
 import { LedgerSorting } from "@/constants/sort";
+import { AccountType } from "@/constants/enums";
 
 // Info: (20260727 - Julian) COA 字典：1100 為 1101/1102 之父、31XX 為 3110 之父（皆非葉）；1101/1102/3110 為葉節點
 // Info: (20260727 - Julian) GENERAL 上捲需父科目存在於字典，故父節點 1100 / 31XX 皆須納入
@@ -305,7 +306,7 @@ describe("generateLedger — 篩選與排序", () => {
   it("accountType 過濾：僅保留該類別科目，且 accountType 欄位正確傳播", () => {
     const asset = generateLedger(acctVouchers, typedDict, {
       ...base,
-      accountType: "asset",
+      accountType: AccountType.ASSET,
     });
     expect(asset.items.length).toBe(2);
     expect(asset.items.every((i) => i.code === "1101")).toBe(true);
@@ -314,7 +315,7 @@ describe("generateLedger — 篩選與排序", () => {
 
     const revenue = generateLedger(acctVouchers, typedDict, {
       ...base,
-      accountType: "revenue",
+      accountType: AccountType.REVENUE,
     });
     expect(revenue.items.every((i) => i.code === "4111")).toBe(true);
     expect(revenue.items.every((i) => i.accountType === "revenue")).toBe(true);

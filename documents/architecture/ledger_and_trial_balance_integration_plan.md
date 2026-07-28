@@ -322,7 +322,7 @@ GET .../account_book/:id/{trial_balance|ledger}
 
 **ExportSettingsModal 擴充（已實作）**
 
-- `ExportType` 增 `LEDGER`；三元式重構為 `EXPORT_CONFIG` 對照表（端點/檔名/i18n/showUnverified）；新增 `initialStartDate`/`initialEndDate`/`extraParams` props；報表型別隱藏「包含未核對」。5 語系 common 新增 `title_ledger`/`desc_ledger`/`stat_title_ledger`/`unit_ledger`/`failed_ledger`。
+- `ExportCsvType` 增 `LEDGER`；三元式重構為 `EXPORT_CONFIG` 對照表（端點/檔名/i18n/showUnverified）；新增 `initialStartDate`/`initialEndDate`/`extraParams` props；報表型別隱藏「包含未核對」。5 語系 common 新增 `title_ledger`/`desc_ledger`/`stat_title_ledger`/`unit_ledger`/`failed_ledger`。
 
 **前端（已實作）**
 

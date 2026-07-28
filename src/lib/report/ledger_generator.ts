@@ -272,7 +272,7 @@ export function generateLedger(
     .sort(buildComparator(sorting, balanceOf));
 
   // Info: (20260727 - Julian) 科目類別於「產出列」過濾（供試算表總帳節點 drill-down）
-  if (accountType && accountType.trim()) {
+  if (accountType) {
     items = items.filter((item) => item.accountType === accountType);
   }
 
