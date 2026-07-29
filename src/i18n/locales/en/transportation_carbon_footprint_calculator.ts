@@ -96,6 +96,9 @@ export const transportationCarbonFootprintCalculator = {
     est_mileage: "Estimated Mileage:",
     emission_coefficient: "Emission Coefficient:",
     carbon_emissions: "Carbon Emissions",
+    fallback_estimate_badge: "Estimated",
+    fallback_estimate_hint:
+      "Road network data does not cover this area; estimated as straight-line distance × 1.2",
   },
   mileage_calculator: {
     title_paste: "Paste Text for AI Parsing",
@@ -156,5 +159,19 @@ export const transportationCarbonFootprintCalculator = {
     origin: "Origin",
     dest: "Destination",
     label: "🟢 ESG Logistics Carbon Trace (Powered by MapLibre)",
+  },
+  // Info: (20260724 - Tzuhan) Export options modal (requirement 2)
+  export_options: {
+    title: "Select Plans to Export",
+    description:
+      "Check the plan types to export. Only plans applicable to this route are listed.",
+    plan_land: "Land Only",
+    plan_sea: "Including Sea (Sea-Land Multimodal)",
+    plan_air: "Including Air (Air-Land Multimodal)",
+    plan_custom: "Custom Multimodal",
+    split_hint:
+      "Each plan is exported as a separate PDF; multiple files are bundled into a ZIP.",
+    confirm: "Export",
+    progress: "Generating report {{current}} / {{total}}...",
   },
 };

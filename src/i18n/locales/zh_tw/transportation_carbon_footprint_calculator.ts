@@ -87,6 +87,8 @@ export const transportationCarbonFootprintCalculator = {
     est_mileage: "預估里程:",
     emission_coefficient: "排放係數:",
     carbon_emissions: "碳排放量",
+    fallback_estimate_badge: "估算值",
+    fallback_estimate_hint: "路網圖資未涵蓋此區域,以直線距離 ×1.2 推估",
   },
   mileage_calculator: {
     title_paste: "貼上文本自動解析",
@@ -147,5 +149,17 @@ export const transportationCarbonFootprintCalculator = {
     origin: "起點",
     dest: "終點",
     label: "🟢 ESG 物流碳盤查軌跡 (Powered by MapLibre)",
+  },
+  // Info: (20260724 - Tzuhan) 匯出勾選選單(需求二)
+  export_options: {
+    title: "選擇匯出方案",
+    description: "請勾選要匯出的方案類型，僅列出此路線適用的方案。",
+    plan_land: "純陸運",
+    plan_sea: "包含海運（海陸聯運）",
+    plan_air: "包含空運（空陸聯運）",
+    plan_custom: "自訂多式聯運",
+    split_hint: "每個方案將產出獨立的 PDF 檔案；多份檔案將打包為 ZIP 下載。",
+    confirm: "匯出",
+    progress: "正在產生第 {{current}} / {{total}} 份報告...",
   },
 };

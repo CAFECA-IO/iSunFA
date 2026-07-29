@@ -93,6 +93,9 @@ export const transportationCarbonFootprintCalculator = {
     est_mileage: "推定走行距離:",
     emission_coefficient: "排出係数:",
     carbon_emissions: "炭素排出量",
+    fallback_estimate_badge: "概算値",
+    fallback_estimate_hint:
+      "道路ネットワークデータが未整備の地域のため、直線距離×1.2で概算",
   },
   mileage_calculator: {
     title_paste: "テキストを貼り付けてAI解析",
@@ -156,5 +159,19 @@ export const transportationCarbonFootprintCalculator = {
     origin: "出発地",
     dest: "目的地",
     label: "🟢 ESG物流炭素排出量追跡 (Powered by MapLibre)",
+  },
+  // Info: (20260724 - Tzuhan) エクスポート選択モーダル(要件2)
+  export_options: {
+    title: "エクスポートするプランを選択",
+    description:
+      "エクスポートするプランを選択してください。このルートに適用可能なプランのみ表示されます。",
+    plan_land: "陸運のみ",
+    plan_sea: "海運を含む（海陸複合輸送）",
+    plan_air: "空運を含む（空陸複合輸送）",
+    plan_custom: "カスタム複合輸送",
+    split_hint:
+      "各プランは個別のPDFとして出力され、複数ファイルはZIPにまとめられます。",
+    confirm: "エクスポート",
+    progress: "レポートを生成中 {{current}} / {{total}}...",
   },
 };
