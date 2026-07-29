@@ -22,6 +22,7 @@ import {
   Download,
   MapPin,
   ArrowRight,
+  Layers,
 } from "lucide-react";
 import * as htmlToImage from "html-to-image";
 import { jsPDF } from "jspdf";
@@ -1595,6 +1596,25 @@ function ReportPageContent() {
                               )}
                             </button>
                           )}
+                          {/* Info: (20260729 - Tzuhan) issue 10:海陸空聯運方案切換(不適用即屏蔽) */}
+                          {routeApplicability.seaLandAir && (
+                            <button
+                              onClick={() => toggleRoute("seaLandAir")}
+                              disabled={!plan || loading}
+                              className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition-all ${
+                                loading
+                                  ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400 opacity-60"
+                                  : selectedRoutes.has("seaLandAir")
+                                    ? "border-indigo-200 bg-indigo-50 text-indigo-700"
+                                    : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+                              }`}
+                            >
+                              <Layers className="h-4 w-4" />{" "}
+                              {t(
+                                "transportation_carbon_footprint_calculator.plan_section.title_sea_land_air",
+                              )}
+                            </button>
+                          )}
                         </div>
                       )}
 
@@ -1602,7 +1622,7 @@ function ReportPageContent() {
                       {(() => {
                         // Info: (20260724 - Tzuhan) 僅渲染適用的方案(與匯出範圍同一判斷來源)
                         const routesToRender = (
-                          ["land", "sea", "air"] as const
+                          ["land", "sea", "air", "seaLandAir"] as const
                         ).filter(
                           (type) =>
                             selectedRoutes.has(type) &&
@@ -1618,9 +1638,13 @@ function ReportPageContent() {
                               ? t(
                                   "transportation_carbon_footprint_calculator.pdf.mode_sea",
                                 )
-                              : t(
-                                  "transportation_carbon_footprint_calculator.pdf.mode_air",
-                                );
+                              : mode === "seaLandAir"
+                                ? t(
+                                    "transportation_carbon_footprint_calculator.plan_section.title_sea_land_air",
+                                  )
+                                : t(
+                                    "transportation_carbon_footprint_calculator.pdf.mode_air",
+                                  );
                         const originName = origin.lat
                           ? `${origin.lat}, ${origin.lng}`
                           : t(
@@ -1671,6 +1695,8 @@ function ReportPageContent() {
                                         <Truck className="h-6 w-6 text-orange-500" />
                                       ) : type === "sea" ? (
                                         <Ship className="h-6 w-6 text-emerald-500" />
+                                      ) : type === "seaLandAir" ? (
+                                        <Layers className="h-6 w-6 text-indigo-500" />
                                       ) : (
                                         <Plane className="h-6 w-6 text-blue-500" />
                                       )}
