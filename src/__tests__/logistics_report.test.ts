@@ -34,14 +34,15 @@ const leg = (
 
 // Info: (20260724 - Tzuhan) 跨海路線:陸運 fallback(不適用)、海空聯運皆適用
 const crossSeaItem: IMileageBatchResult = {
-  origin: "台北市, 信義區",
-  dest: "Shanghai",
+  origin: { lat: 25.03, lng: 121.56, name: "台北市, 信義區" },
+  dest: { lat: 31.23, lng: 121.47, name: "Shanghai" },
   mode: ROUTE_MODE.SEA_LAND,
   plan: {
-    exportPort: null,
-    importPort: null,
-    exportAirport: null,
-    importAirport: null,
+    // Info: (20260729 - Tzuhan) issue 11:港口/機場節點含經緯度,CSV 逐段揭露端點座標
+    exportPort: { name: "Keelung", lat: 25.13, lng: 121.74 },
+    importPort: { name: "Shanghai Port", lat: 31.23, lng: 121.49 },
+    exportAirport: { name: "TPE", lat: 25.08, lng: 121.23 },
+    importAirport: { name: "PVG", lat: 31.14, lng: 121.8 },
     comparisonData: {
       success: true,
       plans: {
@@ -127,7 +128,7 @@ const fallbackFeederItem: IMileageBatchResult = {
   } as unknown as ILogisticsPlan,
 };
 
-describe("buildBatchSummaryCsv", () => {
+describe("buildBatchSummaryCsv (long format, issue 11)", () => {
   const csv = buildBatchSummaryCsv(
     [crossSeaItem, domesticItem, fallbackFeederItem],
     [0, 1, 2],
@@ -139,65 +140,134 @@ describe("buildBatchSummaryCsv", () => {
     5000,
   );
   const lines = csv.split("\n");
+  const header = lines[1].split(",");
+  const body = lines.slice(2);
+  const cellsOf = (line: string): string[] => {
+    // Info: (20260729 - Tzuhan) 測試用簡易 CSV 解析(支援雙引號包裹欄位)
+    const out: string[] = [];
+    let cur = "";
+    let inQuote = false;
+    for (const ch of line) {
+      if (ch === '"') inQuote = !inQuote;
+      else if (ch === "," && !inQuote) {
+        out.push(cur);
+        cur = "";
+      } else cur += ch;
+    }
+    out.push(cur);
+    return out;
+  };
+  const col = (line: string, name: string): string =>
+    cellsOf(line)[header.indexOf(name)];
 
-  it("檔頭揭露公式與單一來源係數", () => {
+  it("檔頭揭露公式、單一來源係數與 long format 語意", () => {
     expect(lines[0]).toContain("CO2e(kg) = distance(km) x weight(t) x factor");
     expect(lines[0]).toContain(`LAND ${EMISSION_FACTORS.LAND}`);
     expect(lines[0]).toContain(`SEA ${EMISSION_FACTORS.SEA}`);
     expect(lines[0]).toContain(`AIR ${EMISSION_FACTORS.AIR}`);
+    expect(lines[0]).toContain("One row per plan leg");
+    expect(lines[0]).toContain("Estimated? = Y");
   });
 
-  it("欄位按方案分組且逐段展開(海運方案的陸運接駁段獨立成欄)", () => {
-    expect(lines[1]).toContain("Sea Plan: Land Leg Origin->Port (km)");
-    expect(lines[1]).toContain("Sea Plan: Sea Leg Port->Port (km)");
-    expect(lines[1]).toContain("Sea Plan: Land Leg Port->Dest (km)");
-    expect(lines[1]).toContain("Air Plan: Air Leg Airport->Airport (km)");
+  it("欄位含模式、端點名稱與經緯度、逐段係數與來源", () => {
+    [
+      "Plan",
+      "Leg #",
+      "Mode",
+      "From Name",
+      "From Lat",
+      "From Lng",
+      "To Name",
+      "To Lat",
+      "To Lng",
+      "Distance (km)",
+      "Estimated?",
+      "Factor (kg CO2e/t-km)",
+      "Factor Source",
+      "Leg CO2e (kg)",
+      "Plan Total CO2e (kg)",
+    ].forEach((name) => expect(header).toContain(name));
   });
 
-  it("跨海路線:陸運欄 N/A,海運方案各段相加=方案總計(勾稽)", () => {
-    // Info: (20260724 - Tzuhan) origin 含逗號 → 被引號包裹,直接以字串檢查
-    const row = lines[2];
-    expect(row).toContain('"台北市, 信義區"');
-    const cells = row.replace('"台北市, 信義區",', "").split(",");
-    // Info: (20260724 - Tzuhan) cells: [dest, weight, landDist, landCo2e, seaLeg1Km, seaLeg1Co2e, seaLegKm, seaLegCo2e, seaLeg3Km, seaLeg3Co2e, seaTotal, ...]
-    expect(cells[2]).toBe("N/A");
-    expect(cells[3]).toBe("N/A");
-    const seaSum = MoneyUtil.toDecimal(cells[5]).plus(cells[7]).plus(cells[9]);
-    expect(seaSum.toFixed(2)).toBe(MoneyUtil.toDecimal(cells[10]).toFixed(2));
+  it("同起訖點多方案分列:跨海路線出海運 3 段 + 空運 3 段,無陸運列", () => {
+    const route1 = body.filter((line) => col(line, "Route #") === "1");
+    expect(route1).toHaveLength(6);
+    expect(
+      route1.filter((l) => col(l, "Plan") === "Sea Multimodal"),
+    ).toHaveLength(3);
+    expect(
+      route1.filter((l) => col(l, "Plan") === "Air Multimodal"),
+    ).toHaveLength(3);
+    // Info: (20260729 - Tzuhan) 陸運不適用 → 不產列(取代舊版 N/A 欄位)
+    expect(route1.filter((l) => col(l, "Plan") === "Land Only")).toHaveLength(
+      0,
+    );
   });
 
-  it("國內路線:海空欄全為 N/A,不輸出誤導性的 0", () => {
-    const row = lines[3];
-    const cells = row.split(",");
-    // Info: (20260724 - Tzuhan) 海運方案 7 欄(index 5-11)與空運方案 7 欄(index 12-18)皆 N/A
-    for (let i = 5; i <= 18; i++) {
-      expect(cells[i]).toBe("N/A");
-    }
-    expect(cells[3]).toBe("350.00");
+  it("國內路線只出陸運 1 列(海空不適用不產列)", () => {
+    const route2 = body.filter((line) => col(line, "Route #") === "2");
+    expect(route2).toHaveLength(1);
+    expect(col(route2[0], "Plan")).toBe("Land Only");
+    expect(col(route2[0], "Mode")).toBe("LAND");
+    expect(col(route2[0], "Distance (km)")).toBe("350.00");
   });
 
-  it("直線 fallback 距離加 * 後綴且檔頭揭露說明(issue 07)", () => {
-    expect(lines[0]).toContain("* = estimated distance");
-    const row = lines[4];
-    // Info: (20260728 - Tzuhan) 接駁陸段為 fallback → 標 *;真實海運主段不標
-    expect(row).toContain("30.00*");
-    expect(row).toContain("40.00*");
-    expect(row).toContain(",800.00,");
-    expect(row).not.toContain("800.00*");
+  it("逐段揭露端點經緯度與係數來源", () => {
+    const seaLeg = body.find(
+      (line) =>
+        col(line, "Route #") === "1" &&
+        col(line, "Plan") === "Sea Multimodal" &&
+        col(line, "Mode") === "SEA",
+    )!;
+    expect(col(seaLeg, "From Name")).toBe("Keelung");
+    expect(col(seaLeg, "From Lat")).toBe("25.13");
+    expect(col(seaLeg, "To Name")).toBe("Shanghai Port");
+    expect(col(seaLeg, "To Lng")).toBe("121.49");
+    expect(col(seaLeg, "Factor (kg CO2e/t-km)")).toBe(EMISSION_FACTORS.SEA);
+    expect(col(seaLeg, "Factor Source")).toContain("DEFRA");
+  });
+
+  it("各段相加 = 方案總計(勾稽),Plan Total 僅於末段填值", () => {
+    const seaLegs = body.filter(
+      (line) =>
+        col(line, "Route #") === "1" && col(line, "Plan") === "Sea Multimodal",
+    );
+    const sum = seaLegs.reduce(
+      (acc, line) => acc.plus(col(line, "Leg CO2e (kg)")),
+      MoneyUtil.toDecimal(0),
+    );
+    expect(col(seaLegs[0], "Plan Total CO2e (kg)")).toBe("");
+    expect(col(seaLegs[2], "Plan Total CO2e (kg)")).toBe("81.31");
+    expect(sum.toFixed(2)).toBe("81.31");
+  });
+
+  it("fallback 段標示 Estimated? = Y,真實路網段為 N(issue 07)", () => {
+    const legs = body.filter(
+      (line) =>
+        col(line, "Route #") === "3" && col(line, "Plan") === "Sea Multimodal",
+    );
+    expect(col(legs[0], "Estimated?")).toBe("Y");
+    expect(col(legs[1], "Estimated?")).toBe("N");
+    expect(col(legs[2], "Estimated?")).toBe("Y");
   });
 
   it("Weight 欄用每列實際重量,缺漏時退回批次參數(issue 08)", () => {
     expect(lines[0]).toContain("Weight column = per-route weight");
-    // Info: (20260728 - Tzuhan) 第 2 列(index 0/1)無自帶重量 → fallback 5000;第 4 列自帶 3000
-    expect(lines[2].split(",")[3]).toBe("5000");
-    expect(lines[4].split(",")[2]).toBe("3000");
+    const route1 = body.find((line) => col(line, "Route #") === "1")!;
+    const route3 = body.find((line) => col(line, "Route #") === "3")!;
+    expect(col(route1, "Weight (kg)")).toBe("5000");
+    expect(col(route3, "Weight (kg)")).toBe("3000");
   });
 
-  it("Report Files 欄列出該路線的獨立 PDF 檔名", () => {
-    expect(lines[2]).toContain(
-      "route_1_sea_multimodal.pdf; route_1_air_multimodal.pdf",
+  it("Report Files 僅於方案末段填值", () => {
+    const seaLegs = body.filter(
+      (line) =>
+        col(line, "Route #") === "1" && col(line, "Plan") === "Sea Multimodal",
     );
-    expect(lines[3]).toContain("route_2_land_only.pdf");
+    expect(col(seaLegs[0], "Report Files")).toBe("");
+    expect(col(seaLegs[2], "Report Files")).toContain(
+      "route_1_sea_multimodal.pdf",
+    );
   });
 });
 

@@ -8,10 +8,11 @@ import { ILogisticsPlan, ITransportSegment } from "@/interfaces/logistics";
 import { IMileageBatchResult } from "@/components/transportation_carbon_footprint_calculator/mileage_batch_results";
 import { getRouteApplicability } from "@/lib/utils/route_applicability";
 import { MoneyUtil } from "@/lib/utils/money";
-import { EMISSION_FACTORS } from "@/constants/logistics";
+import {
+  EMISSION_FACTORS,
+  EMISSION_FACTOR_SOURCES,
+} from "@/constants/logistics";
 import { ROUTE_MODE } from "@/constants/analysis";
-
-const NOT_APPLICABLE = "N/A";
 
 /**
  * Info: (20260724 - Tzuhan) 舊版批次結果沒有完整 plan,僅存距離與 geometry 字串
@@ -224,20 +225,191 @@ const formatLocation = (
 const formatDistance = (distanceKm?: number): string =>
   MoneyUtil.toDecimal(distanceKm || 0).toFixed(2);
 
-// Info: (20260728 - Tzuhan) issue 07:直線 fallback 估算距離以 * 後綴標示(檔頭 # 行說明),估算值不得偽裝成確定值
-const formatLegDistance = (leg?: ITransportSegment): string =>
-  `${MoneyUtil.toDecimal(leg?.distanceKm || 0).toFixed(2)}${leg?.isFallback ? "*" : ""}`;
-
 const formatCo2e = (co2eKg?: string | number): string =>
   co2eKg === undefined || co2eKg === null ? "0" : String(co2eKg);
 
 /**
- * Info: (20260724 - Tzuhan) 批次總結報表:按方案分欄、逐段展開(需求三)
- * - 每列一條路線;純陸運 / 海陸聯運 / 空陸聯運 / 自訂聯運各自獨立欄組,禁止交叉混雜
- * - 混合方案的陸運接駁段(起站→港口、港口→迄站)逐段揭露距離與碳排,數據可追溯
- * - 不適用方案(適用性引擎判定)整組輸出 N/A
- * - 檔頭以 # 行揭露公式與係數(單一來源 EMISSION_FACTORS),單看 CSV 即可重算每格
+ * Info: (20260729 - Tzuhan) 批次總結報表 long format(issue 11:需求三透明化改版)
+ * - 同一條路線的多個方案「換行分列」:每個方案的每一段各佔一列,不再橫向擴充欄位
+ *   (寬表在方案擴充後會破 30 欄,且不適用方案留下大量 N/A;long format 欄位固定、可樞紐分析)
+ * - 每列自我完備:模式、起訖點名稱與經緯度、距離、逐段係數與來源、該段碳排 → 任一段可獨立重算與地理追溯
+ * - 方案總計於該方案最後一段的 Plan Total 欄呈現,維持「各段相加 = 方案總計」勾稽
+ * - 不適用方案(適用性引擎判定)不產生列;fallback 段以 Estimated? = Y 標示(取代 * 後綴)
  */
+type CsvLeg = {
+  mode: "LAND" | "SEA" | "AIR";
+  fromName: string;
+  fromLat?: number;
+  fromLng?: number;
+  toName: string;
+  toLat?: number;
+  toLng?: number;
+  segment?: ITransportSegment;
+};
+
+const FACTOR_BY_MODE: Record<CsvLeg["mode"], string> = {
+  LAND: EMISSION_FACTORS.LAND,
+  SEA: EMISSION_FACTORS.SEA,
+  AIR: EMISSION_FACTORS.AIR,
+};
+
+const FACTOR_SOURCE_BY_MODE: Record<CsvLeg["mode"], string> = {
+  LAND: EMISSION_FACTOR_SOURCES.LAND,
+  SEA: EMISSION_FACTOR_SOURCES.SEA,
+  AIR: EMISSION_FACTOR_SOURCES.AIR,
+};
+
+const formatCoord = (value?: number): string =>
+  value === undefined || value === null ? "" : String(value);
+
+// Info: (20260729 - Tzuhan) 端點座標:字串地點無座標可揭露(留空),物件則輸出 lat/lng
+const pointOf = (
+  loc: string | { lat: number; lng: number; name?: string },
+): { name: string; lat?: number; lng?: number } => {
+  if (typeof loc === "string") return { name: loc };
+  if (loc && typeof loc === "object" && "lat" in loc && "lng" in loc) {
+    return {
+      name: loc.name || `${loc.lat}, ${loc.lng}`,
+      lat: loc.lat,
+      lng: loc.lng,
+    };
+  }
+  return { name: "" };
+};
+
+const nodeOf = (
+  node: { name?: string; lat?: number; lng?: number } | null | undefined,
+  fallbackName: string,
+): { name: string; lat?: number; lng?: number } => ({
+  name: node?.name || fallbackName,
+  lat: node?.lat,
+  lng: node?.lng,
+});
+
+/**
+ * Info: (20260729 - Tzuhan) 依方案組出逐段清單(端點取自 plan 的港口/機場節點,含經緯度)
+ */
+const buildPlanLegs = (
+  item: IMileageBatchResult,
+  planKey: "land" | "sea" | "air" | "custom",
+): CsvLeg[] => {
+  const plan = item.plan;
+  const plans = plan?.comparisonData?.plans;
+  if (!plans) return [];
+  const origin = pointOf(item.origin);
+  const dest = pointOf(item.dest);
+
+  if (planKey === "land") {
+    return [
+      {
+        mode: "LAND",
+        fromName: origin.name,
+        fromLat: origin.lat,
+        fromLng: origin.lng,
+        toName: dest.name,
+        toLat: dest.lat,
+        toLng: dest.lng,
+        segment: plans.landOnly,
+      },
+    ];
+  }
+
+  if (planKey === "sea") {
+    const seaPlan = plans.sea_multimodal;
+    const outPort = nodeOf(plan?.exportPort, "Export Port");
+    const inPort = nodeOf(plan?.importPort, "Import Port");
+    return [
+      {
+        mode: "LAND",
+        fromName: origin.name,
+        fromLat: origin.lat,
+        fromLng: origin.lng,
+        toName: outPort.name,
+        toLat: outPort.lat,
+        toLng: outPort.lng,
+        segment: seaPlan?.land_origin_to_port,
+      },
+      {
+        mode: "SEA",
+        fromName: outPort.name,
+        fromLat: outPort.lat,
+        fromLng: outPort.lng,
+        toName: inPort.name,
+        toLat: inPort.lat,
+        toLng: inPort.lng,
+        segment: seaPlan?.sea_port_to_port,
+      },
+      {
+        mode: "LAND",
+        fromName: inPort.name,
+        fromLat: inPort.lat,
+        fromLng: inPort.lng,
+        toName: dest.name,
+        toLat: dest.lat,
+        toLng: dest.lng,
+        segment: seaPlan?.land_port_to_dest,
+      },
+    ];
+  }
+
+  if (planKey === "air") {
+    const airPlan = plans.air_multimodal;
+    const outAirport = nodeOf(plan?.exportAirport, "Export Airport");
+    const inAirport = nodeOf(plan?.importAirport, "Import Airport");
+    return [
+      {
+        mode: "LAND",
+        fromName: origin.name,
+        fromLat: origin.lat,
+        fromLng: origin.lng,
+        toName: outAirport.name,
+        toLat: outAirport.lat,
+        toLng: outAirport.lng,
+        segment: airPlan?.land_origin_to_airport,
+      },
+      {
+        mode: "AIR",
+        fromName: outAirport.name,
+        fromLat: outAirport.lat,
+        fromLng: outAirport.lng,
+        toName: inAirport.name,
+        toLat: inAirport.lat,
+        toLng: inAirport.lng,
+        segment: airPlan?.air_airport_to_airport,
+      },
+      {
+        mode: "LAND",
+        fromName: inAirport.name,
+        fromLat: inAirport.lat,
+        fromLng: inAirport.lng,
+        toName: dest.name,
+        toLat: dest.lat,
+        toLng: dest.lng,
+        segment: airPlan?.land_airport_to_dest,
+      },
+    ];
+  }
+
+  // Info: (20260729 - Tzuhan) custom:段名格式為 "Land: A -> B",以 name 拆出端點(無座標可揭露)
+  const customPlan = plans.custom_multimodal;
+  return (customPlan?.segments ?? []).map((seg) => {
+    const parts = (seg.name || "").split("->");
+    return {
+      mode: seg.mode === "SEA" ? ("SEA" as const) : ("LAND" as const),
+      fromName: parts[0]?.replace(/^(Land|Sea):\s*/, "").trim() || "Point",
+      toName: parts[1]?.trim() || "Point",
+      segment: seg,
+    };
+  });
+};
+
+const PLAN_LABELS: Record<"land" | "sea" | "air" | "custom", string> = {
+  land: "Land Only",
+  sea: "Sea Multimodal",
+  air: "Air Multimodal",
+  custom: "Custom Multimodal",
+};
+
 export function buildBatchSummaryCsv(
   results: IMileageBatchResult[],
   indices: number[],
@@ -251,92 +423,93 @@ export function buildBatchSummaryCsv(
     `# Formula: CO2e(kg) = distance(km) x weight(t) x factor; ` +
     `Factors (kg CO2e/t-km): LAND ${EMISSION_FACTORS.LAND}, SEA ${EMISSION_FACTORS.SEA}, AIR ${EMISSION_FACTORS.AIR}; ` +
     `Source: UK DEFRA 2025; Weight column = per-route weight (kg) used in calculation; ` +
-    `* = estimated distance (road network data unavailable; straight-line x 1.2)`;
+    `One row per plan leg (long format); Plan Total is filled on the last leg of each plan; ` +
+    `Estimated? = Y means the distance is a straight-line x 1.2 estimate (road network data unavailable); ` +
+    `Plans deemed inapplicable for a route produce no rows`;
 
   const header = [
+    "Route #",
     "Origin",
     "Destination",
     "Weight (kg)",
-    "Land Only: Distance (km)",
-    "Land Only: CO2e (kg)",
-    "Sea Plan: Land Leg Origin->Port (km)",
-    "Sea Plan: Land Leg Origin->Port CO2e (kg)",
-    "Sea Plan: Sea Leg Port->Port (km)",
-    "Sea Plan: Sea Leg Port->Port CO2e (kg)",
-    "Sea Plan: Land Leg Port->Dest (km)",
-    "Sea Plan: Land Leg Port->Dest CO2e (kg)",
-    "Sea Plan: Total CO2e (kg)",
-    "Air Plan: Land Leg Origin->Airport (km)",
-    "Air Plan: Land Leg Origin->Airport CO2e (kg)",
-    "Air Plan: Air Leg Airport->Airport (km)",
-    "Air Plan: Air Leg Airport->Airport CO2e (kg)",
-    "Air Plan: Land Leg Airport->Dest (km)",
-    "Air Plan: Land Leg Airport->Dest CO2e (kg)",
-    "Air Plan: Total CO2e (kg)",
-    "Custom Plan: Total Distance (km)",
-    "Custom Plan: Total CO2e (kg)",
+    "Plan",
+    "Leg #",
+    "Mode",
+    "From Name",
+    "From Lat",
+    "From Lng",
+    "To Name",
+    "To Lat",
+    "To Lng",
+    "Distance (km)",
+    "Estimated?",
+    "Factor (kg CO2e/t-km)",
+    "Factor Source",
+    "Leg CO2e (kg)",
+    "Plan Total CO2e (kg)",
     "Report Files",
   ].join(",");
 
-  const rows = indices.map((index) => {
+  const rows: string[] = [];
+  indices.forEach((index) => {
     const item = results[index];
-    if (!item) return "";
+    if (!item) return;
     const plans = item.plan?.comparisonData?.plans;
+    if (!plans) return;
     const applicability = getRouteApplicability(item.plan);
+    const originLabel = escapeCsv(formatLocation(item.origin));
+    const destLabel = escapeCsv(formatLocation(item.dest));
+    const weight = String(Number(item.weightKg) || fallbackWeight);
+    const files = escapeCsv((filesByRouteIndex.get(index) || []).join("; "));
 
-    const landCells = applicability.land
-      ? [
-          formatLegDistance(plans?.landOnly),
-          formatCo2e(plans?.landOnly?.co2eKg),
-        ]
-      : [NOT_APPLICABLE, NOT_APPLICABLE];
+    const planKeys: ("land" | "sea" | "air" | "custom")[] = [];
+    if (applicability.custom) planKeys.push("custom");
+    if (applicability.land) planKeys.push("land");
+    if (applicability.sea) planKeys.push("sea");
+    if (applicability.air) planKeys.push("air");
 
-    const seaPlan = plans?.sea_multimodal;
-    const seaCells = applicability.sea
-      ? [
-          formatLegDistance(seaPlan?.land_origin_to_port),
-          formatCo2e(seaPlan?.land_origin_to_port?.co2eKg),
-          formatLegDistance(seaPlan?.sea_port_to_port),
-          formatCo2e(seaPlan?.sea_port_to_port?.co2eKg),
-          formatLegDistance(seaPlan?.land_port_to_dest),
-          formatCo2e(seaPlan?.land_port_to_dest?.co2eKg),
-          formatCo2e(seaPlan?.total_co2eKg),
-        ]
-      : Array<string>(7).fill(NOT_APPLICABLE);
+    planKeys.forEach((planKey) => {
+      const legs = buildPlanLegs(item, planKey);
+      if (legs.length === 0) return;
+      const planTotal =
+        planKey === "land"
+          ? plans.landOnly?.co2eKg
+          : planKey === "sea"
+            ? plans.sea_multimodal?.total_co2eKg
+            : planKey === "air"
+              ? plans.air_multimodal?.total_co2eKg
+              : plans.custom_multimodal?.total_co2eKg;
 
-    const airPlan = plans?.air_multimodal;
-    const airCells = applicability.air
-      ? [
-          formatLegDistance(airPlan?.land_origin_to_airport),
-          formatCo2e(airPlan?.land_origin_to_airport?.co2eKg),
-          formatLegDistance(airPlan?.air_airport_to_airport),
-          formatCo2e(airPlan?.air_airport_to_airport?.co2eKg),
-          formatLegDistance(airPlan?.land_airport_to_dest),
-          formatCo2e(airPlan?.land_airport_to_dest?.co2eKg),
-          formatCo2e(airPlan?.total_co2eKg),
-        ]
-      : Array<string>(7).fill(NOT_APPLICABLE);
-
-    const customPlan = plans?.custom_multimodal;
-    const customCells = applicability.custom
-      ? [
-          formatDistance(customPlan?.total_distanceKm),
-          formatCo2e(customPlan?.total_co2eKg),
-        ]
-      : [NOT_APPLICABLE, NOT_APPLICABLE];
-
-    return [
-      escapeCsv(formatLocation(item.origin)),
-      escapeCsv(formatLocation(item.dest)),
-      String(Number(item.weightKg) || fallbackWeight),
-      ...landCells,
-      ...seaCells,
-      ...airCells,
-      ...customCells,
-      escapeCsv((filesByRouteIndex.get(index) || []).join("; ")),
-    ].join(",");
+      legs.forEach((leg, legIndex) => {
+        const isLastLeg = legIndex === legs.length - 1;
+        rows.push(
+          [
+            String(index + 1),
+            originLabel,
+            destLabel,
+            weight,
+            PLAN_LABELS[planKey],
+            String(legIndex + 1),
+            leg.mode,
+            escapeCsv(leg.fromName),
+            formatCoord(leg.fromLat),
+            formatCoord(leg.fromLng),
+            escapeCsv(leg.toName),
+            formatCoord(leg.toLat),
+            formatCoord(leg.toLng),
+            formatDistance(leg.segment?.distanceKm),
+            leg.segment?.isFallback ? "Y" : "N",
+            FACTOR_BY_MODE[leg.mode],
+            escapeCsv(FACTOR_SOURCE_BY_MODE[leg.mode]),
+            formatCo2e(leg.segment?.co2eKg),
+            isLastLeg ? formatCo2e(planTotal) : "",
+            isLastLeg ? files : "",
+          ].join(","),
+        );
+      });
+    });
   });
 
   // Info: (20260724 - Tzuhan) BOM 讓 Excel 正確辨識 UTF-8
-  return ["\uFEFF" + metaLine, header, ...rows.filter(Boolean)].join("\n");
+  return ["\uFEFF" + metaLine, header, ...rows].join("\n");
 }
