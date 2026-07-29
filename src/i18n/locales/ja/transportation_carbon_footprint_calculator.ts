@@ -34,6 +34,8 @@ export const transportationCarbonFootprintCalculator = {
     section_analysis: "専用セクション分析",
     weight_label: "総重量: {{weight}} KG",
     watermark: "iSunFA CONFIDENTIAL",
+    export_id_label: "エクスポートID",
+    plan_code_label: "プランコード",
   },
   ui: {
     title: "物流カーボンフットプリント",

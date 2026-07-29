@@ -11,6 +11,7 @@ import { MoneyUtil } from "@/lib/utils/money";
 import {
   EMISSION_FACTORS,
   EMISSION_FACTOR_SOURCES,
+  buildPlanCode,
 } from "@/constants/logistics";
 import { ROUTE_MODE } from "@/constants/analysis";
 
@@ -492,6 +493,8 @@ export function buildBatchSummaryCsv(
   indices: number[],
   filesByRouteIndex: Map<number, string[]>,
   weightKg: number | string,
+  // Info: (20260729 - Tzuhan) 匯出批次識別碼:與同批 PDF 一致,使跨批次的同名方案代碼可區分
+  exportId?: string,
 ): string {
   // Info: (20260728 - Tzuhan) issue 08:每列用自己的實際計算重量;舊資料缺漏時退回批次參數
   const fallbackWeight = Number(weightKg) || 1000;
@@ -500,11 +503,14 @@ export function buildBatchSummaryCsv(
     `# Formula: CO2e(kg) = distance(km) x weight(t) x factor; ` +
     `Factors (kg CO2e/t-km): LAND ${EMISSION_FACTORS.LAND}, SEA ${EMISSION_FACTORS.SEA}, AIR ${EMISSION_FACTORS.AIR}; ` +
     `Source: UK DEFRA 2025; Weight column = per-route weight (kg) used in calculation; ` +
+    `${exportId ? `Export ID: ${exportId}; ` : ""}` +
+    `Plan Code (R{route}-{MODE}) is the cross-reference to the matching PDF (same code in its filename and header); ` +
     `One row per plan leg (long format); Plan Total is filled on the last leg of each plan; ` +
     `Estimated? = Y means the distance is a straight-line x 1.2 estimate (road network data unavailable); ` +
     `Plans deemed inapplicable for a route produce no rows`;
 
   const header = [
+    "Plan Code",
     "Route #",
     "Origin",
     "Destination",
@@ -564,6 +570,7 @@ export function buildBatchSummaryCsv(
         const isLastLeg = legIndex === legs.length - 1;
         rows.push(
           [
+            buildPlanCode(index, planKey),
             String(index + 1),
             originLabel,
             destLabel,

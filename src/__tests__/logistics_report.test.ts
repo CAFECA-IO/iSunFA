@@ -180,6 +180,7 @@ describe("buildBatchSummaryCsv (long format, issue 11)", () => {
       [2, ["route_3_sea_multimodal.pdf"]],
     ]),
     5000,
+    "20260729-1435",
   );
   const lines = csv.split("\n");
   const header = lines[1].split(",");
@@ -301,6 +302,35 @@ describe("buildBatchSummaryCsv (long format, issue 11)", () => {
     expect(col(route3, "Weight (kg)")).toBe("3000");
   });
 
+  it("Plan Code 為首欄且同方案各段共用同一代碼(PDF/CSV 交叉索引)", () => {
+    expect(header[0]).toBe("Plan Code");
+    const seaLegs = body.filter(
+      (line) =>
+        col(line, "Route #") === "1" && col(line, "Plan") === "Sea Multimodal",
+    );
+    const airLegs = body.filter(
+      (line) =>
+        col(line, "Route #") === "1" && col(line, "Plan") === "Air Multimodal",
+    );
+    // Info: (20260729 - Tzuhan) 同方案 3 段共用 R01-SEA;空運方案為 R01-AIR,一眼可分辨群組
+    expect(seaLegs.map((line) => col(line, "Plan Code"))).toEqual([
+      "R01-SEA",
+      "R01-SEA",
+      "R01-SEA",
+    ]);
+    expect(airLegs.every((line) => col(line, "Plan Code") === "R01-AIR")).toBe(
+      true,
+    );
+    // Info: (20260729 - Tzuhan) 第 2 條路線的陸運方案為 R02-LAND
+    const route2 = body.find((line) => col(line, "Route #") === "2")!;
+    expect(col(route2, "Plan Code")).toBe("R02-LAND");
+  });
+
+  it("檔頭揭露 Export ID 與 Plan Code 對照語意", () => {
+    expect(lines[0]).toContain("Export ID: 20260729-1435");
+    expect(lines[0]).toContain("Plan Code (R{route}-{MODE})");
+  });
+
   it("Report Files 僅於方案末段填值", () => {
     const seaLegs = body.filter(
       (line) =>
@@ -386,8 +416,9 @@ describe("SEA_LAND_AIR plan (issue 10)", () => {
   const csv = buildBatchSummaryCsv(
     [seaLandAirItem],
     [0],
-    new Map([[0, ["route_1_sea_land_air_multimodal.pdf"]]]),
+    new Map([[0, ["R01-SLA_sea_land_air_multimodal.pdf"]]]),
     1000,
+    "20260729-1500",
   );
   const lines = csv.split("\n");
   const header = lines[1].split(",");
@@ -431,6 +462,15 @@ describe("SEA_LAND_AIR plan (issue 10)", () => {
     );
     expect(sum.toFixed(2)).toBe("3491.13");
     expect(col(slaRows[4], "Plan Total CO2e (kg)")).toBe("3491.13");
+  });
+
+  it("海陸空聯運的方案代碼為 R01-SLA(5 段共用)", () => {
+    const slaRows = body.filter(
+      (line) => col(line, "Plan") === "Sea-Land-Air Multimodal",
+    );
+    expect(slaRows.every((line) => col(line, "Plan Code") === "R01-SLA")).toBe(
+      true,
+    );
   });
 
   it("標頭碳排取三模式方案自身總計,不再誤用空運方案", () => {

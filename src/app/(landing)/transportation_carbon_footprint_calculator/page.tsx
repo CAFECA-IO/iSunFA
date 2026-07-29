@@ -50,6 +50,7 @@ import { BatchExportRenderer } from "@/components/transportation_carbon_footprin
 import { ExportOptionsModal } from "@/components/transportation_carbon_footprint_calculator/export_options_modal";
 import {
   buildExportFileName,
+  buildExportId,
   captureElementToPdf,
 } from "@/lib/utils/pdf_export";
 import {
@@ -65,6 +66,7 @@ import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import {
   TRANSPORT_CALCULATOR_QUERY_PARAM,
   HISTORY_VIEW_STATE_STORAGE_KEY,
+  buildPlanCode,
 } from "@/constants/logistics";
 import { ORDER_TYPE } from "@/constants/status";
 import { ANALYSIS_BASE_COSTS } from "@/constants/price";
@@ -192,6 +194,8 @@ function ReportPageContent() {
     current: number;
     total: number;
   } | null>(null);
+  // Info: (20260729 - Tzuhan) 匯出批次識別碼:同批 PDF 與 summary.csv 共用,渲染於 PDF 頁尾
+  const [exportId, setExportId] = useState<string | null>(null);
   const mapReadyResolver = useRef<(() => void) | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<IHistoryItem[]>([]);
@@ -525,6 +529,8 @@ function ReportPageContent() {
     if (!batchResults) return;
     let originalViewport: string | null = null;
     let viewportMeta: Element | null = null;
+    const batchExportId = buildExportId();
+    setExportId(batchExportId);
     try {
       setIsExporting(true);
 
@@ -615,6 +621,7 @@ function ReportPageContent() {
             indices,
             filesByRouteIndex,
             weightKg !== "" ? weightKg : 1000,
+            batchExportId,
           ),
         );
       }
@@ -630,6 +637,7 @@ function ReportPageContent() {
       setExportingIndex(null);
       setExportingPlanType(null);
       setExportProgress(null);
+      setExportId(null);
       setIsExporting(false);
     }
   };
@@ -641,6 +649,7 @@ function ReportPageContent() {
   const executeReportExport = async (selectedPlans: Set<RouteType>) => {
     let originalViewport: string | null = null;
     let viewportMeta: Element | null = null;
+    setExportId(buildExportId());
     try {
       setIsExporting(true); // Info: (20260501 - Luphia) 觸發重新渲染，隱藏控制面板並顯示各分頁 Header/Footer
 
@@ -830,6 +839,7 @@ function ReportPageContent() {
         );
       }
       setExportProgress(null);
+      setExportId(null);
       setIsExporting(false);
     }
   };
@@ -1451,6 +1461,7 @@ function ReportPageContent() {
                       index={exportingIndex}
                       total={batchResults.length}
                       selectedRoutes={new Set([exportingPlanType])}
+                      exportId={exportId ?? undefined}
                       onReady={handleMapsReady}
                     />
                   </div>
@@ -1667,7 +1678,8 @@ function ReportPageContent() {
                             <ReportLayout
                               isPdfExport={isExporting}
                               hideFrameUnlessExport={true}
-                              badgeText={`${getModeName(type)} ${t("transportation_carbon_footprint_calculator.payment.fee_name")}`}
+                              /* Info: (20260729 - Tzuhan) 標頭帶方案代碼 + 運輸模式(對應 CSV Plan Code 與檔名) */
+                              badgeText={`${buildPlanCode(0, type)} · ${getModeName(type)}`}
                               footerType={isExporting ? "simple" : "none"}
                               footerTitle={t(
                                 "transportation_carbon_footprint_calculator.pdf.footer",

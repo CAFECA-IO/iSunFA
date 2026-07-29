@@ -6,6 +6,7 @@ import { jsPDF } from "jspdf";
 import {
   EXPORT_PLAN_FILE_SUFFIX,
   ExportPlanRouteType,
+  buildPlanCode,
 } from "@/constants/logistics";
 
 /**
@@ -55,8 +56,18 @@ export function sanitizeFileNamePart(part: string, maxLength = 30): string {
 }
 
 /**
- * Info: (20260724 - Tzuhan) 語意化匯出檔名:route_{n}_{origin}-{dest}_{plan_type}.pdf
- * 一份 PDF 一個方案(需求二),使用者不需開檔即可辨識內容
+ * Info: (20260729 - Tzuhan) 匯出批次識別碼:同一次匯出的所有 PDF 與 summary.csv 共用,
+ * 使跨批次的同名方案代碼(如兩次匯出都有 R01-SEA)仍可區分
+ */
+export function buildExportId(now: Date = new Date()): string {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
+}
+
+/**
+ * Info: (20260724 - Tzuhan) 語意化匯出檔名:{方案代碼}_{origin}-{dest}_{plan_type}.pdf
+ * Info: (20260729 - Tzuhan) 檔名以方案代碼(R01-SEA)開頭,與 PDF 標頭及 CSV 的 Plan Code 欄一致,
+ * Info: (20260729 - Tzuhan) 使用者不需開檔即可辨識「哪條路線的哪個方案」並回查 CSV
  */
 export function buildExportFileName(
   routeIndex: number,
@@ -64,10 +75,10 @@ export function buildExportFileName(
   origin?: string,
   dest?: string,
 ): string {
-  const routePart = `route_${routeIndex + 1}`;
+  const codePart = buildPlanCode(routeIndex, planType);
   const originPart = origin ? sanitizeFileNamePart(origin) : "";
   const destPart = dest ? sanitizeFileNamePart(dest) : "";
   const locationPart =
     originPart && destPart ? `_${originPart}-${destPart}` : "";
-  return `${routePart}${locationPart}_${EXPORT_PLAN_FILE_SUFFIX[planType]}.pdf`;
+  return `${codePart}${locationPart}_${EXPORT_PLAN_FILE_SUFFIX[planType]}.pdf`;
 }

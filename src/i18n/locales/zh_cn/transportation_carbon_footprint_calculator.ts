@@ -30,6 +30,8 @@ export const transportationCarbonFootprintCalculator = {
     section_analysis: "专属区段分析",
     weight_label: "总重: {{weight}} KG",
     watermark: "iSunFA CONFIDENTIAL",
+    export_id_label: "导出批次",
+    plan_code_label: "方案代码",
   },
   ui: {
     title: "物流碳足迹",

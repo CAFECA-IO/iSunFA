@@ -34,6 +34,8 @@ export const transportationCarbonFootprintCalculator = {
     section_analysis: "전용 섹션 분석",
     weight_label: "총 중량: {{weight}} KG",
     watermark: "iSunFA CONFIDENTIAL",
+    export_id_label: "내보내기 ID",
+    plan_code_label: "플랜 코드",
   },
   ui: {
     title: "물류 탄소 발자국",

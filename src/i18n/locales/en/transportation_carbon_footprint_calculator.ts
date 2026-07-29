@@ -34,6 +34,8 @@ export const transportationCarbonFootprintCalculator = {
     section_analysis: "Exclusive Section Analysis",
     weight_label: "Total Weight: {{weight}} KG",
     watermark: "iSunFA CONFIDENTIAL",
+    export_id_label: "Export ID",
+    plan_code_label: "Plan Code",
   },
   ui: {
     title: "Logistics Carbon Footprint",

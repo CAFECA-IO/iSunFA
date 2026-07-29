@@ -73,9 +73,11 @@
 - [ ] 取消勾選其中一項 → 確認匯出 → 產出的檔案不含該方案
 - [ ] 全勾多方案 → 下載 zip,解開後:
   - [ ] 每個方案**各自一份獨立 PDF**(不是一份多頁混合)
-  - [ ] 檔名可辨識方案:`*_land_only.pdf` / `*_sea_multimodal.pdf` / `*_air_multimodal.pdf` / `*_sea_land_air_multimodal.pdf`
+  - [ ] 檔名以**方案代碼**開頭並可辨識方案:`R01-SEA_..._sea_multimodal.pdf`、`R01-AIR_..._air_multimodal.pdf`、`R02-LAND_..._land_only.pdf`、`R01-SLA_..._sea_land_air_multimodal.pdf`
 - [ ] 開啟其中一份 PDF:
   - [ ] **地圖有正確渲染**(不是空白或透明)⚠️ develop 期間 maplibre 升到 6,這是本次最高風險項
+  - [ ] **標頭顯示方案代碼徽章**(如 `R01-SEA`)與運輸模式名稱,與檔名一致
+  - [ ] 頁尾顯示 `匯出批次: YYYYMMDD-HHmm`(同批所有 PDF 相同)
   - [ ] 區段列表完整、係數與來源可見
   - [ ] 若該段為估算值,PDF 上也應看得到「估算值」徽章
 - [ ] 匯出過程覆蓋層顯示進度「正在產生第 x / y 份報告」
@@ -86,7 +88,10 @@
 
 多筆批次匯出 → zip 內 `summary.csv`,用 Excel 開啟(注意 BOM 應讓中文正常顯示):
 
-- [ ] 檔頭 `#` 行揭露公式、三個係數、Weight 欄語意、`Estimated? = Y` 說明
+- [ ] 檔頭 `#` 行揭露公式、三個係數、Weight 欄語意、`Estimated? = Y` 說明、**Export ID** 與 **Plan Code 對照說明**
+- [ ] **首欄為 `Plan Code`**:同一路線同一方案的各段共用同一代碼(如 R01-SEA 連續 3 列),換方案即換代碼(R01-AIR),一眼可分辨群組
+- [ ] CSV 的 `Plan Code` 與 zip 內 PDF 檔名開頭**完全對應**(挑一個代碼交叉驗證)
+- [ ] CSV 檔頭的 Export ID 與 PDF 頁尾的匯出批次號**相同**
 - [ ] **一段一列**(long format),同一路線的多個方案連續數列
 - [ ] 欄位含 `From Lat/Lng`、`To Lat/Lng`——港口與機場的經緯度有值
 - [ ] `Factor` 與 `Factor Source` **逐列**標注(不是只在檔頭)
