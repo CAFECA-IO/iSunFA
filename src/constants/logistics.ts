@@ -37,6 +37,8 @@ export const EXPORT_PLAN_FILE_SUFFIX = {
   land: "land_only",
   sea: "sea_multimodal",
   air: "air_multimodal",
+  // Info: (20260729 - Tzuhan) issue 10:海陸空聯運
+  seaLandAir: "sea_land_air_multimodal",
   custom: "custom_multimodal",
 } as const;
 

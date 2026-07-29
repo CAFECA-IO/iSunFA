@@ -5,7 +5,7 @@ import {
   PlanSection,
   RouteType,
 } from "@/components/transportation_carbon_footprint_calculator/plan_section";
-import { Truck, Ship, Plane, MapPin } from "lucide-react";
+import { Truck, Ship, Plane, MapPin, Layers } from "lucide-react";
 import { IMileageBatchResult } from "@/components/transportation_carbon_footprint_calculator/mileage_batch_results";
 import { getRouteApplicability } from "@/lib/utils/route_applicability";
 
@@ -63,9 +63,9 @@ export function BatchExportRenderer({
   const applicability = getRouteApplicability(plan);
 
   // Info: (20260724 - Tzuhan) 補上 custom 方案支援(原本被排除導致自訂聯運匯出空白 PDF)
-  const routesToRender = (["custom", "land", "sea", "air"] as const).filter(
-    (type) => selectedRoutes.has(type) && applicability[type],
-  );
+  const routesToRender = (
+    ["custom", "land", "sea", "air", "seaLandAir"] as const
+  ).filter((type) => selectedRoutes.has(type) && applicability[type]);
 
   const getModeName = (mode: string) =>
     mode === "land"
@@ -74,9 +74,13 @@ export function BatchExportRenderer({
         ? t("transportation_carbon_footprint_calculator.pdf.mode_sea")
         : mode === "air"
           ? t("transportation_carbon_footprint_calculator.pdf.mode_air")
-          : t(
-              "transportation_carbon_footprint_calculator.plan_section.title_custom",
-            );
+          : mode === "seaLandAir"
+            ? t(
+                "transportation_carbon_footprint_calculator.plan_section.title_sea_land_air",
+              )
+            : t(
+                "transportation_carbon_footprint_calculator.plan_section.title_custom",
+              );
 
   return (
     <div id={`batch-report-item-${index}`} className="flex flex-col">
@@ -106,6 +110,8 @@ export function BatchExportRenderer({
                     <Ship className="h-6 w-6 text-emerald-500" />
                   ) : type === "air" ? (
                     <Plane className="h-6 w-6 text-blue-500" />
+                  ) : type === "seaLandAir" ? (
+                    <Layers className="h-6 w-6 text-indigo-500" />
                   ) : (
                     <MapPin className="h-6 w-6 text-purple-500" />
                   )}

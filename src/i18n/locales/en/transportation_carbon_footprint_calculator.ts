@@ -75,6 +75,8 @@ export const transportationCarbonFootprintCalculator = {
     mode_sea: "Sea Route",
     mode_air: "Air Route",
     title_custom: "Custom Multimodal Route",
+    title_sea_land_air: "Sea-Land-Air Multimodal Plan",
+    transit_airport: "Transit Airport",
     title_land: "Land Transport Plan",
     title_sea: "Sea Transport Plan",
     title_air: "Air Transport Plan",
@@ -169,6 +171,7 @@ export const transportationCarbonFootprintCalculator = {
     plan_sea: "Including Sea (Sea-Land Multimodal)",
     plan_air: "Including Air (Air-Land Multimodal)",
     plan_custom: "Custom Multimodal",
+    plan_seaLandAir: "Sea-Land-Air (land→sea→land→air→land)",
     split_hint:
       "Each plan is exported as a separate PDF; multiple files are bundled into a ZIP.",
     confirm: "Export",

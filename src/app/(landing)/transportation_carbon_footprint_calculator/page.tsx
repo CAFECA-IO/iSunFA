@@ -208,7 +208,7 @@ function ReportPageContent() {
   });
 
   const [selectedRoutes, setSelectedRoutes] = useState<Set<RouteType>>(
-    new Set(["land", "sea", "air"]),
+    new Set(["land", "sea", "air", "seaLandAir"]),
   );
 
   const reportRef = useRef<HTMLDivElement>(null);
@@ -220,6 +220,8 @@ function ReportPageContent() {
   const seaMapRef = useRef<IMapViewerRef>(null);
   const airMapRef = useRef<IMapViewerRef>(null);
   const customMapRef = useRef<IMapViewerRef>(null);
+  // Info: (20260729 - Tzuhan) issue 10:海陸空聯運方案的地圖 ref
+  const seaLandAirMapRef = useRef<IMapViewerRef>(null);
   const mapRefs = useMemo<
     Record<RouteType, React.RefObject<IMapViewerRef | null>>
   >(
@@ -227,6 +229,7 @@ function ReportPageContent() {
       land: landMapRef,
       sea: seaMapRef,
       air: airMapRef,
+      seaLandAir: seaLandAirMapRef,
       custom: customMapRef,
     }),
     [],
@@ -449,7 +452,13 @@ function ReportPageContent() {
     () =>
       plan
         ? getRouteApplicability(plan)
-        : { land: true, sea: true, air: true, custom: false },
+        : {
+            land: true,
+            sea: true,
+            air: true,
+            seaLandAir: true,
+            custom: false,
+          },
     [plan],
   );
   const isLandAvailable = routeApplicability.land;
@@ -482,7 +491,7 @@ function ReportPageContent() {
   const exportAvailablePlans = useMemo<RouteType[]>(() => {
     if (!exportModalTarget) return [];
     if (exportModalTarget.scope === "report") {
-      return (["land", "sea", "air"] as const).filter(
+      return (["land", "sea", "air", "seaLandAir"] as const).filter(
         (type) => routeApplicability[type],
       );
     }
@@ -495,9 +504,11 @@ function ReportPageContent() {
     targets.forEach((item) => {
       if (!item) return;
       const applicability = getRouteApplicability(item.plan);
-      (["custom", "land", "sea", "air"] as const).forEach((type) => {
-        if (applicability[type]) union.add(type);
-      });
+      (["custom", "land", "sea", "air", "seaLandAir"] as const).forEach(
+        (type) => {
+          if (applicability[type]) union.add(type);
+        },
+      );
     });
     return Array.from(union);
   }, [exportModalTarget, batchResults, routeApplicability]);
@@ -538,11 +549,13 @@ function ReportPageContent() {
       const jobs: Array<{ index: number; type: RouteType }> = [];
       indices.forEach((index) => {
         const applicability = getRouteApplicability(batchResults[index]?.plan);
-        (["custom", "land", "sea", "air"] as const).forEach((type) => {
-          if (selectedPlans.has(type) && applicability[type]) {
-            jobs.push({ index, type });
-          }
-        });
+        (["custom", "land", "sea", "air", "seaLandAir"] as const).forEach(
+          (type) => {
+            if (selectedPlans.has(type) && applicability[type]) {
+              jobs.push({ index, type });
+            }
+          },
+        );
       });
 
       const files: Array<{ index: number; filename: string; blob: Blob }> = [];
@@ -662,9 +675,9 @@ function ReportPageContent() {
       });
 
       // Info: (20260724 - Tzuhan) 匯出範圍=使用者勾選 ∩ 適用性引擎判定(需求一+二),與畫面檢視狀態脫鉤
-      const routesToExport = (["land", "sea", "air"] as const).filter(
-        (type) => selectedPlans.has(type) && routeApplicability[type],
-      );
+      const routesToExport = (
+        ["land", "sea", "air", "seaLandAir"] as const
+      ).filter((type) => selectedPlans.has(type) && routeApplicability[type]);
 
       // Info: (20260724 - Tzuhan) 需求二:一個方案一份獨立 PDF,不再合併分頁
       const files: Array<{ filename: string; blob: Blob }> = [];

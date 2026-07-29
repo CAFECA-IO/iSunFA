@@ -13,7 +13,8 @@ import {
 import { useTranslation } from "@/i18n/i18n_context";
 
 // Info: (20260629 - Tzuhan) Support custom mode
-export type RouteType = "sea" | "air" | "land" | "custom";
+// Info: (20260729 - Tzuhan) issue 10:新增 seaLandAir(海陸空聯運串聯路徑)
+export type RouteType = "sea" | "air" | "land" | "seaLandAir" | "custom";
 
 export interface ISegment {
   mode: string;
@@ -91,10 +92,13 @@ export function PlanSection({
   const isLand = type === "land";
   // Info: (20260629 - Tzuhan) Check custom route type
   const isCustom = type === "custom";
+  // Info: (20260729 - Tzuhan) issue 10:海陸空聯運(5 段串聯)
+  const isSeaLandAir = type === "seaLandAir";
   const seaPlan = plan.comparisonData?.plans?.sea_multimodal;
   const airPlan = plan.comparisonData?.plans?.air_multimodal;
   const landPlan = plan.comparisonData?.plans?.landOnly;
   const customPlan = plan.comparisonData?.plans?.custom_multimodal;
+  const seaLandAirPlan = plan.comparisonData?.plans?.sea_land_air_multimodal;
 
   const segments: ISegment[] = [];
   const mapFeatures: GeoJSON.Feature[] = [];
@@ -230,6 +234,72 @@ export function PlanSection({
       airportIn,
       t("transportation_carbon_footprint_calculator.plan_section.dest"),
       airPlan.land_airport_to_dest,
+      EMISSION_FACTORS.LAND,
+      EMISSION_FACTOR_SOURCES.LAND,
+      "#F97316",
+    );
+  } else if (isSeaLandAir && seaLandAirPlan) {
+    titleName = t(
+      "transportation_carbon_footprint_calculator.plan_section.title_sea_land_air",
+    );
+    themeColor = "text-indigo-500";
+    themeBg = "bg-indigo-100";
+    totalCo2e = seaLandAirPlan.total_co2eKg?.toString() || "0";
+    const portOut =
+      plan.exportPort?.name ||
+      t("transportation_carbon_footprint_calculator.plan_section.origin_port");
+    const portIn =
+      plan.importPort?.name ||
+      t("transportation_carbon_footprint_calculator.plan_section.dest_port");
+    const transitAirport =
+      seaLandAirPlan.transitAirport?.name ||
+      t(
+        "transportation_carbon_footprint_calculator.plan_section.transit_airport",
+      );
+    const airportIn =
+      plan.importAirport?.name ||
+      t("transportation_carbon_footprint_calculator.plan_section.dest_airport");
+    addSegment(
+      "land",
+      t("transportation_carbon_footprint_calculator.plan_section.origin"),
+      portOut,
+      seaLandAirPlan.land_origin_to_port,
+      EMISSION_FACTORS.LAND,
+      EMISSION_FACTOR_SOURCES.LAND,
+      "#F97316",
+    );
+    addSegment(
+      "sea",
+      portOut,
+      portIn,
+      seaLandAirPlan.sea_port_to_port,
+      EMISSION_FACTORS.SEA,
+      EMISSION_FACTOR_SOURCES.SEA,
+      "#059669",
+    );
+    addSegment(
+      "land",
+      portIn,
+      transitAirport,
+      seaLandAirPlan.land_port_to_airport,
+      EMISSION_FACTORS.LAND,
+      EMISSION_FACTOR_SOURCES.LAND,
+      "#F97316",
+    );
+    addSegment(
+      "air",
+      transitAirport,
+      airportIn,
+      seaLandAirPlan.air_airport_to_airport,
+      EMISSION_FACTORS.AIR,
+      EMISSION_FACTOR_SOURCES.AIR,
+      "#2563EB",
+    );
+    addSegment(
+      "land",
+      airportIn,
+      t("transportation_carbon_footprint_calculator.plan_section.dest"),
+      seaLandAirPlan.land_airport_to_dest,
       EMISSION_FACTORS.LAND,
       EMISSION_FACTOR_SOURCES.LAND,
       "#F97316",

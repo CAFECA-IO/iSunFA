@@ -165,6 +165,16 @@ export function getHeadlineCo2e(
     value: plans.air_multimodal?.total_co2eKg,
     legs: airLegs,
   };
+  const seaLandAirCandidate: Candidate = {
+    value: plans.sea_land_air_multimodal?.total_co2eKg,
+    legs: [
+      plans.sea_land_air_multimodal?.land_origin_to_port,
+      plans.sea_land_air_multimodal?.sea_port_to_port,
+      plans.sea_land_air_multimodal?.land_port_to_airport,
+      plans.sea_land_air_multimodal?.air_airport_to_airport,
+      plans.sea_land_air_multimodal?.land_airport_to_dest,
+    ],
+  };
 
   let chosen: Candidate | null = null;
   if (plans.custom_multimodal) {
@@ -177,11 +187,11 @@ export function getHeadlineCo2e(
     chosen = landCandidate;
   } else if (item.mode === ROUTE_MODE.SEA_LAND) {
     chosen = seaCandidate;
-  } else if (
-    item.mode === ROUTE_MODE.AIR_LAND ||
-    item.mode === ROUTE_MODE.SEA_LAND_AIR
-  ) {
+  } else if (item.mode === ROUTE_MODE.AIR_LAND) {
     chosen = airCandidate;
+  } else if (item.mode === ROUTE_MODE.SEA_LAND_AIR) {
+    // Info: (20260729 - Tzuhan) issue 10:三模式串聯方案有自己的總計,不再誤用空運方案
+    chosen = seaLandAirCandidate;
   }
 
   // Info: (20260728 - Tzuhan) 無 mode(或 mode 對應方案無值)時,依適用性引擎取第一個適用方案
@@ -190,6 +200,7 @@ export function getHeadlineCo2e(
     if (applicability.land) chosen = landCandidate;
     else if (applicability.sea) chosen = seaCandidate;
     else if (applicability.air) chosen = airCandidate;
+    else if (applicability.seaLandAir) chosen = seaLandAirCandidate;
     else chosen = null;
   }
 
@@ -291,7 +302,7 @@ const nodeOf = (
  */
 const buildPlanLegs = (
   item: IMileageBatchResult,
-  planKey: "land" | "sea" | "air" | "custom",
+  planKey: "land" | "sea" | "air" | "seaLandAir" | "custom",
 ): CsvLeg[] => {
   const plan = item.plan;
   const plans = plan?.comparisonData?.plans;
@@ -390,6 +401,67 @@ const buildPlanLegs = (
     ];
   }
 
+  if (planKey === "seaLandAir") {
+    // Info: (20260729 - Tzuhan) issue 10:5 段串聯,中轉機場取自方案自身的 transitAirport
+    const slaPlan = plans.sea_land_air_multimodal;
+    const outPort = nodeOf(plan?.exportPort, "Export Port");
+    const inPort = nodeOf(plan?.importPort, "Import Port");
+    const transitAirport = nodeOf(slaPlan?.transitAirport, "Transit Airport");
+    const inAirport = nodeOf(plan?.importAirport, "Import Airport");
+    return [
+      {
+        mode: "LAND",
+        fromName: origin.name,
+        fromLat: origin.lat,
+        fromLng: origin.lng,
+        toName: outPort.name,
+        toLat: outPort.lat,
+        toLng: outPort.lng,
+        segment: slaPlan?.land_origin_to_port,
+      },
+      {
+        mode: "SEA",
+        fromName: outPort.name,
+        fromLat: outPort.lat,
+        fromLng: outPort.lng,
+        toName: inPort.name,
+        toLat: inPort.lat,
+        toLng: inPort.lng,
+        segment: slaPlan?.sea_port_to_port,
+      },
+      {
+        mode: "LAND",
+        fromName: inPort.name,
+        fromLat: inPort.lat,
+        fromLng: inPort.lng,
+        toName: transitAirport.name,
+        toLat: transitAirport.lat,
+        toLng: transitAirport.lng,
+        segment: slaPlan?.land_port_to_airport,
+      },
+      {
+        mode: "AIR",
+        fromName: transitAirport.name,
+        fromLat: transitAirport.lat,
+        fromLng: transitAirport.lng,
+        toName: inAirport.name,
+        toLat: inAirport.lat,
+        toLng: inAirport.lng,
+        segment: slaPlan?.air_airport_to_airport,
+      },
+      {
+        mode: "LAND",
+        fromName: inAirport.name,
+        fromLat: inAirport.lat,
+        fromLng: inAirport.lng,
+        toName: dest.name,
+        toLat: dest.lat,
+        toLng: dest.lng,
+        segment: slaPlan?.land_airport_to_dest,
+      },
+    ];
+  }
+
   // Info: (20260729 - Tzuhan) custom:段名格式為 "Land: A -> B",以 name 拆出端點(無座標可揭露)
   const customPlan = plans.custom_multimodal;
   return (customPlan?.segments ?? []).map((seg) => {
@@ -403,10 +475,15 @@ const buildPlanLegs = (
   });
 };
 
-const PLAN_LABELS: Record<"land" | "sea" | "air" | "custom", string> = {
+const PLAN_LABELS: Record<
+  "land" | "sea" | "air" | "seaLandAir" | "custom",
+  string
+> = {
   land: "Land Only",
   sea: "Sea Multimodal",
   air: "Air Multimodal",
+  // Info: (20260729 - Tzuhan) issue 10:海陸空聯運(串聯路徑)
+  seaLandAir: "Sea-Land-Air Multimodal",
   custom: "Custom Multimodal",
 };
 
@@ -462,11 +539,12 @@ export function buildBatchSummaryCsv(
     const weight = String(Number(item.weightKg) || fallbackWeight);
     const files = escapeCsv((filesByRouteIndex.get(index) || []).join("; "));
 
-    const planKeys: ("land" | "sea" | "air" | "custom")[] = [];
+    const planKeys: ("land" | "sea" | "air" | "seaLandAir" | "custom")[] = [];
     if (applicability.custom) planKeys.push("custom");
     if (applicability.land) planKeys.push("land");
     if (applicability.sea) planKeys.push("sea");
     if (applicability.air) planKeys.push("air");
+    if (applicability.seaLandAir) planKeys.push("seaLandAir");
 
     planKeys.forEach((planKey) => {
       const legs = buildPlanLegs(item, planKey);
@@ -478,7 +556,9 @@ export function buildBatchSummaryCsv(
             ? plans.sea_multimodal?.total_co2eKg
             : planKey === "air"
               ? plans.air_multimodal?.total_co2eKg
-              : plans.custom_multimodal?.total_co2eKg;
+              : planKey === "seaLandAir"
+                ? plans.sea_land_air_multimodal?.total_co2eKg
+                : plans.custom_multimodal?.total_co2eKg;
 
       legs.forEach((leg, legIndex) => {
         const isLastLeg = legIndex === legs.length - 1;

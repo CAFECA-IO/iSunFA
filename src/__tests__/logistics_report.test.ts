@@ -128,6 +128,48 @@ const fallbackFeederItem: IMileageBatchResult = {
   } as unknown as ILogisticsPlan,
 };
 
+// Info: (20260729 - Tzuhan) issue 10:海陸空聯運(5 段串聯)fixture
+const seaLandAirItem: IMileageBatchResult = {
+  origin: { lat: 50.08, lng: 14.42, name: "Prague" },
+  dest: { lat: 41.88, lng: -87.62, name: "Chicago" },
+  mode: ROUTE_MODE.SEA_LAND_AIR,
+  weightKg: 4000,
+  plan: {
+    exportPort: { name: "Hamburg", lat: 53.55, lng: 9.99 },
+    importPort: { name: "New York Port", lat: 40.67, lng: -74.04 },
+    exportAirport: { name: "PRG", lat: 50.1, lng: 14.26 },
+    importAirport: { name: "ORD", lat: 41.98, lng: -87.9 },
+    comparisonData: {
+      success: true,
+      plans: {
+        landOnly: { success: false, distanceKm: 0, geometry: null },
+        sea_multimodal: {
+          land_origin_to_port: leg(700, "316.09"),
+          sea_port_to_port: leg(6200, "259.16"),
+          land_port_to_dest: leg(1300, "587.03"),
+          total_co2eKg: "1162.28",
+        },
+        air_multimodal: {
+          land_origin_to_airport: leg(20, "9.03"),
+          air_airport_to_airport: leg(7000, "16864.40"),
+          land_airport_to_dest: leg(30, "13.55"),
+          total_co2eKg: "16886.98",
+        },
+        sea_land_air_multimodal: {
+          land_origin_to_port: leg(700, "316.09"),
+          sea_port_to_port: leg(6200, "259.16"),
+          land_port_to_airport: leg(30, "13.55"),
+          air_airport_to_airport: leg(1200, "2891.04"),
+          land_airport_to_dest: leg(25, "11.29"),
+          total_co2eKg: "3491.13",
+          transitAirport: { name: "JFK", lat: 40.64, lng: -73.78 },
+          isApplicable: true,
+        },
+      },
+    },
+  } as unknown as ILogisticsPlan,
+};
+
 describe("buildBatchSummaryCsv (long format, issue 11)", () => {
   const csv = buildBatchSummaryCsv(
     [crossSeaItem, domesticItem, fallbackFeederItem],
@@ -336,5 +378,64 @@ describe("getHeadlineCo2e", () => {
 
   it("無 plan 回傳 null", () => {
     expect(getHeadlineCo2e({ origin: "A", dest: "B" })).toBeNull();
+  });
+});
+
+// Info: (20260729 - Tzuhan) issue 10:海陸空聯運在 CSV/標頭的呈現
+describe("SEA_LAND_AIR plan (issue 10)", () => {
+  const csv = buildBatchSummaryCsv(
+    [seaLandAirItem],
+    [0],
+    new Map([[0, ["route_1_sea_land_air_multimodal.pdf"]]]),
+    1000,
+  );
+  const lines = csv.split("\n");
+  const header = lines[1].split(",");
+  const body = lines.slice(2);
+  const col = (line: string, name: string): string =>
+    line.split(",")[header.indexOf(name)];
+
+  it("CSV 以 5 段成列且不需新增欄位(long format 效益)", () => {
+    const slaRows = body.filter(
+      (line) => col(line, "Plan") === "Sea-Land-Air Multimodal",
+    );
+    expect(slaRows).toHaveLength(5);
+    expect(slaRows.map((line) => col(line, "Mode"))).toEqual([
+      "LAND",
+      "SEA",
+      "LAND",
+      "AIR",
+      "LAND",
+    ]);
+    expect(lines[1].split(",")).toHaveLength(header.length);
+  });
+
+  it("中轉機場端點揭露(進口港 → 中轉機場 → 目的機場)", () => {
+    const slaRows = body.filter(
+      (line) => col(line, "Plan") === "Sea-Land-Air Multimodal",
+    );
+    expect(col(slaRows[2], "From Name")).toBe("New York Port");
+    expect(col(slaRows[2], "To Name")).toBe("JFK");
+    expect(col(slaRows[3], "From Name")).toBe("JFK");
+    expect(col(slaRows[3], "To Name")).toBe("ORD");
+    expect(col(slaRows[3], "From Lat")).toBe("40.64");
+  });
+
+  it("各段相加 = 方案總計(5 段勾稽)", () => {
+    const slaRows = body.filter(
+      (line) => col(line, "Plan") === "Sea-Land-Air Multimodal",
+    );
+    const sum = slaRows.reduce(
+      (acc, line) => acc.plus(col(line, "Leg CO2e (kg)")),
+      MoneyUtil.toDecimal(0),
+    );
+    expect(sum.toFixed(2)).toBe("3491.13");
+    expect(col(slaRows[4], "Plan Total CO2e (kg)")).toBe("3491.13");
+  });
+
+  it("標頭碳排取三模式方案自身總計,不再誤用空運方案", () => {
+    const headline = getHeadlineCo2e(seaLandAirItem);
+    expect(headline?.value).toBe("3491.13");
+    expect(headline?.isEstimated).toBe(false);
   });
 });
