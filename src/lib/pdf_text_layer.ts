@@ -5,6 +5,8 @@
 // Info: (20260730 - Tzuhan) 乾淨就送純文字(順帶解除大小限制、大幅省 token),不乾淨才退回原檔走視覺模型。
 // Info: (20260730 - Tzuhan) 本模組刻意拆成「純判定函數」與「薄 IO 包裝」兩層,判定邏輯不碰 IO 才可被單元測試。
 
+import { logger } from "@/lib/utils/logger";
+import { describeError } from "@/lib/utils/error_message";
 import {
   PdfTextLayerDecisionEnum,
   PDF_TEXT_LAYER_MAX_NUMERIC_UNDECODED,
@@ -128,7 +130,9 @@ export function assessPdfTextLayer(
 /**
  * Info: (20260730 - Tzuhan) 薄 IO 包裝:抽 PDF 文字層。
  * pdf-parse 走 pdfjs legacy build,是 CPU 密集同步解析,故限定於伺服端呼叫。
- * 抽取失敗一律回 null 交給呼叫端降級,不吞錯也不猜測。
+ * 抽取失敗回 null 交給呼叫端降級,但**必須把原因記下來**:
+ * 降級到視覺模型的代價是逐字照抄變成 AI 改寫、頁碼切片失效(實測整份沿革條目消失),
+ * 這麼大的行為差異不能只留下一句 text_layer_unavailable。
  */
 export async function extractPdfTextLayer(
   buffer: Buffer,
@@ -151,7 +155,10 @@ export async function extractPdfTextLayer(
     } finally {
       await parser.destroy();
     }
-  } catch {
+  } catch (error) {
+    logger.error(
+      `[PdfTextLayer] extraction failed (bytes=${buffer.length}): ${describeError(error)}`,
+    );
     return null;
   }
 }

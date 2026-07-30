@@ -14,6 +14,12 @@ import {
   CarbonDiagramTemplateEnum,
   CARBON_DIAGRAM_TEMPLATES,
 } from "@/constants/carbon_report_diagrams";
+import { detectChartType } from "@/lib/utils/mermaid_helpers";
+import { MermaidChartType } from "@/constants/mermaid_chart";
+
+// Info: (20260730 - Tzuhan) 取出 mermaid 圍籬內的定義字串(前端 markdown 渲染器交給元件的正是這一段)
+const extractMermaidChart = (block: string): string =>
+  block.match(/```mermaid\n([\s\S]*?)```/)?.[1]?.trim() ?? "";
 
 // Info: (20260730 - Tzuhan) 取自高興昌盤查報告 1.4 節原文(治理架構)
 const GOVERNANCE_SOURCE = `1.4 溫室氣體盤查推行委員會
@@ -472,5 +478,36 @@ describe("時間軸的最少事件數(實測回歸)", () => {
     );
     expect(block).not.toContain("```mermaid");
     expect(block).toContain("不足");
+  });
+});
+
+// Info: (20260730 - Tzuhan) 前端渲染前置條件:mermaid_chart 元件在 render 前先用 detectChartType 過濾,
+// Info: (20260730 - Tzuhan) 回 UNKNOWN 就直接顯示 "Mermaid Syntax Error"。實測 timeline 因未列入型別清單而全數被擋,
+// Info: (20260730 - Tzuhan) 圖從未有機會渲染 —— 產生器測到底也測不出這個缺口,故在此把兩端接起來。
+describe("產出的圖表可被前端型別偵測接受", () => {
+  it("timeline 區塊被辨識為 TIMELINE,而非 UNKNOWN", () => {
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
+      [
+        { label: "公司創立於高雄市", parent: "1966年01月" },
+        { label: "榮獲經濟部中央標準局鍍鋅鋼管正字標記", parent: "1968年06月" },
+        { label: "榮獲經濟部中央標準局黑鋼管正字標記", parent: "1968年11月" },
+      ],
+      MILESTONE_SOURCE,
+    );
+    const chart = extractMermaidChart(block);
+    expect(chart).not.toBe("");
+    expect(detectChartType(chart)).toBe(MermaidChartType.TIMELINE);
+  });
+
+  it("flowchart 區塊被辨識為 FLOWCHART", () => {
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      GOVERNANCE_NODES,
+      GOVERNANCE_SOURCE,
+    );
+    expect(detectChartType(extractMermaidChart(block))).toBe(
+      MermaidChartType.FLOWCHART,
+    );
   });
 });
