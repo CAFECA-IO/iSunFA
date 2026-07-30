@@ -65,8 +65,9 @@ export async function POST(request: NextRequest) {
       logger.info("carbon diagram rejected", {
         paragraphId,
         templateId,
-        reason: validation.reason,
-        offendingLabels: validation.offendingLabels,
+        // Info: (20260730 - Tzuhan) ILogFields 不接受 undefined,缺值一律轉 null(等同「本次無此資訊」)
+        reason: validation.reason ?? null,
+        offendingLabels: validation.offendingLabels ?? [],
         nodeCount: nodes.length,
       });
     }
