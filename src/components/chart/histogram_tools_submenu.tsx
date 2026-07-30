@@ -1,5 +1,3 @@
-/* eslint-disable */
-// ToDo: (20260728 - Julian) 此元件還在開發中
 import React, { useState, useMemo, FC, Dispatch, SetStateAction } from "react";
 import {
   SquarePlus,
@@ -33,7 +31,6 @@ import ColorPicker from "@/components/common/color_picker";
 
 // Info: (20260728 - Julian) 直方圖工具 i18n key 前綴，字面值收斂於 locale 檔
 const HISTOGRAM_I18N_PREFIX = "chart.custom_chart.histogram";
-const MOVER_FALLBACK_LABEL = "new";
 
 enum HistogramTools {
   ADD_ITEM = "addItem",
@@ -103,11 +100,11 @@ const HISTOGRAM_TOOLS: IToolItem[] = [
 ];
 
 const HISTOGRAM_TOOL_TRANSLATION_KEYS: Record<HistogramTools, string> = {
-  [HistogramTools.ADD_ITEM]: `新增項目`,
-  [HistogramTools.EDIT_ITEM]: `編輯項目`,
-  [HistogramTools.EDIT_AXIS]: `編輯軸線標題`,
-  [HistogramTools.SWITCH_TREND_LINE]: `切換趨勢曲線`,
-  [HistogramTools.DELETE_ITEM]: `刪除項目`,
+  [HistogramTools.ADD_ITEM]: `${HISTOGRAM_I18N_PREFIX}.add_item`,
+  [HistogramTools.EDIT_ITEM]: `${HISTOGRAM_I18N_PREFIX}.edit_item`,
+  [HistogramTools.EDIT_AXIS]: `${HISTOGRAM_I18N_PREFIX}.edit_axis`,
+  [HistogramTools.SWITCH_TREND_LINE]: `${HISTOGRAM_I18N_PREFIX}.switch_trend_line`,
+  [HistogramTools.DELETE_ITEM]: `${HISTOGRAM_I18N_PREFIX}.delete_item`,
 };
 
 /**
@@ -135,7 +132,7 @@ const DraggingTrain: FC<IDraggingTrainProps> = ({
   setNewLineIndex,
   newLabel = "",
   variant,
-  movingLineIndex,
+  movingLineIndex = 0,
   disabled = false,
 }) => {
   const { t } = useTranslation();
@@ -234,14 +231,14 @@ const DraggingTrain: FC<IDraggingTrainProps> = ({
   const moverLabel =
     newLabel.trim() !== ""
       ? newLabel
-      : (movingBin?.label ?? MOVER_FALLBACK_LABEL);
+      : (movingBin?.label ?? t(`${HISTOGRAM_I18N_PREFIX}.mover_fallback`));
 
   // Info: (20260730 - Julian) 操作提示：依模式與是否可操作切換文案
   const hint = disabled
-    ? t(`請先選擇要編輯的項目`)
+    ? t(`${HISTOGRAM_I18N_PREFIX}.hint_select_first`)
     : isEdit
-      ? t(`拖曳橘色車廂即可調整此項目的順序`)
-      : t(`拖曳橘色車廂即可調整新項目的插入位置`);
+      ? t(`${HISTOGRAM_I18N_PREFIX}.hint_drag_edit`)
+      : t(`${HISTOGRAM_I18N_PREFIX}.hint_drag_add`);
 
   return (
     <div className="flex flex-col gap-2">
@@ -250,6 +247,9 @@ const DraggingTrain: FC<IDraggingTrainProps> = ({
        * 讓「放開處必被視為可放置」，抑制 HTML5 DnD 放置失敗時的回彈（snap-back）動畫。
        */}
       <div
+        // Info: (20260730 - Julian) 自訂拖曳排序小工具，整體以 application 角色標示（滿足 a11y 且自管鍵盤）
+        role="application"
+        aria-label={t(`${HISTOGRAM_I18N_PREFIX}.mover_aria_label`)!}
         className="flex flex-wrap items-center gap-2"
         onDragOver={(e) => {
           if (isDragging) e.preventDefault();
@@ -261,9 +261,10 @@ const DraggingTrain: FC<IDraggingTrainProps> = ({
             return (
               <div
                 key="mover-carriage"
+                role="button"
                 draggable={!disabled}
                 tabIndex={disabled ? -1 : 0}
-                aria-label={t(`拖曳或使用左右鍵調整此車廂的位置`)!}
+                aria-label={t(`${HISTOGRAM_I18N_PREFIX}.mover_aria_label`)!}
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
                 onKeyDown={handleMoverKeyDown}
@@ -283,6 +284,10 @@ const DraggingTrain: FC<IDraggingTrainProps> = ({
           return (
             <div
               key={`bin-${carriage.bin.lineIndex}`}
+              // Info: (20260730 - Julian) 既有車廂不可拖曳，但作為移動車廂的放置定位點（drop target）
+              role="button"
+              tabIndex={-1}
+              aria-label={carriage.bin.label}
               onDragOver={(e) => handleDragOverCarriage(e, fixedOrdinal)}
               className={`${disabled ? "cursor-not-allowed border-slate-300 text-slate-300" : "border-slate-800 text-slate-800"} relative flex flex-col items-center rounded-sm border px-1.5 py-0.5 text-[10px] font-bold select-none`}
             >
@@ -323,7 +328,7 @@ const AddItemPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: HistogramActionType.ADD_ITEM,
-      description: `新增項目：${label}`,
+      description: t(`${HISTOGRAM_I18N_PREFIX}.action_add_item`, { label }),
       payload: { label, count: valueInput.numValue, lineIndex: newLineIndex },
     });
   };
@@ -331,12 +336,12 @@ const AddItemPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <SquarePlus size={14} />
-        <p>{t(`新增項目`)}</p>
+        <p>{t(`${HISTOGRAM_I18N_PREFIX}.add_item`)}</p>
       </div>
       <div className="flex flex-col gap-2">
         <div className="flex flex-col">
           <label htmlFor="newTitleLabel" className={MERMAID_LABEL_STYLE}>
-            {t(`新項目標題`)}
+            {t(`${HISTOGRAM_I18N_PREFIX}.new_item_title`)}
             <span className="ml-0.5 text-red-500">*</span>
           </label>
           <input
@@ -345,12 +350,12 @@ const AddItemPanel: FC<IBasePanelProps> = ({
             value={titleInput}
             onChange={(e) => setTitleInput(e.target.value)}
             className={MERMAID_INPUT_STYLE}
-            placeholder={t(`請輸入新項目的標題`)!}
+            placeholder={t(`${HISTOGRAM_I18N_PREFIX}.item_title_placeholder`)!}
           />
         </div>
         <div className="flex flex-col">
           <label htmlFor="newValueLabel" className={MERMAID_LABEL_STYLE}>
-            {t(`新項目數值`)}
+            {t(`${HISTOGRAM_I18N_PREFIX}.new_item_value`)}
             <span className="ml-0.5 text-red-500">*</span>
           </label>
           <input
@@ -365,7 +370,7 @@ const AddItemPanel: FC<IBasePanelProps> = ({
         </div>
         <div className="flex flex-col gap-2">
           <p className={MERMAID_LABEL_STYLE}>
-            {t(`插入位置`)}
+            {t(`${HISTOGRAM_I18N_PREFIX}.insert_position`)}
             <span className="ml-0.5 text-red-500">*</span>
           </p>
           {/* Info: (20260728 - Julian) 僅新車廂（橘色）可拖曳；既有車廂順序固定、不可拖曳 */}
@@ -384,7 +389,7 @@ const AddItemPanel: FC<IBasePanelProps> = ({
         disabled={isSubmitDisabled}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t(`新增項目`)}
+        {t(`${HISTOGRAM_I18N_PREFIX}.add_item`)}
       </button>
     </div>
   );
@@ -436,7 +441,7 @@ const EditItemPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: HistogramActionType.EDIT_ITEM,
-      description: `編輯項目：${label}`,
+      description: t(`${HISTOGRAM_I18N_PREFIX}.action_edit_item`, { label }),
       payload: {
         lineIndex: selectedItem.lineIndex,
         label,
@@ -450,12 +455,12 @@ const EditItemPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <PencilLine size={14} />
-        <p>{t(`編輯項目`)}</p>
+        <p>{t(`${HISTOGRAM_I18N_PREFIX}.edit_item`)}</p>
       </div>
       <div className="flex flex-col gap-2">
         <div className="flex flex-col">
           <label htmlFor="editItemLabel" className={MERMAID_LABEL_STYLE}>
-            {t(`選擇欲編輯的項目`)}
+            {t(`${HISTOGRAM_I18N_PREFIX}.select_edit_item`)}
             <span className="ml-0.5 text-red-500">*</span>
           </label>
           <select
@@ -464,7 +469,9 @@ const EditItemPanel: FC<IBasePanelProps> = ({
             onChange={(e) => handleSelect(Number(e.target.value))}
             className={MERMAID_INPUT_STYLE}
           >
-            <option value="">{t(`選擇欲編輯的項目`)}</option>
+            <option value="">
+              {t(`${HISTOGRAM_I18N_PREFIX}.select_edit_item`)}
+            </option>
             {bins.map((item) => (
               <option
                 key={`histogram-edit-opt-${item.lineIndex}`}
@@ -477,7 +484,7 @@ const EditItemPanel: FC<IBasePanelProps> = ({
         </div>
         <div className="flex flex-col">
           <label htmlFor="editTitleLabel" className={MERMAID_LABEL_STYLE}>
-            {t(`編輯項目標題`)}
+            {t(`${HISTOGRAM_I18N_PREFIX}.edit_item_title`)}
           </label>
           <input
             id="editTitleLabel"
@@ -485,13 +492,13 @@ const EditItemPanel: FC<IBasePanelProps> = ({
             value={titleInput}
             onChange={(e) => setTitleInput(e.target.value)}
             className={MERMAID_INPUT_STYLE}
-            placeholder={t(`請輸入新項目的標題`)!}
+            placeholder={t(`${HISTOGRAM_I18N_PREFIX}.item_title_placeholder`)!}
             disabled={!isSelected}
           />
         </div>
         <div className="flex flex-col">
           <label htmlFor="editValueLabel" className={MERMAID_LABEL_STYLE}>
-            {t(`編輯項目數值`)}
+            {t(`${HISTOGRAM_I18N_PREFIX}.edit_item_value`)}
           </label>
           <input
             id="editValueLabel"
@@ -505,7 +512,9 @@ const EditItemPanel: FC<IBasePanelProps> = ({
           />
         </div>
         <div className="flex flex-col gap-2">
-          <p className={MERMAID_LABEL_STYLE}>{t(`變更順序`)}</p>
+          <p className={MERMAID_LABEL_STYLE}>
+            {t(`${HISTOGRAM_I18N_PREFIX}.change_order`)}
+          </p>
           <DraggingTrain
             originalTrain={bins}
             newLineIndex={newLineIndex}
@@ -523,7 +532,7 @@ const EditItemPanel: FC<IBasePanelProps> = ({
         disabled={isSubmitDisabled}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t(`套用變更`)}
+        {t(`${HISTOGRAM_I18N_PREFIX}.apply_changes`)}
       </button>
     </div>
   );
@@ -568,7 +577,7 @@ const EditAxisPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: HistogramActionType.EDIT_AXIS,
-      description: `編輯軸線標題`,
+      description: t(`${HISTOGRAM_I18N_PREFIX}.edit_axis`),
       payload: { xAxis: xTitle.trim(), yAxis: yTitle.trim() },
     });
   };
@@ -576,12 +585,12 @@ const EditAxisPanel: FC<IBasePanelProps> = ({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
-        <p>{t(`編輯軸線標題`)}</p>
+        <p>{t(`${HISTOGRAM_I18N_PREFIX}.edit_axis`)}</p>
       </div>
       <div className="flex flex-col gap-2">
         <div className="flex flex-col">
           <label htmlFor="editYAxisLabel" className={MERMAID_LABEL_STYLE}>
-            {t(`Y 軸文字`)}
+            {t(`${HISTOGRAM_I18N_PREFIX}.y_axis_text`)}
             <span className="ml-0.5 text-red-500">*</span>
           </label>
           <input
@@ -594,7 +603,7 @@ const EditAxisPanel: FC<IBasePanelProps> = ({
         </div>
         <div className="flex flex-col">
           <label htmlFor="editXAxisLabel" className={MERMAID_LABEL_STYLE}>
-            {t(`X 軸文字`)}
+            {t(`${HISTOGRAM_I18N_PREFIX}.x_axis_text`)}
             <span className="ml-0.5 text-red-500">*</span>
           </label>
           <input
@@ -612,7 +621,7 @@ const EditAxisPanel: FC<IBasePanelProps> = ({
         disabled={isSubmitDisabled}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t(`套用變更`)}
+        {t(`${HISTOGRAM_I18N_PREFIX}.apply_changes`)}
       </button>
     </div>
   );
@@ -650,7 +659,9 @@ const SwitchTrendLinePanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: HistogramActionType.SWITCH_TREND_LINE,
-      description: isShowTrend ? `開啟趨勢線` : `關閉趨勢線`,
+      description: isShowTrend
+        ? t(`${HISTOGRAM_I18N_PREFIX}.action_trend_on`)
+        : t(`${HISTOGRAM_I18N_PREFIX}.action_trend_off`),
       payload: isShowTrend ? { trend: trendType, trendColor: color } : {},
     });
   };
@@ -659,7 +670,7 @@ const SwitchTrendLinePanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <ChartNoAxesCombined size={14} />
-        <p>{t(`切換趨勢曲線`)}</p>
+        <p>{t(`${HISTOGRAM_I18N_PREFIX}.switch_trend_line`)}</p>
       </div>
 
       {/* Info: (20260730 - Julian) 開關：開啟／關閉趨勢線 */}
@@ -671,7 +682,7 @@ const SwitchTrendLinePanel: FC<IBasePanelProps> = ({
           type="button"
           role="switch"
           aria-checked={isShowTrend}
-          aria-label={t(`切換趨勢曲線`)!}
+          aria-label={t(`${HISTOGRAM_I18N_PREFIX}.switch_trend_line`)!}
           onClick={() => setIsShowTrend((prev) => !prev)}
           className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
             isShowTrend ? "bg-orange-400" : "bg-slate-300"
@@ -688,7 +699,9 @@ const SwitchTrendLinePanel: FC<IBasePanelProps> = ({
       {/* Info: (20260730 - Julian) 顏色：僅在開啟時可調整 */}
       {isShowTrend && (
         <div className="flex flex-col gap-1.5">
-          <span className={MERMAID_LABEL_STYLE}>{t(`趨勢線顏色`)}</span>
+          <span className={MERMAID_LABEL_STYLE}>
+            {t(`${HISTOGRAM_I18N_PREFIX}.trend_color`)}
+          </span>
           <ColorPicker
             colorOptions={HISTOGRAM_TREND_COLOR_OPTIONS}
             value={color}
@@ -703,7 +716,7 @@ const SwitchTrendLinePanel: FC<IBasePanelProps> = ({
         disabled={isSubmitDisabled}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t(`套用變更`)}
+        {t(`${HISTOGRAM_I18N_PREFIX}.apply_changes`)}
       </button>
     </div>
   );
@@ -728,7 +741,9 @@ const DeleteItemPanel: FC<IBasePanelProps> = ({
     onAddAction({
       id: crypto.randomUUID(),
       type: HistogramActionType.DELETE_ITEM,
-      description: `刪除項目：${selectedItem.label}`,
+      description: t(`${HISTOGRAM_I18N_PREFIX}.action_delete_item`, {
+        label: selectedItem.label,
+      }),
       payload: { lineIndex: selectedItem.lineIndex },
     });
   };
@@ -737,11 +752,11 @@ const DeleteItemPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <Trash2 size={14} />
-        <p>{t(`刪除項目`)}</p>
+        <p>{t(`${HISTOGRAM_I18N_PREFIX}.delete_item`)}</p>
       </div>
       <div className="flex flex-col">
         <label htmlFor="deleteItemLabel" className={MERMAID_LABEL_STYLE}>
-          {t(`選擇欲刪除的項目`)}
+          {t(`${HISTOGRAM_I18N_PREFIX}.select_delete_item`)}
           <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
@@ -750,7 +765,9 @@ const DeleteItemPanel: FC<IBasePanelProps> = ({
           onChange={(e) => setSelectedId(e.target.value)}
           className={MERMAID_INPUT_STYLE}
         >
-          <option value="">{t(`選擇欲刪除的項目`)}</option>
+          <option value="">
+            {t(`${HISTOGRAM_I18N_PREFIX}.select_delete_item`)}
+          </option>
           {bins.map((item) => (
             <option
               key={`histogram-delete-opt-${item.lineIndex}`}
@@ -767,7 +784,7 @@ const DeleteItemPanel: FC<IBasePanelProps> = ({
         disabled={!selectedId}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t(`刪除項目`)}
+        {t(`${HISTOGRAM_I18N_PREFIX}.delete_item`)}
       </button>
     </div>
   );

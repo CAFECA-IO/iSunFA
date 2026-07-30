@@ -73,7 +73,7 @@ export const DEFAULT_HISTOGRAM_TREND_COLOR = "#FF9800";
  * 供工具面板「取得趨勢線原始資料」：即使 DSL 未寫 trendColor，也能由此得知該類型的預設色與名稱。
  */
 export interface IHistogramTrendMeta {
-  label: string; // Info: (20260730 - Julian) 顯示名稱（沿用本專案 t(`中文`) 慣例的字面值）
+  label: string; // Info: (20260730 - Julian) 顯示名稱的 i18n key（字面值收斂於 locale 檔，供 t() 查表）
   defaultColor: string; // Info: (20260730 - Julian) 預設線色 HEX
 }
 
@@ -81,7 +81,7 @@ export const HISTOGRAM_TREND_META: Readonly<
   Record<HistogramTrendType, IHistogramTrendMeta>
 > = {
   [HistogramTrendType.NORMAL]: {
-    label: "常態分佈趨勢線",
+    label: "chart.custom_chart.histogram.trend_normal",
     defaultColor: DEFAULT_HISTOGRAM_TREND_COLOR,
   },
 };

@@ -18,7 +18,7 @@ import { BoxplotChart } from "@/components/chart/boxplot_chart";
 interface ICustomChartProps {
   type: CustomChartType;
   raw: string;
-  // Info: (20260723 - Julian) AI 採用後回寫 Markdown 原始碼（未提供則僅更新本地預覽）
+  // Info: (20260730 - Julian) AI 採用後回寫 Markdown 原始碼（未提供則僅更新本地預覽）
   onChartChange?: (newChart: string) => void;
 }
 
