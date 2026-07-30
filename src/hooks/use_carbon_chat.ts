@@ -1559,12 +1559,25 @@ export const useCarbonChat = () => {
    * LLM 只回節點與父子關係,mermaid 由後端模板組出,且節點文字必須能在該段原文找到才畫。
    */
   const generateParagraphDiagram = useCallback(
-    async (paragraphId: string): Promise<void> => {
-      const paragraph = sessionsData[
-        activeSessionId
-      ]?.reportData?.paragraphs?.find((p) => p.id === paragraphId);
-      if (!paragraph?.content) return;
+    async (paragraphId: string, contentOverride?: string): Promise<void> => {
       if (!findDiagramTemplateForParagraph(paragraphId)) return;
+
+      // Info: (20260730 - Tzuhan) 內容優先取呼叫端傳入者:匯入落地是在 setSessionsData 的同一個 tick 內
+      // Info: (20260730 - Tzuhan) 接著呼叫本函式,此時 closure 捕獲的 sessionsData 還是「匯入前」的舊值,
+      // Info: (20260730 - Tzuhan) 該段內容仍為空 → 原本會靜默 return,結果一張圖都畫不出來(實測即如此)。
+      // Info: (20260730 - Tzuhan) 目錄手動觸發時無 override,讀狀態即可(那時狀態已穩定)。
+      const content =
+        contentOverride ??
+        sessionsData[activeSessionId]?.reportData?.paragraphs?.find(
+          (p) => p.id === paragraphId,
+        )?.content;
+      if (!content) {
+        console.warn(
+          "[carbon-chat] diagram skipped: no content for",
+          paragraphId,
+        );
+        return;
+      }
 
       try {
         const res = await request<{
@@ -1575,14 +1588,17 @@ export const useCarbonChat = () => {
           } | null;
         }>("/api/v1/chat/carbon/diagram", {
           method: "POST",
-          body: JSON.stringify({
-            paragraphId,
-            content: paragraph.content,
-            language,
-          }),
+          body: JSON.stringify({ paragraphId, content, language }),
         });
         const payload = res.payload;
         if (!payload) return;
+        if (!payload.isDrawn) {
+          // Info: (20260730 - Tzuhan) 被護欄拒絕:區塊仍會插入(內含原因文字),此處補一行前端 log 便於對照後端的 offendingLabels
+          console.warn(
+            "[carbon-chat] diagram rejected by guardrail:",
+            paragraphId,
+          );
+        }
 
         setSessionsData((prev) => {
           const session = prev[activeSessionId];
@@ -1616,8 +1632,14 @@ export const useCarbonChat = () => {
           };
         });
       } catch (error) {
-        // Info: (20260730 - Tzuhan) 圖是加值不是前提:失敗只記 log,不影響段落內容與流程
-        console.error("[carbon-chat] diagram generation failed:", error);
+        // Info: (20260730 - Tzuhan) 圖是加值不是前提:失敗不影響段落內容與流程。
+        // Info: (20260730 - Tzuhan) 但要留下痕跡 —— 實測「一張圖都沒出來」時完全無跡可循,
+        // Info: (20260730 - Tzuhan) 查不出是沒觸發、被護欄拒絕、還是呼叫失敗,診斷成本全轉嫁到人身上。
+        console.error(
+          "[carbon-chat] diagram generation failed:",
+          paragraphId,
+          error,
+        );
       }
     },
     [sessionsData, activeSessionId, language],
@@ -1716,7 +1738,8 @@ export const useCarbonChat = () => {
       .filter((item) => findDiagramTemplateForParagraph(item.paragraphId))
       .reduce(async (previous, item) => {
         await previous;
-        await generateParagraphDiagram(item.paragraphId);
+        // Info: (20260730 - Tzuhan) 傳入剛落地的內容:此刻 setSessionsData 尚未生效,讀狀態會拿到空值
+        await generateParagraphDiagram(item.paragraphId, item.content);
       }, Promise.resolve());
   }, [
     pendingImport,

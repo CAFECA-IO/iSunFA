@@ -58,6 +58,36 @@ function normalizeForMatch(value: string): string {
     .toLowerCase();
 }
 
+// Info: (20260730 - Tzuhan) 節點文字的切段依據:冒號、頓號、括號等;切出的每段都要能在原文找到
+const LABEL_SEGMENT_SEPARATOR = /[:：、,，/／|｜()（）\s-]+/;
+
+// Info: (20260730 - Tzuhan) 過短的片段(單字)比對意義低,不納入判定(避免以「的」「與」蒙過關)
+const MIN_SEGMENT_CHARS = 2;
+
+/**
+ * Info: (20260730 - Tzuhan) 節點文字是否可回溯原文。兩層判定:
+ *
+ * 1. 正規化後為原文的連續子字串 —— 最強,逐字照抄的段落走這條。
+ * 2. 否則切段後「每一段都出現在原文」也接受 —— 因為 AI 草稿段落會改寫語序:
+ *    原文寫「由廠長張印燈先生擔任主任委員」,模型給的節點是「主任委員:張印燈廠長」,
+ *    語意完全正確但不是連續子字串。只要求連續會把正確的輸入判成捏造。
+ *
+ * 防捏造的核心仍在:任何原文沒出現過的人名、單位、術語都無法通過(它會是找不到的那一段)。
+ */
+function isGrounded(label: string, normalizedSource: string): boolean {
+  const normalizedLabel = normalizeForMatch(label);
+  if (normalizedLabel.length === 0) return false;
+  if (normalizedSource.includes(normalizedLabel)) return true;
+
+  const segments = label
+    .split(LABEL_SEGMENT_SEPARATOR)
+    .map(normalizeForMatch)
+    .filter((segment) => segment.length >= MIN_SEGMENT_CHARS);
+  // Info: (20260730 - Tzuhan) 切不出可判定的片段時視為不可回溯(不放寬)
+  if (segments.length === 0) return false;
+  return segments.every((segment) => normalizedSource.includes(segment));
+}
+
 /**
  * Info: (20260730 - Tzuhan) 驗證節點是否可採信。任何一項不通過即整張不畫。
  *
@@ -91,7 +121,7 @@ export function validateDiagramNodes(
   // Info: (20260730 - Tzuhan) 核心護欄:每個節點文字都必須能在本節原文找到,否則就是模型自己編的
   const haystack = normalizeForMatch(sourceText);
   const unverifiable = nodes.filter(
-    (node) => !haystack.includes(normalizeForMatch(node.label)),
+    (node) => !isGrounded(node.label, haystack),
   );
   if (unverifiable.length > 0) {
     return {
@@ -109,7 +139,7 @@ export function validateDiagramNodes(
       .map((node) => node.parent)
       .filter(
         (parent): parent is string =>
-          parent !== undefined && !haystack.includes(normalizeForMatch(parent)),
+          parent !== undefined && !isGrounded(parent, haystack),
       );
     if (unverifiableParents.length > 0) {
       return {

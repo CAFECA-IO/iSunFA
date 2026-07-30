@@ -346,3 +346,80 @@ describe("組織邊界圖", () => {
     );
   });
 });
+
+// Info: (20260730 - Tzuhan) 實測回歸:匯入後一張圖都沒出來,兩個原因。
+// Info: (20260730 - Tzuhan) 其一是 hook 的 closure 讀到匯入前的舊狀態(在 hook 修);
+// Info: (20260730 - Tzuhan) 其二是 gap-fill 產生的段落會改寫語序,連續子字串比對把正確的節點判成捏造 —— 這裡護住。
+const GOVERNANCE_AI_DRAFT = `本公司已建立由上而下的氣候治理架構。董事會為最高督導單位。
+在管理階層,我們設立了「溫室氣體盤查小組管理委員會」,由廠長張印燈先生擔任主任委員,
+負責訂定溫室氣體查核計畫,並由副廠長、課長及執行秘書等成員協助督導與執行資料蒐集。`;
+
+describe("AI 草稿段落的節點回溯(語序被改寫)", () => {
+  it("語序不同但每段都在原文中時通過", () => {
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      [
+        { label: "溫室氣體盤查小組管理委員會" },
+        { label: "主任委員:張印燈", parent: "溫室氣體盤查小組管理委員會" },
+        { label: "副廠長", parent: "主任委員:張印燈" },
+      ],
+      GOVERNANCE_AI_DRAFT,
+    );
+    expect(result.isValid).toBe(true);
+  });
+
+  it("放寬語序後仍擋得住捏造的人名", () => {
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      [{ label: "主任委員:王大明" }],
+      GOVERNANCE_AI_DRAFT,
+    );
+    expect(result.isValid).toBe(false);
+    expect(result.reason).toBe(DiagramRejectReasonEnum.LABEL_NOT_IN_SOURCE);
+  });
+
+  it("放寬語序後仍擋得住捏造的單位", () => {
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      [{ label: "永續發展委員會" }],
+      GOVERNANCE_AI_DRAFT,
+    );
+    expect(result.isValid).toBe(false);
+  });
+
+  it("切不出可判定片段的節點不予放寬", () => {
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      [{ label: "X" }],
+      GOVERNANCE_AI_DRAFT,
+    );
+    expect(result.isValid).toBe(false);
+  });
+
+  it("範疇對應圖:草稿裡的粗體與全角括號不影響回溯", () => {
+    const source =
+      "**範疇一（直接排放）**包含固定式燃燒與移動式燃燒;**範疇二（能源間接排放）**為外購電力。";
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.SCOPE_CATEGORY_MAP,
+      [
+        { label: "範疇一（直接排放）" },
+        { label: "固定式燃燒", parent: "範疇一（直接排放）" },
+        { label: "範疇二（能源間接排放）" },
+        { label: "外購電力", parent: "範疇二（能源間接排放）" },
+      ],
+      source,
+    );
+    expect(result.isValid).toBe(true);
+  });
+
+  it("原文拆開寫的詞組不予放寬(無法確認它是一個名詞)", () => {
+    // Info: (20260730 - Tzuhan) 原文寫「固定式與移動式燃燒」,並沒有「固定式燃燒」這個詞組;
+    // Info: (20260730 - Tzuhan) 放寬到能拼湊出來就等於允許模型自行組詞,故維持拒絕
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.SCOPE_CATEGORY_MAP,
+      [{ label: "固定式燃燒" }],
+      "範疇一包含固定式與移動式燃燒",
+    );
+    expect(result.isValid).toBe(false);
+  });
+});
