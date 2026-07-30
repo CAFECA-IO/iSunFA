@@ -233,6 +233,25 @@ export type CarbonReportImportLlmOutput = z.infer<
   typeof CarbonReportImportLlmOutputSchema
 >;
 
+/**
+ * Info: (20260730 - Tzuhan) 頁碼索引 LLM 輸出(兩階段匯入的第一階段)。
+ * 只回「每節起始於第幾頁」,輸出極小(33 個數字),用來把第二階段的輸入從整份文件縮成該章對應頁。
+ * startPage 僅驗範圍;是否合理由服務層以實際頁數複驗,對不上一律退回送全文(不猜)。
+ */
+export const CarbonReportPageIndexLlmOutputSchema = z.object({
+  index: z
+    .array(
+      z.object({
+        paragraphId: z.string().max(50),
+        startPage: z.number().int().min(1).max(5_000),
+      }),
+    )
+    .max(100),
+});
+export type CarbonReportPageIndexLlmOutput = z.infer<
+  typeof CarbonReportPageIndexLlmOutputSchema
+>;
+
 // Info: (20260727 - Tzuhan) #57 草稿補齊 LLM 輸出:匯入後仍空白的段落,依上傳文件撰寫草稿(非照抄);
 // Info: (20260727 - Tzuhan) paragraphId 僅驗型別,白名單複驗於服務層
 export const CarbonReportGapFillLlmOutputSchema = z.object({

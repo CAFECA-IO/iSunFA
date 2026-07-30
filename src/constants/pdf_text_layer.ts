@@ -34,4 +34,22 @@ export const PDF_UNDECODED_CHAR = "�";
 export const PDF_TEXT_CELL_SEPARATOR = "\t";
 
 // Info: (20260730 - Tzuhan) 頁邊界標記:讓 LLM 照抄時能一併帶出頁碼,人工查核可回原文對照
+// Info: (20260730 - Tzuhan) 同時是「頁碼索引兩階段」切片的定位依據 —— 標記格式一改,切片即失效,兩者必須同源
 export const PDF_TEXT_PAGE_JOINER = "\n-- p.page_number/total_number --";
+
+// Info: (20260730 - Tzuhan) 上述標記在輸出後的實際樣貌(page_number/total_number 已代入),用於反向定位頁邊界
+export const PDF_TEXT_PAGE_MARKER_PATTERN = /-- p\.(\d+)\/(\d+) --/g;
+
+/**
+ * Info: (20260730 - Tzuhan) 頁碼索引切片的前後緩衝頁數。
+ * 索引只給「起始頁」,而一節可能跨頁、標題也可能落在頁尾,故前後各多取一頁。
+ * 值越大越安全但越貴;1 頁在實測的 832 字/頁下約多 800 字,代價可接受。
+ */
+export const PDF_TEXT_PAGE_SLICE_PADDING = 1;
+
+/**
+ * Info: (20260730 - Tzuhan) 切片結果的最低可用字數。
+ * 索引抓錯頁或該節其實不在文件中時,切出來會過短;低於此值一律退回送全文,
+ * 寧可多花 token 也不能讓「內容其實存在卻沒被看到」變成靜默的資料遺失。
+ */
+export const PDF_TEXT_PAGE_SLICE_MIN_CHARS = 200;

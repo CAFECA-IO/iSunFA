@@ -47,6 +47,9 @@ export const carbonChatbot = {
   origin_ai_draft: "AI 下書き",
   origin_imported_short: "原文",
   origin_ai_draft_short: "下書き",
+  // Info: (20260730 - Tzuhan) 兩階段匯入的第一階段提示:一次索引換來後續 11 章不必各自重送整份文件
+  import_indexing:
+    "{{name}} の章インデックスを作成中(各セクションのページを特定し、後続の解析量を削減します)…",
   system_error:
     "【システムエラー】申し訳ありません。カーボン会計士サービスへの接続中に問題が発生しました。後でもう一度お試しください。",
   system_unavailable: "申し訳ありません。現在システムは応答できません。",

@@ -13,6 +13,9 @@ import {
   PDF_UNDECODED_CHAR,
   PDF_TEXT_CELL_SEPARATOR,
   PDF_TEXT_PAGE_JOINER,
+  PDF_TEXT_PAGE_MARKER_PATTERN,
+  PDF_TEXT_PAGE_SLICE_MIN_CHARS,
+  PDF_TEXT_PAGE_SLICE_PADDING,
 } from "@/constants/pdf_text_layer";
 
 export interface IPdfTextLayerQuality {
@@ -149,4 +152,73 @@ export async function extractPdfTextLayer(
   } catch {
     return null;
   }
+}
+
+/**
+ * Info: (20260730 - Tzuhan) 以頁邊界標記把文字層切成單頁陣列。純函數。
+ * 標記由 extractPdfTextLayer 植入(`-- p.N/總頁 --`),位於每頁尾端,故標記前的文字屬於該頁。
+ * 找不到任何標記時回傳單一元素(整份文字),呼叫端據此退回送全文。
+ */
+export function splitTextByPages(text: string): string[] {
+  const pages: string[] = [];
+  let cursor = 0;
+  const pattern = new RegExp(PDF_TEXT_PAGE_MARKER_PATTERN.source, "g");
+  let match = pattern.exec(text);
+  while (match !== null) {
+    pages.push(text.slice(cursor, match.index));
+    cursor = match.index + match[0].length;
+    match = pattern.exec(text);
+  }
+  // Info: (20260730 - Tzuhan) 最後一頁通常沒有結尾標記,殘餘文字補為一頁(非空才補)
+  const tail = text.slice(cursor);
+  if (tail.trim().length > 0) pages.push(tail);
+  return pages.length > 0 ? pages : [text];
+}
+
+export interface IPageSliceResult {
+  text: string;
+  /** Info: (20260730 - Tzuhan) 實際取用的頁碼範圍(1-based,含);退回全文時為 null */
+  range: { from: number; to: number } | null;
+  /** Info: (20260730 - Tzuhan) true 表示切片不可用已退回全文——呼叫端應記錄,這是成本與品質的分水嶺 */
+  fellBack: boolean;
+}
+
+/**
+ * Info: (20260730 - Tzuhan) 依頁碼範圍切出文字(前後各留 PDF_TEXT_PAGE_SLICE_PADDING 頁緩衝)。
+ * 三種情況一律退回全文並標記 fellBack:沒有頁標記、範圍無效、切片過短。
+ * 設計立場:切片是省成本的最佳化,不是正確性的前提。寧可多花 token,
+ * 也不能讓「內容其實在文件裡卻沒被送給模型」變成靜默的資料遺失。
+ */
+export function slicePagesForRange(
+  text: string,
+  fromPage: number,
+  toPage: number,
+): IPageSliceResult {
+  const pages = splitTextByPages(text);
+  if (pages.length <= 1) {
+    return { text, range: null, fellBack: true };
+  }
+  if (!Number.isFinite(fromPage) || !Number.isFinite(toPage)) {
+    return { text, range: null, fellBack: true };
+  }
+
+  const from = Math.max(1, Math.floor(fromPage) - PDF_TEXT_PAGE_SLICE_PADDING);
+  const to = Math.min(
+    pages.length,
+    Math.ceil(toPage) + PDF_TEXT_PAGE_SLICE_PADDING,
+  );
+  if (from > to) {
+    return { text, range: null, fellBack: true };
+  }
+
+  // Info: (20260730 - Tzuhan) 保留頁標記:模型照抄時可一併帶出頁碼,人工查核能回原文對照
+  const sliced = pages
+    .slice(from - 1, to)
+    .map((page, index) => `${page}\n-- p.${from + index}/${pages.length} --`)
+    .join("");
+
+  if (sliced.trim().length < PDF_TEXT_PAGE_SLICE_MIN_CHARS) {
+    return { text, range: null, fellBack: true };
+  }
+  return { text: sliced, range: { from, to }, fellBack: false };
 }

@@ -46,6 +46,9 @@ export const carbonChatbot = {
   origin_ai_draft: "AI 草稿",
   origin_imported_short: "原文",
   origin_ai_draft_short: "草稿",
+  // Info: (20260730 - Tzuhan) 兩階段匯入的第一階段提示:一次索引換來後續 11 章不必各自重送整份文件
+  import_indexing:
+    "正在建立 {{name}} 的章節索引(定位各節頁碼,可大幅減少後續解析量)…",
   system_error: "【系統錯誤】抱歉，連線到碳會計師服務時發生問題，請稍後再試。",
   system_unavailable: "抱歉，系統目前無法回應。",
   ai_quota_exceeded:

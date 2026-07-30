@@ -47,6 +47,9 @@ export const carbonChatbot = {
   origin_ai_draft: "AI 초안",
   origin_imported_short: "원문",
   origin_ai_draft_short: "초안",
+  // Info: (20260730 - Tzuhan) 兩階段匯入的第一階段提示:一次索引換來後續 11 章不必各自重送整份文件
+  import_indexing:
+    "{{name}}의 장 색인을 만들고 있습니다(각 섹션의 페이지를 찾아 이후 분석량을 크게 줄입니다)…",
   system_error:
     "[시스템 오류] 죄송합니다. 탄소 회계사 서비스에 연결하는 중 문제가 발생했습니다. 나중에 다시 시도해 주세요.",
   system_unavailable: "죄송합니다. 현재 시스템이 응답할 수 없습니다.",

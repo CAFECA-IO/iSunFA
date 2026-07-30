@@ -11,7 +11,11 @@ dotenv.config({ path: ".env.local" });
 dotenv.config({ path: ".env" });
 
 import { ReportImportService } from "@/services/report_import.service";
-import { assessPdfTextLayer, extractPdfTextLayer } from "@/lib/pdf_text_layer";
+import {
+  assessPdfTextLayer,
+  extractPdfTextLayer,
+  slicePagesForRange,
+} from "@/lib/pdf_text_layer";
 import { PdfTextLayerDecisionEnum } from "@/constants/pdf_text_layer";
 import { CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES } from "@/constants/carbon_chatbot";
 import {
@@ -23,6 +27,8 @@ interface IChapterProbe {
   chapterId: string;
   chapterTitle: string;
   seconds: number;
+  // Info: (20260730 - Tzuhan) 該章實際送出的字數:兩階段切片省下多少輸入,看這欄
+  inputChars?: number;
   segments: number;
   sectionIds: string[];
   unmapped: number;
@@ -82,6 +88,17 @@ async function main(): Promise<void> {
     }),
   );
 
+  // Info: (20260730 - Tzuhan) 兩階段第一階段:先問頁碼索引(僅文字來源可切片)
+  const pageIndex = useText
+    ? await service.buildSectionPageIndex(source, "zh_tw")
+    : new Map<string, number>();
+  console.log(
+    JSON.stringify({
+      pageIndexSize: pageIndex.size,
+      totalSections: CARBON_REPORT_OUTLINE.length,
+    }),
+  );
+
   const probes: IChapterProbe[] = [];
   const allSegments: { paragraphId: string; content: string }[] = [];
   let activitiesTotal = 0;
@@ -95,8 +112,25 @@ async function main(): Promise<void> {
 
   for (const chapter of targets) {
     const startedAt = Date.now();
+    // Info: (20260730 - Tzuhan) 第二階段:該章各節起始頁 → 切片;索引不全就整章送全文(與前端同一判準)
+    const chapterPages = CARBON_REPORT_OUTLINE.filter(
+      (section) => section.chapterId === chapter.id,
+    ).map((section) => pageIndex.get(section.id));
+    const hasFullIndex =
+      chapterPages.length > 0 && chapterPages.every((page) => !!page);
+    const chapterSource =
+      useText && hasFullIndex
+        ? {
+            ...source,
+            data: slicePagesForRange(
+              source.data,
+              Math.min(...(chapterPages as number[])),
+              Math.max(...(chapterPages as number[])),
+            ).text,
+          }
+        : source;
     try {
-      const result = await service.importReport(source, "zh_tw", {
+      const result = await service.importReport(chapterSource, "zh_tw", {
         chapterId: chapter.id,
         extractActivities: chapter.id === CARBON_REPORT_CHAPTERS[0].id,
       });
@@ -106,6 +140,7 @@ async function main(): Promise<void> {
         chapterId: chapter.id,
         chapterTitle: chapter.title,
         seconds: +((Date.now() - startedAt) / 1000).toFixed(1),
+        inputChars: chapterSource.data.length,
         segments: result.segments.length,
         sectionIds: result.segments.map((segment) => segment.paragraphId),
         unmapped: result.unmapped.length,

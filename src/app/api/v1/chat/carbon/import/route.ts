@@ -14,7 +14,11 @@ import {
   ReportImportService,
   type IReportImportSource,
 } from "@/services/report_import.service";
-import { assessPdfTextLayer, extractPdfTextLayer } from "@/lib/pdf_text_layer";
+import {
+  assessPdfTextLayer,
+  extractPdfTextLayer,
+  slicePagesForRange,
+} from "@/lib/pdf_text_layer";
 import { PdfTextLayerDecisionEnum } from "@/constants/pdf_text_layer";
 import {
   CARBON_CHAT_MAX_ATTACHMENT_BYTES,
@@ -107,7 +111,14 @@ export async function POST(request: NextRequest) {
     }
     const extractActivities = formData.get("extractActivities") !== "false";
     // Info: (20260727 - Tzuhan) #57 草稿補齊模式:mode=draft + sectionIds(JSON 陣列,白名單複驗於此與服務層)
-    const mode = formData.get("mode") === "draft" ? "draft" : "verbatim";
+    // Info: (20260730 - Tzuhan) 三種模式:verbatim 逐字匯入、draft 草稿補齊、index 頁碼索引(兩階段第一階段)
+    const modeRaw = formData.get("mode");
+    const mode =
+      modeRaw === "draft"
+        ? "draft"
+        : modeRaw === "index"
+          ? "index"
+          : "verbatim";
     let draftSectionIds: string[] = [];
     if (mode === "draft") {
       const sectionIdsRaw = formData.get("sectionIds");
@@ -135,6 +146,16 @@ export async function POST(request: NextRequest) {
         return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
       }
     }
+    // Info: (20260730 - Tzuhan) 頁碼範圍(兩階段第二階段):由前端依索引算出,伺服端切片後才送 LLM。
+    // Info: (20260730 - Tzuhan) 僅為降低輸入量的最佳化——範圍無效或切片過短時 slicePagesForRange 會退回全文。
+    const parsePage = (value: FormDataEntryValue | null): number | null => {
+      if (typeof value !== "string" || value.length === 0) return null;
+      const parsed = Number(value);
+      return Number.isInteger(parsed) && parsed >= 1 ? parsed : null;
+    };
+    const fromPage = parsePage(formData.get("fromPage"));
+    const toPage = parsePage(formData.get("toPage"));
+
     if (!(file instanceof File)) {
       return jsonFail(API_ERRORS.VA_NO_FILE_UPLOADED);
     }
@@ -162,10 +183,42 @@ export async function POST(request: NextRequest) {
 
     const service = new ReportImportService();
 
+    // Info: (20260730 - Tzuhan) 兩階段第一階段:只問頁碼,輸出極小;失敗時服務層回空索引,前端據此退回送全文
+    if (mode === "index") {
+      const index = await service.buildSectionPageIndex(
+        source,
+        typeof language === "string" ? language : undefined,
+      );
+      return jsonOk({
+        index: Array.from(index.entries()).map(([paragraphId, startPage]) => ({
+          paragraphId,
+          startPage,
+        })),
+      });
+    }
+
+    // Info: (20260730 - Tzuhan) 兩階段第二階段:依頁碼範圍切片,把輸入從整份文件縮成該章對應頁。
+    // Info: (20260730 - Tzuhan) 實測 64 頁報告一次匯入原本耗掉約 44 萬 input token,後段章節因額度耗盡連請求都發不出去。
+    const scopedSource =
+      source.isText && fromPage !== null && toPage !== null
+        ? (() => {
+            const slice = slicePagesForRange(source.data, fromPage, toPage);
+            logger.info("report import page slice", {
+              fileName: file.name,
+              requested: { fromPage, toPage },
+              applied: slice.range,
+              fellBack: slice.fellBack,
+              chars: slice.text.length,
+              originalChars: source.data.length,
+            });
+            return { ...source, data: slice.text };
+          })()
+        : source;
+
     // Info: (20260727 - Tzuhan) #57 草稿補齊:回傳形狀與匯入一致(unmapped/activities 恆空),前端共用合併邏輯
     if (mode === "draft") {
       const segments = await service.draftMissingSections(
-        source,
+        scopedSource,
         draftSectionIds,
         typeof language === "string" ? language : undefined,
       );
@@ -173,7 +226,7 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await service.importReport(
-      source,
+      scopedSource,
       typeof language === "string" ? language : undefined,
       { chapterId, extractActivities },
     );

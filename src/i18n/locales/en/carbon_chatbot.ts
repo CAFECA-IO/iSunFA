@@ -47,6 +47,9 @@ export const carbonChatbot = {
   origin_ai_draft: "AI draft",
   origin_imported_short: "source",
   origin_ai_draft_short: "draft",
+  // Info: (20260730 - Tzuhan) 兩階段匯入的第一階段提示:一次索引換來後續 11 章不必各自重送整份文件
+  import_indexing:
+    "Indexing {{name}} — locating each section's page so the parsing that follows stays small…",
   system_error:
     "[System Error] Sorry, there was a problem connecting to the Carbon Accountant service. Please try again later.",
   system_unavailable: "Sorry, the system is currently unavailable to respond.",

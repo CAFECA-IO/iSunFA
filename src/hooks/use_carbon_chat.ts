@@ -205,6 +205,8 @@ export const useCarbonChat = () => {
   const importActivitiesRef = useRef<IActivityRecord[]>([]);
   // Info: (20260717 - Tzuhan) #56 重試用:最近一次匯入的原始檔(失敗章節重跑無需重選檔)
   const lastImportFileRef = useRef<File | null>(null);
+  // Info: (20260730 - Tzuhan) 首次匯入取得的頁碼索引:重試失敗章節時沿用,不重問(索引不會變,重問等於再燒一次全文輸入)
+  const lastPageIndexRef = useRef<Map<string, number> | undefined>(undefined);
 
   // Info: (20260716 - Tzuhan) #6518 盤查狀態帳本(per-channel):活動數據 + 決定性步驟;E2EE 入庫比照報告草稿
   const [inventoryStates, setInventoryStates] = useState<
@@ -1002,11 +1004,43 @@ export const useCarbonChat = () => {
 
   // Info: (20260717 - Tzuhan) #56 逐章解析執行器:有限並行(2 workers,兼顧速度與 LLM 限流),
   // Info: (20260717 - Tzuhan) 結果依章節順序合併(決定性),單章失敗記錄後續行;進度以完成數回報
+  /**
+   * Info: (20260730 - Tzuhan) 兩階段匯入的第一階段:向後端問「33 節各自起始於第幾頁」。
+   * 一次呼叫、輸出僅 33 個整數,換來後續 11 章不必各自重送整份文件。
+   * 失敗一律回空 Map(後端亦同),第二階段就退回原本的送全文行為——索引是最佳化,不是前提。
+   */
+  const fetchSectionPageIndex = useCallback(
+    async (file: File): Promise<Map<string, number>> => {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("language", language);
+      formData.append("mode", "index");
+      try {
+        const res = await request<{
+          payload: {
+            index: { paragraphId: string; startPage: number }[];
+          } | null;
+        }>("/api/v1/chat/carbon/import", { method: "POST", body: formData });
+        return new Map(
+          (res.payload?.index ?? []).map((entry) => [
+            entry.paragraphId,
+            entry.startPage,
+          ]),
+        );
+      } catch (error) {
+        console.error("[carbon-chat] page index failed:", error);
+        return new Map();
+      }
+    },
+    [language],
+  );
+
   const runImportChapters = useCallback(
     async (
       file: File,
       chapters: { id: string; title: string }[],
       extractActivitiesOnFirst: boolean,
+      pageIndex?: Map<string, number>,
     ) => {
       interface IImportChunkPayload {
         segments: { paragraphId: string; title: string; content: string }[];
@@ -1046,6 +1080,16 @@ export const useCarbonChat = () => {
           "extractActivities",
           extractActivitiesOnFirst && index === 0 ? "true" : "false",
         );
+        // Info: (20260730 - Tzuhan) 該章各節的起始頁 → 頁碼範圍;缺任何一節的索引就不帶範圍(整章退回送全文),
+        // Info: (20260730 - Tzuhan) 寧可多花 token,也不能因為索引不全而漏送內容
+        const chapterPages = CARBON_REPORT_OUTLINE.filter(
+          (section) => section.chapterId === chapter.id,
+        ).map((section) => pageIndex?.get(section.id));
+        if (chapterPages.length > 0 && chapterPages.every((page) => !!page)) {
+          const pages = chapterPages as number[];
+          formData.append("fromPage", String(Math.min(...pages)));
+          formData.append("toPage", String(Math.max(...pages)));
+        }
         try {
           const res = await request<{ payload: IImportChunkPayload | null }>(
             "/api/v1/chat/carbon/import",
@@ -1190,7 +1234,21 @@ export const useCarbonChat = () => {
         let failedChapters: { id: string; title: string }[] = [];
 
         if (useChunked) {
-          const result = await runImportChapters(file, chapters, true);
+          // Info: (20260730 - Tzuhan) 兩階段:先問頁碼索引(一次、輸出極小),再逐章只送對應頁。
+          // Info: (20260730 - Tzuhan) 原本 11 章各送整份文件,實測 64 頁報告耗掉約 44 萬 input token,
+          // Info: (20260730 - Tzuhan) 後段章節因 API 額度耗盡連請求都發不出去(失敗於 6~18ms)。
+          setDraftNotice({
+            type: "loading",
+            text: t("carbon_chatbot.import_indexing", { name: file.name }),
+          });
+          const pageIndex = await fetchSectionPageIndex(file);
+          lastPageIndexRef.current = pageIndex;
+          const result = await runImportChapters(
+            file,
+            chapters,
+            true,
+            pageIndex,
+          );
           payload = result;
           failedChapters = result.failed;
         } else {
@@ -1301,6 +1359,7 @@ export const useCarbonChat = () => {
       t,
       runImportChapters,
       runGapFillSections,
+      fetchSectionPageIndex,
     ],
   );
 
@@ -1310,7 +1369,13 @@ export const useCarbonChat = () => {
     const failed = pendingImport?.failedChapters ?? [];
     if (!file || failed.length === 0 || !pendingImport) return;
 
-    const result = await runImportChapters(file, failed, false);
+    // Info: (20260730 - Tzuhan) 重試沿用首次的頁碼索引:重問一次索引等於再燒一次全文輸入,而索引不會變
+    const result = await runImportChapters(
+      file,
+      failed,
+      false,
+      lastPageIndexRef.current,
+    );
     setDraftNotice(null);
     setPendingImport((prev) => {
       if (!prev) return prev;

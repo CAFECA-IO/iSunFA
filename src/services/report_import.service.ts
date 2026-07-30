@@ -27,6 +27,7 @@ import { MeasurementUnit } from "@/constants/enums";
 import {
   CarbonReportImportLlmOutputSchema,
   CarbonReportGapFillLlmOutputSchema,
+  CarbonReportPageIndexLlmOutputSchema,
   CarbonActivityRecordSchema,
 } from "@/validators";
 import { ApiError, API_ERRORS } from "@/lib/utils/error_dictionary";
@@ -157,6 +158,38 @@ const buildOutlineCatalog = (sections: ICarbonReportSection[]): string =>
     )
     .join("\n");
 
+/**
+ * Info: (20260730 - Tzuhan) 頁碼索引的輸出約束(兩階段匯入的第一階段)。
+ * 只要頁碼、不要內容,輸出因此極小(33 個整數),一次呼叫即可把後續 11 章的輸入
+ * 從「整份文件 × 11」縮成「該章對應頁 × 11」。段落 id 同樣以 enum 鎖死。
+ */
+const buildPageIndexResponseSchema = (
+  sections: ICarbonReportSection[],
+): Schema => ({
+  type: SchemaType.OBJECT,
+  properties: {
+    index: {
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          paragraphId: {
+            type: SchemaType.STRING,
+            format: "enum",
+            enum: sections.map((section) => section.id),
+          },
+          startPage: {
+            type: SchemaType.INTEGER,
+            description: "該段落內容起始的頁碼(取自原文的 -- p.N/總頁 -- 標記)",
+          },
+        },
+        required: ["paragraphId", "startPage"],
+      },
+    },
+  },
+  required: ["index"],
+});
+
 const SECTION_BY_ID = new Map(CARBON_REPORT_OUTLINE.map((s) => [s.id, s]));
 
 // Info: (20260716 - Tzuhan) 匯入來源:文字類直接入 prompt;pdf 走 inlineData
@@ -228,6 +261,87 @@ export class ReportImportService {
       API_ERRORS.IS_REPORT_IMPORT_FAILED.message,
       API_ERRORS.IS_REPORT_IMPORT_FAILED.status,
     );
+  }
+
+  /**
+   * Info: (20260730 - Tzuhan) 兩階段匯入的第一階段:問出「33 節各自起始於第幾頁」。
+   *
+   * 為什麼需要:逐章匯入為了突破輸出上限而拆成 11 次呼叫,但每次都重送整份文件——
+   * 實測 64 頁報告一次匯入耗掉約 44 萬 input token,後段章節因 API 額度耗盡連請求都發不出去
+   * (失敗於 6~18ms)。278 頁的報告只會更糟。
+   *
+   * 為什麼可行:文字層抽取已在每頁尾植入 `-- p.N/總頁 --` 標記,模型只要回頁碼即可,
+   * 輸出僅 33 個整數,一次呼叫的成本遠低於省下的 10 次全文輸入。
+   *
+   * 護欄:回傳的頁碼僅供切片最佳化。頁碼不合理、缺漏、或切出來過短時一律退回送全文
+   * (見 slicePagesForRange),絕不因索引失準而讓內容靜默消失。
+   */
+  async buildSectionPageIndex(
+    source: IReportImportSource,
+    language?: string,
+  ): Promise<Map<string, number>> {
+    // Info: (20260730 - Tzuhan) 僅文字來源可切片(視覺模型走 inlineData,沒有頁標記可依循)
+    if (!source.isText) return new Map();
+
+    const prompt = `你是一位文件索引助手。以下是一份既有的溫室氣體盤查報告全文,每頁尾端有 \`-- p.頁碼/總頁 --\` 標記。
+
+【任務】
+判斷下列標準大綱的每個段落,其對應內容起始於原文的第幾頁,回傳 startPage。
+
+【規則】
+1. startPage 必須取自原文的頁標記,嚴禁推測或估算。
+2. 原文完全沒有對應內容的段落,直接不要列入 index(不要猜一個頁碼)。
+3. 只回頁碼,不要回任何內容。
+4. 語言:${language ?? "zh-TW"}(僅影響你對標題語意的理解)。
+
+【標準大綱】
+${buildOutlineCatalog(CARBON_REPORT_OUTLINE)}
+
+【報告原文】
+${source.data}`;
+
+    let raw: string;
+    try {
+      raw = await this.getChatService().generateRawWithImages(
+        prompt,
+        undefined,
+        true,
+        buildPageIndexResponseSchema(CARBON_REPORT_OUTLINE),
+        {
+          temperature: LLM_TEMPERATURE.EXTRACTION,
+          timeoutMs: LLM_REPORT_IMPORT_TIMEOUT_MS,
+          taskKey: LlmTaskKeyEnum.REPORT_IMPORT,
+          // Info: (20260730 - Tzuhan) 輸出只有頁碼,但思考 token 與輸出共用額度,故仍給足空間
+          maxOutputTokens: LLM_MAX_OUTPUT_TOKENS.REPORT_IMPORT,
+        },
+      );
+    } catch (error) {
+      // Info: (20260730 - Tzuhan) 索引失敗不阻斷匯入:回空 Map,呼叫端退回原本的送全文行為
+      logger.error(
+        `[ReportImportService] page index failed: ${describeError(error)}`,
+      );
+      return new Map();
+    }
+
+    try {
+      const parsed = CarbonReportPageIndexLlmOutputSchema.parse(
+        JSON.parse(raw),
+      );
+      const validIds = new Set(CARBON_REPORT_OUTLINE.map((s) => s.id));
+      const index = new Map<string, number>();
+      parsed.index.forEach((entry) => {
+        // Info: (20260730 - Tzuhan) 白名單複驗:enum 之外的 id 直接丟棄(不進 unmapped,索引不承載內容)
+        if (validIds.has(entry.paragraphId)) {
+          index.set(entry.paragraphId, entry.startPage);
+        }
+      });
+      return index;
+    } catch (error) {
+      logger.error(
+        `[ReportImportService] page index output invalid: ${describeError(error)}`,
+      );
+      return new Map();
+    }
   }
 
   async importReport(
