@@ -81,6 +81,18 @@ export interface IReportParagraph {
   origin?: ParagraphOriginEnum;
 }
 
+/**
+ * Info: (20260730 - Tzuhan) 已封存會話(供還原清單)。
+ * title 由本地快取補:標題衍生自密文首訊,伺服器讀不到,無快取時退回建立日期。
+ */
+export interface IArchivedSessionEntry {
+  sessionId: string;
+  channel: string;
+  createdAt: string;
+  archivedAt: string;
+  title: string;
+}
+
 // Info: (20260713 - Tzuhan) 報告段落統計(完成/查核雙軌進度的單一來源)
 export interface IReportProgressStats {
   completedCount: number;

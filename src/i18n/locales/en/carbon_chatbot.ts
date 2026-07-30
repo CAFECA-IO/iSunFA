@@ -55,6 +55,12 @@ export const carbonChatbot = {
   // Info: (20260730 - Tzuhan) 封存為軟刪:文案明示資料保留可還原,避免使用者誤以為永久刪除
   archive_session: "Archive this conversation (data kept, restorable)",
   archive_confirm: "Click again to confirm",
+  // Info: (20260730 - Tzuhan) 已封存區塊:空清單也需文案,否則分不清「沒有封存」與「載入失敗」
+  archived_sessions: "Archived",
+  archived_loading: "Loading…",
+  archived_empty: "No archived conversations",
+  archived_at: "Archived on {{date}}",
+  restore_session: "Restore this conversation",
   system_error:
     "[System Error] Sorry, there was a problem connecting to the Carbon Accountant service. Please try again later.",
   system_unavailable: "Sorry, the system is currently unavailable to respond.",

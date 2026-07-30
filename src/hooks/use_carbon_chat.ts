@@ -16,6 +16,7 @@ import {
   IComputedLedger,
   IReportCategory,
   IReportParagraph,
+  IArchivedSessionEntry,
 } from "@/types/carbon_chatbot.types";
 import {
   buildCarbonDataTable,
@@ -436,6 +437,86 @@ export const useCarbonChat = () => {
     }>(`/api/v1/chat/carbon/sessions?accountBookId=${accountBookId}`);
     return res.payload?.sessions ?? [];
   }, []);
+
+  /**
+   * Info: (20260730 - Tzuhan) 列出已封存的會話(供還原)。
+   * 後端 GET 帶 includeArchived 會一併回使用中者,此處只留 archivedAt 有值的——
+   * 清單畫面本來就有使用中的會話,重複列出只會讓人以為封存沒生效。
+   */
+  const fetchArchivedSessions = useCallback(async (): Promise<
+    IArchivedSessionEntry[]
+  > => {
+    try {
+      const res = await request<{
+        payload: {
+          sessions: {
+            sessionId: string;
+            channel: string;
+            createdAt: string;
+            archivedAt?: string | null;
+          }[];
+        } | null;
+      }>("/api/v1/chat/carbon/sessions?includeArchived=true");
+      return (res.payload?.sessions ?? [])
+        .filter((entry) => !!entry.archivedAt)
+        .map((entry) => ({
+          sessionId: entry.sessionId,
+          channel: entry.channel,
+          createdAt: entry.createdAt,
+          archivedAt: entry.archivedAt as string,
+          // Info: (20260730 - Tzuhan) 標題衍生自密文首訊(server 讀不到),故以本地快取補;無快取時以建立日期呈現
+          title:
+            (loadSessionsIndex(user?.address ?? "") ?? []).find(
+              (cached) => cached.id === entry.sessionId,
+            )?.title ?? new Date(entry.createdAt).toLocaleDateString(),
+        }));
+    } catch (error) {
+      console.error("[carbon-chat] failed to load archived sessions:", error);
+      return [];
+    }
+  }, [user?.address]);
+
+  /**
+   * Info: (20260730 - Tzuhan) 還原已封存的會話:PATCH 清掉 archivedAt,並把它放回本地清單。
+   * 與封存同一權限層級(DELETE),伺服端裁決;成功才動本地狀態。
+   */
+  const restoreSession = useCallback(
+    async (sessionId: string): Promise<boolean> => {
+      const channel = buildCarbonChatChannel(
+        user?.address ?? "anonymous",
+        sessionId,
+      );
+      try {
+        await request("/api/v1/chat/carbon/sessions", {
+          method: "PATCH",
+          body: JSON.stringify({ channel }),
+        });
+      } catch (error) {
+        console.error("[carbon-chat] restore session failed:", error);
+        return false;
+      }
+
+      const cached = (loadSessionsIndex(user?.address ?? "") ?? []).find(
+        (entry) => entry.id === sessionId,
+      );
+      setSessionsData((prev) => {
+        if (prev[sessionId]) return prev;
+        return {
+          ...prev,
+          [sessionId]: {
+            ...createChatSession(
+              sessionId,
+              cached?.title ?? t("carbon_chatbot.new_session_title"),
+              cached?.createdAt ?? new Date().toLocaleDateString(),
+            ),
+            isTitleCustom: cached?.isTitleCustom ?? false,
+          },
+        };
+      });
+      return true;
+    },
+    [user?.address, t],
+  );
 
   /**
    * Info: (20260730 - Tzuhan) 封存會話(軟刪)。刻意不是硬刪:一個會話連帶整份 33 節報告草稿
@@ -3147,6 +3228,8 @@ export const useCarbonChat = () => {
     discardPendingImport,
     // Info: (20260730 - Tzuhan) 封存會話(軟刪,可還原);權限由後端 DELETE 層級裁決
     archiveSession,
+    fetchArchivedSessions,
+    restoreSession,
     // Info: (20260730 - Tzuhan) 手動產生結構圖(治理架構/範疇對應/量化流程);無對應模板的段落呼叫即 no-op
     generateParagraphDiagram,
     retryFailedImportChapters,

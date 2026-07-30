@@ -84,6 +84,8 @@ export default function CarbonChatbotPage() {
     generateParagraphDraft,
     generateParagraphDiagram,
     archiveSession,
+    fetchArchivedSessions,
+    restoreSession,
     toggleParagraphVerified,
     handleMarkdownChange,
     chatEndRef,
@@ -131,6 +133,8 @@ export default function CarbonChatbotPage() {
         onFetchBookSessions={fetchBookSessions}
         onOpenBookReport={setViewerChannel}
         onArchiveSession={archiveSession}
+        onFetchArchivedSessions={fetchArchivedSessions}
+        onRestoreSession={restoreSession}
       />
 
       {/* Info: (20260714 - Tzuhan) 報告為主視圖: 佔滿剩餘寬度，窄螢幕單欄直向捲動(目錄由工具列抽屜提供) */}

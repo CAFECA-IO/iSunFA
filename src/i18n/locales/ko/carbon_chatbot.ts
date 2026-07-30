@@ -55,6 +55,12 @@ export const carbonChatbot = {
   // Info: (20260730 - Tzuhan) 封存為軟刪:文案明示資料保留可還原,避免使用者誤以為永久刪除
   archive_session: "이 대화 보관(데이터 유지, 복원 가능)",
   archive_confirm: "한 번 더 클릭하면 확정",
+  // Info: (20260730 - Tzuhan) 已封存區塊:空清單也需文案,否則分不清「沒有封存」與「載入失敗」
+  archived_sessions: "보관됨",
+  archived_loading: "불러오는 중…",
+  archived_empty: "보관된 대화가 없습니다",
+  archived_at: "{{date}}에 보관",
+  restore_session: "이 대화 복원",
   system_error:
     "[시스템 오류] 죄송합니다. 탄소 회계사 서비스에 연결하는 중 문제가 발생했습니다. 나중에 다시 시도해 주세요.",
   system_unavailable: "죄송합니다. 현재 시스템이 응답할 수 없습니다.",

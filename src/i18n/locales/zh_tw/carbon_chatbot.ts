@@ -54,6 +54,12 @@ export const carbonChatbot = {
   // Info: (20260730 - Tzuhan) 封存為軟刪:文案明示資料保留可還原,避免使用者誤以為永久刪除
   archive_session: "封存此對話(資料保留,可還原)",
   archive_confirm: "再點一次確認封存",
+  // Info: (20260730 - Tzuhan) 已封存區塊:空清單也需文案,否則分不清「沒有封存」與「載入失敗」
+  archived_sessions: "已封存",
+  archived_loading: "載入中…",
+  archived_empty: "沒有已封存的對話",
+  archived_at: "封存於 {{date}}",
+  restore_session: "還原此對話",
   system_error: "【系統錯誤】抱歉，連線到碳會計師服務時發生問題，請稍後再試。",
   system_unavailable: "抱歉，系統目前無法回應。",
   ai_quota_exceeded:

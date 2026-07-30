@@ -12,8 +12,12 @@ import {
   ChevronRight,
   FileText,
   Archive,
+  ArchiveRestore,
 } from "lucide-react";
-import { IChatSession } from "@/types/carbon_chatbot.types";
+import {
+  IChatSession,
+  IArchivedSessionEntry,
+} from "@/types/carbon_chatbot.types";
 
 // Info: (20260716 - Tzuhan) #52 可綁定帳本的最小資訊(選單顯示用)
 export interface IAccountBookOption {
@@ -42,6 +46,12 @@ interface IChatSidebarProps {
    * 未提供時不顯示封存鈕(無權限者由呼叫端決定不傳)。
    */
   onArchiveSession?: (sessionId: string) => void;
+  /**
+   * Info: (20260730 - Tzuhan) 已封存會話的還原入口:展開時載入,點還原即放回清單。
+   * 兩個 callback 需成對提供,只給其一則不顯示該區塊(半套的入口比沒有更令人困惑)。
+   */
+  onFetchArchivedSessions?: () => Promise<IArchivedSessionEntry[]>;
+  onRestoreSession?: (sessionId: string) => Promise<boolean> | void;
 }
 
 // Info: (20260716 - Tzuhan) 帳本會話列表項(標題衍生自密文首訊 server 不可讀,故以建立日期呈現)
@@ -64,6 +74,8 @@ export function ChatSidebar({
   onFetchBookSessions = undefined,
   onOpenBookReport = undefined,
   onArchiveSession = undefined,
+  onFetchArchivedSessions = undefined,
+  onRestoreSession = undefined,
 }: IChatSidebarProps) {
   const { t } = useTranslation();
   // Info: (20260716 - Tzuhan) #52 新增對話選單開闔(有帳本時才出現)
@@ -71,6 +83,12 @@ export function ChatSidebar({
   // Info: (20260716 - Tzuhan) 改名編輯狀態(session id + 草稿值;Enter/blur 提交,Esc 取消)
   // Info: (20260730 - Tzuhan) 待確認封存的會話 id:第一次點擊只轉為待確認,第二次才真的封存
   const [pendingArchiveId, setPendingArchiveId] = useState<string | null>(null);
+  // Info: (20260730 - Tzuhan) 已封存區塊:預設收合(封存的意義就是不佔視線),展開時才載入
+  const [isArchivedOpen, setIsArchivedOpen] = useState<boolean>(false);
+  const [archivedSessions, setArchivedSessions] = useState<
+    IArchivedSessionEntry[]
+  >([]);
+  const [isArchivedLoading, setIsArchivedLoading] = useState<boolean>(false);
   const [editing, setEditing] = useState<{ id: string; value: string } | null>(
     null,
   );
@@ -361,6 +379,91 @@ export function ChatSidebar({
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Info: (20260730 - Tzuhan) 已封存會話的還原入口:預設收合,展開才載入(封存的意義就是不佔視線) */}
+      {onFetchArchivedSessions && onRestoreSession && (
+        <div className="border-t border-gray-100 px-4 py-3">
+          <button
+            type="button"
+            onClick={async () => {
+              const next = !isArchivedOpen;
+              setIsArchivedOpen(next);
+              if (!next) return;
+              setIsArchivedLoading(true);
+              setArchivedSessions(await onFetchArchivedSessions());
+              setIsArchivedLoading(false);
+            }}
+            className="flex w-full items-center gap-2 text-[12px] font-bold text-gray-500 transition-colors hover:text-gray-700"
+          >
+            {isArchivedOpen ? (
+              <ChevronDown className="h-3.5 w-3.5" />
+            ) : (
+              <ChevronRight className="h-3.5 w-3.5" />
+            )}
+            <Archive className="h-3.5 w-3.5" />
+            <span>{t("carbon_chatbot.archived_sessions")}</span>
+            {isArchivedOpen && !isArchivedLoading && (
+              <span className="ml-auto text-[11px] font-medium text-gray-400">
+                {archivedSessions.length}
+              </span>
+            )}
+          </button>
+
+          {isArchivedOpen && (
+            <div className="mt-2 space-y-1 pl-6">
+              {isArchivedLoading && (
+                <p className="text-[11px] text-gray-400">
+                  {t("carbon_chatbot.archived_loading")}
+                </p>
+              )}
+              {/* Info: (20260730 - Tzuhan) 空清單也要出文案:不然使用者分不清「沒有封存」與「載入失敗」 */}
+              {!isArchivedLoading && archivedSessions.length === 0 && (
+                <p className="text-[11px] text-gray-400">
+                  {t("carbon_chatbot.archived_empty")}
+                </p>
+              )}
+              {!isArchivedLoading &&
+                archivedSessions.map((entry) => (
+                  <div
+                    key={entry.sessionId}
+                    className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-gray-50"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[12px] font-medium text-gray-600">
+                        {entry.title}
+                      </p>
+                      <p className="text-[10px] text-gray-400">
+                        {t("carbon_chatbot.archived_at", {
+                          date: new Date(entry.archivedAt).toLocaleDateString(),
+                        })}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      aria-label={t("carbon_chatbot.restore_session")}
+                      title={t("carbon_chatbot.restore_session")}
+                      onClick={async () => {
+                        const restored = await onRestoreSession(
+                          entry.sessionId,
+                        );
+                        // Info: (20260730 - Tzuhan) 還原成功才從封存清單移除(失敗時項目不可先消失)
+                        if (restored === false) return;
+                        setArchivedSessions((prev) =>
+                          prev.filter(
+                            (item) => item.sessionId !== entry.sessionId,
+                          ),
+                        );
+                      }}
+                      className="shrink-0 rounded p-1 text-gray-400 transition-colors hover:bg-orange-50 hover:text-[#ff5a00]"
+                    >
+                      <ArchiveRestore size={13} />
+                    </button>
+                  </div>
+                ))}
+            </div>
+          )}
         </div>
       )}
 

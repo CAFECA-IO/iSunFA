@@ -55,6 +55,12 @@ export const carbonChatbot = {
   // Info: (20260730 - Tzuhan) 封存為軟刪:文案明示資料保留可還原,避免使用者誤以為永久刪除
   archive_session: "この会話をアーカイブ(データは保持され復元可能)",
   archive_confirm: "もう一度クリックで確定",
+  // Info: (20260730 - Tzuhan) 已封存區塊:空清單也需文案,否則分不清「沒有封存」與「載入失敗」
+  archived_sessions: "アーカイブ済み",
+  archived_loading: "読み込み中…",
+  archived_empty: "アーカイブされた会話はありません",
+  archived_at: "{{date}} にアーカイブ",
+  restore_session: "この会話を復元",
   system_error:
     "【システムエラー】申し訳ありません。カーボン会計士サービスへの接続中に問題が発生しました。後でもう一度お試しください。",
   system_unavailable: "申し訳ありません。現在システムは応答できません。",
