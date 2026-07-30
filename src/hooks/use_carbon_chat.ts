@@ -117,6 +117,8 @@ import {
   CARBON_CHAT_REPLY_TIMEOUT_MS,
   CARBON_CHAT_REPLY_TIMEOUT_WITH_ATTACHMENTS_MS,
   CARBON_IMPORT_SINGLE_CALL_MAX_BYTES,
+  CARBON_DIAGRAM_QUOTA_RETRY_MS,
+  CARBON_DIAGRAM_THROTTLE_MS,
   IMPORT_CANDIDATE_MIME_TYPES,
   PDF_MIME_TYPE,
   ParagraphOriginEnum,
@@ -1579,67 +1581,79 @@ export const useCarbonChat = () => {
         return;
       }
 
-      try {
-        const res = await request<{
-          payload: {
-            templateId: CarbonDiagramTemplateEnum;
-            block: string;
-            isDrawn: boolean;
-          } | null;
-        }>("/api/v1/chat/carbon/diagram", {
-          method: "POST",
-          body: JSON.stringify({ paragraphId, content, language }),
-        });
-        const payload = res.payload;
-        if (!payload) return;
-        if (!payload.isDrawn) {
-          // Info: (20260730 - Tzuhan) 被護欄拒絕:區塊仍會插入(內含原因文字),此處補一行前端 log 便於對照後端的 offendingLabels
-          console.warn(
-            "[carbon-chat] diagram rejected by guardrail:",
-            paragraphId,
-          );
-        }
-
-        setSessionsData((prev) => {
-          const session = prev[activeSessionId];
-          const reportData = session?.reportData;
-          if (!reportData?.paragraphs) return prev;
-          let nextRaw = reportData.rawMarkdown;
-          const nextParagraphs = reportData.paragraphs.map((p) => {
-            if (p.id !== paragraphId || !p.content) return p;
-            const nextContent = insertCarbonDiagramBlock(
-              p.content,
-              payload.templateId,
-              payload.block,
-            );
-            if (nextContent === p.content) return p;
-            if (nextRaw) {
-              nextRaw = patchMarkdownSection(nextRaw, p.title, nextContent);
-            }
-            // Info: (20260730 - Tzuhan) 內容變動即重置查核(與其他寫入路徑同一閘門)
-            return { ...p, content: nextContent, isVerified: false };
+      const attempt = async (): Promise<boolean> => {
+        try {
+          const res = await request<{
+            payload: {
+              templateId: CarbonDiagramTemplateEnum;
+              block: string;
+              isDrawn: boolean;
+            } | null;
+          }>("/api/v1/chat/carbon/diagram", {
+            method: "POST",
+            body: JSON.stringify({ paragraphId, content, language }),
           });
-          return {
-            ...prev,
-            [activeSessionId]: {
-              ...session,
-              reportData: {
-                ...reportData,
-                rawMarkdown: nextRaw,
-                paragraphs: nextParagraphs,
+          const payload = res.payload;
+          if (!payload) return true;
+          if (!payload.isDrawn) {
+            // Info: (20260730 - Tzuhan) 被護欄拒絕:區塊仍會插入(內含原因文字),此處補一行前端 log 便於對照後端的 offendingLabels
+            console.warn(
+              "[carbon-chat] diagram rejected by guardrail:",
+              paragraphId,
+            );
+          }
+
+          setSessionsData((prev) => {
+            const session = prev[activeSessionId];
+            const reportData = session?.reportData;
+            if (!reportData?.paragraphs) return prev;
+            let nextRaw = reportData.rawMarkdown;
+            const nextParagraphs = reportData.paragraphs.map((p) => {
+              if (p.id !== paragraphId || !p.content) return p;
+              const nextContent = insertCarbonDiagramBlock(
+                p.content,
+                payload.templateId,
+                payload.block,
+              );
+              if (nextContent === p.content) return p;
+              if (nextRaw) {
+                nextRaw = patchMarkdownSection(nextRaw, p.title, nextContent);
+              }
+              // Info: (20260730 - Tzuhan) 內容變動即重置查核(與其他寫入路徑同一閘門)
+              return { ...p, content: nextContent, isVerified: false };
+            });
+            return {
+              ...prev,
+              [activeSessionId]: {
+                ...session,
+                reportData: {
+                  ...reportData,
+                  rawMarkdown: nextRaw,
+                  paragraphs: nextParagraphs,
+                },
               },
-            },
-          };
+            };
+          });
+        } catch (error) {
+          // Info: (20260730 - Tzuhan) 圖是加值不是前提:失敗不影響段落內容與流程,但不可靜默 ——
+          // Info: (20260730 - Tzuhan) 實測失敗時畫面與 console 都沒有痕跡,查不出是沒觸發、被護欄拒絕還是呼叫失敗。
+          console.error(
+            "[carbon-chat] diagram generation failed:",
+            paragraphId,
+            error,
+          );
+          return false;
+        }
+        return true;
+      };
+
+      // Info: (20260730 - Tzuhan) 額度不足是「等一下會好」:退避後重試一次即止(不做無上限重試)
+      const succeeded = await attempt();
+      if (!succeeded) {
+        await new Promise((resolve) => {
+          setTimeout(resolve, CARBON_DIAGRAM_QUOTA_RETRY_MS);
         });
-      } catch (error) {
-        // Info: (20260730 - Tzuhan) 圖是加值不是前提:失敗不影響段落內容與流程。
-        // Info: (20260730 - Tzuhan) 但要留下痕跡 —— 實測「一張圖都沒出來」時完全無跡可循,
-        // Info: (20260730 - Tzuhan) 查不出是沒觸發、被護欄拒絕、還是呼叫失敗,診斷成本全轉嫁到人身上。
-        console.error(
-          "[carbon-chat] diagram generation failed:",
-          paragraphId,
-          error,
-        );
+        await attempt();
       }
     },
     [sessionsData, activeSessionId, language],
@@ -1736,8 +1750,14 @@ export const useCarbonChat = () => {
     // Info: (20260730 - Tzuhan) 循序執行(專案禁 await-in-loop):一次一張,避免同時寫入同一份報告狀態。
     void selected
       .filter((item) => findDiagramTemplateForParagraph(item.paragraphId))
-      .reduce(async (previous, item) => {
+      .reduce(async (previous, item, index) => {
         await previous;
+        // Info: (20260730 - Tzuhan) 逐張間隔:匯入本身已吃掉當分鐘的限流額度,連發必被 429 擋掉
+        if (index > 0) {
+          await new Promise((resolve) => {
+            setTimeout(resolve, CARBON_DIAGRAM_THROTTLE_MS);
+          });
+        }
         // Info: (20260730 - Tzuhan) 傳入剛落地的內容:此刻 setSessionsData 尚未生效,讀狀態會拿到空值
         await generateParagraphDiagram(item.paragraphId, item.content);
       }, Promise.resolve());

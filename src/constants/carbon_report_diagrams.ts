@@ -94,3 +94,11 @@ export const buildDiagramAnchorEnd = (
  * 超過即視為「模型把整段敘述塞進節點」,該張圖不予採信。
  */
 export const CARBON_DIAGRAM_MAX_LABEL_CHARS = 40;
+
+/**
+ * Info: (20260730 - Tzuhan) 時間軸最少需要幾個「有時間標籤」的事件。
+ * 實測:1.1 節被 gap-fill 改寫成公司簡介後已無沿革條目,模型只抓到「2023年底 : 員工人數約為217人」
+ * 這一個點,還把時間標籤本身當成事件節點 —— 產出一張技術上合法、語意上無意義的時間軸。
+ * 護欄擋不住語意荒謬,但擋得住「一個點的時間軸」:少於此數即不畫。
+ */
+export const CARBON_TIMELINE_MIN_DATED_EVENTS = 3;

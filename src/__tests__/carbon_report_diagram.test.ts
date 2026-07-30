@@ -259,6 +259,7 @@ describe("時間軸模板(timeline renderer)", () => {
       [
         { label: "榮獲經濟部中央標準局鍍鋅鋼管正字標記", parent: "1968年06月" },
         { label: "榮獲經濟部中央標準局黑鋼管正字標記", parent: "1968年06月" },
+        { label: "公司創立於高雄市", parent: "1966年01月" },
       ],
       MILESTONE_SOURCE,
     );
@@ -289,21 +290,28 @@ describe("時間軸模板(timeline renderer)", () => {
   it("沒有時間標籤的事件不丟棄,歸入未標註時間", () => {
     const block = buildCarbonDiagramBlock(
       CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
-      [{ label: "公司創立於高雄市" }],
+      [...nodes, { label: "公司股票正式掛牌上市" }],
       MILESTONE_SOURCE,
     );
-    expect(block).toContain("未標註時間 : 公司創立於高雄市");
+    expect(block).toContain("未標註時間 : 公司股票正式掛牌上市");
   });
 
   it("事件文字內的冒號換掉,避免撐破 timeline 的分隔語法", () => {
-    const source = "1966年01月 資本額:捌拾萬元";
+    const source =
+      "1966年01月 資本額:捌拾萬元 公司創立於高雄市 1968年06月 榮獲正字標記 1988年12月 掛牌上市";
     const block = buildCarbonDiagramBlock(
       CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
-      [{ label: "資本額:捌拾萬元", parent: "1966年01月" }],
+      [
+        { label: "資本額:捌拾萬元", parent: "1966年01月" },
+        { label: "公司創立於高雄市", parent: "1966年01月" },
+        { label: "榮獲正字標記", parent: "1968年06月" },
+      ],
       source,
     );
     const row = block.split("\n").find((line) => line.includes("1966年01月"))!;
-    expect(row.split(" : ")).toHaveLength(2);
+    // Info: (20260730 - Tzuhan) 該時間點有兩個事件,故為「時間 : 事件 : 事件」三段;
+    // Info: (20260730 - Tzuhan) 重點是原本事件文字裡的冒號已換成連字號,不會多切出一段
+    expect(row.split(" : ")).toHaveLength(3);
     expect(row).toContain("資本額-捌拾萬元");
   });
 });
@@ -421,5 +429,48 @@ describe("AI 草稿段落的節點回溯(語序被改寫)", () => {
       "範疇一包含固定式與移動式燃燒",
     );
     expect(result.isValid).toBe(false);
+  });
+});
+
+describe("時間軸的最少事件數(實測回歸)", () => {
+  // Info: (20260730 - Tzuhan) 實測產出:1.1 節被改寫成公司簡介後已無沿革,
+  // Info: (20260730 - Tzuhan) 模型只抓到一個點,還把時間標籤本身當成事件節點
+  const NONSENSE_SOURCE = "截至2023年底,員工人數約為217人。";
+
+  it("只有一個時間點時不畫(那不是時間軸)", () => {
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
+      [
+        { label: "員工人數約為217人", parent: "2023年底" },
+        { label: "2023年底" },
+      ],
+      NONSENSE_SOURCE,
+    );
+    expect(result.isValid).toBe(false);
+    expect(result.reason).toBe(DiagramRejectReasonEnum.TOO_FEW_DATED_EVENTS);
+  });
+
+  it("事件文字等於時間標籤者不計入事件數", () => {
+    const source = "1966年01月 甲事件 1968年06月 乙事件";
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
+      [
+        { label: "甲事件", parent: "1966年01月" },
+        { label: "乙事件", parent: "1968年06月" },
+        { label: "1966年01月", parent: "1966年01月" },
+      ],
+      source,
+    );
+    expect(result.reason).toBe(DiagramRejectReasonEnum.TOO_FEW_DATED_EVENTS);
+  });
+
+  it("被擋下時輸出說明而非空白圖", () => {
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
+      [{ label: "員工人數約為217人", parent: "2023年底" }],
+      NONSENSE_SOURCE,
+    );
+    expect(block).not.toContain("```mermaid");
+    expect(block).toContain("不足");
   });
 });

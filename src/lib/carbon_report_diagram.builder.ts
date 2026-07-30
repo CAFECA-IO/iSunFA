@@ -8,6 +8,7 @@ import {
   CarbonDiagramTemplateEnum,
   CARBON_DIAGRAM_TEMPLATES,
   CARBON_DIAGRAM_MAX_LABEL_CHARS,
+  CARBON_TIMELINE_MIN_DATED_EVENTS,
   buildDiagramAnchorEnd,
   buildDiagramAnchorStart,
 } from "@/constants/carbon_report_diagrams";
@@ -33,6 +34,8 @@ export const CARBON_DIAGRAM_DEFAULT_LABELS: ICarbonDiagramLabels = {
 
 export enum DiagramRejectReasonEnum {
   NO_NODES = "no_nodes",
+  // Info: (20260730 - Tzuhan) 有時間標籤的事件太少:一兩個點不構成時間軸
+  TOO_FEW_DATED_EVENTS = "too_few_dated_events",
   TOO_MANY_NODES = "too_many_nodes",
   LABEL_TOO_LONG = "label_too_long",
   LABEL_NOT_IN_SOURCE = "label_not_in_source",
@@ -148,6 +151,26 @@ export function validateDiagramNodes(
         offendingLabels: unverifiableParents,
       };
     }
+
+    // Info: (20260730 - Tzuhan) 事件節點的文字若等於某個時間標籤,代表模型把時間當成事件(實測發生過),
+    // Info: (20260730 - Tzuhan) 該節點不計入有效事件數
+    const periods = new Set(
+      nodes
+        .map((node) => node.parent)
+        .filter((parent): parent is string => parent !== undefined)
+        .map(normalizeForMatch),
+    );
+    const datedEvents = nodes.filter(
+      (node) =>
+        node.parent !== undefined &&
+        !periods.has(normalizeForMatch(node.label)),
+    );
+    if (datedEvents.length < CARBON_TIMELINE_MIN_DATED_EVENTS) {
+      return {
+        isValid: false,
+        reason: DiagramRejectReasonEnum.TOO_FEW_DATED_EVENTS,
+      };
+    }
     return { isValid: true };
   }
 
@@ -244,7 +267,8 @@ export function buildCarbonDiagramBlock(
   if (!validation.isValid) {
     return wrap(
       `> _${
-        validation.reason === DiagramRejectReasonEnum.NO_NODES
+        validation.reason === DiagramRejectReasonEnum.NO_NODES ||
+        validation.reason === DiagramRejectReasonEnum.TOO_FEW_DATED_EVENTS
           ? labels.insufficient
           : labels.unverifiable
       }_`,

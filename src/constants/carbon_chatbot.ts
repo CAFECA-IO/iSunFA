@@ -153,6 +153,15 @@ export const CARBON_CHAT_ATTACHMENT_ACCEPT =
   CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES.join(",");
 
 /**
+ * Info: (20260730 - Tzuhan) 結構圖生成的節流與重試。
+ * 匯入完一份報告已用掉 11 章 + 最多 11 次 gap-fill 呼叫,LLM bucket 限流為 12 次/分鐘;
+ * 緊接著再連發 5 次結構圖必然撞 429 —— 實測結果正是「前兩張畫出來,其餘無聲消失」。
+ * 故逐張之間留間隔,遇額度不足再退避重試一次。
+ */
+export const CARBON_DIAGRAM_THROTTLE_MS = 6_000;
+export const CARBON_DIAGRAM_QUOTA_RETRY_MS = 30_000;
+
+/**
  * Info: (20260730 - Tzuhan) 整份報告匯入的三種模式。
  * 原本以 "draft" / "index" 字面值在 route 內比對,違反「拒絕魔法字串」——
  * 這些值同時是 API 契約(前端送、後端判),散落字面值任一端改字就靜默失效。
