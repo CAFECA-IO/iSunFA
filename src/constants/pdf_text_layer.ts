@@ -29,3 +29,9 @@ export const PDF_TEXT_LAYER_MAX_NUMERIC_UNDECODED = 0;
 
 // Info: (20260730 - Tzuhan) Unicode 替換字元:PDF 字型缺 ToUnicode 對照時抽取器的輸出
 export const PDF_UNDECODED_CHAR = "�";
+
+// Info: (20260730 - Tzuhan) 同列儲存格分隔符:盤查報告的排放量統計表若無分隔,抽出來會是一串無歸屬的數字
+export const PDF_TEXT_CELL_SEPARATOR = "\t";
+
+// Info: (20260730 - Tzuhan) 頁邊界標記:讓 LLM 照抄時能一併帶出頁碼,人工查核可回原文對照
+export const PDF_TEXT_PAGE_JOINER = "\n-- p.page_number/total_number --";

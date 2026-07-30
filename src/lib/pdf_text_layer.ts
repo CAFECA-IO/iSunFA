@@ -11,6 +11,8 @@ import {
   PDF_TEXT_LAYER_MAX_UNDECODED_RATIO,
   PDF_TEXT_LAYER_MIN_CHARS_PER_PAGE,
   PDF_UNDECODED_CHAR,
+  PDF_TEXT_CELL_SEPARATOR,
+  PDF_TEXT_PAGE_JOINER,
 } from "@/constants/pdf_text_layer";
 
 export interface IPdfTextLayerQuality {
@@ -130,7 +132,13 @@ export async function extractPdfTextLayer(
     const { PDFParse } = await import("pdf-parse");
     const parser = new PDFParse({ data: new Uint8Array(buffer) });
     try {
-      const result = await parser.getText();
+      // Info: (20260730 - Tzuhan) 必須明示保留儲存格結構:盤查報告的價值集中在排放量統計表,
+      // Info: (20260730 - Tzuhan) 不帶欄位分隔抽出來的表格會塌成一串沒有歸屬的數字(實測 poppler 預設模式即如此),
+      // Info: (20260730 - Tzuhan) 逐字照抄會照抄出無法對齊的內容。cellSeparator 讓同列儲存格以 tab 分隔,LLM 才讀得出欄位歸屬。
+      const result = await parser.getText({
+        cellSeparator: PDF_TEXT_CELL_SEPARATOR,
+        pageJoiner: PDF_TEXT_PAGE_JOINER,
+      });
       return {
         text: result.text ?? "",
         pages: result.total ?? 0,
