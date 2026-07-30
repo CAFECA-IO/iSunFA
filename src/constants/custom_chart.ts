@@ -129,6 +129,15 @@ export enum TornadoActionType {
 }
 
 /**
+ * Info: (20260723 - Julian)
+ * 自訂圖表「跨類型共用」的結構化編輯動作。目前僅標題（title 設定列各類型皆有），
+ * 由 applyCustomChartAction 於分派前統一處理，與 mermaid 的 CHANGE_TITLE 對應。
+ */
+export enum CustomChartActionType {
+  SET_TITLE = "CUSTOM_SET_TITLE",
+}
+
+/**
  * Info: (20260730 - Julian)
  * 直方圖結構化編輯的動作類型列舉（對應 histogram_tools_submenu 的五項工具）。
  * 對應 custom-histogram DSL 的資料列（分箱 item：新增／編輯／刪除）、設定列（軸標題）與趨勢線開關／顏色；

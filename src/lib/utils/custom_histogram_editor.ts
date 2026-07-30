@@ -204,85 +204,118 @@ const setConfigLine = (
 
 /**
  * Info: (20260730 - Julian)
- * 將單一結構化動作決定論地套用到直方圖 DSL 字串，回傳新字串（不變更輸入）。
- * 以 lineIndex（raw.split("\n") 絕對索引）定位資料列；未知類型或定位失敗時原樣返回（Fail Safe）。
- * 純字串操作、決定論、不呼叫 LLM、不做數值計算。
- * 註：動作 lineIndex 皆以「原始 raw」為準；單一動作套用安全，批次堆疊時的行號位移風險見 applyCustomChartActions。
+ * 將「一批」結構化動作決定論地套用到直方圖 DSL 字串，回傳新字串（不變更輸入）。
+ *
+ * 穩定索引策略（解決 stacked-actions 的 lineIndex 位移問題）：
+ * 直方圖分箱有順序，且新增／編輯皆為「定位插入」，故不能單純附加於尾端；改採
+ * 「tombstone 刪除 + 以原始行號錨定的 insertBefore 桶」：套用期間完全不 splice 原始行，
+ * 所有動作的 lineIndex／newLineIndex 皆穩定對應原始 raw 快照：
+ *   1. 資料列動作：新增／移動的內容放進 insertBefore[原始行號] 桶；刪除（含移動來源）僅標記 tombstone。
+ *   2. 依原始行號順序 materialize：於每個原始行前先倒出插入桶，未刪除者再輸出原行；最後倒出尾端桶（key = 長度）。
+ *   3. 設定列動作（軸標題／趨勢線，可能插入設定列）最後才套用，避免位移。
+ * 定位失敗或已刪除的目標一律略過（Fail Safe）。純字串操作、決定論、不呼叫 LLM、不做數值計算。
  */
-export const applyHistogramAction = (
+export const applyHistogramActions = (
   raw: string,
-  action: IHistogramAction,
+  actions: readonly IHistogramAction[],
 ): string => {
   const lines = raw.split("\n");
+  const originalLength = lines.length;
+  const deleted = new Set<number>();
+  // Info: (20260730 - Julian) key = 要插入於「原始行號」之前的位置（0..originalLength，長度代表附加於尾端）
+  const insertBefore = new Map<number, string[]>();
+  const configActions: IHistogramAction[] = [];
 
-  switch (action.type) {
-    case HistogramActionType.ADD_ITEM: {
-      // Info: (20260730 - Julian) 於目標行號插入新分箱列（該 raw 行被佔用、其後順移）；超界則附加於尾端
-      const { label, count, lineIndex } = action.payload;
-      const at = Math.min(Math.max(lineIndex, 0), lines.length);
-      lines.splice(at, 0, buildHistogramDataLine(label, count));
-      break;
-    }
+  const isTargetableDataLine = (idx: number): boolean =>
+    Number.isInteger(idx) &&
+    idx >= 0 &&
+    idx < originalLength &&
+    !deleted.has(idx) &&
+    getHistogramBinFields(lines[idx]) !== null;
 
-    case HistogramActionType.EDIT_ITEM: {
-      // Info: (20260730 - Julian) 以 lineIndex 定位既有分箱，覆寫 label/count 並移動到 newLineIndex
-      const { lineIndex, label, count, newLineIndex } = action.payload;
-      if (lineIndex < 0 || lineIndex >= lines.length) break;
-      if (!getHistogramBinFields(lines[lineIndex])) break;
+  const pushInsert = (at: number, line: string): void => {
+    const key = Math.min(Math.max(at, 0), originalLength);
+    const bucket = insertBefore.get(key);
+    if (bucket) bucket.push(line);
+    else insertBefore.set(key, [line]);
+  };
 
-      lines.splice(lineIndex, 1);
-      // Info: (20260730 - Julian) 移除舊列後，若插入點原在其後需 -1 補償；再夾限到合法範圍
-      const shifted =
-        newLineIndex > lineIndex ? newLineIndex - 1 : newLineIndex;
-      const at = Math.min(Math.max(shifted, 0), lines.length);
-      lines.splice(at, 0, buildHistogramDataLine(label, count));
-      break;
-    }
-
-    case HistogramActionType.DELETE_ITEM: {
-      const { lineIndex } = action.payload;
-      if (
-        lineIndex >= 0 &&
-        lineIndex < lines.length &&
-        getHistogramBinFields(lines[lineIndex])
-      ) {
-        lines.splice(lineIndex, 1);
+  actions.forEach((action) => {
+    switch (action.type) {
+      case HistogramActionType.ADD_ITEM: {
+        // Info: (20260730 - Julian) 新分箱錨定插入於目標原始行號之前（超界則尾端）
+        const { label, count, lineIndex } = action.payload;
+        pushInsert(lineIndex, buildHistogramDataLine(label, count));
+        break;
       }
-      break;
+      case HistogramActionType.EDIT_ITEM: {
+        // Info: (20260730 - Julian) 移動＝刪除來源（tombstone）+ 於 newLineIndex 錨定插入更新後內容
+        const { lineIndex, label, count, newLineIndex } = action.payload;
+        if (!isTargetableDataLine(lineIndex)) break;
+        deleted.add(lineIndex);
+        pushInsert(newLineIndex, buildHistogramDataLine(label, count));
+        break;
+      }
+      case HistogramActionType.DELETE_ITEM: {
+        const { lineIndex } = action.payload;
+        if (isTargetableDataLine(lineIndex)) deleted.add(lineIndex);
+        break;
+      }
+      case HistogramActionType.EDIT_AXIS:
+      case HistogramActionType.SWITCH_TREND_LINE: {
+        // Info: (20260730 - Julian) 設定列動作延後套用
+        configActions.push(action);
+        break;
+      }
+      default:
+        break;
     }
+  });
 
-    case HistogramActionType.EDIT_AXIS: {
-      // Info: (20260730 - Julian) 軸標題設定列（皆選填；空字串移除）
+  // Info: (20260730 - Julian) 依原始行號 materialize：先倒插入桶、再輸出未刪除原行；最後倒尾端桶
+  const materialized: string[] = [];
+  for (let i = 0; i < originalLength; i += 1) {
+    const bucket = insertBefore.get(i);
+    if (bucket) materialized.push(...bucket);
+    if (!deleted.has(i)) materialized.push(lines[i]);
+  }
+  const tailBucket = insertBefore.get(originalLength);
+  if (tailBucket) materialized.push(...tailBucket);
+
+  // Info: (20260730 - Julian) 最後套用設定列動作（此時資料列索引已不再被引用）
+  configActions.forEach((action) => {
+    if (action.type === HistogramActionType.EDIT_AXIS) {
       const { xAxis, yAxis } = action.payload;
       if (xAxis !== undefined) {
-        setConfigLine(lines, CustomChartConfigKey.X_AXIS, xAxis.trim());
+        setConfigLine(materialized, CustomChartConfigKey.X_AXIS, xAxis.trim());
       }
       if (yAxis !== undefined) {
-        setConfigLine(lines, CustomChartConfigKey.Y_AXIS, yAxis.trim());
+        setConfigLine(materialized, CustomChartConfigKey.Y_AXIS, yAxis.trim());
       }
-      break;
-    }
-
-    case HistogramActionType.SWITCH_TREND_LINE: {
-      // Info: (20260730 - Julian) trend 有值＝開啟（並套用顏色）；省略＝關閉（連同顏色一併移除）
+    } else if (action.type === HistogramActionType.SWITCH_TREND_LINE) {
       const { trend, trendColor } = action.payload;
       if (trend === undefined) {
-        setConfigLine(lines, CustomChartConfigKey.TREND, "");
-        setConfigLine(lines, CustomChartConfigKey.TREND_COLOR, "");
+        setConfigLine(materialized, CustomChartConfigKey.TREND, "");
+        setConfigLine(materialized, CustomChartConfigKey.TREND_COLOR, "");
       } else {
-        setConfigLine(lines, CustomChartConfigKey.TREND, trend);
+        setConfigLine(materialized, CustomChartConfigKey.TREND, trend);
         setConfigLine(
-          lines,
+          materialized,
           CustomChartConfigKey.TREND_COLOR,
           (trendColor ?? "").trim(),
         );
       }
-      break;
     }
+  });
 
-    default:
-      return raw;
-  }
-
-  return lines.join("\n");
+  return materialized.join("\n");
 };
+
+/**
+ * Info: (20260730 - Julian)
+ * 將單一結構化動作套用到直方圖 DSL 字串（委派批次引擎，語意一致，保留既有呼叫端 API）。
+ */
+export const applyHistogramAction = (
+  raw: string,
+  action: IHistogramAction,
+): string => applyHistogramActions(raw, [action]);

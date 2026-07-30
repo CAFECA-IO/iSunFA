@@ -9,7 +9,7 @@ import { parseCustomChart } from "@/lib/utils/custom_chart_parser";
 import { useTranslation } from "@/i18n/i18n_context";
 import { ChartShell } from "@/components/chart/chart_shell";
 import { AiChartEditorModal } from "@/components/chart/ai_chart_editor/ai_chart_editor_modal";
-import { createCustomEditorAdapter } from "@/components/chart/ai_chart_editor/adapters/custom_editor_adapter";
+import { createCustomEditorAdapter } from "@/components/chart/ai_chart_editor/custom_editor_adapter";
 import { MatrixChart } from "@/components/chart/matrix_chart";
 import { TornadoChart } from "@/components/chart/tornado_chart";
 import { HistogramChart } from "@/components/chart/histogram_chart";

@@ -6,6 +6,7 @@ import {
   MatrixActionType,
   TornadoActionType,
   TornadoMode,
+  CustomChartActionType,
 } from "@/constants/custom_chart";
 
 /**
@@ -318,14 +319,25 @@ export type ICustomChartAst =
   | ICustomBoxAst;
 
 /**
+ * Info: (20260723 - Julian) 自訂圖表「設定標題」動作（跨類型共用；寫入 DSL 的 title 設定列）
+ */
+export type ICustomTitleAction = {
+  id: string;
+  description: string;
+  type: CustomChartActionType.SET_TITLE;
+  payload: { title: string };
+};
+
+/**
  * Info: (20260723 - Julian)
  * 所有自訂圖表結構化編輯動作的聯集，供通用 AI 編輯器（adapter / dispatcher）承載。
- * 各 apply 引擎依 chartType 取用對應子集。
+ * 各 apply 引擎依 chartType 取用對應子集；SET_TITLE 為跨類型共用。
  */
 export type ICustomChartAction =
   | IMatrixAction
   | ITornadoAction
-  | IHistogramAction;
+  | IHistogramAction
+  | ICustomTitleAction;
 
 /**
  * Info: (20260716 - Julian)
