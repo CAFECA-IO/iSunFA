@@ -13,10 +13,12 @@ import {
   Database,
   Sparkles,
   Loader2,
+  Network,
 } from "lucide-react";
 import { IReportParagraph } from "@/types/carbon_chatbot.types";
 import { CARBON_REPORT_CHAPTERS } from "@/constants/carbon_report_outline";
 import { ParagraphOriginEnum } from "@/constants/carbon_chatbot";
+import { findDiagramTemplateForParagraph } from "@/lib/carbon_report_diagram.builder";
 import { CarbonDataBadgeStateEnum } from "@/lib/carbon_report_table.builder";
 import { useTranslation } from "@/i18n/i18n_context";
 
@@ -28,6 +30,8 @@ interface IOutlineTreeProps {
   // Info: (20260714 - Tzuhan) AI 段落草稿生成:正在生成的段落 id(同時間僅一段)與觸發 callback
   draftingParagraphId?: string | null;
   onGenerateDraft?: (paragraphId: string) => void;
+  // Info: (20260730 - Tzuhan) 產生結構圖:僅對有對應模板的段落顯示(治理架構/範疇對應/量化流程)
+  onGenerateDiagram?: (paragraphId: string) => void;
   // Info: (20260720 - Tzuhan) #23 數據段落勾稽三態(已勾稽 ✓/守恆違反 ⚠/數據不足),由 ledger 決定性裁決
   dataBadgeState?: CarbonDataBadgeStateEnum;
 }
@@ -73,6 +77,7 @@ export function OutlineTree({
   onToggleVerified,
   draftingParagraphId = null,
   onGenerateDraft = undefined,
+  onGenerateDiagram = undefined,
   dataBadgeState = CarbonDataBadgeStateEnum.INSUFFICIENT,
 }: IOutlineTreeProps) {
   const { t } = useTranslation();
@@ -171,6 +176,20 @@ export function OutlineTree({
                         {/* Info: (20260730 - Tzuhan) 否則查核者無從判斷哪幾節需要回原文核對、哪幾節需要自己補資訊 */}
                         {originBadge(p, t)}
                       </button>
+
+                      {/* Info: (20260730 - Tzuhan) 產生結構圖:僅該段有對應模板且已有內容時出現(圖的素材是敘述本身) */}
+                      {onGenerateDiagram &&
+                        p.content &&
+                        findDiagramTemplateForParagraph(p.id) && (
+                          <button
+                            type="button"
+                            onClick={() => onGenerateDiagram(p.id)}
+                            title={t("carbon_chatbot.diagram_generate")}
+                            className="shrink-0 rounded p-0.5 text-gray-300 transition-colors hover:bg-orange-50 hover:text-[#ff5a00]"
+                          >
+                            <Network size={13} />
+                          </button>
+                        )}
 
                       {/* Info: (20260714 - Tzuhan) AI 撰寫此段:生成中顯示 spinner;任一段生成中即全部停用,避免併發寫入 */}
                       {onGenerateDraft && (

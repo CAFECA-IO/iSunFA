@@ -21,6 +21,8 @@ interface IOutlineModalProps {
   // Info: (20260714 - Emily) AI 段落草稿生成(透傳給 OutlineTree);行動版生成時不關閉 Modal,以便觀察 spinner
   draftingParagraphId?: string | null;
   onGenerateDraft?: (paragraphId: string) => void;
+  // Info: (20260730 - Tzuhan) 產生結構圖(僅有對應模板的段落會顯示按鈕)
+  onGenerateDiagram?: (paragraphId: string) => void;
 }
 
 export function OutlineModal({
@@ -32,6 +34,7 @@ export function OutlineModal({
   onClose,
   draftingParagraphId = null,
   onGenerateDraft = undefined,
+  onGenerateDiagram = undefined,
 }: IOutlineModalProps) {
   const { t } = useTranslation();
 
@@ -112,6 +115,7 @@ export function OutlineModal({
           onToggleVerified={onToggleVerified}
           draftingParagraphId={draftingParagraphId}
           onGenerateDraft={onGenerateDraft}
+          onGenerateDiagram={onGenerateDiagram}
         />
       </div>
     </div>

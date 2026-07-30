@@ -18,6 +18,8 @@ interface IOutlineDrawerProps {
   // Info: (20260714 - Tzuhan) AI 段落草稿生成(透傳給 OutlineTree)
   draftingParagraphId?: string | null;
   onGenerateDraft?: (paragraphId: string) => void;
+  // Info: (20260730 - Tzuhan) 產生結構圖(透傳至 OutlineTree;僅有對應模板的段落顯示按鈕)
+  onGenerateDiagram?: (paragraphId: string) => void;
   // Info: (20260720 - Tzuhan) #23 數據段落勾稽三態(透傳給 OutlineTree)
   dataBadgeState?: CarbonDataBadgeStateEnum;
 }
@@ -30,6 +32,7 @@ export function OutlineDrawer({
   onClose,
   draftingParagraphId = null,
   onGenerateDraft = undefined,
+  onGenerateDiagram = undefined,
   dataBadgeState = undefined,
 }: IOutlineDrawerProps) {
   const { t } = useTranslation();
@@ -58,6 +61,7 @@ export function OutlineDrawer({
         onToggleVerified={onToggleVerified}
         draftingParagraphId={draftingParagraphId}
         onGenerateDraft={onGenerateDraft}
+        onGenerateDiagram={onGenerateDiagram}
         dataBadgeState={dataBadgeState}
       />
     </div>

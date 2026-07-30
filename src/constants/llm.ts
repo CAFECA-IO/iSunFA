@@ -42,6 +42,8 @@ export enum LlmTaskKeyEnum {
   ATTACHMENT_EXTRACTION = "ATTACHMENT_EXTRACTION",
   // Info: (20260716 - Tzuhan) #56 整份報告匯入(切段對應大綱)
   REPORT_IMPORT = "REPORT_IMPORT",
+  // Info: (20260730 - Tzuhan) 結構圖節點萃取(敘述 → 節點+父子關係,mermaid 由模板組出)
+  DIAGRAM_EXTRACTION = "DIAGRAM_EXTRACTION",
 }
 
 /**

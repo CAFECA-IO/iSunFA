@@ -39,6 +39,8 @@ interface ICarbonReportPreviewProps {
   // Info: (20260714 - Tzuhan) AI 段落草稿生成(透傳給 OutlineDrawer → OutlineTree)
   draftingParagraphId?: string | null;
   onGenerateDraft?: (paragraphId: string) => void;
+  // Info: (20260730 - Tzuhan) 產生結構圖(透傳至 OutlineTree;僅有對應模板的段落顯示按鈕)
+  onGenerateDiagram?: (paragraphId: string) => void;
   // Info: (20260714 - Tzuhan) 對話↔報告雙向連動:短暫高亮的段落與「點報告段落 → 回跳對話訊息」callback
   highlightedParagraphId?: string | null;
   onParagraphHeadingClick?: (paragraphId: string) => void;
@@ -99,6 +101,7 @@ export default function CarbonReportPreview({
   onToggleVerified = () => {},
   draftingParagraphId = null,
   onGenerateDraft = undefined,
+  onGenerateDiagram = undefined,
   highlightedParagraphId = null,
   onParagraphHeadingClick = undefined,
   saveStatus = null,
@@ -237,18 +240,18 @@ export default function CarbonReportPreview({
   const markdownContent =
     reportData?.rawMarkdown ??
     generateMarkdownFromParagraphs(
-    session,
-    t("carbon_chatbot.section_placeholder"),
-    t("carbon_chatbot.report_status_draft"),
-  );
+      session,
+      t("carbon_chatbot.section_placeholder"),
+      t("carbon_chatbot.report_status_draft"),
+    );
 
   return (
     <div className="relative flex h-full w-full flex-1 flex-col border-l border-gray-200 bg-white">
       {hasOutline && stats && (
         <ReportToolbar
-        readOnly={readOnly}
-        onImportReport={onImportReport}
-        onRenameDocument={onRenameDocument}
+          readOnly={readOnly}
+          onImportReport={onImportReport}
+          onRenameDocument={onRenameDocument}
           documentName={reportData.documentName}
           stats={stats}
           status={session.status}
@@ -280,6 +283,7 @@ export default function CarbonReportPreview({
             onClose={() => setIsDrawerOpen(false)}
             draftingParagraphId={draftingParagraphId}
             onGenerateDraft={onGenerateDraft}
+            onGenerateDiagram={onGenerateDiagram}
             dataBadgeState={dataBadgeState}
           />
         )}

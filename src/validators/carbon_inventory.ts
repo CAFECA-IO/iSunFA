@@ -234,6 +234,25 @@ export type CarbonReportImportLlmOutput = z.infer<
 >;
 
 /**
+ * Info: (20260730 - Tzuhan) 結構圖節點 LLM 輸出。
+ * LLM 只回「節點文字 + 父節點文字」,mermaid 語法由 carbon_report_diagram.builder 組出;
+ * 節點文字是否真的出現在該段原文,由 builder 的 validateDiagramNodes 複驗(找不到就整張不畫)。
+ */
+export const CarbonDiagramNodesLlmOutputSchema = z.object({
+  nodes: z
+    .array(
+      z.object({
+        label: z.string().min(1).max(120),
+        parent: z.string().min(1).max(120).optional(),
+      }),
+    )
+    .max(40),
+});
+export type CarbonDiagramNodesLlmOutput = z.infer<
+  typeof CarbonDiagramNodesLlmOutputSchema
+>;
+
+/**
  * Info: (20260730 - Tzuhan) 頁碼索引 LLM 輸出(兩階段匯入的第一階段)。
  * 只回「每節起始於第幾頁」,輸出極小(33 個數字),用來把第二階段的輸入從整份文件縮成該章對應頁。
  * startPage 僅驗範圍;是否合理由服務層以實際頁數複驗,對不上一律退回送全文(不猜)。

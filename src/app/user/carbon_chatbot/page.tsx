@@ -82,6 +82,7 @@ export default function CarbonChatbotPage() {
     attachImportCandidate,
     dismissImportCandidate,
     generateParagraphDraft,
+    generateParagraphDiagram,
     toggleParagraphVerified,
     handleMarkdownChange,
     chatEndRef,
@@ -141,6 +142,7 @@ export default function CarbonChatbotPage() {
           onToggleVerified={toggleParagraphVerified}
           draftingParagraphId={draftingParagraphId}
           onGenerateDraft={generateParagraphDraft}
+          onGenerateDiagram={generateParagraphDiagram}
           highlightedParagraphId={highlightedParagraphId}
           onParagraphHeadingClick={handleParagraphHeadingClick}
           saveStatus={saveStatus}
@@ -157,7 +159,9 @@ export default function CarbonChatbotPage() {
             state={inventoryState}
             positionClassName="relative flex"
             onImportFromBook={
-              activeSessionAccess.accountBookId ? importBookEsgRecords : undefined
+              activeSessionAccess.accountBookId
+                ? importBookEsgRecords
+                : undefined
             }
             isImportingFromBook={isImportingBookRecords}
             onOpenEvidence={setEvidenceTarget}

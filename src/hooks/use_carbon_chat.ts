@@ -93,6 +93,11 @@ import {
 } from "@/lib/chatroom_key_manager";
 import { request } from "@/lib/utils/request";
 import {
+  findDiagramTemplateForParagraph,
+  insertCarbonDiagramBlock,
+} from "@/lib/carbon_report_diagram.builder";
+import { CarbonDiagramTemplateEnum } from "@/constants/carbon_report_diagrams";
+import {
   getApiErrorCode,
   isGatewayTimeoutError,
   isQuotaApiError,
@@ -1422,6 +1427,77 @@ export const useCarbonChat = () => {
   }, []);
 
   // Info: (20260716 - Tzuhan) #56 套用匯入:勾選段落寫入(查核一律重置);活動數據入帳本交 /calculate 重勾稽
+  /**
+   * Info: (20260730 - Tzuhan) 為段落生成結構圖(治理架構 / 範疇對應 / 量化流程)。
+   * 這三張圖不依賴 computedLedger,素材就是該段敘述本身,因此活動數據還沒進帳也畫得出來
+   * (原本 4 張圖表模板全部由 ledger 產值,ledger 空的時候整份報告一張圖都沒有)。
+   * LLM 只回節點與父子關係,mermaid 由後端模板組出,且節點文字必須能在該段原文找到才畫。
+   */
+  const generateParagraphDiagram = useCallback(
+    async (paragraphId: string): Promise<void> => {
+      const paragraph = sessionsData[
+        activeSessionId
+      ]?.reportData?.paragraphs?.find((p) => p.id === paragraphId);
+      if (!paragraph?.content) return;
+      if (!findDiagramTemplateForParagraph(paragraphId)) return;
+
+      try {
+        const res = await request<{
+          payload: {
+            templateId: CarbonDiagramTemplateEnum;
+            block: string;
+            isDrawn: boolean;
+          } | null;
+        }>("/api/v1/chat/carbon/diagram", {
+          method: "POST",
+          body: JSON.stringify({
+            paragraphId,
+            content: paragraph.content,
+            language,
+          }),
+        });
+        const payload = res.payload;
+        if (!payload) return;
+
+        setSessionsData((prev) => {
+          const session = prev[activeSessionId];
+          const reportData = session?.reportData;
+          if (!reportData?.paragraphs) return prev;
+          let nextRaw = reportData.rawMarkdown;
+          const nextParagraphs = reportData.paragraphs.map((p) => {
+            if (p.id !== paragraphId || !p.content) return p;
+            const nextContent = insertCarbonDiagramBlock(
+              p.content,
+              payload.templateId,
+              payload.block,
+            );
+            if (nextContent === p.content) return p;
+            if (nextRaw) {
+              nextRaw = patchMarkdownSection(nextRaw, p.title, nextContent);
+            }
+            // Info: (20260730 - Tzuhan) 內容變動即重置查核(與其他寫入路徑同一閘門)
+            return { ...p, content: nextContent, isVerified: false };
+          });
+          return {
+            ...prev,
+            [activeSessionId]: {
+              ...session,
+              reportData: {
+                ...reportData,
+                rawMarkdown: nextRaw,
+                paragraphs: nextParagraphs,
+              },
+            },
+          };
+        });
+      } catch (error) {
+        // Info: (20260730 - Tzuhan) 圖是加值不是前提:失敗只記 log,不影響段落內容與流程
+        console.error("[carbon-chat] diagram generation failed:", error);
+      }
+    },
+    [sessionsData, activeSessionId, language],
+  );
+
   const applyPendingImport = useCallback(() => {
     if (!pendingImport) return;
     const selected = pendingImport.items.filter((item) => item.checked);
@@ -1508,12 +1584,22 @@ export const useCarbonChat = () => {
     importActivitiesRef.current = [];
     setPendingImport(null);
     jumpToReportParagraph(selected[0].paragraphId);
+
+    // Info: (20260730 - Tzuhan) 匯入落地後為有對應模板的段落補結構圖(治理架構/範疇對應/量化流程)。
+    // Info: (20260730 - Tzuhan) 循序執行(專案禁 await-in-loop):一次一張,避免同時寫入同一份報告狀態。
+    void selected
+      .filter((item) => findDiagramTemplateForParagraph(item.paragraphId))
+      .reduce(async (previous, item) => {
+        await previous;
+        await generateParagraphDiagram(item.paragraphId);
+      }, Promise.resolve());
   }, [
     pendingImport,
     activeSessionId,
     applyInventoryExtraction,
     jumpToReportParagraph,
     dataTableLabels,
+    generateParagraphDiagram,
   ]);
 
   const discardPendingImport = useCallback(() => {
@@ -3018,6 +3104,8 @@ export const useCarbonChat = () => {
     toggleImportItem,
     applyPendingImport,
     discardPendingImport,
+    // Info: (20260730 - Tzuhan) 手動產生結構圖(治理架構/範疇對應/量化流程);無對應模板的段落呼叫即 no-op
+    generateParagraphDiagram,
     retryFailedImportChapters,
     // Info: (20260716 - Tzuhan) #56 匯入導流(聊天附件疑似整份報告)
     importCandidate,

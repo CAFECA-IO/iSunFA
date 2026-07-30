@@ -49,6 +49,8 @@ export const carbonChatbot = {
   // Info: (20260730 - Tzuhan) 兩階段匯入的第一階段提示:一次索引換來後續 11 章不必各自重送整份文件
   import_indexing:
     "正在建立 {{name}} 的章節索引(定位各節頁碼,可大幅減少後續解析量)…",
+  // Info: (20260730 - Tzuhan) 結構圖:節點文字必須能在該段原文找到才會繪製,故文案明示來源
+  diagram_generate: "產生結構圖(節點取自本節原文)",
   system_error: "【系統錯誤】抱歉，連線到碳會計師服務時發生問題，請稍後再試。",
   system_unavailable: "抱歉，系統目前無法回應。",
   ai_quota_exceeded:
