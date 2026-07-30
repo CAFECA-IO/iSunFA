@@ -1,0 +1,31 @@
+// Info: (20260730 - Tzuhan) PDF 文字層品質閘門門檻
+// Info: (20260730 - Tzuhan) 門檻取自三份真實年報 + 一份真實盤查報告的實測:
+// Info: (20260730 - Tzuhan)   高興昌盤查報告 64 頁 888 字/頁、解碼失敗 0        → 走純文字
+// Info: (20260730 - Tzuhan)   台積永續報告   278 頁 928 字/頁、解碼失敗 0       → 走純文字
+// Info: (20260730 - Tzuhan)   三星永續報告   106 頁 795 字/頁、解碼失敗 0       → 走純文字
+// Info: (20260730 - Tzuhan)   世德永續報告   94 頁 509 字/頁、解碼失敗率 0.52%  → 退回視覺模型(失敗字元集中在數字)
+
+/**
+ * Info: (20260730 - Tzuhan) 判定 PDF 是否具備可信的文字層。
+ * TEXT   —— 文字層乾淨,抽純文字送 LLM(不受 inlineData 大小上限、token 成本大幅降低)
+ * VISION —— 文字層存在但不可信(字型未提供 ToUnicode,數字會變成替換字元),退回 PDF 原檔走視覺模型
+ * REJECT —— 幾乎沒有文字層且原檔超過視覺模型上限,無可用路徑,必須明確告知使用者
+ */
+export enum PdfTextLayerDecisionEnum {
+  TEXT = "text",
+  VISION = "vision",
+  REJECT = "reject",
+}
+
+// Info: (20260730 - Tzuhan) 低於此字數/頁視為掃描件或圖片型 PDF(實測最低的真實報告為 509 字/頁)
+export const PDF_TEXT_LAYER_MIN_CHARS_PER_PAGE = 120;
+
+// Info: (20260730 - Tzuhan) 解碼失敗字元(U+FFFD)佔比上限。ESG 報告的價值在數字,
+// Info: (20260730 - Tzuhan) 世德那份的失敗字元正好落在數字上,0.52% 已足以讓整份數據不可用,故門檻壓在 0.2%
+export const PDF_TEXT_LAYER_MAX_UNDECODED_RATIO = 0.002;
+
+// Info: (20260730 - Tzuhan) 解碼失敗字元緊鄰數字/年份/百分比時零容忍:一個就退視覺模型
+export const PDF_TEXT_LAYER_MAX_NUMERIC_UNDECODED = 0;
+
+// Info: (20260730 - Tzuhan) Unicode 替換字元:PDF 字型缺 ToUnicode 對照時抽取器的輸出
+export const PDF_UNDECODED_CHAR = "�";

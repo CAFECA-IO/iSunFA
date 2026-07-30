@@ -10,7 +10,12 @@ import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { matchesDeclaredMimeType } from "@/lib/file_signature";
-import { ReportImportService } from "@/services/report_import.service";
+import {
+  ReportImportService,
+  type IReportImportSource,
+} from "@/services/report_import.service";
+import { assessPdfTextLayer, extractPdfTextLayer } from "@/lib/pdf_text_layer";
+import { PdfTextLayerDecisionEnum } from "@/constants/pdf_text_layer";
 import {
   CARBON_CHAT_MAX_ATTACHMENT_BYTES,
   CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES,
@@ -29,6 +34,45 @@ const IMPORT_ACCEPTED_MIME_TYPES: readonly string[] = [
 ];
 
 const TEXT_MIME_TYPES: readonly string[] = ["text/markdown", "text/plain"];
+
+/**
+ * Info: (20260730 - Tzuhan) 決定這份檔案要以什麼形態進 LLM。
+ * 回傳 null 代表兩條路都不通(文字層不可信、原檔又超過視覺模型上限),呼叫端須明確拒收。
+ */
+async function resolveImportSource(
+  file: File,
+  buffer: Buffer,
+): Promise<IReportImportSource | null> {
+  const base = { name: file.name, mimeType: file.type };
+
+  if (TEXT_MIME_TYPES.includes(file.type)) {
+    return { ...base, data: buffer.toString("utf-8"), isText: true };
+  }
+
+  const canUseVision = file.size <= CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES;
+  const extracted = await extractPdfTextLayer(buffer);
+  const assessment = extracted
+    ? assessPdfTextLayer(extracted.text, extracted.pages, canUseVision)
+    : null;
+
+  logger.info("report import source decision", {
+    fileName: file.name,
+    fileSize: file.size,
+    canUseVision,
+    decision: assessment?.decision ?? PdfTextLayerDecisionEnum.VISION,
+    reason: assessment?.reason ?? "text_layer_unavailable",
+    charsPerPage: assessment?.quality.charsPerPage ?? 0,
+    numericUndecodedChars: assessment?.quality.numericUndecodedChars ?? 0,
+  });
+
+  if (extracted && assessment?.decision === PdfTextLayerDecisionEnum.TEXT) {
+    return { ...base, data: extracted.text, isText: true };
+  }
+  if (canUseVision) {
+    return { ...base, data: buffer.toString("base64"), isText: false };
+  }
+  return null;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -101,28 +145,22 @@ export async function POST(request: NextRequest) {
     if (file.size > CARBON_CHAT_MAX_ATTACHMENT_BYTES) {
       return jsonFail(API_ERRORS.VA_FILE_TOO_LARGE);
     }
-    // Info: (20260716 - Tzuhan) pdf 走 Gemini inline,超過安全值無法降級 → 直接拒收(明確錯誤優於靜默失敗)
-    if (
-      file.type === "application/pdf" &&
-      file.size > CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES
-    ) {
-      return jsonFail(API_ERRORS.VA_FILE_TOO_LARGE);
-    }
-
     // Info: (20260716 - Tzuhan) magic bytes 複驗(#6517 同一防線):宣告與內容不符即拒
     const buffer = Buffer.from(await file.arrayBuffer());
     if (!matchesDeclaredMimeType(buffer, file.type)) {
       return jsonFail(API_ERRORS.IS_ATTACHMENT_TYPE_MISMATCH);
     }
 
-    const isText = TEXT_MIME_TYPES.includes(file.type);
+    // Info: (20260730 - Tzuhan) PDF 改為「文字層優先」:原本一律走 Gemini inlineData,
+    // Info: (20260730 - Tzuhan) 導致 >14MB 的報告直接拒收且無降級路徑(實測台積 30.3MB、三星 17.4MB 皆進不來)。
+    // Info: (20260730 - Tzuhan) 文字層乾淨即送純文字(不受 inlineData 上限、token 成本大降);
+    // Info: (20260730 - Tzuhan) 文字層不可信(尤其數字被解成替換字元)才退回原檔走視覺模型;兩條路都不通才拒收。
+    const source = await resolveImportSource(file, buffer);
+    if (!source) {
+      return jsonFail(API_ERRORS.VA_FILE_TOO_LARGE);
+    }
+
     const service = new ReportImportService();
-    const source = {
-      name: file.name,
-      mimeType: file.type,
-      data: isText ? buffer.toString("utf-8") : buffer.toString("base64"),
-      isText,
-    };
 
     // Info: (20260727 - Tzuhan) #57 草稿補齊:回傳形狀與匯入一致(unmapped/activities 恆空),前端共用合併邏輯
     if (mode === "draft") {
