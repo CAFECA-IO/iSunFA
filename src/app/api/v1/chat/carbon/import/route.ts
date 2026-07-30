@@ -10,19 +10,11 @@ import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { matchesDeclaredMimeType } from "@/lib/file_signature";
-import {
-  ReportImportService,
-  type IReportImportSource,
-} from "@/services/report_import.service";
-import {
-  assessPdfTextLayer,
-  extractPdfTextLayer,
-  slicePagesForRange,
-} from "@/lib/pdf_text_layer";
-import { PdfTextLayerDecisionEnum } from "@/constants/pdf_text_layer";
+import { describeError } from "@/lib/utils/error_message";
+import { ReportImportService } from "@/services/report_import.service";
 import {
   CARBON_CHAT_MAX_ATTACHMENT_BYTES,
-  CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES,
+  CarbonReportImportModeEnum,
 } from "@/constants/carbon_chatbot";
 import {
   CARBON_REPORT_CHAPTERS,
@@ -39,44 +31,10 @@ const IMPORT_ACCEPTED_MIME_TYPES: readonly string[] = [
 
 const TEXT_MIME_TYPES: readonly string[] = ["text/markdown", "text/plain"];
 
-/**
- * Info: (20260730 - Tzuhan) 決定這份檔案要以什麼形態進 LLM。
- * 回傳 null 代表兩條路都不通(文字層不可信、原檔又超過視覺模型上限),呼叫端須明確拒收。
- */
-async function resolveImportSource(
-  file: File,
-  buffer: Buffer,
-): Promise<IReportImportSource | null> {
-  const base = { name: file.name, mimeType: file.type };
-
-  if (TEXT_MIME_TYPES.includes(file.type)) {
-    return { ...base, data: buffer.toString("utf-8"), isText: true };
-  }
-
-  const canUseVision = file.size <= CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES;
-  const extracted = await extractPdfTextLayer(buffer);
-  const assessment = extracted
-    ? assessPdfTextLayer(extracted.text, extracted.pages, canUseVision)
-    : null;
-
-  logger.info("report import source decision", {
-    fileName: file.name,
-    fileSize: file.size,
-    canUseVision,
-    decision: assessment?.decision ?? PdfTextLayerDecisionEnum.VISION,
-    reason: assessment?.reason ?? "text_layer_unavailable",
-    charsPerPage: assessment?.quality.charsPerPage ?? 0,
-    numericUndecodedChars: assessment?.quality.numericUndecodedChars ?? 0,
-  });
-
-  if (extracted && assessment?.decision === PdfTextLayerDecisionEnum.TEXT) {
-    return { ...base, data: extracted.text, isText: true };
-  }
-  if (canUseVision) {
-    return { ...base, data: buffer.toString("base64"), isText: false };
-  }
-  return null;
-}
+// Info: (20260730 - Tzuhan) 合法模式白名單(未帶或不合法一律視為逐字匯入)
+const IMPORT_MODES: readonly CarbonReportImportModeEnum[] = Object.values(
+  CarbonReportImportModeEnum,
+);
 
 export async function POST(request: NextRequest) {
   try {
@@ -111,16 +69,14 @@ export async function POST(request: NextRequest) {
     }
     const extractActivities = formData.get("extractActivities") !== "false";
     // Info: (20260727 - Tzuhan) #57 草稿補齊模式:mode=draft + sectionIds(JSON 陣列,白名單複驗於此與服務層)
-    // Info: (20260730 - Tzuhan) 三種模式:verbatim 逐字匯入、draft 草稿補齊、index 頁碼索引(兩階段第一階段)
+    // Info: (20260730 - Tzuhan) 三種模式:逐字匯入 / 草稿補齊 / 頁碼索引(兩階段第一階段);
+    // Info: (20260730 - Tzuhan) 值取自 enum(API 契約兩端共用),不在此以字面值比對
     const modeRaw = formData.get("mode");
-    const mode =
-      modeRaw === "draft"
-        ? "draft"
-        : modeRaw === "index"
-          ? "index"
-          : "verbatim";
+    const mode = IMPORT_MODES.includes(modeRaw as CarbonReportImportModeEnum)
+      ? (modeRaw as CarbonReportImportModeEnum)
+      : CarbonReportImportModeEnum.VERBATIM;
     let draftSectionIds: string[] = [];
-    if (mode === "draft") {
+    if (mode === CarbonReportImportModeEnum.DRAFT) {
       const sectionIdsRaw = formData.get("sectionIds");
       if (typeof sectionIdsRaw !== "string") {
         return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
@@ -172,19 +128,22 @@ export async function POST(request: NextRequest) {
       return jsonFail(API_ERRORS.IS_ATTACHMENT_TYPE_MISMATCH);
     }
 
-    // Info: (20260730 - Tzuhan) PDF 改為「文字層優先」:原本一律走 Gemini inlineData,
-    // Info: (20260730 - Tzuhan) 導致 >14MB 的報告直接拒收且無降級路徑(實測台積 30.3MB、三星 17.4MB 皆進不來)。
-    // Info: (20260730 - Tzuhan) 文字層乾淨即送純文字(不受 inlineData 上限、token 成本大降);
-    // Info: (20260730 - Tzuhan) 文字層不可信(尤其數字被解成替換字元)才退回原檔走視覺模型;兩條路都不通才拒收。
-    const source = await resolveImportSource(file, buffer);
+    // Info: (20260730 - Tzuhan) 來源裁決(文字層優先 / 視覺降級 / 拒收)為業務判斷,收在 Service;
+    // Info: (20260730 - Tzuhan) 本層只把檔案 metadata 與 buffer 交出去,並把 null 轉成明確的拒收回應
+    const service = new ReportImportService();
+    const source = await service.resolveSource({
+      name: file.name,
+      mimeType: file.type,
+      sizeBytes: file.size,
+      buffer,
+      isTextMimeType: TEXT_MIME_TYPES.includes(file.type),
+    });
     if (!source) {
       return jsonFail(API_ERRORS.VA_FILE_TOO_LARGE);
     }
 
-    const service = new ReportImportService();
-
     // Info: (20260730 - Tzuhan) 兩階段第一階段:只問頁碼,輸出極小;失敗時服務層回空索引,前端據此退回送全文
-    if (mode === "index") {
+    if (mode === CarbonReportImportModeEnum.INDEX) {
       const index = await service.buildSectionPageIndex(
         source,
         typeof language === "string" ? language : undefined,
@@ -200,23 +159,12 @@ export async function POST(request: NextRequest) {
     // Info: (20260730 - Tzuhan) 兩階段第二階段:依頁碼範圍切片,把輸入從整份文件縮成該章對應頁。
     // Info: (20260730 - Tzuhan) 實測 64 頁報告一次匯入原本耗掉約 44 萬 input token,後段章節因額度耗盡連請求都發不出去。
     const scopedSource =
-      source.isText && fromPage !== null && toPage !== null
-        ? (() => {
-            const slice = slicePagesForRange(source.data, fromPage, toPage);
-            logger.info("report import page slice", {
-              fileName: file.name,
-              requested: { fromPage, toPage },
-              applied: slice.range,
-              fellBack: slice.fellBack,
-              chars: slice.text.length,
-              originalChars: source.data.length,
-            });
-            return { ...source, data: slice.text };
-          })()
+      fromPage !== null && toPage !== null
+        ? service.scopeSourceToPages(source, fromPage, toPage)
         : source;
 
     // Info: (20260727 - Tzuhan) #57 草稿補齊:回傳形狀與匯入一致(unmapped/activities 恆空),前端共用合併邏輯
-    if (mode === "draft") {
+    if (mode === CarbonReportImportModeEnum.DRAFT) {
       const segments = await service.draftMissingSections(
         scopedSource,
         draftSectionIds,
@@ -241,7 +189,7 @@ export async function POST(request: NextRequest) {
       });
     }
     logger.error(
-      `[API] /chat/carbon/import POST error: ${JSON.stringify(error)}`,
+      `[API] /chat/carbon/import POST error: ${describeError(error)}`,
     );
     return jsonFail(API_ERRORS.IS_REPORT_IMPORT_FAILED);
   }

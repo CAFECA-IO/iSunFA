@@ -118,7 +118,9 @@ import {
   CARBON_CHAT_REPLY_TIMEOUT_WITH_ATTACHMENTS_MS,
   CARBON_IMPORT_SINGLE_CALL_MAX_BYTES,
   IMPORT_CANDIDATE_MIME_TYPES,
+  PDF_MIME_TYPE,
   ParagraphOriginEnum,
+  CarbonReportImportModeEnum,
   CARBON_CHAT_AI_CONTEXT_SIZE,
   CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES,
   CARBON_CHAT_MAX_ATTACHMENT_BYTES,
@@ -1141,7 +1143,7 @@ export const useCarbonChat = () => {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("language", language);
-      formData.append("mode", "index");
+      formData.append("mode", CarbonReportImportModeEnum.INDEX);
       try {
         const res = await request<{
           payload: {
@@ -1315,7 +1317,7 @@ export const useCarbonChat = () => {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("language", language);
-        formData.append("mode", "draft");
+        formData.append("mode", CarbonReportImportModeEnum.DRAFT);
         formData.append("sectionIds", JSON.stringify(batches[index]));
         try {
           // Info: (20260727 - Tzuhan) 循序呼叫(非並行):草稿補齊在匯入 11 章之後,保留 LLM 限流餘裕
@@ -1348,8 +1350,9 @@ export const useCarbonChat = () => {
       lastImportFileRef.current = file;
       // Info: (20260716 - Tzuhan) 逐章解析(UAT:整份真實報告單次呼叫受 output token 上限,只回少數段落):
       // Info: (20260717 - Tzuhan) pdf 或大檔逐章(11 章,並行度 2);小型文字檔單發
+      // Info: (20260730 - Tzuhan) PDF 一律逐章(頁數與內容量無法由大小推斷);純文字小檔才單發
       const useChunked =
-        file.type === "application/pdf" ||
+        file.type === PDF_MIME_TYPE ||
         file.size >= CARBON_IMPORT_SINGLE_CALL_MAX_BYTES;
       const chapters = useChunked
         ? CARBON_REPORT_CHAPTERS.map((chapter) => ({

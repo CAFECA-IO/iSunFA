@@ -49,8 +49,11 @@ export const CARBON_CHAT_REPLY_TIMEOUT_WITH_ATTACHMENTS_MS = 180_000;
  * 真實的 64 頁溫室氣體盤查報告書只有 2MB,永遠觸發不了導流,使用者被導進只取 3 節的附件管線,
  * 因而誤以為系統「只認得三節」。改為一律詢問:不猜意圖,由使用者決定,零額外呼叫。
  */
+// Info: (20260730 - Tzuhan) PDF 的 MIME:多處據此分流(逐章與否、是否可抽文字層),抽常數避免字面值散落
+export const PDF_MIME_TYPE = "application/pdf";
+
 export const IMPORT_CANDIDATE_MIME_TYPES: readonly string[] = [
-  "application/pdf",
+  PDF_MIME_TYPE,
   "text/markdown",
   "text/plain",
 ];
@@ -148,6 +151,20 @@ export const CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES = 14 * 1024 * 1024;
 // Info: (20260714 - Tzuhan) file input 的 accept 屬性(與 MIME 白名單同步)
 export const CARBON_CHAT_ATTACHMENT_ACCEPT =
   CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES.join(",");
+
+/**
+ * Info: (20260730 - Tzuhan) 整份報告匯入的三種模式。
+ * 原本以 "draft" / "index" 字面值在 route 內比對,違反「拒絕魔法字串」——
+ * 這些值同時是 API 契約(前端送、後端判),散落字面值任一端改字就靜默失效。
+ */
+export enum CarbonReportImportModeEnum {
+  // Info: (20260716 - Tzuhan) 逐字照抄原文,對應標準大綱段落
+  VERBATIM = "verbatim",
+  // Info: (20260727 - Tzuhan) #57 對不上原文的段落改由 AI 撰寫草稿
+  DRAFT = "draft",
+  // Info: (20260730 - Tzuhan) 兩階段匯入的第一階段:只問各節起始頁碼
+  INDEX = "index",
+}
 
 /**
  * Info: (20260730 - Tzuhan) 聊天面板的三段尺寸。

@@ -17,7 +17,10 @@ import {
 
 const service = new CarbonArticulationService();
 
-const dieselActivity = (quantity: string, unit = MeasurementUnit.LITER): IActivityRecord => ({
+const dieselActivity = (
+  quantity: string,
+  unit = MeasurementUnit.LITER,
+): IActivityRecord => ({
   scopeCategory: GhgProtocolCategory.SCOPE_1_DIRECT,
   sourceName: "柴油",
   quantity,

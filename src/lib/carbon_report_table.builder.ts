@@ -55,9 +55,7 @@ export const CARBON_DATA_TABLE_DEFAULT_LABELS: ICarbonDataTableLabels = {
 export const deriveDataBadgeState = (
   ledger: IComputedLedger | undefined,
 ): CarbonDataBadgeStateEnum => {
-  if (
-    ledger?.articulation?.status === ArticulationStatusEnum.VIOLATED
-  ) {
+  if (ledger?.articulation?.status === ArticulationStatusEnum.VIOLATED) {
     return CarbonDataBadgeStateEnum.VIOLATED;
   }
   if (ledger && ledger.entries.length > 0) {
@@ -138,14 +136,20 @@ export const stripLlmTables = (content: string): string => {
     kept.push(line);
   });
   // Info: (20260720 - Tzuhan) 移除表格後可能留下連續空行,收斂為單一空行
-  return kept.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  return kept
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 };
 
 /**
  * Info: (20260720 - Tzuhan) 表格注入/替換(重算連動的核心):
  * 內容已含錨點 → 只替換錨點區塊(敘述零改動);無錨點 → 附加於內容尾端
  */
-export const injectDataTable = (content: string, tableBlock: string): string => {
+export const injectDataTable = (
+  content: string,
+  tableBlock: string,
+): string => {
   const startIndex = content.indexOf(CARBON_DATA_TABLE_START);
   const endIndex = content.indexOf(CARBON_DATA_TABLE_END);
   if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {

@@ -3,6 +3,7 @@
 
 import { NextRequest } from "next/server";
 import { logger } from "@/lib/utils/logger";
+import { describeError } from "@/lib/utils/error_message";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { enforceCarbonRateLimit } from "@/lib/rate_limiter";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
       });
     }
     logger.error(
-      `[API] /chat/carbon/inventory GET error: ${JSON.stringify(error)}`,
+      `[API] /chat/carbon/inventory GET error: ${describeError(error)}`,
     );
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
@@ -114,7 +115,7 @@ export async function PUT(request: NextRequest) {
       });
     }
     logger.error(
-      `[API] /chat/carbon/inventory PUT error: ${JSON.stringify(error)}`,
+      `[API] /chat/carbon/inventory PUT error: ${describeError(error)}`,
     );
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }

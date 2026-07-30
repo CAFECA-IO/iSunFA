@@ -116,8 +116,7 @@ describe("computeInventoryStep (deterministic state machine)", () => {
           {
             materialName: "柴油",
             unit: MeasurementUnit.LITER,
-            reason:
-              ArticulationViolationReasonEnum.MASS_GAP_EXCEEDS_TOLERANCE,
+            reason: ArticulationViolationReasonEnum.MASS_GAP_EXCEEDS_TOLERANCE,
             expectedConsumption: "150",
             actualConsumption: "200",
             gap: "50",

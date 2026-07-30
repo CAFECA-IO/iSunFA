@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { logger } from "@/lib/utils/logger";
+import { describeError } from "@/lib/utils/error_message";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { enforceCarbonRateLimit } from "@/lib/rate_limiter";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
@@ -331,7 +332,7 @@ export async function POST(request: NextRequest) {
       attachmentFacts,
     });
   } catch (error) {
-    logger.error(`[API] /chat/carbon error: ${JSON.stringify(error)}`);
+    logger.error(`[API] /chat/carbon error: ${describeError(error)}`);
     // Info: (20260714 - Tzuhan) 額度耗盡回專屬錯誤碼，前端提示稍候重試(與一般系統錯誤區分)
     if (isLlmQuotaError(error)) {
       return jsonFail(API_ERRORS.IS_LLM_QUOTA_EXCEEDED);

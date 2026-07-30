@@ -2,6 +2,7 @@
 // Info: (20260714 - Tzuhan) 草稿為 E2EE 密文,本服務不接觸明文;版本樂觀鎖衝突以 VL_DRAFT_VERSION_CONFLICT 回報
 
 import { logger } from "@/lib/utils/logger";
+import { describeError } from "@/lib/utils/error_message";
 import {
   carbonReportDraftRepo,
   CarbonReportDraftRepository,
@@ -50,7 +51,7 @@ export class CarbonReportDraftService {
       };
     } catch (error) {
       logger.error(
-        `[CarbonReportDraftService] getDraft failed: ${JSON.stringify(error)}`,
+        `[CarbonReportDraftService] getDraft failed: ${describeError(error)}`,
       );
       throw new ApiError(
         API_ERRORS.IS_DB_FAILED.code,
@@ -79,7 +80,7 @@ export class CarbonReportDraftService {
       });
     } catch (error) {
       logger.error(
-        `[CarbonReportDraftService] saveDraft failed: ${JSON.stringify(error)}`,
+        `[CarbonReportDraftService] saveDraft failed: ${describeError(error)}`,
       );
       throw new ApiError(
         API_ERRORS.IS_DB_FAILED.code,

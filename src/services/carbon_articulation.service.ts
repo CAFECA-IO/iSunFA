@@ -98,7 +98,10 @@ export class CarbonArticulationService {
     }
 
     // Info: (20260720 - Tzuhan) 期末 > 期初+採購 → 庫存無中生有,物理不可能,直接凍結
-    const expected = MoneyUtil.subtract(MoneyUtil.add(opening, purchased), closing);
+    const expected = MoneyUtil.subtract(
+      MoneyUtil.add(opening, purchased),
+      closing,
+    );
     if (MoneyUtil.isNegative(expected)) {
       return {
         ...base,
@@ -133,7 +136,11 @@ export class CarbonArticulationService {
         try {
           actual = MoneyUtil.add(
             actual,
-            UnitConverter.convert(parsed, activity.unit, record.unit).toString(),
+            UnitConverter.convert(
+              parsed,
+              activity.unit,
+              record.unit,
+            ).toString(),
           );
         } catch {
           return {

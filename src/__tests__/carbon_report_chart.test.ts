@@ -123,7 +123,10 @@ describe("EMISSION_SANKEY (#53 憑證→排放源→Scope 碳流量)", () => {
     const block = buildCarbonChartBlock(
       CarbonChartTemplateEnum.EMISSION_SANKEY,
       buildLedger({
-        entries: [voucherEntry("aaaa1111", "1000"), voucherEntry("bbbb2222", "235")],
+        entries: [
+          voucherEntry("aaaa1111", "1000"),
+          voucherEntry("bbbb2222", "235"),
+        ],
         scopeSubtotals: { [GhgProtocolCategory.SCOPE_2_INDIRECT]: "1235" },
       }),
     );

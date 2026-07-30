@@ -6,6 +6,7 @@
 // Info: (20260720 - Tzuhan) 證據鏈外鍵:esgRecordId(根)+ voucherId/journalId/fileId(#54 據此下鑽到憑證)
 
 import { logger } from "@/lib/utils/logger";
+import { describeError } from "@/lib/utils/error_message";
 import { esgRepo } from "@/repositories/esg.repo";
 import { ApiError, API_ERRORS } from "@/lib/utils/error_dictionary";
 import { GhgProtocolCategory } from "@/constants/esg";
@@ -62,7 +63,10 @@ const resolveScopeCategory = (
   ) {
     return declared as GhgProtocolCategory;
   }
-  if (record.activityType && EsgActivityTypeGhgCategoryMap[record.activityType]) {
+  if (
+    record.activityType &&
+    EsgActivityTypeGhgCategoryMap[record.activityType]
+  ) {
     return EsgActivityTypeGhgCategoryMap[record.activityType];
   }
   if (record.scope && SCOPE_FALLBACK_MAP[record.scope]) {
@@ -90,7 +94,7 @@ export class CarbonEsgLinkService {
       records = await this.repo.getEsgRecords(accountBookId);
     } catch (error) {
       logger.error(
-        `[CarbonEsgLinkService] listBookActivities failed: ${JSON.stringify(error)}`,
+        `[CarbonEsgLinkService] listBookActivities failed: ${describeError(error)}`,
       );
       throw new ApiError(
         API_ERRORS.IS_DB_FAILED.code,

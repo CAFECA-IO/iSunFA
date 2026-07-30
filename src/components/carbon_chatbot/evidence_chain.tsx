@@ -52,7 +52,8 @@ const groupActivities = (activities: IEvidenceActivity[]): IScopeGroup[] => {
   const scopeMap = new Map<string, Map<string, IEvidenceActivity[]>>();
   activities.forEach((activity) => {
     const bySource =
-      scopeMap.get(activity.scopeCategory) ?? new Map<string, IEvidenceActivity[]>();
+      scopeMap.get(activity.scopeCategory) ??
+      new Map<string, IEvidenceActivity[]>();
     const records = bySource.get(activity.sourceName) ?? [];
     records.push(activity);
     bySource.set(activity.sourceName, records);
@@ -73,10 +74,7 @@ const groupActivities = (activities: IEvidenceActivity[]): IScopeGroup[] => {
     return {
       scope,
       sources,
-      subtotal: sources.reduce(
-        (acc, s) => MoneyUtil.add(acc, s.subtotal),
-        "0",
-      ),
+      subtotal: sources.reduce((acc, s) => MoneyUtil.add(acc, s.subtotal), "0"),
       recordCount: sources.reduce((acc, s) => acc + s.records.length, 0),
     };
   });
@@ -117,8 +115,7 @@ export function EvidenceChain({ accountBookId }: IEvidenceChainProps) {
     [activities],
   );
   const total = useMemo(
-    () =>
-      scopeGroups.reduce((acc, g) => MoneyUtil.add(acc, g.subtotal), "0"),
+    () => scopeGroups.reduce((acc, g) => MoneyUtil.add(acc, g.subtotal), "0"),
     [scopeGroups],
   );
 
@@ -162,7 +159,10 @@ export function EvidenceChain({ accountBookId }: IEvidenceChainProps) {
       {scopeGroups.map((group) => {
         const isScopeOpen = Boolean(openScopes[group.scope]);
         return (
-          <div key={group.scope} className="border-b border-gray-50 last:border-0">
+          <div
+            key={group.scope}
+            className="border-b border-gray-50 last:border-0"
+          >
             {/* Info: (20260720 - Tzuhan) 第 1 層:Scope(並聯:小計 = Σ 排放源) */}
             <button
               type="button"
@@ -198,7 +198,10 @@ export function EvidenceChain({ accountBookId }: IEvidenceChainProps) {
                 const sourceKey = `${group.scope}|${source.sourceName}`;
                 const isSourceOpen = Boolean(openSources[sourceKey]);
                 return (
-                  <div key={sourceKey} className="ml-6 border-l border-gray-100">
+                  <div
+                    key={sourceKey}
+                    className="ml-6 border-l border-gray-100"
+                  >
                     {/* Info: (20260720 - Tzuhan) 第 2 層:排放源(並聯:小計 = Σ 憑證紀錄) */}
                     <button
                       type="button"
@@ -211,9 +214,15 @@ export function EvidenceChain({ accountBookId }: IEvidenceChainProps) {
                       className="flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors hover:bg-gray-50"
                     >
                       {isSourceOpen ? (
-                        <ChevronDown size={12} className="shrink-0 text-gray-300" />
+                        <ChevronDown
+                          size={12}
+                          className="shrink-0 text-gray-300"
+                        />
                       ) : (
-                        <ChevronRight size={12} className="shrink-0 text-gray-300" />
+                        <ChevronRight
+                          size={12}
+                          className="shrink-0 text-gray-300"
+                        />
                       )}
                       <span className="min-w-0 flex-1 truncate text-xs text-gray-700">
                         {source.sourceName}
@@ -238,18 +247,35 @@ export function EvidenceChain({ accountBookId }: IEvidenceChainProps) {
                           className="ml-5 flex w-[calc(100%-1.25rem)] items-center gap-2 rounded-md px-3 py-1.5 text-left transition-colors hover:bg-orange-50"
                         >
                           {record.isVerified ? (
-                            <span title={t("carbon_chatbot.evidence_chain_verified")}>
-                              <ShieldCheck size={11} className="shrink-0 text-[#e04f00]" />
+                            <span
+                              title={t(
+                                "carbon_chatbot.evidence_chain_verified",
+                              )}
+                            >
+                              <ShieldCheck
+                                size={11}
+                                className="shrink-0 text-[#e04f00]"
+                              />
                             </span>
                           ) : (
-                            <span title={t("carbon_chatbot.evidence_chain_unverified")}>
-                              <ShieldAlert size={11} className="shrink-0 text-amber-500" />
+                            <span
+                              title={t(
+                                "carbon_chatbot.evidence_chain_unverified",
+                              )}
+                            >
+                              <ShieldAlert
+                                size={11}
+                                className="shrink-0 text-amber-500"
+                              />
                             </span>
                           )}
                           {/* Info: (20260722 - Tzuhan) UAT:公式不得截斷(串聯推導是審計重點)→ 允許換行 */}
                           <span className="min-w-0 flex-1 font-mono text-[11px] break-all whitespace-normal text-gray-600">
                             {t("carbon_chatbot.evidence_chain_formula", {
-                              quantity: MoneyUtil.formatDynamic(record.quantity, 3),
+                              quantity: MoneyUtil.formatDynamic(
+                                record.quantity,
+                                3,
+                              ),
                               unit: record.unit,
                               factor: record.emissionFactor ?? "-",
                               co2e: MoneyUtil.formatDynamic(

@@ -132,10 +132,10 @@ const isStepComplete = (
       // Info: (20260720 - Tzuhan) 純電力/運輸盤查的合法情境,視為通過;VIOLATED 凍結直到使用者澄清)
       return Boolean(
         state.computedLedger &&
-          state.computedLedger.pending.length === 0 &&
-          state.computedLedger.articulation &&
-          state.computedLedger.articulation.status !==
-            ArticulationStatusEnum.VIOLATED,
+        state.computedLedger.pending.length === 0 &&
+        state.computedLedger.articulation &&
+        state.computedLedger.articulation.status !==
+          ArticulationStatusEnum.VIOLATED,
       );
     default:
       return false;

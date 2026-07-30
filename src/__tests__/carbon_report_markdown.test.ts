@@ -52,7 +52,10 @@ describe("alignReportSections (zero-loss round-trip)", () => {
       "內文二",
       `內文二\n\n---\n\n### 我自己貼的段落\n\n自訂內容`,
     );
-    const aligned = alignReportSections(TITLES, splitReportMarkdownSections(md));
+    const aligned = alignReportSections(
+      TITLES,
+      splitReportMarkdownSections(md),
+    );
 
     expect(aligned.get(0)).toBe("內文一(已改)");
     // Info: (20260716 - Tzuhan) 未知標題原文併入前一相符段落 → 零丟棄
@@ -64,7 +67,10 @@ describe("alignReportSections (zero-loss round-trip)", () => {
 
   it("should attach pasted preamble and leading orphans to the first matched section", () => {
     const md = `貼在最前面的自由文字\n\n### 不在大綱的標題\n\n孤兒內容\n\n${compose(["內文一", null, null])}`;
-    const aligned = alignReportSections(TITLES, splitReportMarkdownSections(md));
+    const aligned = alignReportSections(
+      TITLES,
+      splitReportMarkdownSections(md),
+    );
 
     expect(aligned.get(0)).toContain("貼在最前面的自由文字");
     expect(aligned.get(0)).toContain("### 不在大綱的標題");
@@ -85,7 +91,10 @@ describe("alignReportSections (zero-loss round-trip)", () => {
       `### ${TITLES[2]}`,
       "### ",
     );
-    const aligned = alignReportSections(TITLES, splitReportMarkdownSections(md));
+    const aligned = alignReportSections(
+      TITLES,
+      splitReportMarkdownSections(md),
+    );
     expect(aligned.has(2)).toBe(false);
     expect(aligned.get(0)).toBe("內文一");
   });
@@ -117,7 +126,11 @@ describe("patchMarkdownSection (rawMarkdown authoritative source)", () => {
 `;
 
   it("should replace only the target section body and keep the document structure", () => {
-    const patched = patchMarkdownSection(DOC, "1.1 組織概況", "AI 更新後的內文。");
+    const patched = patchMarkdownSection(
+      DOC,
+      "1.1 組織概況",
+      "AI 更新後的內文。",
+    );
     // Info: (20260716 - Tzuhan) 使用者結構零改動:標頭/前言/自訂章節原樣
     expect(patched).toContain("# 我的自訂報告");
     expect(patched).toContain("自訂前言,不可被動到。");

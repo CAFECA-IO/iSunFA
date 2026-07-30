@@ -4,6 +4,7 @@
 // Info: (20260730 - Tzuhan) LLM 只回結構化欄位,mermaid 由本模組組出,且每個節點文字都要能在原文找到才畫。
 
 import {
+  CarbonDiagramRendererEnum,
   CarbonDiagramTemplateEnum,
   CARBON_DIAGRAM_TEMPLATES,
   CARBON_DIAGRAM_MAX_LABEL_CHARS,
@@ -103,7 +104,7 @@ export function validateDiagramNodes(
   // Info: (20260730 - Tzuhan) timeline 的 parent 是「時間標籤」而非另一個節點:
   // Info: (20260730 - Tzuhan) 它只需同樣能在原文找到(上面已驗),不需自己也是節點,也無層級可成環。
   // Info: (20260730 - Tzuhan) 用樹的規則去驗證一條時間軸,會把正確的輸入判成錯的。
-  if (template.renderer === "timeline") {
+  if (template.renderer === CarbonDiagramRendererEnum.TIMELINE) {
     const unverifiableParents = nodes
       .map((node) => node.parent)
       .filter(
@@ -221,7 +222,7 @@ export function buildCarbonDiagramBlock(
   }
 
   const template = CARBON_DIAGRAM_TEMPLATES[templateId];
-  if (template.renderer === "timeline") {
+  if (template.renderer === CarbonDiagramRendererEnum.TIMELINE) {
     return wrap(buildTimeline(nodes));
   }
 

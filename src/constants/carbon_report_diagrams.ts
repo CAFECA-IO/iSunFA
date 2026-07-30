@@ -24,13 +24,16 @@ export enum CarbonDiagramTemplateEnum {
  * - timeline:parent 是「時間標籤」(如 1966年01月),不需要自己也是節點;無層級可成環
  * 這個差異必須明示,否則會用樹的規則去驗證一條時間軸,把正確的輸入判成錯的。
  */
-export type CarbonDiagramRenderer = "flowchart" | "timeline";
+export enum CarbonDiagramRendererEnum {
+  FLOWCHART = "flowchart",
+  TIMELINE = "timeline",
+}
 
 export interface ICarbonDiagramTemplate {
   /** Info: (20260730 - Tzuhan) 該圖預設掛載的段落 id:一圖一段,避免同張圖散落多處各自演化 */
   paragraphId: string;
   /** Info: (20260730 - Tzuhan) 渲染型別:決定 mermaid 語法與 parent 的驗證規則 */
-  renderer: CarbonDiagramRenderer;
+  renderer: CarbonDiagramRendererEnum;
   /** Info: (20260730 - Tzuhan) mermaid flowchart 方向:層級深的用 TD,層級寬的用 LR(timeline 不適用) */
   direction: "TD" | "LR";
   /** Info: (20260730 - Tzuhan) 節點數上限:超過即不畫(過密的圖等於沒有圖) */
@@ -43,19 +46,19 @@ export const CARBON_DIAGRAM_TEMPLATES: Record<
 > = {
   [CarbonDiagramTemplateEnum.GOVERNANCE_TREE]: {
     paragraphId: "ch1-4",
-    renderer: "flowchart",
+    renderer: CarbonDiagramRendererEnum.FLOWCHART,
     direction: "TD",
     maxNodes: 12,
   },
   [CarbonDiagramTemplateEnum.SCOPE_CATEGORY_MAP]: {
     paragraphId: "ch2-3",
-    renderer: "flowchart",
+    renderer: CarbonDiagramRendererEnum.FLOWCHART,
     direction: "LR",
     maxNodes: 24,
   },
   [CarbonDiagramTemplateEnum.QUANTIFICATION_FLOW]: {
     paragraphId: "ch3-3",
-    renderer: "flowchart",
+    renderer: CarbonDiagramRendererEnum.FLOWCHART,
     direction: "LR",
     maxNodes: 10,
   },
@@ -63,13 +66,13 @@ export const CARBON_DIAGRAM_TEMPLATES: Record<
   // Info: (20260730 - Tzuhan) 節點只存事件,年月放 parent(時間標籤),故節點數 = 事件數而非兩倍
   [CarbonDiagramTemplateEnum.MILESTONE_TIMELINE]: {
     paragraphId: "ch1-1",
-    renderer: "timeline",
+    renderer: CarbonDiagramRendererEnum.TIMELINE,
     direction: "TD",
     maxNodes: 30,
   },
   [CarbonDiagramTemplateEnum.BOUNDARY_MAP]: {
     paragraphId: "ch1-5",
-    renderer: "flowchart",
+    renderer: CarbonDiagramRendererEnum.FLOWCHART,
     direction: "TD",
     maxNodes: 12,
   },

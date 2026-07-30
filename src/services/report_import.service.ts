@@ -13,6 +13,14 @@ import {
 } from "@/services/chat.service";
 import { describeError } from "@/lib/utils/error_message";
 import {
+  assessPdfTextLayer,
+  extractPdfTextLayer,
+  slicePagesForRange,
+  PDF_TEXT_LAYER_REASON,
+} from "@/lib/pdf_text_layer";
+import { PdfTextLayerDecisionEnum } from "@/constants/pdf_text_layer";
+import { CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES } from "@/constants/carbon_chatbot";
+import {
   LLM_REPORT_IMPORT_TIMEOUT_MS,
   LLM_MAX_OUTPUT_TOKENS,
   LLM_TEMPERATURE,
@@ -261,6 +269,76 @@ export class ReportImportService {
       API_ERRORS.IS_REPORT_IMPORT_FAILED.message,
       API_ERRORS.IS_REPORT_IMPORT_FAILED.status,
     );
+  }
+
+  /**
+   * Info: (20260730 - Tzuhan) 裁決一份上傳檔案要以什麼形態進 LLM(純文字 / 視覺模型 / 拒收)。
+   *
+   * 這段原本寫在 `import/route.ts`,但它是業務判斷而非端口職責:抽文字層、評估品質、
+   * 決定降級路徑 —— 依三層式架構(API 只做接收→驗證→呼叫 Service→回應)應收在此。
+   *
+   * 回傳 null 代表兩條路都不通(文字層不可信、原檔又超過視覺模型上限),呼叫端須明確拒收。
+   */
+  async resolveSource(input: {
+    name: string;
+    mimeType: string;
+    sizeBytes: number;
+    buffer: Buffer;
+    isTextMimeType: boolean;
+  }): Promise<IReportImportSource | null> {
+    const base = { name: input.name, mimeType: input.mimeType };
+
+    if (input.isTextMimeType) {
+      return { ...base, data: input.buffer.toString("utf-8"), isText: true };
+    }
+
+    const canUseVision =
+      input.sizeBytes <= CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES;
+    const extracted = await extractPdfTextLayer(input.buffer);
+    const assessment = extracted
+      ? assessPdfTextLayer(extracted.text, extracted.pages, canUseVision)
+      : null;
+
+    logger.info("report import source decision", {
+      fileName: input.name,
+      fileSize: input.sizeBytes,
+      canUseVision,
+      decision: assessment?.decision ?? PdfTextLayerDecisionEnum.VISION,
+      reason: assessment?.reason ?? PDF_TEXT_LAYER_REASON.EXTRACTION_FAILED,
+      charsPerPage: assessment?.quality.charsPerPage ?? 0,
+      numericUndecodedChars: assessment?.quality.numericUndecodedChars ?? 0,
+    });
+
+    if (extracted && assessment?.decision === PdfTextLayerDecisionEnum.TEXT) {
+      return { ...base, data: extracted.text, isText: true };
+    }
+    if (canUseVision) {
+      return { ...base, data: input.buffer.toString("base64"), isText: false };
+    }
+    return null;
+  }
+
+  /**
+   * Info: (20260730 - Tzuhan) 依頁碼範圍縮小送進 LLM 的文字(兩階段匯入的第二階段)。
+   * 切片本身是純函數(slicePagesForRange),此處只負責記錄實際生效範圍與退回情況 ——
+   * 成本與品質的分水嶺必須看得到,否則無從判斷索引是否可靠。
+   */
+  scopeSourceToPages(
+    source: IReportImportSource,
+    fromPage: number,
+    toPage: number,
+  ): IReportImportSource {
+    if (!source.isText) return source;
+    const slice = slicePagesForRange(source.data, fromPage, toPage);
+    logger.info("report import page slice", {
+      fileName: source.name,
+      requested: { fromPage, toPage },
+      applied: slice.range,
+      fellBack: slice.fellBack,
+      chars: slice.text.length,
+      originalChars: source.data.length,
+    });
+    return { ...source, data: slice.text };
   }
 
   /**

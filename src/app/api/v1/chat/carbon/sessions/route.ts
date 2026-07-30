@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
     return jsonOk({ sessions });
   } catch (error) {
     logger.error(
-      `[API] /chat/carbon/sessions GET error: ${JSON.stringify(error)}`,
+      `[API] /chat/carbon/sessions GET error: ${describeError(error)}`,
     );
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
     return jsonOk({ channel, accountBookId: parsed.data.accountBookId });
   } catch (error) {
     logger.error(
-      `[API] /chat/carbon/sessions POST error: ${JSON.stringify(error)}`,
+      `[API] /chat/carbon/sessions POST error: ${describeError(error)}`,
     );
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }

@@ -88,6 +88,7 @@ export default function JournalDetailModal({
     if (isOpen && activeJournal) {
       setEditText(activeJournal.text);
     }
+    // Deprecated: (20260730 - Tzuhan) remove eslint-disable
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, activeJournal?.id]);
 

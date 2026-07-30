@@ -4,6 +4,7 @@
 
 import { NextRequest } from "next/server";
 import { logger } from "@/lib/utils/logger";
+import { describeError } from "@/lib/utils/error_message";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { enforceCarbonRateLimit } from "@/lib/rate_limiter";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
@@ -33,7 +34,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Info: (20260720 - Tzuhan) 帳本閱覽裁決(#52 同語意、同錯誤碼):非帳本成員一律拒絕
-    const allowed = await canViewAccountBook(sessionUser.address, accountBookId);
+    const allowed = await canViewAccountBook(
+      sessionUser.address,
+      accountBookId,
+    );
     if (!allowed) {
       return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
     }
@@ -50,7 +54,7 @@ export async function GET(request: NextRequest) {
       });
     }
     logger.error(
-      `[API] /chat/carbon/esg-records GET error: ${JSON.stringify(error)}`,
+      `[API] /chat/carbon/esg-records GET error: ${describeError(error)}`,
     );
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }

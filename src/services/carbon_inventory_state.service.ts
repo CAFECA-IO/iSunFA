@@ -2,6 +2,7 @@
 // Info: (20260716 - Tzuhan) 狀態為 E2EE 密文，本服務不接觸明文；merge 與狀態機在前端(lib/carbon_inventory)執行
 
 import { logger } from "@/lib/utils/logger";
+import { describeError } from "@/lib/utils/error_message";
 import {
   carbonInventoryStateRepo,
   CarbonInventoryStateRepository,
@@ -50,7 +51,7 @@ export class CarbonInventoryStateService {
       };
     } catch (error) {
       logger.error(
-        `[CarbonInventoryStateService] getState failed: ${JSON.stringify(error)}`,
+        `[CarbonInventoryStateService] getState failed: ${describeError(error)}`,
       );
       throw new ApiError(
         API_ERRORS.IS_DB_FAILED.code,
@@ -79,7 +80,7 @@ export class CarbonInventoryStateService {
       });
     } catch (error) {
       logger.error(
-        `[CarbonInventoryStateService] saveState failed: ${JSON.stringify(error)}`,
+        `[CarbonInventoryStateService] saveState failed: ${describeError(error)}`,
       );
       throw new ApiError(
         API_ERRORS.IS_DB_FAILED.code,

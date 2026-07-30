@@ -41,6 +41,8 @@ export const PDF_TEXT_LAYER_REASON = {
   UNDECODED_RATIO: "text_layer_undecoded_ratio",
   UNDECODED_NUMERIC: "text_layer_undecoded_numeric",
   NO_VISION_FALLBACK: "no_vision_fallback",
+  // Info: (20260730 - Tzuhan) 連文字層都抽不出來(pdf-parse 失敗);原本在路由內以字面值記 log
+  EXTRACTION_FAILED: "text_layer_unavailable",
 } as const;
 
 // Info: (20260730 - Tzuhan) 數量語境:替換字元附近若出現這些字元,代表失真發生在數據上而非敘述文字

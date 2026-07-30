@@ -75,7 +75,13 @@ export function BookReportViewer({
         if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
         saveTimerRef.current = setTimeout(() => {
           saveTimerRef.current = null;
-          saveReportDraft(channel, masterKey, next, versionRef.current, accountBookId)
+          saveReportDraft(
+            channel,
+            masterKey,
+            next,
+            versionRef.current,
+            accountBookId,
+          )
             .then((newVersion) => {
               versionRef.current = newVersion;
               setSaveStatus("saved");

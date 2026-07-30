@@ -28,9 +28,10 @@ jest.mock("@/repositories/account_book.repo", () => ({
 const mockFindUnique = prisma.chatroom.findUnique as unknown as ReturnType<
   typeof jest.fn<() => Promise<{ accountBookId: string | null } | null>>
 >;
-const mockGetRole = accountBookRepo.getMemberRoleByAddress as unknown as ReturnType<
-  typeof jest.fn<() => Promise<string | null>>
->;
+const mockGetRole =
+  accountBookRepo.getMemberRoleByAddress as unknown as ReturnType<
+    typeof jest.fn<() => Promise<string | null>>
+  >;
 
 const OWNER_ADDRESS = "0xaaa";
 const OWN_CHANNEL = `carbon-chat-${OWNER_ADDRESS}-s1`;

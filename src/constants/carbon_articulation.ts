@@ -27,17 +27,18 @@ export const STOCKABLE_UNITS: readonly MeasurementUnit[] = [
  * Info: (20260720 - Tzuhan) 非庫存類活動數據的合理性上限(單一企業單年,保守放寬的物理量級邊界):
  * 超出僅產生警示(資料仍是事實,可能是集團級數據),不凍結入帳。值為 Decimal 字串。
  */
-export const PLAUSIBILITY_MAX_BY_UNIT: Partial<Record<MeasurementUnit, string>> =
-  {
-    // Info: (20260720 - Tzuhan) 100 億度電/年 ≈ 台灣全國用電的 3.5%,單一企業超出即極可疑
-    [MeasurementUnit.KWH]: "10000000000",
-    [MeasurementUnit.MWH]: "10000000",
-    [MeasurementUnit.GJ]: "40000000",
-    // Info: (20260720 - Tzuhan) 運輸活動(公里/延噸公里/人公里)
-    [MeasurementUnit.KM]: "1000000000",
-    [MeasurementUnit.TKM]: "100000000000",
-    [MeasurementUnit.PKM]: "100000000000",
-  };
+export const PLAUSIBILITY_MAX_BY_UNIT: Partial<
+  Record<MeasurementUnit, string>
+> = {
+  // Info: (20260720 - Tzuhan) 100 億度電/年 ≈ 台灣全國用電的 3.5%,單一企業超出即極可疑
+  [MeasurementUnit.KWH]: "10000000000",
+  [MeasurementUnit.MWH]: "10000000",
+  [MeasurementUnit.GJ]: "40000000",
+  // Info: (20260720 - Tzuhan) 運輸活動(公里/延噸公里/人公里)
+  [MeasurementUnit.KM]: "1000000000",
+  [MeasurementUnit.TKM]: "100000000000",
+  [MeasurementUnit.PKM]: "100000000000",
+};
 
 // Info: (20260720 - Tzuhan) 單次檢核的庫存紀錄筆數上限(輸入護欄,對齊 CARBON_CALCULATE_MAX_ACTIVITIES 量級)
 export const CARBON_ARTICULATION_MAX_STOCK_RECORDS = 50;
