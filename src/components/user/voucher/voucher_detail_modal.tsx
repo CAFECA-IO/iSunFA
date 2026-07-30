@@ -30,6 +30,8 @@ interface IVoucherDetailModalProps {
   onClose: () => void;
   voucherId: string;
   onUpdate?: (voucher: IVoucher) => void;
+  // Info: (20260721 - Tzuhan) 帳本 id 可由 prop 注入(碳盤查頁等非 account_book 路徑;未提供時沿用 URL)
+  accountBookId?: string | null;
 }
 
 // Info: (20260327 - Luphia) 若資料量大，可以使用 memo 包裝避免不必要的重新渲染
@@ -186,10 +188,13 @@ export default function VoucherDetailModal({
   isOpen,
   onClose,
   voucherId,
+  accountBookId: accountBookIdProp = undefined,
 }: IVoucherDetailModalProps) {
   const { t } = useTranslation();
   const params = useParams();
-  const accountBookId = params?.account_book_id as string;
+  // Info: (20260721 - Tzuhan) prop 優先:carbon_chatbot 頁不在 account_book 路徑下,URL 取不到
+  const accountBookId =
+    accountBookIdProp ?? (params?.account_book_id as string);
 
   const [activeVoucher, setActiveVoucher] = useState<IVoucher | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);

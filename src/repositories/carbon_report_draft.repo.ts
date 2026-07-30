@@ -1,4 +1,4 @@
-// Info: (20260714 - Emily) CarbonReportDraft 資料存取層(唯一碰 Prisma);僅存密文,version 樂觀鎖
+// Info: (20260714 - Tzuhan) CarbonReportDraft 資料存取層(唯一碰 Prisma);僅存密文,version 樂觀鎖
 
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated";
@@ -7,16 +7,18 @@ export interface IUpsertReportDraftParams {
   channel: string;
   purpose?: string;
   recipientPublicKey: string;
-  encryptedContent: string;
+  // Info: (20260716 - Tzuhan) #52 雙模式:個人會話存密文 envelope,帳本會話存 plainContent(擇一)
+  encryptedContent?: string | null;
+  plainContent?: string | null;
   ephemeralPublicKey?: string | null;
-  keyDerivationHint: string;
+  keyDerivationHint?: string | null;
   algorithm: string;
-  // Info: (20260714 - Emily) 呼叫端讀取時的版本;不符即回 null(由服務層轉為衝突錯誤)
+  // Info: (20260714 - Tzuhan) 呼叫端讀取時的版本;不符即回 null(由服務層轉為衝突錯誤)
   expectedVersion: number;
 }
 
 export class CarbonReportDraftRepository {
-  // Info: (20260714 - Emily) 依 channel 取草稿(密文);無 chatroom 或無草稿回 null
+  // Info: (20260714 - Tzuhan) 依 channel 取草稿(密文);無 chatroom 或無草稿回 null
   async findByChannel(channel: string) {
     const chatroom = await prisma.chatroom.findUnique({ where: { channel } });
     if (!chatroom) return null;
@@ -25,7 +27,7 @@ export class CarbonReportDraftRepository {
     });
   }
 
-  // Info: (20260714 - Emily) upsert + 樂觀鎖:版本不符回 null,成功回新版本紀錄
+  // Info: (20260714 - Tzuhan) upsert + 樂觀鎖:版本不符回 null,成功回新版本紀錄
   async upsertByChannel(params: IUpsertReportDraftParams) {
     const chatroom = await prisma.chatroom.upsert({
       where: { channel: params.channel },
@@ -39,9 +41,10 @@ export class CarbonReportDraftRepository {
 
     const envelopeData = {
       recipientPublicKey: params.recipientPublicKey,
-      encryptedContent: params.encryptedContent,
+      encryptedContent: params.encryptedContent ?? null,
+      plainContent: params.plainContent ?? null,
       ephemeralPublicKey: params.ephemeralPublicKey ?? null,
-      keyDerivationHint: params.keyDerivationHint,
+      keyDerivationHint: params.keyDerivationHint ?? null,
       algorithm: params.algorithm,
     };
 
@@ -50,7 +53,7 @@ export class CarbonReportDraftRepository {
     });
 
     if (!existing) {
-      // Info: (20260714 - Emily) 首存:呼叫端讀取到的版本必須是 0(從未存過)
+      // Info: (20260714 - Tzuhan) 首存:呼叫端讀取到的版本必須是 0(從未存過)
       if (params.expectedVersion !== 0) return null;
       try {
         return await prisma.carbonReportDraft.create({
@@ -68,7 +71,7 @@ export class CarbonReportDraftRepository {
       }
     }
 
-    // Info: (20260714 - Emily) updateMany 以 version 條件原子更新;count 0 = 他端已改版(衝突)
+    // Info: (20260714 - Tzuhan) updateMany 以 version 條件原子更新;count 0 = 他端已改版(衝突)
     const updated = await prisma.carbonReportDraft.updateMany({
       where: { chatroomId: chatroom.id, version: params.expectedVersion },
       data: { ...envelopeData, version: params.expectedVersion + 1 },

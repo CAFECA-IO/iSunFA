@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { IReportParagraph } from "@/types/carbon_chatbot.types";
 import { CARBON_REPORT_CHAPTERS } from "@/constants/carbon_report_outline";
+import { CarbonDataBadgeStateEnum } from "@/lib/carbon_report_table.builder";
 import { useTranslation } from "@/i18n/i18n_context";
 
 interface IOutlineTreeProps {
@@ -23,9 +24,11 @@ interface IOutlineTreeProps {
   activeParagraphId: string | null;
   onJump: (paragraphId: string) => void;
   onToggleVerified: (paragraphId: string) => void;
-  // Info: (20260714 - Emily) AI 段落草稿生成:正在生成的段落 id(同時間僅一段)與觸發 callback
+  // Info: (20260714 - Tzuhan) AI 段落草稿生成:正在生成的段落 id(同時間僅一段)與觸發 callback
   draftingParagraphId?: string | null;
   onGenerateDraft?: (paragraphId: string) => void;
+  // Info: (20260720 - Tzuhan) #23 數據段落勾稽三態(已勾稽 ✓/守恆違反 ⚠/數據不足),由 ledger 決定性裁決
+  dataBadgeState?: CarbonDataBadgeStateEnum;
 }
 
 const statusIcon = (paragraph: IReportParagraph, isActive: boolean) => {
@@ -43,8 +46,25 @@ export function OutlineTree({
   onToggleVerified,
   draftingParagraphId = null,
   onGenerateDraft = undefined,
+  dataBadgeState = CarbonDataBadgeStateEnum.INSUFFICIENT,
 }: IOutlineTreeProps) {
   const { t } = useTranslation();
+  // Info: (20260720 - Tzuhan) #23 三態徽章樣式:teal=已勾稽、red=守恆違反、gray=數據不足
+  const dataBadge =
+    dataBadgeState === CarbonDataBadgeStateEnum.RECONCILED
+      ? {
+          className: "shrink-0 text-teal-600",
+          title: t("carbon_chatbot.data_badge_reconciled"),
+        }
+      : dataBadgeState === CarbonDataBadgeStateEnum.VIOLATED
+        ? {
+            className: "shrink-0 text-red-500",
+            title: t("carbon_chatbot.data_badge_violated"),
+          }
+        : {
+            className: "shrink-0 text-gray-300",
+            title: t("carbon_chatbot.data_badge_insufficient"),
+          };
   const activeChapterId = paragraphs.find(
     (p) => p.id === activeParagraphId,
   )?.chapterId;
@@ -122,7 +142,7 @@ export function OutlineTree({
                         </span>
                       </button>
 
-                      {/* Info: (20260714 - Emily) AI 撰寫此段:生成中顯示 spinner;任一段生成中即全部停用,避免併發寫入 */}
+                      {/* Info: (20260714 - Tzuhan) AI 撰寫此段:生成中顯示 spinner;任一段生成中即全部停用,避免併發寫入 */}
                       {onGenerateDraft && (
                         <button
                           type="button"
@@ -150,12 +170,10 @@ export function OutlineTree({
                       )}
 
                       {/* Info: (20260713 - Tzuhan) 數據段落標記:數字由後端決定論管線勾稽,非 LLM 產出 */}
+                      {/* Info: (20260720 - Tzuhan) #23 三態化:顏色/提示反映勾稽真實狀態,不再是不實聲明 */}
                       {p.isDataDriven && (
-                        <span title={t("carbon_chatbot.data_driven_badge")}>
-                          <Database
-                            size={12}
-                            className="shrink-0 text-teal-600"
-                          />
+                        <span title={dataBadge.title}>
+                          <Database size={12} className={dataBadge.className} />
                         </span>
                       )}
 

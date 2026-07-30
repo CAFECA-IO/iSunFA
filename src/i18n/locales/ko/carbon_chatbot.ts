@@ -11,6 +11,19 @@ export const carbonChatbot = {
   today: "오늘",
   history: "이전 대화",
   new_chat: "새 대화",
+  new_chat_personal: "개인 채팅(종단 간 암호화)",
+  rename_session: "대화 이름 바꾸기",
+  rename_document: "보고서 파일명 바꾸기",
+  read_only: "읽기 전용(장부 열람 권한)",
+  book_reports_title: "장부 보고서(팀 공유)",
+  book_no_sessions: "이 장부에는 아직 탄소 보고서가 없습니다",
+  book_session_own: "내 인벤토리 채팅({{date}})",
+  book_session_member: "구성원 보고서({{date}})",
+  book_report_viewer_title: "장부 탄소 보고서",
+  book_report_editable: "편집 가능(장부 편집자 권한)",
+  book_report_empty: "이 세션에는 아직 보고서 내용이 없습니다.",
+  book_chat_hidden_note:
+    "채팅 기록은 개인 종단 간 암호화입니다. 보고서만 장부 구성원과 공유됩니다",
   ai_thinking: "AI가 생각 중입니다...",
   input_placeholder: "질문이나 답변을 입력하세요...",
   report_progress: "보고서 생성 진행률",
@@ -59,6 +72,8 @@ export const carbonChatbot = {
   new_session_title: "새 인벤토리 대화",
   save_saving: "저장 중...",
   save_saved: "저장됨",
+  save_local:
+    "로컬에 임시 저장됨. 암호화 채팅 잠금 해제 후 클라우드에 자동 저장됩니다",
   save_local_hint: "보고서 초안은 암호화되어 클라우드에 저장됩니다",
   save_failed: "저장 실패",
   save_failed_hint:
@@ -82,6 +97,40 @@ export const carbonChatbot = {
     "「{{section}}」 초안 생성 중입니다. 완료되면 보고서에 반영됩니다…",
   draft_failed:
     "[초안 생성 실패] 「{{section}}」 섹션 초안 생성 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+  revision_title: "수정 제안: {{section}}",
+  revision_original: "원문",
+  revision_revised: "수정 후",
+  revision_cited_facts: "인용 사실",
+  revision_apply: "수정 적용",
+  revision_discard: "폐기",
+  revision_generating: "「{{section}}」 수정 제안 생성 중…",
+  revision_failed:
+    "[수정 실패] 수정 제안을 생성할 수 없습니다. 나중에 다시 시도해 주세요.",
+  import_button: "보고서 가져오기",
+  import_title: "보고서 가져오기: {{name}}",
+  import_overwrite_warning: "기존 내용을 덮어씁니다",
+  import_drafting_sections:
+    "「{{name}}」 누락 섹션 AI 초안 보완 중(제 {{current}}/{{total}} 배치, 업로드 문서 기반)…",
+  import_draft_badge: "AI 초안",
+  import_unmapped: "목차에 대응하지 않는 내용({{count}}건, 가져오지 않음)",
+  import_reset_note:
+    "가져온 단락의 검증 상태는 초기화됩니다. 활동 데이터 {{activities}}건은 재대사됩니다",
+  import_apply: "선택 항목 가져오기({{count}})",
+  import_parsing: "「{{name}}」 분석 중. 완료 후 단락별 미리보기가 표시됩니다…",
+  import_parsing_chapter:
+    "「{{name}}」 장별 분석 중({{current}}/{{total}} 완료, 병렬 처리). 전체 보고서는 몇 분 걸립니다…",
+  import_failed_chapters:
+    "다음 장은 분석에 실패했습니다. 나중에 다시 가져오기로 보완할 수 있습니다: {{chapters}}",
+  import_retry_failed: "실패한 장 재시도",
+  import_empty: "[가져오기 실패] 목차에 대응하는 내용이 없습니다.",
+  import_failed:
+    "[가져오기 실패] 보고서 분석에 실패했습니다. 나중에 다시 시도해 주세요.",
+  attachments_processing:
+    "첨부 파일 분석 중(사실 추출 및 초안 생성). 대용량 파일은 1~2분 걸릴 수 있습니다…",
+  import_suggest:
+    "「{{name}}」은(는) 전체 보고서로 보입니다. 보고서 기점으로 가져올까요, 증빙 첨부로 보낼까요?",
+  import_suggest_import: "보고서 가져오기",
+  import_suggest_attach: "첨부로 보내기",
   section_placeholder:
     "이 섹션은 아직 생성되지 않았습니다. 왼쪽 대화에서 탄소 회계사에게 작성 의사를 알리면 내용이 실시간으로 여기에 표시됩니다.",
   report_status_draft:
@@ -101,6 +150,66 @@ export const carbonChatbot = {
   activity_pending_factor:
     "⚠ 보류: 신뢰할 수 있는 계수가 없거나 단위 불일치로 추정하지 않습니다",
   activity_total_co2e: "총 배출량(대사 완료)",
+  articulation_passed: "질량 보존 검증 통과",
+  articulation_violation: "질량 보존 위반: {{material}}",
+  articulation_equation:
+    "기초+구매-기말 = {{expected}} {{unit}}, 장부상 소비 = {{actual}} {{unit}}, 차이 = {{gap}} {{unit}}",
+  articulation_plausibility_warning:
+    "수량이 합리적 범위를 초과했습니다. 확인해 주세요: {{source}}",
+  report_table_detail_heading: "배출원 명세",
+  report_table_col_source: "배출원",
+  report_table_col_scope: "스코프",
+  report_table_col_quantity: "활동 데이터",
+  report_table_col_factor: "배출계수(출처)",
+  report_table_col_co2e: "배출량 (kgCO2e)",
+  report_table_subtotal_heading: "스코프별 소계",
+  report_table_total: "총 배출량",
+  report_table_insufficient:
+    "(데이터 부족: 활동 데이터가 완성되면 시스템이 표를 자동 생성합니다)",
+  report_table_frozen:
+    "⚠ 질량 보존 검증에 통과하지 못해 데이터 표가 동결되었습니다. 대화에서 재고 차이를 해명하면 자동으로 생성됩니다.",
+  report_table_pending_note:
+    "참고: {count}건의 활동 데이터가 계수 대기 중으로 본 표에 포함되지 않았습니다.",
+  data_table_refreshed:
+    "데이터 표가 활동 데이터에 맞춰 갱신되었습니다. 해당 섹션을 다시 확인해 주세요",
+  data_badge_reconciled: "데이터 섹션: 대사 완료 ✓ (수치는 결정론 엔진 산출)",
+  data_badge_violated: "데이터 섹션: 질량 보존 위반 ⚠ (표 동결, 해명 대기)",
+  data_badge_insufficient:
+    "데이터 섹션: 데이터 부족 (활동 데이터 완성 시 자동 생성)",
+  chart_scope_pie_title: "스코프별 배출 비중 (kgCO2e)",
+  chart_scope_bar_title: "스코프별 배출량 (kgCO2e)",
+  chart_insufficient:
+    "(데이터 부족: 활동 데이터가 완성되면 시스템이 차트를 자동 생성합니다)",
+  chart_frozen:
+    "⚠ 질량 보존 검증에 통과하지 못해 차트가 동결되었습니다. 대화에서 재고 차이를 해명하면 자동으로 생성됩니다.",
+  chart_sankey_chat_node: "대화/첨부로 신고됨",
+  book_bind_pending_unlock:
+    "장부 세션이 생성되었습니다. 암호화 대화를 잠금 해제하면 장부 바인딩이 완료됩니다(증빙 가져오기와 증거 체인은 바인딩 후 사용 가능)",
+  book_bind_done:
+    "장부 바인딩 완료. 활동 데이터 카드에서 증빙 데이터를 가져올 수 있습니다",
+  book_bind_denied: "장부 바인딩 실패: 이 장부의 Editor 이상 권한이 필요합니다",
+  book_bind_failed: "장부 바인딩에 실패했습니다. 다시 시도해 주세요",
+  book_records_import_button: "장부에서 증빙 데이터 가져오기",
+  book_records_importing:
+    "장부에서 인식된 증빙 수준 배출 데이터를 가져오는 중…",
+  book_records_imported:
+    "장부에서 {{count}}건의 증빙 수준 활동 데이터를 가져왔습니다(중복은 자동 생략)",
+  book_records_imported_with_skips:
+    "{{count}}건 가져옴; {{skipped}}건은 GHG 스코프를 판정할 수 없어 생략했습니다. ESG 페이지에서 스코프 또는 활동 유형을 설정해 주세요",
+  book_records_import_failed:
+    "장부 가져오기에 실패했습니다. 다시 시도해 주세요",
+  activity_open_evidence: "증빙 보기 ↗",
+  evidence_chain_title:
+    "배출 증거 체인(클릭하여 단계별 확장, 최소 단위는 단일 증빙)",
+  evidence_chain_loading: "장부 증빙 데이터를 불러오는 중…",
+  evidence_chain_empty: "이 장부에는 아직 인식된 배출 데이터가 없습니다",
+  evidence_chain_error: "증빙 데이터 로드 실패(장부 열람 권한을 확인해 주세요)",
+  evidence_chain_records: "증빙 {{count}}건",
+  evidence_chain_formula:
+    "{{quantity}} {{unit}} × {{factor}} = {{co2e}} kgCO2e",
+  evidence_chain_total: "총 배출량",
+  evidence_chain_verified: "검증됨",
+  evidence_chain_unverified: "미검증",
   inventory_step_ORG_PROFILE: "단계: 기업 기본 정보(명칭/연도)",
   inventory_step_ORG_BOUNDARY: "단계: 조직 경계 설정",
   inventory_step_EMISSION_SOURCES: "단계: 배출원 식별",

@@ -1,4 +1,4 @@
-// Info: (20260716 - Emily) 盤查狀態帳本引擎測試(#6518):merge 去重、組織欄位不覆蓋、狀態機推進、白名單裁決
+// Info: (20260716 - Tzuhan) 盤查狀態帳本引擎測試(#6518):merge 去重、組織欄位不覆蓋、狀態機推進、白名單裁決
 
 import { describe, it, expect } from "@jest/globals";
 import {
@@ -9,6 +9,10 @@ import {
   CARBON_INVENTORY_MIN_ACTIVITY_RECORDS,
 } from "@/lib/carbon_inventory";
 import { CarbonInventoryStep } from "@/constants/carbon_chatbot";
+import {
+  ArticulationStatusEnum,
+  ArticulationViolationReasonEnum,
+} from "@/constants/carbon_articulation";
 import { GhgProtocolCategory } from "@/constants/esg";
 import { MeasurementUnit } from "@/constants/enums";
 import {
@@ -35,14 +39,14 @@ describe("mergeInventoryExtraction", () => {
     expect(m1.addedCount).toBe(1);
     expect(m1.state.activities[0].source).toBe("電費單.pdf");
 
-    // Info: (20260716 - Emily) 同排放源+數量+單位+範疇 = 同一筆；重傳不重複記帳
+    // Info: (20260716 - Tzuhan) 同排放源+數量+單位+範疇 = 同一筆；重傳不重複記帳
     const m2 = mergeInventoryExtraction(m1.state, {
       activities: [electricity()],
     });
     expect(m2.addedCount).toBe(0);
     expect(m2.state.activities).toHaveLength(1);
 
-    // Info: (20260716 - Emily) 數量不同 = 不同筆
+    // Info: (20260716 - Tzuhan) 數量不同 = 不同筆
     const m3 = mergeInventoryExtraction(m2.state, {
       activities: [electricity("800,000")],
     });
@@ -85,16 +89,112 @@ describe("computeInventoryStep (deterministic state machine)", () => {
     s.activities = [electricity()];
     expect(computeInventoryStep(s)).toBe(CarbonInventoryStep.ACTIVITY_DATA);
 
-    // Info: (20260716 - Emily) 達到最低筆數門檻 → 推進到係數對應(其出口由 #6519 解鎖)
+    // Info: (20260716 - Tzuhan) 達到最低筆數門檻 → 推進到係數對應(其出口由 #6519 解鎖)
     s.activities = Array.from(
       { length: CARBON_INVENTORY_MIN_ACTIVITY_RECORDS },
       (_, i) => electricity(`${i + 1}00`),
     );
     expect(computeInventoryStep(s)).toBe(CarbonInventoryStep.EMISSION_FACTORS);
 
-    // Info: (20260716 - Emily) 全部有係數 → REVIEW(REVIEW 出口由 #6520 質量守恆裁決，現階段不可能 COMPLETED)
+    // Info: (20260716 - Tzuhan) 全部有係數 → REVIEW
     s.activities = s.activities.map((a) => ({ ...a, emissionFactor: "0.495" }));
     expect(computeInventoryStep(s)).toBe(CarbonInventoryStep.REVIEW);
+
+    // Info: (20260720 - Tzuhan) #6520 REVIEW 出口:計算總表無待補 + 守恆勾稽非違反 → COMPLETED
+    const passedLedger = {
+      entries: [],
+      pending: [],
+      scopeSubtotals: {},
+      totalCo2eKg: "0",
+      computedAt: new Date().toISOString(),
+    };
+    s.computedLedger = {
+      ...passedLedger,
+      articulation: {
+        status: ArticulationStatusEnum.VIOLATED,
+        violations: [
+          {
+            materialName: "柴油",
+            unit: MeasurementUnit.LITER,
+            reason:
+              ArticulationViolationReasonEnum.MASS_GAP_EXCEEDS_TOLERANCE,
+            expectedConsumption: "150",
+            actualConsumption: "200",
+            gap: "50",
+          },
+        ],
+        warnings: [],
+        checkedAt: new Date().toISOString(),
+      },
+    };
+    expect(computeInventoryStep(s)).toBe(CarbonInventoryStep.REVIEW);
+
+    s.computedLedger = {
+      ...passedLedger,
+      articulation: {
+        status: ArticulationStatusEnum.PASSED,
+        violations: [],
+        warnings: [],
+        checkedAt: new Date().toISOString(),
+      },
+    };
+    expect(computeInventoryStep(s)).toBe(CarbonInventoryStep.COMPLETED);
+  });
+
+  it("should merge stock records with dedupe and surface violation facts to the persona", () => {
+    const s0 = createEmptyInventoryState();
+    const stock = {
+      materialName: "柴油",
+      openingQuantity: "100",
+      purchasedQuantity: "50",
+      closingQuantity: "0",
+      unit: MeasurementUnit.LITER,
+    };
+    const m1 = mergeInventoryExtraction(s0, {
+      activities: [],
+      stockRecords: [stock],
+    });
+    expect(m1.addedCount).toBe(1);
+    expect(m1.state.stockRecords).toHaveLength(1);
+
+    // Info: (20260720 - Tzuhan) 同物料+單位 = 同一筆,後到的萃取不覆蓋
+    const m2 = mergeInventoryExtraction(m1.state, {
+      activities: [],
+      stockRecords: [{ ...stock, openingQuantity: "999" }],
+    });
+    expect(m2.addedCount).toBe(0);
+    expect(m2.state.stockRecords?.[0].openingQuantity).toBe("100");
+
+    // Info: (20260720 - Tzuhan) 守恆違反 → persona 描述附等式事實(TS 產生,LLM 只措辭)
+    const violated = {
+      ...m2.state,
+      computedLedger: {
+        entries: [],
+        pending: [],
+        scopeSubtotals: {},
+        totalCo2eKg: "0",
+        computedAt: new Date().toISOString(),
+        articulation: {
+          status: ArticulationStatusEnum.VIOLATED,
+          violations: [
+            {
+              materialName: "柴油",
+              unit: MeasurementUnit.LITER,
+              reason:
+                ArticulationViolationReasonEnum.MASS_GAP_EXCEEDS_TOLERANCE,
+              expectedConsumption: "150",
+              actualConsumption: "200",
+              gap: "50",
+            },
+          ],
+          warnings: [],
+          checkedAt: new Date().toISOString(),
+        },
+      },
+    };
+    const description = describeInventoryStep(violated);
+    expect(description).toContain("質量守恆勾稽違反");
+    expect(description).toContain("缺口=50");
   });
 
   it("should describe missing prerequisites for the persona", () => {
@@ -136,7 +236,7 @@ describe("inventory validators (whitelist guardrails)", () => {
       expect(parsed.data.year).toBe(2025);
       expect(parsed.data.activities[0].quantity).toBe("1,234.5");
     }
-    // Info: (20260716 - Emily) 年度合理性邊界
+    // Info: (20260716 - Tzuhan) 年度合理性邊界
     expect(
       CarbonInventoryExtractionSchema.safeParse({ year: "1024" }).success,
     ).toBe(false);

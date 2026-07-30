@@ -7,8 +7,22 @@ import Image from "next/image";
 import { MermaidChart } from "@/components/chart/mermaid_chart";
 import { CustomChart } from "@/components/chart/custom_chart";
 import { detectCustomChartType } from "@/lib/utils/custom_chart_parser";
+import {
+  CARBON_EVIDENCE_FENCE_LANG,
+  parseEvidenceFence,
+} from "@/constants/carbon_evidence";
 import { useState, useEffect } from "react";
 import { downloadFile } from "@/lib/file_operator";
+import dynamic from "next/dynamic";
+
+// Info: (20260720 - Tzuhan) #54 證據鏈元件動態載入:含 RecordTabModal 依賴鏈,不拖累一般 markdown 渲染
+const EvidenceChain = dynamic(
+  () =>
+    import("@/components/carbon_chatbot/evidence_chain").then(
+      (mod) => mod.EvidenceChain,
+    ),
+  { ssr: false },
+);
 
 const AsyncLariaImage = ({
   src,
@@ -114,6 +128,17 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
   const tableBorder = isDark ? "border-[#444]" : "border-[#d1d5db]";
   const theadBg = isDark ? "bg-[#ffffff]/5" : "bg-[#f9fafb]";
   const thText = isDark ? "text-[#FFB74D]" : "text-[#c2410c]";
+
+  /**
+   * Info: (20260722 - Tzuhan) 顯示層剝除 HTML 註解(UAT:錨點註解外洩至預覽/PDF)。
+   * 未啟用 rehype-raw 時 react-markdown 會把 HTML 註解當純文字印出;
+   * 系統以註解作段落錨點(carbon-data-table / carbon-chart 等,重算連動據此替換),
+   * 錨點必須留在原文、只在渲染時隱藏 — 僅影響顯示,不動資料。
+   */
+  const displayContent = useMemo(
+    () => content.replace(/<!--[\s\S]*?-->/g, ""),
+    [content],
+  );
 
   const components = useMemo(
     () => ({
@@ -303,6 +328,15 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
           return <CustomChart type={customType} raw={getFenceText()} />;
         }
 
+        // Info: (20260720 - Tzuhan) #54 證據鏈 fence:層層下鑽至單一憑證(數據實時問 API,
+        // Info: (20260720 - Tzuhan) 帳本閱覽權限由 server 裁決);格式不符退回一般程式碼區塊呈現
+        if (!inline && fenceLang === CARBON_EVIDENCE_FENCE_LANG) {
+          const accountBookId = parseEvidenceFence(getFenceText());
+          if (accountBookId) {
+            return <EvidenceChain accountBookId={accountBookId} />;
+          }
+        }
+
         if (!inline && match && match[1] === "mermaid") {
           const chartText = getFenceText();
           return (
@@ -377,7 +411,7 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
 
   const result = (
     <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
-      {content}
+      {displayContent}
     </ReactMarkdown>
   );
 

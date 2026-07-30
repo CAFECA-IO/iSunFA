@@ -22,24 +22,33 @@ import {
   CarbonChatStructuredReplySchema,
   CarbonActivityRecordSchema,
   CarbonInventoryExtractionSchema,
+  CarbonStockRecordSchema,
 } from "@/validators";
 import { GhgProtocolCategory } from "@/constants/esg";
 import { MeasurementUnit } from "@/constants/enums";
+import { CarbonChartTemplateEnum } from "@/constants/carbon_report_charts";
 import { IInventoryExtraction } from "@/types/carbon_chatbot.types";
 import { logger } from "@/lib/utils/logger";
 
-// Info: (20260714 - Emily) 結構化聊天回覆: readyParagraphId 已通過白名單裁決(非法/none 一律為 null)
-// Info: (20260716 - Emily) #6518:extraction 為已裁決的事實萃取(壞欄位逐筆丟棄),null = 本輪無可萃取
+// Info: (20260714 - Tzuhan) 結構化聊天回覆: readyParagraphId 已通過白名單裁決(非法/none 一律為 null)
+// Info: (20260716 - Tzuhan) #6518:extraction 為已裁決的事實萃取(壞欄位逐筆丟棄),null = 本輪無可萃取
 export interface ICarbonChatStructuredReply {
   reply: string;
   readyParagraphId: string | null;
   extraction: IInventoryExtraction | null;
+  // Info: (20260716 - Tzuhan) #55 修訂請求:使用者要求「依附件/指示修改既有段落」時的目標段落(白名單裁決後)
+  revisionParagraphId: string | null;
+  // Info: (20260720 - Tzuhan) #51 圖表請求(雙 enum 白名單裁決後):LLM 只裁決「哪張圖、放哪段」,數值零參與
+  chartRequest: {
+    templateId: CarbonChartTemplateEnum;
+    paragraphId: string;
+  } | null;
 }
 
-// Info: (20260714 - Emily) readyParagraphId 的無段落標記(LLM enum 選項之一)
+// Info: (20260714 - Tzuhan) readyParagraphId 的無段落標記(LLM enum 選項之一)
 const NO_READY_PARAGRAPH = "none";
 
-// Info: (20260714 - Emily) 判斷 LLM 錯誤是否為額度耗盡(429/RESOURCE_EXHAUSTED)，供呼叫端回專屬錯誤碼
+// Info: (20260714 - Tzuhan) 判斷 LLM 錯誤是否為額度耗盡(429/RESOURCE_EXHAUSTED)，供呼叫端回專屬錯誤碼
 export const isLlmQuotaError = (error: unknown): boolean => {
   if (!(error instanceof Error)) return false;
   const message = error.message.toLowerCase();
@@ -50,11 +59,11 @@ export const isLlmQuotaError = (error: unknown): boolean => {
   );
 };
 
-// Info: (20260716 - Emily) 判斷 LLM 錯誤是否為同步路徑逾時(#6515)，供 route/service 層映射 IS_LLM_TIMEOUT
+// Info: (20260716 - Tzuhan) 判斷 LLM 錯誤是否為同步路徑逾時(#6515)，供 route/service 層映射 IS_LLM_TIMEOUT
 export const isLlmTimeoutError = (error: unknown): boolean =>
   error instanceof Error && error.message.startsWith(LLM_TIMEOUT_ERROR_MARKER);
 
-// Info: (20260714 - Emily) 聊天回覆 responseSchema:readyParagraphId 以 enum 約束，禁止 LLM 捏造段落 id
+// Info: (20260714 - Tzuhan) 聊天回覆 responseSchema:readyParagraphId 以 enum 約束，禁止 LLM 捏造段落 id
 const CARBON_CHAT_REPLY_SCHEMA: Schema = {
   type: SchemaType.OBJECT,
   properties: {
@@ -68,7 +77,37 @@ const CARBON_CHAT_REPLY_SCHEMA: Schema = {
       enum: [...CARBON_REPORT_OUTLINE.map((s) => s.id), NO_READY_PARAGRAPH],
       description: "資訊已蒐集齊全可寫入報告的段落 id；尚未齊全時為 none",
     },
-    // Info: (20260716 - Emily) #6518 事實萃取: enum 鎖死範疇/單位，數值原樣字串(嚴禁換算),TS 端再白名單複驗
+    // Info: (20260716 - Tzuhan) #55 修訂請求:僅當使用者明確要求「修改/更新既有段落」時填段落 id,否則 none
+    revisionParagraphId: {
+      type: SchemaType.STRING,
+      format: "enum",
+      enum: [...CARBON_REPORT_OUTLINE.map((s) => s.id), NO_READY_PARAGRAPH],
+      description:
+        "使用者要求依附件或指示『修改既有段落』時填該段 id;非修改請求一律 none",
+    },
+    // Info: (20260720 - Tzuhan) #51 圖表請求:雙 enum 鎖死(模板白名單 × 段落清單);數值由系統產出
+    chartRequest: {
+      type: SchemaType.OBJECT,
+      description:
+        "使用者明確要求在指定段落加入圖表/表格時填寫;非圖表請求省略本欄位",
+      properties: {
+        templateId: {
+          type: SchemaType.STRING,
+          format: "enum",
+          enum: Object.values(CarbonChartTemplateEnum),
+          description:
+            "SCOPE_PIE=各範疇占比圓餅圖;SCOPE_BAR=各範疇長條圖;SOURCE_TABLE=排放源明細表;EMISSION_SANKEY=碳流量桑基圖(憑證→排放源→範疇)",
+        },
+        paragraphId: {
+          type: SchemaType.STRING,
+          format: "enum",
+          enum: CARBON_REPORT_OUTLINE.map((s) => s.id),
+          description: "圖表插入的目標段落 id(只能從段落清單挑選)",
+        },
+      },
+      required: ["templateId", "paragraphId"],
+    },
+    // Info: (20260716 - Tzuhan) #6518 事實萃取: enum 鎖死範疇/單位，數值原樣字串(嚴禁換算),TS 端再白名單複驗
     extraction: {
       type: SchemaType.OBJECT,
       description: "本輪用戶訊息中可萃取的盤查事實；無則各欄位省略",
@@ -115,6 +154,43 @@ const CARBON_CHAT_REPLY_SCHEMA: Schema = {
             required: ["scopeCategory", "sourceName", "quantity", "unit"],
           },
         },
+        // Info: (20260720 - Tzuhan) #6520 物料庫存紀錄:期初/採購/期末原樣字串,供質量守恆勾稽
+        stockRecords: {
+          type: SchemaType.ARRAY,
+          items: {
+            type: SchemaType.OBJECT,
+            properties: {
+              materialName: {
+                type: SchemaType.STRING,
+                description: "物料名稱,須與活動數據的排放源名稱一致(如: 柴油)",
+              },
+              openingQuantity: {
+                type: SchemaType.STRING,
+                description: "期初庫存量,原樣照抄,嚴禁換算",
+              },
+              purchasedQuantity: {
+                type: SchemaType.STRING,
+                description: "本期採購量,原樣照抄,嚴禁換算",
+              },
+              closingQuantity: {
+                type: SchemaType.STRING,
+                description: "期末庫存量,原樣照抄,嚴禁換算",
+              },
+              unit: {
+                type: SchemaType.STRING,
+                format: "enum",
+                enum: Object.values(MeasurementUnit),
+              },
+            },
+            required: [
+              "materialName",
+              "openingQuantity",
+              "purchasedQuantity",
+              "closingQuantity",
+              "unit",
+            ],
+          },
+        },
       },
     },
   },
@@ -123,7 +199,7 @@ const CARBON_CHAT_REPLY_SCHEMA: Schema = {
 
 export type { Part, Schema, Tool };
 /**
- * Info: (20260714 - Emily) SchemaType 一併由此 re-export
+ * Info: (20260714 - Tzuhan) SchemaType 一併由此 re-export
  * 所有 AI 串接，含 responseSchema 定義統一經 chat.service
  * 其他服務不得直接 import 任何 AI 相關套件
  */
@@ -137,7 +213,7 @@ export interface IChatGenerationOptions {
   isJson?: boolean;
   tools?: Tool[];
   /**
-   * Info: (20260716 - Emily) 同步 HTTP 路徑專用防護(#6515)。
+   * Info: (20260716 - Tzuhan) 同步 HTTP 路徑專用防護(#6515)。
    * timeoutMs: 後端逾時上限，未提供則不啟用(executor 走檔案狀態機重試，行為零改變)。
    * taskKey: 提供時記錄一筆用量 log，欄位對齊 execution_log.json 以便成本聚合。
    */
@@ -174,7 +250,7 @@ export class ChatService {
   }
 
   /**
-   * Info: (20260716 - Emily) 同步路徑防護執行器(#6515)
+   * Info: (20260716 - Tzuhan) 同步路徑防護執行器(#6515)
    * 1. timeoutMs 提供時以 Promise.race 限時，逾時拋帶識別標記的錯誤(isLlmTimeoutError 可辨識)
    *    SDK 呼叫無法真正中斷，但 HTTP 回應即刻釋放，不再無限期佔連線
    * 2. taskKey 提供時寫一筆用量 log，欄位名對齊 execution_log.json(taskKey/inputTokens/
@@ -195,7 +271,7 @@ export class ChatService {
     const race = async (): Promise<GenerateContentResult> => {
       if (!timeoutMs) return exec();
       /**
-       * Info: (20260716 - Emily) SDK 呼叫無法真正中斷，逾時後仍在背景執行
+       * Info: (20260716 - Tzuhan) SDK 呼叫無法真正中斷，逾時後仍在背景執行
        * 先取得其 Promise 並吞掉「逾時之後才發生」的 reject，避免 unhandledRejection(#6521 review)。
        */
       const execPromise = exec();
@@ -285,7 +361,7 @@ export class ChatService {
       ? { signal: options.signal }
       : undefined;
 
-    // Info: (20260716 - Emily) 經防護執行器呼叫，未帶 timeoutMs 或 taskKey 時行為與原裸呼叫相同
+    // Info: (20260716 - Tzuhan) 經防護執行器呼叫，未帶 timeoutMs 或 taskKey 時行為與原裸呼叫相同
     const result = await this.invokeGuarded(
       () => model.generateContent(parts, requestOptions),
       {
@@ -309,7 +385,7 @@ export class ChatService {
   }
 
   /**
-   * Info: (20260714 - Emily) 碳會計師人設，結構化回覆與招呼詞共用，避免 prompt 漂移
+   * Info: (20260714 - Tzuhan) 碳會計師人設，結構化回覆與招呼詞共用，避免 prompt 漂移
    */
   private buildCarbonPersonaInstruction(
     currentStep?: string,
@@ -324,23 +400,26 @@ export class ChatService {
 - 用戶已提供當前段落所需的關鍵資訊，或明確同意/確認你彙整的內容時 → 填該段落的 id(只能從下方清單挑選)
 - 資訊尚未齊全、仍在追問時 → 填 "${NO_READY_PARAGRAPH}"
 - 填入段落 id 後，系統會自動將該段草稿寫入右側報告；此時請在 reply 告知用戶「本段已寫入報告，可於右側預覽檢視」，不要把完整草稿貼在對話中，也不要再重複詢問同一段落。
+【段落修訂機制】使用者上傳新附件或明確要求「更新/修改某段」時 → revisionParagraphId 填該段 id(只能從段落清單挑選)，reply 告知「已產生修訂建議，請於預覽卡確認」；非修改請求一律填 "none"，且不要在 reply 貼修訂內容(由系統以對照卡呈現)。
+【圖表機制】使用者明確要求「在某段加圖表/表格」(如「在 3.2 加各範疇占比圓餅圖」)時 → chartRequest 填模板與目標段落(皆只能從列舉挑選)，reply 告知「圖表已由系統依勾稽數據插入該段」；圖表數值由系統決定性產出，嚴禁你在 reply 自繪任何圖表或表格；非圖表請求省略 chartRequest。
 【事實萃取機制】每輪回覆的 extraction 欄位，依下列規則萃取「用戶本輪訊息」中的盤查事實:
 - 企業名稱、盤查年度(西元)、組織邊界方法: 用戶明確提供時填入，原文照抄，不確定就省略。
 - activities: 用戶提供的活動數據(如用電量、油耗)。quantity 連同千分位「原樣照抄」為字串，嚴禁換算單位、加總或推導；單位只能從 unit 列舉挑選，對不上就整筆省略。
-- 你是萃取器不是計算機: 任何需要計算的內容一律不填。沒有可萃取的事實時 extraction 省略。
+- stockRecords: 用戶提供「期初庫存、本期採購、期末庫存」三值齊全的物料(燃料/原料)時填入，數值原樣照抄；materialName 須與該物料在活動數據中的排放源名稱一致；三值不齊全就整筆省略，嚴禁以 0 補位。
+- 你是萃取器不是計算機: 任何需要計算的內容一律不填(含庫存缺口、消耗量推算)。沒有可萃取的事實時 extraction 省略。
 【段落清單】
 ${outlineCatalog}${langInstruction}`;
   }
 
   /**
-   * Info: (20260716 - Emily) 萃取結果裁決(#6518): 逐筆 Zod 驗證，壞欄位丟棄該筆而非整包作廢；
+   * Info: (20260716 - Tzuhan) 萃取結果裁決(#6518): 逐筆 Zod 驗證，壞欄位丟棄該筆而非整包作廢；
    * 全空回 null。enum 已在 responseSchema 鎖死，此處為 TS 端第二道白名單(永不直接採信 LLM)。
    */
   private adjudicateInventoryExtraction(
     value: unknown,
   ): IInventoryExtraction | null {
     if (!value || typeof value !== "object") return null;
-    const candidate = value as { activities?: unknown };
+    const candidate = value as { activities?: unknown; stockRecords?: unknown };
     const rawActivities = Array.isArray(candidate.activities)
       ? candidate.activities
       : [];
@@ -353,16 +432,31 @@ ${outlineCatalog}${langInstruction}`;
         dropped: rawActivities.length - activities.length,
       });
     }
+    // Info: (20260720 - Tzuhan) #6520 庫存紀錄同標準裁決:逐筆驗證,壞欄位丟該筆不作廢整包
+    const rawStockRecords = Array.isArray(candidate.stockRecords)
+      ? candidate.stockRecords
+      : [];
+    const stockRecords = rawStockRecords.flatMap((item) => {
+      const parsed = CarbonStockRecordSchema.safeParse(item);
+      return parsed.success ? [parsed.data] : [];
+    });
+    if (rawStockRecords.length !== stockRecords.length) {
+      logger.warn("inventory extraction dropped invalid stock records", {
+        dropped: rawStockRecords.length - stockRecords.length,
+      });
+    }
     const orgParsed = CarbonInventoryExtractionSchema.safeParse({
       ...value,
       activities: [],
+      stockRecords: [],
     });
     const org = orgParsed.success ? orgParsed.data : { activities: [] };
     if (
       !org.company &&
       !org.year &&
       !org.boundaryApproach &&
-      activities.length === 0
+      activities.length === 0 &&
+      stockRecords.length === 0
     ) {
       return null;
     }
@@ -371,11 +465,12 @@ ${outlineCatalog}${langInstruction}`;
       year: org.year,
       boundaryApproach: org.boundaryApproach,
       activities,
+      stockRecords: stockRecords.length > 0 ? stockRecords : undefined,
     };
   }
 
   /**
-   * Info: (20260714 - Emily) 碳會計師結構化回覆
+   * Info: (20260714 - Tzuhan) 碳會計師結構化回覆
    * 對話內容 + 段落完成訊號(碳盤查對 Gemini 的唯一對話路徑)
    * 解決「無限訪談迴圈」：AI 判斷段落資訊已齊全時回報 readyParagraphId
    * 由路由層觸發 ParagraphDraftService 寫入報告；id 經 enum 約束 + 本方法白名單裁決
@@ -403,7 +498,7 @@ ${outlineCatalog}${langInstruction}`;
       parts: [{ text: msg.text }],
     }));
 
-    // Info: (20260716 - Emily) 同步聊天路徑，45秒逾時 + 用量記錄(#6515)
+    // Info: (20260716 - Tzuhan) 同步聊天路徑，45秒逾時 + 用量記錄(#6515)
     const response = await this.invokeGuarded(
       () => model.generateContent({ contents }),
       {
@@ -414,29 +509,62 @@ ${outlineCatalog}${langInstruction}`;
     );
     const raw = response.response.text();
 
-    // Info: (20260714 - Emily) 永不直接採信 LLM 輸出，JSON + Zod 護欄；解析失敗降級為純文字回覆(不中斷對話)
+    // Info: (20260714 - Tzuhan) 永不直接採信 LLM 輸出，JSON + Zod 護欄；解析失敗降級為純文字回覆(不中斷對話)
     try {
       const rawParsed: unknown = JSON.parse(raw);
       const parsed = CarbonChatStructuredReplySchema.parse(rawParsed);
       const isValidParagraph = CARBON_REPORT_OUTLINE.some(
         (s) => s.id === parsed.readyParagraphId,
       );
-      // Info: (20260716 - Emily) #6518:extraction 逐筆裁決(獨立於 reply 護欄，萃取壞掉不影響對話)
+      // Info: (20260716 - Tzuhan) #6518:extraction 逐筆裁決(獨立於 reply 護欄，萃取壞掉不影響對話)
       const extraction = this.adjudicateInventoryExtraction(
         (rawParsed as { extraction?: unknown }).extraction,
       );
+      // Info: (20260716 - Tzuhan) #55:修訂目標同樣經白名單裁決(enum 之外的值一律視為無請求)
+      const rawRevision = (rawParsed as { revisionParagraphId?: unknown })
+        .revisionParagraphId;
+      const revisionParagraphId = CARBON_REPORT_OUTLINE.some(
+        (s) => s.id === rawRevision,
+      )
+        ? (rawRevision as string)
+        : null;
+      // Info: (20260720 - Tzuhan) #51:圖表請求雙欄位皆須通過白名單,任一非法即視為無請求(永不猜)
+      const rawChart = (rawParsed as { chartRequest?: unknown }).chartRequest;
+      const chartCandidate =
+        rawChart && typeof rawChart === "object"
+          ? (rawChart as { templateId?: unknown; paragraphId?: unknown })
+          : null;
+      const chartRequest =
+        chartCandidate &&
+        (Object.values(CarbonChartTemplateEnum) as unknown[]).includes(
+          chartCandidate.templateId,
+        ) &&
+        CARBON_REPORT_OUTLINE.some((s) => s.id === chartCandidate.paragraphId)
+          ? {
+              templateId: chartCandidate.templateId as CarbonChartTemplateEnum,
+              paragraphId: chartCandidate.paragraphId as string,
+            }
+          : null;
       return {
         reply: parsed.reply,
         readyParagraphId: isValidParagraph ? parsed.readyParagraphId : null,
         extraction,
+        revisionParagraphId,
+        chartRequest,
       };
     } catch {
-      return { reply: raw, readyParagraphId: null, extraction: null };
+      return {
+        reply: raw,
+        readyParagraphId: null,
+        extraction: null,
+        revisionParagraphId: null,
+        chartRequest: null,
+      };
     }
   }
 
   /**
-   * Info: (20260714 - Emily) 產生開場招呼詞
+   * Info: (20260714 - Tzuhan) 產生開場招呼詞
    * 進入 channel 時的前置作業：以 bootstrap 指令產生開場招呼詞（不含真實對話歷史）
    * 改走結構化回覆，移除重複的純文字對話方法，人設單一來源；招呼詞只取 reply
    */
