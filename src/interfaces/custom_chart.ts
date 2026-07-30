@@ -220,6 +220,7 @@ export interface ICustomHistogramAst {
   xAxis?: string;
   yAxis?: string;
   trend?: HistogramTrendType; // Info: (20260720 - Julian) 選填趨勢線（如常態分佈）
+  trendColor?: string; // Info: (20260730 - Julian) 趨勢線顏色 HEX（選填；未填採預設色）
   bins: ICustomHistogramBin[];
 }
 
@@ -242,6 +243,7 @@ export interface IHistogramParseResult {
   xAxis?: string;
   yAxis?: string;
   trend?: HistogramTrendType;
+  trendColor?: string; // Info: (20260730 - Julian) 趨勢線顏色 HEX（供工具面板預填目前色；未設定則 undefined）
   bins: IHistogramItem[];
 }
 

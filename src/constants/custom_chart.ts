@@ -38,6 +38,7 @@ export enum CustomChartConfigKey {
   RIGHT_COLOR = "rightcolor", // Info: (20260723 - Julian) 龍捲風圖右數列顏色 HEX
   MODE = "mode", // Info: (20260723 - Julian) 龍捲風圖型別（compare 比較型 / sensitivity 敏感度型）
   BASELINE = "baseline", // Info: (20260723 - Julian) 龍捲風圖敏感度型的中心基準值
+  TREND_COLOR = "trendcolor", // Info: (20260730 - Julian) 直方圖趨勢線顏色 HEX（未設定採預設色）
 }
 
 /**
@@ -60,6 +61,43 @@ export enum TornadoMode {
 export enum HistogramTrendType {
   NORMAL = "normal",
 }
+
+/**
+ * Info: (20260730 - Julian) 直方圖趨勢線的預設線色（未指定 trendColor 時採用）；與深色長條（#152C5B）對比明顯。
+ */
+export const DEFAULT_HISTOGRAM_TREND_COLOR = "#FF9800";
+
+/**
+ * Info: (20260730 - Julian)
+ * 各趨勢線類型的呈現中繼資料（顯示標籤 + 預設線色）。
+ * 供工具面板「取得趨勢線原始資料」：即使 DSL 未寫 trendColor，也能由此得知該類型的預設色與名稱。
+ */
+export interface IHistogramTrendMeta {
+  label: string; // Info: (20260730 - Julian) 顯示名稱（沿用本專案 t(`中文`) 慣例的字面值）
+  defaultColor: string; // Info: (20260730 - Julian) 預設線色 HEX
+}
+
+export const HISTOGRAM_TREND_META: Readonly<
+  Record<HistogramTrendType, IHistogramTrendMeta>
+> = {
+  [HistogramTrendType.NORMAL]: {
+    label: "常態分佈趨勢線",
+    defaultColor: DEFAULT_HISTOGRAM_TREND_COLOR,
+  },
+};
+
+/**
+ * Info: (20260730 - Julian)
+ * 趨勢線選色盤：挑選高彩度、彼此易辨、且與深色長條對比清楚的線條色，供 ColorPicker 快速選色。
+ */
+export const HISTOGRAM_TREND_COLOR_OPTIONS: string[] = [
+  "#FF9800", // 橘（預設）
+  "#E11D48", // 玫紅
+  "#7C3AED", // 紫
+  "#0EA5E9", // 天藍
+  "#16A34A", // 綠
+  "#0F172A", // 墨黑
+];
 
 /**
  * Info: (20260721 - Julian)

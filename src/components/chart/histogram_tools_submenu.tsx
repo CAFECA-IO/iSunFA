@@ -2,16 +2,21 @@
 // ToDo: (20260728 - Julian) 此元件還在開發中
 import React, { useState, useMemo, FC, Dispatch, SetStateAction } from "react";
 import {
-  SlidersHorizontal,
   SquarePlus,
   PencilLine,
   ChartNoAxesCombined,
   Trash2,
   LucideIcon,
   ChevronDown,
+  Move3d,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 // import { HistogramActionType, HistogramMode } from "@/constants/custom_chart";
+import {
+  HistogramTrendType,
+  HISTOGRAM_TREND_META,
+  HISTOGRAM_TREND_COLOR_OPTIONS,
+} from "@/constants/custom_chart";
 import {
   IHistogramItem,
   // IHistogramAction,
@@ -25,6 +30,7 @@ import {
 // import { SegmentedControl } from "@/components/chart/mermaid_common_components";
 import { useDecimalInput } from "@/hooks/use_decimal_input";
 import { parseHistogramData } from "@/lib/utils/custom_histogram_editor";
+import ColorPicker from "@/components/common/color_picker";
 
 // Info: (20260728 - Julian) 直方圖工具 i18n key 前綴，字面值收斂於 locale 檔
 const HISTOGRAM_I18N_PREFIX = "chart.custom_chart.histogram";
@@ -85,7 +91,7 @@ const HISTOGRAM_TOOLS: IToolItem[] = [
   },
   {
     tool: HistogramTools.EDIT_AXIS,
-    icon: SlidersHorizontal,
+    icon: Move3d,
   },
   {
     tool: HistogramTools.SWITCH_TREND_LINE,
@@ -409,9 +415,21 @@ const EditItemPanel: FC<IBasePanelProps> = ({
   // Info: (20260730 - Julian) 數值只允許數字與小數點
   const valueInput = useDecimalInput("");
 
+  const selectedItem = useMemo(
+    () => bins.find((item) => item.lineIndex === Number(selectedId)) ?? null,
+    [bins, selectedId],
+  );
+
   const isSelected = !!selectedId;
+  const isUnchanged =
+    titleInput.trim() === selectedItem?.label &&
+    valueInput.numValue === selectedItem.count &&
+    newLineIndex === selectedItem.lineIndex;
   const isSubmitDisabled =
-    !isSelected || titleInput.trim() === "" || valueInput.isEmpty;
+    !isSelected ||
+    isUnchanged ||
+    titleInput.trim() === "" ||
+    valueInput.isEmpty;
 
   // Info: (20260730 - Julian) 於選取事件匯入初始值（不使用 effect，避免 hook setter 非穩定造成的依賴問題）
   const handleSelect = (id: number) => {
@@ -583,7 +601,6 @@ const EditAxisPanel: FC<IBasePanelProps> = ({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
-        <ChartNoAxesCombined size={14} />
         <p>{t(`編輯軸線標題`)}</p>
       </div>
       <div className="flex flex-col gap-2">
@@ -628,70 +645,97 @@ const EditAxisPanel: FC<IBasePanelProps> = ({
 
 // Info: (20260728 - Julian) 「切換趨勢曲線」面板
 const SwitchTrendLinePanel: FC<IBasePanelProps> = ({
-  // parsedHistogramData,
+  parsedHistogramData,
   onAddAction,
 }) => {
   const { t } = useTranslation();
 
-  // const { bars: itemOptions } = parsedHistogramData;
+  const { trend, trendColor } = parsedHistogramData;
 
-  const [selectedId, setSelectedId] = useState<string>("");
+  // Info: (20260730 - Julian) 目前趨勢線類型（暫僅支援常態）；預設色由中繼資料取得
+  const trendType = trend ?? HistogramTrendType.NORMAL;
+  const defaultColor = HISTOGRAM_TREND_META[trendType].defaultColor;
 
-  // const selectedItem = useMemo(
-  //   () =>
-  //     itemOptions.find((item) => item.lineIndex === Number(selectedId)) ?? null,
-  //   [itemOptions, selectedId],
-  // );
+  // Info: (20260730 - Julian) 原始資料 → 初值：trend 有值即為開啟；顏色取 DSL 指定或該類型預設
+  const initialShow = trend !== undefined;
+  const initialColor = trendColor ?? defaultColor;
+
+  const [isShowTrend, setIsShowTrend] = useState<boolean>(initialShow);
+  const [color, setColor] = useState<string>(initialColor);
+
+  // Info: (20260730 - Julian) 未變更（開關與顏色都同原始）時禁用送出；關閉時不比顏色
+  const isUnchanged =
+    isShowTrend === initialShow &&
+    (!isShowTrend || color.toLowerCase() === initialColor.toLowerCase());
+  const isSubmitDisabled = isUnchanged;
 
   const handleSubmit = () => {
-    // if (!selectedItem) return;
+    if (isSubmitDisabled) return;
+    // Info: (20260730 - Julian) 待補：直方圖動作模型（HistogramActionType / IHistogramAction / applyHistogramAction）
+    // 完成後改為實際 dispatch。預期 payload：
+    //   開啟 → { trend: trendType, trendColor: color }
+    //   關閉 → { trend: undefined, trendColor: undefined }
     // onAddAction({
     //   id: crypto.randomUUID(),
-    //   type: HistogramActionType.DELETE_ITEM,
-    //   description: t(`${HISTOGRAM_I18N_PREFIX}.action_delete_item`, {
-    //     category: selectedItem.category,
-    //   }),
-    //   payload: { lineIndex: selectedItem.lineIndex },
+    //   type: HistogramActionType.SWITCH_TREND_LINE,
+    //   description: isShowTrend
+    //     ? t(`開啟趨勢線`)
+    //     : t(`關閉趨勢線`),
+    //   payload: isShowTrend
+    //     ? { trend: trendType, trendColor: color }
+    //     : { trend: undefined, trendColor: undefined },
     // });
   };
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
-        <Trash2 size={14} />
-        <p>{t(`${HISTOGRAM_I18N_PREFIX}.delete_item`)}</p>
+        <ChartNoAxesCombined size={14} />
+        <p>{t(`切換趨勢曲線`)}</p>
       </div>
-      <div className="flex flex-col">
-        <label htmlFor="deleteItemLabel" className={MERMAID_LABEL_STYLE}>
-          {t(`刪除項目`)}
-          <span className="ml-0.5 text-red-500">*</span>
-        </label>
-        <select
-          id="deleteItemLabel"
-          value={selectedId}
-          onChange={(e) => setSelectedId(e.target.value)}
-          className={MERMAID_INPUT_STYLE}
+
+      {/* Info: (20260730 - Julian) 開關：開啟／關閉趨勢線 */}
+      <div className="flex items-center justify-between">
+        <span className={MERMAID_LABEL_STYLE}>
+          {t(HISTOGRAM_TREND_META[trendType].label)}
+        </span>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={isShowTrend}
+          aria-label={t(`切換趨勢曲線`)!}
+          onClick={() => setIsShowTrend((prev) => !prev)}
+          className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
+            isShowTrend ? "bg-orange-400" : "bg-slate-300"
+          }`}
         >
-          <option value="">
-            {t(`${HISTOGRAM_I18N_PREFIX}.select_delete_item`)}
-          </option>
-          {/* {itemOptions.map((item) => (
-            <option
-              key={`histogram-delete-opt-${item.lineIndex}`}
-              value={item.lineIndex}
-            >
-              {item.category}（{item.left} / {item.right}）
-            </option>
-          ))} */}
-        </select>
+          <span
+            className={`absolute top-0.5 size-4 rounded-full bg-white shadow transition-transform ${
+              isShowTrend ? "translate-x-0" : "-translate-x-4"
+            }`}
+          />
+        </button>
       </div>
+
+      {/* Info: (20260730 - Julian) 顏色：僅在開啟時可調整 */}
+      {isShowTrend && (
+        <div className="flex flex-col gap-1.5">
+          <span className={MERMAID_LABEL_STYLE}>{t(`趨勢線顏色`)}</span>
+          <ColorPicker
+            colorOptions={HISTOGRAM_TREND_COLOR_OPTIONS}
+            value={color}
+            onChange={setColor}
+          />
+        </div>
+      )}
+
       <button
         type="button"
         onClick={handleSubmit}
-        // disabled={!selectedItem}
+        disabled={isSubmitDisabled}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t(`${HISTOGRAM_I18N_PREFIX}.delete_item`)}
+        {t(`套用變更`)}
       </button>
     </div>
   );
@@ -699,23 +743,17 @@ const SwitchTrendLinePanel: FC<IBasePanelProps> = ({
 
 // Info: (20260728 - Julian) 「刪除項目」面板
 const DeleteItemPanel: FC<IBasePanelProps> = ({
-  // parsedHistogramData,
+  parsedHistogramData,
   onAddAction,
 }) => {
   const { t } = useTranslation();
 
-  // const { bars: itemOptions } = parsedHistogramData;
+  const { bins } = parsedHistogramData;
 
   const [selectedId, setSelectedId] = useState<string>("");
 
-  // const selectedItem = useMemo(
-  //   () =>
-  //     itemOptions.find((item) => item.lineIndex === Number(selectedId)) ?? null,
-  //   [itemOptions, selectedId],
-  // );
-
   const handleSubmit = () => {
-    // if (!selectedItem) return;
+    if (!selectedId) return;
     // onAddAction({
     //   id: crypto.randomUUID(),
     //   type: HistogramActionType.DELETE_ITEM,
@@ -730,11 +768,11 @@ const DeleteItemPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <Trash2 size={14} />
-        <p>{t(`${HISTOGRAM_I18N_PREFIX}.delete_item`)}</p>
+        <p>{t(`刪除項目`)}</p>
       </div>
       <div className="flex flex-col">
         <label htmlFor="deleteItemLabel" className={MERMAID_LABEL_STYLE}>
-          {t(`刪除項目`)}
+          {t(`選擇欲刪除的項目`)}
           <span className="ml-0.5 text-red-500">*</span>
         </label>
         <select
@@ -743,26 +781,24 @@ const DeleteItemPanel: FC<IBasePanelProps> = ({
           onChange={(e) => setSelectedId(e.target.value)}
           className={MERMAID_INPUT_STYLE}
         >
-          <option value="">
-            {t(`${HISTOGRAM_I18N_PREFIX}.select_delete_item`)}
-          </option>
-          {/* {itemOptions.map((item) => (
+          <option value="">{t(`選擇欲刪除的項目`)}</option>
+          {bins.map((item) => (
             <option
               key={`histogram-delete-opt-${item.lineIndex}`}
               value={item.lineIndex}
             >
-              {item.category}（{item.left} / {item.right}）
+              {item.label}: {item.count}
             </option>
-          ))} */}
+          ))}
         </select>
       </div>
       <button
         type="button"
         onClick={handleSubmit}
-        // disabled={!selectedItem}
+        disabled={!selectedId}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t(`${HISTOGRAM_I18N_PREFIX}.delete_item`)}
+        {t(`刪除項目`)}
       </button>
     </div>
   );

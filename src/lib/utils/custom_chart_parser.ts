@@ -47,6 +47,7 @@ const CONFIG_KEYS_BY_TYPE: Record<CustomChartType, Set<string>> = {
     CustomChartConfigKey.X_AXIS,
     CustomChartConfigKey.Y_AXIS,
     CustomChartConfigKey.TREND,
+    CustomChartConfigKey.TREND_COLOR,
   ]),
   [CustomChartType.BOXPLOT]: new Set<string>([
     CustomChartConfigKey.TITLE,
@@ -362,6 +363,16 @@ const buildHistogram = (
     trend = match;
   }
 
+  // Info: (20260730 - Julian) 選填趨勢線顏色：非法 HEX fail fast（比照龍捲風數列顏色的嚴格策略）
+  const trendColorRaw = config.get(CustomChartConfigKey.TREND_COLOR)?.trim();
+  let trendColor: string | undefined;
+  if (trendColorRaw) {
+    if (!HEX_COLOR_REGEX.test(trendColorRaw)) {
+      throw malformed(`趨勢線顏色非有效 HEX：「${trendColorRaw}」`);
+    }
+    trendColor = trendColorRaw;
+  }
+
   const bins = dataLines.map((line) => {
     const f = parseCsvLine(line);
     if (f.length !== 2) {
@@ -378,6 +389,7 @@ const buildHistogram = (
     ...(xAxis ? { xAxis } : {}),
     ...(yAxis ? { yAxis } : {}),
     ...(trend ? { trend } : {}),
+    ...(trendColor ? { trendColor } : {}),
     bins,
   };
 };
@@ -482,6 +494,7 @@ const histogramSchema = z.object({
   xAxis: z.string().optional(),
   yAxis: z.string().optional(),
   trend: z.nativeEnum(HistogramTrendType).optional(),
+  trendColor: z.string().optional(),
   bins: z
     .array(z.object({ label: z.string().min(1), count: z.number() }))
     .min(1),

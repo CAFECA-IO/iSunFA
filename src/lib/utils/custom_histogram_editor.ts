@@ -25,6 +25,7 @@ const HISTOGRAM_CONFIG_KEYS: ReadonlySet<string> = new Set<string>([
   CustomChartConfigKey.X_AXIS,
   CustomChartConfigKey.Y_AXIS,
   CustomChartConfigKey.TREND,
+  CustomChartConfigKey.TREND_COLOR,
 ]);
 
 const isNumericField = (raw: string | undefined): boolean => {
@@ -125,8 +126,8 @@ export const parseHistogramData = (raw: string): IHistogramParseResult => {
 
   const result = parseCustomChart(CustomChartType.HISTOGRAM, raw);
   if (result.ok && result.ast.type === CustomChartType.HISTOGRAM) {
-    const { title, xAxis, yAxis, trend } = result.ast;
-    return { bins, title, xAxis, yAxis, trend };
+    const { title, xAxis, yAxis, trend, trendColor } = result.ast;
+    return { bins, title, xAxis, yAxis, trend, trendColor };
   }
 
   // Info: (20260728 - Julian) 解析失敗（如缺資料列）：仍逐行擷取設定列，趨勢線僅接受合法列舉值
@@ -142,5 +143,6 @@ export const parseHistogramData = (raw: string): IHistogramParseResult => {
     xAxis: readConfigValue(lines, CustomChartConfigKey.X_AXIS),
     yAxis: readConfigValue(lines, CustomChartConfigKey.Y_AXIS),
     trend,
+    trendColor: readConfigValue(lines, CustomChartConfigKey.TREND_COLOR),
   };
 };

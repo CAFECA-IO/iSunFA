@@ -2,7 +2,10 @@
 
 import { FC, useMemo } from "react";
 import { ICustomHistogramAst } from "@/interfaces/custom_chart";
-import { HistogramTrendType } from "@/constants/custom_chart";
+import {
+  HistogramTrendType,
+  DEFAULT_HISTOGRAM_TREND_COLOR,
+} from "@/constants/custom_chart";
 
 interface IHistogramChartProps {
   ast: ICustomHistogramAst;
@@ -28,7 +31,6 @@ const ROTATE_SLOT_W = 56; // Info: (20260720 - Julian) 每格寬度小於此值�
 
 // Info: (20260720 - Julian) 長條色 + hover 色（沿用設計系統）
 const COLOR_BAR = "#152C5B";
-const COLOR_TREND = "#FF9800"; // Info: (20260720 - Julian) 常態趨勢線色（橘）
 const TREND_SAMPLES = 120; // Info: (20260720 - Julian) 曲線取樣點數（越多越平滑）
 
 // Info: (20260720 - Julian) 數值格式化（千分位、最多三位小數），避免浮點雜訊
@@ -54,7 +56,9 @@ const niceNum = (range: number, round: boolean): number => {
 };
 
 const HistogramChart: FC<IHistogramChartProps> = ({ ast }) => {
-  const { title, xAxis, yAxis, trend, bins } = ast;
+  const { title, xAxis, yAxis, trend, trendColor, bins } = ast;
+  // Info: (20260730 - Julian) 趨勢線色：DSL 指定優先，否則採預設色
+  const trendStroke = trendColor ?? DEFAULT_HISTOGRAM_TREND_COLOR;
 
   // Info: (20260720 - Julian)
   // 常態趨勢線的加權統計（以「分箱序號 index」為 x、count 為權重，決定論計算）。
@@ -252,7 +256,7 @@ const HistogramChart: FC<IHistogramChartProps> = ({ ast }) => {
         <path
           d={trendPath}
           fill="none"
-          stroke={COLOR_TREND}
+          stroke={trendStroke}
           strokeWidth={2.5}
           strokeLinejoin="round"
           strokeLinecap="round"
