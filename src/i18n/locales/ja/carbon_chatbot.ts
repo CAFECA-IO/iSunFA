@@ -39,6 +39,9 @@ export const carbonChatbot = {
   ghg_protocol: "GHGプロトコルレポート",
   scope_analysis: "スコープ 1、2、3 分析",
   reduction_pathway: "炭素削減経路シミュレーション",
+  // Info: (20260730 - Tzuhan) gateway が接続を切った(504)ときの案内:処理は継続中
+  still_processing:
+    "処理に時間がかかり接続が切れましたが、作業は継続中です。完成したセクションは自動的に表示されます。",
   system_error:
     "【システムエラー】申し訳ありません。カーボン会計士サービスへの接続中に問題が発生しました。後でもう一度お試しください。",
   system_unavailable: "申し訳ありません。現在システムは応答できません。",

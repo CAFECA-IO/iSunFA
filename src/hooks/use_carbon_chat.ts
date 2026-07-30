@@ -93,6 +93,7 @@ import {
 import { request } from "@/lib/utils/request";
 import {
   getApiErrorCode,
+  isGatewayTimeoutError,
   isQuotaApiError,
   isRateLimitedApiError,
   isTimeoutApiError,
@@ -2659,6 +2660,23 @@ export const useCarbonChat = () => {
       // Info: (20260712 - Luphia) 此區塊代表「取得 AI 回覆」階段失敗（如 /api/v1/chat/carbon 錯誤）
       console.error("[carbon-chat] Failed to obtain AI response:", error);
       setDraftNotice(null);
+
+      // Info: (20260730 - Tzuhan) gateway 讀取逾時(504)不是工作失敗:伺服端仍在跑,
+      // Info: (20260730 - Tzuhan) 回覆與逐段草稿都會經 Centrifugo 訂閱送達。此時彈「系統錯誤」是誤報,
+      // Info: (20260730 - Tzuhan) 改為維持等待狀態並提示仍在處理中,由等待窗逾時把真正沒回來的情況兜住。
+      if (isGatewayTimeoutError(error)) {
+        setDraftNotice({
+          type: "loading",
+          text: t("carbon_chatbot.still_processing"),
+        });
+        startReplyTimeout(
+          attachmentsMeta.length > 0
+            ? CARBON_CHAT_REPLY_TIMEOUT_WITH_ATTACHMENTS_MS
+            : CARBON_CHAT_REPLY_TIMEOUT_MS,
+        );
+        return;
+      }
+
       setIsError(true);
       // Info: (20260716 - Tzuhan) 額度/逾時/限流分別給專屬文案(#6515/#6516)，其餘為一般系統錯誤
       let errorText = t("carbon_chatbot.system_error");

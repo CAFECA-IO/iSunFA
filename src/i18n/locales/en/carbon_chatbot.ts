@@ -39,6 +39,9 @@ export const carbonChatbot = {
   ghg_protocol: "GHG Protocol Report",
   scope_analysis: "Scope 1, 2, 3 Analysis",
   reduction_pathway: "Reduction Pathway Simulation",
+  // Info: (20260730 - Tzuhan) Shown when the gateway drops the connection (504) while the job is still running
+  still_processing:
+    "This is taking a while and the connection dropped, but the work is still running — completed sections will appear automatically.",
   system_error:
     "[System Error] Sorry, there was a problem connecting to the Carbon Accountant service. Please try again later.",
   system_unavailable: "Sorry, the system is currently unavailable to respond.",

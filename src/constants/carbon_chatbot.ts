@@ -232,3 +232,62 @@ export const buildChatDraftSummary = (
     CHAT_DRAFT_SUMMARY_TEMPLATES["zh-TW"];
   return template(sections);
 };
+
+// Info: (20260730 - Tzuhan) 逐段推播的階段訊息模板(決定性產生,不經 LLM)
+// Info: (20260730 - Tzuhan) 動機:附件→段落管線一次要跑「萃取 + N 段草稿」(實測 36.8s + 3×17s ≈ 87s),
+// Info: (20260730 - Tzuhan) 而 gateway 的 proxy_read_timeout 預設 60s,使用者只會看到 504 與「系統錯誤」。
+// Info: (20260730 - Tzuhan) 改為每完成一個單元就經 Centrifugo 推一則訊息,結果不再依賴那條 HTTP 連線活著。
+const ATTACHMENT_EXTRACTED_TEMPLATES: Record<
+  string,
+  (fileCount: number, sectionCount: number) => string
+> = {
+  "zh-TW": (fileCount, sectionCount) =>
+    `已讀完 ${fileCount} 個附件,接下來逐段撰寫 ${sectionCount} 個段落草稿,完成一段就會即時出現。`,
+  "zh-CN": (fileCount, sectionCount) =>
+    `已读完 ${fileCount} 个附件,接下来逐段撰写 ${sectionCount} 个段落草稿,完成一段就会即时出现。`,
+  en: (fileCount, sectionCount) =>
+    `Finished reading ${fileCount} attachment(s). Now drafting ${sectionCount} section(s) — each will appear as soon as it is ready.`,
+  ja: (fileCount, sectionCount) =>
+    `${fileCount} 件の添付ファイルを読み終えました。これから ${sectionCount} セクションの下書きを順に作成し、完成ごとに表示します。`,
+  ko: (fileCount, sectionCount) =>
+    `첨부파일 ${fileCount}건을 모두 읽었습니다. 이제 ${sectionCount}개 섹션 초안을 순서대로 작성하며, 완료되는 대로 표시됩니다.`,
+};
+
+export const buildAttachmentExtractedNotice = (
+  language: string | undefined,
+  fileCount: number,
+  sectionCount: number,
+): string => {
+  const template =
+    ATTACHMENT_EXTRACTED_TEMPLATES[language ?? ""] ??
+    ATTACHMENT_EXTRACTED_TEMPLATES["zh-TW"];
+  return template(fileCount, sectionCount);
+};
+
+const DRAFT_PROGRESS_TEMPLATES: Record<
+  string,
+  (title: string, current: number, total: number) => string
+> = {
+  "zh-TW": (title, current, total) =>
+    `已完成草稿(${current}/${total}):${title}。已寫入報告,請查核。`,
+  "zh-CN": (title, current, total) =>
+    `已完成草稿(${current}/${total}):${title}。已写入报告,请核对。`,
+  en: (title, current, total) =>
+    `Draft ${current} of ${total} completed: ${title}. Written to the report — please review.`,
+  ja: (title, current, total) =>
+    `下書き ${current}/${total} が完成しました：${title}。レポートに反映済みです。ご確認ください。`,
+  ko: (title, current, total) =>
+    `초안 ${current}/${total} 완료: ${title}. 보고서에 반영했습니다. 확인해 주세요.`,
+};
+
+export const buildDraftProgressNotice = (
+  language: string | undefined,
+  title: string,
+  current: number,
+  total: number,
+): string => {
+  const template =
+    DRAFT_PROGRESS_TEMPLATES[language ?? ""] ??
+    DRAFT_PROGRESS_TEMPLATES["zh-TW"];
+  return template(title, current, total);
+};

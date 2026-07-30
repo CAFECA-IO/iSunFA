@@ -18,6 +18,24 @@ export const isTimeoutApiError = (error: unknown): boolean => {
   return data?.errorCode === API_ERRORS.IS_LLM_TIMEOUT.code;
 };
 
+// Info: (20260730 - Tzuhan) gateway 讀取逾時的 HTTP 狀態:504 由反向代理產生,502/524 為同族群的連線中斷
+// Info: (20260730 - Tzuhan) (Bad Gateway / Cloudflare timeout),三者共通點是「請求沒有走完,但伺服端可能仍在跑」
+const GATEWAY_TIMEOUT_STATUSES: readonly number[] = [502, 504, 524];
+
+/**
+ * Info: (20260730 - Tzuhan) 判斷失敗是否為「連線被中途切斷」而非「工作失敗」。
+ * 實測:附件→段落管線約 87s,而 gateway 的 proxy_read_timeout 預設 60s,
+ * 連線被切時伺服端其實跑完了、草稿也經 Centrifugo 推達,此時彈「系統錯誤」是誤報。
+ * 這類錯誤應改為提示「仍在處理中」,並讓訂閱通道把結果補上。
+ */
+export const isGatewayTimeoutError = (error: unknown): boolean => {
+  if (!(error instanceof RequestApiError)) return false;
+  // Info: (20260730 - Tzuhan) 已能辨識的業務錯誤碼(額度/逾時/限流)不算連線中斷,交由原有文案處理
+  const data = error.data as { errorCode?: string } | undefined;
+  if (data?.errorCode) return false;
+  return GATEWAY_TIMEOUT_STATUSES.includes(error.status);
+};
+
 // Info: (20260716 - Tzuhan) 取出 API 失敗的錯誤碼(無法辨識回 null),供呼叫端對應專屬文案(#6517)
 export const getApiErrorCode = (error: unknown): string | null => {
   if (!(error instanceof RequestApiError)) return null;
@@ -48,7 +66,10 @@ export interface ISplitReportMarkdown {
 
 // Info: (20260716 - Tzuhan) 去除組稿時附加於各段尾端的 --- 分隔線
 const stripTrailingDivider = (lines: string[]): string =>
-  lines.join("\n").replace(/\n+---\s*$/, "").trim();
+  lines
+    .join("\n")
+    .replace(/\n+---\s*$/, "")
+    .trim();
 
 export const splitReportMarkdownSections = (
   markdown: string,

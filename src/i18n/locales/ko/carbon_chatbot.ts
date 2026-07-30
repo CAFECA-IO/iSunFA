@@ -39,6 +39,9 @@ export const carbonChatbot = {
   ghg_protocol: "GHG 프로토콜 보고서",
   scope_analysis: "Scope 1, 2, 3 분석",
   reduction_pathway: "탄소 감축 경로 시뮬레이션",
+  // Info: (20260730 - Tzuhan) gateway 연결 중단(504) 시 안내:작업은 계속 진행 중
+  still_processing:
+    "처리 시간이 길어 연결이 끊어졌지만 작업은 계속 진행 중입니다. 완료된 섹션은 자동으로 표시됩니다.",
   system_error:
     "[시스템 오류] 죄송합니다. 탄소 회계사 서비스에 연결하는 중 문제가 발생했습니다. 나중에 다시 시도해 주세요.",
   system_unavailable: "죄송합니다. 현재 시스템이 응답할 수 없습니다.",

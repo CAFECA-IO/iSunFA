@@ -38,6 +38,9 @@ export const carbonChatbot = {
   ghg_protocol: "GHG Protocol 报告",
   scope_analysis: "范畴一、二、三分析",
   reduction_pathway: "减碳路径模拟",
+  // Info: (20260730 - Tzuhan) gateway 连线中断(504)时的提示:工作仍在跑,结果会经订阅通道补上
+  still_processing:
+    "处理时间较长,连线已先中断,但作业仍在进行中,完成的段落会自动出现。",
   system_error: "【系统错误】抱歉，连线到碳会计师服务时发生问题，请稍后再试。",
   system_unavailable: "抱歉，系统目前无法回应。",
   ai_quota_exceeded:
