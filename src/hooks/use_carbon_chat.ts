@@ -1039,7 +1039,7 @@ export const useCarbonChat = () => {
     async (
       file: File,
       chapters: { id: string; title: string }[],
-      extractActivitiesOnFirst: boolean,
+      extractActivities: boolean,
       pageIndex?: Map<string, number>,
     ) => {
       interface IImportChunkPayload {
@@ -1076,9 +1076,15 @@ export const useCarbonChat = () => {
         formData.append("file", file);
         formData.append("language", language);
         formData.append("chapterId", chapter.id);
+        // Info: (20260730 - Tzuhan) 活動數據只在「排放章」那次呼叫萃取(避免 11 章重複入帳)。
+        // Info: (20260730 - Tzuhan) 原本掛在 index === 0 也就是第一章「組織與治理概況」,但用電量、油耗
+        // Info: (20260730 - Tzuhan) 這些活動數據在第三章;而該次呼叫的範圍規則又明寫「與範圍無關的內容一律忽略」,
+        // Info: (20260730 - Tzuhan) 兩條指令互相拉扯 → 活動數據抽不到 → computedLedger 空 → 所有數據圖表都畫不出來。
         formData.append(
           "extractActivities",
-          extractActivitiesOnFirst && index === 0 ? "true" : "false",
+          extractActivities && chapter.id === CARBON_EVIDENCE_CHAPTER_ID
+            ? "true"
+            : "false",
         );
         // Info: (20260730 - Tzuhan) 該章各節的起始頁 → 頁碼範圍;缺任何一節的索引就不帶範圍(整章退回送全文),
         // Info: (20260730 - Tzuhan) 寧可多花 token,也不能因為索引不全而漏送內容

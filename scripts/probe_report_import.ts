@@ -18,6 +18,7 @@ import {
 } from "@/lib/pdf_text_layer";
 import { PdfTextLayerDecisionEnum } from "@/constants/pdf_text_layer";
 import { CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES } from "@/constants/carbon_chatbot";
+import { CARBON_EVIDENCE_CHAPTER_ID } from "@/constants/carbon_evidence";
 import {
   CARBON_REPORT_CHAPTERS,
   CARBON_REPORT_OUTLINE,
@@ -132,7 +133,8 @@ async function main(): Promise<void> {
     try {
       const result = await service.importReport(chapterSource, "zh_tw", {
         chapterId: chapter.id,
-        extractActivities: chapter.id === CARBON_REPORT_CHAPTERS[0].id,
+        // Info: (20260730 - Tzuhan) 活動數據在排放章(ch3),不是第一章 —— 與前端同一判準
+        extractActivities: chapter.id === CARBON_EVIDENCE_CHAPTER_ID,
       });
       allSegments.push(...result.segments);
       activitiesTotal += result.activities.length;
