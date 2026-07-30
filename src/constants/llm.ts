@@ -17,6 +17,14 @@ export const DEFAULT_GEMINI_MODEL = "gemini-1.5-flash";
 export const LLM_SYNC_TIMEOUT_MS = 45_000;
 export const LLM_EXTRACTION_TIMEOUT_MS = 120_000;
 
+/**
+ * Info: (20260730 - Tzuhan) 整份報告匯入的逾時:與附件萃取分開。
+ * 實測(64 頁盤查報告逐章匯入)輸出額度從 8,192 提高到 32,768 後,模型有空間完整照抄,
+ * 單章耗時隨之從 ~53s 拉長到 ~71s,第二章更直接撞上 120s 逾時 —— 額度放寬後,逾時成為新的瓶頸。
+ * 逐字照抄整章本質上就是慢工,240s 給足空間;真正的收斂要靠減少每次呼叫的輸入量(見 ADR 014)。
+ */
+export const LLM_REPORT_IMPORT_TIMEOUT_MS = 240_000;
+
 // Info: (20260716 - Tzuhan) 溫度單一來源:萃取/撰寫 = 0(可重現),對話 = 0.2;禁止新增其他字面值
 export const LLM_TEMPERATURE = {
   EXTRACTION: 0,

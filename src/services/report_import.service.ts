@@ -5,12 +5,15 @@
 
 import {
   ChatService,
+  isLlmQuotaError,
+  isLlmTimeoutError,
   isLlmTruncatedError,
   SchemaType,
   type Schema,
 } from "@/services/chat.service";
+import { describeError } from "@/lib/utils/error_message";
 import {
-  LLM_EXTRACTION_TIMEOUT_MS,
+  LLM_REPORT_IMPORT_TIMEOUT_MS,
   LLM_MAX_OUTPUT_TOKENS,
   LLM_TEMPERATURE,
   LlmTaskKeyEnum,
@@ -177,6 +180,56 @@ export class ReportImportService {
     return this.injectedChatService ?? new ChatService();
   }
 
+  /**
+   * Info: (20260730 - Tzuhan) LLM 失敗的四路分流。實測一次完整匯入同時遇到三種不同失敗
+   * (第二章逾時、後續章節 429 額度耗盡、更早一輪的輸出截斷),但當時全部回同一個
+   * 「匯入失敗」,而且 log 是 `JSON.stringify(error)` 印出的 `{}` —— 無從判斷該加大額度、
+   * 該等一下再試、還是該縮小範圍。錯誤分不清就等於沒有錯誤處理。
+   */
+  private toImportError(error: unknown, scope: string): ApiError {
+    const detail = describeError(error);
+
+    if (isLlmTruncatedError(error)) {
+      logger.error(
+        `[ReportImportService] output truncated for scope ${scope}: ${detail}`,
+      );
+      return new ApiError(
+        API_ERRORS.IS_LLM_OUTPUT_TRUNCATED.code,
+        API_ERRORS.IS_LLM_OUTPUT_TRUNCATED.message,
+        API_ERRORS.IS_LLM_OUTPUT_TRUNCATED.status,
+      );
+    }
+    if (isLlmTimeoutError(error)) {
+      logger.error(
+        `[ReportImportService] timeout for scope ${scope}: ${detail}`,
+      );
+      return new ApiError(
+        API_ERRORS.IS_LLM_TIMEOUT.code,
+        API_ERRORS.IS_LLM_TIMEOUT.message,
+        API_ERRORS.IS_LLM_TIMEOUT.status,
+      );
+    }
+    // Info: (20260730 - Tzuhan) 額度耗盡:重試有意義但必須等,與「模型壞掉」是完全不同的處置
+    if (isLlmQuotaError(error)) {
+      logger.error(
+        `[ReportImportService] quota exhausted for scope ${scope}: ${detail}`,
+      );
+      return new ApiError(
+        API_ERRORS.IS_LLM_QUOTA_EXCEEDED.code,
+        API_ERRORS.IS_LLM_QUOTA_EXCEEDED.message,
+        API_ERRORS.IS_LLM_QUOTA_EXCEEDED.status,
+      );
+    }
+    logger.error(
+      `[ReportImportService] LLM call failed for scope ${scope}: ${detail}`,
+    );
+    return new ApiError(
+      API_ERRORS.IS_REPORT_IMPORT_FAILED.code,
+      API_ERRORS.IS_REPORT_IMPORT_FAILED.message,
+      API_ERRORS.IS_REPORT_IMPORT_FAILED.status,
+    );
+  }
+
   async importReport(
     source: IReportImportSource,
     language?: string,
@@ -226,7 +279,7 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
         buildImportResponseSchema(scopedSections, withActivities),
         {
           temperature: LLM_TEMPERATURE.EXTRACTION,
-          timeoutMs: LLM_EXTRACTION_TIMEOUT_MS,
+          timeoutMs: LLM_REPORT_IMPORT_TIMEOUT_MS,
           taskKey: LlmTaskKeyEnum.REPORT_IMPORT,
           // Info: (20260730 - Tzuhan) 原樣照抄需要大輸出空間,且思考 token 與輸出共用此額度
           // Info: (20260730 - Tzuhan) (原本 8192 導致內容較多的前四章全部被截斷,見 LLM_MAX_OUTPUT_TOKENS 註解)
@@ -234,28 +287,7 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
         },
       );
     } catch (error) {
-      // Info: (20260730 - Tzuhan) 截斷與「模型亂回」分流:截斷是額度問題(可靠縮小範圍重試解決),
-      // Info: (20260730 - Tzuhan) 混為一談會讓呼叫端只看到「匯入失敗」而無從判斷該重試還是該放棄
-      if (isLlmTruncatedError(error)) {
-        logger.error(
-          `[ReportImportService] output truncated for scope ${options?.chapterId ?? "all"}: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
-        );
-        throw new ApiError(
-          API_ERRORS.IS_LLM_OUTPUT_TRUNCATED.code,
-          API_ERRORS.IS_LLM_OUTPUT_TRUNCATED.message,
-          API_ERRORS.IS_LLM_OUTPUT_TRUNCATED.status,
-        );
-      }
-      logger.error(
-        `[ReportImportService] LLM call failed: ${JSON.stringify(error)}`,
-      );
-      throw new ApiError(
-        API_ERRORS.IS_REPORT_IMPORT_FAILED.code,
-        API_ERRORS.IS_REPORT_IMPORT_FAILED.message,
-        API_ERRORS.IS_REPORT_IMPORT_FAILED.status,
-      );
+      throw this.toImportError(error, options?.chapterId ?? "all");
     }
 
     // Info: (20260714 - Tzuhan) 永不直接採信 LLM 輸出:JSON + Zod 雙重護欄
@@ -358,33 +390,13 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
         buildGapFillResponseSchema(scopedSections),
         {
           temperature: LLM_TEMPERATURE.EXTRACTION,
-          timeoutMs: LLM_EXTRACTION_TIMEOUT_MS,
+          timeoutMs: LLM_REPORT_IMPORT_TIMEOUT_MS,
           taskKey: LlmTaskKeyEnum.REPORT_IMPORT,
           maxOutputTokens: LLM_MAX_OUTPUT_TOKENS.REPORT_IMPORT,
         },
       );
     } catch (error) {
-      // Info: (20260730 - Tzuhan) 與匯入同一分流:截斷可靠縮小段落範圍重試解決,不應與模型亂回混為一談
-      if (isLlmTruncatedError(error)) {
-        logger.error(
-          `[ReportImportService] gap-fill output truncated for ${sectionIds.length} section(s): ${
-            error instanceof Error ? error.message : String(error)
-          }`,
-        );
-        throw new ApiError(
-          API_ERRORS.IS_LLM_OUTPUT_TRUNCATED.code,
-          API_ERRORS.IS_LLM_OUTPUT_TRUNCATED.message,
-          API_ERRORS.IS_LLM_OUTPUT_TRUNCATED.status,
-        );
-      }
-      logger.error(
-        `[ReportImportService] gap-fill LLM call failed: ${JSON.stringify(error)}`,
-      );
-      throw new ApiError(
-        API_ERRORS.IS_REPORT_IMPORT_FAILED.code,
-        API_ERRORS.IS_REPORT_IMPORT_FAILED.message,
-        API_ERRORS.IS_REPORT_IMPORT_FAILED.status,
-      );
+      throw this.toImportError(error, `gap-fill(${sectionIds.length})`);
     }
 
     // Info: (20260727 - Tzuhan) 永不直接採信 LLM 輸出:JSON + Zod 雙重護欄

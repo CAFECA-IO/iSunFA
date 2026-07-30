@@ -15,6 +15,7 @@ import {
   IActivityRecord,
   IComputedLedger,
   IReportCategory,
+  IReportParagraph,
 } from "@/types/carbon_chatbot.types";
 import {
   buildCarbonDataTable,
@@ -1367,6 +1368,27 @@ export const useCarbonChat = () => {
           : ParagraphOriginEnum.IMPORTED,
       ]),
     );
+
+    /**
+     * Info: (20260730 - Tzuhan) 數據段落的表格一律改由決定論引擎產出。
+     * 原本匯入內容是 `content: imported` 直接寫入,不像 AI 草稿路徑會先 stripLlmTables +
+     * injectDataTable。後果是原報告那張「排放總量統計表」原封不動落地,而且因為它沒有
+     * `<!-- carbon-data-table -->` 錨點,ledger 重算時 hasInjectedDataTable 判定為 false,
+     * 於是**永遠不會被刷新、也不會被標示**——報告裡會有一張不是本系統算出來的排放總量表,
+     * 看報告的人卻分辨不出來。這違反「所有計算收斂到確定性規則引擎」的鐵律。
+     * 原報告的數字仍看得到:它們留在匯入預覽與 unmapped,且原文件本身就是佐證附件。
+     */
+    const ledgerNow = computedLedgerRef.current;
+    const normalizeImported = (
+      paragraph: IReportParagraph,
+      imported: string,
+    ): string =>
+      paragraph.isDataDriven
+        ? injectDataTable(
+            stripLlmTables(imported),
+            buildCarbonDataTable(ledgerNow, dataTableLabels),
+          )
+        : imported;
     setSessionsData((prev) => {
       const session = prev[activeSessionId];
       if (!session?.reportData?.paragraphs) return prev;
@@ -1376,7 +1398,11 @@ export const useCarbonChat = () => {
         session.reportData.paragraphs.forEach((p) => {
           const imported = contentById.get(p.id);
           if (imported !== undefined && nextRaw) {
-            nextRaw = patchMarkdownSection(nextRaw, p.title, imported);
+            nextRaw = patchMarkdownSection(
+              nextRaw,
+              p.title,
+              normalizeImported(p, imported),
+            );
           }
         });
       }
@@ -1391,9 +1417,10 @@ export const useCarbonChat = () => {
               const imported = contentById.get(p.id);
               if (imported === undefined) return p;
               // Info: (20260716 - Tzuhan) 匯入內容原樣落地;查核重置(匯入的舊報告不可信任為已驗證)
+              // Info: (20260730 - Tzuhan) 數據段落例外:表格改掛決定論引擎產出(見 normalizeImported)
               return {
                 ...p,
-                content: imported,
+                content: normalizeImported(p, imported),
                 isCompleted: true,
                 isVerified: false,
                 origin: originById.get(p.id) ?? ParagraphOriginEnum.IMPORTED,
@@ -1415,6 +1442,7 @@ export const useCarbonChat = () => {
     activeSessionId,
     applyInventoryExtraction,
     jumpToReportParagraph,
+    dataTableLabels,
   ]);
 
   const discardPendingImport = useCallback(() => {

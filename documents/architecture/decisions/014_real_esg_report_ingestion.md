@@ -99,7 +99,32 @@
 
 **成本觀察**:每章都重送整份文件,11 章共約 44 萬 input token。逐章切分是為了突破輸出上限,代價是輸入重複 11 次。若要收斂,需引入 context caching 或按章節切分原文,屬後續議題。
 
-**尚待驗證**:額度放大後前四章是否全數落地。第三章是最大風險(6 個小節 + 排放量統計表,輸出最長)。
+### 第二輪實跑(額度 32,768 之後)
+
+| 章節 | 結果 | 耗時 | 說明 |
+| :--- | :--- | ---: | :--- |
+| 第一章 | **成功,7 節全落地** | 70.8s | 輸出 2,113 + 思考 8,725 = 10,838,遠低於 32,768;unmapped 5 |
+| 第二章 | 逾時 | 120.0s | 撞上 `LLM_EXTRACTION_TIMEOUT_MS = 120_000` |
+| 第三章 | 失敗 | 71.0s | 原因不明(log 只印 `{}`) |
+| 第四~八章 | 失敗 | ~10s | 整齊的 10 秒 → 重試後放棄的形狀 |
+| 第九~十一章 | 失敗 | 6~18ms | **完全沒有發出網路請求** → 額度耗盡的典型級聯 |
+
+三個獨立結論:
+
+1. **額度修正有效**:第一章從 0 節變成 7 節全落地(思考 8,725 + 輸出 2,113,原本 8,192 根本裝不下)。
+2. **瓶頸移到逾時**:額度放寬讓模型有空間完整照抄,單章耗時從 ~53s 拉長到 ~71s,第二章直接撞 120s。→ 匯入改用專屬逾時 `LLM_REPORT_IMPORT_TIMEOUT_MS = 240_000`。
+3. **然後撞上 API 額度**:11 章各重送整份文件 = 每分鐘數十萬 input token,後段章節在毫秒內失敗(沒發請求)。這是**輸入量**的問題,不是輸出。
+
+**最關鍵的發現不是上面三點,而是「我們看不到原因」**:`logger.error(...JSON.stringify(error))` 對 Error 實例永遠印出 `{}`(message/stack 皆為不可列舉屬性)。第三章失敗至今仍不知原因。
+
+**決策**:
+1. 新增 `describeError()`(`src/lib/utils/error_message.ts`):展開 name/message、Gemini SDK 的 `status`/`statusText`/`errorDetails`、巢狀 `cause`。專案內另有 28 處 `JSON.stringify(error)` 同病,列為後續清理。
+2. 匯入失敗改**四路分流**:截斷 → `IS_LLM_OUTPUT_TRUNCATED`、逾時 → `IS_LLM_TIMEOUT`、額度 → `IS_LLM_QUOTA_EXCEEDED`、其餘 → `IS_REPORT_IMPORT_FAILED`。三者的正確處置完全不同(加大額度 / 等一下 / 縮小範圍),混為一談等於沒有錯誤處理。
+
+**尚待決定:輸入量收斂**。目前每章重送整份 53k 字文件(40k token × 11 章)。可行方案:
+- **頁碼索引兩階段**:文字層抽取已在每頁尾植入 `-- p.N/64 --` 標記。先一次小輸出呼叫問「每節起始頁」,再逐章只送對應頁 ±1。輸入可從 44 萬降到約 11 萬。
+- Gemini context caching(現行 SDK `@google/generative-ai@0.24` 不支援,需換 SDK)。
+- 降低前端並行度(2 → 1):減緩每分鐘 token 速率,但不減總量。
 
 **尚未驗證的部分**:逐字照抄的實際失真率。實測工具已備好(`scripts/probe_report_import.ts`,會把回傳內容切 12 字視窗回比原文算命中率),但沙箱環境連不到 `generativelanguage.googleapis.com`,**需要在本機執行**:
 
@@ -145,6 +170,14 @@ npx tsx scripts/probe_report_import.ts <pdf 路徑> /tmp/inv.txt
 
 ---
 
+## 四之二、已實作:數據段落不得繞過決定論引擎
+
+**問題**:`applyPendingImport` 以 `content: imported` 直接寫入,不像 AI 草稿路徑會先 `stripLlmTables()` 再 `injectDataTable(computedLedger)`。後果是原報告的「溫室氣體排放總量統計表」原封不動落地,而且因為它沒有 `<!-- carbon-data-table -->` 錨點,ledger 重算時 `hasInjectedDataTable()` 判定為 false,於是**永遠不會被刷新、也不會被標示**。最終產出的報告裡會有一張不是本系統算出來的排放總量表,而讀報告的人分辨不出來——這違反「所有計算收斂到確定性規則引擎」(CLAUDE.md 第 7 條)。
+
+**決策**:匯入落地時,`isDataDriven` 的三個段落(3.4 計算細節、3.6 總量匯總、4.2 不確定性)一律 `stripLlmTables` + `injectDataTable`,敘述文字保留逐字照抄,表格改掛決定論引擎產出。原報告的數字並未消失:它們仍在匯入預覽與 `unmapped` 中可見,且原文件本身就是佐證附件。
+
+---
+
 ## 五、待辦(依優先序)
 
 | # | 項目 | 為什麼 | 卡點 |
@@ -154,7 +187,9 @@ npx tsx scripts/probe_report_import.ts <pdf 路徑> /tmp/inv.txt
 | 3 | 章節內分塊 | 8192 output token 上限已用逐章切解掉,但單章過長(如台積第三章)仍會截斷 | 需先有實測資料佐證截斷點 |
 | 4 | 路由層測試 | MIME 白名單、大小上限、magic bytes、限流目前**完全沒有測試覆蓋** | 無,純工時 |
 | 5 | 永續報告書的「缺節」標示 | 避免 gap-fill 把 AI 草稿混充成原文內容 | 需 UI 設計 |
-| 5b | 截斷時自動改逐節重試 | 32,768 仍可能不足(第三章最長),需要決定論的退路而非讓整章消失 | 需 route/service 支援 sectionIds 範圍的逐字匯入 |
+| 5b | 截斷時自動改逐節重試 | 32,768 仍可能不足,需要決定論的退路而非讓整章消失 | 需 route/service 支援 sectionIds 範圍的逐字匯入 |
+| 5d | **輸入量收斂(頁碼索引兩階段)** | 每章重送整份文件導致 API 額度耗盡,後段章節連請求都發不出去 | 需確認索引呼叫的可靠性 |
+| 5e | 清理其餘 28 處 `JSON.stringify(error)` | 同樣印出 `{}`,任何一處出事都得瞎猜 | 無,純工時(跨功能領域,宜併入各自 PR) |
 | 5c | 聊天附件路徑的 3 段上限 | `CARBON_ATTACHMENT_PIPELINE_MAX_PARAGRAPHS = 3` 讓使用者以為系統「只認得三節」,且產出是 AI 草稿(含「待補」佔位)而非逐字原文 | 需釐清該路徑定位:快速預覽 or 正式匯入 |
 | 6 | DOCX / XLSX 匯入 | `file_signature.ts` 已能驗證,但白名單未開;活動數據常以 Excel 交付 | 需轉換管線決策 |
 
