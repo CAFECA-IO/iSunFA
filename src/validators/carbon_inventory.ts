@@ -246,7 +246,8 @@ export const CarbonDiagramNodesLlmOutputSchema = z.object({
         parent: z.string().min(1).max(120).optional(),
       }),
     )
-    .max(40),
+    // Info: (20260730 - Tzuhan) 上限取最寬的模板(沿革時間軸 30)再留餘裕;逐模板的實際上限由 builder 裁決
+    .max(60),
 });
 export type CarbonDiagramNodesLlmOutput = z.infer<
   typeof CarbonDiagramNodesLlmOutputSchema

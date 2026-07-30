@@ -35,6 +35,10 @@ const DIAGRAM_EXTRACTION_GUIDANCE: Record<CarbonDiagramTemplateEnum, string> = {
     "萃取排放範疇與類別的對應關係:第一層為範疇(如範疇一),第二層為類別或排放源類型(如固定式燃燒),parent 指向所屬範疇。只取原文列出的項目。",
   [CarbonDiagramTemplateEnum.QUANTIFICATION_FLOW]:
     "萃取排放量的計算流程:依原文的算式順序,每個節點為算式中的一個要素(如活動數據、排放係數、全球暖化潛勢、二氧化碳當量),parent 為流程上的前一步。",
+  [CarbonDiagramTemplateEnum.MILESTONE_TIMELINE]:
+    "萃取經營沿革的里程碑:label 為事件敘述(照抄原文,可截去冗長的後綴但不得改寫),parent 為該事件的年月(如 1966年01月)。依原文順序回傳,不要重新排序、不要補上原文沒寫的年月。",
+  [CarbonDiagramTemplateEnum.BOUNDARY_MAP]:
+    "萃取盤查組織邊界:第一層為公司主體,第二層為各廠址或分公司名稱,parent 指向公司主體。只取原文列出的據點,不要補上地址以外的推測。",
 };
 
 const DIAGRAM_RESPONSE_SCHEMA: Schema = {
@@ -107,7 +111,8 @@ ${paragraphContent}`;
           temperature: LLM_TEMPERATURE.EXTRACTION,
           timeoutMs: LLM_SYNC_TIMEOUT_MS,
           taskKey: LlmTaskKeyEnum.DIAGRAM_EXTRACTION,
-          maxOutputTokens: LLM_MAX_OUTPUT_TOKENS.DEFAULT,
+          // Info: (20260730 - Tzuhan) 沿革時間軸的節點數可達 30 筆,思考 token 又與輸出共用額度,故給足空間
+          maxOutputTokens: LLM_MAX_OUTPUT_TOKENS.REPORT_IMPORT,
         },
       );
     } catch (error) {

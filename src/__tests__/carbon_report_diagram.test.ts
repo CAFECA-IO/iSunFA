@@ -224,3 +224,125 @@ describe("插入與定位", () => {
     expect(findDiagramTemplateForParagraph("ch11")).toBeNull();
   });
 });
+
+// Info: (20260730 - Tzuhan) 取自高興昌盤查報告 1.1 節原文(經營沿革)與 1.5 節(組織邊界)
+const MILESTONE_SOURCE = `1966年01月 公司創立於高雄市,資本額新台幣捌拾萬元
+1968年06月 榮獲經濟部中央標準局鍍鋅鋼管正字標記
+1968年11月 榮獲經濟部中央標準局黑鋼管正字標記
+1988年12月 公司股票正式掛牌上市,資本額新台幣壹拾陸億元`;
+
+const BOUNDARY_SOURCE = `1.5.1盤查範圍:本次盤查組織邊界採用控制權法,邊界設定以「高興昌鋼鐵股份有限公司
+總公司、高興昌鋼鐵股份有限公司 台北分公司、高興昌鋼鐵股份有限公司 屏東分公司」為盤查範圍`;
+
+describe("時間軸模板(timeline renderer)", () => {
+  const nodes: ICarbonDiagramNode[] = [
+    { label: "公司創立於高雄市", parent: "1966年01月" },
+    { label: "榮獲經濟部中央標準局鍍鋅鋼管正字標記", parent: "1968年06月" },
+    { label: "榮獲經濟部中央標準局黑鋼管正字標記", parent: "1968年11月" },
+  ];
+
+  it("產出 mermaid timeline,而非 flowchart", () => {
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
+      nodes,
+      MILESTONE_SOURCE,
+    );
+    expect(block).toContain("```mermaid");
+    expect(block).toContain("timeline");
+    expect(block).not.toContain("flowchart");
+    expect(block).toContain("1966年01月 : 公司創立於高雄市");
+  });
+
+  it("同一時間標籤的多個事件併為一列", () => {
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
+      [
+        { label: "榮獲經濟部中央標準局鍍鋅鋼管正字標記", parent: "1968年06月" },
+        { label: "榮獲經濟部中央標準局黑鋼管正字標記", parent: "1968年06月" },
+      ],
+      MILESTONE_SOURCE,
+    );
+    const row = block.split("\n").find((line) => line.includes("1968年06月"))!;
+    expect(row.split(" : ")).toHaveLength(3);
+  });
+
+  it("時間標籤不必自己也是節點(timeline 的 parent 語意與樹不同)", () => {
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
+      nodes,
+      MILESTONE_SOURCE,
+    );
+    expect(result.isValid).toBe(true);
+  });
+
+  it("時間標籤同樣必須能在原文找到(不可自行補年月)", () => {
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
+      [{ label: "公司創立於高雄市", parent: "1965年12月" }],
+      MILESTONE_SOURCE,
+    );
+    expect(result.isValid).toBe(false);
+    expect(result.reason).toBe(DiagramRejectReasonEnum.LABEL_NOT_IN_SOURCE);
+    expect(result.offendingLabels).toEqual(["1965年12月"]);
+  });
+
+  it("沒有時間標籤的事件不丟棄,歸入未標註時間", () => {
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
+      [{ label: "公司創立於高雄市" }],
+      MILESTONE_SOURCE,
+    );
+    expect(block).toContain("未標註時間 : 公司創立於高雄市");
+  });
+
+  it("事件文字內的冒號換掉,避免撐破 timeline 的分隔語法", () => {
+    const source = "1966年01月 資本額:捌拾萬元";
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
+      [{ label: "資本額:捌拾萬元", parent: "1966年01月" }],
+      source,
+    );
+    const row = block.split("\n").find((line) => line.includes("1966年01月"))!;
+    expect(row.split(" : ")).toHaveLength(2);
+    expect(row).toContain("資本額-捌拾萬元");
+  });
+});
+
+describe("組織邊界圖", () => {
+  it("公司主體為根,各據點為子節點", () => {
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.BOUNDARY_MAP,
+      [
+        { label: "高興昌鋼鐵股份有限公司" },
+        { label: "總公司", parent: "高興昌鋼鐵股份有限公司" },
+        { label: "台北分公司", parent: "高興昌鋼鐵股份有限公司" },
+        { label: "屏東分公司", parent: "高興昌鋼鐵股份有限公司" },
+      ],
+      BOUNDARY_SOURCE,
+    );
+    expect(block).toContain("flowchart TD");
+    expect(block).toContain("N0 --> N1");
+    expect(block).toContain("N0 --> N3");
+  });
+
+  it("原文未列出的據點一律拒絕", () => {
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.BOUNDARY_MAP,
+      [
+        { label: "高興昌鋼鐵股份有限公司" },
+        { label: "台中分公司", parent: "高興昌鋼鐵股份有限公司" },
+      ],
+      BOUNDARY_SOURCE,
+    );
+    expect(result.reason).toBe(DiagramRejectReasonEnum.LABEL_NOT_IN_SOURCE);
+  });
+
+  it("段落 id 反查:1.1 為時間軸、1.5 為邊界圖", () => {
+    expect(findDiagramTemplateForParagraph("ch1-1")).toBe(
+      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
+    );
+    expect(findDiagramTemplateForParagraph("ch1-5")).toBe(
+      CarbonDiagramTemplateEnum.BOUNDARY_MAP,
+    );
+  });
+});

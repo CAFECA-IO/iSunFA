@@ -209,11 +209,24 @@ npx tsx scripts/probe_report_import.ts <pdf 路徑> /tmp/inv.txt
 
 **決策**:新增「結構圖」模板,與數據圖表分開命名空間(`carbon-diagram` vs `carbon-chart`),三張:
 
-| 模板 | 掛載段落 | 方向 | 節點上限 |
+| 模板 | 掛載段落 | 渲染 | 節點上限 |
 | :--- | :--- | :--- | ---: |
-| `GOVERNANCE_TREE` 治理架構 | 1.4 | TD | 12 |
-| `SCOPE_CATEGORY_MAP` 範疇類別對應 | 2.3 | LR | 24 |
-| `QUANTIFICATION_FLOW` 量化流程 | 3.3 | LR | 10 |
+| `MILESTONE_TIMELINE` 經營沿革時間軸 | 1.1 | timeline | 30 |
+| `GOVERNANCE_TREE` 治理架構 | 1.4 | flowchart TD | 12 |
+| `BOUNDARY_MAP` 組織邊界 | 1.5 | flowchart TD | 12 |
+| `SCOPE_CATEGORY_MAP` 範疇類別對應 | 2.3 | flowchart LR | 24 |
+| `QUANTIFICATION_FLOW` 量化流程 | 3.3 | flowchart LR | 10 |
+
+**timeline 的 parent 語意與樹不同**,這點必須明示於模板設定(`renderer`),否則會用樹的規則去驗證一條時間軸,把正確的輸入判成錯的:
+
+| | flowchart | timeline |
+| :--- | :--- | :--- |
+| `parent` 是什麼 | 另一個節點 | 時間標籤(如 `1966年01月`) |
+| 必須存在於同批節點內 | 是 | 否 |
+| 檢查成環 | 是 | 不適用 |
+| 需回溯原文 | 是 | **是**(不可自行補年月) |
+
+時間軸另有兩個決定:同一時間標籤的多個事件併為一列;沒有時間標籤的事件**不丟棄**,歸入「未標註時間」——不猜時間,也不讓事件消失。事件文字內的冒號會換成連字號,否則會撐破 timeline 的分隔語法。
 
 **生成方式(這是與鐵律的交界)**:LLM 只回「節點文字 + 父節點文字」,**mermaid 語法一律由 `carbon_report_diagram.builder` 組出**,模型不接觸語法也不決定畫哪張圖(模板由段落 id 決定,請求端無從指定)。
 

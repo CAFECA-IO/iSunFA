@@ -100,6 +100,26 @@ export function validateDiagramNodes(
     };
   }
 
+  // Info: (20260730 - Tzuhan) timeline 的 parent 是「時間標籤」而非另一個節點:
+  // Info: (20260730 - Tzuhan) 它只需同樣能在原文找到(上面已驗),不需自己也是節點,也無層級可成環。
+  // Info: (20260730 - Tzuhan) 用樹的規則去驗證一條時間軸,會把正確的輸入判成錯的。
+  if (template.renderer === "timeline") {
+    const unverifiableParents = nodes
+      .map((node) => node.parent)
+      .filter(
+        (parent): parent is string =>
+          parent !== undefined && !haystack.includes(normalizeForMatch(parent)),
+      );
+    if (unverifiableParents.length > 0) {
+      return {
+        isValid: false,
+        reason: DiagramRejectReasonEnum.LABEL_NOT_IN_SOURCE,
+        offendingLabels: unverifiableParents,
+      };
+    }
+    return { isValid: true };
+  }
+
   // Info: (20260730 - Tzuhan) 父節點必須存在於同一批節點內(不可指向圖外的東西)
   const labels = new Set(nodes.map((node) => node.label));
   const unknownParent = nodes.filter(
@@ -135,9 +155,46 @@ export function validateDiagramNodes(
 // Info: (20260730 - Tzuhan) mermaid 節點 id 只能是安全字元;以序號當 id,文字一律放在引號內的 label
 const buildNodeId = (index: number): string => `N${index}`;
 
+// Info: (20260730 - Tzuhan) timeline 中無時間標籤事件的分組名(不猜時間,也不丟事件)
+const TIMELINE_UNDATED_LABEL = "未標註時間";
+
 // Info: (20260730 - Tzuhan) mermaid 的 label 以雙引號包夾,內部雙引號需移除(逸出規則不完整,直接去掉最安全)
 const escapeLabel = (label: string): string =>
   label.trim().replace(/"/g, "").replace(/\s+/g, " ");
+
+// Info: (20260730 - Tzuhan) timeline 以冒號分隔時間與事件,label 內的冒號必須換掉否則整列語意錯位
+const escapeTimelineLabel = (label: string): string =>
+  escapeLabel(label).replace(/[:：]/g, "-");
+
+/**
+ * Info: (20260730 - Tzuhan) mermaid timeline:`時間標籤 : 事件 : 事件`。
+ * 同一時間標籤的多個事件併為一列,無時間標籤者集中於「未標註時間」之後——
+ * 不猜時間、也不丟掉事件。時間順序沿用模型回傳的順序(原文本身即依時序書寫)。
+ */
+function buildTimeline(nodes: ICarbonDiagramNode[]): string {
+  const eventsByPeriod = new Map<string, string[]>();
+  const undated: string[] = [];
+  nodes.forEach((node) => {
+    const label = escapeTimelineLabel(node.label);
+    if (node.parent === undefined) {
+      undated.push(label);
+      return;
+    }
+    const period = escapeTimelineLabel(node.parent);
+    const bucket = eventsByPeriod.get(period) ?? [];
+    bucket.push(label);
+    eventsByPeriod.set(period, bucket);
+  });
+
+  const rows = Array.from(eventsByPeriod.entries()).map(
+    ([period, events]) => `    ${period} : ${events.join(" : ")}`,
+  );
+  // Info: (20260730 - Tzuhan) 沒有時間標籤的事件不丟棄,列於末尾並明示其未標註時間
+  if (undated.length > 0) {
+    rows.push(`    ${TIMELINE_UNDATED_LABEL} : ${undated.join(" : ")}`);
+  }
+  return ["```mermaid", "timeline", ...rows, "```"].join("\n");
+}
 
 /**
  * Info: (20260730 - Tzuhan) 產出結構圖區塊(錨點包夾,與數據圖表同一套替換機制)。
@@ -164,6 +221,10 @@ export function buildCarbonDiagramBlock(
   }
 
   const template = CARBON_DIAGRAM_TEMPLATES[templateId];
+  if (template.renderer === "timeline") {
+    return wrap(buildTimeline(nodes));
+  }
+
   const idByLabel = new Map(
     nodes.map((node, index) => [node.label, buildNodeId(index)] as const),
   );
