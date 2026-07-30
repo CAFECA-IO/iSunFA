@@ -13,6 +13,7 @@ import {
 } from "@/constants/carbon_evidence";
 import { useState, useEffect } from "react";
 import { downloadFile } from "@/lib/file_operator";
+import { stripMarkdownComments } from "@/lib/utils/markdown_comment";
 import dynamic from "next/dynamic";
 
 // Info: (20260720 - Tzuhan) #54 證據鏈元件動態載入:含 RecordTabModal 依賴鏈,不拖累一般 markdown 渲染
@@ -134,9 +135,12 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
    * 未啟用 rehype-raw 時 react-markdown 會把 HTML 註解當純文字印出;
    * 系統以註解作段落錨點(carbon-data-table / carbon-chart 等,重算連動據此替換),
    * 錨點必須留在原文、只在渲染時隱藏 — 僅影響顯示,不動資料。
+   * Info: (20260730 - Tzuhan) 原為行內 regex,會連程式碼區塊內的註解一起吃掉 ——
+   * 使用者貼 HTML 教學範例時 fence 內的 `<!-- ... -->` 是內容而非錨點,那等於靜默改寫他的文件。
+   * 改用 fence-aware 的共用工具(見 markdown_comment.ts,有單元測試護住)。
    */
   const displayContent = useMemo(
-    () => content.replace(/<!--[\s\S]*?-->/g, ""),
+    () => stripMarkdownComments(content),
     [content],
   );
 
