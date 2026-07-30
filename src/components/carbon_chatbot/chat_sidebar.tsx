@@ -11,6 +11,7 @@ import {
   ChevronDown,
   ChevronRight,
   FileText,
+  Archive,
 } from "lucide-react";
 import { IChatSession } from "@/types/carbon_chatbot.types";
 
@@ -36,6 +37,11 @@ interface IChatSidebarProps {
   onFetchBookSessions?: (accountBookId: string) => Promise<IBookSessionEntry[]>;
   // Info: (20260716 - Tzuhan) 開啟他人會話的報告(帳本檢視器;本人會話走 onSelectSession)
   onOpenBookReport?: (channel: string) => void;
+  /**
+   * Info: (20260730 - Tzuhan) 封存會話(軟刪):清單不再顯示,但資料仍在且可還原。
+   * 未提供時不顯示封存鈕(無權限者由呼叫端決定不傳)。
+   */
+  onArchiveSession?: (sessionId: string) => void;
 }
 
 // Info: (20260716 - Tzuhan) 帳本會話列表項(標題衍生自密文首訊 server 不可讀,故以建立日期呈現)
@@ -57,11 +63,14 @@ export function ChatSidebar({
   onRenameSession = undefined,
   onFetchBookSessions = undefined,
   onOpenBookReport = undefined,
+  onArchiveSession = undefined,
 }: IChatSidebarProps) {
   const { t } = useTranslation();
   // Info: (20260716 - Tzuhan) #52 新增對話選單開闔(有帳本時才出現)
   const [isNewChatMenuOpen, setIsNewChatMenuOpen] = useState<boolean>(false);
   // Info: (20260716 - Tzuhan) 改名編輯狀態(session id + 草稿值;Enter/blur 提交,Esc 取消)
+  // Info: (20260730 - Tzuhan) 待確認封存的會話 id:第一次點擊只轉為待確認,第二次才真的封存
+  const [pendingArchiveId, setPendingArchiveId] = useState<string | null>(null);
   const [editing, setEditing] = useState<{ id: string; value: string } | null>(
     null,
   );
@@ -196,7 +205,7 @@ export function ChatSidebar({
                         type="text"
                         value={editing.value}
                         // Info: (20260716 - Tzuhan) callback ref 聚焦(jsx-a11y 禁 autoFocus prop;編輯模式為使用者主動觸發)
-          ref={(node) => node?.focus()}
+                        ref={(node) => node?.focus()}
                         aria-label={t("carbon_chatbot.rename_session")}
                         onClick={(e) => e.stopPropagation()}
                         onChange={(e) =>
@@ -228,6 +237,34 @@ export function ChatSidebar({
                             className="shrink-0 rounded p-0.5 text-gray-300 opacity-0 transition-opacity group-hover:opacity-100 hover:text-[#ff5a00]"
                           >
                             <Pencil size={11} />
+                          </button>
+                        )}
+                        {/* Info: (20260730 - Tzuhan) 封存:一個會話連帶整份報告與活動數據,故需二次確認 */}
+                        {onArchiveSession && (
+                          <button
+                            type="button"
+                            aria-label={t("carbon_chatbot.archive_session")}
+                            title={
+                              pendingArchiveId === s.id
+                                ? t("carbon_chatbot.archive_confirm")
+                                : t("carbon_chatbot.archive_session")
+                            }
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (pendingArchiveId === s.id) {
+                                setPendingArchiveId(null);
+                                onArchiveSession(s.id);
+                                return;
+                              }
+                              setPendingArchiveId(s.id);
+                            }}
+                            className={`shrink-0 rounded p-0.5 transition-opacity ${
+                              pendingArchiveId === s.id
+                                ? "bg-orange-50 text-[#ff5a00] opacity-100"
+                                : "text-gray-300 opacity-0 group-hover:opacity-100 hover:text-[#ff5a00]"
+                            }`}
+                          >
+                            <Archive size={11} />
                           </button>
                         )}
                       </div>

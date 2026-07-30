@@ -52,6 +52,9 @@ export const carbonChatbot = {
     "Indexing {{name}} — locating each section's page so the parsing that follows stays small…",
   // Info: (20260730 - Tzuhan) 結構圖:節點文字必須能在該段原文找到才會繪製,故文案明示來源
   diagram_generate: "Generate diagram (nodes taken from this section's text)",
+  // Info: (20260730 - Tzuhan) 封存為軟刪:文案明示資料保留可還原,避免使用者誤以為永久刪除
+  archive_session: "Archive this conversation (data kept, restorable)",
+  archive_confirm: "Click again to confirm",
   system_error:
     "[System Error] Sorry, there was a problem connecting to the Carbon Accountant service. Please try again later.",
   system_unavailable: "Sorry, the system is currently unavailable to respond.",

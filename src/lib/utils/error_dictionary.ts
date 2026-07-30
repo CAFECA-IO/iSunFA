@@ -646,6 +646,12 @@ export const API_ERRORS = {
     message: "Campaign not found",
     status: ApiCode.NOT_FOUND,
   } as IErrorDef,
+  // Info: (20260730 - Tzuhan) 碳盤查會話(Chatroom)不存在:封存/還原時明確回報,不假裝成功
+  NF_CARBON_SESSION: {
+    code: "NF000016",
+    message: "Carbon session not found",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
 
   // Info: (20260421 - Luphia) IS: Internal Server Errors (000001 ~ 000099)
   IS_DB_FAILED: {

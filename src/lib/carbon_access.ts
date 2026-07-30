@@ -11,10 +11,19 @@ import { isCarbonChatChannelOwnedBy } from "@/constants/carbon_chatbot";
 export enum CarbonAccessLevelEnum {
   VIEW = "VIEW",
   EDIT = "EDIT",
+  /**
+   * Info: (20260730 - Tzuhan) 封存/還原整個會話。刻意與 EDIT 分層:
+   * 編輯內容與「讓整份 33 節報告連同活動數據帳本從清單上消失」是不同量級的行為,
+   * EDITOR 應能寫報告但不應能收掉別人建的會話。
+   */
+  DELETE = "DELETE",
 }
 
 // Info: (20260716 - Tzuhan) TeamRole 中具編輯權者(VIEWER 之外全部);抽常數避免散落字串比對
 const EDIT_CAPABLE_ROLES: readonly string[] = ["OWNER", "ADMIN", "EDITOR"];
+
+// Info: (20260730 - Tzuhan) 具封存權者:僅帳本管理層。EDITOR 不在此列(見 CarbonAccessLevelEnum.DELETE 註解)
+const DELETE_CAPABLE_ROLES: readonly string[] = ["OWNER", "ADMIN"];
 
 export interface ICarbonAccessDecision {
   allowed: boolean;
@@ -71,6 +80,13 @@ export const resolveCarbonAccess = async (
 
   const canEdit = EDIT_CAPABLE_ROLES.includes(role);
   if (level === CarbonAccessLevelEnum.EDIT && !canEdit) return DENIED;
+  // Info: (20260730 - Tzuhan) 封存需管理層;會話擁有者已於上方直通(自己建的會話自己收得掉)
+  if (
+    level === CarbonAccessLevelEnum.DELETE &&
+    !DELETE_CAPABLE_ROLES.includes(role)
+  ) {
+    return DENIED;
+  }
 
   return { allowed: true, canEdit, accountBookId };
 };

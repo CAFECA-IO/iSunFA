@@ -215,6 +215,18 @@ export const CarbonSessionBindSchema = z.object({
 });
 export type CarbonSessionBindPayload = z.infer<typeof CarbonSessionBindSchema>;
 
+/**
+ * Info: (20260730 - Tzuhan) 會話封存/還原請求:只帶 channel。
+ * 權限由 resolveCarbonAccess 以 DELETE 層級裁決(個人限擁有者;帳本限擁有者或 OWNER/ADMIN),
+ * 故此處不驗擁有權——驗證與授權分層,schema 不承擔授權職責。
+ */
+export const CarbonSessionArchiveSchema = z.object({
+  channel: z.string().min(1).max(200),
+});
+export type CarbonSessionArchivePayload = z.infer<
+  typeof CarbonSessionArchiveSchema
+>;
+
 // Info: (20260716 - Tzuhan) #56 報告匯入 LLM 輸出(responseSchema 之外的第二道防線);
 // Info: (20260716 - Tzuhan) paragraphId 僅驗型別,白名單複驗於服務層(非法者降入 unmapped 不丟棄)
 export const CarbonReportImportLlmOutputSchema = z.object({

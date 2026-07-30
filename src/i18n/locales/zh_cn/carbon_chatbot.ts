@@ -51,6 +51,9 @@ export const carbonChatbot = {
     "正在建立 {{name}} 的章节索引(定位各节页码,可大幅减少后续解析量)…",
   // Info: (20260730 - Tzuhan) 結構圖:節點文字必須能在該段原文找到才會繪製,故文案明示來源
   diagram_generate: "生成结构图(节点取自本节原文)",
+  // Info: (20260730 - Tzuhan) 封存為軟刪:文案明示資料保留可還原,避免使用者誤以為永久刪除
+  archive_session: "封存此对话(资料保留,可还原)",
+  archive_confirm: "再点一次确认封存",
   system_error: "【系统错误】抱歉，连线到碳会计师服务时发生问题，请稍后再试。",
   system_unavailable: "抱歉，系统目前无法回应。",
   ai_quota_exceeded:

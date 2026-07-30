@@ -437,6 +437,47 @@ export const useCarbonChat = () => {
     return res.payload?.sessions ?? [];
   }, []);
 
+  /**
+   * Info: (20260730 - Tzuhan) 封存會話(軟刪)。刻意不是硬刪:一個會話連帶整份 33 節報告草稿
+   * 與活動數據帳本,在審計系統裡誤刪一份已查核的報告是不可逆的損失。伺服端只寫 archivedAt,
+   * 資料仍在,可還原(PATCH)。
+   * 權限為獨立的 DELETE 層級:個人會話限擁有者;帳本會話限擁有者或帳本 OWNER/ADMIN。
+   */
+  const archiveSession = useCallback(
+    async (sessionId: string): Promise<boolean> => {
+      const channel = buildCarbonChatChannel(
+        user?.address ?? "anonymous",
+        sessionId,
+      );
+      try {
+        await request("/api/v1/chat/carbon/sessions", {
+          method: "DELETE",
+          body: JSON.stringify({ channel }),
+        });
+      } catch (error) {
+        console.error("[carbon-chat] archive session failed:", error);
+        return false;
+      }
+
+      // Info: (20260730 - Tzuhan) 封存成功才動本地狀態:失敗時清單不可先消失(否則使用者以為成功了)
+      setSessionsData((prev) => {
+        const next = { ...prev };
+        delete next[sessionId];
+        return next;
+      });
+      // Info: (20260730 - Tzuhan) 封存的若是當前會話,切到其餘任一會話;全空則建新的(畫面不可留在已封存的會話上)
+      setActiveSessionId((current) => {
+        if (current !== sessionId) return current;
+        const remaining = Object.keys(sessionsData).filter(
+          (id) => id !== sessionId,
+        );
+        return remaining[0] ?? current;
+      });
+      return true;
+    },
+    [user?.address, sessionsData],
+  );
+
   // Info: (20260716 - Tzuhan) #52 綁定會話至帳本(POST sessions);成功後記入存取中繼資料
   // Info: (20260720 - Tzuhan) UAT 回饋:排隊與失敗都要對使用者說話(先前靜默,匯入按鈕不出現無從排查)
   const bindSessionToBook = useCallback(
@@ -3104,6 +3145,8 @@ export const useCarbonChat = () => {
     toggleImportItem,
     applyPendingImport,
     discardPendingImport,
+    // Info: (20260730 - Tzuhan) 封存會話(軟刪,可還原);權限由後端 DELETE 層級裁決
+    archiveSession,
     // Info: (20260730 - Tzuhan) 手動產生結構圖(治理架構/範疇對應/量化流程);無對應模板的段落呼叫即 no-op
     generateParagraphDiagram,
     retryFailedImportChapters,

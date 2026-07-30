@@ -1107,6 +1107,11 @@ model Chatroom {
   // Info: (20260712 - Luphia) 建立者/擁有者的公鑰（非內部 FK，維持公鑰定址）
   ownerPublicKey String? @map("owner_public_key")
 
+  // Info: (20260730 - Tzuhan) 封存時間(軟刪):null = 使用中。清單預設排除已封存者,但資料仍在且可還原。
+  // Info: (20260730 - Tzuhan) 刻意不做硬刪:一個會話連帶整份 33 節報告與活動數據帳本,
+  // Info: (20260730 - Tzuhan) 在審計系統裡誤刪一份已查核的報告是不可逆的損失。硬刪需求另議(需二次確認 + 稽核軌跡)。
+  archivedAt DateTime? @map("archived_at")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
