@@ -42,6 +42,11 @@ export const carbonChatbot = {
   // Info: (20260730 - Tzuhan) gateway 연결 중단(504) 시 안내:작업은 계속 진행 중
   still_processing:
     "처리 시간이 길어 연결이 끊어졌지만 작업은 계속 진행 중입니다. 완료된 섹션은 자동으로 표시됩니다.",
+  // Info: (20260730 - Tzuhan) 段落來源標示:AI 草稿不得冒充逐字照抄原文(審計文件底線)
+  origin_imported: "원문 그대로",
+  origin_ai_draft: "AI 초안",
+  origin_imported_short: "원문",
+  origin_ai_draft_short: "초안",
   system_error:
     "[시스템 오류] 죄송합니다. 탄소 회계사 서비스에 연결하는 중 문제가 발생했습니다. 나중에 다시 시도해 주세요.",
   system_unavailable: "죄송합니다. 현재 시스템이 응답할 수 없습니다.",

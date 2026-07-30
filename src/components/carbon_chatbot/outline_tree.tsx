@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { IReportParagraph } from "@/types/carbon_chatbot.types";
 import { CARBON_REPORT_CHAPTERS } from "@/constants/carbon_report_outline";
+import { ParagraphOriginEnum } from "@/constants/carbon_chatbot";
 import { CarbonDataBadgeStateEnum } from "@/lib/carbon_report_table.builder";
 import { useTranslation } from "@/i18n/i18n_context";
 
@@ -37,6 +38,32 @@ const statusIcon = (paragraph: IReportParagraph, isActive: boolean) => {
   if (isActive)
     return <CircleDot size={14} className="shrink-0 text-[#ff5a00]" />;
   return <Circle size={14} className="shrink-0 text-gray-300" />;
+};
+
+/**
+ * Info: (20260730 - Tzuhan) 段落來源徽章。舊草稿沒有 origin 欄位 → 不顯示徽章(不追溯捏造來源),
+ * 人工編輯過的段落亦不顯示(人為內容不需提醒查核者「這不是原文」)。
+ */
+const originBadge = (
+  paragraph: IReportParagraph,
+  t: (key: string) => string,
+): React.ReactNode => {
+  if (!paragraph.content) return null;
+  if (paragraph.origin === ParagraphOriginEnum.IMPORTED) {
+    return (
+      <span className="shrink-0 rounded bg-emerald-50 px-1 text-[10px] font-medium text-emerald-700">
+        {t("carbon_chatbot.origin_imported_short")}
+      </span>
+    );
+  }
+  if (paragraph.origin === ParagraphOriginEnum.AI_DRAFT) {
+    return (
+      <span className="shrink-0 rounded bg-purple-50 px-1 text-[10px] font-medium text-purple-700">
+        {t("carbon_chatbot.origin_ai_draft_short")}
+      </span>
+    );
+  }
+  return null;
 };
 
 export function OutlineTree({
@@ -140,6 +167,9 @@ export function OutlineTree({
                         <span className="min-w-0 flex-1 truncate">
                           {p.title}
                         </span>
+                        {/* Info: (20260730 - Tzuhan) 來源徽章:AI 草稿(含「待補」佔位)與逐字照抄原文必須分辨得出來, */}
+                        {/* Info: (20260730 - Tzuhan) 否則查核者無從判斷哪幾節需要回原文核對、哪幾節需要自己補資訊 */}
+                        {originBadge(p, t)}
                       </button>
 
                       {/* Info: (20260714 - Tzuhan) AI 撰寫此段:生成中顯示 spinner;任一段生成中即全部停用,避免併發寫入 */}

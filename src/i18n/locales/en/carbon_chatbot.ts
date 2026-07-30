@@ -42,6 +42,11 @@ export const carbonChatbot = {
   // Info: (20260730 - Tzuhan) Shown when the gateway drops the connection (504) while the job is still running
   still_processing:
     "This is taking a while and the connection dropped, but the work is still running — completed sections will appear automatically.",
+  // Info: (20260730 - Tzuhan) 段落來源標示:AI 草稿不得冒充逐字照抄原文(審計文件底線)
+  origin_imported: "Verbatim",
+  origin_ai_draft: "AI draft",
+  origin_imported_short: "source",
+  origin_ai_draft_short: "draft",
   system_error:
     "[System Error] Sorry, there was a problem connecting to the Carbon Accountant service. Please try again later.",
   system_unavailable: "Sorry, the system is currently unavailable to respond.",

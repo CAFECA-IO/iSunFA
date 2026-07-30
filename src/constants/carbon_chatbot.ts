@@ -43,13 +43,23 @@ export const CARBON_CHAT_REPLY_TIMEOUT_MS = 30000;
 // Info: (20260716 - Tzuhan) 30 秒會在管線完成前誤報系統錯誤(UAT 實測);對齊 extraction 120s + 餘裕
 export const CARBON_CHAT_REPLY_TIMEOUT_WITH_ATTACHMENTS_MS = 180_000;
 
-// Info: (20260716 - Tzuhan) #56 匯入導流門檻:聊天附件為 pdf 且達此大小,疑似整份報告 →
-// Info: (20260716 - Tzuhan) 建議改走「匯入報告」(佐證附件通常是單張帳單,遠小於此)
-export const CARBON_IMPORT_SUGGEST_MIN_BYTES = 4 * 1024 * 1024;
+/**
+ * Info: (20260730 - Tzuhan) 匯入導流的候選型別:上傳單一此類文件即詢問「匯入整份報告」或「作為佐證附件」。
+ * 原本以檔案大小猜測意圖(PDF ≥ 4MB / 文字檔 ≥ 64KB),但大小是壞代理——
+ * 真實的 64 頁溫室氣體盤查報告書只有 2MB,永遠觸發不了導流,使用者被導進只取 3 節的附件管線,
+ * 因而誤以為系統「只認得三節」。改為一律詢問:不猜意圖,由使用者決定,零額外呼叫。
+ */
+export const IMPORT_CANDIDATE_MIME_TYPES: readonly string[] = [
+  "application/pdf",
+  "text/markdown",
+  "text/plain",
+];
 
-// Info: (20260727 - Tzuhan) #57 純文字/Markdown 的匯入導流門檻:文字版整份報告遠小於 PDF(64KB ≈ 3 萬中文字),
-// Info: (20260727 - Tzuhan) 低於此值視為一般佐證附件,不觸發「匯入報告?」詢問
-export const CARBON_IMPORT_SUGGEST_TEXT_MIN_BYTES = 64 * 1024;
+/**
+ * Info: (20260730 - Tzuhan) 單發全綱匯入的大小上限:超過此值改逐章呼叫(突破單次輸出上限)。
+ * PDF 一律逐章(頁數與內容量無法由檔案大小推斷);純文字小檔才單發,省下 10 次呼叫。
+ */
+export const CARBON_IMPORT_SINGLE_CALL_MAX_BYTES = 64 * 1024;
 
 // Info: (20260712 - Luphia) 送給 AI 的對話上下文只取最近 N 則，控制 token 成本與延遲（不影響畫面顯示的完整歷史）
 export const CARBON_CHAT_AI_CONTEXT_SIZE = 20;
@@ -138,6 +148,20 @@ export const CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES = 14 * 1024 * 1024;
 // Info: (20260714 - Tzuhan) file input 的 accept 屬性(與 MIME 白名單同步)
 export const CARBON_CHAT_ATTACHMENT_ACCEPT =
   CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES.join(",");
+
+/**
+ * Info: (20260730 - Tzuhan) 段落內容的來源。審計文件的底線:AI 寫的與原文照抄的不能混為一談。
+ * 原本兩者都只是 isCompleted=true,gap-fill 把對不上的節全填成 AI 草稿後進度會顯示 33/33,
+ * 但其中有幾節其實是模型依撰寫目標寫的骨架(內含「(待補: …)」佔位),看報告的人分辨不出來。
+ */
+export enum ParagraphOriginEnum {
+  // Info: (20260730 - Tzuhan) 自上傳文件逐字照抄
+  IMPORTED = "imported",
+  // Info: (20260730 - Tzuhan) AI 依原文撰寫(gap-fill / 對話草稿):事實出自原文但文字經改寫
+  AI_DRAFT = "ai_draft",
+  // Info: (20260730 - Tzuhan) 使用者親手編輯
+  MANUAL = "manual",
+}
 
 // Info: (20260714 - Tzuhan) 附件→段落管線:單次生成段落數上限(控制延遲與 token 成本)
 export const CARBON_ATTACHMENT_PIPELINE_MAX_PARAGRAPHS = 3;

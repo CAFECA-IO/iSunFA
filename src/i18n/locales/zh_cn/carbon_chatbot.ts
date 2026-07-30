@@ -41,6 +41,11 @@ export const carbonChatbot = {
   // Info: (20260730 - Tzuhan) gateway 连线中断(504)时的提示:工作仍在跑,结果会经订阅通道补上
   still_processing:
     "处理时间较长,连线已先中断,但作业仍在进行中,完成的段落会自动出现。",
+  // Info: (20260730 - Tzuhan) 段落來源標示:AI 草稿不得冒充逐字照抄原文(審計文件底線)
+  origin_imported: "逐字导入",
+  origin_ai_draft: "AI 草稿",
+  origin_imported_short: "原文",
+  origin_ai_draft_short: "草稿",
   system_error: "【系统错误】抱歉，连线到碳会计师服务时发生问题，请稍后再试。",
   system_unavailable: "抱歉，系统目前无法回应。",
   ai_quota_exceeded:

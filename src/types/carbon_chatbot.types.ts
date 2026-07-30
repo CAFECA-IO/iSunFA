@@ -2,7 +2,10 @@
 // Info: (20260708 - Tzuhan) Define enterprise-grade types and enums for the Carbon Chatbot domain.
 
 import { GhgProtocolCategory } from "@/constants/esg";
-import { CarbonInventoryStep } from "@/constants/carbon_chatbot";
+import {
+  CarbonInventoryStep,
+  ParagraphOriginEnum,
+} from "@/constants/carbon_chatbot";
 import {
   ArticulationStatusEnum,
   ArticulationViolationReasonEnum,
@@ -74,6 +77,8 @@ export interface IReportParagraph {
   isCompleted: boolean;
   isVerified: boolean;
   isDataDriven: boolean;
+  // Info: (20260730 - Tzuhan) 內容來源:逐字匯入 / AI 草稿 / 人工編輯。舊草稿無此欄,視為未知不計入任一分項
+  origin?: ParagraphOriginEnum;
 }
 
 // Info: (20260713 - Tzuhan) 報告段落統計(完成/查核雙軌進度的單一來源)
@@ -83,6 +88,9 @@ export interface IReportProgressStats {
   totalCount: number;
   completedPercent: number;
   verifiedPercent: number;
+  // Info: (20260730 - Tzuhan) 完成數的來源拆解:逐字照抄自原文的節數 vs AI 撰寫的節數
+  importedCount: number;
+  draftedCount: number;
 }
 
 export interface IReportData {

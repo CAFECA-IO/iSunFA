@@ -42,6 +42,11 @@ export const carbonChatbot = {
   // Info: (20260730 - Tzuhan) gateway が接続を切った(504)ときの案内:処理は継続中
   still_processing:
     "処理に時間がかかり接続が切れましたが、作業は継続中です。完成したセクションは自動的に表示されます。",
+  // Info: (20260730 - Tzuhan) 段落來源標示:AI 草稿不得冒充逐字照抄原文(審計文件底線)
+  origin_imported: "原文どおり",
+  origin_ai_draft: "AI 下書き",
+  origin_imported_short: "原文",
+  origin_ai_draft_short: "下書き",
   system_error:
     "【システムエラー】申し訳ありません。カーボン会計士サービスへの接続中に問題が発生しました。後でもう一度お試しください。",
   system_unavailable: "申し訳ありません。現在システムは応答できません。",

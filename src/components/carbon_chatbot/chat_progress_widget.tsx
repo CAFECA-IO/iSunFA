@@ -69,6 +69,21 @@ export function ChatProgressWidget({
             style={{ width: `${stats.verifiedPercent}%` }}
           ></div>
         </div>
+
+        {/* Info: (20260730 - Tzuhan) 完成數的來源拆解:AI 草稿(含「待補」佔位)不可與逐字照抄原文混為一談, */}
+        {/* Info: (20260730 - Tzuhan) 否則 gap-fill 補滿後 33/33 會讓人誤以為整份都是原文內容 */}
+        {stats.importedCount + stats.draftedCount > 0 && (
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-medium text-slate-400">
+            <span className="flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+              {t("carbon_chatbot.origin_imported")} {stats.importedCount}
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-purple-400"></span>
+              {t("carbon_chatbot.origin_ai_draft")} {stats.draftedCount}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Info: (20260714 - Tzuhan) 收合鈕:縮成小藥丸,避免遮擋報告內容 */}

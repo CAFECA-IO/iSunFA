@@ -109,8 +109,9 @@ import {
   buildCarbonChatChannel,
   CARBON_CHAT_REPLY_TIMEOUT_MS,
   CARBON_CHAT_REPLY_TIMEOUT_WITH_ATTACHMENTS_MS,
-  CARBON_IMPORT_SUGGEST_MIN_BYTES,
-  CARBON_IMPORT_SUGGEST_TEXT_MIN_BYTES,
+  CARBON_IMPORT_SINGLE_CALL_MAX_BYTES,
+  IMPORT_CANDIDATE_MIME_TYPES,
+  ParagraphOriginEnum,
   CARBON_CHAT_AI_CONTEXT_SIZE,
   CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES,
   CARBON_CHAT_MAX_ATTACHMENT_BYTES,
@@ -1171,7 +1172,7 @@ export const useCarbonChat = () => {
       // Info: (20260717 - Tzuhan) pdf 或大檔逐章(11 章,並行度 2);小型文字檔單發
       const useChunked =
         file.type === "application/pdf" ||
-        file.size >= CARBON_IMPORT_SUGGEST_MIN_BYTES;
+        file.size >= CARBON_IMPORT_SINGLE_CALL_MAX_BYTES;
       const chapters = useChunked
         ? CARBON_REPORT_CHAPTERS.map((chapter) => ({
             id: chapter.id,
@@ -1356,6 +1357,16 @@ export const useCarbonChat = () => {
     const contentById = new Map(
       selected.map((item) => [item.paragraphId, item.content]),
     );
+    // Info: (20260730 - Tzuhan) 來源標記:預覽卡已區分「逐字匯入」與「AI 草稿」(isDraft),
+    // Info: (20260730 - Tzuhan) 落地時一併記錄,否則兩者在報告裡完全分不出來(gap-fill 補的節內含「(待補: …)」佔位)
+    const originById = new Map(
+      selected.map((item) => [
+        item.paragraphId,
+        item.isDraft
+          ? ParagraphOriginEnum.AI_DRAFT
+          : ParagraphOriginEnum.IMPORTED,
+      ]),
+    );
     setSessionsData((prev) => {
       const session = prev[activeSessionId];
       if (!session?.reportData?.paragraphs) return prev;
@@ -1385,6 +1396,7 @@ export const useCarbonChat = () => {
                 content: imported,
                 isCompleted: true,
                 isVerified: false,
+                origin: originById.get(p.id) ?? ParagraphOriginEnum.IMPORTED,
               };
             }),
           },
@@ -1583,6 +1595,8 @@ export const useCarbonChat = () => {
             isCompleted: true,
             // Info: (20260714 - Tzuhan) 內容更新即重置查核狀態(零信任: 先有產出才有查核)
             isVerified: false,
+            // Info: (20260730 - Tzuhan) 本路徑為 AI 撰寫草稿(對話蒐集/目錄的 AI 撰寫鈕),標記來源以與逐字匯入區分
+            origin: ParagraphOriginEnum.AI_DRAFT,
           };
         });
 
@@ -1892,12 +1906,22 @@ export const useCarbonChat = () => {
     const totalCount = paragraphs.length || CARBON_REPORT_SECTION_COUNT;
     const completedCount = paragraphs.filter((p) => p.isCompleted).length;
     const verifiedCount = paragraphs.filter((p) => p.isVerified).length;
+    // Info: (20260730 - Tzuhan) 完成數拆解來源:AI 草稿不得冒充原文照抄(審計文件底線)。
+    // Info: (20260730 - Tzuhan) 舊草稿無 origin 欄,兩個分項都不計入,但仍算完成——不追溯捏造來源。
+    const importedCount = paragraphs.filter(
+      (p) => p.isCompleted && p.origin === ParagraphOriginEnum.IMPORTED,
+    ).length;
+    const draftedCount = paragraphs.filter(
+      (p) => p.isCompleted && p.origin === ParagraphOriginEnum.AI_DRAFT,
+    ).length;
     return {
       completedCount,
       verifiedCount,
       totalCount,
       completedPercent: Math.round((completedCount / totalCount) * 100),
       verifiedPercent: Math.round((verifiedCount / totalCount) * 100),
+      importedCount,
+      draftedCount,
     };
   }, [activeSession]);
 
@@ -2262,6 +2286,8 @@ export const useCarbonChat = () => {
                 content: nextContent,
                 isCompleted: true,
                 isVerified: false,
+                // Info: (20260730 - Tzuhan) 使用者親手貼上的內容:來源是人不是 AI,不可混入 AI 草稿計數
+                origin: ParagraphOriginEnum.MANUAL,
               };
             }
 
@@ -2275,6 +2301,8 @@ export const useCarbonChat = () => {
               content: nextContent,
               // Info: (20260709 - Tzuhan) 內容被修改，重置查核狀態為未查核 (isVerified: false)
               isVerified: false,
+              // Info: (20260730 - Tzuhan) 人一改過就不再是「逐字照抄原文」,來源轉為人工編輯
+              origin: ParagraphOriginEnum.MANUAL,
             };
           },
         );
@@ -2316,17 +2344,13 @@ export const useCarbonChat = () => {
       setAttachmentError(null);
 
       // Info: (20260716 - Tzuhan) #56 匯入導流(UAT:使用者把整份報告當佐證附件上傳 → 聊天管線超時):
-      // Info: (20260716 - Tzuhan) 單一大型 pdf 疑似整份報告,先問要「匯入報告」還是「作為佐證附件」
-      // Info: (20260727 - Tzuhan) #57 擴及 .txt/.md:文字版報告門檻較低(文字遠比 PDF 精簡)
-      const isImportCandidate = (file: File): boolean => {
-        if (file.type === "application/pdf") {
-          return file.size >= CARBON_IMPORT_SUGGEST_MIN_BYTES;
-        }
-        if (file.type === "text/plain" || file.type === "text/markdown") {
-          return file.size >= CARBON_IMPORT_SUGGEST_TEXT_MIN_BYTES;
-        }
-        return false;
-      };
+      // Info: (20260716 - Tzuhan) 單一文件先問要「匯入報告」還是「作為佐證附件」
+      // Info: (20260730 - Tzuhan) 原以檔案大小(PDF ≥ 4MB / 文字檔 ≥ 64KB)猜測是否為整份報告,
+      // Info: (20260730 - Tzuhan) 但大小是壞代理:真實的 64 頁溫室氣體盤查報告書只有 2MB,永遠觸發不了導流,
+      // Info: (20260730 - Tzuhan) 使用者因此被導進「附件→段落」管線(寫死只取 3 節)並誤以為系統只認得三節。
+      // Info: (20260730 - Tzuhan) 改為單一文件一律詢問:不猜意圖,由使用者決定。零額外呼叫。
+      const isImportCandidate = (file: File): boolean =>
+        IMPORT_CANDIDATE_MIME_TYPES.includes(file.type);
       if (
         !options?.skipImportCheck &&
         files.length === 1 &&

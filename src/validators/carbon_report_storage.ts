@@ -2,7 +2,10 @@
 // Info: (20260714 - Tzuhan) 草稿密文入庫,明文驗證發生在前端解密後;壞資料 Fail Fast 直接丟棄
 
 import { z } from "zod";
-import { CARBON_REPORT_DRAFT_STORAGE_VERSION } from "@/constants/carbon_chatbot";
+import {
+  CARBON_REPORT_DRAFT_STORAGE_VERSION,
+  ParagraphOriginEnum,
+} from "@/constants/carbon_chatbot";
 
 const ReportCategorySchema = z.object({
   id: z.string(),
@@ -21,6 +24,8 @@ const ReportParagraphSchema = z.object({
   isCompleted: z.boolean(),
   isVerified: z.boolean(),
   isDataDriven: z.boolean(),
+  // Info: (20260730 - Tzuhan) 內容來源:選填,舊草稿無此欄不得 Fail Fast 丟棄整份報告
+  origin: z.nativeEnum(ParagraphOriginEnum).optional(),
 });
 
 // Info: (20260714 - Tzuhan) IReportData 的結構驗證:前端解密草稿密文後、寫入狀態前的護欄
