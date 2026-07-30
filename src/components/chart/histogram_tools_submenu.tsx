@@ -28,6 +28,7 @@ import { parseHistogramData } from "@/lib/utils/custom_histogram_editor";
 
 // Info: (20260728 - Julian) 直方圖工具 i18n key 前綴，字面值收斂於 locale 檔
 const HISTOGRAM_I18N_PREFIX = "chart.custom_chart.histogram";
+const MOVER_FALLBACK_LABEL = "new";
 
 enum HistogramTools {
   ADD_ITEM = "addItem",
@@ -37,10 +38,41 @@ enum HistogramTools {
   DELETE_ITEM = "deleteItem",
 }
 
+enum TrainVariant {
+  ADD = "add",
+  EDIT = "edit",
+}
+
 interface IToolItem {
   tool: HistogramTools;
   icon: LucideIcon;
 }
+
+interface IBasePanelProps {
+  parsedHistogramData: IHistogramParseResult;
+  onAddAction: any; // (action: IHistogramAction) => void;
+}
+
+interface IDraggingTrainProps {
+  // Info: (20260730 - Julian) 既有分箱（順序固定、不可拖曳）；以 lineIndex 升序視為車廂順序
+  originalTrain: IHistogramItem[];
+  // Info: (20260730 - Julian) 受控值：新項目要插入的 raw 行號（新列將佔用此行、其後既有列順移）
+  newLineIndex: number;
+  // Info: (20260730 - Julian) 位置變更回報（唯一輸出：決定 newLineIndex）
+  setNewLineIndex: Dispatch<SetStateAction<number>>;
+  // Info: (20260730 - Julian) 拖曳車廂顯示文字（未提供時：新增模式顯示 "new"，編輯模式顯示該項目原始 label）
+  newLabel?: string;
+  // Info: (20260730 - Julian) 模式：新增（幽靈新車廂）或編輯（移動既有項目）；預設 add
+  variant: TrainVariant;
+  // Info: (20260730 - Julian) 編輯模式下要移動的既有項目 lineIndex；未選取時 undefined（不顯示可拖曳車廂）
+  movingLineIndex?: number;
+  disabled?: boolean;
+}
+
+// Info: (20260730 - Julian) 車廂的判別聯集：可拖曳的「移動車廂」(mover) 無 bin；固定車廂帶 bin（型別安全，免非空斷言）
+type ICarriage =
+  | { readonly isMover: true }
+  | { readonly isMover: false; readonly bin: IHistogramItem };
 
 const HISTOGRAM_TOOLS: IToolItem[] = [
   {
@@ -73,54 +105,37 @@ const HISTOGRAM_TOOL_TRANSLATION_KEYS: Record<HistogramTools, string> = {
   [HistogramTools.DELETE_ITEM]: `刪除項目`,
 };
 
-interface IBasePanelProps {
-  parsedHistogramData: IHistogramParseResult;
-  onAddAction: any; // (action: IHistogramAction) => void;
-}
-
-interface IDraggingTrainProps {
-  // Info: (20260730 - Julian) 既有分箱（順序固定、不可拖曳）；以 lineIndex 升序視為車廂順序
-  originalTrain: IHistogramItem[];
-  // Info: (20260730 - Julian) 受控值：新項目要插入的 raw 行號（新列將佔用此行、其後既有列順移）
-  newLineIndex: number;
-  // Info: (20260730 - Julian) 位置變更回報（唯一輸出：決定 newLineIndex）
-  setNewLineIndex: Dispatch<SetStateAction<number>>;
-  // Info: (20260730 - Julian) 新車廂顯示文字（未提供時顯示 "new"）
-  newLabel?: string;
-}
-
-// Info: (20260730 - Julian) 車廂的判別聯集：新車廂無資料、既有車廂帶 bin（避免非空斷言，型別安全）
-type Carriage =
-  | { readonly isNew: true }
-  | { readonly isNew: false; readonly bin: IHistogramItem };
-
-const NEW_CARRIAGE_FALLBACK_LABEL = "new";
-
 /**
  * Info: (20260730 - Julian)
- * 由插槽位置換算 newLineIndex：插在某既有車廂之前→取該車廂 lineIndex；插在最末→末車廂 lineIndex + 1；無既有車廂→0。
+ * 由插槽位置換算 newLineIndex：插在某固定車廂之前→取該車廂 lineIndex；插在最末→末車廂 lineIndex + 1；無固定車廂→0。
  */
-const posToLineIndex = (ordered: IHistogramItem[], pos: number): number => {
-  if (ordered.length === 0) return 0;
-  if (pos >= ordered.length) return ordered[ordered.length - 1].lineIndex + 1;
-  return ordered[pos].lineIndex;
+const posToLineIndex = (fixed: IHistogramItem[], pos: number): number => {
+  if (fixed.length === 0) return 0;
+  if (pos >= fixed.length) return fixed[fixed.length - 1].lineIndex + 1;
+  return fixed[pos].lineIndex;
 };
 
 /**
  * Info: (20260730 - Julian)
- * 「新增項目」的排序決定元件（列車 / 車廂比喻）：只讓使用者拖曳「新車廂」（橘色）到任意位置，
- * 決定新項目要落在的 raw 行號 newLineIndex；既有車廂順序固定、不可拖曳。
+ * 排序決定元件（列車 / 車廂比喻）：只讓使用者拖曳「移動車廂」（橘色）到任意位置，
+ * 決定它要落在的 raw 行號 newLineIndex；其餘車廂順序固定、不可拖曳。兩模式共用同一套定位邏輯：
+ * - add：移動車廂為「幽靈新項目」，不屬於 originalTrain，其餘 bins 皆為固定車廂。
+ * - edit：移動車廂為 originalTrain 中 movingLineIndex 指定的既有項目，將其自固定集合抽出、其餘為固定車廂；
+ *         未指定（未選取）時不顯示移動車廂。
  * 受控 + 單一資料來源：位置完全由 newLineIndex 推導，變更一律透過 setNewLineIndex 回報。
- * 僅 HistogramToolsSection 使用，故與其同檔、不外移。純 UI、決定論、不做數值計算。
  */
 const DraggingTrain: FC<IDraggingTrainProps> = ({
   originalTrain,
   newLineIndex,
   setNewLineIndex,
   newLabel = "",
+  variant,
+  movingLineIndex,
+  disabled = false,
 }) => {
   const { t } = useTranslation();
   const [isDragging, setIsDragging] = useState<boolean>(false);
+  const isEdit = variant === "edit";
 
   // Info: (20260730 - Julian) 以 lineIndex 升序為車廂順序（防禦性排序，不假設輸入已排序）
   const ordered = useMemo(
@@ -128,60 +143,100 @@ const DraggingTrain: FC<IDraggingTrainProps> = ({
     [originalTrain],
   );
 
-  // Info: (20260730 - Julian) 由 newLineIndex 推導插槽位置：lineIndex 小於它的既有車廂數
-  const insertPos = useMemo(
-    () => ordered.filter((bin) => bin.lineIndex < newLineIndex).length,
-    [ordered, newLineIndex],
+  // Info: (20260730 - Julian) 編輯模式下被移動的既有項目（未選取或找不到則為 null）
+  const movingBin = useMemo(
+    () =>
+      isEdit && movingLineIndex !== undefined
+        ? (ordered.find((bin) => bin.lineIndex === movingLineIndex) ?? null)
+        : null,
+    [isEdit, movingLineIndex, ordered],
   );
 
-  // Info: (20260730 - Julian) 移動新車廂到指定插槽；換算後與現值不同才回報，避免冗餘更新
+  // Info: (20260730 - Julian) 是否顯示可拖曳的移動車廂：新增模式恆有；編輯模式需已選取有效項目
+  const showMover = isEdit ? movingBin !== null : true;
+
+  // Info: (20260730 - Julian) 固定車廂集合：編輯模式排除被移動項目；新增模式即全部既有車廂
+  const fixedOrdered = useMemo(
+    () =>
+      movingBin
+        ? ordered.filter((bin) => bin.lineIndex !== movingBin.lineIndex)
+        : ordered,
+    [ordered, movingBin],
+  );
+
+  // Info: (20260730 - Julian) 由 newLineIndex 推導移動車廂插槽：lineIndex 小於它的固定車廂數
+  const insertPos = useMemo(
+    () => fixedOrdered.filter((bin) => bin.lineIndex < newLineIndex).length,
+    [fixedOrdered, newLineIndex],
+  );
+
+  // Info: (20260730 - Julian) 移動到指定插槽；換算後與現值不同才回報，避免冗餘更新
   const moveTo = (pos: number) => {
-    const next = posToLineIndex(ordered, pos);
+    if (disabled || !showMover) return;
+    const next = posToLineIndex(fixedOrdered, pos);
     if (next !== newLineIndex) setNewLineIndex(next);
   };
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    if (disabled) return;
     setIsDragging(true);
     e.dataTransfer.effectAllowed = "move";
     // Info: (20260730 - Julian) 部分瀏覽器需先設定 dataTransfer 才會啟動拖曳
-    e.dataTransfer.setData("text/plain", "new-carriage");
+    e.dataTransfer.setData("text/plain", "mover");
   };
   const handleDragEnd = () => setIsDragging(false);
 
   /**
-   * Info: (20260730 - Julian) 拖曳新車廂經過某既有車廂時，依游標落在左／右半邊，
-   * 即時將新車廂插到該車廂之前或之後（既有車廂彼此順序不變）。
+   * Info: (20260730 - Julian) 拖曳移動車廂經過某固定車廂時，依游標落在左／右半邊，
+   * 即時插到該車廂之前或之後（固定車廂彼此順序不變）。
    */
   const handleDragOverCarriage = (
     e: React.DragEvent<HTMLDivElement>,
-    binOrdinal: number,
+    fixedOrdinal: number,
   ) => {
-    if (!isDragging) return;
+    if (!isDragging || disabled) return;
     e.preventDefault();
     const rect = e.currentTarget.getBoundingClientRect();
     const isLeftHalf = e.clientX - rect.left < rect.width / 2;
-    moveTo(isLeftHalf ? binOrdinal : binOrdinal + 1);
+    moveTo(isLeftHalf ? fixedOrdinal : fixedOrdinal + 1);
   };
 
-  // Info: (20260730 - Julian) 鍵盤可及性：新車廂聚焦後可用左右鍵微調位置
-  const handleNewKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+  // Info: (20260730 - Julian) 鍵盤可及性：移動車廂聚焦後可用左右鍵微調位置
+  const handleMoverKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "ArrowLeft") {
       e.preventDefault();
       moveTo(Math.max(0, insertPos - 1));
     } else if (e.key === "ArrowRight") {
       e.preventDefault();
-      moveTo(Math.min(ordered.length, insertPos + 1));
+      moveTo(Math.min(fixedOrdered.length, insertPos + 1));
     }
   };
 
-  // Info: (20260730 - Julian) 目前車廂順序：既有車廂固定，新車廂插在 insertPos
-  const train: Carriage[] = [
-    ...ordered
-      .slice(0, insertPos)
-      .map((bin) => ({ isNew: false as const, bin })),
-    { isNew: true as const },
-    ...ordered.slice(insertPos).map((bin) => ({ isNew: false as const, bin })),
-  ];
+  // Info: (20260730 - Julian) 目前車廂順序：固定車廂順序不變，移動車廂插在 insertPos（無移動車廂則只列固定車廂）
+  const fixedCarriages: ICarriage[] = fixedOrdered.map((bin) => ({
+    isMover: false as const,
+    bin,
+  }));
+  const train: ICarriage[] = showMover
+    ? [
+        ...fixedCarriages.slice(0, insertPos),
+        { isMover: true as const },
+        ...fixedCarriages.slice(insertPos),
+      ]
+    : fixedCarriages;
+
+  // Info: (20260730 - Julian) 移動車廂顯示文字：優先輸入值，其次編輯項目原 label，最後 fallback
+  const moverLabel =
+    newLabel.trim() !== ""
+      ? newLabel
+      : (movingBin?.label ?? MOVER_FALLBACK_LABEL);
+
+  // Info: (20260730 - Julian) 操作提示：依模式與是否可操作切換文案
+  const hint = disabled
+    ? t(`請先選擇要編輯的項目`)
+    : isEdit
+      ? t(`拖曳橘色車廂即可調整此項目的順序`)
+      : t(`拖曳橘色車廂即可調整新項目的插入位置`);
 
   return (
     <div className="flex flex-col gap-2">
@@ -197,34 +252,34 @@ const DraggingTrain: FC<IDraggingTrainProps> = ({
         onDrop={(e) => e.preventDefault()}
       >
         {train.map((carriage, i) => {
-          // Info: (20260730 - Julian) 既有車廂在 ordered 中的序位（跳過新車廂本身）
-          const binOrdinal = i < insertPos ? i : i - 1;
-          if (carriage.isNew) {
+          if (carriage.isMover) {
             return (
               <div
-                key="new-carriage"
-                draggable
-                tabIndex={0}
-                aria-label={t(`拖曳或使用左右鍵調整新項目的插入位置`)!}
+                key="mover-carriage"
+                draggable={!disabled}
+                tabIndex={disabled ? -1 : 0}
+                aria-label={t(`拖曳或使用左右鍵調整此車廂的位置`)!}
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
-                onKeyDown={handleNewKeyDown}
-                className={`${isDragging ? "opacity-50" : ""} relative flex cursor-grab flex-col items-center rounded-sm border border-orange-400 px-1.5 py-0.5 text-[10px] font-bold text-orange-400 select-none active:cursor-grabbing`}
+                onKeyDown={handleMoverKeyDown}
+                className={` ${isDragging ? "opacity-50" : ""} ${disabled ? "cursor-not-allowed border-slate-300 text-slate-300" : "cursor-grab border-orange-400 text-orange-400 active:cursor-grabbing"} relative flex flex-col items-center rounded-sm border px-1.5 py-0.5 text-[10px] font-bold select-none`}
               >
-                <span className="absolute -top-2 z-10 flex size-3 animate-bounce items-center justify-center rounded-full bg-orange-400 text-white">
+                <span
+                  className={`${disabled ? "hidden" : "flex"} absolute -top-2 z-10 size-3 animate-bounce items-center justify-center rounded-full bg-orange-400 text-white`}
+                >
                   <ChevronDown size={12} strokeWidth={3} />
                 </span>
-                {newLabel.trim() !== ""
-                  ? newLabel
-                  : NEW_CARRIAGE_FALLBACK_LABEL}
+                {moverLabel}
               </div>
             );
           }
+          // Info: (20260730 - Julian) 固定車廂在 fixedOrdered 中的序位（有移動車廂時跳過它）
+          const fixedOrdinal = showMover && i > insertPos ? i - 1 : i;
           return (
             <div
               key={`bin-${carriage.bin.lineIndex}`}
-              onDragOver={(e) => handleDragOverCarriage(e, binOrdinal)}
-              className="relative flex flex-col items-center rounded-sm border border-slate-800 px-1.5 py-0.5 text-[10px] font-bold text-slate-800 select-none"
+              onDragOver={(e) => handleDragOverCarriage(e, fixedOrdinal)}
+              className={`${disabled ? "cursor-not-allowed border-slate-300 text-slate-300" : "border-slate-800 text-slate-800"} relative flex flex-col items-center rounded-sm border px-1.5 py-0.5 text-[10px] font-bold select-none`}
             >
               {carriage.bin.label}
             </div>
@@ -232,9 +287,7 @@ const DraggingTrain: FC<IDraggingTrainProps> = ({
         })}
       </div>
       {/* Info: (20260730 - Julian) 操作提示 */}
-      <p className="text-[10px] text-slate-400">
-        {t(`拖曳橘色車廂即可調整新項目的插入位置`)}
-      </p>
+      <p className="text-[10px] text-slate-400">{hint}</p>
     </div>
   );
 };
@@ -245,14 +298,14 @@ const AddItemPanel: FC<IBasePanelProps> = ({
   onAddAction,
 }) => {
   const { t } = useTranslation();
-
   const { bins } = parsedHistogramData;
 
-  const [titleInput, setTitleInput] = useState<string>("");
   // Info: (20260730 - Julian) 新項目預設插在最末：取既有分箱最大 lineIndex + 1（無資料則為 0）
-  const [newLineIndex, setNewLineIndex] = useState<number>(
-    () => bins.reduce((max, bin) => Math.max(max, bin.lineIndex), -1) + 1,
-  );
+  const newOrder = () =>
+    bins.reduce((max, bin) => Math.max(max, bin.lineIndex), -1) + 1;
+
+  const [titleInput, setTitleInput] = useState<string>("");
+  const [newLineIndex, setNewLineIndex] = useState<number>(newOrder);
 
   // Info: (20260728 - Julian) 數值只允許數字與小數點
   const valueInput = useDecimalInput("");
@@ -325,6 +378,7 @@ const AddItemPanel: FC<IBasePanelProps> = ({
             newLineIndex={newLineIndex}
             setNewLineIndex={setNewLineIndex}
             newLabel={titleInput}
+            variant={TrainVariant.ADD}
           />
         </div>
       </div>
@@ -342,65 +396,39 @@ const AddItemPanel: FC<IBasePanelProps> = ({
 
 // Info: (20260728 - Julian) 「編輯項目」面板
 const EditItemPanel: FC<IBasePanelProps> = ({
-  // parsedHistogramData,
+  parsedHistogramData,
   onAddAction,
 }) => {
   const { t } = useTranslation();
 
-  // const {
-  //   mode,
-  //   bars: itemOptions,
-  //   leftSeries,
-  //   rightSeries,
-  // } = parsedHistogramData;
-  // const isSensitivity = mode === HistogramMode.SENSITIVITY;
-  // const leftLabel =
-  //   leftSeries ||
-  //   (isSensitivity
-  //     ? t(`${HISTOGRAM_I18N_PREFIX}.negative_offset`)
-  //     : t(`${HISTOGRAM_I18N_PREFIX}.left_legend`));
-  // const rightLabel =
-  //   rightSeries ||
-  //   (isSensitivity
-  //     ? t(`${HISTOGRAM_I18N_PREFIX}.positive_offset`)
-  //     : t(`${HISTOGRAM_I18N_PREFIX}.right_legend`));
+  const { bins } = parsedHistogramData;
 
-  const [selectedId, setSelectedId] = useState<string>("");
+  const [selectedId, setSelectedId] = useState<number>(0);
   const [titleInput, setTitleInput] = useState<string>("");
-  // Info: (20260728 - Julian) 左右數值：只允許數字與小數點（可為負）
-  const leftValue = useDecimalInput("", { allowNegative: true });
-  const rightValue = useDecimalInput("", { allowNegative: true });
+  const [newLineIndex, setNewLineIndex] = useState<number>(0);
+  // Info: (20260730 - Julian) 數值只允許數字與小數點
+  const valueInput = useDecimalInput("");
 
-  // const selectedItem = useMemo(
-  //   () =>
-  //     itemOptions.find((item) => item.lineIndex === Number(selectedId)) ?? null,
-  //   [itemOptions, selectedId],
-  // );
+  const isSelected = !!selectedId;
+  const isSubmitDisabled =
+    !isSelected || titleInput.trim() === "" || valueInput.isEmpty;
 
-  // Info: (20260728 - Julian) 於選取事件匯入初始值（不使用 effect，避免 hook setter 非穩定造成的依賴問題）
-  // const handleSelect = (id: string) => {
-  //   setSelectedId(id);
-  //   const item = itemOptions.find((i) => i.lineIndex === Number(id)) ?? null;
-  //   setTitleInput(item ? item.category : "");
-  //   leftValue.setValue(item ? String(item.left) : "");
-  //   rightValue.setValue(item ? String(item.right) : "");
-  // };
-
-  // const isUnselected = !selectedItem;
-  // const isUnchanged =
-  //   !!selectedItem &&
-  //   titleInput.trim() === selectedItem.category &&
-  //   leftValue.numValue === selectedItem.left &&
-  //   rightValue.numValue === selectedItem.right;
-  // const isSubmitDisabled =
-  //   isUnselected ||
-  //   titleInput.trim() === "" ||
-  //   leftValue.isEmpty ||
-  //   rightValue.isEmpty ||
-  //   isUnchanged;
+  // Info: (20260730 - Julian) 於選取事件匯入初始值（不使用 effect，避免 hook setter 非穩定造成的依賴問題）
+  const handleSelect = (id: number) => {
+    setSelectedId(id);
+    const item = bins.find((b) => b.lineIndex === id) ?? null;
+    setTitleInput(item ? item.label : "");
+    setNewLineIndex(item ? item.lineIndex : 0);
+    valueInput.setValue(item ? String(item.count) : "");
+  };
 
   const handleSubmit = () => {
-    // if (!selectedItem || isSubmitDisabled) return;
+    if (isSubmitDisabled) return;
+    const data: IHistogramItem = {
+      label: titleInput,
+      count: valueInput.numValue,
+      lineIndex: newLineIndex,
+    };
     // const category = titleInput.trim();
     // onAddAction({
     //   id: crypto.randomUUID(),
@@ -419,85 +447,80 @@ const EditItemPanel: FC<IBasePanelProps> = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 border-b border-slate-100 pb-1.5 text-xs font-bold text-slate-700">
         <PencilLine size={14} />
-        <p>{t(`${HISTOGRAM_I18N_PREFIX}.edit_item`)}</p>
+        <p>{t(`編輯項目`)}</p>
       </div>
       <div className="flex flex-col gap-2">
         <div className="flex flex-col">
-          <label htmlFor="editIdLabel" className={MERMAID_LABEL_STYLE}>
-            {t(`編輯項目`)}
+          <label htmlFor="editItemLabel" className={MERMAID_LABEL_STYLE}>
+            {t(`選擇欲編輯的項目`)}
             <span className="ml-0.5 text-red-500">*</span>
           </label>
-          {/* <select
-            id="editIdLabel"
+          <select
+            id="editItemLabel"
             value={selectedId}
-            onChange={(e) => handleSelect(e.target.value)}
+            onChange={(e) => handleSelect(Number(e.target.value))}
             className={MERMAID_INPUT_STYLE}
           >
-            <option value="">
-              {t(`${HISTOGRAM_I18N_PREFIX}.select_edit_item`)}
-            </option>
-            {itemOptions.map((item) => (
+            <option value="">{t(`選擇欲編輯的項目`)}</option>
+            {bins.map((item) => (
               <option
                 key={`histogram-edit-opt-${item.lineIndex}`}
                 value={item.lineIndex}
               >
-                {item.category}（{item.left} / {item.right}）
+                {item.label}: {item.count}
               </option>
             ))}
-          </select> */}
+          </select>
         </div>
-        {/* <div className="flex flex-col">
+        <div className="flex flex-col">
           <label htmlFor="editTitleLabel" className={MERMAID_LABEL_STYLE}>
-            {t(`${HISTOGRAM_I18N_PREFIX}.item_title`)}
+            {t(`編輯項目標題`)}
           </label>
           <input
             id="editTitleLabel"
             type="text"
-            disabled={isUnselected}
             value={titleInput}
             onChange={(e) => setTitleInput(e.target.value)}
             className={MERMAID_INPUT_STYLE}
-            placeholder={t(`${HISTOGRAM_I18N_PREFIX}.item_title_placeholder`)!}
+            placeholder={t(`請輸入新項目的標題`)!}
+            disabled={!isSelected}
           />
         </div>
         <div className="flex flex-col">
-          <label htmlFor="editLeftValueLabel" className={MERMAID_LABEL_STYLE}>
-            {leftLabel}
+          <label htmlFor="editValueLabel" className={MERMAID_LABEL_STYLE}>
+            {t(`編輯項目數值`)}
           </label>
           <input
-            id="editLeftValueLabel"
+            id="editValueLabel"
             type="text"
             inputMode="decimal"
-            disabled={isUnselected}
-            value={leftValue.value}
-            onChange={leftValue.onChange}
+            value={valueInput.value}
+            onChange={valueInput.onChange}
             className={MERMAID_INPUT_STYLE}
             placeholder="0"
+            disabled={!isSelected}
           />
         </div>
-        <div className="flex flex-col">
-          <label htmlFor="editRightValueLabel" className={MERMAID_LABEL_STYLE}>
-            {rightLabel}
-          </label>
-          <input
-            id="editRightValueLabel"
-            type="text"
-            inputMode="decimal"
-            disabled={isUnselected}
-            value={rightValue.value}
-            onChange={rightValue.onChange}
-            className={MERMAID_INPUT_STYLE}
-            placeholder="0"
+        <div className="flex flex-col gap-2">
+          <p className={MERMAID_LABEL_STYLE}>{t(`變更順序`)}</p>
+          <DraggingTrain
+            originalTrain={bins}
+            newLineIndex={newLineIndex}
+            setNewLineIndex={setNewLineIndex}
+            newLabel={titleInput}
+            variant={TrainVariant.EDIT}
+            movingLineIndex={isSelected ? selectedId : undefined}
+            disabled={!isSelected}
           />
-        </div> */}
+        </div>
       </div>
       <button
         type="button"
         onClick={handleSubmit}
-        // disabled={isSubmitDisabled}
+        disabled={isSubmitDisabled}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t(`${HISTOGRAM_I18N_PREFIX}.apply_changes`)}
+        {t(`套用變更`)}
       </button>
     </div>
   );
@@ -505,18 +528,20 @@ const EditItemPanel: FC<IBasePanelProps> = ({
 
 // Info: (20260728 - Julian) 「編輯軸線標題」面板：
 const EditAxisPanel: FC<IBasePanelProps> = ({
-  // parsedHistogramData,
+  parsedHistogramData,
   onAddAction,
 }) => {
   const { t } = useTranslation();
 
-  // const { leftSeries, rightSeries, leftColor, rightColor } =
-  //   parsedHistogramData;
+  const { xAxis, yAxis } = parsedHistogramData;
 
   // const initialLeftName = leftSeries ?? "";
   // const initialRightName = rightSeries ?? "";
   // const initialLeftColor = leftColor ?? "";
   // const initialRightColor = rightColor ?? "";
+
+  const initialYTitle = yAxis ?? "";
+  const initialXTitle = xAxis ?? "";
 
   // const [leftTitleInput, setLeftTitleInput] = useState<string>(initialLeftName);
   // const [leftColorInput, setLeftColorInput] =
@@ -526,18 +551,17 @@ const EditAxisPanel: FC<IBasePanelProps> = ({
   // const [rightColorInput, setRightColorInput] =
   //   useState<string>(initialRightColor);
 
-  // const isUnchanged =
-  //   leftTitleInput.trim() === initialLeftName.trim() &&
-  //   rightTitleInput.trim() === initialRightName.trim() &&
-  //   leftColorInput.toLowerCase() === initialLeftColor.toLowerCase() &&
-  //   rightColorInput.toLowerCase() === initialRightColor.toLowerCase();
-  // const isSubmitDisabled =
-  //   leftTitleInput.trim() === "" ||
-  //   rightTitleInput.trim() === "" ||
-  //   isUnchanged;
+  const [yTitle, setYTitle] = useState<string>(initialYTitle);
+  const [xTitle, setXTitle] = useState<string>(initialXTitle);
+
+  const isUnchanged =
+    yTitle.trim() === initialYTitle.trim() &&
+    xTitle.trim() === initialXTitle.trim();
+  const isSubmitDisabled =
+    yTitle.trim() === "" || xTitle.trim() === "" || isUnchanged;
 
   const handleSubmit = () => {
-    // if (isSubmitDisabled) return;
+    if (isSubmitDisabled) return;
     // onAddAction({
     //   id: crypto.randomUUID(),
     //   type: HistogramActionType.EDIT_GROUP,
@@ -562,62 +586,41 @@ const EditAxisPanel: FC<IBasePanelProps> = ({
         <ChartNoAxesCombined size={14} />
         <p>{t(`編輯軸線標題`)}</p>
       </div>
-      <div className="flex gap-2">
-        <div className="flex flex-1 flex-col gap-2">
-          {/* <div className="flex flex-col">
-            <label
-              htmlFor="editLeftTitleValueLabel"
-              className={MERMAID_LABEL_STYLE}
-            >
-              {t(`${HISTOGRAM_I18N_PREFIX}.left_legend`)}
-              <span className="ml-0.5 text-red-500">*</span>
-            </label>
-            <input
-              id="editLeftTitleValueLabel"
-              type="text"
-              value={leftTitleInput}
-              onChange={(e) => setLeftTitleInput(e.target.value)}
-              className={MERMAID_INPUT_STYLE}
-            />
-          </div>
-          <ColorPicker
-            colorOptions={DEFAULT_COLORS}
-            value={leftColorInput}
-            onChange={setLeftColorInput}
-          /> */}
-        </div>
-        <div className="border-l border-dashed border-slate-400"></div>
-        {/* <div className="flex flex-1 flex-col gap-2">
-          <div className="flex flex-col">
-            <label
-              htmlFor="editRightTitleValueLabel"
-              className={MERMAID_LABEL_STYLE}
-            >
-              {t(`${HISTOGRAM_I18N_PREFIX}.right_legend`)}
-              <span className="ml-0.5 text-red-500">*</span>
-            </label>
-            <input
-              id="editRightTitleValueLabel"
-              type="text"
-              value={rightTitleInput}
-              onChange={(e) => setRightTitleInput(e.target.value)}
-              className={MERMAID_INPUT_STYLE}
-            />
-          </div>
-          <ColorPicker
-            colorOptions={DEFAULT_COLORS}
-            value={rightColorInput}
-            onChange={setRightColorInput}
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-col">
+          <label htmlFor="editYAxisLabel" className={MERMAID_LABEL_STYLE}>
+            {t(`Y 軸文字`)}
+            <span className="ml-0.5 text-red-500">*</span>
+          </label>
+          <input
+            id="editYAxisLabel"
+            type="text"
+            value={yTitle}
+            onChange={(e) => setYTitle(e.target.value)}
+            className={MERMAID_INPUT_STYLE}
           />
-        </div> */}
+        </div>
+        <div className="flex flex-col">
+          <label htmlFor="editXAxisLabel" className={MERMAID_LABEL_STYLE}>
+            {t(`X 軸文字`)}
+            <span className="ml-0.5 text-red-500">*</span>
+          </label>
+          <input
+            id="editXAxisLabel"
+            type="text"
+            value={xTitle}
+            onChange={(e) => setXTitle(e.target.value)}
+            className={MERMAID_INPUT_STYLE}
+          />
+        </div>
       </div>
       <button
         type="button"
         onClick={handleSubmit}
-        // disabled={isSubmitDisabled}
+        disabled={isSubmitDisabled}
         className={MERMAID_SUBMIT_BUTTON_STYLE}
       >
-        {t(`${HISTOGRAM_I18N_PREFIX}.apply_changes`)}
+        {t(`套用變更`)}
       </button>
     </div>
   );
