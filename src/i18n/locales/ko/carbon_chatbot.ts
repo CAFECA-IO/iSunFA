@@ -1,6 +1,9 @@
 export const carbonChatbot = {
   title: "탄소 인벤토리 챗봇",
   menu_title: "스마트 GHG 인벤토리",
+  // Info: (20260730 - Tzuhan) 未解鎖時的報告區文案:不可讓大綱骨架看起來像已載入的空報告
+  report_locked_hint:
+    "보고서는 기기 키로 종단간 암호화되어 있습니다. 한 번 인증하면 해제되어 불러옵니다.",
   unlock_button: "암호화 대화 시작",
   unlock_hint:
     "점검 내용을 보호하기 위해 이 대화는 기기의 보안 키로 종단 간 암호화됩니다. 시작을 클릭하고 인증을 한 번 완료하면 잠금이 해제되고 AI 인사를 받습니다.",
@@ -163,6 +166,9 @@ export const carbonChatbot = {
     "보고서 상태: 초안 (내용은 AI가 섹션별로 생성하며 수동 검토 후 확정됩니다)",
   report_button: "보고서",
   close_report: "보고서 닫기",
+  // Info: (20260730 - Tzuhan) 聊天面板放大/縮小(浮層 ↔ 右側 dock);行動版兩態皆全螢幕故不顯示
+  panel_maximize: "사이드 패널로 확대",
+  panel_restore: "플로팅 창으로 축소",
   close_chat: "채팅 창 닫기",
   progress_collapse: "진행률 위젯 접기",
   activity_ledger_title: "활동 데이터 장부",

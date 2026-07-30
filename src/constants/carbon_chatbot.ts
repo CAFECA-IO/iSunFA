@@ -150,6 +150,18 @@ export const CARBON_CHAT_ATTACHMENT_ACCEPT =
   CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES.join(",");
 
 /**
+ * Info: (20260730 - Tzuhan) 聊天面板的三段尺寸。
+ * COLLAPSED 圖示 → FLOATING 浮層(預設)→ DOCKED 右側欄。
+ * 為什麼不是「浮層 or dock」二選一:浮層適合邊看報告邊問一句,dock 適合長對話與逐段對照,
+ * 兩種情境都真實存在,所以由使用者切換而非我們替他決定。
+ */
+export enum CarbonChatPanelSizeEnum {
+  COLLAPSED = "collapsed",
+  FLOATING = "floating",
+  DOCKED = "docked",
+}
+
+/**
  * Info: (20260730 - Tzuhan) 段落內容的來源。審計文件的底線:AI 寫的與原文照抄的不能混為一談。
  * 原本兩者都只是 isCompleted=true,gap-fill 把對不上的節全填成 AI 草稿後進度會顯示 33/33,
  * 但其中有幾節其實是模型依撰寫目標寫的骨架(內含「(待補: …)」佔位),看報告的人分辨不出來。

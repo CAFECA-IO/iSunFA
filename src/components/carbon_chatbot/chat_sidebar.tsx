@@ -45,7 +45,7 @@ interface IChatSidebarProps {
    * Info: (20260730 - Tzuhan) 封存會話(軟刪):清單不再顯示,但資料仍在且可還原。
    * 未提供時不顯示封存鈕(無權限者由呼叫端決定不傳)。
    */
-  onArchiveSession?: (sessionId: string) => void;
+  onArchiveSession?: (sessionId: string) => Promise<boolean> | void;
   /**
    * Info: (20260730 - Tzuhan) 已封存會話的還原入口:展開時載入,點還原即放回清單。
    * 兩個 callback 需成對提供,只給其一則不顯示該區塊(半套的入口比沒有更令人困惑)。
@@ -89,6 +89,19 @@ export function ChatSidebar({
     IArchivedSessionEntry[]
   >([]);
   const [isArchivedLoading, setIsArchivedLoading] = useState<boolean>(false);
+
+  /**
+   * Info: (20260730 - Tzuhan) 載入已封存清單。抽成共用函式的原因:
+   * 封存一個會話後,若「已封存」區塊當下正展開著,清單不會自己長出剛封存的那筆——
+   * 使用者剛做的動作沒有反映在畫面上,會以為封存失敗。故封存成功後主動刷新。
+   */
+  const loadArchived = async (
+    fetcher: () => Promise<IArchivedSessionEntry[]>,
+  ): Promise<void> => {
+    setIsArchivedLoading(true);
+    setArchivedSessions(await fetcher());
+    setIsArchivedLoading(false);
+  };
   const [editing, setEditing] = useState<{ id: string; value: string } | null>(
     null,
   );
@@ -267,11 +280,16 @@ export function ChatSidebar({
                                 ? t("carbon_chatbot.archive_confirm")
                                 : t("carbon_chatbot.archive_session")
                             }
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation();
                               if (pendingArchiveId === s.id) {
                                 setPendingArchiveId(null);
-                                onArchiveSession(s.id);
+                                const archived = await onArchiveSession(s.id);
+                                // Info: (20260730 - Tzuhan) 封存失敗不刷新(清單不可誤示為已封存)
+                                if (archived === false) return;
+                                if (isArchivedOpen && onFetchArchivedSessions) {
+                                  await loadArchived(onFetchArchivedSessions);
+                                }
                                 return;
                               }
                               setPendingArchiveId(s.id);
@@ -390,10 +408,7 @@ export function ChatSidebar({
             onClick={async () => {
               const next = !isArchivedOpen;
               setIsArchivedOpen(next);
-              if (!next) return;
-              setIsArchivedLoading(true);
-              setArchivedSessions(await onFetchArchivedSessions());
-              setIsArchivedLoading(false);
+              if (next) await loadArchived(onFetchArchivedSessions);
             }}
             className="flex w-full items-center gap-2 text-[12px] font-bold text-gray-500 transition-colors hover:text-gray-700"
           >

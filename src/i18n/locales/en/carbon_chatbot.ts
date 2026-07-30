@@ -1,6 +1,9 @@
 export const carbonChatbot = {
   title: "Carbon Chatbot",
   menu_title: "Smart GHG Inventory",
+  // Info: (20260730 - Tzuhan) 未解鎖時的報告區文案:不可讓大綱骨架看起來像已載入的空報告
+  report_locked_hint:
+    "This report is end-to-end encrypted with your device key. Verify once to unlock and load it.",
   unlock_button: "Start encrypted chat",
   unlock_hint:
     "To protect your inventory data, this chat is end-to-end encrypted with your device's secure key. Click start and complete one verification to unlock and receive the AI greeting.",
@@ -163,6 +166,9 @@ export const carbonChatbot = {
     "Report status: Draft (content is generated section by section by AI and must pass human review before finalization)",
   report_button: "Report",
   close_report: "Close report",
+  // Info: (20260730 - Tzuhan) 聊天面板放大/縮小(浮層 ↔ 右側 dock);行動版兩態皆全螢幕故不顯示
+  panel_maximize: "Expand to side panel",
+  panel_restore: "Shrink to floating window",
   close_chat: "Close chat window",
   progress_collapse: "Collapse progress widget",
   activity_ledger_title: "Activity Data Ledger",

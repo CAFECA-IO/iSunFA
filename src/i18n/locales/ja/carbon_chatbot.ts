@@ -1,6 +1,9 @@
 export const carbonChatbot = {
   title: "カーボンインベントリチャットボット",
   menu_title: "スマートGHGインベントリ",
+  // Info: (20260730 - Tzuhan) 未解鎖時的報告區文案:不可讓大綱骨架看起來像已載入的空報告
+  report_locked_hint:
+    "レポートは端末の鍵でエンドツーエンド暗号化されています。一度認証すると解除され読み込まれます。",
   unlock_button: "暗号化チャットを開始",
   unlock_hint:
     "インベントリ内容を保護するため、この会話はデバイスのセキュリティキーでエンドツーエンド暗号化されます。開始をクリックし認証を一度完了すると、解除され AI の挨拶が届きます。",
@@ -166,6 +169,9 @@ export const carbonChatbot = {
     "レポートステータス:ドラフト(内容は AI がセクションごとに生成し、人的レビューを経て確定されます)",
   report_button: "レポート",
   close_report: "レポートを閉じる",
+  // Info: (20260730 - Tzuhan) 聊天面板放大/縮小(浮層 ↔ 右側 dock);行動版兩態皆全螢幕故不顯示
+  panel_maximize: "サイドパネルに拡大",
+  panel_restore: "フローティングウィンドウに縮小",
   close_chat: "チャットウィンドウを閉じる",
   progress_collapse: "進捗ウィジェットを折りたたむ",
   activity_ledger_title: "活動データ台帳",

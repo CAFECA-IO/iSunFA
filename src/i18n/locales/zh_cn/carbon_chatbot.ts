@@ -1,6 +1,9 @@
 export const carbonChatbot = {
   title: "碳盘查机器人",
   menu_title: "智能温盘",
+  // Info: (20260730 - Tzuhan) 未解鎖時的報告區文案:不可讓大綱骨架看起來像已載入的空報告
+  report_locked_hint:
+    "报告内容以设备密钥端对端加密。完成一次验证即可解锁并载入这份报告。",
   unlock_button: "开始加密对话",
   unlock_hint:
     "为保护您的盘查内容，本对话将以设备的安全密钥进行端到端加密。点击开始并完成一次验证即可解锁并取得 AI 招呼。",
@@ -151,6 +154,9 @@ export const carbonChatbot = {
     "报告状态：草稿(内容由 AI 逐段生成，经人工查核后方可定稿)",
   report_button: "报告",
   close_report: "关闭报告",
+  // Info: (20260730 - Tzuhan) 聊天面板放大/縮小(浮層 ↔ 右側 dock);行動版兩態皆全螢幕故不顯示
+  panel_maximize: "放大为侧栏",
+  panel_restore: "缩小为浮动窗口",
   close_chat: "关闭聊天窗口",
   progress_collapse: "收起进度浮窗",
   activity_ledger_title: "活动数据台账",
