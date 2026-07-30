@@ -15,7 +15,8 @@ export const carbonChatbot = {
   rename_session: "重命名对话",
   rename_document: "重命名报告文件名",
   read_only: "只读(账本查看权限)",
-  book_reports_title: "账本报告(团队共享)",
+  // Info: (20260730 - Tzuhan) 語意去重:自己的帳本會話已列於上方歷史對話(帶帳本 chip),此區塊僅為其他成員的報告入口
+  book_reports_title: "团队成员的报告",
   book_no_sessions: "此账本尚无碳盘查报告",
   book_session_own: "我的盘查会话({{date}})",
   book_session_member: "成员盘查报告({{date}})",
@@ -141,6 +142,9 @@ export const carbonChatbot = {
     "「{{name}}」看起来是整份报告。要导入为报告起点,还是作为佐证附件?",
   import_suggest_import: "导入报告",
   import_suggest_attach: "作为附件发送",
+  // Info: (20260730 - Tzuhan) 連續未生成的節收成一列摘要;逐節整句佔位在 33 節全空時等於噪音
+  sections_pending_summary:
+    "以上 {{count}} 节尚未撰写。到对话中告诉碳会计师要写哪一节,内容会即时出现在对应位置。",
   section_placeholder:
     "本段尚未生成。回到左侧对话告诉碳会计师你想撰写这一段，内容将实时出现在这里。",
   report_status_draft:

@@ -15,7 +15,8 @@ export const carbonChatbot = {
   rename_session: "Rename chat",
   rename_document: "Rename report file",
   read_only: "Read-only (account book viewer)",
-  book_reports_title: "Account book reports (shared)",
+  // Info: (20260730 - Tzuhan) 語意去重:自己的帳本會話已列於上方歷史對話(帶帳本 chip),此區塊僅為其他成員的報告入口
+  book_reports_title: "Reports by teammates",
   book_no_sessions: "No carbon reports in this account book yet",
   book_session_own: "My inventory chat ({{date}})",
   book_session_member: "Member report ({{date}})",
@@ -153,6 +154,9 @@ export const carbonChatbot = {
     "「{{name}}」 looks like a full report. Import it as the report baseline, or send it as supporting evidence?",
   import_suggest_import: "Import report",
   import_suggest_attach: "Send as attachment",
+  // Info: (20260730 - Tzuhan) 連續未生成的節收成一列摘要;逐節整句佔位在 33 節全空時等於噪音
+  sections_pending_summary:
+    "{{count}} section(s) above are not written yet. Tell the carbon accountant in chat which one to write and it will appear in place.",
   section_placeholder:
     "This section has not been generated yet. Tell the Carbon Accountant in the chat that you want to work on it, and the content will appear here in real time.",
   report_status_draft:

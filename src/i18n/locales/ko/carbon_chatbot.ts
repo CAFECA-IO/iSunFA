@@ -15,7 +15,8 @@ export const carbonChatbot = {
   rename_session: "대화 이름 바꾸기",
   rename_document: "보고서 파일명 바꾸기",
   read_only: "읽기 전용(장부 열람 권한)",
-  book_reports_title: "장부 보고서(팀 공유)",
+  // Info: (20260730 - Tzuhan) 語意去重:自己的帳本會話已列於上方歷史對話(帶帳本 chip),此區塊僅為其他成員的報告入口
+  book_reports_title: "팀원의 보고서",
   book_no_sessions: "이 장부에는 아직 탄소 보고서가 없습니다",
   book_session_own: "내 인벤토리 채팅({{date}})",
   book_session_member: "구성원 보고서({{date}})",
@@ -153,6 +154,9 @@ export const carbonChatbot = {
     "「{{name}}」은(는) 전체 보고서로 보입니다. 보고서 기점으로 가져올까요, 증빙 첨부로 보낼까요?",
   import_suggest_import: "보고서 가져오기",
   import_suggest_attach: "첨부로 보내기",
+  // Info: (20260730 - Tzuhan) 連續未生成的節收成一列摘要;逐節整句佔位在 33 節全空時等於噪音
+  sections_pending_summary:
+    "위 {{count}}개 섹션은 아직 작성되지 않았습니다. 채팅에서 어느 섹션을 쓸지 알려주면 해당 위치에 표시됩니다.",
   section_placeholder:
     "이 섹션은 아직 생성되지 않았습니다. 왼쪽 대화에서 탄소 회계사에게 작성 의사를 알리면 내용이 실시간으로 여기에 표시됩니다.",
   report_status_draft:

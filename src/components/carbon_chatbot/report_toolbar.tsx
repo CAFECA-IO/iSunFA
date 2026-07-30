@@ -191,6 +191,19 @@ export function ReportToolbar({
           {t("carbon_chatbot.verified_short")} {stats.verifiedCount}/
           {stats.totalCount}
         </span>
+        {/* Info: (20260730 - Tzuhan) 來源拆解原本只出現在已移除的進度浮窗;進度收斂到此處後一併帶過來,
+            否則「逐字匯入 vs AI 草稿」的區隔會隨浮窗一起消失(那是審計文件的底線,不可掉) */}
+        {stats.importedCount + stats.draftedCount > 0 && (
+          <>
+            <span className="text-gray-300">|</span>
+            <span className="font-medium text-emerald-700">
+              {t("carbon_chatbot.origin_imported")} {stats.importedCount}
+            </span>
+            <span className="font-medium text-purple-700">
+              {t("carbon_chatbot.origin_ai_draft")} {stats.draftedCount}
+            </span>
+          </>
+        )}
         <span className="relative inline-block h-1.5 w-16 overflow-hidden rounded-full bg-gray-200">
           <span
             className="absolute inset-y-0 left-0 rounded-full bg-green-400 transition-all duration-500"

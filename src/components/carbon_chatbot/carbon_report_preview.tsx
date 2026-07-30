@@ -59,7 +59,7 @@ interface ICarbonReportPreviewProps {
 // Info: (20260713 - Tzuhan) 渲染全部 33 段:已生成者顯示內容,未生成者顯示灰色佔位區塊,確保跳段永遠有落點且報告骨架一眼可見
 const generateMarkdownFromParagraphs = (
   session: IChatSession,
-  placeholderHint: string,
+  buildPendingSummary: (count: number) => string,
   draftStatusLine: string,
 ): string => {
   const paragraphs = session.reportData?.paragraphs;
@@ -82,12 +82,27 @@ const generateMarkdownFromParagraphs = (
   let md = `# ${session.title}\n\n> _${draftStatusLine}_\n\n---\n\n`;
 
   // Info: (20260714 - Tzuhan) 標頭一律由 p.title 組出;content 只存內文(stripLeadingSectionHeading 相容舊格式殘留標頭)
+  // Info: (20260730 - Tzuhan) 版面收斂:原本每個空段落都輸出一整句「本段尚未生成…」,
+  // Info: (20260730 - Tzuhan) 33 節全空時就是同一句話刷屏 30 次 —— 那不是內容,是噪音,還會把已寫好的段落擠到看不見。
+  // Info: (20260730 - Tzuhan) 改為把「連續未生成」的節收成一列摘要(標頭仍逐節輸出,跳段落點與大綱骨架不受影響)。
+  const flushPending = (pending: string[]): string =>
+    pending.length === 0
+      ? ""
+      : `> _${buildPendingSummary(pending.length)}_\n\n---\n\n`;
+
+  let pendingTitles: string[] = [];
   paragraphs.forEach((p) => {
-    const body = p.content
-      ? stripLeadingSectionHeading(p.content)
-      : `> _${placeholderHint}_`;
-    md += `${buildSectionHeadingByTitle(p.title)}\n\n${body}\n\n---\n\n`;
+    if (!p.content) {
+      // Info: (20260730 - Tzuhan) 空段落仍輸出標頭(跳段需要落點),但內文暫存,待遇到有內容的段落或結尾才一次收攏
+      pendingTitles.push(p.title);
+      md += `${buildSectionHeadingByTitle(p.title)}\n\n`;
+      return;
+    }
+    md += flushPending(pendingTitles);
+    pendingTitles = [];
+    md += `${buildSectionHeadingByTitle(p.title)}\n\n${stripLeadingSectionHeading(p.content)}\n\n---\n\n`;
   });
+  md += flushPending(pendingTitles);
 
   return md;
 };
@@ -241,7 +256,7 @@ export default function CarbonReportPreview({
     reportData?.rawMarkdown ??
     generateMarkdownFromParagraphs(
       session,
-      t("carbon_chatbot.section_placeholder"),
+      (count) => t("carbon_chatbot.sections_pending_summary", { count }),
       t("carbon_chatbot.report_status_draft"),
     );
 
@@ -295,15 +310,15 @@ export default function CarbonReportPreview({
             isDrawerOpen ? "hidden xl:block" : ""
           }`}
         >
-          {/* Info: (20260714 - Tzuhan) 報告成為主視圖後寬度足夠,改 split 讓編輯與預覽水平並排 */}
-          {/* Info: (20260714 - Tzuhan) splitBreakpoint=lg:平板/手機退回單欄+切換鈕,避免雙欄擁擠 */}
-          {/* Info: (20260714 - Tzuhan) 預設 PREVIEW:窄螢幕單欄先看報告;lg+ split 雙欄不受 viewMode 影響照樣同顯 */}
+          {/* Info: (20260730 - Tzuhan) 版面收斂:原本 layout="split" 讓 Markdown 與 PDF 預覽水平並排,
+              但兩欄顯示的是同一份內容 —— 並排不增加資訊,只把每欄壓到一半寬度,而右欄又常被聊天面板遮住。
+              改 layout="toggle":單欄全寬 + 編輯/預覽切換鈕,寬度全給正在看的那一邊。
+              預設 PREVIEW:進來先看報告成品,要改再切編輯。 */}
           <PdfEditor
-            layout="split"
+            layout="toggle"
             isEmbedded={true}
             defaultViewMode={PdfToolViewMode.PREVIEW}
             contentVariant="compact"
-            splitBreakpoint="lg"
             value={markdownContent}
             onChange={onMarkdownChange}
             setErrorModal={setErrorModal}

@@ -15,7 +15,8 @@ export const carbonChatbot = {
   rename_session: "チャット名を変更",
   rename_document: "レポートファイル名を変更",
   read_only: "閲覧のみ(帳簿ビューア権限)",
-  book_reports_title: "帳簿レポート(チーム共有)",
+  // Info: (20260730 - Tzuhan) 語意去重:自己的帳本會話已列於上方歷史對話(帶帳本 chip),此區塊僅為其他成員的報告入口
+  book_reports_title: "チームメンバーのレポート",
   book_no_sessions: "この帳簿にはまだ排出量レポートがありません",
   book_session_own: "自分のインベントリチャット({{date}})",
   book_session_member: "メンバーのレポート({{date}})",
@@ -156,6 +157,9 @@ export const carbonChatbot = {
     "「{{name}}」はレポート全体のようです。レポートの起点としてインポートしますか、それとも証憑として送信しますか?",
   import_suggest_import: "レポートをインポート",
   import_suggest_attach: "添付として送信",
+  // Info: (20260730 - Tzuhan) 連續未生成的節收成一列摘要;逐節整句佔位在 33 節全空時等於噪音
+  sections_pending_summary:
+    "上記 {{count}} セクションは未作成です。チャットでどのセクションを書くか伝えると、その位置に反映されます。",
   section_placeholder:
     "このセクションはまだ生成されていません。左側のチャットでカーボン会計士に作成したい旨を伝えると、内容がここにリアルタイムで表示されます。",
   report_status_draft:

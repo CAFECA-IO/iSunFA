@@ -10,7 +10,6 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { ChatSidebar } from "@/components/carbon_chatbot/chat_sidebar";
 import { ChatArea } from "@/components/carbon_chatbot/chat_area";
 import { ChatInput } from "@/components/carbon_chatbot/chat_input";
-import { ChatProgressWidget } from "@/components/carbon_chatbot/chat_progress_widget";
 import { ActivityLedger } from "@/components/carbon_chatbot/activity_ledger";
 import { CarbonChatWidget } from "@/components/carbon_chatbot/carbon_chat_widget";
 import CarbonReportPreview from "@/components/carbon_chatbot/carbon_report_preview";
@@ -158,8 +157,10 @@ export default function CarbonChatbotPage() {
           dataBadgeState={dataBadgeState}
         />
 
-        {/* Info: (20260716 - Tzuhan) UAT 重疊修正:左下浮窗改單一堆疊容器(活動帳本在上、進度在下),
-            展開/收合皆佔文檔流不再互相覆蓋。意義:藥丸 = 活動數據帳本(#6518),面板 = 報告產出/查核進度 */}
+        {/* Info: (20260730 - Tzuhan) 版面收斂:原本此處疊了「活動數據帳本」與「報告進度」兩個浮窗。
+            進度浮窗已移除 —— 它與工具列膠囊顯示同一組 0/33,同一數字出現兩次只會讓人懷疑哪個是對的,
+            而且它壓在 Markdown 內容上。進度的唯一呈現點改為工具列膠囊(點擊展開目錄看逐節細節)。
+            活動數據帳本保留為浮層:它是可展開的互動面板,不是重複資訊。 */}
         <div className="absolute bottom-10 left-10 z-20 hidden flex-col items-start gap-2 xl:flex">
           <ActivityLedger
             state={inventoryState}
@@ -172,14 +173,11 @@ export default function CarbonChatbotPage() {
             isImportingFromBook={isImportingBookRecords}
             onOpenEvidence={setEvidenceTarget}
           />
-          <ChatProgressWidget
-            stats={reportStats}
-            positionClassName="relative flex"
-          />
         </div>
       </div>
 
-      {/* Info: (20260714 - Tzuhan) 碳盤查聊天浮動視窗(FaithAgent 式外殼，引擎為 use_carbon_chat，功能全保留) */}
+      {/* Info: (20260730 - Tzuhan) 聊天改為右側 dock(桌機佔文檔流,收合為細軌;行動版仍全螢幕覆蓋)。
+          它是這個頁面的第二個主要工作區,不該蓋住第一個。引擎與功能未變。 */}
       <CarbonChatWidget
         isOpen={isChatOpen}
         onToggle={() => setIsChatOpen((prev) => !prev)}
