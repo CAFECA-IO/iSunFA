@@ -183,8 +183,12 @@ describe("buildBatchSummaryCsv (long format, issue 11)", () => {
     "20260729-1435",
   );
   const lines = csv.split("\n");
-  const header = lines[1].split(",");
-  const body = lines.slice(2);
+  // Info: (20260729 - Tzuhan) 檔頭為多行 # 註解,標頭列以「第一個非 # 行」動態定位
+  const headerIndex = lines.findIndex(
+    (line) => !line.replace("\uFEFF", "").startsWith("#"),
+  );
+  const header = lines[headerIndex].split(",");
+  const body = lines.slice(headerIndex + 1);
   const cellsOf = (line: string): string[] => {
     // Info: (20260729 - Tzuhan) 測試用簡易 CSV 解析(支援雙引號包裹欄位)
     const out: string[] = [];
@@ -204,36 +208,38 @@ describe("buildBatchSummaryCsv (long format, issue 11)", () => {
     cellsOf(line)[header.indexOf(name)];
 
   it("檔頭揭露公式、單一來源係數與 long format 語意", () => {
-    expect(lines[0]).toContain("CO2e(kg) = distance(km) x weight(t) x factor");
-    expect(lines[0]).toContain(`LAND ${EMISSION_FACTORS.LAND}`);
-    expect(lines[0]).toContain(`SEA ${EMISSION_FACTORS.SEA}`);
-    expect(lines[0]).toContain(`AIR ${EMISSION_FACTORS.AIR}`);
-    expect(lines[0]).toContain("One row per plan leg");
-    expect(lines[0]).toContain("Estimated? = Y");
+    expect(csv).toContain(
+      "# Formula: Leg CO2e = Distance x (Weight / 1000) x Factor",
+    );
+    expect(csv).toContain(`LAND ${EMISSION_FACTORS.LAND}`);
+    expect(csv).toContain(`SEA ${EMISSION_FACTORS.SEA}`);
+    expect(csv).toContain(`AIR ${EMISSION_FACTORS.AIR}`);
+    expect(csv).toContain("# Layout: one row per leg");
+    expect(csv).toContain("# Est. = Y");
   });
 
   it("欄位含模式、端點名稱與經緯度、逐段係數與來源", () => {
     [
       "Plan",
-      "Leg #",
+      "Leg",
       "Mode",
-      "From Name",
+      "From",
       "From Lat",
       "From Lng",
-      "To Name",
+      "To",
       "To Lat",
       "To Lng",
-      "Distance (km)",
-      "Estimated?",
-      "Factor (kg CO2e/t-km)",
-      "Factor Source",
-      "Leg CO2e (kg)",
-      "Plan Total CO2e (kg)",
+      "Distance",
+      "Est.",
+      "Factor",
+      "Source",
+      "Leg CO2e",
+      "Plan CO2e",
     ].forEach((name) => expect(header).toContain(name));
   });
 
   it("同起訖點多方案分列:跨海路線出海運 3 段 + 空運 3 段,無陸運列", () => {
-    const route1 = body.filter((line) => col(line, "Route #") === "1");
+    const route1 = body.filter((line) => col(line, "Route") === "1");
     expect(route1).toHaveLength(6);
     expect(
       route1.filter((l) => col(l, "Plan") === "Sea Multimodal"),
@@ -248,98 +254,107 @@ describe("buildBatchSummaryCsv (long format, issue 11)", () => {
   });
 
   it("國內路線只出陸運 1 列(海空不適用不產列)", () => {
-    const route2 = body.filter((line) => col(line, "Route #") === "2");
+    const route2 = body.filter((line) => col(line, "Route") === "2");
     expect(route2).toHaveLength(1);
     expect(col(route2[0], "Plan")).toBe("Land Only");
     expect(col(route2[0], "Mode")).toBe("LAND");
-    expect(col(route2[0], "Distance (km)")).toBe("350.00");
+    expect(col(route2[0], "Distance")).toBe("350.00");
   });
 
   it("逐段揭露端點經緯度與係數來源", () => {
     const seaLeg = body.find(
       (line) =>
-        col(line, "Route #") === "1" &&
+        col(line, "Route") === "1" &&
         col(line, "Plan") === "Sea Multimodal" &&
         col(line, "Mode") === "SEA",
     )!;
-    expect(col(seaLeg, "From Name")).toBe("Keelung");
+    expect(col(seaLeg, "From")).toBe("Keelung");
     expect(col(seaLeg, "From Lat")).toBe("25.13");
-    expect(col(seaLeg, "To Name")).toBe("Shanghai Port");
+    expect(col(seaLeg, "To")).toBe("Shanghai Port");
     expect(col(seaLeg, "To Lng")).toBe("121.49");
-    expect(col(seaLeg, "Factor (kg CO2e/t-km)")).toBe(EMISSION_FACTORS.SEA);
-    expect(col(seaLeg, "Factor Source")).toContain("DEFRA");
+    expect(col(seaLeg, "Factor")).toBe(EMISSION_FACTORS.SEA);
+    expect(col(seaLeg, "Source")).toContain("DEFRA");
   });
 
   it("各段相加 = 方案總計(勾稽),Plan Total 僅於末段填值", () => {
     const seaLegs = body.filter(
       (line) =>
-        col(line, "Route #") === "1" && col(line, "Plan") === "Sea Multimodal",
+        col(line, "Route") === "1" && col(line, "Plan") === "Sea Multimodal",
     );
     const sum = seaLegs.reduce(
-      (acc, line) => acc.plus(col(line, "Leg CO2e (kg)")),
+      (acc, line) => acc.plus(col(line, "Leg CO2e")),
       MoneyUtil.toDecimal(0),
     );
-    expect(col(seaLegs[0], "Plan Total CO2e (kg)")).toBe("");
-    expect(col(seaLegs[2], "Plan Total CO2e (kg)")).toBe("81.31");
+    expect(col(seaLegs[0], "Plan CO2e")).toBe("");
+    expect(col(seaLegs[2], "Plan CO2e")).toBe("81.31");
     expect(sum.toFixed(2)).toBe("81.31");
   });
 
   it("fallback 段標示 Estimated? = Y,真實路網段為 N(issue 07)", () => {
     const legs = body.filter(
       (line) =>
-        col(line, "Route #") === "3" && col(line, "Plan") === "Sea Multimodal",
+        col(line, "Route") === "3" && col(line, "Plan") === "Sea Multimodal",
     );
-    expect(col(legs[0], "Estimated?")).toBe("Y");
-    expect(col(legs[1], "Estimated?")).toBe("N");
-    expect(col(legs[2], "Estimated?")).toBe("Y");
+    expect(col(legs[0], "Est.")).toBe("Y");
+    expect(col(legs[1], "Est.")).toBe("N");
+    expect(col(legs[2], "Est.")).toBe("Y");
   });
 
   it("Weight 欄用每列實際重量,缺漏時退回批次參數(issue 08)", () => {
-    expect(lines[0]).toContain("Weight column = per-route weight");
-    const route1 = body.find((line) => col(line, "Route #") === "1")!;
-    const route3 = body.find((line) => col(line, "Route #") === "3")!;
-    expect(col(route1, "Weight (kg)")).toBe("5000");
-    expect(col(route3, "Weight (kg)")).toBe("3000");
+    expect(csv).toContain("# Units: Weight kg");
+    const route1 = body.find((line) => col(line, "Route") === "1")!;
+    const route3 = body.find((line) => col(line, "Route") === "3")!;
+    expect(col(route1, "Weight")).toBe("5000");
+    expect(col(route3, "Weight")).toBe("3000");
   });
 
   it("Plan Code 為首欄且同方案各段共用同一代碼(PDF/CSV 交叉索引)", () => {
-    expect(header[0]).toBe("Plan Code");
+    expect(header[0]).toBe("Code");
     const seaLegs = body.filter(
       (line) =>
-        col(line, "Route #") === "1" && col(line, "Plan") === "Sea Multimodal",
+        col(line, "Route") === "1" && col(line, "Plan") === "Sea Multimodal",
     );
     const airLegs = body.filter(
       (line) =>
-        col(line, "Route #") === "1" && col(line, "Plan") === "Air Multimodal",
+        col(line, "Route") === "1" && col(line, "Plan") === "Air Multimodal",
     );
     // Info: (20260729 - Tzuhan) 同方案 3 段共用 R01-SEA;空運方案為 R01-AIR,一眼可分辨群組
-    expect(seaLegs.map((line) => col(line, "Plan Code"))).toEqual([
+    expect(seaLegs.map((line) => col(line, "Code"))).toEqual([
       "R01-SEA",
       "R01-SEA",
       "R01-SEA",
     ]);
-    expect(airLegs.every((line) => col(line, "Plan Code") === "R01-AIR")).toBe(
-      true,
-    );
+    expect(airLegs.every((line) => col(line, "Code") === "R01-AIR")).toBe(true);
     // Info: (20260729 - Tzuhan) 第 2 條路線的陸運方案為 R02-LAND
-    const route2 = body.find((line) => col(line, "Route #") === "2")!;
-    expect(col(route2, "Plan Code")).toBe("R02-LAND");
+    const route2 = body.find((line) => col(line, "Route") === "2")!;
+    expect(col(route2, "Code")).toBe("R02-LAND");
+  });
+
+  it("檔頭為多行短註解且不含逗號(避免被切欄)", () => {
+    const metaLines = lines.slice(0, headerIndex);
+    expect(metaLines.length).toBeGreaterThan(1);
+    expect(metaLines.every((line) => !line.includes(","))).toBe(true);
+    expect(metaLines[0]).toContain("iSunFA Transport Carbon Report");
+  });
+
+  it("欄名精簡:不帶單位與贅字,單位改由檔頭統一揭露", () => {
+    expect(header.every((name) => name.length <= 12)).toBe(true);
+    expect(header).not.toContain("Plan Total CO2e (kg)");
+    expect(csv).toContain("# Units: Weight kg | Distance km | CO2e kg");
   });
 
   it("檔頭揭露 Export ID 與 Plan Code 對照語意", () => {
-    expect(lines[0]).toContain("Export ID: 20260729-1435");
-    expect(lines[0]).toContain("Plan Code (R{route}-{MODE})");
+    expect(csv).toContain("# Export ID: 20260729-1435");
+    expect(csv).toContain("# Code: R{route}-{MODE}");
   });
 
   it("Report Files 僅於方案末段填值", () => {
     const seaLegs = body.filter(
       (line) =>
-        col(line, "Route #") === "1" && col(line, "Plan") === "Sea Multimodal",
+        col(line, "Route") === "1" && col(line, "Plan") === "Sea Multimodal",
     );
-    expect(col(seaLegs[0], "Report Files")).toBe("");
-    expect(col(seaLegs[2], "Report Files")).toContain(
-      "route_1_sea_multimodal.pdf",
-    );
+    expect(col(seaLegs[0], "PDF")).toBe("");
+    expect(col(seaLegs[2], "PDF")).toContain("route_1_sea_multimodal.pdf");
   });
 });
 
@@ -421,8 +436,12 @@ describe("SEA_LAND_AIR plan (issue 10)", () => {
     "20260729-1500",
   );
   const lines = csv.split("\n");
-  const header = lines[1].split(",");
-  const body = lines.slice(2);
+  // Info: (20260729 - Tzuhan) 檔頭為多行 # 註解,標頭列以「第一個非 # 行」動態定位
+  const headerIndex = lines.findIndex(
+    (line) => !line.replace("\uFEFF", "").startsWith("#"),
+  );
+  const header = lines[headerIndex].split(",");
+  const body = lines.slice(headerIndex + 1);
   const col = (line: string, name: string): string =>
     line.split(",")[header.indexOf(name)];
 
@@ -438,17 +457,17 @@ describe("SEA_LAND_AIR plan (issue 10)", () => {
       "AIR",
       "LAND",
     ]);
-    expect(lines[1].split(",")).toHaveLength(header.length);
+    expect(body[0].split(",")).toHaveLength(header.length);
   });
 
   it("中轉機場端點揭露(進口港 → 中轉機場 → 目的機場)", () => {
     const slaRows = body.filter(
       (line) => col(line, "Plan") === "Sea-Land-Air Multimodal",
     );
-    expect(col(slaRows[2], "From Name")).toBe("New York Port");
-    expect(col(slaRows[2], "To Name")).toBe("JFK");
-    expect(col(slaRows[3], "From Name")).toBe("JFK");
-    expect(col(slaRows[3], "To Name")).toBe("ORD");
+    expect(col(slaRows[2], "From")).toBe("New York Port");
+    expect(col(slaRows[2], "To")).toBe("JFK");
+    expect(col(slaRows[3], "From")).toBe("JFK");
+    expect(col(slaRows[3], "To")).toBe("ORD");
     expect(col(slaRows[3], "From Lat")).toBe("40.64");
   });
 
@@ -457,20 +476,18 @@ describe("SEA_LAND_AIR plan (issue 10)", () => {
       (line) => col(line, "Plan") === "Sea-Land-Air Multimodal",
     );
     const sum = slaRows.reduce(
-      (acc, line) => acc.plus(col(line, "Leg CO2e (kg)")),
+      (acc, line) => acc.plus(col(line, "Leg CO2e")),
       MoneyUtil.toDecimal(0),
     );
     expect(sum.toFixed(2)).toBe("3491.13");
-    expect(col(slaRows[4], "Plan Total CO2e (kg)")).toBe("3491.13");
+    expect(col(slaRows[4], "Plan CO2e")).toBe("3491.13");
   });
 
   it("海陸空聯運的方案代碼為 R01-SLA(5 段共用)", () => {
     const slaRows = body.filter(
       (line) => col(line, "Plan") === "Sea-Land-Air Multimodal",
     );
-    expect(slaRows.every((line) => col(line, "Plan Code") === "R01-SLA")).toBe(
-      true,
-    );
+    expect(slaRows.every((line) => col(line, "Code") === "R01-SLA")).toBe(true);
   });
 
   it("標頭碳排取三模式方案自身總計,不再誤用空運方案", () => {

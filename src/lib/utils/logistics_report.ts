@@ -499,38 +499,43 @@ export function buildBatchSummaryCsv(
   // Info: (20260728 - Tzuhan) issue 08:每列用自己的實際計算重量;舊資料缺漏時退回批次參數
   const fallbackWeight = Number(weightKg) || 1000;
 
-  const metaLine =
-    `# Formula: CO2e(kg) = distance(km) x weight(t) x factor; ` +
-    `Factors (kg CO2e/t-km): LAND ${EMISSION_FACTORS.LAND}, SEA ${EMISSION_FACTORS.SEA}, AIR ${EMISSION_FACTORS.AIR}; ` +
-    `Source: UK DEFRA 2025; Weight column = per-route weight (kg) used in calculation; ` +
-    `${exportId ? `Export ID: ${exportId}; ` : ""}` +
-    `Plan Code (R{route}-{MODE}) is the cross-reference to the matching PDF (same code in its filename and header); ` +
-    `One row per plan leg (long format); Plan Total is filled on the last leg of each plan; ` +
-    `Estimated? = Y means the distance is a straight-line x 1.2 estimate (road network data unavailable); ` +
-    `Plans deemed inapplicable for a route produce no rows`;
+  // Info: (20260729 - Tzuhan) 揭露資訊改為多行短註解:單行 600 字的檔頭在 Excel 中會撐爆首格難以閱讀,
+  // Info: (20260729 - Tzuhan) 拆成一行一件事後每行自成一列;各行皆不含逗號,避免被切成多欄
+  const metaLines = [
+    `# iSunFA Transport Carbon Report`,
+    ...(exportId ? [`# Export ID: ${exportId}`] : []),
+    `# Code: R{route}-{MODE} — the same code appears in the matching PDF's filename and header`,
+    `# Formula: Leg CO2e = Distance x (Weight / 1000) x Factor`,
+    `# Factors (kg CO2e/t-km): LAND ${EMISSION_FACTORS.LAND} | SEA ${EMISSION_FACTORS.SEA} | AIR ${EMISSION_FACTORS.AIR} — UK DEFRA 2025`,
+    `# Units: Weight kg | Distance km | CO2e kg | Lat/Lng WGS84`,
+    `# Layout: one row per leg — Plan CO2e and PDF are filled on the plan's last leg only`,
+    `# Est. = Y: straight-line x 1.2 estimate (road network data unavailable for that leg)`,
+    `# Plans deemed inapplicable for a route produce no rows`,
+  ];
 
+  // Info: (20260729 - Tzuhan) 欄名去除單位與贅字(單位統一移到檔頭 Units 行),使 Excel 首列不必拉寬即可通覽
   const header = [
-    "Plan Code",
-    "Route #",
+    "Code",
+    "Route",
     "Origin",
     "Destination",
-    "Weight (kg)",
+    "Weight",
     "Plan",
-    "Leg #",
+    "Leg",
     "Mode",
-    "From Name",
+    "From",
     "From Lat",
     "From Lng",
-    "To Name",
+    "To",
     "To Lat",
     "To Lng",
-    "Distance (km)",
-    "Estimated?",
-    "Factor (kg CO2e/t-km)",
-    "Factor Source",
-    "Leg CO2e (kg)",
-    "Plan Total CO2e (kg)",
-    "Report Files",
+    "Distance",
+    "Est.",
+    "Factor",
+    "Source",
+    "Leg CO2e",
+    "Plan CO2e",
+    "PDF",
   ].join(",");
 
   const rows: string[] = [];
@@ -598,5 +603,5 @@ export function buildBatchSummaryCsv(
   });
 
   // Info: (20260724 - Tzuhan) BOM 讓 Excel 正確辨識 UTF-8
-  return ["\uFEFF" + metaLine, header, ...rows].join("\n");
+  return ["\uFEFF" + metaLines.join("\n"), header, ...rows].join("\n");
 }

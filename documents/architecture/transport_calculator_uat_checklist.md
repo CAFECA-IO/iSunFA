@@ -88,19 +88,21 @@
 
 多筆批次匯出 → zip 內 `summary.csv`,用 Excel 開啟(注意 BOM 應讓中文正常顯示):
 
-- [ ] 檔頭 `#` 行揭露公式、三個係數、Weight 欄語意、`Estimated? = Y` 說明、**Export ID** 與 **Plan Code 對照說明**
-- [ ] **首欄為 `Plan Code`**:同一路線同一方案的各段共用同一代碼(如 R01-SEA 連續 3 列),換方案即換代碼(R01-AIR),一眼可分辨群組
-- [ ] CSV 的 `Plan Code` 與 zip 內 PDF 檔名開頭**完全對應**(挑一個代碼交叉驗證)
+- [ ] 檔頭為**多行 `#` 短註解**(一行一件事:標題 / Export ID / Code 對照 / 公式 / 係數 / 單位 / 版面 / Est. 說明 / 不適用方案),**不應**出現單行超長文字撐爆首格
+- [ ] 檔頭各行**不含逗號**(不應被 Excel 切成多欄)
+- [ ] **欄名精簡不帶單位**(`Code` / `Route` / `Weight` / `Distance` / `Est.` / `Factor` / `Source` / `Leg CO2e` / `Plan CO2e` / `PDF`),單位由檔頭 `# Units` 行統一揭露;首列不必拉寬即可通覽
+- [ ] **首欄為 `Code`**:同一路線同一方案的各段共用同一代碼(如 R01-SEA 連續 3 列),換方案即換代碼(R01-AIR),一眼可分辨群組
+- [ ] CSV 的 `Code` 與 zip 內 PDF 檔名開頭**完全對應**(挑一個代碼交叉驗證)
 - [ ] CSV 檔頭的 Export ID 與 PDF 頁尾的匯出批次號**相同**
 - [ ] **一段一列**(long format),同一路線的多個方案連續數列
 - [ ] 欄位含 `From Lat/Lng`、`To Lat/Lng`——港口與機場的經緯度有值
-- [ ] `Factor` 與 `Factor Source` **逐列**標注(不是只在檔頭)
-- [ ] `Plan Total CO2e` 只在每個方案的**最後一段**有值
+- [ ] `Factor` 與 `Source` **逐列**標注(不是只在檔頭)
+- [ ] `Plan CO2e` 與 `PDF` 只在每個方案的**最後一段**有值
 - [ ] 隨機挑一列手算驗證:`Distance × (Weight/1000) × Factor = Leg CO2e`
-- [ ] 挑一個方案驗證:各段 `Leg CO2e` 相加 = `Plan Total CO2e`
-- [ ] `Weight (kg)` 欄顯示**該列真實重量**(若各列重量不同,欄值應不同)
+- [ ] 挑一個方案驗證:各段 `Leg CO2e` 相加 = `Plan CO2e`
+- [ ] `Weight` 欄顯示**該列真實重量**(若各列重量不同,欄值應不同)
 - [ ] 不適用方案**完全沒有列**(不是 N/A 填充)
-- [ ] fallback 段 `Estimated?` = `Y`,真實路網段 = `N`
+- [ ] fallback 段 `Est.` = `Y`,真實路網段 = `N`
 
 ---
 
