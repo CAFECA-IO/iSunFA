@@ -3,9 +3,15 @@
 // Info: (20260716 - Tzuhan) 鐵律:內容「原樣搬運」嚴禁改寫;對不上大綱的內容進 unmapped 桶(不丟棄,由使用者裁決);
 // Info: (20260716 - Tzuhan) 報告中的數字不可信任為已驗證 — 活動數據另行萃取,交決定論引擎重新勾稽
 
-import { ChatService, SchemaType, type Schema } from "@/services/chat.service";
+import {
+  ChatService,
+  isLlmTruncatedError,
+  SchemaType,
+  type Schema,
+} from "@/services/chat.service";
 import {
   LLM_EXTRACTION_TIMEOUT_MS,
+  LLM_MAX_OUTPUT_TOKENS,
   LLM_TEMPERATURE,
   LlmTaskKeyEnum,
 } from "@/constants/llm";
@@ -222,11 +228,26 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
           temperature: LLM_TEMPERATURE.EXTRACTION,
           timeoutMs: LLM_EXTRACTION_TIMEOUT_MS,
           taskKey: LlmTaskKeyEnum.REPORT_IMPORT,
-          // Info: (20260716 - Tzuhan) 原樣照抄需要大輸出空間:拉滿單次輸出上限
-          maxOutputTokens: 8192,
+          // Info: (20260730 - Tzuhan) 原樣照抄需要大輸出空間,且思考 token 與輸出共用此額度
+          // Info: (20260730 - Tzuhan) (原本 8192 導致內容較多的前四章全部被截斷,見 LLM_MAX_OUTPUT_TOKENS 註解)
+          maxOutputTokens: LLM_MAX_OUTPUT_TOKENS.REPORT_IMPORT,
         },
       );
     } catch (error) {
+      // Info: (20260730 - Tzuhan) 截斷與「模型亂回」分流:截斷是額度問題(可靠縮小範圍重試解決),
+      // Info: (20260730 - Tzuhan) 混為一談會讓呼叫端只看到「匯入失敗」而無從判斷該重試還是該放棄
+      if (isLlmTruncatedError(error)) {
+        logger.error(
+          `[ReportImportService] output truncated for scope ${options?.chapterId ?? "all"}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+        throw new ApiError(
+          API_ERRORS.IS_LLM_OUTPUT_TRUNCATED.code,
+          API_ERRORS.IS_LLM_OUTPUT_TRUNCATED.message,
+          API_ERRORS.IS_LLM_OUTPUT_TRUNCATED.status,
+        );
+      }
       logger.error(
         `[ReportImportService] LLM call failed: ${JSON.stringify(error)}`,
       );
@@ -339,10 +360,23 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
           temperature: LLM_TEMPERATURE.EXTRACTION,
           timeoutMs: LLM_EXTRACTION_TIMEOUT_MS,
           taskKey: LlmTaskKeyEnum.REPORT_IMPORT,
-          maxOutputTokens: 8192,
+          maxOutputTokens: LLM_MAX_OUTPUT_TOKENS.REPORT_IMPORT,
         },
       );
     } catch (error) {
+      // Info: (20260730 - Tzuhan) 與匯入同一分流:截斷可靠縮小段落範圍重試解決,不應與模型亂回混為一談
+      if (isLlmTruncatedError(error)) {
+        logger.error(
+          `[ReportImportService] gap-fill output truncated for ${sectionIds.length} section(s): ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+        throw new ApiError(
+          API_ERRORS.IS_LLM_OUTPUT_TRUNCATED.code,
+          API_ERRORS.IS_LLM_OUTPUT_TRUNCATED.message,
+          API_ERRORS.IS_LLM_OUTPUT_TRUNCATED.status,
+        );
+      }
       logger.error(
         `[ReportImportService] gap-fill LLM call failed: ${JSON.stringify(error)}`,
       );

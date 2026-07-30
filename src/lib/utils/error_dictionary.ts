@@ -743,6 +743,13 @@ export const API_ERRORS = {
     message: "Mass conservation check failed; data sections are frozen",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
+  // Info: (20260730 - Tzuhan) 輸出被 token 上限截斷:與「模型輸出無效」區分,
+  // Info: (20260730 - Tzuhan) 前者呼叫端可靠縮小範圍重試解決,後者重試無用
+  IS_LLM_OUTPUT_TRUNCATED: {
+    code: "IS000019",
+    message: "LLM output was truncated by the token limit",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
   IS_UNKNOWN: {
     code: "IS000099",
     message: "Internal Server Error",

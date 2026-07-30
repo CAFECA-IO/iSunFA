@@ -8,6 +8,11 @@ import {
   CARBON_REPORT_CHAPTERS,
 } from "@/constants/carbon_report_outline";
 import { GhgProtocolCategory } from "@/constants/esg";
+import {
+  LLM_MAX_OUTPUT_TOKENS,
+  LLM_TRUNCATED_ERROR_MARKER,
+} from "@/constants/llm";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { MeasurementUnit } from "@/constants/enums";
 
 const VALID_ID = CARBON_REPORT_OUTLINE[0].id;
@@ -183,5 +188,46 @@ describe("ReportImportService.draftMissingSections", () => {
     await expect(
       service.draftMissingSections(textSource(), ["not-in-outline"], "zh-TW"),
     ).rejects.toThrow();
+  });
+});
+
+// Info: (20260730 - Tzuhan) 實測 gemini-2.5-pro 逐章匯入時,思考 token 與輸出共用 maxOutputTokens,
+// Info: (20260730 - Tzuhan) 原本 8192 讓內容較多的前四章全數截斷。截斷必須與「模型亂回」分流。
+describe("ReportImportService 輸出額度與截斷處理", () => {
+  const truncatingService = (): ReportImportService => {
+    const spy = jest
+      .fn<GenerateRawWithImages>()
+      .mockRejectedValue(
+        new Error(`${LLM_TRUNCATED_ERROR_MARKER}: output hit maxOutputTokens`),
+      );
+    return new ReportImportService({
+      generateRawWithImages: spy,
+    } as unknown as ChatService);
+  };
+
+  it("逐字照抄以放大的輸出額度呼叫(不再是 8192)", async () => {
+    const { service, spy } = buildService({ segments: [], unmapped: [] });
+    await service.importReport(textSource(), "zh_tw", {
+      extractActivities: false,
+    });
+    const options = spy.mock.calls[0][4] as { maxOutputTokens?: number };
+    expect(options.maxOutputTokens).toBe(LLM_MAX_OUTPUT_TOKENS.REPORT_IMPORT);
+    expect(LLM_MAX_OUTPUT_TOKENS.REPORT_IMPORT).toBeGreaterThan(8192);
+  });
+
+  it("輸出被截斷時回專屬錯誤碼,而非籠統的匯入失敗", async () => {
+    await expect(
+      truncatingService().importReport(textSource(), "zh_tw"),
+    ).rejects.toMatchObject({
+      code: API_ERRORS.IS_LLM_OUTPUT_TRUNCATED.code,
+    });
+  });
+
+  it("草稿補齊同樣區分截斷錯誤", async () => {
+    await expect(
+      truncatingService().draftMissingSections(textSource(), [VALID_ID]),
+    ).rejects.toMatchObject({
+      code: API_ERRORS.IS_LLM_OUTPUT_TRUNCATED.code,
+    });
   });
 });

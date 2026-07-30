@@ -36,5 +36,26 @@ export enum LlmTaskKeyEnum {
   REPORT_IMPORT = "REPORT_IMPORT",
 }
 
+/**
+ * Info: (20260730 - Tzuhan) 輸出 token 上限:thinking 模型的思考 token 與正式輸出**共用**這個額度。
+ * 實測(gemini-2.5-pro,高興昌 64 頁盤查報告逐章匯入):原本設 8192,
+ *   第一章 思考 7923 + 輸出 254 = 8177 → 截斷
+ *   第二章 思考 5255 + 輸出 2921 = 8176 → 截斷
+ *   第三章 思考 8189 + 輸出 0    = 8189 → 完全沒有輸出
+ *   第四章 思考 2466 + 輸出 5710 = 8176 → 截斷
+ * 四章全數以「JSON 解析失敗」告終,而真因是額度被思考吃光。內容較少的第五~十一章則全部成功。
+ * 逐字照抄本身就需要大輸出空間,再加上思考額度,8192 對整章匯入根本不夠。
+ * gemini-2.5-pro 的輸出上限為 65536,此處取 32768:留足空間又不至於讓單次呼叫失控。
+ */
+export const LLM_MAX_OUTPUT_TOKENS = {
+  // Info: (20260730 - Tzuhan) 整章逐字照抄:最耗輸出的任務
+  REPORT_IMPORT: 32_768,
+  // Info: (20260730 - Tzuhan) 其他生成任務維持原額度(未觀測到截斷)
+  DEFAULT: 8_192,
+} as const;
+
+// Info: (20260730 - Tzuhan) 輸出被 token 上限截斷的識別標記:與「模型亂回」區分,前者可靠加大額度/縮小範圍解決
+export const LLM_TRUNCATED_ERROR_MARKER = "LLM_OUTPUT_TRUNCATED";
+
 // Info: (20260716 - Tzuhan) timeout 錯誤的識別標記(type guard 用,避免比對自由字串)
 export const LLM_TIMEOUT_ERROR_MARKER = "LLM_TIMEOUT";

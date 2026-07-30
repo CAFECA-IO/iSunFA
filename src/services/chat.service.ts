@@ -7,6 +7,7 @@ import {
   GenerationConfig,
   ModelParams,
   GenerateContentResult,
+  FinishReason,
 } from "@google/generative-ai";
 import { DirectChatSkill } from "@/skills/chat/direct_chat";
 import { CARBON_CHAT_GREETING_PROMPT } from "@/constants/carbon_chatbot";
@@ -16,6 +17,7 @@ import {
   LLM_SYNC_TIMEOUT_MS,
   LLM_TEMPERATURE,
   LLM_TIMEOUT_ERROR_MARKER,
+  LLM_TRUNCATED_ERROR_MARKER,
   LlmTaskKeyEnum,
 } from "@/constants/llm";
 import {
@@ -62,6 +64,16 @@ export const isLlmQuotaError = (error: unknown): boolean => {
 // Info: (20260716 - Tzuhan) 判斷 LLM 錯誤是否為同步路徑逾時(#6515)，供 route/service 層映射 IS_LLM_TIMEOUT
 export const isLlmTimeoutError = (error: unknown): boolean =>
   error instanceof Error && error.message.startsWith(LLM_TIMEOUT_ERROR_MARKER);
+
+/**
+ * Info: (20260730 - Tzuhan) 判斷是否為「輸出被 token 上限截斷」。
+ * 這與「模型亂回」必須分開:截斷是額度問題(加大額度或縮小範圍就能解),
+ * 若一律歸為 JSON 解析失敗,呼叫端只會看到「LLM 輸出無效」而完全沒有方向。
+ * 實測 gemini-2.5-pro 逐章匯入時前四章全數在此陣亡。
+ */
+export const isLlmTruncatedError = (error: unknown): boolean =>
+  error instanceof Error &&
+  error.message.startsWith(LLM_TRUNCATED_ERROR_MARKER);
 
 // Info: (20260714 - Tzuhan) 聊天回覆 responseSchema:readyParagraphId 以 enum 約束，禁止 LLM 捏造段落 id
 const CARBON_CHAT_REPLY_SCHEMA: Schema = {
@@ -371,6 +383,20 @@ export class ChatService {
       },
     );
     const response = await result.response;
+
+    // Info: (20260730 - Tzuhan) 截斷偵測:thinking 模型的思考 token 與輸出共用 maxOutputTokens,
+    // Info: (20260730 - Tzuhan) 額度被思考吃光時 finishReason 為 MAX_TOKENS,回傳的 JSON 必然殘缺。
+    // Info: (20260730 - Tzuhan) 在此明確拋出可辨識的錯誤,而非讓呼叫端誤判為「模型輸出無效」。
+    const finishReason = response.candidates?.[0]?.finishReason;
+    if (finishReason === FinishReason.MAX_TOKENS) {
+      const usage = response.usageMetadata;
+      throw new Error(
+        `${LLM_TRUNCATED_ERROR_MARKER}: output hit maxOutputTokens ` +
+          `(model=${modelName} limit=${generationConfig.maxOutputTokens ?? "default"} ` +
+          `output=${usage?.candidatesTokenCount ?? 0} total=${usage?.totalTokenCount ?? 0})`,
+      );
+    }
+
     return response.text();
   }
 
