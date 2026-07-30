@@ -2,11 +2,13 @@ import {
   CustomChartType,
   CustomChartConfigKey,
   HistogramTrendType,
+  HistogramActionType,
   CUSTOM_CHART_COMMENT_PREFIX,
 } from "@/constants/custom_chart";
 import {
   IHistogramItem,
   IHistogramParseResult,
+  IHistogramAction,
 } from "@/interfaces/custom_chart";
 import { parseCsvLine } from "@/lib/utils/csv";
 import { parseCustomChart } from "@/lib/utils/custom_chart_parser";
@@ -145,4 +147,142 @@ export const parseHistogramData = (raw: string): IHistogramParseResult => {
     trend,
     trendColor: readConfigValue(lines, CustomChartConfigKey.TREND_COLOR),
   };
+};
+
+/**
+ * Info: (20260730 - Julian)
+ * 將單一欄位序列化為 CSV（RFC 4180）：含逗號／雙引號／換行／前後空白時以雙引號包夾並跳脫，與 parseCsvLine 對稱。
+ */
+const formatCsvField = (field: string): string => {
+  const needsQuote = /[",\r\n]/.test(field) || field !== field.trim();
+  return needsQuote ? `"${field.replace(/"/g, '""')}"` : field;
+};
+
+// Info: (20260730 - Julian) 組合一行直方圖資料列（label, count）；count 原樣輸出（不做任何運算）
+const buildHistogramDataLine = (label: string, count: number): string =>
+  `${formatCsvField(label)}, ${count}`;
+
+// Info: (20260730 - Julian) 尋找第一筆內容列（標頭/資料）行號，用於在無現有設定列時插入設定於其前
+const findFirstContentIndex = (lines: string[]): number =>
+  lines.findIndex((line) => isContentLine(line));
+
+/**
+ * Info: (20260730 - Julian)
+ * 更新（或插入／移除）指定設定列（key: value）。value 為空字串時移除該設定列；就地修改 lines。
+ * 設定在上、資料在下：無現有設定列時插入到第一筆內容列之前。
+ */
+const setConfigLine = (
+  lines: string[],
+  key: CustomChartConfigKey,
+  value: string,
+): void => {
+  const idx = lines.findIndex((line) => {
+    const clean = line.trim();
+    const colonIdx = clean.indexOf(":");
+    return (
+      colonIdx !== -1 && clean.slice(0, colonIdx).trim().toLowerCase() === key
+    );
+  });
+
+  if (value === "") {
+    if (idx !== -1) lines.splice(idx, 1);
+    return;
+  }
+
+  const newLine = `${key}: ${value}`;
+  if (idx !== -1) {
+    lines[idx] = newLine;
+    return;
+  }
+  const contentIdx = findFirstContentIndex(lines);
+  if (contentIdx === -1) {
+    lines.push(newLine);
+  } else {
+    lines.splice(contentIdx, 0, newLine);
+  }
+};
+
+/**
+ * Info: (20260730 - Julian)
+ * 將單一結構化動作決定論地套用到直方圖 DSL 字串，回傳新字串（不變更輸入）。
+ * 以 lineIndex（raw.split("\n") 絕對索引）定位資料列；未知類型或定位失敗時原樣返回（Fail Safe）。
+ * 純字串操作、決定論、不呼叫 LLM、不做數值計算。
+ * 註：動作 lineIndex 皆以「原始 raw」為準；單一動作套用安全，批次堆疊時的行號位移風險見 applyCustomChartActions。
+ */
+export const applyHistogramAction = (
+  raw: string,
+  action: IHistogramAction,
+): string => {
+  const lines = raw.split("\n");
+
+  switch (action.type) {
+    case HistogramActionType.ADD_ITEM: {
+      // Info: (20260730 - Julian) 於目標行號插入新分箱列（該 raw 行被佔用、其後順移）；超界則附加於尾端
+      const { label, count, lineIndex } = action.payload;
+      const at = Math.min(Math.max(lineIndex, 0), lines.length);
+      lines.splice(at, 0, buildHistogramDataLine(label, count));
+      break;
+    }
+
+    case HistogramActionType.EDIT_ITEM: {
+      // Info: (20260730 - Julian) 以 lineIndex 定位既有分箱，覆寫 label/count 並移動到 newLineIndex
+      const { lineIndex, label, count, newLineIndex } = action.payload;
+      if (lineIndex < 0 || lineIndex >= lines.length) break;
+      if (!getHistogramBinFields(lines[lineIndex])) break;
+
+      lines.splice(lineIndex, 1);
+      // Info: (20260730 - Julian) 移除舊列後，若插入點原在其後需 -1 補償；再夾限到合法範圍
+      const shifted =
+        newLineIndex > lineIndex ? newLineIndex - 1 : newLineIndex;
+      const at = Math.min(Math.max(shifted, 0), lines.length);
+      lines.splice(at, 0, buildHistogramDataLine(label, count));
+      break;
+    }
+
+    case HistogramActionType.DELETE_ITEM: {
+      const { lineIndex } = action.payload;
+      if (
+        lineIndex >= 0 &&
+        lineIndex < lines.length &&
+        getHistogramBinFields(lines[lineIndex])
+      ) {
+        lines.splice(lineIndex, 1);
+      }
+      break;
+    }
+
+    case HistogramActionType.EDIT_AXIS: {
+      // Info: (20260730 - Julian) 軸標題設定列（皆選填；空字串移除）
+      const { xAxis, yAxis } = action.payload;
+      if (xAxis !== undefined) {
+        setConfigLine(lines, CustomChartConfigKey.X_AXIS, xAxis.trim());
+      }
+      if (yAxis !== undefined) {
+        setConfigLine(lines, CustomChartConfigKey.Y_AXIS, yAxis.trim());
+      }
+      break;
+    }
+
+    case HistogramActionType.SWITCH_TREND_LINE: {
+      // Info: (20260730 - Julian) trend 有值＝開啟（並套用顏色）；省略＝關閉（連同顏色一併移除）
+      const { trend, trendColor } = action.payload;
+      if (trend === undefined) {
+        setConfigLine(lines, CustomChartConfigKey.TREND, "");
+        setConfigLine(lines, CustomChartConfigKey.TREND_COLOR, "");
+      } else {
+        setConfigLine(lines, CustomChartConfigKey.TREND, trend);
+        setConfigLine(
+          lines,
+          CustomChartConfigKey.TREND_COLOR,
+          (trendColor ?? "").trim(),
+        );
+      }
+      break;
+    }
+
+    default:
+      return raw;
+  }
+
+  return lines.join("\n");
 };

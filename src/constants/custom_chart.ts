@@ -129,6 +129,20 @@ export enum TornadoActionType {
 }
 
 /**
+ * Info: (20260730 - Julian)
+ * 直方圖結構化編輯的動作類型列舉（對應 histogram_tools_submenu 的五項工具）。
+ * 對應 custom-histogram DSL 的資料列（分箱 item：新增／編輯／刪除）、設定列（軸標題）與趨勢線開關／顏色；
+ * 所有編輯皆為決定論字串操作，不呼叫 LLM、不做數值計算。
+ */
+export enum HistogramActionType {
+  ADD_ITEM = "HISTOGRAM_ADD_ITEM",
+  EDIT_ITEM = "HISTOGRAM_EDIT_ITEM",
+  EDIT_AXIS = "HISTOGRAM_EDIT_AXIS",
+  SWITCH_TREND_LINE = "HISTOGRAM_SWITCH_TREND_LINE",
+  DELETE_ITEM = "HISTOGRAM_DELETE_ITEM",
+}
+
+/**
  * Info: (20260721 - Julian)
  * 群組顏色的 HEX 格式驗證（#RGB / #RRGGBB / #RRGGBBAA）。
  * 顏色存於矩陣資料列的第 5 欄，parser 以此驗證，非法值 fail fast。

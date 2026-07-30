@@ -3,12 +3,14 @@ import {
   ICustomChartAction,
   IMatrixAction,
   ITornadoAction,
+  IHistogramAction,
 } from "@/interfaces/custom_chart";
 import {
   applyMatrixAction,
   applyMatrixActions,
 } from "@/lib/utils/custom_matrix_editor";
 import { applyTornadoAction } from "@/lib/utils/custom_tornado_editor";
+import { applyHistogramAction } from "@/lib/utils/custom_histogram_editor";
 
 /**
  * Info: (20260721 - Julian)
@@ -27,6 +29,8 @@ export const applyCustomChartAction = (
       return applyMatrixAction(chart, action as IMatrixAction);
     case CustomChartType.TORNADO:
       return applyTornadoAction(chart, action as ITornadoAction);
+    case CustomChartType.HISTOGRAM:
+      return applyHistogramAction(chart, action as IHistogramAction);
     default:
       // Info: (20260721 - Julian) 其餘類型尚未實作工具，無結構化動作可套用
       return chart;
@@ -38,10 +42,10 @@ export const applyCustomChartAction = (
  * 批次版分派器：依圖表類型將「一整批」動作交給對應的 apply 引擎，回傳新字串（不變更輸入）。
  * 動作的 lineIndex 皆以「原始 chart」行號為準（工具面板以原始 chart 解析選單），故：
  * - 矩陣圖走 applyMatrixActions 的 tombstone 穩定索引策略，避免「先刪後編」的行號位移打錯資料列。
- * - 龍捲風圖尚無批次引擎，暫以 reduce 逐一套用（其 apply 已為 Fail Safe）。
+ * - 龍捲風圖與直方圖尚無批次引擎，暫以 reduce 逐一套用（其 apply 已為 Fail Safe）。
  * 其餘類型尚無工具，原樣返回（Fail Safe）。
  */
-// ToDo: (20260728 - Julian) 龍捲風圖缺批次引擎，stacked-actions 仍有行號位移風險；補 applyTornadoActions 後改走批次
+// ToDo: (20260730 - Julian) 龍捲風圖／直方圖缺批次引擎，stacked-actions 仍有行號位移風險；補 applyTornadoActions／applyHistogramActions 後改走批次
 export const applyCustomChartActions = (
   type: CustomChartType,
   chart: string,
@@ -54,6 +58,12 @@ export const applyCustomChartActions = (
       return actions.reduce(
         (result, action) =>
           applyTornadoAction(result, action as ITornadoAction),
+        chart,
+      );
+    case CustomChartType.HISTOGRAM:
+      return actions.reduce(
+        (result, action) =>
+          applyHistogramAction(result, action as IHistogramAction),
         chart,
       );
     default:

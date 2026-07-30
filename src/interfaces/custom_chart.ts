@@ -2,6 +2,7 @@ import {
   CustomChartType,
   CustomChartParseErrorCode,
   HistogramTrendType,
+  HistogramActionType,
   MatrixActionType,
   TornadoActionType,
   TornadoMode,
@@ -247,6 +248,47 @@ export interface IHistogramParseResult {
   bins: IHistogramItem[];
 }
 
+/**
+ * Info: (20260730 - Julian)
+ * 直方圖結構化編輯動作（Discriminated Union，以 type 為判別因子），由 applyHistogramAction 決定論套用。
+ * 各成員 payload 對應 histogram_tools_submenu 的五項工具 UI。
+ */
+export type IHistogramAction = {
+  id: string;
+  description: string;
+} & (
+  | {
+      // Info: (20260730 - Julian) 新增分箱：label / count 與插入位置 lineIndex（新列佔用該 raw 行、其後順移）
+      type: HistogramActionType.ADD_ITEM;
+      payload: { label: string; count: number; lineIndex: number };
+    }
+  | {
+      // Info: (20260730 - Julian) 編輯分箱：以 lineIndex 定位，覆寫 label / count，並移動到 newLineIndex
+      type: HistogramActionType.EDIT_ITEM;
+      payload: {
+        lineIndex: number;
+        label: string;
+        count: number;
+        newLineIndex: number;
+      };
+    }
+  | {
+      // Info: (20260730 - Julian) 編輯軸線標題：xAxis / yAxis（皆選填；空字串代表移除該設定列）
+      type: HistogramActionType.EDIT_AXIS;
+      payload: { xAxis?: string; yAxis?: string };
+    }
+  | {
+      // Info: (20260730 - Julian) 切換趨勢線：trend 有值＝開啟（並可帶 trendColor）；trend 省略＝關閉（移除趨勢線設定）
+      type: HistogramActionType.SWITCH_TREND_LINE;
+      payload: { trend?: HistogramTrendType; trendColor?: string };
+    }
+  | {
+      // Info: (20260730 - Julian) 刪除分箱：以 lineIndex 定位
+      type: HistogramActionType.DELETE_ITEM;
+      payload: { lineIndex: number };
+    }
+);
+
 // Info: (20260716 - Julian) 盒鬚圖（五數綜合，parser 不自動計算四分位）
 export interface ICustomBoxItem {
   label: string;
@@ -280,7 +322,10 @@ export type ICustomChartAst =
  * 所有自訂圖表結構化編輯動作的聯集，供通用 AI 編輯器（adapter / dispatcher）承載。
  * 各 apply 引擎依 chartType 取用對應子集。
  */
-export type ICustomChartAction = IMatrixAction | ITornadoAction;
+export type ICustomChartAction =
+  | IMatrixAction
+  | ITornadoAction
+  | IHistogramAction;
 
 /**
  * Info: (20260716 - Julian)

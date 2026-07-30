@@ -11,15 +11,15 @@ import {
   Move3d,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
-// import { HistogramActionType, HistogramMode } from "@/constants/custom_chart";
 import {
   HistogramTrendType,
+  HistogramActionType,
   HISTOGRAM_TREND_META,
   HISTOGRAM_TREND_COLOR_OPTIONS,
 } from "@/constants/custom_chart";
 import {
   IHistogramItem,
-  // IHistogramAction,
+  IHistogramAction,
   IHistogramParseResult,
 } from "@/interfaces/custom_chart";
 import {
@@ -27,7 +27,6 @@ import {
   MERMAID_LABEL_STYLE,
   MERMAID_SUBMIT_BUTTON_STYLE,
 } from "@/constants/mermaid_chart";
-// import { SegmentedControl } from "@/components/chart/mermaid_common_components";
 import { useDecimalInput } from "@/hooks/use_decimal_input";
 import { parseHistogramData } from "@/lib/utils/custom_histogram_editor";
 import ColorPicker from "@/components/common/color_picker";
@@ -56,7 +55,7 @@ interface IToolItem {
 
 interface IBasePanelProps {
   parsedHistogramData: IHistogramParseResult;
-  onAddAction: any; // (action: IHistogramAction) => void;
+  onAddAction: (action: IHistogramAction) => void;
 }
 
 interface IDraggingTrainProps {
@@ -320,22 +319,13 @@ const AddItemPanel: FC<IBasePanelProps> = ({
 
   const handleSubmit = () => {
     if (isSubmitDisabled) return;
-    const data: IHistogramItem = {
-      label: titleInput,
-      count: valueInput.numValue,
-      lineIndex: newLineIndex,
-    };
-    // const category = titleInput.trim();
-    // onAddAction({
-    //   id: crypto.randomUUID(),
-    //   type: HistogramActionType.ADD_ITEM,
-    //   description: t(`${HISTOGRAM_I18N_PREFIX}.action_add_item`, { category }),
-    //   payload: {
-    //     category,
-    //     left: leftValue.numValue,
-    //     right: rightValue.numValue,
-    //   },
-    // });
+    const label = titleInput.trim();
+    onAddAction({
+      id: crypto.randomUUID(),
+      type: HistogramActionType.ADD_ITEM,
+      description: `新增項目：${label}`,
+      payload: { label, count: valueInput.numValue, lineIndex: newLineIndex },
+    });
   };
   return (
     <div className="flex flex-col gap-3">
@@ -441,24 +431,19 @@ const EditItemPanel: FC<IBasePanelProps> = ({
   };
 
   const handleSubmit = () => {
-    if (isSubmitDisabled) return;
-    const data: IHistogramItem = {
-      label: titleInput,
-      count: valueInput.numValue,
-      lineIndex: newLineIndex,
-    };
-    // const category = titleInput.trim();
-    // onAddAction({
-    //   id: crypto.randomUUID(),
-    //   type: HistogramActionType.EDIT_ITEM,
-    //   description: t(`${HISTOGRAM_I18N_PREFIX}.action_edit_item`, { category }),
-    //   payload: {
-    //     lineIndex: selectedItem.lineIndex,
-    //     category,
-    //     left: leftValue.numValue,
-    //     right: rightValue.numValue,
-    //   },
-    // });
+    if (isSubmitDisabled || !selectedItem) return;
+    const label = titleInput.trim();
+    onAddAction({
+      id: crypto.randomUUID(),
+      type: HistogramActionType.EDIT_ITEM,
+      description: `編輯項目：${label}`,
+      payload: {
+        lineIndex: selectedItem.lineIndex,
+        label,
+        count: valueInput.numValue,
+        newLineIndex,
+      },
+    });
   };
 
   return (
@@ -580,22 +565,12 @@ const EditAxisPanel: FC<IBasePanelProps> = ({
 
   const handleSubmit = () => {
     if (isSubmitDisabled) return;
-    // onAddAction({
-    //   id: crypto.randomUUID(),
-    //   type: HistogramActionType.EDIT_GROUP,
-    //   description: t(`${HISTOGRAM_I18N_PREFIX}.action_edit_group`, {
-    //     left: leftTitleInput.trim(),
-    //     right: rightTitleInput.trim(),
-    //   }),
-    //   payload: {
-    //     leftSeries: leftTitleInput.trim(),
-    //     rightSeries: rightTitleInput.trim(),
-    //     ...(leftColorInput.trim() !== "" ? { leftColor: leftColorInput } : {}),
-    //     ...(rightColorInput.trim() !== ""
-    //       ? { rightColor: rightColorInput }
-    //       : {}),
-    //   },
-    // });
+    onAddAction({
+      id: crypto.randomUUID(),
+      type: HistogramActionType.EDIT_AXIS,
+      description: `編輯軸線標題`,
+      payload: { xAxis: xTitle.trim(), yAxis: yTitle.trim() },
+    });
   };
 
   return (
@@ -671,20 +646,13 @@ const SwitchTrendLinePanel: FC<IBasePanelProps> = ({
 
   const handleSubmit = () => {
     if (isSubmitDisabled) return;
-    // Info: (20260730 - Julian) 待補：直方圖動作模型（HistogramActionType / IHistogramAction / applyHistogramAction）
-    // 完成後改為實際 dispatch。預期 payload：
-    //   開啟 → { trend: trendType, trendColor: color }
-    //   關閉 → { trend: undefined, trendColor: undefined }
-    // onAddAction({
-    //   id: crypto.randomUUID(),
-    //   type: HistogramActionType.SWITCH_TREND_LINE,
-    //   description: isShowTrend
-    //     ? t(`開啟趨勢線`)
-    //     : t(`關閉趨勢線`),
-    //   payload: isShowTrend
-    //     ? { trend: trendType, trendColor: color }
-    //     : { trend: undefined, trendColor: undefined },
-    // });
+    // Info: (20260730 - Julian) 開啟 → 帶入 trend 與顏色；關閉 → 省略 trend（引擎會移除趨勢線設定列）
+    onAddAction({
+      id: crypto.randomUUID(),
+      type: HistogramActionType.SWITCH_TREND_LINE,
+      description: isShowTrend ? `開啟趨勢線` : `關閉趨勢線`,
+      payload: isShowTrend ? { trend: trendType, trendColor: color } : {},
+    });
   };
 
   return (
@@ -754,14 +722,15 @@ const DeleteItemPanel: FC<IBasePanelProps> = ({
 
   const handleSubmit = () => {
     if (!selectedId) return;
-    // onAddAction({
-    //   id: crypto.randomUUID(),
-    //   type: HistogramActionType.DELETE_ITEM,
-    //   description: t(`${HISTOGRAM_I18N_PREFIX}.action_delete_item`, {
-    //     category: selectedItem.category,
-    //   }),
-    //   payload: { lineIndex: selectedItem.lineIndex },
-    // });
+    const selectedItem =
+      bins.find((item) => item.lineIndex === Number(selectedId)) ?? null;
+    if (!selectedItem) return;
+    onAddAction({
+      id: crypto.randomUUID(),
+      type: HistogramActionType.DELETE_ITEM,
+      description: `刪除項目：${selectedItem.label}`,
+      payload: { lineIndex: selectedItem.lineIndex },
+    });
   };
 
   return (
@@ -816,7 +785,7 @@ interface IHistogramToolsSectionProps {
   selectedTool: string | null;
   setSelectedTool: React.Dispatch<React.SetStateAction<string | null>>;
   chart: string;
-  onAddAction: any; // (action: IHistogramAction) => void;
+  onAddAction: (action: IHistogramAction) => void;
 }
 
 export const HistogramToolsSection: FC<IHistogramToolsSectionProps> = ({
@@ -831,9 +800,7 @@ export const HistogramToolsSection: FC<IHistogramToolsSectionProps> = ({
   const parsedHistogramData = useMemo(() => parseHistogramData(chart), [chart]);
 
   // Info: (20260728 - Julian) 送出動作後收合面板，回到工具選擇列
-  const handleAddActionWithReset = (
-    action: any, //IHistogramAction
-  ) => {
+  const handleAddActionWithReset = (action: IHistogramAction) => {
     onAddAction(action);
     setSelectedTool(null);
   };
