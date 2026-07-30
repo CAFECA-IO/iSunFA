@@ -223,6 +223,28 @@ export interface ICustomHistogramAst {
   bins: ICustomHistogramBin[];
 }
 
+/**
+ * Info: (20260728 - Julian)
+ * 直方圖分箱（含原始行號），供結構化編輯以 lineIndex 精準定位 DSL 中的資料列。
+ * lineIndex 為 raw.split("\n") 的絕對索引（沿用 ITornadoItem 的定位設計）。
+ */
+export interface IHistogramItem extends ICustomHistogramBin {
+  lineIndex: number;
+}
+
+/**
+ * Info: (20260728 - Julian)
+ * 直方圖工具列所需的解析結果：分箱（帶行號）＋圖表標題／XY 軸標籤／趨勢線設定。
+ * 直方圖已分箱、無數列標頭列概念，故不含 hasHeader；trend 沿用 parser 的嚴格列舉驗證結果。
+ */
+export interface IHistogramParseResult {
+  title?: string;
+  xAxis?: string;
+  yAxis?: string;
+  trend?: HistogramTrendType;
+  bins: IHistogramItem[];
+}
+
 // Info: (20260716 - Julian) 盒鬚圖（五數綜合，parser 不自動計算四分位）
 export interface ICustomBoxItem {
   label: string;
