@@ -7,6 +7,7 @@ import {
 } from "@/components/transportation_carbon_footprint_calculator/plan_section";
 import { Truck, Ship, Plane, MapPin, Layers } from "lucide-react";
 import { IMileageBatchResult } from "@/components/transportation_carbon_footprint_calculator/mileage_batch_results";
+import type { IMapViewerRef } from "@/components/transportation_carbon_footprint_calculator/map_viewer";
 import { getRouteApplicability } from "@/lib/utils/route_applicability";
 import { buildPlanCode } from "@/constants/logistics";
 
@@ -17,6 +18,11 @@ interface IBatchExportRendererProps {
   selectedRoutes: Set<RouteType>;
   // Info: (20260729 - Tzuhan) 匯出批次識別碼:顯示於頁尾,與 summary.csv 檔頭一致
   exportId?: string;
+  /**
+   * Info: (20260731 - Tzuhan) 地圖控制器的 ref(issue 08)。呼叫端以此取得地圖影像
+   * (`captureMap()`)供伺服端列印;一次只渲染一個 (路線, 方案),故單一 ref 即足夠。
+   */
+  mapRef?: React.Ref<IMapViewerRef>;
   onReady: () => void;
 }
 
@@ -26,6 +32,7 @@ export function BatchExportRenderer({
   total,
   selectedRoutes,
   exportId = undefined,
+  mapRef = null,
   onReady,
 }: IBatchExportRendererProps) {
   const { t } = useTranslation();
@@ -156,6 +163,10 @@ export function BatchExportRenderer({
               plan={plan}
               weightKg={item.weightKg ?? 1000}
               isExporting={true}
+              // Info: (20260731 - Tzuhan) issue 08:伺服端列印需要地圖影像,而 MapLibre 是 WebGL
+              // Info: (20260731 - Tzuhan) (伺服端沒有),只能由此離屏實例截圖後上傳。
+              // Info: (20260731 - Tzuhan) 這是離屏渲染在向量路徑下唯一還存在的理由。
+              mapRef={mapRef}
             />
           </ReportLayout>
         </div>

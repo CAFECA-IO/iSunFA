@@ -82,3 +82,33 @@ export const TRANSPORT_CALCULATOR_QUERY_PARAM = {
  */
 export const HISTORY_VIEW_STATE_STORAGE_KEY =
   "transport_calculator_history_view_state";
+
+/**
+ * Info: (20260731 - Tzuhan) PDF 匯出的截圖參數。這兩個值**直接決定檔案大小**,
+ * 原本是散在 captureElementToPdf 裡的裸數字,體積出問題時無從調整,故抽出並記錄取捨。
+ *
+ * pixelRatio 2 = 以 CSS 像素兩倍解析度截圖(A4 寬約 175 DPI)。降到 1.5 約 130 DPI,
+ * 文字仍清晰而像素數少 44%;實測體積若超出預算,這是第一個該調的旋鈕。
+ */
+export const PDF_EXPORT_PIXEL_RATIO = 2;
+
+/**
+ * Info: (20260731 - Tzuhan) html-to-image 的 quality 僅對 JPEG/WebP 生效,PNG 為無損。
+ * 保留以維持既有行為,並提醒:報告是白底 + 文字 + 地圖,**PNG 無損壓縮遠優於 JPEG**
+ * (同一張圖實測 PNG 138 KB / JPEG q70 1,198 KB),因此格式不要改成 JPEG。
+ */
+export const PDF_EXPORT_IMAGE_QUALITY = 0.95;
+
+/**
+ * Info: (20260731 - Tzuhan) 單份 PDF 的體積預算。超出僅警告,不阻擋下載 ——
+ * 寧可交付過大的檔案,也不要讓使用者拿不到報告。
+ *
+ * 這個護欄存在的理由:體積曾在無人看管的情況下長到 22.5 MB(jsPDF 未開 compress,
+ * PNG 被以未壓縮原始 RGB 嵌入)。修一行只解決當時那一張圖,常態量測才能防止回歸。
+ *
+ * Info: (20260731 - Tzuhan) 預算自 100 KB 放寬為 500 KB(2026-07-31,Emily 確認)。
+ * 依據:伺服端向量列印的實測落點為 154 KB(其中地圖 32 KB、中文點陣字型約 60 KB),
+ * 光柵路徑為 296 KB。兩者都在 500 KB 內,把預算訂在真實落點之上才有警示意義 ——
+ * 訂 100 KB 會讓每次匯出都跳警告,警告一旦成為常態就等於沒有警告。
+ */
+export const PDF_EXPORT_SIZE_BUDGET_BYTES = 500 * 1024;

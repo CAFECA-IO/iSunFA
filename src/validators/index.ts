@@ -12,3 +12,4 @@ export * from "@/validators/carbon_report_storage";
 export * from "@/validators/carbon_inventory";
 export * from "@/validators/ledger";
 export * from "@/validators/report";
+export * from "@/validators/logistics_report_pdf";

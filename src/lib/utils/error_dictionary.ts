@@ -731,6 +731,14 @@ export const API_ERRORS = {
     message: "Storage quota exceeded",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
+  // Info: (20260731 - Tzuhan) 運輸報告向量列印失敗(Chrome 排版/列印階段)。
+  // Info: (20260731 - Tzuhan) 取 20 而非 17:IS000017~19 已由 feature/esg_report_ingestion 佔用
+  // Info: (20260731 - Tzuhan) (LLM 截斷/逾時/額度),兩分支都會併入 develop,跳號以避免撞碼。
+  IS_PDF_GENERATION_FAILED: {
+    code: "IS000020",
+    message: "Failed to generate PDF report",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
   IS_UNKNOWN: {
     code: "IS000099",
     message: "Internal Server Error",
