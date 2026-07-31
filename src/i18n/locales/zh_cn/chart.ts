@@ -302,6 +302,7 @@ export const chart = {
         select_link_to_delete: "选择欲删除的流向",
       },
     },
+    error_message: "AI 图表产生失败，请重试",
   },
   custom_chart: {
     // Info: (20260722 - Julian) 矩阵图常用工具 i18n 字串

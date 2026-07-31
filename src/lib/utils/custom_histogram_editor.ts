@@ -234,6 +234,7 @@ export const applyHistogramActions = (
     getHistogramBinFields(lines[idx]) !== null;
 
   const pushInsert = (at: number, line: string): void => {
+    if (!Number.isInteger(at)) return;
     const key = Math.min(Math.max(at, 0), originalLength);
     const bucket = insertBefore.get(key);
     if (bucket) bucket.push(line);

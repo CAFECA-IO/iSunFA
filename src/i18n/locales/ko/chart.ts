@@ -305,6 +305,7 @@ export const chart = {
         select_link_to_delete: "삭제할 흐름을 선택하세요",
       },
     },
+    error_message: "AI 차트 생성에 실패했습니다. 다시 시도해 주세요.",
   },
   custom_chart: {
     // Info: (20260722 - Julian) 매트릭스 차트 도구 i18n 문자열

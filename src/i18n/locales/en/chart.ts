@@ -304,6 +304,7 @@ export const chart = {
         select_link_to_delete: "Select the flow to delete",
       },
     },
+    error_message: "AI chart generation failed. Please try again.",
   },
   custom_chart: {
     // Info: (20260722 - Julian) Matrix chart quick-tool i18n strings

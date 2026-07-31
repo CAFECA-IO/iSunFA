@@ -224,7 +224,7 @@ export const createMermaidEditorAdapter = ({
       },
     );
     if (!response || response.code !== "SUCCESS" || !response.payload?.result) {
-      throw new Error("AI 圖表產生失敗，請重試");
+      throw new Error(t("chart.mermaid.error_message"));
     }
     return response.payload.result;
   },

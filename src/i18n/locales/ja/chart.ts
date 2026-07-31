@@ -305,6 +305,7 @@ export const chart = {
         select_link_to_delete: "削除するフローを選択",
       },
     },
+    error_message: "AIによるグラフ生成に失敗しました。もう一度お試しください。",
   },
   custom_chart: {
     // Info: (20260722 - Julian) マトリックスチャート用ツールの i18n 文字列
