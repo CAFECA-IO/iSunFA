@@ -18,10 +18,10 @@ import { MeasurementUnit } from "@/constants/enums";
 const VALID_ID = CARBON_REPORT_OUTLINE[0].id;
 const VALID_ID_2 = CARBON_REPORT_OUTLINE[1].id;
 
-type GenerateRawWithImages = (
-  prompt: string,
-  images?: { data: string; mimeType: string }[],
-) => Promise<string>;
+// Info: (20260731 - Tzuhan) 直接取自 ChatService 的方法型別,而非在此重寫一份:
+// Info: (20260731 - Tzuhan) 手寫版只宣告了前 2 個參數,對第 5 個參數(生成選項)的斷言因此在型別上不成立;
+// Info: (20260731 - Tzuhan) 從本體衍生後,真實簽名一改動這裡就會編譯失敗,不會再默默漂移。
+type GenerateRawWithImages = ChatService["generateRawWithImages"];
 
 const buildService = (
   llmOutput: unknown,
@@ -210,8 +210,9 @@ describe("ReportImportService 輸出額度與截斷處理", () => {
     await service.importReport(textSource(), "zh_tw", {
       extractActivities: false,
     });
-    const options = spy.mock.calls[0][4] as { maxOutputTokens?: number };
-    expect(options.maxOutputTokens).toBe(LLM_MAX_OUTPUT_TOKENS.REPORT_IMPORT);
+    expect(spy.mock.calls[0][4]?.maxOutputTokens).toBe(
+      LLM_MAX_OUTPUT_TOKENS.REPORT_IMPORT,
+    );
     expect(LLM_MAX_OUTPUT_TOKENS.REPORT_IMPORT).toBeGreaterThan(8192);
   });
 

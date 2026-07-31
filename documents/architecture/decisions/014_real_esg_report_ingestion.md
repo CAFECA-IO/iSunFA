@@ -203,7 +203,20 @@ npx tsx scripts/probe_report_import.ts <pdf 路徑> /tmp/inv.txt
 
 差異這麼大的分岔,理由不能只是一個代碼字串。已改為 `logger.error` + `describeError` 記下真正的例外。
 
-**推測成因與已採取的措施**:`pdf-parse` 動態載入 pdfjs legacy build 與 `@napi-rs/canvas`(原生 `.node`),被 bundler 處理過即失效,故加入 `serverExternalPackages`。沙箱側另有發現:載入 `pdfjs-dist@5.4.296` 的 legacy build 會讓 Node 行程直接 core dump(modern build 只是缺 `DOMMatrix`,屬預期),這類 crash **不可被 try/catch 攔截**,若本機也如此則需改用其他抽取器。真正的成因待本機那行 log 確認。
+**成因定位(2026-07-31 更新)**:先前記載「pdfjs legacy build 會讓 Node core dump」是**歸因錯誤**,已更正。逐段隔離後,崩潰來自 `@napi-rs/canvas` 這個原生綁定本身:
+
+| 條件                                                                      | 結果                                                                   |
+| :------------------------------------------------------------------------ | :--------------------------------------------------------------------- |
+| `import("@napi-rs/canvas")` 單獨載入                                      | **SIGBUS(core dump)**                                                  |
+| pdfjs legacy build,`@napi-rs/canvas` 可解析                               | SIGBUS(pdfjs 會去載它)                                                 |
+| pdfjs legacy build,`@napi-rs/canvas` 不存在                               | `ReferenceError: DOMMatrix is not defined`(模組頂層 `new DOMMatrix()`) |
+| pdfjs legacy build,無 canvas + 自備 10 行 DOMMatrix/ImageData/Path2D stub | **成功**:64 頁 / 52,148 字 / 815 字每頁                                |
+
+關鍵在於 pdfjs 的 Node 分支**無條件** `require("@napi-rs/canvas")`,而且是在檢查 `globalThis.DOMMatrix` **之前**——所以預先塞 polyfill 也躲不掉,只要這個套件裝著就會被載入(原始碼見 `pdfjs-dist/legacy/build/pdf.mjs` 的 `node_utils.js` 區段)。
+
+推論出的設計問題比環境問題更重要:**純文字抽取根本不需要繪圖能力,卻被一個原生綁定擋在門外**。最後一列證明只要繞開 canvas,同一份 pdfjs 就能完整抽出這份報告的文字層,且數值與 `pdftotext` 交叉驗證一致。
+
+已採取:(1) 失敗原因改為 `logger.error` + `describeError`;(2) `pdf-parse` 加入 `serverExternalPackages`(它動態載入 pdfjs 與原生 `.node`,被 bundler 處理過即失效);(3) 新增 `scripts/probe_pdf_text_layer.ts`,在 Next 之外逐段走同一條載入鏈,一次跑完即可分辨「原生綁定掛掉 / 打包破壞動態載入 / 這份檔案真的沒有文字層」——三者的修法完全不同。本機跑一次即可定案;若確認是原生綁定,則應改用不含原生依賴的抽取器(如 `unpdf` 的 serverless pdfjs build),而不是在 canvas 上繼續投資。
 
 ---
 
