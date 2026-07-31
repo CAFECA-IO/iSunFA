@@ -253,6 +253,9 @@ export const applyHistogramActions = (
         // Info: (20260730 - Julian) 移動＝刪除來源（tombstone）+ 於 newLineIndex 錨定插入更新後內容
         const { lineIndex, label, count, newLineIndex } = action.payload;
         if (!isTargetableDataLine(lineIndex)) break;
+        // Info: (20260731 - Julian) 先驗 newLineIndex 再 tombstone：非整數（NaN／小數）會被 pushInsert 擋下，
+        // Info: (20260731 - Julian) 若先 deleted.add 就會「刪了卻沒插回」造成該列靜默消失，故整個動作一併略過
+        if (!Number.isInteger(newLineIndex)) break;
         deleted.add(lineIndex);
         pushInsert(newLineIndex, buildHistogramDataLine(label, count));
         break;

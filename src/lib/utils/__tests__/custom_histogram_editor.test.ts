@@ -142,6 +142,28 @@ describe("applyHistogramActions - 超界 / 非法 lineIndex", () => {
     expect(run()).toBe(RAW);
   });
 
+  // Info: (20260731 - Julian) §7「永遠不直接採信 LLM 數值」：newLineIndex 未來由 LLM 產出，
+  // Info: (20260731 - Julian) 非整數若先 tombstone 再 pushInsert 會導致該列靜默消失，此處固化「整批略過」的不變式
+  it.each([
+    ["NaN", Number.NaN],
+    ["小數", 2.5],
+    ["Infinity", Number.POSITIVE_INFINITY],
+  ])(
+    "EDIT 的 newLineIndex 為 %s 時整個動作略過，來源列不得消失",
+    (_label, badIndex) => {
+      const out = applyHistogramActions(RAW, [edit(4, "C", 99, badIndex)]);
+      // Info: (20260731 - Julian) 關鍵：C 必須原樣保留，不可被刪掉也不可變成 99
+      expect(out).toBe(RAW);
+      expect(out).toContain("C, 2");
+      expect(out).not.toContain("C, 99");
+    },
+  );
+
+  it("ADD 的 lineIndex 為非整數時略過，不產生幽靈列", () => {
+    expect(applyHistogramActions(RAW, [add("GHOST", 1, Number.NaN)])).toBe(RAW);
+    expect(applyHistogramActions(RAW, [add("GHOST", 1, 2.5)])).toBe(RAW);
+  });
+
   it("ADD 的 lineIndex 超界時夾限為附加於尾端（不錯位、不 throw）", () => {
     const out = applyHistogramActions(RAW, [add("Z", 1, 999)]);
     expect(out).toBe(
