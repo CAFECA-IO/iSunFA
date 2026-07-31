@@ -13,6 +13,8 @@ import { MapPin } from "lucide-react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { FeatureCollection, Feature, Geometry } from "geojson";
 import { useTranslation } from "@/i18n/i18n_context";
+// Info: (20260731 - Tzuhan) bbox 計算抽到純模組:它是幾何運算而非 UI,且跨換日線的修正需要單元測試
+import { getMapBoundingBox as getBoundingBox } from "@/lib/utils/map_bounding_box";
 
 export interface IMapViewerProps {
   // Info: (20260430 - Tzuhan) 支援多式聯運的 FeatureCollection 或是單一軌跡
@@ -78,66 +80,6 @@ function getStartAndEndCoordinates(
 }
 
 // Info: (20260430 - Tzuhan) 輔助函數：計算 Geometry 的 Bounding Box [[minLng, minLat], [maxLng, maxLat]]
-function getBoundingBox(
-  geojson:
-    | GeoJSON.FeatureCollection
-    | GeoJSON.Feature
-    | GeoJSON.Geometry
-    | null,
-): [[number, number], [number, number]] | null {
-  if (!geojson) return null;
-  let minX = Infinity,
-    minY = Infinity,
-    maxX = -Infinity,
-    maxY = -Infinity;
-
-  const updateBounds = (coord: number[]) => {
-    if (coord[0] < minX) minX = coord[0];
-    if (coord[0] > maxX) maxX = coord[0];
-    if (coord[1] < minY) minY = coord[1];
-    if (coord[1] > maxY) maxY = coord[1];
-  };
-
-  const processGeometry = (geom: GeoJSON.GeoJSON | null) => {
-    if (!geom) return;
-    if (geom.type === "LineString") {
-      geom.coordinates.forEach(updateBounds);
-    } else if (geom.type === "MultiLineString") {
-      geom.coordinates.forEach((line: number[][]) =>
-        line.forEach(updateBounds),
-      );
-    } else if (geom.type === "Point") {
-      updateBounds(geom.coordinates);
-    } else if (geom.type === "GeometryCollection") {
-      geom.geometries.forEach(processGeometry);
-    } else if (geom.type === "FeatureCollection") {
-      geom.features.forEach((f: GeoJSON.Feature) =>
-        processGeometry(f.geometry),
-      );
-    } else if (geom.type === "Feature") {
-      processGeometry(geom.geometry);
-    }
-  };
-
-  processGeometry(geojson);
-
-  if (minX === Infinity) return null;
-
-  // Info: (20260430 - Tzuhan) 防呆：如果起終點太近，給予微小的 bbox 避免報錯或無法縮放
-  if (maxX - minX < 0.001) {
-    minX -= 0.01;
-    maxX += 0.01;
-  }
-  if (maxY - minY < 0.001) {
-    minY -= 0.01;
-    maxY += 0.01;
-  }
-
-  return [
-    [minX, minY],
-    [maxX, maxY],
-  ];
-}
 
 const MapViewerBase = (
   {

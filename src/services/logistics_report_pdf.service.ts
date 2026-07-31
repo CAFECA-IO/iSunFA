@@ -46,6 +46,36 @@ const buildFooterTemplate = (planCode: string): string =>
      <span>iSunFA · <span class="pageNumber"></span>/<span class="totalPages"></span></span>
    </div>`;
 
+/**
+ * Info: (20260731 - Tzuhan) 共用的 Chrome 實例。
+ *
+ * 實測單份請求 4.6s,而其中絕大部分是冷啟動 —— 每個請求各啟一次 Chrome,
+ * 27 份分 4 批就是 4 次啟動的純浪費。改為模組層級快取:
+ * 首次請求付啟動成本,之後重用。
+ *
+ * 沒有做閒置回收:Next 的 dev/serverless 都會在閒置後回收整個模組,
+ * 自行加計時器反而會在請求密集時把正在用的實例關掉。
+ * `connected` 檢查是為了處理 Chrome 自行崩潰後的重建。
+ */
+let sharedBrowser: Awaited<
+  ReturnType<Awaited<typeof import("puppeteer")>["default"]["launch"]>
+> | null = null;
+
+async function getBrowser(): Promise<
+  Awaited<ReturnType<Awaited<typeof import("puppeteer")>["default"]["launch"]>>
+> {
+  if (sharedBrowser?.connected) return sharedBrowser;
+  const puppeteer = (await import("puppeteer")).default;
+  const started = Date.now();
+  sharedBrowser = await puppeteer.launch({
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
+  logger.info(`[LogisticsReportPdfService] browser launched`, {
+    ms: Date.now() - started,
+  });
+  return sharedBrowser;
+}
+
 export class LogisticsReportPdfService {
   /**
    * Info: (20260731 - Tzuhan) 產生多份 PDF。單一 Chrome 實例、逐份列印,任何一份失敗即整批失敗:
@@ -63,34 +93,43 @@ export class LogisticsReportPdfService {
     }
 
     const generatedAt = new Date().toISOString().slice(0, 10);
-    // Info: (20260731 - Tzuhan) 動態載入:puppeteer 體積大且僅伺服端使用(已列於 serverExternalPackages)
-    const puppeteer = (await import("puppeteer")).default;
-
-    let browser: Awaited<ReturnType<typeof puppeteer.launch>> | null = null;
+    const batchStarted = Date.now();
     try {
-      browser = await puppeteer.launch({
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
-      });
+      const browser = await getBrowser();
       const results: IGeneratedReportPdf[] = [];
       // Info: (20260731 - Tzuhan) 逐份序列處理:並行開多個 page 會讓記憶體用量隨批次線性上升
       for (const report of request.reports) {
+        const started = Date.now();
         results.push(
           await this.renderOne(browser, report, generatedAt, request.exportId),
         );
+        // Info: (20260731 - Tzuhan) 逐份計時:批次匯出實測 15 分鐘遠超預估,
+        // Info: (20260731 - Tzuhan) 要能分辨慢在「伺服端排版」還是「前端取地圖」
+        logger.info(`[LogisticsReportPdfService] rendered`, {
+          planCode: report.planCode,
+          ms: Date.now() - started,
+          hasMap: Boolean(report.mapImageDataUrl),
+        });
       }
+      logger.info(`[LogisticsReportPdfService] batch done`, {
+        count: results.length,
+        ms: Date.now() - batchStarted,
+      });
       return results;
     } catch (error) {
       logger.error(
         `[LogisticsReportPdfService] generate failed: ${describeError(error)}`,
       );
+      // Info: (20260731 - Tzuhan) 失敗後棄用共用實例:崩潰的 Chrome 會讓後續請求全數失敗
+      if (sharedBrowser) {
+        await sharedBrowser.close().catch(() => undefined);
+        sharedBrowser = null;
+      }
       throw new ApiError(
         API_ERRORS.IS_PDF_GENERATION_FAILED.code,
         API_ERRORS.IS_PDF_GENERATION_FAILED.message,
         API_ERRORS.IS_PDF_GENERATION_FAILED.status,
       );
-    } finally {
-      // Info: (20260731 - Tzuhan) 一定要關:Chrome 行程洩漏會累積到把伺服器記憶體吃光
-      if (browser) await browser.close();
     }
   }
 

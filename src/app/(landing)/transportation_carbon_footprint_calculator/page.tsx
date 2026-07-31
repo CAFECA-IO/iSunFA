@@ -59,6 +59,7 @@ import {
 } from "@/lib/utils/logistics_report_request";
 import { requestReportPdfs } from "@/lib/utils/logistics_report_client";
 import {
+  CARBON_MAP_CAPTURE_TIMEOUT_MS,
   TRANSPORT_PDF_EXPORT_MODE,
   TransportPdfExportModeEnum,
 } from "@/constants/logistics_pdf";
@@ -592,6 +593,7 @@ function ReportPageContent() {
         TRANSPORT_PDF_EXPORT_MODE === TransportPdfExportModeEnum.SERVER_VECTOR
       ) {
         const mapImages = new Map<string, string>();
+        const mapPhaseStarted = Date.now();
         for (let j = 0; j < jobs.length; j++) {
           const job = jobs[j];
           setExportProgress({ current: j + 1, total: jobs.length });
@@ -604,11 +606,30 @@ function ReportPageContent() {
             // Info: (20260731 - Tzuhan) 不再等整頁可截圖;地圖沒就緒時該份不附圖,不阻擋匯出
             setTimeout(resolve, 4000);
           });
-          const dataUrl = await batchMapRef.current?.captureMap();
+          /**
+           * Info: (20260731 - Tzuhan) captureMap 必須設逾時:它等的是 MapLibre 的 `render` 事件,
+           * 若該實例的 WebGL context 已失效(離屏連續 remount 數十次時會發生),事件永遠不來,
+           * 這個 await 就會**無限期卡住**整個匯出。實測批次耗時 15 分鐘,這是首要嫌疑。
+           * 逾時就不附地圖 —— 少一張圖遠優於使用者盯著一個永不結束的轉圈。
+           */
+          const dataUrl = await Promise.race([
+            batchMapRef.current?.captureMap() ?? Promise.resolve(null),
+            new Promise<null>((resolve) => {
+              setTimeout(() => resolve(null), CARBON_MAP_CAPTURE_TIMEOUT_MS);
+            }),
+          ]);
           if (dataUrl) {
             mapImages.set(buildMapImageKey(job.index, job.type), dataUrl);
+          } else {
+            console.warn(
+              `[pdfExport] ${buildPlanCode(job.index, job.type)} 取地圖逾時或失敗,該份不附地圖`,
+            );
           }
         }
+        // Info: (20260731 - Tzuhan) 兩段各自計時:分辨慢在取地圖(前端 WebGL)還是產 PDF(伺服端)
+        console.info(
+          `[pdfExport] 取地圖階段 ${jobs.length} 份共 ${Math.round((Date.now() - mapPhaseStarted) / 1000)}s`,
+        );
 
         // Info: (20260731 - Tzuhan) 離屏元件可以先卸載:後續只需要資料,不再需要 DOM
         setExportingIndex(null);

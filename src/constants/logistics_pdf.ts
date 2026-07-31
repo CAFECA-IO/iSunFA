@@ -81,6 +81,14 @@ export const TRANSPORT_PDF_EXPORT_MODE: TransportPdfExportModeEnum =
 export const LOGISTICS_PDF_REQUEST_BATCH_SIZE = 8;
 
 /**
+ * Info: (20260731 - Tzuhan) 取單張地圖影像的逾時。
+ * `captureMap()` 等的是 MapLibre 的 `render` 事件;若該實例的 WebGL context 已失效
+ * (離屏連續 remount 數十次時會發生),事件永遠不會來,await 就無限期卡住整個匯出。
+ * 逾時即該份不附地圖 —— 少一張圖遠優於使用者盯著一個永不結束的轉圈。
+ */
+export const CARBON_MAP_CAPTURE_TIMEOUT_MS = 6_000;
+
+/**
  * Info: (20260731 - Tzuhan) 只接受 JPEG/PNG 的 data URL 作為地圖影像:
  * 這個字串會被放進 HTML 的 img src 交給 Chrome,必須先把 javascript: 之類的協定擋在門外。
  */
