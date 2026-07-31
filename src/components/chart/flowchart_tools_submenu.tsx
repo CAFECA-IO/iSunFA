@@ -1,12 +1,10 @@
 import React, { useState, useMemo, FC } from "react";
-import {
-  CirclePlus,
-  Pencil,
-  RefreshCcw,
-  SplinePointer,
-  LucideIcon,
-} from "lucide-react";
+import { CirclePlus, Pencil, RefreshCcw, SplinePointer } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
+import {
+  IToolItem as IToolItemBase,
+  IChartPanelProps,
+} from "@/interfaces/chart_tools";
 import {
   IChartAction,
   MermaidActionType,
@@ -29,10 +27,7 @@ enum FlowchartTools {
   CHANGE_DIRECTION = "changeDirection",
 }
 
-interface IToolItem {
-  tool: FlowchartTools;
-  icon: LucideIcon;
-}
+type IToolItem = IToolItemBase<FlowchartTools>;
 
 const FLOWCHART_TOOLS: IToolItem[] = [
   {
@@ -65,13 +60,13 @@ const FLOWCHART_TOOL_TRANSLATION_KEYS: Record<FlowchartTools, string> = {
 // Info: (20260629 - Julian) 將每個工具拆分成子元件(sub-panel)
 // ==========================================
 
-interface IBasePanelProps {
-  parsedNodes: { id: string; label: string }[];
-  onAddAction: (action: IChartAction) => void;
-}
+type IBasePanelProps = IChartPanelProps<
+  { id: string; label: string }[],
+  IChartAction
+>;
 
 // Info: (20260629 - Julian) 「新增節點」面板
-const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onAddAction }) => {
+const AddNodePanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
   const [newNodeId, setNewNodeId] = useState<string>("");
   const [newNodeLabel, setNewNodeLabel] = useState<string>("");
@@ -157,7 +152,7 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onAddAction }) => {
             className={MERMAID_INPUT_STYLE}
           >
             <option value="">(無)</option>
-            {parsedNodes.map((n) => (
+            {parsedData.map((n) => (
               <option key={`from-${n.id}`} value={n.id}>
                 {n.label} ({n.id})
               </option>
@@ -175,7 +170,7 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onAddAction }) => {
             className={MERMAID_INPUT_STYLE}
           >
             <option value="">(無)</option>
-            {parsedNodes.map((n) => (
+            {parsedData.map((n) => (
               <option key={`to-${n.id}`} value={n.id}>
                 {n.label} ({n.id})
               </option>
@@ -211,7 +206,7 @@ const AddNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onAddAction }) => {
 };
 
 // Info: (20260629 - Julian) 「變更節點文字」面板
-const EditNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onAddAction }) => {
+const EditNodePanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
   const [targetNodeId, setTargetNodeId] = useState<string>("");
   const [newNodeText, setNewNodeText] = useState<string>("");
@@ -249,7 +244,7 @@ const EditNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onAddAction }) => {
           <option value="">
             {t("chart.mermaid.ai_editor.flowchart.select_node_placeholder")}
           </option>
-          {parsedNodes.map((n) => (
+          {parsedData.map((n) => (
             <option key={`edit-${n.id}`} value={n.id}>
               {n.label} ({n.id})
             </option>
@@ -286,7 +281,7 @@ const EditNodePanel: FC<IBasePanelProps> = ({ parsedNodes, onAddAction }) => {
 
 // Info: (20260629 - Julian) 「變更連線」面板
 const AddConnectionPanel: FC<IBasePanelProps> = ({
-  parsedNodes,
+  parsedData,
   onAddAction,
 }) => {
   const { t } = useTranslation();
@@ -334,7 +329,7 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
             <option value="">
               {t("chart.mermaid.ai_editor.flowchart.select_from_placeholder")}
             </option>
-            {parsedNodes.map((n) => (
+            {parsedData.map((n) => (
               <option key={`conn-from-${n.id}`} value={n.id}>
                 {n.label} ({n.id})
               </option>
@@ -355,7 +350,7 @@ const AddConnectionPanel: FC<IBasePanelProps> = ({
             <option value="">
               {t("chart.mermaid.ai_editor.flowchart.select_to_placeholder")}
             </option>
-            {parsedNodes.map((n) => (
+            {parsedData.map((n) => (
               <option key={`conn-to-${n.id}`} value={n.id}>
                 {n.label} ({n.id})
               </option>
@@ -499,7 +494,7 @@ export const FlowchartToolsSection: FC<IFlowchartToolsSectionProps> = ({
   const { t } = useTranslation();
 
   // Info: (20260716 - Julian) 元件自行解析所需資料，父層只需傳入圖表字串
-  const parsedNodes = useMemo(() => parseFlowchartNodes(chart), [chart]);
+  const parsedData = useMemo(() => parseFlowchartNodes(chart), [chart]);
 
   const handleAddActionWithReset = (action: IChartAction) => {
     onAddAction(action);
@@ -544,7 +539,7 @@ export const FlowchartToolsSection: FC<IFlowchartToolsSectionProps> = ({
       {ActivePanel && (
         <div className="mt-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <ActivePanel
-            parsedNodes={parsedNodes}
+            parsedData={parsedData}
             onAddAction={handleAddActionWithReset}
           />
         </div>

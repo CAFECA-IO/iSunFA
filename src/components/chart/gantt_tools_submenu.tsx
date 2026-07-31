@@ -1,15 +1,12 @@
 "use client";
 
 import React, { useState, useMemo, FC } from "react";
-import {
-  SquarePlus,
-  SquarePen,
-  Trash2,
-  Tag,
-  LucideIcon,
-  Shuffle,
-} from "lucide-react";
+import { SquarePlus, SquarePen, Trash2, Tag, Shuffle } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
+import {
+  IToolItem as IToolItemBase,
+  IChartPanelProps,
+} from "@/interfaces/chart_tools";
 import {
   IGanttItem,
   IChartAction,
@@ -38,10 +35,7 @@ enum GanttTools {
   DELETE_TASK = "deleteTask",
 }
 
-interface IToolItem {
-  tool: GanttTools;
-  icon: LucideIcon;
-}
+type IToolItem = IToolItemBase<GanttTools>;
 
 const GANTT_TOOLS: IToolItem[] = [
   {
@@ -99,10 +93,7 @@ enum TaskType {
 // Info: (20260707 - Julian) 將每個工具拆分成子元件(sub-panel)
 // ==========================================
 
-interface IBasePanelProps {
-  parsedGanttItems: IGanttItem[];
-  onAddAction: (action: IChartAction) => void;
-}
+type IBasePanelProps = IChartPanelProps<IGanttItem[], IChartAction>;
 
 // ==========================================
 // Info: (20260707 - Julian) 內部通用小型組件
@@ -164,10 +155,7 @@ const TaskTypeRadioGroup: FC<{
 };
 
 // Info: (20260707 - Julian) 「新增行程」面板
-const AddTaskPanel: FC<IBasePanelProps> = ({
-  parsedGanttItems,
-  onAddAction,
-}) => {
+const AddTaskPanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
   const [ganttSection, setGanttSection] = useState<string>("");
   const [ganttTaskLabel, setGanttTaskLabel] = useState<string>("");
@@ -298,7 +286,7 @@ const AddTaskPanel: FC<IBasePanelProps> = ({
               <option value="">
                 {t("chart.mermaid.ai_editor.gantt.select_predecessor")}
               </option>
-              {parsedGanttItems
+              {parsedData
                 .filter((item) => item.type === GanttItemType.TASK)
                 .map((item) => (
                   <option
@@ -389,10 +377,7 @@ const AddTaskPanel: FC<IBasePanelProps> = ({
 };
 
 // Info: (20260707 - Julian) 「編輯行程」面板
-const EditTaskPanel: FC<IBasePanelProps> = ({
-  parsedGanttItems,
-  onAddAction,
-}) => {
+const EditTaskPanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
   const [ganttTaskTarget, setGanttTaskTarget] = useState<string>("");
   const [ganttNewSection, setGanttNewSection] = useState<string>("");
@@ -426,9 +411,7 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
   const handleSubmit = () => {
     if (submitDisabled) return;
 
-    const targetItem = parsedGanttItems.find(
-      (i) => i.label === ganttTaskTarget,
-    );
+    const targetItem = parsedData.find((i) => i.label === ganttTaskTarget);
     if (!targetItem) return;
 
     const start =
@@ -462,12 +445,11 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
 
   // Info: (20260707 - Julian) 取得選擇任務所屬的 section
   const targetSection = isTargetSelected
-    ? parsedGanttItems.find((item) => item.label === ganttTaskTarget)
-        ?.section || ""
+    ? parsedData.find((item) => item.label === ganttTaskTarget)?.section || ""
     : "";
 
   // Info: (20260707 - Julian) 取得任務分組 (section) 的選項：排除 targetSection
-  const sectionOptions = parsedGanttItems
+  const sectionOptions = parsedData
     .filter((item) => item.type === "section")
     .filter((item) => item.label !== targetSection);
 
@@ -492,7 +474,7 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
             <option value="">
               {t("chart.mermaid.ai_editor.gantt.select_edit_placeholder")}
             </option>
-            {parsedGanttItems
+            {parsedData
               .filter((item) => item.type === GanttItemType.TASK)
               .map((item) => (
                 <option key={`gantt-edit-opt-${item.label}`} value={item.label}>
@@ -585,7 +567,7 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
               <option value="">
                 {t("chart.mermaid.ai_editor.gantt.select_predecessor")}
               </option>
-              {parsedGanttItems
+              {parsedData
                 .filter(
                   (item) =>
                     item.type === GanttItemType.TASK &&
@@ -666,7 +648,7 @@ const EditTaskPanel: FC<IBasePanelProps> = ({
 
 // Info: (20260707 - Julian) 「變更行程類型」面板
 const ChangeTaskTypePanel: FC<IBasePanelProps> = ({
-  parsedGanttItems,
+  parsedData,
   onAddAction,
 }) => {
   const { t } = useTranslation();
@@ -675,9 +657,7 @@ const ChangeTaskTypePanel: FC<IBasePanelProps> = ({
 
   const handleSubmit = () => {
     if (!ganttTaskTarget) return;
-    const targetItem = parsedGanttItems.find(
-      (i) => i.label === ganttTaskTarget,
-    );
+    const targetItem = parsedData.find((i) => i.label === ganttTaskTarget);
     if (!targetItem) return;
 
     onAddAction({
@@ -727,7 +707,7 @@ const ChangeTaskTypePanel: FC<IBasePanelProps> = ({
           <option value="">
             {t("chart.mermaid.ai_editor.gantt.select_edit_placeholder")}
           </option>
-          {parsedGanttItems
+          {parsedData
             .filter((item) => item.type === GanttItemType.TASK)
             .map((item) => (
               <option key={`gantt-type-opt-${item.label}`} value={item.label}>
@@ -758,18 +738,15 @@ const ChangeTaskTypePanel: FC<IBasePanelProps> = ({
 };
 
 // Info: (20260707 - Julian) 「調整行程順序」面板
-const SwapTaskPanel: FC<IBasePanelProps> = ({
-  parsedGanttItems,
-  onAddAction,
-}) => {
+const SwapTaskPanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
   const [ganttTaskTarget, setGanttTaskTarget] = useState<string>("");
   const [ganttTaskTarget2, setGanttTaskTarget2] = useState<string>("");
 
   const handleSubmit = () => {
     if (!ganttTaskTarget || !ganttTaskTarget2) return;
-    const item1 = parsedGanttItems.find((i) => i.label === ganttTaskTarget);
-    const item2 = parsedGanttItems.find((i) => i.label === ganttTaskTarget2);
+    const item1 = parsedData.find((i) => i.label === ganttTaskTarget);
+    const item2 = parsedData.find((i) => i.label === ganttTaskTarget2);
     if (!item1 || !item2) return;
 
     onAddAction({
@@ -788,7 +765,7 @@ const SwapTaskPanel: FC<IBasePanelProps> = ({
     });
   };
 
-  const taskOptions = parsedGanttItems.filter((item) => item.type === "task");
+  const taskOptions = parsedData.filter((item) => item.type === "task");
 
   return (
     <div className="flex flex-col gap-3">
@@ -853,18 +830,13 @@ const SwapTaskPanel: FC<IBasePanelProps> = ({
 };
 
 // Info: (20260707 - Julian) 「刪除行程」面板
-const DeleteTaskPanel: FC<IBasePanelProps> = ({
-  parsedGanttItems,
-  onAddAction,
-}) => {
+const DeleteTaskPanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
   const [ganttTaskTarget, setGanttTaskTarget] = useState<string>("");
 
   const handleSubmit = () => {
     if (!ganttTaskTarget) return;
-    const targetItem = parsedGanttItems.find(
-      (i) => i.label === ganttTaskTarget,
-    );
+    const targetItem = parsedData.find((i) => i.label === ganttTaskTarget);
     if (!targetItem) return;
 
     onAddAction({
@@ -900,7 +872,7 @@ const DeleteTaskPanel: FC<IBasePanelProps> = ({
           <option value="">
             {t("chart.mermaid.ai_editor.gantt.delete_target_label")}
           </option>
-          {parsedGanttItems
+          {parsedData
             .filter((item) => item.type === "task")
             .map((item) => (
               <option key={`gantt-del-opt-${item.label}`} value={item.label}>
@@ -953,7 +925,7 @@ export const GanttToolsSection: FC<IGanttToolsSectionProps> = ({
   const { t } = useTranslation();
 
   // Info: (20260716 - Julian) 元件自行解析所需資料，父層只需傳入圖表字串
-  const parsedGanttItems = useMemo(() => parseGanttItems(chart), [chart]);
+  const parsedData = useMemo(() => parseGanttItems(chart), [chart]);
 
   const handleAddActionWithReset = (action: IChartAction) => {
     onAddAction(action);
@@ -998,7 +970,7 @@ export const GanttToolsSection: FC<IGanttToolsSectionProps> = ({
       {ActivePanel && (
         <div className="mt-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <ActivePanel
-            parsedGanttItems={parsedGanttItems}
+            parsedData={parsedData}
             onAddAction={handleAddActionWithReset}
           />
         </div>

@@ -8,9 +8,12 @@ import {
   GitCommitHorizontal,
   GitCommitVertical,
   Trash2,
-  LucideIcon,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
+import {
+  IToolItem as IToolItemBase,
+  IChartPanelProps,
+} from "@/interfaces/chart_tools";
 import {
   IXYChartData,
   IChartAction,
@@ -38,10 +41,7 @@ export enum XYChartTools {
   DELETE_SERIES = "deleteSeries",
 }
 
-interface IToolItem {
-  tool: XYChartTools;
-  icon: LucideIcon;
-}
+type IToolItem = IToolItemBase<XYChartTools>;
 
 const XY_CHART_TOOLS: IToolItem[] = [
   {
@@ -86,10 +86,7 @@ const XY_CHART_TOOL_TRANSLATION_KEYS: Record<XYChartTools, string> = {
 
 // Info: (20260707 - Julian) 將每個工具拆分成子元件(sub-panel)
 
-interface IBasePanelProps {
-  parsedXYChartData: IXYChartData;
-  onAddAction: (action: IChartAction) => void;
-}
+type IBasePanelProps = IChartPanelProps<IXYChartData, IChartAction>;
 
 const DataTypeSwitch: FC<{
   dataType: XYChartDataType;
@@ -214,12 +211,9 @@ const AddSeriesPanel: FC<IBasePanelProps> = ({ onAddAction }) => {
 };
 
 // Info: (20260709 - Julian) 「變更 X 軸」面板
-const EditXAxisPanel: FC<IBasePanelProps> = ({
-  parsedXYChartData,
-  onAddAction,
-}) => {
+const EditXAxisPanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
-  const { xAxis } = parsedXYChartData;
+  const { xAxis } = parsedData;
 
   const [xAxisTitle, setXAxisTitle] = useState<string>(xAxis.title || "");
   const [xAxisType, setXAxisType] = useState<XYChartAxisType>(
@@ -380,12 +374,9 @@ const EditXAxisPanel: FC<IBasePanelProps> = ({
 };
 
 // Info: (20260709 - Julian) 「變更 Y 軸」面板
-const EditYAxisPanel: FC<IBasePanelProps> = ({
-  parsedXYChartData,
-  onAddAction,
-}) => {
+const EditYAxisPanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
-  const { yAxis } = parsedXYChartData;
+  const { yAxis } = parsedData;
 
   const [yAxisTitle, setYAxisTitle] = useState<string>(yAxis.title || "");
 
@@ -478,19 +469,15 @@ const EditYAxisPanel: FC<IBasePanelProps> = ({
 };
 
 // Info: (20260709 - Julian) 「變更折線圖」面板
-const EditLinePanel: FC<IBasePanelProps> = ({
-  parsedXYChartData,
-  onAddAction,
-}) => {
+const EditLinePanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
   const categories = useMemo(
-    () => parsedXYChartData.xAxis.categories || [],
-    [parsedXYChartData],
+    () => parsedData.xAxis.categories || [],
+    [parsedData],
   );
   const lineSeries = useMemo(
-    () =>
-      parsedXYChartData.series.filter((s) => s.type === XYChartDataType.LINE),
-    [parsedXYChartData],
+    () => parsedData.series.filter((s) => s.type === XYChartDataType.LINE),
+    [parsedData],
   );
 
   const [targetIndex, setTargetIndex] = useState<number>(0);
@@ -507,8 +494,8 @@ const EditLinePanel: FC<IBasePanelProps> = ({
   const isSubmitDisabled = !rawValues || rawValues.length == 0;
 
   useEffect(() => {
-    const categories = parsedXYChartData.xAxis.categories || [];
-    const lineSeries = parsedXYChartData.series.filter(
+    const categories = parsedData.xAxis.categories || [];
+    const lineSeries = parsedData.series.filter(
       (s) => s.type === XYChartDataType.LINE,
     );
     const selectedSeries = lineSeries[targetIndex];
@@ -528,7 +515,7 @@ const EditLinePanel: FC<IBasePanelProps> = ({
         setRawValues("");
       }
     }
-  }, [targetIndex, categories, lineSeries, parsedXYChartData]);
+  }, [targetIndex, categories, lineSeries, parsedData]);
 
   const handleSubmit = () => {
     const data =
@@ -685,19 +672,15 @@ const EditLinePanel: FC<IBasePanelProps> = ({
 };
 
 // Info: (20260709 - Julian) 「變更長條圖」面板
-const EditBarPanel: FC<IBasePanelProps> = ({
-  parsedXYChartData,
-  onAddAction,
-}) => {
+const EditBarPanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
   const categories = useMemo(
-    () => parsedXYChartData.xAxis.categories || [],
-    [parsedXYChartData],
+    () => parsedData.xAxis.categories || [],
+    [parsedData],
   );
   const barSeries = useMemo(
-    () =>
-      parsedXYChartData.series.filter((s) => s.type === XYChartDataType.BAR),
-    [parsedXYChartData],
+    () => parsedData.series.filter((s) => s.type === XYChartDataType.BAR),
+    [parsedData],
   );
 
   const [targetIndex, setTargetIndex] = useState<number>(0);
@@ -712,8 +695,8 @@ const EditBarPanel: FC<IBasePanelProps> = ({
   const [rawValues, setRawValues] = useState<string>("");
 
   useEffect(() => {
-    const categories = parsedXYChartData.xAxis.categories || [];
-    const barSeries = parsedXYChartData.series.filter(
+    const categories = parsedData.xAxis.categories || [];
+    const barSeries = parsedData.series.filter(
       (s) => s.type === XYChartDataType.BAR,
     );
     const selectedSeries = barSeries[targetIndex];
@@ -733,7 +716,7 @@ const EditBarPanel: FC<IBasePanelProps> = ({
         setRawValues("");
       }
     }
-  }, [targetIndex, categories, barSeries, parsedXYChartData]);
+  }, [targetIndex, categories, barSeries, parsedData]);
 
   const handleSubmit = () => {
     const data =
@@ -889,12 +872,12 @@ const EditBarPanel: FC<IBasePanelProps> = ({
 
 // Info: (20260709 - Julian) 「刪除數列」面板
 const DeleteSeriesPanel: FC<IBasePanelProps> = ({
-  parsedXYChartData,
+  parsedData,
   onAddAction,
 }) => {
   const { t } = useTranslation();
 
-  const { series } = parsedXYChartData;
+  const { series } = parsedData;
   const seriesIds = series.map((s) => s.lineIndex);
 
   const [selectedSeries, setSelectedSeries] = useState<number>(seriesIds[0]);
@@ -989,7 +972,7 @@ export const XYChartToolsSection: FC<IXYChartToolsSectionProps> = ({
   const { t } = useTranslation();
 
   // Info: (20260716 - Julian) 元件自行解析所需資料，父層只需傳入圖表字串
-  const parsedXYChartData = useMemo(() => parseXYChartData(chart), [chart]);
+  const parsedData = useMemo(() => parseXYChartData(chart), [chart]);
 
   const handleAddActionWithReset = (action: IChartAction) => {
     onAddAction(action);
@@ -1031,10 +1014,10 @@ export const XYChartToolsSection: FC<IXYChartToolsSectionProps> = ({
       </div>
 
       {/* Info: (20260707 - Julian) 快捷工具子面板 - 透過 Mapping 動態載入 */}
-      {ActivePanel && parsedXYChartData && (
+      {ActivePanel && parsedData && (
         <div className="mt-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <ActivePanel
-            parsedXYChartData={parsedXYChartData}
+            parsedData={parsedData}
             onAddAction={handleAddActionWithReset}
           />
         </div>

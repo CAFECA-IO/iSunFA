@@ -4,11 +4,14 @@ import {
   PencilLine,
   ChartNoAxesCombined,
   Trash2,
-  LucideIcon,
   ChevronDown,
   Move3d,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
+import {
+  IToolItem as IToolItemBase,
+  IChartPanelProps,
+} from "@/interfaces/chart_tools";
 import {
   HistogramTrendType,
   HistogramActionType,
@@ -45,15 +48,12 @@ enum TrainVariant {
   EDIT = "edit",
 }
 
-interface IToolItem {
-  tool: HistogramTools;
-  icon: LucideIcon;
-}
+type IToolItem = IToolItemBase<HistogramTools>;
 
-interface IBasePanelProps {
-  parsedHistogramData: IHistogramParseResult;
-  onAddAction: (action: IHistogramAction) => void;
-}
+type IBasePanelProps = IChartPanelProps<
+  IHistogramParseResult,
+  IHistogramAction
+>;
 
 interface IDraggingTrainProps {
   // Info: (20260730 - Julian) 既有分箱（順序固定、不可拖曳）；以 lineIndex 升序視為車廂順序
@@ -303,12 +303,9 @@ const DraggingTrain: FC<IDraggingTrainProps> = ({
 };
 
 // Info: (20260728 - Julian) 「新增項目」面板
-const AddItemPanel: FC<IBasePanelProps> = ({
-  parsedHistogramData,
-  onAddAction,
-}) => {
+const AddItemPanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
-  const { bins } = parsedHistogramData;
+  const { bins } = parsedData;
 
   // Info: (20260730 - Julian) 新項目預設插在最末：取既有分箱最大 lineIndex + 1（無資料則為 0）
   const newOrder = () =>
@@ -396,13 +393,10 @@ const AddItemPanel: FC<IBasePanelProps> = ({
 };
 
 // Info: (20260728 - Julian) 「編輯項目」面板
-const EditItemPanel: FC<IBasePanelProps> = ({
-  parsedHistogramData,
-  onAddAction,
-}) => {
+const EditItemPanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
 
-  const { bins } = parsedHistogramData;
+  const { bins } = parsedData;
 
   const [selectedId, setSelectedId] = useState<number>(0);
   const [titleInput, setTitleInput] = useState<string>("");
@@ -539,13 +533,10 @@ const EditItemPanel: FC<IBasePanelProps> = ({
 };
 
 // Info: (20260728 - Julian) 「編輯軸線標題」面板：
-const EditAxisPanel: FC<IBasePanelProps> = ({
-  parsedHistogramData,
-  onAddAction,
-}) => {
+const EditAxisPanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
 
-  const { xAxis, yAxis } = parsedHistogramData;
+  const { xAxis, yAxis } = parsedData;
 
   const initialYTitle = yAxis ?? "";
   const initialXTitle = xAxis ?? "";
@@ -616,12 +607,12 @@ const EditAxisPanel: FC<IBasePanelProps> = ({
 
 // Info: (20260728 - Julian) 「切換趨勢曲線」面板
 const SwitchTrendLinePanel: FC<IBasePanelProps> = ({
-  parsedHistogramData,
+  parsedData,
   onAddAction,
 }) => {
   const { t } = useTranslation();
 
-  const { trend, trendColor } = parsedHistogramData;
+  const { trend, trendColor } = parsedData;
 
   // Info: (20260730 - Julian) 目前趨勢線類型（暫僅支援常態）；預設色由中繼資料取得
   const trendType = trend ?? HistogramTrendType.NORMAL;
@@ -710,13 +701,10 @@ const SwitchTrendLinePanel: FC<IBasePanelProps> = ({
 };
 
 // Info: (20260728 - Julian) 「刪除項目」面板
-const DeleteItemPanel: FC<IBasePanelProps> = ({
-  parsedHistogramData,
-  onAddAction,
-}) => {
+const DeleteItemPanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
 
-  const { bins } = parsedHistogramData;
+  const { bins } = parsedData;
 
   const [selectedId, setSelectedId] = useState<string>("");
 
@@ -801,7 +789,7 @@ export const HistogramToolsSection: FC<IHistogramToolsSectionProps> = ({
   const { t } = useTranslation();
 
   // Info: (20260728 - Julian) 元件自行解析所需資料，父層只需傳入圖表字串
-  const parsedHistogramData = useMemo(() => parseHistogramData(chart), [chart]);
+  const parsedData = useMemo(() => parseHistogramData(chart), [chart]);
 
   // Info: (20260728 - Julian) 送出動作後收合面板，回到工具選擇列
   const handleAddActionWithReset = (action: IHistogramAction) => {
@@ -846,7 +834,7 @@ export const HistogramToolsSection: FC<IHistogramToolsSectionProps> = ({
       {ActivePanel && (
         <div className="mt-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <ActivePanel
-            parsedHistogramData={parsedHistogramData}
+            parsedData={parsedData}
             onAddAction={handleAddActionWithReset}
           />
         </div>

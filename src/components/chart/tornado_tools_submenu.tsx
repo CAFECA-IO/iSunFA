@@ -5,9 +5,12 @@ import {
   PencilLine,
   SwatchBook,
   Trash2,
-  LucideIcon,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
+import {
+  IToolItem as IToolItemBase,
+  IChartPanelProps,
+} from "@/interfaces/chart_tools";
 import { TornadoActionType, TornadoMode } from "@/constants/custom_chart";
 import { ITornadoAction, ITornadoParseResult } from "@/interfaces/custom_chart";
 import { parseTornadoData } from "@/lib/utils/custom_tornado_editor";
@@ -32,10 +35,7 @@ enum TornadoTools {
   DELETE_ITEM = "deleteItem",
 }
 
-interface IToolItem {
-  tool: TornadoTools;
-  icon: LucideIcon;
-}
+type IToolItem = IToolItemBase<TornadoTools>;
 
 const TORNADO_TOOLS: IToolItem[] = [
   {
@@ -68,19 +68,16 @@ const TORNADO_TOOL_TRANSLATION_KEYS: Record<TornadoTools, string> = {
   [TornadoTools.DELETE_ITEM]: `${TORNADO_I18N_PREFIX}.delete_item`,
 };
 
-interface IBasePanelProps {
-  parsedTornadoData: ITornadoParseResult;
-  onAddAction: (action: ITornadoAction) => void;
-}
+type IBasePanelProps = IChartPanelProps<ITornadoParseResult, ITornadoAction>;
 
 // Info: (20260723 - Julian) 「圖表設定」面板：切換圖表型別（比較型／敏感度型）、單位、基準值
 const ChartSettingsPanel: FC<IBasePanelProps> = ({
-  parsedTornadoData,
+  parsedData,
   onAddAction,
 }) => {
   const { t } = useTranslation();
 
-  const { mode, unit, baseline } = parsedTornadoData;
+  const { mode, unit, baseline } = parsedData;
   const initialMode = mode ?? TornadoMode.COMPARE;
   const initialUnit = unit ?? "";
   const initialBaseline = baseline !== undefined ? String(baseline) : "";
@@ -201,13 +198,10 @@ const ChartSettingsPanel: FC<IBasePanelProps> = ({
 };
 
 // Info: (20260723 - Julian) 「新增分析項目」面板
-const AddItemPanel: FC<IBasePanelProps> = ({
-  parsedTornadoData,
-  onAddAction,
-}) => {
+const AddItemPanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
 
-  const { mode, leftSeries, rightSeries } = parsedTornadoData;
+  const { mode, leftSeries, rightSeries } = parsedData;
   const isSensitivity = mode === TornadoMode.SENSITIVITY;
   const leftLabel =
     leftSeries ||
@@ -308,18 +302,10 @@ const AddItemPanel: FC<IBasePanelProps> = ({
 };
 
 // Info: (20260723 - Julian) 「編輯項目數值」面板
-const EditItemPanel: FC<IBasePanelProps> = ({
-  parsedTornadoData,
-  onAddAction,
-}) => {
+const EditItemPanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
 
-  const {
-    mode,
-    bars: itemOptions,
-    leftSeries,
-    rightSeries,
-  } = parsedTornadoData;
+  const { mode, bars: itemOptions, leftSeries, rightSeries } = parsedData;
   const isSensitivity = mode === TornadoMode.SENSITIVITY;
   const leftLabel =
     leftSeries ||
@@ -471,13 +457,10 @@ const EditItemPanel: FC<IBasePanelProps> = ({
 };
 
 // Info: (20260723 - Julian) 「編輯項目分組」面板：設定左右數列名稱與顏色
-const EditGroupPanel: FC<IBasePanelProps> = ({
-  parsedTornadoData,
-  onAddAction,
-}) => {
+const EditGroupPanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
 
-  const { leftSeries, rightSeries, leftColor, rightColor } = parsedTornadoData;
+  const { leftSeries, rightSeries, leftColor, rightColor } = parsedData;
 
   const initialLeftName = leftSeries ?? "";
   const initialRightName = rightSeries ?? "";
@@ -590,13 +573,10 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
 };
 
 // Info: (20260723 - Julian) 「刪除分析項目」面板
-const DeleteItemPanel: FC<IBasePanelProps> = ({
-  parsedTornadoData,
-  onAddAction,
-}) => {
+const DeleteItemPanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
 
-  const { bars: itemOptions } = parsedTornadoData;
+  const { bars: itemOptions } = parsedData;
 
   const [selectedId, setSelectedId] = useState<string>("");
 
@@ -684,7 +664,7 @@ export const TornadoToolsSection: FC<ITornadoToolsSectionProps> = ({
   const { t } = useTranslation();
 
   // Info: (20260723 - Julian) 元件自行解析所需資料，父層只需傳入圖表字串
-  const parsedTornadoData = useMemo(() => parseTornadoData(chart), [chart]);
+  const parsedData = useMemo(() => parseTornadoData(chart), [chart]);
 
   // Info: (20260723 - Julian) 送出動作後收合面板，回到工具選擇列
   const handleAddActionWithReset = (action: ITornadoAction) => {
@@ -729,7 +709,7 @@ export const TornadoToolsSection: FC<ITornadoToolsSectionProps> = ({
       {ActivePanel && (
         <div className="mt-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <ActivePanel
-            parsedTornadoData={parsedTornadoData}
+            parsedData={parsedData}
             onAddAction={handleAddActionWithReset}
           />
         </div>

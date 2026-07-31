@@ -1,6 +1,10 @@
 import React, { useState, useMemo, FC } from "react";
-import { CakeSlice, Slice, Trash2, LucideIcon } from "lucide-react";
+import { CakeSlice, Slice, Trash2 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
+import {
+  IToolItem as IToolItemBase,
+  IChartPanelProps,
+} from "@/interfaces/chart_tools";
 import {
   IChartAction,
   MermaidActionType,
@@ -29,10 +33,7 @@ enum PieValueMode {
   PROPORTION = "proportion",
 }
 
-interface IToolItem {
-  tool: PieTools;
-  icon: LucideIcon;
-}
+type IToolItem = IToolItemBase<PieTools>;
 
 const PIE_TOOLS: IToolItem[] = [
   {
@@ -59,16 +60,13 @@ const PIE_TOOL_TRANSLATION_KEYS: Record<PieTools, string> = {
 // Info: (20260629 - Julian) 將每個工具拆分成子元件(sub-panel)
 // ==========================================
 
-interface IBasePanelProps {
-  parsedPieItems: { label: string; value: number }[];
-  onAddAction: (action: IChartAction) => void;
-}
+type IBasePanelProps = IChartPanelProps<
+  { label: string; value: number }[],
+  IChartAction
+>;
 
 // Info: (20260629 - Julian) 「新增項目」面板
-const AddSlicePanel: FC<IBasePanelProps> = ({
-  parsedPieItems,
-  onAddAction,
-}) => {
+const AddSlicePanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
   const [pieSliceLabel, setPieSliceLabel] = useState<string>("");
   const [valueMode, setValueMode] = useState<PieValueMode>(PieValueMode.VALUE);
@@ -83,7 +81,7 @@ const AddSlicePanel: FC<IBasePanelProps> = ({
 
     let finalValue = parseFloat(pieSliceValue.value);
     if (isProportion) {
-      const existingSum = parsedPieItems.reduce((acc, i) => acc + i.value, 0);
+      const existingSum = parsedData.reduce((acc, i) => acc + i.value, 0);
       const p = parseFloat(pieSliceValue.value);
       if (p >= 100) {
         // Info: (20260708 - Julian) 若為 100% 則給予一個極大值或依邏輯處理，此處簡單防呆
@@ -179,10 +177,7 @@ const AddSlicePanel: FC<IBasePanelProps> = ({
 };
 
 // Info: (20260629 - Julian) 「變更標題/數值」面板
-const EditSlicePanel: FC<IBasePanelProps> = ({
-  parsedPieItems,
-  onAddAction,
-}) => {
+const EditSlicePanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
   const [pieSliceTarget, setPieSliceTarget] = useState<string>("");
   const [pieSliceNewLabel, setPieSliceNewLabel] = useState<string>("");
@@ -195,7 +190,7 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
 
   const handleSubmit = () => {
     if (!pieSliceTarget || (!pieSliceValue.value && !pieSliceNewLabel)) return;
-    const targetItem = parsedPieItems.find((i) => i.label === pieSliceTarget);
+    const targetItem = parsedData.find((i) => i.label === pieSliceTarget);
     if (!targetItem) return;
 
     let finalValue = pieSliceValue.value
@@ -203,7 +198,7 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
       : targetItem.value;
 
     if (pieSliceValue.value && isProportion) {
-      const otherSum = parsedPieItems
+      const otherSum = parsedData
         .filter((i) => i.label !== pieSliceTarget)
         .reduce((acc, i) => acc + i.value, 0);
       const p = parseFloat(pieSliceValue.value);
@@ -248,7 +243,7 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
           <option value="">
             {t("chart.mermaid.ai_editor.pie.select_slice_placeholder")}
           </option>
-          {parsedPieItems.map((item) => (
+          {parsedData.map((item) => (
             <option key={`pie-edit-opt-${item.label}`} value={item.label}>
               {item.label} ({item.value})
             </option>
@@ -319,10 +314,7 @@ const EditSlicePanel: FC<IBasePanelProps> = ({
 };
 
 // Info: (20260629 - Julian) 「刪除項目」面板
-const DeleteSlicePanel: FC<IBasePanelProps> = ({
-  parsedPieItems,
-  onAddAction,
-}) => {
+const DeleteSlicePanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
   const [pieSliceTarget, setPieSliceTarget] = useState<string>("");
 
@@ -360,7 +352,7 @@ const DeleteSlicePanel: FC<IBasePanelProps> = ({
           <option value="">
             {t("chart.mermaid.ai_editor.pie.select_delete_placeholder")}
           </option>
-          {parsedPieItems.map((item) => (
+          {parsedData.map((item) => (
             <option key={`pie-del-opt-${item.label}`} value={item.label}>
               {item.label}
             </option>
@@ -401,7 +393,7 @@ export const PieToolsSection: FC<IPieToolsSectionProps> = ({
   const { t } = useTranslation();
 
   // Info: (20260716 - Julian) 元件自行解析所需資料，父層只需傳入圖表字串
-  const parsedPieItems = useMemo(() => parsePieItems(chart), [chart]);
+  const parsedData = useMemo(() => parsePieItems(chart), [chart]);
 
   const handleAddActionWithReset = (action: IChartAction) => {
     onAddAction(action);
@@ -445,7 +437,7 @@ export const PieToolsSection: FC<IPieToolsSectionProps> = ({
       {ActivePanel && (
         <div className="mt-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <ActivePanel
-            parsedPieItems={parsedPieItems}
+            parsedData={parsedData}
             onAddAction={handleAddActionWithReset}
           />
         </div>
