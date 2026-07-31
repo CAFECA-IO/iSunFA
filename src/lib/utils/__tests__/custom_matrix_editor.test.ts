@@ -9,6 +9,7 @@ import {
   applyMatrixAction,
   applyMatrixActions,
 } from "@/lib/utils/custom_matrix_editor";
+import { describe, it, expect } from "@jest/globals";
 
 /**
  * Info: (20260725 - Luphia)
@@ -316,5 +317,112 @@ describe("不可變性與 round-trip", () => {
     });
     const reparsed = parseMatrixItems(out).find((i) => i.label === "B")!;
     expect(reparsed).toMatchObject({ x: 7, y: 8, group: "G1" });
+  });
+});
+
+/**
+ * Info: (20260731 - Julian)
+ * 使用者指定情境補充：矩陣資料點無序、無 newLineIndex 跨列移動，故「移動」情境對應為
+ * ADD 附加尾端 / EDIT 就地（不重排）；另補「同批多動作疊加」「目標已刪除」「超界/非法 lineIndex」。
+ */
+describe("applyMatrixActions - 同批多動作疊加", () => {
+  it("多個 ADD + EDIT + DELETE 混合：驗證最終順序與各列內容", () => {
+    const actions: IMatrixAction[] = [
+      {
+        id: uid(30),
+        type: MatrixActionType.ADD_ITEM,
+        description: "add D",
+        payload: { label: "D", x: 5, y: 6, group: "G2" },
+      },
+      {
+        id: uid(31),
+        type: MatrixActionType.EDIT_ITEM,
+        description: "edit A(3) in place",
+        payload: { lineIndex: 3, label: "A2", x: 11, y: 22, group: "G1" },
+      },
+      {
+        id: uid(32),
+        type: MatrixActionType.DELETE_ITEM,
+        description: "delete B(4)",
+        payload: { lineIndex: 4 },
+      },
+      {
+        id: uid(33),
+        type: MatrixActionType.ADD_ITEM,
+        description: "add E",
+        payload: { label: "E", x: 7, y: 8, group: "" },
+      },
+    ];
+    const out = applyMatrixActions(RAW, actions);
+    // Info: (20260731 - Julian) 非刪除原行（含就地編輯 A→A2）依原序，附加行 D、E 依動作順序接尾端
+    expect(out).toBe(
+      [
+        "title: 競爭力矩陣",
+        "xaxis: 低 ↔ 高",
+        "yaxis: 弱 ↔ 強",
+        "A2, 11, 22, G1",
+        "C, 30, 40",
+        "D, 5, 6, G2",
+        "E, 7, 8",
+      ].join("\n"),
+    );
+    expect(out).not.toContain("B, -5, 15");
+  });
+});
+
+describe("applyMatrixActions - 目標已被刪除（Fail Safe，不產生幽靈列）", () => {
+  it("同一 lineIndex 先 DELETE 再 EDIT：EDIT 被略過", () => {
+    const actions: IMatrixAction[] = [
+      {
+        id: uid(34),
+        type: MatrixActionType.DELETE_ITEM,
+        description: "delete B(4)",
+        payload: { lineIndex: 4 },
+      },
+      {
+        id: uid(35),
+        type: MatrixActionType.EDIT_ITEM,
+        description: "edit deleted B(4)",
+        payload: { lineIndex: 4, label: "GHOST", x: 1, y: 1, group: "" },
+      },
+    ];
+    const out = applyMatrixActions(RAW, actions);
+    expect(parseMatrixItems(out).map((i) => i.label)).toEqual(["A", "C"]);
+    expect(out).not.toContain("GHOST");
+  });
+});
+
+describe("applyMatrixActions - 超界 / 非法 lineIndex", () => {
+  it("超界、負數、指向設定列的 lineIndex 一律略過，不 throw、不錯位", () => {
+    const actions: IMatrixAction[] = [
+      {
+        id: uid(36),
+        type: MatrixActionType.EDIT_ITEM,
+        description: "edit out of bounds",
+        payload: { lineIndex: 999, label: "OOB", x: 1, y: 1, group: "" },
+      },
+      {
+        id: uid(37),
+        type: MatrixActionType.DELETE_ITEM,
+        description: "delete negative",
+        payload: { lineIndex: -1 },
+      },
+      {
+        id: uid(38),
+        type: MatrixActionType.DELETE_ITEM,
+        description: "delete config line",
+        payload: { lineIndex: 0 },
+      },
+      {
+        id: uid(39),
+        type: MatrixActionType.EDIT_ITEM,
+        description: "edit config line",
+        payload: { lineIndex: 1, label: "CFG", x: 0, y: 0, group: "" },
+      },
+    ];
+    const run = () => applyMatrixActions(RAW, actions);
+    expect(run).not.toThrow();
+    // Info: (20260731 - Julian) 全部略過 → 輸出與原始完全相同
+    expect(run()).toBe(RAW);
   });
 });

@@ -547,21 +547,8 @@ const EditAxisPanel: FC<IBasePanelProps> = ({
 
   const { xAxis, yAxis } = parsedHistogramData;
 
-  // const initialLeftName = leftSeries ?? "";
-  // const initialRightName = rightSeries ?? "";
-  // const initialLeftColor = leftColor ?? "";
-  // const initialRightColor = rightColor ?? "";
-
   const initialYTitle = yAxis ?? "";
   const initialXTitle = xAxis ?? "";
-
-  // const [leftTitleInput, setLeftTitleInput] = useState<string>(initialLeftName);
-  // const [leftColorInput, setLeftColorInput] =
-  //   useState<string>(initialLeftColor);
-  // const [rightTitleInput, setRightTitleInput] =
-  //   useState<string>(initialRightName);
-  // const [rightColorInput, setRightColorInput] =
-  //   useState<string>(initialRightColor);
 
   const [yTitle, setYTitle] = useState<string>(initialYTitle);
   const [xTitle, setXTitle] = useState<string>(initialXTitle);
