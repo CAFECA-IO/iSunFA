@@ -3,6 +3,8 @@
 - 版本:v1.0(2026-07-16,Emily;GitHub issue #6516)
 - 適用:所有對外 API route;首波落地於 carbon chatbot 六個 route
 
+> ⚠️ **實作與本規範不符（2026-07-31,Julian）**:第 3 條所述的 HTTP 429 目前**並未實際送出**。`jsonFail()` 使用的 `httpStatusOf()` 缺少 `ApiCode.RATE_LIMIT` 的 case,限流回應實際為 **HTTP 500 + `Retry-After` header**。錯誤碼 `IS000013` 本身正確,故目前只能靠 body 的 `errorCode` 辨識限流,無法依 HTTP 狀態碼分流。詳見 **[已知缺陷:API 錯誤碼對 HTTP 狀態碼雙套對照表](known_issues/api_http_status_dual_mapping.md)**。
+
 ## 設計原則
 
 1. **維度**:身份(DeWT address)× bucket(端點類別)。不做全域 middleware — route 於 DeWT 驗證後、業務邏輯前呼叫 `enforceCarbonRateLimit()`,維持 route「純端口」職責(一行 if)。

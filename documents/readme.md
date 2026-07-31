@@ -26,6 +26,13 @@
 4. 🎯 **[數值精度處理規範](engineering_guidelines/numerical_precision_guideline.md)**
    > 說明為何我們在財務與碳排計算中全面棄用原生 `number`，並強制使用 `Prisma.Decimal` 與 `BigInt`。
 
+### 🐛 已知缺陷 (Known Issues)
+
+*尚未修復、但會影響開發判斷的系統性缺陷；動到相關區域前請先閱讀：*
+
+- ⚠️ **[API 錯誤碼對 HTTP 狀態碼雙套對照表](engineering_guidelines/known_issues/api_http_status_dual_mapping.md)**
+  > `jsonFail()` 使用的 `httpStatusOf()` 缺 `CONFLICT` / `RATE_LIMIT` 兩個 case，限流實際回 500 而非 429。**新增 `ApiCode` 成員時必須手動同步 `httpStatusOf()`，tsc 不會提醒。**
+
 
 ---
 
