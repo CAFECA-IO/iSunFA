@@ -7,6 +7,7 @@ import type { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/type
 import { registerBotService } from "@/services/bot.register.service";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import { ORDER_TYPE } from "@/constants/status";
+import { ApiCode } from "@/lib/utils/status";
 
 export class UploadBotService {
   public async uploadVoucher(
@@ -31,7 +32,7 @@ export class UploadBotService {
       body: JSON.stringify({ name: "Bot Team" }),
     });
     const teamData = await teamRes.json();
-    if (!teamRes.ok || teamData.code !== "SUCCESS")
+    if (!teamRes.ok || teamData.code !== ApiCode.SUCCESS)
       throw new Error(`Team creation failed: ${JSON.stringify(teamData)}`);
     const teamId = teamData.payload.id;
     console.log(`[Bot:Upload] Team Created: ${teamId}`);
@@ -55,7 +56,7 @@ export class UploadBotService {
       }),
     });
     const abData = await abRes.json();
-    if (!abRes.ok || abData.code !== "SUCCESS")
+    if (!abRes.ok || abData.code !== ApiCode.SUCCESS)
       throw new Error(
         `Account Book creation failed: ${JSON.stringify(abData)}`,
       );
@@ -75,7 +76,7 @@ export class UploadBotService {
       body: formData,
     });
     const fileData = await fileRes.json();
-    if (!fileRes.ok || fileData.code !== "SUCCESS")
+    if (!fileRes.ok || fileData.code !== ApiCode.SUCCESS)
       throw new Error(`File upload failed: ${JSON.stringify(fileData)}`);
     console.log(`[Bot:Upload] File API Response:`, fileData);
 
@@ -96,7 +97,7 @@ export class UploadBotService {
       }),
     });
     const orderData = await orderRes.json();
-    if (!orderRes.ok || orderData.code !== "SUCCESS")
+    if (!orderRes.ok || orderData.code !== ApiCode.SUCCESS)
       throw new Error(`Order creation failed: ${JSON.stringify(orderData)}`);
     const { orderId } = orderData.payload;
     const cost = 10;
@@ -141,7 +142,7 @@ export class UploadBotService {
       },
     );
     const paymentData = await paymentRes.json();
-    if (!paymentRes.ok || paymentData.code !== "SUCCESS")
+    if (!paymentRes.ok || paymentData.code !== ApiCode.SUCCESS)
       throw new Error(`Payment failed: ${JSON.stringify(paymentData)}`);
     console.log(
       `[Bot:Upload] Payment Success! TxHash: ${paymentData.payload?.txHash}`,
@@ -165,7 +166,7 @@ export class UploadBotService {
       },
     );
     const voucherData = await voucherRes.json();
-    if (!voucherRes.ok || voucherData.code !== "SUCCESS")
+    if (!voucherRes.ok || voucherData.code !== ApiCode.SUCCESS)
       throw new Error(
         `AI Analysis creation failed: ${JSON.stringify(voucherData)}`,
       );

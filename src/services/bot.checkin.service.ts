@@ -1,3 +1,4 @@
+import { ApiCode } from "@/lib/utils/status";
 export class CheckinBotService {
   public async claimReward(dewt: string, apiUrl: string): Promise<unknown> {
     console.log(`\n[Bot:Checkin] Claiming daily check-in reward...`);
@@ -22,7 +23,7 @@ export class CheckinBotService {
       throw new Error(`Check-in failed with non-JSON response`);
     }
 
-    if (res.ok && (data.code === "SUCCESS" || data.success)) {
+    if (res.ok && (data.code === ApiCode.SUCCESS || data.success)) {
       console.log(
         `[Bot:Checkin] Success! Checkin Result:`,
         data.payload || data,

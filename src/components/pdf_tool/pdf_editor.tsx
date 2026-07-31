@@ -19,6 +19,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 import Image from "next/image";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
+import { ApiCode } from "@/lib/utils/status";
 import PdfShareLinkModal from "@/components/pdf_tool/pdf_share_link_modal";
 import { AiReportModal } from "@/components/pdf_tool/ai_report_modal";
 import EditPanel from "@/components/pdf_tool/edit_panel";
@@ -233,7 +234,7 @@ export default function PdfEditor({
         },
       );
 
-      if (result.code === "SUCCESS" && result.payload?.token) {
+      if (result.code === ApiCode.SUCCESS && result.payload?.token) {
         setShareToken(result.payload.token);
         setIsShareLinkModalOpen(true);
       } else {
@@ -262,7 +263,7 @@ export default function PdfEditor({
         { method: "PATCH" },
       );
 
-      if (result.code === "SUCCESS") {
+      if (result.code === ApiCode.SUCCESS) {
         setShareToken(null);
         setIsShareLinkModalOpen(false);
       }

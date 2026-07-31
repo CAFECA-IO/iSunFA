@@ -4,6 +4,7 @@ import { FC, useState, useMemo } from "react";
 import { CircleX, ZoomIn, ZoomOut, Maximize, Move } from "lucide-react";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
+import { ApiCode } from "@/lib/utils/status";
 import { MermaidChartType } from "@/constants/mermaid_chart";
 import {
   IChartAction,
@@ -223,7 +224,11 @@ export const createMermaidEditorAdapter = ({
         }),
       },
     );
-    if (!response || response.code !== "SUCCESS" || !response.payload?.result) {
+    if (
+      !response ||
+      response.code !== ApiCode.SUCCESS ||
+      !response.payload?.result
+    ) {
       throw new Error(t("chart.mermaid.error_message"));
     }
     return response.payload.result;

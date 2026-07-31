@@ -7,6 +7,7 @@ import type { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/type
 import { registerBotService } from "@/services/bot.register.service";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import { ORDER_TYPE } from "@/constants/status";
+import { ApiCode } from "@/lib/utils/status";
 
 export class AnalysisBotService {
   public async generateAnalysis(
@@ -43,7 +44,7 @@ export class AnalysisBotService {
       });
 
       const orderData = await orderRes.json();
-      if (!orderRes.ok || orderData.code !== "SUCCESS") {
+      if (!orderRes.ok || orderData.code !== ApiCode.SUCCESS) {
         throw new Error(`Order creation failed: ${JSON.stringify(orderData)}`);
       }
 
@@ -93,7 +94,7 @@ export class AnalysisBotService {
       );
 
       const paymentData = await paymentRes.json();
-      if (!paymentRes.ok || paymentData.code !== "SUCCESS") {
+      if (!paymentRes.ok || paymentData.code !== ApiCode.SUCCESS) {
         throw new Error(`Payment failed: ${JSON.stringify(paymentData)}`);
       }
 
