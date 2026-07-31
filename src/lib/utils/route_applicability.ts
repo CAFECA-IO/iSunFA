@@ -14,6 +14,8 @@ export interface IRouteApplicability {
   land: boolean;
   sea: boolean;
   air: boolean;
+  // Info: (20260729 - Tzuhan) issue 10:海陸空聯運(串聯路徑)適用性
+  seaLandAir: boolean;
   custom: boolean;
 }
 
@@ -21,6 +23,7 @@ export const NO_ROUTE_APPLICABILITY: IRouteApplicability = {
   land: false,
   sea: false,
   air: false,
+  seaLandAir: false,
   custom: false,
 };
 
@@ -83,10 +86,41 @@ export function getRouteApplicability(
       !(hasRealLandRoute && landDistanceKm <= airTotalKm);
   }
 
+  /**
+   * Info: (20260729 - Tzuhan) issue 10:海陸空聯運適用性 —— 三模式串聯只在「兩段主運輸皆具商業意義」時成立:
+   * 1. 海運段與空運段皆須達各自商業門檻(否則其中一段是退化的繞路)
+   * 2. 中轉機場與目的機場須為不同機場(相同即空運段無意義)
+   * 3. 存在真實陸路且不長於本方案總距離時不適用(繞海繞空純浪費,與 sea/air 同一原則)
+   * 後端旗標為單一真實來源,歷史資料無旗標時由本函數推導,新舊一致
+   */
+  const slaPlan = plans.sea_land_air_multimodal;
+  let seaLandAir: boolean;
+  if (typeof slaPlan?.isApplicable === "boolean") {
+    seaLandAir = slaPlan.isApplicable;
+  } else if (!slaPlan) {
+    seaLandAir = false;
+  } else {
+    const slaSeaKm = slaPlan.sea_port_to_port?.distanceKm || 0;
+    const slaAirKm = slaPlan.air_airport_to_airport?.distanceKm || 0;
+    const slaTotalKm =
+      slaSeaKm +
+      slaAirKm +
+      (slaPlan.land_origin_to_port?.distanceKm || 0) +
+      (slaPlan.land_port_to_airport?.distanceKm || 0) +
+      (slaPlan.land_airport_to_dest?.distanceKm || 0);
+    seaLandAir =
+      !!slaPlan.sea_port_to_port?.success &&
+      !!slaPlan.air_airport_to_airport?.success &&
+      slaSeaKm >= MIN_SEA_LEG_DISTANCE_KM &&
+      slaAirKm >= MIN_AIR_LEG_DISTANCE_KM &&
+      !(hasRealLandRoute && landDistanceKm <= slaTotalKm);
+  }
+
   return {
     land,
     sea,
     air,
+    seaLandAir,
     custom: !!plans.custom_multimodal,
   };
 }

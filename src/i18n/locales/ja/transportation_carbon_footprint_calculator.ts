@@ -34,6 +34,8 @@ export const transportationCarbonFootprintCalculator = {
     section_analysis: "専用セクション分析",
     weight_label: "総重量: {{weight}} KG",
     watermark: "iSunFA CONFIDENTIAL",
+    export_id_label: "エクスポートID",
+    plan_code_label: "プランコード",
   },
   ui: {
     title: "物流カーボンフットプリント",
@@ -74,6 +76,8 @@ export const transportationCarbonFootprintCalculator = {
     mode_sea: "海上輸送",
     mode_air: "航空輸送",
     title_custom: "カスタム複合一貫輸送ルート",
+    title_sea_land_air: "海陸空複合一貫輸送プラン",
+    transit_airport: "中継空港",
     title_land: "陸上輸送プラン",
     title_sea: "海上輸送プラン",
     title_air: "航空輸送プラン",
@@ -169,6 +173,7 @@ export const transportationCarbonFootprintCalculator = {
     plan_sea: "海運を含む（海陸複合輸送）",
     plan_air: "空運を含む（空陸複合輸送）",
     plan_custom: "カスタム複合輸送",
+    plan_seaLandAir: "海陸空複合輸送(陸→海→陸→空→陸)",
     split_hint:
       "各プランは個別のPDFとして出力され、複数ファイルはZIPにまとめられます。",
     confirm: "エクスポート",

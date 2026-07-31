@@ -89,6 +89,8 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
           const landPlan = plan.comparisonData.plans.landOnly;
           const seaPlan = plan.comparisonData.plans.sea_multimodal;
           const airPlan = plan.comparisonData.plans.air_multimodal;
+          // Info: (20260729 - Tzuhan) issue 10:海陸空聯運方案(可能為 undefined,如無中轉機場)
+          const slaPlan = plan.comparisonData.plans.sea_land_air_multimodal;
 
           let selectedMode = "LAND";
           let totalDist = 0;
@@ -177,6 +179,34 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
                     ]
                   : []),
               ],
+            };
+          } else if (
+            !item.waypoints &&
+            slaPlan?.isApplicable &&
+            slaPlan.sea_port_to_port.success &&
+            slaPlan.air_airport_to_airport.success
+          ) {
+            // Info: (20260729 - Tzuhan) issue 10:海陸空聯運(串聯路徑)優先於單一聯運,
+            // Info: (20260729 - Tzuhan) 僅在適用性引擎判定成立時選用(避免產出無意義的三段繞路)
+            selectedMode = ROUTE_MODE.SEA_LAND_AIR;
+            landDist =
+              (slaPlan.land_origin_to_port.distanceKm || 0) +
+              (slaPlan.land_port_to_airport.distanceKm || 0) +
+              (slaPlan.land_airport_to_dest.distanceKm || 0);
+            seaDist = slaPlan.sea_port_to_port.distanceKm || 0;
+            airDist = slaPlan.air_airport_to_airport.distanceKm || 0;
+            totalDist = landDist + seaDist + airDist;
+            seaGeometry = slaPlan.sea_port_to_port.geometry;
+            airGeometry = slaPlan.air_airport_to_airport.geometry;
+            landGeometry = {
+              type: "FeatureCollection",
+              features: [
+                slaPlan.land_origin_to_port.geometry,
+                slaPlan.land_port_to_airport.geometry,
+                slaPlan.land_airport_to_dest.geometry,
+              ]
+                .filter(Boolean)
+                .map((geometry) => ({ type: "Feature", geometry })),
             };
           } else if (
             !item.waypoints &&

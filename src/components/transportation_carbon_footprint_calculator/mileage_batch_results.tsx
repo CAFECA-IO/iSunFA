@@ -10,10 +10,12 @@ import {
   Truck,
   Ship,
   Plane,
+  Layers,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { ILogisticsPlan } from "@/interfaces/logistics";
 import { getRouteApplicability } from "@/lib/utils/route_applicability";
+import { getHeadlineCo2e } from "@/lib/utils/logistics_report";
 import {
   PlanSection,
   RouteType,
@@ -81,6 +83,7 @@ export function MileageBatchResults({
         applicability.land ? "land" : null,
         applicability.sea ? "sea" : null,
         applicability.air ? "air" : null,
+        applicability.seaLandAir ? "seaLandAir" : null,
       ].filter(Boolean) as RouteType[],
     );
   };
@@ -145,6 +148,8 @@ export function MileageBatchResults({
             const isSeaAvailable = applicability.sea;
             const isAirAvailable = applicability.air;
             const isCustomAvailable = applicability.custom;
+            // Info: (20260729 - Tzuhan) issue 10:海陸空聯運(串聯路徑)
+            const isSeaLandAirAvailable = applicability.seaLandAir;
 
             return (
               <div
@@ -225,20 +230,21 @@ export function MileageBatchResults({
                         </span>
                       </div>
                     </div>
-                    {(item.plan?.comparisonData?.plans?.custom_multimodal
-                      ?.total_co2eKg ||
-                      item.plan?.comparisonData?.plans?.landOnly?.co2eKg) && (
-                      <div className="ml-auto hidden items-center gap-2 rounded-lg border border-gray-100 bg-white px-3 py-1 text-sm font-bold text-gray-600 shadow-sm sm:flex">
-                        {Number(
-                          item.plan.comparisonData.plans.custom_multimodal
-                            ?.total_co2eKg ||
-                            item.plan.comparisonData.plans.landOnly?.co2eKg,
-                        ).toLocaleString(undefined, {
-                          maximumFractionDigits: 1,
-                        })}{" "}
-                        kg CO₂e
-                      </div>
-                    )}
+                    {/* Info: (20260728 - Tzuhan) issue 09:標頭碳排改用 getHeadlineCo2e(mode 對應方案總計),
+                        修正舊邏輯只讀 landOnly 導致聯運路線恆顯示 0;含 fallback 段時加 ~ 前綴標示估算 */}
+                    {(() => {
+                      const headline = getHeadlineCo2e(item);
+                      if (!headline) return null;
+                      return (
+                        <div className="ml-auto hidden items-center gap-2 rounded-lg border border-gray-100 bg-white px-3 py-1 text-sm font-bold text-gray-600 shadow-sm sm:flex">
+                          {headline.isEstimated ? "~" : ""}
+                          {Number(headline.value).toLocaleString(undefined, {
+                            maximumFractionDigits: 1,
+                          })}{" "}
+                          kg CO₂e
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div className="ml-4 flex items-center gap-3">
                     <button
@@ -333,29 +339,52 @@ export function MileageBatchResults({
                           )}
                         </button>
                       )}
+                      {/* Info: (20260729 - Tzuhan) issue 10:海陸空聯運方案切換 */}
+                      {isSeaLandAirAvailable && (
+                        <button
+                          onClick={() =>
+                            toggleRoute(index, "seaLandAir", item.plan)
+                          }
+                          className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition-all ${
+                            selectedRoutes.has("seaLandAir")
+                              ? "border-indigo-200 bg-indigo-50 text-indigo-700"
+                              : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+                          }`}
+                        >
+                          <Layers className="h-4 w-4" />{" "}
+                          {t(
+                            "transportation_carbon_footprint_calculator.plan_section.title_sea_land_air",
+                          )}
+                        </button>
+                      )}
                     </div>
                     <div className="flex flex-col gap-16">
-                      {["custom", "land", "sea", "air"].map((type) => {
-                        if (!selectedRoutes.has(type as RouteType)) return null;
-                        if (type === "custom" && !isCustomAvailable)
-                          return null;
-                        if (type === "land" && !isLandAvailable) return null;
-                        if (type === "sea" && !isSeaAvailable) return null;
-                        if (type === "air" && !isAirAvailable) return null;
+                      {["custom", "land", "sea", "air", "seaLandAir"].map(
+                        (type) => {
+                          if (!selectedRoutes.has(type as RouteType))
+                            return null;
+                          if (type === "custom" && !isCustomAvailable)
+                            return null;
+                          if (type === "land" && !isLandAvailable) return null;
+                          if (type === "sea" && !isSeaAvailable) return null;
+                          if (type === "air" && !isAirAvailable) return null;
+                          if (type === "seaLandAir" && !isSeaLandAirAvailable)
+                            return null;
 
-                        return (
-                          <div key={type}>
-                            <PlanSection
-                              type={type as RouteType}
-                              plan={item.plan!}
-                              weightKg={item.weightKg ?? 1000}
-                              isExporting={
-                                isExporting && exportingIndex === index
-                              }
-                            />
-                          </div>
-                        );
-                      })}
+                          return (
+                            <div key={type}>
+                              <PlanSection
+                                type={type as RouteType}
+                                plan={item.plan!}
+                                weightKg={item.weightKg ?? 1000}
+                                isExporting={
+                                  isExporting && exportingIndex === index
+                                }
+                              />
+                            </div>
+                          );
+                        },
+                      )}
                     </div>
                   </div>
                 )}
