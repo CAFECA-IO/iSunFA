@@ -41,7 +41,7 @@ export interface IChartEditorAdapter<TAction extends IChartEditorAction> {
   examples: string[];
 
   // Info: (20260723 - Julian) 決定論套用「一整批」暫存動作，回傳新圖表字串（不變更輸入）。
-  // 採批次以支援 tombstone 穩定索引（避免「先刪後編」打錯資料列）。
+  // Info: (20260723 - Julian) 採批次以支援 tombstone 穩定索引（避免「先刪後編」打錯資料列）。
   applyActions: (chart: string, actions: readonly TAction[]) => string;
 
   // Info: (20260721 - Julian) 產生流程：回傳新圖表字串；失敗請 throw（訊息顯示於預覽區）
