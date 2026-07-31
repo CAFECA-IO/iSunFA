@@ -52,6 +52,14 @@ import {
   captureElementToPdf,
   pdfToBlob,
 } from "@/lib/utils/pdf_export";
+import { buildReportPdfItem } from "@/lib/utils/logistics_report_request";
+import { requestReportPdfs } from "@/lib/utils/logistics_report_client";
+import {
+  TRANSPORT_PDF_EXPORT_MODE,
+  TransportPdfExportModeEnum,
+} from "@/constants/logistics_pdf";
+import { PDF_EXPORT_SIZE_BUDGET_BYTES } from "@/constants/logistics";
+import type { ILogisticsReportPdfItem } from "@/validators";
 import {
   buildBatchSummaryCsv,
   buildPlanFromLegacyBatchItem,
@@ -695,89 +703,142 @@ function ReportPageContent() {
       // Info: (20260724 - Tzuhan) 需求二:一個方案一份獨立 PDF,不再合併分頁
       const files: Array<{ filename: string; blob: Blob }> = [];
 
-      for (let i = 0; i < routesToExport.length; i++) {
-        const routeType = routesToExport[i];
-        setExportProgress({ current: i + 1, total: routesToExport.length });
-        const pageEl = document.getElementById(`pdf-page-${routeType}`);
-        if (!pageEl) continue;
+      /**
+       * Info: (20260731 - Tzuhan) issue 08 步驟二:伺服端向量列印。
+       * 只向 MapLibre 取地圖影像,其餘資料走純函數建構載荷 —— 不覆寫寬度、不換 canvas、不截整頁,
+       * 因此下方那三段等待(1500ms ResizeObserver / 100ms DOM / 截圖)在此路徑一併消失。
+       * 光柵路徑保留於 else,`TRANSPORT_PDF_EXPORT_MODE` 可即刻切回。
+       */
+      if (
+        TRANSPORT_PDF_EXPORT_MODE === TransportPdfExportModeEnum.SERVER_VECTOR
+      ) {
+        const singleItem: IMileageBatchResult = {
+          origin: { lat: Number(origin.lat), lng: Number(origin.lng) },
+          dest: { lat: Number(dest.lat), lng: Number(dest.lng) },
+          plan: plan ?? undefined,
+          weightKg: Number(weightKg) || undefined,
+        } as IMileageBatchResult;
 
-        // Info: (20260501 - Luphia) 強制設定固定寬度以符合 A4 列印比例最佳化 (約 1024px)
-        const oldWidth = pageEl.style.width;
-        const oldMaxWidth = pageEl.style.maxWidth;
-        pageEl.style.width = "1024px";
-        pageEl.style.maxWidth = "1024px";
+        const items: ILogisticsReportPdfItem[] = [];
+        for (let i = 0; i < routesToExport.length; i++) {
+          const routeType = routesToExport[i];
+          setExportProgress({ current: i + 1, total: routesToExport.length });
+          // Info: (20260731 - Tzuhan) 地圖只能由前端提供:MapLibre 是 WebGL 且需要 MapTiler key,伺服端沒有
+          const mapImageDataUrl =
+            (await mapRefs[routeType as RouteType]?.current?.captureMap()) ??
+            undefined;
+          const built = buildReportPdfItem({
+            item: singleItem,
+            routeIndex: 0,
+            planKey: routeType,
+            fallbackWeightKg: weightKg !== "" ? weightKg : 1000,
+            mapImageDataUrl,
+          });
+          if (built) items.push(built);
+        }
 
-        /**
-         * Info: (20260501 - Luphia)
-         * 寬度改變會觸發 MapLibre 的 ResizeObserver，這會清空 WebGL Buffer！
-         * 我們必須等待足夠長的時間讓 MapLibre 重新渲染地圖跟路線，否則會抓到透明的圖，且 HTML Markers 也會錯位。
-         */
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        const exported = await requestReportPdfs(items, {
+          exportId: exportId ?? undefined,
+          onProgress: (completed, total) => {
+            setExportProgress({ current: completed, total });
+          },
+        });
+        exported.forEach((file) => {
+          // Info: (20260731 - Tzuhan) 體積量測留在同一條路徑上,超出預算即警告(不阻擋下載)
+          if (file.sizeBytes > PDF_EXPORT_SIZE_BUDGET_BYTES) {
+            console.warn(
+              `[pdfExport] ${file.fileName} 為 ${Math.round(file.sizeBytes / 1024)} KB,超出預算 ${Math.round(
+                PDF_EXPORT_SIZE_BUDGET_BYTES / 1024,
+              )} KB`,
+            );
+          }
+          files.push({ filename: file.fileName, blob: file.blob });
+        });
+      } else {
+        for (let i = 0; i < routesToExport.length; i++) {
+          const routeType = routesToExport[i];
+          setExportProgress({ current: i + 1, total: routesToExport.length });
+          const pageEl = document.getElementById(`pdf-page-${routeType}`);
+          if (!pageEl) continue;
 
-        // Info: (20260501 - Luphia) 直接向 MapLibre 請求渲染結果！徹底解決 WebGL 被 html-to-image 忽略的問題！
-        const currentMapRef = mapRefs[routeType as RouteType];
-        let imgEl: HTMLImageElement | null = null;
-        let originalCanvasDisplay = "";
-        let targetCanvas: HTMLCanvasElement | null = null;
+          // Info: (20260501 - Luphia) 強制設定固定寬度以符合 A4 列印比例最佳化 (約 1024px)
+          const oldWidth = pageEl.style.width;
+          const oldMaxWidth = pageEl.style.maxWidth;
+          pageEl.style.width = "1024px";
+          pageEl.style.maxWidth = "1024px";
 
-        if (
-          currentMapRef &&
-          currentMapRef.current &&
-          currentMapRef.current.captureMap
-        ) {
-          const dataUrl = await currentMapRef.current.captureMap();
-          if (dataUrl) {
-            targetCanvas = pageEl.querySelector(
-              ".maplibregl-canvas",
-            ) as HTMLCanvasElement;
-            if (targetCanvas) {
-              imgEl = document.createElement("img");
-              imgEl.src = dataUrl;
-              imgEl.style.width =
-                targetCanvas.style.width || targetCanvas.offsetWidth + "px";
-              imgEl.style.height =
-                targetCanvas.style.height || targetCanvas.offsetHeight + "px";
-              imgEl.style.position = targetCanvas.style.position;
-              imgEl.style.top = targetCanvas.style.top;
-              imgEl.style.left = targetCanvas.style.left;
-              imgEl.className = targetCanvas.className;
-              imgEl.style.zIndex = targetCanvas.style.zIndex;
+          /**
+           * Info: (20260501 - Luphia)
+           * 寬度改變會觸發 MapLibre 的 ResizeObserver，這會清空 WebGL Buffer！
+           * 我們必須等待足夠長的時間讓 MapLibre 重新渲染地圖跟路線，否則會抓到透明的圖，且 HTML Markers 也會錯位。
+           */
+          await new Promise((resolve) => setTimeout(resolve, 1500));
 
-              const parent = targetCanvas.parentElement;
-              if (parent) {
-                parent.insertBefore(imgEl, targetCanvas);
-                originalCanvasDisplay = targetCanvas.style.display;
-                targetCanvas.style.display = "none";
+          // Info: (20260501 - Luphia) 直接向 MapLibre 請求渲染結果！徹底解決 WebGL 被 html-to-image 忽略的問題！
+          const currentMapRef = mapRefs[routeType as RouteType];
+          let imgEl: HTMLImageElement | null = null;
+          let originalCanvasDisplay = "";
+          let targetCanvas: HTMLCanvasElement | null = null;
+
+          if (
+            currentMapRef &&
+            currentMapRef.current &&
+            currentMapRef.current.captureMap
+          ) {
+            const dataUrl = await currentMapRef.current.captureMap();
+            if (dataUrl) {
+              targetCanvas = pageEl.querySelector(
+                ".maplibregl-canvas",
+              ) as HTMLCanvasElement;
+              if (targetCanvas) {
+                imgEl = document.createElement("img");
+                imgEl.src = dataUrl;
+                imgEl.style.width =
+                  targetCanvas.style.width || targetCanvas.offsetWidth + "px";
+                imgEl.style.height =
+                  targetCanvas.style.height || targetCanvas.offsetHeight + "px";
+                imgEl.style.position = targetCanvas.style.position;
+                imgEl.style.top = targetCanvas.style.top;
+                imgEl.style.left = targetCanvas.style.left;
+                imgEl.className = targetCanvas.className;
+                imgEl.style.zIndex = targetCanvas.style.zIndex;
+
+                const parent = targetCanvas.parentElement;
+                if (parent) {
+                  parent.insertBefore(imgEl, targetCanvas);
+                  originalCanvasDisplay = targetCanvas.style.display;
+                  targetCanvas.style.display = "none";
+                }
               }
             }
           }
+
+          // Info: (20260501 - Luphia) 等待 DOM 更新
+          await new Promise((resolve) => setTimeout(resolve, 100));
+
+          // Info: (20260731 - Tzuhan) 改用共用的 captureElementToPdf:此處原本自帶一份
+          // Info: (20260731 - Tzuhan) 「截圖 + 分頁」邏輯(JPEG q0.8,且同樣沒開 compress),
+          // Info: (20260731 - Tzuhan) 是當初抽出共用函式時漏掉的第三份複製。兩條路徑分歧的後果是
+          // Info: (20260731 - Tzuhan) 批次與單筆匯出的體積與畫質不一致,且修一邊不會修到另一邊。
+          const pdf = await captureElementToPdf(pageEl);
+
+          // Info: (20260501 - Luphia) 還原 canvas
+          if (targetCanvas && imgEl && imgEl.parentElement) {
+            targetCanvas.style.display = originalCanvasDisplay;
+            imgEl.parentElement.removeChild(imgEl);
+          }
+
+          pageEl.style.width = oldWidth;
+          pageEl.style.maxWidth = oldMaxWidth;
+
+          const filename = buildExportFileName(
+            0,
+            routeType,
+            origin.lat !== "" ? `${origin.lat}_${origin.lng}` : undefined,
+            dest.lat !== "" ? `${dest.lat}_${dest.lng}` : undefined,
+          );
+          files.push({ filename, blob: pdfToBlob(pdf, filename).blob });
         }
-
-        // Info: (20260501 - Luphia) 等待 DOM 更新
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        // Info: (20260731 - Tzuhan) 改用共用的 captureElementToPdf:此處原本自帶一份
-        // Info: (20260731 - Tzuhan) 「截圖 + 分頁」邏輯(JPEG q0.8,且同樣沒開 compress),
-        // Info: (20260731 - Tzuhan) 是當初抽出共用函式時漏掉的第三份複製。兩條路徑分歧的後果是
-        // Info: (20260731 - Tzuhan) 批次與單筆匯出的體積與畫質不一致,且修一邊不會修到另一邊。
-        const pdf = await captureElementToPdf(pageEl);
-
-        // Info: (20260501 - Luphia) 還原 canvas
-        if (targetCanvas && imgEl && imgEl.parentElement) {
-          targetCanvas.style.display = originalCanvasDisplay;
-          imgEl.parentElement.removeChild(imgEl);
-        }
-
-        pageEl.style.width = oldWidth;
-        pageEl.style.maxWidth = oldMaxWidth;
-
-        const filename = buildExportFileName(
-          0,
-          routeType,
-          origin.lat !== "" ? `${origin.lat}_${origin.lng}` : undefined,
-          dest.lat !== "" ? `${dest.lat}_${dest.lng}` : undefined,
-        );
-        files.push({ filename, blob: pdfToBlob(pdf, filename).blob });
       }
 
       // Info: (20260501 - Luphia) 還原 class

@@ -38,6 +38,32 @@ export const LOGISTICS_PDF_MAP_MAX_BYTES = 60 * 1024;
 export const LOGISTICS_PDF_MAX_REPORTS_PER_REQUEST = 60;
 
 /**
+ * Info: (20260731 - Tzuhan) 匯出管線的切換(issue 08 步驟二~四的回退閘門)。
+ *
+ * 實測基準(單筆陸運報告,前端光柵化 + compress):296 KB、1 頁、單張 2048×2896 @248dpi 的影像,
+ * 該影像佔檔案 **99%**,且 `pdftotext` 抽得出 1 byte —— 整頁沒有任何可選取的文字。
+ * (未開 compress 時同一張圖是 17 MB,那是先前 >20 MB 的成因。)
+ *
+ * 這組數字說明兩件事:壓縮修正已到極限,而「可搜尋」在光柵路徑下永遠是 0。
+ */
+export enum TransportPdfExportModeEnum {
+  /** Info: (20260731 - Tzuhan) 伺服端 Chrome 列印:向量文字、可搜尋、預估數十 KB */
+  SERVER_VECTOR = "SERVER_VECTOR",
+  /** Info: (20260731 - Tzuhan) 前端 html-to-image + jsPDF:保留為回退路徑,出問題可即刻切回 */
+  CLIENT_RASTER = "CLIENT_RASTER",
+}
+
+export const TRANSPORT_PDF_EXPORT_MODE: TransportPdfExportModeEnum =
+  TransportPdfExportModeEnum.SERVER_VECTOR;
+
+/**
+ * Info: (20260731 - Tzuhan) 每次請求送幾份。分批而非一次送完的理由:
+ * 進度條仍有粒度可更新、單次載荷更小、某批失敗只需重試該批。
+ * 8 份約對應 3~7 秒的伺服端工作量,是「使用者感覺有進展」與「請求數不過多」的折衷。
+ */
+export const LOGISTICS_PDF_REQUEST_BATCH_SIZE = 8;
+
+/**
  * Info: (20260731 - Tzuhan) 只接受 JPEG/PNG 的 data URL 作為地圖影像:
  * 這個字串會被放進 HTML 的 img src 交給 Chrome,必須先把 javascript: 之類的協定擋在門外。
  */
