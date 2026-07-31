@@ -549,13 +549,31 @@ function ReportPageContent() {
     item: IMileageBatchResult,
     planKey: RouteType,
   ): Promise<IPlanMapCapture> => {
-    const withTimeout = async <T,>(task: Promise<T>): Promise<T | null> =>
-      Promise.race([
+    /**
+     * Info: (20260731 - Tzuhan) 安全網逾時。CARBON_MAP_CAPTURE_TIMEOUT_MS 由內層的
+     * 樣式與 idle 上限推導,必定大於內層總和 —— 否則外層會在內層仍在合理等待時把它砍掉,
+     * 結果是「再等一秒就好」卻回報缺圖(實測踩過)。
+     * 逾時代表內層卡住而非判定失敗,故另外記 log 以區分兩者。
+     */
+    const withTimeout = async <T,>(
+      task: Promise<T>,
+      label: string,
+    ): Promise<T | null> => {
+      const timedOut = Symbol("timeout");
+      const result = await Promise.race([
         task,
-        new Promise<null>((resolve) => {
-          setTimeout(() => resolve(null), CARBON_MAP_CAPTURE_TIMEOUT_MS);
+        new Promise<typeof timedOut>((resolve) => {
+          setTimeout(() => resolve(timedOut), CARBON_MAP_CAPTURE_TIMEOUT_MS);
         }),
       ]);
+      if (result === timedOut) {
+        console.warn(
+          `[mapCapture] ${label} 逾時 ${CARBON_MAP_CAPTURE_TIMEOUT_MS}ms(內層未回應)`,
+        );
+        return null;
+      }
+      return result as T;
+    };
 
     const legs = buildPlanLegs(item, planKey);
     const geometries = legs
@@ -575,10 +593,11 @@ function ReportPageContent() {
           ? { type: "GeometryCollection", geometries }
           : null,
       ) ?? Promise.resolve(null),
+      `${planKey} 全程圖`,
     );
 
     const legCaptures: (ILegCapture | null)[] = [];
-    for (const leg of legs) {
+    for (const [legIndex, leg] of legs.entries()) {
       const captured = await withTimeout(
         // Info: (20260731 - Tzuhan) soloFeature:逐段圖只畫該段。同時顯示陸運與空運兩條線時,
         // Info: (20260731 - Tzuhan) 讀者無法判斷哪一條是本段,那張圖就不能單獨作為該段的證據。
@@ -586,7 +605,13 @@ function ReportPageContent() {
           (leg.segment?.geometry ?? null) as GeoJSON.Geometry | null,
           { soloFeature: true },
         ) ?? Promise.resolve(null),
+        `${planKey} 第 ${legIndex + 1} 段(${leg.mode})`,
       );
+      if (!captured) {
+        console.warn(
+          `[mapCapture] ${planKey} 第 ${legIndex + 1} 段(${leg.mode})無影像,該段報告將標示未附路徑圖`,
+        );
+      }
       legCaptures.push(captured ?? null);
     }
     return { overview: overview ?? null, legs: legCaptures };

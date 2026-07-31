@@ -20,33 +20,46 @@ import {
   isUniformPixelData,
   MAP_BLANK_SAMPLE_SIZE,
 } from "@/lib/utils/map_capture_quality";
+import {
+  MAP_IDLE_TIMEOUT_MS,
+  MAP_STYLE_READY_TIMEOUT_MS,
+} from "@/constants/logistics_pdf";
 import type maplibregl from "maplibre-gl";
 
 /**
- * Info: (20260731 - Tzuhan) 等待地圖 idle 的上限。
- * 圖磚可能因網路而遲遲不到,逾時就截當下畫面 —— 一張略糊的圖仍是證據,
- * 卡住的匯出什麼都不是(批次 27 份時這個差別是分鐘級的)。
+ * Info: (20260731 - Tzuhan) 輪詢樣式是否就緒。
+ *
+ * **刻意不用 `map.once("load")`**:`load` 是一次性事件,若在我們開始等待之前就已經觸發,
+ * 那個 await 會白等到逾時為止。實測第一條路線的空運段就是這樣被判成缺圖 ——
+ * 樣式其實早就載好了,我們卻在等一個永遠不會再來的事件。
+ * 輪詢對「已經發生」與「即將發生」兩種情況都成立,這是它比事件可靠的地方。
  */
-const MAP_IDLE_TIMEOUT_MS = 3_000;
-
-/**
- * Info: (20260731 - Tzuhan) 等樣式載入完成的上限。
- * 第一次載入要取樣式 JSON、字型與圖磚,實測比 onReady 的 2 秒久 —— 那正是
- * 第一條路線截到純黑畫面的原因。逾時仍會嘗試截圖,但後續有空白判定把關。
- */
-const MAP_STYLE_TIMEOUT_MS = 8_000;
-
-/**
- * Info: (20260731 - Tzuhan) 等一個事件或逾時。逾時回 false,讓呼叫端知道是「等到」還是「等不到」。
- */
-const waitForEvent = (
+const waitForStyleReady = async (
   map: maplibregl.Map,
-  event: "load" | "idle",
+  timeoutMs: number,
+): Promise<boolean> => {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (map.isStyleLoaded()) return true;
+    await new Promise((resolve) => {
+      setTimeout(resolve, 100);
+    });
+  }
+  // Info: (20260731 - Tzuhan) maplibre 的 isStyleLoaded 型別為 boolean | void(未設樣式時回 undefined)
+  return Boolean(map.isStyleLoaded());
+};
+
+/**
+ * Info: (20260731 - Tzuhan) 等 idle 或逾時。idle 會反覆觸發,故用一次性監聽是安全的。
+ * 回傳是否真的等到,供呼叫端記錄「截到的是完整畫面還是逾時畫面」。
+ */
+const waitForIdle = (
+  map: maplibregl.Map,
   timeoutMs: number,
 ): Promise<boolean> =>
   new Promise<boolean>((resolve) => {
     const timer = setTimeout(() => resolve(false), timeoutMs);
-    map.once(event, () => {
+    map.once("idle", () => {
       clearTimeout(timer);
       resolve(true);
     });
@@ -228,9 +241,11 @@ const MapViewerBase = (
          * 而 preserveDrawingBuffer 讓 toDataURL 回傳那個從未被繪製的緩衝區。
          * 第二條路線之後樣式已快取,所以問題只出現在第一條 —— 這也是它難以察覺的原因。
          */
-        if (!map.isStyleLoaded()) {
-          await waitForEvent(map, "load", MAP_STYLE_TIMEOUT_MS);
-        }
+        const startedAt = Date.now();
+        const styleReady = await waitForStyleReady(
+          map,
+          MAP_STYLE_READY_TIMEOUT_MS,
+        );
 
         // Info: (20260731 - Tzuhan) 記下原視野,截完還原,才不會污染後續的全程圖
         const previousCenter = map.getCenter();
@@ -279,7 +294,7 @@ const MapViewerBase = (
         // Info: (20260731 - Tzuhan) 明確要求重繪再等 idle:視野變更後若沒有實際重繪,
         // Info: (20260731 - Tzuhan) preserveDrawingBuffer 會讓我們截到上一張圖(實測四張完全相同)
         map.triggerRepaint();
-        await waitForEvent(map, "idle", MAP_IDLE_TIMEOUT_MS);
+        const becameIdle = await waitForIdle(map, MAP_IDLE_TIMEOUT_MS);
 
         let capture: IMapCapture | null = null;
         try {
@@ -290,7 +305,10 @@ const MapViewerBase = (
            * 黑方塊會被讀成「這段就是這樣」。
            */
           if (isCanvasBlank(canvas)) {
-            console.warn("Map capture skipped: canvas is blank");
+            // Info: (20260731 - Tzuhan) 印出判定依據:缺圖有數種成因,不記下來下次還是得靠猜
+            console.warn(
+              `[mapCapture] blank canvas — styleReady=${styleReady} idle=${becameIdle} elapsed=${Date.now() - startedAt}ms`,
+            );
             if (source?.setData && routeGeojson) {
               source.setData(routeGeojson as GeoJSON.GeoJSON);
             }

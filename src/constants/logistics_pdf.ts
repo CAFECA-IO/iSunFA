@@ -81,12 +81,27 @@ export const TRANSPORT_PDF_EXPORT_MODE: TransportPdfExportModeEnum =
 export const LOGISTICS_PDF_REQUEST_BATCH_SIZE = 8;
 
 /**
- * Info: (20260731 - Tzuhan) 取單張地圖影像的逾時。
- * `captureMap()` 等的是 MapLibre 的 `render` 事件;若該實例的 WebGL context 已失效
- * (離屏連續 remount 數十次時會發生),事件永遠不會來,await 就無限期卡住整個匯出。
- * 逾時即該份不附地圖 —— 少一張圖遠優於使用者盯著一個永不結束的轉圈。
+ * Info: (20260731 - Tzuhan) 等 MapLibre 樣式載入完成的上限。
+ * 首次載入要取樣式 JSON、字型與圖磚,比離屏元件的 2 秒 onReady 久得多。
  */
-export const CARBON_MAP_CAPTURE_TIMEOUT_MS = 6_000;
+export const MAP_STYLE_READY_TIMEOUT_MS = 8_000;
+
+/**
+ * Info: (20260731 - Tzuhan) 視野變更後等重繪完成(idle)的上限。
+ * 圖磚可能因網路遲遲不到;逾時就截當下畫面 —— 一張略糊的圖仍是證據。
+ */
+export const MAP_IDLE_TIMEOUT_MS = 3_000;
+
+/**
+ * Info: (20260731 - Tzuhan) 取單張地圖影像的整體逾時(呼叫端的安全網)。
+ *
+ * **必須大於內層所有等待的總和**,否則外層會在內層還在合理等待時把它砍掉,
+ * 結果是「明明只要再等一秒就好」卻回報缺圖。實測踩過:外層 6s 小於
+ * 內層 8s + 3s,第一條路線的空運段因此被判定缺圖。
+ * 故此值由內層常數推導而非各自寫死 —— 讓這個不變式由結構保證,不靠註解提醒。
+ */
+export const CARBON_MAP_CAPTURE_TIMEOUT_MS =
+  MAP_STYLE_READY_TIMEOUT_MS + MAP_IDLE_TIMEOUT_MS + 2_000;
 
 /**
  * Info: (20260731 - Tzuhan) 地圖在報告中的顯示寬度(CSS 像素基準)。
