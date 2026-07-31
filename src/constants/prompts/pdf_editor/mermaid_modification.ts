@@ -108,9 +108,12 @@ Supplier audit, 7, 4, Supply chain
 - Config keys (all optional, case-insensitive): title; unit; mode; baseline.
 - mode: exactly "compare" or "sensitivity". If omitted, "compare" is assumed. Any other value is rejected.
 - baseline: a single number. Only meaningful in sensitivity mode; ignored in compare mode.
-- OPTIONAL first data row is a header naming the two series: category, leftName, rightName
-  (auto-detected: a first row whose 2nd and 3rd fields are NON-numeric is treated as the header).
-  Series names must be NON-numeric (use "FY2019" / "2019年" — NOT a bare "2019").
+- OPTIONAL first data row is a header naming the two series. ALWAYS write it as a SINGLE field
+  using the pair separator: "leftName <-> rightName" (e.g. "2019 <-> 2020").
+  This form is structurally distinct from a 3-field data row, so ANY series name is safe here —
+  including a bare year. Do NOT emit the legacy 3-field header ("category, leftName, rightName");
+  it is still parsed for existing content but is ambiguous when the names are numeric.
+  Write at most TWO names — "A <-> B <-> C" is rejected.
 - Data rows: category, valueA, valueB — category (label) is REQUIRED; valueA/valueB are numbers.
   The renderer sorts rows itself; do NOT pre-sort. Keep every number sourced from the data.
 
@@ -123,7 +126,7 @@ Body example:
 mode: compare
 title: Price by Item, 2019 vs 2020
 unit: NTD
-Item, Prices (2019), Prices (2020)
+Prices (2019) <-> Prices (2020)
 Item F, 9000, 8800
 Item D, 6800, 6500
 
@@ -143,7 +146,7 @@ mode: sensitivity
 title: NPV Sensitivity
 unit: NTD
 baseline: 10000000
-Factor, Pessimistic, Optimistic
+Pessimistic <-> Optimistic
 Sales price, 8500000, 12100000
 Raw material cost, 8800000, 11200000
 Discount rate, 9200000, 10600000
