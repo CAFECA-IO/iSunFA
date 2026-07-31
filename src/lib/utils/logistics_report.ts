@@ -299,9 +299,22 @@ const nodeOf = (
 });
 
 /**
+ * Info: (20260731 - Tzuhan) 逐段清單的對外型別:CSV 與列印用 HTML 共用同一份逐段推導,
+ * 兩個渲染器不各自算一次,否則同一條路線在 CSV 與 PDF 上會出現不一致的數字。
+ */
+export type IPlanLeg = CsvLeg;
+
+export type ILogisticsPlanKey =
+  | "land"
+  | "sea"
+  | "air"
+  | "seaLandAir"
+  | "custom";
+
+/**
  * Info: (20260729 - Tzuhan) 依方案組出逐段清單(端點取自 plan 的港口/機場節點,含經緯度)
  */
-const buildPlanLegs = (
+export const buildPlanLegs = (
   item: IMileageBatchResult,
   planKey: "land" | "sea" | "air" | "seaLandAir" | "custom",
 ): CsvLeg[] => {
@@ -476,10 +489,7 @@ const buildPlanLegs = (
   });
 };
 
-const PLAN_LABELS: Record<
-  "land" | "sea" | "air" | "seaLandAir" | "custom",
-  string
-> = {
+export const PLAN_LABELS: Record<ILogisticsPlanKey, string> = {
   land: "Land Only",
   sea: "Sea Multimodal",
   air: "Air Multimodal",
