@@ -8,12 +8,8 @@ import { enforceCarbonRateLimit } from "@/lib/rate_limiter";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
-import { chatroomRepo } from "@/repositories/chatroom.repo";
-import {
-  CARBON_CHAT_PURPOSE,
-  buildCarbonChatChannel,
-  isCarbonChatChannelOwnedBy,
-} from "@/constants/carbon_chatbot";
+import { carbonSessionService } from "@/services/carbon_session.service";
+import { buildCarbonChatChannel } from "@/constants/carbon_chatbot";
 import {
   CarbonSessionBindSchema,
   CarbonSessionArchiveSchema,
@@ -42,8 +38,6 @@ export async function GET(request: NextRequest) {
     );
     if (limited) return limited;
 
-    const channelPrefix = buildCarbonChatChannel(sessionUser.address, "");
-
     // Info: (20260716 - Tzuhan) #52 帳本閱覽動線:帶 accountBookId 時列出該帳本全部會話;
     // Info: (20260716 - Tzuhan) 需為團隊成員(VIEWER 含),非成員不得枚舉;逐會話內容授權由 report/inventory GET 再裁決
     // Info: (20260730 - Tzuhan) 已封存的會話預設不列(封存的意義就是從清單消失);帶此參數才一併列出供還原
@@ -56,40 +50,18 @@ export async function GET(request: NextRequest) {
       if (!(await canViewAccountBook(sessionUser.address, accountBookId))) {
         return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
       }
-      const bookRooms = await chatroomRepo.listChatroomsByAccountBookId(
+      const sessions = await carbonSessionService.listByAccountBook(
         accountBookId,
-        CARBON_CHAT_PURPOSE,
+        sessionUser.address,
         includeArchived,
       );
-      const sessions = bookRooms.map((room) => ({
-        sessionId: room.channel.split("-").pop() ?? room.channel,
-        channel: room.channel,
-        createdAt: room.createdAt,
-        updatedAt: room.updatedAt,
-        accountBookId: room.accountBookId,
-        archivedAt: room.archivedAt,
-        // Info: (20260716 - Tzuhan) 是否為本人會話(前端據此決定聊天面板可用性)
-        isOwn: isCarbonChatChannelOwnedBy(room.channel, sessionUser.address),
-      }));
       return jsonOk({ sessions });
     }
 
-    // Info: (20260714 - Tzuhan) 前綴即所有權:頻道格式 carbon-chat-{address}-{sessionId},只列本人頻道
-    const chatrooms = await chatroomRepo.listChatroomsByChannelPrefix(
-      channelPrefix,
-      CARBON_CHAT_PURPOSE,
+    const sessions = await carbonSessionService.listOwnedByAddress(
+      sessionUser.address,
       includeArchived,
     );
-
-    const sessions = chatrooms.map((room) => ({
-      sessionId: room.channel.slice(channelPrefix.length),
-      channel: room.channel,
-      createdAt: room.createdAt,
-      updatedAt: room.updatedAt,
-      accountBookId: room.accountBookId,
-      archivedAt: room.archivedAt,
-      isOwn: true,
-    }));
 
     return jsonOk({ sessions });
   } catch (error) {
@@ -146,17 +118,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Info: (20260716 - Tzuhan) 不可改綁:既有綁定與請求不符即拒
-    const existing = await chatroomRepo.findAccountBookIdByChannel(channel);
-    if (existing && existing !== parsed.data.accountBookId) {
+    const bound = await carbonSessionService.bindAccountBook(
+      channel,
+      parsed.data.accountBookId,
+      parsed.data.recipientPublicKey,
+    );
+    if (!bound) {
       return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
     }
-
-    await chatroomRepo.bindAccountBook(
-      channel,
-      CARBON_CHAT_PURPOSE,
-      parsed.data.recipientPublicKey,
-      parsed.data.accountBookId,
-    );
     return jsonOk({ channel, accountBookId: parsed.data.accountBookId });
   } catch (error) {
     logger.error(
@@ -221,7 +190,7 @@ async function setSessionArchived(request: NextRequest, archived: boolean) {
       return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
     }
 
-    const updated = await chatroomRepo.setArchived(channel, archived);
+    const updated = await carbonSessionService.setArchived(channel, archived);
     if (!updated) {
       // Info: (20260730 - Tzuhan) 不存在就明說,不假裝成功(否則使用者無從得知自己封存的是不存在的會話)
       return jsonFail(API_ERRORS.NF_CARBON_SESSION);
