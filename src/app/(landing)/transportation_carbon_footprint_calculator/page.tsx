@@ -580,8 +580,11 @@ function ReportPageContent() {
     const legCaptures: (ILegCapture | null)[] = [];
     for (const leg of legs) {
       const captured = await withTimeout(
+        // Info: (20260731 - Tzuhan) soloFeature:逐段圖只畫該段。同時顯示陸運與空運兩條線時,
+        // Info: (20260731 - Tzuhan) 讀者無法判斷哪一條是本段,那張圖就不能單獨作為該段的證據。
         mapRef.current?.captureGeometry(
           (leg.segment?.geometry ?? null) as GeoJSON.Geometry | null,
+          { soloFeature: true },
         ) ?? Promise.resolve(null),
       );
       legCaptures.push(captured ?? null);

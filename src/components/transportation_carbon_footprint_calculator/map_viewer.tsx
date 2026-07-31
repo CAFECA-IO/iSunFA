@@ -62,6 +62,14 @@ export interface IMapViewerRef {
    */
   captureGeometry: (
     geometry: GeoJSON.Geometry | null,
+    options?: {
+      /**
+       * Info: (20260731 - Tzuhan) 只畫這一段。逐段圖若同時顯示陸運與空運兩條線,
+       * 讀者無法判斷哪一條才是本段,那張圖就不能單獨作為該段的證據。
+       * 全程圖不設此旗標(它本來就該顯示所有段)。
+       */
+      soloFeature?: boolean;
+    },
   ) => Promise<IMapCapture | null>;
 }
 
@@ -158,7 +166,7 @@ const MapViewerBase = (
         });
       },
 
-      captureGeometry: async (geometry) => {
+      captureGeometry: async (geometry, options) => {
         if (!mapRef.current || !geometry) return null;
         const map = mapRef.current.getMap();
         const bbox = getBoundingBox(geometry);
@@ -167,6 +175,40 @@ const MapViewerBase = (
         // Info: (20260731 - Tzuhan) 記下原視野,截完還原,才不會污染後續的全程圖
         const previousCenter = map.getCenter();
         const previousZoom = map.getZoom();
+
+        /**
+         * Info: (20260731 - Tzuhan) 只畫這一段(solo)。
+         *
+         * captureGeometry 原本只改視野,圖層資料仍是整條路線,於是接駁段的小圖上
+         * 同時出現陸運與空運兩條線 —— 一張「巴黎 → 空軍基地」的圖裡橫著一條飛往柏林的
+         * 藍線,讀者無法判斷哪條才是這一段。逐段圖的用途是單獨證明該段,必須只有一條線。
+         *
+         * 以 setData 暫時替換資料源而非改 props:props 走 React 渲染週期,
+         * 在同一個 async 函式內無法保證已套用;截完立即還原。
+         */
+        const source = options?.soloFeature
+          ? (map.getSource(`route-source-${mapInstanceId}`) as
+              | { setData?: (data: GeoJSON.GeoJSON) => void }
+              | undefined)
+          : undefined;
+        if (source?.setData) {
+          // Info: (20260731 - Tzuhan) 沿用原 feature 的顏色(以幾何物件比對),讓小圖與全程圖的配色一致
+          const original = routeGeojson as FeatureCollection<Geometry> | null;
+          const matched = original?.features?.find(
+            (feature) => feature.geometry === geometry,
+          );
+          source.setData({
+            type: "FeatureCollection",
+            features: [
+              matched ?? {
+                type: "Feature",
+                properties: {},
+                geometry: geometry as Geometry,
+              },
+            ],
+          });
+        }
+
         map.fitBounds(bbox, {
           padding: fitBoundsPadding,
           duration: 0,
@@ -205,11 +247,15 @@ const MapViewerBase = (
           console.error("Failed to capture leg map:", e);
         }
 
+        // Info: (20260731 - Tzuhan) 還原資料源與視野:下一張圖(或畫面上的地圖)不該被這次截圖影響
+        if (source?.setData && routeGeojson) {
+          source.setData(routeGeojson as GeoJSON.GeoJSON);
+        }
         map.jumpTo({ center: previousCenter, zoom: previousZoom });
         return capture;
       },
     }),
-    [fitBoundsPadding],
+    [fitBoundsPadding, mapInstanceId, routeGeojson],
   );
 
   useEffect(() => {
