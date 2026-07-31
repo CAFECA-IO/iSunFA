@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { ILogisticsPlan } from "@/interfaces/logistics";
+import { getRouteApplicability } from "@/lib/utils/route_applicability";
 import {
   PlanSection,
   RouteType,
@@ -26,15 +27,15 @@ export interface IMileageBatchResult {
   error?: string;
   // Info: (20260629 - Tzuhan) Support displaying waypoints
   waypoints?: string | Array<{ lat: number; lng: number; name?: string }>;
+  // Info: (20260728 - Tzuhan) issue 08:每列實際計算重量(plan 內 CO2e 以此計);舊資料缺漏時下游 fallback 1000
+  weightKg?: number;
 }
 
 export interface IMileageBatchResultsProps {
   batchResults: IMileageBatchResult[];
   onRecalculate: () => void;
-  onDownload: (
-    index?: number,
-    selectedOptions?: Record<number, Set<RouteType>>,
-  ) => void;
+  // Info: (20260724 - Tzuhan) 匯出範圍改由匯出勾選選單決定(需求二),不再傳遞畫面檢視狀態
+  onDownload: (index?: number) => void;
   isExporting: boolean;
   exportingIndex: number | null;
 }
@@ -68,20 +69,18 @@ export function MileageBatchResults({
   const getSelectedRoutes = (index: number, plan?: ILogisticsPlan) => {
     if (selectedRoutesMap[index]) return selectedRoutesMap[index];
 
+    // Info: (20260724 - Tzuhan) 預設勾選改以適用性引擎為準(需求一:國內/短程路線不預帶海空運)
+    const applicability = getRouteApplicability(plan);
+
     // Info: (20260629 - Tzuhan) custom route mode
-    if (plan?.comparisonData?.plans?.custom_multimodal) {
+    if (applicability.custom) {
       return new Set<RouteType>(["custom"]);
     }
     return new Set<RouteType>(
       [
-        plan?.comparisonData?.plans?.landOnly?.success ? "land" : null,
-        plan?.comparisonData?.plans?.sea_multimodal?.sea_port_to_port?.success
-          ? "sea"
-          : null,
-        plan?.comparisonData?.plans?.air_multimodal?.air_airport_to_airport
-          ?.success
-          ? "air"
-          : null,
+        applicability.land ? "land" : null,
+        applicability.sea ? "sea" : null,
+        applicability.air ? "air" : null,
       ].filter(Boolean) as RouteType[],
     );
   };
@@ -122,7 +121,7 @@ export function MileageBatchResults({
               )}
             </button>
             <button
-              onClick={() => onDownload(undefined, selectedRoutesMap)}
+              onClick={() => onDownload(undefined)}
               disabled={isExporting}
               className="flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-orange-500 disabled:opacity-50"
             >
@@ -140,16 +139,12 @@ export function MileageBatchResults({
             const isExpanded = expandedIndex === index;
             const selectedRoutes = getSelectedRoutes(index, item.plan);
 
-            const isLandAvailable =
-              !!item.plan?.comparisonData?.plans?.landOnly?.success;
-            const isSeaAvailable =
-              !!item.plan?.comparisonData?.plans?.sea_multimodal
-                ?.sea_port_to_port?.success;
-            const isAirAvailable =
-              !!item.plan?.comparisonData?.plans?.air_multimodal
-                ?.air_airport_to_airport?.success;
-            const isCustomAvailable =
-              !!item.plan?.comparisonData?.plans?.custom_multimodal;
+            // Info: (20260724 - Tzuhan) 可選方案統一由適用性引擎推導,取代原本各欄位 success 的散落判斷
+            const applicability = getRouteApplicability(item.plan);
+            const isLandAvailable = applicability.land;
+            const isSeaAvailable = applicability.sea;
+            const isAirAvailable = applicability.air;
+            const isCustomAvailable = applicability.custom;
 
             return (
               <div
@@ -249,7 +244,7 @@ export function MileageBatchResults({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        onDownload(index, selectedRoutesMap);
+                        onDownload(index);
                       }}
                       disabled={isExporting}
                       className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50 hover:text-orange-600 disabled:opacity-50"
@@ -353,7 +348,7 @@ export function MileageBatchResults({
                             <PlanSection
                               type={type as RouteType}
                               plan={item.plan!}
-                              weightKg={1000}
+                              weightKg={item.weightKg ?? 1000}
                               isExporting={
                                 isExporting && exportingIndex === index
                               }

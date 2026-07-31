@@ -5,8 +5,9 @@ import {
   PlanSection,
   RouteType,
 } from "@/components/transportation_carbon_footprint_calculator/plan_section";
-import { Truck, Ship, Plane } from "lucide-react";
+import { Truck, Ship, Plane, MapPin } from "lucide-react";
 import { IMileageBatchResult } from "@/components/transportation_carbon_footprint_calculator/mileage_batch_results";
+import { getRouteApplicability } from "@/lib/utils/route_applicability";
 
 interface IBatchExportRendererProps {
   item: IMileageBatchResult;
@@ -33,7 +34,9 @@ export function BatchExportRenderer({
     return () => clearTimeout(timer);
   }, [onReady]);
 
-  const formatLocation = (loc: string | { lat: number; lng: number; name?: string }) => {
+  const formatLocation = (
+    loc: string | { lat: number; lng: number; name?: string },
+  ) => {
     if (typeof loc === "string") return loc;
     if (loc && typeof loc === "object" && "lat" in loc && "lng" in loc) {
       if (loc.name) {
@@ -56,21 +59,12 @@ export function BatchExportRenderer({
     );
   }
 
-  const isLandAvailable = !!plan.comparisonData?.plans?.landOnly?.success;
-  const isSeaAvailable =
-    !!plan.comparisonData?.plans?.sea_multimodal?.sea_port_to_port?.success;
-  const isAirAvailable =
-    !!plan.comparisonData?.plans?.air_multimodal?.air_airport_to_airport
-      ?.success;
+  // Info: (20260724 - Tzuhan) 匯出內容與畫面顯示共用同一適用性引擎,確保 PDF 不出現不適用的方案(需求一)
+  const applicability = getRouteApplicability(plan);
 
-  const routesToRender = ["land", "sea", "air"].filter(
-    (type) =>
-      selectedRoutes.has(type as RouteType) &&
-      (type === "land"
-        ? isLandAvailable
-        : type === "sea"
-          ? isSeaAvailable
-          : isAirAvailable),
+  // Info: (20260724 - Tzuhan) 補上 custom 方案支援(原本被排除導致自訂聯運匯出空白 PDF)
+  const routesToRender = (["custom", "land", "sea", "air"] as const).filter(
+    (type) => selectedRoutes.has(type) && applicability[type],
   );
 
   const getModeName = (mode: string) =>
@@ -78,7 +72,11 @@ export function BatchExportRenderer({
       ? t("transportation_carbon_footprint_calculator.pdf.mode_land")
       : mode === "sea"
         ? t("transportation_carbon_footprint_calculator.pdf.mode_sea")
-        : t("transportation_carbon_footprint_calculator.pdf.mode_air");
+        : mode === "air"
+          ? t("transportation_carbon_footprint_calculator.pdf.mode_air")
+          : t(
+              "transportation_carbon_footprint_calculator.plan_section.title_custom",
+            );
 
   return (
     <div id={`batch-report-item-${index}`} className="flex flex-col">
@@ -106,8 +104,10 @@ export function BatchExportRenderer({
                     <Truck className="h-6 w-6 text-orange-500" />
                   ) : type === "sea" ? (
                     <Ship className="h-6 w-6 text-emerald-500" />
-                  ) : (
+                  ) : type === "air" ? (
                     <Plane className="h-6 w-6 text-blue-500" />
+                  ) : (
+                    <MapPin className="h-6 w-6 text-purple-500" />
                   )}
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">
@@ -134,7 +134,7 @@ export function BatchExportRenderer({
             <PlanSection
               type={type as RouteType}
               plan={plan}
-              weightKg={1000}
+              weightKg={item.weightKg ?? 1000}
               isExporting={true}
             />
           </ReportLayout>
