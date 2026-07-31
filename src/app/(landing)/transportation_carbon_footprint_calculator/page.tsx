@@ -24,8 +24,6 @@ import {
   ArrowRight,
   Layers,
 } from "lucide-react";
-import * as htmlToImage from "html-to-image";
-import { jsPDF } from "jspdf";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { ILogisticsPlan } from "@/interfaces/logistics";
@@ -52,6 +50,7 @@ import {
   buildExportFileName,
   buildExportId,
   captureElementToPdf,
+  pdfToBlob,
 } from "@/lib/utils/pdf_export";
 import {
   buildBatchSummaryCsv,
@@ -591,7 +590,11 @@ function ReportPageContent() {
           getLocationLabel(item.origin),
           getLocationLabel(item.dest),
         );
-        files.push({ index: job.index, filename, blob: pdf.output("blob") });
+        files.push({
+          index: job.index,
+          filename,
+          blob: pdfToBlob(pdf, filename).blob,
+        });
       }
 
       if (files.length === 0) return;
@@ -753,11 +756,11 @@ function ReportPageContent() {
         // Info: (20260501 - Luphia) 等待 DOM 更新
         await new Promise((resolve) => setTimeout(resolve, 100));
 
-        const imgData = await htmlToImage.toJpeg(pageEl, {
-          quality: 0.8,
-          backgroundColor: "#ffffff",
-          pixelRatio: 2,
-        });
+        // Info: (20260731 - Tzuhan) 改用共用的 captureElementToPdf:此處原本自帶一份
+        // Info: (20260731 - Tzuhan) 「截圖 + 分頁」邏輯(JPEG q0.8,且同樣沒開 compress),
+        // Info: (20260731 - Tzuhan) 是當初抽出共用函式時漏掉的第三份複製。兩條路徑分歧的後果是
+        // Info: (20260731 - Tzuhan) 批次與單筆匯出的體積與畫質不一致,且修一邊不會修到另一邊。
+        const pdf = await captureElementToPdf(pageEl);
 
         // Info: (20260501 - Luphia) 還原 canvas
         if (targetCanvas && imgEl && imgEl.parentElement) {
@@ -768,38 +771,13 @@ function ReportPageContent() {
         pageEl.style.width = oldWidth;
         pageEl.style.maxWidth = oldMaxWidth;
 
-        // Info: (20260724 - Tzuhan) 每個方案建立獨立 PDF(需求二)
-        const pdf = new jsPDF("p", "mm", "a4");
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-
-        const elWidth = 1024;
-        const elHeight = pageEl.offsetHeight;
-        const imgHeightInMm = (elHeight * pdfWidth) / elWidth;
-
-        let heightLeft = imgHeightInMm;
-        let position = 0;
-
-        pdf.addImage(imgData, "JPEG", 0, position, pdfWidth, imgHeightInMm);
-        heightLeft -= pdfHeight;
-
-        // Info: (20260502 - Luphia) 避免浮點數誤差或 1 毫米的溢白邊產生無意義的整面空白頁
-        while (heightLeft > 1) {
-          position -= pdfHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, "JPEG", 0, position, pdfWidth, imgHeightInMm);
-          heightLeft -= pdfHeight;
-        }
-
-        files.push({
-          filename: buildExportFileName(
-            0,
-            routeType,
-            origin.lat !== "" ? `${origin.lat}_${origin.lng}` : undefined,
-            dest.lat !== "" ? `${dest.lat}_${dest.lng}` : undefined,
-          ),
-          blob: pdf.output("blob"),
-        });
+        const filename = buildExportFileName(
+          0,
+          routeType,
+          origin.lat !== "" ? `${origin.lat}_${origin.lng}` : undefined,
+          dest.lat !== "" ? `${dest.lat}_${dest.lng}` : undefined,
+        );
+        files.push({ filename, blob: pdfToBlob(pdf, filename).blob });
       }
 
       // Info: (20260501 - Luphia) 還原 class
