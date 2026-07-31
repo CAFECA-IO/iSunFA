@@ -731,6 +731,12 @@ export const API_ERRORS = {
     message: "Storage quota exceeded",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
+  // Info: (20260731 - Julian) 使用者於伺服器回應前主動中止請求；非伺服器故障，與 IS_UNKNOWN 區隔以免污染 5xx 指標
+  IS_REQUEST_ABORTED: {
+    code: "IS000017",
+    message: "Request aborted by client",
+    status: ApiCode.CLIENT_CLOSED_REQUEST,
+  } as IErrorDef,
   IS_UNKNOWN: {
     code: "IS000099",
     message: "Internal Server Error",

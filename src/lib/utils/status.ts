@@ -9,6 +9,7 @@ export enum ApiCode {
   NOT_FOUND = "NOT_FOUND", // Info: (20250925 - Tzuhan) 404: 資源不存在
   CONFLICT = "CONFLICT", // Info: (20250925 - Tzuhan) 409: 資源衝突 (例如：重複註冊)
   RATE_LIMIT = "RATE_LIMIT", // Info: (20250925 - Tzuhan) 429: 請求過於頻繁
+  CLIENT_CLOSED_REQUEST = "CLIENT_CLOSED_REQUEST", // Info: (20260731 - Julian) 499: 客戶端於伺服器回應前中止連線；非伺服器故障，不應計入 5xx
 
   // Info: (20250925 - Tzuhan) --- 伺服器端錯誤 ---
   INTERNAL_SERVER_ERROR = "INTERNAL_SERVER_ERROR", // Info: (20250925 - Tzuhan) 500: 未知的伺服器錯誤
@@ -22,5 +23,6 @@ export const HTTP_MAP: Record<ApiCode, number> = {
   [ApiCode.NOT_FOUND]: 404,
   [ApiCode.CONFLICT]: 409,
   [ApiCode.RATE_LIMIT]: 429,
+  [ApiCode.CLIENT_CLOSED_REQUEST]: 499,
   [ApiCode.INTERNAL_SERVER_ERROR]: 500,
 };

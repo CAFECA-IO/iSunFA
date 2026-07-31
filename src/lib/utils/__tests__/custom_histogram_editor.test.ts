@@ -142,8 +142,11 @@ describe("applyHistogramActions - 超界 / 非法 lineIndex", () => {
     expect(run()).toBe(RAW);
   });
 
-  // Info: (20260731 - Julian) §7「永遠不直接採信 LLM 數值」：newLineIndex 未來由 LLM 產出，
-  // Info: (20260731 - Julian) 非整數若先 tombstone 再 pushInsert 會導致該列靜默消失，此處固化「整批略過」的不變式
+  /* Info: (20260731 - Julian)
+   ** 防禦性編程：applyHistogramActions 為對外匯出的公開函式，於邊界驗證輸入。
+   ** 目前 newLineIndex 一律由 UI 的 posToLineIndex 推導（必為整數），此路徑不可達；
+   ** 固化此不變式是為了防止「先 tombstone 後 pushInsert」的不對稱在日後被改回去——
+   ** 一旦 newLineIndex 非整數，來源列會被刪掉卻不插回，該列靜默消失且不拋錯。 */
   it.each([
     ["NaN", Number.NaN],
     ["小數", 2.5],
