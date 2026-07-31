@@ -14,7 +14,7 @@ import { CarbonInventoryStateService } from "@/services/carbon_inventory_state.s
 import {
   resolveCarbonAccess,
   CarbonAccessLevelEnum,
-} from "@/lib/carbon_access";
+} from "@/services/carbon_access.guard";
 
 export async function GET(request: NextRequest) {
   try {

@@ -21,10 +21,10 @@ import {
 import {
   canBindAccountBook,
   resolveCarbonAccess,
+  canViewAccountBook,
   CarbonAccessLevelEnum,
-} from "@/lib/carbon_access";
+} from "@/services/carbon_access.guard";
 import { describeError } from "@/lib/utils/error_message";
-import { accountBookRepo } from "@/repositories/account_book.repo";
 
 export async function GET(request: NextRequest) {
   try {
@@ -51,11 +51,9 @@ export async function GET(request: NextRequest) {
       request.nextUrl.searchParams.get("includeArchived") === "true";
     const accountBookId = request.nextUrl.searchParams.get("accountBookId");
     if (accountBookId) {
-      const role = await accountBookRepo.getMemberRoleByAddress(
-        accountBookId,
-        sessionUser.address,
-      );
-      if (!role) {
+      // Info: (20260731 - Luphia) 改用 carbon_access.guard 既有裁決(§1:route 不直接碰 repository)
+      // Info: (20260731 - Luphia) 注意參數順序為 (userAddress, accountBookId),與 repo 相反
+      if (!(await canViewAccountBook(sessionUser.address, accountBookId))) {
         return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
       }
       const bookRooms = await chatroomRepo.listChatroomsByAccountBookId(

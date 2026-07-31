@@ -3,7 +3,7 @@
 // Info: (20260716 - Tzuhan) 報告/盤查狀態歸屬帳本:綁定帳本的會話以 TeamRole 裁決(VIEWER 可讀、EDITOR 以上可寫),
 // Info: (20260716 - Tzuhan) 未綁定(舊個人會話)沿用前綴裁決 — 雙軌相容,零資料遷移
 
-import { prisma } from "@/lib/prisma";
+import { chatroomRepo } from "@/repositories/chatroom.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { isCarbonChatChannelOwnedBy } from "@/constants/carbon_chatbot";
 
@@ -53,12 +53,9 @@ export const resolveCarbonAccess = async (
 ): Promise<ICarbonAccessDecision> => {
   const isChannelOwner = isCarbonChatChannelOwnedBy(channel, userAddress);
 
-  const chatroom = await prisma.chatroom.findUnique({
-    where: { channel },
-    select: { accountBookId: true },
-  });
-
-  const accountBookId = chatroom?.accountBookId ?? null;
+  // Info: (20260731 - Luphia) 經 repository 取用(§1:唯 repository 可碰 Prisma);
+  // Info: (20260731 - Luphia) chatroomRepo.findAccountBookIdByChannel 語意與原查詢一致
+  const accountBookId = await chatroomRepo.findAccountBookIdByChannel(channel);
 
   // Info: (20260716 - Tzuhan) 個人會話(含尚未建立者):僅擁有者可存取
   if (!accountBookId) {

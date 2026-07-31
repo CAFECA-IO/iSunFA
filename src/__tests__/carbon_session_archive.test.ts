@@ -2,7 +2,7 @@
 // Info: (20260730 - Tzuhan) 「封存整個會話」會讓一整份 33 節報告與活動數據帳本從清單消失,
 // Info: (20260730 - Tzuhan) 因此它的權限必須與「編輯內容」分開——EDITOR 能寫報告,不該能收掉別人建的會話。
 import { describe, it, expect } from "@jest/globals";
-import { CarbonAccessLevelEnum } from "@/lib/carbon_access";
+import { CarbonAccessLevelEnum } from "@/services/carbon_access.guard";
 import { CarbonSessionArchiveSchema } from "@/validators";
 import { buildCarbonChatChannel } from "@/constants/carbon_chatbot";
 

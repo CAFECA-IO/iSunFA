@@ -1,6 +1,6 @@
 // Info: (20260716 - Tzuhan) #52 碳盤查存取裁決測試:個人/帳本雙軌 × 角色 × 讀寫層級矩陣
 // Info: (20260717 - Tzuhan) 重要:next/jest(SWC)只 hoist「全域 jest」的 jest.mock 呼叫;
-// Info: (20260717 - Tzuhan) 若 jest 是 @jest/globals 的 import 綁定,mock 不會被 hoist → 真實 prisma
+// Info: (20260717 - Tzuhan) 若 jest 是 @jest/globals 的 import 綁定,mock 不會被 hoist → 真實 repository/prisma
 // Info: (20260717 - Tzuhan) 先被載入(pg Pool 開啟導致 worker 無法退出、mockReset 不存在)。
 // Info: (20260717 - Tzuhan) 故比照 allocation_engine.test.ts:declare 全域 jest,只 import 型別。
 
@@ -9,25 +9,26 @@ import type { jest as JestType } from "@jest/globals";
 
 declare const jest: typeof JestType;
 
-import { prisma } from "@/lib/prisma";
+import { chatroomRepo } from "@/repositories/chatroom.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import {
   resolveCarbonAccess,
   canBindAccountBook,
   CarbonAccessLevelEnum,
-} from "@/lib/carbon_access";
+} from "@/services/carbon_access.guard";
 
-jest.mock("@/lib/prisma", () => ({
-  prisma: { chatroom: { findUnique: jest.fn() } },
+jest.mock("@/repositories/chatroom.repo", () => ({
+  chatroomRepo: { findAccountBookIdByChannel: jest.fn() },
 }));
 jest.mock("@/repositories/account_book.repo", () => ({
   accountBookRepo: { getMemberRoleByAddress: jest.fn() },
 }));
 
 // Info: (20260716 - Tzuhan) mock 取用(型別化,不使用 any)
-const mockFindUnique = prisma.chatroom.findUnique as unknown as ReturnType<
-  typeof jest.fn<() => Promise<{ accountBookId: string | null } | null>>
->;
+const mockFindAccountBookId =
+  chatroomRepo.findAccountBookIdByChannel as unknown as ReturnType<
+    typeof jest.fn<() => Promise<string | null>>
+  >;
 const mockGetRole =
   accountBookRepo.getMemberRoleByAddress as unknown as ReturnType<
     typeof jest.fn<() => Promise<string | null>>
@@ -39,12 +40,12 @@ const OTHERS_CHANNEL = "carbon-chat-0xbbb-s9";
 
 describe("resolveCarbonAccess", () => {
   beforeEach(() => {
-    mockFindUnique.mockReset();
+    mockFindAccountBookId.mockReset();
     mockGetRole.mockReset();
   });
 
   it("personal session: only the channel owner has access", async () => {
-    mockFindUnique.mockResolvedValue({ accountBookId: null });
+    mockFindAccountBookId.mockResolvedValue(null);
 
     const own = await resolveCarbonAccess(
       OWNER_ADDRESS,
@@ -62,7 +63,7 @@ describe("resolveCarbonAccess", () => {
   });
 
   it("nonexistent chatroom falls back to prefix ownership (first save path)", async () => {
-    mockFindUnique.mockResolvedValue(null);
+    mockFindAccountBookId.mockResolvedValue(null);
     const own = await resolveCarbonAccess(
       OWNER_ADDRESS,
       OWN_CHANNEL,
@@ -72,7 +73,7 @@ describe("resolveCarbonAccess", () => {
   });
 
   it("book session: VIEWER can view but not edit; EDITOR+ can edit; non-member denied", async () => {
-    mockFindUnique.mockResolvedValue({ accountBookId: "book-1" });
+    mockFindAccountBookId.mockResolvedValue("book-1");
 
     mockGetRole.mockResolvedValue("VIEWER");
     const viewerView = await resolveCarbonAccess(
@@ -118,7 +119,7 @@ describe("resolveCarbonAccess", () => {
   });
 
   it("book session: channel owner always has full access regardless of role lookup", async () => {
-    mockFindUnique.mockResolvedValue({ accountBookId: "book-1" });
+    mockFindAccountBookId.mockResolvedValue("book-1");
     const own = await resolveCarbonAccess(
       OWNER_ADDRESS,
       OWN_CHANNEL,

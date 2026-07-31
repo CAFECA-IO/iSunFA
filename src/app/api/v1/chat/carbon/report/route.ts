@@ -14,7 +14,7 @@ import { CarbonReportDraftService } from "@/services/carbon_report_draft.service
 import {
   resolveCarbonAccess,
   CarbonAccessLevelEnum,
-} from "@/lib/carbon_access";
+} from "@/services/carbon_access.guard";
 
 export async function GET(request: NextRequest) {
   try {

@@ -10,7 +10,7 @@ import { enforceCarbonRateLimit } from "@/lib/rate_limiter";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
-import { canViewAccountBook } from "@/lib/carbon_access";
+import { canViewAccountBook } from "@/services/carbon_access.guard";
 import { CarbonEsgLinkService } from "@/services/carbon_esg_link.service";
 
 export async function GET(request: NextRequest) {
