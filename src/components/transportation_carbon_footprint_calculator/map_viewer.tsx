@@ -16,6 +16,11 @@ import { useTranslation } from "@/i18n/i18n_context";
 // Info: (20260731 - Tzuhan) bbox 計算抽到純模組:它是幾何運算而非 UI,且跨換日線的修正需要單元測試
 import { getMapBoundingBox as getBoundingBox } from "@/lib/utils/map_bounding_box";
 import { haversineMeters } from "@/lib/utils/map_scale_bar";
+import {
+  isUniformPixelData,
+  MAP_BLANK_SAMPLE_SIZE,
+} from "@/lib/utils/map_capture_quality";
+import type maplibregl from "maplibre-gl";
 
 /**
  * Info: (20260731 - Tzuhan) 等待地圖 idle 的上限。
@@ -23,6 +28,50 @@ import { haversineMeters } from "@/lib/utils/map_scale_bar";
  * 卡住的匯出什麼都不是(批次 27 份時這個差別是分鐘級的)。
  */
 const MAP_IDLE_TIMEOUT_MS = 3_000;
+
+/**
+ * Info: (20260731 - Tzuhan) 等樣式載入完成的上限。
+ * 第一次載入要取樣式 JSON、字型與圖磚,實測比 onReady 的 2 秒久 —— 那正是
+ * 第一條路線截到純黑畫面的原因。逾時仍會嘗試截圖,但後續有空白判定把關。
+ */
+const MAP_STYLE_TIMEOUT_MS = 8_000;
+
+/**
+ * Info: (20260731 - Tzuhan) 等一個事件或逾時。逾時回 false,讓呼叫端知道是「等到」還是「等不到」。
+ */
+const waitForEvent = (
+  map: maplibregl.Map,
+  event: "load" | "idle",
+  timeoutMs: number,
+): Promise<boolean> =>
+  new Promise<boolean>((resolve) => {
+    const timer = setTimeout(() => resolve(false), timeoutMs);
+    map.once(event, () => {
+      clearTimeout(timer);
+      resolve(true);
+    });
+  });
+
+/**
+ * Info: (20260731 - Tzuhan) 畫布是否為空白(未繪製)。
+ * 縮到 8×8 再讀像素:成本約一毫秒,而批次要跑上百次。
+ * 讀不到像素時回 false(寧可放行也不要因為判定工具本身失敗而丟掉一張好圖)。
+ */
+const isCanvasBlank = (canvas: HTMLCanvasElement): boolean => {
+  try {
+    const probe = document.createElement("canvas");
+    probe.width = MAP_BLANK_SAMPLE_SIZE;
+    probe.height = MAP_BLANK_SAMPLE_SIZE;
+    const context = probe.getContext("2d");
+    if (!context) return false;
+    context.drawImage(canvas, 0, 0, probe.width, probe.height);
+    return isUniformPixelData(
+      context.getImageData(0, 0, probe.width, probe.height).data,
+    );
+  } catch {
+    return false;
+  }
+};
 
 export interface IMapViewerProps {
   // Info: (20260430 - Tzuhan) 支援多式聯運的 FeatureCollection 或是單一軌跡
@@ -172,6 +221,17 @@ const MapViewerBase = (
         const bbox = getBoundingBox(geometry);
         if (!bbox) return null;
 
+        /**
+         * Info: (20260731 - Tzuhan) 先等樣式載入完成才動作。
+         * 實測第一條路線的四張圖全是純黑且完全相同:離屏元件的 onReady 是固定 2 秒,
+         * 但首次載入要取樣式 JSON、字型與圖磚,兩秒不夠;樣式未載入時 fitBounds 不會重繪,
+         * 而 preserveDrawingBuffer 讓 toDataURL 回傳那個從未被繪製的緩衝區。
+         * 第二條路線之後樣式已快取,所以問題只出現在第一條 —— 這也是它難以察覺的原因。
+         */
+        if (!map.isStyleLoaded()) {
+          await waitForEvent(map, "load", MAP_STYLE_TIMEOUT_MS);
+        }
+
         // Info: (20260731 - Tzuhan) 記下原視野,截完還原,才不會污染後續的全程圖
         const previousCenter = map.getCenter();
         const previousZoom = map.getZoom();
@@ -216,18 +276,27 @@ const MapViewerBase = (
           essential: true,
         });
 
-        // Info: (20260731 - Tzuhan) 等 idle(圖磚載入且繪製完成)才截,否則會拍到半張灰底
-        await new Promise<void>((resolve) => {
-          const timer = setTimeout(resolve, MAP_IDLE_TIMEOUT_MS);
-          map.once("idle", () => {
-            clearTimeout(timer);
-            resolve();
-          });
-        });
+        // Info: (20260731 - Tzuhan) 明確要求重繪再等 idle:視野變更後若沒有實際重繪,
+        // Info: (20260731 - Tzuhan) preserveDrawingBuffer 會讓我們截到上一張圖(實測四張完全相同)
+        map.triggerRepaint();
+        await waitForEvent(map, "idle", MAP_IDLE_TIMEOUT_MS);
 
         let capture: IMapCapture | null = null;
         try {
           const canvas = map.getCanvas();
+          /**
+           * Info: (20260731 - Tzuhan) 空白畫面一律當作沒有截到。
+           * 一張純黑方塊被放進報告當證據,比缺圖糟得多:缺圖讀者知道沒有,
+           * 黑方塊會被讀成「這段就是這樣」。
+           */
+          if (isCanvasBlank(canvas)) {
+            console.warn("Map capture skipped: canvas is blank");
+            if (source?.setData && routeGeojson) {
+              source.setData(routeGeojson as GeoJSON.GeoJSON);
+            }
+            map.jumpTo({ center: previousCenter, zoom: previousZoom });
+            return null;
+          }
           // Info: (20260731 - Tzuhan) 以實際 bounds 與畫布寬度算每像素公尺數,不由 zoom 反推
           const bounds = map.getBounds();
           const centerLat = bounds.getCenter().lat;
