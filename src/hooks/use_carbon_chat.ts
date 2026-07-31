@@ -2502,8 +2502,10 @@ export const useCarbonChat = () => {
       }, CARBON_DRAFT_NOTICE_DISMISS_MS);
     }
 
-    // Info: (20260721 - Tzuhan) 自動撰寫數據段落(逐段循序:同一時間僅一段生成的既有約束):
-    // 只填「尚無內容」的第三章數據段落,絕不覆蓋使用者已有的編輯
+    /**
+     * Info: (20260721 - Tzuhan) 自動撰寫數據段落(逐段循序:同一時間僅一段生成的既有約束):
+     * 只填「尚無內容」的第三章數據段落,絕不覆蓋使用者已有的編輯
+     */
     if (importedCount > 0) {
       const paragraphs =
         sessionsData[activeSessionId]?.reportData?.paragraphs ?? [];
