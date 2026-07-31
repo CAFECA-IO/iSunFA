@@ -427,13 +427,21 @@ export async function processNext() {
         "utf8",
       );
 
-      if (localContextObj) {
-        await fs.writeFile(
-          path.join(taskDir, "context.json"),
-          JSON.stringify(localContextObj, null, 2),
-          "utf8",
-        );
-      }
+      // Info: (20260728 - Tzuhan) 一律寫入 orderId(+analysisId):Recorder 回寫的唯一可靠關聯。
+      // Info: (20260728 - Tzuhan) 修復斷鏈:mission.json 出於隱私刻意刪除 orderId(不外流 AI 節點),
+      // Info: (20260728 - Tzuhan) 但 context.json 僅存本地 worker 目錄、不進 IPFS,可安全攜帶關聯;
+      // Info: (20260728 - Tzuhan) 過去只有 CERTIFICATE_ANALYSIS 寫 context.json,運輸分析僅能靠
+      // Info: (20260728 - Tzuhan) mission contains taskId 反查 — 本地鏈重置後 taskId 重複即誤配舊單。
+      const taskContext: Record<string, unknown> = {
+        ...(localContextObj ?? {}),
+        orderId: order.id,
+        ...(analysisId ? { analysisId } : {}),
+      };
+      await fs.writeFile(
+        path.join(taskDir, "context.json"),
+        JSON.stringify(taskContext, null, 2),
+        "utf8",
+      );
 
       const planValidatorContent = `# Plan Validator
 This is an automated validation plan.

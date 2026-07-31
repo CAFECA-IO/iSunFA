@@ -224,6 +224,8 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
             dest: item.dest,
             // Info: (20260629 - Tzuhan) return waypoints back to UI
             waypoints: item.waypoints,
+            // Info: (20260728 - Tzuhan) issue 08:回帶每列實際計算重量,CSV/檢視才能正確顯示與重算(plan 內 CO2e 以此重量計)
+            weightKg: Number(weightKg),
             mode: selectedMode,
             distanceKm: totalDist,
             landDistanceKm: landDist,
