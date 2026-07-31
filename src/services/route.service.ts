@@ -11,7 +11,11 @@ import {
 } from "@/services/logistics.service";
 import { calculateSeaPath } from "@/lib/utils/route.sea";
 import { calculateAirPath } from "@/lib/utils/route.air";
-import { ILogisticsPlan, ITransportSegment } from "@/interfaces/logistics";
+import {
+  ILogisticsPlan,
+  ITransportSegment,
+  INearestPortResult,
+} from "@/interfaces/logistics";
 import { getRouteApplicability } from "@/lib/utils/route_applicability";
 import { EMISSION_FACTORS } from "@/constants/logistics";
 import { MoneyUtil } from "@/lib/utils/money";
@@ -290,6 +294,66 @@ export async function calculateLogisticsPlan(
     }
     airPlan.total_co2eKg = airCo2e.toString();
 
+    /**
+     * Info: (20260729 - Tzuhan) issue 10:海陸空聯運(串聯路徑)
+     * 節點序:起點 →(陸)出口港 →(海)進口港 →(陸)中轉機場 →(空)目的機場 →(陸)迄站
+     * 中轉機場 = 進口港的最近機場;目的機場沿用 importAirport(迄站最近機場)
+     * 全程沿用既有單段函式與 EMISSION_FACTORS,計算一律 Decimal
+     */
+    const transitAirport = await getNearestAirport(
+      importPort.lat,
+      importPort.lng,
+    );
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    let sea_land_air_multimodal:
+      | {
+          land_origin_to_port: ITransportSegment;
+          sea_port_to_port: ITransportSegment;
+          land_port_to_airport: ITransportSegment;
+          air_airport_to_airport: ITransportSegment;
+          land_airport_to_dest: ITransportSegment;
+          total_co2eKg: string;
+          transitAirport: INearestPortResult | null;
+        }
+      | undefined = undefined;
+
+    if (transitAirport) {
+      const slaPlan = {
+        // Info: (20260729 - Tzuhan) 前兩段與海運方案相同(同一出口港/進口港),重用結果避免重複呼叫 OSRM
+        land_origin_to_port: seaPlan.land_origin_to_port,
+        sea_port_to_port: seaPlan.sea_port_to_port,
+        land_port_to_airport: await getLandRoute(importPort, transitAirport),
+        air_airport_to_airport: calculateAirPath(transitAirport, importAirport),
+        land_airport_to_dest: await getLandRoute(importAirport, dest),
+        total_co2eKg: "0",
+        transitAirport,
+      };
+
+      let slaCo2e = MoneyUtil.toDecimal(0);
+      const accumulate = (
+        segment: ITransportSegment,
+        factor: string,
+        reuseExisting: boolean,
+      ) => {
+        if (!segment.success) return;
+        // Info: (20260729 - Tzuhan) 重用海運方案段落時,co2eKg 已算好,直接累加避免重複賦值
+        const c = reuseExisting
+          ? MoneyUtil.toDecimal(segment.co2eKg || 0)
+          : MoneyUtil.toDecimal(segment.distanceKm || 0)
+              .times(weightTonne)
+              .times(factor);
+        if (!reuseExisting) segment.co2eKg = c.toString();
+        slaCo2e = slaCo2e.plus(c);
+      };
+      accumulate(slaPlan.land_origin_to_port, factors.LAND, true);
+      accumulate(slaPlan.sea_port_to_port, factors.SEA, true);
+      accumulate(slaPlan.land_port_to_airport, factors.LAND, false);
+      accumulate(slaPlan.air_airport_to_airport, factors.AIR, false);
+      accumulate(slaPlan.land_airport_to_dest, factors.LAND, false);
+      slaPlan.total_co2eKg = slaCo2e.toString();
+      sea_land_air_multimodal = slaPlan;
+    }
+
     // eslint-disable-next-line @typescript-eslint/naming-convention
     let custom_multimodal:
       | {
@@ -412,6 +476,7 @@ export async function calculateLogisticsPlan(
           landOnly,
           sea_multimodal: seaPlan,
           air_multimodal: airPlan,
+          sea_land_air_multimodal,
           custom_multimodal,
         },
       },
@@ -424,6 +489,10 @@ export async function calculateLogisticsPlan(
       applicability.sea;
     finalPlan.comparisonData.plans.air_multimodal.isApplicable =
       applicability.air;
+    if (finalPlan.comparisonData.plans.sea_land_air_multimodal) {
+      finalPlan.comparisonData.plans.sea_land_air_multimodal.isApplicable =
+        applicability.seaLandAir;
+    }
 
     return finalPlan;
   } catch (error) {

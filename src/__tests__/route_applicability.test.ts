@@ -74,6 +74,13 @@ const buildPlan = (overrides: {
     isApplicable?: boolean;
   };
   custom?: boolean;
+  // Info: (20260729 - Tzuhan) issue 10:海陸空聯運(串聯路徑)
+  sla?: {
+    seaKm: number;
+    airKm: number;
+    landKm?: number;
+    isApplicable?: boolean;
+  };
 }): ILogisticsPlan => ({
   exportPort: mockPort,
   importPort: mockPort,
@@ -97,6 +104,17 @@ const buildPlan = (overrides: {
         total_co2eKg: "0",
         isApplicable: overrides.air.isApplicable,
       },
+      sea_land_air_multimodal: overrides.sla
+        ? {
+            land_origin_to_port: segment(true, overrides.sla.landKm ?? 20),
+            sea_port_to_port: segment(true, overrides.sla.seaKm),
+            land_port_to_airport: segment(true, overrides.sla.landKm ?? 20),
+            air_airport_to_airport: segment(true, overrides.sla.airKm),
+            land_airport_to_dest: segment(true, overrides.sla.landKm ?? 20),
+            total_co2eKg: "0",
+            isApplicable: overrides.sla.isApplicable,
+          }
+        : undefined,
       custom_multimodal: overrides.custom
         ? { segments: [], total_co2eKg: "0", total_distanceKm: 0 }
         : undefined,
@@ -216,12 +234,14 @@ describe("getRouteApplicability", () => {
       land: false,
       sea: false,
       air: false,
+      seaLandAir: false,
       custom: false,
     });
     expect(getRouteApplicability(undefined)).toEqual({
       land: false,
       sea: false,
       air: false,
+      seaLandAir: false,
       custom: false,
     });
   });
@@ -243,5 +263,69 @@ describe("getRouteApplicability", () => {
     });
 
     expect(getRouteApplicability(plan).custom).toBe(true);
+  });
+});
+
+// Info: (20260729 - Tzuhan) issue 10:海陸空聯運適用性規則
+describe("getRouteApplicability - seaLandAir (issue 10)", () => {
+  const baseCrossOcean = {
+    landOnly: fallbackLandRoute(680),
+    sea: {
+      originToPort: segment(true, 30),
+      portToPort: segment(true, 800),
+      portToDest: segment(true, 40),
+    },
+    air: {
+      originToAirport: segment(true, 25),
+      airportToAirport: segment(true, 690),
+      airportToDest: segment(true, 30),
+    },
+  };
+
+  it("海運段與空運段皆達門檻:適用", () => {
+    const plan = buildPlan({
+      ...baseCrossOcean,
+      sla: { seaKm: 800, airKm: 690 },
+    });
+    expect(getRouteApplicability(plan).seaLandAir).toBe(true);
+  });
+
+  it("空運段低於門檻(中轉機場即目的機場等退化):不適用", () => {
+    const plan = buildPlan({
+      ...baseCrossOcean,
+      sla: { seaKm: 800, airKm: 30 },
+    });
+    expect(getRouteApplicability(plan).seaLandAir).toBe(false);
+  });
+
+  it("海運段低於門檻:不適用", () => {
+    const plan = buildPlan({
+      ...baseCrossOcean,
+      sla: { seaKm: 5, airKm: 690 },
+    });
+    expect(getRouteApplicability(plan).seaLandAir).toBe(false);
+  });
+
+  it("存在真實陸路且不長於本方案:不適用(繞海繞空純浪費)", () => {
+    const plan = buildPlan({
+      landOnly: realLandRoute(350),
+      sea: baseCrossOcean.sea,
+      air: baseCrossOcean.air,
+      sla: { seaKm: 320, airKm: 300, landKm: 20 },
+    });
+    expect(getRouteApplicability(plan).seaLandAir).toBe(false);
+  });
+
+  it("方案不存在(無中轉機場):不適用", () => {
+    const plan = buildPlan(baseCrossOcean);
+    expect(getRouteApplicability(plan).seaLandAir).toBe(false);
+  });
+
+  it("後端 isApplicable 旗標優先", () => {
+    const plan = buildPlan({
+      ...baseCrossOcean,
+      sla: { seaKm: 800, airKm: 690, isApplicable: false },
+    });
+    expect(getRouteApplicability(plan).seaLandAir).toBe(false);
   });
 });

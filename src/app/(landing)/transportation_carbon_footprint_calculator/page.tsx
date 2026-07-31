@@ -22,6 +22,7 @@ import {
   Download,
   MapPin,
   ArrowRight,
+  Layers,
 } from "lucide-react";
 import * as htmlToImage from "html-to-image";
 import { jsPDF } from "jspdf";
@@ -49,6 +50,7 @@ import { BatchExportRenderer } from "@/components/transportation_carbon_footprin
 import { ExportOptionsModal } from "@/components/transportation_carbon_footprint_calculator/export_options_modal";
 import {
   buildExportFileName,
+  buildExportId,
   captureElementToPdf,
 } from "@/lib/utils/pdf_export";
 import {
@@ -64,6 +66,7 @@ import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import {
   TRANSPORT_CALCULATOR_QUERY_PARAM,
   HISTORY_VIEW_STATE_STORAGE_KEY,
+  buildPlanCode,
 } from "@/constants/logistics";
 import { ORDER_TYPE } from "@/constants/status";
 import { ANALYSIS_BASE_COSTS } from "@/constants/price";
@@ -191,6 +194,8 @@ function ReportPageContent() {
     current: number;
     total: number;
   } | null>(null);
+  // Info: (20260729 - Tzuhan) 匯出批次識別碼:同批 PDF 與 summary.csv 共用,渲染於 PDF 頁尾
+  const [exportId, setExportId] = useState<string | null>(null);
   const mapReadyResolver = useRef<(() => void) | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<IHistoryItem[]>([]);
@@ -208,7 +213,7 @@ function ReportPageContent() {
   });
 
   const [selectedRoutes, setSelectedRoutes] = useState<Set<RouteType>>(
-    new Set(["land", "sea", "air"]),
+    new Set(["land", "sea", "air", "seaLandAir"]),
   );
 
   const reportRef = useRef<HTMLDivElement>(null);
@@ -220,6 +225,8 @@ function ReportPageContent() {
   const seaMapRef = useRef<IMapViewerRef>(null);
   const airMapRef = useRef<IMapViewerRef>(null);
   const customMapRef = useRef<IMapViewerRef>(null);
+  // Info: (20260729 - Tzuhan) issue 10:海陸空聯運方案的地圖 ref
+  const seaLandAirMapRef = useRef<IMapViewerRef>(null);
   const mapRefs = useMemo<
     Record<RouteType, React.RefObject<IMapViewerRef | null>>
   >(
@@ -227,6 +234,7 @@ function ReportPageContent() {
       land: landMapRef,
       sea: seaMapRef,
       air: airMapRef,
+      seaLandAir: seaLandAirMapRef,
       custom: customMapRef,
     }),
     [],
@@ -449,7 +457,13 @@ function ReportPageContent() {
     () =>
       plan
         ? getRouteApplicability(plan)
-        : { land: true, sea: true, air: true, custom: false },
+        : {
+            land: true,
+            sea: true,
+            air: true,
+            seaLandAir: true,
+            custom: false,
+          },
     [plan],
   );
   const isLandAvailable = routeApplicability.land;
@@ -482,7 +496,7 @@ function ReportPageContent() {
   const exportAvailablePlans = useMemo<RouteType[]>(() => {
     if (!exportModalTarget) return [];
     if (exportModalTarget.scope === "report") {
-      return (["land", "sea", "air"] as const).filter(
+      return (["land", "sea", "air", "seaLandAir"] as const).filter(
         (type) => routeApplicability[type],
       );
     }
@@ -495,9 +509,11 @@ function ReportPageContent() {
     targets.forEach((item) => {
       if (!item) return;
       const applicability = getRouteApplicability(item.plan);
-      (["custom", "land", "sea", "air"] as const).forEach((type) => {
-        if (applicability[type]) union.add(type);
-      });
+      (["custom", "land", "sea", "air", "seaLandAir"] as const).forEach(
+        (type) => {
+          if (applicability[type]) union.add(type);
+        },
+      );
     });
     return Array.from(union);
   }, [exportModalTarget, batchResults, routeApplicability]);
@@ -513,6 +529,8 @@ function ReportPageContent() {
     if (!batchResults) return;
     let originalViewport: string | null = null;
     let viewportMeta: Element | null = null;
+    const batchExportId = buildExportId();
+    setExportId(batchExportId);
     try {
       setIsExporting(true);
 
@@ -538,11 +556,13 @@ function ReportPageContent() {
       const jobs: Array<{ index: number; type: RouteType }> = [];
       indices.forEach((index) => {
         const applicability = getRouteApplicability(batchResults[index]?.plan);
-        (["custom", "land", "sea", "air"] as const).forEach((type) => {
-          if (selectedPlans.has(type) && applicability[type]) {
-            jobs.push({ index, type });
-          }
-        });
+        (["custom", "land", "sea", "air", "seaLandAir"] as const).forEach(
+          (type) => {
+            if (selectedPlans.has(type) && applicability[type]) {
+              jobs.push({ index, type });
+            }
+          },
+        );
       });
 
       const files: Array<{ index: number; filename: string; blob: Blob }> = [];
@@ -601,6 +621,7 @@ function ReportPageContent() {
             indices,
             filesByRouteIndex,
             weightKg !== "" ? weightKg : 1000,
+            batchExportId,
           ),
         );
       }
@@ -616,6 +637,7 @@ function ReportPageContent() {
       setExportingIndex(null);
       setExportingPlanType(null);
       setExportProgress(null);
+      setExportId(null);
       setIsExporting(false);
     }
   };
@@ -627,6 +649,7 @@ function ReportPageContent() {
   const executeReportExport = async (selectedPlans: Set<RouteType>) => {
     let originalViewport: string | null = null;
     let viewportMeta: Element | null = null;
+    setExportId(buildExportId());
     try {
       setIsExporting(true); // Info: (20260501 - Luphia) 觸發重新渲染，隱藏控制面板並顯示各分頁 Header/Footer
 
@@ -662,9 +685,9 @@ function ReportPageContent() {
       });
 
       // Info: (20260724 - Tzuhan) 匯出範圍=使用者勾選 ∩ 適用性引擎判定(需求一+二),與畫面檢視狀態脫鉤
-      const routesToExport = (["land", "sea", "air"] as const).filter(
-        (type) => selectedPlans.has(type) && routeApplicability[type],
-      );
+      const routesToExport = (
+        ["land", "sea", "air", "seaLandAir"] as const
+      ).filter((type) => selectedPlans.has(type) && routeApplicability[type]);
 
       // Info: (20260724 - Tzuhan) 需求二:一個方案一份獨立 PDF,不再合併分頁
       const files: Array<{ filename: string; blob: Blob }> = [];
@@ -816,6 +839,7 @@ function ReportPageContent() {
         );
       }
       setExportProgress(null);
+      setExportId(null);
       setIsExporting(false);
     }
   };
@@ -1437,6 +1461,7 @@ function ReportPageContent() {
                       index={exportingIndex}
                       total={batchResults.length}
                       selectedRoutes={new Set([exportingPlanType])}
+                      exportId={exportId ?? undefined}
                       onReady={handleMapsReady}
                     />
                   </div>
@@ -1582,6 +1607,25 @@ function ReportPageContent() {
                               )}
                             </button>
                           )}
+                          {/* Info: (20260729 - Tzuhan) issue 10:海陸空聯運方案切換(不適用即屏蔽) */}
+                          {routeApplicability.seaLandAir && (
+                            <button
+                              onClick={() => toggleRoute("seaLandAir")}
+                              disabled={!plan || loading}
+                              className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition-all ${
+                                loading
+                                  ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400 opacity-60"
+                                  : selectedRoutes.has("seaLandAir")
+                                    ? "border-indigo-200 bg-indigo-50 text-indigo-700"
+                                    : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+                              }`}
+                            >
+                              <Layers className="h-4 w-4" />{" "}
+                              {t(
+                                "transportation_carbon_footprint_calculator.plan_section.title_sea_land_air",
+                              )}
+                            </button>
+                          )}
                         </div>
                       )}
 
@@ -1589,7 +1633,7 @@ function ReportPageContent() {
                       {(() => {
                         // Info: (20260724 - Tzuhan) 僅渲染適用的方案(與匯出範圍同一判斷來源)
                         const routesToRender = (
-                          ["land", "sea", "air"] as const
+                          ["land", "sea", "air", "seaLandAir"] as const
                         ).filter(
                           (type) =>
                             selectedRoutes.has(type) &&
@@ -1605,9 +1649,13 @@ function ReportPageContent() {
                               ? t(
                                   "transportation_carbon_footprint_calculator.pdf.mode_sea",
                                 )
-                              : t(
-                                  "transportation_carbon_footprint_calculator.pdf.mode_air",
-                                );
+                              : mode === "seaLandAir"
+                                ? t(
+                                    "transportation_carbon_footprint_calculator.plan_section.title_sea_land_air",
+                                  )
+                                : t(
+                                    "transportation_carbon_footprint_calculator.pdf.mode_air",
+                                  );
                         const originName = origin.lat
                           ? `${origin.lat}, ${origin.lng}`
                           : t(
@@ -1630,7 +1678,8 @@ function ReportPageContent() {
                             <ReportLayout
                               isPdfExport={isExporting}
                               hideFrameUnlessExport={true}
-                              badgeText={`${getModeName(type)} ${t("transportation_carbon_footprint_calculator.payment.fee_name")}`}
+                              /* Info: (20260729 - Tzuhan) 標頭帶方案代碼 + 運輸模式(對應 CSV Plan Code 與檔名) */
+                              badgeText={`${buildPlanCode(0, type)} · ${getModeName(type)}`}
                               footerType={isExporting ? "simple" : "none"}
                               footerTitle={t(
                                 "transportation_carbon_footprint_calculator.pdf.footer",
@@ -1658,6 +1707,8 @@ function ReportPageContent() {
                                         <Truck className="h-6 w-6 text-orange-500" />
                                       ) : type === "sea" ? (
                                         <Ship className="h-6 w-6 text-emerald-500" />
+                                      ) : type === "seaLandAir" ? (
+                                        <Layers className="h-6 w-6 text-indigo-500" />
                                       ) : (
                                         <Plane className="h-6 w-6 text-blue-500" />
                                       )}

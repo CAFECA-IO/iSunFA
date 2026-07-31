@@ -5,15 +5,18 @@ import {
   PlanSection,
   RouteType,
 } from "@/components/transportation_carbon_footprint_calculator/plan_section";
-import { Truck, Ship, Plane, MapPin } from "lucide-react";
+import { Truck, Ship, Plane, MapPin, Layers } from "lucide-react";
 import { IMileageBatchResult } from "@/components/transportation_carbon_footprint_calculator/mileage_batch_results";
 import { getRouteApplicability } from "@/lib/utils/route_applicability";
+import { buildPlanCode } from "@/constants/logistics";
 
 interface IBatchExportRendererProps {
   item: IMileageBatchResult;
   index: number;
   total: number;
   selectedRoutes: Set<RouteType>;
+  // Info: (20260729 - Tzuhan) 匯出批次識別碼:顯示於頁尾,與 summary.csv 檔頭一致
+  exportId?: string;
   onReady: () => void;
 }
 
@@ -22,6 +25,7 @@ export function BatchExportRenderer({
   index,
   total,
   selectedRoutes,
+  exportId = undefined,
   onReady,
 }: IBatchExportRendererProps) {
   const { t } = useTranslation();
@@ -63,9 +67,9 @@ export function BatchExportRenderer({
   const applicability = getRouteApplicability(plan);
 
   // Info: (20260724 - Tzuhan) 補上 custom 方案支援(原本被排除導致自訂聯運匯出空白 PDF)
-  const routesToRender = (["custom", "land", "sea", "air"] as const).filter(
-    (type) => selectedRoutes.has(type) && applicability[type],
-  );
+  const routesToRender = (
+    ["custom", "land", "sea", "air", "seaLandAir"] as const
+  ).filter((type) => selectedRoutes.has(type) && applicability[type]);
 
   const getModeName = (mode: string) =>
     mode === "land"
@@ -74,9 +78,13 @@ export function BatchExportRenderer({
         ? t("transportation_carbon_footprint_calculator.pdf.mode_sea")
         : mode === "air"
           ? t("transportation_carbon_footprint_calculator.pdf.mode_air")
-          : t(
-              "transportation_carbon_footprint_calculator.plan_section.title_custom",
-            );
+          : mode === "seaLandAir"
+            ? t(
+                "transportation_carbon_footprint_calculator.plan_section.title_sea_land_air",
+              )
+            : t(
+                "transportation_carbon_footprint_calculator.plan_section.title_custom",
+              );
 
   return (
     <div id={`batch-report-item-${index}`} className="flex flex-col">
@@ -85,7 +93,8 @@ export function BatchExportRenderer({
           <ReportLayout
             isPdfExport={true}
             hideFrameUnlessExport={true}
-            badgeText={`${getModeName(type)} ${t("transportation_carbon_footprint_calculator.payment.fee_name")}`}
+            /* Info: (20260729 - Tzuhan) 標頭帶方案代碼 + 運輸模式,與 CSV 的 Plan Code 欄互為索引 */
+            badgeText={`${buildPlanCode(index, type)} · ${getModeName(type)}`}
             footerType="simple"
             footerTitle={t(
               "transportation_carbon_footprint_calculator.pdf.footer",
@@ -93,7 +102,12 @@ export function BatchExportRenderer({
               .replace("{{current}}", String(index + 1))
               .replace("{{total}}", String(total))
               .replace("{{origin}}", originName)
-              .replace("{{dest}}", destName)}
+              .replace("{{dest}}", destName)
+              .concat(
+                exportId
+                  ? ` • ${t("transportation_carbon_footprint_calculator.pdf.export_id_label")}: ${exportId}`
+                  : "",
+              )}
             className="mb-4 min-h-[1448px] justify-between rounded-none border-none bg-white shadow-none ring-0"
             contentClassName="p-8"
           >
@@ -106,11 +120,17 @@ export function BatchExportRenderer({
                     <Ship className="h-6 w-6 text-emerald-500" />
                   ) : type === "air" ? (
                     <Plane className="h-6 w-6 text-blue-500" />
+                  ) : type === "seaLandAir" ? (
+                    <Layers className="h-6 w-6 text-indigo-500" />
                   ) : (
                     <MapPin className="h-6 w-6 text-purple-500" />
                   )}
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="flex flex-wrap items-baseline gap-2 text-2xl font-bold text-gray-900">
+                  {/* Info: (20260729 - Tzuhan) 唯一方案代碼(對應 CSV Plan Code 與檔名) */}
+                  <span className="rounded-lg bg-gray-900 px-2 py-1 font-mono text-base text-white">
+                    {buildPlanCode(index, type)}
+                  </span>
                   {getModeName(type)}{" "}
                   {t(
                     "transportation_carbon_footprint_calculator.pdf.section_analysis",

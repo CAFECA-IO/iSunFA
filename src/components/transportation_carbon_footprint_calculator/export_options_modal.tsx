@@ -4,7 +4,7 @@
 // Info: (20260724 - Tzuhan) 只列出適用性引擎判定為適用的方案;每個勾選方案將產出獨立 PDF
 
 import { useState } from "react";
-import { Truck, Ship, Plane, MapPin, X, FileDown } from "lucide-react";
+import { Truck, Ship, Plane, MapPin, Layers, X, FileDown } from "lucide-react";
 import { RouteType } from "@/components/transportation_carbon_footprint_calculator/plan_section";
 import { useTranslation } from "@/i18n/i18n_context";
 
@@ -14,12 +14,14 @@ interface IExportOptionsModalProps {
   onClose: () => void;
 }
 
-const PLAN_ORDER: RouteType[] = ["custom", "land", "sea", "air"];
+// Info: (20260729 - Tzuhan) issue 10:海陸空聯運列於海空之後
+const PLAN_ORDER: RouteType[] = ["custom", "land", "sea", "air", "seaLandAir"];
 
 const PLAN_ICONS: Record<RouteType, typeof Truck> = {
   land: Truck,
   sea: Ship,
   air: Plane,
+  seaLandAir: Layers,
   custom: MapPin,
 };
 
