@@ -31,7 +31,7 @@
 - **設定列**:`key: value`,`key` 屬該圖表白名單(小寫比對)。判定規則:冒號存在、且冒號位於第一個逗號之前、且 key 在白名單內;否則視為資料列。
 - **資料列**:CSV(逗號分隔,支援雙引號包夾含逗號/引號的欄位),由共用的 `parseCsvLine`(`src/lib/utils/csv.ts`)解析。
 - 數值:接受可選負號與小數。**解析器只萃取、不做任何計算或正規化**(不自動分箱、不自動算四分位)。
-- **配對分隔符**:`CUSTOM_CHART_PAIR_SEPARATORS`(`<->` 與 `↔`,VS16 變體 `↔️` 於解析前正規化),表「一對事物的兩端」。用於矩陣圖雙極軸設定值(min 端 `<->` max 端)與龍捲風圖標題列(左數列 `<->` 右數列)。標準形式為 ASCII 的 `<->`,editor 一律輸出此形式。
+- **配對分隔符**:`CUSTOM_CHART_PAIR_SEPARATORS`(`<->` 與 `↔`,VS16 變體 `↔️` 於解析前正規化),表「一對事物的兩端」。解析時兩者皆接受,**陣列順序即比對優先序**(`<->` 優先,避免使用者文字中夾帶的 `↔` 被誤判為分隔符)。序列化形式各自具名、不得以索引取值:龍捲風圖標題列用 `CUSTOM_CHART_TORNADO_HEADER_SEPARATOR`(`<->`),矩陣圖雙極軸用 `CUSTOM_CHART_AXIS_SEPARATOR`(`↔`,歷史沿用)。
 
 設定 key 一律定義於 `src/constants/custom_chart.ts` 的 `CustomChartConfigKey` enum(禁魔法字串)。
 
@@ -69,12 +69,15 @@ AST:`{ type, title?, xAxis:{min?,max?,scale?}, yAxis:{min?,max?,scale?}, points:
 
 | 形式 | 寫法 | 說明 |
 |---|---|---|
-| **配對分隔符**(建議,editor 一律輸出此形式) | `左數列 <-> 右數列` | **單一 CSV 欄位**,與 3 欄資料列結構互斥。判定只看結構不看內容,故 `2019 <-> 2020` 這類純數字數列名亦無歧義。分隔符見 `CUSTOM_CHART_PAIR_SEPARATORS`(`<->` 與 `↔`,含 VS16 變體 `↔️`);僅能兩段,`A <-> B <-> C` 拋 `MALFORMED_ROW`;單邊留空則該側 `undefined`;數列名含逗號需引號包夾,否則會被拆成多欄而失去「單一欄位」的判定前提。 |
+| **配對分隔符**(建議,editor 一律輸出此形式) | `左數列 <-> 右數列` | **單一 CSV 欄位**,與 3 欄資料列結構互斥。判定只看結構不看內容,故 `2019 <-> 2020` 這類純數字數列名亦無歧義。分隔符見 `CUSTOM_CHART_PAIR_SEPARATORS`(`<->` 與 `↔`,含 VS16 變體 `↔️`);僅能兩段,`A <-> B <-> C` 拋 `MALFORMED_ROW`;單邊留空則該側 `undefined`;數列名含逗號需引號包夾,否則會被拆成多欄而失去「單一欄位」的判定前提;數列名**不得含分隔符本身**(見下方說明)。 |
 | **Legacy 三欄**(相容既有內容) | `category, leftSeriesName, rightSeriesName` | 以「首列第 2、3 欄皆非數字」推測。此形式與資料列**先天同形**,數列名為純數字(如 bare year `2019`)時無法分辨,會被當成資料列而靜默產生錯誤長條。**新內容請勿使用**;既有圖表經 editor 編輯後會自動遷移為配對分隔符形式。 |
 
 其餘資料列:`category, leftValue, rightValue`,`category`(標籤)**必填**,各值為該數列自身數值,不做任何計算。
 
-> 標題列判定與數列名取值集中於 `custom_chart_parser.ts` 的 `isTornadoHeaderFields()` / `getTornadoHeaderSeries()`,由 parser 與 `custom_tornado_editor` **共用**。兩邊若各自實作而判定分歧,同一列會被一邊當標題列、另一邊當資料列,導致 editor 的 `lineIndex` 與 parser 的 `bars` 對應錯位,編輯動作將套用到錯誤的資料列。
+> 標題列判定與數列名取值集中於 `custom_chart_parser.ts` 的 `isTornadoHeaderFields()` / `getTornadoHeaderSeries()`,由 parser 與 `custom_tornado_editor` **共用**。兩邊若各自實作而判定分歧,同一列會被一邊當標題列、另一邊當資料列,導致 editor 的 `lineIndex` 與 parser 的 `bars` 對應錯位,編輯動作將套用到錯誤的資料列。此不變式由 `custom_tornado_editor.test.ts` 的「parser / editor 標題列判定一致性」測試固化。
+>
+> 數列名稱**不得含配對分隔符**(`<->` / `↔`):`A<->B` 與 `C` 會串成 `A<->B <-> C`,讀回時分成三段而被拒絕。editor 於 `EDIT_GROUP` 邊界擋下此類名稱(略過標頭改寫、顏色設定仍照常套用),不產生自己讀不回來的字串。
+
 AST:`{ type, title?, unit?, leftSeries?, rightSeries?, bars:[{category,left,right}] }`。
 排序(依 `left+right` 遞減,最長者置頂呈龍捲風收斂外型)屬渲染層,AST 保留原始順序。
 

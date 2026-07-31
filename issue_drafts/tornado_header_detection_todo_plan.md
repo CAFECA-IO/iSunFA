@@ -1,4 +1,15 @@
-# 龍捲風圖標題列誤判 ToDo 處理計劃（v2：改用分隔符文法）
+# 龍捲風圖標題列誤判 ToDo 處理計劃（v3：已實作完成）
+
+> **狀態：已實作**（2026-07-31）。本文保留為決策紀錄；下列名稱以實作為準，本文早期段落中的暫定名稱已過時：
+>
+> | 規劃時暫定 | 實際實作 |
+> |---|---|
+> | `isTornadoHeaderLine()` | `isTornadoHeaderFields()`（另有 `getTornadoHeaderSeries()` / `isMalformedPairHeader()`） |
+> | `CUSTOM_CHART_AXIS_SEPARATORS` | 已更名 `CUSTOM_CHART_PAIR_SEPARATORS`；序列化形式另立具名常數 `CUSTOM_CHART_TORNADO_HEADER_SEPARATOR`（`<->`）與 `CUSTOM_CHART_AXIS_SEPARATOR`（`↔`） |
+> | 第二節「待決定：常數名稱…」 | 已決定：更名，且不以索引取值 |
+>
+> **實作後追加**（PR #6585 review 發現，規劃時未預見）：陣列順序即比對優先序，`<->` 必須排在 `↔` 之前；且 editor 須於 `EDIT_GROUP` 邊界擋下含分隔符的數列名，否則會產生自己讀不回來的標題列。
+
 
 > ToDo: (20260721 - Luphia) 數列名稱為純數字（如 bare year 2019）時會被誤判為資料列，靜默產生錯誤的單筆長條而非報錯；考慮更嚴謹的 header 判定或加上警示
 >

@@ -103,7 +103,8 @@ export const isNumericField = (raw: string | undefined): boolean => {
 /**
  * Info: (20260731 - Julian) 移除 VS16（emoji 變體選擇符）以相容 ↔️
  */
-const stripVariationSelector = (raw: string): string => raw.replace(/️/g, "");
+const stripVariationSelector = (raw: string): string =>
+  raw.replace(/\uFE0F/g, "");
 
 /**
  * Info: (20260731 - Julian)

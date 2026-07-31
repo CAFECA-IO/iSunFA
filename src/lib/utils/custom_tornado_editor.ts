@@ -4,6 +4,7 @@ import {
   TornadoActionType,
   CUSTOM_CHART_COMMENT_PREFIX,
   CUSTOM_CHART_PAIR_SEPARATORS,
+  CUSTOM_CHART_TORNADO_HEADER_SEPARATOR,
 } from "@/constants/custom_chart";
 import {
   ITornadoItem,
@@ -36,8 +37,17 @@ const TORNADO_CONFIG_KEYS: ReadonlySet<string> = new Set<string>([
   CustomChartConfigKey.RIGHT_COLOR,
 ]);
 
-// Info: (20260731 - Julian) 標題列序列化採用的配對分隔符（標準形式為 ASCII 的 `<->`）
-const PAIR_SEPARATOR = CUSTOM_CHART_PAIR_SEPARATORS[1];
+// Info: (20260731 - Julian) 標題列序列化採用的配對分隔符
+const PAIR_SEPARATOR = CUSTOM_CHART_TORNADO_HEADER_SEPARATOR;
+
+/**
+ * Info: (20260731 - Julian)
+ * 數列名稱是否含任一配對分隔符。含分隔符的名稱寫入標題列後無法 round-trip：
+ * 例如 `A<->B` 與 `C` 會串成 `A<->B <-> C`，讀回時分成三段而被 parser 拒絕。
+ * 依 §6 Fail Fast 於邊界擋下，不產生自己讀不回來的字串。
+ */
+const containsPairSeparator = (name: string): boolean =>
+  CUSTOM_CHART_PAIR_SEPARATORS.some((sep) => name.includes(sep));
 
 const formatCsvField = (field: string): string => {
   const needsQuote = /[",\r\n]/.test(field) || field !== field.trim();
@@ -335,7 +345,14 @@ export const applyTornadoActions = (
           rightColor.trim(),
         );
       }
-      applyGroupHeader(materialized, leftSeries, rightSeries);
+      // Info: (20260731 - Julian) 數列名含分隔符會產生無法 round-trip 的標題列，
+      // Info: (20260731 - Julian) 故僅略過標頭改寫（顏色設定仍照常套用），不讓髒資料進入 DSL
+      if (
+        !containsPairSeparator(leftSeries) &&
+        !containsPairSeparator(rightSeries)
+      ) {
+        applyGroupHeader(materialized, leftSeries, rightSeries);
+      }
     }
   });
 

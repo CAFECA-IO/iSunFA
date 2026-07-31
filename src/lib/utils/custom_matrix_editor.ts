@@ -3,7 +3,7 @@ import {
   CustomChartConfigKey,
   MatrixActionType,
   CUSTOM_CHART_COMMENT_PREFIX,
-  CUSTOM_CHART_PAIR_SEPARATORS,
+  CUSTOM_CHART_AXIS_SEPARATOR,
 } from "@/constants/custom_chart";
 import {
   IMatrixItem,
@@ -35,7 +35,7 @@ const MATRIX_CONFIG_KEYS: ReadonlySet<string> = new Set<string>([
 ]);
 
 // Info: (20260721 - Julian) 雙極軸序列化採用的分隔符（左為 min 端、右為 max 端）
-const AXIS_SEPARATOR = CUSTOM_CHART_PAIR_SEPARATORS[0];
+const AXIS_SEPARATOR = CUSTOM_CHART_AXIS_SEPARATOR;
 
 /**
  * Info: (20260721 - Julian)

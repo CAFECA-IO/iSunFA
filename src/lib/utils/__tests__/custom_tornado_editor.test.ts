@@ -4,8 +4,10 @@ import {
   applyTornadoAction,
   applyTornadoActions,
 } from "@/lib/utils/custom_tornado_editor";
+import { parseCustomChart } from "@/lib/utils/custom_chart_parser";
 import { ITornadoAction } from "@/interfaces/custom_chart";
 import {
+  CustomChartType,
   TornadoActionType,
   TornadoMode,
   CustomChartConfigKey,
@@ -209,6 +211,83 @@ describe("applyTornadoActions - EDIT_GROUP（標頭 + 顏色）", () => {
       "A, 10, 20",
       "B, 30, 40",
     ]);
+  });
+
+  /**
+   * Info: (20260731 - Julian)
+   * 數列名含配對分隔符會串成無法 round-trip 的標題列
+   * （`A<->B` + `C` → `A<->B <-> C` → 讀回三段被 parser 拒絕）。
+   * 依 §6 Fail Fast 於 editor 邊界擋下：略過標頭改寫，但顏色設定仍照常套用。
+   */
+  it.each([
+    ["ASCII 分隔符", "A<->B"],
+    ["全形箭號", "A↔B"],
+  ])("數列名含%s時略過標頭改寫，不產生壞掉的 DSL", (_label, badName) => {
+    const noHeader = ["title: T", "A, 10, 20"].join("\n");
+    const out = applyTornadoActions(noHeader, [
+      {
+        id: uid(5),
+        description: "group",
+        type: TornadoActionType.EDIT_GROUP,
+        payload: {
+          leftSeries: badName,
+          rightSeries: "C",
+          leftColor: "#ff0000",
+        },
+      },
+    ]);
+    // Info: (20260731 - Julian) 未寫入任何標頭列，且產出仍可被 parser 正常解析
+    expect(out).not.toContain(badName);
+    expect(out.split("\n")).toContain(
+      `${CustomChartConfigKey.LEFT_COLOR}: #ff0000`,
+    );
+    expect(parseCustomChart(CustomChartType.TORNADO, out).ok).toBe(true);
+  });
+});
+
+/**
+ * Info: (20260731 - Julian)
+ * parser 與 editor 共用標題列判定的核心不變式：兩邊對「哪一列是標題列」必須看法一致。
+ * 若分歧，editor 的 lineIndex 會與 parser 的 bars 錯位，編輯動作將套用到錯誤的資料列。
+ * 新式與 legacy 兩種格式都必須固化。
+ */
+describe("parser / editor 標題列判定一致性（跨模組不變式）", () => {
+  it.each([
+    ["新式標頭", ["2019 <-> 2020", "A, 10, 20", "B, 30, 40"]],
+    ["legacy 三欄標頭", ["項目, 樂觀, 悲觀", "A, 10, 20", "B, 30, 40"]],
+    ["無標頭", ["A, 10, 20", "B, 30, 40"]],
+    ["含設定列與註解", ["%% 註解", "title: T", "L <-> R", "A, 10, 20"]],
+  ])("%s：editor 的 bars 與 parser 的 bars 一一對應", (_label, lines) => {
+    const raw = lines.join("\n");
+    const parsed = parseCustomChart(CustomChartType.TORNADO, raw);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok || parsed.ast.type !== CustomChartType.TORNADO) return;
+
+    const editorBars = parseTornadoBars(raw);
+    // Info: (20260731 - Julian) 筆數、順序、內容三者皆須一致
+    expect(editorBars.map((b) => b.category)).toEqual(
+      parsed.ast.bars.map((b) => b.category),
+    );
+    expect(editorBars.map((b) => [b.left, b.right])).toEqual(
+      parsed.ast.bars.map((b) => [b.left, b.right]),
+    );
+    // Info: (20260731 - Julian) editor 的 lineIndex 必須真的指向該筆資料所在的原始行
+    editorBars.forEach((bar) => {
+      expect(raw.split("\n")[bar.lineIndex]).toContain(bar.category);
+    });
+  });
+
+  it("三段標題列：parser 拒絕整張圖表，editor 視為無名稱標頭（刻意的不對稱）", () => {
+    const raw = ["A <-> B <-> C", "X, 1, 2"].join("\n");
+    const parsed = parseCustomChart(CustomChartType.TORNADO, raw);
+    expect(parsed.ok).toBe(false);
+
+    // Info: (20260731 - Julian) editor 永不 throw：該列仍算標頭（不計入 bars），但取不出名稱
+    const data = parseTornadoData(raw);
+    expect(data.hasHeader).toBe(true);
+    expect(data.leftSeries).toBeUndefined();
+    expect(data.rightSeries).toBeUndefined();
+    expect(data.bars.map((b) => b.category)).toEqual(["X"]);
   });
 });
 
