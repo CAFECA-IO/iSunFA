@@ -13,6 +13,77 @@ import { MapPin } from "lucide-react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { FeatureCollection, Feature, Geometry } from "geojson";
 import { useTranslation } from "@/i18n/i18n_context";
+// Info: (20260731 - Tzuhan) bbox 計算抽到純模組:它是幾何運算而非 UI,且跨換日線的修正需要單元測試
+import { getMapBoundingBox as getBoundingBox } from "@/lib/utils/map_bounding_box";
+import { haversineMeters } from "@/lib/utils/map_scale_bar";
+import {
+  isUniformPixelData,
+  MAP_BLANK_SAMPLE_SIZE,
+} from "@/lib/utils/map_capture_quality";
+import {
+  MAP_IDLE_TIMEOUT_MS,
+  MAP_STYLE_READY_TIMEOUT_MS,
+} from "@/constants/logistics_pdf";
+// Info: (20260731 - Luphia) maplibre-gl v6 移除了 default export,故以命名型別匯入(v5/v6 皆提供 MapLibreMap 別名)。
+// Info: (20260731 - Luphia) 請勿改回 `import type maplibregl from "maplibre-gl"`,那會在 CI 以 TS1192 失敗。
+import type { MapLibreMap } from "maplibre-gl";
+
+/**
+ * Info: (20260731 - Tzuhan) 輪詢樣式是否就緒。
+ *
+ * **刻意不用 `map.once("load")`**:`load` 是一次性事件,若在我們開始等待之前就已經觸發,
+ * 那個 await 會白等到逾時為止。實測第一條路線的空運段就是這樣被判成缺圖 ——
+ * 樣式其實早就載好了,我們卻在等一個永遠不會再來的事件。
+ * 輪詢對「已經發生」與「即將發生」兩種情況都成立,這是它比事件可靠的地方。
+ */
+const waitForStyleReady = async (
+  map: MapLibreMap,
+  timeoutMs: number,
+): Promise<boolean> => {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (map.isStyleLoaded()) return true;
+    await new Promise((resolve) => {
+      setTimeout(resolve, 100);
+    });
+  }
+  // Info: (20260731 - Tzuhan) maplibre 的 isStyleLoaded 型別為 boolean | void(未設樣式時回 undefined)
+  return Boolean(map.isStyleLoaded());
+};
+
+/**
+ * Info: (20260731 - Tzuhan) 等 idle 或逾時。idle 會反覆觸發,故用一次性監聽是安全的。
+ * 回傳是否真的等到,供呼叫端記錄「截到的是完整畫面還是逾時畫面」。
+ */
+const waitForIdle = (map: MapLibreMap, timeoutMs: number): Promise<boolean> =>
+  new Promise<boolean>((resolve) => {
+    const timer = setTimeout(() => resolve(false), timeoutMs);
+    map.once("idle", () => {
+      clearTimeout(timer);
+      resolve(true);
+    });
+  });
+
+/**
+ * Info: (20260731 - Tzuhan) 畫布是否為空白(未繪製)。
+ * 縮到 8×8 再讀像素:成本約一毫秒,而批次要跑上百次。
+ * 讀不到像素時回 false(寧可放行也不要因為判定工具本身失敗而丟掉一張好圖)。
+ */
+const isCanvasBlank = (canvas: HTMLCanvasElement): boolean => {
+  try {
+    const probe = document.createElement("canvas");
+    probe.width = MAP_BLANK_SAMPLE_SIZE;
+    probe.height = MAP_BLANK_SAMPLE_SIZE;
+    const context = probe.getContext("2d");
+    if (!context) return false;
+    context.drawImage(canvas, 0, 0, probe.width, probe.height);
+    return isUniformPixelData(
+      context.getImageData(0, 0, probe.width, probe.height).data,
+    );
+  } catch {
+    return false;
+  }
+};
 
 export interface IMapViewerProps {
   // Info: (20260430 - Tzuhan) 支援多式聯運的 FeatureCollection 或是單一軌跡
@@ -31,8 +102,36 @@ export interface IMapViewerProps {
   duration?: number; // Info: (20260501 - Luphia) 飛梭動畫時長
 }
 
+/**
+ * Info: (20260731 - Tzuhan) 單張地圖的截圖結果。
+ * metersPerPixel 由 bounds 與畫布寬度實算而非由 zoom 推導 —— 報告的比例尺必須對得上實際畫面。
+ */
+export interface IMapCapture {
+  dataUrl: string;
+  metersPerPixel: number;
+}
+
 export interface IMapViewerRef {
   captureMap: () => Promise<string | null>;
+  /**
+   * Info: (20260731 - Tzuhan) 截取「聚焦於某段幾何」的圖(issue 08 實測回報:缺接駁段路徑圖)。
+   *
+   * 以命令式而非改 prop 實作,是為了在**同一個 WebGL context** 內連續產出多張圖:
+   * 每段各掛一個 MapViewer 會撞瀏覽器的同時 context 上限
+   * (plan_section.tsx 當年就是為此移除逐段縮圖 —— 註解仍在)。
+   * 截完會還原原本的視野,避免影響後續的全程圖。
+   */
+  captureGeometry: (
+    geometry: GeoJSON.Geometry | null,
+    options?: {
+      /**
+       * Info: (20260731 - Tzuhan) 只畫這一段。逐段圖若同時顯示陸運與空運兩條線,
+       * 讀者無法判斷哪一條才是本段,那張圖就不能單獨作為該段的證據。
+       * 全程圖不設此旗標(它本來就該顯示所有段)。
+       */
+      soloFeature?: boolean;
+    },
+  ) => Promise<IMapCapture | null>;
 }
 
 function getStartAndEndCoordinates(
@@ -78,66 +177,6 @@ function getStartAndEndCoordinates(
 }
 
 // Info: (20260430 - Tzuhan) 輔助函數：計算 Geometry 的 Bounding Box [[minLng, minLat], [maxLng, maxLat]]
-function getBoundingBox(
-  geojson:
-    | GeoJSON.FeatureCollection
-    | GeoJSON.Feature
-    | GeoJSON.Geometry
-    | null,
-): [[number, number], [number, number]] | null {
-  if (!geojson) return null;
-  let minX = Infinity,
-    minY = Infinity,
-    maxX = -Infinity,
-    maxY = -Infinity;
-
-  const updateBounds = (coord: number[]) => {
-    if (coord[0] < minX) minX = coord[0];
-    if (coord[0] > maxX) maxX = coord[0];
-    if (coord[1] < minY) minY = coord[1];
-    if (coord[1] > maxY) maxY = coord[1];
-  };
-
-  const processGeometry = (geom: GeoJSON.GeoJSON | null) => {
-    if (!geom) return;
-    if (geom.type === "LineString") {
-      geom.coordinates.forEach(updateBounds);
-    } else if (geom.type === "MultiLineString") {
-      geom.coordinates.forEach((line: number[][]) =>
-        line.forEach(updateBounds),
-      );
-    } else if (geom.type === "Point") {
-      updateBounds(geom.coordinates);
-    } else if (geom.type === "GeometryCollection") {
-      geom.geometries.forEach(processGeometry);
-    } else if (geom.type === "FeatureCollection") {
-      geom.features.forEach((f: GeoJSON.Feature) =>
-        processGeometry(f.geometry),
-      );
-    } else if (geom.type === "Feature") {
-      processGeometry(geom.geometry);
-    }
-  };
-
-  processGeometry(geojson);
-
-  if (minX === Infinity) return null;
-
-  // Info: (20260430 - Tzuhan) 防呆：如果起終點太近，給予微小的 bbox 避免報錯或無法縮放
-  if (maxX - minX < 0.001) {
-    minX -= 0.01;
-    maxX += 0.01;
-  }
-  if (maxY - minY < 0.001) {
-    minY -= 0.01;
-    maxY += 0.01;
-  }
-
-  return [
-    [minX, minY],
-    [maxX, maxY],
-  ];
-}
 
 const MapViewerBase = (
   {
@@ -187,8 +226,122 @@ const MapViewerBase = (
           map.triggerRepaint();
         });
       },
+
+      captureGeometry: async (geometry, options) => {
+        if (!mapRef.current || !geometry) return null;
+        const map = mapRef.current.getMap();
+        const bbox = getBoundingBox(geometry);
+        if (!bbox) return null;
+
+        /**
+         * Info: (20260731 - Tzuhan) 先等樣式載入完成才動作。
+         * 實測第一條路線的四張圖全是純黑且完全相同:離屏元件的 onReady 是固定 2 秒,
+         * 但首次載入要取樣式 JSON、字型與圖磚,兩秒不夠;樣式未載入時 fitBounds 不會重繪,
+         * 而 preserveDrawingBuffer 讓 toDataURL 回傳那個從未被繪製的緩衝區。
+         * 第二條路線之後樣式已快取,所以問題只出現在第一條 —— 這也是它難以察覺的原因。
+         */
+        const startedAt = Date.now();
+        const styleReady = await waitForStyleReady(
+          map,
+          MAP_STYLE_READY_TIMEOUT_MS,
+        );
+
+        // Info: (20260731 - Tzuhan) 記下原視野,截完還原,才不會污染後續的全程圖
+        const previousCenter = map.getCenter();
+        const previousZoom = map.getZoom();
+
+        /**
+         * Info: (20260731 - Tzuhan) 只畫這一段(solo)。
+         *
+         * captureGeometry 原本只改視野,圖層資料仍是整條路線,於是接駁段的小圖上
+         * 同時出現陸運與空運兩條線 —— 一張「巴黎 → 空軍基地」的圖裡橫著一條飛往柏林的
+         * 藍線,讀者無法判斷哪條才是這一段。逐段圖的用途是單獨證明該段,必須只有一條線。
+         *
+         * 以 setData 暫時替換資料源而非改 props:props 走 React 渲染週期,
+         * 在同一個 async 函式內無法保證已套用;截完立即還原。
+         */
+        const source = options?.soloFeature
+          ? (map.getSource(`route-source-${mapInstanceId}`) as
+              | { setData?: (data: GeoJSON.GeoJSON) => void }
+              | undefined)
+          : undefined;
+        if (source?.setData) {
+          // Info: (20260731 - Tzuhan) 沿用原 feature 的顏色(以幾何物件比對),讓小圖與全程圖的配色一致
+          const original = routeGeojson as FeatureCollection<Geometry> | null;
+          const matched = original?.features?.find(
+            (feature) => feature.geometry === geometry,
+          );
+          source.setData({
+            type: "FeatureCollection",
+            features: [
+              matched ?? {
+                type: "Feature",
+                properties: {},
+                geometry: geometry as Geometry,
+              },
+            ],
+          });
+        }
+
+        map.fitBounds(bbox, {
+          padding: fitBoundsPadding,
+          duration: 0,
+          maxZoom: 14,
+          essential: true,
+        });
+
+        // Info: (20260731 - Tzuhan) 明確要求重繪再等 idle:視野變更後若沒有實際重繪,
+        // Info: (20260731 - Tzuhan) preserveDrawingBuffer 會讓我們截到上一張圖(實測四張完全相同)
+        map.triggerRepaint();
+        const becameIdle = await waitForIdle(map, MAP_IDLE_TIMEOUT_MS);
+
+        let capture: IMapCapture | null = null;
+        try {
+          const canvas = map.getCanvas();
+          /**
+           * Info: (20260731 - Tzuhan) 空白畫面一律當作沒有截到。
+           * 一張純黑方塊被放進報告當證據,比缺圖糟得多:缺圖讀者知道沒有,
+           * 黑方塊會被讀成「這段就是這樣」。
+           */
+          if (isCanvasBlank(canvas)) {
+            // Info: (20260731 - Tzuhan) 印出判定依據:缺圖有數種成因,不記下來下次還是得靠猜
+            console.warn(
+              `[mapCapture] blank canvas — styleReady=${styleReady} idle=${becameIdle} elapsed=${Date.now() - startedAt}ms`,
+            );
+            if (source?.setData && routeGeojson) {
+              source.setData(routeGeojson as GeoJSON.GeoJSON);
+            }
+            map.jumpTo({ center: previousCenter, zoom: previousZoom });
+            return null;
+          }
+          // Info: (20260731 - Tzuhan) 以實際 bounds 與畫布寬度算每像素公尺數,不由 zoom 反推
+          const bounds = map.getBounds();
+          const centerLat = bounds.getCenter().lat;
+          const spanMeters =
+            haversineMeters(
+              centerLat,
+              bounds.getWest(),
+              centerLat,
+              bounds.getEast(),
+            ) || 0;
+          const widthCssPx = canvas.clientWidth || canvas.width;
+          capture = {
+            dataUrl: canvas.toDataURL("image/jpeg", 0.8),
+            metersPerPixel: widthCssPx > 0 ? spanMeters / widthCssPx : 0,
+          };
+        } catch (e) {
+          console.error("Failed to capture leg map:", e);
+        }
+
+        // Info: (20260731 - Tzuhan) 還原資料源與視野:下一張圖(或畫面上的地圖)不該被這次截圖影響
+        if (source?.setData && routeGeojson) {
+          source.setData(routeGeojson as GeoJSON.GeoJSON);
+        }
+        map.jumpTo({ center: previousCenter, zoom: previousZoom });
+        return capture;
+      },
     }),
-    [],
+    [fitBoundsPadding, mapInstanceId, routeGeojson],
   );
 
   useEffect(() => {

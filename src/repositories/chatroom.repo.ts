@@ -40,15 +40,101 @@ export class ChatroomRepository {
     });
   }
 
-  // Info: (20260714 - Emily) 依頻道前綴列出聊天室(sessions 列表);前綴含用戶 address,寫入時已由路由層裁決所有權
-  async listChatroomsByChannelPrefix(channelPrefix: string, purpose?: string) {
+  // Info: (20260714 - Tzuhan) 依頻道前綴列出聊天室(sessions 列表);前綴含用戶 address,寫入時已由路由層裁決所有權
+  /**
+   * Info: (20260716 - Tzuhan) #52 綁定會話至帳本(upsert:會話可能尚未建立);
+   * 已綁定者不可改綁(報告歸屬不可漂移,審計原則)— 由呼叫端先查後裁決
+   */
+  async bindAccountBook(
+    channel: string,
+    purpose: string,
+    ownerPublicKey: string,
+    accountBookId: string,
+  ) {
+    return prisma.chatroom.upsert({
+      where: { channel },
+      update: { accountBookId },
+      create: { channel, purpose, ownerPublicKey, accountBookId },
+    });
+  }
+
+  // Info: (20260716 - Tzuhan) #52 依 channel 查綁定帳本(null = 個人會話或不存在)
+  async findAccountBookIdByChannel(channel: string): Promise<string | null> {
+    const room = await prisma.chatroom.findUnique({
+      where: { channel },
+      select: { accountBookId: true },
+    });
+    return room?.accountBookId ?? null;
+  }
+
+  // Info: (20260716 - Tzuhan) #52 列出帳本的碳盤查會話(帳本成員閱覽動線)
+  /**
+   * Info: (20260730 - Tzuhan) 封存狀態的查詢條件。預設只列使用中者:
+   * 已封存的會話應該從清單消失(否則封存等於沒做),但資料仍在,帶 includeArchived 即可列出還原。
+   */
+  private buildArchivedFilter(includeArchived: boolean) {
+    return includeArchived ? {} : { archivedAt: null };
+  }
+
+  async listChatroomsByAccountBookId(
+    accountBookId: string,
+    purpose?: string,
+    includeArchived = false,
+  ) {
+    return prisma.chatroom.findMany({
+      where: {
+        accountBookId,
+        ...(purpose ? { purpose } : {}),
+        ...this.buildArchivedFilter(includeArchived),
+      },
+      orderBy: { createdAt: "desc" },
+      select: {
+        channel: true,
+        createdAt: true,
+        updatedAt: true,
+        accountBookId: true,
+        archivedAt: true,
+      },
+    });
+  }
+
+  async listChatroomsByChannelPrefix(
+    channelPrefix: string,
+    purpose?: string,
+    includeArchived = false,
+  ) {
     return prisma.chatroom.findMany({
       where: {
         channel: { startsWith: channelPrefix },
         ...(purpose ? { purpose } : {}),
+        ...this.buildArchivedFilter(includeArchived),
       },
       orderBy: { createdAt: "desc" },
-      select: { channel: true, createdAt: true, updatedAt: true },
+      select: {
+        channel: true,
+        createdAt: true,
+        updatedAt: true,
+        // Info: (20260716 - Tzuhan) #52 前端據此切換保存模式(帳本=明文/個人=E2EE)
+        accountBookId: true,
+        archivedAt: true,
+      },
+    });
+  }
+
+  /**
+   * Info: (20260730 - Tzuhan) 封存 / 還原(軟刪)。回傳 null 代表該 channel 不存在——
+   * 呼叫端須據此回 404 而非假裝成功,否則使用者無從得知自己刪的是不存在的東西。
+   */
+  async setArchived(channel: string, archived: boolean) {
+    const chatroom = await prisma.chatroom.findUnique({
+      where: { channel },
+      select: { id: true },
+    });
+    if (!chatroom) return null;
+    return prisma.chatroom.update({
+      where: { id: chatroom.id },
+      data: { archivedAt: archived ? new Date() : null },
+      select: { channel: true, archivedAt: true },
     });
   }
 

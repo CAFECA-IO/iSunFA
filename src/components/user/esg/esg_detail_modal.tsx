@@ -44,6 +44,8 @@ interface IEsgDetailModalProps {
   onClose: () => void;
   esgId: string | null;
   onSave?: (record: IEsgRecordDetail) => void;
+  // Info: (20260721 - Tzuhan) 帳本 id 可由 prop 注入(碳盤查頁等非 account_book 路徑;未提供時沿用 URL)
+  accountBookId?: string | null;
 }
 
 export default function EsgDetailModal({
@@ -51,9 +53,12 @@ export default function EsgDetailModal({
   onClose,
   esgId,
   onSave = undefined,
+  accountBookId: accountBookIdProp = undefined,
 }: IEsgDetailModalProps) {
   const params = useParams();
-  const accountBookId = params?.account_book_id as string;
+  // Info: (20260721 - Tzuhan) prop 優先:carbon_chatbot 頁不在 account_book 路徑下,URL 取不到
+  const accountBookId =
+    accountBookIdProp ?? (params?.account_book_id as string);
   const { t, language } = useTranslation();
 
   const [formData, setFormData] = useState<IEsgRecordDetail | null>(null);

@@ -60,6 +60,8 @@ interface IRecordTabModalProps {
   voucherId?: string | null;
   esgId?: string | null;
   file?: { id: string; hash?: string; fileName?: string } | null;
+  // Info: (20260721 - Tzuhan) 帳本 id 可由 prop 注入(碳盤查頁等非 account_book 路徑;未提供時各分頁沿用 URL)
+  accountBookId?: string | null;
   onJournalUpdate?: (journal: IJournal) => void;
   onVoucherUpdate?: (voucher: IVoucher) => void;
   onEsgUpdate?: (esg: IEsgRecordDetail) => void;
@@ -76,6 +78,7 @@ export default function RecordTabModal({
   voucherId: initialVoucherId = undefined,
   esgId: initialEsgId = undefined,
   file: initialFile = undefined,
+  accountBookId = undefined,
   onJournalUpdate = undefined,
   onVoucherUpdate = undefined,
   onEsgUpdate = undefined,
@@ -88,7 +91,11 @@ export default function RecordTabModal({
   const [activeTab, setActiveTab] = useState<RecordTabType>(defaultTab);
 
   // Info: (20260327 - Luphia) 記錄已點擊過/已掛載的 Tabs，避免切換 Tab 時遺失資料或重複打 API
-  const [mountedTabs, setMountedTabs] = useState<Set<RecordTabType>>(new Set());
+  // Info: (20260722 - Tzuhan) 初始即掛載預設分頁:條件掛載的呼叫端(isOpen 自始為 true)
+  // Info: (20260722 - Tzuhan) 不會經歷 false→true 開啟轉場,原本的空 Set 會讓預設分頁一片空白
+  const [mountedTabs, setMountedTabs] = useState<Set<RecordTabType>>(
+    new Set([defaultTab]),
+  );
 
   const [journalId, setJournalId] = useState<string | null | undefined>(
     initialJournalId,
@@ -371,6 +378,7 @@ export default function RecordTabModal({
                           onClose={onClose}
                           journalId={journalId}
                           onUpdate={handleJournalUpdate}
+                          accountBookId={accountBookId}
                         />
                       </div>
                     )}
@@ -388,6 +396,7 @@ export default function RecordTabModal({
                           onClose={onClose}
                           voucherId={voucherId}
                           onUpdate={handleVoucherUpdate}
+                          accountBookId={accountBookId}
                         />
                       </div>
                     )}
@@ -405,6 +414,7 @@ export default function RecordTabModal({
                           onClose={onClose}
                           esgId={esgId}
                           onSave={handleEsgUpdate}
+                          accountBookId={accountBookId}
                         />
                       </div>
                     )}

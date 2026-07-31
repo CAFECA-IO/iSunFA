@@ -14,7 +14,7 @@ export const AI_REPLY_PROGRESS_STEP = 10;
 // Info: (20260712 - Luphia) chatroom 頻道前綴；完整頻道為 `${prefix}-${用戶 address}-${sessionId}`，隔離不同用戶與不同 session
 export const CARBON_CHAT_CHANNEL_PREFIX = "carbon-chat";
 
-// Info: (20260714 - Emily) 頻道組建與所有權檢查:前後端共用同一規則,防止跨用戶讀寫他人頻道
+// Info: (20260714 - Tzuhan) 頻道組建與所有權檢查:前後端共用同一規則,防止跨用戶讀寫他人頻道
 export const buildCarbonChatChannel = (
   address: string,
   sessionId: string,
@@ -38,6 +38,31 @@ export const CARBON_CHAT_GREETING_PROMPT =
 
 // Info: (20260712 - Luphia) 送出後等待 AI 回覆經 Centrifugo 回傳的逾時（ms）；逾時未收到即解除等待並提示，避免卡在 typing
 export const CARBON_CHAT_REPLY_TIMEOUT_MS = 30000;
+
+// Info: (20260716 - Tzuhan) 帶附件的回覆等待:chat route 內含附件萃取/草稿生成(多次 LLM 呼叫),
+// Info: (20260716 - Tzuhan) 30 秒會在管線完成前誤報系統錯誤(UAT 實測);對齊 extraction 120s + 餘裕
+export const CARBON_CHAT_REPLY_TIMEOUT_WITH_ATTACHMENTS_MS = 180_000;
+
+/**
+ * Info: (20260730 - Tzuhan) 匯入導流的候選型別:上傳單一此類文件即詢問「匯入整份報告」或「作為佐證附件」。
+ * 原本以檔案大小猜測意圖(PDF ≥ 4MB / 文字檔 ≥ 64KB),但大小是壞代理——
+ * 真實的 64 頁溫室氣體盤查報告書只有 2MB,永遠觸發不了導流,使用者被導進只取 3 節的附件管線,
+ * 因而誤以為系統「只認得三節」。改為一律詢問:不猜意圖,由使用者決定,零額外呼叫。
+ */
+// Info: (20260730 - Tzuhan) PDF 的 MIME:多處據此分流(逐章與否、是否可抽文字層),抽常數避免字面值散落
+export const PDF_MIME_TYPE = "application/pdf";
+
+export const IMPORT_CANDIDATE_MIME_TYPES: readonly string[] = [
+  PDF_MIME_TYPE,
+  "text/markdown",
+  "text/plain",
+];
+
+/**
+ * Info: (20260730 - Tzuhan) 單發全綱匯入的大小上限:超過此值改逐章呼叫(突破單次輸出上限)。
+ * PDF 一律逐章(頁數與內容量無法由檔案大小推斷);純文字小檔才單發,省下 10 次呼叫。
+ */
+export const CARBON_IMPORT_SINGLE_CALL_MAX_BYTES = 64 * 1024;
 
 // Info: (20260712 - Luphia) 送給 AI 的對話上下文只取最近 N 則，控制 token 成本與延遲（不影響畫面顯示的完整歷史）
 export const CARBON_CHAT_AI_CONTEXT_SIZE = 20;
@@ -70,7 +95,7 @@ export const CARBON_INVENTORY_STATE_VERSION = 1;
 // Info: (20260713 - Tzuhan) 行動版斷點判斷(對齊 Tailwind xl = 1280px):< xl 時目錄/報告採獨占畫面呈現
 export const MOBILE_MEDIA_QUERY = "(max-width: 1279px)";
 
-// Info: (20260714 - Emily) 聊天附件限制:允許的 MIME 白名單(佐證資料常見格式,影像比照 FaithAgent 放寬)、單檔大小上限與單則附件數上限
+// Info: (20260714 - Tzuhan) 聊天附件限制:允許的 MIME 白名單(佐證資料常見格式,影像比照 FaithAgent 放寬)、單檔大小上限與單則附件數上限
 export const CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES = [
   "image/png",
   "image/jpeg",
@@ -81,19 +106,22 @@ export const CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES = [
   "application/pdf",
   "text/csv",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  // Info: (20260727 - Tzuhan) #57 純文字/Markdown:報告匯入常見格式(匯入 API 本已支援,補齊聊天入口)
+  "text/plain",
+  "text/markdown",
 ] as const;
 
 export type CarbonChatAttachmentMimeType =
   (typeof CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES)[number];
 
-// Info: (20260714 - Emily) 比照 FaithAgent 不擋一般大檔;50MB 為保護記憶體的軟上限(JSON base64 傳輸)
+// Info: (20260714 - Tzuhan) 比照 FaithAgent 不擋一般大檔;50MB 為保護記憶體的軟上限(JSON base64 傳輸)
 export const CARBON_CHAT_MAX_ATTACHMENT_BYTES = 50 * 1024 * 1024;
 
-// Info: (20260716 - Emily) 位元組換算基數（1 GiB），供配額 GB → BigInt bytes 換算
+// Info: (20260716 - Tzuhan) 位元組換算基數（1 GiB），供配額 GB → BigInt bytes 換算
 const BYTES_PER_GB = BigInt(1024 ** 3);
 
 /**
- * Info: (20260716 - Emily) 每使用者（address）附件儲存配額，依訂閱方案分階（#6517）。
+ * Info: (20260716 - Tzuhan) 每使用者（address）附件儲存配額，依訂閱方案分階（#6517）。
  * 對應 SUBSCRIPTION_PLAN_PRICE 的 free/team/business 三階，顯示於 /pricing/subscription。
  * 刻意用常數而非 env: .env 受 FIDO2 簽章鎖定（admin_setup_whitepaper.md），
  * 新增 env key 需超管重簽儀式；配額調整走 code change + release，留下可稽核軌跡。
@@ -112,31 +140,80 @@ export const CARBON_STORAGE_QUOTA_BYTES_BY_PLAN = {
   business: BigInt(CARBON_STORAGE_QUOTA_GB_BY_PLAN.business) * BYTES_PER_GB,
 } as const;
 
-// Info: (20260716 - Emily) 目前上傳強制執行採單一預設（free 階）；依方案分階強制執行為後續 issue
+// Info: (20260716 - Tzuhan) 目前上傳強制執行採單一預設（free 階）；依方案分階強制執行為後續 issue
 export const CARBON_STORAGE_QUOTA_BYTES =
   CARBON_STORAGE_QUOTA_BYTES_BY_PLAN.free;
 export const CARBON_CHAT_MAX_ATTACHMENTS_PER_MESSAGE = 5;
 
-// Info: (20260714 - Emily) Gemini inlineData 單請求約 20MB 上限;超過此安全值的附件直接走降級(不送必失敗的萃取呼叫)
+// Info: (20260714 - Tzuhan) Gemini inlineData 單請求約 20MB 上限;超過此安全值的附件直接走降級(不送必失敗的萃取呼叫)
 export const CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES = 14 * 1024 * 1024;
 
-// Info: (20260714 - Emily) file input 的 accept 屬性(與 MIME 白名單同步)
+// Info: (20260714 - Tzuhan) file input 的 accept 屬性(與 MIME 白名單同步)
 export const CARBON_CHAT_ATTACHMENT_ACCEPT =
   CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES.join(",");
 
-// Info: (20260714 - Emily) 附件→段落管線:單次生成段落數上限(控制延遲與 token 成本)
+/**
+ * Info: (20260730 - Tzuhan) 結構圖生成的節流與重試。
+ * 匯入完一份報告已用掉 11 章 + 最多 11 次 gap-fill 呼叫,LLM bucket 限流為 12 次/分鐘;
+ * 緊接著再連發 5 次結構圖必然撞 429 —— 實測結果正是「前兩張畫出來,其餘無聲消失」。
+ * 故逐張之間留間隔,遇額度不足再退避重試一次。
+ */
+export const CARBON_DIAGRAM_THROTTLE_MS = 6_000;
+export const CARBON_DIAGRAM_QUOTA_RETRY_MS = 30_000;
+
+/**
+ * Info: (20260730 - Tzuhan) 整份報告匯入的三種模式。
+ * 原本以 "draft" / "index" 字面值在 route 內比對,違反「拒絕魔法字串」——
+ * 這些值同時是 API 契約(前端送、後端判),散落字面值任一端改字就靜默失效。
+ */
+export enum CarbonReportImportModeEnum {
+  // Info: (20260716 - Tzuhan) 逐字照抄原文,對應標準大綱段落
+  VERBATIM = "verbatim",
+  // Info: (20260727 - Tzuhan) #57 對不上原文的段落改由 AI 撰寫草稿
+  DRAFT = "draft",
+  // Info: (20260730 - Tzuhan) 兩階段匯入的第一階段:只問各節起始頁碼
+  INDEX = "index",
+}
+
+/**
+ * Info: (20260730 - Tzuhan) 聊天面板的三段尺寸。
+ * COLLAPSED 圖示 → FLOATING 浮層(預設)→ DOCKED 右側欄。
+ * 為什麼不是「浮層 or dock」二選一:浮層適合邊看報告邊問一句,dock 適合長對話與逐段對照,
+ * 兩種情境都真實存在,所以由使用者切換而非我們替他決定。
+ */
+export enum CarbonChatPanelSizeEnum {
+  COLLAPSED = "collapsed",
+  FLOATING = "floating",
+  DOCKED = "docked",
+}
+
+/**
+ * Info: (20260730 - Tzuhan) 段落內容的來源。審計文件的底線:AI 寫的與原文照抄的不能混為一談。
+ * 原本兩者都只是 isCompleted=true,gap-fill 把對不上的節全填成 AI 草稿後進度會顯示 33/33,
+ * 但其中有幾節其實是模型依撰寫目標寫的骨架(內含「(待補: …)」佔位),看報告的人分辨不出來。
+ */
+export enum ParagraphOriginEnum {
+  // Info: (20260730 - Tzuhan) 自上傳文件逐字照抄
+  IMPORTED = "imported",
+  // Info: (20260730 - Tzuhan) AI 依原文撰寫(gap-fill / 對話草稿):事實出自原文但文字經改寫
+  AI_DRAFT = "ai_draft",
+  // Info: (20260730 - Tzuhan) 使用者親手編輯
+  MANUAL = "manual",
+}
+
+// Info: (20260714 - Tzuhan) 附件→段落管線:單次生成段落數上限(控制延遲與 token 成本)
 export const CARBON_ATTACHMENT_PIPELINE_MAX_PARAGRAPHS = 3;
 
-// Info: (20260714 - Emily) 對話↔報告雙向連動:報告段落錨點 data attribute(以順序法注入 h3,取代標題文字比對)
+// Info: (20260714 - Tzuhan) 對話↔報告雙向連動:報告段落錨點 data attribute(以順序法注入 h3,取代標題文字比對)
 export const CARBON_REPORT_PARAGRAPH_ATTR = "data-paragraph-id";
 
-// Info: (20260714 - Emily) 段落高亮與訊息閃爍的持續時間(ms)與高亮底色(orange-100)
+// Info: (20260714 - Tzuhan) 段落高亮與訊息閃爍的持續時間(ms)與高亮底色(orange-100)
 export const CARBON_CHAT_HIGHLIGHT_DURATION_MS = 2000;
 export const CARBON_REPORT_HIGHLIGHT_COLOR = "#ffedd5";
-// Info: (20260714 - Emily) 高亮元素標記 attribute;下載 PDF 前依此清除,避免高亮滲入輸出
+// Info: (20260714 - Tzuhan) 高亮元素標記 attribute;下載 PDF 前依此清除,避免高亮滲入輸出
 export const CARBON_REPORT_HIGHLIGHTED_ATTR = "data-carbon-highlighted";
 
-// Info: (20260714 - Emily) 碳報告下載檔名:iSunFA_CarbonReport_{標題}_{YYYYMMDD}.pdf
+// Info: (20260714 - Tzuhan) 碳報告下載檔名:iSunFA_CarbonReport_{標題}_{YYYYMMDD}.pdf
 export const buildCarbonReportFileName = (title: string): string => {
   const now = new Date();
   const ymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
@@ -145,7 +222,7 @@ export const buildCarbonReportFileName = (title: string): string => {
   return `iSunFA_CarbonReport_${safeTitle}_${ymd}.pdf`;
 };
 
-// Info: (20260714 - Emily) 報告草稿與 session 索引的 localStorage key 與 schema 版本
+// Info: (20260714 - Tzuhan) 報告草稿與 session 索引的 localStorage key 與 schema 版本
 // Info: (20260715 - Luphia) 草稿權威來源已是 DB(E2EE);此 key 改作「未存檔安全快取」——編輯後即寫入本機,DB 確認保存後立即刪除,避免 debounce 保存前發生意外(當機/關頁)導致內容丟失
 export const CARBON_REPORT_DRAFT_STORAGE_VERSION = 1;
 export const buildCarbonReportDraftKey = (channel: string): string =>
@@ -153,16 +230,16 @@ export const buildCarbonReportDraftKey = (channel: string): string =>
 export const buildCarbonSessionsIndexKey = (address: string): string =>
   `carbon_chat_sessions_${address}`;
 
-// Info: (20260714 - Emily) 報告草稿自動保存的 debounce 間隔(ms)
+// Info: (20260714 - Tzuhan) 報告草稿自動保存的 debounce 間隔(ms)
 export const CARBON_REPORT_AUTOSAVE_DEBOUNCE_MS = 2000;
 
-// Info: (20260714 - Emily) 草稿狀態列錯誤提示的自動消失時間(ms)
+// Info: (20260714 - Tzuhan) 草稿狀態列錯誤提示的自動消失時間(ms)
 export const CARBON_DRAFT_NOTICE_DISMISS_MS = 8000;
 
-// Info: (20260714 - Emily) 附件對應不到任何段落時的預設落點(2.2 溫室氣體排放源鑑別)
+// Info: (20260714 - Tzuhan) 附件對應不到任何段落時的預設落點(2.2 溫室氣體排放源鑑別)
 export const CARBON_ATTACHMENT_FALLBACK_PARAGRAPH_ID = "ch2-2";
 
-// Info: (20260714 - Emily) 附件草稿摘要訊息模板(後端決定性產生,不經 LLM);key 對齊前端 Language 型別
+// Info: (20260714 - Tzuhan) 附件草稿摘要訊息模板(後端決定性產生,不經 LLM);key 對齊前端 Language 型別
 const ATTACHMENT_SUMMARY_TEMPLATES: Record<
   string,
   (count: number, sections: string, degraded: boolean) => string
@@ -191,7 +268,7 @@ export const buildAttachmentDraftSummary = (
   return template(count, sections, degraded);
 };
 
-// Info: (20260714 - Emily) 對話蒐集完成後寫入段落的摘要訊息模板(決定性產生,不經 LLM)
+// Info: (20260714 - Tzuhan) 對話蒐集完成後寫入段落的摘要訊息模板(決定性產生,不經 LLM)
 const CHAT_DRAFT_SUMMARY_TEMPLATES: Record<
   string,
   (sections: string) => string
@@ -216,4 +293,63 @@ export const buildChatDraftSummary = (
     CHAT_DRAFT_SUMMARY_TEMPLATES[language ?? ""] ??
     CHAT_DRAFT_SUMMARY_TEMPLATES["zh-TW"];
   return template(sections);
+};
+
+// Info: (20260730 - Tzuhan) 逐段推播的階段訊息模板(決定性產生,不經 LLM)
+// Info: (20260730 - Tzuhan) 動機:附件→段落管線一次要跑「萃取 + N 段草稿」(實測 36.8s + 3×17s ≈ 87s),
+// Info: (20260730 - Tzuhan) 而 gateway 的 proxy_read_timeout 預設 60s,使用者只會看到 504 與「系統錯誤」。
+// Info: (20260730 - Tzuhan) 改為每完成一個單元就經 Centrifugo 推一則訊息,結果不再依賴那條 HTTP 連線活著。
+const ATTACHMENT_EXTRACTED_TEMPLATES: Record<
+  string,
+  (fileCount: number, sectionCount: number) => string
+> = {
+  "zh-TW": (fileCount, sectionCount) =>
+    `已讀完 ${fileCount} 個附件,接下來逐段撰寫 ${sectionCount} 個段落草稿,完成一段就會即時出現。`,
+  "zh-CN": (fileCount, sectionCount) =>
+    `已读完 ${fileCount} 个附件,接下来逐段撰写 ${sectionCount} 个段落草稿,完成一段就会即时出现。`,
+  en: (fileCount, sectionCount) =>
+    `Finished reading ${fileCount} attachment(s). Now drafting ${sectionCount} section(s) — each will appear as soon as it is ready.`,
+  ja: (fileCount, sectionCount) =>
+    `${fileCount} 件の添付ファイルを読み終えました。これから ${sectionCount} セクションの下書きを順に作成し、完成ごとに表示します。`,
+  ko: (fileCount, sectionCount) =>
+    `첨부파일 ${fileCount}건을 모두 읽었습니다. 이제 ${sectionCount}개 섹션 초안을 순서대로 작성하며, 완료되는 대로 표시됩니다.`,
+};
+
+export const buildAttachmentExtractedNotice = (
+  language: string | undefined,
+  fileCount: number,
+  sectionCount: number,
+): string => {
+  const template =
+    ATTACHMENT_EXTRACTED_TEMPLATES[language ?? ""] ??
+    ATTACHMENT_EXTRACTED_TEMPLATES["zh-TW"];
+  return template(fileCount, sectionCount);
+};
+
+const DRAFT_PROGRESS_TEMPLATES: Record<
+  string,
+  (title: string, current: number, total: number) => string
+> = {
+  "zh-TW": (title, current, total) =>
+    `已完成草稿(${current}/${total}):${title}。已寫入報告,請查核。`,
+  "zh-CN": (title, current, total) =>
+    `已完成草稿(${current}/${total}):${title}。已写入报告,请核对。`,
+  en: (title, current, total) =>
+    `Draft ${current} of ${total} completed: ${title}. Written to the report — please review.`,
+  ja: (title, current, total) =>
+    `下書き ${current}/${total} が完成しました：${title}。レポートに反映済みです。ご確認ください。`,
+  ko: (title, current, total) =>
+    `초안 ${current}/${total} 완료: ${title}. 보고서에 반영했습니다. 확인해 주세요.`,
+};
+
+export const buildDraftProgressNotice = (
+  language: string | undefined,
+  title: string,
+  current: number,
+  total: number,
+): string => {
+  const template =
+    DRAFT_PROGRESS_TEMPLATES[language ?? ""] ??
+    DRAFT_PROGRESS_TEMPLATES["zh-TW"];
+  return template(title, current, total);
 };

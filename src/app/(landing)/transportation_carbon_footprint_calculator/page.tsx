@@ -22,9 +22,8 @@ import {
   Download,
   MapPin,
   ArrowRight,
+  Layers,
 } from "lucide-react";
-import * as htmlToImage from "html-to-image";
-import { jsPDF } from "jspdf";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { ILogisticsPlan } from "@/interfaces/logistics";
@@ -49,8 +48,26 @@ import { BatchExportRenderer } from "@/components/transportation_carbon_footprin
 import { ExportOptionsModal } from "@/components/transportation_carbon_footprint_calculator/export_options_modal";
 import {
   buildExportFileName,
+  buildExportId,
   captureElementToPdf,
+  pdfToBlob,
 } from "@/lib/utils/pdf_export";
+import {
+  buildMapImageKey,
+  buildReportPdfItem,
+  buildReportPdfItems,
+  type ILegCapture,
+  type IPlanMapCapture,
+} from "@/lib/utils/logistics_report_request";
+import { buildPlanLegs } from "@/lib/utils/logistics_report";
+import { requestReportPdfs } from "@/lib/utils/logistics_report_client";
+import {
+  CARBON_MAP_CAPTURE_TIMEOUT_MS,
+  TRANSPORT_PDF_EXPORT_MODE,
+  TransportPdfExportModeEnum,
+} from "@/constants/logistics_pdf";
+import { PDF_EXPORT_SIZE_BUDGET_BYTES } from "@/constants/logistics";
+import type { ILogisticsReportPdfItem } from "@/validators";
 import {
   buildBatchSummaryCsv,
   buildPlanFromLegacyBatchItem,
@@ -64,6 +81,7 @@ import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import {
   TRANSPORT_CALCULATOR_QUERY_PARAM,
   HISTORY_VIEW_STATE_STORAGE_KEY,
+  buildPlanCode,
 } from "@/constants/logistics";
 import { ORDER_TYPE } from "@/constants/status";
 import { ANALYSIS_BASE_COSTS } from "@/constants/price";
@@ -191,7 +209,14 @@ function ReportPageContent() {
     current: number;
     total: number;
   } | null>(null);
+  // Info: (20260729 - Tzuhan) 匯出批次識別碼:同批 PDF 與 summary.csv 共用,渲染於 PDF 頁尾
+  const [exportId, setExportId] = useState<string | null>(null);
   const mapReadyResolver = useRef<(() => void) | null>(null);
+  /**
+   * Info: (20260731 - Tzuhan) 批次離屏渲染的地圖控制器(issue 08)。
+   * 批次一次只渲染一個 (路線, 方案),故單一 ref 即足夠;每次 remount 由 key 保證重新綁定。
+   */
+  const batchMapRef = useRef<IMapViewerRef>(null);
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<IHistoryItem[]>([]);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -208,7 +233,7 @@ function ReportPageContent() {
   });
 
   const [selectedRoutes, setSelectedRoutes] = useState<Set<RouteType>>(
-    new Set(["land", "sea", "air"]),
+    new Set(["land", "sea", "air", "seaLandAir"]),
   );
 
   const reportRef = useRef<HTMLDivElement>(null);
@@ -220,6 +245,8 @@ function ReportPageContent() {
   const seaMapRef = useRef<IMapViewerRef>(null);
   const airMapRef = useRef<IMapViewerRef>(null);
   const customMapRef = useRef<IMapViewerRef>(null);
+  // Info: (20260729 - Tzuhan) issue 10:海陸空聯運方案的地圖 ref
+  const seaLandAirMapRef = useRef<IMapViewerRef>(null);
   const mapRefs = useMemo<
     Record<RouteType, React.RefObject<IMapViewerRef | null>>
   >(
@@ -227,6 +254,7 @@ function ReportPageContent() {
       land: landMapRef,
       sea: seaMapRef,
       air: airMapRef,
+      seaLandAir: seaLandAirMapRef,
       custom: customMapRef,
     }),
     [],
@@ -449,7 +477,13 @@ function ReportPageContent() {
     () =>
       plan
         ? getRouteApplicability(plan)
-        : { land: true, sea: true, air: true, custom: false },
+        : {
+            land: true,
+            sea: true,
+            air: true,
+            seaLandAir: true,
+            custom: false,
+          },
     [plan],
   );
   const isLandAvailable = routeApplicability.land;
@@ -482,7 +516,7 @@ function ReportPageContent() {
   const exportAvailablePlans = useMemo<RouteType[]>(() => {
     if (!exportModalTarget) return [];
     if (exportModalTarget.scope === "report") {
-      return (["land", "sea", "air"] as const).filter(
+      return (["land", "sea", "air", "seaLandAir"] as const).filter(
         (type) => routeApplicability[type],
       );
     }
@@ -495,12 +529,93 @@ function ReportPageContent() {
     targets.forEach((item) => {
       if (!item) return;
       const applicability = getRouteApplicability(item.plan);
-      (["custom", "land", "sea", "air"] as const).forEach((type) => {
-        if (applicability[type]) union.add(type);
-      });
+      (["custom", "land", "sea", "air", "seaLandAir"] as const).forEach(
+        (type) => {
+          if (applicability[type]) union.add(type);
+        },
+      );
     });
     return Array.from(union);
   }, [exportModalTarget, batchResults, routeApplicability]);
+
+  /**
+   * Info: (20260731 - Tzuhan) 取一個方案的地圖素材:全程圖 + 逐段圖(issue 08)。
+   * 逐段圖在**同一個 map 實例**內以命令式 fitBounds 連續截取,不各掛一個 MapViewer ——
+   * 那會撞瀏覽器的同時 WebGL context 上限(plan_section.tsx 當年就是為此移除逐段縮圖)。
+   * 任一步失敗即該張缺圖,報告仍成立並在圖說處明示,絕不阻擋匯出。
+   */
+  const capturePlanMaps = async (
+    mapRef: React.RefObject<IMapViewerRef | null>,
+    item: IMileageBatchResult,
+    planKey: RouteType,
+  ): Promise<IPlanMapCapture> => {
+    /**
+     * Info: (20260731 - Tzuhan) 安全網逾時。CARBON_MAP_CAPTURE_TIMEOUT_MS 由內層的
+     * 樣式與 idle 上限推導,必定大於內層總和 —— 否則外層會在內層仍在合理等待時把它砍掉,
+     * 結果是「再等一秒就好」卻回報缺圖(實測踩過)。
+     * 逾時代表內層卡住而非判定失敗,故另外記 log 以區分兩者。
+     */
+    const withTimeout = async <T,>(
+      task: Promise<T>,
+      label: string,
+    ): Promise<T | null> => {
+      const timedOut = Symbol("timeout");
+      const result = await Promise.race([
+        task,
+        new Promise<typeof timedOut>((resolve) => {
+          setTimeout(() => resolve(timedOut), CARBON_MAP_CAPTURE_TIMEOUT_MS);
+        }),
+      ]);
+      if (result === timedOut) {
+        console.warn(
+          `[mapCapture] ${label} 逾時 ${CARBON_MAP_CAPTURE_TIMEOUT_MS}ms(內層未回應)`,
+        );
+        return null;
+      }
+      return result as T;
+    };
+
+    const legs = buildPlanLegs(item, planKey);
+    const geometries = legs
+      .map((leg) => leg.segment?.geometry)
+      .filter((geometry): geometry is GeoJSON.Geometry => Boolean(geometry));
+
+    /**
+     * Info: (20260731 - Tzuhan) 全程圖也走 captureGeometry(以各段幾何的聯集為範圍),
+     * 不再用 captureMap。原因是 captureMap 不回報比例尺資訊,先前為了型別而填了
+     * metersPerPixel: 0,而 validator 要求正數 —— 整批請求因此被 400 擋掉。
+     * 捏造一個「零」來滿足型別,結果是把錯誤推到更遠的地方才爆;
+     * 改由同一條路徑實算,全程圖也就一併有了比例尺。
+     */
+    const overview = await withTimeout(
+      mapRef.current?.captureGeometry(
+        geometries.length > 0
+          ? { type: "GeometryCollection", geometries }
+          : null,
+      ) ?? Promise.resolve(null),
+      `${planKey} 全程圖`,
+    );
+
+    const legCaptures: (ILegCapture | null)[] = [];
+    for (const [legIndex, leg] of legs.entries()) {
+      const captured = await withTimeout(
+        // Info: (20260731 - Tzuhan) soloFeature:逐段圖只畫該段。同時顯示陸運與空運兩條線時,
+        // Info: (20260731 - Tzuhan) 讀者無法判斷哪一條是本段,那張圖就不能單獨作為該段的證據。
+        mapRef.current?.captureGeometry(
+          (leg.segment?.geometry ?? null) as GeoJSON.Geometry | null,
+          { soloFeature: true },
+        ) ?? Promise.resolve(null),
+        `${planKey} 第 ${legIndex + 1} 段(${leg.mode})`,
+      );
+      if (!captured) {
+        console.warn(
+          `[mapCapture] ${planKey} 第 ${legIndex + 1} 段(${leg.mode})無影像,該段報告將標示未附路徑圖`,
+        );
+      }
+      legCaptures.push(captured ?? null);
+    }
+    return { overview: overview ?? null, legs: legCaptures };
+  };
 
   /**
    * Info: (20260724 - Tzuhan) 批次匯出:每個 (路線, 方案) 組合渲染 → 截圖 → 獨立 PDF(需求二)
@@ -513,6 +628,8 @@ function ReportPageContent() {
     if (!batchResults) return;
     let originalViewport: string | null = null;
     let viewportMeta: Element | null = null;
+    const batchExportId = buildExportId();
+    setExportId(batchExportId);
     try {
       setIsExporting(true);
 
@@ -538,40 +655,129 @@ function ReportPageContent() {
       const jobs: Array<{ index: number; type: RouteType }> = [];
       indices.forEach((index) => {
         const applicability = getRouteApplicability(batchResults[index]?.plan);
-        (["custom", "land", "sea", "air"] as const).forEach((type) => {
-          if (selectedPlans.has(type) && applicability[type]) {
-            jobs.push({ index, type });
-          }
-        });
+        (["custom", "land", "sea", "air", "seaLandAir"] as const).forEach(
+          (type) => {
+            if (selectedPlans.has(type) && applicability[type]) {
+              jobs.push({ index, type });
+            }
+          },
+        );
       });
 
       const files: Array<{ index: number; filename: string; blob: Blob }> = [];
-      for (let j = 0; j < jobs.length; j++) {
-        const job = jobs[j];
-        setExportProgress({ current: j + 1, total: jobs.length });
-        setExportingIndex(job.index);
-        setExportingPlanType(job.type);
-        // Info: (20260511 - Luphia) Wait for the BatchItemReport to fully render and capture its internal MapViewers
-        await new Promise<void>((resolve) => {
-          mapReadyResolver.current = resolve;
-          // Info: (20260511 - Luphia) Fallback timeout just in case WebGL or capture fails to respond
-          setTimeout(resolve, 8000);
+
+      /**
+       * Info: (20260731 - Tzuhan) issue 08 步驟三:伺服端向量列印。
+       * 離屏渲染仍然保留,但**只為了取地圖影像**(MapLibre 是 WebGL,伺服端沒有);
+       * 不再截整頁,因此 8000ms 的截圖 fallback 與 pixelRatio 2 的大圖都不需要了。
+       */
+      if (
+        TRANSPORT_PDF_EXPORT_MODE === TransportPdfExportModeEnum.SERVER_VECTOR
+      ) {
+        const mapCaptures = new Map<string, IPlanMapCapture>();
+        const mapPhaseStarted = Date.now();
+        for (let j = 0; j < jobs.length; j++) {
+          const job = jobs[j];
+          setExportProgress({ current: j + 1, total: jobs.length });
+          setExportingIndex(job.index);
+          setExportingPlanType(job.type);
+          // Info: (20260511 - Luphia) Wait for the BatchItemReport to fully render and capture its internal MapViewers
+          await new Promise<void>((resolve) => {
+            mapReadyResolver.current = resolve;
+            // Info: (20260731 - Tzuhan) fallback 從 8000ms 降到 4000ms:此處只等地圖就緒,
+            // Info: (20260731 - Tzuhan) 不再等整頁可截圖;地圖沒就緒時該份不附圖,不阻擋匯出
+            setTimeout(resolve, 4000);
+          });
+          const captured = await capturePlanMaps(
+            batchMapRef,
+            batchResults[job.index],
+            job.type,
+          );
+          mapCaptures.set(buildMapImageKey(job.index, job.type), captured);
+          if (!captured.overview) {
+            console.warn(
+              `[pdfExport] ${buildPlanCode(job.index, job.type)} 全程圖取得失敗,該份不附全程圖`,
+            );
+          }
+        }
+        // Info: (20260731 - Tzuhan) 兩段各自計時:分辨慢在取地圖(前端 WebGL)還是產 PDF(伺服端)
+        console.info(
+          `[pdfExport] 取地圖階段 ${jobs.length} 份共 ${Math.round((Date.now() - mapPhaseStarted) / 1000)}s`,
+        );
+
+        // Info: (20260731 - Tzuhan) 離屏元件可以先卸載:後續只需要資料,不再需要 DOM
+        setExportingIndex(null);
+        setExportingPlanType(null);
+
+        const items = buildReportPdfItems({
+          results: batchResults,
+          indices,
+          selectedPlans,
+          fallbackWeightKg: weightKg !== "" ? weightKg : 1000,
+          mapCaptures,
         });
-
-        const pageEl = document.getElementById(
-          `batch-report-item-${job.index}`,
+        const exported = await requestReportPdfs(items, {
+          exportId: batchExportId,
+          onProgress: (completed, total) => {
+            setExportProgress({ current: completed, total });
+          },
+        });
+        /**
+         * Info: (20260731 - Tzuhan) 以方案代碼回推路線索引(檔名一律以 `R01-SEA_` 起頭,
+         * 代碼內不含底線)。不依賴回傳順序:順序耦合一旦被改動就會靜默錯位,
+         * 而錯位的後果是 summary.csv 把 PDF 對到錯誤的路線 —— 交叉索引失效比少一個檔案更難察覺。
+         */
+        const routeIndexByPlanCode = new Map<string, number>(
+          jobs.map((job) => [buildPlanCode(job.index, job.type), job.index]),
         );
-        if (!pageEl) continue;
+        exported.forEach((file) => {
+          const planCode = file.fileName.split("_")[0];
+          const routeIndex = routeIndexByPlanCode.get(planCode);
+          if (routeIndex === undefined) {
+            // Info: (20260731 - Tzuhan) 對不到就不進 CSV 對照表,但檔案照給;寧可少一列對照也不要給錯的
+            console.warn(
+              `[pdfExport] 無法由檔名 ${file.fileName} 回推路線索引,已略過 summary.csv 對照`,
+            );
+            return;
+          }
+          files.push({
+            index: routeIndex,
+            filename: file.fileName,
+            blob: file.blob,
+          });
+        });
+      } else {
+        for (let j = 0; j < jobs.length; j++) {
+          const job = jobs[j];
+          setExportProgress({ current: j + 1, total: jobs.length });
+          setExportingIndex(job.index);
+          setExportingPlanType(job.type);
+          // Info: (20260511 - Luphia) Wait for the BatchItemReport to fully render and capture its internal MapViewers
+          await new Promise<void>((resolve) => {
+            mapReadyResolver.current = resolve;
+            // Info: (20260511 - Luphia) Fallback timeout just in case WebGL or capture fails to respond
+            setTimeout(resolve, 8000);
+          });
 
-        const item = batchResults[job.index];
-        const pdf = await captureElementToPdf(pageEl);
-        const filename = buildExportFileName(
-          job.index,
-          job.type,
-          getLocationLabel(item.origin),
-          getLocationLabel(item.dest),
-        );
-        files.push({ index: job.index, filename, blob: pdf.output("blob") });
+          const pageEl = document.getElementById(
+            `batch-report-item-${job.index}`,
+          );
+          if (!pageEl) continue;
+
+          const item = batchResults[job.index];
+          const pdf = await captureElementToPdf(pageEl);
+          const filename = buildExportFileName(
+            job.index,
+            job.type,
+            getLocationLabel(item.origin),
+            getLocationLabel(item.dest),
+          );
+          files.push({
+            index: job.index,
+            filename,
+            blob: pdfToBlob(pdf, filename).blob,
+          });
+        }
       }
 
       if (files.length === 0) return;
@@ -601,6 +807,7 @@ function ReportPageContent() {
             indices,
             filesByRouteIndex,
             weightKg !== "" ? weightKg : 1000,
+            batchExportId,
           ),
         );
       }
@@ -616,6 +823,7 @@ function ReportPageContent() {
       setExportingIndex(null);
       setExportingPlanType(null);
       setExportProgress(null);
+      setExportId(null);
       setIsExporting(false);
     }
   };
@@ -627,6 +835,7 @@ function ReportPageContent() {
   const executeReportExport = async (selectedPlans: Set<RouteType>) => {
     let originalViewport: string | null = null;
     let viewportMeta: Element | null = null;
+    setExportId(buildExportId());
     try {
       setIsExporting(true); // Info: (20260501 - Luphia) 觸發重新渲染，隱藏控制面板並顯示各分頁 Header/Footer
 
@@ -662,121 +871,149 @@ function ReportPageContent() {
       });
 
       // Info: (20260724 - Tzuhan) 匯出範圍=使用者勾選 ∩ 適用性引擎判定(需求一+二),與畫面檢視狀態脫鉤
-      const routesToExport = (["land", "sea", "air"] as const).filter(
-        (type) => selectedPlans.has(type) && routeApplicability[type],
-      );
+      const routesToExport = (
+        ["land", "sea", "air", "seaLandAir"] as const
+      ).filter((type) => selectedPlans.has(type) && routeApplicability[type]);
 
       // Info: (20260724 - Tzuhan) 需求二:一個方案一份獨立 PDF,不再合併分頁
       const files: Array<{ filename: string; blob: Blob }> = [];
 
-      for (let i = 0; i < routesToExport.length; i++) {
-        const routeType = routesToExport[i];
-        setExportProgress({ current: i + 1, total: routesToExport.length });
-        const pageEl = document.getElementById(`pdf-page-${routeType}`);
-        if (!pageEl) continue;
+      /**
+       * Info: (20260731 - Tzuhan) issue 08 步驟二:伺服端向量列印。
+       * 只向 MapLibre 取地圖影像,其餘資料走純函數建構載荷 —— 不覆寫寬度、不換 canvas、不截整頁,
+       * 因此下方那三段等待(1500ms ResizeObserver / 100ms DOM / 截圖)在此路徑一併消失。
+       * 光柵路徑保留於 else,`TRANSPORT_PDF_EXPORT_MODE` 可即刻切回。
+       */
+      if (
+        TRANSPORT_PDF_EXPORT_MODE === TransportPdfExportModeEnum.SERVER_VECTOR
+      ) {
+        const singleItem: IMileageBatchResult = {
+          origin: { lat: Number(origin.lat), lng: Number(origin.lng) },
+          dest: { lat: Number(dest.lat), lng: Number(dest.lng) },
+          plan: plan ?? undefined,
+          weightKg: Number(weightKg) || undefined,
+        } as IMileageBatchResult;
 
-        // Info: (20260501 - Luphia) 強制設定固定寬度以符合 A4 列印比例最佳化 (約 1024px)
-        const oldWidth = pageEl.style.width;
-        const oldMaxWidth = pageEl.style.maxWidth;
-        pageEl.style.width = "1024px";
-        pageEl.style.maxWidth = "1024px";
+        const items: ILogisticsReportPdfItem[] = [];
+        for (let i = 0; i < routesToExport.length; i++) {
+          const routeType = routesToExport[i];
+          setExportProgress({ current: i + 1, total: routesToExport.length });
+          // Info: (20260731 - Tzuhan) 地圖只能由前端提供:MapLibre 是 WebGL 且需要 MapTiler key,伺服端沒有
+          const mapImageDataUrl =
+            (await mapRefs[routeType as RouteType]?.current?.captureMap()) ??
+            undefined;
+          const built = buildReportPdfItem({
+            item: singleItem,
+            routeIndex: 0,
+            planKey: routeType,
+            fallbackWeightKg: weightKg !== "" ? weightKg : 1000,
+            mapImageDataUrl,
+          });
+          if (built) items.push(built);
+        }
 
-        /**
-         * Info: (20260501 - Luphia)
-         * 寬度改變會觸發 MapLibre 的 ResizeObserver，這會清空 WebGL Buffer！
-         * 我們必須等待足夠長的時間讓 MapLibre 重新渲染地圖跟路線，否則會抓到透明的圖，且 HTML Markers 也會錯位。
-         */
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        const exported = await requestReportPdfs(items, {
+          exportId: exportId ?? undefined,
+          onProgress: (completed, total) => {
+            setExportProgress({ current: completed, total });
+          },
+        });
+        exported.forEach((file) => {
+          // Info: (20260731 - Tzuhan) 體積量測留在同一條路徑上,超出預算即警告(不阻擋下載)
+          if (file.sizeBytes > PDF_EXPORT_SIZE_BUDGET_BYTES) {
+            console.warn(
+              `[pdfExport] ${file.fileName} 為 ${Math.round(file.sizeBytes / 1024)} KB,超出預算 ${Math.round(
+                PDF_EXPORT_SIZE_BUDGET_BYTES / 1024,
+              )} KB`,
+            );
+          }
+          files.push({ filename: file.fileName, blob: file.blob });
+        });
+      } else {
+        for (let i = 0; i < routesToExport.length; i++) {
+          const routeType = routesToExport[i];
+          setExportProgress({ current: i + 1, total: routesToExport.length });
+          const pageEl = document.getElementById(`pdf-page-${routeType}`);
+          if (!pageEl) continue;
 
-        // Info: (20260501 - Luphia) 直接向 MapLibre 請求渲染結果！徹底解決 WebGL 被 html-to-image 忽略的問題！
-        const currentMapRef = mapRefs[routeType as RouteType];
-        let imgEl: HTMLImageElement | null = null;
-        let originalCanvasDisplay = "";
-        let targetCanvas: HTMLCanvasElement | null = null;
+          // Info: (20260501 - Luphia) 強制設定固定寬度以符合 A4 列印比例最佳化 (約 1024px)
+          const oldWidth = pageEl.style.width;
+          const oldMaxWidth = pageEl.style.maxWidth;
+          pageEl.style.width = "1024px";
+          pageEl.style.maxWidth = "1024px";
 
-        if (
-          currentMapRef &&
-          currentMapRef.current &&
-          currentMapRef.current.captureMap
-        ) {
-          const dataUrl = await currentMapRef.current.captureMap();
-          if (dataUrl) {
-            targetCanvas = pageEl.querySelector(
-              ".maplibregl-canvas",
-            ) as HTMLCanvasElement;
-            if (targetCanvas) {
-              imgEl = document.createElement("img");
-              imgEl.src = dataUrl;
-              imgEl.style.width =
-                targetCanvas.style.width || targetCanvas.offsetWidth + "px";
-              imgEl.style.height =
-                targetCanvas.style.height || targetCanvas.offsetHeight + "px";
-              imgEl.style.position = targetCanvas.style.position;
-              imgEl.style.top = targetCanvas.style.top;
-              imgEl.style.left = targetCanvas.style.left;
-              imgEl.className = targetCanvas.className;
-              imgEl.style.zIndex = targetCanvas.style.zIndex;
+          /**
+           * Info: (20260501 - Luphia)
+           * 寬度改變會觸發 MapLibre 的 ResizeObserver，這會清空 WebGL Buffer！
+           * 我們必須等待足夠長的時間讓 MapLibre 重新渲染地圖跟路線，否則會抓到透明的圖，且 HTML Markers 也會錯位。
+           */
+          await new Promise((resolve) => setTimeout(resolve, 1500));
 
-              const parent = targetCanvas.parentElement;
-              if (parent) {
-                parent.insertBefore(imgEl, targetCanvas);
-                originalCanvasDisplay = targetCanvas.style.display;
-                targetCanvas.style.display = "none";
+          // Info: (20260501 - Luphia) 直接向 MapLibre 請求渲染結果！徹底解決 WebGL 被 html-to-image 忽略的問題！
+          const currentMapRef = mapRefs[routeType as RouteType];
+          let imgEl: HTMLImageElement | null = null;
+          let originalCanvasDisplay = "";
+          let targetCanvas: HTMLCanvasElement | null = null;
+
+          if (
+            currentMapRef &&
+            currentMapRef.current &&
+            currentMapRef.current.captureMap
+          ) {
+            const dataUrl = await currentMapRef.current.captureMap();
+            if (dataUrl) {
+              targetCanvas = pageEl.querySelector(
+                ".maplibregl-canvas",
+              ) as HTMLCanvasElement;
+              if (targetCanvas) {
+                imgEl = document.createElement("img");
+                imgEl.src = dataUrl;
+                imgEl.style.width =
+                  targetCanvas.style.width || targetCanvas.offsetWidth + "px";
+                imgEl.style.height =
+                  targetCanvas.style.height || targetCanvas.offsetHeight + "px";
+                imgEl.style.position = targetCanvas.style.position;
+                imgEl.style.top = targetCanvas.style.top;
+                imgEl.style.left = targetCanvas.style.left;
+                imgEl.className = targetCanvas.className;
+                imgEl.style.zIndex = targetCanvas.style.zIndex;
+
+                const parent = targetCanvas.parentElement;
+                if (parent) {
+                  parent.insertBefore(imgEl, targetCanvas);
+                  originalCanvasDisplay = targetCanvas.style.display;
+                  targetCanvas.style.display = "none";
+                }
               }
             }
           }
-        }
 
-        // Info: (20260501 - Luphia) 等待 DOM 更新
-        await new Promise((resolve) => setTimeout(resolve, 100));
+          // Info: (20260501 - Luphia) 等待 DOM 更新
+          await new Promise((resolve) => setTimeout(resolve, 100));
 
-        const imgData = await htmlToImage.toJpeg(pageEl, {
-          quality: 0.8,
-          backgroundColor: "#ffffff",
-          pixelRatio: 2,
-        });
+          // Info: (20260731 - Tzuhan) 改用共用的 captureElementToPdf:此處原本自帶一份
+          // Info: (20260731 - Tzuhan) 「截圖 + 分頁」邏輯(JPEG q0.8,且同樣沒開 compress),
+          // Info: (20260731 - Tzuhan) 是當初抽出共用函式時漏掉的第三份複製。兩條路徑分歧的後果是
+          // Info: (20260731 - Tzuhan) 批次與單筆匯出的體積與畫質不一致,且修一邊不會修到另一邊。
+          const pdf = await captureElementToPdf(pageEl);
 
-        // Info: (20260501 - Luphia) 還原 canvas
-        if (targetCanvas && imgEl && imgEl.parentElement) {
-          targetCanvas.style.display = originalCanvasDisplay;
-          imgEl.parentElement.removeChild(imgEl);
-        }
+          // Info: (20260501 - Luphia) 還原 canvas
+          if (targetCanvas && imgEl && imgEl.parentElement) {
+            targetCanvas.style.display = originalCanvasDisplay;
+            imgEl.parentElement.removeChild(imgEl);
+          }
 
-        pageEl.style.width = oldWidth;
-        pageEl.style.maxWidth = oldMaxWidth;
+          pageEl.style.width = oldWidth;
+          pageEl.style.maxWidth = oldMaxWidth;
 
-        // Info: (20260724 - Tzuhan) 每個方案建立獨立 PDF(需求二)
-        const pdf = new jsPDF("p", "mm", "a4");
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-
-        const elWidth = 1024;
-        const elHeight = pageEl.offsetHeight;
-        const imgHeightInMm = (elHeight * pdfWidth) / elWidth;
-
-        let heightLeft = imgHeightInMm;
-        let position = 0;
-
-        pdf.addImage(imgData, "JPEG", 0, position, pdfWidth, imgHeightInMm);
-        heightLeft -= pdfHeight;
-
-        // Info: (20260502 - Luphia) 避免浮點數誤差或 1 毫米的溢白邊產生無意義的整面空白頁
-        while (heightLeft > 1) {
-          position -= pdfHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, "JPEG", 0, position, pdfWidth, imgHeightInMm);
-          heightLeft -= pdfHeight;
-        }
-
-        files.push({
-          filename: buildExportFileName(
+          const filename = buildExportFileName(
             0,
             routeType,
             origin.lat !== "" ? `${origin.lat}_${origin.lng}` : undefined,
             dest.lat !== "" ? `${dest.lat}_${dest.lng}` : undefined,
-          ),
-          blob: pdf.output("blob"),
-        });
+          );
+          files.push({ filename, blob: pdfToBlob(pdf, filename).blob });
+        }
       }
 
       // Info: (20260501 - Luphia) 還原 class
@@ -816,6 +1053,7 @@ function ReportPageContent() {
         );
       }
       setExportProgress(null);
+      setExportId(null);
       setIsExporting(false);
     }
   };
@@ -1437,6 +1675,8 @@ function ReportPageContent() {
                       index={exportingIndex}
                       total={batchResults.length}
                       selectedRoutes={new Set([exportingPlanType])}
+                      exportId={exportId ?? undefined}
+                      mapRef={batchMapRef}
                       onReady={handleMapsReady}
                     />
                   </div>
@@ -1582,6 +1822,25 @@ function ReportPageContent() {
                               )}
                             </button>
                           )}
+                          {/* Info: (20260729 - Tzuhan) issue 10:海陸空聯運方案切換(不適用即屏蔽) */}
+                          {routeApplicability.seaLandAir && (
+                            <button
+                              onClick={() => toggleRoute("seaLandAir")}
+                              disabled={!plan || loading}
+                              className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition-all ${
+                                loading
+                                  ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400 opacity-60"
+                                  : selectedRoutes.has("seaLandAir")
+                                    ? "border-indigo-200 bg-indigo-50 text-indigo-700"
+                                    : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+                              }`}
+                            >
+                              <Layers className="h-4 w-4" />{" "}
+                              {t(
+                                "transportation_carbon_footprint_calculator.plan_section.title_sea_land_air",
+                              )}
+                            </button>
+                          )}
                         </div>
                       )}
 
@@ -1589,7 +1848,7 @@ function ReportPageContent() {
                       {(() => {
                         // Info: (20260724 - Tzuhan) 僅渲染適用的方案(與匯出範圍同一判斷來源)
                         const routesToRender = (
-                          ["land", "sea", "air"] as const
+                          ["land", "sea", "air", "seaLandAir"] as const
                         ).filter(
                           (type) =>
                             selectedRoutes.has(type) &&
@@ -1605,9 +1864,13 @@ function ReportPageContent() {
                               ? t(
                                   "transportation_carbon_footprint_calculator.pdf.mode_sea",
                                 )
-                              : t(
-                                  "transportation_carbon_footprint_calculator.pdf.mode_air",
-                                );
+                              : mode === "seaLandAir"
+                                ? t(
+                                    "transportation_carbon_footprint_calculator.plan_section.title_sea_land_air",
+                                  )
+                                : t(
+                                    "transportation_carbon_footprint_calculator.pdf.mode_air",
+                                  );
                         const originName = origin.lat
                           ? `${origin.lat}, ${origin.lng}`
                           : t(
@@ -1630,7 +1893,8 @@ function ReportPageContent() {
                             <ReportLayout
                               isPdfExport={isExporting}
                               hideFrameUnlessExport={true}
-                              badgeText={`${getModeName(type)} ${t("transportation_carbon_footprint_calculator.payment.fee_name")}`}
+                              /* Info: (20260729 - Tzuhan) 標頭帶方案代碼 + 運輸模式(對應 CSV Plan Code 與檔名) */
+                              badgeText={`${buildPlanCode(0, type)} · ${getModeName(type)}`}
                               footerType={isExporting ? "simple" : "none"}
                               footerTitle={t(
                                 "transportation_carbon_footprint_calculator.pdf.footer",
@@ -1658,6 +1922,8 @@ function ReportPageContent() {
                                         <Truck className="h-6 w-6 text-orange-500" />
                                       ) : type === "sea" ? (
                                         <Ship className="h-6 w-6 text-emerald-500" />
+                                      ) : type === "seaLandAir" ? (
+                                        <Layers className="h-6 w-6 text-indigo-500" />
                                       ) : (
                                         <Plane className="h-6 w-6 text-blue-500" />
                                       )}

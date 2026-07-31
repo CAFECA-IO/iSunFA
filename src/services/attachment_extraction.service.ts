@@ -115,6 +115,15 @@ interface IPipelineInput {
   attachments: IAttachment[];
   conversationContext: IParagraphDraftInput["conversationContext"];
   language?: string;
+  // Info: (20260730 - Tzuhan) 逐段推播回呼:整條管線耗時遠超 gateway 的 60s 讀取逾時(實測約 87s),
+  // Info: (20260730 - Tzuhan) 結果不能只靠 HTTP 回應遞送。萃取完成、每段草稿完成時各推一次,
+  // Info: (20260730 - Tzuhan) 使用者在連線被切斷前就已看到內容。回呼失敗絕不中斷管線(推播是加值,不是前提)。
+  onExtracted?: (sectionCount: number) => Promise<void>;
+  onDraft?: (
+    draft: IAttachmentPipelineResult["drafts"][number],
+    current: number,
+    total: number,
+  ) => Promise<void>;
 }
 
 // Info: (20260714 - Emily) 萃取來源: 自 Laria 取回後的檔案內容(base64)
@@ -290,6 +299,9 @@ ${OUTLINE_CATALOG}
       CARBON_ATTACHMENT_PIPELINE_MAX_PARAGRAPHS,
     );
 
+    // Info: (20260730 - Tzuhan) 萃取階段結束(整條管線最長的單一步驟)先報一次進度,讓使用者知道還在跑
+    await this.notify(() => input.onExtracted?.(targetIds.length));
+
     const drafts: IAttachmentPipelineResult["drafts"] = [];
     for (const paragraphId of targetIds) {
       try {
@@ -300,6 +312,10 @@ ${OUTLINE_CATALOG}
           language: input.language,
         });
         drafts.push(draft);
+        // Info: (20260730 - Tzuhan) 完成即推,不等整批做完
+        await this.notify(() =>
+          input.onDraft?.(draft, drafts.length, targetIds.length),
+        );
       } catch (error) {
         // Info: (20260714 - Emily) 單段生成失敗僅跳過該段並標記降級，其餘段落照常產出
         logger.error(
@@ -310,5 +326,19 @@ ${OUTLINE_CATALOG}
     }
 
     return { drafts, facts: allFacts, degraded, activities: allActivities };
+  }
+
+  /**
+   * Info: (20260730 - Tzuhan) 推播回呼的統一防護:推播失敗只記 log,不讓它把整條管線帶下去。
+   * 訊息已入庫且 HTTP 回應仍帶完整結果,推播只是「更早看到」的加值路徑。
+   */
+  private async notify(run: () => Promise<void> | undefined): Promise<void> {
+    try {
+      await run();
+    } catch (error) {
+      logger.error(
+        `[AttachmentExtractionService] progress publish failed: ${JSON.stringify(error)}`,
+      );
+    }
   }
 }
