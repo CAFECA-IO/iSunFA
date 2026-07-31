@@ -24,7 +24,9 @@ import {
   MAP_IDLE_TIMEOUT_MS,
   MAP_STYLE_READY_TIMEOUT_MS,
 } from "@/constants/logistics_pdf";
-import type maplibregl from "maplibre-gl";
+// Info: (20260731 - Luphia) maplibre-gl v6 移除了 default export,故以命名型別匯入(v5/v6 皆提供 MapLibreMap 別名)。
+// Info: (20260731 - Luphia) 請勿改回 `import type maplibregl from "maplibre-gl"`,那會在 CI 以 TS1192 失敗。
+import type { MapLibreMap } from "maplibre-gl";
 
 /**
  * Info: (20260731 - Tzuhan) 輪詢樣式是否就緒。
@@ -35,7 +37,7 @@ import type maplibregl from "maplibre-gl";
  * 輪詢對「已經發生」與「即將發生」兩種情況都成立,這是它比事件可靠的地方。
  */
 const waitForStyleReady = async (
-  map: maplibregl.Map,
+  map: MapLibreMap,
   timeoutMs: number,
 ): Promise<boolean> => {
   const deadline = Date.now() + timeoutMs;
@@ -53,10 +55,7 @@ const waitForStyleReady = async (
  * Info: (20260731 - Tzuhan) 等 idle 或逾時。idle 會反覆觸發,故用一次性監聽是安全的。
  * 回傳是否真的等到,供呼叫端記錄「截到的是完整畫面還是逾時畫面」。
  */
-const waitForIdle = (
-  map: maplibregl.Map,
-  timeoutMs: number,
-): Promise<boolean> =>
+const waitForIdle = (map: MapLibreMap, timeoutMs: number): Promise<boolean> =>
   new Promise<boolean>((resolve) => {
     const timer = setTimeout(() => resolve(false), timeoutMs);
     map.once("idle", () => {
