@@ -94,11 +94,24 @@ const optionalNumber = (
 /**
  * Info: (20260720 - Julian) 判斷欄位是否為有效數字（供龍捲風圖偵測標題列 vs 資料列，不做計算）
  */
-const isNumericField = (raw: string | undefined): boolean => {
+export const isNumericField = (raw: string | undefined): boolean => {
   if (raw === undefined) return false;
   const trimmed = raw.trim();
   return trimmed !== "" && Number.isFinite(Number(trimmed));
 };
+
+/**
+ * Info: (20260731 - Julian)
+ * 龍捲風圖標題列判定的**唯一來源**：首列第 2、3 欄皆非數字即視為數列名稱標題列。
+ *
+ * parser 與 custom_tornado_editor 必須共用此函式，不得各自實作。兩邊判定若分歧，
+ * 同一列會被一邊當標題列、另一邊當資料列，導致 editor 的 lineIndex 與 parser 的
+ * bars 對應錯位，編輯動作將套用到錯誤的資料列。
+ */
+export const isTornadoHeaderFields = (fields: string[]): boolean =>
+  fields.length >= 3 &&
+  !isNumericField(fields[1]) &&
+  !isNumericField(fields[2]);
 
 /**
  * Info: (20260717 - Julian)
@@ -293,10 +306,7 @@ const buildTornado = (
    */
   // ToDo: (20260721 - Luphia) 數列名稱為純數字（如 bare year 2019）時會被誤判為資料列，靜默產生錯誤的單筆長條而非報錯；考慮更嚴謹的 header 判定或加上警示
   const firstFields = parseCsvLine(dataLines[0]);
-  const hasHeader =
-    firstFields.length >= 3 &&
-    !isNumericField(firstFields[1]) &&
-    !isNumericField(firstFields[2]);
+  const hasHeader = isTornadoHeaderFields(firstFields);
 
   // Info: (20260720 - Julian) 數列名稱選填：有標題列才取，未填則留 undefined（不顯示圖例）
   const leftSeries = hasHeader ? firstFields[1].trim() || undefined : undefined;

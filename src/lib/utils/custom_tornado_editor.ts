@@ -10,7 +10,11 @@ import {
   ITornadoAction,
 } from "@/interfaces/custom_chart";
 import { parseCsvLine } from "@/lib/utils/csv";
-import { parseCustomChart } from "@/lib/utils/custom_chart_parser";
+import {
+  parseCustomChart,
+  isNumericField,
+  isTornadoHeaderFields,
+} from "@/lib/utils/custom_chart_parser";
 
 /**
  * Info: (20260722 - Julian)
@@ -51,12 +55,6 @@ const buildHeaderLine = (
 ): string =>
   `${formatCsvField(category)}, ${formatCsvField(leftSeries)}, ${formatCsvField(rightSeries)}`;
 
-const isNumericField = (raw: string | undefined): boolean => {
-  if (raw === undefined) return false;
-  const trimmed = raw.trim();
-  return trimmed !== "" && Number.isFinite(Number(trimmed));
-};
-
 /**
  * Info: (20260722 - Julian) 是否為設定列（key: value，key 屬白名單、冒號在逗號之前）
  */
@@ -80,14 +78,6 @@ const isContentLine = (rawLine: string): boolean => {
     !isTornadoConfigLine(line)
   );
 };
-
-/**
- * Info: (20260722 - Julian) 是否為數列標頭列（第 2、3 欄皆非數字）
- */
-const isHeaderFields = (fields: string[]): boolean =>
-  fields.length >= 3 &&
-  !isNumericField(fields[1]) &&
-  !isNumericField(fields[2]);
 
 /**
  * Info: (20260722 - Julian)
@@ -117,7 +107,10 @@ export const parseTornadoBars = (raw: string): ITornadoItem[] => {
   lines.forEach((line, lineIndex) => {
     if (!isContentLine(line)) return;
     // Info: (20260722 - Julian) 首個內容列若為標頭列則略過（不計入資料列）
-    if (lineIndex === firstIdx && isHeaderFields(parseCsvLine(line.trim()))) {
+    if (
+      lineIndex === firstIdx &&
+      isTornadoHeaderFields(parseCsvLine(line.trim()))
+    ) {
       return;
     }
     const bar = getTornadoBarFields(line);
@@ -142,7 +135,8 @@ export const parseTornadoData = (raw: string): ITornadoParseResult => {
   const lines = raw.split("\n");
   const firstIdx = findFirstContentIndex(lines);
   const hasHeader =
-    firstIdx !== -1 && isHeaderFields(parseCsvLine(lines[firstIdx].trim()));
+    firstIdx !== -1 &&
+    isTornadoHeaderFields(parseCsvLine(lines[firstIdx].trim()));
 
   const result = parseCustomChart(CustomChartType.TORNADO, raw);
   if (result.ok && result.ast.type === CustomChartType.TORNADO) {
@@ -233,7 +227,7 @@ const applyGroupHeader = (
     return;
   }
   const firstFields = parseCsvLine(lines[contentIdx].trim());
-  if (isHeaderFields(firstFields)) {
+  if (isTornadoHeaderFields(firstFields)) {
     const col0 = firstFields[0]?.trim() || DEFAULT_CATEGORY_HEADER;
     lines[contentIdx] = buildHeaderLine(col0, leftSeries, rightSeries);
   } else {

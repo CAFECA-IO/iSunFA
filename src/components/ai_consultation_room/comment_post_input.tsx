@@ -49,7 +49,7 @@ export const CommentPostInput = ({
           body: JSON.stringify({
             content: value,
             parentId,
-            isProfessional: false, // ToDo: 判斷是否為專業人士
+            isProfessional: false, // ToDo: (20260731 - Julian) 判斷是否為專業人士，後續需確認是否保留此欄位
             replyTo,
           }),
         },
