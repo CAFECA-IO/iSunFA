@@ -61,6 +61,12 @@ jobs:
           # The database URL to connect to the PostgreSQL database
           DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
 
+      # Info: (20260731 - Tzuhan) 全專案型別檢查:next build 只檢查應用相依圖可達的檔案,
+      # Info: (20260731 - Tzuhan) 測試檔沒被 import 就完全不檢查;eslint 不做型別推導、jest 走轉譯也不檢查,
+      # Info: (20260731 - Tzuhan) 因此測試檔的型別在此之前是沒有守門人的區域。排在測試之前:跑得快,且一次列出所有錯誤
+      - name: Type check
+        run: npx tsc --noEmit
+
       - name: Run unit tests & integration tests
         run: npm run test
         env:
