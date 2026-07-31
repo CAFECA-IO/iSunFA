@@ -489,6 +489,30 @@ export const buildPlanLegs = (
   });
 };
 
+/**
+ * Info: (20260731 - Tzuhan) 方案總排放的單一取值來源。原本以三元運算內嵌於 buildBatchSummaryCsv,
+ * 列印用的請求建構器需要同一份判斷 —— 抽出以免 CSV 與 PDF 各自維護一份對照而漂移。
+ * 缺值回 undefined,由呼叫端顯示 N/A;不以 "0" 充數(0 會被讀成「零排放」)。
+ */
+export function getPlanTotalCo2e(
+  item: IMileageBatchResult,
+  planKey: ILogisticsPlanKey,
+): string | undefined {
+  const plans = item.plan?.comparisonData?.plans;
+  if (!plans) return undefined;
+  const raw =
+    planKey === "land"
+      ? plans.landOnly?.co2eKg
+      : planKey === "sea"
+        ? plans.sea_multimodal?.total_co2eKg
+        : planKey === "air"
+          ? plans.air_multimodal?.total_co2eKg
+          : planKey === "seaLandAir"
+            ? plans.sea_land_air_multimodal?.total_co2eKg
+            : plans.custom_multimodal?.total_co2eKg;
+  return raw === undefined || raw === null ? undefined : String(raw);
+}
+
 export const PLAN_LABELS: Record<ILogisticsPlanKey, string> = {
   land: "Land Only",
   sea: "Sea Multimodal",
@@ -570,16 +594,8 @@ export function buildBatchSummaryCsv(
     planKeys.forEach((planKey) => {
       const legs = buildPlanLegs(item, planKey);
       if (legs.length === 0) return;
-      const planTotal =
-        planKey === "land"
-          ? plans.landOnly?.co2eKg
-          : planKey === "sea"
-            ? plans.sea_multimodal?.total_co2eKg
-            : planKey === "air"
-              ? plans.air_multimodal?.total_co2eKg
-              : planKey === "seaLandAir"
-                ? plans.sea_land_air_multimodal?.total_co2eKg
-                : plans.custom_multimodal?.total_co2eKg;
+      // Info: (20260731 - Tzuhan) 與列印用請求共用同一份取值(getPlanTotalCo2e),不在此重寫對照
+      const planTotal = getPlanTotalCo2e(item, planKey);
 
       legs.forEach((leg, legIndex) => {
         const isLastLeg = legIndex === legs.length - 1;
