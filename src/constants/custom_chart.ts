@@ -174,8 +174,15 @@ export enum CustomChartParseErrorCode {
 // Info: (20260717 - Julian) DSL 註解前綴（沿用 mermaid 慣例）
 export const CUSTOM_CHART_COMMENT_PREFIX = "%%";
 
-// Info: (20260717 - Julian) 雙極軸分隔符（左為 min 端、右為 max 端）；VS16 變體於 parser 內先行移除
-export const CUSTOM_CHART_AXIS_SEPARATORS: readonly string[] = ["↔", "<->"];
+/**
+ * Info: (20260731 - Julian)
+ * 配對分隔符（左端 <-> 右端），VS16 變體於 parser 內先行移除。兩處語意相同，皆表「一對事物的兩端」：
+ * - 矩陣圖雙極軸設定值：min 端 <-> max 端
+ * - 龍捲風圖標題列：左數列 <-> 右數列
+ *
+ * 標準形式為 ASCII 的 `<->`（editor 一律輸出此形式），解析時兩者皆接受。
+ */
+export const CUSTOM_CHART_PAIR_SEPARATORS: readonly string[] = ["↔", "<->"];
 
 /**
  * Info: (20260722 - Julian)

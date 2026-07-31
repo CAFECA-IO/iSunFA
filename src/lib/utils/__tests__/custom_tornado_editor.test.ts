@@ -162,12 +162,14 @@ describe("applyTornadoActions - EDIT_GROUP（標頭 + 顏色）", () => {
       },
     ]);
     const lines = out.split("\n");
-    expect(lines).toContain("項目, 最佳, 最差");
+    // Info: (20260731 - Julian) legacy 三欄標頭列經編輯後改寫為新式 `左 <-> 右`（漸進遷移）
+    expect(lines).toContain("最佳 <-> 最差");
+    expect(lines).not.toContain("項目, 最佳, 最差");
     expect(lines).toContain(`${CustomChartConfigKey.LEFT_COLOR}: #ff0000`);
     expect(lines).toContain(`${CustomChartConfigKey.RIGHT_COLOR}: #0000ff`);
   });
 
-  it("無標頭時於首筆資料列前插入標頭列（預設類別欄）", () => {
+  it("無標頭時於首筆資料列前插入新式標頭列", () => {
     const noHeader = ["title: T", "A, 10, 20", "B, 30, 40"].join("\n");
     const out = applyTornadoActions(noHeader, [
       {
@@ -179,7 +181,31 @@ describe("applyTornadoActions - EDIT_GROUP（標頭 + 顏色）", () => {
     ]);
     expect(out.split("\n")).toEqual([
       "title: T",
-      "項目, L, R",
+      "L <-> R",
+      "A, 10, 20",
+      "B, 30, 40",
+    ]);
+  });
+
+  // Info: (20260731 - Julian) 新式標頭列（含純數字數列名）應被視為標頭而非資料列
+  it("新式標頭列 `2019 <-> 2020` 不被當成資料列，且可被 EDIT_GROUP 改寫", () => {
+    const raw = ["2019 <-> 2020", "A, 10, 20", "B, 30, 40"].join("\n");
+    const parsed = parseTornadoData(raw);
+    expect(parsed.hasHeader).toBe(true);
+    expect(parsed.leftSeries).toBe("2019");
+    expect(parsed.rightSeries).toBe("2020");
+    expect(parsed.bars.map((b) => b.category)).toEqual(["A", "B"]);
+
+    const out = applyTornadoActions(raw, [
+      {
+        id: uid(4),
+        description: "group",
+        type: TornadoActionType.EDIT_GROUP,
+        payload: { leftSeries: "2021", rightSeries: "2022" },
+      },
+    ]);
+    expect(out.split("\n")).toEqual([
+      "2021 <-> 2022",
       "A, 10, 20",
       "B, 30, 40",
     ]);

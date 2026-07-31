@@ -3,6 +3,7 @@ import {
   CustomChartConfigKey,
   TornadoActionType,
   CUSTOM_CHART_COMMENT_PREFIX,
+  CUSTOM_CHART_PAIR_SEPARATORS,
 } from "@/constants/custom_chart";
 import {
   ITornadoItem,
@@ -14,6 +15,7 @@ import {
   parseCustomChart,
   isNumericField,
   isTornadoHeaderFields,
+  getTornadoHeaderSeries,
 } from "@/lib/utils/custom_chart_parser";
 
 /**
@@ -34,8 +36,8 @@ const TORNADO_CONFIG_KEYS: ReadonlySet<string> = new Set<string>([
   CustomChartConfigKey.RIGHT_COLOR,
 ]);
 
-// Info: (20260722 - Julian) 插入標頭列時的類別欄預設標籤（渲染層不顯示此欄，僅供 header 判定）
-const DEFAULT_CATEGORY_HEADER = "項目";
+// Info: (20260731 - Julian) 標題列序列化採用的配對分隔符（標準形式為 ASCII 的 `<->`）
+const PAIR_SEPARATOR = CUSTOM_CHART_PAIR_SEPARATORS[1];
 
 const formatCsvField = (field: string): string => {
   const needsQuote = /[",\r\n]/.test(field) || field !== field.trim();
@@ -48,12 +50,14 @@ const buildTornadoDataLine = (
   right: number,
 ): string => `${formatCsvField(category)}, ${left}, ${right}`;
 
-const buildHeaderLine = (
-  category: string,
-  leftSeries: string,
-  rightSeries: string,
-): string =>
-  `${formatCsvField(category)}, ${formatCsvField(leftSeries)}, ${formatCsvField(rightSeries)}`;
+/**
+ * Info: (20260731 - Julian)
+ * 一律輸出新式標題列 `左數列 <-> 右數列`：與 3 欄資料列結構互斥，不再有同形歧義。
+ * 既有的 legacy 三欄標題列會在使用者編輯時自然遷移為此形式。
+ * 含逗號的數列名需引號包夾，否則會被 parseCsvLine 拆成多欄而失去「單一欄位」的判定前提。
+ */
+const buildHeaderLine = (leftSeries: string, rightSeries: string): string =>
+  formatCsvField(`${leftSeries} ${PAIR_SEPARATOR} ${rightSeries}`);
 
 /**
  * Info: (20260722 - Julian) 是否為設定列（key: value，key 屬白名單、冒號在逗號之前）
@@ -168,9 +172,10 @@ export const parseTornadoData = (raw: string): ITornadoParseResult => {
   let leftSeries: string | undefined;
   let rightSeries: string | undefined;
   if (hasHeader) {
-    const f = parseCsvLine(lines[firstIdx].trim());
-    leftSeries = f[1]?.trim() || undefined;
-    rightSeries = f[2]?.trim() || undefined;
+    // Info: (20260731 - Julian) 沿用 parser 的共用取值函式，確保新式與 legacy 兩種形式行為一致
+    const series = getTornadoHeaderSeries(parseCsvLine(lines[firstIdx].trim()));
+    leftSeries = series?.leftSeries;
+    rightSeries = series?.rightSeries;
   }
   return { bars, hasHeader, leftSeries, rightSeries };
 };
@@ -221,21 +226,15 @@ const applyGroupHeader = (
 ): void => {
   const contentIdx = findFirstContentIndex(lines);
   if (contentIdx === -1) {
-    lines.push(
-      buildHeaderLine(DEFAULT_CATEGORY_HEADER, leftSeries, rightSeries),
-    );
+    lines.push(buildHeaderLine(leftSeries, rightSeries));
     return;
   }
   const firstFields = parseCsvLine(lines[contentIdx].trim());
   if (isTornadoHeaderFields(firstFields)) {
-    const col0 = firstFields[0]?.trim() || DEFAULT_CATEGORY_HEADER;
-    lines[contentIdx] = buildHeaderLine(col0, leftSeries, rightSeries);
+    // Info: (20260731 - Julian) 既有標題列（新式或 legacy 三欄）一律改寫為新式，達成漸進遷移
+    lines[contentIdx] = buildHeaderLine(leftSeries, rightSeries);
   } else {
-    lines.splice(
-      contentIdx,
-      0,
-      buildHeaderLine(DEFAULT_CATEGORY_HEADER, leftSeries, rightSeries),
-    );
+    lines.splice(contentIdx, 0, buildHeaderLine(leftSeries, rightSeries));
   }
 };
 
