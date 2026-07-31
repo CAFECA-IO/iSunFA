@@ -105,5 +105,10 @@ export const PDF_EXPORT_IMAGE_QUALITY = 0.95;
  *
  * 這個護欄存在的理由:體積曾在無人看管的情況下長到 22.5 MB(jsPDF 未開 compress,
  * PNG 被以未壓縮原始 RGB 嵌入)。修一行只解決當時那一張圖,常態量測才能防止回歸。
+ *
+ * Info: (20260731 - Tzuhan) 預算自 100 KB 放寬為 500 KB(2026-07-31,Emily 確認)。
+ * 依據:伺服端向量列印的實測落點為 154 KB(其中地圖 32 KB、中文點陣字型約 60 KB),
+ * 光柵路徑為 296 KB。兩者都在 500 KB 內,把預算訂在真實落點之上才有警示意義 ——
+ * 訂 100 KB 會讓每次匯出都跳警告,警告一旦成為常態就等於沒有警告。
  */
-export const PDF_EXPORT_SIZE_BUDGET_BYTES = 100 * 1024;
+export const PDF_EXPORT_SIZE_BUDGET_BYTES = 500 * 1024;

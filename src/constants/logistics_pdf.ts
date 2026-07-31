@@ -24,11 +24,28 @@ export const LOGISTICS_PDF_FONT_STACK =
   '-apple-system, "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", "Helvetica Neue", Arial, sans-serif';
 
 /**
- * Info: (20260731 - Tzuhan) 地圖影像的體積上限。地圖是這份報告唯一的真實光柵內容,
- * 因此它決定了整份 PDF 能否守住預算:文字向量約 25~40 KB,地圖必須壓在此值內才進得了 100 KB。
- * 超過即不嵌入並在報告中明示「地圖略過」——寧可少一張圖,也不要交付寄不出去的檔案。
+ * Info: (20260731 - Tzuhan) 已知限制:中文字在輸出的 PDF 內是**點陣字(Type 3)**,不是向量。
+ *
+ * 實測 `pdffonts` 的結果:拉丁字走 CID TrueType 子集(ArialMT、Menlo-Bold),
+ * 但樣板內 19 個相異中文字各自成為一個 Type 3 字型物件 —— Chrome 在找不到可嵌入的
+ * 中文字型時會把字符光柵化。後果是這些字放大會模糊,且約佔檔案 60 KB。
+ *
+ * 搜尋與複製**仍然可用**(ToUnicode 對照表有保留),所以不影響本次的核心目標。
+ * 要修的正解是提供可嵌入的中文字型(在執行環境安裝 Noto Sans TC,或以 @font-face
+ * 內嵌字型檔讓 Chrome 自行子集化);列為後續 issue,不在本次範圍。
  */
-export const LOGISTICS_PDF_MAP_MAX_BYTES = 60 * 1024;
+export const LOGISTICS_PDF_CJK_IS_BITMAP = true;
+
+/**
+ * Info: (20260731 - Tzuhan) 地圖影像的體積上限。地圖是這份報告唯一的真實光柵內容,
+ * 超過即不嵌入並在報告中明示「地圖略過」——寧可少一張圖,也不要交付寄不出去的檔案。
+ *
+ * Info: (20260731 - Tzuhan) 自 60 KB 放寬為 200 KB。原值是在「整份 100 KB」的前提下推算的,
+ * 預算放寬到 500 KB 後它反而成了品質瓶頸:實測嵌入的地圖只有 700×526 @93 ppi
+ * (列印時明顯偏軟,A4 寬度需要約 175 ppi 才紮實),而 Retina 螢幕截下的兩倍圖
+ * 會超過 60 KB 被前端丟掉。放寬後較清晰的地圖才進得來。
+ */
+export const LOGISTICS_PDF_MAP_MAX_BYTES = 200 * 1024;
 
 /**
  * Info: (20260731 - Tzuhan) 單次請求可產生的報告份數上限:每份都要跑一次 Chrome 排版與列印,
