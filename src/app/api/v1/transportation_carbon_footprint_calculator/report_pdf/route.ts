@@ -22,6 +22,19 @@ export async function POST(request: NextRequest) {
 
   const parsed = LogisticsReportPdfRequestSchema.safeParse(body);
   if (!parsed.success) {
+    /**
+     * Info: (20260731 - Tzuhan) 把違規的欄位路徑記下來。
+     * 實測踩過:整批匯出以 400 失敗,而回應與 log 都只說「schema error」,
+     * 完全無法得知是哪一欄(當時是 metersPerPixel 送了 0,而 schema 要求正數)。
+     * 只記路徑與訊息,不記值 —— 載荷含地圖 base64,整包印出來會塞爆 log。
+     */
+    logger.warn("[API] report_pdf schema rejected", {
+      issues: parsed.error.issues.slice(0, 10).map((issue) => ({
+        path: issue.path.join("."),
+        code: issue.code,
+        message: issue.message,
+      })),
+    });
     return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
   }
 

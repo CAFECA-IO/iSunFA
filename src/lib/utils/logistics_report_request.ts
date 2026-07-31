@@ -66,6 +66,18 @@ export interface ILegCapture {
 }
 
 /**
+ * Info: (20260731 - Tzuhan) 比例尺數值的收斂點。
+ * 截圖端在畫布寬度為 0 等退化情況會回 0,而 API validator 要求正數 —— 送出 0 會讓
+ * **整批請求被 400 擋掉**(實測踩過:為了滿足型別而填 0,結果錯誤在更遠的地方才爆)。
+ * 這裡是載荷的邊界,把無效值一律轉成「沒有這個欄位」:沒有比例尺只是少一個刻度,
+ * 送出 0 卻會讓整批報告拿不到。
+ */
+const sanitizeMetersPerPixel = (value?: number): number | undefined =>
+  value !== undefined && Number.isFinite(value) && value > 0
+    ? value
+    : undefined;
+
+/**
  * Info: (20260731 - Tzuhan) 組出單一 (路線, 方案) 的請求項。
  * 無逐段資料(方案不適用)時回 null —— 與 CSV 「不適用方案不產生列」的行為一致,
  * 不產生一份沒有內容的 PDF。
@@ -100,7 +112,9 @@ export function buildReportPdfItem(
     co2eKg: leg.segment?.co2eKg,
     isFallback: leg.segment?.isFallback,
     mapImageDataUrl: legCaptures?.[legIndex]?.dataUrl,
-    metersPerPixel: legCaptures?.[legIndex]?.metersPerPixel,
+    metersPerPixel: sanitizeMetersPerPixel(
+      legCaptures?.[legIndex]?.metersPerPixel,
+    ),
   }));
 
   return {
@@ -115,7 +129,7 @@ export function buildReportPdfItem(
     planTotalCo2e: getPlanTotalCo2e(item, planKey),
     legs: reportLegs,
     mapImageDataUrl,
-    metersPerPixel,
+    metersPerPixel: sanitizeMetersPerPixel(metersPerPixel),
   };
 }
 

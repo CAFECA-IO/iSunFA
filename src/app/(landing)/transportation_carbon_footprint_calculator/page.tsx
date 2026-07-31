@@ -557,11 +557,26 @@ function ReportPageContent() {
         }),
       ]);
 
-    const overviewUrl = await withTimeout(
-      mapRef.current?.captureMap() ?? Promise.resolve(null),
-    );
-    // Info: (20260731 - Tzuhan) 全程圖沿用既有的 captureMap(無比例尺資訊),逐段圖才有實算的比例尺
     const legs = buildPlanLegs(item, planKey);
+    const geometries = legs
+      .map((leg) => leg.segment?.geometry)
+      .filter((geometry): geometry is GeoJSON.Geometry => Boolean(geometry));
+
+    /**
+     * Info: (20260731 - Tzuhan) 全程圖也走 captureGeometry(以各段幾何的聯集為範圍),
+     * 不再用 captureMap。原因是 captureMap 不回報比例尺資訊,先前為了型別而填了
+     * metersPerPixel: 0,而 validator 要求正數 —— 整批請求因此被 400 擋掉。
+     * 捏造一個「零」來滿足型別,結果是把錯誤推到更遠的地方才爆;
+     * 改由同一條路徑實算,全程圖也就一併有了比例尺。
+     */
+    const overview = await withTimeout(
+      mapRef.current?.captureGeometry(
+        geometries.length > 0
+          ? { type: "GeometryCollection", geometries }
+          : null,
+      ) ?? Promise.resolve(null),
+    );
+
     const legCaptures: (ILegCapture | null)[] = [];
     for (const leg of legs) {
       const captured = await withTimeout(
@@ -571,12 +586,7 @@ function ReportPageContent() {
       );
       legCaptures.push(captured ?? null);
     }
-    return {
-      overview: overviewUrl
-        ? { dataUrl: overviewUrl, metersPerPixel: 0 }
-        : null,
-      legs: legCaptures,
-    };
+    return { overview: overview ?? null, legs: legCaptures };
   };
 
   /**

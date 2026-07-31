@@ -245,3 +245,50 @@ describe("chunkReportItems", () => {
     expect(chunkReportItems([1, 2, 3], 0)).toEqual([[1, 2, 3]]);
   });
 });
+
+// Info: (20260731 - Tzuhan) 實測踩過的坑:為了滿足型別而填 metersPerPixel: 0,
+// Info: (20260731 - Tzuhan) 而 API validator 要求正數 → 整批匯出被 400 擋掉。
+// Info: (20260731 - Tzuhan) 「沒有比例尺」只是少一個刻度,「送出 0」卻讓整批報告拿不到。
+describe("比例尺數值的收斂", () => {
+  const captureWith = (metersPerPixel: number) =>
+    new Map([
+      [
+        buildMapImageKey(0, "sea"),
+        {
+          overview: { dataUrl: "data:image/jpeg;base64,AAAA", metersPerPixel },
+          legs: [{ dataUrl: "data:image/jpeg;base64,BBBB", metersPerPixel }],
+        },
+      ],
+    ]);
+
+  const build = (metersPerPixel: number) =>
+    buildReportPdfItems({
+      results: [crossSeaItem],
+      indices: [0],
+      selectedPlans: new Set(["sea"]),
+      fallbackWeightKg: 1000,
+      mapCaptures: captureWith(metersPerPixel),
+    });
+
+  it("0 或負數轉為 undefined,不送出無效值", () => {
+    expect(build(0)[0].metersPerPixel).toBeUndefined();
+    expect(build(0)[0].legs[0].metersPerPixel).toBeUndefined();
+    expect(build(-3)[0].metersPerPixel).toBeUndefined();
+  });
+
+  it("非有限值一律丟棄", () => {
+    expect(build(Number.NaN)[0].metersPerPixel).toBeUndefined();
+    expect(build(Number.POSITIVE_INFINITY)[0].metersPerPixel).toBeUndefined();
+  });
+
+  it("正常值保留", () => {
+    expect(build(42.5)[0].metersPerPixel).toBe(42.5);
+  });
+
+  it("即使比例尺無效,載荷仍通過 API validator(整批不會被 400 擋掉)", () => {
+    const parsed = LogisticsReportPdfRequestSchema.safeParse({
+      reports: build(0),
+    });
+    expect(parsed.success).toBe(true);
+  });
+});
