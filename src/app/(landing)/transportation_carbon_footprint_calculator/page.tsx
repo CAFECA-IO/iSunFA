@@ -52,7 +52,11 @@ import {
   captureElementToPdf,
   pdfToBlob,
 } from "@/lib/utils/pdf_export";
-import { buildReportPdfItem } from "@/lib/utils/logistics_report_request";
+import {
+  buildMapImageKey,
+  buildReportPdfItem,
+  buildReportPdfItems,
+} from "@/lib/utils/logistics_report_request";
 import { requestReportPdfs } from "@/lib/utils/logistics_report_client";
 import {
   TRANSPORT_PDF_EXPORT_MODE,
@@ -204,6 +208,11 @@ function ReportPageContent() {
   // Info: (20260729 - Tzuhan) 匯出批次識別碼:同批 PDF 與 summary.csv 共用,渲染於 PDF 頁尾
   const [exportId, setExportId] = useState<string | null>(null);
   const mapReadyResolver = useRef<(() => void) | null>(null);
+  /**
+   * Info: (20260731 - Tzuhan) 批次離屏渲染的地圖控制器(issue 08)。
+   * 批次一次只渲染一個 (路線, 方案),故單一 ref 即足夠;每次 remount 由 key 保證重新綁定。
+   */
+  const batchMapRef = useRef<IMapViewerRef>(null);
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<IHistoryItem[]>([]);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -573,36 +582,107 @@ function ReportPageContent() {
       });
 
       const files: Array<{ index: number; filename: string; blob: Blob }> = [];
-      for (let j = 0; j < jobs.length; j++) {
-        const job = jobs[j];
-        setExportProgress({ current: j + 1, total: jobs.length });
-        setExportingIndex(job.index);
-        setExportingPlanType(job.type);
-        // Info: (20260511 - Luphia) Wait for the BatchItemReport to fully render and capture its internal MapViewers
-        await new Promise<void>((resolve) => {
-          mapReadyResolver.current = resolve;
-          // Info: (20260511 - Luphia) Fallback timeout just in case WebGL or capture fails to respond
-          setTimeout(resolve, 8000);
-        });
 
-        const pageEl = document.getElementById(
-          `batch-report-item-${job.index}`,
-        );
-        if (!pageEl) continue;
+      /**
+       * Info: (20260731 - Tzuhan) issue 08 步驟三:伺服端向量列印。
+       * 離屏渲染仍然保留,但**只為了取地圖影像**(MapLibre 是 WebGL,伺服端沒有);
+       * 不再截整頁,因此 8000ms 的截圖 fallback 與 pixelRatio 2 的大圖都不需要了。
+       */
+      if (
+        TRANSPORT_PDF_EXPORT_MODE === TransportPdfExportModeEnum.SERVER_VECTOR
+      ) {
+        const mapImages = new Map<string, string>();
+        for (let j = 0; j < jobs.length; j++) {
+          const job = jobs[j];
+          setExportProgress({ current: j + 1, total: jobs.length });
+          setExportingIndex(job.index);
+          setExportingPlanType(job.type);
+          // Info: (20260511 - Luphia) Wait for the BatchItemReport to fully render and capture its internal MapViewers
+          await new Promise<void>((resolve) => {
+            mapReadyResolver.current = resolve;
+            // Info: (20260731 - Tzuhan) fallback 從 8000ms 降到 4000ms:此處只等地圖就緒,
+            // Info: (20260731 - Tzuhan) 不再等整頁可截圖;地圖沒就緒時該份不附圖,不阻擋匯出
+            setTimeout(resolve, 4000);
+          });
+          const dataUrl = await batchMapRef.current?.captureMap();
+          if (dataUrl) {
+            mapImages.set(buildMapImageKey(job.index, job.type), dataUrl);
+          }
+        }
 
-        const item = batchResults[job.index];
-        const pdf = await captureElementToPdf(pageEl);
-        const filename = buildExportFileName(
-          job.index,
-          job.type,
-          getLocationLabel(item.origin),
-          getLocationLabel(item.dest),
-        );
-        files.push({
-          index: job.index,
-          filename,
-          blob: pdfToBlob(pdf, filename).blob,
+        // Info: (20260731 - Tzuhan) 離屏元件可以先卸載:後續只需要資料,不再需要 DOM
+        setExportingIndex(null);
+        setExportingPlanType(null);
+
+        const items = buildReportPdfItems({
+          results: batchResults,
+          indices,
+          selectedPlans,
+          fallbackWeightKg: weightKg !== "" ? weightKg : 1000,
+          mapImages,
         });
+        const exported = await requestReportPdfs(items, {
+          exportId: batchExportId,
+          onProgress: (completed, total) => {
+            setExportProgress({ current: completed, total });
+          },
+        });
+        /**
+         * Info: (20260731 - Tzuhan) 以方案代碼回推路線索引(檔名一律以 `R01-SEA_` 起頭,
+         * 代碼內不含底線)。不依賴回傳順序:順序耦合一旦被改動就會靜默錯位,
+         * 而錯位的後果是 summary.csv 把 PDF 對到錯誤的路線 —— 交叉索引失效比少一個檔案更難察覺。
+         */
+        const routeIndexByPlanCode = new Map<string, number>(
+          jobs.map((job) => [buildPlanCode(job.index, job.type), job.index]),
+        );
+        exported.forEach((file) => {
+          const planCode = file.fileName.split("_")[0];
+          const routeIndex = routeIndexByPlanCode.get(planCode);
+          if (routeIndex === undefined) {
+            // Info: (20260731 - Tzuhan) 對不到就不進 CSV 對照表,但檔案照給;寧可少一列對照也不要給錯的
+            console.warn(
+              `[pdfExport] 無法由檔名 ${file.fileName} 回推路線索引,已略過 summary.csv 對照`,
+            );
+            return;
+          }
+          files.push({
+            index: routeIndex,
+            filename: file.fileName,
+            blob: file.blob,
+          });
+        });
+      } else {
+        for (let j = 0; j < jobs.length; j++) {
+          const job = jobs[j];
+          setExportProgress({ current: j + 1, total: jobs.length });
+          setExportingIndex(job.index);
+          setExportingPlanType(job.type);
+          // Info: (20260511 - Luphia) Wait for the BatchItemReport to fully render and capture its internal MapViewers
+          await new Promise<void>((resolve) => {
+            mapReadyResolver.current = resolve;
+            // Info: (20260511 - Luphia) Fallback timeout just in case WebGL or capture fails to respond
+            setTimeout(resolve, 8000);
+          });
+
+          const pageEl = document.getElementById(
+            `batch-report-item-${job.index}`,
+          );
+          if (!pageEl) continue;
+
+          const item = batchResults[job.index];
+          const pdf = await captureElementToPdf(pageEl);
+          const filename = buildExportFileName(
+            job.index,
+            job.type,
+            getLocationLabel(item.origin),
+            getLocationLabel(item.dest),
+          );
+          files.push({
+            index: job.index,
+            filename,
+            blob: pdfToBlob(pdf, filename).blob,
+          });
+        }
       }
 
       if (files.length === 0) return;
@@ -1501,6 +1581,7 @@ function ReportPageContent() {
                       total={batchResults.length}
                       selectedRoutes={new Set([exportingPlanType])}
                       exportId={exportId ?? undefined}
+                      mapRef={batchMapRef}
                       onReady={handleMapsReady}
                     />
                   </div>
