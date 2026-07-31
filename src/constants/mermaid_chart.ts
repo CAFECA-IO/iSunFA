@@ -9,6 +9,9 @@ export enum MermaidChartType {
   HISTOGRAM = "histogram", // Info: (20260717 - Julian) 直方圖
   BOX = "box", // Info: (20260717 - Julian) 箱形圖／盒鬚圖
   SEQUENCE = "sequence",
+  // Info: (20260730 - Tzuhan) 時間軸圖(盤查報告經營沿革用)。缺這一項會讓 detectChartType 回 UNKNOWN,
+  // Info: (20260730 - Tzuhan) 元件在 render 前就判定失敗並顯示 "Mermaid Syntax Error" —— 語法其實是對的。
+  TIMELINE = "timeline",
   UNKNOWN = "unknown",
 }
 

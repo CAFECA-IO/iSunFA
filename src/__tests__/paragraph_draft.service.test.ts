@@ -1,4 +1,4 @@
-// Info: (20260714 - Emily) ParagraphDraftService 單元測試:mock ChatService,驗證白名單裁決、LLM 輸出護欄與錯誤包裝
+// Info: (20260714 - Tzuhan) ParagraphDraftService 單元測試:mock ChatService,驗證白名單裁決、LLM 輸出護欄與錯誤包裝
 
 import { describe, it, expect, jest } from "@jest/globals";
 import { ParagraphDraftService } from "@/services/paragraph_draft.service";
@@ -73,7 +73,7 @@ describe("ParagraphDraftService", () => {
   });
 
   it("should map quota-exhaustion errors to IS_LLM_QUOTA_EXCEEDED without leaking details", async () => {
-    // Info: (20260715 - Emily) isLlmQuotaError 以訊息關鍵字分類:429/quota 類錯誤需回專屬錯誤碼供前端顯示額度提示
+    // Info: (20260715 - Tzuhan) isLlmQuotaError 以訊息關鍵字分類:429/quota 類錯誤需回專屬錯誤碼供前端顯示額度提示
     const mockChatService = buildMockChatService(
       new Error("Gemini quota exceeded: secret internal detail"),
     );
@@ -105,6 +105,49 @@ describe("ParagraphDraftService", () => {
     await expect(
       service.generateParagraphDraft(baseInput),
     ).rejects.toMatchObject({ code: API_ERRORS.IS_LLM_OUTPUT_INVALID.code });
+  });
+});
+
+describe("ParagraphDraftService revision mode (#55)", () => {
+  it("should build a minimal-change revision prompt with original content and instruction", async () => {
+    const generateRaw = jest
+      .fn<(prompt: string) => Promise<string>>()
+      .mockResolvedValue(
+        JSON.stringify({
+          content: "修訂後的段落內文。",
+          citedFacts: ["外購電力: 1,300,000 度"],
+        }),
+      );
+    const mockChatService = { generateRaw } as unknown as ChatService;
+    const service = new ParagraphDraftService(mockChatService);
+
+    const draft = await service.generateParagraphDraft({
+      ...baseInput,
+      existingContent: "既有段落原文。",
+      instruction: "依新版帳單更新用電量描述",
+      contextFacts: [{ label: "外購電力", value: "1,300,000 度" }],
+    });
+
+    expect(draft.content).toBe("修訂後的段落內文。");
+    // Info: (20260716 - Tzuhan) 修訂 prompt 必含:原文、指示、最小變更規則、禁止無佐證新數字
+    const prompt = generateRaw.mock.calls[0]?.[0] ?? "";
+    expect(prompt).toContain("既有段落原文。");
+    expect(prompt).toContain("依新版帳單更新用電量描述");
+    expect(prompt).toContain("最小變更");
+    expect(prompt).toContain("嚴禁引入無佐證的新數字");
+  });
+
+  it("should keep whitelist adjudication in revision mode", async () => {
+    const mockChatService = buildMockChatService("{}");
+    const service = new ParagraphDraftService(mockChatService);
+    await expect(
+      service.generateParagraphDraft({
+        ...baseInput,
+        paragraphId: "fabricated-section",
+        existingContent: "原文",
+        instruction: "改一下",
+      }),
+    ).rejects.toMatchObject({ code: API_ERRORS.VL_SCHEMA_ERROR.code });
   });
 });
 

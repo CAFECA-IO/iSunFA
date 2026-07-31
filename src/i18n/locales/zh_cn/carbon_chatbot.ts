@@ -1,6 +1,9 @@
 export const carbonChatbot = {
   title: "碳盘查机器人",
   menu_title: "智能温盘",
+  // Info: (20260730 - Tzuhan) 未解鎖時的報告區文案:不可讓大綱骨架看起來像已載入的空報告
+  report_locked_hint:
+    "报告内容以设备密钥端对端加密。完成一次验证即可解锁并载入这份报告。",
   unlock_button: "开始加密对话",
   unlock_hint:
     "为保护您的盘查内容，本对话将以设备的安全密钥进行端到端加密。点击开始并完成一次验证即可解锁并取得 AI 招呼。",
@@ -11,6 +14,19 @@ export const carbonChatbot = {
   today: "今日",
   history: "历史对话",
   new_chat: "新增对话",
+  new_chat_personal: "个人会话(端对端加密)",
+  rename_session: "重命名对话",
+  rename_document: "重命名报告文件名",
+  read_only: "只读(账本查看权限)",
+  // Info: (20260730 - Tzuhan) 語意去重:自己的帳本會話已列於上方歷史對話(帶帳本 chip),此區塊僅為其他成員的報告入口
+  book_reports_title: "团队成员的报告",
+  book_no_sessions: "此账本尚无碳盘查报告",
+  book_session_own: "我的盘查会话({{date}})",
+  book_session_member: "成员盘查报告({{date}})",
+  book_report_viewer_title: "账本碳盘查报告",
+  book_report_editable: "可编辑(账本编辑权限)",
+  book_report_empty: "此会话尚未产生报告内容。",
+  book_chat_hidden_note: "聊天记录为个人端对端加密,仅报告对账本成员共享",
   ai_thinking: "AI 思考中...",
   input_placeholder: "输入您的问题或回复...",
   report_progress: "报告产出进度",
@@ -26,6 +42,28 @@ export const carbonChatbot = {
   ghg_protocol: "GHG Protocol 报告",
   scope_analysis: "范畴一、二、三分析",
   reduction_pathway: "减碳路径模拟",
+  // Info: (20260730 - Tzuhan) gateway 连线中断(504)时的提示:工作仍在跑,结果会经订阅通道补上
+  still_processing:
+    "处理时间较长,连线已先中断,但作业仍在进行中,完成的段落会自动出现。",
+  // Info: (20260730 - Tzuhan) 段落來源標示:AI 草稿不得冒充逐字照抄原文(審計文件底線)
+  origin_imported: "逐字导入",
+  origin_ai_draft: "AI 草稿",
+  origin_imported_short: "原文",
+  origin_ai_draft_short: "草稿",
+  // Info: (20260730 - Tzuhan) 兩階段匯入的第一階段提示:一次索引換來後續 11 章不必各自重送整份文件
+  import_indexing:
+    "正在建立 {{name}} 的章节索引(定位各节页码,可大幅减少后续解析量)…",
+  // Info: (20260730 - Tzuhan) 結構圖:節點文字必須能在該段原文找到才會繪製,故文案明示來源
+  diagram_generate: "生成结构图(节点取自本节原文)",
+  // Info: (20260730 - Tzuhan) 封存為軟刪:文案明示資料保留可還原,避免使用者誤以為永久刪除
+  archive_session: "封存此对话(资料保留,可还原)",
+  archive_confirm: "再点一次确认封存",
+  // Info: (20260730 - Tzuhan) 已封存區塊:空清單也需文案,否則分不清「沒有封存」與「載入失敗」
+  archived_sessions: "已封存",
+  archived_loading: "加载中…",
+  archived_empty: "没有已封存的对话",
+  archived_at: "封存于 {{date}}",
+  restore_session: "还原此对话",
   system_error: "【系统错误】抱歉，连线到碳会计师服务时发生问题，请稍后再试。",
   system_unavailable: "抱歉，系统目前无法回应。",
   ai_quota_exceeded:
@@ -55,6 +93,7 @@ export const carbonChatbot = {
   new_session_title: "新的盘查对话",
   save_saving: "保存中...",
   save_saved: "已保存",
+  save_local: "已暂存于本机,解锁加密对话后将自动保存至云端",
   save_local_hint: "报告草稿已加密保存至云端",
   save_failed: "保存失败",
   save_failed_hint:
@@ -75,12 +114,49 @@ export const carbonChatbot = {
   draft_generating_section: "「{{section}}」草稿生成中，完成后将写入报告…",
   draft_failed:
     "【草稿生成失败】「{{section}}」段落草稿生成时发生问题，请稍后再试。",
+  revision_title: "修订建议:{{section}}",
+  revision_original: "原文",
+  revision_revised: "修订后",
+  revision_cited_facts: "引用事实",
+  revision_apply: "应用修订",
+  revision_discard: "舍弃",
+  revision_generating: "「{{section}}」修订建议生成中…",
+  revision_failed: "【修订失败】无法生成修订建议,请稍后再试。",
+  import_button: "导入报告",
+  import_title: "导入报告:{{name}}",
+  import_overwrite_warning: "将覆盖既有内容",
+  import_drafting_sections:
+    "「{{name}}」缺漏小节 AI 草稿补齐中(第 {{current}}/{{total}} 批,依据上传文件撰写)…",
+  import_draft_badge: "AI 草稿",
+  import_unmapped: "无法对应大纲的内容({{count}} 段,不会导入,可于对话中处理)",
+  import_reset_note:
+    "导入段落的核对状态将重置;{{activities}} 笔活动数据将入账并重新核对",
+  import_apply: "导入勾选({{count}})",
+  import_parsing: "「{{name}}」解析中,完成后将显示逐段预览…",
+  import_parsing_chapter:
+    "「{{name}}」逐章解析中(已完成 {{current}}/{{total}} 章,并行处理),完整报告约需数分钟…",
+  import_failed_chapters: "以下章节解析失败,可稍后重新导入补齐:{{chapters}}",
+  import_retry_failed: "重试失败章节",
+  import_empty: "【导入失败】文件中没有可对应到大纲的内容。",
+  import_failed: "【导入失败】报告解析发生问题,请稍后再试。",
+  attachments_processing:
+    "附件解析中(提取事实与生成草稿),大型文件可能需要一至两分钟…",
+  import_suggest:
+    "「{{name}}」看起来是整份报告。要导入为报告起点,还是作为佐证附件?",
+  import_suggest_import: "导入报告",
+  import_suggest_attach: "作为附件发送",
+  // Info: (20260730 - Tzuhan) 連續未生成的節收成一列摘要;逐節整句佔位在 33 節全空時等於噪音
+  sections_pending_summary:
+    "以上 {{count}} 节尚未撰写。到对话中告诉碳会计师要写哪一节,内容会即时出现在对应位置。",
   section_placeholder:
     "本段尚未生成。回到左侧对话告诉碳会计师你想撰写这一段，内容将实时出现在这里。",
   report_status_draft:
     "报告状态：草稿(内容由 AI 逐段生成，经人工查核后方可定稿)",
   report_button: "报告",
   close_report: "关闭报告",
+  // Info: (20260730 - Tzuhan) 聊天面板放大/縮小(浮層 ↔ 右側 dock);行動版兩態皆全螢幕故不顯示
+  panel_maximize: "放大为侧栏",
+  panel_restore: "缩小为浮动窗口",
   close_chat: "关闭聊天窗口",
   progress_collapse: "收起进度浮窗",
   activity_ledger_title: "活动数据台账",
@@ -93,6 +169,58 @@ export const carbonChatbot = {
   activity_co2e: "CO2e: {{value}} kg",
   activity_pending_factor: "⚠ 待补: 查无可靠系数或单位不符,不予推估",
   activity_total_co2e: "总排放量（已核对）",
+  articulation_passed: "质量守恒核对通过",
+  articulation_violation: "质量守恒违反：{{material}}",
+  articulation_equation:
+    "期初+采购-期末 = {{expected}} {{unit}}，账上消耗 = {{actual}} {{unit}}，缺口 = {{gap}} {{unit}}",
+  articulation_plausibility_warning: "数量超出合理量级，请确认：{{source}}",
+  report_table_detail_heading: "排放源明细",
+  report_table_col_source: "排放源",
+  report_table_col_scope: "范畴",
+  report_table_col_quantity: "活动数据",
+  report_table_col_factor: "排放系数（来源）",
+  report_table_col_co2e: "排放量 (kgCO2e)",
+  report_table_subtotal_heading: "范畴小计",
+  report_table_total: "总排放量",
+  report_table_insufficient:
+    "（数据不足，补齐活动数据后由系统自动生成数据表格）",
+  report_table_frozen:
+    "⚠ 质量守恒核对未通过，数据表格已冻结。请于对话中澄清库存缺口后，表格将自动生成。",
+  report_table_pending_note:
+    "注：尚有 {count} 笔活动数据待补系数，未计入下表。",
+  data_table_refreshed: "数据表格已随活动数据更新，请重新核对相关段落",
+  data_badge_reconciled: "数据段落：已核对 ✓（数字由确定性引擎产出）",
+  data_badge_violated: "数据段落：质量守恒违反 ⚠（表格已冻结，待澄清）",
+  data_badge_insufficient: "数据段落：数据不足（补齐活动数据后自动生成）",
+  chart_scope_pie_title: "各范畴排放占比 (kgCO2e)",
+  chart_scope_bar_title: "各范畴排放量 (kgCO2e)",
+  chart_insufficient: "（数据不足，补齐活动数据后由系统自动生成图表）",
+  chart_frozen:
+    "⚠ 质量守恒核对未通过，图表已冻结。请于对话中澄清库存缺口后，图表将自动生成。",
+  chart_sankey_chat_node: "凭证外的来源（对话/附件申报）",
+  book_bind_pending_unlock:
+    "账本会话已建立。请先解锁加密对话以完成账本绑定（导入凭证数据与证据链功能需绑定后才可用）",
+  book_bind_done: "账本绑定完成，可从活动数据卡导入凭证数据",
+  book_bind_denied: "账本绑定失败：需要该账本 Editor 以上的权限",
+  book_bind_failed: "账本绑定失败，请稍后再试",
+  book_records_import_button: "从账本导入凭证数据",
+  book_records_importing: "正在从账本导入已认列的凭证级碳排数据…",
+  book_records_imported:
+    "已从账本导入 {{count}} 笔凭证级活动数据（重复者自动略过）",
+  book_records_imported_with_skips:
+    "已从账本导入 {{count}} 笔；{{skipped}} 笔因无法判定 GHG 范畴而略过，请至 ESG 页补选范畴或活动类型",
+  book_records_import_failed: "从账本导入失败，请稍后再试",
+  activity_open_evidence: "查看凭证 ↗",
+  evidence_chain_title: "排放证据链（点击逐层展开，最细至单一凭证）",
+  evidence_chain_loading: "正在加载账本凭证数据…",
+  evidence_chain_empty: "此账本尚无已认列的碳排数据",
+  evidence_chain_error: "凭证数据加载失败（请确认账本查看权限）",
+  evidence_chain_records: "{{count}} 笔凭证",
+  evidence_chain_formula:
+    "{{quantity}} {{unit}} × {{factor}} = {{co2e}} kgCO2e",
+  evidence_chain_total: "总排放量",
+  evidence_chain_verified: "已验证",
+  evidence_chain_unverified: "未验证",
   inventory_step_ORG_PROFILE: "步骤: 企业基本资料（名称／年度）",
   inventory_step_ORG_BOUNDARY: "步骤: 组织边界设定",
   inventory_step_EMISSION_SOURCES: "步骤: 排放源识别",

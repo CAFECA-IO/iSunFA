@@ -1,7 +1,8 @@
-// Info: (20260716 - Emily) 盤查狀態帳本服務(#6518): 讀寫協調 + 錯誤包裝(比照 CarbonReportDraftService)
-// Info: (20260716 - Emily) 狀態為 E2EE 密文，本服務不接觸明文；merge 與狀態機在前端(lib/carbon_inventory)執行
+// Info: (20260716 - Tzuhan) 盤查狀態帳本服務(#6518): 讀寫協調 + 錯誤包裝(比照 CarbonReportDraftService)
+// Info: (20260716 - Tzuhan) 狀態為 E2EE 密文，本服務不接觸明文；merge 與狀態機在前端(lib/carbon_inventory)執行
 
 import { logger } from "@/lib/utils/logger";
+import { describeError } from "@/lib/utils/error_message";
 import {
   carbonInventoryStateRepo,
   CarbonInventoryStateRepository,
@@ -11,12 +12,14 @@ import { CARBON_CHAT_PURPOSE } from "@/constants/carbon_chatbot";
 import { CarbonInventoryStatePutPayload } from "@/validators";
 
 export interface IInventoryStateRecord {
+  // Info: (20260716 - Tzuhan) #52 雙模式回傳:個人會話 envelope 有值、帳本會話 plainContent 有值
   envelope: {
     encryptedContent: string;
     ephemeralPublicKey: string | null;
     keyDerivationHint: string;
     algorithm: string;
-  };
+  } | null;
+  plainContent: string | null;
   version: number;
   updatedAt: Date;
 }
@@ -33,18 +36,22 @@ export class CarbonInventoryStateService {
       const record = await this.repo.findByChannel(channel);
       if (!record) return null;
       return {
-        envelope: {
-          encryptedContent: record.encryptedContent,
-          ephemeralPublicKey: record.ephemeralPublicKey,
-          keyDerivationHint: record.keyDerivationHint,
-          algorithm: record.algorithm,
-        },
+        envelope:
+          record.encryptedContent && record.keyDerivationHint
+            ? {
+                encryptedContent: record.encryptedContent,
+                ephemeralPublicKey: record.ephemeralPublicKey,
+                keyDerivationHint: record.keyDerivationHint,
+                algorithm: record.algorithm,
+              }
+            : null,
+        plainContent: record.plainContent ?? null,
         version: record.version,
         updatedAt: record.updatedAt,
       };
     } catch (error) {
       logger.error(
-        `[CarbonInventoryStateService] getState failed: ${JSON.stringify(error)}`,
+        `[CarbonInventoryStateService] getState failed: ${describeError(error)}`,
       );
       throw new ApiError(
         API_ERRORS.IS_DB_FAILED.code,
@@ -63,15 +70,17 @@ export class CarbonInventoryStateService {
         channel: payload.channel,
         purpose: CARBON_CHAT_PURPOSE,
         recipientPublicKey: payload.recipientPublicKey,
-        encryptedContent: payload.envelope.encryptedContent,
-        ephemeralPublicKey: payload.envelope.ephemeralPublicKey ?? null,
-        keyDerivationHint: payload.envelope.keyDerivationHint,
-        algorithm: payload.envelope.algorithm,
+        encryptedContent: payload.envelope?.encryptedContent ?? null,
+        plainContent: payload.plainContent ?? null,
+        ephemeralPublicKey: payload.envelope?.ephemeralPublicKey ?? null,
+        keyDerivationHint: payload.envelope?.keyDerivationHint ?? null,
+        // Info: (20260716 - Tzuhan) #52 帳本模式無 ECIES envelope,algorithm 僅個人模式有意義
+        algorithm: payload.envelope?.algorithm ?? "NONE",
         expectedVersion: payload.version,
       });
     } catch (error) {
       logger.error(
-        `[CarbonInventoryStateService] saveState failed: ${JSON.stringify(error)}`,
+        `[CarbonInventoryStateService] saveState failed: ${describeError(error)}`,
       );
       throw new ApiError(
         API_ERRORS.IS_DB_FAILED.code,
@@ -80,7 +89,7 @@ export class CarbonInventoryStateService {
       );
     }
 
-    // Info: (20260716 - Emily) 樂觀鎖衝突: 他端已更新，呼叫端須重新載入(不 silent overwrite)
+    // Info: (20260716 - Tzuhan) 樂觀鎖衝突: 他端已更新，呼叫端須重新載入(不 silent overwrite)
     if (!saved) {
       throw new ApiError(
         API_ERRORS.VL_DRAFT_VERSION_CONFLICT.code,
