@@ -89,6 +89,20 @@ export const LOGISTICS_PDF_REQUEST_BATCH_SIZE = 8;
 export const CARBON_MAP_CAPTURE_TIMEOUT_MS = 6_000;
 
 /**
+ * Info: (20260731 - Tzuhan) 地圖在報告中的顯示寬度(CSS 像素基準)。
+ * 比例尺的長度是「距離 ÷ 每像素公尺數」,而那個像素數指的是**顯示尺寸**而非原始影像尺寸,
+ * 所以必須有一個共同基準。A4 內容區寬約 190mm,以 96dpi 換算約 718px;
+ * 逐段小圖為兩欄,各約一半。這個值只影響比例尺線段的相對長度,不影響影像本身。
+ */
+export const LOGISTICS_PDF_MAP_RENDER_WIDTH_PX = 718;
+
+/**
+ * Info: (20260731 - Tzuhan) 逐段小圖的顯示寬度:兩欄版面,扣掉 3mm 間距後約一半。
+ * 必須與全程圖分開,否則比例尺的線段長度會差一倍 —— 而長度錯的比例尺等於錯的證據。
+ */
+export const LOGISTICS_PDF_LEG_MAP_RENDER_WIDTH_PX = 348;
+
+/**
  * Info: (20260731 - Tzuhan) 只接受 JPEG/PNG 的 data URL 作為地圖影像:
  * 這個字串會被放進 HTML 的 img src 交給 Chrome,必須先把 javascript: 之類的協定擋在門外。
  */

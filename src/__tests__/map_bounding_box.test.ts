@@ -4,6 +4,7 @@
 
 import { describe, it, expect } from "@jest/globals";
 import { getMapBoundingBox } from "@/lib/utils/map_bounding_box";
+import { buildScaleBar, haversineMeters } from "@/lib/utils/map_scale_bar";
 
 describe("getMapBoundingBox", () => {
   it("一般路線取實際範圍", () => {
@@ -75,5 +76,52 @@ describe("getMapBoundingBox", () => {
     expect(
       getMapBoundingBox({ type: "FeatureCollection", features: [] }),
     ).toBeNull();
+  });
+});
+
+// Info: (20260731 - Tzuhan) 比例尺:報告需要它才能作為證據 —— 沒有比例尺,讀者無法判斷
+// Info: (20260731 - Tzuhan) 圖上那條線是 5 公里還是 500 公里,也就無法回頭驗證距離欄的數字。
+describe("buildScaleBar", () => {
+  it("取 1/2/5 × 10^n 的整數距離(比例尺要能心算)", () => {
+    // Info: (20260731 - Tzuhan) 348px 寬、每像素 30m → 目標約 2,610m → 應取 2 km
+    const bar = buildScaleBar(30, 348);
+    expect(bar?.label).toBe("2 km");
+    // Info: (20260731 - Tzuhan) 2000m / 30 = 66.7px
+    expect(bar?.widthPx).toBe(67);
+  });
+
+  it("小尺度改用公尺", () => {
+    // Info: (20260731 - Tzuhan) 348px × 0.25 × 0.5m = 43.5m 目標 → 取不超過的最大好數字 20m
+    expect(buildScaleBar(0.5, 348)?.label).toBe("20 m");
+  });
+
+  it("大尺度取到百公里級", () => {
+    expect(buildScaleBar(2000, 718)?.label).toBe("200 km");
+  });
+
+  it("比例尺長度不超過圖寬(否則會蓋住路線)", () => {
+    [0.2, 1, 30, 500, 5000].forEach((mpp) => {
+      const bar = buildScaleBar(mpp, 718);
+      expect(bar).not.toBeNull();
+      expect((bar as { widthPx: number }).widthPx).toBeLessThanOrEqual(718);
+    });
+  });
+
+  it("無效的每像素公尺數一律不畫(錯的比例尺比沒有更糟)", () => {
+    expect(buildScaleBar(undefined, 718)).toBeNull();
+    expect(buildScaleBar(0, 718)).toBeNull();
+    expect(buildScaleBar(-5, 718)).toBeNull();
+    expect(buildScaleBar(Number.NaN, 718)).toBeNull();
+    expect(buildScaleBar(30, 0)).toBeNull();
+  });
+});
+
+describe("haversineMeters", () => {
+  it("赤道上一度約 111 公里", () => {
+    expect(haversineMeters(0, 0, 0, 1) / 1000).toBeCloseTo(111.2, 0);
+  });
+
+  it("同一點為零", () => {
+    expect(haversineMeters(25.03, 121.56, 25.03, 121.56)).toBe(0);
   });
 });

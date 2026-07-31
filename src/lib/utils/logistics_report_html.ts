@@ -8,8 +8,11 @@ import {
   EMISSION_FACTORS,
   EMISSION_FACTOR_SOURCES,
 } from "@/constants/logistics";
+import { buildScaleBar } from "@/lib/utils/map_scale_bar";
 import {
   LOGISTICS_PDF_FONT_STACK,
+  LOGISTICS_PDF_LEG_MAP_RENDER_WIDTH_PX,
+  LOGISTICS_PDF_MAP_RENDER_WIDTH_PX,
   LOGISTICS_PDF_MAP_DATA_URL_PATTERN,
   LOGISTICS_PDF_MAP_MAX_BYTES,
 } from "@/constants/logistics_pdf";
@@ -32,6 +35,13 @@ export interface IReportLeg {
   /** Info: (20260731 - Tzuhan) 與 ITransportSegment 一致以字串傳遞:Decimal 的字串形式不可轉 number */
   co2eKg?: string;
   isFallback?: boolean;
+  /**
+   * Info: (20260731 - Tzuhan) 該段的路徑圖(JPEG data URL)。實測回報:只有一張總圖時,
+   * 市區→機場、機場→市區的接駁段完全看不到路徑,報告無法作為那兩段的證據。
+   */
+  mapImageDataUrl?: string;
+  /** Info: (20260731 - Tzuhan) 該段地圖的每像素公尺數,用於決定性地畫出比例尺 */
+  metersPerPixel?: number;
 }
 
 export interface ILogisticsReportHtmlInput {
@@ -48,6 +58,8 @@ export interface ILogisticsReportHtmlInput {
   planTotalCo2e?: string;
   /** Info: (20260731 - Tzuhan) 地圖影像 data URL(JPEG/PNG);過大或格式不符即略過並揭露 */
   mapImageDataUrl?: string;
+  /** Info: (20260731 - Tzuhan) 總圖的每像素公尺數(比例尺用) */
+  metersPerPixel?: number;
   exportId?: string;
   generatedAt: string;
 }
@@ -110,6 +122,49 @@ const coordText = (lat?: number, lng?: number): string =>
     ? ""
     : `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 
+interface IMapFigureInput {
+  dataUrl?: string;
+  metersPerPixel?: number;
+  caption: string;
+  compact?: boolean;
+}
+
+/**
+ * Info: (20260731 - Tzuhan) 單張地圖圖框:影像 + 比例尺 + 圖說。
+ *
+ * 三個立場:
+ * 1. 圖不裁切(CSS `object-fit: contain`)—— 被裁掉的往往正是路線端點,那就不成證據了。
+ * 2. 有比例尺才畫,沒有就不畫;**絕不畫一條猜出來的比例尺**(錯的比例尺會讓讀者
+ *    以為自己驗證過距離,比沒有更糟)。
+ * 3. 缺圖時仍輸出圖說與原因,讀者要能分辨「沒有圖」與「沒有這一段」。
+ */
+export function renderMapFigure(input: IMapFigureInput): string {
+  const resolved = resolveMapImage(input.dataUrl);
+  const cls = input.compact ? "figure compact" : "figure";
+  if (!resolved.src) {
+    const reason =
+      resolved.reason === "too_large"
+        ? "地圖影像超過體積上限,已略過"
+        : resolved.reason === "invalid_format"
+          ? "地圖影像格式不受支援,已略過"
+          : "本段未附路徑圖";
+    return `<figure class="${cls}"><p class="note">${reason}(數值不受影響)</p><figcaption>${input.caption}</figcaption></figure>`;
+  }
+
+  // Info: (20260731 - Tzuhan) 逐段小圖是兩欄版面,顯示寬度只有一半;用錯基準會讓比例尺長度差一倍
+  const renderWidthPx = input.compact
+    ? LOGISTICS_PDF_LEG_MAP_RENDER_WIDTH_PX
+    : LOGISTICS_PDF_MAP_RENDER_WIDTH_PX;
+  const scale = buildScaleBar(input.metersPerPixel, renderWidthPx);
+  const scaleBlock = scale
+    ? `<div class="scalebar">${scale.label}<span class="bar" style="width:${(
+        (scale.widthPx / renderWidthPx) *
+        100
+      ).toFixed(1)}%"></span></div>`
+    : "";
+  return `<figure class="${cls}"><img class="map" src="${resolved.src}" alt="${input.caption}" />${scaleBlock}<figcaption>${input.caption}</figcaption></figure>`;
+}
+
 /**
  * Info: (20260731 - Tzuhan) 組出單一方案的 A4 列印 HTML。
  * 版面刻意不照抄螢幕:螢幕版是可捲動的卡片牆,列印版需要固定表頭與分頁友善的表格。
@@ -118,8 +173,6 @@ const coordText = (lat?: number, lng?: number): string =>
 export function buildLogisticsReportHtml(
   input: ILogisticsReportHtmlInput,
 ): string {
-  const map = resolveMapImage(input.mapImageDataUrl);
-
   const legRows = input.legs
     .map((leg, index) => {
       const from = escapeHtml(leg.fromName);
@@ -145,15 +198,27 @@ export function buildLogisticsReportHtml(
     .map((source) => escapeHtml(source))
     .join(" · ");
 
-  const mapBlock = map.src
-    ? `<img class="map" src="${map.src}" alt="route map" />`
-    : `<p class="note">${
-        map.reason === "too_large"
-          ? "地圖影像超過體積上限,已略過(報告數值不受影響)"
-          : map.reason === "invalid_format"
-            ? "地圖影像格式不受支援,已略過(報告數值不受影響)"
-            : "本報告未附地圖"
-      }</p>`;
+  const mapBlock = renderMapFigure({
+    dataUrl: input.mapImageDataUrl,
+    metersPerPixel: input.metersPerPixel,
+    caption: `${escapeHtml(input.originLabel)} → ${escapeHtml(input.destLabel)}(全程)`,
+  });
+
+  /**
+   * Info: (20260731 - Tzuhan) 逐段路徑圖。實測回報:只有一張全程圖時,
+   * 市區→機場、機場→市區的接駁段在圖上看不到,報告就無法作為那兩段的證據。
+   * 缺圖的段仍列出標題與說明,不靜默跳過 —— 讀者要知道是「沒有圖」而不是「沒有這段」。
+   */
+  const legFigures = input.legs
+    .map((leg, index) =>
+      renderMapFigure({
+        dataUrl: leg.mapImageDataUrl,
+        metersPerPixel: leg.metersPerPixel,
+        caption: `${index + 1}. ${escapeHtml(leg.fromName)} → ${escapeHtml(leg.toName)}(${leg.mode})`,
+        compact: true,
+      }),
+    )
+    .join("\n");
 
   return `<!DOCTYPE html>
 <html lang="zh-Hant">
@@ -170,7 +235,16 @@ export function buildLogisticsReportHtml(
   .card { flex: 1; border: 0.3mm solid #e2e8f0; border-radius: 1.5mm; padding: 3mm; }
   .card .label { font-size: 8pt; color: #64748b; }
   .card .value { font-size: 13pt; font-weight: 700; }
-  .map { width: 100%; max-height: 70mm; object-fit: cover; border: 0.3mm solid #e2e8f0; border-radius: 1.5mm; }
+  /* Info: (20260731 - Tzuhan) contain 而非 cover:cover 會裁掉圖的邊緣,而被裁掉的正是路線端點,
+     實測回報「路線圖被裁掉不完整,無法成為證據」即此。寧可留白也不可裁切證據。 */
+  .map { width: 100%; max-height: 70mm; object-fit: contain; background: #f8fafc; border: 0.3mm solid #e2e8f0; border-radius: 1.5mm; }
+  .figure { position: relative; margin: 0 0 3mm; break-inside: avoid; }
+  .figure figcaption { font-size: 7.5pt; color: #64748b; margin-top: 1mm; }
+  .figure.compact .map { max-height: 46mm; }
+  .scalebar { position: absolute; bottom: 4mm; left: 2.5mm; background: rgba(255,255,255,0.88); border: 0.2mm solid #cbd5e1; border-radius: 0.8mm; padding: 0.6mm 1.2mm; font-size: 6.5pt; color: #334155; line-height: 1.1; }
+  .scalebar .bar { display: block; height: 0.8mm; border: 0.2mm solid #334155; border-top: none; }
+  .section { font-size: 10pt; margin: 5mm 0 2mm; padding-top: 2mm; border-top: 0.2mm solid #e2e8f0; }
+  .legmaps { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; }
   table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
   thead { display: table-header-group; }
   th { text-align: left; background: #f8fafc; border-bottom: 0.4mm solid #cbd5e1; padding: 1.6mm 1.2mm; font-size: 8pt; color: #475569; }
@@ -219,6 +293,10 @@ ${legRows}
     </tbody>
   </table>
   <p class="total">Total ${formatNumber(input.planTotalCo2e)} kg CO2e</p>
+  <h2 class="section">逐段路徑圖</h2>
+  <div class="legmaps">
+${legFigures}
+  </div>
   <div class="formula">
     Leg CO2e = Distance × (Weight / 1000) × Factor ·
     Factors (kg CO2e/t-km): LAND ${EMISSION_FACTORS.LAND} | SEA ${EMISSION_FACTORS.SEA} | AIR ${EMISSION_FACTORS.AIR} ·

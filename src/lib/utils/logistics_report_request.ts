@@ -49,8 +49,20 @@ export interface IBuildReportItemInput {
   planKey: ILogisticsPlanKey;
   /** Info: (20260731 - Tzuhan) 批次參數的重量,僅在該筆結果自身缺漏時使用(issue 08 的同一條規則) */
   fallbackWeightKg: number | string;
-  /** Info: (20260731 - Tzuhan) 前端截下的地圖 JPEG data URL;無地圖時報告仍成立 */
+  /** Info: (20260731 - Tzuhan) 前端截下的全程地圖 JPEG data URL;無地圖時報告仍成立 */
   mapImageDataUrl?: string;
+  /** Info: (20260731 - Tzuhan) 全程圖的每像素公尺數(比例尺用) */
+  metersPerPixel?: number;
+  /**
+   * Info: (20260731 - Tzuhan) 逐段路徑圖,索引對齊 buildPlanLegs 的順序。
+   * 只有全程圖時,市區→機場、機場→市區的接駁段在圖上看不到,那兩段就沒有證據。
+   */
+  legCaptures?: (ILegCapture | null)[];
+}
+
+export interface ILegCapture {
+  dataUrl: string;
+  metersPerPixel: number;
 }
 
 /**
@@ -61,15 +73,22 @@ export interface IBuildReportItemInput {
 export function buildReportPdfItem(
   input: IBuildReportItemInput,
 ): ILogisticsReportPdfItem | null {
-  const { item, routeIndex, planKey, fallbackWeightKg, mapImageDataUrl } =
-    input;
+  const {
+    item,
+    routeIndex,
+    planKey,
+    fallbackWeightKg,
+    mapImageDataUrl,
+    metersPerPixel,
+    legCaptures,
+  } = input;
   const legs = buildPlanLegs(item, planKey);
   if (legs.length === 0) return null;
 
   const originLabel = getLocationLabel(item.origin);
   const destLabel = getLocationLabel(item.dest);
 
-  const reportLegs: IReportLeg[] = legs.map((leg) => ({
+  const reportLegs: IReportLeg[] = legs.map((leg, legIndex) => ({
     mode: leg.mode,
     fromName: leg.fromName,
     toName: leg.toName,
@@ -80,6 +99,8 @@ export function buildReportPdfItem(
     distanceKm: leg.segment?.distanceKm,
     co2eKg: leg.segment?.co2eKg,
     isFallback: leg.segment?.isFallback,
+    mapImageDataUrl: legCaptures?.[legIndex]?.dataUrl,
+    metersPerPixel: legCaptures?.[legIndex]?.metersPerPixel,
   }));
 
   return {
@@ -94,6 +115,7 @@ export function buildReportPdfItem(
     planTotalCo2e: getPlanTotalCo2e(item, planKey),
     legs: reportLegs,
     mapImageDataUrl,
+    metersPerPixel,
   };
 }
 
@@ -104,8 +126,16 @@ export interface IBuildReportRequestInput {
   /** Info: (20260731 - Tzuhan) 使用者勾選的方案 */
   selectedPlans: Set<string>;
   fallbackWeightKg: number | string;
-  /** Info: (20260731 - Tzuhan) 逐 (路線, 方案) 取得的地圖影像;缺項即該份不附地圖 */
-  mapImages?: Map<string, string>;
+  /**
+   * Info: (20260731 - Tzuhan) 逐 (路線, 方案) 取得的地圖素材(全程圖 + 逐段圖);
+   * 缺項即該份不附地圖,報告仍成立並在圖說處明示。
+   */
+  mapCaptures?: Map<string, IPlanMapCapture>;
+}
+
+export interface IPlanMapCapture {
+  overview?: ILegCapture | null;
+  legs?: (ILegCapture | null)[];
 }
 
 /**
@@ -124,14 +154,17 @@ export function buildReportPdfItems(
     EXPORT_PLAN_ORDER.forEach((planKey) => {
       if (!input.selectedPlans.has(planKey)) return;
       if (!applicability[planKey]) return;
+      const captured = input.mapCaptures?.get(
+        buildMapImageKey(routeIndex, planKey),
+      );
       const built = buildReportPdfItem({
         item,
         routeIndex,
         planKey,
         fallbackWeightKg: input.fallbackWeightKg,
-        mapImageDataUrl: input.mapImages?.get(
-          buildMapImageKey(routeIndex, planKey),
-        ),
+        mapImageDataUrl: captured?.overview?.dataUrl,
+        metersPerPixel: captured?.overview?.metersPerPixel,
+        legCaptures: captured?.legs,
       });
       if (built) items.push(built);
     });

@@ -23,6 +23,13 @@ const LegSchema = z.object({
   distanceKm: z.number().nonnegative().optional(),
   co2eKg: z.string().max(32).optional(),
   isFallback: z.boolean().optional(),
+  // Info: (20260731 - Tzuhan) 逐段路徑圖:只有全程圖時接駁段看不到路徑,報告不成證據
+  mapImageDataUrl: z
+    .string()
+    .regex(LOGISTICS_PDF_MAP_DATA_URL_PATTERN)
+    .optional(),
+  // Info: (20260731 - Tzuhan) 每像素公尺數(比例尺用);非正數即不畫比例尺,不猜
+  metersPerPixel: z.number().positive().optional(),
 });
 
 const ReportSchema = z.object({
@@ -40,6 +47,7 @@ const ReportSchema = z.object({
     .string()
     .regex(LOGISTICS_PDF_MAP_DATA_URL_PATTERN)
     .optional(),
+  metersPerPixel: z.number().positive().optional(),
 });
 
 export const LogisticsReportPdfRequestSchema = z.object({

@@ -15,6 +15,14 @@ import type { FeatureCollection, Feature, Geometry } from "geojson";
 import { useTranslation } from "@/i18n/i18n_context";
 // Info: (20260731 - Tzuhan) bbox 計算抽到純模組:它是幾何運算而非 UI,且跨換日線的修正需要單元測試
 import { getMapBoundingBox as getBoundingBox } from "@/lib/utils/map_bounding_box";
+import { haversineMeters } from "@/lib/utils/map_scale_bar";
+
+/**
+ * Info: (20260731 - Tzuhan) 等待地圖 idle 的上限。
+ * 圖磚可能因網路而遲遲不到,逾時就截當下畫面 —— 一張略糊的圖仍是證據,
+ * 卡住的匯出什麼都不是(批次 27 份時這個差別是分鐘級的)。
+ */
+const MAP_IDLE_TIMEOUT_MS = 3_000;
 
 export interface IMapViewerProps {
   // Info: (20260430 - Tzuhan) 支援多式聯運的 FeatureCollection 或是單一軌跡
@@ -33,8 +41,28 @@ export interface IMapViewerProps {
   duration?: number; // Info: (20260501 - Luphia) 飛梭動畫時長
 }
 
+/**
+ * Info: (20260731 - Tzuhan) 單張地圖的截圖結果。
+ * metersPerPixel 由 bounds 與畫布寬度實算而非由 zoom 推導 —— 報告的比例尺必須對得上實際畫面。
+ */
+export interface IMapCapture {
+  dataUrl: string;
+  metersPerPixel: number;
+}
+
 export interface IMapViewerRef {
   captureMap: () => Promise<string | null>;
+  /**
+   * Info: (20260731 - Tzuhan) 截取「聚焦於某段幾何」的圖(issue 08 實測回報:缺接駁段路徑圖)。
+   *
+   * 以命令式而非改 prop 實作,是為了在**同一個 WebGL context** 內連續產出多張圖:
+   * 每段各掛一個 MapViewer 會撞瀏覽器的同時 context 上限
+   * (plan_section.tsx 當年就是為此移除逐段縮圖 —— 註解仍在)。
+   * 截完會還原原本的視野,避免影響後續的全程圖。
+   */
+  captureGeometry: (
+    geometry: GeoJSON.Geometry | null,
+  ) => Promise<IMapCapture | null>;
 }
 
 function getStartAndEndCoordinates(
@@ -129,8 +157,59 @@ const MapViewerBase = (
           map.triggerRepaint();
         });
       },
+
+      captureGeometry: async (geometry) => {
+        if (!mapRef.current || !geometry) return null;
+        const map = mapRef.current.getMap();
+        const bbox = getBoundingBox(geometry);
+        if (!bbox) return null;
+
+        // Info: (20260731 - Tzuhan) 記下原視野,截完還原,才不會污染後續的全程圖
+        const previousCenter = map.getCenter();
+        const previousZoom = map.getZoom();
+        map.fitBounds(bbox, {
+          padding: fitBoundsPadding,
+          duration: 0,
+          maxZoom: 14,
+          essential: true,
+        });
+
+        // Info: (20260731 - Tzuhan) 等 idle(圖磚載入且繪製完成)才截,否則會拍到半張灰底
+        await new Promise<void>((resolve) => {
+          const timer = setTimeout(resolve, MAP_IDLE_TIMEOUT_MS);
+          map.once("idle", () => {
+            clearTimeout(timer);
+            resolve();
+          });
+        });
+
+        let capture: IMapCapture | null = null;
+        try {
+          const canvas = map.getCanvas();
+          // Info: (20260731 - Tzuhan) 以實際 bounds 與畫布寬度算每像素公尺數,不由 zoom 反推
+          const bounds = map.getBounds();
+          const centerLat = bounds.getCenter().lat;
+          const spanMeters =
+            haversineMeters(
+              centerLat,
+              bounds.getWest(),
+              centerLat,
+              bounds.getEast(),
+            ) || 0;
+          const widthCssPx = canvas.clientWidth || canvas.width;
+          capture = {
+            dataUrl: canvas.toDataURL("image/jpeg", 0.8),
+            metersPerPixel: widthCssPx > 0 ? spanMeters / widthCssPx : 0,
+          };
+        } catch (e) {
+          console.error("Failed to capture leg map:", e);
+        }
+
+        map.jumpTo({ center: previousCenter, zoom: previousZoom });
+        return capture;
+      },
     }),
-    [],
+    [fitBoundsPadding],
   );
 
   useEffect(() => {

@@ -161,21 +161,64 @@ describe("buildReportPdfItems", () => {
     expect(items.map((i) => i.planCode)).toEqual(["R01-SEA"]);
   });
 
-  it("地圖影像按 (路線, 方案) 對應,不同方案不共用同一張圖", () => {
-    const maps = new Map([
-      [buildMapImageKey(0, "sea"), "data:image/jpeg;base64,AAAA"],
+  it("地圖素材按 (路線, 方案) 對應,不同方案不共用同一張圖", () => {
+    const captures = new Map([
+      [
+        buildMapImageKey(0, "sea"),
+        {
+          overview: {
+            dataUrl: "data:image/jpeg;base64,AAAA",
+            metersPerPixel: 120,
+          },
+          legs: [
+            { dataUrl: "data:image/jpeg;base64,BBBB", metersPerPixel: 30 },
+            null,
+            { dataUrl: "data:image/jpeg;base64,CCCC", metersPerPixel: 45 },
+          ],
+        },
+      ],
     ]);
     const items = buildReportPdfItems({
       results: [crossSeaItem],
       indices: [0],
       selectedPlans: new Set(["sea", "air"]),
       fallbackWeightKg: 1000,
-      mapImages: maps,
+      mapCaptures: captures,
     });
     const sea = items.find((i) => i.planCode === "R01-SEA");
     const air = items.find((i) => i.planCode === "R01-AIR");
     expect(sea?.mapImageDataUrl).toBe("data:image/jpeg;base64,AAAA");
+    expect(sea?.metersPerPixel).toBe(120);
     expect(air?.mapImageDataUrl).toBeUndefined();
+  });
+
+  it("逐段地圖依索引對應該段,缺圖的段留空而非位移", () => {
+    const captures = new Map([
+      [
+        buildMapImageKey(0, "sea"),
+        {
+          overview: null,
+          legs: [
+            { dataUrl: "data:image/jpeg;base64,BBBB", metersPerPixel: 30 },
+            null,
+            { dataUrl: "data:image/jpeg;base64,CCCC", metersPerPixel: 45 },
+          ],
+        },
+      ],
+    ]);
+    const items = buildReportPdfItems({
+      results: [crossSeaItem],
+      indices: [0],
+      selectedPlans: new Set(["sea"]),
+      fallbackWeightKg: 1000,
+      mapCaptures: captures,
+    });
+    const legs = items[0].legs;
+    // Info: (20260731 - Tzuhan) 中間那段缺圖時,第三段的圖不可被誤填到第二段
+    expect(legs[0].mapImageDataUrl).toBe("data:image/jpeg;base64,BBBB");
+    expect(legs[1].mapImageDataUrl).toBeUndefined();
+    expect(legs[2].mapImageDataUrl).toBe("data:image/jpeg;base64,CCCC");
+    expect(legs[2].metersPerPixel).toBe(45);
   });
 
   it("產出的載荷通過 API validator(前後端契約一致)", () => {

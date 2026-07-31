@@ -56,7 +56,10 @@ import {
   buildMapImageKey,
   buildReportPdfItem,
   buildReportPdfItems,
+  type ILegCapture,
+  type IPlanMapCapture,
 } from "@/lib/utils/logistics_report_request";
+import { buildPlanLegs } from "@/lib/utils/logistics_report";
 import { requestReportPdfs } from "@/lib/utils/logistics_report_client";
 import {
   CARBON_MAP_CAPTURE_TIMEOUT_MS,
@@ -536,6 +539,47 @@ function ReportPageContent() {
   }, [exportModalTarget, batchResults, routeApplicability]);
 
   /**
+   * Info: (20260731 - Tzuhan) 取一個方案的地圖素材:全程圖 + 逐段圖(issue 08)。
+   * 逐段圖在**同一個 map 實例**內以命令式 fitBounds 連續截取,不各掛一個 MapViewer ——
+   * 那會撞瀏覽器的同時 WebGL context 上限(plan_section.tsx 當年就是為此移除逐段縮圖)。
+   * 任一步失敗即該張缺圖,報告仍成立並在圖說處明示,絕不阻擋匯出。
+   */
+  const capturePlanMaps = async (
+    mapRef: React.RefObject<IMapViewerRef | null>,
+    item: IMileageBatchResult,
+    planKey: RouteType,
+  ): Promise<IPlanMapCapture> => {
+    const withTimeout = async <T,>(task: Promise<T>): Promise<T | null> =>
+      Promise.race([
+        task,
+        new Promise<null>((resolve) => {
+          setTimeout(() => resolve(null), CARBON_MAP_CAPTURE_TIMEOUT_MS);
+        }),
+      ]);
+
+    const overviewUrl = await withTimeout(
+      mapRef.current?.captureMap() ?? Promise.resolve(null),
+    );
+    // Info: (20260731 - Tzuhan) 全程圖沿用既有的 captureMap(無比例尺資訊),逐段圖才有實算的比例尺
+    const legs = buildPlanLegs(item, planKey);
+    const legCaptures: (ILegCapture | null)[] = [];
+    for (const leg of legs) {
+      const captured = await withTimeout(
+        mapRef.current?.captureGeometry(
+          (leg.segment?.geometry ?? null) as GeoJSON.Geometry | null,
+        ) ?? Promise.resolve(null),
+      );
+      legCaptures.push(captured ?? null);
+    }
+    return {
+      overview: overviewUrl
+        ? { dataUrl: overviewUrl, metersPerPixel: 0 }
+        : null,
+      legs: legCaptures,
+    };
+  };
+
+  /**
    * Info: (20260724 - Tzuhan) 批次匯出:每個 (路線, 方案) 組合渲染 → 截圖 → 獨立 PDF(需求二)
    * 單檔直接下載;多檔連同 summary.csv 打包 zip
    */
@@ -592,7 +636,7 @@ function ReportPageContent() {
       if (
         TRANSPORT_PDF_EXPORT_MODE === TransportPdfExportModeEnum.SERVER_VECTOR
       ) {
-        const mapImages = new Map<string, string>();
+        const mapCaptures = new Map<string, IPlanMapCapture>();
         const mapPhaseStarted = Date.now();
         for (let j = 0; j < jobs.length; j++) {
           const job = jobs[j];
@@ -606,23 +650,15 @@ function ReportPageContent() {
             // Info: (20260731 - Tzuhan) 不再等整頁可截圖;地圖沒就緒時該份不附圖,不阻擋匯出
             setTimeout(resolve, 4000);
           });
-          /**
-           * Info: (20260731 - Tzuhan) captureMap 必須設逾時:它等的是 MapLibre 的 `render` 事件,
-           * 若該實例的 WebGL context 已失效(離屏連續 remount 數十次時會發生),事件永遠不來,
-           * 這個 await 就會**無限期卡住**整個匯出。實測批次耗時 15 分鐘,這是首要嫌疑。
-           * 逾時就不附地圖 —— 少一張圖遠優於使用者盯著一個永不結束的轉圈。
-           */
-          const dataUrl = await Promise.race([
-            batchMapRef.current?.captureMap() ?? Promise.resolve(null),
-            new Promise<null>((resolve) => {
-              setTimeout(() => resolve(null), CARBON_MAP_CAPTURE_TIMEOUT_MS);
-            }),
-          ]);
-          if (dataUrl) {
-            mapImages.set(buildMapImageKey(job.index, job.type), dataUrl);
-          } else {
+          const captured = await capturePlanMaps(
+            batchMapRef,
+            batchResults[job.index],
+            job.type,
+          );
+          mapCaptures.set(buildMapImageKey(job.index, job.type), captured);
+          if (!captured.overview) {
             console.warn(
-              `[pdfExport] ${buildPlanCode(job.index, job.type)} 取地圖逾時或失敗,該份不附地圖`,
+              `[pdfExport] ${buildPlanCode(job.index, job.type)} 全程圖取得失敗,該份不附全程圖`,
             );
           }
         }
@@ -640,7 +676,7 @@ function ReportPageContent() {
           indices,
           selectedPlans,
           fallbackWeightKg: weightKg !== "" ? weightKg : 1000,
-          mapImages,
+          mapCaptures,
         });
         const exported = await requestReportPdfs(items, {
           exportId: batchExportId,
