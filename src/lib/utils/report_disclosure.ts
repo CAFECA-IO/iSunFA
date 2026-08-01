@@ -109,3 +109,72 @@ export function reconcileLegTotals(
 
   return { verdict, displayedSum, displayedTotal, difference, tolerance };
 }
+
+/**
+ * Info: (20260801 - Luphia) 推估段的材性摘要。
+ *
+ * 為什麼需要:報告目前只在距離欄旁加一個小字 `est.`,頁尾說明「該段無路網資料」。
+ * 那句話是真的,但讀者無從判斷**這件事有多重要** —— 三段裡有一段推估、
+ * 而該段只占總排放 0.03%,與三段裡有兩段推估、占總排放 40%,是完全不同的兩份報告。
+ * 查核者要的是後者這個數字。
+ *
+ * 刻意**不**在報告中宣稱路網的覆蓋範圍。覆蓋範圍實際上由部署決定
+ * (dockerfiles/osrm/Dockerfile 目前只載入 taiwan-latest.osm.pbf),
+ * 在程式碼裡另寫一份就是第二個必須手動同步的事實 —— 而本輪已經修過兩個同類問題
+ * (漏抄 metersPerPixel、字型家族名與系統名不符)。
+ * 改為只陳述資料本身能證實的事:幾段推估、占多少排放。
+ */
+export interface IEstimatedLegSummary {
+  /** Info: (20260801 - Luphia) 推估段數 */
+  estimatedCount: number;
+  /** Info: (20260801 - Luphia) 總段數 */
+  totalCount: number;
+  /**
+   * Info: (20260801 - Luphia) 推估段占方案總排放的比例(0~1)。
+   * 無法計算時為 undefined —— 不以 0 充數,那會讓「算不出來」看起來像「不重要」。
+   */
+  co2eShare?: number;
+}
+
+/**
+ * Info: (20260801 - Luphia) 統計推估段的數量與其排放占比。
+ *
+ * 占比的分母取**逐段排放之和**而非上游總計:分子分母必須同一套推導,
+ * 否則兩套數字的差異會被算進占比裡。這個占比是給讀者判斷材性用的,
+ * 不是報告的申報數值,故不需要與上游總計一致。
+ */
+export function summarizeEstimatedLegs(
+  legs: { co2eKg?: string | number; isFallback?: boolean }[],
+): IEstimatedLegSummary {
+  const totalCount = legs.length;
+  const estimatedLegs = legs.filter((leg) => leg.isFallback === true);
+  const estimatedCount = estimatedLegs.length;
+
+  if (estimatedCount === 0) return { estimatedCount: 0, totalCount };
+
+  const sumOf = (subset: typeof legs): number | null => {
+    let sum = 0;
+    for (const leg of subset) {
+      const parsed = Number(leg.co2eKg);
+      if (
+        leg.co2eKg === undefined ||
+        leg.co2eKg === "" ||
+        !Number.isFinite(parsed)
+      ) {
+        return null;
+      }
+      sum += parsed;
+    }
+    return sum;
+  };
+
+  const estimatedSum = sumOf(estimatedLegs);
+  const allSum = sumOf(legs);
+  // Info: (20260801 - Luphia) 分母為 0 或缺值時不給占比:0 除法與「不重要」是兩件事
+  const co2eShare =
+    estimatedSum !== null && allSum !== null && allSum > 0
+      ? estimatedSum / allSum
+      : undefined;
+
+  return { estimatedCount, totalCount, co2eShare };
+}

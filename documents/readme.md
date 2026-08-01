@@ -34,6 +34,8 @@
   > `jsonFail()` 使用的 `httpStatusOf()` 缺 `CONFLICT` / `RATE_LIMIT` 兩個 case，限流實際回 500 而非 429。**新增 `ApiCode` 成員時必須手動同步 `httpStatusOf()`，tsc 不會提醒。**
 - ⚠️ **[龍捲風圖「編輯數列分組」缺少 UI 層驗證](engineering_guidelines/known_issues/tornado_edit_group_missing_ui_validation.md)**
   > 數列名含配對分隔符（`<->` / `↔`）時，動作照常送出但標頭改寫被靜默略過（顏色仍生效）。資料層防護正確，缺的是 UI 層前置驗證與提示。
+- ⚠️ **[路網資料只有台灣，境外陸運段全數為推估](engineering_guidelines/known_issues/osrm_taiwan_only_coverage.md)**
+  > `dockerfiles/osrm/Dockerfile` 只載入 `taiwan-latest.osm.pbf`，非台灣的陸運段一律落到 `直線距離 × 1.2` 並標記 `est.`。報告已揭露推估段數與其排放占比（實測 R02 為 2/3 段、占 0.07%），**但若業務要處理境外陸運為主的路線，推估誤差會直接進入申報數值**，屆時需擴充覆蓋或改用外部路徑服務。
 - ⚠️ **[列印環境缺少中文字型導致 PDF 中文變空心方框](engineering_guidelines/known_issues/pdf_cjk_font_missing.md)**（已解決，但維運前置條件持續有效）
   > 主機未安裝 CJK 字型時，Chrome 對所有中文字使用 `.notdef`，報告地點名稱全數變方框而流程回報成功。程式碼側有 `IS000022` fail fast，**但每台產出 PDF 的主機仍須 `apt install fonts-noto-cjk` 並重啟**，否則匯出會失敗而非產出破圖。文件內另更正了「中文是 Type 3 點陣字」這個既有的錯誤陳述（實測為向量），並記錄 Type 3 造成的約 128 KB 體積成本。
 

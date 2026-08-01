@@ -2,6 +2,7 @@ import { describe, expect, it } from "@jest/globals";
 import {
   reconcileLegTotals,
   ReconciliationVerdictEnum,
+  summarizeEstimatedLegs,
 } from "@/lib/utils/report_disclosure";
 
 /**
@@ -83,5 +84,70 @@ describe("reconcileLegTotals", () => {
     const result = reconcileLegTotals(Array(100).fill("0.01"), "1.00");
     expect(result.displayedSum).toBe(1);
     expect(result.verdict).toBe(ReconciliationVerdictEnum.EXACT);
+  });
+});
+
+/**
+ * Info: (20260801 - Luphia) 推估段的材性。
+ *
+ * 現行揭露只有距離欄旁的小字 `est.`,讀者無從判斷這件事有多重要 ——
+ * 一段推估且占總排放 0.03%,與兩段推估且占 40%,是完全不同的兩份報告。
+ *
+ * 實測 R02(東京→巴黎)三段中有兩段推估(東京與巴黎的市區接駁),
+ * 成因是 dockerfiles/osrm/Dockerfile 只載入 taiwan-latest.osm.pbf,
+ * 非台灣的陸運段沒有路網資料。但那兩段合計僅占 0.07% —— 有了這個數字讀者才知道可以放心。
+ */
+describe("summarizeEstimatedLegs", () => {
+  const r02 = [
+    { co2eKg: "2.473", isFallback: true },
+    { co2eKg: "5852.32" },
+    { co2eKg: "1.8175", isFallback: true },
+  ];
+
+  it("重現 R02:3 段中 2 段推估,占比約 0.07%", () => {
+    const summary = summarizeEstimatedLegs(r02);
+    expect(summary.estimatedCount).toBe(2);
+    expect(summary.totalCount).toBe(3);
+    expect((summary.co2eShare as number) * 100).toBeCloseTo(0.0733, 3);
+  });
+
+  it("無推估段時不產生占比", () => {
+    const summary = summarizeEstimatedLegs([{ co2eKg: "1" }, { co2eKg: "2" }]);
+    expect(summary.estimatedCount).toBe(0);
+    expect(summary.co2eShare).toBeUndefined();
+  });
+
+  it("全部推估時占比為 100%", () => {
+    expect(
+      summarizeEstimatedLegs([
+        { co2eKg: "3", isFallback: true },
+        { co2eKg: "7", isFallback: true },
+      ]).co2eShare,
+    ).toBe(1);
+  });
+
+  /**
+   * Info: (20260801 - Luphia) 「算不出來」與「不重要」是兩件事。
+   * 缺值或分母為 0 時回 undefined 而非 0 —— 填 0 會讓一個未知看起來像已確認的無關緊要。
+   */
+  it.each([
+    ["逐段數值缺漏", [{ isFallback: true }, { co2eKg: "5" }]],
+    ["逐段數值為空字串", [{ co2eKg: "", isFallback: true }, { co2eKg: "5" }]],
+    ["逐段數值非數字", [{ co2eKg: "abc", isFallback: true }, { co2eKg: "5" }]],
+    ["分母為 0", [{ co2eKg: "0", isFallback: true }]],
+  ])("%s 時不給占比", (_label, legs) => {
+    const summary = summarizeEstimatedLegs(legs);
+    expect(summary.estimatedCount).toBeGreaterThan(0);
+    expect(summary.co2eShare).toBeUndefined();
+  });
+
+  // Info: (20260801 - Luphia) isFallback 未設定不等於 false 之外的任何值,只有 true 才算推估
+  it("僅 isFallback === true 計入推估", () => {
+    expect(
+      summarizeEstimatedLegs([
+        { co2eKg: "1", isFallback: false },
+        { co2eKg: "1" },
+      ]).estimatedCount,
+    ).toBe(0);
   });
 });

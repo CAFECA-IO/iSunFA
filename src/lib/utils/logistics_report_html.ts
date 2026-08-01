@@ -17,6 +17,8 @@ import {
   reconcileLegTotals,
   ReconciliationVerdictEnum,
   REPORT_DISPLAY_DECIMALS,
+  summarizeEstimatedLegs,
+  type IEstimatedLegSummary,
 } from "@/lib/utils/report_disclosure";
 import {
   LOGISTICS_PDF_FONT_STACK,
@@ -276,6 +278,34 @@ export function renderMapFigure(input: IMapFigureInput): string {
 }
 
 /**
+ * Info: (20260801 - Luphia) 推估段的材性揭露文字。
+ *
+ * 現行揭露只有距離欄旁的小字 `est.` 與頁尾一句「該段無路網資料」。那句話是真的,
+ * 但讀者無從判斷這件事有多重要 —— 一段推估且占總排放 0.03%,與兩段推估且占 40%,
+ * 是完全不同的兩份報告。查核者要的是後者這個數字。
+ *
+ * 實測 R02(東京→巴黎)三段中有兩段推估,但合計僅占 0.07% ——
+ * 有了這個數字,讀者才知道可以放心;沒有它,兩個 est. 標記看起來很嚴重。
+ */
+function renderEstimationNote(summary: IEstimatedLegSummary): string {
+  if (summary.estimatedCount === 0) return "";
+
+  const scope = `本報告 ${summary.totalCount} 段中有 ${summary.estimatedCount} 段缺乏路網路徑資料,以直線距離 × 1.2 推估(見上表 est. 標記)`;
+
+  if (summary.co2eShare === undefined) {
+    // Info: (20260801 - Luphia) 算不出占比就明說,不填 0 —— 「算不出來」與「不重要」是兩件事
+    return `<div class="formula recon">${scope};該批段落的排放占比無法計算(逐段數值不完整)。</div>`;
+  }
+
+  /**
+   * Info: (20260801 - Luphia) 占比取兩位小數的百分比:0.07% 與 0% 對材性判斷是不同的答案,
+   * 四捨五入到整數會把前者變成後者。
+   */
+  const percent = (summary.co2eShare * 100).toFixed(2);
+  return `<div class="formula recon">${scope},合計占逐段排放 ${percent}%。</div>`;
+}
+
+/**
  * Info: (20260801 - Luphia) 加總可驗證性的揭露文字。
  *
  * 三種措辭對應三種事實,不可混用:
@@ -347,6 +377,14 @@ export function buildLogisticsReportHtml(
     input.legs.map((leg) => leg.co2eKg),
     input.planTotalCo2e,
   );
+
+  /**
+   * Info: (20260801 - Luphia) 推估段的材性。路網覆蓋範圍由部署決定
+   * (dockerfiles/osrm/Dockerfile 目前只載入 taiwan-latest.osm.pbf,故非台灣的
+   * 陸運段全數落到推估),但報告刻意不宣稱覆蓋範圍 —— 在程式碼裡另寫一份
+   * 就是第二個必須手動同步的事實。只陳述資料本身能證實的:幾段推估、占多少排放。
+   */
+  const estimation = summarizeEstimatedLegs(input.legs);
 
   // Info: (20260731 - Tzuhan) 係數來源逐一列出:查核者要能自行以公開係數重算每一格
   const sources = Array.from(
@@ -486,6 +524,7 @@ ${legFigures}
     ${sources} ·
     est. = 直線距離 × 1.2 推估(該段無路網資料)
   </div>
+  ${renderEstimationNote(estimation)}
   ${renderReconciliationNote(reconciliation)}
 </body>
 </html>`;
