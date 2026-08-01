@@ -199,13 +199,21 @@ export default function UserActions() {
               {t(action.labelKey)}
             </Link>
           ) : (
+            /**
+             * Info: (20260801 - Luphia) 必須顯式指定文字顏色。Tailwind preflight 對 button 設 `color: inherit`,
+             * 而本面板到 body 之間沒有任何祖先設定文字顏色,故會一路繼承 globals.css 的 `body { color: var(--foreground) }`。
+             * `--foreground` 在 `prefers-color-scheme: dark` 下為 #ededed,但本面板背景恆為白色(無深色版),
+             * 結果是使用者系統設為深色時,登出文字變成白底白字而完全看不見(圖示自帶顏色故仍可見)。
+             * 上方 Link 分支本來就有 text-gray-600 不受影響;登出是唯一走 button 分支的項目,因此只有它中招。
+             * 破壞性動作採 red-600 而非圖示的 red-500:12px 文字需 4.5:1 對比,red-500 於白底僅 3.76:1 不合格。
+             */
             <button
               onClick={() => {
                 if (action.action === "logout") logout();
                 setForceOpen(false);
                 close();
               }}
-              className={`group flex h-full w-full flex-col items-center justify-center rounded-xl bg-white p-2 text-center text-xs font-normal shadow-sm ring-1 ring-gray-200 transition-colors md:rounded-lg md:bg-transparent md:font-medium md:shadow-none md:ring-0 ${action.isDestructive ? "hover:bg-red-50" : "hover:bg-gray-50"}`}
+              className={`group flex h-full w-full flex-col items-center justify-center rounded-xl bg-white p-2 text-center text-xs font-normal shadow-sm ring-1 ring-gray-200 transition-colors md:rounded-lg md:bg-transparent md:font-medium md:shadow-none md:ring-0 ${action.isDestructive ? "text-red-600 hover:bg-red-50" : "text-gray-600 hover:bg-gray-50"}`}
             >
               <Icon
                 size={24}
