@@ -71,7 +71,20 @@ export default function MethodologySection({ title }: { title: string }) {
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-expanded={isOpen}
-        className="hover:bg-surface-hover flex w-full items-center gap-3 px-5 py-4 text-left transition-colors"
+        /**
+         * Info: (20260801 - Luphia) 按鈕本身必須帶圓角。
+         *
+         * 外層容器是 rounded-2xl，而按鈕先前是方角 —— hover 背景色因此畫到容器的
+         * 圓角之外，視覺上像是圓角被填平。這是「有背景色的子元素放進圓角容器」
+         * 的通用陷阱：容器的 border-radius 不會自動裁切子元素的背景。
+         *
+         * 收合時按鈕即整張卡片，四角皆需圓角；展開時下方緊接內容區，
+         * 只有上緣需要圓角，否則會在按鈕與內容之間露出兩個缺口。
+         *
+         * 不以外層 overflow-hidden 解決：那會一併裁掉按鈕的 focus 外框，
+         * 用可及性換一個視覺問題並不值得。
+         */
+        className={`hover:bg-surface-hover flex w-full items-center gap-3 px-5 py-4 text-left transition-colors ${isOpen ? "rounded-t-2xl" : "rounded-2xl"}`}
       >
         <Info className="text-text-muted size-4 shrink-0" />
         <span className="text-text-primary flex-1 text-sm font-bold">

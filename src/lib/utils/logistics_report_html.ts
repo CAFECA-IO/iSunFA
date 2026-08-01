@@ -211,11 +211,11 @@ export function renderMapFigure(input: IMapFigureInput): string {
   if (!resolved.src) {
     const reason =
       resolved.reason === "too_large"
-        ? "地圖影像超過體積上限,已略過"
+        ? "地圖影像超過體積上限，已略過"
         : resolved.reason === "invalid_format"
-          ? "地圖影像格式不受支援,已略過"
+          ? "地圖影像格式不受支援，已略過"
           : "本段未附路徑圖";
-    return `<figure class="${cls}"><p class="note">${reason}(數值不受影響)</p><figcaption>${input.caption}</figcaption></figure>`;
+    return `<figure class="${cls}"><p class="note">${reason}（數值不受影響）</p><figcaption>${input.caption}</figcaption></figure>`;
   }
 
   // Info: (20260731 - Tzuhan) 逐段小圖是兩欄版面,顯示寬度只有一半;用錯基準會讓比例尺長度差一倍
@@ -273,7 +273,7 @@ export function renderMapFigure(input: IMapFigureInput): string {
    */
   const scaleNote =
     !scale.drawn && scale.reason === ScaleBarOmissionEnum.LATITUDE_SPAN_TOO_WIDE
-      ? '<p class="note scalenote">本圖跨越緯度過大,Mercator 投影的比例隨緯度變化,單一比例尺不成立故未標示(距離數值不受影響,見上表)</p>'
+      ? '<p class="note scalenote">本圖跨越緯度過大，Mercator 投影的比例隨緯度變化，單一比例尺不成立故未標示（距離數值不受影響，見上表）</p>'
       : "";
 
   const boxStyle = renderedSize
@@ -318,9 +318,9 @@ function renderEstimationNote(summary: IEstimatedLegSummary): string {
     .join("、");
 
   const method = factorText
-    ? `以直線距離乘上繞行係數推估(${factorText})`
+    ? `以直線距離乘上繞行係數推估（${factorText}）`
     : "以直線距離推估";
-  const scope = `本報告 ${summary.totalCount} 段中有 ${summary.estimatedCount} 段缺乏路徑資料,${method}(見上表 est. 標記)`;
+  const scope = `本報告 ${summary.totalCount} 段中有 ${summary.estimatedCount} 段缺乏路徑資料，${method}（見上表 est. 標記）`;
 
   /**
    * Info: (20260801 - Luphia) 基準必須寫進文字:0.07% 的排放占比與 0.07% 的距離占比
@@ -333,7 +333,7 @@ function renderEstimationNote(summary: IEstimatedLegSummary): string {
 
   if (summary.share === undefined) {
     // Info: (20260801 - Luphia) 算不出占比就明說,不填 0 —— 「算不出來」與「不重要」是兩件事
-    return `<div class="formula recon">${scope};該批段落的${basisLabel}占比無法計算(逐段數值不完整)。</div>`;
+    return `<div class="formula recon">${scope}；該批段落的${basisLabel}占比無法計算（逐段數值不完整）。</div>`;
   }
 
   /**
@@ -341,7 +341,7 @@ function renderEstimationNote(summary: IEstimatedLegSummary): string {
    * 四捨五入到整數會把前者變成後者。
    */
   const percent = (summary.share * 100).toFixed(2);
-  return `<div class="formula recon">${scope},合計占${basisLabel} ${percent}%。</div>`;
+  return `<div class="formula recon">${scope}，合計占${basisLabel} ${percent}%。</div>`;
 }
 
 /**
@@ -367,15 +367,15 @@ function renderReconciliationNote(reconciliation: {
   const decimals = `小數 ${REPORT_DISPLAY_DECIMALS} 位`;
 
   if (verdict === ReconciliationVerdictEnum.EXACT) {
-    return `<div class="formula recon">各段數值四捨五入至${decimals}顯示;本表逐列相加與總計一致。完整精度見同批匯出的 summary.csv。</div>`;
+    return `<div class="formula recon">各段數值四捨五入至${decimals}顯示；本表逐列相加與總計一致。完整精度見同批匯出的 summary.csv。</div>`;
   }
 
   if (verdict === ReconciliationVerdictEnum.WITHIN_ROUNDING) {
-    return `<div class="formula recon">各段數值四捨五入至${decimals}顯示,總計以未捨入值計算,故逐列相加(${formatNumber(displayedSum)})與總計(${formatNumber(displayedTotal)})相差 ${formatNumber(Math.abs(difference))} kg —— 此差異來自顯示捨入,非計算差異。完整精度見同批匯出的 summary.csv。</div>`;
+    return `<div class="formula recon">各段數值四捨五入至${decimals}顯示，總計以未捨入值計算，故逐列相加（${formatNumber(displayedSum)}）與總計（${formatNumber(displayedTotal)}）相差 ${formatNumber(Math.abs(difference))} kg —— 此差異來自顯示捨入，非計算差異。完整精度見同批匯出的 summary.csv。</div>`;
   }
 
   // Info: (20260801 - Luphia) DIVERGENT:差異無法以捨入解釋,必須讓讀者知道這不是排版問題
-  return `<div class="formula recon warn">注意:逐列相加(${formatNumber(displayedSum)})與總計(${formatNumber(displayedTotal)})相差 ${formatNumber(Math.abs(difference))} kg,超出四捨五入可解釋的範圍。逐段數值與方案總計由兩套推導產生,此差異需以 summary.csv 核對後判定。</div>`;
+  return `<div class="formula recon warn">注意：逐列相加（${formatNumber(displayedSum)}）與總計（${formatNumber(displayedTotal)}）相差 ${formatNumber(Math.abs(difference))} kg，超出四捨五入可解釋的範圍。逐段數值與方案總計由兩套推導產生，此差異需以 summary.csv 核對後判定。</div>`;
 }
 
 /**
@@ -416,8 +416,8 @@ function renderMethodologyAppendix(): string {
   }).join("\n");
 
   return `<div class="appendix">
-  <h2 class="section">附錄:計算方式說明</h2>
-  <p class="note">本附錄說明本報告數值的產生方式與已知限制,供查核者判斷其可靠程度。</p>
+  <h2 class="section">附錄：計算方式說明</h2>
+  <p class="note">本附錄說明本報告數值的產生方式與已知限制，供查核者判斷其可靠程度。</p>
   ${sections}
 </div>`;
 }
@@ -514,7 +514,7 @@ export function buildLogisticsReportHtml(
     captureHeightPx: input.captureHeightPx,
     captureLatSouthDeg: input.captureLatSouthDeg,
     captureLatNorthDeg: input.captureLatNorthDeg,
-    caption: `${escapeHtml(input.originLabel)} → ${escapeHtml(input.destLabel)}(全程)`,
+    caption: `${escapeHtml(input.originLabel)} → ${escapeHtml(input.destLabel)}（全程）`,
   });
 
   /**
@@ -656,9 +656,9 @@ ${legFigures}
         ? `Leg CO2e = Distance × (Weight / 1000) × Factor ·
     Factors (kg CO2e/t-km): LAND ${EMISSION_FACTORS.LAND} | SEA ${EMISSION_FACTORS.SEA} | AIR ${EMISSION_FACTORS.AIR} ·
     ${sources} ·`
-        : `本報告未計算二氧化碳當量,僅提供路徑與距離。排放量須另行以適用係數計算 ·`
+        : `本報告未計算二氧化碳當量，僅提供路徑與距離。排放量須另行以適用係數計算 ·`
     }
-    est. = 該段無路徑資料,以直線距離乘繞行係數推估(LAND × ${ESTIMATION_TORTUOSITY_FACTORS.LAND}、SEA × ${ESTIMATION_TORTUOSITY_FACTORS.SEA})
+    est. = 該段無路徑資料，以直線距離乘繞行係數推估（LAND × ${ESTIMATION_TORTUOSITY_FACTORS.LAND}、SEA × ${ESTIMATION_TORTUOSITY_FACTORS.SEA}）
   </div>
   ${renderEstimationNote(estimation)}
   ${reconciliation ? renderReconciliationNote(reconciliation) : ""}
