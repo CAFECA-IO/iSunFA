@@ -772,6 +772,17 @@ export const API_ERRORS = {
     message: "Request aborted by client",
     status: ApiCode.CLIENT_CLOSED_REQUEST,
   } as IErrorDef,
+  /**
+   * Info: (20260801 - Luphia) 列印環境缺少中文字形。與 IS_PDF_GENERATION_FAILED 區隔,
+   * 因為兩者的處置完全不同:後者是 Chrome 排版/列印故障,重試有意義;
+   * 前者是主機沒有安裝 CJK 字型,重試一萬次都一樣,必須由維運安裝字型。
+   * 混為同一碼會讓「裝字型」這個唯一解法被埋在通用的列印失敗裡。
+   */
+  IS_PDF_FONT_UNAVAILABLE: {
+    code: "IS000022",
+    message: "PDF rendering environment has no CJK font installed",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
   IS_UNKNOWN: {
     code: "IS000099",
     message: "Internal Server Error",

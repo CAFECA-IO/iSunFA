@@ -1,3 +1,5 @@
+import { PDF_FONT_STACK } from "@/constants/pdf_font";
+
 // Info: (20260731 - Tzuhan) 運輸報告 PDF(向量列印)的版面與體積常數
 // Info: (20260731 - Tzuhan) 為什麼改走伺服端列印:前端 html-to-image + jsPDF 是把整份報告光柵化,
 // Info: (20260731 - Tzuhan) 實測開啟 compress 後仍為 500 KB —— 一頁 A4 的文字在可讀 DPI 下就是 60~150 KB,
@@ -16,12 +18,12 @@ export const LOGISTICS_PDF_MARGIN = {
 } as const;
 
 /**
- * Info: (20260731 - Tzuhan) 列印字體堆疊。刻意不引入網路字型:
- * 一是離線列印仍須正確排版,二是外部字型會讓 Chrome 嵌入額外子集、增加體積。
- * 中日韓字符交由系統字型(伺服器與使用者端皆有)處理。
+ * Info: (20260801 - Luphia) 列印字體堆疊已移至 @/constants/pdf_font 供物流報告與
+ * 數位產品護照共用 —— 兩者都由 headless Chrome 列印、都含中文,字型缺失的成因與修法相同,
+ * 分開維護只會讓其中一邊被漏掉(實測 dpp.service.ts 的堆疊完全沒有 CJK 家族)。
+ * 此處保留別名以免既有引用失效。
  */
-export const LOGISTICS_PDF_FONT_STACK =
-  '-apple-system, "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", "Helvetica Neue", Arial, sans-serif';
+export const LOGISTICS_PDF_FONT_STACK = PDF_FONT_STACK;
 
 /**
  * Info: (20260731 - Tzuhan) 已知限制:中文字在輸出的 PDF 內是**點陣字(Type 3)**,不是向量。

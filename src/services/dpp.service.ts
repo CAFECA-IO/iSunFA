@@ -1,4 +1,5 @@
 import { DppRepository } from "@/repositories/dpp.repo";
+import { PDF_FONT_STACK } from "@/constants/pdf_font";
 import { FileRepository } from "@/repositories/file.repo";
 import { StorageService } from "@/services/storage.service";
 import { Prisma } from "@/generated";
@@ -769,7 +770,7 @@ Document File name: ${fileName}`;
   <meta charset="UTF-8">
   <style>
     * { box-sizing: border-box; }
-    body { font-family: 'Inter', -apple-system, sans-serif; background-color: #ffffff; color: #1e293b; margin: 0; padding: 0; font-size: 13px; }
+    body { font-family: 'Inter', ${PDF_FONT_STACK}; background-color: #ffffff; color: #1e293b; margin: 0; padding: 0; font-size: 13px; }
     .header { background-color: #0f172a; color: #f8fafc; padding: 16px 40px; display: flex; justify-content: space-between; align-items: center; margin: 0; }
     .header-left { display: flex; align-items: center; font-size: 18px; font-weight: 600; letter-spacing: 0.5px; }
     .header-separator { margin: 0 12px; color: #334155; }
@@ -1062,7 +1063,7 @@ Document File name: ${fileName}`;
           printBackground: true,
           displayHeaderFooter: true,
           headerTemplate: "<span></span>",
-          footerTemplate: `<div style="width: 100%; text-align: center; font-family: Arial, sans-serif; font-size: 9px; color: #64748b; padding: 10px 0; border-top: 1px solid #e2e8f0; background: #fff7ed !important; -webkit-print-color-adjust: exact;"><div style="font-weight: bold; color: #1e293b; font-size: 10px; margin-bottom: 2px;">用人工智能重塑碳會計</div><div>© ${new Date().getFullYear()} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal.</div></div>`,
+          footerTemplate: `<div style="width: 100%; text-align: center; font-family: ${PDF_FONT_STACK}; font-size: 9px; color: #64748b; padding: 10px 0; border-top: 1px solid #e2e8f0; background: #fff7ed !important; -webkit-print-color-adjust: exact;"><div style="font-weight: bold; color: #1e293b; font-size: 10px; margin-bottom: 2px;">用人工智能重塑碳會計</div><div>© ${new Date().getFullYear()} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal.</div></div>`,
         },
       },
     );

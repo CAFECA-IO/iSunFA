@@ -9,6 +9,19 @@ import { logger } from "@/lib/utils/logger";
 import { ApiError, API_ERRORS } from "@/lib/utils/error_dictionary";
 import { buildLogisticsReportHtml } from "@/lib/utils/logistics_report_html";
 import {
+  assessGlyphCoverage,
+  containsCjk,
+  GlyphCoverageEnum,
+  shouldBlockForMissingGlyphs,
+  type IGlyphWidths,
+} from "@/lib/utils/pdf_font_probe";
+import {
+  PDF_FONT_PROBE_CJK_SAMPLE,
+  PDF_FONT_PROBE_LATIN_REFERENCE,
+  PDF_FONT_PROBE_NOTDEF_REFERENCE,
+  PDF_FONT_STACK,
+} from "@/constants/pdf_font";
+import {
   LOGISTICS_PDF_MARGIN,
   LOGISTICS_PDF_MAX_REPORTS_PER_REQUEST,
 } from "@/constants/logistics_pdf";
@@ -133,6 +146,80 @@ export class LogisticsReportPdfService {
     }
   }
 
+  /**
+   * Info: (20260801 - Luphia) 列印前實測中文字形是否可用,缺失即 fail fast。
+   *
+   * 為什麼不信任字型堆疊就好:堆疊只表達「偏好」,Chrome 找不到就靜默 fallback。
+   * 實測伺服器 `fc-list :lang=zh` 只有 X11 點陣字 `Fixed`,所有中文取 DejaVu 的
+   * .notdef,產出一份地點名稱全是空心方框的報告 —— 而流程回報「成功」。
+   * 對審計文件而言那不是瑕疵而是不可用,§6 要求這種輸出在交付前就被凍結。
+   *
+   * 量測放在瀏覽器內以 canvas measureText 進行,因為只有 Chrome 自己知道
+   * per-character fallback 最後選了哪個字型;Node 端讀 fontconfig 得到的是
+   * 「系統有什麼」而非「Chrome 實際用了什麼」,兩者可以不同。
+   *
+   * 判定邏輯本身抽在 pdf_font_probe(純函數、可測),此處只負責取得寬度。
+   */
+  private async assertCjkRenderable(
+    page: Awaited<
+      ReturnType<
+        Awaited<
+          ReturnType<Awaited<typeof import("puppeteer")>["default"]["launch"]>
+        >["newPage"]
+      >
+    >,
+    html: string,
+    planCode: string,
+  ): Promise<void> {
+    // Info: (20260801 - Luphia) 純拉丁字的報告即使環境無中文字型也能正確輸出,不該擋
+    const reportContainsCjk = containsCjk(html);
+
+    const widths = await page.evaluate(
+      (fontStack: string, cjk: string, notdef: string, latin: string) => {
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        if (!context) return null;
+        // Info: (20260801 - Luphia) 字級固定 100px:量測值越大,.notdef 與真實字形的差距越明顯
+        context.font = `100px ${fontStack}`;
+        return {
+          cjk: context.measureText(cjk).width,
+          notdef: context.measureText(notdef).width,
+          latin: context.measureText(latin).width,
+        };
+      },
+      PDF_FONT_STACK,
+      PDF_FONT_PROBE_CJK_SAMPLE,
+      PDF_FONT_PROBE_NOTDEF_REFERENCE,
+      PDF_FONT_PROBE_LATIN_REFERENCE,
+    );
+
+    const coverage =
+      widths === null
+        ? GlyphCoverageEnum.INDETERMINATE
+        : assessGlyphCoverage(widths as IGlyphWidths);
+
+    if (coverage === GlyphCoverageEnum.INDETERMINATE) {
+      // Info: (20260801 - Luphia) 偵測自己壞掉時不擋:診斷功能不該成為匯出的單點故障
+      logger.warn(`[LogisticsReportPdfService] glyph probe indeterminate`, {
+        planCode,
+        widths,
+      });
+      return;
+    }
+
+    if (shouldBlockForMissingGlyphs(coverage, reportContainsCjk)) {
+      logger.error(
+        `[LogisticsReportPdfService] no CJK glyph available; refusing to emit a report of empty boxes`,
+        { planCode, widths },
+      );
+      throw new ApiError(
+        API_ERRORS.IS_PDF_FONT_UNAVAILABLE.code,
+        API_ERRORS.IS_PDF_FONT_UNAVAILABLE.message,
+        API_ERRORS.IS_PDF_FONT_UNAVAILABLE.status,
+      );
+    }
+  }
+
   private async renderOne(
     browser: Awaited<
       ReturnType<Awaited<typeof import("puppeteer")>["default"]["launch"]>
@@ -165,6 +252,9 @@ export class LogisticsReportPdfService {
 
       // Info: (20260731 - Tzuhan) setContent 而非 goto:HTML 由我們產生,不需要網路,也不該讓外部 URL 進來
       await page.setContent(html, { waitUntil: "load" });
+
+      await this.assertCjkRenderable(page, html, report.planCode);
+
       const buffer = await page.pdf({
         format: "A4",
         printBackground: true,

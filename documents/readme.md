@@ -34,6 +34,8 @@
   > `jsonFail()` 使用的 `httpStatusOf()` 缺 `CONFLICT` / `RATE_LIMIT` 兩個 case，限流實際回 500 而非 429。**新增 `ApiCode` 成員時必須手動同步 `httpStatusOf()`，tsc 不會提醒。**
 - ⚠️ **[龍捲風圖「編輯數列分組」缺少 UI 層驗證](engineering_guidelines/known_issues/tornado_edit_group_missing_ui_validation.md)**
   > 數列名含配對分隔符（`<->` / `↔`）時，動作照常送出但標頭改寫被靜默略過（顏色仍生效）。資料層防護正確，缺的是 UI 層前置驗證與提示。
+- ⚠️ **[列印環境缺少中文字型導致 PDF 中文變空心方框](engineering_guidelines/known_issues/pdf_cjk_font_missing.md)**
+  > 主機未安裝 CJK 字型時，Chrome 對所有中文字使用 `.notdef`，報告地點名稱全數變方框而流程回報成功。程式碼側已加 `IS000022` fail fast，**但每台產出 PDF 的主機仍須 `apt install fonts-noto-cjk` 並重啟**，否則匯出會失敗而非產出破圖。
 
 
 ---
