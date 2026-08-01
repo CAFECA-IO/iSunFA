@@ -10,6 +10,11 @@ import {
   ESTIMATION_TORTUOSITY_FACTORS,
 } from "@/constants/logistics";
 import {
+  DEFAULT_FACTOR_SET,
+  formatFactorSetVersion,
+  LOGISTICS_FACTOR_SETS,
+} from "@/constants/logistics_factor_sets";
+import {
   buildScaleBar,
   computeRenderedMapSizeMm,
   ScaleBarOmissionEnum,
@@ -438,6 +443,20 @@ export function buildLogisticsReportHtml(
   const includeCo2e = input.includeCo2e !== false;
 
   /**
+   * Info: (20260801 - Luphia) 係數組版本印在標頭。
+   *
+   * 換係數組會讓同一條路線的申報值改變近一倍(實測 R02 為 1.93 倍)。
+   * 若新舊報告都只寫「本方案總排放 X kg」,查核者無法判斷兩份為何不同 ——
+   * 是資料改了、演算法改了,還是係數組換了。標籤讓這件事一眼可辨。
+   *
+   * 未計算碳排時不印:那份報告沒有套用任何係數,標一個係數組版本會誤導。
+   */
+  const factorSetVersion = formatFactorSetVersion(
+    DEFAULT_FACTOR_SET,
+    LOGISTICS_FACTOR_SETS[DEFAULT_FACTOR_SET],
+  );
+
+  /**
    * Info: (20260801 - Luphia) 未計算碳排時,卡片與總計列改呈現總距離 ——
    * 版面不留空洞,而讀者仍拿到這份報告唯一有意義的合計數。
    * 以 Number 累加而非 Decimal:距離僅供顯示,不進申報數值(逐段距離仍照原值印出)。
@@ -614,7 +633,7 @@ export function buildLogisticsReportHtml(
     ${includeCo2e ? "" : "【未計算碳排】"}${escapeHtml(input.originLabel)} → ${escapeHtml(input.destLabel)}
     · ${escapeHtml(input.routeLabel)}
     · ${formatNumber(input.weightKg)} kg
-    · ${escapeHtml(input.generatedAt)}${input.exportId ? ` · Export ${escapeHtml(input.exportId)}` : ""}
+    · ${escapeHtml(input.generatedAt)}${input.exportId ? ` · Export ${escapeHtml(input.exportId)}` : ""}${includeCo2e ? ` · 係數組 ${escapeHtml(factorSetVersion)}` : ""}
   </p>
   <div class="grid">
     ${

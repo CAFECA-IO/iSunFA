@@ -1,6 +1,9 @@
 import { describe, expect, it } from "@jest/globals";
 import {
+  compareFactorSetTotals,
   DEFAULT_FACTOR_SET,
+  factorSetDeltaRatio,
+  formatFactorSetVersion,
   FactorSetEnum,
   FACTOR_SET_ORDER,
   formatFactorSource,
@@ -130,5 +133,99 @@ describe("formatFactorSource 的揭露", () => {
     );
     expect(text).toContain("UK DEFRA 2025");
     expect(text).not.toMatch(/公告/);
+  });
+});
+
+/**
+ * Info: (20260801 - Luphia) 版本標籤以「組代碼 + 各模式公告年份」構成。
+ * 不另立人工版號:版號要人維護且會忘記更新,而年份直接來自係數本身,
+ * 換係數必然改變標籤。
+ */
+describe("formatFactorSetVersion", () => {
+  it("環境部組含三個模式的公告年份且去重排序", () => {
+    expect(
+      formatFactorSetVersion(
+        FactorSetEnum.MOENV,
+        LOGISTICS_FACTOR_SETS[FactorSetEnum.MOENV],
+      ),
+    ).toBe("MOENV/2016-2017-2022");
+  });
+
+  // Info: (20260801 - Luphia) DEFRA 未標公告年份,不虛構補上
+  it("DEFRA 組僅有組代碼", () => {
+    expect(
+      formatFactorSetVersion(
+        FactorSetEnum.DEFRA,
+        LOGISTICS_FACTOR_SETS[FactorSetEnum.DEFRA],
+      ),
+    ).toBe("DEFRA");
+  });
+});
+
+/**
+ * Info: (20260801 - Luphia) 換組的影響完全取決於路線組成,故必須以實際段落試算。
+ * 給一個「約 ±X%」的通用數字會在半數情況下誤導 —— 以下兩個案例即為證明:
+ *   以長程空運為主   DEFRA / MOENV = 0.52（−48%）
+ *   純陸運           DEFRA / MOENV = 0.86（−14%）
+ */
+describe("compareFactorSetTotals", () => {
+  const airHeavy = [
+    { mode: "LAND", distanceKm: 21.91 },
+    { mode: "AIR", distanceKm: 9716.63 },
+    { mode: "LAND", distanceKm: 16.1 },
+  ];
+
+  it("重現 R02 兩組的總排放", () => {
+    const impacts = compareFactorSetTotals(airHeavy, 1000);
+    const moenv = impacts.find((i) => i.setKey === FactorSetEnum.MOENV);
+    const defra = impacts.find((i) => i.setKey === FactorSetEnum.DEFRA);
+    expect(moenv?.totalCo2eKg).toBeCloseTo(11276.27, 1);
+    expect(defra?.totalCo2eKg).toBeCloseTo(5856.62, 1);
+  });
+
+  it("空運為主與純陸運的換組倍數明顯不同", () => {
+    const air = factorSetDeltaRatio(
+      compareFactorSetTotals(airHeavy, 1000),
+      FactorSetEnum.MOENV,
+      FactorSetEnum.DEFRA,
+    );
+    const land = factorSetDeltaRatio(
+      compareFactorSetTotals([{ mode: "LAND", distanceKm: 500 }], 1000),
+      FactorSetEnum.MOENV,
+      FactorSetEnum.DEFRA,
+    );
+    expect(air).toBeCloseTo(0.5194, 3);
+    expect(land).toBeCloseTo(0.8618, 3);
+  });
+
+  it("忽略未知模式與距離不可用的段落", () => {
+    const impacts = compareFactorSetTotals(
+      [
+        { mode: "RAIL", distanceKm: 100 },
+        { mode: "LAND" },
+        { mode: "LAND", distanceKm: 100 },
+      ],
+      1000,
+    );
+    expect(
+      impacts.find((i) => i.setKey === FactorSetEnum.MOENV)?.totalCo2eKg,
+    ).toBeCloseTo(13.1, 6);
+  });
+
+  /**
+   * Info: (20260801 - Luphia) 算不出來就回 undefined,不以 0 或 1 充數 ——
+   * 1 會被讀成「沒有差異」,而事實是「無從比較」。
+   */
+  it.each([
+    ["無可用段落", [] as { mode?: string; distanceKm?: number }[], 1000],
+    ["全部為未知模式", [{ mode: "RAIL", distanceKm: 5 }], 1000],
+    ["重量為零", [{ mode: "LAND", distanceKm: 100 }], 0],
+    ["重量為負", [{ mode: "LAND", distanceKm: 100 }], -5],
+  ])("%s 時不給總計也不給倍數", (_label, legs, weight) => {
+    const impacts = compareFactorSetTotals(legs, weight);
+    expect(impacts.every((i) => i.totalCo2eKg === undefined)).toBe(true);
+    expect(
+      factorSetDeltaRatio(impacts, FactorSetEnum.MOENV, FactorSetEnum.DEFRA),
+    ).toBeUndefined();
   });
 });

@@ -13,9 +13,17 @@ import {
   X,
   FileDown,
   Leaf,
+  FlaskConical,
 } from "lucide-react";
 import { RouteType } from "@/components/transportation_carbon_footprint_calculator/plan_section";
 import { useTranslation } from "@/i18n/i18n_context";
+import {
+  DEFAULT_FACTOR_SET,
+  FactorSetEnum,
+  FACTOR_SET_ORDER,
+  factorSetDeltaRatio,
+  type IFactorSetImpact,
+} from "@/constants/logistics_factor_sets";
 
 /**
  * Info: (20260801 - Luphia) 匯出選項。改以物件回傳而非多個位置引數:
@@ -23,6 +31,8 @@ import { useTranslation } from "@/i18n/i18n_context";
  */
 export interface IExportOptions {
   plans: Set<RouteType>;
+  /** Info: (20260801 - Luphia) 採用的排放係數組;預設為環境部 */
+  factorSet: FactorSetEnum;
   /**
    * Info: (20260801 - Luphia) 是否計算二氧化碳當量。
    * 關閉時整份報告與 CSV 都不出現任何排放數值(不是算了才隱藏)——
@@ -33,6 +43,14 @@ export interface IExportOptions {
 
 interface IExportOptionsModalProps {
   availablePlans: RouteType[];
+  /**
+   * Info: (20260801 - Luphia) 各係數組對本次匯出的總排放試算。
+   *
+   * 由呼叫端以實際段落算出後傳入,而非在此給一個「約 ±X%」的通用數字 ——
+   * 影響完全取決於路線組成:以長程空運為主的路線換組差 48%,純陸運只差 14%。
+   * 通用百分比會在半數情況下誤導使用者。
+   */
+  factorSetImpacts?: IFactorSetImpact[];
   onConfirm: (options: IExportOptions) => void;
   onClose: () => void;
 }
@@ -50,6 +68,8 @@ const PLAN_ICONS: Record<RouteType, typeof Truck> = {
 
 export function ExportOptionsModal({
   availablePlans,
+  // Info: (20260801 - Luphia) 未提供試算時只列出係數組名稱,不顯示數值 —— 不以 0 充數
+  factorSetImpacts = undefined,
   onConfirm,
   onClose,
 }: IExportOptionsModalProps) {
@@ -60,6 +80,8 @@ export function ExportOptionsModal({
   );
   // Info: (20260801 - Luphia) 預設計算:碳足跡是本功能的主要目的,不計算是例外情形
   const [includeCo2e, setIncludeCo2e] = useState(true);
+  // Info: (20260801 - Luphia) 預設環境部:主管機關收錄的係數優先於境外機構
+  const [factorSet, setFactorSet] = useState<FactorSetEnum>(DEFAULT_FACTOR_SET);
 
   const togglePlan = (plan: RouteType) => {
     setSelected((prev) => {
@@ -154,6 +176,93 @@ export function ExportOptionsModal({
           </span>
         </label>
 
+        {/* Info: (20260801 - Luphia) 係數組選擇。僅在要計算碳排時顯示 ——
+            未計算碳排的報告不套用任何係數,選了也沒有意義 */}
+        {includeCo2e && (
+          <div className="mt-4 rounded-xl border border-gray-200 p-3">
+            <div className="mb-2 flex items-center gap-2">
+              <FlaskConical className="h-4 w-4 text-gray-500" />
+              <span className="text-sm font-semibold text-gray-700">
+                {t(
+                  "transportation_carbon_footprint_calculator.export_options.factor_set",
+                )}
+              </span>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              {FACTOR_SET_ORDER.map((key) => {
+                const isChecked = factorSet === key;
+                const impact = factorSetImpacts?.find(
+                  (item) => item.setKey === key,
+                );
+                /**
+                 * Info: (20260801 - Luphia) 直接顯示該組的實際總排放,而非只給百分比 ——
+                 * 使用者要判斷的是「這份報告會報多少」,不是要自己套一個比例。
+                 * 倍數另附於非預設組,供快速對照。
+                 */
+                const ratio =
+                  key === DEFAULT_FACTOR_SET || !factorSetImpacts
+                    ? undefined
+                    : factorSetDeltaRatio(
+                        factorSetImpacts,
+                        DEFAULT_FACTOR_SET,
+                        key,
+                      );
+                return (
+                  <label
+                    key={key}
+                    className={`flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2 text-xs transition-all ${
+                      isChecked
+                        ? "border-orange-200 bg-orange-50"
+                        : "border-transparent hover:bg-gray-50"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="factorSet"
+                      checked={isChecked}
+                      onChange={() => setFactorSet(key)}
+                      className="mt-0.5 h-3.5 w-3.5 accent-orange-600"
+                    />
+                    <span className="flex flex-col gap-0.5">
+                      <span
+                        className={`font-semibold ${isChecked ? "text-orange-700" : "text-gray-700"}`}
+                      >
+                        {t(
+                          `transportation_carbon_footprint_calculator.export_options.factor_set_${key.toLowerCase()}`,
+                        )}
+                        {key === DEFAULT_FACTOR_SET && (
+                          <span className="ml-1.5 font-normal text-gray-400">
+                            {t(
+                              "transportation_carbon_footprint_calculator.export_options.factor_set_default",
+                            )}
+                          </span>
+                        )}
+                      </span>
+                      {impact?.totalCo2eKg !== undefined && (
+                        <span className="font-normal text-gray-500">
+                          {`${Math.round(impact.totalCo2eKg).toLocaleString("en-US")} kg CO2e`}
+                          {ratio !== undefined &&
+                            ` · ${ratio >= 1 ? "+" : ""}${Math.round((ratio - 1) * 100)}%`}
+                        </span>
+                      )}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+            {/* Info: (20260801 - Luphia) 試算不可用時明說,不以「0%」或空白充數 */}
+            <p className="mt-2 text-xs text-gray-400">
+              {factorSetImpacts?.some((item) => item.totalCo2eKg !== undefined)
+                ? t(
+                    "transportation_carbon_footprint_calculator.export_options.factor_set_hint",
+                  )
+                : t(
+                    "transportation_carbon_footprint_calculator.export_options.factor_set_no_estimate",
+                  )}
+            </p>
+          </div>
+        )}
+
         <p className="mt-4 text-xs text-gray-400">
           {t(
             "transportation_carbon_footprint_calculator.export_options.split_hint",
@@ -170,7 +279,9 @@ export function ExportOptionsModal({
           </button>
           <button
             type="button"
-            onClick={() => onConfirm({ plans: selected, includeCo2e })}
+            onClick={() =>
+              onConfirm({ plans: selected, includeCo2e, factorSet })
+            }
             disabled={selected.size === 0}
             className="flex items-center gap-2 rounded-lg bg-orange-600 px-5 py-2 text-sm font-semibold text-white transition-all hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-50"
           >

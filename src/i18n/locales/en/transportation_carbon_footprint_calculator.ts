@@ -180,6 +180,14 @@ export const transportationCarbonFootprintCalculator = {
     include_co2e: "Calculate CO2e",
     include_co2e_hint:
       "Uncheck to export routes and distances only. No emission figures will appear in the PDF or CSV.",
+    factor_set: "Emission factor set",
+    factor_set_moenv: "MOENV product carbon footprint database",
+    factor_set_defra: "UK DEFRA 2025",
+    factor_set_default: "(default)",
+    factor_set_hint:
+      "Totals shown are estimated from the legs in this export. Switching sets changes the reported figures.",
+    factor_set_no_estimate:
+      "Totals cannot be estimated for this export; the set still applies to the calculation.",
     split_hint:
       "Each plan is exported as a separate PDF; multiple files are bundled into a ZIP.",
     confirm: "Export",

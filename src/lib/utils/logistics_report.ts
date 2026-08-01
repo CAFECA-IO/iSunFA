@@ -14,6 +14,11 @@ import {
   buildPlanCode,
   ESTIMATION_TORTUOSITY_FACTORS,
 } from "@/constants/logistics";
+import {
+  DEFAULT_FACTOR_SET,
+  formatFactorSetVersion,
+  LOGISTICS_FACTOR_SETS,
+} from "@/constants/logistics_factor_sets";
 import { ROUTE_MODE } from "@/constants/analysis";
 
 /**
@@ -546,6 +551,13 @@ export function buildBatchSummaryCsv(
     `# iSunFA Transport Carbon Report`,
     ...(exportId ? [`# Export ID: ${exportId}`] : []),
     `# Code: R{route}-{MODE} — the same code appears in the matching PDF's filename and header`,
+    // Info: (20260801 - Luphia) 係數組版本:換組會讓申報值變化近一倍,
+    // Info: (20260801 - Luphia) 沒有這個標籤就無法判斷兩份不同批次的檔案為何數字不同
+    ...(includeCo2e
+      ? [
+          `# Factor set: ${formatFactorSetVersion(DEFAULT_FACTOR_SET, LOGISTICS_FACTOR_SETS[DEFAULT_FACTOR_SET])}`,
+        ]
+      : []),
     ...(includeCo2e
       ? [
           `# Formula: Leg CO2e = Distance x (Weight / 1000) x Factor`,

@@ -148,3 +148,86 @@ export function formatFactorSource(entry: IEmissionFactorEntry): string {
     ? `${entry.publisher}（${entry.itemName}｜${qualifiers}）`
     : `${entry.publisher}（${entry.itemName}）`;
 }
+
+/**
+ * Info: (20260801 - Luphia) 係數組的版本標籤,印在報告上供區分不同批次的產出。
+ *
+ * 為什麼需要:換係數組會讓同一條路線的申報值改變近一倍(實測 R02 為 1.93 倍)。
+ * 已產出的舊報告與新報告若都只寫「本方案總排放 X kg」,查核者無法判斷兩份
+ * 為何不同 —— 是資料改了、演算法改了,還是係數組換了。標籤讓這件事一眼可辨。
+ *
+ * 以「組代碼 + 各模式公告年份」構成而非另立版號:版號要人工維護且會忘記更新,
+ * 而年份直接來自係數本身,換係數必然改變標籤。
+ */
+export function formatFactorSetVersion(
+  setKey: FactorSetEnum,
+  set: IFactorSet,
+): string {
+  const years = (["LAND", "SEA", "AIR"] as const)
+    .map((mode) => set[mode].announcedYear)
+    .filter((year): year is string => Boolean(year));
+  // Info: (20260801 - Luphia) 去重後排序:三個模式常共用同一年份,重複列出沒有資訊量
+  const uniqueYears = [...new Set(years)].sort();
+  return uniqueYears.length > 0 ? `${setKey}/${uniqueYears.join("-")}` : setKey;
+}
+
+/**
+ * Info: (20260801 - Luphia) 換組對總排放的影響。
+ *
+ * **刻意以實際段落試算而非給一個固定百分比。** 影響完全取決於路線組成:
+ * 純陸運路線由 DEFRA 換到環境部只增加 16%,而以長程空運為主的路線增加 93%。
+ * 給一個「約 ±X%」的通用數字會在半數情況下誤導使用者。
+ *
+ * 只用距離與模式,不碰既有的逐段排放值 —— 這是「若換組會怎樣」的假設試算,
+ * 不是申報數值,故以原生 number 計算即可(申報值仍由後端以 Decimal 產生)。
+ */
+export interface IFactorSetImpact {
+  setKey: FactorSetEnum;
+  /** Info: (20260801 - Luphia) 該組下的總排放(kg CO2e);無可用段落時為 undefined */
+  totalCo2eKg?: number;
+}
+
+export function compareFactorSetTotals(
+  legs: { mode?: string; distanceKm?: number }[],
+  weightKg: number,
+): IFactorSetImpact[] {
+  const tonnes = weightKg / 1000;
+  const usable = legs.filter(
+    (leg) =>
+      (leg.mode === "LAND" || leg.mode === "SEA" || leg.mode === "AIR") &&
+      Number.isFinite(Number(leg.distanceKm)),
+  );
+
+  return FACTOR_SET_ORDER.map((setKey) => {
+    if (usable.length === 0 || !Number.isFinite(tonnes) || tonnes <= 0) {
+      return { setKey };
+    }
+    const set = LOGISTICS_FACTOR_SETS[setKey];
+    const total = usable.reduce((sum, leg) => {
+      const entry = set[leg.mode as "LAND" | "SEA" | "AIR"];
+      return sum + Number(leg.distanceKm) * tonnes * Number(entry.factor);
+    }, 0);
+    return { setKey, totalCo2eKg: total };
+  });
+}
+
+/**
+ * Info: (20260801 - Luphia) 相對於指定組的變化倍數。回 undefined 表示無從比較 ——
+ * 不以 0 或 1 充數:1 會被讀成「沒有差異」,而事實是「算不出來」。
+ */
+export function factorSetDeltaRatio(
+  impacts: IFactorSetImpact[],
+  baseSetKey: FactorSetEnum,
+  targetSetKey: FactorSetEnum,
+): number | undefined {
+  const base = impacts.find((impact) => impact.setKey === baseSetKey);
+  const target = impacts.find((impact) => impact.setKey === targetSetKey);
+  if (
+    base?.totalCo2eKg === undefined ||
+    target?.totalCo2eKg === undefined ||
+    base.totalCo2eKg <= 0
+  ) {
+    return undefined;
+  }
+  return target.totalCo2eKg / base.totalCo2eKg;
+}

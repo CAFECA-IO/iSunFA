@@ -99,11 +99,11 @@ describe("LOGISTICS_METHODOLOGY_SECTIONS", () => {
    * 讀者要判斷報告是否足以支持其用途,靠的是限制而非原理。
    * 固化其存在與規模,避免日後被「精簡」掉。
    */
-  it("包含已知限制節且不少於七項", () => {
+  it("包含已知限制節且不少於九項", () => {
     const limitations = LOGISTICS_METHODOLOGY_SECTIONS.find(
       (section) => section.id === "limitations",
     );
     expect(limitations).toBeDefined();
-    expect(limitations?.items?.length ?? 0).toBeGreaterThanOrEqual(7);
+    expect(limitations?.items?.length ?? 0).toBeGreaterThanOrEqual(9);
   });
 });
