@@ -143,19 +143,24 @@ export class LogisticsReportPdfService {
   ): Promise<IGeneratedReportPdf> {
     const page = await browser.newPage();
     try {
+      /**
+       * Info: (20260801 - Luphia) 以展開取代逐欄手抄。
+       *
+       * 逐欄複製漏過一個真實缺陷:`metersPerPixel` 從未被傳下來,於是**全程圖從來沒有比例尺**,
+       * 而三張逐段圖有 —— 因為 `legs` 是整個陣列原樣傳入,逐段的欄位順帶到了。
+       * 實測於 R01-AIR 報告確認:逐段圖有 1 km / 2000 km / 5 km,全程圖左下角空無一物。
+       *
+       * 型別檢查抓不到這種漏抄:目標欄位是 optional,少給一個只是變成 undefined。
+       * 展開之後,validator 加的任何欄位都會自動流到這裡,不必再記得同步第三個地方。
+       *
+       * report 多出的 `fileName` 不在 html input 內,但展開不觸發多餘屬性檢查,
+       * 且 buildLogisticsReportHtml 不讀它,無副作用。
+       */
       const html = buildLogisticsReportHtml({
-        planCode: report.planCode,
-        routeLabel: report.routeLabel,
-        planLabel: report.planLabel,
-        originLabel: report.originLabel,
-        destLabel: report.destLabel,
-        weightKg: report.weightKg,
-        planTotalCo2e: report.planTotalCo2e,
-        mapImageDataUrl: report.mapImageDataUrl,
+        // Info: (20260731 - Tzuhan) validator 的 leg 形狀即 IReportLeg,原樣傳入不做任何換算
+        ...report,
         exportId,
         generatedAt,
-        // Info: (20260731 - Tzuhan) validator 的 leg 形狀即 IReportLeg,原樣傳入不做任何換算
-        legs: report.legs,
       });
 
       // Info: (20260731 - Tzuhan) setContent 而非 goto:HTML 由我們產生,不需要網路,也不該讓外部 URL 進來
