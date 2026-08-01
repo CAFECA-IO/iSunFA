@@ -11,20 +11,7 @@ import {
   ICoefficientInput,
 } from "@/interfaces/coefficient";
 import { Prisma } from "@/generated";
-import {
-  TRUE_COEFFICIENT_DATA_PART_1,
-  TRUE_COEFFICIENT_DATA_PART_2,
-  TRUE_COEFFICIENT_DATA_PART_3,
-  TRUE_COEFFICIENT_DATA_PART_4,
-  TRUE_COEFFICIENT_DATA_PART_5,
-  TRUE_COEFFICIENT_DATA_DEFRA_PART_1,
-  TRUE_COEFFICIENT_DATA_DEFRA_PART_2,
-  TRUE_COEFFICIENT_DATA_DEFRA_PART_3,
-  TRUE_COEFFICIENT_DATA_DEFRA_PART_4,
-  TRUE_COEFFICIENT_DATA_DEFRA_PART_5,
-  TRUE_COEFFICIENT_DATA_DEFRA_PART_6,
-  TRUE_COEFFICIENT_DATA_TAIWAN,
-} from "@/constants/true_esg_coefficients";
+import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
 import { ICoefficientFilterOptions } from "@/interfaces/data_filter_option";
 
 /**
@@ -146,20 +133,19 @@ export async function GET(
 
     const dataFromDatabase: ICoefficient[] = coefficients;
 
-    let dataFromConstants: ICoefficient[] = [
-      ...TRUE_COEFFICIENT_DATA_PART_1,
-      ...TRUE_COEFFICIENT_DATA_PART_2,
-      ...TRUE_COEFFICIENT_DATA_PART_3,
-      ...TRUE_COEFFICIENT_DATA_PART_4,
-      ...TRUE_COEFFICIENT_DATA_PART_5,
-      ...TRUE_COEFFICIENT_DATA_DEFRA_PART_1,
-      ...TRUE_COEFFICIENT_DATA_DEFRA_PART_2,
-      ...TRUE_COEFFICIENT_DATA_DEFRA_PART_3,
-      ...TRUE_COEFFICIENT_DATA_DEFRA_PART_4,
-      ...TRUE_COEFFICIENT_DATA_DEFRA_PART_5,
-      ...TRUE_COEFFICIENT_DATA_DEFRA_PART_6,
-      ...TRUE_COEFFICIENT_DATA_TAIWAN,
-    ];
+    /**
+     * Info: (20260801 - Luphia) 改用 ALL_COEFFICIENTS 而非在此手列各分段。
+     *
+     * 原本這裡逐一展開 12 個分段,而 TRUE_COEFFICIENT_DATA_MOENV_PART_6 被漏掉 ——
+     * 該分段的 6 筆環境部碳足跡排放係數資料庫項目(電力 0.495、自來水、天然氣、
+     * 廢棄物焚化與掩埋)因此完全不會出現在係數清單中,使用者查不到也選不到。
+     *
+     * ALL_COEFFICIENTS 定義在係數檔的末尾、緊接各分段之後,新增分段時漏掉的機會
+     * 遠低於在另一個檔案裡維護第二份清單;且該彙總已有 emission_factor.repo、
+     * document_sync.repo、esg_parsing、carbon_emission_database/import 四處在用,
+     * 此處手抄一份等於讓同一個事實有兩個版本。
+     */
+    let dataFromConstants: ICoefficient[] = [...ALL_COEFFICIENTS];
 
     if (tabParam === CoefficientCategory.CUSTOM) {
       dataFromConstants = [];
