@@ -801,8 +801,16 @@ function ReportPageContent() {
         zip.file(file.filename, file.blob);
       });
 
-      // Info: (20260724 - Tzuhan) 需求三:summary.csv 按方案分欄、逐段展開,由 logistics_report.ts 純函數生成
-      if (indices.length > 1) {
+      /**
+       * Info: (20260724 - Tzuhan) 需求三:summary.csv 按方案分欄、逐段展開,由 logistics_report.ts 純函數生成
+       *
+       * Info: (20260802 - Luphia) 條件由 `indices.length > 1` 改為無條件 ——
+       * 原本以「路線數」為門檻,於是「單一路線 × 多方案」(例如 1 條路線的海運與空運
+       * 共 2 份 PDF)雖然打包成 zip 卻沒有 summary.csv,使用者只看到少了檔案而不知原因。
+       * 此處已在 files.length > 1 的分支內(單檔直接下載不打包),
+       * 也就是「只要產生 zip 就附索引」—— 一個沒有索引的多檔壓縮包本身就不完整。
+       */
+      {
         const filesByRouteIndex = new Map<number, string[]>();
         files.forEach((file) => {
           const list = filesByRouteIndex.get(file.index) || [];
@@ -1099,6 +1107,40 @@ function ReportPageContent() {
       Number(weightKg !== "" ? weightKg : 1000) || 1000,
     );
   }, [exportModalTarget, batchResults, weightKg]);
+
+  /**
+   * Info: (20260802 - Luphia) 匯出期間鎖定頁面捲動。
+   *
+   * 遮罩是 `fixed inset-0`,只覆蓋**視口**而非整份文件 —— 頁面仍可捲動,
+   * 捲下去就會看到遮罩之外的內容(頁尾、聯絡資訊),而且整頁截圖只會擷到一個視口的遮罩,
+   * 下方全部外露。匯出是阻塞操作,期間本來就不該能捲動。
+   *
+   * 同時補償捲軸消失造成的版面位移:直接設 overflow:hidden 會讓內容向右跳一個捲軸寬度,
+   * 以等寬 padding 補回。
+   *
+   * 於 documentElement 與 body 同時設定:兩者哪一個是捲動容器取決於瀏覽器與樣式,
+   * 只設一個在部分情況下無效。
+   */
+  useEffect(() => {
+    if (!isExporting) return undefined;
+    const { documentElement, body } = document;
+    const scrollbarWidth = window.innerWidth - documentElement.clientWidth;
+    const previous = {
+      htmlOverflow: documentElement.style.overflow,
+      bodyOverflow: body.style.overflow,
+      bodyPaddingRight: body.style.paddingRight,
+    };
+    documentElement.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    if (scrollbarWidth > 0) {
+      body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+    return () => {
+      documentElement.style.overflow = previous.htmlOverflow;
+      body.style.overflow = previous.bodyOverflow;
+      body.style.paddingRight = previous.bodyPaddingRight;
+    };
+  }, [isExporting]);
 
   const handleExportConfirm = async (options: IExportOptions) => {
     const target = exportModalTarget;
@@ -1433,7 +1475,11 @@ function ReportPageContent() {
 
       {/* Info: (20260501 - Luphia) PDF 匯出時的滿版覆蓋載入提示 */}
       {isExporting && (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/95 p-6 text-center backdrop-blur-md">
+        /* Info: (20260802 - Luphia) 改為不透明白底:95% 半透明會讓底下內容以模糊形式透出,
+           在整頁截圖或高解析畫面上看起來像遮罩沒蓋滿。匯出期間不需要看到底下的畫面。
+           另以 h-dvh 保底:部分行動瀏覽器的 inset-0 以 layout viewport 為準,
+           而匯出流程會把 viewport meta 改為 width=1024,兩者不一致時高度會短少。 */
+        <div className="fixed inset-0 z-[100] flex h-dvh w-screen flex-col items-center justify-center bg-white p-6 text-center">
           <Loader2 className="mb-6 h-16 w-16 animate-spin text-orange-600 drop-shadow-md" />
           <h2 className="mb-3 text-2xl font-extrabold tracking-tight text-gray-900 md:text-3xl">
             {t(
