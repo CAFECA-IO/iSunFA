@@ -89,7 +89,29 @@ fc-match "Noto Sans CJK TC"   # 應回 NotoSansCJK-Regular.ttc
 - `src/lib/utils/pdf_font_probe.ts` — 覆蓋率判定（純函數、有測試）
 - `logistics_report_pdf.service.ts` — 列印前以 canvas `measureText` 比對中文字與 U+FFFF 的寬度；相等即代表中文落在 `.notdef` 上，此時若報告含中文即 throw `IS_PDF_FONT_UNAVAILABLE`
 
-判定不使用門檻值：門檻值換一次字型就失效。U+FFFF 是 Unicode 永久保留的 noncharacter，任何字型都不會為它提供字形，所以它量到的一定是該字型 `.notdef` 的寬度。
+判定比對的是**字形畫出來的樣子**，不是前進寬度（advance width）。
+
+### 為何不能用寬度判定（第一版的錯誤）
+
+第一版比對「中文字的寬度是否等於 U+FFFF 的寬度」。U+FFFF 是 Unicode 永久保留的 noncharacter，任何字型都不會為它提供字形，所以它量到的必然是該字型 `.notdef` 的寬度——這個推論沒錯，錯的是隱含假設：**「`.notdef` 的寬度會與真正的字形不同」**。
+
+以實際字型檔量測（字級 100px）：
+
+| 字型 | `M` | `測` | `U+FFFF` | 寬度判準 | 正確答案 |
+|---|---|---|---|---|---|
+| Noto Sans CJK | 81.2 | 100.0 | 100.0 | MISSING | **AVAILABLE** ❌ |
+| DejaVu Sans | 83.3 | 60.0 | 60.0 | MISSING | MISSING ✅ |
+
+CJK 字型的 `.notdef` 與真正的中文字**同為全角 1em**，寬度必然相同。所以寬度判準在兩種環境下都回 MISSING，只是在缺字時剛好答對。裝好字型後它反而把匯出全數擋掉（實測 `IS000022` 連續觸發，`latin: 81.19992` 正是 Noto Sans CJK 的指紋——其拉丁字源自 Source Sans，`M` 為 0.812em）。
+
+改為點陣比對後同一組字型能正確分辨：
+
+| 字型 | `測` 墨色像素 | `U+FFFF` 墨色像素 | 雜湊相同 | 判定 |
+|---|---|---|---|---|
+| Noto Sans CJK | 3663 | 3133 | 否 | AVAILABLE ✅ |
+| DejaVu Sans | 1600 | 1600 | 是 | MISSING ✅ |
+
+真正的「測」是筆畫複雜的表意文字，`.notdef` 是空白或一個方框，點陣不可能相同。
 
 量測在瀏覽器內進行而非 Node 端讀 fontconfig，因為只有 Chrome 自己知道 per-character fallback 最後選了哪個字型 —— 系統有什麼字型與 Chrome 實際用了什麼字型可以不同。
 

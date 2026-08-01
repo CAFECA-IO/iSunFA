@@ -63,47 +63,97 @@ describe("containsCjk", () => {
   ])("%s 判定為不含中文", (text) => expect(containsCjk(text)).toBe(false));
 });
 
+/**
+ * Info: (20260801 - Luphia) 判定改以點陣特徵而非前進寬度。
+ *
+ * 第一版用寬度,而 CJK 字型的 .notdef 與真正的中文字同為全角,寬度必然相同。
+ * 以沙箱內的實際字型檔量測(字級 100px):
+ *   Noto Sans CJK  M=81.2  測=100.0  U+FFFF=100.0   → 寬度判準誤判為缺字
+ *   DejaVu Sans    M=83.3  測=60.0   U+FFFF=60.0    → 寬度判準碰巧正確
+ * 也就是說寬度判準在兩種環境下都回 MISSING,只是在缺字時剛好答對。
+ *
+ * 同一組字型的點陣特徵則能正確分辨:
+ *   Noto Sans CJK  測 ink=3663 ≠ notdef ink=3133   → AVAILABLE
+ *   DejaVu Sans    測 ink=1600 = notdef ink=1600(且雜湊相同) → MISSING
+ * 以下常數即取自該次實測。
+ */
 describe("assessGlyphCoverage", () => {
-  /**
-   * Info: (20260801 - Luphia) 實測情境:DejaVu Sans 沒有中文字形,
-   * 中文字與 U+FFFF 都落在同一個 .notdef 方框上,量得同寬。
-   */
-  it("中文與 notdef 同寬即判定缺字", () => {
-    expect(assessGlyphCoverage({ cjk: 63.5, notdef: 63.5, latin: 83.4 })).toBe(
-      GlyphCoverageEnum.MISSING,
-    );
+  const NOTO = {
+    cjk: { inkPixels: 3663, checksum: 1613468216 },
+    notdef: { inkPixels: 3133, checksum: 1530947699 },
+    latin: { inkPixels: 2346, checksum: 42 },
+  };
+  const DEJAVU = {
+    cjk: { inkPixels: 1600, checksum: 2022827699 },
+    notdef: { inkPixels: 1600, checksum: 2022827699 },
+    latin: { inkPixels: 2651, checksum: 99 },
+  };
+
+  it("實測 Noto Sans CJK 的特徵判定為有字形", () => {
+    expect(assessGlyphCoverage(NOTO)).toBe(GlyphCoverageEnum.AVAILABLE);
   });
 
-  // Info: (20260801 - Luphia) measureText 回浮點數,次像素差異不該被誤判為有字形
-  it("次像素級差異仍判定缺字", () => {
+  it("實測 DejaVu Sans 的特徵判定為缺字", () => {
+    expect(assessGlyphCoverage(DEJAVU)).toBe(GlyphCoverageEnum.MISSING);
+  });
+
+  /**
+   * Info: (20260801 - Luphia) 這是第一版誤判的回歸測試:
+   * 中文與 .notdef 同寬(全角)但字形不同時,必須判為有字形。
+   * 點陣特徵不含寬度資訊,故此案例只要雜湊不同就會正確 —— 固化它是為了防止
+   * 有人「順手」把寬度比較加回來當作額外條件。
+   */
+  it("中文與 notdef 同寬但字形不同時仍判定有字形", () => {
     expect(
-      assessGlyphCoverage({ cjk: 63.5, notdef: 63.4999, latin: 83.4 }),
+      assessGlyphCoverage({
+        cjk: { inkPixels: 3663, checksum: 111 },
+        notdef: { inkPixels: 3133, checksum: 222 },
+        latin: { inkPixels: 2346, checksum: 333 },
+      }),
+    ).toBe(GlyphCoverageEnum.AVAILABLE);
+  });
+
+  it("中文完全沒畫出墨色即判定缺字(空白而非方框的情況)", () => {
+    expect(
+      assessGlyphCoverage({
+        cjk: { inkPixels: 0, checksum: 0 },
+        notdef: { inkPixels: 3133, checksum: 222 },
+        latin: { inkPixels: 2346, checksum: 333 },
+      }),
     ).toBe(GlyphCoverageEnum.MISSING);
   });
 
-  // Info: (20260801 - Luphia) 有中文字型時中文為全角(1em),.notdef 方框約 0.6em
-  it("中文為全角寬度時判定有字形", () => {
-    expect(assessGlyphCoverage({ cjk: 100, notdef: 60, latin: 83.4 })).toBe(
-      GlyphCoverageEnum.AVAILABLE,
-    );
-  });
-
-  it("中文寬度為零即判定缺字", () => {
-    expect(assessGlyphCoverage({ cjk: 0, notdef: 60, latin: 83.4 })).toBe(
-      GlyphCoverageEnum.MISSING,
-    );
+  /**
+   * Info: (20260801 - Luphia) 墨色像素數與雜湊必須**同時**相同才算同字形。
+   * 只看雜湊會有碰撞風險,只看像素數則不同字形可能碰巧同量。
+   */
+  it("僅墨色量相同但雜湊不同時不判為同字形", () => {
+    expect(
+      assessGlyphCoverage({
+        cjk: { inkPixels: 1600, checksum: 111 },
+        notdef: { inkPixels: 1600, checksum: 222 },
+        latin: { inkPixels: 2651, checksum: 333 },
+      }),
+    ).toBe(GlyphCoverageEnum.AVAILABLE);
   });
 
   /**
-   * Info: (20260801 - Luphia) 量測本身失效時必須與「確定缺字」區分開。
-   * 兩者混為一談的後果是偵測故障時靜默擋掉全部匯出,或反之靜默放過全部。
+   * Info: (20260801 - Luphia) 渲染管線失效時必須與「確定缺字」區分開。
+   * 拉丁字必然有字形,它畫不出墨色代表 canvas 根本沒運作 ——
+   * 此時中文與 notdef 也會都是空的而「相同」,混為一談會讓偵測故障時擋掉全部匯出。
    */
   it.each([
-    ["拉丁字寬度為零", { cjk: 0, notdef: 0, latin: 0 }],
-    ["notdef 寬度為零", { cjk: 100, notdef: 0, latin: 83 }],
-    ["寬度為 NaN", { cjk: Number.NaN, notdef: 60, latin: 83 }],
-  ])("%s 時回 INDETERMINATE", (_label, widths) => {
-    expect(assessGlyphCoverage(widths)).toBe(GlyphCoverageEnum.INDETERMINATE);
+    ["拉丁字無墨色", { cjk: 0, notdef: 0, latin: 0 }],
+    ["墨色數為 NaN", { cjk: Number.NaN, notdef: 3133, latin: 2346 }],
+    ["墨色數為負", { cjk: -1, notdef: 3133, latin: 2346 }],
+  ])("%s 時回 INDETERMINATE", (_label, ink) => {
+    expect(
+      assessGlyphCoverage({
+        cjk: { inkPixels: ink.cjk, checksum: 1 },
+        notdef: { inkPixels: ink.notdef, checksum: 2 },
+        latin: { inkPixels: ink.latin, checksum: 3 },
+      }),
+    ).toBe(GlyphCoverageEnum.INDETERMINATE);
   });
 });
 

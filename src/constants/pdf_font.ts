@@ -68,5 +68,11 @@ export const PDF_FONT_PROBE_CJK_SAMPLE = "測";
 // Info: (20260801 - Luphia) (#6585 修過同類問題:正則裡藏著一個看不見的 VS16)。
 export const PDF_FONT_PROBE_NOTDEF_REFERENCE = "\uFFFF";
 
+/**
+ * Info: (20260801 - Luphia) 探測時的字級(px)。取 100 而非一般文字大小:
+ * 字形越大,真實字形與 .notdef 的點陣差異越明顯,判定越不易受反鋸齒影響。
+ */
+export const PDF_FONT_PROBE_SIZE_PX = 100;
+
 /** Info: (20260801 - Luphia) 確認 canvas 真的套用了字型的對照字元(拉丁字必然有字形) */
 export const PDF_FONT_PROBE_LATIN_REFERENCE = "M";

@@ -1,17 +1,17 @@
 // Info: (20260801 - Luphia) 列印前的中文字形覆蓋率偵測(判定邏輯為純函數)。
 //
-// Info: (20260801 - Luphia) 為什麼需要偵測而非信任環境:實測伺服器上
-// Info: (20260801 - Luphia) `fc-list :lang=zh` 只有 X11 點陣字 `Fixed`,沒有任何真正的 CJK 字型。
-// Info: (20260801 - Luphia) 後果是一份地點名稱全數渲染成空心方框的報告仍被當成「產生成功」交付 ——
-// Info: (20260801 - Luphia) 對審計文件而言那不是品質瑕疵而是不可用。§6 要求這種髒輸出在最外層就被凍結。
+// Info: (20260801 - Luphia) 為什麼需要偵測而非信任環境:實測伺服器曾經
+// Info: (20260801 - Luphia) `fc-list :lang=zh` 只有 X11 點陣字 `Fixed`,沒有任何真正的 CJK 字型,
+// Info: (20260801 - Luphia) 後果是一份地點名稱全數渲染成空心方框的報告仍被當成「產生成功」交付。
+// Info: (20260801 - Luphia) 對審計文件而言那不是品質瑕疵而是不可用,§6 要求這種髒輸出在最外層就被凍結。
 
 /**
  * Info: (20260801 - Luphia) 中文字元範圍。只涵蓋會出現在報告中的區段:
- * CJK 統一漢字(含擴充 A)、相容表意文字、以及中日韓標點。
+ * CJK 統一漢字(含擴充 A)、相容表意文字。
  * 刻意不含日文假名與韓文諺文 —— 目前的報告文案不會出現,
  * 且擴大範圍會讓「含中文」的判定在只有標點的字串上誤觸發。
  */
-const CJK_PATTERN = /[㐀-䶿一-鿿豈-﫿]/;
+const CJK_PATTERN = /[㐀-䶿一-鿿豈-﫿]/;
 
 /**
  * Info: (20260801 - Luphia) 這段文字是否含需要中文字形的字元。
@@ -23,15 +23,38 @@ export function containsCjk(text: string): boolean {
 }
 
 /**
- * Info: (20260801 - Luphia) 瀏覽器端量測的結果。三個寬度都以同一字型、同一字級量得。
+ * Info: (20260801 - Luphia) 單一字元渲染後的點陣特徵。
+ *
+ * **為什麼是點陣特徵而不是前進寬度(advance width)。**
+ *
+ * 第一版以「中文字的寬度是否等於 U+FFFF 的寬度」判定,理由是 U+FFFF 是 Unicode
+ * 永久保留的 noncharacter,任何字型都不會給它字形,所以它量到的必然是 .notdef 的寬度。
+ * 這個推論本身沒錯,錯的是隱含假設:「.notdef 的寬度會與真正的字形不同」。
+ *
+ * 實測反例(字級 100px):
+ *   latin(M): 81.2   cjk(測): 100.0   notdef(U+FFFF): 100.0
+ * 字型是 Noto Sans CJK(其拉丁字源自 Source Sans,M 為 0.812em,故 81.2 是它的指紋),
+ * 中文字為全角 1em = 100.0 —— 而 **Noto Sans CJK 的 .notdef 也是全角 1em**。
+ * 兩者同寬,於是「字型裝好」反而被判成「缺字」,匯出全數被擋。
+ *
+ * 全角是 CJK 字型的通則而非這個字型的特例,所以寬度判準在有中文字型時必然誤判 ——
+ * 它剛好只在缺字時「碰巧正確」。改為比對字形實際畫出來的樣子:
+ * 真正的「測」是筆畫複雜的表意文字,.notdef 是空白或一個方框,兩者的點陣不可能相同。
  */
-export interface IGlyphWidths {
-  /** Info: (20260801 - Luphia) 中文樣本字的寬度 */
-  cjk: number;
-  /** Info: (20260801 - Luphia) U+FFFF 的寬度,即該字型 .notdef 的寬度 */
-  notdef: number;
-  /** Info: (20260801 - Luphia) 拉丁字的寬度,用於確認量測本身有效 */
-  latin: number;
+export interface IGlyphSignature {
+  /** Info: (20260801 - Luphia) 有墨色(alpha 非零)的像素數;0 表示什麼都沒畫出來 */
+  inkPixels: number;
+  /** Info: (20260801 - Luphia) 墨色分布的雜湊,用於判斷兩個字元是否畫出同一個字形 */
+  checksum: number;
+}
+
+export interface IGlyphProbe {
+  /** Info: (20260801 - Luphia) 中文樣本字 */
+  cjk: IGlyphSignature;
+  /** Info: (20260801 - Luphia) U+FFFF,即該字型的 .notdef */
+  notdef: IGlyphSignature;
+  /** Info: (20260801 - Luphia) 拉丁字,用於確認渲染管線本身有效 */
+  latin: IGlyphSignature;
 }
 
 export enum GlyphCoverageEnum {
@@ -39,43 +62,43 @@ export enum GlyphCoverageEnum {
   AVAILABLE = "AVAILABLE",
   /** Info: (20260801 - Luphia) 中文字落在 .notdef 上,會渲染成方框或空白 */
   MISSING = "MISSING",
-  /** Info: (20260801 - Luphia) 量測本身不可信(寬度為 0 或非有限數),無法判定 */
+  /** Info: (20260801 - Luphia) 渲染本身不可信,無法判定 */
   INDETERMINATE = "INDETERMINATE",
 }
 
 /**
- * Info: (20260801 - Luphia) 由量測寬度判定中文字形覆蓋率。
+ * Info: (20260801 - Luphia) 由點陣特徵判定中文字形覆蓋率。
  *
- * 判準是「中文字的寬度是否等於 .notdef 的寬度」,而非任何門檻值。
- * 門檻值會隨字型或字級換一次就失效;而 U+FFFF 是 Unicode 永久保留的 noncharacter,
- * 任何字型都不會為它提供字形,所以它量到的一定是 .notdef 的寬度 ——
- * 中文字若與它同寬,代表中文字也落在同一個 .notdef 上。
- *
- * 先檢查 latin:若拉丁字寬度為 0,代表 canvas 根本沒套用字型(或量測失敗),
- * 此時 cjk 與 notdef 都會是 0 而「相等」,會誤判為缺字。故獨立回 INDETERMINATE,
- * 讓呼叫端能區分「確定缺字」與「不知道」——把兩者混為一談會讓偵測本身故障時
- * 靜默擋掉所有報告,或反之靜默放過所有報告。
+ * 先檢查 latin:拉丁字必然有字形,它若畫不出墨色代表 canvas 根本沒運作
+ * (字型未套用、量測失敗、離屏渲染被停用)。此時 cjk 與 notdef 也會都是空的而「相同」,
+ * 會被誤判為缺字。故獨立回 INDETERMINATE —— 把「確定缺字」與「不知道」混為一談,
+ * 會讓偵測本身故障時靜默擋掉所有報告。
  */
-export function assessGlyphCoverage(widths: IGlyphWidths): GlyphCoverageEnum {
-  const allFinite = [widths.cjk, widths.notdef, widths.latin].every((value) =>
-    Number.isFinite(value),
+export function assessGlyphCoverage(probe: IGlyphProbe): GlyphCoverageEnum {
+  const signatures = [probe.cjk, probe.notdef, probe.latin];
+  const allFinite = signatures.every(
+    (signature) =>
+      Number.isFinite(signature.inkPixels) &&
+      Number.isFinite(signature.checksum) &&
+      signature.inkPixels >= 0,
   );
-  if (!allFinite || widths.latin <= 0 || widths.notdef <= 0) {
+  if (!allFinite || probe.latin.inkPixels <= 0) {
     return GlyphCoverageEnum.INDETERMINATE;
   }
-  if (widths.cjk <= 0) return GlyphCoverageEnum.MISSING;
+
+  // Info: (20260801 - Luphia) 中文字什麼都沒畫出來:缺字的其中一種表現(空白而非方框)
+  if (probe.cjk.inkPixels <= 0) return GlyphCoverageEnum.MISSING;
 
   /**
-   * Info: (20260801 - Luphia) 以相對誤差比較而非嚴格相等:
-   * canvas 的 measureText 回傳浮點數,同一個 .notdef 字形在不同呼叫間
-   * 可能有次像素級的差異。0.5% 遠小於「有字形」與「.notdef」的實際落差
-   * (中文字通常為 1em 全角,.notdef 方框約 0.6em,差距逾 60%)。
+   * Info: (20260801 - Luphia) 中文字與 U+FFFF 畫出同一個字形 → 兩者都是 .notdef。
+   * 以「墨色像素數」與「分布雜湊」同時相同才判定相同:單看雜湊在極端情況可能碰撞,
+   * 單看像素數則不同字形可能碰巧同量。
    */
-  const relativeDelta =
-    Math.abs(widths.cjk - widths.notdef) / Math.max(widths.cjk, widths.notdef);
-  return relativeDelta < 0.005
-    ? GlyphCoverageEnum.MISSING
-    : GlyphCoverageEnum.AVAILABLE;
+  const sameGlyph =
+    probe.cjk.inkPixels === probe.notdef.inkPixels &&
+    probe.cjk.checksum === probe.notdef.checksum;
+
+  return sameGlyph ? GlyphCoverageEnum.MISSING : GlyphCoverageEnum.AVAILABLE;
 }
 
 /**
