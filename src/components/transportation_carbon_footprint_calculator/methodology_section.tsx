@@ -3,8 +3,11 @@
 /**
  * Info: (20260801 - Luphia) 計算方式說明區塊。
  *
- * 與 PDF 附錄共用 LOGISTICS_METHODOLOGY_SECTIONS —— 兩處各寫一份必然失去同步,
- * 而「網頁說的與報告說的不一樣」對審計文件是致命的。
+ * 文案來自 i18n 語言檔的 methodology.sections,數值由常數插入 ——
+ * 係數與門檻是計算實際採用的值,寫進語言檔就是把同一個事實複製五份。
+ *
+ * Info: (20260802 - Luphia) 原本此說明也作為 PDF 附錄,現已移出報告(只留在頁面),
+ * 故不再有「網頁與報告兩份文案」的同步問題。
  *
  * 預設收合:多數使用者只想看結果,但需要的人必須找得到。
  * 收合而非隱藏在另一個頁面,是因為「計算方式」與「計算結果」放在一起才有對照的意義。
@@ -12,8 +15,9 @@
 
 import { useState } from "react";
 import { ChevronDown, Info } from "lucide-react";
+import { useTranslation } from "@/i18n/i18n_context";
 import {
-  LOGISTICS_METHODOLOGY_SECTIONS,
+  interpolateMethodologySections,
   type IMethodologySection,
 } from "@/constants/logistics_methodology";
 
@@ -64,6 +68,21 @@ function MethodologySectionBody({ section }: { section: IMethodologySection }) {
 
 export default function MethodologySection({ title }: { title: string }) {
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useTranslation();
+
+  /**
+   * Info: (20260802 - Luphia) 文案自語言檔取得,數值由常數插入。
+   *
+   * t<T>() 以 split(".").reduce() 取值,故可直接回傳整個章節陣列 ——
+   * 不必為 11 節 44 條各建一個鍵。但插值只作用於字串,所以語言檔存 {{token}},
+   * 實際值一律由 interpolateMethodologySections 自常數代入:
+   * 係數與門檻是計算實際採用的值,寫進語言檔就是把同一個事實複製五份。
+   */
+  const sections = interpolateMethodologySections(
+    t<IMethodologySection[] | undefined>(
+      "transportation_carbon_footprint_calculator.methodology.sections",
+    ),
+  );
 
   return (
     <div className="border-border-default bg-surface-overlay rounded-2xl border">
@@ -96,7 +115,7 @@ export default function MethodologySection({ title }: { title: string }) {
       </button>
       {isOpen && (
         <div className="border-border-default border-t px-5 py-4">
-          {LOGISTICS_METHODOLOGY_SECTIONS.map((section) => (
+          {sections.map((section) => (
             <MethodologySectionBody key={section.id} section={section} />
           ))}
         </div>
