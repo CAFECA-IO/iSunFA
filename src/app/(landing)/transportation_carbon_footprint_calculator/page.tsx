@@ -51,6 +51,7 @@ import {
 } from "@/components/transportation_carbon_footprint_calculator/export_options_modal";
 import MethodologySection from "@/components/transportation_carbon_footprint_calculator/methodology_section";
 import { compareFactorSetTotals } from "@/constants/logistics_factor_sets";
+import { useScrollLock } from "@/hooks/use_scroll_lock";
 import {
   buildExportFileName,
   buildExportId,
@@ -1109,38 +1110,10 @@ function ReportPageContent() {
   }, [exportModalTarget, batchResults, weightKg]);
 
   /**
-   * Info: (20260802 - Luphia) 匯出期間鎖定頁面捲動。
-   *
-   * 遮罩是 `fixed inset-0`,只覆蓋**視口**而非整份文件 —— 頁面仍可捲動,
-   * 捲下去就會看到遮罩之外的內容(頁尾、聯絡資訊),而且整頁截圖只會擷到一個視口的遮罩,
-   * 下方全部外露。匯出是阻塞操作,期間本來就不該能捲動。
-   *
-   * 同時補償捲軸消失造成的版面位移:直接設 overflow:hidden 會讓內容向右跳一個捲軸寬度,
-   * 以等寬 padding 補回。
-   *
-   * 於 documentElement 與 body 同時設定:兩者哪一個是捲動容器取決於瀏覽器與樣式,
-   * 只設一個在部分情況下無效。
+   * Info: (20260802 - Luphia) 匯出期間與選項對話框開啟期間鎖定捲動。
+   * 兩者的遮罩都是 fixed inset-0,只覆蓋視口 —— 詳見 useScrollLock 的說明。
    */
-  useEffect(() => {
-    if (!isExporting) return undefined;
-    const { documentElement, body } = document;
-    const scrollbarWidth = window.innerWidth - documentElement.clientWidth;
-    const previous = {
-      htmlOverflow: documentElement.style.overflow,
-      bodyOverflow: body.style.overflow,
-      bodyPaddingRight: body.style.paddingRight,
-    };
-    documentElement.style.overflow = "hidden";
-    body.style.overflow = "hidden";
-    if (scrollbarWidth > 0) {
-      body.style.paddingRight = `${scrollbarWidth}px`;
-    }
-    return () => {
-      documentElement.style.overflow = previous.htmlOverflow;
-      body.style.overflow = previous.bodyOverflow;
-      body.style.paddingRight = previous.bodyPaddingRight;
-    };
-  }, [isExporting]);
+  useScrollLock(isExporting || exportModalTarget !== null);
 
   const handleExportConfirm = async (options: IExportOptions) => {
     const target = exportModalTarget;

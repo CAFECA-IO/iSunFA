@@ -103,7 +103,10 @@ export function ExportOptionsModal({
     t(`transportation_carbon_footprint_calculator.export_options.plan_${plan}`);
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-gray-900/50 p-4 backdrop-blur-sm">
+    /* Info: (20260802 - Luphia) 補 h-dvh w-screen:`inset-0` 在部分瀏覽器以 layout viewport 為準,
+       而本頁匯出流程會把 viewport meta 改為 width=1024(page.tsx),兩者不一致時遮罩高度會短少。
+       捲動鎖定在 page.tsx 以 useScrollLock 處理 —— 對話框的開關狀態由該處持有。 */
+    <div className="fixed inset-0 z-[110] flex h-dvh w-screen items-center justify-center bg-gray-900/50 p-4 backdrop-blur-sm">
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
         <div className="mb-1 flex items-center justify-between">
           <h2 className="text-lg font-bold text-gray-900">
