@@ -7,6 +7,7 @@
 import {
   EMISSION_FACTORS,
   EMISSION_FACTOR_SOURCES,
+  ESTIMATION_TORTUOSITY_FACTORS,
 } from "@/constants/logistics";
 import {
   buildScaleBar,
@@ -290,7 +291,25 @@ export function renderMapFigure(input: IMapFigureInput): string {
 function renderEstimationNote(summary: IEstimatedLegSummary): string {
   if (summary.estimatedCount === 0) return "";
 
-  const scope = `本報告 ${summary.totalCount} 段中有 ${summary.estimatedCount} 段缺乏路網路徑資料,以直線距離 × 1.2 推估(見上表 est. 標記)`;
+  /**
+   * Info: (20260801 - Luphia) 加成係數逐模式列出。各模式不同(陸運 ×1.2、海運 ×1.5),
+   * 先前一律寫 1.2 —— 海運的 est. 段揭露值是錯的,查核者照它回推距離會得到錯誤結果。
+   * 係數由 ESTIMATION_TORTUOSITY_FACTORS 供給,與演算法同一個來源。
+   */
+  const factorText = summary.estimatedModes
+    .map((mode) => {
+      const factor =
+        ESTIMATION_TORTUOSITY_FACTORS[
+          mode as keyof typeof ESTIMATION_TORTUOSITY_FACTORS
+        ];
+      return factor === undefined ? mode : `${mode} × ${factor}`;
+    })
+    .join("、");
+
+  const method = factorText
+    ? `以直線距離乘上繞行係數推估(${factorText})`
+    : "以直線距離推估";
+  const scope = `本報告 ${summary.totalCount} 段中有 ${summary.estimatedCount} 段缺乏路徑資料,${method}(見上表 est. 標記)`;
 
   if (summary.co2eShare === undefined) {
     // Info: (20260801 - Luphia) 算不出占比就明說,不填 0 —— 「算不出來」與「不重要」是兩件事
@@ -522,7 +541,7 @@ ${legFigures}
     Leg CO2e = Distance × (Weight / 1000) × Factor ·
     Factors (kg CO2e/t-km): LAND ${EMISSION_FACTORS.LAND} | SEA ${EMISSION_FACTORS.SEA} | AIR ${EMISSION_FACTORS.AIR} ·
     ${sources} ·
-    est. = 直線距離 × 1.2 推估(該段無路網資料)
+    est. = 該段無路徑資料,以直線距離乘繞行係數推估(LAND × ${ESTIMATION_TORTUOSITY_FACTORS.LAND}、SEA × ${ESTIMATION_TORTUOSITY_FACTORS.SEA})
   </div>
   ${renderEstimationNote(estimation)}
   ${renderReconciliationNote(reconciliation)}

@@ -1,3 +1,4 @@
+import { ESTIMATION_TORTUOSITY_FACTORS } from "@/constants/logistics";
 import { calculateDistanceKm, splitAtAntimeridian } from "@/lib/utils/geo";
 import { ITransportSegment } from "@/interfaces/logistics";
 import shippingLanes from "@/lib/data/shipping_lanes.json";
@@ -375,8 +376,11 @@ export function calculateSeaPath(
   } catch (e) {
     console.error("[SeaPath] A* Routing error:", e);
     // Info: (20260501 - Luphia) 若系統錯誤，仍必須有一條路徑
+    // Info: (20260801 - Luphia) 係數改由常數供給:報告的揭露文字必須引用同一個值。
+    // Info: (20260801 - Luphia) 先前此處寫死 1.5 而揭露文字只寫 1.2,海運的 est. 段揭露值是錯的。
     const distKm =
-      calculateDistanceKm(start.lat, start.lng, end.lat, end.lng) * 1.5;
+      calculateDistanceKm(start.lat, start.lng, end.lat, end.lng) *
+      ESTIMATION_TORTUOSITY_FACTORS.SEA;
     const geometry: GeoJSON.LineString = {
       type: "LineString",
       coordinates: [

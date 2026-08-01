@@ -12,6 +12,7 @@ import {
   EMISSION_FACTORS,
   EMISSION_FACTOR_SOURCES,
   buildPlanCode,
+  ESTIMATION_TORTUOSITY_FACTORS,
 } from "@/constants/logistics";
 import { ROUTE_MODE } from "@/constants/analysis";
 
@@ -543,7 +544,9 @@ export function buildBatchSummaryCsv(
     `# Factors (kg CO2e/t-km): LAND ${EMISSION_FACTORS.LAND} | SEA ${EMISSION_FACTORS.SEA} | AIR ${EMISSION_FACTORS.AIR} — UK DEFRA 2025`,
     `# Units: Weight kg | Distance km | CO2e kg | Lat/Lng WGS84`,
     `# Layout: one row per leg — Plan CO2e and PDF are filled on the plan's last leg only`,
-    `# Est. = Y: straight-line x 1.2 estimate (road network data unavailable for that leg)`,
+    // Info: (20260801 - Luphia) 逐模式列出係數:各模式不同(陸運 1.2、海運 1.5),
+    // Info: (20260801 - Luphia) 先前只寫 1.2,被標為 Est. 的海運段揭露值是錯的
+    `# Est. = Y: no route data for that leg; straight-line distance x tortuosity factor (LAND x ${ESTIMATION_TORTUOSITY_FACTORS.LAND}, SEA x ${ESTIMATION_TORTUOSITY_FACTORS.SEA})`,
     `# Plans deemed inapplicable for a route produce no rows`,
   ];
 

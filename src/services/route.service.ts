@@ -17,7 +17,10 @@ import {
   INearestPortResult,
 } from "@/interfaces/logistics";
 import { getRouteApplicability } from "@/lib/utils/route_applicability";
-import { EMISSION_FACTORS } from "@/constants/logistics";
+import {
+  EMISSION_FACTORS,
+  ESTIMATION_TORTUOSITY_FACTORS,
+} from "@/constants/logistics";
 import { MoneyUtil } from "@/lib/utils/money";
 
 function calculateDistanceKm(
@@ -166,7 +169,8 @@ async function getLandRoute(
 
   try {
     let distKm = calculateDistanceKm(start.lat, start.lng, end.lat, end.lng);
-    distKm *= 1.2; // Info: (20260430 - Tzuhan) Tortuosity Factor
+    // Info: (20260801 - Luphia) 係數改由常數供給:揭露文字必須引用同一個值,否則查核者照揭露回推會得到錯誤距離
+    distKm *= ESTIMATION_TORTUOSITY_FACTORS.LAND;
     const geometry: GeoJSON.LineString = {
       type: "LineString",
       coordinates: [
@@ -548,7 +552,7 @@ export async function calculateMileageFromStrings(
       parsed.dest.lat,
       parsed.dest.lng,
     );
-    return { distanceKm: dist * 1.2 };
+    return { distanceKm: dist * ESTIMATION_TORTUOSITY_FACTORS.LAND };
   } catch (err) {
     console.error("Mileage calc error:", err);
     throw err;

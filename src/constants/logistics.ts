@@ -13,6 +13,25 @@ export const EMISSION_FACTORS = {
 
 export type EmissionFactorMode = keyof typeof EMISSION_FACTORS;
 
+/**
+ * Info: (20260801 - Luphia) 路徑資料不可用時的直線距離加成係數(tortuosity factor)。
+ *
+ * **必須由此處供給演算法與揭露文字兩邊。** 先前三處各自寫死:
+ * route.service.ts:169 陸運 ×1.2、route.sea.ts:379 海運 ×1.5,
+ * 而報告的揭露文字只寫「直線距離 × 1.2」—— 被標成 est. 的海運段實際是 ×1.5,
+ * 揭露值是錯的。查核者若照揭露值回推距離會得到錯誤的結果,
+ * 而這正是一份審計文件最不該出現的事。
+ *
+ * 空運無此係數:空運距離即大圓距離本身(route.air.ts 從不設 isFallback),
+ * 沒有「路徑資料不可用」的狀態可退。
+ */
+export const ESTIMATION_TORTUOSITY_FACTORS = {
+  /** Info: (20260430 - Tzuhan) 陸運:實際道路較直線繞行,取 1.2 */
+  LAND: 1.2,
+  /** Info: (20260501 - Luphia) 海運:航道受陸塊與海峽限制,繞行幅度大於陸運,取 1.5 */
+  SEA: 1.5,
+} as const;
+
 export const EMISSION_FACTOR_UNIT = "kg CO₂e / t-km";
 
 export const EMISSION_FACTOR_SOURCES = {

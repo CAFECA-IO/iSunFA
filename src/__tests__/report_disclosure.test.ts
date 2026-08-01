@@ -99,9 +99,9 @@ describe("reconcileLegTotals", () => {
  */
 describe("summarizeEstimatedLegs", () => {
   const r02 = [
-    { co2eKg: "2.473", isFallback: true },
-    { co2eKg: "5852.32" },
-    { co2eKg: "1.8175", isFallback: true },
+    { mode: "LAND", co2eKg: "2.473", isFallback: true },
+    { mode: "AIR", co2eKg: "5852.32" },
+    { mode: "LAND", co2eKg: "1.8175", isFallback: true },
   ];
 
   it("重現 R02:3 段中 2 段推估,占比約 0.07%", () => {
@@ -149,5 +149,36 @@ describe("summarizeEstimatedLegs", () => {
         { co2eKg: "1" },
       ]).estimatedCount,
     ).toBe(0);
+  });
+
+  /**
+   * Info: (20260801 - Luphia) 逐模式回報是必要的:陸運加成係數為 1.2、海運為 1.5
+   * (ESTIMATION_TORTUOSITY_FACTORS)。先前揭露文字一律寫「× 1.2」,
+   * 被標為 est. 的海運段揭露值因此是錯的 —— 查核者照它回推距離會得到錯誤結果。
+   */
+  it("回報出現推估的運輸模式,供揭露文字列出對應係數", () => {
+    expect(summarizeEstimatedLegs(r02).estimatedModes).toEqual(["LAND"]);
+    expect(
+      summarizeEstimatedLegs([
+        { mode: "SEA", co2eKg: "1", isFallback: true },
+        { mode: "LAND", co2eKg: "1" },
+      ]).estimatedModes,
+    ).toEqual(["SEA"]);
+  });
+
+  // Info: (20260801 - Luphia) 依固定順序而非出現順序:同一份報告的措辭不該因段落排列而改變
+  it("模式順序固定為 LAND → SEA → AIR,與段落出現順序無關", () => {
+    expect(
+      summarizeEstimatedLegs([
+        { mode: "SEA", co2eKg: "1", isFallback: true },
+        { mode: "LAND", co2eKg: "1", isFallback: true },
+      ]).estimatedModes,
+    ).toEqual(["LAND", "SEA"]);
+  });
+
+  it("無推估段時模式清單為空", () => {
+    expect(
+      summarizeEstimatedLegs([{ mode: "LAND", co2eKg: "1" }]).estimatedModes,
+    ).toEqual([]);
   });
 });

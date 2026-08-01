@@ -130,6 +130,14 @@ export interface IEstimatedLegSummary {
   /** Info: (20260801 - Luphia) 總段數 */
   totalCount: number;
   /**
+   * Info: (20260801 - Luphia) 哪些運輸模式出現推估段(去重、依 LAND→SEA→AIR 排序)。
+   *
+   * 必須逐模式回報,因為各模式的加成係數不同(陸運 ×1.2、海運 ×1.5)。
+   * 先前揭露文字一律寫「× 1.2」,海運的 est. 段揭露值因此是錯的 ——
+   * 查核者照揭露值回推距離會得到錯誤結果,那是審計文件最不該出現的事。
+   */
+  estimatedModes: string[];
+  /**
    * Info: (20260801 - Luphia) 推估段占方案總排放的比例(0~1)。
    * 無法計算時為 undefined —— 不以 0 充數,那會讓「算不出來」看起來像「不重要」。
    */
@@ -144,13 +152,24 @@ export interface IEstimatedLegSummary {
  * 不是報告的申報數值,故不需要與上游總計一致。
  */
 export function summarizeEstimatedLegs(
-  legs: { co2eKg?: string | number; isFallback?: boolean }[],
+  legs: { mode?: string; co2eKg?: string | number; isFallback?: boolean }[],
 ): IEstimatedLegSummary {
   const totalCount = legs.length;
   const estimatedLegs = legs.filter((leg) => leg.isFallback === true);
   const estimatedCount = estimatedLegs.length;
 
-  if (estimatedCount === 0) return { estimatedCount: 0, totalCount };
+  /**
+   * Info: (20260801 - Luphia) 依固定順序去重而非依出現順序:
+   * 同一份報告的揭露文字不該因段落排列不同而改變措辭。
+   */
+  const modeOrder = ["LAND", "SEA", "AIR"];
+  const estimatedModes = modeOrder.filter((mode) =>
+    estimatedLegs.some((leg) => leg.mode === mode),
+  );
+
+  if (estimatedCount === 0) {
+    return { estimatedCount: 0, totalCount, estimatedModes: [] };
+  }
 
   const sumOf = (subset: typeof legs): number | null => {
     let sum = 0;
@@ -176,5 +195,5 @@ export function summarizeEstimatedLegs(
       ? estimatedSum / allSum
       : undefined;
 
-  return { estimatedCount, totalCount, co2eShare };
+  return { estimatedCount, totalCount, estimatedModes, co2eShare };
 }
