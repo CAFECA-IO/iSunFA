@@ -174,6 +174,9 @@ export const transportationCarbonFootprintCalculator = {
     plan_air: "空運を含む（空陸複合輸送）",
     plan_custom: "カスタム複合輸送",
     plan_seaLandAir: "海陸空複合輸送(陸→海→陸→空→陸)",
+    include_co2e: "CO2e を計算する",
+    include_co2e_hint:
+      "チェックを外すと経路と距離のみを出力します。PDF・CSV に排出量の数値は一切表示されません。",
     split_hint:
       "各プランは個別のPDFとして出力され、複数ファイルはZIPにまとめられます。",
     confirm: "エクスポート",

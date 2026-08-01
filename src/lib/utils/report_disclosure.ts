@@ -138,10 +138,23 @@ export interface IEstimatedLegSummary {
    */
   estimatedModes: string[];
   /**
-   * Info: (20260801 - Luphia) 推估段占方案總排放的比例(0~1)。
+   * Info: (20260801 - Luphia) 推估段占全部段落的比例(0~1),基準見 shareBasis。
    * 無法計算時為 undefined —— 不以 0 充數,那會讓「算不出來」看起來像「不重要」。
    */
-  co2eShare?: number;
+  share?: number;
+  /**
+   * Info: (20260801 - Luphia) 占比的基準。使用者關閉碳排計算時報告內沒有排放數值,
+   * 材性只能以距離衡量 —— 此時仍須給出占比,否則「有幾段推估」少了輕重的判斷依據。
+   * 基準必須隨占比一起回報:0.07% 的排放占比與 0.07% 的距離占比是不同的意思。
+   */
+  shareBasis: EstimationShareBasisEnum;
+}
+
+export enum EstimationShareBasisEnum {
+  /** Info: (20260801 - Luphia) 以逐段排放量衡量(有計算碳排時的預設) */
+  CO2E = "CO2E",
+  /** Info: (20260801 - Luphia) 以逐段距離衡量(未計算碳排時) */
+  DISTANCE = "DISTANCE",
 }
 
 /**
@@ -152,7 +165,13 @@ export interface IEstimatedLegSummary {
  * 不是報告的申報數值,故不需要與上游總計一致。
  */
 export function summarizeEstimatedLegs(
-  legs: { mode?: string; co2eKg?: string | number; isFallback?: boolean }[],
+  legs: {
+    mode?: string;
+    co2eKg?: string | number;
+    distanceKm?: string | number;
+    isFallback?: boolean;
+  }[],
+  shareBasis: EstimationShareBasisEnum = EstimationShareBasisEnum.CO2E,
 ): IEstimatedLegSummary {
   const totalCount = legs.length;
   const estimatedLegs = legs.filter((leg) => leg.isFallback === true);
@@ -168,18 +187,21 @@ export function summarizeEstimatedLegs(
   );
 
   if (estimatedCount === 0) {
-    return { estimatedCount: 0, totalCount, estimatedModes: [] };
+    return { estimatedCount: 0, totalCount, estimatedModes: [], shareBasis };
   }
+
+  // Info: (20260801 - Luphia) 依基準取值:未計算碳排時 co2eKg 全為空,只能用距離
+  const valueOf = (leg: (typeof legs)[number]): string | number | undefined =>
+    shareBasis === EstimationShareBasisEnum.DISTANCE
+      ? leg.distanceKm
+      : leg.co2eKg;
 
   const sumOf = (subset: typeof legs): number | null => {
     let sum = 0;
     for (const leg of subset) {
-      const parsed = Number(leg.co2eKg);
-      if (
-        leg.co2eKg === undefined ||
-        leg.co2eKg === "" ||
-        !Number.isFinite(parsed)
-      ) {
+      const raw = valueOf(leg);
+      const parsed = Number(raw);
+      if (raw === undefined || raw === "" || !Number.isFinite(parsed)) {
         return null;
       }
       sum += parsed;
@@ -190,10 +212,10 @@ export function summarizeEstimatedLegs(
   const estimatedSum = sumOf(estimatedLegs);
   const allSum = sumOf(legs);
   // Info: (20260801 - Luphia) 分母為 0 或缺值時不給占比:0 除法與「不重要」是兩件事
-  const co2eShare =
+  const share =
     estimatedSum !== null && allSum !== null && allSum > 0
       ? estimatedSum / allSum
       : undefined;
 
-  return { estimatedCount, totalCount, estimatedModes, co2eShare };
+  return { estimatedCount, totalCount, estimatedModes, share, shareBasis };
 }

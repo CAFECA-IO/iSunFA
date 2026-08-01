@@ -530,6 +530,12 @@ export function buildBatchSummaryCsv(
   weightKg: number | string,
   // Info: (20260729 - Tzuhan) 匯出批次識別碼:與同批 PDF 一致,使跨批次的同名方案代碼可區分
   exportId?: string,
+  /**
+   * Info: (20260801 - Luphia) 是否計算二氧化碳當量。預設 true 使既有呼叫端行為不變。
+   * false 時 Factor / Source / Leg CO2e / Plan CO2e 四欄整組不輸出,而非留空 ——
+   * 空的 CO2e 欄在 Excel 中會被讀成零,而「未計算」與「為零」是完全不同的主張。
+   */
+  includeCo2e = true,
 ): string {
   // Info: (20260728 - Tzuhan) issue 08:每列用自己的實際計算重量;舊資料缺漏時退回批次參數
   const fallbackWeight = Number(weightKg) || 1000;
@@ -540,10 +546,18 @@ export function buildBatchSummaryCsv(
     `# iSunFA Transport Carbon Report`,
     ...(exportId ? [`# Export ID: ${exportId}`] : []),
     `# Code: R{route}-{MODE} — the same code appears in the matching PDF's filename and header`,
-    `# Formula: Leg CO2e = Distance x (Weight / 1000) x Factor`,
-    `# Factors (kg CO2e/t-km): LAND ${EMISSION_FACTORS.LAND} | SEA ${EMISSION_FACTORS.SEA} | AIR ${EMISSION_FACTORS.AIR} — UK DEFRA 2025`,
-    `# Units: Weight kg | Distance km | CO2e kg | Lat/Lng WGS84`,
-    `# Layout: one row per leg — Plan CO2e and PDF are filled on the plan's last leg only`,
+    ...(includeCo2e
+      ? [
+          `# Formula: Leg CO2e = Distance x (Weight / 1000) x Factor`,
+          `# Factors (kg CO2e/t-km): LAND ${EMISSION_FACTORS.LAND} | SEA ${EMISSION_FACTORS.SEA} | AIR ${EMISSION_FACTORS.AIR} — UK DEFRA 2025`,
+          `# Units: Weight kg | Distance km | CO2e kg | Lat/Lng WGS84`,
+        ]
+      : [
+          // Info: (20260801 - Luphia) 明示未計算而非省略不提:讀者必須知道這份檔案為何沒有排放欄
+          `# CO2e was NOT calculated for this export — distances only`,
+          `# Units: Weight kg | Distance km | Lat/Lng WGS84`,
+        ]),
+    `# Layout: one row per leg${includeCo2e ? " — Plan CO2e and PDF are filled on the plan's last leg only" : " — PDF is filled on the plan's last leg only"}`,
     // Info: (20260801 - Luphia) 逐模式列出係數:各模式不同(陸運 1.2、海運 1.5),
     // Info: (20260801 - Luphia) 先前只寫 1.2,被標為 Est. 的海運段揭露值是錯的
     `# Est. = Y: no route data for that leg; straight-line distance x tortuosity factor (LAND x ${ESTIMATION_TORTUOSITY_FACTORS.LAND}, SEA x ${ESTIMATION_TORTUOSITY_FACTORS.SEA})`,
@@ -568,10 +582,8 @@ export function buildBatchSummaryCsv(
     "To Lng",
     "Distance",
     "Est.",
-    "Factor",
-    "Source",
-    "Leg CO2e",
-    "Plan CO2e",
+    // Info: (20260801 - Luphia) 未計算碳排時整組欄位不輸出,欄名與資料列必須同步條件化
+    ...(includeCo2e ? ["Factor", "Source", "Leg CO2e", "Plan CO2e"] : []),
     "PDF",
   ].join(",");
 
@@ -620,10 +632,14 @@ export function buildBatchSummaryCsv(
             formatCoord(leg.toLng),
             formatDistance(leg.segment?.distanceKm),
             leg.segment?.isFallback ? "Y" : "N",
-            FACTOR_BY_MODE[leg.mode],
-            escapeCsv(FACTOR_SOURCE_BY_MODE[leg.mode]),
-            formatCo2e(leg.segment?.co2eKg),
-            isLastLeg ? formatCo2e(planTotal) : "",
+            ...(includeCo2e
+              ? [
+                  FACTOR_BY_MODE[leg.mode],
+                  escapeCsv(FACTOR_SOURCE_BY_MODE[leg.mode]),
+                  formatCo2e(leg.segment?.co2eKg),
+                  isLastLeg ? formatCo2e(planTotal) : "",
+                ]
+              : []),
             isLastLeg ? files : "",
           ].join(","),
         );

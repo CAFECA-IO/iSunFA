@@ -4,13 +4,36 @@
 // Info: (20260724 - Tzuhan) 只列出適用性引擎判定為適用的方案;每個勾選方案將產出獨立 PDF
 
 import { useState } from "react";
-import { Truck, Ship, Plane, MapPin, Layers, X, FileDown } from "lucide-react";
+import {
+  Truck,
+  Ship,
+  Plane,
+  MapPin,
+  Layers,
+  X,
+  FileDown,
+  Leaf,
+} from "lucide-react";
 import { RouteType } from "@/components/transportation_carbon_footprint_calculator/plan_section";
 import { useTranslation } from "@/i18n/i18n_context";
 
+/**
+ * Info: (20260801 - Luphia) 匯出選項。改以物件回傳而非多個位置引數:
+ * 選項只會越加越多,位置引數到第三個就無法從呼叫端看出哪個是哪個。
+ */
+export interface IExportOptions {
+  plans: Set<RouteType>;
+  /**
+   * Info: (20260801 - Luphia) 是否計算二氧化碳當量。
+   * 關閉時整份報告與 CSV 都不出現任何排放數值(不是算了才隱藏)——
+   * 一份距離報告與一份「碳排為零」的報告是完全不同的主張。
+   */
+  includeCo2e: boolean;
+}
+
 interface IExportOptionsModalProps {
   availablePlans: RouteType[];
-  onConfirm: (selected: Set<RouteType>) => void;
+  onConfirm: (options: IExportOptions) => void;
   onClose: () => void;
 }
 
@@ -35,6 +58,8 @@ export function ExportOptionsModal({
   const [selected, setSelected] = useState<Set<RouteType>>(
     new Set(availablePlans),
   );
+  // Info: (20260801 - Luphia) 預設計算:碳足跡是本功能的主要目的,不計算是例外情形
+  const [includeCo2e, setIncludeCo2e] = useState(true);
 
   const togglePlan = (plan: RouteType) => {
     setSelected((prev) => {
@@ -105,6 +130,30 @@ export function ExportOptionsModal({
           })}
         </div>
 
+        {/* Info: (20260801 - Luphia) 碳排開關與方案勾選以分隔線區隔:
+            前者決定「算什麼」,後者決定「算哪些路線」,是兩個不同層次的選擇 */}
+        <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 transition-all hover:bg-gray-50">
+          <input
+            type="checkbox"
+            checked={includeCo2e}
+            onChange={() => setIncludeCo2e((prev) => !prev)}
+            className="mt-0.5 h-4 w-4 accent-orange-600"
+          />
+          <Leaf className="mt-0.5 h-4 w-4 shrink-0 text-gray-500" />
+          <span className="flex flex-col gap-0.5">
+            <span className="text-sm font-semibold text-gray-700">
+              {t(
+                "transportation_carbon_footprint_calculator.export_options.include_co2e",
+              )}
+            </span>
+            <span className="text-xs font-normal text-gray-500">
+              {t(
+                "transportation_carbon_footprint_calculator.export_options.include_co2e_hint",
+              )}
+            </span>
+          </span>
+        </label>
+
         <p className="mt-4 text-xs text-gray-400">
           {t(
             "transportation_carbon_footprint_calculator.export_options.split_hint",
@@ -121,7 +170,7 @@ export function ExportOptionsModal({
           </button>
           <button
             type="button"
-            onClick={() => onConfirm(selected)}
+            onClick={() => onConfirm({ plans: selected, includeCo2e })}
             disabled={selected.size === 0}
             className="flex items-center gap-2 rounded-lg bg-orange-600 px-5 py-2 text-sm font-semibold text-white transition-all hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-50"
           >

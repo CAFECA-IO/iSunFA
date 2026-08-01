@@ -174,6 +174,9 @@ export const transportationCarbonFootprintCalculator = {
     plan_air: "Including Air (Air-Land Multimodal)",
     plan_custom: "Custom Multimodal",
     plan_seaLandAir: "Sea-Land-Air (land→sea→land→air→land)",
+    include_co2e: "Calculate CO2e",
+    include_co2e_hint:
+      "Uncheck to export routes and distances only. No emission figures will appear in the PDF or CSV.",
     split_hint:
       "Each plan is exported as a separate PDF; multiple files are bundled into a ZIP.",
     confirm: "Export",

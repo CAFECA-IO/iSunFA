@@ -59,6 +59,8 @@ export interface IBuildReportItemInput {
   /** Info: (20260801 - Luphia) 全程圖視野的南北緯度界(Mercator 比例尺護欄用) */
   captureLatSouthDeg?: number;
   captureLatNorthDeg?: number;
+  /** Info: (20260801 - Luphia) 是否計算二氧化碳當量;false 時輸出純距離報告 */
+  includeCo2e?: boolean;
   /**
    * Info: (20260731 - Tzuhan) 逐段路徑圖,索引對齊 buildPlanLegs 的順序。
    * 只有全程圖時,市區→機場、機場→市區的接駁段在圖上看不到,那兩段就沒有證據。
@@ -118,6 +120,7 @@ export function buildReportPdfItem(
     captureHeightPx,
     captureLatSouthDeg,
     captureLatNorthDeg,
+    includeCo2e,
     legCaptures,
   } = input;
   const legs = buildPlanLegs(item, planKey);
@@ -163,6 +166,7 @@ export function buildReportPdfItem(
     captureHeightPx: sanitizePositive(captureHeightPx),
     captureLatSouthDeg: sanitizeLatitude(captureLatSouthDeg),
     captureLatNorthDeg: sanitizeLatitude(captureLatNorthDeg),
+    includeCo2e,
   };
 }
 
@@ -178,6 +182,8 @@ export interface IBuildReportRequestInput {
    * 缺項即該份不附地圖,報告仍成立並在圖說處明示。
    */
   mapCaptures?: Map<string, IPlanMapCapture>;
+  /** Info: (20260801 - Luphia) 是否計算二氧化碳當量(使用者於匯出選單勾選) */
+  includeCo2e?: boolean;
 }
 
 export interface IPlanMapCapture {
@@ -215,6 +221,7 @@ export function buildReportPdfItems(
         captureHeightPx: captured?.overview?.heightPx,
         captureLatSouthDeg: captured?.overview?.latSouthDeg,
         captureLatNorthDeg: captured?.overview?.latNorthDeg,
+        includeCo2e: input.includeCo2e,
         legCaptures: captured?.legs,
       });
       if (built) items.push(built);

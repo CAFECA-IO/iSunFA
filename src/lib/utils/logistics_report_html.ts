@@ -15,6 +15,7 @@ import {
   ScaleBarOmissionEnum,
 } from "@/lib/utils/map_scale_bar";
 import {
+  EstimationShareBasisEnum,
   reconcileLegTotals,
   ReconciliationVerdictEnum,
   REPORT_DISPLAY_DECIMALS,
@@ -91,6 +92,15 @@ export interface ILogisticsReportHtmlInput {
   /** Info: (20260801 - Luphia) 總圖視野的南北緯度界(Mercator 比例尺護欄用) */
   captureLatSouthDeg?: number;
   captureLatNorthDeg?: number;
+  /**
+   * Info: (20260801 - Luphia) 是否計算二氧化碳當量。false 時整份報告不出現任何排放數值:
+   * 係數欄、CO2e 欄、總計列、公式與勾稽揭露全數移除,標頭明示「未計算碳排」。
+   *
+   * 為什麼不是「算了但隱藏」:使用者選擇不計算,報告就不該留下任何看起來像
+   * 「碳排為零」的空欄位 —— 一份距離報告與一份碳排為零的報告是完全不同的主張。
+   * 預設為 true,舊請求(未帶此欄)行為不變。
+   */
+  includeCo2e?: boolean;
   exportId?: string;
   generatedAt: string;
 }
@@ -311,17 +321,26 @@ function renderEstimationNote(summary: IEstimatedLegSummary): string {
     : "以直線距離推估";
   const scope = `本報告 ${summary.totalCount} 段中有 ${summary.estimatedCount} 段缺乏路徑資料,${method}(見上表 est. 標記)`;
 
-  if (summary.co2eShare === undefined) {
+  /**
+   * Info: (20260801 - Luphia) 基準必須寫進文字:0.07% 的排放占比與 0.07% 的距離占比
+   * 是不同的意思。使用者關閉碳排計算時報告內沒有排放數值,材性只能以距離衡量。
+   */
+  const basisLabel =
+    summary.shareBasis === EstimationShareBasisEnum.DISTANCE
+      ? "逐段距離"
+      : "逐段排放";
+
+  if (summary.share === undefined) {
     // Info: (20260801 - Luphia) 算不出占比就明說,不填 0 —— 「算不出來」與「不重要」是兩件事
-    return `<div class="formula recon">${scope};該批段落的排放占比無法計算(逐段數值不完整)。</div>`;
+    return `<div class="formula recon">${scope};該批段落的${basisLabel}占比無法計算(逐段數值不完整)。</div>`;
   }
 
   /**
    * Info: (20260801 - Luphia) 占比取兩位小數的百分比:0.07% 與 0% 對材性判斷是不同的答案,
    * 四捨五入到整數會把前者變成後者。
    */
-  const percent = (summary.co2eShare * 100).toFixed(2);
-  return `<div class="formula recon">${scope},合計占逐段排放 ${percent}%。</div>`;
+  const percent = (summary.share * 100).toFixed(2);
+  return `<div class="formula recon">${scope},合計占${basisLabel} ${percent}%。</div>`;
 }
 
 /**
@@ -366,20 +385,43 @@ function renderReconciliationNote(reconciliation: {
 export function buildLogisticsReportHtml(
   input: ILogisticsReportHtmlInput,
 ): string {
+  /**
+   * Info: (20260801 - Luphia) 預設計算碳排:未帶此欄的舊請求行為不變。
+   * 關閉時整份報告不出現任何排放數值 —— 一份距離報告與一份「碳排為零」的報告
+   * 是完全不同的主張,不可讓讀者從空欄位自行猜測。
+   */
+  const includeCo2e = input.includeCo2e !== false;
+
+  /**
+   * Info: (20260801 - Luphia) 未計算碳排時,卡片與總計列改呈現總距離 ——
+   * 版面不留空洞,而讀者仍拿到這份報告唯一有意義的合計數。
+   * 以 Number 累加而非 Decimal:距離僅供顯示,不進申報數值(逐段距離仍照原值印出)。
+   */
+  const totalDistanceKm = input.legs.reduce(
+    (sum, leg) =>
+      sum +
+      (Number.isFinite(Number(leg.distanceKm)) ? Number(leg.distanceKm) : 0),
+    0,
+  );
+
   const legRows = input.legs
     .map((leg, index) => {
       const from = escapeHtml(leg.fromName);
       const to = escapeHtml(leg.toName);
       const fromCoord = coordText(leg.fromLat, leg.fromLng);
       const toCoord = coordText(leg.toLat, leg.toLng);
+      // Info: (20260801 - Luphia) 未計算碳排時整組欄位不輸出,而非留空格 —— 空欄位會被讀成「碳排為零」
+      const emissionCells = includeCo2e
+        ? `
+  <td class="num">${FACTOR_BY_MODE[leg.mode]}</td>
+  <td class="num">${formatNumber(leg.co2eKg)}</td>`
+        : "";
       return `<tr>
   <td class="num">${index + 1}</td>
   <td><span class="mode mode-${leg.mode.toLowerCase()}">${leg.mode}</span></td>
   <td>${from}${fromCoord ? `<span class="coord">${fromCoord}</span>` : ""}</td>
   <td>${to}${toCoord ? `<span class="coord">${toCoord}</span>` : ""}</td>
-  <td class="num">${formatNumber(leg.distanceKm)}${leg.isFallback ? '<span class="est">est.</span>' : ""}</td>
-  <td class="num">${FACTOR_BY_MODE[leg.mode]}</td>
-  <td class="num">${formatNumber(leg.co2eKg)}</td>
+  <td class="num">${formatNumber(leg.distanceKm)}${leg.isFallback ? '<span class="est">est.</span>' : ""}</td>${emissionCells}
 </tr>`;
     })
     .join("\n");
@@ -392,10 +434,13 @@ export function buildLogisticsReportHtml(
    * 也就是「查核者會不會發現對不上」取決於運氣,而報告完全沒揭露。
    * 「加總對不上」對審計文件是必被提問的一項,故一律揭露。
    */
-  const reconciliation = reconcileLegTotals(
-    input.legs.map((leg) => leg.co2eKg),
-    input.planTotalCo2e,
-  );
+  // Info: (20260801 - Luphia) 未計算碳排時沒有可勾稽的數值,整段揭露不適用
+  const reconciliation = includeCo2e
+    ? reconcileLegTotals(
+        input.legs.map((leg) => leg.co2eKg),
+        input.planTotalCo2e,
+      )
+    : null;
 
   /**
    * Info: (20260801 - Luphia) 推估段的材性。路網覆蓋範圍由部署決定
@@ -403,7 +448,12 @@ export function buildLogisticsReportHtml(
    * 陸運段全數落到推估),但報告刻意不宣稱覆蓋範圍 —— 在程式碼裡另寫一份
    * 就是第二個必須手動同步的事實。只陳述資料本身能證實的:幾段推估、占多少排放。
    */
-  const estimation = summarizeEstimatedLegs(input.legs);
+  const estimation = summarizeEstimatedLegs(
+    input.legs,
+    includeCo2e
+      ? EstimationShareBasisEnum.CO2E
+      : EstimationShareBasisEnum.DISTANCE,
+  );
 
   // Info: (20260731 - Tzuhan) 係數來源逐一列出:查核者要能自行以公開係數重算每一格
   const sources = Array.from(
@@ -505,16 +555,23 @@ export function buildLogisticsReportHtml(
 <body>
   <h1><span class="code">${escapeHtml(input.planCode)}</span> ${escapeHtml(input.planLabel)}</h1>
   <p class="meta">
-    ${escapeHtml(input.originLabel)} → ${escapeHtml(input.destLabel)}
+    ${includeCo2e ? "" : "【未計算碳排】"}${escapeHtml(input.originLabel)} → ${escapeHtml(input.destLabel)}
     · ${escapeHtml(input.routeLabel)}
     · ${formatNumber(input.weightKg)} kg
     · ${escapeHtml(input.generatedAt)}${input.exportId ? ` · Export ${escapeHtml(input.exportId)}` : ""}
   </p>
   <div class="grid">
-    <div class="card">
+    ${
+      includeCo2e
+        ? `<div class="card">
       <div class="label">方案總排放</div>
       <div class="value">${formatNumber(input.planTotalCo2e)} <span style="font-size:9pt">kg CO2e</span></div>
-    </div>
+    </div>`
+        : `<div class="card">
+      <div class="label">總距離</div>
+      <div class="value">${formatNumber(totalDistanceKm)} <span style="font-size:9pt">km</span></div>
+    </div>`
+    }
     <div class="card">
       <div class="label">段數</div>
       <div class="value">${input.legs.length}</div>
@@ -525,26 +582,30 @@ export function buildLogisticsReportHtml(
     <thead>
       <tr>
         <th>#</th><th>Mode</th><th>From</th><th>To</th>
-        <th class="num">Distance (km)</th><th class="num">Factor</th><th class="num">CO2e (kg)</th>
+        <th class="num">Distance (km)</th>${includeCo2e ? '<th class="num">Factor</th><th class="num">CO2e (kg)</th>' : ""}
       </tr>
     </thead>
     <tbody>
 ${legRows}
     </tbody>
   </table>
-  <p class="total">Total ${formatNumber(input.planTotalCo2e)} kg CO2e</p>
+  <p class="total">${includeCo2e ? `Total ${formatNumber(input.planTotalCo2e)} kg CO2e` : `Total ${formatNumber(totalDistanceKm)} km`}</p>
   <h2 class="section">逐段路徑圖</h2>
   <div class="legmaps">
 ${legFigures}
   </div>
   <div class="formula">
-    Leg CO2e = Distance × (Weight / 1000) × Factor ·
+    ${
+      includeCo2e
+        ? `Leg CO2e = Distance × (Weight / 1000) × Factor ·
     Factors (kg CO2e/t-km): LAND ${EMISSION_FACTORS.LAND} | SEA ${EMISSION_FACTORS.SEA} | AIR ${EMISSION_FACTORS.AIR} ·
-    ${sources} ·
+    ${sources} ·`
+        : `本報告未計算二氧化碳當量,僅提供路徑與距離。排放量須另行以適用係數計算 ·`
+    }
     est. = 該段無路徑資料,以直線距離乘繞行係數推估(LAND × ${ESTIMATION_TORTUOSITY_FACTORS.LAND}、SEA × ${ESTIMATION_TORTUOSITY_FACTORS.SEA})
   </div>
   ${renderEstimationNote(estimation)}
-  ${renderReconciliationNote(reconciliation)}
+  ${reconciliation ? renderReconciliationNote(reconciliation) : ""}
 </body>
 </html>`;
 }

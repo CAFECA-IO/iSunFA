@@ -45,7 +45,10 @@ import { useAuth } from "@/contexts/auth_context";
 import AuthPlaceholder from "@/components/common/auth_placeholder";
 import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
 import { BatchExportRenderer } from "@/components/transportation_carbon_footprint_calculator/batch_export_renderer";
-import { ExportOptionsModal } from "@/components/transportation_carbon_footprint_calculator/export_options_modal";
+import {
+  ExportOptionsModal,
+  type IExportOptions,
+} from "@/components/transportation_carbon_footprint_calculator/export_options_modal";
 import {
   buildExportFileName,
   buildExportId,
@@ -623,8 +626,10 @@ function ReportPageContent() {
    */
   const executeBatchExport = async (
     indices: number[],
-    selectedPlans: Set<RouteType>,
+    options: IExportOptions,
   ) => {
+    // Info: (20260801 - Luphia) 解出 plans 供既有邏輯沿用,includeCo2e 只在產出階段用到
+    const selectedPlans = options.plans;
     if (!batchResults) return;
     let originalViewport: string | null = null;
     let viewportMeta: Element | null = null;
@@ -715,6 +720,7 @@ function ReportPageContent() {
           selectedPlans,
           fallbackWeightKg: weightKg !== "" ? weightKg : 1000,
           mapCaptures,
+          includeCo2e: options.includeCo2e,
         });
         const exported = await requestReportPdfs(items, {
           exportId: batchExportId,
@@ -808,6 +814,7 @@ function ReportPageContent() {
             filesByRouteIndex,
             weightKg !== "" ? weightKg : 1000,
             batchExportId,
+            options.includeCo2e,
           ),
         );
       }
@@ -1059,13 +1066,13 @@ function ReportPageContent() {
   };
 
   // Info: (20260724 - Tzuhan) 勾選選單確認 → 依目標範圍分派至批次或單筆匯出流程
-  const handleExportConfirm = async (selectedPlans: Set<RouteType>) => {
+  const handleExportConfirm = async (options: IExportOptions) => {
     const target = exportModalTarget;
     setExportModalTarget(null);
     if (!target) return;
 
     if (target.scope === "report") {
-      await executeReportExport(selectedPlans);
+      await executeReportExport(options.plans);
       return;
     }
     if (!batchResults) return;
@@ -1073,7 +1080,7 @@ function ReportPageContent() {
       target.scope === "single-route" && target.index !== undefined
         ? [target.index]
         : batchResults.map((_, index) => index);
-    await executeBatchExport(indices, selectedPlans);
+    await executeBatchExport(indices, options);
   };
 
   const isLocked = loading; // Info: (20260430 - Tzuhan) 只有在「運算中」才反灰，算完後重新開放輸入以便用戶微調再算一次

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 import {
+  EstimationShareBasisEnum,
   reconcileLegTotals,
   ReconciliationVerdictEnum,
   summarizeEstimatedLegs,
@@ -108,13 +109,13 @@ describe("summarizeEstimatedLegs", () => {
     const summary = summarizeEstimatedLegs(r02);
     expect(summary.estimatedCount).toBe(2);
     expect(summary.totalCount).toBe(3);
-    expect((summary.co2eShare as number) * 100).toBeCloseTo(0.0733, 3);
+    expect((summary.share as number) * 100).toBeCloseTo(0.0733, 3);
   });
 
   it("無推估段時不產生占比", () => {
     const summary = summarizeEstimatedLegs([{ co2eKg: "1" }, { co2eKg: "2" }]);
     expect(summary.estimatedCount).toBe(0);
-    expect(summary.co2eShare).toBeUndefined();
+    expect(summary.share).toBeUndefined();
   });
 
   it("全部推估時占比為 100%", () => {
@@ -122,7 +123,7 @@ describe("summarizeEstimatedLegs", () => {
       summarizeEstimatedLegs([
         { co2eKg: "3", isFallback: true },
         { co2eKg: "7", isFallback: true },
-      ]).co2eShare,
+      ]).share,
     ).toBe(1);
   });
 
@@ -138,7 +139,7 @@ describe("summarizeEstimatedLegs", () => {
   ])("%s 時不給占比", (_label, legs) => {
     const summary = summarizeEstimatedLegs(legs);
     expect(summary.estimatedCount).toBeGreaterThan(0);
-    expect(summary.co2eShare).toBeUndefined();
+    expect(summary.share).toBeUndefined();
   });
 
   // Info: (20260801 - Luphia) isFallback 未設定不等於 false 之外的任何值,只有 true 才算推估
@@ -174,6 +175,38 @@ describe("summarizeEstimatedLegs", () => {
         { mode: "LAND", co2eKg: "1", isFallback: true },
       ]).estimatedModes,
     ).toEqual(["LAND", "SEA"]);
+  });
+
+  /**
+   * Info: (20260801 - Luphia) 使用者關閉碳排計算時報告內沒有排放數值,
+   * 材性只能以距離衡量。基準必須隨占比一起回報 ——
+   * 0.07% 的排放占比與 0.07% 的距離占比是不同的意思。
+   */
+  it("以距離為基準時改用 distanceKm 計算占比", () => {
+    const summary = summarizeEstimatedLegs(
+      [
+        { mode: "LAND", distanceKm: 20, co2eKg: "999", isFallback: true },
+        { mode: "AIR", distanceKm: 80, co2eKg: "1" },
+      ],
+      EstimationShareBasisEnum.DISTANCE,
+    );
+    expect(summary.share).toBeCloseTo(0.2, 10);
+    expect(summary.shareBasis).toBe(EstimationShareBasisEnum.DISTANCE);
+  });
+
+  it("預設基準為排放量", () => {
+    expect(summarizeEstimatedLegs(r02).shareBasis).toBe(
+      EstimationShareBasisEnum.CO2E,
+    );
+  });
+
+  it("以距離為基準但缺距離值時不給占比", () => {
+    expect(
+      summarizeEstimatedLegs(
+        [{ mode: "LAND", co2eKg: "1", isFallback: true }],
+        EstimationShareBasisEnum.DISTANCE,
+      ).share,
+    ).toBeUndefined();
   });
 
   it("無推估段時模式清單為空", () => {

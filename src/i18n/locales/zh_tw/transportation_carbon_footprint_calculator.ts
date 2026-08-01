@@ -163,6 +163,9 @@ export const transportationCarbonFootprintCalculator = {
     plan_air: "包含空運（空陸聯運）",
     plan_custom: "自訂多式聯運",
     plan_seaLandAir: "海陸空聯運(陸→海→陸→空→陸)",
+    include_co2e: "計算二氧化碳當量",
+    include_co2e_hint:
+      "取消勾選則僅匯出路徑與距離，PDF 與 CSV 都不會出現任何排放數值。",
     split_hint: "每個方案將產出獨立的 PDF 檔案；多份檔案將打包為 ZIP 下載。",
     confirm: "匯出",
     progress: "正在產生第 {{current}} / {{total}} 份報告...",

@@ -80,6 +80,11 @@ const ReportSchema = z.object({
    */
   captureLatSouthDeg: z.number().min(-90).max(90).optional(),
   captureLatNorthDeg: z.number().min(-90).max(90).optional(),
+  /**
+   * Info: (20260801 - Luphia) 是否計算二氧化碳當量。optional 且預設視為 true,
+   * 舊版前端未帶此欄時行為不變(向後相容);明確送 false 才輸出純距離報告。
+   */
+  includeCo2e: z.boolean().optional(),
 });
 
 export const LogisticsReportPdfRequestSchema = z.object({
