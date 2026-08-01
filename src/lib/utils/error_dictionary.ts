@@ -764,6 +764,14 @@ export const API_ERRORS = {
     message: "Failed to generate PDF report",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
+  // Info: (20260731 - Julian) 使用者於伺服器回應前主動中止請求；非伺服器故障，與 IS_UNKNOWN 區隔以免污染 5xx 指標
+  // Info: (20260801 - Luphia) 原取 IS000017，但該碼已由 #6569 的 IS_REPORT_IMPORT_FAILED 佔用；
+  // Info: (20260801 - Luphia) develop 現已用到 IS000020，故改取 21 以避免撞碼。
+  IS_REQUEST_ABORTED: {
+    code: "IS000021",
+    message: "Request aborted by client",
+    status: ApiCode.CLIENT_CLOSED_REQUEST,
+  } as IErrorDef,
   IS_UNKNOWN: {
     code: "IS000099",
     message: "Internal Server Error",

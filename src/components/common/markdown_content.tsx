@@ -329,7 +329,27 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
         // Info: (20260717 - Julian) 攔截自訂圖表標籤，交由 CustomChart 解析渲染
         const customType = !inline ? detectCustomChartType(fenceLang) : null;
         if (customType) {
-          return <CustomChart type={customType} raw={getFenceText()} />;
+          const chartText = getFenceText();
+          return (
+            <CustomChart
+              type={customType}
+              raw={chartText}
+              onChartChange={
+                onContentChange
+                  ? (newChart) => {
+                      // Info: (20260730 - Julian) AI 採用後回寫 Markdown 原始碼（優先整塊替換）
+                      const targetBlock = `\`\`\`${fenceLang}\n${chartText}\n\`\`\``;
+                      const newBlock = `\`\`\`${fenceLang}\n${newChart}\n\`\`\``;
+                      if (content.includes(targetBlock)) {
+                        onContentChange(content.replace(targetBlock, newBlock));
+                      } else {
+                        onContentChange(content.replace(chartText, newChart));
+                      }
+                    }
+                  : undefined
+              }
+            />
+          );
         }
 
         // Info: (20260720 - Tzuhan) #54 證據鏈 fence:層層下鑽至單一憑證(數據實時問 API,

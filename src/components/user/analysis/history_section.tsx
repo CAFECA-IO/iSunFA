@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, Fragment } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { request } from "@/lib/utils/request";
+import { ApiCode } from "@/lib/utils/status";
 import {
   Check,
   ChevronLeft,
@@ -127,7 +128,7 @@ export default function HistorySection() {
         cache: "no-store",
       });
 
-      if (result.code === "SUCCESS") {
+      if (result.code === ApiCode.SUCCESS) {
         setHistory(result.payload);
       } else {
         throw new Error(result.message || "Failed to load history");
@@ -160,7 +161,7 @@ export default function HistorySection() {
         method: "POST",
       });
 
-      if (result.code === "SUCCESS") {
+      if (result.code === ApiCode.SUCCESS) {
         const newRetryCount =
           result.payload?.retryCount || (item.retryCount || 0) + 1;
         setHistory((prev) =>
@@ -193,7 +194,7 @@ export default function HistorySection() {
         };
       }>(`/api/v1/user/analysis/${item.reportId}`);
 
-      if (result.code === "SUCCESS") {
+      if (result.code === ApiCode.SUCCESS) {
         let content = "";
         let payloadResult = result.payload.result;
 
@@ -346,7 +347,7 @@ export default function HistorySection() {
         body: JSON.stringify({ hideFinancialData: hideData }),
       });
 
-      if (result.code === "SUCCESS" && result.payload?.token) {
+      if (result.code === ApiCode.SUCCESS && result.payload?.token) {
         setShareToken(result.payload.token);
         setIsShareLinkModalOpen(true);
         setIsShareSettingsModalOpen(false);
@@ -379,7 +380,7 @@ export default function HistorySection() {
         { method: "PATCH" },
       );
 
-      if (result.code === "SUCCESS") {
+      if (result.code === ApiCode.SUCCESS) {
         setShareToken(null);
         setIsShareLinkModalOpen(false);
 

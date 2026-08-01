@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma, Order, User } from "@/generated";
 import {
   ORDER_STATUS,
+  PAYMENT_STATUS,
   PAYMENT_TRANSACTION_STATUS,
   ORDER_TYPE,
 } from "@/constants/status";
@@ -58,7 +59,7 @@ export class PaymentRepository {
       }
 
       const isPaymentSuccess =
-        status === "SUCCESS" ||
+        status === PAYMENT_STATUS.SUCCESS ||
         body.success === true ||
         (token && typeof token === "string");
 
@@ -281,7 +282,7 @@ export class PaymentRepository {
         type: ORDER_TYPE.OEN_PAYMENT,
         paymentTransactions: {
           some: {
-            status: "SUCCESS",
+            status: PAYMENT_TRANSACTION_STATUS.SUCCESS,
           },
         },
       },

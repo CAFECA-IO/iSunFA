@@ -381,8 +381,6 @@ const MermaidChart: FC<IMermaidChartProps> = ({
         onClose={() => setIsAiModalOpen(false)}
         currentChart={currentChart}
         chartType={chartType}
-        svgStr={svgStr}
-        parsedPieData={parsedPieData}
         onAdopt={handleAdopt}
       />
     </div>

@@ -17,7 +17,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 import DataTable, { IDataTableColumn } from "@/components/common/data_table";
 import { formatDate } from "@/lib/utils/date";
 import ReceiptPdfDownloader from "@/components/user/billing/receipt_pdf_downloader";
-import { ORDER_STATUS } from "@/constants/status";
+import { ORDER_STATUS, PAYMENT_TRANSACTION_STATUS } from "@/constants/status";
 import {
   IMetrics,
   IPagination,
@@ -366,7 +366,7 @@ export default function AdminBillingPage() {
       render: (cc) => (
         <span
           className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${
-            cc.status === "SUCCESS"
+            cc.status === PAYMENT_TRANSACTION_STATUS.SUCCESS
               ? "bg-emerald-50 text-emerald-700"
               : "bg-red-50 text-red-700"
           }`}

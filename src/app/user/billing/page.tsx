@@ -22,6 +22,7 @@ import {
   ORDER_STATUS,
   ORDER_TYPE,
   ORDER_TYPE_PREFIX,
+  PAYMENT_TRANSACTION_STATUS,
 } from "@/constants/status";
 import { BANK_TRANSFER } from "@/constants/price";
 
@@ -402,7 +403,8 @@ export default function BillingPage() {
                           <td className="px-6 py-4">
                             <span
                               className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
-                                order.status === "SUCCESS" ||
+                                order.status ===
+                                  PAYMENT_TRANSACTION_STATUS.SUCCESS ||
                                 order.status === ORDER_STATUS.PAID ||
                                 order.status === ORDER_STATUS.COMPLETED
                                   ? "bg-green-50 text-green-700"
@@ -439,7 +441,8 @@ export default function BillingPage() {
                           </td>
                           <td className="flex justify-end px-6 py-4">
                             {order.type === ORDER_TYPE.OEN_PAYMENT &&
-                              order.status === "SUCCESS" && (
+                              order.status ===
+                                PAYMENT_TRANSACTION_STATUS.SUCCESS && (
                                 <ReceiptPdfDownloader
                                   receiptNumber={order.id}
                                   date={order.createdAt}
@@ -527,7 +530,8 @@ export default function BillingPage() {
                                 className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
                                   pt.status === ORDER_STATUS.PAID ||
                                   pt.status === ORDER_STATUS.COMPLETED ||
-                                  pt.status === "SUCCESS"
+                                  pt.status ===
+                                    PAYMENT_TRANSACTION_STATUS.SUCCESS
                                     ? "bg-green-50 text-green-700"
                                     : pt.status === ORDER_STATUS.PENDING ||
                                         pt.status === ORDER_STATUS.PAYING
@@ -725,7 +729,8 @@ export default function BillingPage() {
                                     <td className="px-6 py-3">
                                       <span
                                         className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
-                                          tx.status === "SUCCESS" ||
+                                          tx.status ===
+                                            PAYMENT_TRANSACTION_STATUS.SUCCESS ||
                                           tx.status === ORDER_STATUS.PAID ||
                                           tx.status === ORDER_STATUS.COMPLETED
                                             ? "bg-green-50 text-green-700"
@@ -741,7 +746,8 @@ export default function BillingPage() {
                                       </span>
                                     </td>
                                     <td className="flex justify-end px-6 py-3">
-                                      {tx.status === "SUCCESS" && (
+                                      {tx.status ===
+                                        PAYMENT_TRANSACTION_STATUS.SUCCESS && (
                                         <ReceiptPdfDownloader
                                           receiptNumber={tx.id}
                                           date={tx.createdAt}

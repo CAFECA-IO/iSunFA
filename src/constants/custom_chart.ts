@@ -38,6 +38,7 @@ export enum CustomChartConfigKey {
   RIGHT_COLOR = "rightcolor", // Info: (20260723 - Julian) 龍捲風圖右數列顏色 HEX
   MODE = "mode", // Info: (20260723 - Julian) 龍捲風圖型別（compare 比較型 / sensitivity 敏感度型）
   BASELINE = "baseline", // Info: (20260723 - Julian) 龍捲風圖敏感度型的中心基準值
+  TREND_COLOR = "trendcolor", // Info: (20260730 - Julian) 直方圖趨勢線顏色 HEX（未設定採預設色）
 }
 
 /**
@@ -60,6 +61,43 @@ export enum TornadoMode {
 export enum HistogramTrendType {
   NORMAL = "normal",
 }
+
+/**
+ * Info: (20260730 - Julian) 直方圖趨勢線的預設線色（未指定 trendColor 時採用）；與深色長條（#152C5B）對比明顯。
+ */
+export const DEFAULT_HISTOGRAM_TREND_COLOR = "#FF9800";
+
+/**
+ * Info: (20260730 - Julian)
+ * 各趨勢線類型的呈現中繼資料（顯示標籤 + 預設線色）。
+ * 供工具面板「取得趨勢線原始資料」：即使 DSL 未寫 trendColor，也能由此得知該類型的預設色與名稱。
+ */
+export interface IHistogramTrendMeta {
+  label: string; // Info: (20260730 - Julian) 顯示名稱的 i18n key（字面值收斂於 locale 檔，供 t() 查表）
+  defaultColor: string; // Info: (20260730 - Julian) 預設線色 HEX
+}
+
+export const HISTOGRAM_TREND_META: Readonly<
+  Record<HistogramTrendType, IHistogramTrendMeta>
+> = {
+  [HistogramTrendType.NORMAL]: {
+    label: "chart.custom_chart.histogram.trend_normal",
+    defaultColor: DEFAULT_HISTOGRAM_TREND_COLOR,
+  },
+};
+
+/**
+ * Info: (20260730 - Julian)
+ * 趨勢線選色盤：挑選高彩度、彼此易辨、且與深色長條對比清楚的線條色，供 ColorPicker 快速選色。
+ */
+export const HISTOGRAM_TREND_COLOR_OPTIONS: string[] = [
+  "#FF9800", // 橘（預設）
+  "#E11D48", // 玫紅
+  "#7C3AED", // 紫
+  "#0EA5E9", // 天藍
+  "#16A34A", // 綠
+  "#0F172A", // 墨黑
+];
 
 /**
  * Info: (20260721 - Julian)
@@ -88,6 +126,29 @@ export enum TornadoActionType {
   EDIT_ITEM = "TORNADO_EDIT_ITEM",
   EDIT_GROUP = "TORNADO_EDIT_GROUP",
   DELETE_ITEM = "TORNADO_DELETE_ITEM",
+}
+
+/**
+ * Info: (20260723 - Julian)
+ * 自訂圖表「跨類型共用」的結構化編輯動作。目前僅標題（title 設定列各類型皆有），
+ * 由 applyCustomChartAction 於分派前統一處理，與 mermaid 的 CHANGE_TITLE 對應。
+ */
+export enum CustomChartActionType {
+  SET_TITLE = "CUSTOM_SET_TITLE",
+}
+
+/**
+ * Info: (20260730 - Julian)
+ * 直方圖結構化編輯的動作類型列舉（對應 histogram_tools_submenu 的五項工具）。
+ * 對應 custom-histogram DSL 的資料列（分箱 item：新增／編輯／刪除）、設定列（軸標題）與趨勢線開關／顏色；
+ * 所有編輯皆為決定論字串操作，不呼叫 LLM、不做數值計算。
+ */
+export enum HistogramActionType {
+  ADD_ITEM = "HISTOGRAM_ADD_ITEM",
+  EDIT_ITEM = "HISTOGRAM_EDIT_ITEM",
+  EDIT_AXIS = "HISTOGRAM_EDIT_AXIS",
+  SWITCH_TREND_LINE = "HISTOGRAM_SWITCH_TREND_LINE",
+  DELETE_ITEM = "HISTOGRAM_DELETE_ITEM",
 }
 
 /**

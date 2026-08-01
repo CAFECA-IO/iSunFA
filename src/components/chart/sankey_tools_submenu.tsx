@@ -1,13 +1,10 @@
 import React, { useState, useMemo, FC, useEffect } from "react";
-import {
-  Repeat,
-  Tag,
-  Eraser,
-  TrendingUp,
-  Shuffle,
-  LucideIcon,
-} from "lucide-react";
+import { Repeat, Tag, Eraser, TrendingUp, Shuffle } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
+import {
+  IToolItem as IToolItemBase,
+  IChartPanelProps,
+} from "@/interfaces/chart_tools";
 import {
   IChartAction,
   ISankeyData,
@@ -31,10 +28,7 @@ enum SankeyTools {
   DELETE_LINK = "deleteLink",
 }
 
-interface IToolItem {
-  tool: SankeyTools;
-  icon: LucideIcon;
-}
+type IToolItem = IToolItemBase<SankeyTools>;
 
 const SANKEY_TOOLS: IToolItem[] = [
   {
@@ -67,10 +61,7 @@ const SANKEY_TOOL_TRANSLATION_KEYS: Record<SankeyTools, string> = {
   [SankeyTools.DELETE_LINK]: "chart.mermaid.ai_editor.sankey.delete_link",
 };
 
-interface IBasePanelProps {
-  parsedSankeyData: ISankeyData;
-  onAddAction: (action: IChartAction) => void;
-}
+type IBasePanelProps = IChartPanelProps<ISankeyData, IChartAction>;
 
 enum NodeType {
   NEW = "new",
@@ -78,13 +69,10 @@ enum NodeType {
 }
 
 // Info: (20260713 - Julian) 「新增流向」面板
-const AddLinkPanel: FC<IBasePanelProps> = ({
-  parsedSankeyData,
-  onAddAction,
-}) => {
+const AddLinkPanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
 
-  const nodeOptions = parsedSankeyData.nodes;
+  const nodeOptions = parsedData.nodes;
 
   const [formType, setFormType] = useState<NodeType>(NodeType.EXISTING);
   const [formInput, setFormInput] = useState<string>("");
@@ -249,14 +237,11 @@ const AddLinkPanel: FC<IBasePanelProps> = ({
 };
 
 // Info: (20260713 - Julian) 「編輯流向」面板
-const EditLinkPanel: FC<IBasePanelProps> = ({
-  parsedSankeyData,
-  onAddAction,
-}) => {
+const EditLinkPanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
 
-  const linkOptions = parsedSankeyData.links;
-  const nodeOptions = parsedSankeyData.nodes;
+  const linkOptions = parsedData.links;
+  const nodeOptions = parsedData.nodes;
 
   const [selectedLinkId, setSelectedLinkId] = useState<string>("");
   const [selectedLink, setSelectedLink] = useState<ISankeyLink | null>(null);
@@ -432,13 +417,10 @@ const EditLinkPanel: FC<IBasePanelProps> = ({
 };
 
 // Info: (20260713 - Julian) 「反轉流向」面板
-const ReverseFlowPanel: FC<IBasePanelProps> = ({
-  parsedSankeyData,
-  onAddAction,
-}) => {
+const ReverseFlowPanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
 
-  const linkOptions = parsedSankeyData.links;
+  const linkOptions = parsedData.links;
 
   const [selectedLinkId, setSelectedLinkId] = useState<string>("");
   const [selectedLink, setSelectedLink] = useState<ISankeyLink | null>(null);
@@ -509,13 +491,10 @@ const ReverseFlowPanel: FC<IBasePanelProps> = ({
 };
 
 // Info: (20260713 - Julian) 「變更節點名稱」面板
-const RenameNodePanel: FC<IBasePanelProps> = ({
-  parsedSankeyData,
-  onAddAction,
-}) => {
+const RenameNodePanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
 
-  const nodeOptions = parsedSankeyData.nodes;
+  const nodeOptions = parsedData.nodes;
 
   const [selectedNode, setSelectedNode] = useState<string>("");
   const [newName, setNewName] = useState<string>("");
@@ -593,13 +572,10 @@ const RenameNodePanel: FC<IBasePanelProps> = ({
 };
 
 // Info: (20260629 - Julian) 「刪除流向」面板
-const DeleteLinkPanel: FC<IBasePanelProps> = ({
-  parsedSankeyData,
-  onAddAction,
-}) => {
+const DeleteLinkPanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
 
-  const linkOptions = parsedSankeyData.links;
+  const linkOptions = parsedData.links;
 
   const [selectedLinkId, setSelectedLinkId] = useState<string>("");
   const [selectedLink, setSelectedLink] = useState<ISankeyLink | null>(null);
@@ -693,7 +669,7 @@ export const SankeyToolsSection: FC<ISankeyToolsSectionProps> = ({
   const { t } = useTranslation();
 
   // Info: (20260716 - Julian) 元件自行解析所需資料，父層只需傳入圖表字串
-  const parsedSankeyData = useMemo(() => parseSankeyData(chart), [chart]);
+  const parsedData = useMemo(() => parseSankeyData(chart), [chart]);
 
   const handleAddActionWithReset = (action: IChartAction) => {
     onAddAction(action);
@@ -734,10 +710,10 @@ export const SankeyToolsSection: FC<ISankeyToolsSectionProps> = ({
         })}
       </div>
 
-      {ActivePanel && parsedSankeyData && (
+      {ActivePanel && parsedData && (
         <div className="mt-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <ActivePanel
-            parsedSankeyData={parsedSankeyData}
+            parsedData={parsedData}
             onAddAction={handleAddActionWithReset}
           />
         </div>

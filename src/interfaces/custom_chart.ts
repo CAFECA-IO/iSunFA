@@ -2,9 +2,11 @@ import {
   CustomChartType,
   CustomChartParseErrorCode,
   HistogramTrendType,
+  HistogramActionType,
   MatrixActionType,
   TornadoActionType,
   TornadoMode,
+  CustomChartActionType,
 } from "@/constants/custom_chart";
 
 /**
@@ -220,8 +222,73 @@ export interface ICustomHistogramAst {
   xAxis?: string;
   yAxis?: string;
   trend?: HistogramTrendType; // Info: (20260720 - Julian) 選填趨勢線（如常態分佈）
+  trendColor?: string; // Info: (20260730 - Julian) 趨勢線顏色 HEX（選填；未填採預設色）
   bins: ICustomHistogramBin[];
 }
+
+/**
+ * Info: (20260728 - Julian)
+ * 直方圖分箱（含原始行號），供結構化編輯以 lineIndex 精準定位 DSL 中的資料列。
+ * lineIndex 為 raw.split("\n") 的絕對索引（沿用 ITornadoItem 的定位設計）。
+ */
+export interface IHistogramItem extends ICustomHistogramBin {
+  lineIndex: number;
+}
+
+/**
+ * Info: (20260728 - Julian)
+ * 直方圖工具列所需的解析結果：分箱（帶行號）＋圖表標題／XY 軸標籤／趨勢線設定。
+ * 直方圖已分箱、無數列標頭列概念，故不含 hasHeader；trend 沿用 parser 的嚴格列舉驗證結果。
+ */
+export interface IHistogramParseResult {
+  title?: string;
+  xAxis?: string;
+  yAxis?: string;
+  trend?: HistogramTrendType;
+  trendColor?: string; // Info: (20260730 - Julian) 趨勢線顏色 HEX（供工具面板預填目前色；未設定則 undefined）
+  bins: IHistogramItem[];
+}
+
+/**
+ * Info: (20260730 - Julian)
+ * 直方圖結構化編輯動作（Discriminated Union，以 type 為判別因子），由 applyHistogramAction 決定論套用。
+ * 各成員 payload 對應 histogram_tools_submenu 的五項工具 UI。
+ */
+export type IHistogramAction = {
+  id: string;
+  description: string;
+} & (
+  | {
+      // Info: (20260730 - Julian) 新增分箱：label / count 與插入位置 lineIndex（新列佔用該 raw 行、其後順移）
+      type: HistogramActionType.ADD_ITEM;
+      payload: { label: string; count: number; lineIndex: number };
+    }
+  | {
+      // Info: (20260730 - Julian) 編輯分箱：以 lineIndex 定位，覆寫 label / count，並移動到 newLineIndex
+      type: HistogramActionType.EDIT_ITEM;
+      payload: {
+        lineIndex: number;
+        label: string;
+        count: number;
+        newLineIndex: number;
+      };
+    }
+  | {
+      // Info: (20260730 - Julian) 編輯軸線標題：xAxis / yAxis（皆選填；空字串代表移除該設定列）
+      type: HistogramActionType.EDIT_AXIS;
+      payload: { xAxis?: string; yAxis?: string };
+    }
+  | {
+      // Info: (20260730 - Julian) 切換趨勢線：trend 有值＝開啟（並可帶 trendColor）；trend 省略＝關閉（移除趨勢線設定）
+      type: HistogramActionType.SWITCH_TREND_LINE;
+      payload: { trend?: HistogramTrendType; trendColor?: string };
+    }
+  | {
+      // Info: (20260730 - Julian) 刪除分箱：以 lineIndex 定位
+      type: HistogramActionType.DELETE_ITEM;
+      payload: { lineIndex: number };
+    }
+);
 
 // Info: (20260716 - Julian) 盒鬚圖（五數綜合，parser 不自動計算四分位）
 export interface ICustomBoxItem {
@@ -252,11 +319,25 @@ export type ICustomChartAst =
   | ICustomBoxAst;
 
 /**
+ * Info: (20260723 - Julian) 自訂圖表「設定標題」動作（跨類型共用；寫入 DSL 的 title 設定列）
+ */
+export type ICustomTitleAction = {
+  id: string;
+  description: string;
+  type: CustomChartActionType.SET_TITLE;
+  payload: { title: string };
+};
+
+/**
  * Info: (20260723 - Julian)
  * 所有自訂圖表結構化編輯動作的聯集，供通用 AI 編輯器（adapter / dispatcher）承載。
- * 各 apply 引擎依 chartType 取用對應子集。
+ * 各 apply 引擎依 chartType 取用對應子集；SET_TITLE 為跨類型共用。
  */
-export type ICustomChartAction = IMatrixAction | ITornadoAction;
+export type ICustomChartAction =
+  | IMatrixAction
+  | ITornadoAction
+  | IHistogramAction
+  | ICustomTitleAction;
 
 /**
  * Info: (20260716 - Julian)

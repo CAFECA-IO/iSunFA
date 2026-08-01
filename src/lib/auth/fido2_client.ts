@@ -160,7 +160,7 @@ export async function parsePasskey(
   });
 
   const data = await res.json();
-  if (data.code !== "SUCCESS") {
+  if (data.code !== ApiCode.SUCCESS) {
     throw new Error(data.message || "Failed to parse passkey");
   }
 

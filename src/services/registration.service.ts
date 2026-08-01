@@ -11,6 +11,7 @@ import {
   encodeWebAuthnSignature,
   hexToBase64Url,
 } from "@/lib/auth/crypto_utils";
+import { ApiCode } from "@/lib/utils/status";
 
 export type RegistrationStep =
   | "IDLE"
@@ -150,7 +151,7 @@ export class RegistrationService {
         CONTRACT_ADDRESSES.ENTRY_POINT,
       );
 
-      if (result.code === "SUCCESS" || result.success === true) {
+      if (result.code === ApiCode.SUCCESS || result.success === true) {
         onStepChange?.("SUCCESS");
         return { scwAddress, transactionHash: result.transactionHash };
       } else {

@@ -8,9 +8,12 @@ import {
   Move,
   MoveRight,
   Network,
-  LucideIcon,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
+import {
+  IToolItem as IToolItemBase,
+  IChartPanelProps,
+} from "@/interfaces/chart_tools";
 import {
   MatrixActionType,
   BACKGROUND_COLOR_OPTIONS,
@@ -59,10 +62,7 @@ enum MatrixTools {
   DELETE_ITEM = "deleteItem",
 }
 
-interface IToolItem {
-  tool: MatrixTools;
-  icon: LucideIcon;
-}
+type IToolItem = IToolItemBase<MatrixTools>;
 
 const MATRIX_TOOLS: IToolItem[] = [
   {
@@ -100,19 +100,13 @@ const MATRIX_TOOL_TRANSLATION_KEYS: Record<MatrixTools, string> = {
   [MatrixTools.DELETE_ITEM]: `${MATRIX_I18N_PREFIX}.delete_item`,
 };
 
-interface IBasePanelProps {
-  parsedMatrixData: IMatrixParseResult;
-  onAddAction: (action: IMatrixAction) => void;
-}
+type IBasePanelProps = IChartPanelProps<IMatrixParseResult, IMatrixAction>;
 
 // Info: (20260721 - Julian) 「新增項目」面板
-const AddItemPanel: FC<IBasePanelProps> = ({
-  parsedMatrixData,
-  onAddAction,
-}) => {
+const AddItemPanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
 
-  const { xAxis, yAxis, groups: groupOptions } = parsedMatrixData;
+  const { xAxis, yAxis, groups: groupOptions } = parsedData;
 
   const [titleInput, setTitleInput] = useState<string>("");
   const [selectedGroup, setSelectedGroup] = useState<string>("");
@@ -265,18 +259,10 @@ const AddItemPanel: FC<IBasePanelProps> = ({
 };
 
 // Info: (20260721 - Julian) 「編輯項目」面板
-const EditItemPanel: FC<IBasePanelProps> = ({
-  parsedMatrixData,
-  onAddAction,
-}) => {
+const EditItemPanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
 
-  const {
-    xAxis,
-    yAxis,
-    items: itemOptions,
-    groups: groupOptions,
-  } = parsedMatrixData;
+  const { xAxis, yAxis, items: itemOptions, groups: groupOptions } = parsedData;
 
   const [selectedId, setSelectedId] = useState<string>("");
   const [titleInput, setTitleInput] = useState<string>("");
@@ -497,13 +483,10 @@ const EditItemPanel: FC<IBasePanelProps> = ({
 };
 
 // Info: (20260721 - Julian) 「編輯軸線」面板
-const EditAxisPanel: FC<IBasePanelProps> = ({
-  parsedMatrixData,
-  onAddAction,
-}) => {
+const EditAxisPanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
 
-  const { xAxis, yAxis } = parsedMatrixData;
+  const { xAxis, yAxis } = parsedData;
 
   // Info: (20260721 - Julian) 以現有雙極端點文字作為初始值（未設定則留白）
   const initialXMin = xAxis.min ?? "";
@@ -602,17 +585,10 @@ const EditAxisPanel: FC<IBasePanelProps> = ({
 };
 
 // Info: (20260721 - Julian) 「編輯項目分組」面板
-const EditGroupPanel: FC<IBasePanelProps> = ({
-  parsedMatrixData,
-  onAddAction,
-}) => {
+const EditGroupPanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
 
-  const {
-    items: itemOptions,
-    groups: groupOptions,
-    groupColors,
-  } = parsedMatrixData;
+  const { items: itemOptions, groups: groupOptions, groupColors } = parsedData;
 
   const [selectedGroup, setSelectedGroup] = useState<string>("");
   // Info: (20260721 - Julian) 以行號集合表示分組最終成員，避免物件參照比對
@@ -762,13 +738,10 @@ const EditGroupPanel: FC<IBasePanelProps> = ({
 };
 
 // Info: (20260721 - Julian) 「刪除項目」面板
-const DeleteItemPanel: FC<IBasePanelProps> = ({
-  parsedMatrixData,
-  onAddAction,
-}) => {
+const DeleteItemPanel: FC<IBasePanelProps> = ({ parsedData, onAddAction }) => {
   const { t } = useTranslation();
 
-  const { items: itemOptions, groups: groupOptions } = parsedMatrixData;
+  const { items: itemOptions, groups: groupOptions } = parsedData;
 
   const [selectedId, setSelectedId] = useState<string>("");
   const [selectedGroup, setSelectedGroup] = useState<string>("");
@@ -880,14 +853,14 @@ const DeleteItemPanel: FC<IBasePanelProps> = ({
 
 // Info: (20260721 - Julian) 「變更象限顏色」面板：分別為四象限挑選底色 → 送出 CHANGE_QUADRANT_COLOR
 const ChangeQuadrantColorPanel: FC<IBasePanelProps> = ({
-  parsedMatrixData,
+  parsedData,
   onAddAction,
 }) => {
   const { t } = useTranslation();
 
   // Info: (20260721 - Julian) 以現有象限底色為初始值，缺項退回預設
   const initialColors = QUADRANT_LABELS.map(
-    (_, i) => parsedMatrixData.quadrantColors[i] ?? DEFAULT_QUADRANT_COLORS[i],
+    (_, i) => parsedData.quadrantColors[i] ?? DEFAULT_QUADRANT_COLORS[i],
   );
 
   const [colors, setColors] = useState<string[]>(initialColors);
@@ -971,7 +944,7 @@ export const MatrixToolsSection: FC<IMatrixToolsSectionProps> = ({
   const { t } = useTranslation();
 
   // Info: (20260721 - Julian) 元件自行解析所需資料，父層只需傳入圖表字串
-  const parsedMatrixData = useMemo(() => parseMatrixData(chart), [chart]);
+  const parsedData = useMemo(() => parseMatrixData(chart), [chart]);
 
   // Info: (20260721 - Julian) 送出動作後收合面板，回到工具選擇列
   const handleAddActionWithReset = (action: IMatrixAction) => {
@@ -1016,7 +989,7 @@ export const MatrixToolsSection: FC<IMatrixToolsSectionProps> = ({
       {ActivePanel && (
         <div className="mt-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <ActivePanel
-            parsedMatrixData={parsedMatrixData}
+            parsedData={parsedData}
             onAddAction={handleAddActionWithReset}
           />
         </div>

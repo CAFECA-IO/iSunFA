@@ -218,99 +218,142 @@ const setConfigLine = (
 };
 
 /**
- * Info: (20260723 - Julian)
- * 將單一結構化動作決定論地套用到龍捲風圖 DSL 字串，回傳新字串（不變更輸入）。
- * 未知類型或定位失敗時原樣返回（Fail Safe）。
+ * Info: (20260730 - Julian) 於 materialized（已移除刪除列）套用「數列標頭列」：有標頭則改寫（保留類別欄），否則於首筆內容列前插入
  */
-export const applyTornadoAction = (
+const applyGroupHeader = (
+  lines: string[],
+  leftSeries: string,
+  rightSeries: string,
+): void => {
+  const contentIdx = findFirstContentIndex(lines);
+  if (contentIdx === -1) {
+    lines.push(
+      buildHeaderLine(DEFAULT_CATEGORY_HEADER, leftSeries, rightSeries),
+    );
+    return;
+  }
+  const firstFields = parseCsvLine(lines[contentIdx].trim());
+  if (isHeaderFields(firstFields)) {
+    const col0 = firstFields[0]?.trim() || DEFAULT_CATEGORY_HEADER;
+    lines[contentIdx] = buildHeaderLine(col0, leftSeries, rightSeries);
+  } else {
+    lines.splice(
+      contentIdx,
+      0,
+      buildHeaderLine(DEFAULT_CATEGORY_HEADER, leftSeries, rightSeries),
+    );
+  }
+};
+
+/**
+ * Info: (20260730 - Julian)
+ * 將「一批」結構化動作決定論地套用到龍捲風圖 DSL 字串，回傳新字串（不變更輸入）。
+ *
+ * 穩定索引策略（解決 stacked-actions 的 lineIndex 位移問題，比照 applyMatrixActions）：
+ * 動作攜帶的 lineIndex 皆以「原始 raw」行號為準。套用期間不 splice 原始行：
+ *   1. 資料列動作：編輯就地覆寫、新增附加於尾端、刪除僅標記 tombstone；原始行號整批維持不變。
+ *   2. 全部資料列動作完成後，才一次實體移除被標記刪除的原始行。
+ *   3. 設定列／標頭動作（EDIT_SETTINGS／EDIT_GROUP，可能插入新行）最後才套用，避免插入造成位移。
+ * 定位失敗或已刪除的目標一律略過（Fail Safe）。
+ */
+export const applyTornadoActions = (
   raw: string,
-  action: ITornadoAction,
+  actions: readonly ITornadoAction[],
 ): string => {
   const lines = raw.split("\n");
+  const originalLength = lines.length;
+  const deleted = new Set<number>();
+  const appended: string[] = [];
+  const configActions: ITornadoAction[] = [];
 
-  switch (action.type) {
-    case TornadoActionType.EDIT_SETTINGS: {
-      // Info: (20260723 - Julian) 圖表設定：型別、單位、基準值（皆選填；unit 空字串移除）
+  // Info: (20260730 - Julian) 原始行號 idx 是否可作為資料列編輯／刪除目標
+  const isTargetableDataLine = (idx: number): boolean =>
+    Number.isInteger(idx) &&
+    idx >= 0 &&
+    idx < originalLength &&
+    !deleted.has(idx) &&
+    getTornadoBarFields(lines[idx]) !== null;
+
+  actions.forEach((action) => {
+    switch (action.type) {
+      case TornadoActionType.ADD_ITEM: {
+        // Info: (20260722 - Julian) 附加到尾端，不佔用原始行號
+        const { category, left, right } = action.payload;
+        appended.push(buildTornadoDataLine(category, left, right));
+        break;
+      }
+      case TornadoActionType.EDIT_ITEM: {
+        const { lineIndex, category, left, right } = action.payload;
+        if (!isTargetableDataLine(lineIndex)) break;
+        lines[lineIndex] = buildTornadoDataLine(category, left, right);
+        break;
+      }
+      case TornadoActionType.DELETE_ITEM: {
+        const { lineIndex } = action.payload;
+        if (isTargetableDataLine(lineIndex)) deleted.add(lineIndex);
+        break;
+      }
+      case TornadoActionType.EDIT_SETTINGS:
+      case TornadoActionType.EDIT_GROUP: {
+        // Info: (20260730 - Julian) 設定列／標頭動作延後套用
+        configActions.push(action);
+        break;
+      }
+      default:
+        break;
+    }
+  });
+
+  // Info: (20260730 - Julian) 一次實體移除被標記刪除的原始行，再接上附加行
+  const materialized = lines
+    .filter((_, idx) => !deleted.has(idx))
+    .concat(appended);
+
+  // Info: (20260730 - Julian) 最後套用設定列／標頭動作（此時資料列索引已不再被引用）
+  configActions.forEach((action) => {
+    if (action.type === TornadoActionType.EDIT_SETTINGS) {
       const { mode, unit, baseline } = action.payload;
       if (mode !== undefined) {
-        setConfigLine(lines, CustomChartConfigKey.MODE, mode);
+        setConfigLine(materialized, CustomChartConfigKey.MODE, mode);
       }
       if (unit !== undefined) {
-        setConfigLine(lines, CustomChartConfigKey.UNIT, unit.trim());
+        setConfigLine(materialized, CustomChartConfigKey.UNIT, unit.trim());
       }
       if (baseline !== undefined) {
-        setConfigLine(lines, CustomChartConfigKey.BASELINE, String(baseline));
+        setConfigLine(
+          materialized,
+          CustomChartConfigKey.BASELINE,
+          String(baseline),
+        );
       }
-      break;
-    }
-
-    case TornadoActionType.ADD_ITEM: {
-      // Info: (20260722 - Julian) 附加到最後，避免影響既有資料列的 lineIndex
-      const { category, left, right } = action.payload;
-      lines.push(buildTornadoDataLine(category, left, right));
-      break;
-    }
-
-    case TornadoActionType.EDIT_ITEM: {
-      const { lineIndex, category, left, right } = action.payload;
-      if (lineIndex < 0 || lineIndex >= lines.length) break;
-      if (!getTornadoBarFields(lines[lineIndex])) break;
-      lines[lineIndex] = buildTornadoDataLine(category, left, right);
-      break;
-    }
-
-    case TornadoActionType.DELETE_ITEM: {
-      const { lineIndex } = action.payload;
-      if (
-        lineIndex >= 0 &&
-        lineIndex < lines.length &&
-        getTornadoBarFields(lines[lineIndex])
-      ) {
-        lines.splice(lineIndex, 1);
-      }
-      break;
-    }
-
-    case TornadoActionType.EDIT_GROUP: {
+    } else if (action.type === TornadoActionType.EDIT_GROUP) {
       const { leftSeries, rightSeries, leftColor, rightColor } = action.payload;
-
-      // Info: (20260722 - Julian) 數列顏色（設定列）：提供時更新，空字串移除
       if (leftColor !== undefined) {
-        setConfigLine(lines, CustomChartConfigKey.LEFT_COLOR, leftColor.trim());
+        setConfigLine(
+          materialized,
+          CustomChartConfigKey.LEFT_COLOR,
+          leftColor.trim(),
+        );
       }
       if (rightColor !== undefined) {
         setConfigLine(
-          lines,
+          materialized,
           CustomChartConfigKey.RIGHT_COLOR,
           rightColor.trim(),
         );
       }
-
-      // Info: (20260722 - Julian) 數列名稱（標頭列）：有標頭則改寫（保留類別欄），否則於首筆資料列前插入
-      const contentIdx = findFirstContentIndex(lines);
-      if (contentIdx === -1) {
-        lines.push(
-          buildHeaderLine(DEFAULT_CATEGORY_HEADER, leftSeries, rightSeries),
-        );
-      } else {
-        const firstFields = parseCsvLine(lines[contentIdx].trim());
-        if (isHeaderFields(firstFields)) {
-          const col0 = firstFields[0]?.trim() || DEFAULT_CATEGORY_HEADER;
-          lines[contentIdx] = buildHeaderLine(col0, leftSeries, rightSeries);
-        } else {
-          lines.splice(
-            contentIdx,
-            0,
-            buildHeaderLine(DEFAULT_CATEGORY_HEADER, leftSeries, rightSeries),
-          );
-        }
-      }
-      break;
+      applyGroupHeader(materialized, leftSeries, rightSeries);
     }
+  });
 
-    default:
-      return raw;
-  }
-
-  return lines.join("\n");
+  return materialized.join("\n");
 };
+
+/**
+ * Info: (20260723 - Julian)
+ * 將單一結構化動作套用到龍捲風圖 DSL 字串（委派批次引擎，語意一致，保留既有呼叫端 API）。
+ */
+export const applyTornadoAction = (
+  raw: string,
+  action: ITornadoAction,
+): string => applyTornadoActions(raw, [action]);

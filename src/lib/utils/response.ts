@@ -78,6 +78,8 @@ function httpStatusOf(code: ApiCode): number {
       return 403;
     case ApiCode.NOT_FOUND:
       return 404;
+    case ApiCode.CLIENT_CLOSED_REQUEST:
+      return 499;
     default:
       return 500;
   }

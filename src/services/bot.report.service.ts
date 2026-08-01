@@ -1,3 +1,4 @@
+import { ApiCode } from "@/lib/utils/status";
 export class ReportBotService {
   public async generateReport(
     dewt: string,
@@ -28,7 +29,7 @@ export class ReportBotService {
       );
 
       const data = await res.json();
-      if (res.ok && data.code === "SUCCESS") {
+      if (res.ok && data.code === ApiCode.SUCCESS) {
         console.log(`[Bot:Report] ${reportType} generated successfully.`);
         reports[reportType] = data.payload.report;
       } else {

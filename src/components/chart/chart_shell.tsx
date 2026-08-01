@@ -70,24 +70,35 @@ const ChartShell: FC<IChartShellProps> = ({
     dragHandlers,
   } = useZoomPan({ initialScale, minScale, maxScale });
 
-  // Info: (20260720 - Julian) Ctrl/⌘ + 滾輪縮放；全螢幕時於 modal 內直接滾輪縮放
-  // ToDo: (20260721 - Luphia) 每個 ChartShell 實例各自綁 window wheel 監聽，多圖表報告頁會有 N 個 handler 同時觸發，考慮共用單一監聽或改綁 viewport
+  /**
+   * Info: (20260731 - Julian)
+   * Ctrl/⌘ + 滾輪縮放；全螢幕時於 modal 內直接滾輪縮放。
+   *
+   * 監聽綁在 viewport / modal 元素本身而非 window：多圖表報告頁會同時存在 N 個 ChartShell，
+   * 綁 window 會讓每次滾動都觸發 N 個 handler（其中 N-1 個必定是白工）。改綁元素後由瀏覽器
+   * 原生 hit-testing 與事件冒泡決定派送對象，只有游標所在的圖表會被呼叫，原本用來過濾的
+   * contains() 判斷也隨之省去。
+   *
+   * 注意：不可改用 React 的 onWheel。React 於 root 以 passive 方式註冊 wheel，
+   * 合成事件內的 preventDefault() 不會生效，Ctrl + 滾輪將觸發瀏覽器頁面縮放。
+   * 必須維持原生 addEventListener + { passive: false }。
+   */
   useEffect(() => {
+    const target = isFullscreen ? modalRef.current : viewportRef.current;
+    if (!target) return undefined;
+
     const handleWheel = (e: WheelEvent) => {
-      const overViewport = viewportRef.current?.contains(e.target as Node);
-      const overModal = modalRef.current?.contains(e.target as Node);
-      const shouldZoom = isFullscreen
-        ? overModal
-        : overViewport && (e.ctrlKey || e.metaKey);
-      if (!shouldZoom) return;
+      // Info: (20260731 - Julian) 一般模式需按住 Ctrl/⌘ 才縮放，否則交還給頁面正常捲動
+      if (!isFullscreen && !(e.ctrlKey || e.metaKey)) return;
       e.preventDefault();
       const direction = e.deltaY < 0 ? 1 : -1;
       setScale((prev) =>
         Math.max(minScale, Math.min(maxScale, prev + direction * wheelStep)),
       );
     };
-    window.addEventListener("wheel", handleWheel, { passive: false });
-    return () => window.removeEventListener("wheel", handleWheel);
+
+    target.addEventListener("wheel", handleWheel, { passive: false });
+    return () => target.removeEventListener("wheel", handleWheel);
   }, [isFullscreen, setScale, minScale, maxScale, wheelStep]);
 
   // Info: (20260720 - Julian) ESC 退出全螢幕並重置縮放
