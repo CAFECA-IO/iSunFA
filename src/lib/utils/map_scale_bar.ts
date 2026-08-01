@@ -41,6 +41,27 @@ const NICE_MULTIPLIERS = [1, 2, 5] as const;
  */
 const SCALE_BAR_MAX_RATIO = 0.45;
 
+/**
+ * Info: (20260801 - Luphia) Web Mercator 的比例隨緯度變化 1/cos(緯度),
+ * 因此「一條比例尺」只在某一條緯線上成立。以下兩個門檻決定何時可以忽略這件事。
+ *
+ * 5% 以內視為均勻:比例尺的標示值本身已因取「好數字」而與理想長度差達 37%,
+ * 再細分 5% 沒有意義,標註參考緯度只會讓讀者以為這條線比實際更精確。
+ *
+ * 超過 50% 即不畫:此時線段在圖的一端與另一端相差逾半,
+ * 標註單一參考緯度也救不了想在別處量測的讀者。實測台北→曼徹斯特的航段
+ * 兩端比例相差 52%(25.07°N 為 1.104、53.35°N 為 1.675),正好落在此界之外。
+ */
+/**
+ * Info: (20260801 - Luphia) Web Mercator 的緯度上界。85.0511° 是投影的數學極限
+ * (再往極點 y 座標趨於無限),MapLibre 的視野也不會超出。
+ * 超過此值的輸入代表資料有誤,不是極區地圖 —— 據此拒絕而非硬算。
+ */
+const MAX_MERCATOR_LATITUDE_DEG = 85.0511;
+
+const MERCATOR_UNIFORM_RATIO_MAX = 1.05;
+const MERCATOR_USABLE_RATIO_MAX = 1.5;
+
 /** Info: (20260801 - Luphia) 公釐取兩位小數:Chrome 的列印排版精度遠高於此,再多位無意義 */
 const MM_PRECISION = 100;
 
@@ -96,11 +117,117 @@ export function computeRenderedMapSizeMm(
   };
 }
 
+/**
+ * Info: (20260801 - Luphia) 單一比例尺在這張圖上的成立程度。
+ */
+export enum MercatorScaleVerdictEnum {
+  /** Info: (20260801 - Luphia) 緯度跨幅小,可視為單一比例 */
+  UNIFORM = "UNIFORM",
+  /** Info: (20260801 - Luphia) 比例已明顯隨緯度變化,可畫但必須標註參考緯度 */
+  APPROXIMATE = "APPROXIMATE",
+  /** Info: (20260801 - Luphia) 跨幅過大,任何單一比例尺都會誤導,不應畫 */
+  INVALID = "INVALID",
+}
+
+export interface IMercatorScaleAssessment {
+  verdict: MercatorScaleVerdictEnum;
+  /** Info: (20260801 - Luphia) 圖內最大與最小比例的倍數(1 表示完全均勻) */
+  ratio: number;
+  /** Info: (20260801 - Luphia) 比例尺實際成立的那條緯線(取視野中心) */
+  referenceLatitudeDeg: number;
+}
+
+/**
+ * Info: (20260801 - Luphia) 評估單一比例尺在這張 Mercator 圖上是否成立。
+ *
+ * 為什麼必須評估:`metersPerPixel` 是由視野中心緯線的東西向跨距算出的,
+ * 而 Mercator 在緯度 φ 的比例為 1/cos(φ) —— 離中心緯線越遠,同樣的像素長度
+ * 代表的實際距離差越多。實測台北(25.07°N)→曼徹斯特(53.35°N)的航段圖,
+ * 兩端比例相差 52%:一條標示 2000 km 的線段在台北端實際是 2,148 km、
+ * 在曼徹斯特端只有 1,416 km。
+ *
+ * 這是先前所有比例尺修正都沒解決的一層 —— 而把線段長度與位置修正確之後,
+ * 那條仍然不準的比例尺反而更容易被當成可信的量測依據,比原本沒人看得懂的短線更糟。
+ *
+ * 跨越赤道時最小比例固定為 1(赤道處 cos = 1),因為緯度為 0 的那條線也在圖內。
+ */
+export function assessMercatorScale(
+  latSouthDeg: number | undefined,
+  latNorthDeg: number | undefined,
+): IMercatorScaleAssessment | null {
+  if (
+    latSouthDeg === undefined ||
+    latNorthDeg === undefined ||
+    !Number.isFinite(latSouthDeg) ||
+    !Number.isFinite(latNorthDeg) ||
+    Math.abs(latSouthDeg) > MAX_MERCATOR_LATITUDE_DEG ||
+    Math.abs(latNorthDeg) > MAX_MERCATOR_LATITUDE_DEG ||
+    latNorthDeg < latSouthDeg
+  ) {
+    return null;
+  }
+
+  const toRad = (deg: number): number => (deg * Math.PI) / 180;
+  // Info: (20260801 - Luphia) 跨越赤道時圖內含 |φ|=0,故最小絕對緯度為 0
+  const straddlesEquator = latSouthDeg <= 0 && latNorthDeg >= 0;
+  const minAbsLat = straddlesEquator
+    ? 0
+    : Math.min(Math.abs(latSouthDeg), Math.abs(latNorthDeg));
+  const maxAbsLat = Math.max(Math.abs(latSouthDeg), Math.abs(latNorthDeg));
+
+  const ratio = Math.cos(toRad(minAbsLat)) / Math.cos(toRad(maxAbsLat));
+  if (!isPositiveFinite(ratio)) return null;
+
+  const referenceLatitudeDeg = (latSouthDeg + latNorthDeg) / 2;
+  const verdict =
+    ratio <= MERCATOR_UNIFORM_RATIO_MAX
+      ? MercatorScaleVerdictEnum.UNIFORM
+      : ratio <= MERCATOR_USABLE_RATIO_MAX
+        ? MercatorScaleVerdictEnum.APPROXIMATE
+        : MercatorScaleVerdictEnum.INVALID;
+
+  return { verdict, ratio, referenceLatitudeDeg };
+}
+
 export interface IScaleBar {
   /** Info: (20260801 - Luphia) 比例尺線段在紙面上的長度(mm),可直接寫進 CSS */
   widthMm: number;
   /** Info: (20260731 - Tzuhan) 對應的距離文字,如 "500 m" / "50 km" */
   label: string;
+  /**
+   * Info: (20260801 - Luphia) 比例尺實際成立的緯線。僅在 Mercator 比例已明顯
+   * 隨緯度變化時提供 —— 此時必須讓讀者知道「這條線在哪裡才準」,
+   * 否則他會拿它去量圖上任何一段。均勻時不提供,以免暗示比實際更高的精確度。
+   */
+  referenceLatitudeDeg?: number;
+}
+
+/**
+ * Info: (20260801 - Luphia) 不畫比例尺的原因。必須讓呼叫端能區分 ——
+ * 「沒有資料」與「跨緯度過大所以不成立」在報告上要給讀者不同的說明:
+ * 前者是缺件,後者是刻意的正確判斷。混為一句「無比例尺」會讓後者看起來像故障。
+ */
+export enum ScaleBarOmissionEnum {
+  /** Info: (20260801 - Luphia) 截圖資訊不足(舊版前端、或截圖失敗) */
+  MISSING_INPUT = "MISSING_INPUT",
+  /** Info: (20260801 - Luphia) 圖跨越的緯度過大,任何單一比例尺都會誤導 */
+  LATITUDE_SPAN_TOO_WIDE = "LATITUDE_SPAN_TOO_WIDE",
+}
+
+export type ScaleBarResult =
+  | { drawn: true; bar: IScaleBar }
+  | { drawn: false; reason: ScaleBarOmissionEnum };
+
+export interface IScaleBarInput {
+  /** Info: (20260801 - Luphia) 截圖當下每一個畫布 CSS 像素代表多少公尺 */
+  metersPerPixel?: number;
+  /** Info: (20260801 - Luphia) 截圖畫布的 CSS 寬度,與 metersPerPixel 同基準 */
+  captureWidthPx?: number;
+  /** Info: (20260801 - Luphia) 影像在紙面上的實際寬度(mm) */
+  renderedWidthMm: number;
+  /** Info: (20260801 - Luphia) 截圖視野的南北緯度界,用於判定單一比例尺是否成立 */
+  latSouthDeg?: number;
+  latNorthDeg?: number;
 }
 
 /**
@@ -111,31 +238,46 @@ export interface IScaleBar {
  * 有了實際跨距與紙面寬度,「紙上一公釐等於多少公尺」就是確定的,與影像原始解析度、
  * 裝置像素比、報告版面寬度都無關 —— 那些都是先前算錯的來源。
  *
- * 任一輸入無效時回 null;寧可不畫,也不要畫一條錯的比例尺:
+ * 另外必須通過 Mercator 檢驗:比例隨緯度變化,跨幅過大時單一比例尺不成立。
+ * 緯度界缺漏時一律不畫 —— 它與 captureWidthPx 由同一次截圖同時回報,
+ * 「有寬度卻沒有緯度」在部署後不會發生;要求它不造成實務上的退步,
+ * 卻能避免在無從驗證的情況下畫出一條可能誤導的線。
+ *
+ * 任何一項不成立時回 `drawn: false` 並附原因;寧可不畫,也不要畫一條錯的比例尺:
  * 錯的比例尺會讓讀者以為自己驗證過距離,比沒有更糟。
  */
-export function buildScaleBar(
-  metersPerPixel: number | undefined,
-  captureWidthPx: number | undefined,
-  renderedWidthMm: number,
-): IScaleBar | null {
+export function buildScaleBar(input: IScaleBarInput): ScaleBarResult {
+  const { metersPerPixel, captureWidthPx, renderedWidthMm } = input;
   if (
     !isPositiveFinite(metersPerPixel) ||
     !isPositiveFinite(captureWidthPx) ||
     !isPositiveFinite(renderedWidthMm)
   ) {
-    return null;
+    return { drawn: false, reason: ScaleBarOmissionEnum.MISSING_INPUT };
+  }
+
+  const mercator = assessMercatorScale(input.latSouthDeg, input.latNorthDeg);
+  if (mercator === null) {
+    return { drawn: false, reason: ScaleBarOmissionEnum.MISSING_INPUT };
+  }
+  if (mercator.verdict === MercatorScaleVerdictEnum.INVALID) {
+    return {
+      drawn: false,
+      reason: ScaleBarOmissionEnum.LATITUDE_SPAN_TOO_WIDE,
+    };
   }
 
   // Info: (20260801 - Luphia) 這張圖橫跨的實際距離,以及紙上一公釐代表多少公尺
   const spanMeters = metersPerPixel * captureWidthPx;
   const metersPerMm = spanMeters / renderedWidthMm;
   if (!isPositiveFinite(spanMeters) || !isPositiveFinite(metersPerMm)) {
-    return null;
+    return { drawn: false, reason: ScaleBarOmissionEnum.MISSING_INPUT };
   }
 
   const targetMeters = spanMeters * SCALE_BAR_TARGET_RATIO;
-  if (!isPositiveFinite(targetMeters)) return null;
+  if (!isPositiveFinite(targetMeters)) {
+    return { drawn: false, reason: ScaleBarOmissionEnum.MISSING_INPUT };
+  }
 
   /**
    * Info: (20260801 - Luphia) 取離目標最近的好數字,而非不超過目標的最大者。
@@ -173,9 +315,21 @@ export function buildScaleBar(
   });
 
   const widthMm = roundMm(chosen / metersPerMm);
-  if (!isPositiveFinite(widthMm)) return null;
+  if (!isPositiveFinite(widthMm)) {
+    return { drawn: false, reason: ScaleBarOmissionEnum.MISSING_INPUT };
+  }
 
-  return { widthMm, label: formatScaleLabel(chosen) };
+  return {
+    drawn: true,
+    bar: {
+      widthMm,
+      label: formatScaleLabel(chosen),
+      // Info: (20260801 - Luphia) 僅在比例已明顯隨緯度變化時標註,均勻時不暗示額外精確度
+      ...(mercator.verdict === MercatorScaleVerdictEnum.APPROXIMATE
+        ? { referenceLatitudeDeg: mercator.referenceLatitudeDeg }
+        : {}),
+    },
+  };
 }
 
 /**

@@ -118,6 +118,15 @@ export interface IMapCapture {
    */
   widthPx: number;
   heightPx: number;
+  /**
+   * Info: (20260801 - Luphia) 截圖視野的南北緯度界。
+   * Web Mercator 的比例隨緯度變化 1/cos(緯度),故「一條比例尺」只在某條緯線上成立;
+   * 列印端據此判定單一比例尺是否成立,跨幅過大即不畫。
+   * 實測台北→曼徹斯特的航段兩端比例相差 52%,一條 2000 km 的線段在兩端分別代表
+   * 2,148 km 與 1,416 km —— 沒有這兩個值就無從得知該不該畫。
+   */
+  latSouthDeg: number;
+  latNorthDeg: number;
 }
 
 export interface IMapViewerRef {
@@ -342,6 +351,8 @@ const MapViewerBase = (
             metersPerPixel: widthCssPx > 0 ? spanMeters / widthCssPx : 0,
             widthPx: widthCssPx,
             heightPx: heightCssPx,
+            latSouthDeg: bounds.getSouth(),
+            latNorthDeg: bounds.getNorth(),
           };
         } catch (e) {
           console.error("Failed to capture leg map:", e);

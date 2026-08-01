@@ -11,6 +11,7 @@ import {
 import {
   buildScaleBar,
   computeRenderedMapSizeMm,
+  ScaleBarOmissionEnum,
 } from "@/lib/utils/map_scale_bar";
 import {
   LOGISTICS_PDF_FONT_STACK,
@@ -55,6 +56,9 @@ export interface IReportLeg {
    */
   captureWidthPx?: number;
   captureHeightPx?: number;
+  /** Info: (20260801 - Luphia) 該段視野的南北緯度界(Mercator 比例尺護欄用) */
+  captureLatSouthDeg?: number;
+  captureLatNorthDeg?: number;
 }
 
 export interface ILogisticsReportHtmlInput {
@@ -76,6 +80,9 @@ export interface ILogisticsReportHtmlInput {
   /** Info: (20260801 - Luphia) 總圖截圖畫布的 CSS 尺寸(比例尺與版面尺寸用) */
   captureWidthPx?: number;
   captureHeightPx?: number;
+  /** Info: (20260801 - Luphia) 總圖視野的南北緯度界(Mercator 比例尺護欄用) */
+  captureLatSouthDeg?: number;
+  captureLatNorthDeg?: number;
   exportId?: string;
   generatedAt: string;
 }
@@ -138,6 +145,21 @@ const coordText = (lat?: number, lng?: number): string =>
     ? ""
     : `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 
+/**
+ * Info: (20260801 - Luphia) 比例尺的文字。附參考緯線時寫成「2000 km @ 32.5°N」——
+ * 有了它讀者才知道這條線在圖上哪個高度才準;沒有它,一條隨緯度變化的比例尺
+ * 會被當成整張圖通用。均勻時不附,以免暗示比實際更高的精確度。
+ */
+function formatScaleTick(bar: {
+  label: string;
+  referenceLatitudeDeg?: number;
+}): string {
+  if (bar.referenceLatitudeDeg === undefined) return bar.label;
+  const lat = bar.referenceLatitudeDeg;
+  const hemisphere = lat >= 0 ? "N" : "S";
+  return `${bar.label} @ ${Math.abs(lat).toFixed(1)}°${hemisphere}`;
+}
+
 interface IMapFigureInput {
   dataUrl?: string;
   metersPerPixel?: number;
@@ -148,6 +170,9 @@ interface IMapFigureInput {
    */
   captureWidthPx?: number;
   captureHeightPx?: number;
+  /** Info: (20260801 - Luphia) 視野南北緯度界:Mercator 比例隨緯度變化,跨幅過大時不畫比例尺 */
+  captureLatSouthDeg?: number;
+  captureLatNorthDeg?: number;
   caption: string;
   compact?: boolean;
 }
@@ -197,27 +222,46 @@ export function renderMapFigure(input: IMapFigureInput): string {
   );
 
   const scale = renderedSize
-    ? buildScaleBar(
-        input.metersPerPixel,
-        input.captureWidthPx,
-        renderedSize.widthMm,
-      )
-    : null;
+    ? buildScaleBar({
+        metersPerPixel: input.metersPerPixel,
+        captureWidthPx: input.captureWidthPx,
+        renderedWidthMm: renderedSize.widthMm,
+        latSouthDeg: input.captureLatSouthDeg,
+        latNorthDeg: input.captureLatNorthDeg,
+      })
+    : ({
+        drawn: false,
+        reason: ScaleBarOmissionEnum.MISSING_INPUT,
+      } as const);
 
   /**
    * Info: (20260801 - Luphia) 線段長度以 mm 寫死而非百分比。
    * 百分比會對「最近的定位祖先」求值,也就是這個收縮包住文字的標籤盒本身,
    * 而不是地圖 —— 先前線段只剩幾公釐的成因就在這裡。mm 是絕對單位,沒有這個問題。
+   *
+   * 比例已明顯隨緯度變化時附註參考緯線:讀者必須知道「這條線在哪裡才準」,
+   * 否則他會拿它去量圖上任何一段。
    */
-  const scaleBlock = scale
-    ? `<div class="scalebar"><span class="bar" style="width:${scale.widthMm}mm"></span><span class="tick">${scale.label}</span></div>`
+  const scaleBlock = scale.drawn
+    ? `<div class="scalebar"><span class="bar" style="width:${scale.bar.widthMm}mm"></span><span class="tick">${escapeHtml(formatScaleTick(scale.bar))}</span></div>`
     : "";
+
+  /**
+   * Info: (20260801 - Luphia) 跨緯度過大而不畫比例尺時必須說明,不可靜默省略。
+   * 讀者要能分辨「這張圖沒有比例尺」是缺件還是刻意的判斷 ——
+   * 沒有說明的話,一個正確的決定看起來會像故障。
+   * 反過來,若真的畫上去,一條在圖兩端相差逾半的線會讓讀者以為自己驗證過距離。
+   */
+  const scaleNote =
+    !scale.drawn && scale.reason === ScaleBarOmissionEnum.LATITUDE_SPAN_TOO_WIDE
+      ? '<p class="note scalenote">本圖跨越緯度過大,Mercator 投影的比例隨緯度變化,單一比例尺不成立故未標示(距離數值不受影響,見上表)</p>'
+      : "";
 
   const boxStyle = renderedSize
     ? ` style="width:${renderedSize.widthMm}mm;height:${renderedSize.heightMm}mm"`
     : "";
 
-  return `<figure class="${cls}"><div class="mapbox"${boxStyle}><img class="map" src="${resolved.src}" alt="${input.caption}" />${scaleBlock}</div><figcaption>${input.caption}</figcaption></figure>`;
+  return `<figure class="${cls}"><div class="mapbox"${boxStyle}><img class="map" src="${resolved.src}" alt="${input.caption}" />${scaleBlock}</div>${scaleNote}<figcaption>${input.caption}</figcaption></figure>`;
 }
 
 /**
@@ -258,6 +302,8 @@ export function buildLogisticsReportHtml(
     metersPerPixel: input.metersPerPixel,
     captureWidthPx: input.captureWidthPx,
     captureHeightPx: input.captureHeightPx,
+    captureLatSouthDeg: input.captureLatSouthDeg,
+    captureLatNorthDeg: input.captureLatNorthDeg,
     caption: `${escapeHtml(input.originLabel)} → ${escapeHtml(input.destLabel)}(全程)`,
   });
 
@@ -273,6 +319,8 @@ export function buildLogisticsReportHtml(
         metersPerPixel: leg.metersPerPixel,
         captureWidthPx: leg.captureWidthPx,
         captureHeightPx: leg.captureHeightPx,
+        captureLatSouthDeg: leg.captureLatSouthDeg,
+        captureLatNorthDeg: leg.captureLatNorthDeg,
         caption: `${index + 1}. ${escapeHtml(leg.fromName)} → ${escapeHtml(leg.toName)}(${leg.mode})`,
         compact: true,
       }),
@@ -312,6 +360,8 @@ export function buildLogisticsReportHtml(
      兩端的短豎線標出量測起訖 —— 沒有端點的線段讀不出「從哪量到哪」。 */
   .scalebar .bar { display: block; height: 1.2mm; border: 0.25mm solid #334155; border-top: none; }
   .scalebar .tick { display: block; text-align: center; margin-top: 0.3mm; }
+  /* Info: (20260801 - Luphia) 未標示比例尺的原因:字級小但不可省,讀者要能分辨刻意與缺件 */
+  .scalenote { font-size: 7pt; margin: 1mm 0 0; }
   .section { font-size: 10pt; margin: 5mm 0 2mm; padding-top: 2mm; border-top: 0.2mm solid #e2e8f0; }
   /* Info: (20260801 - Luphia) gap 由常數插入:它同時決定逐段小圖的顯示寬度,
      兩處若各自寫死就會失去同步,而比例尺長度直接建立在那個寬度上 */

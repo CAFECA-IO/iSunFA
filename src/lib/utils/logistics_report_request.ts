@@ -56,6 +56,9 @@ export interface IBuildReportItemInput {
   /** Info: (20260801 - Luphia) 全程圖截圖畫布的 CSS 尺寸(比例尺與紙面尺寸用) */
   captureWidthPx?: number;
   captureHeightPx?: number;
+  /** Info: (20260801 - Luphia) 全程圖視野的南北緯度界(Mercator 比例尺護欄用) */
+  captureLatSouthDeg?: number;
+  captureLatNorthDeg?: number;
   /**
    * Info: (20260731 - Tzuhan) 逐段路徑圖,索引對齊 buildPlanLegs 的順序。
    * 只有全程圖時,市區→機場、機場→市區的接駁段在圖上看不到,那兩段就沒有證據。
@@ -69,6 +72,9 @@ export interface ILegCapture {
   /** Info: (20260801 - Luphia) 截圖畫布的 CSS 尺寸,與 metersPerPixel 同基準(見 IMapCapture) */
   widthPx?: number;
   heightPx?: number;
+  /** Info: (20260801 - Luphia) 截圖視野的南北緯度界,用於判定單一比例尺是否成立 */
+  latSouthDeg?: number;
+  latNorthDeg?: number;
 }
 
 /**
@@ -80,6 +86,16 @@ export interface ILegCapture {
  */
 const sanitizePositive = (value?: number): number | undefined =>
   value !== undefined && Number.isFinite(value) && value > 0
+    ? value
+    : undefined;
+
+/**
+ * Info: (20260801 - Luphia) 緯度的收斂點。**不可套用 sanitizePositive** ——
+ * 緯度合法值含 0(赤道)與負數(南半球),用「正數」過濾會把它們當成無效值丟掉,
+ * 結果是南半球與赤道附近的路線一律失去比例尺。
+ */
+const sanitizeLatitude = (value?: number): number | undefined =>
+  value !== undefined && Number.isFinite(value) && Math.abs(value) <= 90
     ? value
     : undefined;
 
@@ -100,6 +116,8 @@ export function buildReportPdfItem(
     metersPerPixel,
     captureWidthPx,
     captureHeightPx,
+    captureLatSouthDeg,
+    captureLatNorthDeg,
     legCaptures,
   } = input;
   const legs = buildPlanLegs(item, planKey);
@@ -123,6 +141,9 @@ export function buildReportPdfItem(
     metersPerPixel: sanitizePositive(legCaptures?.[legIndex]?.metersPerPixel),
     captureWidthPx: sanitizePositive(legCaptures?.[legIndex]?.widthPx),
     captureHeightPx: sanitizePositive(legCaptures?.[legIndex]?.heightPx),
+    // Info: (20260801 - Luphia) 緯度可為 0 或負數,不可用 sanitizePositive 過濾
+    captureLatSouthDeg: sanitizeLatitude(legCaptures?.[legIndex]?.latSouthDeg),
+    captureLatNorthDeg: sanitizeLatitude(legCaptures?.[legIndex]?.latNorthDeg),
   }));
 
   return {
@@ -140,6 +161,8 @@ export function buildReportPdfItem(
     metersPerPixel: sanitizePositive(metersPerPixel),
     captureWidthPx: sanitizePositive(captureWidthPx),
     captureHeightPx: sanitizePositive(captureHeightPx),
+    captureLatSouthDeg: sanitizeLatitude(captureLatSouthDeg),
+    captureLatNorthDeg: sanitizeLatitude(captureLatNorthDeg),
   };
 }
 
@@ -190,6 +213,8 @@ export function buildReportPdfItems(
         metersPerPixel: captured?.overview?.metersPerPixel,
         captureWidthPx: captured?.overview?.widthPx,
         captureHeightPx: captured?.overview?.heightPx,
+        captureLatSouthDeg: captured?.overview?.latSouthDeg,
+        captureLatNorthDeg: captured?.overview?.latNorthDeg,
         legCaptures: captured?.legs,
       });
       if (built) items.push(built);

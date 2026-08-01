@@ -42,6 +42,13 @@ const LegSchema = z.object({
    */
   captureWidthPx: z.number().positive().max(CAPTURE_PX_MAX).optional(),
   captureHeightPx: z.number().positive().max(CAPTURE_PX_MAX).optional(),
+  /**
+   * Info: (20260801 - Luphia) 截圖視野的南北緯度界(Mercator 比例尺護欄用)。
+   * **範圍為 -90~90 而非 positive** —— 赤道為 0、南半球為負,
+   * 用 positive() 會把南半球與赤道附近的合法值擋成錯誤。
+   */
+  captureLatSouthDeg: z.number().min(-90).max(90).optional(),
+  captureLatNorthDeg: z.number().min(-90).max(90).optional(),
 });
 
 const ReportSchema = z.object({
@@ -66,6 +73,13 @@ const ReportSchema = z.object({
    */
   captureWidthPx: z.number().positive().max(CAPTURE_PX_MAX).optional(),
   captureHeightPx: z.number().positive().max(CAPTURE_PX_MAX).optional(),
+  /**
+   * Info: (20260801 - Luphia) 截圖視野的南北緯度界(Mercator 比例尺護欄用)。
+   * **範圍為 -90~90 而非 positive** —— 赤道為 0、南半球為負,
+   * 用 positive() 會把南半球與赤道附近的合法值擋成錯誤。
+   */
+  captureLatSouthDeg: z.number().min(-90).max(90).optional(),
+  captureLatNorthDeg: z.number().min(-90).max(90).optional(),
 });
 
 export const LogisticsReportPdfRequestSchema = z.object({

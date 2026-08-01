@@ -133,6 +133,20 @@ export class LogisticsReportPdfService {
       logger.error(
         `[LogisticsReportPdfService] generate failed: ${describeError(error)}`,
       );
+
+      /**
+       * Info: (20260801 - Luphia) 已分類的 ApiError 原樣往上拋,不再包成通用的列印失敗。
+       *
+       * 先前無條件覆寫,結果是 IS_PDF_FONT_UNAVAILABLE(缺中文字型)在這裡被吃掉,
+       * 對外只剩「Failed to generate PDF report」—— 而那兩者的處置完全相反:
+       * 通用列印失敗值得重試,缺字型重試一萬次都一樣,唯一解法是裝字型。
+       * 把唯一的解法埋在通用錯誤裡,等於讓維運只能靠猜。
+       *
+       * 同時只有**非**分類錯誤才棄用共用 Chrome:字型缺失時瀏覽器本身是健康的,
+       * 關掉它只會讓後續每個請求多付一次冷啟動,對成因毫無幫助。
+       */
+      if (error instanceof ApiError) throw error;
+
       // Info: (20260731 - Tzuhan) 失敗後棄用共用實例:崩潰的 Chrome 會讓後續請求全數失敗
       if (sharedBrowser) {
         await sharedBrowser.close().catch(() => undefined);
