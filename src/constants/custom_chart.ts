@@ -174,8 +174,31 @@ export enum CustomChartParseErrorCode {
 // Info: (20260717 - Julian) DSL 註解前綴（沿用 mermaid 慣例）
 export const CUSTOM_CHART_COMMENT_PREFIX = "%%";
 
-// Info: (20260717 - Julian) 雙極軸分隔符（左為 min 端、右為 max 端）；VS16 變體於 parser 內先行移除
-export const CUSTOM_CHART_AXIS_SEPARATORS: readonly string[] = ["↔", "<->"];
+/**
+ * Info: (20260731 - Julian) 龍捲風圖標題列序列化形式（`左數列 <-> 右數列`）
+ */
+export const CUSTOM_CHART_TORNADO_HEADER_SEPARATOR = "<->";
+
+/**
+ * Info: (20260731 - Julian) 矩陣圖雙極軸序列化形式（`min 端 ↔ max 端`）；歷史沿用全形箭號
+ */
+export const CUSTOM_CHART_AXIS_SEPARATOR = "↔";
+
+/**
+ * Info: (20260731 - Julian)
+ * 解析時接受的配對分隔符，語意皆為「一對事物的兩端」（軸的 min／max、數列的左／右）。
+ * VS16 變體（`↔️`）於 parser 內先行移除。
+ *
+ * **順序即比對優先序**：解析器取第一個命中的分隔符，故較長、較不易出現在使用者文字中的
+ * ASCII `<->` 必須排在前面。若讓 `↔` 優先，數列名稱中夾帶的 `↔`（如 `A↔B <-> C`）
+ * 會搶先被當成分隔符而靜默解析出錯誤的名稱。
+ *
+ * 各 editor 實際輸出的形式請用上方具名常數，不要以索引取值。
+ */
+export const CUSTOM_CHART_PAIR_SEPARATORS: readonly string[] = [
+  CUSTOM_CHART_TORNADO_HEADER_SEPARATOR,
+  CUSTOM_CHART_AXIS_SEPARATOR,
+];
 
 /**
  * Info: (20260722 - Julian)

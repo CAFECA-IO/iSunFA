@@ -5,7 +5,7 @@ import {
   CustomChartParseErrorCode,
   HistogramTrendType,
   CUSTOM_CHART_COMMENT_PREFIX,
-  CUSTOM_CHART_AXIS_SEPARATORS,
+  CUSTOM_CHART_PAIR_SEPARATORS,
   HEX_COLOR_REGEX,
   TornadoMode,
 } from "@/constants/custom_chart";
@@ -94,10 +94,92 @@ const optionalNumber = (
 /**
  * Info: (20260720 - Julian) 判斷欄位是否為有效數字（供龍捲風圖偵測標題列 vs 資料列，不做計算）
  */
-const isNumericField = (raw: string | undefined): boolean => {
+export const isNumericField = (raw: string | undefined): boolean => {
   if (raw === undefined) return false;
   const trimmed = raw.trim();
   return trimmed !== "" && Number.isFinite(Number(trimmed));
+};
+
+/**
+ * Info: (20260731 - Julian) 移除 VS16（emoji 變體選擇符）以相容 ↔️
+ */
+const stripVariationSelector = (raw: string): string =>
+  raw.replace(/\uFE0F/g, "");
+
+/**
+ * Info: (20260731 - Julian)
+ * 新式標題列：**單一 CSV 欄位**且含配對分隔符，如 `悲觀結果 <-> 樂觀結果`。
+ * 回傳分隔後的各段（已 trim）；非新式標題列則回傳 null。
+ *
+ * 必須以「欄數 === 1」為前提，不可只檢查「含分隔符」——類別名稱含分隔符的資料列
+ * （如 `"A<->B", 100, 200`，解析為 3 欄）否則會被誤判為標題列。
+ * 因為判定只看結構不看內容，`2019 <-> 2020` 這種純數字數列名也能正確識別。
+ */
+const splitPairHeader = (fields: string[]): string[] | null => {
+  if (fields.length !== 1) return null;
+  const cleaned = stripVariationSelector(fields[0]);
+  for (const sep of CUSTOM_CHART_PAIR_SEPARATORS) {
+    if (cleaned.includes(sep)) {
+      return cleaned.split(sep).map((s) => s.trim());
+    }
+  }
+  return null;
+};
+
+/**
+ * Info: (20260731 - Julian)
+ * Legacy 三欄式標題列：`類別欄, 左數列, 右數列`，以「第 2、3 欄皆非數字」推測。
+ *
+ * 此形式與資料列先天同形，數列名為純數字（如 bare year 2019）時無法分辨，
+ * 為既有內容的相容路徑而保留。新內容一律使用 splitPairHeader 的新式文法。
+ */
+const isLegacyTornadoHeaderFields = (fields: string[]): boolean =>
+  fields.length >= 3 &&
+  !isNumericField(fields[1]) &&
+  !isNumericField(fields[2]);
+
+/**
+ * Info: (20260731 - Julian)
+ * 龍捲風圖標題列判定的**唯一來源**（新式優先、legacy 相容）。
+ *
+ * parser 與 custom_tornado_editor 必須共用此函式，不得各自實作。兩邊判定若分歧，
+ * 同一列會被一邊當標題列、另一邊當資料列，導致 editor 的 lineIndex 與 parser 的
+ * bars 對應錯位，編輯動作將套用到錯誤的資料列。
+ */
+export const isTornadoHeaderFields = (fields: string[]): boolean =>
+  splitPairHeader(fields) !== null || isLegacyTornadoHeaderFields(fields);
+
+/**
+ * Info: (20260731 - Julian)
+ * 由標題列欄位取出左右數列名稱（同為 parser 與 editor 的唯一來源）。
+ * 空字串一律回 undefined（維持數列名選填、未命名則不顯示圖例的既有語意）。
+ * 非標題列回傳 null；新式標題列分段超過 2 段時亦回 null，由呼叫端各自決定
+ * 要 fail fast（parser）或忽略（editor 永不 throw）。
+ */
+export const getTornadoHeaderSeries = (
+  fields: string[],
+): { leftSeries?: string; rightSeries?: string } | null => {
+  const pair = splitPairHeader(fields);
+  if (pair) {
+    if (pair.length !== 2) return null;
+    return {
+      leftSeries: pair[0] || undefined,
+      rightSeries: pair[1] || undefined,
+    };
+  }
+  if (!isLegacyTornadoHeaderFields(fields)) return null;
+  return {
+    leftSeries: fields[1].trim() || undefined,
+    rightSeries: fields[2].trim() || undefined,
+  };
+};
+
+/**
+ * Info: (20260731 - Julian) 新式標題列是否分段過多（如 `A <-> B <-> C`），供 parser fail fast
+ */
+export const isMalformedPairHeader = (fields: string[]): boolean => {
+  const pair = splitPairHeader(fields);
+  return pair !== null && pair.length !== 2;
 };
 
 /**
@@ -109,11 +191,11 @@ const parseAxis = (
   value: string,
   scale: number | undefined,
 ): ICustomChartAxis => {
-  const cleaned = value.replace(/️/g, "").trim();
+  const cleaned = stripVariationSelector(value).trim();
   const axis: ICustomChartAxis = {};
   if (scale !== undefined) axis.scale = scale;
 
-  for (const sep of CUSTOM_CHART_AXIS_SEPARATORS) {
+  for (const sep of CUSTOM_CHART_PAIR_SEPARATORS) {
     const idx = cleaned.indexOf(sep);
     if (idx !== -1) {
       const min = cleaned.slice(0, idx).trim();
@@ -287,22 +369,23 @@ const buildTornado = (
   );
 
   /**
-   * Info: (20260720 - Julian)
-   * 依欄位自動偵測標題列：首列若第 2、3 欄皆非數字，視為數列名稱標題列（category, leftSeries, rightSeries）；
-   * 否則視為無標題列，數列名稱套用預設值。標題列不吃掉任何資料。
+   * Info: (20260731 - Julian)
+   * 標題列（選填）支援兩種形式，皆不吃掉任何資料：
+   *   1. 新式（建議）：單一欄位 `左數列 <-> 右數列`。與 3 欄資料列結構互斥，
+   *      判定只看結構不看內容，故數列名為純數字（如 `2019 <-> 2020`）亦無歧義。
+   *   2. Legacy：`類別欄, 左數列, 右數列`，以「第 2、3 欄皆非數字」推測。此形式與
+   *      資料列先天同形，數列名為純數字時無法分辨，僅為既有內容相容而保留。
    */
-  // ToDo: (20260721 - Luphia) 數列名稱為純數字（如 bare year 2019）時會被誤判為資料列，靜默產生錯誤的單筆長條而非報錯；考慮更嚴謹的 header 判定或加上警示
   const firstFields = parseCsvLine(dataLines[0]);
-  const hasHeader =
-    firstFields.length >= 3 &&
-    !isNumericField(firstFields[1]) &&
-    !isNumericField(firstFields[2]);
+  if (isMalformedPairHeader(firstFields)) {
+    throw malformed(`龍捲風標題列僅能有左右兩個數列名稱：「${dataLines[0]}」`);
+  }
+  const headerSeries = getTornadoHeaderSeries(firstFields);
+  const hasHeader = headerSeries !== null;
 
   // Info: (20260720 - Julian) 數列名稱選填：有標題列才取，未填則留 undefined（不顯示圖例）
-  const leftSeries = hasHeader ? firstFields[1].trim() || undefined : undefined;
-  const rightSeries = hasHeader
-    ? firstFields[2].trim() || undefined
-    : undefined;
+  const leftSeries = headerSeries?.leftSeries;
+  const rightSeries = headerSeries?.rightSeries;
 
   const rows = hasHeader ? dataLines.slice(1) : dataLines;
   if (rows.length === 0) {

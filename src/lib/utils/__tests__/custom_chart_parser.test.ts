@@ -119,16 +119,110 @@ describe("parseCustomChart - tornado (paired two-series)", () => {
     }
   });
 
-  it("should fail when only a header row is present (no data rows)", () => {
-    const raw = "項目, 2019, 2020"; // Info: (20260720 - Julian) header 判定為 2019/2020 皆數字→非 header，視為單筆資料
-    const result = parseCustomChart(CustomChartType.TORNADO, raw);
-    // Info: (20260721 - Julian) 這其實是一筆有效資料列（category=項目）
-    expect(result.ok).toBe(true);
-    // Info: (20260721 - Julian) 全非數字→視為 header，無資料列
-    const raw2 = "項目, 售價, 成本";
-    const r2 = parseCustomChart(CustomChartType.TORNADO, raw2);
-    expect(r2.ok).toBe(false);
-    if (!r2.ok) expect(r2.code).toBe(CustomChartParseErrorCode.NO_DATA_ROWS);
+  it("should fail when only a legacy header row is present (no data rows)", () => {
+    // Info: (20260731 - Julian) legacy 三欄格式：全非數字→視為 header，無資料列
+    const result = parseCustomChart(
+      CustomChartType.TORNADO,
+      "項目, 售價, 成本",
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.code).toBe(CustomChartParseErrorCode.NO_DATA_ROWS);
+    }
+  });
+
+  /**
+   * Info: (20260731 - Julian)
+   * 新式標題列 `左數列 <-> 右數列`：單一 CSV 欄位，與 3 欄資料列結構互斥。
+   * 判定只看結構不看內容，因此數列名為純數字時不再有歧義——這正是 legacy
+   * 三欄格式無法解決的問題（見下方最後一則相容性測試）。
+   */
+  describe("parseCustomChart - tornado 新式標題列（配對分隔符）", () => {
+    it("should treat a bare-year pair header as a header, not a data row", () => {
+      const raw = ["2019 <-> 2020", "F, 9000, 8800", "D, 6800, 6500"].join(
+        "\n",
+      );
+      const result = parseCustomChart(CustomChartType.TORNADO, raw);
+      expect(result.ok).toBe(true);
+      if (!result.ok || result.ast.type !== CustomChartType.TORNADO) return;
+      expect(result.ast.leftSeries).toBe("2019");
+      expect(result.ast.rightSeries).toBe("2020");
+      // Info: (20260731 - Julian) 關鍵：不得出現 category 為「2019」的幽靈長條
+      expect(result.ast.bars).toHaveLength(2);
+      expect(result.ast.bars.map((b) => b.category)).toEqual(["F", "D"]);
+    });
+
+    it.each([
+      ["ASCII", "悲觀 <-> 樂觀"],
+      ["全形箭號", "悲觀 ↔ 樂觀"],
+      ["含 VS16 的箭號", "悲觀 ↔️ 樂觀"],
+    ])("should accept the %s separator", (_label, header) => {
+      const result = parseCustomChart(
+        CustomChartType.TORNADO,
+        [header, "A, 1, 2"].join("\n"),
+      );
+      expect(result.ok).toBe(true);
+      if (!result.ok || result.ast.type !== CustomChartType.TORNADO) return;
+      expect(result.ast.leftSeries).toBe("悲觀");
+      expect(result.ast.rightSeries).toBe("樂觀");
+    });
+
+    it("should leave an empty side undefined", () => {
+      const result = parseCustomChart(
+        CustomChartType.TORNADO,
+        ["<-> 樂觀", "A, 1, 2"].join("\n"),
+      );
+      expect(result.ok).toBe(true);
+      if (!result.ok || result.ast.type !== CustomChartType.TORNADO) return;
+      expect(result.ast.leftSeries).toBeUndefined();
+      expect(result.ast.rightSeries).toBe("樂觀");
+    });
+
+    it("should reject a header with more than two segments", () => {
+      const result = parseCustomChart(
+        CustomChartType.TORNADO,
+        ["A <-> B <-> C", "X, 1, 2"].join("\n"),
+      );
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.code).toBe(CustomChartParseErrorCode.MALFORMED_ROW);
+      }
+    });
+
+    it("should treat a 3-column row as data even if the category contains a separator", () => {
+      // Info: (20260731 - Julian) 判定以「欄數 === 1」為前提，故此列仍是資料列
+      const result = parseCustomChart(
+        CustomChartType.TORNADO,
+        '"A<->B", 100, 200',
+      );
+      expect(result.ok).toBe(true);
+      if (!result.ok || result.ast.type !== CustomChartType.TORNADO) return;
+      expect(result.ast.leftSeries).toBeUndefined();
+      expect(result.ast.bars).toEqual([
+        { category: "A<->B", left: 100, right: 200 },
+      ]);
+    });
+
+    it("should fail when only a pair header is present (no data rows)", () => {
+      const result = parseCustomChart(CustomChartType.TORNADO, "悲觀 <-> 樂觀");
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.code).toBe(CustomChartParseErrorCode.NO_DATA_ROWS);
+      }
+    });
+
+    it("should keep legacy 3-column behaviour unchanged (including its known ambiguity)", () => {
+      // Info: (20260731 - Julian) 向後相容回歸：legacy 格式下純數字數列名仍被當成資料列，
+      // Info: (20260731 - Julian) 這是既有內容的既定行為，使用者可改用新式文法消除歧義
+      const result = parseCustomChart(
+        CustomChartType.TORNADO,
+        ["項目, 2019, 2020", "F, 9000, 8800"].join("\n"),
+      );
+      expect(result.ok).toBe(true);
+      if (!result.ok || result.ast.type !== CustomChartType.TORNADO) return;
+      expect(result.ast.leftSeries).toBeUndefined();
+      expect(result.ast.bars).toHaveLength(2);
+    });
   });
 });
 

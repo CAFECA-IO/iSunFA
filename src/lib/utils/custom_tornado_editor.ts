@@ -3,6 +3,8 @@ import {
   CustomChartConfigKey,
   TornadoActionType,
   CUSTOM_CHART_COMMENT_PREFIX,
+  CUSTOM_CHART_PAIR_SEPARATORS,
+  CUSTOM_CHART_TORNADO_HEADER_SEPARATOR,
 } from "@/constants/custom_chart";
 import {
   ITornadoItem,
@@ -10,7 +12,12 @@ import {
   ITornadoAction,
 } from "@/interfaces/custom_chart";
 import { parseCsvLine } from "@/lib/utils/csv";
-import { parseCustomChart } from "@/lib/utils/custom_chart_parser";
+import {
+  parseCustomChart,
+  isNumericField,
+  isTornadoHeaderFields,
+  getTornadoHeaderSeries,
+} from "@/lib/utils/custom_chart_parser";
 
 /**
  * Info: (20260722 - Julian)
@@ -30,8 +37,17 @@ const TORNADO_CONFIG_KEYS: ReadonlySet<string> = new Set<string>([
   CustomChartConfigKey.RIGHT_COLOR,
 ]);
 
-// Info: (20260722 - Julian) 插入標頭列時的類別欄預設標籤（渲染層不顯示此欄，僅供 header 判定）
-const DEFAULT_CATEGORY_HEADER = "項目";
+// Info: (20260731 - Julian) 標題列序列化採用的配對分隔符
+const PAIR_SEPARATOR = CUSTOM_CHART_TORNADO_HEADER_SEPARATOR;
+
+/**
+ * Info: (20260731 - Julian)
+ * 數列名稱是否含任一配對分隔符。含分隔符的名稱寫入標題列後無法 round-trip：
+ * 例如 `A<->B` 與 `C` 會串成 `A<->B <-> C`，讀回時分成三段而被 parser 拒絕。
+ * 依 §6 Fail Fast 於邊界擋下，不產生自己讀不回來的字串。
+ */
+const containsPairSeparator = (name: string): boolean =>
+  CUSTOM_CHART_PAIR_SEPARATORS.some((sep) => name.includes(sep));
 
 const formatCsvField = (field: string): string => {
   const needsQuote = /[",\r\n]/.test(field) || field !== field.trim();
@@ -44,18 +60,14 @@ const buildTornadoDataLine = (
   right: number,
 ): string => `${formatCsvField(category)}, ${left}, ${right}`;
 
-const buildHeaderLine = (
-  category: string,
-  leftSeries: string,
-  rightSeries: string,
-): string =>
-  `${formatCsvField(category)}, ${formatCsvField(leftSeries)}, ${formatCsvField(rightSeries)}`;
-
-const isNumericField = (raw: string | undefined): boolean => {
-  if (raw === undefined) return false;
-  const trimmed = raw.trim();
-  return trimmed !== "" && Number.isFinite(Number(trimmed));
-};
+/**
+ * Info: (20260731 - Julian)
+ * 一律輸出新式標題列 `左數列 <-> 右數列`：與 3 欄資料列結構互斥，不再有同形歧義。
+ * 既有的 legacy 三欄標題列會在使用者編輯時自然遷移為此形式。
+ * 含逗號的數列名需引號包夾，否則會被 parseCsvLine 拆成多欄而失去「單一欄位」的判定前提。
+ */
+const buildHeaderLine = (leftSeries: string, rightSeries: string): string =>
+  formatCsvField(`${leftSeries} ${PAIR_SEPARATOR} ${rightSeries}`);
 
 /**
  * Info: (20260722 - Julian) 是否為設定列（key: value，key 屬白名單、冒號在逗號之前）
@@ -80,14 +92,6 @@ const isContentLine = (rawLine: string): boolean => {
     !isTornadoConfigLine(line)
   );
 };
-
-/**
- * Info: (20260722 - Julian) 是否為數列標頭列（第 2、3 欄皆非數字）
- */
-const isHeaderFields = (fields: string[]): boolean =>
-  fields.length >= 3 &&
-  !isNumericField(fields[1]) &&
-  !isNumericField(fields[2]);
 
 /**
  * Info: (20260722 - Julian)
@@ -117,7 +121,10 @@ export const parseTornadoBars = (raw: string): ITornadoItem[] => {
   lines.forEach((line, lineIndex) => {
     if (!isContentLine(line)) return;
     // Info: (20260722 - Julian) 首個內容列若為標頭列則略過（不計入資料列）
-    if (lineIndex === firstIdx && isHeaderFields(parseCsvLine(line.trim()))) {
+    if (
+      lineIndex === firstIdx &&
+      isTornadoHeaderFields(parseCsvLine(line.trim()))
+    ) {
       return;
     }
     const bar = getTornadoBarFields(line);
@@ -142,7 +149,8 @@ export const parseTornadoData = (raw: string): ITornadoParseResult => {
   const lines = raw.split("\n");
   const firstIdx = findFirstContentIndex(lines);
   const hasHeader =
-    firstIdx !== -1 && isHeaderFields(parseCsvLine(lines[firstIdx].trim()));
+    firstIdx !== -1 &&
+    isTornadoHeaderFields(parseCsvLine(lines[firstIdx].trim()));
 
   const result = parseCustomChart(CustomChartType.TORNADO, raw);
   if (result.ok && result.ast.type === CustomChartType.TORNADO) {
@@ -174,9 +182,10 @@ export const parseTornadoData = (raw: string): ITornadoParseResult => {
   let leftSeries: string | undefined;
   let rightSeries: string | undefined;
   if (hasHeader) {
-    const f = parseCsvLine(lines[firstIdx].trim());
-    leftSeries = f[1]?.trim() || undefined;
-    rightSeries = f[2]?.trim() || undefined;
+    // Info: (20260731 - Julian) 沿用 parser 的共用取值函式，確保新式與 legacy 兩種形式行為一致
+    const series = getTornadoHeaderSeries(parseCsvLine(lines[firstIdx].trim()));
+    leftSeries = series?.leftSeries;
+    rightSeries = series?.rightSeries;
   }
   return { bars, hasHeader, leftSeries, rightSeries };
 };
@@ -227,21 +236,15 @@ const applyGroupHeader = (
 ): void => {
   const contentIdx = findFirstContentIndex(lines);
   if (contentIdx === -1) {
-    lines.push(
-      buildHeaderLine(DEFAULT_CATEGORY_HEADER, leftSeries, rightSeries),
-    );
+    lines.push(buildHeaderLine(leftSeries, rightSeries));
     return;
   }
   const firstFields = parseCsvLine(lines[contentIdx].trim());
-  if (isHeaderFields(firstFields)) {
-    const col0 = firstFields[0]?.trim() || DEFAULT_CATEGORY_HEADER;
-    lines[contentIdx] = buildHeaderLine(col0, leftSeries, rightSeries);
+  if (isTornadoHeaderFields(firstFields)) {
+    // Info: (20260731 - Julian) 既有標題列（新式或 legacy 三欄）一律改寫為新式，達成漸進遷移
+    lines[contentIdx] = buildHeaderLine(leftSeries, rightSeries);
   } else {
-    lines.splice(
-      contentIdx,
-      0,
-      buildHeaderLine(DEFAULT_CATEGORY_HEADER, leftSeries, rightSeries),
-    );
+    lines.splice(contentIdx, 0, buildHeaderLine(leftSeries, rightSeries));
   }
 };
 
@@ -342,7 +345,14 @@ export const applyTornadoActions = (
           rightColor.trim(),
         );
       }
-      applyGroupHeader(materialized, leftSeries, rightSeries);
+      // Info: (20260731 - Julian) 數列名含分隔符會產生無法 round-trip 的標題列，
+      // Info: (20260731 - Julian) 故僅略過標頭改寫（顏色設定仍照常套用），不讓髒資料進入 DSL
+      if (
+        !containsPairSeparator(leftSeries) &&
+        !containsPairSeparator(rightSeries)
+      ) {
+        applyGroupHeader(materialized, leftSeries, rightSeries);
+      }
     }
   });
 

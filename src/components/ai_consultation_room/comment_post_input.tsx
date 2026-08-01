@@ -49,7 +49,7 @@ export const CommentPostInput = ({
           body: JSON.stringify({
             content: value,
             parentId,
-            isProfessional: false, // ToDo: 判斷是否為專業人士
+            isProfessional: false, // ToDo: (20260731 - Julian) 判斷是否為專業人士，後續需確認是否保留此欄位
             replyTo,
           }),
         },
@@ -65,9 +65,9 @@ export const CommentPostInput = ({
     }
   };
 
-  // Info: (20260213 Julian) 處理按鍵事件
+  // Info: (20260213 - Julian) 處理按鍵事件
   const handleKeyDown = (e: KeyboardEvent) => {
-    // Info: (20260213 Julian) 如果正在輸入法組字（選字）中，就直接跳過不執行
+    // Info: (20260213 - Julian) 如果正在輸入法組字（選字）中，就直接跳過不執行
     if (e.nativeEvent.isComposing) {
       return;
     }
