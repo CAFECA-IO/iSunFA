@@ -98,10 +98,10 @@ describe("applyHistogramActions - 跨列移動至首 / 尾（newLineIndex）", (
 describe("applyHistogramActions - 同批多動作疊加", () => {
   it("多個 ADD + EDIT + DELETE 混合：驗證最終順序與各列內容", () => {
     const out = applyHistogramActions(RAW, [
-      add("NEW", 1, 3), // Info: 插到原始第 3 行（B）之前
-      edit(2, "A", 30, 2), // Info: A 就地改值（newLineIndex 維持 2）
-      del(5), // Info: 刪除 D（原始第 5 行）
-      add("END", 9, 6), // Info: lineIndex=6 → 附加於尾端
+      add("NEW", 1, 3), // Info: (20260731 - Julian) 插到原始第 3 行（B）之前
+      edit(2, "A", 30, 2), // Info: (20260731 - Julian) A 就地改值（newLineIndex 維持 2）
+      del(5), // Info: (20260731 - Julian) 刪除 D（原始第 5 行）
+      add("END", 9, 6), // Info: (20260731 - Julian) lineIndex=6 → 附加於尾端
     ]);
     expect(out).toBe(
       [
@@ -132,10 +132,10 @@ describe("applyHistogramActions - 目標已被刪除（Fail Safe，不產生幽�
 describe("applyHistogramActions - 超界 / 非法 lineIndex", () => {
   it("超界、負數、指向設定列的 EDIT/DELETE 一律略過，不 throw、不錯位", () => {
     const actions: IHistogramAction[] = [
-      edit(999, "OOB", 1, 999), // Info: 超界
-      del(-1), // Info: 負數
-      del(0), // Info: 第 0 行為設定列（title）
-      edit(1, "CFG", 1, 1), // Info: 第 1 行為設定列（xaxis）
+      edit(999, "OOB", 1, 999), // Info: (20260731 - Julian) 超界
+      del(-1), // Info: (20260731 - Julian) 負數
+      del(0), // Info: (20260731 - Julian) 第 0 行為設定列（title）
+      edit(1, "CFG", 1, 1), // Info: (20260731 - Julian) 第 1 行為設定列（xaxis）
     ];
     const run = () => applyHistogramActions(RAW, actions);
     expect(run).not.toThrow();
@@ -186,7 +186,7 @@ describe("applyHistogramActions - 超界 / 非法 lineIndex", () => {
 describe("applyHistogramActions - 設定列動作（軸標題 / 趨勢線）延後套用", () => {
   it("EDIT_AXIS 與資料列刪除同批：軸設定正確、資料列刪除正確", () => {
     const out = applyHistogramActions(RAW, [
-      del(3), // Info: 刪 B
+      del(3), // Info: (20260731 - Julian) 刪 B
       {
         id: uid(40),
         description: "axis",

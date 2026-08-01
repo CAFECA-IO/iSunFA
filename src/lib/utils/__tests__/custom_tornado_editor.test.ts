@@ -335,9 +335,9 @@ describe("applyTornadoActions - Fail Safe", () => {
   });
 
   it("EDIT/DELETE 指向標頭列或設定列一律略過（原樣返回）", () => {
-    expect(applyTornadoActions(RAW, [edit(2, "H", 1, 1)])).toBe(RAW); // Info: 第 2 行為標頭列
-    expect(applyTornadoActions(RAW, [edit(0, "T", 1, 1)])).toBe(RAW); // Info: 第 0 行為設定列
-    expect(applyTornadoActions(RAW, [del(2)])).toBe(RAW); // Info: 標頭列不可當資料列刪除
+    expect(applyTornadoActions(RAW, [edit(2, "H", 1, 1)])).toBe(RAW); // Info: (20260731 - Julian) 第 2 行為標頭列
+    expect(applyTornadoActions(RAW, [edit(0, "T", 1, 1)])).toBe(RAW); // Info: (20260731 - Julian) 第 0 行為設定列
+    expect(applyTornadoActions(RAW, [del(2)])).toBe(RAW); // Info: (20260731 - Julian) 標頭列不可當資料列刪除
   });
 
   it("超界 / 負數 lineIndex 一律略過，不 throw、不錯位", () => {

@@ -330,6 +330,8 @@ export const detectChartType = (chartStr: string): MermaidChartType => {
       return MermaidChartType.SANKEY;
     if (cleanLine.startsWith("sequencediagram"))
       return MermaidChartType.SEQUENCE;
+    // Info: (20260730 - Tzuhan) timeline 已由 mermaid 11 原生支援;此處漏列會讓合法圖被當成未知型別而不渲染
+    if (cleanLine.startsWith("timeline")) return MermaidChartType.TIMELINE;
     break;
   }
   return MermaidChartType.UNKNOWN;

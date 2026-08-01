@@ -21,6 +21,8 @@ interface IOutlineModalProps {
   // Info: (20260714 - Emily) AI 段落草稿生成(透傳給 OutlineTree);行動版生成時不關閉 Modal,以便觀察 spinner
   draftingParagraphId?: string | null;
   onGenerateDraft?: (paragraphId: string) => void;
+  // Info: (20260730 - Tzuhan) 產生結構圖(僅有對應模板的段落會顯示按鈕)
+  onGenerateDiagram?: (paragraphId: string) => void;
 }
 
 export function OutlineModal({
@@ -32,6 +34,7 @@ export function OutlineModal({
   onClose,
   draftingParagraphId = null,
   onGenerateDraft = undefined,
+  onGenerateDiagram = undefined,
 }: IOutlineModalProps) {
   const { t } = useTranslation();
 
@@ -81,6 +84,18 @@ export function OutlineModal({
             {t("carbon_chatbot.verified_short")} {stats.verifiedCount}/
             {stats.totalCount}
           </span>
+          {/* Info: (20260730 - Tzuhan) 完成數的來源拆解:AI 草稿不得冒充逐字照抄原文 */}
+          {stats.importedCount + stats.draftedCount > 0 && (
+            <>
+              <span className="text-gray-300">|</span>
+              <span className="font-medium text-emerald-700">
+                {t("carbon_chatbot.origin_imported")} {stats.importedCount}
+              </span>
+              <span className="font-medium text-purple-700">
+                {t("carbon_chatbot.origin_ai_draft")} {stats.draftedCount}
+              </span>
+            </>
+          )}
           <span className="relative ml-auto inline-block h-1.5 w-24 overflow-hidden rounded-full bg-gray-200">
             <span
               className="absolute inset-y-0 left-0 rounded-full bg-green-400 transition-all duration-500"
@@ -100,6 +115,7 @@ export function OutlineModal({
           onToggleVerified={onToggleVerified}
           draftingParagraphId={draftingParagraphId}
           onGenerateDraft={onGenerateDraft}
+          onGenerateDiagram={onGenerateDiagram}
         />
       </div>
     </div>

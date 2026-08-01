@@ -1,3 +1,4 @@
+import { describe, it, expect } from "@jest/globals";
 import {
   MatrixActionType,
   CustomChartConfigKey,
@@ -9,7 +10,6 @@ import {
   applyMatrixAction,
   applyMatrixActions,
 } from "@/lib/utils/custom_matrix_editor";
-import { describe, it, expect } from "@jest/globals";
 
 /**
  * Info: (20260725 - Luphia)

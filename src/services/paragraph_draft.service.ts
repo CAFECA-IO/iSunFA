@@ -1,9 +1,9 @@
-// Info: (20260714 - Emily) Carbon Chatbot 段落草稿生成服務
-// Info: (20260714 - Emily) 職責:依 CARBON_REPORT_OUTLINE 的段落 guidance + 對話上下文 + 已確認事實,由 LLM 撰寫段落敘述草稿
-// Info: (20260714 - Emily) 邊界:LLM 只撰寫敘述;段落對應由白名單裁決、數值一律引用輸入事實原值,嚴禁 LLM 計算或虛構
+// Info: (20260714 - Tzuhan) Carbon Chatbot 段落草稿生成服務
+// Info: (20260714 - Tzuhan) 職責:依 CARBON_REPORT_OUTLINE 的段落 guidance + 對話上下文 + 已確認事實,由 LLM 撰寫段落敘述草稿
+// Info: (20260714 - Tzuhan) 邊界:LLM 只撰寫敘述;段落對應由白名單裁決、數值一律引用輸入事實原值,嚴禁 LLM 計算或虛構
 
 import { logger } from "@/lib/utils/logger";
-// Info: (20260714 - Emily) AI 串接單一閘道:SDK 型別與呼叫一律經 chat.service,本檔不直接依賴 @google/generative-ai
+// Info: (20260714 - Tzuhan) AI 串接單一閘道:SDK 型別與呼叫一律經 chat.service,本檔不直接依賴 @google/generative-ai
 import {
   ChatService,
   isLlmQuotaError,
@@ -28,7 +28,7 @@ import {
 } from "@/interfaces/carbon_paragraph_draft";
 import { ChatRoleEnum } from "@/types/carbon_chatbot.types";
 
-// Info: (20260714 - Emily) Gemini responseSchema:以結構約束輸出,禁止自由格式 + Regex 硬抓
+// Info: (20260714 - Tzuhan) Gemini responseSchema:以結構約束輸出,禁止自由格式 + Regex 硬抓
 const DRAFT_RESPONSE_SCHEMA: Schema = {
   type: SchemaType.OBJECT,
   properties: {
@@ -46,7 +46,7 @@ const DRAFT_RESPONSE_SCHEMA: Schema = {
 };
 
 export class ParagraphDraftService {
-  // Info: (20260714 - Emily) ChatService 延遲建立(避免 import 階段因缺 API Key 拋錯),測試時可注入 mock
+  // Info: (20260714 - Tzuhan) ChatService 延遲建立(避免 import 階段因缺 API Key 拋錯),測試時可注入 mock
   private readonly injectedChatService?: ChatService;
 
   constructor(chatService?: ChatService) {
@@ -60,7 +60,7 @@ export class ParagraphDraftService {
   async generateParagraphDraft(
     input: IParagraphDraftInput,
   ): Promise<IParagraphDraft> {
-    // Info: (20260714 - Emily) 白名單裁決:段落必須存在於標準大綱(validator 已擋,此處為服務層防線)
+    // Info: (20260714 - Tzuhan) 白名單裁決:段落必須存在於標準大綱(validator 已擋,此處為服務層防線)
     const section = CARBON_REPORT_OUTLINE.find(
       (s) => s.id === input.paragraphId,
     );
@@ -76,8 +76,8 @@ export class ParagraphDraftService {
 
     let raw: string;
     try {
-      // Info: (20260714 - Emily) 資料萃取/撰寫任務 Temperature = 0,確保可重現
-      // Info: (20260716 - Emily) 同步路徑防護(#6515):45s 逾時 + 用量記錄
+      // Info: (20260714 - Tzuhan) 資料萃取/撰寫任務 Temperature = 0,確保可重現
+      // Info: (20260716 - Tzuhan) 同步路徑防護(#6515):45s 逾時 + 用量記錄
       raw = await this.getChatService().generateRaw(
         prompt,
         DRAFT_RESPONSE_SCHEMA,
@@ -88,7 +88,7 @@ export class ParagraphDraftService {
         },
       );
     } catch (error) {
-      // Info: (20260714 - Emily) 包裝 LLM 原始錯誤,不讓 Gemini 錯誤細節噴到前端;額度耗盡/逾時回專屬錯誤碼
+      // Info: (20260714 - Tzuhan) 包裝 LLM 原始錯誤,不讓 Gemini 錯誤細節噴到前端;額度耗盡/逾時回專屬錯誤碼
       logger.error(
         `[ParagraphDraftService] LLM call failed: ${JSON.stringify(error)}`,
       );
@@ -98,7 +98,7 @@ export class ParagraphDraftService {
       throw new ApiError(def.code, def.message, def.status);
     }
 
-    // Info: (20260714 - Emily) 永不直接採信 LLM 輸出:JSON 解析 + Zod 雙重護欄
+    // Info: (20260714 - Tzuhan) 永不直接採信 LLM 輸出:JSON 解析 + Zod 雙重護欄
     let parsedUnknown: unknown;
     try {
       parsedUnknown = JSON.parse(raw);
@@ -152,10 +152,37 @@ export class ParagraphDraftService {
             .join("\n")
         : "(無已確認事實)";
 
-    // Info: (20260714 - Emily) 數據段落:數字由後端決定論管線勾稽,LLM 只寫說明文字並保留表格佔位
+    // Info: (20260714 - Tzuhan) 數據段落:數字由後端決定論管線勾稽,LLM 只寫說明文字並保留表格佔位
     const dataDrivenRule = section.isDataDriven
       ? "\n6. 本段為數據段落:不得自行產生任何統計表格或加總數字,僅撰寫方法說明文字,並在表格應出現處保留「(數據表格由系統產出)」佔位。"
       : "";
+
+    // Info: (20260716 - Tzuhan) #55 修訂模式:提供原文與指示,規則改為「最小變更」;
+    // Info: (20260716 - Tzuhan) 修訂稿不直接落地 — 由前端以對照卡呈現,人工確認後才寫入報告
+    if (input.existingContent && input.instruction) {
+      return `你是一位專業碳會計師,負責「修訂」溫室氣體盤查報告書的既有段落。
+
+【段落資訊】
+編號: ${section.code}
+標題: ${section.title}
+
+【既有段落原文】(修訂基準)
+${input.existingContent}
+
+【修訂指示】
+${input.instruction}
+
+【已確認事實】(引用數值的唯一合法來源)
+${factsBlock}
+
+【修訂規則】
+1. 只輸出修訂後的完整段落內文(Markdown),不要輸出章節編號或段落標題。
+2. 最小變更原則:僅修改與指示及新事實相關的語句,其餘句子逐字保留原文。
+3. 所有數值、名稱、年份必須來自【已確認事實】或原文既有內容;嚴禁引入無佐證的新數字。
+4. 嚴禁自行計算、換算或推導任何數字。
+5. 使用 ${input.language ?? "zh-TW"} 撰寫。
+6. citedFacts 逐條列出修訂實際引用的事實;未引用回空陣列。${dataDrivenRule}`;
+    }
 
     return `你是一位專業碳會計師,負責撰寫溫室氣體盤查報告書(IFRS S1/S2 對齊)的指定段落草稿。
 
