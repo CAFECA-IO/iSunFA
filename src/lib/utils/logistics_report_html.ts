@@ -14,6 +14,11 @@ import {
   ScaleBarOmissionEnum,
 } from "@/lib/utils/map_scale_bar";
 import {
+  reconcileLegTotals,
+  ReconciliationVerdictEnum,
+  REPORT_DISPLAY_DECIMALS,
+} from "@/lib/utils/report_disclosure";
+import {
   LOGISTICS_PDF_FONT_STACK,
   LOGISTICS_PDF_LEG_MAP_GAP_MM,
   LOGISTICS_PDF_LEG_MAP_MAX_HEIGHT_MM,
@@ -271,6 +276,40 @@ export function renderMapFigure(input: IMapFigureInput): string {
 }
 
 /**
+ * Info: (20260801 - Luphia) 加總可驗證性的揭露文字。
+ *
+ * 三種措辭對應三種事實,不可混用:
+ * - 完全相符:仍說明顯示位數,讓查核者知道自己重算時該預期什麼精度
+ * - 落在四捨五入內:明確給出差額與來源,查核者不需要自己推敲那 0.01 是哪來的
+ * - 超出四捨五入:這不是排版問題而是兩套推導分歧,措辭必須讓人警覺並轉向 CSV 核對
+ *
+ * 刻意不把總計改成逐列的和 —— 那會讓 PDF 與 CSV、與資料庫出現三套數字,
+ * 正是本檔開頭警告的「避免 CSV 與 PDF 各說各話」。揭露而不改數字。
+ */
+function renderReconciliationNote(reconciliation: {
+  verdict: ReconciliationVerdictEnum;
+  displayedSum: number;
+  displayedTotal: number;
+  difference: number;
+}): string {
+  const { verdict, displayedSum, displayedTotal, difference } = reconciliation;
+  if (verdict === ReconciliationVerdictEnum.INDETERMINATE) return "";
+
+  const decimals = `小數 ${REPORT_DISPLAY_DECIMALS} 位`;
+
+  if (verdict === ReconciliationVerdictEnum.EXACT) {
+    return `<div class="formula recon">各段數值四捨五入至${decimals}顯示;本表逐列相加與總計一致。完整精度見同批匯出的 summary.csv。</div>`;
+  }
+
+  if (verdict === ReconciliationVerdictEnum.WITHIN_ROUNDING) {
+    return `<div class="formula recon">各段數值四捨五入至${decimals}顯示,總計以未捨入值計算,故逐列相加(${formatNumber(displayedSum)})與總計(${formatNumber(displayedTotal)})相差 ${formatNumber(Math.abs(difference))} kg —— 此差異來自顯示捨入,非計算差異。完整精度見同批匯出的 summary.csv。</div>`;
+  }
+
+  // Info: (20260801 - Luphia) DIVERGENT:差異無法以捨入解釋,必須讓讀者知道這不是排版問題
+  return `<div class="formula recon warn">注意:逐列相加(${formatNumber(displayedSum)})與總計(${formatNumber(displayedTotal)})相差 ${formatNumber(Math.abs(difference))} kg,超出四捨五入可解釋的範圍。逐段數值與方案總計由兩套推導產生,此差異需以 summary.csv 核對後判定。</div>`;
+}
+
+/**
  * Info: (20260731 - Tzuhan) 組出單一方案的 A4 列印 HTML。
  * 版面刻意不照抄螢幕:螢幕版是可捲動的卡片牆,列印版需要固定表頭與分頁友善的表格。
  * 「一份 PDF 一個方案」的既有約定不變(需求二),故此函數一次只處理一個方案。
@@ -295,6 +334,19 @@ export function buildLogisticsReportHtml(
 </tr>`;
     })
     .join("\n");
+
+  /**
+   * Info: (20260801 - Luphia) 自我勾稽:逐列相加是否等於總計。
+   *
+   * 頁尾印出計算公式即是邀請查核者逐列重算,而逐段顯示到小數 2 位、總計取自上游
+   * 未捨入的值 —— 兩者本來就可能差幾分錢。實測 R01 差 0.01、R02 恰好對上,
+   * 也就是「查核者會不會發現對不上」取決於運氣,而報告完全沒揭露。
+   * 「加總對不上」對審計文件是必被提問的一項,故一律揭露。
+   */
+  const reconciliation = reconcileLegTotals(
+    input.legs.map((leg) => leg.co2eKg),
+    input.planTotalCo2e,
+  );
 
   // Info: (20260731 - Tzuhan) 係數來源逐一列出:查核者要能自行以公開係數重算每一格
   const sources = Array.from(
@@ -387,6 +439,10 @@ export function buildLogisticsReportHtml(
   .total { margin-top: 3mm; text-align: right; font-size: 11pt; font-weight: 700; }
   .note { font-size: 8pt; color: #64748b; margin: 2mm 0; }
   .formula { margin-top: 4mm; padding-top: 2mm; border-top: 0.2mm solid #e2e8f0; font-size: 7.5pt; color: #64748b; }
+  /* Info: (20260801 - Luphia) 勾稽揭露緊接公式,不再畫一條分隔線(視覺上屬同一段說明) */
+  .formula.recon { margin-top: 1.5mm; padding-top: 0; border-top: none; }
+  /* Info: (20260801 - Luphia) 超出捨入範圍時提高視覺權重:這是查核者必須注意的一項,不可與一般註腳同級 */
+  .formula.recon.warn { color: #b45309; font-weight: 700; }
 </style>
 </head>
 <body>
@@ -430,6 +486,7 @@ ${legFigures}
     ${sources} ·
     est. = 直線距離 × 1.2 推估(該段無路網資料)
   </div>
+  ${renderReconciliationNote(reconciliation)}
 </body>
 </html>`;
 }
