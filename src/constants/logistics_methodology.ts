@@ -110,7 +110,7 @@ export const LOGISTICS_METHODOLOGY_SECTIONS: IMethodologySection[] = [
       {
         term: "道路路網",
         detail:
-          "自建 OSRM 路徑服務，路網取自 OpenStreetMap 的區域萃取檔，採預設小客車路徑設定。**目前僅載入台灣範圍**，範圍外的陸運段一律改以推估（見第五節與第十一節）。",
+          "自建 OSRM 路徑服務，路網取自 OpenStreetMap 的區域萃取檔，採預設小客車路徑設定。**目前僅載入臺灣範圍**，範圍外的陸運段一律改以推估（見第五節與第十一節）。",
       },
       {
         term: "地圖底圖",
@@ -295,9 +295,9 @@ export const LOGISTICS_METHODOLOGY_SECTIONS: IMethodologySection[] = [
     ],
     items: [
       {
-        term: "道路路網僅覆蓋台灣",
+        term: "道路路網僅覆蓋臺灣",
         detail:
-          "非台灣境內的陸運段無法取得實際路徑，一律以直線距離乘繞行係數推估。若某條路線的排放以境外陸運為主，推估誤差會直接進入結果。報告會揭露推估段數及其占比。",
+          "非臺灣境內的陸運段無法取得實際路徑，一律以直線距離乘繞行係數推估。若某條路線的排放以境外陸運為主，推估誤差會直接進入結果。報告會揭露推估段數及其占比。",
       },
       {
         term: "部分軍用場站仍可能被選為接駁機場",

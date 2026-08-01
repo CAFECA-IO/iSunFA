@@ -388,7 +388,7 @@ function renderReconciliationNote(reconciliation: {
  * 內容與畫面上的說明區塊共用 LOGISTICS_METHODOLOGY_SECTIONS ——
  * 兩處各寫一份必然失去同步,而「網頁說的與報告說的不一樣」對審計文件是致命的。
  *
- * `**粗體**` 以最小限度的轉換處理:內容中僅用於強調「不包含」、「僅載入台灣範圍」
+ * `**粗體**` 以最小限度的轉換處理:內容中僅用於強調「不包含」、「僅載入臺灣範圍」
  * 這類決定結論邊界的字眼,不引入 markdown 套件。
  */
 function renderMethodologyAppendix(): string {
@@ -489,7 +489,7 @@ export function buildLogisticsReportHtml(
 
   /**
    * Info: (20260801 - Luphia) 推估段的材性。路網覆蓋範圍由部署決定
-   * (dockerfiles/osrm/Dockerfile 目前只載入 taiwan-latest.osm.pbf,故非台灣的
+   * (dockerfiles/osrm/Dockerfile 目前只載入 taiwan-latest.osm.pbf,故非臺灣的
    * 陸運段全數落到推估),但報告刻意不宣稱覆蓋範圍 —— 在程式碼裡另寫一份
    * 就是第二個必須手動同步的事實。只陳述資料本身能證實的:幾段推估、占多少排放。
    */
