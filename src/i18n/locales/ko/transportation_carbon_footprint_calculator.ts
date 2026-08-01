@@ -162,6 +162,9 @@ export const transportationCarbonFootprintCalculator = {
     label: "🟢 ESG 물류 탄소 발자국 추적 (Powered by MapLibre)",
   },
   // Info: (20260724 - Tzuhan) 내보내기 선택 모달(요구사항 2)
+  methodology: {
+    title: "계산 방식 설명",
+  },
   export_options: {
     title: "내보낼 플랜 선택",
     description:

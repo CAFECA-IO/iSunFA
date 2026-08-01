@@ -49,6 +49,7 @@ import {
   ExportOptionsModal,
   type IExportOptions,
 } from "@/components/transportation_carbon_footprint_calculator/export_options_modal";
+import MethodologySection from "@/components/transportation_carbon_footprint_calculator/methodology_section";
 import {
   buildExportFileName,
   buildExportId,
@@ -2000,6 +2001,18 @@ function ReportPageContent() {
                 </div>
               )}
             </div>
+
+            {/* Info: (20260801 - Luphia) 計算方式說明置於結果之後:
+                先看結論,需要追問原理時往下即是。與 PDF 附錄共用同一份內容 */}
+            {!isExporting && (
+              <div className="mt-6">
+                <MethodologySection
+                  title={t(
+                    "transportation_carbon_footprint_calculator.methodology.title",
+                  )}
+                />
+              </div>
+            )}
           </>
         ) : (
           <AuthPlaceholder

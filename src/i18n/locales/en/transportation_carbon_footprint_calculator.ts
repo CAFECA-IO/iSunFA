@@ -165,6 +165,9 @@ export const transportationCarbonFootprintCalculator = {
     label: "🟢 ESG Logistics Carbon Trace (Powered by MapLibre)",
   },
   // Info: (20260724 - Tzuhan) Export options modal (requirement 2)
+  methodology: {
+    title: "How the figures are calculated",
+  },
   export_options: {
     title: "Select Plans to Export",
     description:

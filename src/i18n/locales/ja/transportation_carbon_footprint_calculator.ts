@@ -165,6 +165,9 @@ export const transportationCarbonFootprintCalculator = {
     label: "🟢 ESG物流炭素排出量追跡 (Powered by MapLibre)",
   },
   // Info: (20260724 - Tzuhan) エクスポート選択モーダル(要件2)
+  methodology: {
+    title: "計算方法の説明",
+  },
   export_options: {
     title: "エクスポートするプランを選択",
     description:

@@ -14,6 +14,7 @@ import {
   computeRenderedMapSizeMm,
   ScaleBarOmissionEnum,
 } from "@/lib/utils/map_scale_bar";
+import { LOGISTICS_METHODOLOGY_SECTIONS } from "@/constants/logistics_methodology";
 import {
   EstimationShareBasisEnum,
   reconcileLegTotals,
@@ -378,6 +379,50 @@ function renderReconciliationNote(reconciliation: {
 }
 
 /**
+ * Info: (20260801 - Luphia) 計算方式說明附錄。
+ *
+ * 放在報告末頁而非另開檔案:查核者拿到的是這份 PDF,不是網站。
+ * 一份自帶方法論的報告可以獨立成為證據;需要另外去查說明的報告,
+ * 在轉手之後那份說明就不見了。
+ *
+ * 內容與畫面上的說明區塊共用 LOGISTICS_METHODOLOGY_SECTIONS ——
+ * 兩處各寫一份必然失去同步,而「網頁說的與報告說的不一樣」對審計文件是致命的。
+ *
+ * `**粗體**` 以最小限度的轉換處理:內容中僅用於強調「不包含」、「僅載入台灣範圍」
+ * 這類決定結論邊界的字眼,不引入 markdown 套件。
+ */
+function renderMethodologyAppendix(): string {
+  const emphasize = (text: string): string =>
+    escapeHtml(text).replace(
+      /\*\*([^*]+)\*\*/g,
+      '<strong class="emph">$1</strong>',
+    );
+
+  const sections = LOGISTICS_METHODOLOGY_SECTIONS.map((section) => {
+    const paragraphs = (section.paragraphs ?? [])
+      .map((text) => `<p class="mp">${emphasize(text)}</p>`)
+      .join("");
+    const items = (section.items ?? [])
+      .map(
+        (item) =>
+          `<dt>${escapeHtml(item.term)}</dt><dd>${emphasize(item.detail)}</dd>`,
+      )
+      .join("");
+    return `<section class="msec">
+  <h3>${escapeHtml(section.title)}</h3>
+  ${paragraphs}
+  ${items ? `<dl>${items}</dl>` : ""}
+</section>`;
+  }).join("\n");
+
+  return `<div class="appendix">
+  <h2 class="section">附錄:計算方式說明</h2>
+  <p class="note">本附錄說明本報告數值的產生方式與已知限制,供查核者判斷其可靠程度。</p>
+  ${sections}
+</div>`;
+}
+
+/**
  * Info: (20260731 - Tzuhan) 組出單一方案的 A4 列印 HTML。
  * 版面刻意不照抄螢幕:螢幕版是可捲動的卡片牆,列印版需要固定表頭與分頁友善的表格。
  * 「一份 PDF 一個方案」的既有約定不變(需求二),故此函數一次只處理一個方案。
@@ -550,6 +595,17 @@ export function buildLogisticsReportHtml(
   .formula.recon { margin-top: 1.5mm; padding-top: 0; border-top: none; }
   /* Info: (20260801 - Luphia) 超出捨入範圍時提高視覺權重:這是查核者必須注意的一項,不可與一般註腳同級 */
   .formula.recon.warn { color: #b45309; font-weight: 700; }
+  /* Info: (20260801 - Luphia) 附錄另起新頁:它是獨立的閱讀單元,
+     夾在頁尾註腳之後會讓讀者以為那還是同一頁的補充 */
+  .appendix { break-before: page; }
+  .msec { margin-top: 3mm; break-inside: avoid; }
+  .msec h3 { font-size: 9pt; margin: 0 0 1mm; color: #1e293b; }
+  .msec .mp { font-size: 7.5pt; color: #334155; margin: 0 0 1mm; line-height: 1.5; }
+  .msec dl { margin: 0; font-size: 7.5pt; line-height: 1.5; }
+  .msec dt { font-weight: 700; color: #475569; margin-top: 1mm; }
+  .msec dd { margin: 0 0 0 4mm; color: #334155; }
+  /* Info: (20260801 - Luphia) 強調字用於界定結論邊界(如「不包含」),需與正文可辨 */
+  .msec .emph { color: #b45309; }
 </style>
 </head>
 <body>
@@ -606,6 +662,7 @@ ${legFigures}
   </div>
   ${renderEstimationNote(estimation)}
   ${reconciliation ? renderReconciliationNote(reconciliation) : ""}
+  ${renderMethodologyAppendix()}
 </body>
 </html>`;
 }

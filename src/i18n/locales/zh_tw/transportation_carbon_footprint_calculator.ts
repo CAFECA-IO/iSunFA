@@ -155,6 +155,9 @@ export const transportationCarbonFootprintCalculator = {
     label: "🟢 ESG 物流碳盤查軌跡 (Powered by MapLibre)",
   },
   // Info: (20260724 - Tzuhan) 匯出勾選選單(需求二)
+  methodology: {
+    title: "計算方式說明",
+  },
   export_options: {
     title: "選擇匯出方案",
     description: "請勾選要匯出的方案類型，僅列出此路線適用的方案。",
