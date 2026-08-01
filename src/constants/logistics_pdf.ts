@@ -26,17 +26,29 @@ export const LOGISTICS_PDF_MARGIN = {
 export const LOGISTICS_PDF_FONT_STACK = PDF_FONT_STACK;
 
 /**
- * Info: (20260731 - Tzuhan) 已知限制:中文字在輸出的 PDF 內是**點陣字(Type 3)**,不是向量。
+ * Info: (20260801 - Luphia) 中文字在輸出的 PDF 內走 **Type 3 字型**,但是**向量而非點陣**。
  *
- * 實測 `pdffonts` 的結果:拉丁字走 CID TrueType 子集(ArialMT、Menlo-Bold),
- * 但樣板內 19 個相異中文字各自成為一個 Type 3 字型物件 —— Chrome 在找不到可嵌入的
- * 中文字型時會把字符光柵化。後果是這些字放大會模糊,且約佔檔案 60 KB。
+ * 原註解記為「Chrome 在找不到可嵌入的中文字型時會把字符光柵化,這些字放大會模糊」——
+ * 實測反駁:R02-AIR 報告含 52 個 Type 3 字型物件、217 個字形,
+ * 逐一檢視 CharProcs 的結果是 **0 個含影像運算子(BI/ID/Do/Image)、
+ * 215 個含路徑運算子(m/l)**,另 2 個是空白字(僅 `d1`,無繪製)。
+ * 也就是全部為向量輪廓,放大不會模糊。
  *
- * 搜尋與複製**仍然可用**(ToUnicode 對照表有保留),所以不影響本次的核心目標。
- * 要修的正解是提供可嵌入的中文字型(在執行環境安裝 Noto Sans TC,或以 @font-face
- * 內嵌字型檔讓 Chrome 自行子集化);列為後續 issue,不在本次範圍。
+ * (先前之所以會判斷成點陣,是因為當時主機根本沒有中文字型,
+ * 看到的 Type 3 是缺字狀態下的產物;裝上 Noto Sans CJK 後才看得出真正的行為。)
+ *
+ * **仍存在的代價是體積。** Type 3 每個字型物件各自攜帶字形,沒有 CID 子集的共用與 hinting:
+ *   R01(當時中文無字形):總 197 KB,其中影像 141 KB → 非影像 56 KB
+ *   R02(中文正常):     總 334 KB,其中影像 150 KB → 非影像 184 KB
+ * 中文字型的成本約 **128 KB**。
+ *
+ * 成因推測是 fonts-noto-cjk 提供的是 `NotoSansCJK-Regular.ttc`(TrueType Collection),
+ * Skia 的 PDF 後端無法從 collection 產生 CID 子集,故改以 Type 3 逐字輸出輪廓。
+ * 若要收斂體積,可改安裝單一字族的檔案(如 Google Fonts 的 Noto Sans TC OTF/TTF)
+ * 讓 Chrome 走正常的 CID 子集路徑。列為後續 issue,不影響正確性:
+ * 文字可選取、可搜尋、放大清晰,對審計文件而言核心目標已達成。
  */
-export const LOGISTICS_PDF_CJK_IS_BITMAP = true;
+export const LOGISTICS_PDF_CJK_USES_TYPE3_VECTOR = true;
 
 /**
  * Info: (20260731 - Tzuhan) 地圖影像的體積上限。地圖是這份報告唯一的真實光柵內容,

@@ -261,7 +261,13 @@ export function renderMapFigure(input: IMapFigureInput): string {
     ? ` style="width:${renderedSize.widthMm}mm;height:${renderedSize.heightMm}mm"`
     : "";
 
-  return `<figure class="${cls}"><div class="mapbox"${boxStyle}><img class="map" src="${resolved.src}" alt="${input.caption}" />${scaleBlock}</div>${scaleNote}<figcaption>${input.caption}</figcaption></figure>`;
+  /**
+   * Info: (20260801 - Luphia) 說明置於圖說**之後**而非圖與圖說之間。
+   * 逐段小圖是兩欄版面,說明有兩行而圖說只有一行 —— 夾在中間會把該欄的圖說往下推,
+   * 左右兩欄的圖說於是不對齊(實測 R02-AIR 第 1、2 段相差一行)。
+   * 置於圖說之後也更符合閱讀順序:先知道這是哪一段,再讀為什麼沒有比例尺。
+   */
+  return `<figure class="${cls}"><div class="mapbox"${boxStyle}><img class="map" src="${resolved.src}" alt="${input.caption}" />${scaleBlock}</div><figcaption>${input.caption}</figcaption>${scaleNote}</figure>`;
 }
 
 /**
