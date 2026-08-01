@@ -9,6 +9,12 @@ import {
 } from "@/constants/logistics_pdf";
 
 // Info: (20260731 - Tzuhan) 地點名稱與標籤的長度上限:超長字串只會撐爛版面,且是探測伺服器的常見手法
+/**
+ * Info: (20260801 - Luphia) 截圖尺寸的合理上界(CSS px)。純粹是溢位護欄:
+ * 真實畫布不會接近這個數,但沒有上界時一個荒謬的大數會讓紙面尺寸與比例尺長度失去意義。
+ */
+const CAPTURE_PX_MAX = 20_000;
+
 const LABEL_MAX = 200;
 
 const LegSchema = z.object({
@@ -30,6 +36,12 @@ const LegSchema = z.object({
     .optional(),
   // Info: (20260731 - Tzuhan) 每像素公尺數(比例尺用);非正數即不畫比例尺,不猜
   metersPerPixel: z.number().positive().optional(),
+  /**
+   * Info: (20260801 - Luphia) 截圖畫布的 CSS 尺寸。上界取 20000:CSS 像素在任何真實畫布上
+   * 都遠低於此,設上界是為了擋下讓紙面尺寸計算溢位的荒謬值,而非限制正常使用。
+   */
+  captureWidthPx: z.number().positive().max(CAPTURE_PX_MAX).optional(),
+  captureHeightPx: z.number().positive().max(CAPTURE_PX_MAX).optional(),
 });
 
 const ReportSchema = z.object({
@@ -48,6 +60,12 @@ const ReportSchema = z.object({
     .regex(LOGISTICS_PDF_MAP_DATA_URL_PATTERN)
     .optional(),
   metersPerPixel: z.number().positive().optional(),
+  /**
+   * Info: (20260801 - Luphia) 截圖畫布的 CSS 尺寸。上界取 20000:CSS 像素在任何真實畫布上
+   * 都遠低於此,設上界是為了擋下讓紙面尺寸計算溢位的荒謬值,而非限制正常使用。
+   */
+  captureWidthPx: z.number().positive().max(CAPTURE_PX_MAX).optional(),
+  captureHeightPx: z.number().positive().max(CAPTURE_PX_MAX).optional(),
 });
 
 export const LogisticsReportPdfRequestSchema = z.object({

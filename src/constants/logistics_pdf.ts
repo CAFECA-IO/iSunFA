@@ -104,18 +104,46 @@ export const CARBON_MAP_CAPTURE_TIMEOUT_MS =
   MAP_STYLE_READY_TIMEOUT_MS + MAP_IDLE_TIMEOUT_MS + 2_000;
 
 /**
- * Info: (20260731 - Tzuhan) 地圖在報告中的顯示寬度(CSS 像素基準)。
- * 比例尺的長度是「距離 ÷ 每像素公尺數」,而那個像素數指的是**顯示尺寸**而非原始影像尺寸,
- * 所以必須有一個共同基準。A4 內容區寬約 190mm,以 96dpi 換算約 718px;
- * 逐段小圖為兩欄,各約一半。這個值只影響比例尺線段的相對長度,不影響影像本身。
+ * Info: (20260801 - Luphia) 地圖在報告中的顯示幾何,全部以公釐表示並由頁面版面推導。
+ *
+ * 改以 mm 為單位而非先前的 CSS 像素,是因為列印樣式本來就以 mm 撰寫,
+ * 而比例尺要算的是「紙上一公釐代表多少公尺」。先前以 718 / 348 px 為基準,
+ * 那組數字既不是影像的原始尺寸、也不是截圖畫布的尺寸,只是版面寬度的另一種寫法 ——
+ * 拿它去除 metersPerPixel(基準為截圖畫布的 CSS 像素)在單位上就不成立,
+ * 算出來的長度必然是錯的。
+ *
+ * 由 A4 尺寸與 LOGISTICS_PDF_MARGIN 推導而非各自寫死:邊界一旦調整,
+ * 這些值會自動跟上,不會默默失去同步。
  */
-export const LOGISTICS_PDF_MAP_RENDER_WIDTH_PX = 718;
+const A4_WIDTH_MM = 210;
+
+export const LOGISTICS_PDF_CONTENT_WIDTH_MM =
+  A4_WIDTH_MM -
+  Number.parseFloat(LOGISTICS_PDF_MARGIN.left) -
+  Number.parseFloat(LOGISTICS_PDF_MARGIN.right);
+
+/** Info: (20260801 - Luphia) 逐段小圖兩欄之間的間距,須與 `.legmaps` 的 grid gap 一致 */
+export const LOGISTICS_PDF_LEG_MAP_GAP_MM = 3;
+
+/** Info: (20260801 - Luphia) 全程圖佔滿內容區寬度 */
+export const LOGISTICS_PDF_MAP_RENDER_WIDTH_MM = LOGISTICS_PDF_CONTENT_WIDTH_MM;
 
 /**
- * Info: (20260731 - Tzuhan) 逐段小圖的顯示寬度:兩欄版面,扣掉 3mm 間距後約一半。
+ * Info: (20260801 - Luphia) 逐段小圖為兩欄:扣掉間距後對半。
  * 必須與全程圖分開,否則比例尺的線段長度會差一倍 —— 而長度錯的比例尺等於錯的證據。
  */
-export const LOGISTICS_PDF_LEG_MAP_RENDER_WIDTH_PX = 348;
+export const LOGISTICS_PDF_LEG_MAP_RENDER_WIDTH_MM =
+  (LOGISTICS_PDF_CONTENT_WIDTH_MM - LOGISTICS_PDF_LEG_MAP_GAP_MM) / 2;
+
+/**
+ * Info: (20260801 - Luphia) 地圖的高度上限(mm)。原本只寫在 CSS 的 `max-height`,
+ * 現在必須是常數:影像的實際顯示尺寸改由 TypeScript 決定性算出(computeRenderedMapSizeMm),
+ * 而那個計算要知道高度上限才能判斷是寬度受限還是高度受限。
+ * 兩處若不同步,算出的紙面尺寸就與實際排版不符,比例尺會再次失準。
+ */
+export const LOGISTICS_PDF_MAP_MAX_HEIGHT_MM = 70;
+
+export const LOGISTICS_PDF_LEG_MAP_MAX_HEIGHT_MM = 46;
 
 /**
  * Info: (20260731 - Tzuhan) 只接受 JPEG/PNG 的 data URL 作為地圖影像:

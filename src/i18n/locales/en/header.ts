@@ -6,5 +6,9 @@ export const header = {
   login: "Login",
   credits: "Credits",
   logout: "Sign out",
+  theme: "Appearance",
+  theme_light: "Light",
+  theme_dark: "Dark",
+  theme_system: "System",
   transportation_carbon_footprint_calculator: "Transportation Carbon Footprint",
 };

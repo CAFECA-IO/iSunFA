@@ -9,6 +9,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import "@/app/globals.css";
 import { I18nProvider } from "@/i18n/i18n_context";
 import { AuthProvider } from "@/contexts/auth_context";
+import { ThemeProvider } from "@/contexts/theme_context";
 import { AiContextProvider } from "@/contexts/ai_context";
 import CookieConsent from "@/components/common/cookie_consent";
 import TestingEnvBanner from "@/components/common/testing_env_banner";
@@ -65,19 +66,26 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
+      {/* Info: (20260801 - Luphia) suppressHydrationWarning 為 next-themes 所需:
+          主題只有瀏覽器讀得到(localStorage),伺服器算出的 class 必然與 client 不同,
+          該套件在 hydration 前以同步 script 補上,此屬性讓 React 不對這個已知差異報警 */}
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} bg-surface-base text-text-primary antialiased`}
       >
         <GoogleAnalytics gaId={gaId} />
-        <I18nProvider>
-          {!isProduction() && <TestingEnvBanner />}
-          <AuthProvider>
-            <AiContextProvider>
-              {children}
-              <CookieConsent privacyPolicyContent={privacyPolicyContent} />
-            </AiContextProvider>
-          </AuthProvider>
-        </I18nProvider>
+        {/* Info: (20260801 - Luphia) ThemeProvider 置於最外層:它要在任何會讀取主題的元件之前
+            決定 <html> 的 class,包在內層會讓外層元件先以錯誤的主題渲染一幀 */}
+        <ThemeProvider>
+          <I18nProvider>
+            {!isProduction() && <TestingEnvBanner />}
+            <AuthProvider>
+              <AiContextProvider>
+                {children}
+                <CookieConsent privacyPolicyContent={privacyPolicyContent} />
+              </AiContextProvider>
+            </AuthProvider>
+          </I18nProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

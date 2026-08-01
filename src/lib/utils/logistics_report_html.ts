@@ -8,11 +8,17 @@ import {
   EMISSION_FACTORS,
   EMISSION_FACTOR_SOURCES,
 } from "@/constants/logistics";
-import { buildScaleBar } from "@/lib/utils/map_scale_bar";
+import {
+  buildScaleBar,
+  computeRenderedMapSizeMm,
+} from "@/lib/utils/map_scale_bar";
 import {
   LOGISTICS_PDF_FONT_STACK,
-  LOGISTICS_PDF_LEG_MAP_RENDER_WIDTH_PX,
-  LOGISTICS_PDF_MAP_RENDER_WIDTH_PX,
+  LOGISTICS_PDF_LEG_MAP_GAP_MM,
+  LOGISTICS_PDF_LEG_MAP_MAX_HEIGHT_MM,
+  LOGISTICS_PDF_LEG_MAP_RENDER_WIDTH_MM,
+  LOGISTICS_PDF_MAP_MAX_HEIGHT_MM,
+  LOGISTICS_PDF_MAP_RENDER_WIDTH_MM,
   LOGISTICS_PDF_MAP_DATA_URL_PATTERN,
   LOGISTICS_PDF_MAP_MAX_BYTES,
 } from "@/constants/logistics_pdf";
@@ -42,6 +48,13 @@ export interface IReportLeg {
   mapImageDataUrl?: string;
   /** Info: (20260731 - Tzuhan) 該段地圖的每像素公尺數,用於決定性地畫出比例尺 */
   metersPerPixel?: number;
+  /**
+   * Info: (20260801 - Luphia) 截圖畫布的 CSS 尺寸,與 metersPerPixel 成對送出。
+   * 少了它就只知道「一像素多少公尺」卻不知道有幾個像素,無從得知這張圖橫跨多遠,
+   * 比例尺畫在紙上該多長也就算不出來。
+   */
+  captureWidthPx?: number;
+  captureHeightPx?: number;
 }
 
 export interface ILogisticsReportHtmlInput {
@@ -60,6 +73,9 @@ export interface ILogisticsReportHtmlInput {
   mapImageDataUrl?: string;
   /** Info: (20260731 - Tzuhan) 總圖的每像素公尺數(比例尺用) */
   metersPerPixel?: number;
+  /** Info: (20260801 - Luphia) 總圖截圖畫布的 CSS 尺寸(比例尺與版面尺寸用) */
+  captureWidthPx?: number;
+  captureHeightPx?: number;
   exportId?: string;
   generatedAt: string;
 }
@@ -125,6 +141,13 @@ const coordText = (lat?: number, lng?: number): string =>
 interface IMapFigureInput {
   dataUrl?: string;
   metersPerPixel?: number;
+  /**
+   * Info: (20260801 - Luphia) 截圖當下畫布的 CSS 尺寸。必須與 metersPerPixel 成對使用:
+   * 兩者相乘才得到這張圖橫跨的實際距離,而長寬比決定影像在紙面上實際被畫成多大。
+   * 缺任一項就無從得知紙上一公釐代表多少公尺,此時不畫比例尺。
+   */
+  captureWidthPx?: number;
+  captureHeightPx?: number;
   caption: string;
   compact?: boolean;
 }
@@ -152,17 +175,49 @@ export function renderMapFigure(input: IMapFigureInput): string {
   }
 
   // Info: (20260731 - Tzuhan) 逐段小圖是兩欄版面,顯示寬度只有一半;用錯基準會讓比例尺長度差一倍
-  const renderWidthPx = input.compact
-    ? LOGISTICS_PDF_LEG_MAP_RENDER_WIDTH_PX
-    : LOGISTICS_PDF_MAP_RENDER_WIDTH_PX;
-  const scale = buildScaleBar(input.metersPerPixel, renderWidthPx);
+  const containerWidthMm = input.compact
+    ? LOGISTICS_PDF_LEG_MAP_RENDER_WIDTH_MM
+    : LOGISTICS_PDF_MAP_RENDER_WIDTH_MM;
+  const maxHeightMm = input.compact
+    ? LOGISTICS_PDF_LEG_MAP_MAX_HEIGHT_MM
+    : LOGISTICS_PDF_MAP_MAX_HEIGHT_MM;
+
+  /**
+   * Info: (20260801 - Luphia) 先算出影像在紙面上的實際尺寸,再把外框直接設成這個尺寸。
+   * 這樣 `object-fit: contain` 就永遠不會留白,影像邊界與外框邊界重合 ——
+   * 比例尺是絕對定位在外框內的,外框若比影像大,比例尺就會落在留白區而不是地圖上
+   * (實測回報的「位置錯誤」即為此)。
+   * 尺寸算不出來(舊版前端未回報截圖尺寸)時退回原本的自適應版面,只是不畫比例尺。
+   */
+  const renderedSize = computeRenderedMapSizeMm(
+    input.captureWidthPx,
+    input.captureHeightPx,
+    containerWidthMm,
+    maxHeightMm,
+  );
+
+  const scale = renderedSize
+    ? buildScaleBar(
+        input.metersPerPixel,
+        input.captureWidthPx,
+        renderedSize.widthMm,
+      )
+    : null;
+
+  /**
+   * Info: (20260801 - Luphia) 線段長度以 mm 寫死而非百分比。
+   * 百分比會對「最近的定位祖先」求值,也就是這個收縮包住文字的標籤盒本身,
+   * 而不是地圖 —— 先前線段只剩幾公釐的成因就在這裡。mm 是絕對單位,沒有這個問題。
+   */
   const scaleBlock = scale
-    ? `<div class="scalebar">${scale.label}<span class="bar" style="width:${(
-        (scale.widthPx / renderWidthPx) *
-        100
-      ).toFixed(1)}%"></span></div>`
+    ? `<div class="scalebar"><span class="bar" style="width:${scale.widthMm}mm"></span><span class="tick">${scale.label}</span></div>`
     : "";
-  return `<figure class="${cls}"><img class="map" src="${resolved.src}" alt="${input.caption}" />${scaleBlock}<figcaption>${input.caption}</figcaption></figure>`;
+
+  const boxStyle = renderedSize
+    ? ` style="width:${renderedSize.widthMm}mm;height:${renderedSize.heightMm}mm"`
+    : "";
+
+  return `<figure class="${cls}"><div class="mapbox"${boxStyle}><img class="map" src="${resolved.src}" alt="${input.caption}" />${scaleBlock}</div><figcaption>${input.caption}</figcaption></figure>`;
 }
 
 /**
@@ -201,6 +256,8 @@ export function buildLogisticsReportHtml(
   const mapBlock = renderMapFigure({
     dataUrl: input.mapImageDataUrl,
     metersPerPixel: input.metersPerPixel,
+    captureWidthPx: input.captureWidthPx,
+    captureHeightPx: input.captureHeightPx,
     caption: `${escapeHtml(input.originLabel)} → ${escapeHtml(input.destLabel)}(全程)`,
   });
 
@@ -214,6 +271,8 @@ export function buildLogisticsReportHtml(
       renderMapFigure({
         dataUrl: leg.mapImageDataUrl,
         metersPerPixel: leg.metersPerPixel,
+        captureWidthPx: leg.captureWidthPx,
+        captureHeightPx: leg.captureHeightPx,
         caption: `${index + 1}. ${escapeHtml(leg.fromName)} → ${escapeHtml(leg.toName)}(${leg.mode})`,
         compact: true,
       }),
@@ -237,14 +296,26 @@ export function buildLogisticsReportHtml(
   .card .value { font-size: 13pt; font-weight: 700; }
   /* Info: (20260731 - Tzuhan) contain 而非 cover:cover 會裁掉圖的邊緣,而被裁掉的正是路線端點,
      實測回報「路線圖被裁掉不完整,無法成為證據」即此。寧可留白也不可裁切證據。 */
-  .map { width: 100%; max-height: 70mm; object-fit: contain; background: #f8fafc; border: 0.3mm solid #e2e8f0; border-radius: 1.5mm; }
-  .figure { position: relative; margin: 0 0 3mm; break-inside: avoid; }
+  .map { display: block; width: 100%; height: 100%; object-fit: contain; background: #f8fafc; border: 0.3mm solid #e2e8f0; border-radius: 1.5mm; }
+  .figure { margin: 0 0 3mm; break-inside: avoid; }
   .figure figcaption { font-size: 7.5pt; color: #64748b; margin-top: 1mm; }
-  .figure.compact .map { max-height: 46mm; }
-  .scalebar { position: absolute; bottom: 4mm; left: 2.5mm; background: rgba(255,255,255,0.88); border: 0.2mm solid #cbd5e1; border-radius: 0.8mm; padding: 0.6mm 1.2mm; font-size: 6.5pt; color: #334155; line-height: 1.1; }
-  .scalebar .bar { display: block; height: 0.8mm; border: 0.2mm solid #334155; border-top: none; }
+  /* Info: (20260801 - Luphia) 比例尺的定位基準必須是「影像」而不是「整個 figure」:
+     figure 還包含 figcaption,以它為基準時 bottom 會把比例尺推到圖說上,而不是圖內。
+     .mapbox 的尺寸由 computeRenderedMapSizeMm 決定性算出並寫在 style 屬性上,
+     與影像實際被畫出的大小完全一致,contain 因此不會留白。 */
+  .mapbox { position: relative; margin: 0 auto; max-width: 100%; }
+  /* Info: (20260801 - Luphia) 尺寸算不出來時的退路:回到自適應高度,此時不畫比例尺 */
+  .mapbox:not([style]) { height: ${LOGISTICS_PDF_MAP_MAX_HEIGHT_MM}mm; }
+  .figure.compact .mapbox:not([style]) { height: ${LOGISTICS_PDF_LEG_MAP_MAX_HEIGHT_MM}mm; }
+  .scalebar { position: absolute; bottom: 2mm; left: 2mm; background: rgba(255,255,255,0.88); border: 0.2mm solid #cbd5e1; border-radius: 0.8mm; padding: 0.6mm 1.2mm; font-size: 6.5pt; color: #334155; line-height: 1.1; }
+  /* Info: (20260801 - Luphia) 線段畫在文字上方:讀者的視線先落在線段兩端,再讀數字。
+     兩端的短豎線標出量測起訖 —— 沒有端點的線段讀不出「從哪量到哪」。 */
+  .scalebar .bar { display: block; height: 1.2mm; border: 0.25mm solid #334155; border-top: none; }
+  .scalebar .tick { display: block; text-align: center; margin-top: 0.3mm; }
   .section { font-size: 10pt; margin: 5mm 0 2mm; padding-top: 2mm; border-top: 0.2mm solid #e2e8f0; }
-  .legmaps { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; }
+  /* Info: (20260801 - Luphia) gap 由常數插入:它同時決定逐段小圖的顯示寬度,
+     兩處若各自寫死就會失去同步,而比例尺長度直接建立在那個寬度上 */
+  .legmaps { display: grid; grid-template-columns: 1fr 1fr; gap: ${LOGISTICS_PDF_LEG_MAP_GAP_MM}mm; }
   table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
   thead { display: table-header-group; }
   th { text-align: left; background: #f8fafc; border-bottom: 0.4mm solid #cbd5e1; padding: 1.6mm 1.2mm; font-size: 8pt; color: #475569; }

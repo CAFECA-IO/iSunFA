@@ -110,6 +110,14 @@ export interface IMapViewerProps {
 export interface IMapCapture {
   dataUrl: string;
   metersPerPixel: number;
+  /**
+   * Info: (20260801 - Luphia) 截圖畫布的 CSS 尺寸。與 metersPerPixel 成對回報:
+   * 後者只說「一像素多少公尺」,要知道整張圖橫跨多遠還得知道有幾個像素。
+   * 列印端據此算出影像的紙面尺寸與比例尺長度 —— 缺這兩個值就只能拿版面寬度去猜,
+   * 而那正是先前比例尺長度算錯的原因。
+   */
+  widthPx: number;
+  heightPx: number;
 }
 
 export interface IMapViewerRef {
@@ -325,10 +333,15 @@ const MapViewerBase = (
               centerLat,
               bounds.getEast(),
             ) || 0;
+          // Info: (20260801 - Luphia) 一律取 CSS 尺寸:metersPerPixel 以它為分母,
+          // Info: (20260801 - Luphia) 回報的尺寸若混用 device pixel 兩者就不同基準,乘回去得不到真實跨距
           const widthCssPx = canvas.clientWidth || canvas.width;
+          const heightCssPx = canvas.clientHeight || canvas.height;
           capture = {
             dataUrl: canvas.toDataURL("image/jpeg", 0.8),
             metersPerPixel: widthCssPx > 0 ? spanMeters / widthCssPx : 0,
+            widthPx: widthCssPx,
+            heightPx: heightCssPx,
           };
         } catch (e) {
           console.error("Failed to capture leg map:", e);

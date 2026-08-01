@@ -1,14 +1,111 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/**
+ * Info: (20260801 - Luphia) 深色模式以 class 驅動,而非 `prefers-color-scheme` 媒體查詢。
+ *
+ * 媒體查詢無法表達「使用者明確選擇淺色,但系統是深色」這個狀態,而那正是切換器的意義。
+ * 由 next-themes 在 <html> 掛上 `.dark`,「跟隨系統」則由它監聽 prefers-color-scheme 後
+ * 代為加掛 —— 系統偏好因此只是預設值的來源,不再是唯一的判準。
+ *
+ * `&:where(.dark, .dark *)` 而非 `.dark &`::where() 的權重為 0,
+ * 深色樣式因此不會單純因為多一個 class 就壓過同層級的其他規則。
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/**
+ * Info: (20260801 - Luphia) 語意色 token。
+ *
+ * 為什麼不直接在各元件寫 `dark:` 變體:全庫 342 個 tsx 中有 240 個寫死 bg-white、
+ * 258 個寫死灰階文字色。逐處加 `dark:` 等於把同一組配色決策複製 260 份,
+ * 日後要調一次色就得改 260 個地方,且必然有漏 —— 漏掉的那個就是白底白字。
+ *
+ * 改為在此定義「這個顏色扮演什麼角色」,元件只引用角色。
+ * 用法為 Tailwind v4 的任意值語法,例如 `bg-surface`、`text-primary`、`border-default`,
+ * 由下方 @theme inline 對應成正式 utility。
+ *
+ * 命名刻意避開色相(不叫 gray-50 而叫 surface-raised):角色名在兩種主題下都成立,
+ * 色相名只在其中一種成立,後者會讓「深色模式下的 gray-50 其實是深灰」這種矛盾寫進程式碼。
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Info: (20260801 - Luphia) 底層:頁面背景 → 卡片 → 浮起元素(彈出面板、下拉) */
+  --surface-base: #ffffff;
+  --surface-raised: #f8fafc;
+  --surface-overlay: #ffffff;
+  --surface-hover: #f1f5f9;
+
+  /* Info: (20260801 - Luphia) 文字:主要 → 次要 → 弱化(僅供輔助說明,不可承載必要資訊) */
+  --text-primary: #171717;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --text-inverted: #ffffff;
+
+  --border-default: #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  /* Info: (20260801 - Luphia) 品牌橘。深色底下需提亮,否則在深色面板上對比不足 */
+  --brand: #ea580c;
+  --brand-soft: #ffedd5;
+  --brand-on-soft: #9a3412;
+
+  /* Info: (20260801 - Luphia) 破壞性動作。文字用 600 而非 500:12px 文字需 4.5:1,
+     red-500 於白底僅 3.76:1 不合格,red-600 為 4.83:1 通過 WCAG AA */
+  --danger: #dc2626;
+  --danger-soft: #fef2f2;
+
+  /* Info: (20260801 - Luphia) 保留原有變數名,既有引用不致失效 */
+  --background: var(--surface-base);
+  --foreground: var(--text-primary);
+}
+
+/**
+ * Info: (20260801 - Luphia) 深色主題。不是把淺色的灰階反轉了事:
+ * 深色介面的層次要靠「越上層越亮」堆疊,與淺色的「越上層越白」方向相同但基準相反,
+ * 直接反轉會讓浮起的面板比頁面還暗,層次感消失。
+ */
+.dark {
+  --surface-base: #0b1120;
+  --surface-raised: #111827;
+  --surface-overlay: #1e293b;
+  --surface-hover: #334155;
+
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-inverted: #0b1120;
+
+  --border-default: #1e293b;
+  --border-strong: #334155;
+
+  --brand: #fb923c;
+  --brand-soft: #431407;
+  --brand-on-soft: #fed7aa;
+
+  --danger: #f87171;
+  --danger-soft: #450a0a;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  /* Info: (20260801 - Luphia) 讓語意 token 成為正式 utility:bg-surface-base、text-primary 等 */
+  --color-surface-base: var(--surface-base);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-overlay: var(--surface-overlay);
+  --color-surface-hover: var(--surface-hover);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-inverted: var(--text-inverted);
+  --color-border-default: var(--border-default);
+  --color-border-strong: var(--border-strong);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-on-soft: var(--brand-on-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
@@ -23,16 +120,9 @@
   --text-line-height-30xl: 1;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--surface-base);
+  color: var(--text-primary);
   font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -42,16 +132,17 @@ input[type="color" i]::-moz-color-swatch {
 }
 
 /* Info: (20260715 - Luphia) 表單控制項預設文字與 placeholder 顏色，避免未設定 color 時因 Tailwind v4 preflight（placeholder 為 currentColor 50%）而過淡；元件仍可用 text 與 placeholder 的 utility class 覆寫 */
+/* Info: (20260801 - Luphia) 改用語意 token：原本寫死 gray-900 會讓深色模式下的輸入框變成深色底深色字 */
 @layer base {
   input,
   textarea,
   select {
-    color: var(--color-gray-900, #171717);
+    color: var(--text-primary);
   }
 
   input::placeholder,
   textarea::placeholder {
-    color: var(--color-gray-400, #9ca3af);
+    color: var(--text-muted);
     opacity: 1;
   }
 }

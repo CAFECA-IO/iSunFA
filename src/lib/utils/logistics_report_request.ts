@@ -53,6 +53,9 @@ export interface IBuildReportItemInput {
   mapImageDataUrl?: string;
   /** Info: (20260731 - Tzuhan) 全程圖的每像素公尺數(比例尺用) */
   metersPerPixel?: number;
+  /** Info: (20260801 - Luphia) 全程圖截圖畫布的 CSS 尺寸(比例尺與紙面尺寸用) */
+  captureWidthPx?: number;
+  captureHeightPx?: number;
   /**
    * Info: (20260731 - Tzuhan) 逐段路徑圖,索引對齊 buildPlanLegs 的順序。
    * 只有全程圖時,市區→機場、機場→市區的接駁段在圖上看不到,那兩段就沒有證據。
@@ -63,6 +66,9 @@ export interface IBuildReportItemInput {
 export interface ILegCapture {
   dataUrl: string;
   metersPerPixel: number;
+  /** Info: (20260801 - Luphia) 截圖畫布的 CSS 尺寸,與 metersPerPixel 同基準(見 IMapCapture) */
+  widthPx?: number;
+  heightPx?: number;
 }
 
 /**
@@ -72,7 +78,7 @@ export interface ILegCapture {
  * 這裡是載荷的邊界,把無效值一律轉成「沒有這個欄位」:沒有比例尺只是少一個刻度,
  * 送出 0 卻會讓整批報告拿不到。
  */
-const sanitizeMetersPerPixel = (value?: number): number | undefined =>
+const sanitizePositive = (value?: number): number | undefined =>
   value !== undefined && Number.isFinite(value) && value > 0
     ? value
     : undefined;
@@ -92,6 +98,8 @@ export function buildReportPdfItem(
     fallbackWeightKg,
     mapImageDataUrl,
     metersPerPixel,
+    captureWidthPx,
+    captureHeightPx,
     legCaptures,
   } = input;
   const legs = buildPlanLegs(item, planKey);
@@ -112,9 +120,9 @@ export function buildReportPdfItem(
     co2eKg: leg.segment?.co2eKg,
     isFallback: leg.segment?.isFallback,
     mapImageDataUrl: legCaptures?.[legIndex]?.dataUrl,
-    metersPerPixel: sanitizeMetersPerPixel(
-      legCaptures?.[legIndex]?.metersPerPixel,
-    ),
+    metersPerPixel: sanitizePositive(legCaptures?.[legIndex]?.metersPerPixel),
+    captureWidthPx: sanitizePositive(legCaptures?.[legIndex]?.widthPx),
+    captureHeightPx: sanitizePositive(legCaptures?.[legIndex]?.heightPx),
   }));
 
   return {
@@ -129,7 +137,9 @@ export function buildReportPdfItem(
     planTotalCo2e: getPlanTotalCo2e(item, planKey),
     legs: reportLegs,
     mapImageDataUrl,
-    metersPerPixel: sanitizeMetersPerPixel(metersPerPixel),
+    metersPerPixel: sanitizePositive(metersPerPixel),
+    captureWidthPx: sanitizePositive(captureWidthPx),
+    captureHeightPx: sanitizePositive(captureHeightPx),
   };
 }
 
@@ -178,6 +188,8 @@ export function buildReportPdfItems(
         fallbackWeightKg: input.fallbackWeightKg,
         mapImageDataUrl: captured?.overview?.dataUrl,
         metersPerPixel: captured?.overview?.metersPerPixel,
+        captureWidthPx: captured?.overview?.widthPx,
+        captureHeightPx: captured?.overview?.heightPx,
         legCaptures: captured?.legs,
       });
       if (built) items.push(built);
