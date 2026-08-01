@@ -26,6 +26,7 @@ import {
 } from "@/constants/logistics_pdf";
 // Info: (20260731 - Luphia) maplibre-gl v6 移除了 default export,故以命名型別匯入(v5/v6 皆提供 MapLibreMap 別名)。
 // Info: (20260731 - Luphia) 請勿改回 `import type maplibregl from "maplibre-gl"`,那會在 CI 以 TS1192 失敗。
+// Info: (20260801 - Luphia) v5/v6 皆匯出 MapLibreMap,故 maplibre-gl 回退至 v5 後此寫法仍成立,無須改動。
 import type { MapLibreMap } from "maplibre-gl";
 
 /**
