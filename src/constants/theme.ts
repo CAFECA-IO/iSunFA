@@ -10,13 +10,17 @@ export enum ThemeModeEnum {
 }
 
 /**
- * Info: (20260801 - Luphia) 切換器的顯示順序。
- * 淺色 → 深色 → 跟隨系統:前兩者是明確選擇,「跟隨系統」是放棄選擇回到預設,故置末。
+ * Info: (20260802 - Luphia) 切換器的顯示順序：淺色 → 跟隨系統 → 深色。
+ *
+ * 改為滑塊式開關之後，順序不再只是清單排列而是空間位置，
+ * 兩個極端（最亮 / 最暗）自然落在兩端，「跟隨系統」居中表示「不選邊」。
+ * 原本把「跟隨系統」置末的理由（它是放棄選擇）在清單裡成立，
+ * 但在滑塊上會讓亮度不是單調遞增，使用者得停下來想一下滑塊往右是變亮還是變暗。
  */
 export const THEME_MODE_ORDER = [
   ThemeModeEnum.LIGHT,
-  ThemeModeEnum.DARK,
   ThemeModeEnum.SYSTEM,
+  ThemeModeEnum.DARK,
 ] as const;
 
 /**

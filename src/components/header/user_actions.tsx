@@ -18,7 +18,6 @@ import {
 } from "@/constants/modules";
 import { useAuth } from "@/contexts/auth_context";
 import { useTranslation } from "@/i18n/i18n_context";
-import ThemeToggle from "@/components/header/theme_toggle";
 import LoginButton from "@/components/common/login_button";
 import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
@@ -402,10 +401,6 @@ export default function UserActions() {
                       </div>
                     </div>
                   )}
-
-                  {/* Info: (20260801 - Luphia) 外觀切換。置於系統動作之上:
-                      它是偏好設定而非動作,與登出這類不可逆的操作分開,避免誤點 */}
-                  <ThemeToggle />
 
                   {/* Info: (20260423 - Julian) Bottom System Actions */}
                   <div>

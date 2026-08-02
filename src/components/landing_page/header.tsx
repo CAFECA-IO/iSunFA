@@ -3,6 +3,7 @@
 import BrandLogo from '@/components/header/brand_logo';
 import HeaderNav from '@/components/header/header_nav';
 import LanguageSelector from '@/components/header/language_selector';
+import ThemeToggle from '@/components/header/theme_toggle';
 import UserActions from '@/components/header/user_actions';
 
 export default function Header() {
@@ -12,6 +13,7 @@ export default function Header() {
         <BrandLogo />
         <div className="flex gap-x-6 lg:gap-x-8 items-center">
           <HeaderNav />
+          <ThemeToggle />
           <LanguageSelector />
           <UserActions />
         </div>

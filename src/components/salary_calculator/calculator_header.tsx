@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useTranslation } from "@/i18n/i18n_context";
 import { ISUNFA_ROUTE } from "@/constants/url";
 import LanguageSelector from "@/components/header/language_selector";
+import ThemeToggle from "@/components/header/theme_toggle";
 import BrandLogo from "@/components/header/brand_logo";
 import UserActions from "@/components/header/user_actions";
 import HeaderNav from "@/components/header/header_nav";
@@ -66,6 +67,7 @@ const CalculatorHeader: FC = () => {
 
         <div className="flex items-center gap-x-4 lg:gap-x-8">
           <HeaderNav />
+          <ThemeToggle />
           <LanguageSelector />
           <UserActions />
         </div>
