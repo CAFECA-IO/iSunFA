@@ -6,7 +6,7 @@
 // Info: (20260802 - Luphia) 只會讓「明確選深色」與「系統深色」長得不一樣，而那極難被發現。
 
 import { describe, it, expect } from "@jest/globals";
-import { readFileSync } from "fs";
+import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
 
 const CSS_PATH = join(process.cwd(), "src/app/globals.css");
@@ -125,5 +125,120 @@ describe("globals.css 主題區塊", () => {
   it("`--t-*` 只在這四個區塊裡宣告", () => {
     const total = (css.match(/--t-[\w-]+:/g) || []).length;
     expect(total).toBe(light.size + dark.size + systemDark.size + print.size);
+  });
+});
+
+/**
+ * Info: (20260802 - Luphia) 空白正規化。Prettier 會依縮排深度把長的 color-mix 折成
+ * 不同形狀，兩個深色區塊的同一條宣告因此字面不同但語意相同。
+ * 不正規化就比對的話，測試會為了排版差異而失敗，很快就會被加上例外而失去意義。
+ */
+function normalize(value: string): string {
+  return value
+    .replace(/\s+/g, " ")
+    .replace(/\s*([(),])\s*/g, "$1")
+    .trim();
+}
+
+/** Info: (20260802 - Luphia) 取出某區塊內的 `--color-*` 宣告（彩色階重映） */
+function extractColorVars(css: string, selector: string): Map<string, string> {
+  const index = css.indexOf(selector);
+  expect(index).toBeGreaterThanOrEqual(0);
+  const open = css.indexOf("{", index);
+  let depth = 0;
+  let end = open;
+  for (let i = open; i < css.length; i += 1) {
+    if (css[i] === "{") depth += 1;
+    if (css[i] === "}") {
+      depth -= 1;
+      if (depth === 0) {
+        end = i;
+        break;
+      }
+    }
+  }
+  const vars = new Map<string, string>();
+  for (const match of css
+    .slice(open + 1, end)
+    .matchAll(/(--color-[\w-]+):([^;]+);/g)) {
+    vars.set(match[1], normalize(match[2]));
+  }
+  return vars;
+}
+
+const TAILWIND_HUES =
+  "red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose";
+
+/** Info: (20260802 - Luphia) 掃描原始碼中實際使用的 utility（含變體） */
+function usedUtilities(pattern: RegExp): string[] {
+  const found = new Set<string>();
+  const walk = (dir: string): void => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith(".tsx")) {
+        for (const m of readFileSync(full, "utf8").matchAll(pattern))
+          found.add(m[0]);
+      }
+    }
+  };
+  walk(join(process.cwd(), "src"));
+  return [...found].sort();
+}
+
+describe("globals.css 彩色階", () => {
+  const css = readFileSync(CSS_PATH, "utf8");
+
+  /**
+   * Info: (20260802 - Luphia) 與 `--t-*` 同樣的理由：深色有兩個入口，
+   * 彩色 tint 的重映也必須兩邊一致，否則「明確選深色」與「系統深色」會長得不一樣。
+   */
+  it("`.dark` 與系統偏好回退的彩色階重映完全相同", () => {
+    const dark = extractColorVars(css, "\n.dark {");
+    const systemDark = extractColorVars(css, ":root:not(.light) {");
+    expect(dark.size).toBeGreaterThan(40);
+    expect(Object.fromEntries(systemDark)).toEqual(Object.fromEntries(dark));
+  });
+
+  /**
+   * Info: (20260802 - Luphia) 有人新增一個目前沒用過的色相（例如 bg-cyan-50）時，
+   * 那張卡在深色模式會維持粉嫩色而配上已翻成淺色的文字 —— 正是這次回報的症狀。
+   * 這條測試讓它在 CI 就停下來，而不是等使用者截圖。
+   */
+  it("原始碼用到的每個彩色 tint 都有深色重映", () => {
+    const used = usedUtilities(
+      new RegExp(
+        `\\b(?:bg|border|ring|divide|from|to|via)-(?:${TAILWIND_HUES})-(?:50|100|200|300)\\b`,
+        "g",
+      ),
+    );
+    const missing = used.filter((utility) => {
+      const [, hue, shade] =
+        utility.match(new RegExp(`-(${TAILWIND_HUES})-(\\d+)$`)) ?? [];
+      return !css.includes(`--color-${hue}-${shade}:`);
+    });
+    expect(missing).toEqual([]);
+  });
+
+  /**
+   * Info: (20260802 - Luphia) 彩色深階當文字用時要提亮，而提亮是逐條選擇器寫的
+   * （不能改變數，否則實心按鈕會一起變亮）。新增變體時很容易漏掉。
+   */
+  it("原始碼用到的每個彩色深階文字都有提亮規則", () => {
+    const used = usedUtilities(
+      /**
+       * Info: (20260802 - Luphia) 變體片段要允許 `/`：具名 group（`group-hover/tag:`）
+       * 若被切成 `tag:`，測試會去找一個不存在的 class 而假性失敗。
+       */
+      new RegExp(
+        `\\b(?:[a-z0-9-]+(?:/[a-z0-9-]+)?:)*text-(?:${TAILWIND_HUES})-(?:600|700|800|900)\\b`,
+        "g",
+      ),
+    );
+    const missing = used.filter(
+      (utility) =>
+        !css.includes(`.${utility.replace(/[:/]/g, (c) => `\\${c}`)}`),
+    );
+    expect(missing).toEqual([]);
   });
 });

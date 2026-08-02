@@ -135,12 +135,281 @@
   --t-white-surface: #ffffff;
   --t-white-surface-hover: #ffffff;
   --t-black-text: #000000;
+  --t-hue-text-lift: 0%;
   --t-border-100: var(--neutral-light-100);
   --t-border-200: var(--neutral-light-200);
 }
 
 .dark {
   color-scheme: dark;
+
+  /**
+   * Info: (20260802 - Luphia) 彩色淺階（tint）也要跟著變暗。
+   *
+   * 這是回報「儀表板配色太糟」後查出來的：色盤反轉只做了 gray 與 slate，
+   * 彩色的 `bg-emerald-50`、`bg-orange-50` 維持原本的粉嫩色，
+   * 而卡片裡的 `text-gray-500` 已經翻成淺色 —— 淺字配淺底，整張卡讀不到。
+   * 全庫有 638 處 `bg-{色相}-{50,100}`，不是單一頁面的問題。
+   *
+   * 做法是把該色相的 500 階依比例混進頁面底色，而不是硬寫一組深色值：
+   *
+   * - 色相身分由 Tailwind 自己的 500 階決定，不必抄 56 個色票，
+   *   將來 Tailwind 調色盤也不會與這裡失聯。
+   * - 混入的對象是 `--t-page`，所以同一條式子在紙張預覽與列印時
+   *   會自動混進淺色底，得到接近原本的淺色 tint（實測 shade 50 的
+   *   oklab 差距 0.019，遠低於可察覺門檻），不需要額外的還原區塊。
+   *
+   * 比例 9 / 14 / 22 / 32 是照原色階的明度落差抓的：50 幾乎只是染了一層色的底，
+   * 300 已經是看得出顏色的邊框。
+   *
+   * 500 以上不動。那些階同時大量用於實心按鈕與文字（500 階：186 處背景、
+   * 483 處文字），沒有一個安全的單一改法；彩色文字在深色下的對比另見 README。
+   */
+  --color-red-50: color-mix(in oklab, var(--color-red-500) 9%, var(--t-page));
+  --color-red-100: color-mix(in oklab, var(--color-red-500) 14%, var(--t-page));
+  --color-red-200: color-mix(in oklab, var(--color-red-500) 22%, var(--t-page));
+  --color-red-300: color-mix(in oklab, var(--color-red-500) 32%, var(--t-page));
+
+  --color-orange-50: color-mix(
+    in oklab,
+    var(--color-orange-500) 9%,
+    var(--t-page)
+  );
+  --color-orange-100: color-mix(
+    in oklab,
+    var(--color-orange-500) 14%,
+    var(--t-page)
+  );
+  --color-orange-200: color-mix(
+    in oklab,
+    var(--color-orange-500) 22%,
+    var(--t-page)
+  );
+  --color-orange-300: color-mix(
+    in oklab,
+    var(--color-orange-500) 32%,
+    var(--t-page)
+  );
+
+  --color-amber-50: color-mix(
+    in oklab,
+    var(--color-amber-500) 9%,
+    var(--t-page)
+  );
+  --color-amber-100: color-mix(
+    in oklab,
+    var(--color-amber-500) 14%,
+    var(--t-page)
+  );
+  --color-amber-200: color-mix(
+    in oklab,
+    var(--color-amber-500) 22%,
+    var(--t-page)
+  );
+  --color-amber-300: color-mix(
+    in oklab,
+    var(--color-amber-500) 32%,
+    var(--t-page)
+  );
+
+  --color-yellow-50: color-mix(
+    in oklab,
+    var(--color-yellow-500) 9%,
+    var(--t-page)
+  );
+  --color-yellow-100: color-mix(
+    in oklab,
+    var(--color-yellow-500) 14%,
+    var(--t-page)
+  );
+  --color-yellow-200: color-mix(
+    in oklab,
+    var(--color-yellow-500) 22%,
+    var(--t-page)
+  );
+  --color-yellow-300: color-mix(
+    in oklab,
+    var(--color-yellow-500) 32%,
+    var(--t-page)
+  );
+
+  --color-green-50: color-mix(
+    in oklab,
+    var(--color-green-500) 9%,
+    var(--t-page)
+  );
+  --color-green-100: color-mix(
+    in oklab,
+    var(--color-green-500) 14%,
+    var(--t-page)
+  );
+  --color-green-200: color-mix(
+    in oklab,
+    var(--color-green-500) 22%,
+    var(--t-page)
+  );
+  --color-green-300: color-mix(
+    in oklab,
+    var(--color-green-500) 32%,
+    var(--t-page)
+  );
+
+  --color-emerald-50: color-mix(
+    in oklab,
+    var(--color-emerald-500) 9%,
+    var(--t-page)
+  );
+  --color-emerald-100: color-mix(
+    in oklab,
+    var(--color-emerald-500) 14%,
+    var(--t-page)
+  );
+  --color-emerald-200: color-mix(
+    in oklab,
+    var(--color-emerald-500) 22%,
+    var(--t-page)
+  );
+  --color-emerald-300: color-mix(
+    in oklab,
+    var(--color-emerald-500) 32%,
+    var(--t-page)
+  );
+
+  --color-teal-50: color-mix(in oklab, var(--color-teal-500) 9%, var(--t-page));
+  --color-teal-100: color-mix(
+    in oklab,
+    var(--color-teal-500) 14%,
+    var(--t-page)
+  );
+  --color-teal-200: color-mix(
+    in oklab,
+    var(--color-teal-500) 22%,
+    var(--t-page)
+  );
+  --color-teal-300: color-mix(
+    in oklab,
+    var(--color-teal-500) 32%,
+    var(--t-page)
+  );
+
+  --color-sky-50: color-mix(in oklab, var(--color-sky-500) 9%, var(--t-page));
+  --color-sky-100: color-mix(in oklab, var(--color-sky-500) 14%, var(--t-page));
+  --color-sky-200: color-mix(in oklab, var(--color-sky-500) 22%, var(--t-page));
+  --color-sky-300: color-mix(in oklab, var(--color-sky-500) 32%, var(--t-page));
+
+  --color-blue-50: color-mix(in oklab, var(--color-blue-500) 9%, var(--t-page));
+  --color-blue-100: color-mix(
+    in oklab,
+    var(--color-blue-500) 14%,
+    var(--t-page)
+  );
+  --color-blue-200: color-mix(
+    in oklab,
+    var(--color-blue-500) 22%,
+    var(--t-page)
+  );
+  --color-blue-300: color-mix(
+    in oklab,
+    var(--color-blue-500) 32%,
+    var(--t-page)
+  );
+
+  --color-indigo-50: color-mix(
+    in oklab,
+    var(--color-indigo-500) 9%,
+    var(--t-page)
+  );
+  --color-indigo-100: color-mix(
+    in oklab,
+    var(--color-indigo-500) 14%,
+    var(--t-page)
+  );
+  --color-indigo-200: color-mix(
+    in oklab,
+    var(--color-indigo-500) 22%,
+    var(--t-page)
+  );
+  --color-indigo-300: color-mix(
+    in oklab,
+    var(--color-indigo-500) 32%,
+    var(--t-page)
+  );
+
+  --color-violet-50: color-mix(
+    in oklab,
+    var(--color-violet-500) 9%,
+    var(--t-page)
+  );
+  --color-violet-100: color-mix(
+    in oklab,
+    var(--color-violet-500) 14%,
+    var(--t-page)
+  );
+  --color-violet-200: color-mix(
+    in oklab,
+    var(--color-violet-500) 22%,
+    var(--t-page)
+  );
+  --color-violet-300: color-mix(
+    in oklab,
+    var(--color-violet-500) 32%,
+    var(--t-page)
+  );
+
+  --color-purple-50: color-mix(
+    in oklab,
+    var(--color-purple-500) 9%,
+    var(--t-page)
+  );
+  --color-purple-100: color-mix(
+    in oklab,
+    var(--color-purple-500) 14%,
+    var(--t-page)
+  );
+  --color-purple-200: color-mix(
+    in oklab,
+    var(--color-purple-500) 22%,
+    var(--t-page)
+  );
+  --color-purple-300: color-mix(
+    in oklab,
+    var(--color-purple-500) 32%,
+    var(--t-page)
+  );
+
+  --color-pink-50: color-mix(in oklab, var(--color-pink-500) 9%, var(--t-page));
+  --color-pink-100: color-mix(
+    in oklab,
+    var(--color-pink-500) 14%,
+    var(--t-page)
+  );
+  --color-pink-200: color-mix(
+    in oklab,
+    var(--color-pink-500) 22%,
+    var(--t-page)
+  );
+  --color-pink-300: color-mix(
+    in oklab,
+    var(--color-pink-500) 32%,
+    var(--t-page)
+  );
+
+  --color-rose-50: color-mix(in oklab, var(--color-rose-500) 9%, var(--t-page));
+  --color-rose-100: color-mix(
+    in oklab,
+    var(--color-rose-500) 14%,
+    var(--t-page)
+  );
+  --color-rose-200: color-mix(
+    in oklab,
+    var(--color-rose-500) 22%,
+    var(--t-page)
+  );
+  --color-rose-300: color-mix(
+    in oklab,
+    var(--color-rose-500) 32%,
+    var(--t-page)
+  );
 
   --t-50: var(--neutral-dark-50);
   --t-100: var(--neutral-dark-100);
@@ -164,6 +433,7 @@
   --t-white-surface: var(--neutral-dark-100);
   --t-white-surface-hover: var(--neutral-dark-300);
   --t-black-text: var(--neutral-dark-900);
+  --t-hue-text-lift: 40%;
   --t-border-100: var(--neutral-dark-300);
   --t-border-200: var(--neutral-dark-300);
 }
@@ -172,6 +442,292 @@
   /* Info: (20260802 - Luphia) 沒設定過就跟隨系統；明確選了淺色（.light）則不套用 */
   :root:not(.light) {
     color-scheme: dark;
+
+    --color-red-50: color-mix(in oklab, var(--color-red-500) 9%, var(--t-page));
+    --color-red-100: color-mix(
+      in oklab,
+      var(--color-red-500) 14%,
+      var(--t-page)
+    );
+    --color-red-200: color-mix(
+      in oklab,
+      var(--color-red-500) 22%,
+      var(--t-page)
+    );
+    --color-red-300: color-mix(
+      in oklab,
+      var(--color-red-500) 32%,
+      var(--t-page)
+    );
+
+    --color-orange-50: color-mix(
+      in oklab,
+      var(--color-orange-500) 9%,
+      var(--t-page)
+    );
+    --color-orange-100: color-mix(
+      in oklab,
+      var(--color-orange-500) 14%,
+      var(--t-page)
+    );
+    --color-orange-200: color-mix(
+      in oklab,
+      var(--color-orange-500) 22%,
+      var(--t-page)
+    );
+    --color-orange-300: color-mix(
+      in oklab,
+      var(--color-orange-500) 32%,
+      var(--t-page)
+    );
+
+    --color-amber-50: color-mix(
+      in oklab,
+      var(--color-amber-500) 9%,
+      var(--t-page)
+    );
+    --color-amber-100: color-mix(
+      in oklab,
+      var(--color-amber-500) 14%,
+      var(--t-page)
+    );
+    --color-amber-200: color-mix(
+      in oklab,
+      var(--color-amber-500) 22%,
+      var(--t-page)
+    );
+    --color-amber-300: color-mix(
+      in oklab,
+      var(--color-amber-500) 32%,
+      var(--t-page)
+    );
+
+    --color-yellow-50: color-mix(
+      in oklab,
+      var(--color-yellow-500) 9%,
+      var(--t-page)
+    );
+    --color-yellow-100: color-mix(
+      in oklab,
+      var(--color-yellow-500) 14%,
+      var(--t-page)
+    );
+    --color-yellow-200: color-mix(
+      in oklab,
+      var(--color-yellow-500) 22%,
+      var(--t-page)
+    );
+    --color-yellow-300: color-mix(
+      in oklab,
+      var(--color-yellow-500) 32%,
+      var(--t-page)
+    );
+
+    --color-green-50: color-mix(
+      in oklab,
+      var(--color-green-500) 9%,
+      var(--t-page)
+    );
+    --color-green-100: color-mix(
+      in oklab,
+      var(--color-green-500) 14%,
+      var(--t-page)
+    );
+    --color-green-200: color-mix(
+      in oklab,
+      var(--color-green-500) 22%,
+      var(--t-page)
+    );
+    --color-green-300: color-mix(
+      in oklab,
+      var(--color-green-500) 32%,
+      var(--t-page)
+    );
+
+    --color-emerald-50: color-mix(
+      in oklab,
+      var(--color-emerald-500) 9%,
+      var(--t-page)
+    );
+    --color-emerald-100: color-mix(
+      in oklab,
+      var(--color-emerald-500) 14%,
+      var(--t-page)
+    );
+    --color-emerald-200: color-mix(
+      in oklab,
+      var(--color-emerald-500) 22%,
+      var(--t-page)
+    );
+    --color-emerald-300: color-mix(
+      in oklab,
+      var(--color-emerald-500) 32%,
+      var(--t-page)
+    );
+
+    --color-teal-50: color-mix(
+      in oklab,
+      var(--color-teal-500) 9%,
+      var(--t-page)
+    );
+    --color-teal-100: color-mix(
+      in oklab,
+      var(--color-teal-500) 14%,
+      var(--t-page)
+    );
+    --color-teal-200: color-mix(
+      in oklab,
+      var(--color-teal-500) 22%,
+      var(--t-page)
+    );
+    --color-teal-300: color-mix(
+      in oklab,
+      var(--color-teal-500) 32%,
+      var(--t-page)
+    );
+
+    --color-sky-50: color-mix(in oklab, var(--color-sky-500) 9%, var(--t-page));
+    --color-sky-100: color-mix(
+      in oklab,
+      var(--color-sky-500) 14%,
+      var(--t-page)
+    );
+    --color-sky-200: color-mix(
+      in oklab,
+      var(--color-sky-500) 22%,
+      var(--t-page)
+    );
+    --color-sky-300: color-mix(
+      in oklab,
+      var(--color-sky-500) 32%,
+      var(--t-page)
+    );
+
+    --color-blue-50: color-mix(
+      in oklab,
+      var(--color-blue-500) 9%,
+      var(--t-page)
+    );
+    --color-blue-100: color-mix(
+      in oklab,
+      var(--color-blue-500) 14%,
+      var(--t-page)
+    );
+    --color-blue-200: color-mix(
+      in oklab,
+      var(--color-blue-500) 22%,
+      var(--t-page)
+    );
+    --color-blue-300: color-mix(
+      in oklab,
+      var(--color-blue-500) 32%,
+      var(--t-page)
+    );
+
+    --color-indigo-50: color-mix(
+      in oklab,
+      var(--color-indigo-500) 9%,
+      var(--t-page)
+    );
+    --color-indigo-100: color-mix(
+      in oklab,
+      var(--color-indigo-500) 14%,
+      var(--t-page)
+    );
+    --color-indigo-200: color-mix(
+      in oklab,
+      var(--color-indigo-500) 22%,
+      var(--t-page)
+    );
+    --color-indigo-300: color-mix(
+      in oklab,
+      var(--color-indigo-500) 32%,
+      var(--t-page)
+    );
+
+    --color-violet-50: color-mix(
+      in oklab,
+      var(--color-violet-500) 9%,
+      var(--t-page)
+    );
+    --color-violet-100: color-mix(
+      in oklab,
+      var(--color-violet-500) 14%,
+      var(--t-page)
+    );
+    --color-violet-200: color-mix(
+      in oklab,
+      var(--color-violet-500) 22%,
+      var(--t-page)
+    );
+    --color-violet-300: color-mix(
+      in oklab,
+      var(--color-violet-500) 32%,
+      var(--t-page)
+    );
+
+    --color-purple-50: color-mix(
+      in oklab,
+      var(--color-purple-500) 9%,
+      var(--t-page)
+    );
+    --color-purple-100: color-mix(
+      in oklab,
+      var(--color-purple-500) 14%,
+      var(--t-page)
+    );
+    --color-purple-200: color-mix(
+      in oklab,
+      var(--color-purple-500) 22%,
+      var(--t-page)
+    );
+    --color-purple-300: color-mix(
+      in oklab,
+      var(--color-purple-500) 32%,
+      var(--t-page)
+    );
+
+    --color-pink-50: color-mix(
+      in oklab,
+      var(--color-pink-500) 9%,
+      var(--t-page)
+    );
+    --color-pink-100: color-mix(
+      in oklab,
+      var(--color-pink-500) 14%,
+      var(--t-page)
+    );
+    --color-pink-200: color-mix(
+      in oklab,
+      var(--color-pink-500) 22%,
+      var(--t-page)
+    );
+    --color-pink-300: color-mix(
+      in oklab,
+      var(--color-pink-500) 32%,
+      var(--t-page)
+    );
+
+    --color-rose-50: color-mix(
+      in oklab,
+      var(--color-rose-500) 9%,
+      var(--t-page)
+    );
+    --color-rose-100: color-mix(
+      in oklab,
+      var(--color-rose-500) 14%,
+      var(--t-page)
+    );
+    --color-rose-200: color-mix(
+      in oklab,
+      var(--color-rose-500) 22%,
+      var(--t-page)
+    );
+    --color-rose-300: color-mix(
+      in oklab,
+      var(--color-rose-500) 32%,
+      var(--t-page)
+    );
 
     --t-50: var(--neutral-dark-50);
     --t-100: var(--neutral-dark-100);
@@ -195,6 +751,7 @@
     --t-white-surface: var(--neutral-dark-100);
     --t-white-surface-hover: var(--neutral-dark-300);
     --t-black-text: var(--neutral-dark-900);
+    --t-hue-text-lift: 40%;
     --t-border-100: var(--neutral-dark-300);
     --t-border-200: var(--neutral-dark-300);
   }
@@ -233,6 +790,7 @@
     --t-white-surface: #ffffff;
     --t-white-surface-hover: #ffffff;
     --t-black-text: #000000;
+    --t-hue-text-lift: 0%;
     --t-border-100: var(--neutral-light-100);
     --t-border-200: var(--neutral-light-200);
   }
@@ -595,6 +1153,53 @@
   }
 
   /**
+   * Info: (20260802 - Luphia) 彩色低階「當文字用」的少數派，維持淺色。
+   *
+   * `text-emerald-100`、`text-orange-300` 這類在淺色模式下就只可能出現在
+   * 實心或深色底上（放在白底是 1.2:1，看不見）。上面把同一階的變數改暗之後，
+   * 它們會跟著變暗而消失，與 gray 色階當初遇到的是同一個問題。
+   *
+   * 這裡改混進白色而非頁面底色，因此兩種主題下都是淺色；
+   * 淺色模式與原色票的差距約 0.03（oklab），肉眼無法分辨。
+   */
+  .text-amber-100 {
+    color: color-mix(in oklab, var(--color-amber-500) 14%, white);
+  }
+
+  .text-blue-100 {
+    color: color-mix(in oklab, var(--color-blue-500) 14%, white);
+  }
+
+  .text-emerald-100 {
+    color: color-mix(in oklab, var(--color-emerald-500) 14%, white);
+  }
+
+  .text-orange-100 {
+    color: color-mix(in oklab, var(--color-orange-500) 14%, white);
+  }
+
+  .text-orange-200 {
+    color: color-mix(in oklab, var(--color-orange-500) 22%, white);
+  }
+
+  .hover\:text-blue-300:hover {
+    color: color-mix(in oklab, var(--color-blue-500) 32%, white);
+  }
+
+  .text-emerald-300,
+  .hover\:text-emerald-300:hover {
+    color: color-mix(in oklab, var(--color-emerald-500) 32%, white);
+  }
+
+  .text-orange-300 {
+    color: color-mix(in oklab, var(--color-orange-500) 32%, white);
+  }
+
+  .text-pink-300 {
+    color: color-mix(in oklab, var(--color-pink-500) 32%, white);
+  }
+
+  /**
    * Info: (20260802 - Luphia) 邊框反過來：100 與 200 在深色下太貼近卡片底色
    * （1.12:1 與 1.18:1），分隔線會消失。整體往上推一階到 300（1.62:1）。
    * 深色介面的分隔線本來就該比淺色介面更靠對比而非更靠明度差。
@@ -607,6 +1212,525 @@
   .border-gray-200,
   .border-slate-200 {
     border-color: var(--t-border-200);
+  }
+
+  /**
+   * Info: (20260802 - Luphia) 彩色深階當文字用時，於深色模式提亮。
+   *
+   * tint 變暗之後，`text-red-600`、`text-blue-600` 這類字落在深底上，
+   * 實測對比 3.3～3.6:1，未達 WCAG AA 的 4.5:1 —— 錯誤訊息正是最不該讀不清的東西。
+   *
+   * **只改 color，不動變數。** 600 階同時是 491 處文字與 184 處實心背景
+   * （`bg-orange-600` 是主要按鈕），改變數會讓按鈕一起變亮而白字失效；
+   * 逐條寫 color 規則則永遠碰不到背景。
+   *
+   * 淺色模式下 `--t-hue-text-lift` 是 0%，`color-mix(白 0%, X)` 恰為 X 本身，
+   * 等同沒有這段。也就是說淺色模式一個像素都沒動。
+   *
+   * 選擇器是從編譯後的 CSS 反查出來的，涵蓋目前所有變體（hover、group-hover、
+   * enabled:hover、data-selected 等）。日後若新增未涵蓋的變體，
+   * `src/__tests__/theme_css_blocks.test.ts` 會抓到。
+   */
+  .text-amber-600 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-amber-600)
+    );
+  }
+
+  .text-amber-700 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-amber-700)
+    );
+  }
+
+  .text-amber-800 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-amber-800)
+    );
+  }
+
+  .text-blue-600 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-blue-600)
+    );
+  }
+
+  .text-blue-600\/80 {
+    color: color-mix(
+      in oklab,
+      color-mix(in oklab, white var(--t-hue-text-lift), var(--color-blue-600))
+        80%,
+      transparent
+    );
+  }
+
+  .text-blue-700 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-blue-700)
+    );
+  }
+
+  .text-blue-800 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-blue-800)
+    );
+  }
+
+  .text-blue-900 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-blue-900)
+    );
+  }
+
+  .text-cyan-700 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-cyan-700)
+    );
+  }
+
+  .text-emerald-600 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-emerald-600)
+    );
+  }
+
+  .text-emerald-600\/70 {
+    color: color-mix(
+      in oklab,
+      color-mix(
+          in oklab,
+          white var(--t-hue-text-lift),
+          var(--color-emerald-600)
+        )
+        70%,
+      transparent
+    );
+  }
+
+  .text-emerald-600\/80 {
+    color: color-mix(
+      in oklab,
+      color-mix(
+          in oklab,
+          white var(--t-hue-text-lift),
+          var(--color-emerald-600)
+        )
+        80%,
+      transparent
+    );
+  }
+
+  .text-emerald-700 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-emerald-700)
+    );
+  }
+
+  .text-emerald-800 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-emerald-800)
+    );
+  }
+
+  .text-emerald-900 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-emerald-900)
+    );
+  }
+
+  .text-fuchsia-700 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-fuchsia-700)
+    );
+  }
+
+  .text-green-600 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-green-600)
+    );
+  }
+
+  .text-green-700 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-green-700)
+    );
+  }
+
+  .text-green-800 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-green-800)
+    );
+  }
+
+  .text-indigo-600 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-indigo-600)
+    );
+  }
+
+  .text-indigo-700 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-indigo-700)
+    );
+  }
+
+  .text-lime-700 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-lime-700)
+    );
+  }
+
+  .text-orange-600 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-orange-600)
+    );
+  }
+
+  .text-orange-600\/70 {
+    color: color-mix(
+      in oklab,
+      color-mix(in oklab, white var(--t-hue-text-lift), var(--color-orange-600))
+        70%,
+      transparent
+    );
+  }
+
+  .text-orange-600\/80 {
+    color: color-mix(
+      in oklab,
+      color-mix(in oklab, white var(--t-hue-text-lift), var(--color-orange-600))
+        80%,
+      transparent
+    );
+  }
+
+  .text-orange-600\/90 {
+    color: color-mix(
+      in oklab,
+      color-mix(in oklab, white var(--t-hue-text-lift), var(--color-orange-600))
+        90%,
+      transparent
+    );
+  }
+
+  .text-orange-700 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-orange-700)
+    );
+  }
+
+  .text-orange-800 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-orange-800)
+    );
+  }
+
+  .text-orange-800\/70 {
+    color: color-mix(
+      in oklab,
+      color-mix(in oklab, white var(--t-hue-text-lift), var(--color-orange-800))
+        70%,
+      transparent
+    );
+  }
+
+  .text-orange-900,
+  .data-selected\:text-orange-900[data-selected] {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-orange-900)
+    );
+  }
+
+  .text-pink-700 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-pink-700)
+    );
+  }
+
+  .text-purple-600 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-purple-600)
+    );
+  }
+
+  .text-purple-700 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-purple-700)
+    );
+  }
+
+  .text-red-600 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-red-600)
+    );
+  }
+
+  .text-red-700 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-red-700)
+    );
+  }
+
+  .text-red-800 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-red-800)
+    );
+  }
+
+  .text-rose-600 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-rose-600)
+    );
+  }
+
+  .text-rose-700 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-rose-700)
+    );
+  }
+
+  .text-sky-800 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-sky-800)
+    );
+  }
+
+  .text-teal-600 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-teal-600)
+    );
+  }
+
+  .text-teal-700 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-teal-700)
+    );
+  }
+
+  .text-violet-700 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-violet-700)
+    );
+  }
+
+  .text-yellow-600 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-yellow-600)
+    );
+  }
+
+  .text-yellow-700 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-yellow-700)
+    );
+  }
+
+  .text-yellow-800 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-yellow-800)
+    );
+  }
+
+  @media (hover: hover) {
+    .hover\:text-amber-600:hover {
+      color: color-mix(
+        in oklab,
+        white var(--t-hue-text-lift),
+        var(--color-amber-600)
+      );
+    }
+
+    .hover\:text-blue-600:hover {
+      color: color-mix(
+        in oklab,
+        white var(--t-hue-text-lift),
+        var(--color-blue-600)
+      );
+    }
+
+    .hover\:text-blue-700:hover {
+      color: color-mix(
+        in oklab,
+        white var(--t-hue-text-lift),
+        var(--color-blue-700)
+      );
+    }
+
+    .hover\:text-blue-900:hover {
+      color: color-mix(
+        in oklab,
+        white var(--t-hue-text-lift),
+        var(--color-blue-900)
+      );
+    }
+
+    .hover\:text-emerald-600:hover {
+      color: color-mix(
+        in oklab,
+        white var(--t-hue-text-lift),
+        var(--color-emerald-600)
+      );
+    }
+
+    .hover\:text-emerald-700:hover {
+      color: color-mix(
+        in oklab,
+        white var(--t-hue-text-lift),
+        var(--color-emerald-700)
+      );
+    }
+
+    .hover\:text-indigo-600:hover {
+      color: color-mix(
+        in oklab,
+        white var(--t-hue-text-lift),
+        var(--color-indigo-600)
+      );
+    }
+
+    .group-hover\:text-orange-600:is(:where(.group):hover *),
+    .hover\:text-orange-600:hover {
+      color: color-mix(
+        in oklab,
+        white var(--t-hue-text-lift),
+        var(--color-orange-600)
+      );
+    }
+
+    .group-hover\:text-orange-700:is(:where(.group):hover *),
+    .hover\:text-orange-700:hover,
+    .enabled\:hover\:text-orange-700:enabled:hover {
+      color: color-mix(
+        in oklab,
+        white var(--t-hue-text-lift),
+        var(--color-orange-700)
+      );
+    }
+
+    .group-hover\/tag\:text-orange-800:is(:where(.group\/tag):hover *),
+    .hover\:text-orange-800:hover {
+      color: color-mix(
+        in oklab,
+        white var(--t-hue-text-lift),
+        var(--color-orange-800)
+      );
+    }
+
+    .hover\:text-orange-900:hover {
+      color: color-mix(
+        in oklab,
+        white var(--t-hue-text-lift),
+        var(--color-orange-900)
+      );
+    }
+
+    .hover\:text-purple-600:hover {
+      color: color-mix(
+        in oklab,
+        white var(--t-hue-text-lift),
+        var(--color-purple-600)
+      );
+    }
+
+    .hover\:text-red-600:hover {
+      color: color-mix(
+        in oklab,
+        white var(--t-hue-text-lift),
+        var(--color-red-600)
+      );
+    }
+
+    .hover\:text-red-700:hover {
+      color: color-mix(
+        in oklab,
+        white var(--t-hue-text-lift),
+        var(--color-red-700)
+      );
+    }
+
+    .hover\:text-yellow-600:hover {
+      color: color-mix(
+        in oklab,
+        white var(--t-hue-text-lift),
+        var(--color-yellow-600)
+      );
+    }
   }
 
   /**
