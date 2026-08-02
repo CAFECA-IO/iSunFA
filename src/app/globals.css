@@ -476,6 +476,75 @@
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
 
+  /**
+   * Info: (20260802 - Luphia) 舊設計系統的 token 別名。
+   *
+   * `text-text-neutral-primary`、`bg-surface-neutral-surface-lv2`、`input-*`、
+   * `tabs-*`、`button-*` 這 30 個 class 散在 14 個 salary_calculator 檔案裡，
+   * 但**它們一直是死的** —— 遷移到 Tailwind v4 時 `tailwind.config.ts` 被移除，
+   * 這些名稱沒有跟著搬進 CSS，v4 因此不會產生任何對應規則。
+   * 實測編譯輸出：0 條。那些元素目前沒有自己的顏色，只是繼承父層。
+   *
+   * 原始定義從 git 歷史取回（`3b40b6ae1^` 的 `tailwind.config.ts`
+   * 與 `src/styles/globals.css`），確認每個 token 原本扮演的角色，
+   * 而不是看名字猜。
+   *
+   * **但不還原原始色值。** 舊系統的品牌色是琥珀金 `#ffa502` / `#cc8401`，
+   * 與現行全庫使用的 `#ea580c` 是兩套顏色；照抄回去只會讓薪資試算頁
+   * 和其他頁面看起來像兩個產品。這裡改為對應到語意 token ——
+   * 角色不變、色值統一，而且自動支援深淺兩種主題。
+   *
+   * 少數對應與原始色彩故事有出入者已於各行註明。
+   */
+
+  /* Info: (20260802 - Luphia) 文字：原為 neutral-600 / 400 / 300 三階 */
+  --color-text-neutral-primary: var(--text-primary);
+  --color-text-neutral-secondary: var(--text-secondary);
+  --color-text-neutral-tertiary: var(--text-muted);
+  --color-text-brand-primary-lv1: var(--brand);
+  --color-text-brand-primary-lv2: var(--brand);
+  --color-text-state-error: var(--danger);
+
+  /* Info: (20260802 - Luphia) 表面：lv2 原為純白、main-background 原為 neutral-50，與語意 token 的分工一致 */
+  --color-surface-neutral-surface-lv2: var(--surface-raised);
+  --color-surface-neutral-main-background: var(--surface-base);
+  --color-surface-brand-primary-30: var(--brand-soft);
+  --color-surface-brand-primary-soft: var(--brand-soft);
+
+  /* Info: (20260802 - Luphia) 圖示原為深藍灰 #314362，屬次要層級而非主要 */
+  --color-icon-surface-single-color-primary: var(--text-secondary);
+  --color-stroke-neutral-quaternary: var(--border-default);
+
+  /* Info: (20260802 - Luphia) 輸入框。hover 邊框原本就是品牌色，語意相同 */
+  --color-input-stroke-input: var(--border-strong);
+  --color-input-stroke-input-hover: var(--brand);
+  --color-input-stroke-error: var(--danger);
+  --color-input-text-input-placeholder: var(--text-muted);
+  --color-input-text-input-filled: var(--text-primary);
+  --color-input-text-primary: var(--text-primary);
+  --color-input-text-error: var(--danger);
+  --color-input-surface-input-background: var(--surface-raised);
+  --color-input-surface-input-hover: var(--brand-soft);
+
+  /**
+   * Info: (20260802 - Luphia) 分頁標籤。
+   * 原始 hover 邊框是淡橘 #ffd892，對應過來會是 --brand-soft，
+   * 但那個 token 在深色主題下是深棕 #431407，當邊框等於看不見。
+   * 故 hover 改用 --border-strong：色彩故事與原設計不同（不再是橘色漸強），
+   * 但「預設 → hover → 選中」三階仍然可辨，且兩種主題下都成立。
+   */
+  --color-tabs-text-default: var(--text-secondary);
+  --color-tabs-text-hover: var(--brand);
+  --color-tabs-text-active: var(--brand);
+  --color-tabs-stroke-default: var(--border-default);
+  --color-tabs-stroke-hover: var(--border-strong);
+  --color-tabs-stroke-active: var(--brand);
+
+  /* Info: (20260802 - Luphia) 次要按鈕原為深藍 #001840，hover 轉淡 #304872；此處以主要／次要文字對應同一方向 */
+  --color-button-text-secondary: var(--text-primary);
+  --color-button-text-secondary-hover: var(--text-secondary);
+  --color-button-stroke-primary-hover: var(--brand);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
