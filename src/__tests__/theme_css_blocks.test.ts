@@ -12,6 +12,18 @@ import { join } from "path";
 const CSS_PATH = join(process.cwd(), "src/app/globals.css");
 
 /**
+ * Info: (20260802 - Luphia) 空白正規化。Prettier 會依縮排深度把長的 color-mix 折成
+ * 不同形狀，兩個深色區塊的同一條宣告因此字面不同但語意相同。
+ * 不正規化就比對的話，測試會為了排版差異而失敗，很快就會被加上例外而失去意義。
+ */
+function normalize(value: string): string {
+  return value
+    .replace(/\s+/g, " ")
+    .replace(/\s*([(),])\s*/g, "$1")
+    .trim();
+}
+
+/**
  * Info: (20260802 - Luphia) 取出某個選擇器區塊內的 `--t-*` 宣告。
  * 以大括號配對切出區塊而非用正則一次抓，是因為區塊內含註解與巢狀媒體查詢，
  * 正則會在第一個 `}` 就停住。
@@ -36,7 +48,9 @@ function extractThemeVars(
   const body = css.slice(open + 1, end);
   const vars = new Map<string, string>();
   for (const match of body.matchAll(/(--t-[\w-]+):\s*([^;]+);/g)) {
-    vars.set(match[1], match[2].trim());
+    // Info: (20260802 - Luphia) 一併正規化空白：值可能長到被 Prettier 折行，
+    // Info: (20260802 - Luphia) 而兩個深色區塊的縮排不同，折出來的形狀就不同。
+    vars.set(match[1], normalize(match[2]));
   }
   return vars;
 }
@@ -127,18 +141,6 @@ describe("globals.css 主題區塊", () => {
     expect(total).toBe(light.size + dark.size + systemDark.size + print.size);
   });
 });
-
-/**
- * Info: (20260802 - Luphia) 空白正規化。Prettier 會依縮排深度把長的 color-mix 折成
- * 不同形狀，兩個深色區塊的同一條宣告因此字面不同但語意相同。
- * 不正規化就比對的話，測試會為了排版差異而失敗，很快就會被加上例外而失去意義。
- */
-function normalize(value: string): string {
-  return value
-    .replace(/\s+/g, " ")
-    .replace(/\s*([(),])\s*/g, "$1")
-    .trim();
-}
 
 /** Info: (20260802 - Luphia) 取出某區塊內的 `--color-*` 宣告（彩色階重映） */
 function extractColorVars(css: string, selector: string): Map<string, string> {

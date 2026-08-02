@@ -1,5 +1,21 @@
 import { timestampToString } from "@/lib/utils/common";
 import { toPng } from "html-to-image";
+import {
+  CHART_COLOR_VARIABLES,
+  CHART_PALETTE_FALLBACK,
+} from "@/constants/chart_palette";
+
+/**
+ * Info: (20260802 - Luphia) 取出匯出用的底色。從容器往上解析，
+ * 讓位於「主題不變區」（紙張預覽）內的圖表拿到淺色底而非深色底。
+ */
+const readChartSurface = (container: HTMLElement): string => {
+  const value = window
+    .getComputedStyle(container)
+    .getPropertyValue(CHART_COLOR_VARIABLES.surface)
+    .trim();
+  return value || CHART_PALETTE_FALLBACK.surface;
+};
 
 /**
  * Info: (20260720 - Julian)
@@ -57,7 +73,13 @@ export function useChartExport(
     const restoreReveal = revealForExport(container);
     try {
       const dataUrl = await toPng(container, {
-        backgroundColor: "#F8FAFC", // Info: (20260615 - Julian) 圖片底色配合 viewport
+        /**
+         * Info: (20260802 - Luphia) 圖片底色跟著主題走。
+         * 原本寫死淺灰 —— 深色模式下匯出會得到「深色圖表配淺灰背景」，
+         * 而圖表的文字與格線都是為深底調的，那張圖幾乎讀不了。
+         * 讀 CSS 變數而非傳參數，是為了讓底色與圖表本身取自同一個真相來源。
+         */
+        backgroundColor: readChartSurface(container),
         pixelRatio: 5, // Info: (20260615 - Julian) 放大 5 倍提高圖片品質
         filter: (node) => {
           if (

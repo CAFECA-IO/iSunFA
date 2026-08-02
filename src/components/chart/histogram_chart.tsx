@@ -6,6 +6,7 @@ import {
   HistogramTrendType,
   DEFAULT_HISTOGRAM_TREND_COLOR,
 } from "@/constants/custom_chart";
+import { useChartPalette } from "@/hooks/use_chart_palette";
 
 interface IHistogramChartProps {
   ast: ICustomHistogramAst;
@@ -30,7 +31,7 @@ const SLOT_GAP = 0; // Info: (20260720 - Julian) 相鄰長條間距（直方圖�
 const ROTATE_SLOT_W = 56; // Info: (20260720 - Julian) 每格寬度小於此值時 x 標籤旋轉避免重疊
 
 // Info: (20260720 - Julian) 長條色 + hover 色（沿用設計系統）
-const COLOR_BAR = "#152C5B";
+
 const TREND_SAMPLES = 120; // Info: (20260720 - Julian) 曲線取樣點數（越多越平滑）
 
 // Info: (20260720 - Julian) 數值格式化（千分位、最多三位小數），避免浮點雜訊
@@ -56,6 +57,13 @@ const niceNum = (range: number, round: boolean): number => {
 };
 
 const HistogramChart: FC<IHistogramChartProps> = ({ ast }) => {
+  /**
+   * Info: (20260802 - Luphia) 顏色從 CSS 變數讀出實值再寫進 SVG 屬性。
+   * 不能直接在屬性寫 var()：匯出 SVG 會把節點 clone 出文件再序列化，
+   * 那份檔案解不到變數，下載到的圖會沒有顏色（見 use_chart_palette）。
+   */
+  const palette = useChartPalette();
+
   const { title, xAxis, yAxis, trend, trendColor, bins } = ast;
   // Info: (20260730 - Julian) 趨勢線色：DSL 指定優先，否則採預設色
   const trendStroke = trendColor ?? DEFAULT_HISTOGRAM_TREND_COLOR;
@@ -161,7 +169,7 @@ const HistogramChart: FC<IHistogramChartProps> = ({ ast }) => {
               y1={y}
               x2={PLOT_RIGHT}
               y2={y}
-              stroke="#E2E8F0"
+              stroke={palette.grid}
               strokeWidth={1}
             />
             <text
@@ -183,7 +191,7 @@ const HistogramChart: FC<IHistogramChartProps> = ({ ast }) => {
         y1={PLOT_TOP}
         x2={PLOT_LEFT}
         y2={PLOT_BOTTOM}
-        stroke="#94A3B8"
+        stroke={palette.axis}
         strokeWidth={1.5}
       />
       <line
@@ -191,7 +199,7 @@ const HistogramChart: FC<IHistogramChartProps> = ({ ast }) => {
         y1={PLOT_BOTTOM}
         x2={PLOT_RIGHT}
         y2={PLOT_BOTTOM}
-        stroke="#94A3B8"
+        stroke={palette.axis}
         strokeWidth={1.5}
       />
 
@@ -211,7 +219,7 @@ const HistogramChart: FC<IHistogramChartProps> = ({ ast }) => {
                 y={barTop}
                 width={barW}
                 height={barH}
-                fill={COLOR_BAR}
+                fill={palette.series1}
                 rx={2}
               />
             )}

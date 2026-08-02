@@ -7,6 +7,7 @@ import {
   DEFAULT_QUADRANT_COLORS,
   NEUTRAL_POINT,
 } from "@/constants/custom_chart";
+import { useChartPalette } from "@/hooks/use_chart_palette";
 
 interface IMatrixChartProps {
   ast: ICustomMatrixAst;
@@ -55,6 +56,13 @@ const getDomain = (
 };
 
 const MatrixChart: FC<IMatrixChartProps> = ({ ast }) => {
+  /**
+   * Info: (20260802 - Luphia) 顏色從 CSS 變數讀出實值再寫進 SVG 屬性。
+   * 不能直接在屬性寫 var()：匯出 SVG 會把節點 clone 出文件再序列化，
+   * 那份檔案解不到變數，下載到的圖會沒有顏色（見 use_chart_palette）。
+   */
+  const palette = useChartPalette();
+
   const {
     title,
     xAxis,
@@ -137,7 +145,7 @@ const MatrixChart: FC<IMatrixChartProps> = ({ ast }) => {
           refY="3"
           orient="auto"
         >
-          <path d="M0,0 L6,3 L0,6 Z" fill="#94A3B8" />
+          <path d="M0,0 L6,3 L0,6 Z" fill={palette.axis} />
         </marker>
       </defs>
 
@@ -206,7 +214,7 @@ const MatrixChart: FC<IMatrixChartProps> = ({ ast }) => {
         y1={midY}
         x2={PLOT_RIGHT + 8}
         y2={midY}
-        stroke="#94A3B8"
+        stroke={palette.axis}
         strokeWidth={1.5}
         markerEnd="url(#matrix-arrow)"
       />
@@ -215,7 +223,7 @@ const MatrixChart: FC<IMatrixChartProps> = ({ ast }) => {
         y1={PLOT_BOTTOM}
         x2={midX}
         y2={PLOT_TOP - 8}
-        stroke="#94A3B8"
+        stroke={palette.axis}
         strokeWidth={1.5}
         markerEnd="url(#matrix-arrow)"
       />
@@ -288,7 +296,7 @@ const MatrixChart: FC<IMatrixChartProps> = ({ ast }) => {
               cy={cy}
               r={6}
               fill={color}
-              stroke="#FFFFFF"
+              stroke={palette.separator}
               strokeWidth={1.5}
             />
             <text

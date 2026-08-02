@@ -143,6 +143,27 @@
   --t-white-surface: #ffffff;
   --t-white-surface-hover: #ffffff;
   --t-black-text: #000000;
+  /**
+   * Info: (20260802 - Luphia) 圖表用色。與其他 token 分開命名，是因為它的消費者不是 CSS
+   * 而是 JS —— 圖表把顏色寫進 SVG 的 fill / stroke 屬性，而匯出 SVG 時
+   * 會把節點 clone 出文件再序列化，`var()` 到了那份檔案裡沒有東西可解析，
+   * 下載到的會是一張沒有顏色的圖。所以由 `use_chart_palette` 在繪製當下讀出實值。
+   *
+   * 淺色的值與原本寫死在各圖表檔裡的字面值完全相同，淺色外觀不變。
+   */
+  --t-chart-grid: #e2e8f0;
+  --t-chart-axis: #94a3b8;
+  --t-chart-label: #64748b;
+  --t-chart-value: #334155;
+  --t-chart-separator: #ffffff;
+  --t-chart-series-1: #152c5b;
+  --t-chart-series-2: #ff9800;
+  --t-chart-surface: #f8fafc;
+  --t-chart-node-surface: #ffffff;
+  --t-chart-node-surface-alt: #f8fafc;
+  --t-chart-node-text: #152c5b;
+  --t-chart-edge-label: #fff3e0;
+  --t-chart-categorical-1: #4f46e5;
   --t-shadow-a-faint: 0.05;
   --t-shadow-a-base: 0.1;
   --t-shadow-a-deep: 0.25;
@@ -464,6 +485,29 @@
   --t-white-surface: var(--neutral-dark-100);
   --t-white-surface-hover: var(--neutral-dark-300);
   --t-black-text: var(--neutral-dark-900);
+  /**
+   * Info: (20260802 - Luphia) 深色圖表用色。
+   * 框架四色沿用中性色階，數列色另訂：深海軍 #152c5b 在深色卡片上是 1.29，
+   * 等於看不見，改為同色相（262°）提亮後的淺海軍，對深色卡片 7.07。
+   * 中位線與分隔線原本是白色 —— 數列色變亮之後白線只剩 2.49，改用卡片底色（7.06）。
+   */
+  --t-chart-grid: var(--t-200);
+  --t-chart-axis: var(--t-400);
+  --t-chart-label: var(--t-500);
+  --t-chart-value: var(--t-700);
+  --t-chart-separator: var(--t-card);
+  --t-chart-series-1: oklch(72% 0.075 262);
+  --t-chart-series-2: #ff9800;
+  --t-chart-surface: var(--t-page);
+  --t-chart-node-surface: var(--t-card);
+  --t-chart-node-surface-alt: var(--t-200);
+  --t-chart-node-text: var(--t-900);
+  --t-chart-edge-label: color-mix(
+    in oklab,
+    var(--color-orange-500) 22%,
+    var(--t-page)
+  );
+  --t-chart-categorical-1: oklch(66% 0.2 276);
   --t-shadow-a-faint: 0.4;
   --t-shadow-a-base: 0.5;
   --t-shadow-a-deep: 0.7;
@@ -797,6 +841,29 @@
     --t-white-surface: var(--neutral-dark-100);
     --t-white-surface-hover: var(--neutral-dark-300);
     --t-black-text: var(--neutral-dark-900);
+    /**
+     * Info: (20260802 - Luphia) 深色圖表用色。
+     * 框架四色沿用中性色階，數列色另訂：深海軍 #152c5b 在深色卡片上是 1.29，
+     * 等於看不見，改為同色相（262°）提亮後的淺海軍，對深色卡片 7.07。
+     * 中位線與分隔線原本是白色 —— 數列色變亮之後白線只剩 2.49，改用卡片底色（7.06）。
+     */
+    --t-chart-grid: var(--t-200);
+    --t-chart-axis: var(--t-400);
+    --t-chart-label: var(--t-500);
+    --t-chart-value: var(--t-700);
+    --t-chart-separator: var(--t-card);
+    --t-chart-series-1: oklch(72% 0.075 262);
+    --t-chart-series-2: #ff9800;
+    --t-chart-surface: var(--t-page);
+    --t-chart-node-surface: var(--t-card);
+    --t-chart-node-surface-alt: var(--t-200);
+    --t-chart-node-text: var(--t-900);
+    --t-chart-edge-label: color-mix(
+      in oklab,
+      var(--color-orange-500) 22%,
+      var(--t-page)
+    );
+    --t-chart-categorical-1: oklch(66% 0.2 276);
     --t-shadow-a-faint: 0.4;
     --t-shadow-a-base: 0.5;
     --t-shadow-a-deep: 0.7;
@@ -843,6 +910,27 @@
     --t-white-surface: #ffffff;
     --t-white-surface-hover: #ffffff;
     --t-black-text: #000000;
+    /**
+     * Info: (20260802 - Luphia) 圖表用色。與其他 token 分開命名，是因為它的消費者不是 CSS
+     * 而是 JS —— 圖表把顏色寫進 SVG 的 fill / stroke 屬性，而匯出 SVG 時
+     * 會把節點 clone 出文件再序列化，`var()` 到了那份檔案裡沒有東西可解析，
+     * 下載到的會是一張沒有顏色的圖。所以由 `use_chart_palette` 在繪製當下讀出實值。
+     *
+     * 淺色的值與原本寫死在各圖表檔裡的字面值完全相同，淺色外觀不變。
+     */
+    --t-chart-grid: #e2e8f0;
+    --t-chart-axis: #94a3b8;
+    --t-chart-label: #64748b;
+    --t-chart-value: #334155;
+    --t-chart-separator: #ffffff;
+    --t-chart-series-1: #152c5b;
+    --t-chart-series-2: #ff9800;
+    --t-chart-surface: #f8fafc;
+    --t-chart-node-surface: #ffffff;
+    --t-chart-node-surface-alt: #f8fafc;
+    --t-chart-node-text: #152c5b;
+    --t-chart-edge-label: #fff3e0;
+    --t-chart-categorical-1: #4f46e5;
     --t-shadow-a-faint: 0.05;
     --t-shadow-a-base: 0.1;
     --t-shadow-a-deep: 0.25;
