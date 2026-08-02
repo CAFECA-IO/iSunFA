@@ -46,6 +46,18 @@ export const THEME_ROOT_CLASS_BY_CHOICE: Record<ThemeChoice, string> = {
   [ThemeModeEnum.DARK]: "dark",
 };
 
+/**
+ * Info: (20260802 - Luphia) 跨分頁同步的頻道名稱。
+ *
+ * cookie 沒有變更事件（`CookieStore` 只有 Chromium 有），所以另一個分頁改了偏好，
+ * 本分頁的 <html> class 不會自己跟上 —— 使用者會看到兩個分頁不同色，
+ * 而且重整才會一致。BroadcastChannel 補上這個缺口。
+ *
+ * 只同步「已經寫進 cookie 的選擇」，不同步任何其他狀態：
+ * 頻道是同源共享的，內容應視為輸入而非指令。
+ */
+export const THEME_SYNC_CHANNEL_NAME = "isunfa-theme-sync";
+
 /** Info: (20260802 - Luphia) 切換當下暫時停用全站 transition 的 class，定義於 globals.css */
 export const THEME_TRANSITION_SUPPRESS_CLASS = "theme-switching";
 

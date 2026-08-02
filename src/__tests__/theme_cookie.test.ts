@@ -8,6 +8,7 @@ import {
   parseThemeCookie,
   readThemeCookie,
   resolveThemeRootClass,
+  toThemeChoice,
 } from "@/lib/utils/theme_cookie";
 import { THEME_COOKIE_NAME, ThemeModeEnum } from "@/constants/theme";
 
@@ -90,5 +91,35 @@ describe("readThemeCookie", () => {
 
   it("容忍分號後的空白", () => {
     expect(readThemeCookie(`a=1;${THEME_COOKIE_NAME}=light`)).toBe("light");
+  });
+});
+
+describe("toThemeChoice", () => {
+  it("認得兩個明確選擇", () => {
+    expect(toThemeChoice("light")).toBe(ThemeModeEnum.LIGHT);
+    expect(toThemeChoice("dark")).toBe(ThemeModeEnum.DARK);
+  });
+
+  /**
+   * Info: (20260802 - Luphia) 跨分頁廣播的內容會直接影響 <html> 的 class。
+   * 這裡與 parseThemeCookie 的差別是：不認得就 undefined（不要動），
+   * 而不是回到跟隨系統 —— 收到雜訊時正確的反應是忽略，不是改變畫面。
+   */
+  it.each([
+    undefined,
+    null,
+    "",
+    "system",
+    "SYSTEM",
+    "Dark",
+    0,
+    1,
+    true,
+    {},
+    [],
+    ["dark"],
+    { theme: "dark" },
+  ])("不認得的值 %p 回 undefined", (value) => {
+    expect(toThemeChoice(value)).toBeUndefined();
   });
 });

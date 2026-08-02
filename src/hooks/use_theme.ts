@@ -14,9 +14,10 @@
  * 畫面顏色在 JS 執行之前就已經是對的了。
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   THEME_ROOT_CLASS_BY_CHOICE,
+  THEME_SYNC_CHANNEL_NAME,
   THEME_TRANSITION_SUPPRESS_CLASS,
   ThemeChoice,
   ThemeModeEnum,
@@ -25,9 +26,44 @@ import {
   buildThemeCookie,
   parseThemeCookie,
   readThemeCookie,
+  toThemeChoice,
 } from "@/lib/utils/theme_cookie";
 
 const DARK_MEDIA_QUERY = "(prefers-color-scheme: dark)";
+
+/**
+ * Info: (20260802 - Luphia) 把選擇套到 <html>。
+ *
+ * 抽成函式是因為有兩個呼叫端：本分頁的切換，以及另一個分頁廣播過來的變更。
+ * 兩者都必須做完全相同的事，各寫一份遲早會分歧。
+ *
+ * 不在此設 `color-scheme` —— 那個屬性已由 globals.css 依 class 決定，
+ * 在 JS 再設一次會製造第二個真相來源，而且系統偏好那一態沒有 class 可依附。
+ */
+function applyThemeChoice(choice: ThemeChoice): void {
+  const root = document.documentElement;
+
+  /**
+   * Info: (20260802 - Luphia) 切換當下停用 transition，下一幀才恢復。
+   * 不停用的話，帶 `transition-colors` 的元件會各自以自己的時長變色，
+   * 整頁呈現一片雜亂的漸層而非乾淨的切換。
+   *
+   * 恢復用兩層 requestAnimationFrame：一層只保證「樣式已套用」，
+   * 尚未保證瀏覽器已經據此繪製過一幀，太早移除仍會讓 transition 抓到舊值。
+   */
+  root.classList.add(THEME_TRANSITION_SUPPRESS_CLASS);
+  root.classList.remove(
+    THEME_ROOT_CLASS_BY_CHOICE[ThemeModeEnum.LIGHT],
+    THEME_ROOT_CLASS_BY_CHOICE[ThemeModeEnum.DARK],
+  );
+  root.classList.add(THEME_ROOT_CLASS_BY_CHOICE[choice]);
+
+  window.requestAnimationFrame(() =>
+    window.requestAnimationFrame(() =>
+      root.classList.remove(THEME_TRANSITION_SUPPRESS_CLASS),
+    ),
+  );
+}
 
 export interface IUseTheme {
   /**
@@ -44,6 +80,7 @@ export interface IUseTheme {
 export function useTheme(): IUseTheme {
   const [mode, setMode] = useState<ThemeModeEnum | undefined>(undefined);
   const [systemPrefersDark, setSystemPrefersDark] = useState(false);
+  const channelRef = useRef<BroadcastChannel | null>(null);
 
   useEffect(() => {
     setMode(parseThemeCookie(readThemeCookie(document.cookie)));
@@ -56,10 +93,37 @@ export function useTheme(): IUseTheme {
      * 自己跟上，但開關的把手不會 —— 它讀的是這裡的 state。
      * 沒有這個監聽，使用者會看到深色介面配著停在「淺色」的開關。
      */
-    const onChange = (event: MediaQueryListEvent) =>
+    const onMediaChange = (event: MediaQueryListEvent) =>
       setSystemPrefersDark(event.matches);
-    media.addEventListener("change", onChange);
-    return () => media.removeEventListener("change", onChange);
+    media.addEventListener("change", onMediaChange);
+
+    /**
+     * Info: (20260802 - Luphia) 跨分頁同步。cookie 本身是分頁共享的，
+     * 所以收到廣播時**不需要再寫一次** —— 另一個分頁寫的那份已經生效，
+     * 這裡缺的只是 DOM class 與本地 state。
+     *
+     * 廣播內容雖然同源，仍然當成外部輸入驗證：收到不認得的值就忽略，
+     * 而不是拿去 classList.add()。
+     */
+    const channel =
+      typeof BroadcastChannel === "undefined"
+        ? null
+        : new BroadcastChannel(THEME_SYNC_CHANNEL_NAME);
+    channelRef.current = channel;
+    if (channel) {
+      channel.onmessage = (event: MessageEvent<unknown>) => {
+        const choice = toThemeChoice(event.data);
+        if (choice === undefined) return;
+        applyThemeChoice(choice);
+        setMode(choice);
+      };
+    }
+
+    return () => {
+      media.removeEventListener("change", onMediaChange);
+      channel?.close();
+      channelRef.current = null;
+    };
   }, []);
 
   const resolved: ThemeChoice | undefined =
@@ -78,34 +142,13 @@ export function useTheme(): IUseTheme {
         ? ThemeModeEnum.LIGHT
         : ThemeModeEnum.DARK;
 
-    const root = document.documentElement;
-
-    /**
-     * Info: (20260802 - Luphia) 切換當下停用 transition，下一幀才恢復。
-     * 不停用的話，帶 `transition-colors` 的元件會各自以自己的時長變色，
-     * 整頁呈現一片雜亂的漸層而非乾淨的切換。
-     *
-     * 恢復用兩層 requestAnimationFrame：一層只保證「樣式已套用」，
-     * 尚未保證瀏覽器已經據此繪製過一幀，太早移除仍會讓 transition 抓到舊值。
-     */
-    root.classList.add(THEME_TRANSITION_SUPPRESS_CLASS);
-
-    root.classList.remove(
-      THEME_ROOT_CLASS_BY_CHOICE[ThemeModeEnum.LIGHT],
-      THEME_ROOT_CLASS_BY_CHOICE[ThemeModeEnum.DARK],
-    );
-    root.classList.add(THEME_ROOT_CLASS_BY_CHOICE[next]);
+    applyThemeChoice(next);
     document.cookie = buildThemeCookie(
       next,
       window.location.protocol === "https:",
     );
     setMode(next);
-
-    window.requestAnimationFrame(() =>
-      window.requestAnimationFrame(() =>
-        root.classList.remove(THEME_TRANSITION_SUPPRESS_CLASS),
-      ),
-    );
+    channelRef.current?.postMessage(next);
   }, [resolved]);
 
   return {

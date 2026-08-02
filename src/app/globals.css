@@ -100,6 +100,19 @@
 :root,
 .theme-static-light,
 .dark .theme-static-light {
+  /**
+   * Info: (20260802 - Luphia) `color-scheme` 決定瀏覽器**原生**部件的配色：
+   * 捲軸、`<select>` 下拉清單、日期選擇器、autofill 的黃底、
+   * 以及 `<input type="checkbox">` 等未被 CSS 完全接管的控制項。
+   *
+   * 這些東西 CSS 碰不到，只能靠這個屬性告訴瀏覽器。少了它，深色頁面會配一條
+   * 白色捲軸，點開下拉是白底黑字 —— 頁面本身再怎麼深色也會露餡。
+   *
+   * 值刻意寫死 light / dark 而非 `light dark`：後者是「兩種都支援，跟隨系統」，
+   * 使用者在深色系統上明確選了淺色時，原生部件仍會是深色。
+   */
+  color-scheme: light;
+
   --t-50: var(--neutral-light-50);
   --t-100: var(--neutral-light-100);
   --t-200: var(--neutral-light-200);
@@ -127,6 +140,8 @@
 }
 
 .dark {
+  color-scheme: dark;
+
   --t-50: var(--neutral-dark-50);
   --t-100: var(--neutral-dark-100);
   --t-200: var(--neutral-dark-200);
@@ -156,6 +171,8 @@
 @media (prefers-color-scheme: dark) {
   /* Info: (20260802 - Luphia) 沒設定過就跟隨系統；明確選了淺色（.light）則不套用 */
   :root:not(.light) {
+    color-scheme: dark;
+
     --t-50: var(--neutral-dark-50);
     --t-100: var(--neutral-dark-100);
     --t-200: var(--neutral-dark-200);
@@ -192,6 +209,8 @@
   :root,
   :root.dark,
   :root:not(.light) {
+    color-scheme: light;
+
     --t-50: var(--neutral-light-50);
     --t-100: var(--neutral-light-100);
     --t-200: var(--neutral-light-200);

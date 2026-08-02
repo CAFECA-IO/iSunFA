@@ -27,6 +27,20 @@ export function parseThemeCookie(
 }
 
 /**
+ * Info: (20260802 - Luphia) 把不可信的值收斂成一個明確選擇，不是就回 undefined。
+ *
+ * 用於跨分頁廣播：訊息雖然同源，仍是本函式之外的東西送進來的，
+ * 直接拿去 `classList.add()` 等於讓任何同源腳本往 <html> 塞任意 class。
+ * 與 parseThemeCookie 分開是因為語意不同 —— 那個把「不認得」當成跟隨系統，
+ * 這個把「不認得」當成不要動。
+ */
+export function toThemeChoice(value: unknown): ThemeChoice | undefined {
+  if (value === ThemeModeEnum.LIGHT) return ThemeModeEnum.LIGHT;
+  if (value === ThemeModeEnum.DARK) return ThemeModeEnum.DARK;
+  return undefined;
+}
+
+/**
  * Info: (20260802 - Luphia) <html> 該掛的 class。跟隨系統時回空字串 ——
  * 由 globals.css 的 `prefers-color-scheme` 媒體查詢承接。
  */

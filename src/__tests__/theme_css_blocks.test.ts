@@ -47,6 +47,33 @@ function blockAt(css: string, selector: string): Map<string, string> {
   return extractThemeVars(css, index);
 }
 
+/**
+ * Info: (20260802 - Luphia) `color-scheme` 是屬性而非變數，不會被上面的
+ * `--t-*` 抽取抓到，但它同樣必須四塊一致 —— 漏掉一塊的症狀是
+ * 「頁面是深的、捲軸是白的」，看起來像瀏覽器的問題而不像我們的。
+ */
+function colorSchemeAt(css: string, selector: string): string | undefined {
+  const index = css.indexOf(selector);
+  expect(index).toBeGreaterThanOrEqual(0);
+  const open = css.indexOf("{", index);
+  let depth = 0;
+  let end = open;
+  for (let i = open; i < css.length; i += 1) {
+    if (css[i] === "{") depth += 1;
+    if (css[i] === "}") {
+      depth -= 1;
+      if (depth === 0) {
+        end = i;
+        break;
+      }
+    }
+  }
+  return css
+    .slice(open + 1, end)
+    .match(/color-scheme:\s*([^;]+);/)?.[1]
+    .trim();
+}
+
 describe("globals.css 主題區塊", () => {
   const css = readFileSync(CSS_PATH, "utf8");
 
@@ -69,6 +96,18 @@ describe("globals.css 主題區塊", () => {
 
   it("列印區塊與淺色區塊宣告完全相同", () => {
     expect(Object.fromEntries(print)).toEqual(Object.fromEntries(light));
+  });
+
+  /**
+   * Info: (20260802 - Luphia) 原生部件（捲軸、下拉、日期選擇器）的配色。
+   * 值必須寫死 light / dark 而非 `light dark`：後者會在使用者明確選淺色、
+   * 但系統是深色時，讓原生部件維持深色。
+   */
+  it("四個區塊都宣告了正確的 color-scheme", () => {
+    expect(colorSchemeAt(css, "\n:root,\n.theme-static-light,")).toBe("light");
+    expect(colorSchemeAt(css, "\n.dark {")).toBe("dark");
+    expect(colorSchemeAt(css, ":root:not(.light) {")).toBe("dark");
+    expect(colorSchemeAt(css, "@media print {")).toBe("light");
   });
 
   it("淺色與深色宣告同一組變數名（只有值不同）", () => {
