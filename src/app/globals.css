@@ -1123,6 +1123,28 @@
   }
 
   /**
+   * Info: (20260802 - Luphia) 漸層的白色端點，與 `bg-white` 同樣處理。
+   *
+   * 這是回報「灰色漸層很突兀」的成因：儀表板的外層是
+   * `bg-gradient-to-b from-gray-50 to-white`，深色模式下 `from-gray-50`
+   * 翻成了深色、`to-white` 卻還是純白 —— 整頁從上到下由深轉白，
+   * 而卡片多半是半透明的，白色一路透上來，文字全部糊掉。
+   *
+   * 漏掉這幾條是因為前一輪只想到「背景」，忘了漸層端點也是同一個角色。
+   */
+  .from-white {
+    --tw-gradient-from: var(--t-white-surface);
+  }
+
+  .via-white {
+    --tw-gradient-via: var(--t-white-surface);
+  }
+
+  .to-white {
+    --tw-gradient-to: var(--t-white-surface);
+  }
+
+  /**
    * Info: (20260802 - Luphia) 低號碼色階當文字用的場合，一律維持淺色。
    *
    * `text-slate-100`、`text-gray-300` 這類在淺色模式下就只可能用在深色底上
