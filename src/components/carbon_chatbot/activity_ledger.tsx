@@ -83,7 +83,7 @@ export function ActivityLedger({
       </div>
 
       {/* Info: (20260716 - Tzuhan) 步驟真值來自決定性狀態機(computeInventoryStep)，非 LLM 判斷 */}
-      <div className="mb-2 rounded-lg bg-orange-50 px-2 py-1 text-[11px] font-bold text-[#e04f00]">
+      <div className="mb-2 rounded-lg bg-orange-50 px-2 py-1 text-[11px] font-bold text-orange-700">
         {t(`carbon_chatbot.inventory_step_${state.step}`)}
       </div>
 
@@ -93,7 +93,7 @@ export function ActivityLedger({
           type="button"
           disabled={isImportingFromBook}
           onClick={onImportFromBook}
-          className="mb-2 flex items-center justify-center gap-1.5 rounded-lg bg-orange-50 px-2 py-1.5 text-[11px] font-bold text-[#e04f00] ring-1 ring-orange-100 transition-colors hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-60"
+          className="mb-2 flex items-center justify-center gap-1.5 rounded-lg bg-orange-50 px-2 py-1.5 text-[11px] font-bold text-orange-700 ring-1 ring-orange-100 transition-colors hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isImportingFromBook ? (
             <Loader2 size={12} className="animate-spin" />
@@ -129,7 +129,7 @@ export function ActivityLedger({
                   <button
                     type="button"
                     onClick={() => onOpenEvidence(activity)}
-                    className="truncate font-bold text-[#e04f00] underline-offset-2 hover:underline"
+                    className="truncate font-bold text-orange-700 underline-offset-2 hover:underline"
                   >
                     {t("carbon_chatbot.activity_open_evidence")}
                   </button>
@@ -175,7 +175,7 @@ export function ActivityLedger({
       {/* Info: (20260716 - Tzuhan) #6519 總計:字串化 Decimal 原樣顯示(無 .toFixed/number 運算) */}
       {/* Info: (20260721 - Tzuhan) UAT:emerald 非 iSunFA 色盤,改橘色系(與品牌一致) */}
       {ledger && (
-        <div className="mt-2 flex items-center justify-between rounded-lg bg-orange-50 px-2 py-1.5 text-xs font-bold text-[#9a3412]">
+        <div className="mt-2 flex items-center justify-between rounded-lg bg-orange-50 px-2 py-1.5 text-xs font-bold text-orange-800">
           <span>{t("carbon_chatbot.activity_total_co2e")}</span>
           <span className="font-mono">{ledger.totalCo2eKg} kgCO2e</span>
         </div>
@@ -183,7 +183,7 @@ export function ActivityLedger({
 
       {/* Info: (20260720 - Tzuhan) #6520 質量守恆勾稽:violation 明細透明呈現(等式兩側值,審計可追溯) */}
       {ledger?.articulation?.status === ArticulationStatusEnum.PASSED && (
-        <div className="mt-1.5 flex items-center gap-1.5 rounded-lg bg-orange-50 px-2 py-1.5 text-[11px] font-bold text-[#9a3412]">
+        <div className="mt-1.5 flex items-center gap-1.5 rounded-lg bg-orange-50 px-2 py-1.5 text-[11px] font-bold text-orange-800">
           <ShieldCheck size={12} className="shrink-0" />
           {t("carbon_chatbot.articulation_passed")}
         </div>

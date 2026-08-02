@@ -155,7 +155,12 @@ export default function CarbonChatbotPage() {
       />
 
       {/* Info: (20260714 - Tzuhan) 報告為主視圖: 佔滿剩餘寬度，窄螢幕單欄直向捲動(目錄由工具列抽屜提供) */}
-      <div className="relative flex min-w-0 flex-1 flex-col bg-[#f8fafc]">
+      {/* Info: (20260802 - Luphia) 本功能區另有一組寫死的橘色 #ff5a00 / #e04f00（48 處）。
+          它們是實心按鈕、邊框與圖示強調色，在深色底上量測為 5.6:1，深色模式下可用，故未一併改。
+          會動的只有「深色文字疊在淺色 tint 上」那一類 —— 那是淺色模式的慣用寫法，
+          tint 變暗之後就讀不到了（#9a3412 在橘色 tint 上只有 2.26:1）。
+          要不要把這組橘色統一到 --brand 是品牌決定，不在深色模式的範圍內。 */}
+      <div className="relative flex min-w-0 flex-1 flex-col bg-gray-50">
         {/* Info: (20260730 - Tzuhan) 未解鎖前不顯示報告:個人會話的報告是 E2EE 密文,尚未解鎖時
             畫面上那份「內容」其實只是大綱骨架與佔位,讓它看起來像已載入的報告會誤導人
             (使用者會以為報告是空的,而非還沒解開)。帳本會話存明文、伺服器可讀,不受此限。 */}

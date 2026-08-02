@@ -19,7 +19,7 @@ export function ParagraphChip({ paragraphId, onJump }: IParagraphChipProps) {
       type="button"
       aria-label={t("carbon_chatbot.jump_aria_label")}
       onClick={() => onJump(paragraphId)}
-      className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-bold text-[#e04f00] transition-colors hover:border-[#ff5a00] hover:bg-orange-100"
+      className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700 transition-colors hover:border-[#ff5a00] hover:bg-orange-100"
     >
       <FileText size={12} className="shrink-0" />
       <span className="truncate">

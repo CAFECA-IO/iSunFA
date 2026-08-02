@@ -319,7 +319,7 @@ export function ChatSidebar({
                       {s.boundBookName && (
                         <span
                           title={s.boundBookName}
-                          className="flex min-w-0 items-center gap-0.5 rounded-full bg-orange-50 px-2 py-0.5 text-[9px] font-bold text-[#e04f00] ring-1 ring-orange-100"
+                          className="flex min-w-0 items-center gap-0.5 rounded-full bg-orange-50 px-2 py-0.5 text-[9px] font-bold text-orange-700 ring-1 ring-orange-100"
                         >
                           <BookOpen size={9} className="shrink-0" />
                           <span className="max-w-[7rem] truncate">

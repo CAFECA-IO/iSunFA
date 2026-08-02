@@ -236,7 +236,7 @@ export default function CarbonReportPreview({
 
   if (!reportData) {
     return (
-      <div className="relative flex h-full w-full flex-1 flex-col items-center justify-center border-l border-gray-200 bg-[#f8fafc] text-gray-400">
+      <div className="relative flex h-full w-full flex-1 flex-col items-center justify-center border-l border-gray-200 bg-gray-50 text-gray-400">
         <FileText className="mb-4 h-12 w-12 opacity-20" />
         <p>{t("carbon_chatbot.no_report_data")}</p>
       </div>

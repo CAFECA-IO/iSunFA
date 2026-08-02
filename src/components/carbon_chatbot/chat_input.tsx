@@ -136,7 +136,7 @@ export function ChatInput({
       {/* Info: (20260716 - Tzuhan) #56 匯入導流:大型 pdf 疑似整份報告,聊天萃取管線會超時 → 建議走匯入 */}
       {importCandidate && (
         <div className="mx-auto mb-2 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-xs">
-          <div className="flex min-w-0 items-center gap-1.5 font-bold text-[#e04f00]">
+          <div className="flex min-w-0 items-center gap-1.5 font-bold text-orange-700">
             <FileUp size={12} className="shrink-0" />
             <span className="min-w-0 truncate">
               {t("carbon_chatbot.import_suggest", {
@@ -176,9 +176,9 @@ export function ChatInput({
         <div
           className={`mx-auto mb-2 flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold ${
             draftNotice.type === "loading"
-              ? "bg-orange-50 text-[#e04f00]"
+              ? "bg-orange-50 text-orange-700"
               : draftNotice.type === "info"
-                ? "bg-orange-50 text-[#9a3412]"
+                ? "bg-orange-50 text-orange-800"
                 : "bg-red-50 text-red-600"
           }`}
         >
