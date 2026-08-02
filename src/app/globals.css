@@ -143,6 +143,9 @@
   --t-white-surface: #ffffff;
   --t-white-surface-hover: #ffffff;
   --t-black-text: #000000;
+  --t-shadow-a-faint: 0.05;
+  --t-shadow-a-base: 0.1;
+  --t-shadow-a-deep: 0.25;
   --t-hover: var(--neutral-light-100);
   --t-line: var(--neutral-light-200);
   --t-line-strong: var(--neutral-light-300);
@@ -461,6 +464,9 @@
   --t-white-surface: var(--neutral-dark-100);
   --t-white-surface-hover: var(--neutral-dark-300);
   --t-black-text: var(--neutral-dark-900);
+  --t-shadow-a-faint: 0.4;
+  --t-shadow-a-base: 0.5;
+  --t-shadow-a-deep: 0.7;
   --t-hover: var(--neutral-dark-200);
   --t-line: var(--neutral-dark-line);
   --t-line-strong: var(--neutral-dark-line-strong);
@@ -791,6 +797,9 @@
     --t-white-surface: var(--neutral-dark-100);
     --t-white-surface-hover: var(--neutral-dark-300);
     --t-black-text: var(--neutral-dark-900);
+    --t-shadow-a-faint: 0.4;
+    --t-shadow-a-base: 0.5;
+    --t-shadow-a-deep: 0.7;
     --t-hover: var(--neutral-dark-200);
     --t-line: var(--neutral-dark-line);
     --t-line-strong: var(--neutral-dark-line-strong);
@@ -834,6 +843,9 @@
     --t-white-surface: #ffffff;
     --t-white-surface-hover: #ffffff;
     --t-black-text: #000000;
+    --t-shadow-a-faint: 0.05;
+    --t-shadow-a-base: 0.1;
+    --t-shadow-a-deep: 0.25;
     --t-hover: var(--neutral-light-100);
     --t-line: var(--neutral-light-200);
     --t-line-strong: var(--neutral-light-300);
@@ -927,6 +939,7 @@
    * **這是過渡層，不是終點。** 元件改用語意 token 之後就不再受此影響，
    * 可以逐頁遷移；全部遷移完成後這一整段即可刪除。
    */
+
   --color-gray-50: var(--t-50);
   --color-gray-100: var(--t-100);
   --color-gray-200: var(--t-200);
@@ -953,6 +966,35 @@
 }
 
 @theme inline {
+  /**
+   * Info: (20260802 - Luphia) 陰影的透明度隨主題變，幾何不變。
+   *
+   * Tailwind 的陰影是 `rgb(0 0 0 / 0.1)` 這種淡黑 —— 在白底上是柔和的浮起，
+   * 在 #060c19 的深色頁面上等於什麼都沒有：黑色疊在近黑色上看不出差別，
+   * 全庫 653 處 `shadow-*` 在深色模式下形同失效。
+   *
+   * 深色介面的浮起主要交給邊框（見 --t-line），陰影是輔助；
+   * 但完全沒有陰影會讓浮動面板與下拉選單失去「離開頁面」的暗示，
+   * 所以保留幾何、把黑色加濃到看得出來為止。
+   *
+   * 只有 alpha 進主題區塊，幾何寫在這裡一次 —— 否則七種尺寸要抄兩份。
+   */
+  --shadow-2xs: 0 1px rgb(0 0 0 / var(--t-shadow-a-faint));
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / var(--t-shadow-a-faint));
+  --shadow-sm:
+    0 1px 3px 0 rgb(0 0 0 / var(--t-shadow-a-base)),
+    0 1px 2px -1px rgb(0 0 0 / var(--t-shadow-a-base));
+  --shadow-md:
+    0 4px 6px -1px rgb(0 0 0 / var(--t-shadow-a-base)),
+    0 2px 4px -2px rgb(0 0 0 / var(--t-shadow-a-base));
+  --shadow-lg:
+    0 10px 15px -3px rgb(0 0 0 / var(--t-shadow-a-base)),
+    0 4px 6px -4px rgb(0 0 0 / var(--t-shadow-a-base));
+  --shadow-xl:
+    0 20px 25px -5px rgb(0 0 0 / var(--t-shadow-a-base)),
+    0 8px 10px -6px rgb(0 0 0 / var(--t-shadow-a-base));
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / var(--t-shadow-a-deep));
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
@@ -1400,6 +1442,17 @@
         transparent
       );
     }
+  }
+
+  /**
+   * Info: (20260802 - Luphia) `shadow-inner` 是 v3 留下的相容 utility，
+   * 不吃 `--inset-shadow-*` 主題變數，色值被 Tailwind 直接寫進規則裡，
+   * 因此無法像其他七種尺寸那樣靠 @theme 改掉，只能在此覆寫。
+   * 保留 `--tw-shadow-color` 的 fallback 結構，`shadow-<色>` 仍可覆蓋。
+   */
+  .shadow-inner {
+    --tw-shadow: inset 0 2px 4px 0
+      var(--tw-shadow-color, rgb(0 0 0 / var(--t-shadow-a-faint)));
   }
 
   /**
