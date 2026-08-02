@@ -143,6 +143,7 @@
   --t-white-surface: #ffffff;
   --t-white-surface-hover: #ffffff;
   --t-black-text: #000000;
+  --t-hover: var(--neutral-light-100);
   --t-line: var(--neutral-light-200);
   --t-line-strong: var(--neutral-light-300);
   --t-tint-alpha-floor: 0%;
@@ -460,6 +461,7 @@
   --t-white-surface: var(--neutral-dark-100);
   --t-white-surface-hover: var(--neutral-dark-300);
   --t-black-text: var(--neutral-dark-900);
+  --t-hover: var(--neutral-dark-200);
   --t-line: var(--neutral-dark-line);
   --t-line-strong: var(--neutral-dark-line-strong);
   --t-tint-alpha-floor: 100%;
@@ -789,6 +791,7 @@
     --t-white-surface: var(--neutral-dark-100);
     --t-white-surface-hover: var(--neutral-dark-300);
     --t-black-text: var(--neutral-dark-900);
+    --t-hover: var(--neutral-dark-200);
     --t-line: var(--neutral-dark-line);
     --t-line-strong: var(--neutral-dark-line-strong);
     --t-tint-alpha-floor: 100%;
@@ -831,6 +834,7 @@
     --t-white-surface: #ffffff;
     --t-white-surface-hover: #ffffff;
     --t-black-text: #000000;
+    --t-hover: var(--neutral-light-100);
     --t-line: var(--neutral-light-200);
     --t-line-strong: var(--neutral-light-300);
     --t-tint-alpha-floor: 0%;
@@ -864,7 +868,15 @@
   --surface-base: var(--t-page);
   --surface-raised: var(--t-card);
   --surface-overlay: var(--t-overlay);
-  --surface-hover: var(--t-100);
+  /**
+   * Info: (20260802 - Luphia) hover / 微弱底色自成一階，不能沿用 --t-100。
+   *
+   * 淺色下卡片是純白、--t-100 是 gray-100，兩者分得開；
+   * 深色下卡片本身就是 --t-100，沿用會讓 hover 與行內程式碼底
+   * 與卡片同色 —— 對比 1.00，等於這些效果整個消失。
+   * 與 --t-line 同樣的道理：淺色沒有的矛盾，深色下必須分家。
+   */
+  --surface-hover: var(--t-hover);
 
   /* Info: (20260801 - Luphia) 文字：主要 → 次要 → 弱化（僅供輔助說明，不可承載必要資訊） */
   --text-primary: var(--t-900);
