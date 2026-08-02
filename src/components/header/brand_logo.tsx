@@ -20,7 +20,7 @@ export default function BrandLogo() {
           height={40}
           priority
         />
-        <span className="font-mono text-[10px] text-gray-500 md:text-xs lg:mb-1.5 lg:ml-1">
+        <span className="text-text-muted font-mono text-[10px] md:text-xs lg:mb-1.5 lg:ml-1">
           v{pkg.version}
         </span>
       </Link>

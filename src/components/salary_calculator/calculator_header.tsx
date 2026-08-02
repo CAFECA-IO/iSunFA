@@ -25,7 +25,7 @@ const CalculatorHeader: FC = () => {
   // const isSlip = pathname === ISUNFA_ROUTE.PAY_SLIP;
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/90 shadow-sm ring-1 ring-gray-900/5 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 w-full bg-surface-raised/90 shadow-sm ring-1 ring-border-default backdrop-blur-xl">
       <nav
         className="flex items-center justify-between p-3 lg:px-8"
         aria-label="Global"
@@ -35,14 +35,14 @@ const CalculatorHeader: FC = () => {
           <div className="hidden items-center gap-x-4 lg:flex">
             <Link
               href={ISUNFA_ROUTE.SALARY_CALCULATOR}
-              className={`text-sm font-medium transition-colors hover:text-orange-600 ${isCalc ? "text-orange-600" : "text-gray-600"}`}
+              className={`text-sm font-medium transition-colors hover:text-brand ${isCalc ? "text-brand" : "text-text-secondary"}`}
             >
               {t("calculator.header.main_title")}
             </Link>
             
             <button
               onClick={() => setIsMechanismModalOpen(true)}
-              className="text-xs font-semibold text-gray-500 hover:text-orange-600 transition-colors bg-transparent border-none cursor-pointer"
+              className="text-xs font-semibold text-text-muted hover:text-brand transition-colors bg-transparent border-none cursor-pointer"
             >
               {t("calculator.header.how_it_works")}
             </button>

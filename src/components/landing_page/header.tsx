@@ -8,7 +8,7 @@ import UserActions from '@/components/header/user_actions';
 
 export default function Header() {
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-xl shadow-sm ring-1 ring-gray-900/5">
+    <header className="sticky top-0 z-50 w-full bg-surface-raised/90 backdrop-blur-xl shadow-sm ring-1 ring-border-default">
       <nav className="flex items-center justify-between p-3 lg:px-8" aria-label="Global">
         <BrandLogo />
         <div className="flex gap-x-6 lg:gap-x-8 items-center">

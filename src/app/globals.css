@@ -467,9 +467,9 @@
    * 把它改暗會讓那些按鈕變成深底深字。故這兩個角色另走 `--t-white-surface`
    * 與 `--t-black-text`，淺色主題下它們就是 #ffffff 與 #000000，等同沒改。
    *
-   * 未處理：`bg-white/20` 這類半透明變體（40 處）與 `lg:bg-white`（2 處）。
-   * 前者多用於深色 hero 上的玻璃效果，本來就該是白色半透明；
-   * 後者的斷點規則與無斷點版同權重，覆寫會在所有斷點生效，反而更錯。
+   * 半透明變體見下方 —— 50% 以上視為表面而跟著翻，40% 以下維持白色。
+   * `lg:bg-white`（2 處）未處理：斷點規則與無斷點版同權重，
+   * 覆寫會在所有斷點生效，反而更錯。
    */
   .bg-white {
     background-color: var(--t-white-surface);
@@ -490,6 +490,77 @@
 
     .group-hover\:bg-white:is(:where(.group):hover *) {
       background-color: var(--t-white-surface-hover);
+    }
+  }
+
+  /**
+   * Info: (20260802 - Luphia) 高不透明度的 `bg-white/N` 也是表面，必須跟著翻。
+   *
+   * 這一條是修 bug：原本判斷「`bg-white/N` 多是深色 hero 上的玻璃效果」而整批略過，
+   * 結果三個 header 的 `bg-white/90` 在深色模式下維持白色 ——
+   * 導覽列文字已翻成淺色，配上沒翻的白底就整條看不見。
+   *
+   * 重新逐處看過 55 個用例後，界線是不透明度而非位置：
+   * 50% 以上全數是表面（header、工具列、遮罩、tooltip、卡片），
+   * 40% 以下全數是深色底上的霧面高光，且都配 `text-white`，本來就該維持白色。
+   *
+   * `color-mix` 的寫法與 Tailwind 產生的完全相同，只把顏色來源換掉。
+   */
+  .bg-white\/50 {
+    background-color: color-mix(
+      in oklab,
+      var(--t-white-surface) 50%,
+      transparent
+    );
+  }
+
+  .bg-white\/60 {
+    background-color: color-mix(
+      in oklab,
+      var(--t-white-surface) 60%,
+      transparent
+    );
+  }
+
+  .bg-white\/70 {
+    background-color: color-mix(
+      in oklab,
+      var(--t-white-surface) 70%,
+      transparent
+    );
+  }
+
+  .bg-white\/80 {
+    background-color: color-mix(
+      in oklab,
+      var(--t-white-surface) 80%,
+      transparent
+    );
+  }
+
+  .bg-white\/90 {
+    background-color: color-mix(
+      in oklab,
+      var(--t-white-surface) 90%,
+      transparent
+    );
+  }
+
+  .bg-white\/95 {
+    background-color: color-mix(
+      in oklab,
+      var(--t-white-surface) 95%,
+      transparent
+    );
+  }
+
+  @media (hover: hover) {
+    .hover\:bg-white\/50:hover {
+      background-color: color-mix(
+        in oklab,
+        var(--t-white-surface) 50%,
+        transparent
+      );
     }
   }
 
