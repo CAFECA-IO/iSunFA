@@ -18,3 +18,15 @@ export const THEME_MODE_ORDER = [
   ThemeModeEnum.DARK,
   ThemeModeEnum.SYSTEM,
 ] as const;
+
+/**
+ * Info: (20260802 - Luphia) 主題不變區的 class 名稱。
+ *
+ * 掛上之後，該子樹的中性色階與語意 token 一律指回淺色，不隨主題切換。
+ * 用途是模擬實體紙張的容器（A4 預覽、報表列印版面）—— 紙不會因為
+ * 使用者把介面切成深色就變黑，而其上的 `text-black` 也不該跟著反轉。
+ *
+ * 實作在 `src/app/globals.css`；此處抽成常數是為了讓引用處不必寫死字串（§3）。
+ * 列印時的還原不需要這個 class，`@media print` 已一律套用。
+ */
+export const THEME_STATIC_LIGHT_CLASS = "theme-static-light";

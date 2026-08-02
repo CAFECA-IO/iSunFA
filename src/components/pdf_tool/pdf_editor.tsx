@@ -24,6 +24,7 @@ import PdfShareLinkModal from "@/components/pdf_tool/pdf_share_link_modal";
 import { AiReportModal } from "@/components/pdf_tool/ai_report_modal";
 import EditPanel from "@/components/pdf_tool/edit_panel";
 import { PdfToolViewMode, PDF_PRINT_STYLE } from "@/constants/pdf_tool";
+import { THEME_STATIC_LIGHT_CLASS } from "@/constants/theme";
 import { safeStorage } from "@/lib/utils/storage";
 
 // Info: (20260604 - Julian) 定義預設 md 內容與 storage key
@@ -580,7 +581,9 @@ export default function PdfEditor({
           {/* Info: (20260714 - Emily) 手機縮小外距讓 A4 預覽用滿寬度,md+ 維持原留白 */}
           <div className="flex min-h-full justify-center p-3 md:p-8">
             {/* Info: (20260426 - Luphia) A4 Document Container */}
-            <div className="mx-auto min-h-[297mm] w-full max-w-[210mm] border border-gray-300 bg-white text-black shadow-md">
+            <div
+              className={`${THEME_STATIC_LIGHT_CLASS} mx-auto min-h-[297mm] w-full max-w-[210mm] border border-gray-300 bg-white text-black shadow-md`}
+            >
               <div
                 id="pdf-content"
                 ref={contentRef}
