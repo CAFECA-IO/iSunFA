@@ -1,27 +1,53 @@
-// Info: (20260801 - Luphia) 主題模式。抽為 enum 而非散落的字串:
-// Info: (20260801 - Luphia) 這些值同時是 next-themes 的 API 契約與 localStorage 的持久化內容,
-// Info: (20260801 - Luphia) 打錯字不會有型別錯誤,只會讓切換靜默失效(§3 拒絕魔法字串)。
+// Info: (20260801 - Luphia) 主題模式。抽為 enum 而非散落的字串：
+// Info: (20260801 - Luphia) 這些值同時是 <html> 的 class 與 cookie 的持久化內容，
+// Info: (20260801 - Luphia) 打錯字不會有型別錯誤，只會讓切換靜默失效（§3 拒絕魔法字串）。
 
 export enum ThemeModeEnum {
   LIGHT = "light",
   DARK = "dark",
-  /** Info: (20260801 - Luphia) 跟隨作業系統;next-themes 會據此監聽 prefers-color-scheme */
+  /**
+   * Info: (20260802 - Luphia) 跟隨作業系統。
+   * 這一態**不會寫進 cookie** —— 它就是「沒有 cookie」本身。
+   * 用一個特殊值來表示「沒設定過」會多出一種要同步的狀態，
+   * 而且沒設定過的新使用者本來就沒有 cookie，兩者必須是同一件事。
+   */
   SYSTEM = "system",
 }
 
 /**
- * Info: (20260802 - Luphia) 切換器的顯示順序：淺色 → 跟隨系統 → 深色。
- *
- * 改為滑塊式開關之後，順序不再只是清單排列而是空間位置，
- * 兩個極端（最亮 / 最暗）自然落在兩端，「跟隨系統」居中表示「不選邊」。
- * 原本把「跟隨系統」置末的理由（它是放棄選擇）在清單裡成立，
- * 但在滑塊上會讓亮度不是單調遞增，使用者得停下來想一下滑塊往右是變亮還是變暗。
+ * Info: (20260802 - Luphia) 使用者明確做過的選擇。與 ThemeModeEnum 分開是為了讓型別
+ * 擋住「把 SYSTEM 寫進 cookie」這種錯誤，而不是靠註解提醒。
  */
-export const THEME_MODE_ORDER = [
-  ThemeModeEnum.LIGHT,
-  ThemeModeEnum.SYSTEM,
-  ThemeModeEnum.DARK,
-] as const;
+export type ThemeChoice = ThemeModeEnum.LIGHT | ThemeModeEnum.DARK;
+
+/**
+ * Info: (20260802 - Luphia) 存 cookie 而非 localStorage。
+ *
+ * localStorage 只有瀏覽器讀得到，伺服器算不出該渲染哪一版，
+ * 必須注入一段在 hydration 之前執行的同步 script 才能避免畫面一閃 ——
+ * 那段 script 的時序很難自己寫對，也是 next-themes 主要在解決的問題。
+ * cookie 會隨請求送到伺服器，`layout.tsx` 在 SSR 當下就能寫出正確的 class，
+ * 整個問題連同那個相依一起消失。
+ */
+export const THEME_COOKIE_NAME = "isunfa_theme";
+
+/** Info: (20260802 - Luphia) 一年。外觀偏好沒有過期的道理，訂這個值只是因為 cookie 一定要有上限 */
+export const THEME_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
+
+/**
+ * Info: (20260802 - Luphia) 掛在 <html> 上的 class。
+ *
+ * 明確選淺色時也要掛 `light`，不能只是「不掛 dark」——
+ * globals.css 的系統偏好回退是 `:root:not(.light)`，
+ * 少了這個 class，選了淺色的使用者在深色系統下仍會看到深色。
+ */
+export const THEME_ROOT_CLASS_BY_CHOICE: Record<ThemeChoice, string> = {
+  [ThemeModeEnum.LIGHT]: "light",
+  [ThemeModeEnum.DARK]: "dark",
+};
+
+/** Info: (20260802 - Luphia) 切換當下暫時停用全站 transition 的 class，定義於 globals.css */
+export const THEME_TRANSITION_SUPPRESS_CLASS = "theme-switching";
 
 /**
  * Info: (20260802 - Luphia) 主題不變區的 class 名稱。

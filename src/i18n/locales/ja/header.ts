@@ -6,9 +6,8 @@ export const header = {
   login: "ログイン",
   credits: "ポイント",
   logout: "ログアウト",
-  theme: "外観",
-  theme_light: "ライト",
-  theme_dark: "ダーク",
   theme_system: "システムに従う",
+  theme_switch_to_dark: "ダークに切り替え",
+  theme_switch_to_light: "ライトに切り替え",
   transportation_carbon_footprint_calculator: "物流カーボンフットプリント",
 };

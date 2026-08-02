@@ -2,24 +2,40 @@
 @plugin "@tailwindcss/typography";
 
 /**
- * Info: (20260801 - Luphia) 深色模式以 class 驅動，而非 `prefers-color-scheme` 媒體查詢。
+ * Info: (20260802 - Luphia) 深色模式的三種狀態，由 <html> 上有沒有 class 決定：
  *
- * 媒體查詢無法表達「使用者明確選擇淺色，但系統是深色」這個狀態，而那正是切換器的意義。
- * 由 next-themes 在 <html> 掛上 `.dark`，「跟隨系統」則由它監聽 prefers-color-scheme 後
- * 代為加掛 —— 系統偏好因此只是預設值的來源，不再是唯一的判準。
+ * - `class="dark"` —— 使用者明確選了深色
+ * - `class="light"` —— 使用者明確選了淺色
+ * - 兩者皆無 —— 沒設定過，跟隨作業系統
  *
- * `&:where(.dark, .dark *)` 而非 `.dark &`：:where() 的權重為 0，
- * 深色樣式因此不會單純因為多一個 class 就壓過同層級的其他規則。
+ * 選擇存在 cookie 而非 localStorage，因為 cookie 伺服器讀得到：
+ * `layout.tsx` 在 SSR 當下就能把正確的 class 寫進 <html>，
+ * 不需要注入一段在 hydration 前執行的同步 script，也不會有一閃的淺色畫面。
+ *
+ * 「跟隨系統」那一態伺服器仍然猜不到（OS 偏好只有瀏覽器知道），
+ * 所以由下方的 `prefers-color-scheme` 媒體查詢承接 —— 純 CSS，第一幀就是對的。
+ * `:root:not(.light)` 的 `:not` 是關鍵：使用者明確選淺色時，
+ * 即使系統是深色也不該套用。
  */
-@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark {
+  &:where(.dark, .dark *) {
+    @slot;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not(.light), :root:not(.light) *) {
+      @slot;
+    }
+  }
+}
 
 /**
- * Info: (20260802 - Luphia) 兩組恆定的中性色階。
+ * Info: (20260802 - Luphia) 恆定原料。這一區的值不隨主題改變，
+ * 主題切換改的是下一區「指向哪一組」。
  *
- * 「恆定」指這兩組值本身不隨主題改變 —— 主題切換改的是 `--color-gray-*`
- * 指向哪一組。這樣寫的理由是深色模式下有三個地方需要「還原成淺色」：
- * 列印、紙張預覽、以及未來可能的匯出預覽。若把淺色值直接寫在 :root，
- * 那三處就得各自再抄一份，抄錯了不會有任何工具告訴我們。
+ * 這樣分層的理由是深色模式有四個入口（明確選深色、系統為深色、
+ * 主題不變區、列印），若把色值直接寫在各入口，就得抄四份，
+ * 抄漏一個不會有任何工具告訴我們。
  */
 :root {
   /* Info: (20260802 - Luphia) 淺色階：與 Tailwind v4 的 gray 原值相同，逐字對照過 */
@@ -56,6 +72,151 @@
   --neutral-dark-800: oklch(94% 0.01 250);
   --neutral-dark-900: oklch(97% 0.005 248);
   --neutral-dark-950: oklch(99% 0.002 248);
+
+  /* Info: (20260802 - Luphia) 品牌橘。深色底下需提亮，否則在深色面板上對比不足 */
+  --brand-light: #ea580c;
+  --brand-soft-light: #ffedd5;
+  --brand-on-soft-light: #9a3412;
+  --brand-dark: #fb923c;
+  --brand-soft-dark: #431407;
+  --brand-on-soft-dark: #fed7aa;
+
+  /* Info: (20260802 - Luphia) 破壞性動作。文字用 600 而非 500：12px 文字需 4.5:1，
+     red-500 於白底僅 3.76:1 不合格，red-600 為 4.83:1 通過 WCAG AA */
+  --danger-light: #dc2626;
+  --danger-soft-light: #fef2f2;
+  --danger-dark: #f87171;
+  --danger-soft-dark: #450a0a;
+}
+
+/**
+ * Info: (20260802 - Luphia) 主題選擇區。**全檔只有這四個區塊會因主題而異**，
+ * 其餘一律讀 `--t-*`，因此新增一個顏色角色只要改一處。
+ *
+ * 四個區塊必須維持一致（淺色兩塊相同、深色兩塊相同），
+ * `src/__tests__/theme_css_blocks.test.ts` 會解析本檔驗證，
+ * 手改其中一塊而忘了另一塊會讓測試失敗而不是讓某個主題悄悄壞掉。
+ */
+:root,
+.theme-static-light,
+.dark .theme-static-light {
+  --t-50: var(--neutral-light-50);
+  --t-100: var(--neutral-light-100);
+  --t-200: var(--neutral-light-200);
+  --t-300: var(--neutral-light-300);
+  --t-400: var(--neutral-light-400);
+  --t-500: var(--neutral-light-500);
+  --t-600: var(--neutral-light-600);
+  --t-700: var(--neutral-light-700);
+  --t-800: var(--neutral-light-800);
+  --t-900: var(--neutral-light-900);
+  --t-950: var(--neutral-light-950);
+  --t-brand: var(--brand-light);
+  --t-brand-soft: var(--brand-soft-light);
+  --t-brand-on-soft: var(--brand-on-soft-light);
+  --t-danger: var(--danger-light);
+  --t-danger-soft: var(--danger-soft-light);
+  --t-page: var(--neutral-light-50);
+  --t-card: #ffffff;
+  --t-overlay: #ffffff;
+  --t-white-surface: #ffffff;
+  --t-white-surface-hover: #ffffff;
+  --t-black-text: #000000;
+  --t-border-100: var(--neutral-light-100);
+  --t-border-200: var(--neutral-light-200);
+}
+
+.dark {
+  --t-50: var(--neutral-dark-50);
+  --t-100: var(--neutral-dark-100);
+  --t-200: var(--neutral-dark-200);
+  --t-300: var(--neutral-dark-300);
+  --t-400: var(--neutral-dark-400);
+  --t-500: var(--neutral-dark-500);
+  --t-600: var(--neutral-dark-600);
+  --t-700: var(--neutral-dark-700);
+  --t-800: var(--neutral-dark-800);
+  --t-900: var(--neutral-dark-900);
+  --t-950: var(--neutral-dark-950);
+  --t-brand: var(--brand-dark);
+  --t-brand-soft: var(--brand-soft-dark);
+  --t-brand-on-soft: var(--brand-on-soft-dark);
+  --t-danger: var(--danger-dark);
+  --t-danger-soft: var(--danger-soft-dark);
+  --t-page: var(--neutral-dark-50);
+  --t-card: var(--neutral-dark-100);
+  --t-overlay: var(--neutral-dark-200);
+  --t-white-surface: var(--neutral-dark-100);
+  --t-white-surface-hover: var(--neutral-dark-300);
+  --t-black-text: var(--neutral-dark-900);
+  --t-border-100: var(--neutral-dark-300);
+  --t-border-200: var(--neutral-dark-300);
+}
+
+@media (prefers-color-scheme: dark) {
+  /* Info: (20260802 - Luphia) 沒設定過就跟隨系統；明確選了淺色（.light）則不套用 */
+  :root:not(.light) {
+    --t-50: var(--neutral-dark-50);
+    --t-100: var(--neutral-dark-100);
+    --t-200: var(--neutral-dark-200);
+    --t-300: var(--neutral-dark-300);
+    --t-400: var(--neutral-dark-400);
+    --t-500: var(--neutral-dark-500);
+    --t-600: var(--neutral-dark-600);
+    --t-700: var(--neutral-dark-700);
+    --t-800: var(--neutral-dark-800);
+    --t-900: var(--neutral-dark-900);
+    --t-950: var(--neutral-dark-950);
+    --t-brand: var(--brand-dark);
+    --t-brand-soft: var(--brand-soft-dark);
+    --t-brand-on-soft: var(--brand-on-soft-dark);
+    --t-danger: var(--danger-dark);
+    --t-danger-soft: var(--danger-soft-dark);
+    --t-page: var(--neutral-dark-50);
+    --t-card: var(--neutral-dark-100);
+    --t-overlay: var(--neutral-dark-200);
+    --t-white-surface: var(--neutral-dark-100);
+    --t-white-surface-hover: var(--neutral-dark-300);
+    --t-black-text: var(--neutral-dark-900);
+    --t-border-100: var(--neutral-dark-300);
+    --t-border-200: var(--neutral-dark-300);
+  }
+}
+
+@media print {
+  /**
+   * Info: (20260802 - Luphia) 列印一律用淺色。
+   * 深色模式下按列印，不還原的話輸出會是滿版深底 —— 對噴墨機是災難，
+   * 對雷射機是一張難以閱讀的灰紙。財報、傳票、ESG 報告都是要印出來簽章的文件。
+   */
+  :root,
+  :root.dark,
+  :root:not(.light) {
+    --t-50: var(--neutral-light-50);
+    --t-100: var(--neutral-light-100);
+    --t-200: var(--neutral-light-200);
+    --t-300: var(--neutral-light-300);
+    --t-400: var(--neutral-light-400);
+    --t-500: var(--neutral-light-500);
+    --t-600: var(--neutral-light-600);
+    --t-700: var(--neutral-light-700);
+    --t-800: var(--neutral-light-800);
+    --t-900: var(--neutral-light-900);
+    --t-950: var(--neutral-light-950);
+    --t-brand: var(--brand-light);
+    --t-brand-soft: var(--brand-soft-light);
+    --t-brand-on-soft: var(--brand-on-soft-light);
+    --t-danger: var(--danger-light);
+    --t-danger-soft: var(--danger-soft-light);
+    --t-page: var(--neutral-light-50);
+    --t-card: #ffffff;
+    --t-overlay: #ffffff;
+    --t-white-surface: #ffffff;
+    --t-white-surface-hover: #ffffff;
+    --t-black-text: #000000;
+    --t-border-100: var(--neutral-light-100);
+    --t-border-200: var(--neutral-light-200);
+  }
 }
 
 /**
@@ -76,383 +237,86 @@
   /**
    * Info: (20260802 - Luphia) 底層：頁面背景 → 卡片 → 浮起元素（彈出面板、下拉）。
    *
-   * 這裡原本的值與註解相反 —— base 是純白、raised 是灰，等於卡片比頁面暗，
-   * 層次是倒的。全庫的實際慣例是「頁面 gray-50、卡片白」（783 處 bg-white 中
-   * 671 處帶 rounded 或 shadow，是卡片而非頁面），照原值語意化下去，
-   * 淺色模式會變成白頁面配灰卡片。此處改回與註解、與全庫慣例一致的順序。
+   * 順序與全庫慣例一致（783 處 bg-white 中 671 處帶 rounded 或 shadow，
+   * 是卡片而非頁面），不是「base 就等於最白」。
    */
-  --surface-base: var(--neutral-light-50);
-  --surface-raised: #ffffff;
-  --surface-overlay: #ffffff;
-  --surface-hover: var(--neutral-light-100);
+  --surface-base: var(--t-page);
+  --surface-raised: var(--t-card);
+  --surface-overlay: var(--t-overlay);
+  --surface-hover: var(--t-100);
 
   /* Info: (20260801 - Luphia) 文字：主要 → 次要 → 弱化（僅供輔助說明，不可承載必要資訊） */
-  --text-primary: var(--neutral-light-900);
-  --text-secondary: var(--neutral-light-600);
+  --text-primary: var(--t-900);
+  --text-secondary: var(--t-600);
   /**
    * Info: (20260802 - Luphia) 弱化文字取 500 而非 400。
    * 400 於白底對比僅 2.9:1，未達 WCAG AA 對一般文字要求的 4.5:1；
    * 500 為 4.6:1 通過。「不承載必要資訊」不等於可以讀不到。
    */
-  --text-muted: var(--neutral-light-500);
-  --text-inverted: #ffffff;
+  --text-muted: var(--t-500);
+  --text-inverted: var(--t-page);
 
-  --border-default: var(--neutral-light-200);
-  --border-strong: var(--neutral-light-300);
+  --border-default: var(--t-200);
+  --border-strong: var(--t-300);
 
-  /* Info: (20260801 - Luphia) 品牌橘。深色底下需提亮，否則在深色面板上對比不足 */
-  --brand: #ea580c;
-  --brand-soft: #ffedd5;
-  --brand-on-soft: #9a3412;
-
-  /* Info: (20260801 - Luphia) 破壞性動作。文字用 600 而非 500：12px 文字需 4.5:1，
-     red-500 於白底僅 3.76:1 不合格，red-600 為 4.83:1 通過 WCAG AA */
-  --danger: #dc2626;
-  --danger-soft: #fef2f2;
+  --brand: var(--t-brand);
+  --brand-soft: var(--t-brand-soft);
+  --brand-on-soft: var(--t-brand-on-soft);
+  --danger: var(--t-danger);
+  --danger-soft: var(--t-danger-soft);
 
   /* Info: (20260801 - Luphia) 保留原有變數名，既有引用不致失效 */
   --background: var(--surface-base);
   --foreground: var(--text-primary);
-}
 
-/**
- * Info: (20260802 - Luphia) 深色主題。分成兩件事做：
- *
- * **一、語意 token** —— 新寫的元件引用角色名，改這裡就好。
- *
- * **二、中性色盤反轉** —— 既有的 5,031 處 `bg-gray-50`、`text-gray-900`
- * 不可能逐處改寫，但 Tailwind v4 把它們全部編譯成 `var(--color-gray-N)`，
- * 因此在 `.dark` 底下重新指向深色階，就能一次生效。
- *
- * 這招之所以成立，是因為色階的使用是**位置性**的 —— 實測全庫：
- *
- * ```
- * shade   bg   text        shade   bg   text
- * 50     286      0        500      2    385
- * 100    149      0        700      4    297
- * 200     75     11        900     34    441
- * ```
- *
- * 低號碼幾乎只當背景、高號碼幾乎只當文字，兩者沒有交叉。
- * 把色階上下顛倒，背景與文字就同時翻對，不需要知道任何一處的語境。
- *
- * 反轉後 gray 與 slate 收斂為同一組值。這兩套色盤在本專案是混用的
- * （`bg-gray-50` 286 次、`bg-slate-50` 亦大量出現），本來就沒有語意差別，
- * 深色模式下不再各自漂移反而是修正。
- *
- * **這是過渡層，不是終點。** 元件改用語意 token 之後就不再受此影響，
- * 可以逐頁遷移；全部遷移完成後這一整段即可刪除。
- */
-.dark {
-  --surface-base: var(--neutral-dark-50);
-  --surface-raised: var(--neutral-dark-100);
-  --surface-overlay: var(--neutral-dark-200);
-  --surface-hover: var(--neutral-dark-300);
-
-  --text-primary: var(--neutral-dark-900);
-  --text-secondary: var(--neutral-dark-600);
-  --text-muted: var(--neutral-dark-500);
-  --text-inverted: var(--neutral-dark-50);
-
-  --border-default: var(--neutral-dark-200);
-  --border-strong: var(--neutral-dark-300);
-
-  --brand: #fb923c;
-  --brand-soft: #431407;
-  --brand-on-soft: #fed7aa;
-
-  --danger: #f87171;
-  --danger-soft: #450a0a;
-
-  --color-gray-50: var(--neutral-dark-50);
-  --color-gray-100: var(--neutral-dark-100);
-  --color-gray-200: var(--neutral-dark-200);
-  --color-gray-300: var(--neutral-dark-300);
-  --color-gray-400: var(--neutral-dark-400);
-  --color-gray-500: var(--neutral-dark-500);
-  --color-gray-600: var(--neutral-dark-600);
-  --color-gray-700: var(--neutral-dark-700);
-  --color-gray-800: var(--neutral-dark-800);
-  --color-gray-900: var(--neutral-dark-900);
-  --color-gray-950: var(--neutral-dark-950);
-
-  --color-slate-50: var(--neutral-dark-50);
-  --color-slate-100: var(--neutral-dark-100);
-  --color-slate-200: var(--neutral-dark-200);
-  --color-slate-300: var(--neutral-dark-300);
-  --color-slate-400: var(--neutral-dark-400);
-  --color-slate-500: var(--neutral-dark-500);
-  --color-slate-600: var(--neutral-dark-600);
-  --color-slate-700: var(--neutral-dark-700);
-  --color-slate-800: var(--neutral-dark-800);
-  --color-slate-900: var(--neutral-dark-900);
-  --color-slate-950: var(--neutral-dark-950);
-}
-
-/**
- * Info: (20260802 - Luphia) 主題不變區：無論使用者選了什麼，這裡永遠是淺色。
- *
- * 兩種場合需要它：
- *
- * 1. **列印。** 使用者在深色模式下按下列印，若不還原，輸出會是滿版深底 ——
- *    對噴墨機是災難，對雷射機是一張難以閱讀的灰紙。財報、傳票、ESG 報告
- *    都是要印出來給人簽章的文件，這不是次要情境。
- * 2. **紙張預覽。** A4 尺寸的 PDF 預覽容器（`min-h-[297mm]`）模擬的是實體紙，
- *    紙不會因為介面切深色就變黑。這類容器請加上 `.theme-static-light`，
- *    class 名稱請引用 `THEME_STATIC_LIGHT_CLASS`（§3 拒絕魔法字串）。
- *
- * 只還原色盤與語意 token，不動品牌色與語意狀態色 —— 那些兩種主題下本來就相同。
- */
-.theme-static-light,
-.dark .theme-static-light {
-  --surface-base: var(--neutral-light-50);
-  --surface-raised: #ffffff;
-  --surface-overlay: #ffffff;
-  --surface-hover: var(--neutral-light-100);
-
-  --text-primary: var(--neutral-light-900);
-  --text-secondary: var(--neutral-light-600);
-  --text-muted: var(--neutral-light-500);
-  --text-inverted: #ffffff;
-
-  --border-default: var(--neutral-light-200);
-  --border-strong: var(--neutral-light-300);
-
-  --color-gray-50: var(--neutral-light-50);
-  --color-gray-100: var(--neutral-light-100);
-  --color-gray-200: var(--neutral-light-200);
-  --color-gray-300: var(--neutral-light-300);
-  --color-gray-400: var(--neutral-light-400);
-  --color-gray-500: var(--neutral-light-500);
-  --color-gray-600: var(--neutral-light-600);
-  --color-gray-700: var(--neutral-light-700);
-  --color-gray-800: var(--neutral-light-800);
-  --color-gray-900: var(--neutral-light-900);
-  --color-gray-950: var(--neutral-light-950);
-
-  --color-slate-50: var(--neutral-light-50);
-  --color-slate-100: var(--neutral-light-100);
-  --color-slate-200: var(--neutral-light-200);
-  --color-slate-300: var(--neutral-light-300);
-  --color-slate-400: var(--neutral-light-400);
-  --color-slate-500: var(--neutral-light-500);
-  --color-slate-600: var(--neutral-light-600);
-  --color-slate-700: var(--neutral-light-700);
-  --color-slate-800: var(--neutral-light-800);
-  --color-slate-900: var(--neutral-light-900);
-  --color-slate-950: var(--neutral-light-950);
-}
-
-@media print {
-  /* Info: (20260802 - Luphia) 列印一律用淺色，理由見上。選擇器包含 .dark 是因為
-     主題 class 掛在 <html> 上，必須在同一個元素上覆蓋回來 */
-  :root,
-  .dark {
-    --surface-base: #ffffff;
-    --surface-raised: #ffffff;
-    --surface-overlay: #ffffff;
-    --surface-hover: #ffffff;
-
-    --text-primary: var(--neutral-light-900);
-    --text-secondary: var(--neutral-light-700);
-    --text-muted: var(--neutral-light-600);
-    --text-inverted: #ffffff;
-
-    --border-default: var(--neutral-light-300);
-    --border-strong: var(--neutral-light-400);
-
-    --color-gray-50: var(--neutral-light-50);
-    --color-gray-100: var(--neutral-light-100);
-    --color-gray-200: var(--neutral-light-200);
-    --color-gray-300: var(--neutral-light-300);
-    --color-gray-400: var(--neutral-light-400);
-    --color-gray-500: var(--neutral-light-500);
-    --color-gray-600: var(--neutral-light-600);
-    --color-gray-700: var(--neutral-light-700);
-    --color-gray-800: var(--neutral-light-800);
-    --color-gray-900: var(--neutral-light-900);
-    --color-gray-950: var(--neutral-light-950);
-
-    --color-slate-50: var(--neutral-light-50);
-    --color-slate-100: var(--neutral-light-100);
-    --color-slate-200: var(--neutral-light-200);
-    --color-slate-300: var(--neutral-light-300);
-    --color-slate-400: var(--neutral-light-400);
-    --color-slate-500: var(--neutral-light-500);
-    --color-slate-600: var(--neutral-light-600);
-    --color-slate-700: var(--neutral-light-700);
-    --color-slate-800: var(--neutral-light-800);
-    --color-slate-900: var(--neutral-light-900);
-    --color-slate-950: var(--neutral-light-950);
-  }
-}
-
-/**
- * Info: (20260802 - Luphia) 色階反轉補不到的少數派角色。
- *
- * **為什麼包在 `@layer utilities` 裡，而且用 `:where(.dark)`** ——
- * 這兩件事缺一不可，值得寫清楚，否則下次有人「順手簡化」就會踩回同一個坑。
- *
- * 1. **必須在 layer 內。** cascade layer 的優先序高於權重：無層規則一律勝過
- *    任何有層規則，權重再低也一樣。若把覆寫寫在 `@layer` 外，
- *    `.bg-white` 的覆寫會連 `hover:bg-gray-50` 一起壓掉 —— 全庫有 126 處
- *    `bg-white` 與 hover 背景同時出現，那些元素的 hover 會整個失效。
- *    放進 `utilities` 之後才回到「同層比權重」的正常規則。
- *
- * 2. **必須用 `:where()`。** 同層之內，`.dark .bg-white` 是 (0,2,0)，
- *    與 `.hover\:bg-gray-50:hover` 同分，而本段在後面，仍然會贏。
- *    `:where()` 的權重恆為 0，`:where(.dark) .bg-white` 因此降回 (0,1,0)，
- *    只與沒有變體的 `.bg-white` 同分（後出現者勝），對 hover 則乾脆讓路。
- *
- * 合起來就是想要的行為：**只覆寫沒有變體的那一版，變體一律讓路。**
- */
-@layer utilities {
   /**
-   * Info: (20260802 - Luphia) `bg-white` 與 `text-black` 無法靠變數翻轉。
-   * `--color-white` 同時餵給 297 處 `text-white`（橘色按鈕上的白字），
-   * 把它改暗會讓那些按鈕變成深底深字。故這兩個角色單獨處理。
+   * Info: (20260802 - Luphia) 中性色盤反轉。
    *
-   * 未處理：`bg-white/20` 這類半透明變體（40 處）與 `lg:bg-white`（2 處）。
-   * 前者多用於深色 hero 上的玻璃效果，本來就該是白色半透明；
-   * 後者的斷點規則與無斷點版同權重，覆寫會在所有斷點生效，反而更錯。
+   * 既有的 5,031 處 `bg-gray-50`、`text-gray-900` 不可能逐處改寫，
+   * 但 Tailwind v4 把它們全部編譯成 `var(--color-gray-N)`，
+   * 因此把這些變數指向 `--t-*` 就能一次生效。
+   *
+   * 這招之所以成立，是因為色階的使用是**位置性**的 —— 實測全庫：
+   *
+   * ```
+   * shade   bg   text        shade   bg   text
+   * 50     286      0        500      2    385
+   * 100    149      0        700      4    297
+   * 200     75     11        900     34    441
+   * ```
+   *
+   * 低號碼幾乎只當背景、高號碼幾乎只當文字，兩者沒有交叉。
+   * 把色階上下顛倒，背景與文字就同時翻對，不需要知道任何一處的語境。
+   *
+   * 反轉後 gray 與 slate 收斂為同一組值。這兩套色盤在本專案是混用的，
+   * 本來就沒有語意差別，深色模式下不再各自漂移反而是修正。
+   *
+   * **這是過渡層，不是終點。** 元件改用語意 token 之後就不再受此影響，
+   * 可以逐頁遷移；全部遷移完成後這一整段即可刪除。
    */
-  :where(.dark) .bg-white {
-    background-color: var(--surface-raised);
-  }
+  --color-gray-50: var(--t-50);
+  --color-gray-100: var(--t-100);
+  --color-gray-200: var(--t-200);
+  --color-gray-300: var(--t-300);
+  --color-gray-400: var(--t-400);
+  --color-gray-500: var(--t-500);
+  --color-gray-600: var(--t-600);
+  --color-gray-700: var(--t-700);
+  --color-gray-800: var(--t-800);
+  --color-gray-900: var(--t-900);
+  --color-gray-950: var(--t-950);
 
-  :where(.dark) .focus\:bg-white:focus {
-    background-color: var(--surface-raised);
-  }
-
-  :where(.dark) .text-black {
-    color: var(--neutral-dark-900);
-  }
-
-  @media (hover: hover) {
-    :where(.dark) .hover\:bg-white:hover {
-      background-color: var(--surface-hover);
-    }
-
-    :where(.dark) .group-hover\:bg-white:is(:where(.group):hover *) {
-      background-color: var(--surface-hover);
-    }
-  }
-  /**
-   * Info: (20260802 - Luphia) 低號碼色階當文字用的場合，一律維持淺色。
-   *
-   * `text-slate-100`、`text-gray-300` 這類在淺色模式下就只可能用在深色底上
-   * （在白底是 1.1:1，看不見）。反轉會把它們變暗，配上下方「維持深色」的表面，
-   * 結果是深底深字 —— 這是驗證掃描實際抓到的兩處回歸，不是假想。
-   *
-   * 200 與 300 同時也是邊框的主力（270 與 132 處），故變數留給邊框，
-   * 文字角色在此單獨拉回。
-   */
-  :where(.dark) .text-gray-50,
-  :where(.dark) .text-slate-50 {
-    color: var(--neutral-light-50);
-  }
-  :where(.dark) .text-gray-100,
-  :where(.dark) .text-slate-100 {
-    color: var(--neutral-light-100);
-  }
-  :where(.dark) .text-gray-200,
-  :where(.dark) .text-slate-200 {
-    color: var(--neutral-light-200);
-  }
-  :where(.dark) .text-gray-300,
-  :where(.dark) .text-slate-300 {
-    color: var(--neutral-light-300);
-  }
-  /**
-   * Info: (20260802 - Luphia) 邊框反過來：100 與 200 在深色下太貼近卡片底色
-   * （1.12:1 與 1.18:1），分隔線會消失。整體往上推一階到 300（1.62:1）。
-   * 深色介面的分隔線本來就該比淺色介面更靠對比而非更靠明度差。
-   */
-  :where(.dark) .border-gray-100,
-  :where(.dark) .border-gray-200,
-  :where(.dark) .border-slate-100,
-  :where(.dark) .border-slate-200 {
-    border-color: var(--neutral-dark-300);
-  }
-  /**
-   * Info: (20260802 - Luphia) 刻意深色的表面：維持原色，不隨主題翻轉。
-   *
-   * admin 側欄、tooltip、landing 的深色區塊等 124 處（散在 56 個檔案）
-   * 在淺色模式下本來就是深底配白字 —— 那是設計，不是「還沒深色化」。
-   * 色階反轉會把它們變成淺底，而其上的 `text-white` 不會跟著變，
-   * 結果是白字配白底。此處還原這些色階原本的值。
-   *
-   * 只還原背景與漸層端點，不還原邊框：`border-slate-700` 反轉後變亮，
-   * 在維持深色的底上仍然成立，甚至更清楚。
-   */
-  :where(.dark) .bg-gray-700 {
-    background-color: var(--neutral-light-700);
-  }
-  :where(.dark) .bg-gray-800 {
-    background-color: var(--neutral-light-800);
-  }
-  :where(.dark) .bg-gray-900 {
-    background-color: var(--neutral-light-900);
-  }
-  :where(.dark) .bg-gray-950 {
-    background-color: var(--neutral-light-950);
-  }
-  :where(.dark) .bg-slate-700 {
-    background-color: var(--neutral-light-700);
-  }
-  :where(.dark) .bg-slate-800 {
-    background-color: var(--neutral-light-800);
-  }
-  :where(.dark) .bg-slate-900 {
-    background-color: var(--neutral-light-900);
-  }
-  :where(.dark) .bg-slate-950 {
-    background-color: var(--neutral-light-950);
-  }
-  :where(.dark) .from-gray-900 {
-    --tw-gradient-from: var(--neutral-light-900);
-  }
-  :where(.dark) .via-gray-900 {
-    --tw-gradient-via: var(--neutral-light-900);
-  }
-  :where(.dark) .to-gray-800 {
-    --tw-gradient-to: var(--neutral-light-800);
-  }
-  :where(.dark) .from-slate-900 {
-    --tw-gradient-from: var(--neutral-light-900);
-  }
-  :where(.dark) .to-slate-800 {
-    --tw-gradient-to: var(--neutral-light-800);
-  }
-  /**
-   * Info: (20260802 - Luphia) 主題不變區與列印的還原。
-   *
-   * 上面幾條是 `:where(.dark)` 開頭、權重 (0,1,0)；這裡同為 (0,1,0) 但排在後面，
-   * 同分後出現者勝，因此能把 `bg-white` 與 `text-black` 拉回紙張該有的樣子。
-   * 色階類的覆寫不需要在此重複 —— 它們引用變數，而變數已在 .theme-static-light
-   * 與 @media print 裡指回淺色階了。
-   */
-  :where(.theme-static-light) .bg-white,
-  :where(.theme-static-light).bg-white {
-    background-color: #ffffff;
-  }
-
-  :where(.theme-static-light) .text-black,
-  :where(.theme-static-light).text-black {
-    color: #000000;
-  }
-}
-
-@media print {
-  @layer utilities {
-    .bg-white {
-      background-color: #ffffff;
-    }
-
-    .text-black {
-      color: #000000;
-    }
-  }
+  --color-slate-50: var(--t-50);
+  --color-slate-100: var(--t-100);
+  --color-slate-200: var(--t-200);
+  --color-slate-300: var(--t-300);
+  --color-slate-400: var(--t-400);
+  --color-slate-500: var(--t-500);
+  --color-slate-600: var(--t-600);
+  --color-slate-700: var(--t-700);
+  --color-slate-800: var(--t-800);
+  --color-slate-900: var(--t-900);
+  --color-slate-950: var(--t-950);
 }
 
 @theme inline {
@@ -559,10 +423,188 @@
   --text-line-height-30xl: 1;
 }
 
+/**
+ * Info: (20260802 - Luphia) 色階反轉補不到的少數派角色。
+ *
+ * **為什麼包在 `@layer utilities` 裡，而且選擇器不帶 `.dark`** ——
+ * 這兩件事都不是風格偏好，值得寫清楚，否則下次有人「順手簡化」就會踩回坑裡。
+ *
+ * 1. **必須在 layer 內。** cascade layer 的優先序高於權重：無層規則一律勝過
+ *    任何有層規則，權重再低也一樣。若把覆寫寫在 `@layer` 外，
+ *    `.bg-white` 的覆寫會連 `hover:bg-gray-50` 一起壓掉 —— 全庫有 126 處
+ *    `bg-white` 與 hover 背景同時出現，那些元素的 hover 會整個失效。
+ *    放進 `utilities` 之後才回到「同層比權重」的正常規則：這裡的選擇器都是
+ *    (0,1,0)，與沒有變體的原版同分而排在後面（勝），對 hover 則乾脆讓路。
+ *
+ * 2. **不帶 `.dark`。** 深色有兩個入口（`.dark` 與系統偏好），
+ *    寫成 `:where(.dark) .bg-white` 就得為媒體查詢再抄一份選擇器，
+ *    二十幾條規則變成四十幾條。改為讓選擇器無條件生效、**值**由 `--t-*` 決定，
+ *    主題差異就完全收斂在上面那四個變數區塊裡。
+ */
+@layer utilities {
+  /**
+   * Info: (20260802 - Luphia) `bg-white` 與 `text-black` 無法靠色盤變數翻轉。
+   * `--color-white` 同時餵給 297 處 `text-white`（橘色按鈕上的白字），
+   * 把它改暗會讓那些按鈕變成深底深字。故這兩個角色另走 `--t-white-surface`
+   * 與 `--t-black-text`，淺色主題下它們就是 #ffffff 與 #000000，等同沒改。
+   *
+   * 未處理：`bg-white/20` 這類半透明變體（40 處）與 `lg:bg-white`（2 處）。
+   * 前者多用於深色 hero 上的玻璃效果，本來就該是白色半透明；
+   * 後者的斷點規則與無斷點版同權重，覆寫會在所有斷點生效，反而更錯。
+   */
+  .bg-white {
+    background-color: var(--t-white-surface);
+  }
+
+  .focus\:bg-white:focus {
+    background-color: var(--t-white-surface);
+  }
+
+  .text-black {
+    color: var(--t-black-text);
+  }
+
+  @media (hover: hover) {
+    .hover\:bg-white:hover {
+      background-color: var(--t-white-surface-hover);
+    }
+
+    .group-hover\:bg-white:is(:where(.group):hover *) {
+      background-color: var(--t-white-surface-hover);
+    }
+  }
+
+  /**
+   * Info: (20260802 - Luphia) 低號碼色階當文字用的場合，一律維持淺色。
+   *
+   * `text-slate-100`、`text-gray-300` 這類在淺色模式下就只可能用在深色底上
+   * （在白底是 1.1:1，看不見）。反轉會把它們變暗，配上下方「維持深色」的表面，
+   * 結果是深底深字 —— 這是對比掃描實際抓到的回歸，不是假想。
+   *
+   * 值直接取淺色階常數而非 `--t-*`：淺色主題下這本來就是它們的原值，
+   * 兩種主題共用同一個值，不需要分歧。
+   */
+  .text-gray-50,
+  .text-slate-50 {
+    color: var(--neutral-light-50);
+  }
+
+  .text-gray-100,
+  .text-slate-100 {
+    color: var(--neutral-light-100);
+  }
+
+  .text-gray-200,
+  .text-slate-200 {
+    color: var(--neutral-light-200);
+  }
+
+  .text-gray-300,
+  .text-slate-300 {
+    color: var(--neutral-light-300);
+  }
+
+  /**
+   * Info: (20260802 - Luphia) 邊框反過來：100 與 200 在深色下太貼近卡片底色
+   * （1.12:1 與 1.18:1），分隔線會消失。整體往上推一階到 300（1.62:1）。
+   * 深色介面的分隔線本來就該比淺色介面更靠對比而非更靠明度差。
+   */
+  .border-gray-100,
+  .border-slate-100 {
+    border-color: var(--t-border-100);
+  }
+
+  .border-gray-200,
+  .border-slate-200 {
+    border-color: var(--t-border-200);
+  }
+
+  /**
+   * Info: (20260802 - Luphia) 刻意深色的表面：維持原色，不隨主題翻轉。
+   *
+   * admin 側欄、tooltip、landing 的深色區塊等 124 處（散在 56 個檔案）
+   * 在淺色模式下本來就是深底配白字 —— 那是設計，不是「還沒深色化」。
+   * 色階反轉會把它們變成淺底，而其上的 `text-white` 不會跟著變，
+   * 結果是白字配白底。
+   *
+   * 同樣取淺色階常數：兩種主題下都該是這個值。
+   * 只還原背景與漸層端點，不還原邊框：`border-slate-700` 反轉後變亮，
+   * 在維持深色的底上仍然成立，甚至更清楚。
+   */
+  .bg-gray-700 {
+    background-color: var(--neutral-light-700);
+  }
+
+  .bg-gray-800 {
+    background-color: var(--neutral-light-800);
+  }
+
+  .bg-gray-900 {
+    background-color: var(--neutral-light-900);
+  }
+
+  .bg-gray-950 {
+    background-color: var(--neutral-light-950);
+  }
+
+  .bg-slate-700 {
+    background-color: var(--neutral-light-700);
+  }
+
+  .bg-slate-800 {
+    background-color: var(--neutral-light-800);
+  }
+
+  .bg-slate-900 {
+    background-color: var(--neutral-light-900);
+  }
+
+  .bg-slate-950 {
+    background-color: var(--neutral-light-950);
+  }
+
+  .from-gray-900 {
+    --tw-gradient-from: var(--neutral-light-900);
+  }
+
+  .via-gray-900 {
+    --tw-gradient-via: var(--neutral-light-900);
+  }
+
+  .to-gray-800 {
+    --tw-gradient-to: var(--neutral-light-800);
+  }
+
+  .from-slate-900 {
+    --tw-gradient-from: var(--neutral-light-900);
+  }
+
+  .to-slate-800 {
+    --tw-gradient-to: var(--neutral-light-800);
+  }
+}
+
 body {
   background: var(--surface-base);
   color: var(--text-primary);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/**
+ * Info: (20260802 - Luphia) 切換主題當下停用全站 transition。
+ *
+ * 不停用的話，所有帶 `transition-colors` 的元件會各自以自己的時長變色，
+ * 畫面呈現出一片雜亂的漸層而非乾淨的整頁切換。
+ * class 由切換器加上、下一幀移除，名稱請引用 `THEME_TRANSITION_SUPPRESS_CLASS`（§3）。
+ *
+ * `!important` 在此是必要的：要壓過的是各元件自己宣告的 transition，
+ * 而那些宣告散落在數百個 utility 上，沒有一個共同的、權重更高的選擇器可用。
+ */
+.theme-switching,
+.theme-switching *,
+.theme-switching *::before,
+.theme-switching *::after {
+  transition: none !important;
 }
 
 input[type="color" i]::-webkit-color-swatch,
