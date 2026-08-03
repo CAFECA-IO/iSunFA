@@ -75,3 +75,17 @@ export enum EmissionBasisEnum {
 // Info: (20260803 - Tzuhan) 原文的基準字樣(表3.8 的廠址總計列會標明)
 export const LOCATION_BASIS_TOKENS: readonly string[] = ["所在地基準"];
 export const MARKET_BASIS_TOKENS: readonly string[] = ["市場基準"];
+
+/**
+ * Info: (20260803 - Tzuhan) 帳本項目的來源(Issue B 的核心欄位)。
+ *
+ * 報告裡會同時出現兩種數字:本系統從活動數據算出來的,與外部已查證報告照抄來的。
+ * 兩者的可信依據完全不同(一個可重算、一個是既成事實),混在一起之後
+ * 就再也回答不了「這個數字是誰算的」—— 而那是查核者的第一個問題。
+ */
+export enum LedgerProvenanceEnum {
+  /** Info: (20260803 - Tzuhan) 本系統由活動數據 × 排放係數 × GWP 決定性計算 */
+  COMPUTED = "COMPUTED",
+  /** Info: (20260803 - Tzuhan) 自上傳的盤查報告表格照抄並通過三層勾稽 */
+  IMPORTED = "IMPORTED",
+}

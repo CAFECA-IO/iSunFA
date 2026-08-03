@@ -14,6 +14,7 @@ import {
   IInventoryExtraction,
   IActivityRecord,
   IComputedLedger,
+  IComputedLedgerEntry,
   IReportCategory,
   IReportParagraph,
   IArchivedSessionEntry,
@@ -28,6 +29,12 @@ import {
 } from "@/lib/carbon_report_table.builder";
 // Info: (20260801 - Tzuhan) 段落版面順序由組裝器決定(Issue A):敘述 → 原文表格 → 系統表格 → 對帳
 import { composeParagraphContent } from "@/lib/carbon_paragraph_composer";
+import {
+  buildImportedLedger,
+  type IImportedLedgerResult,
+} from "@/lib/carbon_table38.pipeline";
+import { isImportedEntry } from "@/lib/carbon_table38.ledger";
+import { summarizeLedgerEntries } from "@/lib/carbon_ledger_totals";
 import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
 import { CARBON_SOURCE_TABLE_MAX_PER_PARAGRAPH } from "@/constants/carbon_source_tables";
 import {
@@ -984,6 +991,53 @@ export const useCarbonChat = () => {
     [user?.address, activeSessionId],
   );
 
+  /**
+   * Info: (20260803 - Tzuhan) 把匯入的表3.8 項目併進 computedLedger(Issue B)。
+   *
+   * 三個刻意的決定:
+   * 1. **以 activityKey 取代同一筆**,不是附加。重複匯入同一份報告是常態
+   *    (改一段、重跑一次),附加會讓總量每匯入一次就翻一倍。
+   * 2. **只換 IMPORTED 的部分**,COMPUTED 項目原樣保留 ——
+   *    憑證算出來的東西不該因為匯入一份外部報告而消失。
+   * 3. 小計與總計走共用的 summarizeLedgerEntries,與後端 /calculate 同一份實作;
+   *    前端自己再寫一次累加,遲早會出現「明細加起來不等於小計」。
+   */
+  const applyImportedLedgerEntries = useCallback(
+    (entries: IComputedLedgerEntry[]) => {
+      if (entries.length === 0) return;
+      const channel = buildCarbonChatChannel(
+        user?.address ?? "anonymous",
+        activeSessionId,
+      );
+      setInventoryStates((prev) => {
+        const base = prev[channel] ?? createEmptyInventoryState();
+        const incomingKeys = new Set(entries.map((entry) => entry.activityKey));
+        const kept = (base.computedLedger?.entries ?? []).filter(
+          (entry) =>
+            !isImportedEntry(entry) || !incomingKeys.has(entry.activityKey),
+        );
+        const nextEntries = [...kept, ...entries];
+        const { scopeSubtotals, totalCo2eKg } =
+          summarizeLedgerEntries(nextEntries);
+        return {
+          ...prev,
+          [channel]: {
+            ...base,
+            computedLedger: {
+              ...base.computedLedger,
+              entries: nextEntries,
+              pending: base.computedLedger?.pending ?? [],
+              scopeSubtotals,
+              totalCo2eKg,
+              computedAt: new Date().toISOString(),
+            },
+          },
+        };
+      });
+    },
+    [user?.address, activeSessionId],
+  );
+
   // Info: (20260721 - Tzuhan) #53 匯入狀態(定義於此供 UI;主邏輯 importBookEsgRecords 移至
   // Info: (20260721 - Tzuhan) generateParagraphDraft 之後 — 匯入成功需自動生成數據段落草稿)
   const [isImportingBookRecords, setIsImportingBookRecords] =
@@ -1761,6 +1815,23 @@ export const useCarbonChat = () => {
      */
     const ledgerNow = computedLedgerRef.current;
     /**
+     * Info: (20260803 - Tzuhan) 表3.8 → 帳本 + 對帳說明(Issue B)。
+     * 解析、勾稽、轉換、揭露全在 buildImportedLedger 這個純函數裡完成;
+     * 這裡只負責把結果寫進狀態 —— 業務流程留在 hook 裡就再也測不到,
+     * 而它的每一步都在決定數字能不能進帳本。
+     */
+    const importedLedgerById = new Map<string, IImportedLedgerResult>();
+    selected.forEach((item) => {
+      const tables = sourceTablesById.get(item.paragraphId) ?? [];
+      if (tables.length === 0) return;
+      const result = buildImportedLedger({ sourceTables: tables });
+      if (result.disclosure === null) return;
+      importedLedgerById.set(item.paragraphId, result);
+    });
+    const importedEntries = Array.from(importedLedgerById.values()).flatMap(
+      (result) => result.entries,
+    );
+    /**
      * Info: (20260801 - Tzuhan) 改由組裝器決定版面順序(Issue A 第 4 點):
      * 敘述 → 原文照錄的表格 → 系統計算表格 → 對帳。
      * 原文表格帶自己的錨點命名空間,故不受 stripLlmTables 剝除;
@@ -1771,15 +1842,23 @@ export const useCarbonChat = () => {
       imported: string,
     ): string => {
       const sourceTables = sourceTablesById.get(paragraph.id) ?? [];
+      // Info: (20260803 - Tzuhan) 有表3.8 的段落附上對帳說明(原文總量 vs 系統加總 + 揭露)
+      const reconciliation =
+        importedLedgerById.get(paragraph.id)?.disclosure ?? undefined;
       if (!paragraph.isDataDriven) {
         return sourceTables.length > 0
-          ? composeParagraphContent({ content: imported, sourceTables })
+          ? composeParagraphContent({
+              content: imported,
+              sourceTables,
+              reconciliation,
+            })
           : imported;
       }
       return composeParagraphContent({
         content: stripLlmTables(imported),
         sourceTables,
         dataTableBlock: buildCarbonDataTable(ledgerNow, dataTableLabels),
+        reconciliation,
       });
     };
     setSessionsData((prev) => {
@@ -1826,6 +1905,26 @@ export const useCarbonChat = () => {
     const activities = importActivitiesRef.current;
     if (activities.length > 0) {
       applyInventoryExtraction({ activities });
+    }
+    if (importedEntries.length > 0) {
+      applyImportedLedgerEntries(importedEntries);
+    } else {
+      /**
+       * Info: (20260803 - Tzuhan) 有表卻沒入帳時要留痕跡:對帳說明已寫在報告裡,
+       * 但開發時看 log 才分得出「沒有表3.8」與「有表3.8 但勾稽沒過」。
+       */
+      const blocked = Array.from(importedLedgerById.entries()).filter(
+        ([, result]) => result.blockedReason !== null,
+      );
+      if (blocked.length > 0) {
+        console.warn(
+          "[carbon-chat] imported ledger blocked",
+          blocked.map(([paragraphId, result]) => ({
+            paragraphId,
+            reason: result.blockedReason,
+          })),
+        );
+      }
     }
     importActivitiesRef.current = [];
     setPendingImport(null);
@@ -1875,6 +1974,7 @@ export const useCarbonChat = () => {
     jumpToReportParagraph,
     dataTableLabels,
     generateParagraphDiagram,
+    applyImportedLedgerEntries,
     t,
   ]);
 

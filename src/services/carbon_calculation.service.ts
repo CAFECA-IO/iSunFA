@@ -3,7 +3,7 @@
 // Info: (20260716 - Tzuhan) UnitConverter(量綱守門)、EsgCalculatorService(單/多氣體+GWP)。
 // Info: (20260716 - Tzuhan) 鐵律:全程字串/Decimal 不經 number 中轉(ADR 003);無 LLM;無法裁決一律進待補清單(ADR 007)
 
-import { MoneyUtil } from "@/lib/utils/money";
+import { summarizeLedgerEntries } from "@/lib/carbon_ledger_totals";
 import { UnitConverter } from "@/lib/utils/unit_converter";
 import {
   EsgCalculatorService,
@@ -210,19 +210,9 @@ export class CarbonCalculationService {
       });
     }
 
-    // Info: (20260716 - Tzuhan) 分 scope 小計與總計:MoneyUtil(decimal.js)累加,輸出字串
-    const scopeSubtotals: Record<string, string> = {};
-    entries.forEach((entry) => {
-      const current = scopeSubtotals[entry.scopeCategory] ?? "0";
-      scopeSubtotals[entry.scopeCategory] = MoneyUtil.add(
-        current,
-        entry.co2eKg,
-      );
-    });
-    const totalCo2eKg = entries.reduce(
-      (acc, entry) => MoneyUtil.add(acc, entry.co2eKg),
-      "0",
-    );
+    // Info: (20260803 - Tzuhan) 小計/總計改用共用實作:匯入路徑(Issue B)也要在前端做同樣的累加,
+    // Info: (20260803 - Tzuhan) 兩份實作遲早不一致,而不一致的表現是「明細加起來不等於小計」。
+    const { scopeSubtotals, totalCo2eKg } = summarizeLedgerEntries(entries);
 
     return {
       entries,

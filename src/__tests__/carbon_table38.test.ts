@@ -10,6 +10,10 @@ import {
   ReconciliationLevelEnum,
   reconcileTable38,
 } from "@/lib/carbon_table38.reconciliation";
+import { toLedgerEntries } from "@/lib/carbon_table38.ledger";
+import { buildReconciliationDisclosure } from "@/lib/carbon_table38.disclosure";
+import { LedgerProvenanceEnum } from "@/constants/imported_quantity";
+import { buildCarbonDataTable } from "@/lib/carbon_report_table.builder";
 import {
   EmissionBasisEnum,
   ImportedQuantityStateEnum,
@@ -290,5 +294,150 @@ describe("listExcludedEntries", () => {
           entry.state === ImportedQuantityStateEnum.NOT_SIGNIFICANT,
       ),
     ).toBe(true);
+  });
+});
+
+describe("toLedgerEntries", () => {
+  const parsed = parseTable38(TABLE_38);
+  const reconciled = reconcileTable38(parsed, {
+    companyTotalTonne: COMPANY_TOTAL,
+  });
+
+  it("勾稽通過即寫入,全部標記 IMPORTED", () => {
+    const result = toLedgerEntries(parsed, reconciled, { tableNo: "表3.8" });
+    expect(result.blockedReason).toBeNull();
+    expect(result.entries.length).toBeGreaterThan(0);
+    expect(
+      result.entries.every(
+        (entry) => entry.provenance === LedgerProvenanceEnum.IMPORTED,
+      ),
+    ).toBe(true);
+  });
+
+  /**
+   * Info: (20260803 - Tzuhan) NA/NS 不入帳。若寫 0 進帳本,總量不變但**項目數會膨脹**,
+   * 而每一筆 0 都在宣稱「這個排放源已量化為零」—— 原文的意思恰好相反。
+   */
+  it("只寫 REPORTED,NA / NS 不入帳", () => {
+    const result = toLedgerEntries(parsed, reconciled, { tableNo: "表3.8" });
+    const reportedCount = parsed.rows.filter(
+      (row) => row.state === ImportedQuantityStateEnum.REPORTED,
+    ).length;
+    expect(result.entries).toHaveLength(reportedCount);
+    expect(result.entries.some((entry) => entry.co2eKg === null)).toBe(false);
+  });
+
+  it("Decimal 換算沿用解析結果(公斤,零浮點誤差)", () => {
+    const result = toLedgerEntries(parsed, reconciled, { tableNo: "表3.8" });
+    const pingtung = result.entries.find((entry) =>
+      entry.sourceName.includes("(3) 屏東分公司 1.1"),
+    );
+    expect(pingtung?.co2eKg).toBe("2591861.5");
+  });
+
+  it("帶得出廠址與 ISO 類別(桑基圖三層需要)", () => {
+    const result = toLedgerEntries(parsed, reconciled, { tableNo: "表3.8" });
+    const entry = result.entries[0];
+    expect(entry.importedOrigin?.site).toBe("(1) 總公司");
+    expect(entry.importedOrigin?.tableNo).toBe("表3.8");
+    expect(entry.emissionBasis).toBe(EmissionBasisEnum.LOCATION);
+  });
+
+  /**
+   * Info: (20260803 - Tzuhan) 勾稽沒過就一筆都不寫。半套資料進帳本之後,
+   * 每一張圖與每一個小計都是錯的,而且錯得很像對的(比例看起來合理)。
+   */
+  it("勾稽未通過:一筆都不寫,並回傳可讀的理由", () => {
+    const tampered = parseTable38(
+      TABLE_38.replace("| 8121.918 |", "| 9121.918 |"),
+    );
+    const failed = reconcileTable38(tampered);
+    const result = toLedgerEntries(tampered, failed, { tableNo: "表3.8" });
+    expect(result.entries).toEqual([]);
+    expect(result.blockedReason).toContain("差額");
+  });
+
+  it("沒有係數就不假裝有(不寫成 1)", () => {
+    const result = toLedgerEntries(parsed, reconciled, { tableNo: "表3.8" });
+    expect(result.entries[0].factor.value).not.toBe("1");
+    expect(result.entries[0].factor.source).toBe("表3.8");
+  });
+});
+
+/**
+ * Info: (20260803 - Tzuhan) 「兩者並存但絕不合併」的執行面:
+ * 匯入項目進 ledger(桑基圖需要),但不得出現在系統計算表格裡 ——
+ * 否則同一組數字會在一節內出現兩遍,一遍標原文、一遍看起來像本系統算的。
+ */
+describe("匯入項目不進系統計算表格", () => {
+  it("ledger 只有匯入項目時,系統表格仍顯示資料不足", () => {
+    const parsed = parseTable38(TABLE_38);
+    const reconciled = reconcileTable38(parsed, {
+      companyTotalTonne: COMPANY_TOTAL,
+    });
+    const { entries } = toLedgerEntries(parsed, reconciled, {
+      tableNo: "表3.8",
+    });
+    const block = buildCarbonDataTable({
+      entries,
+      pending: [],
+      scopeSubtotals: {},
+      totalCo2eKg: "0",
+      computedAt: new Date().toISOString(),
+    });
+    expect(block).not.toContain("2,591,861.5");
+    expect(block).toContain("carbon-data-table:start");
+  });
+});
+
+describe("buildReconciliationDisclosure", () => {
+  const parsed = parseTable38(TABLE_38);
+  const reconciled = reconcileTable38(parsed, {
+    companyTotalTonne: COMPANY_TOTAL,
+  });
+  const text = buildReconciliationDisclosure({
+    parsed,
+    reconciliation: reconciled,
+    tableNo: "表3.8",
+  });
+
+  it("標明來源表號與基準", () => {
+    expect(text).toContain("表3.8");
+    expect(text).toContain("所在地基準");
+  });
+
+  // Info: (20260803 - Tzuhan) 在容差內的差額也要寫出來:靜默吸收等於宣稱兩者完全相等
+  it("即使通過也寫出實際差額", () => {
+    expect(text).toContain("0.0002");
+  });
+
+  it("列出通過的檢查,不只列失敗", () => {
+    expect(text).toContain("✓");
+    expect(text).toContain("廠址加總 vs 表3.6 全公司總量");
+  });
+
+  it("列出被排除的 NA / NS 項目與其狀態", () => {
+    expect(text).toContain("未納入計算的項目");
+    expect(text).toContain("不顯著、未量化(NS)");
+    expect(text).toContain("不適用(NA)");
+  });
+
+  it("揭露近似映射(隱藏判斷等於沒有依據)", () => {
+    expect(text).toContain("分類對應的近似之處");
+    expect(text).toContain("3.4");
+    expect(text).toContain("4.5");
+  });
+
+  it("勾稽失敗時明示未寫入帳本", () => {
+    const tampered = parseTable38(
+      TABLE_38.replace("| 8121.918 |", "| 9121.918 |"),
+    );
+    const failedText = buildReconciliationDisclosure({
+      parsed: tampered,
+      reconciliation: reconcileTable38(tampered),
+      tableNo: "表3.8",
+    });
+    expect(failedText).toContain("未寫入帳本");
+    expect(failedText).toContain("✗");
   });
 });

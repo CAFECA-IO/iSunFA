@@ -242,3 +242,25 @@ export function parseTable38(markdown: string): IParsedTable38 {
 
   return { rows, siteTotals, unparsedRows };
 }
+
+/**
+ * Info: (20260803 - Tzuhan) 從表3.6 / 表3.7 取全公司總排放量(第三層勾稽的對照值)。
+ *
+ * 取「排放當量」那一列的**最後一個**數值:那張表的最右欄就是總排放量,
+ * 而中間各欄是類別小計。以欄名比對反而不可靠 —— 表頭跨兩列且原文有換行,
+ * 「總排放 量」這種被拆開的欄名對不上任何固定字串。
+ *
+ * 找不到即回 null:寧可少做第三層勾稽,也不要拿一個猜來的數字去比對。
+ */
+export function extractCompanyTotalTonne(markdown: string): string | null {
+  const rows = markdown.split("\n").filter((line) => line.includes("|"));
+  const quantityRow = rows.find((line) => {
+    const cells = splitRow(line);
+    return cells.some((cell) => /排放當量/.test(cell));
+  });
+  if (!quantityRow) return null;
+  const values = splitRow(quantityRow)
+    .map(parseTonne)
+    .filter((value): value is string => value !== null);
+  return values.length > 0 ? values[values.length - 1] : null;
+}

@@ -8,6 +8,7 @@ import { MoneyUtil } from "@/lib/utils/money";
 import { ArticulationStatusEnum } from "@/constants/carbon_articulation";
 import { IComputedLedger } from "@/types/carbon_chatbot.types";
 import { SOURCE_TABLE_ANCHOR_PATTERN } from "@/constants/carbon_source_tables";
+import { isImportedEntry } from "@/lib/carbon_table38.ledger";
 
 // Info: (20260720 - Tzuhan) 表格注入錨點(HTML 註解:Markdown 渲染不可見、PDF 不輸出;重算時依此替換不動敘述)
 export const CARBON_DATA_TABLE_START = "<!-- carbon-data-table:start -->";
@@ -81,7 +82,18 @@ export const buildCarbonDataTable = (
   if (ledger?.articulation?.status === ArticulationStatusEnum.VIOLATED) {
     return wrap(`> ${labels.frozen}`);
   }
-  if (!ledger || ledger.entries.length === 0) {
+  /**
+   * Info: (20260803 - Tzuhan) 系統計算表格**只列本系統算出來的項目**(Issue B)。
+   *
+   * 匯入的表3.8 項目同樣進 ledger(桑基圖與總量需要),但它們已經以「原文照錄」
+   * 的形式出現在同一節裡。若這裡也列一次,同一組數字會在一節內出現兩遍 ——
+   * 一遍標著原文、一遍看起來像本系統算的,而查核者無從判斷哪個才是我們的主張。
+   * 「兩者並存但絕不合併」的執行面就在這一行。
+   */
+  const computedEntries = ledger?.entries.filter(
+    (entry) => !isImportedEntry(entry),
+  );
+  if (!ledger || !computedEntries || computedEntries.length === 0) {
     return wrap(`> _${labels.insufficient}_`);
   }
 
@@ -94,7 +106,7 @@ export const buildCarbonDataTable = (
   lines.push("| --- | --- | --- | --- | ---: |");
   const scopeLabel = (scope: string): string =>
     labels.formatScope?.(scope) ?? scope;
-  ledger.entries.forEach((entry) => {
+  computedEntries.forEach((entry) => {
     lines.push(
       `| ${entry.sourceName} | ${scopeLabel(entry.scopeCategory)} | ${MoneyUtil.formatDynamic(entry.convertedQuantity, 3)} ${entry.convertedUnit} | ${entry.factor.value}(${entry.factor.source}) | ${MoneyUtil.formatDynamic(entry.co2eKg, 3)} |`,
     );
