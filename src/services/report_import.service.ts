@@ -637,13 +637,36 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
       },
     );
 
-    // Info: (20260716 - Tzuhan) 活動數據逐筆裁決(壞一筆丟一筆);source 記檔名供溯源
-    const activities: IActivityRecord[] = (parsed.activities ?? []).flatMap(
-      (item) => {
-        const record = CarbonActivityRecordSchema.safeParse(item);
-        return record.success ? [{ ...record.data, source: source.name }] : [];
-      },
-    );
+    /**
+     * Info: (20260716 - Tzuhan) 活動數據逐筆裁決(壞一筆丟一筆);source 記檔名供溯源。
+     *
+     * Info: (20260803 - Tzuhan) 補上裁決結果的記錄。原本被拒的筆數與原因**完全無痕跡**,
+     * 後果是 computedLedger 空的時候(→ 所有數據表格顯示「資料不足」、桑基圖不出現)
+     * 無法分辨是「模型沒抽到」還是「抽到了但整批被 Schema 擋掉」。
+     * 這與表號、API 400 是同一類問題:裁決點不留下被拒的實際值,現場就只能靠猜。
+     */
+    const rawActivities = parsed.activities ?? [];
+    const activities: IActivityRecord[] = rawActivities.flatMap((item) => {
+      const record = CarbonActivityRecordSchema.safeParse(item);
+      if (record.success) return [{ ...record.data, source: source.name }];
+      const rejected = item as Record<string, unknown>;
+      logger.warn("[ReportImportService] activity record rejected", {
+        name: String(rejected?.name ?? "").slice(0, 40),
+        unit: String(rejected?.unit ?? "").slice(0, 20),
+        quantity: String(rejected?.quantity ?? "").slice(0, 20),
+        issues: record.error.issues
+          .map((issue) => `${issue.path.join(".")}:${issue.code}`)
+          .slice(0, 4)
+          .join(","),
+      });
+      return [];
+    });
+    if (withActivities) {
+      logger.info("[ReportImportService] activity extraction result", {
+        received: rawActivities.length,
+        accepted: activities.length,
+      });
+    }
 
     return { segments, unmapped, activities };
   }

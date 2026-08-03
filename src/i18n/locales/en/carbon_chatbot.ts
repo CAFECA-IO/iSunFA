@@ -136,6 +136,8 @@ export const carbonChatbot = {
   import_overwrite_warning: "Will overwrite existing content",
   import_drafting_sections:
     'Drafting missing sections for "{{name}}" (batch {{current}}/{{total}}, grounded in the uploaded file)…',
+  import_generating_diagrams:
+    "Generating structural diagrams ({{current}}/{{total}})… the report is already usable; diagrams will appear as they finish.",
   import_draft_badge: "AI Draft",
   import_unmapped:
     "Content not matching the outline ({{count}} blocks; not imported, handle in chat)",

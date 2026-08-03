@@ -25,6 +25,19 @@ export const LLM_EXTRACTION_TIMEOUT_MS = 120_000;
  */
 export const LLM_REPORT_IMPORT_TIMEOUT_MS = 240_000;
 
+/**
+ * Info: (20260803 - Tzuhan) 結構圖萃取的逾時:與 chat 分開。
+ *
+ * 原本沿用 LLM_SYNC_TIMEOUT_MS(45s),但那個 45 秒的理由是「前端 UI 30 秒放棄後
+ * 留一點緩衝」—— 那是對話回覆的期限。結構圖是匯入後的加值步驟,沒有 30 秒的 UI 期限,
+ * 借用對話的期限等於把不相干的約束套進來。
+ *
+ * 實測代價:1.1 節(經營沿革時間軸,原文 23 個里程碑)第一次 latencyMs 45,003 逾時,
+ * 退避重試 44,992 才過 —— 8 毫秒的差距。靠 8 毫秒成立的功能等於擲硬幣。
+ * 90s 給推理型模型處理最長的那張圖留足空間;它仍是上限而非期望值(其餘四張都在 12s 內)。
+ */
+export const LLM_DIAGRAM_TIMEOUT_MS = 90_000;
+
 // Info: (20260716 - Tzuhan) 溫度單一來源:萃取/撰寫 = 0(可重現),對話 = 0.2;禁止新增其他字面值
 export const LLM_TEMPERATURE = {
   EXTRACTION: 0,

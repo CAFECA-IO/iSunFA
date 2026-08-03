@@ -137,6 +137,8 @@ export const carbonChatbot = {
   import_overwrite_warning: "기존 내용을 덮어씁니다",
   import_drafting_sections:
     "「{{name}}」 누락 섹션 AI 초안 보완 중(제 {{current}}/{{total}} 배치, 업로드 문서 기반)…",
+  import_generating_diagrams:
+    "구조도 생성 중({{current}}/{{total}})… 보고서는 이미 사용할 수 있으며 도표는 완성되는 대로 추가됩니다.",
   import_draft_badge: "AI 초안",
   import_unmapped: "목차에 대응하지 않는 내용({{count}}건, 가져오지 않음)",
   import_reset_note:

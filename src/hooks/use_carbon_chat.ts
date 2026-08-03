@@ -1812,17 +1812,32 @@ export const useCarbonChat = () => {
       candidates: diagramTargets.map((item) => item.paragraphId),
       selected: selected.length,
     });
-    void diagramTargets.reduce(async (previous, item, index) => {
-      await previous;
-      // Info: (20260730 - Tzuhan) 逐張間隔:匯入本身已吃掉當分鐘的限流額度,連發必被 429 擋掉
-      if (index > 0) {
-        await new Promise((resolve) => {
-          setTimeout(resolve, CARBON_DIAGRAM_THROTTLE_MS);
+    void diagramTargets
+      .reduce(async (previous, item, index) => {
+        await previous;
+        // Info: (20260730 - Tzuhan) 逐張間隔:匯入本身已吃掉當分鐘的限流額度,連發必被 429 擋掉
+        if (index > 0) {
+          await new Promise((resolve) => {
+            setTimeout(resolve, CARBON_DIAGRAM_THROTTLE_MS);
+          });
+        }
+        /**
+         * Info: (20260803 - Tzuhan) 這個階段要有進度,否則使用者看到的是「匯入完成但沒有圖」。
+         * 實測回報即為「所有圖表不見了」:它最長會跑近兩分鐘(單張逾時 + 退避重試 + 每張間隔),
+         * 期間畫面完全沒有痕跡,於是「還沒畫」與「畫不出來」在使用者眼裡完全相同。
+         */
+        setDraftNotice({
+          type: "loading",
+          text: t("carbon_chatbot.import_generating_diagrams", {
+            current: index + 1,
+            total: diagramTargets.length,
+          }),
         });
-      }
-      // Info: (20260730 - Tzuhan) 傳入剛落地的內容:此刻 setSessionsData 尚未生效,讀狀態會拿到空值
-      await generateParagraphDiagram(item.paragraphId, item.content);
-    }, Promise.resolve());
+        // Info: (20260730 - Tzuhan) 傳入剛落地的內容:此刻 setSessionsData 尚未生效,讀狀態會拿到空值
+        await generateParagraphDiagram(item.paragraphId, item.content);
+      }, Promise.resolve())
+      // Info: (20260803 - Tzuhan) 圖是加值不是前提:全部跑完(含失敗)即收掉提示,不留常駐 loading
+      .finally(() => setDraftNotice(null));
   }, [
     pendingImport,
     activeSessionId,
@@ -1830,6 +1845,7 @@ export const useCarbonChat = () => {
     jumpToReportParagraph,
     dataTableLabels,
     generateParagraphDiagram,
+    t,
   ]);
 
   const discardPendingImport = useCallback(() => {
