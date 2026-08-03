@@ -146,11 +146,11 @@ export function EvidenceChain({ accountBookId }: IEvidenceChainProps) {
     <div className="my-4 overflow-hidden rounded-xl border border-orange-100 bg-white text-sm">
       {/* Info: (20260720 - Tzuhan) 第 0 層:總排放(全部憑證的並聯總和) */}
       <div className="flex items-center justify-between gap-2 border-b border-orange-100 bg-orange-50/60 px-4 py-2.5">
-        <span className="flex items-center gap-1.5 text-xs font-bold text-[#9a3412]">
+        <span className="flex items-center gap-1.5 text-xs font-bold text-orange-800">
           <Link2 size={13} />
           {t("carbon_chatbot.evidence_chain_title")}
         </span>
-        <span className="shrink-0 font-mono text-xs font-bold text-[#9a3412]">
+        <span className="shrink-0 font-mono text-xs font-bold text-orange-800">
           {t("carbon_chatbot.evidence_chain_total")}:{" "}
           {MoneyUtil.formatDynamic(total, 3)} kgCO2e
         </span>
@@ -254,7 +254,7 @@ export function EvidenceChain({ accountBookId }: IEvidenceChainProps) {
                             >
                               <ShieldCheck
                                 size={11}
-                                className="shrink-0 text-[#e04f00]"
+                                className="shrink-0 text-orange-700"
                               />
                             </span>
                           ) : (
@@ -287,7 +287,7 @@ export function EvidenceChain({ accountBookId }: IEvidenceChainProps) {
                           {/* Info: (20260722 - Tzuhan) UAT:憑證 id 顯示尾碼(全碼擠壓公式;title 保留全碼) */}
                           <span
                             title={record.source}
-                            className="shrink-0 text-[10px] font-bold text-[#e04f00]"
+                            className="shrink-0 text-[10px] font-bold text-orange-700"
                           >
                             {record.voucherId
                               ? `#${record.voucherId.slice(-8)}`

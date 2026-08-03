@@ -42,7 +42,7 @@ export default function HeaderNav() {
           <Link
             key={item.label}
             href={item.href}
-            className="group flex items-center gap-1 px-2 py-1 text-sm leading-6 font-semibold whitespace-nowrap text-gray-900 transition-colors hover:text-orange-600"
+            className="group text-text-primary hover:text-brand flex items-center gap-1 px-2 py-1 text-sm leading-6 font-semibold whitespace-nowrap transition-colors"
           >
             <item.icon className="size-5 shrink-0" />
             <p className="max-w-0 overflow-hidden transition-all duration-300 group-hover:max-w-40">
@@ -59,9 +59,9 @@ export default function HeaderNav() {
       >
         {({ close }) => (
           <>
-            <MenuButton className="flex items-center gap-x-1 px-2 py-1 text-sm leading-6 font-semibold text-gray-900 transition-colors hover:text-orange-600 focus:outline-none">
+            <MenuButton className="text-text-primary hover:text-brand flex items-center gap-x-1 px-2 py-1 text-sm leading-6 font-semibold transition-colors focus:outline-none">
               <TextAlignJustify
-                className="size-5 shrink-0 text-gray-500"
+                className="text-text-muted size-5 shrink-0"
                 aria-hidden="true"
               />
             </MenuButton>
@@ -74,11 +74,11 @@ export default function HeaderNav() {
               leaveFrom="transform opacity-100 translate-y-0 md:scale-100"
               leaveTo="transform opacity-0 translate-y-full md:translate-y-0 md:scale-95"
             >
-              <MenuItems className="fixed top-0 left-0 h-screen w-full bg-white">
+              <MenuItems className="bg-surface-overlay fixed top-0 left-0 h-screen w-full">
                 <button
                   type="button"
                   onClick={close}
-                  className="flex w-full shrink-0 justify-end border-b border-gray-300 px-6 py-4 shadow"
+                  className="border-border-default flex w-full shrink-0 justify-end border-b px-6 py-4 shadow"
                 >
                   <X size={24} />
                 </button>
@@ -88,7 +88,7 @@ export default function HeaderNav() {
                       <Link
                         href={item.href}
                         onClick={close}
-                        className="flex items-center justify-center gap-4 border-b border-gray-300 px-6 py-4 text-sm leading-6 whitespace-normal text-gray-700 transition-colors last:border-none hover:text-orange-600"
+                        className="border-border-default text-text-secondary hover:text-brand flex items-center justify-center gap-4 border-b px-6 py-4 text-sm leading-6 whitespace-normal transition-colors last:border-none"
                       >
                         <item.icon size={14} className="shrink-0" />
                         <span>{item.label}</span>

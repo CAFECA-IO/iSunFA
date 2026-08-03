@@ -26,6 +26,7 @@ import {
 } from "@/constants/logistics_pdf";
 // Info: (20260731 - Luphia) maplibre-gl v6 移除了 default export,故以命名型別匯入(v5/v6 皆提供 MapLibreMap 別名)。
 // Info: (20260731 - Luphia) 請勿改回 `import type maplibregl from "maplibre-gl"`,那會在 CI 以 TS1192 失敗。
+// Info: (20260801 - Luphia) v5/v6 皆匯出 MapLibreMap,故 maplibre-gl 回退至 v5 後此寫法仍成立,無須改動。
 import type { MapLibreMap } from "maplibre-gl";
 
 /**
@@ -109,6 +110,23 @@ export interface IMapViewerProps {
 export interface IMapCapture {
   dataUrl: string;
   metersPerPixel: number;
+  /**
+   * Info: (20260801 - Luphia) 截圖畫布的 CSS 尺寸。與 metersPerPixel 成對回報:
+   * 後者只說「一像素多少公尺」,要知道整張圖橫跨多遠還得知道有幾個像素。
+   * 列印端據此算出影像的紙面尺寸與比例尺長度 —— 缺這兩個值就只能拿版面寬度去猜,
+   * 而那正是先前比例尺長度算錯的原因。
+   */
+  widthPx: number;
+  heightPx: number;
+  /**
+   * Info: (20260801 - Luphia) 截圖視野的南北緯度界。
+   * Web Mercator 的比例隨緯度變化 1/cos(緯度),故「一條比例尺」只在某條緯線上成立;
+   * 列印端據此判定單一比例尺是否成立,跨幅過大即不畫。
+   * 實測台北→曼徹斯特的航段兩端比例相差 52%,一條 2000 km 的線段在兩端分別代表
+   * 2,148 km 與 1,416 km —— 沒有這兩個值就無從得知該不該畫。
+   */
+  latSouthDeg: number;
+  latNorthDeg: number;
 }
 
 export interface IMapViewerRef {
@@ -324,10 +342,17 @@ const MapViewerBase = (
               centerLat,
               bounds.getEast(),
             ) || 0;
+          // Info: (20260801 - Luphia) 一律取 CSS 尺寸:metersPerPixel 以它為分母,
+          // Info: (20260801 - Luphia) 回報的尺寸若混用 device pixel 兩者就不同基準,乘回去得不到真實跨距
           const widthCssPx = canvas.clientWidth || canvas.width;
+          const heightCssPx = canvas.clientHeight || canvas.height;
           capture = {
             dataUrl: canvas.toDataURL("image/jpeg", 0.8),
             metersPerPixel: widthCssPx > 0 ? spanMeters / widthCssPx : 0,
+            widthPx: widthCssPx,
+            heightPx: heightCssPx,
+            latSouthDeg: bounds.getSouth(),
+            latNorthDeg: bounds.getNorth(),
           };
         } catch (e) {
           console.error("Failed to capture leg map:", e);

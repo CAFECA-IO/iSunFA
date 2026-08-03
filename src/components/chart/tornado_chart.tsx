@@ -1,8 +1,9 @@
 "use client";
 
-import { FC, useMemo } from "react";
+import { FC, useMemo, useState } from "react";
 import { ICustomTornadoAst } from "@/interfaces/custom_chart";
 import { TornadoMode } from "@/constants/custom_chart";
+import { useChartPalette } from "@/hooks/use_chart_palette";
 
 interface ITornadoChartProps {
   ast: ICustomTornadoAst;
@@ -27,8 +28,6 @@ const SENS_PLOT_LEFT = 220;
 const SENS_PLOT_RIGHT = VIEW_W - 84;
 
 // Info: (20260720 - Julian) 兩數列配色（沿用設計系統色）：左=深藍、右=橘
-const COLOR_LEFT = "#152C5B";
-const COLOR_RIGHT = "#FF9800";
 
 // Info: (20260720 - Julian) 數值標籤：內嵌 / 外置的字寬估算與配色
 const CHAR_W = 6.5; // Info: (20260720 - Julian) fontSize 11 下每字元約略寬度（含逗號）
@@ -39,14 +38,31 @@ const formatValue = (n: number): string =>
   n.toLocaleString(undefined, { maximumFractionDigits: 3 });
 
 const TornadoChart: FC<ITornadoChartProps> = ({ ast }) => {
+  /**
+   * Info: (20260802 - Luphia) 顏色從 CSS 變數讀出實值再寫進 SVG 屬性。
+   * 不能直接在屬性寫 var()：匯出 SVG 會把節點 clone 出文件再序列化，
+   * 那份檔案解不到變數，下載到的圖會沒有顏色（見 use_chart_palette）。
+   */
+  /**
+   * Info: (20260803 - Tzuhan) 從自己的節點解析調色盤，不要讓 useChartPalette
+   * 退回 document.documentElement。紙張預覽（PDF 編輯器、/share/pdf/[token]）的
+   * A4 容器帶 .theme-static-light，深色模式下它內部是淺色的；從 <html> 讀會拿到
+   * 深色值，於是白紙上出現淺灰座標軸與深色分隔線。use_chart_export 已經是從
+   * 容器讀背景色，兩邊不一致時匯出的 PNG 會是淺底配深色模式的線條。
+   * 用 state 回呼 ref 而非 useRef：useChartPalette 的 effect 相依是 [resolved, element]，
+   * ref 物件的 .current 變動不會觸發重讀。
+   */
+  const [node, setNode] = useState<SVGSVGElement | null>(null);
+  const palette = useChartPalette(node);
+
   const { title, unit, mode, baseline, leftSeries, rightSeries, bars } = ast;
 
   // Info: (20260723 - Julian) 敏感度型：中心＝基準值、兩側為 ±偏移；比較型：中心＝數列分隔線
   const isSensitivity = mode === TornadoMode.SENSITIVITY;
 
   // Info: (20260723 - Julian) 數列顏色：DSL 指定優先，否則採預設（左深藍、右橘）
-  const colorLeft = ast.leftColor ?? COLOR_LEFT;
-  const colorRight = ast.rightColor ?? COLOR_RIGHT;
+  const colorLeft = ast.leftColor ?? palette.series1;
+  const colorRight = ast.rightColor ?? palette.series2;
 
   // Info: (20260723 - Julian) 比較型頂端置中標籤：僅單位（敏感度型的基準改標於基準線上）
   const centerLabel = unit ? `單位：${unit}` : "";
@@ -123,6 +139,7 @@ const TornadoChart: FC<ITornadoChartProps> = ({ ast }) => {
 
     return (
       <svg
+        ref={setNode}
         viewBox={`0 0 ${VIEW_W} ${sensViewH}`}
         className="h-full w-full"
         preserveAspectRatio="xMidYMid meet"
@@ -171,7 +188,7 @@ const TornadoChart: FC<ITornadoChartProps> = ({ ast }) => {
               y1={MARGIN_TOP}
               x2={baseX}
               y2={plotBottom}
-              stroke="#94A3B8"
+              stroke={palette.axis}
               strokeWidth={1.5}
               strokeDasharray="4 3"
             />
@@ -242,7 +259,7 @@ const TornadoChart: FC<ITornadoChartProps> = ({ ast }) => {
                 x={loX - LABEL_PAD}
                 y={cY + 4}
                 textAnchor="end"
-                fill="#64748B"
+                fill={palette.label}
                 fontSize={11}
               >
                 {formatValue(bar.lo)}
@@ -251,7 +268,7 @@ const TornadoChart: FC<ITornadoChartProps> = ({ ast }) => {
                 x={hiX + LABEL_PAD}
                 y={cY + 4}
                 textAnchor="start"
-                fill="#64748B"
+                fill={palette.label}
                 fontSize={11}
               >
                 {formatValue(bar.hi)}
@@ -311,6 +328,7 @@ const TornadoChart: FC<ITornadoChartProps> = ({ ast }) => {
 
   return (
     <svg
+      ref={setNode}
       viewBox={`0 0 ${VIEW_W} ${viewH}`}
       className="h-full w-full"
       preserveAspectRatio="xMidYMid meet"
@@ -345,7 +363,7 @@ const TornadoChart: FC<ITornadoChartProps> = ({ ast }) => {
         y1={MARGIN_TOP}
         x2={CENTER_X}
         y2={plotBottom}
-        stroke="#94A3B8"
+        stroke={palette.axis}
         strokeWidth={1.5}
         strokeDasharray="4 3"
       />
@@ -420,7 +438,7 @@ const TornadoChart: FC<ITornadoChartProps> = ({ ast }) => {
               x={leftFits ? leftStart + LABEL_PAD : leftStart - LABEL_PAD}
               y={barCenterY + 4}
               textAnchor={leftFits ? "start" : "end"}
-              fill="#64748B"
+              fill={palette.label}
               filter={leftFits ? "invert(1)" : ""}
               fontSize={12}
               fontWeight={leftFits ? 600 : 400}
@@ -432,7 +450,7 @@ const TornadoChart: FC<ITornadoChartProps> = ({ ast }) => {
               x={rightFits ? rightEnd - LABEL_PAD : rightEnd + LABEL_PAD}
               y={barCenterY + 4}
               textAnchor={rightFits ? "end" : "start"}
-              fill="#64748B"
+              fill={palette.label}
               filter={leftFits ? "invert(1)" : ""}
               fontSize={12}
               fontWeight={rightFits ? 600 : 400}

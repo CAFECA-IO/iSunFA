@@ -1,3 +1,5 @@
+import { PDF_FONT_STACK } from "@/constants/pdf_font";
+
 // Info: (20260731 - Tzuhan) 運輸報告 PDF(向量列印)的版面與體積常數
 // Info: (20260731 - Tzuhan) 為什麼改走伺服端列印:前端 html-to-image + jsPDF 是把整份報告光柵化,
 // Info: (20260731 - Tzuhan) 實測開啟 compress 後仍為 500 KB —— 一頁 A4 的文字在可讀 DPI 下就是 60~150 KB,
@@ -16,25 +18,37 @@ export const LOGISTICS_PDF_MARGIN = {
 } as const;
 
 /**
- * Info: (20260731 - Tzuhan) 列印字體堆疊。刻意不引入網路字型:
- * 一是離線列印仍須正確排版,二是外部字型會讓 Chrome 嵌入額外子集、增加體積。
- * 中日韓字符交由系統字型(伺服器與使用者端皆有)處理。
+ * Info: (20260801 - Luphia) 列印字體堆疊已移至 @/constants/pdf_font 供物流報告與
+ * 數位產品護照共用 —— 兩者都由 headless Chrome 列印、都含中文,字型缺失的成因與修法相同,
+ * 分開維護只會讓其中一邊被漏掉(實測 dpp.service.ts 的堆疊完全沒有 CJK 家族)。
+ * 此處保留別名以免既有引用失效。
  */
-export const LOGISTICS_PDF_FONT_STACK =
-  '-apple-system, "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", "Helvetica Neue", Arial, sans-serif';
+export const LOGISTICS_PDF_FONT_STACK = PDF_FONT_STACK;
 
 /**
- * Info: (20260731 - Tzuhan) 已知限制:中文字在輸出的 PDF 內是**點陣字(Type 3)**,不是向量。
+ * Info: (20260801 - Luphia) 中文字在輸出的 PDF 內走 **Type 3 字型**,但是**向量而非點陣**。
  *
- * 實測 `pdffonts` 的結果:拉丁字走 CID TrueType 子集(ArialMT、Menlo-Bold),
- * 但樣板內 19 個相異中文字各自成為一個 Type 3 字型物件 —— Chrome 在找不到可嵌入的
- * 中文字型時會把字符光柵化。後果是這些字放大會模糊,且約佔檔案 60 KB。
+ * 原註解記為「Chrome 在找不到可嵌入的中文字型時會把字符光柵化,這些字放大會模糊」——
+ * 實測反駁:R02-AIR 報告含 52 個 Type 3 字型物件、217 個字形,
+ * 逐一檢視 CharProcs 的結果是 **0 個含影像運算子(BI/ID/Do/Image)、
+ * 215 個含路徑運算子(m/l)**,另 2 個是空白字(僅 `d1`,無繪製)。
+ * 也就是全部為向量輪廓,放大不會模糊。
  *
- * 搜尋與複製**仍然可用**(ToUnicode 對照表有保留),所以不影響本次的核心目標。
- * 要修的正解是提供可嵌入的中文字型(在執行環境安裝 Noto Sans TC,或以 @font-face
- * 內嵌字型檔讓 Chrome 自行子集化);列為後續 issue,不在本次範圍。
+ * (先前之所以會判斷成點陣,是因為當時主機根本沒有中文字型,
+ * 看到的 Type 3 是缺字狀態下的產物;裝上 Noto Sans CJK 後才看得出真正的行為。)
+ *
+ * **仍存在的代價是體積。** Type 3 每個字型物件各自攜帶字形,沒有 CID 子集的共用與 hinting:
+ *   R01(當時中文無字形):總 197 KB,其中影像 141 KB → 非影像 56 KB
+ *   R02(中文正常):     總 334 KB,其中影像 150 KB → 非影像 184 KB
+ * 中文字型的成本約 **128 KB**。
+ *
+ * 成因推測是 fonts-noto-cjk 提供的是 `NotoSansCJK-Regular.ttc`(TrueType Collection),
+ * Skia 的 PDF 後端無法從 collection 產生 CID 子集,故改以 Type 3 逐字輸出輪廓。
+ * 若要收斂體積,可改安裝單一字族的檔案(如 Google Fonts 的 Noto Sans TC OTF/TTF)
+ * 讓 Chrome 走正常的 CID 子集路徑。列為後續 issue,不影響正確性:
+ * 文字可選取、可搜尋、放大清晰,對審計文件而言核心目標已達成。
  */
-export const LOGISTICS_PDF_CJK_IS_BITMAP = true;
+export const LOGISTICS_PDF_CJK_USES_TYPE3_VECTOR = true;
 
 /**
  * Info: (20260731 - Tzuhan) 地圖影像的體積上限。地圖是這份報告唯一的真實光柵內容,
@@ -104,18 +118,46 @@ export const CARBON_MAP_CAPTURE_TIMEOUT_MS =
   MAP_STYLE_READY_TIMEOUT_MS + MAP_IDLE_TIMEOUT_MS + 2_000;
 
 /**
- * Info: (20260731 - Tzuhan) 地圖在報告中的顯示寬度(CSS 像素基準)。
- * 比例尺的長度是「距離 ÷ 每像素公尺數」,而那個像素數指的是**顯示尺寸**而非原始影像尺寸,
- * 所以必須有一個共同基準。A4 內容區寬約 190mm,以 96dpi 換算約 718px;
- * 逐段小圖為兩欄,各約一半。這個值只影響比例尺線段的相對長度,不影響影像本身。
+ * Info: (20260801 - Luphia) 地圖在報告中的顯示幾何,全部以公釐表示並由頁面版面推導。
+ *
+ * 改以 mm 為單位而非先前的 CSS 像素,是因為列印樣式本來就以 mm 撰寫,
+ * 而比例尺要算的是「紙上一公釐代表多少公尺」。先前以 718 / 348 px 為基準,
+ * 那組數字既不是影像的原始尺寸、也不是截圖畫布的尺寸,只是版面寬度的另一種寫法 ——
+ * 拿它去除 metersPerPixel(基準為截圖畫布的 CSS 像素)在單位上就不成立,
+ * 算出來的長度必然是錯的。
+ *
+ * 由 A4 尺寸與 LOGISTICS_PDF_MARGIN 推導而非各自寫死:邊界一旦調整,
+ * 這些值會自動跟上,不會默默失去同步。
  */
-export const LOGISTICS_PDF_MAP_RENDER_WIDTH_PX = 718;
+const A4_WIDTH_MM = 210;
+
+export const LOGISTICS_PDF_CONTENT_WIDTH_MM =
+  A4_WIDTH_MM -
+  Number.parseFloat(LOGISTICS_PDF_MARGIN.left) -
+  Number.parseFloat(LOGISTICS_PDF_MARGIN.right);
+
+/** Info: (20260801 - Luphia) 逐段小圖兩欄之間的間距,須與 `.legmaps` 的 grid gap 一致 */
+export const LOGISTICS_PDF_LEG_MAP_GAP_MM = 3;
+
+/** Info: (20260801 - Luphia) 全程圖佔滿內容區寬度 */
+export const LOGISTICS_PDF_MAP_RENDER_WIDTH_MM = LOGISTICS_PDF_CONTENT_WIDTH_MM;
 
 /**
- * Info: (20260731 - Tzuhan) 逐段小圖的顯示寬度:兩欄版面,扣掉 3mm 間距後約一半。
+ * Info: (20260801 - Luphia) 逐段小圖為兩欄:扣掉間距後對半。
  * 必須與全程圖分開,否則比例尺的線段長度會差一倍 —— 而長度錯的比例尺等於錯的證據。
  */
-export const LOGISTICS_PDF_LEG_MAP_RENDER_WIDTH_PX = 348;
+export const LOGISTICS_PDF_LEG_MAP_RENDER_WIDTH_MM =
+  (LOGISTICS_PDF_CONTENT_WIDTH_MM - LOGISTICS_PDF_LEG_MAP_GAP_MM) / 2;
+
+/**
+ * Info: (20260801 - Luphia) 地圖的高度上限(mm)。原本只寫在 CSS 的 `max-height`,
+ * 現在必須是常數:影像的實際顯示尺寸改由 TypeScript 決定性算出(computeRenderedMapSizeMm),
+ * 而那個計算要知道高度上限才能判斷是寬度受限還是高度受限。
+ * 兩處若不同步,算出的紙面尺寸就與實際排版不符,比例尺會再次失準。
+ */
+export const LOGISTICS_PDF_MAP_MAX_HEIGHT_MM = 70;
+
+export const LOGISTICS_PDF_LEG_MAP_MAX_HEIGHT_MM = 46;
 
 /**
  * Info: (20260731 - Tzuhan) 只接受 JPEG/PNG 的 data URL 作為地圖影像:

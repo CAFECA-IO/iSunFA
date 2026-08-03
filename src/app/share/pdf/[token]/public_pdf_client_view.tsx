@@ -3,6 +3,7 @@
 import { useTranslation } from "@/i18n/i18n_context";
 import Image from "next/image";
 import { MarkdownContent } from "@/components/common/markdown_content";
+import { THEME_STATIC_LIGHT_CLASS } from "@/constants/theme";
 
 export default function PublicPdfClientView({ content }: { content: string }) {
   const { t } = useTranslation();
@@ -10,7 +11,9 @@ export default function PublicPdfClientView({ content }: { content: string }) {
   return (
     <div className="flex min-h-screen justify-center bg-gray-50 p-4 sm:p-8">
       {/* Info: (20260604 - Julian) A4 Document Container */}
-      <div className="mx-auto min-h-[297mm] w-full max-w-[210mm] border border-gray-300 bg-white text-black shadow-md">
+      <div
+        className={`${THEME_STATIC_LIGHT_CLASS} mx-auto min-h-[297mm] w-full max-w-[210mm] border border-gray-300 bg-white text-black shadow-md`}
+      >
         <div className="flex min-h-full flex-col bg-[#ffffff] font-sans">
           {/* Info: (20260604 - Julian) iSunFA Header */}
           <div className="flex items-center justify-between bg-[#111827] px-6 py-4">

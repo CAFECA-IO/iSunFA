@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { promises as fs } from "fs";
 import path from "path";
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
@@ -13,6 +13,11 @@ import { AiContextProvider } from "@/contexts/ai_context";
 import CookieConsent from "@/components/common/cookie_consent";
 import TestingEnvBanner from "@/components/common/testing_env_banner";
 import { isProduction } from "@/lib/utils/common";
+import { THEME_COOKIE_NAME } from "@/constants/theme";
+import {
+  parseThemeCookie,
+  resolveThemeRootClass,
+} from "@/lib/utils/theme_cookie";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,6 +45,7 @@ export default async function RootLayout({
 }>) {
   // Info: (20260118 - Luphia) Check if .env has all required keys from .env.example
   const headersList = await headers();
+  const cookieStore = await cookies();
   const currentUrl = headersList.get("x-url") || "";
 
   // Info: (20260118 - Luphia) .env validator
@@ -63,10 +69,21 @@ export default async function RootLayout({
   const privacyPolicyContent = await fs.readFile(privacyPolicyPath, "utf8");
   const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-XXXXXXXXXX";
 
+  /**
+   * Info: (20260802 - Luphia) 主題 class 在 SSR 當下就決定，因此沒有 FOUC，
+   * 伺服器與瀏覽器算出的結果也一致，不需要 suppressHydrationWarning。
+   *
+   * 沒有 cookie（跟隨系統）時回空字串 —— 那一態由 globals.css 的
+   * `prefers-color-scheme` 媒體查詢承接，伺服器猜不到也不該猜。
+   */
+  const themeClass = resolveThemeRootClass(
+    parseThemeCookie(cookieStore.get(THEME_COOKIE_NAME)?.value),
+  );
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={themeClass}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} bg-surface-base text-text-primary antialiased`}
       >
         <GoogleAnalytics gaId={gaId} />
         <I18nProvider>

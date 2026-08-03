@@ -53,6 +53,14 @@ export interface IBuildReportItemInput {
   mapImageDataUrl?: string;
   /** Info: (20260731 - Tzuhan) 全程圖的每像素公尺數(比例尺用) */
   metersPerPixel?: number;
+  /** Info: (20260801 - Luphia) 全程圖截圖畫布的 CSS 尺寸(比例尺與紙面尺寸用) */
+  captureWidthPx?: number;
+  captureHeightPx?: number;
+  /** Info: (20260801 - Luphia) 全程圖視野的南北緯度界(Mercator 比例尺護欄用) */
+  captureLatSouthDeg?: number;
+  captureLatNorthDeg?: number;
+  /** Info: (20260801 - Luphia) 是否計算二氧化碳當量;false 時輸出純距離報告 */
+  includeCo2e?: boolean;
   /**
    * Info: (20260731 - Tzuhan) 逐段路徑圖,索引對齊 buildPlanLegs 的順序。
    * 只有全程圖時,市區→機場、機場→市區的接駁段在圖上看不到,那兩段就沒有證據。
@@ -63,6 +71,12 @@ export interface IBuildReportItemInput {
 export interface ILegCapture {
   dataUrl: string;
   metersPerPixel: number;
+  /** Info: (20260801 - Luphia) 截圖畫布的 CSS 尺寸,與 metersPerPixel 同基準(見 IMapCapture) */
+  widthPx?: number;
+  heightPx?: number;
+  /** Info: (20260801 - Luphia) 截圖視野的南北緯度界,用於判定單一比例尺是否成立 */
+  latSouthDeg?: number;
+  latNorthDeg?: number;
 }
 
 /**
@@ -72,8 +86,18 @@ export interface ILegCapture {
  * 這裡是載荷的邊界,把無效值一律轉成「沒有這個欄位」:沒有比例尺只是少一個刻度,
  * 送出 0 卻會讓整批報告拿不到。
  */
-const sanitizeMetersPerPixel = (value?: number): number | undefined =>
+const sanitizePositive = (value?: number): number | undefined =>
   value !== undefined && Number.isFinite(value) && value > 0
+    ? value
+    : undefined;
+
+/**
+ * Info: (20260801 - Luphia) 緯度的收斂點。**不可套用 sanitizePositive** ——
+ * 緯度合法值含 0(赤道)與負數(南半球),用「正數」過濾會把它們當成無效值丟掉,
+ * 結果是南半球與赤道附近的路線一律失去比例尺。
+ */
+const sanitizeLatitude = (value?: number): number | undefined =>
+  value !== undefined && Number.isFinite(value) && Math.abs(value) <= 90
     ? value
     : undefined;
 
@@ -92,6 +116,11 @@ export function buildReportPdfItem(
     fallbackWeightKg,
     mapImageDataUrl,
     metersPerPixel,
+    captureWidthPx,
+    captureHeightPx,
+    captureLatSouthDeg,
+    captureLatNorthDeg,
+    includeCo2e,
     legCaptures,
   } = input;
   const legs = buildPlanLegs(item, planKey);
@@ -112,9 +141,12 @@ export function buildReportPdfItem(
     co2eKg: leg.segment?.co2eKg,
     isFallback: leg.segment?.isFallback,
     mapImageDataUrl: legCaptures?.[legIndex]?.dataUrl,
-    metersPerPixel: sanitizeMetersPerPixel(
-      legCaptures?.[legIndex]?.metersPerPixel,
-    ),
+    metersPerPixel: sanitizePositive(legCaptures?.[legIndex]?.metersPerPixel),
+    captureWidthPx: sanitizePositive(legCaptures?.[legIndex]?.widthPx),
+    captureHeightPx: sanitizePositive(legCaptures?.[legIndex]?.heightPx),
+    // Info: (20260801 - Luphia) 緯度可為 0 或負數,不可用 sanitizePositive 過濾
+    captureLatSouthDeg: sanitizeLatitude(legCaptures?.[legIndex]?.latSouthDeg),
+    captureLatNorthDeg: sanitizeLatitude(legCaptures?.[legIndex]?.latNorthDeg),
   }));
 
   return {
@@ -129,7 +161,12 @@ export function buildReportPdfItem(
     planTotalCo2e: getPlanTotalCo2e(item, planKey),
     legs: reportLegs,
     mapImageDataUrl,
-    metersPerPixel: sanitizeMetersPerPixel(metersPerPixel),
+    metersPerPixel: sanitizePositive(metersPerPixel),
+    captureWidthPx: sanitizePositive(captureWidthPx),
+    captureHeightPx: sanitizePositive(captureHeightPx),
+    captureLatSouthDeg: sanitizeLatitude(captureLatSouthDeg),
+    captureLatNorthDeg: sanitizeLatitude(captureLatNorthDeg),
+    includeCo2e,
   };
 }
 
@@ -145,6 +182,8 @@ export interface IBuildReportRequestInput {
    * 缺項即該份不附地圖,報告仍成立並在圖說處明示。
    */
   mapCaptures?: Map<string, IPlanMapCapture>;
+  /** Info: (20260801 - Luphia) 是否計算二氧化碳當量(使用者於匯出選單勾選) */
+  includeCo2e?: boolean;
 }
 
 export interface IPlanMapCapture {
@@ -178,6 +217,11 @@ export function buildReportPdfItems(
         fallbackWeightKg: input.fallbackWeightKg,
         mapImageDataUrl: captured?.overview?.dataUrl,
         metersPerPixel: captured?.overview?.metersPerPixel,
+        captureWidthPx: captured?.overview?.widthPx,
+        captureHeightPx: captured?.overview?.heightPx,
+        captureLatSouthDeg: captured?.overview?.latSouthDeg,
+        captureLatNorthDeg: captured?.overview?.latNorthDeg,
+        includeCo2e: input.includeCo2e,
         legCaptures: captured?.legs,
       });
       if (built) items.push(built);

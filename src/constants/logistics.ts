@@ -1,24 +1,88 @@
 // Info: (20260724 - Tzuhan) 運輸物流單一來源常數:排放係數與運輸方式適用性門檻
 // Info: (20260724 - Tzuhan) 嚴禁在 service/component 內硬編碼下列數值(曾出現 0.01614/0.50422 錯誤係數殘留)
 
+import {
+  DEFAULT_FACTOR_SET,
+  formatFactorSource,
+  LOGISTICS_FACTOR_SETS,
+} from "@/constants/logistics_factor_sets";
+
 /**
  * Info: (20260724 - Tzuhan) 排放係數 (kg CO₂e / t-km)
  * 以字串保存,計算時一律經 MoneyUtil.toDecimal 轉 Decimal,禁止原生浮點運算
+ *
+ * Info: (20260801 - Luphia) 排放係數改由係數組導出,不再在此寫死。
+ *
+ * 預設組為環境部(見 @/constants/logistics_factor_sets)。保留這兩個常數名是為了
+ * 讓既有引用(route.service、plan_section、CSV、PDF)不必同步改動 ——
+ * 但它們現在代表「預設組的係數」而非「唯一的係數」,呼叫端若需支援使用者選擇的組,
+ * 應改用 resolveFactorSet()。
  */
 export const EMISSION_FACTORS = {
-  LAND: "0.11289",
-  SEA: "0.01045",
-  AIR: "0.6023",
+  LAND: LOGISTICS_FACTOR_SETS[DEFAULT_FACTOR_SET].LAND.factor,
+  SEA: LOGISTICS_FACTOR_SETS[DEFAULT_FACTOR_SET].SEA.factor,
+  AIR: LOGISTICS_FACTOR_SETS[DEFAULT_FACTOR_SET].AIR.factor,
 } as const;
 
-export type EmissionFactorMode = keyof typeof EMISSION_FACTORS;
+export const EMISSION_FACTOR_SOURCES = {
+  LAND: formatFactorSource(LOGISTICS_FACTOR_SETS[DEFAULT_FACTOR_SET].LAND),
+  SEA: formatFactorSource(LOGISTICS_FACTOR_SETS[DEFAULT_FACTOR_SET].SEA),
+  AIR: formatFactorSource(LOGISTICS_FACTOR_SETS[DEFAULT_FACTOR_SET].AIR),
+} as const;
 
 export const EMISSION_FACTOR_UNIT = "kg CO₂e / t-km";
 
-export const EMISSION_FACTOR_SOURCES = {
-  LAND: "UK DEFRA 2025 (HGV)",
-  SEA: "UK DEFRA 2025 (Container ship)",
-  AIR: "UK DEFRA 2025 (Long-haul)",
+/**
+ * Info: (20260801 - Luphia) 接駁機場的採用條件。
+ *
+ * 先前 getNearestAirport 對 airports.json 全部 5,277 筆暴力取最近者,**完全不篩選**,
+ * 因此軍用基地、南極科考跑道與重複紀錄都可能因為距離最近而被選為接駁機場。
+ *
+ * **要求具備 IATA 代碼**排除 714 筆。IATA 由 IATA 組織核發給有商業客貨運作的場站,
+ * 是這份資料裡唯一能用來判斷「是否為商業機場」的欄位。
+ *
+ * **這是部分改善,不是完整解決 —— 實測數字如下,不可誇大:**
+ *
+ *   類別                總數    篩選後仍留
+ *   軍用基地(名稱含 Air Base 等)  485      114
+ *   [Duplicate] 重複紀錄           6        2
+ *   Skiway / Runway               5        1
+ *
+ * 也就是仍有 114 個軍用基地持有 IATA 代碼而通過篩選(如 Bezmer Air Base、
+ * Utti Air Base),以及 2 筆重複紀錄(如 [Duplicate] Wolf's Fang Runway)。
+ * 名稱比對不列為條件:以字串猜測用途會誤傷合法場站
+ * (例如民用與空軍共用的機場),那比漏掉更糟。
+ *
+ * **另一個此條件解決不了的問題:** IATA 只證明「有商業運作」,不證明「有貨運能力」。
+ * 實測巴黎的最近機場是 Paris-Le Bourget(LBG)—— 商務航空機場而非貨運樞紐,
+ * 真正的貨運樞紐是較遠的 Charles de Gaulle(CDG);但 LBG 同為 large_airport
+ * 且有 IATA,此條件留不住這個問題。要修正需要貨運吞吐量或貨運航線資料,
+ * 而 airports.json 沒有這些欄位。
+ *
+ * size 不列入條件:實測資料只有 large_airport(1,182)與 medium_airport(4,095),
+ * 沒有 small —— 對這份資料而言「排除小型機場」是空操作。
+ * 限定 large 會讓可選池從 4,563 縮到 1,178,把短程接駁推向更遠的大型樞紐,
+ * 那是改變業務規則而非修正缺陷,不在此範圍。
+ */
+export const AIRPORT_SELECTION_REQUIRES_IATA = true;
+
+/**
+ * Info: (20260801 - Luphia) 路徑資料不可用時的直線距離加成係數(tortuosity factor)。
+ *
+ * **必須由此處供給演算法與揭露文字兩邊。** 先前三處各自寫死:
+ * route.service.ts:169 陸運 ×1.2、route.sea.ts:379 海運 ×1.5,
+ * 而報告的揭露文字只寫「直線距離 × 1.2」—— 被標成 est. 的海運段實際是 ×1.5,
+ * 揭露值是錯的。查核者若照揭露值回推距離會得到錯誤的結果,
+ * 而這正是一份審計文件最不該出現的事。
+ *
+ * 空運無此係數:空運距離即大圓距離本身(route.air.ts 從不設 isFallback),
+ * 沒有「路徑資料不可用」的狀態可退。
+ */
+export const ESTIMATION_TORTUOSITY_FACTORS = {
+  /** Info: (20260430 - Tzuhan) 陸運:實際道路較直線繞行,取 1.2 */
+  LAND: 1.2,
+  /** Info: (20260501 - Luphia) 海運:航道受陸塊與海峽限制,繞行幅度大於陸運,取 1.5 */
+  SEA: 1.5,
 } as const;
 
 /**

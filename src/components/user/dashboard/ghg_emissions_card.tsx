@@ -19,8 +19,12 @@ export const GHGEmissionsCard = ({ currentData, gasType, setGasType }: IGHGEmiss
       ${isEco ? 'bg-emerald-50/50 border-emerald-100' : 'bg-white border-gray-200'}
     `}>
       {/* Info: (20260118 - Luphia) Decorative Watermark */}
+      {/* Info: (20260802 - Luphia) 改以 500 階低透明度表示，而非 `text-emerald-100/50`：
+          100 階在深色模式被當成「深底上的淺色字」而維持淺色（那條規則是為了
+          solutions 頁 hero 上的說明文字），用在這裡會變成深色卡片上一道刺眼的亮綠，
+          正好與「浮水印」相反 */}
       {isEco && (
-        <Leaf className="absolute -top-10 -right-10 w-64 h-64 text-emerald-100/50 pointer-events-none -rotate-12" />
+        <Leaf className="pointer-events-none absolute -top-10 -right-10 h-64 w-64 -rotate-12 text-emerald-500/10" />
       )}
 
       <div className="relative z-10 p-6 flex flex-col gap-6 h-full">

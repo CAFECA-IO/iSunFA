@@ -12,7 +12,13 @@ import {
   EMISSION_FACTORS,
   EMISSION_FACTOR_SOURCES,
   buildPlanCode,
+  ESTIMATION_TORTUOSITY_FACTORS,
 } from "@/constants/logistics";
+import {
+  DEFAULT_FACTOR_SET,
+  formatFactorSetVersion,
+  LOGISTICS_FACTOR_SETS,
+} from "@/constants/logistics_factor_sets";
 import { ROUTE_MODE } from "@/constants/analysis";
 
 /**
@@ -529,21 +535,60 @@ export function buildBatchSummaryCsv(
   weightKg: number | string,
   // Info: (20260729 - Tzuhan) 匯出批次識別碼:與同批 PDF 一致,使跨批次的同名方案代碼可區分
   exportId?: string,
+  /**
+   * Info: (20260801 - Luphia) 是否計算二氧化碳當量。預設 true 使既有呼叫端行為不變。
+   * false 時 Factor / Source / Leg CO2e / Plan CO2e 四欄整組不輸出,而非留空 ——
+   * 空的 CO2e 欄在 Excel 中會被讀成零,而「未計算」與「為零」是完全不同的主張。
+   */
+  includeCo2e = true,
 ): string {
   // Info: (20260728 - Tzuhan) issue 08:每列用自己的實際計算重量;舊資料缺漏時退回批次參數
   const fallbackWeight = Number(weightKg) || 1000;
 
   // Info: (20260729 - Tzuhan) 揭露資訊改為多行短註解:單行 600 字的檔頭在 Excel 中會撐爆首格難以閱讀,
   // Info: (20260729 - Tzuhan) 拆成一行一件事後每行自成一列;各行皆不含逗號,避免被切成多欄
+  // Info: (20260802 - Luphia) 「不含逗號」是硬性不變式,不是風格偏好 ——
+  // Info: (20260802 - Luphia) 一個逗號就會讓該行在 Excel 中裂成兩欄,揭露內容從此對不上。
+  // Info: (20260802 - Luphia) 要列舉多個項目請用 ` | `;此規則由 logistics_report.test.ts 守住。
   const metaLines = [
     `# iSunFA Transport Carbon Report`,
     ...(exportId ? [`# Export ID: ${exportId}`] : []),
     `# Code: R{route}-{MODE} — the same code appears in the matching PDF's filename and header`,
-    `# Formula: Leg CO2e = Distance x (Weight / 1000) x Factor`,
-    `# Factors (kg CO2e/t-km): LAND ${EMISSION_FACTORS.LAND} | SEA ${EMISSION_FACTORS.SEA} | AIR ${EMISSION_FACTORS.AIR} — UK DEFRA 2025`,
-    `# Units: Weight kg | Distance km | CO2e kg | Lat/Lng WGS84`,
-    `# Layout: one row per leg — Plan CO2e and PDF are filled on the plan's last leg only`,
-    `# Est. = Y: straight-line x 1.2 estimate (road network data unavailable for that leg)`,
+    // Info: (20260801 - Luphia) 係數組版本:換組會讓申報值變化近一倍,
+    // Info: (20260801 - Luphia) 沒有這個標籤就無法判斷兩份不同批次的檔案為何數字不同
+    ...(includeCo2e
+      ? [
+          `# Factor set: ${formatFactorSetVersion(DEFAULT_FACTOR_SET, LOGISTICS_FACTOR_SETS[DEFAULT_FACTOR_SET])}`,
+        ]
+      : []),
+    ...(includeCo2e
+      ? [
+          `# Formula: Leg CO2e = Distance x (Weight / 1000) x Factor`,
+          // Info: (20260802 - Luphia) 出處由常數推導,不可寫死。
+          // Info: (20260802 - Luphia) 先前換用環境部係數時漏改這裡的「UK DEFRA 2025」,
+          // Info: (20260802 - Luphia) 等於把環境部的數字掛在 DEFRA 名下 —— 對查核者是錯誤歸屬,
+          // Info: (20260802 - Luphia) 比數字本身錯更難發現。
+          `# Factors (kg CO2e/t-km): LAND ${EMISSION_FACTORS.LAND} | SEA ${EMISSION_FACTORS.SEA} | AIR ${EMISSION_FACTORS.AIR} — ${formatFactorSetVersion(DEFAULT_FACTOR_SET, LOGISTICS_FACTOR_SETS[DEFAULT_FACTOR_SET])}`,
+          `# Units: Weight kg | Distance km | CO2e kg | Lat/Lng WGS84`,
+        ]
+      : [
+          // Info: (20260801 - Luphia) 明示未計算而非省略不提:讀者必須知道這份檔案為何沒有排放欄
+          `# CO2e was NOT calculated for this export — distances only`,
+          `# Units: Weight kg | Distance km | Lat/Lng WGS84`,
+          /**
+           * Info: (20260803 - Tzuhan) 換算約定在「不計算」時更要寫,不能只寫在計算分支。
+           * 這份檔案存在的唯一理由就是被乘上使用者自己的係數,而係數的通用單位是
+           * kg CO2e / t-km —— Weight 欄卻是 kg。少了這行,使用者直接
+           * Distance x Weight x factor 就會差 1000 倍,且檔頭沒有任何一行會阻止他。
+           */
+          `# To apply your own factor (kg CO2e/t-km): Leg CO2e = Distance x (Weight / 1000) x YourFactor`,
+        ]),
+    `# Layout: one row per leg${includeCo2e ? " — Plan CO2e and PDF are filled on the plan's last leg only" : " — PDF is filled on the plan's last leg only"}`,
+    // Info: (20260801 - Luphia) 逐模式列出係數:各模式不同(陸運 1.2、海運 1.5),
+    // Info: (20260801 - Luphia) 先前只寫 1.2,被標為 Est. 的海運段揭露值是錯的
+    // Info: (20260803 - Tzuhan) 明示係數已乘進 Distance 欄。原文只說「直線距離 x 繞行係數」,
+    // Info: (20260803 - Tzuhan) 讀者無從判斷該欄是乘之前還是之後,自行重算時會再乘一次。
+    `# Est. = Y: no route data for that leg; straight-line distance x tortuosity factor already applied to Distance (LAND x ${ESTIMATION_TORTUOSITY_FACTORS.LAND} | SEA x ${ESTIMATION_TORTUOSITY_FACTORS.SEA})`,
     `# Plans deemed inapplicable for a route produce no rows`,
   ];
 
@@ -565,10 +610,8 @@ export function buildBatchSummaryCsv(
     "To Lng",
     "Distance",
     "Est.",
-    "Factor",
-    "Source",
-    "Leg CO2e",
-    "Plan CO2e",
+    // Info: (20260801 - Luphia) 未計算碳排時整組欄位不輸出,欄名與資料列必須同步條件化
+    ...(includeCo2e ? ["Factor", "Source", "Leg CO2e", "Plan CO2e"] : []),
     "PDF",
   ].join(",");
 
@@ -617,10 +660,14 @@ export function buildBatchSummaryCsv(
             formatCoord(leg.toLng),
             formatDistance(leg.segment?.distanceKm),
             leg.segment?.isFallback ? "Y" : "N",
-            FACTOR_BY_MODE[leg.mode],
-            escapeCsv(FACTOR_SOURCE_BY_MODE[leg.mode]),
-            formatCo2e(leg.segment?.co2eKg),
-            isLastLeg ? formatCo2e(planTotal) : "",
+            ...(includeCo2e
+              ? [
+                  FACTOR_BY_MODE[leg.mode],
+                  escapeCsv(FACTOR_SOURCE_BY_MODE[leg.mode]),
+                  formatCo2e(leg.segment?.co2eKg),
+                  isLastLeg ? formatCo2e(planTotal) : "",
+                ]
+              : []),
             isLastLeg ? files : "",
           ].join(","),
         );

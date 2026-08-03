@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useRef } from "react";
-import Image from "next/image";
 import { toJpeg } from "html-to-image";
 import { Download } from "lucide-react";
+import BrandLogoImage from "@/components/common/brand_logo_image";
 
 export default function CafecaDeskBoard() {
   const [isExporting, setIsExporting] = useState(false);
@@ -68,14 +68,11 @@ export default function CafecaDeskBoard() {
         <div className="relative z-10 flex w-full max-w-4xl flex-col items-center gap-8 select-text">
           {/* Info: (20260604 - Luphia) Logo enlarged 4x (Standard logo is h-8, enlarged 4x is h-32) */}
           <div className="flex items-center justify-center p-4">
-            <Image
-              src="/isunfa_logo_color.svg"
-              alt="iSunFA Logo"
+            <BrandLogoImage
+              className="h-32 w-auto"
               width={500}
               height={128}
-              className="h-32 w-auto"
-              priority
-              unoptimized
+              alt="iSunFA Logo"
             />
           </div>
 

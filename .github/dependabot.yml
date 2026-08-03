@@ -19,3 +19,10 @@ updates:
       runtime-minor-patch:
         dependency-type: "production"
         update-types: ["minor", "patch"]
+    # Info: (20260801 - Luphia) maplibre-gl 鎖在 v5:v6 與 @vis.gl/react-maplibre 8.1.x 執行期不相容。
+    # Info: (20260801 - Luphia) 該套件的 peer 宣告為 "maplibre-gl": ">=4.0.0"（無上界），不會擋下 v6,
+    # Info: (20260801 - Luphia) 但 v6 會讓 _onCameraEvent 讀到 undefined 的 transform,fitBounds 必定崩潰。
+    # Info: (20260801 - Luphia) 待該套件明確宣告支援 v6 後再解除此限制。
+    ignore:
+      - dependency-name: "maplibre-gl"
+        update-types: ["version-update:semver-major"]

@@ -7,12 +7,33 @@
 import {
   EMISSION_FACTORS,
   EMISSION_FACTOR_SOURCES,
+  ESTIMATION_TORTUOSITY_FACTORS,
 } from "@/constants/logistics";
-import { buildScaleBar } from "@/lib/utils/map_scale_bar";
+import {
+  DEFAULT_FACTOR_SET,
+  formatFactorSetVersion,
+  LOGISTICS_FACTOR_SETS,
+} from "@/constants/logistics_factor_sets";
+import {
+  buildScaleBar,
+  computeRenderedMapSizeMm,
+  ScaleBarOmissionEnum,
+} from "@/lib/utils/map_scale_bar";
+import {
+  EstimationShareBasisEnum,
+  reconcileLegTotals,
+  ReconciliationVerdictEnum,
+  REPORT_DISPLAY_DECIMALS,
+  summarizeEstimatedLegs,
+  type IEstimatedLegSummary,
+} from "@/lib/utils/report_disclosure";
 import {
   LOGISTICS_PDF_FONT_STACK,
-  LOGISTICS_PDF_LEG_MAP_RENDER_WIDTH_PX,
-  LOGISTICS_PDF_MAP_RENDER_WIDTH_PX,
+  LOGISTICS_PDF_LEG_MAP_GAP_MM,
+  LOGISTICS_PDF_LEG_MAP_MAX_HEIGHT_MM,
+  LOGISTICS_PDF_LEG_MAP_RENDER_WIDTH_MM,
+  LOGISTICS_PDF_MAP_MAX_HEIGHT_MM,
+  LOGISTICS_PDF_MAP_RENDER_WIDTH_MM,
   LOGISTICS_PDF_MAP_DATA_URL_PATTERN,
   LOGISTICS_PDF_MAP_MAX_BYTES,
 } from "@/constants/logistics_pdf";
@@ -42,6 +63,16 @@ export interface IReportLeg {
   mapImageDataUrl?: string;
   /** Info: (20260731 - Tzuhan) 該段地圖的每像素公尺數,用於決定性地畫出比例尺 */
   metersPerPixel?: number;
+  /**
+   * Info: (20260801 - Luphia) 截圖畫布的 CSS 尺寸,與 metersPerPixel 成對送出。
+   * 少了它就只知道「一像素多少公尺」卻不知道有幾個像素,無從得知這張圖橫跨多遠,
+   * 比例尺畫在紙上該多長也就算不出來。
+   */
+  captureWidthPx?: number;
+  captureHeightPx?: number;
+  /** Info: (20260801 - Luphia) 該段視野的南北緯度界(Mercator 比例尺護欄用) */
+  captureLatSouthDeg?: number;
+  captureLatNorthDeg?: number;
 }
 
 export interface ILogisticsReportHtmlInput {
@@ -60,6 +91,21 @@ export interface ILogisticsReportHtmlInput {
   mapImageDataUrl?: string;
   /** Info: (20260731 - Tzuhan) 總圖的每像素公尺數(比例尺用) */
   metersPerPixel?: number;
+  /** Info: (20260801 - Luphia) 總圖截圖畫布的 CSS 尺寸(比例尺與版面尺寸用) */
+  captureWidthPx?: number;
+  captureHeightPx?: number;
+  /** Info: (20260801 - Luphia) 總圖視野的南北緯度界(Mercator 比例尺護欄用) */
+  captureLatSouthDeg?: number;
+  captureLatNorthDeg?: number;
+  /**
+   * Info: (20260801 - Luphia) 是否計算二氧化碳當量。false 時整份報告不出現任何排放數值:
+   * 係數欄、CO2e 欄、總計列、公式與勾稽揭露全數移除,標頭明示「未計算碳排」。
+   *
+   * 為什麼不是「算了但隱藏」:使用者選擇不計算,報告就不該留下任何看起來像
+   * 「碳排為零」的空欄位 —— 一份距離報告與一份碳排為零的報告是完全不同的主張。
+   * 預設為 true,舊請求(未帶此欄)行為不變。
+   */
+  includeCo2e?: boolean;
   exportId?: string;
   generatedAt: string;
 }
@@ -122,9 +168,34 @@ const coordText = (lat?: number, lng?: number): string =>
     ? ""
     : `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 
+/**
+ * Info: (20260801 - Luphia) 比例尺的文字。附參考緯線時寫成「2000 km @ 32.5°N」——
+ * 有了它讀者才知道這條線在圖上哪個高度才準;沒有它,一條隨緯度變化的比例尺
+ * 會被當成整張圖通用。均勻時不附,以免暗示比實際更高的精確度。
+ */
+function formatScaleTick(bar: {
+  label: string;
+  referenceLatitudeDeg?: number;
+}): string {
+  if (bar.referenceLatitudeDeg === undefined) return bar.label;
+  const lat = bar.referenceLatitudeDeg;
+  const hemisphere = lat >= 0 ? "N" : "S";
+  return `${bar.label} @ ${Math.abs(lat).toFixed(1)}°${hemisphere}`;
+}
+
 interface IMapFigureInput {
   dataUrl?: string;
   metersPerPixel?: number;
+  /**
+   * Info: (20260801 - Luphia) 截圖當下畫布的 CSS 尺寸。必須與 metersPerPixel 成對使用:
+   * 兩者相乘才得到這張圖橫跨的實際距離,而長寬比決定影像在紙面上實際被畫成多大。
+   * 缺任一項就無從得知紙上一公釐代表多少公尺,此時不畫比例尺。
+   */
+  captureWidthPx?: number;
+  captureHeightPx?: number;
+  /** Info: (20260801 - Luphia) 視野南北緯度界:Mercator 比例隨緯度變化,跨幅過大時不畫比例尺 */
+  captureLatSouthDeg?: number;
+  captureLatNorthDeg?: number;
   caption: string;
   compact?: boolean;
 }
@@ -144,25 +215,171 @@ export function renderMapFigure(input: IMapFigureInput): string {
   if (!resolved.src) {
     const reason =
       resolved.reason === "too_large"
-        ? "地圖影像超過體積上限,已略過"
+        ? "地圖影像超過體積上限，已略過"
         : resolved.reason === "invalid_format"
-          ? "地圖影像格式不受支援,已略過"
+          ? "地圖影像格式不受支援，已略過"
           : "本段未附路徑圖";
-    return `<figure class="${cls}"><p class="note">${reason}(數值不受影響)</p><figcaption>${input.caption}</figcaption></figure>`;
+    return `<figure class="${cls}"><p class="note">${reason}（數值不受影響）</p><figcaption>${input.caption}</figcaption></figure>`;
   }
 
   // Info: (20260731 - Tzuhan) 逐段小圖是兩欄版面,顯示寬度只有一半;用錯基準會讓比例尺長度差一倍
-  const renderWidthPx = input.compact
-    ? LOGISTICS_PDF_LEG_MAP_RENDER_WIDTH_PX
-    : LOGISTICS_PDF_MAP_RENDER_WIDTH_PX;
-  const scale = buildScaleBar(input.metersPerPixel, renderWidthPx);
-  const scaleBlock = scale
-    ? `<div class="scalebar">${scale.label}<span class="bar" style="width:${(
-        (scale.widthPx / renderWidthPx) *
-        100
-      ).toFixed(1)}%"></span></div>`
+  const containerWidthMm = input.compact
+    ? LOGISTICS_PDF_LEG_MAP_RENDER_WIDTH_MM
+    : LOGISTICS_PDF_MAP_RENDER_WIDTH_MM;
+  const maxHeightMm = input.compact
+    ? LOGISTICS_PDF_LEG_MAP_MAX_HEIGHT_MM
+    : LOGISTICS_PDF_MAP_MAX_HEIGHT_MM;
+
+  /**
+   * Info: (20260801 - Luphia) 先算出影像在紙面上的實際尺寸,再把外框直接設成這個尺寸。
+   * 這樣 `object-fit: contain` 就永遠不會留白,影像邊界與外框邊界重合 ——
+   * 比例尺是絕對定位在外框內的,外框若比影像大,比例尺就會落在留白區而不是地圖上
+   * (實測回報的「位置錯誤」即為此)。
+   * 尺寸算不出來(舊版前端未回報截圖尺寸)時退回原本的自適應版面,只是不畫比例尺。
+   */
+  const renderedSize = computeRenderedMapSizeMm(
+    input.captureWidthPx,
+    input.captureHeightPx,
+    containerWidthMm,
+    maxHeightMm,
+  );
+
+  const scale = renderedSize
+    ? buildScaleBar({
+        metersPerPixel: input.metersPerPixel,
+        captureWidthPx: input.captureWidthPx,
+        renderedWidthMm: renderedSize.widthMm,
+        latSouthDeg: input.captureLatSouthDeg,
+        latNorthDeg: input.captureLatNorthDeg,
+      })
+    : ({
+        drawn: false,
+        reason: ScaleBarOmissionEnum.MISSING_INPUT,
+      } as const);
+
+  /**
+   * Info: (20260801 - Luphia) 線段長度以 mm 寫死而非百分比。
+   * 百分比會對「最近的定位祖先」求值,也就是這個收縮包住文字的標籤盒本身,
+   * 而不是地圖 —— 先前線段只剩幾公釐的成因就在這裡。mm 是絕對單位,沒有這個問題。
+   *
+   * 比例已明顯隨緯度變化時附註參考緯線:讀者必須知道「這條線在哪裡才準」,
+   * 否則他會拿它去量圖上任何一段。
+   */
+  const scaleBlock = scale.drawn
+    ? `<div class="scalebar"><span class="bar" style="width:${scale.bar.widthMm}mm"></span><span class="tick">${escapeHtml(formatScaleTick(scale.bar))}</span></div>`
     : "";
-  return `<figure class="${cls}"><img class="map" src="${resolved.src}" alt="${input.caption}" />${scaleBlock}<figcaption>${input.caption}</figcaption></figure>`;
+
+  /**
+   * Info: (20260801 - Luphia) 跨緯度過大而不畫比例尺時必須說明,不可靜默省略。
+   * 讀者要能分辨「這張圖沒有比例尺」是缺件還是刻意的判斷 ——
+   * 沒有說明的話,一個正確的決定看起來會像故障。
+   * 反過來,若真的畫上去,一條在圖兩端相差逾半的線會讓讀者以為自己驗證過距離。
+   */
+  const scaleNote =
+    !scale.drawn && scale.reason === ScaleBarOmissionEnum.LATITUDE_SPAN_TOO_WIDE
+      ? '<p class="note scalenote">本圖跨越緯度過大，Mercator 投影的比例隨緯度變化，單一比例尺不成立故未標示（距離數值不受影響，見上表）</p>'
+      : "";
+
+  const boxStyle = renderedSize
+    ? ` style="width:${renderedSize.widthMm}mm;height:${renderedSize.heightMm}mm"`
+    : "";
+
+  /**
+   * Info: (20260801 - Luphia) 說明置於圖說**之後**而非圖與圖說之間。
+   * 逐段小圖是兩欄版面,說明有兩行而圖說只有一行 —— 夾在中間會把該欄的圖說往下推,
+   * 左右兩欄的圖說於是不對齊(實測 R02-AIR 第 1、2 段相差一行)。
+   * 置於圖說之後也更符合閱讀順序:先知道這是哪一段,再讀為什麼沒有比例尺。
+   */
+  return `<figure class="${cls}"><div class="mapbox"${boxStyle}><img class="map" src="${resolved.src}" alt="${input.caption}" />${scaleBlock}</div><figcaption>${input.caption}</figcaption>${scaleNote}</figure>`;
+}
+
+/**
+ * Info: (20260801 - Luphia) 推估段的材性揭露文字。
+ *
+ * 現行揭露只有距離欄旁的小字 `est.` 與頁尾一句「該段無路網資料」。那句話是真的,
+ * 但讀者無從判斷這件事有多重要 —— 一段推估且占總排放 0.03%,與兩段推估且占 40%,
+ * 是完全不同的兩份報告。查核者要的是後者這個數字。
+ *
+ * 實測 R02(東京→巴黎)三段中有兩段推估,但合計僅占 0.07% ——
+ * 有了這個數字,讀者才知道可以放心;沒有它,兩個 est. 標記看起來很嚴重。
+ */
+function renderEstimationNote(summary: IEstimatedLegSummary): string {
+  if (summary.estimatedCount === 0) return "";
+
+  /**
+   * Info: (20260801 - Luphia) 加成係數逐模式列出。各模式不同(陸運 ×1.2、海運 ×1.5),
+   * 先前一律寫 1.2 —— 海運的 est. 段揭露值是錯的,查核者照它回推距離會得到錯誤結果。
+   * 係數由 ESTIMATION_TORTUOSITY_FACTORS 供給,與演算法同一個來源。
+   */
+  const factorText = summary.estimatedModes
+    .map((mode) => {
+      const factor =
+        ESTIMATION_TORTUOSITY_FACTORS[
+          mode as keyof typeof ESTIMATION_TORTUOSITY_FACTORS
+        ];
+      return factor === undefined ? mode : `${mode} × ${factor}`;
+    })
+    .join("、");
+
+  const method = factorText
+    ? `以直線距離乘上繞行係數推估（${factorText}）`
+    : "以直線距離推估";
+  const scope = `本報告 ${summary.totalCount} 段中有 ${summary.estimatedCount} 段缺乏路徑資料，${method}（見上表 est. 標記）`;
+
+  /**
+   * Info: (20260801 - Luphia) 基準必須寫進文字:0.07% 的排放占比與 0.07% 的距離占比
+   * 是不同的意思。使用者關閉碳排計算時報告內沒有排放數值,材性只能以距離衡量。
+   */
+  const basisLabel =
+    summary.shareBasis === EstimationShareBasisEnum.DISTANCE
+      ? "逐段距離"
+      : "逐段排放";
+
+  if (summary.share === undefined) {
+    // Info: (20260801 - Luphia) 算不出占比就明說,不填 0 —— 「算不出來」與「不重要」是兩件事
+    return `<div class="formula recon">${scope}；該批段落的${basisLabel}占比無法計算（逐段數值不完整）。</div>`;
+  }
+
+  /**
+   * Info: (20260801 - Luphia) 占比取兩位小數的百分比:0.07% 與 0% 對材性判斷是不同的答案,
+   * 四捨五入到整數會把前者變成後者。
+   */
+  const percent = (summary.share * 100).toFixed(2);
+  return `<div class="formula recon">${scope}，合計占${basisLabel} ${percent}%。</div>`;
+}
+
+/**
+ * Info: (20260801 - Luphia) 加總可驗證性的揭露文字。
+ *
+ * 三種措辭對應三種事實,不可混用:
+ * - 完全相符:仍說明顯示位數,讓查核者知道自己重算時該預期什麼精度
+ * - 落在四捨五入內:明確給出差額與來源,查核者不需要自己推敲那 0.01 是哪來的
+ * - 超出四捨五入:這不是排版問題而是兩套推導分歧,措辭必須讓人警覺並轉向 CSV 核對
+ *
+ * 刻意不把總計改成逐列的和 —— 那會讓 PDF 與 CSV、與資料庫出現三套數字,
+ * 正是本檔開頭警告的「避免 CSV 與 PDF 各說各話」。揭露而不改數字。
+ */
+function renderReconciliationNote(reconciliation: {
+  verdict: ReconciliationVerdictEnum;
+  displayedSum: number;
+  displayedTotal: number;
+  difference: number;
+}): string {
+  const { verdict, displayedSum, displayedTotal, difference } = reconciliation;
+  if (verdict === ReconciliationVerdictEnum.INDETERMINATE) return "";
+
+  const decimals = `小數 ${REPORT_DISPLAY_DECIMALS} 位`;
+
+  if (verdict === ReconciliationVerdictEnum.EXACT) {
+    return `<div class="formula recon">各段數值四捨五入至${decimals}顯示；本表逐列相加與總計一致。完整精度見同批匯出的 summary.csv。</div>`;
+  }
+
+  if (verdict === ReconciliationVerdictEnum.WITHIN_ROUNDING) {
+    return `<div class="formula recon">各段數值四捨五入至${decimals}顯示，總計以未捨入值計算，故逐列相加（${formatNumber(displayedSum)}）與總計（${formatNumber(displayedTotal)}）相差 ${formatNumber(Math.abs(difference))} kg —— 此差異來自顯示捨入，非計算差異。完整精度見同批匯出的 summary.csv。</div>`;
+  }
+
+  // Info: (20260801 - Luphia) DIVERGENT:差異無法以捨入解釋,必須讓讀者知道這不是排版問題
+  return `<div class="formula recon warn">注意：逐列相加（${formatNumber(displayedSum)}）與總計（${formatNumber(displayedTotal)}）相差 ${formatNumber(Math.abs(difference))} kg，超出四捨五入可解釋的範圍。逐段數值與方案總計由兩套推導產生，此差異需以 summary.csv 核對後判定。</div>`;
 }
 
 /**
@@ -173,23 +390,89 @@ export function renderMapFigure(input: IMapFigureInput): string {
 export function buildLogisticsReportHtml(
   input: ILogisticsReportHtmlInput,
 ): string {
+  /**
+   * Info: (20260801 - Luphia) 預設計算碳排:未帶此欄的舊請求行為不變。
+   * 關閉時整份報告不出現任何排放數值 —— 一份距離報告與一份「碳排為零」的報告
+   * 是完全不同的主張,不可讓讀者從空欄位自行猜測。
+   */
+  const includeCo2e = input.includeCo2e !== false;
+
+  /**
+   * Info: (20260801 - Luphia) 係數組版本印在標頭。
+   *
+   * 換係數組會讓同一條路線的申報值改變近一倍(實測 R02 為 1.93 倍)。
+   * 若新舊報告都只寫「本方案總排放 X kg」,查核者無法判斷兩份為何不同 ——
+   * 是資料改了、演算法改了,還是係數組換了。標籤讓這件事一眼可辨。
+   *
+   * 未計算碳排時不印:那份報告沒有套用任何係數,標一個係數組版本會誤導。
+   */
+  const factorSetVersion = formatFactorSetVersion(
+    DEFAULT_FACTOR_SET,
+    LOGISTICS_FACTOR_SETS[DEFAULT_FACTOR_SET],
+  );
+
+  /**
+   * Info: (20260801 - Luphia) 未計算碳排時,卡片與總計列改呈現總距離 ——
+   * 版面不留空洞,而讀者仍拿到這份報告唯一有意義的合計數。
+   * 以 Number 累加而非 Decimal:距離僅供顯示,不進申報數值(逐段距離仍照原值印出)。
+   */
+  const totalDistanceKm = input.legs.reduce(
+    (sum, leg) =>
+      sum +
+      (Number.isFinite(Number(leg.distanceKm)) ? Number(leg.distanceKm) : 0),
+    0,
+  );
+
   const legRows = input.legs
     .map((leg, index) => {
       const from = escapeHtml(leg.fromName);
       const to = escapeHtml(leg.toName);
       const fromCoord = coordText(leg.fromLat, leg.fromLng);
       const toCoord = coordText(leg.toLat, leg.toLng);
+      // Info: (20260801 - Luphia) 未計算碳排時整組欄位不輸出,而非留空格 —— 空欄位會被讀成「碳排為零」
+      const emissionCells = includeCo2e
+        ? `
+  <td class="num">${FACTOR_BY_MODE[leg.mode]}</td>
+  <td class="num">${formatNumber(leg.co2eKg)}</td>`
+        : "";
       return `<tr>
   <td class="num">${index + 1}</td>
   <td><span class="mode mode-${leg.mode.toLowerCase()}">${leg.mode}</span></td>
   <td>${from}${fromCoord ? `<span class="coord">${fromCoord}</span>` : ""}</td>
   <td>${to}${toCoord ? `<span class="coord">${toCoord}</span>` : ""}</td>
-  <td class="num">${formatNumber(leg.distanceKm)}${leg.isFallback ? '<span class="est">est.</span>' : ""}</td>
-  <td class="num">${FACTOR_BY_MODE[leg.mode]}</td>
-  <td class="num">${formatNumber(leg.co2eKg)}</td>
+  <td class="num">${formatNumber(leg.distanceKm)}${leg.isFallback ? '<span class="est">est.</span>' : ""}</td>${emissionCells}
 </tr>`;
     })
     .join("\n");
+
+  /**
+   * Info: (20260801 - Luphia) 自我勾稽:逐列相加是否等於總計。
+   *
+   * 頁尾印出計算公式即是邀請查核者逐列重算,而逐段顯示到小數 2 位、總計取自上游
+   * 未捨入的值 —— 兩者本來就可能差幾分錢。實測 R01 差 0.01、R02 恰好對上,
+   * 也就是「查核者會不會發現對不上」取決於運氣,而報告完全沒揭露。
+   * 「加總對不上」對審計文件是必被提問的一項,故一律揭露。
+   */
+  // Info: (20260801 - Luphia) 未計算碳排時沒有可勾稽的數值,整段揭露不適用
+  const reconciliation = includeCo2e
+    ? reconcileLegTotals(
+        input.legs.map((leg) => leg.co2eKg),
+        input.planTotalCo2e,
+      )
+    : null;
+
+  /**
+   * Info: (20260801 - Luphia) 推估段的材性。路網覆蓋範圍由部署決定
+   * (dockerfiles/osrm/Dockerfile 目前只載入 taiwan-latest.osm.pbf,故非臺灣的
+   * 陸運段全數落到推估),但報告刻意不宣稱覆蓋範圍 —— 在程式碼裡另寫一份
+   * 就是第二個必須手動同步的事實。只陳述資料本身能證實的:幾段推估、占多少排放。
+   */
+  const estimation = summarizeEstimatedLegs(
+    input.legs,
+    includeCo2e
+      ? EstimationShareBasisEnum.CO2E
+      : EstimationShareBasisEnum.DISTANCE,
+  );
 
   // Info: (20260731 - Tzuhan) 係數來源逐一列出:查核者要能自行以公開係數重算每一格
   const sources = Array.from(
@@ -201,7 +484,11 @@ export function buildLogisticsReportHtml(
   const mapBlock = renderMapFigure({
     dataUrl: input.mapImageDataUrl,
     metersPerPixel: input.metersPerPixel,
-    caption: `${escapeHtml(input.originLabel)} → ${escapeHtml(input.destLabel)}(全程)`,
+    captureWidthPx: input.captureWidthPx,
+    captureHeightPx: input.captureHeightPx,
+    captureLatSouthDeg: input.captureLatSouthDeg,
+    captureLatNorthDeg: input.captureLatNorthDeg,
+    caption: `${escapeHtml(input.originLabel)} → ${escapeHtml(input.destLabel)}（全程）`,
   });
 
   /**
@@ -214,6 +501,10 @@ export function buildLogisticsReportHtml(
       renderMapFigure({
         dataUrl: leg.mapImageDataUrl,
         metersPerPixel: leg.metersPerPixel,
+        captureWidthPx: leg.captureWidthPx,
+        captureHeightPx: leg.captureHeightPx,
+        captureLatSouthDeg: leg.captureLatSouthDeg,
+        captureLatNorthDeg: leg.captureLatNorthDeg,
         caption: `${index + 1}. ${escapeHtml(leg.fromName)} → ${escapeHtml(leg.toName)}(${leg.mode})`,
         compact: true,
       }),
@@ -237,14 +528,28 @@ export function buildLogisticsReportHtml(
   .card .value { font-size: 13pt; font-weight: 700; }
   /* Info: (20260731 - Tzuhan) contain 而非 cover:cover 會裁掉圖的邊緣,而被裁掉的正是路線端點,
      實測回報「路線圖被裁掉不完整,無法成為證據」即此。寧可留白也不可裁切證據。 */
-  .map { width: 100%; max-height: 70mm; object-fit: contain; background: #f8fafc; border: 0.3mm solid #e2e8f0; border-radius: 1.5mm; }
-  .figure { position: relative; margin: 0 0 3mm; break-inside: avoid; }
+  .map { display: block; width: 100%; height: 100%; object-fit: contain; background: #f8fafc; border: 0.3mm solid #e2e8f0; border-radius: 1.5mm; }
+  .figure { margin: 0 0 3mm; break-inside: avoid; }
   .figure figcaption { font-size: 7.5pt; color: #64748b; margin-top: 1mm; }
-  .figure.compact .map { max-height: 46mm; }
-  .scalebar { position: absolute; bottom: 4mm; left: 2.5mm; background: rgba(255,255,255,0.88); border: 0.2mm solid #cbd5e1; border-radius: 0.8mm; padding: 0.6mm 1.2mm; font-size: 6.5pt; color: #334155; line-height: 1.1; }
-  .scalebar .bar { display: block; height: 0.8mm; border: 0.2mm solid #334155; border-top: none; }
+  /* Info: (20260801 - Luphia) 比例尺的定位基準必須是「影像」而不是「整個 figure」:
+     figure 還包含 figcaption,以它為基準時 bottom 會把比例尺推到圖說上,而不是圖內。
+     .mapbox 的尺寸由 computeRenderedMapSizeMm 決定性算出並寫在 style 屬性上,
+     與影像實際被畫出的大小完全一致,contain 因此不會留白。 */
+  .mapbox { position: relative; margin: 0 auto; max-width: 100%; }
+  /* Info: (20260801 - Luphia) 尺寸算不出來時的退路:回到自適應高度,此時不畫比例尺 */
+  .mapbox:not([style]) { height: ${LOGISTICS_PDF_MAP_MAX_HEIGHT_MM}mm; }
+  .figure.compact .mapbox:not([style]) { height: ${LOGISTICS_PDF_LEG_MAP_MAX_HEIGHT_MM}mm; }
+  .scalebar { position: absolute; bottom: 2mm; left: 2mm; background: rgba(255,255,255,0.88); border: 0.2mm solid #cbd5e1; border-radius: 0.8mm; padding: 0.6mm 1.2mm; font-size: 6.5pt; color: #334155; line-height: 1.1; }
+  /* Info: (20260801 - Luphia) 線段畫在文字上方:讀者的視線先落在線段兩端,再讀數字。
+     兩端的短豎線標出量測起訖 —— 沒有端點的線段讀不出「從哪量到哪」。 */
+  .scalebar .bar { display: block; height: 1.2mm; border: 0.25mm solid #334155; border-top: none; }
+  .scalebar .tick { display: block; text-align: center; margin-top: 0.3mm; }
+  /* Info: (20260801 - Luphia) 未標示比例尺的原因:字級小但不可省,讀者要能分辨刻意與缺件 */
+  .scalenote { font-size: 7pt; margin: 1mm 0 0; }
   .section { font-size: 10pt; margin: 5mm 0 2mm; padding-top: 2mm; border-top: 0.2mm solid #e2e8f0; }
-  .legmaps { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; }
+  /* Info: (20260801 - Luphia) gap 由常數插入:它同時決定逐段小圖的顯示寬度,
+     兩處若各自寫死就會失去同步,而比例尺長度直接建立在那個寬度上 */
+  .legmaps { display: grid; grid-template-columns: 1fr 1fr; gap: ${LOGISTICS_PDF_LEG_MAP_GAP_MM}mm; }
   table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
   thead { display: table-header-group; }
   th { text-align: left; background: #f8fafc; border-bottom: 0.4mm solid #cbd5e1; padding: 1.6mm 1.2mm; font-size: 8pt; color: #475569; }
@@ -260,21 +565,32 @@ export function buildLogisticsReportHtml(
   .total { margin-top: 3mm; text-align: right; font-size: 11pt; font-weight: 700; }
   .note { font-size: 8pt; color: #64748b; margin: 2mm 0; }
   .formula { margin-top: 4mm; padding-top: 2mm; border-top: 0.2mm solid #e2e8f0; font-size: 7.5pt; color: #64748b; }
+  /* Info: (20260801 - Luphia) 勾稽揭露緊接公式,不再畫一條分隔線(視覺上屬同一段說明) */
+  .formula.recon { margin-top: 1.5mm; padding-top: 0; border-top: none; }
+  /* Info: (20260801 - Luphia) 超出捨入範圍時提高視覺權重:這是查核者必須注意的一項,不可與一般註腳同級 */
+  .formula.recon.warn { color: #b45309; font-weight: 700; }
 </style>
 </head>
 <body>
   <h1><span class="code">${escapeHtml(input.planCode)}</span> ${escapeHtml(input.planLabel)}</h1>
   <p class="meta">
-    ${escapeHtml(input.originLabel)} → ${escapeHtml(input.destLabel)}
+    ${includeCo2e ? "" : "【未計算碳排】"}${escapeHtml(input.originLabel)} → ${escapeHtml(input.destLabel)}
     · ${escapeHtml(input.routeLabel)}
     · ${formatNumber(input.weightKg)} kg
-    · ${escapeHtml(input.generatedAt)}${input.exportId ? ` · Export ${escapeHtml(input.exportId)}` : ""}
+    · ${escapeHtml(input.generatedAt)}${input.exportId ? ` · Export ${escapeHtml(input.exportId)}` : ""}${includeCo2e ? ` · 係數組 ${escapeHtml(factorSetVersion)}` : ""}
   </p>
   <div class="grid">
-    <div class="card">
+    ${
+      includeCo2e
+        ? `<div class="card">
       <div class="label">方案總排放</div>
       <div class="value">${formatNumber(input.planTotalCo2e)} <span style="font-size:9pt">kg CO2e</span></div>
-    </div>
+    </div>`
+        : `<div class="card">
+      <div class="label">總距離</div>
+      <div class="value">${formatNumber(totalDistanceKm)} <span style="font-size:9pt">km</span></div>
+    </div>`
+    }
     <div class="card">
       <div class="label">段數</div>
       <div class="value">${input.legs.length}</div>
@@ -285,24 +601,30 @@ export function buildLogisticsReportHtml(
     <thead>
       <tr>
         <th>#</th><th>Mode</th><th>From</th><th>To</th>
-        <th class="num">Distance (km)</th><th class="num">Factor</th><th class="num">CO2e (kg)</th>
+        <th class="num">Distance (km)</th>${includeCo2e ? '<th class="num">Factor</th><th class="num">CO2e (kg)</th>' : ""}
       </tr>
     </thead>
     <tbody>
 ${legRows}
     </tbody>
   </table>
-  <p class="total">Total ${formatNumber(input.planTotalCo2e)} kg CO2e</p>
+  <p class="total">${includeCo2e ? `Total ${formatNumber(input.planTotalCo2e)} kg CO2e` : `Total ${formatNumber(totalDistanceKm)} km`}</p>
   <h2 class="section">逐段路徑圖</h2>
   <div class="legmaps">
 ${legFigures}
   </div>
   <div class="formula">
-    Leg CO2e = Distance × (Weight / 1000) × Factor ·
+    ${
+      includeCo2e
+        ? `Leg CO2e = Distance × (Weight / 1000) × Factor ·
     Factors (kg CO2e/t-km): LAND ${EMISSION_FACTORS.LAND} | SEA ${EMISSION_FACTORS.SEA} | AIR ${EMISSION_FACTORS.AIR} ·
-    ${sources} ·
-    est. = 直線距離 × 1.2 推估(該段無路網資料)
+    ${sources} ·`
+        : `本報告未計算二氧化碳當量，僅提供路徑與距離。排放量須另行以適用係數計算 ·`
+    }
+    est. = 該段無路徑資料，以直線距離乘繞行係數推估（LAND × ${ESTIMATION_TORTUOSITY_FACTORS.LAND}、SEA × ${ESTIMATION_TORTUOSITY_FACTORS.SEA}）
   </div>
+  ${renderEstimationNote(estimation)}
+  ${reconciliation ? renderReconciliationNote(reconciliation) : ""}
 </body>
 </html>`;
 }

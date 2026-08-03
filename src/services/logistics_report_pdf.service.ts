@@ -9,6 +9,20 @@ import { logger } from "@/lib/utils/logger";
 import { ApiError, API_ERRORS } from "@/lib/utils/error_dictionary";
 import { buildLogisticsReportHtml } from "@/lib/utils/logistics_report_html";
 import {
+  assessGlyphCoverage,
+  containsCjk,
+  GlyphCoverageEnum,
+  shouldBlockForMissingGlyphs,
+  type IGlyphProbe,
+} from "@/lib/utils/pdf_font_probe";
+import {
+  PDF_FONT_PROBE_CJK_SAMPLE,
+  PDF_FONT_PROBE_LATIN_REFERENCE,
+  PDF_FONT_PROBE_NOTDEF_REFERENCE,
+  PDF_FONT_PROBE_SIZE_PX,
+  PDF_FONT_STACK,
+} from "@/constants/pdf_font";
+import {
   LOGISTICS_PDF_MARGIN,
   LOGISTICS_PDF_MAX_REPORTS_PER_REQUEST,
 } from "@/constants/logistics_pdf";
@@ -120,6 +134,20 @@ export class LogisticsReportPdfService {
       logger.error(
         `[LogisticsReportPdfService] generate failed: ${describeError(error)}`,
       );
+
+      /**
+       * Info: (20260801 - Luphia) 已分類的 ApiError 原樣往上拋,不再包成通用的列印失敗。
+       *
+       * 先前無條件覆寫,結果是 IS_PDF_FONT_UNAVAILABLE(缺中文字型)在這裡被吃掉,
+       * 對外只剩「Failed to generate PDF report」—— 而那兩者的處置完全相反:
+       * 通用列印失敗值得重試,缺字型重試一萬次都一樣,唯一解法是裝字型。
+       * 把唯一的解法埋在通用錯誤裡,等於讓維運只能靠猜。
+       *
+       * 同時只有**非**分類錯誤才棄用共用 Chrome:字型缺失時瀏覽器本身是健康的,
+       * 關掉它只會讓後續每個請求多付一次冷啟動,對成因毫無幫助。
+       */
+      if (error instanceof ApiError) throw error;
+
       // Info: (20260731 - Tzuhan) 失敗後棄用共用實例:崩潰的 Chrome 會讓後續請求全數失敗
       if (sharedBrowser) {
         await sharedBrowser.close().catch(() => undefined);
@@ -129,6 +157,118 @@ export class LogisticsReportPdfService {
         API_ERRORS.IS_PDF_GENERATION_FAILED.code,
         API_ERRORS.IS_PDF_GENERATION_FAILED.message,
         API_ERRORS.IS_PDF_GENERATION_FAILED.status,
+      );
+    }
+  }
+
+  /**
+   * Info: (20260801 - Luphia) 列印前實測中文字形是否可用,缺失即 fail fast。
+   *
+   * 為什麼不信任字型堆疊就好:堆疊只表達「偏好」,Chrome 找不到就靜默 fallback。
+   * 實測伺服器 `fc-list :lang=zh` 只有 X11 點陣字 `Fixed`,所有中文取 DejaVu 的
+   * .notdef,產出一份地點名稱全是空心方框的報告 —— 而流程回報「成功」。
+   * 對審計文件而言那不是瑕疵而是不可用,§6 要求這種輸出在交付前就被凍結。
+   *
+   * 渲染放在瀏覽器內進行,因為只有 Chrome 自己知道 per-character fallback
+   * 最後選了哪個字型;Node 端讀 fontconfig 得到的是「系統有什麼」而非
+   * 「Chrome 實際用了什麼」,兩者可以不同。
+   *
+   * 判定邏輯本身抽在 pdf_font_probe(純函數、可測),此處只負責取得寬度。
+   */
+  private async assertCjkRenderable(
+    page: Awaited<
+      ReturnType<
+        Awaited<
+          ReturnType<Awaited<typeof import("puppeteer")>["default"]["launch"]>
+        >["newPage"]
+      >
+    >,
+    html: string,
+    planCode: string,
+  ): Promise<void> {
+    // Info: (20260801 - Luphia) 純拉丁字的報告即使環境無中文字型也能正確輸出,不該擋
+    const reportContainsCjk = containsCjk(html);
+
+    /**
+     * Info: (20260801 - Luphia) 把三個字元各自畫到離屏 canvas,回傳點陣特徵。
+     *
+     * 不量前進寬度:CJK 字型的 .notdef 與真正的中文字同為全角,寬度必然相同
+     * (實測 Noto Sans CJK 兩者皆為 1em),用寬度判定會在字型正常時誤判為缺字。
+     * 字形畫出來的樣子才是真正的判準 —— 真的「測」是筆畫複雜的表意文字,
+     * .notdef 是空白或一個方框,點陣不可能相同。
+     */
+    const probe = await page.evaluate(
+      (fontStack: string, samples: string[], sizePx: number) => {
+        const canvas = document.createElement("canvas");
+        canvas.width = sizePx * 2;
+        canvas.height = sizePx * 2;
+        const context = canvas.getContext("2d", { willReadFrequently: true });
+        if (!context) return null;
+
+        const signatureOf = (character: string) => {
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          context.font = `${sizePx}px ${fontStack}`;
+          context.textBaseline = "top";
+          context.fillStyle = "#000";
+          context.fillText(character, sizePx * 0.25, sizePx * 0.25);
+
+          const { data } = context.getImageData(
+            0,
+            0,
+            canvas.width,
+            canvas.height,
+          );
+          let inkPixels = 0;
+          let checksum = 0;
+          // Info: (20260801 - Luphia) 只讀 alpha 通道(每 4 bytes 的第 4 個),字色固定為黑
+          for (let index = 3; index < data.length; index += 4) {
+            const alpha = data[index];
+            if (alpha === 0) continue;
+            inkPixels += 1;
+            // Info: (20260801 - Luphia) 位置與濃度同時入雜湊,否則只是墨量相同就會誤判成同字形
+            checksum = (checksum * 31 + index * 7 + alpha) % 2147483647;
+          }
+          return { inkPixels, checksum };
+        };
+
+        return {
+          cjk: signatureOf(samples[0]),
+          notdef: signatureOf(samples[1]),
+          latin: signatureOf(samples[2]),
+        };
+      },
+      PDF_FONT_STACK,
+      [
+        PDF_FONT_PROBE_CJK_SAMPLE,
+        PDF_FONT_PROBE_NOTDEF_REFERENCE,
+        PDF_FONT_PROBE_LATIN_REFERENCE,
+      ],
+      PDF_FONT_PROBE_SIZE_PX,
+    );
+
+    const coverage =
+      probe === null
+        ? GlyphCoverageEnum.INDETERMINATE
+        : assessGlyphCoverage(probe as IGlyphProbe);
+
+    if (coverage === GlyphCoverageEnum.INDETERMINATE) {
+      // Info: (20260801 - Luphia) 偵測自己壞掉時不擋:診斷功能不該成為匯出的單點故障
+      logger.warn(`[LogisticsReportPdfService] glyph probe indeterminate`, {
+        planCode,
+        probe,
+      });
+      return;
+    }
+
+    if (shouldBlockForMissingGlyphs(coverage, reportContainsCjk)) {
+      logger.error(
+        `[LogisticsReportPdfService] no CJK glyph available; refusing to emit a report of empty boxes`,
+        { planCode, probe },
+      );
+      throw new ApiError(
+        API_ERRORS.IS_PDF_FONT_UNAVAILABLE.code,
+        API_ERRORS.IS_PDF_FONT_UNAVAILABLE.message,
+        API_ERRORS.IS_PDF_FONT_UNAVAILABLE.status,
       );
     }
   }
@@ -143,23 +283,31 @@ export class LogisticsReportPdfService {
   ): Promise<IGeneratedReportPdf> {
     const page = await browser.newPage();
     try {
+      /**
+       * Info: (20260801 - Luphia) 以展開取代逐欄手抄。
+       *
+       * 逐欄複製漏過一個真實缺陷:`metersPerPixel` 從未被傳下來,於是**全程圖從來沒有比例尺**,
+       * 而三張逐段圖有 —— 因為 `legs` 是整個陣列原樣傳入,逐段的欄位順帶到了。
+       * 實測於 R01-AIR 報告確認:逐段圖有 1 km / 2000 km / 5 km,全程圖左下角空無一物。
+       *
+       * 型別檢查抓不到這種漏抄:目標欄位是 optional,少給一個只是變成 undefined。
+       * 展開之後,validator 加的任何欄位都會自動流到這裡,不必再記得同步第三個地方。
+       *
+       * report 多出的 `fileName` 不在 html input 內,但展開不觸發多餘屬性檢查,
+       * 且 buildLogisticsReportHtml 不讀它,無副作用。
+       */
       const html = buildLogisticsReportHtml({
-        planCode: report.planCode,
-        routeLabel: report.routeLabel,
-        planLabel: report.planLabel,
-        originLabel: report.originLabel,
-        destLabel: report.destLabel,
-        weightKg: report.weightKg,
-        planTotalCo2e: report.planTotalCo2e,
-        mapImageDataUrl: report.mapImageDataUrl,
+        // Info: (20260731 - Tzuhan) validator 的 leg 形狀即 IReportLeg,原樣傳入不做任何換算
+        ...report,
         exportId,
         generatedAt,
-        // Info: (20260731 - Tzuhan) validator 的 leg 形狀即 IReportLeg,原樣傳入不做任何換算
-        legs: report.legs,
       });
 
       // Info: (20260731 - Tzuhan) setContent 而非 goto:HTML 由我們產生,不需要網路,也不該讓外部 URL 進來
       await page.setContent(html, { waitUntil: "load" });
+
+      await this.assertCjkRenderable(page, html, report.planCode);
+
       const buffer = await page.pdf({
         format: "A4",
         printBackground: true,

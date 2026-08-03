@@ -34,11 +34,11 @@ export default function LanguageSelector() {
 
   return (
     <Menu as="div" className="relative">
-      <MenuButton className="flex items-center gap-x-1 text-sm leading-6 font-semibold text-slate-900 transition-colors hover:text-orange-600 focus:outline-none">
+      <MenuButton className="text-text-primary hover:text-brand flex items-center gap-x-1 text-sm leading-6 font-semibold transition-colors focus:outline-none">
         <Globe className="size-5 shrink-0" aria-hidden="true" />
         <span className="hidden sm:inline">{currentLangLabel}</span>
         <ChevronDown
-          className="size-4 shrink-0 text-gray-400"
+          className="text-text-muted size-4 shrink-0"
           aria-hidden="true"
         />
       </MenuButton>
@@ -51,13 +51,13 @@ export default function LanguageSelector() {
         leaveFrom="transform opacity-100 scale-100"
         leaveTo="transform opacity-0 scale-95"
       >
-        <MenuItems className="ring-opacity-5 absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black focus:outline-none">
+        <MenuItems className="bg-surface-overlay ring-border-default absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md py-1 shadow-lg ring-1 focus:outline-none">
           {languages.map((lang) => (
             <MenuItem key={lang.code}>
               {({ focus }) => (
                 <button
                   onClick={() => setLanguage(lang.code)}
-                  className={` ${focus ? "bg-orange-50" : ""} ${language === lang.code ? "font-bold text-orange-600" : "text-gray-700"} group flex w-full items-center justify-between px-4 py-2 text-sm`}
+                  className={` ${focus ? "bg-brand-soft" : ""} ${language === lang.code ? "text-brand font-bold" : "text-text-secondary"} group flex w-full items-center justify-between px-4 py-2 text-sm`}
                 >
                   <span>{lang.label}</span>
                   {language === lang.code && (

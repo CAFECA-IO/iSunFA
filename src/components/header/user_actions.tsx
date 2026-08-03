@@ -119,21 +119,21 @@ export default function UserActions() {
                 setForceOpen(false);
                 close();
               }}
-              className={`group flex h-full w-full flex-col items-center justify-center rounded-xl bg-white p-2 shadow-sm ring-1 ring-gray-200 transition-all duration-200 hover:bg-orange-50 hover:ring-1 hover:ring-orange-200 md:rounded-lg md:p-3 md:shadow-none md:ring-gray-100`}
+              className={`group bg-surface-overlay ring-border-default hover:bg-brand-soft hover:ring-brand md:ring-border-default flex h-full w-full flex-col items-center justify-center rounded-xl p-2 shadow-sm ring-1 transition-all duration-200 hover:ring-1 md:rounded-lg md:p-3 md:shadow-none`}
             >
               <Icon
-                className={`mb-1 size-6 text-gray-500 group-hover:text-orange-500 md:mb-2`}
+                className={`text-text-muted group-hover:text-brand mb-1 size-6 md:mb-2`}
               />
               <span
-                className={`text-center text-xs font-normal text-gray-700 group-hover:text-orange-900 md:text-sm md:font-medium`}
+                className={`text-text-secondary group-hover:text-brand-on-soft text-center text-xs font-normal md:text-sm md:font-medium`}
               >
                 {t(getModuleI18nKey(module.key, isAdmin))}
               </span>
             </Link>
           ) : (
-            <div className="flex h-full w-full cursor-not-allowed flex-col items-center justify-center rounded-xl bg-gray-50/80 p-2 opacity-60 ring-1 ring-gray-100 md:rounded-lg md:bg-gray-50/50 md:p-3">
-              <Icon size={24} className="mb-1 text-gray-300 md:mb-2" />
-              <span className="text-center text-xs font-normal text-gray-400 md:text-sm md:font-medium">
+            <div className="bg-surface-raised/80 ring-border-default md:bg-surface-raised/50 flex h-full w-full cursor-not-allowed flex-col items-center justify-center rounded-xl p-2 opacity-60 ring-1 md:rounded-lg md:p-3">
+              <Icon size={24} className="text-text-muted mb-1 md:mb-2" />
+              <span className="text-text-muted text-center text-xs font-normal md:text-sm md:font-medium">
                 {t(getModuleI18nKey(module.key, isAdmin))}
               </span>
             </div>
@@ -157,13 +157,13 @@ export default function UserActions() {
             setForceOpen(false);
             close();
           }}
-          className={`group flex h-full w-full flex-col items-center justify-center rounded-xl bg-white p-2 shadow-sm ring-1 ring-gray-200 transition-all duration-200 hover:bg-orange-50 hover:ring-1 hover:ring-orange-200 md:rounded-lg md:p-3 md:shadow-none md:ring-gray-100`}
+          className={`group bg-surface-overlay ring-border-default hover:bg-brand-soft hover:ring-brand md:ring-border-default flex h-full w-full flex-col items-center justify-center rounded-xl p-2 shadow-sm ring-1 transition-all duration-200 hover:ring-1 md:rounded-lg md:p-3 md:shadow-none`}
         >
           <Icon
-            className={`mb-1 size-6 text-gray-500 group-hover:text-orange-500 md:mb-2`}
+            className={`text-text-muted group-hover:text-brand mb-1 size-6 md:mb-2`}
           />
           <span
-            className={`text-center text-xs font-normal text-gray-700 group-hover:text-orange-900 md:text-sm md:font-medium`}
+            className={`text-text-secondary group-hover:text-brand-on-soft text-center text-xs font-normal md:text-sm md:font-medium`}
           >
             {t(getModuleI18nKey(module.key, isAdmin))}
           </span>
@@ -190,26 +190,34 @@ export default function UserActions() {
                 setForceOpen(false);
                 close();
               }}
-              className={`group flex h-full w-full flex-col items-center justify-center rounded-xl bg-white p-2 text-center text-xs font-normal text-gray-600 shadow-sm ring-1 ring-gray-200 transition-colors hover:bg-gray-50 md:rounded-lg md:bg-transparent md:font-medium md:shadow-none md:ring-0`}
+              className={`group bg-surface-overlay text-text-secondary ring-border-default hover:bg-surface-hover flex h-full w-full flex-col items-center justify-center rounded-xl p-2 text-center text-xs font-normal shadow-sm ring-1 transition-colors md:rounded-lg md:bg-transparent md:font-medium md:shadow-none md:ring-0`}
             >
               <Icon
                 size={24}
-                className="mb-1 text-gray-400 group-hover:text-gray-600 md:size-5"
+                className="text-text-muted group-hover:text-text-secondary mb-1 md:size-5"
               />
               {t(action.labelKey)}
             </Link>
           ) : (
+            /**
+             * Info: (20260801 - Luphia) 必須顯式指定文字顏色。Tailwind preflight 對 button 設 `color: inherit`,
+             * 而本面板到 body 之間沒有任何祖先設定文字顏色,故會一路繼承 globals.css 的 `body { color: var(--foreground) }`。
+             * `--foreground` 在 `prefers-color-scheme: dark` 下為 #ededed,但本面板背景恆為白色(無深色版),
+             * 結果是使用者系統設為深色時,登出文字變成白底白字而完全看不見(圖示自帶顏色故仍可見)。
+             * 上方 Link 分支本來就有明確文字色不受影響;登出是唯一走 button 分支的項目,因此只有它中招。
+             * 破壞性動作採 red-600 而非圖示的 red-500:12px 文字需 4.5:1 對比,red-500 於白底僅 3.76:1 不合格。
+             */
             <button
               onClick={() => {
                 if (action.action === "logout") logout();
                 setForceOpen(false);
                 close();
               }}
-              className={`group flex h-full w-full flex-col items-center justify-center rounded-xl bg-white p-2 text-center text-xs font-normal shadow-sm ring-1 ring-gray-200 transition-colors md:rounded-lg md:bg-transparent md:font-medium md:shadow-none md:ring-0 ${action.isDestructive ? "hover:bg-red-50" : "hover:bg-gray-50"}`}
+              className={`group bg-surface-overlay ring-border-default flex h-full w-full flex-col items-center justify-center rounded-xl p-2 text-center text-xs font-normal shadow-sm ring-1 transition-colors md:rounded-lg md:bg-transparent md:font-medium md:shadow-none md:ring-0 ${action.isDestructive ? "text-danger hover:bg-danger-soft" : "text-text-secondary hover:bg-surface-hover"}`}
             >
               <Icon
                 size={24}
-                className={`mb-1 md:size-5 ${action.isDestructive ? "text-red-500" : "text-gray-600"}`}
+                className={`mb-1 md:size-5 ${action.isDestructive ? "text-danger" : "text-text-secondary"}`}
               />
               {t(action.labelKey)}
             </button>
@@ -223,12 +231,12 @@ export default function UserActions() {
     <div className="flex items-center gap-x-4">
       {accountBook && (
         <div className="hidden flex-col md:flex">
-          <p className="text-[10px] text-slate-500">
+          <p className="text-text-muted text-[10px]">
             {t("sidebar.current_account_book")}
           </p>
           <Link
             href="/user/account_book"
-            className="inline-flex items-center gap-1 rounded-md bg-orange-100 px-2.5 py-1 text-orange-700 ring-1 ring-orange-600/20 transition-all ring-inset hover:bg-orange-200 hover:text-orange-800"
+            className="bg-brand-soft text-brand-on-soft ring-brand/30 hover:bg-surface-hover hover:text-brand inline-flex items-center gap-1 rounded-md px-2.5 py-1 ring-1 transition-all ring-inset"
             title={accountBook.name}
           >
             <Book size={12} className="shrink-0" />
@@ -246,14 +254,14 @@ export default function UserActions() {
                 refreshAuth();
                 setForceOpen(false);
               }}
-              className="flex items-center gap-x-2 rounded-full bg-white py-1 pr-3 pl-1 text-sm leading-6 font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200 transition-all ring-inset hover:ring-orange-300 focus:outline-none"
+              className="bg-surface-overlay text-text-primary ring-border-default hover:ring-brand flex items-center gap-x-2 rounded-full py-1 pr-3 pl-1 text-sm leading-6 font-semibold shadow-sm ring-1 transition-all ring-inset focus:outline-none"
             >
-              <span className="flex size-8 items-center justify-center rounded-full bg-orange-50 text-orange-600 ring-1 ring-orange-100 ring-inset">
+              <span className="bg-brand-soft text-brand ring-brand/30 flex size-8 items-center justify-center rounded-full ring-1 ring-inset">
                 <User className="size-5" />
               </span>
               <span className="hidden sm:inline">{user.name}</span>
               <ChevronDown
-                className="size-4 text-gray-400"
+                className="text-text-muted size-4"
                 aria-hidden="true"
               />
             </PopoverButton>
@@ -269,7 +277,7 @@ export default function UserActions() {
             >
               <PopoverPanel
                 static
-                className="fixed inset-0 z-100 flex h-dvh flex-col bg-white focus:outline-none md:absolute md:inset-auto md:top-full md:right-0 md:mt-2 md:h-auto md:w-[600px] md:origin-top-right md:overflow-hidden md:rounded-xl md:shadow-2xl md:ring-1 md:ring-black"
+                className="bg-surface-overlay md:ring-border-strong fixed inset-0 z-100 flex h-dvh flex-col focus:outline-none md:absolute md:inset-auto md:top-full md:right-0 md:mt-2 md:h-auto md:w-[600px] md:origin-top-right md:overflow-hidden md:rounded-xl md:shadow-2xl md:ring-1"
               >
                 {/* Info: (20260702 - Julian) Backdrop for forceOpen mode */}
                 {forceOpen && !showQrCodeModal && (
@@ -281,19 +289,19 @@ export default function UserActions() {
                   />
                 )}
                 {/* Info: (20260423 - Julian) Top User Info */}
-                <div className="z-10 shrink-0 border-b border-gray-100 bg-gray-50 p-4 md:px-6 md:py-4">
+                <div className="border-border-default bg-surface-raised z-10 shrink-0 border-b p-4 md:px-6 md:py-4">
                   <div className="flex items-start justify-between md:items-center">
                     <div className="flex items-center md:gap-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex size-12 items-center justify-center rounded-full bg-orange-100 text-orange-600 ring-2 ring-white md:size-10">
+                        <div className="bg-brand-soft text-brand ring-surface-overlay flex size-12 items-center justify-center rounded-full ring-2 md:size-10">
                           <User className="size-7 md:size-6" />
                         </div>
                         <div className="overflow-hidden">
-                          <p className="truncate text-base font-bold text-gray-900 md:max-w-none md:text-sm">
+                          <p className="text-text-primary truncate text-base font-bold md:max-w-none md:text-sm">
                             {user.name || "User"}
                           </p>
                           <div className="mt-1 flex items-center gap-2 md:mt-0">
-                            <p className="max-w-[180px] truncate text-sm text-gray-500 md:max-w-[120px] md:text-xs lg:max-w-none">
+                            <p className="text-text-muted max-w-[180px] truncate text-sm md:max-w-[120px] md:text-xs lg:max-w-none">
                               {user.address}
                             </p>
                             <button
@@ -302,7 +310,7 @@ export default function UserActions() {
                                 e.stopPropagation();
                                 toggleQrCodeModal();
                               }}
-                              className="p-1 text-gray-400 transition-colors hover:text-orange-500 focus:outline-none md:p-0"
+                              className="text-text-muted hover:text-brand p-1 transition-colors focus:outline-none md:p-0"
                               title="Generate Address QR Code"
                             >
                               <QrCode className="size-4 md:size-3" />
@@ -314,12 +322,12 @@ export default function UserActions() {
 
                     {/* Info: (20260423 - Julian) Desktop right info */}
                     <div className="hidden shrink-0 text-right md:block">
-                      <div className="mb-1 inline-flex items-center rounded-md bg-orange-50 px-2 py-1 text-xs font-medium text-orange-700 ring-1 ring-orange-600/20 ring-inset">
+                      <div className="bg-brand-soft text-brand-on-soft ring-brand/30 mb-1 inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset">
                         {t(`pricing.plans.${user.plan || "personal"}.name`)}
                       </div>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-text-muted text-xs">
                         {t("header.credits")}:{" "}
-                        <span className="font-semibold text-gray-900">
+                        <span className="text-text-primary font-semibold">
                           {user.credits?.toLocaleString() || 0}
                         </span>
                       </p>
@@ -331,7 +339,7 @@ export default function UserActions() {
                         close();
                         setForceOpen(false);
                       }}
-                      className="-mr-2 rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 md:hidden"
+                      className="text-text-muted hover:bg-surface-hover hover:text-text-secondary -mr-2 rounded-full p-2 md:hidden"
                     >
                       <span className="sr-only">Close menu</span>
                       <X size={24} />
@@ -340,17 +348,17 @@ export default function UserActions() {
 
                   {/* Info: (20260423 - Julian) Mobile right info */}
                   <div className="mt-2 flex items-center justify-between md:hidden">
-                    <div className="inline-flex items-center rounded-md bg-orange-50 px-2 py-1 text-[10px] font-medium text-orange-700 ring-1 ring-orange-600/20 ring-inset">
+                    <div className="bg-brand-soft text-brand-on-soft ring-brand/30 inline-flex items-center rounded-md px-2 py-1 text-[10px] font-medium ring-1 ring-inset">
                       {t(`pricing.plans.${user.plan || "personal"}.name`)}
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       {accountBook && (
                         <div className="flex gap-0.5 text-right md:hidden">
-                          <p className="text-xs text-gray-500">
+                          <p className="text-text-muted text-xs">
                             {t("sidebar.current_account_book")}:
                           </p>
                           <div
-                            className="inline-flex max-w-[140px] items-center gap-1 text-orange-700 transition-colors hover:text-orange-800"
+                            className="text-brand-on-soft hover:text-brand inline-flex max-w-[140px] items-center gap-1 transition-colors"
                             title={accountBook.name}
                           >
                             <Book size={10} className="shrink-0" />
@@ -360,9 +368,9 @@ export default function UserActions() {
                           </div>
                         </div>
                       )}
-                      <p className="text-xs text-gray-500">
+                      <p className="text-text-muted text-xs">
                         {t("header.credits")}:{" "}
-                        <span className="font-semibold text-gray-900">
+                        <span className="text-text-primary font-semibold">
                           {user.credits?.toLocaleString() || 0}
                         </span>
                       </p>
@@ -374,7 +382,7 @@ export default function UserActions() {
                 <div className="flex-1 space-y-6 overflow-y-auto p-4 md:space-y-4 md:p-4">
                   {/* Info: (20260423 - Julian) Modules Grid */}
                   <div>
-                    <h3 className="mb-2 px-1 text-xs font-semibold tracking-wider text-gray-400 uppercase md:mb-3 md:px-2">
+                    <h3 className="text-text-muted mb-2 px-1 text-xs font-semibold tracking-wider uppercase md:mb-3 md:px-2">
                       {t("sidebar.modules")}
                     </h3>
                     <div className="grid grid-cols-3 gap-3 md:gap-2">
@@ -385,7 +393,7 @@ export default function UserActions() {
                   {/* Info: (20260502 - Luphia) 小工具選單 */}
                   {!isAdmin && (
                     <div>
-                      <h3 className="mb-2 px-1 text-xs font-semibold tracking-wider text-gray-400 uppercase md:mb-3 md:px-2">
+                      <h3 className="text-text-muted mb-2 px-1 text-xs font-semibold tracking-wider uppercase md:mb-3 md:px-2">
                         {t("sidebar.public_modules")}
                       </h3>
                       <div className="grid grid-cols-3 gap-3 md:gap-2">
@@ -396,7 +404,7 @@ export default function UserActions() {
 
                   {/* Info: (20260423 - Julian) Bottom System Actions */}
                   <div>
-                    <h3 className="mb-2 px-1 text-xs font-semibold tracking-wider text-gray-400 uppercase md:mb-3 md:px-2">
+                    <h3 className="text-text-muted mb-2 px-1 text-xs font-semibold tracking-wider uppercase md:mb-3 md:px-2">
                       {t("sidebar.system")}
                     </h3>
                     <div className="grid grid-cols-4 gap-3 md:gap-2">

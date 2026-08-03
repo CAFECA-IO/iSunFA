@@ -45,7 +45,12 @@ import { useAuth } from "@/contexts/auth_context";
 import AuthPlaceholder from "@/components/common/auth_placeholder";
 import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
 import { BatchExportRenderer } from "@/components/transportation_carbon_footprint_calculator/batch_export_renderer";
-import { ExportOptionsModal } from "@/components/transportation_carbon_footprint_calculator/export_options_modal";
+import {
+  ExportOptionsModal,
+  type IExportOptions,
+} from "@/components/transportation_carbon_footprint_calculator/export_options_modal";
+import MethodologySection from "@/components/transportation_carbon_footprint_calculator/methodology_section";
+import { useScrollLock } from "@/hooks/use_scroll_lock";
 import {
   buildExportFileName,
   buildExportId,
@@ -623,8 +628,10 @@ function ReportPageContent() {
    */
   const executeBatchExport = async (
     indices: number[],
-    selectedPlans: Set<RouteType>,
+    options: IExportOptions,
   ) => {
+    // Info: (20260801 - Luphia) 解出 plans 供既有邏輯沿用,includeCo2e 只在產出階段用到
+    const selectedPlans = options.plans;
     if (!batchResults) return;
     let originalViewport: string | null = null;
     let viewportMeta: Element | null = null;
@@ -715,6 +722,7 @@ function ReportPageContent() {
           selectedPlans,
           fallbackWeightKg: weightKg !== "" ? weightKg : 1000,
           mapCaptures,
+          includeCo2e: options.includeCo2e,
         });
         const exported = await requestReportPdfs(items, {
           exportId: batchExportId,
@@ -782,7 +790,12 @@ function ReportPageContent() {
 
       if (files.length === 0) return;
 
-      if (files.length === 1) {
+      /**
+       * Info: (20260803 - Tzuhan) 不計算碳排時不走單檔捷徑。
+       * 此時 CSV 才是主要產出(PDF 的距離是給人看的格式化數字,無法拿去乘係數),
+       * 而這個提前 return 在 CSV 產生之前,單一路線單一方案會只下載到一份 PDF。
+       */
+      if (files.length === 1 && options.includeCo2e !== false) {
         saveAs(files[0].blob, files[0].filename);
         return;
       }
@@ -792,8 +805,16 @@ function ReportPageContent() {
         zip.file(file.filename, file.blob);
       });
 
-      // Info: (20260724 - Tzuhan) 需求三:summary.csv 按方案分欄、逐段展開,由 logistics_report.ts 純函數生成
-      if (indices.length > 1) {
+      /**
+       * Info: (20260724 - Tzuhan) 需求三:summary.csv 按方案分欄、逐段展開,由 logistics_report.ts 純函數生成
+       *
+       * Info: (20260802 - Luphia) 條件由 `indices.length > 1` 改為無條件 ——
+       * 原本以「路線數」為門檻,於是「單一路線 × 多方案」(例如 1 條路線的海運與空運
+       * 共 2 份 PDF)雖然打包成 zip 卻沒有 summary.csv,使用者只看到少了檔案而不知原因。
+       * 此處已在 files.length > 1 的分支內(單檔直接下載不打包),
+       * 也就是「只要產生 zip 就附索引」—— 一個沒有索引的多檔壓縮包本身就不完整。
+       */
+      {
         const filesByRouteIndex = new Map<number, string[]>();
         files.forEach((file) => {
           const list = filesByRouteIndex.get(file.index) || [];
@@ -808,6 +829,7 @@ function ReportPageContent() {
             filesByRouteIndex,
             weightKg !== "" ? weightKg : 1000,
             batchExportId,
+            options.includeCo2e,
           ),
         );
       }
@@ -831,11 +853,24 @@ function ReportPageContent() {
   /**
    * Info: (20260724 - Tzuhan) 單筆分析報告匯出:沿用既有 WebGL 截圖 workaround,
    * 但改為「一個方案一份獨立 PDF」(需求二),多檔打包 zip
+   *
+   * Info: (20260803 - Tzuhan) 改收整個 options 而非只收 plans。
+   * 原本簽章只有 selectedPlans,呼叫端的 options.includeCo2e 因此在此無聲消失,
+   * buildLogisticsReportHtml 的預設又是「未指定即計算」,於是使用者取消勾選
+   * 「計算二氧化碳當量」後,從分析畫面與歷史紀錄匯出仍會拿到完整排放報告。
    */
-  const executeReportExport = async (selectedPlans: Set<RouteType>) => {
+  const executeReportExport = async (options: IExportOptions) => {
+    const selectedPlans = options.plans;
     let originalViewport: string | null = null;
     let viewportMeta: Element | null = null;
-    setExportId(buildExportId());
+    /**
+     * Info: (20260803 - Tzuhan) 用區域變數而非 state。setExportId 是非同步的,
+     * 同一個 closure 內接著讀 `exportId` 只會拿到更新前的 null ——
+     * 單筆匯出的 PDF 與 CSV 因此從來沒有 Export ID,無法互相對照。
+     * executeBatchExport 用的就是這個做法(batchExportId)。
+     */
+    const reportExportId = buildExportId();
+    setExportId(reportExportId);
     try {
       setIsExporting(true); // Info: (20260501 - Luphia) 觸發重新渲染，隱藏控制面板並顯示各分頁 Header/Footer
 
@@ -879,6 +914,16 @@ function ReportPageContent() {
       const files: Array<{ filename: string; blob: Blob }> = [];
 
       /**
+       * Info: (20260803 - Tzuhan) 提到分支外:summary.csv 需要它,而它與列印模式無關。
+       */
+      const singleItem: IMileageBatchResult = {
+        origin: { lat: Number(origin.lat), lng: Number(origin.lng) },
+        dest: { lat: Number(dest.lat), lng: Number(dest.lng) },
+        plan: plan ?? undefined,
+        weightKg: Number(weightKg) || undefined,
+      } as IMileageBatchResult;
+
+      /**
        * Info: (20260731 - Tzuhan) issue 08 步驟二:伺服端向量列印。
        * 只向 MapLibre 取地圖影像,其餘資料走純函數建構載荷 —— 不覆寫寬度、不換 canvas、不截整頁,
        * 因此下方那三段等待(1500ms ResizeObserver / 100ms DOM / 截圖)在此路徑一併消失。
@@ -887,13 +932,6 @@ function ReportPageContent() {
       if (
         TRANSPORT_PDF_EXPORT_MODE === TransportPdfExportModeEnum.SERVER_VECTOR
       ) {
-        const singleItem: IMileageBatchResult = {
-          origin: { lat: Number(origin.lat), lng: Number(origin.lng) },
-          dest: { lat: Number(dest.lat), lng: Number(dest.lng) },
-          plan: plan ?? undefined,
-          weightKg: Number(weightKg) || undefined,
-        } as IMileageBatchResult;
-
         const items: ILogisticsReportPdfItem[] = [];
         for (let i = 0; i < routesToExport.length; i++) {
           const routeType = routesToExport[i];
@@ -908,12 +946,13 @@ function ReportPageContent() {
             planKey: routeType,
             fallbackWeightKg: weightKg !== "" ? weightKg : 1000,
             mapImageDataUrl,
+            includeCo2e: options.includeCo2e,
           });
           if (built) items.push(built);
         }
 
         const exported = await requestReportPdfs(items, {
-          exportId: exportId ?? undefined,
+          exportId: reportExportId,
           onProgress: (completed, total) => {
             setExportProgress({ current: completed, total });
           },
@@ -1021,14 +1060,37 @@ function ReportPageContent() {
         el.className = className;
       });
 
+      if (files.length === 0) return;
+
+      /**
+       * Info: (20260803 - Tzuhan) 單筆路徑也要附 summary.csv。
+       *
+       * PDF 的數字是給人看的:有千分位、四捨五入到小數兩位。使用者若要套用自己的
+       * 排放係數(這正是「不計算二氧化碳當量」存在的理由),需要的是逐段的
+       * 距離與重量,而那只有 CSV 有。原本這條路徑完全不產 CSV,等於
+       * 「匯出後自己算」在最主要的入口是走不通的。
+       *
+       * 不計算碳排時 CSV 才是主要產出,因此此時一律打包 —— 否則單一方案會走
+       * 單檔捷徑直接下載 PDF,CSV 又不見了。
+       */
+      const summaryCsv = buildBatchSummaryCsv(
+        [singleItem],
+        [0],
+        new Map([[0, files.map((file) => file.filename)]]),
+        weightKg !== "" ? weightKg : 1000,
+        reportExportId,
+        options.includeCo2e,
+      );
+
       // Info: (20260724 - Tzuhan) 單檔直接下載;多方案打包 zip,嚴禁合併於同一份文件
-      if (files.length === 1) {
+      if (files.length === 1 && options.includeCo2e !== false) {
         saveAs(files[0].blob, files[0].filename);
-      } else if (files.length > 1) {
+      } else {
         const zip = new JSZip();
         files.forEach((file) => {
           zip.file(file.filename, file.blob);
         });
+        zip.file("summary.csv", summaryCsv);
         const content = await zip.generateAsync({ type: "blob" });
         saveAs(
           content,
@@ -1059,13 +1121,27 @@ function ReportPageContent() {
   };
 
   // Info: (20260724 - Tzuhan) 勾選選單確認 → 依目標範圍分派至批次或單筆匯出流程
-  const handleExportConfirm = async (selectedPlans: Set<RouteType>) => {
+  /**
+   * Info: (20260803 - Tzuhan) 此處原有 factorSetImpacts(各係數組的總排放試算),
+   * 隨係數組選單一併移除:它把互斥方案(land / sea / air / seaLandAir 是同一批貨的
+   * 替代方案)的段落攤平相加,起點→港的陸段還會被算兩次,得出的 kg CO2e
+   * 在任何一份報告裡都不存在;它也讀 applicability 而非使用者實際勾選的方案,
+   * 並用全域 weightKg 而非逐列的 item.weightKg(CSV 與 PDF 都是用後者)。
+   */
+
+  /**
+   * Info: (20260802 - Luphia) 匯出期間與選項對話框開啟期間鎖定捲動。
+   * 兩者的遮罩都是 fixed inset-0,只覆蓋視口 —— 詳見 useScrollLock 的說明。
+   */
+  useScrollLock(isExporting || exportModalTarget !== null);
+
+  const handleExportConfirm = async (options: IExportOptions) => {
     const target = exportModalTarget;
     setExportModalTarget(null);
     if (!target) return;
 
     if (target.scope === "report") {
-      await executeReportExport(selectedPlans);
+      await executeReportExport(options);
       return;
     }
     if (!batchResults) return;
@@ -1073,7 +1149,7 @@ function ReportPageContent() {
       target.scope === "single-route" && target.index !== undefined
         ? [target.index]
         : batchResults.map((_, index) => index);
-    await executeBatchExport(indices, selectedPlans);
+    await executeBatchExport(indices, options);
   };
 
   const isLocked = loading; // Info: (20260430 - Tzuhan) 只有在「運算中」才反灰，算完後重新開放輸入以便用戶微調再算一次
@@ -1392,7 +1468,11 @@ function ReportPageContent() {
 
       {/* Info: (20260501 - Luphia) PDF 匯出時的滿版覆蓋載入提示 */}
       {isExporting && (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/95 p-6 text-center backdrop-blur-md">
+        /* Info: (20260802 - Luphia) 改為不透明白底:95% 半透明會讓底下內容以模糊形式透出,
+           在整頁截圖或高解析畫面上看起來像遮罩沒蓋滿。匯出期間不需要看到底下的畫面。
+           另以 h-dvh 保底:部分行動瀏覽器的 inset-0 以 layout viewport 為準,
+           而匯出流程會把 viewport meta 改為 width=1024,兩者不一致時高度會短少。 */
+        <div className="fixed inset-0 z-[100] flex h-dvh w-screen flex-col items-center justify-center bg-white p-6 text-center">
           <Loader2 className="mb-6 h-16 w-16 animate-spin text-orange-600 drop-shadow-md" />
           <h2 className="mb-3 text-2xl font-extrabold tracking-tight text-gray-900 md:text-3xl">
             {t(
@@ -1993,6 +2073,18 @@ function ReportPageContent() {
                 </div>
               )}
             </div>
+
+            {/* Info: (20260801 - Luphia) 計算方式說明置於結果之後:
+                先看結論,需要追問原理時往下即是。與 PDF 附錄共用同一份內容 */}
+            {!isExporting && (
+              <div className="mt-6">
+                <MethodologySection
+                  title={t(
+                    "transportation_carbon_footprint_calculator.methodology.title",
+                  )}
+                />
+              </div>
+            )}
           </>
         ) : (
           <AuthPlaceholder

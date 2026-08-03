@@ -120,15 +120,41 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
   const h4Size = isCompact ? "text-sm" : "text-base";
   const h5Size = isCompact ? "text-xs" : "text-sm";
   const bodySize = isCompact ? "text-sm" : "";
-  const textColor = isDark ? "text-[#ffffff]" : "text-[#111827]";
-  const secondaryTextColor = isDark ? "text-[#E0E0E0]" : "text-[#374151]";
-  const linkColor = isDark ? "text-[#64B5F6]" : "text-[#2563eb]";
-  const borderColor = isDark ? "border-[#444]" : "border-[#e5e7eb]";
-  const blockquoteBg = isDark ? "bg-[#FF9800]/10" : "bg-[#fff7ed]";
-  const blockquoteText = isDark ? "text-[#FFE0B2]" : "text-[#9a3412]";
-  const tableBorder = isDark ? "border-[#444]" : "border-[#d1d5db]";
-  const theadBg = isDark ? "bg-[#ffffff]/5" : "bg-[#f9fafb]";
-  const thText = isDark ? "text-[#FFB74D]" : "text-[#c2410c]";
+  /**
+   * Info: (20260802 - Luphia) 這裡的 `theme` 問的是「我背後是深色還是淺色」，
+   * 不是「App 目前是什麼主題」—— 聊天泡泡就是靠它區分使用者（深底）與回覆（淺底）。
+   * 兩個分支因此有不同的處理方式：
+   *
+   * - `dark` 分支的背後**永遠**是深色（深色泡泡、`bg-slate-800` 的條款頁），
+   *   與 App 主題無關，色值維持字面值。
+   * - `light` 分支的背後是「卡片」，而卡片會隨主題變 —— 原本寫死 `#111827`
+   *   之類的深色文字，App 切深色後卡片變深、字沒變，對比只剩 1.0。
+   *   改用語意 token 與色階 utility，讓它跟著卡片走。
+   *
+   * 淺色模式下多數色值與原字面值完全相同（`#e5e7eb`、`#d1d5db`、`#fff7ed`、
+   * `#f9fafb` 都是 Tailwind 色票的原值）；少數幾個原本寫的是 Tailwind v3 的色票，
+   * 換成 v4 同名色階後有極小差異，已逐項量測（最大 oklab 0.02，低於可察覺門檻）。
+   */
+  const textColor = isDark ? "text-[#ffffff]" : "text-gray-900";
+  const secondaryTextColor = isDark ? "text-[#E0E0E0]" : "text-gray-700";
+  /** Info: (20260802 - Luphia) 連結沿用藍色語意；blue-600 即原本的 #2563eb，深色下由色階規則提亮 */
+  const linkColor = isDark ? "text-[#64B5F6]" : "text-blue-600";
+  const borderColor = isDark ? "border-[#444]" : "border-border-default";
+  /** Info: (20260802 - Luphia) orange-50 / orange-800 即原本的 #fff7ed / #9a3412 */
+  const blockquoteBg = isDark ? "bg-[#FF9800]/10" : "bg-orange-50";
+  const blockquoteText = isDark ? "text-[#FFE0B2]" : "text-orange-800";
+  const tableBorder = isDark ? "border-[#444]" : "border-border-strong";
+  /** Info: (20260802 - Luphia) gray-50 即原本的 #f9fafb；深色下會比卡片再深一階，表頭仍分得出來 */
+  const theadBg = isDark ? "bg-[#ffffff]/5" : "bg-gray-50";
+  /** Info: (20260802 - Luphia) orange-700 即原本的 #c2410c */
+  const thText = isDark ? "text-[#FFB74D]" : "text-orange-700";
+  /**
+   * Info: (20260802 - Luphia) 表格列 hover 與行內程式碼的底色。
+   * 原本兩處都寫死 `bg-black/5` —— 那在深色卡片上等於沒有效果，
+   * 因為黑色疊在深色上看不出差別。改為與其他色一樣分兩個分支。
+   */
+  const subtleBg = isDark ? "bg-white/10" : "bg-surface-hover";
+  const subtleHoverBg = isDark ? "hover:bg-white/5" : "hover:bg-surface-hover";
 
   /**
    * Info: (20260722 - Tzuhan) 顯示層剝除 HTML 註解(UAT:錨點註解外洩至預覽/PDF)。
@@ -283,7 +309,7 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
         </tbody>
       ),
       tr: ({ children, ...props }: ComponentPropsWithoutRef<"tr">) => (
-        <tr className={`transition-colors hover:bg-black/5`} {...props}>
+        <tr className={`transition-colors ${subtleHoverBg}`} {...props}>
           {children}
         </tr>
       ),
@@ -387,7 +413,7 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
         if (inline) {
           return (
             <code
-              className={`rounded-md bg-black/5 px-1.5 py-0.5 text-sm ${textColor} font-mono`}
+              className={`rounded-md ${subtleBg} px-1.5 py-0.5 text-sm ${textColor} font-mono`}
               {...props}
             >
               {children}
@@ -421,6 +447,8 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
       tableBorder,
       theadBg,
       thText,
+      subtleBg,
+      subtleHoverBg,
       isDark,
       content,
       onContentChange,

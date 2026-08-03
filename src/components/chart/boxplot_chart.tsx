@@ -1,7 +1,8 @@
 "use client";
 
-import { FC, useMemo } from "react";
+import { FC, useMemo, useState } from "react";
 import { ICustomBoxAst } from "@/interfaces/custom_chart";
+import { useChartPalette } from "@/hooks/use_chart_palette";
 
 interface IBoxplotChartProps {
   ast: ICustomBoxAst;
@@ -26,10 +27,6 @@ const MAX_BOX_W = 90; // Info: (20260720 - Julian) 盒身最大寬度（過寬�
 const ROTATE_SLOT_W = 72; // Info: (20260720 - Julian) 每格過窄則 x 標籤旋轉
 
 // Info: (20260720 - Julian) 配色（沿用設計系統）：盒身深藍、中位數白線（深底上突顯）、離群點灰
-const COLOR_BOX = "#152C5B";
-const COLOR_MEDIAN = "#FFFFFF";
-const COLOR_OUTLIER = "#94A3B8";
-const COLOR_VALUE = "#334155"; // Info: (20260720 - Julian) hover 顯示的數值字色
 
 // Info: (20260720 - Julian) 數值格式化（千分位、最多三位小數），避免浮點雜訊
 const formatValue = (n: number): string =>
@@ -53,6 +50,23 @@ const niceNum = (range: number, round: boolean): number => {
 };
 
 const BoxplotChart: FC<IBoxplotChartProps> = ({ ast }) => {
+  /**
+   * Info: (20260802 - Luphia) 顏色從 CSS 變數讀出實值再寫進 SVG 屬性。
+   * 不能直接在屬性寫 var()：匯出 SVG 會把節點 clone 出文件再序列化，
+   * 那份檔案解不到變數，下載到的圖會沒有顏色（見 use_chart_palette）。
+   */
+  /**
+   * Info: (20260803 - Tzuhan) 從自己的節點解析調色盤，不要讓 useChartPalette
+   * 退回 document.documentElement。紙張預覽（PDF 編輯器、/share/pdf/[token]）的
+   * A4 容器帶 .theme-static-light，深色模式下它內部是淺色的；從 <html> 讀會拿到
+   * 深色值，於是白紙上出現淺灰座標軸與深色分隔線。use_chart_export 已經是從
+   * 容器讀背景色，兩邊不一致時匯出的 PNG 會是淺底配深色模式的線條。
+   * 用 state 回呼 ref 而非 useRef：useChartPalette 的 effect 相依是 [resolved, element]，
+   * ref 物件的 .current 變動不會觸發重讀。
+   */
+  const [node, setNode] = useState<SVGSVGElement | null>(null);
+  const palette = useChartPalette(node);
+
   const { title, yAxis, unit, boxes } = ast;
 
   // Info: (20260720 - Julian) y 軸域：涵蓋所有五數綜合與離群點，取 nice 上下界與級距（渲染層職責）
@@ -95,6 +109,7 @@ const BoxplotChart: FC<IBoxplotChartProps> = ({ ast }) => {
   return (
     // Info: (20260720 - Julian) 外層灰底縮放平移容器由 ChartShell 提供，此處只回傳 SVG
     <svg
+      ref={setNode}
       viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
       className="h-full w-full"
       preserveAspectRatio="xMidYMid meet"
@@ -140,7 +155,7 @@ const BoxplotChart: FC<IBoxplotChartProps> = ({ ast }) => {
               y1={y}
               x2={PLOT_RIGHT}
               y2={y}
-              stroke="#E2E8F0"
+              stroke={palette.grid}
               strokeWidth={1}
             />
             <text
@@ -162,7 +177,7 @@ const BoxplotChart: FC<IBoxplotChartProps> = ({ ast }) => {
         y1={PLOT_TOP}
         x2={PLOT_LEFT}
         y2={PLOT_BOTTOM}
-        stroke="#94A3B8"
+        stroke={palette.axis}
         strokeWidth={1.5}
       />
       <line
@@ -170,7 +185,7 @@ const BoxplotChart: FC<IBoxplotChartProps> = ({ ast }) => {
         y1={PLOT_BOTTOM}
         x2={PLOT_RIGHT}
         y2={PLOT_BOTTOM}
-        stroke="#94A3B8"
+        stroke={palette.axis}
         strokeWidth={1.5}
       />
 
@@ -205,7 +220,7 @@ const BoxplotChart: FC<IBoxplotChartProps> = ({ ast }) => {
               y1={yMax}
               x2={cx}
               y2={yQ3}
-              stroke={COLOR_BOX}
+              stroke={palette.series1}
               strokeWidth={1.5}
             />
             <line
@@ -213,7 +228,7 @@ const BoxplotChart: FC<IBoxplotChartProps> = ({ ast }) => {
               y1={yQ1}
               x2={cx}
               y2={yMin}
-              stroke={COLOR_BOX}
+              stroke={palette.series1}
               strokeWidth={1.5}
             />
             {/* Info: (20260720 - Julian) 端帽（min / max） */}
@@ -222,7 +237,7 @@ const BoxplotChart: FC<IBoxplotChartProps> = ({ ast }) => {
               y1={yMax}
               x2={cx + capW / 2}
               y2={yMax}
-              stroke={COLOR_BOX}
+              stroke={palette.series1}
               strokeWidth={1.5}
             />
             <line
@@ -230,7 +245,7 @@ const BoxplotChart: FC<IBoxplotChartProps> = ({ ast }) => {
               y1={yMin}
               x2={cx + capW / 2}
               y2={yMin}
-              stroke={COLOR_BOX}
+              stroke={palette.series1}
               strokeWidth={1.5}
             />
             {/* Info: (20260720 - Julian) 盒身（q1→q3） */}
@@ -239,9 +254,9 @@ const BoxplotChart: FC<IBoxplotChartProps> = ({ ast }) => {
               y={boxTop}
               width={boxW}
               height={boxH}
-              fill={COLOR_BOX}
+              fill={palette.series1}
               fillOpacity={0.9}
-              stroke={COLOR_BOX}
+              stroke={palette.series1}
               strokeWidth={1.5}
               rx={2}
             />
@@ -251,7 +266,7 @@ const BoxplotChart: FC<IBoxplotChartProps> = ({ ast }) => {
               y1={yMedian}
               x2={cx + boxW / 2}
               y2={yMedian}
-              stroke={COLOR_MEDIAN}
+              stroke={palette.separator}
               strokeWidth={2.5}
             />
             {/* Info: (20260720 - Julian) 離群點 */}
@@ -262,8 +277,8 @@ const BoxplotChart: FC<IBoxplotChartProps> = ({ ast }) => {
                 cx={cx}
                 cy={toY(o)}
                 r={3}
-                fill={COLOR_OUTLIER}
-                stroke="#FFFFFF"
+                fill={palette.axis}
+                stroke={palette.separator}
                 strokeWidth={1}
               />
             ))}
@@ -276,8 +291,8 @@ const BoxplotChart: FC<IBoxplotChartProps> = ({ ast }) => {
                   x={valueX}
                   y={s.y + 4}
                   textAnchor={valueAnchor}
-                  fill={COLOR_VALUE}
-                  stroke="#FFFFFF"
+                  fill={palette.value}
+                  stroke={palette.separator}
                   strokeWidth={3}
                   paintOrder="stroke"
                   fontSize={11}
@@ -292,8 +307,8 @@ const BoxplotChart: FC<IBoxplotChartProps> = ({ ast }) => {
                   x={valueX}
                   y={toY(o) + 4}
                   textAnchor={valueAnchor}
-                  fill={COLOR_VALUE}
-                  stroke="#FFFFFF"
+                  fill={palette.value}
+                  stroke={palette.separator}
                   strokeWidth={3}
                   paintOrder="stroke"
                   fontSize={11}
