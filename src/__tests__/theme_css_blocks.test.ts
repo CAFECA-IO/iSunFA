@@ -171,14 +171,25 @@ function extractColorVars(css: string, selector: string): Map<string, string> {
 const TAILWIND_HUES =
   "red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose";
 
-/** Info: (20260802 - Luphia) 掃描原始碼中實際使用的 utility（含變體） */
+/**
+ * Info: (20260802 - Luphia) 掃描原始碼中實際使用的 utility（含變體）
+ *
+ * Info: (20260803 - Tzuhan) 必須連 `.ts` 一起掃，不能只掃 `.tsx`。
+ * Tailwind v4 掃描的是所有原始碼檔，class 名稱不必寫在 JSX 裡也會被產生 ——
+ * `src/constants/accounting_account.ts` 的 ACCOUNT_TYPE_COLORS 就把
+ * `bg-lime-50`、`bg-cyan-50`、`bg-fuchsia-50` 定義在 `.ts` 中。
+ * 只掃 `.tsx` 的話，這條測試看不到那三個色相，也就漏掉了它自己要防的那個 bug
+ * （深色模式下粉彩底配提亮後的深階文字，對比僅 2.3–2.5:1）。
+ * 排除 `__tests__`：測試檔裡的字串是斷言用的樣本，不是實際渲染的 class。
+ */
 function usedUtilities(pattern: RegExp): string[] {
   const found = new Set<string>();
   const walk = (dir: string): void => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name === "__tests__") continue;
       const full = join(dir, entry.name);
       if (entry.isDirectory()) walk(full);
-      else if (entry.name.endsWith(".tsx")) {
+      else if (entry.name.endsWith(".tsx") || entry.name.endsWith(".ts")) {
         for (const m of readFileSync(full, "utf8").matchAll(pattern))
           found.add(m[0]);
       }

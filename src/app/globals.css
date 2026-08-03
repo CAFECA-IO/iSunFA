@@ -269,6 +269,27 @@
     var(--t-page)
   );
 
+  --color-lime-50: color-mix(
+    in oklab,
+    var(--color-lime-500) 16%,
+    var(--t-page)
+  );
+  --color-lime-100: color-mix(
+    in oklab,
+    var(--color-lime-500) 22%,
+    var(--t-page)
+  );
+  --color-lime-200: color-mix(
+    in oklab,
+    var(--color-lime-500) 30%,
+    var(--t-page)
+  );
+  --color-lime-300: color-mix(
+    in oklab,
+    var(--color-lime-500) 40%,
+    var(--t-page)
+  );
+
   --color-green-50: color-mix(
     in oklab,
     var(--color-green-500) 16%,
@@ -329,6 +350,27 @@
   --color-teal-300: color-mix(
     in oklab,
     var(--color-teal-500) 40%,
+    var(--t-page)
+  );
+
+  --color-cyan-50: color-mix(
+    in oklab,
+    var(--color-cyan-500) 16%,
+    var(--t-page)
+  );
+  --color-cyan-100: color-mix(
+    in oklab,
+    var(--color-cyan-500) 22%,
+    var(--t-page)
+  );
+  --color-cyan-200: color-mix(
+    in oklab,
+    var(--color-cyan-500) 30%,
+    var(--t-page)
+  );
+  --color-cyan-300: color-mix(
+    in oklab,
+    var(--color-cyan-500) 40%,
     var(--t-page)
   );
 
@@ -418,6 +460,27 @@
   --color-purple-300: color-mix(
     in oklab,
     var(--color-purple-500) 40%,
+    var(--t-page)
+  );
+
+  --color-fuchsia-50: color-mix(
+    in oklab,
+    var(--color-fuchsia-500) 16%,
+    var(--t-page)
+  );
+  --color-fuchsia-100: color-mix(
+    in oklab,
+    var(--color-fuchsia-500) 22%,
+    var(--t-page)
+  );
+  --color-fuchsia-200: color-mix(
+    in oklab,
+    var(--color-fuchsia-500) 30%,
+    var(--t-page)
+  );
+  --color-fuchsia-300: color-mix(
+    in oklab,
+    var(--color-fuchsia-500) 40%,
     var(--t-page)
   );
 
@@ -520,6 +583,344 @@
   --t-border-200: var(--neutral-dark-300);
 }
 
+/**
+ * Info: (20260803 - Tzuhan) 主題不變區（紙張預覽 / 公開分享頁的 A4 容器）的彩色 tint 還原。
+ *
+ * 上方 .theme-static-light 已把 --t-* 翻回淺色，但那不足以還原這些 tint：
+ * color-mix 是在宣告它的元素（:root）上就代入完成的，子孫元素繼承到的是
+ * 一個已經算好的深色值，不會因為後代把 --t-page 改淺而重算。
+ * 同一條式子必須在此重寫一次，才會以淺色底重新混色。
+ *
+ * 只在深色的兩個入口內還原：淺色模式下這些 tint 本來就是 Tailwind 原生值，
+ * 用近似的混色去覆蓋反而會讓現在正確的淺色預覽產生色差。
+ */
+.dark .theme-static-light {
+  --color-red-50: color-mix(in oklab, var(--color-red-500) 16%, var(--t-page));
+  --color-red-100: color-mix(in oklab, var(--color-red-500) 22%, var(--t-page));
+  --color-red-200: color-mix(in oklab, var(--color-red-500) 30%, var(--t-page));
+  --color-red-300: color-mix(in oklab, var(--color-red-500) 40%, var(--t-page));
+
+  --color-orange-50: color-mix(
+    in oklab,
+    var(--color-orange-500) 16%,
+    var(--t-page)
+  );
+  --color-orange-100: color-mix(
+    in oklab,
+    var(--color-orange-500) 22%,
+    var(--t-page)
+  );
+  --color-orange-200: color-mix(
+    in oklab,
+    var(--color-orange-500) 30%,
+    var(--t-page)
+  );
+  --color-orange-300: color-mix(
+    in oklab,
+    var(--color-orange-500) 40%,
+    var(--t-page)
+  );
+
+  --color-amber-50: color-mix(
+    in oklab,
+    var(--color-amber-500) 16%,
+    var(--t-page)
+  );
+  --color-amber-100: color-mix(
+    in oklab,
+    var(--color-amber-500) 22%,
+    var(--t-page)
+  );
+  --color-amber-200: color-mix(
+    in oklab,
+    var(--color-amber-500) 30%,
+    var(--t-page)
+  );
+  --color-amber-300: color-mix(
+    in oklab,
+    var(--color-amber-500) 40%,
+    var(--t-page)
+  );
+
+  --color-yellow-50: color-mix(
+    in oklab,
+    var(--color-yellow-500) 16%,
+    var(--t-page)
+  );
+  --color-yellow-100: color-mix(
+    in oklab,
+    var(--color-yellow-500) 22%,
+    var(--t-page)
+  );
+  --color-yellow-200: color-mix(
+    in oklab,
+    var(--color-yellow-500) 30%,
+    var(--t-page)
+  );
+  --color-yellow-300: color-mix(
+    in oklab,
+    var(--color-yellow-500) 40%,
+    var(--t-page)
+  );
+
+  --color-lime-50: color-mix(
+    in oklab,
+    var(--color-lime-500) 16%,
+    var(--t-page)
+  );
+  --color-lime-100: color-mix(
+    in oklab,
+    var(--color-lime-500) 22%,
+    var(--t-page)
+  );
+  --color-lime-200: color-mix(
+    in oklab,
+    var(--color-lime-500) 30%,
+    var(--t-page)
+  );
+  --color-lime-300: color-mix(
+    in oklab,
+    var(--color-lime-500) 40%,
+    var(--t-page)
+  );
+
+  --color-green-50: color-mix(
+    in oklab,
+    var(--color-green-500) 16%,
+    var(--t-page)
+  );
+  --color-green-100: color-mix(
+    in oklab,
+    var(--color-green-500) 22%,
+    var(--t-page)
+  );
+  --color-green-200: color-mix(
+    in oklab,
+    var(--color-green-500) 30%,
+    var(--t-page)
+  );
+  --color-green-300: color-mix(
+    in oklab,
+    var(--color-green-500) 40%,
+    var(--t-page)
+  );
+
+  --color-emerald-50: color-mix(
+    in oklab,
+    var(--color-emerald-500) 16%,
+    var(--t-page)
+  );
+  --color-emerald-100: color-mix(
+    in oklab,
+    var(--color-emerald-500) 22%,
+    var(--t-page)
+  );
+  --color-emerald-200: color-mix(
+    in oklab,
+    var(--color-emerald-500) 30%,
+    var(--t-page)
+  );
+  --color-emerald-300: color-mix(
+    in oklab,
+    var(--color-emerald-500) 40%,
+    var(--t-page)
+  );
+
+  --color-teal-50: color-mix(
+    in oklab,
+    var(--color-teal-500) 16%,
+    var(--t-page)
+  );
+  --color-teal-100: color-mix(
+    in oklab,
+    var(--color-teal-500) 22%,
+    var(--t-page)
+  );
+  --color-teal-200: color-mix(
+    in oklab,
+    var(--color-teal-500) 30%,
+    var(--t-page)
+  );
+  --color-teal-300: color-mix(
+    in oklab,
+    var(--color-teal-500) 40%,
+    var(--t-page)
+  );
+
+  --color-cyan-50: color-mix(
+    in oklab,
+    var(--color-cyan-500) 16%,
+    var(--t-page)
+  );
+  --color-cyan-100: color-mix(
+    in oklab,
+    var(--color-cyan-500) 22%,
+    var(--t-page)
+  );
+  --color-cyan-200: color-mix(
+    in oklab,
+    var(--color-cyan-500) 30%,
+    var(--t-page)
+  );
+  --color-cyan-300: color-mix(
+    in oklab,
+    var(--color-cyan-500) 40%,
+    var(--t-page)
+  );
+
+  --color-sky-50: color-mix(in oklab, var(--color-sky-500) 16%, var(--t-page));
+  --color-sky-100: color-mix(in oklab, var(--color-sky-500) 22%, var(--t-page));
+  --color-sky-200: color-mix(in oklab, var(--color-sky-500) 30%, var(--t-page));
+  --color-sky-300: color-mix(in oklab, var(--color-sky-500) 40%, var(--t-page));
+
+  --color-blue-50: color-mix(
+    in oklab,
+    var(--color-blue-500) 16%,
+    var(--t-page)
+  );
+  --color-blue-100: color-mix(
+    in oklab,
+    var(--color-blue-500) 22%,
+    var(--t-page)
+  );
+  --color-blue-200: color-mix(
+    in oklab,
+    var(--color-blue-500) 30%,
+    var(--t-page)
+  );
+  --color-blue-300: color-mix(
+    in oklab,
+    var(--color-blue-500) 40%,
+    var(--t-page)
+  );
+
+  --color-indigo-50: color-mix(
+    in oklab,
+    var(--color-indigo-500) 16%,
+    var(--t-page)
+  );
+  --color-indigo-100: color-mix(
+    in oklab,
+    var(--color-indigo-500) 22%,
+    var(--t-page)
+  );
+  --color-indigo-200: color-mix(
+    in oklab,
+    var(--color-indigo-500) 30%,
+    var(--t-page)
+  );
+  --color-indigo-300: color-mix(
+    in oklab,
+    var(--color-indigo-500) 40%,
+    var(--t-page)
+  );
+
+  --color-violet-50: color-mix(
+    in oklab,
+    var(--color-violet-500) 16%,
+    var(--t-page)
+  );
+  --color-violet-100: color-mix(
+    in oklab,
+    var(--color-violet-500) 22%,
+    var(--t-page)
+  );
+  --color-violet-200: color-mix(
+    in oklab,
+    var(--color-violet-500) 30%,
+    var(--t-page)
+  );
+  --color-violet-300: color-mix(
+    in oklab,
+    var(--color-violet-500) 40%,
+    var(--t-page)
+  );
+
+  --color-purple-50: color-mix(
+    in oklab,
+    var(--color-purple-500) 16%,
+    var(--t-page)
+  );
+  --color-purple-100: color-mix(
+    in oklab,
+    var(--color-purple-500) 22%,
+    var(--t-page)
+  );
+  --color-purple-200: color-mix(
+    in oklab,
+    var(--color-purple-500) 30%,
+    var(--t-page)
+  );
+  --color-purple-300: color-mix(
+    in oklab,
+    var(--color-purple-500) 40%,
+    var(--t-page)
+  );
+
+  --color-fuchsia-50: color-mix(
+    in oklab,
+    var(--color-fuchsia-500) 16%,
+    var(--t-page)
+  );
+  --color-fuchsia-100: color-mix(
+    in oklab,
+    var(--color-fuchsia-500) 22%,
+    var(--t-page)
+  );
+  --color-fuchsia-200: color-mix(
+    in oklab,
+    var(--color-fuchsia-500) 30%,
+    var(--t-page)
+  );
+  --color-fuchsia-300: color-mix(
+    in oklab,
+    var(--color-fuchsia-500) 40%,
+    var(--t-page)
+  );
+
+  --color-pink-50: color-mix(
+    in oklab,
+    var(--color-pink-500) 16%,
+    var(--t-page)
+  );
+  --color-pink-100: color-mix(
+    in oklab,
+    var(--color-pink-500) 22%,
+    var(--t-page)
+  );
+  --color-pink-200: color-mix(
+    in oklab,
+    var(--color-pink-500) 30%,
+    var(--t-page)
+  );
+  --color-pink-300: color-mix(
+    in oklab,
+    var(--color-pink-500) 40%,
+    var(--t-page)
+  );
+
+  --color-rose-50: color-mix(
+    in oklab,
+    var(--color-rose-500) 16%,
+    var(--t-page)
+  );
+  --color-rose-100: color-mix(
+    in oklab,
+    var(--color-rose-500) 22%,
+    var(--t-page)
+  );
+  --color-rose-200: color-mix(
+    in oklab,
+    var(--color-rose-500) 30%,
+    var(--t-page)
+  );
+  --color-rose-300: color-mix(
+    in oklab,
+    var(--color-rose-500) 40%,
+    var(--t-page)
+  );
+}
+
 @media (prefers-color-scheme: dark) {
   /* Info: (20260802 - Luphia) 沒設定過就跟隨系統；明確選了淺色（.light）則不套用 */
   :root:not(.light) {
@@ -609,6 +1010,27 @@
       var(--t-page)
     );
 
+    --color-lime-50: color-mix(
+      in oklab,
+      var(--color-lime-500) 16%,
+      var(--t-page)
+    );
+    --color-lime-100: color-mix(
+      in oklab,
+      var(--color-lime-500) 22%,
+      var(--t-page)
+    );
+    --color-lime-200: color-mix(
+      in oklab,
+      var(--color-lime-500) 30%,
+      var(--t-page)
+    );
+    --color-lime-300: color-mix(
+      in oklab,
+      var(--color-lime-500) 40%,
+      var(--t-page)
+    );
+
     --color-green-50: color-mix(
       in oklab,
       var(--color-green-500) 16%,
@@ -669,6 +1091,27 @@
     --color-teal-300: color-mix(
       in oklab,
       var(--color-teal-500) 40%,
+      var(--t-page)
+    );
+
+    --color-cyan-50: color-mix(
+      in oklab,
+      var(--color-cyan-500) 16%,
+      var(--t-page)
+    );
+    --color-cyan-100: color-mix(
+      in oklab,
+      var(--color-cyan-500) 22%,
+      var(--t-page)
+    );
+    --color-cyan-200: color-mix(
+      in oklab,
+      var(--color-cyan-500) 30%,
+      var(--t-page)
+    );
+    --color-cyan-300: color-mix(
+      in oklab,
+      var(--color-cyan-500) 40%,
       var(--t-page)
     );
 
@@ -777,6 +1220,27 @@
       var(--t-page)
     );
 
+    --color-fuchsia-50: color-mix(
+      in oklab,
+      var(--color-fuchsia-500) 16%,
+      var(--t-page)
+    );
+    --color-fuchsia-100: color-mix(
+      in oklab,
+      var(--color-fuchsia-500) 22%,
+      var(--t-page)
+    );
+    --color-fuchsia-200: color-mix(
+      in oklab,
+      var(--color-fuchsia-500) 30%,
+      var(--t-page)
+    );
+    --color-fuchsia-300: color-mix(
+      in oklab,
+      var(--color-fuchsia-500) 40%,
+      var(--t-page)
+    );
+
     --color-pink-50: color-mix(
       in oklab,
       var(--color-pink-500) 16%,
@@ -875,6 +1339,376 @@
     --t-border-100: var(--neutral-dark-300);
     --t-border-200: var(--neutral-dark-300);
   }
+
+  /**
+   * Info: (20260803 - Tzuhan) 主題不變區（紙張預覽 / 公開分享頁的 A4 容器）的彩色 tint 還原。
+   *
+   * 上方 .theme-static-light 已把 --t-* 翻回淺色，但那不足以還原這些 tint：
+   * color-mix 是在宣告它的元素（:root）上就代入完成的，子孫元素繼承到的是
+   * 一個已經算好的深色值，不會因為後代把 --t-page 改淺而重算。
+   * 同一條式子必須在此重寫一次，才會以淺色底重新混色。
+   *
+   * 只在深色的兩個入口內還原：淺色模式下這些 tint 本來就是 Tailwind 原生值，
+   * 用近似的混色去覆蓋反而會讓現在正確的淺色預覽產生色差。
+   */
+  :root:not(.light) .theme-static-light {
+    --color-red-50: color-mix(
+      in oklab,
+      var(--color-red-500) 16%,
+      var(--t-page)
+    );
+    --color-red-100: color-mix(
+      in oklab,
+      var(--color-red-500) 22%,
+      var(--t-page)
+    );
+    --color-red-200: color-mix(
+      in oklab,
+      var(--color-red-500) 30%,
+      var(--t-page)
+    );
+    --color-red-300: color-mix(
+      in oklab,
+      var(--color-red-500) 40%,
+      var(--t-page)
+    );
+
+    --color-orange-50: color-mix(
+      in oklab,
+      var(--color-orange-500) 16%,
+      var(--t-page)
+    );
+    --color-orange-100: color-mix(
+      in oklab,
+      var(--color-orange-500) 22%,
+      var(--t-page)
+    );
+    --color-orange-200: color-mix(
+      in oklab,
+      var(--color-orange-500) 30%,
+      var(--t-page)
+    );
+    --color-orange-300: color-mix(
+      in oklab,
+      var(--color-orange-500) 40%,
+      var(--t-page)
+    );
+
+    --color-amber-50: color-mix(
+      in oklab,
+      var(--color-amber-500) 16%,
+      var(--t-page)
+    );
+    --color-amber-100: color-mix(
+      in oklab,
+      var(--color-amber-500) 22%,
+      var(--t-page)
+    );
+    --color-amber-200: color-mix(
+      in oklab,
+      var(--color-amber-500) 30%,
+      var(--t-page)
+    );
+    --color-amber-300: color-mix(
+      in oklab,
+      var(--color-amber-500) 40%,
+      var(--t-page)
+    );
+
+    --color-yellow-50: color-mix(
+      in oklab,
+      var(--color-yellow-500) 16%,
+      var(--t-page)
+    );
+    --color-yellow-100: color-mix(
+      in oklab,
+      var(--color-yellow-500) 22%,
+      var(--t-page)
+    );
+    --color-yellow-200: color-mix(
+      in oklab,
+      var(--color-yellow-500) 30%,
+      var(--t-page)
+    );
+    --color-yellow-300: color-mix(
+      in oklab,
+      var(--color-yellow-500) 40%,
+      var(--t-page)
+    );
+
+    --color-lime-50: color-mix(
+      in oklab,
+      var(--color-lime-500) 16%,
+      var(--t-page)
+    );
+    --color-lime-100: color-mix(
+      in oklab,
+      var(--color-lime-500) 22%,
+      var(--t-page)
+    );
+    --color-lime-200: color-mix(
+      in oklab,
+      var(--color-lime-500) 30%,
+      var(--t-page)
+    );
+    --color-lime-300: color-mix(
+      in oklab,
+      var(--color-lime-500) 40%,
+      var(--t-page)
+    );
+
+    --color-green-50: color-mix(
+      in oklab,
+      var(--color-green-500) 16%,
+      var(--t-page)
+    );
+    --color-green-100: color-mix(
+      in oklab,
+      var(--color-green-500) 22%,
+      var(--t-page)
+    );
+    --color-green-200: color-mix(
+      in oklab,
+      var(--color-green-500) 30%,
+      var(--t-page)
+    );
+    --color-green-300: color-mix(
+      in oklab,
+      var(--color-green-500) 40%,
+      var(--t-page)
+    );
+
+    --color-emerald-50: color-mix(
+      in oklab,
+      var(--color-emerald-500) 16%,
+      var(--t-page)
+    );
+    --color-emerald-100: color-mix(
+      in oklab,
+      var(--color-emerald-500) 22%,
+      var(--t-page)
+    );
+    --color-emerald-200: color-mix(
+      in oklab,
+      var(--color-emerald-500) 30%,
+      var(--t-page)
+    );
+    --color-emerald-300: color-mix(
+      in oklab,
+      var(--color-emerald-500) 40%,
+      var(--t-page)
+    );
+
+    --color-teal-50: color-mix(
+      in oklab,
+      var(--color-teal-500) 16%,
+      var(--t-page)
+    );
+    --color-teal-100: color-mix(
+      in oklab,
+      var(--color-teal-500) 22%,
+      var(--t-page)
+    );
+    --color-teal-200: color-mix(
+      in oklab,
+      var(--color-teal-500) 30%,
+      var(--t-page)
+    );
+    --color-teal-300: color-mix(
+      in oklab,
+      var(--color-teal-500) 40%,
+      var(--t-page)
+    );
+
+    --color-cyan-50: color-mix(
+      in oklab,
+      var(--color-cyan-500) 16%,
+      var(--t-page)
+    );
+    --color-cyan-100: color-mix(
+      in oklab,
+      var(--color-cyan-500) 22%,
+      var(--t-page)
+    );
+    --color-cyan-200: color-mix(
+      in oklab,
+      var(--color-cyan-500) 30%,
+      var(--t-page)
+    );
+    --color-cyan-300: color-mix(
+      in oklab,
+      var(--color-cyan-500) 40%,
+      var(--t-page)
+    );
+
+    --color-sky-50: color-mix(
+      in oklab,
+      var(--color-sky-500) 16%,
+      var(--t-page)
+    );
+    --color-sky-100: color-mix(
+      in oklab,
+      var(--color-sky-500) 22%,
+      var(--t-page)
+    );
+    --color-sky-200: color-mix(
+      in oklab,
+      var(--color-sky-500) 30%,
+      var(--t-page)
+    );
+    --color-sky-300: color-mix(
+      in oklab,
+      var(--color-sky-500) 40%,
+      var(--t-page)
+    );
+
+    --color-blue-50: color-mix(
+      in oklab,
+      var(--color-blue-500) 16%,
+      var(--t-page)
+    );
+    --color-blue-100: color-mix(
+      in oklab,
+      var(--color-blue-500) 22%,
+      var(--t-page)
+    );
+    --color-blue-200: color-mix(
+      in oklab,
+      var(--color-blue-500) 30%,
+      var(--t-page)
+    );
+    --color-blue-300: color-mix(
+      in oklab,
+      var(--color-blue-500) 40%,
+      var(--t-page)
+    );
+
+    --color-indigo-50: color-mix(
+      in oklab,
+      var(--color-indigo-500) 16%,
+      var(--t-page)
+    );
+    --color-indigo-100: color-mix(
+      in oklab,
+      var(--color-indigo-500) 22%,
+      var(--t-page)
+    );
+    --color-indigo-200: color-mix(
+      in oklab,
+      var(--color-indigo-500) 30%,
+      var(--t-page)
+    );
+    --color-indigo-300: color-mix(
+      in oklab,
+      var(--color-indigo-500) 40%,
+      var(--t-page)
+    );
+
+    --color-violet-50: color-mix(
+      in oklab,
+      var(--color-violet-500) 16%,
+      var(--t-page)
+    );
+    --color-violet-100: color-mix(
+      in oklab,
+      var(--color-violet-500) 22%,
+      var(--t-page)
+    );
+    --color-violet-200: color-mix(
+      in oklab,
+      var(--color-violet-500) 30%,
+      var(--t-page)
+    );
+    --color-violet-300: color-mix(
+      in oklab,
+      var(--color-violet-500) 40%,
+      var(--t-page)
+    );
+
+    --color-purple-50: color-mix(
+      in oklab,
+      var(--color-purple-500) 16%,
+      var(--t-page)
+    );
+    --color-purple-100: color-mix(
+      in oklab,
+      var(--color-purple-500) 22%,
+      var(--t-page)
+    );
+    --color-purple-200: color-mix(
+      in oklab,
+      var(--color-purple-500) 30%,
+      var(--t-page)
+    );
+    --color-purple-300: color-mix(
+      in oklab,
+      var(--color-purple-500) 40%,
+      var(--t-page)
+    );
+
+    --color-fuchsia-50: color-mix(
+      in oklab,
+      var(--color-fuchsia-500) 16%,
+      var(--t-page)
+    );
+    --color-fuchsia-100: color-mix(
+      in oklab,
+      var(--color-fuchsia-500) 22%,
+      var(--t-page)
+    );
+    --color-fuchsia-200: color-mix(
+      in oklab,
+      var(--color-fuchsia-500) 30%,
+      var(--t-page)
+    );
+    --color-fuchsia-300: color-mix(
+      in oklab,
+      var(--color-fuchsia-500) 40%,
+      var(--t-page)
+    );
+
+    --color-pink-50: color-mix(
+      in oklab,
+      var(--color-pink-500) 16%,
+      var(--t-page)
+    );
+    --color-pink-100: color-mix(
+      in oklab,
+      var(--color-pink-500) 22%,
+      var(--t-page)
+    );
+    --color-pink-200: color-mix(
+      in oklab,
+      var(--color-pink-500) 30%,
+      var(--t-page)
+    );
+    --color-pink-300: color-mix(
+      in oklab,
+      var(--color-pink-500) 40%,
+      var(--t-page)
+    );
+
+    --color-rose-50: color-mix(
+      in oklab,
+      var(--color-rose-500) 16%,
+      var(--t-page)
+    );
+    --color-rose-100: color-mix(
+      in oklab,
+      var(--color-rose-500) 22%,
+      var(--t-page)
+    );
+    --color-rose-200: color-mix(
+      in oklab,
+      var(--color-rose-500) 30%,
+      var(--t-page)
+    );
+    --color-rose-300: color-mix(
+      in oklab,
+      var(--color-rose-500) 40%,
+      var(--t-page)
+    );
+  }
 }
 
 @media print {
@@ -957,8 +1791,18 @@
  *
  * 命名刻意避開色相（不叫 gray-50 而叫 surface-raised）：角色名在兩種主題下都成立，
  * 色相名只在其中一種成立，後者會讓「深色模式下的 gray-50 其實是深灰」這種矛盾寫進程式碼。
+ *
+ * Info: (20260803 - Tzuhan) 選擇器必須含主題不變區，不能只寫 `:root`。
+ * 這一整層是 `--text-primary: var(--t-900)` 這種轉接，而 `var()` 是在
+ * **宣告它的元素**上就代入完成的：寫在 `:root` 就等於在 `<html>` 上算完，
+ * 子孫元素繼承到的是一個已經定案的顏色值。紙張預覽把 `--t-900` 翻回淺色
+ * 因此毫無作用 —— 深色模式下 `.bg-white` 有還原（它在元素上才解析），
+ * 內文的 `text-gray-900` 卻仍是近白色，白紙白字（實測對比 1.09:1）。
+ * 影響 PDF 編輯器預覽與 /share/pdf/[token] 公開分享頁。
  */
-:root {
+:root,
+.theme-static-light,
+.dark .theme-static-light {
   /**
    * Info: (20260802 - Luphia) 底層：頁面背景 → 卡片 → 浮起元素（彈出面板、下拉）。
    *

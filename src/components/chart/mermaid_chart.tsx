@@ -33,8 +33,15 @@ const MermaidChart: FC<IMermaidChartProps> = ({
   /**
    * Info: (20260802 - Luphia) Mermaid 吃設定物件而非 CSS，顏色必須是實值。
    * 主題一變 palette 就換一組，下方的 effect 會據此重新渲染整張圖。
+   *
+   * Info: (20260803 - Tzuhan) 從外層 wrapper 解析而非 document.documentElement。
+   * 紙張預覽的 A4 容器帶 .theme-static-light，深色模式下其內部為淺色；
+   * 從 <html> 讀會讓白紙上的流程圖套用深色調色盤。
+   * 用 state 回呼 ref 而非 useRef：useChartPalette 的 effect 相依是
+   * [resolved, element]，ref 物件的 .current 變動不會觸發重讀。
    */
-  const palette = useChartPalette();
+  const [node, setNode] = useState<HTMLDivElement | null>(null);
+  const palette = useChartPalette(node);
 
   // Info: (20260623 - Julian) 維持當前作用的圖表內容 state
   const [currentChart, setCurrentChart] = useState<string>(chart || "");
@@ -241,7 +248,10 @@ const MermaidChart: FC<IMermaidChartProps> = ({
   }
 
   return (
-    <div className="relative w-full break-inside-avoid print:break-inside-avoid">
+    <div
+      ref={setNode}
+      className="relative w-full break-inside-avoid print:break-inside-avoid"
+    >
       <style>{`
         /* 1. Subgraph Clusters Styling */
         .mermaid-container .cluster-label span,
