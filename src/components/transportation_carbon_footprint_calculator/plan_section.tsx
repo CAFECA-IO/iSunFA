@@ -10,6 +10,11 @@ import {
   EMISSION_FACTOR_SOURCES,
   EMISSION_FACTOR_UNIT,
 } from "@/constants/logistics";
+import {
+  DEFAULT_FACTOR_SET,
+  LOGISTICS_FACTOR_SETS,
+  formatFactorSetVersion,
+} from "@/constants/logistics_factor_sets";
 import { useTranslation } from "@/i18n/i18n_context";
 
 // Info: (20260629 - Tzuhan) Support custom mode
@@ -454,11 +459,21 @@ export function PlanSection({
                 </span>
               </li>
             </ul>
+            {/**
+             * Info: (20260803 - Tzuhan) 出處由常數推導,不可寫死。上方三行印的是
+             * EMISSION_FACTORS,也就是預設組(環境部)的值;這裡原本寫死
+             * 「UK DEFRA 2025」,等於把環境部的數字掛在 DEFRA 名下。
+             * 與 CSV 檔頭用同一個版本標籤,使用者才能把畫面與匯出的檔案對起來。
+             */}
             <div className="mt-2 text-right text-[10px] text-gray-400">
               {t(
                 "transportation_carbon_footprint_calculator.plan_section.source",
               )}
-              : UK DEFRA 2025
+              :{" "}
+              {formatFactorSetVersion(
+                DEFAULT_FACTOR_SET,
+                LOGISTICS_FACTOR_SETS[DEFAULT_FACTOR_SET],
+              )}
             </div>
           </div>
         </div>

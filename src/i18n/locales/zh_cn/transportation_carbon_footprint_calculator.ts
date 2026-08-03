@@ -473,12 +473,8 @@ export const transportationCarbonFootprintCalculator = {
     include_co2e_hint:
       "取消勾选则仅导出路径与距离，PDF 与 CSV 都不会出现任何排放数值。",
     factor_set: "排放系数组",
-    factor_set_moenv: "环境部产品碳足迹信息网",
-    factor_set_defra: "UK DEFRA 2025",
-    factor_set_default: "（默认）",
-    factor_set_hint: "上列总量以本次导出的实际航段试算，换组会改变申报数值。",
-    factor_set_no_estimate:
-      "本次导出无法试算总量，但所选系数组仍会套用于计算。",
+    factor_set_hint:
+      "若需采用其他系数，请取消勾选上方选项：导出的 CSV 含逐段距离与重量，可自行套用。",
     split_hint: "每个方案将产出独立的 PDF 文件；多份文件将打包为 ZIP 下载。",
     confirm: "导出",
     progress: "正在生成第 {{current}} / {{total}} 份报告...",

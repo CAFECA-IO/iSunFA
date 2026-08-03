@@ -484,13 +484,8 @@ export const transportationCarbonFootprintCalculator = {
     include_co2e_hint:
       "チェックを外すと経路と距離のみを出力します。PDF・CSV に排出量の数値は一切表示されません。",
     factor_set: "排出係数セット",
-    factor_set_moenv: "環境部 製品カーボンフットプリント情報網",
-    factor_set_defra: "UK DEFRA 2025",
-    factor_set_default: "（既定）",
     factor_set_hint:
-      "上記の合計は今回の出力対象の区間から試算した値です。セットを変えると報告値が変わります。",
-    factor_set_no_estimate:
-      "今回の出力では合計を試算できませんが、選択したセットは計算に適用されます。",
+      "別の係数セットを使う場合は上のチェックを外してください。出力される CSV に区間ごとの距離と重量が含まれるため、ご自身の係数を適用できます。",
     split_hint:
       "各プランは個別のPDFとして出力され、複数ファイルはZIPにまとめられます。",
     confirm: "エクスポート",

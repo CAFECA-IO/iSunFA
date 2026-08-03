@@ -50,7 +50,6 @@ import {
   type IExportOptions,
 } from "@/components/transportation_carbon_footprint_calculator/export_options_modal";
 import MethodologySection from "@/components/transportation_carbon_footprint_calculator/methodology_section";
-import { compareFactorSetTotals } from "@/constants/logistics_factor_sets";
 import { useScrollLock } from "@/hooks/use_scroll_lock";
 import {
   buildExportFileName,
@@ -64,7 +63,6 @@ import {
   buildReportPdfItems,
   type ILegCapture,
   type IPlanMapCapture,
-  EXPORT_PLAN_ORDER,
 } from "@/lib/utils/logistics_report_request";
 import { buildPlanLegs } from "@/lib/utils/logistics_report";
 import { requestReportPdfs } from "@/lib/utils/logistics_report_client";
@@ -1124,35 +1122,12 @@ function ReportPageContent() {
 
   // Info: (20260724 - Tzuhan) 勾選選單確認 → 依目標範圍分派至批次或單筆匯出流程
   /**
-   * Info: (20260801 - Luphia) 各係數組對本次匯出的總排放試算。
-   *
-   * 以實際段落算出而非給一個通用百分比 —— 影響完全取決於路線組成:
-   * 以長程空運為主的路線換組差 48%,純陸運只差 14%。
-   * 取匯出範圍內所有 (路線, 方案) 的段落聯集,與實際會產出的報告一致。
+   * Info: (20260803 - Tzuhan) 此處原有 factorSetImpacts(各係數組的總排放試算),
+   * 隨係數組選單一併移除:它把互斥方案(land / sea / air / seaLandAir 是同一批貨的
+   * 替代方案)的段落攤平相加,起點→港的陸段還會被算兩次,得出的 kg CO2e
+   * 在任何一份報告裡都不存在;它也讀 applicability 而非使用者實際勾選的方案,
+   * 並用全域 weightKg 而非逐列的 item.weightKg(CSV 與 PDF 都是用後者)。
    */
-  const factorSetImpacts = useMemo(() => {
-    const target = exportModalTarget;
-    if (!target || !batchResults) return undefined;
-    const indices =
-      target.scope === "single-route" && target.index !== undefined
-        ? [target.index]
-        : batchResults.map((_, index) => index);
-    const legs = indices.flatMap((index) => {
-      const item = batchResults[index];
-      if (!item) return [];
-      const applicability = getRouteApplicability(item.plan);
-      return EXPORT_PLAN_ORDER.filter((planKey) => applicability[planKey])
-        .flatMap((planKey) => buildPlanLegs(item, planKey))
-        .map((leg) => ({
-          mode: leg.mode as string,
-          distanceKm: leg.segment?.distanceKm,
-        }));
-    });
-    return compareFactorSetTotals(
-      legs,
-      Number(weightKg !== "" ? weightKg : 1000) || 1000,
-    );
-  }, [exportModalTarget, batchResults, weightKg]);
 
   /**
    * Info: (20260802 - Luphia) 匯出期間與選項對話框開啟期間鎖定捲動。
@@ -1537,7 +1512,6 @@ function ReportPageContent() {
       {exportModalTarget && (
         <ExportOptionsModal
           availablePlans={exportAvailablePlans}
-          factorSetImpacts={factorSetImpacts}
           onConfirm={handleExportConfirm}
           onClose={() => setExportModalTarget(null)}
         />

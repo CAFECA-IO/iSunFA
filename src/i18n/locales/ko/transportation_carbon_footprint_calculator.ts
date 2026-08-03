@@ -481,13 +481,8 @@ export const transportationCarbonFootprintCalculator = {
     include_co2e_hint:
       "선택을 해제하면 경로와 거리만 내보냅니다. PDF와 CSV에 배출량 수치가 표시되지 않습니다.",
     factor_set: "배출계수 세트",
-    factor_set_moenv: "환경부 제품 탄소발자국 정보망",
-    factor_set_defra: "UK DEFRA 2025",
-    factor_set_default: "(기본)",
     factor_set_hint:
-      "위 합계는 이번 내보내기 구간으로 추산한 값입니다. 세트를 바꾸면 보고 수치가 변경됩니다.",
-    factor_set_no_estimate:
-      "이번 내보내기에서는 합계를 추산할 수 없지만 선택한 세트는 계산에 적용됩니다.",
+      "다른 배출계수를 사용하려면 위 항목의 체크를 해제하세요. 내보낸 CSV에 구간별 거리와 중량이 들어 있어 직접 적용할 수 있습니다.",
     split_hint: "각 플랜은 개별 PDF로 출력되며, 여러 파일은 ZIP으로 묶입니다.",
     confirm: "내보내기",
     progress: "보고서 생성 중 {{current}} / {{total}}...",
