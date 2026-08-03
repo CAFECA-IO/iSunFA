@@ -7,6 +7,7 @@
 import { MoneyUtil } from "@/lib/utils/money";
 import { ArticulationStatusEnum } from "@/constants/carbon_articulation";
 import { IComputedLedger } from "@/types/carbon_chatbot.types";
+import { SOURCE_TABLE_ANCHOR_PATTERN } from "@/constants/carbon_source_tables";
 
 // Info: (20260720 - Tzuhan) 表格注入錨點(HTML 註解:Markdown 渲染不可見、PDF 不輸出;重算時依此替換不動敘述)
 export const CARBON_DATA_TABLE_START = "<!-- carbon-data-table:start -->";
@@ -125,14 +126,26 @@ export const buildCarbonDataTable = (
 /**
  * Info: (20260720 - Tzuhan) 丟棄 LLM 草稿夾帶的 markdown 表格(fence-aware):
  * 數據段落的表格唯一合法來源是本模組;LLM 敘述中的 |...| 表格列(含分隔列)整塊移除
+ *
+ * Info: (20260801 - Tzuhan) 例外:落在 `carbon-source-table` 錨點之間的表格是**自上傳文件
+ * 逐字照錄**的原文,不是模型產生的,必須保留(見 issue_drafts/inventory_table_import)。
+ * 這道剝除原本假設「表格 = LLM 產生 = 不可信」,而該假設在匯入原文表格後不再成立;
+ * 分辨的依據是錨點,不是內容 —— 內容無從分辨,來源可以。
  */
 export const stripLlmTables = (content: string): string => {
   const lines = content.split("\n");
   const kept: string[] = [];
   let inFence = false;
+  let inSourceTable = false;
   lines.forEach((line) => {
     if (/^\s*(```|~~~)/.test(line)) inFence = !inFence;
-    if (!inFence && /^\s*\|.*\|\s*$/.test(line)) return;
+    const anchor = line.match(SOURCE_TABLE_ANCHOR_PATTERN);
+    if (anchor) {
+      inSourceTable = anchor[2] === "start";
+      kept.push(line);
+      return;
+    }
+    if (!inFence && !inSourceTable && /^\s*\|.*\|\s*$/.test(line)) return;
     kept.push(line);
   });
   // Info: (20260720 - Tzuhan) 移除表格後可能留下連續空行,收斂為單一空行
