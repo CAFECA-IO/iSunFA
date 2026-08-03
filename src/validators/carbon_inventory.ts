@@ -235,6 +235,12 @@ export const CarbonReportImportLlmOutputSchema = z.object({
       z.object({
         paragraphId: z.string().max(50),
         content: z.string().min(1).max(50_000),
+        /**
+         * Info: (20260801 - Tzuhan) 原文照錄的表格。此處刻意用 unknown 收下再逐張裁決:
+         * 一張表格格式不合就整批匯入失敗是不對的比例 —— 其餘段落與敘述都還是好的。
+         * 逐張以 CarbonSourceTableSchema 判定,壞的丟掉並記 log(與 activities 同一原則)。
+         */
+        sourceTables: z.array(z.unknown()).max(20).optional(),
       }),
     )
     .max(100),

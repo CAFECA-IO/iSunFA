@@ -26,6 +26,8 @@ import {
   deriveDataBadgeState,
   type ICarbonDataTableLabels,
 } from "@/lib/carbon_report_table.builder";
+// Info: (20260801 - Tzuhan) 段落版面順序由組裝器決定(Issue A):敘述 → 原文表格 → 系統表格 → 對帳
+import { composeParagraphContent } from "@/lib/carbon_paragraph_composer";
 import {
   buildCarbonChartBlock,
   insertCarbonChartBlock,
@@ -1666,6 +1668,10 @@ export const useCarbonChat = () => {
     const contentById = new Map(
       selected.map((item) => [item.paragraphId, item.content]),
     );
+    // Info: (20260801 - Tzuhan) 原文照錄的表格與該段敘述一起落地(Issue A)
+    const sourceTablesById = new Map(
+      selected.map((item) => [item.paragraphId, item.sourceTables ?? []]),
+    );
     // Info: (20260730 - Tzuhan) 來源標記:預覽卡已區分「逐字匯入」與「AI 草稿」(isDraft),
     // Info: (20260730 - Tzuhan) 落地時一併記錄,否則兩者在報告裡完全分不出來(gap-fill 補的節內含「(待補: …)」佔位)
     const originById = new Map(
@@ -1687,16 +1693,28 @@ export const useCarbonChat = () => {
      * 原報告的數字仍看得到:它們留在匯入預覽與 unmapped,且原文件本身就是佐證附件。
      */
     const ledgerNow = computedLedgerRef.current;
+    /**
+     * Info: (20260801 - Tzuhan) 改由組裝器決定版面順序(Issue A 第 4 點):
+     * 敘述 → 原文照錄的表格 → 系統計算表格 → 對帳。
+     * 原文表格帶自己的錨點命名空間,故不受 stripLlmTables 剝除;
+     * 系統表格仍只由 computedLedger 產出,兩者並存但絕不合併。
+     */
     const normalizeImported = (
       paragraph: IReportParagraph,
       imported: string,
-    ): string =>
-      paragraph.isDataDriven
-        ? injectDataTable(
-            stripLlmTables(imported),
-            buildCarbonDataTable(ledgerNow, dataTableLabels),
-          )
-        : imported;
+    ): string => {
+      const sourceTables = sourceTablesById.get(paragraph.id) ?? [];
+      if (!paragraph.isDataDriven) {
+        return sourceTables.length > 0
+          ? composeParagraphContent({ content: imported, sourceTables })
+          : imported;
+      }
+      return composeParagraphContent({
+        content: stripLlmTables(imported),
+        sourceTables,
+        dataTableBlock: buildCarbonDataTable(ledgerNow, dataTableLabels),
+      });
+    };
     setSessionsData((prev) => {
       const session = prev[activeSessionId];
       if (!session?.reportData?.paragraphs) return prev;

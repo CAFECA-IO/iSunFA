@@ -37,8 +37,13 @@ import {
   CarbonReportGapFillLlmOutputSchema,
   CarbonReportPageIndexLlmOutputSchema,
   CarbonActivityRecordSchema,
+  CarbonSourceTableSchema,
 } from "@/validators";
 import { ApiError, API_ERRORS } from "@/lib/utils/error_dictionary";
+import {
+  validateSourceTables,
+  type ICarbonSourceTable,
+} from "@/lib/carbon_source_table.builder";
 import { logger } from "@/lib/utils/logger";
 import { IActivityRecord } from "@/types/carbon_chatbot.types";
 
@@ -48,6 +53,11 @@ export interface IImportedSegment {
   // Info: (20260716 - Tzuhan) 顯示用標題(code + title,取自大綱非 LLM)
   title: string;
   content: string;
+  /**
+   * Info: (20260801 - Tzuhan) 該段自原文照錄的表格(已逐張裁決)。
+   * 與 content 分開的理由見 responseSchema 的註解:混在敘述裡會被剝除守門丟棄。
+   */
+  sourceTables?: ICarbonSourceTable[];
 }
 
 export interface IReportImportResult {
@@ -83,6 +93,37 @@ const buildImportResponseSchema = (
           content: {
             type: SchemaType.STRING,
             description: "該段原文,逐字照抄,嚴禁改寫、摘要或補充",
+          },
+          // Info: (20260801 - Tzuhan) 原文表格獨立成欄而非混在 content 內:
+          // Info: (20260801 - Tzuhan) 混在敘述裡會被 stripLlmTables 當成模型自產而丟棄,
+          // Info: (20260801 - Tzuhan) 而且無法帶出表號與頁碼(那兩者是回查原文的唯一線索)。
+          sourceTables: {
+            type: SchemaType.ARRAY,
+            items: {
+              type: SchemaType.OBJECT,
+              properties: {
+                tableNo: {
+                  type: SchemaType.STRING,
+                  description: "原文的表號,如 表3.8;照抄不改格式",
+                },
+                caption: {
+                  type: SchemaType.STRING,
+                  description: "原文的表格標題,逐字照抄",
+                },
+                sourcePages: {
+                  type: SchemaType.ARRAY,
+                  items: { type: SchemaType.NUMBER },
+                  description:
+                    "該表所在頁碼;跨頁表格給起訖兩頁(取自原文的 -- p.N/總頁 -- 標記)",
+                },
+                markdown: {
+                  type: SchemaType.STRING,
+                  description:
+                    "該表的 markdown;儲存格逐字照抄,嚴禁重排、合併、換算或補值",
+                },
+              },
+              required: ["tableNo", "caption", "sourcePages", "markdown"],
+            },
           },
         },
         required: ["paragraphId", "content"],
@@ -457,6 +498,15 @@ ${source.data}`;
 3. ${withActivities ? "activities:報告中的活動數據(用電量、油耗等),quantity 原樣照抄為字串,嚴禁換算;單位對不上列舉就整筆省略。" : "本次呼叫不需要萃取活動數據。"}
 4. 語言:${language ?? "zh-TW"}(僅影響你對標題語意的理解,內容一律照抄)。${scopeRule}
 
+【表格規則】
+T1. 原文的表格**不要**放進 content,一律放入該段的 sourceTables;content 只放敘述文字。
+T2. markdown 的儲存格內容逐字照抄:不重排欄列、不合併儲存格、不換算單位、不補值、不加總。
+T3. **「NA」「NS」「-」等非數值標記必須原樣保留,嚴禁改成 0 或空白。** 它們的語意各不相同
+    (不適用 / 不顯著 / 未填),改成 0 會讓「沒有盤查」看起來像「盤查後為零」。
+T4. 跨頁的同一張表合併為一張,sourcePages 給起訖兩頁;不同表號絕不合併。
+T5. tableNo 照抄原文表號(如「表3.8」);找不到表號的表格整張省略,不要自己編號。
+T6. 只收錄真正是表格的內容;條列式文字不要當成表格。
+
 【標準大綱】
 ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\n${source.data}` : ""}`;
 
@@ -497,6 +547,7 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
     // Info: (20260716 - Tzuhan) 白名單複驗:非法/範圍外段落 id 的內容降入 unmapped(不丟棄);同段多片段串接
     const scopedIds = new Set(scopedSections.map((section) => section.id));
     const contentById = new Map<string, string[]>();
+    const tablesById = new Map<string, ICarbonSourceTable[]>();
     const unmapped: string[] = [...parsed.unmapped];
     parsed.segments.forEach((segment) => {
       if (!scopedIds.has(segment.paragraphId)) {
@@ -506,15 +557,48 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
       const bucket = contentById.get(segment.paragraphId) ?? [];
       bucket.push(segment.content);
       contentById.set(segment.paragraphId, bucket);
+
+      /**
+       * Info: (20260801 - Tzuhan) 原文表格逐張裁決(壞一張丟一張,與 activities 同一原則)。
+       * 整批拒絕是錯的比例:一張表格格式不合,其餘段落與敘述都還是好的。
+       * 丟掉的表格記 log —— 沉默的缺表會讓使用者以為原文沒有那張表。
+       */
+      const accepted = tablesById.get(segment.paragraphId) ?? [];
+      (segment.sourceTables ?? []).forEach((candidate) => {
+        const table = CarbonSourceTableSchema.safeParse(candidate);
+        if (!table.success) {
+          logger.warn("[ReportImportService] source table rejected", {
+            paragraphId: segment.paragraphId,
+            issues: table.error.issues
+              .slice(0, 3)
+              .map((issue) => `${issue.path.join(".")}: ${issue.code}`),
+          });
+          return;
+        }
+        accepted.push(table.data);
+      });
+      if (accepted.length > 0) tablesById.set(segment.paragraphId, accepted);
     });
 
     const segments: IImportedSegment[] = Array.from(contentById.entries()).map(
       ([paragraphId, parts]) => {
         const section = SECTION_BY_ID.get(paragraphId);
+        // Info: (20260801 - Tzuhan) 形狀複驗(是否真為表格)在寫入段落前的最後一道;
+        // Info: (20260801 - Tzuhan) 不合格即整段不帶表格,但敘述照樣落地
+        const candidates = tablesById.get(paragraphId) ?? [];
+        const shapeCheck = validateSourceTables(candidates);
+        if (!shapeCheck.isValid) {
+          logger.warn("[ReportImportService] source tables dropped", {
+            paragraphId,
+            reason: shapeCheck.reason ?? null,
+            offendingTableNo: shapeCheck.offendingTableNo ?? null,
+          });
+        }
         return {
           paragraphId,
           title: section ? `${section.code} ${section.title}` : paragraphId,
           content: parts.join("\n\n").trim(),
+          sourceTables: shapeCheck.isValid ? candidates : [],
         };
       },
     );

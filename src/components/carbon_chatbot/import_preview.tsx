@@ -10,6 +10,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
+import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
 
 export interface IPendingImportItem {
   paragraphId: string;
@@ -20,6 +21,11 @@ export interface IPendingImportItem {
   checked: boolean;
   // Info: (20260727 - Tzuhan) #57 AI 草稿補齊段落(非逐字原文):預覽需明確標記,與原樣匯入區隔
   isDraft?: boolean;
+  /**
+   * Info: (20260801 - Tzuhan) 自原文照錄的表格(已逐張裁決)。預覽顯示張數,
+   * 使用者勾選該段時一併落地 —— 表格與敘述同屬一段的照錄結果,不該能分開勾。
+   */
+  sourceTables?: ICarbonSourceTable[];
 }
 
 export interface IPendingImport {
