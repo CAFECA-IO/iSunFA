@@ -14,6 +14,11 @@ import {
 import { renderMermaid } from "@/lib/utils/mermaid_render";
 import { MermaidChartType } from "@/constants/mermaid_chart";
 import { useChartPalette } from "@/hooks/use_chart_palette";
+import { resolveCssColorToHex } from "@/lib/utils/css_color";
+import {
+  CHART_PALETTE_FALLBACK,
+  type ChartColorRole,
+} from "@/constants/chart_palette";
 
 interface IMermaidChartProps {
   chart: string;
@@ -77,6 +82,16 @@ const MermaidChart: FC<IMermaidChartProps> = ({
     // Info: (20260615 - Julian) 加入 isCurrent 變數，防止在更新過程中重新渲染（競態問題）
     let isCurrent = true;
 
+    /**
+     * Info: (20260802 - Tzuhan) 色票轉十六進位才交給 mermaid。
+     * palette 的值可能是 oklch()/lab()(主題色票以現代色彩空間定義),SVG 屬性吃得下,
+     * 但 mermaid 會在 JS 內解析這些值去推導衍生色,其色彩函式庫不認得 ——
+     * 實測整個 initialize 拋 `Unsupported color format: "lab(...)"`,報告預覽整頁掛掉。
+     * 解析不了就退回同角色的 fallback:顏色略有差異的圖仍可用,拋錯則什麼都看不到。
+     */
+    const hex = (role: ChartColorRole): string =>
+      resolveCssColorToHex(palette[role], CHART_PALETTE_FALLBACK[role]);
+
     // Info: (20260418 - Tzuhan) Applied premium aesthetic color palette for Mermaid charts to avoid muddy default dark theme
     mermaid.initialize({
       startOnLoad: false,
@@ -92,21 +107,21 @@ const MermaidChart: FC<IMermaidChartProps> = ({
          * 否則會是白底深藍字的節點浮在深色頁面上。
          * 連線色（琥珀）兩種主題共用，實測深色卡片上 8.16。
          */
-        primaryColor: palette.nodeSurface,
-        primaryTextColor: palette.nodeText,
-        primaryBorderColor: palette.series1,
-        lineColor: palette.series2,
-        secondaryColor: palette.nodeSurfaceAlt,
-        tertiaryColor: palette.nodeSurface,
-        mainBkg: palette.nodeSurface,
-        nodeBorder: palette.series1,
-        clusterBkg: palette.nodeSurface,
-        clusterBorder: palette.grid,
-        defaultLinkColor: palette.series2,
-        titleColor: palette.nodeText,
+        primaryColor: hex("nodeSurface"),
+        primaryTextColor: hex("nodeText"),
+        primaryBorderColor: hex("series1"),
+        lineColor: hex("series2"),
+        secondaryColor: hex("nodeSurfaceAlt"),
+        tertiaryColor: hex("nodeSurface"),
+        mainBkg: hex("nodeSurface"),
+        nodeBorder: hex("series1"),
+        clusterBkg: hex("nodeSurface"),
+        clusterBorder: hex("grid"),
+        defaultLinkColor: hex("series2"),
+        titleColor: hex("nodeText"),
         // Info: (20260615 - Julian) 節點標籤底色（淺橘色）
-        edgeLabelBackground: palette.edgeLabel,
-        nodeTextColor: palette.nodeText,
+        edgeLabelBackground: hex("edgeLabel"),
+        nodeTextColor: hex("nodeText"),
 
         // Info: (20260418 - Tzuhan) Vibrant Palette for Pie Charts
         /**
@@ -114,7 +129,7 @@ const MermaidChart: FC<IMermaidChartProps> = ({
          * 原色 #4F46E5 對深色卡片只有 2.8，與底色糊在一起；其餘九色 4.2～8.9 維持原值。
          * 沒有整組提亮，是因為那會改變十色之間的相互辨識度，而我無法在此驗證。
          */
-        pie1: palette.categorical1,
+        pie1: hex("categorical1"),
         pie2: "#10B981",
         pie3: "#F59E0B",
         pie4: "#EC4899",
@@ -126,13 +141,13 @@ const MermaidChart: FC<IMermaidChartProps> = ({
         pie10: "#3B82F6",
 
         pieTitleTextSize: "20px",
-        pieTitleTextColor: palette.value,
+        pieTitleTextColor: hex("value"),
         pieSectionTextSize: "15px",
         // Info: (20260802 - Luphia) 圓餅區塊本身在兩種主題下都是鮮豔色，標籤維持白字
         pieSectionTextColor: "#FFFFFF",
         pieLegendTextSize: "14px",
-        pieLegendTextColor: palette.label,
-        pieStrokeColor: palette.nodeSurface,
+        pieLegendTextColor: hex("label"),
+        pieStrokeColor: hex("nodeSurface"),
         pieStrokeWidth: "3px",
         pieOuterStrokeWidth: "0px",
         pieOuterStrokeColor: "transparent",

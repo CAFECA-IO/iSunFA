@@ -567,8 +567,21 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
       (segment.sourceTables ?? []).forEach((candidate) => {
         const table = CarbonSourceTableSchema.safeParse(candidate);
         if (!table.success) {
+          /**
+           * Info: (20260802 - Tzuhan) 記下**被拒的實際值**,不只記 Zod 的錯誤碼。
+           * 實測時 log 只說 `tableNo: custom`,完全看不出模型給的是「表 3.6」還是「Table 3.6」——
+           * 我因此只能回頭猜 regex 該怎麼放寬。這與先前 API 400 只回「schema error」是同一個坑,
+           * 而我在同一輪重蹈了一次:拒絕的理由必須包含被拒的東西本身。
+           * 值截斷至 40 字元:表號與標題夠看,但不會把整張表的 markdown 灌進 log。
+           */
+          const raw = candidate as Record<string, unknown> | null;
           logger.warn("[ReportImportService] source table rejected", {
             paragraphId: segment.paragraphId,
+            tableNo: String(raw?.tableNo ?? "").slice(0, 40),
+            caption: String(raw?.caption ?? "").slice(0, 40),
+            sourcePages: Array.isArray(raw?.sourcePages)
+              ? JSON.stringify(raw.sourcePages).slice(0, 40)
+              : null,
             issues: table.error.issues
               .slice(0, 3)
               .map((issue) => `${issue.path.join(".")}: ${issue.code}`),

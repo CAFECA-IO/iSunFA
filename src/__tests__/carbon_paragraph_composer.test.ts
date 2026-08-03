@@ -179,20 +179,71 @@ describe("CarbonSourceTableSchema", () => {
     });
   });
 
-  it("頁碼須為正整數且最多兩個(跨頁表格給起訖)", () => {
-    expect(
-      CarbonSourceTableSchema.safeParse({ ...TABLE_3_6, sourcePages: [41, 43] })
-        .success,
-    ).toBe(true);
+  /**
+   * Info: (20260802 - Tzuhan) 契約已改:模型會把跨越的每一頁都列出(表3.8 跨三頁就給三個數字),
+   * 原本上限 2 讓那些表全被擋掉。現在收下後收斂為起訖兩頁。
+   */
+  it("逐頁列出的頁碼收斂為起訖兩頁", () => {
+    const parsed = CarbonSourceTableSchema.safeParse({
+      ...TABLE_3_6,
+      sourcePages: [41, 42, 43],
+    });
+    expect(parsed.success).toBe(true);
+    expect(parsed.success && parsed.data.sourcePages).toEqual([41, 43]);
+  });
+
+  it("亂序頁碼取最小與最大(與模型給的順序無關)", () => {
+    const parsed = CarbonSourceTableSchema.safeParse({
+      ...TABLE_3_6,
+      sourcePages: [43, 41, 42],
+    });
+    expect(parsed.success && parsed.data.sourcePages).toEqual([41, 43]);
+  });
+
+  it("單頁只留一個值", () => {
+    const parsed = CarbonSourceTableSchema.safeParse({
+      ...TABLE_3_6,
+      sourcePages: [41, 41],
+    });
+    expect(parsed.success && parsed.data.sourcePages).toEqual([41]);
+  });
+
+  it("空陣列可接受(模型未給頁碼時仍收表格,只是不顯示頁碼)", () => {
     expect(
       CarbonSourceTableSchema.safeParse({ ...TABLE_3_6, sourcePages: [] })
         .success,
     ).toBe(true);
-    [[0], [-1], [1.5], [41, 42, 43], [99999]].forEach((sourcePages) => {
+  });
+
+  it("非正整數或超出頁數上界仍拒絕", () => {
+    [[0], [-1], [1.5], [99999]].forEach((sourcePages) => {
       expect(
         CarbonSourceTableSchema.safeParse({ ...TABLE_3_6, sourcePages })
           .success,
       ).toBe(false);
+    });
+  });
+
+  /**
+   * Info: (20260802 - Tzuhan) 實測現場:每一張表都被擋在 `tableNo: custom`,
+   * 因為原文的表號寫法與我假設的單一形式不符。以下都是同一語意的不同寫法,
+   * 應收斂而非拒絕 —— 因格式差異丟掉真實資料是最不該犯的錯。
+   */
+  it("表號的多種寫法正規化為同一形式", () => {
+    [
+      ["表 3.6", "表3.6"],
+      ["表　3.6", "表3.6"],
+      ["表3-6", "表3.6"],
+      ["表３.６", "表3.6"],
+      ["表3.6.", "表3.6"],
+      ["表3.6.1", "表3.6.1"],
+    ].forEach(([input, expected]) => {
+      const parsed = CarbonSourceTableSchema.safeParse({
+        ...TABLE_3_6,
+        tableNo: input,
+      });
+      expect(parsed.success).toBe(true);
+      expect(parsed.success && parsed.data.tableNo).toBe(expected);
     });
   });
 

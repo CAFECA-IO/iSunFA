@@ -12,6 +12,9 @@
 import { z } from "zod";
 import {
   CARBON_SOURCE_TABLE_MAX_PER_PARAGRAPH,
+  normalizeSourcePages,
+  normalizeSourceTableNo,
+  SOURCE_TABLE_MAX_PAGE_ENTRIES,
   SOURCE_TABLE_NO_PATTERN,
 } from "@/constants/carbon_source_tables";
 
@@ -36,16 +39,29 @@ const MARKDOWN_MAX = 20_000;
 const PAGE_MAX = 2_000;
 
 export const CarbonSourceTableSchema = z.object({
+  /**
+   * Info: (20260802 - Tzuhan) 先正規化再驗證。實測原文的表號寫法有全形空格、連字號、
+   * 三層編號等多種,逐一拒絕等於因格式差異丟掉真實資料;正規化只收斂寫法不改內容,
+   * 收斂後仍不符正規形式者才拒絕,錨點安全性不變。
+   */
   tableNo: z
     .string()
     .min(1)
-    .max(16)
+    .max(24)
+    .transform(normalizeSourceTableNo)
     .refine((value) => SOURCE_TABLE_NO_PATTERN.test(value), {
-      message: "tableNo must look like 表3.8",
+      message: "tableNo must normalise to 表3.8 / 表3.6.1",
     }),
   caption: z.string().min(1).max(CAPTION_MAX),
-  // Info: (20260801 - Tzuhan) 跨頁表格給起訖兩頁,故上限 2;空陣列代表模型沒給頁碼(仍可收,只是不顯示頁碼)
-  sourcePages: z.array(z.number().int().min(1).max(PAGE_MAX)).max(2),
+  /**
+   * Info: (20260802 - Tzuhan) 模型會把實際跨越的每一頁都列出(表3.8 跨三頁就給三個數字),
+   * 故先收下再收斂為起訖兩頁。原本上限 2 讓跨三頁的表全被擋掉。
+   * 空陣列代表模型沒給頁碼(仍可收,只是不顯示頁碼)。
+   */
+  sourcePages: z
+    .array(z.number().int().min(1).max(PAGE_MAX))
+    .max(SOURCE_TABLE_MAX_PAGE_ENTRIES)
+    .transform(normalizeSourcePages),
   markdown: z.string().min(1).max(MARKDOWN_MAX),
 });
 
