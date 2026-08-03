@@ -35,9 +35,14 @@ export const SOURCE_TABLE_ANCHOR_PATTERN = new RegExp(
 
 /**
  * Info: (20260801 - Tzuhan) 單一段落可收錄的原文表格數上限。
- * 3.6 節最多會有表3.5~3.8 四張;取 6 留有餘裕,同時避免模型把整章表格全塞進一節。
+ *
+ * Info: (20260803 - Tzuhan) 原為 6,理由是「3.6 節最多會有表3.5~3.8 四張」——
+ * 我只看了一節就定了全域上限。實測 4.2 節(不確定性分析)引用 表4.1~表4.9 共九張,
+ * 於是整段被判 too_many_tables,九張全丟、報告上一張都沒有。
+ * 依實際文件最密的那一節取 12:容得下九張並留餘裕,同時仍擋得住
+ * 「把整章表格全塞進一節」的退化輸出(那份報告全文表格數遠超此值)。
  */
-export const CARBON_SOURCE_TABLE_MAX_PER_PARAGRAPH = 6;
+export const CARBON_SOURCE_TABLE_MAX_PER_PARAGRAPH = 12;
 
 /**
  * Info: (20260801 - Tzuhan) 表號的**正規形式**:`表` + 以點分隔的層級(如 表3.8、表3.6.1)。

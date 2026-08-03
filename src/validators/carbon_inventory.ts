@@ -229,21 +229,27 @@ export type CarbonSessionArchivePayload = z.infer<
 
 // Info: (20260716 - Tzuhan) #56 報告匯入 LLM 輸出(responseSchema 之外的第二道防線);
 // Info: (20260716 - Tzuhan) paragraphId 僅驗型別,白名單複驗於服務層(非法者降入 unmapped 不丟棄)
+/**
+ * Info: (20260803 - Tzuhan) 單一段落的形狀。獨立匯出是為了讓 Service 能**逐段**裁決。
+ *
+ * 實測代價:第二章有一段不合形狀,整章的匯入就以 500 收場(LLM output invalid),
+ * 該章十幾節的原文全部落空、退回 AI 草稿 —— 一段壞掉賠掉一整章。
+ * 這與底下 sourceTables 的註解是同一條原則,我卻只把它套用在表格上,沒套用在段落本身。
+ */
+export const CarbonReportImportSegmentSchema = z.object({
+  paragraphId: z.string().max(50),
+  content: z.string().min(1).max(50_000),
+  /**
+   * Info: (20260801 - Tzuhan) 原文照錄的表格。此處刻意用 unknown 收下再逐張裁決:
+   * 一張表格格式不合就整批匯入失敗是不對的比例 —— 其餘段落與敘述都還是好的。
+   * 逐張以 CarbonSourceTableSchema 判定,壞的丟掉並記 log(與 activities 同一原則)。
+   */
+  sourceTables: z.array(z.unknown()).max(20).optional(),
+});
+
 export const CarbonReportImportLlmOutputSchema = z.object({
-  segments: z
-    .array(
-      z.object({
-        paragraphId: z.string().max(50),
-        content: z.string().min(1).max(50_000),
-        /**
-         * Info: (20260801 - Tzuhan) 原文照錄的表格。此處刻意用 unknown 收下再逐張裁決:
-         * 一張表格格式不合就整批匯入失敗是不對的比例 —— 其餘段落與敘述都還是好的。
-         * 逐張以 CarbonSourceTableSchema 判定,壞的丟掉並記 log(與 activities 同一原則)。
-         */
-        sourceTables: z.array(z.unknown()).max(20).optional(),
-      }),
-    )
-    .max(100),
+  // Info: (20260803 - Tzuhan) 收下 unknown 再逐段裁決(見 CarbonReportImportSegmentSchema)
+  segments: z.array(z.unknown()).max(100),
   unmapped: z.array(z.string().max(50_000)).max(100),
   activities: z.array(z.unknown()).max(50).optional(),
 });

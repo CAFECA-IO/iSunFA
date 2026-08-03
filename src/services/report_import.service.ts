@@ -11,6 +11,7 @@ import {
   SchemaType,
   type Schema,
 } from "@/services/chat.service";
+import { ZodError } from "zod";
 import { describeError } from "@/lib/utils/error_message";
 import {
   assessPdfTextLayer,
@@ -34,6 +35,7 @@ import { GhgProtocolCategory } from "@/constants/esg";
 import { MeasurementUnit } from "@/constants/enums";
 import {
   CarbonReportImportLlmOutputSchema,
+  CarbonReportImportSegmentSchema,
   CarbonReportGapFillLlmOutputSchema,
   CarbonReportPageIndexLlmOutputSchema,
   CarbonActivityRecordSchema,
@@ -536,7 +538,22 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
     let parsed;
     try {
       parsed = CarbonReportImportLlmOutputSchema.parse(JSON.parse(raw));
-    } catch {
+    } catch (parseError) {
+      /**
+       * Info: (20260803 - Tzuhan) 記下失敗的實際欄位再丟。原本是裸的 `catch {}`,
+       * ZodError 被整個丟掉,前端只看到「LLM structured output failed validation」——
+       * 哪一個欄位、哪一段不合形狀完全無從得知。我在同一個檔案裡已經為表號與活動數據
+       * 補過同樣的洞,這裡卻還留著。
+       */
+      logger.error("[ReportImportService] llm output schema invalid", {
+        chapterId: options?.chapterId ?? "all",
+        issues:
+          parseError instanceof ZodError
+            ? parseError.issues
+                .slice(0, 6)
+                .map((issue) => `${issue.path.join(".")}: ${issue.code}`)
+            : [describeError(parseError).slice(0, 120)],
+      });
       throw new ApiError(
         API_ERRORS.IS_LLM_OUTPUT_INVALID.code,
         API_ERRORS.IS_LLM_OUTPUT_INVALID.message,
@@ -549,7 +566,33 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
     const contentById = new Map<string, string[]>();
     const tablesById = new Map<string, ICarbonSourceTable[]>();
     const unmapped: string[] = [...parsed.unmapped];
-    parsed.segments.forEach((segment) => {
+    /**
+     * Info: (20260803 - Tzuhan) 逐段裁決:一段不合形狀只丟那一段,不賠掉整章。
+     * 實測第二章即因單一段落不合形狀而整章 500,十幾節原文全部落空。
+     */
+    const rawSegments = parsed.segments;
+    const validSegments = rawSegments.flatMap((candidate) => {
+      const segment = CarbonReportImportSegmentSchema.safeParse(candidate);
+      if (segment.success) return [segment.data];
+      const raw = candidate as Record<string, unknown> | null;
+      logger.warn("[ReportImportService] segment rejected", {
+        paragraphId: String(raw?.paragraphId ?? "").slice(0, 40),
+        contentChars:
+          typeof raw?.content === "string" ? raw.content.length : null,
+        issues: segment.error.issues
+          .slice(0, 3)
+          .map((issue) => `${issue.path.join(".")}: ${issue.code}`),
+      });
+      return [];
+    });
+    if (validSegments.length < rawSegments.length) {
+      logger.warn("[ReportImportService] segment adjudication", {
+        chapterId: options?.chapterId ?? "all",
+        received: rawSegments.length,
+        accepted: validSegments.length,
+      });
+    }
+    validSegments.forEach((segment) => {
       if (!scopedIds.has(segment.paragraphId)) {
         unmapped.push(segment.content);
         return;
