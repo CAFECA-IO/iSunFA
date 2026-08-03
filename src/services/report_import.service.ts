@@ -599,19 +599,40 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
         // Info: (20260801 - Tzuhan) 形狀複驗(是否真為表格)在寫入段落前的最後一道;
         // Info: (20260801 - Tzuhan) 不合格即整段不帶表格,但敘述照樣落地
         const candidates = tablesById.get(paragraphId) ?? [];
-        const shapeCheck = validateSourceTables(candidates);
-        if (!shapeCheck.isValid) {
+        /**
+         * Info: (20260802 - Tzuhan) 形狀檢查**逐張**丟棄,不整批丟。
+         *
+         * 原本呼叫 validateSourceTables 對整批判定,實測後果是:ch4-2 的「表4.1 定性及定量
+         * 評估等級表」是文字矩陣而非真表格,於是**同一節其餘合格的表格也一起消失**。
+         * 這與 Zod 層「壞一張丟一張」的原則自相矛盾 —— 同一件事在兩層用不同比例,
+         * 是我設計上的不一致。統一為逐張:一張不合格只丟那一張。
+         */
+        const shaped = candidates.filter((table) => {
+          const check = validateSourceTables([table]);
+          if (!check.isValid) {
+            logger.warn("[ReportImportService] source table dropped", {
+              paragraphId,
+              tableNo: table.tableNo,
+              caption: table.caption.slice(0, 40),
+              reason: check.reason ?? null,
+            });
+          }
+          return check.isValid;
+        });
+        // Info: (20260802 - Tzuhan) 逐張過關後仍要驗數量上限(單張檢查看不到總數)
+        const withinLimit = validateSourceTables(shaped);
+        if (!withinLimit.isValid) {
           logger.warn("[ReportImportService] source tables dropped", {
             paragraphId,
-            reason: shapeCheck.reason ?? null,
-            offendingTableNo: shapeCheck.offendingTableNo ?? null,
+            reason: withinLimit.reason ?? null,
+            count: shaped.length,
           });
         }
         return {
           paragraphId,
           title: section ? `${section.code} ${section.title}` : paragraphId,
           content: parts.join("\n\n").trim(),
-          sourceTables: shapeCheck.isValid ? candidates : [],
+          sourceTables: withinLimit.isValid ? shaped : [],
         };
       },
     );
