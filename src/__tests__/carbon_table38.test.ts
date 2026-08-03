@@ -12,11 +12,11 @@ import {
 } from "@/lib/carbon_table38.reconciliation";
 import { toLedgerEntries } from "@/lib/carbon_table38.ledger";
 import { buildReconciliationDisclosure } from "@/lib/carbon_table38.disclosure";
-import { LedgerProvenanceEnum } from "@/constants/imported_quantity";
 import { buildCarbonDataTable } from "@/lib/carbon_report_table.builder";
 import {
   EmissionBasisEnum,
   ImportedQuantityStateEnum,
+  LedgerProvenanceEnum,
 } from "@/constants/imported_quantity";
 import { Iso14064SubCategory } from "@/constants/iso14064_subcategory";
 import { GhgProtocolCategory, Iso14064Category } from "@/constants/esg";
