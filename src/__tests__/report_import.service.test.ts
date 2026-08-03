@@ -10,6 +10,8 @@ import {
 import { GhgProtocolCategory } from "@/constants/esg";
 import {
   LLM_MAX_OUTPUT_TOKENS,
+  LLM_TRANSPORT_RETRY_ATTEMPTS,
+  LLM_TRANSPORT_RETRY_DELAY_MS,
   LLM_TRUNCATED_ERROR_MARKER,
 } from "@/constants/llm";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
@@ -230,5 +232,84 @@ describe("ReportImportService 輸出額度與截斷處理", () => {
     ).rejects.toMatchObject({
       code: API_ERRORS.IS_LLM_OUTPUT_TRUNCATED.code,
     });
+  });
+});
+
+/**
+ * Info: (20260803 - Tzuhan) 傳輸層重試(僅針對「沒送到」的錯誤)。
+ *
+ * 實測(20260803):一次連線中斷讓 ch3~ch10 共八章連鎖失敗,而當時匯入路徑沒有任何重試,
+ * 八章直接報廢、使用者只看到「Failed to import the report」。
+ * 結構圖路徑早就有退避重試 —— 同一個系統對兩條路徑用了兩種標準,
+ * 而比較貴、比較久、比較痛的那條反而沒有。
+ */
+describe("ReportImportService 傳輸層重試", () => {
+  const transportError = new Error(
+    "[GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent: fetch failed",
+  );
+  const validOutput = JSON.stringify({
+    segments: [{ paragraphId: VALID_ID, content: "第一段原文。" }],
+    unmapped: [],
+  });
+
+  const buildRetryService = (
+    spy: jest.Mock<GenerateRawWithImages>,
+  ): ReportImportService =>
+    new ReportImportService({
+      generateRawWithImages: spy,
+    } as unknown as ChatService);
+
+  it("傳輸失敗後重試並成功(不讓一次連線中斷賠掉整章)", async () => {
+    const spy = jest
+      .fn<GenerateRawWithImages>()
+      .mockRejectedValueOnce(transportError)
+      .mockResolvedValueOnce(validOutput);
+    const result = await buildRetryService(spy).importReport(textSource());
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(result.segments).toHaveLength(1);
+  });
+
+  it(
+    "重試次數用盡後才放棄(不無限重試)",
+    async () => {
+      const spy = jest
+        .fn<GenerateRawWithImages>()
+        .mockRejectedValue(transportError);
+      await expect(
+        buildRetryService(spy).importReport(textSource()),
+      ).rejects.toThrow();
+      // Info: (20260803 - Tzuhan) 首次 + LLM_TRANSPORT_RETRY_ATTEMPTS 次重試
+      expect(spy).toHaveBeenCalledTimes(LLM_TRANSPORT_RETRY_ATTEMPTS + 1);
+      /**
+       * Info: (20260803 - Tzuhan) 這項會真的等完退避,故 timeout 由常數推導而非寫死:
+       * 退避時間一調大,寫死的 timeout 會讓這個測試在 CI 上偶發失敗,
+       * 而偶發失敗的測試最後都會被當成雜訊忽略。
+       */
+    },
+    LLM_TRANSPORT_RETRY_DELAY_MS * (LLM_TRANSPORT_RETRY_ATTEMPTS + 1) + 2_000,
+  );
+
+  /**
+   * Info: (20260803 - Tzuhan) 這一項是重試設計的核心限制:可重現的失敗不重試。
+   * 同一份輸入重送必得同樣結果,重試只會把一次必然的失敗變成三次,還多付兩次 token。
+   */
+  it("非傳輸層的失敗不重試", async () => {
+    const spy = jest
+      .fn<GenerateRawWithImages>()
+      .mockRejectedValue(new Error("429 RESOURCE_EXHAUSTED"));
+    await expect(
+      buildRetryService(spy).importReport(textSource()),
+    ).rejects.toThrow();
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it("schema 無效也不重試(模型確實回了,只是不合用)", async () => {
+    const spy = jest
+      .fn<GenerateRawWithImages>()
+      .mockResolvedValue("{ not json");
+    await expect(
+      buildRetryService(spy).importReport(textSource()),
+    ).rejects.toThrow();
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 });

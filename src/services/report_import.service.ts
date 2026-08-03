@@ -7,6 +7,7 @@ import {
   ChatService,
   isLlmQuotaError,
   isLlmTimeoutError,
+  isLlmTransportError,
   isLlmTruncatedError,
   SchemaType,
   type Schema,
@@ -23,6 +24,8 @@ import { PdfTextLayerDecisionEnum } from "@/constants/pdf_text_layer";
 import { CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES } from "@/constants/carbon_chatbot";
 import {
   LLM_REPORT_IMPORT_TIMEOUT_MS,
+  LLM_TRANSPORT_RETRY_ATTEMPTS,
+  LLM_TRANSPORT_RETRY_DELAY_MS,
   LLM_MAX_OUTPUT_TOKENS,
   LLM_TEMPERATURE,
   LlmTaskKeyEnum,
@@ -270,6 +273,42 @@ export class ReportImportService {
    * 「匯入失敗」,而且 log 是 `JSON.stringify(error)` 印出的 `{}` —— 無從判斷該加大額度、
    * 該等一下再試、還是該縮小範圍。錯誤分不清就等於沒有錯誤處理。
    */
+  /**
+   * Info: (20260803 - Tzuhan) 只對「傳輸層沒送到」的錯誤重試(見 isLlmTransportError)。
+   *
+   * 為什麼不一律重試:截斷與 schema 無效是模型確實回了但不合用,同一份輸入重送必得同樣結果,
+   * 重試只會把一次必然的失敗變成三次,還多付兩次 token。傳輸失敗相反 ——
+   * 請求根本沒抵達,重送完全可能成功。
+   *
+   * 為什麼非做不可:實測(20260803)一次連線中斷讓 ch3~ch10 共八章連鎖失敗
+   * (latency 從 70s 掉到 2.5s,顯然是同一條連線掛掉),而當時匯入路徑沒有任何重試,
+   * 八章直接報廢、使用者只看到「Failed to import the report」。
+   * 結構圖路徑早就有退避重試 —— 同一個系統對兩條路徑用兩種標準,
+   * 而比較貴、比較久、比較痛的那條反而沒有。
+   *
+   * 遞迴而非迴圈:專案禁 await-in-loop。深度上限 = 重試次數,無堆疊風險。
+   */
+  private async callLlmWithTransportRetry(
+    exec: () => Promise<string>,
+    scope: string,
+    attemptsLeft: number = LLM_TRANSPORT_RETRY_ATTEMPTS,
+  ): Promise<string> {
+    try {
+      return await exec();
+    } catch (error) {
+      if (attemptsLeft <= 0 || !isLlmTransportError(error)) throw error;
+      logger.warn("[ReportImportService] transport error, retrying", {
+        scope,
+        attemptsLeft,
+        detail: describeError(error).slice(0, 160),
+      });
+      await new Promise((resolve) => {
+        setTimeout(resolve, LLM_TRANSPORT_RETRY_DELAY_MS);
+      });
+      return this.callLlmWithTransportRetry(exec, scope, attemptsLeft - 1);
+    }
+  }
+
   private toImportError(error: unknown, scope: string): ApiError {
     const detail = describeError(error);
 
@@ -512,26 +551,31 @@ T6. 只收錄真正是表格的內容;條列式文字不要當成表格。
 【標準大綱】
 ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\n${source.data}` : ""}`;
 
+    const scopeLabel = options?.chapterId ?? "all";
     let raw: string;
     try {
-      raw = await this.getChatService().generateRawWithImages(
-        prompt,
-        source.isText
-          ? undefined
-          : [{ data: source.data, mimeType: source.mimeType }],
-        true,
-        buildImportResponseSchema(scopedSections, withActivities),
-        {
-          temperature: LLM_TEMPERATURE.EXTRACTION,
-          timeoutMs: LLM_REPORT_IMPORT_TIMEOUT_MS,
-          taskKey: LlmTaskKeyEnum.REPORT_IMPORT,
-          // Info: (20260730 - Tzuhan) 原樣照抄需要大輸出空間,且思考 token 與輸出共用此額度
-          // Info: (20260730 - Tzuhan) (原本 8192 導致內容較多的前四章全部被截斷,見 LLM_MAX_OUTPUT_TOKENS 註解)
-          maxOutputTokens: LLM_MAX_OUTPUT_TOKENS.REPORT_IMPORT,
-        },
+      raw = await this.callLlmWithTransportRetry(
+        () =>
+          this.getChatService().generateRawWithImages(
+            prompt,
+            source.isText
+              ? undefined
+              : [{ data: source.data, mimeType: source.mimeType }],
+            true,
+            buildImportResponseSchema(scopedSections, withActivities),
+            {
+              temperature: LLM_TEMPERATURE.EXTRACTION,
+              timeoutMs: LLM_REPORT_IMPORT_TIMEOUT_MS,
+              taskKey: LlmTaskKeyEnum.REPORT_IMPORT,
+              // Info: (20260730 - Tzuhan) 原樣照抄需要大輸出空間,且思考 token 與輸出共用此額度
+              // Info: (20260730 - Tzuhan) (原本 8192 導致內容較多的前四章全部被截斷,見 LLM_MAX_OUTPUT_TOKENS 註解)
+              maxOutputTokens: LLM_MAX_OUTPUT_TOKENS.REPORT_IMPORT,
+            },
+          ),
+        scopeLabel,
       );
     } catch (error) {
-      throw this.toImportError(error, options?.chapterId ?? "all");
+      throw this.toImportError(error, scopeLabel);
     }
 
     // Info: (20260714 - Tzuhan) 永不直接採信 LLM 輸出:JSON + Zod 雙重護欄

@@ -82,3 +82,15 @@ export const LLM_TRUNCATED_ERROR_MARKER = "LLM_OUTPUT_TRUNCATED";
 
 // Info: (20260716 - Tzuhan) timeout 錯誤的識別標記(type guard 用,避免比對自由字串)
 export const LLM_TIMEOUT_ERROR_MARKER = "LLM_TIMEOUT";
+
+/**
+ * Info: (20260803 - Tzuhan) 傳輸層失敗的重試次數與退避(僅用於「沒送到」的錯誤)。
+ *
+ * 只重試傳輸失敗是刻意的:截斷與 schema 無效重送同一份輸入必得同樣結果,
+ * 重試只會把一次必然的失敗變成三次,還多付兩次 token。
+ *
+ * 2 次(共 3 次嘗試)、間隔 3 秒:實測的中斷是短暫的(同一分鐘內其他章仍成功),
+ * 而逐章匯入單章本來就要一到兩分鐘,再加幾秒退避對總時長無感。
+ */
+export const LLM_TRANSPORT_RETRY_ATTEMPTS = 2;
+export const LLM_TRANSPORT_RETRY_DELAY_MS = 3_000;
