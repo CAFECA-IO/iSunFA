@@ -1230,13 +1230,43 @@ export const useCarbonChat = () => {
         );
         // Info: (20260730 - Tzuhan) 該章各節的起始頁 → 頁碼範圍;缺任何一節的索引就不帶範圍(整章退回送全文),
         // Info: (20260730 - Tzuhan) 寧可多花 token,也不能因為索引不全而漏送內容
-        const chapterPages = CARBON_REPORT_OUTLINE.filter(
+        const chapterSections = CARBON_REPORT_OUTLINE.filter(
           (section) => section.chapterId === chapter.id,
-        ).map((section) => pageIndex?.get(section.id));
+        );
+        const chapterPages = chapterSections.map((section) =>
+          pageIndex?.get(section.id),
+        );
         if (chapterPages.length > 0 && chapterPages.every((page) => !!page)) {
           const pages = chapterPages as number[];
+          /**
+           * Info: (20260803 - Tzuhan) 上界取「下一章第一節的起始頁」,不是本章最後一節的起始頁。
+           *
+           * 索引只記每節的**起始**頁,所以 max(起始頁) 等於「最後一節開始的地方」——
+           * 那一節的內容全部在它之後。實測代價:第三章上界算成 p.41(3.6 節起始),
+           * 而表3.8 跨 p.41–43 → 42、43 頁從未送進模型,整張表無聲消失;
+           * 表2.2(p.15,ch2 上界 15)與表4.2(p.46–47,ch4 上界 47)同樣被切掉尾段,
+           * 落地的是只有表頭的半張表。同一個成因,三張表受害。
+           *
+           * 章節在大綱裡是連續的,所以下一章第一節的起始頁就是本章的自然終點 ——
+           * 這是推導出來的邊界,不是猜一個緩衝頁數。最後一章沒有下一節,不帶上界(送到文末)。
+           */
+          const lastSection = chapterSections[chapterSections.length - 1];
+          const globalIndex = CARBON_REPORT_OUTLINE.findIndex(
+            (section) => section.id === lastSection.id,
+          );
+          const nextSection = CARBON_REPORT_OUTLINE[globalIndex + 1];
+          const nextPage = nextSection
+            ? pageIndex?.get(nextSection.id)
+            : undefined;
           formData.append("fromPage", String(Math.min(...pages)));
-          formData.append("toPage", String(Math.max(...pages)));
+          /**
+           * Info: (20260803 - Tzuhan) 只有在下一節的起始頁已知時才帶上界。
+           * 未知(或本章是最後一章)就不帶 —— 後端會送全文。那比帶一個會切掉表格的
+           * 上界好:多花 token 是成本,漏送內容是錯誤,而且是無聲的錯誤。
+           */
+          if (nextPage && nextPage > Math.max(...pages)) {
+            formData.append("toPage", String(nextPage));
+          }
         }
         try {
           const res = await request<{ payload: IImportChunkPayload | null }>(
