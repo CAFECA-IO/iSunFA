@@ -247,6 +247,37 @@ describe("時間軸模板(timeline renderer)", () => {
     { label: "榮獲經濟部中央標準局黑鋼管正字標記", parent: "1968年11月" },
   ];
 
+  /**
+   * Info: (20260803 - Tzuhan) 實測產出過這一列:`未標註時間 : 1966年01月 : 1968年06月 : …`
+   * —— 模型把**時間標籤本身**當成無時間的事件再回傳一次,等於把時間軸自己列了兩遍。
+   * 這些是軸的複本而非事件,不可渲染。timeline 沒有層級,丟掉它們不會捏造結構。
+   */
+  it("時間標籤被當成事件回傳時不渲染(軸的複本,不是事件)", () => {
+    const withAxisDuplicates: ICarbonDiagramNode[] = [
+      ...nodes,
+      { label: "1966年01月" },
+      { label: "1968年06月" },
+      { label: "1968年11月" },
+    ];
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
+      withAxisDuplicates,
+      MILESTONE_SOURCE,
+    );
+    expect(block).not.toContain("未標註時間");
+    // Info: (20260803 - Tzuhan) 真實事件仍在,且仍掛在自己的時間標籤下
+    expect(block).toContain("1966年01月 : 公司創立於高雄市");
+  });
+
+  it("真正沒有時間標籤的事件仍保留(不猜時間也不丟事件)", () => {
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
+      [...nodes, { label: "公司股票正式掛牌上市" }],
+      MILESTONE_SOURCE,
+    );
+    expect(block).toContain("未標註時間 : 公司股票正式掛牌上市");
+  });
+
   it("產出 mermaid timeline,而非 flowchart", () => {
     const block = buildCarbonDiagramBlock(
       CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
