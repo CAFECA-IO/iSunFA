@@ -547,6 +547,9 @@ export function buildBatchSummaryCsv(
 
   // Info: (20260729 - Tzuhan) 揭露資訊改為多行短註解:單行 600 字的檔頭在 Excel 中會撐爆首格難以閱讀,
   // Info: (20260729 - Tzuhan) 拆成一行一件事後每行自成一列;各行皆不含逗號,避免被切成多欄
+  // Info: (20260802 - Luphia) 「不含逗號」是硬性不變式,不是風格偏好 ——
+  // Info: (20260802 - Luphia) 一個逗號就會讓該行在 Excel 中裂成兩欄,揭露內容從此對不上。
+  // Info: (20260802 - Luphia) 要列舉多個項目請用 ` | `;此規則由 logistics_report.test.ts 守住。
   const metaLines = [
     `# iSunFA Transport Carbon Report`,
     ...(exportId ? [`# Export ID: ${exportId}`] : []),
@@ -561,7 +564,11 @@ export function buildBatchSummaryCsv(
     ...(includeCo2e
       ? [
           `# Formula: Leg CO2e = Distance x (Weight / 1000) x Factor`,
-          `# Factors (kg CO2e/t-km): LAND ${EMISSION_FACTORS.LAND} | SEA ${EMISSION_FACTORS.SEA} | AIR ${EMISSION_FACTORS.AIR} — UK DEFRA 2025`,
+          // Info: (20260802 - Luphia) 出處由常數推導,不可寫死。
+          // Info: (20260802 - Luphia) 先前換用環境部係數時漏改這裡的「UK DEFRA 2025」,
+          // Info: (20260802 - Luphia) 等於把環境部的數字掛在 DEFRA 名下 —— 對查核者是錯誤歸屬,
+          // Info: (20260802 - Luphia) 比數字本身錯更難發現。
+          `# Factors (kg CO2e/t-km): LAND ${EMISSION_FACTORS.LAND} | SEA ${EMISSION_FACTORS.SEA} | AIR ${EMISSION_FACTORS.AIR} — ${formatFactorSetVersion(DEFAULT_FACTOR_SET, LOGISTICS_FACTOR_SETS[DEFAULT_FACTOR_SET])}`,
           `# Units: Weight kg | Distance km | CO2e kg | Lat/Lng WGS84`,
         ]
       : [
@@ -572,7 +579,7 @@ export function buildBatchSummaryCsv(
     `# Layout: one row per leg${includeCo2e ? " — Plan CO2e and PDF are filled on the plan's last leg only" : " — PDF is filled on the plan's last leg only"}`,
     // Info: (20260801 - Luphia) 逐模式列出係數:各模式不同(陸運 1.2、海運 1.5),
     // Info: (20260801 - Luphia) 先前只寫 1.2,被標為 Est. 的海運段揭露值是錯的
-    `# Est. = Y: no route data for that leg; straight-line distance x tortuosity factor (LAND x ${ESTIMATION_TORTUOSITY_FACTORS.LAND}, SEA x ${ESTIMATION_TORTUOSITY_FACTORS.SEA})`,
+    `# Est. = Y: no route data for that leg; straight-line distance x tortuosity factor (LAND x ${ESTIMATION_TORTUOSITY_FACTORS.LAND} | SEA x ${ESTIMATION_TORTUOSITY_FACTORS.SEA})`,
     `# Plans deemed inapplicable for a route produce no rows`,
   ];
 

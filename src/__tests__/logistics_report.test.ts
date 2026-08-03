@@ -8,6 +8,11 @@ import {
 } from "@/lib/utils/logistics_report";
 import { ROUTE_MODE } from "@/constants/analysis";
 import { EMISSION_FACTORS } from "@/constants/logistics";
+import {
+  DEFAULT_FACTOR_SET,
+  LOGISTICS_FACTOR_SETS,
+  formatFactorSource,
+} from "@/constants/logistics_factor_sets";
 import { MoneyUtil } from "@/lib/utils/money";
 import { ILogisticsPlan, ITransportSegment } from "@/interfaces/logistics";
 import { IMileageBatchResult } from "@/components/transportation_carbon_footprint_calculator/mileage_batch_results";
@@ -273,7 +278,15 @@ describe("buildBatchSummaryCsv (long format, issue 11)", () => {
     expect(col(seaLeg, "To")).toBe("Shanghai Port");
     expect(col(seaLeg, "To Lng")).toBe("121.49");
     expect(col(seaLeg, "Factor")).toBe(EMISSION_FACTORS.SEA);
-    expect(col(seaLeg, "Source")).toContain("DEFRA");
+    /**
+     * Info: (20260802 - Luphia) 斷言改為對照常數而非寫死出處字串。
+     * 原本寫死 "DEFRA"，預設係數組換成環境部之後這條才失敗 ——
+     * 而它本來要守的是「Source 欄有把出處帶出來」，不是「出處是哪一家」。
+     * 出處的實際內容由 logistics_factor_sets.test.ts 負責釘住。
+     */
+    expect(col(seaLeg, "Source")).toBe(
+      formatFactorSource(LOGISTICS_FACTOR_SETS[DEFAULT_FACTOR_SET].SEA),
+    );
   });
 
   it("各段相加 = 方案總計(勾稽),Plan Total 僅於末段填值", () => {
@@ -333,7 +346,12 @@ describe("buildBatchSummaryCsv (long format, issue 11)", () => {
   it("檔頭為多行短註解且不含逗號(避免被切欄)", () => {
     const metaLines = lines.slice(0, headerIndex);
     expect(metaLines.length).toBeGreaterThan(1);
-    expect(metaLines.every((line) => !line.includes(","))).toBe(true);
+    /**
+     * Info: (20260802 - Luphia) 列出違規的行而非只回報 true/false。
+     * 這條測試曾經抓到真正的 bug（揭露文字裡多了一個逗號），
+     * 但當時只說「預期 true 得到 false」，得自己去翻是哪一行。
+     */
+    expect(metaLines.filter((line) => line.includes(","))).toEqual([]);
     expect(metaLines[0]).toContain("iSunFA Transport Carbon Report");
   });
 
@@ -371,13 +389,13 @@ describe("buildPlanFromLegacyBatchItem", () => {
     );
     const seaPlan = plan.comparisonData.plans.sea_multimodal;
 
-    // Info: (20260724 - Tzuhan) 800km x 5t x 0.01045 = 41.80(舊係數 0.01614 會得 64.56,已修正)
-    expect(seaPlan.sea_port_to_port.co2eKg).toBe("41.80");
-    // Info: (20260724 - Tzuhan) 接駁陸段歸入第一段:100km x 5t x 0.11289 = 56.45
-    expect(seaPlan.land_origin_to_port.co2eKg).toBe("56.45");
+    // Info: (20260802 - Luphia) 800km x 5t x 0.0198 = 79.20(環境部海運係數;DEFRA 0.01045 得 41.80)
+    expect(seaPlan.sea_port_to_port.co2eKg).toBe("79.20");
+    // Info: (20260802 - Luphia) 接駁陸段歸入第一段:100km x 5t x 0.131 = 65.50(DEFRA 0.11289 得 56.45)
+    expect(seaPlan.land_origin_to_port.co2eKg).toBe("65.50");
     expect(seaPlan.land_origin_to_port.distanceKm).toBe(100);
     // Info: (20260724 - Tzuhan) 勾稽:各段相加 = 方案總計
-    expect(seaPlan.total_co2eKg).toBe("98.25");
+    expect(seaPlan.total_co2eKg).toBe("144.70");
   });
 
   it("純陸運 legacy:landOnly 成立且海空不成立", () => {
@@ -386,7 +404,8 @@ describe("buildPlanFromLegacyBatchItem", () => {
       1000,
     );
     expect(plan.comparisonData.plans.landOnly.success).toBe(true);
-    expect(plan.comparisonData.plans.landOnly.co2eKg).toBe("39.51");
+    // Info: (20260802 - Luphia) 350km x 1t x 0.131 = 45.85(環境部陸運係數;DEFRA 0.11289 得 39.51)
+    expect(plan.comparisonData.plans.landOnly.co2eKg).toBe("45.85");
     expect(
       plan.comparisonData.plans.sea_multimodal.sea_port_to_port.success,
     ).toBe(false);

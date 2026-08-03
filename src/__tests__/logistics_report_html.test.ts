@@ -11,6 +11,11 @@ import {
 } from "@/lib/utils/logistics_report_html";
 import { LOGISTICS_PDF_MAP_MAX_BYTES } from "@/constants/logistics_pdf";
 import { LogisticsReportPdfRequestSchema } from "@/validators";
+import {
+  DEFAULT_FACTOR_SET,
+  LOGISTICS_FACTOR_SETS,
+  formatFactorSource,
+} from "@/constants/logistics_factor_sets";
 
 const LEGS: IReportLeg[] = [
   {
@@ -86,7 +91,13 @@ describe("buildLogisticsReportHtml", () => {
   it("係數與公式一併輸出,查核者可自行重算", () => {
     const html = buildLogisticsReportHtml(baseInput);
     expect(html).toContain("Leg CO2e = Distance");
-    expect(html).toContain("DEFRA");
+    /**
+     * Info: (20260802 - Luphia) 原本寫死 "DEFRA"，預設係數組換成環境部後才失敗。
+     * 這條要守的是「報告有把係數出處印出來供查核者回溯」，不是出處是哪一家。
+     */
+    expect(html).toContain(
+      formatFactorSource(LOGISTICS_FACTOR_SETS[DEFAULT_FACTOR_SET].SEA),
+    );
   });
 });
 
