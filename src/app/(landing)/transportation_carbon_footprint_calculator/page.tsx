@@ -792,7 +792,12 @@ function ReportPageContent() {
 
       if (files.length === 0) return;
 
-      if (files.length === 1) {
+      /**
+       * Info: (20260803 - Tzuhan) 不計算碳排時不走單檔捷徑。
+       * 此時 CSV 才是主要產出(PDF 的距離是給人看的格式化數字,無法拿去乘係數),
+       * 而這個提前 return 在 CSV 產生之前,單一路線單一方案會只下載到一份 PDF。
+       */
+      if (files.length === 1 && options.includeCo2e !== false) {
         saveAs(files[0].blob, files[0].filename);
         return;
       }
@@ -850,11 +855,24 @@ function ReportPageContent() {
   /**
    * Info: (20260724 - Tzuhan) 單筆分析報告匯出:沿用既有 WebGL 截圖 workaround,
    * 但改為「一個方案一份獨立 PDF」(需求二),多檔打包 zip
+   *
+   * Info: (20260803 - Tzuhan) 改收整個 options 而非只收 plans。
+   * 原本簽章只有 selectedPlans,呼叫端的 options.includeCo2e 因此在此無聲消失,
+   * buildLogisticsReportHtml 的預設又是「未指定即計算」,於是使用者取消勾選
+   * 「計算二氧化碳當量」後,從分析畫面與歷史紀錄匯出仍會拿到完整排放報告。
    */
-  const executeReportExport = async (selectedPlans: Set<RouteType>) => {
+  const executeReportExport = async (options: IExportOptions) => {
+    const selectedPlans = options.plans;
     let originalViewport: string | null = null;
     let viewportMeta: Element | null = null;
-    setExportId(buildExportId());
+    /**
+     * Info: (20260803 - Tzuhan) 用區域變數而非 state。setExportId 是非同步的,
+     * 同一個 closure 內接著讀 `exportId` 只會拿到更新前的 null ——
+     * 單筆匯出的 PDF 與 CSV 因此從來沒有 Export ID,無法互相對照。
+     * executeBatchExport 用的就是這個做法(batchExportId)。
+     */
+    const reportExportId = buildExportId();
+    setExportId(reportExportId);
     try {
       setIsExporting(true); // Info: (20260501 - Luphia) 觸發重新渲染，隱藏控制面板並顯示各分頁 Header/Footer
 
@@ -898,6 +916,16 @@ function ReportPageContent() {
       const files: Array<{ filename: string; blob: Blob }> = [];
 
       /**
+       * Info: (20260803 - Tzuhan) 提到分支外:summary.csv 需要它,而它與列印模式無關。
+       */
+      const singleItem: IMileageBatchResult = {
+        origin: { lat: Number(origin.lat), lng: Number(origin.lng) },
+        dest: { lat: Number(dest.lat), lng: Number(dest.lng) },
+        plan: plan ?? undefined,
+        weightKg: Number(weightKg) || undefined,
+      } as IMileageBatchResult;
+
+      /**
        * Info: (20260731 - Tzuhan) issue 08 步驟二:伺服端向量列印。
        * 只向 MapLibre 取地圖影像,其餘資料走純函數建構載荷 —— 不覆寫寬度、不換 canvas、不截整頁,
        * 因此下方那三段等待(1500ms ResizeObserver / 100ms DOM / 截圖)在此路徑一併消失。
@@ -906,13 +934,6 @@ function ReportPageContent() {
       if (
         TRANSPORT_PDF_EXPORT_MODE === TransportPdfExportModeEnum.SERVER_VECTOR
       ) {
-        const singleItem: IMileageBatchResult = {
-          origin: { lat: Number(origin.lat), lng: Number(origin.lng) },
-          dest: { lat: Number(dest.lat), lng: Number(dest.lng) },
-          plan: plan ?? undefined,
-          weightKg: Number(weightKg) || undefined,
-        } as IMileageBatchResult;
-
         const items: ILogisticsReportPdfItem[] = [];
         for (let i = 0; i < routesToExport.length; i++) {
           const routeType = routesToExport[i];
@@ -927,12 +948,13 @@ function ReportPageContent() {
             planKey: routeType,
             fallbackWeightKg: weightKg !== "" ? weightKg : 1000,
             mapImageDataUrl,
+            includeCo2e: options.includeCo2e,
           });
           if (built) items.push(built);
         }
 
         const exported = await requestReportPdfs(items, {
-          exportId: exportId ?? undefined,
+          exportId: reportExportId,
           onProgress: (completed, total) => {
             setExportProgress({ current: completed, total });
           },
@@ -1040,14 +1062,37 @@ function ReportPageContent() {
         el.className = className;
       });
 
+      if (files.length === 0) return;
+
+      /**
+       * Info: (20260803 - Tzuhan) 單筆路徑也要附 summary.csv。
+       *
+       * PDF 的數字是給人看的:有千分位、四捨五入到小數兩位。使用者若要套用自己的
+       * 排放係數(這正是「不計算二氧化碳當量」存在的理由),需要的是逐段的
+       * 距離與重量,而那只有 CSV 有。原本這條路徑完全不產 CSV,等於
+       * 「匯出後自己算」在最主要的入口是走不通的。
+       *
+       * 不計算碳排時 CSV 才是主要產出,因此此時一律打包 —— 否則單一方案會走
+       * 單檔捷徑直接下載 PDF,CSV 又不見了。
+       */
+      const summaryCsv = buildBatchSummaryCsv(
+        [singleItem],
+        [0],
+        new Map([[0, files.map((file) => file.filename)]]),
+        weightKg !== "" ? weightKg : 1000,
+        reportExportId,
+        options.includeCo2e,
+      );
+
       // Info: (20260724 - Tzuhan) 單檔直接下載;多方案打包 zip,嚴禁合併於同一份文件
-      if (files.length === 1) {
+      if (files.length === 1 && options.includeCo2e !== false) {
         saveAs(files[0].blob, files[0].filename);
-      } else if (files.length > 1) {
+      } else {
         const zip = new JSZip();
         files.forEach((file) => {
           zip.file(file.filename, file.blob);
         });
+        zip.file("summary.csv", summaryCsv);
         const content = await zip.generateAsync({ type: "blob" });
         saveAs(
           content,
@@ -1121,7 +1166,7 @@ function ReportPageContent() {
     if (!target) return;
 
     if (target.scope === "report") {
-      await executeReportExport(options.plans);
+      await executeReportExport(options);
       return;
     }
     if (!batchResults) return;

@@ -575,11 +575,20 @@ export function buildBatchSummaryCsv(
           // Info: (20260801 - Luphia) 明示未計算而非省略不提:讀者必須知道這份檔案為何沒有排放欄
           `# CO2e was NOT calculated for this export — distances only`,
           `# Units: Weight kg | Distance km | Lat/Lng WGS84`,
+          /**
+           * Info: (20260803 - Tzuhan) 換算約定在「不計算」時更要寫,不能只寫在計算分支。
+           * 這份檔案存在的唯一理由就是被乘上使用者自己的係數,而係數的通用單位是
+           * kg CO2e / t-km —— Weight 欄卻是 kg。少了這行,使用者直接
+           * Distance x Weight x factor 就會差 1000 倍,且檔頭沒有任何一行會阻止他。
+           */
+          `# To apply your own factor (kg CO2e/t-km): Leg CO2e = Distance x (Weight / 1000) x YourFactor`,
         ]),
     `# Layout: one row per leg${includeCo2e ? " — Plan CO2e and PDF are filled on the plan's last leg only" : " — PDF is filled on the plan's last leg only"}`,
     // Info: (20260801 - Luphia) 逐模式列出係數:各模式不同(陸運 1.2、海運 1.5),
     // Info: (20260801 - Luphia) 先前只寫 1.2,被標為 Est. 的海運段揭露值是錯的
-    `# Est. = Y: no route data for that leg; straight-line distance x tortuosity factor (LAND x ${ESTIMATION_TORTUOSITY_FACTORS.LAND} | SEA x ${ESTIMATION_TORTUOSITY_FACTORS.SEA})`,
+    // Info: (20260803 - Tzuhan) 明示係數已乘進 Distance 欄。原文只說「直線距離 x 繞行係數」,
+    // Info: (20260803 - Tzuhan) 讀者無從判斷該欄是乘之前還是之後,自行重算時會再乘一次。
+    `# Est. = Y: no route data for that leg; straight-line distance x tortuosity factor already applied to Distance (LAND x ${ESTIMATION_TORTUOSITY_FACTORS.LAND} | SEA x ${ESTIMATION_TORTUOSITY_FACTORS.SEA})`,
     `# Plans deemed inapplicable for a route produce no rows`,
   ];
 
