@@ -28,6 +28,8 @@ import {
 } from "@/lib/carbon_report_table.builder";
 // Info: (20260801 - Tzuhan) 段落版面順序由組裝器決定(Issue A):敘述 → 原文表格 → 系統表格 → 對帳
 import { composeParagraphContent } from "@/lib/carbon_paragraph_composer";
+import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
+import { CARBON_SOURCE_TABLE_MAX_PER_PARAGRAPH } from "@/constants/carbon_source_tables";
 import {
   buildCarbonChartBlock,
   insertCarbonChartBlock,
@@ -1176,7 +1178,14 @@ export const useCarbonChat = () => {
       pageIndex?: Map<string, number>,
     ) => {
       interface IImportChunkPayload {
-        segments: { paragraphId: string; title: string; content: string }[];
+        segments: {
+          paragraphId: string;
+          title: string;
+          content: string;
+          // Info: (20260803 - Tzuhan) 原文照錄的表格。API 一直有回,但這裡漏宣告 →
+          // Info: (20260803 - Tzuhan) 逐章合併時被靜默丟棄,Issue A 的表格一張都沒進過報告。
+          sourceTables?: ICarbonSourceTable[];
+        }[];
         unmapped: string[];
         activities?: IActivityRecord[];
       }
@@ -1252,7 +1261,7 @@ export const useCarbonChat = () => {
 
       const segmentsById = new Map<
         string,
-        { title: string; parts: string[] }
+        { title: string; parts: string[]; sourceTables: ICarbonSourceTable[] }
       >();
       const unmapped: string[] = [];
       let activities: IActivityRecord[] = [];
@@ -1262,8 +1271,26 @@ export const useCarbonChat = () => {
           const bucket = segmentsById.get(segment.paragraphId) ?? {
             title: segment.title,
             parts: [],
+            sourceTables: [],
           };
           bucket.parts.push(segment.content);
+          /**
+           * Info: (20260803 - Tzuhan) 表格隨敘述一起累積。以表號去重:
+           * 同一節的內容可能被切成多段回來,同一張表因此可能重複出現,
+           * 而重複的表在報告上是兩張一樣的表 —— 讀者無從判斷哪張才是原文。
+           */
+          (segment.sourceTables ?? []).forEach((table) => {
+            if (
+              bucket.sourceTables.some((kept) => kept.tableNo === table.tableNo)
+            )
+              return;
+            if (
+              bucket.sourceTables.length >=
+              CARBON_SOURCE_TABLE_MAX_PER_PARAGRAPH
+            )
+              return;
+            bucket.sourceTables.push(table);
+          });
           segmentsById.set(segment.paragraphId, bucket);
         });
         unmapped.push(...chunk.unmapped);
@@ -1278,6 +1305,7 @@ export const useCarbonChat = () => {
             paragraphId,
             title: bucket.title,
             content: bucket.parts.join("\n\n").trim(),
+            sourceTables: bucket.sourceTables,
           }),
         ),
         unmapped,
@@ -1406,6 +1434,7 @@ export const useCarbonChat = () => {
                 paragraphId: string;
                 title: string;
                 content: string;
+                sourceTables?: ICarbonSourceTable[];
               }[];
               unmapped: string[];
               activities: IActivityRecord[];
@@ -1564,7 +1593,15 @@ export const useCarbonChat = () => {
    */
   const generateParagraphDiagram = useCallback(
     async (paragraphId: string, contentOverride?: string): Promise<void> => {
-      if (!findDiagramTemplateForParagraph(paragraphId)) return;
+      /**
+       * Info: (20260803 - Tzuhan) 沒有對應模板就跳過,但**不再靜默**。
+       * 實測「所有圖表不見了」時,前端零 log、後端零請求,無法分辨是沒觸發、
+       * 被過濾掉、還是呼叫失敗 —— 只能回頭猜。決策點沒有痕跡,現場就無法還原。
+       */
+      if (!findDiagramTemplateForParagraph(paragraphId)) {
+        console.info("[carbon-chat] diagram skipped: no template", paragraphId);
+        return;
+      }
 
       // Info: (20260730 - Tzuhan) 內容優先取呼叫端傳入者:匯入落地是在 setSessionsData 的同一個 tick 內
       // Info: (20260730 - Tzuhan) 接著呼叫本函式,此時 closure 捕獲的 sessionsData 還是「匯入前」的舊值,
@@ -1766,19 +1803,26 @@ export const useCarbonChat = () => {
 
     // Info: (20260730 - Tzuhan) 匯入落地後為有對應模板的段落補結構圖(治理架構/範疇對應/量化流程)。
     // Info: (20260730 - Tzuhan) 循序執行(專案禁 await-in-loop):一次一張,避免同時寫入同一份報告狀態。
-    void selected
-      .filter((item) => findDiagramTemplateForParagraph(item.paragraphId))
-      .reduce(async (previous, item, index) => {
-        await previous;
-        // Info: (20260730 - Tzuhan) 逐張間隔:匯入本身已吃掉當分鐘的限流額度,連發必被 429 擋掉
-        if (index > 0) {
-          await new Promise((resolve) => {
-            setTimeout(resolve, CARBON_DIAGRAM_THROTTLE_MS);
-          });
-        }
-        // Info: (20260730 - Tzuhan) 傳入剛落地的內容:此刻 setSessionsData 尚未生效,讀狀態會拿到空值
-        await generateParagraphDiagram(item.paragraphId, item.content);
-      }, Promise.resolve());
+    const diagramTargets = selected.filter((item) =>
+      findDiagramTemplateForParagraph(item.paragraphId),
+    );
+    // Info: (20260803 - Tzuhan) 這一行是為了讓「圖一張都沒出來」能被現場還原:
+    // Info: (20260803 - Tzuhan) 先知道有幾段進候選、是哪幾段,才談得上查為什麼沒畫。
+    console.info("[carbon-chat] diagram phase start", {
+      candidates: diagramTargets.map((item) => item.paragraphId),
+      selected: selected.length,
+    });
+    void diagramTargets.reduce(async (previous, item, index) => {
+      await previous;
+      // Info: (20260730 - Tzuhan) 逐張間隔:匯入本身已吃掉當分鐘的限流額度,連發必被 429 擋掉
+      if (index > 0) {
+        await new Promise((resolve) => {
+          setTimeout(resolve, CARBON_DIAGRAM_THROTTLE_MS);
+        });
+      }
+      // Info: (20260730 - Tzuhan) 傳入剛落地的內容:此刻 setSessionsData 尚未生效,讀狀態會拿到空值
+      await generateParagraphDiagram(item.paragraphId, item.content);
+    }, Promise.resolve());
   }, [
     pendingImport,
     activeSessionId,
