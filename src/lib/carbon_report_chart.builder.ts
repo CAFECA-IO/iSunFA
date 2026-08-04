@@ -5,6 +5,7 @@
 // Info: (20260720 - Tzuhan) 與 /admin/pdf_tool 寫法一致,下載 PDF 即含圖
 // Info: (20260720 - Tzuhan) 防護:空 ledger → 佔位不畫空圖;守恆違反(#22)→ 凍結告警(比照 #23 表格)
 
+import { Decimal } from "decimal.js";
 import { MoneyUtil } from "@/lib/utils/money";
 import { ArticulationStatusEnum } from "@/constants/carbon_articulation";
 import {
@@ -200,13 +201,41 @@ const buildImportedSankey = (
     rows.push(`${quote(site)},${quote(category)},${total}`);
   });
 
-  // Info: (20260803 - Tzuhan) 第二層 類別 → 排放形式(子代碼):節點過多時整層略過
+  /**
+   * Info: (20260803 - Tzuhan) 第二層 類別 → 排放形式(子代碼):節點過多時整層略過。
+   *
+   * **同一組節點對先自己加總再輸出。** 三個廠址共用同一個類別節點,
+   * 因此「類別一 → 1.1」會同時來自總公司與屏東;若原樣輸出兩行,
+   * 就等於賭 mermaid 會把重複的連結加總 —— 它也可能畫成兩條重疊的平行線。
+   * 依賴渲染器未明文保證的行為,是今天已經吃過虧的那類假設(中文節點那次)。
+   * 自己加總,輸出就是決定性的。
+   */
   if (!collapsed) {
+    // Info: (20260803 - Tzuhan) 以公斤累加、輸出前才換公噸,少一次除法捨入
+    const byCategorySub = new Map<
+      string,
+      { category: string; subCategory: string; co2eKg: Decimal }
+    >();
     drawable.forEach((entry) => {
       const origin = entry.importedOrigin;
       if (!origin) return;
+      const category = formatCategory(origin.isoCategory, labels);
+      const key = `${category}\u0000${origin.subCategory}`;
+      const current = byCategorySub.get(key);
+      const co2eKg = MoneyUtil.toDecimal(entry.co2eKg);
+      if (current) {
+        current.co2eKg = current.co2eKg.plus(co2eKg);
+      } else {
+        byCategorySub.set(key, {
+          category,
+          subCategory: origin.subCategory,
+          co2eKg,
+        });
+      }
+    });
+    byCategorySub.forEach(({ category, subCategory, co2eKg }) => {
       rows.push(
-        `${quote(formatCategory(origin.isoCategory, labels))},${quote(origin.subCategory)},${toTonne(entry.co2eKg)}`,
+        `${quote(category)},${quote(subCategory)},${toTonne(co2eKg.toString())}`,
       );
     });
   }

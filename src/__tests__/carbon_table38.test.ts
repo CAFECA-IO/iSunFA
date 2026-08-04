@@ -712,8 +712,41 @@ describe("匯入報告的三層桑基圖", () => {
    * 若印公斤(2591861.5),圖上的數字就與原文對不上,對帳的意義隨之消失。
    */
   it("數值為公噸,與原文表格逐格對得上", () => {
-    expect(block).toContain("2591.8615");
-    expect(block).not.toContain("2591861.5");
+    // Info: (20260803 - Tzuhan) 屏東 1.1 單獨為 2591.8615,第一層逐格對得上原文
+    expect(block).toContain("2814.0773");
+    expect(block).not.toContain("2814077.3");
+  });
+
+  /**
+   * Info: (20260803 - Tzuhan) 第二層同一組節點對只能出現一次。
+   *
+   * 三個廠址共用類別節點,「類別一 → 1.1」同時來自總公司(0.4375)與屏東(2591.8615)。
+   * 若原樣輸出兩行,就是在賭 mermaid 會替我們加總 —— 它也可能畫成兩條重疊的平行線。
+   * 這條測試守的不是數字,是「不依賴渲染器未明文保證的行為」。
+   */
+  it("第二層同一組節點對只出現一次且已加總", () => {
+    const links = block
+      .split("\n")
+      .filter((line) => /^".+","\S+",[\d.]+$/.test(line.trim()));
+    const pairs = links.map((line) => line.split(",").slice(0, 2).join(","));
+    expect(new Set(pairs).size).toBe(pairs.length);
+    expect(block).toContain('"1.1",2592.299');
+  });
+
+  /**
+   * Info: (20260803 - Tzuhan) 桑基圖不得憑空生出或吃掉流量:第二層總和 = 第一層總和。
+   */
+  it("第二層總流量等於第一層總流量", () => {
+    const weightsOf = (predicate: (source: string) => boolean): number =>
+      block
+        .split("\n")
+        .map((line) => line.trim().match(/^"(.+?)","(.+?)",([\d.]+)$/))
+        .filter((m): m is RegExpMatchArray => Boolean(m) && predicate(m![1]))
+        .reduce((sum, m) => sum + Number(m[3]), 0);
+
+    const layer1 = weightsOf((source) => !source.startsWith("類別"));
+    const layer2 = weightsOf((source) => source.startsWith("類別"));
+    expect(Math.abs(layer1 - layer2)).toBeLessThan(0.001);
   });
 
   it("第一層為廠址 → 類別", () => {
