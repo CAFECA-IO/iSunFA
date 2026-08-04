@@ -920,7 +920,23 @@ export const useCarbonChat = () => {
       return undefined;
     if (!inventoryVersionsRef.current.has(chatChannel)) return undefined;
     const master = masterKeyRef.current;
-    if (!master) return undefined;
+    /**
+     * Info: (20260803 - Tzuhan) 沒有金鑰就存不了 —— 但**必須讓使用者看見**。
+     *
+     * 讀寫兩條路對金鑰的要求不對稱:還原時帳本會話走明文模式免金鑰,
+     * 保存時 PUT 的 schema 仍硬性要求 recipientPublicKey(見 carbon_report_storage 的
+     * CarbonReportDraftPutSchema),因此一律需要 master。
+     * 結果是帳本會話未解鎖時「讀得到但存不了」,而原本這裡直接 return,
+     * 連 request 都沒發出、catch 也不會觸發 —— 匯入的帳本與桑基圖當下看得到,
+     * 重載就消失,全程沒有任何提示。
+     *
+     * 報告草稿那條路至少會設 "local" 告知「僅暫存本機」,這裡卻連狀態都沒有。
+     * 這一行是止盲不是治本:根因(明文模式仍要求公鑰)另開票處理。
+     */
+    if (!master) {
+      setSaveStatus("local");
+      return undefined;
+    }
 
     if (inventoryAutosaveTimerRef.current) {
       clearTimeout(inventoryAutosaveTimerRef.current);
