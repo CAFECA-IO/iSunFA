@@ -31,6 +31,7 @@ import {
 import { composeParagraphContent } from "@/lib/carbon_paragraph_composer";
 import {
   buildImportedLedger,
+  LEDGER_SOURCE_TABLE_NO,
   type IImportedLedgerResult,
 } from "@/lib/carbon_table38.pipeline";
 import { isImportedEntry } from "@/lib/carbon_table38.ledger";
@@ -113,6 +114,10 @@ import {
   insertCarbonDiagramBlock,
 } from "@/lib/carbon_report_diagram.builder";
 import { CarbonDiagramTemplateEnum } from "@/constants/carbon_report_diagrams";
+import {
+  resolveChapterPageRange,
+  validatePageIndex,
+} from "@/lib/carbon_page_slice";
 import {
   getApiErrorCode,
   isGatewayTimeoutError,
@@ -1377,12 +1382,38 @@ export const useCarbonChat = () => {
             index: { paragraphId: string; startPage: number }[];
           } | null;
         }>("/api/v1/chat/carbon/import", { method: "POST", body: formData });
-        return new Map(
+        const index = new Map(
           (res.payload?.index ?? []).map((entry) => [
             entry.paragraphId,
             entry.startPage,
           ]),
         );
+        /**
+         * Info: (20260804 - Tzuhan) 索引成功時原本零 log,而它是整條管線**最上游、
+         * 唯一非決定性**的輸入 —— 後面每一章送哪幾頁都由它決定。
+         * 出事時(表3.8 沒進來、桑基圖消失)完全無從回溯這一輪的索引長什麼樣,
+         * 只能猜。決策點沒有痕跡,現場就無法還原。
+         */
+        const validation = validatePageIndex(
+          CARBON_REPORT_OUTLINE.map((section) => ({
+            id: section.id,
+            startPage: index.get(section.id),
+          })),
+        );
+        console.info("[carbon-chat] page index", {
+          resolved: index.size,
+          total: CARBON_REPORT_OUTLINE.length,
+          isValid: validation.isValid,
+          reason: validation.reason,
+          offending: validation.offending,
+          index: Object.fromEntries(index),
+        });
+        /**
+         * Info: (20260804 - Tzuhan) 不合理即整份丟棄,退回送全文。
+         * 半可信的索引比沒有索引更危險:沒有索引只是多花 token,
+         * 錯的索引會讓內容無聲消失,而且看起來一切正常。
+         */
+        return validation.isValid ? index : new Map();
       } catch (error) {
         console.error("[carbon-chat] page index failed:", error);
         return new Map();
@@ -1468,36 +1499,26 @@ export const useCarbonChat = () => {
         const chapterPages = chapterSections.map((section) =>
           pageIndex?.get(section.id),
         );
-        if (chapterPages.length > 0 && chapterPages.every((page) => !!page)) {
-          const pages = chapterPages as number[];
-          /**
-           * Info: (20260803 - Tzuhan) 上界取「下一章第一節的起始頁」,不是本章最後一節的起始頁。
-           *
-           * 索引只記每節的**起始**頁,所以 max(起始頁) 等於「最後一節開始的地方」——
-           * 那一節的內容全部在它之後。實測代價:第三章上界算成 p.41(3.6 節起始),
-           * 而表3.8 跨 p.41–43 → 42、43 頁從未送進模型,整張表無聲消失;
-           * 表2.2(p.15,ch2 上界 15)與表4.2(p.46–47,ch4 上界 47)同樣被切掉尾段,
-           * 落地的是只有表頭的半張表。同一個成因,三張表受害。
-           *
-           * 章節在大綱裡是連續的,所以下一章第一節的起始頁就是本章的自然終點 ——
-           * 這是推導出來的邊界,不是猜一個緩衝頁數。最後一章沒有下一節,不帶上界(送到文末)。
-           */
-          const lastSection = chapterSections[chapterSections.length - 1];
-          const globalIndex = CARBON_REPORT_OUTLINE.findIndex(
-            (section) => section.id === lastSection.id,
-          );
-          const nextSection = CARBON_REPORT_OUTLINE[globalIndex + 1];
-          const nextPage = nextSection
-            ? pageIndex?.get(nextSection.id)
-            : undefined;
-          formData.append("fromPage", String(Math.min(...pages)));
-          /**
-           * Info: (20260803 - Tzuhan) 只有在下一節的起始頁已知時才帶上界。
-           * 未知(或本章是最後一章)就不帶 —— 後端會送全文。那比帶一個會切掉表格的
-           * 上界好:多花 token 是成本,漏送內容是錯誤,而且是無聲的錯誤。
-           */
-          if (nextPage && nextPage > Math.max(...pages)) {
-            formData.append("toPage", String(nextPage));
+        const lastSection = chapterSections[chapterSections.length - 1];
+        const globalIndex = CARBON_REPORT_OUTLINE.findIndex(
+          (section) => section.id === lastSection?.id,
+        );
+        const range = resolveChapterPageRange({
+          sectionPages: chapterPages,
+          nextChapterFirstPage: pageIndex?.get(
+            CARBON_REPORT_OUTLINE[globalIndex + 1]?.id ?? "",
+          ),
+        });
+        // Info: (20260804 - Tzuhan) 每章實際送出的範圍要留痕跡:少一張表時才查得出是被誰切掉的
+        console.info("[carbon-chat] chapter slice", {
+          chapterId: chapter.id,
+          fromPage: range?.fromPage ?? "(full text)",
+          toPage: range?.toPage ?? "(to end)",
+        });
+        if (range) {
+          formData.append("fromPage", String(range.fromPage));
+          if (range.toPage !== undefined) {
+            formData.append("toPage", String(range.toPage));
           }
         }
         try {
@@ -2172,14 +2193,18 @@ export const useCarbonChat = () => {
        * 但開發時看 log 才分得出「沒有表3.8」與「有表3.8 但勾稽沒過」。
        */
       const blocked = Array.from(importedLedgerById.entries()).filter(
-        ([, result]) => result.blockedReason !== null,
+        ([, result]) =>
+          result.blockedReason !== null || result.missingLedgerTable,
       );
       if (blocked.length > 0) {
         console.warn(
           "[carbon-chat] imported ledger blocked",
           blocked.map(([paragraphId, result]) => ({
             paragraphId,
-            reason: result.blockedReason,
+            // Info: (20260804 - Tzuhan) 「該有表3.8 卻沒拿到」與「有表但勾稽沒過」是兩件事
+            reason: result.missingLedgerTable
+              ? `缺少 ${LEDGER_SOURCE_TABLE_NO}(同節有全公司總量表,疑似被頁碼切片切掉)`
+              : result.blockedReason,
           })),
         );
       }
