@@ -11,7 +11,7 @@ import {
   parsePieData,
   getChartTitle,
 } from "@/lib/utils/mermaid_helpers";
-import { renderMermaid } from "@/lib/utils/mermaid_render";
+import { renderMermaid, validateMermaid } from "@/lib/utils/mermaid_render";
 import { MermaidChartType } from "@/constants/mermaid_chart";
 import { useChartPalette } from "@/hooks/use_chart_palette";
 import { resolveCssColorToHex } from "@/lib/utils/css_color";
@@ -183,9 +183,12 @@ const MermaidChart: FC<IMermaidChartProps> = ({
        * suppressErrors 讓解析失敗回傳 false ，退回原始 code block，而非拋錯或注入爆炸圖
        */
       try {
-        const parseResult = await mermaid.parse(trimmedChart, {
-          suppressErrors: true,
-        });
+        /**
+         * Info: (20260803 - Tzuhan) 驗證與渲染共用同一個前處理(見 validateMermaid)。
+         * 原本此處直接 parse 原始字串,而中文節點的 Sankey 要先做 ASCII 別名替換才合法 ——
+         * 驗證因此永遠失敗,含中文的桑基圖一律顯示語法錯誤,連渲染都走不到。
+         */
+        const parseResult = await validateMermaid(trimmedChart);
         if (!parseResult) {
           if (isCurrent) {
             setHasError(true);

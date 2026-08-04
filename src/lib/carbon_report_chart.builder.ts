@@ -13,7 +13,10 @@ import {
   buildChartAnchorEnd,
   CARBON_CHART_ANCHOR_PREFIX,
   CARBON_SANKEY_MAX_EVIDENCE_NODES,
+  CARBON_SANKEY_MAX_IMPORTED_NODES,
 } from "@/constants/carbon_report_charts";
+import { TONNE_TO_KG_MULTIPLIER } from "@/constants/imported_quantity";
+import { isImportedEntry } from "@/lib/carbon_table38.ledger";
 import {
   buildCarbonDataTable,
   ICarbonDataTableLabels,
@@ -30,6 +33,17 @@ export interface ICarbonChartLabels {
   frozen: string;
   // Info: (20260720 - Tzuhan) #53 桑基圖:非憑證來源(對話/附件申報)的聚合節點名
   sankeyChatNode: string;
+  /**
+   * Info: (20260803 - Tzuhan) 匯入桑基圖的標題。**必須帶基準與單位** ——
+   * 一張沒有單位的流量圖,讀者無從判斷 8332 是公噸還是公斤,差一千倍。
+   */
+  importedSankeyTitle?: string;
+  /** Info: (20260803 - Tzuhan) 圖下方「未畫出的項目」說明抬頭 */
+  importedSankeyExcluded?: string;
+  /** Info: (20260803 - Tzuhan) 節點過多而降為兩層時的說明 */
+  importedSankeyCollapsed?: string;
+  /** Info: (20260803 - Tzuhan) ISO 類別顯示名(類別一~六);未提供時輸出 enum 值 */
+  formatIsoCategory?: (category: string) => string;
   // Info: (20260722 - Tzuhan) UAT:範疇 enum 值不可讀 → 顯示名 formatter(未提供時原樣輸出)
   formatScope?: (scope: string) => string;
 }
@@ -42,11 +56,18 @@ export const CARBON_CHART_DEFAULT_LABELS: ICarbonChartLabels = {
   frozen:
     "⚠ 質量守恆勾稽未通過,圖表已凍結。請於對話中澄清庫存缺口後,圖表將自動生成。",
   sankeyChatNode: "對話/附件申報",
+  importedSankeyTitle: "溫室氣體排放流向(原文照錄,所在地基準,公噸 CO2e/年)",
+  importedSankeyExcluded: "未畫出的項目(NA/NS 或為零)",
+  importedSankeyCollapsed: "節點過多,已降為兩層(廠址 → 類別)",
 };
 
 // Info: (20260720 - Tzuhan) mermaid 數值:引擎 Decimal 字串正規化(去千分位疑慮,不經 number)
 const chartValue = (value: string): string =>
   MoneyUtil.toDecimal(value).toString();
+
+// Info: (20260803 - Tzuhan) ISO 類別的顯示名;未提供 formatter 時原樣輸出(enum 值仍可讀出類別)
+const formatCategory = (category: string, labels: ICarbonChartLabels): string =>
+  labels.formatIsoCategory?.(category) ?? category;
 
 const buildScopePie = (
   ledger: IComputedLedger,
@@ -116,6 +137,96 @@ const buildEmissionSankey = (
   return ["```mermaid", "sankey-beta", "", ...rows, "```"].join("\n");
 };
 
+/**
+ * Info: (20260803 - Tzuhan) 匯入報告的碳流量桑基圖:**廠址 → 類別 → 排放形式**(Issue C)。
+ *
+ * 與憑證切面分開的理由見 CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY 的註解。
+ * 三個刻意的行為:
+ *
+ * 1. **零與 NA/NS 一律不畫。** mermaid sankey 的零權重連結沒有意義,而 NA/NS 根本沒有數字。
+ *    但被排除者必須列在圖下方 —— 一張只畫得出來的圖會讓人以為沒畫的都是零,
+ *    而 NA/NS 的意思正好相反。
+ * 2. **超過節點上限降為兩層**(廠址 → 類別),並明說降級了。寧可少一層也不畫成毛線團。
+ * 3. **單位以公噸呈現**,與原文一致。ledger 存的是公斤,此處換算回公噸再畫 ——
+ *    圖上的數字要能與原文表格逐格對照,否則對帳的意義就消失了。
+ */
+const buildImportedSankey = (
+  ledger: IComputedLedger,
+  labels: ICarbonChartLabels,
+): string => {
+  const quote = (name: string): string => `"${name.replace(/"/g, "'")}"`;
+  const imported = ledger.entries.filter(isImportedEntry);
+
+  // Info: (20260803 - Tzuhan) 只畫 REPORTED 且 > 0 者;其餘列入說明
+  const drawable = imported.filter((entry) =>
+    MoneyUtil.toDecimal(entry.co2eKg).greaterThan(0),
+  );
+  const excluded = imported.filter(
+    (entry) => !MoneyUtil.toDecimal(entry.co2eKg).greaterThan(0),
+  );
+
+  if (drawable.length === 0) return `> _${labels.insufficient}_`;
+
+  // Info: (20260803 - Tzuhan) 公斤 → 公噸:圖上的數字要能與原文表格逐格對照
+  const toTonne = (co2eKg: string): string =>
+    MoneyUtil.toDecimal(co2eKg).div(TONNE_TO_KG_MULTIPLIER).toString();
+
+  const sites = new Set(drawable.map((entry) => entry.importedOrigin?.site));
+  const categories = new Set(
+    drawable.map((entry) => entry.importedOrigin?.isoCategory),
+  );
+  const nodeCount = sites.size + categories.size + drawable.length;
+  const collapsed = nodeCount > CARBON_SANKEY_MAX_IMPORTED_NODES;
+
+  const rows: string[] = [];
+
+  /**
+   * Info: (20260803 - Tzuhan) 第一層 廠址 → 類別:同一廠址同一類別的子項加總。
+   * 以 MoneyUtil 累加(字串 Decimal),不經 number —— 圖上的總流入必須等於總流出,
+   * 而浮點的累加順序會讓那個等式偶爾不成立。
+   */
+  const bySiteCategory = new Map<string, string>();
+  drawable.forEach((entry) => {
+    const origin = entry.importedOrigin;
+    if (!origin) return;
+    const key = `${origin.site}|${formatCategory(origin.isoCategory, labels)}`;
+    bySiteCategory.set(
+      key,
+      MoneyUtil.add(bySiteCategory.get(key) ?? "0", toTonne(entry.co2eKg)),
+    );
+  });
+  bySiteCategory.forEach((total, key) => {
+    const [site, category] = key.split("|");
+    rows.push(`${quote(site)},${quote(category)},${total}`);
+  });
+
+  // Info: (20260803 - Tzuhan) 第二層 類別 → 排放形式(子代碼):節點過多時整層略過
+  if (!collapsed) {
+    drawable.forEach((entry) => {
+      const origin = entry.importedOrigin;
+      if (!origin) return;
+      rows.push(
+        `${quote(formatCategory(origin.isoCategory, labels))},${quote(origin.subCategory)},${toTonne(entry.co2eKg)}`,
+      );
+    });
+  }
+
+  const lines = ["```mermaid", "sankey-beta", "", ...rows, "```"];
+  if (labels.importedSankeyTitle) {
+    lines.unshift(`**${labels.importedSankeyTitle}**`, "");
+  }
+  if (collapsed && labels.importedSankeyCollapsed) {
+    lines.push("", `> _${labels.importedSankeyCollapsed}_`);
+  }
+  if (excluded.length > 0 && labels.importedSankeyExcluded) {
+    lines.push("", `**${labels.importedSankeyExcluded}**`, "");
+    excluded.forEach((entry) => {
+      lines.push(`- ${entry.sourceName}`);
+    });
+  }
+  return lines.join("\n");
+};
+
 const buildScopeBar = (
   ledger: IComputedLedger,
   labels: ICarbonChartLabels,
@@ -162,6 +273,8 @@ export const buildCarbonChartBlock = (
       return wrap(buildScopeBar(ledger, labels));
     case CarbonChartTemplateEnum.EMISSION_SANKEY:
       return wrap(buildEmissionSankey(ledger, labels));
+    case CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY:
+      return wrap(buildImportedSankey(ledger, labels));
     case CarbonChartTemplateEnum.SOURCE_TABLE:
     default:
       // Info: (20260720 - Tzuhan) 明細表復用 #23 產生器(去其外層錨點,改包本模板錨點避免雙重替換)

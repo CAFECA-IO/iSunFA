@@ -79,6 +79,21 @@ export interface IParsedTable38 {
   unparsedRows: string[];
 }
 
+/**
+ * Info: (20260803 - Tzuhan) 去掉 markdown 的強調標記(**粗體**、*斜體*、__底線__)。
+ *
+ * 實測:模型以 `| **(1) 總公司** | | | |` 標示廠址,`**` 因此進了廠址名,
+ * 一路帶到對帳表與桑基圖的節點上(「**(1) 總公司** 1.1」)。
+ * **那是排版不是內容** —— 逐字照錄的對象是儲存格的文字,不是它的字重。
+ * 只剝除成對的標記,不動內容中真正的星號。
+ */
+const stripEmphasis = (cell: string): string =>
+  cell
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/__(.+?)__/g, "$1")
+    .replace(/(^|[^*])\*([^*]+?)\*($|[^*])/g, "$1$2$3")
+    .trim();
+
 // Info: (20260803 - Tzuhan) markdown 表格列 → 儲存格陣列(去掉首尾的空欄)
 const splitRow = (line: string): string[] =>
   line
@@ -86,7 +101,7 @@ const splitRow = (line: string): string[] =>
     .replace(/^\|/, "")
     .replace(/\|$/, "")
     .split("|")
-    .map((cell) => cell.trim());
+    .map((cell) => stripEmphasis(cell.trim()));
 
 // Info: (20260803 - Tzuhan) `| --- | :--- |` 這類分隔列
 const isSeparatorRow = (cells: string[]): boolean =>

@@ -635,3 +635,29 @@ describe("表3.8 第二種版面", () => {
     expect(ledger.entries.length).toBeGreaterThan(0);
   });
 });
+
+/**
+ * Info: (20260803 - Tzuhan) 第三輪實測:模型改用 `**(1) 總公司**` 標示廠址。
+ * `**` 因此進了廠址名,一路帶到對帳表與桑基節點上。排版不是內容。
+ */
+describe("markdown 強調標記不進資料", () => {
+  const BOLD = `
+| 報告邊界 | 類型 | 溫室氣體排放量 (公噸 CO2e/年) | 溫室氣體排放量各類別總和 (公噸 CO2e/年) |
+|---|---|---|---|
+| **(1) 總公司** | | | |
+| 類別一 | 1.1 固定式燃燒 | 0.4375 | 0.4375 |
+| 直接與間接溫室氣體總排放量-所在地基準 (公噸 CO2e/年) | | 0.4375 | |
+`.trim();
+
+  it("廠址名不含 ** 標記", () => {
+    const parsed = parseTable38(BOLD);
+    const sites = Array.from(new Set(parsed.rows.map((row) => row.site)));
+    expect(sites).toEqual(["(1) 總公司"]);
+  });
+
+  it("剝除標記後仍能完成勾稽", () => {
+    const parsed = parseTable38(BOLD);
+    expect(parsed.unparsedRows).toEqual([]);
+    expect(reconcileTable38(parsed).isReconciled).toBe(true);
+  });
+});
