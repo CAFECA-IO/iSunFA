@@ -147,8 +147,10 @@ export const carbonChatbot = {
     "가져온 단락의 검증 상태는 초기화됩니다. 활동 데이터 {{activities}}건은 재대사됩니다",
   import_apply: "선택 항목 가져오기({{count}})",
   import_parsing: "「{{name}}」 분석 중. 완료 후 단락별 미리보기가 표시됩니다…",
+  import_already_running:
+    "「{{name}}」을(를) 아직 분석 중입니다. 두 건을 동시에 실행하면 같은 할당량을 두고 경쟁해 양쪽 모두 느려집니다. 완료를 기다리거나 새로고침 후 다시 시도해 주세요.",
   import_parsing_chapter:
-    "「{{name}}」 장별 분석 중({{current}}/{{total}} 완료, 병렬 처리). 전체 보고서는 몇 분 걸립니다…",
+    "「{{name}}」 장별 분석 중({{current}}/{{total}} 완료, {{inFlight}}개 장 처리 중). 전체 보고서는 몇 분 걸립니다…",
   import_failed_chapters:
     "다음 장은 분석에 실패했습니다. 나중에 다시 가져오기로 보완할 수 있습니다: {{chapters}}",
   import_retry_failed: "실패한 장 재시도",

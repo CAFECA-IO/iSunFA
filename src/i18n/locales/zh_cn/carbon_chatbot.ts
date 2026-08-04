@@ -136,8 +136,10 @@ export const carbonChatbot = {
     "导入段落的核对状态将重置;{{activities}} 笔活动数据将入账并重新核对",
   import_apply: "导入勾选({{count}})",
   import_parsing: "「{{name}}」解析中,完成后将显示逐段预览…",
+  import_already_running:
+    "「{{name}}」还在解析中。同时跑两份会互相抢额度、两边都变慢,请等这一份跑完或刷新后再试。",
   import_parsing_chapter:
-    "「{{name}}」逐章解析中(已完成 {{current}}/{{total}} 章,并行处理),完整报告约需数分钟…",
+    "「{{name}}」逐章解析中(已完成 {{current}}/{{total}} 章,{{inFlight}} 章解析中),完整报告约需数分钟…",
   import_failed_chapters: "以下章节解析失败,可稍后重新导入补齐:{{chapters}}",
   import_retry_failed: "重试失败章节",
   import_empty: "【导入失败】文件中没有可对应到大纲的内容。",

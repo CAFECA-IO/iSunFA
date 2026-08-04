@@ -147,8 +147,10 @@ export const carbonChatbot = {
     "Verification resets for imported paragraphs; {{activities}} activity records will be re-reconciled",
   import_apply: "Import selected ({{count}})",
   import_parsing: "Parsing 「{{name}}」; a per-paragraph preview will follow…",
+  import_already_running:
+    "\u300c{{name}}\u300d is still being parsed. Running two imports at once makes both slower by competing for the same quota \u2014 please wait for this one to finish, or reload and try again.",
   import_parsing_chapter:
-    "Parsing 「{{name}}」 chapter by chapter ({{current}}/{{total}} done, in parallel); a full report takes a few minutes…",
+    "Parsing \u300c{{name}}\u300d chapter by chapter ({{current}}/{{total}} done, {{inFlight}} in progress); a full report takes a few minutes\u2026",
   import_failed_chapters:
     "These chapters failed to parse and can be re-imported later: {{chapters}}",
   import_retry_failed: "Retry failed chapters",

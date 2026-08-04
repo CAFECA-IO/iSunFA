@@ -157,6 +157,18 @@ export type ReportSaveStatus = "saving" | "saved" | "error" | "local" | null;
 export interface IDraftNotice {
   type: "loading" | "error" | "info";
   text: string;
+  /**
+   * Info: (20260804 - Tzuhan) 這件工作是什麼時候開始的(epoch ms)。
+   *
+   * 給的是**起點**而不是格式化好的字串,因為要跳動的是畫面不是狀態:
+   * 每秒重寫一次提示文字等於每秒觸發一次 re-render 與一次狀態寫入,
+   * 而已經過多久這件事,元件自己有一個計時器就能算。
+   *
+   * 為什麼需要它:逐章解析 11 章並行,完成數在開頭會長時間停在 0/11 ——
+   * 那是正常的,但畫面上「還在跑」與「已經死了」完全一樣。
+   * 一個會跳動的秒數是最便宜的存活訊號。
+   */
+  startedAt?: number;
 }
 
 /**
@@ -320,6 +332,8 @@ export const useCarbonChat = () => {
   const importActivitiesRef = useRef<IActivityRecord[]>([]);
   // Info: (20260717 - Tzuhan) #56 重試用:最近一次匯入的原始檔(失敗章節重跑無需重選檔)
   const lastImportFileRef = useRef<File | null>(null);
+  // Info: (20260804 - Tzuhan) 進行中的匯入檔名(null 即無);用檔名而非布林,提示才說得出擋的是誰
+  const importInFlightRef = useRef<string | null>(null);
   // Info: (20260730 - Tzuhan) 首次匯入取得的頁碼索引:重試失敗章節時沿用,不重問(索引不會變,重問等於再燒一次全文輸入)
   const lastPageIndexRef = useRef<Map<string, number> | undefined>(undefined);
 
@@ -1387,6 +1401,13 @@ export const useCarbonChat = () => {
       const failed: { id: string; title: string }[] = [];
       let nextIndex = 0;
       let completedCount = 0;
+      /**
+       * Info: (20260804 - Tzuhan) 正在跑的章數。只報「已完成 0/11」會讓開頭那段
+       * 長時間的 0 看起來像卡死 —— 11 章並行、每章數十秒,完成數本來就會停在 0 很久。
+       * 「3 章解析中」說的是同一件事的另一面:沒完成不等於沒在動。
+       */
+      let inFlightCount = 0;
+      const startedAt = Date.now();
 
       const reportProgress = () => {
         setDraftNotice({
@@ -1395,7 +1416,9 @@ export const useCarbonChat = () => {
             name: file.name,
             current: completedCount,
             total: chapters.length,
+            inFlight: inFlightCount,
           }),
+          startedAt,
         });
       };
       reportProgress();
@@ -1406,6 +1429,8 @@ export const useCarbonChat = () => {
         nextIndex += 1;
         if (index >= chapters.length) return;
         const chapter = chapters[index];
+        inFlightCount += 1;
+        reportProgress();
         const formData = new FormData();
         formData.append("file", file);
         formData.append("language", language);
@@ -1475,6 +1500,7 @@ export const useCarbonChat = () => {
           failed.push(chapter);
         }
         completedCount += 1;
+        inFlightCount -= 1;
         reportProgress();
         await processNext();
       };
@@ -1601,6 +1627,26 @@ export const useCarbonChat = () => {
   // Info: (20260716 - Tzuhan) #56 上傳整份報告 → 匯入預覽(不直接寫入;查核重置與數字重勾稽於確認時執行)
   const importReportFile = useCallback(
     async (file: File) => {
+      /**
+       * Info: (20260804 - Tzuhan) 同一時間只跑一份匯入。
+       *
+       * 實測情境:切房回來看不出還在不在跑,於是重新上傳 —— 那個判斷在當下沒有錯,
+       * 是介面沒給依據。但兩份匯入同時跑會各自燒 11 章的 LLM 額度、互相搶限流,
+       * 兩邊都變慢甚至一起失敗,而且先完成的那份會被後完成的覆蓋。
+       *
+       * 擋下來並說出正在跑的是哪一個檔,比預設「使用者知道自己在做什麼」安全 ——
+       * 使用者不知道,因為畫面本來就沒說。
+       */
+      if (importInFlightRef.current) {
+        setDraftNotice({
+          type: "info",
+          text: t("carbon_chatbot.import_already_running", {
+            name: importInFlightRef.current,
+          }),
+        });
+        return;
+      }
+      importInFlightRef.current = file.name;
       lastImportFileRef.current = file;
       /**
        * Info: (20260803 - Tzuhan) 釘住發起匯入的會話(階段二)。
@@ -1753,6 +1799,9 @@ export const useCarbonChat = () => {
           draftNoticeTimerRef.current = null;
           notify(null);
         }, CARBON_DRAFT_NOTICE_DISMISS_MS);
+      } finally {
+        // Info: (20260804 - Tzuhan) 成功、失敗、拋錯都要放行,否則一次失敗就再也匯入不了
+        importInFlightRef.current = null;
       }
     },
     [

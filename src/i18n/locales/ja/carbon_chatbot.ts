@@ -150,8 +150,10 @@ export const carbonChatbot = {
   import_apply: "選択をインポート({{count}})",
   import_parsing:
     "「{{name}}」を解析中。完了後に段落ごとのプレビューを表示します…",
+  import_already_running:
+    "「{{name}}」は解析中です。同時に 2 件実行すると同じ割り当てを奪い合い、どちらも遅くなります。完了を待つか、再読み込みしてからお試しください。",
   import_parsing_chapter:
-    "「{{name}}」を章ごとに解析中({{current}}/{{total}} 完了、並行処理)。完全なレポートは数分かかります…",
+    "「{{name}}」を章ごとに解析中({{current}}/{{total}} 完了、{{inFlight}} 章を処理中)。完全なレポートは数分かかります…",
   import_failed_chapters:
     "次の章は解析に失敗しました。後で再インポートで補完できます:{{chapters}}",
   import_retry_failed: "失敗した章を再試行",
