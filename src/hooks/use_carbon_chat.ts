@@ -155,6 +155,23 @@ export interface IDraftNotice {
   text: string;
 }
 
+/**
+ * Info: (20260803 - Tzuhan) 取指定會話,取不到即回 null。
+ *
+ * 為什麼需要一個專門的函式而不是直接索引:`{ ...prev[activeSessionId] }` 在會話不存在時
+ * **不會拋錯** —— 展開 undefined 得到 `{}`,錯誤延後到下一行 `.messages.some(...)` 才爆,
+ * 而訊息會是「Cannot read properties of undefined (reading 'some')」,
+ * 指向 messages 而非真正的原因(會話不存在)。實測從對話框切換帳本時即如此,
+ * 我因此在錯的地方找了一輪。
+ *
+ * 會話為何可能不存在:切換帳本會改 activeSessionId,而該帳本的會話是非同步載入的;
+ * 封存當前會話時也會先 delete 再改 id。這兩個時點之間抵達的訊息就會撞上空會話。
+ */
+const resolveSession = (
+  sessions: Record<string, IChatSession>,
+  sessionId: string,
+): IChatSession | null => sessions[sessionId] ?? null;
+
 export const useCarbonChat = () => {
   const { t, language } = useTranslation();
   const { user } = useAuth();
@@ -304,7 +321,20 @@ export const useCarbonChat = () => {
         replyTimersRef.current.delete(channel);
       }
       setSessionsData((prev) => {
-        const updatedSession = { ...prev[activeSessionId] };
+        const existing = resolveSession(prev, activeSessionId);
+        /**
+         * Info: (20260803 - Tzuhan) 會話不存在就丟棄這則訊息,不即時建一個新的:
+         * 憑一則訊息長出會話,會在剛切換過去的帳本裡冒出一間不屬於它的聊天室。
+         * 丟棄但留 log —— 靜默丟訊息會變成「回覆有時候不見」這種查不到的問題。
+         */
+        if (!existing) {
+          console.warn(
+            "[carbon-chat] message dropped: session not found",
+            activeSessionId,
+          );
+          return prev;
+        }
+        const updatedSession = { ...existing };
         // Info: (20260714 - Tzuhan) 以訊息 id 去重: HTTP 回帶與 Centrifugo 訂閱可能送達同一則訊息
         if (updatedSession.messages.some((m) => m.id === message.id)) {
           return prev;
@@ -2394,7 +2424,10 @@ export const useCarbonChat = () => {
         );
 
         setSessionsData((prev) => {
-          const session = { ...prev[activeSessionId] };
+          const existing = resolveSession(prev, activeSessionId);
+          // Info: (20260803 - Tzuhan) 同上:會話已不在(切帳本/封存)就不回填歷史
+          if (!existing) return prev;
+          const session = { ...existing };
           session.messages = before
             ? [...decrypted, ...session.messages]
             : decrypted;
@@ -2495,7 +2528,10 @@ export const useCarbonChat = () => {
       if (!section) return;
 
       setSessionsData((prev) => {
-        const updatedSession = { ...prev[activeSessionId] };
+        const existing = resolveSession(prev, activeSessionId);
+        // Info: (20260803 - Tzuhan) 不存在就不寫:否則會憑一個欄位長出一間只有 currentStep 的空會話
+        if (!existing) return prev;
+        const updatedSession = { ...existing };
         updatedSession.currentStep = `${section.code} ${section.title}：${section.guidance}`;
         return { ...prev, [activeSessionId]: updatedSession };
       });
@@ -3100,7 +3136,9 @@ export const useCarbonChat = () => {
 
     // Info: (20260713 - Tzuhan) 廢除訊息計次假進度；進度一律由 reportStats 依實際完成段落數推導
     setSessionsData((prev) => {
-      const updatedSession = { ...prev[activeSessionId] };
+      const existing = resolveSession(prev, activeSessionId);
+      if (!existing) return prev;
+      const updatedSession = { ...existing };
       // Info: (20260714 - Tzuhan) 新對話以首則使用者訊息摘要為標題(demo 精度: 截前 24 字)
       const hasUserMessage = updatedSession.messages.some(
         (m) => m.sender === ChatRoleEnum.USER,
