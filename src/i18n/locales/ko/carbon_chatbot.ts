@@ -206,9 +206,17 @@ export const carbonChatbot = {
     "⚠ 질량 보존 검증에 통과하지 못해 데이터 표가 동결되었습니다. 대화에서 재고 차이를 해명하면 자동으로 생성됩니다.",
   report_table_pending_note:
     "참고: {count}건의 활동 데이터가 계수 대기 중으로 본 표에 포함되지 않았습니다.",
+  report_table_col_provenance: "데이터 출처",
+  report_table_provenance_computed: "시스템 계산",
+  report_table_provenance_imported: "원문 전재",
+  report_table_not_provided: "원문에 없음",
+  report_table_imported_note:
+    "참고: \u201c원문 전재\u201d로 표시된 행은 외부 보고서에 기재된 CO2e를 그대로 옮긴 것입니다. 본 시스템은 활동 데이터나 배출계수를 적용하지 않았으므로 해당 두 열은 \u201c원문에 없음\u201d으로 표시됩니다. 수치는 원문 합계와 대조 완료되었습니다(본 절의 대조 설명 참조).",
   data_table_refreshed:
     "데이터 표가 활동 데이터에 맞춰 갱신되었습니다. 해당 섹션을 다시 확인해 주세요",
   data_badge_reconciled: "데이터 섹션: 대사 완료 ✓ (수치는 결정론 엔진 산출)",
+  data_badge_imported:
+    "데이터 섹션: 원문 전재 항목 포함 (원문 합계와 대조 완료, 행별 출처 표시)",
   data_badge_violated: "데이터 섹션: 질량 보존 위반 ⚠ (표 동결, 해명 대기)",
   data_badge_insufficient:
     "데이터 섹션: 데이터 부족 (활동 데이터 완성 시 자동 생성)",

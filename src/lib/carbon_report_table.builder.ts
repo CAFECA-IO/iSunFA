@@ -9,15 +9,23 @@ import { ArticulationStatusEnum } from "@/constants/carbon_articulation";
 import { IComputedLedger } from "@/types/carbon_chatbot.types";
 import { SOURCE_TABLE_ANCHOR_PATTERN } from "@/constants/carbon_source_tables";
 import { isImportedEntry } from "@/lib/carbon_table38.ledger";
-import { summarizeLedgerEntries } from "@/lib/carbon_ledger_totals";
 
 // Info: (20260720 - Tzuhan) 表格注入錨點(HTML 註解:Markdown 渲染不可見、PDF 不輸出;重算時依此替換不動敘述)
 export const CARBON_DATA_TABLE_START = "<!-- carbon-data-table:start -->";
 export const CARBON_DATA_TABLE_END = "<!-- carbon-data-table:end -->";
 
-// Info: (20260720 - Tzuhan) 數據段落勾稽徽章三態(目錄樹顯示;違反時段落內另有告警)
+// Info: (20260720 - Tzuhan) 數據段落勾稽徽章(目錄樹顯示;違反時段落內另有告警)
 export enum CarbonDataBadgeStateEnum {
   RECONCILED = "RECONCILED",
+  /**
+   * Info: (20260804 - Tzuhan) 段落含原文照錄的匯入項目。
+   *
+   * 與 RECONCILED 分開的理由:RECONCILED 的文案是「數字由決定論引擎產出」,
+   * 而匯入項目的數字是從外部報告逐字抄來的,本系統一個乘法都沒做。
+   * 只要段落裡有一列是抄的,那句話對整段就不成立 —— 徽章是對整段的聲明,
+   * 不能因為「大部分是算的」就照掛。混合情形一律落在這一態。
+   */
+  IMPORTED = "IMPORTED",
   VIOLATED = "VIOLATED",
   INSUFFICIENT = "INSUFFICIENT",
 }
@@ -37,6 +45,12 @@ export interface ICarbonDataTableLabels {
   pendingNote: string;
   // Info: (20260722 - Tzuhan) UAT:範疇 enum 值不可讀 → 顯示名 formatter(未提供時原樣輸出)
   formatScope?: (scope: string) => string;
+  // Info: (20260804 - Tzuhan) 逐列來源標示:同一張表混了兩種來源,不標示就分不出哪列是我們算的
+  colProvenance: string;
+  provenanceComputed: string;
+  provenanceImported: string;
+  notProvided: string;
+  importedNote: string;
 }
 
 export const CARBON_DATA_TABLE_DEFAULT_LABELS: ICarbonDataTableLabels = {
@@ -52,14 +66,21 @@ export const CARBON_DATA_TABLE_DEFAULT_LABELS: ICarbonDataTableLabels = {
   frozen:
     "⚠ 質量守恆勾稽未通過,數據表格已凍結。請於對話中澄清庫存缺口後,表格將自動生成。",
   pendingNote: "註:尚有 {count} 筆活動數據待補係數,未計入下表。",
+  colProvenance: "資料來源",
+  provenanceComputed: "系統計算",
+  provenanceImported: "原文照錄",
+  notProvided: "原文未提供",
+  importedNote:
+    "註:標示「原文照錄」者為外部報告既有的排放當量,本系統未套用任何活動數據或排放係數,故該兩欄為「原文未提供」;其數字已與原文總量勾稽(見本節對帳說明)。",
 };
 
-// Info: (20260720 - Tzuhan) 徽章三態裁決(決定性):違反 > 有數據 > 不足
 /**
- * Info: (20260805 - Luphia) 徽章與數據表必須看同一組項目。
- * 原本用 `ledger.entries.length > 0`,而數據表已改為只列 COMPUTED 項目 ——
- * 於是「只有匯入項目」的帳本會出現徽章 teal(已勾稽/有數據)、表格卻寫「資料不足」。
- * teal 的語意是「這些數字由本系統的決定論引擎產出」,拿它去蓋原文照錄的數字是錯的宣稱。
+ * Info: (20260720 - Tzuhan) 徽章裁決(決定性):違反 > 含匯入 > 全部系統計算 > 不足
+ *
+ * Info: (20260804 - Tzuhan) 原本只看 `entries.length > 0` 就回 RECONCILED,
+ * 而表格那側同時把匯入項目過濾掉、印「資料不足」—— 同一份 ledger,
+ * 徽章說「已勾稽 ✓」、表格說「資料不足」,兩者互相打臉。
+ * 現在兩側都以 provenance 為準,而且只要有一列是抄的就不宣稱「由引擎產出」。
  */
 export const deriveDataBadgeState = (
   ledger: IComputedLedger | undefined,
@@ -67,10 +88,13 @@ export const deriveDataBadgeState = (
   if (ledger?.articulation?.status === ArticulationStatusEnum.VIOLATED) {
     return CarbonDataBadgeStateEnum.VIOLATED;
   }
-  if (ledger && ledger.entries.some((entry) => !isImportedEntry(entry))) {
-    return CarbonDataBadgeStateEnum.RECONCILED;
+  if (!ledger || ledger.entries.length === 0) {
+    return CarbonDataBadgeStateEnum.INSUFFICIENT;
   }
-  return CarbonDataBadgeStateEnum.INSUFFICIENT;
+  if (ledger.entries.some(isImportedEntry)) {
+    return CarbonDataBadgeStateEnum.IMPORTED;
+  }
+  return CarbonDataBadgeStateEnum.RECONCILED;
 };
 
 /**
@@ -90,61 +114,68 @@ export const buildCarbonDataTable = (
     return wrap(`> ${labels.frozen}`);
   }
   /**
-   * Info: (20260803 - Tzuhan) 系統計算表格**只列本系統算出來的項目**(Issue B)。
+   * Info: (20260804 - Tzuhan) 匯入項目也列進系統表格,但**逐列標示來源**(修正 20260803 的處置)。
    *
-   * 匯入的表3.8 項目同樣進 ledger(桑基圖與總量需要),但它們已經以「原文照錄」
-   * 的形式出現在同一節裡。若這裡也列一次,同一組數字會在一節內出現兩遍 ——
-   * 一遍標著原文、一遍看起來像本系統算的,而查核者無從判斷哪個才是我們的主張。
-   * 「兩者並存但絕不合併」的執行面就在這一行。
+   * 原本整批過濾掉匯入項目,理由是「同一組數字會在一節內出現兩遍,查核者無從
+   * 判斷哪個才是我們的主張」。那個顧慮是對的,但處置收得太寬 ——
+   * 連範疇小計與總計也一起沒了,於是 3.6「溫室氣體排放總量匯總表」這一節,
+   * 標題是排放總量匯總,內容是「資料不足」,而總量其實就握在 ledger 裡。
+   *
+   * 分辨不出來的解法是**把來源寫出來**,不是把資料藏起來。加一欄「資料來源」之後,
+   * 「哪列是我們算的」變成表上的事實,而不是靠讀者猜。
+   *
+   * 兩欄仍然不填:活動數據與排放係數。原文只給最終 CO2e,
+   * 活動數據 × 係數 × GWP 全發生在報告作者端 —— 本系統一個乘法都沒做。
+   * 尤其不能把 convertedQuantity 印進「活動數據」欄:匯入項目的該欄塞的是
+   * 排放當量本身,印出來會與右邊的排放量差一個 1000 倍,讀成「係數是 1000」。
    */
-  const computedEntries = ledger?.entries.filter(
-    (entry) => !isImportedEntry(entry),
-  );
-  if (!ledger || !computedEntries || computedEntries.length === 0) {
+  if (!ledger || ledger.entries.length === 0) {
     return wrap(`> _${labels.insufficient}_`);
   }
+  const hasImported = ledger.entries.some(isImportedEntry);
 
   const lines: string[] = [];
   lines.push(`**${labels.detailHeading}**`);
   lines.push("");
   lines.push(
-    `| ${labels.colSource} | ${labels.colScope} | ${labels.colQuantity} | ${labels.colFactor} | ${labels.colCo2e} |`,
+    `| ${labels.colSource} | ${labels.colScope} | ${labels.colQuantity} | ${labels.colFactor} | ${labels.colCo2e} | ${labels.colProvenance} |`,
   );
-  lines.push("| --- | --- | --- | --- | ---: |");
+  lines.push("| --- | --- | --- | --- | ---: | --- |");
   const scopeLabel = (scope: string): string =>
     labels.formatScope?.(scope) ?? scope;
-  computedEntries.forEach((entry) => {
+  ledger.entries.forEach((entry) => {
+    const imported = isImportedEntry(entry);
+    const quantity = imported
+      ? labels.notProvided
+      : `${MoneyUtil.formatDynamic(entry.convertedQuantity, 3)} ${entry.convertedUnit}`;
+    const factor = imported
+      ? labels.notProvided
+      : `${entry.factor.value}(${entry.factor.source})`;
+    const provenance = imported
+      ? `${labels.provenanceImported}(${entry.importedOrigin?.tableNo ?? entry.factor.source})`
+      : labels.provenanceComputed;
     lines.push(
-      `| ${entry.sourceName} | ${scopeLabel(entry.scopeCategory)} | ${MoneyUtil.formatDynamic(entry.convertedQuantity, 3)} ${entry.convertedUnit} | ${entry.factor.value}(${entry.factor.source}) | ${MoneyUtil.formatDynamic(entry.co2eKg, 3)} |`,
+      `| ${entry.sourceName} | ${scopeLabel(entry.scopeCategory)} | ${quantity} | ${factor} | ${MoneyUtil.formatDynamic(entry.co2eKg, 3)} | ${provenance} |`,
     );
   });
+
+  if (hasImported) {
+    lines.push("");
+    lines.push(`> _${labels.importedNote}_`);
+  }
 
   lines.push("");
   lines.push(`**${labels.subtotalHeading}**`);
   lines.push("");
   lines.push(`| ${labels.colScope} | ${labels.colCo2e} |`);
   lines.push("| --- | ---: |");
-  /**
-   * Info: (20260805 - Luphia) 小計與總計必須由**這張表列出的項目**算出來,
-   * 不可讀 ledger.scopeSubtotals / ledger.totalCo2eKg。
-   *
-   * 那兩個欄位在匯入之後涵蓋 COMPUTED + IMPORTED(applyImportedLedgerEntries 重算過),
-   * 而上面的明細只列 COMPUTED。混用的結果是同一張表裡「明細加起來 ≠ 小計」——
-   * 本檔開頭與 carbon_ledger_totals 都說過,那在查帳系統裡是致命的:
-   * 查核者會先懷疑每一個數字,而不是懷疑這是個顯示 bug。
-   *
-   * 走 summarizeLedgerEntries 而非在這裡自己累加,理由同前:累加只能有一份實作。
-   * 匯入項目的總量由「原文照錄」表格與勾稽揭露區塊各自負責交代,不從這裡出。
-   */
-  const { scopeSubtotals, totalCo2eKg } =
-    summarizeLedgerEntries(computedEntries);
-  Object.entries(scopeSubtotals).forEach(([scope, subtotal]) => {
+  Object.entries(ledger.scopeSubtotals).forEach(([scope, subtotal]) => {
     lines.push(
       `| ${scopeLabel(scope)} | ${MoneyUtil.formatDynamic(subtotal, 3)} |`,
     );
   });
   lines.push(
-    `| **${labels.total}** | **${MoneyUtil.formatDynamic(totalCo2eKg, 3)}** |`,
+    `| **${labels.total}** | **${MoneyUtil.formatDynamic(ledger.totalCo2eKg, 3)}** |`,
   );
 
   if (ledger.pending.length > 0) {

@@ -15,7 +15,11 @@ import {
 } from "@/lib/carbon_table38.reconciliation";
 import { toLedgerEntries } from "@/lib/carbon_table38.ledger";
 import { buildReconciliationDisclosure } from "@/lib/carbon_table38.disclosure";
-import { buildCarbonDataTable } from "@/lib/carbon_report_table.builder";
+import {
+  buildCarbonDataTable,
+  CarbonDataBadgeStateEnum,
+  deriveDataBadgeState,
+} from "@/lib/carbon_report_table.builder";
 import {
   buildCarbonChartBlock,
   CARBON_CHART_DEFAULT_LABELS,
@@ -484,28 +488,105 @@ describe("toLedgerEntries", () => {
 });
 
 /**
- * Info: (20260803 - Tzuhan) 「兩者並存但絕不合併」的執行面:
- * 匯入項目進 ledger(桑基圖需要),但不得出現在系統計算表格裡 ——
- * 否則同一組數字會在一節內出現兩遍,一遍標原文、一遍看起來像本系統算的。
+ * Info: (20260804 - Tzuhan) 匯入項目進系統表格,但逐列標示來源(取代 20260803 的整批排除)。
+ *
+ * 「兩者並存但絕不合併」守的是**查核者要分得出哪列是我們算的**,
+ * 而分辨的手段是把來源寫在表上,不是把資料藏起來 ——
+ * 藏起來的代價是 3.6「排放總量匯總表」印著「資料不足」,而總量就在 ledger 裡。
  */
-describe("匯入項目不進系統計算表格", () => {
-  it("ledger 只有匯入項目時,系統表格仍顯示資料不足", () => {
-    const parsed = parseTable38(TABLE_38);
-    const reconciled = reconcileTable38(parsed, {
+describe("匯入項目進系統表格但標示來源", () => {
+  const block = ((): string => {
+    const parsedLocal = parseTable38(TABLE_38);
+    const reconciledLocal = reconcileTable38(parsedLocal, {
       companyTotalTonne: COMPANY_TOTAL,
     });
-    const { entries } = toLedgerEntries(parsed, reconciled, {
+    const { entries } = toLedgerEntries(parsedLocal, reconciledLocal, {
       tableNo: "表3.8",
     });
-    const block = buildCarbonDataTable({
-      entries,
-      pending: [],
-      scopeSubtotals: {},
-      totalCo2eKg: "0",
-      computedAt: new Date().toISOString(),
+    return buildCarbonDataTable(mergeImportedLedgerEntries(undefined, entries));
+  })();
+
+  it("列出匯入項目,不再一律印資料不足", () => {
+    expect(block).toContain("2,591,861.5");
+    expect(block).not.toContain("資料不足");
+  });
+
+  it("逐列標示原文照錄與表號", () => {
+    expect(block).toContain("原文照錄(表3.8)");
+  });
+
+  /**
+   * Info: (20260804 - Tzuhan) 匯入項目的 convertedQuantity 塞的是排放當量本身,
+   * 不是活動數據。印進「活動數據」欄會與右邊的排放量差 1000 倍,讀成「係數是 1000」。
+   */
+  it("活動數據與排放係數兩欄明示原文未提供,不得填數字", () => {
+    const importedRow = block
+      .split("\n")
+      .find((line) => line.includes("(1) 總公司 1.1"));
+    expect(importedRow).toBeDefined();
+    const cells = importedRow!.split("|").map((cell) => cell.trim());
+    expect(cells[3]).toBe("原文未提供");
+    expect(cells[4]).toBe("原文未提供");
+  });
+
+  it("範疇小計與總計有數字(這一節的標題就是排放總量匯總)", () => {
+    expect(block).toContain("**總排放量**");
+    expect(block).toContain("8,332,581.1");
+  });
+});
+
+/**
+ * Info: (20260804 - Tzuhan) 徽章與表格必須對同一份 ledger 說同一件事。
+ * 先前徽章看 entries.length、表格看過濾後的 computedEntries,
+ * 於是同一段徽章顯示「已勾稽 ✓(數字由決定論引擎產出)」、表格顯示「資料不足」。
+ */
+describe("徽章以 provenance 裁決", () => {
+  const importedEntry = ((): IComputedLedgerEntry => {
+    const parsedLocal = parseTable38(TABLE_38);
+    const reconciledLocal = reconcileTable38(parsedLocal, {
+      companyTotalTonne: COMPANY_TOTAL,
     });
-    expect(block).not.toContain("2,591,861.5");
-    expect(block).toContain("carbon-data-table:start");
+    return toLedgerEntries(parsedLocal, reconciledLocal, { tableNo: "表3.8" })
+      .entries[0];
+  })();
+
+  it("只有匯入項目時不宣稱由決定論引擎產出", () => {
+    const ledger = mergeImportedLedgerEntries(undefined, [importedEntry]);
+    expect(deriveDataBadgeState(ledger)).toBe(
+      CarbonDataBadgeStateEnum.IMPORTED,
+    );
+  });
+
+  it("混合時仍落在 IMPORTED(只要有一列是抄的,那句話對整段就不成立)", () => {
+    const computed: IComputedLedgerEntry = {
+      activityKey: "voucher:1",
+      scopeCategory: GhgProtocolCategory.SCOPE_1_DIRECT,
+      sourceName: "柴油",
+      quantityRaw: "10",
+      convertedQuantity: "10",
+      convertedUnit: MeasurementUnit.LITER,
+      co2eKg: "26",
+      factor: {
+        factorId: "f",
+        name: "f",
+        value: "2.6",
+        unit: "kg",
+        source: "係數庫",
+      },
+    };
+    const ledger = mergeImportedLedgerEntries(
+      {
+        entries: [computed],
+        pending: [],
+        scopeSubtotals: {},
+        totalCo2eKg: "0",
+        computedAt: new Date().toISOString(),
+      },
+      [importedEntry],
+    );
+    expect(deriveDataBadgeState(ledger)).toBe(
+      CarbonDataBadgeStateEnum.IMPORTED,
+    );
   });
 });
 

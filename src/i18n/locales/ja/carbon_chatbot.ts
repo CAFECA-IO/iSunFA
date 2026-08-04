@@ -209,10 +209,18 @@ export const carbonChatbot = {
     "⚠ 質量保存チェックに未合格のため、データ表は凍結されています。チャットで在庫差異を明確にすると自動的に生成されます。",
   report_table_pending_note:
     "注：{count} 件の活動データは係数待ちのため、本表に含まれていません。",
+  report_table_col_provenance: "データ出所",
+  report_table_provenance_computed: "システム計算",
+  report_table_provenance_imported: "原文転記",
+  report_table_not_provided: "原文に記載なし",
+  report_table_imported_note:
+    "注：「原文転記」の行は外部報告書に記載された CO2e をそのまま転記したものです。本システムは活動データも排出係数も適用していないため、当該 2 列は「原文に記載なし」と表示されます。数値は原文の合計値と照合済みです（本節の照合説明を参照）。",
   data_table_refreshed:
     "データ表が活動データに合わせて更新されました。該当セクションを再確認してください",
   data_badge_reconciled:
     "データセクション：照合済み ✓（数値は決定論エンジン産出）",
+  data_badge_imported:
+    "データセクション：原文転記の項目を含む（原文合計と照合済み、行ごとに出所を明示）",
   data_badge_violated: "データセクション：質量保存違反 ⚠（表は凍結中）",
   data_badge_insufficient:
     "データセクション：データ不足（活動データが揃い次第自動生成）",

@@ -206,10 +206,18 @@ export const carbonChatbot = {
     "⚠ Mass conservation check failed; the data table is frozen. Clarify the inventory gap in the chat and the table will be generated automatically.",
   report_table_pending_note:
     "Note: {count} activity record(s) still await emission factors and are excluded from this table.",
+  report_table_col_provenance: "Source",
+  report_table_provenance_computed: "Computed",
+  report_table_provenance_imported: "Transcribed",
+  report_table_not_provided: "Not given in source",
+  report_table_imported_note:
+    "Note: rows marked \u201cTranscribed\u201d carry CO2e figures taken verbatim from the source report. This system applied no activity data and no emission factor, hence those two columns read \u201cNot given in source\u201d. The figures have been reconciled against the source totals (see the reconciliation note in this section).",
   data_table_refreshed:
     "Data tables were refreshed from the activity ledger — please re-verify the affected sections",
   data_badge_reconciled:
     "Data section: reconciled ✓ (figures produced by the deterministic engine)",
+  data_badge_imported:
+    "Data section: contains transcribed figures (reconciled against source totals; provenance marked per row)",
   data_badge_violated:
     "Data section: mass conservation violated ⚠ (table frozen pending clarification)",
   data_badge_insufficient:

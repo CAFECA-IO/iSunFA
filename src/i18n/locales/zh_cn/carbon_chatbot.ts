@@ -191,8 +191,16 @@ export const carbonChatbot = {
     "⚠ 质量守恒核对未通过，数据表格已冻结。请于对话中澄清库存缺口后，表格将自动生成。",
   report_table_pending_note:
     "注：尚有 {count} 笔活动数据待补系数，未计入下表。",
+  report_table_col_provenance: "资料来源",
+  report_table_provenance_computed: "系统计算",
+  report_table_provenance_imported: "原文照录",
+  report_table_not_provided: "原文未提供",
+  report_table_imported_note:
+    "注：标示「原文照录」者为外部报告既有的排放当量，本系统未套用任何活动数据或排放系数，故该两栏为「原文未提供」；其数字已与原文总量勾稽（见本节对账说明）。",
   data_table_refreshed: "数据表格已随活动数据更新，请重新核对相关段落",
   data_badge_reconciled: "数据段落：已核对 ✓（数字由确定性引擎产出）",
+  data_badge_imported:
+    "数据段落：含原文照录项目（已与原文总量勾稽，逐列标示来源）",
   data_badge_violated: "数据段落：质量守恒违反 ⚠（表格已冻结，待澄清）",
   data_badge_insufficient: "数据段落：数据不足（补齐活动数据后自动生成）",
   chart_scope_pie_title: "各范畴排放占比 (kgCO2e)",

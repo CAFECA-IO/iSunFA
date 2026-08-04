@@ -944,6 +944,11 @@ export const useCarbonChat = () => {
       insufficient: t("carbon_chatbot.report_table_insufficient"),
       frozen: t("carbon_chatbot.report_table_frozen"),
       pendingNote: t("carbon_chatbot.report_table_pending_note"),
+      colProvenance: t("carbon_chatbot.report_table_col_provenance"),
+      provenanceComputed: t("carbon_chatbot.report_table_provenance_computed"),
+      provenanceImported: t("carbon_chatbot.report_table_provenance_imported"),
+      notProvided: t("carbon_chatbot.report_table_not_provided"),
+      importedNote: t("carbon_chatbot.report_table_imported_note"),
       // Info: (20260722 - Tzuhan) UAT:範疇顯示名(enum 值不可讀)
       formatScope: (scope: string) => formatGhgCategoryLabel(scope, language),
     }),
