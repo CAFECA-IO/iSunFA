@@ -139,6 +139,8 @@ export const carbonChatbot = {
     "「{{name}}」 누락 섹션 AI 초안 보완 중(제 {{current}}/{{total}} 배치, 업로드 문서 기반)…",
   import_generating_diagrams:
     "구조도 생성 중({{current}}/{{total}})… 보고서는 이미 사용할 수 있으며 도표는 완성되는 대로 추가됩니다.",
+  import_wrong_session:
+    "이 가져오기는 「{{name}}」의 것입니다. 적용하려면 해당 대화로 돌아가세요.",
   import_draft_badge: "AI 초안",
   import_unmapped: "목차에 대응하지 않는 내용({{count}}건, 가져오지 않음)",
   import_reset_note:

@@ -1635,6 +1635,10 @@ export const useCarbonChat = () => {
         importActivitiesRef.current = payload.activities;
         setPendingImport({
           fileName: file.name,
+          // Info: (20260803 - Tzuhan) 記下發起的會話,套用時比對(見 IPendingImport 註解)
+          originSessionId: activeSessionId,
+          originSessionTitle:
+            sessionsData[activeSessionId]?.title ?? activeSessionId,
           items: [
             ...payload.segments.map((segment) => ({
               ...segment,
@@ -1843,6 +1847,24 @@ export const useCarbonChat = () => {
 
   const applyPendingImport = useCallback(() => {
     if (!pendingImport) return;
+    /**
+     * Info: (20260803 - Tzuhan) 只能套用回發起它的會話(issue_drafts/inventory_table_import/03)。
+     *
+     * 匯入不會因切換聊天室而中斷,但套用寫入的是當下的 activeSessionId ——
+     * 在 A 房發起、切到 B 房再套用,A 房的報告會覆蓋 B 房的內容且毫無警告。
+     * 這裡先擋住(階段一);讓匯入跟著房間走是階段二。
+     *
+     * 提示指名道姓寫出來源對話 —— 只說「無法套用」等於把問題丟回給使用者。
+     */
+    if (pendingImport.originSessionId !== activeSessionId) {
+      setDraftNotice({
+        type: "error",
+        text: t("carbon_chatbot.import_wrong_session", {
+          name: pendingImport.originSessionTitle,
+        }),
+      });
+      return;
+    }
     const selected = pendingImport.items.filter((item) => item.checked);
     if (selected.length === 0) return;
     const contentById = new Map(

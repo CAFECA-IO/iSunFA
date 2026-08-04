@@ -138,6 +138,8 @@ export const carbonChatbot = {
     'Drafting missing sections for "{{name}}" (batch {{current}}/{{total}}, grounded in the uploaded file)…',
   import_generating_diagrams:
     "Generating structural diagrams ({{current}}/{{total}})… the report is already usable; diagrams will appear as they finish.",
+  import_wrong_session:
+    'This import belongs to "{{name}}". Switch back to that conversation to apply it.',
   import_draft_badge: "AI Draft",
   import_unmapped:
     "Content not matching the outline ({{count}} blocks; not imported, handle in chat)",

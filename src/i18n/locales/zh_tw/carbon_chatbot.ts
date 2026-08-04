@@ -129,6 +129,7 @@ export const carbonChatbot = {
     "「{{name}}」缺漏小節 AI 草稿補齊中(第 {{current}}/{{total}} 批,依據上傳文件撰寫)…",
   import_generating_diagrams:
     "結構圖生成中({{current}}/{{total}})…報告已可閱讀,圖表會在完成後陸續出現。",
+  import_wrong_session: "這份匯入屬於「{{name}}」，請切回該對話再套用。",
   import_draft_badge: "AI 草稿",
   import_unmapped: "無法對應大綱的內容({{count}} 段,不會匯入,可於對話中處理)",
   import_reset_note:

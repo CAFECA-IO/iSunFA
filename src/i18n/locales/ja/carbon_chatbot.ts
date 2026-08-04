@@ -140,6 +140,8 @@ export const carbonChatbot = {
     "「{{name}}」の欠落セクションをAIドラフトで補完中(第 {{current}}/{{total}} バッチ、アップロード文書に基づく)…",
   import_generating_diagrams:
     "構造図を生成中({{current}}/{{total}})…レポートは既に閲覧可能で、図は完成次第追加されます。",
+  import_wrong_session:
+    "このインポートは「{{name}}」のものです。適用するにはその会話に戻ってください。",
   import_draft_badge: "AIドラフト",
   import_unmapped:
     "アウトラインに対応しない内容({{count}} 件。インポートされません)",
