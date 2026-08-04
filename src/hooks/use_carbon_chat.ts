@@ -778,11 +778,13 @@ export const useCarbonChat = () => {
     // Info: (20260716 - Tzuhan) #52 無編輯權(帳本 VIEWER)不觸發保存(server 亦會 403,此為第一道)
     if (sessionAccess[chatChannel]?.canEdit === false) return undefined;
     const master = masterKeyRef.current;
+    // Info: (20260803 - Tzuhan) 明文模式(帳本會話)免金鑰,與還原那條路一致
+    const draftBookId = sessionAccess[chatChannel]?.accountBookId ?? null;
     const canCloudSave =
       restoredChannelsRef.current.has(chatChannel) &&
       draftVersionsRef.current.has(chatChannel) &&
-      Boolean(master);
-    if (!canCloudSave || !master) {
+      (Boolean(master) || Boolean(draftBookId));
+    if (!canCloudSave) {
       // Info: (20260716 - Tzuhan) #50 明確告知使用者「僅暫存本機」,避免誤以為已上雲
       setSaveStatus("local");
       return undefined;
@@ -799,7 +801,7 @@ export const useCarbonChat = () => {
         master,
         activeReportData,
         expectedVersion,
-        sessionAccess[chatChannel]?.accountBookId ?? null,
+        draftBookId,
       )
         .then((newVersion) => {
           draftVersionsRef.current.set(chatChannel, newVersion);
@@ -920,8 +922,14 @@ export const useCarbonChat = () => {
       return undefined;
     if (!inventoryVersionsRef.current.has(chatChannel)) return undefined;
     const master = masterKeyRef.current;
+    const bookId = sessionAccess[chatChannel]?.accountBookId ?? null;
     /**
-     * Info: (20260803 - Tzuhan) 沒有金鑰就存不了 —— 但**必須讓使用者看見**。
+     * Info: (20260803 - Tzuhan) 明文模式(帳本會話)免金鑰 —— 與還原那條路一致。
+     * 兩條路的要求不對稱正是先前「讀得到卻存不了」的成因。
+     */
+    /**
+     * Info: (20260803 - Tzuhan) 個人會話仍需金鑰(E2EE 沒有金鑰就無從加密),
+     * 但**必須讓使用者看見**。
      *
      * 讀寫兩條路對金鑰的要求不對稱:還原時帳本會話走明文模式免金鑰,
      * 保存時 PUT 的 schema 仍硬性要求 recipientPublicKey(見 carbon_report_storage 的
@@ -933,7 +941,7 @@ export const useCarbonChat = () => {
      * 報告草稿那條路至少會設 "local" 告知「僅暫存本機」,這裡卻連狀態都沒有。
      * 這一行是止盲不是治本:根因(明文模式仍要求公鑰)另開票處理。
      */
-    if (!master) {
+    if (!bookId && !master) {
       setSaveStatus("local");
       return undefined;
     }
@@ -950,7 +958,7 @@ export const useCarbonChat = () => {
         master,
         activeInventoryState,
         expectedVersion,
-        sessionAccess[chatChannel]?.accountBookId ?? null,
+        bookId,
       )
         .then((newVersion) => {
           inventoryVersionsRef.current.set(chatChannel, newVersion);

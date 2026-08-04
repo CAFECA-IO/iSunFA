@@ -106,7 +106,19 @@ export async function PUT(request: NextRequest) {
     }
 
     const service = new CarbonReportDraftService();
-    const result = await service.saveDraft(parsed.data);
+    /**
+     * Info: (20260803 - Tzuhan) 明文模式沒有 ECIES 收件人,但 DB 欄位為 non-null,
+     * 故以**已驗證的使用者位址**補齊。該位址本來就是授權依據
+     * (resolveCarbonAccess 以 channel 前綴與 TeamRole 裁決,不看這個欄位),
+     * 補的是紀錄用的擁有者標記,不是任何權限來源。
+     *
+     * 這樣「帳本會話免金鑰」才真的成立 —— 原本讀免金鑰、寫仍要金鑰,
+     * 未解鎖時讀得到卻存不了(見 issue_drafts/inventory_table_import/04)。
+     */
+    const result = await service.saveDraft({
+      ...parsed.data,
+      recipientPublicKey: parsed.data.recipientPublicKey ?? sessionUser.address,
+    });
     return jsonOk(result);
   } catch (error) {
     if (error instanceof ApiError) {
