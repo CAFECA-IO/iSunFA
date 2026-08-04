@@ -102,3 +102,16 @@ export const CARBON_DIAGRAM_MAX_LABEL_CHARS = 40;
  * 護欄擋不住語意荒謬,但擋得住「一個點的時間軸」:少於此數即不畫。
  */
 export const CARBON_TIMELINE_MIN_DATED_EVENTS = 3;
+
+/**
+ * Info: (20260804 - Tzuhan) flowchart 的節點下限(issue_drafts/inventory_table_import/05)。
+ *
+ * 實測畫出過只有一個節點的治理架構圖(只有「溫室氣體盤查推行委員會」)、
+ * 只有兩個節點的範疇對應圖。**單節點的圖比沒有圖更糟** ——
+ * 它看起來像在陳述「這個組織的治理架構只有一個委員會」,而那是錯的訊息;
+ * 沒有圖至少不會誤導,說明文字還能指出是原文該節資訊不足。
+ *
+ * 三個節點是「能構成關係」的最小值:兩個節點只畫得出一條邊,
+ * 那用一句話講完即可,不需要一張圖。與 timeline 的下限同一個理由。
+ */
+export const CARBON_DIAGRAM_MIN_NODES = 3;

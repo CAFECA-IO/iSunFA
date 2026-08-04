@@ -2135,6 +2135,25 @@ export const useCarbonChat = () => {
       candidates: diagramTargets.map((item) => item.paragraphId),
       selected: selected.length,
     });
+    /**
+     * Info: (20260804 - Tzuhan) 同節的原文表格也是畫圖素材(issue_drafts/inventory_table_import/05)。
+     *
+     * 原本只傳 item.content(敘述),把該節最有結構的部分排除在外。
+     * 2.3 範疇對應圖真正的素材就是表2.2 —— 類別與排放源的層級全在表裡,
+     * 敘述只有兩行,於是圖只畫得出兩個節點。
+     *
+     * 這不會放寬防捏造護欄:節點文字仍必須能在傳入的原文中找到,
+     * 只是「原文」的範圍從敘述擴到同節的逐字表格 —— 兩者都是原文,
+     * 差別只在先前漏給了一半。
+     */
+    const withSourceTables = (paragraphId: string, content: string): string => {
+      const tables = sourceTablesById.get(paragraphId) ?? [];
+      if (tables.length === 0) return content;
+      return [
+        content,
+        ...tables.map((table) => `${table.caption}\n\n${table.markdown}`),
+      ].join("\n\n");
+    };
     void diagramTargets
       .reduce(async (previous, item, index) => {
         await previous;
@@ -2157,7 +2176,10 @@ export const useCarbonChat = () => {
           }),
         });
         // Info: (20260730 - Tzuhan) 傳入剛落地的內容:此刻 setSessionsData 尚未生效,讀狀態會拿到空值
-        await generateParagraphDiagram(item.paragraphId, item.content);
+        await generateParagraphDiagram(
+          item.paragraphId,
+          withSourceTables(item.paragraphId, item.content),
+        );
       }, Promise.resolve())
       // Info: (20260803 - Tzuhan) 圖是加值不是前提:全部跑完(含失敗)即收掉提示,不留常駐 loading
       .finally(() => setDraftNotice(null));
