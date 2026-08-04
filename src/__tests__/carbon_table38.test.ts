@@ -5,6 +5,9 @@
 
 import { describe, it, expect } from "@jest/globals";
 import { parseTable38 } from "@/lib/carbon_table38.parser";
+import { mergeImportedLedgerEntries } from "@/lib/carbon_ledger_totals";
+import type { IComputedLedgerEntry } from "@/types/carbon_chatbot.types";
+
 import {
   listExcludedEntries,
   ReconciliationLevelEnum,
@@ -29,6 +32,7 @@ import {
   GhgProtocolCategory,
   Iso14064Category,
 } from "@/constants/esg";
+import { MeasurementUnit } from "@/constants/enums";
 
 /**
  * Info: (20260803 - Tzuhan) 總公司完整一段(含 NA、NS、0.0000 三態並存),
@@ -782,5 +786,59 @@ describe("匯入報告的三層桑基圖", () => {
     const total = siteToCategory.reduce((sum, value) => sum + Number(value), 0);
     // Info: (20260803 - Tzuhan) 0.001 公噸容差,與勾稽同一個標準(發布數字的四捨五入)
     expect(Math.abs(total - Number(COMPANY_TOTAL))).toBeLessThanOrEqual(0.001);
+  });
+});
+
+/**
+ * Info: (20260804 - Tzuhan) 併入匯入項目(mergeImportedLedgerEntries)。
+ *
+ * 這份合併規則原本在 hook 與建表兩處各寫一次。抽成純函數之後才測得到 ——
+ * 而它守的三件事都是「錯了不會當場報錯,只會讓總量默默不對」的那種。
+ */
+describe("匯入項目併入帳本", () => {
+  const makeEntry = (
+    activityKey: string,
+    co2eKg: string,
+    provenance?: LedgerProvenanceEnum,
+  ): IComputedLedgerEntry => ({
+    activityKey,
+    scopeCategory: GhgProtocolCategory.SCOPE_1_DIRECT,
+    sourceName: activityKey,
+    quantityRaw: co2eKg,
+    convertedQuantity: co2eKg,
+    convertedUnit: MeasurementUnit.TONNE,
+    co2eKg,
+    factor: { factorId: "x", name: "x", value: "1", unit: "kg", source: "x" },
+    ...(provenance ? { provenance } : {}),
+  });
+
+  const computed = makeEntry("voucher:1", "100");
+  const imported = makeEntry(
+    "imported:location:總公司:1.1",
+    "500",
+    LedgerProvenanceEnum.IMPORTED,
+  );
+
+  it("重複匯入同一筆是取代而非附加(總量不會翻倍)", () => {
+    const once = mergeImportedLedgerEntries(undefined, [imported]);
+    const twice = mergeImportedLedgerEntries(once, [imported]);
+    expect(twice.entries).toHaveLength(1);
+    expect(twice.totalCo2eKg).toBe("500");
+  });
+
+  it("憑證算出來的項目不因匯入而消失", () => {
+    const base = mergeImportedLedgerEntries(undefined, [computed]);
+    const merged = mergeImportedLedgerEntries(base, [imported]);
+    expect(merged.entries.map((e) => e.activityKey)).toContain("voucher:1");
+    expect(merged.totalCo2eKg).toBe("600");
+  });
+
+  it("小計與總計走同一份實作(明細加起來等於小計)", () => {
+    const merged = mergeImportedLedgerEntries(undefined, [computed, imported]);
+    const subtotalSum = Object.values(merged.scopeSubtotals).reduce(
+      (sum, value) => sum + Number(value),
+      0,
+    );
+    expect(subtotalSum).toBe(Number(merged.totalCo2eKg));
   });
 });

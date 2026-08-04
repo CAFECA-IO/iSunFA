@@ -5,7 +5,6 @@
 // Info: (20260720 - Tzuhan) 與 /admin/pdf_tool 寫法一致,下載 PDF 即含圖
 // Info: (20260720 - Tzuhan) 防護:空 ledger → 佔位不畫空圖;守恆違反(#22)→ 凍結告警(比照 #23 表格)
 
-import { Decimal } from "decimal.js";
 import { MoneyUtil } from "@/lib/utils/money";
 import { ArticulationStatusEnum } from "@/constants/carbon_articulation";
 import {
@@ -214,7 +213,7 @@ const buildImportedSankey = (
     // Info: (20260803 - Tzuhan) 以公斤累加、輸出前才換公噸,少一次除法捨入
     const byCategorySub = new Map<
       string,
-      { category: string; subCategory: string; co2eKg: Decimal }
+      { category: string; subCategory: string; co2eKg: string }
     >();
     drawable.forEach((entry) => {
       const origin = entry.importedOrigin;
@@ -222,21 +221,18 @@ const buildImportedSankey = (
       const category = formatCategory(origin.isoCategory, labels);
       const key = `${category}\u0000${origin.subCategory}`;
       const current = byCategorySub.get(key);
-      const co2eKg = MoneyUtil.toDecimal(entry.co2eKg);
       if (current) {
-        current.co2eKg = current.co2eKg.plus(co2eKg);
+        current.co2eKg = MoneyUtil.add(current.co2eKg, entry.co2eKg);
       } else {
         byCategorySub.set(key, {
           category,
           subCategory: origin.subCategory,
-          co2eKg,
+          co2eKg: entry.co2eKg,
         });
       }
     });
     byCategorySub.forEach(({ category, subCategory, co2eKg }) => {
-      rows.push(
-        `${quote(category)},${quote(subCategory)},${toTonne(co2eKg.toString())}`,
-      );
+      rows.push(`${quote(category)},${quote(subCategory)},${toTonne(co2eKg)}`);
     });
   }
 

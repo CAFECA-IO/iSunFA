@@ -34,7 +34,7 @@ import {
   type IImportedLedgerResult,
 } from "@/lib/carbon_table38.pipeline";
 import { isImportedEntry } from "@/lib/carbon_table38.ledger";
-import { summarizeLedgerEntries } from "@/lib/carbon_ledger_totals";
+import { mergeImportedLedgerEntries } from "@/lib/carbon_ledger_totals";
 import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
 import { CARBON_SOURCE_TABLE_MAX_PER_PARAGRAPH } from "@/constants/carbon_source_tables";
 import {
@@ -1151,26 +1151,14 @@ export const useCarbonChat = () => {
       );
       setInventoryStates((prev) => {
         const base = prev[channel] ?? createEmptyInventoryState();
-        const incomingKeys = new Set(entries.map((entry) => entry.activityKey));
-        const kept = (base.computedLedger?.entries ?? []).filter(
-          (entry) =>
-            !isImportedEntry(entry) || !incomingKeys.has(entry.activityKey),
-        );
-        const nextEntries = [...kept, ...entries];
-        const { scopeSubtotals, totalCo2eKg } =
-          summarizeLedgerEntries(nextEntries);
         return {
           ...prev,
           [channel]: {
             ...base,
-            computedLedger: {
-              ...base.computedLedger,
-              entries: nextEntries,
-              pending: base.computedLedger?.pending ?? [],
-              scopeSubtotals,
-              totalCo2eKg,
-              computedAt: new Date().toISOString(),
-            },
+            computedLedger: mergeImportedLedgerEntries(
+              base.computedLedger,
+              entries,
+            ),
           },
         };
       });
@@ -1998,7 +1986,6 @@ export const useCarbonChat = () => {
      * 看報告的人卻分辨不出來。這違反「所有計算收斂到確定性規則引擎」的鐵律。
      * 原報告的數字仍看得到:它們留在匯入預覽與 unmapped,且原文件本身就是佐證附件。
      */
-    const ledgerNow = computedLedgerRef.current;
     /**
      * Info: (20260803 - Tzuhan) 表3.8 → 帳本 + 對帳說明(Issue B)。
      * 解析、勾稽、轉換、揭露全在 buildImportedLedger 這個純函數裡完成;
@@ -2016,6 +2003,22 @@ export const useCarbonChat = () => {
     const importedEntries = Array.from(importedLedgerById.values()).flatMap(
       (result) => result.entries,
     );
+    /**
+     * Info: (20260804 - Tzuhan) 建表時要看到「併入匯入項目之後」的帳本。
+     *
+     * `applyImportedLedgerEntries` 走 setState,要到下一輪 render 才生效,
+     * 但 `normalizeImported` 在本輪就要拿 ledger 去產系統表格 ——
+     * 用 `computedLedgerRef.current` 等於拿併入前的舊帳本建表,首次落地必定少了匯入項目。
+     * 先前看不出來,是因為表格本來就把匯入項目過濾掉、一律印「資料不足」;
+     * 一旦小計表開始吃匯入資料,這個時序就會直接變成錯誤的數字。
+     *
+     * 合併規則與 `applyImportedLedgerEntries` 相同(以 activityKey 取代、只換 IMPORTED),
+     * 小計一律走 `summarizeLedgerEntries` —— 前端自己再累加一次,遲早與後端不一致。
+     */
+    const ledgerForTables =
+      importedEntries.length > 0
+        ? mergeImportedLedgerEntries(computedLedgerRef.current, importedEntries)
+        : computedLedgerRef.current;
     /**
      * Info: (20260801 - Tzuhan) 改由組裝器決定版面順序(Issue A 第 4 點):
      * 敘述 → 原文照錄的表格 → 系統計算表格 → 對帳。
@@ -2042,7 +2045,7 @@ export const useCarbonChat = () => {
       return composeParagraphContent({
         content: stripLlmTables(imported),
         sourceTables,
-        dataTableBlock: buildCarbonDataTable(ledgerNow, dataTableLabels),
+        dataTableBlock: buildCarbonDataTable(ledgerForTables, dataTableLabels),
         reconciliation,
       });
     };
