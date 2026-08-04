@@ -109,6 +109,7 @@ import {
 import { request } from "@/lib/utils/request";
 import {
   findDiagramTemplateForParagraph,
+  hasCarbonDiagramBlock,
   insertCarbonDiagramBlock,
 } from "@/lib/carbon_report_diagram.builder";
 import { CarbonDiagramTemplateEnum } from "@/constants/carbon_report_diagrams";
@@ -2551,6 +2552,61 @@ export const useCarbonChat = () => {
     chartLabels,
     dataTableLabels,
   ]);
+
+  /**
+   * Info: (20260804 - Tzuhan) 結構圖補位 —— 比照上面桑基圖那個 effect。
+   *
+   * 為什麼需要:桑基圖與結構圖的失敗後果原本天差地遠。
+   * 桑基圖是純本地計算,上面那個 effect 每次載入都會檢查並補上,錯過一次無所謂;
+   * 結構圖走 LLM + 網路,而它**只在匯入套用的那一次 fire-and-forget** ——
+   * 那 5 次呼叫若整批失敗(限流、90 秒逾時撞閘道、切房中斷),就永久沒有圖,
+   * 沒有任何機制會再試。實測整份報告一個 carbon-diagram 錨點都沒有,即是此故。
+   * 被護欄拒絕仍會插入錨點(內含原因文字),所以「零錨點」只可能是呼叫從未成功。
+   *
+   * 一次只掃一段並節流:這條路要燒 LLM 額度,與匯入共用同一個 bucket。
+   * 全部並發等於自己把自己限流,那正是原本可能的失敗原因之一。
+   *
+   * 每個(會話, 段落)一輪頁面生命週期只試一次(diagramAttemptedRef)。
+   * 失敗不重排 —— 否則 effect 會在每次 sessionsData 變動時重試,把額度燒光。
+   * 想再試就重新載入頁面,這是刻意的:自動重試的上限交給人,比交給計時器安全。
+   */
+  const diagramAttemptedRef = useRef<Set<string>>(new Set());
+  const diagramSweepRunningRef = useRef<boolean>(false);
+  useEffect(() => {
+    if (diagramSweepRunningRef.current) return;
+    const paragraphs =
+      sessionsData[activeSessionId]?.reportData?.paragraphs ?? [];
+    const pending = paragraphs.filter((p) => {
+      const templateId = findDiagramTemplateForParagraph(p.id);
+      if (!templateId || !p.content) return false;
+      if (hasCarbonDiagramBlock(p.content, templateId)) return false;
+      return !diagramAttemptedRef.current.has(`${activeSessionId}:${p.id}`);
+    });
+    if (pending.length === 0) return;
+
+    diagramSweepRunningRef.current = true;
+    const originSessionId = activeSessionId;
+    console.info("[carbon-chat] diagram backfill start", {
+      candidates: pending.map((p) => p.id),
+    });
+    // Info: (20260804 - Tzuhan) 循序執行(專案禁 await-in-loop):與匯入路徑同一種寫法
+    void pending
+      .reduce(async (previous, paragraph, index) => {
+        await previous;
+        // Info: (20260804 - Tzuhan) 使用者切走就停:寫入目標是 activeSessionId,寫錯房間是靜默的災難
+        if (activeSessionIdRef.current !== originSessionId) return;
+        if (index > 0) {
+          await new Promise((resolve) => {
+            setTimeout(resolve, CARBON_DIAGRAM_THROTTLE_MS);
+          });
+        }
+        diagramAttemptedRef.current.add(`${originSessionId}:${paragraph.id}`);
+        await generateParagraphDiagram(paragraph.id, paragraph.content);
+      }, Promise.resolve())
+      .finally(() => {
+        diagramSweepRunningRef.current = false;
+      });
+  }, [sessionsData, activeSessionId, generateParagraphDiagram]);
 
   // Info: (20260712 - Luphia) 載入歷史訊息（密文→以主私鑰解密）；before 省略為最新一頁，否則載入更舊一頁並前置
   const loadHistory = useCallback(
