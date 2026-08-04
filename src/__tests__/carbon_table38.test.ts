@@ -14,6 +14,8 @@ import {
   reconcileTable38,
 } from "@/lib/carbon_table38.reconciliation";
 import { toLedgerEntries } from "@/lib/carbon_table38.ledger";
+import { buildImportedLedger } from "@/lib/carbon_table38.pipeline";
+import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
 import { buildReconciliationDisclosure } from "@/lib/carbon_table38.disclosure";
 import {
   buildCarbonDataTable,
@@ -921,5 +923,42 @@ describe("匯入項目併入帳本", () => {
       0,
     );
     expect(subtotalSum).toBe(Number(merged.totalCo2eKg));
+  });
+});
+
+/**
+ * Info: (20260804 - Tzuhan) 缺表3.8 有兩種情形,不可混為一談。
+ * 桑基圖與系統數據表格的唯一資料來源就是表3.8 —— 它沒進來的表現只是「少一張圖」,
+ * 畫面上毫無異狀。那正是最需要被說出來的一種失敗。
+ */
+describe("缺少表3.8 的兩種情形", () => {
+  const table = (tableNo: string): ICarbonSourceTable => ({
+    tableNo,
+    caption: tableNo,
+    sourcePages: [40],
+    markdown: "| a |\n| --- |\n| 1 |",
+  });
+
+  it("同節有表3.6 卻沒有表3.8:視為異常並產出說明", () => {
+    const result = buildImportedLedger({ sourceTables: [table("表3.6")] });
+    expect(result.missingLedgerTable).toBe(true);
+    expect(result.disclosure).toContain("未取得表3.8");
+    expect(result.entries).toEqual([]);
+  });
+
+  it("完全沒有全公司總量表:靜默略過(使用者可能只是沒勾選)", () => {
+    const result = buildImportedLedger({ sourceTables: [table("表2.1")] });
+    expect(result.missingLedgerTable).toBe(false);
+    expect(result.disclosure).toBeNull();
+  });
+
+  it("有表3.8 時不觸發缺表判定", () => {
+    const result = buildImportedLedger({
+      sourceTables: [
+        { ...table("表3.8"), markdown: TABLE_38 },
+        { ...table("表3.6"), markdown: TABLE_38 },
+      ],
+    });
+    expect(result.missingLedgerTable).toBe(false);
   });
 });
