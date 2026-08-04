@@ -217,6 +217,11 @@ export const carbonChatbot = {
   chart_frozen:
     "⚠ 질량 보존 검증에 통과하지 못해 차트가 동결되었습니다. 대화에서 재고 차이를 해명하면 자동으로 생성됩니다.",
   chart_sankey_chat_node: "대화/첨부로 신고됨",
+  chart_imported_sankey_title:
+    "온실가스 배출 흐름(원문 전재, 지역 기준, tCO2e/년)",
+  chart_imported_sankey_excluded: "그래프에 없는 항목(NA/NS 또는 0)",
+  chart_imported_sankey_collapsed:
+    "노드가 너무 많아 2단계(사업장 → 범주)로 축약했습니다",
   book_bind_pending_unlock:
     "장부 세션이 생성되었습니다. 암호화 대화를 잠금 해제하면 장부 바인딩이 완료됩니다(증빙 가져오기와 증거 체인은 바인딩 후 사용 가능)",
   book_bind_done:

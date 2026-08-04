@@ -219,6 +219,11 @@ export const carbonChatbot = {
   chart_frozen:
     "⚠ Mass conservation check failed; the chart is frozen. Clarify the inventory gap in the chat and it will be generated automatically.",
   chart_sankey_chat_node: "Declared in chat/attachments",
+  chart_imported_sankey_title:
+    "GHG emission flow (verbatim from the report, location-based, tCO2e/yr)",
+  chart_imported_sankey_excluded: "Not shown (NA/NS or zero)",
+  chart_imported_sankey_collapsed:
+    "Too many nodes; collapsed to two layers (site → category)",
   book_bind_pending_unlock:
     "Book session created. Unlock the encrypted chat to complete the binding (voucher import and the evidence chain require it)",
   book_bind_done:

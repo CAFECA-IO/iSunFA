@@ -14,12 +14,21 @@ import { toLedgerEntries } from "@/lib/carbon_table38.ledger";
 import { buildReconciliationDisclosure } from "@/lib/carbon_table38.disclosure";
 import { buildCarbonDataTable } from "@/lib/carbon_report_table.builder";
 import {
+  buildCarbonChartBlock,
+  CARBON_CHART_DEFAULT_LABELS,
+} from "@/lib/carbon_report_chart.builder";
+import { CarbonChartTemplateEnum } from "@/constants/carbon_report_charts";
+import {
   EmissionBasisEnum,
   ImportedQuantityStateEnum,
   LedgerProvenanceEnum,
 } from "@/constants/imported_quantity";
 import { Iso14064SubCategory } from "@/constants/iso14064_subcategory";
-import { GhgProtocolCategory, Iso14064Category } from "@/constants/esg";
+import {
+  formatIsoCategoryLabel,
+  GhgProtocolCategory,
+  Iso14064Category,
+} from "@/constants/esg";
 
 /**
  * Info: (20260803 - Tzuhan) 總公司完整一段(含 NA、NS、0.0000 三態並存),
@@ -659,5 +668,86 @@ describe("markdown 強調標記不進資料", () => {
     const parsed = parseTable38(BOLD);
     expect(parsed.unparsedRows).toEqual([]);
     expect(reconcileTable38(parsed).isReconciled).toBe(true);
+  });
+});
+
+/**
+ * Info: (20260803 - Tzuhan) 三層桑基圖(Issue C)。驗的是圖的「語意」而非外觀:
+ * 單位、層次、以及「沒畫的東西有沒有被說出來」。
+ */
+describe("匯入報告的三層桑基圖", () => {
+  const parsed = parseTable38(TABLE_38_LAYOUT_B);
+  const reconciled = reconcileTable38(parsed, {
+    companyTotalTonne: COMPANY_TOTAL,
+  });
+  const { entries } = toLedgerEntries(parsed, reconciled, { tableNo: "表3.8" });
+  /**
+   * Info: (20260803 - Tzuhan) 帶 formatIsoCategory —— 與 hook 的實際用法一致。
+   * 不帶時圖上會印 CATEGORY_1,那對查核者不可讀;純函數無從得知語言,
+   * 顯示名只能由呼叫端注入。
+   */
+  const block = buildCarbonChartBlock(
+    CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY,
+    {
+      entries,
+      pending: [],
+      scopeSubtotals: {},
+      totalCo2eKg: "0",
+      computedAt: new Date().toISOString(),
+    },
+    {
+      ...CARBON_CHART_DEFAULT_LABELS,
+      formatIsoCategory: (category: string) =>
+        formatIsoCategoryLabel(category, "zh_tw"),
+    },
+  );
+
+  it("使用自己的錨點(與憑證桑基圖並存不互相覆蓋)", () => {
+    expect(block).toContain("carbon-chart:IMPORTED_EMISSION_SANKEY:start");
+    expect(block).not.toContain("carbon-chart:EMISSION_SANKEY:start");
+  });
+
+  /**
+   * Info: (20260803 - Tzuhan) 單位必須是公噸,與原文表格一致。
+   * 若印公斤(2591861.5),圖上的數字就與原文對不上,對帳的意義隨之消失。
+   */
+  it("數值為公噸,與原文表格逐格對得上", () => {
+    expect(block).toContain("2591.8615");
+    expect(block).not.toContain("2591861.5");
+  });
+
+  it("第一層為廠址 → 類別", () => {
+    expect(block).toContain('"(1) 總公司"');
+    expect(block).toContain("類別一");
+  });
+
+  it("第二層為類別 → 排放形式(子代碼)", () => {
+    expect(block).toContain('"1.1"');
+    expect(block).toContain('"2.1"');
+  });
+
+  // Info: (20260803 - Tzuhan) 零權重連結在 sankey 沒有意義;但不畫的必須說出來
+  it("零與 NA/NS 不畫,且列在圖下方", () => {
+    expect(block).toContain("未畫出的項目");
+    expect(block).toContain("1.3");
+  });
+
+  it("標題帶基準與單位(沒有單位的流量圖無從判讀量級)", () => {
+    expect(block).toContain("所在地基準");
+    expect(block).toContain("公噸 CO2e");
+  });
+
+  /**
+   * Info: (20260803 - Tzuhan) 計畫的驗收條件:總流入 = 總流出 = 8332.581(容差內)。
+   * 桑基圖的第一層(廠址 → 類別)加總即全公司總量,對不上就是圖在說謊。
+   */
+  it("總流入等於原文全公司總量", () => {
+    const siteToCategory = block
+      .split("\n")
+      .filter((line) => /^"\(\d+\)/.test(line))
+      .map((line) => line.slice(line.lastIndexOf(",") + 1));
+    const total = siteToCategory.reduce((sum, value) => sum + Number(value), 0);
+    // Info: (20260803 - Tzuhan) 0.001 公噸容差,與勾稽同一個標準(發布數字的四捨五入)
+    expect(Math.abs(total - Number(COMPANY_TOTAL))).toBeLessThanOrEqual(0.001);
   });
 });

@@ -48,7 +48,10 @@ import {
   CarbonChartTemplateEnum,
   CARBON_AUTO_SANKEY_PARAGRAPH_ID,
 } from "@/constants/carbon_report_charts";
-import { formatGhgCategoryLabel } from "@/constants/esg";
+import {
+  formatGhgCategoryLabel,
+  formatIsoCategoryLabel,
+} from "@/constants/esg";
 import {
   CARBON_EVIDENCE_CHAPTER_ID,
   buildEvidenceChainBlock,
@@ -896,8 +899,18 @@ export const useCarbonChat = () => {
       insufficient: t("carbon_chatbot.chart_insufficient"),
       frozen: t("carbon_chatbot.chart_frozen"),
       sankeyChatNode: t("carbon_chatbot.chart_sankey_chat_node"),
+      importedSankeyTitle: t("carbon_chatbot.chart_imported_sankey_title"),
+      importedSankeyExcluded: t(
+        "carbon_chatbot.chart_imported_sankey_excluded",
+      ),
+      importedSankeyCollapsed: t(
+        "carbon_chatbot.chart_imported_sankey_collapsed",
+      ),
       // Info: (20260722 - Tzuhan) UAT:範疇顯示名(enum 值不可讀)
       formatScope: (scope: string) => formatGhgCategoryLabel(scope, language),
+      // Info: (20260803 - Tzuhan) ISO 類別顯示名(匯入桑基圖第二層;直接印 CATEGORY_1 讀者看不懂)
+      formatIsoCategory: (category: string) =>
+        formatIsoCategoryLabel(category, language),
     }),
     [t, language],
   );
@@ -2148,11 +2161,15 @@ export const useCarbonChat = () => {
         section.id === CARBON_AUTO_SANKEY_PARAGRAPH_ID &&
         (ledgerNow?.entries.length ?? 0) > 0
       ) {
+        // Info: (20260803 - Tzuhan) 與補位 effect 同一條規則:切面由 provenance 決定
+        const sankeyTemplate = ledgerNow?.entries.some(isImportedEntry)
+          ? CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY
+          : CarbonChartTemplateEnum.EMISSION_SANKEY;
         content = insertCarbonChartBlock(
           content,
-          CarbonChartTemplateEnum.EMISSION_SANKEY,
+          sankeyTemplate,
           buildCarbonChartBlock(
-            CarbonChartTemplateEnum.EMISSION_SANKEY,
+            sankeyTemplate,
             ledgerNow,
             chartLabels,
             dataTableLabels,
@@ -2333,15 +2350,19 @@ export const useCarbonChat = () => {
     );
     if (!target?.content || hasCarbonChartBlocks(target.content)) return;
 
+    /**
+     * Info: (20260803 - Tzuhan) 切面由 provenance 決定(Issue C 第 1 點):
+     * 匯入的報告畫「廠址 → 類別 → 排放形式」,憑證帳本畫「憑證 → 排放源 → 範疇」。
+     * 兩者的可信依據不同(外部已查證的年度事實 vs 本系統可下鑽的帳本),
+     * 混在同一張圖裡會讓查核者無法判斷任一條流量的來源,故各用各的模板。
+     */
+    const templateId = ledger.entries.some(isImportedEntry)
+      ? CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY
+      : CarbonChartTemplateEnum.EMISSION_SANKEY;
     const nextContent = insertCarbonChartBlock(
       target.content,
-      CarbonChartTemplateEnum.EMISSION_SANKEY,
-      buildCarbonChartBlock(
-        CarbonChartTemplateEnum.EMISSION_SANKEY,
-        ledger,
-        chartLabels,
-        dataTableLabels,
-      ),
+      templateId,
+      buildCarbonChartBlock(templateId, ledger, chartLabels, dataTableLabels),
     );
     setSessionsData((prev) => {
       const session = prev[activeSessionId];

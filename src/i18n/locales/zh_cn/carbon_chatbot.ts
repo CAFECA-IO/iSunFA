@@ -200,6 +200,10 @@ export const carbonChatbot = {
   chart_frozen:
     "⚠ 质量守恒核对未通过，图表已冻结。请于对话中澄清库存缺口后，图表将自动生成。",
   chart_sankey_chat_node: "凭证外的来源（对话/附件申报）",
+  chart_imported_sankey_title:
+    "温室气体排放流向（原文照录，所在地基准，公吨 CO2e/年）",
+  chart_imported_sankey_excluded: "未画出的项目（NA/NS 或为零）",
+  chart_imported_sankey_collapsed: "节点过多，已降为两层（厂址 → 类别）",
   book_bind_pending_unlock:
     "账本会话已建立。请先解锁加密对话以完成账本绑定（导入凭证数据与证据链功能需绑定后才可用）",
   book_bind_done: "账本绑定完成，可从活动数据卡导入凭证数据",
