@@ -107,12 +107,15 @@ export function reconcileTable38(
         (row) => row.isoCategory === category,
       );
       /**
-       * Info: (20260803 - Tzuhan) 小計只出現在類別首列;找不到就跳過該層檢查而非當成 0。
-       * 當成 0 會讓「原文沒印小計」與「原文印了 0」得到同一個結論。
+       * Info: (20260803 - Tzuhan) 小計改由 parsed.categorySubtotals 取得(版面中立):
+       * 兩種版面把小計放在不同位置(子代碼列的第二欄 / 類別標籤獨立成列),
+       * 解析器已收斂成同一份清單,此處因此不必知道版面差異。
+       * 找不到就跳過該層檢查而非當成 0 —— 當成 0 會讓「原文沒印小計」
+       * 與「原文印了 0」得到同一個結論。
        */
-      const subtotal = categoryRows
-        .map((row) => row.categorySubtotalTonne)
-        .find((value) => value !== null);
+      const subtotal = parsed.categorySubtotals.find(
+        (item) => item.site === site && item.isoCategory === category,
+      )?.tonneCo2e;
       if (subtotal === undefined || subtotal === null) return;
       checks.push(
         buildCheck(

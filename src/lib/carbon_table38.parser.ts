@@ -17,6 +17,14 @@ import {
   SCOPE_BY_ISO_SUBCATEGORY,
 } from "@/constants/iso14064_subcategory";
 import {
+  TABLE38_CATEGORY_LABEL_TO_ISO,
+  TABLE38_CATEGORY_LABELS,
+  TABLE38_HEADER_TOKENS,
+  TABLE38_SITE_INDEX_PATTERN,
+  TABLE38_SITE_KEYWORDS,
+  TABLE38_SITE_TOTAL_TOKEN,
+} from "@/constants/table38_layout";
+import {
   EmissionBasisEnum,
   ImportedQuantityStateEnum,
   LOCATION_BASIS_TOKENS,
@@ -46,9 +54,23 @@ export interface IParsedSiteTotal {
   tonneCo2e: string;
 }
 
+/**
+ * Info: (20260803 - Tzuhan) 原文標示的類別小計。獨立成一份清單而非掛在資料列上,
+ * 因為兩種版面把它放在不同位置:第一輪在子代碼列的第二個數值欄,
+ * 第二輪自己獨立成一列(`| 類別一 | | 17.8494 | |`)。
+ * 收斂成同一份清單後,勾稽層不必知道版面差異。
+ */
+export interface IParsedCategorySubtotal {
+  site: string;
+  isoCategory: Iso14064Category;
+  /** Info: (20260803 - Tzuhan) 原文為 NA/NS 時為 null —— 那代表「原文沒印小計」,不是零 */
+  tonneCo2e: string | null;
+}
+
 export interface IParsedTable38 {
   rows: IParsedEmissionRow[];
   siteTotals: IParsedSiteTotal[];
+  categorySubtotals: IParsedCategorySubtotal[];
   /**
    * Info: (20260803 - Tzuhan) 沒能解析的資料列原文。**必須回傳而不是丟掉**:
    * 靜默跳過一列的後果是總量少一筆卻依然「勾稽通過」(因為小計也少了同一筆),
@@ -135,17 +157,45 @@ const detectBasis = (cells: string[]): EmissionBasisEnum | null => {
   return null;
 };
 
+const isHeaderToken = (cell: string): boolean =>
+  TABLE38_HEADER_TOKENS.some(
+    (token) => normalizeToken(cell) === normalizeToken(token),
+  );
+
 /**
- * Info: (20260803 - Tzuhan) 廠址儲存格的判定:原文以「(1) 總公司」「(3) 屏東分公司」開頭。
- * 抓「含中文且非類別/子代碼」的儲存格,並沿用上一列的廠址 ——
- * 合併儲存格在 markdown 裡會變成空欄,同一廠址的第二列之後都沒有廠址字樣。
+ * Info: (20260803 - Tzuhan) 表頭列:所有非空儲存格都是表頭字樣。
+ * 第二輪的版面在每個廠址前重複一次表頭,不跳過就會被當成資料。
+ */
+const isHeaderRow = (cells: string[]): boolean => {
+  const filled = cells.filter((cell) => cell.length > 0);
+  return filled.length > 0 && filled.every(isHeaderToken);
+};
+
+/**
+ * Info: (20260803 - Tzuhan) 廠址儲存格的判定。**收緊到明表**:
+ * 以「(n)」開頭,或含「公司」「廠」且本身不是表頭字樣。
+ *
+ * 原本用排除法(「含中文、不以類別開頭、非子代碼」即為廠址),而第二輪的重複表頭
+ * 「報告邊界」完全符合那三個條件 → 被當成廠址,台北與屏東的資料全部併進假廠址。
+ * 排除法的失敗方式是靜默改變資料歸屬;明表的失敗方式是多一列未解析。後者看得見。
  */
 const isSiteCell = (cell: string): boolean => {
   if (cell.length === 0) return false;
-  if (/^類別/.test(cell)) return false;
+  if (isHeaderToken(cell)) return false;
+  if (cell.includes(TABLE38_SITE_TOTAL_TOKEN)) return false;
   if (findSubCategory(cell) !== null) return false;
-  return /[一-鿿]/.test(cell);
+  if (TABLE38_SITE_INDEX_PATTERN.test(cell)) return true;
+  if (TABLE38_CATEGORY_LABELS.some((label) => cell.startsWith(label))) {
+    return false;
+  }
+  return TABLE38_SITE_KEYWORDS.some((keyword) => cell.includes(keyword));
 };
+
+// Info: (20260803 - Tzuhan) 類別標籤儲存格(可獨立成列攜帶小計)
+const findCategoryLabel = (cells: string[]): string | undefined =>
+  cells.find((cell) =>
+    TABLE38_CATEGORY_LABELS.some((label) => normalizeToken(cell) === label),
+  );
 
 /**
  * Info: (20260803 - Tzuhan) 解析表3.8 的 markdown。
@@ -157,6 +207,7 @@ const isSiteCell = (cell: string): boolean => {
 export function parseTable38(markdown: string): IParsedTable38 {
   const rows: IParsedEmissionRow[] = [];
   const siteTotals: IParsedSiteTotal[] = [];
+  const categorySubtotals: IParsedCategorySubtotal[] = [];
   const unparsedRows: string[] = [];
   let currentSite = "";
 
@@ -164,12 +215,12 @@ export function parseTable38(markdown: string): IParsedTable38 {
     if (!line.includes("|")) return;
     const cells = splitRow(line);
     if (cells.length < 2 || isSeparatorRow(cells)) return;
+    // Info: (20260803 - Tzuhan) 重複表頭整列跳過(第二輪每個廠址前都重複一次)
+    if (isHeaderRow(cells)) return;
 
     // Info: (20260803 - Tzuhan) 廠址沿用:合併儲存格攤平後,後續列的廠址欄是空的
     const siteCandidate = cells.find(isSiteCell);
-    if (siteCandidate && !/總排放量/.test(siteCandidate)) {
-      currentSite = siteCandidate;
-    }
+    if (siteCandidate) currentSite = siteCandidate;
 
     // Info: (20260803 - Tzuhan) 廠址總計列:帶基準字樣,取該列唯一的數值
     const basis = detectBasis(cells);
@@ -186,24 +237,61 @@ export function parseTable38(markdown: string): IParsedTable38 {
     const subCategoryCell = cells.find(
       (cell) => findSubCategory(cell) !== null && !/^類別/.test(cell),
     );
-    /**
-     * Info: (20260803 - Tzuhan) 類別六沒有子代碼欄(原文寫「-」),改由類別標籤取代碼。
-     * 只有類別六走這條路:其他類別缺子代碼是真的異常,要落進 unparsedRows 讓人看到。
-     */
     const categoryLabelCell = subCategoryCell
       ? undefined
-      : cells.find((cell) => CATEGORY_LABEL_TO_SUBCATEGORY[cell] !== undefined);
-    if (!subCategoryCell && !categoryLabelCell) {
-      // Info: (20260803 - Tzuhan) 表頭與純標題列不算未解析(它們本來就沒有資料)
+      : findCategoryLabel(cells);
+
+    /**
+     * Info: (20260803 - Tzuhan) 類別標籤獨立成列(第二輪版面):該列攜帶的是**類別小計**,
+     * 子代碼在後續各列。類別六例外 —— 它是開放類別、本身就沒有子項,
+     * 故除了小計之外還要產出一筆資料列(子代碼 "6")。
+     */
+    if (categoryLabelCell && currentSite.length > 0) {
+      const label = normalizeToken(categoryLabelCell);
+      const isoCategory = TABLE38_CATEGORY_LABEL_TO_ISO[label];
+      const afterLabel = cells
+        .slice(cells.indexOf(categoryLabelCell) + 1)
+        .map((cell) => readQuantityCell(cell))
+        .filter((reading): reading is ICellReading => reading !== null);
+      if (isoCategory !== undefined) {
+        // Info: (20260803 - Tzuhan) 小計取該列最後一個可判讀值:類別六那列前面還有子代碼的量
+        const subtotalReading = afterLabel[afterLabel.length - 1];
+        categorySubtotals.push({
+          site: currentSite,
+          isoCategory,
+          tonneCo2e: subtotalReading?.tonneCo2e ?? null,
+        });
+      }
+      const openCategory = CATEGORY_LABEL_TO_SUBCATEGORY[label];
+      if (openCategory === undefined) return;
+      // Info: (20260803 - Tzuhan) 類別六:第一個可判讀值即其排放量
+      const quantityReading = afterLabel[0];
+      if (!quantityReading) return;
+      rows.push({
+        site: currentSite,
+        subCategory: openCategory,
+        isoCategory: ISO_CATEGORY_BY_SUBCATEGORY[openCategory],
+        scope: SCOPE_BY_ISO_SUBCATEGORY[openCategory].scope,
+        state: quantityReading.state,
+        tonneCo2e: quantityReading.tonneCo2e,
+        co2eKg:
+          quantityReading.tonneCo2e === null
+            ? null
+            : toKg(quantityReading.tonneCo2e),
+        categorySubtotalTonne: null,
+      });
+      return;
+    }
+
+    if (!subCategoryCell) {
+      // Info: (20260803 - Tzuhan) 純標題列不算未解析(它們本來就沒有資料)
       const hasQuantity = cells.some((cell) => readQuantityCell(cell) !== null);
       if (hasQuantity) unparsedRows.push(line.trim());
       return;
     }
-    const anchorCell = subCategoryCell ?? (categoryLabelCell as string);
-    const subCategory = subCategoryCell
-      ? findSubCategory(subCategoryCell)
-      : CATEGORY_LABEL_TO_SUBCATEGORY[anchorCell];
-    if (subCategory === null || subCategory === undefined) {
+    const anchorCell = subCategoryCell;
+    const subCategory = findSubCategory(subCategoryCell);
+    if (subCategory === null) {
       unparsedRows.push(line.trim());
       return;
     }
@@ -228,6 +316,24 @@ export function parseTable38(markdown: string): IParsedTable38 {
       unparsedRows.push(line.trim());
       return;
     }
+    /**
+     * Info: (20260803 - Tzuhan) 第一輪版面的小計掛在子代碼列的第二個數值欄。
+     * 一併收進同一份清單,勾稽層因此不必知道版面差異(只在該類別尚無小計時登錄,
+     * 避免同一類別的每一列都推一筆)。
+     */
+    if (subtotal?.tonneCo2e) {
+      const isoCategory = ISO_CATEGORY_BY_SUBCATEGORY[subCategory];
+      const seen = categorySubtotals.some(
+        (item) => item.site === currentSite && item.isoCategory === isoCategory,
+      );
+      if (!seen) {
+        categorySubtotals.push({
+          site: currentSite,
+          isoCategory,
+          tonneCo2e: subtotal.tonneCo2e,
+        });
+      }
+    }
     rows.push({
       site: currentSite,
       subCategory,
@@ -240,7 +346,7 @@ export function parseTable38(markdown: string): IParsedTable38 {
     });
   });
 
-  return { rows, siteTotals, unparsedRows };
+  return { rows, siteTotals, categorySubtotals, unparsedRows };
 }
 
 /**

@@ -74,6 +74,112 @@ const TABLE_38 = `
 | (3) 屏東分公司 | 直接與間接溫室氣體總排放量-所在地基準 (公噸 CO2e/年) | | 8121.918 | |
 `.trim();
 
+/**
+ * Info: (20260803 - Tzuhan) **第二輪**實測落地的版面(issue_drafts/inventory_table_import/01)。
+ *
+ * 同一份 PDF、同一組提示詞,模型換一輪就改變攤平策略:廠址與類別小計各自獨立成列,
+ * 且每個廠址前重複一次表頭。兩份 fixture 都要留 —— 只留新的等於把第一輪的迴歸風險丟掉,
+ * 而版面既然會變,它隨時可能變回來。
+ *
+ * 原文第三個廠址的序號誤寫為 (1)(原文自身的錯字),照錄不修正。
+ */
+const TABLE_38_LAYOUT_B = `
+| 報告邊界 | 溫室氣體排放量 (公噸 CO2e/年) | 溫室氣體排放量各類別總和 (公噸 CO2e/年) | 類型 |
+| :--- | :--- | :--- | :--- |
+| (1) 總公司 | | | |
+| 類別一 | | 17.8494 | |
+| 1.1 固定式燃燒 | 0.4375 | | |
+| 1.2 移動式燃燒 | 9.0759 | | |
+| 1.3 產業過程 | 0.0000 | | |
+| 1.4 人為系統/逸散 | 8.3360 | | |
+| 1.5 土地使用與變更、 林業之排放與移除 | 0.0000 | | |
+| 類別二 | | 139.4858 | |
+| 2.1 外購電力 | 139.4858 | | |
+| 2.2 外購能源 | 0.0000 | | |
+| 類別三 | | 16.2308 | |
+| 3.1 上游運輸 | NS | | |
+| 3.2 下游運輸 | NS | | |
+| 3.3 員工通勤 | 15.4379 | | |
+| 3.4 客戶與訪客運輸 | NA | | |
+| 3.5 業務旅運 | 0.7929 | | |
+| 類別四 | | 27.8985 | |
+| 4.1 採購貨物 | 27.8985 | | |
+| 4.2 資本財 | NA | | |
+| 4.3 固體或液體廢棄物 | NA | | |
+| 4.4 資產使用 | NA | | |
+| 4.5 服務使用 | NA | | |
+| 類別五 | | NA | |
+| 5.1 產品使用階段排放 或移除 | NA | | |
+| 5.2 下游承租資產 | NA | | |
+| 5.3 產品生命終止階段 | NA | | |
+| 5.4 投資運作 | NA | | |
+| 類別六 | - | NA | NA |
+| 直接與間接溫室氣體總排放量-所在地基準 (公噸 CO2e/年) | 201.465 | | |
+| 直接與間接溫室氣體總排放量-市場基準 (公噸 CO2e/年) | 201.465 | | |
+| (2) 台北分公司 | | | |
+| 報告邊界 | 溫室氣體排放量 (公噸 CO2e/年) | 溫室氣體排放量各類別總和 (公噸 CO2e/年) | 類型 |
+| 類別一 | | 1.5133 | |
+| 1.1 固定式燃燒 | 0.0000 | | |
+| 1.2 移動式燃燒 | 1.1221 | | |
+| 1.3 產業過程 | 0.0000 | | |
+| 1.4 人為系統/逸散 | 0.3912 | | |
+| 1.5 土地使用與變更、林 業之排放與移除 | 0.0000 | | |
+| 類別二 | | 5.8344 | |
+| 2.1 外購電力 | 5.8344 | | |
+| 2.2 外購能源 | 0.0000 | | |
+| 類別三 | | 0.6892 | |
+| 3.1 上游運輸 | NA | | |
+| 3.2 下游運輸 | NA | | |
+| 3.3 員工通勤 | 0.1887 | | |
+| 3.4 客戶與訪客運輸 | NA | | |
+| 3.5 業務旅運 | 0.5005 | | |
+| 類別四 | | 1.1613 | |
+| 4.1 採購貨物 | 1.1613 | | |
+| 4.2 資本財 | NA | | |
+| 4.3 固體或液體廢棄物 | NA | | |
+| 4.4 資產使用 | NA | | |
+| 4.5 服務使用 | NA | | |
+| 類別五 | | NA | |
+| 5.1 產品使用階段排放 或移除 | NA | | |
+| 5.2 下游承租資產 | NA | | |
+| 5.3 產品生命終止階段 | NA | | |
+| 5.4 投資運作 | NA | | |
+| 類別六 | - | NA | NA |
+| 直接與間接溫室氣體總排放量-所在地基準 (公噸 CO2e/年) | 9.1982 | | |
+| 直接與間接溫室氣體總排放量-市場基準 (公噸 CO2e/年) | 9.1982 | | |
+| (1) 屏東分公司 | | | |
+| 報告邊界 | 溫室氣體排放量 (公噸 CO2e/年) | 溫室氣體排放量各類別總和 (公噸 CO2e/年) | 類型 |
+| 類別一 | | 2814.0773 | |
+| 1.1 固定式燃燒 | 2591.8615 | | |
+| 1.2 移動式燃燒 | 13.2206 | | |
+| 1.3 產業過程 | 189.0363 | | |
+| 1.4 人為系統/逸散 | 19.9589 | | |
+| 1.5 土地使用與變更、 林業之排放與移除 | 0.0000 | | |
+| 類別二 | | 3325.0152 | |
+| 2.1 外購電力 | 3325.0152 | | |
+| 2.2 外購能源 | 0.0000 | | |
+| 類別三 | | 1226.2346 | |
+| 3.1 上游運輸 | 176.8211 | | |
+| 3.2 下游運輸 | 927.4575 | | |
+| 3.3 員工通勤 | 118.8558 | | |
+| 3.4 客戶與訪客運輸 | NA | | |
+| 3.5 業務旅運 | 3.1002 | | |
+| 類別四 | | 756.5913 | |
+| 4.1 採購貨物 | 654.9068 | | |
+| 4.2 資本財 | NA | | |
+| 4.3 固體或液體廢棄物 | 101.6845 | | |
+| 4.4 資產使用 | NA | | |
+| 4.5 服務使用 | NA | | |
+| 類別五 | | NA | |
+| 5.1 產品使用階段排放 或移除 | NA | | |
+| 5.2 下游承租資產 | NA | | |
+| 5.3 產品生命終止階段 | NA | | |
+| 5.4 投資運作 | NA | | |
+| 類別六 | - | NA | NA |
+| 直接與間接溫室氣體總排放量-所在地基準 (公噸 CO2e/年) | 8121.918 | | |
+| 直接與間接溫室氣體總排放量-市場基準 (公噸 CO2e/年) | 8121.918 | | |
+`.trim();
+
 // Info: (20260803 - Tzuhan) 表3.6 的全公司總量(第三層勾稽的對照值)
 const COMPANY_TOTAL = "8332.581";
 
@@ -439,5 +545,93 @@ describe("buildReconciliationDisclosure", () => {
     });
     expect(failedText).toContain("未寫入帳本");
     expect(failedText).toContain("✗");
+  });
+});
+
+/**
+ * Info: (20260803 - Tzuhan) 第二種版面(廠址與類別小計獨立成列 + 重複表頭)。
+ * 這一組是 issue 01 的驗收:實測時它讓 15 列無法解析、且表頭「報告邊界」被當成廠址名,
+ * 台北與屏東的資料全部併進假廠址(差額 8121.9184)。
+ */
+describe("表3.8 第二種版面", () => {
+  const parsed = parseTable38(TABLE_38_LAYOUT_B);
+
+  it("沒有讀不懂的資料列(類別小計獨立成列也要認得)", () => {
+    expect(parsed.unparsedRows).toEqual([]);
+  });
+
+  /**
+   * Info: (20260803 - Tzuhan) 最關鍵的一項:重複表頭的「報告邊界」不可成為廠址。
+   * 誤認的後果不是報錯,而是資料歸屬悄悄改變 —— 總量還對得上,分佈全錯。
+   */
+  it("重複表頭不被當成廠址", () => {
+    const sites = Array.from(new Set(parsed.rows.map((row) => row.site)));
+    expect(sites).not.toContain("報告邊界");
+    expect(sites).toHaveLength(3);
+  });
+
+  it("三個廠址各自獨立(原文第三個誤寫為 (1) 也照錄不合併)", () => {
+    const sites = Array.from(new Set(parsed.rows.map((row) => row.site)));
+    expect(sites).toEqual(["(1) 總公司", "(2) 台北分公司", "(1) 屏東分公司"]);
+  });
+
+  it("類別小計獨立成列時仍取得(供第一層勾稽)", () => {
+    const headOfficeCat3 = parsed.categorySubtotals.find(
+      (item) =>
+        item.site === "(1) 總公司" &&
+        item.isoCategory === Iso14064Category.CATEGORY_3,
+    );
+    expect(headOfficeCat3?.tonneCo2e).toBe("16.2308");
+  });
+
+  it("原文小計為 NA 時記為 null(不是 0)", () => {
+    const cat5 = parsed.categorySubtotals.find(
+      (item) =>
+        item.site === "(1) 總公司" &&
+        item.isoCategory === Iso14064Category.CATEGORY_5,
+    );
+    expect(cat5?.tonneCo2e).toBeNull();
+  });
+
+  it("類別六仍產出一筆資料列(開放類別本身沒有子項)", () => {
+    const row = parsed.rows.find(
+      (item) =>
+        item.site === "(1) 總公司" &&
+        item.subCategory === Iso14064SubCategory.OTHER_INDIRECT,
+    );
+    expect(row?.state).toBe(ImportedQuantityStateEnum.NOT_APPLICABLE);
+  });
+
+  it("三態仍分得開", () => {
+    const ns = parsed.rows.find(
+      (item) =>
+        item.site === "(1) 總公司" &&
+        item.subCategory === Iso14064SubCategory.UPSTREAM_TRANSPORT,
+    );
+    const zero = parsed.rows.find(
+      (item) =>
+        item.site === "(1) 總公司" &&
+        item.subCategory === Iso14064SubCategory.INDUSTRIAL_PROCESS,
+    );
+    expect(ns?.state).toBe(ImportedQuantityStateEnum.NOT_SIGNIFICANT);
+    expect(zero?.tonneCo2e).toBe("0");
+  });
+
+  it("三層勾稽全部通過", () => {
+    const result = reconcileTable38(parsed, {
+      companyTotalTonne: COMPANY_TOTAL,
+    });
+    const failed = result.checks.filter((check) => !check.isWithinTolerance);
+    expect(failed).toEqual([]);
+    expect(result.isReconciled).toBe(true);
+  });
+
+  it("通過勾稽後寫入帳本(桑基圖的前置條件)", () => {
+    const result = reconcileTable38(parsed, {
+      companyTotalTonne: COMPANY_TOTAL,
+    });
+    const ledger = toLedgerEntries(parsed, result, { tableNo: "表3.8" });
+    expect(ledger.blockedReason).toBeNull();
+    expect(ledger.entries.length).toBeGreaterThan(0);
   });
 });
