@@ -65,8 +65,21 @@ export function ReportToolbar({
     setEditingName(null);
   };
 
+  /**
+   * Info: (20260805 - Tzuhan) 允許換行(`flex-wrap`)。
+   *
+   * 原本是單行 flex,而列上幾乎每個膠囊都 `shrink-0`:
+   * 檔名 + 狀態 + 保存 + 匯入報告 + 進度膠囊(完成/查核/逐字匯入/AI 草稿/匯入自 檔名/進度條) + 目錄。
+   * 聊天面板 dock 起來會從文檔流吃掉 420px,剩餘寬度裝不下這一列 —— 於是整列往右溢出。
+   * 而外層報告容器是 `relative`、聊天面板 dock 時是 `static`,**定位元素畫在未定位元素之上**,
+   * 溢出的「目錄」按鈕就疊在聊天面板的標題上(實測畫面正是如此)。
+   *
+   * 選換行而不是隱藏或裁切:這一列每一項都是審計資訊 ——
+   * 逐字匯入 vs AI 草稿的區隔、匯入來歷的檔名,少一項就是少一項事實。
+   * 寧可多佔一行,不可讓資訊消失或互相遮蔽。
+   */
   return (
-    <div className="flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-2.5">
+    <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-gray-200 bg-white px-4 py-2.5">
       <FileText size={16} className="shrink-0 text-gray-400" />
       {editingName !== null ? (
         <input
@@ -186,15 +199,16 @@ export function ReportToolbar({
       <button
         type="button"
         onClick={onToggleDrawer}
-        className="ml-auto flex shrink-0 items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs transition-colors hover:bg-gray-100"
+        className="ml-auto flex min-w-0 items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs transition-colors hover:bg-gray-100"
         title={t("carbon_chatbot.outline_title")}
       >
-        <span className="font-medium text-green-700">
+        {/* Info: (20260805 - Tzuhan) 數字與進度條不可壓縮:壓縮後就讀不出來了。要讓位的是下方的匯入檔名 */}
+        <span className="shrink-0 font-medium text-green-700">
           {t("carbon_chatbot.completed_short")} {stats.completedCount}/
           {stats.totalCount}
         </span>
-        <span className="text-gray-300">|</span>
-        <span className="font-medium text-blue-700">
+        <span className="shrink-0 text-gray-300">|</span>
+        <span className="shrink-0 font-medium text-blue-700">
           {t("carbon_chatbot.verified_short")} {stats.verifiedCount}/
           {stats.totalCount}
         </span>
@@ -202,20 +216,21 @@ export function ReportToolbar({
             否則「逐字匯入 vs AI 草稿」的區隔會隨浮窗一起消失(那是審計文件的底線,不可掉) */}
         {stats.importedCount + stats.draftedCount > 0 && (
           <>
-            <span className="text-gray-300">|</span>
-            <span className="font-medium text-emerald-700">
+            <span className="shrink-0 text-gray-300">|</span>
+            <span className="shrink-0 font-medium text-emerald-700">
               {t("carbon_chatbot.origin_imported")} {stats.importedCount}
             </span>
-            <span className="font-medium text-purple-700">
+            <span className="shrink-0 font-medium text-purple-700">
               {t("carbon_chatbot.origin_ai_draft")} {stats.draftedCount}
             </span>
           </>
         )}
         {importedFrom && (
           <>
-            <span className="text-gray-300">|</span>
+            <span className="shrink-0 text-gray-300">|</span>
+            {/* Info: (20260805 - Tzuhan) 檔名是這列唯一可截斷的:全名在 title 與報告的匯入摘要裡都留著 */}
             <span
-              className="max-w-40 truncate font-medium text-emerald-700"
+              className="max-w-40 min-w-0 truncate font-medium text-emerald-700"
               title={t("carbon_chatbot.imported_from_title", {
                 name: importedFrom.fileName,
                 date: new Date(importedFrom.importedAt).toLocaleString(),
@@ -225,7 +240,7 @@ export function ReportToolbar({
             </span>
           </>
         )}
-        <span className="relative inline-block h-1.5 w-16 overflow-hidden rounded-full bg-gray-200">
+        <span className="relative inline-block h-1.5 w-16 shrink-0 overflow-hidden rounded-full bg-gray-200">
           <span
             className="absolute inset-y-0 left-0 rounded-full bg-green-400 transition-all duration-500"
             style={{ width: `${stats.completedPercent}%` }}
