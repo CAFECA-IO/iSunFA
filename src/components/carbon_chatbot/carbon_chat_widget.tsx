@@ -52,7 +52,12 @@ export function CarbonChatWidget({
       className={
         isDocked
           ? // Info: (20260730 - Tzuhan) dock:桌機佔文檔流(報告自動讓出寬度);行動版仍全螢幕
-            "fixed inset-0 z-[80] flex h-full w-full flex-col overflow-hidden bg-white sm:static sm:z-auto sm:h-auto sm:w-[420px] sm:shrink-0 sm:border-l sm:border-gray-200"
+            // Info: (20260805 - Tzuhan) 桌機用 relative + z-10 而非 static:報告容器是 relative,
+            // Info: (20260805 - Tzuhan) 只要它任何一個子元素橫向溢出,定位元素就會畫在未定位的本面板之上
+            // Info: (20260805 - Tzuhan) (實測:工具列裝不下時「目錄」按鈕疊在本面板標題上)。
+            // Info: (20260805 - Tzuhan) 溢出的成因各自修,但這裡先讓「聊天面板被蓋住」在結構上不可能發生。
+            // Info: (20260805 - Tzuhan) z-10 遠低於所有覆蓋層(彈窗 z-[70] 以上),不會擋住它們。
+            "fixed inset-0 z-[80] flex h-full w-full flex-col overflow-hidden bg-white sm:relative sm:z-10 sm:h-auto sm:w-[420px] sm:shrink-0 sm:border-l sm:border-gray-200"
           : // Info: (20260730 - Tzuhan) 浮層:桌機固定尺寸浮在右下;行動版全螢幕
             "fixed inset-0 z-50 flex h-full w-full flex-col overflow-hidden bg-white shadow-2xl ring-1 ring-black/5 sm:static sm:z-auto sm:h-[640px] sm:w-[420px] sm:rounded-2xl"
       }
