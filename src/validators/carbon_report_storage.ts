@@ -39,6 +39,13 @@ export const CarbonReportDataSchema = z.object({
   totalEmissions: z.coerce.string().max(60),
   // Info: (20260716 - Tzuhan) 報告全文權威來源(零改動保證;上限對齊密文欄位)
   rawMarkdown: z.string().max(2_000_000).optional(),
+  // Info: (20260804 - Tzuhan) 匯入來歷(選填以相容既有草稿;不持久化就會隨編輯蒸發)
+  importedFrom: z
+    .object({
+      fileName: z.string().min(1).max(300),
+      importedAt: z.string().min(1).max(40),
+    })
+    .optional(),
 });
 
 export type CarbonReportDataPayload = z.infer<typeof CarbonReportDataSchema>;

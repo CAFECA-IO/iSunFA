@@ -47,6 +47,8 @@ export const carbonChatbot = {
   still_processing:
     "This is taking a while and the connection dropped, but the work is still running — completed sections will appear automatically.",
   // Info: (20260730 - Tzuhan) 段落來源標示:AI 草稿不得冒充逐字照抄原文(審計文件底線)
+  imported_from_short: "Imported from",
+  imported_from_title: "Imported from {{name}} on {{date}}",
   origin_imported: "Verbatim",
   origin_ai_draft: "AI draft",
   origin_imported_short: "source",

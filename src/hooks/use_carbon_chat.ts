@@ -2164,6 +2164,18 @@ export const useCarbonChat = () => {
           reportData: {
             ...session.reportData,
             rawMarkdown: nextRaw,
+            /**
+             * Info: (20260804 - Tzuhan) 記下這份報告的來歷,只在此寫入一次。
+             *
+             * 段落層的 origin 不夠:任何編輯都會把它改成 MANUAL,
+             * 改幾節就掉幾個;計數歸零時工具列那塊 UI 直接消失,
+             * 「改過的匯入報告」與「從未匯入過」因此在畫面上完全同形。
+             * 匯入是發生過的事實,不該隨後續編輯蒸發。
+             */
+            importedFrom: session.reportData.importedFrom ?? {
+              fileName: pendingImport.fileName,
+              importedAt: new Date().toISOString(),
+            },
             paragraphs: session.reportData.paragraphs.map((p) => {
               const imported = contentById.get(p.id);
               if (imported === undefined) return p;
@@ -2741,6 +2753,7 @@ export const useCarbonChat = () => {
 
         const decrypted: IChatMessage[] = [];
         const historyDrafts: IParagraphDraft[] = [];
+        let undecryptable = 0;
         for (const envelope of payload.messages) {
           try {
             const plaintext = await eciesDecrypt(
@@ -2756,7 +2769,23 @@ export const useCarbonChat = () => {
             if (drafts && drafts.length > 0) historyDrafts.push(...drafts);
           } catch {
             // Info: (20260712 - Luphia) 個別訊息解密失敗則略過
+            undecryptable += 1;
           }
+        }
+        /**
+         * Info: (20260804 - Tzuhan) 解密失敗原本是空 catch、零痕跡。
+         *
+         * 後果:整頁都解不開時 `decrypted` 為 [],而第一頁載入是**整組覆蓋**
+         * (見下方 `session.messages = ... : decrypted`),於是聊天紀錄整個變空 ——
+         * 畫面上與「這個房間本來就沒講過話」完全同形,而資料其實還在 DB 裡。
+         * 略過個別壞訊息是對的,但不能連略過了幾則都不說。
+         */
+        if (undecryptable > 0) {
+          console.warn("[carbon-chat] history messages undecryptable", {
+            channel: chatChannel,
+            undecryptable,
+            total: payload.messages.length,
+          });
         }
 
         // Info: (20260714 - Tzuhan) 只填空白段落(onlyIfEmpty): 不覆蓋 DB 草稿還原或使用者編輯後的內容

@@ -269,6 +269,7 @@ export default function CarbonReportPreview({
           onRenameDocument={onRenameDocument}
           documentName={reportData.documentName}
           stats={stats}
+          importedFrom={reportData.importedFrom}
           status={session.status}
           statusColor={session.statusColor}
           isDrawerOpen={isDrawerOpen}
