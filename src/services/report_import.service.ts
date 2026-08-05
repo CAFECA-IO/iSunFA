@@ -697,11 +697,25 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
         const shaped = candidates.filter((table) => {
           const check = validateSourceTables([table]);
           if (!check.isValid) {
+            /**
+             * Info: (20260804 - Tzuhan) 記下被拒內容的開頭幾行。
+             *
+             * 原本只記 reason —— 而 `not_a_table` 檢查的正是前兩行,
+             * 不把它們印出來就等於「知道被擋了,但永遠不知道為什麼」。
+             * 實測代價:表3.8 被判 not_a_table,桑基圖整張消失,
+             * 我卻只能從別處推論,還推錯了方向(以為是頁碼切片切掉的)。
+             */
             logger.warn("[ReportImportService] source table dropped", {
               paragraphId,
               tableNo: table.tableNo,
               caption: table.caption.slice(0, 40),
               reason: check.reason ?? null,
+              head: table.markdown
+                .split("\n")
+                .filter((line) => line.trim().length > 0)
+                .slice(0, 3)
+                .map((line) => line.slice(0, 120)),
+              lineCount: table.markdown.split("\n").length,
             });
           }
           return check.isValid;

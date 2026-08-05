@@ -43,7 +43,7 @@ export const DISCLOSURE_DEFAULT_LABELS: IDisclosureLabels = {
   stateNotApplicable: "不適用(NA)",
   stateNotSignificant: "不顯著、未量化(NS)",
   missingLedgerTable:
-    "本節有全公司總量表(表3.6/3.7)卻未取得表3.8,無法建立廠址與排放形式的分解,桑基圖與系統數據表格因此無法產出。表3.8 在原文與表3.6/3.7 同節,通常是匯入時被頁碼切片切掉;請重新匯入本節。",
+    "本節有全公司總量表(表3.6/3.7)卻未取得表3.8,無法建立廠址與排放形式的分解,桑基圖與系統數據表格因此無法產出。表3.8 在原文與表3.6/3.7 同節,理應一併匯入;請重新匯入本節,並在伺服端日誌查看該表是否被丟棄及其原因。",
   reconciled: "三層加總勾稽通過,已寫入帳本",
   blocked: "勾稽未通過,未寫入帳本",
   excludedHeading: "未納入計算的項目",
