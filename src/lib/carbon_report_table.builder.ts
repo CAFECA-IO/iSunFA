@@ -9,6 +9,7 @@ import { ArticulationStatusEnum } from "@/constants/carbon_articulation";
 import { IComputedLedger } from "@/types/carbon_chatbot.types";
 import { SOURCE_TABLE_ANCHOR_PATTERN } from "@/constants/carbon_source_tables";
 import { isImportedEntry } from "@/lib/carbon_table38.ledger";
+import { summarizeLedgerEntries } from "@/lib/carbon_ledger_totals";
 
 // Info: (20260720 - Tzuhan) 表格注入錨點(HTML 註解:Markdown 渲染不可見、PDF 不輸出;重算時依此替換不動敘述)
 export const CARBON_DATA_TABLE_START = "<!-- carbon-data-table:start -->";
@@ -54,13 +55,19 @@ export const CARBON_DATA_TABLE_DEFAULT_LABELS: ICarbonDataTableLabels = {
 };
 
 // Info: (20260720 - Tzuhan) 徽章三態裁決(決定性):違反 > 有數據 > 不足
+/**
+ * Info: (20260805 - Luphia) 徽章與數據表必須看同一組項目。
+ * 原本用 `ledger.entries.length > 0`,而數據表已改為只列 COMPUTED 項目 ——
+ * 於是「只有匯入項目」的帳本會出現徽章 teal(已勾稽/有數據)、表格卻寫「資料不足」。
+ * teal 的語意是「這些數字由本系統的決定論引擎產出」,拿它去蓋原文照錄的數字是錯的宣稱。
+ */
 export const deriveDataBadgeState = (
   ledger: IComputedLedger | undefined,
 ): CarbonDataBadgeStateEnum => {
   if (ledger?.articulation?.status === ArticulationStatusEnum.VIOLATED) {
     return CarbonDataBadgeStateEnum.VIOLATED;
   }
-  if (ledger && ledger.entries.length > 0) {
+  if (ledger && ledger.entries.some((entry) => !isImportedEntry(entry))) {
     return CarbonDataBadgeStateEnum.RECONCILED;
   }
   return CarbonDataBadgeStateEnum.INSUFFICIENT;
@@ -117,13 +124,27 @@ export const buildCarbonDataTable = (
   lines.push("");
   lines.push(`| ${labels.colScope} | ${labels.colCo2e} |`);
   lines.push("| --- | ---: |");
-  Object.entries(ledger.scopeSubtotals).forEach(([scope, subtotal]) => {
+  /**
+   * Info: (20260805 - Luphia) 小計與總計必須由**這張表列出的項目**算出來,
+   * 不可讀 ledger.scopeSubtotals / ledger.totalCo2eKg。
+   *
+   * 那兩個欄位在匯入之後涵蓋 COMPUTED + IMPORTED(applyImportedLedgerEntries 重算過),
+   * 而上面的明細只列 COMPUTED。混用的結果是同一張表裡「明細加起來 ≠ 小計」——
+   * 本檔開頭與 carbon_ledger_totals 都說過,那在查帳系統裡是致命的:
+   * 查核者會先懷疑每一個數字,而不是懷疑這是個顯示 bug。
+   *
+   * 走 summarizeLedgerEntries 而非在這裡自己累加,理由同前:累加只能有一份實作。
+   * 匯入項目的總量由「原文照錄」表格與勾稽揭露區塊各自負責交代,不從這裡出。
+   */
+  const { scopeSubtotals, totalCo2eKg } =
+    summarizeLedgerEntries(computedEntries);
+  Object.entries(scopeSubtotals).forEach(([scope, subtotal]) => {
     lines.push(
       `| ${scopeLabel(scope)} | ${MoneyUtil.formatDynamic(subtotal, 3)} |`,
     );
   });
   lines.push(
-    `| **${labels.total}** | **${MoneyUtil.formatDynamic(ledger.totalCo2eKg, 3)}** |`,
+    `| **${labels.total}** | **${MoneyUtil.formatDynamic(totalCo2eKg, 3)}** |`,
   );
 
   if (ledger.pending.length > 0) {

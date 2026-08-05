@@ -16,6 +16,7 @@ import {
   ArticulationViolationReasonEnum,
 } from "@/constants/carbon_articulation";
 import { GhgProtocolCategory } from "@/constants/esg";
+import { LedgerProvenanceEnum } from "@/constants/imported_quantity";
 import { IComputedLedger } from "@/types/carbon_chatbot.types";
 
 const buildLedger = (
@@ -172,5 +173,92 @@ describe("deriveDataBadgeState", () => {
         }),
       ),
     ).toBe(CarbonDataBadgeStateEnum.VIOLATED);
+  });
+});
+
+/**
+ * Info: (20260805 - Luphia) 明細與小計必須自洽(Issue B 的顯示端)。
+ * 這一組的存在理由:數據表已改為只列 COMPUTED 項目,而 ledger.scopeSubtotals /
+ * totalCo2eKg 在匯入之後涵蓋 COMPUTED + IMPORTED。若小計仍讀那兩個欄位,
+ * 同一張表會出現「明細加起來 ≠ 小計」—— 查核者會先懷疑每一個數字,
+ * 而不是懷疑這是個顯示 bug。
+ */
+describe("buildCarbonDataTable — detail rows and subtotals must agree", () => {
+  const importedEntry = {
+    activityKey: "imported:LOCATION:(1) 總公司:1.1",
+    scopeCategory: GhgProtocolCategory.SCOPE_1_DIRECT,
+    sourceName: "1.1 固定式燃燒",
+    quantityRaw: "—",
+    convertedQuantity: "2591861.5",
+    convertedUnit: "KG",
+    co2eKg: "2591861.5",
+    provenance: LedgerProvenanceEnum.IMPORTED,
+    factor: {
+      factorId: "imported",
+      name: "不適用(原文照錄)",
+      value: "—",
+      unit: "—",
+      source: "表3.8",
+    },
+  };
+
+  // Info: (20260805 - Luphia) 混合帳本:1 筆憑證算出的 + 1 筆原文照錄的,ledger 層聚合值含兩者
+  const mixedLedger = (): IComputedLedger =>
+    buildLedger({
+      entries: [...buildLedger().entries, importedEntry],
+      scopeSubtotals: {
+        [GhgProtocolCategory.SCOPE_2_INDIRECT]: "1235000",
+        [GhgProtocolCategory.SCOPE_1_DIRECT]: "2591861.5",
+      },
+      totalCo2eKg: "3826861.5",
+    });
+
+  it("should total only the rows it actually lists", () => {
+    const table = buildCarbonDataTable(mixedLedger());
+    // Info: (20260805 - Luphia) 明細只有憑證那一筆,故總計必須是 1,235,000 而非混合後的 3,826,861.5
+    expect(table).toContain("1,235,000");
+    expect(table).not.toContain("3,826,861.5");
+    expect(table).not.toContain("2,591,861.5");
+  });
+
+  it("should not emit a subtotal row for a scope that has no listed detail row", () => {
+    const table = buildCarbonDataTable(mixedLedger());
+    /**
+     * Info: (20260805 - Luphia) 匯入項目是範疇一,明細裡沒有任何範疇一的列。
+     * 小計卻列出範疇一,等於宣稱有一筆本系統算出來的範疇一排放 —— 那是捏造。
+     */
+    const scopeOneRows = table
+      .split("\n")
+      .filter((line) => line.includes(GhgProtocolCategory.SCOPE_1_DIRECT));
+    expect(scopeOneRows).toHaveLength(0);
+  });
+
+  it("should stay self-consistent for a computed-only ledger (no behaviour change)", () => {
+    // Info: (20260805 - Luphia) 沒有匯入項時輸出必須與改動前完全相同(既有憑證路徑零影響)
+    expect(buildCarbonDataTable(buildLedger())).toBe(
+      buildCarbonDataTable(buildLedger()),
+    );
+    expect(buildCarbonDataTable(buildLedger())).toContain("1,235,000");
+  });
+});
+
+describe("deriveDataBadgeState — imported-only ledger", () => {
+  it("should not claim RECONCILED when every entry is transcribed", () => {
+    const importedOnly = buildLedger({
+      entries: [
+        {
+          ...buildLedger().entries[0],
+          activityKey: "imported:LOCATION:(1) 總公司:1.1",
+          provenance: LedgerProvenanceEnum.IMPORTED,
+        },
+      ],
+    });
+    /**
+     * Info: (20260805 - Luphia) teal 的語意是「這些數字由本系統的決定論引擎產出」。
+     * 只有原文照錄時不成立,而數據表這時也寫「資料不足」—— 徽章與表格必須說同一件事。
+     */
+    expect(deriveDataBadgeState(importedOnly)).toBe(
+      CarbonDataBadgeStateEnum.INSUFFICIENT,
+    );
   });
 });
