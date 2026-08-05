@@ -47,6 +47,8 @@ export const carbonChatbot = {
   still_processing:
     "처리 시간이 길어 연결이 끊어졌지만 작업은 계속 진행 중입니다. 완료된 섹션은 자동으로 표시됩니다.",
   // Info: (20260730 - Tzuhan) 段落來源標示:AI 草稿不得冒充逐字照抄原文(審計文件底線)
+  imported_from_short: "가져온 파일",
+  imported_from_title: "가져온 파일 {{name}} ({{date}})",
   origin_imported: "원문 그대로",
   origin_ai_draft: "AI 초안",
   origin_imported_short: "원문",

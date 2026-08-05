@@ -46,6 +46,8 @@ export const carbonChatbot = {
   still_processing:
     "处理时间较长,连线已先中断,但作业仍在进行中,完成的段落会自动出现。",
   // Info: (20260730 - Tzuhan) 段落來源標示:AI 草稿不得冒充逐字照抄原文(審計文件底線)
+  imported_from_short: "导入自",
+  imported_from_title: "导入自 {{name}}(导入时间 {{date}})",
   origin_imported: "逐字导入",
   origin_ai_draft: "AI 草稿",
   origin_imported_short: "原文",

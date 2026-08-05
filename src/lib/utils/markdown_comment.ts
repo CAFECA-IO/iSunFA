@@ -5,8 +5,15 @@
 // Info: (20260730 - Tzuhan) 但剝除**必須跳過程式碼區塊**:使用者貼 HTML 教學範例時,
 // Info: (20260730 - Tzuhan) fence 內的 `<!-- ... -->` 是內容而不是錨點,吃掉它就是靜默改寫使用者的文件。
 
-// Info: (20260730 - Tzuhan) 圍欄起訖(``` 或 ~~~,允許前置空白與資訊字串)
-const FENCE_PATTERN = /^\s*(```|~~~)/;
+/**
+ * Info: (20260730 - Tzuhan) 圍欄起訖(``` 或 ~~~,允許前置空白與資訊字串)
+ *
+ * Info: (20260804 - Tzuhan) 導出供 markdown_line_break 共用:
+ * 兩處都要「跳過程式碼區塊」,而判斷圍欄的規則只能有一份。
+ * (兩邊各自的狀態機仍是分開的 —— 本檔多一層跨行註解狀態,
+ *  抽成共用的 line mapper 需要一併重寫那段,見 issue_drafts/markdown_content/01。)
+ */
+export const FENCE_PATTERN = /^\s*(```|~~~)/;
 
 // Info: (20260730 - Tzuhan) 單行內的完整註解;跨行註解另以狀態機處理
 const INLINE_COMMENT_PATTERN = /<!--.*?-->/g;

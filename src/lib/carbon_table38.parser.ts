@@ -33,6 +33,7 @@ import {
   NOT_SIGNIFICANT_TOKENS,
   TONNE_TO_KG_MULTIPLIER,
 } from "@/constants/imported_quantity";
+import { stripHtmlLineBreaks } from "@/lib/utils/markdown_line_break";
 
 export interface IParsedEmissionRow {
   site: string;
@@ -94,14 +95,21 @@ const stripEmphasis = (cell: string): string =>
     .replace(/(^|[^*])\*([^*]+?)\*($|[^*])/g, "$1$2$3")
     .trim();
 
-// Info: (20260803 - Tzuhan) markdown 表格列 → 儲存格陣列(去掉首尾的空欄)
+/**
+ * Info: (20260803 - Tzuhan) markdown 表格列 → 儲存格陣列(去掉首尾的空欄)
+ *
+ * Info: (20260804 - Tzuhan) 一併清掉 `<br>`,與 stripEmphasis 同一個理由:版面不是內容。
+ * 實測不清掉會壞四處,而且全部是靜默的:
+ * `2,775.<br>6475` 解不出數字、`(1) 總公<br>司` 成為污染的廠址名一路帶進桑基圖節點、
+ * `1.<br>1` 對不到子代碼、含 `<br>` 的重複表頭被當成資料列。
+ */
 const splitRow = (line: string): string[] =>
   line
     .trim()
     .replace(/^\|/, "")
     .replace(/\|$/, "")
     .split("|")
-    .map((cell) => stripEmphasis(cell.trim()));
+    .map((cell) => stripEmphasis(stripHtmlLineBreaks(cell).trim()));
 
 // Info: (20260803 - Tzuhan) `| --- | :--- |` 這類分隔列
 const isSeparatorRow = (cells: string[]): boolean =>

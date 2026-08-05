@@ -962,3 +962,37 @@ describe("缺少表3.8 的兩種情形", () => {
     expect(result.missingLedgerTable).toBe(false);
   });
 });
+
+/**
+ * Info: (20260804 - Tzuhan) 儲存格內的 `<br>`(模型以它表示原文版面的折行)。
+ *
+ * 四個後果全是靜默的,其中廠址名污染與 stripEmphasis 修過的 `**(1) 總公司**` 同一類:
+ * 錯的名字會一路帶進對帳表與桑基圖節點,而畫面上看起來像是資料本來就長那樣。
+ */
+describe("儲存格內的 <br>", () => {
+  const TABLE_WITH_BR = `
+| 公司 | 報告邊界類型 | 報告邊界 | 溫室氣體排放量 (公噸 CO2e/年) | 溫室氣體排放量各類別總和 (公噸 CO2e/年) |
+| --- | --- | --- | --- | --- |
+| (1) 總公<br>司 | 類別一 | 1.<br>1 固定式燃燒 | 0.4375 | 17.8494 |
+| (1) 總公司 | | 1.2 移動式燃燒 | 9.<br>0759 | |
+`.trim();
+
+  const parsedBr = parseTable38(TABLE_WITH_BR);
+
+  it("廠址名不含 <br>(否則污染會帶進桑基圖節點)", () => {
+    expect(parsedBr.rows.every((row) => !row.site.includes("<br>"))).toBe(true);
+    expect(parsedBr.rows[0].site).toBe("(1) 總公司");
+  });
+
+  it("折行的子代碼仍對得上", () => {
+    expect(parsedBr.rows[0].subCategory).toBe(Iso14064SubCategory.STATIONARY_COMBUSTION);
+  });
+
+  it("折行的數字仍解得出來", () => {
+    expect(parsedBr.rows[1].tonneCo2e).toBe("9.0759");
+  });
+
+  it("沒有讀不懂的資料列", () => {
+    expect(parsedBr.unparsedRows).toEqual([]);
+  });
+});
