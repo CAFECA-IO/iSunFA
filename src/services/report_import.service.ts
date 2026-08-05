@@ -512,13 +512,24 @@ ${source.data}`;
       chapterId?: string;
       // Info: (20260716 - Tzuhan) 僅首次呼叫萃取活動數據(避免逐章重複入帳)
       extractActivities?: boolean;
+      /**
+       * Info: (20260805 - Tzuhan) 只處理這幾節(該章的子集)。
+       * 前端把節數多的章切成數次呼叫,讓單次請求跑得完 ——
+       * 閘道的 60 秒是**閒置**逾時,而等 LLM 期間一個位元組都沒送,整段都算閒置。
+       * 省略即整章,行為與先前完全相同。
+       */
+      sectionIds?: string[];
     },
   ): Promise<IReportImportResult> {
-    const scopedSections = options?.chapterId
-      ? CARBON_REPORT_OUTLINE.filter(
-          (section) => section.chapterId === options.chapterId,
-        )
-      : CARBON_REPORT_OUTLINE;
+    const sectionIdFilter = options?.sectionIds
+      ? new Set(options.sectionIds)
+      : null;
+    const scopedSections = CARBON_REPORT_OUTLINE.filter((section) => {
+      if (sectionIdFilter) return sectionIdFilter.has(section.id);
+      return options?.chapterId
+        ? section.chapterId === options.chapterId
+        : true;
+    });
     if (scopedSections.length === 0) {
       throw new ApiError(
         API_ERRORS.VL_SCHEMA_ERROR.code,
@@ -551,7 +562,9 @@ T6. 只收錄真正是表格的內容;條列式文字不要當成表格。
 【標準大綱】
 ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\n${source.data}` : ""}`;
 
-    const scopeLabel = options?.chapterId ?? "all";
+    const scopeLabel = options?.sectionIds
+      ? options.sectionIds.join(",")
+      : (options?.chapterId ?? "all");
     let raw: string;
     try {
       raw = await this.callLlmWithTransportRetry(

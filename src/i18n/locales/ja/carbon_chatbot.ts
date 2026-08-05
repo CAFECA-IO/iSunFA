@@ -47,6 +47,9 @@ export const carbonChatbot = {
   still_processing:
     "処理に時間がかかり接続が切れましたが、作業は継続中です。完成したセクションは自動的に表示されます。",
   // Info: (20260730 - Tzuhan) 段落來源標示:AI 草稿不得冒充逐字照抄原文(審計文件底線)
+  realtime_connecting: "リアルタイム接続中…応答が遅れる場合があります",
+  realtime_disconnected:
+    "リアルタイム接続が切断されました。長時間処理の結果が届かない可能性があります。ページを再読み込みしてください。",
   imported_from_short: "インポート元",
   imported_from_title: "インポート元 {{name}}（{{date}}）",
   origin_imported: "原文どおり",

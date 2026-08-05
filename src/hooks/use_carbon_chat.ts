@@ -96,7 +96,11 @@ import {
   loadLocalDraftBackup,
 } from "@/lib/carbon_report_draft_storage";
 import { useTranslation } from "@/i18n/i18n_context";
-import { subscribeChatroom } from "@/lib/chatroom";
+import {
+  ChatroomConnectionStateEnum,
+  subscribeChatroom,
+  subscribeChatroomConnection,
+} from "@/lib/chatroom";
 import {
   eciesDecrypt,
   ChatroomUnsupportedDeviceError,
@@ -115,7 +119,8 @@ import {
 } from "@/lib/carbon_report_diagram.builder";
 import { CarbonDiagramTemplateEnum } from "@/constants/carbon_report_diagrams";
 import {
-  resolveChapterPageRange,
+  buildImportUnits,
+  resolveUnitPageRange,
   validatePageIndex,
 } from "@/lib/carbon_page_slice";
 import {
@@ -1441,8 +1446,17 @@ export const useCarbonChat = () => {
         unmapped: string[];
         activities?: IActivityRecord[];
       }
+      /**
+       * Info: (20260805 - Tzuhan) 把章切成「單次呼叫跑得完」的工作單元。
+       * ch1(7 節)、ch3(6 節)、ch9(5 節)會各切成兩份;
+       * 節數少的章維持一份,行為與先前相同。
+       */
+      const units = buildImportUnits(
+        CARBON_REPORT_OUTLINE,
+        chapters.map((chapter) => chapter.id),
+      );
       const results: (IImportChunkPayload | null)[] = new Array(
-        chapters.length,
+        units.length,
       ).fill(null);
       const failed: { id: string; title: string }[] = [];
       let nextIndex = 0;
@@ -1461,7 +1475,7 @@ export const useCarbonChat = () => {
           text: t("carbon_chatbot.import_parsing_chapter", {
             name: file.name,
             current: completedCount,
-            total: chapters.length,
+            total: units.length,
             inFlight: inFlightCount,
           }),
           startedAt,
@@ -1473,8 +1487,10 @@ export const useCarbonChat = () => {
       const processNext = async (): Promise<void> => {
         const index = nextIndex;
         nextIndex += 1;
-        if (index >= chapters.length) return;
-        const chapter = chapters[index];
+        if (index >= units.length) return;
+        const unit = units[index];
+        const chapter = chapters.find((item) => item.id === unit.chapterId);
+        if (!chapter) return;
         inFlightCount += 1;
         reportProgress();
         const formData = new FormData();
@@ -1491,27 +1507,32 @@ export const useCarbonChat = () => {
             ? "true"
             : "false",
         );
-        // Info: (20260730 - Tzuhan) 該章各節的起始頁 → 頁碼範圍;缺任何一節的索引就不帶範圍(整章退回送全文),
+        /**
+         * Info: (20260805 - Tzuhan) 只處理本單元的節。省略即整章(節數少的章仍是一份)。
+         * 帶了就必須合法,伺服端會白名單複驗 —— 靜默忽略等於整章重跑卻沒人知道。
+         */
+        if (unit.partTotal > 1) {
+          formData.append("sectionIds", JSON.stringify(unit.sectionIds));
+        }
+        // Info: (20260730 - Tzuhan) 該單元各節的起始頁 → 頁碼範圍;缺任何一節的索引就不帶範圍(退回送全文),
         // Info: (20260730 - Tzuhan) 寧可多花 token,也不能因為索引不全而漏送內容
-        const chapterSections = CARBON_REPORT_OUTLINE.filter(
-          (section) => section.chapterId === chapter.id,
-        );
-        const chapterPages = chapterSections.map((section) =>
-          pageIndex?.get(section.id),
-        );
-        const lastSection = chapterSections[chapterSections.length - 1];
-        const globalIndex = CARBON_REPORT_OUTLINE.findIndex(
-          (section) => section.id === lastSection?.id,
-        );
-        const range = resolveChapterPageRange({
-          sectionPages: chapterPages,
-          nextChapterFirstPage: pageIndex?.get(
-            CARBON_REPORT_OUTLINE[globalIndex + 1]?.id ?? "",
-          ),
+        const unitPages = unit.sectionIds.map((id) => pageIndex?.get(id));
+        /**
+         * Info: (20260805 - Tzuhan) 上界取**下一個單元**的第一節,不是下一章的第一節。
+         * 同章切成多份時,用下一章當上界會讓每一份都送到章尾 —— 切了等於沒切。
+         */
+        const nextUnit = units[index + 1];
+        const range = resolveUnitPageRange({
+          sectionPages: unitPages,
+          nextUnitFirstPage: nextUnit
+            ? pageIndex?.get(nextUnit.sectionIds[0])
+            : undefined,
         });
-        // Info: (20260804 - Tzuhan) 每章實際送出的範圍要留痕跡:少一張表時才查得出是被誰切掉的
+        // Info: (20260804 - Tzuhan) 每次實際送出的範圍要留痕跡:少一張表時才查得出是被誰切掉的
         console.info("[carbon-chat] chapter slice", {
           chapterId: chapter.id,
+          part: `${unit.partIndex}/${unit.partTotal}`,
+          sections: unit.sectionIds,
           fromPage: range?.fromPage ?? "(full text)",
           toPage: range?.toPage ?? "(to end)",
         });
@@ -1531,9 +1552,17 @@ export const useCarbonChat = () => {
           console.error(
             "[carbon-chat] import chapter failed:",
             chapter.id,
+            `part ${unit.partIndex}/${unit.partTotal}`,
             chunkError,
           );
-          failed.push(chapter);
+          /**
+           * Info: (20260805 - Tzuhan) 以章去重:同一章切成多份時可能失敗兩次,
+           * 而重試的粒度是章 —— 列兩次會讓使用者以為有兩章壞掉。
+           * 重試整章比重試單一份安全:份與份之間的邊界本來就有重疊。
+           */
+          if (!failed.some((item) => item.id === chapter.id)) {
+            failed.push(chapter);
+          }
         }
         completedCount += 1;
         inFlightCount -= 1;
@@ -3295,19 +3324,50 @@ export const useCarbonChat = () => {
     [activeSessionId, sessionAccess, user?.address],
   );
 
+  /**
+   * Info: (20260805 - Tzuhan) 訂閱只依賴 chatChannel,回呼走 ref。
+   *
+   * 原本依賴 `[chatChannel, activeSessionId, decryptAndAppendEnvelope, markSessionBusy]`,
+   * 而 `decryptAndAppendEnvelope` 的依賴鏈一路連到 `sessionAccess` ——
+   * 它在掛載後至少三處會非同步寫入(sessions 清單載入、報告草稿還原、帳本綁定),
+   * 每寫一次整條 callback 換身分 → effect 重跑 → 連線被 disconnect 再重建。
+   * 頁面剛載入那幾百毫秒內連續發生數次,WSS 握手來不及完成。
+   *
+   * 訂閱該在「頻道變了」時重建,不該在「某個 callback 換了身分」時重建 ——
+   * 回呼放進 ref,身分穩定,依賴就只剩下真正決定訂閱對象的那一個值。
+   */
+  const decryptAndAppendEnvelopeRef = useRef(decryptAndAppendEnvelope);
+  const markSessionBusyRef = useRef(markSessionBusy);
+  // Info: (20260805 - Tzuhan) 在 effect 內更新(與 activeSessionIdRef 同一慣例;render 期間寫 ref 會被 ESLint 擋)
+  useEffect(() => {
+    decryptAndAppendEnvelopeRef.current = decryptAndAppendEnvelope;
+    markSessionBusyRef.current = markSessionBusy;
+  }, [decryptAndAppendEnvelope, markSessionBusy]);
+
   // Info: (20260712 - Luphia) 訂閱 chatroom 頻道，接收並解密 AI 回覆等即時訊息（取代原本的 mock CustomEvent）
   useEffect(() => {
     const unsubscribe = subscribeChatroom<IEciesEnvelope>({
       channel: chatChannel,
       // Info: (20260712 - Luphia) 主金鑰尚未就緒（未經 PRF 解鎖）前無法解密，先略過(decryptAndAppendEnvelope 內建防護)
-      onMessage: decryptAndAppendEnvelope,
+      onMessage: (envelope) => decryptAndAppendEnvelopeRef.current(envelope),
       onError: () => {
         setIsError(true);
-        markSessionBusy(activeSessionId, false);
+        markSessionBusyRef.current(activeSessionIdRef.current, false);
       },
     });
     return unsubscribe;
-  }, [chatChannel, activeSessionId, decryptAndAppendEnvelope, markSessionBusy]);
+  }, [chatChannel]);
+
+  /**
+   * Info: (20260805 - Tzuhan) 推播連線狀態。原本連線壞掉只寫進 `isError`,
+   * 而 `isError` **沒有任何元件消費** —— 推播整條壞掉是完全靜默的,
+   * 於是「AI 沒回應」與「回應送不到」在畫面上一模一樣,而兩者的處置完全不同。
+   */
+  const [connectionState, setConnectionState] =
+    useState<ChatroomConnectionStateEnum>(
+      ChatroomConnectionStateEnum.CONNECTING,
+    );
+  useEffect(() => subscribeChatroomConnection(setConnectionState), []);
 
   // Info: (20260714 - Tzuhan) 加入附件: 前端 Fail Fast(MIME 白名單/大小/數量)，通過者轉 base64 進待送清單
   const addAttachments = useCallback(
@@ -3848,6 +3908,8 @@ export const useCarbonChat = () => {
     isTyping,
     isLoading,
     isError,
+    // Info: (20260805 - Tzuhan) 推播連線狀態(壞掉必須看得見,見上方 effect)
+    connectionState,
     isUnlocked,
     initializeChat,
     hasMoreHistory,

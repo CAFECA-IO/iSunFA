@@ -47,6 +47,10 @@ export const carbonChatbot = {
   still_processing:
     "This is taking a while and the connection dropped, but the work is still running — completed sections will appear automatically.",
   // Info: (20260730 - Tzuhan) 段落來源標示:AI 草稿不得冒充逐字照抄原文(審計文件底線)
+  realtime_connecting:
+    "Reconnecting to the live channel — replies may be delayed",
+  realtime_disconnected:
+    "Live channel disconnected. Results of long-running work may not reach you. Please reload the page.",
   imported_from_short: "Imported from",
   imported_from_title: "Imported from {{name}} on {{date}}",
   origin_imported: "Verbatim",
