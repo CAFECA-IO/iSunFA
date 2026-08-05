@@ -139,6 +139,7 @@ import {
   DEFAULT_SESSION_ID,
   SESSION_PROGRESS_MAX,
   buildCarbonChatChannel,
+  CarbonImportReconciliationStateEnum,
   CARBON_CHAT_REPLY_TIMEOUT_MS,
   CARBON_CHAT_REPLY_TIMEOUT_WITH_ATTACHMENTS_MS,
   CARBON_IMPORT_SINGLE_CALL_MAX_BYTES,
@@ -2251,6 +2252,45 @@ export const useCarbonChat = () => {
       }
     }
     importActivitiesRef.current = [];
+    /**
+     * Info: (20260805 - Tzuhan) 在聊天室留下一則匯入摘要,並且**要入庫**。
+     *
+     * 匯入原本全程不產生任何聊天訊息 —— 一份 64 頁的報告落地 33 個段落,
+     * 對話裡卻只剩招呼語。段落層的 origin 會被編輯抹掉,報告層的 importedFrom
+     * 只有檔名與時間;「當時發生了什麼」需要一則按時序排在對話裡、且能撐過重載的記錄。
+     *
+     * 只送事實,文案由伺服端組出 —— 入庫的是系統的陳述,不能由前端塞任意字串。
+     * 送失敗不影響匯入本身(內容已經落地了),但不可靜默:那會讓「沒有記錄」
+     * 與「記錄送失敗」在畫面上完全同形。
+     */
+    void (async () => {
+      try {
+        await request("/api/v1/chat/carbon/import/notice", {
+          method: "POST",
+          body: JSON.stringify({
+            channel: buildCarbonChatChannel(
+              user?.address ?? "anonymous",
+              activeSessionId,
+            ),
+            fileName: pendingImport.fileName,
+            importedCount: selected.filter((item) => !item.isDraft).length,
+            draftedCount: selected.filter((item) => item.isDraft).length,
+            reconciliation:
+              importedEntries.length > 0
+                ? CarbonImportReconciliationStateEnum.RECONCILED
+                : importedLedgerById.size > 0
+                  ? CarbonImportReconciliationStateEnum.BLOCKED
+                  : CarbonImportReconciliationStateEnum.NONE,
+            failedChapters: (pendingImport.failedChapters ?? []).map(
+              (chapter) => chapter.title,
+            ),
+            language,
+          }),
+        });
+      } catch (error) {
+        console.error("[carbon-chat] import notice failed:", error);
+      }
+    })();
     setPendingImportFor(activeSessionId, null);
     jumpToReportParagraph(selected[0].paragraphId);
 
@@ -2324,6 +2364,9 @@ export const useCarbonChat = () => {
     t,
     setDraftNotice,
     setPendingImportFor,
+    // Info: (20260805 - Tzuhan) 匯入摘要訊息用到:頻道由 address 組出,文案語言由此決定
+    user?.address,
+    language,
   ]);
 
   const discardPendingImport = useCallback(() => {
