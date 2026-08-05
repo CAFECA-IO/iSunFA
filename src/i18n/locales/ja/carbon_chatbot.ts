@@ -140,6 +140,8 @@ export const carbonChatbot = {
     "「{{name}}」の欠落セクションをAIドラフトで補完中(第 {{current}}/{{total}} バッチ、アップロード文書に基づく)…",
   import_generating_diagrams:
     "構造図を生成中({{current}}/{{total}})…レポートは既に閲覧可能で、図は完成次第追加されます。",
+  import_wrong_session:
+    "このインポートは「{{name}}」のものです。適用するにはその会話に戻ってください。",
   import_draft_badge: "AIドラフト",
   import_unmapped:
     "アウトラインに対応しない内容({{count}} 件。インポートされません)",
@@ -148,8 +150,10 @@ export const carbonChatbot = {
   import_apply: "選択をインポート({{count}})",
   import_parsing:
     "「{{name}}」を解析中。完了後に段落ごとのプレビューを表示します…",
+  import_already_running:
+    "「{{name}}」は解析中です。同時に 2 件実行すると同じ割り当てを奪い合い、どちらも遅くなります。完了を待つか、再読み込みしてからお試しください。",
   import_parsing_chapter:
-    "「{{name}}」を章ごとに解析中({{current}}/{{total}} 完了、並行処理)。完全なレポートは数分かかります…",
+    "「{{name}}」を章ごとに解析中({{current}}/{{total}} 完了、{{inFlight}} 章を処理中)。完全なレポートは数分かかります…",
   import_failed_chapters:
     "次の章は解析に失敗しました。後で再インポートで補完できます:{{chapters}}",
   import_retry_failed: "失敗した章を再試行",
@@ -207,10 +211,18 @@ export const carbonChatbot = {
     "⚠ 質量保存チェックに未合格のため、データ表は凍結されています。チャットで在庫差異を明確にすると自動的に生成されます。",
   report_table_pending_note:
     "注：{count} 件の活動データは係数待ちのため、本表に含まれていません。",
+  report_table_col_provenance: "データ出所",
+  report_table_provenance_computed: "システム計算",
+  report_table_provenance_imported: "原文転記",
+  report_table_not_provided: "原文に記載なし",
+  report_table_imported_note:
+    "注：「原文転記」の行は外部報告書に記載された CO2e をそのまま転記したものです。本システムは活動データも排出係数も適用していないため、当該 2 列は「原文に記載なし」と表示されます。数値は原文の合計値と照合済みです（本節の照合説明を参照）。",
   data_table_refreshed:
     "データ表が活動データに合わせて更新されました。該当セクションを再確認してください",
   data_badge_reconciled:
     "データセクション：照合済み ✓（数値は決定論エンジン産出）",
+  data_badge_imported:
+    "データセクション：原文転記の項目を含む（原文合計と照合済み、行ごとに出所を明示）",
   data_badge_violated: "データセクション：質量保存違反 ⚠（表は凍結中）",
   data_badge_insufficient:
     "データセクション：データ不足（活動データが揃い次第自動生成）",
@@ -221,6 +233,11 @@ export const carbonChatbot = {
   chart_frozen:
     "⚠ 質量保存チェックに未合格のため、グラフは凍結されています。チャットで在庫差異を明確にすると自動的に生成されます。",
   chart_sankey_chat_node: "チャット/添付による申告",
+  chart_imported_sankey_title:
+    "温室効果ガス排出フロー(原文転記、ロケーション基準、tCO2e/年)",
+  chart_imported_sankey_excluded: "図に含まれない項目(NA/NS または 0)",
+  chart_imported_sankey_collapsed:
+    "ノードが多すぎるため 2 階層(拠点 → カテゴリ)に縮約しました",
   book_bind_pending_unlock:
     "帳簿セッションを作成しました。暗号化チャットのロックを解除すると帳簿バインドが完了します(証憑インポートと証拠チェーンはバインド後に利用可能)",
   book_bind_done:

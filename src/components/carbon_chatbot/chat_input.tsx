@@ -1,6 +1,6 @@
 // Info: (20260714 - Tzuhan) 對話輸入列:純文字 + 附件(按鈕/拖放),附件驗證與 base64 轉換邏輯集中於 use_carbon_chat
 
-import { KeyboardEvent, DragEvent, useRef, useState } from "react";
+import { KeyboardEvent, DragEvent, useEffect, useRef, useState } from "react";
 import { Paperclip, X, Loader2, FileText, FileUp } from "lucide-react";
 import {
   IPendingAttachment,
@@ -9,6 +9,32 @@ import {
 import { IDraftNotice } from "@/hooks/use_carbon_chat";
 import { CARBON_CHAT_ATTACHMENT_ACCEPT } from "@/constants/carbon_chatbot";
 import { useTranslation } from "@/i18n/i18n_context";
+
+/**
+ * Info: (20260804 - Tzuhan) 提示列的存活訊號:一個每秒跳動的已過時間。
+ *
+ * 為什麼需要:逐章解析 11 章並行,「已完成 0/11」在開頭會停留很久 ——
+ * 那是正常的,但畫面上「還在跑」與「已經死了」長得完全一樣,
+ * 使用者只能重傳(實測就是這樣發生的)。會動的數字是最便宜的區分方式。
+ *
+ * 計時放在元件而非狀態:每秒重寫提示文字等於每秒一次狀態寫入與全域 re-render,
+ * 而「已過多久」由起點就能算出來,不需要有人每秒告訴它一次。
+ */
+function ElapsedSince({ startedAt }: { startedAt: number }) {
+  const [now, setNow] = useState<number>(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  const totalSeconds = Math.max(0, Math.floor((now - startedAt) / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return (
+    <span className="shrink-0 tabular-nums opacity-70">
+      {minutes}:{String(seconds).padStart(2, "0")}
+    </span>
+  );
+}
 
 export interface IChatInputProps {
   inputValue: string;
@@ -185,7 +211,11 @@ export function ChatInput({
           {draftNotice.type === "loading" && (
             <Loader2 size={12} className="shrink-0 animate-spin" />
           )}
-          {draftNotice.text}
+          <span>{draftNotice.text}</span>
+          {draftNotice.type === "loading" &&
+            draftNotice.startedAt !== undefined && (
+              <ElapsedSince startedAt={draftNotice.startedAt} />
+            )}
         </div>
       )}
 

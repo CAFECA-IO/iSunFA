@@ -51,7 +51,19 @@ export const CarbonReportDraftPutSchema = z
     channel: z.string().min(1).max(200),
     // Info: (20260714 - Tzuhan) 樂觀鎖:讀取時的版本;不符即 VL_DRAFT_VERSION_CONFLICT
     version: z.number().int().min(0),
-    recipientPublicKey: z.string().min(1).max(300),
+    /**
+     * Info: (20260803 - Tzuhan) ECIES 收件公鑰。**明文模式(plainContent)下為選填** ——
+     * 明文模式沒有加密,這個欄位在那裡是空轉的。
+     *
+     * 原本一律必填,造成「帳本會話免金鑰」只實現了一半:還原免金鑰,保存卻仍要 master,
+     * 於是未解鎖時讀得到卻存不了,重載後匯入的帳本與桑基圖消失(見
+     * issue_drafts/inventory_table_import/04)。
+     *
+     * 資料庫該欄位仍為 non-null:明文模式由 API 層以已驗證的使用者位址補上
+     * (該位址本來就是授權依據 —— resolveCarbonAccess 以 channel 前綴與 TeamRole 裁決,
+     * 不看這個欄位)。因此不需要改 schema、不動索引。
+     */
+    recipientPublicKey: z.string().min(1).max(300).optional(),
     envelope: z
       .object({
         encryptedContent: z.string().min(1).max(2_000_000),
@@ -64,6 +76,13 @@ export const CarbonReportDraftPutSchema = z
   })
   .refine((data) => Boolean(data.envelope) !== Boolean(data.plainContent), {
     message: "exactly one of envelope or plainContent is required",
+  })
+  /**
+   * Info: (20260803 - Tzuhan) 加密模式仍必須帶公鑰 —— 沒有收件公鑰就無從解密,
+   * 存進去的密文等於永久失聯。放寬只針對明文模式。
+   */
+  .refine((data) => !data.envelope || Boolean(data.recipientPublicKey), {
+    message: "recipientPublicKey is required when envelope is present",
   });
 
 export type CarbonReportDraftPutPayload = z.infer<

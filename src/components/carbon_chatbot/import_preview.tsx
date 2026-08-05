@@ -30,6 +30,17 @@ export interface IPendingImportItem {
 
 export interface IPendingImport {
   fileName: string;
+  /**
+   * Info: (20260803 - Tzuhan) 發起這次匯入的會話 id(issue_drafts/inventory_table_import/03)。
+   *
+   * 匯入的 fetch 不理會 React,切換聊天室不會讓它停下來;而套用時寫入的是
+   * **當下的** activeSessionId。沒有這個欄位的話,在 A 房發起、切到 B 房再套用,
+   * A 房的報告會寫進 B 房並覆蓋原內容,且沒有任何警告。
+   * 這不是體驗問題,是資料歸屬問題。
+   */
+  originSessionId: string;
+  /** Info: (20260803 - Tzuhan) 發起當下的會話標題,拒絕時要能指名道姓說出來源 */
+  originSessionTitle: string;
   items: IPendingImportItem[];
   unmapped: string[];
   // Info: (20260716 - Tzuhan) 匯入的活動數據筆數(顯示用;實際合併於確認時執行)

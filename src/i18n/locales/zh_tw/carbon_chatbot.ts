@@ -129,14 +129,17 @@ export const carbonChatbot = {
     "「{{name}}」缺漏小節 AI 草稿補齊中(第 {{current}}/{{total}} 批,依據上傳文件撰寫)…",
   import_generating_diagrams:
     "結構圖生成中({{current}}/{{total}})…報告已可閱讀,圖表會在完成後陸續出現。",
+  import_wrong_session: "這份匯入屬於「{{name}}」，請切回該對話再套用。",
   import_draft_badge: "AI 草稿",
   import_unmapped: "無法對應大綱的內容({{count}} 段,不會匯入,可於對話中處理)",
   import_reset_note:
     "匯入段落的查核狀態將重置;{{activities}} 筆活動數據將入帳並重新勾稽",
   import_apply: "匯入勾選({{count}})",
   import_parsing: "「{{name}}」解析中,完成後將顯示逐段預覽…",
+  import_already_running:
+    "「{{name}}」還在解析中。同時跑兩份會互相搶額度、兩邊都變慢,請等這一份跑完或重新整理後再試。",
   import_parsing_chapter:
-    "「{{name}}」逐章解析中(已完成 {{current}}/{{total}} 章,並行處理),完整報告約需數分鐘…",
+    "「{{name}}」逐章解析中(已完成 {{current}}/{{total}} 章,{{inFlight}} 章解析中),完整報告約需數分鐘…",
   import_failed_chapters: "以下章節解析失敗,可稍後重新匯入補齊:{{chapters}}",
   import_retry_failed: "重試失敗章節",
   import_empty: "【匯入失敗】檔案中沒有可對應到大綱的內容。",
@@ -190,8 +193,16 @@ export const carbonChatbot = {
     "⚠ 質量守恆勾稽未通過，數據表格已凍結。請於對話中澄清庫存缺口後，表格將自動生成。",
   report_table_pending_note:
     "註：尚有 {count} 筆活動數據待補係數，未計入下表。",
+  report_table_col_provenance: "資料來源",
+  report_table_provenance_computed: "系統計算",
+  report_table_provenance_imported: "原文照錄",
+  report_table_not_provided: "原文未提供",
+  report_table_imported_note:
+    "註：標示「原文照錄」者為外部報告既有的排放當量，本系統未套用任何活動數據或排放係數，故該兩欄為「原文未提供」；其數字已與原文總量勾稽（見本節對帳說明）。",
   data_table_refreshed: "數據表格已隨活動數據更新，請重新查核相關段落",
   data_badge_reconciled: "數據段落：已勾稽 ✓（數字由決定論引擎產出）",
+  data_badge_imported:
+    "數據段落：含原文照錄項目（已與原文總量勾稽，逐列標示來源）",
   data_badge_violated: "數據段落：質量守恆違反 ⚠（表格已凍結，待澄清）",
   data_badge_insufficient: "數據段落：數據不足（補齊活動數據後自動生成）",
   chart_scope_pie_title: "各範疇排放占比 (kgCO2e)",
@@ -200,6 +211,10 @@ export const carbonChatbot = {
   chart_frozen:
     "⚠ 質量守恆勾稽未通過，圖表已凍結。請於對話中澄清庫存缺口後，圖表將自動生成。",
   chart_sankey_chat_node: "憑證外的來源（對話/附件申報）",
+  chart_imported_sankey_title:
+    "溫室氣體排放流向（原文照錄，所在地基準,公噸 CO2e/年）",
+  chart_imported_sankey_excluded: "未畫出的項目（NA/NS 或為零）",
+  chart_imported_sankey_collapsed: "節點過多，已降為兩層（廠址 → 類別）",
   book_bind_pending_unlock:
     "帳本會話已建立。請先解鎖加密對話以完成帳本綁定（匯入憑證數據與證據鏈功能需綁定後才可用）",
   book_bind_done: "帳本綁定完成，可從活動數據卡匯入憑證數據",

@@ -81,22 +81,31 @@ export function OutlineTree({
   dataBadgeState = CarbonDataBadgeStateEnum.INSUFFICIENT,
 }: IOutlineTreeProps) {
   const { t } = useTranslation();
-  // Info: (20260720 - Tzuhan) #23 三態徽章樣式:teal=已勾稽、red=守恆違反、gray=數據不足
+  /**
+   * Info: (20260720 - Tzuhan) #23 徽章樣式:teal=已勾稽、red=守恆違反、gray=數據不足
+   * Info: (20260804 - Tzuhan) 新增 amber=含原文照錄。與 teal 分色的理由與分態相同:
+   * teal 的文案宣稱「數字由決定論引擎產出」,對抄來的數字不成立,不該共用同一個訊號。
+   */
   const dataBadge =
     dataBadgeState === CarbonDataBadgeStateEnum.RECONCILED
       ? {
           className: "shrink-0 text-teal-600",
           title: t("carbon_chatbot.data_badge_reconciled"),
         }
-      : dataBadgeState === CarbonDataBadgeStateEnum.VIOLATED
+      : dataBadgeState === CarbonDataBadgeStateEnum.IMPORTED
         ? {
-            className: "shrink-0 text-red-500",
-            title: t("carbon_chatbot.data_badge_violated"),
+            className: "shrink-0 text-amber-500",
+            title: t("carbon_chatbot.data_badge_imported"),
           }
-        : {
-            className: "shrink-0 text-gray-300",
-            title: t("carbon_chatbot.data_badge_insufficient"),
-          };
+        : dataBadgeState === CarbonDataBadgeStateEnum.VIOLATED
+          ? {
+              className: "shrink-0 text-red-500",
+              title: t("carbon_chatbot.data_badge_violated"),
+            }
+          : {
+              className: "shrink-0 text-gray-300",
+              title: t("carbon_chatbot.data_badge_insufficient"),
+            };
   const activeChapterId = paragraphs.find(
     (p) => p.id === activeParagraphId,
   )?.chapterId;

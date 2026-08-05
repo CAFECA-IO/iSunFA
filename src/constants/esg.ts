@@ -247,6 +247,20 @@ export const formatGhgCategoryLabel = (
   return language.startsWith("zh") ? detail.nameZh : detail.nameEn;
 };
 
+/**
+ * Info: (20260803 - Tzuhan) ISO 14064 類別顯示名(桑基圖第二層的節點名)。
+ * 與 formatGhgCategoryLabel 同一慣例:zh 系取 nameZh,其餘 nameEn,未知值原樣返回不猜。
+ * 圖上直接印 CATEGORY_1 讀者看不懂,而那張圖的用途正是給查核者一眼看出分佈。
+ */
+export const formatIsoCategoryLabel = (
+  category: string,
+  language: string,
+): string => {
+  const detail = IsoCategoryDetails[category as Iso14064Category];
+  if (!detail) return category;
+  return language.startsWith("zh") ? detail.nameZh : detail.nameEn;
+};
+
 export const GhgToIsoMapping: Record<GhgProtocolCategory, Iso14064Category> = {
   [GhgProtocolCategory.SCOPE_1_DIRECT]: Iso14064Category.CATEGORY_1,
   [GhgProtocolCategory.SCOPE_2_INDIRECT]: Iso14064Category.CATEGORY_2,

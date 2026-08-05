@@ -61,8 +61,14 @@ export class CarbonReportDraftService {
     }
   }
 
+  /**
+   * Info: (20260803 - Tzuhan) recipientPublicKey 在此**必填**,即使 Schema 放寬為選填。
+   * 放寬是為了讓明文模式的呼叫端不必持有金鑰;而 DB 欄位仍為 non-null,
+   * 由 API 層以已驗證的使用者位址補齊。以交集型別表達這條契約 ——
+   * 若哪天有人忘了補,會在編譯期擋下,而不是等到 Prisma 在執行期報錯。
+   */
   async saveDraft(
-    payload: CarbonReportDraftPutPayload,
+    payload: CarbonReportDraftPutPayload & { recipientPublicKey: string },
   ): Promise<{ version: number }> {
     let saved;
     try {

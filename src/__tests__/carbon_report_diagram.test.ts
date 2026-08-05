@@ -49,7 +49,13 @@ describe("validateDiagramNodes", () => {
   it("容忍斷行與標點差異(抽取造成的),但不放寬語意", () => {
     const result = validateDiagramNodes(
       CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
-      [{ label: "主任委員 張印燈廠長" }],
+      // Info: (20260804 - Tzuhan) 三個節點是下限(CARBON_DIAGRAM_MIN_NODES);
+      // Info: (20260804 - Tzuhan) 此處要驗的是 grounding 的寬容度,不是節點數,故補足到不被下限攔下
+      [
+        { label: "主任委員 張印燈廠長" },
+        { label: "副主任委員 陳豐仁副廠長" },
+        { label: "管理代表 歐青銓課長" },
+      ],
       GOVERNANCE_SOURCE,
     );
     expect(result.isValid).toBe(true);
@@ -93,7 +99,11 @@ describe("validateDiagramNodes", () => {
   it("父節點不在同批節點內時拒絕(不可指向圖外)", () => {
     const result = validateDiagramNodes(
       CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
-      [{ label: "管理代表:歐青銓課長", parent: "董事長" }],
+      [
+        { label: "管理代表:歐青銓課長", parent: "董事長" },
+        { label: "主任委員:張印燈廠長" },
+        { label: "副主任委員:陳豐仁副廠長" },
+      ],
       `${GOVERNANCE_SOURCE} 董事長`,
     );
     expect(result.reason).toBe(DiagramRejectReasonEnum.UNKNOWN_PARENT);
@@ -105,10 +115,40 @@ describe("validateDiagramNodes", () => {
       [
         { label: "甲", parent: "乙" },
         { label: "乙", parent: "甲" },
+        { label: "丙", parent: "甲" },
       ],
-      "甲乙",
+      "甲乙丙",
     );
     expect(result.reason).toBe(DiagramRejectReasonEnum.CYCLIC);
+  });
+
+  /**
+   * Info: (20260804 - Tzuhan) 單節點的圖比沒有圖更糟(issue_drafts/inventory_table_import/05)。
+   * 實測畫出過只有「溫室氣體盤查推行委員會」一個節點的治理架構圖 ——
+   * 它看起來像在陳述「這個組織的治理架構只有一個委員會」,而那是錯的訊息。
+   */
+  it("節點少於三個時不畫(一兩個節點不構成結構)", () => {
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      [
+        { label: "主任委員:張印燈廠長" },
+        { label: "副主任委員:陳豐仁副廠長", parent: "主任委員:張印燈廠長" },
+      ],
+      GOVERNANCE_SOURCE,
+    );
+    expect(result.isValid).toBe(false);
+    expect(result.reason).toBe(DiagramRejectReasonEnum.TOO_FEW_NODES);
+  });
+
+  it("節點不足時輸出說明文字,不是空白也不是空圖", () => {
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      [{ label: "溫室氣體盤查推行委員會" }],
+      GOVERNANCE_SOURCE,
+    );
+    expect(block).toContain("carbon-diagram:GOVERNANCE_TREE:start");
+    expect(block).toContain("本節內容不足以繪製結構圖");
+    expect(block).not.toContain("```mermaid");
   });
 
   it("無節點時回報素材不足", () => {
@@ -171,8 +211,8 @@ describe("buildCarbonDiagramBlock", () => {
   it("節點文字內的雙引號移除,避免破壞 mermaid 語法", () => {
     const block = buildCarbonDiagramBlock(
       CarbonDiagramTemplateEnum.QUANTIFICATION_FLOW,
-      [{ label: '活動"數據' }],
-      '活動"數據',
+      [{ label: '活動"數據' }, { label: "排放係數" }, { label: "GWP" }],
+      '活動"數據 排放係數 GWP',
     );
     expect(block).toContain('N0["活動數據"]');
   });

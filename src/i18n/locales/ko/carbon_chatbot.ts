@@ -139,14 +139,18 @@ export const carbonChatbot = {
     "「{{name}}」 누락 섹션 AI 초안 보완 중(제 {{current}}/{{total}} 배치, 업로드 문서 기반)…",
   import_generating_diagrams:
     "구조도 생성 중({{current}}/{{total}})… 보고서는 이미 사용할 수 있으며 도표는 완성되는 대로 추가됩니다.",
+  import_wrong_session:
+    "이 가져오기는 「{{name}}」의 것입니다. 적용하려면 해당 대화로 돌아가세요.",
   import_draft_badge: "AI 초안",
   import_unmapped: "목차에 대응하지 않는 내용({{count}}건, 가져오지 않음)",
   import_reset_note:
     "가져온 단락의 검증 상태는 초기화됩니다. 활동 데이터 {{activities}}건은 재대사됩니다",
   import_apply: "선택 항목 가져오기({{count}})",
   import_parsing: "「{{name}}」 분석 중. 완료 후 단락별 미리보기가 표시됩니다…",
+  import_already_running:
+    "「{{name}}」을(를) 아직 분석 중입니다. 두 건을 동시에 실행하면 같은 할당량을 두고 경쟁해 양쪽 모두 느려집니다. 완료를 기다리거나 새로고침 후 다시 시도해 주세요.",
   import_parsing_chapter:
-    "「{{name}}」 장별 분석 중({{current}}/{{total}} 완료, 병렬 처리). 전체 보고서는 몇 분 걸립니다…",
+    "「{{name}}」 장별 분석 중({{current}}/{{total}} 완료, {{inFlight}}개 장 처리 중). 전체 보고서는 몇 분 걸립니다…",
   import_failed_chapters:
     "다음 장은 분석에 실패했습니다. 나중에 다시 가져오기로 보완할 수 있습니다: {{chapters}}",
   import_retry_failed: "실패한 장 재시도",
@@ -204,9 +208,17 @@ export const carbonChatbot = {
     "⚠ 질량 보존 검증에 통과하지 못해 데이터 표가 동결되었습니다. 대화에서 재고 차이를 해명하면 자동으로 생성됩니다.",
   report_table_pending_note:
     "참고: {count}건의 활동 데이터가 계수 대기 중으로 본 표에 포함되지 않았습니다.",
+  report_table_col_provenance: "데이터 출처",
+  report_table_provenance_computed: "시스템 계산",
+  report_table_provenance_imported: "원문 전재",
+  report_table_not_provided: "원문에 없음",
+  report_table_imported_note:
+    "참고: \u201c원문 전재\u201d로 표시된 행은 외부 보고서에 기재된 CO2e를 그대로 옮긴 것입니다. 본 시스템은 활동 데이터나 배출계수를 적용하지 않았으므로 해당 두 열은 \u201c원문에 없음\u201d으로 표시됩니다. 수치는 원문 합계와 대조 완료되었습니다(본 절의 대조 설명 참조).",
   data_table_refreshed:
     "데이터 표가 활동 데이터에 맞춰 갱신되었습니다. 해당 섹션을 다시 확인해 주세요",
   data_badge_reconciled: "데이터 섹션: 대사 완료 ✓ (수치는 결정론 엔진 산출)",
+  data_badge_imported:
+    "데이터 섹션: 원문 전재 항목 포함 (원문 합계와 대조 완료, 행별 출처 표시)",
   data_badge_violated: "데이터 섹션: 질량 보존 위반 ⚠ (표 동결, 해명 대기)",
   data_badge_insufficient:
     "데이터 섹션: 데이터 부족 (활동 데이터 완성 시 자동 생성)",
@@ -217,6 +229,11 @@ export const carbonChatbot = {
   chart_frozen:
     "⚠ 질량 보존 검증에 통과하지 못해 차트가 동결되었습니다. 대화에서 재고 차이를 해명하면 자동으로 생성됩니다.",
   chart_sankey_chat_node: "대화/첨부로 신고됨",
+  chart_imported_sankey_title:
+    "온실가스 배출 흐름(원문 전재, 지역 기준, tCO2e/년)",
+  chart_imported_sankey_excluded: "그래프에 없는 항목(NA/NS 또는 0)",
+  chart_imported_sankey_collapsed:
+    "노드가 너무 많아 2단계(사업장 → 범주)로 축약했습니다",
   book_bind_pending_unlock:
     "장부 세션이 생성되었습니다. 암호화 대화를 잠금 해제하면 장부 바인딩이 완료됩니다(증빙 가져오기와 증거 체인은 바인딩 후 사용 가능)",
   book_bind_done:

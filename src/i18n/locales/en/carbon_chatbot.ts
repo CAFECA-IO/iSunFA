@@ -138,6 +138,8 @@ export const carbonChatbot = {
     'Drafting missing sections for "{{name}}" (batch {{current}}/{{total}}, grounded in the uploaded file)…',
   import_generating_diagrams:
     "Generating structural diagrams ({{current}}/{{total}})… the report is already usable; diagrams will appear as they finish.",
+  import_wrong_session:
+    'This import belongs to "{{name}}". Switch back to that conversation to apply it.',
   import_draft_badge: "AI Draft",
   import_unmapped:
     "Content not matching the outline ({{count}} blocks; not imported, handle in chat)",
@@ -145,8 +147,10 @@ export const carbonChatbot = {
     "Verification resets for imported paragraphs; {{activities}} activity records will be re-reconciled",
   import_apply: "Import selected ({{count}})",
   import_parsing: "Parsing 「{{name}}」; a per-paragraph preview will follow…",
+  import_already_running:
+    "\u300c{{name}}\u300d is still being parsed. Running two imports at once makes both slower by competing for the same quota \u2014 please wait for this one to finish, or reload and try again.",
   import_parsing_chapter:
-    "Parsing 「{{name}}」 chapter by chapter ({{current}}/{{total}} done, in parallel); a full report takes a few minutes…",
+    "Parsing \u300c{{name}}\u300d chapter by chapter ({{current}}/{{total}} done, {{inFlight}} in progress); a full report takes a few minutes\u2026",
   import_failed_chapters:
     "These chapters failed to parse and can be re-imported later: {{chapters}}",
   import_retry_failed: "Retry failed chapters",
@@ -204,10 +208,18 @@ export const carbonChatbot = {
     "⚠ Mass conservation check failed; the data table is frozen. Clarify the inventory gap in the chat and the table will be generated automatically.",
   report_table_pending_note:
     "Note: {count} activity record(s) still await emission factors and are excluded from this table.",
+  report_table_col_provenance: "Source",
+  report_table_provenance_computed: "Computed",
+  report_table_provenance_imported: "Transcribed",
+  report_table_not_provided: "Not given in source",
+  report_table_imported_note:
+    "Note: rows marked \u201cTranscribed\u201d carry CO2e figures taken verbatim from the source report. This system applied no activity data and no emission factor, hence those two columns read \u201cNot given in source\u201d. The figures have been reconciled against the source totals (see the reconciliation note in this section).",
   data_table_refreshed:
     "Data tables were refreshed from the activity ledger — please re-verify the affected sections",
   data_badge_reconciled:
     "Data section: reconciled ✓ (figures produced by the deterministic engine)",
+  data_badge_imported:
+    "Data section: contains transcribed figures (reconciled against source totals; provenance marked per row)",
   data_badge_violated:
     "Data section: mass conservation violated ⚠ (table frozen pending clarification)",
   data_badge_insufficient:
@@ -219,6 +231,11 @@ export const carbonChatbot = {
   chart_frozen:
     "⚠ Mass conservation check failed; the chart is frozen. Clarify the inventory gap in the chat and it will be generated automatically.",
   chart_sankey_chat_node: "Declared in chat/attachments",
+  chart_imported_sankey_title:
+    "GHG emission flow (verbatim from the report, location-based, tCO2e/yr)",
+  chart_imported_sankey_excluded: "Not shown (NA/NS or zero)",
+  chart_imported_sankey_collapsed:
+    "Too many nodes; collapsed to two layers (site → category)",
   book_bind_pending_unlock:
     "Book session created. Unlock the encrypted chat to complete the binding (voucher import and the evidence chain require it)",
   book_bind_done:

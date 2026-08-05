@@ -129,14 +129,17 @@ export const carbonChatbot = {
     "「{{name}}」缺漏小节 AI 草稿补齐中(第 {{current}}/{{total}} 批,依据上传文件撰写)…",
   import_generating_diagrams:
     "结构图生成中({{current}}/{{total}})…报告已可阅读,图表会在完成后陆续出现。",
+  import_wrong_session: "这份导入属于「{{name}}」，请切回该对话再套用。",
   import_draft_badge: "AI 草稿",
   import_unmapped: "无法对应大纲的内容({{count}} 段,不会导入,可于对话中处理)",
   import_reset_note:
     "导入段落的核对状态将重置;{{activities}} 笔活动数据将入账并重新核对",
   import_apply: "导入勾选({{count}})",
   import_parsing: "「{{name}}」解析中,完成后将显示逐段预览…",
+  import_already_running:
+    "「{{name}}」还在解析中。同时跑两份会互相抢额度、两边都变慢,请等这一份跑完或刷新后再试。",
   import_parsing_chapter:
-    "「{{name}}」逐章解析中(已完成 {{current}}/{{total}} 章,并行处理),完整报告约需数分钟…",
+    "「{{name}}」逐章解析中(已完成 {{current}}/{{total}} 章,{{inFlight}} 章解析中),完整报告约需数分钟…",
   import_failed_chapters: "以下章节解析失败,可稍后重新导入补齐:{{chapters}}",
   import_retry_failed: "重试失败章节",
   import_empty: "【导入失败】文件中没有可对应到大纲的内容。",
@@ -190,8 +193,16 @@ export const carbonChatbot = {
     "⚠ 质量守恒核对未通过，数据表格已冻结。请于对话中澄清库存缺口后，表格将自动生成。",
   report_table_pending_note:
     "注：尚有 {count} 笔活动数据待补系数，未计入下表。",
+  report_table_col_provenance: "资料来源",
+  report_table_provenance_computed: "系统计算",
+  report_table_provenance_imported: "原文照录",
+  report_table_not_provided: "原文未提供",
+  report_table_imported_note:
+    "注：标示「原文照录」者为外部报告既有的排放当量，本系统未套用任何活动数据或排放系数，故该两栏为「原文未提供」；其数字已与原文总量勾稽（见本节对账说明）。",
   data_table_refreshed: "数据表格已随活动数据更新，请重新核对相关段落",
   data_badge_reconciled: "数据段落：已核对 ✓（数字由确定性引擎产出）",
+  data_badge_imported:
+    "数据段落：含原文照录项目（已与原文总量勾稽，逐列标示来源）",
   data_badge_violated: "数据段落：质量守恒违反 ⚠（表格已冻结，待澄清）",
   data_badge_insufficient: "数据段落：数据不足（补齐活动数据后自动生成）",
   chart_scope_pie_title: "各范畴排放占比 (kgCO2e)",
@@ -200,6 +211,10 @@ export const carbonChatbot = {
   chart_frozen:
     "⚠ 质量守恒核对未通过，图表已冻结。请于对话中澄清库存缺口后，图表将自动生成。",
   chart_sankey_chat_node: "凭证外的来源（对话/附件申报）",
+  chart_imported_sankey_title:
+    "温室气体排放流向（原文照录，所在地基准，公吨 CO2e/年）",
+  chart_imported_sankey_excluded: "未画出的项目（NA/NS 或为零）",
+  chart_imported_sankey_collapsed: "节点过多，已降为两层（厂址 → 类别）",
   book_bind_pending_unlock:
     "账本会话已建立。请先解锁加密对话以完成账本绑定（导入凭证数据与证据链功能需绑定后才可用）",
   book_bind_done: "账本绑定完成，可从活动数据卡导入凭证数据",

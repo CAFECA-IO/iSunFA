@@ -8,6 +8,7 @@ import {
   CarbonDiagramTemplateEnum,
   CARBON_DIAGRAM_TEMPLATES,
   CARBON_DIAGRAM_MAX_LABEL_CHARS,
+  CARBON_DIAGRAM_MIN_NODES,
   CARBON_TIMELINE_MIN_DATED_EVENTS,
   buildDiagramAnchorEnd,
   buildDiagramAnchorStart,
@@ -36,6 +37,8 @@ export enum DiagramRejectReasonEnum {
   NO_NODES = "no_nodes",
   // Info: (20260730 - Tzuhan) 有時間標籤的事件太少:一兩個點不構成時間軸
   TOO_FEW_DATED_EVENTS = "too_few_dated_events",
+  // Info: (20260804 - Tzuhan) 節點太少:一兩個節點不構成結構,畫出來會誤導(見 CARBON_DIAGRAM_MIN_NODES)
+  TOO_FEW_NODES = "too_few_nodes",
   TOO_MANY_NODES = "too_many_nodes",
   LABEL_TOO_LONG = "label_too_long",
   LABEL_NOT_IN_SOURCE = "label_not_in_source",
@@ -174,6 +177,16 @@ export function validateDiagramNodes(
     return { isValid: true };
   }
 
+  /**
+   * Info: (20260804 - Tzuhan) 節點太少即不畫(issue_drafts/inventory_table_import/05)。
+   *
+   * 放在 timeline 分支之後,因為 timeline 有自己的下限(以「有時間標籤的事件數」為準,
+   * 而不是節點總數 —— 時間標籤本身也算節點,用總數會把只有一個事件的時間軸放行)。
+   */
+  if (nodes.length < CARBON_DIAGRAM_MIN_NODES) {
+    return { isValid: false, reason: DiagramRejectReasonEnum.TOO_FEW_NODES };
+  }
+
   // Info: (20260730 - Tzuhan) 父節點必須存在於同一批節點內(不可指向圖外的東西)
   const labels = new Set(nodes.map((node) => node.label));
   const unknownParent = nodes.filter(
@@ -285,7 +298,8 @@ export function buildCarbonDiagramBlock(
     return wrap(
       `> _${
         validation.reason === DiagramRejectReasonEnum.NO_NODES ||
-        validation.reason === DiagramRejectReasonEnum.TOO_FEW_DATED_EVENTS
+        validation.reason === DiagramRejectReasonEnum.TOO_FEW_DATED_EVENTS ||
+        validation.reason === DiagramRejectReasonEnum.TOO_FEW_NODES
           ? labels.insufficient
           : labels.unverifiable
       }_`,

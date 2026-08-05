@@ -34,7 +34,7 @@ import {
   type IImportedLedgerResult,
 } from "@/lib/carbon_table38.pipeline";
 import { isImportedEntry } from "@/lib/carbon_table38.ledger";
-import { summarizeLedgerEntries } from "@/lib/carbon_ledger_totals";
+import { mergeImportedLedgerEntries } from "@/lib/carbon_ledger_totals";
 import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
 import { CARBON_SOURCE_TABLE_MAX_PER_PARAGRAPH } from "@/constants/carbon_source_tables";
 import {
@@ -48,7 +48,10 @@ import {
   CarbonChartTemplateEnum,
   CARBON_AUTO_SANKEY_PARAGRAPH_ID,
 } from "@/constants/carbon_report_charts";
-import { formatGhgCategoryLabel } from "@/constants/esg";
+import {
+  formatGhgCategoryLabel,
+  formatIsoCategoryLabel,
+} from "@/constants/esg";
 import {
   CARBON_EVIDENCE_CHAPTER_ID,
   buildEvidenceChainBlock,
@@ -106,6 +109,7 @@ import {
 import { request } from "@/lib/utils/request";
 import {
   findDiagramTemplateForParagraph,
+  hasCarbonDiagramBlock,
   insertCarbonDiagramBlock,
 } from "@/lib/carbon_report_diagram.builder";
 import { CarbonDiagramTemplateEnum } from "@/constants/carbon_report_diagrams";
@@ -153,7 +157,36 @@ export type ReportSaveStatus = "saving" | "saved" | "error" | "local" | null;
 export interface IDraftNotice {
   type: "loading" | "error" | "info";
   text: string;
+  /**
+   * Info: (20260804 - Tzuhan) 這件工作是什麼時候開始的(epoch ms)。
+   *
+   * 給的是**起點**而不是格式化好的字串,因為要跳動的是畫面不是狀態:
+   * 每秒重寫一次提示文字等於每秒觸發一次 re-render 與一次狀態寫入,
+   * 而已經過多久這件事,元件自己有一個計時器就能算。
+   *
+   * 為什麼需要它:逐章解析 11 章並行,完成數在開頭會長時間停在 0/11 ——
+   * 那是正常的,但畫面上「還在跑」與「已經死了」完全一樣。
+   * 一個會跳動的秒數是最便宜的存活訊號。
+   */
+  startedAt?: number;
 }
+
+/**
+ * Info: (20260803 - Tzuhan) 取指定會話,取不到即回 null。
+ *
+ * 為什麼需要一個專門的函式而不是直接索引:`{ ...prev[activeSessionId] }` 在會話不存在時
+ * **不會拋錯** —— 展開 undefined 得到 `{}`,錯誤延後到下一行 `.messages.some(...)` 才爆,
+ * 而訊息會是「Cannot read properties of undefined (reading 'some')」,
+ * 指向 messages 而非真正的原因(會話不存在)。實測從對話框切換帳本時即如此,
+ * 我因此在錯的地方找了一輪。
+ *
+ * 會話為何可能不存在:切換帳本會改 activeSessionId,而該帳本的會話是非同步載入的;
+ * 封存當前會話時也會先 delete 再改 id。這兩個時點之間抵達的訊息就會撞上空會話。
+ */
+const resolveSession = (
+  sessions: Record<string, IChatSession>,
+  sessionId: string,
+): IChatSession | null => sessions[sessionId] ?? null;
 
 export const useCarbonChat = () => {
   const { t, language } = useTranslation();
@@ -180,15 +213,88 @@ export const useCarbonChat = () => {
   const [draftingParagraphId, setDraftingParagraphId] = useState<string | null>(
     null,
   );
-  // Info: (20260714 - Tzuhan) 草稿狀態列(loading/error);error 自動清除
-  const [draftNotice, setDraftNotice] = useState<IDraftNotice | null>(null);
+  // Info: (20260803 - Tzuhan) 當前會話的 ref:供身分需穩定的 setter 讀取(見 setDraftNotice)
+  const activeSessionIdRef = useRef<string>(activeSessionId);
+  useEffect(() => {
+    activeSessionIdRef.current = activeSessionId;
+  }, [activeSessionId]);
+
+  /**
+   * Info: (20260714 - Tzuhan) 草稿狀態列(loading/error);error 自動清除
+   *
+   * Info: (20260803 - Tzuhan) 提示綁定會話(issue_drafts/inventory_table_import/03 階段二):
+   * 匯入會跑好幾分鐘且不因切房而停,提示若不綁房間,B 房會看到 A 房的進度條。
+   * 記下「屬於哪一間」而非改寫全部 38 個呼叫點 —— 多數呼叫點是同步的 UI 流程,
+   * 「當前會話」本來就是對的;真正需要指定的只有長時間執行的匯入。
+   */
+  const [draftNoticeState, setDraftNoticeState] = useState<{
+    sessionId: string;
+    notice: IDraftNotice | null;
+  } | null>(null);
   // Info: (20260716 - Tzuhan) #55 待確認修訂(對照卡):null = 無;確認後才寫入報告
   const [pendingRevision, setPendingRevision] =
     useState<IPendingRevision | null>(null);
-  // Info: (20260716 - Tzuhan) #56 待確認匯入(逐段勾選):null = 無;確認後才寫入報告與活動帳本
-  const [pendingImport, setPendingImport] = useState<IPendingImport | null>(
-    null,
+  /**
+   * Info: (20260716 - Tzuhan) #56 待確認匯入(逐段勾選):確認後才寫入報告與活動帳本
+   *
+   * Info: (20260803 - Tzuhan) 改為 per-session(階段二):切回原房仍看得到預覽卡,
+   * 而不是「切走就等於作廢」。鍵為發起匯入的會話 id。
+   */
+  const [pendingImportBySession, setPendingImportBySession] = useState<
+    Record<string, IPendingImport>
+  >({});
+  /**
+   * Info: (20260803 - Tzuhan) 只顯示屬於當前會話的提示。切到別房時當前房本來就沒有進度,
+   * 顯示 null 而非沿用上一房的字串 —— 沿用會讓使用者以為這一房正在跑。
+   */
+  const draftNotice =
+    draftNoticeState?.sessionId === activeSessionId
+      ? draftNoticeState.notice
+      : null;
+
+  /**
+   * Info: (20260803 - Tzuhan) 設定提示。sessionId 省略即「當前會話」——
+   * 長時間執行的流程(匯入)必須明確傳入發起當下的 id,否則中途切房後
+   * 提示會落到新房去。
+   */
+  /**
+   * Info: (20260803 - Tzuhan) 以 ref 讀當前會話,讓這個 setter **身分穩定**(deps 為空)。
+   * 若改用 activeSessionId 當依賴,它每次換房就換身分,
+   * 三十幾個呼叫端的 useCallback/useEffect 都得跟著把它列進依賴 ——
+   * 那不只是雜訊,還會讓那些 effect 在換房時無謂重跑。
+   */
+  const setDraftNotice = useCallback(
+    (notice: IDraftNotice | null, sessionId?: string) => {
+      setDraftNoticeState({
+        sessionId: sessionId ?? activeSessionIdRef.current,
+        notice,
+      });
+    },
+    [],
   );
+
+  // Info: (20260803 - Tzuhan) 當前會話的待確認匯入(切回原房即再度出現)
+  const pendingImport = pendingImportBySession[activeSessionId] ?? null;
+
+  /**
+   * Info: (20260803 - Tzuhan) 寫入/清除指定會話的待確認匯入。
+   * 清除時從 map 移除而非設 null —— 留著空鍵會讓「有沒有待確認」多一種等價表示。
+   */
+  const setPendingImportFor = useCallback(
+    (sessionId: string, next: IPendingImport | null) => {
+      setPendingImportBySession((prev) => {
+        if (!next) {
+          if (!(sessionId in prev)) return prev;
+          const rest = { ...prev };
+          delete rest[sessionId];
+          return rest;
+        }
+        return { ...prev, [sessionId]: next };
+      });
+    },
+    [],
+  );
+
   // Info: (20260716 - Tzuhan) #56 匯入導流:聊天附件疑似整份報告時的候選(File 保留供直接匯入)
   const [importCandidate, setImportCandidate] = useState<File | null>(null);
   const draftNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
@@ -226,6 +332,8 @@ export const useCarbonChat = () => {
   const importActivitiesRef = useRef<IActivityRecord[]>([]);
   // Info: (20260717 - Tzuhan) #56 重試用:最近一次匯入的原始檔(失敗章節重跑無需重選檔)
   const lastImportFileRef = useRef<File | null>(null);
+  // Info: (20260804 - Tzuhan) 進行中的匯入檔名(null 即無);用檔名而非布林,提示才說得出擋的是誰
+  const importInFlightRef = useRef<string | null>(null);
   // Info: (20260730 - Tzuhan) 首次匯入取得的頁碼索引:重試失敗章節時沿用,不重問(索引不會變,重問等於再燒一次全文輸入)
   const lastPageIndexRef = useRef<Map<string, number> | undefined>(undefined);
 
@@ -304,7 +412,20 @@ export const useCarbonChat = () => {
         replyTimersRef.current.delete(channel);
       }
       setSessionsData((prev) => {
-        const updatedSession = { ...prev[activeSessionId] };
+        const existing = resolveSession(prev, activeSessionId);
+        /**
+         * Info: (20260803 - Tzuhan) 會話不存在就丟棄這則訊息,不即時建一個新的:
+         * 憑一則訊息長出會話,會在剛切換過去的帳本裡冒出一間不屬於它的聊天室。
+         * 丟棄但留 log —— 靜默丟訊息會變成「回覆有時候不見」這種查不到的問題。
+         */
+        if (!existing) {
+          console.warn(
+            "[carbon-chat] message dropped: session not found",
+            activeSessionId,
+          );
+          return prev;
+        }
+        const updatedSession = { ...existing };
         // Info: (20260714 - Tzuhan) 以訊息 id 去重: HTTP 回帶與 Centrifugo 訂閱可能送達同一則訊息
         if (updatedSession.messages.some((m) => m.id === message.id)) {
           return prev;
@@ -561,6 +682,12 @@ export const useCarbonChat = () => {
         delete next[sessionId];
         return next;
       });
+      /**
+       * Info: (20260805 - Luphia) 待確認匯入隨會話一起消失。
+       * 這是 pendingImportBySession 唯一該被移除的時機 —— 切房不是
+       * (見 switchSession 的註解)。會話已經不存在,留著那一鍵就沒有任何人能套用它。
+       */
+      setPendingImportFor(sessionId, null);
       // Info: (20260730 - Tzuhan) 封存的若是當前會話,切到其餘任一會話;全空則建新的(畫面不可留在已封存的會話上)
       setActiveSessionId((current) => {
         if (current !== sessionId) return current;
@@ -571,7 +698,7 @@ export const useCarbonChat = () => {
       });
       return true;
     },
-    [user?.address, sessionsData],
+    [user?.address, sessionsData, setPendingImportFor],
   );
 
   // Info: (20260716 - Tzuhan) #52 綁定會話至帳本(POST sessions);成功後記入存取中繼資料
@@ -632,7 +759,7 @@ export const useCarbonChat = () => {
         });
       }
     },
-    [t],
+    [t, setDraftNotice],
   );
 
   // Info: (20260716 - Tzuhan) #52 解鎖後補送排隊中的綁定請求
@@ -643,7 +770,7 @@ export const useCarbonChat = () => {
     pending.forEach(([sessionId, accountBookId]) => {
       void bindSessionToBook(sessionId, accountBookId);
     });
-  }, [isUnlocked, bindSessionToBook]);
+  }, [isUnlocked, bindSessionToBook, setDraftNotice]);
 
   // Info: (20260716 - Tzuhan) UAT P0:本機常駐快取「即刻水合」— 不需金鑰,refresh 後解鎖前內容即可見。
   // Info: (20260716 - Tzuhan) 僅在該 session 仍為空骨架時套用(絕不覆蓋已還原/已編輯內容);DB 還原隨後比版本裁決
@@ -745,11 +872,13 @@ export const useCarbonChat = () => {
     // Info: (20260716 - Tzuhan) #52 無編輯權(帳本 VIEWER)不觸發保存(server 亦會 403,此為第一道)
     if (sessionAccess[chatChannel]?.canEdit === false) return undefined;
     const master = masterKeyRef.current;
+    // Info: (20260803 - Tzuhan) 明文模式(帳本會話)免金鑰,與還原那條路一致
+    const draftBookId = sessionAccess[chatChannel]?.accountBookId ?? null;
     const canCloudSave =
       restoredChannelsRef.current.has(chatChannel) &&
       draftVersionsRef.current.has(chatChannel) &&
-      Boolean(master);
-    if (!canCloudSave || !master) {
+      (Boolean(master) || Boolean(draftBookId));
+    if (!canCloudSave) {
       // Info: (20260716 - Tzuhan) #50 明確告知使用者「僅暫存本機」,避免誤以為已上雲
       setSaveStatus("local");
       return undefined;
@@ -766,7 +895,7 @@ export const useCarbonChat = () => {
         master,
         activeReportData,
         expectedVersion,
-        sessionAccess[chatChannel]?.accountBookId ?? null,
+        draftBookId,
       )
         .then((newVersion) => {
           draftVersionsRef.current.set(chatChannel, newVersion);
@@ -836,6 +965,11 @@ export const useCarbonChat = () => {
       insufficient: t("carbon_chatbot.report_table_insufficient"),
       frozen: t("carbon_chatbot.report_table_frozen"),
       pendingNote: t("carbon_chatbot.report_table_pending_note"),
+      colProvenance: t("carbon_chatbot.report_table_col_provenance"),
+      provenanceComputed: t("carbon_chatbot.report_table_provenance_computed"),
+      provenanceImported: t("carbon_chatbot.report_table_provenance_imported"),
+      notProvided: t("carbon_chatbot.report_table_not_provided"),
+      importedNote: t("carbon_chatbot.report_table_imported_note"),
       // Info: (20260722 - Tzuhan) UAT:範疇顯示名(enum 值不可讀)
       formatScope: (scope: string) => formatGhgCategoryLabel(scope, language),
     }),
@@ -866,8 +1000,18 @@ export const useCarbonChat = () => {
       insufficient: t("carbon_chatbot.chart_insufficient"),
       frozen: t("carbon_chatbot.chart_frozen"),
       sankeyChatNode: t("carbon_chatbot.chart_sankey_chat_node"),
+      importedSankeyTitle: t("carbon_chatbot.chart_imported_sankey_title"),
+      importedSankeyExcluded: t(
+        "carbon_chatbot.chart_imported_sankey_excluded",
+      ),
+      importedSankeyCollapsed: t(
+        "carbon_chatbot.chart_imported_sankey_collapsed",
+      ),
       // Info: (20260722 - Tzuhan) UAT:範疇顯示名(enum 值不可讀)
       formatScope: (scope: string) => formatGhgCategoryLabel(scope, language),
+      // Info: (20260803 - Tzuhan) ISO 類別顯示名(匯入桑基圖第二層;直接印 CATEGORY_1 讀者看不懂)
+      formatIsoCategory: (category: string) =>
+        formatIsoCategoryLabel(category, language),
     }),
     [t, language],
   );
@@ -877,7 +1021,29 @@ export const useCarbonChat = () => {
       return undefined;
     if (!inventoryVersionsRef.current.has(chatChannel)) return undefined;
     const master = masterKeyRef.current;
-    if (!master) return undefined;
+    const bookId = sessionAccess[chatChannel]?.accountBookId ?? null;
+    /**
+     * Info: (20260803 - Tzuhan) 明文模式(帳本會話)免金鑰 —— 與還原那條路一致。
+     * 兩條路的要求不對稱正是先前「讀得到卻存不了」的成因。
+     */
+    /**
+     * Info: (20260803 - Tzuhan) 個人會話仍需金鑰(E2EE 沒有金鑰就無從加密),
+     * 但**必須讓使用者看見**。
+     *
+     * 讀寫兩條路對金鑰的要求不對稱:還原時帳本會話走明文模式免金鑰,
+     * 保存時 PUT 的 schema 仍硬性要求 recipientPublicKey(見 carbon_report_storage 的
+     * CarbonReportDraftPutSchema),因此一律需要 master。
+     * 結果是帳本會話未解鎖時「讀得到但存不了」,而原本這裡直接 return,
+     * 連 request 都沒發出、catch 也不會觸發 —— 匯入的帳本與桑基圖當下看得到,
+     * 重載就消失,全程沒有任何提示。
+     *
+     * 報告草稿那條路至少會設 "local" 告知「僅暫存本機」,這裡卻連狀態都沒有。
+     * 這一行是止盲不是治本:根因(明文模式仍要求公鑰)另開票處理。
+     */
+    if (!bookId && !master) {
+      setSaveStatus("local");
+      return undefined;
+    }
 
     if (inventoryAutosaveTimerRef.current) {
       clearTimeout(inventoryAutosaveTimerRef.current);
@@ -891,7 +1057,7 @@ export const useCarbonChat = () => {
         master,
         activeInventoryState,
         expectedVersion,
-        sessionAccess[chatChannel]?.accountBookId ?? null,
+        bookId,
       )
         .then((newVersion) => {
           inventoryVersionsRef.current.set(chatChannel, newVersion);
@@ -1011,26 +1177,14 @@ export const useCarbonChat = () => {
       );
       setInventoryStates((prev) => {
         const base = prev[channel] ?? createEmptyInventoryState();
-        const incomingKeys = new Set(entries.map((entry) => entry.activityKey));
-        const kept = (base.computedLedger?.entries ?? []).filter(
-          (entry) =>
-            !isImportedEntry(entry) || !incomingKeys.has(entry.activityKey),
-        );
-        const nextEntries = [...kept, ...entries];
-        const { scopeSubtotals, totalCo2eKg } =
-          summarizeLedgerEntries(nextEntries);
         return {
           ...prev,
           [channel]: {
             ...base,
-            computedLedger: {
-              ...base.computedLedger,
-              entries: nextEntries,
-              pending: base.computedLedger?.pending ?? [],
-              scopeSubtotals,
-              totalCo2eKg,
-              computedAt: new Date().toISOString(),
-            },
+            computedLedger: mergeImportedLedgerEntries(
+              base.computedLedger,
+              entries,
+            ),
           },
         };
       });
@@ -1094,7 +1248,7 @@ export const useCarbonChat = () => {
         }, CARBON_DRAFT_NOTICE_DISMISS_MS);
       }
     },
-    [sessionsData, activeSessionId, language, t],
+    [sessionsData, activeSessionId, language, t, setDraftNotice],
   );
 
   // Info: (20260714 - Tzuhan) sessions 索引持久化(id/標題/建立時間;訊息內容已由 DB 密文保存,不重複入本機)
@@ -1107,25 +1261,38 @@ export const useCarbonChat = () => {
       isTitleCustom: s.isTitleCustom,
     }));
     saveSessionsIndex(user.address, entries);
-  }, [sessionsData, user?.address]);
+  }, [sessionsData, user?.address, setDraftNotice]);
 
   // Info: (20260714 - Tzuhan) 切換聊天室: 各室訊息/報告/等待狀態彼此隔離，僅重置跨室共用的暫態 UI
   // Info: (20260714 - Tzuhan) (輸入框、附件、高亮、跳段目標為輸入層暫態；busy/計時器 per-session 不需重置)
-  const switchSession = useCallback((sessionId: string) => {
-    setActiveSessionId(sessionId);
-    setActiveParagraphId(null);
-    setHighlightedParagraphId(null);
-    setFocusedMessageId(null);
-    setInputValue("");
-    setPendingAttachments([]);
-    setAttachmentError(null);
-    setSaveStatus(null);
-    setIsError(false);
-    setDraftNotice(null);
-    setPendingRevision(null);
-    setPendingImport(null);
-    pendingDraftParagraphIdRef.current = null;
-  }, []);
+  const switchSession = useCallback(
+    (sessionId: string) => {
+      setActiveSessionId(sessionId);
+      setActiveParagraphId(null);
+      setHighlightedParagraphId(null);
+      setFocusedMessageId(null);
+      setInputValue("");
+      setPendingAttachments([]);
+      setAttachmentError(null);
+      setSaveStatus(null);
+      setIsError(false);
+      setDraftNotice(null);
+      setPendingRevision(null);
+      /**
+       * Info: (20260805 - Luphia) 這裡刻意**不動** pendingImportBySession。
+       * 它已經以發起匯入的會話 id 為鍵,切房本來就不需要重設任何東西 ——
+       * 而原本沿用「清掉唯一那筆」的舊語意去清空整個 map,恰好抵銷了 per-session 的全部意義:
+       * 在 A 房啟動匯入 → 切到 B 房等 → 匯入完成落成 { A: preview } → 點回 A 房
+       * → switchSession('A') 把 map 清成 {} → 預覽卡消失。
+       * 數分鐘的 LLM 工作與整份報告的配額靜默丟棄,連 retryFailedImportChapters 都救不回來
+       * (它需要 pendingImport)。
+       *
+       * 生命週期正確的清除點是「會話消失」而不是「切走」,故改在 archiveSession 移除該鍵。
+       */
+      pendingDraftParagraphIdRef.current = null;
+    },
+    [setDraftNotice],
+  );
 
   // Info: (20260716 - Tzuhan) 對話改名:設自訂旗標(首訊衍生不再覆蓋);sessions 索引 effect 自動持久化
   const renameSession = useCallback((sessionId: string, title: string) => {
@@ -1249,6 +1416,13 @@ export const useCarbonChat = () => {
       const failed: { id: string; title: string }[] = [];
       let nextIndex = 0;
       let completedCount = 0;
+      /**
+       * Info: (20260804 - Tzuhan) 正在跑的章數。只報「已完成 0/11」會讓開頭那段
+       * 長時間的 0 看起來像卡死 —— 11 章並行、每章數十秒,完成數本來就會停在 0 很久。
+       * 「3 章解析中」說的是同一件事的另一面:沒完成不等於沒在動。
+       */
+      let inFlightCount = 0;
+      const startedAt = Date.now();
 
       const reportProgress = () => {
         setDraftNotice({
@@ -1257,7 +1431,9 @@ export const useCarbonChat = () => {
             name: file.name,
             current: completedCount,
             total: chapters.length,
+            inFlight: inFlightCount,
           }),
+          startedAt,
         });
       };
       reportProgress();
@@ -1268,6 +1444,8 @@ export const useCarbonChat = () => {
         nextIndex += 1;
         if (index >= chapters.length) return;
         const chapter = chapters[index];
+        inFlightCount += 1;
+        reportProgress();
         const formData = new FormData();
         formData.append("file", file);
         formData.append("language", language);
@@ -1337,6 +1515,7 @@ export const useCarbonChat = () => {
           failed.push(chapter);
         }
         completedCount += 1;
+        inFlightCount -= 1;
         reportProgress();
         await processNext();
       };
@@ -1397,7 +1576,7 @@ export const useCarbonChat = () => {
         failed,
       };
     },
-    [language, t],
+    [language, t, setDraftNotice],
   );
 
   // Info: (20260727 - Tzuhan) #57 草稿補齊執行器:對「原樣匯入後仍空白」的段落,依同一份上傳文件請 LLM 撰寫草稿。
@@ -1457,13 +1636,41 @@ export const useCarbonChat = () => {
       }
       return drafted;
     },
-    [language, t],
+    [language, t, setDraftNotice],
   );
 
   // Info: (20260716 - Tzuhan) #56 上傳整份報告 → 匯入預覽(不直接寫入;查核重置與數字重勾稽於確認時執行)
   const importReportFile = useCallback(
     async (file: File) => {
+      /**
+       * Info: (20260804 - Tzuhan) 同一時間只跑一份匯入。
+       *
+       * 實測情境:切房回來看不出還在不在跑,於是重新上傳 —— 那個判斷在當下沒有錯,
+       * 是介面沒給依據。但兩份匯入同時跑會各自燒 11 章的 LLM 額度、互相搶限流,
+       * 兩邊都變慢甚至一起失敗,而且先完成的那份會被後完成的覆蓋。
+       *
+       * 擋下來並說出正在跑的是哪一個檔,比預設「使用者知道自己在做什麼」安全 ——
+       * 使用者不知道,因為畫面本來就沒說。
+       */
+      if (importInFlightRef.current) {
+        setDraftNotice({
+          type: "info",
+          text: t("carbon_chatbot.import_already_running", {
+            name: importInFlightRef.current,
+          }),
+        });
+        return;
+      }
+      importInFlightRef.current = file.name;
       lastImportFileRef.current = file;
+      /**
+       * Info: (20260803 - Tzuhan) 釘住發起匯入的會話(階段二)。
+       * 匯入會跑好幾分鐘且不因切房而停 —— 沿用「當前會話」的話,中途切房後
+       * 進度提示會落到新房,預覽卡也會出現在錯的房間。
+       */
+      const originSessionId = activeSessionId;
+      const notify = (notice: IDraftNotice | null) =>
+        setDraftNotice(notice, originSessionId);
       // Info: (20260716 - Tzuhan) 逐章解析(UAT:整份真實報告單次呼叫受 output token 上限,只回少數段落):
       // Info: (20260717 - Tzuhan) pdf 或大檔逐章(11 章,並行度 2);小型文字檔單發
       // Info: (20260730 - Tzuhan) PDF 一律逐章(頁數與內容量無法由大小推斷);純文字小檔才單發
@@ -1489,7 +1696,7 @@ export const useCarbonChat = () => {
           // Info: (20260730 - Tzuhan) 兩階段:先問頁碼索引(一次、輸出極小),再逐章只送對應頁。
           // Info: (20260730 - Tzuhan) 原本 11 章各送整份文件,實測 64 頁報告耗掉約 44 萬 input token,
           // Info: (20260730 - Tzuhan) 後段章節因 API 額度耗盡連請求都發不出去(失敗於 6~18ms)。
-          setDraftNotice({
+          notify({
             type: "loading",
             text: t("carbon_chatbot.import_indexing", { name: file.name }),
           });
@@ -1505,7 +1712,7 @@ export const useCarbonChat = () => {
           failedChapters = result.failed;
         } else {
           // Info: (20260717 - Tzuhan) 小型文字檔:單發全綱呼叫
-          setDraftNotice({
+          notify({
             type: "loading",
             text: t("carbon_chatbot.import_parsing", { name: file.name }),
           });
@@ -1531,15 +1738,15 @@ export const useCarbonChat = () => {
           };
         }
 
-        setDraftNotice(null);
+        notify(null);
         if (payload.segments.length === 0 && failedChapters.length === 0) {
-          setDraftNotice({
+          notify({
             type: "error",
             text: t("carbon_chatbot.import_empty"),
           });
           draftNoticeTimerRef.current = setTimeout(() => {
             draftNoticeTimerRef.current = null;
-            setDraftNotice(null);
+            notify(null);
           }, CARBON_DRAFT_NOTICE_DISMISS_MS);
           return;
         }
@@ -1570,12 +1777,16 @@ export const useCarbonChat = () => {
             file.name,
           );
         }
-        setDraftNotice(null);
+        notify(null);
 
         // Info: (20260716 - Tzuhan) 匯入的活動數據於確認時合併,先隨預覽暫存
         importActivitiesRef.current = payload.activities;
-        setPendingImport({
+        setPendingImportFor(originSessionId, {
           fileName: file.name,
+          // Info: (20260803 - Tzuhan) 記下發起的會話,套用時比對(見 IPendingImport 註解)
+          originSessionId: activeSessionId,
+          originSessionTitle:
+            sessionsData[activeSessionId]?.title ?? activeSessionId,
           items: [
             ...payload.segments.map((segment) => ({
               ...segment,
@@ -1595,14 +1806,17 @@ export const useCarbonChat = () => {
         });
       } catch (error) {
         console.error("[carbon-chat] report import failed:", error);
-        setDraftNotice({
+        notify({
           type: "error",
           text: t("carbon_chatbot.import_failed"),
         });
         draftNoticeTimerRef.current = setTimeout(() => {
           draftNoticeTimerRef.current = null;
-          setDraftNotice(null);
+          notify(null);
         }, CARBON_DRAFT_NOTICE_DISMISS_MS);
+      } finally {
+        // Info: (20260804 - Tzuhan) 成功、失敗、拋錯都要放行,否則一次失敗就再也匯入不了
+        importInFlightRef.current = null;
       }
     },
     [
@@ -1613,6 +1827,8 @@ export const useCarbonChat = () => {
       runImportChapters,
       runGapFillSections,
       fetchSectionPageIndex,
+      setDraftNotice,
+      setPendingImportFor,
     ],
   );
 
@@ -1630,10 +1846,11 @@ export const useCarbonChat = () => {
       lastPageIndexRef.current,
     );
     setDraftNotice(null);
-    setPendingImport((prev) => {
-      if (!prev) return prev;
+    setPendingImportBySession((prev) => {
+      const current = prev[activeSessionId];
+      if (!current) return prev;
       const itemByParagraph = new Map(
-        prev.items.map((item) => [item.paragraphId, item]),
+        current.items.map((item) => [item.paragraphId, item]),
       );
       result.segments.forEach((segment) => {
         const existing = itemByParagraph.get(segment.paragraphId);
@@ -1645,28 +1862,36 @@ export const useCarbonChat = () => {
           checked: existing?.checked ?? true,
         });
       });
-      return {
-        ...prev,
+      const next: IPendingImport = {
+        ...current,
         items: Array.from(itemByParagraph.values()),
-        unmapped: [...prev.unmapped, ...result.unmapped],
+        unmapped: [...current.unmapped, ...result.unmapped],
         failedChapters: result.failed,
       };
+      return { ...prev, [activeSessionId]: next };
     });
-  }, [pendingImport, runImportChapters]);
+  }, [pendingImport, runImportChapters, activeSessionId, setDraftNotice]);
 
-  const toggleImportItem = useCallback((paragraphId: string) => {
-    setPendingImport((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        items: prev.items.map((item) =>
-          item.paragraphId === paragraphId
-            ? { ...item, checked: !item.checked }
-            : item,
-        ),
-      };
-    });
-  }, []);
+  const toggleImportItem = useCallback(
+    (paragraphId: string) => {
+      setPendingImportBySession((prev) => {
+        const current = prev[activeSessionId];
+        if (!current) return prev;
+        return {
+          ...prev,
+          [activeSessionId]: {
+            ...current,
+            items: current.items.map((item) =>
+              item.paragraphId === paragraphId
+                ? { ...item, checked: !item.checked }
+                : item,
+            ),
+          },
+        };
+      });
+    },
+    [activeSessionId],
+  );
 
   // Info: (20260716 - Tzuhan) #56 套用匯入:勾選段落寫入(查核一律重置);活動數據入帳本交 /calculate 重勾稽
   /**
@@ -1784,6 +2009,24 @@ export const useCarbonChat = () => {
 
   const applyPendingImport = useCallback(() => {
     if (!pendingImport) return;
+    /**
+     * Info: (20260803 - Tzuhan) 只能套用回發起它的會話(issue_drafts/inventory_table_import/03)。
+     *
+     * 匯入不會因切換聊天室而中斷,但套用寫入的是當下的 activeSessionId ——
+     * 在 A 房發起、切到 B 房再套用,A 房的報告會覆蓋 B 房的內容且毫無警告。
+     * 這裡先擋住(階段一);讓匯入跟著房間走是階段二。
+     *
+     * 提示指名道姓寫出來源對話 —— 只說「無法套用」等於把問題丟回給使用者。
+     */
+    if (pendingImport.originSessionId !== activeSessionId) {
+      setDraftNotice({
+        type: "error",
+        text: t("carbon_chatbot.import_wrong_session", {
+          name: pendingImport.originSessionTitle,
+        }),
+      });
+      return;
+    }
     const selected = pendingImport.items.filter((item) => item.checked);
     if (selected.length === 0) return;
     const contentById = new Map(
@@ -1813,7 +2056,6 @@ export const useCarbonChat = () => {
      * 看報告的人卻分辨不出來。這違反「所有計算收斂到確定性規則引擎」的鐵律。
      * 原報告的數字仍看得到:它們留在匯入預覽與 unmapped,且原文件本身就是佐證附件。
      */
-    const ledgerNow = computedLedgerRef.current;
     /**
      * Info: (20260803 - Tzuhan) 表3.8 → 帳本 + 對帳說明(Issue B)。
      * 解析、勾稽、轉換、揭露全在 buildImportedLedger 這個純函數裡完成;
@@ -1831,6 +2073,22 @@ export const useCarbonChat = () => {
     const importedEntries = Array.from(importedLedgerById.values()).flatMap(
       (result) => result.entries,
     );
+    /**
+     * Info: (20260804 - Tzuhan) 建表時要看到「併入匯入項目之後」的帳本。
+     *
+     * `applyImportedLedgerEntries` 走 setState,要到下一輪 render 才生效,
+     * 但 `normalizeImported` 在本輪就要拿 ledger 去產系統表格 ——
+     * 用 `computedLedgerRef.current` 等於拿併入前的舊帳本建表,首次落地必定少了匯入項目。
+     * 先前看不出來,是因為表格本來就把匯入項目過濾掉、一律印「資料不足」;
+     * 一旦小計表開始吃匯入資料,這個時序就會直接變成錯誤的數字。
+     *
+     * 合併規則與 `applyImportedLedgerEntries` 相同(以 activityKey 取代、只換 IMPORTED),
+     * 小計一律走 `summarizeLedgerEntries` —— 前端自己再累加一次,遲早與後端不一致。
+     */
+    const ledgerForTables =
+      importedEntries.length > 0
+        ? mergeImportedLedgerEntries(computedLedgerRef.current, importedEntries)
+        : computedLedgerRef.current;
     /**
      * Info: (20260801 - Tzuhan) 改由組裝器決定版面順序(Issue A 第 4 點):
      * 敘述 → 原文照錄的表格 → 系統計算表格 → 對帳。
@@ -1857,7 +2115,7 @@ export const useCarbonChat = () => {
       return composeParagraphContent({
         content: stripLlmTables(imported),
         sourceTables,
-        dataTableBlock: buildCarbonDataTable(ledgerNow, dataTableLabels),
+        dataTableBlock: buildCarbonDataTable(ledgerForTables, dataTableLabels),
         reconciliation,
       });
     };
@@ -1927,7 +2185,7 @@ export const useCarbonChat = () => {
       }
     }
     importActivitiesRef.current = [];
-    setPendingImport(null);
+    setPendingImportFor(activeSessionId, null);
     jumpToReportParagraph(selected[0].paragraphId);
 
     // Info: (20260730 - Tzuhan) 匯入落地後為有對應模板的段落補結構圖(治理架構/範疇對應/量化流程)。
@@ -1941,6 +2199,25 @@ export const useCarbonChat = () => {
       candidates: diagramTargets.map((item) => item.paragraphId),
       selected: selected.length,
     });
+    /**
+     * Info: (20260804 - Tzuhan) 同節的原文表格也是畫圖素材(issue_drafts/inventory_table_import/05)。
+     *
+     * 原本只傳 item.content(敘述),把該節最有結構的部分排除在外。
+     * 2.3 範疇對應圖真正的素材就是表2.2 —— 類別與排放源的層級全在表裡,
+     * 敘述只有兩行,於是圖只畫得出兩個節點。
+     *
+     * 這不會放寬防捏造護欄:節點文字仍必須能在傳入的原文中找到,
+     * 只是「原文」的範圍從敘述擴到同節的逐字表格 —— 兩者都是原文,
+     * 差別只在先前漏給了一半。
+     */
+    const withSourceTables = (paragraphId: string, content: string): string => {
+      const tables = sourceTablesById.get(paragraphId) ?? [];
+      if (tables.length === 0) return content;
+      return [
+        content,
+        ...tables.map((table) => `${table.caption}\n\n${table.markdown}`),
+      ].join("\n\n");
+    };
     void diagramTargets
       .reduce(async (previous, item, index) => {
         await previous;
@@ -1963,7 +2240,10 @@ export const useCarbonChat = () => {
           }),
         });
         // Info: (20260730 - Tzuhan) 傳入剛落地的內容:此刻 setSessionsData 尚未生效,讀狀態會拿到空值
-        await generateParagraphDiagram(item.paragraphId, item.content);
+        await generateParagraphDiagram(
+          item.paragraphId,
+          withSourceTables(item.paragraphId, item.content),
+        );
       }, Promise.resolve())
       // Info: (20260803 - Tzuhan) 圖是加值不是前提:全部跑完(含失敗)即收掉提示,不留常駐 loading
       .finally(() => setDraftNotice(null));
@@ -1976,12 +2256,14 @@ export const useCarbonChat = () => {
     generateParagraphDiagram,
     applyImportedLedgerEntries,
     t,
+    setDraftNotice,
+    setPendingImportFor,
   ]);
 
   const discardPendingImport = useCallback(() => {
     importActivitiesRef.current = [];
-    setPendingImport(null);
-  }, []);
+    setPendingImportFor(activeSessionId, null);
+  }, [activeSessionId, setPendingImportFor]);
 
   // Info: (20260716 - Tzuhan) #55 套用修訂:寫入段落(取消查核)並高亮;人工 gate 的唯一落地點
   const applyPendingRevision = useCallback(() => {
@@ -2118,11 +2400,15 @@ export const useCarbonChat = () => {
         section.id === CARBON_AUTO_SANKEY_PARAGRAPH_ID &&
         (ledgerNow?.entries.length ?? 0) > 0
       ) {
+        // Info: (20260803 - Tzuhan) 與補位 effect 同一條規則:切面由 provenance 決定
+        const sankeyTemplate = ledgerNow?.entries.some(isImportedEntry)
+          ? CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY
+          : CarbonChartTemplateEnum.EMISSION_SANKEY;
         content = insertCarbonChartBlock(
           content,
-          CarbonChartTemplateEnum.EMISSION_SANKEY,
+          sankeyTemplate,
           buildCarbonChartBlock(
-            CarbonChartTemplateEnum.EMISSION_SANKEY,
+            sankeyTemplate,
             ledgerNow,
             chartLabels,
             dataTableLabels,
@@ -2287,6 +2573,7 @@ export const useCarbonChat = () => {
     dataTableLabels,
     chartLabels,
     t,
+    setDraftNotice,
   ]);
 
   /**
@@ -2303,15 +2590,19 @@ export const useCarbonChat = () => {
     );
     if (!target?.content || hasCarbonChartBlocks(target.content)) return;
 
+    /**
+     * Info: (20260803 - Tzuhan) 切面由 provenance 決定(Issue C 第 1 點):
+     * 匯入的報告畫「廠址 → 類別 → 排放形式」,憑證帳本畫「憑證 → 排放源 → 範疇」。
+     * 兩者的可信依據不同(外部已查證的年度事實 vs 本系統可下鑽的帳本),
+     * 混在同一張圖裡會讓查核者無法判斷任一條流量的來源,故各用各的模板。
+     */
+    const templateId = ledger.entries.some(isImportedEntry)
+      ? CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY
+      : CarbonChartTemplateEnum.EMISSION_SANKEY;
     const nextContent = insertCarbonChartBlock(
       target.content,
-      CarbonChartTemplateEnum.EMISSION_SANKEY,
-      buildCarbonChartBlock(
-        CarbonChartTemplateEnum.EMISSION_SANKEY,
-        ledger,
-        chartLabels,
-        dataTableLabels,
-      ),
+      templateId,
+      buildCarbonChartBlock(templateId, ledger, chartLabels, dataTableLabels),
     );
     setSessionsData((prev) => {
       const session = prev[activeSessionId];
@@ -2347,6 +2638,61 @@ export const useCarbonChat = () => {
     chartLabels,
     dataTableLabels,
   ]);
+
+  /**
+   * Info: (20260804 - Tzuhan) 結構圖補位 —— 比照上面桑基圖那個 effect。
+   *
+   * 為什麼需要:桑基圖與結構圖的失敗後果原本天差地遠。
+   * 桑基圖是純本地計算,上面那個 effect 每次載入都會檢查並補上,錯過一次無所謂;
+   * 結構圖走 LLM + 網路,而它**只在匯入套用的那一次 fire-and-forget** ——
+   * 那 5 次呼叫若整批失敗(限流、90 秒逾時撞閘道、切房中斷),就永久沒有圖,
+   * 沒有任何機制會再試。實測整份報告一個 carbon-diagram 錨點都沒有,即是此故。
+   * 被護欄拒絕仍會插入錨點(內含原因文字),所以「零錨點」只可能是呼叫從未成功。
+   *
+   * 一次只掃一段並節流:這條路要燒 LLM 額度,與匯入共用同一個 bucket。
+   * 全部並發等於自己把自己限流,那正是原本可能的失敗原因之一。
+   *
+   * 每個(會話, 段落)一輪頁面生命週期只試一次(diagramAttemptedRef)。
+   * 失敗不重排 —— 否則 effect 會在每次 sessionsData 變動時重試,把額度燒光。
+   * 想再試就重新載入頁面,這是刻意的:自動重試的上限交給人,比交給計時器安全。
+   */
+  const diagramAttemptedRef = useRef<Set<string>>(new Set());
+  const diagramSweepRunningRef = useRef<boolean>(false);
+  useEffect(() => {
+    if (diagramSweepRunningRef.current) return;
+    const paragraphs =
+      sessionsData[activeSessionId]?.reportData?.paragraphs ?? [];
+    const pending = paragraphs.filter((p) => {
+      const templateId = findDiagramTemplateForParagraph(p.id);
+      if (!templateId || !p.content) return false;
+      if (hasCarbonDiagramBlock(p.content, templateId)) return false;
+      return !diagramAttemptedRef.current.has(`${activeSessionId}:${p.id}`);
+    });
+    if (pending.length === 0) return;
+
+    diagramSweepRunningRef.current = true;
+    const originSessionId = activeSessionId;
+    console.info("[carbon-chat] diagram backfill start", {
+      candidates: pending.map((p) => p.id),
+    });
+    // Info: (20260804 - Tzuhan) 循序執行(專案禁 await-in-loop):與匯入路徑同一種寫法
+    void pending
+      .reduce(async (previous, paragraph, index) => {
+        await previous;
+        // Info: (20260804 - Tzuhan) 使用者切走就停:寫入目標是 activeSessionId,寫錯房間是靜默的災難
+        if (activeSessionIdRef.current !== originSessionId) return;
+        if (index > 0) {
+          await new Promise((resolve) => {
+            setTimeout(resolve, CARBON_DIAGRAM_THROTTLE_MS);
+          });
+        }
+        diagramAttemptedRef.current.add(`${originSessionId}:${paragraph.id}`);
+        await generateParagraphDiagram(paragraph.id, paragraph.content);
+      }, Promise.resolve())
+      .finally(() => {
+        diagramSweepRunningRef.current = false;
+      });
+  }, [sessionsData, activeSessionId, generateParagraphDiagram]);
 
   // Info: (20260712 - Luphia) 載入歷史訊息（密文→以主私鑰解密）；before 省略為最新一頁，否則載入更舊一頁並前置
   const loadHistory = useCallback(
@@ -2394,7 +2740,10 @@ export const useCarbonChat = () => {
         );
 
         setSessionsData((prev) => {
-          const session = { ...prev[activeSessionId] };
+          const existing = resolveSession(prev, activeSessionId);
+          // Info: (20260803 - Tzuhan) 同上:會話已不在(切帳本/封存)就不回填歷史
+          if (!existing) return prev;
+          const session = { ...existing };
           session.messages = before
             ? [...decrypted, ...session.messages]
             : decrypted;
@@ -2495,7 +2844,10 @@ export const useCarbonChat = () => {
       if (!section) return;
 
       setSessionsData((prev) => {
-        const updatedSession = { ...prev[activeSessionId] };
+        const existing = resolveSession(prev, activeSessionId);
+        // Info: (20260803 - Tzuhan) 不存在就不寫:否則會憑一個欄位長出一間只有 currentStep 的空會話
+        if (!existing) return prev;
+        const updatedSession = { ...existing };
         updatedSession.currentStep = `${section.code} ${section.title}：${section.guidance}`;
         return { ...prev, [activeSessionId]: updatedSession };
       });
@@ -2639,6 +2991,7 @@ export const useCarbonChat = () => {
       }
     },
     [
+      setDraftNotice,
       draftingParagraphId,
       activeSession,
       language,
@@ -2738,6 +3091,7 @@ export const useCarbonChat = () => {
     sessionsData,
     activeSessionId,
     generateParagraphDraft,
+    setDraftNotice,
   ]);
 
   // Info: (20260712 - Luphia) 進入時先預抓金鑰紀錄，避免解鎖手勢當下「fetch → PRF」耗掉 user activation
@@ -3100,7 +3454,9 @@ export const useCarbonChat = () => {
 
     // Info: (20260713 - Tzuhan) 廢除訊息計次假進度；進度一律由 reportStats 依實際完成段落數推導
     setSessionsData((prev) => {
-      const updatedSession = { ...prev[activeSessionId] };
+      const existing = resolveSession(prev, activeSessionId);
+      if (!existing) return prev;
+      const updatedSession = { ...existing };
       // Info: (20260714 - Tzuhan) 新對話以首則使用者訊息摘要為標題(demo 精度: 截前 24 字)
       const hasUserMessage = updatedSession.messages.some(
         (m) => m.sender === ChatRoleEnum.USER,
@@ -3302,6 +3658,7 @@ export const useCarbonChat = () => {
     inventoryStates,
     requestParagraphRevision,
     insertChartIntoParagraph,
+    setDraftNotice,
   ]);
 
   // Info: (20260712 - Luphia) 進入 channel 的一次性手勢：解鎖金鑰(PRF) → 請後端做前置作業並經 Centrifugo 回傳招呼詞

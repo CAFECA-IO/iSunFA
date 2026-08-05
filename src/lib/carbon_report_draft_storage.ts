@@ -90,24 +90,40 @@ export const loadReportDraft = async (
 // Info: (20260716 - Tzuhan) #52 雙模式保存:帳本會話送明文(模型 A);個人會話維持 E2EE envelope
 export const saveReportDraft = async (
   channel: string,
-  masterKey: IChatroomMasterKey,
+  /**
+   * Info: (20260803 - Tzuhan) 明文模式(帳本會話)可為 null —— 沒有加密就不需要收件公鑰。
+   * 原本一律必填,造成「帳本會話免金鑰」只實現一半:讀免金鑰、寫仍要 master,
+   * 未解鎖時讀得到卻存不了(見 issue_drafts/inventory_table_import/04)。
+   * 明文模式的擁有者標記改由 API 層以已驗證的使用者位址補上。
+   */
+  masterKey: IChatroomMasterKey | null,
   reportData: IReportData,
   version: number,
   accountBookId: string | null = null,
 ): Promise<number> => {
+  // Info: (20260803 - Tzuhan) 加密模式沒有金鑰就無從加密,必須在這裡失敗而不是送出空密文
+  if (!accountBookId && !masterKey) {
+    throw new Error("masterKey is required for encrypted mode");
+  }
   const serialized = JSON.stringify(reportData);
   const body = accountBookId
     ? {
         channel,
         version,
-        recipientPublicKey: masterKey.extendedPublicKey,
+        // Info: (20260803 - Tzuhan) 明文模式不帶公鑰;有金鑰時仍附上(保留既有紀錄語意)
+        ...(masterKey
+          ? { recipientPublicKey: masterKey.extendedPublicKey }
+          : {}),
         plainContent: serialized,
       }
     : {
         channel,
         version,
-        recipientPublicKey: masterKey.extendedPublicKey,
-        envelope: await eciesEncrypt(masterKey.extendedPublicKey, serialized),
+        recipientPublicKey: (masterKey as IChatroomMasterKey).extendedPublicKey,
+        envelope: await eciesEncrypt(
+          (masterKey as IChatroomMasterKey).extendedPublicKey,
+          serialized,
+        ),
       };
 
   const res = await request<{ payload: { version: number } | null }>(

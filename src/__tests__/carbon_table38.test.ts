@@ -5,6 +5,9 @@
 
 import { describe, it, expect } from "@jest/globals";
 import { parseTable38 } from "@/lib/carbon_table38.parser";
+import { mergeImportedLedgerEntries } from "@/lib/carbon_ledger_totals";
+import type { IComputedLedgerEntry } from "@/types/carbon_chatbot.types";
+
 import {
   listExcludedEntries,
   ReconciliationLevelEnum,
@@ -12,14 +15,28 @@ import {
 } from "@/lib/carbon_table38.reconciliation";
 import { toLedgerEntries } from "@/lib/carbon_table38.ledger";
 import { buildReconciliationDisclosure } from "@/lib/carbon_table38.disclosure";
-import { buildCarbonDataTable } from "@/lib/carbon_report_table.builder";
+import {
+  buildCarbonDataTable,
+  CarbonDataBadgeStateEnum,
+  deriveDataBadgeState,
+} from "@/lib/carbon_report_table.builder";
+import {
+  buildCarbonChartBlock,
+  CARBON_CHART_DEFAULT_LABELS,
+} from "@/lib/carbon_report_chart.builder";
+import { CarbonChartTemplateEnum } from "@/constants/carbon_report_charts";
 import {
   EmissionBasisEnum,
   ImportedQuantityStateEnum,
   LedgerProvenanceEnum,
 } from "@/constants/imported_quantity";
 import { Iso14064SubCategory } from "@/constants/iso14064_subcategory";
-import { GhgProtocolCategory, Iso14064Category } from "@/constants/esg";
+import {
+  formatIsoCategoryLabel,
+  GhgProtocolCategory,
+  Iso14064Category,
+} from "@/constants/esg";
+import { MeasurementUnit } from "@/constants/enums";
 
 /**
  * Info: (20260803 - Tzuhan) 總公司完整一段(含 NA、NS、0.0000 三態並存),
@@ -72,6 +89,112 @@ const TABLE_38 = `
 | (3) 屏東分公司 | 類別四 | 4.1 採購貨物 | 654.9068 | 756.5913 |
 | (3) 屏東分公司 | | 4.3 固體或液體廢棄物 | 101.6845 | |
 | (3) 屏東分公司 | 直接與間接溫室氣體總排放量-所在地基準 (公噸 CO2e/年) | | 8121.918 | |
+`.trim();
+
+/**
+ * Info: (20260803 - Tzuhan) **第二輪**實測落地的版面(issue_drafts/inventory_table_import/01)。
+ *
+ * 同一份 PDF、同一組提示詞,模型換一輪就改變攤平策略:廠址與類別小計各自獨立成列,
+ * 且每個廠址前重複一次表頭。兩份 fixture 都要留 —— 只留新的等於把第一輪的迴歸風險丟掉,
+ * 而版面既然會變,它隨時可能變回來。
+ *
+ * 原文第三個廠址的序號誤寫為 (1)(原文自身的錯字),照錄不修正。
+ */
+const TABLE_38_LAYOUT_B = `
+| 報告邊界 | 溫室氣體排放量 (公噸 CO2e/年) | 溫室氣體排放量各類別總和 (公噸 CO2e/年) | 類型 |
+| :--- | :--- | :--- | :--- |
+| (1) 總公司 | | | |
+| 類別一 | | 17.8494 | |
+| 1.1 固定式燃燒 | 0.4375 | | |
+| 1.2 移動式燃燒 | 9.0759 | | |
+| 1.3 產業過程 | 0.0000 | | |
+| 1.4 人為系統/逸散 | 8.3360 | | |
+| 1.5 土地使用與變更、 林業之排放與移除 | 0.0000 | | |
+| 類別二 | | 139.4858 | |
+| 2.1 外購電力 | 139.4858 | | |
+| 2.2 外購能源 | 0.0000 | | |
+| 類別三 | | 16.2308 | |
+| 3.1 上游運輸 | NS | | |
+| 3.2 下游運輸 | NS | | |
+| 3.3 員工通勤 | 15.4379 | | |
+| 3.4 客戶與訪客運輸 | NA | | |
+| 3.5 業務旅運 | 0.7929 | | |
+| 類別四 | | 27.8985 | |
+| 4.1 採購貨物 | 27.8985 | | |
+| 4.2 資本財 | NA | | |
+| 4.3 固體或液體廢棄物 | NA | | |
+| 4.4 資產使用 | NA | | |
+| 4.5 服務使用 | NA | | |
+| 類別五 | | NA | |
+| 5.1 產品使用階段排放 或移除 | NA | | |
+| 5.2 下游承租資產 | NA | | |
+| 5.3 產品生命終止階段 | NA | | |
+| 5.4 投資運作 | NA | | |
+| 類別六 | - | NA | NA |
+| 直接與間接溫室氣體總排放量-所在地基準 (公噸 CO2e/年) | 201.465 | | |
+| 直接與間接溫室氣體總排放量-市場基準 (公噸 CO2e/年) | 201.465 | | |
+| (2) 台北分公司 | | | |
+| 報告邊界 | 溫室氣體排放量 (公噸 CO2e/年) | 溫室氣體排放量各類別總和 (公噸 CO2e/年) | 類型 |
+| 類別一 | | 1.5133 | |
+| 1.1 固定式燃燒 | 0.0000 | | |
+| 1.2 移動式燃燒 | 1.1221 | | |
+| 1.3 產業過程 | 0.0000 | | |
+| 1.4 人為系統/逸散 | 0.3912 | | |
+| 1.5 土地使用與變更、林 業之排放與移除 | 0.0000 | | |
+| 類別二 | | 5.8344 | |
+| 2.1 外購電力 | 5.8344 | | |
+| 2.2 外購能源 | 0.0000 | | |
+| 類別三 | | 0.6892 | |
+| 3.1 上游運輸 | NA | | |
+| 3.2 下游運輸 | NA | | |
+| 3.3 員工通勤 | 0.1887 | | |
+| 3.4 客戶與訪客運輸 | NA | | |
+| 3.5 業務旅運 | 0.5005 | | |
+| 類別四 | | 1.1613 | |
+| 4.1 採購貨物 | 1.1613 | | |
+| 4.2 資本財 | NA | | |
+| 4.3 固體或液體廢棄物 | NA | | |
+| 4.4 資產使用 | NA | | |
+| 4.5 服務使用 | NA | | |
+| 類別五 | | NA | |
+| 5.1 產品使用階段排放 或移除 | NA | | |
+| 5.2 下游承租資產 | NA | | |
+| 5.3 產品生命終止階段 | NA | | |
+| 5.4 投資運作 | NA | | |
+| 類別六 | - | NA | NA |
+| 直接與間接溫室氣體總排放量-所在地基準 (公噸 CO2e/年) | 9.1982 | | |
+| 直接與間接溫室氣體總排放量-市場基準 (公噸 CO2e/年) | 9.1982 | | |
+| (1) 屏東分公司 | | | |
+| 報告邊界 | 溫室氣體排放量 (公噸 CO2e/年) | 溫室氣體排放量各類別總和 (公噸 CO2e/年) | 類型 |
+| 類別一 | | 2814.0773 | |
+| 1.1 固定式燃燒 | 2591.8615 | | |
+| 1.2 移動式燃燒 | 13.2206 | | |
+| 1.3 產業過程 | 189.0363 | | |
+| 1.4 人為系統/逸散 | 19.9589 | | |
+| 1.5 土地使用與變更、 林業之排放與移除 | 0.0000 | | |
+| 類別二 | | 3325.0152 | |
+| 2.1 外購電力 | 3325.0152 | | |
+| 2.2 外購能源 | 0.0000 | | |
+| 類別三 | | 1226.2346 | |
+| 3.1 上游運輸 | 176.8211 | | |
+| 3.2 下游運輸 | 927.4575 | | |
+| 3.3 員工通勤 | 118.8558 | | |
+| 3.4 客戶與訪客運輸 | NA | | |
+| 3.5 業務旅運 | 3.1002 | | |
+| 類別四 | | 756.5913 | |
+| 4.1 採購貨物 | 654.9068 | | |
+| 4.2 資本財 | NA | | |
+| 4.3 固體或液體廢棄物 | 101.6845 | | |
+| 4.4 資產使用 | NA | | |
+| 4.5 服務使用 | NA | | |
+| 類別五 | | NA | |
+| 5.1 產品使用階段排放 或移除 | NA | | |
+| 5.2 下游承租資產 | NA | | |
+| 5.3 產品生命終止階段 | NA | | |
+| 5.4 投資運作 | NA | | |
+| 類別六 | - | NA | NA |
+| 直接與間接溫室氣體總排放量-所在地基準 (公噸 CO2e/年) | 8121.918 | | |
+| 直接與間接溫室氣體總排放量-市場基準 (公噸 CO2e/年) | 8121.918 | | |
 `.trim();
 
 // Info: (20260803 - Tzuhan) 表3.6 的全公司總量(第三層勾稽的對照值)
@@ -365,28 +488,105 @@ describe("toLedgerEntries", () => {
 });
 
 /**
- * Info: (20260803 - Tzuhan) 「兩者並存但絕不合併」的執行面:
- * 匯入項目進 ledger(桑基圖需要),但不得出現在系統計算表格裡 ——
- * 否則同一組數字會在一節內出現兩遍,一遍標原文、一遍看起來像本系統算的。
+ * Info: (20260804 - Tzuhan) 匯入項目進系統表格,但逐列標示來源(取代 20260803 的整批排除)。
+ *
+ * 「兩者並存但絕不合併」守的是**查核者要分得出哪列是我們算的**,
+ * 而分辨的手段是把來源寫在表上,不是把資料藏起來 ——
+ * 藏起來的代價是 3.6「排放總量匯總表」印著「資料不足」,而總量就在 ledger 裡。
  */
-describe("匯入項目不進系統計算表格", () => {
-  it("ledger 只有匯入項目時,系統表格仍顯示資料不足", () => {
-    const parsed = parseTable38(TABLE_38);
-    const reconciled = reconcileTable38(parsed, {
+describe("匯入項目進系統表格但標示來源", () => {
+  const block = ((): string => {
+    const parsedLocal = parseTable38(TABLE_38);
+    const reconciledLocal = reconcileTable38(parsedLocal, {
       companyTotalTonne: COMPANY_TOTAL,
     });
-    const { entries } = toLedgerEntries(parsed, reconciled, {
+    const { entries } = toLedgerEntries(parsedLocal, reconciledLocal, {
       tableNo: "表3.8",
     });
-    const block = buildCarbonDataTable({
-      entries,
-      pending: [],
-      scopeSubtotals: {},
-      totalCo2eKg: "0",
-      computedAt: new Date().toISOString(),
+    return buildCarbonDataTable(mergeImportedLedgerEntries(undefined, entries));
+  })();
+
+  it("列出匯入項目,不再一律印資料不足", () => {
+    expect(block).toContain("2,591,861.5");
+    expect(block).not.toContain("資料不足");
+  });
+
+  it("逐列標示原文照錄與表號", () => {
+    expect(block).toContain("原文照錄(表3.8)");
+  });
+
+  /**
+   * Info: (20260804 - Tzuhan) 匯入項目的 convertedQuantity 塞的是排放當量本身,
+   * 不是活動數據。印進「活動數據」欄會與右邊的排放量差 1000 倍,讀成「係數是 1000」。
+   */
+  it("活動數據與排放係數兩欄明示原文未提供,不得填數字", () => {
+    const importedRow = block
+      .split("\n")
+      .find((line) => line.includes("(1) 總公司 1.1"));
+    expect(importedRow).toBeDefined();
+    const cells = importedRow!.split("|").map((cell) => cell.trim());
+    expect(cells[3]).toBe("原文未提供");
+    expect(cells[4]).toBe("原文未提供");
+  });
+
+  it("範疇小計與總計有數字(這一節的標題就是排放總量匯總)", () => {
+    expect(block).toContain("**總排放量**");
+    expect(block).toContain("8,332,581.1");
+  });
+});
+
+/**
+ * Info: (20260804 - Tzuhan) 徽章與表格必須對同一份 ledger 說同一件事。
+ * 先前徽章看 entries.length、表格看過濾後的 computedEntries,
+ * 於是同一段徽章顯示「已勾稽 ✓(數字由決定論引擎產出)」、表格顯示「資料不足」。
+ */
+describe("徽章以 provenance 裁決", () => {
+  const importedEntry = ((): IComputedLedgerEntry => {
+    const parsedLocal = parseTable38(TABLE_38);
+    const reconciledLocal = reconcileTable38(parsedLocal, {
+      companyTotalTonne: COMPANY_TOTAL,
     });
-    expect(block).not.toContain("2,591,861.5");
-    expect(block).toContain("carbon-data-table:start");
+    return toLedgerEntries(parsedLocal, reconciledLocal, { tableNo: "表3.8" })
+      .entries[0];
+  })();
+
+  it("只有匯入項目時不宣稱由決定論引擎產出", () => {
+    const ledger = mergeImportedLedgerEntries(undefined, [importedEntry]);
+    expect(deriveDataBadgeState(ledger)).toBe(
+      CarbonDataBadgeStateEnum.IMPORTED,
+    );
+  });
+
+  it("混合時仍落在 IMPORTED(只要有一列是抄的,那句話對整段就不成立)", () => {
+    const computed: IComputedLedgerEntry = {
+      activityKey: "voucher:1",
+      scopeCategory: GhgProtocolCategory.SCOPE_1_DIRECT,
+      sourceName: "柴油",
+      quantityRaw: "10",
+      convertedQuantity: "10",
+      convertedUnit: MeasurementUnit.LITER,
+      co2eKg: "26",
+      factor: {
+        factorId: "f",
+        name: "f",
+        value: "2.6",
+        unit: "kg",
+        source: "係數庫",
+      },
+    };
+    const ledger = mergeImportedLedgerEntries(
+      {
+        entries: [computed],
+        pending: [],
+        scopeSubtotals: {},
+        totalCo2eKg: "0",
+        computedAt: new Date().toISOString(),
+      },
+      [importedEntry],
+    );
+    expect(deriveDataBadgeState(ledger)).toBe(
+      CarbonDataBadgeStateEnum.IMPORTED,
+    );
   });
 });
 
@@ -439,5 +639,287 @@ describe("buildReconciliationDisclosure", () => {
     });
     expect(failedText).toContain("未寫入帳本");
     expect(failedText).toContain("✗");
+  });
+});
+
+/**
+ * Info: (20260803 - Tzuhan) 第二種版面(廠址與類別小計獨立成列 + 重複表頭)。
+ * 這一組是 issue 01 的驗收:實測時它讓 15 列無法解析、且表頭「報告邊界」被當成廠址名,
+ * 台北與屏東的資料全部併進假廠址(差額 8121.9184)。
+ */
+describe("表3.8 第二種版面", () => {
+  const parsed = parseTable38(TABLE_38_LAYOUT_B);
+
+  it("沒有讀不懂的資料列(類別小計獨立成列也要認得)", () => {
+    expect(parsed.unparsedRows).toEqual([]);
+  });
+
+  /**
+   * Info: (20260803 - Tzuhan) 最關鍵的一項:重複表頭的「報告邊界」不可成為廠址。
+   * 誤認的後果不是報錯,而是資料歸屬悄悄改變 —— 總量還對得上,分佈全錯。
+   */
+  it("重複表頭不被當成廠址", () => {
+    const sites = Array.from(new Set(parsed.rows.map((row) => row.site)));
+    expect(sites).not.toContain("報告邊界");
+    expect(sites).toHaveLength(3);
+  });
+
+  it("三個廠址各自獨立(原文第三個誤寫為 (1) 也照錄不合併)", () => {
+    const sites = Array.from(new Set(parsed.rows.map((row) => row.site)));
+    expect(sites).toEqual(["(1) 總公司", "(2) 台北分公司", "(1) 屏東分公司"]);
+  });
+
+  it("類別小計獨立成列時仍取得(供第一層勾稽)", () => {
+    const headOfficeCat3 = parsed.categorySubtotals.find(
+      (item) =>
+        item.site === "(1) 總公司" &&
+        item.isoCategory === Iso14064Category.CATEGORY_3,
+    );
+    expect(headOfficeCat3?.tonneCo2e).toBe("16.2308");
+  });
+
+  it("原文小計為 NA 時記為 null(不是 0)", () => {
+    const cat5 = parsed.categorySubtotals.find(
+      (item) =>
+        item.site === "(1) 總公司" &&
+        item.isoCategory === Iso14064Category.CATEGORY_5,
+    );
+    expect(cat5?.tonneCo2e).toBeNull();
+  });
+
+  it("類別六仍產出一筆資料列(開放類別本身沒有子項)", () => {
+    const row = parsed.rows.find(
+      (item) =>
+        item.site === "(1) 總公司" &&
+        item.subCategory === Iso14064SubCategory.OTHER_INDIRECT,
+    );
+    expect(row?.state).toBe(ImportedQuantityStateEnum.NOT_APPLICABLE);
+  });
+
+  it("三態仍分得開", () => {
+    const ns = parsed.rows.find(
+      (item) =>
+        item.site === "(1) 總公司" &&
+        item.subCategory === Iso14064SubCategory.UPSTREAM_TRANSPORT,
+    );
+    const zero = parsed.rows.find(
+      (item) =>
+        item.site === "(1) 總公司" &&
+        item.subCategory === Iso14064SubCategory.INDUSTRIAL_PROCESS,
+    );
+    expect(ns?.state).toBe(ImportedQuantityStateEnum.NOT_SIGNIFICANT);
+    expect(zero?.tonneCo2e).toBe("0");
+  });
+
+  it("三層勾稽全部通過", () => {
+    const result = reconcileTable38(parsed, {
+      companyTotalTonne: COMPANY_TOTAL,
+    });
+    const failed = result.checks.filter((check) => !check.isWithinTolerance);
+    expect(failed).toEqual([]);
+    expect(result.isReconciled).toBe(true);
+  });
+
+  it("通過勾稽後寫入帳本(桑基圖的前置條件)", () => {
+    const result = reconcileTable38(parsed, {
+      companyTotalTonne: COMPANY_TOTAL,
+    });
+    const ledger = toLedgerEntries(parsed, result, { tableNo: "表3.8" });
+    expect(ledger.blockedReason).toBeNull();
+    expect(ledger.entries.length).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * Info: (20260803 - Tzuhan) 第三輪實測:模型改用 `**(1) 總公司**` 標示廠址。
+ * `**` 因此進了廠址名,一路帶到對帳表與桑基節點上。排版不是內容。
+ */
+describe("markdown 強調標記不進資料", () => {
+  const BOLD = `
+| 報告邊界 | 類型 | 溫室氣體排放量 (公噸 CO2e/年) | 溫室氣體排放量各類別總和 (公噸 CO2e/年) |
+|---|---|---|---|
+| **(1) 總公司** | | | |
+| 類別一 | 1.1 固定式燃燒 | 0.4375 | 0.4375 |
+| 直接與間接溫室氣體總排放量-所在地基準 (公噸 CO2e/年) | | 0.4375 | |
+`.trim();
+
+  it("廠址名不含 ** 標記", () => {
+    const parsed = parseTable38(BOLD);
+    const sites = Array.from(new Set(parsed.rows.map((row) => row.site)));
+    expect(sites).toEqual(["(1) 總公司"]);
+  });
+
+  it("剝除標記後仍能完成勾稽", () => {
+    const parsed = parseTable38(BOLD);
+    expect(parsed.unparsedRows).toEqual([]);
+    expect(reconcileTable38(parsed).isReconciled).toBe(true);
+  });
+});
+
+/**
+ * Info: (20260803 - Tzuhan) 三層桑基圖(Issue C)。驗的是圖的「語意」而非外觀:
+ * 單位、層次、以及「沒畫的東西有沒有被說出來」。
+ */
+describe("匯入報告的三層桑基圖", () => {
+  const parsed = parseTable38(TABLE_38_LAYOUT_B);
+  const reconciled = reconcileTable38(parsed, {
+    companyTotalTonne: COMPANY_TOTAL,
+  });
+  const { entries } = toLedgerEntries(parsed, reconciled, { tableNo: "表3.8" });
+  /**
+   * Info: (20260803 - Tzuhan) 帶 formatIsoCategory —— 與 hook 的實際用法一致。
+   * 不帶時圖上會印 CATEGORY_1,那對查核者不可讀;純函數無從得知語言,
+   * 顯示名只能由呼叫端注入。
+   */
+  const block = buildCarbonChartBlock(
+    CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY,
+    {
+      entries,
+      pending: [],
+      scopeSubtotals: {},
+      totalCo2eKg: "0",
+      computedAt: new Date().toISOString(),
+    },
+    {
+      ...CARBON_CHART_DEFAULT_LABELS,
+      formatIsoCategory: (category: string) =>
+        formatIsoCategoryLabel(category, "zh_tw"),
+    },
+  );
+
+  it("使用自己的錨點(與憑證桑基圖並存不互相覆蓋)", () => {
+    expect(block).toContain("carbon-chart:IMPORTED_EMISSION_SANKEY:start");
+    expect(block).not.toContain("carbon-chart:EMISSION_SANKEY:start");
+  });
+
+  /**
+   * Info: (20260803 - Tzuhan) 單位必須是公噸,與原文表格一致。
+   * 若印公斤(2591861.5),圖上的數字就與原文對不上,對帳的意義隨之消失。
+   */
+  it("數值為公噸,與原文表格逐格對得上", () => {
+    // Info: (20260803 - Tzuhan) 屏東 1.1 單獨為 2591.8615,第一層逐格對得上原文
+    expect(block).toContain("2814.0773");
+    expect(block).not.toContain("2814077.3");
+  });
+
+  /**
+   * Info: (20260803 - Tzuhan) 第二層同一組節點對只能出現一次。
+   *
+   * 三個廠址共用類別節點,「類別一 → 1.1」同時來自總公司(0.4375)與屏東(2591.8615)。
+   * 若原樣輸出兩行,就是在賭 mermaid 會替我們加總 —— 它也可能畫成兩條重疊的平行線。
+   * 這條測試守的不是數字,是「不依賴渲染器未明文保證的行為」。
+   */
+  it("第二層同一組節點對只出現一次且已加總", () => {
+    const links = block
+      .split("\n")
+      .filter((line) => /^".+","\S+",[\d.]+$/.test(line.trim()));
+    const pairs = links.map((line) => line.split(",").slice(0, 2).join(","));
+    expect(new Set(pairs).size).toBe(pairs.length);
+    expect(block).toContain('"1.1",2592.299');
+  });
+
+  /**
+   * Info: (20260803 - Tzuhan) 桑基圖不得憑空生出或吃掉流量:第二層總和 = 第一層總和。
+   */
+  it("第二層總流量等於第一層總流量", () => {
+    const weightsOf = (predicate: (source: string) => boolean): number =>
+      block
+        .split("\n")
+        .map((line) => line.trim().match(/^"(.+?)","(.+?)",([\d.]+)$/))
+        .filter((m): m is RegExpMatchArray => Boolean(m) && predicate(m![1]))
+        .reduce((sum, m) => sum + Number(m[3]), 0);
+
+    const layer1 = weightsOf((source) => !source.startsWith("類別"));
+    const layer2 = weightsOf((source) => source.startsWith("類別"));
+    expect(Math.abs(layer1 - layer2)).toBeLessThan(0.001);
+  });
+
+  it("第一層為廠址 → 類別", () => {
+    expect(block).toContain('"(1) 總公司"');
+    expect(block).toContain("類別一");
+  });
+
+  it("第二層為類別 → 排放形式(子代碼)", () => {
+    expect(block).toContain('"1.1"');
+    expect(block).toContain('"2.1"');
+  });
+
+  // Info: (20260803 - Tzuhan) 零權重連結在 sankey 沒有意義;但不畫的必須說出來
+  it("零與 NA/NS 不畫,且列在圖下方", () => {
+    expect(block).toContain("未畫出的項目");
+    expect(block).toContain("1.3");
+  });
+
+  it("標題帶基準與單位(沒有單位的流量圖無從判讀量級)", () => {
+    expect(block).toContain("所在地基準");
+    expect(block).toContain("公噸 CO2e");
+  });
+
+  /**
+   * Info: (20260803 - Tzuhan) 計畫的驗收條件:總流入 = 總流出 = 8332.581(容差內)。
+   * 桑基圖的第一層(廠址 → 類別)加總即全公司總量,對不上就是圖在說謊。
+   */
+  it("總流入等於原文全公司總量", () => {
+    const siteToCategory = block
+      .split("\n")
+      .filter((line) => /^"\(\d+\)/.test(line))
+      .map((line) => line.slice(line.lastIndexOf(",") + 1));
+    const total = siteToCategory.reduce((sum, value) => sum + Number(value), 0);
+    // Info: (20260803 - Tzuhan) 0.001 公噸容差,與勾稽同一個標準(發布數字的四捨五入)
+    expect(Math.abs(total - Number(COMPANY_TOTAL))).toBeLessThanOrEqual(0.001);
+  });
+});
+
+/**
+ * Info: (20260804 - Tzuhan) 併入匯入項目(mergeImportedLedgerEntries)。
+ *
+ * 這份合併規則原本在 hook 與建表兩處各寫一次。抽成純函數之後才測得到 ——
+ * 而它守的三件事都是「錯了不會當場報錯,只會讓總量默默不對」的那種。
+ */
+describe("匯入項目併入帳本", () => {
+  const makeEntry = (
+    activityKey: string,
+    co2eKg: string,
+    provenance?: LedgerProvenanceEnum,
+  ): IComputedLedgerEntry => ({
+    activityKey,
+    scopeCategory: GhgProtocolCategory.SCOPE_1_DIRECT,
+    sourceName: activityKey,
+    quantityRaw: co2eKg,
+    convertedQuantity: co2eKg,
+    convertedUnit: MeasurementUnit.TONNE,
+    co2eKg,
+    factor: { factorId: "x", name: "x", value: "1", unit: "kg", source: "x" },
+    ...(provenance ? { provenance } : {}),
+  });
+
+  const computed = makeEntry("voucher:1", "100");
+  const imported = makeEntry(
+    "imported:location:總公司:1.1",
+    "500",
+    LedgerProvenanceEnum.IMPORTED,
+  );
+
+  it("重複匯入同一筆是取代而非附加(總量不會翻倍)", () => {
+    const once = mergeImportedLedgerEntries(undefined, [imported]);
+    const twice = mergeImportedLedgerEntries(once, [imported]);
+    expect(twice.entries).toHaveLength(1);
+    expect(twice.totalCo2eKg).toBe("500");
+  });
+
+  it("憑證算出來的項目不因匯入而消失", () => {
+    const base = mergeImportedLedgerEntries(undefined, [computed]);
+    const merged = mergeImportedLedgerEntries(base, [imported]);
+    expect(merged.entries.map((e) => e.activityKey)).toContain("voucher:1");
+    expect(merged.totalCo2eKg).toBe("600");
+  });
+
+  it("小計與總計走同一份實作(明細加起來等於小計)", () => {
+    const merged = mergeImportedLedgerEntries(undefined, [computed, imported]);
+    const subtotalSum = Object.values(merged.scopeSubtotals).reduce(
+      (sum, value) => sum + Number(value),
+      0,
+    );
+    expect(subtotalSum).toBe(Number(merged.totalCo2eKg));
   });
 });
