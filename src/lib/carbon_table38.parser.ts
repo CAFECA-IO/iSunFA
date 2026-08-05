@@ -22,6 +22,7 @@ import {
   TABLE38_HEADER_TOKENS,
   TABLE38_SITE_INDEX_PATTERN,
   TABLE38_SITE_KEYWORDS,
+  TABLE38_NO_SUBITEM_TOKEN,
   TABLE38_STANDALONE_SITE_PATTERN,
   TABLE38_SITE_TOTAL_TOKEN,
 } from "@/constants/table38_layout";
@@ -322,8 +323,22 @@ export function parseTable38(markdown: string): IParsedTable38 {
 
     if (!subCategoryCell) {
       // Info: (20260803 - Tzuhan) 純標題列不算未解析(它們本來就沒有資料)
-      const hasQuantity = cells.some((cell) => readQuantityCell(cell) !== null);
-      if (hasQuantity) unparsedRows.push(line.trim());
+      const filled = cells.filter((cell) => cell.length > 0);
+      const quantities = filled.filter(
+        (cell) => readQuantityCell(cell) !== null,
+      );
+      /**
+       * Info: (20260805 - Tzuhan) 開放類別的「無細分項」標記列(見 TABLE38_NO_SUBITEM_TOKEN)。
+       * 前一行的類別標籤已產出該類別的資料列,這一行是同一筆資訊的重複 ——
+       * 不是資料,也不是讀不懂,所以兩邊都不記。
+       */
+      const isNoSubItemRow =
+        filled.length === 2 &&
+        quantities.length === 1 &&
+        filled.some((cell) => cell === TABLE38_NO_SUBITEM_TOKEN);
+      if (quantities.length > 0 && !isNoSubItemRow) {
+        unparsedRows.push(line.trim());
+      }
       return;
     }
     const anchorCell = subCategoryCell;
