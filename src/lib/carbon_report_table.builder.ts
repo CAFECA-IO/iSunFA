@@ -7,6 +7,9 @@
 import { MoneyUtil } from "@/lib/utils/money";
 import { ArticulationStatusEnum } from "@/constants/carbon_articulation";
 import { IComputedLedger } from "@/types/carbon_chatbot.types";
+import { SOURCE_TABLE_ANCHOR_PATTERN } from "@/constants/carbon_source_tables";
+import { isImportedEntry } from "@/lib/carbon_table38.ledger";
+import { summarizeLedgerEntries } from "@/lib/carbon_ledger_totals";
 
 // Info: (20260720 - Tzuhan) 表格注入錨點(HTML 註解:Markdown 渲染不可見、PDF 不輸出;重算時依此替換不動敘述)
 export const CARBON_DATA_TABLE_START = "<!-- carbon-data-table:start -->";
@@ -52,13 +55,19 @@ export const CARBON_DATA_TABLE_DEFAULT_LABELS: ICarbonDataTableLabels = {
 };
 
 // Info: (20260720 - Tzuhan) 徽章三態裁決(決定性):違反 > 有數據 > 不足
+/**
+ * Info: (20260805 - Luphia) 徽章與數據表必須看同一組項目。
+ * 原本用 `ledger.entries.length > 0`,而數據表已改為只列 COMPUTED 項目 ——
+ * 於是「只有匯入項目」的帳本會出現徽章 teal(已勾稽/有數據)、表格卻寫「資料不足」。
+ * teal 的語意是「這些數字由本系統的決定論引擎產出」,拿它去蓋原文照錄的數字是錯的宣稱。
+ */
 export const deriveDataBadgeState = (
   ledger: IComputedLedger | undefined,
 ): CarbonDataBadgeStateEnum => {
   if (ledger?.articulation?.status === ArticulationStatusEnum.VIOLATED) {
     return CarbonDataBadgeStateEnum.VIOLATED;
   }
-  if (ledger && ledger.entries.length > 0) {
+  if (ledger && ledger.entries.some((entry) => !isImportedEntry(entry))) {
     return CarbonDataBadgeStateEnum.RECONCILED;
   }
   return CarbonDataBadgeStateEnum.INSUFFICIENT;
@@ -80,7 +89,18 @@ export const buildCarbonDataTable = (
   if (ledger?.articulation?.status === ArticulationStatusEnum.VIOLATED) {
     return wrap(`> ${labels.frozen}`);
   }
-  if (!ledger || ledger.entries.length === 0) {
+  /**
+   * Info: (20260803 - Tzuhan) 系統計算表格**只列本系統算出來的項目**(Issue B)。
+   *
+   * 匯入的表3.8 項目同樣進 ledger(桑基圖與總量需要),但它們已經以「原文照錄」
+   * 的形式出現在同一節裡。若這裡也列一次,同一組數字會在一節內出現兩遍 ——
+   * 一遍標著原文、一遍看起來像本系統算的,而查核者無從判斷哪個才是我們的主張。
+   * 「兩者並存但絕不合併」的執行面就在這一行。
+   */
+  const computedEntries = ledger?.entries.filter(
+    (entry) => !isImportedEntry(entry),
+  );
+  if (!ledger || !computedEntries || computedEntries.length === 0) {
     return wrap(`> _${labels.insufficient}_`);
   }
 
@@ -93,7 +113,7 @@ export const buildCarbonDataTable = (
   lines.push("| --- | --- | --- | --- | ---: |");
   const scopeLabel = (scope: string): string =>
     labels.formatScope?.(scope) ?? scope;
-  ledger.entries.forEach((entry) => {
+  computedEntries.forEach((entry) => {
     lines.push(
       `| ${entry.sourceName} | ${scopeLabel(entry.scopeCategory)} | ${MoneyUtil.formatDynamic(entry.convertedQuantity, 3)} ${entry.convertedUnit} | ${entry.factor.value}(${entry.factor.source}) | ${MoneyUtil.formatDynamic(entry.co2eKg, 3)} |`,
     );
@@ -104,13 +124,27 @@ export const buildCarbonDataTable = (
   lines.push("");
   lines.push(`| ${labels.colScope} | ${labels.colCo2e} |`);
   lines.push("| --- | ---: |");
-  Object.entries(ledger.scopeSubtotals).forEach(([scope, subtotal]) => {
+  /**
+   * Info: (20260805 - Luphia) 小計與總計必須由**這張表列出的項目**算出來,
+   * 不可讀 ledger.scopeSubtotals / ledger.totalCo2eKg。
+   *
+   * 那兩個欄位在匯入之後涵蓋 COMPUTED + IMPORTED(applyImportedLedgerEntries 重算過),
+   * 而上面的明細只列 COMPUTED。混用的結果是同一張表裡「明細加起來 ≠ 小計」——
+   * 本檔開頭與 carbon_ledger_totals 都說過,那在查帳系統裡是致命的:
+   * 查核者會先懷疑每一個數字,而不是懷疑這是個顯示 bug。
+   *
+   * 走 summarizeLedgerEntries 而非在這裡自己累加,理由同前:累加只能有一份實作。
+   * 匯入項目的總量由「原文照錄」表格與勾稽揭露區塊各自負責交代,不從這裡出。
+   */
+  const { scopeSubtotals, totalCo2eKg } =
+    summarizeLedgerEntries(computedEntries);
+  Object.entries(scopeSubtotals).forEach(([scope, subtotal]) => {
     lines.push(
       `| ${scopeLabel(scope)} | ${MoneyUtil.formatDynamic(subtotal, 3)} |`,
     );
   });
   lines.push(
-    `| **${labels.total}** | **${MoneyUtil.formatDynamic(ledger.totalCo2eKg, 3)}** |`,
+    `| **${labels.total}** | **${MoneyUtil.formatDynamic(totalCo2eKg, 3)}** |`,
   );
 
   if (ledger.pending.length > 0) {
@@ -125,14 +159,26 @@ export const buildCarbonDataTable = (
 /**
  * Info: (20260720 - Tzuhan) 丟棄 LLM 草稿夾帶的 markdown 表格(fence-aware):
  * 數據段落的表格唯一合法來源是本模組;LLM 敘述中的 |...| 表格列(含分隔列)整塊移除
+ *
+ * Info: (20260801 - Tzuhan) 例外:落在 `carbon-source-table` 錨點之間的表格是**自上傳文件
+ * 逐字照錄**的原文,不是模型產生的,必須保留(見 issue_drafts/inventory_table_import)。
+ * 這道剝除原本假設「表格 = LLM 產生 = 不可信」,而該假設在匯入原文表格後不再成立;
+ * 分辨的依據是錨點,不是內容 —— 內容無從分辨,來源可以。
  */
 export const stripLlmTables = (content: string): string => {
   const lines = content.split("\n");
   const kept: string[] = [];
   let inFence = false;
+  let inSourceTable = false;
   lines.forEach((line) => {
     if (/^\s*(```|~~~)/.test(line)) inFence = !inFence;
-    if (!inFence && /^\s*\|.*\|\s*$/.test(line)) return;
+    const anchor = line.match(SOURCE_TABLE_ANCHOR_PATTERN);
+    if (anchor) {
+      inSourceTable = anchor[2] === "start";
+      kept.push(line);
+      return;
+    }
+    if (!inFence && !inSourceTable && /^\s*\|.*\|\s*$/.test(line)) return;
     kept.push(line);
   });
   // Info: (20260720 - Tzuhan) 移除表格後可能留下連續空行,收斂為單一空行

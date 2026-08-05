@@ -12,7 +12,7 @@ import {
   type Schema,
 } from "@/services/chat.service";
 import {
-  LLM_SYNC_TIMEOUT_MS,
+  LLM_DIAGRAM_TIMEOUT_MS,
   LLM_TEMPERATURE,
   LLM_MAX_OUTPUT_TOKENS,
   LlmTaskKeyEnum,
@@ -109,7 +109,7 @@ ${paragraphContent}`;
         DIAGRAM_RESPONSE_SCHEMA,
         {
           temperature: LLM_TEMPERATURE.EXTRACTION,
-          timeoutMs: LLM_SYNC_TIMEOUT_MS,
+          timeoutMs: LLM_DIAGRAM_TIMEOUT_MS,
           taskKey: LlmTaskKeyEnum.DIAGRAM_EXTRACTION,
           // Info: (20260730 - Tzuhan) 沿革時間軸的節點數可達 30 筆,思考 token 又與輸出共用額度,故給足空間
           maxOutputTokens: LLM_MAX_OUTPUT_TOKENS.REPORT_IMPORT,

@@ -5,6 +5,7 @@ import {
   ChatService,
   isLlmTimeoutError,
   isLlmQuotaError,
+  isLlmTransportError,
 } from "@/services/chat.service";
 import {
   LLM_TIMEOUT_ERROR_MARKER,
@@ -85,9 +86,7 @@ describe("ChatService sync-path guards (#6515)", () => {
       timeoutMs: 5_000,
       taskKey: LlmTaskKeyEnum.CARBON_CHAT,
     });
-    const assertion = expect(promise).rejects.toThrow(
-      LLM_TIMEOUT_ERROR_MARKER,
-    );
+    const assertion = expect(promise).rejects.toThrow(LLM_TIMEOUT_ERROR_MARKER);
     await jest.advanceTimersByTimeAsync(5_001);
     await assertion;
 
@@ -113,7 +112,9 @@ describe("ChatService sync-path guards (#6515)", () => {
   });
 
   it("should classify timeout vs quota errors distinctly", () => {
-    const timeoutError = new Error(`${LLM_TIMEOUT_ERROR_MARKER}: exceeded 45000ms`);
+    const timeoutError = new Error(
+      `${LLM_TIMEOUT_ERROR_MARKER}: exceeded 45000ms`,
+    );
     const quotaError = new Error("429 RESOURCE_EXHAUSTED: quota");
     expect(isLlmTimeoutError(timeoutError)).toBe(true);
     expect(isLlmQuotaError(timeoutError)).toBe(false);
@@ -126,5 +127,55 @@ describe("ChatService sync-path guards (#6515)", () => {
     // Info: (20260716 - Emily) 護欄:溫度單一來源(萃取可重現性依賴 EXTRACTION = 0)
     expect(LLM_TEMPERATURE.EXTRACTION).toBe(0);
     expect(LLM_TEMPERATURE.CHAT).toBe(0.2);
+  });
+});
+
+/**
+ * Info: (20260803 - Tzuhan) 傳輸層錯誤必須與其他 LLM 錯誤分開辨識,因為兩者的**可重試性相反**:
+ * 傳輸失敗代表請求沒抵達,重送同一份輸入可能成功;截斷/schema 無效代表模型回了但不合用,
+ * 同輸入必得同結果,重試只是把一次必然的失敗變成三次並多付兩次 token。
+ *
+ * 實測(20260803):一次連線中斷讓 ch3~ch10 共八章連鎖失敗(latency 從 70s 掉到 2.5s),
+ * 而當時匯入路徑沒有任何重試,八章直接報廢。
+ */
+describe("isLlmTransportError", () => {
+  it("辨識 SDK 的 fetch failed(實測的訊息原文)", () => {
+    const error = new Error(
+      "[GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent: fetch failed",
+    );
+    expect(isLlmTransportError(error)).toBe(true);
+  });
+
+  it("辨識其他傳輸層訊息", () => {
+    [
+      "ECONNRESET",
+      "socket hang up",
+      "ETIMEDOUT",
+      "getaddrinfo ENOTFOUND",
+    ].forEach((message) => {
+      expect(isLlmTransportError(new Error(message))).toBe(true);
+    });
+  });
+
+  it("不把可重現的失敗當成傳輸失敗(否則會白重試並多付 token)", () => {
+    [
+      "Array must contain at most 60 element(s)",
+      "Unexpected token in JSON",
+      "429 RESOURCE_EXHAUSTED",
+    ].forEach((message) => {
+      expect(isLlmTransportError(new Error(message))).toBe(false);
+    });
+  });
+
+  it("非 Error 值不誤判", () => {
+    expect(isLlmTransportError("fetch failed")).toBe(false);
+    expect(isLlmTransportError(null)).toBe(false);
+  });
+
+  // Info: (20260803 - Tzuhan) 逾時與傳輸失敗是不同的處置(前者已送達但太久,後者沒送到)
+  it("與逾時錯誤互不重疊", () => {
+    const timeout = new Error(`${LLM_TIMEOUT_ERROR_MARKER} exceeded`);
+    expect(isLlmTimeoutError(timeout)).toBe(true);
+    expect(isLlmTransportError(timeout)).toBe(false);
   });
 });

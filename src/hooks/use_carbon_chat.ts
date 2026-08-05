@@ -14,6 +14,7 @@ import {
   IInventoryExtraction,
   IActivityRecord,
   IComputedLedger,
+  IComputedLedgerEntry,
   IReportCategory,
   IReportParagraph,
   IArchivedSessionEntry,
@@ -26,6 +27,16 @@ import {
   deriveDataBadgeState,
   type ICarbonDataTableLabels,
 } from "@/lib/carbon_report_table.builder";
+// Info: (20260801 - Tzuhan) 段落版面順序由組裝器決定(Issue A):敘述 → 原文表格 → 系統表格 → 對帳
+import { composeParagraphContent } from "@/lib/carbon_paragraph_composer";
+import {
+  buildImportedLedger,
+  type IImportedLedgerResult,
+} from "@/lib/carbon_table38.pipeline";
+import { isImportedEntry } from "@/lib/carbon_table38.ledger";
+import { summarizeLedgerEntries } from "@/lib/carbon_ledger_totals";
+import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
+import { CARBON_SOURCE_TABLE_MAX_PER_PARAGRAPH } from "@/constants/carbon_source_tables";
 import {
   buildCarbonChartBlock,
   insertCarbonChartBlock,
@@ -980,6 +991,53 @@ export const useCarbonChat = () => {
     [user?.address, activeSessionId],
   );
 
+  /**
+   * Info: (20260803 - Tzuhan) 把匯入的表3.8 項目併進 computedLedger(Issue B)。
+   *
+   * 三個刻意的決定:
+   * 1. **以 activityKey 取代同一筆**,不是附加。重複匯入同一份報告是常態
+   *    (改一段、重跑一次),附加會讓總量每匯入一次就翻一倍。
+   * 2. **只換 IMPORTED 的部分**,COMPUTED 項目原樣保留 ——
+   *    憑證算出來的東西不該因為匯入一份外部報告而消失。
+   * 3. 小計與總計走共用的 summarizeLedgerEntries,與後端 /calculate 同一份實作;
+   *    前端自己再寫一次累加,遲早會出現「明細加起來不等於小計」。
+   */
+  const applyImportedLedgerEntries = useCallback(
+    (entries: IComputedLedgerEntry[]) => {
+      if (entries.length === 0) return;
+      const channel = buildCarbonChatChannel(
+        user?.address ?? "anonymous",
+        activeSessionId,
+      );
+      setInventoryStates((prev) => {
+        const base = prev[channel] ?? createEmptyInventoryState();
+        const incomingKeys = new Set(entries.map((entry) => entry.activityKey));
+        const kept = (base.computedLedger?.entries ?? []).filter(
+          (entry) =>
+            !isImportedEntry(entry) || !incomingKeys.has(entry.activityKey),
+        );
+        const nextEntries = [...kept, ...entries];
+        const { scopeSubtotals, totalCo2eKg } =
+          summarizeLedgerEntries(nextEntries);
+        return {
+          ...prev,
+          [channel]: {
+            ...base,
+            computedLedger: {
+              ...base.computedLedger,
+              entries: nextEntries,
+              pending: base.computedLedger?.pending ?? [],
+              scopeSubtotals,
+              totalCo2eKg,
+              computedAt: new Date().toISOString(),
+            },
+          },
+        };
+      });
+    },
+    [user?.address, activeSessionId],
+  );
+
   // Info: (20260721 - Tzuhan) #53 匯入狀態(定義於此供 UI;主邏輯 importBookEsgRecords 移至
   // Info: (20260721 - Tzuhan) generateParagraphDraft 之後 — 匯入成功需自動生成數據段落草稿)
   const [isImportingBookRecords, setIsImportingBookRecords] =
@@ -1174,7 +1232,14 @@ export const useCarbonChat = () => {
       pageIndex?: Map<string, number>,
     ) => {
       interface IImportChunkPayload {
-        segments: { paragraphId: string; title: string; content: string }[];
+        segments: {
+          paragraphId: string;
+          title: string;
+          content: string;
+          // Info: (20260803 - Tzuhan) 原文照錄的表格。API 一直有回,但這裡漏宣告 →
+          // Info: (20260803 - Tzuhan) 逐章合併時被靜默丟棄,Issue A 的表格一張都沒進過報告。
+          sourceTables?: ICarbonSourceTable[];
+        }[];
         unmapped: string[];
         activities?: IActivityRecord[];
       }
@@ -1219,13 +1284,43 @@ export const useCarbonChat = () => {
         );
         // Info: (20260730 - Tzuhan) 該章各節的起始頁 → 頁碼範圍;缺任何一節的索引就不帶範圍(整章退回送全文),
         // Info: (20260730 - Tzuhan) 寧可多花 token,也不能因為索引不全而漏送內容
-        const chapterPages = CARBON_REPORT_OUTLINE.filter(
+        const chapterSections = CARBON_REPORT_OUTLINE.filter(
           (section) => section.chapterId === chapter.id,
-        ).map((section) => pageIndex?.get(section.id));
+        );
+        const chapterPages = chapterSections.map((section) =>
+          pageIndex?.get(section.id),
+        );
         if (chapterPages.length > 0 && chapterPages.every((page) => !!page)) {
           const pages = chapterPages as number[];
+          /**
+           * Info: (20260803 - Tzuhan) 上界取「下一章第一節的起始頁」,不是本章最後一節的起始頁。
+           *
+           * 索引只記每節的**起始**頁,所以 max(起始頁) 等於「最後一節開始的地方」——
+           * 那一節的內容全部在它之後。實測代價:第三章上界算成 p.41(3.6 節起始),
+           * 而表3.8 跨 p.41–43 → 42、43 頁從未送進模型,整張表無聲消失;
+           * 表2.2(p.15,ch2 上界 15)與表4.2(p.46–47,ch4 上界 47)同樣被切掉尾段,
+           * 落地的是只有表頭的半張表。同一個成因,三張表受害。
+           *
+           * 章節在大綱裡是連續的,所以下一章第一節的起始頁就是本章的自然終點 ——
+           * 這是推導出來的邊界,不是猜一個緩衝頁數。最後一章沒有下一節,不帶上界(送到文末)。
+           */
+          const lastSection = chapterSections[chapterSections.length - 1];
+          const globalIndex = CARBON_REPORT_OUTLINE.findIndex(
+            (section) => section.id === lastSection.id,
+          );
+          const nextSection = CARBON_REPORT_OUTLINE[globalIndex + 1];
+          const nextPage = nextSection
+            ? pageIndex?.get(nextSection.id)
+            : undefined;
           formData.append("fromPage", String(Math.min(...pages)));
-          formData.append("toPage", String(Math.max(...pages)));
+          /**
+           * Info: (20260803 - Tzuhan) 只有在下一節的起始頁已知時才帶上界。
+           * 未知(或本章是最後一章)就不帶 —— 後端會送全文。那比帶一個會切掉表格的
+           * 上界好:多花 token 是成本,漏送內容是錯誤,而且是無聲的錯誤。
+           */
+          if (nextPage && nextPage > Math.max(...pages)) {
+            formData.append("toPage", String(nextPage));
+          }
         }
         try {
           const res = await request<{ payload: IImportChunkPayload | null }>(
@@ -1250,7 +1345,7 @@ export const useCarbonChat = () => {
 
       const segmentsById = new Map<
         string,
-        { title: string; parts: string[] }
+        { title: string; parts: string[]; sourceTables: ICarbonSourceTable[] }
       >();
       const unmapped: string[] = [];
       let activities: IActivityRecord[] = [];
@@ -1260,8 +1355,26 @@ export const useCarbonChat = () => {
           const bucket = segmentsById.get(segment.paragraphId) ?? {
             title: segment.title,
             parts: [],
+            sourceTables: [],
           };
           bucket.parts.push(segment.content);
+          /**
+           * Info: (20260803 - Tzuhan) 表格隨敘述一起累積。以表號去重:
+           * 同一節的內容可能被切成多段回來,同一張表因此可能重複出現,
+           * 而重複的表在報告上是兩張一樣的表 —— 讀者無從判斷哪張才是原文。
+           */
+          (segment.sourceTables ?? []).forEach((table) => {
+            if (
+              bucket.sourceTables.some((kept) => kept.tableNo === table.tableNo)
+            )
+              return;
+            if (
+              bucket.sourceTables.length >=
+              CARBON_SOURCE_TABLE_MAX_PER_PARAGRAPH
+            )
+              return;
+            bucket.sourceTables.push(table);
+          });
           segmentsById.set(segment.paragraphId, bucket);
         });
         unmapped.push(...chunk.unmapped);
@@ -1276,6 +1389,7 @@ export const useCarbonChat = () => {
             paragraphId,
             title: bucket.title,
             content: bucket.parts.join("\n\n").trim(),
+            sourceTables: bucket.sourceTables,
           }),
         ),
         unmapped,
@@ -1404,6 +1518,7 @@ export const useCarbonChat = () => {
                 paragraphId: string;
                 title: string;
                 content: string;
+                sourceTables?: ICarbonSourceTable[];
               }[];
               unmapped: string[];
               activities: IActivityRecord[];
@@ -1562,7 +1677,15 @@ export const useCarbonChat = () => {
    */
   const generateParagraphDiagram = useCallback(
     async (paragraphId: string, contentOverride?: string): Promise<void> => {
-      if (!findDiagramTemplateForParagraph(paragraphId)) return;
+      /**
+       * Info: (20260803 - Tzuhan) 沒有對應模板就跳過,但**不再靜默**。
+       * 實測「所有圖表不見了」時,前端零 log、後端零請求,無法分辨是沒觸發、
+       * 被過濾掉、還是呼叫失敗 —— 只能回頭猜。決策點沒有痕跡,現場就無法還原。
+       */
+      if (!findDiagramTemplateForParagraph(paragraphId)) {
+        console.info("[carbon-chat] diagram skipped: no template", paragraphId);
+        return;
+      }
 
       // Info: (20260730 - Tzuhan) 內容優先取呼叫端傳入者:匯入落地是在 setSessionsData 的同一個 tick 內
       // Info: (20260730 - Tzuhan) 接著呼叫本函式,此時 closure 捕獲的 sessionsData 還是「匯入前」的舊值,
@@ -1666,6 +1789,10 @@ export const useCarbonChat = () => {
     const contentById = new Map(
       selected.map((item) => [item.paragraphId, item.content]),
     );
+    // Info: (20260801 - Tzuhan) 原文照錄的表格與該段敘述一起落地(Issue A)
+    const sourceTablesById = new Map(
+      selected.map((item) => [item.paragraphId, item.sourceTables ?? []]),
+    );
     // Info: (20260730 - Tzuhan) 來源標記:預覽卡已區分「逐字匯入」與「AI 草稿」(isDraft),
     // Info: (20260730 - Tzuhan) 落地時一併記錄,否則兩者在報告裡完全分不出來(gap-fill 補的節內含「(待補: …)」佔位)
     const originById = new Map(
@@ -1687,16 +1814,53 @@ export const useCarbonChat = () => {
      * 原報告的數字仍看得到:它們留在匯入預覽與 unmapped,且原文件本身就是佐證附件。
      */
     const ledgerNow = computedLedgerRef.current;
+    /**
+     * Info: (20260803 - Tzuhan) 表3.8 → 帳本 + 對帳說明(Issue B)。
+     * 解析、勾稽、轉換、揭露全在 buildImportedLedger 這個純函數裡完成;
+     * 這裡只負責把結果寫進狀態 —— 業務流程留在 hook 裡就再也測不到,
+     * 而它的每一步都在決定數字能不能進帳本。
+     */
+    const importedLedgerById = new Map<string, IImportedLedgerResult>();
+    selected.forEach((item) => {
+      const tables = sourceTablesById.get(item.paragraphId) ?? [];
+      if (tables.length === 0) return;
+      const result = buildImportedLedger({ sourceTables: tables });
+      if (result.disclosure === null) return;
+      importedLedgerById.set(item.paragraphId, result);
+    });
+    const importedEntries = Array.from(importedLedgerById.values()).flatMap(
+      (result) => result.entries,
+    );
+    /**
+     * Info: (20260801 - Tzuhan) 改由組裝器決定版面順序(Issue A 第 4 點):
+     * 敘述 → 原文照錄的表格 → 系統計算表格 → 對帳。
+     * 原文表格帶自己的錨點命名空間,故不受 stripLlmTables 剝除;
+     * 系統表格仍只由 computedLedger 產出,兩者並存但絕不合併。
+     */
     const normalizeImported = (
       paragraph: IReportParagraph,
       imported: string,
-    ): string =>
-      paragraph.isDataDriven
-        ? injectDataTable(
-            stripLlmTables(imported),
-            buildCarbonDataTable(ledgerNow, dataTableLabels),
-          )
-        : imported;
+    ): string => {
+      const sourceTables = sourceTablesById.get(paragraph.id) ?? [];
+      // Info: (20260803 - Tzuhan) 有表3.8 的段落附上對帳說明(原文總量 vs 系統加總 + 揭露)
+      const reconciliation =
+        importedLedgerById.get(paragraph.id)?.disclosure ?? undefined;
+      if (!paragraph.isDataDriven) {
+        return sourceTables.length > 0
+          ? composeParagraphContent({
+              content: imported,
+              sourceTables,
+              reconciliation,
+            })
+          : imported;
+      }
+      return composeParagraphContent({
+        content: stripLlmTables(imported),
+        sourceTables,
+        dataTableBlock: buildCarbonDataTable(ledgerNow, dataTableLabels),
+        reconciliation,
+      });
+    };
     setSessionsData((prev) => {
       const session = prev[activeSessionId];
       if (!session?.reportData?.paragraphs) return prev;
@@ -1742,14 +1906,42 @@ export const useCarbonChat = () => {
     if (activities.length > 0) {
       applyInventoryExtraction({ activities });
     }
+    if (importedEntries.length > 0) {
+      applyImportedLedgerEntries(importedEntries);
+    } else {
+      /**
+       * Info: (20260803 - Tzuhan) 有表卻沒入帳時要留痕跡:對帳說明已寫在報告裡,
+       * 但開發時看 log 才分得出「沒有表3.8」與「有表3.8 但勾稽沒過」。
+       */
+      const blocked = Array.from(importedLedgerById.entries()).filter(
+        ([, result]) => result.blockedReason !== null,
+      );
+      if (blocked.length > 0) {
+        console.warn(
+          "[carbon-chat] imported ledger blocked",
+          blocked.map(([paragraphId, result]) => ({
+            paragraphId,
+            reason: result.blockedReason,
+          })),
+        );
+      }
+    }
     importActivitiesRef.current = [];
     setPendingImport(null);
     jumpToReportParagraph(selected[0].paragraphId);
 
     // Info: (20260730 - Tzuhan) 匯入落地後為有對應模板的段落補結構圖(治理架構/範疇對應/量化流程)。
     // Info: (20260730 - Tzuhan) 循序執行(專案禁 await-in-loop):一次一張,避免同時寫入同一份報告狀態。
-    void selected
-      .filter((item) => findDiagramTemplateForParagraph(item.paragraphId))
+    const diagramTargets = selected.filter((item) =>
+      findDiagramTemplateForParagraph(item.paragraphId),
+    );
+    // Info: (20260803 - Tzuhan) 這一行是為了讓「圖一張都沒出來」能被現場還原:
+    // Info: (20260803 - Tzuhan) 先知道有幾段進候選、是哪幾段,才談得上查為什麼沒畫。
+    console.info("[carbon-chat] diagram phase start", {
+      candidates: diagramTargets.map((item) => item.paragraphId),
+      selected: selected.length,
+    });
+    void diagramTargets
       .reduce(async (previous, item, index) => {
         await previous;
         // Info: (20260730 - Tzuhan) 逐張間隔:匯入本身已吃掉當分鐘的限流額度,連發必被 429 擋掉
@@ -1758,9 +1950,23 @@ export const useCarbonChat = () => {
             setTimeout(resolve, CARBON_DIAGRAM_THROTTLE_MS);
           });
         }
+        /**
+         * Info: (20260803 - Tzuhan) 這個階段要有進度,否則使用者看到的是「匯入完成但沒有圖」。
+         * 實測回報即為「所有圖表不見了」:它最長會跑近兩分鐘(單張逾時 + 退避重試 + 每張間隔),
+         * 期間畫面完全沒有痕跡,於是「還沒畫」與「畫不出來」在使用者眼裡完全相同。
+         */
+        setDraftNotice({
+          type: "loading",
+          text: t("carbon_chatbot.import_generating_diagrams", {
+            current: index + 1,
+            total: diagramTargets.length,
+          }),
+        });
         // Info: (20260730 - Tzuhan) 傳入剛落地的內容:此刻 setSessionsData 尚未生效,讀狀態會拿到空值
         await generateParagraphDiagram(item.paragraphId, item.content);
-      }, Promise.resolve());
+      }, Promise.resolve())
+      // Info: (20260803 - Tzuhan) 圖是加值不是前提:全部跑完(含失敗)即收掉提示,不留常駐 loading
+      .finally(() => setDraftNotice(null));
   }, [
     pendingImport,
     activeSessionId,
@@ -1768,6 +1974,8 @@ export const useCarbonChat = () => {
     jumpToReportParagraph,
     dataTableLabels,
     generateParagraphDiagram,
+    applyImportedLedgerEntries,
+    t,
   ]);
 
   const discardPendingImport = useCallback(() => {

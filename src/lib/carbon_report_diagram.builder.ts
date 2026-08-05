@@ -228,9 +228,26 @@ const escapeTimelineLabel = (label: string): string =>
 function buildTimeline(nodes: ICarbonDiagramNode[]): string {
   const eventsByPeriod = new Map<string, string[]>();
   const undated: string[] = [];
+  /**
+   * Info: (20260803 - Tzuhan) 時間標籤的集合。模型除了「事件 + 時間標籤」之外,
+   * 還會另外回傳一批**標籤本身**當節點(無 parent),實測產出這樣一列:
+   * `未標註時間 : 1966年01月 : 1968年06月 : …` —— 那是把時間軸自己再列一次。
+   *
+   * 本檔開頭寫過「不丟壞節點、只留好節點」,理由是少了中間層會呈現原文不存在的層級。
+   * 那條理由對 timeline 不成立:時間軸沒有層級,丟掉一個與軸重複的項目
+   * 不可能捏造出結構。這裡丟掉的不是事件,是軸的複本。
+   */
+  const periods = new Set(
+    nodes
+      .map((node) => node.parent)
+      .filter((parent): parent is string => parent !== undefined)
+      .map(escapeTimelineLabel),
+  );
   nodes.forEach((node) => {
     const label = escapeTimelineLabel(node.label);
     if (node.parent === undefined) {
+      // Info: (20260803 - Tzuhan) 無時間標籤且文字本身就是某個時間標籤 → 軸的複本,不是事件
+      if (periods.has(label)) return;
       undated.push(label);
       return;
     }

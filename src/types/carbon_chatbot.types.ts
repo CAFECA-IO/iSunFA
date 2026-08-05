@@ -1,7 +1,11 @@
 // Info: (20260708 - Tzuhan) Carbon Chatbot Framework
 // Info: (20260708 - Tzuhan) Define enterprise-grade types and enums for the Carbon Chatbot domain.
 
-import { GhgProtocolCategory } from "@/constants/esg";
+import { GhgProtocolCategory, Iso14064Category } from "@/constants/esg";
+import {
+  EmissionBasisEnum,
+  LedgerProvenanceEnum,
+} from "@/constants/imported_quantity";
 import {
   CarbonInventoryStep,
   ParagraphOriginEnum,
@@ -214,6 +218,28 @@ export interface IComputedLedgerEntry {
   ghgBreakdown?: Record<string, string>;
   gwpVersion?: string;
   factor: IFactorSnapshot;
+  /**
+   * Info: (20260803 - Tzuhan) 這筆數字是誰算的(Issue B)。未給即視為 COMPUTED ——
+   * 既有的憑證計算路徑因此零改動,不必為了新增欄位去回填每一個呼叫點。
+   * 但**桑基圖與對帳一律以此分流**:外部照抄的與本系統計算的絕不混為一張圖。
+   */
+  provenance?: LedgerProvenanceEnum;
+  /**
+   * Info: (20260803 - Tzuhan) 範疇二的報告基準。這份報告所在地與市場基準數字相同
+   * (沒有綠電採購),但一旦不同,把兩者都寫進同一個 ledger 就是同一度電算兩次。
+   * 故此維度必須存在於資料上,而不是靠「反正通常一樣」蒙過去。
+   */
+  emissionBasis?: EmissionBasisEnum;
+  /**
+   * Info: (20260803 - Tzuhan) 匯入項目的原始位置(廠址 + ISO 子代碼),供桑基圖三層與溯源。
+   * 只有 IMPORTED 有值 —— 憑證路徑的位置資訊在 evidence 裡。
+   */
+  importedOrigin?: {
+    site: string;
+    isoCategory: Iso14064Category;
+    subCategory: string;
+    tableNo: string;
+  };
   // Info: (20260720 - Tzuhan) #53 證據引用(桑基圖與 #54 證據鏈下鑽的資料來源;對話申報者無)
   evidence?: {
     esgRecordId: string;

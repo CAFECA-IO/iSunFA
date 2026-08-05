@@ -6,6 +6,7 @@ import {
   mergeInventoryExtraction,
   computeInventoryStep,
   describeInventoryStep,
+  applyComputedLedger,
   CARBON_INVENTORY_MIN_ACTIVITY_RECORDS,
 } from "@/lib/carbon_inventory";
 import { CarbonInventoryStep } from "@/constants/carbon_chatbot";
@@ -19,7 +20,13 @@ import {
   CarbonActivityRecordSchema,
   CarbonInventoryExtractionSchema,
 } from "@/validators";
-import { IActivityRecord } from "@/types/carbon_chatbot.types";
+import { LedgerProvenanceEnum } from "@/constants/imported_quantity";
+import {
+  IActivityRecord,
+  ICarbonInventoryState,
+  IComputedLedger,
+  IComputedLedgerEntry,
+} from "@/types/carbon_chatbot.types";
 
 const electricity = (quantity = "1,200,000"): IActivityRecord => ({
   scopeCategory: GhgProtocolCategory.SCOPE_2_INDIRECT,
@@ -239,5 +246,146 @@ describe("inventory validators (whitelist guardrails)", () => {
     expect(
       CarbonInventoryExtractionSchema.safeParse({ year: "1024" }).success,
     ).toBe(false);
+  });
+});
+
+/**
+ * Info: (20260805 - Luphia) applyComputedLedger 必須讓匯入項目跨重算存活。
+ * 這一組的存在理由是一個實際會發生的順序:confirmPendingImport 先送出活動、
+ * 再寫入表3.8 的分錄;活動簽章一變就觸發 /calculate,而 /calculate 只認得
+ * 憑證/活動算出來的項目 —— 回應整包蓋回來時,匯入的分錄不能一起被沖掉。
+ *
+ * 為什麼這件事值得一組獨立測試:失敗的表現是「報告寫著已寫入帳本,帳本卻是空的」。
+ * 那不是資料遺失,是報告在說謊,而總量看起來仍然合理,沒有人會發現。
+ */
+describe("applyComputedLedger — imported entries survive recalculation", () => {
+  const computedEntry = (): IComputedLedgerEntry => ({
+    activityKey: "esg|voucher-1",
+    scopeCategory: GhgProtocolCategory.SCOPE_2_INDIRECT,
+    sourceName: "外購電力",
+    quantityRaw: "2,500,000",
+    convertedQuantity: "2500000",
+    convertedUnit: MeasurementUnit.KWH,
+    co2eKg: "1235000",
+    factor: {
+      factorId: "f1",
+      name: "台電電力係數",
+      value: "0.494",
+      unit: "度(kwh)",
+      source: "台灣電力公司 2024",
+    },
+  });
+
+  const importedEntry = (
+    activityKey = "imported:LOCATION:(1) 總公司:1.1",
+    co2eKg = "2591861.5",
+  ): IComputedLedgerEntry => ({
+    activityKey,
+    scopeCategory: GhgProtocolCategory.SCOPE_1_DIRECT,
+    sourceName: "1.1 固定式燃燒",
+    quantityRaw: "—",
+    convertedQuantity: co2eKg,
+    convertedUnit: MeasurementUnit.KG,
+    co2eKg,
+    provenance: LedgerProvenanceEnum.IMPORTED,
+    factor: {
+      factorId: "imported",
+      name: "不適用(原文照錄)",
+      value: "—",
+      unit: "—",
+      source: "表3.8",
+    },
+  });
+
+  const serverLedger = (): IComputedLedger => ({
+    entries: [computedEntry()],
+    pending: [],
+    scopeSubtotals: { [GhgProtocolCategory.SCOPE_2_INDIRECT]: "1235000" },
+    totalCo2eKg: "1235000",
+    computedAt: "2026-08-05T00:00:00.000Z",
+  });
+
+  const stateWithImported = (
+    imported: IComputedLedgerEntry[],
+  ): ICarbonInventoryState => ({
+    ...createEmptyInventoryState(),
+    computedLedger: {
+      entries: imported,
+      pending: [],
+      scopeSubtotals: {},
+      totalCo2eKg: "0",
+      computedAt: "2026-08-04T00:00:00.000Z",
+    },
+  });
+
+  it("should preserve imported entries when /calculate returns a computed-only ledger", () => {
+    const next = applyComputedLedger(
+      stateWithImported([importedEntry()]),
+      serverLedger(),
+    );
+    const keys = next.computedLedger?.entries.map((e) => e.activityKey) ?? [];
+    // Info: (20260805 - Luphia) 兩者並存:伺服端算的與原文照錄的都在
+    expect(keys).toContain("esg|voucher-1");
+    expect(keys).toContain("imported:LOCATION:(1) 總公司:1.1");
+  });
+
+  it("should recompute subtotals and total over the merged entry set", () => {
+    const next = applyComputedLedger(
+      stateWithImported([importedEntry()]),
+      serverLedger(),
+    );
+    // Info: (20260805 - Luphia) 1235000 + 2591861.5,以字串 Decimal 精確相加(禁止原生浮點)
+    expect(next.computedLedger?.totalCo2eKg).toBe("3826861.5");
+    expect(
+      next.computedLedger?.scopeSubtotals[GhgProtocolCategory.SCOPE_1_DIRECT],
+    ).toBe("2591861.5");
+    expect(
+      next.computedLedger?.scopeSubtotals[GhgProtocolCategory.SCOPE_2_INDIRECT],
+    ).toBe("1235000");
+  });
+
+  it("should let the server win when both sides carry the same activityKey", () => {
+    const collide = importedEntry("esg|voucher-1", "999");
+    const next = applyComputedLedger(
+      stateWithImported([collide]),
+      serverLedger(),
+    );
+    expect(next.computedLedger?.entries).toHaveLength(1);
+    expect(next.computedLedger?.entries[0].co2eKg).toBe("1235000");
+    // Info: (20260805 - Luphia) 同鍵不得同時存在,否則同一筆排放被算兩次
+    expect(next.computedLedger?.totalCo2eKg).toBe("1235000");
+  });
+
+  it("should return the server ledger untouched when there is nothing imported to keep", () => {
+    const next = applyComputedLedger(
+      stateWithImported([computedEntry()]),
+      serverLedger(),
+    );
+    // Info: (20260805 - Luphia) 沒有 IMPORTED 就不該有任何額外行為(既有憑證路徑零影響)
+    expect(next.computedLedger).toEqual(serverLedger());
+  });
+
+  it("should keep the server articulation verdict as-is", () => {
+    const ledger: IComputedLedger = {
+      ...serverLedger(),
+      articulation: {
+        status: ArticulationStatusEnum.PASSED,
+        violations: [],
+        warnings: [],
+        checkedAt: "2026-08-05T00:00:00.000Z",
+      },
+    };
+    const next = applyComputedLedger(
+      stateWithImported([importedEntry()]),
+      ledger,
+    );
+    /**
+     * Info: (20260805 - Luphia) 質量守恆勾稽是對活動數據的期初+採購=消耗+期末做的,
+     * 匯入項目只有最終 CO2e、沒有庫存流量,本來就不在該檢查範圍內 ——
+     * 故此處刻意不重算也不清空,並以測試把這個決定釘住。
+     */
+    expect(next.computedLedger?.articulation?.status).toBe(
+      ArticulationStatusEnum.PASSED,
+    );
   });
 });

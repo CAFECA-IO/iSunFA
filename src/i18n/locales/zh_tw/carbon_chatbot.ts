@@ -127,6 +127,8 @@ export const carbonChatbot = {
   import_overwrite_warning: "將覆蓋既有內容",
   import_drafting_sections:
     "「{{name}}」缺漏小節 AI 草稿補齊中(第 {{current}}/{{total}} 批,依據上傳文件撰寫)…",
+  import_generating_diagrams:
+    "結構圖生成中({{current}}/{{total}})…報告已可閱讀,圖表會在完成後陸續出現。",
   import_draft_badge: "AI 草稿",
   import_unmapped: "無法對應大綱的內容({{count}} 段,不會匯入,可於對話中處理)",
   import_reset_note:

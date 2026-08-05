@@ -7,10 +7,12 @@ import {
   ChatService,
   isLlmQuotaError,
   isLlmTimeoutError,
+  isLlmTransportError,
   isLlmTruncatedError,
   SchemaType,
   type Schema,
 } from "@/services/chat.service";
+import { ZodError } from "zod";
 import { describeError } from "@/lib/utils/error_message";
 import {
   assessPdfTextLayer,
@@ -22,6 +24,8 @@ import { PdfTextLayerDecisionEnum } from "@/constants/pdf_text_layer";
 import { CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES } from "@/constants/carbon_chatbot";
 import {
   LLM_REPORT_IMPORT_TIMEOUT_MS,
+  LLM_TRANSPORT_RETRY_ATTEMPTS,
+  LLM_TRANSPORT_RETRY_DELAY_MS,
   LLM_MAX_OUTPUT_TOKENS,
   LLM_TEMPERATURE,
   LlmTaskKeyEnum,
@@ -34,11 +38,17 @@ import { GhgProtocolCategory } from "@/constants/esg";
 import { MeasurementUnit } from "@/constants/enums";
 import {
   CarbonReportImportLlmOutputSchema,
+  CarbonReportImportSegmentSchema,
   CarbonReportGapFillLlmOutputSchema,
   CarbonReportPageIndexLlmOutputSchema,
   CarbonActivityRecordSchema,
+  CarbonSourceTableSchema,
 } from "@/validators";
 import { ApiError, API_ERRORS } from "@/lib/utils/error_dictionary";
+import {
+  validateSourceTables,
+  type ICarbonSourceTable,
+} from "@/lib/carbon_source_table.builder";
 import { logger } from "@/lib/utils/logger";
 import { IActivityRecord } from "@/types/carbon_chatbot.types";
 
@@ -48,6 +58,11 @@ export interface IImportedSegment {
   // Info: (20260716 - Tzuhan) 顯示用標題(code + title,取自大綱非 LLM)
   title: string;
   content: string;
+  /**
+   * Info: (20260801 - Tzuhan) 該段自原文照錄的表格(已逐張裁決)。
+   * 與 content 分開的理由見 responseSchema 的註解:混在敘述裡會被剝除守門丟棄。
+   */
+  sourceTables?: ICarbonSourceTable[];
 }
 
 export interface IReportImportResult {
@@ -83,6 +98,37 @@ const buildImportResponseSchema = (
           content: {
             type: SchemaType.STRING,
             description: "該段原文,逐字照抄,嚴禁改寫、摘要或補充",
+          },
+          // Info: (20260801 - Tzuhan) 原文表格獨立成欄而非混在 content 內:
+          // Info: (20260801 - Tzuhan) 混在敘述裡會被 stripLlmTables 當成模型自產而丟棄,
+          // Info: (20260801 - Tzuhan) 而且無法帶出表號與頁碼(那兩者是回查原文的唯一線索)。
+          sourceTables: {
+            type: SchemaType.ARRAY,
+            items: {
+              type: SchemaType.OBJECT,
+              properties: {
+                tableNo: {
+                  type: SchemaType.STRING,
+                  description: "原文的表號,如 表3.8;照抄不改格式",
+                },
+                caption: {
+                  type: SchemaType.STRING,
+                  description: "原文的表格標題,逐字照抄",
+                },
+                sourcePages: {
+                  type: SchemaType.ARRAY,
+                  items: { type: SchemaType.NUMBER },
+                  description:
+                    "該表所在頁碼;跨頁表格給起訖兩頁(取自原文的 -- p.N/總頁 -- 標記)",
+                },
+                markdown: {
+                  type: SchemaType.STRING,
+                  description:
+                    "該表的 markdown;儲存格逐字照抄,嚴禁重排、合併、換算或補值",
+                },
+              },
+              required: ["tableNo", "caption", "sourcePages", "markdown"],
+            },
           },
         },
         required: ["paragraphId", "content"],
@@ -227,6 +273,42 @@ export class ReportImportService {
    * 「匯入失敗」,而且 log 是 `JSON.stringify(error)` 印出的 `{}` —— 無從判斷該加大額度、
    * 該等一下再試、還是該縮小範圍。錯誤分不清就等於沒有錯誤處理。
    */
+  /**
+   * Info: (20260803 - Tzuhan) 只對「傳輸層沒送到」的錯誤重試(見 isLlmTransportError)。
+   *
+   * 為什麼不一律重試:截斷與 schema 無效是模型確實回了但不合用,同一份輸入重送必得同樣結果,
+   * 重試只會把一次必然的失敗變成三次,還多付兩次 token。傳輸失敗相反 ——
+   * 請求根本沒抵達,重送完全可能成功。
+   *
+   * 為什麼非做不可:實測(20260803)一次連線中斷讓 ch3~ch10 共八章連鎖失敗
+   * (latency 從 70s 掉到 2.5s,顯然是同一條連線掛掉),而當時匯入路徑沒有任何重試,
+   * 八章直接報廢、使用者只看到「Failed to import the report」。
+   * 結構圖路徑早就有退避重試 —— 同一個系統對兩條路徑用兩種標準,
+   * 而比較貴、比較久、比較痛的那條反而沒有。
+   *
+   * 遞迴而非迴圈:專案禁 await-in-loop。深度上限 = 重試次數,無堆疊風險。
+   */
+  private async callLlmWithTransportRetry(
+    exec: () => Promise<string>,
+    scope: string,
+    attemptsLeft: number = LLM_TRANSPORT_RETRY_ATTEMPTS,
+  ): Promise<string> {
+    try {
+      return await exec();
+    } catch (error) {
+      if (attemptsLeft <= 0 || !isLlmTransportError(error)) throw error;
+      logger.warn("[ReportImportService] transport error, retrying", {
+        scope,
+        attemptsLeft,
+        detail: describeError(error).slice(0, 160),
+      });
+      await new Promise((resolve) => {
+        setTimeout(resolve, LLM_TRANSPORT_RETRY_DELAY_MS);
+      });
+      return this.callLlmWithTransportRetry(exec, scope, attemptsLeft - 1);
+    }
+  }
+
   private toImportError(error: unknown, scope: string): ApiError {
     const detail = describeError(error);
 
@@ -457,36 +539,65 @@ ${source.data}`;
 3. ${withActivities ? "activities:報告中的活動數據(用電量、油耗等),quantity 原樣照抄為字串,嚴禁換算;單位對不上列舉就整筆省略。" : "本次呼叫不需要萃取活動數據。"}
 4. 語言:${language ?? "zh-TW"}(僅影響你對標題語意的理解,內容一律照抄)。${scopeRule}
 
+【表格規則】
+T1. 原文的表格**不要**放進 content,一律放入該段的 sourceTables;content 只放敘述文字。
+T2. markdown 的儲存格內容逐字照抄:不重排欄列、不合併儲存格、不換算單位、不補值、不加總。
+T3. **「NA」「NS」「-」等非數值標記必須原樣保留,嚴禁改成 0 或空白。** 它們的語意各不相同
+    (不適用 / 不顯著 / 未填),改成 0 會讓「沒有盤查」看起來像「盤查後為零」。
+T4. 跨頁的同一張表合併為一張,sourcePages 給起訖兩頁;不同表號絕不合併。
+T5. tableNo 照抄原文表號(如「表3.8」);找不到表號的表格整張省略,不要自己編號。
+T6. 只收錄真正是表格的內容;條列式文字不要當成表格。
+
 【標準大綱】
 ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\n${source.data}` : ""}`;
 
+    const scopeLabel = options?.chapterId ?? "all";
     let raw: string;
     try {
-      raw = await this.getChatService().generateRawWithImages(
-        prompt,
-        source.isText
-          ? undefined
-          : [{ data: source.data, mimeType: source.mimeType }],
-        true,
-        buildImportResponseSchema(scopedSections, withActivities),
-        {
-          temperature: LLM_TEMPERATURE.EXTRACTION,
-          timeoutMs: LLM_REPORT_IMPORT_TIMEOUT_MS,
-          taskKey: LlmTaskKeyEnum.REPORT_IMPORT,
-          // Info: (20260730 - Tzuhan) 原樣照抄需要大輸出空間,且思考 token 與輸出共用此額度
-          // Info: (20260730 - Tzuhan) (原本 8192 導致內容較多的前四章全部被截斷,見 LLM_MAX_OUTPUT_TOKENS 註解)
-          maxOutputTokens: LLM_MAX_OUTPUT_TOKENS.REPORT_IMPORT,
-        },
+      raw = await this.callLlmWithTransportRetry(
+        () =>
+          this.getChatService().generateRawWithImages(
+            prompt,
+            source.isText
+              ? undefined
+              : [{ data: source.data, mimeType: source.mimeType }],
+            true,
+            buildImportResponseSchema(scopedSections, withActivities),
+            {
+              temperature: LLM_TEMPERATURE.EXTRACTION,
+              timeoutMs: LLM_REPORT_IMPORT_TIMEOUT_MS,
+              taskKey: LlmTaskKeyEnum.REPORT_IMPORT,
+              // Info: (20260730 - Tzuhan) 原樣照抄需要大輸出空間,且思考 token 與輸出共用此額度
+              // Info: (20260730 - Tzuhan) (原本 8192 導致內容較多的前四章全部被截斷,見 LLM_MAX_OUTPUT_TOKENS 註解)
+              maxOutputTokens: LLM_MAX_OUTPUT_TOKENS.REPORT_IMPORT,
+            },
+          ),
+        scopeLabel,
       );
     } catch (error) {
-      throw this.toImportError(error, options?.chapterId ?? "all");
+      throw this.toImportError(error, scopeLabel);
     }
 
     // Info: (20260714 - Tzuhan) 永不直接採信 LLM 輸出:JSON + Zod 雙重護欄
     let parsed;
     try {
       parsed = CarbonReportImportLlmOutputSchema.parse(JSON.parse(raw));
-    } catch {
+    } catch (parseError) {
+      /**
+       * Info: (20260803 - Tzuhan) 記下失敗的實際欄位再丟。原本是裸的 `catch {}`,
+       * ZodError 被整個丟掉,前端只看到「LLM structured output failed validation」——
+       * 哪一個欄位、哪一段不合形狀完全無從得知。我在同一個檔案裡已經為表號與活動數據
+       * 補過同樣的洞,這裡卻還留著。
+       */
+      logger.error("[ReportImportService] llm output schema invalid", {
+        chapterId: options?.chapterId ?? "all",
+        issues:
+          parseError instanceof ZodError
+            ? parseError.issues
+                .slice(0, 6)
+                .map((issue) => `${issue.path.join(".")}: ${issue.code}`)
+            : [describeError(parseError).slice(0, 120)],
+      });
       throw new ApiError(
         API_ERRORS.IS_LLM_OUTPUT_INVALID.code,
         API_ERRORS.IS_LLM_OUTPUT_INVALID.message,
@@ -497,8 +608,35 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
     // Info: (20260716 - Tzuhan) 白名單複驗:非法/範圍外段落 id 的內容降入 unmapped(不丟棄);同段多片段串接
     const scopedIds = new Set(scopedSections.map((section) => section.id));
     const contentById = new Map<string, string[]>();
+    const tablesById = new Map<string, ICarbonSourceTable[]>();
     const unmapped: string[] = [...parsed.unmapped];
-    parsed.segments.forEach((segment) => {
+    /**
+     * Info: (20260803 - Tzuhan) 逐段裁決:一段不合形狀只丟那一段,不賠掉整章。
+     * 實測第二章即因單一段落不合形狀而整章 500,十幾節原文全部落空。
+     */
+    const rawSegments = parsed.segments;
+    const validSegments = rawSegments.flatMap((candidate) => {
+      const segment = CarbonReportImportSegmentSchema.safeParse(candidate);
+      if (segment.success) return [segment.data];
+      const raw = candidate as Record<string, unknown> | null;
+      logger.warn("[ReportImportService] segment rejected", {
+        paragraphId: String(raw?.paragraphId ?? "").slice(0, 40),
+        contentChars:
+          typeof raw?.content === "string" ? raw.content.length : null,
+        issues: segment.error.issues
+          .slice(0, 3)
+          .map((issue) => `${issue.path.join(".")}: ${issue.code}`),
+      });
+      return [];
+    });
+    if (validSegments.length < rawSegments.length) {
+      logger.warn("[ReportImportService] segment adjudication", {
+        chapterId: options?.chapterId ?? "all",
+        received: rawSegments.length,
+        accepted: validSegments.length,
+      });
+    }
+    validSegments.forEach((segment) => {
       if (!scopedIds.has(segment.paragraphId)) {
         unmapped.push(segment.content);
         return;
@@ -506,26 +644,116 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
       const bucket = contentById.get(segment.paragraphId) ?? [];
       bucket.push(segment.content);
       contentById.set(segment.paragraphId, bucket);
+
+      /**
+       * Info: (20260801 - Tzuhan) 原文表格逐張裁決(壞一張丟一張,與 activities 同一原則)。
+       * 整批拒絕是錯的比例:一張表格格式不合,其餘段落與敘述都還是好的。
+       * 丟掉的表格記 log —— 沉默的缺表會讓使用者以為原文沒有那張表。
+       */
+      const accepted = tablesById.get(segment.paragraphId) ?? [];
+      (segment.sourceTables ?? []).forEach((candidate) => {
+        const table = CarbonSourceTableSchema.safeParse(candidate);
+        if (!table.success) {
+          /**
+           * Info: (20260802 - Tzuhan) 記下**被拒的實際值**,不只記 Zod 的錯誤碼。
+           * 實測時 log 只說 `tableNo: custom`,完全看不出模型給的是「表 3.6」還是「Table 3.6」——
+           * 我因此只能回頭猜 regex 該怎麼放寬。這與先前 API 400 只回「schema error」是同一個坑,
+           * 而我在同一輪重蹈了一次:拒絕的理由必須包含被拒的東西本身。
+           * 值截斷至 40 字元:表號與標題夠看,但不會把整張表的 markdown 灌進 log。
+           */
+          const raw = candidate as Record<string, unknown> | null;
+          logger.warn("[ReportImportService] source table rejected", {
+            paragraphId: segment.paragraphId,
+            tableNo: String(raw?.tableNo ?? "").slice(0, 40),
+            caption: String(raw?.caption ?? "").slice(0, 40),
+            sourcePages: Array.isArray(raw?.sourcePages)
+              ? JSON.stringify(raw.sourcePages).slice(0, 40)
+              : null,
+            issues: table.error.issues
+              .slice(0, 3)
+              .map((issue) => `${issue.path.join(".")}: ${issue.code}`),
+          });
+          return;
+        }
+        accepted.push(table.data);
+      });
+      if (accepted.length > 0) tablesById.set(segment.paragraphId, accepted);
     });
 
     const segments: IImportedSegment[] = Array.from(contentById.entries()).map(
       ([paragraphId, parts]) => {
         const section = SECTION_BY_ID.get(paragraphId);
+        // Info: (20260801 - Tzuhan) 形狀複驗(是否真為表格)在寫入段落前的最後一道;
+        // Info: (20260801 - Tzuhan) 不合格即整段不帶表格,但敘述照樣落地
+        const candidates = tablesById.get(paragraphId) ?? [];
+        /**
+         * Info: (20260802 - Tzuhan) 形狀檢查**逐張**丟棄,不整批丟。
+         *
+         * 原本呼叫 validateSourceTables 對整批判定,實測後果是:ch4-2 的「表4.1 定性及定量
+         * 評估等級表」是文字矩陣而非真表格,於是**同一節其餘合格的表格也一起消失**。
+         * 這與 Zod 層「壞一張丟一張」的原則自相矛盾 —— 同一件事在兩層用不同比例,
+         * 是我設計上的不一致。統一為逐張:一張不合格只丟那一張。
+         */
+        const shaped = candidates.filter((table) => {
+          const check = validateSourceTables([table]);
+          if (!check.isValid) {
+            logger.warn("[ReportImportService] source table dropped", {
+              paragraphId,
+              tableNo: table.tableNo,
+              caption: table.caption.slice(0, 40),
+              reason: check.reason ?? null,
+            });
+          }
+          return check.isValid;
+        });
+        // Info: (20260802 - Tzuhan) 逐張過關後仍要驗數量上限(單張檢查看不到總數)
+        const withinLimit = validateSourceTables(shaped);
+        if (!withinLimit.isValid) {
+          logger.warn("[ReportImportService] source tables dropped", {
+            paragraphId,
+            reason: withinLimit.reason ?? null,
+            count: shaped.length,
+          });
+        }
         return {
           paragraphId,
           title: section ? `${section.code} ${section.title}` : paragraphId,
           content: parts.join("\n\n").trim(),
+          sourceTables: withinLimit.isValid ? shaped : [],
         };
       },
     );
 
-    // Info: (20260716 - Tzuhan) 活動數據逐筆裁決(壞一筆丟一筆);source 記檔名供溯源
-    const activities: IActivityRecord[] = (parsed.activities ?? []).flatMap(
-      (item) => {
-        const record = CarbonActivityRecordSchema.safeParse(item);
-        return record.success ? [{ ...record.data, source: source.name }] : [];
-      },
-    );
+    /**
+     * Info: (20260716 - Tzuhan) 活動數據逐筆裁決(壞一筆丟一筆);source 記檔名供溯源。
+     *
+     * Info: (20260803 - Tzuhan) 補上裁決結果的記錄。原本被拒的筆數與原因**完全無痕跡**,
+     * 後果是 computedLedger 空的時候(→ 所有數據表格顯示「資料不足」、桑基圖不出現)
+     * 無法分辨是「模型沒抽到」還是「抽到了但整批被 Schema 擋掉」。
+     * 這與表號、API 400 是同一類問題:裁決點不留下被拒的實際值,現場就只能靠猜。
+     */
+    const rawActivities = parsed.activities ?? [];
+    const activities: IActivityRecord[] = rawActivities.flatMap((item) => {
+      const record = CarbonActivityRecordSchema.safeParse(item);
+      if (record.success) return [{ ...record.data, source: source.name }];
+      const rejected = item as Record<string, unknown>;
+      logger.warn("[ReportImportService] activity record rejected", {
+        name: String(rejected?.name ?? "").slice(0, 40),
+        unit: String(rejected?.unit ?? "").slice(0, 20),
+        quantity: String(rejected?.quantity ?? "").slice(0, 20),
+        issues: record.error.issues
+          .map((issue) => `${issue.path.join(".")}:${issue.code}`)
+          .slice(0, 4)
+          .join(","),
+      });
+      return [];
+    });
+    if (withActivities) {
+      logger.info("[ReportImportService] activity extraction result", {
+        received: rawActivities.length,
+        accepted: activities.length,
+      });
+    }
 
     return { segments, unmapped, activities };
   }

@@ -14,6 +14,8 @@ import {
   CARBON_INVENTORY_STATE_VERSION,
 } from "@/constants/carbon_chatbot";
 import { ArticulationStatusEnum } from "@/constants/carbon_articulation";
+import { summarizeLedgerEntries } from "@/lib/carbon_ledger_totals";
+import { isImportedEntry } from "@/lib/carbon_table38.ledger";
 
 // Info: (20260716 - Tzuhan) ACTIVITY_DATA 完成門檻: 至少 N 筆完整活動數據(門檻為決定性常數，不由 LLM 判斷)
 export const CARBON_INVENTORY_MIN_ACTIVITY_RECORDS = 3;
@@ -180,8 +182,16 @@ export const describeInventoryStep = (state: ICarbonInventoryState): string => {
 /**
  * Info: (20260716 - Tzuhan) #6519 掛回計算總表:
  * - 依 activityKey 回填各活動的 emissionFactor/factorSource(決定性,同鍵對齊)
- * - computedLedger 整包存入 state;步驟由 computeInventoryStep 重算
+ * - computedLedger 存入 state;步驟由 computeInventoryStep 重算
  *   (全部活動有係數 → EMISSION_FACTORS 完成 → 推進 REVIEW)
+ *
+ * Info: (20260805 - Luphia) 匯入項目必須跨重算存活。
+ * /calculate 只算得出憑證/活動衍生的項目,回應裡不可能有 provenance = IMPORTED 的分錄。
+ * 原本這裡是整包覆蓋(`computedLedger: ledger`),於是「確認匯入」會踩到自己的腳:
+ * confirmPendingImport 先送出活動、再寫匯入分錄;活動簽章一變就觸發 /calculate,
+ * 幾秒後回應落地把整包蓋掉,表3.8 的分錄全部消失。
+ * 而報告此時已經寫上「三層加總勾稽通過,已寫入帳本」—— 帳本卻是空的。
+ * 在查帳系統裡這不是資料遺失,是報告在說謊。
  */
 export const applyComputedLedger = (
   state: ICarbonInventoryState,
@@ -190,6 +200,31 @@ export const applyComputedLedger = (
   const factorByKey = new Map(
     ledger.entries.map((entry) => [entry.activityKey, entry.factor]),
   );
+  /**
+   * Info: (20260805 - Luphia) 合併規則與 applyImportedLedgerEntries 一致:
+   * 以 activityKey 取代同一筆(伺服端若同鍵也算出來了,以伺服端為準),
+   * 小計/總計一律走 summarizeLedgerEntries —— 禁止在這裡另寫一份累加,
+   * 兩份實作遲早不一致,而不一致的表現是「明細加起來不等於小計」。
+   */
+  const serverKeys = new Set(ledger.entries.map((entry) => entry.activityKey));
+  const preservedImported = (state.computedLedger?.entries ?? []).filter(
+    (entry) => isImportedEntry(entry) && !serverKeys.has(entry.activityKey),
+  );
+  /**
+   * Info: (20260805 - Luphia) articulation 維持伺服端的裁決,不重算也不清空:
+   * 質量守恆勾稽是對「活動數據」的期初+採購=消耗+期末做的,
+   * 匯入項目只有最終 CO2e、沒有庫存流量,本來就不在該檢查的範圍內。
+   * 這一點必須明說,否則下一個人會以為這個 verdict 也涵蓋了匯入項。
+   */
+  const mergedEntries = [...ledger.entries, ...preservedImported];
+  const mergedLedger: IComputedLedger =
+    preservedImported.length === 0
+      ? ledger
+      : {
+          ...ledger,
+          entries: mergedEntries,
+          ...summarizeLedgerEntries(mergedEntries),
+        };
   const next: ICarbonInventoryState = {
     ...state,
     activities: state.activities.map((activity) => {
@@ -201,7 +236,7 @@ export const applyComputedLedger = (
         factorSource: factor.source,
       };
     }),
-    computedLedger: ledger,
+    computedLedger: mergedLedger,
     updatedAt: new Date().toISOString(),
   };
   next.step = computeInventoryStep(next);

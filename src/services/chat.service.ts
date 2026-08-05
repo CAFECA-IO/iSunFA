@@ -61,6 +61,29 @@ export const isLlmQuotaError = (error: unknown): boolean => {
   );
 };
 
+/**
+ * Info: (20260803 - Tzuhan) 判斷是否為「傳輸層沒送到」(fetch failed / ECONNRESET / socket hang up)。
+ *
+ * 這一類與其他 LLM 錯誤在**可重試性**上性質相反,故必須分開辨識:
+ * - 傳輸失敗 = 請求根本沒抵達,重送同一份輸入完全可能成功
+ * - 截斷 / schema 無效 = 模型確實回覆了,只是不合用;同輸入必得同結果,重試純粹浪費時間與費用
+ *
+ * 實測(20260803)一次連線中斷讓 ch3~ch10 共八章連鎖失敗,latency 從 70s 掉到 2.5s ——
+ * 那不是八個各自的錯誤,是同一條連線掛掉;而當時匯入路徑沒有任何重試,八章直接報廢。
+ */
+export const isLlmTransportError = (error: unknown): boolean => {
+  if (!(error instanceof Error)) return false;
+  const message = error.message.toLowerCase();
+  return (
+    message.includes("fetch failed") ||
+    message.includes("econnreset") ||
+    message.includes("etimedout") ||
+    message.includes("enotfound") ||
+    message.includes("socket hang up") ||
+    message.includes("network")
+  );
+};
+
 // Info: (20260716 - Tzuhan) 判斷 LLM 錯誤是否為同步路徑逾時(#6515)，供 route/service 層映射 IS_LLM_TIMEOUT
 export const isLlmTimeoutError = (error: unknown): boolean =>
   error instanceof Error && error.message.startsWith(LLM_TIMEOUT_ERROR_MARKER);
