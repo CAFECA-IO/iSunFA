@@ -985,7 +985,9 @@ describe("儲存格內的 <br>", () => {
   });
 
   it("折行的子代碼仍對得上", () => {
-    expect(parsedBr.rows[0].subCategory).toBe(Iso14064SubCategory.STATIONARY_COMBUSTION);
+    expect(parsedBr.rows[0].subCategory).toBe(
+      Iso14064SubCategory.STATIONARY_COMBUSTION,
+    );
   });
 
   it("折行的數字仍解得出來", () => {
@@ -994,5 +996,119 @@ describe("儲存格內的 <br>", () => {
 
   it("沒有讀不懂的資料列", () => {
     expect(parsedBr.unparsedRows).toEqual([]);
+  });
+});
+
+/**
+ * Info: (20260805 - Tzuhan) **第三種版面**(2026-08-05 實測):表3.8 被拆成三張子表格,
+ * 每張前面一行**表格外的純文字廠址標籤**。
+ *
+ * 解析器原本只看含 `|` 的行,這種標籤整行被跳過 → currentSite 永遠是空的
+ * → 72 列全部落進 unparsedRows → 廠址加總 0 → 勾稽失敗 → 不入帳 → 桑基圖不畫。
+ * 三份 fixture 都要留:版面既然一輪換一次,任何一種隨時會回來。
+ */
+const TABLE_38_LAYOUT_C = `
+**表3.8 各公司溫室氣體各類別排放量統計表**(原文照錄 p.42–44)
+
+(1) 總公司
+
+| 報告邊界 | 類型 | 溫室氣體排放量 (公噸 CO2e/年) | 溫室氣體排放量各類別總和 (公噸 CO2e/年) |
+|---|---|---|---|
+| 類別一 | 1.1 固定式燃燒 | 0.4375 | 17.8494 |
+| | 1.2 移動式燃燒 | 9.0759 | |
+| | 1.3 產業過程 | 0.0000 | |
+| | 1.4 人為系統/逸散 | 8.3360 | |
+| | 1.5 土地使用與變更、 林業之排放與移除 | 0.0000 | |
+| 類別二 | 2.1 外購電力 | 139.4858 | 139.4858 |
+| | 2.2 外購能源 | 0.0000 | |
+| 類別三 | 3.1 上游運輸 | NS | 16.2308 |
+| | 3.2 下游運輸 | NS | |
+| | 3.3 員工通勤 | 15.4379 | |
+| | 3.4 客戶與訪客運輸 | NA | |
+| | 3.5 業務旅運 | 0.7929 | |
+| 類別四 | 4.1 採購貨物 | 27.8985 | 27.8985 |
+| | 4.2 資本財 | NA | |
+| | 4.3 固體或液體廢棄物 | NA | |
+| | 4.4 資產使用 | NA | |
+| | 4.5 服務使用 | NA | |
+| 類別五 | 5.1 產品使用階段排放 或移除 | NA | NA |
+| | 5.2 下游承租資產 | NA | |
+| | 5.3 產品生命終止階段 | NA | |
+| | 5.4 投資運作 | NA | |
+| 類別六 | - | NA | NA |
+| 直接與間接溫室氣體總排放量-所在地基準 (公噸 CO2e/年) | | 201.465 | |
+
+(2) 台北分公司
+
+| 報告邊界 | 類型 | 溫室氣體排放量 (公噸 CO2e/年) | 溫室氣體排放量各類別總和 (公噸 CO2e/年) |
+|---|---|---|---|
+| 類別一 | 1.1 固定式燃燒 | 0.0000 | 1.5133 |
+| | 1.2 移動式燃燒 | 1.1221 | |
+| | 1.4 人為系統/逸散 | 0.3912 | |
+| 類別二 | 2.1 外購電力 | 5.8344 | 5.8344 |
+| 類別三 | 3.3 員工通勤 | 0.1887 | 0.6892 |
+| | 3.5 業務旅運 | 0.5005 | |
+| 類別四 | 4.1 採購貨物 | 1.1613 | 1.1613 |
+| 直接與間接溫室氣體總排放量-所在地基準 (公噸 CO2e/年) | | 9.1982 | |
+
+(1) 屏東分公司
+
+| 報告邊界 | 類型 | 溫室氣體排放量 (公噸 CO2e/年) | 溫室氣體排放量各類別總和 (公噸 CO2e/年) |
+|---|---|---|---|
+| 類別一 | 1.1 固定式燃燒 | 2591.8615 | 2814.0773 |
+| | 1.2 移動式燃燒 | 13.2206 | |
+| | 1.3 產業過程 | 189.0363 | |
+| | 1.4 人為系統/逸散 | 19.9589 | |
+| 類別二 | 2.1 外購電力 | 3325.0152 | 3325.0152 |
+| 類別三 | 3.1 上游運輸 | 176.8211 | 1226.2346 |
+| | 3.2 下游運輸 | 927.4575 | |
+| | 3.3 員工通勤 | 118.8558 | |
+| | 3.5 業務旅運 | 3.1002 | |
+| 類別四 | 4.1 採購貨物 | 654.9068 | 756.5913 |
+| | 4.3 固體或液體廢棄物 | 101.6845 | |
+| 直接與間接溫室氣體總排放量-所在地基準 (公噸 CO2e/年) | | 8121.918 | |
+`.trim();
+
+describe("表3.8 第三種版面:廠址標籤在表格外", () => {
+  const parsedC = parseTable38(TABLE_38_LAYOUT_C);
+
+  it("沒有讀不懂的資料列", () => {
+    expect(parsedC.unparsedRows).toEqual([]);
+  });
+
+  it("三個廠址都認得出來(標籤在表格外的純文字行)", () => {
+    const sites = Array.from(new Set(parsedC.rows.map((row) => row.site)));
+    expect(sites).toEqual(["(1) 總公司", "(2) 台北分公司", "(1) 屏東分公司"]);
+  });
+
+  /**
+   * Info: (20260805 - Tzuhan) 表格標題含「各公司」,若沿用 isSiteCell 的「含公司」備援訊號
+   * 就會把標題認成廠址。收緊到 (n) 前綴 + 短名 + 整行到此為止。
+   */
+  it("表格標題不會被認成廠址", () => {
+    expect(parsedC.rows.every((row) => !row.site.includes("表3.8"))).toBe(true);
+  });
+
+  it("三層勾稽通過,總量對得上原文", () => {
+    const reconciled = reconcileTable38(parsedC, {
+      companyTotalTonne: COMPANY_TOTAL,
+    });
+    // Info: (20260805 - Tzuhan) 判準是 isWithinTolerance,與 isReconciled 的組成一致
+    const failed = reconciled.checks.filter(
+      (check) => !check.isWithinTolerance,
+    );
+    expect(failed).toEqual([]);
+    expect(reconciled.isReconciled).toBe(true);
+  });
+
+  it("入得了帳本(桑基圖的素材因此存在)", () => {
+    const reconciled = reconcileTable38(parsedC, {
+      companyTotalTonne: COMPANY_TOTAL,
+    });
+    const { entries, blockedReason } = toLedgerEntries(parsedC, reconciled, {
+      tableNo: "表3.8",
+    });
+    expect(blockedReason).toBeNull();
+    expect(entries.length).toBeGreaterThan(0);
   });
 });

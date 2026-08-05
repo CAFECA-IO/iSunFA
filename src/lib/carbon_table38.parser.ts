@@ -22,6 +22,7 @@ import {
   TABLE38_HEADER_TOKENS,
   TABLE38_SITE_INDEX_PATTERN,
   TABLE38_SITE_KEYWORDS,
+  TABLE38_STANDALONE_SITE_PATTERN,
   TABLE38_SITE_TOTAL_TOKEN,
 } from "@/constants/table38_layout";
 import {
@@ -234,8 +235,21 @@ export function parseTable38(markdown: string): IParsedTable38 {
   const unparsedRows: string[] = [];
   let currentSite = "";
 
+  /**
+   * Info: (20260805 - Tzuhan) 表格外的獨立廠址標籤(第三種版面,見 TABLE38_STANDALONE_SITE_PATTERN)。
+   * 剝除粗體與 `<br>` 的理由與 splitRow 相同:排版不是內容。
+   */
+  const asStandaloneSiteLabel = (line: string): string | null => {
+    const cleaned = stripEmphasis(stripHtmlLineBreaks(line).trim());
+    return TABLE38_STANDALONE_SITE_PATTERN.test(cleaned) ? cleaned : null;
+  };
+
   markdown.split("\n").forEach((line) => {
-    if (!line.includes("|")) return;
+    if (!line.includes("|")) {
+      const standaloneSite = asStandaloneSiteLabel(line);
+      if (standaloneSite) currentSite = standaloneSite;
+      return;
+    }
     const cells = splitRow(line);
     if (cells.length < 2 || isSeparatorRow(cells)) return;
     // Info: (20260803 - Tzuhan) 重複表頭整列跳過(第二輪每個廠址前都重複一次)
