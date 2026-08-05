@@ -4,6 +4,7 @@
 
 import { describe, it, expect } from "@jest/globals";
 import {
+  buildImportUnits,
   resolveChapterPageRange,
   validatePageIndex,
   PageIndexRejectReasonEnum,
@@ -131,5 +132,62 @@ describe("resolveChapterPageRange", () => {
       nextChapterFirstPage: 41,
     });
     expect(range?.toPage).toBeUndefined();
+  });
+});
+
+/**
+ * Info: (20260805 - Tzuhan) 把章切成「單次呼叫跑得完」的工作單元。
+ * 閘道的 60 秒是**閒置**逾時,而等 LLM 期間一個位元組都沒送,整段都算閒置;
+ * 拉長逾時已被否決,所以要縮的是工作本身。
+ */
+describe("buildImportUnits", () => {
+  const outline = [
+    ...Array.from({ length: 7 }, (_, i) => ({
+      id: `ch1-${i}`,
+      chapterId: "ch1",
+    })),
+    ...Array.from({ length: 3 }, (_, i) => ({
+      id: `ch4-${i}`,
+      chapterId: "ch4",
+    })),
+  ];
+
+  it("節數超過上限的章切成多份", () => {
+    const units = buildImportUnits(outline, ["ch1"], 4);
+    expect(units).toHaveLength(2);
+    expect(units[0].sectionIds).toEqual(["ch1-0", "ch1-1", "ch1-2", "ch1-3"]);
+    expect(units[1].sectionIds).toEqual(["ch1-4", "ch1-5", "ch1-6"]);
+    expect(units.map((u) => `${u.partIndex}/${u.partTotal}`)).toEqual([
+      "1/2",
+      "2/2",
+    ]);
+  });
+
+  it("節數未超過上限的章維持一份(行為與先前相同)", () => {
+    const units = buildImportUnits(outline, ["ch4"], 4);
+    expect(units).toHaveLength(1);
+    expect(units[0].partTotal).toBe(1);
+    expect(units[0].sectionIds).toEqual(["ch4-0", "ch4-1", "ch4-2"]);
+  });
+
+  it("保持大綱原序(合併結果必須是決定性的)", () => {
+    const units = buildImportUnits(outline, ["ch1", "ch4"], 4);
+    expect(units.flatMap((u) => u.sectionIds)).toEqual(
+      outline.map((s) => s.id),
+    );
+  });
+
+  it("沒有對應節的章不產生單元", () => {
+    expect(buildImportUnits(outline, ["ch9"], 4)).toEqual([]);
+  });
+
+  /**
+   * Info: (20260805 - Tzuhan) 已知限度:節數少但單節極重的章切不動。
+   * ch4 只有 3 節卻跑 2.5 分鐘 —— 成本集中在 4.2 一節的九張表。
+   * 再往下切就會把跨頁的表格切成兩半,那是拿無聲的資料損失換請求跑得完。
+   */
+  it("切不動節數少但單節極重的章(已知限度,不是遺漏)", () => {
+    expect(buildImportUnits(outline, ["ch4"], 1)).toHaveLength(3);
+    expect(buildImportUnits(outline, ["ch4"], 4)).toHaveLength(1);
   });
 });

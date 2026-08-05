@@ -1,12 +1,13 @@
 // Info: (20260714 - Tzuhan) 對話輸入列:純文字 + 附件(按鈕/拖放),附件驗證與 base64 轉換邏輯集中於 use_carbon_chat
 
 import { KeyboardEvent, DragEvent, useEffect, useRef, useState } from "react";
-import { Paperclip, X, Loader2, FileText, FileUp } from "lucide-react";
+import { Paperclip, X, Loader2, FileText, FileUp, WifiOff } from "lucide-react";
 import {
   IPendingAttachment,
   PendingAttachmentStatusEnum,
 } from "@/types/carbon_chatbot.types";
 import { IDraftNotice } from "@/hooks/use_carbon_chat";
+import { ChatroomConnectionStateEnum } from "@/lib/chatroom";
 import { CARBON_CHAT_ATTACHMENT_ACCEPT } from "@/constants/carbon_chatbot";
 import { useTranslation } from "@/i18n/i18n_context";
 
@@ -48,6 +49,14 @@ export interface IChatInputProps {
   onRemoveAttachment?: (attachmentId: string) => void;
   // Info: (20260714 - Tzuhan) 草稿生成狀態列(loading/error):並行任務不以對話氣泡表達,避免與回覆順序矛盾
   draftNotice?: IDraftNotice | null;
+  /**
+   * Info: (20260805 - Tzuhan) 即時推播的連線狀態。
+   *
+   * 為什麼要顯示:AI 的回覆同時走 HTTP 回帶與推播兩軌,推播斷掉時長工作的結果送不回來。
+   * 而先前連線狀態只寫進沒人消費的 isError —— 壞掉完全靜默,
+   * 「AI 沒回應」與「回應送不到」在畫面上一模一樣,但兩者的處置完全不同。
+   */
+  connectionState?: ChatroomConnectionStateEnum;
   // Info: (20260716 - Tzuhan) #56 匯入導流:疑似整份報告的附件候選(擇一:匯入報告/仍作附件)
   importCandidate?: File | null;
   onConfirmImportCandidate?: () => void;
@@ -66,6 +75,7 @@ export function ChatInput({
   onAddFiles = undefined,
   onRemoveAttachment = undefined,
   draftNotice = null,
+  connectionState = ChatroomConnectionStateEnum.CONNECTED,
   importCandidate = null,
   onConfirmImportCandidate = undefined,
   onAttachImportCandidate = undefined,
@@ -194,6 +204,29 @@ export function ChatInput({
               <X size={12} />
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Info: (20260805 - Tzuhan) 推播斷線提示:只在非 CONNECTED 時出現,連上就自己消失 */}
+      {connectionState !== ChatroomConnectionStateEnum.CONNECTED && (
+        <div
+          className={`mx-auto mb-2 flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold ${
+            connectionState === ChatroomConnectionStateEnum.CONNECTING
+              ? "bg-amber-50 text-amber-700"
+              : "bg-red-50 text-red-600"
+          }`}
+        >
+          {connectionState === ChatroomConnectionStateEnum.CONNECTING ? (
+            <>
+              <Loader2 size={12} className="shrink-0 animate-spin" />
+              {t("carbon_chatbot.realtime_connecting")}
+            </>
+          ) : (
+            <>
+              <WifiOff size={12} className="shrink-0" />
+              {t("carbon_chatbot.realtime_disconnected")}
+            </>
+          )}
         </div>
       )}
 

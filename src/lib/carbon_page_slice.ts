@@ -5,6 +5,7 @@
 // Info: (20260804 - Tzuhan) 而少的那張剛好可能是唯一的資料來源。留在 hook 裡就永遠測不到。
 
 import {
+  CARBON_IMPORT_MAX_SECTIONS_PER_CALL,
   CARBON_PAGE_SLICE_MARGIN,
   CARBON_PAGE_INDEX_MIN_PAGE,
 } from "@/constants/carbon_page_slice";
@@ -125,4 +126,71 @@ export function resolveChapterPageRange(params: {
     return { fromPage };
   }
   return { fromPage, toPage: nextChapterFirstPage + CARBON_PAGE_SLICE_MARGIN };
+}
+
+export interface IImportUnit {
+  /** Info: (20260805 - Tzuhan) 所屬章節(API 仍以此界定範圍規則與活動數據萃取) */
+  chapterId: string;
+  /** Info: (20260805 - Tzuhan) 本次呼叫要處理的節;為該章的連續子集 */
+  sectionIds: string[];
+  /** Info: (20260805 - Tzuhan) 同章切成多份時的序號,供進度顯示(1-based) */
+  partIndex: number;
+  partTotal: number;
+}
+
+/**
+ * Info: (20260805 - Tzuhan) 把章節切成「單次呼叫跑得完」的工作單元。
+ *
+ * 為什麼要切:閘道的讀取逾時是 60 秒的**閒置**逾時,而請求在等 LLM 期間
+ * 一個位元組都沒送,整段都算閒置。拉長逾時已被否決(全站共用、
+ * 慢速連線攻擊成本降低),所以要縮的是工作本身。
+ *
+ * 切的單位是**節**,不是頁:節是大綱的自然邊界,而頁不是 ——
+ * 以頁切會把跨頁的表格切成兩半(表4.8 跨 8 頁),
+ * 那是拿「無聲的資料損失」換「請求跑得完」。
+ *
+ * 章的順序與章內節的順序都保持大綱原序:合併結果必須是決定性的。
+ */
+export function buildImportUnits(
+  sections: { id: string; chapterId: string }[],
+  chapterIds: string[],
+  maxSectionsPerUnit: number = CARBON_IMPORT_MAX_SECTIONS_PER_CALL,
+): IImportUnit[] {
+  const units: IImportUnit[] = [];
+  chapterIds.forEach((chapterId) => {
+    const own = sections
+      .filter((section) => section.chapterId === chapterId)
+      .map((section) => section.id);
+    if (own.length === 0) return;
+    const parts: string[][] = [];
+    for (let i = 0; i < own.length; i += maxSectionsPerUnit) {
+      parts.push(own.slice(i, i + maxSectionsPerUnit));
+    }
+    parts.forEach((sectionIds, index) => {
+      units.push({
+        chapterId,
+        sectionIds,
+        partIndex: index + 1,
+        partTotal: parts.length,
+      });
+    });
+  });
+  return units;
+}
+
+/**
+ * Info: (20260805 - Tzuhan) 工作單元的頁碼範圍。
+ *
+ * 上界取「下一個單元的第一節」而非「下一章的第一節」—— 同章切成多份時,
+ * 用下一章當上界會讓每一份都送到章尾,切了等於沒切。
+ * 安全邊界的理由與 resolveChapterPageRange 相同(索引是估計值,不是事實)。
+ */
+export function resolveUnitPageRange(params: {
+  sectionPages: (number | undefined)[];
+  nextUnitFirstPage: number | undefined;
+}): IChapterPageRange | null {
+  return resolveChapterPageRange({
+    sectionPages: params.sectionPages,
+    nextChapterFirstPage: params.nextUnitFirstPage,
+  });
 }
