@@ -682,6 +682,12 @@ export const useCarbonChat = () => {
         delete next[sessionId];
         return next;
       });
+      /**
+       * Info: (20260805 - Luphia) 待確認匯入隨會話一起消失。
+       * 這是 pendingImportBySession 唯一該被移除的時機 —— 切房不是
+       * (見 switchSession 的註解)。會話已經不存在,留著那一鍵就沒有任何人能套用它。
+       */
+      setPendingImportFor(sessionId, null);
       // Info: (20260730 - Tzuhan) 封存的若是當前會話,切到其餘任一會話;全空則建新的(畫面不可留在已封存的會話上)
       setActiveSessionId((current) => {
         if (current !== sessionId) return current;
@@ -692,7 +698,7 @@ export const useCarbonChat = () => {
       });
       return true;
     },
-    [user?.address, sessionsData],
+    [user?.address, sessionsData, setPendingImportFor],
   );
 
   // Info: (20260716 - Tzuhan) #52 綁定會話至帳本(POST sessions);成功後記入存取中繼資料
@@ -1272,8 +1278,17 @@ export const useCarbonChat = () => {
       setIsError(false);
       setDraftNotice(null);
       setPendingRevision(null);
-      // Info: (20260803 - Tzuhan) 全部重設:整個 map 清空(語意與原本的「清掉唯一那筆」一致)
-      setPendingImportBySession({});
+      /**
+       * Info: (20260805 - Luphia) 這裡刻意**不動** pendingImportBySession。
+       * 它已經以發起匯入的會話 id 為鍵,切房本來就不需要重設任何東西 ——
+       * 而原本沿用「清掉唯一那筆」的舊語意去清空整個 map,恰好抵銷了 per-session 的全部意義:
+       * 在 A 房啟動匯入 → 切到 B 房等 → 匯入完成落成 { A: preview } → 點回 A 房
+       * → switchSession('A') 把 map 清成 {} → 預覽卡消失。
+       * 數分鐘的 LLM 工作與整份報告的配額靜默丟棄,連 retryFailedImportChapters 都救不回來
+       * (它需要 pendingImport)。
+       *
+       * 生命週期正確的清除點是「會話消失」而不是「切走」,故改在 archiveSession 移除該鍵。
+       */
       pendingDraftParagraphIdRef.current = null;
     },
     [setDraftNotice],
