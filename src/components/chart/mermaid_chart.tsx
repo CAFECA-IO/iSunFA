@@ -166,23 +166,27 @@ const MermaidChart: FC<IMermaidChartProps> = ({
       /**
        * Info: (20260722 - Julian) 渲染前先以 parse 驗證語法
        * suppressErrors 讓解析失敗回傳 false ，退回原始 code block，而非拋錯或注入爆炸圖
+       * Info: (20260805 - Julian) Sankey 例外：其文法只認 ASCII，含中文節點需先由 renderMermaid 做 ASCII 別名，
+       * 若在此拿原始（含 CJK）字串直接 parse 會誤判為語法錯，故 Sankey 跳過本護欄，交由下方 renderMermaid 的 try/catch 處理
        */
-      try {
-        const parseResult = await mermaid.parse(trimmedChart, {
-          suppressErrors: true,
-        });
-        if (!parseResult) {
+      if (type !== MermaidChartType.SANKEY) {
+        try {
+          const parseResult = await mermaid.parse(trimmedChart, {
+            suppressErrors: true,
+          });
+          if (!parseResult) {
+            if (isCurrent) {
+              setHasError(true);
+            }
+            return;
+          }
+        } catch (error) {
+          console.error("Mermaid parse failed", error);
           if (isCurrent) {
             setHasError(true);
           }
           return;
         }
-      } catch (error) {
-        console.error("Mermaid parse failed", error);
-        if (isCurrent) {
-          setHasError(true);
-        }
-        return;
       }
 
       try {
