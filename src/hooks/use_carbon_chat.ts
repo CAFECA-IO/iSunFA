@@ -51,7 +51,8 @@ import {
 } from "@/constants/carbon_report_charts";
 import {
   formatGhgCategoryLabel,
-  formatIsoCategoryLabel,
+  formatEsgScopeLabel,
+  formatIsoCategoryShortLabel,
 } from "@/constants/esg";
 import {
   CARBON_EVIDENCE_CHAPTER_ID,
@@ -1020,9 +1021,12 @@ export const useCarbonChat = () => {
       ),
       // Info: (20260722 - Tzuhan) UAT:範疇顯示名(enum 值不可讀)
       formatScope: (scope: string) => formatGhgCategoryLabel(scope, language),
-      // Info: (20260803 - Tzuhan) ISO 類別顯示名(匯入桑基圖第二層;直接印 CATEGORY_1 讀者看不懂)
+      // Info: (20260803 - Tzuhan) ISO 類別顯示名(匯入桑基圖第四層;直接印 CATEGORY_1 讀者看不懂)
+      // Info: (20260805 - Tzuhan) 桑基圖節點用短名:完整名 18 個字,數十個節點會互相重疊
       formatIsoCategory: (category: string) =>
-        formatIsoCategoryLabel(category, language),
+        formatIsoCategoryShortLabel(category, language),
+      // Info: (20260805 - Tzuhan) 三大範疇顯示名(匯入桑基圖第三層)
+      formatEsgScope: (scope: string) => formatEsgScopeLabel(scope, language),
     }),
     [t, language],
   );
