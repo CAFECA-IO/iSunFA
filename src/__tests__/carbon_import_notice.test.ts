@@ -127,6 +127,9 @@ describe("buildImportSummaryNotice", () => {
 describe("CarbonImportNoticeSchema", () => {
   const validPayload = {
     channel: "carbon-chat-0xabc-s123",
+    // Info: (20260806 - Tzuhan) base58 xpub;不是 `0x…` 位址(見下方那條測試的理由)
+    recipientPublicKey:
+      "xpub6CUGRUonZSQ4TWtTMmzXdrXDtypWKiKrhko4egpiMZbpiaQL2Jkwr",
     fileName: "report.pdf",
     importedCount: 32,
     draftedCount: 1,
@@ -136,6 +139,25 @@ describe("CarbonImportNoticeSchema", () => {
   it("failedChapters 省略時預設空陣列", () => {
     const parsed = CarbonImportNoticeSchema.parse(validPayload);
     expect(parsed.failedChapters).toEqual([]);
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 收件公鑰必填 —— 這條是為一個實際發生過的失敗補的測試。
+   *
+   * 原本 schema 標選填,而路由以 `sessionUser.address` 補位,
+   * 理由寫「與 report PUT 同一慣例」。那句話不成立:report PUT 的 address 補位
+   * 只發生在明文模式(address 是擁有者標記,不是金鑰),而聊天訊息一律 E2EE,
+   * 這個值會被拿去做 ECIES 加密。`0x…` 十六進位位址不是 base58 xpub,
+   * 於是這條端點從上線起**一次都沒成功過**
+   * (500:`invalid base58 value (argument="letter", value="0")`),
+   * 表現是「匯入後聊天室依舊沒有記錄」。
+   *
+   * 契約上說清楚比讓路由擋更好:選填會讓呼叫端以為「不送也行」,而它一送就是 500。
+   */
+  it("沒有收件公鑰即拒絕(不得以 address 補位,那不是金鑰)", () => {
+    const { recipientPublicKey, ...withoutKey } = validPayload;
+    expect(recipientPublicKey).toBeTruthy();
+    expect(CarbonImportNoticeSchema.safeParse(withoutKey).success).toBe(false);
   });
 
   /**

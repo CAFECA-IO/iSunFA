@@ -13,8 +13,18 @@ import {
 
 export const CarbonImportNoticeSchema = z.object({
   channel: z.string().min(1).max(200),
-  // Info: (20260805 - Tzuhan) 選填:省略時伺服端以 session 的 address 補上(與 report PUT 同一慣例)
-  recipientPublicKey: z.string().min(1).max(300).optional(),
+  /**
+   * Info: (20260806 - Tzuhan) ECIES 收件公鑰(xpub)。**必填。**
+   *
+   * 原註解寫「選填:省略時伺服端以 session 的 address 補上(與 report PUT 同一慣例)」——
+   * 那句話不成立,而這條端點因此從上線起一次都沒成功過。
+   * report PUT 的 address 補位只在**明文模式**:那時 address 是擁有者標記,不是金鑰。
+   * 聊天訊息一律 E2EE,這個值會被拿去做 ECIES 加密,而 `0x…` 位址不是 base58 xpub。
+   *
+   * 改必填而不是留選填讓路由擋:選填的欄位會讓呼叫端以為「不送也行」,
+   * 而它一送就是 500。契約上就該說清楚。
+   */
+  recipientPublicKey: z.string().min(1).max(300),
   fileName: z.string().min(1).max(300),
   /**
    * Info: (20260805 - Tzuhan) 上限取大綱節數:超過即不可能是真的落地節數,

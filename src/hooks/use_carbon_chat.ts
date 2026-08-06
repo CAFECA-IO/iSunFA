@@ -2486,6 +2486,24 @@ export const useCarbonChat = () => {
      * 與「記錄送失敗」在畫面上完全同形。
      */
     void (async () => {
+      /**
+       * Info: (20260806 - Tzuhan) 帶上真正的收件公鑰(xpub)。
+       *
+       * 原本沒帶,而伺服端以 `sessionUser.address` 補位 —— 那是 `0x…` 十六進位位址,
+       * 不是 base58 xpub,於是 ECIES 加密在底層炸開,這條端點從上線起
+       * **一次都沒成功過**(500:`invalid base58 value (argument="letter", value="0")`)。
+       * 表現正是使用者回報的「匯入後聊天室依舊沒有記錄」。
+       *
+       * 沒有金鑰時不發請求:發了必定 500,而 500 只會在 log 裡多一行看不懂的 base58 錯誤。
+       */
+      const recipientPublicKey = masterKeyRef.current?.extendedPublicKey;
+      if (!recipientPublicKey) {
+        console.warn(
+          "[carbon-chat] import notice skipped: no master key",
+          activeSessionId,
+        );
+        return;
+      }
       try {
         await request("/api/v1/chat/carbon/import/notice", {
           method: "POST",
@@ -2494,6 +2512,7 @@ export const useCarbonChat = () => {
               user?.address ?? "anonymous",
               activeSessionId,
             ),
+            recipientPublicKey,
             fileName: pendingImport.fileName,
             importedCount: selected.filter((item) => !item.isDraft).length,
             draftedCount: selected.filter((item) => item.isDraft).length,
