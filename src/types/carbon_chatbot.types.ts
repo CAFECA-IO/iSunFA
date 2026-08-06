@@ -337,6 +337,16 @@ export interface IChatSession {
   // Info: (20260716 - Tzuhan) 使用者自訂標題:true 時首訊衍生標題不得覆蓋
   isTitleCustom?: boolean;
   time: string;
+  /**
+   * Info: (20260806 - Tzuhan) 最後一次有動作的時間(ISO 字串);清單排序依據。
+   *
+   * 為什麼不用 `time`:那是 `toLocaleDateString()` 的產物 —— 只有日期、而且格式隨語系變
+   * (zh-TW 的 `2026/8/6` 與 en-US 的 `8/6/2026` 字典序完全不同)。
+   * 拿它排序在中文環境下「剛好會對」,換個語系就錯,而那種錯沒有人會聯想到排序。
+   *
+   * 選填:舊的本機快取沒有這個欄位,缺值時排在有值者之後(不假裝它很新)。
+   */
+  updatedAt?: string;
   status: SessionStatusEnum;
   statusColor: string;
   progress: number;

@@ -135,6 +135,7 @@ import {
   alignReportSections,
   patchMarkdownSection,
   reduceDraftNotice,
+  sortSessionsByRecency,
 } from "@/hooks/use_carbon_chat.helpers";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { useAuth } from "@/contexts/auth_context";
@@ -520,6 +521,8 @@ export const useCarbonChat = () => {
           return prev;
         }
         updatedSession.messages = [...updatedSession.messages, message];
+        // Info: (20260806 - Tzuhan) 有訊息就是有動作:清單依此把這一房排到最上面
+        updatedSession.updatedAt = new Date().toISOString();
         if (progressUpdate) {
           updatedSession.progress = Math.min(
             SESSION_PROGRESS_MAX,
@@ -592,6 +595,8 @@ export const useCarbonChat = () => {
           sessionId: string;
           channel: string;
           createdAt: string;
+          // Info: (20260806 - Tzuhan) 伺服端算出的「最後一次有動作」(清單排序依據)
+          lastActivityAt?: string;
           accountBookId?: string | null;
         }[];
       } | null;
@@ -626,6 +631,12 @@ export const useCarbonChat = () => {
               ),
               // Info: (20260716 - Tzuhan) 自訂標題旗標隨快取還原(首訊衍生不覆蓋)
               isTitleCustom: cached?.isTitleCustom ?? false,
+              /**
+               * Info: (20260806 - Tzuhan) 排序依據取伺服端的 lastActivityAt。
+               * 缺值時退回 createdAt —— 而不是留空:留空會讓舊資料全部沉底,
+               * 那比「照建立時間排」更不像使用者預期的樣子。
+               */
+              updatedAt: entry.lastActivityAt ?? entry.createdAt,
             };
           });
           return next;
@@ -2411,6 +2422,8 @@ export const useCarbonChat = () => {
         ...prev,
         [activeSessionId]: {
           ...session,
+          // Info: (20260806 - Tzuhan) 套用匯入是動作:清單依此把這一房排到最上面
+          updatedAt: new Date().toISOString(),
           reportData: {
             ...session.reportData,
             rawMarkdown: nextRaw,
@@ -3212,6 +3225,18 @@ export const useCarbonChat = () => {
     [sessionsData, sessionAccess, accountBooks, user?.address],
   );
 
+  /**
+   * Info: (20260806 - Tzuhan) 清單依「最近有動作」由新到舊,新增對話因此在最上面。
+   *
+   * 原本直接吐 `Object.values(sessionsData)` 的插入順序 —— 沒有排序。
+   * 看起來像照日期排是因為 API 回的是 createdAt desc,
+   * 而新建的會話加在物件最後,於是**新增對話出現在清單最底部**。
+   */
+  const sortedSessionsList = useMemo(
+    () => sortSessionsByRecency(sessionsList),
+    [sessionsList],
+  );
+
   // Info: (20260713 - Tzuhan) 完成/查核雙軌統計: 工具列膠囊與進度浮窗共用的單一來源
   const reportStats: IReportProgressStats = useMemo(() => {
     const paragraphs = activeSession?.reportData?.paragraphs ?? [];
@@ -3527,6 +3552,8 @@ export const useCarbonChat = () => {
       setSessionsData((prev) => {
         const updatedSession = { ...prev[activeSessionId] };
         if (!updatedSession.reportData?.paragraphs) return prev;
+        // Info: (20260806 - Tzuhan) 編輯報告也是動作(清單排序依據)
+        updatedSession.updatedAt = new Date().toISOString();
 
         const newParagraphs = updatedSession.reportData.paragraphs.map((p) => {
           if (p.id !== paragraphId) return p;
@@ -4231,7 +4258,7 @@ export const useCarbonChat = () => {
   }, [isUnlocked, chatChannel, loadHistory, requestGreeting]);
 
   return {
-    sessionsList,
+    sessionsList: sortedSessionsList,
     activeSession,
     activeSessionId,
     // Info: (20260714 - Tzuhan) 對外的切換入口為 switchSession(重置跨室暫態 UI)，沿用原名稱以維持呼叫端不變
