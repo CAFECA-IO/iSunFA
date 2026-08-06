@@ -160,6 +160,21 @@ export interface IActivityRecord {
   voucherId?: string;
   journalId?: string;
   fileId?: string;
+  /**
+   * Info: (20260806 - Tzuhan) 交易日期(Unix **秒**;來源為 `IEsgRecordDetail.tradingDate`)。
+   *
+   * 帳本紀錄本來就有真實日期,但這個 interface 先前沒有時間欄位,
+   * 於是月份在 `carbon_esg_link` 映射的那一步就被丟掉了 ——
+   * 圖表因此只能畫年度合計,連「多期趨勢」模板都因為「單期 ledger 無時間序列」
+   * 而刻意不上架(見 CarbonChartTemplateEnum 的註解)。
+   *
+   * 存原始時間戳而非 `YYYY-MM`:月別只是其中一種聚合,
+   * 先把粒度砍到月,以後要季/週就得回頭改資料模型。
+   * 用 number 而非 `Date`:整個 state 會 JSON 序列化後 E2EE 入庫,`Date` 過不去。
+   *
+   * 選填 —— 對話/附件申報與匯入報告都沒有逐筆日期,那是事實而不是缺漏。
+   */
+  tradingTimestamp?: number;
   // Info: (20260721 - Tzuhan) 原始憑證檔 hash/檔名:RecordTabModal 的原始憑證分頁憑此啟用預覽/下載
   // Info: (20260721 - Tzuhan) (detail modal 載入時不回填 file,須開門即備妥)
   fileHash?: string;
@@ -255,6 +270,11 @@ export interface IComputedLedgerEntry {
     subCategory: string;
     tableNo: string;
   };
+  /**
+   * Info: (20260806 - Tzuhan) 交易日期(Unix 秒),自 `IActivityRecord.tradingTimestamp` 帶過。
+   * 桑基圖的月別層憑此分層;無值即「未標註期間」,**絕不由旁證推測月份**。
+   */
+  tradingTimestamp?: number;
   // Info: (20260720 - Tzuhan) #53 證據引用(桑基圖與 #54 證據鏈下鑽的資料來源;對話申報者無)
   evidence?: {
     esgRecordId: string;

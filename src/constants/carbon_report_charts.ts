@@ -28,6 +28,17 @@ export enum CarbonChartTemplateEnum {
 export const CARBON_SANKEY_MAX_EVIDENCE_NODES = 30;
 
 /**
+ * Info: (20260806 - Tzuhan) 桑基圖月別節點上限:超過即整層略過並明說。
+ *
+ * 取 24(兩個年度)。單一盤查年度最多 12 個月別節點,補列往年也還讀得出來;
+ * 但若 ledger 橫跨數年,月別層會長成幾十個節點的柵欄,
+ * 那時候該畫的是趨勢圖而不是在桑基圖上多一層 —— 兩張圖各有各的工作。
+ *
+ * **略過必須說出來。** 少一層而不講,讀者會以為這份帳本沒有日期。
+ */
+export const CARBON_SANKEY_MAX_MONTH_NODES = 24;
+
+/**
  * Info: (20260803 - Tzuhan) 匯入桑基圖的節點上限。超過即降為兩層(廠址 → 類別),
  * 寧可少一層也不畫成毛線團 —— 沿用憑證層的同一條哲學。
  *

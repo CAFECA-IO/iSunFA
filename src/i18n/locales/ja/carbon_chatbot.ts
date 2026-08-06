@@ -238,11 +238,16 @@ export const carbonChatbot = {
   chart_frozen:
     "⚠ 質量保存チェックに未合格のため、グラフは凍結されています。チャットで在庫差異を明確にすると自動的に生成されます。",
   chart_sankey_chat_node: "チャット/添付による申告",
+  chart_sankey_period_unknown: "期間の記載なし",
+  chart_sankey_period_collapsed:
+    "期間が 2 年度を超えるため月別階層を省略しました(月別は推移グラフを参照)",
   chart_imported_sankey_title:
-    "温室効果ガス排出フロー(原文転記、ロケーション基準、tCO2e/年)",
+    "温室効果ガス排出フロー:組織 → 拠点 → スコープ → カテゴリ → 排出形態(原文転記、ロケーション基準、tCO2e/年)",
   chart_imported_sankey_excluded: "図に含まれない項目(NA/NS または 0)",
   chart_imported_sankey_collapsed:
-    "ノードが多すぎるため 2 階層(拠点 → カテゴリ)に縮約しました",
+    "ノードが多すぎるため 3 階層(組織 → 拠点 → スコープ)に縮約しました",
+  chart_imported_sankey_below_threshold: "比率が小さく非表示(tCO2e/年)",
+  chart_imported_sankey_organization: "全社",
   book_bind_pending_unlock:
     "帳簿セッションを作成しました。暗号化チャットのロックを解除すると帳簿バインドが完了します(証憑インポートと証拠チェーンはバインド後に利用可能)",
   book_bind_done:
