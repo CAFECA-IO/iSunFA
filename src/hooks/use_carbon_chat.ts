@@ -112,7 +112,11 @@ import {
   ensureMasterKey,
   prefetchOwnKeyRecord,
 } from "@/lib/chatroom_key_manager";
-import { request } from "@/lib/utils/request";
+import {
+  request,
+  unwrapEnvelope,
+  type IEnvelopeLike,
+} from "@/lib/utils/request";
 import {
   findDiagramTemplateForParagraph,
   hasCarbonDiagramBlock,
@@ -1453,13 +1457,14 @@ export const useCarbonChat = () => {
       formData.append("language", language);
       formData.append("mode", CarbonReportImportModeEnum.INDEX);
       try {
-        const res = await request<{
-          payload: {
-            index: { paragraphId: string; startPage: number }[];
-          } | null;
-        }>("/api/v1/chat/carbon/import", { method: "POST", body: formData });
+        // Info: (20260806 - Tzuhan) 端點走保活式串流,失敗在信封裡:unwrapEnvelope 轉回拋出,
+        // Info: (20260806 - Tzuhan) 下面既有的 catch(回空 Map、退回送全文)語意因此完全不變
+        const res = await request<
+          IEnvelopeLike<{ index: { paragraphId: string; startPage: number }[] }>
+        >("/api/v1/chat/carbon/import", { method: "POST", body: formData });
+        const payload = unwrapEnvelope(res);
         const index = new Map(
-          (res.payload?.index ?? []).map((entry) => [
+          (payload?.index ?? []).map((entry) => [
             entry.paragraphId,
             entry.startPage,
           ]),
@@ -1640,11 +1645,12 @@ export const useCarbonChat = () => {
           }
         }
         try {
-          const res = await request<{ payload: IImportChunkPayload | null }>(
+          const res = await request<IEnvelopeLike<IImportChunkPayload>>(
             "/api/v1/chat/carbon/import",
             { method: "POST", body: formData },
           );
-          results[index] = res.payload;
+          // Info: (20260806 - Tzuhan) 信封裡的失敗轉回拋出:下面的 catch(記進 failed、供重試)照舊
+          results[index] = unwrapEnvelope(res);
         } catch (chunkError) {
           console.error(
             "[carbon-chat] import chapter failed:",
@@ -1766,16 +1772,17 @@ export const useCarbonChat = () => {
         formData.append("sectionIds", JSON.stringify(batches[index]));
         try {
           // Info: (20260727 - Tzuhan) 循序呼叫(非並行):草稿補齊在匯入 11 章之後,保留 LLM 限流餘裕
-          const res = await request<{
-            payload: {
+          const res = await request<
+            IEnvelopeLike<{
               segments: {
                 paragraphId: string;
                 title: string;
                 content: string;
               }[];
-            } | null;
-          }>("/api/v1/chat/carbon/import", { method: "POST", body: formData });
-          drafted.push(...(res.payload?.segments ?? []));
+            }>
+          >("/api/v1/chat/carbon/import", { method: "POST", body: formData });
+          // Info: (20260806 - Tzuhan) 信封裡的失敗轉回拋出:下面的 catch(記 log、不阻斷預覽)照舊
+          drafted.push(...(unwrapEnvelope(res)?.segments ?? []));
         } catch (gapError) {
           console.error(
             "[carbon-chat] gap-fill batch failed:",
@@ -1871,8 +1878,8 @@ export const useCarbonChat = () => {
           const formData = new FormData();
           formData.append("file", file);
           formData.append("language", language);
-          const res = await request<{
-            payload: {
+          const res = await request<
+            IEnvelopeLike<{
               segments: {
                 paragraphId: string;
                 title: string;
@@ -1881,9 +1888,15 @@ export const useCarbonChat = () => {
               }[];
               unmapped: string[];
               activities: IActivityRecord[];
-            } | null;
-          }>("/api/v1/chat/carbon/import", { method: "POST", body: formData });
-          payload = res.payload ?? {
+            }>
+          >("/api/v1/chat/carbon/import", { method: "POST", body: formData });
+          /**
+           * Info: (20260806 - Tzuhan) 信封裡的失敗轉回拋出。
+           * 這一支特別要緊:原本 `?? { segments: [] … }` 會把失敗變成「空匯入」,
+           * 而空匯入走的是「檔案裡找不到內容」那條文案 —— 使用者會回去改檔案,
+           * 而真正的原因是呼叫失敗。外層 catch 才會給對的訊息。
+           */
+          payload = unwrapEnvelope(res) ?? {
             segments: [],
             unmapped: [],
             activities: [],
@@ -2095,37 +2108,23 @@ export const useCarbonChat = () => {
 
       const attempt = async (): Promise<boolean> => {
         try {
-          const res = await request<{
-            // Info: (20260806 - Tzuhan) 端點改走保活式串流後 HTTP 狀態鎖 200,失敗在信封裡
-            success: boolean;
-            errorCode?: string;
-            payload: {
+          const res = await request<
+            IEnvelopeLike<{
               templateId: CarbonDiagramTemplateEnum;
               block: string;
               isDrawn: boolean;
-            } | null;
-          }>("/api/v1/chat/carbon/diagram", {
+            }>
+          >("/api/v1/chat/carbon/diagram", {
             method: "POST",
             body: JSON.stringify({ paragraphId, content, language }),
           });
           /**
-           * Info: (20260806 - Tzuhan) 判 `success` 而非只判 HTTP 狀態。
-           *
-           * 這個端點的 LLM 段落改走保活式串流(繞開閘道 60 秒的閒置逾時),
-           * 而串流一開始狀態碼就鎖成 200 —— 只看狀態碼會把失敗當成成功,
+           * Info: (20260806 - Tzuhan) 端點走保活式串流(繞開閘道 60 秒的閒置逾時),
+           * 而串流一開始 HTTP 狀態就鎖成 200 —— 只看狀態碼會把失敗當成成功,
            * 表現是「圖沒出來也不重試,而且 console 一片乾淨」。
-           *
-           * 回 false 即走既有的退避重試一次(額度不足是「等一下會好」)。
+           * unwrapEnvelope 把信封裡的失敗轉回拋出,下面的 catch(退避重試一次)因此照舊。
            */
-          if (!res.success) {
-            console.error(
-              "[carbon-chat] diagram generation failed:",
-              paragraphId,
-              res.errorCode ?? null,
-            );
-            return false;
-          }
-          const payload = res.payload;
+          const payload = unwrapEnvelope(res);
           if (!payload) return true;
           if (!payload.isDrawn) {
             // Info: (20260730 - Tzuhan) 被護欄拒絕:區塊仍會插入(內含原因文字),此處補一行前端 log 便於對照後端的 offendingLabels

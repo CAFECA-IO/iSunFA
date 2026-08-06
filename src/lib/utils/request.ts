@@ -14,6 +14,36 @@ interface IRequestOptions extends RequestInit {
   query?: Record<string, string | number | boolean | undefined>;
 }
 
+/**
+ * Info: (20260806 - Tzuhan) 保活式串流端點的回應信封解封。
+ *
+ * 那些端點(見 @/lib/utils/streaming_response)為了繞開閘道 60 秒的**閒置**逾時,
+ * 一開始就送出 200 表頭,失敗只能寫在信封的 `success` / `errorCode` 裡。
+ * 於是 `request()` 不會拋 —— **只看 HTTP 狀態會把失敗當成成功**,
+ * 而那個表現(沒結果、也沒錯誤、console 一片乾淨)比原本的 504 更難查。
+ *
+ * 這裡把信封裡的失敗轉回 `ApiError` 拋出,好處是呼叫端的既有 catch 路徑
+ * (重試清單、退回送全文、退避重試)語意完全不變,而且 `isQuotaApiError` /
+ * `isTimeoutApiError` / `isRateLimitedApiError` 這些型別守衛讀的正是 `data.errorCode`,
+ * 因此額度與逾時的分類照樣成立。
+ *
+ * `status` 帶 200 是誠實的:HTTP 那層真的成功了,失敗在應用層 ——
+ * 所以分類一律走 `errorCode`,不要拿 status 去判這類錯誤。
+ */
+export interface IEnvelopeLike<T> {
+  success?: boolean;
+  errorCode?: string;
+  message?: string;
+  payload: T | null;
+}
+
+export const unwrapEnvelope = <T>(envelope: IEnvelopeLike<T>): T | null => {
+  if (envelope.success === false) {
+    throw new ApiError(envelope.message || "Request failed", 200, envelope);
+  }
+  return envelope.payload;
+};
+
 export async function request<T = unknown>(
   url: string,
   options: IRequestOptions = {},
