@@ -91,9 +91,24 @@ export const buildDiagramAnchorEnd = (
 
 /**
  * Info: (20260730 - Tzuhan) 節點文字長度上限:過長的節點會把 mermaid 圖撐爛。
- * 超過即視為「模型把整段敘述塞進節點」,該張圖不予採信。
+ *
+ * Info: (20260806 - Tzuhan) 40 → 60。
+ *
+ * 40 是憑感覺定的,而實測擋掉的是原文的一個**完整里程碑**:
+ * 「永安廠冷軋產品榮獲 ISO 9001、ISO 14001 及 OHSAS 18001 認證」(43 字)——
+ * 那不是「模型把整段敘述塞進節點」,它就是原文那一條。
+ * 一整段敘述通常上百字,60 仍然擋得住。
  */
-export const CARBON_DIAGRAM_MAX_LABEL_CHARS = 40;
+export const CARBON_DIAGRAM_MAX_LABEL_CHARS = 60;
+
+/**
+ * Info: (20260806 - Tzuhan) 超長節點占比的上限:超過即整張不畫。
+ *
+ * 這道界守的是原規則的**本意** —— 「模型把整段敘述當成節點」。
+ * 那種情形的特徵是**大部分**節點都過長,而不是三十個裡有一個。
+ * 半數以上過長即不採信;否則只略過那幾個(見 validateDiagramNodes)。
+ */
+export const CARBON_DIAGRAM_MAX_OVERLONG_SHARE = 0.5;
 
 /**
  * Info: (20260730 - Tzuhan) 時間軸最少需要幾個「有時間標籤」的事件。

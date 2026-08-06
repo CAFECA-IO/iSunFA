@@ -188,6 +188,11 @@ export const carbonChatbot = {
   progress_collapse: "Collapse progress widget",
   activity_ledger_title: "Activity Data Ledger",
   activity_ledger_pill: "{{count}} activity records",
+  activity_ledger_pill_imported: " · imported {{count}}",
+  activity_ledger_imported_note:
+    "Imported emissions are already in the ledger: {{count}} rows totalling {{tonne}} tCO2e. The source report gives emissions only — no activity data or factors — so they are not listed below.",
+  activity_ledger_empty_after_import:
+    "No activity data yet. The imported report provides emissions only; to get per-row activity data and factors, provide them in the chat or import voucher data from the account book.",
   activity_ledger_empty:
     "No activity data yet. Provide figures like electricity or fuel usage in the chat, or upload bills, and they will be recorded here automatically.",
   activity_ledger_collapse: "Collapse activity ledger",
