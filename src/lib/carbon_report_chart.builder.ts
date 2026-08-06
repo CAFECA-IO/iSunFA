@@ -110,7 +110,7 @@ export const CARBON_CHART_DEFAULT_LABELS: ICarbonChartLabels = {
   importedSankeyCollapsed: "節點過多,已降為兩層(廠址 → 範疇)",
   importedSankeyGhgMapping: "子代碼與 GHG Protocol 類別的對照",
   importedTopItemsTitle:
-    "排放去向:全公司 → 廠址 → 各廠址前九大項目與其他(原文照錄,所在地基準,公噸 CO2e/年)",
+    "排放去向:全公司 → 前九大排放項目與其他(原文照錄,所在地基準,公噸 CO2e/年)",
   importedSankeyOther: "其他",
   importedSankeyOrganization: "全公司",
   importedSankeyBelowThreshold: "占比過小未畫出(公噸 CO2e/年)",
@@ -652,78 +652,64 @@ const buildImportedTopItemsSankey = (
   const toTonne = (co2eKg: string): string =>
     MoneyUtil.toDecimal(co2eKg).div(TONNE_TO_KG_MULTIPLIER).toString();
 
-  // Info: (20260806 - Tzuhan) 廠址編號與分類切面同一套(`#n`,首次出現順序),兩張圖可以對照著看
-  const siteOrder: string[] = [];
-  positive.forEach((entry) => {
-    const site = entry.importedOrigin?.site;
-    if (site && !siteOrder.includes(site)) siteOrder.push(site);
-  });
-  const siteTags = new Map(
-    siteOrder.map((site, index) => [site, `#${index + 1}`]),
-  );
-  const siteDisplayName = (site: string): string =>
-    `${siteTags.get(site) ?? ""} ${site.replace(SANKEY_SITE_INDEX_PATTERN, "").trim()}`.trim();
-
   const organization = labels.importedSankeyOrganization ?? "全公司";
   const otherLabel = labels.importedSankeyOther ?? "其他";
 
   /**
-   * Info: (20260806 - Tzuhan) 逐廠址累加各項目(項目 = 子代碼),再逐廠址取前 N 大。
+   * Info: (20260806 - Tzuhan) 兩層:全公司 → 前 N 大項目 + 其他。**刻意沒有廠址層。**
+   *
+   * 第一版做成 組織 → 廠址 → 逐廠址前九大,結果是 3 × (9+1) = 最多 30 個葉節點,
+   * 而實測這份報告 97.5% 集中在一個廠址 —— 另外兩個廠址合計 2.5%,
+   * 它們那十幾個項目全是看不見的細線,把整張圖的比重稀釋掉。
+   *
+   * 廠址的分布在分類切面那張圖的第一層就看得到(#1 201 / #2 9.2 / #3 8121),
+   * 這裡再分一次沒有帶進資訊,只是讓「哪一項最大」變得讀不出來 ——
+   * 而那正是這張圖唯一要回答的問題。
+   *
+   * 項目跨廠址依子代碼合併:公司層級的「前九大排放項目」本來就是合併後的概念。
    * 以公斤累加、輸出前才換公噸:少一次除法捨入。
    */
-  const bySite = new Map<string, Map<string, string>>();
+  const byItem = new Map<string, string>();
   positive.forEach((entry) => {
     const origin = entry.importedOrigin;
     if (!origin) return;
-    if (!bySite.has(origin.site)) bySite.set(origin.site, new Map());
-    const items = bySite.get(origin.site);
-    if (!items) return;
-    items.set(
+    byItem.set(
       origin.subCategory,
-      MoneyUtil.add(items.get(origin.subCategory) ?? "0", entry.co2eKg),
+      MoneyUtil.add(byItem.get(origin.subCategory) ?? "0", entry.co2eKg),
     );
   });
 
-  const rows: string[] = [];
-  siteOrder.forEach((site) => {
-    const items = bySite.get(site);
-    if (!items) return;
-    const siteNode = siteDisplayName(site);
-    const siteTotal = Array.from(items.values()).reduce(
-      (sum, value) => MoneyUtil.add(sum, value),
+  /**
+   * Info: (20260806 - Tzuhan) 排序鍵帶子代碼:同額項目的先後才是決定性的。
+   * 只比數值時同額項目的順序取決於 Map 的走訪順序,那會讓同一份輸入畫出不同的圖。
+   */
+  const sorted = Array.from(byItem.entries()).sort((a, b) => {
+    const diff = MoneyUtil.toDecimal(b[1]).comparedTo(
+      MoneyUtil.toDecimal(a[1]),
+    );
+    return diff !== 0 ? diff : a[0].localeCompare(b[0]);
+  });
+  const top = sorted.slice(0, CARBON_SANKEY_TOP_ITEM_COUNT);
+  const rest = sorted.slice(CARBON_SANKEY_TOP_ITEM_COUNT);
+
+  const rows: string[] = top.map(
+    ([subCategory, co2eKg]) =>
+      `${quote(organization)},${quote(subCategory)},${toTonne(co2eKg)}`,
+  );
+  /**
+   * Info: (20260806 - Tzuhan) 「其他」是一個**真的節點**,不是丟掉 ——
+   * 沒進前 N 名的流量仍然畫在圖上,所以第一層的流出等於原文全公司總量。
+   * 門檻制做不到這件事:它只能把那些流量從圖上移除,再列在圖下方。
+   */
+  if (rest.length > 0) {
+    const otherTotal = rest.reduce(
+      (sum, [, value]) => MoneyUtil.add(sum, value),
       "0",
     );
     rows.push(
-      `${quote(organization)},${quote(siteNode)},${toTonne(siteTotal)}`,
+      `${quote(organization)},${quote(`${otherLabel}(${rest.length})`)},${toTonne(otherTotal)}`,
     );
-
-    /**
-     * Info: (20260806 - Tzuhan) 排序鍵帶子代碼:同額項目的先後才是決定性的。
-     * 只比數值時同額項目的順序取決於 Map 的走訪順序,那會讓同一份輸入畫出不同的圖。
-     */
-    const sorted = Array.from(items.entries()).sort((a, b) => {
-      const diff = MoneyUtil.toDecimal(b[1]).comparedTo(
-        MoneyUtil.toDecimal(a[1]),
-      );
-      return diff !== 0 ? diff : a[0].localeCompare(b[0]);
-    });
-    const top = sorted.slice(0, CARBON_SANKEY_TOP_ITEM_COUNT);
-    const rest = sorted.slice(CARBON_SANKEY_TOP_ITEM_COUNT);
-    top.forEach(([subCategory, co2eKg]) => {
-      rows.push(
-        `${quote(siteNode)},${quote(`${siteTags.get(site) ?? ""} ${subCategory}`.trim())},${toTonne(co2eKg)}`,
-      );
-    });
-    if (rest.length > 0) {
-      const otherTotal = rest.reduce(
-        (sum, [, value]) => MoneyUtil.add(sum, value),
-        "0",
-      );
-      rows.push(
-        `${quote(siteNode)},${quote(`${siteTags.get(site) ?? ""} ${otherLabel}(${rest.length})`.trim())},${toTonne(otherTotal)}`,
-      );
-    }
-  });
+  }
 
   const lines = ["```mermaid", "sankey-beta", "", ...rows, "```"];
   if (labels.importedTopItemsTitle) {
