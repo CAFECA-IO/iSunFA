@@ -147,6 +147,9 @@ export const carbonChatbot = {
     "「{{name}}」逐章解析中(已完成 {{current}}/{{total}} 章,{{inFlight}} 章解析中),完整報告約需數分鐘…",
   import_failed_chapters: "以下章節解析失敗,可稍後重新匯入補齊:{{chapters}}",
   import_retry_failed: "重試失敗章節",
+  import_retrying: "重試中…",
+  import_retrying_hint:
+    "正在重新解析失敗的章節,需要數分鐘。請不要關閉這張卡片。",
   import_empty: "【匯入失敗】檔案中沒有可對應到大綱的內容。",
   import_failed: "【匯入失敗】報告解析發生問題,請稍後再試。",
   attachments_processing:
@@ -222,6 +225,8 @@ export const carbonChatbot = {
   chart_imported_sankey_title:
     "溫室氣體排放流向：組織 → 廠址 → 範疇 → 類別 → 排放形式（原文照錄，所在地基準，公噸 CO2e/年）",
   chart_imported_sankey_excluded: "未畫出的項目（NA/NS 或為零）",
+  chart_imported_sankey_no_ledger:
+    "本報告已匯入，但帳本沒有任何可用數據，因此畫不出排放流向圖。桑基圖與系統數據表格的唯一來源是表3.8（各公司溫室氣體排放量），本次未取得該表。請確認第三章是否解析成功；若該章列為解析失敗，請以預覽卡的「重試失敗章節」重新匯入，並在伺服端日誌查看該表是否被丟棄及其原因。",
   chart_imported_sankey_collapsed: "節點過多，已降為三層（組織 → 廠址 → 範疇）",
   chart_imported_sankey_below_threshold: "占比過小未畫出（公噸 CO2e/年）",
   chart_imported_sankey_organization: "全公司",

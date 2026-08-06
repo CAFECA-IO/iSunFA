@@ -52,6 +52,18 @@ export interface ICarbonChartLabels {
   importedSankeyTitle?: string;
   /** Info: (20260803 - Tzuhan) 圖下方「未畫出的項目」說明抬頭 */
   importedSankeyExcluded?: string;
+  /**
+   * Info: (20260806 - Tzuhan) 已匯入報告但帳本空的時候的說明。
+   *
+   * 與 `insufficient` 分開是必要的:`insufficient` 說的是「補齊活動數據」,
+   * 那句話對匯入的報告是**錯的方向** —— 匯入路徑的數據不是靠使用者一筆一筆補,
+   * 而是來自表3.8。實測那一輪第三章解析失敗、表3.8 沒進來,
+   * 而 3.6 只印著「補齊活動數據」,於是使用者會去找活動數據,
+   * 真正該做的是重新匯入第三章。
+   *
+   * 指錯方向的提示比沒有提示更貴:它讓人把時間花在不會有結果的地方。
+   */
+  importedSankeyNoLedger?: string;
   /** Info: (20260803 - Tzuhan) 節點過多而降層時的說明 */
   importedSankeyCollapsed?: string;
   /** Info: (20260805 - Tzuhan) 第一層節點名(組織總體) */
@@ -82,6 +94,8 @@ export const CARBON_CHART_DEFAULT_LABELS: ICarbonChartLabels = {
   importedSankeyTitle:
     "溫室氣體排放流向:組織 → 廠址 → 範疇 → 類別 → 排放形式(原文照錄,所在地基準,公噸 CO2e/年)",
   importedSankeyExcluded: "未畫出的項目(NA/NS 或為零)",
+  importedSankeyNoLedger:
+    "本報告已匯入,但帳本沒有任何可用數據,因此畫不出排放流向圖。桑基圖與系統數據表格的唯一來源是表3.8(各公司溫室氣體排放量),本次未取得該表。請確認第三章是否解析成功;若該章列為解析失敗,請以預覽卡的「重試失敗章節」重新匯入,並在伺服端日誌查看該表是否被丟棄及其原因。",
   importedSankeyCollapsed: "節點過多,已降為三層(組織 → 廠址 → 範疇)",
   importedSankeyOrganization: "全公司",
   importedSankeyBelowThreshold: "占比過小未畫出(公噸 CO2e/年)",
@@ -452,6 +466,16 @@ export const buildCarbonChartBlock = (
     return wrap(`> ${labels.frozen}`);
   }
   if (!ledger || ledger.entries.length === 0) {
+    /**
+     * Info: (20260806 - Tzuhan) 匯入桑基圖的空帳本要說對的原因。
+     * `insufficient` 指向「補齊活動數據」,而匯入路徑的數據來自表3.8,
+     * 不是使用者一筆一筆補 —— 指錯方向的提示比沒有提示更貴。
+     */
+    if (templateId === CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY) {
+      return wrap(
+        `> _${labels.importedSankeyNoLedger ?? labels.insufficient}_`,
+      );
+    }
     return wrap(`> _${labels.insufficient}_`);
   }
 

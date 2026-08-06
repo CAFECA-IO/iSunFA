@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   RotateCcw,
   Sparkles,
+  Loader2,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
@@ -56,6 +57,18 @@ export interface IImportPreviewProps {
   onDiscard: () => void;
   // Info: (20260717 - Tzuhan) 只重跑失敗章節並合併進本預覽(檔案由 hook 暫存,無需重選)
   onRetryFailed?: () => void;
+  /**
+   * Info: (20260806 - Tzuhan) 重試進行中。
+   *
+   * 原本這張卡對「正在重試」一無所知:按下去毫無變化,按鈕還能再按,
+   * 而進度只出現在被本 modal(z-[90])蓋住的輸入列上。
+   * 使用者理所當然會再按一次,而那會並行跑兩份、各燒一份 LLM 額度。
+   *
+   * 重試一次要好幾分鐘(逐章解析),所以「等待中」不能只靠使用者猜。
+   */
+  isRetrying?: boolean;
+  /** Info: (20260806 - Tzuhan) 重試期間的進度文字(與輸入列同一份 draftNotice) */
+  retryNotice?: string | null;
 }
 
 export function ImportPreview({
@@ -64,6 +77,8 @@ export function ImportPreview({
   onApply,
   onDiscard,
   onRetryFailed = undefined,
+  isRetrying = false,
+  retryNotice = null,
 }: IImportPreviewProps) {
   const { t } = useTranslation();
   const checkedCount = pendingImport.items.filter((i) => i.checked).length;
@@ -136,12 +151,32 @@ export function ImportPreview({
                 <button
                   type="button"
                   onClick={onRetryFailed}
-                  className="flex shrink-0 items-center gap-1 rounded-full bg-white px-2.5 py-1 font-bold text-amber-700 ring-1 ring-amber-200 transition-colors hover:bg-amber-100"
+                  disabled={isRetrying}
+                  className="flex shrink-0 items-center gap-1 rounded-full bg-white px-2.5 py-1 font-bold text-amber-700 ring-1 ring-amber-200 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-white"
                 >
-                  <RotateCcw size={11} />
-                  {t("carbon_chatbot.import_retry_failed")}
+                  {isRetrying ? (
+                    <Loader2 size={11} className="animate-spin" />
+                  ) : (
+                    <RotateCcw size={11} />
+                  )}
+                  {t(
+                    isRetrying
+                      ? "carbon_chatbot.import_retrying"
+                      : "carbon_chatbot.import_retry_failed",
+                  )}
                 </button>
               )}
+            </div>
+          )}
+
+          {/* Info: (20260806 - Tzuhan) 重試中的進度:與輸入列同一份提示,但顯示在 modal **內**。
+              輸入列在本 modal(z-[90])後面,重試時使用者看得到的只有這裡。 */}
+          {isRetrying && (
+            <div className="flex items-center gap-2 rounded-xl bg-orange-50 p-3 text-[11px] font-bold text-orange-700">
+              <Loader2 size={12} className="shrink-0 animate-spin" />
+              <span className="min-w-0 flex-1">
+                {retryNotice ?? t("carbon_chatbot.import_retrying_hint")}
+              </span>
             </div>
           )}
 

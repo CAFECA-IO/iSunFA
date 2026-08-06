@@ -81,6 +81,8 @@ export default function CarbonChatbotPage() {
     applyPendingImport,
     discardPendingImport,
     retryFailedImportChapters,
+    isRetryingImport,
+    importFollowUpPrompts,
     importCandidate,
     confirmImportCandidate,
     attachImportCandidate,
@@ -262,6 +264,9 @@ export default function CarbonChatbotPage() {
               onConfirmImportCandidate={confirmImportCandidate}
               onAttachImportCandidate={attachImportCandidate}
               onDismissImportCandidate={dismissImportCandidate}
+              // Info: (20260806 - Tzuhan) 匯入後的後續建議:按鈕上的字就是送出的內容
+              followUpPrompts={importFollowUpPrompts}
+              onSendFollowUp={handleSendMessage}
             />
           </>
         ) : (
@@ -298,6 +303,10 @@ export default function CarbonChatbotPage() {
           onApply={applyPendingImport}
           onDiscard={discardPendingImport}
           onRetryFailed={retryFailedImportChapters}
+          isRetrying={isRetryingImport}
+          // Info: (20260806 - Tzuhan) 進度沿用同一份 draftNotice:輸入列被本 modal(z-[90])蓋住,
+          // Info: (20260806 - Tzuhan) 重試時使用者看得到的只有卡片內那一處
+          retryNotice={draftNotice?.text ?? null}
         />
       )}
 
