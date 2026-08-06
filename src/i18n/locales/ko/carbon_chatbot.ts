@@ -187,6 +187,11 @@ export const carbonChatbot = {
   progress_collapse: "진행률 위젯 접기",
   activity_ledger_title: "활동 데이터 장부",
   activity_ledger_pill: "활동 데이터 {{count}}건",
+  activity_ledger_pill_imported: " · 가져오기 {{count}}건",
+  activity_ledger_imported_note:
+    "가져온 배출량은 이미 원장에 있습니다: {{count}}건, 합계 {{tonne}} tCO2e. 원문은 배출량만 제공하고 활동 데이터와 계수가 없어 아래에는 표시되지 않습니다.",
+  activity_ledger_empty_after_import:
+    "활동 데이터가 아직 없습니다. 가져온 보고서는 배출량만 제공합니다. 건별 활동 데이터와 계수가 필요하면 대화에서 제공하거나 장부에서 증빙 데이터를 가져오세요.",
   activity_ledger_empty:
     "활동 데이터가 아직 없습니다. 채팅에서 전력 사용량, 연료 사용량 등을 알려주거나 청구서를 업로드하면 자동으로 기록됩니다.",
   activity_ledger_collapse: "활동 데이터 접기",

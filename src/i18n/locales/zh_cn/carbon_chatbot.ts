@@ -174,6 +174,11 @@ export const carbonChatbot = {
   progress_collapse: "收起进度浮窗",
   activity_ledger_title: "活动数据台账",
   activity_ledger_pill: "活动数据 {{count}} 笔",
+  activity_ledger_pill_imported: " · 导入 {{count}} 笔",
+  activity_ledger_imported_note:
+    "导入的排放量已在账本:{{count}} 笔,合计 {{tonne}} 公吨 CO2e。原文只给排放量、没有活动数据与系数,故不列于下方。",
+  activity_ledger_empty_after_import:
+    "尚无活动数据。导入的报告只提供排放量;若要逐笔的活动数据与系数,请在对话中提供或从账本导入凭证数据。",
   activity_ledger_empty:
     "尚无活动数据。在对话中提供用电量、油耗等数据，或上传账单，系统会自动记录于此。",
   activity_ledger_collapse: "收起活动数据",

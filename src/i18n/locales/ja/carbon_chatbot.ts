@@ -190,6 +190,11 @@ export const carbonChatbot = {
   progress_collapse: "進捗ウィジェットを折りたたむ",
   activity_ledger_title: "活動データ台帳",
   activity_ledger_pill: "活動データ {{count}} 件",
+  activity_ledger_pill_imported: " · インポート {{count}} 件",
+  activity_ledger_imported_note:
+    "インポートした排出量は台帳にあります:{{count}} 件、合計 {{tonne}} tCO2e。原文は排出量のみで活動データと係数がないため、下には表示されません。",
+  activity_ledger_empty_after_import:
+    "活動データはまだありません。インポートした報告書は排出量のみを提供します。件別の活動データと係数が必要な場合は、チャットで提供するか帳簿から証憑データをインポートしてください。",
   activity_ledger_empty:
     "活動データはまだありません。チャットで電力使用量や燃料消費量を伝えるか、請求書をアップロードすると自動記録されます。",
   activity_ledger_collapse: "活動データを折りたたむ",
