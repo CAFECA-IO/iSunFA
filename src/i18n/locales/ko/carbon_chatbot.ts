@@ -254,15 +254,18 @@ export const carbonChatbot = {
   chart_sankey_period_collapsed:
     "기간이 2개 연도를 초과하여 월별 계층을 생략했습니다(월별은 추세 차트 참조)",
   chart_imported_sankey_title:
-    "온실가스 배출 흐름: 조직 → 사업장 → 범위 → 범주 → 배출 형태(원문 전재, 지역 기준, tCO2e/년)",
+    "배출 분류: 전사 → 스코프 → 세부 범주 (원문 그대로, 위치 기준, tCO2e/년)",
   chart_imported_sankey_excluded: "그래프에 없는 항목(NA/NS 또는 0)",
   chart_imported_sankey_no_ledger:
     "보고서는 가져왔지만 원장에 사용할 수 있는 데이터가 없어 배출 흐름도를 그릴 수 없습니다. 생키 다이어그램과 시스템 집계표의 유일한 출처는 표3.8(회사별 온실가스 배출량)이며 이번에는 가져오지 못했습니다. 제3장이 정상적으로 분석되었는지 확인해 주세요. 분석 실패로 표시된 경우 미리보기 카드의 「실패한 장 재시도」로 다시 가져오고, 서버 로그에서 해당 표가 폐기된 이유를 확인해 주세요.",
   chart_imported_sankey_collapsed:
-    "노드가 너무 많아 2단계(사업장 → 범위)로 축약했습니다",
+    "노드가 너무 많아 1개 층으로 축소했습니다 (전사 → 스코프)",
   chart_imported_top_items_title:
     "배출 흐름: 전사 → 상위 9개 배출 항목과 기타(원문 전재, 지역 기준, tCO2e/년)",
   chart_imported_sankey_other: "기타",
+  // Info: (20260807 - Tzuhan) 分類圖抽掉廠址層(屏東佔 97%,同圖畫不出比重);廠址改列小計
+  chart_imported_sankey_site_totals:
+    "사업장별 소계 (tCO2e/년, 전사 대비 비중)",
   chart_imported_sankey_ghg_mapping: "하위 코드와 GHG Protocol 범주 대조",
   chart_imported_sankey_below_threshold: "비중이 작아 미표시(tCO2e/년)",
   chart_imported_sankey_organization: "전사",

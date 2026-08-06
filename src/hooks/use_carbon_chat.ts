@@ -50,6 +50,7 @@ import {
   CARBON_AUTO_SANKEY_PARAGRAPH_ID,
 } from "@/constants/carbon_report_charts";
 import { formatGhgCategoryLabel, formatEsgScopeLabel } from "@/constants/esg";
+import { formatIsoSubCategoryLabel } from "@/constants/iso14064_subcategory";
 import {
   CARBON_EVIDENCE_CHAPTER_ID,
   buildEvidenceChainBlock,
@@ -1262,10 +1263,22 @@ export const useCarbonChat = () => {
       importedSankeyOrganization: t(
         "carbon_chatbot.chart_imported_sankey_organization",
       ),
+      // Info: (20260807 - Tzuhan) 分類圖抽掉廠址層後,廠址小計改列在圖下
+      importedSankeySiteTotals: t(
+        "carbon_chatbot.chart_imported_sankey_site_totals",
+      ),
       // Info: (20260722 - Tzuhan) UAT:範疇顯示名(enum 值不可讀)
       formatScope: (scope: string) => formatGhgCategoryLabel(scope, language),
       // Info: (20260805 - Tzuhan) 三大範疇顯示名(匯入桑基圖第三層)
       formatEsgScope: (scope: string) => formatEsgScopeLabel(scope, language),
+      /**
+       * Info: (20260807 - Tzuhan) 子代碼顯示名(`2.1 外購電力`)。
+       * 名稱取自 ISO 14064-1 標準而非原文報告的寫法 ——
+       * 各家報告的中文名稱不一致,而同一個代碼在不同報告印出不同名字,
+       * 圖與圖之間就對不起來(理由詳見 formatIsoSubCategoryLabel)。
+       */
+      formatSubCategory: (subCategory: string) =>
+        formatIsoSubCategoryLabel(subCategory, language),
     }),
     [t, language],
   );
