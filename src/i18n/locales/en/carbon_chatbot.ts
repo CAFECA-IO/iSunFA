@@ -249,7 +249,12 @@ export const carbonChatbot = {
   chart_imported_sankey_no_ledger:
     'The report was imported but the ledger holds no usable data, so the emission flow cannot be drawn. Table 3.8 (GHG emissions by company) is the only source for the Sankey diagram and the system data table, and it was not obtained this time. Check whether Chapter 3 parsed successfully; if it is listed as failed, re-import it via "Retry failed chapters" on the preview card, and check the server log for whether the table was dropped and why.',
   chart_imported_sankey_collapsed:
-    "Too many nodes; collapsed to three layers (organization → site → scope)",
+    "Too many nodes; collapsed to two layers (site → scope)",
+  chart_imported_top_items_title:
+    "Where emissions go: company → site → top nine items per site plus Other (verbatim from the report, location-based, tCO2e/yr)",
+  chart_imported_sankey_other: "Other",
+  chart_imported_sankey_ghg_mapping:
+    "Sub-code to GHG Protocol category mapping",
   chart_imported_sankey_below_threshold: "Too small to plot (tCO2e/yr)",
   chart_imported_sankey_organization: "Whole company",
   book_bind_pending_unlock:

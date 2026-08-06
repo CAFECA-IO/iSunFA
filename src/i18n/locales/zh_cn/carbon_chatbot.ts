@@ -227,7 +227,11 @@ export const carbonChatbot = {
   chart_imported_sankey_excluded: "未画出的项目（NA/NS 或为零）",
   chart_imported_sankey_no_ledger:
     "本报告已导入，但账本没有任何可用数据，因此画不出排放流向图。桑基图与系统数据表格的唯一来源是表3.8（各公司温室气体排放量），本次未取得该表。请确认第三章是否解析成功；若该章列为解析失败，请以预览卡的「重试失败章节」重新导入，并在服务端日志查看该表是否被丢弃及其原因。",
-  chart_imported_sankey_collapsed: "节点过多，已降为三层（组织 → 厂址 → 范畴）",
+  chart_imported_sankey_collapsed: "节点过多，已降为两层（厂址 → 范畴）",
+  chart_imported_top_items_title:
+    "排放去向：全公司 → 厂址 → 各厂址前九大项目与其他（原文照录，所在地基准，公吨 CO2e/年）",
+  chart_imported_sankey_other: "其他",
+  chart_imported_sankey_ghg_mapping: "子代码与 GHG Protocol 类别的对照",
   chart_imported_sankey_below_threshold: "占比过小未画出（公吨 CO2e/年）",
   chart_imported_sankey_organization: "全公司",
   book_bind_pending_unlock:

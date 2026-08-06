@@ -246,7 +246,11 @@ export const carbonChatbot = {
   chart_imported_sankey_no_ledger:
     "보고서는 가져왔지만 원장에 사용할 수 있는 데이터가 없어 배출 흐름도를 그릴 수 없습니다. 생키 다이어그램과 시스템 집계표의 유일한 출처는 표3.8(회사별 온실가스 배출량)이며 이번에는 가져오지 못했습니다. 제3장이 정상적으로 분석되었는지 확인해 주세요. 분석 실패로 표시된 경우 미리보기 카드의 「실패한 장 재시도」로 다시 가져오고, 서버 로그에서 해당 표가 폐기된 이유를 확인해 주세요.",
   chart_imported_sankey_collapsed:
-    "노드가 너무 많아 3단계(조직 → 사업장 → 범위)로 축약했습니다",
+    "노드가 너무 많아 2단계(사업장 → 범위)로 축약했습니다",
+  chart_imported_top_items_title:
+    "배출 흐름: 전사 → 사업장 → 사업장별 상위 9개 항목과 기타(원문 전재, 지역 기준, tCO2e/년)",
+  chart_imported_sankey_other: "기타",
+  chart_imported_sankey_ghg_mapping: "하위 코드와 GHG Protocol 범주 대조",
   chart_imported_sankey_below_threshold: "비중이 작아 미표시(tCO2e/년)",
   chart_imported_sankey_organization: "전사",
   book_bind_pending_unlock:

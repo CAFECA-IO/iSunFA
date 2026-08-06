@@ -49,11 +49,7 @@ import {
   CarbonChartTemplateEnum,
   CARBON_AUTO_SANKEY_PARAGRAPH_ID,
 } from "@/constants/carbon_report_charts";
-import {
-  formatGhgCategoryLabel,
-  formatEsgScopeLabel,
-  formatIsoCategoryShortLabel,
-} from "@/constants/esg";
+import { formatGhgCategoryLabel, formatEsgScopeLabel } from "@/constants/esg";
 import {
   CARBON_EVIDENCE_CHAPTER_ID,
   buildEvidenceChainBlock,
@@ -1119,6 +1115,12 @@ export const useCarbonChat = () => {
       importedSankeyCollapsed: t(
         "carbon_chatbot.chart_imported_sankey_collapsed",
       ),
+      // Info: (20260806 - Tzuhan) 兩張圖拆開後新增的文案:去向圖標題、其他節點、GHG 對照抬頭
+      importedTopItemsTitle: t("carbon_chatbot.chart_imported_top_items_title"),
+      importedSankeyOther: t("carbon_chatbot.chart_imported_sankey_other"),
+      importedSankeyGhgMapping: t(
+        "carbon_chatbot.chart_imported_sankey_ghg_mapping",
+      ),
       /**
        * Info: (20260806 - Tzuhan) 這兩個先前漏接 i18n,只吃得到 CARBON_CHART_DEFAULT_LABELS 的
        * 繁中預設值 —— 五層圖是 20260805 才加的,文案當時只改了 default 沒改 i18n,
@@ -1132,10 +1134,6 @@ export const useCarbonChat = () => {
       ),
       // Info: (20260722 - Tzuhan) UAT:範疇顯示名(enum 值不可讀)
       formatScope: (scope: string) => formatGhgCategoryLabel(scope, language),
-      // Info: (20260803 - Tzuhan) ISO 類別顯示名(匯入桑基圖第四層;直接印 CATEGORY_1 讀者看不懂)
-      // Info: (20260805 - Tzuhan) 桑基圖節點用短名:完整名 18 個字,數十個節點會互相重疊
-      formatIsoCategory: (category: string) =>
-        formatIsoCategoryShortLabel(category, language),
       // Info: (20260805 - Tzuhan) 三大範疇顯示名(匯入桑基圖第三層)
       formatEsgScope: (scope: string) => formatEsgScopeLabel(scope, language),
     }),
@@ -2959,15 +2957,37 @@ export const useCarbonChat = () => {
      * Info: (20260806 - Tzuhan) 帳本空的時候 entries 判不出切面,改看報告的匯入來歷 ——
      * 那正是「該畫匯入圖卻沒有資料」的情形,說明文字也必須是匯入路徑的那一份。
      */
-    const templateId =
+    /**
+     * Info: (20260806 - Tzuhan) 匯入路徑掛**兩張**:排放去向 + 分類切面。
+     *
+     * 原本一張硬塞五層,而範疇 → ISO 類別 對類別一/二是 1:1 —— 1:1 的層在 sankey 上
+     * 必然讓標籤互相重疊(見 buildImportedSankey 的檔頭)。
+     * 「排放去哪了」與「怎麼分類的」是兩個問題,分開畫各自都只有三層,橫向才有空間。
+     *
+     * 兩張各有自己的錨點命名空間,所以可以並存、各自替換互不覆蓋 ——
+     * 那個可能性 CarbonChartTemplateEnum 的註解早就留著了,這次才真的用上。
+     */
+    const templateIds =
       (ledger?.entries ?? []).some(isImportedEntry) ||
       (!hasLedgerEntries && wasImported)
-        ? CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY
-        : CarbonChartTemplateEnum.EMISSION_SANKEY;
-    const nextContent = insertCarbonChartBlock(
+        ? [
+            CarbonChartTemplateEnum.IMPORTED_TOP_ITEMS_SANKEY,
+            CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY,
+          ]
+        : [CarbonChartTemplateEnum.EMISSION_SANKEY];
+    const nextContent = templateIds.reduce(
+      (content, templateId) =>
+        insertCarbonChartBlock(
+          content,
+          templateId,
+          buildCarbonChartBlock(
+            templateId,
+            ledger,
+            chartLabels,
+            dataTableLabels,
+          ),
+        ),
       target.content,
-      templateId,
-      buildCarbonChartBlock(templateId, ledger, chartLabels, dataTableLabels),
     );
     setSessionsData((prev) => {
       const session = prev[activeSessionId];
