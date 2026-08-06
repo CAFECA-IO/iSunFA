@@ -4,6 +4,8 @@
 import { describe, it, expect } from "@jest/globals";
 import {
   buildImportSummaryNotice,
+  buildImportFollowUpPrompt,
+  CARBON_IMPORT_FOLLOW_UPS,
   CarbonImportReconciliationStateEnum,
   type ICarbonImportSummary,
 } from "@/constants/carbon_chatbot";
@@ -45,7 +47,18 @@ describe("buildImportSummaryNotice", () => {
     expect(texts[2]).toContain("沒有可入帳");
   });
 
-  it("失敗的章列出來;全部成功時不留空行", () => {
+  /**
+   * Info: (20260806 - Tzuhan) 原本斷言「整段完全沒有空行」。
+   *
+   * 那條斷言真正要守的是 `.filter(Boolean)` 有生效 ——
+   * 沒有失敗章節時不該留下一行空白(那個位置本來是失敗章節那句話)。
+   * 20260806 摘要後面接上「接下來可以…」的引導區塊,兩段之間有一行**刻意的**空行,
+   * 於是原斷言開始失敗。
+   *
+   * 放寬範圍而不放棄意圖:改為只檢查摘要那一段(引導抬頭之前)沒有空行。
+   * 直接改成「允許空行」會讓 filter(Boolean) 哪天壞掉也沒人知道。
+   */
+  it("失敗的章列出來;全部成功時摘要段不留空行", () => {
     const withFailures = buildImportSummaryNotice("zh-TW", {
       ...baseSummary,
       failedChapters: ["第四章 數據品質管理", "第九章 查證"],
@@ -54,7 +67,33 @@ describe("buildImportSummaryNotice", () => {
 
     const clean = buildImportSummaryNotice("zh-TW", baseSummary);
     expect(clean).not.toContain("解析失敗");
-    expect(clean.split("\n").every((line) => line.length > 0)).toBe(true);
+    const summaryPart = clean.split("接下來我可以幫你:")[0].trimEnd();
+    expect(summaryPart.split("\n").every((line) => line.length > 0)).toBe(true);
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 摘要不能講完就停:使用者匯入報告的目的是要有人幫他看。
+   * 三個選項的文案**同時是**使用者點按鈕時送出的那句話(共用 CARBON_IMPORT_FOLLOW_UPS),
+   * 所以這裡順便釘住兩者一致 —— 按鈕寫一句、實際送另一句是最難查的一種不一致。
+   */
+  it("摘要後面接上後續建議,且與按鈕送出的內容是同一份文案", () => {
+    const text = buildImportSummaryNotice("zh-TW", baseSummary);
+    expect(text).toContain("接下來我可以幫你:");
+    CARBON_IMPORT_FOLLOW_UPS.forEach((followUp, index) => {
+      const prompt = buildImportFollowUpPrompt("zh-TW", followUp);
+      expect(text).toContain(`${index + 1}. ${prompt}`);
+    });
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 引導語只說「可以做什麼」,不說「這份報告怎麼樣」——
+   * 此刻只看得到段落計數,沒看過內容,任何對報告品質的斷言都是捏造。
+   */
+  it("引導語不對報告內容下任何斷語", () => {
+    const text = buildImportSummaryNotice("zh-TW", baseSummary);
+    ["品質良好", "符合規範", "沒有問題", "完整"].forEach((claim) => {
+      expect(text).not.toContain(claim);
+    });
   });
 
   // Info: (20260805 - Tzuhan) 匯入的內容一律未查核 —— 這句不能因為勾稽通過就省略

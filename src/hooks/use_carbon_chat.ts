@@ -150,6 +150,8 @@ import {
   CARBON_CHAT_REPLY_TIMEOUT_MS,
   CARBON_CHAT_REPLY_TIMEOUT_WITH_ATTACHMENTS_MS,
   CARBON_IMPORT_SINGLE_CALL_MAX_BYTES,
+  CARBON_IMPORT_FOLLOW_UPS,
+  buildImportFollowUpPrompt,
   CARBON_DIAGRAM_QUOTA_RETRY_MS,
   CARBON_DIAGRAM_THROTTLE_MS,
   IMPORT_CANDIDATE_MIME_TYPES,
@@ -369,6 +371,11 @@ export const useCarbonChat = () => {
 
   // Info: (20260716 - Tzuhan) #56 匯入導流:聊天附件疑似整份報告時的候選(File 保留供直接匯入)
   const [importCandidate, setImportCandidate] = useState<File | null>(null);
+  /**
+   * Info: (20260806 - Tzuhan) 失敗章節重試中。用 state 而非 ref:預覽卡要據此
+   * 禁用按鈕並顯示 spinner —— ref 改變不會觸發重繪,那正是原本「按了沒反應」的形狀。
+   */
+  const [isRetryingImport, setIsRetryingImport] = useState<boolean>(false);
   // Info: (20260714 - Tzuhan) 待送出附件(base64 僅存記憶體，送出後清除)與附件驗證錯誤提示
   const [pendingAttachments, setPendingAttachments] = useState<
     IPendingAttachment[]
@@ -1104,6 +1111,10 @@ export const useCarbonChat = () => {
       importedSankeyTitle: t("carbon_chatbot.chart_imported_sankey_title"),
       importedSankeyExcluded: t(
         "carbon_chatbot.chart_imported_sankey_excluded",
+      ),
+      // Info: (20260806 - Tzuhan) 匯入了但帳本空:必須指向表3.8/第三章,而不是「補齊活動數據」
+      importedSankeyNoLedger: t(
+        "carbon_chatbot.chart_imported_sankey_no_ledger",
       ),
       importedSankeyCollapsed: t(
         "carbon_chatbot.chart_imported_sankey_collapsed",
@@ -2043,6 +2054,19 @@ export const useCarbonChat = () => {
     const file = lastImportFileRef.current;
     const failed = pendingImport?.failedChapters ?? [];
     if (!file || failed.length === 0 || !pendingImport) return;
+    /**
+     * Info: (20260806 - Tzuhan) 重試中不得再次發射。
+     *
+     * 預覽卡的重試鈕原本按下去毫無變化 —— 沒有 spinner、沒有禁用、進度只出現在
+     * 被 modal(z-[90])蓋住的輸入列上。使用者理所當然會再按一次,
+     * 而兩份重試會並行跑、各自燒一份 LLM 額度(額度是 12 次/分鐘),
+     * 互相搶限流之後兩邊都更慢甚至一起失敗,先回來的還會被後回來的覆蓋。
+     *
+     * 這個旗標同時是 UI 的依據(見 isRetryingImport):
+     * 「正在跑」必須看得見,否則使用者的補救動作只會讓情況更糟。
+     */
+    if (isRetryingImport) return;
+    setIsRetryingImport(true);
 
     /**
      * Info: (20260806 - Tzuhan) 重試也釘住發起當下的會話。
@@ -2053,40 +2077,58 @@ export const useCarbonChat = () => {
     const originSessionId = activeSessionId;
     const notify = (notice: IDraftNotice | null) =>
       setDraftNotice(notice, originSessionId);
-    // Info: (20260730 - Tzuhan) 重試沿用首次的頁碼索引:重問一次索引等於再燒一次全文輸入,而索引不會變
-    const result = await runImportChapters(
-      file,
-      failed,
-      false,
-      lastPageIndexRef.current,
-      notify,
-    );
-    notify(null);
-    setPendingImportBySession((prev) => {
-      const current = prev[activeSessionId];
-      if (!current) return prev;
-      const itemByParagraph = new Map(
-        current.items.map((item) => [item.paragraphId, item]),
+    try {
+      // Info: (20260730 - Tzuhan) 重試沿用首次的頁碼索引:重問一次索引等於再燒一次全文輸入,而索引不會變
+      const result = await runImportChapters(
+        file,
+        failed,
+        false,
+        lastPageIndexRef.current,
+        notify,
       );
-      result.segments.forEach((segment) => {
-        const existing = itemByParagraph.get(segment.paragraphId);
-        itemByParagraph.set(segment.paragraphId, {
-          paragraphId: segment.paragraphId,
-          title: segment.title,
-          content: segment.content,
-          hasExisting: existing?.hasExisting ?? false,
-          checked: existing?.checked ?? true,
+      notify(null);
+      setPendingImportBySession((prev) => {
+        const current = prev[activeSessionId];
+        if (!current) return prev;
+        const itemByParagraph = new Map(
+          current.items.map((item) => [item.paragraphId, item]),
+        );
+        result.segments.forEach((segment) => {
+          const existing = itemByParagraph.get(segment.paragraphId);
+          itemByParagraph.set(segment.paragraphId, {
+            paragraphId: segment.paragraphId,
+            title: segment.title,
+            content: segment.content,
+            hasExisting: existing?.hasExisting ?? false,
+            checked: existing?.checked ?? true,
+          });
         });
+        const next: IPendingImport = {
+          ...current,
+          items: Array.from(itemByParagraph.values()),
+          unmapped: [...current.unmapped, ...result.unmapped],
+          failedChapters: result.failed,
+        };
+        return { ...prev, [activeSessionId]: next };
       });
-      const next: IPendingImport = {
-        ...current,
-        items: Array.from(itemByParagraph.values()),
-        unmapped: [...current.unmapped, ...result.unmapped],
-        failedChapters: result.failed,
-      };
-      return { ...prev, [activeSessionId]: next };
-    });
-  }, [pendingImport, runImportChapters, activeSessionId, setDraftNotice]);
+    } catch (error) {
+      // Info: (20260806 - Tzuhan) 原本沒有 catch:重試整批拋錯時提示會卡在 loading 不散
+      console.error("[carbon-chat] retry failed chapters failed:", error);
+      notify({ type: "error", text: t("carbon_chatbot.import_failed") });
+      dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, originSessionId);
+    } finally {
+      // Info: (20260806 - Tzuhan) 成功或失敗都要放行,否則一次失敗就再也重試不了
+      setIsRetryingImport(false);
+    }
+  }, [
+    pendingImport,
+    runImportChapters,
+    activeSessionId,
+    setDraftNotice,
+    dismissDraftNoticeAfter,
+    isRetryingImport,
+    t,
+  ]);
 
   const toggleImportItem = useCallback(
     (paragraphId: string) => {
@@ -2867,8 +2909,23 @@ export const useCarbonChat = () => {
    */
   useEffect(() => {
     const ledger = activeInventoryState?.computedLedger;
-    if (!ledger || ledger.entries.length === 0) return;
     const reportData = sessionsData[activeSessionId]?.reportData;
+    const wasImported = Boolean(reportData?.importedFrom);
+    const hasLedgerEntries = Boolean(ledger && ledger.entries.length > 0);
+    /**
+     * Info: (20260806 - Tzuhan) 匯入過的報告即使帳本是空的也要插入這個區塊。
+     *
+     * 原本 `ledger.entries.length === 0` 直接 return —— 於是表3.8 沒進來時
+     * 3.6 連錨點都沒有,畫面上只剩「資料不足,補齊活動數據」那句
+     * (那是系統數據表格的文案,而它指的方向對匯入路徑是錯的)。
+     * 使用者看到的是「桑基圖又不見了」而報告本身一句話都沒解釋。
+     *
+     * 插入之後有兩個好處:區塊裡會說出真正的原因(見 importedSankeyNoLedger),
+     * 而且錨點存在,帳本後來補上時 refreshCarbonChartBlocks 會就地把圖填進去。
+     *
+     * 沒匯入過而帳本空的會話仍然跳過:那時 3.6 本來就還沒有內容可談。
+     */
+    if (!hasLedgerEntries && !wasImported) return;
     const target = reportData?.paragraphs?.find(
       (p) => p.id === CARBON_AUTO_SANKEY_PARAGRAPH_ID,
     );
@@ -2879,10 +2936,15 @@ export const useCarbonChat = () => {
      * 匯入的報告畫「廠址 → 類別 → 排放形式」,憑證帳本畫「憑證 → 排放源 → 範疇」。
      * 兩者的可信依據不同(外部已查證的年度事實 vs 本系統可下鑽的帳本),
      * 混在同一張圖裡會讓查核者無法判斷任一條流量的來源,故各用各的模板。
+     *
+     * Info: (20260806 - Tzuhan) 帳本空的時候 entries 判不出切面,改看報告的匯入來歷 ——
+     * 那正是「該畫匯入圖卻沒有資料」的情形,說明文字也必須是匯入路徑的那一份。
      */
-    const templateId = ledger.entries.some(isImportedEntry)
-      ? CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY
-      : CarbonChartTemplateEnum.EMISSION_SANKEY;
+    const templateId =
+      (ledger?.entries ?? []).some(isImportedEntry) ||
+      (!hasLedgerEntries && wasImported)
+        ? CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY
+        : CarbonChartTemplateEnum.EMISSION_SANKEY;
     const nextContent = insertCarbonChartBlock(
       target.content,
       templateId,
@@ -3718,269 +3780,299 @@ export const useCarbonChat = () => {
     setPendingAttachments((prev) => prev.filter((a) => a.id !== attachmentId));
   }, []);
 
-  const handleSendMessage = useCallback(async () => {
-    const readyAttachments = pendingAttachments.filter(
-      (a) => a.status === PendingAttachmentStatusEnum.READY,
-    );
-    // Info: (20260714 - Tzuhan) 有文字或有就緒附件即可送出
-    if ((!inputValue.trim() && readyAttachments.length === 0) || isLoading)
-      return;
+  /**
+   * Info: (20260806 - Tzuhan) `overrideText` 供「後續建議」按鈕直接送出既定的一句話。
+   *
+   * 為什麼不是 setInputValue 之後再送:setState 要到下一輪 render 才生效,
+   * 此刻讀 `inputValue` 拿到的還是空字串 —— 按鈕會變成「按了沒反應」。
+   * 讓文字從參數進來,送出的內容就與按鈕上的字完全一致。
+   */
+  const handleSendMessage = useCallback(
+    async (overrideText?: string) => {
+      const outgoingText = overrideText ?? inputValue;
+      const readyAttachments = pendingAttachments.filter(
+        (a) => a.status === PendingAttachmentStatusEnum.READY,
+      );
+      // Info: (20260714 - Tzuhan) 有文字或有就緒附件即可送出
+      if ((!outgoingText.trim() && readyAttachments.length === 0) || isLoading)
+        return;
 
-    // Info: (20260712 - Luphia) 先於使用者手勢內備妥主金鑰（WebAuthn PRF 需 user activation）；不支援裝置直接提示
-    let masterKey: IChatroomMasterKey;
-    try {
-      masterKey = await ensureMasterKeyCached();
-    } catch (keyError) {
-      if (keyError instanceof ChatroomUnsupportedDeviceError) {
+      // Info: (20260712 - Luphia) 先於使用者手勢內備妥主金鑰（WebAuthn PRF 需 user activation）；不支援裝置直接提示
+      let masterKey: IChatroomMasterKey;
+      try {
+        masterKey = await ensureMasterKeyCached();
+      } catch (keyError) {
+        if (keyError instanceof ChatroomUnsupportedDeviceError) {
+          appendMessageLocally(
+            {
+              id: crypto.randomUUID(),
+              sender: ChatRoleEnum.AI,
+              text: t("carbon_chatbot.device_unsupported"),
+            },
+            0,
+          );
+          return;
+        }
+        console.error(
+          "[carbon-chat] failed to prepare encryption key:",
+          keyError,
+        );
+        setIsError(true);
         appendMessageLocally(
           {
             id: crypto.randomUUID(),
             sender: ChatRoleEnum.AI,
-            text: t("carbon_chatbot.device_unsupported"),
+            text: t("carbon_chatbot.system_error"),
           },
           0,
         );
         return;
       }
-      console.error(
-        "[carbon-chat] failed to prepare encryption key:",
-        keyError,
-      );
-      setIsError(true);
-      appendMessageLocally(
-        {
-          id: crypto.randomUUID(),
-          sender: ChatRoleEnum.AI,
-          text: t("carbon_chatbot.system_error"),
-        },
-        0,
-      );
-      return;
-    }
 
-    // Info: (20260714 - Tzuhan) 附件已於選檔時上傳 Laria；訊息只帶 metadata+cid(內容由後端管線經 recoverLaria 取回)
-    const attachmentsMeta: IAttachment[] = readyAttachments.map((a) => ({
-      name: a.name,
-      size: a.size,
-      mimeType: a.mimeType,
-      cid: a.cid,
-    }));
+      // Info: (20260714 - Tzuhan) 附件已於選檔時上傳 Laria；訊息只帶 metadata+cid(內容由後端管線經 recoverLaria 取回)
+      const attachmentsMeta: IAttachment[] = readyAttachments.map((a) => ({
+        name: a.name,
+        size: a.size,
+        mimeType: a.mimeType,
+        cid: a.cid,
+      }));
 
-    const userMessage: IChatMessage = {
-      id: crypto.randomUUID(),
-      sender: ChatRoleEnum.USER,
-      text: inputValue,
-      ...(attachmentsMeta.length > 0 ? { attachments: attachmentsMeta } : {}),
-    };
+      const userMessage: IChatMessage = {
+        id: crypto.randomUUID(),
+        sender: ChatRoleEnum.USER,
+        text: outgoingText,
+        ...(attachmentsMeta.length > 0 ? { attachments: attachmentsMeta } : {}),
+      };
 
-    // Info: (20260713 - Tzuhan) 廢除訊息計次假進度；進度一律由 reportStats 依實際完成段落數推導
-    setSessionsData((prev) => {
-      const existing = resolveSession(prev, activeSessionId);
-      if (!existing) return prev;
-      const updatedSession = { ...existing };
-      // Info: (20260714 - Tzuhan) 新對話以首則使用者訊息摘要為標題(demo 精度: 截前 24 字)
-      const hasUserMessage = updatedSession.messages.some(
-        (m) => m.sender === ChatRoleEnum.USER,
-      );
-      if (
-        !hasUserMessage &&
-        inputValue.trim() &&
-        !updatedSession.isTitleCustom &&
-        updatedSession.title === t("carbon_chatbot.new_session_title")
-      ) {
-        updatedSession.title = inputValue.trim().slice(0, 24);
-      }
-      updatedSession.messages = [...updatedSession.messages, userMessage];
-      return { ...prev, [activeSessionId]: updatedSession };
-    });
-
-    setInputValue("");
-    setPendingAttachments([]);
-    setAttachmentError(null);
-    markSessionBusy(activeSessionId, true);
-    setIsError(false);
-    pendingReplyChannelsRef.current.add(chatChannel);
-
-    // Info: (20260714 - Tzuhan) 跳段後送出且訊息仍指涉該段標題 → 並行觸發段落草稿生成(與聊天回覆互不等待)
-    // Info: (20260714 - Tzuhan) 決定性字串規則: 預填文字由系統產生；使用者改寫成無關內容則解除，不誤觸發
-    const pendingDraftId = pendingDraftParagraphIdRef.current;
-    if (pendingDraftId) {
-      pendingDraftParagraphIdRef.current = null;
-      const pendingSection = CARBON_REPORT_OUTLINE.find(
-        (s) => s.id === pendingDraftId,
-      );
-      if (pendingSection && userMessage.text.includes(pendingSection.title)) {
-        generateParagraphDraft(pendingDraftId);
-      }
-    }
-
-    try {
-      // Info: (20260712 - Luphia) 只取最近 N 則送給 AI 以控 token；畫面仍保有完整歷史
-      const currentHistory = [...activeSession.messages, userMessage]
-        .slice(-CARBON_CHAT_AI_CONTEXT_SIZE)
-        .map((msg) => ({
-          role: msg.sender === ChatRoleEnum.USER ? "user" : "model",
-          text: msg.text,
-        }));
-
-      // Info: (20260712 - Luphia) 傳入頻道與本 session 的加密公鑰(xpub)，由後端加密 AI 回覆並經 Centrifugo 回傳
-      // Info: (20260714 - Tzuhan) 改用 request helper:自動帶 DeWT Bearer token(後端已加授權檢查)
-      // Info: (20260716 - Tzuhan) 附件解析為長工(在 chat 請求內執行):以狀態列告知,避免使用者誤判卡死
-      if (attachmentsMeta.length > 0) {
-        setDraftNotice({
-          type: "loading",
-          text: t("carbon_chatbot.attachments_processing"),
-        });
-      }
-
-      const data = await request<{
-        success: boolean;
-        message: string;
-        payload: {
-          drafts?: IParagraphDraft[];
-          envelopes?: IEciesEnvelope[];
-          extraction?: IInventoryExtraction | null;
-          attachmentActivities?: IActivityRecord[];
-          revisionParagraphId?: string | null;
-          chartRequest?: {
-            templateId: CarbonChartTemplateEnum;
-            paragraphId: string;
-          } | null;
-          attachmentFacts?: IContextFact[];
-        } | null;
-      }>("/api/v1/chat/carbon", {
-        method: "POST",
-        body: JSON.stringify({
-          history: currentHistory,
-          // Info: (20260716 - Tzuhan) #6518:currentStep 改餵狀態機真值(跳段指引仍優先)
-          currentStep:
-            activeSession.currentStep ||
-            describeInventoryStep(
-              inventoryStates[chatChannel] ?? createEmptyInventoryState(),
-            ),
-          language,
-          channel: chatChannel,
-          recipientPublicKey: masterKey.extendedPublicKey,
-          // Info: (20260714 - Tzuhan) 附件只帶 metadata+cid(檔案已在 Laria)；請求 body 維持輕量
-          ...(attachmentsMeta.length > 0
-            ? { attachments: attachmentsMeta }
-            : {}),
-        }),
+      // Info: (20260713 - Tzuhan) 廢除訊息計次假進度；進度一律由 reportStats 依實際完成段落數推導
+      setSessionsData((prev) => {
+        const existing = resolveSession(prev, activeSessionId);
+        if (!existing) return prev;
+        const updatedSession = { ...existing };
+        // Info: (20260714 - Tzuhan) 新對話以首則使用者訊息摘要為標題(demo 精度: 截前 24 字)
+        const hasUserMessage = updatedSession.messages.some(
+          (m) => m.sender === ChatRoleEnum.USER,
+        );
+        if (
+          !hasUserMessage &&
+          outgoingText.trim() &&
+          !updatedSession.isTitleCustom &&
+          updatedSession.title === t("carbon_chatbot.new_session_title")
+        ) {
+          updatedSession.title = outgoingText.trim().slice(0, 24);
+        }
+        updatedSession.messages = [...updatedSession.messages, userMessage];
+        return { ...prev, [activeSessionId]: updatedSession };
       });
 
-      if (!data.success) {
-        throw new Error(data.message || "AI API returned an error");
-      }
+      setInputValue("");
+      setPendingAttachments([]);
+      setAttachmentError(null);
+      markSessionBusy(activeSessionId, true);
+      setIsError(false);
+      pendingReplyChannelsRef.current.add(chatChannel);
 
-      // Info: (20260714 - Tzuhan) HTTP 回帶的密文訊息直接解密顯示(草稿隨摘要訊息一起套用);
-      // Info: (20260714 - Tzuhan) Centrifugo 訂閱若也送達，由訊息 id 去重(草稿亦以訊息 id 防重複套用)
-      const payload = data.payload;
-      // Info: (20260716 - Tzuhan) 附件管線完成(回應已達),清除解析中提示
-      if (attachmentsMeta.length > 0) setDraftNotice(null);
-
-      // Info: (20260716 - Tzuhan) #6518 事實入帳: 對話萃取 + 附件活動數據合併進狀態帳本(去重由引擎裁決)
-      applyInventoryExtraction(
-        payload?.extraction,
-        userMessage.text.slice(0, 80),
-      );
-      if (
-        payload?.attachmentActivities &&
-        payload.attachmentActivities.length > 0
-      ) {
-        applyInventoryExtraction({ activities: payload.attachmentActivities });
-      }
-
-      if (payload?.envelopes) {
-        for (const envelope of payload.envelopes) {
-          await decryptAndAppendEnvelope(envelope);
+      // Info: (20260714 - Tzuhan) 跳段後送出且訊息仍指涉該段標題 → 並行觸發段落草稿生成(與聊天回覆互不等待)
+      // Info: (20260714 - Tzuhan) 決定性字串規則: 預填文字由系統產生；使用者改寫成無關內容則解除，不誤觸發
+      const pendingDraftId = pendingDraftParagraphIdRef.current;
+      if (pendingDraftId) {
+        pendingDraftParagraphIdRef.current = null;
+        const pendingSection = CARBON_REPORT_OUTLINE.find(
+          (s) => s.id === pendingDraftId,
+        );
+        if (pendingSection && userMessage.text.includes(pendingSection.title)) {
+          generateParagraphDraft(pendingDraftId);
         }
       }
 
-      // Info: (20260716 - Tzuhan) #55 修訂請求:以使用者原話為指示、附件事實為佐證,產生對照卡
-      if (payload?.revisionParagraphId) {
-        void requestParagraphRevision(
-          payload.revisionParagraphId,
-          userMessage.text,
-          payload.attachmentFacts ?? [],
-        );
-      }
+      try {
+        // Info: (20260712 - Luphia) 只取最近 N 則送給 AI 以控 token；畫面仍保有完整歷史
+        const currentHistory = [...activeSession.messages, userMessage]
+          .slice(-CARBON_CHAT_AI_CONTEXT_SIZE)
+          .map((msg) => ({
+            role: msg.sender === ChatRoleEnum.USER ? "user" : "model",
+            text: msg.text,
+          }));
 
-      // Info: (20260720 - Tzuhan) #51 圖表請求(已經雙 enum 白名單裁決):由模板從勾稽數據產圖插入
-      if (payload?.chartRequest) {
-        insertChartIntoParagraph(
-          payload.chartRequest.templateId,
-          payload.chartRequest.paragraphId,
-        );
-      }
+        // Info: (20260712 - Luphia) 傳入頻道與本 session 的加密公鑰(xpub)，由後端加密 AI 回覆並經 Centrifugo 回傳
+        // Info: (20260714 - Tzuhan) 改用 request helper:自動帶 DeWT Bearer token(後端已加授權檢查)
+        // Info: (20260716 - Tzuhan) 附件解析為長工(在 chat 請求內執行):以狀態列告知,避免使用者誤判卡死
+        if (attachmentsMeta.length > 0) {
+          setDraftNotice({
+            type: "loading",
+            text: t("carbon_chatbot.attachments_processing"),
+          });
+        }
 
-      // Info: (20260712 - Luphia) 啟動等待逾時，避免「已發佈但未收到」時卡在 typing(回覆已回帶時為 no-op)
-      // Info: (20260716 - Tzuhan) 帶附件時管線含萃取/草稿生成,等待窗加長(UAT:30s 誤報系統錯誤)
-      startReplyTimeout(
-        attachmentsMeta.length > 0
-          ? CARBON_CHAT_REPLY_TIMEOUT_WITH_ATTACHMENTS_MS
-          : CARBON_CHAT_REPLY_TIMEOUT_MS,
-      );
-    } catch (error) {
-      // Info: (20260712 - Luphia) 此區塊代表「取得 AI 回覆」階段失敗（如 /api/v1/chat/carbon 錯誤）
-      console.error("[carbon-chat] Failed to obtain AI response:", error);
-      setDraftNotice(null);
-
-      // Info: (20260730 - Tzuhan) gateway 讀取逾時(504)不是工作失敗:伺服端仍在跑,
-      // Info: (20260730 - Tzuhan) 回覆與逐段草稿都會經 Centrifugo 訂閱送達。此時彈「系統錯誤」是誤報,
-      // Info: (20260730 - Tzuhan) 改為維持等待狀態並提示仍在處理中,由等待窗逾時把真正沒回來的情況兜住。
-      if (isGatewayTimeoutError(error)) {
-        setDraftNotice({
-          type: "loading",
-          text: t("carbon_chatbot.still_processing"),
+        const data = await request<{
+          success: boolean;
+          message: string;
+          payload: {
+            drafts?: IParagraphDraft[];
+            envelopes?: IEciesEnvelope[];
+            extraction?: IInventoryExtraction | null;
+            attachmentActivities?: IActivityRecord[];
+            revisionParagraphId?: string | null;
+            chartRequest?: {
+              templateId: CarbonChartTemplateEnum;
+              paragraphId: string;
+            } | null;
+            attachmentFacts?: IContextFact[];
+          } | null;
+        }>("/api/v1/chat/carbon", {
+          method: "POST",
+          body: JSON.stringify({
+            history: currentHistory,
+            // Info: (20260716 - Tzuhan) #6518:currentStep 改餵狀態機真值(跳段指引仍優先)
+            currentStep:
+              activeSession.currentStep ||
+              describeInventoryStep(
+                inventoryStates[chatChannel] ?? createEmptyInventoryState(),
+              ),
+            language,
+            channel: chatChannel,
+            recipientPublicKey: masterKey.extendedPublicKey,
+            // Info: (20260714 - Tzuhan) 附件只帶 metadata+cid(檔案已在 Laria)；請求 body 維持輕量
+            ...(attachmentsMeta.length > 0
+              ? { attachments: attachmentsMeta }
+              : {}),
+          }),
         });
+
+        if (!data.success) {
+          throw new Error(data.message || "AI API returned an error");
+        }
+
+        // Info: (20260714 - Tzuhan) HTTP 回帶的密文訊息直接解密顯示(草稿隨摘要訊息一起套用);
+        // Info: (20260714 - Tzuhan) Centrifugo 訂閱若也送達，由訊息 id 去重(草稿亦以訊息 id 防重複套用)
+        const payload = data.payload;
+        // Info: (20260716 - Tzuhan) 附件管線完成(回應已達),清除解析中提示
+        if (attachmentsMeta.length > 0) setDraftNotice(null);
+
+        // Info: (20260716 - Tzuhan) #6518 事實入帳: 對話萃取 + 附件活動數據合併進狀態帳本(去重由引擎裁決)
+        applyInventoryExtraction(
+          payload?.extraction,
+          userMessage.text.slice(0, 80),
+        );
+        if (
+          payload?.attachmentActivities &&
+          payload.attachmentActivities.length > 0
+        ) {
+          applyInventoryExtraction({
+            activities: payload.attachmentActivities,
+          });
+        }
+
+        if (payload?.envelopes) {
+          for (const envelope of payload.envelopes) {
+            await decryptAndAppendEnvelope(envelope);
+          }
+        }
+
+        // Info: (20260716 - Tzuhan) #55 修訂請求:以使用者原話為指示、附件事實為佐證,產生對照卡
+        if (payload?.revisionParagraphId) {
+          void requestParagraphRevision(
+            payload.revisionParagraphId,
+            userMessage.text,
+            payload.attachmentFacts ?? [],
+          );
+        }
+
+        // Info: (20260720 - Tzuhan) #51 圖表請求(已經雙 enum 白名單裁決):由模板從勾稽數據產圖插入
+        if (payload?.chartRequest) {
+          insertChartIntoParagraph(
+            payload.chartRequest.templateId,
+            payload.chartRequest.paragraphId,
+          );
+        }
+
+        // Info: (20260712 - Luphia) 啟動等待逾時，避免「已發佈但未收到」時卡在 typing(回覆已回帶時為 no-op)
+        // Info: (20260716 - Tzuhan) 帶附件時管線含萃取/草稿生成,等待窗加長(UAT:30s 誤報系統錯誤)
         startReplyTimeout(
           attachmentsMeta.length > 0
             ? CARBON_CHAT_REPLY_TIMEOUT_WITH_ATTACHMENTS_MS
             : CARBON_CHAT_REPLY_TIMEOUT_MS,
         );
-        return;
-      }
+      } catch (error) {
+        // Info: (20260712 - Luphia) 此區塊代表「取得 AI 回覆」階段失敗（如 /api/v1/chat/carbon 錯誤）
+        console.error("[carbon-chat] Failed to obtain AI response:", error);
+        setDraftNotice(null);
 
-      setIsError(true);
-      // Info: (20260716 - Tzuhan) 額度/逾時/限流分別給專屬文案(#6515/#6516)，其餘為一般系統錯誤
-      let errorText = t("carbon_chatbot.system_error");
-      if (isQuotaApiError(error)) {
-        errorText = t("carbon_chatbot.ai_quota_exceeded");
-      } else if (isTimeoutApiError(error)) {
-        errorText = t("carbon_chatbot.ai_timeout");
-      } else if (isRateLimitedApiError(error)) {
-        errorText = t("carbon_chatbot.rate_limited");
+        // Info: (20260730 - Tzuhan) gateway 讀取逾時(504)不是工作失敗:伺服端仍在跑,
+        // Info: (20260730 - Tzuhan) 回覆與逐段草稿都會經 Centrifugo 訂閱送達。此時彈「系統錯誤」是誤報,
+        // Info: (20260730 - Tzuhan) 改為維持等待狀態並提示仍在處理中,由等待窗逾時把真正沒回來的情況兜住。
+        if (isGatewayTimeoutError(error)) {
+          setDraftNotice({
+            type: "loading",
+            text: t("carbon_chatbot.still_processing"),
+          });
+          startReplyTimeout(
+            attachmentsMeta.length > 0
+              ? CARBON_CHAT_REPLY_TIMEOUT_WITH_ATTACHMENTS_MS
+              : CARBON_CHAT_REPLY_TIMEOUT_MS,
+          );
+          return;
+        }
+
+        setIsError(true);
+        // Info: (20260716 - Tzuhan) 額度/逾時/限流分別給專屬文案(#6515/#6516)，其餘為一般系統錯誤
+        let errorText = t("carbon_chatbot.system_error");
+        if (isQuotaApiError(error)) {
+          errorText = t("carbon_chatbot.ai_quota_exceeded");
+        } else if (isTimeoutApiError(error)) {
+          errorText = t("carbon_chatbot.ai_timeout");
+        } else if (isRateLimitedApiError(error)) {
+          errorText = t("carbon_chatbot.rate_limited");
+        }
+        appendMessageLocally(
+          {
+            id: crypto.randomUUID(),
+            sender: ChatRoleEnum.AI,
+            text: errorText,
+          },
+          0,
+        );
       }
-      appendMessageLocally(
-        {
-          id: crypto.randomUUID(),
-          sender: ChatRoleEnum.AI,
-          text: errorText,
-        },
-        0,
-      );
-    }
-  }, [
-    inputValue,
-    isLoading,
-    pendingAttachments,
-    activeSession,
-    activeSessionId,
-    language,
-    t,
-    appendMessageLocally,
-    generateParagraphDraft,
-    decryptAndAppendEnvelope,
-    startReplyTimeout,
-    chatChannel,
-    ensureMasterKeyCached,
-    markSessionBusy,
-    applyInventoryExtraction,
-    inventoryStates,
-    requestParagraphRevision,
-    insertChartIntoParagraph,
-    setDraftNotice,
-  ]);
+    },
+    [
+      inputValue,
+      isLoading,
+      pendingAttachments,
+      activeSession,
+      activeSessionId,
+      language,
+      t,
+      appendMessageLocally,
+      generateParagraphDraft,
+      decryptAndAppendEnvelope,
+      startReplyTimeout,
+      chatChannel,
+      ensureMasterKeyCached,
+      markSessionBusy,
+      applyInventoryExtraction,
+      inventoryStates,
+      requestParagraphRevision,
+      insertChartIntoParagraph,
+      setDraftNotice,
+    ],
+  );
+
+  /**
+   * Info: (20260806 - Tzuhan) 匯入之後的後續建議。
+   *
+   * 依據是**報告的匯入來歷**(`importedFrom`)而非某一則訊息:
+   * 掛在訊息上會被對話捲走,而「這份報告可以拿來做什麼」在報告存在期間一直成立;
+   * 來歷是持久化的,重載後建議仍在。
+   */
+  const importFollowUpPrompts = useMemo(
+    () =>
+      activeSession.reportData?.importedFrom
+        ? CARBON_IMPORT_FOLLOW_UPS.map((followUp) =>
+            buildImportFollowUpPrompt(language, followUp),
+          )
+        : [],
+    [activeSession.reportData?.importedFrom, language],
+  );
 
   // Info: (20260712 - Luphia) 進入 channel 的一次性手勢：解鎖金鑰(PRF) → 請後端做前置作業並經 Centrifugo 回傳招呼詞
   const initializeChat = useCallback(async () => {
@@ -4123,6 +4215,8 @@ export const useCarbonChat = () => {
     isLoadingHistory,
     loadMoreHistory,
     handleSendMessage,
+    // Info: (20260806 - Tzuhan) 匯入後的後續建議(所見即所送:按鈕上的字就是送出的內容)
+    importFollowUpPrompts,
     pendingAttachments,
     attachmentError,
     addAttachments,
@@ -4169,6 +4263,8 @@ export const useCarbonChat = () => {
     // Info: (20260730 - Tzuhan) 手動產生結構圖(治理架構/範疇對應/量化流程);無對應模板的段落呼叫即 no-op
     generateParagraphDiagram,
     retryFailedImportChapters,
+    // Info: (20260806 - Tzuhan) 重試中:預覽卡據此禁用按鈕並顯示進度(「正在跑」必須看得見)
+    isRetryingImport,
     // Info: (20260716 - Tzuhan) #56 匯入導流(聊天附件疑似整份報告)
     importCandidate,
     confirmImportCandidate,

@@ -159,6 +159,9 @@ export const carbonChatbot = {
   import_failed_chapters:
     "다음 장은 분석에 실패했습니다. 나중에 다시 가져오기로 보완할 수 있습니다: {{chapters}}",
   import_retry_failed: "실패한 장 재시도",
+  import_retrying: "재시도 중…",
+  import_retrying_hint:
+    "실패한 장을 다시 분석하고 있습니다. 몇 분 정도 걸립니다. 이 카드를 닫지 마세요.",
   import_empty: "[가져오기 실패] 목차에 대응하는 내용이 없습니다.",
   import_failed:
     "[가져오기 실패] 보고서 분석에 실패했습니다. 나중에 다시 시도해 주세요.",
@@ -240,6 +243,8 @@ export const carbonChatbot = {
   chart_imported_sankey_title:
     "온실가스 배출 흐름: 조직 → 사업장 → 범위 → 범주 → 배출 형태(원문 전재, 지역 기준, tCO2e/년)",
   chart_imported_sankey_excluded: "그래프에 없는 항목(NA/NS 또는 0)",
+  chart_imported_sankey_no_ledger:
+    "보고서는 가져왔지만 원장에 사용할 수 있는 데이터가 없어 배출 흐름도를 그릴 수 없습니다. 생키 다이어그램과 시스템 집계표의 유일한 출처는 표3.8(회사별 온실가스 배출량)이며 이번에는 가져오지 못했습니다. 제3장이 정상적으로 분석되었는지 확인해 주세요. 분석 실패로 표시된 경우 미리보기 카드의 「실패한 장 재시도」로 다시 가져오고, 서버 로그에서 해당 표가 폐기된 이유를 확인해 주세요.",
   chart_imported_sankey_collapsed:
     "노드가 너무 많아 3단계(조직 → 사업장 → 범위)로 축약했습니다",
   chart_imported_sankey_below_threshold: "비중이 작아 미표시(tCO2e/년)",

@@ -160,6 +160,9 @@ export const carbonChatbot = {
   import_failed_chapters:
     "These chapters failed to parse and can be re-imported later: {{chapters}}",
   import_retry_failed: "Retry failed chapters",
+  import_retrying: "Retrying…",
+  import_retrying_hint:
+    "Re-parsing the failed chapters. This takes a few minutes — please keep this card open.",
   import_empty: "[Import failed] Nothing in the file maps to the outline.",
   import_failed:
     "[Import failed] Could not parse the report; please retry later.",
@@ -243,6 +246,8 @@ export const carbonChatbot = {
   chart_imported_sankey_title:
     "GHG emission flow: organization → site → scope → category → emission form (verbatim from the report, location-based, tCO2e/yr)",
   chart_imported_sankey_excluded: "Not shown (NA/NS or zero)",
+  chart_imported_sankey_no_ledger:
+    'The report was imported but the ledger holds no usable data, so the emission flow cannot be drawn. Table 3.8 (GHG emissions by company) is the only source for the Sankey diagram and the system data table, and it was not obtained this time. Check whether Chapter 3 parsed successfully; if it is listed as failed, re-import it via "Retry failed chapters" on the preview card, and check the server log for whether the table was dropped and why.',
   chart_imported_sankey_collapsed:
     "Too many nodes; collapsed to three layers (organization → site → scope)",
   chart_imported_sankey_below_threshold: "Too small to plot (tCO2e/yr)",
