@@ -14,6 +14,7 @@ import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { matchesDeclaredMimeType } from "@/lib/file_signature";
 import { describeError } from "@/lib/utils/error_message";
 import { ReportImportService } from "@/services/report_import.service";
+import { storageService } from "@/services/storage.service";
 import {
   CARBON_CHAT_MAX_ATTACHMENT_BYTES,
   CarbonReportImportModeEnum,
@@ -129,31 +130,90 @@ export async function POST(request: NextRequest) {
     const fromPage = parsePage(formData.get("fromPage"));
     const toPage = parsePage(formData.get("toPage"));
 
-    if (!(file instanceof File)) {
-      return jsonFail(API_ERRORS.VA_NO_FILE_UPLOADED);
+    /**
+     * Info: (20260806 - Tzuhan) 檔案改以 **cid** 引用,不再每次重傳。
+     *
+     * 原本每一次 `/import` 都把整份 PDF 放進 multipart 再傳一次。
+     * 實測一份 64 頁報告要 14 次呼叫(索引 1 + 逐章 11 + 補齊 1 + 重試),
+     * 於是同一個 2.02 MB 的檔案被上傳 14 次 ≈ 28 MB,
+     * 而伺服端也跟著重跑 14 次 magic bytes 與 PDF 文字層抽取
+     * (log 裡 14 筆一模一樣的 `report import source decision` 就是這件事)。
+     *
+     * 檔案本體改由選檔時經 `/chat/carbon/attachment` 存進 Laria(切片 + Reed-Solomon),
+     * 這裡只收 cid 再 `recoverLaria` 取回。三個附帶好處:
+     *
+     * 1. 匯入的檔案終於**經過掃毒** —— 附件那條路一直有,匯入這條只驗 magic bytes。
+     * 2. cid 存得進待匯入紀錄,重載之後「重試失敗章節」不必重新上傳。
+     * 3. 少 13 次 2 MB 上傳。
+     *
+     * 仍保留 `file` 一路:cid 尚未上傳成功時前端會退回直傳,
+     * 而「上傳失敗就整個匯入不能做」是不必要的脆弱。
+     */
+    const cidRaw = formData.get("cid");
+    const cid = typeof cidRaw === "string" && cidRaw.length > 0 ? cidRaw : null;
+    const fileNameRaw = formData.get("fileName");
+    const mimeTypeRaw = formData.get("mimeType");
+
+    let sourceName: string;
+    let sourceMimeType: string;
+    let buffer: Buffer;
+    if (cid) {
+      if (
+        typeof fileNameRaw !== "string" ||
+        typeof mimeTypeRaw !== "string" ||
+        !IMPORT_ACCEPTED_MIME_TYPES.includes(mimeTypeRaw)
+      ) {
+        return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
+      }
+      sourceName = fileNameRaw;
+      sourceMimeType = mimeTypeRaw;
+      try {
+        buffer = await storageService.recoverLaria(cid);
+      } catch (recoverError) {
+        // Info: (20260806 - Tzuhan) 取不回來就明說,不要靜默退回「檔案裡沒有內容」
+        logger.error(
+          `[API] /chat/carbon/import recoverLaria failed: ${describeError(recoverError)}`,
+        );
+        return jsonFail(API_ERRORS.VA_NO_FILE_UPLOADED);
+      }
+    } else {
+      if (!(file instanceof File)) {
+        return jsonFail(API_ERRORS.VA_NO_FILE_UPLOADED);
+      }
+      if (!IMPORT_ACCEPTED_MIME_TYPES.includes(file.type)) {
+        return jsonFail(API_ERRORS.VA_INVALID_DOCUMENT_TYPE);
+      }
+      if (file.size > CARBON_CHAT_MAX_ATTACHMENT_BYTES) {
+        return jsonFail(API_ERRORS.VA_FILE_TOO_LARGE);
+      }
+      sourceName = file.name;
+      sourceMimeType = file.type;
+      buffer = Buffer.from(await file.arrayBuffer());
     }
 
-    if (!IMPORT_ACCEPTED_MIME_TYPES.includes(file.type)) {
-      return jsonFail(API_ERRORS.VA_INVALID_DOCUMENT_TYPE);
-    }
-    if (file.size > CARBON_CHAT_MAX_ATTACHMENT_BYTES) {
-      return jsonFail(API_ERRORS.VA_FILE_TOO_LARGE);
-    }
-    // Info: (20260716 - Tzuhan) magic bytes 複驗(#6517 同一防線):宣告與內容不符即拒
-    const buffer = Buffer.from(await file.arrayBuffer());
-    if (!matchesDeclaredMimeType(buffer, file.type)) {
+    /**
+     * Info: (20260716 - Tzuhan) magic bytes 複驗(#6517 同一防線):宣告與內容不符即拒。
+     * Info: (20260806 - Tzuhan) cid 那條路也驗 —— 宣告的 mimeType 由呼叫端給,
+     * 而「呼叫端說什麼就信什麼」正是這道防線要擋的。
+     */
+    if (!matchesDeclaredMimeType(buffer, sourceMimeType)) {
       return jsonFail(API_ERRORS.IS_ATTACHMENT_TYPE_MISMATCH);
+    }
+    if (buffer.byteLength > CARBON_CHAT_MAX_ATTACHMENT_BYTES) {
+      return jsonFail(API_ERRORS.VA_FILE_TOO_LARGE);
     }
 
     // Info: (20260730 - Tzuhan) 來源裁決(文字層優先 / 視覺降級 / 拒收)為業務判斷,收在 Service;
     // Info: (20260730 - Tzuhan) 本層只把檔案 metadata 與 buffer 交出去,並把 null 轉成明確的拒收回應
     const service = new ReportImportService();
     const source = await service.resolveSource({
-      name: file.name,
-      mimeType: file.type,
-      sizeBytes: file.size,
+      name: sourceName,
+      mimeType: sourceMimeType,
+      sizeBytes: buffer.byteLength,
       buffer,
-      isTextMimeType: TEXT_MIME_TYPES.includes(file.type),
+      isTextMimeType: TEXT_MIME_TYPES.includes(sourceMimeType),
+      // Info: (20260806 - Tzuhan) 有 cid 即可快取裁決結果:同一份檔案的文字層不會變
+      cacheKey: cid,
     });
     if (!source) {
       return jsonFail(API_ERRORS.VA_FILE_TOO_LARGE);

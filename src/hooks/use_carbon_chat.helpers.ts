@@ -84,6 +84,52 @@ export const reduceDraftNotice = <TNotice>(
 };
 
 /**
+ * Info: (20260806 - Tzuhan) 匯入時對「那份檔案」的引用。
+ *
+ * 一份 64 頁報告要 14 次 `/import` 呼叫,而原本每一次都把整份 PDF 放進 multipart 再傳一次
+ * —— 同一個 2.02 MB 的檔案上傳 14 次 ≈ 28 MB,伺服端也跟著重跑 14 次 PDF 文字層抽取。
+ *
+ * 檔案本體改為選檔時就存進 Laria(`/chat/carbon/attachment`,切片 + Reed-Solomon),
+ * 之後只帶 cid。`file` 保留為退路:上傳失敗時仍能直傳,
+ * 而「上傳失敗就整個匯入不能做」是不必要的脆弱。
+ */
+export interface ICarbonImportSource {
+  /** Info: (20260806 - Tzuhan) Laria metadata hash;取不到即為 null,由 file 那條路頂上 */
+  cid: string | null;
+  fileName: string;
+  mimeType: string;
+  /** Info: (20260806 - Tzuhan) 沒有 cid 時的退路;重載之後只剩 cid,這裡會是 null */
+  file: File | null;
+}
+
+/**
+ * Info: (20260806 - Tzuhan) 把檔案引用寫進 multipart。
+ *
+ * 有 cid 就只送 cid 與宣告的檔名/型別 —— 伺服端會 `recoverLaria` 取回並**複驗 magic bytes**,
+ * 所以宣告的型別不被信任(那正是那道防線要擋的)。
+ */
+export const appendImportSource = (
+  formData: FormData,
+  source: ICarbonImportSource,
+): void => {
+  if (source.cid) {
+    formData.append("cid", source.cid);
+    formData.append("fileName", source.fileName);
+    formData.append("mimeType", source.mimeType);
+    return;
+  }
+  if (source.file) {
+    formData.append("file", source.file);
+    return;
+  }
+  /**
+   * Info: (20260806 - Tzuhan) 兩者都沒有即無從取得檔案 —— 早點拋,不要送一個註定失敗的請求。
+   * 這個情形出現在「重載之後 cid 也沒存下來」,而那是呼叫端該擋的。
+   */
+  throw new Error("import source has neither cid nor file");
+};
+
+/**
  * Info: (20260806 - Tzuhan) 會話清單排序:最近有動作的在最上面。
  *
  * 原本清單是 `Object.values(sessionsData)` 的**插入順序** —— 沒有排序。

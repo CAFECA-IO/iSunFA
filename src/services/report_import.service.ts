@@ -255,6 +255,32 @@ export interface IReportImportSource {
   isText: boolean;
 }
 
+/**
+ * Info: (20260806 - Tzuhan) 來源裁決的快取,鍵為 Laria cid。
+ *
+ * 只存裁決結果(文字層抽出的內容或視覺降級的標記),不存原始 buffer ——
+ * buffer 隨時可由 `recoverLaria(cid)` 取回,留在記憶體裡只是佔位。
+ *
+ * 上限刻意很小:同時進行的匯入本來就只有一份(importInFlightRef 擋著),
+ * 留幾筆是為了重試與補齊那幾次呼叫。超過即汰換最舊的 ——
+ * 沒有上限的快取在長跑的伺服端就是一個慢速的記憶體洩漏。
+ */
+const SOURCE_DECISION_CACHE_MAX = 4;
+const sourceDecisionCache = new Map<string, IReportImportSource>();
+
+const rememberSourceDecision = (
+  cacheKey: string,
+  source: IReportImportSource,
+): void => {
+  if (sourceDecisionCache.has(cacheKey)) sourceDecisionCache.delete(cacheKey);
+  sourceDecisionCache.set(cacheKey, source);
+  while (sourceDecisionCache.size > SOURCE_DECISION_CACHE_MAX) {
+    const oldest = sourceDecisionCache.keys().next().value;
+    if (oldest === undefined) break;
+    sourceDecisionCache.delete(oldest);
+  }
+};
+
 export class ReportImportService {
   // Info: (20260716 - Tzuhan) 依賴延遲建立(避免 import 階段因缺 API Key 拋錯),測試時可注入 mock
   private readonly injectedChatService?: ChatService;
@@ -367,11 +393,34 @@ export class ReportImportService {
     sizeBytes: number;
     buffer: Buffer;
     isTextMimeType: boolean;
+    /**
+     * Info: (20260806 - Tzuhan) 有 cid 即可快取裁決結果(同一份檔案的文字層不會變)。
+     *
+     * 一份 64 頁報告要 14 次 `/import` 呼叫,而每一次都重跑一遍 PDF 文字層抽取 ——
+     * log 裡 14 筆一模一樣的 `report import source decision` 就是這件事。
+     * 那是純函數式的判斷(輸入相同必得相同結果),沒有理由算 14 次。
+     *
+     * 沒有 cid(前端退回直傳)時不快取:那時沒有可信的鍵,
+     * 拿檔名當鍵會讓兩份同名不同內容的檔互相污染。
+     */
+    cacheKey?: string | null;
   }): Promise<IReportImportSource | null> {
     const base = { name: input.name, mimeType: input.mimeType };
 
     if (input.isTextMimeType) {
       return { ...base, data: input.buffer.toString("utf-8"), isText: true };
+    }
+
+    if (input.cacheKey) {
+      const cached = sourceDecisionCache.get(input.cacheKey);
+      if (cached) {
+        // Info: (20260806 - Tzuhan) 命中也記一行:少了這行就分不清「沒重算」與「沒跑到」
+        logger.info("report import source decision (cached)", {
+          fileName: input.name,
+          cacheKey: input.cacheKey,
+        });
+        return { ...cached, name: input.name, mimeType: input.mimeType };
+      }
     }
 
     const canUseVision =
@@ -391,12 +440,26 @@ export class ReportImportService {
       numericUndecodedChars: assessment?.quality.numericUndecodedChars ?? 0,
     });
 
+    /**
+     * Info: (20260806 - Tzuhan) 兩條成功路徑都寫進快取。
+     * 視覺降級那條的 data 是 base64 的整份檔案 —— 體積大,但快取上限只有 4 筆,
+     * 而它換掉的是每次呼叫都重跑一遍文字層抽取。
+     */
     if (extracted && assessment?.decision === PdfTextLayerDecisionEnum.TEXT) {
-      return { ...base, data: extracted.text, isText: true };
+      const resolved = { ...base, data: extracted.text, isText: true };
+      if (input.cacheKey) rememberSourceDecision(input.cacheKey, resolved);
+      return resolved;
     }
     if (canUseVision) {
-      return { ...base, data: input.buffer.toString("base64"), isText: false };
+      const resolved = {
+        ...base,
+        data: input.buffer.toString("base64"),
+        isText: false,
+      };
+      if (input.cacheKey) rememberSourceDecision(input.cacheKey, resolved);
+      return resolved;
     }
+    // Info: (20260806 - Tzuhan) 拒收不快取:那是「這份檔案不能用」,不是一個可重用的結果
     return null;
   }
 
