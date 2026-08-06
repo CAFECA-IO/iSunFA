@@ -250,7 +250,11 @@ export const carbonChatbot = {
   chart_imported_sankey_no_ledger:
     "報告書はインポートされましたが、台帳に利用可能なデータがないため排出フロー図を描画できません。サンキー図とシステム集計表の唯一の出典は表3.8（各社の温室効果ガス排出量）で、今回は取得できませんでした。第三章の解析が成功したかご確認ください。解析失敗と表示されている場合は、プレビューカードの「失敗した章を再試行」で再インポートし、サーバーログで当該表が破棄された理由をご確認ください。",
   chart_imported_sankey_collapsed:
-    "ノードが多すぎるため 3 階層(組織 → 拠点 → スコープ)に縮約しました",
+    "ノードが多すぎるため 2 階層(拠点 → スコープ)に縮約しました",
+  chart_imported_top_items_title:
+    "排出の行き先：全社 → 拠点 → 拠点ごとの上位 9 項目とその他(原文転記、ロケーション基準、tCO2e/年)",
+  chart_imported_sankey_other: "その他",
+  chart_imported_sankey_ghg_mapping: "サブコードと GHG Protocol カテゴリの対応",
   chart_imported_sankey_below_threshold: "比率が小さく非表示(tCO2e/年)",
   chart_imported_sankey_organization: "全社",
   book_bind_pending_unlock:

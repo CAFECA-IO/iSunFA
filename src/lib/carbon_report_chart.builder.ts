@@ -17,6 +17,7 @@ import {
   CARBON_SANKEY_MAX_IMPORTED_NODES,
   CARBON_SANKEY_MAX_MONTH_NODES,
   CARBON_SANKEY_MIN_SHARE_OF_TOTAL,
+  CARBON_SANKEY_TOP_ITEM_COUNT,
 } from "@/constants/carbon_report_charts";
 import { resolveEmissionMonth } from "@/lib/utils/emission_period";
 import { TONNE_TO_KG_MULTIPLIER } from "@/constants/imported_quantity";
@@ -66,6 +67,18 @@ export interface ICarbonChartLabels {
   importedSankeyNoLedger?: string;
   /** Info: (20260803 - Tzuhan) 節點過多而降層時的說明 */
   importedSankeyCollapsed?: string;
+  /**
+   * Info: (20260806 - Tzuhan) 子代碼 ↔ GHG Protocol 類別對照的抬頭。
+   * 那個映射是 1:1 所以不畫成一層,但它是一個分類判斷,必須說出來。
+   */
+  importedSankeyGhgMapping?: string;
+  /** Info: (20260806 - Tzuhan) 排放去向圖的標題(前 N 大 + 其他) */
+  importedTopItemsTitle?: string;
+  /**
+   * Info: (20260806 - Tzuhan) 「其他」節點名。**它是一個真的節點**,不是丟掉 ——
+   * 沒進前 N 名的流量仍然畫在圖上,廠址的流出才等於流入。
+   */
+  importedSankeyOther?: string;
   /** Info: (20260805 - Tzuhan) 第一層節點名(組織總體) */
   importedSankeyOrganization?: string;
   /**
@@ -73,8 +86,6 @@ export interface ICarbonChartLabels {
    * 與 importedSankeyExcluded 分開:「沒有數字」與「數字太小」是不同的事實。
    */
   importedSankeyBelowThreshold?: string;
-  /** Info: (20260803 - Tzuhan) ISO 類別顯示名(類別一~六);未提供時輸出 enum 值 */
-  formatIsoCategory?: (category: string) => string;
   // Info: (20260722 - Tzuhan) UAT:範疇 enum 值不可讀 → 顯示名 formatter(未提供時原樣輸出)
   formatScope?: (scope: string) => string;
   /** Info: (20260805 - Tzuhan) 三大範疇(Scope 1/2/3)顯示名;桑基圖第三層用 */
@@ -92,11 +103,15 @@ export const CARBON_CHART_DEFAULT_LABELS: ICarbonChartLabels = {
   sankeyPeriodUnknown: "未標註期間",
   sankeyPeriodCollapsed: "期間跨度超過兩個年度,已略過月別層(月別請看趨勢圖)",
   importedSankeyTitle:
-    "溫室氣體排放流向:組織 → 廠址 → 範疇 → 類別 → 排放形式(原文照錄,所在地基準,公噸 CO2e/年)",
+    "排放分類:廠址 → 範疇 → 子代碼(原文照錄,所在地基準,公噸 CO2e/年)",
   importedSankeyExcluded: "未畫出的項目(NA/NS 或為零)",
   importedSankeyNoLedger:
     "本報告已匯入,但帳本沒有任何可用數據,因此畫不出排放流向圖。桑基圖與系統數據表格的唯一來源是表3.8(各公司溫室氣體排放量),本次未取得該表。請確認第三章是否解析成功;若該章列為解析失敗,請以預覽卡的「重試失敗章節」重新匯入,並在伺服端日誌查看該表是否被丟棄及其原因。",
-  importedSankeyCollapsed: "節點過多,已降為三層(組織 → 廠址 → 範疇)",
+  importedSankeyCollapsed: "節點過多,已降為兩層(廠址 → 範疇)",
+  importedSankeyGhgMapping: "子代碼與 GHG Protocol 類別的對照",
+  importedTopItemsTitle:
+    "排放去向:全公司 → 廠址 → 各廠址前九大項目與其他(原文照錄,所在地基準,公噸 CO2e/年)",
+  importedSankeyOther: "其他",
   importedSankeyOrganization: "全公司",
   importedSankeyBelowThreshold: "占比過小未畫出(公噸 CO2e/年)",
 };
@@ -104,10 +119,6 @@ export const CARBON_CHART_DEFAULT_LABELS: ICarbonChartLabels = {
 // Info: (20260720 - Tzuhan) mermaid 數值:引擎 Decimal 字串正規化(去千分位疑慮,不經 number)
 const chartValue = (value: string): string =>
   MoneyUtil.toDecimal(value).toString();
-
-// Info: (20260803 - Tzuhan) ISO 類別的顯示名;未提供 formatter 時原樣輸出(enum 值仍可讀出類別)
-const formatCategory = (category: string, labels: ICarbonChartLabels): string =>
-  labels.formatIsoCategory?.(category) ?? category;
 
 // Info: (20260805 - Tzuhan) 範疇(Scope 1/2/3)顯示名;同上,未提供 formatter 時原樣輸出
 const formatScope = (scope: string, labels: ICarbonChartLabels): string =>
@@ -352,17 +363,33 @@ const buildEmissionSankey = (
  *    圖上的數字要能與原文表格逐格對照,否則對帳的意義就消失了。
  */
 /**
- * Info: (20260805 - Tzuhan) 匯入報告的五層桑基圖:
- * 組織總體 → 廠址 → 範疇(Scope 1/2/3) → ISO 類別 → 子代碼。
+ * Info: (20260806 - Tzuhan) 匯入報告的分類切面:**廠址 → 範疇 → 子代碼**(三層)。
  *
- * **第三層之後每個節點帶廠址前綴。** 先前三個廠址共用同一個類別節點,
- * 總量守恆但線互相交叉,而且看不出「屏東的類別一」與「總公司的類別一」誰是誰 ——
- * 那不是一棵樹,是一張把三棵樹疊在一起的圖。帶上前綴才是真的層級。
+ * ## 為什麼從五層減成三層
  *
- * **第五層是子代碼,不是燃料實體。** 使用者要的第五層是「柴油、外購電力」這種
- * 具體排放源,但表3.8 最細只到子代碼(1.1 固定式燃燒);燃料層級的名稱在表2.2/表3.1,
- * 那兩張表**只有名稱沒有數量**,而活動數據萃取目前抽不到。
- * 沒有數字就沒有流量 —— 硬畫等於自己編一個分配比例,那是零捏造要防的事。
+ * 原本是 組織 → 廠址 → 範疇 → ISO 類別 → 子代碼。
+ * 但 **範疇 → ISO 類別 對類別一/二是 1:1**(見 SCOPE_BY_ISO_SUBCATEGORY 的明表:
+ * 類別一整組 → 範疇一、類別二 → 範疇二),而 1:1 的層在 sankey 上必然重疊 ——
+ * mermaid 把標籤畫在節點右側,「範疇二 3464.5」就直接壓在「類別二 3464.5」上。
+ *
+ * 那不是排版沒調好,是那兩層本來就重複。ISO 類別的資訊並沒有消失:
+ * 子代碼的第一個數字就是它的類別(3.1 屬類別三),而類別的完整名稱在原文表格裡。
+ *
+ * 「這份報告的排放去哪了」(見 IMPORTED_TOP_ITEMS_SANKEY)與「它怎麼分類的」
+ * 本來就是兩個問題,查核者也是分開問的 —— 兩張三層圖比一張五層圖好讀。
+ *
+ * ## GHG Protocol 類別不另開一層
+ *
+ * `SCOPE_BY_ISO_SUBCATEGORY` 是**子代碼 → GHG 類別的 1:1 EXACT 映射**
+ * (3.1 上游運輸 → Cat 4、3.2 下游運輸 → Cat 9、3.3 員工通勤 → Cat 7…),
+ * 所以 GHG 類別是子代碼的**換名**而不是再細分 —— 另開一層即純傳遞節點。
+ * 改為在圖下方列一份對照,把那個映射明白說出來(隱藏的判斷等於沒有依據)。
+ *
+ * ## 子代碼是最細,不是燃料實體
+ *
+ * 表3.8 最細只到子代碼(1.1 固定式燃燒);燃料層級的名稱在表2.2/表3.1,
+ * 而**那兩張表只有名稱沒有數量**。沒有數字就沒有流量 ——
+ * 硬畫等於自己編一個分配比例,那是零捏造要防的事。
  */
 const buildImportedSankey = (
   ledger: IComputedLedger,
@@ -439,7 +466,10 @@ const buildImportedSankey = (
   const scoped = (site: string, label: string): string =>
     `${siteTags.get(site) ?? site} ${label}`;
 
-  const organization = labels.importedSankeyOrganization ?? "全公司";
+  /**
+   * Info: (20260806 - Tzuhan) 分類切面沒有「全公司」根節點 —— 那一層在排放去向那張圖。
+   * 這張圖的根是各廠址(sankey 允許多個根),要看全公司總量請看另一張。
+   */
 
   /**
    * Info: (20260805 - Tzuhan) 逐層累加。以公斤累加、輸出前才換公噸,少一次除法捨入;
@@ -455,20 +485,26 @@ const buildImportedSankey = (
   };
   const KEY_SEPARATOR = "\u0000";
   const layers: Map<string, string>[] = [
-    new Map(), // Info: 組織 → 廠址
     new Map(), // Info: 廠址 → 範疇
-    new Map(), // Info: 範疇 → 類別
-    new Map(), // Info: 類別 → 子代碼
+    new Map(), // Info: 範疇 → 子代碼
   ];
 
   /**
-   * Info: (20260805 - Tzuhan) 門檻**只套在最細一層**(類別 → 子代碼)。
+   * Info: (20260806 - Tzuhan) 子代碼 ↔ GHG Protocol 類別的對照(只記圖上實際畫出的)。
+   *
+   * 不另開一層的理由見本函式檔頭:那個映射是 1:1,另開一層即純傳遞節點。
+   * 但**必須說出來** —— 那是一個分類判斷,而隱藏的判斷等於沒有依據。
+   */
+  const ghgBySubCategory = new Map<string, string>();
+
+  /**
+   * Info: (20260805 - Tzuhan) 門檻**只套在最細一層**(範疇 → 子代碼)。
    *
    * 原本套在每一筆上,後果是:台北分公司總量 9.1982 公噸(占 0.11%,高於門檻),
    * 但它的每一個單項都低於門檻 —— **整個廠址從圖上消失了**。
    * 而三個廠址是這份報告明載的組織邊界,一個營運據點不該因為規模小就從查核圖上不見。
    *
-   * 前四層因此以全部正值建立,層間總流量完全守恆;
+   * 前一層因此以全部正值建立,層間總流量完全守恆;
    * 只有最細一層會少掉低於門檻者,差額由圖下方的清單交代。
    * 「哪些沒畫」說得出來,就不是隱瞞。
    */
@@ -480,20 +516,14 @@ const buildImportedSankey = (
       origin.site,
       formatScope(GhgCategoryToScope[entry.scopeCategory], labels),
     );
-    const category = scoped(
-      origin.site,
-      formatCategory(origin.isoCategory, labels),
-    );
     const subCategory = scoped(origin.site, origin.subCategory);
-    addTo(layers[0], [organization, site].join(KEY_SEPARATOR), entry.co2eKg);
-    addTo(layers[1], [site, scope].join(KEY_SEPARATOR), entry.co2eKg);
-    addTo(layers[2], [scope, category].join(KEY_SEPARATOR), entry.co2eKg);
+    ghgBySubCategory.set(
+      origin.subCategory,
+      labels.formatScope?.(entry.scopeCategory) ?? entry.scopeCategory,
+    );
+    addTo(layers[0], [site, scope].join(KEY_SEPARATOR), entry.co2eKg);
     if (MoneyUtil.toDecimal(entry.co2eKg).greaterThanOrEqualTo(threshold)) {
-      addTo(
-        layers[3],
-        [category, subCategory].join(KEY_SEPARATOR),
-        entry.co2eKg,
-      );
+      addTo(layers[1], [scope, subCategory].join(KEY_SEPARATOR), entry.co2eKg);
     }
   });
 
@@ -503,12 +533,11 @@ const buildImportedSankey = (
     ),
   ).size;
   /**
-   * Info: (20260805 - Tzuhan) 節點過多即砍掉最細的兩層(範疇 → 類別 → 子代碼),
-   * 只留 組織 → 廠址 → 範疇。寧可少幾層也不畫成毛線團 ——
-   * 沿用 20260803 的同一條哲學,只是這次砍的是尾端而非中段。
+   * Info: (20260806 - Tzuhan) 節點過多即砍掉最細一層(範疇 → 子代碼),只留 廠址 → 範疇。
+   * 寧可少一層也不畫成毛線團 —— 沿用 20260803 的同一條哲學。
    */
   const collapsed = nodeCount > CARBON_SANKEY_MAX_IMPORTED_NODES;
-  const emitted = collapsed ? layers.slice(0, 2) : layers;
+  const emitted = collapsed ? layers.slice(0, 1) : layers;
 
   const edges: ISankeyEdge[] = emitted.flatMap((layer) =>
     Array.from(layer.entries()).map(([key, co2eKg]) => {
@@ -518,15 +547,15 @@ const buildImportedSankey = (
   );
 
   /**
-   * Info: (20260806 - Tzuhan) 廠址與組織不參與摺疊。
+   * Info: (20260806 - Tzuhan) 廠址不參與摺疊。
    *
    * 廠址是報告明載的組織邊界。前車之鑑:門檻套錯層級時台北分公司整個從圖上消失,
    * 而一個營運據點不該因為「數值和下游一樣」就從查核圖上不見 ——
    * 那條線在數學上多餘,在查核上不是。
    */
-  const protectedNodes = new Set<string>([organization]);
+  const protectedNodes = new Set<string>();
   layers[0].forEach((_value, key) => {
-    protectedNodes.add(key.split(KEY_SEPARATOR)[1]);
+    protectedNodes.add(key.split(KEY_SEPARATOR)[0]);
   });
 
   const rows = collapsePassThroughNodes(edges, protectedNodes).map(
@@ -555,6 +584,159 @@ const buildImportedSankey = (
     lines.push("", `**${labels.importedSankeyBelowThreshold}**`, "");
     belowThreshold.forEach((entry) => {
       lines.push(`- ${entry.sourceName} ${toTonne(entry.co2eKg)}`);
+    });
+  }
+  /**
+   * Info: (20260806 - Tzuhan) 子代碼 ↔ GHG Protocol 類別的對照。
+   *
+   * 這個映射是一個**分類判斷**(ISO 14064-1 的 3.1 上游運輸 = GHG Protocol Cat 4),
+   * 而隱藏的判斷等於沒有依據 —— 查核者無法質疑他看不到的東西。
+   * 不畫成一層是因為映射 1:1,那會是純傳遞節點;但省略不說是另一回事。
+   *
+   * 只列圖上實際畫出的子代碼:列出沒畫的會讓人以為圖上有。
+   */
+  if (ghgBySubCategory.size > 0 && labels.importedSankeyGhgMapping) {
+    lines.push("", `**${labels.importedSankeyGhgMapping}**`, "");
+    Array.from(ghgBySubCategory.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .forEach(([subCategory, ghgCategory]) => {
+        lines.push(`- ${subCategory} → ${ghgCategory}`);
+      });
+  }
+  return lines.join("\n");
+};
+
+/**
+ * Info: (20260806 - Tzuhan) 匯入報告的**排放去向**:全公司 → 廠址 → 前 N 大項目 + 其他。
+ *
+ * ## 為什麼與分類切面拆成兩張
+ *
+ * sankey 的每一層必須是上一層的細分。原本一張圖硬塞
+ * 組織 → 廠址 → 範疇 → ISO 類別 → 子代碼,而範疇 → ISO 類別 對類別一/二是 1:1 ——
+ * 1:1 的層必然讓標籤互相重疊。詳見 buildImportedSankey 的檔頭。
+ *
+ * 「排放去哪了」與「怎麼分類的」是兩個問題,分開問、分開畫。
+ *
+ * ## 前 N 大 + 其他,而不是門檻
+ *
+ * 名額給的是節點數的**上界**;門檻是相對值,通過的節點數沒有上限。
+ * 而且門檻已經害過一次:台北分公司總量占 0.11% 高於門檻,
+ * 但它每一個單項都低於門檻 —— 整個廠址從圖上消失。
+ *
+ * **「其他」是一個真的節點**,不是丟掉:沒進前 N 名的流量仍然畫在圖上,
+ * 所以每個廠址的流出等於它的流入,總量守恆。
+ * 門檻制做不到這件事 —— 它只能把那些流量從圖上移除,再列在圖下方。
+ *
+ * ## 名額是逐廠址算的
+ *
+ * 前 N 大取「該廠址底下的項目」,不是全公司通吃。
+ * 全公司通吃的話,小廠址的項目永遠擠不進前九名,那個廠址就只會有一條「其他」——
+ * 又回到「小廠址看不見」的老問題。
+ */
+const buildImportedTopItemsSankey = (
+  ledger: IComputedLedger,
+  labels: ICarbonChartLabels,
+): string => {
+  const quote = (name: string): string => `"${name.replace(/"/g, "'")}"`;
+  const imported = ledger.entries.filter(isImportedEntry);
+  const positive = imported.filter((entry) =>
+    MoneyUtil.toDecimal(entry.co2eKg).greaterThan(0),
+  );
+  const excluded = imported.filter(
+    (entry) => !MoneyUtil.toDecimal(entry.co2eKg).greaterThan(0),
+  );
+  if (positive.length === 0) {
+    return `> _${labels.importedSankeyNoLedger ?? labels.insufficient}_`;
+  }
+
+  const toTonne = (co2eKg: string): string =>
+    MoneyUtil.toDecimal(co2eKg).div(TONNE_TO_KG_MULTIPLIER).toString();
+
+  // Info: (20260806 - Tzuhan) 廠址編號與分類切面同一套(`#n`,首次出現順序),兩張圖可以對照著看
+  const siteOrder: string[] = [];
+  positive.forEach((entry) => {
+    const site = entry.importedOrigin?.site;
+    if (site && !siteOrder.includes(site)) siteOrder.push(site);
+  });
+  const siteTags = new Map(
+    siteOrder.map((site, index) => [site, `#${index + 1}`]),
+  );
+  const siteDisplayName = (site: string): string =>
+    `${siteTags.get(site) ?? ""} ${site.replace(SANKEY_SITE_INDEX_PATTERN, "").trim()}`.trim();
+
+  const organization = labels.importedSankeyOrganization ?? "全公司";
+  const otherLabel = labels.importedSankeyOther ?? "其他";
+
+  /**
+   * Info: (20260806 - Tzuhan) 逐廠址累加各項目(項目 = 子代碼),再逐廠址取前 N 大。
+   * 以公斤累加、輸出前才換公噸:少一次除法捨入。
+   */
+  const bySite = new Map<string, Map<string, string>>();
+  positive.forEach((entry) => {
+    const origin = entry.importedOrigin;
+    if (!origin) return;
+    if (!bySite.has(origin.site)) bySite.set(origin.site, new Map());
+    const items = bySite.get(origin.site);
+    if (!items) return;
+    items.set(
+      origin.subCategory,
+      MoneyUtil.add(items.get(origin.subCategory) ?? "0", entry.co2eKg),
+    );
+  });
+
+  const rows: string[] = [];
+  siteOrder.forEach((site) => {
+    const items = bySite.get(site);
+    if (!items) return;
+    const siteNode = siteDisplayName(site);
+    const siteTotal = Array.from(items.values()).reduce(
+      (sum, value) => MoneyUtil.add(sum, value),
+      "0",
+    );
+    rows.push(
+      `${quote(organization)},${quote(siteNode)},${toTonne(siteTotal)}`,
+    );
+
+    /**
+     * Info: (20260806 - Tzuhan) 排序鍵帶子代碼:同額項目的先後才是決定性的。
+     * 只比數值時同額項目的順序取決於 Map 的走訪順序,那會讓同一份輸入畫出不同的圖。
+     */
+    const sorted = Array.from(items.entries()).sort((a, b) => {
+      const diff = MoneyUtil.toDecimal(b[1]).comparedTo(
+        MoneyUtil.toDecimal(a[1]),
+      );
+      return diff !== 0 ? diff : a[0].localeCompare(b[0]);
+    });
+    const top = sorted.slice(0, CARBON_SANKEY_TOP_ITEM_COUNT);
+    const rest = sorted.slice(CARBON_SANKEY_TOP_ITEM_COUNT);
+    top.forEach(([subCategory, co2eKg]) => {
+      rows.push(
+        `${quote(siteNode)},${quote(`${siteTags.get(site) ?? ""} ${subCategory}`.trim())},${toTonne(co2eKg)}`,
+      );
+    });
+    if (rest.length > 0) {
+      const otherTotal = rest.reduce(
+        (sum, [, value]) => MoneyUtil.add(sum, value),
+        "0",
+      );
+      rows.push(
+        `${quote(siteNode)},${quote(`${siteTags.get(site) ?? ""} ${otherLabel}(${rest.length})`.trim())},${toTonne(otherTotal)}`,
+      );
+    }
+  });
+
+  const lines = ["```mermaid", "sankey-beta", "", ...rows, "```"];
+  if (labels.importedTopItemsTitle) {
+    lines.unshift(`**${labels.importedTopItemsTitle}**`, "");
+  }
+  /**
+   * Info: (20260806 - Tzuhan) NA/NS 與為零者仍要列出:這張圖沒有門檻,
+   * 所以「沒畫出來」只剩一個原因 —— 原文根本沒有數字。那件事必須說出來。
+   */
+  if (excluded.length > 0 && labels.importedSankeyExcluded) {
+    lines.push("", `**${labels.importedSankeyExcluded}**`, "");
+    excluded.forEach((entry) => {
+      lines.push(`- ${entry.sourceName}`);
     });
   }
   return lines.join("\n");
@@ -601,7 +783,10 @@ export const buildCarbonChartBlock = (
      * `insufficient` 指向「補齊活動數據」,而匯入路徑的數據來自表3.8,
      * 不是使用者一筆一筆補 —— 指錯方向的提示比沒有提示更貴。
      */
-    if (templateId === CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY) {
+    if (
+      templateId === CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY ||
+      templateId === CarbonChartTemplateEnum.IMPORTED_TOP_ITEMS_SANKEY
+    ) {
       return wrap(
         `> _${labels.importedSankeyNoLedger ?? labels.insufficient}_`,
       );
@@ -618,6 +803,8 @@ export const buildCarbonChartBlock = (
       return wrap(buildEmissionSankey(ledger, labels));
     case CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY:
       return wrap(buildImportedSankey(ledger, labels));
+    case CarbonChartTemplateEnum.IMPORTED_TOP_ITEMS_SANKEY:
+      return wrap(buildImportedTopItemsSankey(ledger, labels));
     case CarbonChartTemplateEnum.SOURCE_TABLE:
     default:
       // Info: (20260720 - Tzuhan) 明細表復用 #23 產生器(去其外層錨點,改包本模板錨點避免雙重替換)
