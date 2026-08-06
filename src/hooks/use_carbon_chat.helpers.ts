@@ -50,6 +50,39 @@ export const isRateLimitedApiError = (error: unknown): boolean => {
   return data?.errorCode === API_ERRORS.IS_RATE_LIMITED.code;
 };
 
+/**
+ * Info: (20260806 - Tzuhan) 逐會話提示的 reducer(issue_drafts/inventory_table_import/06)。
+ *
+ * 抽成純函式而不是留在 `setDraftNotice` 裡,是因為這裡的規則有一條**測不到就會回歸**的:
+ * 「寫 B 房不得動到 A 房」。那正是原本的 bug —— 匯入跑在 A 房,
+ * 切到 B 房隨手做任何會設提示的動作,A 房的進度就被覆蓋掉,
+ * 切回 A 房畫面一片乾淨而匯入其實還在跑,於是使用者重新上傳一次。
+ *
+ * hook 本體目前沒有測試環境(`@testing-library/react` 未安裝,見 enterprise/40),
+ * 把不變式放進純函式是現在唯一測得到它的方式。
+ */
+export type IDraftNoticeMap<TNotice> = Readonly<Record<string, TNotice>>;
+
+/**
+ * Info: (20260806 - Tzuhan) 寫入或清除指定會話的提示。
+ * `notice` 為 null 即從 map 移除而非留 null —— 留著空鍵會讓「有沒有提示」多一種等價表示。
+ * 無變化時回傳原物件(同一參考),避免無謂的重繪。
+ */
+export const reduceDraftNotice = <TNotice>(
+  current: IDraftNoticeMap<TNotice>,
+  sessionId: string,
+  notice: TNotice | null,
+): IDraftNoticeMap<TNotice> => {
+  if (!notice) {
+    if (!(sessionId in current)) return current;
+    const rest = { ...current };
+    delete rest[sessionId];
+    return rest;
+  }
+  if (current[sessionId] === notice) return current;
+  return { ...current, [sessionId]: notice };
+};
+
 // Info: (20260716 - Tzuhan) #50 報告 Markdown 切分(保留式,fence-aware):
 // Info: (20260716 - Tzuhan) 舊版以 regex 切 `### ` 且丟棄不符結構的內容 → 貼上內容靜默遺失;
 // Info: (20260716 - Tzuhan) 新版逐行掃描:程式碼圍欄內的 ### 不觸發切分,所有內容都有去處(零丟棄)
