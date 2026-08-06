@@ -813,28 +813,50 @@ describe("匯入報告的五層桑基圖", () => {
     expect(block).not.toContain("2814077.3");
   });
 
-  it("五層俱在:組織 → 廠址 → 範疇 → 類別 → 子代碼", () => {
+  /**
+   * Info: (20260806 - Tzuhan) 原斷言逐一檢查「範疇一」在不在。
+   * 純傳遞節點摺疊後,範疇一 因為與類別一 同值而被摺掉(它什麼都沒說),
+   * 所以改為檢查**層級鏈**存在:組織 → 廠址 → …… → 子代碼。
+   */
+  it("層級鏈俱在:組織 → 廠址 → …… → 子代碼", () => {
     expect(links.some((l) => l.from === "全公司")).toBe(true);
-    expect(links.some((l) => l.to.includes("範疇一"))).toBe(true);
+    expect(links.some((l) => /^#\d+ /.test(l.to))).toBe(true);
     expect(links.some((l) => l.to.includes("類別一"))).toBe(true);
     expect(links.some((l) => l.to.endsWith("1.1"))).toBe(true);
   });
 
   /**
-   * Info: (20260805 - Tzuhan) 第三層之後的節點必須帶廠址前綴。
+   * Info: (20260806 - Tzuhan) **每個廠址各有一棵子樹,深層節點不得跨廠址共用。**
    *
-   * 先前三個廠址共用同一個類別節點:總量守恆,但線互相交叉,
-   * 而且看不出「屏東的類別一」與「總公司的類別一」誰是誰 ——
-   * 那不是一棵樹,是把三棵樹疊在一起。
+   * 這條是為一個實際存在、而且畫面上一直是錯的 bug 補的。
+   *
+   * 20260805 改五層時以「原文廠址名開頭的 `(n)`」當深層節點的前綴,
+   * 而這份報告的表3.8 裡總公司與屏東分公司**都是 `(1)`** ——
+   * 前綴不唯一,於是第三層之後兩個廠址共用同一個節點:
+   * 實測 `(1) 範疇一` 同時收到總公司的 17.8494 與屏東分公司的 2814.0773。
+   *
+   * 那正是當初要解決的「三棵樹疊在一起」,只是換一種方式重現。
+   * **而層間守恆的測試全部通過** —— 因為合併不改變總和。
+   * 守恆擋不住這一類錯,所以要有這條「同一子樹內標記必須一致」的斷言。
+   *
+   * 這個 fixture 本身就帶著重複的 `(1)`,所以它同時是回歸測試。
    */
-  it("第三層之後的節點帶廠址前綴(才是一棵真的樹)", () => {
-    const scopeNodes = links
-      .filter((l) => l.to.includes("範疇"))
-      .map((l) => l.to);
-    expect(scopeNodes.length).toBeGreaterThan(0);
-    expect(scopeNodes.every((node) => /^\(\d+\)/.test(node))).toBe(true);
-    // Info: (20260805 - Tzuhan) 同名不同廠址必須是不同節點
-    expect(new Set(scopeNodes).size).toBeGreaterThan(1);
+  it("每個廠址各有一棵子樹(原文序號重複也要分得開)", () => {
+    const siteLinks = links.filter((l) => l.from === "全公司");
+    const tagOf = (node: string): string | null =>
+      node.match(/^#\d+/)?.[0] ?? null;
+
+    // Info: (20260806 - Tzuhan) 三個廠址三個相異標記
+    expect(new Set(siteLinks.map((l) => tagOf(l.to))).size).toBe(
+      siteLinks.length,
+    );
+    // Info: (20260806 - Tzuhan) 廠址以下每一條邊的兩端都屬於同一個廠址
+    links
+      .filter((l) => l.from !== "全公司")
+      .forEach((l) => {
+        expect(tagOf(l.from)).not.toBeNull();
+        expect(tagOf(l.to)).toBe(tagOf(l.from));
+      });
   });
 
   it("同一組節點對只出現一次且已加總(不賭渲染器會替我們合併)", () => {
@@ -843,35 +865,82 @@ describe("匯入報告的五層桑基圖", () => {
   });
 
   /**
-   * Info: (20260805 - Tzuhan) 桑基圖不得憑空生出或吃掉流量:每一層的總流量都必須相等。
-   * 這是五層圖最重要的一條 —— 任何一層漏加或重複,圖就在說謊。
+   * Info: (20260806 - Tzuhan) 守恆的斷言從「逐層」改為「逐節點」。
+   *
+   * 原本以標籤字樣切出「範疇層」「類別層」再比各層總和。
+   * 20260806 起純傳遞節點會被摺疊(一入一出且同值 —— 例如
+   * 範疇一 2831.93 → 類別一 2831.93,那個節點什麼都沒說卻讓標籤互相重疊),
+   * 於是「層」不再是一個能用標籤切出來的東西:摺掉之後
+   * 廠址會直接接到類別,而範疇三(真的分岔)仍然留著。
+   *
+   * 守恆本來就是**節點的性質**而不是層的性質,所以改成逐節點驗:
+   * 流入必須等於流出,除非它的下游是最細的子代碼(那一層才套門檻)。
+   * 這比原斷言更強,而且不因摺疊或層數變化而失效。
    */
-  it("前四層的總流量完全相等", () => {
-    const sumWhere = (predicate: (from: string) => boolean): number =>
-      links.filter((l) => predicate(l.from)).reduce((s, l) => s + l.weight, 0);
-
-    const organization = sumWhere((from) => from === "全公司");
-    const site = sumWhere((from) => /^\(\d+\)\s*\S+(公司|廠)$/.test(from));
-    const scope = sumWhere((from) => from.includes("範疇"));
-
-    [site, scope].forEach((layer) => {
-      expect(Math.abs(layer - organization)).toBeLessThan(0.001);
+  it("每個中間節點的流入等於流出(最細層例外,門檻只套那裡)", () => {
+    const inflow = new Map<string, number>();
+    const outflow = new Map<string, number>();
+    links.forEach((l) => {
+      inflow.set(l.to, (inflow.get(l.to) ?? 0) + l.weight);
+      outflow.set(l.from, (outflow.get(l.from) ?? 0) + l.weight);
     });
-    expect(organization).toBeGreaterThan(0);
+    // Info: (20260806 - Tzuhan) 子代碼節點:標籤尾端是 `1.1` 這種形狀
+    const isSubCategory = (node: string): boolean => /\s\d+\.\d+$/.test(node);
+
+    const intermediates = Array.from(inflow.keys()).filter((node) =>
+      outflow.has(node),
+    );
+    expect(intermediates.length).toBeGreaterThan(0);
+    intermediates.forEach((node) => {
+      const into = inflow.get(node) ?? 0;
+      const outOf = outflow.get(node) ?? 0;
+      // Info: (20260806 - Tzuhan) 不得憑空生出流量 —— 這條沒有例外
+      expect(outOf).toBeLessThanOrEqual(into + 0.001);
+      const feedsSubCategory = links.some(
+        (l) => l.from === node && isSubCategory(l.to),
+      );
+      if (!feedsSubCategory) {
+        expect(Math.abs(outOf - into)).toBeLessThan(0.001);
+      }
+    });
   });
 
   /**
    * Info: (20260805 - Tzuhan) 最細一層可以少 —— 差額就是低於門檻者,且已列在圖下方。
    * 這是刻意的不對稱:門檻只套最細層,否則小廠址的每一項都低於門檻,整個廠址會消失。
    */
-  it("最細一層可低於上層,差額不超過門檻總和", () => {
-    const sumWhere = (predicate: (from: string) => boolean): number =>
-      links.filter((l) => predicate(l.from)).reduce((s, l) => s + l.weight, 0);
-    const category = sumWhere((from) => from.includes("類別"));
-    const scope = sumWhere((from) => from.includes("範疇"));
-    expect(category).toBeLessThanOrEqual(scope + 0.001);
+  it("最細一層可低於上層,但差額不超過總量的 1%", () => {
+    const isSubCategory = (node: string): boolean => /\s\d+\.\d+$/.test(node);
+    const organization = links
+      .filter((l) => l.from === "全公司")
+      .reduce((s, l) => s + l.weight, 0);
+    const subCategory = links
+      .filter((l) => isSubCategory(l.to))
+      .reduce((s, l) => s + l.weight, 0);
+    expect(subCategory).toBeLessThanOrEqual(organization + 0.001);
     // Info: (20260805 - Tzuhan) 濾掉的是極細項,不該吃掉超過總量的 1%
-    expect(category).toBeGreaterThan(scope * 0.99);
+    expect(subCategory).toBeGreaterThan(organization * 0.99);
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 純傳遞的範疇節點要被摺掉,真的分岔的要留著。
+   *
+   * 這份報告的 ISO 類別一/二 與範疇一/二 是一對一(定義上如此),
+   * 於是那兩個範疇節點的進出數值完全相同、什麼都沒說,
+   * 而 mermaid 把標籤畫在節點右側 —— 「(1) 範疇二 3464.5」直接疊在
+   * 「(1) 類別二 3464.5」上,兩者都讀不出來。
+   * 範疇三 → 類別三 + 類別四 真的分岔,那一個必須留。
+   */
+  it("純傳遞的範疇節點被摺掉,分岔的保留", () => {
+    const scopeNodes = new Set(
+      links.filter((l) => l.to.includes("範疇")).map((l) => l.to),
+    );
+    expect(
+      Array.from(scopeNodes).every((node) => node.includes("範疇三")),
+    ).toBe(true);
+    expect(scopeNodes.size).toBeGreaterThan(0);
+    // Info: (20260806 - Tzuhan) 摺掉之後廠址直接接類別,類別本身仍在
+    expect(links.some((l) => l.to.includes("類別一"))).toBe(true);
   });
 
   /**

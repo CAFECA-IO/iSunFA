@@ -120,6 +120,90 @@ const formatScope = (scope: string, labels: ICarbonChartLabels): string =>
  */
 const SANKEY_SITE_INDEX_PATTERN = /^\(\s*[0-9]+\s*\)/;
 
+interface ISankeyEdge {
+  from: string;
+  to: string;
+  co2eKg: string;
+}
+
+/**
+ * Info: (20260806 - Tzuhan) 摺疊「純傳遞」節點:一入、一出,且進出數值相同。
+ *
+ * ## 為什麼要摺
+ *
+ * 這種節點在數學上什麼都沒說 —— 流量進來多少就出去多少,沒有分岔、沒有分解。
+ * 而它在畫面上要付兩份代價:佔一個欄位的寬度,而且 mermaid 把標籤畫在節點右側,
+ * 於是它的標籤會壓到下一層節點的標籤上。
+ *
+ * 實測那份報告正是如此:範疇一 2831.93 → 類別一 2831.93、範疇二 3464.5 → 類別二 3464.5,
+ * 兩組數值完全相同(ISO 14064 的類別一/二 與範疇一/二 本來就是一對一),
+ * 於是「(1) 範疇二 3464.5」的標籤直接疊在「(1) 類別二 3464.5」上,兩者都讀不出來。
+ * 而範疇三 2026.96 → 類別三 1242.47 + 類別四 784.49 **真的分岔**,那一個保留。
+ *
+ * 也就是說:重疊不是隨機的擁擠,是那兩層在這份報告裡本來就重複。
+ * 靠縮短字或拉大畫布治不了根 —— 該拿掉的是沒有帶進資訊的節點。
+ *
+ * ## 資訊零損失
+ *
+ * 摺疊只是把 `A → N → B`(兩段同值)換成 `A → B`,總流入與總流出完全不變。
+ * 被摺掉的節點名稱其實仍在下游節點的標籤裡看得到分類層級(類別一就是範疇一),
+ * 所以讀者不會少知道任何一件事。
+ *
+ * ## 受保護的節點
+ *
+ * `protectedNodes` 的成員即使符合條件也不摺 —— 組織與廠址在此列。
+ * 廠址是報告明載的組織邊界,不因數值重複而消失。
+ *
+ * ## 決定性
+ *
+ * 每一輪只摺第一個符合條件的節點,並在原位置替換那條邊(不 push 到尾端),
+ * 因此同輸入必得同輸出、同順序。連續的傳遞鏈會在多輪中逐一摺完。
+ */
+export function collapsePassThroughNodes(
+  edges: readonly ISankeyEdge[],
+  protectedNodes: ReadonlySet<string>,
+): ISankeyEdge[] {
+  let current: ISankeyEdge[] = [...edges];
+
+  // Info: (20260806 - Tzuhan) 最多摺 edges.length 輪:每輪必減一條邊,故不可能無窮迴圈
+  for (let round = 0; round < edges.length; round += 1) {
+    const inbound = new Map<string, number[]>();
+    const outbound = new Map<string, number[]>();
+    current.forEach((edge, index) => {
+      if (!inbound.has(edge.to)) inbound.set(edge.to, []);
+      inbound.get(edge.to)?.push(index);
+      if (!outbound.has(edge.from)) outbound.set(edge.from, []);
+      outbound.get(edge.from)?.push(index);
+    });
+
+    // Info: (20260806 - Tzuhan) 依邊的順序找候選,結果才與輸入順序無關地穩定
+    const target = current
+      .map((edge) => edge.to)
+      .find((node) => {
+        if (protectedNodes.has(node)) return false;
+        const ins = inbound.get(node) ?? [];
+        const outs = outbound.get(node) ?? [];
+        if (ins.length !== 1 || outs.length !== 1) return false;
+        return MoneyUtil.toDecimal(current[ins[0]].co2eKg).equals(
+          MoneyUtil.toDecimal(current[outs[0]].co2eKg),
+        );
+      });
+    if (target === undefined) return current;
+
+    const inIndex = (inbound.get(target) ?? [])[0];
+    const outIndex = (outbound.get(target) ?? [])[0];
+    // Info: (20260806 - Tzuhan) 在入邊的原位置替換,維持列的視覺順序
+    current = current
+      .map((edge, index) =>
+        index === inIndex
+          ? { from: edge.from, to: current[outIndex].to, co2eKg: edge.co2eKg }
+          : edge,
+      )
+      .filter((_edge, index) => index !== outIndex);
+  }
+  return current;
+}
+
 const buildScopePie = (
   ledger: IComputedLedger,
   labels: ICarbonChartLabels,
@@ -319,14 +403,41 @@ const buildImportedSankey = (
     MoneyUtil.toDecimal(co2eKg).div(TONNE_TO_KG_MULTIPLIER).toString();
 
   /**
-   * Info: (20260805 - Tzuhan) 節點名。第一層是組織總體,第二層是廠址原名,
-   * 第三層之後以廠址的序號前綴((1)、(2)…)區隔 —— 前綴取自廠址名本身,
-   * 用全名會讓標籤長到互相重疊,而序號已足以辨識是哪一個廠址。
+   * Info: (20260806 - Tzuhan) 廠址標籤改用**本模組自己編的序號**,不再取原文的。
+   *
+   * ## 原本錯在哪(實測抓到,而且畫面上一直是錯的)
+   *
+   * 原本取原文廠址名開頭的 `(n)` 當前綴。而這份報告的表3.8 裡
+   * 總公司與屏東分公司**都是 `(1)`** —— 前綴不唯一,於是第三層之後
+   * 兩個廠址共用同一個節點:實測 `(1) 範疇一` 同時收到
+   * 總公司的 17.8494 與屏東分公司的 2814.0773,合成 2831.9267。
+   *
+   * 那正是 20260805 改五層時要解決的「三棵樹疊在一起」,而它**沒有真的解決** ——
+   * 只是換了一種方式重現:總量仍然守恆(所以層間守恆的測試全過),
+   * 但線互相交叉、也分不出哪一條屬於哪個廠址。
+   * 守恆的測試擋不住這種錯,因為合併不改變總和。
+   *
+   * ## 現在的作法
+   *
+   * 以「首次出現順序」為每個相異廠址編一個 `#n`,並**去掉原文的 `(n)`**:
+   * 那個序號不唯一,留著只會讓人以為它有意義。
+   * 廠址全名仍在第二層(`#1 總公司`),深層只帶 `#1`,兩者可以循線對上。
+   *
+   * 順序取自 positive 的走訪順序,而那個順序是決定性的 —— 同輸入必得同編號。
    */
-  const sitePrefix = (site: string): string =>
-    site.match(SANKEY_SITE_INDEX_PATTERN)?.[0] ?? site;
+  const siteOrder: string[] = [];
+  positive.forEach((entry) => {
+    const site = entry.importedOrigin?.site;
+    if (site && !siteOrder.includes(site)) siteOrder.push(site);
+  });
+  const siteTags = new Map(
+    siteOrder.map((site, index) => [site, `#${index + 1}`]),
+  );
+  // Info: (20260806 - Tzuhan) 去掉原文那個不唯一的 `(n)`,只留廠址名本身
+  const siteDisplayName = (site: string): string =>
+    `${siteTags.get(site) ?? ""} ${site.replace(SANKEY_SITE_INDEX_PATTERN, "").trim()}`.trim();
   const scoped = (site: string, label: string): string =>
-    `${sitePrefix(site)} ${label}`;
+    `${siteTags.get(site) ?? site} ${label}`;
 
   const organization = labels.importedSankeyOrganization ?? "全公司";
 
@@ -364,13 +475,16 @@ const buildImportedSankey = (
   positive.forEach((entry) => {
     const origin = entry.importedOrigin;
     if (!origin) return;
-    const site = origin.site;
+    const site = siteDisplayName(origin.site);
     const scope = scoped(
-      site,
+      origin.site,
       formatScope(GhgCategoryToScope[entry.scopeCategory], labels),
     );
-    const category = scoped(site, formatCategory(origin.isoCategory, labels));
-    const subCategory = scoped(site, origin.subCategory);
+    const category = scoped(
+      origin.site,
+      formatCategory(origin.isoCategory, labels),
+    );
+    const subCategory = scoped(origin.site, origin.subCategory);
     addTo(layers[0], [organization, site].join(KEY_SEPARATOR), entry.co2eKg);
     addTo(layers[1], [site, scope].join(KEY_SEPARATOR), entry.co2eKg);
     addTo(layers[2], [scope, category].join(KEY_SEPARATOR), entry.co2eKg);
@@ -396,11 +510,27 @@ const buildImportedSankey = (
   const collapsed = nodeCount > CARBON_SANKEY_MAX_IMPORTED_NODES;
   const emitted = collapsed ? layers.slice(0, 2) : layers;
 
-  const rows = emitted.flatMap((layer) =>
+  const edges: ISankeyEdge[] = emitted.flatMap((layer) =>
     Array.from(layer.entries()).map(([key, co2eKg]) => {
       const [from, to] = key.split(KEY_SEPARATOR);
-      return `${quote(from)},${quote(to)},${toTonne(co2eKg)}`;
+      return { from, to, co2eKg };
     }),
+  );
+
+  /**
+   * Info: (20260806 - Tzuhan) 廠址與組織不參與摺疊。
+   *
+   * 廠址是報告明載的組織邊界。前車之鑑:門檻套錯層級時台北分公司整個從圖上消失,
+   * 而一個營運據點不該因為「數值和下游一樣」就從查核圖上不見 ——
+   * 那條線在數學上多餘,在查核上不是。
+   */
+  const protectedNodes = new Set<string>([organization]);
+  layers[0].forEach((_value, key) => {
+    protectedNodes.add(key.split(KEY_SEPARATOR)[1]);
+  });
+
+  const rows = collapsePassThroughNodes(edges, protectedNodes).map(
+    (edge) => `${quote(edge.from)},${quote(edge.to)},${toTonne(edge.co2eKg)}`,
   );
 
   const lines = ["```mermaid", "sankey-beta", "", ...rows, "```"];
