@@ -6,6 +6,7 @@ import {
   insertCarbonChartBlock,
   hasCarbonChartBlocks,
   refreshCarbonChartBlocks,
+  collapsePassThroughNodes,
 } from "@/lib/carbon_report_chart.builder";
 import {
   CarbonChartTemplateEnum,
@@ -294,6 +295,93 @@ describe("EMISSION_SANKEY 月別層", () => {
     const block = sankeyOf([withVoucher]);
     expect(block).toContain('"2025-01","外購電力 #aaaa1111",100');
     expect(block).toContain('"外購電力 #aaaa1111","外購電力",100');
+  });
+});
+
+/**
+ * Info: (20260806 - Tzuhan) 摺疊純傳遞節點。
+ *
+ * 一入一出且進出同值的節點在數學上什麼都沒說,而它在畫面上要付兩份代價:
+ * 佔一欄寬度,而 mermaid 把標籤畫在節點右側 → 標籤壓到下一層去。
+ * 實測那份報告的「(1) 範疇二 3464.5」就直接疊在「(1) 類別二 3464.5」上。
+ */
+describe("collapsePassThroughNodes", () => {
+  const edge = (from: string, to: string, co2eKg: string) => ({
+    from,
+    to,
+    co2eKg,
+  });
+
+  it("一入一出且同值即摺掉", () => {
+    const result = collapsePassThroughNodes(
+      [edge("A", "N", "100"), edge("N", "B", "100")],
+      new Set(["A"]),
+    );
+    expect(result).toEqual([edge("A", "B", "100")]);
+  });
+
+  it("連續的傳遞鏈一路摺完", () => {
+    const result = collapsePassThroughNodes(
+      [edge("A", "N1", "100"), edge("N1", "N2", "100"), edge("N2", "B", "100")],
+      new Set(["A"]),
+    );
+    expect(result).toEqual([edge("A", "B", "100")]);
+  });
+
+  // Info: (20260806 - Tzuhan) 真的分岔的節點帶了資訊,不可摺
+  it("分岔的節點保留", () => {
+    const edges = [
+      edge("A", "N", "100"),
+      edge("N", "B", "60"),
+      edge("N", "C", "40"),
+    ];
+    expect(collapsePassThroughNodes(edges, new Set(["A"]))).toEqual(edges);
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 進出不同值代表它吃掉或生出了流量 —— 那是實質資訊(門檻濾掉的差額),
+   * 摺掉會把「這裡少了一些」變成看不見。
+   */
+  it("進出不同值即不摺(差額是實質資訊)", () => {
+    const edges = [edge("A", "N", "100"), edge("N", "B", "90")];
+    expect(collapsePassThroughNodes(edges, new Set(["A"]))).toEqual(edges);
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 受保護的節點即使符合條件也不摺 ——
+   * 廠址是報告明載的組織邊界,不因數值重複而從查核圖上消失。
+   */
+  it("受保護的節點不摺(廠址是組織邊界)", () => {
+    const edges = [edge("全公司", "#1 廠", "100"), edge("#1 廠", "1.1", "100")];
+    expect(
+      collapsePassThroughNodes(edges, new Set(["全公司", "#1 廠"])),
+    ).toEqual(edges);
+  });
+
+  // Info: (20260806 - Tzuhan) 摺疊不得改變總流入/總流出
+  it("摺疊前後總流量不變", () => {
+    const edges = [
+      edge("A", "N", "100"),
+      edge("N", "B", "100"),
+      edge("A", "M", "50"),
+      edge("M", "C", "30"),
+      edge("M", "D", "20"),
+    ];
+    const sum = (list: readonly { co2eKg: string }[]): number =>
+      list.reduce((total, e) => total + Number(e.co2eKg), 0);
+    const result = collapsePassThroughNodes(edges, new Set(["A"]));
+    const rootOut = (
+      list: readonly { from: string; co2eKg: string }[],
+    ): number => sum(list.filter((e) => e.from === "A"));
+    expect(rootOut(result)).toBe(rootOut(edges));
+    expect(sum(result)).toBeLessThan(sum(edges));
+  });
+
+  it("同輸入同輸出(決定性)", () => {
+    const edges = [edge("A", "N", "100"), edge("N", "B", "100")];
+    expect(collapsePassThroughNodes(edges, new Set(["A"]))).toEqual(
+      collapsePassThroughNodes(edges, new Set(["A"])),
+    );
   });
 });
 
