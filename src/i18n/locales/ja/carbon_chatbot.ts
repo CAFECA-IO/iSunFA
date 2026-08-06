@@ -56,6 +56,9 @@ export const carbonChatbot = {
   origin_ai_draft: "AI 下書き",
   origin_imported_short: "原文",
   origin_ai_draft_short: "下書き",
+  // Info: (20260806 - Tzuhan) 匯入前先上傳取 cid:14 次呼叫共用一份儲存,文案要說出「為何要等」
+  import_uploading:
+    "{{name}} を安全なストレージへ保存中(以降の各章の解析はサーバー側で取得し、ファイルを毎回再送しません)…",
   // Info: (20260730 - Tzuhan) 兩階段匯入的第一階段提示:一次索引換來後續 11 章不必各自重送整份文件
   import_indexing:
     "{{name}} の章インデックスを作成中(各セクションのページを特定し、後続の解析量を削減します)…",

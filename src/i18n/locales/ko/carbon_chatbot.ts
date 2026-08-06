@@ -56,6 +56,9 @@ export const carbonChatbot = {
   origin_ai_draft: "AI 초안",
   origin_imported_short: "원문",
   origin_ai_draft_short: "초안",
+  // Info: (20260806 - Tzuhan) 匯入前先上傳取 cid:14 次呼叫共用一份儲存,文案要說出「為何要等」
+  import_uploading:
+    "{{name}}을(를) 보안 저장소에 저장 중입니다(이후 각 장 분석은 서버가 가져오며 파일을 매번 다시 올리지 않습니다)…",
   // Info: (20260730 - Tzuhan) 兩階段匯入的第一階段提示:一次索引換來後續 11 章不必各自重送整份文件
   import_indexing:
     "{{name}}의 장 색인을 만들고 있습니다(각 섹션의 페이지를 찾아 이후 분석량을 크게 줄입니다)…",

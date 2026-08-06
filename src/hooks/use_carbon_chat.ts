@@ -136,6 +136,8 @@ import {
   patchMarkdownSection,
   reduceDraftNotice,
   sortSessionsByRecency,
+  appendImportSource,
+  type ICarbonImportSource,
 } from "@/hooks/use_carbon_chat.helpers";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { useAuth } from "@/contexts/auth_context";
@@ -404,7 +406,13 @@ export const useCarbonChat = () => {
   // Info: (20260716 - Tzuhan) #56 匯入預覽期間暫存的活動數據(確認時才入帳本)
   const importActivitiesRef = useRef<IActivityRecord[]>([]);
   // Info: (20260717 - Tzuhan) #56 重試用:最近一次匯入的原始檔(失敗章節重跑無需重選檔)
-  const lastImportFileRef = useRef<File | null>(null);
+  /**
+   * Info: (20260806 - Tzuhan) 上一次匯入的檔案引用(重試失敗章節時取用)。
+   * 原本存的是 `File`,而 File 是純瀏覽器記憶體物件 —— 重載即消失,
+   * 於是「重試失敗章節」在重載後永遠是死鈕。改存 cid 之後這件事有解:
+   * cid 是字串,可以隨待匯入紀錄一起進 DB。
+   */
+  const lastImportSourceRef = useRef<ICarbonImportSource | null>(null);
   // Info: (20260804 - Tzuhan) 進行中的匯入檔名(null 即無);用檔名而非布林,提示才說得出擋的是誰
   const importInFlightRef = useRef<string | null>(null);
   // Info: (20260730 - Tzuhan) 首次匯入取得的頁碼索引:重試失敗章節時沿用,不重問(索引不會變,重問等於再燒一次全文輸入)
@@ -1510,9 +1518,9 @@ export const useCarbonChat = () => {
    * 失敗一律回空 Map(後端亦同),第二階段就退回原本的送全文行為——索引是最佳化,不是前提。
    */
   const fetchSectionPageIndex = useCallback(
-    async (file: File): Promise<Map<string, number>> => {
+    async (source: ICarbonImportSource): Promise<Map<string, number>> => {
       const formData = new FormData();
-      formData.append("file", file);
+      appendImportSource(formData, source);
       formData.append("language", language);
       formData.append("mode", CarbonReportImportModeEnum.INDEX);
       try {
@@ -1572,7 +1580,7 @@ export const useCarbonChat = () => {
    */
   const runImportChapters = useCallback(
     async (
-      file: File,
+      source: ICarbonImportSource,
       chapters: { id: string; title: string }[],
       extractActivities: boolean,
       pageIndex: Map<string, number> | undefined,
@@ -1617,7 +1625,7 @@ export const useCarbonChat = () => {
         notify({
           type: "loading",
           text: t("carbon_chatbot.import_parsing_chapter", {
-            name: file.name,
+            name: source.fileName,
             current: completedCount,
             total: units.length,
             inFlight: inFlightCount,
@@ -1638,7 +1646,7 @@ export const useCarbonChat = () => {
         inFlightCount += 1;
         reportProgress();
         const formData = new FormData();
-        formData.append("file", file);
+        appendImportSource(formData, source);
         formData.append("language", language);
         formData.append("chapterId", chapter.id);
         // Info: (20260730 - Tzuhan) 活動數據只在「排放章」那次呼叫萃取(避免 11 章重複入帳)。
@@ -1797,7 +1805,7 @@ export const useCarbonChat = () => {
   // Info: (20260806 - Tzuhan) notify 由呼叫端注入(理由同 runImportChapters:補齊也跑在匯入的長流程裡)
   const runGapFillSections = useCallback(
     async (
-      file: File,
+      source: ICarbonImportSource,
       missingSectionIds: string[],
       fileName: string,
       notify: (notice: IDraftNotice | null) => void,
@@ -1825,7 +1833,7 @@ export const useCarbonChat = () => {
           }),
         });
         const formData = new FormData();
-        formData.append("file", file);
+        appendImportSource(formData, source);
         formData.append("language", language);
         formData.append("mode", CarbonReportImportModeEnum.DRAFT);
         formData.append("sectionIds", JSON.stringify(batches[index]));
@@ -1879,7 +1887,6 @@ export const useCarbonChat = () => {
         return;
       }
       importInFlightRef.current = file.name;
-      lastImportFileRef.current = file;
       /**
        * Info: (20260803 - Tzuhan) 釘住發起匯入的會話(階段二)。
        * 匯入會跑好幾分鐘且不因切房而停 —— 沿用「當前會話」的話,中途切房後
@@ -1888,6 +1895,41 @@ export const useCarbonChat = () => {
       const originSessionId = activeSessionId;
       const notify = (notice: IDraftNotice | null) =>
         setDraftNotice(notice, originSessionId);
+      /**
+       * Info: (20260806 - Tzuhan) 先把檔案存進 Laria 拿 cid,之後每次呼叫只帶 cid。
+       *
+       * 一份 64 頁報告要 1 次索引 + 11 章 + 補章共十幾次 `/import`,原本每一次都重送整份 PDF。
+       * 走的是附件那條既有的安全管線(magic bytes → 掃毒 → 配額 → 分片),
+       * 所以匯入檔第一次也真的被掃過 —— 原本匯入路徑只驗 magic bytes,沒有掃毒。
+       *
+       * 上傳失敗不中止匯入:退回直傳 File(cid 為 null)。
+       * 代價是重載後不能重試失敗章節,但那比「整份報告匯不進來」輕。
+       */
+      notify({
+        type: "loading",
+        text: t("carbon_chatbot.import_uploading", { name: file.name }),
+      });
+      let importCid: string | null = null;
+      try {
+        const uploadForm = new FormData();
+        uploadForm.append("file", file);
+        const uploaded = await request<{ payload: { cid: string } | null }>(
+          "/api/v1/chat/carbon/attachment",
+          { method: "POST", body: uploadForm },
+        );
+        importCid = uploaded.payload?.cid ?? null;
+      } catch (uploadError) {
+        // Info: (20260806 - Tzuhan) 記下真正原因(型別/掃毒/配額都在錯誤碼裡),但不擋匯入
+        console.error("[carbon-chat] import upload failed:", uploadError);
+      }
+      const importSource: ICarbonImportSource = {
+        cid: importCid,
+        fileName: file.name,
+        mimeType: file.type,
+        // Info: (20260806 - Tzuhan) 有 cid 就不再留 File 參考,讓瀏覽器早點回收大檔
+        file: importCid ? null : file,
+      };
+      lastImportSourceRef.current = importSource;
       // Info: (20260716 - Tzuhan) 逐章解析(UAT:整份真實報告單次呼叫受 output token 上限,只回少數段落):
       // Info: (20260717 - Tzuhan) pdf 或大檔逐章(11 章,並行度 2);小型文字檔單發
       // Info: (20260730 - Tzuhan) PDF 一律逐章(頁數與內容量無法由大小推斷);純文字小檔才單發
@@ -1917,10 +1959,10 @@ export const useCarbonChat = () => {
             type: "loading",
             text: t("carbon_chatbot.import_indexing", { name: file.name }),
           });
-          const pageIndex = await fetchSectionPageIndex(file);
+          const pageIndex = await fetchSectionPageIndex(importSource);
           lastPageIndexRef.current = pageIndex;
           const result = await runImportChapters(
-            file,
+            importSource,
             chapters,
             true,
             pageIndex,
@@ -1935,7 +1977,7 @@ export const useCarbonChat = () => {
             text: t("carbon_chatbot.import_parsing", { name: file.name }),
           });
           const formData = new FormData();
-          formData.append("file", file);
+          appendImportSource(formData, importSource);
           formData.append("language", language);
           const res = await request<
             IEnvelopeLike<{
@@ -1996,7 +2038,7 @@ export const useCarbonChat = () => {
         }[] = [];
         if (missingSectionIds.length > 0) {
           draftedSegments = await runGapFillSections(
-            file,
+            importSource,
             missingSectionIds,
             file.name,
             notify,
@@ -2060,9 +2102,9 @@ export const useCarbonChat = () => {
 
   // Info: (20260717 - Tzuhan) #56 只重跑失敗章節,結果合併進現有預覽(檔案取自暫存 ref)
   const retryFailedImportChapters = useCallback(async () => {
-    const file = lastImportFileRef.current;
+    const source = lastImportSourceRef.current;
     const failed = pendingImport?.failedChapters ?? [];
-    if (!file || failed.length === 0 || !pendingImport) return;
+    if (!source || failed.length === 0 || !pendingImport) return;
     /**
      * Info: (20260806 - Tzuhan) 重試中不得再次發射。
      *
@@ -2089,7 +2131,7 @@ export const useCarbonChat = () => {
     try {
       // Info: (20260730 - Tzuhan) 重試沿用首次的頁碼索引:重問一次索引等於再燒一次全文輸入,而索引不會變
       const result = await runImportChapters(
-        file,
+        source,
         failed,
         false,
         lastPageIndexRef.current,

@@ -55,6 +55,9 @@ export const carbonChatbot = {
   origin_ai_draft: "AI 草稿",
   origin_imported_short: "原文",
   origin_ai_draft_short: "草稿",
+  // Info: (20260806 - Tzuhan) 匯入前先上傳取 cid:14 次呼叫共用一份儲存,文案要說出「為何要等」
+  import_uploading:
+    "正在將 {{name}} 存入安全儲存(後續每章解析改由伺服端取回,不再重複上傳整份檔案)…",
   // Info: (20260730 - Tzuhan) 兩階段匯入的第一階段提示:一次索引換來後續 11 章不必各自重送整份文件
   import_indexing:
     "正在建立 {{name}} 的章節索引(定位各節頁碼,可大幅減少後續解析量)…",
