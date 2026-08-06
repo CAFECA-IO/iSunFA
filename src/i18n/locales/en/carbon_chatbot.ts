@@ -257,15 +257,18 @@ export const carbonChatbot = {
   chart_sankey_period_collapsed:
     "The period spans more than two years; the monthly layer is omitted (see the trend chart for months)",
   chart_imported_sankey_title:
-    "GHG emission flow: organization → site → scope → category → emission form (verbatim from the report, location-based, tCO2e/yr)",
+    "Emissions by category: company → scope → sub-category (verbatim, location-based, tCO2e/year)",
   chart_imported_sankey_excluded: "Not shown (NA/NS or zero)",
   chart_imported_sankey_no_ledger:
     'The report was imported but the ledger holds no usable data, so the emission flow cannot be drawn. Table 3.8 (GHG emissions by company) is the only source for the Sankey diagram and the system data table, and it was not obtained this time. Check whether Chapter 3 parsed successfully; if it is listed as failed, re-import it via "Retry failed chapters" on the preview card, and check the server log for whether the table was dropped and why.',
   chart_imported_sankey_collapsed:
-    "Too many nodes; collapsed to two layers (site → scope)",
+    "Too many nodes — reduced to one layer (company → scope)",
   chart_imported_top_items_title:
     "Where emissions go: company → top nine emission items plus Other (verbatim from the report, location-based, tCO2e/yr)",
   chart_imported_sankey_other: "Other",
+  // Info: (20260807 - Tzuhan) 分類圖抽掉廠址層(屏東佔 97%,同圖畫不出比重);廠址改列小計
+  chart_imported_sankey_site_totals:
+    "Per-site subtotals (tCO2e/year, share of company total)",
   chart_imported_sankey_ghg_mapping:
     "Sub-code to GHG Protocol category mapping",
   chart_imported_sankey_below_threshold: "Too small to plot (tCO2e/yr)",

@@ -236,14 +236,17 @@ export const carbonChatbot = {
   chart_sankey_period_collapsed:
     "期間跨度超過兩個年度，已略過月別層（月別請看趨勢圖）",
   chart_imported_sankey_title:
-    "溫室氣體排放流向：組織 → 廠址 → 範疇 → 類別 → 排放形式（原文照錄，所在地基準，公噸 CO2e/年）",
+    "排放分類:全公司 → 範疇 → 子代碼(原文照錄,所在地基準,公噸 CO2e/年)",
   chart_imported_sankey_excluded: "未畫出的項目（NA/NS 或為零）",
   chart_imported_sankey_no_ledger:
     "本報告已匯入，但帳本沒有任何可用數據，因此畫不出排放流向圖。桑基圖與系統數據表格的唯一來源是表3.8（各公司溫室氣體排放量），本次未取得該表。請確認第三章是否解析成功；若該章列為解析失敗，請以預覽卡的「重試失敗章節」重新匯入，並在伺服端日誌查看該表是否被丟棄及其原因。",
-  chart_imported_sankey_collapsed: "節點過多，已降為兩層（廠址 → 範疇）",
+  chart_imported_sankey_collapsed: "節點過多,已降為一層(全公司 → 範疇)",
   chart_imported_top_items_title:
     "排放去向：全公司 → 前九大排放項目與其他（原文照錄，所在地基準，公噸 CO2e/年）",
   chart_imported_sankey_other: "其他",
+  // Info: (20260807 - Tzuhan) 分類圖抽掉廠址層(屏東佔 97%,同圖畫不出比重);廠址改列小計
+  chart_imported_sankey_site_totals:
+    "各廠址小計(公噸 CO2e/年,占全公司比)",
   chart_imported_sankey_ghg_mapping: "子代碼與 GHG Protocol 類別的對照",
   chart_imported_sankey_below_threshold: "占比過小未畫出（公噸 CO2e/年）",
   chart_imported_sankey_organization: "全公司",

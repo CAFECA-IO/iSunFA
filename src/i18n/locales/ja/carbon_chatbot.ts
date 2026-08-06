@@ -258,15 +258,18 @@ export const carbonChatbot = {
   chart_sankey_period_collapsed:
     "期間が 2 年度を超えるため月別階層を省略しました(月別は推移グラフを参照)",
   chart_imported_sankey_title:
-    "温室効果ガス排出フロー:組織 → 拠点 → スコープ → カテゴリ → 排出形態(原文転記、ロケーション基準、tCO2e/年)",
+    "排出の分類：全社 → スコープ → サブカテゴリ（原文どおり、ロケーション基準、tCO2e/年）",
   chart_imported_sankey_excluded: "図に含まれない項目(NA/NS または 0)",
   chart_imported_sankey_no_ledger:
     "報告書はインポートされましたが、台帳に利用可能なデータがないため排出フロー図を描画できません。サンキー図とシステム集計表の唯一の出典は表3.8（各社の温室効果ガス排出量）で、今回は取得できませんでした。第三章の解析が成功したかご確認ください。解析失敗と表示されている場合は、プレビューカードの「失敗した章を再試行」で再インポートし、サーバーログで当該表が破棄された理由をご確認ください。",
   chart_imported_sankey_collapsed:
-    "ノードが多すぎるため 2 階層(拠点 → スコープ)に縮約しました",
+    "ノードが多すぎるため 1 層に縮小しました（全社 → スコープ）",
   chart_imported_top_items_title:
     "排出の行き先：全社 → 上位 9 排出項目とその他(原文転記、ロケーション基準、tCO2e/年)",
   chart_imported_sankey_other: "その他",
+  // Info: (20260807 - Tzuhan) 分類圖抽掉廠址層(屏東佔 97%,同圖畫不出比重);廠址改列小計
+  chart_imported_sankey_site_totals:
+    "拠点別小計（tCO2e/年、全社比）",
   chart_imported_sankey_ghg_mapping: "サブコードと GHG Protocol カテゴリの対応",
   chart_imported_sankey_below_threshold: "比率が小さく非表示(tCO2e/年)",
   chart_imported_sankey_organization: "全社",

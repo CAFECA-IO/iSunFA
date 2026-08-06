@@ -91,6 +91,18 @@ export const CARBON_SANKEY_MAX_IMPORTED_NODES = 90;
  */
 export const CARBON_SANKEY_MIN_SHARE_OF_TOTAL = 0.001;
 
+/**
+ * Info: (20260807 - Tzuhan) 廠址小計清單的百分比:乘數與小數位。
+ *
+ * 分類圖抽掉廠址層之後,「哪個據點排最多」只剩這份清單交代 ——
+ * 所以它要說得出比例,而不只是絕對值:8121.92 對外人不是資訊,97.5% 才是。
+ *
+ * 小數一位:三個廠址的占比是 2.4% / 0.1% / 97.5%,再多位數不增加判斷力,
+ * 而 0.1% 這個量級需要一位才不會被四捨成 0%(那會讓一個真實據點看起來是零)。
+ */
+export const PERCENT_MULTIPLIER = 100;
+export const SITE_SHARE_DECIMAL_PLACES = 1;
+
 // Info: (20260721 - Tzuhan) UAT:排放總量匯總段(3.6)草稿生成時自動附掛碳流量桑基圖 —
 // Info: (20260721 - Tzuhan) mermaid 原始碼落在 Markdown 輸入區,PDF 預覽區同步渲染
 export const CARBON_AUTO_SANKEY_PARAGRAPH_ID = "ch3-6";
