@@ -15,8 +15,10 @@ import {
   CARBON_CHART_ANCHOR_PREFIX,
   CARBON_SANKEY_MAX_EVIDENCE_NODES,
   CARBON_SANKEY_MAX_IMPORTED_NODES,
+  CARBON_SANKEY_MAX_MONTH_NODES,
   CARBON_SANKEY_MIN_SHARE_OF_TOTAL,
 } from "@/constants/carbon_report_charts";
+import { resolveEmissionMonth } from "@/lib/utils/emission_period";
 import { TONNE_TO_KG_MULTIPLIER } from "@/constants/imported_quantity";
 import { isImportedEntry } from "@/lib/carbon_table38.ledger";
 import {
@@ -35,6 +37,14 @@ export interface ICarbonChartLabels {
   frozen: string;
   // Info: (20260720 - Tzuhan) #53 桑基圖:非憑證來源(對話/附件申報)的聚合節點名
   sankeyChatNode: string;
+  /**
+   * Info: (20260806 - Tzuhan) 沒有交易日期的紀錄在月別層的節點名。
+   * 一定要有這個節點:把無日期的筆數默默併進某個月份就是編造事實,
+   * 而整批丟掉會讓總流入不等於總流出 —— 那張圖就不再是守恆的證明。
+   */
+  sankeyPeriodUnknown?: string;
+  /** Info: (20260806 - Tzuhan) 月別跨度過大而略過該層時的說明 */
+  sankeyPeriodCollapsed?: string;
   /**
    * Info: (20260803 - Tzuhan) 匯入桑基圖的標題。**必須帶基準與單位** ——
    * 一張沒有單位的流量圖,讀者無從判斷 8332 是公噸還是公斤,差一千倍。
@@ -67,6 +77,8 @@ export const CARBON_CHART_DEFAULT_LABELS: ICarbonChartLabels = {
   frozen:
     "⚠ 質量守恆勾稽未通過,圖表已凍結。請於對話中澄清庫存缺口後,圖表將自動生成。",
   sankeyChatNode: "對話/附件申報",
+  sankeyPeriodUnknown: "未標註期間",
+  sankeyPeriodCollapsed: "期間跨度超過兩個年度,已略過月別層(月別請看趨勢圖)",
   importedSankeyTitle:
     "溫室氣體排放流向:組織 → 廠址 → 範疇 → 類別 → 排放形式(原文照錄,所在地基準,公噸 CO2e/年)",
   importedSankeyExcluded: "未畫出的項目(NA/NS 或為零)",
@@ -115,6 +127,24 @@ const buildScopePie = (
  * 憑證節點超過上限 → 略過憑證層(排放源 → Scope 兩層),保持可讀性。
  * mermaid sankey-beta 為 CSV 語法,節點名一律引號包裹(名稱含逗號不破格式)。
  */
+/**
+ * Info: (20260806 - Tzuhan) 最前面加**月別層**:月別 → 憑證 → 排放源 → 範疇。
+ *
+ * 帳本紀錄本來就有真實交易日期(`EsgRecord.tradingDate`),
+ * 但它在 `carbon_esg_link` 映射成 `IActivityRecord` 時被丟掉了 ——
+ * 於是這張圖只畫得出「一整年的合計」,連 TREND_LINE 模板都因為
+ * 「單期 ledger 無時間序列」而刻意沒上架。資料一直都在,是介面漏了欄位。
+ *
+ * 三個刻意的行為:
+ *
+ * 1. **一筆日期都沒有時不加這一層。** 對話申報與匯入報告都沒有逐筆日期,
+ *    那時候月別層只會是一個「未標註期間」的漏斗節點 —— 純噪音。
+ * 2. **有日期與沒日期混在一起時,沒日期的走「未標註期間」節點。**
+ *    併進某個月份是編造;整批丟掉則會讓總流入不等於總流出,
+ *    而這張圖的意義正是守恆的視覺化(#22 同一哲學)。
+ * 3. **月別數超過上限即整層略過並明說**(見 CARBON_SANKEY_MAX_MONTH_NODES)。
+ *    少一層而不講,讀者會以為這份帳本根本沒有日期。
+ */
 const buildEmissionSankey = (
   ledger: IComputedLedger,
   labels: ICarbonChartLabels,
@@ -127,39 +157,87 @@ const buildEmissionSankey = (
     evidenceEntries.length > 0 &&
     evidenceEntries.length <= CARBON_SANKEY_MAX_EVIDENCE_NODES;
 
-  // Info: (20260720 - Tzuhan) 第一層:憑證/申報來源 → 排放源(值 = 單筆 CO2e)
-  if (withEvidenceLayer) {
-    ledger.entries.forEach((entry) => {
-      // Info: (20260720 - Tzuhan) 節點名帶憑證 id 尾碼(cuid 尾段才有區別度;首段為時間戳易撞名)
-      const origin = entry.evidence?.voucherId
-        ? `${entry.sourceName} #${entry.evidence.voucherId.slice(-8)}`
-        : labels.sankeyChatNode;
-      rows.push(
-        `${quote(origin)},${quote(entry.sourceName)},${chartValue(entry.co2eKg)}`,
-      );
+  /**
+   * Info: (20260720 - Tzuhan) 憑證/申報來源的節點名。
+   * 節點名帶憑證 id 尾碼(cuid 尾段才有區別度;首段為時間戳易撞名)。
+   */
+  const originNode = (entry: IComputedLedger["entries"][number]): string =>
+    entry.evidence?.voucherId
+      ? `${entry.sourceName} #${entry.evidence.voucherId.slice(-8)}`
+      : labels.sankeyChatNode;
+
+  /**
+   * Info: (20260806 - Tzuhan) 逐鍵累加(字串 Decimal,不經 number);同一組節點對只畫一條線。
+   *
+   * 分隔符取 NUL 而非可列印字元:節點名裡本來就有空白(「外購電力 #aaaa1111」),
+   * 用空白或 `|` 都可能把節點名切成兩半 —— 畫出來會是一個名字不完整的節點,
+   * 看起來像資料本身有問題。與匯入桑基圖同一慣例。
+   */
+  const EMISSION_SANKEY_KEY_SEPARATOR = "\u0000";
+  const addTo = (
+    map: Map<string, string>,
+    from: string,
+    to: string,
+    co2eKg: string,
+  ): void => {
+    const key = [from, to].join(EMISSION_SANKEY_KEY_SEPARATOR);
+    map.set(key, MoneyUtil.add(map.get(key) ?? "0", co2eKg));
+  };
+  const emit = (map: Map<string, string>): void => {
+    map.forEach((total, key) => {
+      const [from, to] = key.split(EMISSION_SANKEY_KEY_SEPARATOR);
+      rows.push(`${quote(from)},${quote(to)},${chartValue(total)}`);
     });
+  };
+
+  // Info: (20260806 - Tzuhan) 月別層:逐筆解出月份(解不出即 null,絕不猜)
+  const months = ledger.entries.map((entry) =>
+    resolveEmissionMonth(entry.tradingTimestamp),
+  );
+  const distinctMonths = new Set(
+    months.filter((month): month is string => month !== null),
+  );
+  const hasAnyMonth = distinctMonths.size > 0;
+  const withMonthLayer =
+    hasAnyMonth && distinctMonths.size <= CARBON_SANKEY_MAX_MONTH_NODES;
+
+  if (withMonthLayer) {
+    const byMonth = new Map<string, string>();
+    ledger.entries.forEach((entry, index) => {
+      // Info: (20260806 - Tzuhan) 無日期者走「未標註期間」節點:不併進任何月份,也不丟掉
+      const month = months[index] ?? labels.sankeyPeriodUnknown ?? "未標註期間";
+      const target = withEvidenceLayer ? originNode(entry) : entry.sourceName;
+      addTo(byMonth, month, target, entry.co2eKg);
+    });
+    emit(byMonth);
   }
 
-  // Info: (20260720 - Tzuhan) 第二層:排放源 → Scope(同源加總,MoneyUtil 字串累加)
-  const bySource = new Map<string, { scope: string; total: string }>();
+  // Info: (20260720 - Tzuhan) 憑證層:憑證/申報來源 → 排放源(值 = 單筆 CO2e)
+  if (withEvidenceLayer) {
+    const byOrigin = new Map<string, string>();
+    ledger.entries.forEach((entry) => {
+      addTo(byOrigin, originNode(entry), entry.sourceName, entry.co2eKg);
+    });
+    emit(byOrigin);
+  }
+
+  // Info: (20260720 - Tzuhan) 排放源 → Scope(同源加總,MoneyUtil 字串累加)
+  const bySource = new Map<string, string>();
   ledger.entries.forEach((entry) => {
-    const key = `${entry.sourceName}|${entry.scopeCategory}`;
-    const current = bySource.get(key) ?? {
-      scope: entry.scopeCategory,
-      total: "0",
-    };
-    current.total = MoneyUtil.add(current.total, entry.co2eKg);
-    bySource.set(key, current);
-  });
-  bySource.forEach((value, key) => {
-    const sourceName = key.slice(0, key.lastIndexOf("|"));
-    const scopeName = labels.formatScope?.(value.scope) ?? value.scope;
-    rows.push(
-      `${quote(sourceName)},${quote(scopeName)},${chartValue(value.total)}`,
+    addTo(
+      bySource,
+      entry.sourceName,
+      labels.formatScope?.(entry.scopeCategory) ?? entry.scopeCategory,
+      entry.co2eKg,
     );
   });
+  emit(bySource);
 
-  return ["```mermaid", "sankey-beta", "", ...rows, "```"].join("\n");
+  const lines = ["```mermaid", "sankey-beta", "", ...rows, "```"];
+  if (hasAnyMonth && !withMonthLayer && labels.sankeyPeriodCollapsed) {
+    lines.push("", `> _${labels.sankeyPeriodCollapsed}_`);
+  }
+  return lines.join("\n");
 };
 
 /**

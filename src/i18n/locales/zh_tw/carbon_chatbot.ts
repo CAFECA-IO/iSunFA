@@ -216,10 +216,15 @@ export const carbonChatbot = {
   chart_frozen:
     "⚠ 質量守恆勾稽未通過，圖表已凍結。請於對話中澄清庫存缺口後，圖表將自動生成。",
   chart_sankey_chat_node: "憑證外的來源（對話/附件申報）",
+  chart_sankey_period_unknown: "未標註期間",
+  chart_sankey_period_collapsed:
+    "期間跨度超過兩個年度，已略過月別層（月別請看趨勢圖）",
   chart_imported_sankey_title:
-    "溫室氣體排放流向（原文照錄，所在地基準,公噸 CO2e/年）",
+    "溫室氣體排放流向：組織 → 廠址 → 範疇 → 類別 → 排放形式（原文照錄，所在地基準，公噸 CO2e/年）",
   chart_imported_sankey_excluded: "未畫出的項目（NA/NS 或為零）",
-  chart_imported_sankey_collapsed: "節點過多，已降為兩層（廠址 → 類別）",
+  chart_imported_sankey_collapsed: "節點過多，已降為三層（組織 → 廠址 → 範疇）",
+  chart_imported_sankey_below_threshold: "占比過小未畫出（公噸 CO2e/年）",
+  chart_imported_sankey_organization: "全公司",
   book_bind_pending_unlock:
     "帳本會話已建立。請先解鎖加密對話以完成帳本綁定（匯入憑證數據與證據鏈功能需綁定後才可用）",
   book_bind_done: "帳本綁定完成，可從活動數據卡匯入憑證數據",

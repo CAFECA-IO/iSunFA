@@ -1013,12 +1013,26 @@ export const useCarbonChat = () => {
       insufficient: t("carbon_chatbot.chart_insufficient"),
       frozen: t("carbon_chatbot.chart_frozen"),
       sankeyChatNode: t("carbon_chatbot.chart_sankey_chat_node"),
+      // Info: (20260806 - Tzuhan) 憑證桑基圖的月別層文案
+      sankeyPeriodUnknown: t("carbon_chatbot.chart_sankey_period_unknown"),
+      sankeyPeriodCollapsed: t("carbon_chatbot.chart_sankey_period_collapsed"),
       importedSankeyTitle: t("carbon_chatbot.chart_imported_sankey_title"),
       importedSankeyExcluded: t(
         "carbon_chatbot.chart_imported_sankey_excluded",
       ),
       importedSankeyCollapsed: t(
         "carbon_chatbot.chart_imported_sankey_collapsed",
+      ),
+      /**
+       * Info: (20260806 - Tzuhan) 這兩個先前漏接 i18n,只吃得到 CARBON_CHART_DEFAULT_LABELS 的
+       * 繁中預設值 —— 五層圖是 20260805 才加的,文案當時只改了 default 沒改 i18n,
+       * 而這個 hook 會用 i18n 覆蓋 default,結果英日韓看到的是中文。
+       */
+      importedSankeyBelowThreshold: t(
+        "carbon_chatbot.chart_imported_sankey_below_threshold",
+      ),
+      importedSankeyOrganization: t(
+        "carbon_chatbot.chart_imported_sankey_organization",
       ),
       // Info: (20260722 - Tzuhan) UAT:範疇顯示名(enum 值不可讀)
       formatScope: (scope: string) => formatGhgCategoryLabel(scope, language),

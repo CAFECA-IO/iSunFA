@@ -10,6 +10,7 @@ import {
 import {
   CarbonChartTemplateEnum,
   buildChartAnchorStart,
+  CARBON_SANKEY_MAX_MONTH_NODES,
 } from "@/constants/carbon_report_charts";
 import { ArticulationStatusEnum } from "@/constants/carbon_articulation";
 import { GhgProtocolCategory } from "@/constants/esg";
@@ -167,6 +168,132 @@ describe("EMISSION_SANKEY (#53 憑證→排放源→Scope 碳流量)", () => {
     );
     expect(many).not.toContain(" #");
     expect(many).toContain('"外購電力","SCOPE_2_INDIRECT"');
+  });
+});
+
+/**
+ * Info: (20260806 - Tzuhan) 月別層(帳本的 tradingDate 打通後才成立)。
+ * 這一層的資料一路要經過 esg_link → 計算服務 → 本模組,漏任何一段的表現都是
+ * 「有些筆沒有月份」—— 看起來像資料缺日期,不像程式漏了一行。故守恆與缺值都要有測試。
+ */
+describe("EMISSION_SANKEY 月別層", () => {
+  const MILLISECONDS_PER_SECOND = 1000;
+  const secondsOf = (iso: string): number =>
+    Math.floor(new Date(iso).getTime() / MILLISECONDS_PER_SECOND);
+
+  const dated = (
+    iso: string | undefined,
+    co2e: string,
+    sourceName = "外購電力",
+  ): IComputedLedger["entries"][number] => ({
+    ...buildLedger().entries[0],
+    activityKey: `k-${iso ?? "none"}-${sourceName}-${co2e}`,
+    sourceName,
+    co2eKg: co2e,
+    tradingTimestamp: iso ? secondsOf(iso) : undefined,
+  });
+
+  const sankeyOf = (entries: IComputedLedger["entries"]): string =>
+    buildCarbonChartBlock(
+      CarbonChartTemplateEnum.EMISSION_SANKEY,
+      buildLedger({ entries }),
+    );
+
+  it("有日期即在最前面加一層月別(YYYY-MM)", () => {
+    const block = sankeyOf([
+      dated("2025-01-10T00:00:00Z", "100"),
+      dated("2025-02-10T00:00:00Z", "250"),
+    ]);
+    expect(block).toContain('"2025-01","外購電力",100');
+    expect(block).toContain('"2025-02","外購電力",250');
+    // Info: (20260806 - Tzuhan) 月別層是加在原有結構前面,不是取代它
+    expect(block).toContain('"外購電力","SCOPE_2_INDIRECT",350');
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 一筆日期都沒有時不加這一層:
+   * 對話申報與匯入報告都沒有逐筆日期,那時月別層只是一個「未標註期間」的漏斗節點 —— 純噪音。
+   */
+  it("一筆日期都沒有就不加月別層(行為與先前完全相同)", () => {
+    const block = sankeyOf([dated(undefined, "100")]);
+    expect(block).not.toContain("未標註期間");
+    expect(block).toContain('"外購電力","SCOPE_2_INDIRECT",100');
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 有無日期混在一起是最需要說清楚的情形:
+   * 併進某個月份是編造;整批丟掉會讓總流入不等於總流出,而這張圖的意義正是守恆的視覺化。
+   */
+  it("有日期與沒日期混在一起時,沒日期的走「未標註期間」而非被丟掉", () => {
+    const block = sankeyOf([
+      dated("2025-01-10T00:00:00Z", "100"),
+      dated(undefined, "40"),
+    ]);
+    expect(block).toContain('"2025-01","外購電力",100');
+    expect(block).toContain('"未標註期間","外購電力",40');
+
+    // Info: (20260806 - Tzuhan) 月別層的總流出必須等於排放源層的總流入(守恆)
+    const rows = block
+      .split("\n")
+      .filter((line) => line.startsWith('"') && line.split(",").length === 3);
+    const monthOut = rows
+      .filter((row) => /^"(\d{4}-\d{2}|未標註期間)"/.test(row))
+      .reduce((sum, row) => sum + Number(row.split(",")[2]), 0);
+    expect(monthOut).toBe(140);
+  });
+
+  it("同月同源只畫一條線(逐鍵累加,不畫兩條平行線)", () => {
+    const block = sankeyOf([
+      dated("2025-01-10T00:00:00Z", "100"),
+      dated("2025-01-20T00:00:00Z", "60"),
+    ]);
+    const januaryRows = block
+      .split("\n")
+      .filter((line) => line.startsWith('"2025-01"'));
+    expect(januaryRows).toEqual(['"2025-01","外購電力",160']);
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 跨度過大即整層略過,**並且說出來**。
+   * 少一層而不講,讀者會以為這份帳本根本沒有日期。
+   */
+  it("月別數超過上限即略過該層並明說", () => {
+    const entries = Array.from(
+      { length: CARBON_SANKEY_MAX_MONTH_NODES + 1 },
+      (_, index) => {
+        const year = 2020 + Math.floor(index / 12);
+        const month = String((index % 12) + 1).padStart(2, "0");
+        return dated(`${year}-${month}-05T00:00:00Z`, "10");
+      },
+    );
+    const block = sankeyOf(entries);
+    expect(block).not.toContain('"2020-01"');
+    expect(block).toContain("略過月別層");
+    expect(block).toContain('"外購電力","SCOPE_2_INDIRECT"');
+  });
+
+  it("上限之內的跨年度仍畫月別層", () => {
+    const entries = Array.from(
+      { length: CARBON_SANKEY_MAX_MONTH_NODES },
+      (_, index) => {
+        const year = 2020 + Math.floor(index / 12);
+        const month = String((index % 12) + 1).padStart(2, "0");
+        return dated(`${year}-${month}-05T00:00:00Z`, "10");
+      },
+    );
+    const block = sankeyOf(entries);
+    expect(block).toContain('"2020-01","外購電力",10');
+    expect(block).not.toContain("略過月別層");
+  });
+
+  it("有憑證層時月別接到憑證節點,不跳過憑證", () => {
+    const withVoucher: IComputedLedger["entries"][number] = {
+      ...dated("2025-01-10T00:00:00Z", "100"),
+      evidence: { esgRecordId: "esg-1", voucherId: "voucher-aaaa1111" },
+    };
+    const block = sankeyOf([withVoucher]);
+    expect(block).toContain('"2025-01","外購電力 #aaaa1111",100');
+    expect(block).toContain('"外購電力 #aaaa1111","外購電力",100');
   });
 });
 
