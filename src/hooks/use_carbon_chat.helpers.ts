@@ -83,6 +83,37 @@ export const reduceDraftNotice = <TNotice>(
   return { ...current, [sessionId]: notice };
 };
 
+/**
+ * Info: (20260806 - Tzuhan) 會話清單排序:最近有動作的在最上面。
+ *
+ * 原本清單是 `Object.values(sessionsData)` 的**插入順序** —— 沒有排序。
+ * 看起來像照日期排,是因為 API 回的是 createdAt desc;
+ * 而新建的會話用 `{ ...prev, [id]: session }` 加進去,新鍵在物件的最後 ——
+ * 於是**新增對話出現在清單最底部**(實測就是這樣)。
+ *
+ * 排序鍵取 ISO 字串的 `updatedAt`,不取 `time`:後者是 `toLocaleDateString()` 的產物,
+ * 只有日期而且格式隨語系變(zh-TW 的 `2026/8/6` 與 en-US 的 `8/6/2026` 字典序完全不同)。
+ * 在中文環境「剛好會對」的排序,換個語系就錯,而那種錯沒有人會聯想到排序。
+ *
+ * 缺 `updatedAt` 的(舊的本機快取)排在有值者之後 —— 不假裝它很新;
+ * 同組之內維持原順序(穩定排序),否則每次 render 的順序都可能不同。
+ */
+export const sortSessionsByRecency = <T extends { updatedAt?: string }>(
+  sessions: readonly T[],
+): T[] =>
+  sessions
+    .map((session, index) => ({ session, index }))
+    .sort((a, b) => {
+      const left = a.session.updatedAt;
+      const right = b.session.updatedAt;
+      if (left && right && left !== right) return left < right ? 1 : -1;
+      if (left && !right) return -1;
+      if (!left && right) return 1;
+      // Info: (20260806 - Tzuhan) 同時間或都沒有時間:維持原順序(穩定)
+      return a.index - b.index;
+    })
+    .map(({ session }) => session);
+
 // Info: (20260716 - Tzuhan) #50 報告 Markdown 切分(保留式,fence-aware):
 // Info: (20260716 - Tzuhan) 舊版以 regex 切 `### ` 且丟棄不符結構的內容 → 貼上內容靜默遺失;
 // Info: (20260716 - Tzuhan) 新版逐行掃描:程式碼圍欄內的 ### 不觸發切分,所有內容都有去處(零丟棄)
