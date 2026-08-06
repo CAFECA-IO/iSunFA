@@ -256,7 +256,7 @@ export const carbonChatbot = {
   chart_imported_sankey_collapsed:
     "Too many nodes; collapsed to two layers (site → scope)",
   chart_imported_top_items_title:
-    "Where emissions go: company → site → top nine items per site plus Other (verbatim from the report, location-based, tCO2e/yr)",
+    "Where emissions go: company → top nine emission items plus Other (verbatim from the report, location-based, tCO2e/yr)",
   chart_imported_sankey_other: "Other",
   chart_imported_sankey_ghg_mapping:
     "Sub-code to GHG Protocol category mapping",

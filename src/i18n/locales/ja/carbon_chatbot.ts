@@ -257,7 +257,7 @@ export const carbonChatbot = {
   chart_imported_sankey_collapsed:
     "ノードが多すぎるため 2 階層(拠点 → スコープ)に縮約しました",
   chart_imported_top_items_title:
-    "排出の行き先：全社 → 拠点 → 拠点ごとの上位 9 項目とその他(原文転記、ロケーション基準、tCO2e/年)",
+    "排出の行き先：全社 → 上位 9 排出項目とその他(原文転記、ロケーション基準、tCO2e/年)",
   chart_imported_sankey_other: "その他",
   chart_imported_sankey_ghg_mapping: "サブコードと GHG Protocol カテゴリの対応",
   chart_imported_sankey_below_threshold: "比率が小さく非表示(tCO2e/年)",

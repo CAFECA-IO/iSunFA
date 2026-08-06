@@ -1051,13 +1051,18 @@ describe("匯入報告的排放去向圖(前九大 + 其他)", () => {
     expect(block).not.toContain("carbon-chart:IMPORTED_EMISSION_SANKEY:start");
   });
 
-  it("三層:全公司 → 廠址 → 項目", () => {
-    const siteLinks = links.filter((l) => l.from === "全公司");
-    expect(siteLinks).toHaveLength(3);
-    expect(siteLinks.some((l) => l.to.includes("台北"))).toBe(true);
-    expect(
-      links.some((l) => /^#\d+ /.test(l.from) && l.from !== "全公司"),
-    ).toBe(true);
+  /**
+   * Info: (20260806 - Tzuhan) 兩層,刻意沒有廠址層。
+   *
+   * 第一版做成 組織 → 廠址 → 逐廠址前九大,結果 28 個葉節點,
+   * 而這份報告 97.5% 集中在一個廠址 —— 另外兩個廠址的項目全是看不見的細線,
+   * 把比重稀釋掉,而比重正是這張圖唯一要回答的問題。
+   * 廠址分布在分類切面那張圖的第一層就看得到。
+   */
+  it("兩層:全公司 → 項目(沒有廠址層)", () => {
+    expect(links.every((l) => l.from === "全公司")).toBe(true);
+    expect(links.some((l) => /^#\d+ /.test(l.to))).toBe(false);
+    expect(links.length).toBeLessThanOrEqual(CARBON_SANKEY_TOP_ITEM_COUNT + 1);
   });
 
   /**
@@ -1065,22 +1070,9 @@ describe("匯入報告的排放去向圖(前九大 + 其他)", () => {
    * 第一層加總 = 原文全公司總量,而且每個廠址的流出等於它的流入。
    * 「其他」是一個真的節點,那才是守恆成立的原因。
    */
-  it("完全守恆:第一層等於原文總量,且每個廠址流入等於流出", () => {
-    const organization = links
-      .filter((l) => l.from === "全公司")
-      .reduce((s, l) => s + l.weight, 0);
-    expect(Math.abs(organization - Number(COMPANY_TOTAL))).toBeLessThanOrEqual(
-      0.001,
-    );
-
-    links
-      .filter((l) => l.from === "全公司")
-      .forEach((siteLink) => {
-        const outflow = links
-          .filter((l) => l.from === siteLink.to)
-          .reduce((s, l) => s + l.weight, 0);
-        expect(Math.abs(outflow - siteLink.weight)).toBeLessThanOrEqual(0.001);
-      });
+  it("完全守恆:加總等於原文全公司總量", () => {
+    const total = links.reduce((sum, l) => sum + l.weight, 0);
+    expect(Math.abs(total - Number(COMPANY_TOTAL))).toBeLessThanOrEqual(0.001);
   });
 
   /**
@@ -1088,16 +1080,23 @@ describe("匯入報告的排放去向圖(前九大 + 其他)", () => {
    * 小廠址的項目永遠擠不進前九名,那個廠址就只會有一條「其他」——
    * 又回到「小廠址看不見」的老問題。
    */
-  it("每個廠址各自最多十個下游(前九大 + 其他)", () => {
-    links
-      .filter((l) => l.from === "全公司")
-      .forEach((siteLink) => {
-        const children = links.filter((l) => l.from === siteLink.to);
-        expect(children.length).toBeLessThanOrEqual(
-          CARBON_SANKEY_TOP_ITEM_COUNT + 1,
-        );
-        expect(children.length).toBeGreaterThan(0);
-      });
+  /**
+   * Info: (20260806 - Tzuhan) 「其他」是一個真的節點,不是丟掉 —— 那才是守恆成立的原因。
+   * 門檻制做不到:它只能把流量從圖上移除,再列在圖下方。
+   */
+  it("超出名額的併成一個真的「其他」節點", () => {
+    const other = links.filter((l) => l.to.startsWith("其他("));
+    expect(other).toHaveLength(1);
+    expect(other[0].weight).toBeGreaterThan(0);
+    // Info: (20260806 - Tzuhan) 前九大 + 其他 = 恰好十條
+    expect(links).toHaveLength(CARBON_SANKEY_TOP_ITEM_COUNT + 1);
+  });
+
+  // Info: (20260806 - Tzuhan) 最大的項目排第一:這張圖的用途就是「哪一項最大」
+  it("依排放量由大到小", () => {
+    const items = links.filter((l) => !l.to.startsWith("其他("));
+    const weights = items.map((l) => l.weight);
+    expect([...weights].sort((a, b) => b - a)).toEqual(weights);
   });
 
   // Info: (20260806 - Tzuhan) 沒有門檻,所以「沒畫出來」只剩一個原因:原文根本沒有數字

@@ -253,7 +253,7 @@ export const carbonChatbot = {
   chart_imported_sankey_collapsed:
     "노드가 너무 많아 2단계(사업장 → 범위)로 축약했습니다",
   chart_imported_top_items_title:
-    "배출 흐름: 전사 → 사업장 → 사업장별 상위 9개 항목과 기타(원문 전재, 지역 기준, tCO2e/년)",
+    "배출 흐름: 전사 → 상위 9개 배출 항목과 기타(원문 전재, 지역 기준, tCO2e/년)",
   chart_imported_sankey_other: "기타",
   chart_imported_sankey_ghg_mapping: "하위 코드와 GHG Protocol 범주 대조",
   chart_imported_sankey_below_threshold: "비중이 작아 미표시(tCO2e/년)",
