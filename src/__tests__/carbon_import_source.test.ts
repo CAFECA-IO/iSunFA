@@ -1,5 +1,6 @@
 // Info: (20260806 - Tzuhan) 匯入檔案引用(cid 優先、File 退路)的不變式
 
+import { describe, it, expect } from "@jest/globals";
 import {
   appendImportSource,
   type ICarbonImportSource,

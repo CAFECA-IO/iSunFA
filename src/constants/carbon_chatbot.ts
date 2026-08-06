@@ -225,6 +225,14 @@ export const buildCarbonReportFileName = (title: string): string => {
 // Info: (20260714 - Tzuhan) 報告草稿與 session 索引的 localStorage key 與 schema 版本
 // Info: (20260715 - Luphia) 草稿權威來源已是 DB(E2EE);此 key 改作「未存檔安全快取」——編輯後即寫入本機,DB 確認保存後立即刪除,避免 debounce 保存前發生意外(當機/關頁)導致內容丟失
 export const CARBON_REPORT_DRAFT_STORAGE_VERSION = 1;
+
+/**
+ * Info: (20260806 - Tzuhan) 待匯入解析結果的持久化格式版本。
+ * 與草稿分開編號:兩者是不同生命週期的資料,格式各自演進;
+ * 版本不符時整筆丟棄(而非嘗試相容)—— 待匯入結果尚未落地,
+ * 重新上傳解析一次即可,不值得為它背相容邏輯的風險。
+ */
+export const CARBON_PENDING_IMPORT_STORAGE_VERSION = 1;
 export const buildCarbonReportDraftKey = (channel: string): string =>
   `carbon_report_draft_${channel}`;
 export const buildCarbonSessionsIndexKey = (address: string): string =>
@@ -589,6 +597,109 @@ const IMPORT_SUMMARY_TEMPLATES: Record<
       .filter(Boolean)
       .join("\n"),
 };
+
+/**
+ * Info: (20260806 - Tzuhan) 「解析完成、尚未匯入」的訊息。
+ *
+ * 為什麼與匯入摘要分成兩則:兩者陳述的是**不同的事實**。
+ * 摘要說「已經寫進報告了」,這一則說「解析好了,還沒寫進去,你決定」——
+ * 把兩者用同一句話含混帶過,使用者會以為內容已經在報告裡。
+ *
+ * 這則訊息存在的理由是使用者的實測:解析跑完幾分鐘,當下沒有按套用就什麼都不留,
+ * 重載後對話裡沒有任何痕跡,而那幾分鐘的 LLM 呼叫也白燒了。
+ * 訊息入庫(E2EE)+ 待匯入結果入庫,兩者一起才讓「稍後再決定」真的可行。
+ */
+export interface ICarbonImportParsedSummary {
+  fileName: string;
+  /** Info: (20260806 - Tzuhan) 待確認的逐字段落數 */
+  pendingCount: number;
+  /** Info: (20260806 - Tzuhan) 待確認的 AI 草稿段落數 */
+  draftedCount: number;
+  /** Info: (20260806 - Tzuhan) 一併解析出的活動數據筆數(尚未入帳) */
+  activityCount: number;
+  failedChapters: string[];
+}
+
+const IMPORT_PARSED_TEMPLATES: Record<
+  string,
+  (summary: ICarbonImportParsedSummary) => string
+> = {
+  "zh-TW": (s) =>
+    [
+      `報告解析完成:「${s.fileName}」。`,
+      `待確認 ${s.pendingCount} 節逐字內容、${s.draftedCount} 節 AI 草稿,另有 ${s.activityCount} 筆活動數據。`,
+      s.failedChapters.length > 0
+        ? `以下章節解析失敗,可在預覽卡重試:${s.failedChapters.join("、")}。`
+        : "",
+      "解析結果已保存,尚未寫入報告 —— 你可以現在檢視並匯入,也可以稍後回到這個對話再決定。",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  "zh-CN": (s) =>
+    [
+      `报告解析完成:「${s.fileName}」。`,
+      `待确认 ${s.pendingCount} 节逐字内容、${s.draftedCount} 节 AI 草稿,另有 ${s.activityCount} 笔活动数据。`,
+      s.failedChapters.length > 0
+        ? `以下章节解析失败,可在预览卡重试:${s.failedChapters.join("、")}。`
+        : "",
+      "解析结果已保存,尚未写入报告 —— 你可以现在查看并导入,也可以稍后回到这个对话再决定。",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  en: (s) =>
+    [
+      `Finished parsing "${s.fileName}".`,
+      `${s.pendingCount} verbatim section(s) and ${s.draftedCount} AI draft(s) are waiting for your confirmation, plus ${s.activityCount} activity record(s).`,
+      s.failedChapters.length > 0
+        ? `These chapters failed to parse and can be retried from the preview card: ${s.failedChapters.join(", ")}.`
+        : "",
+      "The parsed result is saved but not yet written into the report — review and import it now, or come back to this conversation later.",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  ja: (s) =>
+    [
+      `「${s.fileName}」の解析が完了しました。`,
+      `原文どおりの ${s.pendingCount} セクションと AI 下書き ${s.draftedCount} セクションが確認待ちです。活動データは ${s.activityCount} 件です。`,
+      s.failedChapters.length > 0
+        ? `次の章は解析に失敗しました。プレビューから再試行できます：${s.failedChapters.join("、")}。`
+        : "",
+      "解析結果は保存済みですが、報告書にはまだ書き込まれていません。今すぐ確認してインポートするか、後でこの会話に戻って決めることもできます。",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  ko: (s) =>
+    [
+      `「${s.fileName}」 분석을 완료했습니다.`,
+      `원문 ${s.pendingCount}개 절과 AI 초안 ${s.draftedCount}개 절이 확인을 기다리고 있으며, 활동 데이터는 ${s.activityCount}건입니다.`,
+      s.failedChapters.length > 0
+        ? `다음 장은 분석에 실패했습니다. 미리보기에서 다시 시도할 수 있습니다: ${s.failedChapters.join(", ")}.`
+        : "",
+      "분석 결과는 저장되었지만 아직 보고서에 기록되지 않았습니다 — 지금 확인해 가져오거나, 나중에 이 대화로 돌아와 결정할 수 있습니다.",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+};
+
+// Info: (20260806 - Tzuhan) 未知語系一律退回 zh-TW(與摘要同一慣例)
+export const buildImportParsedNotice = (
+  language: string | undefined,
+  summary: ICarbonImportParsedSummary,
+): string =>
+  (IMPORT_PARSED_TEMPLATES[language ?? ""] ??
+    IMPORT_PARSED_TEMPLATES["zh-TW"])(summary);
+
+/**
+ * Info: (20260806 - Tzuhan) 匯入通知的種類。
+ * 兩則訊息陳述不同的事實(已寫入 / 尚未寫入),故以 enum 明確區分,
+ * 而不是靠欄位有無去猜 —— 靠猜的話,少送一個欄位就會說出錯的事實。
+ */
+export enum CarbonImportNoticeKindEnum {
+  /** Info: (20260806 - Tzuhan) 解析完成、待人工確認(尚未寫入報告) */
+  PARSED = "PARSED",
+  /** Info: (20260806 - Tzuhan) 已套用寫入報告 */
+  SUMMARY = "SUMMARY",
+}
 
 export const buildImportSummaryNotice = (
   language: string | undefined,

@@ -140,6 +140,11 @@ export const carbonChatbot = {
   import_wrong_session: "这份导入属于「{{name}}」，请切回该对话再套用。",
   import_draft_badge: "AI 草稿",
   import_unmapped: "无法对应大纲的内容({{count}} 段,不会导入,可于对话中处理)",
+  // Info: (20260806 - Tzuhan) 待匯入結果的第三條路:保存起來稍後再決定(內容已入庫,重載仍在)
+  import_defer: "稍后再说",
+  import_pending_bar: "已保存待导入的解析结果:{{name}}(共 {{count}} 节,尚未写入报告)",
+  import_pending_open: "查看并导入",
+  import_pending_discard: "舍弃",
   import_reset_note:
     "导入段落的核对状态将重置;{{activities}} 笔活动数据将入账并重新核对",
   import_apply: "导入勾选({{count}})",

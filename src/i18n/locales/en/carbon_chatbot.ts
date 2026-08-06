@@ -152,6 +152,11 @@ export const carbonChatbot = {
   import_draft_badge: "AI Draft",
   import_unmapped:
     "Content not matching the outline ({{count}} blocks; not imported, handle in chat)",
+  // Info: (20260806 - Tzuhan) 待匯入結果的第三條路:保存起來稍後再決定(內容已入庫,重載仍在)
+  import_defer: "Decide later",
+  import_pending_bar: "Parsed result saved for {{name}} — {{count}} section(s), not yet written into the report",
+  import_pending_open: "Review and import",
+  import_pending_discard: "Discard",
   import_reset_note:
     "Verification resets for imported paragraphs; {{activities}} activity records will be re-reconciled",
   import_apply: "Import selected ({{count}})",

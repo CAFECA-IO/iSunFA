@@ -1118,6 +1118,7 @@ model Chatroom {
   messages       ChatroomMessage[]
   inventoryState CarbonInventoryState?
   reportDraft    CarbonReportDraft?
+  pendingImport  CarbonPendingImport?
 
   // Info: (20260714 - Tzuhan) 供「依擁有者列出聊天室」的 sessions 查詢
   @@index([ownerPublicKey])
@@ -1155,6 +1156,45 @@ model CarbonReportDraft {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("carbon_report_draft")
+}
+
+/**
+ * Info: (20260806 - Tzuhan) 待匯入的解析結果(E2EE at rest,封裝比照 CarbonReportDraft):每 chatroom 一筆。
+ *
+ * 解析一份 64 頁報告要跑十幾次 LLM、好幾分鐘。原本結果只存在 React state ——
+ * 重整、切帳號、瀏覽器當掉,幾分鐘的解析就沒了,而使用者唯一能做的是重新上傳再等一次。
+ * 而且「當下先不匯入」根本無法表達:不當場按套用,結果就消失。
+ *
+ * 這裡存的是**尚未寫進報告**的內容,與 CarbonReportDraft 是不同生命週期的兩份資料:
+ * 套用或捨棄時刪除,在那之前一直在。不共用同一筆紀錄的理由就是這個 ——
+ * 混在一起會分不清「已落地的報告」與「等待人工確認的候選」,
+ * 而人工確認那道 gate 正是這個模組的核心設計。
+ */
+model CarbonPendingImport {
+  id String @id @default(uuid())
+
+  chatroomId String   @unique @map("chatroom_id")
+  chatroom   Chatroom @relation(fields: [chatroomId], references: [id])
+
+  // Info: (20260806 - Tzuhan) base64(iv + 密文):待匯入內容(含各段原文、活動數據、cid)的序列化密文
+  encryptedContent String? @map("encrypted_content") @db.Text
+
+  // Info: (20260806 - Tzuhan) 帳本模式明文(at-rest 加密由 DB 層承擔,同 CarbonReportDraft 的雙模式)
+  plainContent String? @map("plain_content") @db.Text
+
+  ephemeralPublicKey String? @map("ephemeral_public_key")
+  keyDerivationHint  String? @map("key_derivation_hint")
+  algorithm          String  @default("ECIES-secp256k1-AES-256-GCM")
+
+  recipientPublicKey String @map("recipient_public_key")
+
+  // Info: (20260806 - Tzuhan) 樂觀鎖:PUT 需帶讀取時的版本,不符即拒(防雙分頁互相覆蓋)
+  version Int @default(0)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("carbon_pending_import")
 }
 
 // Info: (20260712 - Luphia) 碳盤查結構化事實狀態（方案 A：伺服器端明文 Jsonb，供組 prompt／勾稽／報告）

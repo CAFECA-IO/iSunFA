@@ -13,6 +13,10 @@ import {
   ArticulationWarningReasonEnum,
 } from "@/constants/carbon_articulation";
 import { CarbonReportDraftPutSchema } from "@/validators/carbon_report_storage";
+import {
+  EMISSION_TIMESTAMP_MIN_SECONDS,
+  EMISSION_TIMESTAMP_MAX_SECONDS,
+} from "@/constants/emission_period";
 
 // Info: (20260716 - Tzuhan) 單筆活動數據: scopeCategory/unit 以 nativeEnum 鎖死；quantity 原樣字串(嚴禁在此轉數字)
 /**
@@ -55,6 +59,18 @@ const CarbonActivityRecordShape = z.object({
   fileId: z.string().max(100).optional(),
   fileHash: z.string().max(200).optional(),
   precomputedCo2eKg: z.string().max(60).optional(),
+  /**
+   * Info: (20260806 - Tzuhan) 交易日期(Unix 秒)。**沒有這一行,月別分層只在重載前有效** ——
+   * Zod 預設 strip 未宣告的鍵,活動明細解密後過這道 schema 就把時間戳洗掉了,
+   * 而畫面上看不出任何異狀:桑基圖只是安靜地退回「未標註期間」一個節點。
+   * 上下界與 resolveEmissionMonth 同一組常數(擋毫秒誤傳成秒)。
+   */
+  tradingTimestamp: z
+    .number()
+    .int()
+    .min(EMISSION_TIMESTAMP_MIN_SECONDS)
+    .max(EMISSION_TIMESTAMP_MAX_SECONDS)
+    .optional(),
 });
 
 export const CarbonActivityRecordSchema =
@@ -126,6 +142,13 @@ export const ComputedLedgerSchema = z.object({
       convertedQuantity: z.string().max(60),
       convertedUnit: z.string().max(50),
       co2eKg: z.string().max(60),
+      // Info: (20260806 - Tzuhan) 同上:總表 entry 也要保留時間戳,否則重載後月別分層一樣消失
+      tradingTimestamp: z
+        .number()
+        .int()
+        .min(EMISSION_TIMESTAMP_MIN_SECONDS)
+        .max(EMISSION_TIMESTAMP_MAX_SECONDS)
+        .optional(),
       ghgBreakdown: z.record(z.string(), z.string()).optional(),
       gwpVersion: z.string().max(30).optional(),
       factor: FactorSnapshotSchema,

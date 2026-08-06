@@ -4,10 +4,13 @@
 import { describe, it, expect } from "@jest/globals";
 import {
   buildImportSummaryNotice,
+  buildImportParsedNotice,
   buildImportFollowUpPrompt,
   CARBON_IMPORT_FOLLOW_UPS,
   CarbonImportReconciliationStateEnum,
+  CarbonImportNoticeKindEnum,
   type ICarbonImportSummary,
+  type ICarbonImportParsedSummary,
 } from "@/constants/carbon_chatbot";
 import { CarbonImportNoticeSchema } from "@/validators/carbon_import_notice";
 import { CARBON_REPORT_OUTLINE } from "@/constants/carbon_report_outline";
@@ -131,6 +134,8 @@ describe("CarbonImportNoticeSchema", () => {
     recipientPublicKey:
       "xpub6CUGRUonZSQ4TWtTMmzXdrXDtypWKiKrhko4egpiMZbpiaQL2Jkwr",
     fileName: "report.pdf",
+    // Info: (20260806 - Tzuhan) 兩種通知以 kind 區分(已寫入 / 尚未寫入),見 CarbonImportNoticeKindEnum
+    kind: CarbonImportNoticeKindEnum.SUMMARY,
     importedCount: 32,
     draftedCount: 1,
     reconciliation: CarbonImportReconciliationStateEnum.RECONCILED,
@@ -188,5 +193,86 @@ describe("CarbonImportNoticeSchema", () => {
       text: "我自己寫的訊息",
     });
     expect("text" in parsed).toBe(false);
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 兩種通知不可混用欄位。
+   *
+   * PARSED 說的是「解析好了、還沒寫進報告」,那時一筆都還沒入帳 ——
+   * 讓它收下 reconciliation 就是允許它說出一件此刻不可能成立的事實。
+   */
+  it("PARSED 通知不接受對帳結果那組欄位", () => {
+    const { importedCount, reconciliation, ...common } = validPayload;
+    expect(importedCount).toBeTruthy();
+    expect(reconciliation).toBeTruthy();
+    const parsed = CarbonImportNoticeSchema.parse({
+      ...common,
+      kind: CarbonImportNoticeKindEnum.PARSED,
+      pendingCount: 30,
+      draftedCount: 3,
+      activityCount: 12,
+      reconciliation: CarbonImportReconciliationStateEnum.RECONCILED,
+    });
+    expect("reconciliation" in parsed).toBe(false);
+  });
+
+  it("kind 不是列舉值即拒絕(不得靠欄位有無去猜是哪一種通知)", () => {
+    expect(
+      CarbonImportNoticeSchema.safeParse({ ...validPayload, kind: "OTHER" })
+        .success,
+    ).toBe(false);
+  });
+});
+
+describe("buildImportParsedNotice", () => {
+  const baseParsed: ICarbonImportParsedSummary = {
+    fileName: "高興昌鋼鐵股份有限公司溫室氣體盤查報告書.pdf",
+    pendingCount: 30,
+    draftedCount: 3,
+    activityCount: 12,
+    failedChapters: [],
+  };
+
+  it("帶入檔名、待確認節數與活動數據筆數", () => {
+    const text = buildImportParsedNotice("zh-TW", baseParsed);
+    expect(text).toContain(baseParsed.fileName);
+    expect(text).toContain("30 節");
+    expect(text).toContain("3 節");
+    expect(text).toContain("12 筆");
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 這條是這則訊息存在的**唯一理由**:
+   * 它必須說出「還沒寫進報告」。說得含混的話,使用者會以為內容已經落地,
+   * 而那正是原本什麼都不說時發生的誤解。
+   */
+  it("明說尚未寫入報告,且與「已匯入」的摘要不會說成同一件事", () => {
+    const parsedText = buildImportParsedNotice("zh-TW", baseParsed);
+    expect(parsedText).toContain("尚未寫入報告");
+    const summaryText = buildImportSummaryNotice("zh-TW", {
+      fileName: baseParsed.fileName,
+      importedCount: 30,
+      draftedCount: 3,
+      reconciliation: CarbonImportReconciliationStateEnum.NONE,
+      failedChapters: [],
+    });
+    expect(summaryText).toContain("已匯入");
+    expect(parsedText).not.toBe(summaryText);
+  });
+
+  it("有失敗章節才提重試,沒有時不留空行", () => {
+    const withFailures = buildImportParsedNotice("zh-TW", {
+      ...baseParsed,
+      failedChapters: ["第三章 排放量盤查結果"],
+    });
+    expect(withFailures).toContain("第三章 排放量盤查結果");
+    expect(buildImportParsedNotice("zh-TW", baseParsed)).not.toContain("\n\n");
+  });
+
+  // Info: (20260806 - Tzuhan) 未知語系退回 zh-TW(與摘要同一慣例);缺語系不該讓訊息變成空字串
+  it("未知語系退回 zh-TW", () => {
+    expect(buildImportParsedNotice("de", baseParsed)).toBe(
+      buildImportParsedNotice("zh-TW", baseParsed),
+    );
   });
 });
