@@ -2096,6 +2096,9 @@ export const useCarbonChat = () => {
       const attempt = async (): Promise<boolean> => {
         try {
           const res = await request<{
+            // Info: (20260806 - Tzuhan) 端點改走保活式串流後 HTTP 狀態鎖 200,失敗在信封裡
+            success: boolean;
+            errorCode?: string;
             payload: {
               templateId: CarbonDiagramTemplateEnum;
               block: string;
@@ -2105,6 +2108,23 @@ export const useCarbonChat = () => {
             method: "POST",
             body: JSON.stringify({ paragraphId, content, language }),
           });
+          /**
+           * Info: (20260806 - Tzuhan) 判 `success` 而非只判 HTTP 狀態。
+           *
+           * 這個端點的 LLM 段落改走保活式串流(繞開閘道 60 秒的閒置逾時),
+           * 而串流一開始狀態碼就鎖成 200 —— 只看狀態碼會把失敗當成成功,
+           * 表現是「圖沒出來也不重試,而且 console 一片乾淨」。
+           *
+           * 回 false 即走既有的退避重試一次(額度不足是「等一下會好」)。
+           */
+          if (!res.success) {
+            console.error(
+              "[carbon-chat] diagram generation failed:",
+              paragraphId,
+              res.errorCode ?? null,
+            );
+            return false;
+          }
           const payload = res.payload;
           if (!payload) return true;
           if (!payload.isDrawn) {
