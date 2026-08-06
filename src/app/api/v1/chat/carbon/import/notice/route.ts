@@ -19,6 +19,8 @@ import { describeError } from "@/lib/utils/error_message";
 import { CarbonImportNoticeSchema } from "@/validators";
 import {
   buildImportSummaryNotice,
+  buildImportParsedNotice,
+  CarbonImportNoticeKindEnum,
   CARBON_CHAT_PURPOSE,
   isCarbonChatChannelOwnedBy,
 } from "@/constants/carbon_chatbot";
@@ -49,7 +51,7 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
   }
-  const { channel, recipientPublicKey, language, ...summary } = parsed.data;
+  const { channel, recipientPublicKey, language } = parsed.data;
 
   // Info: (20260805 - Tzuhan) 頻道所有權裁決:只允許寫入自己 address 前綴的頻道(與 /chat/carbon 同一規則)
   if (!isCarbonChatChannelOwnedBy(channel, sessionUser.address)) {
@@ -81,10 +83,31 @@ export async function POST(request: NextRequest) {
      * Info: (20260805 - Tzuhan) 文案在此組出,不採用呼叫端傳來的字串 ——
      * 入庫的是系統的陳述,讓呼叫端塞任意文字進使用者的對話紀錄是不能接受的。
      */
+    /**
+     * Info: (20260806 - Tzuhan) 兩種通知各自組句(見 CarbonImportNoticeKindEnum)。
+     * PARSED 說的是「解析好了、還沒寫進報告」,SUMMARY 說的是「已經寫進去了」——
+     * 兩者混用同一句話會讓使用者以為內容已經落地。
+     */
+    const text =
+      parsed.data.kind === CarbonImportNoticeKindEnum.PARSED
+        ? buildImportParsedNotice(language, {
+            fileName: parsed.data.fileName,
+            pendingCount: parsed.data.pendingCount,
+            draftedCount: parsed.data.draftedCount,
+            activityCount: parsed.data.activityCount,
+            failedChapters: parsed.data.failedChapters,
+          })
+        : buildImportSummaryNotice(language, {
+            fileName: parsed.data.fileName,
+            importedCount: parsed.data.importedCount,
+            draftedCount: parsed.data.draftedCount,
+            reconciliation: parsed.data.reconciliation,
+            failedChapters: parsed.data.failedChapters,
+          });
     const envelope = await chatroomService.recordAndPublishAiReply({
       channel,
       recipientPublicKey,
-      text: buildImportSummaryNotice(language, summary),
+      text,
       purpose: CARBON_CHAT_PURPOSE,
     });
     return jsonOk({ envelope });

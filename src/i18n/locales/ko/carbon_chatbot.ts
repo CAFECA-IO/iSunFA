@@ -151,6 +151,11 @@ export const carbonChatbot = {
     "이 가져오기는 「{{name}}」의 것입니다. 적용하려면 해당 대화로 돌아가세요.",
   import_draft_badge: "AI 초안",
   import_unmapped: "목차에 대응하지 않는 내용({{count}}건, 가져오지 않음)",
+  // Info: (20260806 - Tzuhan) 待匯入結果的第三條路:保存起來稍後再決定(內容已入庫,重載仍在)
+  import_defer: "나중에 결정",
+  import_pending_bar: "가져오기 대기 중인 분석 결과를 저장했습니다: {{name}} ({{count}}개 절, 보고서에 미기록)",
+  import_pending_open: "확인하고 가져오기",
+  import_pending_discard: "버리기",
   import_reset_note:
     "가져온 단락의 검증 상태는 초기화됩니다. 활동 데이터 {{activities}}건은 재대사됩니다",
   import_apply: "선택 항목 가져오기({{count}})",

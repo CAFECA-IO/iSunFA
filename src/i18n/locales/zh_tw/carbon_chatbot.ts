@@ -140,6 +140,11 @@ export const carbonChatbot = {
   import_wrong_session: "這份匯入屬於「{{name}}」，請切回該對話再套用。",
   import_draft_badge: "AI 草稿",
   import_unmapped: "無法對應大綱的內容({{count}} 段,不會匯入,可於對話中處理)",
+  // Info: (20260806 - Tzuhan) 待匯入結果的第三條路:保存起來稍後再決定(內容已入庫,重載仍在)
+  import_defer: "稍後再說",
+  import_pending_bar: "已保存待匯入的解析結果:{{name}}(共 {{count}} 節,尚未寫入報告)",
+  import_pending_open: "檢視並匯入",
+  import_pending_discard: "捨棄",
   import_reset_note:
     "匯入段落的查核狀態將重置;{{activities}} 筆活動數據將入帳並重新勾稽",
   import_apply: "匯入勾選({{count}})",

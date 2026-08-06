@@ -74,6 +74,16 @@ export interface IChatInputProps {
    */
   followUpPrompts?: readonly string[];
   onSendFollowUp?: (prompt: string) => void;
+  /**
+   * Info: (20260806 - Tzuhan) 已保存但尚未匯入的解析結果(null 即無)。
+   *
+   * 為什麼要在輸入列上方留這一條:待匯入結果現在會入庫並撐過重載,
+   * 但一進聊天室就被一張蓋住全螢幕的預覽卡攔住不是提醒而是阻擋 ——
+   * 尤其它講的可能是幾天前的事。留一條可點的線索,主導權還在使用者手上。
+   */
+  deferredImport?: { fileName: string; count: number } | null;
+  onOpenDeferredImport?: () => void;
+  onDiscardDeferredImport?: () => void;
 }
 
 export function ChatInput({
@@ -94,6 +104,9 @@ export function ChatInput({
   onDismissImportCandidate = undefined,
   followUpPrompts = [],
   onSendFollowUp = undefined,
+  deferredImport = null,
+  onOpenDeferredImport = undefined,
+  onDiscardDeferredImport = undefined,
 }: IChatInputProps) {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -217,6 +230,39 @@ export function ChatInput({
             >
               <X size={12} />
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Info: (20260806 - Tzuhan) 已保存、尚未匯入的解析結果:重載與切房都還在,由使用者決定何時處理 */}
+      {deferredImport && onOpenDeferredImport && (
+        <div className="mx-auto mb-2 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-xs">
+          <div className="flex min-w-0 items-center gap-1.5 font-bold text-orange-700">
+            <FileUp size={12} className="shrink-0" />
+            <span className="min-w-0 truncate">
+              {t("carbon_chatbot.import_pending_bar", {
+                name: deferredImport.fileName,
+                count: deferredImport.count,
+              })}
+            </span>
+          </div>
+          <div className="mt-1.5 flex gap-2">
+            <button
+              type="button"
+              onClick={onOpenDeferredImport}
+              className="rounded-full bg-[#ff5a00] px-3 py-1 font-bold text-white transition-colors hover:bg-[#e04f00]"
+            >
+              {t("carbon_chatbot.import_pending_open")}
+            </button>
+            {onDiscardDeferredImport && (
+              <button
+                type="button"
+                onClick={onDiscardDeferredImport}
+                className="rounded-full border border-gray-200 bg-white px-3 py-1 font-bold text-gray-600 transition-colors hover:bg-gray-50"
+              >
+                {t("carbon_chatbot.import_pending_discard")}
+              </button>
+            )}
           </div>
         </div>
       )}

@@ -80,6 +80,9 @@ export default function CarbonChatbotPage() {
     toggleImportItem,
     applyPendingImport,
     discardPendingImport,
+    isImportPreviewOpen,
+    deferImportPreview,
+    openImportPreview,
     retryFailedImportChapters,
     isRetryingImport,
     importFollowUpPrompts,
@@ -267,6 +270,17 @@ export default function CarbonChatbotPage() {
               // Info: (20260806 - Tzuhan) 匯入後的後續建議:按鈕上的字就是送出的內容
               followUpPrompts={importFollowUpPrompts}
               onSendFollowUp={handleSendMessage}
+              // Info: (20260806 - Tzuhan) 收起中的待匯入結果:重載後也會出現在這裡(紀錄已入庫)
+              deferredImport={
+                pendingImport && !isImportPreviewOpen
+                  ? {
+                      fileName: pendingImport.fileName,
+                      count: pendingImport.items.length,
+                    }
+                  : null
+              }
+              onOpenDeferredImport={openImportPreview}
+              onDiscardDeferredImport={discardPendingImport}
             />
           </>
         ) : (
@@ -296,12 +310,14 @@ export default function CarbonChatbotPage() {
       )}
 
       {/* Info: (20260716 - Tzuhan) #56 匯入預覽卡:逐段勾選確認後才寫入 */}
-      {pendingImport && (
+      {/* Info: (20260806 - Tzuhan) 收起時不渲染:內容仍在(已入庫),由輸入列上方那條提示帶回來 */}
+      {pendingImport && isImportPreviewOpen && (
         <ImportPreview
           pendingImport={pendingImport}
           onToggleItem={toggleImportItem}
           onApply={applyPendingImport}
           onDiscard={discardPendingImport}
+          onDefer={deferImportPreview}
           onRetryFailed={retryFailedImportChapters}
           isRetrying={isRetryingImport}
           // Info: (20260806 - Tzuhan) 進度沿用同一份 draftNotice:輸入列被本 modal(z-[90])蓋住,

@@ -153,6 +153,11 @@ export const carbonChatbot = {
   import_draft_badge: "AIドラフト",
   import_unmapped:
     "アウトラインに対応しない内容({{count}} 件。インポートされません)",
+  // Info: (20260806 - Tzuhan) 待匯入結果的第三條路:保存起來稍後再決定(內容已入庫,重載仍在)
+  import_defer: "後で決める",
+  import_pending_bar: "インポート待ちの解析結果を保存しています：{{name}}（{{count}} セクション、報告書には未記入）",
+  import_pending_open: "確認してインポート",
+  import_pending_discard: "破棄",
   import_reset_note:
     "インポートした段落の検証状態はリセットされます。{{activities}} 件の活動データは再照合されます",
   import_apply: "選択をインポート({{count}})",
