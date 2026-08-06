@@ -411,7 +411,24 @@ export const useCarbonChat = () => {
     Record<string, ICarbonInventoryState>
   >({});
   const inventoryVersionsRef = useRef<Map<string, number>>(new Map());
-  const inventoryRestoredChannelsRef = useRef<Set<string>>(new Set());
+  /**
+   * Info: (20260806 - Tzuhan) 還原的「試過」與「成功」拆成兩個集合
+   * (issue_drafts/inventory_table_import/04)。
+   *
+   * 原本只有一個集合,而且在**發出請求之前**就加進去 ——
+   * 於是還原失敗一次,那個 channel 就永遠不會再試。
+   * 表現是「報告與活動帳本讀不到」而畫面毫無異狀:
+   * 不是空的報告,是看起來像空的報告,而使用者無從分辨。
+   *
+   * - attempted:防同一輪重複發射(effect 會因 sessionAccess 非同步寫入而多次重跑)
+   * - settled:已有結論、再試也一樣的(讀到了、或記錄存在但解不開)
+   *
+   * 失敗時從 attempted 移除,下次進到這個房間就會重試。
+   * **不是自動重試** —— effect 的依賴沒變不會自己重跑,
+   * 這裡只是不再把一次失敗變成永久失敗。真正的自動重試要另外做。
+   */
+  const inventoryLoadAttemptedRef = useRef<Set<string>>(new Set());
+  const inventoryLoadSettledRef = useRef<Set<string>>(new Set());
   const inventoryAutosaveTimerRef = useRef<ReturnType<
     typeof setTimeout
   > | null>(null);
@@ -988,11 +1005,22 @@ export const useCarbonChat = () => {
     // Info: (20260716 - Tzuhan) #52 帳本會話明文模式免金鑰(同報告還原)
     const isBookBound = Boolean(sessionAccess[chatChannel]?.accountBookId);
     if (!isBookBound && (!isUnlocked || !master)) return;
-    if (inventoryRestoredChannelsRef.current.has(chatChannel)) return;
-    inventoryRestoredChannelsRef.current.add(chatChannel);
+    if (
+      inventoryLoadSettledRef.current.has(chatChannel) ||
+      inventoryLoadAttemptedRef.current.has(chatChannel)
+    ) {
+      return;
+    }
+    inventoryLoadAttemptedRef.current.add(chatChannel);
 
     loadInventoryState(chatChannel, master ?? null)
       .then((loaded) => {
+        /**
+         * Info: (20260806 - Tzuhan) 有結論即記為 settled —— 包含「記錄存在但解不開」。
+         * 那種情形再試一百次也是同一個結果(金鑰不對就是不對),
+         * 重試只會每次切房都多一次無用的請求。
+         */
+        inventoryLoadSettledRef.current.add(chatChannel);
         inventoryVersionsRef.current.set(chatChannel, loaded?.version ?? 0);
         if (loaded && !loaded.state) {
           // Info: (20260716 - Tzuhan) 記錄存在但不可讀: 保留真實版本，不以空狀態覆蓋
@@ -1009,6 +1037,12 @@ export const useCarbonChat = () => {
       .catch((error) => {
         // Info: (20260716 - Tzuhan) 還原失敗不設版本 → 凍結該 channel 的狀態自動保存，防空狀態蓋庫
         console.error("[carbon-chat] failed to load inventory state:", error);
+        /**
+         * Info: (20260806 - Tzuhan) 從 attempted 移除,**不**加進 settled ——
+         * 這是「沒有結論」而非「結論是失敗」:網路抖動、伺服器暫時不可用都走這條,
+         * 而它們下次就會好。原本這裡什麼都不做,等於一次失敗即永久失敗。
+         */
+        inventoryLoadAttemptedRef.current.delete(chatChannel);
       });
   }, [isUnlocked, chatChannel, sessionAccess]);
 
@@ -1098,28 +1132,33 @@ export const useCarbonChat = () => {
   );
   useEffect(() => {
     if (!activeInventoryState) return undefined;
-    if (!inventoryRestoredChannelsRef.current.has(chatChannel))
-      return undefined;
+    /**
+     * Info: (20260806 - Tzuhan) 自動保存的閘門用 **settled** 而非 attempted:
+     * 條件是「已經讀到過庫裡的內容」,不是「發過請求」——
+     * 拿在途的狀態當閘門,等於可能以還沒讀完的空狀態去蓋掉庫裡的資料。
+     * (下一行的版本檢查本來也擋得住,但那是巧合而非意圖;意圖要寫在條件裡。)
+     */
+    if (!inventoryLoadSettledRef.current.has(chatChannel)) return undefined;
     if (!inventoryVersionsRef.current.has(chatChannel)) return undefined;
     const master = masterKeyRef.current;
     const bookId = sessionAccess[chatChannel]?.accountBookId ?? null;
     /**
      * Info: (20260803 - Tzuhan) 明文模式(帳本會話)免金鑰 —— 與還原那條路一致。
      * 兩條路的要求不對稱正是先前「讀得到卻存不了」的成因。
-     */
-    /**
-     * Info: (20260803 - Tzuhan) 個人會話仍需金鑰(E2EE 沒有金鑰就無從加密),
-     * 但**必須讓使用者看見**。
      *
-     * 讀寫兩條路對金鑰的要求不對稱:還原時帳本會話走明文模式免金鑰,
-     * 保存時 PUT 的 schema 仍硬性要求 recipientPublicKey(見 carbon_report_storage 的
-     * CarbonReportDraftPutSchema),因此一律需要 master。
-     * 結果是帳本會話未解鎖時「讀得到但存不了」,而原本這裡直接 return,
-     * 連 request 都沒發出、catch 也不會觸發 —— 匯入的帳本與桑基圖當下看得到,
-     * 重載就消失,全程沒有任何提示。
+     * Info: (20260806 - Tzuhan) 那個不對稱**已經治本了**,這段註解原本沒跟著改。
      *
-     * 報告草稿那條路至少會設 "local" 告知「僅暫存本機」,這裡卻連狀態都沒有。
-     * 這一行是止盲不是治本:根因(明文模式仍要求公鑰)另開票處理。
+     * 原文寫「保存時 PUT 的 schema 仍硬性要求 recipientPublicKey,因此一律需要 master」——
+     * 那句話在 20260803 當天就不再成立:`CarbonReportDraftPutSchema` 已把
+     * `recipientPublicKey` 改為選填(僅加密模式必填,見該檔的兩個 refine),
+     * 前端 `saveInventoryState` 也只在「非帳本會話且無金鑰」時才拋。
+     * 帳本會話未解鎖時現在是真的存得進去,不是止盲。
+     *
+     * 留著錯的註解比沒有註解更貴:下一個人會以為根因還在,
+     * 去追一張早就關掉的票,或反過來不敢動這一行。
+     *
+     * 這一行現在的職責只剩下面那個 —— 兩者都沒有時,連加密都做不到,
+     * 只能告知「僅暫存本機」。個人會話沒有金鑰就是沒有金鑰,那不是缺陷。
      */
     if (!bookId && !master) {
       setSaveStatus("local");
