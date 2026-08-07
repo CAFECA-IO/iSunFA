@@ -8,8 +8,11 @@ export default function AIConsultationSection() {
   const { t } = useTranslation();
 
   return (
-    // Info: (20260807 - Luphia) 深色下把暖色漸層整段拿掉：orange-50 的深色對應色是
-    // Info: (20260807 - Luphia) 混了橘的暗棕，夾在前後兩段藍黑之間會是一條沒有理由的暖色帶。
+    /**
+     * Info: (20260807 - Luphia)
+     * 深色下把暖色漸層整段拿掉：orange-50 的深色對應色是混了橘的暗棕，
+     * 夾在前後兩段藍黑之間會是一條沒有理由的暖色帶。
+     */
     <div className="dark:bg-surface-base relative overflow-hidden bg-gradient-to-b from-orange-50 to-white py-24 sm:py-32 dark:bg-none">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 sm:gap-y-20 lg:mx-0 lg:max-w-none lg:grid-cols-2 lg:items-center">

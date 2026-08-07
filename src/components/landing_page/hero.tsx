@@ -14,8 +14,11 @@ export default function Hero() {
   const router = useRouter();
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
 
-  // Info: (20260807 - Luphia) `dark:bg-*` 上的 `!` 是為了退出 globals.css 的深色表面
-  // Info: (20260807 - Luphia) 相容層，理由寫在該區塊；landing 各段一律照此收斂成 base / raised 兩級。
+  /**
+   * Info: (20260807 - Luphia)
+   * `dark:bg-*` 上的 `!` 是為了退出 globals.css 的深色表面相容層，理由寫在該區塊；
+   * landing 各段一律照此收斂成 base / raised 兩級。
+   */
   return (
     <div className="dark:bg-surface-base! relative isolate overflow-hidden bg-white px-6 pt-14 lg:px-8">
       {/* Background Gradients */}

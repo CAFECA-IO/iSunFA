@@ -8,8 +8,11 @@ import { useTranslation } from "@/i18n/i18n_context";
 export default function Footer() {
   const { t } = useTranslation();
   return (
-    // Info: (20260807 - Luphia) 深色下拿掉漸層：終點的純黑比頁面底色還深，
-    // Info: (20260807 - Luphia) 在深色主題會讀成「頁面沒有結束」而不是頁尾。
+    /**
+     * Info: (20260807 - Luphia)
+     * 深色下拿掉漸層：終點的純黑比頁面底色還深，
+     * 在深色主題會讀成「頁面沒有結束」而不是頁尾。
+     */
     <footer
       className="dark:bg-surface-raised border-t border-white/10 bg-gradient-to-b from-gray-900 to-black text-white dark:bg-none"
       aria-labelledby="footer-heading"
