@@ -19,6 +19,11 @@ export const common = {
   end_date: "结束日期",
   error: {
     download_failed: "下载失败",
+    // Info: (20260807 - Emily) 产出空白必须说得出是空白;与「下载失败」共用一句等于没说
+    pdf_blank_output:
+      "PDF 内容为空白,已中止下载。报告过长导致浏览器无法一次绘制,请缩短内容或分段导出。",
+    pdf_download_needs_preview:
+      "请先切换到「预览 PDF」再下载 —— 下载的内容就是预览所见",
     default: "系统错误，请稍后再试",
   },
   refresh: "重新整理",

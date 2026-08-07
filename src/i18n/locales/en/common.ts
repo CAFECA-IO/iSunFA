@@ -20,6 +20,11 @@ export const common = {
   end_date: "End Date",
   error: {
     download_failed: "Download failed",
+    // Info: (20260807 - Emily) A blank output must say it is blank; sharing one string with "download failed" says nothing
+    pdf_blank_output:
+      "The PDF came out blank, so the download was cancelled. The report is too long for the browser to render in one pass — shorten it or export in parts.",
+    pdf_download_needs_preview:
+      "Switch to PDF preview before downloading — the download is exactly what the preview shows",
     default: "System error, please try again later",
   },
   refresh: "Refresh",
