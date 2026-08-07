@@ -18,6 +18,7 @@ import { Dialog } from "@headlessui/react";
 import { getLoginOptions, fido2ClientService } from "@/lib/auth/fido2_client";
 import ConfirmModal from "@/components/common/confirm_modal";
 import InviteMemberModal from "@/components/team/invite_member_modal";
+import TeamWalletPanel from "@/components/team/team_wallet_panel";
 import { IAccountBook } from "@/interfaces/account_book";
 
 interface ITeam {
@@ -604,6 +605,15 @@ export default function TeamManagementPage() {
                       </div>
                     </div>
                   )}
+
+                {/* Info: (20260807 - Luphia) 團隊錢包與訂閱額度面板（設計書 §9 P4 前端） */}
+                <TeamWalletPanel
+                  key={currentTeam.id}
+                  teamId={currentTeam.id}
+                  members={members}
+                  isManager={isOwnerOrAdmin}
+                  showAlert={showAlert}
+                />
               </div>
             </div>
           )}

@@ -10,6 +10,7 @@ import { syncExchangeRates } from "@/services/cron/exchange_rate.cron";
 import { processAmortization } from "@/services/cron/amortization.worker.service";
 import { runWalletGuardian } from "@/services/cron/wallet_audit.cron";
 import { expireOverdueTeamSubscriptions } from "@/services/cron/subscription_expiry.cron";
+import { processSubscriptionRenewals } from "@/services/cron/subscription_renewal.cron";
 
 /**
  * Info: (20260130 - Luphia)
@@ -73,6 +74,12 @@ async function runWorker() {
     startServiceLoop(
       "SubscriptionExpiry",
       () => expireOverdueTeamSubscriptions(),
+      60 * 60 * 1000,
+    ),
+    // Info: (20260807 - Luphia) autoRenew 自動扣款續訂（逾 3 天寬限期未成即降級 free）
+    startServiceLoop(
+      "SubscriptionRenewal",
+      () => processSubscriptionRenewals(),
       60 * 60 * 1000,
     ),
   ]);

@@ -49,4 +49,37 @@ export const teamManagement = {
   scan_qr_code: "Scan QR Code",
   scanning: "Scanning...",
   camera_error: "Cannot access camera, please check permission settings.",
+  // Info: (20260807 - Luphia) Team wallet & subscription quota panel (design doc §9 P4)
+  wallet: {
+    title: "Team Wallet & Subscription Quota",
+    quota_title: "Subscription Quota",
+    quota_5h: "Per 5-hour quota",
+    quota_week: "Weekly quota",
+    reset_in: "Resets in",
+    faith_rate:
+      "Faith AI chat: 1 credit per {{rate}} tokens (rounded up, minimum 1 credit per message)",
+    balance_title: "Team Wallet",
+    pool_balance: "Unallocated credits",
+    my_allocation: "My allocated credits",
+    frozen_warning:
+      "The team wallet is frozen (conservation audit failure). Please contact support.",
+    purchase: "Purchase",
+    purchasing: "Processing…",
+    purchase_success:
+      "Purchase completed. Credits have been added to the team wallet.",
+    purchase_failed: "Purchase failed. Please try again later.",
+    no_card:
+      "No card on file. Please bind a card on the Buy Credits page first.",
+    relogin_required: "Please sign in again to retrieve your payment key.",
+    credits_unit: "credits",
+    allocation_title: "Credit Allocation",
+    select_member: "Select a member",
+    amount_placeholder: "Amount",
+    allocate: "Allocate",
+    revoke: "Revoke",
+    allocation_success: "Done.",
+    allocation_failed: "Operation failed. Please check the balance and retry.",
+    allocations_empty: "No credits have been allocated to members yet.",
+    invalid_amount: "Select a member and enter a positive integer amount.",
+  },
 };

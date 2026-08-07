@@ -123,6 +123,18 @@ export class TeamSubscriptionRepository {
     return result.count;
   }
 
+  // Info: (20260807 - Luphia) 續訂 Worker 用：待自動扣款的過期付費訂閱
+  async listPastDueAutoRenew(): Promise<TeamSubscription[]> {
+    return prisma.teamSubscription.findMany({
+      where: {
+        status: TEAM_SUBSCRIPTION_STATUS.PAST_DUE,
+        autoRenew: true,
+        planId: { not: TEAM_PLAN.FREE },
+      },
+      orderBy: { currentPeriodEnd: "asc" },
+    });
+  }
+
   // Info: (20260807 - Luphia) 免付款的直接降級（PUT planId=free）
   async downgradeToFree(
     teamId: string,

@@ -49,4 +49,37 @@ export const teamManagement = {
   scan_qr_code: "QRコードをスキャン",
   scanning: "スキャン中...",
   camera_error: "カメラにアクセスできません。権限設定を確認してください。",
+  // Info: (20260807 - Luphia) チームウォレットとサブスクリプション枠パネル（設計書 §9 P4）
+  wallet: {
+    title: "チームウォレットとサブスクリプション枠",
+    quota_title: "サブスクリプション枠",
+    quota_5h: "5 時間ごとの枠",
+    quota_week: "週間枠",
+    reset_in: "リセットまで",
+    faith_rate:
+      "Faith AI チャット：{{rate}} トークンごとに 1 ポイント（切り上げ、1 メッセージ最低 1 ポイント）",
+    balance_title: "チームウォレット",
+    pool_balance: "未割り当てポイント",
+    my_allocation: "自分の割り当てポイント",
+    frozen_warning:
+      "チームウォレットは凍結中です（保存則監査の異常）。サポートにお問い合わせください。",
+    purchase: "購入",
+    purchasing: "処理中…",
+    purchase_success:
+      "購入が完了し、ポイントがチームウォレットに追加されました。",
+    purchase_failed: "購入に失敗しました。後でもう一度お試しください。",
+    no_card:
+      "カードが登録されていません。先に「ポイント購入」ページでカードを登録してください。",
+    relogin_required: "決済キーを取得するため、再ログインしてください。",
+    credits_unit: "ポイント",
+    allocation_title: "ポイント割り当て",
+    select_member: "メンバーを選択",
+    amount_placeholder: "ポイント",
+    allocate: "割り当て",
+    revoke: "回収",
+    allocation_success: "完了しました。",
+    allocation_failed: "操作に失敗しました。残高を確認して再試行してください。",
+    allocations_empty: "まだメンバーにポイントを割り当てていません。",
+    invalid_amount: "メンバーを選択し、正の整数を入力してください。",
+  },
 };
