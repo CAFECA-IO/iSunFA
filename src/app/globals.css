@@ -2979,6 +2979,19 @@
    * 同樣取淺色階常數：兩種主題下都該是這個值。
    * 只還原背景與漸層端點，不還原邊框：`border-slate-700` 反轉後變亮，
    * 在維持深色的底上仍然成立，甚至更清楚。
+   *
+   * Info: (20260807 - Luphia) 「兩種主題同一個值」對元件是對的，對整段版面卻不是。
+   *
+   * landing 用 slate-800 / 900 / 950 排出深淺交錯的段落節奏 —— 那在白色頁面上
+   * 是三個層次分明的深色帶，但在本身就近黑的深色頁面上，同樣三個值變成
+   * #1e2939 / #101828 / #030712 三種毫無語意的黑，其中技術規格區還是全頁最亮的一塊。
+   *
+   * 因此個別版面可以用 `dark:bg-surface-base!` / `dark:bg-surface-raised!` 退出，
+   * 深色下收斂成 base / raised 兩級，淺色的節奏原封不動。
+   *
+   * **`!` 不能省**：本區塊位於 `@layer utilities` 末端，而 `dark:` 變體的
+   * `:where()` 不加權，兩者同為 (0,1,0)，同權重下後者勝 —— 也就是這裡會贏過
+   * 元件上的 `dark:bg-*`。important 是讓個別元件退出全域相容層的唯一途徑。
    */
   .bg-gray-700 {
     background-color: var(--neutral-light-700);
@@ -3030,6 +3043,186 @@
 
   .to-slate-800 {
     --tw-gradient-to: var(--neutral-light-800);
+  }
+
+  /**
+   * Info: (20260807 - Luphia) 同一批深色表面的半透明版本。
+   *
+   * 上面那組只還原了不透明的 `.bg-slate-800`，但 Tailwind v4 把
+   * `bg-slate-800/40` 編成 `color-mix(in oklab, var(--color-slate-800) 40%, transparent)`
+   * —— 走的是被反轉的變數，因此整批逃過還原，在深色模式下解析成近白色
+   * （實測 `bg-slate-800/40` = rgb(230,235,242)、`bg-slate-950/60` = rgb(252,252,253)）。
+   *
+   * 而其上的文字由上方 `.text-slate-100~300` 正確地維持淺色，
+   * 兩者相加就是淺字配淺底：landing 的 DPP 產品護照卡實測 1.07:1，
+   * 三步驟膠囊 1.22:1，等於整塊內容消失。
+   *
+   * 這與 `bg-white/N`（見上）是同一個 bug 的鏡像：白色那一側補了，
+   * 深色這一側漏了。差別只在白色是「該翻而沒翻」，這裡是「不該翻卻翻了」。
+   *
+   * 只列全庫實際用到的組合而不寫通則選擇器（如 `[class*="bg-slate-800/"]`）：
+   * 屬性選擇器會連未經檢查語境的類名一起命中。
+   *
+   * Info: (20260807 - Luphia) **新增用法時務必回來補一條，而且變體要各列一條。**
+   *
+   * `hover:bg-slate-800/60` 編出來的是 `.hover\:bg-slate-800\/60:hover`，
+   * 與 `.bg-slate-800\/60` 是**兩個不同的選擇器** —— 補了後者不會蓋到前者。
+   * 這一點漏過一次：卡片靜止時已經是深色，滑鼠一移上去整張變成淺灰板子，
+   * 反而比修之前更糟；而全庫其實沒有任何一處用不帶前綴的 `/60`，
+   * 也就是說當時補的那條規則從頭到尾沒有使用者。
+   * （`bg-white/N` 那一組當初就有連 `hover:` / `focus:` 一起補，這裡照辦。）
+   *
+   * 漏一個不會有任何工具報錯，只會在深色模式下把整塊內容變成淺字配淺底。
+   * 檢查方式是把新用法的類名逐字轉成選擇器（`:` → `\:`、`/` → `\/`）在本區塊搜一次。
+   */
+  .bg-slate-800\/40 {
+    background-color: color-mix(
+      in oklab,
+      var(--neutral-light-800) 40%,
+      transparent
+    );
+  }
+
+  .bg-slate-800\/50 {
+    background-color: color-mix(
+      in oklab,
+      var(--neutral-light-800) 50%,
+      transparent
+    );
+  }
+
+  .bg-slate-800\/60 {
+    background-color: color-mix(
+      in oklab,
+      var(--neutral-light-800) 60%,
+      transparent
+    );
+  }
+
+  .bg-slate-800\/80 {
+    background-color: color-mix(
+      in oklab,
+      var(--neutral-light-800) 80%,
+      transparent
+    );
+  }
+
+  .bg-slate-900\/40 {
+    background-color: color-mix(
+      in oklab,
+      var(--neutral-light-900) 40%,
+      transparent
+    );
+  }
+
+  .bg-slate-900\/50 {
+    background-color: color-mix(
+      in oklab,
+      var(--neutral-light-900) 50%,
+      transparent
+    );
+  }
+
+  .bg-slate-900\/60 {
+    background-color: color-mix(
+      in oklab,
+      var(--neutral-light-900) 60%,
+      transparent
+    );
+  }
+
+  .bg-slate-900\/80 {
+    background-color: color-mix(
+      in oklab,
+      var(--neutral-light-900) 80%,
+      transparent
+    );
+  }
+
+  .bg-slate-900\/90 {
+    background-color: color-mix(
+      in oklab,
+      var(--neutral-light-900) 90%,
+      transparent
+    );
+  }
+
+  .bg-slate-950\/40 {
+    background-color: color-mix(
+      in oklab,
+      var(--neutral-light-950) 40%,
+      transparent
+    );
+  }
+
+  .bg-slate-950\/60 {
+    background-color: color-mix(
+      in oklab,
+      var(--neutral-light-950) 60%,
+      transparent
+    );
+  }
+
+  .bg-gray-900\/40 {
+    background-color: color-mix(
+      in oklab,
+      var(--neutral-light-900) 40%,
+      transparent
+    );
+  }
+
+  .bg-gray-900\/50 {
+    background-color: color-mix(
+      in oklab,
+      var(--neutral-light-900) 50%,
+      transparent
+    );
+  }
+
+  .bg-gray-900\/60 {
+    background-color: color-mix(
+      in oklab,
+      var(--neutral-light-900) 60%,
+      transparent
+    );
+  }
+
+  /**
+   * Info: (20260807 - Luphia) hover / group-hover 變體。
+   * 這三組（DPP 兩張卡、淨零面板、三個流程步驟）只以變體形式存在，
+   * 沒有任何一處用不帶前綴的 `bg-slate-800/60`。
+   */
+  .hover\:bg-slate-800\/60:hover {
+    background-color: color-mix(
+      in oklab,
+      var(--neutral-light-800) 60%,
+      transparent
+    );
+  }
+
+  .group-hover\:bg-slate-800\/60:is(:where(.group):hover *) {
+    background-color: color-mix(
+      in oklab,
+      var(--neutral-light-800) 60%,
+      transparent
+    );
+  }
+
+  /* Info: (20260807 - Luphia) 漸層端點的半透明版本，理由同上 */
+  .from-gray-900\/60 {
+    --tw-gradient-from: color-mix(
+      in oklab,
+      var(--neutral-light-900) 60%,
+      transparent
+    );
+  }
+
+  .via-gray-900\/40 {
+    --tw-gradient-via: color-mix(
+      in oklab,
+      var(--neutral-light-900) 40%,
+      transparent
+    );
   }
 }
 

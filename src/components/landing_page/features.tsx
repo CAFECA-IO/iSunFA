@@ -37,12 +37,16 @@ export default function Features() {
         </div>
         <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
           <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-10 lg:max-w-none lg:grid-cols-3 xl:grid-cols-4">
+            {/* Info: (20260807 - Luphia) 深色下另外加一圈橘環當 hover 訊號。
+                hover:shadow-xl 是照白底設計的：黑色陰影疊在近黑的頁面上，
+                實測最深處對頁面只有 1.05:1，等於整個 hover 只剩 4px 的位移。
+                這與 globals.css 的原則一致 —— 深色的浮起交給邊框，陰影只是輔助。 */}
             {MODULES.map((feature) => (
               <Link
                 key={feature.key}
                 href={`/user/account_book/default/${feature.key}`}
                 onClick={handleFeatureClick}
-                className="relative block flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                className="relative block flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:hover:ring-orange-500/60"
               >
                 <dt className="flex items-center gap-x-3 text-base leading-7 font-semibold text-gray-900">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-600">
