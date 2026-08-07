@@ -123,6 +123,21 @@ export interface IReportData {
   paragraphs?: IReportParagraph[];
   // Info: (20260720 - Tzuhan) #23 接真值:computedLedger.totalCo2eKg(字串化 Decimal,kg)
   totalEmissions: string;
+  /**
+   * Info: (20260804 - Tzuhan) 這份報告是從哪個檔匯入的(報告層級的事實)。
+   *
+   * 為什麼段落層的 origin 不夠:**任何編輯都會把 origin 改成 MANUAL**,
+   * 使用者改一節、匯入計數就掉一個;計數歸零時工具列那塊 UI 直接消失,
+   * 於是「改過幾節的匯入報告」與「從未匯入過」在畫面上完全同形。
+   * 匯入是發生過的事實,不該隨後續編輯蒸發 —— 查核者需要知道這份報告的來歷。
+   *
+   * 只在匯入套用時寫入一次,之後不再改動。
+   */
+  importedFrom?: {
+    fileName: string;
+    /** Info: (20260804 - Tzuhan) ISO 8601 */
+    importedAt: string;
+  };
 }
 
 // Info: (20260712 - Luphia) 單筆活動數據（數值以字串保存，計算時於服務層轉 Decimal，避免浮點誤差）

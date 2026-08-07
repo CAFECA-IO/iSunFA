@@ -22,6 +22,8 @@ import {
   TABLE38_HEADER_TOKENS,
   TABLE38_SITE_INDEX_PATTERN,
   TABLE38_SITE_KEYWORDS,
+  TABLE38_NO_SUBITEM_TOKEN,
+  TABLE38_STANDALONE_SITE_PATTERN,
   TABLE38_SITE_TOTAL_TOKEN,
 } from "@/constants/table38_layout";
 import {
@@ -33,6 +35,7 @@ import {
   NOT_SIGNIFICANT_TOKENS,
   TONNE_TO_KG_MULTIPLIER,
 } from "@/constants/imported_quantity";
+import { stripHtmlLineBreaks } from "@/lib/utils/markdown_line_break";
 
 export interface IParsedEmissionRow {
   site: string;
@@ -94,14 +97,21 @@ const stripEmphasis = (cell: string): string =>
     .replace(/(^|[^*])\*([^*]+?)\*($|[^*])/g, "$1$2$3")
     .trim();
 
-// Info: (20260803 - Tzuhan) markdown 表格列 → 儲存格陣列(去掉首尾的空欄)
+/**
+ * Info: (20260803 - Tzuhan) markdown 表格列 → 儲存格陣列(去掉首尾的空欄)
+ *
+ * Info: (20260804 - Tzuhan) 一併清掉 `<br>`,與 stripEmphasis 同一個理由:版面不是內容。
+ * 實測不清掉會壞四處,而且全部是靜默的:
+ * `2,775.<br>6475` 解不出數字、`(1) 總公<br>司` 成為污染的廠址名一路帶進桑基圖節點、
+ * `1.<br>1` 對不到子代碼、含 `<br>` 的重複表頭被當成資料列。
+ */
 const splitRow = (line: string): string[] =>
   line
     .trim()
     .replace(/^\|/, "")
     .replace(/\|$/, "")
     .split("|")
-    .map((cell) => stripEmphasis(cell.trim()));
+    .map((cell) => stripEmphasis(stripHtmlLineBreaks(cell).trim()));
 
 // Info: (20260803 - Tzuhan) `| --- | :--- |` 這類分隔列
 const isSeparatorRow = (cells: string[]): boolean =>
@@ -226,8 +236,21 @@ export function parseTable38(markdown: string): IParsedTable38 {
   const unparsedRows: string[] = [];
   let currentSite = "";
 
+  /**
+   * Info: (20260805 - Tzuhan) 表格外的獨立廠址標籤(第三種版面,見 TABLE38_STANDALONE_SITE_PATTERN)。
+   * 剝除粗體與 `<br>` 的理由與 splitRow 相同:排版不是內容。
+   */
+  const asStandaloneSiteLabel = (line: string): string | null => {
+    const cleaned = stripEmphasis(stripHtmlLineBreaks(line).trim());
+    return TABLE38_STANDALONE_SITE_PATTERN.test(cleaned) ? cleaned : null;
+  };
+
   markdown.split("\n").forEach((line) => {
-    if (!line.includes("|")) return;
+    if (!line.includes("|")) {
+      const standaloneSite = asStandaloneSiteLabel(line);
+      if (standaloneSite) currentSite = standaloneSite;
+      return;
+    }
     const cells = splitRow(line);
     if (cells.length < 2 || isSeparatorRow(cells)) return;
     // Info: (20260803 - Tzuhan) 重複表頭整列跳過(第二輪每個廠址前都重複一次)
@@ -300,8 +323,22 @@ export function parseTable38(markdown: string): IParsedTable38 {
 
     if (!subCategoryCell) {
       // Info: (20260803 - Tzuhan) 純標題列不算未解析(它們本來就沒有資料)
-      const hasQuantity = cells.some((cell) => readQuantityCell(cell) !== null);
-      if (hasQuantity) unparsedRows.push(line.trim());
+      const filled = cells.filter((cell) => cell.length > 0);
+      const quantities = filled.filter(
+        (cell) => readQuantityCell(cell) !== null,
+      );
+      /**
+       * Info: (20260805 - Tzuhan) 開放類別的「無細分項」標記列(見 TABLE38_NO_SUBITEM_TOKEN)。
+       * 前一行的類別標籤已產出該類別的資料列,這一行是同一筆資訊的重複 ——
+       * 不是資料,也不是讀不懂,所以兩邊都不記。
+       */
+      const isNoSubItemRow =
+        filled.length === 2 &&
+        quantities.length === 1 &&
+        filled.some((cell) => cell === TABLE38_NO_SUBITEM_TOKEN);
+      if (quantities.length > 0 && !isNoSubItemRow) {
+        unparsedRows.push(line.trim());
+      }
       return;
     }
     const anchorCell = subCategoryCell;

@@ -31,6 +31,7 @@ import {
 import { composeParagraphContent } from "@/lib/carbon_paragraph_composer";
 import {
   buildImportedLedger,
+  LEDGER_SOURCE_TABLE_NO,
   type IImportedLedgerResult,
 } from "@/lib/carbon_table38.pipeline";
 import { isImportedEntry } from "@/lib/carbon_table38.ledger";
@@ -50,7 +51,8 @@ import {
 } from "@/constants/carbon_report_charts";
 import {
   formatGhgCategoryLabel,
-  formatIsoCategoryLabel,
+  formatEsgScopeLabel,
+  formatIsoCategoryShortLabel,
 } from "@/constants/esg";
 import {
   CARBON_EVIDENCE_CHAPTER_ID,
@@ -95,7 +97,11 @@ import {
   loadLocalDraftBackup,
 } from "@/lib/carbon_report_draft_storage";
 import { useTranslation } from "@/i18n/i18n_context";
-import { subscribeChatroom } from "@/lib/chatroom";
+import {
+  ChatroomConnectionStateEnum,
+  subscribeChatroom,
+  subscribeChatroomConnection,
+} from "@/lib/chatroom";
 import {
   eciesDecrypt,
   ChatroomUnsupportedDeviceError,
@@ -114,6 +120,12 @@ import {
 } from "@/lib/carbon_report_diagram.builder";
 import { CarbonDiagramTemplateEnum } from "@/constants/carbon_report_diagrams";
 import {
+  buildImportUnits,
+  nextOutlineSectionId,
+  resolveUnitPageRange,
+  validatePageIndex,
+} from "@/lib/carbon_page_slice";
+import {
   getApiErrorCode,
   isGatewayTimeoutError,
   isQuotaApiError,
@@ -129,6 +141,7 @@ import {
   DEFAULT_SESSION_ID,
   SESSION_PROGRESS_MAX,
   buildCarbonChatChannel,
+  CarbonImportReconciliationStateEnum,
   CARBON_CHAT_REPLY_TIMEOUT_MS,
   CARBON_CHAT_REPLY_TIMEOUT_WITH_ATTACHMENTS_MS,
   CARBON_IMPORT_SINGLE_CALL_MAX_BYTES,
@@ -1009,9 +1022,12 @@ export const useCarbonChat = () => {
       ),
       // Info: (20260722 - Tzuhan) UAT:範疇顯示名(enum 值不可讀)
       formatScope: (scope: string) => formatGhgCategoryLabel(scope, language),
-      // Info: (20260803 - Tzuhan) ISO 類別顯示名(匯入桑基圖第二層;直接印 CATEGORY_1 讀者看不懂)
+      // Info: (20260803 - Tzuhan) ISO 類別顯示名(匯入桑基圖第四層;直接印 CATEGORY_1 讀者看不懂)
+      // Info: (20260805 - Tzuhan) 桑基圖節點用短名:完整名 18 個字,數十個節點會互相重疊
       formatIsoCategory: (category: string) =>
-        formatIsoCategoryLabel(category, language),
+        formatIsoCategoryShortLabel(category, language),
+      // Info: (20260805 - Tzuhan) 三大範疇顯示名(匯入桑基圖第三層)
+      formatEsgScope: (scope: string) => formatEsgScopeLabel(scope, language),
     }),
     [t, language],
   );
@@ -1377,12 +1393,38 @@ export const useCarbonChat = () => {
             index: { paragraphId: string; startPage: number }[];
           } | null;
         }>("/api/v1/chat/carbon/import", { method: "POST", body: formData });
-        return new Map(
+        const index = new Map(
           (res.payload?.index ?? []).map((entry) => [
             entry.paragraphId,
             entry.startPage,
           ]),
         );
+        /**
+         * Info: (20260804 - Tzuhan) 索引成功時原本零 log,而它是整條管線**最上游、
+         * 唯一非決定性**的輸入 —— 後面每一章送哪幾頁都由它決定。
+         * 出事時(表3.8 沒進來、桑基圖消失)完全無從回溯這一輪的索引長什麼樣,
+         * 只能猜。決策點沒有痕跡,現場就無法還原。
+         */
+        const validation = validatePageIndex(
+          CARBON_REPORT_OUTLINE.map((section) => ({
+            id: section.id,
+            startPage: index.get(section.id),
+          })),
+        );
+        console.info("[carbon-chat] page index", {
+          resolved: index.size,
+          total: CARBON_REPORT_OUTLINE.length,
+          isValid: validation.isValid,
+          reason: validation.reason,
+          offending: validation.offending,
+          index: Object.fromEntries(index),
+        });
+        /**
+         * Info: (20260804 - Tzuhan) 不合理即整份丟棄,退回送全文。
+         * 半可信的索引比沒有索引更危險:沒有索引只是多花 token,
+         * 錯的索引會讓內容無聲消失,而且看起來一切正常。
+         */
+        return validation.isValid ? index : new Map();
       } catch (error) {
         console.error("[carbon-chat] page index failed:", error);
         return new Map();
@@ -1410,8 +1452,17 @@ export const useCarbonChat = () => {
         unmapped: string[];
         activities?: IActivityRecord[];
       }
+      /**
+       * Info: (20260805 - Tzuhan) 把章切成「單次呼叫跑得完」的工作單元。
+       * ch1(7 節)、ch3(6 節)、ch9(5 節)會各切成兩份;
+       * 節數少的章維持一份,行為與先前相同。
+       */
+      const units = buildImportUnits(
+        CARBON_REPORT_OUTLINE,
+        chapters.map((chapter) => chapter.id),
+      );
       const results: (IImportChunkPayload | null)[] = new Array(
-        chapters.length,
+        units.length,
       ).fill(null);
       const failed: { id: string; title: string }[] = [];
       let nextIndex = 0;
@@ -1430,7 +1481,7 @@ export const useCarbonChat = () => {
           text: t("carbon_chatbot.import_parsing_chapter", {
             name: file.name,
             current: completedCount,
-            total: chapters.length,
+            total: units.length,
             inFlight: inFlightCount,
           }),
           startedAt,
@@ -1442,8 +1493,10 @@ export const useCarbonChat = () => {
       const processNext = async (): Promise<void> => {
         const index = nextIndex;
         nextIndex += 1;
-        if (index >= chapters.length) return;
-        const chapter = chapters[index];
+        if (index >= units.length) return;
+        const unit = units[index];
+        const chapter = chapters.find((item) => item.id === unit.chapterId);
+        if (!chapter) return;
         inFlightCount += 1;
         reportProgress();
         const formData = new FormData();
@@ -1460,44 +1513,56 @@ export const useCarbonChat = () => {
             ? "true"
             : "false",
         );
-        // Info: (20260730 - Tzuhan) 該章各節的起始頁 → 頁碼範圍;缺任何一節的索引就不帶範圍(整章退回送全文),
+        /**
+         * Info: (20260805 - Tzuhan) 只處理本單元的節。省略即整章(節數少的章仍是一份)。
+         * 帶了就必須合法,伺服端會白名單複驗 —— 靜默忽略等於整章重跑卻沒人知道。
+         */
+        if (unit.partTotal > 1) {
+          formData.append("sectionIds", JSON.stringify(unit.sectionIds));
+        }
+        // Info: (20260730 - Tzuhan) 該單元各節的起始頁 → 頁碼範圍;缺任何一節的索引就不帶範圍(退回送全文),
         // Info: (20260730 - Tzuhan) 寧可多花 token,也不能因為索引不全而漏送內容
-        const chapterSections = CARBON_REPORT_OUTLINE.filter(
-          (section) => section.chapterId === chapter.id,
+        const unitPages = unit.sectionIds.map((id) => pageIndex?.get(id));
+        /**
+         * Info: (20260805 - Tzuhan) 上界取**下一個單元**的第一節,不是下一章的第一節。
+         * 同章切成多份時,用下一章當上界會讓每一份都送到章尾 —— 切了等於沒切。
+         */
+        /**
+         * Info: (20260807 - Emily) 上界取本單元最後一節在**大綱**裡的下一節
+         * (PR review 第 1 點;原本取 `units[index + 1]`)。
+         *
+         * 匯入單元是由使用者勾選的章建出來的,所以 `units[index + 1]`
+         * 在勾選不連續時會指到很遠的地方:只重試 ch1 與 ch9 時,
+         * ch1 的上界會變成 ch9 的起始頁 —— 等於整份文件都送進去。
+         * 那條路不會報錯,只會變慢並可能再次撞逾時,
+         * 而「重試失敗章節」正是最容易不連續勾選的路徑。
+         *
+         * 改用大綱推導仍然保留原本的用意:同章切成多份時,
+         * 上一份最後一節的下一節就是下一份的第一節。
+         */
+        const lastSectionId = unit.sectionIds[unit.sectionIds.length - 1];
+        const boundarySectionId = nextOutlineSectionId(
+          CARBON_REPORT_OUTLINE,
+          lastSectionId,
         );
-        const chapterPages = chapterSections.map((section) =>
-          pageIndex?.get(section.id),
-        );
-        if (chapterPages.length > 0 && chapterPages.every((page) => !!page)) {
-          const pages = chapterPages as number[];
-          /**
-           * Info: (20260803 - Tzuhan) 上界取「下一章第一節的起始頁」,不是本章最後一節的起始頁。
-           *
-           * 索引只記每節的**起始**頁,所以 max(起始頁) 等於「最後一節開始的地方」——
-           * 那一節的內容全部在它之後。實測代價:第三章上界算成 p.41(3.6 節起始),
-           * 而表3.8 跨 p.41–43 → 42、43 頁從未送進模型,整張表無聲消失;
-           * 表2.2(p.15,ch2 上界 15)與表4.2(p.46–47,ch4 上界 47)同樣被切掉尾段,
-           * 落地的是只有表頭的半張表。同一個成因,三張表受害。
-           *
-           * 章節在大綱裡是連續的,所以下一章第一節的起始頁就是本章的自然終點 ——
-           * 這是推導出來的邊界,不是猜一個緩衝頁數。最後一章沒有下一節,不帶上界(送到文末)。
-           */
-          const lastSection = chapterSections[chapterSections.length - 1];
-          const globalIndex = CARBON_REPORT_OUTLINE.findIndex(
-            (section) => section.id === lastSection.id,
-          );
-          const nextSection = CARBON_REPORT_OUTLINE[globalIndex + 1];
-          const nextPage = nextSection
-            ? pageIndex?.get(nextSection.id)
-            : undefined;
-          formData.append("fromPage", String(Math.min(...pages)));
-          /**
-           * Info: (20260803 - Tzuhan) 只有在下一節的起始頁已知時才帶上界。
-           * 未知(或本章是最後一章)就不帶 —— 後端會送全文。那比帶一個會切掉表格的
-           * 上界好:多花 token 是成本,漏送內容是錯誤,而且是無聲的錯誤。
-           */
-          if (nextPage && nextPage > Math.max(...pages)) {
-            formData.append("toPage", String(nextPage));
+        const range = resolveUnitPageRange({
+          sectionPages: unitPages,
+          nextUnitFirstPage: boundarySectionId
+            ? pageIndex?.get(boundarySectionId)
+            : undefined,
+        });
+        // Info: (20260804 - Tzuhan) 每次實際送出的範圍要留痕跡:少一張表時才查得出是被誰切掉的
+        console.info("[carbon-chat] chapter slice", {
+          chapterId: chapter.id,
+          part: `${unit.partIndex}/${unit.partTotal}`,
+          sections: unit.sectionIds,
+          fromPage: range?.fromPage ?? "(full text)",
+          toPage: range?.toPage ?? "(to end)",
+        });
+        if (range) {
+          formData.append("fromPage", String(range.fromPage));
+          if (range.toPage !== undefined) {
+            formData.append("toPage", String(range.toPage));
           }
         }
         try {
@@ -1510,9 +1575,17 @@ export const useCarbonChat = () => {
           console.error(
             "[carbon-chat] import chapter failed:",
             chapter.id,
+            `part ${unit.partIndex}/${unit.partTotal}`,
             chunkError,
           );
-          failed.push(chapter);
+          /**
+           * Info: (20260805 - Tzuhan) 以章去重:同一章切成多份時可能失敗兩次,
+           * 而重試的粒度是章 —— 列兩次會讓使用者以為有兩章壞掉。
+           * 重試整章比重試單一份安全:份與份之間的邊界本來就有重疊。
+           */
+          if (!failed.some((item) => item.id === chapter.id)) {
+            failed.push(chapter);
+          }
         }
         completedCount += 1;
         inFlightCount -= 1;
@@ -2143,6 +2216,18 @@ export const useCarbonChat = () => {
           reportData: {
             ...session.reportData,
             rawMarkdown: nextRaw,
+            /**
+             * Info: (20260804 - Tzuhan) 記下這份報告的來歷,只在此寫入一次。
+             *
+             * 段落層的 origin 不夠:任何編輯都會把它改成 MANUAL,
+             * 改幾節就掉幾個;計數歸零時工具列那塊 UI 直接消失,
+             * 「改過的匯入報告」與「從未匯入過」因此在畫面上完全同形。
+             * 匯入是發生過的事實,不該隨後續編輯蒸發。
+             */
+            importedFrom: session.reportData.importedFrom ?? {
+              fileName: pendingImport.fileName,
+              importedAt: new Date().toISOString(),
+            },
             paragraphs: session.reportData.paragraphs.map((p) => {
               const imported = contentById.get(p.id);
               if (imported === undefined) return p;
@@ -2172,19 +2257,62 @@ export const useCarbonChat = () => {
        * 但開發時看 log 才分得出「沒有表3.8」與「有表3.8 但勾稽沒過」。
        */
       const blocked = Array.from(importedLedgerById.entries()).filter(
-        ([, result]) => result.blockedReason !== null,
+        ([, result]) =>
+          result.blockedReason !== null || result.missingLedgerTable,
       );
       if (blocked.length > 0) {
         console.warn(
           "[carbon-chat] imported ledger blocked",
           blocked.map(([paragraphId, result]) => ({
             paragraphId,
-            reason: result.blockedReason,
+            // Info: (20260804 - Tzuhan) 「該有表3.8 卻沒拿到」與「有表但勾稽沒過」是兩件事
+            reason: result.missingLedgerTable
+              ? `缺少 ${LEDGER_SOURCE_TABLE_NO}(同節有全公司總量表,疑似被頁碼切片切掉)`
+              : result.blockedReason,
           })),
         );
       }
     }
     importActivitiesRef.current = [];
+    /**
+     * Info: (20260805 - Tzuhan) 在聊天室留下一則匯入摘要,並且**要入庫**。
+     *
+     * 匯入原本全程不產生任何聊天訊息 —— 一份 64 頁的報告落地 33 個段落,
+     * 對話裡卻只剩招呼語。段落層的 origin 會被編輯抹掉,報告層的 importedFrom
+     * 只有檔名與時間;「當時發生了什麼」需要一則按時序排在對話裡、且能撐過重載的記錄。
+     *
+     * 只送事實,文案由伺服端組出 —— 入庫的是系統的陳述,不能由前端塞任意字串。
+     * 送失敗不影響匯入本身(內容已經落地了),但不可靜默:那會讓「沒有記錄」
+     * 與「記錄送失敗」在畫面上完全同形。
+     */
+    void (async () => {
+      try {
+        await request("/api/v1/chat/carbon/import/notice", {
+          method: "POST",
+          body: JSON.stringify({
+            channel: buildCarbonChatChannel(
+              user?.address ?? "anonymous",
+              activeSessionId,
+            ),
+            fileName: pendingImport.fileName,
+            importedCount: selected.filter((item) => !item.isDraft).length,
+            draftedCount: selected.filter((item) => item.isDraft).length,
+            reconciliation:
+              importedEntries.length > 0
+                ? CarbonImportReconciliationStateEnum.RECONCILED
+                : importedLedgerById.size > 0
+                  ? CarbonImportReconciliationStateEnum.BLOCKED
+                  : CarbonImportReconciliationStateEnum.NONE,
+            failedChapters: (pendingImport.failedChapters ?? []).map(
+              (chapter) => chapter.title,
+            ),
+            language,
+          }),
+        });
+      } catch (error) {
+        console.error("[carbon-chat] import notice failed:", error);
+      }
+    })();
     setPendingImportFor(activeSessionId, null);
     jumpToReportParagraph(selected[0].paragraphId);
 
@@ -2258,6 +2386,9 @@ export const useCarbonChat = () => {
     t,
     setDraftNotice,
     setPendingImportFor,
+    // Info: (20260805 - Tzuhan) 匯入摘要訊息用到:頻道由 address 組出,文案語言由此決定
+    user?.address,
+    language,
   ]);
 
   const discardPendingImport = useCallback(() => {
@@ -2716,6 +2847,7 @@ export const useCarbonChat = () => {
 
         const decrypted: IChatMessage[] = [];
         const historyDrafts: IParagraphDraft[] = [];
+        let undecryptable = 0;
         for (const envelope of payload.messages) {
           try {
             const plaintext = await eciesDecrypt(
@@ -2731,7 +2863,23 @@ export const useCarbonChat = () => {
             if (drafts && drafts.length > 0) historyDrafts.push(...drafts);
           } catch {
             // Info: (20260712 - Luphia) 個別訊息解密失敗則略過
+            undecryptable += 1;
           }
+        }
+        /**
+         * Info: (20260804 - Tzuhan) 解密失敗原本是空 catch、零痕跡。
+         *
+         * 後果:整頁都解不開時 `decrypted` 為 [],而第一頁載入是**整組覆蓋**
+         * (見下方 `session.messages = ... : decrypted`),於是聊天紀錄整個變空 ——
+         * 畫面上與「這個房間本來就沒講過話」完全同形,而資料其實還在 DB 裡。
+         * 略過個別壞訊息是對的,但不能連略過了幾則都不說。
+         */
+        if (undecryptable > 0) {
+          console.warn("[carbon-chat] history messages undecryptable", {
+            channel: chatChannel,
+            undecryptable,
+            total: payload.messages.length,
+          });
         }
 
         // Info: (20260714 - Tzuhan) 只填空白段落(onlyIfEmpty): 不覆蓋 DB 草稿還原或使用者編輯後的內容
@@ -3241,19 +3389,50 @@ export const useCarbonChat = () => {
     [activeSessionId, sessionAccess, user?.address],
   );
 
+  /**
+   * Info: (20260805 - Tzuhan) 訂閱只依賴 chatChannel,回呼走 ref。
+   *
+   * 原本依賴 `[chatChannel, activeSessionId, decryptAndAppendEnvelope, markSessionBusy]`,
+   * 而 `decryptAndAppendEnvelope` 的依賴鏈一路連到 `sessionAccess` ——
+   * 它在掛載後至少三處會非同步寫入(sessions 清單載入、報告草稿還原、帳本綁定),
+   * 每寫一次整條 callback 換身分 → effect 重跑 → 連線被 disconnect 再重建。
+   * 頁面剛載入那幾百毫秒內連續發生數次,WSS 握手來不及完成。
+   *
+   * 訂閱該在「頻道變了」時重建,不該在「某個 callback 換了身分」時重建 ——
+   * 回呼放進 ref,身分穩定,依賴就只剩下真正決定訂閱對象的那一個值。
+   */
+  const decryptAndAppendEnvelopeRef = useRef(decryptAndAppendEnvelope);
+  const markSessionBusyRef = useRef(markSessionBusy);
+  // Info: (20260805 - Tzuhan) 在 effect 內更新(與 activeSessionIdRef 同一慣例;render 期間寫 ref 會被 ESLint 擋)
+  useEffect(() => {
+    decryptAndAppendEnvelopeRef.current = decryptAndAppendEnvelope;
+    markSessionBusyRef.current = markSessionBusy;
+  }, [decryptAndAppendEnvelope, markSessionBusy]);
+
   // Info: (20260712 - Luphia) 訂閱 chatroom 頻道，接收並解密 AI 回覆等即時訊息（取代原本的 mock CustomEvent）
   useEffect(() => {
     const unsubscribe = subscribeChatroom<IEciesEnvelope>({
       channel: chatChannel,
       // Info: (20260712 - Luphia) 主金鑰尚未就緒（未經 PRF 解鎖）前無法解密，先略過(decryptAndAppendEnvelope 內建防護)
-      onMessage: decryptAndAppendEnvelope,
+      onMessage: (envelope) => decryptAndAppendEnvelopeRef.current(envelope),
       onError: () => {
         setIsError(true);
-        markSessionBusy(activeSessionId, false);
+        markSessionBusyRef.current(activeSessionIdRef.current, false);
       },
     });
     return unsubscribe;
-  }, [chatChannel, activeSessionId, decryptAndAppendEnvelope, markSessionBusy]);
+  }, [chatChannel]);
+
+  /**
+   * Info: (20260805 - Tzuhan) 推播連線狀態。原本連線壞掉只寫進 `isError`,
+   * 而 `isError` **沒有任何元件消費** —— 推播整條壞掉是完全靜默的,
+   * 於是「AI 沒回應」與「回應送不到」在畫面上一模一樣,而兩者的處置完全不同。
+   */
+  const [connectionState, setConnectionState] =
+    useState<ChatroomConnectionStateEnum>(
+      ChatroomConnectionStateEnum.CONNECTING,
+    );
+  useEffect(() => subscribeChatroomConnection(setConnectionState), []);
 
   // Info: (20260714 - Tzuhan) 加入附件: 前端 Fail Fast(MIME 白名單/大小/數量)，通過者轉 base64 進待送清單
   const addAttachments = useCallback(
@@ -3794,6 +3973,8 @@ export const useCarbonChat = () => {
     isTyping,
     isLoading,
     isError,
+    // Info: (20260805 - Tzuhan) 推播連線狀態(壞掉必須看得見,見上方 effect)
+    connectionState,
     isUnlocked,
     initializeChat,
     hasMoreHistory,

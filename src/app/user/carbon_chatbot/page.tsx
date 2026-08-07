@@ -71,6 +71,7 @@ export default function CarbonChatbotPage() {
     focusMessageForParagraph,
     draftingParagraphId,
     draftNotice,
+    connectionState,
     pendingRevision,
     applyPendingRevision,
     discardPendingRevision,
@@ -256,6 +257,7 @@ export default function CarbonChatbotPage() {
               onAddFiles={addAttachments}
               onRemoveAttachment={removeAttachment}
               draftNotice={draftNotice}
+              connectionState={connectionState}
               importCandidate={importCandidate}
               onConfirmImportCandidate={confirmImportCandidate}
               onAttachImportCandidate={attachImportCandidate}

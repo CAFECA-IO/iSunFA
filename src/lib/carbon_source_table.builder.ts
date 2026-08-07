@@ -40,6 +40,23 @@ export interface ISourceTableValidation {
 /**
  * Info: (20260801 - Tzuhan) markdown 是否真的是一張表格:至少要有表頭列與分隔列。
  * 只檢查形狀不檢查內容 —— 內容的正確性由「逐字照抄」保證,不是我們能驗的。
+ *
+ * Info: (20260804 - Tzuhan) 原本要求分隔列**剛好是第二個非空行**:
+ *
+ * ```ts
+ * return isRow(lines[0]) && isDivider(lines[1]);
+ * ```
+ *
+ * 那等於假設模型照錄表格時,第一行一定就是表頭列。實測不成立 ——
+ * 表3.8 與表3.4 都被判 not_a_table 而整張丟掉,而表3.8 是桑基圖唯一的資料來源,
+ * 於是圖整張消失。前面幾行可能是原文的表格標題、廠址標籤或空白,
+ * 那些不會讓它不是一張表。
+ *
+ * 改為:內容中存在**任一組「表頭列 + 緊接的分隔列」**即認定為表格。
+ * 這仍然擋得住模型自由書寫的散文(分隔列的形狀很特定,散文不會湊巧產生),
+ * 但不再因為開頭多一行標題就把整張表丟掉。
+ * 兩種錯的代價差很多:誤收一段散文會被逐字照錄的原則與表號驗證擋下,
+ * 誤丟一張表卻是無聲的 —— 報告裡就是少一張,沒有人會知道。
  */
 const looksLikeMarkdownTable = (markdown: string): boolean => {
   const lines = markdown
@@ -51,7 +68,10 @@ const looksLikeMarkdownTable = (markdown: string): boolean => {
   // Info: (20260801 - Tzuhan) 分隔列:| --- | :--: | 之類,只由 -、:、|、空白組成
   const isDivider = (line: string): boolean =>
     isRow(line) && /^\|[\s:|-]+\|$/.test(line);
-  return isRow(lines[0]) && isDivider(lines[1]);
+  return lines.some(
+    (line, index) =>
+      index + 1 < lines.length && isRow(line) && isDivider(lines[index + 1]),
+  );
 };
 
 /**

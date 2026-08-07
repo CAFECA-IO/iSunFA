@@ -19,6 +19,12 @@ import { useTranslation } from "@/i18n/i18n_context";
 interface IReportToolbarProps {
   documentName: string;
   stats: IReportProgressStats;
+  /**
+   * Info: (20260804 - Tzuhan) 匯入來歷。與 stats 的匯入計數是兩件事:
+   * 計數會隨編輯下降(編輯把段落 origin 改成 MANUAL),歸零時整塊消失;
+   * 來歷是發生過的事實,一旦寫入就不再改變。
+   */
+  importedFrom?: { fileName: string; importedAt: string };
   isDrawerOpen: boolean;
   onToggleDrawer: () => void;
   // Info: (20260713 - Tzuhan) 報告狀態徽章(取代舊 Markdown 內嵌 HTML 的狀態列)
@@ -37,6 +43,7 @@ interface IReportToolbarProps {
 export function ReportToolbar({
   documentName,
   stats,
+  importedFrom = undefined,
   isDrawerOpen,
   onToggleDrawer,
   status = undefined,
@@ -201,6 +208,20 @@ export function ReportToolbar({
             </span>
             <span className="font-medium text-purple-700">
               {t("carbon_chatbot.origin_ai_draft")} {stats.draftedCount}
+            </span>
+          </>
+        )}
+        {importedFrom && (
+          <>
+            <span className="text-gray-300">|</span>
+            <span
+              className="max-w-40 truncate font-medium text-emerald-700"
+              title={t("carbon_chatbot.imported_from_title", {
+                name: importedFrom.fileName,
+                date: new Date(importedFrom.importedAt).toLocaleString(),
+              })}
+            >
+              {t("carbon_chatbot.imported_from_short")} {importedFrom.fileName}
             </span>
           </>
         )}

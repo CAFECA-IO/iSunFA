@@ -46,6 +46,11 @@ export const carbonChatbot = {
   still_processing:
     "處理時間較長,連線已先中斷,但作業仍在進行中,完成的段落會自動出現。",
   // Info: (20260730 - Tzuhan) 段落來源標示:AI 草稿不得冒充逐字照抄原文(審計文件底線)
+  realtime_connecting: "即時連線中…回覆可能延遲送達",
+  realtime_disconnected:
+    "即時連線中斷,長時間的處理結果可能送不回來。請重新整理頁面。",
+  imported_from_short: "匯入自",
+  imported_from_title: "匯入自 {{name}}(匯入時間 {{date}})",
   origin_imported: "逐字匯入",
   origin_ai_draft: "AI 草稿",
   origin_imported_short: "原文",

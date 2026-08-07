@@ -8,6 +8,7 @@ export * from "@/validators/order";
 export * from "@/validators/carbon_paragraph_draft";
 export * from "@/validators/carbon_chat";
 export * from "@/validators/carbon_attachment_extraction";
+export * from "@/validators/carbon_import_notice";
 export * from "@/validators/carbon_report_storage";
 export * from "@/validators/carbon_inventory";
 export * from "@/validators/ledger";

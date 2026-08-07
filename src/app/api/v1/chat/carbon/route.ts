@@ -124,6 +124,38 @@ export async function POST(request: NextRequest) {
           })
         : history;
 
+    /**
+     * Info: (20260804 - Tzuhan) 使用者的訊息**先入庫,再呼叫 LLM**。
+     *
+     * 原本排在 LLM 呼叫之後。後果:LLM 逾時、撞額度或任何拋錯,
+     * 那則訊息就永遠不會進 DB —— 畫面上它還在(前端本機 echo),
+     * 但下一次 loadHistory 就沒了,使用者看到的是「我打的字消失了」。
+     *
+     * 而匯入正是最會把 LLM 額度燒乾的操作(11 章 + 最多 11 次 gap-fill + 5 次結構圖,
+     * 而額度是 12 次/分鐘),所以這個順序錯誤在匯入前後最容易發作 ——
+     * 實測「匯入後聊天歷史只剩招呼語」即由此而來。
+     *
+     * 使用者說過的話不該因為系統回不出來就消失:那是他的輸入,不是系統的產出。
+     */
+    const canPublish = Boolean(channel && recipientPublicKey);
+    const publishChannel = channel as string;
+    const publishKey = recipientPublicKey as string;
+    const attachmentsMeta: IAttachment[] | undefined = attachments;
+    const lastUserMessage = [...history]
+      .reverse()
+      .find((item) => item.role === "user");
+
+    if (canPublish && (lastUserMessage?.text || attachmentNames.length > 0)) {
+      await chatroomService.recordUserMessage({
+        channel: publishChannel,
+        recipientPublicKey: publishKey,
+        text: lastUserMessage?.text ?? "",
+        purpose: CARBON_CHAT_PURPOSE,
+        // Info: (20260714 - Tzuhan) 入庫 metadata(name/size/mimeType/cid)；原檔已於選檔時由 Laria 分片保存
+        attachments: attachmentsMeta,
+      });
+    }
+
     // Info: (20260714 - Tzuhan) 結構化回覆: 對話內容 + 段落完成訊號(readyParagraphId 已經白名單裁決)
     // Info: (20260716 - Tzuhan) #6518:extraction 為已裁決的事實萃取，回帶前端合併進盤查狀態帳本
     // Info: (20260720 - Tzuhan) #51 chartRequest 為已裁決的圖表請求(雙 enum 白名單),透傳前端由模板產圖
@@ -151,34 +183,16 @@ export async function POST(request: NextRequest) {
     let attachmentActivities: IActivityRecord[] = [];
     // Info: (20260716 - Tzuhan) #55 附件事實回帶:前端據此發起段落修訂(修訂數值僅能引用這些事實)
     let attachmentFacts: IContextFact[] = [];
-    const attachmentsMeta: IAttachment[] | undefined = attachments;
 
     // Info: (20260730 - Tzuhan) 遞送順序改為「邊做邊推」:原本使用者訊息與 AI 回覆都排在附件管線之後,
     // Info: (20260730 - Tzuhan) 整條請求做完才一次發佈。實測附件流程約 87s(萃取 36.8s + 3 段草稿),
-    // Info: (20260730 - Tzuhan) 而 gateway 的 proxy_read_timeout 預設 60s,使用者只看到 504 與「系統錯誤」,
+    // Info: (20260730 - Tzuhan) 而閘道的讀取逾時預設 60s,使用者只看到 504 與「系統錯誤」,
     // Info: (20260730 - Tzuhan) 即使伺服端其實跑完了。改成回覆先送、每個單元完成即推,結果不再依賴那條連線活著。
-    const canPublish = Boolean(channel && recipientPublicKey);
-    const publishChannel = channel as string;
-    const publishKey = recipientPublicKey as string;
+    // Info: (20260804 - Tzuhan) 使用者訊息已提前於 LLM 呼叫之前入庫,不在此處。
     const envelopes: IEciesEnvelope[] = [];
     const publishedDraftIds = new Set<string>();
 
     if (canPublish) {
-      const lastUserMessage = [...history]
-        .reverse()
-        .find((item) => item.role === "user");
-
-      if (lastUserMessage?.text || attachmentNames.length > 0) {
-        await chatroomService.recordUserMessage({
-          channel: publishChannel,
-          recipientPublicKey: publishKey,
-          text: lastUserMessage?.text ?? "",
-          purpose: CARBON_CHAT_PURPOSE,
-          // Info: (20260714 - Tzuhan) 入庫 metadata(name/size/mimeType/cid)；原檔已於選檔時由 Laria 分片保存
-          attachments: attachmentsMeta,
-        });
-      }
-
       // Info: (20260730 - Tzuhan) 對話回覆此時已算完,立刻送出,不讓它被後面的長工作綁住
       envelopes.push(
         await chatroomService.recordAndPublishAiReply({

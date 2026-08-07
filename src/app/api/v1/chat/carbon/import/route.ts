@@ -75,32 +75,47 @@ export async function POST(request: NextRequest) {
     const mode = IMPORT_MODES.includes(modeRaw as CarbonReportImportModeEnum)
       ? (modeRaw as CarbonReportImportModeEnum)
       : CarbonReportImportModeEnum.VERBATIM;
-    let draftSectionIds: string[] = [];
-    if (mode === CarbonReportImportModeEnum.DRAFT) {
-      const sectionIdsRaw = formData.get("sectionIds");
-      if (typeof sectionIdsRaw !== "string") {
-        return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
-      }
+    /**
+     * Info: (20260805 - Tzuhan) sectionIds 白名單解析。DRAFT 必填;
+     * VERBATIM 選填 —— 前端把節數多的章切成數次呼叫,讓單次請求跑得完
+     * (閘道 60 秒閒置逾時,而等 LLM 期間整段都算閒置)。省略即整章。
+     */
+    const parseSectionIds = (
+      raw: FormDataEntryValue | null,
+    ): string[] | null => {
+      if (typeof raw !== "string") return null;
       try {
-        const parsed: unknown = JSON.parse(sectionIdsRaw);
+        const parsed: unknown = JSON.parse(raw);
         if (
           !Array.isArray(parsed) ||
           parsed.length === 0 ||
           parsed.length > CARBON_REPORT_OUTLINE.length ||
           !parsed.every((id) => typeof id === "string")
         ) {
-          return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
+          return null;
         }
         const validIds = new Set(
           CARBON_REPORT_OUTLINE.map((section) => section.id),
         );
-        if (!parsed.every((id) => validIds.has(id))) {
-          return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
-        }
-        draftSectionIds = parsed;
+        return parsed.every((id) => validIds.has(id))
+          ? (parsed as string[])
+          : null;
       } catch {
-        return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
+        return null;
       }
+    };
+    const sectionIdsRaw = formData.get("sectionIds");
+    let draftSectionIds: string[] = [];
+    let verbatimSectionIds: string[] | undefined;
+    if (mode === CarbonReportImportModeEnum.DRAFT) {
+      const parsed = parseSectionIds(sectionIdsRaw);
+      if (!parsed) return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
+      draftSectionIds = parsed;
+    } else if (sectionIdsRaw !== null) {
+      // Info: (20260805 - Tzuhan) 有帶就必須合法:帶了壞值而靜默忽略,等於整章重跑卻沒人知道
+      const parsed = parseSectionIds(sectionIdsRaw);
+      if (!parsed) return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
+      verbatimSectionIds = parsed;
     }
     // Info: (20260730 - Tzuhan) 頁碼範圍(兩階段第二階段):由前端依索引算出,伺服端切片後才送 LLM。
     // Info: (20260730 - Tzuhan) 僅為降低輸入量的最佳化——範圍無效或切片過短時 slicePagesForRange 會退回全文。
@@ -176,7 +191,7 @@ export async function POST(request: NextRequest) {
     const result = await service.importReport(
       scopedSource,
       typeof language === "string" ? language : undefined,
-      { chapterId, extractActivities },
+      { chapterId, extractActivities, sectionIds: verbatimSectionIds },
     );
 
     return jsonOk(result);

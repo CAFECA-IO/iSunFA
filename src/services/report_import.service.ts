@@ -512,13 +512,24 @@ ${source.data}`;
       chapterId?: string;
       // Info: (20260716 - Tzuhan) 僅首次呼叫萃取活動數據(避免逐章重複入帳)
       extractActivities?: boolean;
+      /**
+       * Info: (20260805 - Tzuhan) 只處理這幾節(該章的子集)。
+       * 前端把節數多的章切成數次呼叫,讓單次請求跑得完 ——
+       * 閘道的 60 秒是**閒置**逾時,而等 LLM 期間一個位元組都沒送,整段都算閒置。
+       * 省略即整章,行為與先前完全相同。
+       */
+      sectionIds?: string[];
     },
   ): Promise<IReportImportResult> {
-    const scopedSections = options?.chapterId
-      ? CARBON_REPORT_OUTLINE.filter(
-          (section) => section.chapterId === options.chapterId,
-        )
-      : CARBON_REPORT_OUTLINE;
+    const sectionIdFilter = options?.sectionIds
+      ? new Set(options.sectionIds)
+      : null;
+    const scopedSections = CARBON_REPORT_OUTLINE.filter((section) => {
+      if (sectionIdFilter) return sectionIdFilter.has(section.id);
+      return options?.chapterId
+        ? section.chapterId === options.chapterId
+        : true;
+    });
     if (scopedSections.length === 0) {
       throw new ApiError(
         API_ERRORS.VL_SCHEMA_ERROR.code,
@@ -527,9 +538,20 @@ ${source.data}`;
       );
     }
     const withActivities = options?.extractActivities ?? true;
-    const scopeRule = options?.chapterId
-      ? "5. 本次只處理下列段落範圍:與範圍無關的內容一律忽略(其他章節另行處理),不要放入 unmapped;unmapped 僅放「疑似屬本範圍但對不上細段」的原文。"
-      : "";
+    /**
+     * Info: (20260805 - Tzuhan) 範圍規則的措辭必須與實際範圍一致。
+     *
+     * 原本一律寫「其他**章節**另行處理」,而切成工作單元後,範圍是「章的一部分」——
+     * 模型看到同章但不在清單裡的內容(3.5、3.6),會判斷「同一章、應該收」,
+     * 於是把它塞進清單裡最後那一節。實測代價:3.4 節裡多了一整份表3.8 與對帳說明,
+     * 而 3.6 節又有一份 —— 同一份內容在報告裡出現兩次。
+     * 頁碼安全邊界讓模型看得到範圍外的頁,措辭就必須明說那些頁不歸這次處理。
+     */
+    const scopeRule = options?.sectionIds
+      ? "5. 本次**只處理下方大綱列出的段落**:清單外的內容一律忽略,即使它屬於同一章 —— 那些段落由其他次呼叫處理,重複收錄會讓同一份內容在報告裡出現兩次。不要把清單外的內容併進清單內任一段落,也不要放入 unmapped;unmapped 僅放「疑似屬清單內段落但對不上細段」的原文。"
+      : options?.chapterId
+        ? "5. 本次只處理下列段落範圍:與範圍無關的內容一律忽略(其他章節另行處理),不要放入 unmapped;unmapped 僅放「疑似屬本範圍但對不上細段」的原文。"
+        : "";
 
     const prompt = `你是一位專業碳會計師的文件整理助手。使用者上傳了一份既有的溫室氣體盤查報告,請將其內容切段並對應到標準大綱。
 
@@ -551,7 +573,9 @@ T6. 只收錄真正是表格的內容;條列式文字不要當成表格。
 【標準大綱】
 ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\n${source.data}` : ""}`;
 
-    const scopeLabel = options?.chapterId ?? "all";
+    const scopeLabel = options?.sectionIds
+      ? options.sectionIds.join(",")
+      : (options?.chapterId ?? "all");
     let raw: string;
     try {
       raw = await this.callLlmWithTransportRetry(
@@ -697,11 +721,25 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
         const shaped = candidates.filter((table) => {
           const check = validateSourceTables([table]);
           if (!check.isValid) {
+            /**
+             * Info: (20260804 - Tzuhan) 記下被拒內容的開頭幾行。
+             *
+             * 原本只記 reason —— 而 `not_a_table` 檢查的正是前兩行,
+             * 不把它們印出來就等於「知道被擋了,但永遠不知道為什麼」。
+             * 實測代價:表3.8 被判 not_a_table,桑基圖整張消失,
+             * 我卻只能從別處推論,還推錯了方向(以為是頁碼切片切掉的)。
+             */
             logger.warn("[ReportImportService] source table dropped", {
               paragraphId,
               tableNo: table.tableNo,
               caption: table.caption.slice(0, 40),
               reason: check.reason ?? null,
+              head: table.markdown
+                .split("\n")
+                .filter((line) => line.trim().length > 0)
+                .slice(0, 3)
+                .map((line) => line.slice(0, 120)),
+              lineCount: table.markdown.split("\n").length,
             });
           }
           return check.isValid;

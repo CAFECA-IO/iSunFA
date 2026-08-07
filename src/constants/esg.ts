@@ -261,6 +261,87 @@ export const formatIsoCategoryLabel = (
   return language.startsWith("zh") ? detail.nameZh : detail.nameEn;
 };
 
+/**
+ * Info: (20260805 - Tzuhan) GHG Protocol 15 類 → 三大範疇(Scope 1/2/3)。
+ *
+ * 明表列舉,**不從 enum 名稱前綴推導**:`SCOPE_3_CAT_n` 的前綴看起來可以字串切割,
+ * 但那等於把分類規則寄託在命名慣例上 —— 命名一改(或新增一個不照慣例的值),
+ * 推導就靜默給出錯的範疇,而範疇是報告的第一層分類,錯了整張圖都錯。
+ *
+ * 桑基圖的第三層用它:查核者要先看範疇的分佈,再往下看類別。
+ */
+export const GhgCategoryToScope: Record<GhgProtocolCategory, EsgScope> = {
+  [GhgProtocolCategory.SCOPE_1_DIRECT]: EsgScope.SCOPE_1,
+  [GhgProtocolCategory.SCOPE_2_INDIRECT]: EsgScope.SCOPE_2,
+  [GhgProtocolCategory.SCOPE_3_CAT_1]: EsgScope.SCOPE_3,
+  [GhgProtocolCategory.SCOPE_3_CAT_2]: EsgScope.SCOPE_3,
+  [GhgProtocolCategory.SCOPE_3_CAT_3]: EsgScope.SCOPE_3,
+  [GhgProtocolCategory.SCOPE_3_CAT_4]: EsgScope.SCOPE_3,
+  [GhgProtocolCategory.SCOPE_3_CAT_5]: EsgScope.SCOPE_3,
+  [GhgProtocolCategory.SCOPE_3_CAT_6]: EsgScope.SCOPE_3,
+  [GhgProtocolCategory.SCOPE_3_CAT_7]: EsgScope.SCOPE_3,
+  [GhgProtocolCategory.SCOPE_3_CAT_8]: EsgScope.SCOPE_3,
+  [GhgProtocolCategory.SCOPE_3_CAT_9]: EsgScope.SCOPE_3,
+  [GhgProtocolCategory.SCOPE_3_CAT_10]: EsgScope.SCOPE_3,
+  [GhgProtocolCategory.SCOPE_3_CAT_11]: EsgScope.SCOPE_3,
+  [GhgProtocolCategory.SCOPE_3_CAT_12]: EsgScope.SCOPE_3,
+  [GhgProtocolCategory.SCOPE_3_CAT_13]: EsgScope.SCOPE_3,
+  [GhgProtocolCategory.SCOPE_3_CAT_14]: EsgScope.SCOPE_3,
+  [GhgProtocolCategory.SCOPE_3_CAT_15]: EsgScope.SCOPE_3,
+};
+
+// Info: (20260805 - Tzuhan) 三大範疇的短顯示名(桑基圖節點要短,長標籤會互相重疊)
+const ESG_SCOPE_LABELS: Record<EsgScope, { zh: string; en: string }> = {
+  [EsgScope.SCOPE_1]: { zh: "範疇一", en: "Scope 1" },
+  [EsgScope.SCOPE_2]: { zh: "範疇二", en: "Scope 2" },
+  [EsgScope.SCOPE_3]: { zh: "範疇三", en: "Scope 3" },
+};
+
+/**
+ * Info: (20260805 - Tzuhan) ISO 類別的**短顯示名**(桑基圖節點用)。
+ *
+ * 完整名是「類別一：直接溫室氣體排放與移除」——18 個字。
+ * 桑基圖的節點標籤畫在節點旁邊,五層圖有數十個節點,長標籤會互相重疊,
+ * 重疊之後連看得見的流量也讀不出來(實測就是這樣)。
+ * 完整名仍在報告的敘述與表格裡,圖上只需要能辨識是哪一個類別。
+ *
+ * 明表列舉而非切 `：` 前綴:切字串等於把顯示規則寄託在標點上,
+ * 而 nameZh 是可能被改的文案。
+ */
+const ISO_CATEGORY_SHORT_LABELS: Record<
+  Iso14064Category,
+  { zh: string; en: string }
+> = {
+  [Iso14064Category.CATEGORY_1]: { zh: "類別一", en: "Cat. 1" },
+  [Iso14064Category.CATEGORY_2]: { zh: "類別二", en: "Cat. 2" },
+  [Iso14064Category.CATEGORY_3]: { zh: "類別三", en: "Cat. 3" },
+  [Iso14064Category.CATEGORY_4]: { zh: "類別四", en: "Cat. 4" },
+  [Iso14064Category.CATEGORY_5]: { zh: "類別五", en: "Cat. 5" },
+  [Iso14064Category.CATEGORY_6]: { zh: "類別六", en: "Cat. 6" },
+};
+
+export const formatIsoCategoryShortLabel = (
+  category: string,
+  language: string,
+): string => {
+  const detail = ISO_CATEGORY_SHORT_LABELS[category as Iso14064Category];
+  if (!detail) return category;
+  return language.startsWith("zh") ? detail.zh : detail.en;
+};
+
+/**
+ * Info: (20260805 - Tzuhan) 範疇顯示名。與 formatIsoCategoryLabel 同一慣例
+ * (zh 系取中文,其餘英文,未知值原樣返回不猜)。
+ */
+export const formatEsgScopeLabel = (
+  scope: string,
+  language: string,
+): string => {
+  const detail = ESG_SCOPE_LABELS[scope as EsgScope];
+  if (!detail) return scope;
+  return language.startsWith("zh") ? detail.zh : detail.en;
+};
+
 export const GhgToIsoMapping: Record<GhgProtocolCategory, Iso14064Category> = {
   [GhgProtocolCategory.SCOPE_1_DIRECT]: Iso14064Category.CATEGORY_1,
   [GhgProtocolCategory.SCOPE_2_INDIRECT]: Iso14064Category.CATEGORY_2,

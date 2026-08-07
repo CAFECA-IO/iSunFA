@@ -353,3 +353,143 @@ export const buildDraftProgressNotice = (
     DRAFT_PROGRESS_TEMPLATES["zh-TW"];
   return template(title, current, total);
 };
+
+/**
+ * Info: (20260805 - Tzuhan) 匯入完成的摘要訊息。
+ *
+ * 為什麼要有:匯入原本**全程不產生任何聊天訊息** —— 一份 64 頁的報告落地 33 個段落,
+ * 對話裡卻只剩招呼語。使用者無從知道這個會話曾經匯入過什麼、對帳過不過、哪幾章失敗。
+ * 段落層的 origin 會被編輯抹掉,報告層的 importedFrom 只有檔名與時間;
+ * 「當時發生了什麼」需要一則按時序排在對話裡的記錄。
+ *
+ * Info: (20260805 - Tzuhan) 文案由**伺服端**組出而非前端傳入:
+ * 入庫的內容是系統的陳述,不能讓呼叫端塞任意字串進使用者的對話紀錄。
+ * 前端只送事實(檔名、節數、對帳結果),句子在這裡組。
+ */
+export enum CarbonImportReconciliationStateEnum {
+  /** Info: (20260805 - Tzuhan) 表3.8 已入帳,三層勾稽通過 */
+  RECONCILED = "RECONCILED",
+  /** Info: (20260805 - Tzuhan) 有表3.8 但勾稽未過,一筆都沒入帳 */
+  BLOCKED = "BLOCKED",
+  /** Info: (20260805 - Tzuhan) 這次匯入沒有可入帳的表3.8 */
+  NONE = "NONE",
+}
+
+export interface ICarbonImportSummary {
+  fileName: string;
+  /** Info: (20260805 - Tzuhan) 逐字匯入的段落數 */
+  importedCount: number;
+  /** Info: (20260805 - Tzuhan) 由 gap-fill 補寫的段落數 */
+  draftedCount: number;
+  reconciliation: CarbonImportReconciliationStateEnum;
+  /** Info: (20260805 - Tzuhan) 解析失敗的章節標題;空陣列表示全部成功 */
+  failedChapters: string[];
+}
+
+const IMPORT_RECONCILIATION_TEMPLATES: Record<
+  string,
+  Record<CarbonImportReconciliationStateEnum, string>
+> = {
+  "zh-TW": {
+    RECONCILED: "表3.8 三層勾稽通過,已寫入帳本。",
+    BLOCKED: "表3.8 勾稽未通過,一筆都沒有寫入帳本(見該節的對帳說明)。",
+    NONE: "本次沒有可入帳的表3.8。",
+  },
+  "zh-CN": {
+    RECONCILED: "表3.8 三层勾稽通过,已写入账本。",
+    BLOCKED: "表3.8 勾稽未通过,一笔都没有写入账本(见该节的对账说明)。",
+    NONE: "本次没有可入账的表3.8。",
+  },
+  en: {
+    RECONCILED:
+      "Table 3.8 passed all three reconciliation levels and was written to the ledger.",
+    BLOCKED:
+      "Table 3.8 failed reconciliation — nothing was written to the ledger (see the reconciliation note in that section).",
+    NONE: "No ledger-eligible Table 3.8 in this import.",
+  },
+  ja: {
+    RECONCILED: "表3.8 は三層の照合をすべて通過し、台帳に記録しました。",
+    BLOCKED:
+      "表3.8 の照合が通らなかったため、台帳には 1 件も記録していません（該当セクションの照合説明をご確認ください）。",
+    NONE: "今回、台帳に記録できる表3.8 はありません。",
+  },
+  ko: {
+    RECONCILED: "표3.8 이 3단계 대조를 모두 통과해 원장에 기록했습니다.",
+    BLOCKED:
+      "표3.8 대조가 통과하지 못해 원장에 한 건도 기록하지 않았습니다(해당 절의 대조 설명 참조).",
+    NONE: "이번 가져오기에는 원장에 기록할 표3.8 이 없습니다.",
+  },
+};
+
+const IMPORT_SUMMARY_TEMPLATES: Record<
+  string,
+  (summary: ICarbonImportSummary, reconciliation: string) => string
+> = {
+  "zh-TW": (s, reconciliation) =>
+    [
+      `已匯入「${s.fileName}」:逐字落地 ${s.importedCount} 節、AI 補寫草稿 ${s.draftedCount} 節。`,
+      reconciliation,
+      s.failedChapters.length > 0
+        ? `以下章節解析失敗,可重新匯入補齊:${s.failedChapters.join("、")}。`
+        : "",
+      "匯入的內容一律標為未查核,請逐段確認後再定稿。",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  "zh-CN": (s, reconciliation) =>
+    [
+      `已导入「${s.fileName}」:逐字落地 ${s.importedCount} 节、AI 补写草稿 ${s.draftedCount} 节。`,
+      reconciliation,
+      s.failedChapters.length > 0
+        ? `以下章节解析失败,可重新导入补齐:${s.failedChapters.join("、")}。`
+        : "",
+      "导入的内容一律标为未核对,请逐段确认后再定稿。",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  en: (s, reconciliation) =>
+    [
+      `Imported "${s.fileName}": ${s.importedCount} section(s) transcribed verbatim, ${s.draftedCount} drafted by AI.`,
+      reconciliation,
+      s.failedChapters.length > 0
+        ? `These chapters failed to parse and can be re-imported: ${s.failedChapters.join(", ")}.`
+        : "",
+      "Everything imported is marked unverified — please review each section before finalising.",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  ja: (s, reconciliation) =>
+    [
+      `「${s.fileName}」をインポートしました：${s.importedCount} セクションを原文どおり、${s.draftedCount} セクションを AI が下書き。`,
+      reconciliation,
+      s.failedChapters.length > 0
+        ? `次の章は解析に失敗しました。再インポートで補完できます：${s.failedChapters.join("、")}。`
+        : "",
+      "インポートした内容はすべて未確認として扱われます。各セクションをご確認のうえ確定してください。",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  ko: (s, reconciliation) =>
+    [
+      `「${s.fileName}」을(를) 가져왔습니다: ${s.importedCount}개 절은 원문 그대로, ${s.draftedCount}개 절은 AI 초안.`,
+      reconciliation,
+      s.failedChapters.length > 0
+        ? `다음 장은 분석에 실패했습니다. 다시 가져와 보완할 수 있습니다: ${s.failedChapters.join(", ")}.`
+        : "",
+      "가져온 내용은 모두 미검증으로 표시됩니다. 각 절을 확인한 뒤 확정해 주세요.",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+};
+
+export const buildImportSummaryNotice = (
+  language: string | undefined,
+  summary: ICarbonImportSummary,
+): string => {
+  const key = language ?? "";
+  const reconciliation = (IMPORT_RECONCILIATION_TEMPLATES[key] ??
+    IMPORT_RECONCILIATION_TEMPLATES["zh-TW"])[summary.reconciliation];
+  const template =
+    IMPORT_SUMMARY_TEMPLATES[key] ?? IMPORT_SUMMARY_TEMPLATES["zh-TW"];
+  return template(summary, reconciliation);
+};

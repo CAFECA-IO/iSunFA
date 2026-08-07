@@ -14,6 +14,8 @@ import {
   reconcileTable38,
 } from "@/lib/carbon_table38.reconciliation";
 import { toLedgerEntries } from "@/lib/carbon_table38.ledger";
+import { buildImportedLedger } from "@/lib/carbon_table38.pipeline";
+import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
 import { buildReconciliationDisclosure } from "@/lib/carbon_table38.disclosure";
 import {
   buildCarbonDataTable,
@@ -32,7 +34,8 @@ import {
 } from "@/constants/imported_quantity";
 import { Iso14064SubCategory } from "@/constants/iso14064_subcategory";
 import {
-  formatIsoCategoryLabel,
+  formatEsgScopeLabel,
+  formatIsoCategoryShortLabel,
   GhgProtocolCategory,
   Iso14064Category,
 } from "@/constants/esg";
@@ -760,16 +763,16 @@ describe("markdown 強調標記不進資料", () => {
  * Info: (20260803 - Tzuhan) 三層桑基圖(Issue C)。驗的是圖的「語意」而非外觀:
  * 單位、層次、以及「沒畫的東西有沒有被說出來」。
  */
-describe("匯入報告的三層桑基圖", () => {
+describe("匯入報告的五層桑基圖", () => {
   const parsed = parseTable38(TABLE_38_LAYOUT_B);
   const reconciled = reconcileTable38(parsed, {
     companyTotalTonne: COMPANY_TOTAL,
   });
   const { entries } = toLedgerEntries(parsed, reconciled, { tableNo: "表3.8" });
   /**
-   * Info: (20260803 - Tzuhan) 帶 formatIsoCategory —— 與 hook 的實際用法一致。
-   * 不帶時圖上會印 CATEGORY_1,那對查核者不可讀;純函數無從得知語言,
-   * 顯示名只能由呼叫端注入。
+   * Info: (20260803 - Tzuhan) 帶 formatIsoCategory / formatEsgScope —— 與 hook 的實際用法一致。
+   * 不帶時圖上會印 CATEGORY_1 與 SCOPE_1,那對查核者不可讀;
+   * 純函數無從得知語言,顯示名只能由呼叫端注入。
    */
   const block = buildCarbonChartBlock(
     CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY,
@@ -782,10 +785,19 @@ describe("匯入報告的三層桑基圖", () => {
     },
     {
       ...CARBON_CHART_DEFAULT_LABELS,
+      // Info: (20260805 - Tzuhan) 短名 —— 與 hook 的實際用法一致(長名會讓節點標籤重疊)
       formatIsoCategory: (category: string) =>
-        formatIsoCategoryLabel(category, "zh_tw"),
+        formatIsoCategoryShortLabel(category, "zh_tw"),
+      formatEsgScope: (scope: string) => formatEsgScopeLabel(scope, "zh_tw"),
     },
   );
+
+  // Info: (20260805 - Tzuhan) 取出 mermaid 的連結列:`"來源","目標",權重`
+  const links = block
+    .split("\n")
+    .map((line) => line.trim().match(/^"(.+?)","(.+?)",([\d.]+)$/))
+    .filter((m): m is RegExpMatchArray => m !== null)
+    .map((m) => ({ from: m[1], to: m[2], weight: Number(m[3]) }));
 
   it("使用自己的錨點(與憑證桑基圖並存不互相覆蓋)", () => {
     expect(block).toContain("carbon-chart:IMPORTED_EMISSION_SANKEY:start");
@@ -794,54 +806,100 @@ describe("匯入報告的三層桑基圖", () => {
 
   /**
    * Info: (20260803 - Tzuhan) 單位必須是公噸,與原文表格一致。
-   * 若印公斤(2591861.5),圖上的數字就與原文對不上,對帳的意義隨之消失。
+   * 若印公斤(2814077.3),圖上的數字就與原文對不上,對帳的意義隨之消失。
    */
   it("數值為公噸,與原文表格逐格對得上", () => {
-    // Info: (20260803 - Tzuhan) 屏東 1.1 單獨為 2591.8615,第一層逐格對得上原文
     expect(block).toContain("2814.0773");
     expect(block).not.toContain("2814077.3");
   });
 
+  it("五層俱在:組織 → 廠址 → 範疇 → 類別 → 子代碼", () => {
+    expect(links.some((l) => l.from === "全公司")).toBe(true);
+    expect(links.some((l) => l.to.includes("範疇一"))).toBe(true);
+    expect(links.some((l) => l.to.includes("類別一"))).toBe(true);
+    expect(links.some((l) => l.to.endsWith("1.1"))).toBe(true);
+  });
+
   /**
-   * Info: (20260803 - Tzuhan) 第二層同一組節點對只能出現一次。
+   * Info: (20260805 - Tzuhan) 第三層之後的節點必須帶廠址前綴。
    *
-   * 三個廠址共用類別節點,「類別一 → 1.1」同時來自總公司(0.4375)與屏東(2591.8615)。
-   * 若原樣輸出兩行,就是在賭 mermaid 會替我們加總 —— 它也可能畫成兩條重疊的平行線。
-   * 這條測試守的不是數字,是「不依賴渲染器未明文保證的行為」。
+   * 先前三個廠址共用同一個類別節點:總量守恆,但線互相交叉,
+   * 而且看不出「屏東的類別一」與「總公司的類別一」誰是誰 ——
+   * 那不是一棵樹,是把三棵樹疊在一起。
    */
-  it("第二層同一組節點對只出現一次且已加總", () => {
-    const links = block
-      .split("\n")
-      .filter((line) => /^".+","\S+",[\d.]+$/.test(line.trim()));
-    const pairs = links.map((line) => line.split(",").slice(0, 2).join(","));
+  it("第三層之後的節點帶廠址前綴(才是一棵真的樹)", () => {
+    const scopeNodes = links
+      .filter((l) => l.to.includes("範疇"))
+      .map((l) => l.to);
+    expect(scopeNodes.length).toBeGreaterThan(0);
+    expect(scopeNodes.every((node) => /^\(\d+\)/.test(node))).toBe(true);
+    // Info: (20260805 - Tzuhan) 同名不同廠址必須是不同節點
+    expect(new Set(scopeNodes).size).toBeGreaterThan(1);
+  });
+
+  it("同一組節點對只出現一次且已加總(不賭渲染器會替我們合併)", () => {
+    const pairs = links.map((l) => `${l.from}\u0000${l.to}`);
     expect(new Set(pairs).size).toBe(pairs.length);
-    expect(block).toContain('"1.1",2592.299');
   });
 
   /**
-   * Info: (20260803 - Tzuhan) 桑基圖不得憑空生出或吃掉流量:第二層總和 = 第一層總和。
+   * Info: (20260805 - Tzuhan) 桑基圖不得憑空生出或吃掉流量:每一層的總流量都必須相等。
+   * 這是五層圖最重要的一條 —— 任何一層漏加或重複,圖就在說謊。
    */
-  it("第二層總流量等於第一層總流量", () => {
-    const weightsOf = (predicate: (source: string) => boolean): number =>
-      block
-        .split("\n")
-        .map((line) => line.trim().match(/^"(.+?)","(.+?)",([\d.]+)$/))
-        .filter((m): m is RegExpMatchArray => Boolean(m) && predicate(m![1]))
-        .reduce((sum, m) => sum + Number(m[3]), 0);
+  it("前四層的總流量完全相等", () => {
+    const sumWhere = (predicate: (from: string) => boolean): number =>
+      links.filter((l) => predicate(l.from)).reduce((s, l) => s + l.weight, 0);
 
-    const layer1 = weightsOf((source) => !source.startsWith("類別"));
-    const layer2 = weightsOf((source) => source.startsWith("類別"));
-    expect(Math.abs(layer1 - layer2)).toBeLessThan(0.001);
+    const organization = sumWhere((from) => from === "全公司");
+    const site = sumWhere((from) => /^\(\d+\)\s*\S+(公司|廠)$/.test(from));
+    const scope = sumWhere((from) => from.includes("範疇"));
+
+    [site, scope].forEach((layer) => {
+      expect(Math.abs(layer - organization)).toBeLessThan(0.001);
+    });
+    expect(organization).toBeGreaterThan(0);
   });
 
-  it("第一層為廠址 → 類別", () => {
-    expect(block).toContain('"(1) 總公司"');
-    expect(block).toContain("類別一");
+  /**
+   * Info: (20260805 - Tzuhan) 最細一層可以少 —— 差額就是低於門檻者,且已列在圖下方。
+   * 這是刻意的不對稱:門檻只套最細層,否則小廠址的每一項都低於門檻,整個廠址會消失。
+   */
+  it("最細一層可低於上層,差額不超過門檻總和", () => {
+    const sumWhere = (predicate: (from: string) => boolean): number =>
+      links.filter((l) => predicate(l.from)).reduce((s, l) => s + l.weight, 0);
+    const category = sumWhere((from) => from.includes("類別"));
+    const scope = sumWhere((from) => from.includes("範疇"));
+    expect(category).toBeLessThanOrEqual(scope + 0.001);
+    // Info: (20260805 - Tzuhan) 濾掉的是極細項,不該吃掉超過總量的 1%
+    expect(category).toBeGreaterThan(scope * 0.99);
   });
 
-  it("第二層為類別 → 排放形式(子代碼)", () => {
-    expect(block).toContain('"1.1"');
-    expect(block).toContain('"2.1"');
+  /**
+   * Info: (20260805 - Tzuhan) 每一個廠址都必須出現在圖上。
+   * 台北分公司總量 9.1982 公噸(占 0.11%,高於門檻)但每一個單項都低於門檻 ——
+   * 門檻若套在每一筆上,整個廠址就從圖上消失,而廠址是報告明載的組織邊界。
+   */
+  it("小廠址不會整個消失", () => {
+    const siteLinks = links.filter((l) => l.from === "全公司");
+    expect(siteLinks).toHaveLength(3);
+    expect(siteLinks.some((l) => l.to.includes("台北"))).toBe(true);
+  });
+
+  /**
+   * Info: (20260805 - Tzuhan) 計畫的驗收條件:第一層即全公司總量,對不上就是圖在說謊。
+   * 門檻濾掉的極細項會讓它略低於原文總量,故容差取「原文總量 × 門檻 × 項數上限」的量級。
+   */
+  /**
+   * Info: (20260805 - Tzuhan) 計畫的驗收條件:第一層即全公司總量,對不上就是圖在說謊。
+   * 前四層不套門檻,所以這裡是**完全相等**(容差同勾稽的 0.001 公噸)。
+   */
+  it("第一層加總等於原文全公司總量", () => {
+    const organization = links
+      .filter((l) => l.from === "全公司")
+      .reduce((s, l) => s + l.weight, 0);
+    expect(Math.abs(organization - Number(COMPANY_TOTAL))).toBeLessThanOrEqual(
+      0.001,
+    );
   });
 
   // Info: (20260803 - Tzuhan) 零權重連結在 sankey 沒有意義;但不畫的必須說出來
@@ -850,23 +908,17 @@ describe("匯入報告的三層桑基圖", () => {
     expect(block).toContain("1.3");
   });
 
+  /**
+   * Info: (20260805 - Tzuhan) 低於門檻的也必須說出來,而且與 NA/NS 分開列 ——
+   * 「沒有數字」與「數字太小」是不同的事實,只看圖都會被當成零。
+   */
+  it("低於門檻未畫出的另外列出", () => {
+    expect(block).toContain("占比過小未畫出");
+  });
+
   it("標題帶基準與單位(沒有單位的流量圖無從判讀量級)", () => {
     expect(block).toContain("所在地基準");
     expect(block).toContain("公噸 CO2e");
-  });
-
-  /**
-   * Info: (20260803 - Tzuhan) 計畫的驗收條件:總流入 = 總流出 = 8332.581(容差內)。
-   * 桑基圖的第一層(廠址 → 類別)加總即全公司總量,對不上就是圖在說謊。
-   */
-  it("總流入等於原文全公司總量", () => {
-    const siteToCategory = block
-      .split("\n")
-      .filter((line) => /^"\(\d+\)/.test(line))
-      .map((line) => line.slice(line.lastIndexOf(",") + 1));
-    const total = siteToCategory.reduce((sum, value) => sum + Number(value), 0);
-    // Info: (20260803 - Tzuhan) 0.001 公噸容差,與勾稽同一個標準(發布數字的四捨五入)
-    expect(Math.abs(total - Number(COMPANY_TOTAL))).toBeLessThanOrEqual(0.001);
   });
 });
 
@@ -921,5 +973,328 @@ describe("匯入項目併入帳本", () => {
       0,
     );
     expect(subtotalSum).toBe(Number(merged.totalCo2eKg));
+  });
+});
+
+/**
+ * Info: (20260804 - Tzuhan) 缺表3.8 有兩種情形,不可混為一談。
+ * 桑基圖與系統數據表格的唯一資料來源就是表3.8 —— 它沒進來的表現只是「少一張圖」,
+ * 畫面上毫無異狀。那正是最需要被說出來的一種失敗。
+ */
+describe("缺少表3.8 的兩種情形", () => {
+  const table = (tableNo: string): ICarbonSourceTable => ({
+    tableNo,
+    caption: tableNo,
+    sourcePages: [40],
+    markdown: "| a |\n| --- |\n| 1 |",
+  });
+
+  it("同節有表3.6 卻沒有表3.8:視為異常並產出說明", () => {
+    const result = buildImportedLedger({ sourceTables: [table("表3.6")] });
+    expect(result.missingLedgerTable).toBe(true);
+    expect(result.disclosure).toContain("未取得表3.8");
+    expect(result.entries).toEqual([]);
+  });
+
+  it("完全沒有全公司總量表:靜默略過(使用者可能只是沒勾選)", () => {
+    const result = buildImportedLedger({ sourceTables: [table("表2.1")] });
+    expect(result.missingLedgerTable).toBe(false);
+    expect(result.disclosure).toBeNull();
+  });
+
+  it("有表3.8 時不觸發缺表判定", () => {
+    const result = buildImportedLedger({
+      sourceTables: [
+        { ...table("表3.8"), markdown: TABLE_38 },
+        { ...table("表3.6"), markdown: TABLE_38 },
+      ],
+    });
+    expect(result.missingLedgerTable).toBe(false);
+  });
+});
+
+/**
+ * Info: (20260804 - Tzuhan) 儲存格內的 `<br>`(模型以它表示原文版面的折行)。
+ *
+ * 四個後果全是靜默的,其中廠址名污染與 stripEmphasis 修過的 `**(1) 總公司**` 同一類:
+ * 錯的名字會一路帶進對帳表與桑基圖節點,而畫面上看起來像是資料本來就長那樣。
+ */
+describe("儲存格內的 <br>", () => {
+  const TABLE_WITH_BR = `
+| 公司 | 報告邊界類型 | 報告邊界 | 溫室氣體排放量 (公噸 CO2e/年) | 溫室氣體排放量各類別總和 (公噸 CO2e/年) |
+| --- | --- | --- | --- | --- |
+| (1) 總公<br>司 | 類別一 | 1.<br>1 固定式燃燒 | 0.4375 | 17.8494 |
+| (1) 總公司 | | 1.2 移動式燃燒 | 9.<br>0759 | |
+`.trim();
+
+  const parsedBr = parseTable38(TABLE_WITH_BR);
+
+  it("廠址名不含 <br>(否則污染會帶進桑基圖節點)", () => {
+    expect(parsedBr.rows.every((row) => !row.site.includes("<br>"))).toBe(true);
+    expect(parsedBr.rows[0].site).toBe("(1) 總公司");
+  });
+
+  it("折行的子代碼仍對得上", () => {
+    expect(parsedBr.rows[0].subCategory).toBe(
+      Iso14064SubCategory.STATIONARY_COMBUSTION,
+    );
+  });
+
+  it("折行的數字仍解得出來", () => {
+    expect(parsedBr.rows[1].tonneCo2e).toBe("9.0759");
+  });
+
+  it("沒有讀不懂的資料列", () => {
+    expect(parsedBr.unparsedRows).toEqual([]);
+  });
+});
+
+/**
+ * Info: (20260805 - Tzuhan) **第三種版面**(2026-08-05 實測):表3.8 被拆成三張子表格,
+ * 每張前面一行**表格外的純文字廠址標籤**。
+ *
+ * 解析器原本只看含 `|` 的行,這種標籤整行被跳過 → currentSite 永遠是空的
+ * → 72 列全部落進 unparsedRows → 廠址加總 0 → 勾稽失敗 → 不入帳 → 桑基圖不畫。
+ * 三份 fixture 都要留:版面既然一輪換一次,任何一種隨時會回來。
+ */
+const TABLE_38_LAYOUT_C = `
+**表3.8 各公司溫室氣體各類別排放量統計表**(原文照錄 p.42–44)
+
+(1) 總公司
+
+| 報告邊界 | 類型 | 溫室氣體排放量 (公噸 CO2e/年) | 溫室氣體排放量各類別總和 (公噸 CO2e/年) |
+|---|---|---|---|
+| 類別一 | 1.1 固定式燃燒 | 0.4375 | 17.8494 |
+| | 1.2 移動式燃燒 | 9.0759 | |
+| | 1.3 產業過程 | 0.0000 | |
+| | 1.4 人為系統/逸散 | 8.3360 | |
+| | 1.5 土地使用與變更、 林業之排放與移除 | 0.0000 | |
+| 類別二 | 2.1 外購電力 | 139.4858 | 139.4858 |
+| | 2.2 外購能源 | 0.0000 | |
+| 類別三 | 3.1 上游運輸 | NS | 16.2308 |
+| | 3.2 下游運輸 | NS | |
+| | 3.3 員工通勤 | 15.4379 | |
+| | 3.4 客戶與訪客運輸 | NA | |
+| | 3.5 業務旅運 | 0.7929 | |
+| 類別四 | 4.1 採購貨物 | 27.8985 | 27.8985 |
+| | 4.2 資本財 | NA | |
+| | 4.3 固體或液體廢棄物 | NA | |
+| | 4.4 資產使用 | NA | |
+| | 4.5 服務使用 | NA | |
+| 類別五 | 5.1 產品使用階段排放 或移除 | NA | NA |
+| | 5.2 下游承租資產 | NA | |
+| | 5.3 產品生命終止階段 | NA | |
+| | 5.4 投資運作 | NA | |
+| 類別六 | - | NA | NA |
+| 直接與間接溫室氣體總排放量-所在地基準 (公噸 CO2e/年) | | 201.465 | |
+
+(2) 台北分公司
+
+| 報告邊界 | 類型 | 溫室氣體排放量 (公噸 CO2e/年) | 溫室氣體排放量各類別總和 (公噸 CO2e/年) |
+|---|---|---|---|
+| 類別一 | 1.1 固定式燃燒 | 0.0000 | 1.5133 |
+| | 1.2 移動式燃燒 | 1.1221 | |
+| | 1.4 人為系統/逸散 | 0.3912 | |
+| 類別二 | 2.1 外購電力 | 5.8344 | 5.8344 |
+| 類別三 | 3.3 員工通勤 | 0.1887 | 0.6892 |
+| | 3.5 業務旅運 | 0.5005 | |
+| 類別四 | 4.1 採購貨物 | 1.1613 | 1.1613 |
+| 直接與間接溫室氣體總排放量-所在地基準 (公噸 CO2e/年) | | 9.1982 | |
+
+(1) 屏東分公司
+
+| 報告邊界 | 類型 | 溫室氣體排放量 (公噸 CO2e/年) | 溫室氣體排放量各類別總和 (公噸 CO2e/年) |
+|---|---|---|---|
+| 類別一 | 1.1 固定式燃燒 | 2591.8615 | 2814.0773 |
+| | 1.2 移動式燃燒 | 13.2206 | |
+| | 1.3 產業過程 | 189.0363 | |
+| | 1.4 人為系統/逸散 | 19.9589 | |
+| 類別二 | 2.1 外購電力 | 3325.0152 | 3325.0152 |
+| 類別三 | 3.1 上游運輸 | 176.8211 | 1226.2346 |
+| | 3.2 下游運輸 | 927.4575 | |
+| | 3.3 員工通勤 | 118.8558 | |
+| | 3.5 業務旅運 | 3.1002 | |
+| 類別四 | 4.1 採購貨物 | 654.9068 | 756.5913 |
+| | 4.3 固體或液體廢棄物 | 101.6845 | |
+| 直接與間接溫室氣體總排放量-所在地基準 (公噸 CO2e/年) | | 8121.918 | |
+`.trim();
+
+describe("表3.8 第三種版面:廠址標籤在表格外", () => {
+  const parsedC = parseTable38(TABLE_38_LAYOUT_C);
+
+  it("沒有讀不懂的資料列", () => {
+    expect(parsedC.unparsedRows).toEqual([]);
+  });
+
+  it("三個廠址都認得出來(標籤在表格外的純文字行)", () => {
+    const sites = Array.from(new Set(parsedC.rows.map((row) => row.site)));
+    expect(sites).toEqual(["(1) 總公司", "(2) 台北分公司", "(1) 屏東分公司"]);
+  });
+
+  /**
+   * Info: (20260805 - Tzuhan) 表格標題含「各公司」,若沿用 isSiteCell 的「含公司」備援訊號
+   * 就會把標題認成廠址。收緊到 (n) 前綴 + 短名 + 整行到此為止。
+   */
+  it("表格標題不會被認成廠址", () => {
+    expect(parsedC.rows.every((row) => !row.site.includes("表3.8"))).toBe(true);
+  });
+
+  it("三層勾稽通過,總量對得上原文", () => {
+    const reconciled = reconcileTable38(parsedC, {
+      companyTotalTonne: COMPANY_TOTAL,
+    });
+    // Info: (20260805 - Tzuhan) 判準是 isWithinTolerance,與 isReconciled 的組成一致
+    const failed = reconciled.checks.filter(
+      (check) => !check.isWithinTolerance,
+    );
+    expect(failed).toEqual([]);
+    expect(reconciled.isReconciled).toBe(true);
+  });
+
+  it("入得了帳本(桑基圖的素材因此存在)", () => {
+    const reconciled = reconcileTable38(parsedC, {
+      companyTotalTonne: COMPANY_TOTAL,
+    });
+    const { entries, blockedReason } = toLedgerEntries(parsedC, reconciled, {
+      tableNo: "表3.8",
+    });
+    expect(blockedReason).toBeNull();
+    expect(entries.length).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * Info: (20260805 - Tzuhan) **第四種版面**(2026-08-05 test5 實測):
+ * 廠址名成為表格內的粗體列,且開放類別(類別六)的「無細分項」獨立成一列。
+ *
+ * 這一輪的教訓不在解析,在**否決權的粒度**:
+ * 勾稽 16 項全數通過(全公司 8332.5812 vs 原文 8332.581,差 0.0002),
+ * 卻因為三列 `| - | NA | | |` 被記成未解析,整張表不予入帳 —— 桑基圖因此不畫。
+ * 那三列是前一行類別標籤已記過的同一筆資訊,沒有新資料。
+ */
+const TABLE_38_LAYOUT_D = `
+| 報告邊界 | 溫室氣體排放量 (公噸 CO2e/年) | 溫室氣體排放量各類別總和 (公噸 CO2e/年) | 類型 |
+| :--- | :--- | :--- | :--- |
+| **(1) 總公司** | | | |
+| 類別一 | | 17.8494 | |
+| 1.1 固定式燃燒 | 0.4375 | | |
+| 1.2 移動式燃燒 | 9.0759 | | |
+| 1.3 產業過程 | 0.0000 | | |
+| 1.4 人為系統/逸散 | 8.3360 | | |
+| 1.5 土地使用與變更、 林業之排放與移除 | 0.0000 | | |
+| 類別二 | | 139.4858 | |
+| 2.1 外購電力 | 139.4858 | | |
+| 2.2 外購能源 | 0.0000 | | |
+| 類別三 | | 16.2308 | |
+| 3.1 上游運輸 | NS | | |
+| 3.2 下游運輸 | NS | | |
+| 3.3 員工通勤 | 15.4379 | | |
+| 3.4 客戶與訪客運輸 | NA | | |
+| 3.5 業務旅運 | 0.7929 | | |
+| 類別四 | | 27.8985 | |
+| 4.1 採購貨物 | 27.8985 | | |
+| 4.2 資本財 | NA | | |
+| 4.3 固體或液體廢棄物 | NA | | |
+| 4.4 資產使用 | NA | | |
+| 4.5 服務使用 | NA | | |
+| 類別五 | | NA | |
+| 5.1 產品使用階段排放 或移除 | NA | | |
+| 5.2 下游承租資產 | NA | | |
+| 5.3 產品生命終止階段 | NA | | |
+| 5.4 投資運作 | NA | | |
+| 類別六 | | NA | |
+| - | NA | | |
+| 直接與間接溫室氣體總排放量-所在地基準 (公噸 CO2e/年) | 201.465 | | |
+| 直接與間接溫室氣體總排放量-市場基準 (公噸 CO2e/年) | 201.465 | | |
+| **(2) 台北分公司** | | | |
+| 類別一 | | 1.5133 | |
+| 1.1 固定式燃燒 | 0.0000 | | |
+| 1.2 移動式燃燒 | 1.1221 | | |
+| 1.4 人為系統/逸散 | 0.3912 | | |
+| 類別二 | | 5.8344 | |
+| 2.1 外購電力 | 5.8344 | | |
+| 類別三 | | 0.6892 | |
+| 3.3 員工通勤 | 0.1887 | | |
+| 3.5 業務旅運 | 0.5005 | | |
+| 類別四 | | 1.1613 | |
+| 4.1 採購貨物 | 1.1613 | | |
+| 類別六 | | NA | |
+| - | NA | | |
+| 直接與間接溫室氣體總排放量-所在地基準 (公噸 CO2e/年) | 9.1982 | | |
+| **(3) 屏東分公司** | | | |
+| 類別一 | | 2814.0773 | |
+| 1.1 固定式燃燒 | 2591.8615 | | |
+| 1.2 移動式燃燒 | 13.2206 | | |
+| 1.3 產業過程 | 189.0363 | | |
+| 1.4 人為系統/逸散 | 19.9589 | | |
+| 類別二 | | 3325.0152 | |
+| 2.1 外購電力 | 3325.0152 | | |
+| 類別三 | | 1226.2346 | |
+| 3.1 上游運輸 | 176.8211 | | |
+| 3.2 下游運輸 | 927.4575 | | |
+| 3.3 員工通勤 | 118.8558 | | |
+| 3.5 業務旅運 | 3.1002 | | |
+| 類別四 | | 756.5913 | |
+| 4.1 採購貨物 | 654.9068 | | |
+| 4.3 固體或液體廢棄物 | 101.6845 | | |
+| 類別六 | | NA | |
+| - | NA | | |
+| 直接與間接溫室氣體總排放量-所在地基準 (公噸 CO2e/年) | 8121.918 | | |
+`.trim();
+
+describe("表3.8 第四種版面:開放類別的無細分項獨立成列", () => {
+  const parsedD = parseTable38(TABLE_38_LAYOUT_D);
+
+  it("`| - | NA | | |` 不算未解析(前一行類別標籤已記過)", () => {
+    expect(parsedD.unparsedRows).toEqual([]);
+  });
+
+  it("粗體廠址列仍認得出廠址", () => {
+    const sites = Array.from(new Set(parsedD.rows.map((row) => row.site)));
+    expect(sites).toEqual(["(1) 總公司", "(2) 台北分公司", "(3) 屏東分公司"]);
+  });
+
+  it("類別六仍產出一筆 NA 的資料列(沒有被一起吃掉)", () => {
+    const categorySix = parsedD.rows.filter(
+      (row) => row.isoCategory === Iso14064Category.CATEGORY_6,
+    );
+    expect(categorySix).toHaveLength(3);
+    expect(
+      categorySix.every(
+        (row) => row.state === ImportedQuantityStateEnum.NOT_APPLICABLE,
+      ),
+    ).toBe(true);
+  });
+
+  /**
+   * Info: (20260805 - Tzuhan) 這一條是本輪真正的驗收:
+   * 勾稽全通過**且**入得了帳本。先前 16 項全 ✓ 卻仍被三列未解析否決。
+   */
+  it("勾稽通過且入得了帳本(桑基圖因此有素材)", () => {
+    const reconciled = reconcileTable38(parsedD, {
+      companyTotalTonne: COMPANY_TOTAL,
+    });
+    expect(reconciled.isReconciled).toBe(true);
+    const { entries, blockedReason } = toLedgerEntries(parsedD, reconciled, {
+      tableNo: "表3.8",
+    });
+    expect(blockedReason).toBeNull();
+    expect(entries.length).toBeGreaterThan(0);
+  });
+
+  /**
+   * Info: (20260805 - Tzuhan) 放寬不等於放行:真正認不出子代碼的列仍須記成未解析。
+   * 那道網是「少讀一列時小計與總計往往一起少,勾稽反而會通過」的唯一防線。
+   */
+  it("有數值但認不出主體的列仍記成未解析", () => {
+    const tampered = parseTable38(
+      TABLE_38_LAYOUT_D.replace(
+        "| 1.1 固定式燃燒 | 0.4375 | | |",
+        "| 某個看不懂的項目 | 0.4375 | | |",
+      ),
+    );
+    expect(tampered.unparsedRows).toEqual([
+      "| 某個看不懂的項目 | 0.4375 | | |",
+    ]);
   });
 });
