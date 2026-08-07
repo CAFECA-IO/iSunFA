@@ -516,6 +516,48 @@ export class TeamWalletRepository {
     }
   }
 
+  /**
+   * Info: (20260807 - Luphia) 每日守恆勾稽用（設計書 §3、ADR 015）：
+   * 恆等式 Σ(PURCHASE + ADJUST + CONSUME + REFUND) = 池餘額 + Σ 分配餘額
+   * （ALLOCATE / REVOKE 為內部移轉，不列入左側）。
+   */
+  async listAllWallets(): Promise<TeamWallet[]> {
+    return prisma.teamWallet.findMany();
+  }
+
+  async sumAllocationsByTeam(): Promise<{ teamId: string; total: bigint }[]> {
+    const grouped = await prisma.teamWalletAllocation.groupBy({
+      by: ["teamId"],
+      _sum: { balance: true },
+    });
+    return grouped.map((g) => ({
+      teamId: g.teamId,
+      total: g._sum.balance ?? BigInt(0),
+    }));
+  }
+
+  async sumLedgerByWalletAndType(): Promise<
+    { teamWalletId: string; entryType: string; total: bigint }[]
+  > {
+    const grouped = await prisma.teamWalletLedger.groupBy({
+      by: ["teamWalletId", "entryType"],
+      _sum: { amount: true },
+    });
+    return grouped.map((g) => ({
+      teamWalletId: g.teamWalletId,
+      entryType: g.entryType,
+      total: g._sum.amount ?? BigInt(0),
+    }));
+  }
+
+  // Info: (20260807 - Luphia) 守恆違反時凍結：人工介入前禁止任何異動（Fail Fast）
+  async freezeWallet(id: string): Promise<TeamWallet> {
+    return prisma.teamWallet.update({
+      where: { id },
+      data: { status: TEAM_WALLET_STATUS.FROZEN },
+    });
+  }
+
   async listAllocations(teamId: string): Promise<TeamWalletAllocation[]> {
     return prisma.teamWalletAllocation.findMany({
       where: { teamId },

@@ -8,6 +8,8 @@ import { processNext as processIssueValidatorNext } from "@/services/issue.valid
 import { issueRecorderService } from "@/services/issue.recorder.service";
 import { syncExchangeRates } from "@/services/cron/exchange_rate.cron";
 import { processAmortization } from "@/services/cron/amortization.worker.service";
+import { runWalletGuardian } from "@/services/cron/wallet_audit.cron";
+import { expireOverdueTeamSubscriptions } from "@/services/cron/subscription_expiry.cron";
 
 /**
  * Info: (20260130 - Luphia)
@@ -59,6 +61,18 @@ async function runWorker() {
     startServiceLoop(
       "AmortizationWorker",
       () => processAmortization(),
+      60 * 60 * 1000,
+    ),
+    // Info: (20260807 - Luphia) 團隊錢包守恆勾稽 + 每日 merkle 錨定（ADR 015 C 案 Phase 1）
+    startServiceLoop(
+      "WalletGuardian",
+      () => runWalletGuardian(),
+      60 * 60 * 1000,
+    ),
+    // Info: (20260807 - Luphia) 訂閱到期降級 / 標記續訂（fail-closed 防線在扣費側即時生效）
+    startServiceLoop(
+      "SubscriptionExpiry",
+      () => expireOverdueTeamSubscriptions(),
       60 * 60 * 1000,
     ),
   ]);

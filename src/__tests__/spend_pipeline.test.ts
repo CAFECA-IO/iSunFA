@@ -4,6 +4,7 @@ declare const jest: typeof JestType;
 import {
   QuotaExceededError,
   refundCredits,
+  resolveEffectivePlanId,
   settleSpend,
   spendCredits,
 } from "@/services/spend.service";
@@ -69,8 +70,11 @@ describe("spendCredits", () => {
     } as unknown);
     asMock(teamQuotaUsageRepo.findByIdempotencyKey).mockResolvedValue(null);
     asMock(teamWalletRepo.findLedgerByIdempotencyKey).mockResolvedValue(null);
+    // Info: (20260807 - Luphia) 有效方案需 ACTIVE + 週期內（fail-closed 防線），mock 需齊備
     asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
       planId: "team",
+      status: "ACTIVE",
+      currentPeriodEnd: new Date((NOW_SEC + 86400) * 1000),
     } as unknown);
     asMock(teamQuotaUsageRepo.sumWindowUsage).mockResolvedValue({
       used5h: BigInt(0),
@@ -429,5 +433,65 @@ describe("settleSpend", () => {
       operatorUserId: "user-1",
     });
     expect(result.settled).toBe(false);
+  });
+});
+
+describe("resolveEffectivePlanId (fail-closed)", () => {
+  const FUTURE = new Date((NOW_SEC + 86400) * 1000);
+  const PAST = new Date((NOW_SEC - 86400) * 1000);
+
+  it("returns the plan only when ACTIVE and within the period", () => {
+    expect(
+      resolveEffectivePlanId(
+        { planId: "team", status: "ACTIVE", currentPeriodEnd: FUTURE },
+        NOW_SEC,
+      ),
+    ).toBe("team");
+  });
+
+  it("falls back to free when the period has ended", () => {
+    expect(
+      resolveEffectivePlanId(
+        { planId: "business", status: "ACTIVE", currentPeriodEnd: PAST },
+        NOW_SEC,
+      ),
+    ).toBe("free");
+  });
+
+  it("falls back to free when the subscription is PAST_DUE or missing", () => {
+    expect(
+      resolveEffectivePlanId(
+        { planId: "team", status: "PAST_DUE", currentPeriodEnd: FUTURE },
+        NOW_SEC,
+      ),
+    ).toBe("free");
+    expect(resolveEffectivePlanId(null, NOW_SEC)).toBe("free");
+  });
+
+  it("expired subscription grants only free quota in the pipeline", async () => {
+    jest.clearAllMocks();
+    asMock(teamRepo.getTeamMember).mockResolvedValue({
+      id: "member-1",
+    } as unknown);
+    asMock(teamQuotaUsageRepo.findByIdempotencyKey).mockResolvedValue(null);
+    asMock(teamWalletRepo.findLedgerByIdempotencyKey).mockResolvedValue(null);
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
+      planId: "team",
+      status: "ACTIVE",
+      currentPeriodEnd: PAST,
+    } as unknown);
+    // Info: (20260807 - Luphia) free per5h = 10：8 + 3 > 10 → 過期方案不得再享 team 額度
+    asMock(teamQuotaUsageRepo.sumWindowUsage).mockResolvedValue({
+      used5h: BigInt(8),
+      usedWeek: BigInt(8),
+    });
+    asMock(teamWalletRepo.consumeAllocation).mockResolvedValue({
+      outcome: WALLET_OP_OUTCOME.OK,
+      ledger: { amount: BigInt(-3) },
+    } as unknown);
+
+    const result = await spendCredits(BASE_PARAMS);
+    expect(result.source).toBe(SPEND_SOURCE.TEAM_ALLOCATION);
+    expect(teamQuotaUsageRepo.createUsage).not.toHaveBeenCalled();
   });
 });

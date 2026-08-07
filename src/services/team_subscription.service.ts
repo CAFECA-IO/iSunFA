@@ -27,7 +27,10 @@ import type {
   IQuotaStatus,
   ITeamSubscriptionView,
 } from "@/interfaces/team_wallet";
-import { resolvePlanId } from "@/services/spend.service";
+import {
+  resolveEffectivePlanId,
+  resolvePlanId,
+} from "@/services/spend.service";
 import { generatePaymentOrder } from "@/services/order.service";
 import { assertTeamMember } from "@/services/team_wallet_access.guard";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
@@ -89,7 +92,8 @@ export async function getTeamSubscriptionView(params: {
     await assertTeamMember(userId, teamId);
 
     const subscription = await teamSubscriptionRepo.getByTeamId(teamId);
-    const planId = resolvePlanId(subscription?.planId);
+    // Info: (20260807 - Luphia) 顯示「有效」方案：過期或非 ACTIVE 一律呈現 free，與扣費側一致
+    const planId = resolveEffectivePlanId(subscription, nowSec);
     const quota = await buildQuotaStatus(teamId, planId, nowSec);
 
     return {

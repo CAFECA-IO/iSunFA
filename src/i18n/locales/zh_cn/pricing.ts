@@ -5,6 +5,10 @@ export const pricing = {
   monthly: "月缴",
   yearly: "年缴",
   save_percent: "省下 17%",
+  // Info: (20260807 - Luphia) 費思費率標註（設計書 §5.3 定價揭露），數字由 API 插值、嚴禁寫死
+  faith_rate: "费思 AI 对话：每 {{rate}} tokens 消耗 1 点",
+  faith_rate_tooltip:
+    "以模型回报的输入＋思考＋输出 tokens 总量计费，不足 {{rate}} tokens 以 {{rate}} 计，每则消息最低消耗 1 点",
   currency_prefix: "NT$ ",
 
   cta: "立即开始",

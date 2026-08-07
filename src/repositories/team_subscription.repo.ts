@@ -85,6 +85,44 @@ export class TeamSubscriptionRepository {
     );
   }
 
+  /**
+   * Info: (20260807 - Luphia) 續訂 Worker 用：到期未續約的付費方案降級 free（設計書 §9 P4）。
+   * status 記 PAST_DUE 保留「曾為付費戶」的稽核線索；扣費側另有 fail-closed 防線
+   * （resolveEffectivePlanId），Worker 未跑到期間也不會多放額度。
+   */
+  async expireOverdue(nowMs: number): Promise<number> {
+    const result = await prisma.teamSubscription.updateMany({
+      where: {
+        status: TEAM_SUBSCRIPTION_STATUS.ACTIVE,
+        planId: { not: TEAM_PLAN.FREE },
+        currentPeriodEnd: { lt: new Date(nowMs) },
+        autoRenew: false,
+      },
+      data: {
+        planId: TEAM_PLAN.FREE,
+        status: TEAM_SUBSCRIPTION_STATUS.PAST_DUE,
+      },
+    });
+    return result.count;
+  }
+
+  /**
+   * Info: (20260807 - Luphia) autoRenew=true 的到期戶不直接降級：標 PAST_DUE 由續訂流程
+   * 嘗試扣款（自動扣款續訂為後續 issue；標記後 fail-closed 防線即刻生效，不多放額度）。
+   */
+  async markOverdueForRenewal(nowMs: number): Promise<number> {
+    const result = await prisma.teamSubscription.updateMany({
+      where: {
+        status: TEAM_SUBSCRIPTION_STATUS.ACTIVE,
+        planId: { not: TEAM_PLAN.FREE },
+        currentPeriodEnd: { lt: new Date(nowMs) },
+        autoRenew: true,
+      },
+      data: { status: TEAM_SUBSCRIPTION_STATUS.PAST_DUE },
+    });
+    return result.count;
+  }
+
   // Info: (20260807 - Luphia) 免付款的直接降級（PUT planId=free）
   async downgradeToFree(
     teamId: string,

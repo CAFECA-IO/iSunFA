@@ -3,6 +3,7 @@ import {
   SPEND_SOURCE,
   SUBSCRIPTION_QUOTA_BY_PLAN,
   TEAM_PLAN,
+  TEAM_SUBSCRIPTION_STATUS,
   TeamPlanId,
   WALLET_OP_OUTCOME,
 } from "@/constants/subscription_quota";
@@ -76,6 +77,27 @@ export function resolvePlanId(planId: string | undefined): TeamPlanId {
 }
 
 /**
+ * Info: (20260807 - Luphia) 有效方案 = 方案 ID + 訂閱狀態 + 計費週期三者同時成立，
+ * 缺一即 fail-closed 到 free——即使續訂 Worker 尚未跑到，過期訂閱也不會多放一點額度。
+ */
+export function resolveEffectivePlanId(
+  subscription: {
+    planId: string;
+    status: string;
+    currentPeriodEnd: Date;
+  } | null,
+  nowSec: number,
+): TeamPlanId {
+  if (!subscription) return TEAM_PLAN.FREE;
+  const planId = resolvePlanId(subscription.planId);
+  if (planId === TEAM_PLAN.FREE) return TEAM_PLAN.FREE;
+  const isActive = subscription.status === TEAM_SUBSCRIPTION_STATUS.ACTIVE;
+  const inPeriod =
+    Math.floor(subscription.currentPeriodEnd.getTime() / 1000) >= nowSec;
+  return isActive && inPeriod ? planId : TEAM_PLAN.FREE;
+}
+
+/**
  * Info: (20260807 - Luphia) Service 層錯誤邊界：ApiError 原樣上拋，
  * 其餘（含 Prisma 原始錯誤）一律包裝，不讓底層錯誤細節噴到前端。
  */
@@ -125,7 +147,7 @@ export async function spendCredits(
     // Info: (20260807 - Luphia) 第一層：訂閱額度（雙視窗皆須容納本次 cost）
     const subscription = await teamSubscriptionRepo.getByTeamId(teamId);
     const quota =
-      SUBSCRIPTION_QUOTA_BY_PLAN[resolvePlanId(subscription?.planId)];
+      SUBSCRIPTION_QUOTA_BY_PLAN[resolveEffectivePlanId(subscription, nowSec)];
     const windowKey5h = getWindowKey5h(nowSec);
     const windowKeyWeek = getWindowKeyWeek(nowSec);
     const { used5h, usedWeek } = await teamQuotaUsageRepo.sumWindowUsage(

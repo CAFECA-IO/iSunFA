@@ -5,6 +5,10 @@ export const pricing = {
   monthly: "월 결제",
   yearly: "연 결제",
   save_percent: "17% 절약",
+  // Info: (20260807 - Luphia) 費思費率標註（設計書 §5.3 定價揭露），數字由 API 插值、嚴禁寫死
+  faith_rate: "Faith AI 채팅: {{rate}} 토큰당 1 포인트 차감",
+  faith_rate_tooltip:
+    "모델이 보고한 입력·사고·출력 토큰 총량으로 계산합니다. {{rate}} 토큰 미만은 {{rate}}로 올림 처리하며, 메시지당 최소 1 포인트가 차감됩니다.",
   currency_prefix: "NT$ ",
 
   cta: "시작하기",

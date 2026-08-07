@@ -5,6 +5,10 @@ export const pricing = {
   monthly: "月払い",
   yearly: "年払い",
   save_percent: "17% お得",
+  // Info: (20260807 - Luphia) 費思費率標註（設計書 §5.3 定價揭露），數字由 API 插值、嚴禁寫死
+  faith_rate: "Faith AI チャット：{{rate}} トークンごとに 1 ポイント消費",
+  faith_rate_tooltip:
+    "モデルが報告する入力・思考・出力トークンの合計で計算します。{{rate}} トークン未満は {{rate}} として切り上げ、1 メッセージにつき最低 1 ポイントを消費します。",
   currency_prefix: "NT$ ",
 
   cta: "始める",

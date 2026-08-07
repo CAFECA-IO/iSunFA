@@ -462,6 +462,7 @@ body：`{ userId, amount(bigIntString), direction: "ALLOCATE" | "REVOKE" }`
 | **P2** | 錢包購買（OEN 分流）、分配 / 收回 API、成員移除自動 REVOKE | E2E：購買 → 入池 → 分配 → 消耗 → 收回，Ledger 守恆式成立（E2E 帳本用 `e2e-book-` 前綴） |
 | **P3** | 計費功能接入管線（AI 分析先行，**費思對話含 §5.3 四項 guardrails** 次之，碳盤查對話再次之）、402 fallback 到既有個人錢包簽章流程 | 額度內操作零簽章；用罄後三條出路皆可走通；費思結算誤差 = 0（settle 以 `usageMetadata` 為準） |
 | **P4** | 前端（額度儀表、重置倒數、錢包管理頁、分配 UI、**訂閱方案頁標註費思費率**）、勾稽 / 續訂 Workers、**C 案 Phase 1 merkle 錨定**（`ledger_anchor.sol` 部署 + Worker 錨定步驟） | 勾稽 Worker 對壞帳注入測試能凍結錢包並告警；定價頁費率數字與 env 同源；**任一日的 Ledger 可由 DB 重算 root 並與鏈上 event 比對一致** |
+| **P4 進度**（2026-08-07） | ✅ 已交付：WalletGuardian（守恆勾稽 + 凍結告警 + merkle 錨定，壞帳不上鏈）、SubscriptionExpiry（到期降級 / 標記續訂）、`ledger_anchor.sol`、`resolveEffectivePlanId` fail-closed 防線（過期即免額度，不依賴 Worker 排程）、定價頁費率標註（`/pricing/meta` env 同源 + 五語系 i18n）。⏳ 待辦：`ledger_anchor.sol` 部署與 `NEXT_PUBLIC_LEDGER_ANCHOR_ADDRESS` 設定（未配置時錨定留 FAILED 自動重試，不阻斷營運）、額度儀表 / 錢包管理頁 / 分配 UI 前端、autoRenew 自動扣款續訂 | — |
 | **P5**（展望） | 個人錢包「免簽授權額度」：使用者一次性簽署授權每期上限，管線第 3 層自動代扣。**C 案 Phase 2**：團隊購點 1:1 mint 至 per-team 隔離地址 + 每日批次結算 burn（**硬性前置：金鑰治理——冷熱分離 + multisig + 獨立 `OPERATOR_ROLE`**，見 ADR 015） | — |
 
 ---
