@@ -59,20 +59,25 @@ model User {
   coupons               Coupon[]
   pdfEditorDocuments    PdfEditorDocument[]    @relation("PdfEditorDocumentCreator")
   accountingAccounts    AccountingAccount[]
+  teamWalletAllocations TeamWalletAllocation[]
 
   @@index([address])
   @@map("user")
 }
 
 model Team {
-  id              String           @id @default(uuid())
-  name            String
-  createdAt       DateTime         @default(now()) @map("created_at")
-  updatedAt       DateTime         @updatedAt @map("updated_at")
-  deletedAt       DateTime?        @map("deleted_at")
-  teamMembers     TeamMember[]
-  teamInvitations TeamInvitation[]
-  accountBooks    AccountBook[]
+  id                    String                 @id @default(uuid())
+  name                  String
+  createdAt             DateTime               @default(now()) @map("created_at")
+  updatedAt             DateTime               @updatedAt @map("updated_at")
+  deletedAt             DateTime?              @map("deleted_at")
+  teamMembers           TeamMember[]
+  teamInvitations       TeamInvitation[]
+  accountBooks          AccountBook[]
+  teamSubscription      TeamSubscription?
+  teamWallet            TeamWallet?
+  teamWalletAllocations TeamWalletAllocation[]
+  teamQuotaUsages       TeamQuotaUsage[]
 
   @@map("team")
 }
@@ -87,6 +92,7 @@ model TeamMember {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@unique([teamId, userId])
   @@map("team_member")
 }
 
@@ -103,6 +109,103 @@ model TeamInvitation {
   updatedAt      DateTime @updatedAt @map("updated_at")
 
   @@map("team_invitation")
+}
+
+/**
+ * Info: (20260807 - Luphia)
+ * 團隊錢包與訂閱額度（設計書 documents/architecture/team_wallet_and_subscription_quota.md、ADR 015）。
+ * 團隊點數採離鏈決定論帳本（C 案混合制：離鏈營運 + 每日 merkle 鏈上錨定），
+ * 金額一律 BigInt 零誤差；TeamWalletLedger 為 append-only，更正僅允許反向分錄。
+ */
+model TeamSubscription {
+  id                 String   @id @default(uuid())
+  teamId             String   @unique @map("team_id")
+  team               Team     @relation(fields: [teamId], references: [id])
+  planId             String   @default("free") @map("plan_id") // Info: (20260807 - Luphia) PLAN 常數 (free/team/business)
+  status             String   @default("ACTIVE") // Info: (20260807 - Luphia) TEAM_SUBSCRIPTION_STATUS 常數
+  currentPeriodStart DateTime @map("current_period_start")
+  currentPeriodEnd   DateTime @map("current_period_end")
+  autoRenew          Boolean  @default(true) @map("auto_renew")
+  latestOrderId      String?  @map("latest_order_id")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@map("team_subscription")
+}
+
+model TeamWallet {
+  id                 String             @id @default(uuid())
+  teamId             String             @unique @map("team_id")
+  team               Team               @relation(fields: [teamId], references: [id])
+  unallocatedBalance BigInt             @default(0) @map("unallocated_balance")
+  status             String             @default("ACTIVE") // Info: (20260807 - Luphia) TEAM_WALLET_STATUS: ACTIVE / FROZEN / CLOSED
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+  ledgers            TeamWalletLedger[]
+
+  @@map("team_wallet")
+}
+
+model TeamWalletAllocation {
+  id        String   @id @default(uuid())
+  teamId    String   @map("team_id")
+  team      Team     @relation(fields: [teamId], references: [id])
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  balance   BigInt   @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([teamId, userId])
+  @@map("team_wallet_allocation")
+}
+
+model TeamWalletLedger {
+  id                     String     @id @default(uuid())
+  teamWalletId           String     @map("team_wallet_id")
+  teamWallet             TeamWallet @relation(fields: [teamWalletId], references: [id])
+  entryType              String     @map("entry_type") // Info: (20260807 - Luphia) TEAM_WALLET_ENTRY_TYPE 常數
+  amount                 BigInt // Info: (20260807 - Luphia) 有號數：入帳為正、出帳為負
+  poolBalanceAfter       BigInt?    @map("pool_balance_after")
+  allocationBalanceAfter BigInt?    @map("allocation_balance_after")
+  targetUserId           String?    @map("target_user_id")
+  operatorUserId         String     @map("operator_user_id")
+  orderId                String?    @map("order_id")
+  featureCode            String?    @map("feature_code") // Info: (20260807 - Luphia) BILLABLE_FEATURE_CODE 常數
+  idempotencyKey         String     @unique @map("idempotency_key")
+  createdAt              DateTime   @default(now()) @map("created_at")
+
+  @@index([teamWalletId, createdAt])
+  @@map("team_wallet_ledger")
+}
+
+model TeamQuotaUsage {
+  id            String   @id @default(uuid())
+  teamId        String   @map("team_id")
+  team          Team     @relation(fields: [teamId], references: [id])
+  userId        String   @map("user_id")
+  featureCode   String   @map("feature_code")
+  amount        BigInt
+  windowKey5h   Int      @map("window_key_5h")
+  windowKeyWeek Int      @map("window_key_week")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([teamId, windowKey5h])
+  @@index([teamId, windowKeyWeek])
+  @@map("team_quota_usage")
+}
+
+model TeamLedgerAnchor {
+  id            String   @id @default(uuid())
+  anchorDate    DateTime @unique @map("anchor_date") // Info: (20260807 - Luphia) 錨定的營業日（UTC+8 日界）
+  entryCount    Int      @map("entry_count")
+  dayMerkleRoot String   @map("day_merkle_root")
+  chainedRoot   String   @map("chained_root") // Info: (20260807 - Luphia) keccak256(前日 chainedRoot ‖ dayMerkleRoot)
+  txHash        String?  @map("tx_hash")
+  status        String   @default("PENDING") // Info: (20260807 - Luphia) TEAM_LEDGER_ANCHOR_STATUS 常數
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("team_ledger_anchor")
 }
 
 model Order {
