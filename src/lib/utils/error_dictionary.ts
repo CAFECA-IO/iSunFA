@@ -875,4 +875,9 @@ export const API_ERRORS = {
     message: "Team wallet operation failed",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
+  TW_INVALID_CREDIT_PLAN: {
+    code: "TW000010",
+    message: "Unknown credit plan id",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
 };

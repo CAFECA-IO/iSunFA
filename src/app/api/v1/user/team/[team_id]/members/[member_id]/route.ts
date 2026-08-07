@@ -1,5 +1,6 @@
-import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
+import { revokeAllocationOnMemberRemoval } from "@/services/team_wallet.service";
 import { stringToHex } from "viem";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
@@ -195,6 +196,17 @@ export async function DELETE(
       }
     }
 
+    /**
+     * Info: (20260807 - Luphia) 成員移除前先全額收回其團隊分配點數（設計書 §6.2）。
+     * 錢包凍結時丟錯中止移除（守恆優先）；冪等鍵綁 memberId，重試安全。
+     */
+    await revokeAllocationOnMemberRemoval({
+      teamId,
+      targetUserId: targetMember.userId,
+      operatorUserId: sessionUser.id,
+      memberId,
+    });
+
     const deletedMember = await teamRepo.deleteTeamMember(memberId);
 
     // Info: (20260326 - Tzuhan) simulated on-chain record for member deletion
@@ -236,6 +248,14 @@ export async function DELETE(
       "[API] /team/[team_id]/members/[member_id] DELETE error:",
       error,
     );
+    // Info: (20260807 - Luphia) 收回分配失敗（如錢包凍結）時回傳明確錯誤，而非籠統 500
+    if (error instanceof ApiError) {
+      return jsonFail({
+        code: error.code,
+        message: error.message,
+        status: error.status,
+      });
+    }
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

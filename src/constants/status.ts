@@ -38,6 +38,8 @@ export const ORDER_TYPE = {
   BILLING_SOLUTION: "BILLING_SOLUTION",
   BILLING_SUBSCRIBE: "BILLING_SUBSCRIBE",
   BILLING_POINT: "BILLING_POINT",
+  // Info: (20260807 - Luphia) 團隊錢包購點：付款成功後入池（離鏈 Ledger），不 mint 鏈上點數
+  BILLING_TEAM_POINT: "BILLING_TEAM_POINT",
 } as const;
 
 export type OrderType = (typeof ORDER_TYPE)[keyof typeof ORDER_TYPE];

@@ -11,7 +11,12 @@ import { prisma } from "@/lib/prisma";
 
 jest.mock("@/lib/prisma", () => {
   const tx = {
-    teamWallet: { findUnique: jest.fn() },
+    teamWallet: {
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      updateMany: jest.fn(),
+    },
     teamWalletAllocation: {
       updateMany: jest.fn(),
       findUnique: jest.fn(),
@@ -37,7 +42,12 @@ jest.mock("@/lib/prisma", () => {
  */
 
 interface ITxMock {
-  teamWallet: { findUnique: ReturnType<typeof jest.fn> };
+  teamWallet: {
+    findUnique: ReturnType<typeof jest.fn>;
+    create: ReturnType<typeof jest.fn>;
+    update: ReturnType<typeof jest.fn>;
+    updateMany: ReturnType<typeof jest.fn>;
+  };
   teamWalletAllocation: {
     updateMany: ReturnType<typeof jest.fn>;
     findUnique: ReturnType<typeof jest.fn>;
@@ -238,5 +248,227 @@ describe("TeamWalletRepository.refundAllocation", () => {
     );
     expect(result.outcome).toBe(WALLET_OP_OUTCOME.DUPLICATE);
     expect(txMock.teamWalletAllocation.upsert).not.toHaveBeenCalled();
+  });
+});
+
+describe("TeamWalletRepository.creditPool", () => {
+  const CREDIT_INPUT = {
+    teamId: "team-1",
+    credits: BigInt(700),
+    orderId: "order-1",
+    operatorUserId: "user-admin",
+    idempotencyKey: "purchase:order-1",
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    txMock.teamWalletLedger.findUnique.mockResolvedValue(null);
+    txMock.teamWallet.findUnique.mockResolvedValue(ACTIVE_WALLET as unknown);
+    txMock.teamWallet.update.mockResolvedValue({
+      ...ACTIVE_WALLET,
+      unallocatedBalance: BigInt(700),
+    } as unknown);
+    txMock.teamWalletLedger.create.mockResolvedValue({
+      id: "ledger-purchase",
+    } as unknown);
+  });
+
+  it("creates the wallet on first purchase and records the pool closing balance", async () => {
+    txMock.teamWallet.findUnique.mockResolvedValue(null);
+    txMock.teamWallet.create.mockResolvedValue(ACTIVE_WALLET as unknown);
+
+    const result = await teamWalletRepo.creditPool(CREDIT_INPUT);
+    expect(result.outcome).toBe(WALLET_OP_OUTCOME.OK);
+    expect(txMock.teamWallet.create).toHaveBeenCalledWith({
+      data: { teamId: "team-1" },
+    });
+    expect(txMock.teamWalletLedger.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        entryType: TEAM_WALLET_ENTRY_TYPE.PURCHASE,
+        amount: BigInt(700),
+        poolBalanceAfter: BigInt(700),
+        orderId: "order-1",
+        idempotencyKey: "purchase:order-1",
+      }),
+    });
+  });
+
+  it("is idempotent on webhook redelivery", async () => {
+    txMock.teamWalletLedger.findUnique.mockResolvedValue({
+      id: "ledger-purchase",
+    } as unknown);
+    const result = await teamWalletRepo.creditPool(CREDIT_INPUT);
+    expect(result.outcome).toBe(WALLET_OP_OUTCOME.DUPLICATE);
+    expect(txMock.teamWallet.update).not.toHaveBeenCalled();
+  });
+
+  it("refuses to credit a frozen wallet", async () => {
+    txMock.teamWallet.findUnique.mockResolvedValue({
+      ...ACTIVE_WALLET,
+      status: "FROZEN",
+    } as unknown);
+    const result = await teamWalletRepo.creditPool(CREDIT_INPUT);
+    expect(result.outcome).toBe(WALLET_OP_OUTCOME.FROZEN);
+    expect(txMock.teamWallet.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("TeamWalletRepository.allocate / revoke", () => {
+  const ALLOC_INPUT = {
+    teamId: "team-1",
+    targetUserId: "user-2",
+    amount: BigInt(50),
+    operatorUserId: "user-admin",
+    idempotencyKey: "alloc-1",
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    txMock.teamWallet.findUnique.mockResolvedValue({
+      ...ACTIVE_WALLET,
+      unallocatedBalance: BigInt(700),
+    } as unknown);
+    txMock.teamWalletLedger.findUnique.mockResolvedValue(null);
+    txMock.teamWallet.updateMany.mockResolvedValue({ count: 1 } as unknown);
+    txMock.teamWalletAllocation.upsert.mockResolvedValue({
+      balance: BigInt(50),
+    } as unknown);
+    txMock.teamWalletLedger.create.mockResolvedValue({
+      id: "ledger-alloc",
+    } as unknown);
+  });
+
+  it("allocates with a conditional pool decrement and dual closing balances", async () => {
+    txMock.teamWallet.findUnique
+      .mockResolvedValueOnce({
+        ...ACTIVE_WALLET,
+        unallocatedBalance: BigInt(700),
+      } as unknown)
+      .mockResolvedValueOnce({
+        ...ACTIVE_WALLET,
+        unallocatedBalance: BigInt(650),
+      } as unknown);
+
+    const result = await teamWalletRepo.allocate(ALLOC_INPUT);
+    expect(result.outcome).toBe(WALLET_OP_OUTCOME.OK);
+    expect(txMock.teamWallet.updateMany).toHaveBeenCalledWith({
+      where: { id: "wallet-1", unallocatedBalance: { gte: BigInt(50) } },
+      data: { unallocatedBalance: { decrement: BigInt(50) } },
+    });
+    expect(txMock.teamWalletLedger.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        entryType: TEAM_WALLET_ENTRY_TYPE.ALLOCATE,
+        amount: BigInt(50),
+        poolBalanceAfter: BigInt(650),
+        allocationBalanceAfter: BigInt(50),
+        targetUserId: "user-2",
+      }),
+    });
+  });
+
+  it("returns INSUFFICIENT when the pool cannot cover the allocation", async () => {
+    txMock.teamWallet.updateMany.mockResolvedValue({ count: 0 } as unknown);
+    const result = await teamWalletRepo.allocate(ALLOC_INPUT);
+    expect(result.outcome).toBe(WALLET_OP_OUTCOME.INSUFFICIENT);
+    expect(txMock.teamWalletLedger.create).not.toHaveBeenCalled();
+  });
+
+  it("revokes with a conditional allocation decrement and a negative REVOKE entry", async () => {
+    txMock.teamWalletAllocation.updateMany.mockResolvedValue({
+      count: 1,
+    } as unknown);
+    txMock.teamWallet.update.mockResolvedValue({
+      ...ACTIVE_WALLET,
+      unallocatedBalance: BigInt(750),
+    } as unknown);
+    txMock.teamWalletAllocation.findUnique.mockResolvedValue({
+      balance: BigInt(0),
+    } as unknown);
+
+    const result = await teamWalletRepo.revoke(ALLOC_INPUT);
+    expect(result.outcome).toBe(WALLET_OP_OUTCOME.OK);
+    expect(txMock.teamWalletAllocation.updateMany).toHaveBeenCalledWith({
+      where: {
+        teamId: "team-1",
+        userId: "user-2",
+        balance: { gte: BigInt(50) },
+      },
+      data: { balance: { decrement: BigInt(50) } },
+    });
+    expect(txMock.teamWalletLedger.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        entryType: TEAM_WALLET_ENTRY_TYPE.REVOKE,
+        amount: BigInt(-50),
+        poolBalanceAfter: BigInt(750),
+        allocationBalanceAfter: BigInt(0),
+      }),
+    });
+  });
+
+  it("returns INSUFFICIENT when revoking more than the member holds", async () => {
+    txMock.teamWalletAllocation.updateMany.mockResolvedValue({
+      count: 0,
+    } as unknown);
+    const result = await teamWalletRepo.revoke(ALLOC_INPUT);
+    expect(result.outcome).toBe(WALLET_OP_OUTCOME.INSUFFICIENT);
+    expect(txMock.teamWalletLedger.create).not.toHaveBeenCalled();
+  });
+});
+
+describe("TeamWalletRepository.revokeAllForUser", () => {
+  const REVOKE_ALL_INPUT = {
+    teamId: "team-1",
+    targetUserId: "user-2",
+    operatorUserId: "user-admin",
+    idempotencyKey: "revoke-all:member-1",
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    txMock.teamWalletAllocation.findUnique.mockResolvedValue({
+      balance: BigInt(30),
+    } as unknown);
+    txMock.teamWallet.findUnique.mockResolvedValue(ACTIVE_WALLET as unknown);
+    txMock.teamWalletLedger.findUnique.mockResolvedValue(null);
+    txMock.teamWalletAllocation.updateMany.mockResolvedValue({
+      count: 1,
+    } as unknown);
+    txMock.teamWallet.update.mockResolvedValue({
+      ...ACTIVE_WALLET,
+      unallocatedBalance: BigInt(730),
+    } as unknown);
+    txMock.teamWalletLedger.create.mockResolvedValue({
+      id: "ledger-revoke-all",
+    } as unknown);
+  });
+
+  it("revokes the full remaining balance back to the pool", async () => {
+    const result = await teamWalletRepo.revokeAllForUser(REVOKE_ALL_INPUT);
+    expect(result.outcome).toBe(WALLET_OP_OUTCOME.OK);
+    expect(txMock.teamWalletLedger.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        entryType: TEAM_WALLET_ENTRY_TYPE.REVOKE,
+        amount: BigInt(-30),
+        allocationBalanceAfter: BigInt(0),
+        idempotencyKey: "revoke-all:member-1",
+      }),
+    });
+  });
+
+  it("is a no-op (NOT_FOUND) when the member has no allocation", async () => {
+    txMock.teamWalletAllocation.findUnique.mockResolvedValue(null);
+    const result = await teamWalletRepo.revokeAllForUser(REVOKE_ALL_INPUT);
+    expect(result.outcome).toBe(WALLET_OP_OUTCOME.NOT_FOUND);
+    expect(txMock.teamWalletAllocation.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("blocks on a frozen wallet so member removal aborts", async () => {
+    txMock.teamWallet.findUnique.mockResolvedValue({
+      ...ACTIVE_WALLET,
+      status: "FROZEN",
+    } as unknown);
+    const result = await teamWalletRepo.revokeAllForUser(REVOKE_ALL_INPUT);
+    expect(result.outcome).toBe(WALLET_OP_OUTCOME.FROZEN);
+    expect(txMock.teamWalletAllocation.updateMany).not.toHaveBeenCalled();
   });
 });

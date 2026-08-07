@@ -117,6 +117,15 @@ export const BILLABLE_FEATURE_CODE = {
 export type BillableFeatureCode =
   (typeof BILLABLE_FEATURE_CODE)[keyof typeof BILLABLE_FEATURE_CODE];
 
+// Info: (20260807 - Luphia) 分配 API 的操作方向（設計書 §6.2）
+export const ALLOCATION_DIRECTION = {
+  ALLOCATE: "ALLOCATE",
+  REVOKE: "REVOKE",
+} as const;
+
+export type AllocationDirection =
+  (typeof ALLOCATION_DIRECTION)[keyof typeof ALLOCATION_DIRECTION];
+
 /**
  * Info: (20260807 - Luphia) 錢包原子操作的結果判別（Repository → Service 溝通用），
  * Service 依此轉換為對應的 ApiError，Repository 不直接丟業務錯誤。
