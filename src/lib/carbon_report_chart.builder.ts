@@ -469,8 +469,8 @@ const buildImportedSankey = (
   };
   const KEY_SEPARATOR = "\u0000";
   const layers: Map<string, string>[] = [
-    new Map(), // Info: 全公司 → 範疇
-    new Map(), // Info: 範疇 → 子代碼
+    new Map(), // Info: (20260806 - Tzuhan) 全公司 → 範疇
+    new Map(), // Info: (20260806 - Tzuhan) 範疇 → 子代碼
   ];
 
   /**
