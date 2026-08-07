@@ -52,6 +52,21 @@ export enum CarbonChartTemplateEnum {
  */
 export const CARBON_SANKEY_TOP_ITEM_COUNT = 9;
 
+/**
+ * Info: (20260807 - Emily) 桑基圖節點標籤的顯示寬度上限(半形字元為 1,全形為 2)。
+ *
+ * 末端節點補上名稱之後(`2.1 外購電力`)標籤變長,而 mermaid 把標籤畫在節點右側 ——
+ * 英文最長的一筆是 `2.2 Purchased energy (steam, heat, cooling)` 共 43 個字元,
+ * 在 1024px 寬度下會與相鄰節點互相疊字。
+ *
+ * **以顯示寬度而非字元數計**:中文 12 個字與英文 12 個字在畫面上差一倍,
+ * 用同一個字元數上限去截,不是中文被截得太早就是英文截不夠。
+ *
+ * 取 28:中文最長的 `2.2 外購能源(蒸汽/熱/冷)` 剛好落在界內(不截),
+ * 過長的英文名稱才會被截 —— 截斷是為了英文,不該波及中文。
+ */
+export const CARBON_SANKEY_LABEL_MAX_WIDTH = 28;
+
 // Info: (20260720 - Tzuhan) 桑基圖憑證節點上限:超過即略過憑證層(排放源→Scope),避免不可讀的毛線團
 export const CARBON_SANKEY_MAX_EVIDENCE_NODES = 30;
 

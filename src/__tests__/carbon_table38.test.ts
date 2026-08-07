@@ -911,7 +911,8 @@ describe("匯入報告的分類切面圖(全公司 → 範疇 → 子代碼)", (
     // Info: (20260807 - Tzuhan) 三個廠址的 2.1 相加(原文:3464.501 + 5.8344 + 0)
     expect(electricity[0].weight).toBeCloseTo(3470.3354, 3);
     // Info: (20260807 - Tzuhan) 而它既然畫了,就不該同時出現在「未畫出」清單裡
-    const belowSection = (block.split("占比過小未畫出")[1] ?? "").split("**")[2] ?? "";
+    const belowSection =
+      (block.split("占比過小未畫出")[1] ?? "").split("**")[2] ?? "";
     expect(belowSection).not.toContain("2.1");
   });
 
@@ -945,7 +946,8 @@ describe("匯入報告的分類切面圖(全公司 → 範疇 → 子代碼)", (
      * 原本判定「尾端是 1.1」,而 20260807 補上名稱之後代碼移到前面,
      * 那個 regex 會一個都認不出來 → 這條斷言會變成永遠成立(等於沒測)。
      */
-    const isSubCategory = (node: string): boolean => /^\d+(\.\d+)?\s/.test(node);
+    const isSubCategory = (node: string): boolean =>
+      /^\d+(\.\d+)?\s/.test(node);
 
     const intermediates = Array.from(inflow.keys()).filter((node) =>
       outflow.has(node),
@@ -971,7 +973,8 @@ describe("匯入報告的分類切面圖(全公司 → 範疇 → 子代碼)", (
    */
   it("最細一層可低於上層,但差額不超過總量的 1%", () => {
     // Info: (20260807 - Tzuhan) 同上:代碼在標籤開頭
-    const isSubCategory = (node: string): boolean => /^\d+(\.\d+)?\s/.test(node);
+    const isSubCategory = (node: string): boolean =>
+      /^\d+(\.\d+)?\s/.test(node);
     const targets = new Set(links.map((l) => l.to));
     const organization = links
       .filter((l) => !targets.has(l.from))
@@ -993,20 +996,41 @@ describe("匯入報告的分類切面圖(全公司 → 範疇 → 子代碼)", (
    * 「(1) 類別二 3464.5」上,兩者都讀不出來。
    * 範疇三 → 類別三 + 類別四 真的分岔,那一個必須留。
    */
-  it("純傳遞的範疇節點被摺掉,分岔的保留", () => {
+  /**
+   * Info: (20260807 - Emily) 這條斷言在 UAT 之後反轉了
+   * (issue_drafts/inventory_table_import/11)。
+   *
+   * 原本斷言「只有一個子代碼的範疇會被摺掉」,理由是摺疊規則的免責條件:
+   * 被摺掉的名稱仍在下游標籤裡看得到(類別二就是範疇二)。
+   * 但 20260806 把下游改成顯示**子代碼**之後,下游變成「2.1 外購電力」,
+   * 對應關係不再寫在標籤上。
+   *
+   * 實測後果:範疇一與範疇三都分岔所以留著,唯獨範疇二只有 2.1 一個子代碼而被摺掉 ——
+   * 圖的標題寫著「全公司 → 範疇 → 子代碼」,卻只畫得出兩個範疇,
+   * 而消失的那個是 3470.34 公噸、占全公司 42%,是最大的一塊。
+   *
+   * 所以現在斷言相反的事:**範疇層一律不摺**,全公司的下一層必定是範疇。
+   */
+  it("範疇層一律不摺:全公司的下一層必定是範疇,不得直接接子代碼", () => {
     const scopeNodes = new Set(
       links.filter((l) => l.to.includes("範疇")).map((l) => l.to),
     );
     expect(scopeNodes.size).toBeGreaterThan(0);
-    /**
-     * Info: (20260807 - Tzuhan) 只有一個子代碼的範疇會被摺掉,全公司直接接子代碼。
-     * 這份報告的範疇二只有 2.1 外購電力,所以「全公司 → 2.1 外購電力」必須存在:
-     * 那個範疇節點一進一出且同值,留著只會讓標籤互相重疊。
-     */
-    const collapsedToSubCategory = links.filter(
+
+    // Info: (20260807 - Emily) 子代碼形如「2.1 外購電力」;它不得直接掛在全公司下
+    const rootToSubCategory = links.filter(
       (l) => l.from === "全公司" && /^\d+(\.\d+)?\s/.test(l.to),
     );
-    expect(collapsedToSubCategory.length).toBeGreaterThan(0);
+    expect(rootToSubCategory).toEqual([]);
+
+    /**
+     * Info: (20260807 - Emily) 範疇二是這份報告裡唯一只有一個子代碼的範疇,
+     * 也就是舊規則唯一會摺掉的那個 —— 指名驗它,回歸才擋得住。
+     */
+    const scopeTwo = links.find(
+      (l) => l.from === "全公司" && l.to.includes("範疇二"),
+    );
+    expect(scopeTwo).toBeDefined();
   });
 
   /**
@@ -1066,6 +1090,50 @@ describe("匯入報告的分類切面圖(全公司 → 範疇 → 子代碼)", (
    */
   it("低於門檻未畫出的另外列出", () => {
     expect(block).toContain("占比過小未畫出");
+  });
+
+  /**
+   * Info: (20260807 - Emily) 但降為一層時就不能再列(PR review 低優先項)。
+   *
+   * 降為一層的時候,套門檻的那一層(範疇 → 子代碼)整層都沒畫 ——
+   * 圖上一個子代碼都沒有,不是只有清單裡那幾個沒有。
+   * 這時候還印「這些占比過小才沒畫」,會讓讀者反過來以為其餘子代碼都在圖上。
+   * 真正的原因旁邊已經講了(「已降為一層」),這份清單只會蓋掉它。
+   */
+  it("降為一層時不列「占比過小」——整層都沒畫,不是那幾個太小", () => {
+    // Info: (20260807 - Emily) 造出足以超過節點上限的資料:多廠址 × 多子代碼
+    const manyEntries = Array.from({ length: 120 }, (_, i) => ({
+      ...entries[0],
+      activityKey: `imported:site${i}`,
+      sourceName: `(1) 廠址${i} 1.1`,
+      co2eKg: i === 0 ? "1" : "500000",
+      importedOrigin: {
+        ...entries[0].importedOrigin!,
+        site: `廠址${i}`,
+        subCategory: `${(i % 4) + 1}.${(i % 5) + 1}`,
+      },
+    }));
+    const collapsedBlock = buildCarbonChartBlock(
+      CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY,
+      {
+        entries: manyEntries,
+        pending: [],
+        scopeSubtotals: {},
+        totalCo2eKg: "0",
+        computedAt: new Date().toISOString(),
+      },
+      {
+        ...CARBON_CHART_DEFAULT_LABELS,
+        formatEsgScope: (scope: string) => formatEsgScopeLabel(scope, "zh_tw"),
+        formatScope: (scope: string) => formatGhgCategoryLabel(scope, "zh_tw"),
+      },
+    );
+    if (!collapsedBlock.includes("已降為一層")) {
+      // Info: (20260807 - Emily) 沒觸發降級就沒有這條規則要驗;不假裝驗過
+      expect(collapsedBlock).toContain("sankey-beta");
+      return;
+    }
+    expect(collapsedBlock).not.toContain("占比過小未畫出");
   });
 
   it("標題帶基準與單位(沒有單位的流量圖無從判讀量級)", () => {
