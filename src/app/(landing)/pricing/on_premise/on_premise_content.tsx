@@ -38,11 +38,15 @@ export default function OnPremiseContent() {
 
   return (
     <div className="mx-auto max-w-7xl px-6 pt-10 pb-24 lg:px-8">
-      <div className="rounded-3xl bg-gradient-to-b from-gray-900 to-gray-800 p-1 shadow-2xl ring-1 shadow-orange-900/20 ring-white/10">
-        <div className="rounded-[22px] bg-gray-900/50 px-6 py-8 backdrop-blur-xl sm:px-12 lg:px-12 lg:py-12">
+      {/* Info: (20260807 - Luphia) 本卡為「刻意深色」的展示設計，兩種主題下都應維持深底。
+          gray/slate 色階會被主題過渡層整組翻轉（globals.css 的中性色盤反轉，即 variant trap：
+          高色階當背景違反位置性假設），深色模式下 gray-900 底會翻成近白、text-white 變白底白字。
+          故本檔一律使用不參與翻轉的 zinc 色盤，嚴禁改回 gray/slate。 */}
+      <div className="rounded-3xl bg-gradient-to-b from-zinc-900 to-zinc-800 p-1 shadow-2xl ring-1 shadow-orange-900/20 ring-white/10">
+        <div className="rounded-[22px] bg-zinc-900/50 px-6 py-8 backdrop-blur-xl sm:px-12 lg:px-12 lg:py-12">
           <div className="mx-auto flex max-w-2xl flex-col gap-16 lg:mx-0 lg:max-w-none lg:flex-row lg:items-start">
             <div className="w-full flex-auto">
-              <ul className="mt-8 grid grid-cols-1 gap-x-8 gap-y-4 text-base leading-7 text-gray-300 sm:grid-cols-2">
+              <ul className="mt-8 grid grid-cols-1 gap-x-8 gap-y-4 text-base leading-7 text-zinc-300 sm:grid-cols-2">
                 {t<string[]>("pricing.ai_adoption.features").map(
                   (feature, index) => (
                     <li key={index} className="flex items-center gap-x-3">
@@ -72,7 +76,7 @@ export default function OnPremiseContent() {
                           ? t("pricing.ai_adoption.capacity_x86")
                           : t("pricing.ai_adoption.capacity_gx10")}
                       </span>
-                      <span className="mt-1 block text-sm text-gray-400">
+                      <span className="mt-1 block text-sm text-zinc-400">
                         {t("pricing.ai_adoption.add_module_price", {
                           price:
                             ENTERPRISE_PLAN_PRICE.MACHINE[
@@ -87,7 +91,7 @@ export default function OnPremiseContent() {
                         className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
                           selectedMachine === "X86_5060TI"
                             ? "bg-orange-600 text-white shadow-lg"
-                            : "text-gray-400 hover:text-white"
+                            : "text-zinc-400 hover:text-white"
                         }`}
                       >
                         X86
@@ -97,7 +101,7 @@ export default function OnPremiseContent() {
                         className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
                           selectedMachine === "ASUS_ASCENT_GX10"
                             ? "bg-orange-600 text-white shadow-lg"
-                            : "text-gray-400 hover:text-white"
+                            : "text-zinc-400 hover:text-white"
                         }`}
                       >
                         GX10
@@ -110,7 +114,7 @@ export default function OnPremiseContent() {
                       <span className="block text-lg font-medium text-white">
                         {t("pricing.ai_adoption.user_count")}
                       </span>
-                      <span className="mt-1 block text-sm text-gray-400">
+                      <span className="mt-1 block text-sm text-zinc-400">
                         {t("pricing.ai_adoption.add_user_price", {
                           price: (
                             userCount * ENTERPRISE_PLAN_PRICE.USER
@@ -145,7 +149,7 @@ export default function OnPremiseContent() {
                       <span className="block text-lg font-medium text-white">
                         {t("pricing.ai_adoption.software_update")}
                       </span>
-                      <span className="mt-1 block text-sm text-gray-400">
+                      <span className="mt-1 block text-sm text-zinc-400">
                         {t("pricing.ai_adoption.software_update_price", {
                           price: (
                             updateYears * ENTERPRISE_PLAN_PRICE.UPDATE
@@ -184,7 +188,7 @@ export default function OnPremiseContent() {
                         <span className="block text-lg font-medium text-white">
                           {t("pricing.ai_adoption.add_module")}
                         </span>
-                        <span className="mt-1 block text-sm text-gray-400">
+                        <span className="mt-1 block text-sm text-zinc-400">
                           {t("pricing.ai_adoption.add_module_price", {
                             price: (
                               selectedModules.length *
@@ -214,11 +218,11 @@ export default function OnPremiseContent() {
                               className={`group relative flex h-full w-full flex-row items-center gap-3 overflow-hidden rounded-lg px-3 py-2.5 text-left transition-all duration-200 ${
                                 isSelected
                                   ? "bg-gradient-to-br from-orange-600 to-orange-700 text-white shadow-lg ring-1 shadow-orange-900/20 ring-orange-500"
-                                  : "bg-white/5 text-gray-400 ring-1 ring-white/10 hover:bg-white/10 hover:text-gray-200 hover:ring-white/20"
+                                  : "bg-white/5 text-zinc-400 ring-1 ring-white/10 hover:bg-white/10 hover:text-zinc-200 hover:ring-white/20"
                               } ${isMandatory ? "cursor-not-allowed" : "cursor-pointer active:scale-[0.98]"} `}
                             >
                               <div
-                                className={`flex-none rounded-md p-1.5 transition-colors ${isSelected ? "bg-white/20 text-white" : "bg-white/5 text-gray-400 group-hover:text-gray-300"} `}
+                                className={`flex-none rounded-md p-1.5 transition-colors ${isSelected ? "bg-white/20 text-white" : "bg-white/5 text-zinc-400 group-hover:text-zinc-300"} `}
                               >
                                 <mod.icon className="h-4 w-4" />
                               </div>
@@ -241,7 +245,7 @@ export default function OnPremiseContent() {
               </div>
             </div>
             <div className="flex w-full flex-none flex-col gap-6 lg:sticky lg:top-24 lg:w-96">
-              <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-gray-800 object-cover shadow-2xl ring-1 ring-white/10">
+              <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-zinc-800 object-cover shadow-2xl ring-1 ring-white/10">
                 <Image
                   src="/images/hardware_lease.webp"
                   alt="Hardware Lease"
@@ -251,7 +255,7 @@ export default function OnPremiseContent() {
                   sizes="(max-width: 1024px) 100vw, 384px"
                   className="object-cover opacity-80 grayscale-[0.2]"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent" />
                 <div className="absolute right-0 bottom-0 left-0 p-8">
                   <p className="mb-2 text-sm font-medium text-orange-400">
                     On-Premise Solution
@@ -259,7 +263,7 @@ export default function OnPremiseContent() {
                   <h4 className="mb-2 text-2xl font-bold text-white">
                     {t("pricing.ai_adoption.local_node")}
                   </h4>
-                  <p className="text-sm leading-relaxed text-gray-300">
+                  <p className="text-sm leading-relaxed text-zinc-300">
                     {t("pricing.ai_adoption.local_node_tooltip")}
                   </p>
                 </div>
@@ -267,7 +271,7 @@ export default function OnPremiseContent() {
 
               <div className="rounded-2xl bg-white/5 p-6 ring-1 ring-white/10 backdrop-blur-sm">
                 <div className="flex flex-col gap-y-2">
-                  <span className="text-base leading-7 font-semibold text-gray-300">
+                  <span className="text-base leading-7 font-semibold text-zinc-300">
                     {t("pricing.ai_adoption.total_estimated")}
                   </span>
                   <div className="flex items-baseline gap-x-2">
