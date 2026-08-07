@@ -47,8 +47,9 @@ export default function NetZeroPathway() {
 
             {/* Info: (20260807 - Luphia) 深色下 hover 由外圈承擔：底色在近黑頁面上動不了 ——
                 `bg-slate-800/40 → /60` 疊出來只差 1.04:1，就算拉到 100% 也只有 1.12:1。
-                綠環拉到 /70 才對卡片有 4.29:1，過得了 WCAG 1.4.11 的 3:1。 */}
-            <div className="dark:ring-border-default relative flex h-[400px] w-full flex-col items-center justify-center rounded-3xl bg-slate-800/40 p-6 ring-1 ring-slate-700/50 backdrop-blur-md transition-all hover:bg-slate-800/60 hover:ring-green-500/30 dark:hover:ring-green-500/70">
+                綠環改為滿版並加粗到 2px，對卡片 7.45:1 —— 遠高於 WCAG 1.4.11 的 3:1，
+                滑過去要一眼看得出來，不是勉強達標。 */}
+            <div className="dark:ring-border-default relative flex h-[400px] w-full flex-col items-center justify-center rounded-3xl bg-slate-800/40 p-6 ring-1 ring-slate-700/50 backdrop-blur-md transition-all hover:bg-slate-800/60 hover:ring-green-500/30 dark:hover:ring-2 dark:hover:ring-green-500">
               {/* Info: (20260611 - Luphia) SVG Topology Lines */}
               <svg
                 className="pointer-events-none absolute inset-0 z-0 h-full w-full"

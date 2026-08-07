@@ -3060,9 +3060,17 @@
    * 這與 `bg-white/N`（見上）是同一個 bug 的鏡像：白色那一側補了，
    * 深色這一側漏了。差別只在白色是「該翻而沒翻」，這裡是「不該翻卻翻了」。
    *
-   * 只列全庫實際用到的 14 個組合而不寫通則選擇器（如 `[class*="bg-slate-800/"]`）：
-   * 屬性選擇器會連 `dark:bg-slate-800/40` 這種帶變體的類名一起命中，
-   * 而那些的語境未經檢查。新增用法時照樣補一條，與上方慣例一致。
+   * 只列全庫實際用到的組合而不寫通則選擇器（如 `[class*="bg-slate-800/"]`）：
+   * 屬性選擇器會連未經檢查語境的類名一起命中。
+   *
+   * Info: (20260807 - Luphia) **變體要各列一條。** `hover:bg-slate-800/60` 編出來的是
+   * `.hover\:bg-slate-800\/60:hover`，與 `.bg-slate-800\/60` 是**兩個不同的選擇器** ——
+   * 補了後者不會蓋到前者。第一版就是漏了這點：卡片靜止時已經是深色，
+   * 滑鼠一移上去整張變成淺灰板子，反而比修之前更糟。
+   * （`bg-white/N` 那一組當初就有連 `hover:` / `focus:` 一起補，這裡照辦。）
+   *
+   * 漏一個不會有任何工具報錯，因此由 `src/__tests__/theme_alpha_surface.test.ts`
+   * 掃描全庫用法並比對本區塊，新增沒補的組合會讓測試失敗。
    */
   .bg-slate-800\/40 {
     background-color: color-mix(
@@ -3172,6 +3180,27 @@
     background-color: color-mix(
       in oklab,
       var(--neutral-light-900) 60%,
+      transparent
+    );
+  }
+
+  /**
+   * Info: (20260807 - Luphia) hover / group-hover 變體。
+   * 這三組（DPP 兩張卡、淨零面板、三個流程步驟）只以變體形式存在，
+   * 沒有任何一處用不帶前綴的 `bg-slate-800/60`。
+   */
+  .hover\:bg-slate-800\/60:hover {
+    background-color: color-mix(
+      in oklab,
+      var(--neutral-light-800) 60%,
+      transparent
+    );
+  }
+
+  .group-hover\:bg-slate-800\/60:is(:where(.group):hover *) {
+    background-color: color-mix(
+      in oklab,
+      var(--neutral-light-800) 60%,
       transparent
     );
   }

@@ -78,8 +78,9 @@ export default function DPPUrbanMining() {
           {/* Info: (20260529 - Luphia) Card 1: DPP */}
           {/* Info: (20260807 - Luphia) 深色下 hover 由外圈承擔：底色在近黑頁面上動不了 ——
               `bg-slate-800/40 → /60` 疊出來只差 1.04:1，就算拉到 100% 也只有 1.12:1。
-              橘環拉到 /70 才對卡片有 3.39:1，過得了 WCAG 1.4.11 的 3:1。 */}
-          <div className="group dark:ring-border-default relative flex flex-col justify-between rounded-3xl bg-slate-800/40 p-8 ring-1 ring-slate-700/50 backdrop-blur-md transition-all duration-300 hover:bg-slate-800/60 hover:ring-orange-500/50 dark:hover:ring-orange-500/70">
+              橘環改為滿版並加粗到 2px，對卡片 5.72:1 —— 遠高於 WCAG 1.4.11 的 3:1，
+              滑過去要一眼看得出來，不是勉強達標。 */}
+          <div className="group dark:ring-border-default relative flex flex-col justify-between rounded-3xl bg-slate-800/40 p-8 ring-1 ring-slate-700/50 backdrop-blur-md transition-all duration-300 hover:bg-slate-800/60 hover:ring-orange-500/50 dark:hover:ring-2 dark:hover:ring-orange-500">
             <div>
               <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-400 ring-1 ring-orange-500/30 transition-transform group-hover:scale-110">
                 <QrCode className="h-6 w-6" />
@@ -139,7 +140,7 @@ export default function DPPUrbanMining() {
 
           {/* Info: (20260529 - Luphia) Card 2: Urban Mining */}
           {/* Info: (20260807 - Luphia) hover 的處理同 Card 1 */}
-          <div className="group dark:ring-border-default relative flex flex-col justify-between rounded-3xl bg-slate-800/40 p-8 ring-1 ring-slate-700/50 backdrop-blur-md transition-all duration-300 hover:bg-slate-800/60 hover:ring-green-500/50 dark:hover:ring-green-500/70">
+          <div className="group dark:ring-border-default relative flex flex-col justify-between rounded-3xl bg-slate-800/40 p-8 ring-1 ring-slate-700/50 backdrop-blur-md transition-all duration-300 hover:bg-slate-800/60 hover:ring-green-500/50 dark:hover:ring-2 dark:hover:ring-green-500">
             <div>
               <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-green-500/10 text-green-400 ring-1 ring-green-500/30 transition-transform group-hover:scale-110">
                 <Recycle className="h-6 w-6" />
