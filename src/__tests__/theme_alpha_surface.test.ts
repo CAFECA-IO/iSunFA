@@ -1,27 +1,26 @@
-// Info: (20260807 - Luphia) 半透明深色表面的還原覆蓋率。
-//
-// Info: (20260807 - Luphia) 中性色盤在深色模式整組反轉，globals.css 再把「刻意深色」的
-// Info: (20260807 - Luphia) 表面還原回淺色階常數。不透明的 `.bg-slate-800` 好辦，
-// Info: (20260807 - Luphia) 但 Tailwind v4 把 `bg-slate-800/40` 編成
-// Info: (20260807 - Luphia) `color-mix(in oklab, var(--color-slate-800) 40%, transparent)`，
-// Info: (20260807 - Luphia) 讀的是被反轉的變數，必須逐條補；而 `hover:bg-slate-800/60`
-// Info: (20260807 - Luphia) 又是另一個選擇器，補了不帶前綴的那條也蓋不到它。
-//
-// Info: (20260807 - Luphia) 漏補的後果是深色下解析成近白色，配上刻意維持淺色的
-// Info: (20260807 - Luphia) `text-slate-100~300` 就是淺字配淺底（實測低到 1.07:1）。
-// Info: (20260807 - Luphia) 這種漏不會有任何工具報錯 —— 兩次都是靠人眼在畫面上抓到的，
-// Info: (20260807 - Luphia) 所以改由這支測試在 CI 擋下來。
-
 import { describe, it, expect } from "@jest/globals";
 import { readFileSync } from "fs";
 import { execFileSync } from "child_process";
 import { join } from "path";
 
+/*
+ * Info: (20260807 - Luphia) 半透明深色表面的還原覆蓋率
+ * 中性色盤在深色模式整組反轉，globals.css 再把「刻意深色」的
+ * 表面還原回淺色階常數。不透明的 `.bg-slate-800` 好辦，
+ * 但 Tailwind v4 把 `bg-slate-800/40` 編成
+ *`color-mix(in oklab, var(--color-slate-800) 40%, transparent)`，
+ * 讀的是被反轉的變數，必須逐條補；而 `hover:bg-slate-800/60`
+ * 又是另一個選擇器，補了不帶前綴的那條也蓋不到它。
+ * 漏補的後果是深色下解析成近白色，配上刻意維持淺色的
+ * `text-slate-100~300` 就是淺字配淺底（實測低到 1.07:1）。
+ * 這種漏不會有任何工具報錯 —— 兩次都是靠人眼在畫面上抓到的，
+ * 所以改由這支測試在 CI 擋下來。
+ */
+
 const CSS_PATH = join(process.cwd(), "src/app/globals.css");
 
 /**
- * Info: (20260807 - Luphia) 需要還原的色階：只有高號碼。
- *
+ * Info: (20260807 - Luphia) 需要還原的色階：只有高號碼
  * 低號碼在全庫是淺色表面（`bg-gray-50` 的卡片），反轉後變深才是對的；
  * 高號碼是深色表面（landing 的深色區塊、admin 側欄），反轉後變淺是錯的。
  * 這個分界與 globals.css 的色盤反轉註解採同一套「位置性」依據。
@@ -29,7 +28,8 @@ const CSS_PATH = join(process.cwd(), "src/app/globals.css");
 const SHADES = ["600", "700", "800", "900", "950"];
 
 /**
- * Info: (20260807 - Luphia) 例如 `hover:bg-slate-800/60`、`bg-gray-900/40`。
+ * Info: (20260807 - Luphia) 
+ * 例如 `hover:bg-slate-800/60`、`bg-gray-900/40`
  * 寫成 POSIX ERE 而非 JS 正則：這串是要交給 `git grep -E` 的，
  * 那邊沒有 `(?:...)` 也沒有 `\d`。
  */
