@@ -194,3 +194,28 @@ export function resolveUnitPageRange(params: {
     nextChapterFirstPage: params.nextUnitFirstPage,
   });
 }
+
+/**
+ * Info: (20260807 - Emily) 某一節在**大綱**裡的下一節 id;已是最後一節則回 undefined。
+ *
+ * 為什麼是大綱而不是本次的匯入單元清單(PR review 第 1 點):
+ *
+ * 匯入單元是由**使用者勾選的章**建出來的。拿 `units[index + 1]` 當頁碼上界,
+ * 在勾選連續時剛好等於大綱的下一節,看起來沒問題;但只重試 ch1 與 ch9 時,
+ * ch1 最後一份的上界會變成 ch9 的起始頁 —— 等於把整份文件都送進去。
+ *
+ * 而「重試失敗章節」正是最容易出現不連續勾選的路徑,
+ * 也就是說這個錯誤專挑本模組想省時間的那條路發作,
+ * 而且不會報錯,只會變慢並可能再次撞逾時。
+ *
+ * 改用大綱推導同時保留了原本的用意:同章切成多份時,
+ * 上一份最後一節的下一節就是下一份的第一節 —— 每一份仍然只送自己那一段。
+ */
+export function nextOutlineSectionId(
+  sections: { id: string }[],
+  sectionId: string,
+): string | undefined {
+  const index = sections.findIndex((section) => section.id === sectionId);
+  if (index < 0) return undefined;
+  return sections[index + 1]?.id;
+}

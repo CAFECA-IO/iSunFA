@@ -5,6 +5,7 @@
 import { describe, it, expect } from "@jest/globals";
 import {
   buildImportUnits,
+  nextOutlineSectionId,
   resolveChapterPageRange,
   validatePageIndex,
   PageIndexRejectReasonEnum,
@@ -189,5 +190,51 @@ describe("buildImportUnits", () => {
   it("切不動節數少但單節極重的章(已知限度,不是遺漏)", () => {
     expect(buildImportUnits(outline, ["ch4"], 1)).toHaveLength(3);
     expect(buildImportUnits(outline, ["ch4"], 4)).toHaveLength(1);
+  });
+});
+
+/**
+ * Info: (20260807 - Emily) PR review 第 1 點的回歸測試。
+ *
+ * 舊實作用 `units[index + 1]` 當頁碼上界,在勾選連續時剛好等於大綱的下一節,
+ * 所以既有測試全綠 —— 這個 bug 只在**不連續勾選**時發作,
+ * 而那正是「重試失敗章節」的常態。
+ */
+describe("nextOutlineSectionId", () => {
+  const OUTLINE = [
+    { id: "ch1-1", chapterId: "ch1" },
+    { id: "ch1-2", chapterId: "ch1" },
+    { id: "ch2-1", chapterId: "ch2" },
+    { id: "ch9-1", chapterId: "ch9" },
+  ];
+
+  it("should return the next section in the outline", () => {
+    expect(nextOutlineSectionId(OUTLINE, "ch1-1")).toBe("ch1-2");
+  });
+
+  it("should cross a chapter boundary (the next chapter caps the last unit)", () => {
+    expect(nextOutlineSectionId(OUTLINE, "ch1-2")).toBe("ch2-1");
+  });
+
+  it("should return undefined at the end of the outline", () => {
+    expect(nextOutlineSectionId(OUTLINE, "ch9-1")).toBeUndefined();
+  });
+
+  it("should return undefined for an unknown section", () => {
+    expect(nextOutlineSectionId(OUTLINE, "nope")).toBeUndefined();
+  });
+
+  it("should not widen the bound when the selection is not contiguous", () => {
+    /**
+     * Info: (20260807 - Emily) 只勾 ch1 與 ch9 —— 舊實作的上界會是 ch9-1,
+     * 等於把整份文件送進去。改用大綱推導後,ch1 的上界仍然是 ch2-1。
+     */
+    const units = buildImportUnits(OUTLINE, ["ch1", "ch9"]);
+    const firstUnit = units[0];
+    const lastSectionId = firstUnit.sectionIds[firstUnit.sectionIds.length - 1];
+    expect(nextOutlineSectionId(OUTLINE, lastSectionId)).toBe("ch2-1");
+
+    // Info: (20260807 - Emily) 對照:舊作法會指到 ch9,這一行說明差異有多大
+    expect(units[1].sectionIds[0]).toBe("ch9-1");
   });
 });

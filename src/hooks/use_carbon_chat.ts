@@ -121,6 +121,7 @@ import {
 import { CarbonDiagramTemplateEnum } from "@/constants/carbon_report_diagrams";
 import {
   buildImportUnits,
+  nextOutlineSectionId,
   resolveUnitPageRange,
   validatePageIndex,
 } from "@/lib/carbon_page_slice";
@@ -1526,11 +1527,28 @@ export const useCarbonChat = () => {
          * Info: (20260805 - Tzuhan) 上界取**下一個單元**的第一節,不是下一章的第一節。
          * 同章切成多份時,用下一章當上界會讓每一份都送到章尾 —— 切了等於沒切。
          */
-        const nextUnit = units[index + 1];
+        /**
+         * Info: (20260807 - Emily) 上界取本單元最後一節在**大綱**裡的下一節
+         * (PR review 第 1 點;原本取 `units[index + 1]`)。
+         *
+         * 匯入單元是由使用者勾選的章建出來的,所以 `units[index + 1]`
+         * 在勾選不連續時會指到很遠的地方:只重試 ch1 與 ch9 時,
+         * ch1 的上界會變成 ch9 的起始頁 —— 等於整份文件都送進去。
+         * 那條路不會報錯,只會變慢並可能再次撞逾時,
+         * 而「重試失敗章節」正是最容易不連續勾選的路徑。
+         *
+         * 改用大綱推導仍然保留原本的用意:同章切成多份時,
+         * 上一份最後一節的下一節就是下一份的第一節。
+         */
+        const lastSectionId = unit.sectionIds[unit.sectionIds.length - 1];
+        const boundarySectionId = nextOutlineSectionId(
+          CARBON_REPORT_OUTLINE,
+          lastSectionId,
+        );
         const range = resolveUnitPageRange({
           sectionPages: unitPages,
-          nextUnitFirstPage: nextUnit
-            ? pageIndex?.get(nextUnit.sectionIds[0])
+          nextUnitFirstPage: boundarySectionId
+            ? pageIndex?.get(boundarySectionId)
             : undefined,
         });
         // Info: (20260804 - Tzuhan) 每次實際送出的範圍要留痕跡:少一張表時才查得出是被誰切掉的
