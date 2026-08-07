@@ -69,7 +69,7 @@ function toApiError(def: IErrorDef): ApiError {
  * Info: (20260807 - Luphia) 方案解析採 fail-closed：查無訂閱或未知 planId 一律視為 free，
  * 絕不因資料異常放大額度。
  */
-function resolvePlanId(planId: string | undefined): TeamPlanId {
+export function resolvePlanId(planId: string | undefined): TeamPlanId {
   const known = Object.values(TEAM_PLAN) as string[];
   if (planId && known.includes(planId)) return planId as TeamPlanId;
   return TEAM_PLAN.FREE;
@@ -237,5 +237,95 @@ export async function refundCredits(
     }
 
     return { refunded: false, source: null };
+  });
+}
+
+export interface ISettleParams {
+  idempotencyKey: string;
+  actualCost: bigint;
+  operatorUserId: string;
+}
+
+export interface ISettleResult {
+  settled: boolean;
+  source: (typeof SPEND_SOURCE)[keyof typeof SPEND_SOURCE] | null;
+  held: string;
+  charged: string;
+  refunded: string;
+}
+
+/**
+ * Info: (20260807 - Luphia) 預扣—結算（設計書 §5.3 步驟 3）：
+ * 依實際用量退還「預扣 - 實耗」的差額，結算鍵 settle:{原鍵} 天然冪等。
+ * hold 公式保證 actual ≤ held（只退不補）；若因估算異常出現 actual > held，
+ * 收斂為不退款（絕不在結算階段追加扣款，避免二次不足的複雜態）。
+ */
+export async function settleSpend(
+  params: ISettleParams,
+): Promise<ISettleResult> {
+  const { idempotencyKey, actualCost, operatorUserId } = params;
+
+  if (typeof actualCost !== "bigint" || actualCost <= BigInt(0)) {
+    throw toApiError(API_ERRORS.TW_INVALID_SPEND_AMOUNT);
+  }
+
+  return guarded(async () => {
+    const usage = await teamQuotaUsageRepo.findByIdempotencyKey(idempotencyKey);
+    if (usage && usage.amount > BigInt(0)) {
+      const held = usage.amount;
+      const refund =
+        held - actualCost > BigInt(0) ? held - actualCost : BigInt(0);
+      if (refund > BigInt(0)) {
+        await teamQuotaUsageRepo.createUsage({
+          teamId: usage.teamId,
+          userId: usage.userId,
+          featureCode: usage.featureCode,
+          amount: -refund,
+          windowKey5h: usage.windowKey5h,
+          windowKeyWeek: usage.windowKeyWeek,
+          idempotencyKey: `settle:${idempotencyKey}`,
+        });
+      }
+      return {
+        settled: true,
+        source: SPEND_SOURCE.SUBSCRIPTION_QUOTA,
+        held: held.toString(),
+        charged: (held - refund).toString(),
+        refunded: refund.toString(),
+      };
+    }
+
+    const ledger =
+      await teamWalletRepo.findLedgerByIdempotencyKey(idempotencyKey);
+    if (ledger && ledger.amount < BigInt(0)) {
+      const held = -ledger.amount;
+      const refund =
+        held - actualCost > BigInt(0) ? held - actualCost : BigInt(0);
+      if (refund > BigInt(0)) {
+        const result = await teamWalletRepo.refundAllocationPartial(
+          idempotencyKey,
+          refund,
+          operatorUserId,
+        );
+        if (result.outcome === WALLET_OP_OUTCOME.FROZEN) {
+          throw toApiError(API_ERRORS.TW_WALLET_FROZEN);
+        }
+      }
+      return {
+        settled: true,
+        source: SPEND_SOURCE.TEAM_ALLOCATION,
+        held: held.toString(),
+        charged: (held - refund).toString(),
+        refunded: refund.toString(),
+      };
+    }
+
+    return {
+      settled: false,
+      source: null,
+      held: "0",
+      charged: "0",
+      refunded: "0",
+    };
   });
 }

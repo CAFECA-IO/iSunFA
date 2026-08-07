@@ -1,0 +1,102 @@
+import { NextRequest, NextResponse } from "next/server";
+import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
+import { AppError } from "@/lib/utils/error";
+import { jsonOk, jsonFail, jsonFailWithPayload } from "@/lib/utils/response";
+import { getIdentityFromDeWT } from "@/lib/auth/dewt";
+import { ORDER_TYPE } from "@/constants/status";
+import { BILLABLE_FEATURE_CODE } from "@/constants/subscription_quota";
+import { teamQuotaPaymentSchema } from "@/validators";
+import { getPendingOrder, markOrderPaying } from "@/services/order.service";
+import { fulfillPaidAnalysisOrder } from "@/services/analysis_fulfillment.service";
+import {
+  QuotaExceededError,
+  refundCredits,
+  spendCredits,
+} from "@/services/spend.service";
+import { paymentRepo } from "@/repositories/payment.repo";
+
+/**
+ * Info: (20260807 - Luphia) 團隊額度付款（設計書 §5 / P3）：
+ * 分析訂單在訂閱額度或分配點數內扣抵，**免 WebAuthn 簽章、免鏈上交易**；
+ * 額度用罄回 402（payload 附雙視窗 resetAt 與三條出路），前端 fallback 到
+ * 既有 blockchain_payment 個人錢包簽章流程。冪等鍵 analysis:{orderId}。
+ */
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ order_id: string }> },
+) {
+  try {
+    const authHeader = request.headers.get("Authorization");
+    const user = await getIdentityFromDeWT(authHeader);
+    if (!user) return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
+
+    const { order_id: orderId } = await params;
+    const parsed = teamQuotaPaymentSchema.safeParse(await request.json());
+    if (!parsed.success) return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
+    const { teamId } = parsed.data;
+
+    const order = await getPendingOrder(orderId, user.id);
+    if (order.type !== ORDER_TYPE.ANALYSIS) {
+      return jsonFail(API_ERRORS.VA_INVALID_ORDER_TYPE);
+    }
+
+    // Info: (20260807 - Luphia) 1. 扣抵（訂閱額度 → 分配點數）；金額 = 訂單點數成本
+    const idempotencyKey = `analysis:${orderId}`;
+    let spend;
+    try {
+      spend = await spendCredits({
+        teamId,
+        userId: user.id,
+        featureCode: BILLABLE_FEATURE_CODE.AI_ANALYSIS,
+        cost: BigInt(order.amount),
+        idempotencyKey,
+        nowSec: Math.floor(Date.now() / 1000),
+      });
+    } catch (error) {
+      if (error instanceof QuotaExceededError) {
+        return jsonFailWithPayload(API_ERRORS.TW_QUOTA_EXCEEDED, error.data);
+      }
+      throw error;
+    }
+
+    // Info: (20260807 - Luphia) 2. 標記付款來源（無鏈上 tx，signature 記載扣抵來源供稽核）
+    await markOrderPaying(
+      orderId,
+      JSON.stringify({ verifiedVia: "team_quota", source: spend.source }),
+    );
+
+    // Info: (20260807 - Luphia) 3. 履行（與 blockchain_payment 共用）；失敗即退還扣抵
+    let resData: { reportId?: string };
+    try {
+      resData = await fulfillPaidAnalysisOrder(user.id, orderId, order.data);
+    } catch (fulfillError) {
+      await refundCredits({ idempotencyKey, operatorUserId: user.id });
+      throw fulfillError;
+    }
+
+    await paymentRepo.updateOrderCompleted(orderId);
+
+    return jsonOk({
+      orderId,
+      reportId: resData.reportId,
+      billing: {
+        source: spend.source,
+        charged: spend.amount,
+        idempotencyKey,
+      },
+    });
+  } catch (error) {
+    console.error("[API] POST team_quota_payment Error:", error);
+    if (error instanceof AppError) {
+      return NextResponse.json(error.mapToResponse(), { status: error.http });
+    }
+    if (error instanceof ApiError) {
+      return jsonFail({
+        code: error.code,
+        message: error.message,
+        status: error.status,
+      });
+    }
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
+  }
+}

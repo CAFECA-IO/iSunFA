@@ -13,6 +13,8 @@ export enum RateLimitBucketEnum {
   READ = "READ",
   // Info: (20260716 - Emily) 保存類(report PUT):autosave debounce 2s,上限需高於正常編輯節奏
   SAVE = "SAVE",
+  // Info: (20260807 - Luphia) 費思訪客試用(未登入或未帶 teamId,不進計費管線;設計書 §5.3 guardrail 1)
+  FAITH_GUEST = "FAITH_GUEST",
 }
 
 export interface IRateLimitWindow {
@@ -47,6 +49,10 @@ export const RATE_LIMIT_RULES: Record<RateLimitBucketEnum, IRateLimitWindow[]> =
     ],
     [RateLimitBucketEnum.SAVE]: [
       { windowMs: MINUTE_MS, max: envInt("CARBON_RL_SAVE_PER_MINUTE", 60) },
+    ],
+    [RateLimitBucketEnum.FAITH_GUEST]: [
+      { windowMs: MINUTE_MS, max: envInt("FAITH_RL_GUEST_PER_MINUTE", 2) },
+      { windowMs: DAY_MS, max: envInt("FAITH_RL_GUEST_PER_DAY", 5) },
     ],
   };
 

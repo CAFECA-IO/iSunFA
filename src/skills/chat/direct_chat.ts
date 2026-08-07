@@ -1,4 +1,9 @@
-import { ChatService } from "@/services/chat.service";
+import { ChatService, ILlmUsage } from "@/services/chat.service";
+import {
+  FAITH_MAX_OUTPUT_TOKENS,
+  LLM_SYNC_TIMEOUT_MS,
+  LlmTaskKeyEnum,
+} from "@/constants/llm";
 
 export class DirectChatSkill {
   private getPrompt(message: string, tags: string[] = []): string {
@@ -108,11 +113,43 @@ export class DirectChatSkill {
     mimeType?: string,
     chatService?: ChatService,
   ): Promise<string> {
+    const { text } = await this.executeWithUsage(
+      message,
+      tags,
+      file,
+      mimeType,
+      chatService,
+    );
+    return text;
+  }
+
+  /**
+   * Info: (20260807 - Luphia) 計費版本（設計書 §5.3 guardrails 2、3）：
+   * 帶 taskKey 啟用 usageMetadata 記錄、上 maxOutputTokens（thinking 與輸出共用此額度，
+   * 即成本上界）與 45s timeout。execute 委派至此，非計費呼叫端行為不變。
+   */
+  async executeWithUsage(
+    message: string,
+    tags: string[] = [],
+    file?: string,
+    mimeType?: string,
+    chatService?: ChatService,
+  ): Promise<{ text: string; usage: ILlmUsage }> {
     if (!chatService) throw new Error("ChatService required");
     const prompt = this.getPrompt(message, tags);
     const images = file
       ? [{ data: file, mimeType: mimeType || "image/jpeg" }]
       : [];
-    return chatService.generateRawWithImages(prompt, images);
+    return chatService.generateRawWithImagesUsage(
+      prompt,
+      images,
+      false,
+      undefined,
+      {
+        taskKey: LlmTaskKeyEnum.FAITH_CHAT,
+        maxOutputTokens: FAITH_MAX_OUTPUT_TOKENS,
+        timeoutMs: LLM_SYNC_TIMEOUT_MS,
+      },
+    );
   }
 }

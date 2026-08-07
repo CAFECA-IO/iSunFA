@@ -4,6 +4,7 @@ declare const jest: typeof JestType;
 import {
   QuotaExceededError,
   refundCredits,
+  settleSpend,
   spendCredits,
 } from "@/services/spend.service";
 import {
@@ -36,6 +37,7 @@ jest.mock("@/repositories/team_wallet.repo", () => ({
     consumeAllocation: jest.fn(),
     getAllocation: jest.fn(),
     refundAllocation: jest.fn(),
+    refundAllocationPartial: jest.fn(),
   },
 }));
 
@@ -307,5 +309,125 @@ describe("refundCredits", () => {
       operatorUserId: "worker",
     });
     expect(result).toEqual({ refunded: false, source: null });
+  });
+});
+
+describe("settleSpend", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    asMock(teamQuotaUsageRepo.findByIdempotencyKey).mockResolvedValue(null);
+    asMock(teamWalletRepo.findLedgerByIdempotencyKey).mockResolvedValue(null);
+    asMock(teamQuotaUsageRepo.createUsage).mockResolvedValue({
+      created: true,
+      usage: { amount: BigInt(-2) },
+    } as unknown);
+    asMock(teamWalletRepo.refundAllocationPartial).mockResolvedValue({
+      outcome: WALLET_OP_OUTCOME.OK,
+      ledger: { amount: BigInt(2) },
+    } as unknown);
+  });
+
+  it("refunds the quota difference into the original windows", async () => {
+    asMock(teamQuotaUsageRepo.findByIdempotencyKey).mockResolvedValue({
+      teamId: "team-1",
+      userId: "user-1",
+      featureCode: BILLABLE_FEATURE_CODE.FAITH_CHAT,
+      amount: BigInt(6),
+      windowKey5h: 99226,
+      windowKeyWeek: 30,
+    } as unknown);
+
+    const result = await settleSpend({
+      idempotencyKey: "faith:msg-1",
+      actualCost: BigInt(4),
+      operatorUserId: "user-1",
+    });
+    expect(result).toEqual({
+      settled: true,
+      source: SPEND_SOURCE.SUBSCRIPTION_QUOTA,
+      held: "6",
+      charged: "4",
+      refunded: "2",
+    });
+    expect(teamQuotaUsageRepo.createUsage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        amount: BigInt(-2),
+        windowKey5h: 99226,
+        windowKeyWeek: 30,
+        idempotencyKey: "settle:faith:msg-1",
+      }),
+    );
+  });
+
+  it("does not write a settle entry when actual equals held", async () => {
+    asMock(teamQuotaUsageRepo.findByIdempotencyKey).mockResolvedValue({
+      teamId: "team-1",
+      userId: "user-1",
+      featureCode: BILLABLE_FEATURE_CODE.FAITH_CHAT,
+      amount: BigInt(4),
+      windowKey5h: 99226,
+      windowKeyWeek: 30,
+    } as unknown);
+
+    const result = await settleSpend({
+      idempotencyKey: "faith:msg-1",
+      actualCost: BigInt(4),
+      operatorUserId: "user-1",
+    });
+    expect(result.refunded).toBe("0");
+    expect(teamQuotaUsageRepo.createUsage).not.toHaveBeenCalled();
+  });
+
+  it("never charges beyond the hold when actual exceeds it", async () => {
+    asMock(teamQuotaUsageRepo.findByIdempotencyKey).mockResolvedValue({
+      teamId: "team-1",
+      userId: "user-1",
+      featureCode: BILLABLE_FEATURE_CODE.FAITH_CHAT,
+      amount: BigInt(4),
+      windowKey5h: 99226,
+      windowKeyWeek: 30,
+    } as unknown);
+
+    const result = await settleSpend({
+      idempotencyKey: "faith:msg-1",
+      actualCost: BigInt(9),
+      operatorUserId: "user-1",
+    });
+    expect(result.charged).toBe("4");
+    expect(result.refunded).toBe("0");
+    expect(teamQuotaUsageRepo.createUsage).not.toHaveBeenCalled();
+  });
+
+  it("refunds the allocation difference through the partial refund path", async () => {
+    asMock(teamWalletRepo.findLedgerByIdempotencyKey).mockResolvedValue({
+      amount: BigInt(-6),
+    } as unknown);
+
+    const result = await settleSpend({
+      idempotencyKey: "faith:msg-1",
+      actualCost: BigInt(4),
+      operatorUserId: "user-1",
+    });
+    expect(result).toEqual({
+      settled: true,
+      source: SPEND_SOURCE.TEAM_ALLOCATION,
+      held: "6",
+      charged: "4",
+      refunded: "2",
+    });
+    expect(teamWalletRepo.refundAllocationPartial).toHaveBeenCalledWith(
+      "faith:msg-1",
+      BigInt(2),
+      "user-1",
+    );
+  });
+
+  it("reports settled=false when there is no original spend", async () => {
+    const result = await settleSpend({
+      idempotencyKey: "faith:unknown",
+      actualCost: BigInt(1),
+      operatorUserId: "user-1",
+    });
+    expect(result.settled).toBe(false);
   });
 });

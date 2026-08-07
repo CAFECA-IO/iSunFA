@@ -57,6 +57,8 @@ export enum LlmTaskKeyEnum {
   REPORT_IMPORT = "REPORT_IMPORT",
   // Info: (20260730 - Tzuhan) 結構圖節點萃取(敘述 → 節點+父子關係,mermaid 由模板組出)
   DIAGRAM_EXTRACTION = "DIAGRAM_EXTRACTION",
+  // Info: (20260807 - Luphia) 費思對話（計費，設計書 §5.3）
+  FAITH_CHAT = "FAITH_CHAT",
 }
 
 /**
@@ -94,3 +96,27 @@ export const LLM_TIMEOUT_ERROR_MARKER = "LLM_TIMEOUT";
  */
 export const LLM_TRANSPORT_RETRY_ATTEMPTS = 2;
 export const LLM_TRANSPORT_RETRY_DELAY_MS = 3_000;
+
+const envInt = (name: string, fallback: number): number => {
+  const raw = process.env[name];
+  if (!raw) return fallback;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+};
+
+/**
+ * Info: (20260807 - Luphia) 費思對話計費常數（設計書 §5.3，產品拍板 2026-08-07）。
+ * 每 FAITH_TOKENS_PER_CREDIT tokens（input + thinking + output 合計）扣 1 點，
+ * 無條件進位、每輪最低 1 點；費率標註於訂閱方案頁，數字與此 env 同源、嚴禁前端寫死。
+ * 成本上界由 FAITH_MAX_OUTPUT_TOKENS 保證——依上方實測，thinking token 與正式輸出
+ * 「共用」maxOutputTokens 額度，因此單一上限即同時封頂思考與輸出成本。
+ */
+export const FAITH_TOKENS_PER_CREDIT = envInt("FAITH_TOKENS_PER_CREDIT", 1000);
+export const FAITH_MAX_OUTPUT_TOKENS = envInt("FAITH_MAX_OUTPUT_TOKENS", 4096);
+// Info: (20260807 - Luphia) 預扣估算用：系統 prompt 上界（最大分支 ~1750 字元）+ 訊息以 3 字元/token 估
+export const FAITH_PROMPT_OVERHEAD_TOKENS = 600;
+export const FAITH_INPUT_CHARS_PER_TOKEN = 3;
+export const FAITH_IMAGE_INPUT_TOKEN_ESTIMATE = envInt(
+  "FAITH_IMAGE_INPUT_TOKEN_ESTIMATE",
+  2000,
+);

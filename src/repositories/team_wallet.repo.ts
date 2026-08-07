@@ -195,7 +195,36 @@ export class TeamWalletRepository {
     idempotencyKey: string,
     operatorUserId: string,
   ): Promise<IWalletOpResult> {
-    const refundKey = `refund:${idempotencyKey}`;
+    return this.refundAllocationCore(
+      idempotencyKey,
+      `refund:${idempotencyKey}`,
+      operatorUserId,
+    );
+  }
+
+  /**
+   * Info: (20260807 - Luphia) 部分退款（預扣—結算的退差額路徑，設計書 §5.3）：
+   * 退款分錄鍵為 settle:{原鍵}，金額不得超過原始消耗，超過即 Fail Fast。
+   */
+  async refundAllocationPartial(
+    idempotencyKey: string,
+    amount: bigint,
+    operatorUserId: string,
+  ): Promise<IWalletOpResult> {
+    return this.refundAllocationCore(
+      idempotencyKey,
+      `settle:${idempotencyKey}`,
+      operatorUserId,
+      amount,
+    );
+  }
+
+  private async refundAllocationCore(
+    idempotencyKey: string,
+    refundKey: string,
+    operatorUserId: string,
+    amountOverride?: bigint,
+  ): Promise<IWalletOpResult> {
     try {
       return await prisma.$transaction(async (tx) => {
         const original = await tx.teamWalletLedger.findUnique({
@@ -224,8 +253,12 @@ export class TeamWalletRepository {
           return { outcome: WALLET_OP_OUTCOME.DUPLICATE, ledger: duplicated };
         }
 
-        // Info: (20260807 - Luphia) CONSUME 分錄 amount 為負值，退還金額取其絕對值
-        const refundAmount = -original.amount;
+        // Info: (20260807 - Luphia) CONSUME 分錄 amount 為負值，全額退還取其絕對值
+        const maxRefundable = -original.amount;
+        const refundAmount = amountOverride ?? maxRefundable;
+        if (refundAmount <= BigInt(0) || refundAmount > maxRefundable) {
+          return { outcome: WALLET_OP_OUTCOME.INSUFFICIENT };
+        }
 
         const allocation = await tx.teamWalletAllocation.upsert({
           where: {

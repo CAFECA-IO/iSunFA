@@ -117,6 +117,15 @@ export const BILLABLE_FEATURE_CODE = {
 export type BillableFeatureCode =
   (typeof BILLABLE_FEATURE_CODE)[keyof typeof BILLABLE_FEATURE_CODE];
 
+// Info: (20260807 - Luphia) 訂閱計費週期（對齊既有 Order.data.billingInterval 慣例）
+export const BILLING_INTERVAL = {
+  MONTH: "month",
+  YEAR: "year",
+} as const;
+
+export type BillingInterval =
+  (typeof BILLING_INTERVAL)[keyof typeof BILLING_INTERVAL];
+
 // Info: (20260807 - Luphia) 分配 API 的操作方向（設計書 §6.2）
 export const ALLOCATION_DIRECTION = {
   ALLOCATE: "ALLOCATE",

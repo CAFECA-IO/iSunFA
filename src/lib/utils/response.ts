@@ -49,6 +49,24 @@ export const jsonFail = (def: IErrorDef, init?: ResponseInit) =>
     ...init,
   });
 
+/**
+ * Info: (20260807 - Luphia) 帶結構化 payload 的失敗回應：
+ * 402 額度用罄需回傳雙視窗 resetAt 與三條出路資訊（設計書 §5），
+ * 前端據此渲染重置倒數與 fallback 選項。
+ */
+export const jsonFailWithPayload = <T>(
+  def: IErrorDef,
+  payload: T,
+  init?: ResponseInit,
+) =>
+  NextResponse.json<IApiResponse<T | null>>(
+    { ...fail(def), payload },
+    {
+      status: httpStatusOf(def.status),
+      ...init,
+    },
+  );
+
 export const fileOk = (
   content: string | Blob | ArrayBuffer,
   filename: string,
