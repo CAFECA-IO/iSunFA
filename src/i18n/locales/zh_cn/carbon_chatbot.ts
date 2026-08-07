@@ -106,6 +106,16 @@ export const carbonChatbot = {
   save_failed: "保存失败",
   save_failed_hint:
     "保存失败: 可能有其他标签页已更新草稿，请刷新页面获取最新版本",
+  // Info: (20260807 - Emily) 保存失败的分型文案:失败代价是几分钟的成果,不能只留一个小图标
+  save_failed_notice:
+    "报告最新的变更没有保存到云端。内容仍在本机,请稍后重试或刷新页面。",
+  save_failed_conflict:
+    "报告最新的变更没有保存到云端：草稿已被其他标签页或设备更新。请刷新页面获取最新版本后再改一次。",
+  save_failed_too_large:
+    "报告最新的变更没有保存到云端：内容已超过单份草稿的上限。请先移除部分原文表格或改以分次导入。",
+  save_local_quota: "本机暂存空间已满,离线备份未更新(云端已保存)。",
+  save_local_quota_only:
+    "本机暂存空间已满,而这一版尚未能保存至云端 —— 请勿关闭标签页,先解锁或刷新后再试。",
   attach_file: "附加文件",
   remove_attachment: "移除附件",
   attachment_invalid_type:
@@ -142,7 +152,8 @@ export const carbonChatbot = {
   import_unmapped: "无法对应大纲的内容({{count}} 段,不会导入,可于对话中处理)",
   // Info: (20260806 - Tzuhan) 待匯入結果的第三條路:保存起來稍後再決定(內容已入庫,重載仍在)
   import_defer: "稍后再说",
-  import_pending_bar: "已保存待导入的解析结果:{{name}}(共 {{count}} 节,尚未写入报告)",
+  import_pending_bar:
+    "已保存待导入的解析结果:{{name}}(共 {{count}} 节,尚未写入报告)",
   import_pending_open: "查看并导入",
   import_pending_discard: "舍弃",
   import_reset_note:
@@ -245,8 +256,7 @@ export const carbonChatbot = {
     "排放去向：全公司 → 前九大排放项目与其他（原文照录，所在地基准，公吨 CO2e/年）",
   chart_imported_sankey_other: "其他",
   // Info: (20260807 - Tzuhan) 分類圖抽掉廠址層(屏東佔 97%,同圖畫不出比重);廠址改列小計
-  chart_imported_sankey_site_totals:
-    "各厂址小计(公吨 CO2e/年,占全公司比)",
+  chart_imported_sankey_site_totals: "各厂址小计(公吨 CO2e/年,占全公司比)",
   chart_imported_sankey_ghg_mapping: "子代码与 GHG Protocol 类别的对照",
   chart_imported_sankey_below_threshold: "占比过小未画出（公吨 CO2e/年）",
   chart_imported_sankey_organization: "全公司",

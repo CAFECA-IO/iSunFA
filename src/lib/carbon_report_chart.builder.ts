@@ -107,6 +107,10 @@ export interface ICarbonChartLabels {
   formatEsgScope?: (scope: string) => string;
 }
 
+// Info: (20260807 - Emily) 桑基圖根節點的顯示名:預設標籤與 fallback 共用同一個來源
+// Info: (20260807 - Emily) (PR review 低優先項:魔法字串重複)
+const SANKEY_ROOT_LABEL = "全公司";
+
 export const CARBON_CHART_DEFAULT_LABELS: ICarbonChartLabels = {
   pieTitle: "各範疇排放占比 (kgCO2e)",
   barTitle: "各範疇排放量 (kgCO2e)",
@@ -128,7 +132,7 @@ export const CARBON_CHART_DEFAULT_LABELS: ICarbonChartLabels = {
   importedTopItemsTitle:
     "排放去向:全公司 → 前九大排放項目與其他(原文照錄,所在地基準,公噸 CO2e/年)",
   importedSankeyOther: "其他",
-  importedSankeyOrganization: "全公司",
+  importedSankeyOrganization: SANKEY_ROOT_LABEL,
   importedSankeyBelowThreshold: "占比過小未畫出(公噸 CO2e/年)",
 };
 
@@ -495,7 +499,7 @@ const buildImportedSankey = (
    */
   const byCode = new Map<string, string>();
 
-  const organization = labels.importedSankeyOrganization ?? "全公司";
+  const organization = labels.importedSankeyOrganization ?? SANKEY_ROOT_LABEL;
 
   positive.forEach((entry) => {
     const origin = entry.importedOrigin;
@@ -567,7 +571,28 @@ const buildImportedSankey = (
    * 前車之鑑是門檻套錯層級讓台北分公司整個消失:
    * 數學上多餘的節點,在查核上不一定多餘。
    */
-  const protectedNodes = new Set<string>([organization]);
+  /**
+   * Info: (20260807 - Emily) 範疇層一併保護 —— 摺疊規則當初的免責條件已經不成立
+   * (issue_drafts/inventory_table_import/11)。
+   *
+   * `collapsePassThroughNodes` 的「資訊零損失」論證寫的是:
+   * 被摺掉的節點名稱仍在下游節點的標籤裡看得到(類別一就是範疇一)。
+   * 那在下游節點是 **ISO 類別**時成立;但 20260806 改成顯示**子代碼**之後,
+   * 下游變成「2.1 外購電力」,而它與範疇的對應關係不再寫在標籤上。
+   *
+   * 後果在 UAT 實測到:範疇一(分岔到 1.1~1.4)與範疇三(分岔到 3.x/4.x)都留著,
+   * 唯獨範疇二只有 2.1 一個子代碼,於是被摺掉 ——
+   * 圖上變成「全公司 → 2.1 外購電力」,三個範疇只畫得出兩個。
+   * 而被摺掉的那個是 3470.34 公噸,**占全公司 42%,是最大的一塊**。
+   *
+   * 對查核者來說這不是版面問題:圖的標題寫著「全公司 → 範疇 → 子代碼」,
+   * 卻有一個範疇不在圖上,而且無法從圖上讀出它的小計。
+   * 數學上多餘的節點,在查核上不一定多餘 —— 與上面保護根節點的同一條理由。
+   */
+  const scopeNodes = Array.from(layers[0].keys()).map(
+    (key) => key.split(KEY_SEPARATOR)[1],
+  );
+  const protectedNodes = new Set<string>([organization, ...scopeNodes]);
 
   const rows = collapsePassThroughNodes(edges, protectedNodes).map(
     (edge) => `${quote(edge.from)},${quote(edge.to)},${toTonne(edge.co2eKg)}`,
@@ -614,7 +639,25 @@ const buildImportedSankey = (
       lines.push(`- ${entry.sourceName}`);
     });
   }
-  if (belowThreshold.length > 0 && labels.importedSankeyBelowThreshold) {
+  /**
+   * Info: (20260807 - Emily) 降為一層時不列這份清單(PR review 低優先項)。
+   *
+   * 這份清單宣稱「這些項目因為占比過小才沒畫出來」。而 collapsed 的時候,
+   * 套門檻的那一層(範疇 → 子代碼)整層都沒畫 —— 圖上一個子代碼都沒有,
+   * 不是只有清單裡這幾個沒有。
+   *
+   * 所以它不是一句措辭不夠精確的話,是一句**不成立**的話:
+   * 它把「整層被拿掉」說成「這幾個太小」,讀者會反過來以為其餘子代碼都畫出來了。
+   * 真正的原因旁邊已經講了(「節點過多,已降為一層」),這份清單只會蓋掉它。
+   *
+   * 少畫的東西必須說出來 —— 但說的必須是**真正的原因**,
+   * 否則「有交代」反而比「沒交代」更容易讓人誤判。
+   */
+  if (
+    !collapsed &&
+    belowThreshold.length > 0 &&
+    labels.importedSankeyBelowThreshold
+  ) {
     lines.push("", `**${labels.importedSankeyBelowThreshold}**`, "");
     belowThreshold
       .sort(([a], [b]) => a.localeCompare(b))
@@ -697,7 +740,7 @@ const buildImportedTopItemsSankey = (
   const toTonne = (co2eKg: string): string =>
     MoneyUtil.toDecimal(co2eKg).div(TONNE_TO_KG_MULTIPLIER).toString();
 
-  const organization = labels.importedSankeyOrganization ?? "全公司";
+  const organization = labels.importedSankeyOrganization ?? SANKEY_ROOT_LABEL;
   const otherLabel = labels.importedSankeyOther ?? "其他";
 
   /**
@@ -884,6 +927,47 @@ export const hasCarbonChartBlocks = (content: string): boolean =>
 /**
  * Info: (20260720 - Tzuhan) 重算連動:重建內容中所有已插入的模板圖表(白名單逐一檢查,敘述零改動)
  */
+/**
+ * Info: (20260807 - Emily) 一個區塊裡有沒有「真的東西」。
+ *
+ * 資料不足時 `buildCarbonChartBlock` 回的是一句佔位提示,既沒有 mermaid 圍籬
+ * 也沒有表格列。用「有沒有這兩者」判斷,比拿字串去比對 i18n 文案可靠 ——
+ * 文案會改,而且有五種語言。
+ */
+const carriesRenderedData = (block: string): boolean =>
+  block.includes("```mermaid") || /^\s*\|.*\|\s*$/m.test(block);
+
+// Info: (20260807 - Emily) 取出兩個錨點之間的現有內容(含錨點);找不到就回空字串
+const readExistingBlock = (
+  content: string,
+  templateId: CarbonChartTemplateEnum,
+): string => {
+  const start = content.indexOf(buildChartAnchorStart(templateId));
+  if (start < 0) return "";
+  const endAnchor = buildChartAnchorEnd(templateId);
+  const end = content.indexOf(endAnchor, start);
+  if (end < 0) return "";
+  return content.slice(start, end + endAnchor.length);
+};
+
+/**
+ * Info: (20260807 - Emily) 依帳本重建所有內嵌圖表。
+ *
+ * ## 算不出圖的重建,不得蓋掉已經有圖的區塊
+ *
+ * 這是 UAT 追了一整天的「刷新後桑基圖不見」的真因
+ * (issue_drafts/inventory_table_import/12)。刷新前後兩份 markdown 比對後很明確:
+ * **錨點完好,中間的內容被換成了「(資料不足,補齊活動數據後由系統自動生成圖表)」**。
+ * 也就是說圖沒有存丟、也沒有讀丟 —— 是重載時這支函式拿著一份還沒載入完的帳本
+ * 重建了一次,算出「沒有資料」,然後把好好的圖蓋掉,接著那份殘缺內容被存了回去。
+ *
+ * 一次失敗的重建於是變成永久的資料損失。這與 `12` 修過的
+ * 「一次還原失敗變成永久失敗」是同一個形狀,只是換了一層。
+ *
+ * 判斷的依據不是「帳本是不是空的」—— 那正是呼叫端搞不清楚的事,
+ * 而是**新算出來的東西有沒有比現有的少**。帳本真的被清空時,
+ * 使用者會經由明確的操作把圖移除,而不是靠一次沉默的重建。
+ */
 export const refreshCarbonChartBlocks = (
   content: string,
   ledger: IComputedLedger | undefined,
@@ -893,11 +977,20 @@ export const refreshCarbonChartBlocks = (
   let next = content;
   Object.values(CarbonChartTemplateEnum).forEach((templateId) => {
     if (!next.includes(buildChartAnchorStart(templateId))) return;
-    next = insertCarbonChartBlock(
-      next,
+    const rebuilt = buildCarbonChartBlock(
       templateId,
-      buildCarbonChartBlock(templateId, ledger, labels, tableLabels),
+      ledger,
+      labels,
+      tableLabels,
     );
+    if (
+      !carriesRenderedData(rebuilt) &&
+      carriesRenderedData(readExistingBlock(next, templateId))
+    ) {
+      // Info: (20260807 - Emily) 保留現有內容:降級的重建不是新資訊,是資訊遺失
+      return;
+    }
+    next = insertCarbonChartBlock(next, templateId, rebuilt);
   });
   return next;
 };

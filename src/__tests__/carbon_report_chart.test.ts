@@ -431,4 +431,45 @@ describe("insertCarbonChartBlock / refreshCarbonChartBlocks", () => {
     expect(refreshed).not.toContain("1235000");
     expect(refreshed.startsWith("敘述。")).toBe(true);
   });
+
+  /**
+   * Info: (20260807 - Emily) 「刷新後桑基圖不見」的回歸測試
+   * (issue_drafts/inventory_table_import/12)。
+   *
+   * UAT 提供的刷新前後 markdown 比對顯示:錨點完好,中間的 sankey 被換成
+   * 「(資料不足...)」佔位字串。成因是重載時帳本還沒載入完就重建了一次,
+   * 而那次重建的結果被存了回去 —— 一次沉默的降級變成永久的資料損失。
+   */
+  it("should not overwrite a rendered chart when the rebuild has no data", () => {
+    const chart = buildCarbonChartBlock(
+      CarbonChartTemplateEnum.SCOPE_PIE,
+      buildLedger(),
+    );
+    const content = insertCarbonChartBlock(
+      "敘述。",
+      CarbonChartTemplateEnum.SCOPE_PIE,
+      chart,
+    );
+    expect(content).toContain("```mermaid");
+
+    // Info: (20260807 - Emily) 帳本還沒載入 —— 這正是重載當下的狀態
+    const refreshed = refreshCarbonChartBlocks(content, undefined);
+    expect(refreshed).toBe(content);
+  });
+
+  it("should still fill an empty block when the rebuild has data", () => {
+    /**
+     * Info: (20260807 - Emily) 保護不能變成「一旦空過就永遠填不回去」——
+     * 佔位字串被真正的圖表取代仍然必須發生,否則第一次重建失敗就再也救不回來。
+     */
+    const placeholder = insertCarbonChartBlock(
+      "敘述。",
+      CarbonChartTemplateEnum.SCOPE_PIE,
+      buildCarbonChartBlock(CarbonChartTemplateEnum.SCOPE_PIE, undefined),
+    );
+    expect(placeholder).not.toContain("```mermaid");
+
+    const refreshed = refreshCarbonChartBlocks(placeholder, buildLedger());
+    expect(refreshed).toContain("```mermaid");
+  });
 });

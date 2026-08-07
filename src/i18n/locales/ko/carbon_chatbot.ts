@@ -112,6 +112,17 @@ export const carbonChatbot = {
   save_failed: "저장 실패",
   save_failed_hint:
     "저장 실패: 다른 탭에서 초안을 업데이트했을 수 있습니다. 페이지를 새로고침해 주세요",
+  // Info: (20260807 - Emily) 저장 실패 유형별 문구: 잃는 것은 수 분의 결과물이며 아이콘 하나로는 부족하다
+  save_failed_notice:
+    "보고서의 최신 변경 사항이 클라우드에 저장되지 않았습니다. 내용은 이 기기에 남아 있습니다. 잠시 후 다시 시도하거나 페이지를 새로고침해 주세요.",
+  save_failed_conflict:
+    "최신 변경 사항이 클라우드에 저장되지 않았습니다: 다른 탭 또는 기기에서 초안이 업데이트되었습니다. 새로고침해 최신 버전을 받은 뒤 다시 수정해 주세요.",
+  save_failed_too_large:
+    "최신 변경 사항이 클라우드에 저장되지 않았습니다: 초안 하나의 용량 상한을 초과했습니다. 원문 표 일부를 제거하거나 나누어 가져오기 해 주세요.",
+  save_local_quota:
+    "로컬 저장 공간이 부족해 오프라인 백업을 갱신하지 못했습니다(클라우드 저장은 완료).",
+  save_local_quota_only:
+    "로컬 저장 공간이 부족하고 이 버전은 아직 클라우드에 없습니다 — 탭을 닫지 말고 잠금 해제 또는 새로고침 후 다시 시도해 주세요.",
   attach_file: "파일 첨부",
   remove_attachment: "첨부 제거",
   attachment_invalid_type:
@@ -153,7 +164,8 @@ export const carbonChatbot = {
   import_unmapped: "목차에 대응하지 않는 내용({{count}}건, 가져오지 않음)",
   // Info: (20260806 - Tzuhan) 待匯入結果的第三條路:保存起來稍後再決定(內容已入庫,重載仍在)
   import_defer: "나중에 결정",
-  import_pending_bar: "가져오기 대기 중인 분석 결과를 저장했습니다: {{name}} ({{count}}개 절, 보고서에 미기록)",
+  import_pending_bar:
+    "가져오기 대기 중인 분석 결과를 저장했습니다: {{name}} ({{count}}개 절, 보고서에 미기록)",
   import_pending_open: "확인하고 가져오기",
   import_pending_discard: "버리기",
   import_reset_note:
@@ -264,8 +276,7 @@ export const carbonChatbot = {
     "배출 흐름: 전사 → 상위 9개 배출 항목과 기타(원문 전재, 지역 기준, tCO2e/년)",
   chart_imported_sankey_other: "기타",
   // Info: (20260807 - Tzuhan) 分類圖抽掉廠址層(屏東佔 97%,同圖畫不出比重);廠址改列小計
-  chart_imported_sankey_site_totals:
-    "사업장별 소계 (tCO2e/년, 전사 대비 비중)",
+  chart_imported_sankey_site_totals: "사업장별 소계 (tCO2e/년, 전사 대비 비중)",
   chart_imported_sankey_ghg_mapping: "하위 코드와 GHG Protocol 범주 대조",
   chart_imported_sankey_below_threshold: "비중이 작아 미표시(tCO2e/년)",
   chart_imported_sankey_organization: "전사",

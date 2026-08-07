@@ -17,6 +17,7 @@ import {
   IComputedLedgerEntry,
   IReportCategory,
   IReportParagraph,
+  IReportData,
   IArchivedSessionEntry,
 } from "@/types/carbon_chatbot.types";
 import {
@@ -48,6 +49,7 @@ import {
 import {
   CarbonChartTemplateEnum,
   CARBON_AUTO_SANKEY_PARAGRAPH_ID,
+  CARBON_SANKEY_LABEL_MAX_WIDTH,
 } from "@/constants/carbon_report_charts";
 import { formatGhgCategoryLabel, formatEsgScopeLabel } from "@/constants/esg";
 import { formatIsoSubCategoryLabel } from "@/constants/iso14064_subcategory";
@@ -93,6 +95,7 @@ import {
   loadReportDraft,
   saveReportDraft,
   isDraftVersionConflict,
+  isDraftTooLargeError,
   loadSessionsIndex,
   saveSessionsIndex,
   saveLocalDraftBackup,
@@ -386,6 +389,16 @@ export const useCarbonChat = () => {
   // Info: (20260806 - Tzuhan) 各 channel 待匯入紀錄的樂觀鎖版本(讀取時記下,保存成功後更新)
   const pendingImportVersionsRef = useRef<Map<string, number>>(new Map());
   /**
+   * Info: (20260807 - Emily) 每個 channel 一條保存佇列
+   * (issue_drafts/inventory_table_import/14_pending_import_persist_race.md)。
+   *
+   * 版本號的讀取與回寫之間隔著一次網路往返;兩次併發的保存會讀到同一個起始版本,
+   * 後到的那次撞上樂觀鎖並回 400。實測 log 裡就是相隔 1ms 的兩個 PUT,一個 400、一個 200。
+   * 串成佇列之後,後一次一定在前一次把新版本寫回 ref 之後才讀 —— 衝突從源頭消失,
+   * 不需要重試邏輯(重試只是把競態換成比較慢的競態)。
+   */
+  const persistPendingQueueRef = useRef<Map<string, Promise<void>>>(new Map());
+  /**
    * Info: (20260806 - Tzuhan) 待匯入紀錄的還原狀態,兩個集合分工同盤查狀態那條路:
    * settled = 有結論(含「存在但解不開」,再試也是同一結果);
    * attempted = 正在試,失敗時移除以便下次重試(網路抖動不該變成永久失敗)。
@@ -415,6 +428,29 @@ export const useCarbonChat = () => {
   const [saveStatus, setSaveStatus] = useState<ReportSaveStatus>(null);
   const restoredChannelsRef = useRef<Set<string>>(new Set());
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /**
+   * Info: (20260807 - Emily) 進行中的雲端保存(逐 channel)。
+   *
+   * 這是「重整之後圖不見了」的根因(issue_drafts/inventory_table_import/12):
+   * 舊實作只 debounce、不管有沒有請求在飛。整份報告書的 PUT 是好幾 MB,
+   * 一次要跑上好幾秒;匯入落地 → 算勾稽 → 插流程圖 → 插桑基圖 這一串變更之間
+   * 只隔幾百毫秒,於是第二次 PUT 帶著**還沒被更新的 version** 送出去,
+   * 撞上樂觀鎖回 VL_DRAFT_VERSION_CONFLICT。
+   *
+   * 而圖表是整條管線**最後**才加上去的 —— 最後一次保存失敗之後就沒有下一次變更
+   * 可以再觸發保存,所以外顯症狀恰好是「其他段落都在,只有圖不見了」。
+   */
+  const savingChannelsRef = useRef<Set<string>>(new Set());
+  /**
+   * Info: (20260807 - Emily) 各 channel 當下最新的報告內容。
+   *
+   * 保存成功後要用**最新**的內容重寫本機快取,不能用送出當時 closure 裡那一份:
+   * 舊實作 `saveLocalDraftBackup(chatChannel, activeReportData, newVersion)` 寫的是
+   * 送出時的舊內容,卻掛上新的 draftVersion —— 還原時 `draftVersion >= DB version`
+   * 判定成立而優先採用本機快取,於是**連退路那一份也被舊內容蓋掉**,
+   * 圖表在雲端與本機同時消失。
+   */
+  const latestReportDataRef = useRef<Map<string, IReportData>>(new Map());
   // Info: (20260714 - Tzuhan) 各 channel 草稿的樂觀鎖版本(讀取時記下，保存成功後更新)
   const draftVersionsRef = useRef<Map<string, number>>(new Map());
   // Info: (20260716 - Tzuhan) #52 各 channel 的存取中繼資料:accountBookId(決定保存模式)與 canEdit(唯讀切換)
@@ -984,14 +1020,93 @@ export const useCarbonChat = () => {
       });
   }, [isUnlocked, chatChannel, activeSessionId, sessionAccess]);
 
+  /**
+   * Info: (20260807 - Emily) 送出一輪雲端保存,直到送出去的就是當下最新的那一份。
+   *
+   * 兩件事被綁在一起,因為它們是同一個不變式的兩半:
+   * 1. **同一個 channel 同時只有一個 PUT 在飛**(savingChannelsRef)。並行送出會讓後者
+   *    帶著過期的 version 撞上樂觀鎖,而那一次的內容就此消失。
+   * 2. **飛的期間內容又變了就再送一次**(while 迴圈)。少了這一步,第 1 點會把
+   *    「保存期間的變更」直接丟掉 —— 那只是把競態換成靜默遺失。
+   *
+   * 迴圈內的 await 是刻意的:這裡要的就是序列化,並行正是要防的事。
+   */
+  const flushReportDraftSave = useCallback(
+    async (
+      channel: string,
+      sessionId: string,
+      masterKey: IChatroomMasterKey | null,
+      accountBookId: string | null,
+    ): Promise<void> => {
+      if (savingChannelsRef.current.has(channel)) return;
+      savingChannelsRef.current.add(channel);
+      setSaveStatus("saving");
+      try {
+        let inflight = latestReportDataRef.current.get(channel);
+        while (inflight) {
+          const expectedVersion = draftVersionsRef.current.get(channel) ?? 0;
+          // Info: (20260716 - Tzuhan) #52 帳本會話走明文保存(模型 A);個人會話維持 E2EE
+          const newVersion = await saveReportDraft(
+            channel,
+            masterKey,
+            inflight,
+            expectedVersion,
+            accountBookId,
+          );
+          draftVersionsRef.current.set(channel, newVersion);
+          // Info: (20260716 - Tzuhan) UAT P0:快取常駐(refresh 後解鎖前即刻可見)
+          // Info: (20260807 - Emily) 以「當下最新」重寫,不是送出時的那份 —— 見 latestReportDataRef
+          const latest = latestReportDataRef.current.get(channel) ?? inflight;
+          if (!saveLocalDraftBackup(channel, latest, newVersion)) {
+            // Info: (20260807 - Emily) 雲端成功時退路失效不擋流程,但不得靜默(配額爆掉是可觀測事實)
+            setDraftNotice(
+              { type: "info", text: t("carbon_chatbot.save_local_quota")! },
+              sessionId,
+            );
+            dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, sessionId);
+          }
+          if (latest === inflight) break;
+          inflight = latest;
+        }
+        setSaveStatus("saved");
+      } catch (error) {
+        /**
+         * Info: (20260807 - Emily) 保存失敗必須說得出**是哪一種**失敗,而不是共用一個小圖示。
+         * 代價是幾分鐘的 LLM 成果,使用者有權當場知道這一版沒有進雲端。
+         */
+        let noticeText: string;
+        if (isDraftTooLargeError(error)) {
+          console.error("[carbon-chat] report draft too large:", channel, {
+            chars: error.chars,
+            limit: error.limit,
+          });
+          noticeText = t("carbon_chatbot.save_failed_too_large")!;
+        } else if (isDraftVersionConflict(error)) {
+          console.warn("[carbon-chat] draft version conflict:", channel);
+          noticeText = t("carbon_chatbot.save_failed_conflict")!;
+        } else {
+          console.error("[carbon-chat] failed to save report draft:", error);
+          noticeText = t("carbon_chatbot.save_failed_notice")!;
+        }
+        setSaveStatus("error");
+        setDraftNotice({ type: "error", text: noticeText }, sessionId);
+      } finally {
+        savingChannelsRef.current.delete(channel);
+      }
+    },
+    [t, setDraftNotice, dismissDraftNoticeAfter],
+  );
+
   // Info: (20260714 - Tzuhan) 報告草稿 debounce 自動保存(前端加密 → PUT)；還原完成前不保存，避免空骨架覆蓋既有草稿
   const activeReportData = sessionsData[activeSessionId]?.reportData;
   useEffect(() => {
     if (!activeReportData) return undefined;
+    // Info: (20260807 - Emily) 先記下「當下最新」,保存迴圈與快取重寫都以這裡為準
+    latestReportDataRef.current.set(chatChannel, activeReportData);
     // Info: (20260715 - Luphia) 內容一有變更即先寫本機安全快取(不等 debounce);萬一保存前當機/關頁,下次還原時可救回
     // Info: (20260716 - Tzuhan) #50 提到所有雲端保存 guard 之前:本機快取不需金鑰,
     // Info: (20260716 - Tzuhan) 未解鎖的新聊天室貼上內容也先落地,解鎖後由還原流程撿回並自動推入 DB
-    saveLocalDraftBackup(
+    const backedUp = saveLocalDraftBackup(
       chatChannel,
       activeReportData,
       draftVersionsRef.current.get(chatChannel) ?? 0,
@@ -1008,42 +1123,45 @@ export const useCarbonChat = () => {
     if (!canCloudSave) {
       // Info: (20260716 - Tzuhan) #50 明確告知使用者「僅暫存本機」,避免誤以為已上雲
       setSaveStatus("local");
+      /**
+       * Info: (20260807 - Emily) 只暫存本機、而本機也寫不進去 = 這一版哪裡都沒有。
+       * 這是最不能靜默的一種,原本只有一行 console.error。
+       */
+      if (!backedUp) {
+        setSaveStatus("error");
+        setDraftNotice(
+          { type: "error", text: t("carbon_chatbot.save_local_quota_only")! },
+          activeSessionId,
+        );
+      }
       return undefined;
     }
 
     setSaveStatus("saving");
     if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    const sessionIdForSave = activeSessionId;
     autosaveTimerRef.current = setTimeout(() => {
       autosaveTimerRef.current = null;
-      const expectedVersion = draftVersionsRef.current.get(chatChannel) ?? 0;
-      // Info: (20260716 - Tzuhan) #52 帳本會話走明文保存(模型 A);個人會話維持 E2EE
-      saveReportDraft(
+      void flushReportDraftSave(
         chatChannel,
+        sessionIdForSave,
         master,
-        activeReportData,
-        expectedVersion,
         draftBookId,
-      )
-        .then((newVersion) => {
-          draftVersionsRef.current.set(chatChannel, newVersion);
-          setSaveStatus("saved");
-          // Info: (20260716 - Tzuhan) UAT P0:快取常駐(refresh 後解鎖前即刻可見),僅同步版本號
-          saveLocalDraftBackup(chatChannel, activeReportData, newVersion);
-        })
-        .catch((error) => {
-          // Info: (20260714 - Tzuhan) 樂觀鎖衝突 = 他端已更新，不 silent overwrite；一律以 error 提示重整取得最新
-          if (isDraftVersionConflict(error)) {
-            console.warn("[carbon-chat] draft version conflict:", chatChannel);
-          } else {
-            console.error("[carbon-chat] failed to save report draft:", error);
-          }
-          setSaveStatus("error");
-        });
+      );
     }, CARBON_REPORT_AUTOSAVE_DEBOUNCE_MS);
     return () => {
       if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
     };
-  }, [activeReportData, chatChannel, isUnlocked, sessionAccess]);
+  }, [
+    activeReportData,
+    chatChannel,
+    activeSessionId,
+    isUnlocked,
+    sessionAccess,
+    flushReportDraftSave,
+    setDraftNotice,
+    t,
+  ]);
 
   // Info: (20260716 - Tzuhan) #6518 切至 session 時自 DB 還原盤查狀態(三態協定比照報告草稿)
   useEffect(() => {
@@ -1273,8 +1391,13 @@ export const useCarbonChat = () => {
        * 各家報告的中文名稱不一致,而同一個代碼在不同報告印出不同名字,
        * 圖與圖之間就對不起來(理由詳見 formatIsoSubCategoryLabel)。
        */
+      // Info: (20260807 - Emily) 以顯示寬度截斷:名稱補上之後,英文最長的一筆在 1024px 下會疊字
       formatSubCategory: (subCategory: string) =>
-        formatIsoSubCategoryLabel(subCategory, language),
+        formatIsoSubCategoryLabel(
+          subCategory,
+          language,
+          CARBON_SANKEY_LABEL_MAX_WIDTH,
+        ),
     }),
     [t, language],
   );
@@ -1673,7 +1796,6 @@ export const useCarbonChat = () => {
           isValid: validation.isValid,
           reason: validation.reason,
           offending: validation.offending,
-          index: Object.fromEntries(index),
         });
         /**
          * Info: (20260804 - Tzuhan) 不合理即整份丟棄,退回送全文。
@@ -1761,7 +1883,8 @@ export const useCarbonChat = () => {
         if (index >= units.length) return;
         const unit = units[index];
         const chapter = chapters.find((item) => item.id === unit.chapterId);
-        if (!chapter) return;
+        // Info: (20260807 - Emily) 取不到章就接著取下一個,不要白白少一個 worker
+        if (!chapter) return processNext();
         inFlightCount += 1;
         reportProgress();
         const formData = new FormData();
@@ -1788,10 +1911,6 @@ export const useCarbonChat = () => {
         // Info: (20260730 - Tzuhan) 該單元各節的起始頁 → 頁碼範圍;缺任何一節的索引就不帶範圍(退回送全文),
         // Info: (20260730 - Tzuhan) 寧可多花 token,也不能因為索引不全而漏送內容
         const unitPages = unit.sectionIds.map((id) => pageIndex?.get(id));
-        /**
-         * Info: (20260805 - Tzuhan) 上界取**下一個單元**的第一節,不是下一章的第一節。
-         * 同章切成多份時,用下一章當上界會讓每一份都送到章尾 —— 切了等於沒切。
-         */
         /**
          * Info: (20260807 - Emily) 上界取本單元最後一節在**大綱**裡的下一節
          * (PR review 第 1 點;原本取 `units[index + 1]`)。
@@ -2019,39 +2138,54 @@ export const useCarbonChat = () => {
         );
         return;
       }
-      try {
-        const version = pendingImportVersionsRef.current.get(channel) ?? 0;
-        const nextVersion = await putPendingImportRecord(
-          channel,
-          master,
-          {
-            storageVersion: CARBON_PENDING_IMPORT_STORAGE_VERSION,
-            savedAt: new Date().toISOString(),
-            source: {
-              cid: source?.cid ?? null,
-              fileName: source?.fileName ?? pending.fileName,
-              mimeType: source?.mimeType ?? "",
+      const run = async (): Promise<void> => {
+        try {
+          const version = pendingImportVersionsRef.current.get(channel) ?? 0;
+          const nextVersion = await putPendingImportRecord(
+            channel,
+            master,
+            {
+              storageVersion: CARBON_PENDING_IMPORT_STORAGE_VERSION,
+              savedAt: new Date().toISOString(),
+              source: {
+                cid: source?.cid ?? null,
+                fileName: source?.fileName ?? pending.fileName,
+                mimeType: source?.mimeType ?? "",
+              },
+              pending: {
+                fileName: pending.fileName,
+                originSessionId: pending.originSessionId,
+                originSessionTitle: pending.originSessionTitle,
+                items: pending.items,
+                unmapped: pending.unmapped,
+                activityCount: pending.activityCount,
+                failedChapters: pending.failedChapters ?? [],
+              },
+              activities,
+              // Info: (20260806 - Tzuhan) Map 無法 JSON 序列化,存成 entry 陣列
+              pageIndex: pageIndex ? Array.from(pageIndex.entries()) : [],
             },
-            pending: {
-              fileName: pending.fileName,
-              originSessionId: pending.originSessionId,
-              originSessionTitle: pending.originSessionTitle,
-              items: pending.items,
-              unmapped: pending.unmapped,
-              activityCount: pending.activityCount,
-              failedChapters: pending.failedChapters ?? [],
-            },
-            activities,
-            // Info: (20260806 - Tzuhan) Map 無法 JSON 序列化,存成 entry 陣列
-            pageIndex: pageIndex ? Array.from(pageIndex.entries()) : [],
-          },
-          version,
-          bookId,
-        );
-        pendingImportVersionsRef.current.set(channel, nextVersion);
-      } catch (error) {
-        console.error("[carbon-chat] failed to persist pending import:", error);
-      }
+            version,
+            bookId,
+          );
+          pendingImportVersionsRef.current.set(channel, nextVersion);
+        } catch (error) {
+          console.error(
+            "[carbon-chat] failed to persist pending import:",
+            error,
+          );
+        }
+      };
+
+      /**
+       * Info: (20260807 - Emily) 接到同一 channel 的佇列尾端。
+       * previous 已經 catch 過,不會因為前一次失敗而讓整條鏈斷掉。
+       */
+      const previous =
+        persistPendingQueueRef.current.get(channel) ?? Promise.resolve();
+      const task = previous.then(run);
+      persistPendingQueueRef.current.set(channel, task);
+      await task;
     },
     [user?.address, sessionAccess],
   );
@@ -2413,6 +2547,7 @@ export const useCarbonChat = () => {
         notify,
       );
       notify(null);
+      let mergedPending: IPendingImport | null = null;
       setPendingImportBySession((prev) => {
         const current = prev[activeSessionId];
         if (!current) return prev;
@@ -2435,19 +2570,33 @@ export const useCarbonChat = () => {
           unmapped: [...current.unmapped, ...result.unmapped],
           failedChapters: result.failed,
         };
-        /**
-         * Info: (20260806 - Tzuhan) 補回來的章節也要落地,否則重載後又回到「還有 N 章失敗」。
-         * 寫在 updater 內是為了拿到剛合併好的結果 —— 從外面讀 state 會讀到合併前的值。
-         */
+        // Info: (20260807 - Emily) 只帶出合併結果,保存移到 updater 之外
+        mergedPending = next;
+        return { ...prev, [activeSessionId]: next };
+      });
+
+      /**
+       * Info: (20260807 - Emily) 保存不能寫在 setState 的 updater 裡
+       * (issue_drafts/inventory_table_import/14_pending_import_persist_race.md)。
+       *
+       * updater 必須是純函式。React 18 的 StrictMode 會刻意呼叫它兩次來逼出不純的實作,
+       * 於是那一行 `void persistPendingImport(...)` 會送出兩個帶著同一個起始版本的 PUT,
+       * 後到的撞上樂觀鎖回 400。Emily 的 UAT log 裡抓到了這個形狀:
+       * 相隔 1ms 的兩個 PUT(400 + 200),堆疊上有 basicStateReducer ——
+       * 那就是 React 正在執行 updater。
+       *
+       * 原註解說「寫在 updater 內是為了拿到剛合併好的結果」,顧慮是對的,
+       * 但用一個區域變數把結果帶出來就夠了,不必把網路請求也搬進去。
+       */
+      if (mergedPending) {
         void persistPendingImport(
           activeSessionId,
-          next,
+          mergedPending,
           lastImportSourceRef.current,
           importActivitiesRef.current,
           lastPageIndexRef.current,
         );
-        return { ...prev, [activeSessionId]: next };
-      });
+      }
     } catch (error) {
       // Info: (20260806 - Tzuhan) 原本沒有 catch:重試整批拋錯時提示會卡在 loading 不散
       console.error("[carbon-chat] retry failed chapters failed:", error);

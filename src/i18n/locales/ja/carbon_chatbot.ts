@@ -112,6 +112,17 @@ export const carbonChatbot = {
   save_failed: "保存に失敗しました",
   save_failed_hint:
     "保存失敗:別のタブが下書きを更新した可能性があります。ページを再読み込みしてください",
+  // Info: (20260807 - Emily) 保存失敗の種別文言:失うのは数分の成果であり、アイコン一つでは足りない
+  save_failed_notice:
+    "レポートの最新の変更はクラウドに保存されていません。内容は本端末に残っています。しばらくしてから再試行するか、ページを再読み込みしてください。",
+  save_failed_conflict:
+    "最新の変更はクラウドに保存されていません:別のタブまたは端末が下書きを更新しました。再読み込みして最新版を取得してから、もう一度編集してください。",
+  save_failed_too_large:
+    "最新の変更はクラウドに保存されていません:下書き 1 件あたりの上限を超えています。原文テーブルを一部削除するか、分割して取り込んでください。",
+  save_local_quota:
+    "ローカルの保存領域が不足し、オフラインバックアップを更新できませんでした(クラウドへの保存は完了しています)。",
+  save_local_quota_only:
+    "ローカルの保存領域が不足しており、この版はまだクラウドにありません — タブを閉じずに、ロック解除または再読み込みのうえ再試行してください。",
   attach_file: "ファイルを添付",
   remove_attachment: "添付を削除",
   attachment_invalid_type:
@@ -155,7 +166,8 @@ export const carbonChatbot = {
     "アウトラインに対応しない内容({{count}} 件。インポートされません)",
   // Info: (20260806 - Tzuhan) 待匯入結果的第三條路:保存起來稍後再決定(內容已入庫,重載仍在)
   import_defer: "後で決める",
-  import_pending_bar: "インポート待ちの解析結果を保存しています：{{name}}（{{count}} セクション、報告書には未記入）",
+  import_pending_bar:
+    "インポート待ちの解析結果を保存しています：{{name}}（{{count}} セクション、報告書には未記入）",
   import_pending_open: "確認してインポート",
   import_pending_discard: "破棄",
   import_reset_note:
@@ -268,8 +280,7 @@ export const carbonChatbot = {
     "排出の行き先：全社 → 上位 9 排出項目とその他(原文転記、ロケーション基準、tCO2e/年)",
   chart_imported_sankey_other: "その他",
   // Info: (20260807 - Tzuhan) 分類圖抽掉廠址層(屏東佔 97%,同圖畫不出比重);廠址改列小計
-  chart_imported_sankey_site_totals:
-    "拠点別小計（tCO2e/年、全社比）",
+  chart_imported_sankey_site_totals: "拠点別小計（tCO2e/年、全社比）",
   chart_imported_sankey_ghg_mapping: "サブコードと GHG Protocol カテゴリの対応",
   chart_imported_sankey_below_threshold: "比率が小さく非表示(tCO2e/年)",
   chart_imported_sankey_organization: "全社",

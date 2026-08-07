@@ -14,6 +14,8 @@ import {
 import { request, ApiError } from "@/lib/utils/request";
 import {
   CARBON_REPORT_DRAFT_STORAGE_VERSION,
+  CARBON_REPORT_DRAFT_MAX_CONTENT_CHARS,
+  CARBON_REPORT_DRAFT_ENCRYPTED_SIZE_RATIO,
   buildCarbonSessionsIndexKey,
   buildCarbonReportDraftKey,
 } from "@/constants/carbon_chatbot";
@@ -36,6 +38,44 @@ export interface ILoadedReportDraft {
 }
 
 const REPORT_DRAFT_API = "/api/v1/chat/carbon/report";
+
+/**
+ * Info: (20260807 - Emily) 草稿超出欄位上限 —— 以具名錯誤拋出,而不是讓它變成一個 400。
+ *
+ * 舊行為:超過 2M 由 server 的 Zod 擋下,前端收到 VL_SCHEMA_ERROR,
+ * 與「網路斷了」「版本衝突」共用同一個 catch,畫面上都是同一個小圖示。
+ * 整份盤查報告書匯入後本來就會逼近這個上限,那不是例外而是常態,
+ * 呼叫端必須能分辨出「太大」並對使用者說得出原因。
+ */
+export class CarbonDraftTooLargeError extends Error {
+  readonly chars: number;
+
+  readonly limit: number;
+
+  constructor(chars: number, limit: number) {
+    super(`carbon report draft too large: ${chars} > ${limit}`);
+    this.name = "CarbonDraftTooLargeError";
+    this.chars = chars;
+    this.limit = limit;
+  }
+}
+
+export const isDraftTooLargeError = (
+  error: unknown,
+): error is CarbonDraftTooLargeError =>
+  error instanceof CarbonDraftTooLargeError;
+
+/**
+ * Info: (20260807 - Emily) 明文的可用預算:加密模式要扣掉 ECIES + base64 的膨脹,
+ * 因為上限管的是密文長度,而這裡手上只有明文。
+ */
+const draftPlaintextBudget = (isPlainMode: boolean): number =>
+  isPlainMode
+    ? CARBON_REPORT_DRAFT_MAX_CONTENT_CHARS
+    : Math.floor(
+        CARBON_REPORT_DRAFT_MAX_CONTENT_CHARS /
+          CARBON_REPORT_DRAFT_ENCRYPTED_SIZE_RATIO,
+      );
 
 // Info: (20260714 - Tzuhan) 取回草稿:GET 密文 → 主私鑰解密 → Zod 驗證
 // Info: (20260714 - Tzuhan) 回傳三態:null = 無草稿(版本 0 可首存);reportData null = 草稿存在但無法解讀
@@ -106,6 +146,15 @@ export const saveReportDraft = async (
     throw new Error("masterKey is required for encrypted mode");
   }
   const serialized = JSON.stringify(reportData);
+  /**
+   * Info: (20260807 - Emily) 送出前先量,不要讓上限以 400 的形式被發現。
+   * Fail Fast 的對象是使用者:超過上限時他必須當場知道「這一版沒有存進去」,
+   * 而不是在重整之後才發現最後幾分鐘的成果不見了。
+   */
+  const budget = draftPlaintextBudget(Boolean(accountBookId));
+  if (serialized.length > budget) {
+    throw new CarbonDraftTooLargeError(serialized.length, budget);
+  }
   const body = accountBookId
     ? {
         channel,
@@ -151,12 +200,21 @@ const isBrowser = (): boolean => typeof window !== "undefined";
 
 // Info: (20260715 - Luphia) 編輯後立即寫入本機安全快取(明文限本機,信任邊界為使用者裝置;E2EE 針對的是 server)
 // Info: (20260716 - Tzuhan) draftVersion = 內容對應的 DB 樂觀鎖版本(0 = 尚未上雲),供還原時與 DB 比新舊
+/**
+ * Info: (20260807 - Emily) 回傳是否真的寫進去了。
+ *
+ * 原本回 void 且 catch 只 console.error —— 而這一層是雲端保存失敗時的**唯一退路**。
+ * 整份盤查報告書(153 頁)序列化後逼近 localStorage 的 5 MB 配額,
+ * QuotaExceededError 一旦發生,兩層保存就同時靜靜失效,
+ * 使用者看到的仍只是一個小圖示(issue_drafts/inventory_table_import/12)。
+ * 呼叫端要能知道退路也沒了,才有辦法把話說清楚。
+ */
 export const saveLocalDraftBackup = (
   channel: string,
   reportData: IReportData,
   draftVersion: number = 0,
-): void => {
-  if (!isBrowser()) return;
+): boolean => {
+  if (!isBrowser()) return false;
   try {
     window.localStorage.setItem(
       buildCarbonReportDraftKey(channel),
@@ -166,11 +224,13 @@ export const saveLocalDraftBackup = (
         reportData,
       }),
     );
+    return true;
   } catch (error) {
     console.error(
       "[carbon-report-storage] save local draft backup failed:",
       error,
     );
+    return false;
   }
 };
 
