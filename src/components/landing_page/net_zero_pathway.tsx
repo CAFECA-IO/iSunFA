@@ -14,7 +14,8 @@ export default function NetZeroPathway() {
   const { t } = useTranslation();
 
   return (
-    <section className="relative overflow-hidden border-y border-slate-800/60 bg-slate-950 py-24 sm:py-32">
+    // Info: (20260807 - Luphia) dark:bg-* 的 `!` 見 globals.css「刻意深色的表面」區塊
+    <section className="dark:bg-surface-raised! relative overflow-hidden border-y border-slate-800/60 bg-slate-950 py-24 sm:py-32">
       {/* Info: (20260611 - Luphia) Background Gradients */}
       <div className="absolute inset-y-0 left-1/2 -z-10 w-[200%] -translate-x-1/2 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(34,197,94,0.15),transparent_50%)]" />

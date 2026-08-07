@@ -13,7 +13,8 @@ export default function SimulationWorkflow() {
   const { t } = useTranslation();
 
   return (
-    <section className="relative overflow-hidden bg-slate-900 py-24 sm:py-32">
+    // Info: (20260807 - Luphia) dark:bg-* 的 `!` 見 globals.css「刻意深色的表面」區塊
+    <section className="dark:bg-surface-raised! relative overflow-hidden bg-slate-900 py-24 sm:py-32">
       {/* Info: (20260611 - Luphia) Background Gradients */}
       <div className="absolute inset-y-0 left-1/2 -z-10 w-[200%] -translate-x-1/2 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(249,115,22,0.1),transparent_40%)]" />

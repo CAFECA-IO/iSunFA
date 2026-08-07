@@ -50,7 +50,8 @@ export default function DPPUrbanMining() {
   }, []);
 
   return (
-    <div className="relative overflow-hidden bg-slate-900 py-24 text-white sm:py-32">
+    // Info: (20260807 - Luphia) dark:bg-* 的 `!` 見 globals.css「刻意深色的表面」區塊
+    <div className="dark:bg-surface-raised! relative overflow-hidden bg-slate-900 py-24 text-white sm:py-32">
       {/* Info: (20260529 - Luphia) Background Gradients */}
       <div className="absolute inset-y-0 left-1/2 -z-10 w-[200%] -translate-x-1/2 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(249,115,22,0.15),transparent_45%)]" />
@@ -236,7 +237,7 @@ export default function DPPUrbanMining() {
               <button
                 onClick={startScan}
                 disabled={isScanning}
-                className="mt-6 inline-flex items-center gap-x-2 rounded-xl bg-orange-600 px-5 py-3 font-semibold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-50"
+                className="mt-6 inline-flex items-center gap-x-2 rounded-xl bg-orange-700 px-5 py-3 font-semibold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-orange-800 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isScanning ? (
                   <span className="flex items-center gap-2">
