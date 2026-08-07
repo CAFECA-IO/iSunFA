@@ -107,3 +107,33 @@ export async function request<T = unknown>(
     );
   }
 }
+
+/**
+ * Info: (20260807 - Emily) 保活式串流端點專用:發請求並直接拆信封
+ * (PR review 第 1 點)。
+ *
+ * ## 為什麼需要這個
+ *
+ * `/chat/carbon/import` 與 `/chat/carbon/diagram` 走保活式串流(先送 `\n` 撐住
+ * 閘道的 60 秒閒置逾時),代價是 **HTTP 狀態碼從一開始就鎖成 200** ——
+ * 失敗只存在於信封的 `success: false` 裡。
+ *
+ * 也就是說,對這兩條端點直接用 `request()` 的人會拿到一個「成功」的回應,
+ * 而裡面是失敗。表現是「沒結果、沒錯誤、console 一片乾淨」——
+ * 比它想取代的那個 504 更難查。
+ *
+ * 目前所有呼叫點都記得接 `unwrapEnvelope`,但那是靠**作者知道**,不是靠機制。
+ * 把兩步併成一步之後,錯誤用法不再是「忘了加一行」,而是要**刻意**繞過去。
+ *
+ * ## 這不是把 request() 取代掉
+ *
+ * 一般端點仍然用 `request()`:它們的失敗在 HTTP 狀態碼上,拆信封是多餘的。
+ * 這支只服務「狀態碼不能表達失敗」的那一類端點。
+ */
+export async function requestEnvelope<T = unknown>(
+  url: string,
+  options: IRequestOptions = {},
+): Promise<T | null> {
+  const envelope = await request<IEnvelopeLike<T>>(url, options);
+  return unwrapEnvelope(envelope);
+}
