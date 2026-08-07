@@ -472,4 +472,37 @@ describe("insertCarbonChartBlock / refreshCarbonChartBlocks", () => {
     const refreshed = refreshCarbonChartBlocks(placeholder, buildLedger());
     expect(refreshed).toContain("```mermaid");
   });
+
+  /**
+   * Info: (20260808 - Luphia) 守恆凍結必須穿透「保留現有」的防護。
+   *
+   * 凍結告警是 blockquote —— 無 mermaid 也無表格列,`carriesRenderedData`
+   * 會把它判成降級。若防護不放行,勾稽違反時舊圖永遠留在畫面上,
+   * 凍結機制(#22)對「已經畫出圖」的報告形同不存在;
+   * 而同一次重算裡資料表格是無條件替換的 —— 表格凍結、圖表照舊,同頁自相矛盾。
+   */
+  it("should let a conservation freeze replace an existing chart", () => {
+    const chart = buildCarbonChartBlock(
+      CarbonChartTemplateEnum.SCOPE_PIE,
+      buildLedger(),
+    );
+    const content = insertCarbonChartBlock(
+      "敘述。",
+      CarbonChartTemplateEnum.SCOPE_PIE,
+      chart,
+    );
+    expect(content).toContain("```mermaid");
+
+    const violated = buildLedger({
+      articulation: {
+        status: ArticulationStatusEnum.VIOLATED,
+        violations: [],
+        warnings: [],
+        checkedAt: "2026-08-08T00:00:00.000Z",
+      },
+    });
+    const refreshed = refreshCarbonChartBlocks(content, violated);
+    expect(refreshed).not.toContain("```mermaid");
+    expect(refreshed).toContain("凍結");
+  });
 });

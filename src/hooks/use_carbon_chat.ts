@@ -282,6 +282,21 @@ export const useCarbonChat = () => {
     Record<string, IPendingImport>
   >({});
   /**
+   * Info: (20260808 - Luphia) pendingImportBySession 的 ref 鏡像,
+   * 供跨 await 的流程(重試合併)讀「當下最新」而不必進 updater。
+   *
+   * 為什麼不能從 updater 帶值出來:React 18 只有在該 fiber 沒有其他
+   * pending update 時才會 eager 同步執行 updater —— 重試路徑前一行的
+   * `notify(null)` 已經排了同元件的更新,updater 會被延後到 render 才跑,
+   * 「帶出來的區域變數」在同步檢查的當下仍是 null,保存就被靜默跳過。
+   * 也不能用 closure 裡的 state:await 之後它可能已過期
+   * (重試期間使用者套用或捨棄,closure 那份會把已清除的紀錄復活)。
+   */
+  const pendingImportBySessionRef = useRef<Record<string, IPendingImport>>({});
+  useEffect(() => {
+    pendingImportBySessionRef.current = pendingImportBySession;
+  }, [pendingImportBySession]);
+  /**
    * Info: (20260803 - Tzuhan) 只顯示屬於當前會話的提示。切到別房時當前房本來就沒有進度,
    * 顯示 null 而非沿用上一房的字串 —— 沿用會讓使用者以為這一房正在跑。
    */
@@ -2547,34 +2562,6 @@ export const useCarbonChat = () => {
         notify,
       );
       notify(null);
-      let mergedPending: IPendingImport | null = null;
-      setPendingImportBySession((prev) => {
-        const current = prev[activeSessionId];
-        if (!current) return prev;
-        const itemByParagraph = new Map(
-          current.items.map((item) => [item.paragraphId, item]),
-        );
-        result.segments.forEach((segment) => {
-          const existing = itemByParagraph.get(segment.paragraphId);
-          itemByParagraph.set(segment.paragraphId, {
-            paragraphId: segment.paragraphId,
-            title: segment.title,
-            content: segment.content,
-            hasExisting: existing?.hasExisting ?? false,
-            checked: existing?.checked ?? true,
-          });
-        });
-        const next: IPendingImport = {
-          ...current,
-          items: Array.from(itemByParagraph.values()),
-          unmapped: [...current.unmapped, ...result.unmapped],
-          failedChapters: result.failed,
-        };
-        // Info: (20260807 - Emily) 只帶出合併結果,保存移到 updater 之外
-        mergedPending = next;
-        return { ...prev, [activeSessionId]: next };
-      });
-
       /**
        * Info: (20260807 - Emily) 保存不能寫在 setState 的 updater 裡
        * (issue_drafts/inventory_table_import/14_pending_import_persist_race.md)。
@@ -2585,18 +2572,42 @@ export const useCarbonChat = () => {
        * 相隔 1ms 的兩個 PUT(400 + 200),堆疊上有 basicStateReducer ——
        * 那就是 React 正在執行 updater。
        *
-       * 原註解說「寫在 updater 內是為了拿到剛合併好的結果」,顧慮是對的,
-       * 但用一個區域變數把結果帶出來就夠了,不必把網路請求也搬進去。
+       * Info: (20260808 - Luphia) 也不能「從 updater 用區域變數帶值出來再保存」——
+       * updater 不保證同步執行(見 pendingImportBySessionRef 的說明),
+       * 那個變數在檢查當下可能還是 null,保存會被靜默跳過。
+       * 改為:從 ref 鏡像讀當下最新 → 在 updater 之外算好合併結果 →
+       * 同一份物件既寫進 state 也送去保存。讀不到現有紀錄就代表
+       * 重試期間已被套用或捨棄,此時合併等於復活一筆已清除的紀錄,直接放棄。
        */
-      if (mergedPending) {
-        void persistPendingImport(
-          activeSessionId,
-          mergedPending,
-          lastImportSourceRef.current,
-          importActivitiesRef.current,
-          lastPageIndexRef.current,
-        );
-      }
+      const current = pendingImportBySessionRef.current[originSessionId];
+      if (!current) return;
+      const itemByParagraph = new Map(
+        current.items.map((item) => [item.paragraphId, item]),
+      );
+      result.segments.forEach((segment) => {
+        const existing = itemByParagraph.get(segment.paragraphId);
+        itemByParagraph.set(segment.paragraphId, {
+          paragraphId: segment.paragraphId,
+          title: segment.title,
+          content: segment.content,
+          hasExisting: existing?.hasExisting ?? false,
+          checked: existing?.checked ?? true,
+        });
+      });
+      const merged: IPendingImport = {
+        ...current,
+        items: Array.from(itemByParagraph.values()),
+        unmapped: [...current.unmapped, ...result.unmapped],
+        failedChapters: result.failed,
+      };
+      setPendingImportFor(originSessionId, merged);
+      void persistPendingImport(
+        originSessionId,
+        merged,
+        lastImportSourceRef.current,
+        importActivitiesRef.current,
+        lastPageIndexRef.current,
+      );
     } catch (error) {
       // Info: (20260806 - Tzuhan) 原本沒有 catch:重試整批拋錯時提示會卡在 loading 不散
       console.error("[carbon-chat] retry failed chapters failed:", error);
@@ -2613,6 +2624,7 @@ export const useCarbonChat = () => {
     setDraftNotice,
     dismissDraftNoticeAfter,
     isRetryingImport,
+    setPendingImportFor,
     persistPendingImport,
     t,
   ]);

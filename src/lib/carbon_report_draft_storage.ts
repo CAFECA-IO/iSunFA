@@ -15,10 +15,10 @@ import { request, ApiError } from "@/lib/utils/request";
 import {
   CARBON_REPORT_DRAFT_STORAGE_VERSION,
   CARBON_REPORT_DRAFT_MAX_CONTENT_CHARS,
-  CARBON_REPORT_DRAFT_ENCRYPTED_SIZE_RATIO,
   buildCarbonSessionsIndexKey,
   buildCarbonReportDraftKey,
 } from "@/constants/carbon_chatbot";
+import { projectedEciesContentChars } from "@/lib/chatroom_ecies";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import {
   CarbonReportDataSchema,
@@ -66,16 +66,22 @@ export const isDraftTooLargeError = (
   error instanceof CarbonDraftTooLargeError;
 
 /**
- * Info: (20260807 - Emily) 明文的可用預算:加密模式要扣掉 ECIES + base64 的膨脹,
- * 因為上限管的是密文長度,而這裡手上只有明文。
+ * Info: (20260807 - Emily) 上限管的是**送出欄位**的長度,而這裡手上只有明文。
+ *
+ * Info: (20260808 - Luphia) 改為精確投影,不再用固定倍率估。
+ * 密文長度取決於明文的 UTF-8 位元組數,而 `.length` 數的是 UTF-16 code units ——
+ * 中文字 1 個 `.length` 佔 3 bytes,固定倍率(原 1.4)對中文報告會低估到 3 倍:
+ * 預檢放行、伺服端 400,正是預檢要消滅的那種失敗,而中文報告是這個功能的主場。
+ * 明文模式送的就是字串本身,伺服端 zod `.max()` 數的同樣是 `.length`,直接比即可;
+ * 加密模式以 UTF-8 位元組數走 `projectedEciesContentChars` 精確換算。
  */
-const draftPlaintextBudget = (isPlainMode: boolean): number =>
+const projectedDraftContentChars = (
+  serialized: string,
+  isPlainMode: boolean,
+): number =>
   isPlainMode
-    ? CARBON_REPORT_DRAFT_MAX_CONTENT_CHARS
-    : Math.floor(
-        CARBON_REPORT_DRAFT_MAX_CONTENT_CHARS /
-          CARBON_REPORT_DRAFT_ENCRYPTED_SIZE_RATIO,
-      );
+    ? serialized.length
+    : projectedEciesContentChars(new TextEncoder().encode(serialized).length);
 
 // Info: (20260714 - Tzuhan) 取回草稿:GET 密文 → 主私鑰解密 → Zod 驗證
 // Info: (20260714 - Tzuhan) 回傳三態:null = 無草稿(版本 0 可首存);reportData null = 草稿存在但無法解讀
@@ -151,9 +157,15 @@ export const saveReportDraft = async (
    * Fail Fast 的對象是使用者:超過上限時他必須當場知道「這一版沒有存進去」,
    * 而不是在重整之後才發現最後幾分鐘的成果不見了。
    */
-  const budget = draftPlaintextBudget(Boolean(accountBookId));
-  if (serialized.length > budget) {
-    throw new CarbonDraftTooLargeError(serialized.length, budget);
+  const projectedChars = projectedDraftContentChars(
+    serialized,
+    Boolean(accountBookId),
+  );
+  if (projectedChars > CARBON_REPORT_DRAFT_MAX_CONTENT_CHARS) {
+    throw new CarbonDraftTooLargeError(
+      projectedChars,
+      CARBON_REPORT_DRAFT_MAX_CONTENT_CHARS,
+    );
   }
   const body = accountBookId
     ? {

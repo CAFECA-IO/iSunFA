@@ -11,10 +11,8 @@
 
 import { describe, it, expect } from "@jest/globals";
 import { CarbonReportDataSchema } from "@/validators";
-import {
-  CARBON_REPORT_DRAFT_MAX_CONTENT_CHARS,
-  CARBON_REPORT_DRAFT_ENCRYPTED_SIZE_RATIO,
-} from "@/constants/carbon_chatbot";
+import { CARBON_REPORT_DRAFT_MAX_CONTENT_CHARS } from "@/constants/carbon_chatbot";
+import { projectedEciesContentChars } from "@/lib/chatroom_ecies";
 import {
   buildChartAnchorStart,
   CarbonChartTemplateEnum,
@@ -77,17 +75,31 @@ describe("carbon report draft persistence", () => {
     expect(CarbonReportDataSchema.safeParse(oversized).success).toBe(false);
   });
 
-  it("should leave headroom for ECIES expansion in the encrypted-mode budget", () => {
+  it("should project the ciphertext length exactly from UTF-8 bytes", () => {
     /**
-     * Info: (20260807 - Emily) 上限管的是密文長度,而前端手上只有明文。
-     * 加密模式的明文預算必須嚴格小於上限,否則預檢會放行一份注定被 server 擋下的草稿 ——
-     * 那正是「保存靜靜失敗」的其中一條路。
+     * Info: (20260808 - Luphia) `encryptedContent` = base64(iv 12B + 密文 + tag 16B),
+     * base64 每 3 bytes 產 4 字元。投影必須與這個公式一致,
+     * 否則預檢與伺服端上限之間又會出現縫隙。
      */
-    const encryptedBudget = Math.floor(
-      CARBON_REPORT_DRAFT_MAX_CONTENT_CHARS /
-        CARBON_REPORT_DRAFT_ENCRYPTED_SIZE_RATIO,
+    expect(projectedEciesContentChars(0)).toBe(Math.ceil(28 / 3) * 4);
+    const bytes = 1_000;
+    expect(projectedEciesContentChars(bytes)).toBe(
+      Math.ceil((12 + bytes + 16) / 3) * 4,
     );
-    expect(CARBON_REPORT_DRAFT_ENCRYPTED_SIZE_RATIO).toBeGreaterThan(1);
-    expect(encryptedBudget).toBeLessThan(CARBON_REPORT_DRAFT_MAX_CONTENT_CHARS);
+  });
+
+  it("should measure the encrypted-mode budget in UTF-8 bytes, not UTF-16 chars", () => {
+    /**
+     * Info: (20260808 - Luphia) 這是中文報告的回歸測試:中文字 1 個 `.length`
+     * 佔 3 bytes,舊的固定倍率(1.4)用 `.length` 估,60 萬字的純中文內容
+     * 會被預檢放行(600,000 < 2M ÷ 1.4),而實際密文 ≈ 240 萬字元,
+     * 伺服端必然 400 —— 預檢形同虛設。以位元組計的投影必須把它擋下來。
+     */
+    const cjkChars = 600_000;
+    const utf8Bytes = cjkChars * 3;
+    expect(cjkChars).toBeLessThan(CARBON_REPORT_DRAFT_MAX_CONTENT_CHARS / 1.4);
+    expect(projectedEciesContentChars(utf8Bytes)).toBeGreaterThan(
+      CARBON_REPORT_DRAFT_MAX_CONTENT_CHARS,
+    );
   });
 });

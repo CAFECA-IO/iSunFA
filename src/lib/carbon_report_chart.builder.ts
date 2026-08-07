@@ -975,6 +975,16 @@ export const refreshCarbonChartBlocks = (
   tableLabels: ICarbonDataTableLabels = CARBON_DATA_TABLE_DEFAULT_LABELS,
 ): string => {
   let next = content;
+  /**
+   * Info: (20260808 - Luphia) 守恆凍結必須穿透「保留現有」的防護。
+   *
+   * 凍結告警是 blockquote,既無 mermaid 也無表格列,`carriesRenderedData`
+   * 會把它判成「沒有真的東西」—— 於是勾稽違反時舊圖被留著、告警從未出現,
+   * 而同一次重算裡資料表格走無條件替換,表格凍結了、圖表還在,同頁自相矛盾。
+   * 凍結是**帳本當下狀態的權威陳述**,不是資訊遺失;防護只該擋「算不出圖」的降級。
+   */
+  const isFrozen =
+    ledger?.articulation?.status === ArticulationStatusEnum.VIOLATED;
   Object.values(CarbonChartTemplateEnum).forEach((templateId) => {
     if (!next.includes(buildChartAnchorStart(templateId))) return;
     const rebuilt = buildCarbonChartBlock(
@@ -984,6 +994,7 @@ export const refreshCarbonChartBlocks = (
       tableLabels,
     );
     if (
+      !isFrozen &&
       !carriesRenderedData(rebuilt) &&
       carriesRenderedData(readExistingBlock(next, templateId))
     ) {

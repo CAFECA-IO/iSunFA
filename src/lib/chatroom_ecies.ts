@@ -126,6 +126,32 @@ async function deriveAesGcmKey(
   );
 }
 
+/**
+ * Info: (20260808 - Luphia) AES-GCM 驗證標籤長度(bytes,WebCrypto 預設 128 bits)。
+ * 只供長度投影使用;實際加解密由 WebCrypto 以預設值處理。
+ */
+const CHATROOM_ENCRYPTION_TAG_BYTES = 16;
+
+/**
+ * Info: (20260808 - Luphia) 給定明文的 UTF-8 位元組數,精確算出
+ * `encryptedContent` 的字元長度(= base64(iv + ciphertext + tag))。
+ *
+ * 供呼叫端在**加密前**預檢欄位上限。密文長度取決於 UTF-8 位元組數
+ * 而非字串 `.length`(UTF-16 code units):中文字 1 個 `.length` 佔 3 bytes,
+ * 用 `.length` 乘固定倍率估會低估到 3 倍 —— 預檢放行、伺服端 400,
+ * 正是預檢要消滅的那種失敗。放在本模組,是因為信封的形狀
+ * (iv 前綴、GCM tag、base64)是這裡的實作細節,呼叫端不該各自推算。
+ */
+export function projectedEciesContentChars(
+  plaintextUtf8Bytes: number,
+): number {
+  const cipherBytes =
+    CHATROOM_ENCRYPTION_IV_BYTES +
+    plaintextUtf8Bytes +
+    CHATROOM_ENCRYPTION_TAG_BYTES;
+  return Math.ceil(cipherBytes / 3) * 4;
+}
+
 // Info: (20260712 - Luphia) --- ECIES 加密：任何人用收件者 xpub 即可加密 ---
 export async function eciesEncrypt(
   recipientExtendedPublicKey: string,

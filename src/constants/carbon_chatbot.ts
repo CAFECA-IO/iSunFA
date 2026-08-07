@@ -252,14 +252,11 @@ export const CARBON_REPORT_AUTOSAVE_DEBOUNCE_MS = 2000;
 export const CARBON_REPORT_DRAFT_MAX_CONTENT_CHARS = 2_000_000;
 
 /**
- * Info: (20260807 - Emily) ECIES + base64 的體積膨脹估計倍率。
- *
- * 上限管的是**密文**長度,而前端手上只有明文 —— 用明文長度去比 2M 會低估,
- * 於是「前端覺得沒超過、伺服端擋下來」。加密模式的預檢因此以
- * 上限 ÷ 本倍率 作為明文預算。取 1.4 是量測值(base64 固定 4/3,
- * 加上 ECIES 的固定標頭與 JSON 包裝)再留一點餘裕。
+ * Info: (20260808 - Luphia) 加密模式的預檢不再用固定倍率估
+ * (原 `CARBON_REPORT_DRAFT_ENCRYPTED_SIZE_RATIO = 1.4` 已移除)。
+ * 密文長度取決於明文的 UTF-8 位元組數,固定倍率對中文內容會低估到 3 倍;
+ * 精確換算收斂到 `projectedEciesContentChars`(chatroom_ecies.ts)。
  */
-export const CARBON_REPORT_DRAFT_ENCRYPTED_SIZE_RATIO = 1.4;
 
 // Info: (20260714 - Tzuhan) 草稿狀態列錯誤提示的自動消失時間(ms)
 export const CARBON_DRAFT_NOTICE_DISMISS_MS = 8000;
