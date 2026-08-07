@@ -180,15 +180,17 @@ model TeamWalletLedger {
 }
 
 model TeamQuotaUsage {
-  id            String   @id @default(uuid())
-  teamId        String   @map("team_id")
-  team          Team     @relation(fields: [teamId], references: [id])
-  userId        String   @map("user_id")
-  featureCode   String   @map("feature_code")
-  amount        BigInt
-  windowKey5h   Int      @map("window_key_5h")
-  windowKeyWeek Int      @map("window_key_week")
-  createdAt     DateTime @default(now()) @map("created_at")
+  id             String   @id @default(uuid())
+  teamId         String   @map("team_id")
+  team           Team     @relation(fields: [teamId], references: [id])
+  userId         String   @map("user_id")
+  featureCode    String   @map("feature_code")
+  amount         BigInt
+  windowKey5h    Int      @map("window_key_5h")
+  windowKeyWeek  Int      @map("window_key_week")
+  // Info: (20260807 - Luphia) 冪等鍵：重試不重複扣額度；退款列以 refund: 前綴共用同一鍵空間
+  idempotencyKey String   @unique @map("idempotency_key")
+  createdAt      DateTime @default(now()) @map("created_at")
 
   @@index([teamId, windowKey5h])
   @@index([teamId, windowKeyWeek])

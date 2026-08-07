@@ -117,6 +117,23 @@ export const BILLABLE_FEATURE_CODE = {
 export type BillableFeatureCode =
   (typeof BILLABLE_FEATURE_CODE)[keyof typeof BILLABLE_FEATURE_CODE];
 
+/**
+ * Info: (20260807 - Luphia) 錢包原子操作的結果判別（Repository → Service 溝通用），
+ * Service 依此轉換為對應的 ApiError，Repository 不直接丟業務錯誤。
+ */
+export const WALLET_OP_OUTCOME = {
+  OK: "OK",
+  // Info: (20260807 - Luphia) 冪等重放：同 idempotencyKey 已入帳，未重複扣款
+  DUPLICATE: "DUPLICATE",
+  NO_WALLET: "NO_WALLET",
+  FROZEN: "FROZEN",
+  INSUFFICIENT: "INSUFFICIENT",
+  NOT_FOUND: "NOT_FOUND",
+} as const;
+
+export type WalletOpOutcome =
+  (typeof WALLET_OP_OUTCOME)[keyof typeof WALLET_OP_OUTCOME];
+
 // Info: (20260807 - Luphia) C 案 Phase 1 每日 merkle 錨定狀態（ADR 015）
 export const TEAM_LEDGER_ANCHOR_STATUS = {
   PENDING: "PENDING",

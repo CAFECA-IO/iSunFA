@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ApiCode } from "@/lib/utils/status";
+import { ApiCode, HTTP_MAP } from "@/lib/utils/status";
 import { name, version } from "@/package";
 import { IErrorDef } from "@/lib/utils/error_dictionary";
 
@@ -66,21 +66,13 @@ export const fileOk = (
   });
 };
 
+/**
+ * Info: (20260807 - Luphia) 改以 HTTP_MAP 為唯一對照來源，
+ * 修正雙套對照缺陷（known_issues/api_http_status_dual_mapping.md）：
+ * 原 switch 缺 CONFLICT / RATE_LIMIT 導致 409/429 實際回 500，
+ * 且新增 ApiCode 成員時 tsc 不會提醒同步。HTTP_MAP 為 Record<ApiCode, number>，
+ * 缺成員會直接編譯失敗。
+ */
 function httpStatusOf(code: ApiCode): number {
-  switch (code) {
-    case ApiCode.SUCCESS:
-      return 200;
-    case ApiCode.VALIDATION_ERROR:
-      return 400;
-    case ApiCode.UNAUTHORIZED:
-      return 401;
-    case ApiCode.FORBIDDEN:
-      return 403;
-    case ApiCode.NOT_FOUND:
-      return 404;
-    case ApiCode.CLIENT_CLOSED_REQUEST:
-      return 499;
-    default:
-      return 500;
-  }
+  return HTTP_MAP[code] ?? 500;
 }
