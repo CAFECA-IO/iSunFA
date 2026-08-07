@@ -234,10 +234,11 @@ export default function DPPUrbanMining() {
               </div>
 
               {/* Info: (20260529 - Luphia) Action Button */}
+              {/* Info: (20260807 - Luphia) hover 不動底色，理由見 hero.tsx 的同款按鈕 */}
               <button
                 onClick={startScan}
                 disabled={isScanning}
-                className="mt-6 inline-flex items-center gap-x-2 rounded-xl bg-orange-700 px-5 py-3 font-semibold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-orange-800 disabled:cursor-not-allowed disabled:opacity-50"
+                className="mt-6 inline-flex items-center gap-x-2 rounded-xl bg-orange-700 px-5 py-3 font-semibold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:ring-2 hover:ring-orange-400 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isScanning ? (
                   <span className="flex items-center gap-2">

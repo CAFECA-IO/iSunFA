@@ -28,9 +28,10 @@ export default function AIConsultationSection() {
                 {t("ai_consultation_section.description")}
               </p>
               <div className="mt-10 flex items-center gap-x-6">
+                {/* Info: (20260807 - Luphia) hover 不動底色，理由見 hero.tsx 的同款按鈕 */}
                 <Link
                   href="/ai_consultation_room"
-                  className="rounded-md bg-orange-700 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-1 hover:bg-orange-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+                  className="rounded-md bg-orange-700 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:ring-2 hover:ring-orange-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
                 >
                   {t("ai_consultation_section.button")}
                 </Link>

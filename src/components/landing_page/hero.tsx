@@ -56,9 +56,13 @@ export default function Hero() {
             />
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
-            {/* Info: (20260807 - Luphia) orange-600 配白字只有 3.58:1，未達 AA 的 4.5。
-                orange-700（5.22:1）是仍能通過的最淺一階，因此 hover 只能往更深走。
-                純圖示的橘底圓鈕不在此列：圖形只需 3:1，orange-600 本來就夠。 */}
+            {/* Info: (20260807 - Luphia) orange-600 配白字只有 3.58:1，未達 AA 的 4.5，
+                改用 orange-700（5.22:1）。純圖示的橘底圓鈕不在此列：圖形只需 3:1。
+
+                hover 不動底色。白字釘住了底色的下限（不能比 orange-700 更淺），
+                而往更深走會讓按鈕自己退回頁面裡 —— orange-800 對深色頁面只有 2.65:1，
+                低於 WCAG 1.4.11 對控制項輪廓要求的 3:1，等於滑過去反而更看不見。
+                改以外圈光暈表示 hover：橘環對頁面 8.22:1，方向與全頁其他 hover 一致（浮起）。 */}
             <button
               onClick={() => {
                 if (user) {
@@ -67,7 +71,7 @@ export default function Hero() {
                   setAuthModalOpen(true);
                 }
               }}
-              className="rounded-md bg-orange-700 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+              className="rounded-md bg-orange-700 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg hover:ring-2 hover:ring-orange-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
             >
               {t("hero.free_trial")}
             </button>
