@@ -15,7 +15,7 @@ export default function NetZeroPathway() {
 
   return (
     // Info: (20260807 - Luphia) dark:bg-* 的 `!` 見 globals.css「刻意深色的表面」區塊
-    <section className="dark:bg-surface-raised! relative overflow-hidden border-y border-slate-800/60 bg-slate-950 py-24 sm:py-32">
+    <section className="dark:bg-surface-raised! dark:border-border-default relative overflow-hidden border-y border-slate-800/60 bg-slate-950 py-24 sm:py-32">
       {/* Info: (20260611 - Luphia) Background Gradients */}
       <div className="absolute inset-y-0 left-1/2 -z-10 w-[200%] -translate-x-1/2 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(34,197,94,0.15),transparent_50%)]" />
@@ -45,7 +45,10 @@ export default function NetZeroPathway() {
             {/* Info: (20260611 - Luphia) Ambient glow behind the panel */}
             <div className="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-b from-green-500/5 to-teal-500/5 blur-xl" />
 
-            <div className="relative flex h-[400px] w-full flex-col items-center justify-center rounded-3xl bg-slate-800/40 p-6 ring-1 ring-slate-700/50 backdrop-blur-md transition-all hover:bg-slate-800/60 hover:ring-green-500/30">
+            {/* Info: (20260807 - Luphia) 深色下 hover 由外圈承擔：底色在近黑頁面上動不了 ——
+                `bg-slate-800/40 → /60` 疊出來只差 1.04:1，就算拉到 100% 也只有 1.12:1。
+                綠環拉到 /70 才對卡片有 4.29:1，過得了 WCAG 1.4.11 的 3:1。 */}
+            <div className="dark:ring-border-default relative flex h-[400px] w-full flex-col items-center justify-center rounded-3xl bg-slate-800/40 p-6 ring-1 ring-slate-700/50 backdrop-blur-md transition-all hover:bg-slate-800/60 hover:ring-green-500/30 dark:hover:ring-green-500/70">
               {/* Info: (20260611 - Luphia) SVG Topology Lines */}
               <svg
                 className="pointer-events-none absolute inset-0 z-0 h-full w-full"
@@ -114,13 +117,13 @@ export default function NetZeroPathway() {
               <div className="relative z-10 flex h-full w-full items-center justify-between">
                 {/* Info: (20260611 - Luphia) Left Side: Global Factories Database */}
                 <div className="flex h-full flex-col justify-between py-8 pl-2">
-                  <div className="group flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900/80 ring-1 ring-slate-700 backdrop-blur-sm transition-transform hover:scale-110">
+                  <div className="group dark:ring-border-default flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900/80 ring-1 ring-slate-700 backdrop-blur-sm transition-transform hover:scale-110">
                     <Factory className="h-4 w-4 text-sky-400/70" />
                   </div>
-                  <div className="group flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900/80 ring-1 ring-slate-700 backdrop-blur-sm transition-transform hover:scale-110">
+                  <div className="group dark:ring-border-default flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900/80 ring-1 ring-slate-700 backdrop-blur-sm transition-transform hover:scale-110">
                     <Globe2 className="h-4 w-4 text-sky-400/70" />
                   </div>
-                  <div className="group flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900/80 ring-1 ring-slate-700 backdrop-blur-sm transition-transform hover:scale-110">
+                  <div className="group dark:ring-border-default flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900/80 ring-1 ring-slate-700 backdrop-blur-sm transition-transform hover:scale-110">
                     <Factory className="h-4 w-4 text-sky-400/70" />
                   </div>
                   <div className="absolute -bottom-2 left-2 text-xs font-semibold text-slate-400">

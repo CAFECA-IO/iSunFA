@@ -76,7 +76,10 @@ export default function DPPUrbanMining() {
         {/* Info: (20260529 - Luphia) Dual Cards Grid */}
         <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-8 lg:grid-cols-2">
           {/* Info: (20260529 - Luphia) Card 1: DPP */}
-          <div className="group relative flex flex-col justify-between rounded-3xl bg-slate-800/40 p-8 ring-1 ring-slate-700/50 backdrop-blur-md transition-all duration-300 hover:bg-slate-800/60 hover:ring-orange-500/50">
+          {/* Info: (20260807 - Luphia) 深色下 hover 由外圈承擔：底色在近黑頁面上動不了 ——
+              `bg-slate-800/40 → /60` 疊出來只差 1.04:1，就算拉到 100% 也只有 1.12:1。
+              橘環拉到 /70 才對卡片有 3.39:1，過得了 WCAG 1.4.11 的 3:1。 */}
+          <div className="group dark:ring-border-default relative flex flex-col justify-between rounded-3xl bg-slate-800/40 p-8 ring-1 ring-slate-700/50 backdrop-blur-md transition-all duration-300 hover:bg-slate-800/60 hover:ring-orange-500/50 dark:hover:ring-orange-500/70">
             <div>
               <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-400 ring-1 ring-orange-500/30 transition-transform group-hover:scale-110">
                 <QrCode className="h-6 w-6" />
@@ -135,7 +138,8 @@ export default function DPPUrbanMining() {
           </div>
 
           {/* Info: (20260529 - Luphia) Card 2: Urban Mining */}
-          <div className="group relative flex flex-col justify-between rounded-3xl bg-slate-800/40 p-8 ring-1 ring-slate-700/50 backdrop-blur-md transition-all duration-300 hover:bg-slate-800/60 hover:ring-green-500/50">
+          {/* Info: (20260807 - Luphia) hover 的處理同 Card 1 */}
+          <div className="group dark:ring-border-default relative flex flex-col justify-between rounded-3xl bg-slate-800/40 p-8 ring-1 ring-slate-700/50 backdrop-blur-md transition-all duration-300 hover:bg-slate-800/60 hover:ring-green-500/50 dark:hover:ring-green-500/70">
             <div>
               <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-green-500/10 text-green-400 ring-1 ring-green-500/30 transition-transform group-hover:scale-110">
                 <Recycle className="h-6 w-6" />
@@ -195,7 +199,7 @@ export default function DPPUrbanMining() {
         </div>
 
         {/* Info: (20260529 - Luphia) Interactive Scanner Demo Section */}
-        <div className="relative mx-auto mt-24 max-w-5xl overflow-hidden rounded-3xl bg-slate-950/60 p-8 ring-1 ring-slate-800/80 backdrop-blur-sm">
+        <div className="dark:ring-border-default relative mx-auto mt-24 max-w-5xl overflow-hidden rounded-3xl bg-slate-950/60 p-8 ring-1 ring-slate-800/80 backdrop-blur-sm">
           <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-orange-500/5 blur-3xl" />
           <div className="absolute bottom-0 left-0 h-40 w-40 rounded-full bg-green-500/5 blur-3xl" />
 
@@ -207,7 +211,7 @@ export default function DPPUrbanMining() {
               </h4>
 
               {/* Info: (20260529 - Luphia) Scan Frame */}
-              <div className="group relative flex h-56 w-56 items-center justify-center overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-900 p-6 shadow-inner">
+              <div className="group dark:border-border-default relative flex h-56 w-56 items-center justify-center overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-900 p-6 shadow-inner">
                 {/* Info: (20260529 - Luphia) QR Code Graphic */}
                 <div
                   className={`transition-opacity duration-300 ${isScanning ? "opacity-30" : "opacity-90"}`}
@@ -262,7 +266,7 @@ export default function DPPUrbanMining() {
             {/* Info: (20260529 - Luphia) Right: Results / DPP Mockup Card */}
             <div className="flex w-full flex-col lg:w-3/5">
               {scanComplete ? (
-                <div className="scale-100 rounded-2xl border border-slate-700/60 bg-slate-900/90 p-6 opacity-100 shadow-2xl transition-all duration-500">
+                <div className="dark:border-border-default scale-100 rounded-2xl border border-slate-700/60 bg-slate-900/90 p-6 opacity-100 shadow-2xl transition-all duration-500">
                   {/* Info: (20260529 - Luphia) Status Banner */}
                   <div className="mb-4 flex w-fit items-center gap-2 rounded-full bg-green-500/10 px-3 py-1 text-xs font-semibold text-green-400">
                     <ShieldCheck className="h-3.5 w-3.5" />
@@ -270,7 +274,7 @@ export default function DPPUrbanMining() {
                   </div>
 
                   {/* Info: (20260529 - Luphia) Product Title */}
-                  <h5 className="mb-4 border-b border-slate-800 pb-2 text-xl font-bold text-slate-100">
+                  <h5 className="dark:border-border-default mb-4 border-b border-slate-800 pb-2 text-xl font-bold text-slate-100">
                     {t("dpp_urban_mining.interactive.product_identity")}
                   </h5>
 
@@ -335,7 +339,7 @@ export default function DPPUrbanMining() {
                       {t("dpp_urban_mining.interactive.materials_composition")}
                     </h6>
                     <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-                      <div className="flex items-center justify-between border-b border-slate-800/40 py-1.5">
+                      <div className="dark:border-border-default flex items-center justify-between border-b border-slate-800/40 py-1.5">
                         <span className="text-slate-300">
                           {t("dpp_urban_mining.interactive.material_gold")}
                         </span>
@@ -343,19 +347,19 @@ export default function DPPUrbanMining() {
                           0.24 g
                         </span>
                       </div>
-                      <div className="flex items-center justify-between border-b border-slate-800/40 py-1.5">
+                      <div className="dark:border-border-default flex items-center justify-between border-b border-slate-800/40 py-1.5">
                         <span className="text-slate-300">
                           {t("dpp_urban_mining.interactive.material_copper")}
                         </span>
                         <span className="font-mono text-slate-200">32.0 g</span>
                       </div>
-                      <div className="flex items-center justify-between border-b border-slate-800/40 py-1.5">
+                      <div className="dark:border-border-default flex items-center justify-between border-b border-slate-800/40 py-1.5">
                         <span className="text-slate-300">
                           {t("dpp_urban_mining.interactive.material_lithium")}
                         </span>
                         <span className="font-mono text-green-400">8.6 g</span>
                       </div>
-                      <div className="flex items-center justify-between border-b border-slate-800/40 py-1.5">
+                      <div className="dark:border-border-default flex items-center justify-between border-b border-slate-800/40 py-1.5">
                         <span className="text-slate-300">
                           {t("dpp_urban_mining.interactive.material_cobalt")}
                         </span>
@@ -378,7 +382,7 @@ export default function DPPUrbanMining() {
                   </div>
                 </div>
               ) : isScanning ? (
-                <div className="flex h-[350px] scale-100 flex-col justify-center rounded-2xl border border-slate-800/60 bg-slate-900/50 p-8 opacity-90 shadow-inner transition-all duration-300">
+                <div className="dark:border-border-default flex h-[350px] scale-100 flex-col justify-center rounded-2xl border border-slate-800/60 bg-slate-900/50 p-8 opacity-90 shadow-inner transition-all duration-300">
                   <div className="mb-6 flex items-center gap-2">
                     <span className="h-5 w-5 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
                     <span className="text-sm font-bold text-slate-200">
@@ -469,7 +473,7 @@ export default function DPPUrbanMining() {
                   </div>
                 </div>
               ) : (
-                <div className="flex h-[350px] scale-98 flex-col items-center justify-center rounded-2xl border border-slate-800/60 bg-slate-900/40 p-8 text-center opacity-70 shadow-inner transition-all duration-500">
+                <div className="dark:border-border-default flex h-[350px] scale-98 flex-col items-center justify-center rounded-2xl border border-slate-800/60 bg-slate-900/40 p-8 text-center opacity-70 shadow-inner transition-all duration-500">
                   <QrCode className="mb-4 h-16 w-16 text-slate-600" />
                   <p className="max-w-sm text-sm text-slate-400">
                     {t("dpp_urban_mining.interactive.scan_placeholder")}
