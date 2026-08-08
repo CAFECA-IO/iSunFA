@@ -426,7 +426,9 @@ export default function TeamManagementPage() {
           {selectedTeamId && currentTeam && (
             <div className="flex-1 space-y-6">
               <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-                <div className="mb-6 flex flex-col items-start justify-between gap-4 border-b pb-4 sm:flex-row sm:items-center">
+                {/* Info: (20260809 - Luphia) border 需明確帶色：Tailwind v4 預設 currentColor，
+                    深色模式會繼承近白文字色變成亮白分隔線 */}
+                <div className="mb-6 flex flex-col items-start justify-between gap-4 border-b border-gray-100 pb-4 sm:flex-row sm:items-center">
                   {editingName ? (
                     <div className="flex w-full max-w-sm items-center space-x-2">
                       <input

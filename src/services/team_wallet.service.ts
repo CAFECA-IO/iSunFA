@@ -147,8 +147,9 @@ export async function fulfillTeamPointPurchase(order: Order): Promise<void> {
 }
 
 /**
- * Info: (20260807 - Luphia) 錢包視圖（設計書 §7 GET /wallet）：
- * 成員見池餘額與自己的分配；OWNER / ADMIN 另附全員分配清單。
+ * Info: (20260809 - Luphia) 錢包視圖（設計書 §7 GET /wallet）：
+ * 一般成員僅見自己的分配餘額與錢包狀態；未分配池餘額與全員分配清單為
+ * 管理職資訊，僅 OWNER / ADMIN 回傳——後端就不給，非僅前端隱藏（零信任）。
  */
 export async function getTeamWalletView(params: {
   userId: string;
@@ -165,11 +166,13 @@ export async function getTeamWalletView(params: {
     const view: ITeamWalletDetailView = {
       teamId,
       status: (wallet?.status ?? TEAM_WALLET_STATUS.ACTIVE) as TeamWalletStatus,
-      unallocatedBalance: (wallet?.unallocatedBalance ?? BigInt(0)).toString(),
       myAllocationBalance: (allocation?.balance ?? BigInt(0)).toString(),
     };
 
     if (isWalletManager(member)) {
+      view.unallocatedBalance = (
+        wallet?.unallocatedBalance ?? BigInt(0)
+      ).toString();
       const allocations = await teamWalletRepo.listAllocations(teamId);
       view.allocations = allocations.map((a) => ({
         userId: a.userId,

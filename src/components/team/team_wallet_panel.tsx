@@ -34,7 +34,8 @@ interface ISubscriptionView {
 
 interface IWalletView {
   status: string;
-  unallocatedBalance: string;
+  // Info: (20260809 - Luphia) 管理職限定欄位：一般成員的回應不含此欄
+  unallocatedBalance?: string;
   myAllocationBalance: string;
   allocations?: { userId: string; balance: string }[];
 }
@@ -268,14 +269,17 @@ export default function TeamWalletPanel({
               {t("team_management.wallet.balance_title")}
             </span>
             <div className="mt-4 grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs text-gray-500">
-                  {t("team_management.wallet.pool_balance")}
-                </p>
-                <p className="mt-1 text-2xl font-bold text-gray-900 tabular-nums">
-                  {wallet.unallocatedBalance}
-                </p>
-              </div>
+              {/* Info: (20260809 - Luphia) 未分配池為管理職資訊：一般成員後端不回傳、前端不渲染 */}
+              {isManager && wallet.unallocatedBalance !== undefined && (
+                <div>
+                  <p className="text-xs text-gray-500">
+                    {t("team_management.wallet.pool_balance")}
+                  </p>
+                  <p className="mt-1 text-2xl font-bold text-gray-900 tabular-nums">
+                    {wallet.unallocatedBalance}
+                  </p>
+                </div>
+              )}
               <div>
                 <p className="text-xs text-gray-500">
                   {t("team_management.wallet.my_allocation")}

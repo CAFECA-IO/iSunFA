@@ -321,12 +321,15 @@ describe("getTeamWalletView", () => {
     expect(view.allocations).toHaveLength(1);
   });
 
-  it("hides the allocation table from plain members", async () => {
+  it("hides the pool balance and allocation table from plain members", async () => {
     const view = await getTeamWalletView({
       userId: "user-viewer",
       teamId: "team-1",
     });
+    // Info: (20260809 - Luphia) 未分配池為管理職資訊：一般成員的回應不含此欄（零信任）
+    expect(view.unallocatedBalance).toBeUndefined();
     expect(view.allocations).toBeUndefined();
+    expect(view.myAllocationBalance).toBe("50");
     expect(teamWalletRepo.listAllocations).not.toHaveBeenCalled();
   });
 
@@ -334,7 +337,7 @@ describe("getTeamWalletView", () => {
     asMock(teamWalletRepo.getWalletByTeamId).mockResolvedValue(null);
     asMock(teamWalletRepo.getAllocation).mockResolvedValue(null);
     const view = await getTeamWalletView({
-      userId: "user-viewer",
+      userId: "user-admin",
       teamId: "team-1",
     });
     expect(view.unallocatedBalance).toBe("0");

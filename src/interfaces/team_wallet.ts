@@ -40,7 +40,11 @@ export interface ITeamSubscriptionView {
 export interface ITeamWalletView {
   teamId: string;
   status: TeamWalletStatus;
-  unallocatedBalance: string;
+  /**
+   * Info: (20260809 - Luphia) 未分配池餘額為管理職資訊：僅 OWNER / ADMIN 回傳，
+   * 一般成員視角省略此欄位（後端就不給，非僅前端隱藏——零信任）
+   */
+  unallocatedBalance?: string;
   // Info: (20260807 - Luphia) 呼叫者自己的分配餘額；管理者視角另以 allocations 列表取全員
   myAllocationBalance: string;
 }
