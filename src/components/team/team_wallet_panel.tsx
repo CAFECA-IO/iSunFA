@@ -41,32 +41,21 @@ interface ITeamWalletPanelProps {
   isManager: boolean;
 }
 
-function formatCountdown(secondsLeft: number): string {
-  if (secondsLeft <= 0) return "00:00:00";
-  const days = Math.floor(secondsLeft / 86400);
-  const hours = Math.floor((secondsLeft % 86400) / 3600);
-  const minutes = Math.floor((secondsLeft % 3600) / 60);
-  const seconds = secondsLeft % 60;
-  const hms = [hours, minutes, seconds]
-    .map((v) => String(v).padStart(2, "0"))
-    .join(":");
-  return days > 0 ? `${days}d ${hms}` : hms;
-}
-
+/**
+ * Info: (20260809 - Luphia) 額度儀表僅顯示百分比進度條（產品調整 20260809）：
+ * 不揭露 used / limit 具體數字與重置倒數；額度用罄的 resetAt 仍由 402 payload 揭露。
+ */
 function QuotaMeter({
   label,
   window,
-  nowSec,
-  resetLabel,
 }: {
   label: string;
   window: IQuotaWindow;
-  nowSec: number;
-  resetLabel: string;
 }) {
   const limit = Number(window.limit);
   const used = Number(window.used);
   const ratio = limit > 0 ? Math.min(1, Math.max(0, used / limit)) : 0;
+  const percent = Math.round(ratio * 100);
   const barColor =
     ratio >= 1 ? "bg-red-500" : ratio >= 0.8 ? "bg-amber-500" : "bg-orange-500";
 
@@ -74,19 +63,14 @@ function QuotaMeter({
     <div>
       <div className="flex items-baseline justify-between">
         <span className="text-sm font-medium text-gray-700">{label}</span>
-        <span className="text-xs text-gray-500 tabular-nums">
-          {window.used} / {window.limit}
-        </span>
+        <span className="text-xs text-gray-500 tabular-nums">{percent}%</span>
       </div>
       <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-gray-100">
         <div
           className={`h-full rounded-full transition-all ${barColor}`}
-          style={{ width: `${ratio * 100}%` }}
+          style={{ width: `${percent}%` }}
         />
       </div>
-      <p className="mt-1 text-xs text-gray-400 tabular-nums">
-        {resetLabel} {formatCountdown(window.resetAt - nowSec)}
-      </p>
     </div>
   );
 }
@@ -101,7 +85,6 @@ export default function TeamWalletPanel({
   const [subscription, setSubscription] = useState<ISubscriptionView | null>(
     null,
   );
-  const [nowSec, setNowSec] = useState(() => Math.floor(Date.now() / 1000));
 
   const fetchSubscription = useCallback(async () => {
     try {
@@ -121,17 +104,17 @@ export default function TeamWalletPanel({
     fetchSubscription();
   }, [fetchSubscription]);
 
-  // Info: (20260807 - Luphia) 重置倒數：每秒 tick；resetAt 過期即重新拉額度（新視窗歸零）
+  /**
+   * Info: (20260809 - Luphia) 倒數顯示已移除（僅百分比進度條），
+   * 但仍於 5h 視窗 resetAt 到點時自動重拉額度，讓進度條歸零不顯示過期資料
+   */
   useEffect(() => {
-    const timer = setInterval(() => {
-      setNowSec((prev) => {
-        const next = Math.floor(Date.now() / 1000);
-        const reset5h = subscription?.quota.quota5h.resetAt ?? 0;
-        if (prev < reset5h && next >= reset5h) fetchSubscription();
-        return next;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
+    const reset5h = subscription?.quota.quota5h.resetAt;
+    if (!reset5h) return undefined;
+    const delayMs = reset5h * 1000 - Date.now();
+    if (delayMs <= 0) return undefined;
+    const timer = setTimeout(() => fetchSubscription(), delayMs + 1000);
+    return () => clearTimeout(timer);
   }, [subscription, fetchSubscription]);
 
   if (!subscription && !wallet) return null;
@@ -166,21 +149,12 @@ export default function TeamWalletPanel({
               <QuotaMeter
                 label={t("team_management.wallet.quota_5h")}
                 window={subscription.quota.quota5h}
-                nowSec={nowSec}
-                resetLabel={t("team_management.wallet.reset_in")}
               />
               <QuotaMeter
                 label={t("team_management.wallet.quota_week")}
                 window={subscription.quota.quotaWeek}
-                nowSec={nowSec}
-                resetLabel={t("team_management.wallet.reset_in")}
               />
             </div>
-            <p className="mt-4 border-t border-gray-100 pt-3 text-xs text-gray-400">
-              {t("team_management.wallet.faith_rate", {
-                rate: subscription.faithTokensPerCredit,
-              })}
-            </p>
           </div>
         )}
 

@@ -55,9 +55,6 @@ export const teamManagement = {
     quota_title: "Subscription Quota",
     quota_5h: "Per 5-hour quota",
     quota_week: "Weekly quota",
-    reset_in: "Resets in",
-    faith_rate:
-      "Faith AI chat: 1 credit per {{rate}} tokens (rounded up, minimum 1 credit per message)",
     balance_title: "Team Wallet",
     pool_balance: "Unallocated credits",
     frozen_warning:

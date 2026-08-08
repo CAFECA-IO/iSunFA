@@ -55,9 +55,6 @@ export const teamManagement = {
     quota_title: "구독 한도",
     quota_5h: "5시간 한도",
     quota_week: "주간 한도",
-    reset_in: "초기화까지",
-    faith_rate:
-      "Faith AI 채팅: {{rate}} 토큰당 1 포인트 (올림 처리, 메시지당 최소 1 포인트)",
     balance_title: "팀 지갑",
     pool_balance: "미배분 포인트",
     frozen_warning:

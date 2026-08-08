@@ -54,9 +54,6 @@ export const teamManagement = {
     quota_title: "訂閱額度",
     quota_5h: "每 5 小時額度",
     quota_week: "每週額度",
-    reset_in: "重置倒數",
-    faith_rate:
-      "費思 AI 對話：每 {{rate}} tokens 消耗 1 點（不足以 {{rate}} 計，每則最低 1 點）",
     balance_title: "團隊錢包",
     pool_balance: "未分配點數",
     frozen_warning: "團隊錢包已凍結（守恆勾稽異常），請聯繫客服處理。",

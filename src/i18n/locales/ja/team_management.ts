@@ -55,9 +55,6 @@ export const teamManagement = {
     quota_title: "サブスクリプション枠",
     quota_5h: "5 時間ごとの枠",
     quota_week: "週間枠",
-    reset_in: "リセットまで",
-    faith_rate:
-      "Faith AI チャット：{{rate}} トークンごとに 1 ポイント（切り上げ、1 メッセージ最低 1 ポイント）",
     balance_title: "チームウォレット",
     pool_balance: "未割り当てポイント",
     frozen_warning:
