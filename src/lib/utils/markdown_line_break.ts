@@ -54,10 +54,23 @@ export function stripHtmlLineBreaks(text: string): string {
   });
 }
 
+// Info: (20260807 - Emily) 僅供 test();刻意不帶 /g —— 帶了會記住 lastIndex 而漏判
+const HTML_LINE_BREAK_TEST_PATTERN = new RegExp(
+  HTML_LINE_BREAK_PATTERN.source,
+  "i",
+);
+
 /** Info: (20260804 - Tzuhan) 內容是否含 HTML 換行標籤(顯示層用以避免不必要的重建字串) */
 export function hasHtmlLineBreaks(text: string): boolean {
-  // Info: (20260804 - Tzuhan) 每次重建 RegExp:帶 /g 的 test() 會記住 lastIndex,共用實例會漏判
-  return new RegExp(HTML_LINE_BREAK_PATTERN.source, "i").test(text);
+  /**
+   * Info: (20260807 - Emily) 用不帶 /g 的模組層常數,不必每次重建
+   * (PR review 低優先項)。
+   *
+   * 原本每次呼叫都 new RegExp,理由是「帶 /g 的 test() 會記住 lastIndex,
+   * 共用實例會漏判」—— 那個顧慮是對的,但成因是 /g 而不是共用。
+   * 沒有 /g 的實例不帶 lastIndex 狀態,共用完全安全。
+   */
+  return HTML_LINE_BREAK_TEST_PATTERN.test(text);
 }
 
 /**

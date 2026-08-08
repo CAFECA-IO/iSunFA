@@ -431,4 +431,78 @@ describe("insertCarbonChartBlock / refreshCarbonChartBlocks", () => {
     expect(refreshed).not.toContain("1235000");
     expect(refreshed.startsWith("敘述。")).toBe(true);
   });
+
+  /**
+   * Info: (20260807 - Emily) 「刷新後桑基圖不見」的回歸測試
+   * (issue_drafts/inventory_table_import/12)。
+   *
+   * UAT 提供的刷新前後 markdown 比對顯示:錨點完好,中間的 sankey 被換成
+   * 「(資料不足...)」佔位字串。成因是重載時帳本還沒載入完就重建了一次,
+   * 而那次重建的結果被存了回去 —— 一次沉默的降級變成永久的資料損失。
+   */
+  it("should not overwrite a rendered chart when the rebuild has no data", () => {
+    const chart = buildCarbonChartBlock(
+      CarbonChartTemplateEnum.SCOPE_PIE,
+      buildLedger(),
+    );
+    const content = insertCarbonChartBlock(
+      "敘述。",
+      CarbonChartTemplateEnum.SCOPE_PIE,
+      chart,
+    );
+    expect(content).toContain("```mermaid");
+
+    // Info: (20260807 - Emily) 帳本還沒載入 —— 這正是重載當下的狀態
+    const refreshed = refreshCarbonChartBlocks(content, undefined);
+    expect(refreshed).toBe(content);
+  });
+
+  it("should still fill an empty block when the rebuild has data", () => {
+    /**
+     * Info: (20260807 - Emily) 保護不能變成「一旦空過就永遠填不回去」——
+     * 佔位字串被真正的圖表取代仍然必須發生,否則第一次重建失敗就再也救不回來。
+     */
+    const placeholder = insertCarbonChartBlock(
+      "敘述。",
+      CarbonChartTemplateEnum.SCOPE_PIE,
+      buildCarbonChartBlock(CarbonChartTemplateEnum.SCOPE_PIE, undefined),
+    );
+    expect(placeholder).not.toContain("```mermaid");
+
+    const refreshed = refreshCarbonChartBlocks(placeholder, buildLedger());
+    expect(refreshed).toContain("```mermaid");
+  });
+
+  /**
+   * Info: (20260808 - Luphia) 守恆凍結必須穿透「保留現有」的防護。
+   *
+   * 凍結告警是 blockquote —— 無 mermaid 也無表格列,`carriesRenderedData`
+   * 會把它判成降級。若防護不放行,勾稽違反時舊圖永遠留在畫面上,
+   * 凍結機制(#22)對「已經畫出圖」的報告形同不存在;
+   * 而同一次重算裡資料表格是無條件替換的 —— 表格凍結、圖表照舊,同頁自相矛盾。
+   */
+  it("should let a conservation freeze replace an existing chart", () => {
+    const chart = buildCarbonChartBlock(
+      CarbonChartTemplateEnum.SCOPE_PIE,
+      buildLedger(),
+    );
+    const content = insertCarbonChartBlock(
+      "敘述。",
+      CarbonChartTemplateEnum.SCOPE_PIE,
+      chart,
+    );
+    expect(content).toContain("```mermaid");
+
+    const violated = buildLedger({
+      articulation: {
+        status: ArticulationStatusEnum.VIOLATED,
+        violations: [],
+        warnings: [],
+        checkedAt: "2026-08-08T00:00:00.000Z",
+      },
+    });
+    const refreshed = refreshCarbonChartBlocks(content, violated);
+    expect(refreshed).not.toContain("```mermaid");
+    expect(refreshed).toContain("凍結");
+  });
 });

@@ -45,7 +45,21 @@ let client: Centrifuge | null = null;
 
 type ConnectionListener = (state: ChatroomConnectionStateEnum) => void;
 const connectionListeners = new Set<ConnectionListener>();
-let connectionState = ChatroomConnectionStateEnum.DISCONNECTED;
+// Info: (20260807 - Emily) 每個 channel 目前有幾個訂閱者;歸零才真的拆掉訂閱
+const channelRefCounts = new Map<string, number>();
+/**
+ * Info: (20260807 - Emily) 初值取 CONNECTING 而非 DISCONNECTED
+ * (PR review 第 5 點)。
+ *
+ * subscribeChatroomConnection 在訂閱當下會先推一次目前狀態。
+ * 初值若是 DISCONNECTED,只要連線狀態的 effect 比 getClient() 早跑到
+ * (或根本還沒有 channel、連線尚未建立),使用者一進頁面就看到
+ * 紅色的「連線中斷,請重新整理頁面」—— 而其實什麼事都還沒發生。
+ *
+ * 「還沒連上」與「連過但斷了」對使用者的意義完全不同:
+ * 前者要等,後者要動作。用同一個初值表示兩者,就會叫人去修一個不存在的問題。
+ */
+let connectionState = ChatroomConnectionStateEnum.CONNECTING;
 
 const setConnectionState = (next: ChatroomConnectionStateEnum): void => {
   if (connectionState === next) return;
@@ -114,6 +128,19 @@ export function subscribeChatroom<T>({
   // Info: (20260805 - Tzuhan) newSubscription 對已存在的 channel 會拋錯,故先取既有的
   const subscription =
     centrifuge.getSubscription(channel) ?? centrifuge.newSubscription(channel);
+  /**
+   * Info: (20260807 - Emily) 訂閱重用要配計數 —— 否則拆除是不對稱的
+   * (PR review 第 4 點)。
+   *
+   * 既有訂閱會被重用,但原本的 cleanup 無條件 unsubscribe + removeSubscription:
+   * 同一個 channel 有兩個訂閱者時,第一個卸載會把另一個一起殺掉,
+   * 而後者不會收到任何錯誤 —— 它只是從此再也收不到訊息。
+   *
+   * 目前只有一個消費端,所以踩不到。但既然特地寫了重用,
+   * 不配計數就是留一顆地雷給下一個呼叫端 —— 而那時候的症狀
+   * (訊息莫名其妙不見)與成因(另一個元件卸載了)隔得非常遠。
+   */
+  channelRefCounts.set(channel, (channelRefCounts.get(channel) ?? 0) + 1);
 
   const handlePublication = (ctx: { data: unknown }) => {
     onMessage(ctx.data as T);
@@ -129,7 +156,35 @@ export function subscribeChatroom<T>({
   return () => {
     subscription.off("publication", handlePublication);
     subscription.off("error", handleError);
+    const remaining = (channelRefCounts.get(channel) ?? 1) - 1;
+    if (remaining > 0) {
+      // Info: (20260807 - Emily) 還有別人在聽:只拆自己的 handler,訂閱留著
+      channelRefCounts.set(channel, remaining);
+      return;
+    }
+    channelRefCounts.delete(channel);
     subscription.unsubscribe();
     centrifuge.removeSubscription(subscription);
   };
 }
+
+/**
+ * Info: (20260807 - Emily) 明確關閉連線並歸零模組狀態(PR review 第 4 點附帶)。
+ *
+ * `getClient()` 建立的連線原本永不關閉 —— 登出之後 socket 仍然活著,
+ * 帶著上一個使用者的憑證繼續重連。對一個推播的是碳盤查草稿的頻道來說,
+ * 那不只是資源沒回收。
+ *
+ * 呼叫端:登出流程。沒有呼叫端時行為與過去完全相同,所以這支的加入不影響現況。
+ */
+export const disconnectChatroom = (): void => {
+  if (!client) return;
+  client.disconnect();
+  client = null;
+  channelRefCounts.clear();
+  /**
+   * Info: (20260807 - Emily) 回到「還沒連上」而不是「斷線」——
+   * 主動關閉不是故障,不該讓 UI 叫使用者去重新整理頁面。
+   */
+  setConnectionState(ChatroomConnectionStateEnum.CONNECTING);
+};

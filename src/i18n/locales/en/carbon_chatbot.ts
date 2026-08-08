@@ -112,6 +112,17 @@ export const carbonChatbot = {
   save_failed: "Save failed",
   save_failed_hint:
     "Save failed: another tab may have updated the draft; reload to get the latest version",
+  // Info: (20260807 - Emily) Typed save-failure copy: losing a save costs minutes of work, an icon is not enough
+  save_failed_notice:
+    "The latest changes to this report were not saved to the cloud. They are still on this device — retry shortly or reload the page.",
+  save_failed_conflict:
+    "The latest changes were not saved to the cloud: the draft was updated in another tab or device. Reload to get the latest version, then reapply your edit.",
+  save_failed_too_large:
+    "The latest changes were not saved to the cloud: this draft exceeds the per-report size limit. Remove some verbatim source tables, or import in smaller parts.",
+  save_local_quota:
+    "Local storage is full, so the offline backup was not updated (the cloud copy was saved).",
+  save_local_quota_only:
+    "Local storage is full and this version is not on the cloud yet — keep this tab open, then unlock or reload and try again.",
   attach_file: "Attach file",
   remove_attachment: "Remove attachment",
   attachment_invalid_type:
@@ -154,7 +165,8 @@ export const carbonChatbot = {
     "Content not matching the outline ({{count}} blocks; not imported, handle in chat)",
   // Info: (20260806 - Tzuhan) 待匯入結果的第三條路:保存起來稍後再決定(內容已入庫,重載仍在)
   import_defer: "Decide later",
-  import_pending_bar: "Parsed result saved for {{name}} — {{count}} section(s), not yet written into the report",
+  import_pending_bar:
+    "Parsed result saved for {{name}} — {{count}} section(s), not yet written into the report",
   import_pending_open: "Review and import",
   import_pending_discard: "Discard",
   import_reset_note:

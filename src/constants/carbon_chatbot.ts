@@ -241,6 +241,23 @@ export const buildCarbonSessionsIndexKey = (address: string): string =>
 // Info: (20260714 - Tzuhan) 報告草稿自動保存的 debounce 間隔(ms)
 export const CARBON_REPORT_AUTOSAVE_DEBOUNCE_MS = 2000;
 
+/**
+ * Info: (20260807 - Emily) 草稿內容上限(字元)。單一來源 —— validator(envelope.encryptedContent /
+ * plainContent / rawMarkdown)與前端送出前的預檢都引這一個常數。
+ *
+ * 原本 2_000_000 這個數字在 validator 裡寫死三次,而前端完全不知道它存在:
+ * 超過就是一個 400 VL_SCHEMA_ERROR,畫面上只剩一個「保存異常」小圖示,
+ * 代價是幾分鐘的 LLM 成果無聲消失(issue_drafts/inventory_table_import/12)。
+ */
+export const CARBON_REPORT_DRAFT_MAX_CONTENT_CHARS = 2_000_000;
+
+/**
+ * Info: (20260808 - Luphia) 加密模式的預檢不再用固定倍率估
+ * (原 `CARBON_REPORT_DRAFT_ENCRYPTED_SIZE_RATIO = 1.4` 已移除)。
+ * 密文長度取決於明文的 UTF-8 位元組數,固定倍率對中文內容會低估到 3 倍;
+ * 精確換算收斂到 `projectedEciesContentChars`(chatroom_ecies.ts)。
+ */
+
 // Info: (20260714 - Tzuhan) 草稿狀態列錯誤提示的自動消失時間(ms)
 export const CARBON_DRAFT_NOTICE_DISMISS_MS = 8000;
 
@@ -686,8 +703,9 @@ export const buildImportParsedNotice = (
   language: string | undefined,
   summary: ICarbonImportParsedSummary,
 ): string =>
-  (IMPORT_PARSED_TEMPLATES[language ?? ""] ??
-    IMPORT_PARSED_TEMPLATES["zh-TW"])(summary);
+  (IMPORT_PARSED_TEMPLATES[language ?? ""] ?? IMPORT_PARSED_TEMPLATES["zh-TW"])(
+    summary,
+  );
 
 /**
  * Info: (20260806 - Tzuhan) 匯入通知的種類。

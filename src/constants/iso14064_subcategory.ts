@@ -173,12 +173,64 @@ export const Iso14064SubCategoryDetails: Readonly<
 export const formatIsoSubCategoryLabel = (
   subCategory: string,
   language: string,
+  maxWidth?: number,
 ): string => {
-  const detail =
-    Iso14064SubCategoryDetails[subCategory as Iso14064SubCategory];
+  const detail = Iso14064SubCategoryDetails[subCategory as Iso14064SubCategory];
   if (!detail) return subCategory;
   const name = language.startsWith("zh") ? detail.nameZh : detail.nameEn;
-  return `${subCategory} ${name}`;
+  const label = `${subCategory} ${name}`;
+  if (maxWidth === undefined) return label;
+  return truncateToDisplayWidth(label, maxWidth, subCategory);
+};
+
+/**
+ * Info: (20260807 - Emily) 顯示寬度:全形(CJK、全形標點)算 2,其餘算 1。
+ *
+ * 這不是雞蛋裡挑骨頭 —— 版面上會不會疊字取決於實際佔寬,
+ * 而中文 12 字與英文 12 字在畫面上差一倍。以字元數為單位的上限
+ * 必然在其中一種語言上是錯的。
+ */
+export const displayWidth = (text: string): number =>
+  [...text].reduce(
+    (width, char) => width + (FULLWIDTH_PATTERN.test(char) ? 2 : 1),
+    0,
+  );
+
+// Info: (20260807 - Emily) CJK 統一表意文字、假名、諺文與 CJK 標點(全形括號等)
+const FULLWIDTH_PATTERN =
+  /[\u1100-\u115F\u2E80-\uA4CF\uAC00-\uD7A3\uF900-\uFAFF\uFE30-\uFE4F\uFF00-\uFF60\uFFE0-\uFFE6]/;
+
+// Info: (20260807 - Emily) 截斷用的省略符號(全形,寬度 1 —— U+2026 為窄形)
+const ELLIPSIS = "\u2026";
+
+/**
+ * Info: (20260807 - Emily) 依顯示寬度截斷,並保證 `keepPrefix` 完整留下。
+ *
+ * `keepPrefix` 是子代碼 —— 它是讀者回原文表3.8 逐格對照的唯一線索,
+ * 截掉代碼等於把這個標籤變成看得懂但查不到。名稱可以短,代碼不能缺。
+ * 連代碼都放不下時就只回代碼:寧可少了名稱,不要給一個半截的名稱。
+ */
+export const truncateToDisplayWidth = (
+  text: string,
+  maxWidth: number,
+  keepPrefix: string,
+): string => {
+  if (displayWidth(text) <= maxWidth) return text;
+  const prefixWidth = displayWidth(keepPrefix);
+  // Info: (20260807 - Emily) +1 為省略符號的寬度
+  const nameBudget = maxWidth - prefixWidth - 1 - 1;
+  if (nameBudget <= 0) return keepPrefix;
+  const name = text.slice(keepPrefix.length).trimStart();
+  let kept = "";
+  let width = 0;
+  for (const char of name) {
+    const charWidth = FULLWIDTH_PATTERN.test(char) ? 2 : 1;
+    if (width + charWidth > nameBudget) break;
+    kept += char;
+    width += charWidth;
+  }
+  if (!kept.trim()) return keepPrefix;
+  return `${keepPrefix} ${kept.trimEnd()}${ELLIPSIS}`;
 };
 
 /**
