@@ -84,8 +84,10 @@ export class PaymentRepository {
         } else if (
           order.type === ORDER_TYPE.OEN_PAYMENT ||
           order.type === ORDER_TYPE.BILLING_TEAM_POINT ||
-          // Info: (20260807 - Luphia) 團隊訂閱（data 帶 teamId）才進本分支；
-          // 個人 BILLING_SUBSCRIBE 維持原行為（webhook 不處理），避免改變既有語意
+          /**
+           * Info: (20260807 - Luphia) 團隊訂閱（data 帶 teamId）才進本分支；
+           * 個人 BILLING_SUBSCRIBE 維持原行為（webhook 不處理），避免改變既有語意
+           */
           (order.type === ORDER_TYPE.BILLING_SUBSCRIBE &&
             Boolean((order.data as { teamId?: string })?.teamId))
         ) {

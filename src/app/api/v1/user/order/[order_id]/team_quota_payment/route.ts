@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { AppError } from "@/lib/utils/error";
 import { jsonOk, jsonFail, jsonFailWithPayload } from "@/lib/utils/response";
@@ -6,14 +6,17 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { ORDER_TYPE } from "@/constants/status";
 import { BILLABLE_FEATURE_CODE } from "@/constants/subscription_quota";
 import { teamQuotaPaymentSchema } from "@/validators";
-import { getPendingOrder, markOrderPaying } from "@/services/order.service";
+import {
+  getPendingOrder,
+  markOrderCompleted,
+  markOrderPaying,
+} from "@/services/order.service";
 import { fulfillPaidAnalysisOrder } from "@/services/analysis_fulfillment.service";
 import {
   QuotaExceededError,
   refundCredits,
   spendCredits,
 } from "@/services/spend.service";
-import { paymentRepo } from "@/repositories/payment.repo";
 
 /**
  * Info: (20260807 - Luphia) 團隊額度付款（設計書 §5 / P3）：
@@ -74,7 +77,7 @@ export async function POST(
       throw fulfillError;
     }
 
-    await paymentRepo.updateOrderCompleted(orderId);
+    await markOrderCompleted(orderId);
 
     return jsonOk({
       orderId,
@@ -87,8 +90,13 @@ export async function POST(
     });
   } catch (error) {
     console.error("[API] POST team_quota_payment Error:", error);
+    // Info: (20260808 - Luphia) 一律走 jsonFail：AppError 帶回其源自 API_ERRORS 的錯誤定義
     if (error instanceof AppError) {
-      return NextResponse.json(error.mapToResponse(), { status: error.http });
+      return jsonFail({
+        code: error.apiCode,
+        message: error.message,
+        status: error.code,
+      });
     }
     if (error instanceof ApiError) {
       return jsonFail({

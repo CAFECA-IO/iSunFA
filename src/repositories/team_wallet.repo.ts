@@ -177,8 +177,10 @@ export class TeamWalletRepository {
         return { outcome: WALLET_OP_OUTCOME.OK, ledger };
       });
     } catch (error) {
-      // Info: (20260807 - Luphia) 併發下兩個交易同時通過 dedupe 檢查時，
-      // 後者在寫分錄時命中 P2002，整筆交易（含扣款）已回滾，安全回報冪等重放
+      /**
+       * Info: (20260807 - Luphia) 併發下兩個交易同時通過 dedupe 檢查時，
+       * 後者在寫分錄時命中 P2002，整筆交易（含扣款）已回滾，安全回報冪等重放
+       */
       if (isUniqueConstraintError(error)) {
         const ledger = await this.findLedgerByIdempotencyKey(idempotencyKey);
         if (ledger) return { outcome: WALLET_OP_OUTCOME.DUPLICATE, ledger };

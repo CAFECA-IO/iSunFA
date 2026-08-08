@@ -7,9 +7,9 @@ import { PLAN } from "@/constants/plans";
  * 費率與方案額度的估算依據見設計書 §4.1 / §5.3。
  */
 
-// Info: (20260807 - Luphia) 視窗常數：純數學，禁止依賴系統時區
-export const FIVE_HOURS_SEC = 5 * 60 * 60; // 18000
-export const WEEK_SEC = 7 * 24 * 60 * 60; // 604800
+// Info: (20260807 - Luphia) 視窗常數：純數學，禁止依賴系統時區（5h = 18,000 秒、週 = 604,800 秒）
+export const FIVE_HOURS_SEC = 5 * 60 * 60;
+export const WEEK_SEC = 7 * 24 * 60 * 60;
 
 /**
  * Info: (20260807 - Luphia) 週視窗錨點：2026-01-05（一）00:00 Asia/Taipei 的 epoch 秒。
