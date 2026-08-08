@@ -65,8 +65,6 @@ export const pricing = {
       features: {
         storage: "{{gb}} GB storage",
         fido: "1 FIDO2 Key",
-        credit_limit: "Credit Limit: 500 Credits",
-        daily_credits: "{{amount}} Credits on Daily Login",
         consults: "Max {{amount}} Consults / Month",
         consults_tooltip: "{{price}} Credits / Consult",
         vouchers: "Max {{amount}} Vouchers / Month",
@@ -85,7 +83,6 @@ export const pricing = {
         fido: "Unlimited FIDO2 Keys",
         fido_tooltip:
           "Subscription fee charged based on the number of FIDO2 keys",
-        credit_limit: "Unlimited Credits",
         monthly_credits: "{{amount}} credits automatically issued every month",
         monthly_credits_tooltip: "Credits are valid for 30 days",
         consults: "Max {{amount}} Consults / Month",
@@ -108,7 +105,6 @@ export const pricing = {
         fido: "Unlimited FIDO2 Keys",
         fido_tooltip:
           "Subscription fee charged based on the number of FIDO2 keys",
-        credit_limit: "Unlimited Credits",
         monthly_credits: "{{amount}} credits automatically issued every month",
         monthly_credits_tooltip: "Credits are valid for 30 days",
         consults: "Max {{amount}} Consults / Month",
@@ -170,6 +166,7 @@ export const pricing = {
       validity: "Credits never expire",
     },
     plans: {
+      buy_now: "Buy Now",
       tier1: {
         credits: "{{count}} Credits",
         price: "{{price}}",

@@ -63,15 +63,9 @@ export const teamManagement = {
     my_allocation: "自分の割り当てポイント",
     frozen_warning:
       "チームウォレットは凍結中です（保存則監査の異常）。サポートにお問い合わせください。",
-    purchase: "購入",
-    purchasing: "処理中…",
-    purchase_success:
-      "購入が完了し、ポイントがチームウォレットに追加されました。",
-    purchase_failed: "購入に失敗しました。後でもう一度お試しください。",
-    no_card:
-      "カードが登録されていません。先に「ポイント購入」ページでカードを登録してください。",
-    relogin_required: "決済キーを取得するため、再ログインしてください。",
-    credits_unit: "ポイント",
+    buy_credits: "ポイントを購入",
+    buy_credits_hint:
+      "購入したポイントはチームウォレットに入り、管理者が割り当てできます。",
     allocation_title: "ポイント割り当て",
     select_member: "メンバーを選択",
     amount_placeholder: "ポイント",

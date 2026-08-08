@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   Wallet,
   Gauge,
@@ -9,17 +10,13 @@ import {
   ArrowRightLeft,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { useAuth } from "@/contexts/auth_context";
-import { fido2ClientService } from "@/lib/auth/fido2_client";
-import { encodeWebAuthnSignature } from "@/lib/auth/crypto_utils";
-import { CREDIT_PLANS } from "@/config/credit_plans";
 import { ALLOCATION_DIRECTION } from "@/constants/subscription_quota";
 
 /**
  * Info: (20260807 - Luphia) 團隊錢包與訂閱額度面板（設計書 §9 P4 前端）。
  * - 額度儀表：5 小時 / 週雙視窗用量與重置倒數（resetAt 由後端揭露，前端只做倒數）
  * - 錢包卡：未分配池、我的分配餘額、FROZEN 告警
- * - 管理者（OWNER / ADMIN）：購買點數（既有 FIDO + OEN checkout 流程）、分配 / 收回
+ * - 管理者（OWNER / ADMIN）：分配 / 收回；購買一律引導至 /pricing/credits（20260809 產品決策）
  * 費思費率等數字一律取自 API（env 同源），嚴禁寫死。
  */
 
@@ -112,16 +109,12 @@ export default function TeamWalletPanel({
   showAlert,
 }: ITeamWalletPanelProps) {
   const { t } = useTranslation();
-  const { user } = useAuth();
 
   const [subscription, setSubscription] = useState<ISubscriptionView | null>(
     null,
   );
   const [wallet, setWallet] = useState<IWalletView | null>(null);
   const [nowSec, setNowSec] = useState(() => Math.floor(Date.now() / 1000));
-
-  const [selectedTier, setSelectedTier] = useState(CREDIT_PLANS[0].id);
-  const [purchasing, setPurchasing] = useState(false);
 
   const [allocTarget, setAllocTarget] = useState("");
   const [allocAmount, setAllocAmount] = useState("");
@@ -179,80 +172,6 @@ export default function TeamWalletPanel({
       })),
     [members],
   );
-
-  const handlePurchase = async () => {
-    if (purchasing) return;
-    if (!user?.pubKeyX || !user?.pubKeyY) {
-      showAlert(t("team_management.wallet.relogin_required"));
-      return;
-    }
-    setPurchasing(true);
-    try {
-      // Info: (20260807 - Luphia) 1. 取綁定卡（無卡引導至購買點數頁綁卡）
-      const pmRes = await fetch("/api/v1/user/payment_method", {
-        headers: authHeaders(),
-      }).then((r) => r.json());
-      const paymentMethod = pmRes?.payload?.paymentMethods?.[0];
-      if (!paymentMethod) {
-        showAlert(t("team_management.wallet.no_card"));
-        return;
-      }
-
-      // Info: (20260807 - Luphia) 2. 建團隊購點訂單（BILLING_TEAM_POINT，data 帶 teamId）
-      const orderRes = await fetch(
-        `/api/v1/user/team/${teamId}/wallet/purchase`,
-        {
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({
-            creditPlanId: selectedTier,
-            paymentMethodId: paymentMethod.id,
-          }),
-        },
-      ).then((r) => r.json());
-      if (!orderRes.success) throw new Error(orderRes.message);
-      const { orderId, challenge } = orderRes.payload;
-
-      // Info: (20260807 - Luphia) 3. FIDO 簽章 + 既有 checkout 直扣（付款成功自動入池）
-      const transferAuth = await fido2ClientService.startLogin({
-        challenge,
-        timeout: 60000,
-        userVerification: "required",
-        allowCredentials: [],
-      });
-      const encodedSignature = encodeWebAuthnSignature(
-        transferAuth,
-        BigInt(user.pubKeyX),
-        BigInt(user.pubKeyY),
-      );
-      const checkoutRes = await fetch(
-        `/api/v1/user/payment_method/${paymentMethod.id}/checkout`,
-        {
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({
-            orderId,
-            authentication: { ...transferAuth, signature: encodedSignature },
-          }),
-        },
-      ).then((r) => r.json());
-      if (!checkoutRes.success) {
-        throw new Error(
-          checkoutRes.message || t("team_management.wallet.purchase_failed"),
-        );
-      }
-
-      showAlert(t("team_management.wallet.purchase_success"));
-      await fetchWalletState();
-    } catch (err) {
-      console.error("[TeamWalletPanel] purchase failed:", err);
-      showAlert(
-        (err as Error).message || t("team_management.wallet.purchase_failed"),
-      );
-    } finally {
-      setPurchasing(false);
-    }
-  };
 
   const handleAllocation = async (direction: string) => {
     if (allocating) return;
@@ -368,29 +287,20 @@ export default function TeamWalletPanel({
             </div>
 
             {isManager && (
-              <div className="mt-4 flex items-center gap-2 border-t border-gray-100 pt-4">
-                <select
-                  value={selectedTier}
-                  onChange={(e) => setSelectedTier(e.target.value)}
-                  className="flex-1 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm text-gray-700"
+              /**
+               * Info: (20260809 - Luphia) 團隊管理不內嵌購買流程（產品決策 20260809）：
+               * 引導至 /pricing/credits 購買，購點入池由後端 BILLING_TEAM_POINT 訂單履行
+               */
+              <div className="mt-4 flex items-center justify-between gap-2 border-t border-gray-100 pt-4">
+                <p className="text-xs text-gray-500">
+                  {t("team_management.wallet.buy_credits_hint")}
+                </p>
+                <Link
+                  href="/pricing/credits"
+                  className="shrink-0 rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-orange-500"
                 >
-                  {CREDIT_PLANS.map((plan) => (
-                    <option key={plan.id} value={plan.id}>
-                      {plan.credits.toLocaleString()}{" "}
-                      {t("team_management.wallet.credits_unit")} / NT${" "}
-                      {plan.price.twd.toLocaleString()}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  onClick={handlePurchase}
-                  disabled={purchasing}
-                  className="rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {purchasing
-                    ? t("team_management.wallet.purchasing")
-                    : t("team_management.wallet.purchase")}
-                </button>
+                  {t("team_management.wallet.buy_credits")}
+                </Link>
               </div>
             )}
           </div>

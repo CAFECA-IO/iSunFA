@@ -63,14 +63,9 @@ export const teamManagement = {
     my_allocation: "내 배분 포인트",
     frozen_warning:
       "팀 지갑이 동결되었습니다(보존 감사 이상). 고객 지원에 문의해 주세요.",
-    purchase: "구매",
-    purchasing: "처리 중…",
-    purchase_success: "구매가 완료되어 포인트가 팀 지갑에 추가되었습니다.",
-    purchase_failed: "구매에 실패했습니다. 나중에 다시 시도해 주세요.",
-    no_card:
-      "등록된 카드가 없습니다. 먼저 포인트 구매 페이지에서 카드를 등록해 주세요.",
-    relogin_required: "결제 키를 가져오려면 다시 로그인해 주세요.",
-    credits_unit: "포인트",
+    buy_credits: "포인트 구매하기",
+    buy_credits_hint:
+      "구매한 포인트는 팀 지갑에 적립되어 관리자가 배분할 수 있습니다.",
     allocation_title: "포인트 배분",
     select_member: "멤버 선택",
     amount_placeholder: "포인트",

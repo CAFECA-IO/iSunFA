@@ -65,8 +65,6 @@ export const pricing = {
       features: {
         storage: "儲存空間 {{gb}} GB",
         fido: "1 組 FIDO2 金鑰",
-        credit_limit: "點數上限 500 點",
-        daily_credits: "每日登入發放 {{amount}} 點點數",
         consults: "每月最多諮詢 {{amount}} 個問題",
         consults_tooltip: "每個問題 {{price}} 點數",
         vouchers: "每月最多分析 {{amount}} 份會計憑證",
@@ -84,7 +82,6 @@ export const pricing = {
         storage: "儲存空間 {{gb}} GB",
         fido: "無限 FIDO2 金鑰",
         fido_tooltip: "根據 fido2 金鑰數量收取訂閱費",
-        credit_limit: "點數無上限",
         monthly_credits: "每月自動發放 {{amount}} 點點數",
         monthly_credits_tooltip: "點數有效期限 30 日",
         consults: "每月最多諮詢 {{amount}} 個問題",
@@ -106,7 +103,6 @@ export const pricing = {
         storage: "儲存空間 {{gb}} GB",
         fido: "無限 FIDO2 金鑰",
         fido_tooltip: "根據 fido2 金鑰數量收取訂閱費",
-        credit_limit: "點數無上限",
         monthly_credits: "每月自動發放 {{amount}} 點點數",
         monthly_credits_tooltip: "點數有效期限 30 日",
         consults: "每月最多諮詢 {{amount}} 個問題",
@@ -167,6 +163,7 @@ export const pricing = {
       validity: "點數永久有效",
     },
     plans: {
+      buy_now: "立即購買",
       tier1: {
         credits: "{{count}} 點",
         price: "{{price}}",

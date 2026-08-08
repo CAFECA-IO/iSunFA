@@ -63,15 +63,9 @@ export const teamManagement = {
     my_allocation: "My allocated credits",
     frozen_warning:
       "The team wallet is frozen (conservation audit failure). Please contact support.",
-    purchase: "Purchase",
-    purchasing: "Processing…",
-    purchase_success:
-      "Purchase completed. Credits have been added to the team wallet.",
-    purchase_failed: "Purchase failed. Please try again later.",
-    no_card:
-      "No card on file. Please bind a card on the Buy Credits page first.",
-    relogin_required: "Please sign in again to retrieve your payment key.",
-    credits_unit: "credits",
+    buy_credits: "Buy Credits",
+    buy_credits_hint:
+      "Purchased credits go into the team wallet for managers to allocate.",
     allocation_title: "Credit Allocation",
     select_member: "Select a member",
     amount_placeholder: "Amount",

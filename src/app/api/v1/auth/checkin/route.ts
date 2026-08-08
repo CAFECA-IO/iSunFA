@@ -3,17 +3,7 @@ import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { checkinRepo } from "@/repositories/checkin.repo";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { publicClient } from "@/lib/viem";
-import { ABIS, CONTRACT_ADDRESSES } from "@/config/contracts";
-import { formatUnits } from "viem";
-import {
-  claimDailyCheckIn,
-  registerUserViaMembership,
-} from "@/services/member.service";
-import { CURRENCY_UNIT, REWARD_AMOUNTS } from "@/constants/price";
-import { paymentRepo } from "@/repositories/payment.repo";
-import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
-import { MoneyUtil } from "@/lib/utils/money";
+import { registerUserViaMembership } from "@/services/member.service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -58,66 +48,23 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Info: (20260408 - Luphia) 5. Check balance and maybe mint
-    let rewardedAmount = 0;
-    console.log(user.address, "checkin");
+    /**
+     * Info: (20260809 - Luphia) 5. 確保鏈上會員註冊（AA 錢包 onboarding 的一環）。
+     * 登入贈點機制已於 20260809 取消（產品決策）：不再檢查餘額、不再 mint
+     * CHECK_IN_REWARD——本端點僅保留登入紀錄（稽核）與註冊確保，
+     * rewardAmount 固定為 0，前端不再彈出獎勵視窗。
+     */
     try {
       if (user.address) {
         await registerUserViaMembership(user.address);
-        const balance = await publicClient.readContract({
-          address: CONTRACT_ADDRESSES.CREDIT_POINT,
-          abi: ABIS.CREDIT_POINT,
-          functionName: "balanceOf",
-          args: [user.address as `0x${string}`],
-        });
-
-        const credits = formatUnits(balance, 18);
-
-        if (MoneyUtil.toDecimal(credits).lt(REWARD_AMOUNTS.FREE_PLAN_LIMIT)) {
-          // Info: (20260408 - Luphia) Check if user is blacklisted before minting
-          const isBlacklisted = await publicClient.readContract({
-            address: CONTRACT_ADDRESSES.DYNAMIC_KYC_MEMBERSHIP,
-            abi: ABIS.DYNAMIC_KYC_MEMBERSHIP,
-            functionName: "isBlacklisted",
-            args: [user.address as `0x${string}`],
-          });
-
-          if (isBlacklisted) {
-            console.warn(
-              `User ${user.address} is blacklisted, skipping checkin mint`,
-            );
-            return;
-          }
-
-          rewardedAmount = REWARD_AMOUNTS.DAILY_CHECKIN_REWARD;
-          const mintResult = await claimDailyCheckIn(user.address);
-
-          if (mintResult.success) {
-            await paymentRepo.createOrder({
-              userId: user.id,
-              type: ORDER_TYPE.CHECK_IN_REWARD,
-              amount: rewardedAmount,
-              unit: CURRENCY_UNIT.ICP,
-              status: ORDER_STATUS.COMPLETED,
-              challenge: "reward",
-              data: {},
-              transactionHash: (mintResult.data as { tx: string })?.tx || "",
-            });
-            console.log(user.address, "checked in", rewardedAmount);
-          } else {
-            throw new Error(
-              `MembershipSystem checkin failed: ${mintResult.message}`,
-            );
-          }
-        }
       }
     } catch (contractError) {
-      console.warn("Checkin transaction blocked or failed: ", contractError);
+      console.warn("Checkin registration blocked or failed: ", contractError);
     }
 
     return jsonOk({
       checkinSuccess: true,
-      rewardAmount: rewardedAmount,
+      rewardAmount: 0,
     });
   } catch (error) {
     console.error("[API] /auth/checkin error:", error);

@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { FAITH_TOKENS_PER_CREDIT } from "@/constants/llm";
 import PricingCard from "@/components/pricing/pricing_card";
 import {
-  REWARD_AMOUNTS,
   ANALYSIS_BASE_COSTS,
   SUBSCRIPTION_PLAN_CREDITS,
 } from "@/constants/price";
@@ -124,12 +123,6 @@ export default function SubscriptionContent() {
             currentPlan={currentPlan}
             features={[
               t("pricing.plans.free.features.fido"),
-              {
-                text: t("pricing.plans.free.features.daily_credits", {
-                  amount: REWARD_AMOUNTS.DAILY_CHECKIN_REWARD,
-                }),
-                tooltip: t("pricing.plans.free.features.credit_limit"),
-              },
               {
                 text: t("pricing.plans.free.features.consults", {
                   amount: Math.floor(

@@ -24,10 +24,13 @@ export const CURRENCY_UNIT = {
 
 export type CurrencyUnit = (typeof CURRENCY_UNIT)[keyof typeof CURRENCY_UNIT];
 
+/**
+ * Info: (20260809 - Luphia) DAILY_CHECKIN_REWARD 與 FREE_PLAN_LIMIT 已移除：
+ * 登入贈點機制於 20260809 取消（產品決策）。歷史訂單的 CHECK_IN_REWARD
+ * 型別保留於 ORDER_TYPE 供點數歷程顯示，不受影響。
+ */
 export const REWARD_AMOUNTS = {
   REGISTRATION_REWARD: 100,
-  DAILY_CHECKIN_REWARD: 5,
-  FREE_PLAN_LIMIT: 500,
 } as const;
 
 export {

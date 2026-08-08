@@ -8,7 +8,6 @@ import { faith } from "@/i18n/locales/zh_tw/faith";
 import { cookieConsent } from "@/i18n/locales/zh_tw/cookie_consent";
 import { dashboard } from "@/i18n/locales/zh_tw/dashboard";
 import { header } from "@/i18n/locales/zh_tw/header";
-import { checkinReward } from "@/i18n/locales/zh_tw/checkin_reward";
 import { authModal } from "@/i18n/locales/zh_tw/auth_modal";
 import { features } from "@/i18n/locales/zh_tw/features";
 import { esgTarget } from "@/i18n/locales/zh_tw/esg_target";
@@ -82,7 +81,6 @@ export const zhTw = {
   cookie_consent: cookieConsent,
   dashboard,
   header,
-  checkin_reward: checkinReward,
   auth_modal: authModal,
   features,
   esg_target: esgTarget,

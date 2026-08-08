@@ -65,8 +65,6 @@ export const pricing = {
       features: {
         storage: "ストレージ {{gb}} GB",
         fido: "FIDO2 キー 1個",
-        credit_limit: "ポイント上限 500 pt",
-        daily_credits: "毎日ログインで {{amount}} pt 付与",
         consults: "月間最大 {{amount}} 回の質問",
         consults_tooltip: "1 質問につき {{price}} pt",
         vouchers: "月間最大 {{amount}} 件の証憑分析",
@@ -85,7 +83,6 @@ export const pricing = {
         fido: "無制限の FIDO2 キー",
         fido_tooltip:
           "FIDO2 キーの数に基づいてサブスクリプション料金が請求されます",
-        credit_limit: "ポイント上限なし",
         monthly_credits: "毎月自動的に {{amount}} ポイントが付与されます",
         monthly_credits_tooltip: "ポイントの有効期限は 30 日間です",
         consults: "月間最大 {{amount}} 回の質問",
@@ -108,7 +105,6 @@ export const pricing = {
         fido: "無制限の FIDO2 キー",
         fido_tooltip:
           "FIDO2 キーの数に基づいてサブスクリプション料金が請求されます",
-        credit_limit: "ポイント上限なし",
         monthly_credits: "毎月自動的に {{amount}} ポイントが付与されます",
         monthly_credits_tooltip: "ポイントの有効期限は 30 日間です",
         consults: "月間最大 {{amount}} 回の質問",
@@ -171,6 +167,7 @@ export const pricing = {
       validity: "ポイント有効期限なし",
     },
     plans: {
+      buy_now: "今すぐ購入",
       tier1: {
         credits: "{{count}} pt",
         price: "{{price}}",
