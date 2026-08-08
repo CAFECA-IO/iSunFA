@@ -60,21 +60,20 @@ export const teamManagement = {
       "Faith AI 채팅: {{rate}} 토큰당 1 포인트 (올림 처리, 메시지당 최소 1 포인트)",
     balance_title: "팀 지갑",
     pool_balance: "미배분 포인트",
-    my_allocation: "내 배분 포인트",
     frozen_warning:
       "팀 지갑이 동결되었습니다(보존 감사 이상). 고객 지원에 문의해 주세요.",
     buy_credits: "포인트 구매하기",
     buy_credits_hint:
       "구매한 포인트는 팀 지갑에 적립되어 관리자가 배분할 수 있습니다.",
-    allocation_title: "포인트 배분",
-    select_member: "멤버 선택",
-    amount_placeholder: "포인트",
+    allocated_points: "배분 포인트",
+    allocate_to: "{{name}}에게 포인트 배분",
+    revoke_from: "{{name}}에게서 포인트 회수",
+    amount_label: "포인트",
     allocate: "배분",
     revoke: "회수",
     allocation_success: "완료되었습니다.",
     allocation_failed:
       "작업에 실패했습니다. 잔액을 확인한 후 다시 시도해 주세요.",
-    allocations_empty: "아직 멤버에게 배분된 포인트가 없습니다.",
-    invalid_amount: "멤버를 선택하고 양의 정수를 입력해 주세요.",
+    invalid_amount: "양의 정수를 입력해 주세요.",
   },
 };
