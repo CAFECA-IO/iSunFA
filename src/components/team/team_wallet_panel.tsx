@@ -8,7 +8,7 @@ import { TEAM_WALLET_STATUS } from "@/constants/subscription_quota";
 
 /**
  * Info: (20260809 - Luphia) 團隊錢包與訂閱額度面板（產品調整 20260809 後的職責）：
- * - 額度儀表：5 小時 / 週雙視窗用量與重置倒數（resetAt 由後端揭露，前端只做倒數）
+ * - 額度儀表：5 小時 / 週雙視窗，僅百分比進度條（不揭露數字與倒數）
  * - 管理者錢包卡：未分配池餘額 + 導購連結（/pricing/credits）
  * - FROZEN 告警（所有成員可見，消費會被擋）
  * 點數分配操作與各成員分配餘額改由成員清單承載（team/page.tsx），
