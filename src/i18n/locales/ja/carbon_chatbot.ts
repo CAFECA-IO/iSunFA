@@ -56,6 +56,9 @@ export const carbonChatbot = {
   origin_ai_draft: "AI 下書き",
   origin_imported_short: "原文",
   origin_ai_draft_short: "下書き",
+  // Info: (20260806 - Tzuhan) 匯入前先上傳取 cid:14 次呼叫共用一份儲存,文案要說出「為何要等」
+  import_uploading:
+    "{{name}} を安全なストレージへ保存中(以降の各章の解析はサーバー側で取得し、ファイルを毎回再送しません)…",
   // Info: (20260730 - Tzuhan) 兩階段匯入的第一階段提示:一次索引換來後續 11 章不必各自重送整份文件
   import_indexing:
     "{{name}} の章インデックスを作成中(各セクションのページを特定し、後続の解析量を削減します)…",
@@ -150,6 +153,11 @@ export const carbonChatbot = {
   import_draft_badge: "AIドラフト",
   import_unmapped:
     "アウトラインに対応しない内容({{count}} 件。インポートされません)",
+  // Info: (20260806 - Tzuhan) 待匯入結果的第三條路:保存起來稍後再決定(內容已入庫,重載仍在)
+  import_defer: "後で決める",
+  import_pending_bar: "インポート待ちの解析結果を保存しています：{{name}}（{{count}} セクション、報告書には未記入）",
+  import_pending_open: "確認してインポート",
+  import_pending_discard: "破棄",
   import_reset_note:
     "インポートした段落の検証状態はリセットされます。{{activities}} 件の活動データは再照合されます",
   import_apply: "選択をインポート({{count}})",
@@ -162,6 +170,9 @@ export const carbonChatbot = {
   import_failed_chapters:
     "次の章は解析に失敗しました。後で再インポートで補完できます:{{chapters}}",
   import_retry_failed: "失敗した章を再試行",
+  import_retrying: "再試行中…",
+  import_retrying_hint:
+    "失敗した章を再解析しています。数分かかります。このカードは閉じないでください。",
   import_empty: "【インポート失敗】アウトラインに対応する内容がありません。",
   import_failed:
     "【インポート失敗】解析に失敗しました。後でもう一度お試しください。",
@@ -187,6 +198,11 @@ export const carbonChatbot = {
   progress_collapse: "進捗ウィジェットを折りたたむ",
   activity_ledger_title: "活動データ台帳",
   activity_ledger_pill: "活動データ {{count}} 件",
+  activity_ledger_pill_imported: " · インポート {{count}} 件",
+  activity_ledger_imported_note:
+    "インポートした排出量は台帳にあります:{{count}} 件、合計 {{tonne}} tCO2e。原文は排出量のみで活動データと係数がないため、下には表示されません。",
+  activity_ledger_empty_after_import:
+    "活動データはまだありません。インポートした報告書は排出量のみを提供します。件別の活動データと係数が必要な場合は、チャットで提供するか帳簿から証憑データをインポートしてください。",
   activity_ledger_empty:
     "活動データはまだありません。チャットで電力使用量や燃料消費量を伝えるか、請求書をアップロードすると自動記録されます。",
   activity_ledger_collapse: "活動データを折りたたむ",
@@ -238,11 +254,25 @@ export const carbonChatbot = {
   chart_frozen:
     "⚠ 質量保存チェックに未合格のため、グラフは凍結されています。チャットで在庫差異を明確にすると自動的に生成されます。",
   chart_sankey_chat_node: "チャット/添付による申告",
+  chart_sankey_period_unknown: "期間の記載なし",
+  chart_sankey_period_collapsed:
+    "期間が 2 年度を超えるため月別階層を省略しました(月別は推移グラフを参照)",
   chart_imported_sankey_title:
-    "温室効果ガス排出フロー(原文転記、ロケーション基準、tCO2e/年)",
+    "排出の分類：全社 → スコープ → サブカテゴリ（原文どおり、ロケーション基準、tCO2e/年）",
   chart_imported_sankey_excluded: "図に含まれない項目(NA/NS または 0)",
+  chart_imported_sankey_no_ledger:
+    "報告書はインポートされましたが、台帳に利用可能なデータがないため排出フロー図を描画できません。サンキー図とシステム集計表の唯一の出典は表3.8（各社の温室効果ガス排出量）で、今回は取得できませんでした。第三章の解析が成功したかご確認ください。解析失敗と表示されている場合は、プレビューカードの「失敗した章を再試行」で再インポートし、サーバーログで当該表が破棄された理由をご確認ください。",
   chart_imported_sankey_collapsed:
-    "ノードが多すぎるため 2 階層(拠点 → カテゴリ)に縮約しました",
+    "ノードが多すぎるため 1 層に縮小しました（全社 → スコープ）",
+  chart_imported_top_items_title:
+    "排出の行き先：全社 → 上位 9 排出項目とその他(原文転記、ロケーション基準、tCO2e/年)",
+  chart_imported_sankey_other: "その他",
+  // Info: (20260807 - Tzuhan) 分類圖抽掉廠址層(屏東佔 97%,同圖畫不出比重);廠址改列小計
+  chart_imported_sankey_site_totals:
+    "拠点別小計（tCO2e/年、全社比）",
+  chart_imported_sankey_ghg_mapping: "サブコードと GHG Protocol カテゴリの対応",
+  chart_imported_sankey_below_threshold: "比率が小さく非表示(tCO2e/年)",
+  chart_imported_sankey_organization: "全社",
   book_bind_pending_unlock:
     "帳簿セッションを作成しました。暗号化チャットのロックを解除すると帳簿バインドが完了します(証憑インポートと証拠チェーンはバインド後に利用可能)",
   book_bind_done:

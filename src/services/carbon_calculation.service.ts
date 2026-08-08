@@ -123,6 +123,10 @@ export class CarbonCalculationService {
             journalId: activity.journalId,
             fileId: activity.fileId,
           },
+          // Info: (20260806 - Tzuhan) 交易日期原樣帶過(桑基圖月別層的唯一依據);
+          // Info: (20260806 - Tzuhan) 兩個 push 點都要帶 —— 漏一個的表現是「有些筆沒有月份」,
+          // Info: (20260806 - Tzuhan) 而那看起來像資料缺日期,不像程式漏了一行。
+          tradingTimestamp: activity.tradingTimestamp,
         });
         continue;
       }
@@ -207,6 +211,8 @@ export class CarbonCalculationService {
           unit: coefficient.unit,
           source: coefficient.source,
         },
+        // Info: (20260806 - Tzuhan) 同上:自行計算的這條路也要帶交易日期
+        tradingTimestamp: activity.tradingTimestamp,
       });
     }
 

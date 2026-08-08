@@ -26,16 +26,22 @@ import {
   buildCarbonChartBlock,
   CARBON_CHART_DEFAULT_LABELS,
 } from "@/lib/carbon_report_chart.builder";
-import { CarbonChartTemplateEnum } from "@/constants/carbon_report_charts";
+import {
+  CarbonChartTemplateEnum,
+  CARBON_SANKEY_TOP_ITEM_COUNT,
+} from "@/constants/carbon_report_charts";
 import {
   EmissionBasisEnum,
   ImportedQuantityStateEnum,
   LedgerProvenanceEnum,
 } from "@/constants/imported_quantity";
-import { Iso14064SubCategory } from "@/constants/iso14064_subcategory";
+import {
+  Iso14064SubCategory,
+  formatIsoSubCategoryLabel,
+} from "@/constants/iso14064_subcategory";
 import {
   formatEsgScopeLabel,
-  formatIsoCategoryShortLabel,
+  formatGhgCategoryLabel,
   GhgProtocolCategory,
   Iso14064Category,
 } from "@/constants/esg";
@@ -763,16 +769,19 @@ describe("markdown 強調標記不進資料", () => {
  * Info: (20260803 - Tzuhan) 三層桑基圖(Issue C)。驗的是圖的「語意」而非外觀:
  * 單位、層次、以及「沒畫的東西有沒有被說出來」。
  */
-describe("匯入報告的五層桑基圖", () => {
+describe("匯入報告的分類切面圖(全公司 → 範疇 → 子代碼)", () => {
   const parsed = parseTable38(TABLE_38_LAYOUT_B);
   const reconciled = reconcileTable38(parsed, {
     companyTotalTonne: COMPANY_TOTAL,
   });
   const { entries } = toLedgerEntries(parsed, reconciled, { tableNo: "表3.8" });
   /**
-   * Info: (20260803 - Tzuhan) 帶 formatIsoCategory / formatEsgScope —— 與 hook 的實際用法一致。
-   * 不帶時圖上會印 CATEGORY_1 與 SCOPE_1,那對查核者不可讀;
+   * Info: (20260803 - Tzuhan) 帶 formatEsgScope / formatScope —— 與 hook 的實際用法一致。
+   * 不帶時圖上會印 SCOPE_1,那對查核者不可讀;
    * 純函數無從得知語言,顯示名只能由呼叫端注入。
+   *
+   * Info: (20260806 - Tzuhan) ISO 類別層已移除(它與範疇對類別一/二是 1:1,疊起來必然重疊),
+   * 所以不再注入 formatIsoCategory。
    */
   const block = buildCarbonChartBlock(
     CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY,
@@ -785,10 +794,16 @@ describe("匯入報告的五層桑基圖", () => {
     },
     {
       ...CARBON_CHART_DEFAULT_LABELS,
-      // Info: (20260805 - Tzuhan) 短名 —— 與 hook 的實際用法一致(長名會讓節點標籤重疊)
-      formatIsoCategory: (category: string) =>
-        formatIsoCategoryShortLabel(category, "zh_tw"),
       formatEsgScope: (scope: string) => formatEsgScopeLabel(scope, "zh_tw"),
+      // Info: (20260806 - Tzuhan) 子代碼 ↔ GHG 類別的對照要用得上這個 formatter
+      formatScope: (scope: string) => formatGhgCategoryLabel(scope, "zh_tw"),
+      /**
+       * Info: (20260807 - Tzuhan) 子代碼顯示名。不注入時圖上只有 `2.1`,
+       * 而實測回報正是「尾端只有代碼,看不出流向哪裡」——
+       * 測試要跟 hook 用同一組 labels,否則測到的是一個沒人在跑的組合。
+       */
+      formatSubCategory: (subCategory: string) =>
+        formatIsoSubCategoryLabel(subCategory, "zh_tw"),
     },
   );
 
@@ -809,32 +824,95 @@ describe("匯入報告的五層桑基圖", () => {
    * 若印公斤(2814077.3),圖上的數字就與原文對不上,對帳的意義隨之消失。
    */
   it("數值為公噸,與原文表格逐格對得上", () => {
-    expect(block).toContain("2814.0773");
+    /**
+     * Info: (20260807 - Tzuhan) 原本斷言 `2814.0773`(屏東的範疇一小計)。
+     * 抽掉廠址層之後圖上的節點都是三廠址合併後的值,那個數字不再單獨出現。
+     *
+     * 改為斷言**廠址小計清單裡的原文值** —— 8121.9184 是原文表3.8 的屏東小計,
+     * 逐格對得上;而這也順便釘住「抽掉廠址層不等於廠址數字消失」。
+     */
+    expect(block).toContain("8121.9184");
+    // Info: (20260803 - Tzuhan) 公斤值不得出現(差一千倍,對帳就失去意義)
     expect(block).not.toContain("2814077.3");
   });
 
-  it("五層俱在:組織 → 廠址 → 範疇 → 類別 → 子代碼", () => {
+  /**
+   * Info: (20260806 - Tzuhan) 原斷言逐一檢查「範疇一」在不在。
+   * 純傳遞節點摺疊後,範疇一 因為與類別一 同值而被摺掉(它什麼都沒說),
+   * 所以改為檢查**層級鏈**存在:組織 → 廠址 → …… → 子代碼。
+   */
+  it("層級鏈俱在:全公司 → 範疇 → 子代碼(帶名稱)", () => {
     expect(links.some((l) => l.from === "全公司")).toBe(true);
-    expect(links.some((l) => l.to.includes("範疇一"))).toBe(true);
-    expect(links.some((l) => l.to.includes("類別一"))).toBe(true);
-    expect(links.some((l) => l.to.endsWith("1.1"))).toBe(true);
+    expect(links.some((l) => l.to.includes("範疇"))).toBe(true);
+    /**
+     * Info: (20260807 - Tzuhan) 末端節點要有**代碼 + 名稱**。
+     * 只有代碼時讀者不知道 1.1 是什麼(實測回報),
+     * 而只有名稱時無法回原文表格逐格對照 —— 兩者都要,順序也固定。
+     */
+    expect(links.some((l) => l.to === "1.1 固定式燃燒")).toBe(true);
   });
 
   /**
-   * Info: (20260805 - Tzuhan) 第三層之後的節點必須帶廠址前綴。
+   * Info: (20260807 - Tzuhan) **廠址不再畫在圖上,但必須列得出來,而且逐廠址正確。**
    *
-   * 先前三個廠址共用同一個類別節點:總量守恆,但線互相交叉,
-   * 而且看不出「屏東的類別一」與「總公司的類別一」誰是誰 ——
-   * 那不是一棵樹,是把三棵樹疊在一起。
+   * 這條斷言接的是一個實際存在、畫面上一直錯著的 bug:
+   * 20260805 用「原文廠址名開頭的 `(n)`」當深層節點前綴,而這份報告的
+   * 總公司與屏東分公司**都是 `(1)`** —— 前綴不唯一,第三層以下兩個廠址
+   * 共用同一個節點,而**層間守恆的測試全部通過**(合併不改變總和)。
+   *
+   * 20260807 抽掉廠址層之後那個 bug 在圖上不可能再發生(沒有廠址節點),
+   * 但風險換了地方:廠址資訊改由圖下的小計清單承擔 ——
+   * 所以斷言也跟著換地方,改驗「清單裡三個廠址各自的量是對的」。
+   * 這個 fixture 本身就帶著重複的 `(1)`,因此仍是同一個 bug 的回歸測試。
    */
-  it("第三層之後的節點帶廠址前綴(才是一棵真的樹)", () => {
-    const scopeNodes = links
-      .filter((l) => l.to.includes("範疇"))
-      .map((l) => l.to);
-    expect(scopeNodes.length).toBeGreaterThan(0);
-    expect(scopeNodes.every((node) => /^\(\d+\)/.test(node))).toBe(true);
-    // Info: (20260805 - Tzuhan) 同名不同廠址必須是不同節點
-    expect(new Set(scopeNodes).size).toBeGreaterThan(1);
+  it("圖上沒有廠址節點,廠址改列小計清單且逐廠址分得開", () => {
+    // Info: (20260807 - Tzuhan) `#n` 前綴那個 workaround 應該整個消失了
+    links.forEach((l) => {
+      expect(l.from).not.toMatch(/^#\d+/);
+      expect(l.to).not.toMatch(/^#\d+/);
+    });
+
+    expect(block).toContain("各廠址小計");
+    const siteRows = block
+      .split("\n")
+      .map((line) => line.match(/^- (.+?) ([\d.]+) \(([\d.]+)%\)$/))
+      .filter((m): m is RegExpMatchArray => m !== null);
+
+    // Info: (20260807 - Tzuhan) 三個廠址三列,名稱相異(重複的 `(1)` 已去掉,靠名稱本身分辨)
+    expect(siteRows).toHaveLength(3);
+    expect(new Set(siteRows.map((m) => m[1])).size).toBe(3);
+    expect(siteRows.some((m) => m[1].includes("台北"))).toBe(true);
+    expect(siteRows.some((m) => m[1].includes("屏東"))).toBe(true);
+
+    // Info: (20260807 - Tzuhan) 各廠址加總 = 原文全公司總量(清單不套門檻,故完全相等)
+    const listed = siteRows.reduce((sum, m) => sum + Number(m[2]), 0);
+    expect(Math.abs(listed - Number(COMPANY_TOTAL))).toBeLessThanOrEqual(0.001);
+    // Info: (20260807 - Tzuhan) 占比也要加起來是 100%(容差為小數一位的捨入)
+    const shares = siteRows.reduce((sum, m) => sum + Number(m[3]), 0);
+    expect(Math.abs(shares - 100)).toBeLessThanOrEqual(0.2);
+  });
+
+  /**
+   * Info: (20260807 - Tzuhan) **同一個子代碼跨廠址合併後,要嘛整個畫、要嘛整個列在下面。**
+   *
+   * 這條是為一個我在 20260807 當天寫出來、又當天抓到的 bug 補的:
+   * 抽掉廠址層之後,門檻仍逐筆套用 —— 台北分公司的 2.1 外購電力是 5.8344 公噸,
+   * 低於門檻(總量的 0.1%,即 8.33),於是那一筆的邊被丟掉;
+   * 而「未畫出」清單是以**合併後**的值算的,合併後的 2.1 是 3470.34,遠高於門檻,
+   * 所以它不在清單裡。結果是「範疇二 3470.34 → 2.1 外購電力 3464.50」,
+   * **差額 5.83 既沒畫出來、也沒被說出來**。
+   *
+   * 那正是這個模組再三聲明要避免的形狀:沒畫出來的東西必須說得出來。
+   * 而它同樣通得過所有守恆測試 —— 因為少掉的量在最細層,而最細層本來就允許少。
+   */
+  it("同一子代碼合併後高於門檻就整個畫,不得只畫一部分", () => {
+    const electricity = links.filter((l) => l.to === "2.1 外購電力");
+    expect(electricity).toHaveLength(1);
+    // Info: (20260807 - Tzuhan) 三個廠址的 2.1 相加(原文:3464.501 + 5.8344 + 0)
+    expect(electricity[0].weight).toBeCloseTo(3470.3354, 3);
+    // Info: (20260807 - Tzuhan) 而它既然畫了,就不該同時出現在「未畫出」清單裡
+    const belowSection = (block.split("占比過小未畫出")[1] ?? "").split("**")[2] ?? "";
+    expect(belowSection).not.toContain("2.1");
   });
 
   it("同一組節點對只出現一次且已加總(不賭渲染器會替我們合併)", () => {
@@ -843,63 +921,137 @@ describe("匯入報告的五層桑基圖", () => {
   });
 
   /**
-   * Info: (20260805 - Tzuhan) 桑基圖不得憑空生出或吃掉流量:每一層的總流量都必須相等。
-   * 這是五層圖最重要的一條 —— 任何一層漏加或重複,圖就在說謊。
+   * Info: (20260806 - Tzuhan) 守恆的斷言從「逐層」改為「逐節點」。
+   *
+   * 原本以標籤字樣切出「範疇層」「類別層」再比各層總和。
+   * 20260806 起純傳遞節點會被摺疊(一入一出且同值 —— 例如
+   * 範疇一 2831.93 → 類別一 2831.93,那個節點什麼都沒說卻讓標籤互相重疊),
+   * 於是「層」不再是一個能用標籤切出來的東西:摺掉之後
+   * 廠址會直接接到類別,而範疇三(真的分岔)仍然留著。
+   *
+   * 守恆本來就是**節點的性質**而不是層的性質,所以改成逐節點驗:
+   * 流入必須等於流出,除非它的下游是最細的子代碼(那一層才套門檻)。
+   * 這比原斷言更強,而且不因摺疊或層數變化而失效。
    */
-  it("前四層的總流量完全相等", () => {
-    const sumWhere = (predicate: (from: string) => boolean): number =>
-      links.filter((l) => predicate(l.from)).reduce((s, l) => s + l.weight, 0);
-
-    const organization = sumWhere((from) => from === "全公司");
-    const site = sumWhere((from) => /^\(\d+\)\s*\S+(公司|廠)$/.test(from));
-    const scope = sumWhere((from) => from.includes("範疇"));
-
-    [site, scope].forEach((layer) => {
-      expect(Math.abs(layer - organization)).toBeLessThan(0.001);
+  it("每個中間節點的流入等於流出(最細層例外,門檻只套那裡)", () => {
+    const inflow = new Map<string, number>();
+    const outflow = new Map<string, number>();
+    links.forEach((l) => {
+      inflow.set(l.to, (inflow.get(l.to) ?? 0) + l.weight);
+      outflow.set(l.from, (outflow.get(l.from) ?? 0) + l.weight);
     });
-    expect(organization).toBeGreaterThan(0);
+    /**
+     * Info: (20260807 - Tzuhan) 子代碼節點:標籤是「2.1 外購電力」——**代碼在開頭**。
+     * 原本判定「尾端是 1.1」,而 20260807 補上名稱之後代碼移到前面,
+     * 那個 regex 會一個都認不出來 → 這條斷言會變成永遠成立(等於沒測)。
+     */
+    const isSubCategory = (node: string): boolean => /^\d+(\.\d+)?\s/.test(node);
+
+    const intermediates = Array.from(inflow.keys()).filter((node) =>
+      outflow.has(node),
+    );
+    expect(intermediates.length).toBeGreaterThan(0);
+    intermediates.forEach((node) => {
+      const into = inflow.get(node) ?? 0;
+      const outOf = outflow.get(node) ?? 0;
+      // Info: (20260806 - Tzuhan) 不得憑空生出流量 —— 這條沒有例外
+      expect(outOf).toBeLessThanOrEqual(into + 0.001);
+      const feedsSubCategory = links.some(
+        (l) => l.from === node && isSubCategory(l.to),
+      );
+      if (!feedsSubCategory) {
+        expect(Math.abs(outOf - into)).toBeLessThan(0.001);
+      }
+    });
   });
 
   /**
    * Info: (20260805 - Tzuhan) 最細一層可以少 —— 差額就是低於門檻者,且已列在圖下方。
    * 這是刻意的不對稱:門檻只套最細層,否則小廠址的每一項都低於門檻,整個廠址會消失。
    */
-  it("最細一層可低於上層,差額不超過門檻總和", () => {
-    const sumWhere = (predicate: (from: string) => boolean): number =>
-      links.filter((l) => predicate(l.from)).reduce((s, l) => s + l.weight, 0);
-    const category = sumWhere((from) => from.includes("類別"));
-    const scope = sumWhere((from) => from.includes("範疇"));
-    expect(category).toBeLessThanOrEqual(scope + 0.001);
-    // Info: (20260805 - Tzuhan) 濾掉的是極細項,不該吃掉超過總量的 1%
-    expect(category).toBeGreaterThan(scope * 0.99);
-  });
-
-  /**
-   * Info: (20260805 - Tzuhan) 每一個廠址都必須出現在圖上。
-   * 台北分公司總量 9.1982 公噸(占 0.11%,高於門檻)但每一個單項都低於門檻 ——
-   * 門檻若套在每一筆上,整個廠址就從圖上消失,而廠址是報告明載的組織邊界。
-   */
-  it("小廠址不會整個消失", () => {
-    const siteLinks = links.filter((l) => l.from === "全公司");
-    expect(siteLinks).toHaveLength(3);
-    expect(siteLinks.some((l) => l.to.includes("台北"))).toBe(true);
-  });
-
-  /**
-   * Info: (20260805 - Tzuhan) 計畫的驗收條件:第一層即全公司總量,對不上就是圖在說謊。
-   * 門檻濾掉的極細項會讓它略低於原文總量,故容差取「原文總量 × 門檻 × 項數上限」的量級。
-   */
-  /**
-   * Info: (20260805 - Tzuhan) 計畫的驗收條件:第一層即全公司總量,對不上就是圖在說謊。
-   * 前四層不套門檻,所以這裡是**完全相等**(容差同勾稽的 0.001 公噸)。
-   */
-  it("第一層加總等於原文全公司總量", () => {
+  it("最細一層可低於上層,但差額不超過總量的 1%", () => {
+    // Info: (20260807 - Tzuhan) 同上:代碼在標籤開頭
+    const isSubCategory = (node: string): boolean => /^\d+(\.\d+)?\s/.test(node);
+    const targets = new Set(links.map((l) => l.to));
     const organization = links
-      .filter((l) => l.from === "全公司")
+      .filter((l) => !targets.has(l.from))
       .reduce((s, l) => s + l.weight, 0);
-    expect(Math.abs(organization - Number(COMPANY_TOTAL))).toBeLessThanOrEqual(
+    const subCategory = links
+      .filter((l) => isSubCategory(l.to))
+      .reduce((s, l) => s + l.weight, 0);
+    expect(subCategory).toBeLessThanOrEqual(organization + 0.001);
+    // Info: (20260805 - Tzuhan) 濾掉的是極細項,不該吃掉超過總量的 1%
+    expect(subCategory).toBeGreaterThan(organization * 0.99);
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 純傳遞的範疇節點要被摺掉,真的分岔的要留著。
+   *
+   * 這份報告的 ISO 類別一/二 與範疇一/二 是一對一(定義上如此),
+   * 於是那兩個範疇節點的進出數值完全相同、什麼都沒說,
+   * 而 mermaid 把標籤畫在節點右側 —— 「(1) 範疇二 3464.5」直接疊在
+   * 「(1) 類別二 3464.5」上,兩者都讀不出來。
+   * 範疇三 → 類別三 + 類別四 真的分岔,那一個必須留。
+   */
+  it("純傳遞的範疇節點被摺掉,分岔的保留", () => {
+    const scopeNodes = new Set(
+      links.filter((l) => l.to.includes("範疇")).map((l) => l.to),
+    );
+    expect(scopeNodes.size).toBeGreaterThan(0);
+    /**
+     * Info: (20260807 - Tzuhan) 只有一個子代碼的範疇會被摺掉,全公司直接接子代碼。
+     * 這份報告的範疇二只有 2.1 外購電力,所以「全公司 → 2.1 外購電力」必須存在:
+     * 那個範疇節點一進一出且同值,留著只會讓標籤互相重疊。
+     */
+    const collapsedToSubCategory = links.filter(
+      (l) => l.from === "全公司" && /^\d+(\.\d+)?\s/.test(l.to),
+    );
+    expect(collapsedToSubCategory.length).toBeGreaterThan(0);
+  });
+
+  /**
+   * Info: (20260807 - Tzuhan) 唯一的根是「全公司」,而且它不得被摺疊掉。
+   *
+   * 原本這張圖有三個根(三個廠址),而屏東佔 97% —— 另外兩個廠址在同一張圖上
+   * 只能是髮絲級的細線,整張圖的比重讀不出來(實測回報)。
+   *
+   * 收成單一根之後多一個風險:若只剩一個範疇,「全公司 → 範疇一」是一進一出且同值,
+   * 摺疊規則會把它吃掉,圖上就只剩子代碼、沒有總量。因此根節點列為受保護節點。
+   */
+  it("唯一的根是全公司(且不被摺疊規則吃掉)", () => {
+    const targets = new Set(links.map((l) => l.to));
+    const roots = new Set(
+      links.map((l) => l.from).filter((n) => !targets.has(n)),
+    );
+    expect(Array.from(roots)).toEqual(["全公司"]);
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 各根節點流出加總 = 原文全公司總量。
+   * 第一層不套門檻,所以是**完全相等**(容差同勾稽的 0.001 公噸)。
+   */
+  it("根節點流出加總等於原文全公司總量", () => {
+    const targets = new Set(links.map((l) => l.to));
+    const fromRoots = links
+      .filter((l) => !targets.has(l.from))
+      .reduce((s, l) => s + l.weight, 0);
+    expect(Math.abs(fromRoots - Number(COMPANY_TOTAL))).toBeLessThanOrEqual(
       0.001,
     );
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) GHG Protocol 類別不畫成一層(映射 1:1,那會是純傳遞節點),
+   * 但它是一個分類判斷 —— 隱藏的判斷等於沒有依據,所以要在圖下方列出來。
+   */
+  it("子代碼與 GHG Protocol 類別的對照列在圖下方", () => {
+    expect(block).toContain("子代碼與 GHG Protocol 類別的對照");
+    /**
+     * Info: (20260807 - Tzuhan) 左邊只放代碼:名稱已經在圖上的節點文字裡,
+     * 兩邊都放會變成「3.1 上游運輸與配送 → 上游運輸與配送」的同語重複
+     * (ISO 與 GHG Protocol 對這幾項的用詞剛好一樣),讀起來像 bug。
+     */
+    expect(block).toContain("3.1 → ");
   });
 
   // Info: (20260803 - Tzuhan) 零權重連結在 sankey 沒有意義;但不畫的必須說出來
@@ -928,6 +1080,128 @@ describe("匯入報告的五層桑基圖", () => {
  * 這份合併規則原本在 hook 與建表兩處各寫一次。抽成純函數之後才測得到 ——
  * 而它守的三件事都是「錯了不會當場報錯,只會讓總量默默不對」的那種。
  */
+/**
+ * Info: (20260806 - Tzuhan) 排放去向圖:全公司 → 廠址 → 各廠址前九大項目 + 其他。
+ *
+ * 與分類切面拆成兩張的理由見 buildImportedSankey 的檔頭:
+ * sankey 的每一層必須是上一層的細分,而範疇 → ISO 類別 對類別一/二是 1:1,
+ * 1:1 的層必然讓標籤互相重疊。
+ *
+ * 這張圖用「名額」而不是「門檻」:名額給的是節點數上界,而門檻是相對值。
+ * 門檻已經害過一次 —— 台北分公司總量占 0.11% 高於門檻,但它每一個單項都低於門檻,
+ * 整個廠址從圖上消失。
+ */
+describe("匯入報告的排放去向圖(前九大 + 其他)", () => {
+  const parsed = parseTable38(TABLE_38_LAYOUT_B);
+  const reconciled = reconcileTable38(parsed, {
+    companyTotalTonne: COMPANY_TOTAL,
+  });
+  const { entries } = toLedgerEntries(parsed, reconciled, { tableNo: "表3.8" });
+  const block = buildCarbonChartBlock(
+    CarbonChartTemplateEnum.IMPORTED_TOP_ITEMS_SANKEY,
+    {
+      entries,
+      pending: [],
+      scopeSubtotals: {},
+      totalCo2eKg: "0",
+      computedAt: new Date().toISOString(),
+    },
+    {
+      ...CARBON_CHART_DEFAULT_LABELS,
+      // Info: (20260807 - Tzuhan) 與 hook 同一組 labels:末端節點要有代碼 + 名稱
+      formatSubCategory: (subCategory: string) =>
+        formatIsoSubCategoryLabel(subCategory, "zh_tw"),
+    },
+  );
+  const links = block
+    .split("\n")
+    .map((line) => line.trim().match(/^"(.+?)","(.+?)",([\d.]+)$/))
+    .filter((m): m is RegExpMatchArray => m !== null)
+    .map((m) => ({ from: m[1], to: m[2], weight: Number(m[3]) }));
+
+  /**
+   * Info: (20260807 - Tzuhan) 末端節點必須看得出「那是什麼」。
+   *
+   * 實測回報:「尾端只有代碼,看不出流向哪裡」—— 這張圖給查證人員與主管看,
+   * 而 `2.1` 對他們不是資訊,要回頭翻表才知道是外購電力。
+   * 代碼仍留在最前面:名稱是為了看得懂,代碼是為了回原文表格查得到。
+   */
+  it("末端節點帶代碼與標準名稱(代碼在前,可回原文對照)", () => {
+    const biggest = links.find((l) => !l.to.startsWith("其他("));
+    expect(biggest?.to).toBe("2.1 外購電力");
+    // Info: (20260807 - Tzuhan) 不得只剩名稱 —— 那樣就回不去原文表3.8 了
+    links
+      .filter((l) => !l.to.startsWith("其他("))
+      .forEach((l) => {
+        expect(l.to).toMatch(/^\d+(\.\d+)?\s\S/);
+      });
+  });
+
+  it("使用自己的錨點(與分類切面並存不互相覆蓋)", () => {
+    expect(block).toContain("carbon-chart:IMPORTED_TOP_ITEMS_SANKEY:start");
+    expect(block).not.toContain("carbon-chart:IMPORTED_EMISSION_SANKEY:start");
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 兩層,刻意沒有廠址層。
+   *
+   * 第一版做成 組織 → 廠址 → 逐廠址前九大,結果 28 個葉節點,
+   * 而這份報告 97.5% 集中在一個廠址 —— 另外兩個廠址的項目全是看不見的細線,
+   * 把比重稀釋掉,而比重正是這張圖唯一要回答的問題。
+   * 廠址分布在分類切面那張圖的第一層就看得到。
+   */
+  it("兩層:全公司 → 項目(沒有廠址層)", () => {
+    expect(links.every((l) => l.from === "全公司")).toBe(true);
+    expect(links.some((l) => /^#\d+ /.test(l.to))).toBe(false);
+    expect(links.length).toBeLessThanOrEqual(CARBON_SANKEY_TOP_ITEM_COUNT + 1);
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 這張圖**沒有門檻**,所以總量必須完全守恆:
+   * 第一層加總 = 原文全公司總量,而且每個廠址的流出等於它的流入。
+   * 「其他」是一個真的節點,那才是守恆成立的原因。
+   */
+  it("完全守恆:加總等於原文全公司總量", () => {
+    const total = links.reduce((sum, l) => sum + l.weight, 0);
+    expect(Math.abs(total - Number(COMPANY_TOTAL))).toBeLessThanOrEqual(0.001);
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 名額是逐廠址算的:全公司通吃的話,
+   * 小廠址的項目永遠擠不進前九名,那個廠址就只會有一條「其他」——
+   * 又回到「小廠址看不見」的老問題。
+   */
+  /**
+   * Info: (20260806 - Tzuhan) 「其他」是一個真的節點,不是丟掉 —— 那才是守恆成立的原因。
+   * 門檻制做不到:它只能把流量從圖上移除,再列在圖下方。
+   */
+  it("超出名額的併成一個真的「其他」節點", () => {
+    const other = links.filter((l) => l.to.startsWith("其他("));
+    expect(other).toHaveLength(1);
+    expect(other[0].weight).toBeGreaterThan(0);
+    // Info: (20260806 - Tzuhan) 前九大 + 其他 = 恰好十條
+    expect(links).toHaveLength(CARBON_SANKEY_TOP_ITEM_COUNT + 1);
+  });
+
+  // Info: (20260806 - Tzuhan) 最大的項目排第一:這張圖的用途就是「哪一項最大」
+  it("依排放量由大到小", () => {
+    const items = links.filter((l) => !l.to.startsWith("其他("));
+    const weights = items.map((l) => l.weight);
+    expect([...weights].sort((a, b) => b - a)).toEqual(weights);
+  });
+
+  // Info: (20260806 - Tzuhan) 沒有門檻,所以「沒畫出來」只剩一個原因:原文根本沒有數字
+  it("NA/NS 與為零者仍列在圖下方,但沒有「占比過小」那一段", () => {
+    expect(block).toContain("未畫出的項目");
+    expect(block).not.toContain("占比過小未畫出");
+  });
+
+  it("標題帶基準與單位", () => {
+    expect(block).toContain("所在地基準");
+    expect(block).toContain("公噸 CO2e");
+  });
+});
+
 describe("匯入項目併入帳本", () => {
   const makeEntry = (
     activityKey: string,

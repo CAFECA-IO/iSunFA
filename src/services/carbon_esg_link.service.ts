@@ -154,6 +154,10 @@ export class CarbonEsgLinkService {
         voucherId: record.voucherId,
         journalId: record.journalId,
         fileId: record.fileId || undefined,
+        // Info: (20260806 - Tzuhan) 交易日期(repo 已轉 Unix 秒)。先前這裡沒帶,
+        // Info: (20260806 - Tzuhan) 帳本紀錄的真實日期在映射的這一步就被丟掉,
+        // Info: (20260806 - Tzuhan) 圖表因此只畫得出年度合計 —— 資料一直都在,是介面漏了欄位。
+        tradingTimestamp: record.tradingDate,
         // Info: (20260721 - Tzuhan) 原始憑證檔 hash/檔名(RecordTabModal 憑此啟用「原始憑證」分頁與下載檔名)
         fileHash: record.file?.hash,
         fileName: record.file?.fileName,

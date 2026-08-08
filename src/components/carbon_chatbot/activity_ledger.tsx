@@ -16,6 +16,11 @@ import {
   IActivityRecord,
 } from "@/types/carbon_chatbot.types";
 import { activityDedupeKey } from "@/lib/carbon_inventory";
+import { MoneyUtil } from "@/lib/utils/money";
+import {
+  LedgerProvenanceEnum,
+  TONNE_TO_KG_MULTIPLIER,
+} from "@/constants/imported_quantity";
 import { ArticulationStatusEnum } from "@/constants/carbon_articulation";
 import { useTranslation } from "@/i18n/i18n_context";
 
@@ -42,6 +47,30 @@ export function ActivityLedger({
   const count = state.activities.length;
   // Info: (20260716 - Tzuhan) #6519 計算結果對照表(activityKey → entry);數值為字串化 Decimal,原樣渲染不格式化
   const ledger = state.computedLedger;
+  /**
+   * Info: (20260806 - Tzuhan) 匯入的排放量**不是活動數據**,但它在帳本裡。
+   *
+   * 匯入的列進的是 `computedLedger.entries`(provenance = IMPORTED),不在 `activities` ——
+   * 因為原文只給排放量,沒有活動數據也沒有係數(報告表格已逐列標「原文未提供」)。
+   * 所以「活動數據 0 筆」技術上是真的。
+   *
+   * 但畫面上只說那一句就會誤導:實測匯入 8332.58 公噸之後,
+   * 這張卡仍寫著「尚無活動數據。在對話中提供用電量、油耗等數據,或上傳帳單」——
+   * 而使用者照做也不會有結果,真正該做的事跟那句話無關。
+   * 與 3.6 那句「補齊活動數據」是同一類錯誤:**指錯方向的提示比沒有提示更貴。**
+   *
+   * 處置是兩件事都說,而不是把匯入項偽裝成活動數據。
+   */
+  const importedEntries = (ledger?.entries ?? []).filter(
+    (entry) => entry.provenance === LedgerProvenanceEnum.IMPORTED,
+  );
+  const importedTotalKg = importedEntries.reduce(
+    (sum, entry) => MoneyUtil.add(sum, entry.co2eKg),
+    "0",
+  );
+  const importedTotalTonne = MoneyUtil.toDecimal(importedTotalKg)
+    .div(TONNE_TO_KG_MULTIPLIER)
+    .toString();
   const entryByKey = new Map(
     (ledger?.entries ?? []).map((entry) => [entry.activityKey, entry]),
   );
@@ -59,6 +88,14 @@ export function ActivityLedger({
       >
         <ClipboardList size={14} className="text-[#ff5a00]" />
         {t("carbon_chatbot.activity_ledger_pill", { count })}
+        {/* Info: (20260806 - Tzuhan) 匯入的排放量另計:藥丸上只寫「活動數據 0 筆」會讓人以為系統裡沒東西 */}
+        {importedEntries.length > 0 && (
+          <span className="text-emerald-700">
+            {t("carbon_chatbot.activity_ledger_pill_imported", {
+              count: importedEntries.length,
+            })}
+          </span>
+        )}
       </button>
     );
   }
@@ -104,9 +141,23 @@ export function ActivityLedger({
         </button>
       )}
 
+      {/* Info: (20260806 - Tzuhan) 匯入的排放量在帳本裡但不是活動數據 —— 兩件事都要說 */}
+      {importedEntries.length > 0 && (
+        <p className="rounded-lg bg-emerald-50 px-2 py-1.5 text-[11px] text-emerald-800">
+          {t("carbon_chatbot.activity_ledger_imported_note", {
+            count: importedEntries.length,
+            tonne: importedTotalTonne,
+          })}
+        </p>
+      )}
+
       {count === 0 ? (
         <p className="py-3 text-center text-xs text-gray-400">
-          {t("carbon_chatbot.activity_ledger_empty")}
+          {t(
+            importedEntries.length > 0
+              ? "carbon_chatbot.activity_ledger_empty_after_import"
+              : "carbon_chatbot.activity_ledger_empty",
+          )}
         </p>
       ) : (
         <ul className="max-h-56 space-y-1.5 overflow-y-auto">

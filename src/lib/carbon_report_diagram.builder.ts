@@ -8,6 +8,7 @@ import {
   CarbonDiagramTemplateEnum,
   CARBON_DIAGRAM_TEMPLATES,
   CARBON_DIAGRAM_MAX_LABEL_CHARS,
+  CARBON_DIAGRAM_MAX_OVERLONG_SHARE,
   CARBON_DIAGRAM_MIN_NODES,
   CARBON_TIMELINE_MIN_DATED_EVENTS,
   buildDiagramAnchorEnd,
@@ -26,11 +27,17 @@ export interface ICarbonDiagramLabels {
   unverifiable: string;
   /** Info: (20260730 - Tzuhan) 素材不足(無節點)時的佔位說明 */
   insufficient: string;
+  /**
+   * Info: (20260806 - Tzuhan) 因過長而略過的節點的說明抬頭。
+   * 略過而不說等於靜默少了原文的一條 —— 這個專案一貫的做法是「沒畫出來的必須說出來」。
+   */
+  skippedTooLong?: string;
 }
 
 export const CARBON_DIAGRAM_DEFAULT_LABELS: ICarbonDiagramLabels = {
   unverifiable: "(圖表節點無法回溯至本節原文,已略過不繪製)",
   insufficient: "(本節內容不足以繪製結構圖)",
+  skippedTooLong: "以下項目文字過長,未畫進圖中(內容仍在本節原文)",
 };
 
 export enum DiagramRejectReasonEnum {
@@ -51,6 +58,14 @@ export interface IDiagramValidation {
   reason?: DiagramRejectReasonEnum;
   /** Info: (20260730 - Tzuhan) 未通過原文回溯的節點文字,供 log 定位模型在哪裡越界 */
   offendingLabels?: string[];
+  /**
+   * Info: (20260806 - Tzuhan) 通過原文回溯、但因過長而不畫的節點文字。
+   *
+   * 與 offendingLabels 是**不同的事**:那個是「模型編的」(信任問題),
+   * 這個是「原文就這麼長」(版面問題)。用同一個欄位表達會讓兩者的處置混在一起,
+   * 而它們的處置正好相反 —— 一個要整張作廢,一個只是少畫一項並說出來。
+   */
+  skippedLabels?: string[];
 }
 
 /**
@@ -113,17 +128,12 @@ export function validateDiagramNodes(
     return { isValid: false, reason: DiagramRejectReasonEnum.TOO_MANY_NODES };
   }
 
-  const tooLong = nodes.filter(
-    (node) => node.label.trim().length > CARBON_DIAGRAM_MAX_LABEL_CHARS,
-  );
-  if (tooLong.length > 0) {
-    return {
-      isValid: false,
-      reason: DiagramRejectReasonEnum.LABEL_TOO_LONG,
-      offendingLabels: tooLong.map((node) => node.label),
-    };
-  }
-
+  /**
+   * Info: (20260806 - Tzuhan) 原文回溯先驗,長度後驗 —— **順序是這段邏輯的關鍵。**
+   *
+   * 先驗回溯,才能斷言「過長的那幾個節點不是模型編的」;
+   * 反過來的話,一個編造出來的長標籤會被當成版面問題略過,而它其實是信任問題。
+   */
   // Info: (20260730 - Tzuhan) 核心護欄:每個節點文字都必須能在本節原文找到,否則就是模型自己編的
   const haystack = normalizeForMatch(sourceText);
   const unverifiable = nodes.filter(
@@ -136,6 +146,37 @@ export function validateDiagramNodes(
       offendingLabels: unverifiable.map((node) => node.label),
     };
   }
+
+  /**
+   * Info: (20260806 - Tzuhan) 過長的處置改為**分兩種**。
+   *
+   * 原本一律整張否決,理由寫「超過即視為模型把整段敘述塞進節點」。
+   * 但實測擋掉的是原文的一條完整里程碑(43 字),而它**已經通過上面的原文回溯** ——
+   * 那不是編造,只是長。用信任層面的處置(作廢 30 個節點)去解版面問題,代價完全不對等。
+   *
+   * - 半數以上過長 → 那才像原本設想的「把敘述當節點」,整張不採信。
+   * - 否則:**時間軸**略過那幾個並在圖下方列出;**樹狀圖**仍整張否決 ——
+   *   本檔開頭那條理由對樹成立:少了中間層會讓剩下的圖呈現原文裡不存在的層級,
+   *   而那比不畫更糟,因為它看起來是對的。時間軸沒有層級,所以不受這條限制。
+   */
+  const tooLong = nodes.filter(
+    (node) => node.label.trim().length > CARBON_DIAGRAM_MAX_LABEL_CHARS,
+  );
+  if (tooLong.length > 0) {
+    const isMostlyTooLong =
+      tooLong.length / nodes.length > CARBON_DIAGRAM_MAX_OVERLONG_SHARE;
+    const isTimeline =
+      CARBON_DIAGRAM_TEMPLATES[templateId].renderer ===
+      CarbonDiagramRendererEnum.TIMELINE;
+    if (isMostlyTooLong || !isTimeline) {
+      return {
+        isValid: false,
+        reason: DiagramRejectReasonEnum.LABEL_TOO_LONG,
+        offendingLabels: tooLong.map((node) => node.label),
+      };
+    }
+  }
+  const skippedLabels = tooLong.map((node) => node.label);
 
   // Info: (20260730 - Tzuhan) timeline 的 parent 是「時間標籤」而非另一個節點:
   // Info: (20260730 - Tzuhan) 它只需同樣能在原文找到(上面已驗),不需自己也是節點,也無層級可成環。
@@ -174,7 +215,10 @@ export function validateDiagramNodes(
         reason: DiagramRejectReasonEnum.TOO_FEW_DATED_EVENTS,
       };
     }
-    return { isValid: true };
+    // Info: (20260806 - Tzuhan) 過長者不畫但要說出來(見上方 skippedLabels 的理由)
+    return skippedLabels.length > 0
+      ? { isValid: true, skippedLabels }
+      : { isValid: true };
   }
 
   /**
@@ -306,9 +350,27 @@ export function buildCarbonDiagramBlock(
     );
   }
 
+  /**
+   * Info: (20260806 - Tzuhan) 略過過長的節點,並在圖下方列出來。
+   * 它們通過了原文回溯(內容仍在本節原文裡),只是畫進圖裡會把版面撐爛。
+   */
+  const skipped = new Set(validation.skippedLabels ?? []);
+  const drawn =
+    skipped.size > 0 ? nodes.filter((node) => !skipped.has(node.label)) : nodes;
+  const noteSkipped = (body: string): string => {
+    if (skipped.size === 0 || !labels.skippedTooLong) return body;
+    return [
+      body,
+      "",
+      `**${labels.skippedTooLong}**`,
+      "",
+      ...Array.from(skipped).map((label) => `- ${label}`),
+    ].join("\n");
+  };
+
   const template = CARBON_DIAGRAM_TEMPLATES[templateId];
   if (template.renderer === CarbonDiagramRendererEnum.TIMELINE) {
-    return wrap(buildTimeline(nodes));
+    return wrap(noteSkipped(buildTimeline(drawn)));
   }
 
   const idByLabel = new Map(

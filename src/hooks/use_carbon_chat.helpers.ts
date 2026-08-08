@@ -50,6 +50,116 @@ export const isRateLimitedApiError = (error: unknown): boolean => {
   return data?.errorCode === API_ERRORS.IS_RATE_LIMITED.code;
 };
 
+/**
+ * Info: (20260806 - Tzuhan) 逐會話提示的 reducer(issue_drafts/inventory_table_import/06)。
+ *
+ * 抽成純函式而不是留在 `setDraftNotice` 裡,是因為這裡的規則有一條**測不到就會回歸**的:
+ * 「寫 B 房不得動到 A 房」。那正是原本的 bug —— 匯入跑在 A 房,
+ * 切到 B 房隨手做任何會設提示的動作,A 房的進度就被覆蓋掉,
+ * 切回 A 房畫面一片乾淨而匯入其實還在跑,於是使用者重新上傳一次。
+ *
+ * hook 本體目前沒有測試環境(`@testing-library/react` 未安裝,見 enterprise/40),
+ * 把不變式放進純函式是現在唯一測得到它的方式。
+ */
+export type IDraftNoticeMap<TNotice> = Readonly<Record<string, TNotice>>;
+
+/**
+ * Info: (20260806 - Tzuhan) 寫入或清除指定會話的提示。
+ * `notice` 為 null 即從 map 移除而非留 null —— 留著空鍵會讓「有沒有提示」多一種等價表示。
+ * 無變化時回傳原物件(同一參考),避免無謂的重繪。
+ */
+export const reduceDraftNotice = <TNotice>(
+  current: IDraftNoticeMap<TNotice>,
+  sessionId: string,
+  notice: TNotice | null,
+): IDraftNoticeMap<TNotice> => {
+  if (!notice) {
+    if (!(sessionId in current)) return current;
+    const rest = { ...current };
+    delete rest[sessionId];
+    return rest;
+  }
+  if (current[sessionId] === notice) return current;
+  return { ...current, [sessionId]: notice };
+};
+
+/**
+ * Info: (20260806 - Tzuhan) 匯入時對「那份檔案」的引用。
+ *
+ * 一份 64 頁報告要 14 次 `/import` 呼叫,而原本每一次都把整份 PDF 放進 multipart 再傳一次
+ * —— 同一個 2.02 MB 的檔案上傳 14 次 ≈ 28 MB,伺服端也跟著重跑 14 次 PDF 文字層抽取。
+ *
+ * 檔案本體改為選檔時就存進 Laria(`/chat/carbon/attachment`,切片 + Reed-Solomon),
+ * 之後只帶 cid。`file` 保留為退路:上傳失敗時仍能直傳,
+ * 而「上傳失敗就整個匯入不能做」是不必要的脆弱。
+ */
+export interface ICarbonImportSource {
+  /** Info: (20260806 - Tzuhan) Laria metadata hash;取不到即為 null,由 file 那條路頂上 */
+  cid: string | null;
+  fileName: string;
+  mimeType: string;
+  /** Info: (20260806 - Tzuhan) 沒有 cid 時的退路;重載之後只剩 cid,這裡會是 null */
+  file: File | null;
+}
+
+/**
+ * Info: (20260806 - Tzuhan) 把檔案引用寫進 multipart。
+ *
+ * 有 cid 就只送 cid 與宣告的檔名/型別 —— 伺服端會 `recoverLaria` 取回並**複驗 magic bytes**,
+ * 所以宣告的型別不被信任(那正是那道防線要擋的)。
+ */
+export const appendImportSource = (
+  formData: FormData,
+  source: ICarbonImportSource,
+): void => {
+  if (source.cid) {
+    formData.append("cid", source.cid);
+    formData.append("fileName", source.fileName);
+    formData.append("mimeType", source.mimeType);
+    return;
+  }
+  if (source.file) {
+    formData.append("file", source.file);
+    return;
+  }
+  /**
+   * Info: (20260806 - Tzuhan) 兩者都沒有即無從取得檔案 —— 早點拋,不要送一個註定失敗的請求。
+   * 這個情形出現在「重載之後 cid 也沒存下來」,而那是呼叫端該擋的。
+   */
+  throw new Error("import source has neither cid nor file");
+};
+
+/**
+ * Info: (20260806 - Tzuhan) 會話清單排序:最近有動作的在最上面。
+ *
+ * 原本清單是 `Object.values(sessionsData)` 的**插入順序** —— 沒有排序。
+ * 看起來像照日期排,是因為 API 回的是 createdAt desc;
+ * 而新建的會話用 `{ ...prev, [id]: session }` 加進去,新鍵在物件的最後 ——
+ * 於是**新增對話出現在清單最底部**(實測就是這樣)。
+ *
+ * 排序鍵取 ISO 字串的 `updatedAt`,不取 `time`:後者是 `toLocaleDateString()` 的產物,
+ * 只有日期而且格式隨語系變(zh-TW 的 `2026/8/6` 與 en-US 的 `8/6/2026` 字典序完全不同)。
+ * 在中文環境「剛好會對」的排序,換個語系就錯,而那種錯沒有人會聯想到排序。
+ *
+ * 缺 `updatedAt` 的(舊的本機快取)排在有值者之後 —— 不假裝它很新;
+ * 同組之內維持原順序(穩定排序),否則每次 render 的順序都可能不同。
+ */
+export const sortSessionsByRecency = <T extends { updatedAt?: string }>(
+  sessions: readonly T[],
+): T[] =>
+  sessions
+    .map((session, index) => ({ session, index }))
+    .sort((a, b) => {
+      const left = a.session.updatedAt;
+      const right = b.session.updatedAt;
+      if (left && right && left !== right) return left < right ? 1 : -1;
+      if (left && !right) return -1;
+      if (!left && right) return 1;
+      // Info: (20260806 - Tzuhan) 同時間或都沒有時間:維持原順序(穩定)
+      return a.index - b.index;
+    })
+    .map(({ session }) => session);
+
 // Info: (20260716 - Tzuhan) #50 報告 Markdown 切分(保留式,fence-aware):
 // Info: (20260716 - Tzuhan) 舊版以 regex 切 `### ` 且丟棄不符結構的內容 → 貼上內容靜默遺失;
 // Info: (20260716 - Tzuhan) 新版逐行掃描:程式碼圍欄內的 ### 不觸發切分,所有內容都有去處(零丟棄)

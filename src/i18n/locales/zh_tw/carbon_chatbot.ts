@@ -55,6 +55,9 @@ export const carbonChatbot = {
   origin_ai_draft: "AI 草稿",
   origin_imported_short: "原文",
   origin_ai_draft_short: "草稿",
+  // Info: (20260806 - Tzuhan) 匯入前先上傳取 cid:14 次呼叫共用一份儲存,文案要說出「為何要等」
+  import_uploading:
+    "正在將 {{name}} 存入安全儲存(後續每章解析改由伺服端取回,不再重複上傳整份檔案)…",
   // Info: (20260730 - Tzuhan) 兩階段匯入的第一階段提示:一次索引換來後續 11 章不必各自重送整份文件
   import_indexing:
     "正在建立 {{name}} 的章節索引(定位各節頁碼,可大幅減少後續解析量)…",
@@ -137,6 +140,11 @@ export const carbonChatbot = {
   import_wrong_session: "這份匯入屬於「{{name}}」，請切回該對話再套用。",
   import_draft_badge: "AI 草稿",
   import_unmapped: "無法對應大綱的內容({{count}} 段,不會匯入,可於對話中處理)",
+  // Info: (20260806 - Tzuhan) 待匯入結果的第三條路:保存起來稍後再決定(內容已入庫,重載仍在)
+  import_defer: "稍後再說",
+  import_pending_bar: "已保存待匯入的解析結果:{{name}}(共 {{count}} 節,尚未寫入報告)",
+  import_pending_open: "檢視並匯入",
+  import_pending_discard: "捨棄",
   import_reset_note:
     "匯入段落的查核狀態將重置;{{activities}} 筆活動數據將入帳並重新勾稽",
   import_apply: "匯入勾選({{count}})",
@@ -147,6 +155,9 @@ export const carbonChatbot = {
     "「{{name}}」逐章解析中(已完成 {{current}}/{{total}} 章,{{inFlight}} 章解析中),完整報告約需數分鐘…",
   import_failed_chapters: "以下章節解析失敗,可稍後重新匯入補齊:{{chapters}}",
   import_retry_failed: "重試失敗章節",
+  import_retrying: "重試中…",
+  import_retrying_hint:
+    "正在重新解析失敗的章節,需要數分鐘。請不要關閉這張卡片。",
   import_empty: "【匯入失敗】檔案中沒有可對應到大綱的內容。",
   import_failed: "【匯入失敗】報告解析發生問題,請稍後再試。",
   attachments_processing:
@@ -171,6 +182,11 @@ export const carbonChatbot = {
   progress_collapse: "收合進度浮窗",
   activity_ledger_title: "活動數據帳本",
   activity_ledger_pill: "活動數據 {{count}} 筆",
+  activity_ledger_pill_imported: " · 匯入 {{count}} 筆",
+  activity_ledger_imported_note:
+    "匯入的排放量已在帳本:{{count}} 筆,合計 {{tonne}} 公噸 CO2e。原文只給排放量、沒有活動數據與係數,故不列於下方。",
+  activity_ledger_empty_after_import:
+    "尚無活動數據。匯入的報告只提供排放量;若要逐筆的活動數據與係數,請在對話中提供或從帳本匯入憑證數據。",
   activity_ledger_empty:
     "尚無活動數據。在對話中提供用電量、油耗等數據，或上傳帳單，系統會自動記錄於此。",
   activity_ledger_collapse: "收合活動數據",
@@ -216,10 +232,24 @@ export const carbonChatbot = {
   chart_frozen:
     "⚠ 質量守恆勾稽未通過，圖表已凍結。請於對話中澄清庫存缺口後，圖表將自動生成。",
   chart_sankey_chat_node: "憑證外的來源（對話/附件申報）",
+  chart_sankey_period_unknown: "未標註期間",
+  chart_sankey_period_collapsed:
+    "期間跨度超過兩個年度，已略過月別層（月別請看趨勢圖）",
   chart_imported_sankey_title:
-    "溫室氣體排放流向（原文照錄，所在地基準,公噸 CO2e/年）",
+    "排放分類:全公司 → 範疇 → 子代碼(原文照錄,所在地基準,公噸 CO2e/年)",
   chart_imported_sankey_excluded: "未畫出的項目（NA/NS 或為零）",
-  chart_imported_sankey_collapsed: "節點過多，已降為兩層（廠址 → 類別）",
+  chart_imported_sankey_no_ledger:
+    "本報告已匯入，但帳本沒有任何可用數據，因此畫不出排放流向圖。桑基圖與系統數據表格的唯一來源是表3.8（各公司溫室氣體排放量），本次未取得該表。請確認第三章是否解析成功；若該章列為解析失敗，請以預覽卡的「重試失敗章節」重新匯入，並在伺服端日誌查看該表是否被丟棄及其原因。",
+  chart_imported_sankey_collapsed: "節點過多,已降為一層(全公司 → 範疇)",
+  chart_imported_top_items_title:
+    "排放去向：全公司 → 前九大排放項目與其他（原文照錄，所在地基準，公噸 CO2e/年）",
+  chart_imported_sankey_other: "其他",
+  // Info: (20260807 - Tzuhan) 分類圖抽掉廠址層(屏東佔 97%,同圖畫不出比重);廠址改列小計
+  chart_imported_sankey_site_totals:
+    "各廠址小計(公噸 CO2e/年,占全公司比)",
+  chart_imported_sankey_ghg_mapping: "子代碼與 GHG Protocol 類別的對照",
+  chart_imported_sankey_below_threshold: "占比過小未畫出（公噸 CO2e/年）",
+  chart_imported_sankey_organization: "全公司",
   book_bind_pending_unlock:
     "帳本會話已建立。請先解鎖加密對話以完成帳本綁定（匯入憑證數據與證據鏈功能需綁定後才可用）",
   book_bind_done: "帳本綁定完成，可從活動數據卡匯入憑證數據",

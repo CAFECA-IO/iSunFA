@@ -34,6 +34,8 @@ export const createChatSession = (
   id,
   title,
   time,
+  // Info: (20260806 - Tzuhan) 新建即為「剛動過」—— 清單依此排序,新對話因此出現在最上面
+  updatedAt: new Date().toISOString(),
   status: SessionStatusEnum.IN_PROGRESS,
   statusColor: "text-orange-500 bg-orange-100",
   progress: 0,
