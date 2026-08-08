@@ -24,7 +24,6 @@ interface IQuotaWindow {
 interface ISubscriptionView {
   planId: string;
   quota: { quota5h: IQuotaWindow; quotaWeek: IQuotaWindow };
-  faithTokensPerCredit: number;
 }
 
 export interface ITeamWalletInfo {

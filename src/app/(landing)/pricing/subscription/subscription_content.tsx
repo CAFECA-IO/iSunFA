@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { FAITH_TOKENS_PER_CREDIT } from "@/constants/llm";
+import { useState } from "react";
 import PricingCard from "@/components/pricing/pricing_card";
 import {
   ANALYSIS_BASE_COSTS,
@@ -22,27 +21,10 @@ export default function SubscriptionContent() {
   );
 
   /**
-   * Info: (20260807 - Luphia) 費思費率（設計書 §5.3 定價揭露）：
-   * 初值取常數（拍板預設 1,000），掛載後自 /pricing/meta 取 runtime env 同源值——
-   * 調 env 費率即全站同步，文案數字嚴禁寫死。
+   * Info: (20260809 - Luphia) 方案功能列僅列出「費思人工智能代理人」（產品調整 20260809）：
+   * 不再於此揭露計費費率與 token 計算方式，費率揭露改以服務條款 §3.4 為準。
    */
-  const [faithRate, setFaithRate] = useState<number>(FAITH_TOKENS_PER_CREDIT);
-  useEffect(() => {
-    fetch("/api/v1/pricing/meta")
-      .then((res) => res.json())
-      .then((body) => {
-        const rate = body?.payload?.faithTokensPerCredit;
-        if (typeof rate === "number" && rate > 0) setFaithRate(rate);
-      })
-      .catch(() => {
-        // Info: (20260807 - Luphia) 取不到 meta 時維持常數預設值，不阻斷頁面
-      });
-  }, []);
-
-  const faithRateFeature = {
-    text: t("pricing.faith_rate", { rate: faithRate }),
-    tooltip: t("pricing.faith_rate_tooltip", { rate: faithRate }),
-  };
+  const faithAgentFeature = t("pricing.faith_agent");
 
   const currentPlan = user
     ? user.plan === "personal" || !user.plan
@@ -166,7 +148,7 @@ export default function SubscriptionContent() {
                 }),
                 tooltip: t("pricing.plans.free.features.ai_overage_tooltip"),
               },
-              faithRateFeature,
+              faithAgentFeature,
               t("pricing.plans.free.features.storage", {
                 gb: CARBON_STORAGE_QUOTA_GB_BY_PLAN.free,
               }),
@@ -189,14 +171,6 @@ export default function SubscriptionContent() {
               {
                 text: t("pricing.plans.team.features.fido"),
                 tooltip: t("pricing.plans.team.features.fido_tooltip"),
-              },
-              {
-                text: t("pricing.plans.team.features.monthly_credits", {
-                  amount: SUBSCRIPTION_PLAN_CREDITS.team,
-                }),
-                tooltip: t(
-                  "pricing.plans.team.features.monthly_credits_tooltip",
-                ),
               },
               {
                 text: t("pricing.plans.team.features.consults", {
@@ -241,7 +215,7 @@ export default function SubscriptionContent() {
                 }),
                 tooltip: t("pricing.plans.team.features.ai_overage_tooltip"),
               },
-              faithRateFeature,
+              faithAgentFeature,
               t("pricing.plans.team.features.analytics"),
               t("pricing.plans.team.features.support"),
               t("pricing.plans.team.features.storage", {
@@ -264,14 +238,6 @@ export default function SubscriptionContent() {
               {
                 text: t("pricing.plans.business.features.fido"),
                 tooltip: t("pricing.plans.business.features.fido_tooltip"),
-              },
-              {
-                text: t("pricing.plans.business.features.monthly_credits", {
-                  amount: SUBSCRIPTION_PLAN_CREDITS.business,
-                }),
-                tooltip: t(
-                  "pricing.plans.business.features.monthly_credits_tooltip",
-                ),
               },
               {
                 text: t("pricing.plans.business.features.consults", {
@@ -321,7 +287,7 @@ export default function SubscriptionContent() {
                   "pricing.plans.business.features.ai_overage_tooltip",
                 ),
               },
-              faithRateFeature,
+              faithAgentFeature,
               t("pricing.plans.business.features.analytics"),
               t("pricing.plans.business.features.support"),
               {

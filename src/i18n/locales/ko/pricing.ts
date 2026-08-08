@@ -6,9 +6,7 @@ export const pricing = {
   yearly: "연 결제",
   save_percent: "17% 절약",
   // Info: (20260807 - Luphia) 費思費率標註（設計書 §5.3 定價揭露），數字由 API 插值、嚴禁寫死
-  faith_rate: "Faith AI 채팅: {{rate}} 토큰당 1 포인트 차감",
-  faith_rate_tooltip:
-    "모델이 보고한 입력·사고·출력 토큰 총량으로 계산합니다. {{rate}} 토큰 미만은 {{rate}}로 올림 처리하며, 메시지당 최소 1 포인트가 차감됩니다.",
+  faith_agent: "Faith AI 에이전트",
   currency_prefix: "NT$ ",
 
   cta: "시작하기",
@@ -83,8 +81,6 @@ export const pricing = {
         storage: "저장 공간 {{gb}} GB",
         fido: "무제한 FIDO2 키",
         fido_tooltip: "FIDO2 키 수량에 따라 구독료가 부과됩니다",
-        monthly_credits: "매월 자동으로 {{amount}} 크레딧이 지급됩니다",
-        monthly_credits_tooltip: "크레딧 유효기간 30 일",
         consults: "월 최대 {{amount}} 회 질문",
         consults_tooltip: "질문당 {{price}} 크레딧",
         vouchers: "월 최대 {{amount}} 건의 전표 분석",
@@ -104,8 +100,6 @@ export const pricing = {
         storage: "저장 공간 {{gb}} GB",
         fido: "무제한 FIDO2 키",
         fido_tooltip: "FIDO2 키 수량에 따라 구독료가 부과됩니다",
-        monthly_credits: "매월 자동으로 {{amount}} 크레딧이 지급됩니다",
-        monthly_credits_tooltip: "크레딧 유효기간 30 일",
         consults: "월 최대 {{amount}} 회 질문",
         consults_tooltip: "질문당 {{price}} 크레딧",
         vouchers: "월 최대 {{amount}} 건의 전표 분석",

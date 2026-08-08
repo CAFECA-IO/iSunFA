@@ -6,9 +6,7 @@ export const pricing = {
   yearly: "Yearly",
   save_percent: "Save 17%",
   // Info: (20260807 - Luphia) 費思費率標註（設計書 §5.3 定價揭露），數字由 API 插值、嚴禁寫死
-  faith_rate: "Faith AI chat: 1 credit per {{rate}} tokens",
-  faith_rate_tooltip:
-    "Metered by the model-reported total of input, thinking, and output tokens; partial usage rounds up to {{rate}} tokens, with a minimum of 1 credit per message.",
+  faith_agent: "Faith AI Agent",
   currency_prefix: "NT$ ",
   cta: "Get Started",
   features: "Features",
@@ -83,8 +81,6 @@ export const pricing = {
         fido: "Unlimited FIDO2 Keys",
         fido_tooltip:
           "Subscription fee charged based on the number of FIDO2 keys",
-        monthly_credits: "{{amount}} credits automatically issued every month",
-        monthly_credits_tooltip: "Credits are valid for 30 days",
         consults: "Max {{amount}} Consults / Month",
         consults_tooltip: "{{price}} Credits / Consult",
         vouchers: "Max {{amount}} Vouchers / Month",
@@ -105,8 +101,6 @@ export const pricing = {
         fido: "Unlimited FIDO2 Keys",
         fido_tooltip:
           "Subscription fee charged based on the number of FIDO2 keys",
-        monthly_credits: "{{amount}} credits automatically issued every month",
-        monthly_credits_tooltip: "Credits are valid for 30 days",
         consults: "Max {{amount}} Consults / Month",
         consults_tooltip: "{{price}} Credits / Consult",
         vouchers: "Max {{amount}} Vouchers / Month",

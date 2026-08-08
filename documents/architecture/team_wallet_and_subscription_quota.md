@@ -312,9 +312,10 @@ spendCredits(identity, teamId, featureCode, cost, idempotencyKey)
 >
 > 體感（典型一輪 4 點，對照 §4.1 額度）：free 每週約 10 輪、team 約 190 輪、business 約 1,900 輪。
 >
-> **定價揭露（產品要求 2026-08-07）：「費思對話每 1,000 tokens 消耗 1 點」必須標註在訂閱方案內。** 落點與規則：
-> 1. 定價頁（`src/app/(landing)/pricing/subscription/subscription_content.tsx`）各方案卡片標註費率，文案進 i18n 四語系（`src/i18n/locales/*/`）。
-> 2. **數字不得寫死在文案**：`GET /api/v1/pricing/plans` 與 `GET .../team/[team_id]/subscription` 回傳 `faithTokensPerCredit`（讀自 env 常數），前端以插值渲染——調費率只動 env，文案自動同步，避免「標示與實扣不符」。
+> ~~**定價揭露（產品要求 2026-08-07）：費率必須標註在訂閱方案內。**~~
+> **產品改版（2026-08-09）：訂閱方案頁不再揭露費率與 token 計算方式**，各方案功能列僅列出「費思人工智能代理人」；為此新建的 `GET /api/v1/pricing/meta` 端點隨之移除（零消費端）。落點與規則調整為：
+> 1. **費率揭露以服務條款 §3.4 為準**（該條款明列「每 1,000 tokens 扣 1 點、不足以 1,000 計、每則最低 1 點」，並載明扣點明細可於點數歷程查驗）。
+> 2. **數字不得寫死**：`GET .../team/[team_id]/subscription` 仍回傳 `faithTokensPerCredit`（讀自 env 常數），供未來需揭露費率的介面插值使用——調費率只動 env，避免「標示與實扣不符」。
 > 3. 額度用罄的 402 提示與扣點明細（Ledger / point_history）同樣顯示費率與本輪實耗 tokens，對用戶可驗證（零捏造原則的 UX 延伸）。
 > 4. **服務條款同步修訂（已起草，待法務確認）**：`documents/legal/terms_of_service.md`（前端 `/terms` 頁直接讀此檔）新增 §3.3 訂閱額度、§3.5 團隊錢包與點數分配，並於 §3.4 扣點標準加入費思費率；文件頂部留 `ToDo` 註記，Release 前由法務確認並更新生效日期。《退款政策》尚未涵蓋團隊錢包剩餘點數（開放問題 #5），需一併補。
 >
@@ -417,7 +418,7 @@ body：`{ userId, amount(bigIntString), direction: "ALLOCATE" | "REVOKE" }`
 
 | Method + Path | 用途 | 權限 |
 |---|---|---|
-| `GET /subscription` | 方案、計費週期、雙視窗剩餘額度與 `resetAt`、`faithTokensPerCredit` 費率（§5.3 定價揭露） | 成員 |
+| `GET /subscription` | 方案、計費週期、雙視窗剩餘額度與 `resetAt`、`faithTokensPerCredit` 費率（供未來揭露介面用，§5.3） | 成員 |
 | `PUT /subscription` | 變更方案（建 `BILLING_SUBSCRIBE` 訂單，`data.teamId`） | OWNER |
 | `GET /wallet` | 池餘額 + 自己的分配餘額（管理者另含全員分配總表） | 成員 |
 | `POST /wallet/purchase` | 購買點數入池 | OWNER / ADMIN |
@@ -448,7 +449,7 @@ body：`{ userId, amount(bigIntString), direction: "ALLOCATE" | "REVOKE" }`
 | Contracts | `contracts/ledger_anchor.sol`（極簡錨定合約：`event AnchorCommitted(uint256 day, bytes32 root)` + 獨立 `ANCHOR_ROLE`，不持有任何資產） |
 | 修改 | `prisma/schema.prisma`、`src/constants/status.ts`（`ORDER_TYPE.BILLING_TEAM_POINT`）、`src/repositories/payment.repo.ts`（webhook 分流）、`httpStatusOf()`、各計費功能入口改呼叫 `spendCredits()` |
 | 修改（費思接入，§5.3） | `src/app/api/v1/chat/route.ts`（DeWT auth + 預扣—結算）、`src/skills/chat/direct_chat.ts`（帶 `taskKey` + guardrails）、`src/constants/llm.ts`（`LlmTaskKeyEnum.FAITH_CHAT`、`FAITH_TOKENS_PER_CREDIT`）、`src/components/chat/chat_input.tsx`（附件大小上限） |
-| 修改（定價揭露，§5.3） | `src/app/(landing)/pricing/subscription/subscription_content.tsx`（方案卡片標註費率，插值不寫死）、`src/app/api/v1/pricing/plans/route.ts`（回傳 `faithTokensPerCredit`）、`src/i18n/locales/*/`（四語系文案） |
+| 修改（方案功能列，§5.3） | `src/app/(landing)/pricing/subscription/subscription_content.tsx`（功能列僅列「費思人工智能代理人」，不揭露費率；月配點文案亦移除）、`src/i18n/locales/*/`（五語系文案） |
 | 修改（法務文件，§5.3 / §6.3） | `documents/legal/terms_of_service.md`（§3.3 訂閱額度、§3.4 費思扣點標準、§3.5 團隊錢包與解散不退還，已起草待法務確認）、`documents/legal/refund_policy.md`（§3.1 團隊錢包點數不退款與解散失效條款，已起草待法務確認） |
 
 ---
@@ -462,7 +463,7 @@ body：`{ userId, amount(bigIntString), direction: "ALLOCATE" | "REVOKE" }`
 | **P2** | 錢包購買（OEN 分流）、分配 / 收回 API、成員移除自動 REVOKE | E2E：購買 → 入池 → 分配 → 消耗 → 收回，Ledger 守恆式成立（E2E 帳本用 `e2e-book-` 前綴） |
 | **P3** | 計費功能接入管線（AI 分析先行，**費思對話含 §5.3 四項 guardrails** 次之，碳盤查對話再次之）、402 fallback 到既有個人錢包簽章流程 | 額度內操作零簽章；用罄後三條出路皆可走通；費思結算誤差 = 0（settle 以 `usageMetadata` 為準） |
 | **P4** | 前端（額度儀表、重置倒數、錢包管理頁、分配 UI、**訂閱方案頁標註費思費率**）、勾稽 / 續訂 Workers、**C 案 Phase 1 merkle 錨定**（`ledger_anchor.sol` 部署 + Worker 錨定步驟） | 勾稽 Worker 對壞帳注入測試能凍結錢包並告警；定價頁費率數字與 env 同源；**任一日的 Ledger 可由 DB 重算 root 並與鏈上 event 比對一致** |
-| **P4 進度**（2026-08-07，全數交付 ✅） | WalletGuardian（守恆勾稽 + 凍結告警 + merkle 錨定，壞帳不上鏈）、SubscriptionExpiry + SubscriptionRenewal（到期降級、autoRenew 以綁定卡自動扣款續訂、逾 3 天寬限降級 free）、`ledger_anchor.sol` + deploy_contract 部署整合、`resolveEffectivePlanId` fail-closed 防線、定價頁費率標註（`/pricing/meta` env 同源 + 五語系 i18n）、團隊管理頁錢包面板（額度儀表 + 重置倒數 + 購點 + 分配/收回 UI）。營運前置：跑 `npm run deploy_contract` 產出 `NEXT_PUBLIC_LEDGER_ANCHOR_ADDRESS`（未配置時錨定留 FAILED 自動重試，不阻斷營運） | — |
+| **P4 進度**（2026-08-07，全數交付 ✅） | WalletGuardian（守恆勾稽 + 凍結告警 + merkle 錨定，壞帳不上鏈）、SubscriptionExpiry + SubscriptionRenewal（到期降級、autoRenew 以綁定卡自動扣款續訂、逾 3 天寬限降級 free）、`ledger_anchor.sol` + deploy_contract 部署整合、`resolveEffectivePlanId` fail-closed 防線、團隊管理頁錢包面板（額度百分比儀表 + 成員卡片分配/收回 + 導購連結）。營運前置：跑 `npm run deploy_contract` 產出 `NEXT_PUBLIC_LEDGER_ANCHOR_ADDRESS`（未配置時錨定留 FAILED 自動重試，不阻斷營運） | — |
 | **P5**（展望） | 個人錢包「免簽授權額度」：使用者一次性簽署授權每期上限，管線第 3 層自動代扣。**C 案 Phase 2**：團隊購點 1:1 mint 至 per-team 隔離地址 + 每日批次結算 burn（**硬性前置：金鑰治理——冷熱分離 + multisig + 獨立 `OPERATOR_ROLE`**，見 ADR 015） | — |
 
 ---

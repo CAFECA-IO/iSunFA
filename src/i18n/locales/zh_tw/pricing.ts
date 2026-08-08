@@ -6,9 +6,7 @@ export const pricing = {
   yearly: "年繳",
   save_percent: "省下 17%",
   // Info: (20260807 - Luphia) 費思費率標註（設計書 §5.3 定價揭露），數字由 API 插值、嚴禁寫死
-  faith_rate: "費思 AI 對話：每 {{rate}} tokens 消耗 1 點",
-  faith_rate_tooltip:
-    "以模型回報的輸入＋思考＋輸出 tokens 總量計費，不足 {{rate}} tokens 以 {{rate}} 計，每則訊息最低消耗 1 點",
+  faith_agent: "費思人工智能代理人",
   currency_prefix: "NT$ ",
 
   cta: "立即開始",
@@ -82,8 +80,6 @@ export const pricing = {
         storage: "儲存空間 {{gb}} GB",
         fido: "無限 FIDO2 金鑰",
         fido_tooltip: "根據 fido2 金鑰數量收取訂閱費",
-        monthly_credits: "每月自動發放 {{amount}} 點點數",
-        monthly_credits_tooltip: "點數有效期限 30 日",
         consults: "每月最多諮詢 {{amount}} 個問題",
         consults_tooltip: "每個問題 {{price}} 點數",
         vouchers: "每月最多分析 {{amount}} 份會計憑證",
@@ -103,8 +99,6 @@ export const pricing = {
         storage: "儲存空間 {{gb}} GB",
         fido: "無限 FIDO2 金鑰",
         fido_tooltip: "根據 fido2 金鑰數量收取訂閱費",
-        monthly_credits: "每月自動發放 {{amount}} 點點數",
-        monthly_credits_tooltip: "點數有效期限 30 日",
         consults: "每月最多諮詢 {{amount}} 個問題",
         consults_tooltip: "每個問題 {{price}} 點數",
         vouchers: "每月最多分析 {{amount}} 份會計憑證",
