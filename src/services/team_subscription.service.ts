@@ -5,7 +5,6 @@ import {
   CURRENCY_UNIT,
 } from "@/constants/price";
 import { ORDER_TYPE } from "@/constants/status";
-import { FAITH_TOKENS_PER_CREDIT } from "@/constants/llm";
 import { TeamRole } from "@/constants/team";
 import {
   BILLING_INTERVAL,
@@ -35,6 +34,7 @@ import { assertTeamMember } from "@/services/team_wallet_access.guard";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { teamQuotaUsageRepo } from "@/repositories/team_quota_usage.repo";
 import { subscriptionPlanQuotaRepo } from "@/repositories/subscription_plan_quota.repo";
+import { faithBillingSettingRepo } from "@/repositories/faith_billing_setting.repo";
 import { paymentRepo } from "@/repositories/payment.repo";
 
 /**
@@ -96,6 +96,8 @@ export async function getTeamSubscriptionView(params: {
     // Info: (20260807 - Luphia) 顯示「有效」方案：過期或非 ACTIVE 一律呈現 free，與扣費側一致
     const planId = resolveEffectivePlanId(subscription, nowSec);
     const quota = await buildQuotaStatus(teamId, planId, nowSec);
+    // Info: (20260809 - Luphia) 費率為系統設定，自 DB 取得
+    const billing = await faithBillingSettingRepo.resolveSetting();
 
     return {
       teamId,
@@ -110,7 +112,7 @@ export async function getTeamSubscriptionView(params: {
         : 0,
       autoRenew: subscription?.autoRenew ?? false,
       quota,
-      faithTokensPerCredit: FAITH_TOKENS_PER_CREDIT,
+      faithTokensPerCredit: billing.tokensPerCredit,
     };
   });
 }

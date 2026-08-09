@@ -97,26 +97,35 @@ export const LLM_TIMEOUT_ERROR_MARKER = "LLM_TIMEOUT";
 export const LLM_TRANSPORT_RETRY_ATTEMPTS = 2;
 export const LLM_TRANSPORT_RETRY_DELAY_MS = 3_000;
 
-const envInt = (name: string, fallback: number): number => {
-  const raw = process.env[name];
-  if (!raw) return fallback;
-  const parsed = Number.parseInt(raw, 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+export interface IFaithBillingSetting {
+  // Info: (20260809 - Luphia) 每 N tokens（input + thinking + output 合計）扣 1 點
+  tokensPerCredit: number;
+  // Info: (20260809 - Luphia) 成本上界：thinking token 與正式輸出共用此額度（見上方實測）
+  maxOutputTokens: number;
+  // Info: (20260809 - Luphia) 預扣估算用：帶圖時的輸入 token 估值
+  imageInputTokenEstimate: number;
+}
+
+/**
+ * Info: (20260809 - Luphia) 費思對話計費設定的**預設值**（設計書 §5.3，產品拍板 2026-08-07）。
+ *
+ * 正式值為系統設定，保存於 DB 的 `FaithBillingSetting` 表（可由後台調整、留變更軌跡、
+ * 多實例一致），本常數僅在查無設定列時作為 fail-safe 預設。
+ * **嚴禁改回 env 覆寫**——營運設定不屬部署參數，且非 NEXT_PUBLIC_ 的環境變數
+ * 在 client bundle 讀不到，會使 server 與 client 算出不同結果。
+ *
+ * 計費規則：無條件進位、每輪最低 1 點；費率之對外揭露見服務條款 §3.4。
+ */
+export const DEFAULT_FAITH_BILLING: IFaithBillingSetting = {
+  tokensPerCredit: 1000,
+  maxOutputTokens: 4096,
+  imageInputTokenEstimate: 2000,
 };
 
 /**
- * Info: (20260807 - Luphia) 費思對話計費常數（設計書 §5.3，產品拍板 2026-08-07）。
- * 每 FAITH_TOKENS_PER_CREDIT tokens（input + thinking + output 合計）扣 1 點，
- * 無條件進位、每輪最低 1 點；費率標註於訂閱方案頁，數字與此 env 同源、嚴禁前端寫死。
- * 成本上界由 FAITH_MAX_OUTPUT_TOKENS 保證——依上方實測，thinking token 與正式輸出
- * 「共用」maxOutputTokens 額度，因此單一上限即同時封頂思考與輸出成本。
+ * Info: (20260807 - Luphia) 預扣估算的內部係數（非營運設定，不進 DB）：
+ * 系統 prompt 上界（最大分支 ~1750 字元）與「3 字元 ≈ 1 token」的估算基準，
+ * 兩者皆繫於 prompt 實作與模型分詞行為，隨程式碼一起版控才有意義。
  */
-export const FAITH_TOKENS_PER_CREDIT = envInt("FAITH_TOKENS_PER_CREDIT", 1000);
-export const FAITH_MAX_OUTPUT_TOKENS = envInt("FAITH_MAX_OUTPUT_TOKENS", 4096);
-// Info: (20260807 - Luphia) 預扣估算用：系統 prompt 上界（最大分支 ~1750 字元）+ 訊息以 3 字元/token 估
 export const FAITH_PROMPT_OVERHEAD_TOKENS = 600;
 export const FAITH_INPUT_CHARS_PER_TOKEN = 3;
-export const FAITH_IMAGE_INPUT_TOKEN_ESTIMATE = envInt(
-  "FAITH_IMAGE_INPUT_TOKEN_ESTIMATE",
-  2000,
-);

@@ -1,9 +1,5 @@
 import { ChatService, ILlmUsage } from "@/services/chat.service";
-import {
-  FAITH_MAX_OUTPUT_TOKENS,
-  LLM_SYNC_TIMEOUT_MS,
-  LlmTaskKeyEnum,
-} from "@/constants/llm";
+import { LLM_SYNC_TIMEOUT_MS, LlmTaskKeyEnum } from "@/constants/llm";
 
 export class DirectChatSkill {
   private getPrompt(message: string, tags: string[] = []): string {
@@ -134,6 +130,8 @@ export class DirectChatSkill {
     file?: string,
     mimeType?: string,
     chatService?: ChatService,
+    // Info: (20260809 - Luphia) 成本上界由呼叫端自 DB 設定注入（FaithBillingSetting）
+    maxOutputTokens?: number,
   ): Promise<{ text: string; usage: ILlmUsage }> {
     if (!chatService) throw new Error("ChatService required");
     const prompt = this.getPrompt(message, tags);
@@ -147,7 +145,7 @@ export class DirectChatSkill {
       undefined,
       {
         taskKey: LlmTaskKeyEnum.FAITH_CHAT,
-        maxOutputTokens: FAITH_MAX_OUTPUT_TOKENS,
+        maxOutputTokens,
         timeoutMs: LLM_SYNC_TIMEOUT_MS,
       },
     );

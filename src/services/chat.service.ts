@@ -469,9 +469,18 @@ export class ChatService {
     tags: string[] = [],
     file?: string,
     mimeType?: string,
+    // Info: (20260809 - Luphia) 成本上界源自 DB 的費思計費設定，由 service 層注入
+    maxOutputTokens?: number,
   ): Promise<{ text: string; usage: ILlmUsage }> {
     const skill = new DirectChatSkill();
-    return skill.executeWithUsage(message, tags, file, mimeType, this);
+    return skill.executeWithUsage(
+      message,
+      tags,
+      file,
+      mimeType,
+      this,
+      maxOutputTokens,
+    );
   }
 
   /**

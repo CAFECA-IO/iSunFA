@@ -303,7 +303,8 @@ spendCredits(identity, teamId, featureCode, cost, idempotencyKey)
 
 費思與 AI 諮詢室不同：諮詢室是單發任務，**維持既有固定 5 點不改**（產品拍板 2026-08-07）；費思是不定長度的多輪對話，**按 token 計量**才公平。規則：
 
-> **產品拍板（2026-08-07）：`FAITH_TOKENS_PER_CREDIT = 1_000`，每 1,000 tokens（input + thinking + output 合計）扣 1 點，無條件進位，每輪最低 1 點。** env 可調，不改 code。
+> **產品拍板（2026-08-07）：每 1,000 tokens（input + thinking + output 合計）扣 1 點，無條件進位，每輪最低 1 點。**
+> 費率與成本上界為**系統設定值，保存於 DB 的 `FaithBillingSetting` 表**（單列設定，欄位 `tokensPerCredit` / `maxOutputTokens` / `imageInputTokenEstimate`），可由後台調整、留變更軌跡；`DEFAULT_FAITH_BILLING` 僅為查無設定列時的 fail-safe 預設。**嚴禁改回 env 覆寫**（2026-08-09 修正，同 §4.1）。
 > **點值定價規則：1 點 = TWD 0.1 為成本基準下限，任何點數售價必須高於此基準 3 倍以上（即 ≥ NT$0.3/點）**——`credit_plans.ts` 現行售價 NT$0.5–1.0/點 已符合，無需調整。
 >
 > **費率定位**：計量門檻低於典型單輪（~3,150 tokens），**token 計量真實生效**：典型一輪扣 4 點、上限一輪 7 點。以售價下限 NT$0.3/點 計，營收 ≈ US$9.4/M tokens，已高於現用 Gemini 2.5 Pro 的混合成本（~$8.4/M）：

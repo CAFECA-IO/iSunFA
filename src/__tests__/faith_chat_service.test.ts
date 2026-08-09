@@ -7,9 +7,13 @@ import {
   settleSpend,
   spendCredits,
 } from "@/services/spend.service";
-import { FAITH_TOKENS_PER_CREDIT } from "@/constants/llm";
+import { DEFAULT_FAITH_BILLING } from "@/constants/llm";
+import { faithBillingSettingRepo } from "@/repositories/faith_billing_setting.repo";
 import type { ChatService } from "@/services/chat.service";
 
+jest.mock("@/repositories/faith_billing_setting.repo", () => ({
+  faithBillingSettingRepo: { resolveSetting: jest.fn() },
+}));
 jest.mock("@/services/spend.service", () => ({
   spendCredits: jest.fn(),
   refundCredits: jest.fn(),
@@ -56,6 +60,9 @@ describe("runFaithBilledChat", () => {
       amount: "6",
       idempotencyKey: "faith:user-1:msg-9",
     });
+    asMock(faithBillingSettingRepo.resolveSetting).mockResolvedValue(
+      DEFAULT_FAITH_BILLING,
+    );
     asMock(settleSpend).mockResolvedValue({
       settled: true,
       source: "SUBSCRIPTION_QUOTA",
@@ -91,7 +98,7 @@ describe("runFaithBilledChat", () => {
       charged: "4",
       refunded: "2",
       totalTokens: 3150,
-      tokensPerCredit: FAITH_TOKENS_PER_CREDIT,
+      tokensPerCredit: DEFAULT_FAITH_BILLING.tokensPerCredit,
     });
   });
 

@@ -7,7 +7,8 @@ import {
   getTeamSubscriptionView,
 } from "@/services/team_subscription.service";
 import { BILLING_INTERVAL, TEAM_PLAN } from "@/constants/subscription_quota";
-import { FAITH_TOKENS_PER_CREDIT } from "@/constants/llm";
+import { DEFAULT_FAITH_BILLING } from "@/constants/llm";
+import { faithBillingSettingRepo } from "@/repositories/faith_billing_setting.repo";
 import { ORDER_TYPE } from "@/constants/status";
 import { teamRepo } from "@/repositories/team.repo";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
@@ -32,6 +33,9 @@ jest.mock("@/repositories/subscription_plan_quota.repo", () => ({
 }));
 jest.mock("@/repositories/team_quota_usage.repo", () => ({
   teamQuotaUsageRepo: { sumWindowUsage: jest.fn() },
+}));
+jest.mock("@/repositories/faith_billing_setting.repo", () => ({
+  faithBillingSettingRepo: { resolveSetting: jest.fn() },
 }));
 jest.mock("@/repositories/payment.repo", () => ({
   paymentRepo: { updateOrderCompleted: jest.fn() },
@@ -72,6 +76,9 @@ describe("getTeamSubscriptionView", () => {
           ? { per5h: 1000, perWeek: 7500 }
           : { per5h: 10, perWeek: 40 },
     );
+    asMock(faithBillingSettingRepo.resolveSetting).mockResolvedValue(
+      DEFAULT_FAITH_BILLING,
+    );
     asMock(teamQuotaUsageRepo.sumWindowUsage).mockResolvedValue({
       used5h: BigInt(3),
       usedWeek: BigInt(12),
@@ -88,7 +95,9 @@ describe("getTeamSubscriptionView", () => {
     expect(view.quota.quota5h).toMatchObject({ limit: "10", used: "3" });
     expect(view.quota.quotaWeek).toMatchObject({ limit: "40", used: "12" });
     expect(view.quota.quota5h.resetAt).toBeGreaterThan(NOW_SEC);
-    expect(view.faithTokensPerCredit).toBe(FAITH_TOKENS_PER_CREDIT);
+    expect(view.faithTokensPerCredit).toBe(
+      DEFAULT_FAITH_BILLING.tokensPerCredit,
+    );
   });
 
   it("rejects non-members", async () => {

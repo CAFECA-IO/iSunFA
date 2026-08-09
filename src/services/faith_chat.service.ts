@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { BILLABLE_FEATURE_CODE } from "@/constants/subscription_quota";
-import { FAITH_TOKENS_PER_CREDIT } from "@/constants/llm";
+import { faithBillingSettingRepo } from "@/repositories/faith_billing_setting.repo";
 import {
   estimateFaithHoldCredits,
   settleFaithCredits,
@@ -51,11 +51,18 @@ export async function runFaithBilledChat(
   const { userId, teamId, message, tags, file, mimeType, clientMessageId } =
     params;
 
+  // Info: (20260809 - Luphia) 計費設定為系統設定，自 DB 取得（查無設定列時 fail-safe 回預設值）
+  const billing = await faithBillingSettingRepo.resolveSetting();
+
   // Info: (20260808 - Luphia) 1. 預扣：hold 為成本上界（輸入估算 + maxOutputTokens），只退不補
   const idempotencyKey = clientMessageId
     ? `faith:${userId}:${clientMessageId}`
     : `faith:${randomUUID()}`;
-  const holdCredits = estimateFaithHoldCredits(message.length, Boolean(file));
+  const holdCredits = estimateFaithHoldCredits(
+    message.length,
+    Boolean(file),
+    billing,
+  );
 
   await spendCredits({
     teamId,
@@ -74,6 +81,7 @@ export async function runFaithBilledChat(
       tags,
       file,
       mimeType,
+      billing.maxOutputTokens,
     );
   } catch (llmError) {
     await refundCredits({ idempotencyKey, operatorUserId: userId });
@@ -81,7 +89,10 @@ export async function runFaithBilledChat(
   }
 
   // Info: (20260808 - Luphia) 3. 結算：以 SDK usageMetadata 為準，無條件進位、最低 1 點
-  const actualCredits = settleFaithCredits(generation.usage.totalTokens);
+  const actualCredits = settleFaithCredits(
+    generation.usage.totalTokens,
+    billing,
+  );
   const settlement = await settleSpend({
     idempotencyKey,
     actualCost: actualCredits,
@@ -97,7 +108,7 @@ export async function runFaithBilledChat(
       charged: settlement.charged,
       refunded: settlement.refunded,
       totalTokens: generation.usage.totalTokens,
-      tokensPerCredit: FAITH_TOKENS_PER_CREDIT,
+      tokensPerCredit: billing.tokensPerCredit,
     },
   };
 }

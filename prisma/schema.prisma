@@ -214,6 +214,22 @@ model SubscriptionPlanQuota {
   @@map("subscription_plan_quota")
 }
 
+/**
+ * Info: (20260809 - Luphia) 費思計費設定：系統設定值，由 DB 保存而非環境變數（同 SubscriptionPlanQuota）。
+ * 單列設定（singleton），以固定主鍵 "default" 保證唯一。
+ * 查無設定列時，以 src/constants/llm.ts 的 DEFAULT_FAITH_BILLING fail-safe。
+ */
+model FaithBillingSetting {
+  key                     String   @id @default("default")
+  tokensPerCredit         Int      @map("tokens_per_credit")
+  maxOutputTokens         Int      @map("max_output_tokens")
+  imageInputTokenEstimate Int      @map("image_input_token_estimate")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  @@map("faith_billing_setting")
+}
+
 model TeamLedgerAnchor {
   id            String   @id @default(uuid())
   anchorDate    DateTime @unique @map("anchor_date") // Info: (20260807 - Luphia) 錨定的營業日（UTC+8 日界）
