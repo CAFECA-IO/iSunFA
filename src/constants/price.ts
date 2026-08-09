@@ -107,8 +107,8 @@ export const SUBSCRIPTION_PLAN_PRICE = {
 
 export const SUBSCRIPTION_PLAN_CREDITS = {
   free: 150,
-  team: 3000,
-  business: 30000,
+  team: 1500,
+  business: 15000,
 } as const;
 
 export const BUSINESS_MODEL_PRICE = {

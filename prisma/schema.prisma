@@ -197,6 +197,23 @@ model TeamQuotaUsage {
   @@map("team_quota_usage")
 }
 
+/**
+ * Info: (20260809 - Luphia) 訂閱方案額度：系統設定值，由 DB 保存而非環境變數。
+ * 額度屬營運設定（可由後台調整、需變更軌跡、多實例一致），非部署環境差異；
+ * 且 env 於 client bundle 讀不到，會造成 SSR 與水合結果不一致。
+ * 查無方案設定列時，以 src/constants/subscription_quota.ts 的預設值 fail-safe。
+ */
+model SubscriptionPlanQuota {
+  id        String   @id @default(uuid())
+  planId    String   @unique @map("plan_id") // Info: (20260809 - Luphia) PLAN 常數 (free/team/business)
+  per5h     Int      @map("per_5h")
+  perWeek   Int      @map("per_week")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("subscription_plan_quota")
+}
+
 model TeamLedgerAnchor {
   id            String   @id @default(uuid())
   anchorDate    DateTime @unique @map("anchor_date") // Info: (20260807 - Luphia) 錨定的營業日（UTC+8 日界）

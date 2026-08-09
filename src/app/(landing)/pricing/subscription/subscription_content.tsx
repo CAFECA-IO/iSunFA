@@ -11,7 +11,16 @@ import { usePricing } from "@/contexts/pricing_context";
 import { useAuth } from "@/contexts/auth_context";
 import { useTranslation } from "@/i18n/i18n_context";
 
-export default function SubscriptionContent() {
+interface ISubscriptionContentProps {
+  // Info: (20260809 - Luphia) 額度倍數由 server 端計算後傳入（見 page.tsx 的 hydration 說明）
+  teamQuotaMultiple: number;
+  businessQuotaMultiple: number;
+}
+
+export default function SubscriptionContent({
+  teamQuotaMultiple,
+  businessQuotaMultiple,
+}: ISubscriptionContentProps) {
   const { onSelectSubscription, setAuthModalOpen, setConfirmModal } =
     usePricing();
   const { user } = useAuth();
@@ -172,6 +181,9 @@ export default function SubscriptionContent() {
                 text: t("pricing.plans.team.features.fido"),
                 tooltip: t("pricing.plans.team.features.fido_tooltip"),
               },
+              t("pricing.plans.team.features.quota_multiple", {
+                multiple: teamQuotaMultiple,
+              }),
               {
                 text: t("pricing.plans.team.features.consults", {
                   amount: Math.floor(
@@ -239,6 +251,9 @@ export default function SubscriptionContent() {
                 text: t("pricing.plans.business.features.fido"),
                 tooltip: t("pricing.plans.business.features.fido_tooltip"),
               },
+              t("pricing.plans.business.features.quota_multiple", {
+                multiple: businessQuotaMultiple,
+              }),
               {
                 text: t("pricing.plans.business.features.consults", {
                   amount: Math.floor(

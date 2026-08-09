@@ -31,33 +31,23 @@ export interface ISubscriptionQuota {
   perWeek: number;
 }
 
-const envInt = (name: string, fallback: number): number => {
-  const raw = process.env[name];
-  if (!raw) return fallback;
-  const parsed = Number.parseInt(raw, 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
-};
-
 /**
- * Info: (20260807 - Luphia) 各方案雙視窗額度（單位：credit，與 ANALYSIS_BASE_COSTS 同）。
- * 預設值為工程建議值（月額 ÷ 4 ≈ 週額；週額 ÷ 8 ≈ 5h 突發上限），正式值由 env 調整。
+ * Info: (20260809 - Luphia) 各方案雙視窗額度的**預設值**（單位：credit，與 ANALYSIS_BASE_COSTS 同）。
+ *
+ * 正式值為系統設定，保存於 DB 的 `SubscriptionPlanQuota` 表（可由後台調整、留變更軌跡、
+ * 多實例一致）；本常數僅在查無設定列時作為 fail-safe 預設。
+ * **嚴禁改回 env 覆寫**——非 NEXT_PUBLIC_ 的環境變數在 client bundle 讀不到，
+ * 會使 server 與 client 算出不同結果（hydration mismatch）。
+ *
+ * 數值來源為工程建議值（月額 ÷ 4 ≈ 週額；週額 ÷ 8 ≈ 5h 突發上限）。
  */
-export const SUBSCRIPTION_QUOTA_BY_PLAN: Record<
+export const DEFAULT_SUBSCRIPTION_QUOTA_BY_PLAN: Record<
   TeamPlanId,
   ISubscriptionQuota
 > = {
-  [TEAM_PLAN.FREE]: {
-    per5h: envInt("QUOTA_FREE_5H", 10),
-    perWeek: envInt("QUOTA_FREE_WEEK", 40),
-  },
-  [TEAM_PLAN.TEAM]: {
-    per5h: envInt("QUOTA_TEAM_5H", 100),
-    perWeek: envInt("QUOTA_TEAM_WEEK", 750),
-  },
-  [TEAM_PLAN.BUSINESS]: {
-    per5h: envInt("QUOTA_BIZ_5H", 1000),
-    perWeek: envInt("QUOTA_BIZ_WEEK", 7500),
-  },
+  [TEAM_PLAN.FREE]: { per5h: 10, perWeek: 40 },
+  [TEAM_PLAN.TEAM]: { per5h: 100, perWeek: 750 },
+  [TEAM_PLAN.BUSINESS]: { per5h: 1000, perWeek: 7500 },
 };
 
 export const TEAM_SUBSCRIPTION_STATUS = {

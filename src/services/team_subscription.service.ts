@@ -10,7 +10,6 @@ import { TeamRole } from "@/constants/team";
 import {
   BILLING_INTERVAL,
   BillingInterval,
-  SUBSCRIPTION_QUOTA_BY_PLAN,
   TEAM_PLAN,
   TEAM_SUBSCRIPTION_STATUS,
   TeamPlanId,
@@ -35,6 +34,7 @@ import { generatePaymentOrder } from "@/services/order.service";
 import { assertTeamMember } from "@/services/team_wallet_access.guard";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { teamQuotaUsageRepo } from "@/repositories/team_quota_usage.repo";
+import { subscriptionPlanQuotaRepo } from "@/repositories/subscription_plan_quota.repo";
 import { paymentRepo } from "@/repositories/payment.repo";
 
 /**
@@ -61,7 +61,8 @@ async function buildQuotaStatus(
   planId: TeamPlanId,
   nowSec: number,
 ): Promise<IQuotaStatus> {
-  const quota = SUBSCRIPTION_QUOTA_BY_PLAN[planId];
+  // Info: (20260809 - Luphia) 額度為系統設定，自 DB 取得
+  const quota = await subscriptionPlanQuotaRepo.resolveQuota(planId);
   const { used5h, usedWeek } = await teamQuotaUsageRepo.sumWindowUsage(
     teamId,
     getWindowKey5h(nowSec),

@@ -81,6 +81,7 @@ export const pricing = {
         fido: "無制限の FIDO2 キー",
         fido_tooltip:
           "FIDO2 キーの数に基づいてサブスクリプション料金が請求されます",
+        quota_multiple: "無料版の {{multiple}} 倍のトークン枠",
         consults: "月間最大 {{amount}} 回の質問",
         consults_tooltip: "1 質問につき {{price}} pt",
         vouchers: "月間最大 {{amount}} 件の証憑分析",
@@ -101,6 +102,7 @@ export const pricing = {
         fido: "無制限の FIDO2 キー",
         fido_tooltip:
           "FIDO2 キーの数に基づいてサブスクリプション料金が請求されます",
+        quota_multiple: "チーム版の {{multiple}} 倍のトークン枠",
         consults: "月間最大 {{amount}} 回の質問",
         consults_tooltip: "1 質問につき {{price}} pt",
         vouchers: "月間最大 {{amount}} 件の証憑分析",

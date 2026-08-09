@@ -1,7 +1,6 @@
 import {
   BillableFeatureCode,
   SPEND_SOURCE,
-  SUBSCRIPTION_QUOTA_BY_PLAN,
   TEAM_PLAN,
   TEAM_SUBSCRIPTION_STATUS,
   TeamPlanId,
@@ -22,6 +21,7 @@ import { teamRepo } from "@/repositories/team.repo";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { teamQuotaUsageRepo } from "@/repositories/team_quota_usage.repo";
 import { teamWalletRepo } from "@/repositories/team_wallet.repo";
+import { subscriptionPlanQuotaRepo } from "@/repositories/subscription_plan_quota.repo";
 
 /**
  * Info: (20260807 - Luphia) 扣費管線（設計書 §5）——所有計費功能的單一入口。
@@ -146,8 +146,10 @@ export async function spendCredits(
 
     // Info: (20260807 - Luphia) 第一層：訂閱額度（雙視窗皆須容納本次 cost）
     const subscription = await teamSubscriptionRepo.getByTeamId(teamId);
-    const quota =
-      SUBSCRIPTION_QUOTA_BY_PLAN[resolveEffectivePlanId(subscription, nowSec)];
+    // Info: (20260809 - Luphia) 額度為系統設定，自 DB 取得（查無設定列時 fail-safe 回預設值）
+    const quota = await subscriptionPlanQuotaRepo.resolveQuota(
+      resolveEffectivePlanId(subscription, nowSec),
+    );
     const windowKey5h = getWindowKey5h(nowSec);
     const windowKeyWeek = getWindowKeyWeek(nowSec);
     const { used5h, usedWeek } = await teamQuotaUsageRepo.sumWindowUsage(

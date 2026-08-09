@@ -17,6 +17,7 @@ import { getResetAt5h, getResetAtWeek } from "@/lib/quota/window";
 import { teamRepo } from "@/repositories/team.repo";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { teamQuotaUsageRepo } from "@/repositories/team_quota_usage.repo";
+import { subscriptionPlanQuotaRepo } from "@/repositories/subscription_plan_quota.repo";
 import { teamWalletRepo } from "@/repositories/team_wallet.repo";
 
 jest.mock("@/repositories/team.repo", () => ({
@@ -31,6 +32,9 @@ jest.mock("@/repositories/team_quota_usage.repo", () => ({
     sumWindowUsage: jest.fn(),
     createUsage: jest.fn(),
   },
+}));
+jest.mock("@/repositories/subscription_plan_quota.repo", () => ({
+  subscriptionPlanQuotaRepo: { resolveQuota: jest.fn() },
 }));
 jest.mock("@/repositories/team_wallet.repo", () => ({
   teamWalletRepo: {
@@ -76,6 +80,13 @@ describe("spendCredits", () => {
       status: "ACTIVE",
       currentPeriodEnd: new Date((NOW_SEC + 86400) * 1000),
     } as unknown);
+    // Info: (20260809 - Luphia) 額度改由 DB 設定表提供，mock 依方案回傳既有測試預期值
+    asMock(subscriptionPlanQuotaRepo.resolveQuota).mockImplementation(
+      async (planId: unknown) =>
+        planId === "free"
+          ? { per5h: 10, perWeek: 40 }
+          : { per5h: 100, perWeek: 750 },
+    );
     asMock(teamQuotaUsageRepo.sumWindowUsage).mockResolvedValue({
       used5h: BigInt(0),
       usedWeek: BigInt(0),
@@ -475,6 +486,12 @@ describe("resolveEffectivePlanId (fail-closed)", () => {
     } as unknown);
     asMock(teamQuotaUsageRepo.findByIdempotencyKey).mockResolvedValue(null);
     asMock(teamWalletRepo.findLedgerByIdempotencyKey).mockResolvedValue(null);
+    asMock(subscriptionPlanQuotaRepo.resolveQuota).mockImplementation(
+      async (planId: unknown) =>
+        planId === "free"
+          ? { per5h: 10, perWeek: 40 }
+          : { per5h: 100, perWeek: 750 },
+    );
     asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
       planId: "team",
       status: "ACTIVE",

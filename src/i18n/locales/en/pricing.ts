@@ -81,6 +81,7 @@ export const pricing = {
         fido: "Unlimited FIDO2 Keys",
         fido_tooltip:
           "Subscription fee charged based on the number of FIDO2 keys",
+        quota_multiple: "{{multiple}}x the token quota of the Free plan",
         consults: "Max {{amount}} Consults / Month",
         consults_tooltip: "{{price}} Credits / Consult",
         vouchers: "Max {{amount}} Vouchers / Month",
@@ -101,6 +102,7 @@ export const pricing = {
         fido: "Unlimited FIDO2 Keys",
         fido_tooltip:
           "Subscription fee charged based on the number of FIDO2 keys",
+        quota_multiple: "{{multiple}}x the token quota of the Team plan",
         consults: "Max {{amount}} Consults / Month",
         consults_tooltip: "{{price}} Credits / Consult",
         vouchers: "Max {{amount}} Vouchers / Month",

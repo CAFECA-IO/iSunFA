@@ -12,6 +12,7 @@ import { ORDER_TYPE } from "@/constants/status";
 import { teamRepo } from "@/repositories/team.repo";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { teamQuotaUsageRepo } from "@/repositories/team_quota_usage.repo";
+import { subscriptionPlanQuotaRepo } from "@/repositories/subscription_plan_quota.repo";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { generatePaymentOrder } from "@/services/order.service";
 import type { Order } from "@/generated";
@@ -25,6 +26,9 @@ jest.mock("@/repositories/team_subscription.repo", () => ({
     downgradeToFree: jest.fn(),
     applyTeamSubscription: jest.fn(),
   },
+}));
+jest.mock("@/repositories/subscription_plan_quota.repo", () => ({
+  subscriptionPlanQuotaRepo: { resolveQuota: jest.fn() },
 }));
 jest.mock("@/repositories/team_quota_usage.repo", () => ({
   teamQuotaUsageRepo: { sumWindowUsage: jest.fn() },
@@ -61,6 +65,13 @@ describe("getTeamSubscriptionView", () => {
     jest.clearAllMocks();
     mockMembers({ "user-1": "VIEWER" });
     asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(null);
+    // Info: (20260809 - Luphia) 額度改由 DB 設定表提供
+    asMock(subscriptionPlanQuotaRepo.resolveQuota).mockImplementation(
+      async (planId: unknown) =>
+        planId === "business"
+          ? { per5h: 1000, perWeek: 7500 }
+          : { per5h: 10, perWeek: 40 },
+    );
     asMock(teamQuotaUsageRepo.sumWindowUsage).mockResolvedValue({
       used5h: BigInt(3),
       usedWeek: BigInt(12),

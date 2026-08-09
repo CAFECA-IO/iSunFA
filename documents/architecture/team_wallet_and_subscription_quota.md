@@ -208,9 +208,13 @@ export function getResetAtWeek(nowSec: number): number {
 
 **用量計算**：`SUM(TeamQuotaUsage.amount) WHERE teamId = ? AND windowKey5h = ?`（週視窗同理）。以 DB 聚合為準，天生多實例一致；量大時可加每視窗一列的 counter 快取表，但 Phase 1 直接 SUM + 複合索引即可（單團隊單視窗列數 = 操作次數，量級無虞）。
 
-### 4.1 方案額度常數
+### 4.1 方案額度設定
 
-新檔 `src/constants/subscription_quota.ts`，沿用 `rate_limit.ts` 的「常數 + env 覆寫」pattern。額度單位與 `ANALYSIS_BASE_COSTS` 同為 credit：
+額度為**系統設定值，保存於 DB 的 `SubscriptionPlanQuota` 表**（每方案一列，具型別欄位 `per5h` / `perWeek`），可由後台調整、留 `updatedAt` 變更軌跡、多實例一致。額度單位與 `ANALYSIS_BASE_COSTS` 同為 credit。
+
+> ⚠️ **嚴禁改為 env 覆寫**（2026-08-09 修正原設計）：額度屬營運設定而非部署參數；
+> 且非 `NEXT_PUBLIC_` 的環境變數在 client bundle 讀不到，會使 server 與 client 算出不同結果（hydration mismatch）。
+> 定價頁的額度倍數一律於 server component 讀 DB 算好後，以 props 傳入 client component。
 
 | 方案 | 每 5 小時 | 每週 | 依據（`SUBSCRIPTION_PLAN_CREDITS` 月額 ÷ 4 ≈ 週額；週額 ÷ 8 ≈ 5h 突發上限） |
 |---|---|---|---|
@@ -219,14 +223,15 @@ export function getResetAtWeek(nowSec: number): number {
 | `business` | 1,000 | 7,500 | 月額 30,000 |
 
 ```typescript
-export const SUBSCRIPTION_QUOTA_BY_PLAN: Record<PlanId, ISubscriptionQuota> = {
-  [PLAN.FREE]: { per5h: envInt('QUOTA_FREE_5H', 10), perWeek: envInt('QUOTA_FREE_WEEK', 40) },
-  [PLAN.TEAM]: { per5h: envInt('QUOTA_TEAM_5H', 100), perWeek: envInt('QUOTA_TEAM_WEEK', 750) },
-  [PLAN.BUSINESS]: { per5h: envInt('QUOTA_BIZ_5H', 1000), perWeek: envInt('QUOTA_BIZ_WEEK', 7500) },
-} as const;
+// Info: 僅為查無設定列時的 fail-safe 預設值；正式值寫入 SubscriptionPlanQuota 設定表
+export const DEFAULT_SUBSCRIPTION_QUOTA_BY_PLAN: Record<TeamPlanId, ISubscriptionQuota> = {
+  [TEAM_PLAN.FREE]: { per5h: 10, perWeek: 40 },
+  [TEAM_PLAN.TEAM]: { per5h: 100, perWeek: 750 },
+  [TEAM_PLAN.BUSINESS]: { per5h: 1000, perWeek: 7500 },
+};
 ```
 
-> 數字為初版建議值，正式值由產品定價確認後以 env 調整，不需改 code。
+> 上表為程式碼預設值；正式值由後台寫入設定表，不需改 code、不需重新部署。
 
 ---
 
@@ -470,7 +475,7 @@ body：`{ userId, amount(bigIntString), direction: "ALLOCATE" | "REVOKE" }`
 
 ## 10. 開放問題（實作前需產品拍板）
 
-1. 各方案的正式額度數字（§4.1 為工程建議值，env 可調）。
+1. 各方案的正式額度數字（§4.1 為程式碼預設值；正式值寫入 `SubscriptionPlanQuota` 設定表，需後台介面或 seed 腳本寫入）。
 2. 團隊點數是否設**有效期**（現設計為永久有效；若要到期，Ledger 已預留 `ADJUST` 型別 + 到期 Worker 即可擴充）。
 3. `free` 方案是否允許購買團隊點數（現設計：允許，額度與錢包互相獨立）。
 4. 訂閱降級時當期已消耗超過新方案週額 → 現設計：立即按新額度擋下，不追溯扣款。
