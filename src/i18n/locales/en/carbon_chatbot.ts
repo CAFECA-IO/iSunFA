@@ -47,10 +47,19 @@ export const carbonChatbot = {
   still_processing:
     "This is taking a while and the connection dropped, but the work is still running — completed sections will appear automatically.",
   // Info: (20260730 - Tzuhan) 段落來源標示:AI 草稿不得冒充逐字照抄原文(審計文件底線)
+  realtime_connecting:
+    "Reconnecting to the live channel — replies may be delayed",
+  realtime_disconnected:
+    "Live channel disconnected. Results of long-running work may not reach you. Please reload the page.",
+  imported_from_short: "Imported from",
+  imported_from_title: "Imported from {{name}} on {{date}}",
   origin_imported: "Verbatim",
   origin_ai_draft: "AI draft",
   origin_imported_short: "source",
   origin_ai_draft_short: "draft",
+  // Info: (20260806 - Tzuhan) 匯入前先上傳取 cid:14 次呼叫共用一份儲存,文案要說出「為何要等」
+  import_uploading:
+    "Uploading {{name}} to secure storage — the parsing that follows reads it from there instead of resending the file each time…",
   // Info: (20260730 - Tzuhan) 兩階段匯入的第一階段提示:一次索引換來後續 11 章不必各自重送整份文件
   import_indexing:
     "Indexing {{name}} — locating each section's page so the parsing that follows stays small…",
@@ -103,6 +112,17 @@ export const carbonChatbot = {
   save_failed: "Save failed",
   save_failed_hint:
     "Save failed: another tab may have updated the draft; reload to get the latest version",
+  // Info: (20260807 - Emily) Typed save-failure copy: losing a save costs minutes of work, an icon is not enough
+  save_failed_notice:
+    "The latest changes to this report were not saved to the cloud. They are still on this device — retry shortly or reload the page.",
+  save_failed_conflict:
+    "The latest changes were not saved to the cloud: the draft was updated in another tab or device. Reload to get the latest version, then reapply your edit.",
+  save_failed_too_large:
+    "The latest changes were not saved to the cloud: this draft exceeds the per-report size limit. Remove some verbatim source tables, or import in smaller parts.",
+  save_local_quota:
+    "Local storage is full, so the offline backup was not updated (the cloud copy was saved).",
+  save_local_quota_only:
+    "Local storage is full and this version is not on the cloud yet — keep this tab open, then unlock or reload and try again.",
   attach_file: "Attach file",
   remove_attachment: "Remove attachment",
   attachment_invalid_type:
@@ -143,6 +163,12 @@ export const carbonChatbot = {
   import_draft_badge: "AI Draft",
   import_unmapped:
     "Content not matching the outline ({{count}} blocks; not imported, handle in chat)",
+  // Info: (20260806 - Tzuhan) 待匯入結果的第三條路:保存起來稍後再決定(內容已入庫,重載仍在)
+  import_defer: "Decide later",
+  import_pending_bar:
+    "Parsed result saved for {{name}} — {{count}} section(s), not yet written into the report",
+  import_pending_open: "Review and import",
+  import_pending_discard: "Discard",
   import_reset_note:
     "Verification resets for imported paragraphs; {{activities}} activity records will be re-reconciled",
   import_apply: "Import selected ({{count}})",
@@ -154,6 +180,9 @@ export const carbonChatbot = {
   import_failed_chapters:
     "These chapters failed to parse and can be re-imported later: {{chapters}}",
   import_retry_failed: "Retry failed chapters",
+  import_retrying: "Retrying…",
+  import_retrying_hint:
+    "Re-parsing the failed chapters. This takes a few minutes — please keep this card open.",
   import_empty: "[Import failed] Nothing in the file maps to the outline.",
   import_failed:
     "[Import failed] Could not parse the report; please retry later.",
@@ -179,6 +208,11 @@ export const carbonChatbot = {
   progress_collapse: "Collapse progress widget",
   activity_ledger_title: "Activity Data Ledger",
   activity_ledger_pill: "{{count}} activity records",
+  activity_ledger_pill_imported: " · imported {{count}}",
+  activity_ledger_imported_note:
+    "Imported emissions are already in the ledger: {{count}} rows totalling {{tonne}} tCO2e. The source report gives emissions only — no activity data or factors — so they are not listed below.",
+  activity_ledger_empty_after_import:
+    "No activity data yet. The imported report provides emissions only; to get per-row activity data and factors, provide them in the chat or import voucher data from the account book.",
   activity_ledger_empty:
     "No activity data yet. Provide figures like electricity or fuel usage in the chat, or upload bills, and they will be recorded here automatically.",
   activity_ledger_collapse: "Collapse activity ledger",
@@ -231,11 +265,26 @@ export const carbonChatbot = {
   chart_frozen:
     "⚠ Mass conservation check failed; the chart is frozen. Clarify the inventory gap in the chat and it will be generated automatically.",
   chart_sankey_chat_node: "Declared in chat/attachments",
+  chart_sankey_period_unknown: "No period recorded",
+  chart_sankey_period_collapsed:
+    "The period spans more than two years; the monthly layer is omitted (see the trend chart for months)",
   chart_imported_sankey_title:
-    "GHG emission flow (verbatim from the report, location-based, tCO2e/yr)",
+    "Emissions by category: company → scope → sub-category (verbatim, location-based, tCO2e/year)",
   chart_imported_sankey_excluded: "Not shown (NA/NS or zero)",
+  chart_imported_sankey_no_ledger:
+    'The report was imported but the ledger holds no usable data, so the emission flow cannot be drawn. Table 3.8 (GHG emissions by company) is the only source for the Sankey diagram and the system data table, and it was not obtained this time. Check whether Chapter 3 parsed successfully; if it is listed as failed, re-import it via "Retry failed chapters" on the preview card, and check the server log for whether the table was dropped and why.',
   chart_imported_sankey_collapsed:
-    "Too many nodes; collapsed to two layers (site → category)",
+    "Too many nodes — reduced to one layer (company → scope)",
+  chart_imported_top_items_title:
+    "Where emissions go: company → top nine emission items plus Other (verbatim from the report, location-based, tCO2e/yr)",
+  chart_imported_sankey_other: "Other",
+  // Info: (20260807 - Tzuhan) 分類圖抽掉廠址層(屏東佔 97%,同圖畫不出比重);廠址改列小計
+  chart_imported_sankey_site_totals:
+    "Per-site subtotals (tCO2e/year, share of company total)",
+  chart_imported_sankey_ghg_mapping:
+    "Sub-code to GHG Protocol category mapping",
+  chart_imported_sankey_below_threshold: "Too small to plot (tCO2e/yr)",
+  chart_imported_sankey_organization: "Whole company",
   book_bind_pending_unlock:
     "Book session created. Unlock the encrypted chat to complete the binding (voucher import and the evidence chain require it)",
   book_bind_done:

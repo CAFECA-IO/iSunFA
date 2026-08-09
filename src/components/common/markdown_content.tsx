@@ -14,6 +14,7 @@ import {
 import { useState, useEffect } from "react";
 import { downloadFile } from "@/lib/file_operator";
 import { stripMarkdownComments } from "@/lib/utils/markdown_comment";
+import { stripHtmlLineBreaksOutsideFences } from "@/lib/utils/markdown_line_break";
 import dynamic from "next/dynamic";
 
 // Info: (20260720 - Tzuhan) #54 證據鏈元件動態載入:含 RecordTabModal 依賴鏈,不拖累一般 markdown 渲染
@@ -165,8 +166,14 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
    * 使用者貼 HTML 教學範例時 fence 內的 `<!-- ... -->` 是內容而非錨點,那等於靜默改寫他的文件。
    * 改用 fence-aware 的共用工具(見 markdown_comment.ts,有單元測試護住)。
    */
+  /**
+   * Info: (20260804 - Tzuhan) 一併清除 `<br>`:模型逐字照錄 PDF 表格時,
+   * 會用它表示原文版面的折行,而本元件未啟用 rehype-raw(刻意的,見上方註解),
+   * 於是它被當純文字印在儲存格裡。下載 PDF 走同一個 DOM,所以兩邊一起解決。
+   * 與註解剝除一樣:僅影響顯示,存下來的原文一字不改。
+   */
   const displayContent = useMemo(
-    () => stripMarkdownComments(content),
+    () => stripHtmlLineBreaksOutsideFences(stripMarkdownComments(content)),
     [content],
   );
 

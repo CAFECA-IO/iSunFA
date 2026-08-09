@@ -73,13 +73,101 @@ describe("validateDiagramNodes", () => {
   });
 
   it("節點文字過長視為把整段敘述塞進節點,不採信", () => {
-    const long = "主".repeat(50);
+    const long = "主".repeat(80);
     const result = validateDiagramNodes(
       CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
       [{ label: long }],
       long,
     );
     expect(result.reason).toBe(DiagramRejectReasonEnum.LABEL_TOO_LONG);
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 過長的處置分兩種,而分界是**它是不是編造的**。
+   *
+   * 實測那次被擋掉的是原文的一條完整里程碑(43 字),它通過了原文回溯 ——
+   * 那不是「模型把敘述塞進節點」,只是長。原本一律整張否決,
+   * 30 個有效節點被 1 個拖垮,代價完全不對等。
+   */
+  it("時間軸:少數過長者只略過那幾個,其餘照畫", () => {
+    const longMilestone = "永".repeat(70);
+    const source = [longMilestone, "1966年01月", "公司創立", "股票上市"].join(
+      "，",
+    );
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
+      [
+        { label: "公司創立", parent: "1966年01月" },
+        { label: "股票上市", parent: "1966年01月" },
+        { label: longMilestone, parent: "1966年01月" },
+      ],
+      source,
+    );
+    expect(result.isValid).toBe(true);
+    expect(result.skippedLabels).toEqual([longMilestone]);
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 半數以上過長才像原本設想的「把敘述當節點」——
+   * 那道界守的是原規則的本意,不是把它拿掉。
+   */
+  it("時間軸:半數以上過長仍整張否決", () => {
+    const a = "甲".repeat(70);
+    const b = "乙".repeat(70);
+    const source = [a, b, "1966年01月", "公司創立"].join("，");
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
+      [
+        { label: "公司創立", parent: "1966年01月" },
+        { label: a, parent: "1966年01月" },
+        { label: b, parent: "1966年01月" },
+      ],
+      source,
+    );
+    expect(result.isValid).toBe(false);
+    expect(result.reason).toBe(DiagramRejectReasonEnum.LABEL_TOO_LONG);
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 樹狀圖不得只略過壞節點 —— 本檔開頭那條理由對樹成立:
+   * 少了中間層會讓剩下的圖呈現原文裡不存在的層級,而那比不畫更糟,因為它看起來是對的。
+   */
+  it("樹狀圖:即使只有一個過長也整張否決(略過會發明層級)", () => {
+    const long = "長".repeat(70);
+    const source = [long, "主任委員", "執行秘書", "稽核組"].join("，");
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      [
+        { label: "主任委員" },
+        { label: "執行秘書", parent: "主任委員" },
+        { label: "稽核組", parent: "主任委員" },
+        { label: long, parent: "主任委員" },
+      ],
+      source,
+    );
+    expect(result.isValid).toBe(false);
+    expect(result.reason).toBe(DiagramRejectReasonEnum.LABEL_TOO_LONG);
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 順序的反向測試:回溯先驗、長度後驗。
+   * 反過來的話,一個**編造出來的**長標籤會被當成版面問題略過 —— 那是信任問題,
+   * 必須整張否決。這條擋的正是那個顛倒。
+   */
+  it("編造的長標籤是信任問題,不得被當成版面問題略過", () => {
+    const fabricated = "編".repeat(70);
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
+      [
+        { label: "公司創立", parent: "1966年01月" },
+        { label: "股票上市", parent: "1966年01月" },
+        { label: fabricated, parent: "1966年01月" },
+      ],
+      "1966年01月，公司創立，股票上市",
+    );
+    expect(result.isValid).toBe(false);
+    expect(result.reason).toBe(DiagramRejectReasonEnum.LABEL_NOT_IN_SOURCE);
+    expect(result.skippedLabels).toBeUndefined();
   });
 
   it("節點數超過模板上限時不畫(過密的圖等於沒有圖)", () => {

@@ -1,12 +1,13 @@
 // Info: (20260714 - Tzuhan) 對話輸入列:純文字 + 附件(按鈕/拖放),附件驗證與 base64 轉換邏輯集中於 use_carbon_chat
 
 import { KeyboardEvent, DragEvent, useEffect, useRef, useState } from "react";
-import { Paperclip, X, Loader2, FileText, FileUp } from "lucide-react";
+import { Paperclip, X, Loader2, FileText, FileUp, WifiOff } from "lucide-react";
 import {
   IPendingAttachment,
   PendingAttachmentStatusEnum,
 } from "@/types/carbon_chatbot.types";
 import { IDraftNotice } from "@/hooks/use_carbon_chat";
+import { ChatroomConnectionStateEnum } from "@/lib/chatroom";
 import { CARBON_CHAT_ATTACHMENT_ACCEPT } from "@/constants/carbon_chatbot";
 import { useTranslation } from "@/i18n/i18n_context";
 
@@ -48,11 +49,41 @@ export interface IChatInputProps {
   onRemoveAttachment?: (attachmentId: string) => void;
   // Info: (20260714 - Tzuhan) 草稿生成狀態列(loading/error):並行任務不以對話氣泡表達,避免與回覆順序矛盾
   draftNotice?: IDraftNotice | null;
+  /**
+   * Info: (20260805 - Tzuhan) 即時推播的連線狀態。
+   *
+   * 為什麼要顯示:AI 的回覆同時走 HTTP 回帶與推播兩軌,推播斷掉時長工作的結果送不回來。
+   * 而先前連線狀態只寫進沒人消費的 isError —— 壞掉完全靜默,
+   * 「AI 沒回應」與「回應送不到」在畫面上一模一樣,但兩者的處置完全不同。
+   */
+  connectionState?: ChatroomConnectionStateEnum;
   // Info: (20260716 - Tzuhan) #56 匯入導流:疑似整份報告的附件候選(擇一:匯入報告/仍作附件)
   importCandidate?: File | null;
   onConfirmImportCandidate?: () => void;
   onAttachImportCandidate?: () => void;
   onDismissImportCandidate?: () => void;
+  /**
+   * Info: (20260806 - Tzuhan) 匯入之後的後續建議(空陣列即不顯示)。
+   *
+   * 為什麼由**報告的匯入來歷**決定而不是掛在某一則訊息上:
+   * 掛在訊息上的話,對話一長就被捲走,而「這份報告可以拿來做什麼」
+   * 在報告存在期間一直都成立。來歷是持久的,重載後建議仍在。
+   *
+   * 文案與點下去送出的內容是同一個字串(見 CARBON_IMPORT_FOLLOW_UPS)——
+   * 按鈕寫一句、實際送另一句是對話紀錄裡最難查的一種不一致。
+   */
+  followUpPrompts?: readonly string[];
+  onSendFollowUp?: (prompt: string) => void;
+  /**
+   * Info: (20260806 - Tzuhan) 已保存但尚未匯入的解析結果(null 即無)。
+   *
+   * 為什麼要在輸入列上方留這一條:待匯入結果現在會入庫並撐過重載,
+   * 但一進聊天室就被一張蓋住全螢幕的預覽卡攔住不是提醒而是阻擋 ——
+   * 尤其它講的可能是幾天前的事。留一條可點的線索,主導權還在使用者手上。
+   */
+  deferredImport?: { fileName: string; count: number } | null;
+  onOpenDeferredImport?: () => void;
+  onDiscardDeferredImport?: () => void;
 }
 
 export function ChatInput({
@@ -66,10 +97,16 @@ export function ChatInput({
   onAddFiles = undefined,
   onRemoveAttachment = undefined,
   draftNotice = null,
+  connectionState = ChatroomConnectionStateEnum.CONNECTED,
   importCandidate = null,
   onConfirmImportCandidate = undefined,
   onAttachImportCandidate = undefined,
   onDismissImportCandidate = undefined,
+  followUpPrompts = [],
+  onSendFollowUp = undefined,
+  deferredImport = null,
+  onOpenDeferredImport = undefined,
+  onDiscardDeferredImport = undefined,
 }: IChatInputProps) {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -194,6 +231,80 @@ export function ChatInput({
               <X size={12} />
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Info: (20260806 - Tzuhan) 已保存、尚未匯入的解析結果:重載與切房都還在,由使用者決定何時處理 */}
+      {deferredImport && onOpenDeferredImport && (
+        <div className="mx-auto mb-2 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-xs">
+          <div className="flex min-w-0 items-center gap-1.5 font-bold text-orange-700">
+            <FileUp size={12} className="shrink-0" />
+            <span className="min-w-0 truncate">
+              {t("carbon_chatbot.import_pending_bar", {
+                name: deferredImport.fileName,
+                count: deferredImport.count,
+              })}
+            </span>
+          </div>
+          <div className="mt-1.5 flex gap-2">
+            <button
+              type="button"
+              onClick={onOpenDeferredImport}
+              className="rounded-full bg-[#ff5a00] px-3 py-1 font-bold text-white transition-colors hover:bg-[#e04f00]"
+            >
+              {t("carbon_chatbot.import_pending_open")}
+            </button>
+            {onDiscardDeferredImport && (
+              <button
+                type="button"
+                onClick={onDiscardDeferredImport}
+                className="rounded-full border border-gray-200 bg-white px-3 py-1 font-bold text-gray-600 transition-colors hover:bg-gray-50"
+              >
+                {t("carbon_chatbot.import_pending_discard")}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Info: (20260806 - Tzuhan) 匯入之後的後續建議:點下去即以按鈕上的原句送出(所見即所送)。
+          解析中(isTyping)時不顯示 —— 那時送出只會排隊,按了沒反應比沒有按鈕更糟。 */}
+      {onSendFollowUp && followUpPrompts.length > 0 && !isTyping && (
+        <div className="mx-auto mb-2 flex flex-wrap gap-2">
+          {followUpPrompts.map((prompt) => (
+            <button
+              key={prompt}
+              type="button"
+              title={prompt}
+              onClick={() => onSendFollowUp(prompt)}
+              className="max-w-full truncate rounded-full border border-orange-200 bg-white px-3 py-1.5 text-xs font-bold text-[#ff5a00] shadow-sm transition-colors hover:bg-orange-50"
+            >
+              {prompt}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Info: (20260805 - Tzuhan) 推播斷線提示:只在非 CONNECTED 時出現,連上就自己消失 */}
+      {connectionState !== ChatroomConnectionStateEnum.CONNECTED && (
+        <div
+          className={`mx-auto mb-2 flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold ${
+            connectionState === ChatroomConnectionStateEnum.CONNECTING
+              ? "bg-amber-50 text-amber-700"
+              : "bg-red-50 text-red-600"
+          }`}
+        >
+          {connectionState === ChatroomConnectionStateEnum.CONNECTING ? (
+            <>
+              <Loader2 size={12} className="shrink-0 animate-spin" />
+              {t("carbon_chatbot.realtime_connecting")}
+            </>
+          ) : (
+            <>
+              <WifiOff size={12} className="shrink-0" />
+              {t("carbon_chatbot.realtime_disconnected")}
+            </>
+          )}
         </div>
       )}
 

@@ -433,10 +433,27 @@ export class ChatService {
     const finishReason = response.candidates?.[0]?.finishReason;
     if (finishReason === FinishReason.MAX_TOKENS) {
       const usage = response.usageMetadata;
+      /**
+       * Info: (20260807 - Emily) 訊息必須帶上**思考 token**,否則這行讀起來像鬼故事。
+       *
+       * 原本只報 output 與 limit,於是 UAT 現場看到的是
+       * 「limit=32768 output=9343」—— 兩個數字擺在一起完全不成立,
+       * 排查的人第一反應會是去懷疑上限沒生效,而真正吃掉額度的是思考。
+       * thinking 沒有獨立欄位,用 total − input − output 推回來。
+       */
+      const inputTokens = usage?.promptTokenCount ?? 0;
+      const outputTokens = usage?.candidatesTokenCount ?? 0;
+      const totalTokens = usage?.totalTokenCount ?? 0;
+      const thinkingTokens = Math.max(
+        0,
+        totalTokens - inputTokens - outputTokens,
+      );
       throw new Error(
         `${LLM_TRUNCATED_ERROR_MARKER}: output hit maxOutputTokens ` +
           `(model=${modelName} limit=${generationConfig.maxOutputTokens ?? "default"} ` +
-          `output=${usage?.candidatesTokenCount ?? 0} total=${usage?.totalTokenCount ?? 0})`,
+          `output=${outputTokens} thinking=${thinkingTokens} ` +
+          `output+thinking=${outputTokens + thinkingTokens} ` +
+          `input=${inputTokens} total=${totalTokens})`,
       );
     }
 

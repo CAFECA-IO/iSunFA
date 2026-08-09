@@ -1,0 +1,278 @@
+// Info: (20260805 - Tzuhan) 匯入摘要訊息:入庫的內容是系統的陳述,必須是決定性的。
+// Info: (20260805 - Tzuhan) 前端只送事實,句子在伺服端組 —— 不能讓呼叫端塞任意字串進使用者的對話紀錄。
+
+import { describe, it, expect } from "@jest/globals";
+import {
+  buildImportSummaryNotice,
+  buildImportParsedNotice,
+  buildImportFollowUpPrompt,
+  CARBON_IMPORT_FOLLOW_UPS,
+  CarbonImportReconciliationStateEnum,
+  CarbonImportNoticeKindEnum,
+  type ICarbonImportSummary,
+  type ICarbonImportParsedSummary,
+} from "@/constants/carbon_chatbot";
+import { CarbonImportNoticeSchema } from "@/validators/carbon_import_notice";
+import { CARBON_REPORT_OUTLINE } from "@/constants/carbon_report_outline";
+
+const baseSummary: ICarbonImportSummary = {
+  fileName: "高興昌鋼鐵股份有限公司溫室氣體盤查報告書.pdf",
+  importedCount: 32,
+  draftedCount: 1,
+  reconciliation: CarbonImportReconciliationStateEnum.RECONCILED,
+  failedChapters: [],
+};
+
+describe("buildImportSummaryNotice", () => {
+  it("帶入檔名與逐字/草稿的節數", () => {
+    const text = buildImportSummaryNotice("zh-TW", baseSummary);
+    expect(text).toContain(baseSummary.fileName);
+    expect(text).toContain("逐字落地 32 節");
+    expect(text).toContain("AI 補寫草稿 1 節");
+  });
+
+  /**
+   * Info: (20260805 - Tzuhan) 三種對帳結果必須說得不一樣。
+   * 「勾稽通過」與「有表但一筆都沒入帳」的處置完全不同 ——
+   * 前者可以往下走,後者要回去看對帳說明;寫成同一句話等於沒說。
+   */
+  it("三種對帳結果各有各的說法", () => {
+    const texts = [
+      CarbonImportReconciliationStateEnum.RECONCILED,
+      CarbonImportReconciliationStateEnum.BLOCKED,
+      CarbonImportReconciliationStateEnum.NONE,
+    ].map((reconciliation) =>
+      buildImportSummaryNotice("zh-TW", { ...baseSummary, reconciliation }),
+    );
+    expect(new Set(texts).size).toBe(3);
+    expect(texts[0]).toContain("已寫入帳本");
+    expect(texts[1]).toContain("勾稽未通過");
+    expect(texts[2]).toContain("沒有可入帳");
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 原本斷言「整段完全沒有空行」。
+   *
+   * 那條斷言真正要守的是 `.filter(Boolean)` 有生效 ——
+   * 沒有失敗章節時不該留下一行空白(那個位置本來是失敗章節那句話)。
+   * 20260806 摘要後面接上「接下來可以…」的引導區塊,兩段之間有一行**刻意的**空行,
+   * 於是原斷言開始失敗。
+   *
+   * 放寬範圍而不放棄意圖:改為只檢查摘要那一段(引導抬頭之前)沒有空行。
+   * 直接改成「允許空行」會讓 filter(Boolean) 哪天壞掉也沒人知道。
+   */
+  it("失敗的章列出來;全部成功時摘要段不留空行", () => {
+    const withFailures = buildImportSummaryNotice("zh-TW", {
+      ...baseSummary,
+      failedChapters: ["第四章 數據品質管理", "第九章 查證"],
+    });
+    expect(withFailures).toContain("第四章 數據品質管理、第九章 查證");
+
+    const clean = buildImportSummaryNotice("zh-TW", baseSummary);
+    expect(clean).not.toContain("解析失敗");
+    const summaryPart = clean.split("接下來我可以幫你:")[0].trimEnd();
+    expect(summaryPart.split("\n").every((line) => line.length > 0)).toBe(true);
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 摘要不能講完就停:使用者匯入報告的目的是要有人幫他看。
+   * 三個選項的文案**同時是**使用者點按鈕時送出的那句話(共用 CARBON_IMPORT_FOLLOW_UPS),
+   * 所以這裡順便釘住兩者一致 —— 按鈕寫一句、實際送另一句是最難查的一種不一致。
+   */
+  it("摘要後面接上後續建議,且與按鈕送出的內容是同一份文案", () => {
+    const text = buildImportSummaryNotice("zh-TW", baseSummary);
+    expect(text).toContain("接下來我可以幫你:");
+    CARBON_IMPORT_FOLLOW_UPS.forEach((followUp, index) => {
+      const prompt = buildImportFollowUpPrompt("zh-TW", followUp);
+      expect(text).toContain(`${index + 1}. ${prompt}`);
+    });
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 引導語只說「可以做什麼」,不說「這份報告怎麼樣」——
+   * 此刻只看得到段落計數,沒看過內容,任何對報告品質的斷言都是捏造。
+   */
+  it("引導語不對報告內容下任何斷語", () => {
+    const text = buildImportSummaryNotice("zh-TW", baseSummary);
+    ["品質良好", "符合規範", "沒有問題", "完整"].forEach((claim) => {
+      expect(text).not.toContain(claim);
+    });
+  });
+
+  // Info: (20260805 - Tzuhan) 匯入的內容一律未查核 —— 這句不能因為勾稽通過就省略
+  it("一律提醒未查核", () => {
+    [
+      CarbonImportReconciliationStateEnum.RECONCILED,
+      CarbonImportReconciliationStateEnum.BLOCKED,
+      CarbonImportReconciliationStateEnum.NONE,
+    ].forEach((reconciliation) => {
+      expect(
+        buildImportSummaryNotice("zh-TW", { ...baseSummary, reconciliation }),
+      ).toContain("未查核");
+    });
+  });
+
+  it("五個語系都有文案,未知語系退回 zh-TW", () => {
+    ["zh-TW", "zh-CN", "en", "ja", "ko"].forEach((language) => {
+      expect(
+        buildImportSummaryNotice(language, baseSummary).length,
+      ).toBeGreaterThan(0);
+    });
+    expect(buildImportSummaryNotice("de", baseSummary)).toBe(
+      buildImportSummaryNotice("zh-TW", baseSummary),
+    );
+    expect(buildImportSummaryNotice(undefined, baseSummary)).toBe(
+      buildImportSummaryNotice("zh-TW", baseSummary),
+    );
+  });
+});
+
+describe("CarbonImportNoticeSchema", () => {
+  const validPayload = {
+    channel: "carbon-chat-0xabc-s123",
+    // Info: (20260806 - Tzuhan) base58 xpub;不是 `0x…` 位址(見下方那條測試的理由)
+    recipientPublicKey:
+      "xpub6CUGRUonZSQ4TWtTMmzXdrXDtypWKiKrhko4egpiMZbpiaQL2Jkwr",
+    fileName: "report.pdf",
+    // Info: (20260806 - Tzuhan) 兩種通知以 kind 區分(已寫入 / 尚未寫入),見 CarbonImportNoticeKindEnum
+    kind: CarbonImportNoticeKindEnum.SUMMARY,
+    importedCount: 32,
+    draftedCount: 1,
+    reconciliation: CarbonImportReconciliationStateEnum.RECONCILED,
+  };
+
+  it("failedChapters 省略時預設空陣列", () => {
+    const parsed = CarbonImportNoticeSchema.parse(validPayload);
+    expect(parsed.failedChapters).toEqual([]);
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 收件公鑰必填 —— 這條是為一個實際發生過的失敗補的測試。
+   *
+   * 原本 schema 標選填,而路由以 `sessionUser.address` 補位,
+   * 理由寫「與 report PUT 同一慣例」。那句話不成立:report PUT 的 address 補位
+   * 只發生在明文模式(address 是擁有者標記,不是金鑰),而聊天訊息一律 E2EE,
+   * 這個值會被拿去做 ECIES 加密。`0x…` 十六進位位址不是 base58 xpub,
+   * 於是這條端點從上線起**一次都沒成功過**
+   * (500:`invalid base58 value (argument="letter", value="0")`),
+   * 表現是「匯入後聊天室依舊沒有記錄」。
+   *
+   * 契約上說清楚比讓路由擋更好:選填會讓呼叫端以為「不送也行」,而它一送就是 500。
+   */
+  it("沒有收件公鑰即拒絕(不得以 address 補位,那不是金鑰)", () => {
+    const { recipientPublicKey, ...withoutKey } = validPayload;
+    expect(recipientPublicKey).toBeTruthy();
+    expect(CarbonImportNoticeSchema.safeParse(withoutKey).success).toBe(false);
+  });
+
+  /**
+   * Info: (20260805 - Tzuhan) 節數上限取大綱節數:超過即不可能是真的落地節數,
+   * 而讓一個誇大的數字入庫等於在對話紀錄裡留下假事實。
+   */
+  it("節數超過大綱節數即拒絕", () => {
+    expect(
+      CarbonImportNoticeSchema.safeParse({
+        ...validPayload,
+        importedCount: CARBON_REPORT_OUTLINE.length + 1,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("對帳結果不是列舉值即拒絕(前端不得自訂狀態)", () => {
+    expect(
+      CarbonImportNoticeSchema.safeParse({
+        ...validPayload,
+        reconciliation: "LOOKS_FINE",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("沒有可以塞文案的欄位(文案一律由伺服端組出)", () => {
+    const parsed = CarbonImportNoticeSchema.parse({
+      ...validPayload,
+      text: "我自己寫的訊息",
+    });
+    expect("text" in parsed).toBe(false);
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 兩種通知不可混用欄位。
+   *
+   * PARSED 說的是「解析好了、還沒寫進報告」,那時一筆都還沒入帳 ——
+   * 讓它收下 reconciliation 就是允許它說出一件此刻不可能成立的事實。
+   */
+  it("PARSED 通知不接受對帳結果那組欄位", () => {
+    const { importedCount, reconciliation, ...common } = validPayload;
+    expect(importedCount).toBeTruthy();
+    expect(reconciliation).toBeTruthy();
+    const parsed = CarbonImportNoticeSchema.parse({
+      ...common,
+      kind: CarbonImportNoticeKindEnum.PARSED,
+      pendingCount: 30,
+      draftedCount: 3,
+      activityCount: 12,
+      reconciliation: CarbonImportReconciliationStateEnum.RECONCILED,
+    });
+    expect("reconciliation" in parsed).toBe(false);
+  });
+
+  it("kind 不是列舉值即拒絕(不得靠欄位有無去猜是哪一種通知)", () => {
+    expect(
+      CarbonImportNoticeSchema.safeParse({ ...validPayload, kind: "OTHER" })
+        .success,
+    ).toBe(false);
+  });
+});
+
+describe("buildImportParsedNotice", () => {
+  const baseParsed: ICarbonImportParsedSummary = {
+    fileName: "高興昌鋼鐵股份有限公司溫室氣體盤查報告書.pdf",
+    pendingCount: 30,
+    draftedCount: 3,
+    activityCount: 12,
+    failedChapters: [],
+  };
+
+  it("帶入檔名、待確認節數與活動數據筆數", () => {
+    const text = buildImportParsedNotice("zh-TW", baseParsed);
+    expect(text).toContain(baseParsed.fileName);
+    expect(text).toContain("30 節");
+    expect(text).toContain("3 節");
+    expect(text).toContain("12 筆");
+  });
+
+  /**
+   * Info: (20260806 - Tzuhan) 這條是這則訊息存在的**唯一理由**:
+   * 它必須說出「還沒寫進報告」。說得含混的話,使用者會以為內容已經落地,
+   * 而那正是原本什麼都不說時發生的誤解。
+   */
+  it("明說尚未寫入報告,且與「已匯入」的摘要不會說成同一件事", () => {
+    const parsedText = buildImportParsedNotice("zh-TW", baseParsed);
+    expect(parsedText).toContain("尚未寫入報告");
+    const summaryText = buildImportSummaryNotice("zh-TW", {
+      fileName: baseParsed.fileName,
+      importedCount: 30,
+      draftedCount: 3,
+      reconciliation: CarbonImportReconciliationStateEnum.NONE,
+      failedChapters: [],
+    });
+    expect(summaryText).toContain("已匯入");
+    expect(parsedText).not.toBe(summaryText);
+  });
+
+  it("有失敗章節才提重試,沒有時不留空行", () => {
+    const withFailures = buildImportParsedNotice("zh-TW", {
+      ...baseParsed,
+      failedChapters: ["第三章 排放量盤查結果"],
+    });
+    expect(withFailures).toContain("第三章 排放量盤查結果");
+    expect(buildImportParsedNotice("zh-TW", baseParsed)).not.toContain("\n\n");
+  });
+
+  // Info: (20260806 - Tzuhan) 未知語系退回 zh-TW(與摘要同一慣例);缺語系不該讓訊息變成空字串
+  it("未知語系退回 zh-TW", () => {
+    expect(buildImportParsedNotice("de", baseParsed)).toBe(
+      buildImportParsedNotice("zh-TW", baseParsed),
+    );
+  });
+});

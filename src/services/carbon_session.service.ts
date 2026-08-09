@@ -13,10 +13,41 @@ export interface ICarbonSessionSummary {
   channel: string;
   createdAt: Date;
   updatedAt: Date;
+  /**
+   * Info: (20260806 - Tzuhan) 這個會話最後一次**有動作**的時間(清單排序依據)。
+   *
+   * 與 `updatedAt` 是不同的東西:`updatedAt` 是 Prisma 的 `@updatedAt`,
+   * 只在 chatroom 那一列被 update 時才跳,而全專案只有封存/還原會 update 它。
+   * 送訊息、存報告、更新盤查狀態寫的都是關聯表,一次都不會碰到它 ——
+   * 拿它當「最新改動」排序,結果會是「幾乎所有會話都停在建立那一刻」。
+   */
+  lastActivityAt: Date;
   accountBookId: string | null;
   archivedAt: Date | null;
   isOwn: boolean;
 }
+
+/**
+ * Info: (20260806 - Tzuhan) 取四個時間點的最大值:
+ * chatroom 本身、最新一則訊息、報告草稿、盤查狀態。
+ *
+ * 全部取最大而不是只看訊息:一份匯入進來的報告可能一則訊息都沒有,
+ * 但它顯然「有動過」—— 只看訊息會讓那種會話永遠沉在清單底部。
+ */
+const resolveLastActivityAt = (room: {
+  updatedAt: Date;
+  messages: { createdAt: Date }[];
+  reportDraft: { updatedAt: Date } | null;
+  inventoryState: { updatedAt: Date } | null;
+}): Date => {
+  const candidates: Date[] = [room.updatedAt];
+  if (room.messages[0]) candidates.push(room.messages[0].createdAt);
+  if (room.reportDraft) candidates.push(room.reportDraft.updatedAt);
+  if (room.inventoryState) candidates.push(room.inventoryState.updatedAt);
+  return candidates.reduce((latest, current) =>
+    current > latest ? current : latest,
+  );
+};
 
 export const carbonSessionService = {
   /**
@@ -38,6 +69,7 @@ export const carbonSessionService = {
       channel: room.channel,
       createdAt: room.createdAt,
       updatedAt: room.updatedAt,
+      lastActivityAt: resolveLastActivityAt(room),
       accountBookId: room.accountBookId,
       archivedAt: room.archivedAt,
       // Info: (20260731 - Luphia) 是否為本人會話(前端據此決定聊天面板可用性)
@@ -61,6 +93,7 @@ export const carbonSessionService = {
       channel: room.channel,
       createdAt: room.createdAt,
       updatedAt: room.updatedAt,
+      lastActivityAt: resolveLastActivityAt(room),
       accountBookId: room.accountBookId,
       archivedAt: room.archivedAt,
       isOwn: true,

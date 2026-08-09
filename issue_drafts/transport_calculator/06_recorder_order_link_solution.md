@@ -1,5 +1,7 @@
 # [FEATURE] - Recorder 訂單關聯修復方案評估:context.json 決定性關聯 vs 開發 SOP
 
+> **狀態**:✅ 已完成 2026-07-28(commit `09967c7d5`)
+
 ## Summary
 
 針對 issue 05(Recorder 反查誤配舊單)的兩個候選解法進行評估,並給出建議結論。

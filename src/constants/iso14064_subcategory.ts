@@ -42,6 +42,198 @@ export enum Iso14064SubCategory {
 }
 
 /**
+ * Info: (20260807 - Tzuhan) 子代碼的**標準名稱**(ISO 14064-1:2018 的類別名)。
+ *
+ * ## 為什麼需要
+ *
+ * 桑基圖的末端節點原本只印代碼(`2.1 3470.34`)。代碼對系統夠用,對讀者不夠 ——
+ * 這張圖是給查證人員與主管看的,而「2.1」要回頭翻表才知道是外購電力。
+ * 實測回報就是「尾端看不出流向哪裡」。
+ *
+ * ## 為什麼不用原文報告裡的名稱
+ *
+ * 解析器刻意只認代碼(見 `findSubCategory`):中文名稱各家報告寫法不一
+ * (「外購電力」/「電力(外購)」/「購入電力」),而代碼是標準的。
+ * 顯示名若改跟原文,同一個 2.1 在不同報告會印出不同名字,圖與圖之間就對不起來。
+ * 這裡用**標準本身的名稱**,是決定性的,且不隨 LLM 輸出漂移。
+ *
+ * ## 為什麼只有中英
+ *
+ * 沿用 `formatGhgCategoryLabel` / `formatIsoCategoryLabel` 同一慣例
+ * (zh 系 → nameZh,其餘 → nameEn)。這裡是領域術語而非介面文案,
+ * 因此不進 i18n 檔 —— 那五份檔案是給介面字串用的,把標準的類別名散進去,
+ * 五份就會各自漂移。
+ */
+export interface IIso14064SubCategoryDetail {
+  nameZh: string;
+  nameEn: string;
+}
+
+export const Iso14064SubCategoryDetails: Readonly<
+  Record<Iso14064SubCategory, IIso14064SubCategoryDetail>
+> = {
+  [Iso14064SubCategory.STATIONARY_COMBUSTION]: {
+    nameZh: "固定式燃燒",
+    nameEn: "Stationary combustion",
+  },
+  [Iso14064SubCategory.MOBILE_COMBUSTION]: {
+    nameZh: "移動式燃燒",
+    nameEn: "Mobile combustion",
+  },
+  [Iso14064SubCategory.INDUSTRIAL_PROCESS]: {
+    nameZh: "工業製程",
+    nameEn: "Industrial process",
+  },
+  [Iso14064SubCategory.FUGITIVE]: {
+    nameZh: "逸散排放",
+    nameEn: "Fugitive emissions",
+  },
+  [Iso14064SubCategory.LAND_USE]: {
+    nameZh: "土地使用與變化",
+    nameEn: "Land use and land-use change",
+  },
+  [Iso14064SubCategory.PURCHASED_ELECTRICITY]: {
+    nameZh: "外購電力",
+    nameEn: "Purchased electricity",
+  },
+  [Iso14064SubCategory.PURCHASED_ENERGY]: {
+    nameZh: "外購能源(蒸汽/熱/冷)",
+    nameEn: "Purchased energy (steam, heat, cooling)",
+  },
+  [Iso14064SubCategory.UPSTREAM_TRANSPORT]: {
+    nameZh: "上游運輸與配送",
+    nameEn: "Upstream transport and distribution",
+  },
+  [Iso14064SubCategory.DOWNSTREAM_TRANSPORT]: {
+    nameZh: "下游運輸與配送",
+    nameEn: "Downstream transport and distribution",
+  },
+  [Iso14064SubCategory.EMPLOYEE_COMMUTING]: {
+    nameZh: "員工通勤",
+    nameEn: "Employee commuting",
+  },
+  [Iso14064SubCategory.CUSTOMER_VISITOR_TRANSPORT]: {
+    nameZh: "客戶與訪客運輸",
+    nameEn: "Client and visitor transport",
+  },
+  [Iso14064SubCategory.BUSINESS_TRAVEL]: {
+    nameZh: "商務旅行",
+    nameEn: "Business travel",
+  },
+  [Iso14064SubCategory.PURCHASED_GOODS]: {
+    nameZh: "採購商品",
+    nameEn: "Purchased goods",
+  },
+  [Iso14064SubCategory.CAPITAL_GOODS]: {
+    nameZh: "資本設備",
+    nameEn: "Capital goods",
+  },
+  [Iso14064SubCategory.SOLID_LIQUID_WASTE]: {
+    nameZh: "固體與液體廢棄物處理",
+    nameEn: "Disposal of solid and liquid waste",
+  },
+  [Iso14064SubCategory.ASSET_USE]: {
+    nameZh: "資產使用",
+    nameEn: "Use of assets",
+  },
+  [Iso14064SubCategory.SERVICE_USE]: {
+    nameZh: "服務使用",
+    nameEn: "Use of services",
+  },
+  [Iso14064SubCategory.PRODUCT_USE_PHASE]: {
+    nameZh: "產品使用階段",
+    nameEn: "Use stage of the product",
+  },
+  [Iso14064SubCategory.DOWNSTREAM_LEASED_ASSET]: {
+    nameZh: "下游租賃資產",
+    nameEn: "Downstream leased assets",
+  },
+  [Iso14064SubCategory.PRODUCT_END_OF_LIFE]: {
+    nameZh: "產品生命終期",
+    nameEn: "End of life of the product",
+  },
+  [Iso14064SubCategory.INVESTMENT]: {
+    nameZh: "投資",
+    nameEn: "Investments",
+  },
+  [Iso14064SubCategory.OTHER_INDIRECT]: {
+    nameZh: "其他來源之間接排放",
+    nameEn: "Indirect emissions from other sources",
+  },
+};
+
+/**
+ * Info: (20260807 - Tzuhan) 子代碼顯示名:`2.1 外購電力`。
+ *
+ * **代碼放前面**是刻意的:讀者要能拿這個標籤回頭在原文表3.8 裡逐格對照,
+ * 而原文只有代碼。名稱是為了看得懂,代碼是為了查得到,兩者都要。
+ *
+ * 未知代碼原樣返回,不猜 —— 一個編出來的類別名會讓查核者對著錯的分類看半天。
+ */
+export const formatIsoSubCategoryLabel = (
+  subCategory: string,
+  language: string,
+  maxWidth?: number,
+): string => {
+  const detail = Iso14064SubCategoryDetails[subCategory as Iso14064SubCategory];
+  if (!detail) return subCategory;
+  const name = language.startsWith("zh") ? detail.nameZh : detail.nameEn;
+  const label = `${subCategory} ${name}`;
+  if (maxWidth === undefined) return label;
+  return truncateToDisplayWidth(label, maxWidth, subCategory);
+};
+
+/**
+ * Info: (20260807 - Emily) 顯示寬度:全形(CJK、全形標點)算 2,其餘算 1。
+ *
+ * 這不是雞蛋裡挑骨頭 —— 版面上會不會疊字取決於實際佔寬,
+ * 而中文 12 字與英文 12 字在畫面上差一倍。以字元數為單位的上限
+ * 必然在其中一種語言上是錯的。
+ */
+export const displayWidth = (text: string): number =>
+  [...text].reduce(
+    (width, char) => width + (FULLWIDTH_PATTERN.test(char) ? 2 : 1),
+    0,
+  );
+
+// Info: (20260807 - Emily) CJK 統一表意文字、假名、諺文與 CJK 標點(全形括號等)
+const FULLWIDTH_PATTERN =
+  /[\u1100-\u115F\u2E80-\uA4CF\uAC00-\uD7A3\uF900-\uFAFF\uFE30-\uFE4F\uFF00-\uFF60\uFFE0-\uFFE6]/;
+
+// Info: (20260807 - Emily) 截斷用的省略符號(全形,寬度 1 —— U+2026 為窄形)
+const ELLIPSIS = "\u2026";
+
+/**
+ * Info: (20260807 - Emily) 依顯示寬度截斷,並保證 `keepPrefix` 完整留下。
+ *
+ * `keepPrefix` 是子代碼 —— 它是讀者回原文表3.8 逐格對照的唯一線索,
+ * 截掉代碼等於把這個標籤變成看得懂但查不到。名稱可以短,代碼不能缺。
+ * 連代碼都放不下時就只回代碼:寧可少了名稱,不要給一個半截的名稱。
+ */
+export const truncateToDisplayWidth = (
+  text: string,
+  maxWidth: number,
+  keepPrefix: string,
+): string => {
+  if (displayWidth(text) <= maxWidth) return text;
+  const prefixWidth = displayWidth(keepPrefix);
+  // Info: (20260807 - Emily) +1 為省略符號的寬度
+  const nameBudget = maxWidth - prefixWidth - 1 - 1;
+  if (nameBudget <= 0) return keepPrefix;
+  const name = text.slice(keepPrefix.length).trimStart();
+  let kept = "";
+  let width = 0;
+  for (const char of name) {
+    const charWidth = FULLWIDTH_PATTERN.test(char) ? 2 : 1;
+    if (width + charWidth > nameBudget) break;
+    kept += char;
+    width += charWidth;
+  }
+  if (!kept.trim()) return keepPrefix;
+  return `${keepPrefix} ${kept.trimEnd()}${ELLIPSIS}`;
+};
+
+/**
  * Info: (20260803 - Tzuhan) 子代碼 → ISO 類別。取代碼首位數字即可,但仍寫成明表:
  * 從字串切字元會在「6」(單層,無小數點)上出錯,而那正是最容易漏測的一筆。
  */

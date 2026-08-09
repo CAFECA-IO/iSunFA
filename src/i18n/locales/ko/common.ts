@@ -20,6 +20,11 @@ export const common = {
   end_date: "종료일",
   error: {
     download_failed: "다운로드 실패",
+    // Info: (20260807 - Emily) 빈 출력은 비어 있다고 말할 수 있어야 한다
+    pdf_blank_output:
+      "PDF 내용이 비어 있어 다운로드를 중단했습니다. 보고서가 너무 길어 브라우저가 한 번에 그릴 수 없습니다. 내용을 줄이거나 나누어 내보내 주세요.",
+    pdf_download_needs_preview:
+      "다운로드 전에 'PDF 미리보기'로 전환하세요 —— 미리보기에 보이는 그대로 출력됩니다",
     default: "시스템 오류가 발생했습니다. 다시 시도해 주세요.",
   },
   refresh: "새로고침",

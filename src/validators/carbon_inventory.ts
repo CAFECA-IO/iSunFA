@@ -2,7 +2,11 @@
 // Info: (20260716 - Tzuhan) LLM 萃取結果的白名單護欄(enum 鎖死) + E2EE 狀態封裝的形狀驗證
 
 import { z } from "zod";
-import { GhgProtocolCategory } from "@/constants/esg";
+import { GhgProtocolCategory, Iso14064Category } from "@/constants/esg";
+import {
+  EmissionBasisEnum,
+  LedgerProvenanceEnum,
+} from "@/constants/imported_quantity";
 import { MeasurementUnit } from "@/constants/enums";
 import { CarbonInventoryStep } from "@/constants/carbon_chatbot";
 import { CARBON_CALCULATE_MAX_ACTIVITIES } from "@/constants/carbon_calculation";
@@ -13,6 +17,10 @@ import {
   ArticulationWarningReasonEnum,
 } from "@/constants/carbon_articulation";
 import { CarbonReportDraftPutSchema } from "@/validators/carbon_report_storage";
+import {
+  EMISSION_TIMESTAMP_MIN_SECONDS,
+  EMISSION_TIMESTAMP_MAX_SECONDS,
+} from "@/constants/emission_period";
 
 // Info: (20260716 - Tzuhan) 單筆活動數據: scopeCategory/unit 以 nativeEnum 鎖死；quantity 原樣字串(嚴禁在此轉數字)
 /**
@@ -55,6 +63,18 @@ const CarbonActivityRecordShape = z.object({
   fileId: z.string().max(100).optional(),
   fileHash: z.string().max(200).optional(),
   precomputedCo2eKg: z.string().max(60).optional(),
+  /**
+   * Info: (20260806 - Tzuhan) 交易日期(Unix 秒)。**沒有這一行,月別分層只在重載前有效** ——
+   * Zod 預設 strip 未宣告的鍵,活動明細解密後過這道 schema 就把時間戳洗掉了,
+   * 而畫面上看不出任何異狀:桑基圖只是安靜地退回「未標註期間」一個節點。
+   * 上下界與 resolveEmissionMonth 同一組常數(擋毫秒誤傳成秒)。
+   */
+  tradingTimestamp: z
+    .number()
+    .int()
+    .min(EMISSION_TIMESTAMP_MIN_SECONDS)
+    .max(EMISSION_TIMESTAMP_MAX_SECONDS)
+    .optional(),
 });
 
 export const CarbonActivityRecordSchema =
@@ -126,9 +146,43 @@ export const ComputedLedgerSchema = z.object({
       convertedQuantity: z.string().max(60),
       convertedUnit: z.string().max(50),
       co2eKg: z.string().max(60),
+      // Info: (20260806 - Tzuhan) 同上:總表 entry 也要保留時間戳,否則重載後月別分層一樣消失
+      tradingTimestamp: z
+        .number()
+        .int()
+        .min(EMISSION_TIMESTAMP_MIN_SECONDS)
+        .max(EMISSION_TIMESTAMP_MAX_SECONDS)
+        .optional(),
       ghgBreakdown: z.record(z.string(), z.string()).optional(),
       gwpVersion: z.string().max(30).optional(),
       factor: FactorSnapshotSchema,
+      /**
+       * Info: (20260807 - Emily) 出處必須跟著帳本一起存
+       * (issue_drafts/inventory_table_import/16)。
+       *
+       * 這三個欄位原本在 `IComputedLedgerEntry` 上有,卻不在這個 schema 裡 ——
+       * zod 預設剝掉未宣告的鍵,於是存檔那一刻它們就消失了。
+       * 重載後 `provenance` 變成 undefined,而型別註解寫著「未給即視為 COMPUTED」,
+       * 於是 33 列「原文照錄(表3.8)」全部被改寫成「系統計算」,
+       * 活動數據欄還印出從 CO2e 反推的數字 —— 原文根本沒提供過那個值。
+       *
+       * 數字沒變所以畫面看不出異常,變的是「這筆數字從哪來」的聲明。
+       * 對查證文件來說那正是最不能錯的一欄:它決定查核者要向誰索取佐證。
+       *
+       * 「未給即視為 COMPUTED」這個預設本身是合理的(既有憑證路徑零改動),
+       * 但它讓欄位遺失變成**靜默的出處竄改**而不是一個錯誤 ——
+       * 所以真正該修的是讓欄位存得下來,而不是改那個預設。
+       */
+      provenance: z.nativeEnum(LedgerProvenanceEnum).optional(),
+      emissionBasis: z.nativeEnum(EmissionBasisEnum).optional(),
+      importedOrigin: z
+        .object({
+          site: z.string().max(200),
+          isoCategory: z.nativeEnum(Iso14064Category),
+          subCategory: z.string().max(50),
+          tableNo: z.string().max(50),
+        })
+        .optional(),
       // Info: (20260720 - Tzuhan) #53 證據引用(憑證匯入的活動才有)
       evidence: z
         .object({

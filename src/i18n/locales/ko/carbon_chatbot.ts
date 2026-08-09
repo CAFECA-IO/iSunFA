@@ -47,10 +47,18 @@ export const carbonChatbot = {
   still_processing:
     "처리 시간이 길어 연결이 끊어졌지만 작업은 계속 진행 중입니다. 완료된 섹션은 자동으로 표시됩니다.",
   // Info: (20260730 - Tzuhan) 段落來源標示:AI 草稿不得冒充逐字照抄原文(審計文件底線)
+  realtime_connecting: "실시간 연결 중… 응답이 지연될 수 있습니다",
+  realtime_disconnected:
+    "실시간 연결이 끊겼습니다. 오래 걸리는 작업의 결과가 전달되지 않을 수 있습니다. 페이지를 새로고침해 주세요.",
+  imported_from_short: "가져온 파일",
+  imported_from_title: "가져온 파일 {{name}} ({{date}})",
   origin_imported: "원문 그대로",
   origin_ai_draft: "AI 초안",
   origin_imported_short: "원문",
   origin_ai_draft_short: "초안",
+  // Info: (20260806 - Tzuhan) 匯入前先上傳取 cid:14 次呼叫共用一份儲存,文案要說出「為何要等」
+  import_uploading:
+    "{{name}}을(를) 보안 저장소에 저장 중입니다(이후 각 장 분석은 서버가 가져오며 파일을 매번 다시 올리지 않습니다)…",
   // Info: (20260730 - Tzuhan) 兩階段匯入的第一階段提示:一次索引換來後續 11 章不必各自重送整份文件
   import_indexing:
     "{{name}}의 장 색인을 만들고 있습니다(각 섹션의 페이지를 찾아 이후 분석량을 크게 줄입니다)…",
@@ -104,6 +112,17 @@ export const carbonChatbot = {
   save_failed: "저장 실패",
   save_failed_hint:
     "저장 실패: 다른 탭에서 초안을 업데이트했을 수 있습니다. 페이지를 새로고침해 주세요",
+  // Info: (20260807 - Emily) 저장 실패 유형별 문구: 잃는 것은 수 분의 결과물이며 아이콘 하나로는 부족하다
+  save_failed_notice:
+    "보고서의 최신 변경 사항이 클라우드에 저장되지 않았습니다. 내용은 이 기기에 남아 있습니다. 잠시 후 다시 시도하거나 페이지를 새로고침해 주세요.",
+  save_failed_conflict:
+    "최신 변경 사항이 클라우드에 저장되지 않았습니다: 다른 탭 또는 기기에서 초안이 업데이트되었습니다. 새로고침해 최신 버전을 받은 뒤 다시 수정해 주세요.",
+  save_failed_too_large:
+    "최신 변경 사항이 클라우드에 저장되지 않았습니다: 초안 하나의 용량 상한을 초과했습니다. 원문 표 일부를 제거하거나 나누어 가져오기 해 주세요.",
+  save_local_quota:
+    "로컬 저장 공간이 부족해 오프라인 백업을 갱신하지 못했습니다(클라우드 저장은 완료).",
+  save_local_quota_only:
+    "로컬 저장 공간이 부족하고 이 버전은 아직 클라우드에 없습니다 — 탭을 닫지 말고 잠금 해제 또는 새로고침 후 다시 시도해 주세요.",
   attach_file: "파일 첨부",
   remove_attachment: "첨부 제거",
   attachment_invalid_type:
@@ -143,6 +162,12 @@ export const carbonChatbot = {
     "이 가져오기는 「{{name}}」의 것입니다. 적용하려면 해당 대화로 돌아가세요.",
   import_draft_badge: "AI 초안",
   import_unmapped: "목차에 대응하지 않는 내용({{count}}건, 가져오지 않음)",
+  // Info: (20260806 - Tzuhan) 待匯入結果的第三條路:保存起來稍後再決定(內容已入庫,重載仍在)
+  import_defer: "나중에 결정",
+  import_pending_bar:
+    "가져오기 대기 중인 분석 결과를 저장했습니다: {{name}} ({{count}}개 절, 보고서에 미기록)",
+  import_pending_open: "확인하고 가져오기",
+  import_pending_discard: "버리기",
   import_reset_note:
     "가져온 단락의 검증 상태는 초기화됩니다. 활동 데이터 {{activities}}건은 재대사됩니다",
   import_apply: "선택 항목 가져오기({{count}})",
@@ -154,6 +179,9 @@ export const carbonChatbot = {
   import_failed_chapters:
     "다음 장은 분석에 실패했습니다. 나중에 다시 가져오기로 보완할 수 있습니다: {{chapters}}",
   import_retry_failed: "실패한 장 재시도",
+  import_retrying: "재시도 중…",
+  import_retrying_hint:
+    "실패한 장을 다시 분석하고 있습니다. 몇 분 정도 걸립니다. 이 카드를 닫지 마세요.",
   import_empty: "[가져오기 실패] 목차에 대응하는 내용이 없습니다.",
   import_failed:
     "[가져오기 실패] 보고서 분석에 실패했습니다. 나중에 다시 시도해 주세요.",
@@ -179,6 +207,11 @@ export const carbonChatbot = {
   progress_collapse: "진행률 위젯 접기",
   activity_ledger_title: "활동 데이터 장부",
   activity_ledger_pill: "활동 데이터 {{count}}건",
+  activity_ledger_pill_imported: " · 가져오기 {{count}}건",
+  activity_ledger_imported_note:
+    "가져온 배출량은 이미 원장에 있습니다: {{count}}건, 합계 {{tonne}} tCO2e. 원문은 배출량만 제공하고 활동 데이터와 계수가 없어 아래에는 표시되지 않습니다.",
+  activity_ledger_empty_after_import:
+    "활동 데이터가 아직 없습니다. 가져온 보고서는 배출량만 제공합니다. 건별 활동 데이터와 계수가 필요하면 대화에서 제공하거나 장부에서 증빙 데이터를 가져오세요.",
   activity_ledger_empty:
     "활동 데이터가 아직 없습니다. 채팅에서 전력 사용량, 연료 사용량 등을 알려주거나 청구서를 업로드하면 자동으로 기록됩니다.",
   activity_ledger_collapse: "활동 데이터 접기",
@@ -229,11 +262,24 @@ export const carbonChatbot = {
   chart_frozen:
     "⚠ 질량 보존 검증에 통과하지 못해 차트가 동결되었습니다. 대화에서 재고 차이를 해명하면 자동으로 생성됩니다.",
   chart_sankey_chat_node: "대화/첨부로 신고됨",
+  chart_sankey_period_unknown: "기간 미기재",
+  chart_sankey_period_collapsed:
+    "기간이 2개 연도를 초과하여 월별 계층을 생략했습니다(월별은 추세 차트 참조)",
   chart_imported_sankey_title:
-    "온실가스 배출 흐름(원문 전재, 지역 기준, tCO2e/년)",
+    "배출 분류: 전사 → 스코프 → 세부 범주 (원문 그대로, 위치 기준, tCO2e/년)",
   chart_imported_sankey_excluded: "그래프에 없는 항목(NA/NS 또는 0)",
+  chart_imported_sankey_no_ledger:
+    "보고서는 가져왔지만 원장에 사용할 수 있는 데이터가 없어 배출 흐름도를 그릴 수 없습니다. 생키 다이어그램과 시스템 집계표의 유일한 출처는 표3.8(회사별 온실가스 배출량)이며 이번에는 가져오지 못했습니다. 제3장이 정상적으로 분석되었는지 확인해 주세요. 분석 실패로 표시된 경우 미리보기 카드의 「실패한 장 재시도」로 다시 가져오고, 서버 로그에서 해당 표가 폐기된 이유를 확인해 주세요.",
   chart_imported_sankey_collapsed:
-    "노드가 너무 많아 2단계(사업장 → 범주)로 축약했습니다",
+    "노드가 너무 많아 1개 층으로 축소했습니다 (전사 → 스코프)",
+  chart_imported_top_items_title:
+    "배출 흐름: 전사 → 상위 9개 배출 항목과 기타(원문 전재, 지역 기준, tCO2e/년)",
+  chart_imported_sankey_other: "기타",
+  // Info: (20260807 - Tzuhan) 分類圖抽掉廠址層(屏東佔 97%,同圖畫不出比重);廠址改列小計
+  chart_imported_sankey_site_totals: "사업장별 소계 (tCO2e/년, 전사 대비 비중)",
+  chart_imported_sankey_ghg_mapping: "하위 코드와 GHG Protocol 범주 대조",
+  chart_imported_sankey_below_threshold: "비중이 작아 미표시(tCO2e/년)",
+  chart_imported_sankey_organization: "전사",
   book_bind_pending_unlock:
     "장부 세션이 생성되었습니다. 암호화 대화를 잠금 해제하면 장부 바인딩이 완료됩니다(증빙 가져오기와 증거 체인은 바인딩 후 사용 가능)",
   book_bind_done:

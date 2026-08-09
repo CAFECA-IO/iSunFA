@@ -14,6 +14,36 @@ interface IRequestOptions extends RequestInit {
   query?: Record<string, string | number | boolean | undefined>;
 }
 
+/**
+ * Info: (20260806 - Tzuhan) 保活式串流端點的回應信封解封。
+ *
+ * 那些端點(見 @/lib/utils/streaming_response)為了繞開閘道 60 秒的**閒置**逾時,
+ * 一開始就送出 200 表頭,失敗只能寫在信封的 `success` / `errorCode` 裡。
+ * 於是 `request()` 不會拋 —— **只看 HTTP 狀態會把失敗當成成功**,
+ * 而那個表現(沒結果、也沒錯誤、console 一片乾淨)比原本的 504 更難查。
+ *
+ * 這裡把信封裡的失敗轉回 `ApiError` 拋出,好處是呼叫端的既有 catch 路徑
+ * (重試清單、退回送全文、退避重試)語意完全不變,而且 `isQuotaApiError` /
+ * `isTimeoutApiError` / `isRateLimitedApiError` 這些型別守衛讀的正是 `data.errorCode`,
+ * 因此額度與逾時的分類照樣成立。
+ *
+ * `status` 帶 200 是誠實的:HTTP 那層真的成功了,失敗在應用層 ——
+ * 所以分類一律走 `errorCode`,不要拿 status 去判這類錯誤。
+ */
+export interface IEnvelopeLike<T> {
+  success?: boolean;
+  errorCode?: string;
+  message?: string;
+  payload: T | null;
+}
+
+export const unwrapEnvelope = <T>(envelope: IEnvelopeLike<T>): T | null => {
+  if (envelope.success === false) {
+    throw new ApiError(envelope.message || "Request failed", 200, envelope);
+  }
+  return envelope.payload;
+};
+
 export async function request<T = unknown>(
   url: string,
   options: IRequestOptions = {},
@@ -76,4 +106,34 @@ export async function request<T = unknown>(
       0,
     );
   }
+}
+
+/**
+ * Info: (20260807 - Emily) 保活式串流端點專用:發請求並直接拆信封
+ * (PR review 第 1 點)。
+ *
+ * ## 為什麼需要這個
+ *
+ * `/chat/carbon/import` 與 `/chat/carbon/diagram` 走保活式串流(先送 `\n` 撐住
+ * 閘道的 60 秒閒置逾時),代價是 **HTTP 狀態碼從一開始就鎖成 200** ——
+ * 失敗只存在於信封的 `success: false` 裡。
+ *
+ * 也就是說,對這兩條端點直接用 `request()` 的人會拿到一個「成功」的回應,
+ * 而裡面是失敗。表現是「沒結果、沒錯誤、console 一片乾淨」——
+ * 比它想取代的那個 504 更難查。
+ *
+ * 目前所有呼叫點都記得接 `unwrapEnvelope`,但那是靠**作者知道**,不是靠機制。
+ * 把兩步併成一步之後,錯誤用法不再是「忘了加一行」,而是要**刻意**繞過去。
+ *
+ * ## 這不是把 request() 取代掉
+ *
+ * 一般端點仍然用 `request()`:它們的失敗在 HTTP 狀態碼上,拆信封是多餘的。
+ * 這支只服務「狀態碼不能表達失敗」的那一類端點。
+ */
+export async function requestEnvelope<T = unknown>(
+  url: string,
+  options: IRequestOptions = {},
+): Promise<T | null> {
+  const envelope = await request<IEnvelopeLike<T>>(url, options);
+  return unwrapEnvelope(envelope);
 }

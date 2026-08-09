@@ -3,6 +3,7 @@
 
 import { z } from "zod";
 import {
+  CARBON_REPORT_DRAFT_MAX_CONTENT_CHARS,
   CARBON_REPORT_DRAFT_STORAGE_VERSION,
   ParagraphOriginEnum,
 } from "@/constants/carbon_chatbot";
@@ -38,7 +39,15 @@ export const CarbonReportDataSchema = z.object({
   // Info: (20260720 - Tzuhan) #23 改字串化 Decimal;coerce 相容既有草稿的 number
   totalEmissions: z.coerce.string().max(60),
   // Info: (20260716 - Tzuhan) 報告全文權威來源(零改動保證;上限對齊密文欄位)
-  rawMarkdown: z.string().max(2_000_000).optional(),
+  // Info: (20260807 - Emily) 上限改引常數:前端預檢與此處必須是同一個數字,否則預檢形同虛設
+  rawMarkdown: z.string().max(CARBON_REPORT_DRAFT_MAX_CONTENT_CHARS).optional(),
+  // Info: (20260804 - Tzuhan) 匯入來歷(選填以相容既有草稿;不持久化就會隨編輯蒸發)
+  importedFrom: z
+    .object({
+      fileName: z.string().min(1).max(300),
+      importedAt: z.string().min(1).max(40),
+    })
+    .optional(),
 });
 
 export type CarbonReportDataPayload = z.infer<typeof CarbonReportDataSchema>;
@@ -66,13 +75,20 @@ export const CarbonReportDraftPutSchema = z
     recipientPublicKey: z.string().min(1).max(300).optional(),
     envelope: z
       .object({
-        encryptedContent: z.string().min(1).max(2_000_000),
+        encryptedContent: z
+          .string()
+          .min(1)
+          .max(CARBON_REPORT_DRAFT_MAX_CONTENT_CHARS),
         ephemeralPublicKey: z.string().max(300).optional(),
         keyDerivationHint: z.string().min(1).max(200),
         algorithm: z.string().min(1).max(100),
       })
       .optional(),
-    plainContent: z.string().min(1).max(2_000_000).optional(),
+    plainContent: z
+      .string()
+      .min(1)
+      .max(CARBON_REPORT_DRAFT_MAX_CONTENT_CHARS)
+      .optional(),
   })
   .refine((data) => Boolean(data.envelope) !== Boolean(data.plainContent), {
     message: "exactly one of envelope or plainContent is required",

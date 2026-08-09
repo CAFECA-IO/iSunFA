@@ -197,3 +197,54 @@ describe("stripLlmTables 與原文表格共存", () => {
     expect(stripLlmTables(content)).toContain("| a | b |");
   });
 });
+
+/**
+ * Info: (20260804 - Tzuhan) 表頭列不在第一行的表格必須收下(20260804 放寬)。
+ *
+ * 原檢查要求分隔列剛好是第二個非空行,等於假設模型照錄時第一行一定是表頭。
+ * 實測不成立:表3.8 與表3.4 都被判 not_a_table 整張丟掉,
+ * 而表3.8 是桑基圖唯一的資料來源 —— 圖整張消失,報告裡卻只是少一張。
+ */
+describe("表頭列不在第一行", () => {
+  const withHead = (head: string): ICarbonSourceTable => ({
+    tableNo: "表3.8",
+    caption: "各公司溫室氣體各類別排放量統計表",
+    sourcePages: [42, 44],
+    markdown: `${head}| 報告邊界 | 排放量 |\n| --- | --- |\n| 1.1 固定式燃燒 | 0.4375 |`,
+  });
+
+  it("開頭多一行原文標題仍是表格", () => {
+    const result = validateSourceTables([
+      withHead("表3.8 各公司溫室氣體各類別排放量統計表\n"),
+    ]);
+    expect(result.isValid).toBe(true);
+  });
+
+  it("開頭多一行廠址標籤仍是表格", () => {
+    const result = validateSourceTables([withHead("(1) 總公司\n")]);
+    expect(result.isValid).toBe(true);
+  });
+
+  it("開頭有空行仍是表格", () => {
+    const result = validateSourceTables([withHead("\n\n")]);
+    expect(result.isValid).toBe(true);
+  });
+
+  /**
+   * Info: (20260804 - Tzuhan) 放寬不等於放行散文:分隔列的形狀很特定,
+   * 沒有「表頭列 + 緊接分隔列」這一組就仍然不算表格。
+   */
+  it("沒有分隔列的純文字仍然不是表格", () => {
+    const result = validateSourceTables([
+      {
+        tableNo: "表3.8",
+        caption: "x",
+        sourcePages: [42],
+        markdown:
+          "本節說明各公司排放量。\n| 這行有管線符號但下一行不是分隔列 |\n又一段文字。",
+      },
+    ]);
+    expect(result.isValid).toBe(false);
+    expect(result.reason).toBe(SourceTableRejectReasonEnum.NOT_A_TABLE);
+  });
+});

@@ -1,5 +1,7 @@
 # [BUG] - MissionRecorder 以 taskId 子字串反查 Order,鏈重置後無聲寫錯帳
 
+> **狀態**:✅ 已完成 2026-07-28(commit `09967c7d5`)
+
 ## Summary
 
 **症狀**:分析任務在檔案系統已完整跑完(`missions/<addr>_<taskId>/close.md` Approved、`issues/<addr>_<taskId>/approved.0.md` 存在),但 UI 歷史報告永遠顯示 `executing`;即使手動把 Order 改成 COMPLETED,「載入」仍打不開——因為 `analysis.result` 是空的,結果被寫進**別張 Order 的 analysis**。

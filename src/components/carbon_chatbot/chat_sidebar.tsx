@@ -402,7 +402,11 @@ export function ChatSidebar({
 
       {/* Info: (20260730 - Tzuhan) 已封存會話的還原入口:預設收合,展開才載入(封存的意義就是不佔視線) */}
       {onFetchArchivedSessions && onRestoreSession && (
-        <div className="border-t border-gray-100 px-4 py-3">
+        /**
+         * Info: (20260805 - Tzuhan) shrink-0:這一塊在 flex-1 捲動區**之外**,
+         * 不可被上方的歷史清單壓縮 —— 被壓縮時展開箭頭會跟著消失,使用者連收合都做不到。
+         */
+        <div className="shrink-0 border-t border-gray-100 px-4 py-3">
           <button
             type="button"
             onClick={async () => {
@@ -427,7 +431,18 @@ export function ChatSidebar({
           </button>
 
           {isArchivedOpen && (
-            <div className="mt-2 space-y-1 pl-6">
+            /**
+             * Info: (20260805 - Tzuhan) 封存清單自己捲動,不撐長整個側邊欄。
+             *
+             * 這一塊是 flex-1 捲動區的兄弟節點,而根容器沒有高度上限:
+             * 實測封存 16 筆時整個側邊欄被撐到超過視窗高度,
+             * 「設定」被推出畫面,而歷史清單自己的捲動條也失去意義
+             * (因為要捲的是外層頁面,不是它)。
+             *
+             * max-h-56 沿用 activity_ledger 的既有慣例;展開的切換鈕留在範圍外,
+             * 所以清單捲到底時仍看得到、按得到收合。
+             */
+            <div className="mt-2 max-h-56 space-y-1 overflow-y-auto pl-6">
               {isArchivedLoading && (
                 <p className="text-[11px] text-gray-400">
                   {t("carbon_chatbot.archived_loading")}

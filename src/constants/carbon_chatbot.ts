@@ -225,6 +225,14 @@ export const buildCarbonReportFileName = (title: string): string => {
 // Info: (20260714 - Tzuhan) 報告草稿與 session 索引的 localStorage key 與 schema 版本
 // Info: (20260715 - Luphia) 草稿權威來源已是 DB(E2EE);此 key 改作「未存檔安全快取」——編輯後即寫入本機,DB 確認保存後立即刪除,避免 debounce 保存前發生意外(當機/關頁)導致內容丟失
 export const CARBON_REPORT_DRAFT_STORAGE_VERSION = 1;
+
+/**
+ * Info: (20260806 - Tzuhan) 待匯入解析結果的持久化格式版本。
+ * 與草稿分開編號:兩者是不同生命週期的資料,格式各自演進;
+ * 版本不符時整筆丟棄(而非嘗試相容)—— 待匯入結果尚未落地,
+ * 重新上傳解析一次即可,不值得為它背相容邏輯的風險。
+ */
+export const CARBON_PENDING_IMPORT_STORAGE_VERSION = 1;
 export const buildCarbonReportDraftKey = (channel: string): string =>
   `carbon_report_draft_${channel}`;
 export const buildCarbonSessionsIndexKey = (address: string): string =>
@@ -232,6 +240,23 @@ export const buildCarbonSessionsIndexKey = (address: string): string =>
 
 // Info: (20260714 - Tzuhan) 報告草稿自動保存的 debounce 間隔(ms)
 export const CARBON_REPORT_AUTOSAVE_DEBOUNCE_MS = 2000;
+
+/**
+ * Info: (20260807 - Emily) 草稿內容上限(字元)。單一來源 —— validator(envelope.encryptedContent /
+ * plainContent / rawMarkdown)與前端送出前的預檢都引這一個常數。
+ *
+ * 原本 2_000_000 這個數字在 validator 裡寫死三次,而前端完全不知道它存在:
+ * 超過就是一個 400 VL_SCHEMA_ERROR,畫面上只剩一個「保存異常」小圖示,
+ * 代價是幾分鐘的 LLM 成果無聲消失(issue_drafts/inventory_table_import/12)。
+ */
+export const CARBON_REPORT_DRAFT_MAX_CONTENT_CHARS = 2_000_000;
+
+/**
+ * Info: (20260808 - Luphia) 加密模式的預檢不再用固定倍率估
+ * (原 `CARBON_REPORT_DRAFT_ENCRYPTED_SIZE_RATIO = 1.4` 已移除)。
+ * 密文長度取決於明文的 UTF-8 位元組數,固定倍率對中文內容會低估到 3 倍;
+ * 精確換算收斂到 `projectedEciesContentChars`(chatroom_ecies.ts)。
+ */
 
 // Info: (20260714 - Tzuhan) 草稿狀態列錯誤提示的自動消失時間(ms)
 export const CARBON_DRAFT_NOTICE_DISMISS_MS = 8000;
@@ -352,4 +377,363 @@ export const buildDraftProgressNotice = (
     DRAFT_PROGRESS_TEMPLATES[language ?? ""] ??
     DRAFT_PROGRESS_TEMPLATES["zh-TW"];
   return template(title, current, total);
+};
+
+/**
+ * Info: (20260805 - Tzuhan) 匯入完成的摘要訊息。
+ *
+ * 為什麼要有:匯入原本**全程不產生任何聊天訊息** —— 一份 64 頁的報告落地 33 個段落,
+ * 對話裡卻只剩招呼語。使用者無從知道這個會話曾經匯入過什麼、對帳過不過、哪幾章失敗。
+ * 段落層的 origin 會被編輯抹掉,報告層的 importedFrom 只有檔名與時間;
+ * 「當時發生了什麼」需要一則按時序排在對話裡的記錄。
+ *
+ * Info: (20260805 - Tzuhan) 文案由**伺服端**組出而非前端傳入:
+ * 入庫的內容是系統的陳述,不能讓呼叫端塞任意字串進使用者的對話紀錄。
+ * 前端只送事實(檔名、節數、對帳結果),句子在這裡組。
+ */
+export enum CarbonImportReconciliationStateEnum {
+  /** Info: (20260805 - Tzuhan) 表3.8 已入帳,三層勾稽通過 */
+  RECONCILED = "RECONCILED",
+  /** Info: (20260805 - Tzuhan) 有表3.8 但勾稽未過,一筆都沒入帳 */
+  BLOCKED = "BLOCKED",
+  /** Info: (20260805 - Tzuhan) 這次匯入沒有可入帳的表3.8 */
+  NONE = "NONE",
+}
+
+export interface ICarbonImportSummary {
+  fileName: string;
+  /** Info: (20260805 - Tzuhan) 逐字匯入的段落數 */
+  importedCount: number;
+  /** Info: (20260805 - Tzuhan) 由 gap-fill 補寫的段落數 */
+  draftedCount: number;
+  reconciliation: CarbonImportReconciliationStateEnum;
+  /** Info: (20260805 - Tzuhan) 解析失敗的章節標題;空陣列表示全部成功 */
+  failedChapters: string[];
+}
+
+const IMPORT_RECONCILIATION_TEMPLATES: Record<
+  string,
+  Record<CarbonImportReconciliationStateEnum, string>
+> = {
+  "zh-TW": {
+    RECONCILED: "表3.8 三層勾稽通過,已寫入帳本。",
+    BLOCKED: "表3.8 勾稽未通過,一筆都沒有寫入帳本(見該節的對帳說明)。",
+    NONE: "本次沒有可入帳的表3.8。",
+  },
+  "zh-CN": {
+    RECONCILED: "表3.8 三层勾稽通过,已写入账本。",
+    BLOCKED: "表3.8 勾稽未通过,一笔都没有写入账本(见该节的对账说明)。",
+    NONE: "本次没有可入账的表3.8。",
+  },
+  en: {
+    RECONCILED:
+      "Table 3.8 passed all three reconciliation levels and was written to the ledger.",
+    BLOCKED:
+      "Table 3.8 failed reconciliation — nothing was written to the ledger (see the reconciliation note in that section).",
+    NONE: "No ledger-eligible Table 3.8 in this import.",
+  },
+  ja: {
+    RECONCILED: "表3.8 は三層の照合をすべて通過し、台帳に記録しました。",
+    BLOCKED:
+      "表3.8 の照合が通らなかったため、台帳には 1 件も記録していません（該当セクションの照合説明をご確認ください）。",
+    NONE: "今回、台帳に記録できる表3.8 はありません。",
+  },
+  ko: {
+    RECONCILED: "표3.8 이 3단계 대조를 모두 통과해 원장에 기록했습니다.",
+    BLOCKED:
+      "표3.8 대조가 통과하지 못해 원장에 한 건도 기록하지 않았습니다(해당 절의 대조 설명 참조).",
+    NONE: "이번 가져오기에는 원장에 기록할 표3.8 이 없습니다.",
+  },
+};
+
+/**
+ * Info: (20260806 - Tzuhan) 匯入之後可以接下去做什麼(決定性列舉)。
+ *
+ * 匯入摘要原本是一段**單向的系統陳述**:講完就結束,對話停在那裡。
+ * 而使用者匯入一份報告的目的不是「讓它躺在系統裡」,是要有人幫他看 ——
+ * 以外部查證的標準檢視、分析排放結構、找出揭露缺口。
+ * 摘要不接上這一步,就等於把「接下來呢」丟回給使用者自己想。
+ *
+ * **為什麼是固定列舉而不是讓 LLM 開場:**
+ * 開場白若由 LLM 生成,它會順手概括「這份報告如何」——
+ * 而它此刻只看到 33 段落的計數,沒看過內容,那個概括必然是捏造的。
+ * 這裡只提供**可以做什麼**(系統確知的能力),不提供**報告怎麼樣**(要分析過才知道)。
+ *
+ * 三個選項各自對應一種真實需求,枚舉值同時是「使用者點下去會送出什麼」的鍵,
+ * 讓摘要文案與輸入列上方的建議按鈕**共用同一份定義** —— 兩邊各寫一份遲早不一致,
+ * 而不一致的表現是「按鈕做的事跟它上面那句話說的不一樣」。
+ */
+export enum CarbonImportFollowUpEnum {
+  /** Info: (20260806 - Tzuhan) 以外部查證的標準逐項檢視(ISO 14064-1 必要揭露項) */
+  EXTERNAL_REVIEW = "EXTERNAL_REVIEW",
+  /** Info: (20260806 - Tzuhan) 分析排放結構(範疇/類別/廠址的占比與熱點) */
+  ANALYZE_STRUCTURE = "ANALYZE_STRUCTURE",
+  /** Info: (20260806 - Tzuhan) 找出揭露缺口與待補項 */
+  FIND_GAPS = "FIND_GAPS",
+}
+
+// Info: (20260806 - Tzuhan) 選項順序固定(決定性):由嚴到寬 —— 先查核、再分析、再補缺
+export const CARBON_IMPORT_FOLLOW_UPS: readonly CarbonImportFollowUpEnum[] = [
+  CarbonImportFollowUpEnum.EXTERNAL_REVIEW,
+  CarbonImportFollowUpEnum.ANALYZE_STRUCTURE,
+  CarbonImportFollowUpEnum.FIND_GAPS,
+];
+
+/**
+ * Info: (20260806 - Tzuhan) 後續選項的文案。**同時是使用者點下去送出的那句話** ——
+ * 按鈕上的字與送出的內容一致,使用者才知道自己要求了什麼
+ * (按鈕寫一句、實際送另一句,是對話紀錄裡最難查的一種不一致)。
+ */
+const IMPORT_FOLLOW_UP_TEMPLATES: Record<
+  string,
+  Record<CarbonImportFollowUpEnum, string>
+> = {
+  "zh-TW": {
+    EXTERNAL_REVIEW: "以外部查證的標準逐項檢視這份報告,指出不符之處。",
+    ANALYZE_STRUCTURE: "分析這份報告的排放結構,指出占比最高的熱點。",
+    FIND_GAPS: "找出這份報告的揭露缺口與待補項。",
+  },
+  "zh-CN": {
+    EXTERNAL_REVIEW: "以外部核查的标准逐项检视这份报告,指出不符之处。",
+    ANALYZE_STRUCTURE: "分析这份报告的排放结构,指出占比最高的热点。",
+    FIND_GAPS: "找出这份报告的披露缺口与待补项。",
+  },
+  en: {
+    EXTERNAL_REVIEW:
+      "Review this report against external verification criteria and point out non-conformities.",
+    ANALYZE_STRUCTURE:
+      "Analyse the emission structure of this report and identify the largest hotspots.",
+    FIND_GAPS: "Identify the disclosure gaps and outstanding items.",
+  },
+  ja: {
+    EXTERNAL_REVIEW:
+      "外部検証の基準に沿ってこの報告書を項目ごとに点検し、不適合を指摘してください。",
+    ANALYZE_STRUCTURE:
+      "この報告書の排出構造を分析し、比率の高いホットスポットを指摘してください。",
+    FIND_GAPS: "この報告書の開示ギャップと未対応項目を洗い出してください。",
+  },
+  ko: {
+    EXTERNAL_REVIEW:
+      "외부 검증 기준에 따라 이 보고서를 항목별로 점검하고 부적합 사항을 지적해 주세요.",
+    ANALYZE_STRUCTURE:
+      "이 보고서의 배출 구조를 분석하고 비중이 가장 큰 핫스팟을 지적해 주세요.",
+    FIND_GAPS: "이 보고서의 공시 누락 항목과 보완 필요 항목을 찾아 주세요.",
+  },
+};
+
+// Info: (20260806 - Tzuhan) 未知語系一律退回 zh-TW(與摘要同一慣例)
+export const buildImportFollowUpPrompt = (
+  language: string | undefined,
+  followUp: CarbonImportFollowUpEnum,
+): string =>
+  (IMPORT_FOLLOW_UP_TEMPLATES[language ?? ""] ??
+    IMPORT_FOLLOW_UP_TEMPLATES["zh-TW"])[followUp];
+
+// Info: (20260806 - Tzuhan) 摘要末尾那句「接下來可以…」的抬頭
+const IMPORT_FOLLOW_UP_HEADINGS: Record<string, string> = {
+  "zh-TW": "接下來我可以幫你:",
+  "zh-CN": "接下来我可以帮你:",
+  en: "Next, I can help you:",
+  ja: "次に、以下のお手伝いができます：",
+  ko: "다음으로 이런 도움을 드릴 수 있습니다:",
+};
+
+/**
+ * Info: (20260806 - Tzuhan) 把三個選項編號列在摘要末尾。
+ * 編號是刻意的:使用者可以直接回「1」,不必把整句打出來 ——
+ * 而按鈕不見得每次都在(捲動、行動版),編號在對話紀錄裡永遠都在。
+ */
+const buildFollowUpBlock = (language: string | undefined): string => {
+  const heading =
+    IMPORT_FOLLOW_UP_HEADINGS[language ?? ""] ??
+    IMPORT_FOLLOW_UP_HEADINGS["zh-TW"];
+  const options = CARBON_IMPORT_FOLLOW_UPS.map(
+    (followUp, index) =>
+      `${index + 1}. ${buildImportFollowUpPrompt(language, followUp)}`,
+  );
+  return [heading, ...options].join("\n");
+};
+
+const IMPORT_SUMMARY_TEMPLATES: Record<
+  string,
+  (summary: ICarbonImportSummary, reconciliation: string) => string
+> = {
+  "zh-TW": (s, reconciliation) =>
+    [
+      `已匯入「${s.fileName}」:逐字落地 ${s.importedCount} 節、AI 補寫草稿 ${s.draftedCount} 節。`,
+      reconciliation,
+      s.failedChapters.length > 0
+        ? `以下章節解析失敗,可重新匯入補齊:${s.failedChapters.join("、")}。`
+        : "",
+      "匯入的內容一律標為未查核,請逐段確認後再定稿。",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  "zh-CN": (s, reconciliation) =>
+    [
+      `已导入「${s.fileName}」:逐字落地 ${s.importedCount} 节、AI 补写草稿 ${s.draftedCount} 节。`,
+      reconciliation,
+      s.failedChapters.length > 0
+        ? `以下章节解析失败,可重新导入补齐:${s.failedChapters.join("、")}。`
+        : "",
+      "导入的内容一律标为未核对,请逐段确认后再定稿。",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  en: (s, reconciliation) =>
+    [
+      `Imported "${s.fileName}": ${s.importedCount} section(s) transcribed verbatim, ${s.draftedCount} drafted by AI.`,
+      reconciliation,
+      s.failedChapters.length > 0
+        ? `These chapters failed to parse and can be re-imported: ${s.failedChapters.join(", ")}.`
+        : "",
+      "Everything imported is marked unverified — please review each section before finalising.",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  ja: (s, reconciliation) =>
+    [
+      `「${s.fileName}」をインポートしました：${s.importedCount} セクションを原文どおり、${s.draftedCount} セクションを AI が下書き。`,
+      reconciliation,
+      s.failedChapters.length > 0
+        ? `次の章は解析に失敗しました。再インポートで補完できます：${s.failedChapters.join("、")}。`
+        : "",
+      "インポートした内容はすべて未確認として扱われます。各セクションをご確認のうえ確定してください。",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  ko: (s, reconciliation) =>
+    [
+      `「${s.fileName}」을(를) 가져왔습니다: ${s.importedCount}개 절은 원문 그대로, ${s.draftedCount}개 절은 AI 초안.`,
+      reconciliation,
+      s.failedChapters.length > 0
+        ? `다음 장은 분석에 실패했습니다. 다시 가져와 보완할 수 있습니다: ${s.failedChapters.join(", ")}.`
+        : "",
+      "가져온 내용은 모두 미검증으로 표시됩니다. 각 절을 확인한 뒤 확정해 주세요.",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+};
+
+/**
+ * Info: (20260806 - Tzuhan) 「解析完成、尚未匯入」的訊息。
+ *
+ * 為什麼與匯入摘要分成兩則:兩者陳述的是**不同的事實**。
+ * 摘要說「已經寫進報告了」,這一則說「解析好了,還沒寫進去,你決定」——
+ * 把兩者用同一句話含混帶過,使用者會以為內容已經在報告裡。
+ *
+ * 這則訊息存在的理由是使用者的實測:解析跑完幾分鐘,當下沒有按套用就什麼都不留,
+ * 重載後對話裡沒有任何痕跡,而那幾分鐘的 LLM 呼叫也白燒了。
+ * 訊息入庫(E2EE)+ 待匯入結果入庫,兩者一起才讓「稍後再決定」真的可行。
+ */
+export interface ICarbonImportParsedSummary {
+  fileName: string;
+  /** Info: (20260806 - Tzuhan) 待確認的逐字段落數 */
+  pendingCount: number;
+  /** Info: (20260806 - Tzuhan) 待確認的 AI 草稿段落數 */
+  draftedCount: number;
+  /** Info: (20260806 - Tzuhan) 一併解析出的活動數據筆數(尚未入帳) */
+  activityCount: number;
+  failedChapters: string[];
+}
+
+const IMPORT_PARSED_TEMPLATES: Record<
+  string,
+  (summary: ICarbonImportParsedSummary) => string
+> = {
+  "zh-TW": (s) =>
+    [
+      `報告解析完成:「${s.fileName}」。`,
+      `待確認 ${s.pendingCount} 節逐字內容、${s.draftedCount} 節 AI 草稿,另有 ${s.activityCount} 筆活動數據。`,
+      s.failedChapters.length > 0
+        ? `以下章節解析失敗,可在預覽卡重試:${s.failedChapters.join("、")}。`
+        : "",
+      "解析結果已保存,尚未寫入報告 —— 你可以現在檢視並匯入,也可以稍後回到這個對話再決定。",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  "zh-CN": (s) =>
+    [
+      `报告解析完成:「${s.fileName}」。`,
+      `待确认 ${s.pendingCount} 节逐字内容、${s.draftedCount} 节 AI 草稿,另有 ${s.activityCount} 笔活动数据。`,
+      s.failedChapters.length > 0
+        ? `以下章节解析失败,可在预览卡重试:${s.failedChapters.join("、")}。`
+        : "",
+      "解析结果已保存,尚未写入报告 —— 你可以现在查看并导入,也可以稍后回到这个对话再决定。",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  en: (s) =>
+    [
+      `Finished parsing "${s.fileName}".`,
+      `${s.pendingCount} verbatim section(s) and ${s.draftedCount} AI draft(s) are waiting for your confirmation, plus ${s.activityCount} activity record(s).`,
+      s.failedChapters.length > 0
+        ? `These chapters failed to parse and can be retried from the preview card: ${s.failedChapters.join(", ")}.`
+        : "",
+      "The parsed result is saved but not yet written into the report — review and import it now, or come back to this conversation later.",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  ja: (s) =>
+    [
+      `「${s.fileName}」の解析が完了しました。`,
+      `原文どおりの ${s.pendingCount} セクションと AI 下書き ${s.draftedCount} セクションが確認待ちです。活動データは ${s.activityCount} 件です。`,
+      s.failedChapters.length > 0
+        ? `次の章は解析に失敗しました。プレビューから再試行できます：${s.failedChapters.join("、")}。`
+        : "",
+      "解析結果は保存済みですが、報告書にはまだ書き込まれていません。今すぐ確認してインポートするか、後でこの会話に戻って決めることもできます。",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  ko: (s) =>
+    [
+      `「${s.fileName}」 분석을 완료했습니다.`,
+      `원문 ${s.pendingCount}개 절과 AI 초안 ${s.draftedCount}개 절이 확인을 기다리고 있으며, 활동 데이터는 ${s.activityCount}건입니다.`,
+      s.failedChapters.length > 0
+        ? `다음 장은 분석에 실패했습니다. 미리보기에서 다시 시도할 수 있습니다: ${s.failedChapters.join(", ")}.`
+        : "",
+      "분석 결과는 저장되었지만 아직 보고서에 기록되지 않았습니다 — 지금 확인해 가져오거나, 나중에 이 대화로 돌아와 결정할 수 있습니다.",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+};
+
+// Info: (20260806 - Tzuhan) 未知語系一律退回 zh-TW(與摘要同一慣例)
+export const buildImportParsedNotice = (
+  language: string | undefined,
+  summary: ICarbonImportParsedSummary,
+): string =>
+  (IMPORT_PARSED_TEMPLATES[language ?? ""] ?? IMPORT_PARSED_TEMPLATES["zh-TW"])(
+    summary,
+  );
+
+/**
+ * Info: (20260806 - Tzuhan) 匯入通知的種類。
+ * 兩則訊息陳述不同的事實(已寫入 / 尚未寫入),故以 enum 明確區分,
+ * 而不是靠欄位有無去猜 —— 靠猜的話,少送一個欄位就會說出錯的事實。
+ */
+export enum CarbonImportNoticeKindEnum {
+  /** Info: (20260806 - Tzuhan) 解析完成、待人工確認(尚未寫入報告) */
+  PARSED = "PARSED",
+  /** Info: (20260806 - Tzuhan) 已套用寫入報告 */
+  SUMMARY = "SUMMARY",
+}
+
+export const buildImportSummaryNotice = (
+  language: string | undefined,
+  summary: ICarbonImportSummary,
+): string => {
+  const key = language ?? "";
+  const reconciliation = (IMPORT_RECONCILIATION_TEMPLATES[key] ??
+    IMPORT_RECONCILIATION_TEMPLATES["zh-TW"])[summary.reconciliation];
+  const template =
+    IMPORT_SUMMARY_TEMPLATES[key] ?? IMPORT_SUMMARY_TEMPLATES["zh-TW"];
+  /**
+   * Info: (20260806 - Tzuhan) 摘要之後接上「接下來可以做什麼」。
+   * 講完事實就停住等於把「接下來呢」丟回給使用者 ——
+   * 而他匯入報告的目的本來就是要有人幫他看。
+   */
+  return [template(summary, reconciliation), "", buildFollowUpBlock(key)].join(
+    "\n",
+  );
 };

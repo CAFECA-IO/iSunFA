@@ -18,6 +18,7 @@ import {
 import { toLedgerEntries } from "@/lib/carbon_table38.ledger";
 import {
   buildReconciliationDisclosure,
+  DISCLOSURE_DEFAULT_LABELS,
   type IDisclosureLabels,
 } from "@/lib/carbon_table38.disclosure";
 import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
@@ -40,6 +41,11 @@ export interface IImportedLedgerResult {
   parsed: IParsedTable38 | null;
   /** Info: (20260803 - Tzuhan) 有表但沒入帳的理由。與「沒有表」必須分得開 */
   blockedReason: string | null;
+  /**
+   * Info: (20260804 - Tzuhan) 該有表3.8 卻沒拿到。與「使用者沒勾選任何表」必須分得開:
+   * 前者是異常(通常是頁碼切片把它切掉了),後者只是還沒有可入帳的來源。
+   */
+  missingLedgerTable: boolean;
 }
 
 const EMPTY_RESULT: IImportedLedgerResult = {
@@ -48,6 +54,7 @@ const EMPTY_RESULT: IImportedLedgerResult = {
   reconciliation: null,
   parsed: null,
   blockedReason: null,
+  missingLedgerTable: false,
 };
 
 const findTable = (
@@ -72,7 +79,32 @@ export function buildImportedLedger(
   input: IBuildImportedLedgerInput,
 ): IImportedLedgerResult {
   const table38 = findTable(input.sourceTables, LEDGER_SOURCE_TABLE_NO);
-  if (!table38) return EMPTY_RESULT;
+  if (!table38) {
+    /**
+     * Info: (20260804 - Tzuhan) 缺表3.8 有兩種情形,不可混為一談。
+     *
+     * 使用者沒勾選,或這節本來就不是排放總量節 —— 不是錯誤,靜默即可。
+     * 但**同節有表3.6/3.7 卻沒有表3.8**,那就是該有卻沒有:
+     * 這三張在原文是同一節連續的表,有前者沒後者只可能是中途掉了
+     * (實測是頁碼切片把跨頁的表3.8 切掉)。
+     *
+     * 差別很大:表3.8 是桑基圖與系統數據表格**唯一**的資料來源,
+     * 它沒進來的表現卻只是「少一張圖」,畫面上毫無異狀。
+     * 用同節的鄰表當判準,而不是段落 id —— 純函數不該知道大綱結構。
+     */
+    const hasCompanyTotalTable =
+      findTable(input.sourceTables, COMPANY_TOTAL_TABLE_NO_LOCATION) !==
+        undefined ||
+      findTable(input.sourceTables, COMPANY_TOTAL_TABLE_NO_MARKET) !==
+        undefined;
+    if (!hasCompanyTotalTable) return EMPTY_RESULT;
+    const labels = input.labels ?? DISCLOSURE_DEFAULT_LABELS;
+    return {
+      ...EMPTY_RESULT,
+      missingLedgerTable: true,
+      disclosure: `**${labels.heading}**\n\n> _⚠ ${labels.missingLedgerTable}_`,
+    };
+  }
 
   /**
    * Info: (20260803 - Tzuhan) 防禦性檢查:markdown 內不得含原文表格的錨點字樣。
@@ -121,5 +153,6 @@ export function buildImportedLedger(
     reconciliation,
     parsed,
     blockedReason,
+    missingLedgerTable: false,
   };
 }

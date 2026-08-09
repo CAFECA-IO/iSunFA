@@ -11,6 +11,29 @@ export interface ICreateChatroomMessageParams {
   keyDerivationHint: string;
 }
 
+/**
+ * Info: (20260806 - Tzuhan) 「最新改動」需要的關聯欄位。
+ *
+ * **`Chatroom.updatedAt` 不是活動訊號。** 它是 Prisma 的 `@updatedAt`,
+ * 只在 chatroom 這一列被 update 時才跳 —— 而全專案只有封存/還原會 update 它。
+ * 送訊息寫的是 ChatroomMessage、存報告寫的是 CarbonReportDraft、
+ * 盤查狀態寫的是 CarbonInventoryState,三者都不會碰到 chatroom 那一列。
+ *
+ * 所以「這個會話最後一次有動作是什麼時候」必須從關聯表取,
+ * 由 service 取四者的最大值(見 resolveLastActivityAt)。
+ *
+ * 只取最新一則訊息(take: 1)—— 要的是時間點,不是內容,也不該把整串訊息撈進來。
+ */
+const LAST_ACTIVITY_SELECT = {
+  messages: {
+    select: { createdAt: true },
+    orderBy: { createdAt: "desc" },
+    take: 1,
+  },
+  reportDraft: { select: { updatedAt: true } },
+  inventoryState: { select: { updatedAt: true } },
+} as const;
+
 export class ChatroomRepository {
   // Info: (20260712 - Luphia) 依 channel 取得或建立聊天室（upsert 避免併發競態）
   async findOrCreateByChannel(
@@ -94,6 +117,7 @@ export class ChatroomRepository {
         updatedAt: true,
         accountBookId: true,
         archivedAt: true,
+        ...LAST_ACTIVITY_SELECT,
       },
     });
   }
@@ -117,6 +141,7 @@ export class ChatroomRepository {
         // Info: (20260716 - Tzuhan) #52 前端據此切換保存模式(帳本=明文/個人=E2EE)
         accountBookId: true,
         archivedAt: true,
+        ...LAST_ACTIVITY_SELECT,
       },
     });
   }
