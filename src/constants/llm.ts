@@ -114,7 +114,9 @@ export interface IFaithBillingSetting {
  * **嚴禁改回 env 覆寫**——營運設定不屬部署參數，且非 NEXT_PUBLIC_ 的環境變數
  * 在 client bundle 讀不到，會使 server 與 client 算出不同結果。
  *
- * 計費規則：無條件進位、每輪最低 1 點；費率之對外揭露見服務條款 §3.4。
+ * 計費規則：無條件進位、每輪最低 1 點。服務條款 §3.4 刻意不載明費率數字
+ * （設定可由後台調整，寫死條款會失準），改以「服務內公告」為準——
+ * 該公告的正式落點尚待產品與法務指定，見設計書 §5.3 待辦。
  */
 export const DEFAULT_FAITH_BILLING: IFaithBillingSetting = {
   tokensPerCredit: 1000,
