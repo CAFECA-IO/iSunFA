@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Wallet, Gauge, Coins, ShieldAlert } from "lucide-react";
+import { Wallet, Gauge, Coins, ShieldAlert, AlertCircle } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { TEAM_WALLET_STATUS } from "@/constants/subscription_quota";
 
@@ -13,7 +13,12 @@ import { TEAM_WALLET_STATUS } from "@/constants/subscription_quota";
  * - FROZEN 告警（所有成員可見，消費會被擋）
  * 點數分配操作與各成員分配餘額改由成員清單承載（team/page.tsx），
  * 錢包資料由頁面單一 fetch 後傳入，本元件只負責訂閱額度的取得與呈現。
+ *
+ * 兩張卡片各自呈現載入 / 失敗狀態並可重試：載入失敗時**絕不靜默隱藏**——
+ * 靜默隱藏會讓「功能沒上」與「功能壞了」無從分辨，實際造成過多次誤判。
  */
+
+export type TeamWalletFetchStatus = "loading" | "error" | "ready";
 
 interface IQuotaWindow {
   limit: string;
@@ -37,7 +42,9 @@ export interface ITeamWalletInfo {
 interface ITeamWalletPanelProps {
   teamId: string;
   wallet: ITeamWalletInfo | null;
+  walletStatus: TeamWalletFetchStatus;
   isManager: boolean;
+  onRetryWallet: () => void;
 }
 
 /**
@@ -88,27 +95,94 @@ function QuotaMeter({
   );
 }
 
+/**
+ * Info: (20260809 - Luphia) 卡片外殼：統一承載載入骨架與失敗提示（含重試），
+ * 讓「還在載入」「載入失敗」「沒有資料」三種狀態在畫面上可分辨。
+ */
+function PanelCard({
+  title,
+  icon,
+  status,
+  onRetry,
+  headerExtra = null,
+  children,
+}: {
+  title: string;
+  icon: ReactNode;
+  status: TeamWalletFetchStatus;
+  onRetry: () => void;
+  headerExtra?: ReactNode;
+  children: ReactNode;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="mb-4 flex items-center justify-between">
+        <span className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+          {icon}
+          {title}
+        </span>
+        {status === "ready" && headerExtra}
+      </div>
+
+      {status === "loading" && (
+        <div className="animate-pulse space-y-3" aria-busy="true">
+          <div className="bg-surface-hover h-2 w-full rounded-full" />
+          <div className="bg-surface-hover h-2 w-2/3 rounded-full" />
+          <span className="sr-only">{t("common.loading")}</span>
+        </div>
+      )}
+
+      {status === "error" && (
+        <div className="flex items-center justify-between gap-2">
+          <span className="flex items-center gap-2 text-sm text-red-600">
+            <AlertCircle className="size-4 shrink-0" />
+            {t("team_management.wallet.load_failed")}
+          </span>
+          <button
+            onClick={onRetry}
+            className="shrink-0 rounded-lg border border-gray-200 px-3 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
+          >
+            {t("team_management.wallet.retry")}
+          </button>
+        </div>
+      )}
+
+      {status === "ready" && children}
+    </div>
+  );
+}
+
 export default function TeamWalletPanel({
   teamId,
   wallet,
+  walletStatus,
   isManager,
+  onRetryWallet,
 }: ITeamWalletPanelProps) {
   const { t } = useTranslation();
 
   const [subscription, setSubscription] = useState<ISubscriptionView | null>(
     null,
   );
+  const [subscriptionStatus, setSubscriptionStatus] =
+    useState<TeamWalletFetchStatus>("loading");
 
   const fetchSubscription = useCallback(async () => {
+    setSubscriptionStatus("loading");
     try {
       const res = await fetch(`/api/v1/user/team/${teamId}/subscription`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("dewt")}`,
         },
       }).then((r) => r.json());
-      if (res.success) setSubscription(res.payload);
+      if (!res.success) throw new Error(res.message || "subscription failed");
+      setSubscription(res.payload);
+      setSubscriptionStatus("ready");
     } catch (err) {
       console.error("[TeamWalletPanel] subscription fetch failed:", err);
+      setSubscriptionStatus("error");
     }
   }, [teamId]);
 
@@ -130,8 +204,6 @@ export default function TeamWalletPanel({
     return () => clearTimeout(timer);
   }, [subscription, fetchSubscription]);
 
-  if (!subscription && !wallet) return null;
-
   return (
     <div className="mt-8 border-t border-gray-100 pt-6">
       <h3 className="mb-4 flex items-center gap-2 text-lg font-medium text-gray-900">
@@ -147,17 +219,18 @@ export default function TeamWalletPanel({
       )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {subscription && (
-          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="mb-4 flex items-center justify-between">
-              <span className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                <Gauge className="size-4 shrink-0 text-orange-600" />
-                {t("team_management.wallet.quota_title")}
-              </span>
-              <span className="rounded-full bg-orange-600/10 px-2.5 py-0.5 text-xs font-semibold text-orange-600 uppercase">
-                {subscription.planId}
-              </span>
-            </div>
+        <PanelCard
+          title={t("team_management.wallet.quota_title")}
+          icon={<Gauge className="size-4 shrink-0 text-orange-600" />}
+          status={subscriptionStatus}
+          onRetry={fetchSubscription}
+          headerExtra={
+            <span className="rounded-full bg-orange-600/10 px-2.5 py-0.5 text-xs font-semibold text-orange-600 uppercase">
+              {subscription?.planId}
+            </span>
+          }
+        >
+          {subscription && (
             <div className="space-y-4">
               <QuotaMeter
                 label={t("team_management.wallet.quota_5h")}
@@ -168,21 +241,22 @@ export default function TeamWalletPanel({
                 window={subscription.quota.quotaWeek}
               />
             </div>
-          </div>
-        )}
+          )}
+        </PanelCard>
 
-        {isManager && wallet && (
-          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <span className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-              <Coins className="size-4 shrink-0 text-orange-600" />
-              {t("team_management.wallet.balance_title")}
-            </span>
-            <div className="mt-4">
+        {isManager && (
+          <PanelCard
+            title={t("team_management.wallet.balance_title")}
+            icon={<Coins className="size-4 shrink-0 text-orange-600" />}
+            status={walletStatus}
+            onRetry={onRetryWallet}
+          >
+            <div>
               <p className="text-xs text-gray-500">
                 {t("team_management.wallet.pool_balance")}
               </p>
               <p className="mt-1 text-2xl font-bold text-gray-900 tabular-nums">
-                {wallet.unallocatedBalance ?? "0"}
+                {wallet?.unallocatedBalance ?? "0"}
               </p>
             </div>
 
@@ -198,7 +272,7 @@ export default function TeamWalletPanel({
                 {t("team_management.wallet.buy_credits")}
               </Link>
             </div>
-          </div>
+          </PanelCard>
         )}
       </div>
     </div>

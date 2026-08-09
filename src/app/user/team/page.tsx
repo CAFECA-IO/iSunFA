@@ -23,6 +23,7 @@ import ConfirmModal from "@/components/common/confirm_modal";
 import InviteMemberModal from "@/components/team/invite_member_modal";
 import TeamWalletPanel, {
   type ITeamWalletInfo,
+  type TeamWalletFetchStatus,
 } from "@/components/team/team_wallet_panel";
 import AllocationModal from "@/components/team/allocation_modal";
 import {
@@ -74,6 +75,9 @@ export default function TeamManagementPage() {
 
   // Info: (20260809 - Luphia) 團隊錢包與分配操作（成員卡片上的分配 / 收回）
   const [teamWallet, setTeamWallet] = useState<ITeamWalletInfo | null>(null);
+  // Info: (20260809 - Luphia) 載入狀態外顯，讓「載入中」與「載入失敗」在畫面上可分辨
+  const [walletStatus, setWalletStatus] =
+    useState<TeamWalletFetchStatus>("loading");
   const [allocationModal, setAllocationModal] = useState<{
     member: ITeamMember;
     direction: AllocationDirection;
@@ -199,18 +203,26 @@ export default function TeamManagementPage() {
    * 一般成員的回應僅含自己的 myAllocationBalance（後端零信任收斂）。
    */
   const fetchTeamWallet = useCallback(async (teamId: string) => {
+    setWalletStatus("loading");
     try {
       const token = localStorage.getItem("dewt");
       const res = await fetch(`/api/v1/user/team/${teamId}/wallet`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const json = await res.json();
-      setTeamWallet(json.success ? json.payload : null);
+      if (!json.success) throw new Error(json.message || "wallet fetch failed");
+      setTeamWallet(json.payload);
+      setWalletStatus("ready");
     } catch (err) {
       console.error("Error fetching team wallet:", err);
       setTeamWallet(null);
+      setWalletStatus("error");
     }
   }, []);
+
+  const retryTeamWallet = useCallback(() => {
+    if (selectedTeamId) fetchTeamWallet(selectedTeamId);
+  }, [selectedTeamId, fetchTeamWallet]);
 
   useEffect(() => {
     setTeamWallet(null);
@@ -767,7 +779,9 @@ export default function TeamManagementPage() {
                   key={currentTeam.id}
                   teamId={currentTeam.id}
                   wallet={teamWallet}
+                  walletStatus={walletStatus}
                   isManager={isOwnerOrAdmin}
+                  onRetryWallet={retryTeamWallet}
                 />
               </div>
             </div>

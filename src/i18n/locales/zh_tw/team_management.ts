@@ -52,6 +52,8 @@ export const teamManagement = {
   wallet: {
     title: "團隊錢包與訂閱額度",
     quota_title: "訂閱額度",
+    load_failed: "無法載入，請稍後再試。",
+    retry: "重試",
     quota_5h: "每 5 小時額度",
     quota_week: "每週額度",
     balance_title: "團隊錢包",

@@ -53,6 +53,8 @@ export const teamManagement = {
   wallet: {
     title: "팀 지갑 및 구독 한도",
     quota_title: "구독 한도",
+    load_failed: "불러올 수 없습니다. 잠시 후 다시 시도해 주세요.",
+    retry: "다시 시도",
     quota_5h: "5시간 한도",
     quota_week: "주간 한도",
     balance_title: "팀 지갑",

@@ -53,6 +53,8 @@ export const teamManagement = {
   wallet: {
     title: "チームウォレットとサブスクリプション枠",
     quota_title: "サブスクリプション枠",
+    load_failed: "読み込めませんでした。しばらくしてからお試しください。",
+    retry: "再試行",
     quota_5h: "5 時間ごとの枠",
     quota_week: "週間枠",
     balance_title: "チームウォレット",

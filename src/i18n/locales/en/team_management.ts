@@ -53,6 +53,8 @@ export const teamManagement = {
   wallet: {
     title: "Team Wallet & Subscription Quota",
     quota_title: "Subscription Quota",
+    load_failed: "Unable to load. Please try again.",
+    retry: "Retry",
     quota_5h: "Per 5-hour quota",
     quota_week: "Weekly quota",
     balance_title: "Team Wallet",
