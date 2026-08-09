@@ -66,6 +66,7 @@ export const teamManagement = {
     allocate_to: "Allocate credits to {{name}}",
     revoke_from: "Revoke credits from {{name}}",
     amount_label: "Amount",
+    amount_limit: "Available: {{max}} credits",
     allocate: "Allocate",
     revoke: "Revoke",
     allocation_success: "Done.",

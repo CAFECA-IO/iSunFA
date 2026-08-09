@@ -63,6 +63,7 @@ export const teamManagement = {
     allocate_to: "分配点数给 {{name}}",
     revoke_from: "从 {{name}} 收回点数",
     amount_label: "点数",
+    amount_limit: "可用上限 {{max}} 点",
     allocate: "分配",
     revoke: "收回",
     allocation_success: "操作成功。",

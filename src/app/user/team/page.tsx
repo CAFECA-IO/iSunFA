@@ -227,7 +227,8 @@ export default function TeamManagementPage() {
 
   /**
    * Info: (20260809 - Luphia) 成員分配點數對照表：管理者見全員（allocations），
-   * 一般成員僅見自己（myAllocationBalance）——與後端回傳範圍一致
+   * 一般成員僅見自己（myAllocationBalance）——與後端回傳範圍一致。
+   * 尚未分配過的成員在 allocations 中沒有列，視為 0（而非不顯示）。
    */
   const allocationByUserId = useMemo(() => {
     const map: Record<string, string> = {};
@@ -235,11 +236,18 @@ export default function TeamManagementPage() {
       teamWallet.allocations.forEach((a) => {
         map[a.userId] = a.balance;
       });
-    } else if (teamWallet && currentUserMember) {
+    }
+    if (teamWallet && currentUserMember) {
       map[currentUserMember.userId] = teamWallet.myAllocationBalance;
     }
     return map;
   }, [teamWallet, currentUserMember]);
+
+  // Info: (20260809 - Luphia) 可見範圍：管理者見全員、一般成員僅見自己
+  const canSeeAllocation = (userId: string) =>
+    Boolean(teamWallet) &&
+    (isOwnerOrAdmin || userId === currentUserMember?.userId);
+  const allocationOf = (userId: string) => allocationByUserId[userId] ?? "0";
 
   const handleAllocationConfirm = async (amount: string) => {
     if (!allocationModal || !selectedTeamId) return;
@@ -610,8 +618,7 @@ export default function TeamManagementPage() {
                                 {member.user?.address}
                               </p>
                               {/* Info: (20260809 - Luphia) 分配點數 badge：管理者見全員、成員僅見自己（與後端回傳一致） */}
-                              {allocationByUserId[member.userId] !==
-                                undefined && (
+                              {canSeeAllocation(member.userId) && (
                                 <p
                                   className="mt-1 flex items-center gap-1 text-xs font-medium text-orange-600 tabular-nums"
                                   title={t(
@@ -619,7 +626,7 @@ export default function TeamManagementPage() {
                                   )}
                                 >
                                   <Coins className="size-3.5 shrink-0" />
-                                  {allocationByUserId[member.userId]}
+                                  {allocationOf(member.userId)}
                                 </p>
                               )}
                             </div>
@@ -776,6 +783,11 @@ export default function TeamManagementPage() {
             allocationModal.member.user?.name ||
             allocationModal.member.user?.address ||
             allocationModal.member.userId
+          }
+          max={
+            allocationModal.direction === ALLOCATION_DIRECTION.ALLOCATE
+              ? (teamWallet?.unallocatedBalance ?? "0")
+              : allocationOf(allocationModal.member.userId)
           }
           submitting={allocating}
           onClose={() => setAllocationModal(null)}

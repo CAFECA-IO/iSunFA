@@ -66,6 +66,7 @@ export const teamManagement = {
     allocate_to: "{{name}}에게 포인트 배분",
     revoke_from: "{{name}}에게서 포인트 회수",
     amount_label: "포인트",
+    amount_limit: "사용 가능: {{max}} 포인트",
     allocate: "배분",
     revoke: "회수",
     allocation_success: "완료되었습니다.",

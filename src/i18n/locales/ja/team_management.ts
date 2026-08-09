@@ -66,6 +66,7 @@ export const teamManagement = {
     allocate_to: "{{name}} にポイントを割り当て",
     revoke_from: "{{name}} からポイントを回収",
     amount_label: "ポイント数",
+    amount_limit: "利用可能：{{max}} ポイント",
     allocate: "割り当て",
     revoke: "回収",
     allocation_success: "完了しました。",
