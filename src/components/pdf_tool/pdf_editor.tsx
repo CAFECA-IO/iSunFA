@@ -38,6 +38,10 @@ import {
   isCanvasBlank,
   maxPagesPerSegment,
 } from "@/lib/utils/pdf_canvas_guard";
+import {
+  createColorConverter,
+  createColorSafeComputedStyle,
+} from "@/lib/utils/pdf_color_safety";
 
 // Info: (20260604 - Julian) 定義預設 md 內容與 storage key
 const DEFAULT_CONTENT =
@@ -653,64 +657,34 @@ export default function PdfEditor({
         pagebreak: { mode: ["avoid-all", "css", "legacy"] },
       };
 
-      // Info: (20260426 - Luphia) Globally proxy getComputedStyle during PDF generation to prevent html2canvas crashing on Tailwind v4's lab/oklch colors
+      /**
+       * Info: (20260810 - Emily) 光柵化期間把 html2canvas 解析不了的顏色**換算成等值的 rgb**
+       * (data/issue_drafts/inventory_table_import/17)。
+       *
+       * 這裡原本是「碰到含 lab / lch / color( 的值一律回 rgb(17, 24, 39)」。
+       * 那不是安全退路,是把淺色底塗成近黑:Tailwind v4 的 `bg-gray-50`
+       * computed 值為 `oklch(0.985 0.002 247.839)`,字串裡含 "lch" ——
+       * UAT 從第一天回報到現在的「表頭一整片黑」就是它,而不是 html2canvas 拋錯。
+       * 實測(tools/pdf_harness/proxy.mjs):
+       *   無攔截 → 拋錯 unsupported color function "oklch"
+       *   既有攔截 → 表頭像素 rgb(17,24,39)
+       *   換算 → 表頭像素 rgb(249,250,251)
+       *
+       * 也因為它先把 oklch 換成了 rgb(17,24,39),8/10 那版在 DOM 上做的
+       * 顏色修正一個都沒生效 —— 它讀到的已經是攔截後的值,看不到 oklch。
+       */
+      const colorProbe = document.createElement("canvas");
+      colorProbe.width = 1;
+      colorProbe.height = 1;
+      const convertColor = createColorConverter(
+        colorProbe.getContext("2d", { willReadFrequently: true }),
+      );
       const originalGetComputedStyle = window.getComputedStyle;
-      window.getComputedStyle = function (
-        elt: Element,
-        pseudoElt?: string | null,
-      ) {
-        const styles = originalGetComputedStyle.call(window, elt, pseudoElt);
-
-        return new Proxy(styles, {
-          get(target: CSSStyleDeclaration, prop: string | symbol) {
-            const targetObj = target as unknown as Record<
-              string | symbol,
-              unknown
-            >;
-            if (typeof targetObj[prop] === "function") {
-              if (prop === "getPropertyValue") {
-                return function (property: string) {
-                  const val = target.getPropertyValue(property);
-                  if (
-                    typeof val === "string" &&
-                    (val.includes("lab") ||
-                      val.includes("lch") ||
-                      val.includes("color("))
-                  ) {
-                    if (
-                      property.toLowerCase().includes("shadow") ||
-                      property.toLowerCase().includes("image")
-                    )
-                      return "none";
-                    return "rgb(17, 24, 39)"; // Info: (20260426 - Luphia) Safe fallback
-                  }
-                  return val;
-                };
-              }
-              return (targetObj[prop] as (...args: unknown[]) => unknown).bind(
-                target,
-              );
-            }
-
-            const val = targetObj[prop];
-            if (
-              typeof val === "string" &&
-              (val.includes("lab") ||
-                val.includes("lch") ||
-                val.includes("color("))
-            ) {
-              if (
-                String(prop).toLowerCase().includes("shadow") ||
-                String(prop).toLowerCase().includes("image")
-              )
-                return "none";
-              return "rgb(17, 24, 39)"; // Info: (20260426 - Luphia) Safe fallback
-            }
-
-            return val;
-          },
-        });
-      };
+      window.getComputedStyle = createColorSafeComputedStyle(
+        (element, pseudoElement) =>
+          originalGetComputedStyle.call(window, element, pseudoElement),
+        convertColor,
+      );
 
       try {
         /**
@@ -735,6 +709,16 @@ export default function PdfEditor({
          * 混用同一個布林值的後果是一句與真因無關的錯誤訊息。
          */
         const target = contentRef.current;
+        /**
+         * Info: (20260810 - Emily) 光柵化前先把 oklch / color-mix 換成 rgb
+         * (issue_drafts/inventory_table_import/17)。
+         *
+         * html2canvas 遇到這兩類色彩函式是**直接拋錯**而不是退化,
+         * 而 Tailwind v4 的整套調色盤就是 oklch —— 任一元素帶到就整份掛掉。
+         * UAT 看到的「表頭一整片黑」是它死在那裡、那塊沒被畫上東西。
+         *
+         * 包在最外層是因為兩條輸出路徑(html2pdf 與分段)都會踩到。
+         */
         await withLaidOutElement(target, async () => {
           const verdict = budget.isEmpty
             ? assessCanvasBudget({
