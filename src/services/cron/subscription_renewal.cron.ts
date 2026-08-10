@@ -18,6 +18,8 @@ import { resolvePlanId } from "@/services/spend.service";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
+import { SystemSettingKey } from "@/constants/system_setting";
+import { systemSettingService } from "@/services/system_setting.service";
 
 /**
  * Info: (20260807 - Luphia) autoRenew 自動扣款續訂（設計書 §9 P4 待辦收尾）。
@@ -27,7 +29,6 @@ import { webAuthnRepo } from "@/repositories/webauthn.repo";
  * 逾寬限期（預設 3 天）仍未成功 → 降級 free（不無限重試扣款，避免對用戶卡片反覆請款）。
  */
 
-const OEN_ACCESS_TOKEN = process.env.OEN_ACCESS_TOKEN;
 const OEN_BASE_URL = isProduction()
   ? "https://payment-api.oen.tw"
   : "https://payment-api.testing.oen.tw";
@@ -132,11 +133,17 @@ async function renewOne(
     );
 
   const pmData = paymentMethod.data as Record<string, string> | undefined;
+
+  // Info: (20260809 - Luphia) 金流憑證以資料庫設定為準，env 為 fallback；每次續訂重新解析，輪替後立即生效
+  const oenAccessToken = await systemSettingService.get(
+    SystemSettingKey.OEN_ACCESS_TOKEN,
+  );
+
   const oenRes = await fetch(`${OEN_BASE_URL}/token/transactions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${OEN_ACCESS_TOKEN}`,
+      Authorization: `Bearer ${oenAccessToken}`,
     },
     body: JSON.stringify(
       buildOenTransactionPayload(

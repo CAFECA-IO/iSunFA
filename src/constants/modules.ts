@@ -26,6 +26,7 @@ import {
   FlaskConical,
   Activity,
   ClipboardList,
+  SlidersHorizontal,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -92,6 +93,8 @@ export const ADMIN_MODULES: IModuleItem[] = [
   { key: "coupon", icon: Tag, basic: true },
   { key: "pdf_tool", icon: FileText, basic: true },
   { key: "carbon_emission_database", icon: Database, basic: true },
+  // Info: (20260809 - Luphia) 系統設定：資料庫保管、需 SUPER_ADMIN passkey 簽章才能修改
+  { key: "settings", icon: SlidersHorizontal, basic: true },
 ];
 
 export const SYSTEM_MODULES = [
@@ -183,6 +186,8 @@ export function getModuleI18nKey(key: string, isAdminContext: boolean = false) {
       return "application_management.title";
     case "carbon_chatbot":
       return "carbon_chatbot.menu_title";
+    case "settings":
+      return isAdminContext ? "admin_settings.title" : "sidebar.settings";
     default:
       return `${key}.title`;
   }

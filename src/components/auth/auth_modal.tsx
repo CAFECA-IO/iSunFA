@@ -27,6 +27,7 @@ import {
   RegistrationStep,
 } from "@/services/registration.service";
 import AuthTransition, { LoginStep } from "@/components/auth/auth_transition";
+import SocialLoginButtons from "@/components/auth/social_login_buttons";
 import RewardScreen from "@/components/auth/reward_screen";
 import CampaignRegistrationFields from "@/components/auth/campaign_registration_fields";
 import { Role } from "@/constants/role";
@@ -471,6 +472,14 @@ export default function AuthModal({
                                         ? t("auth_modal.authenticating")
                                         : t("auth_modal.login_btn")}
                                     </button>
+
+                                    {/* Info: (20260809 - Luphia) FIDO2 以外的登入方式；未設定的環境會自動不渲染 */}
+                                    <SocialLoginButtons
+                                      intent="login"
+                                      returnTo={pathname}
+                                      disabled={loading}
+                                      onError={setError}
+                                    />
                                   </div>
                                 )}
                               </>
@@ -589,6 +598,14 @@ export default function AuthModal({
                                           )
                                         : t("auth_modal.create_btn")}
                                     </button>
+
+                                    {/* Info: (20260809 - Luphia) 以第三方身分註冊：首次登入即自動建立帳號與託管錢包 */}
+                                    <SocialLoginButtons
+                                      intent="login"
+                                      returnTo={pathname}
+                                      disabled={loading}
+                                      onError={setError}
+                                    />
                                   </form>
                                 )}
                               </>

@@ -2490,6 +2490,14 @@
     );
   }
 
+  .text-amber-900 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-amber-900)
+    );
+  }
+
   .text-blue-600 {
     color: color-mix(
       in oklab,
@@ -2770,6 +2778,14 @@
     );
   }
 
+  .text-red-900 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-red-900)
+    );
+  }
+
   .text-rose-600 {
     color: color-mix(
       in oklab,
@@ -2807,6 +2823,14 @@
       in oklab,
       white var(--t-hue-text-lift),
       var(--color-teal-700)
+    );
+  }
+
+  .text-violet-600 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-violet-600)
     );
   }
 
@@ -3206,6 +3230,28 @@
       var(--neutral-light-800) 60%,
       transparent
     );
+  }
+
+  /**
+   * Info: (20260810 - Luphia) 不透明的 hover 深階背景。
+   *
+   * 上方那段警告說的情形又發生了一次：不帶前綴的深階背景已經還原成深色，
+   * 但帶 hover 前綴編出來是另一個選擇器，沒被蓋到 —— 於是按鈕靜止時深底白字正常，
+   * 滑鼠移上去背景翻成 93% 的近白，而 text-white 不會跟著變，文字就整個消失。
+   *
+   * 這是使用者實際回報的症狀（物流碳足跡的「AI 自動解析」按鈕）。
+   * 下方的測試會掃原始碼實際用到的變體並比對本區塊，漏一條就失敗，不必再靠人工搜尋。
+   */
+  .hover\:bg-gray-800:hover {
+    background-color: var(--neutral-light-800);
+  }
+
+  .hover\:bg-slate-700:hover {
+    background-color: var(--neutral-light-700);
+  }
+
+  .hover\:bg-slate-800:hover {
+    background-color: var(--neutral-light-800);
   }
 
   /* Info: (20260807 - Luphia) 漸層端點的半透明版本，理由同上 */

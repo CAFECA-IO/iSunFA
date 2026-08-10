@@ -32,6 +32,15 @@ export const authModal = {
   unregistered_confirm_yes: "はい、アカウントを作成します",
   unregistered_confirm_no: "キャンセル",
   user_canceled: "ユーザーがログインをキャンセルしました",
+  or_continue_with: "または次の方法で続行",
+  continue_with_google: "Google アカウントで続行",
+  oauth_exchanging: "ログインしています...",
+  oauth_exchanging_desc: "アカウントを確認しています。少々お待ちください。",
+  oauth_wrong_origin:
+    "サードパーティログインは {{origin}} でのみ利用できます。認可後はまったく同じアドレスに戻る必要があります。そちらのアドレスから開き直してください。",
+  oauth_failed: "外部サービスでのログインに失敗しました",
+  oauth_canceled: "認可をキャンセルしました",
+  oauth_back_home: "ホームに戻る",
   reward: {
     title: "キャンペーン登録完了！",
     subtitle: "限定報酬がアカウントに付与されました",

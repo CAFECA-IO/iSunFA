@@ -60,9 +60,59 @@ model User {
   pdfEditorDocuments    PdfEditorDocument[]    @relation("PdfEditorDocumentCreator")
   accountingAccounts    AccountingAccount[]
   teamWalletAllocations TeamWalletAllocation[]
+  identities            UserIdentity[]
+  custodialKey          UserCustodialKey?
 
   @@index([address])
   @@map("user")
+}
+
+/**
+ * Info: (20260809 - Luphia) 第三方身分綁定（Google / Apple / ...）。
+ * 一個 User 可綁多個 provider，同一 provider 只能綁一個外部帳號；
+ * (provider, providerUserId) 為全域唯一，避免同一個 Google 帳號登入到兩個 User。
+ */
+model UserIdentity {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider       String
+  providerUserId String    @map("provider_user_id")
+  email          String?
+  emailVerified  Boolean   @default(false) @map("email_verified")
+  displayName    String?   @map("display_name")
+  avatarUrl      String?   @map("avatar_url")
+  lastLoginAt    DateTime? @map("last_login_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@unique([provider, providerUserId])
+  @@unique([userId, provider])
+  @@index([userId])
+  @@map("user_identity")
+}
+
+/**
+ * Info: (20260809 - Luphia) 託管式 SCW 簽章金鑰。
+ * 僅用於「沒有 passkey」的第三方登入使用者：伺服器代管其 P-256 私鑰，
+ * 私鑰以 AES-256-GCM 加密後存放（見 src/lib/auth/key_vault.ts），明文永不落盤。
+ * 使用者之後補綁 passkey 時，可將 SCW 擁有者換成 passkey 公鑰並廢除此列。
+ */
+model UserCustodialKey {
+  userId              String   @id @map("user_id")
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credentialId        String   @unique @map("credential_id")
+  pubKeyX             String   @map("pub_key_x")
+  pubKeyY             String   @map("pub_key_y")
+  encryptedPrivateKey String   @map("encrypted_private_key")
+  iv                  String
+  authTag             String   @map("auth_tag")
+  keyVersion          Int      @default(1) @map("key_version")
+  algorithm           String   @default("AES-256-GCM")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@map("user_custodial_key")
 }
 
 model Team {
@@ -219,6 +269,59 @@ model SubscriptionPlanQuota {
  * 單列設定（singleton），以固定主鍵 "default" 保證唯一。
  * 查無設定列時，以 src/constants/llm.ts 的 DEFAULT_FAITH_BILLING fail-safe。
  */
+/**
+ * Info: (20260809 - Luphia) 系統設定（DB 為準，取代大部分 .env 變更）。
+ * 秘密值（如 OAuth client secret）以 AES-256-GCM 加密後存放，明文永不落盤。
+ * 完整性由 SystemSettingManifest 的全集簽章保護——單獨改這張表會導致 digest 對不上而被拒用。
+ */
+model SystemSetting {
+  key        String   @id
+  value      String
+  isSecret   Boolean  @default(false) @map("is_secret")
+  iv         String?
+  authTag    String?  @map("auth_tag")
+  keyVersion Int?     @map("key_version")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("system_setting")
+}
+
+/**
+ * Info: (20260809 - Luphia) 系統設定的全集簽章（單列）。
+ *
+ * 與 .env 的 SUPER_ADMIN_SIGNATURE 同構：把所有設定的「明文」鍵值排序串接成
+ * canonical string，SHA-256 後當作 WebAuthn challenge，由 SUPER_ADMIN 的 passkey 簽署。
+ *
+ * 之所以簽全集而非逐列：逐列簽章擋不住「整列刪除」與「換回舊值」，
+ * 只有涵蓋全集的 digest 才能偵測新增／刪除。version 單調遞增以緩解 rollback
+ * （完全防堵需 DB 以外的錨點，見 ADR 017）。
+ */
+model SystemSettingManifest {
+  key       String   @id @default("default")
+  digest    String
+  signature String
+  signedBy  String   @map("signed_by")
+  version   Int
+  signedAt  DateTime @default(now()) @map("signed_at")
+
+  @@map("system_setting_manifest")
+}
+
+// Info: (20260809 - Luphia) 設定變更稽核軌跡：保留每一版的 digest 與簽章，供事後追查與 version 單調性檢查
+model SystemSettingAudit {
+  id        String   @id @default(uuid())
+  version   Int      @unique
+  digest    String
+  signature String
+  signedBy  String   @map("signed_by")
+  changedKeys String @map("changed_keys")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@map("system_setting_audit")
+}
+
 model FaithBillingSetting {
   key                     String   @id @default("default")
   tokensPerCredit         Int      @map("tokens_per_credit")

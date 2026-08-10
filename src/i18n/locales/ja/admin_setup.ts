@@ -207,6 +207,13 @@ export const adminSetup = {
       "LLM ベクトル検索エンジンを強化します。省略すると、AI アシスタントはフォールバックのモックモードで動作します。",
     oen_hint:
       "法定通貨のオンランプ操作に必要。動的請求書を生成し、オフチェーンで支払いステータスを記録します。",
+    llm_model_label: "LLM モデル",
+    third_party_login: "サードパーティログイン",
+    stored_in_db: "データベースに保管",
+    google_client_id_label: "Google OAuth Client ID",
+    google_client_secret_label: "Google OAuth Client Secret",
+    google_hint:
+      "任意項目です。空欄の場合はパスキーのみのログインになります。この値はデータベースに保管され（シークレットは暗号化）、スーパー管理者のパスキー署名で封印されます。後から変更する際に .env の編集も再起動も不要です。Google Cloud Console で「Web application」クライアントを作成し、${APP_URL}/auth/callback/google を承認済みリダイレクト URI に追加してください。",
     core_system: "コアエコシステム",
     ai_consult: "AI コンサルテーション",
     payment_gateway: "OEN 支払いゲートウェイ",

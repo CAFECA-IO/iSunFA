@@ -197,6 +197,13 @@ export const adminSetup = {
     gemini_hint:
       "驱动 LLM 向量搜索引擎。如果省略，AI 助手将在备用的 Mock 模式下运行。",
     oen_hint: "法币入金操作的必要条件。可以生成动态发票并在链下记录付款状态。",
+    llm_model_label: "LLM 模型",
+    third_party_login: "第三方登录",
+    stored_in_db: "保管于数据库",
+    google_client_id_label: "Google OAuth Client ID",
+    google_client_secret_label: "Google OAuth Client Secret",
+    google_hint:
+      "选填，留白代表只提供 Passkey 登录。这组值保管在数据库（Secret 加密存放）并以您的超级管理员 Passkey 签章封存，日后修改不需要改 .env 也不需要重启服务。请至 Google Cloud Console 建立「Web application」客户端，并将 ${APP_URL}/auth/callback/google 加入授权跳转网址。",
     core_system: "核心生态系统",
     ai_consult: "AI 咨询服务",
     payment_gateway: "OEN 支付网关",

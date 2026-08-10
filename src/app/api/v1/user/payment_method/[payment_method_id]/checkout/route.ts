@@ -13,8 +13,9 @@ import { fulfillTeamPointPurchase } from "@/services/team_wallet.service";
 import { fulfillTeamSubscriptionOrder } from "@/services/team_subscription.service";
 import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 import { isProduction } from "@/lib/utils/common";
+import { SystemSettingKey } from "@/constants/system_setting";
+import { systemSettingService } from "@/services/system_setting.service";
 
-const OEN_ACCESS_TOKEN = process.env.OEN_ACCESS_TOKEN;
 const OEN_BASE_URL = isProduction()
   ? "https://payment-api.oen.tw"
   : "https://payment-api.testing.oen.tw";
@@ -96,13 +97,18 @@ export async function POST(
 
     const pmData = oenPaymentMethod.data as Record<string, string> | undefined;
 
+    // Info: (20260809 - Luphia) 金流憑證以資料庫設定為準，env 為 fallback
+    const oenAccessToken = await systemSettingService.get(
+      SystemSettingKey.OEN_ACCESS_TOKEN,
+    );
+
     // Info: (20260305 - Tzuhan) 準備打給應援科技的扣款請求
     const fetchUrl = `${OEN_BASE_URL}/token/transactions`;
     const fetchQuery = {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${OEN_ACCESS_TOKEN}`,
+        Authorization: `Bearer ${oenAccessToken}`,
       },
       body: JSON.stringify(
         buildOenTransactionPayload(

@@ -190,13 +190,24 @@ function usedUtilities(pattern: RegExp): string[] {
       const full = join(dir, entry.name);
       if (entry.isDirectory()) walk(full);
       else if (entry.name.endsWith(".tsx") || entry.name.endsWith(".ts")) {
-        for (const m of readFileSync(full, "utf8").matchAll(pattern))
+        for (const m of stripComments(readFileSync(full, "utf8")).matchAll(
+          pattern,
+        ))
           found.add(m[0]);
       }
     }
   };
   walk(join(process.cwd(), "src"));
   return [...found].sort();
+}
+
+/**
+ * Info: (20260809 - Luphia) 掃描前先去掉註解。
+ * 註解裡提到的 class 名稱（例如解釋「為什麼不要寫 dark:bg-slate-950」的說明）
+ * 不會被渲染到任何元素上，卻會讓這些測試把文件本身當成違規來源。
+ */
+function stripComments(source: string): string {
+  return source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
 }
 
 describe("globals.css 彩色階", () => {
@@ -252,6 +263,206 @@ describe("globals.css 彩色階", () => {
       (utility) =>
         !css.includes(`.${utility.replace(/[:/]/g, (c) => `\\${c}`)}`),
     );
+    expect(missing).toEqual([]);
+  });
+});
+
+/**
+ * Info: (20260809 - Luphia) `bg-white` 系列有深色覆寫（表面會翻成深色），
+ * 但 `border-white` / `ring-white` / `divide-white` 完全沒有 —— `--color-white` 刻意不動，
+ * 因為它同時餵給數百處橘底白字。
+ *
+ * 兩者寫在同一個元素上，深色模式下就會變成「深色面板配一條純白亮線」，
+ * 這正是 wizard_header 出現過的症狀。低不透明度（≤40%）的 bg-white 不翻轉，
+ * 與白邊搭配是一致的，因此不在此列。
+ */
+describe("globals.css 白色邊框與白色表面的搭配", () => {
+  const css = readFileSync(CSS_PATH, "utf8");
+
+  // Info: (20260809 - Luphia) 會跟著主題翻成深色表面的 bg-white 變體
+  const FLIPPING_BG_WHITE = /\bbg-white(?:\/(?:50|60|70|80|90|95))?(?!\S)/;
+
+  /**
+   * Info: (20260809 - Luphia) 只抓「不透明或半透明以上」的白線。
+   * 沿用 globals.css 自己的分界：50% 以上視為表面，40% 以下維持白色 ——
+   * 低不透明度的白色髮絲線（border-white/10）本來就是深色面板上的常見手法，
+   * 與翻轉後的深色表面搭配並不衝突。
+   */
+  const WHITE_LINE =
+    /\b(?:border|ring|divide)-white(?:\/(?:5\d|[6-9]\d|100))?(?!\S)/;
+
+  function classAttributeValues(): { file: string; value: string }[] {
+    const results: { file: string; value: string }[] = [];
+
+    const walk = (dir: string): void => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        if (entry.name === "__tests__") continue;
+        const full = join(dir, entry.name);
+        if (entry.isDirectory()) {
+          walk(full);
+          continue;
+        }
+        if (!entry.name.endsWith(".tsx")) continue;
+
+        const source = readFileSync(full, "utf8");
+        // Info: (20260809 - Luphia) 逐個字串常值檢查，避免把相鄰元素的 class 誤併成一組
+        for (const match of source.matchAll(/"([^"\n]*)"|`([^`\n]*)`/g)) {
+          results.push({ file: full, value: match[1] ?? match[2] ?? "" });
+        }
+      }
+    };
+
+    walk(join(process.cwd(), "src"));
+    return results;
+  }
+
+  it("`.border-white` 確實沒有深色覆寫（本測試存在的前提）", () => {
+    expect(css.includes(".border-white")).toBe(false);
+  });
+
+  it("沒有元素同時使用會翻轉的白色表面與不會翻轉的白色線條", () => {
+    const offenders = classAttributeValues()
+      .filter(
+        ({ value }) => FLIPPING_BG_WHITE.test(value) && WHITE_LINE.test(value),
+      )
+      .map(({ file }) => file.replace(`${process.cwd()}/`, ""));
+
+    expect([...new Set(offenders)]).toEqual([]);
+  });
+});
+
+/**
+ * Info: (20260809 - Luphia) `dark:` 變體不可套用在 gray / slate 上。
+ *
+ * globals.css 已把這兩個色系整組重映到 `--t-*`，而深色階是淺色階「上下顛倒」，
+ * 所以 `bg-slate-50` 在深色模式本來就會變成最暗的那一階。
+ * 再補一個 `dark:bg-slate-950` 等於把同一件事做第二次 ——
+ * `--neutral-dark-950` 是 99% 亮度，整頁會變成近白色。
+ *
+ * 這個 bug 的症狀（深色模式下版面變成亮白底）很容易被誤判成「主題沒生效」，
+ * 但真正原因是生效了兩次。
+ *
+ * 若某個元素刻意要在兩種模式維持同一個顏色，請改用不被重映的
+ * zinc / neutral / stone（見 reboot_countdown.tsx 與 on_premise_content.tsx）。
+ */
+describe("globals.css 主題色系與 dark: 變體", () => {
+  it("gray / slate 不應搭配 dark: 變體（會翻轉兩次）", () => {
+    const offenders = usedUtilities(
+      /\bdark:(?:[a-z0-9-]+:)*(?:bg|text|border|ring|divide|from|to|via)-(?:gray|slate)-\d+\b/g,
+    );
+
+    expect(offenders).toEqual([]);
+  });
+});
+
+/**
+ * Info: (20260810 - Luphia) 寫死的淺色背景（Tailwind arbitrary value）不會跟著主題翻轉。
+ *
+ * `bg-[#F8FAFC]` 這種寫法繞過了整個主題系統：globals.css 重映的是 `--color-*` 變數
+ * 與 `.bg-white` 這類 utility，arbitrary value 完全碰不到。結果是深色模式下版面
+ * 維持近白色，而裡面的欄位、邊框、文字都正確翻成深色——看起來像「只有背景壞掉」。
+ *
+ * 20260810 的三個明細 modal（日記帳／會計傳票／碳盤查）就是這樣，靠使用者截圖才發現。
+ *
+ * 少數情況是刻意的：紙張式預覽（PDF／分享頁）本來就該兩種模式都保持淺色，
+ * 以及自己用 isDark 分支處理的元件。這些以路徑允許清單放行，
+ * 新增例外時必須寫下理由，而不是默默讓測試變寬。
+ */
+describe("globals.css 寫死的淺色背景", () => {
+  // Info: (20260810 - Luphia) 紙張式／自行處理主題的檔案，允許出現淺色 hex
+  const ALLOWED_PREFIXES = [
+    "src/app/share/pdf/",
+    "src/components/pdf_tool/",
+    "src/components/common/markdown_content.tsx",
+  ];
+
+  // Info: (20260810 - Luphia) sRGB 相對亮度；用來區分「淺色背景」與品牌色／深色面板
+  function luminance(hex: string): number {
+    const full =
+      hex.length === 3
+        ? hex
+            .split("")
+            .map((c) => c + c)
+            .join("")
+        : hex;
+    const [r, g, b] = [0, 2, 4].map(
+      (i) => parseInt(full.slice(i, i + 2), 16) / 255,
+    );
+    const lin = (v: number) =>
+      v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+    return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+  }
+
+  it("應用介面不得使用寫死的淺色背景", () => {
+    const offenders: string[] = [];
+
+    const walk = (dir: string): void => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        if (entry.name === "__tests__") continue;
+        const full = join(dir, entry.name);
+        if (entry.isDirectory()) {
+          walk(full);
+          continue;
+        }
+        if (!entry.name.endsWith(".tsx") && !entry.name.endsWith(".ts"))
+          continue;
+
+        const relative = full.replace(`${process.cwd()}/`, "");
+        if (ALLOWED_PREFIXES.some((prefix) => relative.startsWith(prefix))) {
+          continue;
+        }
+
+        const source = stripComments(readFileSync(full, "utf8"));
+        for (const match of source.matchAll(
+          /\bbg-\[#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\]/g,
+        )) {
+          // Info: (20260810 - Luphia) 只抓「淺色」；品牌橘與深色面板是刻意固定的
+          if (luminance(match[1]) > 0.6) {
+            offenders.push(`${relative}: ${match[0]}`);
+          }
+        }
+      }
+    };
+
+    walk(join(process.cwd(), "src"));
+    expect(offenders).toEqual([]);
+  });
+});
+
+/**
+ * Info: (20260810 - Luphia) 深階背景的**變體**必須各自補覆寫規則。
+ *
+ * globals.css 有一層相容層，把 `bg-gray-700`~`950` / `bg-slate-700`~`950` 還原成
+ * 淺色階常數，讓「刻意深色的表面」在兩種主題下都維持深色——其上的 `text-white`
+ * 因此一直是對的。
+ *
+ * 但覆寫是逐條選擇器寫的：`hover:bg-gray-800` 編出來是 `.hover\:bg-gray-800:hover`，
+ * 與 `.bg-gray-800` 是兩個不同的選擇器，補了後者不會蓋到前者。漏掉的後果是
+ * 按鈕靜止時正常、滑鼠移上去背景翻成近白而白字消失。
+ *
+ * 這個坑踩過兩次（20260807 的 `/60` 卡片、20260810 的「AI 自動解析」按鈕），
+ * 兩次都是靠肉眼發現。globals.css 的註解要求人工「逐字轉成選擇器搜一次」——
+ * 這條測試就是把那個人工步驟自動化。
+ */
+describe("globals.css 深階背景的變體覆寫", () => {
+  /**
+   * Info: (20260810 - Luphia) 比對前先去掉 CSS 註解。
+   * 這條測試第一版就是敗在這裡：說明文字裡引用了選擇器字面，
+   * 於是規則被刪掉後仍然「找得到」，護欄形同虛設。
+   */
+  const css = readFileSync(CSS_PATH, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+
+  it("原始碼用到的每個 hover / group-hover 深階背景都有覆寫規則", () => {
+    const used = usedUtilities(
+      /\b(?:group-)?hover:bg-(?:gray|slate)-(?:700|800|900|950)(?:\/\d+)?\b/g,
+    );
+
+    // Info: (20260810 - Luphia) 類名逐字轉成 CSS 選擇器：`:` → `\:`、`/` → `\/`
+    const missing = used.filter((utility) => {
+      const escaped = utility.replace(/[:/]/g, (c) => `\\${c}`);
+      return !css.includes(`.${escaped}`);
+    });
+
     expect(missing).toEqual([]);
   });
 });

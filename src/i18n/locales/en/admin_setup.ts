@@ -205,6 +205,13 @@ export const adminSetup = {
       "Powers the LLM vector search engine. If omitted, the AI Assistant will operate in fallback mock mode.",
     oen_hint:
       "Required for fiat on-ramp operations. Generates dynamic invoices and records payment statuses off-chain.",
+    llm_model_label: "LLM Model",
+    third_party_login: "Third-party Login",
+    stored_in_db: "Stored in database",
+    google_client_id_label: "Google OAuth Client ID",
+    google_client_secret_label: "Google OAuth Client Secret",
+    google_hint:
+      "Optional. Leave blank to keep passkey as the only sign-in method. These values are kept in the database (the secret is encrypted) and sealed with your super admin passkey signature — changing them later needs no .env edit and no restart. In Google Cloud Console create a Web application client and add ${APP_URL}/auth/callback/google to its authorized redirect URIs.",
     core_system: "Core Ecosystem",
     ai_consult: "AI Consultation",
     payment_gateway: "OEN Payment Gateway",
