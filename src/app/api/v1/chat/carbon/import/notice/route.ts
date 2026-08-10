@@ -58,23 +58,6 @@ export async function POST(request: NextRequest) {
     return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
   }
 
-  /**
-   * Info: (20260810 - Emily) `recipientPublicKey` 由 schema 擋成必填
-   * （`z.string().min(1).max(300)`），此處不再做執行期檢查（PR review 第 5 點）。
-   *
-   * 保留這段說明的理由是**它記錄的是一個不該再犯的決定**，不是一個還存在的檢查：
-   * 原本寫 `recipientPublicKey ?? sessionUser.address`，理由是「與 report PUT 同一慣例」，
-   * 而這條端點因此從上線起一次都沒成功過（實測 500:
-   * `invalid base58 value (argument="letter", value="0")`）。
-   *
-   * report PUT 的 address 補位只發生在**明文模式**:帳本會話存明文，
-   * address 只是擁有者標記，從不當金鑰用。
-   * 而聊天訊息一律 E2EE，`recordAndPublishAiReply` 會拿這個值做 ECIES 加密 ——
-   * 它必須是 base58 的 xpub，而 `0x…` 十六進位位址在第一個 `0` 就解不出來。
-   *
-   * 一個慣例被跨過了它不成立的邊界。現在由 schema 在更前面擋住。
-   */
-
   try {
     /**
      * Info: (20260805 - Tzuhan) 文案在此組出,不採用呼叫端傳來的字串 ——
