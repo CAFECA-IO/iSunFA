@@ -30,7 +30,7 @@ const DonutLegend: FC<IDonutLegendProps> = ({
   dense = false,
   showValue = false,
 }) => (
-  <ul className={dense ? "flex flex-col gap-1.5" : "space-y-4"}>
+  <ul className={dense ? "grid grid-cols-2 gap-1.5 gap-x-4" : "space-y-4"}>
     {items.map((item, index) => (
       <li
         key={item.name}
