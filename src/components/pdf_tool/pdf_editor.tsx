@@ -42,6 +42,15 @@ import {
   createColorConverter,
   createColorSafeComputedStyle,
 } from "@/lib/utils/pdf_color_safety";
+import {
+  requestCarbonReportPdf,
+  saveBlobAs,
+} from "@/lib/utils/carbon_report_pdf_client";
+import {
+  CARBON_PDF_EXPORT_MODE,
+  CARBON_PDF_FOOTER_TITLE,
+  CarbonPdfExportModeEnum,
+} from "@/constants/carbon_pdf";
 
 // Info: (20260604 - Julian) 定義預設 md 內容與 storage key
 const DEFAULT_CONTENT =
@@ -338,6 +347,17 @@ interface IPdfEditorProps {
   onBeforeDownload?: () => void;
   // Info: (20260714 - Emily) split 佈局的並排斷點:預設 md(既有行為);嵌入場景空間較擠時可設 lg,平板寬度退回單欄切換
   splitBreakpoint?: "md" | "lg";
+  /**
+   * Info: (20260810 - Emily) 改走伺服端向量列印
+   * (data/issue_drafts/inventory_table_import/17)。
+   *
+   * 預設 false —— 這是 opt-in 而不是全域切換,因為前端光柵化那條路仍有它的用途:
+   * 文件工具與任務板的短文件輸出正常,而公開分享頁(/share/pdf/[token])沒有登入,
+   * 打不到需要驗證的列印端點。目前只有碳盤查報告開啟:
+   * 它動輒上百頁、含跨頁表格,而且是要交給查證人員的文件 ——
+   * 光柵化產出的點陣圖不能搜尋、不能複製任何一個排放量數字。
+   */
+  serverPrint?: boolean;
 }
 
 export default function PdfEditor({
@@ -352,6 +372,7 @@ export default function PdfEditor({
   downloadFileName = undefined,
   onBeforeDownload = undefined,
   splitBreakpoint = "md",
+  serverPrint = false,
 }: IPdfEditorProps) {
   const { t } = useTranslation();
 
@@ -621,6 +642,39 @@ export default function PdfEditor({
     abortControllerRef.current?.abort();
   };
 
+  /**
+   * Info: (20260810 - Emily) 伺服端向量列印
+   * (data/issue_drafts/inventory_table_import/17)。
+   *
+   * 送出的是 markdown 而不是快照後的 DOM:伺服端用同一份 markdown 重新排版,
+   * 因此輸出是真的分頁文件 —— 列不會被切一半、跨頁的表會重印表頭、
+   * 塞不下直式頁的表自動轉橫式,而文字是文字(可搜尋、可複製)。
+   * html2canvas 那條路一條列印規則都不執行,那些是它做不到的事。
+   *
+   * **失敗不自動退回光柵化。** 退回的產物是一份上百頁、數十 MB、
+   * 一個字都抽不出來的點陣圖 —— 對查證文件而言那不是「比較差的成功」。
+   * 要整批切回舊路徑請改 CARBON_PDF_EXPORT_MODE。
+   */
+  const downloadViaServer = async (fileName: string): Promise<boolean> => {
+    if (!serverPrint) return false;
+    if (CARBON_PDF_EXPORT_MODE !== CarbonPdfExportModeEnum.SERVER_VECTOR) {
+      return false;
+    }
+    const result = await requestCarbonReportPdf({
+      markdown: markdownContext,
+      fileName,
+      title: CARBON_PDF_FOOTER_TITLE,
+    });
+    saveBlobAs(result.blob, fileName);
+    if (result.chartsFailed > 0) {
+      console.warn(
+        "[PdfEditor] some charts could not be drawn:",
+        result.chartsFailed,
+      );
+    }
+    return true;
+  };
+
   const handleDownloadPDF = async () => {
     if (!contentRef.current) return;
 
@@ -629,6 +683,11 @@ export default function PdfEditor({
 
     setIsGenerating(true);
     try {
+      const serverFileName =
+        downloadFileName ?? `iSunFA_Document_${Date.now()}.pdf`;
+      if (await downloadViaServer(serverFileName)) {
+        return;
+      }
       const html2pdf = (await import("html2pdf.js")).default;
 
       const pdfOverrideStyle = document.createElement("style");

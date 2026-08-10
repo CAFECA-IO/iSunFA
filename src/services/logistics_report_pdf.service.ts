@@ -6,22 +6,10 @@
 // Info: (20260731 - Tzuhan) mdToPdf 每次呼叫都會另啟一個 Chrome,27 份就是 27 次啟動。
 
 import { logger } from "@/lib/utils/logger";
+import { dropPrintBrowser, getPrintBrowser } from "@/lib/utils/pdf_browser";
 import { ApiError, API_ERRORS } from "@/lib/utils/error_dictionary";
 import { buildLogisticsReportHtml } from "@/lib/utils/logistics_report_html";
-import {
-  assessGlyphCoverage,
-  containsCjk,
-  GlyphCoverageEnum,
-  shouldBlockForMissingGlyphs,
-  type IGlyphProbe,
-} from "@/lib/utils/pdf_font_probe";
-import {
-  PDF_FONT_PROBE_CJK_SAMPLE,
-  PDF_FONT_PROBE_LATIN_REFERENCE,
-  PDF_FONT_PROBE_NOTDEF_REFERENCE,
-  PDF_FONT_PROBE_SIZE_PX,
-  PDF_FONT_STACK,
-} from "@/constants/pdf_font";
+import { assertCjkRenderable } from "@/lib/utils/pdf_font_guard";
 import {
   LOGISTICS_PDF_MARGIN,
   LOGISTICS_PDF_MAX_REPORTS_PER_REQUEST,
@@ -60,36 +48,6 @@ const buildFooterTemplate = (planCode: string): string =>
      <span>iSunFA · <span class="pageNumber"></span>/<span class="totalPages"></span></span>
    </div>`;
 
-/**
- * Info: (20260731 - Tzuhan) 共用的 Chrome 實例。
- *
- * 實測單份請求 4.6s,而其中絕大部分是冷啟動 —— 每個請求各啟一次 Chrome,
- * 27 份分 4 批就是 4 次啟動的純浪費。改為模組層級快取:
- * 首次請求付啟動成本,之後重用。
- *
- * 沒有做閒置回收:Next 的 dev/serverless 都會在閒置後回收整個模組,
- * 自行加計時器反而會在請求密集時把正在用的實例關掉。
- * `connected` 檢查是為了處理 Chrome 自行崩潰後的重建。
- */
-let sharedBrowser: Awaited<
-  ReturnType<Awaited<typeof import("puppeteer")>["default"]["launch"]>
-> | null = null;
-
-async function getBrowser(): Promise<
-  Awaited<ReturnType<Awaited<typeof import("puppeteer")>["default"]["launch"]>>
-> {
-  if (sharedBrowser?.connected) return sharedBrowser;
-  const puppeteer = (await import("puppeteer")).default;
-  const started = Date.now();
-  sharedBrowser = await puppeteer.launch({
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
-  logger.info(`[LogisticsReportPdfService] browser launched`, {
-    ms: Date.now() - started,
-  });
-  return sharedBrowser;
-}
-
 export class LogisticsReportPdfService {
   /**
    * Info: (20260731 - Tzuhan) 產生多份 PDF。單一 Chrome 實例、逐份列印,任何一份失敗即整批失敗:
@@ -109,7 +67,7 @@ export class LogisticsReportPdfService {
     const generatedAt = new Date().toISOString().slice(0, 10);
     const batchStarted = Date.now();
     try {
-      const browser = await getBrowser();
+      const browser = await getPrintBrowser();
       const results: IGeneratedReportPdf[] = [];
       // Info: (20260731 - Tzuhan) 逐份序列處理:並行開多個 page 會讓記憶體用量隨批次線性上升
       for (const report of request.reports) {
@@ -149,126 +107,11 @@ export class LogisticsReportPdfService {
       if (error instanceof ApiError) throw error;
 
       // Info: (20260731 - Tzuhan) 失敗後棄用共用實例:崩潰的 Chrome 會讓後續請求全數失敗
-      if (sharedBrowser) {
-        await sharedBrowser.close().catch(() => undefined);
-        sharedBrowser = null;
-      }
+      await dropPrintBrowser();
       throw new ApiError(
         API_ERRORS.IS_PDF_GENERATION_FAILED.code,
         API_ERRORS.IS_PDF_GENERATION_FAILED.message,
         API_ERRORS.IS_PDF_GENERATION_FAILED.status,
-      );
-    }
-  }
-
-  /**
-   * Info: (20260801 - Luphia) 列印前實測中文字形是否可用,缺失即 fail fast。
-   *
-   * 為什麼不信任字型堆疊就好:堆疊只表達「偏好」,Chrome 找不到就靜默 fallback。
-   * 實測伺服器 `fc-list :lang=zh` 只有 X11 點陣字 `Fixed`,所有中文取 DejaVu 的
-   * .notdef,產出一份地點名稱全是空心方框的報告 —— 而流程回報「成功」。
-   * 對審計文件而言那不是瑕疵而是不可用,§6 要求這種輸出在交付前就被凍結。
-   *
-   * 渲染放在瀏覽器內進行,因為只有 Chrome 自己知道 per-character fallback
-   * 最後選了哪個字型;Node 端讀 fontconfig 得到的是「系統有什麼」而非
-   * 「Chrome 實際用了什麼」,兩者可以不同。
-   *
-   * 判定邏輯本身抽在 pdf_font_probe(純函數、可測),此處只負責取得寬度。
-   */
-  private async assertCjkRenderable(
-    page: Awaited<
-      ReturnType<
-        Awaited<
-          ReturnType<Awaited<typeof import("puppeteer")>["default"]["launch"]>
-        >["newPage"]
-      >
-    >,
-    html: string,
-    planCode: string,
-  ): Promise<void> {
-    // Info: (20260801 - Luphia) 純拉丁字的報告即使環境無中文字型也能正確輸出,不該擋
-    const reportContainsCjk = containsCjk(html);
-
-    /**
-     * Info: (20260801 - Luphia) 把三個字元各自畫到離屏 canvas,回傳點陣特徵。
-     *
-     * 不量前進寬度:CJK 字型的 .notdef 與真正的中文字同為全角,寬度必然相同
-     * (實測 Noto Sans CJK 兩者皆為 1em),用寬度判定會在字型正常時誤判為缺字。
-     * 字形畫出來的樣子才是真正的判準 —— 真的「測」是筆畫複雜的表意文字,
-     * .notdef 是空白或一個方框,點陣不可能相同。
-     */
-    const probe = await page.evaluate(
-      (fontStack: string, samples: string[], sizePx: number) => {
-        const canvas = document.createElement("canvas");
-        canvas.width = sizePx * 2;
-        canvas.height = sizePx * 2;
-        const context = canvas.getContext("2d", { willReadFrequently: true });
-        if (!context) return null;
-
-        const signatureOf = (character: string) => {
-          context.clearRect(0, 0, canvas.width, canvas.height);
-          context.font = `${sizePx}px ${fontStack}`;
-          context.textBaseline = "top";
-          context.fillStyle = "#000";
-          context.fillText(character, sizePx * 0.25, sizePx * 0.25);
-
-          const { data } = context.getImageData(
-            0,
-            0,
-            canvas.width,
-            canvas.height,
-          );
-          let inkPixels = 0;
-          let checksum = 0;
-          // Info: (20260801 - Luphia) 只讀 alpha 通道(每 4 bytes 的第 4 個),字色固定為黑
-          for (let index = 3; index < data.length; index += 4) {
-            const alpha = data[index];
-            if (alpha === 0) continue;
-            inkPixels += 1;
-            // Info: (20260801 - Luphia) 位置與濃度同時入雜湊,否則只是墨量相同就會誤判成同字形
-            checksum = (checksum * 31 + index * 7 + alpha) % 2147483647;
-          }
-          return { inkPixels, checksum };
-        };
-
-        return {
-          cjk: signatureOf(samples[0]),
-          notdef: signatureOf(samples[1]),
-          latin: signatureOf(samples[2]),
-        };
-      },
-      PDF_FONT_STACK,
-      [
-        PDF_FONT_PROBE_CJK_SAMPLE,
-        PDF_FONT_PROBE_NOTDEF_REFERENCE,
-        PDF_FONT_PROBE_LATIN_REFERENCE,
-      ],
-      PDF_FONT_PROBE_SIZE_PX,
-    );
-
-    const coverage =
-      probe === null
-        ? GlyphCoverageEnum.INDETERMINATE
-        : assessGlyphCoverage(probe as IGlyphProbe);
-
-    if (coverage === GlyphCoverageEnum.INDETERMINATE) {
-      // Info: (20260801 - Luphia) 偵測自己壞掉時不擋:診斷功能不該成為匯出的單點故障
-      logger.warn(`[LogisticsReportPdfService] glyph probe indeterminate`, {
-        planCode,
-        probe,
-      });
-      return;
-    }
-
-    if (shouldBlockForMissingGlyphs(coverage, reportContainsCjk)) {
-      logger.error(
-        `[LogisticsReportPdfService] no CJK glyph available; refusing to emit a report of empty boxes`,
-        { planCode, probe },
-      );
-      throw new ApiError(
-        API_ERRORS.IS_PDF_FONT_UNAVAILABLE.code,
-        API_ERRORS.IS_PDF_FONT_UNAVAILABLE.message,
-        API_ERRORS.IS_PDF_FONT_UNAVAILABLE.status,
       );
     }
   }
@@ -306,7 +149,10 @@ export class LogisticsReportPdfService {
       // Info: (20260731 - Tzuhan) setContent 而非 goto:HTML 由我們產生,不需要網路,也不該讓外部 URL 進來
       await page.setContent(html, { waitUntil: "load" });
 
-      await this.assertCjkRenderable(page, html, report.planCode);
+      await assertCjkRenderable(page, html, {
+        scope: "LogisticsReportPdfService",
+        ref: report.planCode,
+      });
 
       const buffer = await page.pdf({
         format: "A4",
