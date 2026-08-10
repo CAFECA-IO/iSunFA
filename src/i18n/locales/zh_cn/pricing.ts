@@ -5,6 +5,8 @@ export const pricing = {
   monthly: "月缴",
   yearly: "年缴",
   save_percent: "省下 17%",
+  // Info: (20260807 - Luphia) 費思費率標註（設計書 §5.3 定價揭露），數字由 API 插值、嚴禁寫死
+  faith_agent: "费思人工智能代理人",
   currency_prefix: "NT$ ",
 
   cta: "立即开始",
@@ -61,8 +63,6 @@ export const pricing = {
       features: {
         storage: "存储空间 {{gb}} GB",
         fido: "1 组 FIDO2 密钥",
-        credit_limit: "点数上限 500 点",
-        daily_credits: "每日登录发放 {{amount}} 点点数",
         consults: "每月最多咨询 {{amount}} 个问题",
         consults_tooltip: "每个问题 {{price}} 点数",
         vouchers: "每月最多分析 {{amount}} 份会计凭证",
@@ -80,9 +80,7 @@ export const pricing = {
         storage: "存储空间 {{gb}} GB",
         fido: "无限 FIDO2 密钥",
         fido_tooltip: "根据 fido2 密钥数量收取订阅费",
-        credit_limit: "点数无上限",
-        monthly_credits: "每月自动发放 {{amount}} 点点数",
-        monthly_credits_tooltip: "点数有效期限 30 日",
+        quota_multiple: "Tokens 额度为免费版的 {{multiple}} 倍",
         consults: "每月最多咨询 {{amount}} 个问题",
         consults_tooltip: "每个问题 {{price}} 点数",
         vouchers: "每月最多分析 {{amount}} 份会计凭证",
@@ -102,9 +100,7 @@ export const pricing = {
         storage: "存储空间 {{gb}} GB",
         fido: "无限 FIDO2 密钥",
         fido_tooltip: "根据 fido2 密钥数量收取订阅费",
-        credit_limit: "点数无上限",
-        monthly_credits: "每月自动发放 {{amount}} 点点数",
-        monthly_credits_tooltip: "点数有效期限 30 日",
+        quota_multiple: "Tokens 额度为团队版的 {{multiple}} 倍",
         consults: "每月最多咨询 {{amount}} 个问题",
         consults_tooltip: "每个问题 {{price}} 点数",
         vouchers: "每月最多分析 {{amount}} 份会计凭证",
@@ -163,6 +159,7 @@ export const pricing = {
       validity: "点数永久有效",
     },
     plans: {
+      buy_now: "立即购买",
       tier1: {
         credits: "{{count}} 点",
         price: "{{price}}",

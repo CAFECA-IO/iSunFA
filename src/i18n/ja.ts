@@ -8,7 +8,6 @@ import { faith } from "@/i18n/locales/ja/faith";
 import { cookieConsent } from "@/i18n/locales/ja/cookie_consent";
 import { dashboard } from "@/i18n/locales/ja/dashboard";
 import { header } from "@/i18n/locales/ja/header";
-import { checkinReward } from "@/i18n/locales/ja/checkin_reward";
 import { authModal } from "@/i18n/locales/ja/auth_modal";
 import { features } from "@/i18n/locales/ja/features";
 import { registrationSteps } from "@/i18n/locales/ja/registration_steps";
@@ -85,7 +84,6 @@ export const ja = {
   cookie_consent: cookieConsent,
   dashboard,
   header,
-  checkin_reward: checkinReward,
   auth_modal: authModal,
   features,
   esg_target: esgTarget,

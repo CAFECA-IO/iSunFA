@@ -3,7 +3,6 @@
 import { useState } from "react";
 import PricingCard from "@/components/pricing/pricing_card";
 import {
-  REWARD_AMOUNTS,
   ANALYSIS_BASE_COSTS,
   SUBSCRIPTION_PLAN_CREDITS,
 } from "@/constants/price";
@@ -12,7 +11,16 @@ import { usePricing } from "@/contexts/pricing_context";
 import { useAuth } from "@/contexts/auth_context";
 import { useTranslation } from "@/i18n/i18n_context";
 
-export default function SubscriptionContent() {
+interface ISubscriptionContentProps {
+  // Info: (20260809 - Luphia) 額度倍數由 server 端計算後傳入（見 page.tsx 的 hydration 說明）
+  teamQuotaMultiple: number;
+  businessQuotaMultiple: number;
+}
+
+export default function SubscriptionContent({
+  teamQuotaMultiple,
+  businessQuotaMultiple,
+}: ISubscriptionContentProps) {
   const { onSelectSubscription, setAuthModalOpen, setConfirmModal } =
     usePricing();
   const { user } = useAuth();
@@ -20,6 +28,12 @@ export default function SubscriptionContent() {
   const [billingInterval, setBillingInterval] = useState<"month" | "year">(
     "month",
   );
+
+  /**
+   * Info: (20260809 - Luphia) 方案功能列僅列出「費思人工智能代理人」（產品調整 20260809）：
+   * 不再於此揭露計費費率與 token 計算方式，費率揭露改以服務條款 §3.4 為準。
+   */
+  const faithAgentFeature = t("pricing.faith_agent");
 
   const currentPlan = user
     ? user.plan === "personal" || !user.plan
@@ -101,12 +115,6 @@ export default function SubscriptionContent() {
             features={[
               t("pricing.plans.free.features.fido"),
               {
-                text: t("pricing.plans.free.features.daily_credits", {
-                  amount: REWARD_AMOUNTS.DAILY_CHECKIN_REWARD,
-                }),
-                tooltip: t("pricing.plans.free.features.credit_limit"),
-              },
-              {
                 text: t("pricing.plans.free.features.consults", {
                   amount: Math.floor(
                     SUBSCRIPTION_PLAN_CREDITS.free /
@@ -149,6 +157,7 @@ export default function SubscriptionContent() {
                 }),
                 tooltip: t("pricing.plans.free.features.ai_overage_tooltip"),
               },
+              faithAgentFeature,
               t("pricing.plans.free.features.storage", {
                 gb: CARBON_STORAGE_QUOTA_GB_BY_PLAN.free,
               }),
@@ -172,14 +181,9 @@ export default function SubscriptionContent() {
                 text: t("pricing.plans.team.features.fido"),
                 tooltip: t("pricing.plans.team.features.fido_tooltip"),
               },
-              {
-                text: t("pricing.plans.team.features.monthly_credits", {
-                  amount: SUBSCRIPTION_PLAN_CREDITS.team,
-                }),
-                tooltip: t(
-                  "pricing.plans.team.features.monthly_credits_tooltip",
-                ),
-              },
+              t("pricing.plans.team.features.quota_multiple", {
+                multiple: teamQuotaMultiple,
+              }),
               {
                 text: t("pricing.plans.team.features.consults", {
                   amount: Math.floor(
@@ -223,6 +227,7 @@ export default function SubscriptionContent() {
                 }),
                 tooltip: t("pricing.plans.team.features.ai_overage_tooltip"),
               },
+              faithAgentFeature,
               t("pricing.plans.team.features.analytics"),
               t("pricing.plans.team.features.support"),
               t("pricing.plans.team.features.storage", {
@@ -246,14 +251,9 @@ export default function SubscriptionContent() {
                 text: t("pricing.plans.business.features.fido"),
                 tooltip: t("pricing.plans.business.features.fido_tooltip"),
               },
-              {
-                text: t("pricing.plans.business.features.monthly_credits", {
-                  amount: SUBSCRIPTION_PLAN_CREDITS.business,
-                }),
-                tooltip: t(
-                  "pricing.plans.business.features.monthly_credits_tooltip",
-                ),
-              },
+              t("pricing.plans.business.features.quota_multiple", {
+                multiple: businessQuotaMultiple,
+              }),
               {
                 text: t("pricing.plans.business.features.consults", {
                   amount: Math.floor(
@@ -302,6 +302,7 @@ export default function SubscriptionContent() {
                   "pricing.plans.business.features.ai_overage_tooltip",
                 ),
               },
+              faithAgentFeature,
               t("pricing.plans.business.features.analytics"),
               t("pricing.plans.business.features.support"),
               {

@@ -825,4 +825,59 @@ export const API_ERRORS = {
     message: "Account not found",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
+
+  /**
+   * Info: (20260807 - Luphia) 團隊錢包與訂閱額度（TW 前綴），
+   * 設計書 documents/architecture/team_wallet_and_subscription_quota.md §5 / §7。
+   */
+  TW_QUOTA_EXCEEDED: {
+    code: "TW000001",
+    message: "Team subscription quota exceeded",
+    status: ApiCode.PAYMENT_REQUIRED,
+  } as IErrorDef,
+  TW_ALLOCATION_INSUFFICIENT: {
+    code: "TW000002",
+    message: "Allocated team credits insufficient",
+    status: ApiCode.PAYMENT_REQUIRED,
+  } as IErrorDef,
+  TW_WALLET_INSUFFICIENT: {
+    code: "TW000003",
+    message: "Team wallet unallocated balance insufficient",
+    status: ApiCode.PAYMENT_REQUIRED,
+  } as IErrorDef,
+  TW_WALLET_FORBIDDEN: {
+    code: "TW000004",
+    message: "Only team owner or admin can manage the team wallet",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+  TW_WALLET_FROZEN: {
+    code: "TW000005",
+    message: "Team wallet is frozen pending audit",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+  TW_SUBSCRIPTION_NOT_FOUND: {
+    code: "TW000006",
+    message: "Team subscription not found",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+  TW_INVALID_SPEND_AMOUNT: {
+    code: "TW000007",
+    message: "Spend amount must be a positive integer",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+  TW_NOT_TEAM_MEMBER: {
+    code: "TW000008",
+    message: "User is not a member of the team",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+  TW_OPERATION_FAILED: {
+    code: "TW000009",
+    message: "Team wallet operation failed",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
+  TW_INVALID_CREDIT_PLAN: {
+    code: "TW000010",
+    message: "Unknown credit plan id",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
 };

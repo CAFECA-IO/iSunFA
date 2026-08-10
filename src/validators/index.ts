@@ -16,3 +16,5 @@ export * from "@/validators/ledger";
 export * from "@/validators/report";
 export * from "@/validators/logistics_report_pdf";
 export * from "@/validators/carbon_source_table";
+export * from "@/validators/team_wallet";
+export * from "@/validators/faith_chat";

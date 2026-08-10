@@ -263,6 +263,14 @@ export async function completeOrder(
   );
 }
 
+/**
+ * Info: (20260808 - Luphia) 團隊額度付款履行後標記完成（離鏈扣抵，無鏈上 tx 與收據簽章）。
+ * route 層不得直呼 repository，統一經此 service 包裝。
+ */
+export async function markOrderCompleted(orderId: string) {
+  await paymentRepo.updateOrderCompleted(orderId);
+}
+
 export async function failOrder(orderId: string, reason: string) {
   await paymentRepo.failOrder(orderId, reason);
 }

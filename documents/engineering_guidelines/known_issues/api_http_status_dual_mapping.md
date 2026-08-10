@@ -1,7 +1,11 @@
 # 🐛 已知缺陷：API 錯誤碼對 HTTP 狀態碼存在雙套對照表，其中一套不完整
 
-- 版本：v1.0（2026-07-31，Julian）
-- 狀態：**Open — 未修復**
+- 版本：v1.1（2026-08-07，Luphia）
+- 狀態：**Resolved — 已修復（2026-08-07，feature/team_wallet_subscription_quota）**
+  > `httpStatusOf()` 已改為 `return HTTP_MAP[code] ?? 500;`，雙套對照收斂為單一來源。
+  > `HTTP_MAP` 型別為 `Record<ApiCode, number>`，日後新增 `ApiCode` 成員（如本次的
+  > `PAYMENT_REQUIRED` 402）漏補對照會直接編譯失敗，不再依賴人工同步。
+  > 以下原始描述保留供歷史脈絡。
 - 嚴重度：中（影響監控正確性、前端錯誤分流、以及已成文規範的實際落地）
 - 發現脈絡：處理 PR #6570 review 衍生的 `report_generate/route.ts` aborted 錯誤碼 ToDo 時發現
 

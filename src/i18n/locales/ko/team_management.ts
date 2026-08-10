@@ -49,4 +49,31 @@ export const teamManagement = {
   scan_qr_code: "QR 코드 스캔",
   scanning: "스캔 중...",
   camera_error: "카메라에 액세스할 수 없습니다. 권한 설정을 확인하세요.",
+  // Info: (20260807 - Luphia) 팀 지갑 및 구독 한도 패널（設計書 §9 P4）
+  wallet: {
+    title: "팀 지갑 및 구독 한도",
+    quota_title: "구독 한도",
+    load_failed: "불러올 수 없습니다. 잠시 후 다시 시도해 주세요.",
+    retry: "다시 시도",
+    quota_5h: "5시간 한도",
+    quota_week: "주간 한도",
+    balance_title: "팀 지갑",
+    pool_balance: "미배분 포인트",
+    frozen_warning:
+      "팀 지갑이 동결되었습니다(보존 감사 이상). 고객 지원에 문의해 주세요.",
+    buy_credits: "포인트 구매하기",
+    buy_credits_hint:
+      "구매한 포인트는 팀 지갑에 적립되어 관리자가 배분할 수 있습니다.",
+    allocated_points: "배분 포인트",
+    allocate_to: "{{name}}에게 포인트 배분",
+    revoke_from: "{{name}}에게서 포인트 회수",
+    amount_label: "포인트",
+    amount_limit: "사용 가능: {{max}} 포인트",
+    allocate: "배분",
+    revoke: "회수",
+    allocation_success: "완료되었습니다.",
+    allocation_failed:
+      "작업에 실패했습니다. 잔액을 확인한 후 다시 시도해 주세요.",
+    invalid_amount: "양의 정수를 입력해 주세요.",
+  },
 };

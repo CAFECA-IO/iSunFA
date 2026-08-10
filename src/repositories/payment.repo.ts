@@ -10,6 +10,13 @@ import { IOenCallbackData, IOenOrderData } from "@/interfaces/payment";
 import { buildReceiptDataToSave } from "@/lib/utils/payment_helpers";
 import { CurrencyUnit, CURRENCY_UNIT } from "@/constants/price";
 import { MoneyUtil } from "@/lib/utils/money";
+import { creditPoolInTx } from "@/repositories/team_wallet.repo";
+import { applyTeamSubscriptionInTx } from "@/repositories/team_subscription.repo";
+import {
+  BILLING_INTERVAL,
+  BillingInterval,
+  WALLET_OP_OUTCOME,
+} from "@/constants/subscription_quota";
 
 export interface IOrderWithUser extends Order {
   user: User | null;
@@ -74,7 +81,16 @@ export class PaymentRepository {
               } as Prisma.InputJsonObject,
             },
           });
-        } else if (order.type === ORDER_TYPE.OEN_PAYMENT) {
+        } else if (
+          order.type === ORDER_TYPE.OEN_PAYMENT ||
+          order.type === ORDER_TYPE.BILLING_TEAM_POINT ||
+          /**
+           * Info: (20260807 - Luphia) 團隊訂閱（data 帶 teamId）才進本分支；
+           * 個人 BILLING_SUBSCRIBE 維持原行為（webhook 不處理），避免改變既有語意
+           */
+          (order.type === ORDER_TYPE.BILLING_SUBSCRIBE &&
+            Boolean((order.data as { teamId?: string })?.teamId))
+        ) {
           const _creditsToMint = (order.data as IOenOrderData)?.credits || 0;
           const standardizedData = buildReceiptDataToSave(
             order.id,
@@ -125,9 +141,63 @@ export class PaymentRepository {
             },
           });
 
-          shouldMint = true;
-          creditsToMint = _creditsToMint;
-          amountPaid = order.amount;
+          if (order.type === ORDER_TYPE.BILLING_TEAM_POINT) {
+            /**
+             * Info: (20260807 - Luphia) 團隊購點分流（設計書 §6.1）：
+             * 不 mint 鏈上點數，於同一交易內原子入池（冪等鍵 purchase:{orderId}）。
+             * 入池成功即 COMPLETED；錢包凍結或資料缺 teamId 時訂單停在 PAID 供人工介入。
+             */
+            const teamId = (order.data as IOenOrderData & { teamId?: string })
+              ?.teamId;
+            if (teamId && _creditsToMint > 0) {
+              const credited = await creditPoolInTx(tx, {
+                teamId,
+                credits: BigInt(_creditsToMint),
+                orderId: order.id,
+                operatorUserId: order.userId,
+                idempotencyKey: `purchase:${order.id}`,
+              });
+              if (
+                credited.outcome === WALLET_OP_OUTCOME.OK ||
+                credited.outcome === WALLET_OP_OUTCOME.DUPLICATE
+              ) {
+                await tx.order.update({
+                  where: { id: order.id },
+                  data: { status: ORDER_STATUS.COMPLETED },
+                });
+              }
+            }
+            amountPaid = order.amount;
+          } else if (order.type === ORDER_TYPE.BILLING_SUBSCRIBE) {
+            /**
+             * Info: (20260807 - Luphia) 團隊訂閱履行（設計書 §7 PUT /subscription）：
+             * 於同一交易內套用方案並完成訂單，不 mint 鏈上點數。
+             */
+            const subData = order.data as IOenOrderData & {
+              teamId?: string;
+              planId?: string;
+              billingInterval?: BillingInterval;
+            };
+            if (subData.teamId && subData.planId) {
+              await applyTeamSubscriptionInTx(tx, {
+                teamId: subData.teamId,
+                planId: subData.planId,
+                billingInterval:
+                  subData.billingInterval ?? BILLING_INTERVAL.MONTH,
+                orderId: order.id,
+                nowMs: Date.now(),
+              });
+              await tx.order.update({
+                where: { id: order.id },
+                data: { status: ORDER_STATUS.COMPLETED },
+              });
+            }
+            amountPaid = order.amount;
+          } else {
+            shouldMint = true;
+            creditsToMint = _creditsToMint;
+            amountPaid = order.amount;
+          }
         }
       } else if (!isPaymentSuccess && order.status === ORDER_STATUS.PENDING) {
         await tx.paymentTransaction.updateMany({
@@ -173,12 +243,13 @@ export class PaymentRepository {
     });
   }
 
-  async updateOrderCompleted(orderId: string, transactionHash: string) {
+  // Info: (20260807 - Luphia) transactionHash 改為可選：團隊購點入池為離鏈履行，無鏈上交易
+  async updateOrderCompleted(orderId: string, transactionHash?: string) {
     return prisma.order.update({
       where: { id: orderId },
       data: {
         status: ORDER_STATUS.COMPLETED,
-        transactionHash: transactionHash,
+        ...(transactionHash ? { transactionHash } : {}),
       },
     });
   }
