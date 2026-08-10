@@ -68,6 +68,14 @@ describe("assertStorableEnvelope", () => {
    * Info: (20260810 - Emily) 「兩者皆有」違反 schema 的「恰一」業務規則,
    * 但**讀得出來** —— 不屬於這一層。這一層只涵蓋不可讀的終態,
    * 在它自己的層次上是完整的,不是把一條規則折成兩半。
+   *
+   * **這支測試單獨存在時是一個空話。** 它斷言 repo 不擋,而「schema 會擋」
+   * 原本沒有任何測試支撐 —— 那條 refine 一旦被動,這裡照樣全綠,
+   * 不變式卻已整條消失。另一半在
+   * src/__tests__/carbon_report_draft_storage.test.ts 的
+   * 「should reject carrying both an envelope and plainContent」與
+   * 「should reject carrying neither an envelope nor plainContent」。
+   * 兩支要一起看:分層的主張要成立,每一層都得有人驗。
    */
   it("should leave the exactly-one business rule to the schema", () => {
     expect(() =>
