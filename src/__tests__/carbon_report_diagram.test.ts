@@ -90,15 +90,31 @@ describe("validateDiagramNodes", () => {
    * 30 個有效節點被 1 個拖垮,代價完全不對等。
    */
   it("時間軸:少數過長者只略過那幾個,其餘照畫", () => {
+    /**
+     * Info: (20260810 - Emily) fixture 由 3 個事件改為 4 個。
+     *
+     * 這條測試要證明的是「1 個過長不該拖垮其餘」,那個意圖不變;
+     * 但原本用 3 個事件示範,略過 1 個之後只剩 2 個 ——
+     * 正好低於時間軸自己的事件數下限(3)。
+     * 兩條規則在那個 fixture 上重疊了,而重疊處正是本次修正的 bug:
+     * 下限原本用完整節點集驗,所以那張圖會通過驗證卻只畫得出 2 個事件。
+     *
+     * 改成 4 個之後,略過 1 個仍有 3 個 —— 兩條規則各自成立,互不干擾。
+     */
     const longMilestone = "永".repeat(70);
-    const source = [longMilestone, "1966年01月", "公司創立", "股票上市"].join(
-      "，",
-    );
+    const source = [
+      longMilestone,
+      "1966年01月",
+      "公司創立",
+      "股票上市",
+      "永安廠啟用",
+    ].join("，");
     const result = validateDiagramNodes(
       CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
       [
         { label: "公司創立", parent: "1966年01月" },
         { label: "股票上市", parent: "1966年01月" },
+        { label: "永安廠啟用", parent: "1966年01月" },
         { label: longMilestone, parent: "1966年01月" },
       ],
       source,
@@ -626,6 +642,30 @@ describe("時間軸的最少事件數(實測回歸)", () => {
       ],
       source,
     );
+    expect(result.reason).toBe(DiagramRejectReasonEnum.TOO_FEW_DATED_EVENTS);
+  });
+
+  /**
+   * Info: (20260810 - Emily) PR review 第 6 點的回歸測試。
+   *
+   * 過長的節點會被略過不畫（見 skippedLabels），但下限原本用完整節點集驗 ——
+   * 「驗證時 3 個、畫出來 2 個」因此會通過，產出一條低於下限的時間軸。
+   * 既有測試抓不到它，是因為它們的節點都沒有過長者。
+   */
+  it("略過過長節點之後，事件數低於下限即不畫", () => {
+    // Info: (20260810 - Emily) 必須真的超過 CARBON_DIAGRAM_MAX_LABEL_CHARS(60)才會被略過
+    const longLabel = `本公司於該年度完成全廠區汽電共生設備汰換${"並取得能源管理系統認證與溫室氣體查證聲明書".repeat(2)}`;
+    const source = `1966年01月 甲事件 1968年06月 乙事件 1970年03月 ${longLabel}`;
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
+      [
+        { label: "甲事件", parent: "1966年01月" },
+        { label: "乙事件", parent: "1968年06月" },
+        { label: longLabel, parent: "1970年03月" },
+      ],
+      source,
+    );
+    expect(result.isValid).toBe(false);
     expect(result.reason).toBe(DiagramRejectReasonEnum.TOO_FEW_DATED_EVENTS);
   });
 

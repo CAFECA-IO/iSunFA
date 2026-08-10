@@ -204,10 +204,22 @@ export function validateDiagramNodes(
         .filter((parent): parent is string => parent !== undefined)
         .map(normalizeForMatch),
     );
+    /**
+     * Info: (20260810 - Emily) 下限要以**實際會畫出來的**事件數為準，不是全部節點
+     * （PR review 第 6 點）。
+     *
+     * 上面的 `skippedLabels` 是過長而不畫的節點。原本這裡用完整節點集算 datedEvents，
+     * 於是「驗證時 3 個、畫出來 2 個」的情形會通過 —— 產出一條事件數低於下限的時間軸，
+     * 而下限存在的理由正是「少於 3 個事件的時間軸讀不出趨勢」。
+     *
+     * 驗的集合與畫的集合必須是同一個，否則這道護欄擋不住它宣稱要擋的東西。
+     */
+    const skipped = new Set(skippedLabels);
     const datedEvents = nodes.filter(
       (node) =>
         node.parent !== undefined &&
-        !periods.has(normalizeForMatch(node.label)),
+        !periods.has(normalizeForMatch(node.label)) &&
+        !skipped.has(node.label),
     );
     if (datedEvents.length < CARBON_TIMELINE_MIN_DATED_EVENTS) {
       return {
