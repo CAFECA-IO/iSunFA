@@ -1,6 +1,8 @@
 // Info: (20260714 - Tzuhan) CarbonReportDraft 資料存取層(唯一碰 Prisma);僅存密文,version 樂觀鎖
 
 import { prisma } from "@/lib/prisma";
+import { assertStorableEnvelope } from "@/repositories/carbon_envelope_invariant";
+
 import { Prisma } from "@/generated";
 
 export interface IUpsertReportDraftParams {
@@ -29,6 +31,7 @@ export class CarbonReportDraftRepository {
 
   // Info: (20260714 - Tzuhan) upsert + 樂觀鎖:版本不符回 null,成功回新版本紀錄
   async upsertByChannel(params: IUpsertReportDraftParams) {
+    assertStorableEnvelope("CarbonReportDraft", params);
     const chatroom = await prisma.chatroom.upsert({
       where: { channel: params.channel },
       update: {},
