@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useMemo, useRef } from "react";
-import { PieChart, Pie, Cell, Tooltip } from "recharts";
-import { useTranslation } from "@/i18n/i18n_context";
 import { Download, Sparkles } from "lucide-react";
+import { DonutCanvas } from "@/components/common/donut_canvas";
+import { DonutLegend } from "@/components/common/donut_legend";
 import { useChartExport } from "@/hooks/use_chart_export";
+import { useTranslation } from "@/i18n/i18n_context";
 
 export interface IDonutChartData {
   name: string;
@@ -28,37 +29,10 @@ export const DEFAULT_COLORS = [
   "#8B5CF6",
 ];
 
-interface ICustomTooltipPayload {
-  name: string;
-  value: number | string;
-  payload: {
-    percent?: number;
-    [key: string]: unknown;
-  };
-}
-
-interface ICustomTooltipProps {
-  active?: boolean;
-  payload?: ICustomTooltipPayload[];
-}
-
-const CustomTooltip = ({
-  active = false,
-  payload = [],
-}: ICustomTooltipProps) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="z-100 rounded-xl border border-gray-100/50 bg-white/95 p-3 shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-sm">
-        <p className="text-sm font-semibold text-gray-800">{payload[0].name}</p>
-        <p className="mt-0.5 text-sm text-gray-500">
-          {new Intl.NumberFormat("en-US").format(Number(payload[0].value))} %
-        </p>
-      </div>
-    );
-  }
-  return null;
-};
-
+/**
+ * Info: (20260810 - Julian) 報表用的圓環卡片：外框 + 匯出工具列 + 圓環 + 圖例。
+ * 圓環本體與圖例已抽到 `DonutCanvas` / `DonutLegend`，這裡只負責組裝與卡片外觀。
+ */
 export const DonutChart: React.FC<IDonutChartProps> = ({
   title,
   data,
@@ -73,34 +47,23 @@ export const DonutChart: React.FC<IDonutChartProps> = ({
     () => chartRef.current,
     "donut-chart",
   );
-  // Info: (20260418 - Tzuhan) Calculate total to determine percentages for the custom center text
+
+  // Info: (20260418 - Tzuhan) Calculate total to determine percentages
   const total = useMemo(
     () => data.reduce((acc, current) => acc + current.value, 0),
     [data],
   );
 
   // Info: (20260418 - Tzuhan) Parse data for percentages
-  const enrichedData = useMemo(() => {
-    return data.map((item) => ({
-      ...item,
-      percent: total > 0 ? Math.round((item.value / total) * 100) : 0,
-    }));
-  }, [data, total]);
-
-  // Info: (20260418 - Tzuhan) Find the largest slice for the center emphasis
-  const primaryItem = useMemo(() => {
-    if (enrichedData.length === 0) return { name: "", percent: 0 };
-    return enrichedData.reduce((prev, current) =>
-      prev.value > current.value ? prev : current,
-    );
-  }, [enrichedData]);
-
-  // Info: (20260418 - Tzuhan) Truncate name for center label
-  const getShortName = (name: string) => {
-    // Info: (20260418 - Tzuhan) If it has spaces, maybe take first word, or just substring
-    if (name.length > 5) return name.substring(0, 4) + "..";
-    return name;
-  };
+  const legendItems = useMemo(
+    () =>
+      data.map((item) => ({
+        name: item.name,
+        value: item.value,
+        percent: total > 0 ? Math.round((item.value / total) * 100) : 0,
+      })),
+    [data, total],
+  );
 
   return (
     <div
@@ -155,62 +118,12 @@ export const DonutChart: React.FC<IDonutChartProps> = ({
             <span className="text-orange-500">📊</span> {title}
           </h3>
         )}
-        <div className="relative mx-auto h-[200px] w-[200px] shrink-0">
-          {/* Info: (20260418 - Tzuhan) Custom Center UI */}
-          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-3xl leading-none font-black tracking-tight text-[#0B1F45]">
-              {primaryItem.percent}%
-            </span>
-            <span className="mt-1 text-xs font-semibold tracking-wider text-gray-500 uppercase">
-              {getShortName(primaryItem.name)}
-            </span>
-          </div>
-          <PieChart width={200} height={200}>
-            <Pie
-              data={enrichedData}
-              cx="50%"
-              cy="50%"
-              innerRadius={65}
-              outerRadius={90}
-              paddingAngle={4}
-              dataKey="value"
-              stroke="none"
-            >
-              {enrichedData.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={colors[index % colors.length]}
-                  className="drop-shadow-sm transition-opacity outline-none hover:opacity-90"
-                />
-              ))}
-            </Pie>
-            <Tooltip content={<CustomTooltip />} />
-          </PieChart>
-        </div>
+        <DonutCanvas data={data} colors={colors} />
       </div>
 
       {/* Info: (20260418 - Tzuhan) Legend & Details Section */}
       <div className="flex w-full min-w-0 flex-col justify-center border-t border-gray-100 pt-6 md:w-2/3 md:border-t-0 md:border-l md:pt-0 md:pl-10">
-        <div className="space-y-4">
-          {enrichedData.map((item, index) => (
-            <div key={index} className="group flex min-w-0 items-center">
-              <div
-                className="mr-4 h-4 w-4 shrink-0 rounded-full shadow-sm transition-transform duration-200 group-hover:scale-110"
-                style={{ backgroundColor: colors[index % colors.length] }}
-              />
-              <div className="flex min-w-0 flex-1 items-baseline justify-between gap-4">
-                <span className="truncate text-sm leading-tight font-semibold text-gray-700 transition-colors group-hover:text-gray-900">
-                  {item.name}
-                </span>
-                <div className="flex shrink-0 items-baseline gap-2">
-                  <span className="text-sm font-bold text-gray-700">
-                    {item.percent}%
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <DonutLegend items={legendItems} colors={colors} />
         <div className="mt-8 min-w-0 border-t border-gray-50 pt-4">
           <p className="text-xs leading-relaxed font-medium wrap-break-word break-all whitespace-normal text-gray-400 md:wrap-break-word">
             {t("chart.donut_chart.note", { title })}
