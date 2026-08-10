@@ -95,15 +95,11 @@ describe("CarbonReportDraftPutSchema", () => {
   });
 
   /**
-   * Info: (20260810 - Emily) 「envelope 與 plainContent 恰一」這條 refine 的兩側。
+   * Info: (20260810 - Emily) 「envelope 與 plainContent 恰一」這條 refine 原本零覆蓋。
    *
-   * 補這兩支的理由不是覆蓋率:`carbon_envelope_invariant` 刻意**不**在 repo 擋
-   * 「兩者皆有」,理由是「那是 schema 的業務規則」—— 而那句話原本沒有任何測試支撐。
-   * 於是分層論述只有一半被驗證:repo 不擋(有測)、schema 會擋(沒測)。
-   * 哪天有人動了這條 refine,repo 那支測試照樣全綠,而不變式已經整條消失 ——
-   * 那正是本次 review 第 6 點那個 bug 的形狀:驗的東西與實際生效的東西不是同一個。
-   *
-   * 對應的另一半在 src/__tests__/carbon_envelope_invariant.test.ts。
+   * 這個檔案先前只測了 version 負數與空密文,而那條 refine 是這個 schema 唯一的
+   * 跨欄位規則,且每一次 PUT 都會執行。XOR 有兩側,只測一側等於沒測 ——
+   * 所以兩者皆有、兩者皆空各補一支。
    */
   it("should reject carrying both an envelope and plainContent", () => {
     const result = CarbonReportDraftPutSchema.safeParse({
