@@ -2,6 +2,7 @@ import { marked } from "marked";
 import { escapeHtml } from "@/lib/utils/logistics_report_html";
 import { stripMarkdownComments } from "@/lib/utils/markdown_comment";
 import { stripHtmlLineBreaksOutsideFences } from "@/lib/utils/markdown_line_break";
+import { escapeArithmeticEmphasis } from "@/lib/utils/markdown_arithmetic_safety";
 import {
   CARBON_PDF_CHART_MAX_HEIGHT_MM,
   CARBON_PDF_FONT_STACK,
@@ -319,11 +320,18 @@ export const buildCarbonReportHtml = (markdown: string): string => {
    *
    * 兩支都是 fence-aware 的既有共用工具(有單元測試護住),程式碼區塊內原樣保留 ——
    * 使用者貼 HTML 教學範例時,fence 內的那些是內容而不是錨點。
+   *
+   * Info: (20260810 - Emily) 剝除之後才轉義乘號:轉義要看的是**最後交給 marked 的那份文字**,
+   * 順序與 `MarkdownContent` 一致(comment → br → 乘號),兩端看到的輸入才是同一份。
+   * 既有草稿是在轉義加入之前組成的,內容裡的乘號還是裸的;重新產生一份 46 頁的報告很貴,
+   * 所以讀取端也擋一次 —— 函式是冪等的,重複套用無害。
    */
   const source = stripHtmlLineBreaksOutsideFences(
     stripMarkdownComments(markdown),
   );
-  let body = marked.parse(source, { async: false }) as string;
+  let body = marked.parse(escapeArithmeticEmphasis(source), {
+    async: false,
+  }) as string;
   body = stripActiveContent(body);
   body = body.replace(
     MERMAID_BLOCK,

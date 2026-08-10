@@ -19,6 +19,7 @@ import {
   type ICarbonSourceTableLabels,
 } from "@/lib/carbon_source_table.builder";
 import { CARBON_SOURCE_TABLE_ANCHOR_PREFIX } from "@/constants/carbon_source_tables";
+import { escapeArithmeticEmphasis } from "@/lib/utils/markdown_arithmetic_safety";
 
 /**
  * Info: (20260801 - Tzuhan) 對帳區塊的錨點。獨立命名空間的理由與其他三種相同:
@@ -112,7 +113,12 @@ const escapeAnchor = (anchor: string): string =>
  * 3. 缺任一種區塊時其餘照常輸出,不留空殼標題
  */
 export function composeParagraphContent(input: IComposeParagraphInput): string {
-  const narrative = extractNarrative(input.content);
+  /**
+   * Info: (20260810 - Emily) 敘述含原文照錄的計算式,星號是乘號而非強調語法。
+   * 在這裡轉義是因為這裡是段落 markdown 的組裝點 —— 存進去的內容就該是對的,
+   * 而不是每個讀取端各自修補一次(見 markdown_arithmetic_safety 的說明)。
+   */
+  const narrative = escapeArithmeticEmphasis(extractNarrative(input.content));
   const blocks: string[] = [];
   if (narrative.length > 0) blocks.push(narrative);
 

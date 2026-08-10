@@ -16,6 +16,7 @@ import { downloadFile } from "@/lib/file_operator";
 import { stripMarkdownComments } from "@/lib/utils/markdown_comment";
 import { stripHtmlLineBreaksOutsideFences } from "@/lib/utils/markdown_line_break";
 import dynamic from "next/dynamic";
+import { escapeArithmeticEmphasis } from "@/lib/utils/markdown_arithmetic_safety";
 
 // Info: (20260720 - Tzuhan) #54 證據鏈元件動態載入:含 RecordTabModal 依賴鏈,不拖累一般 markdown 渲染
 const EvidenceChain = dynamic(
@@ -173,7 +174,14 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
    * 與註解剝除一樣:僅影響顯示,存下來的原文一字不改。
    */
   const displayContent = useMemo(
-    () => stripHtmlLineBreaksOutsideFences(stripMarkdownComments(content)),
+    /**
+     * Info: (20260810 - Emily) 一併轉義算式裡的星號 —— 否則預覽與下載的 PDF
+     * 會顯示不同的數字,而那正是這幾天一直在追的那種分歧。
+     */
+    () =>
+      escapeArithmeticEmphasis(
+        stripHtmlLineBreaksOutsideFences(stripMarkdownComments(content)),
+      ),
     [content],
   );
 
