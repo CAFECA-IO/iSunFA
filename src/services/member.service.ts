@@ -80,39 +80,10 @@ export async function registerUserViaMembership(
 }
 
 /**
- * Info: (20260413 - Luphia) Claims the 5 pt daily check-in reward for a user on-chain.
- * Reverts if 24 hours haven't passed.
+ * Info: (20260809 - Luphia) claimDailyCheckIn 已移除：登入贈點機制於 20260809 取消（產品決策），
+ * 唯一呼叫端 /api/v1/auth/checkin 不再 mint 獎勵；鏈上 MembershipSystem.dailyCheckIn
+ * 仍存在於已部署合約（不可變），僅後端不再呼叫。
  */
-export async function claimDailyCheckIn(
-  userAddress: string,
-): Promise<ActionResponse> {
-  try {
-    const { account, walletClient, membershipAddress } = await getClients();
-    const validTo = getAddress(userAddress);
-
-    const { request } = await publicClient.simulateContract({
-      account,
-      address: membershipAddress,
-      abi: MEMBERSHIP_ABI,
-      functionName: "dailyCheckIn",
-      args: [validTo],
-    });
-
-    const tx = await walletClient.writeContract(request);
-    await publicClient.waitForTransactionReceipt({ hash: tx });
-
-    return { success: true, message: "Daily check-in processed", data: { tx } };
-  } catch (error) {
-    /**
-     * Info: (20260413 - Luphia) We don't want to blow up the backend entirely if someone just checks in too early,
-     * so just log the warning and return false gracefully.
-     */
-    console.warn(
-      `[MembershipService] dailyCheckIn blocked for ${userAddress}: ${(error as Error).message.split("\n")[0]}`,
-    );
-    return { success: false, message: (error as Error).message };
-  }
-}
 
 // Info: (20260413 - Luphia) Distributes purchased points directly through the Membership contract's reserve.
 export async function issuePurchasedPointsToMember(

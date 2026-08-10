@@ -5,6 +5,8 @@ export const pricing = {
   monthly: "月払い",
   yearly: "年払い",
   save_percent: "17% お得",
+  // Info: (20260807 - Luphia) 費思費率標註（設計書 §5.3 定價揭露），數字由 API 插值、嚴禁寫死
+  faith_agent: "Faith AI エージェント",
   currency_prefix: "NT$ ",
 
   cta: "始める",
@@ -61,8 +63,6 @@ export const pricing = {
       features: {
         storage: "ストレージ {{gb}} GB",
         fido: "FIDO2 キー 1個",
-        credit_limit: "ポイント上限 500 pt",
-        daily_credits: "毎日ログインで {{amount}} pt 付与",
         consults: "月間最大 {{amount}} 回の質問",
         consults_tooltip: "1 質問につき {{price}} pt",
         vouchers: "月間最大 {{amount}} 件の証憑分析",
@@ -81,9 +81,7 @@ export const pricing = {
         fido: "無制限の FIDO2 キー",
         fido_tooltip:
           "FIDO2 キーの数に基づいてサブスクリプション料金が請求されます",
-        credit_limit: "ポイント上限なし",
-        monthly_credits: "毎月自動的に {{amount}} ポイントが付与されます",
-        monthly_credits_tooltip: "ポイントの有効期限は 30 日間です",
+        quota_multiple: "無料版の {{multiple}} 倍のトークン枠",
         consults: "月間最大 {{amount}} 回の質問",
         consults_tooltip: "1 質問につき {{price}} pt",
         vouchers: "月間最大 {{amount}} 件の証憑分析",
@@ -104,9 +102,7 @@ export const pricing = {
         fido: "無制限の FIDO2 キー",
         fido_tooltip:
           "FIDO2 キーの数に基づいてサブスクリプション料金が請求されます",
-        credit_limit: "ポイント上限なし",
-        monthly_credits: "毎月自動的に {{amount}} ポイントが付与されます",
-        monthly_credits_tooltip: "ポイントの有効期限は 30 日間です",
+        quota_multiple: "チーム版の {{multiple}} 倍のトークン枠",
         consults: "月間最大 {{amount}} 回の質問",
         consults_tooltip: "1 質問につき {{price}} pt",
         vouchers: "月間最大 {{amount}} 件の証憑分析",
@@ -167,6 +163,7 @@ export const pricing = {
       validity: "ポイント有効期限なし",
     },
     plans: {
+      buy_now: "今すぐ購入",
       tier1: {
         credits: "{{count}} pt",
         price: "{{price}}",

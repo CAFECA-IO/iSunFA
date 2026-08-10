@@ -14,7 +14,6 @@ import { request } from "@/lib/utils/request";
 import { publicClient } from "@/lib/viem_public";
 import { ABIS, CONTRACT_ADDRESSES } from "@/config/contracts";
 import { formatUnits } from "viem";
-import { CheckinRewardModal } from "@/components/common/checkin_reward_modal";
 import { MoneyUtil } from "@/lib/utils/money";
 
 interface IAuthUser {
@@ -45,8 +44,6 @@ const AuthContext = createContext<IAuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<IAuthUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [rewardAmount, setRewardAmount] = useState<string>("0");
-  const [showRewardModal, setShowRewardModal] = useState<boolean>(false);
 
   const refreshAuth = useCallback(async () => {
     const token = localStorage.getItem("dewt");
@@ -61,24 +58,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: "GET",
       });
 
-      // Info: (20260408 - Luphia) Parallel non-blocking checkin
-      const checkinPromise = request<{
-        payload: { checkinSuccess: boolean; rewardAmount: string };
-      }>("/api/v1/auth/checkin", {
-        method: "GET",
-      }).catch((err) => {
+      /**
+       * Info: (20260809 - Luphia) Parallel non-blocking checkin：
+       * 登入贈點已取消（20260809 產品決策），不再處理 rewardAmount 與獎勵視窗；
+       * 背景呼叫保留——後端仍以此記錄登入（稽核）並確保鏈上會員註冊。
+       */
+      request("/api/v1/auth/checkin", { method: "GET" }).catch((err) => {
         console.warn("Background checkin failed:", err);
-        return null;
-      });
-      checkinPromise.then((res) => {
-        if (
-          res &&
-          res.payload &&
-          MoneyUtil.toDecimal(res.payload.rewardAmount).gt(0)
-        ) {
-          setRewardAmount(res.payload.rewardAmount);
-          setShowRewardModal(true);
-        }
       });
 
       const response = await authPromise;
@@ -162,16 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [user, loading, refreshAuth, logout, updateLocalCredits],
   );
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-      <CheckinRewardModal
-        isOpen={showRewardModal}
-        onClose={() => setShowRewardModal(false)}
-        rewardAmount={rewardAmount}
-      />
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

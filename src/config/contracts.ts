@@ -15,6 +15,8 @@ export const CONTRACT_ADDRESSES = {
   SCW_FACTORY: process.env.NEXT_PUBLIC_SCW_FACTORY_ADDRESS as Address,
   ENTRY_POINT: process.env.NEXT_PUBLIC_ENTRY_POINT_ADDRESS as Address,
   MISSION_BOARD: process.env.NEXT_PUBLIC_MISSION_BOARD_ADDRESS as Address,
+  // Info: (20260807 - Luphia) C 案 Phase 1 每日 Ledger merkle 錨定（ADR 015），不持有資產
+  LEDGER_ANCHOR: process.env.NEXT_PUBLIC_LEDGER_ANCHOR_ADDRESS as Address,
 } as const;
 
 export const ABIS = {
@@ -78,5 +80,11 @@ export const ABIS = {
     "function totalSupply() view returns (uint256)",
     "function compliance() external view returns (address)",
     "function identityRegistry() external view returns (address)",
+  ]),
+
+  // Info: (20260807 - Luphia) 每日 Ledger merkle 錨定（ADR 015 C 案 Phase 1）
+  LEDGER_ANCHOR: parseAbi([
+    "function commitAnchor(uint256 day, bytes32 dayRoot, bytes32 chainedRoot, uint256 entryCount) external",
+    "event AnchorCommitted(uint256 indexed day, bytes32 dayRoot, bytes32 chainedRoot, uint256 entryCount)",
   ]),
 };

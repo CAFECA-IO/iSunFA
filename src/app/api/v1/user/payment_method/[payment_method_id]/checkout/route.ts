@@ -9,7 +9,9 @@ import { issuePurchasedPointsToMember } from "@/services/member.service";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { webAuthnService } from "@/services/webauthn.service";
-import { ORDER_STATUS } from "@/constants/status";
+import { fulfillTeamPointPurchase } from "@/services/team_wallet.service";
+import { fulfillTeamSubscriptionOrder } from "@/services/team_subscription.service";
+import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 import { isProduction } from "@/lib/utils/common";
 
 const OEN_ACCESS_TOKEN = process.env.OEN_ACCESS_TOKEN;
@@ -148,6 +150,32 @@ export async function POST(
       oenData,
       authentication,
     );
+
+    // Info: (20260807 - Luphia) 團隊購點分流（設計書 §6.1）：離鏈入池 + COMPLETED，不 mint 鏈上點數
+    if (order.type === ORDER_TYPE.BILLING_TEAM_POINT) {
+      try {
+        await fulfillTeamPointPurchase(order);
+        return jsonOk({ requireBinding: false, success: true });
+      } catch (fulfillError) {
+        // Info: (20260807 - Luphia) 已扣款但入池失敗（如錢包凍結）：訂單停在 PAID 供人工介入
+        console.error("Team point fulfillment failed:", fulfillError);
+        return jsonFail(API_ERRORS.TW_WALLET_FROZEN);
+      }
+    }
+
+    // Info: (20260807 - Luphia) 團隊訂閱分流（設計書 §7）：套用方案 + COMPLETED，不 mint 鏈上點數
+    if (
+      order.type === ORDER_TYPE.BILLING_SUBSCRIBE &&
+      (order.data as { teamId?: string })?.teamId
+    ) {
+      try {
+        await fulfillTeamSubscriptionOrder(order, Date.now());
+        return jsonOk({ requireBinding: false, success: true });
+      } catch (fulfillError) {
+        console.error("Team subscription fulfillment failed:", fulfillError);
+        return jsonFail(API_ERRORS.TW_OPERATION_FAILED);
+      }
+    }
 
     // Info: (20260306 - Tzuhan) 呼叫鑄造代幣合約
     const mintResult = await issuePurchasedPointsToMember(

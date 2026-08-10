@@ -30,8 +30,8 @@
 
 *尚未修復、但會影響開發判斷的系統性缺陷；動到相關區域前請先閱讀：*
 
-- ⚠️ **[API 錯誤碼對 HTTP 狀態碼雙套對照表](engineering_guidelines/known_issues/api_http_status_dual_mapping.md)**
-  > `jsonFail()` 使用的 `httpStatusOf()` 缺 `CONFLICT` / `RATE_LIMIT` 兩個 case，限流實際回 500 而非 429。**新增 `ApiCode` 成員時必須手動同步 `httpStatusOf()`，tsc 不會提醒。**
+- ⚠️ **[API 錯誤碼對 HTTP 狀態碼雙套對照表](engineering_guidelines/known_issues/api_http_status_dual_mapping.md)**（已解決 2026-08-07）
+  > `httpStatusOf()` 已收斂為讀 `HTTP_MAP`（`Record<ApiCode, number>`），新增 `ApiCode` 成員漏補對照會直接編譯失敗，無需再人工同步。
 - ⚠️ **[龍捲風圖「編輯數列分組」缺少 UI 層驗證](engineering_guidelines/known_issues/tornado_edit_group_missing_ui_validation.md)**
   > 數列名含配對分隔符（`<->` / `↔`）時，動作照常送出但標頭改寫被靜默略過（顏色仍生效）。資料層防護正確，缺的是 UI 層前置驗證與提示。
 - ⚠️ **[路網資料只有臺灣，境外陸運段全數為推估](engineering_guidelines/known_issues/osrm_taiwan_only_coverage.md)**
@@ -62,6 +62,7 @@
 
 ### 🧩 3.5 功能整合計畫 (Feature Integration Plans)
 - **[分類帳與試算表整合施行計劃 (Ledger & Trial Balance Integration Plan)](architecture/ledger_and_trial_balance_integration_plan.md)**：於既有報表引擎慣例上新增兩支唯讀報表（樹狀溯源 + MoneyUtil + 懸記納入）。
+- **[團隊錢包與訂閱額度消耗系統 (Team Wallet & Subscription Quota)](architecture/team_wallet_and_subscription_quota.md)**：團隊為計費主體、5 小時 / 週雙視窗訂閱額度、免簽章扣費管線與管理者點數分配。
 
 ### 📌 4. 架構決策紀錄 (Architecture Decision Records, ADRs)
 *追蹤重大架構變更背後的歷史脈絡與取捨：*
@@ -76,6 +77,7 @@
 - **[ADR 009: Zero-Trust Washing Pipeline and SoD](architecture/decisions/009_zero_trust_washing_pipeline_and_sod.md)**：決定論管線洗淨與 IssueRecorder 瘦身，嚴守資料流的單向黃金法則。
 - **[ADR 010: Immutable Pipeline, File-System Queue, and Stateless Workers](architecture/decisions/010_immutable_pipeline_and_stateless_workers.md)**：採用無狀態攤銷、不可變資料管道與 Web3 檔案系統佇列的分散式高可用設計。
 - **[ADR 011: Agentic Reflection and Deterministic Validation](architecture/decisions/011_agentic_reflection_and_deterministic_validation.md)**：AI 反思機制與確定性驗證層，建立 BSI 級別的自評重做與懸記防護網。
+- **[ADR 015: Off-chain Team Wallet Ledger](architecture/decisions/015_offchain_team_wallet_ledger.md)**：團隊錢包與訂閱額度採 C 案混合制——離鏈決定論帳本營運（免逐次簽章、append-only Ledger + 守恆勾稽），每日 merkle root 鏈上錨定；1:1 backing 為金鑰治理到位後的 Phase 2。
 
 ---
 

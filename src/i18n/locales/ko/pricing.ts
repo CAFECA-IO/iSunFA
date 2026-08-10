@@ -5,6 +5,8 @@ export const pricing = {
   monthly: "월 결제",
   yearly: "연 결제",
   save_percent: "17% 절약",
+  // Info: (20260807 - Luphia) 費思費率標註（設計書 §5.3 定價揭露），數字由 API 插值、嚴禁寫死
+  faith_agent: "Faith AI 에이전트",
   currency_prefix: "NT$ ",
 
   cta: "시작하기",
@@ -62,8 +64,6 @@ export const pricing = {
       features: {
         storage: "저장 공간 {{gb}} GB",
         fido: "FIDO2 키 1개",
-        credit_limit: "크레딧 한도: 500 크레딧",
-        daily_credits: "매일 로그인 시 {{amount}} 크레딧 지급",
         consults: "월 최대 {{amount}} 회 질문",
         consults_tooltip: "질문당 {{price}} 크레딧",
         vouchers: "월 최대 {{amount}} 건의 전표 분석",
@@ -81,9 +81,7 @@ export const pricing = {
         storage: "저장 공간 {{gb}} GB",
         fido: "무제한 FIDO2 키",
         fido_tooltip: "FIDO2 키 수량에 따라 구독료가 부과됩니다",
-        credit_limit: "크레딧 무제한",
-        monthly_credits: "매월 자동으로 {{amount}} 크레딧이 지급됩니다",
-        monthly_credits_tooltip: "크레딧 유효기간 30 일",
+        quota_multiple: "무료 플랜의 {{multiple}}배 토큰 한도",
         consults: "월 최대 {{amount}} 회 질문",
         consults_tooltip: "질문당 {{price}} 크레딧",
         vouchers: "월 최대 {{amount}} 건의 전표 분석",
@@ -103,9 +101,7 @@ export const pricing = {
         storage: "저장 공간 {{gb}} GB",
         fido: "무제한 FIDO2 키",
         fido_tooltip: "FIDO2 키 수량에 따라 구독료가 부과됩니다",
-        credit_limit: "크레딧 무제한",
-        monthly_credits: "매월 자동으로 {{amount}} 크레딧이 지급됩니다",
-        monthly_credits_tooltip: "크레딧 유효기간 30 일",
+        quota_multiple: "팀 플랜의 {{multiple}}배 토큰 한도",
         consults: "월 최대 {{amount}} 회 질문",
         consults_tooltip: "질문당 {{price}} 크레딧",
         vouchers: "월 최대 {{amount}} 건의 전표 분석",
@@ -164,6 +160,7 @@ export const pricing = {
       validity: "포인트 유효기간 없음",
     },
     plans: {
+      buy_now: "지금 구매",
       tier1: {
         credits: "{{count}} pt",
         price: "{{price}}",

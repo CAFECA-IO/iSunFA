@@ -8,7 +8,6 @@ import { faith } from "@/i18n/locales/zh_cn/faith";
 import { cookieConsent } from "@/i18n/locales/zh_cn/cookie_consent";
 import { dashboard } from "@/i18n/locales/zh_cn/dashboard";
 import { header } from "@/i18n/locales/zh_cn/header";
-import { checkinReward } from "@/i18n/locales/zh_cn/checkin_reward";
 import { authModal } from "@/i18n/locales/zh_cn/auth_modal";
 import { features } from "@/i18n/locales/zh_cn/features";
 import { registrationSteps } from "@/i18n/locales/zh_cn/registration_steps";
@@ -85,7 +84,6 @@ export const zhCn = {
   cookie_consent: cookieConsent,
   dashboard,
   header,
-  checkin_reward: checkinReward,
   auth_modal: authModal,
   features,
   esg_target: esgTarget,

@@ -57,6 +57,8 @@ export enum LlmTaskKeyEnum {
   REPORT_IMPORT = "REPORT_IMPORT",
   // Info: (20260730 - Tzuhan) 結構圖節點萃取(敘述 → 節點+父子關係,mermaid 由模板組出)
   DIAGRAM_EXTRACTION = "DIAGRAM_EXTRACTION",
+  // Info: (20260807 - Luphia) 費思對話（計費，設計書 §5.3）
+  FAITH_CHAT = "FAITH_CHAT",
 }
 
 /**
@@ -105,3 +107,38 @@ export const LLM_TIMEOUT_ERROR_MARKER = "LLM_TIMEOUT";
  */
 export const LLM_TRANSPORT_RETRY_ATTEMPTS = 2;
 export const LLM_TRANSPORT_RETRY_DELAY_MS = 3_000;
+
+export interface IFaithBillingSetting {
+  // Info: (20260809 - Luphia) 每 N tokens（input + thinking + output 合計）扣 1 點
+  tokensPerCredit: number;
+  // Info: (20260809 - Luphia) 成本上界：thinking token 與正式輸出共用此額度（見上方實測）
+  maxOutputTokens: number;
+  // Info: (20260809 - Luphia) 預扣估算用：帶圖時的輸入 token 估值
+  imageInputTokenEstimate: number;
+}
+
+/**
+ * Info: (20260809 - Luphia) 費思對話計費設定的**預設值**（設計書 §5.3，產品拍板 2026-08-07）。
+ *
+ * 正式值為系統設定，保存於 DB 的 `FaithBillingSetting` 表（可由後台調整、留變更軌跡、
+ * 多實例一致），本常數僅在查無設定列時作為 fail-safe 預設。
+ * **嚴禁改回 env 覆寫**——營運設定不屬部署參數，且非 NEXT_PUBLIC_ 的環境變數
+ * 在 client bundle 讀不到，會使 server 與 client 算出不同結果。
+ *
+ * 計費規則：無條件進位、每輪最低 1 點。服務條款 §3.4 刻意不載明費率數字
+ * （設定可由後台調整，寫死條款會失準），改以「服務內公告」為準——
+ * 該公告的正式落點尚待產品與法務指定，見設計書 §5.3 待辦。
+ */
+export const DEFAULT_FAITH_BILLING: IFaithBillingSetting = {
+  tokensPerCredit: 1000,
+  maxOutputTokens: 4096,
+  imageInputTokenEstimate: 2000,
+};
+
+/**
+ * Info: (20260807 - Luphia) 預扣估算的內部係數（非營運設定，不進 DB）：
+ * 系統 prompt 上界（最大分支 ~1750 字元）與「3 字元 ≈ 1 token」的估算基準，
+ * 兩者皆繫於 prompt 實作與模型分詞行為，隨程式碼一起版控才有意義。
+ */
+export const FAITH_PROMPT_OVERHEAD_TOKENS = 600;
+export const FAITH_INPUT_CHARS_PER_TOKEN = 3;

@@ -1,0 +1,314 @@
+import { randomUUID } from "crypto";
+import { Order, TeamWalletLedger } from "@/generated";
+import { CREDIT_PLANS } from "@/config/credit_plans";
+import { CURRENCY_UNIT } from "@/constants/price";
+import { ORDER_TYPE } from "@/constants/status";
+import {
+  ALLOCATION_DIRECTION,
+  AllocationDirection,
+  TEAM_WALLET_STATUS,
+  TeamWalletEntryType,
+  TeamWalletStatus,
+  WALLET_OP_OUTCOME,
+  WalletOpOutcome,
+} from "@/constants/subscription_quota";
+import { API_ERRORS, ApiError, IErrorDef } from "@/lib/utils/error_dictionary";
+import type {
+  IAllocationView,
+  ILedgerEntryView,
+  ITeamWalletView,
+} from "@/interfaces/team_wallet";
+import { generatePaymentOrder } from "@/services/order.service";
+import {
+  assertTeamMember,
+  assertWalletManager,
+  isWalletManager,
+} from "@/services/team_wallet_access.guard";
+import { teamRepo } from "@/repositories/team.repo";
+import { teamWalletRepo } from "@/repositories/team_wallet.repo";
+import { paymentRepo } from "@/repositories/payment.repo";
+
+/**
+ * Info: (20260807 - Luphia) 團隊錢包 Service（設計書 §6）：購點、分配、收回、
+ * 成員移除自動收回、錢包視圖與 Ledger 查詢。原子性在 Repository 層，
+ * 本層負責授權、業務防呆與錯誤包裝。
+ */
+
+export interface IManageAllocationParams {
+  teamId: string;
+  operatorUserId: string;
+  targetUserId: string;
+  amount: bigint;
+  direction: AllocationDirection;
+  idempotencyKey?: string;
+}
+
+export interface ITeamWalletDetailView extends ITeamWalletView {
+  allocations?: IAllocationView[];
+}
+
+function toApiError(def: IErrorDef): ApiError {
+  return new ApiError(def.code, def.message, def.status);
+}
+
+/**
+ * Info: (20260807 - Luphia) Service 層錯誤邊界（同 spend.service）：
+ * ApiError 原樣上拋，其餘一律包裝為 TW_OPERATION_FAILED，不外洩底層細節。
+ */
+async function guarded<T>(operation: () => Promise<T>): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw toApiError(API_ERRORS.TW_OPERATION_FAILED);
+  }
+}
+
+function toLedgerView(ledger: TeamWalletLedger): ILedgerEntryView {
+  return {
+    id: ledger.id,
+    entryType: ledger.entryType as TeamWalletEntryType,
+    amount: ledger.amount.toString(),
+    poolBalanceAfter: ledger.poolBalanceAfter?.toString() ?? null,
+    allocationBalanceAfter: ledger.allocationBalanceAfter?.toString() ?? null,
+    targetUserId: ledger.targetUserId,
+    operatorUserId: ledger.operatorUserId,
+    orderId: ledger.orderId,
+    featureCode: (ledger.featureCode ??
+      null) as ILedgerEntryView["featureCode"],
+    createdAt: Math.floor(ledger.createdAt.getTime() / 1000),
+  };
+}
+
+/**
+ * Info: (20260807 - Luphia) 建立團隊購點訂單（設計書 §6.1 步驟 1）。
+ * 點數包沿用 credit_plans（tier1–tier6）；訂單 data 內帶 teamId 供付款成功後分流入池。
+ */
+export async function createTeamPointPurchaseOrder(params: {
+  userId: string;
+  teamId: string;
+  creditPlanId: string;
+  paymentMethodId: string;
+}) {
+  const { userId, teamId, creditPlanId, paymentMethodId } = params;
+
+  return guarded(async () => {
+    await assertWalletManager(userId, teamId);
+
+    const plan = CREDIT_PLANS.find((p) => p.id === creditPlanId);
+    if (!plan) throw toApiError(API_ERRORS.TW_INVALID_CREDIT_PLAN);
+
+    return generatePaymentOrder(userId, {
+      type: ORDER_TYPE.BILLING_TEAM_POINT,
+      amount: plan.price.twd,
+      unit: CURRENCY_UNIT.TWD,
+      credits: plan.credits,
+      paymentMethodId,
+      title: `iSunFA Team Credits - ${plan.credits}`,
+      data: { teamId, creditPlanId },
+    });
+  });
+}
+
+/**
+ * Info: (20260807 - Luphia) 綁卡直扣（checkout）路徑的購點履行：
+ * 入池（冪等鍵 purchase:{orderId}）後標記訂單 COMPLETED。
+ * webhook 路徑不經此函式——processOenPayment 已於交易內原子處理。
+ */
+export async function fulfillTeamPointPurchase(order: Order): Promise<void> {
+  return guarded(async () => {
+    if (order.type !== ORDER_TYPE.BILLING_TEAM_POINT) {
+      throw toApiError(API_ERRORS.TW_OPERATION_FAILED);
+    }
+    const data = order.data as { teamId?: string; credits?: number } | null;
+    const teamId = data?.teamId;
+    const credits = data?.credits ?? 0;
+    if (!teamId || credits <= 0) {
+      throw toApiError(API_ERRORS.TW_OPERATION_FAILED);
+    }
+
+    const credited = await teamWalletRepo.creditPool({
+      teamId,
+      credits: BigInt(credits),
+      orderId: order.id,
+      operatorUserId: order.userId,
+      idempotencyKey: `purchase:${order.id}`,
+    });
+    if (
+      credited.outcome !== WALLET_OP_OUTCOME.OK &&
+      credited.outcome !== WALLET_OP_OUTCOME.DUPLICATE
+    ) {
+      // Info: (20260807 - Luphia) 已扣款但錢包凍結：訂單停在 PAID，勾稽解凍後人工補入
+      throw toApiError(API_ERRORS.TW_WALLET_FROZEN);
+    }
+
+    await paymentRepo.updateOrderCompleted(order.id);
+  });
+}
+
+/**
+ * Info: (20260809 - Luphia) 錢包視圖（設計書 §7 GET /wallet）：
+ * 一般成員僅見自己的分配餘額與錢包狀態；未分配池餘額與全員分配清單為
+ * 管理職資訊，僅 OWNER / ADMIN 回傳——後端就不給，非僅前端隱藏（零信任）。
+ */
+export async function getTeamWalletView(params: {
+  userId: string;
+  teamId: string;
+}): Promise<ITeamWalletDetailView> {
+  const { userId, teamId } = params;
+
+  return guarded(async () => {
+    const member = await assertTeamMember(userId, teamId);
+
+    const wallet = await teamWalletRepo.getWalletByTeamId(teamId);
+    const allocation = await teamWalletRepo.getAllocation(teamId, userId);
+
+    const view: ITeamWalletDetailView = {
+      teamId,
+      status: (wallet?.status ?? TEAM_WALLET_STATUS.ACTIVE) as TeamWalletStatus,
+      myAllocationBalance: (allocation?.balance ?? BigInt(0)).toString(),
+    };
+
+    if (isWalletManager(member)) {
+      view.unallocatedBalance = (
+        wallet?.unallocatedBalance ?? BigInt(0)
+      ).toString();
+      const allocations = await teamWalletRepo.listAllocations(teamId);
+      view.allocations = allocations.map((a) => ({
+        userId: a.userId,
+        balance: a.balance.toString(),
+        updatedAt: Math.floor(a.updatedAt.getTime() / 1000),
+      }));
+    }
+
+    return view;
+  });
+}
+
+export async function listAllocations(params: {
+  userId: string;
+  teamId: string;
+}): Promise<IAllocationView[]> {
+  const { userId, teamId } = params;
+  return guarded(async () => {
+    await assertWalletManager(userId, teamId);
+    const allocations = await teamWalletRepo.listAllocations(teamId);
+    return allocations.map((a) => ({
+      userId: a.userId,
+      balance: a.balance.toString(),
+      updatedAt: Math.floor(a.updatedAt.getTime() / 1000),
+    }));
+  });
+}
+
+/**
+ * Info: (20260807 - Luphia) 分配 / 收回（設計書 §6.2）。
+ * ALLOCATE 目標必須是現任有效成員；冪等鍵未提供時以 UUID 補上（僅保證唯一，無重放保護）。
+ */
+export async function manageAllocation(
+  params: IManageAllocationParams,
+): Promise<ILedgerEntryView> {
+  const { teamId, operatorUserId, targetUserId, amount, direction } = params;
+
+  if (typeof amount !== "bigint" || amount <= BigInt(0)) {
+    throw toApiError(API_ERRORS.TW_INVALID_SPEND_AMOUNT);
+  }
+
+  return guarded(async () => {
+    await assertWalletManager(operatorUserId, teamId);
+
+    if (direction === ALLOCATION_DIRECTION.ALLOCATE) {
+      const target = await teamRepo.getTeamMember(targetUserId, teamId);
+      if (!target) throw toApiError(API_ERRORS.TW_NOT_TEAM_MEMBER);
+    }
+
+    const idempotencyKey = params.idempotencyKey ?? randomUUID();
+    const input = {
+      teamId,
+      targetUserId,
+      amount,
+      operatorUserId,
+      idempotencyKey,
+    };
+    const result =
+      direction === ALLOCATION_DIRECTION.ALLOCATE
+        ? await teamWalletRepo.allocate(input)
+        : await teamWalletRepo.revoke(input);
+
+    if (
+      result.outcome === WALLET_OP_OUTCOME.OK ||
+      result.outcome === WALLET_OP_OUTCOME.DUPLICATE
+    ) {
+      if (!result.ledger) throw toApiError(API_ERRORS.TW_OPERATION_FAILED);
+      return toLedgerView(result.ledger);
+    }
+    throw toApiError(mapAllocationFailure(direction, result.outcome));
+  });
+}
+
+function mapAllocationFailure(
+  direction: AllocationDirection,
+  outcome: WalletOpOutcome,
+): IErrorDef {
+  if (outcome === WALLET_OP_OUTCOME.FROZEN) return API_ERRORS.TW_WALLET_FROZEN;
+  if (
+    outcome === WALLET_OP_OUTCOME.INSUFFICIENT ||
+    outcome === WALLET_OP_OUTCOME.NO_WALLET
+  ) {
+    return direction === ALLOCATION_DIRECTION.ALLOCATE
+      ? API_ERRORS.TW_WALLET_INSUFFICIENT
+      : API_ERRORS.TW_ALLOCATION_INSUFFICIENT;
+  }
+  return API_ERRORS.TW_OPERATION_FAILED;
+}
+
+export async function listTeamWalletLedger(params: {
+  userId: string;
+  teamId: string;
+  page: number;
+  pageSize: number;
+}): Promise<{ items: ILedgerEntryView[]; total: number }> {
+  const { userId, teamId, page, pageSize } = params;
+  return guarded(async () => {
+    await assertWalletManager(userId, teamId);
+    const { items, total } = await teamWalletRepo.listLedger(
+      teamId,
+      page,
+      pageSize,
+    );
+    return { items: items.map(toLedgerView), total };
+  });
+}
+
+/**
+ * Info: (20260807 - Luphia) 成員移除自動收回（設計書 §6.2）：
+ * 於移除流程「刪除成員之前」呼叫；FROZEN 時丟錯中止移除（守恆優先）；
+ * 冪等鍵綁 memberId，重試安全。
+ */
+export async function revokeAllocationOnMemberRemoval(params: {
+  teamId: string;
+  targetUserId: string;
+  operatorUserId: string;
+  memberId: string;
+}): Promise<{ revoked: boolean }> {
+  const { teamId, targetUserId, operatorUserId, memberId } = params;
+  return guarded(async () => {
+    const result = await teamWalletRepo.revokeAllForUser({
+      teamId,
+      targetUserId,
+      operatorUserId,
+      idempotencyKey: `revoke-all:${memberId}`,
+    });
+    if (
+      result.outcome === WALLET_OP_OUTCOME.OK ||
+      result.outcome === WALLET_OP_OUTCOME.DUPLICATE
+    ) {
+      return { revoked: true };
+    }
+    if (result.outcome === WALLET_OP_OUTCOME.FROZEN) {
+      throw toApiError(API_ERRORS.TW_WALLET_FROZEN);
+    }
+    // Info: (20260807 - Luphia) NOT_FOUND / NO_WALLET：無分配可收，no-op
+    return { revoked: false };
+  });
+}

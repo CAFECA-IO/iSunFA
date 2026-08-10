@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, FormEvent } from "react";
+import { useState, useEffect, useCallback, useMemo, FormEvent } from "react";
 
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAuth } from "@/contexts/auth_context";
@@ -13,11 +13,23 @@ import {
   Check,
   X,
   Book,
+  Coins,
+  PlusCircle,
+  MinusCircle,
 } from "lucide-react";
 import { Dialog } from "@headlessui/react";
 import { getLoginOptions, fido2ClientService } from "@/lib/auth/fido2_client";
 import ConfirmModal from "@/components/common/confirm_modal";
 import InviteMemberModal from "@/components/team/invite_member_modal";
+import TeamWalletPanel, {
+  type ITeamWalletInfo,
+  type TeamWalletFetchStatus,
+} from "@/components/team/team_wallet_panel";
+import AllocationModal from "@/components/team/allocation_modal";
+import {
+  ALLOCATION_DIRECTION,
+  type AllocationDirection,
+} from "@/constants/subscription_quota";
 import { IAccountBook } from "@/interfaces/account_book";
 
 interface ITeam {
@@ -60,6 +72,17 @@ export default function TeamManagementPage() {
   const [tempName, setTempName] = useState("");
 
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+
+  // Info: (20260809 - Luphia) 團隊錢包與分配操作（成員卡片上的分配 / 收回）
+  const [teamWallet, setTeamWallet] = useState<ITeamWalletInfo | null>(null);
+  // Info: (20260809 - Luphia) 載入狀態外顯，讓「載入中」與「載入失敗」在畫面上可分辨
+  const [walletStatus, setWalletStatus] =
+    useState<TeamWalletFetchStatus>("loading");
+  const [allocationModal, setAllocationModal] = useState<{
+    member: ITeamMember;
+    direction: AllocationDirection;
+  } | null>(null);
+  const [allocating, setAllocating] = useState(false);
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newTeamName, setNewTeamName] = useState("");
@@ -174,6 +197,38 @@ export default function TeamManagementPage() {
     if (selectedTeamId) fetchMembers(selectedTeamId);
   }, [selectedTeamId, fetchMembers]);
 
+  /**
+   * Info: (20260809 - Luphia) 錢包資料由頁面單一 fetch（產品調整 20260809）：
+   * 成員清單的分配點數 badge 與錢包面板共用，分配 / 收回後重拉。
+   * 一般成員的回應僅含自己的 myAllocationBalance（後端零信任收斂）。
+   */
+  const fetchTeamWallet = useCallback(async (teamId: string) => {
+    setWalletStatus("loading");
+    try {
+      const token = localStorage.getItem("dewt");
+      const res = await fetch(`/api/v1/user/team/${teamId}/wallet`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.message || "wallet fetch failed");
+      setTeamWallet(json.payload);
+      setWalletStatus("ready");
+    } catch (err) {
+      console.error("Error fetching team wallet:", err);
+      setTeamWallet(null);
+      setWalletStatus("error");
+    }
+  }, []);
+
+  const retryTeamWallet = useCallback(() => {
+    if (selectedTeamId) fetchTeamWallet(selectedTeamId);
+  }, [selectedTeamId, fetchTeamWallet]);
+
+  useEffect(() => {
+    setTeamWallet(null);
+    if (selectedTeamId) fetchTeamWallet(selectedTeamId);
+  }, [selectedTeamId, fetchTeamWallet]);
+
   const currentTeam = teams.find((t) => t.id === selectedTeamId);
   const currentUserMember = members.find(
     (m) => m.user?.address === user?.address,
@@ -181,6 +236,73 @@ export default function TeamManagementPage() {
   const isOwnerOrAdmin =
     currentUserMember?.role === "OWNER" || currentUserMember?.role === "ADMIN";
   const isOwner = currentUserMember?.role === "OWNER";
+
+  /**
+   * Info: (20260809 - Luphia) 成員分配點數對照表：管理者見全員（allocations），
+   * 一般成員僅見自己（myAllocationBalance）——與後端回傳範圍一致。
+   * 尚未分配過的成員在 allocations 中沒有列，視為 0（而非不顯示）。
+   */
+  const allocationByUserId = useMemo(() => {
+    const map: Record<string, string> = {};
+    if (teamWallet?.allocations) {
+      teamWallet.allocations.forEach((a) => {
+        map[a.userId] = a.balance;
+      });
+    }
+    if (teamWallet && currentUserMember) {
+      map[currentUserMember.userId] = teamWallet.myAllocationBalance;
+    }
+    return map;
+  }, [teamWallet, currentUserMember]);
+
+  // Info: (20260809 - Luphia) 可見範圍：管理者見全員、一般成員僅見自己
+  const canSeeAllocation = (userId: string) =>
+    Boolean(teamWallet) &&
+    (isOwnerOrAdmin || userId === currentUserMember?.userId);
+  const allocationOf = (userId: string) => allocationByUserId[userId] ?? "0";
+
+  const handleAllocationConfirm = async (amount: string) => {
+    if (!allocationModal || !selectedTeamId) return;
+    if (!/^\d+$/.test(amount) || amount === "0") {
+      showAlert(t("team_management.wallet.invalid_amount"));
+      return;
+    }
+    setAllocating(true);
+    try {
+      const token = localStorage.getItem("dewt");
+      const res = await fetch(
+        `/api/v1/user/team/${selectedTeamId}/wallet/allocations`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: allocationModal.member.userId,
+            amount,
+            direction: allocationModal.direction,
+            idempotencyKey: `ui:${selectedTeamId}:${allocationModal.member.userId}:${allocationModal.direction}:${amount}:${Date.now()}`,
+          }),
+        },
+      );
+      const json = await res.json();
+      if (!json.success) {
+        throw new Error(
+          json.message || t("team_management.wallet.allocation_failed"),
+        );
+      }
+      setAllocationModal(null);
+      showAlert(t("team_management.wallet.allocation_success"));
+      await fetchTeamWallet(selectedTeamId);
+    } catch (err) {
+      showAlert(
+        (err as Error).message || t("team_management.wallet.allocation_failed"),
+      );
+    } finally {
+      setAllocating(false);
+    }
+  };
 
   const handleCreateTeam = async (e: FormEvent) => {
     e.preventDefault();
@@ -425,7 +547,9 @@ export default function TeamManagementPage() {
           {selectedTeamId && currentTeam && (
             <div className="flex-1 space-y-6">
               <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-                <div className="mb-6 flex flex-col items-start justify-between gap-4 border-b pb-4 sm:flex-row sm:items-center">
+                {/* Info: (20260809 - Luphia) border 需明確帶色：Tailwind v4 預設 currentColor，
+                    深色模式會繼承近白文字色變成亮白分隔線 */}
+                <div className="mb-6 flex flex-col items-start justify-between gap-4 border-b border-gray-100 pb-4 sm:flex-row sm:items-center">
                   {editingName ? (
                     <div className="flex w-full max-w-sm items-center space-x-2">
                       <input
@@ -505,6 +629,18 @@ export default function TeamManagementPage() {
                               <p className="mt-1 w-32 truncate font-mono text-xs break-all text-gray-500">
                                 {member.user?.address}
                               </p>
+                              {/* Info: (20260809 - Luphia) 分配點數 badge：管理者見全員、成員僅見自己（與後端回傳一致） */}
+                              {canSeeAllocation(member.userId) && (
+                                <p
+                                  className="mt-1 flex items-center gap-1 text-xs font-medium text-orange-600 tabular-nums"
+                                  title={t(
+                                    "team_management.wallet.allocated_points",
+                                  )}
+                                >
+                                  <Coins className="size-3.5 shrink-0" />
+                                  {allocationOf(member.userId)}
+                                </p>
+                              )}
                             </div>
                           </div>
                           <div className="flex flex-col items-end space-y-2">
@@ -534,16 +670,48 @@ export default function TeamManagementPage() {
                                 {t("team_management.roles." + member.role)}
                               </span>
                             )}
-                            {(isOwner ||
-                              member.user?.address === user?.address) && (
-                              <button
-                                onClick={() => handleRemoveMember(member.id)}
-                                className="p-1 text-gray-400 transition-colors hover:text-red-500"
-                                title="Remove Member"
-                              >
-                                <Trash2 className="size-3.5 shrink-0" />
-                              </button>
-                            )}
+                            <div className="flex items-center space-x-1">
+                              {/* Info: (20260809 - Luphia) 分配 / 收回入口移至成員卡片（產品調整 20260809），開啟輸入點數的確認視窗 */}
+                              {isOwnerOrAdmin && (
+                                <>
+                                  <button
+                                    onClick={() =>
+                                      setAllocationModal({
+                                        member,
+                                        direction:
+                                          ALLOCATION_DIRECTION.ALLOCATE,
+                                      })
+                                    }
+                                    className="p-1 text-gray-400 transition-colors hover:text-orange-600"
+                                    title={t("team_management.wallet.allocate")}
+                                  >
+                                    <PlusCircle className="size-3.5 shrink-0" />
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      setAllocationModal({
+                                        member,
+                                        direction: ALLOCATION_DIRECTION.REVOKE,
+                                      })
+                                    }
+                                    className="p-1 text-gray-400 transition-colors hover:text-orange-600"
+                                    title={t("team_management.wallet.revoke")}
+                                  >
+                                    <MinusCircle className="size-3.5 shrink-0" />
+                                  </button>
+                                </>
+                              )}
+                              {(isOwner ||
+                                member.user?.address === user?.address) && (
+                                <button
+                                  onClick={() => handleRemoveMember(member.id)}
+                                  className="p-1 text-gray-400 transition-colors hover:text-red-500"
+                                  title="Remove Member"
+                                >
+                                  <Trash2 className="size-3.5 shrink-0" />
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -604,11 +772,42 @@ export default function TeamManagementPage() {
                       </div>
                     </div>
                   )}
+
+                {/* Info: (20260809 - Luphia) 團隊錢包與訂閱額度面板：錢包資料由本頁 fetch 傳入，
+                    分配操作已移至上方成員卡片 */}
+                <TeamWalletPanel
+                  key={currentTeam.id}
+                  teamId={currentTeam.id}
+                  wallet={teamWallet}
+                  walletStatus={walletStatus}
+                  isManager={isOwnerOrAdmin}
+                  onRetryWallet={retryTeamWallet}
+                />
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {allocationModal && (
+        <AllocationModal
+          isOpen
+          direction={allocationModal.direction}
+          memberName={
+            allocationModal.member.user?.name ||
+            allocationModal.member.user?.address ||
+            allocationModal.member.userId
+          }
+          max={
+            allocationModal.direction === ALLOCATION_DIRECTION.ALLOCATE
+              ? (teamWallet?.unallocatedBalance ?? "0")
+              : allocationOf(allocationModal.member.userId)
+          }
+          submitting={allocating}
+          onClose={() => setAllocationModal(null)}
+          onConfirm={handleAllocationConfirm}
+        />
+      )}
 
       <Dialog
         open={isCreateModalOpen}

@@ -240,6 +240,13 @@ export type { Part, Schema, Tool };
  */
 export { SchemaType };
 
+// Info: (20260807 - Luphia) SDK usageMetadata 的摘要（費思計費結算依據）
+export interface ILlmUsage {
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+}
+
 export interface IChatGenerationOptions {
   modelName?: string;
   temperature?: number;
@@ -364,6 +371,19 @@ export class ChatService {
     parts: Part[],
     options?: IChatGenerationOptions,
   ): Promise<string> {
+    const { text } = await this.generateContentWithUsage(parts, options);
+    return text;
+  }
+
+  /**
+   * Info: (20260807 - Luphia) generateContent 的計費版本：連同 usageMetadata 一併回傳，
+   * 供費思「預扣—結算」以 SDK 回報的 totalTokens 為準結算（設計書 §5.3，零捏造：
+   * token 數取自決定論來源，絕不採信模型自報）。generateContent 委派至此，行為不變。
+   */
+  async generateContentWithUsage(
+    parts: Part[],
+    options?: IChatGenerationOptions,
+  ): Promise<{ text: string; usage: ILlmUsage }> {
     const modelName = options?.modelName || this.modelName;
     const generationConfig: GenerationConfig = {};
 
@@ -437,7 +457,15 @@ export class ChatService {
       );
     }
 
-    return response.text();
+    const usageMetadata = response.usageMetadata;
+    return {
+      text: response.text(),
+      usage: {
+        inputTokens: usageMetadata?.promptTokenCount ?? 0,
+        outputTokens: usageMetadata?.candidatesTokenCount ?? 0,
+        totalTokens: usageMetadata?.totalTokenCount ?? 0,
+      },
+    };
   }
 
   async generateResponse(
@@ -448,6 +476,28 @@ export class ChatService {
   ): Promise<string> {
     const skill = new DirectChatSkill();
     return skill.execute(message, tags, file, mimeType, this);
+  }
+
+  /**
+   * Info: (20260807 - Luphia) 費思計費路徑（設計書 §5.3）：回傳 text + usage 供預扣—結算
+   */
+  async generateFaithResponse(
+    message: string,
+    tags: string[] = [],
+    file?: string,
+    mimeType?: string,
+    // Info: (20260809 - Luphia) 成本上界源自 DB 的費思計費設定，由 service 層注入
+    maxOutputTokens?: number,
+  ): Promise<{ text: string; usage: ILlmUsage }> {
+    const skill = new DirectChatSkill();
+    return skill.executeWithUsage(
+      message,
+      tags,
+      file,
+      mimeType,
+      this,
+      maxOutputTokens,
+    );
   }
 
   /**
@@ -654,6 +704,27 @@ ${outlineCatalog}${langInstruction}`;
     responseSchema?: Schema,
     options?: IChatGenerationOptions,
   ): Promise<string> {
+    const { text } = await this.generateRawWithImagesUsage(
+      prompt,
+      images,
+      isJson,
+      responseSchema,
+      options,
+    );
+    return text;
+  }
+
+  /**
+   * Info: (20260807 - Luphia) generateRawWithImages 的計費版本（費思路徑用），
+   * 回傳 text + usage；原方法委派至此，既有呼叫端行為不變。
+   */
+  async generateRawWithImagesUsage(
+    prompt: string,
+    images?: { data: string; mimeType: string }[],
+    isJson: boolean = false,
+    responseSchema?: Schema,
+    options?: IChatGenerationOptions,
+  ): Promise<{ text: string; usage: ILlmUsage }> {
     const parts: Part[] = [{ text: prompt }];
 
     if (images && images.length > 0) {
@@ -667,7 +738,7 @@ ${outlineCatalog}${langInstruction}`;
       });
     }
 
-    return this.generateContent(parts, {
+    return this.generateContentWithUsage(parts, {
       ...options,
       isJson: isJson || options?.isJson,
       responseSchema: responseSchema || options?.responseSchema,

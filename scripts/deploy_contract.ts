@@ -312,6 +312,33 @@ async function main() {
     );
   }
 
+  // Info: (20260807 - Luphia) 9. Deploy LedgerAnchor（ADR 015 C 案 Phase 1：每日 Ledger merkle 錨定）
+  let ledgerAnchorAddress = getEnv("NEXT_PUBLIC_LEDGER_ANCHOR_ADDRESS");
+  if (!ledgerAnchorAddress || ledgerAnchorAddress === "" || forceRedeployCore) {
+    const ledgerAnchorArtifact = getArtifact("ledger_anchor", "LedgerAnchor");
+    console.log("Deploying LedgerAnchor...");
+    /**
+     * Info: (20260807 - Luphia) 合約不持有資產，ANCHOR_ROLE 初期授予 relayer（同部署者）；
+     * 金鑰治理（冷熱分離 + multisig）到位後，由 DEFAULT_ADMIN_ROLE 改授獨立錨定 key
+     */
+    const anchorHash = await walletClient.deployContract({
+      chain: isuncoin,
+      abi: ledgerAnchorArtifact.abi,
+      bytecode: ledgerAnchorArtifact.bytecode,
+      args: [account.address, account.address],
+    });
+    const anchorReceipt = await publicClient.waitForTransactionReceipt({
+      hash: anchorHash,
+      timeout: 1200000,
+    });
+    ledgerAnchorAddress = anchorReceipt.contractAddress!;
+    console.log(`-> LedgerAnchor deployed to: ${ledgerAnchorAddress}`);
+  } else {
+    console.log(
+      `-> Skipped: LedgerAnchor already exists at ${ledgerAnchorAddress}`,
+    );
+  }
+
   console.log("\n===== DEPLOYMENT SUMMARY =====");
   console.log(`DynamicKYCMembership:  ${dmcAddress}`);
   console.log(`CreditPoint:           ${treasuryAddress}`);
@@ -320,6 +347,7 @@ async function main() {
   console.log(`EntryPoint:            ${entryPointAddress}`);
   console.log(`Fido2AccountFactory:   ${factoryAddress}`);
   console.log(`MissionBoard:          ${missionBoardAddress}`);
+  console.log(`LedgerAnchor:          ${ledgerAnchorAddress}`);
   console.log("==============================\n");
 
   if (!fs.existsSync(envSetupPath)) {
@@ -349,6 +377,7 @@ async function main() {
   updateEnv("NEXT_PUBLIC_SCW_FACTORY_ADDRESS", factoryAddress || "");
   updateEnv("NEXT_PUBLIC_ENTRY_POINT_ADDRESS", entryPointAddress || "");
   updateEnv("NEXT_PUBLIC_MISSION_BOARD_ADDRESS", missionBoardAddress || "");
+  updateEnv("NEXT_PUBLIC_LEDGER_ANCHOR_ADDRESS", ledgerAnchorAddress || "");
 
   fs.writeFileSync(envSetupPath, envContent, "utf-8");
   console.log(
