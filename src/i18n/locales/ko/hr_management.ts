@@ -12,13 +12,6 @@ export const hrManagement = {
     document: "문서 관리",
     setting: "시스템 설정",
   },
-  breadcrumb: {
-    dashboard: "대시보드",
-    root: "인사관리",
-    employee: "직원 관리",
-    employee_list: "직원 목록",
-    organization: "조직도",
-  },
   status: {
     active: "재직",
     probation: "수습",

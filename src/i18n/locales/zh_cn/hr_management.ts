@@ -12,13 +12,6 @@ export const hrManagement = {
     document: "文件管理",
     setting: "系统设置",
   },
-  breadcrumb: {
-    dashboard: "仪表板",
-    root: "人事管理",
-    employee: "员工管理",
-    employee_list: "员工列表",
-    organization: "组织架构",
-  },
   status: {
     active: "在职",
     probation: "试用期",

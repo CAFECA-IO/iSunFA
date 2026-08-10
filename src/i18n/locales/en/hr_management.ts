@@ -12,13 +12,6 @@ export const hrManagement = {
     document: "Documents",
     setting: "Settings",
   },
-  breadcrumb: {
-    dashboard: "Dashboard",
-    root: "HR Management",
-    employee: "Employees",
-    employee_list: "Employee List",
-    organization: "Organization",
-  },
   status: {
     active: "Active",
     probation: "Probation",
