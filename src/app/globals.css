@@ -2786,6 +2786,14 @@
     );
   }
 
+  .text-sky-700 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-sky-700)
+    );
+  }
+
   .text-sky-800 {
     color: color-mix(
       in oklab,

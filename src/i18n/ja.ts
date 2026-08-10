@@ -68,6 +68,7 @@ import { solutions } from "@/i18n/locales/ja/solutions";
 import { applicationManagement } from "@/i18n/locales/ja/application_management";
 import type { BaseTranslation } from "@/i18n/zh_tw";
 import { carbonChatbot } from "@/i18n/locales/ja/carbon_chatbot";
+import { hrManagement } from "@/i18n/locales/ja/hr_management";
 
 export const ja = {
   digital_product_passport: digitalProductPassport,
@@ -140,4 +141,5 @@ export const ja = {
   solutions,
   application_management: applicationManagement,
   carbon_chatbot: carbonChatbot,
+  hr_management: hrManagement,
 } satisfies BaseTranslation;
