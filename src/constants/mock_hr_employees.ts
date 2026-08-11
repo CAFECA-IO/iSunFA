@@ -3,6 +3,7 @@ import {
   Gender,
   PROBATION_MONTHS,
 } from "@/constants/hr_management";
+import { MOCK_HR_DEPARTMENTS } from "@/constants/mock_hr_organization";
 import { IEmployeeListItem } from "@/interfaces/hr_management";
 import { addDays, parseIsoDate, toIsoDate } from "@/lib/utils/hr_date";
 
@@ -306,6 +307,24 @@ const GENERATED_COUNT = 125;
 
 /** Info: (20260810 - Julian) 這兩位的離職日固定落在基準月，見下方離職日的說明 */
 const RECENT_RESIGNATION_INDEXES = [2, 7];
+
+/**
+ * Info: (20260810 - Julian) 已提出離職、但最後一天還沒到的人。
+ *
+ * 狀態維持在職 —— 到最後一天之前他們確實還在上班，也還佔編制。
+ * 沒有這種人的話，到離職看板的「離職交接中」那一欄永遠是空的，
+ * 而那一欄正是交接流程真正在跑的階段。
+ */
+const PENDING_RESIGNATION_INDEXES = [11, 33];
+
+/**
+ * Info: (20260810 - Julian) 試用期已過但還沒完成考核的人。
+ *
+ * 一般規則是「到職 3 個月內才可能是試用期」，因此逾期未考核這條路徑
+ * 在推導出來的資料裡永遠不會發生。這裡刻意留一位，讓那個警示看得到。
+ */
+const OVERDUE_PROBATION_INDEX = 83;
+const OVERDUE_PROBATION_DAYS_AGO = 110;
 const RANDOM_SEED = 20260810;
 
 const SURNAMES = [
@@ -436,11 +455,29 @@ function shuffle<T>(items: T[], random: () => number): T[] {
  * 其中最前面 4 位刻意壓在 7 天內，讓「近期報到新人」一定有東西可看。
  */
 function hireDaysAgo(index: number, random: () => number): number {
+  if (index === OVERDUE_PROBATION_INDEX) return OVERDUE_PROBATION_DAYS_AGO;
   if (index < 85) return 400 + index * 35 + Math.floor(random() * 30);
   const recentIndex = index - 85;
   if (recentIndex < 4) return recentIndex * 2;
   return 12 + Math.round((recentIndex - 4) * 9.5);
 }
+
+/**
+ * Info: (20260810 - Julian) 部門 id → 部門主管姓名。
+ *
+ * 產生的員工原本 `managerName` 一律是 null，於是看板卡片與員工列表的
+ * 「直屬主管」有一半顯示「—」。主管其實是查得到的：部門的 managerId
+ * 指向前 15 位具名核心人員，照著查即可，不必再編一組名字。
+ */
+const MANAGER_NAME_BY_DEPARTMENT = new Map<string, string>(
+  MOCK_HR_DEPARTMENTS.flatMap((department) => {
+    if (!department.managerId) return [];
+    const manager = MOCK_HR_CORE_EMPLOYEES.find(
+      (employee) => employee.id === department.managerId,
+    );
+    return manager ? [[department.id, manager.name] as const] : [];
+  }),
+);
 
 function buildGeneratedEmployees(): IEmployeeListItem[] {
   const random = createRandom(RANDOM_SEED);
@@ -466,7 +503,9 @@ function buildGeneratedEmployees(): IEmployeeListItem[] {
      * 先決定誰離職（只從老員工挑），再看還在試用期的，最後才是留職停薪。
      */
     const isResigned = index < 85 && (index % 5 === 2 || index === 84);
-    const isProbation = !isResigned && daysAgo <= PROBATION_MONTHS * 31;
+    const isProbation =
+      !isResigned &&
+      (daysAgo <= PROBATION_MONTHS * 31 || index === OVERDUE_PROBATION_INDEX);
     const isLeaveWithoutPay = !isResigned && !isProbation && index % 37 === 5;
 
     let status = EmployeeStatus.ACTIVE;
@@ -479,6 +518,13 @@ function buildGeneratedEmployees(): IEmployeeListItem[] {
      * 但至少要在到職滿 60 天之後，否則會出現離職日早於到職日的資料。
      */
     let leaveDate: string | null = null;
+
+    // Info: (20260810 - Julian) 已預告離職者：狀態仍是在職，但已經有最後一天
+    const pendingIndex = PENDING_RESIGNATION_INDEXES.indexOf(index);
+    if (!isResigned && pendingIndex >= 0) {
+      leaveDate = toIsoDate(addDays(today, 12 + pendingIndex * 13));
+    }
+
     if (isResigned) {
       /**
        * Info: (20260810 - Julian) 前兩位離職者刻意排在本月。
@@ -529,7 +575,11 @@ function buildGeneratedEmployees(): IEmployeeListItem[] {
       departmentName: department.name,
       jobTitleId: jobTitle.id,
       jobTitle: jobTitle.title,
-      managerName: null,
+      /**
+       * Info: (20260810 - Julian) 自己就是部門主管時不會是自己的主管；
+       * 產生的員工都不是主管，因此直接查表即可。
+       */
+      managerName: MANAGER_NAME_BY_DEPARTMENT.get(department.id) ?? null,
     } satisfies IEmployeeListItem;
   });
 }

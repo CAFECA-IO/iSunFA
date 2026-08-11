@@ -1,0 +1,394 @@
+import {
+  EmployeeStatus,
+  Gender,
+  HandoverCategory,
+  OFFBOARDING_CLOSING_DAYS,
+  OffboardingTaskKey,
+  OnboardingTaskKey,
+  ONBOARDING_UPCOMING_DAYS,
+  ProcessTaskStatus,
+  ProcessTaskType,
+} from "@/constants/hr_management";
+import {
+  MOCK_HR_EMPLOYEES,
+  MOCK_HR_TODAY,
+} from "@/constants/mock_hr_employees";
+import { IEmployeeListItem, IProcessTask } from "@/interfaces/hr_management";
+import {
+  addDays,
+  differenceInDays,
+  differenceInFullMonths,
+  parseIsoDate,
+  toIsoDate,
+} from "@/lib/utils/hr_date";
+import { resolveRequiredNoticeDays } from "@/lib/utils/hr_movement";
+
+/**
+ * ToDo: (20260810 - Julian) 待 `/api/v1/hr/onboarding`、`/api/v1/hr/offboarding`
+ * 上線後整檔移除。
+ */
+
+const today = parseIsoDate(MOCK_HR_TODAY);
+
+/**
+ * Info: (20260810 - Julian) 尚未報到的準員工，刻意**不放進** `MOCK_HR_EMPLOYEES`。
+ *
+ * Prisma 的 `EmployeeStatus` 沒有「待報到」這一態，若把他們併進全公司名冊，
+ * 在職人數、部門編制、年資分布會全部把還沒上班的人算進去 —— 那是錯的數字，
+ * 而且錯得很安靜。分開放，到離職頁自己把兩份合起來用。
+ *
+ * ToDo: (20260810 - Julian) 這是 schema 的缺口，不是 mock 的權宜：
+ * 接 API 前需要決定用新的 EmployeeStatus 值，還是靠 `hireDate > now` 當約定。
+ */
+export const MOCK_HR_INCOMING_EMPLOYEES: IEmployeeListItem[] = [
+  {
+    id: "emp-inc-01",
+    employeeNo: "EMP045",
+    name: "陳小明",
+    englishName: "Ming Chen",
+    gender: Gender.MALE,
+    birthday: "1997-04-12",
+    email: "emp045@isunfa.com",
+    phone: "0918-334-770",
+    status: EmployeeStatus.PROBATION,
+    hireDate: toIsoDate(addDays(today, 10)),
+    leaveDate: null,
+    departmentId: "dep-101",
+    departmentName: "前端組",
+    jobTitleId: "jt-005",
+    jobTitle: "前端工程師",
+    managerName: "張小明",
+  },
+  {
+    id: "emp-inc-02",
+    employeeNo: "EMP046",
+    name: "楊思妤",
+    englishName: "Sylvia Yang",
+    gender: Gender.FEMALE,
+    birthday: "1999-11-23",
+    email: "emp046@isunfa.com",
+    phone: "0927-118-455",
+    status: EmployeeStatus.PROBATION,
+    hireDate: toIsoDate(addDays(today, 4)),
+    leaveDate: null,
+    departmentId: "dep-002",
+    departmentName: "財會部",
+    jobTitleId: "jt-006",
+    jobTitle: "財會專員",
+    managerName: "李佳蓉",
+  },
+  {
+    id: "emp-inc-03",
+    employeeNo: "EMP047",
+    name: "何柏睿",
+    englishName: "Bruce Ho",
+    gender: Gender.MALE,
+    birthday: "1994-07-08",
+    email: "emp047@isunfa.com",
+    phone: "0933-620-149",
+    status: EmployeeStatus.PROBATION,
+    hireDate: toIsoDate(addDays(today, 13)),
+    leaveDate: null,
+    departmentId: "dep-005",
+    departmentName: "業務部",
+    jobTitleId: "jt-006",
+    jobTitle: "業務代表",
+    managerName: "劉冠宇",
+  },
+];
+
+/** Info: (20260810 - Julian) 報到任務範本：相對報到日的到期天數、分類與負責人 */
+const ONBOARDING_TEMPLATE = [
+  {
+    key: OnboardingTaskKey.FORM,
+    title: "繳交報到前資料表",
+    category: HandoverCategory.HR,
+    assignee: "林巧芯",
+    dueOffset: -3,
+  },
+  {
+    key: OnboardingTaskKey.CONTRACT,
+    title: "簽署勞動契約",
+    category: HandoverCategory.HR,
+    assignee: "林巧芯",
+    dueOffset: 1,
+  },
+  {
+    key: OnboardingTaskKey.ACCOUNT,
+    title: "開通 Email 與系統帳號",
+    category: HandoverCategory.IT,
+    assignee: "許庭瑋",
+    dueOffset: 0,
+  },
+  {
+    key: OnboardingTaskKey.LAPTOP,
+    title: "領取公務筆電",
+    category: HandoverCategory.IT,
+    assignee: "許庭瑋",
+    dueOffset: 0,
+  },
+  {
+    key: OnboardingTaskKey.BADGE,
+    title: "發放識別證與門禁卡",
+    category: HandoverCategory.ASSET,
+    assignee: "蔡宜臻",
+    dueOffset: 1,
+  },
+  {
+    key: OnboardingTaskKey.ORIENTATION,
+    title: "安排 Orientation 與部門介紹",
+    category: HandoverCategory.WORK,
+    assignee: "蔡宜臻",
+    dueOffset: 3,
+  },
+];
+
+/** Info: (20260810 - Julian) 離職交接範本：四個面向對應規格的交接矩陣 */
+const OFFBOARDING_TEMPLATE = [
+  {
+    key: OffboardingTaskKey.DOCUMENT_HANDOVER,
+    title: "專案文件轉移",
+    category: HandoverCategory.WORK,
+    assignee: "王大明",
+    dueOffset: -7,
+    note: null,
+  },
+  {
+    key: OffboardingTaskKey.CUSTOMER_HANDOVER,
+    title: "業務客戶移交",
+    category: HandoverCategory.WORK,
+    assignee: "王大明",
+    dueOffset: -5,
+    note: null,
+  },
+  {
+    key: OffboardingTaskKey.ACCESS_CARD,
+    title: "門禁卡回收",
+    category: HandoverCategory.ASSET,
+    assignee: "蔡宜臻",
+    dueOffset: 0,
+    note: null,
+  },
+  {
+    key: OffboardingTaskKey.CAR_KEY,
+    title: "公務車鑰匙回收",
+    category: HandoverCategory.ASSET,
+    assignee: "蔡宜臻",
+    dueOffset: 0,
+    note: null,
+  },
+  {
+    key: OffboardingTaskKey.LAPTOP_RETURN,
+    title: "公務電腦回收",
+    category: HandoverCategory.IT,
+    assignee: "許庭瑋",
+    dueOffset: 0,
+    note: null,
+  },
+  {
+    key: OffboardingTaskKey.ACCOUNT_REVOKE,
+    title: "Google Workspace / Slack 帳號停權",
+    category: HandoverCategory.IT,
+    assignee: "許庭瑋",
+    dueOffset: 0,
+    note: "23:59 停權",
+  },
+  {
+    key: OffboardingTaskKey.INSURANCE,
+    title: "勞健保退保申報表",
+    category: HandoverCategory.HR,
+    assignee: "林巧芯",
+    dueOffset: 3,
+    note: null,
+  },
+  {
+    key: OffboardingTaskKey.CERTIFICATE,
+    title: "服務證明書",
+    category: HandoverCategory.HR,
+    assignee: "林巧芯",
+    dueOffset: 1,
+    note: null,
+  },
+];
+
+/**
+ * Info: (20260810 - Julian) 任務完成與否由「到期日是否已過」推導，不用亂數。
+ *
+ * 這樣產生的清單自洽：還沒到期的不會莫名其妙已完成，而未來才報到的人
+ * 也不會出現一堆逾期未做的任務。`skipIndexes` 用來刻意留幾筆逾期未完成，
+ * 讓「已逾期」那條路徑在畫面上看得到。
+ */
+function resolveStatus(
+  dueDate: Date,
+  index: number,
+  skipIndexes: number[],
+): ProcessTaskStatus {
+  if (skipIndexes.includes(index)) return ProcessTaskStatus.PENDING;
+  /**
+   * Info: (20260810 - Julian) `differenceInDays(a, b)` 回傳的是 b − a，
+   * 因此「到期日已過」是 today − dueDate > 0。寫成 < 0 會整個顛倒過來：
+   * 還沒報到的人任務幾乎全完成、已經報到一週的人一項都沒做。
+   */
+  return differenceInDays(dueDate, today) > 0
+    ? ProcessTaskStatus.COMPLETED
+    : ProcessTaskStatus.PENDING;
+}
+
+function buildOnboardingTasks(employee: IEmployeeListItem): IProcessTask[] {
+  const hireDate = parseIsoDate(employee.hireDate);
+  // Info: (20260810 - Julian) 依工號末碼決定哪幾項卡住，讓每個人的進度不一樣但固定
+  const seed = Number(employee.employeeNo.replace(/\D/g, "")) % 3;
+  const skipIndexes = seed === 0 ? [1] : seed === 1 ? [3, 5] : [2];
+
+  return ONBOARDING_TEMPLATE.map((template, index) => {
+    const dueDate = addDays(hireDate, template.dueOffset);
+    return {
+      id: `task-on-${employee.id}-${template.key}`,
+      employeeId: employee.id,
+      taskType: ProcessTaskType.ONBOARDING,
+      title: template.title,
+      status: resolveStatus(dueDate, index, skipIndexes),
+      dueDate: toIsoDate(dueDate),
+      category: template.category,
+      templateKey: template.key,
+      assigneeName: template.assignee,
+      note: null,
+    } satisfies IProcessTask;
+  });
+}
+
+/** Info: (20260810 - Julian) 離職滿這麼多天後，交接視為全部結清 */
+const OFFBOARDING_SETTLED_DAYS = 7;
+
+function buildOffboardingTasks(employee: IEmployeeListItem): IProcessTask[] {
+  if (!employee.leaveDate) return [];
+  const leaveDate = parseIsoDate(employee.leaveDate);
+
+  /**
+   * Info: (20260810 - Julian) 離職超過一週的人，交接全部完成。
+   *
+   * 少了這一條，沒有任何案件會是 100% ——「可結案」的綠燈與
+   * 「歷史離職紀錄」那個分頁就永遠是空的，兩條路徑都不會被畫面驗證到。
+   */
+  const isSettled =
+    differenceInDays(leaveDate, today) > OFFBOARDING_SETTLED_DAYS;
+
+  /**
+   * Info: (20260810 - Julian) 已進入結案窗口（離職日 3 天內）但尚未結清的人，
+   * 一律讓「帳號停權」留著沒做。
+   *
+   * 這不是為了讓畫面好看：帳號停權本來就是最容易被拖到最後、
+   * 而且過了最後一天就沒人會再想起的一項，它同時是規格裡紅燈的主要觸發條件。
+   * 不釘住它的話，紅燈會隨著其他 mock 參數飄移而時有時無，
+   * 那條路徑就等於沒有被驗證過。
+   */
+  const isClosingSoon =
+    !isSettled &&
+    differenceInDays(today, leaveDate) <= OFFBOARDING_CLOSING_DAYS;
+  const accountRevokeIndex = OFFBOARDING_TEMPLATE.findIndex(
+    (template) => template.key === OffboardingTaskKey.ACCOUNT_REVOKE,
+  );
+
+  const seed = Number(employee.employeeNo.replace(/\D/g, "")) % 4;
+  const baseSkips =
+    seed === 0 ? [3] : seed === 1 ? [1, 6] : seed === 2 ? [5] : [2, 7];
+  const skipIndexes = isSettled
+    ? []
+    : [
+        ...new Set(
+          isClosingSoon ? [...baseSkips, accountRevokeIndex] : baseSkips,
+        ),
+      ];
+
+  return OFFBOARDING_TEMPLATE.map((template, index) => {
+    const dueDate = addDays(leaveDate, template.dueOffset);
+    return {
+      id: `task-off-${employee.id}-${template.key}`,
+      employeeId: employee.id,
+      taskType: ProcessTaskType.OFFBOARDING,
+      title: template.title,
+      status: resolveStatus(dueDate, index, skipIndexes),
+      dueDate: toIsoDate(dueDate),
+      category: template.category,
+      templateKey: template.key,
+      assigneeName: template.assignee,
+      note: template.note,
+    } satisfies IProcessTask;
+  });
+}
+
+/** Info: (20260810 - Julian) 離職滿 30 天後就不再出現在交接清單 */
+const OFFBOARDING_WINDOW_DAYS = 30;
+
+/**
+ * Info: (20260810 - Julian) 到離職頁面看得到的完整名冊 = 在職名冊 + 待報到準員工。
+ * 其他頁面只用 `MOCK_HR_EMPLOYEES`，避免把還沒上班的人算進編制。
+ */
+export const MOCK_HR_MOVEMENT_PEOPLE: IEmployeeListItem[] = [
+  ...MOCK_HR_EMPLOYEES,
+  ...MOCK_HR_INCOMING_EMPLOYEES,
+];
+
+export const MOCK_HR_MOVEMENT_TASKS: IProcessTask[] =
+  MOCK_HR_MOVEMENT_PEOPLE.flatMap((employee) => {
+    const hiredDaysAgo = differenceInDays(
+      parseIsoDate(employee.hireDate),
+      today,
+    );
+
+    // Info: (20260810 - Julian) 未來 14 天內報到、或報到未滿 30 天者有報到流程
+    const hasOnboarding =
+      employee.status !== EmployeeStatus.RESIGNED &&
+      hiredDaysAgo >= -ONBOARDING_UPCOMING_DAYS &&
+      hiredDaysAgo <= 30;
+
+    if (hasOnboarding) return buildOnboardingTasks(employee);
+
+    /**
+     * Info: (20260810 - Julian) 有離職日就有交接流程，不限於狀態已是 RESIGNED。
+     *
+     * 已提出離職但還沒到最後一天的人，狀態仍然是在職 —— 而那正是交接進行中的階段，
+     * 也是看板「離職交接中」那一欄的來源。只看 RESIGNED 會讓那一欄永遠空著。
+     */
+    if (employee.leaveDate) {
+      const daysUntilLeave = differenceInDays(
+        today,
+        parseIsoDate(employee.leaveDate),
+      );
+      if (daysUntilLeave >= -OFFBOARDING_WINDOW_DAYS) {
+        return buildOffboardingTasks(employee);
+      }
+    }
+
+    return [];
+  });
+
+/**
+ * Info: (20260810 - Julian) 每位離職者「提出離職」的日期。
+ *
+ * 預告期要從提出日算到最後一天，不是從今天算 —— 用今天當起點的話，
+ * 已經離職的人預告天數永遠是 0，而所有人都會被標成「預告期不足」，
+ * 那個徽章就變成純裝飾。
+ *
+ * 這裡由應預告天數往前推，並讓約三分之一的人刻意不足，
+ * 使「符合」與「不足」兩條路徑在畫面上都看得到。
+ *
+ * ToDo: (20260810 - Julian) 接 API 後改讀 `OffboardingProcess.createdAt`。
+ */
+export const MOCK_HR_RESIGNATION_NOTICES: Record<string, string> =
+  Object.fromEntries(
+    MOCK_HR_MOVEMENT_PEOPLE.filter(
+      (employee) => employee.leaveDate !== null,
+    ).map((employee) => {
+      const leaveDate = parseIsoDate(employee.leaveDate as string);
+      const tenureMonths = differenceInFullMonths(
+        parseIsoDate(employee.hireDate),
+        leaveDate,
+      );
+      const requiredDays = resolveRequiredNoticeDays(tenureMonths);
+      const serial = Number(employee.employeeNo.replace(/\D/g, ""));
+      // Info: (20260810 - Julian) 三分之一提前不足，其餘多給 8 天
+      const gap = serial % 3 === 0 ? requiredDays - 12 : requiredDays + 8;
+      return [employee.id, toIsoDate(addDays(leaveDate, -Math.max(0, gap)))];
+    }),
+  );
