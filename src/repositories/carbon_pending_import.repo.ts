@@ -2,6 +2,8 @@
 // Info: (20260806 - Tzuhan) 語意與 carbon_report_draft.repo 一致;差別在多一個 deleteByChannel(套用/捨棄後要清掉)
 
 import { prisma } from "@/lib/prisma";
+import { assertStorableEnvelope } from "@/repositories/carbon_envelope_invariant";
+
 import { Prisma } from "@/generated";
 
 export interface IUpsertPendingImportParams {
@@ -30,6 +32,7 @@ export class CarbonPendingImportRepository {
 
   // Info: (20260806 - Tzuhan) upsert + 樂觀鎖:版本不符回 null,成功回新版本紀錄
   async upsertByChannel(params: IUpsertPendingImportParams) {
+    assertStorableEnvelope("CarbonPendingImport", params);
     const chatroom = await prisma.chatroom.upsert({
       where: { channel: params.channel },
       update: {},

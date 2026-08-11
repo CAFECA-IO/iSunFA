@@ -116,3 +116,32 @@
 - **特定業務領域**：[薪資計算機運作機制 (Salary Calculator)](domain/salary_calculator_mechanism.md)
   > 薪資計算機採用的所得稅、勞健保與勞退公式及運作邏輯說明。
 - **合規政策**：[服務條款 (Terms of Service)](legal/terms_of_service.md) | [隱私權政策 (Privacy Policy)](legal/privacy_policy.md) | [退款政策 (Refund Policy)](legal/refund_policy.md)
+
+---
+
+## 🗂️ 附錄：`issue_drafts/` 引用路徑對照 (Issue Draft References)
+
+`src/` 與 `documents/` 共有 36 個檔案的註解引用 `issue_drafts/...` 形式的路徑，
+例如 `src/lib/carbon_report_diagram.builder.ts` 的
+「節點太少即不畫（issue_drafts/inventory_table_import/05）」。
+
+**這些草稿已於 commit 902df4580 移出應用程式 repo，現位於開發者本機的 `data/issue_drafts/`
+（`data/` 由 `.gitignore` 第 61 行整個排除）。** 完成的項目在 `data/issue_drafts/done/`，
+過期的在 `data/issue_drafts/archive/`。
+
+### 為什麼要在這裡記一行
+
+那些註解的全部價值就是可追溯性。移走而不留下落點，剩下的只是一串死路徑 ——
+**比沒有引用更糟，因為它看起來查得到。** 讀到那些註解的人（含 AI Agent）
+需要一個地方能回答「這個編號現在在哪」。
+
+### 為什麼草稿不放進 repo
+
+草稿裡有 UAT 期間的客戶報告內容（完整的溫室氣體盤查數據）。
+它們曾被誤commit 進 develop，於 e121c28e3 移除 —— 客戶資料不該存在於程式碼 repo 的歷史裡。
+
+### 新的引用寫法
+
+新寫的註解一律用 `data/issue_drafts/<主題>/<編號>` 的完整相對路徑
+（例如 `data/issue_drafts/inventory_table_import/17`），
+讓路徑本身就說明它不在 repo 內，不必回來查這一節。

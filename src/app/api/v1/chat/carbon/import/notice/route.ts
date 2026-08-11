@@ -58,26 +58,6 @@ export async function POST(request: NextRequest) {
     return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
   }
 
-  /**
-   * Info: (20260806 - Tzuhan) 沒有收件公鑰即拒絕,**不以 address 補位**。
-   *
-   * 原本寫 `recipientPublicKey ?? sessionUser.address`,理由是「與 report PUT 同一慣例」——
-   * 那句話不成立,而這條端點因此從上線起一次都沒成功過(實測 500:
-   * `invalid base58 value (argument="letter", value="0")`)。
-   *
-   * report PUT 的 address 補位只發生在**明文模式**:帳本會話存明文,
-   * address 只是擁有者標記,從不當金鑰用。
-   * 而聊天訊息一律 E2EE,`recordAndPublishAiReply` 會拿這個值做 ECIES 加密 ——
-   * 它必須是 base58 的 xpub,而 `0x…` 十六進位位址在第一個 `0` 就解不出來。
-   *
-   * 我把一個慣例跨過了它不成立的邊界。這裡改成 Fail Fast:
-   * 缺金鑰就明說,而不是拿一個不是金鑰的值去加密然後在底層炸開 ——
-   * 後者的表現是 500 加一行 base58 錯誤,完全看不出缺的是什麼。
-   */
-  if (!recipientPublicKey) {
-    return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
-  }
-
   try {
     /**
      * Info: (20260805 - Tzuhan) 文案在此組出,不採用呼叫端傳來的字串 ——
