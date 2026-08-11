@@ -1,4 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { systemSettingService } from "@/services/system_setting.service";
+import { SystemSettingKey } from "@/constants/system_setting";
 import { reportRepo } from "@/repositories/report.repo";
 import { lanceDBService } from "@/services/lancedb.service";
 import { ILanceDBRow } from "@/interfaces/lance_db";
@@ -286,7 +288,17 @@ ${question}`;
       const allReports = await reportRepo.findMany();
 
       try {
-        const apiKey = process.env.GEMINI_API_KEY;
+        /**
+         * Info: (20260812 - Luphia) 金鑰改由 systemSettingService 解析。
+         *
+         * 這是本檔唯一不經過 ChatService 的 LLM 呼叫(自建 GoogleGenerativeAI 並
+         * 指定 responseMimeType),所以不能靠 ChatService 的解析,得自己問。
+         * `get()` 已經處理三種狀態:資料庫可信時以資料庫為準、驗簽失敗時拒絕服務、
+         * 從未用資料庫保管時才讀環境變數 —— 直接讀 env 會跳過前兩者。
+         */
+        const apiKey = await systemSettingService.get(
+          SystemSettingKey.GEMINI_API_KEY,
+        );
         if (!apiKey) {
           throw new Error("Missing GEMINI_API_KEY");
         }

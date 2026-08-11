@@ -30,13 +30,19 @@ export async function processNext() {
   const missionDirBase = setupConfig.MISSION_DIR || "missions";
   const missionDirPath = path.join(process.cwd(), missionDirBase);
 
-  const apiKey = setupConfig.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    console.warn(
-      "[MissionExecutor] Missing GEMINI_API_KEY. Execution might fail if ChatService is required.",
-    );
-  }
-  const chatService = new ChatService(apiKey || "");
+  /**
+   * Info: (20260812 - Luphia) 金鑰交給 ChatService 解析,不從 `.env` 檔案預先取。
+   *
+   * 原本讀的是 `getPriorityEnvConfig()`(直接解析 `.env.setup` / `.env` 檔案),
+   * 比 `process.env` 更外層,再把值當「明確傳入」交給 ChatService ——
+   * 於是 Worker 行程完全在系統設定機制之外:管理員在 /admin/settings
+   * 輪替或撤銷金鑰,背景任務照樣用檔案裡的舊值。
+   *
+   * 拿掉的那個 `console.warn` 沒有換成別的:金鑰現在由 ChatService 在需要時解析
+   * (資料庫 > 環境變數),這裡無從判斷「缺不缺」—— 而它原本的訊息也只是
+   * 「might fail if ChatService is required」,真正缺的時候 ChatService 會明確拋錯。
+   */
+  const chatService = new ChatService();
 
   try {
     const folders = await fs.readdir(missionDirPath, { withFileTypes: true });

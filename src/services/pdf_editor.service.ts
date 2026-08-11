@@ -7,6 +7,20 @@ import {
 import { getMermaidModificationPrompt } from "@/constants/prompts/pdf_editor/mermaid_modification";
 import { MermaidChartType } from "@/constants/mermaid_chart";
 
+/**
+ * Info: (20260812 - Luphia) 本檔三個方法都不再自行從環境變數讀 LLM 金鑰。
+ *
+ * 原本每個方法都先讀 env、缺就 `throw new Error("Missing GEMINI_API_KEY")`,
+ * 再把讀到的值當「明確傳入」交給 ChatService。兩個後果:
+ *
+ * 1. ChatService 的優先序是「建構子明確傳入 > 資料庫設定 > 環境變數」,
+ *    於是 /admin/settings 裡輪替或撤銷金鑰對這三條路徑無效 —— 沿用 env 舊值。
+ * 2. 反過來,已經把金鑰搬進資料庫、env 不再保留的部署,這三個功能會直接不可用,
+ *    而金鑰明明設好了。這三條路徑對應 /admin/pdf_editor 的三個端點。
+ *
+ * 缺金鑰的錯誤改由 ChatService 在實際呼叫時拋出;訊息仍含 "GEMINI_API_KEY",
+ * 因此那三條路由以字串比對辨識此成因的處置行為不變。
+ */
 export class PdfEditorService {
   /**
    * Info: (20260623 - Julian) 根據使用者指令修改 Mermaid 圖表
@@ -16,11 +30,6 @@ export class PdfEditorService {
     chartType: MermaidChartType,
     instruction: string,
   ): Promise<string> {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("Missing GEMINI_API_KEY");
-    }
-
     const finalPrompt = `${getMermaidModificationPrompt(chartType)}
 
     【原始 Mermaid 圖表 (Original Mermaid Chart)】：
@@ -30,7 +39,7 @@ export class PdfEditorService {
     ${instruction}
 `;
 
-    const chatService = new ChatService(apiKey);
+    const chatService = new ChatService();
     const reply = await chatService.generateRaw(finalPrompt);
 
     // Info: (20260623 - Julian) 移除 AI 的自我反思過程 (<thinking>...</thinking>) 並確保輸出為純 Mermaid 語法
@@ -51,11 +60,6 @@ export class PdfEditorService {
     instruction: string = "",
     signal?: AbortSignal,
   ): Promise<string> {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("Missing GEMINI_API_KEY");
-    }
-
     const finalPrompt = `${REPORT_GENERATION_PROMPT}
 
 【輸入數據 (Input Data)】：
@@ -64,7 +68,7 @@ ${data}
 ${instruction ? `【額外指示 (Additional Instructions)】：\n${instruction}\n` : ""}
 `;
 
-    const chatService = new ChatService(apiKey);
+    const chatService = new ChatService();
     // Info: (20260720 - Julian) 傳入 signal，使用者中止時連底層 LLM 請求一起取消
     const reply = await chatService.generateRaw(
       finalPrompt,
@@ -87,11 +91,6 @@ ${instruction ? `【額外指示 (Additional Instructions)】：\n${instruction}
     text: string,
     action: string,
   ): Promise<string> {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("Missing GEMINI_API_KEY");
-    }
-
     const instruction = AI_REFINE_INSTRUCTIONS[action] || action;
 
     const finalPrompt = `${TEXT_REFINEMENT_PROMPT}
@@ -102,7 +101,7 @@ ${text}
 【使用者指令】：
 ${instruction}`;
 
-    const chatService = new ChatService(apiKey);
+    const chatService = new ChatService();
     const reply = await chatService.generateRaw(finalPrompt);
 
     return reply.trim();
