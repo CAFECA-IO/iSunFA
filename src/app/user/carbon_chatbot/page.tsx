@@ -10,6 +10,8 @@ import {
   CarbonChatPanelSizeEnum,
 } from "@/constants/carbon_chatbot";
 import { useTranslation } from "@/i18n/i18n_context";
+import { useAuth } from "@/contexts/auth_context";
+import { WalletCustodyType } from "@/constants/auth_provider";
 import { ChatSidebar } from "@/components/carbon_chatbot/chat_sidebar";
 import { ChatArea } from "@/components/carbon_chatbot/chat_area";
 import { ChatInput } from "@/components/carbon_chatbot/chat_input";
@@ -31,6 +33,8 @@ const RecordTabModal = dynamic(
 
 export default function CarbonChatbotPage() {
   const { t } = useTranslation();
+  // Info: (20260812 - Luphia) custody 決定解鎖說明給的是哪一種保證（見下方 unlock 提示）
+  const { user } = useAuth();
   const {
     sessionsList,
     activeSession,
@@ -286,8 +290,15 @@ export default function CarbonChatbotPage() {
         ) : (
           // Info: (20260712 - Luphia) 進入時需一次手勢解鎖加密金鑰(PRF)，之後才由 AI 前置作業回傳招呼詞
           <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
+            {/*
+              Info: (20260812 - Luphia) 託管帳號看到的是不同的保證。
+              那些帳號的加密金鑰由伺服器派生（見 requestPrfSecret），沿用 passkey 那句
+              「以裝置的安全金鑰進行端對端加密」會給出一個它們沒有的承諾。
+            */}
             <p className="max-w-sm text-sm text-gray-500">
-              {t("carbon_chatbot.unlock_hint")}
+              {user?.custody === WalletCustodyType.CUSTODIAL
+                ? t("carbon_chatbot.unlock_hint_custodial")
+                : t("carbon_chatbot.unlock_hint")}
             </p>
             <button
               type="button"

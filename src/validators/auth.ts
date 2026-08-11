@@ -31,6 +31,19 @@ export const updateProfileSchema = z.object({
  * 付款 UserOp。**刻意不接受呼叫端傳入的 UserOp**——只驗 sender 的話，callData 仍由
  * 呼叫端決定，那就是一支任意動作簽章預言機（見 custodial_wallet.service）。
  */
+/**
+ * Info: (20260812 - Luphia) 託管帳號索取 PRF 替身秘密。
+ *
+ * 只收 `prfSalt`：使用者身分一律取自 DeWT，不接受呼叫端指定 —— 否則這支就變成
+ * 「拿一枚 DeWT 換任意帳號的對話金鑰」。`strict()` 讓多送的欄位被拒絕而不是靜默忽略。
+ */
+export const custodialPrfSchema = z
+  .object({
+    // Info: (20260812 - Luphia) base64 的 32 bytes salt；長度上限留餘裕，內容不入判斷邏輯
+    prfSalt: z.string().min(1).max(256),
+  })
+  .strict();
+
 export const custodialSignSchema = z
   .object({
     challenge: z.string().min(1).max(512).optional(),

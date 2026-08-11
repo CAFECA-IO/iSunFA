@@ -558,13 +558,21 @@ export const useCarbonChat = () => {
 
   // Info: (20260712 - Luphia) 用戶主金鑰：經 WebAuthn PRF 解包/註冊後持久化；xpub 供後端加密、xprv 供本地解密
   const masterKeyRef = useRef<IChatroomMasterKey | null>(null);
+  /**
+   * Info: (20260812 - Luphia) 帶上 custody:託管帳號（第三方登入）沒有 passkey,
+   * PRF 秘密改向 API 索取（見 `requestPrfSecret`）。
+   *
+   * 不帶的話 `navigator.credentials.get()` 會開出一個永遠不會成功的 passkey 對話框,
+   * 使用者關掉它拿到 `NotAllowedError`,再被下面的 catch 翻譯成「您的裝置不支援」——
+   * 而裝置沒問題,是帳號沒有 passkey。
+   */
   const ensureMasterKeyCached =
     useCallback(async (): Promise<IChatroomMasterKey> => {
       if (!masterKeyRef.current) {
-        masterKeyRef.current = await ensureMasterKey();
+        masterKeyRef.current = await ensureMasterKey(user?.custody);
       }
       return masterKeyRef.current;
-    }, []);
+    }, [user?.custody]);
 
   // Info: (20260714 - Tzuhan) 等待中回覆的 channel 集合: 回覆若於 fetch 期間就送達，不再啟動逾時計時器(per-channel)
   const pendingReplyChannelsRef = useRef<Set<string>>(new Set());

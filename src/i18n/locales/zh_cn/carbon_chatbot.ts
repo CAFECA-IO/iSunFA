@@ -7,6 +7,9 @@ export const carbonChatbot = {
   unlock_button: "开始加密对话",
   unlock_hint:
     "为保护您的盘查内容，本对话将以设备的安全密钥进行端到端加密。点击开始并完成一次验证即可解锁并取得 AI 招呼。",
+  // Info: (20260812 - Luphia) 托管账号（第三方登录）专用的解锁说明，不可沿用上面那句
+  unlock_hint_custodial:
+    "为保护您的盘查内容，本对话将加密后储存。您以第三方账号登录，加密密钥由平台代管（与您的钱包相同），因此平台在技术上具备解密能力；若需要「仅您本人可解密」的保护等级，请改用 passkey 账号。点击开始即可解锁并取得 AI 招呼。",
   device_unsupported:
     "您的设备或浏览器不支持加密所需的安全密钥功能（WebAuthn PRF），暂时无法使用加密对话。建议改用支持的环境，例如 Android 上的 Chrome，或支持 PRF 的实体安全密钥。",
   subtitle: "您专属的企业碳会计师 (Carbon Accountant)",

@@ -43,6 +43,16 @@ interface ICustodialSignResponse {
   payload: { assertion: AuthenticationJSON; userOp?: UserOperationJson } | null;
 }
 
+// Info: (20260812 - Luphia) base64 → ArrayBuffer；PRF 的兩條路徑都要回同一種型別給呼叫端
+function base64ToArrayBuffer(value: string): ArrayBuffer {
+  const binary = atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes.buffer;
+}
+
 async function postCustodialSign(
   body: Record<string, unknown>,
 ): Promise<{ assertion: AuthenticationJSON; userOp?: UserOperationJson }> {
@@ -91,6 +101,67 @@ export async function requestAssertion(
     challengeToken: params.challengeToken,
   });
   return assertion;
+}
+
+/**
+ * Info: (20260812 - Luphia) 取得端到端加密用的 PRF 秘密，不管帳號是哪一種。
+ *
+ * 與 `requestAssertion()` 同一個道理,只是對象從「簽章」換成「PRF 輸出」:
+ * - passkey 帳號:行為完全不變,仍由驗證器以 WebAuthn PRF 擴充派生。
+ * - 託管帳號:改呼叫 `/api/v1/auth/custodial/prf`,由伺服器以保險庫主密鑰派生。
+ *
+ * 為什麼一定要統一到這裡:`getPrfSecret()` 原本直接呼叫 `navigator.credentials.get()`,
+ * 而託管帳號沒有 passkey —— 那個對話框開得起來但永遠不會成功,
+ * 使用者關掉它得到的是 `NotAllowedError`,再被上層翻譯成「您的裝置不支援」。
+ * 裝置沒問題,是帳號沒有 passkey。ADR 016 對 `startLogin` 寫過同一句警告,
+ * 它對 PRF 一字不改地成立。
+ *
+ * **兩條路徑的隱私保證不同,呼叫端必須知道**:passkey 路徑的秘密只存在於使用者的
+ * 驗證器裡,伺服器連解密的能力都沒有;託管路徑由伺服器派生,伺服器**有**那個能力。
+ * 這與託管錢包本來的信任模型一致（平台已持有其簽章私鑰），但介面文案不得混用
+ * 同一句保證（見 carbon_chatbot 的 unlock 提示）。
+ */
+export async function requestPrfSecret(params: {
+  // Info: (20260812 - Luphia) base64 的 salt；兩條路徑用同一份，才能保證同一個包裝解得開
+  prfSaltBase64: string;
+  // Info: (20260812 - Luphia) 來自 /auth/me 的 custody；未提供時視為 passkey（與 requestAssertion 一致）
+  custody?: string;
+  // Info: (20260812 - Luphia) passkey 路徑的實作由呼叫端注入，避免這支把 WebAuthn 細節一起拖進來
+  derivePasskeySecret: () => Promise<ArrayBuffer>;
+}): Promise<ArrayBuffer> {
+  if (params.custody !== WalletCustodyType.CUSTODIAL) {
+    return params.derivePasskeySecret();
+  }
+
+  const response = await fetch("/api/v1/auth/custodial/prf", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("dewt")}`,
+    },
+    body: JSON.stringify({ prfSalt: params.prfSaltBase64 }),
+  });
+
+  const data = (await response.json()) as {
+    code: ApiCode | string;
+    message?: string;
+    errorCode?: string;
+    payload: { prfSecret: string } | null;
+  };
+
+  if (data.code !== ApiCode.SUCCESS || !data.payload?.prfSecret) {
+    throw new AppError({
+      code: typeof data.errorCode === "string" ? data.errorCode : "IS000099",
+      message: data.message || "Custodial PRF derivation failed",
+      status:
+        typeof data.code === "string" &&
+        (Object.values(ApiCode) as string[]).includes(data.code)
+          ? (data.code as ApiCode)
+          : ApiCode.INTERNAL_SERVER_ERROR,
+    });
+  }
+
+  return base64ToArrayBuffer(data.payload.prfSecret);
 }
 
 export interface IOrderPaymentAssertionParams {

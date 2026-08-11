@@ -1,7 +1,20 @@
 // Info: (20260712 - Luphia) chatroom 加密金鑰管理：以 WebAuthn PRF 派生金鑰包裝/解包主私鑰，並持久化於後端
 // Info: (20260712 - Luphia) 主私鑰永不以明文離開瀏覽器；後端只存公鑰與 PRF 包裝後的密文
 
+/**
+ * Info: (20260812 - Luphia) PRF 秘密改由 `requestPrfSecret()` 統一取得。
+ *
+ * passkey 帳號行為完全不變。託管帳號（第三方登入）沒有 passkey，
+ * 原本會卡在一個永遠不會成功的系統對話框前面，現在改向 API 索取
+ * （見 `assertion_client.requestPrfSecret` 與 ADR 016 補充）。
+ *
+ * **上面第二行那句保證只對 passkey 帳號成立。** 託管帳號的秘密由伺服器派生，
+ * 主私鑰仍然只在瀏覽器裡解包，但伺服器有能力自己派生同一個秘密 ——
+ * 與它已經持有那些帳號的簽章私鑰是同一個信任模型。
+ */
+
 import { request } from "@/lib/utils/request";
+import { requestPrfSecret } from "@/lib/auth/assertion_client";
 import {
   generateMasterKey,
   generatePrfSalt,
@@ -50,12 +63,19 @@ async function registerOwnKey(record: IOwnKeyRecord): Promise<void> {
 
 // Info: (20260712 - Luphia) 確保取得可用的主金鑰：已註冊者經 PRF 解包；未註冊者產生後 PRF 包裝並註冊
 // Info: (20260712 - Luphia) 裝置不支援 PRF 時，getPrfSecret 會拋 ChatroomUnsupportedDeviceError（由呼叫端提示）
-export async function ensureMasterKey(): Promise<IChatroomMasterKey> {
+// Info: (20260812 - Luphia) custody 來自 /auth/me；未提供時視為 passkey，與 requestAssertion 的預設一致
+export async function ensureMasterKey(
+  custody?: string,
+): Promise<IChatroomMasterKey> {
   // Info: (20260712 - Luphia) 使用預抓結果（多半已就緒），手勢當下 getPrfSecret 前不再等網路
   const existing = await prefetchOwnKeyRecord();
 
   if (existing) {
-    const prfSecret = await getPrfSecret(base64ToBytes(existing.prfSalt));
+    const prfSecret = await requestPrfSecret({
+      prfSaltBase64: existing.prfSalt,
+      custody,
+      derivePasskeySecret: () => getPrfSecret(base64ToBytes(existing.prfSalt)),
+    });
     const extendedPrivateKey = await unwrapMasterKey(
       prfSecret,
       existing.wrappedPrivateKey,
@@ -68,7 +88,11 @@ export async function ensureMasterKey(): Promise<IChatroomMasterKey> {
 
   const master = generateMasterKey();
   const prfSalt = generatePrfSalt();
-  const prfSecret = await getPrfSecret(prfSalt);
+  const prfSecret = await requestPrfSecret({
+    prfSaltBase64: bytesToBase64(prfSalt),
+    custody,
+    derivePasskeySecret: () => getPrfSecret(prfSalt),
+  });
   const wrappedPrivateKey = await wrapMasterKey(
     prfSecret,
     master.extendedPrivateKey,
