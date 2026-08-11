@@ -49,6 +49,10 @@ import {
   validateSourceTables,
   type ICarbonSourceTable,
 } from "@/lib/carbon_source_table.builder";
+import {
+  replaceOfficeSymbolChars,
+  unmappedPrivateUseChars,
+} from "@/lib/utils/office_symbol_chars";
 import { padTableHeaderToWidest } from "@/lib/utils/markdown_table_columns";
 import { logger } from "@/lib/utils/logger";
 import { IActivityRecord } from "@/types/carbon_chatbot.types";
@@ -735,13 +739,39 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
         accepted: validSegments.length,
       });
     }
+    /**
+     * Info: (20260811 - Emily) Word 私有區符號要在落地前換成真的 Unicode
+     * (issue_drafts/open/20 第 1 張票)。
+     *
+     * 原文的項目符號是 Wingdings 的實心圓,Word 存成 PDF 時寫的是私有使用區
+     * 的 U+F06C;抽取文字層時那個碼位原樣進來,而私有區沒有任何字型有字形 ——
+     * 預覽與 PDF 都是一個空心方框。實測那份 UAT 報告 57 個。
+     *
+     * 修在匯入落地這一層:預覽與下載的 PDF 讀同一份內容,修在渲染層只會讓兩邊分歧。
+     * 換不掉的私有區字元記 log —— 每一個都會在報告上留一個方框,不能靜默通過。
+     */
+    const normalizeSymbols = (text: string, paragraphId: string): string => {
+      const stray = unmappedPrivateUseChars(text);
+      if (stray.length > 0) {
+        logger.warn("[ReportImportService] unmapped private-use chars", {
+          paragraphId,
+          chars: stray.map(
+            (char) =>
+              `U+${char.codePointAt(0)?.toString(16).toUpperCase() ?? "?"}`,
+          ),
+        });
+      }
+      return replaceOfficeSymbolChars(text);
+    };
+
     validSegments.forEach((segment) => {
+      const content = normalizeSymbols(segment.content, segment.paragraphId);
       if (!scopedIds.has(segment.paragraphId)) {
-        unmapped.push(segment.content);
+        unmapped.push(content);
         return;
       }
       const bucket = contentById.get(segment.paragraphId) ?? [];
-      bucket.push(segment.content);
+      bucket.push(content);
       contentById.set(segment.paragraphId, bucket);
 
       /**
@@ -774,7 +804,12 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
           });
           return;
         }
-        accepted.push(table.data);
+        // Info: (20260811 - Emily) 表格儲存格裡也可能有私有區符號,同樣換掉
+        accepted.push({
+          ...table.data,
+          markdown: normalizeSymbols(table.data.markdown, segment.paragraphId),
+          caption: normalizeSymbols(table.data.caption, segment.paragraphId),
+        });
       });
       if (accepted.length > 0) tablesById.set(segment.paragraphId, accepted);
     });
