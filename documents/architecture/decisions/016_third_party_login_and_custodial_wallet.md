@@ -138,6 +138,31 @@ FCL_WebAuthn.checkSignature(
 
 （順帶修掉一個 100% 失效的 bug：route 層原本漏傳 `challengeToken` 給 service，所有走 `generateChallengeToken()` 的流程對託管帳號必然拋 `AU000021`。刻意在補上 purpose 綁定之後才修它——先修的話等於把一個被 bug 擋住的漏洞打開。）
 
+### 20260811 修正：who / what 之外還有 when
+
+A-1 與 H-2 分別補上了「哪個錢包」與「做什麼」。回頭檢查第三個維度——**這份授權何時失效**——結果是幾乎沒有守。
+
+| 憑證                    | 有時效嗎 | 依據                                                     |
+| ----------------------- | -------- | -------------------------------------------------------- |
+| DeWT session            | 是，24h  | JWT `exp`                                                |
+| OAuth state token       | 是，5m   | `OAUTH_STATE_TTL`                                        |
+| `challengeToken`        | 是，5m   | `setExpirationTime("5m")`                                |
+| `User.currentChallenge` | **否**   | 無 TTL 欄位；只在下次簽發時被覆寫，且代簽路徑不消耗它    |
+| 訂單 challenge          | **否**   | 無 TTL、無過期 cron，只靠 `status = PENDING`             |
+| **簽出的 UserOp**       | **否**   | ERC-4337 v0.6 的 struct 沒有 `validUntil` / `validAfter` |
+
+最後一項是關鍵：**一份簽出來的 UserOp 沒有任何時間邊界**，它一直有效，直到它佔的 nonce 槽被用掉。`paymasterAndData` 是空的，所以連 paymaster 那條唯一能加時效的路也沒走。
+
+而 `prepareTransferUserOp` 原本每次用隨機 nonce key（`Date.now() * Math.random()`）。隨機 key 幾乎必然沒被用過，`getNonce` 回傳 seq 0——於是**同一張訂單的每一份簽章各自佔一個獨立的槽，互不作廢、也不過期**。N 份簽章就是 N 筆各自可獨立動用的永久授權。
+
+這件事對託管帳號特別要緊：A-1 之後攻擊者已經無法把錢導向自己（`callData` 只能付 `MEMBERSHIP_SYSTEM`、金額取自訂單），但**撤銷能力仍然不存在**。登出、換掉 DeWT、訂單被標記為已付，都無法讓一份已簽出的簽章失效——鏈上從不查我們的資料庫。殘餘攻擊是「偷到 DeWT + 一張 PENDING 訂單 → 每天最多 50 份簽章（限流）→ 在任意未來時點逐步把受害者 SCW 的餘額推給平台」，屬於 griefing 而非竊取。
+
+**修法：nonce key 改由 `orderId` 決定性推導**（`deriveNonceKey`，`uint192(keccak256(orderId))`）。同一張訂單的所有簽章共用一個槽，第一份上鏈就消耗掉它，其餘**永久失效**。「N 筆可動用的授權」因此收斂成 1 筆，順帶也擋掉同一張訂單被重複付款。不同訂單得到不同 key，所以併發付款不會互相卡住——那正是當初改用隨機 key 想解決的問題，決定性推導同時滿足兩邊。
+
+`src/__tests__/user_op_nonce_key.test.ts` 釘住這個性質。它必須有測試，因為壞掉的時候**付款照樣成功**，只有安全性默默消失。其中「不含任何隨機或時間成分」那條是舊實作必然失敗的地方（已實測：換回隨機版本會紅 2 條）。
+
+真正的時間邊界（幾分鐘後就作廢）需要 paymaster 帶 `validUntil` 或改合約，屬於另一個量級，記入下方後續工作。
+
 ### 20260811 修正：UV 旗標不該由伺服器代為聲稱
 
 `AUTHENTICATOR_FLAGS` 原本是 `0x05`（UP | UV），也就是對外聲稱「本次已完成使用者驗證」。託管金鑰在伺服器上，簽的當下沒有任何使用者驗證行為。改成 `0x01`（只設 UP）：合約端 `fcl_webauthn.sol` 只驗 UP mask，後端 `verifyAuthentication` 目前也不要求 UV，因此不影響驗證通過。UV 這個位元的價值就在於它可信，應該保留給真的做過驗證的 passkey。
@@ -169,6 +194,8 @@ FCL_WebAuthn.checkSignature(
 - [ ] `/oauth/link` 加 step-up 驗證：目前新增登入方式只憑一張存在 `localStorage` 的 DeWT，不要求重做 FIDO2 assertion。XSS 讀到 DeWT 即可綁上攻擊者的 Google 帳號，且受害者換掉 passkey、清掉 session 之後攻擊者仍能登入。
 - [ ] 首次社交註冊先在 transaction 內以 `(provider, providerUserId)` 佔位再部署 SCW。SCW 位址是 CREATE2 決定性的，不需先部署就能算出；目前部署在唯一鍵競爭之前，同一帳號兩個分頁同時首次登入會在鏈上留下一個無人可控的合約。
 - [ ] `state` 加 `jti` 一次性紀錄或綁定 httpOnly cookie；目前防重放完全外包給 Google 對 authorization code 的一次性。
+- [ ] **付款授權的真正時效**。nonce key 決定性推導已把「同一張訂單的 N 份永久授權」收斂成 1 份，但那 1 份仍然沒有到期時間。要讓簽章在幾分鐘後自動作廢，需要 paymaster 帶 `validUntil`（`paymasterAndData` 目前是空的）或在 SCW 端加時間檢查。
+- [ ] **challenge 沒有一次性消耗**。三條出處驗證都是純比對，成功後不失效：`currentChallenge` 沒有 TTL 欄位、代簽路徑也不清空它（清掉會讓下游端點的驗證失敗，因為它們自己要驗完才 `clearChallenge`）；訂單 challenge 同樣沒有 TTL。目前的邊界是「訂單必須是 `PENDING`」與代簽端點的限流，不是一次性。乾淨的做法是讓需要代簽的流程一律走帶 `exp` 的 `challengeToken`，而不是依賴 `currentChallenge`。
 - [ ] `IOAuthProvider` 補 `nonce` 欄位。現在走 code flow + 後端交換，replay 風險低，但介面上沒有 nonce 的位置，一旦加入使用 `response_mode=form_post` 的 provider（Apple 即是）就沒有防 id_token 注入的機制可用。
 - [ ] 服務條款與隱私權政策補充託管錢包的保管責任說明。
 
