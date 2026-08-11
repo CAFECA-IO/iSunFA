@@ -9,11 +9,13 @@ import * as AuthSetupService from "@/services/setup.auth.service";
 import * as EnvSetupService from "@/services/setup.env.service";
 import * as DbSetupService from "@/services/setup.db.service";
 import * as DeploySetupService from "@/services/deploy.service";
+import * as SystemSettingSetupService from "@/services/setup.system_setting.service";
 
 const SetupService = {
   ...StateSetupService,
   ...DbSetupService,
   ...EnvSetupService,
+  ...SystemSettingSetupService,
   ...BlockchainSetupService,
   ...AuthSetupService,
   ...DeploySetupService,

@@ -31,6 +31,8 @@ import { MeasurementUnit } from "@/constants/enums";
 import { CarbonChartTemplateEnum } from "@/constants/carbon_report_charts";
 import { IInventoryExtraction } from "@/types/carbon_chatbot.types";
 import { logger } from "@/lib/utils/logger";
+import { SystemSettingKey } from "@/constants/system_setting";
+import { systemSettingService } from "@/services/system_setting.service";
 
 // Info: (20260714 - Tzuhan) 結構化聊天回覆: readyParagraphId 已通過白名單裁決(非法/none 一律為 null)
 // Info: (20260716 - Tzuhan) #6518:extraction 為已裁決的事實萃取(壞欄位逐筆丟棄),null = 本輪無可萃取
@@ -266,8 +268,9 @@ export interface IChatGenerationOptions {
 }
 
 export class ChatService {
-  private genAI: GoogleGenerativeAI;
-  private modelName: string;
+  private genAI: GoogleGenerativeAI | null = null;
+  private modelName: string = DEFAULT_GEMINI_MODEL;
+  private readonly explicitApiKey?: string;
 
   /**
    * Info: (20260707 - Luphia)
@@ -275,10 +278,34 @@ export class ChatService {
    *    組件端與業務邏輯層不再需要負責 apiKey 的讀取與驗證，簡化呼叫流程。
    * 2. 本地模型支援預留：將 apiKey 讀取移入 Service 內部，是為了未來能根據環境變數
    *    直接切換至本地模型（如 Ollama）而不需要修改外部呼叫端的代碼。
+   *
+   * Info: (20260809 - Luphia) 金鑰與模型名改為「首次使用時才解析」。
+   * 正式來源已移至資料庫的 system_setting（經 SUPER_ADMIN 簽章），解析必然是非同步的，
+   * 但建構子不能是非同步的——而 `new ChatService()` 散落在 20 幾處，其中還包含
+   * 預設參數值與同步 getter。延遲解析讓所有呼叫端一行都不必改，
+   * 同時讓輪替金鑰後的新請求自動取得新值（不需重啟）。
    */
   constructor(apiKey?: string) {
+    this.explicitApiKey = apiKey;
+  }
+
+  /**
+   * Info: (20260809 - Luphia) 解析並快取 LLM 用戶端。
+   * 優先序：建構子明確傳入 > 資料庫設定 > 環境變數。
+   */
+  private async ensureClient(): Promise<GoogleGenerativeAI> {
+    if (this.genAI) return this.genAI;
+
+    const [settingKey, settingModel] = await Promise.all([
+      systemSettingService.get(SystemSettingKey.GEMINI_API_KEY),
+      systemSettingService.get(SystemSettingKey.LLM_MODEL),
+    ]);
+
     const key =
-      apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+      this.explicitApiKey ||
+      settingKey ||
+      process.env.GEMINI_API_KEY ||
+      process.env.GOOGLE_API_KEY;
 
     if (!key) {
       // Info: (20260707 - Luphia) 若未來支援純本地模型且不需 Key，此處應改為僅在切換至 Google Provider 時才拋錯
@@ -287,8 +314,9 @@ export class ChatService {
       );
     }
 
+    this.modelName = settingModel || process.env.MODEL || DEFAULT_GEMINI_MODEL;
     this.genAI = new GoogleGenerativeAI(key);
-    this.modelName = process.env.MODEL || DEFAULT_GEMINI_MODEL;
+    return this.genAI;
   }
 
   /**
@@ -384,6 +412,8 @@ export class ChatService {
     parts: Part[],
     options?: IChatGenerationOptions,
   ): Promise<{ text: string; usage: ILlmUsage }> {
+    // Info: (20260809 - Luphia) 先解析用戶端，this.modelName 才會是設定後的值
+    const genAI = await this.ensureClient();
     const modelName = options?.modelName || this.modelName;
     const generationConfig: GenerationConfig = {};
 
@@ -409,7 +439,7 @@ export class ChatService {
       modelOptions.tools = options.tools;
     }
 
-    const model = this.genAI.getGenerativeModel(modelOptions);
+    const model = genAI.getGenerativeModel(modelOptions);
 
     // Info: (20260720 - Julian) 有 signal 才帶 requestOptions，讓底層 fetch 可被中止
     const requestOptions = options?.signal
@@ -597,7 +627,8 @@ ${outlineCatalog}${langInstruction}`;
     language?: string,
     taskKey: LlmTaskKeyEnum = LlmTaskKeyEnum.CARBON_CHAT,
   ): Promise<ICarbonChatStructuredReply> {
-    const model = this.genAI.getGenerativeModel({
+    const genAI = await this.ensureClient();
+    const model = genAI.getGenerativeModel({
       model: this.modelName,
       systemInstruction: this.buildCarbonPersonaInstruction(
         currentStep,
@@ -759,7 +790,8 @@ ${outlineCatalog}${langInstruction}`;
 
   async countTokens(text: string): Promise<number> {
     try {
-      const model = this.genAI.getGenerativeModel({ model: this.modelName });
+      const genAI = await this.ensureClient();
+      const model = genAI.getGenerativeModel({ model: this.modelName });
       const response = await model.countTokens(text);
       return response.totalTokens;
     } catch {

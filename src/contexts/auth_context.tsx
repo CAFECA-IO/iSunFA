@@ -29,6 +29,11 @@ interface IAuthUser {
   isVerified?: boolean;
   pubKeyX?: string;
   pubKeyY?: string;
+  /**
+   * Info: (20260810 - Luphia) PASSKEY 或 CUSTODIAL。
+   * 託管帳號（第三方登入）沒有 passkey，需要簽章的流程必須改走伺服器端代簽。
+   */
+  custody?: string;
 }
 
 interface IAuthContextType {

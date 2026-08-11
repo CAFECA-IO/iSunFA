@@ -35,6 +35,15 @@ export const authModal = {
   unregistered_confirm_yes: "Yes, Create Account",
   unregistered_confirm_no: "Cancel",
   user_canceled: "User canceled login",
+  or_continue_with: "or continue with",
+  continue_with_google: "Continue with Google",
+  oauth_exchanging: "Signing you in...",
+  oauth_exchanging_desc: "Verifying your account, this only takes a moment.",
+  oauth_wrong_origin:
+    "Third-party sign-in only works at {{origin}} — the authorization callback must return to that exact address. Open the app there and try again.",
+  oauth_failed: "Third-party sign-in failed",
+  oauth_canceled: "You canceled the authorization",
+  oauth_back_home: "Back to home",
   reward: {
     title: "Campaign Registration Complete!",
     subtitle: "Your exclusive rewards have been credited to your account",

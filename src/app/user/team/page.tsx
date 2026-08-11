@@ -18,7 +18,8 @@ import {
   MinusCircle,
 } from "lucide-react";
 import { Dialog } from "@headlessui/react";
-import { getLoginOptions, fido2ClientService } from "@/lib/auth/fido2_client";
+import { getLoginOptions } from "@/lib/auth/fido2_client";
+import { requestAssertion } from "@/lib/auth/assertion_client";
 import ConfirmModal from "@/components/common/confirm_modal";
 import InviteMemberModal from "@/components/team/invite_member_modal";
 import TeamWalletPanel, {
@@ -366,7 +367,11 @@ export default function TeamManagementPage() {
     setAcceptingId(inviteId);
     try {
       const { challenge } = await getLoginOptions(user.address);
-      const authentication = await fido2ClientService.startLogin({ challenge });
+      // Info: (20260811 - Luphia) 走 requestAssertion，託管帳號才不會卡在永遠不會成功的系統對話框
+      const authentication = await requestAssertion({
+        challenge,
+        custody: user.custody,
+      });
       const token = localStorage.getItem("dewt");
       const res = await fetch(
         `/api/v1/user/team/invitations/${inviteId}/accept`,
@@ -397,7 +402,11 @@ export default function TeamManagementPage() {
     try {
       if (!user?.address) return;
       const { challenge } = await getLoginOptions(user.address);
-      const authentication = await fido2ClientService.startLogin({ challenge });
+      // Info: (20260811 - Luphia) 走 requestAssertion，託管帳號才不會卡在永遠不會成功的系統對話框
+      const authentication = await requestAssertion({
+        challenge,
+        custody: user.custody,
+      });
       const token = localStorage.getItem("dewt");
       const res = await fetch(
         `/api/v1/user/team/${selectedTeamId}/members/${memberId}`,
@@ -426,8 +435,10 @@ export default function TeamManagementPage() {
       try {
         if (!user?.address) return;
         const { challenge } = await getLoginOptions(user.address);
-        const authentication = await fido2ClientService.startLogin({
+        // Info: (20260811 - Luphia) 走 requestAssertion，託管帳號才不會卡在永遠不會成功的系統對話框
+        const authentication = await requestAssertion({
           challenge,
+          custody: user.custody,
         });
         const token = localStorage.getItem("dewt");
         const res = await fetch(

@@ -80,7 +80,7 @@ const MIRRORED: Record<string, Record<string, string>> = {
  * Info: (20260811 - Julian) 只存在於前端、schema 沒有對應 enum 的，登記在這裡。
  *
  * `ProcessTaskType` 是最需要說明的一個：schema 那邊原本有，但 `ProcessTask`
- * 依 ADR 017 拆成兩張表之後已移除 —— 現在它是 service 依來源表填入的 DTO 衍生值。
+ * 依 ADR 019 拆成兩張表之後已移除 —— 現在它是 service 依來源表填入的 DTO 衍生值。
  * 若不明列，下面的覆蓋率檢查會把它報成「漏了鏡像」。
  */
 const UI_ONLY = [

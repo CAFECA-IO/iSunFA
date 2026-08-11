@@ -32,6 +32,15 @@ export const authModal = {
   unregistered_confirm_yes: "好，创建账户",
   unregistered_confirm_no: "取消",
   user_canceled: "用户取消登录",
+  or_continue_with: "或使用以下方式",
+  continue_with_google: "使用 Google 账号继续",
+  oauth_exchanging: "登录中...",
+  oauth_exchanging_desc: "正在验证您的账号，请稍候。",
+  oauth_wrong_origin:
+    "第三方登录只能在 {{origin}} 使用——授权完成后必须跳回这个完全相同的网址。请改从该网址打开后再试。",
+  oauth_failed: "第三方登录失败",
+  oauth_canceled: "您已取消授权",
+  oauth_back_home: "回到首页",
   reward: {
     title: "恭喜完成活动注册！",
     subtitle: "我们已经将专属奖励发放至您的帐户",

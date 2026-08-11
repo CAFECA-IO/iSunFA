@@ -11,6 +11,7 @@ import { useState } from "react";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { useTranslation } from "@/i18n/i18n_context";
 import { getLoginOptions, fido2ClientService } from "@/lib/auth/fido2_client";
+import { ChallengePurpose } from "@/constants/challenge_purpose";
 import { XCircle, Loader2 } from "lucide-react";
 
 interface IProps {
@@ -37,7 +38,10 @@ export default function LocalTaskColumn({ title, missions }: IProps) {
   ) => {
     setActionLoading({ id: folderId, type: action });
     try {
-      const { challenge, token } = await getLoginOptions();
+      const { challenge, token } = await getLoginOptions(
+        undefined,
+        ChallengePurpose.ADMIN_ACTION,
+      );
       const authentication = await fido2ClientService.startLogin({ challenge });
 
       await request(`/api/v1/admin/mission_board/local/${folderId}/actions`, {

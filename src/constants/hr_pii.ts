@@ -1,7 +1,7 @@
 /**
  * Info: (20260811 - Julian) 人事模組個資保護的共用常數（加解密、遮罩、稽核三方的單一來源）。
  *
- * 分級與決策理由見 `documents/architecture/decisions/016_hr_pii_data_classification.md`
+ * 分級與決策理由見 `documents/architecture/decisions/018_hr_pii_data_classification.md`
  * 與 `prisma/schema.prisma` 人事區塊開頭的說明。
  */
 

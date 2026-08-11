@@ -360,6 +360,22 @@ export class PaymentRepository {
     });
   }
 
+  /**
+   * Info: (20260810 - Luphia) 以 challenge 反查「這位使用者自己的」未結案訂單。
+   * 託管代簽用來驗證 challenge 出處：必須綁定 userId，否則等於可以拿別人的
+   * challenge 來借簽。
+   */
+  async findOrderByUserAndChallenge(
+    userId: string,
+    challenge: string,
+    statuses: string[],
+  ) {
+    return prisma.order.findFirst({
+      where: { userId, challenge, status: { in: statuses } },
+      select: { id: true },
+    });
+  }
+
   async getOrderByIdAndUserId(orderId: string, userId: string) {
     return prisma.order.findUnique({
       where: { id: orderId, userId },
