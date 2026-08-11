@@ -86,11 +86,30 @@ describe("buildCarbonReportHtml with restored line structure", () => {
     );
   });
 
+  /**
+   * Info: (20260811 - Emily) 樣本從 timeline 換成 flowchart。
+   *
+   * 這條測的是「行結構還原不會破壞 mermaid 圍籬」,而它原本剛好拿 timeline 當樣本 ——
+   * timeline 現在會被 convertTimelineBlocksToTables 轉成表格
+   * (issue_drafts/open/20 第 2 張票),所以那個樣本已經不是「一個保留下來的圍籬」。
+   * 換成 flowchart:不變式沒變,只是樣本要選一個真的會留在文件裡的圖種。
+   */
   it("should keep mermaid fences intact", () => {
+    const html = buildCarbonReportHtml(
+      "內文一行\n\n```mermaid\nflowchart TD\n  a[起] --> b[迄]\n```\n",
+    );
+    expect(html).toContain('<figure class="chart"><pre class="mermaid">');
+    expect(html).toContain("flowchart TD");
+  });
+
+  it("should turn a timeline fence into a table instead of a chart", () => {
     const html = buildCarbonReportHtml(
       "內文一行\n\n```mermaid\ntimeline\n  1966年01月 : 創立\n```\n",
     );
-    expect(html).toContain('<figure class="chart"><pre class="mermaid">');
-    expect(html).toContain("timeline");
+
+    expect(html).not.toContain('<pre class="mermaid">');
+    expect(html).toContain("<table>");
+    expect(bodyTextOf(html)).toContain("1966年01月");
+    expect(bodyTextOf(html)).toContain("創立");
   });
 });

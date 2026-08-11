@@ -18,6 +18,7 @@ import { stripHtmlLineBreaksOutsideFences } from "@/lib/utils/markdown_line_brea
 import dynamic from "next/dynamic";
 import { escapeArithmeticEmphasis } from "@/lib/utils/markdown_arithmetic_safety";
 import { restoreLineStructure } from "@/lib/utils/markdown_line_structure";
+import { convertTimelineBlocksToTables } from "@/lib/utils/markdown_timeline_table";
 
 // Info: (20260720 - Tzuhan) #54 證據鏈元件動態載入:含 RecordTabModal 依賴鏈,不拖累一般 markdown 渲染
 const EvidenceChain = dynamic(
@@ -189,8 +190,14 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
      * 會顯示不同的數字,而那正是這幾天一直在追的那種分歧。
      */
     () => {
-      const normalized = escapeArithmeticEmphasis(
-        stripHtmlLineBreaksOutsideFences(stripMarkdownComments(content)),
+      /**
+       * Info: (20260811 - Emily) timeline → 表格也要在預覽做,否則預覽是圖、下載是表格
+       * —— 兩端分歧正是這幾天追的多數問題的形狀(issue_drafts/open/20 第 2 張票)。
+       */
+      const normalized = convertTimelineBlocksToTables(
+        escapeArithmeticEmphasis(
+          stripHtmlLineBreaksOutsideFences(stripMarkdownComments(content)),
+        ),
       );
       return restoreSourceLineBreaks
         ? restoreLineStructure(normalized)

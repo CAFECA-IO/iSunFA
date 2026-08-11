@@ -4,6 +4,7 @@ import { stripMarkdownComments } from "@/lib/utils/markdown_comment";
 import { stripHtmlLineBreaksOutsideFences } from "@/lib/utils/markdown_line_break";
 import { escapeArithmeticEmphasis } from "@/lib/utils/markdown_arithmetic_safety";
 import { restoreLineStructure } from "@/lib/utils/markdown_line_structure";
+import { convertTimelineBlocksToTables } from "@/lib/utils/markdown_timeline_table";
 import {
   CARBON_PDF_CHART_MAX_HEIGHT_MM,
   CARBON_PDF_FONT_STACK,
@@ -453,8 +454,16 @@ export const buildCarbonReportHtml = (
   const source = stripHtmlLineBreaksOutsideFences(
     stripMarkdownComments(markdown),
   );
+  /**
+   * Info: (20260811 - Emily) 既有草稿裡的 mermaid timeline 在此轉成表格。
+   * 產表端已改成直接輸出表格,但既有草稿的 markdown 裡存著改動前產生的 timeline 區塊,
+   * 不會因為產生器換了寫法就變 —— 實測那份 54 頁的下載仍是縮到 28% 的彩虹軸。
+   * 轉換是決定性且冪等的,比重新產生整份報告便宜太多。
+   */
   let body = marked.parse(
-    restoreLineStructure(escapeArithmeticEmphasis(source)),
+    convertTimelineBlocksToTables(
+      restoreLineStructure(escapeArithmeticEmphasis(source)),
+    ),
     { async: false },
   ) as string;
   body = stripActiveContent(body);
