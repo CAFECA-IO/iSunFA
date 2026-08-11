@@ -1,4 +1,4 @@
-# 架構決策紀錄 (ADR) 016: HR PII Data Classification and Field-Level Encryption (人事個資分級與欄位級加密)
+# 架構決策紀錄 (ADR) 018: HR PII Data Classification and Field-Level Encryption (人事個資分級與欄位級加密)
 
 > **Date**: 2026-08-11
 > **Author**: Julian
@@ -78,6 +78,26 @@ E2EE 會廢掉這個模組一半的功能，也與 CLAUDE.md §7「所有計算�
 
 **把邊界寫進 ADR，是因為「加密了」很容易被讀成「安全了」。**應用層被攻破這條路徑由授權檢查與 `AuditLogAction.READ` 負責，不是加密該解的問題。
 
+### 補充決策（2026-08-12 review）：密文綁定它的位置（GCM AAD）
+
+上表「防得住」那一欄裡列了「DBA 或維運直連翻表」。**能讀 dump 的人通常也能寫**，而原本的
+`iv || 密文 || tag` 只保證「這段密文沒被改過」，不保證「它屬於誰」：
+
+把員工 A 的 `national_id_cipher` 複製到員工 B 的那一列，解密會**乾淨地成功** ——
+GCM 驗章通過，讀取端拿到 A 的身分證字號並顯示成 B 的。攻擊者不需要竄改任何一個位元組，
+只換位置。同理，`address_cipher` 的內容可以搬進 `phone_cipher`。
+
+因此每段密文以 AAD 綁定 `表名:列 id:欄位名:金鑰代次`。四者都是解密時必然知道的資訊
+（正在讀哪張表的哪一列的哪一欄，代次來自同列的 `pii_key_version`），所以不需要額外儲存 ——
+AAD 不進密文，是重算出來的。密文被搬動時的表現與「用錯代金鑰」相同：驗章失敗、拋
+`HrPiiDecryptError`，不會回傳垃圾明文。
+
+**這對寫入端的要求**：`recordId` 是 AAD 的一部分，而加密發生在 `insert` 之前，
+所以新增紀錄時 **id 必須由應用程式產生**（`randomUUID()`）而不是等資料庫的
+`@default(uuid())`。repo 層照這個方式寫即可（`analysis.service`、`storage.service`
+等已有先例）。選擇必填而不是選填，是因為「加密時省略、解密時帶上」會得到一個
+看起來像密文損毀的驗章失敗，那種錯誤沒有人查得出來。
+
 ---
 
 ## 🎯 4. 決策三：身分證的帳本內唯一性改掛盲索引 (Blind Index)
@@ -114,6 +134,16 @@ nationalIdHash   String? @map("national_id_hash")     // HMAC-SHA256(pepper, 正
 3. 沒有任何密文卻標了 `piiKeyVersion` → 不影響解密，但會讓金鑰輪替腳本的盤點永遠算不完
 
 **即使目前不可觸發也要留**：走 repository 的正常路徑上，密文與 keyVersion 由 `encryptPii()` 的回傳值一起產生。留著的理由是 repository 是唯一的 DB 閘口，任何繞過 service 的呼叫（種子腳本、資料遷移、金鑰輪替作業、未來的批次匯入）都會經過這裡 —— **金鑰輪替腳本尤其：那支腳本的工作就是同時改寫密文與 keyVersion，是這條不變式最可能被違反、也是違反後果最不可逆的地方。**
+
+### 補充決策（2026-08-12 review）：第 1 條由資料庫直接擋
+
+上面點名的威脅是「繞過 service 的呼叫」，但一支用 **raw SQL** 的輪替腳本**同樣繞過這個 TypeScript 守衛** —— 那時只有資料庫約束攔得住。
+
+`Employee`、`EmergencyContact`、`BankAccount` 各自至少有一個**必填**密文欄位（`phone_cipher`、`account_number_cipher`），因此代次必然存在，`pii_key_version` 改為 **NOT NULL**。第 1 條於是由資料庫執行，不再只是應用層的檢查。
+
+`Dependent` 的密文欄位全是選填（可能只登記姓名與關係），代次維持可空，第 1 條仍由 `assertStorablePii` 負責。第 3 條（沒有密文卻標了代次）也仍然只能在應用層擋 —— Prisma 沒有 CHECK 約束。
+
+換句話說：**能交給資料庫的就交給資料庫，剩下的才留給不變式。**
 
 ---
 

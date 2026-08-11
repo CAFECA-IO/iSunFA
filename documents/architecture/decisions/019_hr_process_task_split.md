@@ -1,4 +1,4 @@
-# 架構決策紀錄 (ADR) 017: Splitting ProcessTask to Make Illegal States Unrepresentable (拆分 ProcessTask 以消除非法狀態)
+# 架構決策紀錄 (ADR) 019: Splitting ProcessTask to Make Illegal States Unrepresentable (拆分 ProcessTask 以消除非法狀態)
 
 > **Date**: 2026-08-11
 > **Author**: Julian
@@ -93,7 +93,7 @@ model OffboardingTask {
 
 1. **待辦清單走兩個 query + 合併排序**，不要為了省一次查詢而把兩張表合回去。
 2. **DTO 的 `taskType` 是衍生值**（`src/constants/hr_management.ts` 的 `ProcessTaskType`），由 service 依來源表填入，**不可以寫回資料庫**。前端待辦清單把兩種任務併成一張列表，每一列需要標示來源，這是它唯一的用途。
-3. **建立任務時 `accountBookId` 必須與所屬流程的 `accountBookId` 一致**。這條拆表擋不掉（兩個都是必填外鍵，但可以指向不同帳本），屬於跨表一致性，由 service 層 fail fast —— 與 ADR 016 §5 的 PII 不變式同一類，是 schema 表達不了、必須落到程式碼的規則。
+3. **建立任務時 `accountBookId` 必須與所屬流程的 `accountBookId` 一致**。這條拆表擋不掉（兩個都是必填外鍵，但可以指向不同帳本），屬於跨表一致性，由 service 層 fail fast —— 與 ADR 018 §5 的 PII 不變式同一類，是 schema 表達不了、必須落到程式碼的規則。
 
 ---
 
@@ -107,4 +107,4 @@ model OffboardingTask {
 
 ---
 
-> 相關文件：`prisma/schema.prisma`（`OnboardingTask` 的說明）、`src/constants/hr_management.ts`、`src/repositories/carbon_envelope_invariant.ts`（同一判準的另一種解）、`documents/architecture/decisions/016_hr_pii_data_classification.md`。
+> 相關文件：`prisma/schema.prisma`（`OnboardingTask` 的說明）、`src/constants/hr_management.ts`、`src/repositories/carbon_envelope_invariant.ts`（同一判準的另一種解）、`documents/architecture/decisions/018_hr_pii_data_classification.md`。

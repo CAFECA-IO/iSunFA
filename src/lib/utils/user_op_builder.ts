@@ -13,6 +13,37 @@ import {
 import { publicClient, isuncoin } from "@/lib/viem_public";
 import { CONTRACT_ADDRESSES, ABIS } from "@/config/contracts";
 
+// Info: (20260811 - Luphia) ERC-4337 的 nonce 是 (key << 64) | seq，key 佔 uint192
+const UINT192_MASK = (1n << 192n) - 1n;
+
+/**
+ * Info: (20260811 - Luphia) 由 orderId 決定性推導 nonce key，取代原本的隨機 key。
+ *
+ * ── 為什麼這是一道安全防線，不只是整理 ──
+ * ERC-4337 v0.6 的 UserOperation 沒有 validUntil / validAfter，`paymasterAndData` 也是空的，
+ * 因此一份簽出來的 UserOp **沒有任何時間邊界**：它一直有效，直到它佔的那個 nonce 槽被用掉。
+ *
+ * 原本每次都用隨機 key（`Date.now() * Math.random()`），而隨機 key 幾乎必然沒被用過，
+ * `getNonce` 回傳 seq 0。於是同一張訂單的每一份簽章各自佔一個獨立的槽——
+ * 它們互不作廢、也不過期。N 份簽章就是 N 筆各自可獨立動用的永久授權。
+ *
+ * 對託管帳號來說這特別要緊：偷到一枚 DeWT 的人可以批次索取簽章，而登出、撤銷 DeWT、
+ * 訂單被標記為已付都無法讓已簽出的那些失效——鏈上從不查我們的資料庫。
+ *
+ * 改成由 orderId 推導之後，同一張訂單的所有簽章共用同一個槽：第一份上鏈就消耗掉它，
+ * 其餘**永久失效**。「N 筆可動用的授權」因此收斂成 1 筆，順帶也擋掉同一張訂單被重複付款。
+ *
+ * 不同訂單得到不同 key，所以併發付款仍不會互相卡住——那正是當初改用隨機 key 想解決的問題，
+ * 這個做法同時滿足兩邊。
+ *
+ * 沒有 orderId 時退回 key 0（標準的循序 nonce 空間），不再用隨機值：
+ * 決定性的行為才有辦法推理，隨機只是把問題藏起來。
+ */
+export function deriveNonceKey(orderId?: string): bigint {
+  if (!orderId) return 0n;
+  return BigInt(keccak256(stringToBytes(orderId))) & UINT192_MASK;
+}
+
 // Info: (20260419 - Agent) Merged to provide a single, pure client-side UserOp builder
 export async function prepareTransferUserOp(
   sender: string,
@@ -55,25 +86,31 @@ export async function prepareTransferUserOp(
       args: [CONTRACT_ADDRESSES.CREDIT_POINT, BigInt(0), executeCallData],
     });
 
-    /** Info: (20260130 - Tzuhan)
-     * 3. Get Nonce
+    /**
+     * Info: (20260130 - Tzuhan) 3. Get Nonce
+     *
+     * Info: (20260811 - Luphia) key 由 orderId 決定性推導（見 deriveNonceKey）。
+     *
+     * getNonce 回傳的是已打包好的完整 nonce（`(key << 64) | seq`），可直接放進 UserOp。
+     *
+     * 讀取失敗時退回 `key << 64`（即該 key 的 seq 0）而不是 0：
+     * 退回 0 會把這筆交易丟進 key 0 的循序空間，與其他交易互搶同一個槽，
+     * 而那個槽的 seq 很可能早就不是 0 了，結果是簽出一份必然被 EntryPoint 拒絕的 UserOp。
      */
-    let nonce = BigInt(0);
+    const nonceKey = deriveNonceKey(orderId);
+    let nonce = nonceKey << 64n;
     try {
       const entryPointAbi = parseAbi([
         "function getNonce(address sender, uint192 key) external view returns (uint256)",
       ]);
-      const randomKey = BigInt(
-        Math.floor(Date.now() * Math.random()) % 1000000000,
-      );
       nonce = await publicClient.readContract({
         address: CONTRACT_ADDRESSES.ENTRY_POINT,
         abi: entryPointAbi,
         functionName: "getNonce",
-        args: [validSender, randomKey],
+        args: [validSender, nonceKey],
       });
     } catch (e) {
-      console.warn("Failed to fetch nonce, defaulting to 0", e);
+      console.warn("Failed to fetch nonce, defaulting to key sequence 0", e);
     }
 
     /** Info: (20260130 - Tzuhan)

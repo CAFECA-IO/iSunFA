@@ -330,6 +330,15 @@ export default function CarbonReportPreview({
               buildCarbonReportFileName(session.title)
             }
             onBeforeDownload={handleBeforeDownload}
+            /*
+             * Info: (20260810 - Emily) 盤查報告走伺服端向量列印
+             * (data/issue_drafts/inventory_table_import/17)。
+             *
+             * 只有這裡開:報告動輒上百頁、含跨頁表格,而且要交給查證人員 ——
+             * 前端光柵化產出的是點陣圖,一個排放量數字都複製不出來。
+             * 文件工具與公開分享頁維持原路徑(後者沒有登入,打不到這條端點)。
+             */
+            serverPrint
           />
         </div>
       </div>

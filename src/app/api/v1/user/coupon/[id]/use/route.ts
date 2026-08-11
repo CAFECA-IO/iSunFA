@@ -3,6 +3,7 @@ import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { couponService } from "@/services/coupon.service";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { verifyChallengeToken } from "@/lib/auth/challenge_token";
+import { ChallengePurpose } from "@/constants/challenge_purpose";
 import { webAuthnService } from "@/services/webauthn.service";
 
 export async function POST(
@@ -29,7 +30,11 @@ export async function POST(
     }
 
     const { authentication, challengeToken } = body.fido2Signature;
-    const expectedChallenge = await verifyChallengeToken(challengeToken);
+    const expectedChallenge = await verifyChallengeToken(
+      challengeToken,
+      ChallengePurpose.USER_ACTION,
+      jwtUser.id,
+    );
 
     const isValid = await webAuthnService.verifySignature(
       jwtUser.address,

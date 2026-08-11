@@ -1,0 +1,10 @@
+{
+  "name": "pdf-harness",
+  "private": true,
+  "type": "module",
+  "description": "PDF 光柵化路徑的無頭瀏覽器驗證工具（開發輔助，不進 build）",
+  "dependencies": {
+    "html2canvas": "^1.4.1",
+    "playwright": "^1.55.0"
+  }
+}

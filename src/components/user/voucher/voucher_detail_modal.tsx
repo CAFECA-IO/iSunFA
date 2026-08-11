@@ -406,7 +406,7 @@ export default function VoucherDetailModal({
     );
 
   const VoucherContent = (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-[#F8FAFC]">
+    <div className="flex h-full w-full flex-col overflow-hidden bg-slate-50">
       {/* Info: (20260327 - Luphia) Body Content */}
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-[10px]">
         {/* Info: (20260327 - Luphia) Section 1: Basic Info */}

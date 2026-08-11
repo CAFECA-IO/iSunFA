@@ -13,12 +13,26 @@ export const ENV_EXAMPLE_PATH = path.join(
   ".env.example",
 );
 
+/**
+ * Info: (20260811 - Luphia) 值必須是單行，否則寫進去就等於憑空多出一個環境變數鍵。
+ *
+ * .env 是逐行 `KEY=VALUE` 解析的，這個函式又沒有任何 escaping。值裡帶一個換行，
+ * 第二行就會被 parse 成獨立的鍵——包括 SUPER_ADMIN_PUB_X 這種信任根。
+ * 這裡 fail fast，不試圖「清乾淨後照寫」：能走到這裡的換行都不是正常輸入。
+ */
+function assertSingleLineEnvValue(key: string, value: string): void {
+  if (/[\r\n]/.test(value)) {
+    throw new Error(`Env value for ${key} must not contain line breaks`);
+  }
+}
+
 // Info: (20260414 - Luphia) 更新或附加環境變數，統一處理正則表達式取代邏輯
 export function updateOrAppendEnv(
   content: string,
   key: string,
   value: string,
 ): string {
+  assertSingleLineEnvValue(key, value);
   const regex = new RegExp(`^${key}=.*$`, "m");
   if (content.match(regex)) {
     return content.replace(regex, () => `${key}=${value}`);

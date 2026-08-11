@@ -142,7 +142,7 @@ export const HR_DASHBOARD_ROLE_I18N_KEY: Record<HrDashboardRole, string> = {
  * 原本對齊 Prisma enum `ProcessTaskType`，但那個 enum 已隨 `ProcessTask` 拆成
  * `OnboardingTask` / `OffboardingTask` 一併移除 —— 儲存層裡任務屬於哪種流程
  * 由它在哪張表決定，存一個可以與外鍵矛盾的欄位只會製造第三種真相
- * （見 ADR 017）。
+ * （見 ADR 019）。
  *
  * 這裡保留它的理由不同：待辦清單畫面把兩種任務併成一張列表，
  * 每一列需要標示自己來自哪邊。這個值由 service 層依來源表填入，

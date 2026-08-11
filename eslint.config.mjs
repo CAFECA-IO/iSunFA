@@ -120,6 +120,27 @@ const tslintConfigs = [
         { patterns: [{ group: ['./*', '../*'], message: "請使用 '@/' 路徑別名取代相對路徑 '..'" }] },
       ],
 
+      /**
+       * Info: (20260811 - Luphia) 元件層不得直接使用 fido2_client 取簽章。
+       *
+       * 託管帳號（第三方登入）沒有 passkey，直呼 startLogin 會讓使用者卡在一個
+       * 永遠不會成功的系統對話框前面。正確做法是 requestAssertion——它會依 custody
+       * 自動選擇 passkey 或伺服器代簽，兩者回傳的都是真正的 WebAuthn assertion。
+       *
+       * 這條規則的存在是因為第一版只遷移了一個呼叫點，其餘十幾處全數漏掉，
+       * 而漏掉的症狀只有託管使用者會遇到——不會有人在 code review 時發現。
+       * 登入與部署精靈本來就沒有 custody 可言，在該檔案內以 eslint-disable-next-line 排除。
+       */
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "MemberExpression[object.name='fido2ClientService'][property.name='startLogin']",
+          message:
+            '需要簽章時請改用 @/lib/auth/assertion_client 的 requestAssertion，否則託管帳號無法完成操作',
+        },
+      ],
+
       'jsx-a11y/click-events-have-key-events': 'warn',
       'jsx-a11y/no-static-element-interactions': 'warn',
       'jsx-a11y/control-has-associated-label': [
@@ -138,6 +159,32 @@ const tslintConfigs = [
           ],
         },
       ],
+    },
+  },
+
+  /**
+   * Info: (20260811 - Luphia) 允許直接使用 fido2ClientService.startLogin 的例外清單。
+   *
+   * 三類檔案本來就不可能走 requestAssertion，把它們列在這裡（而不是散落 17 個
+   * inline disable）才看得出「例外只有這些、而且每一類都有理由」：
+   *
+   * 1. 登入與 passkey 註冊：當下還沒有 session，也就沒有 custody 可判斷。
+   * 2. 部署精靈：系統尚未初始化，SUPER_ADMIN 的 passkey 就是唯一信任根。
+   * 3. 管理員操作與系統設定簽署：刻意只接受真實 passkey。託管帳號的「同意」
+   *    只是一張 session cookie，讓它能授權最高權限操作等於沒有第二因素；
+   *    custodial_signing.service 也對應地拒絕代簽 ADMIN_ACTION 用途的 challenge。
+   */
+  {
+    files: [
+      'src/lib/auth/assertion_client.ts',
+      'src/components/auth/auth_modal.tsx',
+      'src/services/registration.service.ts',
+      'src/components/admin/setup/**/*.{ts,tsx}',
+      'src/app/admin/**/*.{ts,tsx}',
+      'src/components/admin/**/*.{ts,tsx}',
+    ],
+    rules: {
+      'no-restricted-syntax': 'off',
     },
   },
 

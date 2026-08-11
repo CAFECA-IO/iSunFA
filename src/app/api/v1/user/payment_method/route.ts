@@ -7,8 +7,9 @@ import { paymentRepo } from "@/repositories/payment.repo";
 import { ORDER_TYPE } from "@/constants/status";
 import { isProduction } from "@/lib/utils/common";
 import { CURRENCY_UNIT } from "@/constants/price";
+import { SystemSettingKey } from "@/constants/system_setting";
+import { systemSettingService } from "@/services/system_setting.service";
 
-const OEN_ACCESS_TOKEN = process.env.OEN_ACCESS_TOKEN;
 const OEN_BASE_URL = isProduction()
   ? "https://payment-api.oen.tw"
   : "https://payment-api.testing.oen.tw";
@@ -53,6 +54,15 @@ export async function POST(request: NextRequest) {
       return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
+    /**
+     * Info: (20260809 - Luphia) 金流憑證改由資料庫設定解析（env 為 fallback），
+     * 讓輪替 OEN 憑證不需要改 .env 也不需要重啟服務。
+     */
+    const [oenAccessToken, oenMerchantId] = await Promise.all([
+      systemSettingService.get(SystemSettingKey.OEN_ACCESS_TOKEN),
+      systemSettingService.get(SystemSettingKey.OEN_MERCHANT_ID),
+    ]);
+
     const order = await paymentRepo.createOrder({
       userId: user.id,
       type: ORDER_TYPE.OEN_BINDING,
@@ -72,10 +82,11 @@ export async function POST(request: NextRequest) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${OEN_ACCESS_TOKEN}`,
+        Authorization: `Bearer ${oenAccessToken}`,
       },
       body: JSON.stringify({
-        merchantId: "mermer",
+        // Info: (20260809 - Luphia) 原本寫死 "mermer"，導致部署精靈收集的商店代號從未生效
+        merchantId: oenMerchantId,
         // Info: (20260305 - Tzuhan) 綁定成功後，OEN 將用戶導回前台
         successUrl: `${webhookBase}/pricing?tab=credits&binding_success=true&order_id=${order.id}`,
         failureUrl: `${webhookBase}/pricing?tab=credits&binding_failure=true&order_id=${order.id}`,

@@ -60,9 +60,59 @@ model User {
   pdfEditorDocuments    PdfEditorDocument[]    @relation("PdfEditorDocumentCreator")
   accountingAccounts    AccountingAccount[]
   teamWalletAllocations TeamWalletAllocation[]
+  identities            UserIdentity[]
+  custodialKey          UserCustodialKey?
 
   @@index([address])
   @@map("user")
+}
+
+/**
+ * Info: (20260809 - Luphia) 第三方身分綁定（Google / Apple / ...）。
+ * 一個 User 可綁多個 provider，同一 provider 只能綁一個外部帳號；
+ * (provider, providerUserId) 為全域唯一，避免同一個 Google 帳號登入到兩個 User。
+ */
+model UserIdentity {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider       String
+  providerUserId String    @map("provider_user_id")
+  email          String?
+  emailVerified  Boolean   @default(false) @map("email_verified")
+  displayName    String?   @map("display_name")
+  avatarUrl      String?   @map("avatar_url")
+  lastLoginAt    DateTime? @map("last_login_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@unique([provider, providerUserId])
+  // Info: (20260811 - Luphia) 不另建 @@index([userId])：複合唯一索引的最左前綴已涵蓋以 userId 查詢
+  @@unique([userId, provider])
+  @@map("user_identity")
+}
+
+/**
+ * Info: (20260809 - Luphia) 託管式 SCW 簽章金鑰。
+ * 僅用於「沒有 passkey」的第三方登入使用者：伺服器代管其 P-256 私鑰，
+ * 私鑰以 AES-256-GCM 加密後存放（見 src/lib/auth/key_vault.ts），明文永不落盤。
+ * 使用者之後補綁 passkey 時，可將 SCW 擁有者換成 passkey 公鑰並廢除此列。
+ */
+model UserCustodialKey {
+  userId              String   @id @map("user_id")
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credentialId        String   @unique @map("credential_id")
+  pubKeyX             String   @map("pub_key_x")
+  pubKeyY             String   @map("pub_key_y")
+  encryptedPrivateKey String   @map("encrypted_private_key")
+  iv                  String
+  authTag             String   @map("auth_tag")
+  keyVersion          Int      @default(1) @map("key_version")
+  algorithm           String   @default("AES-256-GCM")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@map("user_custodial_key")
 }
 
 model Team {
@@ -212,6 +262,59 @@ model SubscriptionPlanQuota {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("subscription_plan_quota")
+}
+
+/**
+ * Info: (20260809 - Luphia) 系統設定（DB 為準，取代大部分 .env 變更）。
+ * 秘密值（如 OAuth client secret）以 AES-256-GCM 加密後存放，明文永不落盤。
+ * 完整性由 SystemSettingManifest 的全集簽章保護——單獨改這張表會導致 digest 對不上而被拒用。
+ */
+model SystemSetting {
+  key        String   @id
+  value      String
+  isSecret   Boolean  @default(false) @map("is_secret")
+  iv         String?
+  authTag    String?  @map("auth_tag")
+  keyVersion Int?     @map("key_version")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("system_setting")
+}
+
+/**
+ * Info: (20260809 - Luphia) 系統設定的全集簽章（單列）。
+ *
+ * 與 .env 的 SUPER_ADMIN_SIGNATURE 同構：把所有設定的「明文」鍵值排序串接成
+ * canonical string，SHA-256 後當作 WebAuthn challenge，由 SUPER_ADMIN 的 passkey 簽署。
+ *
+ * 之所以簽全集而非逐列：逐列簽章擋不住「整列刪除」與「換回舊值」，
+ * 只有涵蓋全集的 digest 才能偵測新增／刪除。version 單調遞增以緩解 rollback
+ * （完全防堵需 DB 以外的錨點，見 ADR 017）。
+ */
+model SystemSettingManifest {
+  key       String   @id @default("default")
+  digest    String
+  signature String
+  signedBy  String   @map("signed_by")
+  version   Int
+  signedAt  DateTime @default(now()) @map("signed_at")
+
+  @@map("system_setting_manifest")
+}
+
+// Info: (20260809 - Luphia) 設定變更稽核軌跡：保留每一版的 digest 與簽章，供事後追查與 version 單調性檢查
+model SystemSettingAudit {
+  id        String   @id @default(uuid())
+  version   Int      @unique
+  digest    String
+  signature String
+  signedBy  String   @map("signed_by")
+  // Info: (20260811 - Luphia) 逗號串接：目前 key 全部來自 SystemSettingKey 常數，不含逗號
+  changedKeys String   @map("changed_keys")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("system_setting_audit")
 }
 
 /**
@@ -1462,7 +1565,7 @@ model UserStorageUsage {
  *
  * 敏感個資欄位一律以**應用層欄位加密**入庫（AES-256-GCM，金鑰由伺服器持有），
  * 對外預設回遮罩值，取用完整值另走一條路徑並寫 `AuditLog`。
- * 完整脈絡見 `documents/architecture/decisions/016_hr_pii_data_classification.md`。
+ * 完整脈絡見 `documents/architecture/decisions/018_hr_pii_data_classification.md`。
  *
  * ## 為什麼不是 E2EE（碳盤查的做法）
  *
@@ -1489,10 +1592,14 @@ model UserStorageUsage {
  * 1. 密文欄位一律以 `Cipher` 結尾（`nationalIdCipher`、`accountNumberCipher`…）。
  *    命名就是型別以外的第二道提醒：看到 `Cipher` 就知道這不是能直接顯示的值。
  * 2. 每張持有個資的表帶 `piiAlgorithm` + `piiKeyVersion`，支援金鑰輪替時新舊並存。
- * 3. `piiKeyVersion` 可為 null，但**任一密文欄位有值時它必須有值** ——
+ * 3. `piiKeyVersion` 在密文欄位全為選填的表（Dependent）可為 null；
+ *    其餘三張表至少有一個必填密文欄位，因此改為 NOT NULL 由資料庫直接擋
+ *    （見各表欄位上的說明）。不變式仍然保留：它涵蓋 Dependent，
+ *    也涵蓋「沒有任何密文卻標了代次」的反方向。
+ *    原文保留於此以說明規則本身：**任一密文欄位有值時它必須有值** ——
  *    比照 `carbon_envelope_invariant.ts` 的「寫得進去就必須讀得出來」，
  *    由 `src/repositories/hr_pii_invariant.ts` 擋在寫入端，而不是讀取端。
- * 4. 未加密的欄位是刻意的，理由逐欄記在 ADR 016：
+ * 4. 未加密的欄位是刻意的，理由逐欄記在 ADR 018：
  *    `employeeNo` / `email` 要進複合唯一鍵，`name` 要排序與模糊搜尋，
  *    加密會讓這兩件事都做不到，而它們單獨不足以冒用身分。
  * 5. `birthday` 加密後失去 DB 端的日期查詢能力。目前沒有任何查詢用到它；
@@ -1603,7 +1710,11 @@ model Employee {
   // Info: (20260811 - Julian) 個資封裝參數：演算法版本化，keyVersion 供金鑰輪替時新舊並存
   // Info: (20260811 - Julian) keyVersion 可為 null（整列無密文時），但任一密文有值即必須有值，由 hr_pii_invariant 擋在寫入端
   piiAlgorithm  String  @default("AES-256-GCM") @map("pii_algorithm")
-  piiKeyVersion Int?    @map("pii_key_version")
+  // Info: (20260812 - Luphia) 非空:本表至少有一個密文欄位是必填的,所以代次必然存在。
+  // Info: (20260812 - Luphia) 由資料庫擋而不是只靠 assertStorablePii —— 那條不變式點名的威脅
+  // Info: (20260812 - Luphia) 是「繞過 service 的呼叫(種子腳本、資料遷移、金鑰輪替作業)」,
+  // Info: (20260812 - Luphia) 而用 raw SQL 的輪替腳本同樣繞過 TS 守衛,只有 NOT NULL 攔得住。
+  piiKeyVersion Int    @map("pii_key_version")
 
   // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
   accountBookId String      @map("account_book_id")
@@ -1724,7 +1835,11 @@ model EmergencyContact {
 
   // Info: (20260811 - Julian) 個資封裝參數，語意同 Employee
   piiAlgorithm  String @default("AES-256-GCM") @map("pii_algorithm")
-  piiKeyVersion Int?   @map("pii_key_version")
+  // Info: (20260812 - Luphia) 非空:本表至少有一個密文欄位是必填的,所以代次必然存在。
+  // Info: (20260812 - Luphia) 由資料庫擋而不是只靠 assertStorablePii —— 那條不變式點名的威脅
+  // Info: (20260812 - Luphia) 是「繞過 service 的呼叫(種子腳本、資料遷移、金鑰輪替作業)」,
+  // Info: (20260812 - Luphia) 而用 raw SQL 的輪替腳本同樣繞過 TS 守衛,只有 NOT NULL 攔得住。
+  piiKeyVersion Int   @map("pii_key_version")
 
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
@@ -1792,7 +1907,11 @@ model BankAccount {
 
   // Info: (20260811 - Julian) 個資封裝參數，語意同 Employee
   piiAlgorithm  String @default("AES-256-GCM") @map("pii_algorithm")
-  piiKeyVersion Int?   @map("pii_key_version")
+  // Info: (20260812 - Luphia) 非空:本表至少有一個密文欄位是必填的,所以代次必然存在。
+  // Info: (20260812 - Luphia) 由資料庫擋而不是只靠 assertStorablePii —— 那條不變式點名的威脅
+  // Info: (20260812 - Luphia) 是「繞過 service 的呼叫(種子腳本、資料遷移、金鑰輪替作業)」,
+  // Info: (20260812 - Luphia) 而用 raw SQL 的輪替腳本同樣繞過 TS 守衛,只有 NOT NULL 攔得住。
+  piiKeyVersion Int   @map("pii_key_version")
 
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")

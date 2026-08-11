@@ -203,6 +203,13 @@ export const adminSetup = {
       "LLM 벡터 검색 엔진을 구동합니다. 생략하면 AI 어시스턴트가 대체 모의 모드로 작동합니다.",
     oen_hint:
       "명목 화폐 온램프 작업에 필요. 동적 송장을 생성하고 오프체인에서 결제 상태를 기록합니다.",
+    llm_model_label: "LLM 모델",
+    third_party_login: "제3자 로그인",
+    stored_in_db: "데이터베이스에 보관",
+    google_client_id_label: "Google OAuth Client ID",
+    google_client_secret_label: "Google OAuth Client Secret",
+    google_hint:
+      "선택 사항입니다. 비워 두면 패스키 로그인만 제공됩니다. 이 값은 데이터베이스에 보관되며(시크릿은 암호화) 슈퍼 관리자 패스키 서명으로 봉인됩니다. 이후 변경 시 .env 수정이나 재시작이 필요하지 않습니다. Google Cloud Console에서 'Web application' 클라이언트를 만들고 ${APP_URL}/auth/callback/google 을 승인된 리디렉션 URI에 추가하세요.",
     core_system: "핵심 생태계",
     ai_consult: "AI 상담",
     payment_gateway: "OEN 결제 게이트웨이",
@@ -224,6 +231,7 @@ export const adminSetup = {
     ready_title: "엔터프라이즈 시스템 준비 완료",
     ready_desc:
       "구성이 안전하게 서명되었습니다. 백엔드 인프라는 이제 FIDO2 보호 하에 완벽하게 작동합니다.",
+    db_settings_preview: "이번에 함께 서명할 데이터베이스 설정",
     err_challenge: "서명 챌린지 생성 실패.",
     err_finalize: "구성을 완료하지 못했습니다: ",
     err_sign: "서명 실패: ",

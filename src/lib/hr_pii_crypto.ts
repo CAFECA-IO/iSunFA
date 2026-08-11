@@ -33,6 +33,7 @@ import {
   HR_PII_KEY_BYTES,
   HR_PII_KEY_ENV_PREFIX,
   HR_PII_TAG_BYTES,
+  HrPiiTable,
 } from "@/constants/hr_pii";
 
 /**
@@ -92,6 +93,48 @@ export interface IHrPiiCiphertext {
 }
 
 /**
+ * Info: (20260812 - Luphia) 每段密文綁定它的位置（GCM 的 AAD）。
+ *
+ * ## 沒有 AAD 會怎樣
+ *
+ * `iv || 密文 || tag` 的 tag 只保證「這段密文沒被改過」，不保證「它屬於誰」。
+ * 於是把員工 A 的 `national_id_cipher` 複製到員工 B 的那一列，解密會**乾淨地成功**
+ * —— GCM 驗章通過，讀取端拿到 A 的身分證字號並顯示成 B 的。
+ * 同理，`address_cipher` 的內容可以搬到 `phone_cipher`。
+ *
+ * 這不在「密文竄改」的防護範圍內，因為攻擊者沒有竄改任何一段密文，
+ * 只是換了它們的位置。而本模組的威脅模型是「DBA 或維運直連資料庫」——
+ * 能讀 dump 的人通常也能寫。
+ *
+ * ## 綁什麼
+ *
+ * `表名:列 id:欄位名:金鑰代次`。四者都是解密時**必然知道**的資訊
+ * （正在讀哪張表的哪一列的哪一欄，代次來自同列的 `piiKeyVersion`），
+ * 所以不需要額外儲存 —— AAD 不進密文，是重算出來的。
+ *
+ * ## 這對寫入端的要求
+ *
+ * `recordId` 是必填，因此新增紀錄時 **id 必須由應用程式產生**（`randomUUID()`）
+ * 而不是等資料庫的 `@default(uuid())` —— 加密發生在 insert 之前。
+ * repo 層照這個方式寫即可（`analysis.service`、`storage.service` 等已有先例）。
+ * 選擇必填而不是選填，是因為「加密時省略、解密時帶上」會得到一個
+ * 看起來像密文損毀的驗章失敗，那種錯誤沒有人查得出來。
+ */
+export interface IHrPiiAadContext {
+  table: HrPiiTable;
+  // Info: (20260812 - Luphia) 密文欄位名（例：`nationalIdCipher`）；同一列不同欄位不可互換
+  field: string;
+  // Info: (20260812 - Luphia) 該列的主鍵；不同列不可互換
+  recordId: string;
+}
+
+const buildAad = (context: IHrPiiAadContext, keyVersion: number): Buffer =>
+  Buffer.from(
+    `${context.table}:${context.recordId}:${context.field}:${keyVersion}`,
+    "utf8",
+  );
+
+/**
  * Info: (20260811 - Julian) 加密單一欄位。
  *
  * 回傳同時帶 algorithm 與 keyVersion，而不是只回密文字串：
@@ -101,11 +144,29 @@ export interface IHrPiiCiphertext {
  */
 export function encryptPii(
   plaintext: string,
+  context: IHrPiiAadContext,
   keyVersion: number = HR_PII_CURRENT_KEY_VERSION,
 ): IHrPiiCiphertext {
+  /**
+   * Info: (20260812 - Luphia) 空字串直接拒絕,不加密。
+   *
+   * `decryptPii` 的長度守衛是「至少要放得下 iv + tag」,而空明文的密文
+   * 正好等於 iv + tag（28 bytes）—— 於是加密成功、解密卻判定 too short 而拋錯,
+   * 一段自己解不開自己產物的不對稱。
+   *
+   * 選擇在加密端拒絕而不是放寬解密端的守衛:空字串的個資欄位沒有意義,
+   * 應該寫 null。放寬守衛只會讓「表單送了空字串」這件事安靜地存進資料庫。
+   */
+  if (plaintext === "") {
+    throw new HrPiiDecryptError(
+      "refusing to encrypt an empty string; write null instead of an empty PII field",
+    );
+  }
+
   const key = loadKey(keyVersion);
   const iv = randomBytes(HR_PII_IV_BYTES);
   const cipher = createCipheriv(HR_PII_CIPHER, key, iv);
+  cipher.setAAD(buildAad(context, keyVersion));
 
   const encrypted = Buffer.concat([
     cipher.update(plaintext, "utf8"),
@@ -120,8 +181,18 @@ export function encryptPii(
   };
 }
 
-// Info: (20260811 - Julian) 解密單一欄位；keyVersion 取自該列的 piiKeyVersion，支援輪替期間新舊並存
-export function decryptPii(cipherText: string, keyVersion: number): string {
+/**
+ * Info: (20260811 - Julian) 解密單一欄位；keyVersion 取自該列的 piiKeyVersion，支援輪替期間新舊並存
+ *
+ * Info: (20260812 - Luphia) `context` 必須與加密時**完全一致**（見 IHrPiiAadContext）。
+ * 不一致的表現與「用錯代金鑰」相同:GCM 驗章失敗、拋 HrPiiDecryptError,
+ * 不會回傳垃圾明文。密文被搬到別的列或別的欄位時就是這個結果 —— 那正是目的。
+ */
+export function decryptPii(
+  cipherText: string,
+  context: IHrPiiAadContext,
+  keyVersion: number,
+): string {
   const key = loadKey(keyVersion);
   const raw = Buffer.from(cipherText, "base64");
 
@@ -137,6 +208,7 @@ export function decryptPii(cipherText: string, keyVersion: number): string {
   const body = raw.subarray(HR_PII_IV_BYTES, raw.length - HR_PII_TAG_BYTES);
 
   const decipher = createDecipheriv(HR_PII_CIPHER, key, iv);
+  decipher.setAAD(buildAad(context, keyVersion));
   decipher.setAuthTag(tag);
 
   try {
@@ -177,6 +249,12 @@ export function blindIndexNationalId(nationalId: string): string {
  *
  * 一般的 `===` 會在第一個不同的位元組就返回，比對耗時洩漏了前綴正確幾碼；
  * 這在「拿著候選身分證字號逐碼試」的情境下是可利用的。
+ *
+ * Info: (20260812 - Luphia) **目前沒有正式呼叫端**（只有測試在用）。
+ * 實務上的唯一性比對由 `@@unique([accountBookId, nationalIdHash])` 在資料庫層做,
+ * 走不到這支。它是為「以身分證查員工」那條 lookup 準備的,而 repo / service 層還沒寫。
+ * 留著是因為那條路徑一定會出現,而屆時最容易寫成 `===`;
+ * 但在接上之前,不要誤以為它正在守什麼。
  */
 export function blindIndexEquals(left: string, right: string): boolean {
   const a = Buffer.from(left, "base64");

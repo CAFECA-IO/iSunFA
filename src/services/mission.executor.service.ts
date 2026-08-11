@@ -11,6 +11,9 @@ import { ITaskDefinition } from "@/lib/worker/task.generator";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { Schema } from "@google/generative-ai";
 import { JSONValue } from "@/validators/common";
+import { acquireMissionLock, isMissionLocked } from "@/lib/worker/mission_lock";
+import { MISSION_MAX_EXECUTION_FAILURES } from "@/constants/mission_executor";
+import { LLM_WORKER_TIMEOUT_MS } from "@/constants/llm";
 
 /**
  * Info: (20260516 - Luphia) 禁止在此處撰寫工作流程相關邏輯
@@ -58,27 +61,14 @@ export async function processNext() {
         continue; // Info: (20260502 - Luphia) Given up after 3 rejections
       } catch {}
 
-      // Info: (20260521 - Luphia) Check for running lock
-      const runningFilePath = path.join(taskDir, "running");
-      let isRunningLockActive = false;
-      try {
-        const runningContent = await fs.readFile(runningFilePath, "utf8");
-        const runningTimestamp = parseInt(runningContent.trim(), 10);
-        if (!isNaN(runningTimestamp)) {
-          const oneHourAgo = Date.now() - 60 * 60 * 1000;
-          if (runningTimestamp > oneHourAgo) {
-            isRunningLockActive = true;
-          } else {
-            try {
-              await fs.unlink(runningFilePath);
-            } catch {}
-          }
-        }
-      } catch {
-        // Info: (20260521 - Luphia) File does not exist or is unreadable, not locked
-      }
-
-      if (isRunningLockActive) {
+      /**
+       * Info: (20260811 - Luphia) 檢查執行鎖（見 lib/worker/mission_lock）。
+       *
+       * 舊版在這裡 inline 判斷「時間戳是否超過一小時」，於是 worker 被強制中斷留下的
+       * 孤兒鎖會讓該 mission 整整停擺一小時。現在以 heartbeat 判斷存活，
+       * 並在同一台機器上比對 pid——持有行程消失時可立即接手。過期的鎖由這支函式順手清掉。
+       */
+      if (await isMissionLocked(taskDir)) {
         continue;
       }
 
@@ -99,7 +89,7 @@ export async function processNext() {
         (f) => f.startsWith("failed_") && f.endsWith(".md"),
       );
 
-      if (failedFiles.length >= 3) {
+      if (failedFiles.length >= MISSION_MAX_EXECUTION_FAILURES) {
         continue; // Info: (20260422 - Luphia) Max retries exceeded
       }
 
@@ -124,18 +114,16 @@ export async function processNext() {
     const resultPath = path.join(taskDir, "result.md");
     const missionJsonPath = path.join(taskDir, "mission.json");
 
-    const runningFilePath = path.join(taskDir, "running");
-    try {
-      await fs.writeFile(runningFilePath, String(Date.now()), { flag: "wx" });
-    } catch (err) {
-      const error = err as NodeJS.ErrnoException;
-      if (error.code === "EEXIST") {
-        console.log(
-          `[MissionExecutor] Folder ${folderName} is already locked by another process. Skipping.`,
-        );
-        return;
-      }
-      throw err;
+    /**
+     * Info: (20260811 - Luphia) 取得執行鎖並啟動 heartbeat。
+     * 以 `wx` 建檔保證原子性：多個 worker 同時掃到同一個 mission 時只有一個成功。
+     */
+    const lock = await acquireMissionLock(taskDir);
+    if (!lock) {
+      console.log(
+        `[MissionExecutor] Folder ${folderName} is already locked by another process. Skipping.`,
+      );
+      return;
     }
 
     try {
@@ -216,6 +204,8 @@ export async function processNext() {
               taskResultStr = await chatService.generateRaw(
                 fullPrompt,
                 responseSchema,
+                // Info: (20260811 - Luphia) 逾時上限，見 LLM_WORKER_TIMEOUT_MS
+                { timeoutMs: LLM_WORKER_TIMEOUT_MS },
               );
 
               // Info: (20260516 - Tzuhan) Add AI_GENERATED tag to raw LLM output if it is JSON
@@ -545,9 +535,8 @@ export async function processNext() {
         );
       }
     } finally {
-      try {
-        await fs.unlink(runningFilePath);
-      } catch {}
+      // Info: (20260811 - Luphia) 一併停掉 heartbeat，否則計時器會繼續刷新一個已刪除的鎖檔
+      await lock.release();
     }
   } catch (e) {
     console.log("[MissionExecutor] Invalid MISSION_DIR or none exists yet.", e);

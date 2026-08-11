@@ -3,6 +3,7 @@ import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { Role } from "@/constants/role";
 import { webAuthnService } from "@/services/webauthn.service";
 import { verifyChallengeToken } from "@/lib/auth/challenge_token";
+import { ChallengePurpose } from "@/constants/challenge_purpose";
 import type { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
 
 export interface IAdminActionPayload {
@@ -45,7 +46,15 @@ export async function validateAdminFido2(req: Request) {
   const { authentication, challengeToken } = body.fido2Signature;
 
   // Info: (20260416 - Luphia) 3. FIDO2 Signature Integrity Check
-  const expectedChallenge = await verifyChallengeToken(challengeToken);
+  /**
+   * Info: (20260811 - Luphia) 管理員操作只接受 ADMIN_ACTION 用途、且綁定本人的 token。
+   * 沒有這兩項比對時，任何一枚使用者手上的 challengeToken 都能授權最高權限操作。
+   */
+  const expectedChallenge = await verifyChallengeToken(
+    challengeToken,
+    ChallengePurpose.ADMIN_ACTION,
+    user.id,
+  );
 
   const isValid = await webAuthnService.verifySignature(
     user.address,
