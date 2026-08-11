@@ -49,6 +49,7 @@ import {
   validateSourceTables,
   type ICarbonSourceTable,
 } from "@/lib/carbon_source_table.builder";
+import { padTableHeaderToWidest } from "@/lib/utils/markdown_table_columns";
 import { logger } from "@/lib/utils/logger";
 import { IActivityRecord } from "@/types/carbon_chatbot.types";
 
@@ -632,6 +633,17 @@ T3. **「NA」「NS」「-」等非數值標記必須原樣保留,嚴禁改成 0
 T4. 跨頁的同一張表合併為一張,sourcePages 給起訖兩頁;不同表號絕不合併。
 T5. tableNo 照抄原文表號(如「表3.8」);找不到表號的表格整張省略,不要自己編號。
 T6. 只收錄真正是表格的內容;條列式文字不要當成表格。
+T7. **每一列的欄數必須與表頭一致。** markdown 沒有跨欄/跨列,原文的合併儲存格要照下面兩條轉寫;
+    欄數對不上時多出來的欄會被整個丟掉(連內容一起),而且不會有任何錯誤。
+T8. **兩層表頭**(父標題橫跨數欄、子標題在下一列):表頭列寫父標題,父標題所涵蓋的每一欄各佔一格
+    (第二格起留空),下一列再寫子標題。例:
+      | 設施/活動 | 溫室氣體源 | 可能產生溫室氣體種類 | | | | | | | 備註 |
+      | | | CO2 | CH4 | N2O | HFCs | PFCs | NF3 | SF6 | (類別) |
+    —— 不要把父標題那一列寫成 4 欄了事,那會讓後面六欄的資料全部消失。
+T9. **跨欄的分隔列**(整列只有一個置中標題,如「類別二:輸入能源的間接溫室氣體排放量」)
+    獨立成一列:第一格寫該標題,同列其餘儲存格全部留空。
+    不要把它填進它所涵蓋的每一列的第一欄,也不要因此把原本的第一欄擠到第二欄去。
+    **縱向合併的儲存格**只在該範圍的第一列寫值,其餘列的該格留空,不要逐列重複。
 
 【標準大綱】
 ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\n${source.data}` : ""}`;
@@ -807,20 +819,48 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
           }
           return check.isValid;
         });
+        /**
+         * Info: (20260811 - Emily) 表頭比資料列窄的表要先把欄數補齊
+         * (issue_drafts/open/19 第 3 張票)。
+         *
+         * GFM 會把超出表頭欄數的儲存格**靜默丟棄**。原文的兩層表頭
+         * (父標題橫跨數欄、子標題在下一列)在 markdown 沒有 colspan 可用,
+         * 模型只能把父標題那列寫成較少的欄 —— 於是表3.1 宣告 4 欄、資料列有 10 欄,
+         * 七種溫室氣體裡的五種連同「(類別)」欄一起消失,而且沒有任何錯誤訊息。
+         *
+         * 實測那份 UAT 報告:4 張表共 261 個非空儲存格就這樣不見了。
+         * 補欄只在表頭尾端加空欄,不動任何一格既有內容;多出來的格全是空的
+         * (行尾多打一個 `|`)時不補,免得憑空多一條空欄。
+         *
+         * 修在匯入落地這一層而不是渲染層:預覽與下載的 PDF 讀的是同一份 markdown,
+         * 修在渲染層只會讓兩邊再度分歧。
+         */
+        const widened = shaped.map((table) => {
+          const fix = padTableHeaderToWidest(table.markdown);
+          if (fix.recoveredCells === 0) return table;
+          logger.warn("[ReportImportService] source table header widened", {
+            paragraphId,
+            tableNo: table.tableNo,
+            headerColumns: fix.headerColumns,
+            widestColumns: fix.widestColumns,
+            recoveredCells: fix.recoveredCells,
+          });
+          return { ...table, markdown: fix.markdown };
+        });
         // Info: (20260802 - Tzuhan) 逐張過關後仍要驗數量上限(單張檢查看不到總數)
-        const withinLimit = validateSourceTables(shaped);
+        const withinLimit = validateSourceTables(widened);
         if (!withinLimit.isValid) {
           logger.warn("[ReportImportService] source tables dropped", {
             paragraphId,
             reason: withinLimit.reason ?? null,
-            count: shaped.length,
+            count: widened.length,
           });
         }
         return {
           paragraphId,
           title: section ? `${section.code} ${section.title}` : paragraphId,
           content: parts.join("\n\n").trim(),
-          sourceTables: withinLimit.isValid ? shaped : [],
+          sourceTables: withinLimit.isValid ? widened : [],
         };
       },
     );
