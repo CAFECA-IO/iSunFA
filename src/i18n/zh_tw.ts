@@ -68,6 +68,7 @@ import { chart } from "@/i18n/locales/zh_tw/chart";
 import { solutions } from "@/i18n/locales/zh_tw/solutions";
 import { applicationManagement } from "@/i18n/locales/zh_tw/application_management";
 import { carbonChatbot } from "@/i18n/locales/zh_tw/carbon_chatbot";
+import { hrManagement } from "@/i18n/locales/zh_tw/hr_management";
 
 export const zhTw = {
   digital_product_passport: digitalProductPassport,
@@ -141,6 +142,7 @@ export const zhTw = {
   solutions,
   application_management: applicationManagement,
   carbon_chatbot: carbonChatbot,
+  hr_management: hrManagement,
 } as const;
 
 export type BaseTranslation = typeof zhTw;

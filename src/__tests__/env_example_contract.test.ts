@@ -22,9 +22,22 @@ import {
  * code review 看不出來、CI 不會紅、上線才炸。所以把它變成一個測試。
  */
 
+/**
+ * Info: (20260812 - Luphia) 人事個資金鑰也納入這條契約。
+ *
+ * 它們與 SECRET_VAULT_MASTER_KEY 同一類:保護 DB 內容、必須留在 env、
+ * 但**對整個系統是選填的** —— 未設定時只有人事模組不可用,其餘功能不受影響。
+ * 因此不能寫成鍵值,否則既有部署升級後會全部掉進「尚未初始化」狀態。
+ *
+ * 原本這兩個 key 不在清單裡,所以這支測試抓不到它們 —— 風險一模一樣,
+ * 只是少了機制。列進來之後，下一個想「把 .env.example 補完整」的人會被 CI 擋下。
+ */
+const HR_PII_KEYS = ["HR_PII_KEY_V1", "HR_PII_BLIND_INDEX_PEPPER"];
+
 const OPTIONAL_KEYS = [
   ...SYSTEM_SETTING_KEYS.map((key) => SYSTEM_SETTING_DEFINITIONS[key].envKey),
   "SECRET_VAULT_MASTER_KEY",
+  ...HR_PII_KEYS,
 ];
 
 describe(".env.example contract", () => {

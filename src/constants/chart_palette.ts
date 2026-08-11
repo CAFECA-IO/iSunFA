@@ -56,3 +56,21 @@ export const CHART_PALETTE_FALLBACK: IChartPalette = {
   edgeLabel: "#fff3e0",
   categorical1: "#4f46e5",
 };
+
+// Info: (20260810 - Julian) 圖表十色類別色板。
+export const CHART_CATEGORICAL_REST: readonly string[] = [
+  "#10B981",
+  "#F59E0B",
+  "#EC4899",
+  "#8B5CF6",
+  "#06B6D4",
+  "#EF4444",
+  "#84CC16",
+  "#F97316",
+  "#3B82F6",
+];
+
+/** Info: (20260810 - Julian) 完整十色：第一色需由 `useChartPalette` 讀出後傳入 */
+export function buildCategoricalColors(categorical1: string): string[] {
+  return [categorical1, ...CHART_CATEGORICAL_REST];
+}
