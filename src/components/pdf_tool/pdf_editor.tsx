@@ -38,6 +38,20 @@ import {
   isCanvasBlank,
   maxPagesPerSegment,
 } from "@/lib/utils/pdf_canvas_guard";
+import {
+  createColorConverter,
+  createColorSafeComputedStyle,
+} from "@/lib/utils/pdf_color_safety";
+import {
+  isPdfFontUnavailableError,
+  requestCarbonReportPdf,
+  saveBlobAs,
+} from "@/lib/utils/carbon_report_pdf_client";
+import {
+  CARBON_PDF_EXPORT_MODE,
+  CARBON_PDF_FOOTER_TITLE,
+  CarbonPdfExportModeEnum,
+} from "@/constants/carbon_pdf";
 
 // Info: (20260604 - Julian) 定義預設 md 內容與 storage key
 const DEFAULT_CONTENT =
@@ -334,6 +348,17 @@ interface IPdfEditorProps {
   onBeforeDownload?: () => void;
   // Info: (20260714 - Emily) split 佈局的並排斷點:預設 md(既有行為);嵌入場景空間較擠時可設 lg,平板寬度退回單欄切換
   splitBreakpoint?: "md" | "lg";
+  /**
+   * Info: (20260810 - Emily) 改走伺服端向量列印
+   * (data/issue_drafts/inventory_table_import/17)。
+   *
+   * 預設 false —— 這是 opt-in 而不是全域切換,因為前端光柵化那條路仍有它的用途:
+   * 文件工具與任務板的短文件輸出正常,而公開分享頁(/share/pdf/[token])沒有登入,
+   * 打不到需要驗證的列印端點。目前只有碳盤查報告開啟:
+   * 它動輒上百頁、含跨頁表格,而且是要交給查證人員的文件 ——
+   * 光柵化產出的點陣圖不能搜尋、不能複製任何一個排放量數字。
+   */
+  serverPrint?: boolean;
 }
 
 export default function PdfEditor({
@@ -348,6 +373,7 @@ export default function PdfEditor({
   downloadFileName = undefined,
   onBeforeDownload = undefined,
   splitBreakpoint = "md",
+  serverPrint = false,
 }: IPdfEditorProps) {
   const { t } = useTranslation();
 
@@ -617,6 +643,39 @@ export default function PdfEditor({
     abortControllerRef.current?.abort();
   };
 
+  /**
+   * Info: (20260810 - Emily) 伺服端向量列印
+   * (data/issue_drafts/inventory_table_import/17)。
+   *
+   * 送出的是 markdown 而不是快照後的 DOM:伺服端用同一份 markdown 重新排版,
+   * 因此輸出是真的分頁文件 —— 列不會被切一半、跨頁的表會重印表頭、
+   * 塞不下直式頁的表自動轉橫式,而文字是文字(可搜尋、可複製)。
+   * html2canvas 那條路一條列印規則都不執行,那些是它做不到的事。
+   *
+   * **失敗不自動退回光柵化。** 退回的產物是一份上百頁、數十 MB、
+   * 一個字都抽不出來的點陣圖 —— 對查證文件而言那不是「比較差的成功」。
+   * 要整批切回舊路徑請改 CARBON_PDF_EXPORT_MODE。
+   */
+  const downloadViaServer = async (fileName: string): Promise<boolean> => {
+    if (!serverPrint) return false;
+    if (CARBON_PDF_EXPORT_MODE !== CarbonPdfExportModeEnum.SERVER_VECTOR) {
+      return false;
+    }
+    const result = await requestCarbonReportPdf({
+      markdown: markdownContext,
+      fileName,
+      title: CARBON_PDF_FOOTER_TITLE,
+    });
+    saveBlobAs(result.blob, fileName);
+    if (result.chartsFailed > 0) {
+      console.warn(
+        "[PdfEditor] some charts could not be drawn:",
+        result.chartsFailed,
+      );
+    }
+    return true;
+  };
+
   const handleDownloadPDF = async () => {
     if (!contentRef.current) return;
 
@@ -625,6 +684,11 @@ export default function PdfEditor({
 
     setIsGenerating(true);
     try {
+      const serverFileName =
+        downloadFileName ?? `iSunFA_Document_${Date.now()}.pdf`;
+      if (await downloadViaServer(serverFileName)) {
+        return;
+      }
       const html2pdf = (await import("html2pdf.js")).default;
 
       const pdfOverrideStyle = document.createElement("style");
@@ -653,64 +717,34 @@ export default function PdfEditor({
         pagebreak: { mode: ["avoid-all", "css", "legacy"] },
       };
 
-      // Info: (20260426 - Luphia) Globally proxy getComputedStyle during PDF generation to prevent html2canvas crashing on Tailwind v4's lab/oklch colors
+      /**
+       * Info: (20260810 - Emily) 光柵化期間把 html2canvas 解析不了的顏色**換算成等值的 rgb**
+       * (data/issue_drafts/inventory_table_import/17)。
+       *
+       * 這裡原本是「碰到含 lab / lch / color( 的值一律回 rgb(17, 24, 39)」。
+       * 那不是安全退路,是把淺色底塗成近黑:Tailwind v4 的 `bg-gray-50`
+       * computed 值為 `oklch(0.985 0.002 247.839)`,字串裡含 "lch" ——
+       * UAT 從第一天回報到現在的「表頭一整片黑」就是它,而不是 html2canvas 拋錯。
+       * 實測(tools/pdf_harness/proxy.mjs):
+       *   無攔截 → 拋錯 unsupported color function "oklch"
+       *   既有攔截 → 表頭像素 rgb(17,24,39)
+       *   換算 → 表頭像素 rgb(249,250,251)
+       *
+       * 也因為它先把 oklch 換成了 rgb(17,24,39),8/10 那版在 DOM 上做的
+       * 顏色修正一個都沒生效 —— 它讀到的已經是攔截後的值,看不到 oklch。
+       */
+      const colorProbe = document.createElement("canvas");
+      colorProbe.width = 1;
+      colorProbe.height = 1;
+      const convertColor = createColorConverter(
+        colorProbe.getContext("2d", { willReadFrequently: true }),
+      );
       const originalGetComputedStyle = window.getComputedStyle;
-      window.getComputedStyle = function (
-        elt: Element,
-        pseudoElt?: string | null,
-      ) {
-        const styles = originalGetComputedStyle.call(window, elt, pseudoElt);
-
-        return new Proxy(styles, {
-          get(target: CSSStyleDeclaration, prop: string | symbol) {
-            const targetObj = target as unknown as Record<
-              string | symbol,
-              unknown
-            >;
-            if (typeof targetObj[prop] === "function") {
-              if (prop === "getPropertyValue") {
-                return function (property: string) {
-                  const val = target.getPropertyValue(property);
-                  if (
-                    typeof val === "string" &&
-                    (val.includes("lab") ||
-                      val.includes("lch") ||
-                      val.includes("color("))
-                  ) {
-                    if (
-                      property.toLowerCase().includes("shadow") ||
-                      property.toLowerCase().includes("image")
-                    )
-                      return "none";
-                    return "rgb(17, 24, 39)"; // Info: (20260426 - Luphia) Safe fallback
-                  }
-                  return val;
-                };
-              }
-              return (targetObj[prop] as (...args: unknown[]) => unknown).bind(
-                target,
-              );
-            }
-
-            const val = targetObj[prop];
-            if (
-              typeof val === "string" &&
-              (val.includes("lab") ||
-                val.includes("lch") ||
-                val.includes("color("))
-            ) {
-              if (
-                String(prop).toLowerCase().includes("shadow") ||
-                String(prop).toLowerCase().includes("image")
-              )
-                return "none";
-              return "rgb(17, 24, 39)"; // Info: (20260426 - Luphia) Safe fallback
-            }
-
-            return val;
-          },
-        });
-      };
+      window.getComputedStyle = createColorSafeComputedStyle(
+        (element, pseudoElement) =>
+          originalGetComputedStyle.call(window, element, pseudoElement),
+        convertColor,
+      );
 
       try {
         /**
@@ -735,6 +769,16 @@ export default function PdfEditor({
          * 混用同一個布林值的後果是一句與真因無關的錯誤訊息。
          */
         const target = contentRef.current;
+        /**
+         * Info: (20260810 - Emily) 光柵化前先把 oklch / color-mix 換成 rgb
+         * (issue_drafts/inventory_table_import/17)。
+         *
+         * html2canvas 遇到這兩類色彩函式是**直接拋錯**而不是退化,
+         * 而 Tailwind v4 的整套調色盤就是 oklch —— 任一元素帶到就整份掛掉。
+         * UAT 看到的「表頭一整片黑」是它死在那裡、那塊沒被畫上東西。
+         *
+         * 包在最外層是因為兩條輸出路徑(html2pdf 與分段)都會踩到。
+         */
         await withLaidOutElement(target, async () => {
           const verdict = budget.isEmpty
             ? assessCanvasBudget({
@@ -769,9 +813,17 @@ export default function PdfEditor({
       setErrorModal({
         isOpen: true,
         // Info: (20260807 - Emily) 空白產出要說得出是空白 —— 與「下載失敗」共用一句話等於沒說
-        message:
-          error instanceof PdfBlankOutputError ||
-          error instanceof PdfNotLaidOutError
+        /**
+         * Info: (20260811 - Luphia) 缺中文字型也要說得出是缺字型(PR review 第 4 點)。
+         *
+         * 同一條標準:伺服端把它與通用列印失敗分成兩個錯誤碼,因為兩者的處置相反 ——
+         * 字型缺失重試一萬次都一樣,唯一的解法是由維運安裝字型。那條分類原本在
+         * 這個 catch 裡消失,使用者看到的是一句與成因無關的「下載失敗」。
+         */
+        message: isPdfFontUnavailableError(error)
+          ? t("common.error.pdf_font_unavailable")!
+          : error instanceof PdfBlankOutputError ||
+              error instanceof PdfNotLaidOutError
             ? t("common.error.pdf_blank_output")!
             : t("common.error.download_failed")!,
       });
