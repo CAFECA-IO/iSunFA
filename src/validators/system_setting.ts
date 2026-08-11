@@ -6,10 +6,31 @@ import { SYSTEM_SETTING_KEYS } from "@/constants/system_setting";
  * digest 涵蓋全集才擋得住刪除，若允許部分更新就必須在伺服器端合併，
  * 那樣管理員簽的內容與最終落地的內容就可能不一致。
  */
+/**
+ * Info: (20260811 - Luphia) 設定值不得含控制字元——這是簽章正確性的前提，不只是輸入衛生。
+ *
+ * canonical string 以「一行一個 key=value」串接後雜湊。值裡藏一個換行就能偽裝成
+ * 額外的設定鍵，讓兩組語意不同的設定算出同一個 digest（signature.ts 的 escapeValue
+ * 是第二道防線）。同一條規則也擋住部署精靈把換行寫進 .env.setup ——
+ * 那條路徑可以憑空長出一個 SUPER_ADMIN_PUB_X，直接換掉信任根。
+ *
+ * 用 refine 而非 regex 是為了避開 no-control-regex；判斷內容完全相同。
+ */
+export const settingValueSchema = z
+  .string()
+  .max(4096)
+  .refine(
+    (value) =>
+      ![...value].some(
+        (ch) => ch.charCodeAt(0) < 0x20 || ch.charCodeAt(0) === 0x7f,
+      ),
+    { message: "Setting value must not contain control characters" },
+  );
+
 const settingValuesShape = SYSTEM_SETTING_KEYS.reduce<
-  Record<string, z.ZodOptional<z.ZodString>>
+  Record<string, z.ZodOptional<typeof settingValueSchema>>
 >((shape, key) => {
-  shape[key] = z.string().max(4096).optional();
+  shape[key] = settingValueSchema.optional();
   return shape;
 }, {});
 

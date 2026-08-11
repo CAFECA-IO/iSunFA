@@ -4,6 +4,7 @@ import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { OAUTH_STATE_TTL, isAuthProvider } from "@/constants/auth_provider";
 import { IOAuthStatePayload } from "@/interfaces/oauth";
+import { getTokenSecret, TokenSecretPurpose } from "@/lib/auth/token_secret";
 
 /**
  * Info: (20260809 - Luphia) 沿用 challenge_token 的無狀態設計：
@@ -11,9 +12,10 @@ import { IOAuthStatePayload } from "@/interfaces/oauth";
  * 前端把它放在 sessionStorage，callback 時原封帶回來與 provider 回傳的 state 交叉比對，
  * 兩者不符即視為 CSRF 攻擊。
  */
-const SECRET = new TextEncoder().encode(
-  process.env.DEWT_PRIVATE_KEY_PEM || "temporary_secret",
-);
+// Info: (20260811 - Luphia) 金鑰以用途派生且缺 env 時直接 throw，見 token_secret.ts
+function secret(): Uint8Array {
+  return getTokenSecret(TokenSecretPurpose.OAUTH_STATE);
+}
 
 const STATE_TOKEN_TYPE = "oauth_state";
 
@@ -24,14 +26,14 @@ export async function signStateToken(
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(OAUTH_STATE_TTL)
-    .sign(SECRET);
+    .sign(secret());
 }
 
 export async function verifyStateToken(
   token: string,
 ): Promise<IOAuthStatePayload> {
   try {
-    const { payload } = await jwtVerify(token, SECRET);
+    const { payload } = await jwtVerify(token, secret());
 
     if (payload.typ !== STATE_TOKEN_TYPE) {
       throw new Error("Unexpected token type");

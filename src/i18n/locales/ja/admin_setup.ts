@@ -235,6 +235,7 @@ export const adminSetup = {
     ready_title: "エンタープライズシステムの準備完了",
     ready_desc:
       "構成が安全に署名されました。バックエンドインフラストラクチャは FIDO2 の下で完全に稼働しています。",
+    db_settings_preview: "今回あわせて署名するデータベース設定",
     err_challenge: "署名チャレンジの生成に失敗しました。",
     err_finalize: "設定の完了に失敗しました：",
     err_sign: "署名に失敗しました：",

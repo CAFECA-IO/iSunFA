@@ -562,10 +562,15 @@ export const API_ERRORS = {
    * 寫入是全量替換，若讀不到現況就覆寫，等於用「看不見的狀態」刪掉既有設定
    * （20260810 曾因此遺失 Google OAuth 設定）。
    */
+  /**
+   * Info: (20260811 - Luphia) 狀態改為 500：根因是伺服器端讀不到現況（保險庫主密鑰
+   * 不可用、設定遭竄改），不是客戶端拿著過期版本。回 409 會讓前端走「重新載入後重試」，
+   * 而那條路永遠不會成功——版本衝突請用 CF_SETTING_VERSION_CONFLICT。
+   */
   CF_SETTING_STATE_UNREADABLE: {
     code: "CF000002",
     message: "Current settings unreadable, refusing to overwrite",
-    status: ApiCode.CONFLICT,
+    status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
   CF_VAULT_KEY_WOULD_ORPHAN: {
     code: "CF000003",
@@ -580,6 +585,16 @@ export const API_ERRORS = {
   IS_SECRET_VAULT_MISSING: {
     code: "IS000098",
     message: "Secret vault master key not configured",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
+  /**
+   * Info: (20260811 - Luphia) 資料庫裡有設定，但驗簽 / digest / 加密狀態對不上。
+   * 這種情況不退回 env（那等於讓一行 SQL 就能把系統換回輪替前的舊憑證），
+   * 一律拒絕服務並告警，由管理員重新簽署設定或還原資料。
+   */
+  IS_SETTING_STATE_UNTRUSTED: {
+    code: "IS000097",
+    message: "Stored system settings failed verification",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
 

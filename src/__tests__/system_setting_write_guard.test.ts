@@ -46,6 +46,13 @@ class FakeRepo implements ISystemSettingRepository {
   constructor(
     private readonly rows: SystemSetting[],
     private readonly manifest: SystemSettingManifest | null,
+    /**
+     * Info: (20260811 - Luphia) 稽核表的最高版本可獨立指定。
+     *
+     * 原本這個 fake 直接回 manifest.version，於是 `manifest.version < maxAuditVersion`
+     * 永遠為 false——rollback 偵測那條分支根本測不到，而它是這套機制的核心之一。
+     */
+    private readonly maxAuditVersion?: number,
   ) {}
 
   async findAll(): Promise<SystemSetting[]> {
@@ -57,7 +64,7 @@ class FakeRepo implements ISystemSettingRepository {
   }
 
   async getMaxAuditVersion(): Promise<number> {
-    return this.manifest?.version ?? 0;
+    return this.maxAuditVersion ?? this.manifest?.version ?? 0;
   }
 
   async listAudit(): Promise<ISystemSettingAuditEntry[]> {
@@ -141,5 +148,88 @@ describe("system setting write guard", () => {
         3,
       ),
     ).rejects.toThrow();
+  });
+
+  /**
+   * Info: (20260811 - Luphia) 版本號不得從已用過的號碼重新起算。
+   *
+   * 清掉 system_setting 但留著 manifest / 稽核紀錄時，快照的 version 會回到 0；
+   * 若下一版直接取 0 + 1，就會撞上稽核表的 version 唯一鍵，整筆 transaction rollback，
+   * 畫面只看到 500 且每次重試都一樣——無法從 UI 復原。
+   */
+  it("下一版必須避開稽核表用過的最高版本", async () => {
+    const repo = new FakeRepo([], null, 7);
+    const service = new SystemSettingService(repo);
+
+    const challenge = await service.buildChallenge(
+      { [SystemSettingKey.LLM_MODEL]: "gemini-2.5-pro" },
+      0,
+    );
+
+    expect(challenge.version).toBe(8);
+  });
+
+  /**
+   * Info: (20260811 - Luphia) Rollback 偵測：manifest 的版本低於稽核表出現過的最高版本
+   * ＝ 有人把設定與 manifest 換回舊版。此時快照必須判為不可信，寫入一律拒絕。
+   *
+   * 這條分支原本測不到——舊版 fake 的 getMaxAuditVersion 直接回 manifest.version，
+   * 判斷式永遠為 false。
+   */
+  it("偵測到版本回滾時拒絕寫入", async () => {
+    const manifest = {
+      key: "default",
+      digest: "whatever",
+      signature: "whatever",
+      signedBy: "cred",
+      version: 3,
+      signedAt: new Date(0),
+    } as SystemSettingManifest;
+
+    const repo = new FakeRepo(
+      [makeRow(SystemSettingKey.GOOGLE_OAUTH_CLIENT_ID, false)],
+      manifest,
+      9,
+    );
+    const service = new SystemSettingService(repo);
+
+    await expect(
+      service.buildChallenge(
+        { [SystemSettingKey.LLM_MODEL]: "gemini-2.5-pro" },
+        3,
+      ),
+    ).rejects.toThrow();
+  });
+
+  /**
+   * Info: (20260811 - Luphia) 加密降級偵測：DB 列自稱 isSecret=false，
+   * 但程式碼定義說那是秘密——代表有人把密文換成明文並清掉 iv/authTag。
+   * 這樣改不會動到明文內容，digest 與簽章仍然有效，只有這道斷言擋得住。
+   */
+  it("DB 列的 isSecret 與程式碼定義不符時判為不可信", async () => {
+    const manifest = {
+      key: "default",
+      digest: "whatever",
+      signature: "whatever",
+      signedBy: "cred",
+      version: 1,
+      signedAt: new Date(0),
+    } as SystemSettingManifest;
+
+    // Info: (20260811 - Luphia) CLIENT_SECRET 定義為秘密，這裡卻以非秘密形式存放
+    const repo = new FakeRepo(
+      [makeRow(SystemSettingKey.GOOGLE_OAUTH_CLIENT_SECRET, false)],
+      manifest,
+    );
+    const service = new SystemSettingService(repo);
+
+    await expect(
+      service.buildChallenge(
+        { [SystemSettingKey.LLM_MODEL]: "gemini-2.5-pro" },
+        1,
+      ),
+    ).rejects.toThrow();
+
+    expect(repo.replaceCalls).toBe(0);
   });
 });

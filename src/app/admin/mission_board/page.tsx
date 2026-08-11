@@ -24,6 +24,7 @@ import { request } from "@/lib/utils/request";
 import { useAuth } from "@/contexts/auth_context";
 import { getAdminAddressString } from "@/lib/wallet/admin_wallet";
 import { getLoginOptions, fido2ClientService } from "@/lib/auth/fido2_client";
+import { ChallengePurpose } from "@/constants/challenge_purpose";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { MoneyUtil } from "@/lib/utils/money";
 import { CURRENCY_UNIT } from "@/constants/price";
@@ -55,7 +56,10 @@ export default function AdminMissionBoardPage() {
     if (gcLoading) return;
     setGcLoading(true);
     try {
-      const { challenge, token } = await getLoginOptions();
+      const { challenge, token } = await getLoginOptions(
+        undefined,
+        ChallengePurpose.ADMIN_ACTION,
+      );
       const authentication = await fido2ClientService.startLogin({ challenge });
 
       const data = await request<{
@@ -87,7 +91,10 @@ export default function AdminMissionBoardPage() {
     if (actionLoading) return;
     setActionLoading(taskId);
     try {
-      const { challenge, token } = await getLoginOptions();
+      const { challenge, token } = await getLoginOptions(
+        undefined,
+        ChallengePurpose.ADMIN_ACTION,
+      );
       const authentication = await fido2ClientService.startLogin({ challenge });
 
       await request(`/api/v1/admin/mission/${taskId}/actions`, {
@@ -111,7 +118,10 @@ export default function AdminMissionBoardPage() {
     if (actionLoading) return;
     setActionLoading(taskId);
     try {
-      const { challenge, token } = await getLoginOptions();
+      const { challenge, token } = await getLoginOptions(
+        undefined,
+        ChallengePurpose.ADMIN_ACTION,
+      );
       const authentication = await fido2ClientService.startLogin({ challenge });
 
       await request(`/api/v1/admin/mission/${taskId}/actions`, {

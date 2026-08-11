@@ -22,6 +22,8 @@ import {
 
 const CLIENT_ID = SystemSettingKey.GOOGLE_OAUTH_CLIENT_ID;
 const CLIENT_SECRET = SystemSettingKey.GOOGLE_OAUTH_CLIENT_SECRET;
+const LLM_MODEL = SystemSettingKey.LLM_MODEL;
+const MERCHANT_ID = SystemSettingKey.OEN_MERCHANT_ID;
 
 describe("system setting signature", () => {
   it("canonical string 與輸入順序無關", () => {
@@ -94,7 +96,15 @@ describe("system setting signature", () => {
     expect(expected).not.toMatch(/[+/=]/);
   });
 
-  it("canonical string 以 __version__ 結尾，避免值內容偽造版本行", () => {
+  /**
+   * Info: (20260811 - Luphia) 名稱改過。
+   *
+   * 原本叫「避免值內容偽造版本行」，但它只斷言最後一行是 __version__=5，
+   * 完全沒有涵蓋「值裡塞東西」這件事——而那正是當時真實存在的漏洞。
+   * 一個名字宣稱守住某個攻擊、內容卻沒守的測試，比沒有測試更危險：
+   * 它會讓後來的人以為這裡已經處理過了。
+   */
+  it("canonical string 以 __version__ 作為最後一行", () => {
     const canonical = buildCanonicalString(
       [{ key: CLIENT_ID, value: "id" }],
       5,
@@ -102,6 +112,63 @@ describe("system setting signature", () => {
     const lines = canonical.split("\n");
 
     expect(lines[lines.length - 1]).toBe("__version__=5");
+  });
+
+  /**
+   * Info: (20260811 - Luphia) 這才是真正守住「值內容不能偽造成額外設定行」的測試。
+   *
+   * 沒有 escaping 時，下面兩組設定的 canonical string 逐位元相同，digest 也相同：
+   * 具 DB 寫入權限者就能在不動簽章、不動 version 的前提下把設定重組成語意完全
+   * 不同的內容，而 loadSnapshot 的 digest 比對與 FIDO2 驗簽全部通過。
+   */
+  it("值內含換行不得與「拆成兩個鍵」產生相同 digest", () => {
+    const injected = buildSettingsDigest(
+      [{ key: LLM_MODEL, value: `flash\n${MERCHANT_ID}=attacker` }],
+      3,
+    );
+    const genuine = buildSettingsDigest(
+      [
+        { key: LLM_MODEL, value: "flash" },
+        { key: MERCHANT_ID, value: "attacker" },
+      ],
+      3,
+    );
+
+    expect(injected).not.toBe(genuine);
+  });
+
+  // Info: (20260811 - Luphia) 反斜線也必須跳脫，否則 "a\\nb" 與 "a<換行>b" 會再次碰撞
+  it("反斜線與換行的組合不得碰撞", () => {
+    const withBackslashN = buildSettingsDigest(
+      [{ key: LLM_MODEL, value: "a\\nb" }],
+      1,
+    );
+    const withNewline = buildSettingsDigest(
+      [{ key: LLM_MODEL, value: "a\nb" }],
+      1,
+    );
+
+    expect(withBackslashN).not.toBe(withNewline);
+  });
+
+  /**
+   * Info: (20260811 - Luphia) 排序必須是 code unit，不是 localeCompare。
+   * localeCompare 的結果取決於執行環境的 ICU 資料與預設 locale，
+   * 而這個 digest 要跨瀏覽器、跨實例比對。
+   */
+  it("鍵的排序與 Array.prototype.sort 一致", () => {
+    const keys = [MERCHANT_ID, CLIENT_ID, LLM_MODEL];
+    const canonical = buildCanonicalString(
+      keys.map((key) => ({ key, value: "v" })),
+      1,
+    );
+
+    const emitted = canonical
+      .split("\n")
+      .filter((line) => !line.startsWith("__version__"))
+      .map((line) => line.split("=")[0]);
+
+    expect(emitted).toEqual([...keys].sort());
   });
 
   it("簽章 blob 可完整往返", () => {

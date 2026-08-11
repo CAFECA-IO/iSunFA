@@ -20,8 +20,18 @@ import { extractXYFromSPKI } from "@/lib/auth/crypto_utils";
  * 但我們仍照實填入本站的 rpId / origin，讓稽核紀錄與真實 passkey 一致。
  */
 
-// Info: (20260809 - Luphia) authenticatorData flags：UP (0x01) | UV (0x04)
-const AUTHENTICATOR_FLAGS = 0x05;
+/**
+ * Info: (20260811 - Luphia) authenticatorData flags：只設 User Presence (0x01)。
+ *
+ * 原本是 0x05（UP | UV），也就是對外聲稱「本次已完成使用者驗證（生物辨識／PIN）」。
+ * 託管金鑰在伺服器上，簽的當下沒有任何使用者驗證行為，這個宣告不是事實。
+ * UV 這個位元的價值就在於它可信——一旦託管簽章也把它設起來，任何依它判斷
+ * 「這筆操作經過生物辨識」的邏輯（現在沒有，日後很可能有）就會被誤導。
+ *
+ * 相容性：合約端 fcl_webauthn.sol 只驗 UP mask，後端 verifyAuthentication 目前
+ * 傳的是 userVerified: false，兩邊都不要求 UV，因此改成 0x01 不影響驗證通過。
+ */
+const AUTHENTICATOR_FLAGS = 0x01;
 
 export interface ICustodialKeyPair {
   // Info: (20260809 - Luphia) PKCS#8 PEM，交給 key_vault 加密後才可落盤
@@ -39,8 +49,18 @@ export interface IWebAuthnAssertion {
   s: bigint;
 }
 
+/**
+ * Info: (20260811 - Luphia) 正規化成純 origin。
+ * NEXT_PUBLIC_APP_URL 帶尾斜線或路徑時，clientDataJSON 的 origin 就會與真實瀏覽器
+ * 送出的不一致，日後任何比對 origin 的驗證都會莫名其妙地失敗。
+ */
 function getOrigin(): string {
-  return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const raw = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  try {
+    return new URL(raw).origin;
+  } catch {
+    return raw;
+  }
 }
 
 function getRpId(): string {
@@ -156,12 +176,20 @@ export function signChallenge(
    * Info: (20260809 - Luphia) challengeIndex / typeIndex 指向「值的第一個字元」在 clientDataJSON 中的
    * byte 位移，與前端 crypto_utils.getWebAuthnSignatureStruct 的算法一致。
    * clientDataString 全為 ASCII（challenge 是 base64url、origin 是網址），故字元位移等同 byte 位移。
+   *
+   * Info: (20260811 - Luphia) 改以欄位標記定位，不再用 indexOf(challenge)。
+   * 直接找值本身的話，短 challenge 或值碰巧與 origin 內容重疊時會取到錯誤位移；
+   * 錨定 `"challenge":"` 之後，位移必然落在值的第一個字元上。
    */
-  const challengeIndex = clientDataString.indexOf(challenge);
-  const typeIndex = clientDataString.indexOf(clientData.type);
-  if (challengeIndex < 0 || typeIndex < 0) {
+  const CHALLENGE_MARKER = '"challenge":"';
+  const TYPE_MARKER = '"type":"';
+  const challengeMarkerAt = clientDataString.indexOf(CHALLENGE_MARKER);
+  const typeMarkerAt = clientDataString.indexOf(TYPE_MARKER);
+  if (challengeMarkerAt < 0 || typeMarkerAt < 0) {
     throw new Error("Failed to locate clientDataJSON fields");
   }
+  const challengeIndex = challengeMarkerAt + CHALLENGE_MARKER.length;
+  const typeIndex = typeMarkerAt + TYPE_MARKER.length;
 
   const authenticatorData = buildAuthenticatorData();
   const clientDataHash = createHash("sha256").update(clientDataBuffer).digest();

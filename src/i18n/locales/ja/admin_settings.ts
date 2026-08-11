@@ -15,6 +15,8 @@ export const adminSettings = {
     ai: "AI 連携",
     payment: "決済ゲートウェイ",
   },
+  env_only_hint:
+    "この項目は現在環境変数にのみ存在し、データベース保管と署名の対象にはなっていません。保存すると保護対象になります。",
   fallback_hint:
     "未設定です。現在はフォールバック値「{{value}}」を使用しています。",
   history_title: "変更履歴",

@@ -15,6 +15,8 @@ export const adminSettings = {
     ai: "AI 연동",
     payment: "결제 게이트웨이",
   },
+  env_only_hint:
+    "이 항목은 현재 환경 변수에만 존재하며 데이터베이스 보관 및 서명 대상이 아닙니다. 저장하면 보호 대상이 됩니다.",
   fallback_hint:
     '설정되지 않았습니다. 현재 기본값 "{{value}}" 을(를) 사용 중입니다.',
   history_title: "변경 이력",

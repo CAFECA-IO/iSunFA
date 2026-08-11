@@ -14,6 +14,8 @@ export const adminSettings = {
     ai: "AI 整合",
     payment: "金流閘道",
   },
+  env_only_hint:
+    "此項目目前僅存在於環境變數，尚未納入資料庫保管與簽章；儲存後才會受保護。",
   fallback_hint: "未設定，系統目前採用保底值「{{value}}」。",
   history_title: "變更歷史",
   history_version: "版本",

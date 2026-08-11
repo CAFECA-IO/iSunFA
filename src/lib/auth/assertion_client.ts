@@ -30,15 +30,46 @@ export interface IRequestAssertionParams {
   challenge: string;
   // Info: (20260810 - Luphia) 來自 /auth/me 的 custody；未提供時視為 passkey
   custody?: string;
-  /**
-   * Info: (20260810 - Luphia) 付款等鏈上流程可一併帶上 UserOp。
-   * 伺服器會據此重算雜湊並比對 sender，而不是盲目簽收到的 challenge。
-   */
-  userOp?: UserOperationJson;
   // Info: (20260810 - Luphia) 由 challengeToken 發出的 challenge 需附上原 token 供出處驗證
   challengeToken?: string;
   // Info: (20260810 - Luphia) 僅 passkey 路徑會用到
   passkeyOptions?: Omit<AuthenticateOptions, "challenge">;
+}
+
+interface ICustodialSignResponse {
+  code: ApiCode | string;
+  message?: string;
+  errorCode?: string;
+  payload: { assertion: AuthenticationJSON; userOp?: UserOperationJson } | null;
+}
+
+async function postCustodialSign(
+  body: Record<string, unknown>,
+): Promise<{ assertion: AuthenticationJSON; userOp?: UserOperationJson }> {
+  const response = await fetch("/api/v1/auth/custodial/sign", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("dewt")}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  const data = (await response.json()) as ICustodialSignResponse;
+
+  if (data.code !== ApiCode.SUCCESS || !data.payload) {
+    throw new AppError({
+      code: typeof data.errorCode === "string" ? data.errorCode : "IS000099",
+      message: data.message || "Custodial signing failed",
+      status:
+        typeof data.code === "string" &&
+        (Object.values(ApiCode) as string[]).includes(data.code)
+          ? (data.code as ApiCode)
+          : ApiCode.INTERNAL_SERVER_ERROR,
+    });
+  }
+
+  return data.payload;
 }
 
 export async function requestAssertion(
@@ -55,37 +86,50 @@ export async function requestAssertion(
     });
   }
 
-  const response = await fetch("/api/v1/auth/custodial/sign", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${localStorage.getItem("dewt")}`,
-    },
-    body: JSON.stringify({
-      challenge: params.challenge,
-      challengeToken: params.challengeToken,
-      userOp: params.userOp,
-    }),
+  const { assertion } = await postCustodialSign({
+    challenge: params.challenge,
+    challengeToken: params.challengeToken,
   });
+  return assertion;
+}
 
-  const data = (await response.json()) as {
-    code: ApiCode | string;
-    message?: string;
-    errorCode?: string;
-    payload: { assertion: AuthenticationJSON } | null;
-  };
+export interface IOrderPaymentAssertionParams {
+  orderId: string;
+  custody?: string;
+  // Info: (20260811 - Luphia) passkey 路徑仍由前端組 UserOp 並簽它的雜湊
+  userOp: UserOperationJson;
+  challenge: string;
+}
 
-  if (data.code !== ApiCode.SUCCESS || !data.payload) {
+/**
+ * Info: (20260811 - Luphia) 付款專用：取得 assertion **與實際要送出的那份 UserOp**。
+ *
+ * 兩條路徑回傳的 userOp 不一定是同一份，這是刻意的：
+ * - passkey：使用者以生物辨識授權自己裝置上組出的那份，原樣沿用。
+ * - 託管：伺服器不接受呼叫端組好的 UserOp（只驗 sender 擋不住任意 callData），
+ *   它依訂單自行組一份、簽它，並把那一份回傳。呼叫端必須提交回傳的這份，
+ *   否則簽章對不上雜湊。
+ */
+export async function requestOrderPaymentAssertion(
+  params: IOrderPaymentAssertionParams,
+): Promise<{ assertion: AuthenticationJSON; userOp: UserOperationJson }> {
+  if (params.custody !== WalletCustodyType.CUSTODIAL) {
+    const assertion = await fido2ClientService.startLogin({
+      challenge: params.challenge,
+      userVerification: "required",
+      timeout: 60000,
+    });
+    return { assertion, userOp: params.userOp };
+  }
+
+  const result = await postCustodialSign({ orderId: params.orderId });
+  if (!result.userOp) {
     throw new AppError({
-      code: typeof data.errorCode === "string" ? data.errorCode : "IS000099",
-      message: data.message || "Custodial signing failed",
-      status:
-        typeof data.code === "string" &&
-        (Object.values(ApiCode) as string[]).includes(data.code)
-          ? (data.code as ApiCode)
-          : ApiCode.INTERNAL_SERVER_ERROR,
+      code: "IS000099",
+      message: "Custodial signing returned no user operation",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
     });
   }
 
-  return data.payload.assertion;
+  return { assertion: result.assertion, userOp: result.userOp };
 }

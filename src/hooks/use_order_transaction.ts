@@ -6,7 +6,7 @@ import {
   hexToBase64Url,
 } from "@/lib/auth/crypto_utils";
 import { prepareTransferUserOp } from "@/lib/utils/user_op_builder";
-import { requestAssertion } from "@/lib/auth/assertion_client";
+import { requestOrderPaymentAssertion } from "@/lib/auth/assertion_client";
 import { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
 import { request } from "@/lib/utils/request";
 import { IOrderParams } from "@/lib/analysis/pricing";
@@ -82,20 +82,27 @@ export const useOrderTransaction = () => {
       if (!prepRes.success || !prepRes.data) {
         throw new Error(prepRes.message || "Failed to prepare transfer");
       }
-      const { userOp, userOpHash } = prepRes.data;
+      const { userOp: preparedUserOp, userOpHash } = prepRes.data;
 
       /**
-       * Info: (20260810 - Luphia) 3. 簽署。
+       * Info: (20260811 - Luphia) 3. 簽署。
+       *
        * 託管帳號（第三方登入）沒有 passkey，改由後端以託管金鑰代簽；
        * 回傳的是一份真正的 WebAuthn assertion，因此後續編碼與後端驗章完全不變。
+       *
+       * 託管路徑送出的是**後端自己依訂單組出來的 UserOp**，不是這裡準備的這份——
+       * 後端不接受呼叫端指定交易內容（見 custodial_wallet.service）。因此下面一律
+       * 使用回傳的 userOp，兩條路徑才都保證「簽的就是送出的」。
        */
       setWorkflowStatus("signing_payment");
       const challengeBase64 = hexToBase64Url(userOpHash);
-      const transferAuth: AuthenticationJSON = await requestAssertion({
-        challenge: challengeBase64,
-        custody: user.custody,
-        userOp,
-      });
+      const { assertion: transferAuth, userOp } =
+        await requestOrderPaymentAssertion({
+          orderId,
+          custody: user.custody,
+          userOp: preparedUserOp,
+          challenge: challengeBase64,
+        });
 
       // Info: (20260209 - Tzuhan) 4. 編碼簽名
       const encodedSignature = encodeWebAuthnSignature(

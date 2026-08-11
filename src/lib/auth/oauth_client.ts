@@ -4,7 +4,7 @@ import { ApiCode } from "@/lib/utils/status";
 import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { AuthProvider } from "@/constants/auth_provider";
-import { isSameEffectiveOrigin } from "@/lib/utils/host";
+import { INTERNAL_PATH_PATTERN, isSameEffectiveOrigin } from "@/lib/utils/host";
 
 /**
  * Info: (20260809 - Luphia) 第三方登入的瀏覽器端流程。
@@ -139,11 +139,15 @@ export function takeStoredIntent(): OAuthIntent {
 /**
  * Info: (20260809 - Luphia) 綁定流程用：伺服器回應不含 returnTo，
  * 由前端自行記住發起綁定的頁面。只接受站內相對路徑，避免開放轉址。
+ *
+ * Info: (20260811 - Luphia) 光看開頭是不是 "/" 不夠：`//evil.com` 也以 "/" 開頭，
+ * 但瀏覽器會把它當成 protocol-relative 絕對網址，router.replace() 直接把使用者送出站。
+ * 反斜線同理（部分瀏覽器視同斜線）。
  */
 export function takeStoredReturnTo(): string | null {
   const returnTo = sessionStorage.getItem(RETURN_TO_STORAGE_KEY);
   sessionStorage.removeItem(RETURN_TO_STORAGE_KEY);
-  return returnTo?.startsWith("/") ? returnTo : null;
+  return returnTo && INTERNAL_PATH_PATTERN.test(returnTo) ? returnTo : null;
 }
 
 function takeStoredStateToken(): string {

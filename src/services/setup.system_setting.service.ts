@@ -1,5 +1,6 @@
 import type { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
 import {
+  ENV_PATH,
   ENV_SETUP_PATH,
   getEnvRawContent,
   saveEnvRawContent,
@@ -15,6 +16,7 @@ import {
   isSystemSettingKey,
 } from "@/constants/system_setting";
 import { systemSettingService } from "@/services/system_setting.service";
+import { settingValueSchema } from "@/validators";
 import { ISuperAdminCredential } from "@/lib/config/system_setting_signature";
 
 /**
@@ -39,8 +41,17 @@ function stripQuotes(value: string): string {
   return value.replace(/^"(.*)"$/, "$1");
 }
 
+/**
+ * Info: (20260811 - Luphia) 只讀 .env.setup，不讀合併後的 env。
+ *
+ * 原本讀的是 computePredictedFinalEnvString()（.env ⊕ .env.setup），也就是把 .env 裡
+ * 的舊值一起當成「這次暫存的變更」。管理員在 /admin/settings 輪替過 GEMINI_API_KEY 之後，
+ * 日後任何一次重跑精靈都會從 .env 撈到輪替前的舊金鑰、簽章寫回資料庫，
+ * 輪替被靜默回退；而 applySystemSettingSignature 只清 .env.setup，.env 的舊值還在，
+ * 下次再來一次。暫存區就該只有暫存區。
+ */
 function readStagedSettings(): Partial<Record<SystemSettingKey, string>> {
-  const config = parse(computePredictedFinalEnvString());
+  const config = parse(getEnvRawContent(ENV_SETUP_PATH));
   const staged: Partial<Record<SystemSettingKey, string>> = {};
 
   for (const key of STAGED_KEYS) {
@@ -79,8 +90,21 @@ function hasActualChange(
   });
 }
 
+/**
+ * Info: (20260811 - Luphia) 信任根優先取 .env，只有 .env 完全沒有時才看 .env.setup。
+ *
+ * .env.setup 是精靈的暫存區，初次部署時 SUPER_ADMIN 的公鑰確實只存在那裡，
+ * 所以不能一概不看。但對一個已經完成部署的系統來說，暫存區不該有能力「換掉」
+ * 既有的信任根——那正是 20260811 review 指出的攻擊路徑（配合換行注入，
+ * 精靈的無認證階段就能把 SUPER_ADMIN_PUB_X 覆寫成攻擊者的公鑰，之後自簽任意設定）。
+ * 換行注入本身已在 updateOrAppendEnv 與 settingValueSchema 擋掉，這是第二道。
+ */
 function readSuperAdminCredential(): ISuperAdminCredential | null {
-  const config = parse(computePredictedFinalEnvString());
+  const fromEnv = parse(getEnvRawContent(ENV_PATH));
+  const config = fromEnv.SUPER_ADMIN_CRED_ID
+    ? fromEnv
+    : parse(computePredictedFinalEnvString());
+
   const credentialId = config.SUPER_ADMIN_CRED_ID;
   const pubKeyX = config.SUPER_ADMIN_PUB_X;
   const pubKeyY = config.SUPER_ADMIN_PUB_Y;
@@ -118,7 +142,23 @@ export async function saveSystemSettingDraft(
        */
       if (value === SECRET_MASK) continue;
 
-      content = updateOrAppendEnv(content, key, `"${value.trim()}"`);
+      /**
+       * Info: (20260811 - Luphia) 值必須通過與 /admin/settings 相同的檢查才寫進暫存區。
+       *
+       * 精靈的 API 在 validateEnv() 為 false 時完全沒有身分驗證。原本這裡只檢查「鍵是否
+       * 已定義」，值則原封寫進 .env.setup —— 塞一個換行就能憑空長出第二行環境變數，
+       * 包括 SUPER_ADMIN_PUB_X 這種信任根，等於任何人都能把自己變成簽章者。
+       * trim() 只去頭尾空白，救不了這件事。
+       */
+      const parsed = settingValueSchema.safeParse(value.trim());
+      if (!parsed.success) {
+        return {
+          success: false,
+          error: `Invalid value for ${key}: ${parsed.error.issues[0]?.message}`,
+        };
+      }
+
+      content = updateOrAppendEnv(content, key, `"${parsed.data}"`);
     }
 
     saveEnvRawContent(ENV_SETUP_PATH, content);

@@ -225,6 +225,7 @@ export const adminSetup = {
     ready_title: "企业级系统已就绪",
     ready_desc:
       "系统配置文件已完成安全签名。后台基础设施现已正式启用并处于受 FIDO2 全面保护的运行状态。",
+    db_settings_preview: "数据库设置预览（本次一并签署）",
     err_challenge: "生成签名挑战失败。",
     err_finalize: "完成配置失败：",
     err_sign: "签名失败：",

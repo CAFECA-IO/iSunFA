@@ -6,7 +6,8 @@ import { WalletCustodyType } from "@/constants/auth_provider";
 import { ORDER_STATUS } from "@/constants/status";
 import { signChallenge } from "@/lib/auth/custodial_signer";
 import { openSecret, VaultPurpose } from "@/lib/auth/key_vault";
-import { verifyChallengeToken } from "@/lib/auth/challenge_token";
+import { inspectChallengeToken } from "@/lib/auth/challenge_token";
+import { ChallengePurpose } from "@/constants/challenge_purpose";
 import { resolveCustodyType } from "@/lib/auth/user_approval";
 import {
   custodialKeyRepo,
@@ -28,9 +29,11 @@ import { UserOperationJson } from "@/validators";
  * 一支「你給什麼雜湊我就簽」的端點，等於讓任何拿到 session 的人（例如一次 XSS）
  * 簽出把錢包掏空的 UserOp。因此這裡只簽「伺服器自己發出過」的 challenge：
  *
- * 1. userOp 模式：雜湊由伺服器向 EntryPoint 重新計算，且 sender 必須是該使用者的 SCW。
+ * 1. orderId 模式：呼叫端只指名一張自己的未付款訂單，UserOp 的每一個欄位
+ *    （收款方、金額、nonce、gas）都由伺服器決定，雜湊自然也是伺服器算的。
  * 2. challenge 模式：必須對得上使用者的 currentChallenge、自己某張未付款訂單的
- *    challenge，或一枚由本站簽發且未過期的 challengeToken。
+ *    challenge（且格式須為伺服器產生的 43 字元 base64url），
+ *    或一枚由本站簽發、綁定本人、且用途不是管理員操作的 challengeToken。
  *
  * 對不上就拒絕。前端不必為此改變任何行為——這些 challenge 本來就是它手上那一份。
  */
@@ -38,14 +41,33 @@ import { UserOperationJson } from "@/validators";
 export interface ICustodialSignParams {
   user: IUser;
   challenge?: string;
-  userOp?: UserOperationJson;
+  // Info: (20260811 - Luphia) 付款流程只給訂單編號，UserOp 由伺服器自行組出
+  orderId?: string;
   challengeToken?: string;
 }
+
+export interface ICustodialSignResult {
+  assertion: AuthenticationJSON;
+  /**
+   * Info: (20260811 - Luphia) orderId 模式才有：伺服器實際簽下去的那份 UserOp。
+   * 呼叫端必須原封提交這一份，簽章才對得上——這也是「伺服器決定交易內容」的落實方式。
+   */
+  userOp?: UserOperationJson;
+}
+
+/**
+ * Info: (20260811 - Luphia) 訂單 challenge 的格式門檻：32 bytes 的 base64url ＝ 43 字元。
+ * 系統內有幾張訂單把 challenge 寫成 "N/A" / "registration" / "admin_distribute"
+ * 這類常數，少了這道檢查就會變成「可無限重複代簽的固定字串」。
+ */
+const SERVER_ISSUED_CHALLENGE_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 
 export class CustodialSigningService {
   constructor(private readonly keyRepo: ICustodialKeyRepository) {}
 
-  public async sign(params: ICustodialSignParams): Promise<AuthenticationJSON> {
+  public async sign(
+    params: ICustodialSignParams,
+  ): Promise<ICustodialSignResult> {
     const { user } = params;
 
     /**
@@ -59,17 +81,20 @@ export class CustodialSigningService {
     }
 
     /**
-     * Info: (20260810 - Luphia) 決定要簽的 challenge，兩種來源都必須經過出處驗證。
-     * userOp 模式由錢包服務重算雜湊並比對 sender；challenge 模式必須對得上
+     * Info: (20260811 - Luphia) 決定要簽的 challenge，兩種來源都不接受呼叫端指定內容。
+     * orderId 模式由錢包服務自行組出 UserOp 並算雜湊；challenge 模式必須對得上
      * 本站發出過的值。兩者之後走同一條簽章路徑。
      */
     let challenge: string;
+    let userOp: UserOperationJson | undefined;
 
-    if (params.userOp) {
-      challenge = await custodialWalletService.resolveUserOpChallenge(
+    if (params.orderId) {
+      const built = await custodialWalletService.buildOrderPaymentUserOp(
         user.id,
-        params.userOp,
+        params.orderId,
       );
+      challenge = built.challenge;
+      userOp = built.userOp;
     } else {
       if (!params.challenge) {
         throw new AppError(API_ERRORS.VL_MISSING_PARAMS);
@@ -100,14 +125,26 @@ export class CustodialSigningService {
 
     const assertion = signChallenge(privateKeyPem, challenge);
 
-    // Info: (20260810 - Luphia) 每一次代簽都留紀錄：這類授權沒有第二因素，紀錄是唯一的事後追查依據
+    /**
+     * Info: (20260811 - Luphia) 每一次代簽都留紀錄：這類授權沒有第二因素，紀錄是唯一的事後追查依據。
+     * challenge 在付款模式下只是一個雜湊，光記它事後看不出簽掉了什麼，
+     * 因此連同模式、訂單、實際的收款目標與金額一起記。
+     */
     logger.info("Custodial assertion issued", {
       userId: user.id,
       address: user.address,
+      mode: params.orderId ? "ORDER_PAYMENT" : "CHALLENGE",
+      orderId: params.orderId ?? "",
       challenge,
+      sender: userOp?.sender ?? "",
+      nonce: userOp?.nonce ?? "",
+      callData: userOp?.callData ?? "",
     });
 
-    return this.toAuthenticationJSON(record.credentialId, assertion);
+    return {
+      assertion: this.toAuthenticationJSON(record.credentialId, assertion),
+      userOp,
+    };
   }
 
   /**
@@ -127,17 +164,51 @@ export class CustodialSigningService {
 
     // Info: (20260810 - Luphia) 2. 本站簽發的短效 challengeToken（優惠券等流程用）
     if (challengeToken) {
-      const expected = await verifyChallengeToken(challengeToken);
-      if (expected === challenge) return;
+      const inspected = await inspectChallengeToken(challengeToken);
+
+      /**
+       * Info: (20260811 - Luphia) 管理員操作一律不代簽。
+       *
+       * 託管帳號的「同意」就只是一張 session cookie；讓它能授權改金流憑證、發點數
+       * 這類操作，等於把最高權限的第二因素整個拿掉。管理員帳號本來就不該是託管型，
+       * 這裡明確拒絕，讓這個前提變成程式碼而不是口頭約定。
+       */
+      if (inspected.purpose === ChallengePurpose.ADMIN_ACTION) {
+        logger.error(
+          "Refusing to custodially sign an admin-purpose challenge",
+          {
+            userId: user.id,
+          },
+        );
+        throw new AppError(API_ERRORS.AUTH_PERMISSION_DENIED);
+      }
+
+      // Info: (20260811 - Luphia) token 必須是發給這個人的，不能拿別人的來借簽
+      if (inspected.sub && inspected.sub !== user.id) {
+        throw new AppError(API_ERRORS.AUTH_PERMISSION_DENIED);
+      }
+
+      if (inspected.challenge === challenge) return;
     }
 
-    // Info: (20260810 - Luphia) 3. 使用者自己某張未付款訂單的 challenge
-    const order = await paymentRepo.findOrderByUserAndChallenge(
-      user.id,
-      challenge,
-      [ORDER_STATUS.PENDING, ORDER_STATUS.PAYING],
-    );
-    if (order) return;
+    /**
+     * Info: (20260810 - Luphia) 3. 使用者自己某張未付款訂單的 challenge。
+     *
+     * Info: (20260811 - Luphia) 只認 PENDING，且 challenge 必須是 43 字元的 base64url。
+     *
+     * 系統內有幾處訂單把 challenge 寫成固定字串（綁卡的 "N/A"、註冊的 "registration"、
+     * 管理員發點數的 "admin_distribute"）。少了格式門檻，任何託管使用者只要建一張
+     * 綁卡訂單，之後就能無限次要求伺服器簽 "N/A" 這個常數。真正由伺服器產生的訂單
+     * challenge 一律是 sha256 的 base64url，長度固定 43。
+     */
+    if (SERVER_ISSUED_CHALLENGE_PATTERN.test(challenge)) {
+      const order = await paymentRepo.findOrderByUserAndChallenge(
+        user.id,
+        challenge,
+        [ORDER_STATUS.PENDING],
+      );
+      if (order) return;
+    }
 
     logger.error("Refusing to sign an unrecognised challenge", {
       userId: user.id,

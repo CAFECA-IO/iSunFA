@@ -7,7 +7,9 @@ import {
   SYSTEM_SETTING_DEFINITIONS,
   SYSTEM_SETTING_FALLBACKS,
   SYSTEM_SETTING_KEYS,
+  SettingSnapshotState,
   SystemSettingKey,
+  SystemSettingSource,
 } from "@/constants/system_setting";
 import {
   openSecret,
@@ -33,11 +35,14 @@ import {
 /**
  * Info: (20260809 - Luphia) 系統設定服務。
  *
- * 讀取優先序：**DB（已驗簽）> process.env > 無**。
- * 因此既有部署不改任何東西也能繼續運作，一旦 DB 有經簽章的設定就以 DB 為準。
+ * 讀取優先序取決於快照狀態（SettingSnapshotState）：
+ * - EMPTY（從未用 DB 保管過）：讀 process.env，既有部署不改任何東西也能繼續運作。
+ * - TRUSTED（驗簽通過）：DB 就是唯一事實來源，**不再讀 env**。
+ * - UNTRUSTED（DB 有設定但驗不過）：拒絕服務並告警。
+ * - UNAVAILABLE（DB 暫時讀不到）：沿用上一份可信快照，否則暫時讀 env，且不快取。
  *
- * Fail Closed：只要簽章驗不過、digest 對不上、或偵測到 version 回滾，
- * 整組 DB 設定一律視為不存在並退回 env，絕不採用內容可疑的設定。
+ * TRUSTED 之後不讀 env 是刻意的：否則「管理員簽名把某項清空」會被 env 的舊值蓋過去，
+ * 而讓驗簽失敗就等於一鍵把整組憑證換回 .env 裡輪替前的版本。
  */
 
 // Info: (20260809 - Luphia) 驗簽是 P-256 運算，用短 TTL 快取避免每次讀設定都算一次
@@ -46,7 +51,7 @@ const CACHE_TTL_MS = 30_000;
 interface ISettingsSnapshot {
   values: Map<SystemSettingKey, string>;
   version: number;
-  trusted: boolean;
+  state: SettingSnapshotState;
   loadedAt: number;
 }
 
@@ -57,7 +62,15 @@ export interface ISettingView {
   value: string;
   isSecret: boolean;
   hasValue: boolean;
-  source: "DB" | "ENV" | "NONE";
+  source: SystemSettingSource;
+  /**
+   * Info: (20260811 - Luphia) 這一項是否真的存在於（已簽章的）資料庫內。
+   *
+   * 沒有這個旗標的話，只存在於 .env 的秘密在畫面上同樣顯示 ********，
+   * 看起來「有值、有保護」，實際上它不在簽章承諾內、DB 裡也沒有這一列；
+   * 管理員按下儲存後那一項會被靜默丟棄，等哪天清理 .env 時服務才會掛掉。
+   */
+  storedInDb: boolean;
   // Info: (20260809 - Luphia) 未設定時系統實際會採用的保底值，讓管理員知道現在跑的是什麼
   fallback?: string;
 }
@@ -88,10 +101,23 @@ export class SystemSettingService {
       return cached;
     }
 
+    // Info: (20260811 - Luphia) 從未設定過 DB 設定：遷移期的正常狀態，可讀 env
     const empty: ISettingsSnapshot = {
       values: new Map(),
       version: 0,
-      trusted: false,
+      state: SettingSnapshotState.EMPTY,
+      loadedAt: Date.now(),
+    };
+
+    /**
+     * Info: (20260811 - Luphia) DB 有內容但驗不過＝遭竄改，與「沒設定過」完全不同。
+     * 這個狀態不退回 env，由 get() 拒絕服務——否則 `UPDATE ... SET value = value || 'x'`
+     * 這種一行 SQL 就能讓系統改用 .env 裡輪替前的舊憑證，而對外行為完全正常。
+     */
+    const untrusted: ISettingsSnapshot = {
+      values: new Map(),
+      version: 0,
+      state: SettingSnapshotState.UNTRUSTED,
       loadedAt: Date.now(),
     };
 
@@ -111,10 +137,17 @@ export class SystemSettingService {
         logger.error("System settings present without a signed manifest", {
           count: rows.length,
         });
-        this.snapshot = empty;
-        return empty;
+        this.snapshot = untrusted;
+        return untrusted;
       }
 
+      /**
+       * Info: (20260809 - Luphia) 信任根不在 env 時退回 env，而不是 fail closed。
+       *
+       * 這個狀態只可能來自 .env 缺鍵——能改 .env 的人本來就能改任何東西，
+       * 不在「具 DB 寫入權限的攻擊者」這個威脅模型內；而硬性停機會讓一次設定失誤
+       * 變成全站故障。設定頁另有 trustRootReady 旗標明確呈現這個狀態。
+       */
       const credential = getSuperAdminCredential();
       if (!credential) {
         logger.error("SUPER_ADMIN trust root missing; DB settings disabled", {
@@ -135,8 +168,8 @@ export class SystemSettingService {
           manifestVersion: manifest.version,
           maxAuditVersion,
         });
-        this.snapshot = empty;
-        return empty;
+        this.snapshot = untrusted;
+        return untrusted;
       }
 
       const entries: ISettingEntry[] = [];
@@ -146,15 +179,35 @@ export class SystemSettingService {
         if (!(row.key in SYSTEM_SETTING_DEFINITIONS)) {
           // Info: (20260809 - Luphia) 出現未知鍵代表 DB 被塞入非預期資料，整組判為不可信
           logger.error("Unknown system setting key found", { key: row.key });
-          this.snapshot = empty;
-          return empty;
+          this.snapshot = untrusted;
+          return untrusted;
         }
 
         const key = row.key as SystemSettingKey;
-        const plain = row.isSecret ? this.decryptRow(row) : row.value;
+
+        /**
+         * Info: (20260811 - Luphia) isSecret 以程式碼定義為準，並強制與 DB 列一致。
+         *
+         * 原本直接採信 `row.isSecret`：把某一列改成 is_secret=false、value 換成明文、
+         * iv/auth_tag 清空，解密就不會被呼叫，明文與原值相同，於是 digest 與簽章
+         * 依然有效、系統回報 trusted——秘密從此明文躺在 DB 裡，沒有任何機制會發現。
+         * 加密與否不是資料自己能宣告的事。
+         */
+        const definition = SYSTEM_SETTING_DEFINITIONS[key];
+        if (row.isSecret !== definition.isSecret) {
+          logger.error("System setting encryption downgrade detected", {
+            key,
+            expectedIsSecret: definition.isSecret,
+            actualIsSecret: row.isSecret,
+          });
+          this.snapshot = untrusted;
+          return untrusted;
+        }
+
+        const plain = definition.isSecret ? this.decryptRow(row) : row.value;
         if (plain === null) {
-          this.snapshot = empty;
-          return empty;
+          this.snapshot = untrusted;
+          return untrusted;
         }
 
         entries.push({ key, value: plain });
@@ -167,14 +220,14 @@ export class SystemSettingService {
           expected: manifest.digest,
           computed: digest,
         });
-        this.snapshot = empty;
-        return empty;
+        this.snapshot = untrusted;
+        return untrusted;
       }
 
       const signature = decodeSignature(manifest.signature);
       if (!signature) {
-        this.snapshot = empty;
-        return empty;
+        this.snapshot = untrusted;
+        return untrusted;
       }
 
       const isValid = await verifySettingsSignature({
@@ -183,25 +236,36 @@ export class SystemSettingService {
         credential,
       });
       if (!isValid) {
-        this.snapshot = empty;
-        return empty;
+        this.snapshot = untrusted;
+        return untrusted;
       }
 
       const snapshot: ISettingsSnapshot = {
         values,
         version: manifest.version,
-        trusted: true,
+        state: SettingSnapshotState.TRUSTED,
         loadedAt: Date.now(),
       };
       this.snapshot = snapshot;
       return snapshot;
     } catch (error) {
-      // Info: (20260809 - Luphia) DB 不可用時退回 env，不讓設定層拖垮整個服務
+      /**
+       * Info: (20260811 - Luphia) DB 暫時讀不到是「不知道」，不是「沒有」。
+       *
+       * 這個結果刻意不寫進快取，也刻意不覆蓋既有的可信快照：一次 200ms 的連線抖動
+       * 原本會把降級狀態固化 30 秒，故障早就恢復了但整批請求還在用 env 的舊憑證。
+       */
       logger.error("Failed to load system settings", {
         message: (error as Error).message,
       });
-      this.snapshot = empty;
-      return empty;
+
+      if (cached) return cached;
+      return {
+        values: new Map(),
+        version: 0,
+        state: SettingSnapshotState.UNAVAILABLE,
+        loadedAt: Date.now(),
+      };
     }
   }
 
@@ -241,17 +305,55 @@ export class SystemSettingService {
   /**
    * Info: (20260809 - Luphia) 取單一設定值。
    * 空字串視同未設定，讓「清空設定」與「從未設定」在呼叫端行為一致。
+   *
+   * Info: (20260811 - Luphia) 可信時 DB 就是唯一事實來源，缺鍵不再落回 env。
+   *
+   * 原本缺鍵會往下掉去讀 env，造成兩個問題：
+   * 1. SUPER_ADMIN 為了停用某項功能把秘密清空並簽名，DB 內該鍵被刪除，
+   *    讀取時卻落回 process.env 的舊值——功能照樣啟用，管理員簽下的撤銷被無視。
+   * 2. 只要讓驗簽失敗就能讓整組設定退回 env 裡輪替前的舊憑證。
+   * 保底值（SYSTEM_SETTING_FALLBACKS）是程式碼常數不是環境狀態，仍然適用。
    */
   public async get(key: SystemSettingKey): Promise<string | undefined> {
     const snapshot = await this.loadSnapshot();
 
-    if (snapshot.trusted) {
-      const value = snapshot.values.get(key);
-      if (value) return value;
+    if (snapshot.state === SettingSnapshotState.TRUSTED) {
+      return snapshot.values.get(key) || SYSTEM_SETTING_FALLBACKS[key];
+    }
+
+    /**
+     * Info: (20260811 - Luphia) DB 有設定但驗不過時拒絕服務，不靜默降級。
+     * 這個狀態下任何回傳值都可能是攻擊者選的，或是管理員以為早就換掉的舊憑證。
+     */
+    if (snapshot.state === SettingSnapshotState.UNTRUSTED) {
+      throw new AppError(API_ERRORS.IS_SETTING_STATE_UNTRUSTED);
     }
 
     const fromEnv = process.env[SYSTEM_SETTING_DEFINITIONS[key].envKey];
     return fromEnv || SYSTEM_SETTING_FALLBACKS[key] || undefined;
+  }
+
+  /**
+   * Info: (20260811 - Luphia) 目前「實際生效」的設定，供寫入路徑當作合併基準。
+   *
+   * 一旦資料庫有了任何一筆已簽章的設定，讀取就完全不看 env（見 get()）。
+   * 因此第一次寫入必須把當下還靠 env 生效的值一併帶進來，否則既有部署只要在
+   * 設定頁存一次 Google OAuth，原本放在 .env 的 GEMINI_API_KEY 就會跟著失效。
+   * 遷移完成（TRUSTED）之後就只認資料庫，env 再也不會回頭覆蓋。
+   */
+  private effectiveValues(
+    snapshot: ISettingsSnapshot,
+  ): Map<SystemSettingKey, string> {
+    if (snapshot.state === SettingSnapshotState.TRUSTED) {
+      return snapshot.values;
+    }
+
+    const merged = new Map<SystemSettingKey, string>();
+    for (const key of SYSTEM_SETTING_KEYS) {
+      const fromEnv = process.env[SYSTEM_SETTING_DEFINITIONS[key].envKey];
+      if (fromEnv) merged.set(key, fromEnv);
+    }
+    return merged;
   }
 
   public async getMany(
@@ -273,15 +375,17 @@ export class SystemSettingService {
   public async listForAdmin(): Promise<ISettingView[]> {
     const snapshot = await this.loadSnapshot();
 
+    const trusted = snapshot.state === SettingSnapshotState.TRUSTED;
+
     return SYSTEM_SETTING_KEYS.map((key) => {
       const definition = SYSTEM_SETTING_DEFINITIONS[key];
-      const dbValue = snapshot.trusted ? snapshot.values.get(key) : undefined;
+      const dbValue = trusted ? snapshot.values.get(key) : undefined;
       const envValue = process.env[definition.envKey];
       const resolved = dbValue || envValue || "";
 
-      let source: ISettingView["source"] = "NONE";
-      if (dbValue) source = "DB";
-      else if (envValue) source = "ENV";
+      let source = SystemSettingSource.NONE;
+      if (dbValue) source = SystemSettingSource.DB;
+      else if (envValue) source = SystemSettingSource.ENV;
 
       return {
         key,
@@ -290,6 +394,12 @@ export class SystemSettingService {
         isSecret: definition.isSecret,
         hasValue: Boolean(resolved),
         source,
+        /**
+         * Info: (20260811 - Luphia) 讓畫面能區分「已納入資料庫保管」與「只是 env 還有值」。
+         * 兩者都顯示 ********，但後者不在簽章承諾內；不標示出來的話，管理員會以為
+         * 那一項已經受保護，等哪天清理 .env 才發現服務掛掉。
+         */
+        storedInDb: Boolean(dbValue),
         fallback: SYSTEM_SETTING_FALLBACKS[key],
       };
     });
@@ -308,7 +418,7 @@ export class SystemSettingService {
   }> {
     const snapshot = await this.loadSnapshot();
     return {
-      trusted: snapshot.trusted,
+      trusted: snapshot.state === SettingSnapshotState.TRUSTED,
       version: snapshot.version,
       vaultReady: isVaultConfigured(),
       trustRootReady: getSuperAdminCredential() !== null,
@@ -326,8 +436,8 @@ export class SystemSettingService {
     const snapshot = await this.loadSnapshot();
     await this.assertSafeToReplace(snapshot, baseVersion);
 
-    const version = snapshot.version + 1;
-    const entries = this.toEntries(pending, snapshot.values);
+    const version = await this.nextVersion(snapshot);
+    const entries = this.toEntries(pending, this.effectiveValues(snapshot));
 
     /**
      * Info: (20260809 - Luphia) 在發出 challenge 前就擋下來。
@@ -380,17 +490,33 @@ export class SystemSettingService {
     snapshot: ISettingsSnapshot,
     baseVersion: number,
   ): Promise<void> {
-    if (!snapshot.trusted) {
-      // Info: (20260810 - Luphia) 完全沒存過任何設定時，「讀不到」是正常的初始狀態
-      const stored = await this.repo.findAll();
-      if (stored.length > 0) {
-        throw new AppError(API_ERRORS.CF_SETTING_STATE_UNREADABLE);
-      }
+    /**
+     * Info: (20260811 - Luphia) 只有 EMPTY（從未設定過）能在非 TRUSTED 下寫入。
+     * UNTRUSTED 代表現況讀不出來，照著寫下去等於把既有設定全部刪掉；
+     * UNAVAILABLE 代表 DB 暫時讀不到，同樣不能拿來當刪除依據。
+     */
+    if (
+      snapshot.state !== SettingSnapshotState.TRUSTED &&
+      snapshot.state !== SettingSnapshotState.EMPTY
+    ) {
+      throw new AppError(API_ERRORS.CF_SETTING_STATE_UNREADABLE);
     }
 
     if (baseVersion !== snapshot.version) {
       throw new AppError(API_ERRORS.CF_SETTING_VERSION_CONFLICT);
     }
+  }
+
+  /**
+   * Info: (20260811 - Luphia) 下一個版本號必須同時避開 manifest 與稽核表的最高版本。
+   *
+   * 原本只用 `snapshot.version + 1`。清掉 system_setting 但留著 manifest / 稽核紀錄時
+   * 快照的 version 會從 0 重新起算，下次儲存就撞上稽核表的 version 唯一鍵，
+   * 整筆 transaction rollback，畫面只看到 500——而且每次重試都一樣，無法從 UI 復原。
+   */
+  private async nextVersion(snapshot: ISettingsSnapshot): Promise<number> {
+    const maxAuditVersion = await this.repo.getMaxAuditVersion();
+    return Math.max(snapshot.version, maxAuditVersion) + 1;
   }
 
   /**
@@ -453,8 +579,9 @@ export class SystemSettingService {
     const snapshot = await this.loadSnapshot();
     await this.assertSafeToReplace(snapshot, params.baseVersion);
 
-    const version = snapshot.version + 1;
-    const entries = this.toEntries(params.pending, snapshot.values);
+    const version = await this.nextVersion(snapshot);
+    const current = this.effectiveValues(snapshot);
+    const entries = this.toEntries(params.pending, current);
 
     // Info: (20260809 - Luphia) challenge 端已擋過一次，這裡再擋是因為兩支 API 可被獨立呼叫
     this.assertVaultReadyFor(entries);
@@ -471,7 +598,7 @@ export class SystemSettingService {
     }
 
     const changedKeys = entries
-      .filter((entry) => snapshot.values.get(entry.key) !== entry.value)
+      .filter((entry) => current.get(entry.key) !== entry.value)
       .map((entry) => entry.key);
 
     await this.repo.replaceAll({
@@ -524,10 +651,11 @@ export class SystemSettingService {
     Partial<Record<SystemSettingKey, string>>
   > {
     const snapshot = await this.loadSnapshot();
+    const current = this.effectiveValues(snapshot);
     const result: Partial<Record<SystemSettingKey, string>> = {};
 
     for (const key of SYSTEM_SETTING_KEYS) {
-      const value = snapshot.trusted ? snapshot.values.get(key) : undefined;
+      const value = current.get(key);
       if (value) result[key] = value;
     }
     return result;

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { logger } from "@/lib/utils/logger";
 import { AppError } from "@/lib/utils/error";
 import { authProviderSchema, oauthStartSchema } from "@/validators";
 import { AuthProvider } from "@/constants/auth_provider";
@@ -36,7 +37,9 @@ export async function POST(
 
     return jsonOk(result);
   } catch (error) {
-    console.error("[API] OAuth start error:", error);
+    logger.error("[API] OAuth start error:", {
+      message: (error as Error).message,
+    });
     // Info: (20260809 - Luphia) AppError 帶回其源自 API_ERRORS 的錯誤定義
     if (error instanceof AppError) {
       return jsonFail({

@@ -87,8 +87,8 @@ model UserIdentity {
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   @@unique([provider, providerUserId])
+  // Info: (20260811 - Luphia) 不另建 @@index([userId])：複合唯一索引的最左前綴已涵蓋以 userId 查詢
   @@unique([userId, provider])
-  @@index([userId])
   @@map("user_identity")
 }
 
@@ -265,11 +265,6 @@ model SubscriptionPlanQuota {
 }
 
 /**
- * Info: (20260809 - Luphia) 費思計費設定：系統設定值，由 DB 保存而非環境變數（同 SubscriptionPlanQuota）。
- * 單列設定（singleton），以固定主鍵 "default" 保證唯一。
- * 查無設定列時，以 src/constants/llm.ts 的 DEFAULT_FAITH_BILLING fail-safe。
- */
-/**
  * Info: (20260809 - Luphia) 系統設定（DB 為準，取代大部分 .env 變更）。
  * 秘密值（如 OAuth client secret）以 AES-256-GCM 加密後存放，明文永不落盤。
  * 完整性由 SystemSettingManifest 的全集簽章保護——單獨改這張表會導致 digest 對不上而被拒用。
@@ -315,13 +310,18 @@ model SystemSettingAudit {
   digest    String
   signature String
   signedBy  String   @map("signed_by")
-  changedKeys String @map("changed_keys")
-  createdAt DateTime @default(now()) @map("created_at")
+  // Info: (20260811 - Luphia) 逗號串接：目前 key 全部來自 SystemSettingKey 常數，不含逗號
+  changedKeys String   @map("changed_keys")
+  createdAt   DateTime @default(now()) @map("created_at")
 
-  @@index([createdAt])
   @@map("system_setting_audit")
 }
 
+/**
+ * Info: (20260809 - Luphia) 費思計費設定：系統設定值，由 DB 保存而非環境變數（同 SubscriptionPlanQuota）。
+ * 單列設定（singleton），以固定主鍵 "default" 保證唯一。
+ * 查無設定列時，以 src/constants/llm.ts 的 DEFAULT_FAITH_BILLING fail-safe。
+ */
 model FaithBillingSetting {
   key                     String   @id @default("default")
   tokensPerCredit         Int      @map("tokens_per_credit")

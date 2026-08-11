@@ -1,5 +1,6 @@
 import z from "zod";
 import { AUTH_PROVIDER_VALUES } from "@/constants/auth_provider";
+import { INTERNAL_PATH_PATTERN } from "@/lib/utils/host";
 
 // Info: (20260809 - Luphia) provider 路徑參數統一大小寫不敏感，內部一律轉大寫比對 AuthProvider
 export const authProviderSchema = z
@@ -17,8 +18,12 @@ export const authProviderSchema = z
  */
 export const oauthStartSchema = z.object({
   redirectUri: z.string().url(),
-  // Info: (20260809 - Luphia) 登入成功後要回到的站內路徑，僅允許以 / 開頭的相對路徑
-  returnTo: z.string().startsWith("/").max(512).optional(),
+  /**
+   * Info: (20260811 - Luphia) 登入成功後要回到的站內路徑。
+   * 規則與前端的 takeStoredReturnTo 共用同一個 pattern：`//evil.com` 也以 "/" 開頭，
+   * 但那是 protocol-relative 的絕對網址，放行等於開放轉址。
+   */
+  returnTo: z.string().regex(INTERNAL_PATH_PATTERN).max(512).optional(),
 });
 
 // Info: (20260809 - Luphia) 授權碼換 DeWT：state 由 provider 回傳，stateToken 是我方簽發的簽章憑證

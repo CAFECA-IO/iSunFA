@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { logger } from "@/lib/utils/logger";
 import { AppError } from "@/lib/utils/error";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { oauthLinkSchema, oauthUnlinkSchema } from "@/validators";
@@ -34,7 +35,9 @@ export async function GET(request: NextRequest) {
 
     return jsonOk({ identities: await oauthService.listIdentities(user.id) });
   } catch (error) {
-    console.error("[API] List identities error:", error);
+    logger.error("[API] List identities error:", {
+      message: (error as Error).message,
+    });
     return failFrom(error);
   }
 }
@@ -62,7 +65,9 @@ export async function POST(request: NextRequest) {
 
     return jsonOk(await oauthService.linkIdentity(user.id, parsed.data));
   } catch (error) {
-    console.error("[API] Link identity error:", error);
+    logger.error("[API] Link identity error:", {
+      message: (error as Error).message,
+    });
     return failFrom(error);
   }
 }
@@ -92,7 +97,9 @@ export async function DELETE(request: NextRequest) {
     );
     return jsonOk({ provider: parsed.data.provider });
   } catch (error) {
-    console.error("[API] Unlink identity error:", error);
+    logger.error("[API] Unlink identity error:", {
+      message: (error as Error).message,
+    });
     return failFrom(error);
   }
 }

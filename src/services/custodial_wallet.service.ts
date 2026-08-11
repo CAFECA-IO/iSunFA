@@ -17,7 +17,11 @@ import {
   ICustodialKeyRepository,
 } from "@/repositories/custodial_key.repo";
 import { bundlerService, BundlerService } from "@/services/bundler.service";
-import { UserOperationJson, userOperationSchema } from "@/validators";
+import { paymentRepo } from "@/repositories/payment.repo";
+import { ORDER_STATUS } from "@/constants/status";
+import { prepareTransferUserOp } from "@/lib/utils/user_op_builder";
+import { hexToBase64Url } from "@/lib/auth/crypto_utils";
+import { UserOperationJson } from "@/validators";
 
 /**
  * Info: (20260809 - Luphia) 託管錢包服務。
@@ -26,8 +30,10 @@ import { UserOperationJson, userOperationSchema } from "@/validators";
  * 代為部署 SCW 並在需要時代簽 UserOp。
  *
  * 安全邊界（重要）：
- * 1. 這個服務不提供「任意雜湊代簽」的公開端點。呼叫端必須指定 target / value / data，
- *    由本服務自行組出 UserOp 與 userOpHash，避免變成簽章預言機。
+ * 1. 這個服務不提供「任意雜湊代簽」的公開端點。呼叫端只能指名要做什麼
+ *    （執行哪一筆呼叫、付哪一張訂單），UserOp 與 userOpHash 一律由本服務自行組出，
+ *    避免變成簽章預言機。任何「把組好的 UserOp 送進來代簽」的介面都不要再加回去——
+ *    sender 檢查只證明是誰的錢包，證明不了那筆交易要做什麼（見 buildOrderPaymentUserOp）。
  * 2. 明文私鑰只在單次呼叫的記憶體中出現，不寫檔、不入 log。
  * 3. 使用者日後補綁 passkey 後應改用非託管路徑，並廢除此金鑰。
  */
@@ -202,17 +208,7 @@ export class CustodialWalletService {
       throw new AppError(API_ERRORS.AUTH_CUSTODIAL_KEY_MISSING);
     }
 
-    const sender = (await publicClient.readContract({
-      address: CONTRACT_ADDRESSES.SCW_FACTORY,
-      abi: ABIS.SCW_FACTORY,
-      functionName: "getAddress",
-      args: [
-        stringToHex(record.credentialId),
-        BigInt(record.pubKeyX),
-        BigInt(record.pubKeyY),
-        DEPLOY_SALT,
-      ],
-    })) as Address;
+    const sender = await this.deriveSender(record);
 
     const nonce = await publicClient.readContract({
       address: entryPoint,
@@ -258,31 +254,13 @@ export class CustodialWalletService {
     );
   }
 
-  /**
-   * Info: (20260810 - Luphia) 驗證一份「已經組好的」UserOp 並算出它的 challenge。
-   *
-   * 付款流程的 UserOp 本來就是伺服器端用 prepareTransferUserOp 組出來的
-   * （target 是 CreditPoint、data 是轉給 MEMBERSHIP_SYSTEM 並附上訂單雜湊），
-   * 呼叫端只是要拿到它的 challenge 去換一份託管簽章。
-   *
-   * 它不是簽章預言機，靠兩道限制：
-   * 1. sender 必須等於該使用者自己的 SCW 位址——只能簽自己錢包的操作，
-   *    沒辦法叫它替別人的錢包或任意位址簽名。
-   * 2. userOpHash 由伺服器向 EntryPoint 重新計算，不接受呼叫端傳入的雜湊，
-   *    因此簽章必然對應到實際會上鏈的那份 UserOp。
-   */
-  public async resolveUserOpChallenge(
-    userId: string,
-    userOpJson: UserOperationJson,
-  ): Promise<string> {
-    const { entryPoint } = this.requireContracts();
-
-    const record = await this.keyRepo.findByUserId(userId);
-    if (!record) {
-      throw new AppError(API_ERRORS.AUTH_CUSTODIAL_KEY_MISSING);
-    }
-
-    const expectedSender = (await publicClient.readContract({
+  // Info: (20260811 - Luphia) 以託管金鑰紀錄推導該使用者的 SCW 位址（CREATE2，決定性）
+  private async deriveSender(record: {
+    credentialId: string;
+    pubKeyX: string;
+    pubKeyY: string;
+  }): Promise<Address> {
+    return (await publicClient.readContract({
       address: CONTRACT_ADDRESSES.SCW_FACTORY,
       abi: ABIS.SCW_FACTORY,
       functionName: "getAddress",
@@ -293,36 +271,74 @@ export class CustodialWalletService {
         DEPLOY_SALT,
       ],
     })) as Address;
+  }
 
-    if (userOpJson.sender.toLowerCase() !== expectedSender.toLowerCase()) {
-      logger.error("Refusing to sign a UserOp for a foreign sender", {
-        userId,
-        requested: userOpJson.sender,
-        expected: expectedSender,
-      });
-      throw new AppError(API_ERRORS.AUTH_PERMISSION_DENIED);
+  /**
+   * Info: (20260811 - Luphia) 由伺服器自行組出「付這張訂單」的 UserOp 並回傳它的 challenge。
+   *
+   * ── 為什麼不是由前端把組好的 UserOp 送回來 ──
+   * 前一版接受呼叫端傳入的 UserOp，只比對 sender 就代簽，其餘欄位（callData、nonce、
+   * gas、fee、paymasterAndData）原封交給 EntryPoint 算雜湊。sender 是「哪個錢包」，
+   * callData 才是「做什麼」——驗了 who 沒驗 what。拿到一枚 DeWT 的人可以送
+   * `callData = execute(CREDIT_POINT, 0, transfer(攻擊者, 全部餘額))`，通過 sender 檢查後
+   * 取得一份合法簽章，直接丟給 bundler，完全不需要再經過本站任何端點；
+   * 對 nonce = N, N+1 … 各要一份，登出與撤銷 DeWT 都無法讓那些簽章失效。
+   *
+   * 在 passkey 模型下「照收到的 UserOp 算雜湊」是安全的：授權閘門是使用者的手指。
+   * 託管模型把閘門換成伺服器的 session 檢查，同一段邏輯就從安全變成致命。
+   *
+   * 因此呼叫端現在只能指名一張訂單，內容一律由伺服器決定：金額取自訂單本身
+   * （不是前端說了算）、收款方固定是 MEMBERSHIP_SYSTEM、nonce 與 gas 由組裝函式產生。
+   * 前端拿回 assertion 與**伺服器組的那份 UserOp**，兩者必然對應。
+   */
+  public async buildOrderPaymentUserOp(
+    userId: string,
+    orderId: string,
+  ): Promise<{ userOp: UserOperationJson; challenge: string }> {
+    this.requireContracts();
+
+    const record = await this.keyRepo.findByUserId(userId);
+    if (!record) {
+      throw new AppError(API_ERRORS.AUTH_CUSTODIAL_KEY_MISSING);
     }
 
-    const parsed = userOperationSchema.parse(userOpJson);
-    const userOpHash = await this.getUserOpHash(entryPoint, {
-      sender: parsed.sender as Address,
-      nonce: parsed.nonce,
-      initCode: parsed.initCode as Hex,
-      callData: parsed.callData as Hex,
-      callGasLimit: parsed.callGasLimit,
-      verificationGasLimit: parsed.verificationGasLimit,
-      preVerificationGas: parsed.preVerificationGas,
-      maxFeePerGas: parsed.maxFeePerGas,
-      maxPriorityFeePerGas: parsed.maxPriorityFeePerGas,
-      paymasterAndData: parsed.paymasterAndData as Hex,
-      signature: "0x" as Hex,
-    });
+    // Info: (20260811 - Luphia) 訂單必須屬於這位使用者且仍未付款，否則不簽
+    const order = await paymentRepo.getOrderByIdAndUserId(orderId, userId);
+    if (!order) {
+      throw new AppError(API_ERRORS.NF_ORDER);
+    }
+    if (order.status !== ORDER_STATUS.PENDING) {
+      throw new AppError(API_ERRORS.VL_INVALID_ORDER_STATUS);
+    }
 
     /**
-     * Info: (20260810 - Luphia) 回傳 base64url 形式的 challenge 而非直接簽章：
+     * Info: (20260811 - Luphia) 金額取自訂單紀錄。
+     * 分析類訂單以負數記錄扣款（見 order.service），這裡取絕對值換算成轉帳金額。
+     */
+    const amount = Math.abs(Number(order.amount));
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new AppError(API_ERRORS.VL_INVALID_ORDER_STATUS);
+    }
+
+    const sender = await this.deriveSender(record);
+    const prepared = await prepareTransferUserOp(sender, amount, orderId);
+    if (!prepared.success || !prepared.data) {
+      logger.error("Failed to build custodial payment UserOp", {
+        userId,
+        orderId,
+        message: prepared.message,
+      });
+      throw new AppError(API_ERRORS.IS_UNKNOWN);
+    }
+
+    /**
+     * Info: (20260811 - Luphia) 回傳 base64url 形式的 challenge 而非直接簽章：
      * 簽章統一由 custodial_signing.service 產生，全系統只有一條合成 assertion 的路徑。
      */
-    return Buffer.from(userOpHash.slice(2), "hex").toString("base64url");
+    return {
+      userOp: prepared.data.userOp,
+      challenge: hexToBase64Url(prepared.data.userOpHash),
+    };
   }
 
   // Info: (20260809 - Luphia) BundlerService 只吃 hex 字串形式的 UserOp（userOperationSchema 會轉回 BigInt）

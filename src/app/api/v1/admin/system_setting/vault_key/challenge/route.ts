@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { logger } from "@/lib/utils/logger";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { Role } from "@/constants/role";
+import { requireSuperAdmin } from "@/lib/auth/admin_guard";
 import {
   ensureSecretVaultKey,
   getEnvHashChallenge,
@@ -25,15 +25,7 @@ import { isVaultConfigured } from "@/lib/auth/key_vault";
  */
 export async function POST(request: NextRequest) {
   try {
-    const user = await getIdentityFromDeWT(
-      request.headers.get("Authorization"),
-    );
-    if (!user) {
-      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
-    }
-    if (user.role !== Role.SUPER_ADMIN) {
-      return jsonFail(API_ERRORS.AUTH_SUPER_ADMIN_REQUIRED);
-    }
+    await requireSuperAdmin(request);
 
     // Info: (20260809 - Luphia) 已經有可用金鑰就不重發，避免誤觸而讓既有密文再也解不開
     if (isVaultConfigured()) {
@@ -56,7 +48,9 @@ export async function POST(request: NextRequest) {
       challenge: challenge.challenge,
     });
   } catch (error) {
-    console.error("[API] Vault key challenge error:", error);
+    logger.error("[API] Vault key challenge error:", {
+      message: (error as Error).message,
+    });
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

@@ -1,9 +1,9 @@
 import { NextRequest } from "next/server";
 import type { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { logger } from "@/lib/utils/logger";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { Role } from "@/constants/role";
+import { requireSuperAdmin } from "@/lib/auth/admin_guard";
 import { vaultKeyApplySchema } from "@/validators";
 import { verifyAndFinalizeConfig } from "@/services/setup.auth.service";
 import { restartService } from "@/services/setup.state.service";
@@ -23,15 +23,7 @@ import { restartService } from "@/services/setup.state.service";
  */
 export async function POST(request: NextRequest) {
   try {
-    const user = await getIdentityFromDeWT(
-      request.headers.get("Authorization"),
-    );
-    if (!user) {
-      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
-    }
-    if (user.role !== Role.SUPER_ADMIN) {
-      return jsonFail(API_ERRORS.AUTH_SUPER_ADMIN_REQUIRED);
-    }
+    await requireSuperAdmin(request);
 
     const body = await request.json();
     const parsed = vaultKeyApplySchema.safeParse(body);
@@ -52,7 +44,9 @@ export async function POST(request: NextRequest) {
 
     return jsonOk({ restarting: true });
   } catch (error) {
-    console.error("[API] Vault key apply error:", error);
+    logger.error("[API] Vault key apply error:", {
+      message: (error as Error).message,
+    });
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

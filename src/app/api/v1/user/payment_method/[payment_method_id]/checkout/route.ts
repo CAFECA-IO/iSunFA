@@ -101,6 +101,10 @@ export async function POST(
     const oenAccessToken = await systemSettingService.get(
       SystemSettingKey.OEN_ACCESS_TOKEN,
     );
+    // Info: (20260811 - Luphia) 與綁卡路徑取同一個設定值，避免兩邊商店代號不一致
+    const oenMerchantId = await systemSettingService.get(
+      SystemSettingKey.OEN_MERCHANT_ID,
+    );
 
     // Info: (20260305 - Tzuhan) 準備打給應援科技的扣款請求
     const fetchUrl = `${OEN_BASE_URL}/token/transactions`;
@@ -118,6 +122,7 @@ export async function POST(
           amount,
           order.data as Record<string, unknown>,
           providerToken,
+          oenMerchantId ?? "",
         ),
       ),
     };

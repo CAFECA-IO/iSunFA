@@ -18,8 +18,10 @@ import { request } from "@/lib/utils/request";
 import { fido2ClientService } from "@/lib/auth/fido2_client";
 import {
   SECRET_MASK,
+  SettingSaveStatus,
   SystemSettingGroup,
   SystemSettingKey,
+  SystemSettingSource,
   SYSTEM_SETTING_DEFINITIONS,
   SYSTEM_SETTING_GROUP_ORDER,
 } from "@/constants/system_setting";
@@ -40,7 +42,12 @@ interface ISettingRow {
   value: string;
   isSecret: boolean;
   hasValue: boolean;
-  source: "DB" | "ENV" | "NONE";
+  source: SystemSettingSource;
+  /**
+   * Info: (20260811 - Luphia) 這一項是否真的已納入資料庫保管（並在簽章承諾內）。
+   * 只存在於 .env 的秘密同樣顯示 ********，不標示出來的話管理員會以為它已受保護。
+   */
+  storedInDb: boolean;
   fallback?: string;
 }
 
@@ -72,8 +79,6 @@ interface ITrustState {
   trustRootReady: boolean;
 }
 
-type SaveStatus = "IDLE" | "SIGNING" | "SAVING" | "SUCCESS" | "ERROR";
-
 export default function AdminSettingsPage() {
   const { t } = useTranslation();
 
@@ -82,7 +87,9 @@ export default function AdminSettingsPage() {
   const [trust, setTrust] = useState<ITrustState | null>(null);
   const [history, setHistory] = useState<IHistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState<SaveStatus>("IDLE");
+  const [status, setStatus] = useState<SettingSaveStatus>(
+    SettingSaveStatus.IDLE,
+  );
   const [message, setMessage] = useState<string>("");
 
   const load = useCallback(async () => {
@@ -105,7 +112,7 @@ export default function AdminSettingsPage() {
         ),
       );
     } catch (error) {
-      setStatus("ERROR");
+      setStatus(SettingSaveStatus.ERROR);
       setMessage(
         error instanceof Error
           ? error.message
@@ -129,7 +136,7 @@ export default function AdminSettingsPage() {
    * 因此這條維護路徑必須存在於這裡。
    */
   const handleProvisionVaultKey = async () => {
-    setStatus("SIGNING");
+    setStatus(SettingSaveStatus.SIGNING);
     setMessage("");
 
     try {
@@ -141,7 +148,7 @@ export default function AdminSettingsPage() {
       });
 
       if (challengeRes.payload.alreadyConfigured) {
-        setStatus("SUCCESS");
+        setStatus(SettingSaveStatus.SUCCESS);
         setMessage(t("admin_settings.vault_already_configured"));
         await load();
         return;
@@ -153,17 +160,17 @@ export default function AdminSettingsPage() {
         timeout: 60000,
       });
 
-      setStatus("SAVING");
+      setStatus(SettingSaveStatus.SAVING);
       await request("/api/v1/admin/system_setting/vault_key", {
         method: "POST",
         body: JSON.stringify({ authentication }),
       });
 
-      setStatus("SUCCESS");
+      setStatus(SettingSaveStatus.SUCCESS);
       setMessage(t("admin_settings.vault_provisioned"));
     } catch (error) {
       console.error("Failed to provision vault key:", error);
-      setStatus("ERROR");
+      setStatus(SettingSaveStatus.ERROR);
       setMessage(
         error instanceof Error
           ? error.message
@@ -173,7 +180,7 @@ export default function AdminSettingsPage() {
   };
 
   const handleSave = async () => {
-    setStatus("SIGNING");
+    setStatus(SettingSaveStatus.SIGNING);
     setMessage("");
 
     try {
@@ -206,18 +213,18 @@ export default function AdminSettingsPage() {
         timeout: 60000,
       });
 
-      setStatus("SAVING");
+      setStatus(SettingSaveStatus.SAVING);
       await request("/api/v1/admin/system_setting", {
         method: "POST",
         body: JSON.stringify({ values, baseVersion, authentication }),
       });
 
-      setStatus("SUCCESS");
+      setStatus(SettingSaveStatus.SUCCESS);
       setMessage(t("admin_settings.saved"));
       await load();
     } catch (error) {
       console.error("Failed to save system settings:", error);
-      setStatus("ERROR");
+      setStatus(SettingSaveStatus.ERROR);
       setMessage(
         error instanceof Error
           ? error.message
@@ -226,11 +233,13 @@ export default function AdminSettingsPage() {
     }
   };
 
-  const isBusy = status === "SIGNING" || status === "SAVING";
+  const isBusy =
+    status === SettingSaveStatus.SIGNING || status === SettingSaveStatus.SAVING;
 
-  const sourceLabel = (source: ISettingRow["source"]) => {
-    if (source === "DB") return t("admin_settings.source_db");
-    if (source === "ENV") return t("admin_settings.source_env");
+  const sourceLabel = (source: SystemSettingSource) => {
+    if (source === SystemSettingSource.DB) return t("admin_settings.source_db");
+    if (source === SystemSettingSource.ENV)
+      return t("admin_settings.source_env");
     return t("admin_settings.source_none");
   };
 
@@ -359,6 +368,17 @@ export default function AdminSettingsPage() {
                             : (row.fallback ?? "")
                         }
                       />
+                      {/*
+                        Info: (20260811 - Luphia) 只存在於 env 的項目要標示出來。
+                        它與「已納入資料庫保管」在畫面上長得一樣（秘密都顯示 ********），
+                        但它不在簽章承諾內，日後清理 .env 時服務會直接掛掉。
+                      */}
+                      {row.hasValue && !row.storedInDb && (
+                        <p className="text-xs text-amber-700">
+                          {t("admin_settings.env_only_hint")}
+                        </p>
+                      )}
+
                       {/* Info: (20260809 - Luphia) 未設定但有保底值時要講清楚系統實際跑的是什麼 */}
                       {!row.hasValue && row.fallback && (
                         <p className="text-[10px] text-gray-400">
@@ -384,12 +404,12 @@ export default function AdminSettingsPage() {
       {message && (
         <div
           className={`mt-4 flex items-start gap-2 rounded-lg border p-4 text-sm ${
-            status === "ERROR"
+            status === SettingSaveStatus.ERROR
               ? "border-red-200 bg-red-50 text-red-800"
               : "border-emerald-200 bg-emerald-50 text-emerald-800"
           }`}
         >
-          {status === "ERROR" ? (
+          {status === SettingSaveStatus.ERROR ? (
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           ) : (
             <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
@@ -408,7 +428,7 @@ export default function AdminSettingsPage() {
           {isBusy ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              {status === "SIGNING"
+              {status === SettingSaveStatus.SIGNING
                 ? t("admin_settings.signing")
                 : t("admin_settings.saving")}
             </>

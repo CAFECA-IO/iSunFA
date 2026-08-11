@@ -209,6 +209,19 @@ export class OAuthService {
   /**
    * Info: (20260809 - Luphia) 首次以第三方身分註冊：先部署託管 SCW，成功後才寫 DB。
    * 順序刻意如此——鏈上部署失敗時不留下無錢包的殘缺帳號。
+   *
+   * Info: (20260811 - Luphia) 這個順序的代價，明講：
+   *
+   * 唯一鍵（provider, providerUserId）的競爭發生在部署之後。同一個 Google 帳號在兩個
+   * 分頁同時首次登入，兩邊會各自部署一個 SCW（各花一次 gas），後到者撞 P2002 改走登入
+   * 路徑，它那把私鑰隨 request 消失——鏈上就留下一個永久無人可控的合約。
+   *
+   * 也就是說我們把「無錢包的殘缺帳號」換成了「無帳號的殘缺錢包」。這個方向是對的
+   * （壞掉的是一份沒人用的合約，而不是使用者的帳號），但它不是沒有代價。
+   *
+   * 要一併解掉的話：SCW 位址是 CREATE2 決定性的，不需要先部署就能算出來，
+   * 因此可以先在 transaction 內以 (provider, providerUserId) 佔位、拿到佔位才部署。
+   * 見 ADR 016 的後續工作。
    */
   private async registerWithProfile(profile: IOAuthProfile): Promise<IUser> {
     if (!profile.emailVerified) {
@@ -278,6 +291,17 @@ export class OAuthService {
   /**
    * Info: (20260809 - Luphia) 解除綁定。
    * 託管使用者（沒有 passkey）解除最後一個第三方身分等於自我鎖死帳號，故擋下。
+   *
+   * Info: (20260811 - Luphia) 已知限制，這裡如實記錄而不是假裝已解決：
+   *
+   * 「有沒有 passkey」目前是以「有沒有託管金鑰列」反推的。本專案的 User 只有單一
+   * credentialId 欄位、沒有獨立的 authenticator 表，因此無法查出「這個社交註冊帳號
+   * 後來補綁了 passkey」；而 schema 註解提到的「補綁後廢除託管金鑰列」也還沒有實作，
+   * 全庫沒有任何刪除該列的程式碼。
+   *
+   * 結果是社交註冊使用者永遠被視為「沒有 passkey」，解綁功能對他們等於不存在。
+   * 方向上是 fail closed（不會鎖死帳號），但要真正提供解綁，得先做「帳號安全設定」
+   * 那個功能：補綁 passkey、確認可用、才刪掉託管金鑰列。見 ADR 016 的後續工作。
    */
   public async unlinkIdentity(
     userId: string,

@@ -114,6 +114,43 @@ export function isSystemSettingKey(value: unknown): value is SystemSettingKey {
 export const SECRET_MASK = "********";
 
 /**
+ * Info: (20260811 - Luphia) DB 設定快照的四種狀態。
+ *
+ * 原本只有 trusted 布林值，於是「從來沒設定過」與「設定被竄改」變成同一件事，
+ * 兩者都靜默退回 env——一行 SQL 就能讓系統改用 .env 裡輪替前的舊憑證，
+ * 而管理員簽下的「這一項已清空」也會被無視。這兩種情況必須分開處置。
+ */
+export enum SettingSnapshotState {
+  // Info: (20260811 - Luphia) 尚未使用 DB 保管設定，遷移期的正常狀態，允許讀 env
+  EMPTY = "EMPTY",
+  // Info: (20260811 - Luphia) 驗簽通過，DB 就是唯一事實來源，不再讀 env
+  TRUSTED = "TRUSTED",
+  // Info: (20260811 - Luphia) DB 有設定但驗不過＝遭竄改，一律 fail closed
+  UNTRUSTED = "UNTRUSTED",
+  // Info: (20260811 - Luphia) DB 暫時讀不到（連線抖動），不快取、允許暫時讀 env
+  UNAVAILABLE = "UNAVAILABLE",
+}
+
+// Info: (20260811 - Luphia) 設定值的來源，供設定頁標示；服務層與畫面共用同一組定義
+export enum SystemSettingSource {
+  DB = "DB",
+  ENV = "ENV",
+  NONE = "NONE",
+}
+
+/**
+ * Info: (20260811 - Luphia) 設定頁儲存流程的狀態。
+ * 原本以 inline 字面聯集寫在畫面裡並直接字串比對，屬於規範禁止的魔法字串。
+ */
+export enum SettingSaveStatus {
+  IDLE = "IDLE",
+  SIGNING = "SIGNING",
+  SAVING = "SAVING",
+  SUCCESS = "SUCCESS",
+  ERROR = "ERROR",
+}
+
+/**
  * Info: (20260809 - Luphia) 全集簽章 manifest 的固定主鍵（單列設計）。
  * 與 FaithBillingSetting 的 "default" 慣例一致。
  */

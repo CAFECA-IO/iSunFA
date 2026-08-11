@@ -233,6 +233,7 @@ export const adminSetup = {
     ready_title: "Enterprise System Ready",
     ready_desc:
       "Configuration securely signed. The backend infrastructure is now fully operational with FIDO2 enforcement.",
+    db_settings_preview: "Database settings to be signed",
     err_challenge: "Failed to generate signing challenge.",
     err_finalize: "Failed to finalize config: ",
     err_sign: "Signing failed: ",

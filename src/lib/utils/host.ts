@@ -11,13 +11,28 @@
  * 只寫純字串運算，middleware runtime 也能用。
  */
 
-// Info: (20260810 - Luphia) 迴環位址的各種寫法都指向本機，視為同一台主機
-const LOOPBACK_HOSTNAMES = new Set([
-  "localhost",
-  "127.0.0.1",
-  "0.0.0.0",
-  "::1",
-]);
+/**
+ * Info: (20260810 - Luphia) 迴環位址的各種寫法都指向本機，視為同一台主機。
+ *
+ * Info: (20260811 - Luphia) 移除 0.0.0.0。它是「未指定位址」不是迴環位址：
+ * 監聽時代表「所有介面」，當成目標連線時的行為隨平台而異。把它併進迴環集合，
+ * isSameEffectiveOrigin 就會認定 http://0.0.0.0:3000 與 localhost:3000 同源，
+ * 白白放寬了 OAuth redirect_uri 的白名單。
+ */
+const LOOPBACK_HOSTNAMES = new Set(["localhost", "127.0.0.1", "::1"]);
+
+/**
+ * Info: (20260811 - Luphia) 站內路徑：必須以單一斜線開頭，且不得含反斜線。
+ *
+ * `startsWith("/")` 不足以判斷「這是站內」——`//evil.com` 同樣以斜線開頭，
+ * 但瀏覽器會把它解讀成 protocol-relative 的絕對網址，直接把使用者導出站；
+ * 部分瀏覽器也把反斜線當斜線處理，所以 `/\evil.com` 一併排除。
+ */
+export const INTERNAL_PATH_PATTERN = /^\/(?!\/)[^\\]*$/;
+
+export function isInternalPath(value: string): boolean {
+  return INTERNAL_PATH_PATTERN.test(value);
+}
 
 /**
  * Info: (20260810 - Luphia) 把主機名正規化到可比對的形式。

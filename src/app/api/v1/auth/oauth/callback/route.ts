@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { logger } from "@/lib/utils/logger";
 import { AppError } from "@/lib/utils/error";
 import { oauthCallbackSchema } from "@/validators";
 import { oauthService } from "@/services/oauth.service";
@@ -24,7 +25,9 @@ export async function POST(request: NextRequest) {
     const result = await oauthService.completeLogin(parsed.data);
     return jsonOk(result);
   } catch (error) {
-    console.error("[API] OAuth callback error:", error);
+    logger.error("[API] OAuth callback error:", {
+      message: (error as Error).message,
+    });
     // Info: (20260809 - Luphia) AppError 帶回其源自 API_ERRORS 的錯誤定義
     if (error instanceof AppError) {
       return jsonFail({

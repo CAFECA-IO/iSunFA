@@ -1,10 +1,10 @@
 import { NextRequest } from "next/server";
 import type { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { logger } from "@/lib/utils/logger";
 import { AppError } from "@/lib/utils/error";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { Role } from "@/constants/role";
+import { requireAdmin, requireSuperAdmin } from "@/lib/auth/admin_guard";
 import { systemSettingApplySchema } from "@/validators";
 import { systemSettingService } from "@/services/system_setting.service";
 
@@ -16,24 +16,6 @@ import { systemSettingService } from "@/services/system_setting.service";
  *
  * 權限：檢視限管理員；寫入限 SUPER_ADMIN，且必須附上對「設定內容 digest」的 passkey 簽章。
  */
-
-async function requireAdmin(request: NextRequest, superAdminOnly: boolean) {
-  const user = await getIdentityFromDeWT(request.headers.get("Authorization"));
-  if (!user) {
-    throw new AppError(API_ERRORS.AUTH_INVALID_TOKEN);
-  }
-
-  if (superAdminOnly) {
-    // Info: (20260809 - Luphia) 設定的信任根是 SUPER_ADMIN 的 passkey，簽署權限不下放給 ADMIN
-    if (user.role !== Role.SUPER_ADMIN) {
-      throw new AppError(API_ERRORS.AUTH_SUPER_ADMIN_REQUIRED);
-    }
-  } else if (user.role !== Role.SUPER_ADMIN && user.role !== Role.ADMIN) {
-    throw new AppError(API_ERRORS.AUTH_ADMIN_REQUIRED);
-  }
-
-  return user;
-}
 
 // Info: (20260809 - Luphia) AppError 帶回其源自 API_ERRORS 的錯誤定義
 function failFrom(error: unknown) {
@@ -53,7 +35,7 @@ function failFrom(error: unknown) {
  */
 export async function GET(request: NextRequest) {
   try {
-    await requireAdmin(request, false);
+    await requireAdmin(request);
 
     const [settings, trust, history] = await Promise.all([
       systemSettingService.listForAdmin(),
@@ -63,7 +45,9 @@ export async function GET(request: NextRequest) {
 
     return jsonOk({ settings, trust, history });
   } catch (error) {
-    console.error("[API] List system settings error:", error);
+    logger.error("[API] List system settings error:", {
+      message: (error as Error).message,
+    });
     return failFrom(error);
   }
 }
@@ -78,7 +62,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    await requireAdmin(request, true);
+    await requireSuperAdmin(request);
 
     const body = await request.json();
     const parsed = systemSettingApplySchema.safeParse(body);
@@ -94,7 +78,9 @@ export async function POST(request: NextRequest) {
 
     return jsonOk(result);
   } catch (error) {
-    console.error("[API] Apply system settings error:", error);
+    logger.error("[API] Apply system settings error:", {
+      message: (error as Error).message,
+    });
     return failFrom(error);
   }
 }

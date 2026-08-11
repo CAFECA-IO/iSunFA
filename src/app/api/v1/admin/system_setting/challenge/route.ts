@@ -1,9 +1,9 @@
 import { NextRequest } from "next/server";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { logger } from "@/lib/utils/logger";
 import { AppError } from "@/lib/utils/error";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { Role } from "@/constants/role";
+import { requireSuperAdmin } from "@/lib/auth/admin_guard";
 import { systemSettingChallengeSchema } from "@/validators";
 import { systemSettingService } from "@/services/system_setting.service";
 
@@ -16,15 +16,7 @@ import { systemSettingService } from "@/services/system_setting.service";
  */
 export async function POST(request: NextRequest) {
   try {
-    const user = await getIdentityFromDeWT(
-      request.headers.get("Authorization"),
-    );
-    if (!user) {
-      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
-    }
-    if (user.role !== Role.SUPER_ADMIN) {
-      return jsonFail(API_ERRORS.AUTH_SUPER_ADMIN_REQUIRED);
-    }
+    await requireSuperAdmin(request);
 
     const body = await request.json();
     const parsed = systemSettingChallengeSchema.safeParse(body);
@@ -38,7 +30,9 @@ export async function POST(request: NextRequest) {
     );
     return jsonOk(challenge);
   } catch (error) {
-    console.error("[API] System setting challenge error:", error);
+    logger.error("[API] System setting challenge error:", {
+      message: (error as Error).message,
+    });
     if (error instanceof AppError) {
       return jsonFail({
         code: error.apiCode,

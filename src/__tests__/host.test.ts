@@ -19,11 +19,28 @@ import {
 
 describe("normalizeHostname", () => {
   it("各種迴環寫法收斂成同一個值", () => {
-    const forms = ["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]"];
+    const forms = ["localhost", "127.0.0.1", "::1", "[::1]"];
     const normalized = forms.map(normalizeHostname);
 
     expect(new Set(normalized).size).toBe(1);
     expect(normalized[0]).toBe("localhost");
+  });
+
+  /**
+   * Info: (20260811 - Luphia) 0.0.0.0 不是迴環位址，是「未指定位址」。
+   *
+   * 這條原本寫反了：舊版把它一起收斂成 localhost，於是 isSameEffectiveOrigin
+   * 會認定 http://0.0.0.0:3000 與 localhost:3000 同源，白白放寬 OAuth 的
+   * redirect_uri 白名單。測試跟著實作一起錯，等於幫錯誤背書。
+   */
+  it("0.0.0.0 不算迴環位址，不與 localhost 視為同源", () => {
+    expect(normalizeHostname("0.0.0.0")).toBe("0.0.0.0");
+    expect(
+      isSameEffectiveOrigin(
+        new URL("http://0.0.0.0:3000"),
+        new URL("http://localhost:3000"),
+      ),
+    ).toBe(false);
   });
 
   it("大小寫不影響結果", () => {

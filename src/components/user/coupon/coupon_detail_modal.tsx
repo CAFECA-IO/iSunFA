@@ -9,13 +9,16 @@ import {
 import { X, QrCode, Loader2 } from "lucide-react";
 import { request } from "@/lib/utils/request";
 import { useTranslation } from "@/i18n/i18n_context";
+import { useAuth } from "@/contexts/auth_context";
 import { MarkdownContent } from "@/components/common/markdown_content";
 import { formatDate } from "@/lib/utils/date";
 import { downloadFile } from "@/lib/file_operator";
 import type { ICoupon } from "@/app/(landing)/coupon/page";
 import { QRCodeSVG } from "qrcode.react";
 import { COUPON_STATUS } from "@/constants/status";
-import { getLoginOptions, fido2ClientService } from "@/lib/auth/fido2_client";
+import { getLoginOptions } from "@/lib/auth/fido2_client";
+import { requestAssertion } from "@/lib/auth/assertion_client";
+import { ChallengePurpose } from "@/constants/challenge_purpose";
 import UsedStamp from "@/components/user/coupon/used_stamp";
 
 interface ICouponDetailModalProps {
@@ -32,6 +35,7 @@ export default function CouponDetailModal({
   onStatusChange = () => {},
 }: ICouponDetailModalProps) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [markdownContent, setMarkdownContent] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);
@@ -81,8 +85,16 @@ export default function CouponDetailModal({
     if (!coupon) return;
     setIsUsing(true);
     try {
-      const { challenge, token } = await getLoginOptions();
-      const authentication = await fido2ClientService.startLogin({ challenge });
+      const { challenge, token } = await getLoginOptions(
+        undefined,
+        ChallengePurpose.USER_ACTION,
+      );
+      // Info: (20260811 - Luphia) 走 requestAssertion，託管帳號才不會卡在永遠不會成功的系統對話框
+      const authentication = await requestAssertion({
+        challenge,
+        custody: user?.custody,
+        challengeToken: token,
+      });
 
       const res = await request<{
         success: boolean;

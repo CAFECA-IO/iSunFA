@@ -206,8 +206,18 @@ function usedUtilities(pattern: RegExp): string[] {
  * 註解裡提到的 class 名稱（例如解釋「為什麼不要寫 dark:bg-slate-950」的說明）
  * 不會被渲染到任何元素上，卻會讓這些測試把文件本身當成違規來源。
  */
+/**
+ * Info: (20260811 - Luphia) `//` 只在行首（允許前置空白）才視為註解。
+ *
+ * 原本是一條不限位置的雙斜線規則：`"https://payment-api.oen.tw"` 會被從 `//` 起截斷，
+ * 同一行之後的 class 名稱全部被吞掉。目前的排版恰好沒踩到，所以測試照樣綠——
+ * 也就是說這道護欄的可信度是假的。行首規則會漏掉行尾註解，
+ * 但那個方向只會多掃到不該掃的內容（假性失敗，看得見），不會漏掉違規。
+ */
 function stripComments(source: string): string {
-  return source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^[ \t]*\/\/[^\n]*/gm, "");
 }
 
 describe("globals.css 彩色階", () => {
@@ -291,6 +301,51 @@ describe("globals.css 白色邊框與白色表面的搭配", () => {
   const WHITE_LINE =
     /\b(?:border|ring|divide)-white(?:\/(?:5\d|[6-9]\d|100))?(?!\S)/;
 
+  /**
+   * Info: (20260811 - Luphia) 讀出一個 className 屬性的完整值（允許跨行）。
+   *
+   * 原本的做法是掃所有單行字串常值：`/"([^"\n]*)"|`([^`\n]*)`/`。兩個分支都排除換行，
+   * 因此**任何被 prettier 折成多行的 className 完全不會被掃到**——而折行正是 prettier
+   * 的預設行為（本 PR 的 cookie_consent.tsx 就是），`cn("bg-white/60", cond && "border-white/80")`
+   * 也一樣逃得掉。護欄看起來綠，其實根本沒看那些檔案。
+   *
+   * 改成以 className= 為起點，把整個屬性值取出來（字串或大括號運算式），
+   * 大括號用簡單的深度計數配對，並略過字串內的括號。取整段的另一個好處是
+   * `cn()` 內多個字面值會被視為同一個元素的 class，才判斷得出「同時使用」這種條件。
+   */
+  function readAttributeValue(source: string, at: number): string | null {
+    const opener = source[at];
+
+    if (opener === '"' || opener === "'") {
+      const end = source.indexOf(opener, at + 1);
+      return end < 0 ? null : source.slice(at + 1, end);
+    }
+    if (opener !== "{") return null;
+
+    let depth = 0;
+    let quote: string | null = null;
+
+    for (let i = at; i < source.length; i += 1) {
+      const ch = source[i];
+
+      if (quote) {
+        if (ch === "\\") i += 1;
+        else if (ch === quote) quote = null;
+        continue;
+      }
+      if (ch === '"' || ch === "'" || ch === "`") {
+        quote = ch;
+        continue;
+      }
+      if (ch === "{") depth += 1;
+      else if (ch === "}") {
+        depth -= 1;
+        if (depth === 0) return source.slice(at + 1, i);
+      }
+    }
+    return null;
+  }
+
   function classAttributeValues(): { file: string; value: string }[] {
     const results: { file: string; value: string }[] = [];
 
@@ -304,10 +359,26 @@ describe("globals.css 白色邊框與白色表面的搭配", () => {
         }
         if (!entry.name.endsWith(".tsx")) continue;
 
-        const source = readFileSync(full, "utf8");
-        // Info: (20260809 - Luphia) 逐個字串常值檢查，避免把相鄰元素的 class 誤併成一組
-        for (const match of source.matchAll(/"([^"\n]*)"|`([^`\n]*)`/g)) {
-          results.push({ file: full, value: match[1] ?? match[2] ?? "" });
+        const source = stripComments(readFileSync(full, "utf8"));
+        for (const match of source.matchAll(/className\s*=\s*/g)) {
+          const value = readAttributeValue(
+            source,
+            (match.index ?? 0) + match[0].length,
+          );
+          /**
+           * Info: (20260811 - Luphia) 把引號、逗號、括號換成空白再交出去。
+           *
+           * 取出的是整段運算式原文，class 名稱兩側可能緊貼著引號或逗號；
+           * 而這些 pattern 以 `(?!\S)` 判斷 utility 的結尾（避免 bg-white 誤中
+           * bg-white-ish 這類名稱）。不先正規化的話 `"bg-white/60",` 會因為
+           * 後面緊接著引號而配不到——測試看起來綠，其實比舊版更不敏感。
+           */
+          if (value !== null) {
+            results.push({
+              file: full,
+              value: value.replace(/[`'"(),{}]/g, " "),
+            });
+          }
         }
       }
     };

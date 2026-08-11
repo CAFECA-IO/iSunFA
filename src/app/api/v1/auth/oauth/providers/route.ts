@@ -1,5 +1,6 @@
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { logger } from "@/lib/utils/logger";
 import { oauthService } from "@/services/oauth.service";
 
 /**
@@ -22,7 +23,9 @@ export async function GET() {
       canonicalOrigin: oauthService.getCanonicalOrigin(),
     });
   } catch (error) {
-    console.error("[API] List OAuth providers error:", error);
+    logger.error("[API] List OAuth providers error:", {
+      message: (error as Error).message,
+    });
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

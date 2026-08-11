@@ -1,6 +1,5 @@
 import z from "zod";
 import { jsonValueSchema } from "@/validators/common";
-import { userOperationJsonSchema } from "@/validators/erc4337";
 
 export const updateProfileSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -26,16 +25,20 @@ export const updateProfileSchema = z.object({
 });
 
 /**
- * Info: (20260810 - Luphia) 託管帳號代簽請求。
- * 兩種模式：直接給 challenge（需為本站發出過的值），或給一份 UserOp
- * 讓伺服器自行重算雜湊。兩者都不接受來源不明的任意雜湊。
+ * Info: (20260811 - Luphia) 託管帳號代簽請求。
+ *
+ * 兩種模式：直接給 challenge（需為本站發出過的值），或給 orderId 讓伺服器自己組
+ * 付款 UserOp。**刻意不接受呼叫端傳入的 UserOp**——只驗 sender 的話，callData 仍由
+ * 呼叫端決定，那就是一支任意動作簽章預言機（見 custodial_wallet.service）。
  */
 export const custodialSignSchema = z
   .object({
     challenge: z.string().min(1).max(512).optional(),
     challengeToken: z.string().min(1).optional(),
-    userOp: userOperationJsonSchema.optional(),
+    orderId: z.string().uuid().optional(),
   })
-  .refine((value) => Boolean(value.challenge || value.userOp), {
-    message: "Either challenge or userOp is required",
+  // Info: (20260811 - Luphia) strict：多送的欄位一律拒絕，讓「不再接受 userOp」是可驗證的，而不是被靜默忽略
+  .strict()
+  .refine((value) => Boolean(value.challenge || value.orderId), {
+    message: "Either challenge or orderId is required",
   });

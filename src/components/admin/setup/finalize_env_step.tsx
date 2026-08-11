@@ -26,6 +26,16 @@ export function SetupFinalizeEnv({
   const [envItems, setEnvItems] = useState<{ key: string; value: string }[]>(
     [],
   );
+  /**
+   * Info: (20260811 - Luphia) 待簽的資料庫設定，簽署前必須讓管理員看見。
+   *
+   * 原本 getSystemSettingChallenge() 回傳的 items 被直接丟棄，畫面只顯示 .env 的內容——
+   * 管理員會簽下一份自己從未看過的設定，而那份簽章帶有完整的 FIDO2 稽核證據。
+   * ADR 017 說「管理員在畫面上核可的本來就是明文」，這條路徑原本並不成立。
+   */
+  const [settingItems, setSettingItems] = useState<
+    { key: string; value: string; isSecret: boolean }[]
+  >([]);
 
   useEffect(() => {
     if (isActive && status !== StepStatus.SUCCESS && !isCompleted) {
@@ -36,6 +46,17 @@ export function SetupFinalizeEnv({
           }
         })
         .catch((e) => console.error("Failed to load env contents:", e));
+
+      hasPendingSystemSettings()
+        .then((res) =>
+          res.success && res.pending ? getSystemSettingChallenge() : null,
+        )
+        .then((challenge) => {
+          if (challenge?.success && challenge.items) {
+            setSettingItems(challenge.items);
+          }
+        })
+        .catch((e) => console.error("Failed to load pending settings:", e));
     }
   }, [isActive, status, isCompleted]);
 
@@ -147,6 +168,22 @@ export function SetupFinalizeEnv({
               {t("admin_setup.step8.verify_msg")}
             </p>
           </div>
+
+          {settingItems.length > 0 && (
+            <div className="w-full space-y-1 rounded border border-orange-200 bg-white p-3 font-mono text-xs">
+              <p className="mb-1 font-sans font-semibold text-orange-800">
+                {t("admin_setup.step8.db_settings_preview")}
+              </p>
+              {settingItems.map((item) => (
+                <div key={item.key} className="flex gap-2">
+                  <span className="shrink-0 font-bold text-orange-800">
+                    {item.key}=
+                  </span>
+                  <span className="break-all text-slate-600">{item.value}</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           {envItems.length > 0 && (
             <div className="custom-scrollbar max-h-48 w-full space-y-1 overflow-y-auto rounded border border-orange-200 bg-white p-3 font-mono text-xs">

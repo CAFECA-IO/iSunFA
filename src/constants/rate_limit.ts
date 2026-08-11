@@ -15,6 +15,13 @@ export enum RateLimitBucketEnum {
   SAVE = "SAVE",
   // Info: (20260807 - Luphia) 費思訪客試用(未登入或未帶 teamId,不進計費管線;設計書 §5.3 guardrail 1)
   FAITH_GUEST = "FAITH_GUEST",
+  /**
+   * Info: (20260811 - Luphia) 託管代簽。這是資金授權原語,不是一般讀寫:
+   * 每次呼叫做一次 AES-GCM 解密加兩次鏈上讀取,而且產出的是一份可直接送 bundler 的簽章。
+   * 正常使用者一分鐘不會簽超過幾次,把上限壓低是為了讓「拿到 session 後批次索取簽章」
+   * 這種行為在造成損失前先撞牆並留下告警。
+   */
+  SIGNING = "SIGNING",
 }
 
 export interface IRateLimitWindow {
@@ -53,6 +60,10 @@ export const RATE_LIMIT_RULES: Record<RateLimitBucketEnum, IRateLimitWindow[]> =
     [RateLimitBucketEnum.FAITH_GUEST]: [
       { windowMs: MINUTE_MS, max: envInt("FAITH_RL_GUEST_PER_MINUTE", 2) },
       { windowMs: DAY_MS, max: envInt("FAITH_RL_GUEST_PER_DAY", 5) },
+    ],
+    [RateLimitBucketEnum.SIGNING]: [
+      { windowMs: MINUTE_MS, max: envInt("SIGNING_RL_PER_MINUTE", 5) },
+      { windowMs: DAY_MS, max: envInt("SIGNING_RL_PER_DAY", 50) },
     ],
   };
 

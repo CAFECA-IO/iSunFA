@@ -231,6 +231,7 @@ export const adminSetup = {
     ready_title: "엔터프라이즈 시스템 준비 완료",
     ready_desc:
       "구성이 안전하게 서명되었습니다. 백엔드 인프라는 이제 FIDO2 보호 하에 완벽하게 작동합니다.",
+    db_settings_preview: "이번에 함께 서명할 데이터베이스 설정",
     err_challenge: "서명 챌린지 생성 실패.",
     err_finalize: "구성을 완료하지 못했습니다: ",
     err_sign: "서명 실패: ",

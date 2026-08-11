@@ -14,6 +14,8 @@ export const adminSettings = {
     ai: "AI 集成",
     payment: "支付网关",
   },
+  env_only_hint:
+    "此项目目前仅存在于环境变量，尚未纳入数据库保管与签章；保存后才会受保护。",
   fallback_hint: "未设置，系统目前采用保底值「{{value}}」。",
   history_title: "变更历史",
   history_version: "版本",

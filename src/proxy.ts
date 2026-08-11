@@ -55,16 +55,34 @@ export async function proxy(request: NextRequest) {
          * 選 cookie 而不是在網址上加參數，是為了不污染使用者看到的網址。
          * 迴圈發生在同一個主機上，所以 cookie 一定帶得回來。
          */
-        const alreadyTried = request.cookies.get(CANONICAL_REDIRECT_COOKIE);
+        /**
+         * Info: (20260811 - Luphia) cookie 值帶上目標主機，且壓到 30 秒。
+         *
+         * 原本寫死 "1" 又留 10 分鐘，等於「每個主機一輩子只導向一次」而不是
+         * 「偵測到迴圈才停用」：使用者用 127.0.0.1 開站成功導向後，cookie 留在
+         * 127.0.0.1 上；幾分鐘後再點同一個舊書籤就完全不導向了，人停在非 canonical
+         * 主機上，接著 OAuth 的 canonicalOrigin 檢查會直接擋掉登入。
+         * 而 cookie 的 domain 是非 canonical 主機，canonical 端收不到也刪不掉它。
+         *
+         * 帶上目標主機讓 NEXT_PUBLIC_APP_URL 改了之後立刻重新嘗試；30 秒足夠涵蓋
+         * 一次瀏覽器重試，又短到不會把人黏住。httpOnly + secure 是因為這個 cookie
+         * 實質上是「關閉 canonical 導向」的開關——不設 httpOnly 的話，該網域上任何
+         * XSS 都能用 document.cookie 直接寫下它。
+         */
+        const alreadyTried =
+          request.cookies.get(CANONICAL_REDIRECT_COOKIE)?.value ===
+          targetHostname;
 
         if (!alreadyTried) {
           const response = new NextResponse(null, {
             status: 307,
             headers: { location },
           });
-          response.cookies.set(CANONICAL_REDIRECT_COOKIE, "1", {
+          response.cookies.set(CANONICAL_REDIRECT_COOKIE, targetHostname, {
             path: "/",
-            maxAge: 600,
+            maxAge: 30,
+            httpOnly: true,
+            secure: targetUrl.protocol === "https:",
             sameSite: "lax",
           });
           return response;
