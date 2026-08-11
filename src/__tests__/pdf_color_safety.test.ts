@@ -57,6 +57,22 @@ describe("createColorConverter", () => {
     const convert = createColorConverter(null);
     expect(convert("oklch(0.5 0.1 200)")).toBe("oklch(0.5 0.1 200)");
   });
+
+  /**
+   * Info: (20260811 - Luphia) 釘住「為什麼要兩個哨兵」。
+   *
+   * `fillStyle` 對無效輸入是靜默保留原值,所以判定「瀏覽器接受了嗎」只能靠
+   * 「設定後的值有沒有變」。單一哨兵無法區分「輸入無效」與「輸入剛好等於哨兵」,
+   * 後者會被誤判成無效而原值退回。
+   *
+   * 這條契約是這支函式自己宣告的(「把**任意** CSS 顏色換成等值的 rgba()」)——
+   * 目前唯一的呼叫端有 UNSUPPORTED_COLOR_PATTERN 擋在前面,碰不到這個輸入,
+   * 但那是呼叫端的性質,不是這支函式的。少了這支測試,拿掉第二個哨兵不會有任何測試變紅。
+   */
+  it("should still convert a value that collides with the probe sentinel", () => {
+    const convert = createColorConverter(buildContext([1, 2, 3, 255]));
+    expect(convert("#010203")).toBe("rgba(1, 2, 3, 1.000)");
+  });
 });
 
 describe("rewriteColorValue", () => {
@@ -92,6 +108,39 @@ describe("rewriteColorValue", () => {
         () => "rgba(255, 255, 255, 0.051)",
       ),
     ).toBe("rgba(255, 255, 255, 0.051)");
+  });
+
+  /**
+   * Info: (20260811 - Luphia) `color()` 也要換 —— 它是這組 pattern 的覆蓋漏洞。
+   *
+   * 舊版的 blanket check 含 `includes("color(")`,所以 `color(display-p3 …)`
+   * 至少被塗黑(錯的顏色但不炸);改成具名 pattern 時漏掉它,就變成直接放行,
+   * 而 html2canvas 1.4.1 一樣解析不了 —— 結果從「顏色錯」變成「整份匯出失敗」。
+   * Chrome 認得這個語法,所以它是換算得出來的,漏的只是一個 token。
+   */
+  it("should rewrite color() as well", () => {
+    expect(
+      rewriteColorValue(
+        "background-color",
+        "color(display-p3 1 0.5 0)",
+        () => "rgb(255, 122, 0)",
+      ),
+    ).toBe("rgb(255, 122, 0)");
+  });
+
+  /**
+   * Info: (20260811 - Luphia) 巢狀超過一層時回原值,而不是換到一半的字串。
+   *
+   * pattern 只容許一層巢狀,兩層時只有內層會被換掉。兩種寫法最後都會讓
+   * html2canvas 拋錯,差別在留給讀 log 的人什麼:半成品看起來像換算失敗,
+   * 原值看起來像「這個寫法我們不支援」—— 後者才是實際發生的事。
+   */
+  it("should keep the original value when nesting is deeper than one level", () => {
+    const value =
+      "color-mix(in oklab, color-mix(in oklab, oklch(0.9 0 0) 50%, transparent) 5%, transparent)";
+    expect(
+      rewriteColorValue("background-color", value, () => "rgb(9, 9, 9)"),
+    ).toBe(value);
   });
 
   /**

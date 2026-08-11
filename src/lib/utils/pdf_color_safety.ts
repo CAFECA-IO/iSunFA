@@ -26,17 +26,29 @@
  * 改不到 inline style 的來源;攔在讀取端才涵蓋得完,而且完全不動使用者畫面。
  */
 
-// Info: (20260810 - Emily) html2canvas 1.4.1 解析不了的色彩函式
+/**
+ * Info: (20260810 - Emily) html2canvas 1.4.1 解析不了的色彩函式。
+ *
+ * Info: (20260811 - Luphia) `color(` 必須在列 —— 它是換算得出來的,不是取捨。
+ * 舊版的 blanket check 含 `includes("color(")`,改成這組具名 pattern 時漏掉了它,
+ * 於是 `color(display-p3 1 0.5 0)` 從「被塗黑」變成「直接放行」——
+ * html2canvas 一樣解析不了,結果是整份匯出拋錯。而 Chrome 認得這個語法,
+ * 探針換算得出等值 rgb,所以漏的只是一個 token。
+ * `\bcolor\(` 不會誤中 `color-mix(`:`color` 後面接的是 `-` 而不是 `(`。
+ */
 const UNSUPPORTED_COLOR_PATTERN =
-  /(oklch|oklab|color-mix|\blch\(|\blab\(|\bhwb\()/i;
+  /(oklch|oklab|color-mix|\bcolor\(|\blch\(|\blab\(|\bhwb\()/i;
 
 /**
  * Info: (20260810 - Emily) 抓出單一個色彩函式呼叫,容許一層巢狀
  * (`color-mix(in oklab, oklch(...) 5%, transparent)`)。
  * 逐段換而不是整串換 —— 一個值可能含多個顏色(border-color 三段、漸層多段)。
+ *
+ * Info: (20260811 - Luphia) `color-mix` 排在 `color` 之前只是為了讀起來清楚;
+ * 交換順序不會壞掉,因為 `color` 命中後 `\(` 對不上 `-mix(` 會回溯到下一個分支。
  */
 const COLOR_FUNCTION_PATTERN =
-  /(?:oklch|oklab|color-mix|lch|lab|hwb)\((?:[^()]|\([^()]*\))*\)/gi;
+  /(?:oklch|oklab|color-mix|color|lch|lab|hwb)\((?:[^()]|\([^()]*\))*\)/gi;
 
 const PROBE_SENTINEL_A = "#010203";
 const PROBE_SENTINEL_B = "#040506";
@@ -95,6 +107,18 @@ const isDroppableProperty = (property: string): boolean => {
   return name.includes("shadow") || name.includes("image");
 };
 
+/**
+ * Info: (20260811 - Luphia) 換不乾淨時回**原值**,而不是換到一半的字串。
+ *
+ * `COLOR_FUNCTION_PATTERN` 只容許一層巢狀,所以兩層的
+ * `color-mix(in oklab, color-mix(in oklab, oklch(…) 50%, transparent) 5%, transparent)`
+ * 只有內層會被換掉,留下 `color-mix(in oklab, rgba(…) 5%, transparent)` ——
+ * 仍然解析不了,html2canvas 照樣拋錯。
+ *
+ * 兩者的結果都是拋錯,差別在留下什麼給讀 log 的人:半成品字串看起來像換算失敗,
+ * 原值看起來像「這個寫法我們不支援」,而後者才是實際發生的事。
+ * 政策也是這麼寫的 —— 一般顏色寧可保持原值讓它拋錯。
+ */
 export const rewriteColorValue = (
   property: string,
   value: string,
@@ -103,7 +127,7 @@ export const rewriteColorValue = (
   if (!UNSUPPORTED_COLOR_PATTERN.test(value)) return value;
   const rewritten = value.replace(COLOR_FUNCTION_PATTERN, (fn) => convert(fn));
   if (!UNSUPPORTED_COLOR_PATTERN.test(rewritten)) return rewritten;
-  return isDroppableProperty(property) ? "none" : rewritten;
+  return isDroppableProperty(property) ? "none" : value;
 };
 
 export type IComputedStyleGetter = (
