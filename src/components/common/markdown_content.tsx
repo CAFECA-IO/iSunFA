@@ -17,6 +17,7 @@ import { stripMarkdownComments } from "@/lib/utils/markdown_comment";
 import { stripHtmlLineBreaksOutsideFences } from "@/lib/utils/markdown_line_break";
 import dynamic from "next/dynamic";
 import { escapeArithmeticEmphasis } from "@/lib/utils/markdown_arithmetic_safety";
+import { restoreLineStructure } from "@/lib/utils/markdown_line_structure";
 
 // Info: (20260720 - Tzuhan) #54 證據鏈元件動態載入:含 RecordTabModal 依賴鏈,不拖累一般 markdown 渲染
 const EvidenceChain = dynamic(
@@ -102,6 +103,14 @@ export type MarkdownContentVariant = "document" | "compact";
 
 interface IMarkdownContentProps {
   content: string;
+  /**
+   * Info: (20260810 - Emily) 把段落內的換行還原成硬斷行(碳盤查報告專用)。
+   *
+   * 用 opt-in 而不是預設:這個元件同時服務文件工具、任務板與公開分享頁,
+   * 那些內容的斷行慣例未經量測。碳報告的原文行結構有量過(見
+   * markdown_line_structure 的說明),其他使用端沒有,不該替它們決定。
+   */
+  restoreSourceLineBreaks?: boolean;
   theme?: "dark" | "light";
   variant?: MarkdownContentVariant;
   onContentChange?: (newContent: string) => void;
@@ -109,6 +118,7 @@ interface IMarkdownContentProps {
 
 const MarkdownContent: FC<IMarkdownContentProps> = ({
   content,
+  restoreSourceLineBreaks = false,
   theme = "dark",
   variant = "document",
   onContentChange = () => {},
@@ -178,11 +188,15 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
      * Info: (20260810 - Emily) 一併轉義算式裡的星號 —— 否則預覽與下載的 PDF
      * 會顯示不同的數字,而那正是這幾天一直在追的那種分歧。
      */
-    () =>
-      escapeArithmeticEmphasis(
+    () => {
+      const normalized = escapeArithmeticEmphasis(
         stripHtmlLineBreaksOutsideFences(stripMarkdownComments(content)),
-      ),
-    [content],
+      );
+      return restoreSourceLineBreaks
+        ? restoreLineStructure(normalized)
+        : normalized;
+    },
+    [content, restoreSourceLineBreaks],
   );
 
   const components = useMemo(

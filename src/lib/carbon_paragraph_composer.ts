@@ -20,6 +20,7 @@ import {
 } from "@/lib/carbon_source_table.builder";
 import { CARBON_SOURCE_TABLE_ANCHOR_PREFIX } from "@/constants/carbon_source_tables";
 import { escapeArithmeticEmphasis } from "@/lib/utils/markdown_arithmetic_safety";
+import { restoreLineStructure } from "@/lib/utils/markdown_line_structure";
 
 /**
  * Info: (20260801 - Tzuhan) 對帳區塊的錨點。獨立命名空間的理由與其他三種相同:
@@ -118,7 +119,9 @@ export function composeParagraphContent(input: IComposeParagraphInput): string {
    * 在這裡轉義是因為這裡是段落 markdown 的組裝點 —— 存進去的內容就該是對的,
    * 而不是每個讀取端各自修補一次(見 markdown_arithmetic_safety 的說明)。
    */
-  const narrative = escapeArithmeticEmphasis(extractNarrative(input.content));
+  const narrative = restoreLineStructure(
+    escapeArithmeticEmphasis(extractNarrative(input.content)),
+  );
   const blocks: string[] = [];
   if (narrative.length > 0) blocks.push(narrative);
 

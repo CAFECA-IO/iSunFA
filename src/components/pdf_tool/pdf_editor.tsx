@@ -359,6 +359,11 @@ interface IPdfEditorProps {
    * 光柵化產出的點陣圖不能搜尋、不能複製任何一個排放量數字。
    */
   serverPrint?: boolean;
+  /**
+   * Info: (20260810 - Emily) 轉傳給 MarkdownContent:把段落內的換行還原成硬斷行。
+   * 與 serverPrint 一樣是 opt-in —— 只有碳盤查報告的原文行結構被量過。
+   */
+  restoreSourceLineBreaks?: boolean;
 }
 
 export default function PdfEditor({
@@ -374,6 +379,7 @@ export default function PdfEditor({
   onBeforeDownload = undefined,
   splitBreakpoint = "md",
   serverPrint = false,
+  restoreSourceLineBreaks = false,
 }: IPdfEditorProps) {
   const { t } = useTranslation();
 
@@ -1030,6 +1036,7 @@ export default function PdfEditor({
                         setMarkdownContext(val);
                       }}
                       theme="light"
+                      restoreSourceLineBreaks={restoreSourceLineBreaks}
                     />
                   </div>
                 </div>

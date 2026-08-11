@@ -3,6 +3,7 @@ import { escapeHtml } from "@/lib/utils/logistics_report_html";
 import { stripMarkdownComments } from "@/lib/utils/markdown_comment";
 import { stripHtmlLineBreaksOutsideFences } from "@/lib/utils/markdown_line_break";
 import { escapeArithmeticEmphasis } from "@/lib/utils/markdown_arithmetic_safety";
+import { restoreLineStructure } from "@/lib/utils/markdown_line_structure";
 import {
   CARBON_PDF_CHART_MAX_HEIGHT_MM,
   CARBON_PDF_FONT_STACK,
@@ -329,9 +330,10 @@ export const buildCarbonReportHtml = (markdown: string): string => {
   const source = stripHtmlLineBreaksOutsideFences(
     stripMarkdownComments(markdown),
   );
-  let body = marked.parse(escapeArithmeticEmphasis(source), {
-    async: false,
-  }) as string;
+  let body = marked.parse(
+    restoreLineStructure(escapeArithmeticEmphasis(source)),
+    { async: false },
+  ) as string;
   body = stripActiveContent(body);
   body = body.replace(
     MERMAID_BLOCK,
