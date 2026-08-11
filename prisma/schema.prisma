@@ -516,6 +516,21 @@ model AccountBook {
   // Info: (20260703 - Julian) 帳本對應的客製化會計科目
   accountingAccounts AccountingAccount[]
 
+  // Info: (20260811 - Julian) 帳本對應的人資 (HR) 資料
+  departments          Department[]
+  jobTitles            JobTitle[]
+  employees            Employee[]
+  employeeEducations   EmployeeEducation[]
+  employeeExperiences  EmployeeExperience[]
+  emergencyContacts    EmergencyContact[]
+  dependents           Dependent[]
+  bankAccounts         BankAccount[]
+  processTasks         ProcessTask[]
+  onboardingProcesses  OnboardingProcess[]
+  probationReviews     ProbationReview[]
+  offboardingProcesses OffboardingProcess[]
+  employeeDocuments    EmployeeDocument[]
+
   @@map("account_book")
 }
 
@@ -1450,65 +1465,84 @@ enum Gender {
 // Info: (20260810 - Julian) 公司部門 (支援無限層級樹狀圖)
 model Department {
   id          String       @id @default(uuid())
-  code        String       @unique // Info: (20260810 - Julian) 部門編號 (例: DEP-001)
+  code        String       // Info: (20260810 - Julian) 部門編號 (例: DEP-001)，唯一性以帳本為範圍
   name        String       // Info: (20260810 - Julian) 部門名稱
   description String?
-  
+
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
   // Info: (20260810 - Julian) 樹狀圖自關聯 (父部門與子部門)
-  parentId    String?
+  parentId    String?      @map("parent_id")
   parent      Department?  @relation("DepartmentTree", fields: [parentId], references: [id], onDelete: SetNull)
   children    Department[] @relation("DepartmentTree")
 
   // Info: (20260810 - Julian) 部門最高主管 (簽核流程節點之一)
-  managerId   String?      @unique
+  managerId   String?      @unique @map("manager_id")
   manager     Employee?    @relation("DeptManager", fields: [managerId], references: [id], onDelete: SetNull)
 
   employees   Employee[]   @relation("DeptEmployees")
 
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
 
+  @@unique([accountBookId, code])
+  @@index([accountBookId])
   @@index([parentId])
+  @@map("department")
 }
 
 // Info: (20260810 - Julian) 職稱字典
 model JobTitle {
   id          String     @id @default(uuid())
-  code        String     @unique // Info: (20260810 - Julian) 職稱代號 (例: JT-DEV-LEAD)
+  code        String     // Info: (20260810 - Julian) 職稱代號 (例: JT-DEV-LEAD)，唯一性以帳本為範圍
   title       String     // Info: (20260810 - Julian) 職稱名稱 (例: 前端工程師)
   level       Int        @default(1) // Info: (20260810 - Julian) 職等/職級 (可用於差旅標準或簽核門檻判斷)
   description String?
 
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
   employees   Employee[]
 
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  @@unique([accountBookId, code])
+  @@index([accountBookId])
+  @@map("job_title")
 }
 
 // Info: (20260810 - Julian) 員工基本資料
 model Employee {
   id            String         @id @default(uuid())
-  employeeNo    String         @unique // Info: (20260810 - Julian) 工號 (例: EMP001)
+  employeeNo    String         @map("employee_no") // Info: (20260810 - Julian) 工號 (例: EMP001)，唯一性以帳本為範圍
   name          String         // Info: (20260810 - Julian) 姓名
-  englishName   String?        // Info: (20260810 - Julian) 英文名
+  englishName   String?        @map("english_name") // Info: (20260810 - Julian) 英文名
   gender        Gender
   birthday      DateTime?
-  nationalId    String?        // Info: (20260810 - Julian) 身分證字號 / 護照號碼
-  email         String         @unique // Info: (20260810 - Julian) 公司 Email
+  nationalId    String?        @map("national_id") // Info: (20260810 - Julian) 身分證字號 / 護照號碼
+  email         String         // Info: (20260810 - Julian) 公司 Email，唯一性以帳本為範圍
   phone         String         // Info: (20260810 - Julian) 聯絡電話
   address       String?        // Info: (20260810 - Julian) 通訊地址
   status        EmployeeStatus @default(PROBATION)
-  hireDate      DateTime       // Info: (20260810 - Julian) 到職日
-  leaveDate     DateTime?      // Info: (20260810 - Julian) 離職日
+  hireDate      DateTime       @map("hire_date") // Info: (20260810 - Julian) 到職日
+  leaveDate     DateTime?      @map("leave_date") // Info: (20260810 - Julian) 離職日
+
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
 
   // Info: (20260810 - Julian) 部門與職稱關聯
-  departmentId  String?
+  departmentId  String?        @map("department_id")
   department    Department?    @relation("DeptEmployees", fields: [departmentId], references: [id], onDelete: SetNull)
-  jobTitleId    String?
+  jobTitleId    String?        @map("job_title_id")
   jobTitle      JobTitle?      @relation(fields: [jobTitleId], references: [id], onDelete: SetNull)
 
   // Info: (20260810 - Julian) 直屬主管關係 (Self-Relation，假勤流程直屬主管簽核的核心)
-  managerId     String?
+  managerId     String?        @map("manager_id")
   manager       Employee?      @relation("ManagerSubordinate", fields: [managerId], references: [id], onDelete: SetNull)
   subordinates  Employee[]     @relation("ManagerSubordinate")
 
@@ -1528,101 +1562,141 @@ model Employee {
   assignedTasks       ProcessTask[]        @relation("TaskAssignee")
   conductedReviews    ProbationReview[]    @relation("ProbationReviewer")
 
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
 
+  @@unique([accountBookId, employeeNo])
+  @@unique([accountBookId, email])
+  @@unique([accountBookId, nationalId])
+  @@index([accountBookId])
   @@index([departmentId])
   @@index([jobTitleId])
   @@index([managerId])
+  @@map("employee")
 }
 
 // Info: (20260810 - Julian) ========== 員工詳細資料 ==========
 // Info: (20260810 - Julian) 學歷資料
 model EmployeeEducation {
   id          String    @id @default(uuid())
-  employeeId  String
+  employeeId  String    @map("employee_id")
   employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  schoolName  String    // Info: (20260810 - Julian) 學校名稱
+
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  schoolName  String    @map("school_name") // Info: (20260810 - Julian) 學校名稱
   major       String?   // Info: (20260810 - Julian) 科系/專業
   degree      String    // Info: (20260810 - Julian) 學位 (如: 學士、碩士)
-  startDate   DateTime
-  endDate     DateTime?
-  isGraduated Boolean   @default(true)
+  startDate   DateTime  @map("start_date")
+  endDate     DateTime? @map("end_date")
+  isGraduated Boolean   @default(true) @map("is_graduated")
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
+  @@index([accountBookId])
   @@index([employeeId])
+  @@map("employee_education")
 }
 
 // Info: (20260810 - Julian) 工作經歷
 model EmployeeExperience {
   id          String    @id @default(uuid())
-  employeeId  String
+  employeeId  String    @map("employee_id")
   employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  companyName String    // Info: (20260810 - Julian) 公司名稱
+
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  companyName String    @map("company_name") // Info: (20260810 - Julian) 公司名稱
   position    String    // Info: (20260810 - Julian) 當時職位
   description String?   // Info: (20260810 - Julian) 主要職責/成就
-  startDate   DateTime
-  endDate     DateTime?
+  startDate   DateTime  @map("start_date")
+  endDate     DateTime? @map("end_date")
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
+  @@index([accountBookId])
   @@index([employeeId])
+  @@map("employee_experience")
 }
 
 // Info: (20260810 - Julian) 緊急聯絡人
 model EmergencyContact {
   id           String   @id @default(uuid())
-  employeeId   String
+  employeeId   String   @map("employee_id")
   employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
   name         String   // Info: (20260810 - Julian) 聯絡人姓名
   relationship String   // Info: (20260810 - Julian) 關係 (例: 配偶、父母)
   phone        String   // Info: (20260810 - Julian) 主要電話
-  altPhone     String?  // Info: (20260810 - Julian) 備用電話
-  isPrimary    Boolean  @default(false) // Info: (20260810 - Julian) 是否為第一順位聯絡人
+  altPhone     String?  @map("alt_phone") // Info: (20260810 - Julian) 備用電話
+  isPrimary    Boolean  @default(false) @map("is_primary") // Info: (20260810 - Julian) 是否為第一順位聯絡人
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
+  @@index([accountBookId])
   @@index([employeeId])
+  @@map("emergency_contact")
 }
 
 // Info: (20260810 - Julian) 眷屬資料 (健保投保 / 報稅扶養)
 model Dependent {
   id                    String    @id @default(uuid())
-  employeeId            String
+  employeeId            String    @map("employee_id")
   employee              Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
   name                  String    // Info: (20260810 - Julian) 眷屬姓名
   relationship          String    // Info: (20260810 - Julian) 關係
-  nationalId            String?   // Info: (20260810 - Julian) 眷屬身分證字號
+  nationalId            String?   @map("national_id") // Info: (20260810 - Julian) 眷屬身分證字號
   birthday              DateTime?
-  isNationalHealthInsur Boolean   @default(true) // Info: (20260810 - Julian) 是否隨同參加健保
+  isNationalHealthInsur Boolean   @default(true) @map("is_national_health_insur") // Info: (20260810 - Julian) 是否隨同參加健保
 
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
 
+  @@index([accountBookId])
   @@index([employeeId])
+  @@map("dependent")
 }
 
 // Info: (20260810 - Julian) 薪轉銀行帳戶
 model BankAccount {
   id            String   @id @default(uuid())
-  employeeId    String
+  employeeId    String   @map("employee_id")
   employee      Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  bankCode      String   // Info: (20260810 - Julian) 銀行代碼 (例: 822)
-  bankName      String   // Info: (20260810 - Julian) 銀行名稱 (例: 中國信託)
-  branchCode    String?  // Info: (20260810 - Julian) 分行代碼
-  branchName    String?  // Info: (20260810 - Julian) 分行名稱
-  accountNumber String   // Info: (20260810 - Julian) 帳戶號碼
-  accountHolder String   // Info: (20260810 - Julian) 戶名
-  isPrimary     Boolean  @default(true) // Info: (20260810 - Julian) 是否為主薪轉帳戶
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
 
+  bankCode      String   @map("bank_code") // Info: (20260810 - Julian) 銀行代碼 (例: 822)
+  bankName      String   @map("bank_name") // Info: (20260810 - Julian) 銀行名稱 (例: 中國信託)
+  branchCode    String?  @map("branch_code") // Info: (20260810 - Julian) 分行代碼
+  branchName    String?  @map("branch_name") // Info: (20260810 - Julian) 分行名稱
+  accountNumber String   @map("account_number") // Info: (20260810 - Julian) 帳戶號碼
+  accountHolder String   @map("account_holder") // Info: (20260810 - Julian) 戶名
+  isPrimary     Boolean  @default(true) @map("is_primary") // Info: (20260810 - Julian) 是否為主薪轉帳戶
+
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@index([accountBookId])
   @@index([employeeId])
+  @@map("bank_account")
 }
 
 enum OnboardingStatus {
@@ -1660,99 +1734,135 @@ enum DocumentCategory {
 // Info: (20260810 - Julian) 報到與離職的共通任務清單 (Task Checklist)
 model ProcessTask {
   id                  String             @id @default(uuid())
-  taskType            ProcessTaskType           // Info: (20260810 - Julian) 區分是 ONBOARDING 還是 OFFBOARDING
+  taskType            ProcessTaskType    @map("task_type") // Info: (20260810 - Julian) 區分是 ONBOARDING 還是 OFFBOARDING
   title               String             // Info: (20260810 - Julian) 任務名稱 (例: 發放門禁卡、收回電腦、退健保)
   description         String?
-  status              ProcessTaskStatus         @default(PENDING)
-  
+  status              ProcessTaskStatus  @default(PENDING)
+
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
   // Info: (20260810 - Julian) 負責處理該任務的人 (例: IT 部門人員、HR)
-  assigneeId          String?
+  assigneeId          String?            @map("assignee_id")
   assignee            Employee?          @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
-  completedAt         DateTime?
+  completedAt         DateTime?          @map("completed_at")
 
   // Info: (20260810 - Julian) 歸屬於哪個報到流程或離職流程
-  onboardingProcessId  String?
+  onboardingProcessId  String?            @map("onboarding_process_id")
   onboardingProcess    OnboardingProcess? @relation(fields: [onboardingProcessId], references: [id], onDelete: Cascade)
 
-  offboardingProcessId String?
+  offboardingProcessId String?             @map("offboarding_process_id")
   offboardingProcess   OffboardingProcess? @relation(fields: [offboardingProcessId], references: [id], onDelete: Cascade)
 
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
+  createdAt           DateTime           @default(now()) @map("created_at")
+  updatedAt           DateTime           @updatedAt @map("updated_at")
 
+  @@index([accountBookId])
   @@index([onboardingProcessId])
   @@index([offboardingProcessId])
   @@index([assigneeId])
+  @@map("process_task")
 }
 
 // Info: (20260810 - Julian) 新人報到流程檔
 model OnboardingProcess {
   id           String           @id @default(uuid())
-  employeeId   String           @unique // Info: (20260810 - Julian) 一個員工對應一個報到流程
+  employeeId   String           @unique @map("employee_id") // Info: (20260810 - Julian) 一個員工對應一個報到流程
   employee     Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
   status       OnboardingStatus @default(NOT_STARTED)
-  startDate    DateTime         // Info: (20260810 - Julian) 預計/實際報到日
-  completedAt  DateTime?        // Info: (20260810 - Julian) 完成時間
+  startDate    DateTime         @map("start_date") // Info: (20260810 - Julian) 預計/實際報到日
+  completedAt  DateTime?        @map("completed_at") // Info: (20260810 - Julian) 完成時間
 
   // Info: (20260810 - Julian) 關聯至細項任務
   tasks        ProcessTask[]
 
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+
+  @@index([accountBookId])
+  @@map("onboarding_process")
 }
 
 // Info: (20260810 - Julian) 試用期考核紀錄
 model ProbationReview {
   id           String    @id @default(uuid())
-  employeeId   String    @unique
+  employeeId   String    @unique @map("employee_id")
   employee     Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  
-  reviewerId   String?   // Info: (20260810 - Julian) 考核主管 ID
+
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  reviewerId   String?   @map("reviewer_id") // Info: (20260810 - Julian) 考核主管 ID
   reviewer     Employee? @relation("ProbationReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
 
-  reviewDate   DateTime? // Info: (20260810 - Julian) 考核日期
+  reviewDate   DateTime? @map("review_date") // Info: (20260810 - Julian) 考核日期
   score        Int?      // Info: (20260810 - Julian) 評分 (例: 1-100)
   comment      String?   // Info: (20260810 - Julian) 考核評語
   result       String?   // Info: (20260810 - Julian) 考核結果 (例: PASS, EXTEND, FAIL)
-  
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@index([accountBookId])
+  @@index([reviewerId])
+  @@map("probation_review")
 }
 
 // Info: (20260810 - Julian) 離職申請與退保流程檔
 model OffboardingProcess {
   id             String            @id @default(uuid())
-  employeeId     String            @unique
+  employeeId     String            @unique @map("employee_id")
   employee       Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
   status         OffboardingStatus @default(PENDING)
-  
+
   reason         String?           // Info: (20260810 - Julian) 離職原因
-  expectedDate   DateTime          // Info: (20260810 - Julian) 預計離職日
-  actualDate     DateTime?         // Info: (20260810 - Julian) 實際離職日
-  insuranceOffAt DateTime?         // Info: (20260810 - Julian) 勞健保退保生效日
+  expectedDate   DateTime          @map("expected_date") // Info: (20260810 - Julian) 預計離職日
+  actualDate     DateTime?         @map("actual_date") // Info: (20260810 - Julian) 實際離職日
+  insuranceOffAt DateTime?         @map("insurance_off_at") // Info: (20260810 - Julian) 勞健保退保生效日
 
   // Info: (20260810 - Julian) 關聯至交接細項任務
   tasks          ProcessTask[]
 
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  @@index([accountBookId])
+  @@map("offboarding_process")
 }
 
 // Info: (20260810 - Julian) 合約與文件管理 (Documents & Contracts)
 model EmployeeDocument {
   id          String           @id @default(uuid())
-  employeeId  String
+  employeeId  String           @map("employee_id")
   employee    Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  
+
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
   title       String           // Info: (20260810 - Julian) 文件名稱 (例: 2026 勞動契約)
   category    DocumentCategory // Info: (20260810 - Julian) 文件分類
-  fileId String? @map("file_id")
-  file   File?   @relation(fields: [fileId], references: [id])
-  
-  expiredAt   DateTime?        // Info: (20260810 - Julian) 文件到期日 (如證照過期日、合約續約日)
-  
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  fileId      String?          @map("file_id")
+  file        File?            @relation(fields: [fileId], references: [id])
 
+  expiredAt   DateTime?        @map("expired_at") // Info: (20260810 - Julian) 文件到期日 (如證照過期日、合約續約日)
+
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  @@index([accountBookId])
   @@index([employeeId])
+  @@map("employee_document")
 }
