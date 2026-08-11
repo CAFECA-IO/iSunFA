@@ -45,7 +45,7 @@ export const HR_NAV_ITEMS: IHrNavItem[] = [
     href: HR_MANAGEMENT_ROUTE.MOVEMENT,
     labelKey: "hr_management.nav.movement",
     icon: Repeat,
-    disabled: true,
+    disabled: false,
   },
   {
     key: "document",
