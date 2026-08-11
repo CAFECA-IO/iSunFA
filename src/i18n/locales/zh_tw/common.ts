@@ -22,6 +22,9 @@ export const common = {
     // Info: (20260807 - Emily) 產出空白必須說得出是空白;與「下載失敗」共用一句等於沒說
     pdf_blank_output:
       "PDF 內容為空白,已中止下載。報告過長導致瀏覽器無法一次繪製,請縮短內容或分段匯出。",
+    // Info: (20260811 - Luphia) 缺字型不是重試能解的 —— 唯一的解法是由維運安裝字型
+    pdf_font_unavailable:
+      "列印伺服器未安裝中文字型,已在產出一份空心方框的報告之前中止。重試結果相同,請聯繫維運安裝 CJK 字型。",
     pdf_download_needs_preview:
       "請先切換到「預覽 PDF」再下載 —— 下載的內容就是預覽所見",
     default: "系統錯誤，請稍後再試",

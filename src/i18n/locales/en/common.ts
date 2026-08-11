@@ -23,6 +23,9 @@ export const common = {
     // Info: (20260807 - Emily) A blank output must say it is blank; sharing one string with "download failed" says nothing
     pdf_blank_output:
       "The PDF came out blank, so the download was cancelled. The report is too long for the browser to render in one pass — shorten it or export in parts.",
+    // Info: (20260811 - Luphia) A missing font is fixed by ops installing one, not by retrying
+    pdf_font_unavailable:
+      "The print server has no Chinese font installed, so the export was stopped before it produced a report of empty boxes. Retrying will not help — ask ops to install a CJK font.",
     pdf_download_needs_preview:
       "Switch to PDF preview before downloading — the download is exactly what the preview shows",
     default: "System error, please try again later",
