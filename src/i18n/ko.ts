@@ -69,6 +69,7 @@ import { solutions } from "@/i18n/locales/ko/solutions";
 import { applicationManagement } from "@/i18n/locales/ko/application_management";
 import type { BaseTranslation } from "@/i18n/zh_tw";
 import { carbonChatbot } from "@/i18n/locales/ko/carbon_chatbot";
+import { hrManagement } from "@/i18n/locales/ko/hr_management";
 
 export const ko = {
   digital_product_passport: digitalProductPassport,
@@ -142,4 +143,5 @@ export const ko = {
   solutions,
   application_management: applicationManagement,
   carbon_chatbot: carbonChatbot,
+  hr_management: hrManagement,
 } satisfies BaseTranslation;

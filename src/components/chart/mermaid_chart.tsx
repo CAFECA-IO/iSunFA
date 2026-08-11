@@ -15,6 +15,7 @@ import { renderMermaid, validateMermaid } from "@/lib/utils/mermaid_render";
 import { MermaidChartType } from "@/constants/mermaid_chart";
 import { useChartPalette } from "@/hooks/use_chart_palette";
 import { resolveCssColorToHex } from "@/lib/utils/css_color";
+import { CHART_CATEGORICAL_REST } from "@/constants/chart_palette";
 import {
   CHART_PALETTE_FALLBACK,
   type ChartColorRole,
@@ -130,15 +131,15 @@ const MermaidChart: FC<IMermaidChartProps> = ({
          * 沒有整組提亮，是因為那會改變十色之間的相互辨識度，而我無法在此驗證。
          */
         pie1: hex("categorical1"),
-        pie2: "#10B981",
-        pie3: "#F59E0B",
-        pie4: "#EC4899",
-        pie5: "#8B5CF6",
-        pie6: "#06B6D4",
-        pie7: "#EF4444",
-        pie8: "#84CC16",
-        pie9: "#F97316",
-        pie10: "#3B82F6",
+        pie2: CHART_CATEGORICAL_REST[0],
+        pie3: CHART_CATEGORICAL_REST[1],
+        pie4: CHART_CATEGORICAL_REST[2],
+        pie5: CHART_CATEGORICAL_REST[3],
+        pie6: CHART_CATEGORICAL_REST[4],
+        pie7: CHART_CATEGORICAL_REST[5],
+        pie8: CHART_CATEGORICAL_REST[6],
+        pie9: CHART_CATEGORICAL_REST[7],
+        pie10: CHART_CATEGORICAL_REST[8],
 
         pieTitleTextSize: "20px",
         pieTitleTextColor: hex("value"),
