@@ -1,4 +1,7 @@
 import { marked } from "marked";
+import { escapeHtml } from "@/lib/utils/logistics_report_html";
+import { stripMarkdownComments } from "@/lib/utils/markdown_comment";
+import { stripHtmlLineBreaksOutsideFences } from "@/lib/utils/markdown_line_break";
 import {
   CARBON_PDF_CHART_MAX_HEIGHT_MM,
   CARBON_PDF_FONT_STACK,
@@ -130,12 +133,42 @@ export const annotateTable = (tableHtml: string): string => {
 };
 
 /**
+ * Info: (20260811 - Luphia) 原生 HTML 一律**逸出成純文字**,不交給 Chrome 解析
+ * (PR review 第 1 點)。
+ *
+ * 這是這條路徑的第一道防線,`stripActiveContent` 退居第二道。
+ * 原本相反 —— marked 預設放行原生 HTML,再用 regex 追著清 —— 而 regex 清不乾淨:
+ * 實測 `<img src=x onerror=alert(1)>`(屬性未加引號)完整存活到交給 Chrome 的 HTML 裡,
+ * 而 `src=x` 是相對 URL,`sealNetwork` 把它 abort 正是引爆 `onerror` 的那一步。
+ * 也就是說那兩層並不獨立:第二層的 abort 去引爆第一層的漏網之魚。
+ *
+ * 改成逸出而不是刪除,是為了與預覽一致:`MarkdownContent` 未啟用 rehype-raw,
+ * react-markdown 把原生 HTML 當純文字印出(見 carbon_report_preview 的註解
+ * 「嚴禁在內容層塞原生 HTML」)。逸出之後同一份 markdown 在預覽與列印看起來一樣,
+ * 而「兩邊各寫一份的下場」這份 PR 自己在 sankey 別名那段已經說過一次。
+ *
+ * 代價要說清楚:報告若真的夾帶原生 HTML 表格,列印端從「畫成表格」變成
+ * 「印出逸出後的文字」。但它在預覽裡本來就是逸出後的文字 ——
+ * 這個改動讓兩邊一致,不是讓列印變差。
+ */
+marked.use({
+  renderer: {
+    html: ({ text }) => escapeHtml(text),
+  },
+});
+
+/**
  * Info: (20260810 - Emily) 拔掉腳本與事件屬性。
  *
  * markdown 允許夾帶原始 HTML,而這份 HTML 會被交給**伺服器上的** Chrome 執行。
  * 報告內容雖然出自使用者自己的草稿,但「使用者能寫的東西會在伺服器的網路位置上執行」
  * 本身就是不該存在的能力(SSRF)。service 另外全面阻斷網路請求,兩層都做:
  * 這一層擋執行,那一層擋外連 —— 任一層失效時另一層仍成立。
+ *
+ * Info: (20260811 - Luphia) 上面的逸出接手之後,這一層的角色是**真正的第二道**:
+ * 它擋的是「逸出萬一失效」,而不是唯一的防線。它清不掉未加引號的事件屬性
+ * (見測試 `should document that unquoted handlers slip past this layer`),
+ * 所以不能單獨成立 —— 保留是因為兩層仍比一層好,不是因為它夠用。
  */
 export const stripActiveContent = (html: string): string =>
   html
@@ -271,7 +304,26 @@ const printStyle = (): string => {
  */
 export const buildCarbonReportHtml = (markdown: string): string => {
   marked.setOptions({ gfm: true, breaks: false });
-  let body = marked.parse(markdown, { async: false }) as string;
+  /**
+   * Info: (20260811 - Luphia) 先套上預覽層的兩道剝除,再交給 marked
+   * (PR review 第 1 點的一部分)。
+   *
+   * `MarkdownContent` 顯示前做的是
+   * `stripHtmlLineBreaksOutsideFences(stripMarkdownComments(content))`,
+   * 而列印端原本收到的是未經處理的原文 —— 兩邊看到的輸入不是同一份。
+   *
+   * 這兩道不是為了安全,是為了**內容正確**:
+   * - HTML 註解是段落錨點(carbon-data-table / carbon-chart / carbon-diagram),
+   *   必須留在原文、只在顯示時隱藏;逸出之後若不剝除,錨點會變成 PDF 上的可見文字。
+   * - `<br>` 是模型逐字照錄原文表格時用來表示折行的,同理。
+   *
+   * 兩支都是 fence-aware 的既有共用工具(有單元測試護住),程式碼區塊內原樣保留 ——
+   * 使用者貼 HTML 教學範例時,fence 內的那些是內容而不是錨點。
+   */
+  const source = stripHtmlLineBreaksOutsideFences(
+    stripMarkdownComments(markdown),
+  );
+  let body = marked.parse(source, { async: false }) as string;
   body = stripActiveContent(body);
   body = body.replace(
     MERMAID_BLOCK,

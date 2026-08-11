@@ -43,6 +43,7 @@ import {
   createColorSafeComputedStyle,
 } from "@/lib/utils/pdf_color_safety";
 import {
+  isPdfFontUnavailableError,
   requestCarbonReportPdf,
   saveBlobAs,
 } from "@/lib/utils/carbon_report_pdf_client";
@@ -812,9 +813,17 @@ export default function PdfEditor({
       setErrorModal({
         isOpen: true,
         // Info: (20260807 - Emily) 空白產出要說得出是空白 —— 與「下載失敗」共用一句話等於沒說
-        message:
-          error instanceof PdfBlankOutputError ||
-          error instanceof PdfNotLaidOutError
+        /**
+         * Info: (20260811 - Luphia) 缺中文字型也要說得出是缺字型(PR review 第 4 點)。
+         *
+         * 同一條標準:伺服端把它與通用列印失敗分成兩個錯誤碼,因為兩者的處置相反 ——
+         * 字型缺失重試一萬次都一樣,唯一的解法是由維運安裝字型。那條分類原本在
+         * 這個 catch 裡消失,使用者看到的是一句與成因無關的「下載失敗」。
+         */
+        message: isPdfFontUnavailableError(error)
+          ? t("common.error.pdf_font_unavailable")!
+          : error instanceof PdfBlankOutputError ||
+              error instanceof PdfNotLaidOutError
             ? t("common.error.pdf_blank_output")!
             : t("common.error.download_failed")!,
       });

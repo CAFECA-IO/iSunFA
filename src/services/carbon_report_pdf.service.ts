@@ -123,6 +123,10 @@ export class CarbonReportPdfService {
           ms: Date.now() - started,
           bytes: buffer.length,
           landscapeTables: layout.landscape,
+          // Info: (20260811 - Luphia) 縮字級留在直式的張數也要記(PR review 第 7 點):
+          // Info: (20260811 - Luphia) applyPageLayout 算了 shrunk 卻沒有任何出口,而它正是
+          // Info: (20260811 - Luphia) 「幾張表是靠縮字級才避掉一次強制分頁」的唯一觀測點。
+          shrunkTables: layout.shrunk,
           chartsRendered: charts.rendered,
           chartsFailed: charts.failed,
         });

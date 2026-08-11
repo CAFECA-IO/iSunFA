@@ -107,6 +107,23 @@ describe("stripActiveContent", () => {
     expect(clean).not.toContain("javascript:");
     expect(clean).toContain("<p>x</p>");
   });
+
+  /**
+   * Info: (20260811 - Luphia) 這一層清不掉未加引號的事件屬性 —— 記錄它的**極限**
+   * (PR review 第 1 點)。
+   *
+   * 上面那支測的是帶引號的 `onclick="…"`,剛好是 regex 處理得到的形狀。
+   * 未加引號的形狀 regex 抓不到,所以這一層不能是唯一的防線:
+   * 真正擋住它的是 `buildCarbonReportHtml` 的逸出(見該區塊的測試)。
+   *
+   * 這支測試不是在為缺陷背書,而是釘住「為什麼需要逸出那一層」——
+   * 哪天有人想拿掉逸出、只留這一層,這裡寫著它擋不住什麼。
+   */
+  it("should document that unquoted handlers slip past this layer", () => {
+    expect(stripActiveContent("<img src=x onerror=alert(1)>")).toContain(
+      "onerror=alert(1)",
+    );
+  });
 });
 
 describe("buildCarbonReportHtml", () => {
@@ -135,5 +152,46 @@ describe("buildCarbonReportHtml", () => {
     );
     expect(html).toContain('<td class="label">外購電力</td>');
     expect(html).toContain('<td class="narrow">21</td>');
+  });
+
+  /**
+   * Info: (20260811 - Luphia) 原生 HTML 逸出成純文字 —— 這是第一道防線
+   * (PR review 第 1 點)。
+   *
+   * 未加引號的事件屬性是 `stripActiveContent` 的漏網之魚(見該區塊的測試),
+   * 而 `sealNetwork` 把 `src=x` 這種相對 URL abort 掉,正是引爆 `onerror` 的那一步 ——
+   * 兩層並不獨立。逸出讓它從一開始就不是標籤,漏網與引爆都失去對象。
+   */
+  it("should escape raw html instead of handing it to Chrome", () => {
+    const html = buildCarbonReportHtml("內文 <img src=x onerror=alert(1)> 尾");
+    expect(html).toContain("&lt;img src=x onerror=alert(1)&gt;");
+    expect(html).not.toContain("<img src=x");
+  });
+
+  /**
+   * Info: (20260811 - Luphia) 與預覽看到同一份輸入。
+   *
+   * 段落錨點是 HTML 註解,必須留在原文、只在顯示時隱藏;逸出之後若不剝除,
+   * 它會變成 PDF 上的可見文字。`<br>` 同理(模型照錄原文表格的折行)。
+   * `MarkdownContent` 顯示前做的就是這兩道,列印端原本一道都沒做。
+   */
+  it("should strip anchors and line breaks the preview also strips", () => {
+    const html = buildCarbonReportHtml(
+      "<!-- carbon-diagram:MILESTONE_TIMELINE:start -->\n\n第一行<br>第二行\n",
+    );
+    expect(html).not.toContain("carbon-diagram");
+    expect(html).not.toContain("&lt;br&gt;");
+    expect(html).toContain("第一行第二行");
+  });
+
+  /**
+   * Info: (20260811 - Luphia) 程式碼區塊內原樣保留 —— 使用者貼 HTML 教學範例時,
+   * fence 內的註解與 `<br>` 是內容而不是錨點,吃掉它就是靜默改寫他的文件。
+   * 兩支剝除工具本身是 fence-aware 的,這支測試釘住「接上來之後仍然是」。
+   */
+  it("should leave fenced html untouched", () => {
+    const html = buildCarbonReportHtml("```html\n<!-- keep -->\n<br>\n```\n");
+    expect(html).toContain("&lt;!-- keep --&gt;");
+    expect(html).toContain("&lt;br&gt;");
   });
 });

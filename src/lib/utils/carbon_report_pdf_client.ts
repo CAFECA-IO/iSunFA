@@ -1,5 +1,6 @@
-import { request } from "@/lib/utils/request";
+import { request, ApiError as RequestApiError } from "@/lib/utils/request";
 import type { IApiResponse } from "@/lib/utils/response";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { base64ToBytes } from "@/lib/utils/logistics_report_client";
 
 /**
@@ -56,6 +57,24 @@ export const requestCarbonReportPdf = async (params: {
     chartsRendered: file.chartsRendered,
     chartsFailed: file.chartsFailed,
   };
+};
+
+/**
+ * Info: (20260811 - Luphia) 缺中文字型的失敗要能被單獨認出來(PR review 第 4 點)。
+ *
+ * service 花了一整支 pdf_font_guard 把這個成因從通用列印失敗裡分出來,
+ * 理由是兩者的處置相反:字型缺失重試一萬次都一樣,唯一的解法是由維運安裝字型;
+ * 列印故障值得重試。而前端的 catch 原本把兩者收成同一句「下載失敗」——
+ * 那條分類到了使用者眼前就消失了,而 pdf_editor 自己的註解寫著
+ * 「空白產出要說得出是空白 —— 與『下載失敗』共用一句話等於沒說」。
+ *
+ * 讀 `data.errorCode` 而不是 HTTP 狀態:兩者都是 500,狀態碼分不出來。
+ * 型別守衛的形狀沿用 use_carbon_chat.helpers 的 isQuotaApiError / isTimeoutApiError。
+ */
+export const isPdfFontUnavailableError = (error: unknown): boolean => {
+  if (!(error instanceof RequestApiError)) return false;
+  const data = error.data as { errorCode?: string } | undefined;
+  return data?.errorCode === API_ERRORS.IS_PDF_FONT_UNAVAILABLE.code;
 };
 
 /** Info: (20260810 - Emily) 觸發瀏覽器下載;URL 用完即撤,否則整份 PDF 會留在記憶體 */
