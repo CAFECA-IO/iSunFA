@@ -295,6 +295,67 @@ const printStyle = (): string => {
     break-inside: avoid;
   }
   code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .9em; }
+
+  /*
+   * Info: (20260811 - Emily) 文件外殼(頁首／頁尾),對照預覽的 pdf_editor 版型。
+   *
+   * 各出現一次而不是每頁重印:預覽是一份連續文件,頁首在最上、頁尾在最下,
+   * 逐頁重印會與使用者看到的不同。逐頁的那條資訊(報告名 + 頁碼)已由
+   * page.pdf 的 displayHeaderFooter 負責,兩者不重疊。
+   *
+   * 深色底必須 break-inside: avoid —— 一條被切成兩頁的深色橫幅比沒有更難看。
+   * 顏色以 rgb() 寫死而不用 Tailwind 的色票:這份 HTML 在 headless Chrome 裡
+   * 沒有樣式表,而 oklch() 這類現代色彩空間在 html2canvas 那條路上炸過一次。
+   */
+  .doc-shell-header {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgb(17, 24, 39); color: rgb(255, 255, 255);
+    padding: 6mm 8mm; margin: 0 0 7mm;
+    break-inside: avoid; page-break-inside: avoid;
+    break-after: avoid-page; page-break-after: avoid;
+  }
+  .doc-shell-header .brand {
+    display: flex; align-items: center; gap: 3.5mm;
+    font-size: 13pt; font-weight: 700; line-height: 1;
+  }
+  .doc-shell-header .brand img { height: 8mm; width: auto; }
+  .doc-shell-header .brand-name {
+    border-left: 0.3mm solid rgb(75, 85, 99); padding-left: 3.5mm;
+  }
+  .doc-shell-header .badge {
+    border: 0.3mm solid rgb(147, 197, 253); border-radius: 20mm;
+    background: rgb(30, 58, 95); color: rgb(147, 197, 253);
+    padding: 1.2mm 3.5mm; font-size: 8pt; white-space: nowrap;
+  }
+
+  .doc-shell-meta {
+    border-bottom: 0.3mm solid rgb(226, 232, 240);
+    padding-bottom: 5mm; margin: 0 0 7mm;
+    break-inside: avoid; page-break-inside: avoid;
+    break-after: avoid-page; page-break-after: avoid;
+  }
+  .doc-shell-meta .tag {
+    display: inline-block; background: rgb(255, 237, 213); color: rgb(194, 65, 12);
+    font-size: 8pt; font-weight: 700; padding: 1mm 2mm; border-radius: 1mm;
+  }
+  .doc-shell-meta .line {
+    margin: 2.5mm 0 0; font-size: 9pt; color: rgb(107, 114, 128);
+  }
+  .doc-shell-meta .dot { color: rgb(209, 213, 219); }
+  .doc-shell-meta .doc-title { margin: 4mm 0 0; font-size: 16pt; }
+
+  /* 頁尾整塊不可分頁,且必須與前文分開 —— 它是文件的結尾而不是一段內容 */
+  .doc-shell-footer {
+    border-top: 0.3mm solid rgb(255, 237, 213); background: rgb(255, 247, 237);
+    padding: 9mm 8mm; margin: 10mm 0 0; text-align: center;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .doc-shell-footer h3 {
+    margin: 0 0 2mm; font-size: 13pt; color: rgb(17, 24, 39);
+  }
+  .doc-shell-footer p {
+    margin: 0 auto; max-width: 120mm; font-size: 9pt; color: rgb(75, 85, 99);
+  }
 `;
 };
 
@@ -304,7 +365,69 @@ const printStyle = (): string => {
  * mermaid 區塊只換成容器不在此渲染:mermaid 需要真的 DOM,
  * 而在 headless Chrome 裡畫出來的是**向量** SVG —— 這正是改走伺服端列印的理由之一。
  */
-export const buildCarbonReportHtml = (markdown: string): string => {
+/**
+ * Info: (20260811 - Emily) 下載的 PDF 要有預覽上那組頁首／頁尾
+ * (Emily 2026-08-11:「下載的檔案補上 header 跟 footer」)。
+ *
+ * 文案由呼叫端傳入而不是在這裡寫死:預覽那組是 i18n
+ * (`admin_mission_board.pdf_editor.*`),同一份文件在兩處各寫一份文案,
+ * 遲早會一邊改一邊沒改 —— 這幾天追的多數問題都是這種兩端分歧。
+ *
+ * logo 以 data URL 傳入:列印時 `sealNetwork` 會擋掉所有非 data/about/blob 的請求
+ * (SSRF 防護),`/isunfa_logo.svg` 這種相對路徑在無伺服器的頁面裡本來也取不到。
+ * 沒有 logo 就只出品牌文字,不讓一個圖檔讓整份報告印不出來。
+ */
+export interface ICarbonReportShell {
+  /** Info: (20260811 - Emily) 深色頁首左側的品牌字(預覽的 pdf_editor.brand) */
+  brand: string;
+  /** Info: (20260811 - Emily) 頁首右上的徽章(pdf_editor.internal_document) */
+  internalDocument: string;
+  /** Info: (20260811 - Emily) 內容上方的橘色標籤(pdf_editor.system_report) */
+  systemReport: string;
+  /** Info: (20260811 - Emily) 標籤下方那行的日期,呼叫端格式化(伺服端不知道使用者的地區設定) */
+  issuedAt: string;
+  /** Info: (20260811 - Emily) 頁尾標語(pdf_editor.footer_title) */
+  footerTitle: string;
+  /** Info: (20260811 - Emily) 頁尾版權句,`{{year}}` 已由呼叫端代入 */
+  footerText: string;
+  /** Info: (20260811 - Emily) iSunFA logo 的 data URL;取不到就省略 */
+  logoDataUrl?: string;
+  /** Info: (20260811 - Emily) 報告標題;省略即不印(內容自己的 h1 已足夠) */
+  title?: string;
+}
+
+const SHELL_VENDOR = "iSunFA Enterprise Solutions";
+
+const shellHeader = (shell: ICarbonReportShell): string =>
+  [
+    '<header class="doc-shell-header">',
+    '<div class="brand">',
+    shell.logoDataUrl
+      ? `<img src="${escapeHtml(shell.logoDataUrl)}" alt="" />`
+      : "",
+    `<span class="brand-name">${escapeHtml(shell.brand)}</span>`,
+    "</div>",
+    `<span class="badge">${escapeHtml(shell.internalDocument)}</span>`,
+    "</header>",
+    '<section class="doc-shell-meta">',
+    `<span class="tag">${escapeHtml(shell.systemReport)}</span>`,
+    `<p class="line">${escapeHtml(SHELL_VENDOR)} <span class="dot">•</span> ${escapeHtml(shell.issuedAt)}</p>`,
+    shell.title ? `<h1 class="doc-title">${escapeHtml(shell.title)}</h1>` : "",
+    "</section>",
+  ].join("");
+
+const shellFooter = (shell: ICarbonReportShell): string =>
+  [
+    '<footer class="doc-shell-footer">',
+    `<h3>${escapeHtml(shell.footerTitle)}</h3>`,
+    `<p>${escapeHtml(shell.footerText)}</p>`,
+    "</footer>",
+  ].join("");
+
+export const buildCarbonReportHtml = (
+  markdown: string,
+  shell?: ICarbonReportShell,
+): string => {
   marked.setOptions({ gfm: true, breaks: false });
   /**
    * Info: (20260811 - Luphia) 先套上預覽層的兩道剝除,再交給 marked
@@ -345,6 +468,10 @@ export const buildCarbonReportHtml = (markdown: string): string => {
   return [
     '<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8">',
     `<style>${printStyle()}</style>`,
-    `</head><body>${body}</body></html>`,
+    "</head><body>",
+    shell ? shellHeader(shell) : "",
+    body,
+    shell ? shellFooter(shell) : "",
+    "</body></html>",
   ].join("");
 };

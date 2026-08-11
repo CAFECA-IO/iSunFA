@@ -31,10 +31,25 @@ interface ICarbonPdfPayload {
   };
 }
 
+/**
+ * Info: (20260811 - Emily) 下載的 PDF 要有預覽上那組頁首／頁尾,文案由這裡帶上去 ——
+ * 它們是 i18n,伺服端沒有使用者的語言設定(見 validators/carbon_report_pdf 的註解)。
+ */
+export interface ICarbonPdfShell {
+  brand: string;
+  internalDocument: string;
+  systemReport: string;
+  issuedAt: string;
+  footerTitle: string;
+  footerText: string;
+  title?: string;
+}
+
 export const requestCarbonReportPdf = async (params: {
   markdown: string;
   fileName: string;
   title?: string;
+  shell?: ICarbonPdfShell;
 }): Promise<ICarbonPdfResult> => {
   /*
    * Info: (20260810 - Emily) request() 回的是整個信封而不是 payload,

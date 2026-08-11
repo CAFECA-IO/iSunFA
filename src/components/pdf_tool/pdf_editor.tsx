@@ -671,6 +671,25 @@ export default function PdfEditor({
       markdown: markdownContext,
       fileName,
       title: CARBON_PDF_FOOTER_TITLE,
+      /**
+       * Info: (20260811 - Emily) 下載的 PDF 補上預覽那組頁首／頁尾。
+       *
+       * 文案從這裡帶上去而不是在伺服端另寫一份:這幾個字就是下方版型用的同一組
+       * i18n key,同一份文件的頁首若有兩處來源,遲早一邊改一邊沒改。
+       * 日期也在此格式化 —— 伺服端不知道使用者的地區設定。
+       */
+      shell: {
+        brand: t("admin_mission_board.pdf_editor.brand")!,
+        internalDocument: t(
+          "admin_mission_board.pdf_editor.internal_document",
+        )!,
+        systemReport: t("admin_mission_board.pdf_editor.system_report")!,
+        issuedAt: new Date().toLocaleDateString().replace(/-/g, "/"),
+        footerTitle: t("admin_mission_board.pdf_editor.footer_title")!,
+        footerText: t("admin_mission_board.pdf_editor.footer_text", {
+          year: new Date().getFullYear(),
+        })!,
+      },
     });
     saveBlobAs(result.blob, fileName);
     if (result.chartsFailed > 0) {

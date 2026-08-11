@@ -2,7 +2,10 @@ import fs from "fs";
 import path from "path";
 import { logger } from "@/lib/utils/logger";
 import { ApiError, API_ERRORS } from "@/lib/utils/error_dictionary";
-import { buildCarbonReportHtml } from "@/lib/utils/carbon_report_html";
+import {
+  buildCarbonReportHtml,
+  type ICarbonReportShell,
+} from "@/lib/utils/carbon_report_html";
 import { assertCjkRenderable } from "@/lib/utils/pdf_font_guard";
 import {
   dropPrintBrowser,
@@ -41,6 +44,11 @@ export interface ICarbonReportPdfInput {
   fileName: string;
   /** Info: (20260810 - Emily) 頁尾顯示的報告名稱;未給則用檔名 */
   title?: string;
+  /**
+   * Info: (20260811 - Emily) 文件外殼的文案(頁首／頁尾),由用戶端帶上來。
+   * 省略即不印外殼 —— 舊的用戶端不會因此壞掉。
+   */
+  shell?: Omit<ICarbonReportShell, "logoDataUrl">;
 }
 
 export interface IGeneratedCarbonPdf {
@@ -81,9 +89,38 @@ const buildFooterTemplate = (title: string): string =>
    </div>`;
 
 export class CarbonReportPdfService {
+  /**
+   * Info: (20260811 - Emily) logo 讀成 data URL。
+   *
+   * 列印頁面沒有伺服器,`/isunfa_logo.svg` 這種相對路徑取不到;
+   * 而 `sealNetwork` 也會擋掉所有非 data/about/blob 的請求(SSRF 防護)。
+   * 讀不到就回 undefined —— 一份少了 logo 的報告仍然可用,
+   * 為了一個圖檔讓整份印不出來不成比例。
+   */
+  private static logoDataUrl(): string | undefined {
+    try {
+      const file = path.join(process.cwd(), "public", "isunfa_logo.svg");
+      const svg = fs.readFileSync(file);
+      return `data:image/svg+xml;base64,${svg.toString("base64")}`;
+    } catch (error) {
+      logger.warn("[CarbonReportPdfService] logo unavailable", {
+        reason: error instanceof Error ? error.message : "unknown",
+      });
+      return undefined;
+    }
+  }
+
   async generate(input: ICarbonReportPdfInput): Promise<IGeneratedCarbonPdf> {
     const started = Date.now();
-    const html = buildCarbonReportHtml(input.markdown);
+    const html = buildCarbonReportHtml(
+      input.markdown,
+      input.shell
+        ? {
+            ...input.shell,
+            logoDataUrl: CarbonReportPdfService.logoDataUrl(),
+          }
+        : undefined,
+    );
 
     try {
       const browser = await getPrintBrowser();
