@@ -14,6 +14,10 @@ if (fs.existsSync(srcEnv)) {
 
 // Info: (20260521 - Luphia) Import service, ensuring they are resolved using the project root paths
 import { processNext as processMissionExecutorNext } from "../src/services/mission.executor.service";
+import {
+  installWorkerShutdownHandlers,
+  isShuttingDown,
+} from "../src/lib/worker/shutdown";
 
 // Info: (20260521 - Luphia) Setup executor using argument ID
 const id = process.argv[2];
@@ -26,20 +30,15 @@ if (!id || !/^[0-9a-z]{8}$/.test(id)) {
 async function startExecutorLoop() {
   console.log(`Executor loop started. Monitoring missions for tasks...`);
 
-  let isRunning = true;
-  process.on("SIGINT", () => {
-    isRunning = false;
-  });
-  process.on("SIGTERM", () => {
-    isRunning = false;
-  });
+  // Info: (20260811 - Luphia) 兩段式中斷 + 結束前釋放 mission 執行鎖（見 lib/worker/shutdown）
+  installWorkerShutdownHandlers(`Executor ${id}`);
 
   const intervalMs = 10000; // Info: (20260521 - Luphia) 10 seconds
 
-  while (isRunning) {
+  while (!isShuttingDown()) {
     try {
       await processMissionExecutorNext();
-      if (!isRunning) break;
+      if (isShuttingDown()) break;
       await new Promise((resolve) => setTimeout(resolve, intervalMs));
     } catch (error) {
       console.error(`Error in executor processNext:`, error);

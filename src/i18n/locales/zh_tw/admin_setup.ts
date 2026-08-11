@@ -199,6 +199,13 @@ export const adminSetup = {
     gemini_hint:
       "驅動 LLM 向量搜尋引擎。如果省略，AI 助理將在備用的 Mock 模式下運作。",
     oen_hint: "法幣入金操作的必要條件。可以產生動態發票並在鏈下記錄付款狀態。",
+    llm_model_label: "LLM 模型",
+    third_party_login: "第三方登入",
+    stored_in_db: "保管於資料庫",
+    google_client_id_label: "Google OAuth Client ID",
+    google_client_secret_label: "Google OAuth Client Secret",
+    google_hint:
+      "選填，留白代表只提供 Passkey 登入。這組值保管在資料庫（Secret 加密存放）並以您的超級管理員 Passkey 簽章封存，日後修改不需要改 .env 也不需要重啟服務。請至 Google Cloud Console 建立「Web application」用戶端，並將 ${APP_URL}/auth/callback/google 加入授權導向網址。",
     core_system: "核心生態系統",
     ai_consult: "AI 諮詢服務",
     payment_gateway: "OEN 支付閘道",
@@ -220,6 +227,7 @@ export const adminSetup = {
     ready_title: "企業級系統已就緒",
     ready_desc:
       "系統設定檔已完成安全簽署。所有的後台基礎設施現已正式啟用並處於受 FIDO2 全面保護的運行狀態。",
+    db_settings_preview: "資料庫設定預覽（本次一併簽署）",
     err_challenge: "產生簽章挑戰失敗。",
     err_finalize: "完成設定失敗：",
     err_sign: "簽署失敗：",

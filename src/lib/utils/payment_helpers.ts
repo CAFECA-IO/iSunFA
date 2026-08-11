@@ -88,6 +88,12 @@ export function buildOenTransactionPayload(
   amount: bigint | number | string,
   orderData: Record<string, unknown>,
   providerToken: string,
+  /**
+   * Info: (20260811 - Luphia) 商店代號必須由呼叫端從系統設定取得。
+   * 原本這裡寫死 "mermer"：綁卡那條路徑已改讀設定，扣款這條沒改，於是設了
+   * OEN_MERCHANT_ID 之後兩邊送出的商店代號不一致（綁卡用新的、實際扣款用舊的）。
+   */
+  merchantId: string,
 ) {
   const parsedAmount = MoneyUtil.toDecimal(amount.toString()).toNumber();
   if (!Number.isSafeInteger(parsedAmount)) {
@@ -99,7 +105,7 @@ export function buildOenTransactionPayload(
   const items = generateReceiptItems(amount, orderData);
 
   return {
-    merchantId: "mermer",
+    merchantId,
     amount: parsedAmount,
     currency: "TWD",
     token: providerToken,

@@ -3,6 +3,7 @@ import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
 import { Schema } from "@google/generative-ai";
+import { LLM_WORKER_TIMEOUT_MS } from "@/constants/llm";
 
 export class VoucherBaseParsingSkill implements ITaskSkill {
   name = "VOUCHER_BASE_PARSING";
@@ -46,6 +47,8 @@ export class VoucherBaseParsingSkill implements ITaskSkill {
         images,
         true,
         responseSchema,
+        // Info: (20260811 - Luphia) worker 路徑的逾時上限：沒有它「失敗重試」的前提不成立
+        { timeoutMs: LLM_WORKER_TIMEOUT_MS },
       );
 
       /**

@@ -5,6 +5,7 @@ import { prepareDocumentContext } from "@/skills/utils/document_helper";
 import { UniversalAccountTag } from "@/constants/enums";
 
 import { SchemaType, Schema } from "@google/generative-ai";
+import { LLM_WORKER_TIMEOUT_MS } from "@/constants/llm";
 
 export class VoucherLinesParsingSkill implements ITaskSkill {
   name = "VOUCHER_LINES_PARSING";
@@ -86,6 +87,8 @@ export class VoucherLinesParsingSkill implements ITaskSkill {
         images,
         true,
         turn1Schema,
+        // Info: (20260811 - Luphia) worker 路徑的逾時上限：沒有它「失敗重試」的前提不成立
+        { timeoutMs: LLM_WORKER_TIMEOUT_MS },
       );
 
       const turn1Result = JSON.parse(turn1Text.trim()) as {

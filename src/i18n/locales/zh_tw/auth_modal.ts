@@ -35,6 +35,15 @@ export const authModal = {
   unregistered_confirm_yes: "好，建立帳戶",
   unregistered_confirm_no: "取消",
   user_canceled: "用戶取消登入",
+  or_continue_with: "或使用以下方式",
+  continue_with_google: "使用 Google 帳號繼續",
+  oauth_exchanging: "登入中...",
+  oauth_exchanging_desc: "正在驗證您的帳號，請稍候。",
+  oauth_wrong_origin:
+    "第三方登入只能在 {{origin}} 使用——授權完成後必須導回這個完全相同的網址。請改從該網址開啟後再試。",
+  oauth_failed: "第三方登入失敗",
+  oauth_canceled: "您已取消授權",
+  oauth_back_home: "回到首頁",
   reward: {
     title: "恭喜完成活動註冊！",
     subtitle: "我們已經將專屬獎勵發放至您的帳戶",

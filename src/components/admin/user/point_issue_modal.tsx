@@ -6,6 +6,7 @@ import { MoneyUtil } from "@/lib/utils/money";
 import { X, CheckCircle, AlertCircle, Loader2, Coins } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { getLoginOptions, fido2ClientService } from "@/lib/auth/fido2_client";
+import { ChallengePurpose } from "@/constants/challenge_purpose";
 
 export interface IUserTarget {
   id: string;
@@ -52,7 +53,10 @@ export function PointIssueModal({
        * Wait, `getLoginOptions()` with no address triggers a Discoverable Login (Stateless)!
        * So we can just call `getLoginOptions()` without parameters.
        */
-      const { challenge, token } = await getLoginOptions();
+      const { challenge, token } = await getLoginOptions(
+        undefined,
+        ChallengePurpose.ADMIN_ACTION,
+      );
       const authentication = await fido2ClientService.startLogin({ challenge });
 
       const res = await request<{ success: boolean; message: string }>(

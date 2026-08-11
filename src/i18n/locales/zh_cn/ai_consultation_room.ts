@@ -1,6 +1,6 @@
 export const aiConsultationRoom = {
   title: "AI 咨询室",
-  subtitle: "与 AI 进行即时会计问答，并和社区成员分享讨论",
+  subtitle: "与 AI 进行即时会计与碳管理问答，并和社区成员分享讨论",
   not_found: "未找到对话记录",
   not_found_desc: "抱歉，我们无法找到您要查看的内容。",
   back_to_prev: "返回上一页",

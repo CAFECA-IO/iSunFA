@@ -12,6 +12,7 @@ import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { UserOperationJson } from "@/validators";
 import { fetchWithRetry } from "@/lib/utils/http_client";
+import { ChallengePurpose } from "@/constants/challenge_purpose";
 
 // Info: (20251223 - Tzuhan) 定義登入回傳結果介面
 export interface ILoginResult {
@@ -99,12 +100,28 @@ export async function getRegisterChallenge(): Promise<string> {
  */
 export async function getLoginOptions(
   address?: string,
+  /**
+   * Info: (20260811 - Luphia) 這枚 challenge 之後要拿去授權什麼。
+   * LOGIN 以外的用途會由伺服器綁定到目前登入者（sub），驗證端必須指名相同用途，
+   * 一枚 token 才不會被拿去授權另一種操作（尤其是管理員操作）。
+   */
+  purpose: ChallengePurpose = ChallengePurpose.LOGIN,
 ): Promise<{ challenge: string; token?: string }> {
   const url = address
     ? `/api/v1/auth/options?action=login&address=${address}`
-    : "/api/v1/auth/options?action=login";
+    : `/api/v1/auth/options?action=login&purpose=${purpose}`;
 
-  const res = await fetchWithRetry(url);
+  // Info: (20260811 - Luphia) LOGIN 以外的用途需要帶 session，伺服器才知道要綁給誰
+  const res = await fetchWithRetry(
+    url,
+    purpose === ChallengePurpose.LOGIN
+      ? {}
+      : {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("dewt")}`,
+          },
+        },
+  );
   const data = await res.json();
   if (data.code !== ApiCode.SUCCESS) throw new Error(data.message);
 

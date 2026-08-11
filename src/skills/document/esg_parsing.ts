@@ -11,6 +11,7 @@ import { MOCK_EEIO_COEFFICIENTS } from "@/constants/mock_eeio_coefficients";
 import { EmissionFactorRepo } from "@/repositories/emission_factor.repo";
 import { prisma } from "@/lib/prisma";
 import { GhgProtocolCategory, Iso14064Category } from "@/constants/esg";
+import { LLM_WORKER_TIMEOUT_MS } from "@/constants/llm";
 
 export class EsgParsingSkill implements ITaskSkill {
   name = "ESG_PARSING";
@@ -146,6 +147,8 @@ export class EsgParsingSkill implements ITaskSkill {
         images,
         true,
         turn1Schema,
+        // Info: (20260811 - Luphia) worker 路徑的逾時上限：沒有它「失敗重試」的前提不成立
+        { timeoutMs: LLM_WORKER_TIMEOUT_MS },
       );
 
       const parsed1 = JSON.parse(text1.trim());
@@ -272,6 +275,8 @@ export class EsgParsingSkill implements ITaskSkill {
         images,
         true,
         turn2Schema,
+        // Info: (20260811 - Luphia) worker 路徑的逾時上限：沒有它「失敗重試」的前提不成立
+        { timeoutMs: LLM_WORKER_TIMEOUT_MS },
       );
 
       const parsed2 = JSON.parse(text2.trim());

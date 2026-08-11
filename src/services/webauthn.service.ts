@@ -20,6 +20,7 @@ import {
   reconstructKeyFromXY,
 } from "@/lib/auth/crypto_utils";
 import { randomBytes } from "crypto";
+import { ChallengePurpose } from "@/constants/challenge_purpose";
 import {
   generateChallengeToken,
   verifyChallengeToken,
@@ -211,8 +212,12 @@ class WebAuthnService {
     }
   }
 
-  public async generateStatelessLoginOptions() {
-    return await generateChallengeToken();
+  // Info: (20260811 - Luphia) purpose / sub 由呼叫端指定，見 challenge_token
+  public async generateStatelessLoginOptions(
+    purpose: ChallengePurpose = ChallengePurpose.LOGIN,
+    sub?: string,
+  ) {
+    return await generateChallengeToken(purpose, sub);
   }
 
   private async recoverUserByCredentialId(
@@ -257,7 +262,11 @@ class WebAuthnService {
     challengeToken: string,
     authenticationData: AuthenticationJSON,
   ): Promise<ILoginResult> {
-    const expectedChallenge = await verifyChallengeToken(challengeToken);
+    // Info: (20260811 - Luphia) 登入用的 token 不得拿去授權其他操作，反之亦然
+    const expectedChallenge = await verifyChallengeToken(
+      challengeToken,
+      ChallengePurpose.LOGIN,
+    );
 
     // Info: (20260123 - Tzuhan) 這裡加上 try-catch，捕捉 DB 連線錯誤
     let user: IUser | null = null;

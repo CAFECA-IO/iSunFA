@@ -20,6 +20,7 @@ import BlockchainPeers from "@/components/admin/blockchain/blockchain_peers";
 import { request } from "@/lib/utils/request";
 import { type IBlockchainDashboardData } from "@/services/admin.blockchain.service";
 import { getLoginOptions, fido2ClientService } from "@/lib/auth/fido2_client";
+import { ChallengePurpose } from "@/constants/challenge_purpose";
 import { useTranslation } from "@/i18n/i18n_context";
 import { CURRENCY_UNIT } from "@/constants/price";
 import { MoneyUtil } from "@/lib/utils/money";
@@ -92,7 +93,10 @@ export default function BlockchainDashboardPage() {
     setIsTogglingMining(true);
     const newState = !data.isMining;
     try {
-      const { challenge, token } = await getLoginOptions();
+      const { challenge, token } = await getLoginOptions(
+        undefined,
+        ChallengePurpose.ADMIN_ACTION,
+      );
       const authentication = await fido2ClientService.startLogin({ challenge });
 
       const res = await request<{
@@ -149,7 +153,10 @@ export default function BlockchainDashboardPage() {
     setIsMinting(true);
     const amtStr = MoneyUtil.toDecimal(mintAmount).toString();
     try {
-      const { challenge, token } = await getLoginOptions();
+      const { challenge, token } = await getLoginOptions(
+        undefined,
+        ChallengePurpose.ADMIN_ACTION,
+      );
       const authentication = await fido2ClientService.startLogin({ challenge });
 
       const res = await request<{

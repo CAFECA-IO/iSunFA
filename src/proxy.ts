@@ -1,6 +1,19 @@
 import { NextResponse } from "next/server";
 import { validateEnv } from "@/validators/env";
+import { hostnameOf, normalizeHostname } from "@/lib/utils/host";
 import type { NextRequest } from "next/server";
+
+// Info: (20260809 - Luphia) 記錄「這個主機已嘗試過 canonical 導向」的短效 cookie，用於斷開導向迴圈
+const CANONICAL_REDIRECT_COOKIE = "canonical_redirect_attempted";
+
+// Info: (20260809 - Luphia) 反向代理後面要以 x-forwarded-host 為準，否則看到的是內部主機名
+function readClientHost(request: NextRequest): string {
+  const forwarded = request.headers.get("x-forwarded-host") || "";
+  const host = forwarded
+    ? forwarded.split(",")[0].trim()
+    : request.headers.get("host") || "";
+  return host || request.nextUrl.host;
+}
 
 export async function proxy(request: NextRequest) {
   const targetUrlStr = process.env.NEXT_PUBLIC_APP_URL;
@@ -9,30 +22,71 @@ export async function proxy(request: NextRequest) {
   if (envIsValid && targetUrlStr) {
     try {
       const targetUrl = new URL(targetUrlStr);
-      const xForwardedHost = request.headers.get("x-forwarded-host") || "";
-      const hostHeader = xForwardedHost
-        ? xForwardedHost.split(",")[0].trim()
-        : request.headers.get("host") || "";
-      const currentHostname = hostHeader
-        ? hostHeader.split(":")[0]
-        : request.nextUrl.hostname;
+      const clientHost = readClientHost(request);
+      const currentHostname = normalizeHostname(hostnameOf(clientHost));
+      const targetHostname = normalizeHostname(targetUrl.hostname);
 
       const isPublicShare =
         request.nextUrl.pathname.startsWith("/share/report");
       const isSetup = request.nextUrl.pathname.startsWith("/admin/setup");
 
       // Info: (20260413 - Luphia) 當進來的網域與環境變數設定的網域不同時，強制重導向至正確的網址 (但設定、分享頁面例外)
-      if (
-        !isSetup &&
-        !isPublicShare &&
-        currentHostname !== targetUrl.hostname
-      ) {
-        const redirectUrl = new URL(request.url);
-        redirectUrl.hostname = targetUrl.hostname;
-        redirectUrl.protocol = targetUrl.protocol;
-        redirectUrl.port = targetUrl.port;
+      if (!isSetup && !isPublicShare && currentHostname !== targetHostname) {
+        const target = new URL(
+          `${request.nextUrl.pathname}${request.nextUrl.search}`,
+          targetUrl.origin,
+        );
+        const location = target.toString();
 
-        return NextResponse.redirect(redirectUrl);
+        /**
+         * Info: (20260809 - Luphia) 防迴圈護欄：每個主機最多只嘗試導向一次。
+         *
+         * 為什麼需要它——實測（20260810）發現 middleware 發出的 Location 會被 Next
+         * 收斂成「只剩路徑」的相對網址，hostname / protocol / port 全部遺失，
+         * 連自行寫入 Location 標頭也一樣被改掉。結果是導向指回同一個網址，
+         * 瀏覽器重試又命中同一條規則，變成 ERR_TOO_MANY_REDIRECTS。
+         *
+         * 因此不能只比對「意圖的目標」——bug 出在序列化，比對意圖看不出來。
+         * 改用一個短效 cookie 記錄「這個主機已經試過導向了」：
+         * 若導向沒有真的生效（瀏覽器又用同一個主機打回來），就直接把頁面送出，
+         * 而不是無止盡地彈。10 分鐘後自動失效，因此改好 NEXT_PUBLIC_APP_URL 之後
+         * 不需要手動清 cookie 也會恢復正常導向。
+         *
+         * 選 cookie 而不是在網址上加參數，是為了不污染使用者看到的網址。
+         * 迴圈發生在同一個主機上，所以 cookie 一定帶得回來。
+         */
+        /**
+         * Info: (20260811 - Luphia) cookie 值帶上目標主機，且壓到 30 秒。
+         *
+         * 原本寫死 "1" 又留 10 分鐘，等於「每個主機一輩子只導向一次」而不是
+         * 「偵測到迴圈才停用」：使用者用 127.0.0.1 開站成功導向後，cookie 留在
+         * 127.0.0.1 上；幾分鐘後再點同一個舊書籤就完全不導向了，人停在非 canonical
+         * 主機上，接著 OAuth 的 canonicalOrigin 檢查會直接擋掉登入。
+         * 而 cookie 的 domain 是非 canonical 主機，canonical 端收不到也刪不掉它。
+         *
+         * 帶上目標主機讓 NEXT_PUBLIC_APP_URL 改了之後立刻重新嘗試；30 秒足夠涵蓋
+         * 一次瀏覽器重試，又短到不會把人黏住。httpOnly + secure 是因為這個 cookie
+         * 實質上是「關閉 canonical 導向」的開關——不設 httpOnly 的話，該網域上任何
+         * XSS 都能用 document.cookie 直接寫下它。
+         */
+        const alreadyTried =
+          request.cookies.get(CANONICAL_REDIRECT_COOKIE)?.value ===
+          targetHostname;
+
+        if (!alreadyTried) {
+          const response = new NextResponse(null, {
+            status: 307,
+            headers: { location },
+          });
+          response.cookies.set(CANONICAL_REDIRECT_COOKIE, targetHostname, {
+            path: "/",
+            maxAge: 30,
+            httpOnly: true,
+            secure: targetUrl.protocol === "https:",
+            sameSite: "lax",
+          });
+          return response;
+        }
       }
     } catch {
       // Info: (20260413 - Luphia) URL 解析錯誤時忽略

@@ -1,6 +1,7 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
+import { resolveCustodyType } from "@/lib/auth/user_approval";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { MODULES } from "@/constants/modules";
 import { publicClient } from "@/lib/viem_public";
@@ -68,8 +69,16 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    /**
+     * Info: (20260810 - Luphia) 讓前端知道這個帳號是 passkey 還是託管。
+     * 託管使用者簽不出 FIDO2 assertion，付款等流程必須跳過喚起 passkey 的步驟，
+     * 否則會卡在一個永遠不會成功的系統對話框。
+     */
+    const custody = await resolveCustodyType(user.id);
+
     return jsonOk({
       ...user,
+      custody,
       address: user.address,
       modules: MODULES.filter((m) => m.basic).map((m) => m.key),
       isAdmin: user.role === "ADMIN",

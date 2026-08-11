@@ -21,6 +21,7 @@ import { uploadFile } from "@/lib/file_operator";
 import CouponModal from "@/components/admin/coupon/coupon_modal";
 import AirdropModal from "@/components/admin/coupon/airdrop_modal";
 import { getLoginOptions, fido2ClientService } from "@/lib/auth/fido2_client";
+import { ChallengePurpose } from "@/constants/challenge_purpose";
 import { COUPON_STATUS } from "@/constants/status";
 
 export interface IRedemptionRecordData {
@@ -372,7 +373,10 @@ export default function CouponManagementPage() {
       t("admin_coupon.redemption_table.reset_confirm_msg"),
       async () => {
         try {
-          const { challenge, token } = await getLoginOptions();
+          const { challenge, token } = await getLoginOptions(
+            undefined,
+            ChallengePurpose.ADMIN_ACTION,
+          );
           const authentication = await fido2ClientService.startLogin({
             challenge,
           });

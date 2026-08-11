@@ -1,7 +1,7 @@
 export const aiConsultationRoom = {
   title: "AI 상담실",
   subtitle:
-    "AI와 실시간 회계 Q&A를 진행하고 커뮤니티 회원들과 토론을 공유하세요.",
+    "AI와 실시간 회계·탄소관리 Q&A를 진행하고 커뮤니티 회원들과 토론을 공유하세요.",
   not_found: "대화 기록을 찾을 수 없습니다",
   not_found_desc: "죄송합니다. 요청하신 콘텐츠를 찾을 수 없습니다.",
   back_to_prev: "이전 페이지로 돌아가기",

@@ -1,8 +1,11 @@
 /**
  * Info: (20260716 - Tzuhan) LLM 同步路徑參數集中(issue #6515)。
  * 適用範圍:不經 mission executor 的同步 HTTP 路徑(carbon chat / draft / extraction)。
- * worker 管線的重試與用量記錄由檔案狀態機承擔(見 00.1_mission_executor_architecture.md),
- * 本檔常數不影響 executor 行為。
+ * worker 管線的重試與用量記錄由檔案狀態機承擔(見 00.1_mission_executor_architecture.md)。
+ *
+ * Info: (20260811 - Luphia) 原本這裡寫著「本檔常數不影響 executor 行為」,那句話已不成立:
+ * LLM_WORKER_TIMEOUT_MS 就是給 executor 用的。理由見該常數的說明——
+ * 「檔案狀態機承擔重試」這個前提隱含「執行一定會結束」,而沒有逾時的呼叫不保證會結束。
  */
 
 // Info: (20260716 - Tzuhan) 模型 fallback 單一來源(原硬編於 chat.service.ts)
@@ -16,6 +19,25 @@ export const DEFAULT_GEMINI_MODEL = "gemini-1.5-flash";
  */
 export const LLM_SYNC_TIMEOUT_MS = 45_000;
 export const LLM_EXTRACTION_TIMEOUT_MS = 120_000;
+
+/**
+ * Info: (20260811 - Luphia) mission executor(worker 管線)的 LLM 逾時上限。
+ *
+ * ── 為什麼 worker 也需要逾時 ──
+ * executor 的重試機制是檔案狀態機:失敗時寫 `failed_*.md`,累積 3 個就停止重試。
+ * 那個設計隱含一個前提——**執行一定會結束**。而在此之前 worker 路徑完全沒有逾時
+ * (只有同步 HTTP 路徑有),因此 LLM 呼叫掛住時:
+ *   - 不會拋錯,所以不會寫 `failed_*.md`,3 次上限永遠不會被觸發
+ *   - finally 不會執行,所以執行鎖不會被釋放
+ *   - 該 mission 因此無聲停擺,而 log 上看不出任何異常
+ * 20260811 的 mission 288 就停在這個狀態。逾時是讓「重試」這件事有意義的前提。
+ *
+ * ── 為什麼是 180 秒 ──
+ * 它是上限而非期望值。worker 的單次呼叫多在數十秒內完成,最重的是帶多張圖的憑證解析;
+ * 180 秒給足空間,同時保證失敗會在三分鐘內被記錄下來、鎖會被釋放、mission 會進入重試。
+ * 整份報告匯入那條路徑另有 LLM_REPORT_IMPORT_TIMEOUT_MS(240 秒),不受此值約束。
+ */
+export const LLM_WORKER_TIMEOUT_MS = 180_000;
 
 /**
  * Info: (20260730 - Tzuhan) 整份報告匯入的逾時:與附件萃取分開。

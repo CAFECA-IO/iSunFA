@@ -32,6 +32,15 @@ export const authModal = {
   unregistered_confirm_yes: "네, 계정 생성",
   unregistered_confirm_no: "취소",
   user_canceled: "사용자가 로그인을 취소했습니다",
+  or_continue_with: "또는 다음으로 계속",
+  continue_with_google: "Google 계정으로 계속하기",
+  oauth_exchanging: "로그인 중...",
+  oauth_exchanging_desc: "계정을 확인하고 있습니다. 잠시만 기다려 주세요.",
+  oauth_wrong_origin:
+    "제3자 로그인은 {{origin}} 에서만 사용할 수 있습니다. 인증 후 정확히 동일한 주소로 돌아와야 합니다. 해당 주소로 다시 열어 주세요.",
+  oauth_failed: "외부 서비스 로그인에 실패했습니다",
+  oauth_canceled: "인증을 취소했습니다",
+  oauth_back_home: "홈으로 돌아가기",
   reward: {
     title: "캠페인 등록 완료!",
     subtitle: "특별 보상이 계정에 지급되었습니다",

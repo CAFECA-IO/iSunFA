@@ -72,10 +72,7 @@ export function SetupSuperAdmin({
       res = await saveExternalConfig({
         appUrl: appUrlValue,
         gaId: "",
-        geminiKey: "",
         maptilerKey: "",
-        oenToken: "",
-        oenMerchant: "",
       });
     } catch {
       await new Promise((resolve) => setTimeout(resolve, 3000));

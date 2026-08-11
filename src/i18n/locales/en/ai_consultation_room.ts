@@ -1,7 +1,7 @@
 export const aiConsultationRoom = {
   title: "AI Consultation Room",
   subtitle:
-    "Real-time accounting Q&A with AI, and share discussions with community members.",
+    "Real-time accounting and carbon management Q&A with AI, and share discussions with community members.",
   not_found: "Discussion Recording Not Found",
   not_found_desc: "Sorry, we couldn't find the content you're looking for.",
   back_to_prev: "Back to Previous Page",

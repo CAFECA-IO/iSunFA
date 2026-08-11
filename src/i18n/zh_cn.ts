@@ -46,6 +46,7 @@ import { balanceSheetView } from "@/i18n/locales/zh_cn/balance_sheet_view";
 import { trialBalanceView } from "@/i18n/locales/zh_cn/trial_balance_view";
 import { incomeStatementView } from "@/i18n/locales/zh_cn/income_statement_view";
 import { adminSetup } from "@/i18n/locales/zh_cn/admin_setup";
+import { adminSettings } from "@/i18n/locales/zh_cn/admin_settings";
 import { adminMember } from "@/i18n/locales/zh_cn/admin_member";
 import { adminBlockchain } from "@/i18n/locales/zh_cn/admin_blockchain";
 import { adminMissionBoard } from "@/i18n/locales/zh_cn/admin_mission_board";
@@ -122,6 +123,7 @@ export const zhCn = {
   trial_balance_view: trialBalanceView,
   income_statement_view: incomeStatementView,
   admin_setup: adminSetup,
+  admin_settings: adminSettings,
   admin_member: adminMember,
   admin_blockchain: adminBlockchain,
   admin_billing: adminBilling,

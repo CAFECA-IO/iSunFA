@@ -5,7 +5,8 @@ import { Dialog } from "@headlessui/react";
 import { X, ScanQrCode } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAuth } from "@/contexts/auth_context";
-import { getLoginOptions, fido2ClientService } from "@/lib/auth/fido2_client";
+import { getLoginOptions } from "@/lib/auth/fido2_client";
+import { requestAssertion } from "@/lib/auth/assertion_client";
 import { request, ApiError } from "@/lib/utils/request";
 import { TeamRole } from "@/constants/team";
 import QrScannerModal from "@/components/common/qr_scanner_modal";
@@ -46,7 +47,11 @@ export default function InviteMemberModal({
     setInviting(true);
     try {
       const { challenge } = await getLoginOptions(user.address);
-      const authentication = await fido2ClientService.startLogin({ challenge });
+      // Info: (20260811 - Luphia) 走 requestAssertion，託管帳號才不會卡在永遠不會成功的系統對話框
+      const authentication = await requestAssertion({
+        challenge,
+        custody: user.custody,
+      });
 
       const json = await request<{ success: boolean; message?: string }>(
         `/api/v1/user/team/${selectedTeamId}/invitations`,
