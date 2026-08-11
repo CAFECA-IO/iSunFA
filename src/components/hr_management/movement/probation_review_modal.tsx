@@ -4,6 +4,7 @@ import { ChangeEvent, FC, useEffect, useMemo, useState } from "react";
 import { ClipboardList, X } from "lucide-react";
 import ProbationScoreRow from "@/components/hr_management/movement/probation_score_row";
 import {
+  HR_INPUT_CLASS,
   PROBATION_EFFECTIVE_DAY_OFFSET,
   PROBATION_RESULTS,
   PROBATION_RESULT_I18N_KEY,
@@ -22,7 +23,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 
 interface IProbationReviewModalProps {
   row: IProbationRow | null;
-  /** Info: (20260811 - Julian) 該員工既有的表單內容（草稿或已提交），沒有則為 null */
+  // Info: (20260811 - Julian) 該員工既有的表單內容（草稿或已提交），沒有則為 null
   form: IProbationReviewForm | null;
   onClose: () => void;
   onSubmit: (employeeId: string, form: IProbationReviewForm) => void;
@@ -30,9 +31,6 @@ interface IProbationReviewModalProps {
 
 // Info: (20260811 - Julian) 四項預設給中間值，避免主管被迫從最低分往上點
 const DEFAULT_SCORE = 3;
-
-const INPUT_CLASS =
-  "rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-700 transition-all placeholder:text-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none";
 
 function buildInitialForm(row: IProbationRow): IProbationReviewForm {
   const probationEnd = parseIsoDate(row.probationEndDate);
@@ -80,7 +78,7 @@ const ProbationReviewModal: FC<IProbationReviewModalProps> = ({
   const { t } = useTranslation();
   const [draft, setDraft] = useState<IProbationReviewForm | null>(null);
 
-  // Info: (20260811 - Julian) 換人時重置整份表單的內容。
+  // Info: (20260811 - Julian) 換人時重置整份表單的內容
   useEffect(() => {
     if (!row) {
       setDraft(null);
@@ -104,7 +102,7 @@ const ProbationReviewModal: FC<IProbationReviewModalProps> = ({
   /**
    * Info: (20260811 - Julian) 可否提交。
    *
-   * 除了必填的考核結果，延長與不予錄用**一定要有日期** ——
+   * 除了必填的考核結果，延長與不予錄用「一定要有日期」 ——
    * 沒有日期的「延長試用期」在流程上什麼都推不動，存下去只會讓清單
    * 看起來已處理，但沒有人知道要延到哪一天。原因欄位不強制，
    * 因為它是說明而非流程輸入。
@@ -159,7 +157,7 @@ const ProbationReviewModal: FC<IProbationReviewModalProps> = ({
       >
         <header className="flex items-center justify-between gap-3 border-b border-gray-100 px-5 py-4">
           <h2 className="flex items-center gap-2 text-base font-bold text-gray-800">
-            <ClipboardList className="size-5 shrink-0 text-orange-500" />
+            <ClipboardList className="h-5 w-5 text-orange-500" />
             {t("hr_management.movement.review_title")}
           </h2>
           <button
@@ -242,7 +240,7 @@ const ProbationReviewModal: FC<IProbationReviewModalProps> = ({
                     placeholder={t(
                       "hr_management.movement.comment_strengths_placeholder",
                     )}
-                    className={`mt-1.5 w-full resize-none ${INPUT_CLASS}`}
+                    className={`mt-1.5 w-full resize-none ${HR_INPUT_CLASS}`}
                   />
                 </div>
                 <div>
@@ -262,7 +260,7 @@ const ProbationReviewModal: FC<IProbationReviewModalProps> = ({
                     placeholder={t(
                       "hr_management.movement.comment_improvements_placeholder",
                     )}
-                    className={`mt-1.5 w-full resize-none ${INPUT_CLASS}`}
+                    className={`mt-1.5 w-full resize-none ${HR_INPUT_CLASS}`}
                   />
                 </div>
               </div>
@@ -303,10 +301,7 @@ const ProbationReviewModal: FC<IProbationReviewModalProps> = ({
                       </span>
                     </label>
 
-                    {/**
-                     * Info: (20260811 - Julian) 附帶欄位只在選中該項時出現。
-                     * 避免三組日期同時攤開會造成混亂或填錯格。
-                     */}
+                    {/* Info: (20260811 - Julian) 附帶欄位只在選中該項時出現 */}
                     {isSelected && option === ProbationResult.PASS && (
                       <div className="mt-3 flex flex-wrap items-center gap-2 pl-7">
                         <label
@@ -322,7 +317,7 @@ const ProbationReviewModal: FC<IProbationReviewModalProps> = ({
                           onChange={(event: ChangeEvent<HTMLInputElement>) =>
                             update({ effectiveDate: event.target.value })
                           }
-                          className={INPUT_CLASS}
+                          className={HR_INPUT_CLASS}
                         />
                       </div>
                     )}
@@ -342,7 +337,7 @@ const ProbationReviewModal: FC<IProbationReviewModalProps> = ({
                           onChange={(event) =>
                             update({ extendUntil: event.target.value })
                           }
-                          className={INPUT_CLASS}
+                          className={HR_INPUT_CLASS}
                         />
                         <label
                           htmlFor="probation-extend-reason"
@@ -357,7 +352,7 @@ const ProbationReviewModal: FC<IProbationReviewModalProps> = ({
                           onChange={(event) =>
                             update({ extendReason: event.target.value })
                           }
-                          className={`min-w-0 flex-1 ${INPUT_CLASS}`}
+                          className={`min-w-0 flex-1 ${HR_INPUT_CLASS}`}
                         />
                       </div>
                     )}
@@ -377,7 +372,7 @@ const ProbationReviewModal: FC<IProbationReviewModalProps> = ({
                           onChange={(event) =>
                             update({ lastDay: event.target.value })
                           }
-                          className={INPUT_CLASS}
+                          className={HR_INPUT_CLASS}
                         />
                       </div>
                     )}
@@ -422,7 +417,7 @@ const ProbationReviewModal: FC<IProbationReviewModalProps> = ({
                       aria-label={t(
                         "hr_management.movement.adjustment_new_salary",
                       )}
-                      className={`min-w-0 flex-1 ${INPUT_CLASS}`}
+                      className={`min-w-0 flex-1 ${HR_INPUT_CLASS}`}
                     />
                   )}
                 </div>
@@ -452,7 +447,7 @@ const ProbationReviewModal: FC<IProbationReviewModalProps> = ({
                       aria-label={t(
                         "hr_management.movement.adjustment_new_title",
                       )}
-                      className={`min-w-0 flex-1 ${INPUT_CLASS}`}
+                      className={`min-w-0 flex-1 ${HR_INPUT_CLASS}`}
                     />
                   )}
                 </div>

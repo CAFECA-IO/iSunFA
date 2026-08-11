@@ -1,10 +1,6 @@
 /**
  * Info: (20260810 - Julian) 人事管理系統的共用常數。
- *
- * 狀態值與 `prisma/schema.prisma` 的 `EmployeeStatus`、`Gender` 逐字對齊，
- * 但刻意不從 `@/generated/prisma` 匯入：那份 client 會把 Node 端的相依
- * 拉進 client component 的 bundle，而前端只需要「字串長什麼樣」。
- * 兩邊若日後不同步，`src/__tests__` 的 schema 對照測試會擋下來。
+ * 與 `prisma/schema.prisma` 的 `EmployeeStatus`、`Gender` 逐字對齊。
  */
 
 // Info: (20260810 - Julian) 人事管理系統的路由表，側邊選單與麵包屑共用同一份
@@ -32,11 +28,7 @@ export enum Gender {
   OTHER = "OTHER",
 }
 
-/**
- * Info: (20260810 - Julian) 篩選器的「全部」選項。
- * 用一個不可能與部門 id / 狀態值相撞的字串，避免用空字串當哨兵值 ——
- * 空字串在 `<select>` 與 URL query 中都會與「沒有值」混淆。
- */
+// Info: (20260810 - Julian) 篩選器的「全部」選項。
 export const HR_FILTER_ALL = "__ALL__";
 
 // Info: (20260810 - Julian) 列表可排序的欄位。字串同時是 DataTable 的 column key 與未來 API 的 sortBy 參數
@@ -175,12 +167,7 @@ export const DOCUMENT_CATEGORY_I18N_KEY: Record<DocumentCategory, string> = {
   [DocumentCategory.OTHER]: "hr_management.dashboard.doc_other",
 };
 
-/**
- * Info: (20260810 - Julian) 儀表板的各種天數門檻。
- *
- * 全部集中在此，因為它們同時被「要不要出現在清單」與「要不要標成紅色」
- * 兩處判斷使用，分散寫死會讓清單裡出現一筆卻不標色這種說不出理由的狀況。
- */
+// Info: (20260810 - Julian) 儀表板的各種天數的標色門檻。
 export const PROBATION_MONTHS = 3;
 export const PROBATION_ALERT_DAYS = 30;
 export const PROBATION_URGENT_DAYS = 14;
@@ -195,10 +182,8 @@ export const DASHBOARD_LIST_LIMIT = 5;
 export interface IHistogramBucket {
   key: string;
   labelKey: string;
-  /** Info: (20260810 - Julian) 下界（含） */
-  min: number;
-  /** Info: (20260810 - Julian) 上界（不含）；null 表示沒有上界 */
-  max: number | null;
+  min: number; // Info: (20260810 - Julian) 下界（含）
+  max: number | null; // Info: (20260810 - Julian) 上界（不含）；null 表示沒有上界
 }
 
 // Info: (20260810 - Julian) 年資級距（單位：年）
@@ -287,23 +272,27 @@ export const STRUCTURE_DIMENSION_I18N_KEY: Record<StructureDimension, string> =
   };
 
 // Info: (20260810 - Julian) 到離職頁的四個分頁
+/**
+ * Info: (20260811 - Julian) 到離職的三個分頁。
+ *
+ * 沒有獨立的「新人報到」分頁：報到列表就是概覽的另一種檢視，
+ * 兩邊本來就是同一個元件、同一份資料，分成兩頁只會讓快速篩選
+ * 在其中一頁失效，而使用者分不出兩張長得一樣的表差在哪。
+ */
 export enum MovementTab {
   OVERVIEW = "OVERVIEW",
-  ONBOARDING = "ONBOARDING",
   PROBATION = "PROBATION",
   OFFBOARDING = "OFFBOARDING",
 }
 
 export const MOVEMENT_TABS: MovementTab[] = [
   MovementTab.OVERVIEW,
-  MovementTab.ONBOARDING,
   MovementTab.PROBATION,
   MovementTab.OFFBOARDING,
 ];
 
 export const MOVEMENT_TAB_I18N_KEY: Record<MovementTab, string> = {
   [MovementTab.OVERVIEW]: "hr_management.movement.tab_overview",
-  [MovementTab.ONBOARDING]: "hr_management.movement.tab_onboarding",
   [MovementTab.PROBATION]: "hr_management.movement.tab_probation",
   [MovementTab.OFFBOARDING]: "hr_management.movement.tab_offboarding",
 };
@@ -357,10 +346,10 @@ export const MOVEMENT_STAGE_I18N_KEY: Record<MovementStage, string> = {
 
 // Info: (20260810 - Julian) 看板欄位的頂部色條，用來一眼分辨報到（綠）與離職（琥珀→紅）
 export const MOVEMENT_STAGE_ACCENT: Record<MovementStage, string> = {
-  [MovementStage.PREPARING]: "bg-sky-400",
-  [MovementStage.FIRST_WEEK]: "bg-emerald-400",
-  [MovementStage.HANDOVER]: "bg-amber-400",
-  [MovementStage.CLOSING]: "bg-rose-400",
+  [MovementStage.PREPARING]: "bg-sky-300",
+  [MovementStage.FIRST_WEEK]: "bg-emerald-300",
+  [MovementStage.HANDOVER]: "bg-amber-300",
+  [MovementStage.CLOSING]: "bg-rose-300",
 };
 
 // Info: (20260810 - Julian) 分欄的天數門檻
@@ -450,12 +439,7 @@ export const PROBATION_RESULT_I18N_KEY: Record<ProbationResult, string> = {
   [ProbationResult.FAIL]: "hr_management.movement.result_fail",
 };
 
-/**
- * Info: (20260811 - Julian) 考核結果的配色。
- *
- * 三種結果不共用一個底色：主管掃清單時先看到的是顏色而不是文字，
- * 把「不予錄用」畫成綠色，會讓一列已決定終止的試用期看起來像通過。
- */
+// Info: (20260811 - Julian) 考核結果的配色
 export const PROBATION_RESULT_STYLE: Record<ProbationResult, string> = {
   [ProbationResult.PASS]: "bg-emerald-50 text-emerald-700",
   [ProbationResult.EXTEND]: "bg-amber-50 text-amber-700",
@@ -552,11 +536,6 @@ export const NOTICE_PERIOD_RULES = [
 
 /**
  * Info: (20260810 - Julian) 任務範本鍵值。
- *
- * 報到列表的「報到前表單 / IT 帳號設備 / 簽署合約」三欄要對應到特定任務，
- * 用範本鍵值比對而不是比對任務標題 —— 標題會被翻譯、會被使用者改寫，
- * 拿它當判斷依據等於把顯示文字變成業務邏輯。
- *
  * ToDo: (20260810 - Julian) Prisma 的 `ProcessTask` 沒有這個欄位，
  * 接 API 前需要在 schema 補上（真實系統通常來自任務範本表）。
  */
@@ -569,16 +548,184 @@ export enum OnboardingTaskKey {
   ORIENTATION = "ONBOARDING_ORIENTATION",
 }
 
+// Info: (20260811 - Julian) 離職交接的任務範本鍵值
 export enum OffboardingTaskKey {
   DOCUMENT_HANDOVER = "OFFBOARDING_DOCUMENT_HANDOVER",
   CUSTOMER_HANDOVER = "OFFBOARDING_CUSTOMER_HANDOVER",
+  HANDOVER_APPROVAL = "OFFBOARDING_HANDOVER_APPROVAL",
   ACCESS_CARD = "OFFBOARDING_ACCESS_CARD",
   CAR_KEY = "OFFBOARDING_CAR_KEY",
   LAPTOP_RETURN = "OFFBOARDING_LAPTOP_RETURN",
+  MONITOR_RETURN = "OFFBOARDING_MONITOR_RETURN",
   ACCOUNT_REVOKE = "OFFBOARDING_ACCOUNT_REVOKE",
-  INSURANCE = "OFFBOARDING_INSURANCE",
+  VPN_REVOKE = "OFFBOARDING_VPN_REVOKE",
+  LABOR_INSURANCE = "OFFBOARDING_LABOR_INSURANCE",
+  HEALTH_INSURANCE = "OFFBOARDING_HEALTH_INSURANCE",
+  PENSION_STOP = "OFFBOARDING_PENSION_STOP",
   CERTIFICATE = "OFFBOARDING_CERTIFICATE",
 }
+
+/**
+ * Info: (20260811 - Julian) 會被畫成「資產回收表」一列的任務。
+ * 帳號停權雖然也歸 IT，但它沒有實體可以回收、也沒有序號，
+ * 因此走「停權設定」而不是資產表。
+ */
+export const OFFBOARDING_ASSET_KEYS: string[] = [
+  OffboardingTaskKey.LAPTOP_RETURN,
+  OffboardingTaskKey.MONITOR_RETURN,
+  OffboardingTaskKey.ACCESS_CARD,
+  OffboardingTaskKey.CAR_KEY,
+];
+
+// Info: (20260811 - Julian) 走「自動停權時間」設定的任務
+export const OFFBOARDING_REVOKE_KEYS: string[] = [
+  OffboardingTaskKey.ACCOUNT_REVOKE,
+  OffboardingTaskKey.VPN_REVOKE,
+];
+
+/**
+ * Info: (20260811 - Julian) 主管驗收也是一筆任務，不是 Modal 裡的一個旗標。
+ * 只活在表單裡的話，案件完成度（由任務推導）會跟交接進度對不起來，
+ * 出現「已結案，但工作交接 67%」這種自相矛盾的一列。
+ */
+export const OFFBOARDING_APPROVAL_KEY: string =
+  OffboardingTaskKey.HANDOVER_APPROVAL;
+
+// Info: (20260811 - Julian) 三項退保申報，各自一張表、各自一個生效日
+export const OFFBOARDING_INSURANCE_KEYS: string[] = [
+  OffboardingTaskKey.LABOR_INSURANCE,
+  OffboardingTaskKey.HEALTH_INSURANCE,
+  OffboardingTaskKey.PENSION_STOP,
+];
+
+/**
+ * Info: (20260811 - Julian) 帳號停權的預設時間：離職日當天 18:00。
+ *
+ * 不用 23:59 是因為最後一天下班後就不該再進得去系統，
+ * 而把停權排在午夜等於多給了一個沒人看著的空窗。
+ */
+export const ACCOUNT_REVOKE_DEFAULT_TIME = "18:00";
+
+/**
+ * Info: (20260811 - Julian) 離職流程 Modal 的四個分頁。
+ *
+ * 分頁順序就是流程順序：先確認離職本身成立（原因與預告期），
+ * 再交接工作、收回資產，最後才是 HR 結算。倒過來做的話，
+ * 會出現「證明書都發了才發現預告期不足」。
+ */
+export enum OffboardingModalTab {
+  APPLICATION = "APPLICATION",
+  HANDOVER = "HANDOVER",
+  ASSET = "ASSET",
+  FINALIZATION = "FINALIZATION",
+}
+
+export const OFFBOARDING_MODAL_TABS: OffboardingModalTab[] = [
+  OffboardingModalTab.APPLICATION,
+  OffboardingModalTab.HANDOVER,
+  OffboardingModalTab.ASSET,
+  OffboardingModalTab.FINALIZATION,
+];
+
+export const OFFBOARDING_MODAL_TAB_I18N_KEY: Record<
+  OffboardingModalTab,
+  string
+> = {
+  [OffboardingModalTab.APPLICATION]:
+    "hr_management.offboarding.tab_application",
+  [OffboardingModalTab.HANDOVER]: "hr_management.offboarding.tab_handover",
+  [OffboardingModalTab.ASSET]: "hr_management.offboarding.tab_asset",
+  [OffboardingModalTab.FINALIZATION]:
+    "hr_management.offboarding.tab_finalization",
+};
+
+/**
+ * Info: (20260811 - Julian) 離職原因。
+ * 資遣與自願離職在法律上是兩件事（資遣要發資遣費、要通報）。
+ *
+ * ToDo: (20260811 - Julian) Prisma 的 `OffboardingProcess.reason` 是自由字串，
+ * 接 API 前應改成 enum，否則統計離職原因時每個人的拼法都不一樣。
+ */
+export enum ResignationReason {
+  CAREER = "CAREER",
+  HEALTH = "HEALTH",
+  NEW_JOB = "NEW_JOB",
+  LAYOFF = "LAYOFF",
+  OTHER = "OTHER",
+}
+
+export const RESIGNATION_REASONS: ResignationReason[] = [
+  ResignationReason.CAREER,
+  ResignationReason.HEALTH,
+  ResignationReason.NEW_JOB,
+  ResignationReason.LAYOFF,
+  ResignationReason.OTHER,
+];
+
+export const RESIGNATION_REASON_I18N_KEY: Record<ResignationReason, string> = {
+  [ResignationReason.CAREER]: "hr_management.offboarding.reason_career",
+  [ResignationReason.HEALTH]: "hr_management.offboarding.reason_health",
+  [ResignationReason.NEW_JOB]: "hr_management.offboarding.reason_new_job",
+  [ResignationReason.LAYOFF]: "hr_management.offboarding.reason_layoff",
+  [ResignationReason.OTHER]: "hr_management.offboarding.reason_other",
+};
+
+// Info: (20260811 - Julian) 工作交接項目的狀態：未完成／已交接
+export enum HandoverItemState {
+  PENDING = "PENDING",
+  DONE = "DONE",
+}
+
+export const HANDOVER_ITEM_STATE_I18N_KEY: Record<HandoverItemState, string> = {
+  [HandoverItemState.PENDING]: "hr_management.offboarding.item_pending",
+  [HandoverItemState.DONE]: "hr_management.offboarding.item_done",
+};
+
+export const HANDOVER_ITEM_STATE_STYLE: Record<HandoverItemState, string> = {
+  [HandoverItemState.PENDING]: "bg-gray-100 text-gray-500",
+  [HandoverItemState.DONE]: "bg-emerald-50 text-emerald-700",
+};
+
+/**
+ * Info: (20260811 - Julian) 離職證明書的三個狀態。
+ *
+ * 「已預覽」單獨成一態是因為它代表 HR 看過內容但還沒寄出 ——
+ * 少了這一態，畫面上只有「未發放」，HR 無從分辨是還沒做還是做到一半。
+ */
+export enum CertificateState {
+  NOT_ISSUED = "NOT_ISSUED",
+  PREVIEWED = "PREVIEWED",
+  SENT = "SENT",
+}
+
+export const CERTIFICATE_STATE_I18N_KEY: Record<CertificateState, string> = {
+  [CertificateState.NOT_ISSUED]: "hr_management.offboarding.certificate_none",
+  [CertificateState.PREVIEWED]:
+    "hr_management.offboarding.certificate_previewed",
+  [CertificateState.SENT]: "hr_management.offboarding.certificate_sent",
+};
+
+export const CERTIFICATE_STATE_STYLE: Record<CertificateState, string> = {
+  [CertificateState.NOT_ISSUED]: "bg-gray-100 text-gray-500",
+  [CertificateState.PREVIEWED]: "bg-amber-50 text-amber-700",
+  [CertificateState.SENT]: "bg-emerald-50 text-emerald-700",
+};
+
+/**
+ * Info: (20260811 - Julian) 未休特休折算工資的分母。
+ *
+ * 勞基法施行細則第 24-1 條：一日工資 = 月薪 ÷ 30。
+ * 這個 30 是法定的固定數，不是「一個月大約幾天」，因此寫成常數而不是取當月天數。
+ */
+export const MONTHLY_PAYROLL_DAYS = 30;
+
+/**
+ * Info: (20260811 - Julian) 人事模組表單輸入框的共用樣式。
+ * 抽成常數是因為它已經被三個 Modal 各抄了一份，
+ * 而抄本之間的 focus 樣式已經開始不一樣了。
+ */
+export const HR_INPUT_CLASS =
+  "rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-700 transition-all placeholder:text-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none";
 
 // Info: (20260810 - Julian) 報到列表三個欄位各自看哪些任務；IT 欄同時看帳號與筆電
 export const ONBOARDING_FORM_KEYS: string[] = [OnboardingTaskKey.FORM];
@@ -619,6 +766,11 @@ export enum MovementAlertReason {
   IT_ACCOUNT_PENDING = "IT_ACCOUNT_PENDING",
   PROBATION_OVERDUE = "PROBATION_OVERDUE",
   READY_TO_CLOSE = "READY_TO_CLOSE",
+  /**
+   * Info: (20260811 - Julian) 離職全部完成 = 已結案，不是「可結案」。
+   * 報到做完人還在，離職勾完最後一項，案件就結束了。
+   */
+  SETTLED = "SETTLED",
   IN_PROGRESS = "IN_PROGRESS",
 }
 
@@ -631,6 +783,7 @@ export const MOVEMENT_ALERT_REASON_I18N_KEY: Record<
   [MovementAlertReason.PROBATION_OVERDUE]:
     "hr_management.movement.alert_probation_overdue",
   [MovementAlertReason.READY_TO_CLOSE]: "hr_management.movement.alert_ready",
+  [MovementAlertReason.SETTLED]: "hr_management.movement.alert_settled",
   [MovementAlertReason.IN_PROGRESS]: "hr_management.movement.alert_in_progress",
 };
 

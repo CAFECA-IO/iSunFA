@@ -1,17 +1,21 @@
 import {
+  CertificateState,
   ChecklistState,
   DocumentCategory,
   EmployeeStatus,
   Gender,
   HandoverCategory,
+  HandoverItemState,
   MovementAlertLevel,
   MovementAlertReason,
   MovementStage,
+  OffboardingModalTab,
   ProbationMilestone,
   ProbationResult,
   ProbationScoreItem,
   ProcessTaskStatus,
   ProcessTaskType,
+  ResignationReason,
 } from "@/constants/hr_management";
 
 /**
@@ -123,8 +127,30 @@ export interface IProcessTask {
   category: HandoverCategory;
   /** Info: (20260811 - Julian) 任務範本鍵值，見 OnboardingTaskKey / OffboardingTaskKey */
   templateKey: string;
+  /** Info: (20260811 - Julian) 負責單位／負責人，任務指派給誰 */
   assigneeName: string;
-  /** Info: (20260811 - Julian) 補充說明，例如「預定 8/31 23:59 停權」 */
+  /**
+   * Info: (20260811 - Julian) 實際完成的經辦人與日期，與 `assigneeName` 不同。
+   *
+   * 指派給 IT 部門的回收單，當資產出了爭議時可以查這一欄。
+   *
+   * ToDo: (20260811 - Julian) Prisma 的 `ProcessTask` 只有 `completedAt`，
+   * 沒有經辦人。接 API 前要補 `completedById`。
+   */
+  completedBy: string | null;
+  completedDate: string | null;
+  /**
+   * Info: (20260811 - Julian) 資產序號／卡號。
+   * ToDo: (20260811 - Julian) 真實系統應該來自資產管理模組，
+   * Prisma 目前完全沒有資產表，接 API 前要決定是新開一張表還是外接系統。
+   */
+  assetNo: string | null;
+  /**
+   * Info: (20260811 - Julian) 排定生效時間（帳號停權用），格式 `YYYY-MM-DDTHH:mm`。
+   * 停權是排程執行而不是當下執行，因此它是「預定」而非「完成」時間。
+   */
+  scheduledAt: string | null;
+  /** Info: (20260811 - Julian) 補充說明／損壞紀錄 */
   note: string | null;
 }
 
@@ -328,6 +354,139 @@ export interface IOffboardingCase extends IMovementCase {
   actualNoticeDays: number;
   isNoticeSatisfied: boolean;
   isCompleted: boolean;
+  /** Info: (20260811 - Julian) 提出離職的日期，預告期由此起算 */
+  noticeDate: string;
+  /** Info: (20260811 - Julian) 到最後一天為止的足月年資，預告天數由此推得 */
+  tenureMonths: number;
+  hireDate: string;
+  email: string;
+}
+
+/**
+ * Info: (20260811 - Julian) 預告期檢核的結果。
+ *
+ * 離職日在 Modal 裡可以改，改完預告天數就會跟著變 —— 因此這是一個
+ * 隨表單重算的函式回傳值，不是案件上的固定欄位。
+ */
+export interface INoticePeriodCheck {
+  requiredDays: number;
+  actualDays: number;
+  isSatisfied: boolean;
+  shortageDays: number;
+}
+
+/**
+ * Info: (20260811 - Julian) 工作交接清單的一列。
+ *
+ * `taskId` 有值代表它對應到既有的交接任務（勾選會同步回看板與交接矩陣），
+ * 為 null 則是使用者在 Modal 裡臨時加的一列 —— 那些只活在這份表單裡。
+ *
+ * ToDo: (20260811 - Julian) Prisma 沒有「交接項目」這張表，
+ * 目前是把它壓在 ProcessTask 上。接 API 前要決定動態新增的列存去哪。
+ */
+export interface IHandoverItem {
+  id: string;
+  taskId: string | null;
+  title: string;
+  /** Info: (20260811 - Julian) 文件或專案的連結，選填 */
+  link: string;
+  state: HandoverItemState;
+  /** Info: (20260811 - Julian) 接替人自己確認收到，與交接人標記完成是兩件事 */
+  isConfirmed: boolean;
+}
+
+/**
+ * Info: (20260811 - Julian) 資產回收表的一列，一律對應一筆既有任務。
+ *
+ * 沒有「純表單資產」這種東西：資產回收本身就是一件要指派、要追蹤的任務，
+ * 只存在 Modal 裡的話，看板上永遠看不到它還沒收回來。
+ */
+export interface IOffboardingAsset {
+  taskId: string;
+  name: string;
+  assetNo: string | null;
+  /** Info: (20260811 - Julian) IT 或總務，決定它畫在哪一區 */
+  category: HandoverCategory;
+  assigneeName: string;
+  isReturned: boolean;
+  returnedDate: string;
+  /** Info: (20260811 - Julian) 損壞紀錄／備註 */
+  note: string;
+}
+
+// Info: (20260811 - Julian) 帳號停權的一列
+export interface IAccountRevokeItem {
+  taskId: string;
+  title: string;
+  isDone: boolean;
+  scheduledAt: string;
+}
+
+// Info: (20260811 - Julian) 退保申報的一列
+export interface IInsuranceItem {
+  taskId: string;
+  title: string;
+  isDone: boolean;
+  effectiveDate: string;
+}
+
+/**
+ * Info: (20260811 - Julian) 離職流程 Modal 的完整表單。
+ *
+ * 四個分頁共用一份物件，因為它們是同一張離職單的四個面向：
+ * 底部的進度總覽要同時看三個分頁的狀態，拆成四份 state 的話，
+ * 那條總覽就得自己去別人的 state 裡撈。
+ */
+export interface IOffboardingForm {
+  reason: ResignationReason;
+  reasonNote: string;
+  /** Info: (20260811 - Julian) 三個關鍵日期，改動後預告期會即時重算 */
+  expectedLeaveDate: string;
+  lastWorkingDate: string;
+  insuranceOffDate: string;
+  /** Info: (20260811 - Julian) 交接對象，值為員工 id；未指定為空字串 */
+  handoverAssigneeId: string;
+  handoverItems: IHandoverItem[];
+  /** Info: (20260811 - Julian) 主管驗收對應的任務，簽核時一併標記完成 */
+  approvalTaskId: string | null;
+  /**
+   * Info: (20260811 - Julian) 是否已驗收，以驗收任務的狀態為準。
+   *
+   * 不用「approvedAt 有沒有值」來判斷：任務被勾完成時不一定帶得回時間戳
+   * （前端覆寫只改狀態），那會讓已驗收的案件看起來還沒驗收。
+   */
+  isApproved: boolean;
+  /** Info: (20260811 - Julian) 簽核人與時間戳，僅供顯示，未簽核為 null */
+  approvedBy: string | null;
+  approvedAt: string | null;
+  assets: IOffboardingAsset[];
+  revokes: IAccountRevokeItem[];
+  /** Info: (20260811 - Julian) 離職後信件轉寄對象 */
+  mailForwardTo: string;
+  insurances: IInsuranceItem[];
+  /** Info: (20260811 - Julian) 未休完特休天數，可到 0.5 天 */
+  remainingLeaveDays: number;
+  /**
+   * Info: (20260811 - Julian) 月薪，用來估算特休折算金額。
+   * ToDo: (20260811 - Julian) Prisma 的 Employee 沒有薪資欄位，
+   * 接 API 前要決定薪資從哪裡讀（多半是另一個受權限保護的薪資模組）。
+   */
+  monthlySalary: number;
+  certificateState: CertificateState;
+  /** Info: (20260811 - Julian) 證明書對應的任務，發送時一併標記完成 */
+  certificateTaskId: string | null;
+  /** Info: (20260811 - Julian) 每個分頁各自的備註事項 */
+  notes: Record<OffboardingModalTab, string>;
+}
+
+/**
+ * Info: (20260811 - Julian) 底部進度總覽的三個百分比。
+ * 與分頁一一對應（申請資訊沒有進度可言，因此只有三個）。
+ */
+export interface IOffboardingProgress {
+  handoverPercent: number;
+  assetPercent: number;
+  finalizationPercent: number;
 }
 
 // Info: (20260811 - Julian) 交接矩陣的一組：分類與其下的任務

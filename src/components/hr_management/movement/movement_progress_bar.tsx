@@ -10,7 +10,7 @@ interface IMovementProgressBarProps {
 }
 
 /**
- * Info: (20260810 - Julian) 任務進度條。
+ * Info: (20260811 - Julian) 任務進度條。
  *
  * 數字（4/6）與百分比（66%）兩個都給：百分比適合掃視、分數適合判斷「還差幾件」，
  * 而 HR 真正要做的決定是後者。

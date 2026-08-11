@@ -77,11 +77,10 @@ const MovementKanban: FC<IMovementKanbanProps> = ({
                   : "border-gray-200"
               }`}
             >
-              <div className="flex items-center gap-2 rounded-t-xl border-b border-gray-200 bg-white px-3 py-2.5">
-                <span
-                  className={`size-2 shrink-0 rounded-full ${MOVEMENT_STAGE_ACCENT[stage]}`}
-                />
-                <h3 className="min-w-0 flex-1 truncate text-sm font-bold text-gray-700">
+              <div
+                className={`flex items-center gap-2 rounded-t-xl border-b border-gray-200 px-3 py-2.5 ${MOVEMENT_STAGE_ACCENT[stage]}`}
+              >
+                <h3 className="min-w-0 flex-1 truncate text-sm font-bold text-white">
                   {t(MOVEMENT_STAGE_I18N_KEY[stage])}
                 </h3>
                 <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-bold text-gray-600">

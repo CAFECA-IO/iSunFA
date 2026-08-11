@@ -1,4 +1,5 @@
 import {
+  ACCOUNT_REVOKE_DEFAULT_TIME,
   EmployeeStatus,
   Gender,
   HandoverCategory,
@@ -143,7 +144,13 @@ const ONBOARDING_TEMPLATE = [
   },
 ];
 
-/** Info: (20260810 - Julian) 離職交接範本：四個面向對應規格的交接矩陣 */
+/**
+ * Info: (20260811 - Julian) 離職交接範本：四個面向對應規格的交接矩陣。
+ *
+ * `assetPrefix` 有值的是實體資產，會出現在資產回收表並依員工產生序號；
+ * `isScheduled` 為真的是排程停權，顯示的是預定生效時間而不是完成日 ——
+ * 停權由排程執行，「今天勾了」與「幾點生效」是兩件不同的事。
+ */
 const OFFBOARDING_TEMPLATE = [
   {
     key: OffboardingTaskKey.DOCUMENT_HANDOVER,
@@ -152,6 +159,8 @@ const OFFBOARDING_TEMPLATE = [
     assignee: "王大明",
     dueOffset: -7,
     note: null,
+    assetPrefix: null,
+    isScheduled: false,
   },
   {
     key: OffboardingTaskKey.CUSTOMER_HANDOVER,
@@ -160,54 +169,118 @@ const OFFBOARDING_TEMPLATE = [
     assignee: "王大明",
     dueOffset: -5,
     note: null,
+    assetPrefix: null,
+    isScheduled: false,
+  },
+  {
+    key: OffboardingTaskKey.HANDOVER_APPROVAL,
+    title: "主管驗收交接完成",
+    category: HandoverCategory.WORK,
+    assignee: "王大明",
+    dueOffset: -3,
+    note: null,
+    assetPrefix: null,
+    isScheduled: false,
   },
   {
     key: OffboardingTaskKey.ACCESS_CARD,
-    title: "門禁卡回收",
+    title: "繳回門禁識別證",
     category: HandoverCategory.ASSET,
     assignee: "蔡宜臻",
     dueOffset: 0,
     note: null,
+    assetPrefix: "ID-",
+    isScheduled: false,
   },
   {
     key: OffboardingTaskKey.CAR_KEY,
-    title: "公務車鑰匙回收",
+    title: "清空個人座位與公務車鑰匙",
     category: HandoverCategory.ASSET,
     assignee: "蔡宜臻",
     dueOffset: 0,
     note: null,
+    assetPrefix: "KEY-",
+    isScheduled: false,
   },
   {
     key: OffboardingTaskKey.LAPTOP_RETURN,
-    title: "公務電腦回收",
+    title: '回收 MacBook Pro 16"',
     category: HandoverCategory.IT,
     assignee: "許庭瑋",
     dueOffset: 0,
     note: null,
+    assetPrefix: "C02X",
+    isScheduled: false,
   },
   {
-    key: OffboardingTaskKey.ACCOUNT_REVOKE,
-    title: "Google Workspace / Slack 帳號停權",
+    key: OffboardingTaskKey.MONITOR_RETURN,
+    title: "回收外接螢幕與擴充埠",
     category: HandoverCategory.IT,
     assignee: "許庭瑋",
     dueOffset: 0,
-    note: "23:59 停權",
+    note: null,
+    assetPrefix: "MON-",
+    isScheduled: false,
   },
   {
-    key: OffboardingTaskKey.INSURANCE,
-    title: "勞健保退保申報表",
+    key: OffboardingTaskKey.ACCOUNT_REVOKE,
+    title: "Google Workspace 帳號停權",
+    category: HandoverCategory.IT,
+    assignee: "許庭瑋",
+    dueOffset: 0,
+    note: null,
+    assetPrefix: null,
+    isScheduled: true,
+  },
+  {
+    key: OffboardingTaskKey.VPN_REVOKE,
+    title: "停用 VPN 與 AWS 權限",
+    category: HandoverCategory.IT,
+    assignee: "許庭瑋",
+    dueOffset: 0,
+    note: null,
+    assetPrefix: null,
+    isScheduled: true,
+  },
+  {
+    key: OffboardingTaskKey.LABOR_INSURANCE,
+    title: "勞保退保申報",
     category: HandoverCategory.HR,
     assignee: "林巧芯",
     dueOffset: 3,
     note: null,
+    assetPrefix: null,
+    isScheduled: false,
+  },
+  {
+    key: OffboardingTaskKey.HEALTH_INSURANCE,
+    title: "健保退保申報",
+    category: HandoverCategory.HR,
+    assignee: "林巧芯",
+    dueOffset: 3,
+    note: null,
+    assetPrefix: null,
+    isScheduled: false,
+  },
+  {
+    key: OffboardingTaskKey.PENSION_STOP,
+    title: "勞退停提申報",
+    category: HandoverCategory.HR,
+    assignee: "林巧芯",
+    dueOffset: 3,
+    note: null,
+    assetPrefix: null,
+    isScheduled: false,
   },
   {
     key: OffboardingTaskKey.CERTIFICATE,
-    title: "服務證明書",
+    title: "離職證明書發放",
     category: HandoverCategory.HR,
     assignee: "林巧芯",
     dueOffset: 1,
     note: null,
+    assetPrefix: null,
+    isScheduled: false,
   },
 ];
 
@@ -234,24 +307,45 @@ function resolveStatus(
     : ProcessTaskStatus.PENDING;
 }
 
+/** Info: (20260811 - Julian) 工號裡的數字，當作各種衍生值的固定種子 */
+function employeeSerial(employee: IEmployeeListItem): number {
+  return Number(employee.employeeNo.replace(/\D/g, ""));
+}
+
+/**
+ * Info: (20260811 - Julian) 實際完成日：到期日往前推 0～2 天。
+ *
+ * 直接用到期日的話，整張清單的「經辦人 (日期)」會是同一天，
+ * 看起來像批次匯入而不是有人真的一件一件去收。
+ */
+function resolveCompletedDate(dueDate: Date, index: number): string {
+  return toIsoDate(addDays(dueDate, -(index % 3)));
+}
+
 function buildOnboardingTasks(employee: IEmployeeListItem): IProcessTask[] {
   const hireDate = parseIsoDate(employee.hireDate);
   // Info: (20260810 - Julian) 依工號末碼決定哪幾項卡住，讓每個人的進度不一樣但固定
-  const seed = Number(employee.employeeNo.replace(/\D/g, "")) % 3;
+  const seed = employeeSerial(employee) % 3;
   const skipIndexes = seed === 0 ? [1] : seed === 1 ? [3, 5] : [2];
 
   return ONBOARDING_TEMPLATE.map((template, index) => {
     const dueDate = addDays(hireDate, template.dueOffset);
+    const status = resolveStatus(dueDate, index, skipIndexes);
+    const isDone = status !== ProcessTaskStatus.PENDING;
     return {
       id: `task-on-${employee.id}-${template.key}`,
       employeeId: employee.id,
       taskType: ProcessTaskType.ONBOARDING,
       title: template.title,
-      status: resolveStatus(dueDate, index, skipIndexes),
+      status,
       dueDate: toIsoDate(dueDate),
       category: template.category,
       templateKey: template.key,
       assigneeName: template.assignee,
+      completedBy: isDone ? template.assignee : null,
+      completedDate: isDone ? resolveCompletedDate(dueDate, index) : null,
+      assetNo: null,
+      scheduledAt: null,
       note: null,
     } satisfies IProcessTask;
   });
@@ -289,9 +383,16 @@ function buildOffboardingTasks(employee: IEmployeeListItem): IProcessTask[] {
     (template) => template.key === OffboardingTaskKey.ACCOUNT_REVOKE,
   );
 
-  const seed = Number(employee.employeeNo.replace(/\D/g, "")) % 4;
+  const serial = employeeSerial(employee);
+  const seed = serial % 4;
   const baseSkips =
-    seed === 0 ? [3] : seed === 1 ? [1, 6] : seed === 2 ? [5] : [2, 7];
+    seed === 0
+      ? [4, 10]
+      : seed === 1
+        ? [1, 7, 11]
+        : seed === 2
+          ? [6, 9]
+          : [3, 8, 12];
   const skipIndexes = isSettled
     ? []
     : [
@@ -302,16 +403,30 @@ function buildOffboardingTasks(employee: IEmployeeListItem): IProcessTask[] {
 
   return OFFBOARDING_TEMPLATE.map((template, index) => {
     const dueDate = addDays(leaveDate, template.dueOffset);
+    const status = resolveStatus(dueDate, index, skipIndexes);
+    const isDone = status !== ProcessTaskStatus.PENDING;
     return {
       id: `task-off-${employee.id}-${template.key}`,
       employeeId: employee.id,
       taskType: ProcessTaskType.OFFBOARDING,
       title: template.title,
-      status: resolveStatus(dueDate, index, skipIndexes),
+      status,
       dueDate: toIsoDate(dueDate),
       category: template.category,
       templateKey: template.key,
       assigneeName: template.assignee,
+      completedBy: isDone ? template.assignee : null,
+      completedDate: isDone ? resolveCompletedDate(dueDate, index) : null,
+      /**
+       * Info: (20260811 - Julian) 序號由工號推導，同一個人每次進畫面都一樣。
+       * 用亂數的話，重新整理後同一台筆電會換一組序號。
+       */
+      assetNo: template.assetPrefix
+        ? `${template.assetPrefix}${1000 + ((serial * 37 + index * 131) % 9000)}`
+        : null,
+      scheduledAt: template.isScheduled
+        ? `${toIsoDate(leaveDate)}T${ACCOUNT_REVOKE_DEFAULT_TIME}`
+        : null,
       note: template.note,
     } satisfies IProcessTask;
   });

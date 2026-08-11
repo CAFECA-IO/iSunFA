@@ -48,7 +48,8 @@ import {
  * Info: (20260811 - Julian) 到離職的計算層。
  *
  * 四個分頁看的是同一批人與同一批任務，只是切法不同，因此所有推導集中在這裡：
- * 看板的分欄、報到列表的三個欄位、試用期的節點、離職的交接矩陣。
+ * 看板的分欄、報到列表的三個欄位、試用期的節點、離職的交接矩陣，
+ * 各自寫一份的話「完成」的定義遲早會在某一頁走鐘。
  */
 
 // Info: (20260811 - Julian) 任務是否算完成。跳過（SKIPPED）視同完成，它代表「這件事不用做」
@@ -118,7 +119,15 @@ export function resolveCaseAlert(
   if (totalCount > 0 && doneCount === totalCount) {
     return {
       level: MovementAlertLevel.COMPLETED,
-      reason: MovementAlertReason.READY_TO_CLOSE,
+      /**
+       * Info: (20260811 - Julian) 離職沒有另一道結案手續 ——
+       * 最後一項交接勾完，案件就結束了，因此是「已結案」而不是「可結案」。
+       * 報到全做完則只是流程跑完，人還在，仍然是可結案。
+       */
+      reason:
+        taskType === ProcessTaskType.OFFBOARDING
+          ? MovementAlertReason.SETTLED
+          : MovementAlertReason.READY_TO_CLOSE,
     };
   }
 
@@ -406,7 +415,10 @@ export function buildOffboardingCases(
       const hireDate = employee ? parseIsoDate(employee.hireDate) : today;
       const leaveDate = parseIsoDate(item.keyDate);
 
-      // Info: (20260811 - Julian) 年資以「到最後一天為止」的足月數計算。
+      /**
+       * Info: (20260811 - Julian) 年資以「到最後一天為止」的足月數計算。
+       * 用足年數 × 12 會讓到職 6 個月的人被算成 0 個月，應預告天數因此少算。
+       */
       const tenureMonths = differenceInFullMonths(hireDate, leaveDate);
       const requiredNoticeDays = resolveRequiredNoticeDays(tenureMonths);
 
@@ -426,6 +438,14 @@ export function buildOffboardingCases(
         actualNoticeDays,
         isNoticeSatisfied: actualNoticeDays >= requiredNoticeDays,
         isCompleted: item.completedTaskCount === item.totalTaskCount,
+        /**
+         * Info: (20260811 - Julian) 缺提出日時退回最後一天，讓實際預告天數變 0。
+         * 樂觀補一個日期會讓一筆資料不全的案件看起來合規。
+         */
+        noticeDate: noticeDate ?? item.keyDate,
+        tenureMonths,
+        hireDate: employee?.hireDate ?? item.keyDate,
+        email: employee?.email ?? "",
       } satisfies IOffboardingCase;
     })
     .sort((a, b) => a.keyDate.localeCompare(b.keyDate));
