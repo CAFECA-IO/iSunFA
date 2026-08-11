@@ -204,10 +204,22 @@ export function validateDiagramNodes(
         .filter((parent): parent is string => parent !== undefined)
         .map(normalizeForMatch),
     );
+    /**
+     * Info: (20260810 - Emily) 下限要以**實際會畫出來的**事件數為準，不是全部節點
+     * （PR review 第 6 點）。
+     *
+     * 上面的 `skippedLabels` 是過長而不畫的節點。原本這裡用完整節點集算 datedEvents，
+     * 於是「驗證時 3 個、畫出來 2 個」的情形會通過 —— 產出一條事件數低於下限的時間軸，
+     * 而下限存在的理由正是「少於 3 個事件的時間軸讀不出趨勢」。
+     *
+     * 驗的集合與畫的集合必須是同一個，否則這道護欄擋不住它宣稱要擋的東西。
+     */
+    const skipped = new Set(skippedLabels);
     const datedEvents = nodes.filter(
       (node) =>
         node.parent !== undefined &&
-        !periods.has(normalizeForMatch(node.label)),
+        !periods.has(normalizeForMatch(node.label)) &&
+        !skipped.has(node.label),
     );
     if (datedEvents.length < CARBON_TIMELINE_MIN_DATED_EVENTS) {
       return {
@@ -373,26 +385,41 @@ export function buildCarbonDiagramBlock(
     return wrap(noteSkipped(buildTimeline(drawn)));
   }
 
+  /**
+   * Info: (20260810 - Emily) 這裡也用 drawn 而不是 nodes（PR review 第 7 點）。
+   *
+   * 今天兩者相等:非時間軸模板遇到過長節點是**整張否決**，所以 skipped 必為空，
+   * 這段改動可證明行為不變。留 nodes 的問題不在今天而在明天 ——
+   * 哪天樹狀圖也改成「略過過長者」，這裡就會靜默重現本次修的那個 bug：
+   * 驗的集合與畫的集合分岔。把兩處都綁到同一個集合，那個分岔就沒有地方可以發生。
+   *
+   * 邊要一併過濾:父節點若被略過，`idByLabel.get(parent)` 會是 undefined，
+   * 產出 `undefined --> x` 這種畫不出來的語法。節點換了集合、邊沒換，
+   * 就是另一種形式的同一個錯。
+   */
   const idByLabel = new Map(
-    nodes.map((node, index) => [node.label, buildNodeId(index)] as const),
+    drawn.map((node, index) => [node.label, buildNodeId(index)] as const),
   );
 
   const lines = [
     "```mermaid",
     `flowchart ${template.direction}`,
-    ...nodes.map(
+    ...drawn.map(
       (node) =>
         `    ${idByLabel.get(node.label)}["${escapeLabel(node.label)}"]`,
     ),
-    ...nodes
-      .filter((node) => node.parent !== undefined)
+    ...drawn
+      .filter(
+        (node) =>
+          node.parent !== undefined && idByLabel.has(node.parent as string),
+      )
       .map(
         (node) =>
           `    ${idByLabel.get(node.parent as string)} --> ${idByLabel.get(node.label)}`,
       ),
     "```",
   ];
-  return wrap(lines.join("\n"));
+  return wrap(noteSkipped(lines.join("\n")));
 }
 
 /**
