@@ -539,12 +539,18 @@ enum AuditLogDataType {
   JOURNAL
   VOUCHER
   ESG_RECORD
+  // Info: (20260811 - Julian) 人事敏感個資的存取軌跡；dataId 一律填所屬 Employee.id，
+  // Info: (20260811 - Julian) 讓「誰在何時看了誰的身分證／銀行帳號」可以用單一員工當軸線查回來
+  EMPLOYEE_PII
 }
 
 enum AuditLogAction {
   CREATE
   UPDATE
   DELETE
+  // Info: (20260811 - Julian) 唯讀動作。財務資料改了才需要留痕，個資「被看過」本身就是事件
+  // Info: (20260811 - Julian) （個資法 §12 §27 的存取軌跡要求），因此僅用於 EMPLOYEE_PII
+  READ
 }
 
 model AuditLog {
@@ -1448,6 +1454,50 @@ model UserStorageUsage {
   @@map("user_storage_usage")
 }
 
+/**
+ * Info: (20260811 - Julian) ========== 人事模組個資保護等級（本區塊 13 張表的預設值）==========
+ *
+ * ## 決策
+ *
+ * 敏感個資欄位一律以**應用層欄位加密**入庫（AES-256-GCM，金鑰由伺服器持有），
+ * 對外預設回遮罩值，取用完整值另走一條路徑並寫 `AuditLog`。
+ * 完整脈絡見 `documents/architecture/decisions/016_hr_pii_data_classification.md`。
+ *
+ * ## 為什麼不是 E2EE（碳盤查的做法）
+ *
+ * `ChatroomMessage` / `CarbonReportDraft` 那套 ECIES envelope 之所以成立，是因為
+ * 那些資料**只有使用者自己要讀**；伺服器讀不到不影響任何功能。
+ * 人事資料相反：薪轉檔產製、勞健保申報、離職退保、試用期到期通知，
+ * 全部是背景 Worker 在跑。金鑰若只在前端，這些流程永遠解不開資料 ——
+ * E2EE 會廢掉這個模組一半的功能，也與 CLAUDE.md §7「計算收斂到後端確定性規則引擎」衝突。
+ *
+ * 所以這裡取的是中間值：**伺服器讀得到，資料庫本身讀不到**。
+ * 防的是 DB dump、備份外洩、DBA 越權直讀、誤上傳的還原檔 ——
+ * 這些正是個資外洩事故的實際大宗。防不了的是應用層被攻破，那由 §存取稽核 補。
+ *
+ * ## 為什麼不是「維持明文，靠 DB 層 at-rest 加密」
+ *
+ * `sovereign_cloud_security_drp.md` 宣告的 PostgreSQL AES-256 靜態加密是**磁碟層**的，
+ * 對 `pg_dump`、對持有連線字串的人、對備份檔完全無效 —— 它防的是實體磁碟被搬走。
+ * 帳本模式的 `CarbonReportDraft.plainContent` 接受這個等級，理由是那是碳排活動數據；
+ * 而這裡存的是身分證字號與銀行帳號，外洩後果是身分冒用與金流盜用，不是同一個量級。
+ * 保護強度不該低於它所保護的東西。
+ *
+ * ## 落地規則
+ *
+ * 1. 密文欄位一律以 `Cipher` 結尾（`nationalIdCipher`、`accountNumberCipher`…）。
+ *    命名就是型別以外的第二道提醒：看到 `Cipher` 就知道這不是能直接顯示的值。
+ * 2. 每張持有個資的表帶 `piiAlgorithm` + `piiKeyVersion`，支援金鑰輪替時新舊並存。
+ * 3. `piiKeyVersion` 可為 null，但**任一密文欄位有值時它必須有值** ——
+ *    比照 `carbon_envelope_invariant.ts` 的「寫得進去就必須讀得出來」，
+ *    由 `src/repositories/hr_pii_invariant.ts` 擋在寫入端，而不是讀取端。
+ * 4. 未加密的欄位是刻意的，理由逐欄記在 ADR 016：
+ *    `employeeNo` / `email` 要進複合唯一鍵，`name` 要排序與模糊搜尋，
+ *    加密會讓這兩件事都做不到，而它們單獨不足以冒用身分。
+ * 5. `birthday` 加密後失去 DB 端的日期查詢能力。目前沒有任何查詢用到它；
+ *    未來若需要「本月壽星」這類需求，加一個非敏感的衍生欄位（如 `birthMonth Int?`），
+ *    不要為了查詢把 `birthday` 改回明文。
+ */
 // Info: (20260810 - Julian) 員工基本資料
 enum EmployeeStatus {
   ACTIVE             // Info: (20260810 - Julian) 在職
@@ -1522,14 +1572,37 @@ model Employee {
   name          String         // Info: (20260810 - Julian) 姓名
   englishName   String?        @map("english_name") // Info: (20260810 - Julian) 英文名
   gender        Gender
-  birthday      DateTime?
-  nationalId    String?        @map("national_id") // Info: (20260810 - Julian) 身分證字號 / 護照號碼
-  email         String         // Info: (20260810 - Julian) 公司 Email，唯一性以帳本為範圍
-  phone         String         // Info: (20260810 - Julian) 聯絡電話
-  address       String?        // Info: (20260810 - Julian) 通訊地址
+  email         String         // Info: (20260810 - Julian) 公司 Email，唯一性以帳本為範圍；為複合唯一鍵成員，不加密
   status        EmployeeStatus @default(PROBATION)
   hireDate      DateTime       @map("hire_date") // Info: (20260810 - Julian) 到職日
   leaveDate     DateTime?      @map("leave_date") // Info: (20260810 - Julian) 離職日
+
+  // Info: (20260811 - Julian) --- 敏感個資（密文入庫，見本區塊開頭的決策說明）---
+  // Info: (20260811 - Julian) Tier 1 受限：身分證字號 / 護照號碼，可直接用於冒用身分；讀取完整值需寫 AuditLog
+  nationalIdCipher String? @map("national_id_cipher")
+  /**
+   * Info: (20260811 - Julian) 盲索引 (blind index)：HMAC-SHA256(pepper, 正規化後的身分證字號)。
+   *
+   * AES-GCM 每次用隨機 IV，同一個身分證字號兩次加密不會得到同一段密文 ——
+   * 唯一約束掛不上密文，但「同一帳本不得重複建檔同一人」這條規則不該因為加密而消失。
+   * 因此另存一個決定性摘要專供唯一性比對，明文仍只在 `nationalIdCipher`。
+   *
+   * 用 HMAC 而不是裸 SHA-256：台灣身分證字號的空間只有約 2.4 億組，
+   * 裸雜湊被 dump 出去等於幾分鐘就能反查完。pepper 由伺服器持有且不入庫，
+   * 拿到 DB 的人沒有 pepper 就無法枚舉。
+   */
+  nationalIdHash String? @map("national_id_hash")
+  // Info: (20260811 - Julian) Tier 2 機密：生日以 ISO-8601 字串加密（型別由 DateTime 轉 String 是加密的必然代價）
+  birthdayCipher   String? @map("birthday_cipher")
+  // Info: (20260811 - Julian) Tier 2 機密：通訊地址
+  addressCipher    String? @map("address_cipher")
+  // Info: (20260811 - Julian) Tier 2 機密：聯絡電話（原為必填，加密後維持必填）
+  phoneCipher      String  @map("phone_cipher")
+
+  // Info: (20260811 - Julian) 個資封裝參數：演算法版本化，keyVersion 供金鑰輪替時新舊並存
+  // Info: (20260811 - Julian) keyVersion 可為 null（整列無密文時），但任一密文有值即必須有值，由 hr_pii_invariant 擋在寫入端
+  piiAlgorithm  String  @default("AES-256-GCM") @map("pii_algorithm")
+  piiKeyVersion Int?    @map("pii_key_version")
 
   // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
   accountBookId String      @map("account_book_id")
@@ -1567,7 +1640,8 @@ model Employee {
 
   @@unique([accountBookId, employeeNo])
   @@unique([accountBookId, email])
-  @@unique([accountBookId, nationalId])
+  // Info: (20260811 - Julian) 身分證的帳本內唯一改掛盲索引，不是取消 —— 理由見 nationalIdHash 欄位註解
+  @@unique([accountBookId, nationalIdHash])
   @@index([accountBookId])
   @@index([departmentId])
   @@index([jobTitleId])
@@ -1637,9 +1711,17 @@ model EmergencyContact {
 
   name         String   // Info: (20260810 - Julian) 聯絡人姓名
   relationship String   // Info: (20260810 - Julian) 關係 (例: 配偶、父母)
-  phone        String   // Info: (20260810 - Julian) 主要電話
-  altPhone     String?  @map("alt_phone") // Info: (20260810 - Julian) 備用電話
   isPrimary    Boolean  @default(false) @map("is_primary") // Info: (20260810 - Julian) 是否為第一順位聯絡人
+
+  // Info: (20260811 - Julian) --- 敏感個資（密文入庫，見本區塊開頭的決策說明）---
+  // Info: (20260811 - Julian) Tier 2 機密：緊急聯絡人電話。與眷屬同理，聯絡人是未同意過條款的第三人，
+  // Info: (20260811 - Julian) 且這份名單本身就是「員工的私人關係網」，外洩即可用於社交工程
+  phoneCipher    String  @map("phone_cipher")
+  altPhoneCipher String? @map("alt_phone_cipher")
+
+  // Info: (20260811 - Julian) 個資封裝參數，語意同 Employee
+  piiAlgorithm  String @default("AES-256-GCM") @map("pii_algorithm")
+  piiKeyVersion Int?   @map("pii_key_version")
 
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
@@ -1661,9 +1743,18 @@ model Dependent {
 
   name                  String    // Info: (20260810 - Julian) 眷屬姓名
   relationship          String    // Info: (20260810 - Julian) 關係
-  nationalId            String?   @map("national_id") // Info: (20260810 - Julian) 眷屬身分證字號
-  birthday              DateTime?
   isNationalHealthInsur Boolean   @default(true) @map("is_national_health_insur") // Info: (20260810 - Julian) 是否隨同參加健保
+
+  // Info: (20260811 - Julian) --- 敏感個資（密文入庫，見本區塊開頭的決策說明）---
+  // Info: (20260811 - Julian) Tier 1 受限：眷屬身分證字號。眷屬並非本系統使用者、從未同意過任何條款，
+  // Info: (20260811 - Julian) 保護等級只能高於員工本人，不能低於；不設盲索引，眷屬本就可能重複掛在不同員工下（如夫妻同公司）
+  nationalIdCipher String? @map("national_id_cipher")
+  // Info: (20260811 - Julian) Tier 2 機密：眷屬生日（ISO-8601 字串）。與 Employee.birthday 同級，不因為是眷屬就降級
+  birthdayCipher   String? @map("birthday_cipher")
+
+  // Info: (20260811 - Julian) 個資封裝參數，語意同 Employee
+  piiAlgorithm  String @default("AES-256-GCM") @map("pii_algorithm")
+  piiKeyVersion Int?   @map("pii_key_version")
 
   createdAt             DateTime  @default(now()) @map("created_at")
   updatedAt             DateTime  @updatedAt @map("updated_at")
@@ -1683,13 +1774,22 @@ model BankAccount {
   accountBookId String      @map("account_book_id")
   accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
 
+  // Info: (20260811 - Julian) 銀行/分行代碼與名稱維持明文：那是公開的金融機構字典值，不是個資
   bankCode      String   @map("bank_code") // Info: (20260810 - Julian) 銀行代碼 (例: 822)
   bankName      String   @map("bank_name") // Info: (20260810 - Julian) 銀行名稱 (例: 中國信託)
   branchCode    String?  @map("branch_code") // Info: (20260810 - Julian) 分行代碼
   branchName    String?  @map("branch_name") // Info: (20260810 - Julian) 分行名稱
-  accountNumber String   @map("account_number") // Info: (20260810 - Julian) 帳戶號碼
-  accountHolder String   @map("account_holder") // Info: (20260810 - Julian) 戶名
   isPrimary     Boolean  @default(true) @map("is_primary") // Info: (20260810 - Julian) 是否為主薪轉帳戶
+
+  // Info: (20260811 - Julian) --- 敏感個資（密文入庫，見本區塊開頭的決策說明）---
+  // Info: (20260811 - Julian) Tier 1 受限：帳戶號碼與戶名。這兩個湊齊即可直接用於金流盜用，
+  // Info: (20260811 - Julian) 是本模組風險最高的一組欄位；讀取完整值需寫 AuditLog
+  accountNumberCipher String @map("account_number_cipher")
+  accountHolderCipher String @map("account_holder_cipher")
+
+  // Info: (20260811 - Julian) 個資封裝參數，語意同 Employee
+  piiAlgorithm  String @default("AES-256-GCM") @map("pii_algorithm")
+  piiKeyVersion Int?   @map("pii_key_version")
 
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
