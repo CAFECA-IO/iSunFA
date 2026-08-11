@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
+import { isLlmKeyMissingError } from "@/services/chat.service";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
@@ -50,8 +51,18 @@ export async function POST(req: NextRequest) {
       return jsonFail(API_ERRORS.IS_REQUEST_ABORTED);
     }
     console.error("[API] /admin/pdf_editor/report_generate error:", error);
-    if (error instanceof Error && error.message.includes("GEMINI_API_KEY")) {
-      return jsonFail(API_ERRORS.IN_SERVER_CONFIGURATION_ERROR);
+    /**
+     * Info: (20260812 - Luphia) 用具名分類取代比對訊息字串。
+     *
+     * 原本是拿錯誤訊息去比對金鑰名稱那串字,而
+     * `IS_GEMINI_API_KEY_UNDEFINED` 這個錯誤碼早就定義好、全庫零使用 ——
+     * 於是「缺金鑰」被歸進通用的伺服器設定錯誤,而它的解法(去 /admin/settings
+     * 設定金鑰)和其他設定問題完全不同。
+     *
+     * 比對字串也不穩:那句訊息在 ChatService 裡,任何人改動它就會讓這個分支靜默失效。
+     */
+    if (isLlmKeyMissingError(error)) {
+      return jsonFail(API_ERRORS.IS_GEMINI_API_KEY_UNDEFINED);
     }
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }

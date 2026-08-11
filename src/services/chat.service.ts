@@ -14,6 +14,7 @@ import { CARBON_CHAT_GREETING_PROMPT } from "@/constants/carbon_chatbot";
 import { CARBON_REPORT_OUTLINE } from "@/constants/carbon_report_outline";
 import {
   DEFAULT_GEMINI_MODEL,
+  LLM_KEY_MISSING_ERROR_MARKER,
   LLM_SYNC_TIMEOUT_MS,
   LLM_TEMPERATURE,
   LLM_TIMEOUT_ERROR_MARKER,
@@ -99,6 +100,17 @@ export const isLlmTimeoutError = (error: unknown): boolean =>
 export const isLlmTruncatedError = (error: unknown): boolean =>
   error instanceof Error &&
   error.message.startsWith(LLM_TRUNCATED_ERROR_MARKER);
+
+/**
+ * Info: (20260812 - Luphia) 判斷是否為「完全沒有可用的 LLM 金鑰」。
+ *
+ * 這與其他 LLM 失敗必須分開:它不是暫時性故障,重試一萬次都一樣 ——
+ * 唯一的解法是在 /admin/settings 設定金鑰。上層據此回
+ * `IS_GEMINI_API_KEY_UNDEFINED` 而不是通用的未知錯誤。
+ */
+export const isLlmKeyMissingError = (error: unknown): boolean =>
+  error instanceof Error &&
+  error.message.startsWith(LLM_KEY_MISSING_ERROR_MARKER);
 
 // Info: (20260714 - Tzuhan) 聊天回覆 responseSchema:readyParagraphId 以 enum 約束，禁止 LLM 捏造段落 id
 const CARBON_CHAT_REPLY_SCHEMA: Schema = {
@@ -308,9 +320,16 @@ export class ChatService {
       process.env.GOOGLE_API_KEY;
 
     if (!key) {
-      // Info: (20260707 - Luphia) 若未來支援純本地模型且不需 Key，此處應改為僅在切換至 Google Provider 時才拋錯
+      /**
+       * Info: (20260707 - Luphia) 若未來支援純本地模型且不需 Key，此處應改為僅在切換至 Google Provider 時才拋錯
+       *
+       * Info: (20260812 - Luphia) 以標記開頭,讓上層用 `isLlmKeyMissingError()` 分類,
+       * 而不是比對訊息裡有沒有「GEMINI_API_KEY」這串字。
+       * 也不再說「in environment」—— 金鑰的正式保管位置已經是資料庫的系統設定,
+       * env 只是尚未遷移時的 fallback,寫成 environment 會把人送去改錯的地方。
+       */
       throw new Error(
-        "Missing GEMINI_API_KEY or GOOGLE_API_KEY in environment",
+        `${LLM_KEY_MISSING_ERROR_MARKER}: no LLM API key is configured (checked system settings, then environment)`,
       );
     }
 

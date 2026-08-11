@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { systemSettingService } from "@/services/system_setting.service";
 import { SystemSettingKey } from "@/constants/system_setting";
+import { LLM_KEY_MISSING_ERROR_MARKER } from "@/constants/llm";
 import { reportRepo } from "@/repositories/report.repo";
 import { lanceDBService } from "@/services/lancedb.service";
 import { ILanceDBRow } from "@/interfaces/lance_db";
@@ -300,7 +301,10 @@ ${question}`;
           SystemSettingKey.GEMINI_API_KEY,
         );
         if (!apiKey) {
-          throw new Error("Missing GEMINI_API_KEY");
+          // Info: (20260812 - Luphia) 與 ChatService 用同一個標記，上層的分類才不會分岔
+          throw new Error(
+            `${LLM_KEY_MISSING_ERROR_MARKER}: no LLM API key is configured for business monitoring`,
+          );
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);

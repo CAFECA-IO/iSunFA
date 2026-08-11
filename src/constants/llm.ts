@@ -119,6 +119,15 @@ export const LLM_TRUNCATED_ERROR_MARKER = "LLM_OUTPUT_TRUNCATED";
 export const LLM_TIMEOUT_ERROR_MARKER = "LLM_TIMEOUT";
 
 /**
+ * Info: (20260812 - Luphia) 完全取不到 LLM 金鑰的識別標記。
+ *
+ * 之前上層是用 `error.message.includes("GEMINI_API_KEY")` 認這個成因 ——
+ * 比對的是一段可以被任何人改掉的自由字串,而 `IS_GEMINI_API_KEY_UNDEFINED`
+ * 這個錯誤碼早就定義好、卻沒有任何地方使用。與另外兩個標記同一種做法。
+ */
+export const LLM_KEY_MISSING_ERROR_MARKER = "LLM_KEY_MISSING";
+
+/**
  * Info: (20260803 - Tzuhan) 傳輸層失敗的重試次數與退避(僅用於「沒送到」的錯誤)。
  *
  * 只重試傳輸失敗是刻意的:截斷與 schema 無效重送同一份輸入必得同樣結果,
