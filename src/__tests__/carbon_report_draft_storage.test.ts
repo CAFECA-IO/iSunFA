@@ -93,6 +93,29 @@ describe("CarbonReportDraftPutSchema", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  /**
+   * Info: (20260810 - Emily) 「envelope 與 plainContent 恰一」這條 refine 原本零覆蓋。
+   *
+   * 這個檔案先前只測了 version 負數與空密文,而那條 refine 是這個 schema 唯一的
+   * 跨欄位規則,且每一次 PUT 都會執行。XOR 有兩側,只測一側等於沒測 ——
+   * 所以兩者皆有、兩者皆空各補一支。
+   */
+  it("should reject carrying both an envelope and plainContent", () => {
+    const result = CarbonReportDraftPutSchema.safeParse({
+      ...putPayload,
+      plainContent: "# 報告",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("should reject carrying neither an envelope nor plainContent", () => {
+    const result = CarbonReportDraftPutSchema.safeParse({
+      ...putPayload,
+      envelope: undefined,
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("CarbonReportDataSchema", () => {
@@ -152,12 +175,10 @@ describe("sessions index cache", () => {
   });
 
   it("should round-trip the sessions index and reject tampered entries", async () => {
-    const { loadSessionsIndex, saveSessionsIndex } = await import(
-      "@/lib/carbon_report_draft_storage"
-    );
-    const { buildCarbonSessionsIndexKey } = await import(
-      "@/constants/carbon_chatbot"
-    );
+    const { loadSessionsIndex, saveSessionsIndex } =
+      await import("@/lib/carbon_report_draft_storage");
+    const { buildCarbonSessionsIndexKey } =
+      await import("@/constants/carbon_chatbot");
 
     const sessions = [
       { id: "2025", title: "2025 溫室氣體盤查報告", createdAt: "2026/7/14" },

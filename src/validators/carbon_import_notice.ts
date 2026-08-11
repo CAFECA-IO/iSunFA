@@ -27,6 +27,25 @@ import {
  */
 const NoticeCommonShape = {
   channel: z.string().min(1).max(200),
+  /**
+   * Info: (20260810 - Emily) 必填的理由記在這裡,而不是在路由（PR review 第 8 點）。
+   *
+   * 原本這段說明掛在 notice route 的執行期檢查上方;檢查移除之後它就懸空了 ——
+   * 不依附任何 statement,讀起來像在註解下面的 try。而它解釋的是「為什麼這個欄位
+   * 必填」,規則住在這一行,理由就該和它守護的東西在同一個地方。
+   *
+   * 原本寫 `recipientPublicKey ?? sessionUser.address`,理由是「與 report PUT 同一慣例」,
+   * 而這條端點因此從上線起一次都沒成功過(實測 500:
+   * `invalid base58 value (argument="letter", value="0")`)。
+   *
+   * report PUT 的 address 補位只發生在**明文模式**:帳本會話存明文,
+   * address 只是擁有者標記,從不當金鑰用。
+   * 而聊天訊息一律 E2EE,`recordAndPublishAiReply` 會拿這個值做 ECIES 加密 ——
+   * 它必須是 base58 的 xpub,而 `0x…` 十六進位位址在第一個 `0` 就解不出來。
+   *
+   * 一個慣例被跨過了它不成立的邊界。改必填而不是留選填讓路由擋:
+   * 選填的欄位會讓呼叫端以為「不送也行」,而它一送就是 500。
+   */
   recipientPublicKey: z.string().min(1).max(300),
   fileName: z.string().min(1).max(300),
   // Info: (20260805 - Tzuhan) 章節標題,上限取章數;內容不入判斷邏輯,僅呈現

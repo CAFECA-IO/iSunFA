@@ -2,6 +2,8 @@
 // Info: (20260716 - Tzuhan) #6518 重寫: 明文 Jsonb 改 E2EE 密文 envelope + version 樂觀鎖(比照 CarbonReportDraft)
 
 import { prisma } from "@/lib/prisma";
+import { assertStorableEnvelope } from "@/repositories/carbon_envelope_invariant";
+
 import { Prisma } from "@/generated";
 
 export interface IUpsertInventoryStateParams {
@@ -30,6 +32,7 @@ export class CarbonInventoryStateRepository {
 
   // Info: (20260716 - Tzuhan) upsert + 樂觀鎖: 版本不符回 null，成功回新版本紀錄
   async upsertByChannel(params: IUpsertInventoryStateParams) {
+    assertStorableEnvelope("CarbonInventoryState", params);
     const chatroom = await prisma.chatroom.upsert({
       where: { channel: params.channel },
       update: {},
