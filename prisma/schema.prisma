@@ -525,7 +525,8 @@ model AccountBook {
   emergencyContacts    EmergencyContact[]
   dependents           Dependent[]
   bankAccounts         BankAccount[]
-  processTasks         ProcessTask[]
+  onboardingTasks      OnboardingTask[]
+  offboardingTasks     OffboardingTask[]
   onboardingProcesses  OnboardingProcess[]
   probationReviews     ProbationReview[]
   offboardingProcesses OffboardingProcess[]
@@ -1632,8 +1633,10 @@ model Employee {
   probationReview     ProbationReview?
   offboardingProcess  OffboardingProcess?
   documents           EmployeeDocument[]
-  assignedTasks       ProcessTask[]        @relation("TaskAssignee")
   conductedReviews    ProbationReview[]    @relation("ProbationReviewer")
+  // Info: (20260811 - Julian) 被指派的任務拆成兩份：「我的待辦」需查兩張表再合併，是拆表換取型別保證的代價
+  assignedOnboardingTasks  OnboardingTask[]  @relation("OnboardingTaskAssignee")
+  assignedOffboardingTasks OffboardingTask[] @relation("OffboardingTaskAssignee")
 
   createdAt     DateTime       @default(now()) @map("created_at")
   updatedAt     DateTime       @updatedAt @map("updated_at")
@@ -1813,15 +1816,37 @@ enum OffboardingStatus {
   REJECTED    // Info: (20260810 - Julian) 駁回
 }
 
-enum ProcessTaskType {
-  ONBOARDING  // Info: (20260810 - Julian) 報到任務
-  OFFBOARDING // Info: (20260810 - Julian) 離職交接任務
-}
-
+/**
+ * Info: (20260811 - Julian) 任務狀態為報到／離職兩張任務表共用。
+ *
+ * 原本還有一個 `ProcessTaskType { ONBOARDING, OFFBOARDING }` 已移除 ——
+ * 任務拆成兩張表之後，表名本身就是型別，那個欄位唯一能做的事是與實際掛的流程矛盾。
+ * 詳見 `OnboardingTask` 的說明。
+ */
 enum ProcessTaskStatus {
   PENDING     // Info: (20260810 - Julian) 待處理
   COMPLETED   // Info: (20260810 - Julian) 已完成
   SKIPPED     // Info: (20260810 - Julian) 跳過
+}
+
+/**
+ * Info: (20260811 - Julian) 試用期考核結果。
+ *
+ * 原本是 `String?`，而註解裡自己列舉了這三個值 —— 註解列得出來的封閉集合就是 enum，
+ * 用 String 只是把「有哪些合法值」這件事從型別系統搬到人腦裡（CLAUDE.md §3 拒絕魔法字串）。
+ *
+ * 這三個值都會進 if/switch：EXTEND 要延長試用期並重排考核日，
+ * FAIL 要觸發離職流程，PASS 要把 `EmployeeStatus` 從 PROBATION 轉成 ACTIVE。
+ * 用 String 的話，一個 "Pass" 大小寫之差就會讓員工卡在試用期而沒有任何錯誤。
+ *
+ * 對照組：`relationship`（眷屬／緊急聯絡人關係）維持 String 是對的 ——
+ * 那是自由文字，使用者可以填「岳母」「同居人」，不進任何判斷。
+ * 判準不是「看起來像不像列舉」，是「有沒有程式碼拿它做分支」。
+ */
+enum ProbationResult {
+  PASS   // Info: (20260811 - Julian) 通過，轉正職
+  EXTEND // Info: (20260811 - Julian) 延長試用期
+  FAIL   // Info: (20260811 - Julian) 未通過
 }
 
 enum DocumentCategory {
@@ -1831,38 +1856,92 @@ enum DocumentCategory {
   OTHER       // Info: (20260810 - Julian) 其他
 }
 
-// Info: (20260810 - Julian) 報到與離職的共通任務清單 (Task Checklist)
-model ProcessTask {
-  id                  String             @id @default(uuid())
-  taskType            ProcessTaskType    @map("task_type") // Info: (20260810 - Julian) 區分是 ONBOARDING 還是 OFFBOARDING
-  title               String             // Info: (20260810 - Julian) 任務名稱 (例: 發放門禁卡、收回電腦、退健保)
-  description         String?
-  status              ProcessTaskStatus  @default(PENDING)
+/**
+ * Info: (20260811 - Julian) 報到任務清單 (Task Checklist)。
+ *
+ * ## 為什麼是兩張表，不是一張帶 taskType 的 ProcessTask
+ *
+ * 原本的單表設計把兩個外鍵都設成可選（`onboardingProcessId?` / `offboardingProcessId?`），
+ * 沒有任何機制保證恰有一個。這讓三種非法狀態都寫得進去：
+ *
+ * 1. **兩個都掛** —— 一個任務同時屬於某人的報到流程與另一人的離職流程。
+ * 2. **都不掛** —— 孤兒任務，不會出現在任何清單裡，也沒有人會發現它存在。
+ * 3. **taskType 與實際流程矛盾** —— `taskType: ONBOARDING` 卻掛在 `offboardingProcessId` 上。
+ *    這種紀錄在「報到進度」與「離職交接進度」兩張畫面上會各自呈現不同的真相。
+ *
+ * Prisma 的 schema DSL 沒有 CHECK 約束，單表要擋只能靠執行期檢查 ——
+ * 而執行期檢查擋不住繞過 service 的寫入（種子腳本、資料遷移、批次匯入）。
+ *
+ * 拆表之後外鍵轉為**必填**，三種狀態在型別層就無法表示，一行檢查都不用寫。
+ * `taskType` 一併移除：表名即型別，那個欄位唯一能做的事就是說謊。
+ *
+ * 這與碳盤查那條「一個寫得進去就再也讀不出來的狀態，不該是可達的」是同一個判準，
+ * 只是這裡有更強的解 —— 碳盤查的 envelope 無法用型別表達，只能用不變式擋在寫入端；
+ * 這裡可以直接讓非法狀態不存在。**能讓它不可表示，就不要退而求其次讓它可被拒絕。**
+ *
+ * ## 代價
+ *
+ * 兩張表的欄位目前完全相同，等於複製一份定義。接受這個重複，理由有二：
+ * 一是重複的是 7 個欄位、不是邏輯；二是兩種任務未來大概率會分化 ——
+ * 離職交接需要「交接對象」與「資產歸還確認」，報到不需要，屆時單表會被迫再加一批可選欄位。
+ *
+ * 「我的待辦」這類跨兩種任務的查詢需要查兩張表再合併。這是拆表唯一的實質成本。
+ */
+model OnboardingTask {
+  id          String            @id @default(uuid())
+  title       String            // Info: (20260810 - Julian) 任務名稱 (例: 發放門禁卡、環境設定、勞健保加保)
+  description String?
+  status      ProcessTaskStatus @default(PENDING)
 
   // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
   accountBookId String      @map("account_book_id")
   accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
 
+  // Info: (20260811 - Julian) 歸屬的報到流程。必填 —— 這正是拆表要換到的東西，孤兒任務不可表示
+  onboardingProcessId String            @map("onboarding_process_id")
+  onboardingProcess   OnboardingProcess @relation(fields: [onboardingProcessId], references: [id], onDelete: Cascade)
+
   // Info: (20260810 - Julian) 負責處理該任務的人 (例: IT 部門人員、HR)
-  assigneeId          String?            @map("assignee_id")
-  assignee            Employee?          @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
-  completedAt         DateTime?          @map("completed_at")
+  assigneeId  String?   @map("assignee_id")
+  assignee    Employee? @relation("OnboardingTaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  completedAt DateTime? @map("completed_at")
 
-  // Info: (20260810 - Julian) 歸屬於哪個報到流程或離職流程
-  onboardingProcessId  String?            @map("onboarding_process_id")
-  onboardingProcess    OnboardingProcess? @relation(fields: [onboardingProcessId], references: [id], onDelete: Cascade)
-
-  offboardingProcessId String?             @map("offboarding_process_id")
-  offboardingProcess   OffboardingProcess? @relation(fields: [offboardingProcessId], references: [id], onDelete: Cascade)
-
-  createdAt           DateTime           @default(now()) @map("created_at")
-  updatedAt           DateTime           @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([accountBookId])
   @@index([onboardingProcessId])
+  @@index([assigneeId])
+  @@map("onboarding_task")
+}
+
+// Info: (20260811 - Julian) 離職交接任務清單。拆表理由見 OnboardingTask 的說明，兩張表對稱
+model OffboardingTask {
+  id          String            @id @default(uuid())
+  title       String            // Info: (20260810 - Julian) 任務名稱 (例: 收回電腦、繳回門禁卡、勞健保退保)
+  description String?
+  status      ProcessTaskStatus @default(PENDING)
+
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  // Info: (20260811 - Julian) 歸屬的離職流程。必填，同 OnboardingTask
+  offboardingProcessId String             @map("offboarding_process_id")
+  offboardingProcess   OffboardingProcess @relation(fields: [offboardingProcessId], references: [id], onDelete: Cascade)
+
+  // Info: (20260810 - Julian) 負責處理該任務的人 (例: IT 部門人員、HR)
+  assigneeId  String?   @map("assignee_id")
+  assignee    Employee? @relation("OffboardingTaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  completedAt DateTime? @map("completed_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([accountBookId])
   @@index([offboardingProcessId])
   @@index([assigneeId])
-  @@map("process_task")
+  @@map("offboarding_task")
 }
 
 // Info: (20260810 - Julian) 新人報到流程檔
@@ -1880,7 +1959,7 @@ model OnboardingProcess {
   completedAt  DateTime?        @map("completed_at") // Info: (20260810 - Julian) 完成時間
 
   // Info: (20260810 - Julian) 關聯至細項任務
-  tasks        ProcessTask[]
+  tasks        OnboardingTask[]
 
   createdAt    DateTime         @default(now()) @map("created_at")
   updatedAt    DateTime         @updatedAt @map("updated_at")
@@ -1902,10 +1981,11 @@ model ProbationReview {
   reviewerId   String?   @map("reviewer_id") // Info: (20260810 - Julian) 考核主管 ID
   reviewer     Employee? @relation("ProbationReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
 
-  reviewDate   DateTime? @map("review_date") // Info: (20260810 - Julian) 考核日期
-  score        Int?      // Info: (20260810 - Julian) 評分 (例: 1-100)
-  comment      String?   // Info: (20260810 - Julian) 考核評語
-  result       String?   // Info: (20260810 - Julian) 考核結果 (例: PASS, EXTEND, FAIL)
+  reviewDate   DateTime?        @map("review_date") // Info: (20260810 - Julian) 考核日期
+  score        Int?             // Info: (20260810 - Julian) 評分 (例: 1-100)
+  comment      String?          // Info: (20260810 - Julian) 考核評語
+  // Info: (20260811 - Julian) 尚未考核時為 null；已考核則必為三個列舉值之一
+  result       ProbationResult?
 
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
@@ -1933,7 +2013,7 @@ model OffboardingProcess {
   insuranceOffAt DateTime?         @map("insurance_off_at") // Info: (20260810 - Julian) 勞健保退保生效日
 
   // Info: (20260810 - Julian) 關聯至交接細項任務
-  tasks          ProcessTask[]
+  tasks          OffboardingTask[]
 
   createdAt      DateTime          @default(now()) @map("created_at")
   updatedAt      DateTime          @updatedAt @map("updated_at")
