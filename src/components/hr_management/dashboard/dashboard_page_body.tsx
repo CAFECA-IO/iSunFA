@@ -12,7 +12,6 @@ import {
   HR_DASHBOARD_ROLE_I18N_KEY,
   HR_DASHBOARD_ROLES,
   HrDashboardRole,
-  MOCK_MANAGER_DEPARTMENT_ID,
 } from "@/constants/hr_management";
 import {
   MOCK_HR_DOCUMENTS,
@@ -22,7 +21,10 @@ import {
   MOCK_HR_EMPLOYEES,
   MOCK_HR_TODAY,
 } from "@/constants/mock_hr_employees";
-import { MOCK_HR_DEPARTMENTS } from "@/constants/mock_hr_organization";
+import {
+  MOCK_HR_DEPARTMENTS,
+  MOCK_MANAGER_DEPARTMENT_ID,
+} from "@/constants/mock_hr_organization";
 import { buildDashboardData } from "@/lib/utils/hr_dashboard";
 import { parseIsoDate } from "@/lib/utils/hr_date";
 import { useTranslation } from "@/i18n/i18n_context";

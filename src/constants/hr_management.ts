@@ -137,12 +137,6 @@ export const HR_DASHBOARD_ROLE_I18N_KEY: Record<HrDashboardRole, string> = {
 };
 
 /**
- * ToDo: (20260810 - Julian) 主管視角暫時固定看技術部。
- * 接上權限後改為由登入者的 `Employee.managedDepartment` 決定。
- */
-export const MOCK_MANAGER_DEPARTMENT_ID = "dep-001";
-
-/**
  * Info: (20260811 - Julian) 報到／離職任務類型。**DTO 層的衍生值，DB 沒有這個欄位。**
  *
  * 原本對齊 Prisma enum `ProcessTaskType`，但那個 enum 已隨 `ProcessTask` 拆成

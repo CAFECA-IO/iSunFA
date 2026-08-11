@@ -120,3 +120,15 @@ export const MOCK_HR_JOB_TITLES: IJobTitle[] = [
     description: "執行部門例行業務",
   },
 ];
+
+/**
+ * ToDo: (20260810 - Julian) 主管視角暫時固定看技術部（`dep-001`）。
+ * 接上權限後改為由登入者的 `Employee.managedDepartment` 決定。
+ *
+ * Info: (20260811 - Julian) 從 `constants/hr_management.ts` 搬來這裡：
+ * 它是指向 `MOCK_HR_DEPARTMENTS` 某一筆的 mock 產物，不是正式常數。
+ * 留在正式常數模組裡，`MOCK_` 前綴的東西會跟真常數混在同一份 import 清單中，
+ * 而清掉 mock 時最容易漏掉的就是這種「看起來像設定值」的一行。
+ * 放在它所指向的資料旁邊，兩者會同生共死。
+ */
+export const MOCK_MANAGER_DEPARTMENT_ID = "dep-001";
