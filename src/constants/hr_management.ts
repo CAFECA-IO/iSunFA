@@ -285,3 +285,387 @@ export const STRUCTURE_DIMENSION_I18N_KEY: Record<StructureDimension, string> =
     [StructureDimension.TENURE]: "hr_management.dashboard.dimension_tenure",
     [StructureDimension.AGE]: "hr_management.dashboard.dimension_age",
   };
+
+// Info: (20260810 - Julian) 到離職頁的四個分頁
+export enum MovementTab {
+  OVERVIEW = "OVERVIEW",
+  ONBOARDING = "ONBOARDING",
+  PROBATION = "PROBATION",
+  OFFBOARDING = "OFFBOARDING",
+}
+
+export const MOVEMENT_TABS: MovementTab[] = [
+  MovementTab.OVERVIEW,
+  MovementTab.ONBOARDING,
+  MovementTab.PROBATION,
+  MovementTab.OFFBOARDING,
+];
+
+export const MOVEMENT_TAB_I18N_KEY: Record<MovementTab, string> = {
+  [MovementTab.OVERVIEW]: "hr_management.movement.tab_overview",
+  [MovementTab.ONBOARDING]: "hr_management.movement.tab_onboarding",
+  [MovementTab.PROBATION]: "hr_management.movement.tab_probation",
+  [MovementTab.OFFBOARDING]: "hr_management.movement.tab_offboarding",
+};
+
+// Info: (20260810 - Julian) 概覽的兩種檢視
+export enum MovementViewMode {
+  KANBAN = "KANBAN",
+  LIST = "LIST",
+}
+
+export const MOVEMENT_VIEW_MODES: MovementViewMode[] = [
+  MovementViewMode.KANBAN,
+  MovementViewMode.LIST,
+];
+
+export const MOVEMENT_VIEW_MODE_I18N_KEY: Record<MovementViewMode, string> = {
+  [MovementViewMode.KANBAN]: "hr_management.movement.view_kanban",
+  [MovementViewMode.LIST]: "hr_management.movement.view_list",
+};
+
+/**
+ * Info: (20260810 - Julian) 看板的四個欄位。
+ *
+ * 欄位是「由日期推導」出來的，不是資料庫欄位：預備報到＝未來 14 天內到職、
+ * 首日報到＝到職第 1～7 天、交接中＝已提離職但未到最後 3 天、待結案＝離職前 3 天內。
+ *
+ * ToDo: (20260810 - Julian) 使用者手動拖拽會覆寫這個推導結果，目前只存在記憶體。
+ * 接 API 後 `OnboardingProcess` / `OffboardingProcess` 需要一個欄位存放人工指定的階段，
+ * 否則重整就會被日期規則覆蓋回去。
+ */
+export enum MovementStage {
+  PREPARING = "PREPARING",
+  FIRST_WEEK = "FIRST_WEEK",
+  HANDOVER = "HANDOVER",
+  CLOSING = "CLOSING",
+}
+
+export const MOVEMENT_STAGES: MovementStage[] = [
+  MovementStage.PREPARING,
+  MovementStage.FIRST_WEEK,
+  MovementStage.HANDOVER,
+  MovementStage.CLOSING,
+];
+
+export const MOVEMENT_STAGE_I18N_KEY: Record<MovementStage, string> = {
+  [MovementStage.PREPARING]: "hr_management.movement.stage_preparing",
+  [MovementStage.FIRST_WEEK]: "hr_management.movement.stage_first_week",
+  [MovementStage.HANDOVER]: "hr_management.movement.stage_handover",
+  [MovementStage.CLOSING]: "hr_management.movement.stage_closing",
+};
+
+// Info: (20260810 - Julian) 看板欄位的頂部色條，用來一眼分辨報到（綠）與離職（琥珀→紅）
+export const MOVEMENT_STAGE_ACCENT: Record<MovementStage, string> = {
+  [MovementStage.PREPARING]: "bg-sky-400",
+  [MovementStage.FIRST_WEEK]: "bg-emerald-400",
+  [MovementStage.HANDOVER]: "bg-amber-400",
+  [MovementStage.CLOSING]: "bg-rose-400",
+};
+
+// Info: (20260810 - Julian) 分欄的天數門檻
+export const ONBOARDING_UPCOMING_DAYS = 14;
+export const ONBOARDING_FIRST_WEEK_DAYS = 7;
+export const OFFBOARDING_CLOSING_DAYS = 3;
+
+/**
+ * Info: (20260810 - Julian) 離職交接矩陣的四個負責面向。
+ *
+ * ToDo: (20260810 - Julian) Prisma 的 `ProcessTask` 目前只有 title / status / assignee，
+ * 沒有分類欄位。接 API 前需要在 schema 補 `category`，否則右側矩陣分不了組。
+ */
+export enum HandoverCategory {
+  WORK = "WORK",
+  ASSET = "ASSET",
+  IT = "IT",
+  HR = "HR",
+}
+
+export const HANDOVER_CATEGORIES: HandoverCategory[] = [
+  HandoverCategory.WORK,
+  HandoverCategory.ASSET,
+  HandoverCategory.IT,
+  HandoverCategory.HR,
+];
+
+export const HANDOVER_CATEGORY_I18N_KEY: Record<HandoverCategory, string> = {
+  [HandoverCategory.WORK]: "hr_management.movement.category_work",
+  [HandoverCategory.ASSET]: "hr_management.movement.category_asset",
+  [HandoverCategory.IT]: "hr_management.movement.category_it",
+  [HandoverCategory.HR]: "hr_management.movement.category_hr",
+};
+
+/**
+ * Info: (20260810 - Julian) 試用期的三個考核節點與其相對到職日的天數。
+ *
+ * ToDo: (20260810 - Julian) Prisma 的 `ProbationReview` 只有單筆 reviewDate / score /
+ * result，存不下三個節點。接 API 前需要拆成多筆或加上節點欄位。
+ */
+export enum ProbationMilestone {
+  CARE_30 = "CARE_30",
+  INTERVIEW_60 = "INTERVIEW_60",
+  FINAL_85 = "FINAL_85",
+}
+
+export const PROBATION_MILESTONES: ProbationMilestone[] = [
+  ProbationMilestone.CARE_30,
+  ProbationMilestone.INTERVIEW_60,
+  ProbationMilestone.FINAL_85,
+];
+
+export const PROBATION_MILESTONE_DAYS: Record<ProbationMilestone, number> = {
+  [ProbationMilestone.CARE_30]: 30,
+  [ProbationMilestone.INTERVIEW_60]: 60,
+  [ProbationMilestone.FINAL_85]: 85,
+};
+
+export const PROBATION_MILESTONE_I18N_KEY: Record<ProbationMilestone, string> =
+  {
+    [ProbationMilestone.CARE_30]: "hr_management.movement.milestone_care",
+    [ProbationMilestone.INTERVIEW_60]:
+      "hr_management.movement.milestone_interview",
+    [ProbationMilestone.FINAL_85]: "hr_management.movement.milestone_final",
+  };
+
+/**
+ * Info: (20260810 - Julian) 試用期考核結果。
+ * ToDo: (20260810 - Julian) Prisma 的 `ProbationReview.result` 是自由字串，
+ * 接 API 前應改成 enum，否則「通過轉正」會有各種拼法。
+ */
+export enum ProbationResult {
+  PASS = "PASS",
+  EXTEND = "EXTEND",
+  FAIL = "FAIL",
+}
+
+export const PROBATION_RESULTS: ProbationResult[] = [
+  ProbationResult.PASS,
+  ProbationResult.EXTEND,
+  ProbationResult.FAIL,
+];
+
+export const PROBATION_RESULT_I18N_KEY: Record<ProbationResult, string> = {
+  [ProbationResult.PASS]: "hr_management.movement.result_pass",
+  [ProbationResult.EXTEND]: "hr_management.movement.result_extend",
+  [ProbationResult.FAIL]: "hr_management.movement.result_fail",
+};
+
+/**
+ * Info: (20260811 - Julian) 考核結果的配色。
+ *
+ * 三種結果不共用一個底色：主管掃清單時先看到的是顏色而不是文字，
+ * 把「不予錄用」畫成綠色，會讓一列已決定終止的試用期看起來像通過。
+ */
+export const PROBATION_RESULT_STYLE: Record<ProbationResult, string> = {
+  [ProbationResult.PASS]: "bg-emerald-50 text-emerald-700",
+  [ProbationResult.EXTEND]: "bg-amber-50 text-amber-700",
+  [ProbationResult.FAIL]: "bg-red-50 text-red-600",
+};
+
+/**
+ * Info: (20260811 - Julian) 考核已完成、但案件還沒結束的結果。
+ * 「延長試用」是把試用期推到新的一天，流程還在跑，不能標成可結案。
+ */
+export const PROBATION_UNSETTLED_RESULTS: ProbationResult[] = [
+  ProbationResult.EXTEND,
+];
+
+// Info: (20260810 - Julian) 評分區間（1～5 分）
+export const PROBATION_SCORE_MIN = 1;
+export const PROBATION_SCORE_MAX = 5;
+
+// Info: (20260810 - Julian) 報到列表的快速篩選
+export enum OnboardingQuickFilter {
+  ALL = "ALL",
+  THIS_WEEK = "THIS_WEEK",
+  PENDING_EQUIPMENT = "PENDING_EQUIPMENT",
+  PENDING_CONTRACT = "PENDING_CONTRACT",
+}
+
+export const ONBOARDING_QUICK_FILTERS: OnboardingQuickFilter[] = [
+  OnboardingQuickFilter.ALL,
+  OnboardingQuickFilter.THIS_WEEK,
+  OnboardingQuickFilter.PENDING_EQUIPMENT,
+  OnboardingQuickFilter.PENDING_CONTRACT,
+];
+
+export const ONBOARDING_QUICK_FILTER_I18N_KEY: Record<
+  OnboardingQuickFilter,
+  string
+> = {
+  [OnboardingQuickFilter.ALL]: "hr_management.movement.filter_all",
+  [OnboardingQuickFilter.THIS_WEEK]: "hr_management.movement.filter_this_week",
+  [OnboardingQuickFilter.PENDING_EQUIPMENT]:
+    "hr_management.movement.filter_pending_equipment",
+  [OnboardingQuickFilter.PENDING_CONTRACT]:
+    "hr_management.movement.filter_pending_contract",
+};
+
+// Info: (20260810 - Julian) 報到三項行政事宜的狀態，對應表格的三個欄位
+export enum ChecklistState {
+  DONE = "DONE",
+  IN_PROGRESS = "IN_PROGRESS",
+  PENDING = "PENDING",
+}
+
+export const CHECKLIST_STATE_I18N_KEY: Record<ChecklistState, string> = {
+  [ChecklistState.DONE]: "hr_management.movement.state_done",
+  [ChecklistState.IN_PROGRESS]: "hr_management.movement.state_in_progress",
+  [ChecklistState.PENDING]: "hr_management.movement.state_pending",
+};
+
+export const CHECKLIST_STATE_STYLE: Record<ChecklistState, string> = {
+  [ChecklistState.DONE]: "bg-emerald-50 text-emerald-700",
+  [ChecklistState.IN_PROGRESS]: "bg-amber-50 text-amber-700",
+  [ChecklistState.PENDING]: "bg-gray-100 text-gray-500",
+};
+
+// Info: (20260810 - Julian) 離職清單的兩種檢視
+export enum OffboardingListMode {
+  ACTIVE = "ACTIVE",
+  HISTORY = "HISTORY",
+}
+
+export const OFFBOARDING_LIST_MODES: OffboardingListMode[] = [
+  OffboardingListMode.ACTIVE,
+  OffboardingListMode.HISTORY,
+];
+
+export const OFFBOARDING_LIST_MODE_I18N_KEY: Record<
+  OffboardingListMode,
+  string
+> = {
+  [OffboardingListMode.ACTIVE]: "hr_management.movement.offboarding_active",
+  [OffboardingListMode.HISTORY]: "hr_management.movement.offboarding_history",
+};
+
+/**
+ * Info: (20260810 - Julian) 勞基法第 16 條的預告期門檻（天）。
+ * 三個月以上未滿一年 10 天、一年以上未滿三年 20 天、三年以上 30 天。
+ */
+export const NOTICE_PERIOD_RULES = [
+  { minTenureMonths: 36, days: 30 },
+  { minTenureMonths: 12, days: 20 },
+  { minTenureMonths: 3, days: 10 },
+  { minTenureMonths: 0, days: 0 },
+];
+
+/**
+ * Info: (20260810 - Julian) 任務範本鍵值。
+ *
+ * 報到列表的「報到前表單 / IT 帳號設備 / 簽署合約」三欄要對應到特定任務，
+ * 用範本鍵值比對而不是比對任務標題 —— 標題會被翻譯、會被使用者改寫，
+ * 拿它當判斷依據等於把顯示文字變成業務邏輯。
+ *
+ * ToDo: (20260810 - Julian) Prisma 的 `ProcessTask` 沒有這個欄位，
+ * 接 API 前需要在 schema 補上（真實系統通常來自任務範本表）。
+ */
+export enum OnboardingTaskKey {
+  FORM = "ONBOARDING_FORM",
+  CONTRACT = "ONBOARDING_CONTRACT",
+  ACCOUNT = "ONBOARDING_ACCOUNT",
+  LAPTOP = "ONBOARDING_LAPTOP",
+  BADGE = "ONBOARDING_BADGE",
+  ORIENTATION = "ONBOARDING_ORIENTATION",
+}
+
+export enum OffboardingTaskKey {
+  DOCUMENT_HANDOVER = "OFFBOARDING_DOCUMENT_HANDOVER",
+  CUSTOMER_HANDOVER = "OFFBOARDING_CUSTOMER_HANDOVER",
+  ACCESS_CARD = "OFFBOARDING_ACCESS_CARD",
+  CAR_KEY = "OFFBOARDING_CAR_KEY",
+  LAPTOP_RETURN = "OFFBOARDING_LAPTOP_RETURN",
+  ACCOUNT_REVOKE = "OFFBOARDING_ACCOUNT_REVOKE",
+  INSURANCE = "OFFBOARDING_INSURANCE",
+  CERTIFICATE = "OFFBOARDING_CERTIFICATE",
+}
+
+// Info: (20260810 - Julian) 報到列表三個欄位各自看哪些任務；IT 欄同時看帳號與筆電
+export const ONBOARDING_FORM_KEYS: string[] = [OnboardingTaskKey.FORM];
+export const ONBOARDING_CONTRACT_KEYS: string[] = [OnboardingTaskKey.CONTRACT];
+export const ONBOARDING_EQUIPMENT_KEYS: string[] = [
+  OnboardingTaskKey.ACCOUNT,
+  OnboardingTaskKey.LAPTOP,
+];
+
+/**
+ * Info: (20260810 - Julian) 案件的自動化警示等級。
+ *
+ * 三色是有嚴格定義的，不是「看起來急不急」：紅色代表**現在就會出事**
+ * （離職日在三天內但 IT 帳號還沒停權、試用期已過卻沒人考核），
+ * 綠色代表**可以結案**，其餘一律黃色。判斷收斂在 `resolveCaseAlert`，
+ * 各畫面只負責上色，不各自判斷 —— 否則同一筆案件在看板是紅的、在列表是黃的。
+ */
+export enum MovementAlertLevel {
+  URGENT = "URGENT",
+  IN_PROGRESS = "IN_PROGRESS",
+  COMPLETED = "COMPLETED",
+}
+
+export const MOVEMENT_ALERT_STYLE: Record<MovementAlertLevel, string> = {
+  [MovementAlertLevel.URGENT]: "bg-red-50 text-red-600 ring-red-200",
+  [MovementAlertLevel.IN_PROGRESS]: "bg-amber-50 text-amber-700 ring-amber-200",
+  [MovementAlertLevel.COMPLETED]:
+    "bg-emerald-50 text-emerald-700 ring-emerald-200",
+};
+
+/**
+ * Info: (20260810 - Julian) 警示原因。
+ *
+ * 徽章上顯示原因而不是「緊急」兩個字 —— 使用者要知道的是該做什麼，
+ * 而「IT 帳號未停權」本身就是那件待辦。
+ */
+export enum MovementAlertReason {
+  IT_ACCOUNT_PENDING = "IT_ACCOUNT_PENDING",
+  PROBATION_OVERDUE = "PROBATION_OVERDUE",
+  READY_TO_CLOSE = "READY_TO_CLOSE",
+  IN_PROGRESS = "IN_PROGRESS",
+}
+
+export const MOVEMENT_ALERT_REASON_I18N_KEY: Record<
+  MovementAlertReason,
+  string
+> = {
+  [MovementAlertReason.IT_ACCOUNT_PENDING]:
+    "hr_management.movement.alert_it_account",
+  [MovementAlertReason.PROBATION_OVERDUE]:
+    "hr_management.movement.alert_probation_overdue",
+  [MovementAlertReason.READY_TO_CLOSE]: "hr_management.movement.alert_ready",
+  [MovementAlertReason.IN_PROGRESS]: "hr_management.movement.alert_in_progress",
+};
+
+/**
+ * Info: (20260811 - Julian) 試用期考核的四個評分項。
+ *
+ * ToDo: (20260811 - Julian) Prisma 的 `ProbationReview` 只有單一 `score`，
+ * 存不下四個分項。接 API 前需要拆成子表或改成 JSON 欄位，
+ * 否則主管填的四個分數只會剩下一個平均值，事後無法回頭看是哪一項不足。
+ */
+export enum ProbationScoreItem {
+  PROFESSIONAL = "PROFESSIONAL",
+  TEAMWORK = "TEAMWORK",
+  INITIATIVE = "INITIATIVE",
+  DISCIPLINE = "DISCIPLINE",
+}
+
+export const PROBATION_SCORE_ITEMS: ProbationScoreItem[] = [
+  ProbationScoreItem.PROFESSIONAL,
+  ProbationScoreItem.TEAMWORK,
+  ProbationScoreItem.INITIATIVE,
+  ProbationScoreItem.DISCIPLINE,
+];
+
+export const PROBATION_SCORE_ITEM_I18N_KEY: Record<ProbationScoreItem, string> =
+  {
+    [ProbationScoreItem.PROFESSIONAL]:
+      "hr_management.movement.score_professional",
+    [ProbationScoreItem.TEAMWORK]: "hr_management.movement.score_teamwork",
+    [ProbationScoreItem.INITIATIVE]: "hr_management.movement.score_initiative",
+    [ProbationScoreItem.DISCIPLINE]: "hr_management.movement.score_discipline",
+  };
+
+/**
+ * Info: (20260811 - Julian) 通過轉正的預設生效日 = 試用期滿日的隔天。
+ * 試用期最後一天仍屬試用，轉正從次日起算；主管仍可在表單上改。
+ */
+export const PROBATION_EFFECTIVE_DAY_OFFSET = 1;
