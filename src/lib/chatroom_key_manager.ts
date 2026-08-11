@@ -46,9 +46,26 @@ async function fetchOwnKeyRecord(): Promise<IOwnKeyRecord | null> {
 // Info: (20260712 - Luphia) 避免「fetch → PRF」順序耗掉 WebAuthn 的 transient user activation
 let ownKeyRecordPromise: Promise<IOwnKeyRecord | null> | null = null;
 
+/**
+ * Info: (20260812 - Luphia) 失敗的 promise 不留在快取裡。
+ *
+ * 原本只判斷 `if (!ownKeyRecordPromise)`,而被記住的包含**已 reject 的 promise** ——
+ * `/api/v1/user/encryption_key` 只要失敗過一次(網路抖動、後端重啟、一次 500),
+ * 之後每一次 `ensureMasterKey()` 都會 await 到同一個 rejected promise,
+ * 在碰到 WebAuthn 之前就拋出。
+ *
+ * 使用者看到的是「按了解鎖完全沒反應,連驗證對話框都不跳」,
+ * 而且**重按沒有用**,只有重新整理頁面才會好 —— 因為模組層級的變數不會自己清掉。
+ *
+ * 清掉之後重按就是一次真正的重試。成功的結果仍然快取(那才是這支存在的理由:
+ * 避免「fetch → PRF」的順序耗掉 WebAuthn 的 transient user activation)。
+ */
 export function prefetchOwnKeyRecord(): Promise<IOwnKeyRecord | null> {
   if (!ownKeyRecordPromise) {
-    ownKeyRecordPromise = fetchOwnKeyRecord();
+    ownKeyRecordPromise = fetchOwnKeyRecord().catch((error: unknown) => {
+      ownKeyRecordPromise = null;
+      throw error;
+    });
   }
   return ownKeyRecordPromise;
 }

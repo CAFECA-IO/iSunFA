@@ -49,6 +49,7 @@ export default function CarbonChatbotPage() {
     isTyping,
     isLoading,
     isUnlocked,
+    unlockError,
     initializeChat,
     hasMoreHistory,
     isLoadingHistory,
@@ -196,8 +197,15 @@ export default function CarbonChatbotPage() {
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
             <FileLock2 className="h-12 w-12 text-gray-300" />
+            {/*
+              Info: (20260812 - Luphia) 這裡也不能對託管帳號說「以裝置金鑰端對端加密」——
+              與下方 unlock 提示同一個理由(見 requestPrfSecret)。上一版只改了聊天區那句,
+              漏了報告區這句,等於揭露只做一半。
+            */}
             <p className="max-w-sm text-sm text-gray-500">
-              {t("carbon_chatbot.report_locked_hint")}
+              {user?.custody === WalletCustodyType.CUSTODIAL
+                ? t("carbon_chatbot.report_locked_hint_custodial")
+                : t("carbon_chatbot.report_locked_hint")}
             </p>
             <button
               type="button"
@@ -206,6 +214,19 @@ export default function CarbonChatbotPage() {
             >
               {t("carbon_chatbot.unlock_button")}
             </button>
+            {/*
+              Info: (20260812 - Luphia) 解鎖失敗的原因顯示在這裡。
+              原本失敗只 appendMessageLocally() 到聊天區,而那個區塊在解鎖前還鎖著 ——
+              訊息一則都看不到,使用者的體驗是「點了完全沒有反應」。
+            */}
+            {unlockError ? (
+              <p
+                role="alert"
+                className="max-w-sm text-sm font-medium text-[#c2410c]"
+              >
+                {unlockError}
+              </p>
+            ) : null}
           </div>
         )}
 
@@ -307,6 +328,19 @@ export default function CarbonChatbotPage() {
             >
               {t("carbon_chatbot.unlock_button")}
             </button>
+            {/*
+              Info: (20260812 - Luphia) 解鎖失敗的原因顯示在這裡。
+              原本失敗只 appendMessageLocally() 到聊天區,而那個區塊在解鎖前還鎖著 ——
+              訊息一則都看不到,使用者的體驗是「點了完全沒有反應」。
+            */}
+            {unlockError ? (
+              <p
+                role="alert"
+                className="max-w-sm text-sm font-medium text-[#c2410c]"
+              >
+                {unlockError}
+              </p>
+            ) : null}
           </div>
         )}
       </CarbonChatWidget>

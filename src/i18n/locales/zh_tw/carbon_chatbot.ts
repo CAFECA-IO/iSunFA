@@ -4,6 +4,8 @@ export const carbonChatbot = {
   // Info: (20260730 - Tzuhan) 未解鎖時的報告區文案:不可讓大綱骨架看起來像已載入的空報告
   report_locked_hint:
     "報告內容以裝置金鑰端對端加密。完成一次驗證即可解鎖並載入這份報告。",
+  report_locked_hint_custodial:
+    "報告內容加密後儲存。您以第三方帳號登入，加密金鑰由平台代管，完成一次驗證即可解鎖並載入這份報告。",
   unlock_button: "開始加密對話",
   unlock_hint:
     "為保護您的盤查內容，本對話將以裝置的安全金鑰進行端對端加密。點擊開始並完成一次驗證即可解鎖並取得 AI 招呼。",
@@ -16,6 +18,8 @@ export const carbonChatbot = {
     "為保護您的盤查內容，本對話將加密後儲存。您以第三方帳號登入，加密金鑰由平台代管（與您的錢包相同），因此平台在技術上具備解密能力；若需要「僅您本人可解密」的保護等級，請改用 passkey 帳號。點擊開始即可解鎖並取得 AI 招呼。",
   device_unsupported:
     "您的裝置或瀏覽器不支援加密所需的安全金鑰功能（WebAuthn PRF），暫時無法使用加密對話。建議改用支援的環境，例如 Android 上的 Chrome，或支援 PRF 的實體安全金鑰。",
+  unlock_failed:
+    "解鎖加密金鑰失敗，對話尚未開始。請再按一次；若持續失敗，請重新整理頁面或聯繫維運（詳細原因已記錄在瀏覽器主控台）。",
   subtitle: "您專屬的企業碳會計師 (Carbon Accountant)",
   recent_chats: "最新對話",
   today: "今日",
