@@ -1,6 +1,7 @@
 import { ITaskSkill } from "@/skills/types";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { ChatService } from "@/services/chat.service";
+import { LLM_WORKER_TIMEOUT_MS } from "@/constants/llm";
 
 export class MarketEventCollectionSkill implements ITaskSkill {
   name = "MARKET_EVENT_COLLECTION";
@@ -55,9 +56,14 @@ export class MarketEventCollectionSkill implements ITaskSkill {
       console.log(
         `[TaskService] Enabling Google Search Grounding for Date > 2024-01-01...`,
       );
-      return await chatService.generateRawWithSearch(fullPrompt);
+      // Info: (20260811 - Luphia) worker 路徑的逾時上限：沒有它「失敗重試」的前提不成立
+      return await chatService.generateRawWithSearch(fullPrompt, {
+        timeoutMs: LLM_WORKER_TIMEOUT_MS,
+      });
     } else {
-      return await chatService.generateRaw(fullPrompt);
+      return await chatService.generateRaw(fullPrompt, undefined, {
+        timeoutMs: LLM_WORKER_TIMEOUT_MS,
+      });
     }
   }
 }

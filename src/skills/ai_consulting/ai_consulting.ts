@@ -5,6 +5,7 @@ import { ChatService } from "@/services/chat.service";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { ITaskDefinition } from "@/lib/worker/task.generator";
 import { storageService } from "@/services/storage.service";
+import { LLM_WORKER_TIMEOUT_MS } from "@/constants/llm";
 
 export class AiConsultingSkill implements ITaskSkill {
   name = "AiConsulting";
@@ -99,6 +100,8 @@ export class AiConsultingSkill implements ITaskSkill {
         imagesForAi,
         true,
         responseSchema as Schema,
+        // Info: (20260811 - Luphia) worker 路徑的逾時上限：沒有它「失敗重試」的前提不成立
+        { timeoutMs: LLM_WORKER_TIMEOUT_MS },
       );
       const parsed = JSON.parse(responseText);
       answer = parsed.answer || responseText;
