@@ -11,11 +11,9 @@ export const pricing = {
    * Info: (20260812 - Luphia) 費思個人化記憶文案（服務條款 §3.7、隱私權政策 §5）。
    * 保留天數由 FAITH_MEMORY_RETENTION_DAYS 插值，不寫死數字，避免與條款不一致。
    */
-  faith_agent_free_tooltip:
-    "Short-term task memory only: Faith follows the context while a task is under way, and keeps nothing once it ends. Long-term memory and feedback learning are exclusive to the Team and Business plans.",
+  faith_agent_free_tooltip: "Short-term task memory",
   faith_agent_memory: "Faith AI Agent (with personal memory)",
-  faith_agent_memory_tooltip:
-    "Short-term task memory plus long-term memory: every member gets their own Faith agent that learns from your feedback, remembering your preferences and corrections so it fits your way of working over time. {{days}} days after your subscription ends, we delete the long-term memory to protect your privacy.",
+  faith_agent_memory_tooltip: "Short-term task memory and long-term memory",
   faith_memory_note_title: "About Faith's personal memory",
   faith_memory_note:
     "Faith's memory comes in two layers. Short-term task memory lets it follow the context while a task is under way, and every plan has it. Long-term memory and feedback learning are exclusive to the cloud Team and Business plans: every member gets their own Faith AI agent, which records the feedback and preferences you give it while chatting — the accounts you use most, how you like reports presented, how much detail you want — and gradually learns your needs so its answers fit your way of working. This memory is used only to improve your own experience: it is never shared with other members or other customers, and never used to train shared AI models.",
@@ -25,7 +23,8 @@ export const pricing = {
    * Info: (20260812 - Luphia) Seat-based pricing copy (Terms §3.1 / §3.6).
    * The headline price is the per-seat rate, not the team total.
    */
-  per_seat: "seat",
+  price_multiply_note:
+    "This is the price per member; multiply it by your team size for the amount due",
   seat_billing_note_title: "About seat-based pricing",
   seat_billing_note:
     'The Team and Business plans are priced per seat: each team member takes one seat, and the amount due is seats × per-seat price. The price above is the per-seat rate; the actual amount is calculated once you pick a team, and we show "seats × per-seat price = total due" before you pay. The Free plan has no seat charge.',
@@ -72,7 +71,6 @@ export const pricing = {
       name: "Free",
       desc: "Perfect for individuals",
       features: {
-        fido: "1 FIDO2 Key",
         vouchers: "{{amount}} Vouchers / Month",
         vouchers_overage_tooltip: "{{price}} Credits / Voucher",
         logistics: "{{amount}} Logistics Carbon Footprints / Month",
@@ -86,7 +84,6 @@ export const pricing = {
       desc: "Perfect for individuals",
       features: {
         storage: "{{gb}} GB storage",
-        fido: "1 FIDO2 Key",
         consults: "Max {{amount}} Consults / Month",
         consults_tooltip: "{{price}} Credits / Consult",
         vouchers: "Max {{amount}} Vouchers / Month",
@@ -102,8 +99,6 @@ export const pricing = {
       desc: "For growing teams",
       features: {
         storage: "{{gb}} GB storage",
-        fido: "Unlimited FIDO2 Keys",
-        fido_tooltip: "The subscription fee is charged per team seat (member)",
         quota_multiple: "{{multiple}}x the token quota of the Free plan",
         consults: "Max {{amount}} Consults / Month",
         consults_tooltip: "{{price}} Credits / Consult",
@@ -122,8 +117,6 @@ export const pricing = {
       desc: "For large scale operations",
       features: {
         storage: "{{gb}} GB storage",
-        fido: "Unlimited FIDO2 Keys",
-        fido_tooltip: "The subscription fee is charged per team seat (member)",
         quota_multiple: "{{multiple}}x the token quota of the Team plan",
         consults: "Max {{amount}} Consults / Month",
         consults_tooltip: "{{price}} Credits / Consult",

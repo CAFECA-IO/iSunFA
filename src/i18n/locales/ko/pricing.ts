@@ -11,11 +11,9 @@ export const pricing = {
    * Info: (20260812 - Luphia) 費思個人化記憶文案（服務條款 §3.7、隱私權政策 §5）。
    * 保留天數由 FAITH_MEMORY_RETENTION_DAYS 插值，不寫死數字，避免與條款不一致。
    */
-  faith_agent_free_tooltip:
-    "작업 단기 기억만 제공합니다. Faith는 같은 작업이 진행되는 동안 맥락을 유지하지만 작업이 끝나면 보관하지 않습니다. 작업을 넘나드는 장기 기억과 피드백 학습은 팀·비즈니스 요금제 전용입니다.",
+  faith_agent_free_tooltip: "작업 단기 기억을 제공합니다",
   faith_agent_memory: "Faith AI 에이전트(전용 기억)",
-  faith_agent_memory_tooltip:
-    "작업 단기 기억에 장기 기억까지 제공합니다. 구성원마다 전용 Faith 에이전트가 피드백 학습을 통해 선호와 수정 사항을 기억해 사용할수록 업무 방식에 가까워집니다. 구독 종료 후 {{days}}일이 지나면 개인정보 보호를 위해 장기 기억을 삭제합니다.",
+  faith_agent_memory_tooltip: "작업 단기 기억과 장기 기억을 제공합니다",
   faith_memory_note_title: "Faith 전용 기억에 대하여",
   faith_memory_note:
     "Faith의 기억은 두 층으로 나뉩니다. 작업 단기 기억은 같은 작업이 진행되는 동안 맥락을 유지하며 모든 요금제에 제공됩니다. 장기 기억과 피드백 학습은 클라우드 팀·비즈니스 요금제 전용으로, 구성원마다 독립된 Faith AI 에이전트가 대화 중 남기신 피드백과 선호(자주 쓰는 계정과목, 보고서 표현 방식, 답변의 상세도 등)를 기록해 사용할수록 필요를 기억하고, 답변을 업무 방식에 맞춰 갑니다. 이 기억은 오직 본인의 사용 경험 개선에만 쓰이며, 다른 구성원이나 다른 고객과 공유되지 않고 공용 AI 모델 학습에도 사용되지 않습니다.",
@@ -25,7 +23,8 @@ export const pricing = {
    * Info: (20260812 - Luphia) 좌석 기준 과금 문안(서비스 약관 §3.1 / §3.6).
    * 표시 가격은 좌석 1개당 단가이며 팀 전체 금액이 아니다.
    */
-  per_seat: "좌석",
+  price_multiply_note:
+    "구성원 1명당 요금입니다. 결제 금액은 팀 구성원 수를 곱한 금액입니다",
   seat_billing_note_title: "좌석 기준 과금 안내",
   seat_billing_note:
     '팀·비즈니스 요금제는 좌석 기준으로 과금됩니다. 구성원 1명이 좌석 1개를 사용하며, 결제 금액은 좌석 수 × 좌석당 요금입니다. 위에 표시된 금액은 좌석당 단가이며, 실제 금액은 팀을 선택한 뒤 계산되어 결제 전에 "좌석 수 × 좌석당 요금 = 결제 금액"으로 표시됩니다. 무료 요금제에는 좌석 요금이 없습니다.',
@@ -73,7 +72,6 @@ export const pricing = {
       name: "무료 버전",
       desc: "개인 사용자용",
       features: {
-        fido: "FIDO2 키 1개",
         vouchers: "월 {{amount}} 건의 전표",
         vouchers_overage_tooltip: "{{price}} 크레딧/건",
         logistics: "월 {{amount}} 건의 물류 탄소 발자국",
@@ -87,7 +85,6 @@ export const pricing = {
       desc: "개인 사용자용",
       features: {
         storage: "저장 공간 {{gb}} GB",
-        fido: "FIDO2 키 1개",
         consults: "월 최대 {{amount}} 회 질문",
         consults_tooltip: "질문당 {{price}} 크레딧",
         vouchers: "월 최대 {{amount}} 건의 전표 분석",
@@ -103,8 +100,6 @@ export const pricing = {
       desc: "성장하는 팀을 위해",
       features: {
         storage: "저장 공간 {{gb}} GB",
-        fido: "무제한 FIDO2 키",
-        fido_tooltip: "구독료는 팀 좌석(구성원 수)에 따라 부과됩니다",
         quota_multiple: "무료 플랜의 {{multiple}}배 토큰 한도",
         consults: "월 최대 {{amount}} 회 질문",
         consults_tooltip: "질문당 {{price}} 크레딧",
@@ -123,8 +118,6 @@ export const pricing = {
       desc: "대규모 조직을 위해",
       features: {
         storage: "저장 공간 {{gb}} GB",
-        fido: "무제한 FIDO2 키",
-        fido_tooltip: "구독료는 팀 좌석(구성원 수)에 따라 부과됩니다",
         quota_multiple: "팀 플랜의 {{multiple}}배 토큰 한도",
         consults: "월 최대 {{amount}} 회 질문",
         consults_tooltip: "질문당 {{price}} 크레딧",

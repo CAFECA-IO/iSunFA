@@ -11,11 +11,9 @@ export const pricing = {
    * Info: (20260812 - Luphia) 費思個人化記憶文案（服務條款 §3.7、隱私權政策 §5）。
    * 保留天數由 FAITH_MEMORY_RETENTION_DAYS 插值，不寫死數字，避免與條款不一致。
    */
-  faith_agent_free_tooltip:
-    "僅具備任務短期記憶：費思在同一項任務進行中記得前後文，任務結束即不再保留。跨任務的長期記憶與回饋學習為團隊版、企業版專屬。",
+  faith_agent_free_tooltip: "具備任務短期記憶",
   faith_agent_memory: "費思人工智能代理人（專屬記憶）",
-  faith_agent_memory_tooltip:
-    "具備任務短期記憶與長期記憶：每位成員各自擁有獨立的費思代理人，透過回饋學習機制記住您的偏好與修正，越用越貼近您的工作方式。停止訂閱 {{days}} 天後，我們會刪除長期記憶以保障隱私。",
+  faith_agent_memory_tooltip: "具備任務短期記憶與長期記憶",
   faith_memory_note_title: "關於費思的專屬記憶",
   faith_memory_note:
     "費思的記憶分兩層：任務短期記憶讓它在同一項任務進行中記得前後文，所有方案皆具備；長期記憶與回饋學習機制則為雲端版的團隊版與企業版專屬——每位成員各自擁有一個獨立的費思人工智能代理人，會記錄您在對話中給予的回饋與偏好（例如慣用的會計科目、報表呈現方式、回答的詳細程度），隨著使用逐漸記住您的需求，讓回答越來越貼近您的工作方式；這些記憶只用於改善您個人的使用體驗，不會與其他成員或其他客戶共用，也不會用於訓練共享的 AI 模型。",
@@ -26,7 +24,7 @@ export const pricing = {
    * documents/architecture/team_seat_billing_and_email_invitation.md）。
    * 價格數字為「每席」單價，不是團隊總額。
    */
-  per_seat: "席",
+  price_multiply_note: "此為每位成員的費用，應付金額需乘上團隊成員數量",
   seat_billing_note_title: "關於席次計費",
   seat_billing_note:
     "團隊版與企業版依席次計費：一位團隊成員佔一席，應付金額 = 席次數 × 每席費用。上方標示的價格為每席單價，實際金額於您選定團隊後計算，並在付款前顯示「席次數 × 每席費用 = 應付總額」。免費版不收席次費用。",
@@ -73,7 +71,6 @@ export const pricing = {
       name: "免費版",
       desc: "適合個人使用者",
       features: {
-        fido: "1 組 FIDO2 金鑰",
         vouchers: "每月 {{amount}} 份會計憑證",
         vouchers_overage_tooltip: "每份 {{price}} 點數",
         logistics: "每月 {{amount}} 筆物流碳足跡",
@@ -87,7 +84,6 @@ export const pricing = {
       desc: "適合個人使用者",
       features: {
         storage: "儲存空間 {{gb}} GB",
-        fido: "1 組 FIDO2 金鑰",
         consults: "每月最多諮詢 {{amount}} 個問題",
         consults_tooltip: "每個問題 {{price}} 點數",
         vouchers: "每月最多分析 {{amount}} 份會計憑證",
@@ -103,8 +99,6 @@ export const pricing = {
       desc: "適合成長中的團隊",
       features: {
         storage: "儲存空間 {{gb}} GB",
-        fido: "無限 FIDO2 金鑰",
-        fido_tooltip: "訂閱費依團隊席次（成員數）計收",
         quota_multiple: "Tokens 額度為免費版的 {{multiple}} 倍",
         consults: "每月最多諮詢 {{amount}} 個問題",
         consults_tooltip: "每個問題 {{price}} 點數",
@@ -123,8 +117,6 @@ export const pricing = {
       desc: "適合大型機構與事務所",
       features: {
         storage: "儲存空間 {{gb}} GB",
-        fido: "無限 FIDO2 金鑰",
-        fido_tooltip: "訂閱費依團隊席次（成員數）計收",
         quota_multiple: "Tokens 額度為團隊版的 {{multiple}} 倍",
         consults: "每月最多諮詢 {{amount}} 個問題",
         consults_tooltip: "每個問題 {{price}} 點數",

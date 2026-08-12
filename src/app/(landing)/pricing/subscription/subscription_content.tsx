@@ -40,10 +40,10 @@ export default function SubscriptionContent({
    * Info: (20260809 - Luphia) 方案功能列僅列出「費思人工智能代理人」（產品調整 20260809）：
    * 不再於此揭露計費費率與 token 計算方式，費率揭露改以服務條款 §3.4 為準。
    *
-   * Info: (20260812 - Luphia) 個人化記憶為付費訂閱權益（服務條款 §3.7）：
-   * 免費版列「費思人工智能代理人」並於 tooltip 說明為單次問答；
-   * 團隊版 / 企業版列「（專屬記憶）」並揭露停止訂閱後的保留天數。
-   * 天數一律自 server 傳入的系統設定值插值（見 props），與條款同源。
+   * Info: (20260812 - Luphia) 記憶分兩層（服務條款 §3.7）：任務短期記憶各方案皆具備，
+   * 長期記憶與回饋學習為付費訂閱權益。故免費版 tooltip 只述短期記憶，
+   * 團隊版 / 企業版列「（專屬記憶）」並述兩層記憶；細節與保留天數由方案格下方段落承載
+   * （天數自 server 傳入的系統設定值插值，見 props，與條款同源）。
    */
   const faithAgentFeature = {
     text: t("pricing.faith_agent"),
@@ -134,7 +134,6 @@ export default function SubscriptionContent({
             billingInterval={billingInterval}
             currentPlan={currentPlan}
             features={[
-              t("pricing.plans.free.features.fido"),
               {
                 text: t("pricing.plans.free.features.consults", {
                   amount: Math.floor(
@@ -198,10 +197,6 @@ export default function SubscriptionContent({
               )
             }
             features={[
-              {
-                text: t("pricing.plans.team.features.fido"),
-                tooltip: t("pricing.plans.team.features.fido_tooltip"),
-              },
               t("pricing.plans.team.features.quota_multiple", {
                 multiple: teamQuotaMultiple,
               }),
@@ -268,10 +263,6 @@ export default function SubscriptionContent({
               )
             }
             features={[
-              {
-                text: t("pricing.plans.business.features.fido"),
-                tooltip: t("pricing.plans.business.features.fido_tooltip"),
-              },
               t("pricing.plans.business.features.quota_multiple", {
                 multiple: businessQuotaMultiple,
               }),

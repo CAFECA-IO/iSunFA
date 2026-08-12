@@ -11,11 +11,9 @@ export const pricing = {
    * Info: (20260812 - Luphia) 費思個人化記憶文案（服務條款 §3.7、隱私權政策 §5）。
    * 保留天數由 FAITH_MEMORY_RETENTION_DAYS 插值，不寫死數字，避免與條款不一致。
    */
-  faith_agent_free_tooltip:
-    "タスクの短期記憶のみ：Faith は同じタスクの進行中は文脈を把握しますが、タスクが終わると保持しません。タスクをまたぐ長期記憶とフィードバック学習はチームプラン・ビジネスプラン限定です。",
+  faith_agent_free_tooltip: "タスクの短期記憶を備えています",
   faith_agent_memory: "Faith AI エージェント（専用メモリ）",
-  faith_agent_memory_tooltip:
-    "タスクの短期記憶に加えて長期記憶を備えます。メンバーごとの専用 Faith エージェントがフィードバック学習によりお客様の好みや修正を記憶し、使うほど進め方に近づきます。サブスクリプション終了から {{days}} 日後、プライバシー保護のため長期記憶を削除します。",
+  faith_agent_memory_tooltip: "タスクの短期記憶と長期記憶を備えています",
   faith_memory_note_title: "Faith の専用メモリについて",
   faith_memory_note:
     "Faith の記憶は 2 層構成です。タスクの短期記憶は同じタスクの進行中に文脈を保持するもので、すべてのプランに備わっています。長期記憶とフィードバック学習はクラウド版のチームプラン・ビジネスプラン限定で、メンバーごとに独立した Faith AI エージェントが、対話の中でいただいたフィードバックや好み（よく使う勘定科目、帳票の見せ方、回答の詳しさなど）を記録し、使うほどご要望を覚えて、お客様の進め方に沿った回答に近づけていきます。この記憶はお客様ご自身の利用体験の改善にのみ用いられ、他のメンバーや他のお客様と共有されることはなく、共有 AI モデルの学習にも使用しません。",
@@ -25,7 +23,8 @@ export const pricing = {
    * Info: (20260812 - Luphia) 席数課金の文案（利用規約 §3.1 / §3.6）。
    * 表示価格は「1 席あたり」の単価であり、チーム合計額ではない。
    */
-  per_seat: "席",
+  price_multiply_note:
+    "メンバー 1 名あたりの料金です。お支払額はチームのメンバー数を掛けた金額となります",
   seat_billing_note_title: "席数課金について",
   seat_billing_note:
     "チームプランとビジネスプランは席数課金です。メンバー 1 名が 1 席を使用し、お支払額は「席数 × 1 席あたりの料金」となります。上記の価格は 1 席あたりの単価で、実際の金額はチームを選択後に計算し、お支払いの前に「席数 × 1 席あたりの料金 = お支払総額」を表示します。無料プランに席数料金はかかりません。",
@@ -72,7 +71,6 @@ export const pricing = {
       name: "フリープラン",
       desc: "個人ユーザー向け",
       features: {
-        fido: "FIDO2 キー 1個",
         vouchers: "月 {{amount}} 件の証憑",
         vouchers_overage_tooltip: "{{price}} pt/件",
         logistics: "月 {{amount}} 件の物流カーボンフットプリント",
@@ -86,7 +84,6 @@ export const pricing = {
       desc: "個人ユーザー向け",
       features: {
         storage: "ストレージ {{gb}} GB",
-        fido: "FIDO2 キー 1個",
         consults: "月間最大 {{amount}} 回の質問",
         consults_tooltip: "1 質問につき {{price}} pt",
         vouchers: "月間最大 {{amount}} 件の証憑分析",
@@ -102,9 +99,6 @@ export const pricing = {
       desc: "成長中のチーム向け",
       features: {
         storage: "ストレージ {{gb}} GB",
-        fido: "無制限の FIDO2 キー",
-        fido_tooltip:
-          "サブスクリプション料金はチームの席数（メンバー数）に応じて請求されます",
         quota_multiple: "無料版の {{multiple}} 倍のトークン枠",
         consults: "月間最大 {{amount}} 回の質問",
         consults_tooltip: "1 質問につき {{price}} pt",
@@ -123,9 +117,6 @@ export const pricing = {
       desc: "大規模な組織向け",
       features: {
         storage: "ストレージ {{gb}} GB",
-        fido: "無制限の FIDO2 キー",
-        fido_tooltip:
-          "サブスクリプション料金はチームの席数（メンバー数）に応じて請求されます",
         quota_multiple: "チーム版の {{multiple}} 倍のトークン枠",
         consults: "月間最大 {{amount}} 回の質問",
         consults_tooltip: "1 質問につき {{price}} pt",

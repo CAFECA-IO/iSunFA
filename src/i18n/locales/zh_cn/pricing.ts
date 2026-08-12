@@ -11,11 +11,9 @@ export const pricing = {
    * Info: (20260812 - Luphia) 费思个人化记忆文案（服务条款 §3.7、隐私权政策 §5）。
    * 保留天数由 FAITH_MEMORY_RETENTION_DAYS 插值，不写死数字，避免与条款不一致。
    */
-  faith_agent_free_tooltip:
-    "仅具备任务短期记忆：费思在同一项任务进行中记得前后文，任务结束即不再保留。跨任务的长期记忆与反馈学习为团队版、企业版专属。",
+  faith_agent_free_tooltip: "具备任务短期记忆",
   faith_agent_memory: "费思人工智能代理人（专属记忆）",
-  faith_agent_memory_tooltip:
-    "具备任务短期记忆与长期记忆：每位成员各自拥有独立的费思代理人，透过反馈学习机制记住您的偏好与修正，越用越贴近您的工作方式。停止订阅 {{days}} 天后，我们会删除长期记忆以保障隐私。",
+  faith_agent_memory_tooltip: "具备任务短期记忆与长期记忆",
   faith_memory_note_title: "关于费思的专属记忆",
   faith_memory_note:
     "费思的记忆分两层：任务短期记忆让它在同一项任务进行中记得前后文，所有方案皆具备；长期记忆与反馈学习机制则为云端版的团队版与企业版专属——每位成员各自拥有一个独立的费思人工智能代理人，会记录您在对话中给予的反馈与偏好（例如惯用的会计科目、报表呈现方式、回答的详细程度），随着使用逐渐记住您的需求，让回答越来越贴近您的工作方式；这些记忆只用于改善您个人的使用体验，不会与其他成员或其他客户共用，也不会用于训练共享的 AI 模型。",
@@ -25,7 +23,7 @@ export const pricing = {
    * Info: (20260812 - Luphia) 席位计费文案（服务条款 §3.1 / §3.6）。
    * 价格数字为「每席位」单价，不是团队总额。
    */
-  per_seat: "席位",
+  price_multiply_note: "此为每位成员的费用，应付金额需乘上团队成员数量",
   seat_billing_note_title: "关于席位计费",
   seat_billing_note:
     "团队版与企业版依席位计费：一位团队成员占一个席位，应付金额 = 席位数 × 每席位费用。上方标示的价格为每席位单价，实际金额于您选定团队后计算，并在付款前显示「席位数 × 每席位费用 = 应付总额」。免费版不收席位费用。",
@@ -72,7 +70,6 @@ export const pricing = {
       name: "免费版",
       desc: "适合个人使用者",
       features: {
-        fido: "1 组 FIDO2 密钥",
         vouchers: "每月 {{amount}} 份会计凭证",
         vouchers_overage_tooltip: "每份 {{price}} 点数",
         logistics: "每月 {{amount}} 笔物流碳足迹",
@@ -86,7 +83,6 @@ export const pricing = {
       desc: "适合个人使用者",
       features: {
         storage: "存储空间 {{gb}} GB",
-        fido: "1 组 FIDO2 密钥",
         consults: "每月最多咨询 {{amount}} 个问题",
         consults_tooltip: "每个问题 {{price}} 点数",
         vouchers: "每月最多分析 {{amount}} 份会计凭证",
@@ -102,8 +98,6 @@ export const pricing = {
       desc: "适合成长中的团队",
       features: {
         storage: "存储空间 {{gb}} GB",
-        fido: "无限 FIDO2 密钥",
-        fido_tooltip: "订阅费依团队席位（成员数）计收",
         quota_multiple: "Tokens 额度为免费版的 {{multiple}} 倍",
         consults: "每月最多咨询 {{amount}} 个问题",
         consults_tooltip: "每个问题 {{price}} 点数",
@@ -122,8 +116,6 @@ export const pricing = {
       desc: "适合大型机构与事务所",
       features: {
         storage: "存储空间 {{gb}} GB",
-        fido: "无限 FIDO2 密钥",
-        fido_tooltip: "订阅费依团队席位（成员数）计收",
         quota_multiple: "Tokens 额度为团队版的 {{multiple}} 倍",
         consults: "每月最多咨询 {{amount}} 个问题",
         consults_tooltip: "每个问题 {{price}} 点数",
