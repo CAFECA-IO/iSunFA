@@ -124,11 +124,26 @@ export async function requestAssertion(
 export async function requestPrfSecret(params: {
   // Info: (20260812 - Luphia) base64 的 salt；兩條路徑用同一份，才能保證同一個包裝解得開
   prfSaltBase64: string;
-  // Info: (20260812 - Luphia) 來自 /auth/me 的 custody；未提供時視為 passkey（與 requestAssertion 一致）
+  /**
+   * Info: (20260812 - Luphia) 來自 /auth/me 的 custody。
+   *
+   * 與 `requestAssertion` 不同,這裡**沒有預設值**（PR review P-2）:那邊猜錯只是一次
+   * 簽章失敗,這邊猜錯會拿到一把錯的包裝金鑰 —— 把託管帳號當成 passkey 就是開出一個
+   * 永遠不會成功的系統對話框,正是這批修正要消滅的 bug。未知時拋錯,不猜。
+   */
   custody?: string;
   // Info: (20260812 - Luphia) passkey 路徑的實作由呼叫端注入，避免這支把 WebAuthn 細節一起拖進來
   derivePasskeySecret: () => Promise<ArrayBuffer>;
 }): Promise<ArrayBuffer> {
+  if (params.custody === undefined) {
+    throw new AppError({
+      code: "AU000021",
+      message:
+        "account custody is not loaded yet; refusing to guess a key source",
+      status: ApiCode.VALIDATION_ERROR,
+    });
+  }
+
   if (params.custody !== WalletCustodyType.CUSTODIAL) {
     return params.derivePasskeySecret();
   }

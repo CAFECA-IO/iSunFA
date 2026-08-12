@@ -3,6 +3,7 @@ import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { WalletCustodyType } from "@/constants/auth_provider";
 import { resolveCustodyType } from "@/lib/auth/user_approval";
 import { derivePurposeSecret, VaultPurpose } from "@/lib/auth/key_vault";
+import { CUSTODIAL_PRF_VERSION } from "@/constants/chatroom_key";
 
 /**
  * Info: (20260812 - Luphia) 託管帳號的 PRF 替身。
@@ -60,9 +61,31 @@ export class CustodialPrfService {
       throw new AppError(API_ERRORS.AUTH_PERMISSION_DENIED);
     }
 
+    /**
+     * Info: (20260812 - Luphia) 綁 salt 的 **bytes**,不是它的 base64 字串（PR review P-3）。
+     *
+     * 另一條路徑吃的是 bytes（`getPrfSecret(base64ToBytes(prfSalt))`）,
+     * 這裡若綁字串表示,兩條路徑對 salt 的敏感點就不同 —— 任何編碼上的改動
+     * (base64 → base64url、去 padding、trim、一次正規化的遷移) 都會換掉秘密,
+     * 而**失敗方式是不對稱的**:passkey 帳號解碼成 bytes 所以毫無症狀,
+     * 只有託管帳號的對話永久解不開,而且要等改動上線之後才發現。
+     *
+     * 以長度前綴串接而不是用 `:` 分隔（PR review nit）:userId 今天是固定格式的 uuid
+     * 所以無歧義,但前綴長度一旦不固定就有碰撞面。長度前綴讓框界不依賴內容。
+     *
+     * 版本字串也進輸入（P-5）:標記換版時派生出來的秘密必須跟著換,
+     * 否則 `algorithm` 裡的版本只是註解。
+     */
+    const userIdBytes = Buffer.from(params.userId, "utf8");
+    const saltBytes = Buffer.from(params.prfSalt, "base64");
+    const versionBytes = Buffer.from(CUSTODIAL_PRF_VERSION, "utf8");
+    const framing = Buffer.alloc(8);
+    framing.writeUInt32BE(versionBytes.length, 0);
+    framing.writeUInt32BE(userIdBytes.length, 4);
+
     const secret = derivePurposeSecret(
       VaultPurpose.CUSTODIAL_PRF,
-      `${params.userId}:${params.prfSalt}`,
+      Buffer.concat([framing, versionBytes, userIdBytes, saltBytes]),
     );
     return secret.toString("base64");
   }

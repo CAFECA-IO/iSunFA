@@ -12,6 +12,10 @@ export const carbonChatbot = {
   // Info: (20260812 - Luphia) Custodial (third-party login) accounts need a different promise than the passkey one
   unlock_hint_custodial:
     'To protect your inventory data, this chat is stored encrypted. You signed in with a third-party account, so the encryption key is held by the platform (the same as your wallet) — meaning the platform is technically able to decrypt it. If you need "only you can decrypt" protection, use a passkey account instead. Click start to unlock and receive the AI greeting.',
+  custody_loading:
+    "Checking how your account key is held. The encrypted chat will be available in a moment.",
+  key_source_mismatch:
+    "This conversation was encrypted under a different key custody (for example, content created before you registered a passkey), so the current key cannot open it. Contact ops to migrate the key — retrying will not help.",
   device_unsupported:
     "Your device or browser does not support the secure key feature (WebAuthn PRF) required for encryption, so encrypted chat is unavailable. Please use a supported environment, such as Chrome on Android or a PRF-capable security key.",
   unlock_failed:

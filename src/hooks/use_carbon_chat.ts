@@ -115,6 +115,8 @@ import {
 } from "@/lib/chatroom_ecies";
 import {
   ensureMasterKey,
+  ChatroomKeySourceMismatchError,
+  ChatroomCustodyUnknownError,
   prefetchOwnKeyRecord,
 } from "@/lib/chatroom_key_manager";
 import { request, requestEnvelope } from "@/lib/utils/request";
@@ -4699,6 +4701,22 @@ export const useCarbonChat = () => {
       console.error("[carbon-chat] failed to unlock encryption key:", keyError);
       if (keyError instanceof ChatroomUnsupportedDeviceError) {
         setUnlockError(t("carbon_chatbot.device_unsupported"));
+        return;
+      }
+      /**
+       * Info: (20260812 - Luphia) 來源不符要說成它本來的樣子（PR review P-1）。
+       *
+       * 這一列是用另一種金鑰包裝的（最可能是補綁 passkey 之後託管金鑰列被廢除）,
+       * 解不開不是「失敗」而是「需要先做金鑰移轉」。共用 unlock_failed 會讓人
+       * 一直重按一件永遠不會成功的事。
+       */
+      if (keyError instanceof ChatroomKeySourceMismatchError) {
+        setUnlockError(t("carbon_chatbot.key_source_mismatch"));
+        return;
+      }
+      // Info: (20260812 - Luphia) custody 還沒載入（按鈕本該是 disabled，這是第二層）
+      if (keyError instanceof ChatroomCustodyUnknownError) {
+        setUnlockError(t("carbon_chatbot.custody_loading"));
         return;
       }
       setIsError(true);

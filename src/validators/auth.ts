@@ -39,8 +39,17 @@ export const updateProfileSchema = z.object({
  */
 export const custodialPrfSchema = z
   .object({
-    // Info: (20260812 - Luphia) base64 的 32 bytes salt；長度上限留餘裕，內容不入判斷邏輯
-    prfSalt: z.string().min(1).max(256),
+    /**
+     * Info: (20260812 - Luphia) 32 bytes 的 base64 就是 44 字元（含一個 padding）。
+     *
+     * 原本只寫 `min(1).max(256)`。亂送不構成漏洞（不同 salt 得到不同秘密，
+     * 而且必須與包裝時完全一致才解得開），但 custodial_signing 那邊已經為訂單
+     * challenge 立了 43 字元 base64url 的門檻 —— 沿用同樣的嚴格度，
+     * 讓「這個欄位應該長什麼樣」是程式碼而不是慣例（PR review P-6）。
+     */
+    prfSalt: z
+      .string()
+      .regex(/^[A-Za-z0-9+/]{43}=$/, "prfSalt must be 32 bytes in base64"),
   })
   .strict();
 

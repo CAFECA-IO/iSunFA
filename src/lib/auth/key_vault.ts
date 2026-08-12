@@ -148,12 +148,21 @@ export function openSecret(
  *
  * `getSubKey` 仍然不外露 —— 呼叫端拿到的是派生結果,不是子金鑰本身,
  * 因此無法用它去解別的東西。
+ *
+ * Info: (20260812 - Luphia) `info` 收 `Buffer` 而不只是字串（PR review P-3）。
+ *
+ * 綁字串的話,呼叫端只能餵「某個值的字串表示」;而當那個值本來是 bytes
+ * (例如 base64 的 salt),派生結果就對**編碼方式**敏感 ——
+ * base64 → base64url、去掉 padding、trim,任何一個看起來無害的改動都會換掉秘密。
+ * 收 Buffer 讓呼叫端可以綁 bytes 本身,與另一條路徑（WebAuthn PRF 吃的就是 bytes）
+ * 依賴同一件事。
  */
 export function derivePurposeSecret(
   purpose: VaultPurpose,
-  info: string,
+  info: string | Buffer,
 ): Buffer {
-  return createHmac("sha256", getSubKey(purpose)).update(info, "utf8").digest();
+  const material = typeof info === "string" ? Buffer.from(info, "utf8") : info;
+  return createHmac("sha256", getSubKey(purpose)).update(material).digest();
 }
 
 // Info: (20260809 - Luphia) 供健康檢查／設定頁判斷主密鑰是否就緒，不外露密鑰內容

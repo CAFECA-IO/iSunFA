@@ -76,3 +76,60 @@ describe("prefetchOwnKeyRecord", () => {
     expect(requestMock).toHaveBeenCalledTimes(2);
   });
 });
+
+/**
+ * Info: (20260812 - Luphia) 包裝來源必須被記錄並在解包前比對（PR review P-1 / P-2）。
+ *
+ * 沒有這道比對，custody 一翻轉就是**靜默的資料損失**：託管使用者補綁 passkey、
+ * 託管金鑰列被廢除之後 `resolveCustodyType` 回 PASSKEY，前端改走 passkey 派生 ——
+ * 同一個 salt、不同的秘密，`unwrapMasterKey` 必然失敗，而使用者看到的是
+ * 一句通用的「解鎖失敗」，真相是「這份對話已經解不開了」。
+ */
+describe("ensureMasterKey guards the key source", () => {
+  const CUSTODIAL_RECORD = {
+    encryptionPublicKey: "xpub",
+    wrappedPrivateKey: "wrapped",
+    prfSalt: "c2FsdA==",
+    algorithm: "CustodialPRF-v1-HMAC-SHA256-AES-256-GCM",
+  };
+
+  it("should refuse to unwrap a custodial record as a passkey one", async () => {
+    requestMock.mockResolvedValue({ payload: CUSTODIAL_RECORD });
+    const { ensureMasterKey, ChatroomKeySourceMismatchError } =
+      await loadManager();
+
+    await expect(ensureMasterKey("PASSKEY")).rejects.toBeInstanceOf(
+      ChatroomKeySourceMismatchError,
+    );
+  });
+
+  /**
+   * Info: (20260812 - Luphia) 反向也要擋:passkey 包裝的列不得用託管秘密去解。
+   * 舊列沒有 `algorithm` 欄位，視為 passkey（schema 的預設值就是那個）。
+   */
+  it("should refuse to unwrap a legacy passkey record as a custodial one", async () => {
+    requestMock.mockResolvedValue({
+      payload: { ...CUSTODIAL_RECORD, algorithm: undefined },
+    });
+    const { ensureMasterKey, ChatroomKeySourceMismatchError } =
+      await loadManager();
+
+    await expect(ensureMasterKey("CUSTODIAL")).rejects.toBeInstanceOf(
+      ChatroomKeySourceMismatchError,
+    );
+  });
+
+  /**
+   * Info: (20260812 - Luphia) custody 未知時不猜（P-2）。
+   * 猜錯的方向不對稱:把託管帳號當 passkey 會開出一個永遠不會成功的系統對話框。
+   */
+  it("should refuse to guess when custody is not loaded", async () => {
+    requestMock.mockResolvedValue({ payload: CUSTODIAL_RECORD });
+    const { ensureMasterKey, ChatroomCustodyUnknownError } =
+      await loadManager();
+
+    await expect(ensureMasterKey(undefined)).rejects.toBeInstanceOf(
+      ChatroomCustodyUnknownError,
+    );
+  });
+});

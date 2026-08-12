@@ -36,10 +36,12 @@ export async function POST(request: NextRequest) {
       return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
-    const limited = enforceCarbonRateLimit(
-      user.id,
-      RateLimitBucketEnum.SIGNING,
-    );
+    /**
+     * Info: (20260812 - Luphia) 用獨立的 PRF 桶,不與付款簽章共用（PR review P-4）。
+     * 這是每次進聊天室都會走一次的例行操作,共用資金授權的尺寸會讓
+     * 「重載五次就解鎖失敗」與「聊天擠掉當天的付款簽章額度」同時發生。
+     */
+    const limited = enforceCarbonRateLimit(user.id, RateLimitBucketEnum.PRF);
     if (limited) return limited;
 
     const body = await request.json();

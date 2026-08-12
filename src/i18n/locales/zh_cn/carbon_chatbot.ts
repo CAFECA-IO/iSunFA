@@ -12,6 +12,9 @@ export const carbonChatbot = {
   // Info: (20260812 - Luphia) 托管账号（第三方登录）专用的解锁说明，不可沿用上面那句
   unlock_hint_custodial:
     "为保护您的盘查内容，本对话将加密后储存。您以第三方账号登录，加密密钥由平台代管（与您的钱包相同），因此平台在技术上具备解密能力；若需要「仅您本人可解密」的保护等级，请改用 passkey 账号。点击开始即可解锁并取得 AI 招呼。",
+  custody_loading: "正在确认您的账号密钥保管方式，稍候即可开始加密对话。",
+  key_source_mismatch:
+    "这份对话是以另一种密钥保管方式加密的（例如您在绑定 passkey 之前建立的内容），因此无法用目前的密钥解开。请联系运维协助完成密钥移转 —— 重试不会有帮助。",
   device_unsupported:
     "您的设备或浏览器不支持加密所需的安全密钥功能（WebAuthn PRF），暂时无法使用加密对话。建议改用支持的环境，例如 Android 上的 Chrome，或支持 PRF 的实体安全密钥。",
   unlock_failed:

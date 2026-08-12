@@ -34,7 +34,21 @@ const RecordTabModal = dynamic(
 export default function CarbonChatbotPage() {
   const { t } = useTranslation();
   // Info: (20260812 - Luphia) custody 決定解鎖說明給的是哪一種保證（見下方 unlock 提示）
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+
+  /**
+   * Info: (20260812 - Luphia) custody 未知時不給任何保證、也不讓解鎖成立（PR review P-2）。
+   *
+   * `user?.custody` 在 `/auth/me` 回來之前是 undefined,而原本兩處都寫成
+   * 「不是 CUSTODIAL 就當 passkey」—— 於是託管使用者在那個窗口看到的是
+   * **passkey 那句保證**（「以裝置的安全金鑰進行端對端加密」),
+   * 而 ADR 016 補充明寫「在使用者按下解鎖之前就要講清楚」。
+   *
+   * 按下去更糟:走 passkey 派生 → 開出一個永遠不會成功的系統對話框,
+   * 正是這批修正要消滅的 bug。未知時倒向「不給保證」而不是「給較強的保證」。
+   */
+  const custodyKnown = !authLoading && user?.custody !== undefined;
+  const isCustodial = user?.custody === WalletCustodyType.CUSTODIAL;
   const {
     sessionsList,
     activeSession,
@@ -203,14 +217,17 @@ export default function CarbonChatbotPage() {
               漏了報告區這句,等於揭露只做一半。
             */}
             <p className="max-w-sm text-sm text-gray-500">
-              {user?.custody === WalletCustodyType.CUSTODIAL
-                ? t("carbon_chatbot.report_locked_hint_custodial")
-                : t("carbon_chatbot.report_locked_hint")}
+              {!custodyKnown
+                ? t("carbon_chatbot.custody_loading")
+                : isCustodial
+                  ? t("carbon_chatbot.report_locked_hint_custodial")
+                  : t("carbon_chatbot.report_locked_hint")}
             </p>
             <button
               type="button"
               onClick={initializeChat}
-              className="rounded-full bg-[#ff5a00] px-6 py-3 text-sm font-bold text-white shadow-md shadow-orange-500/20 transition-colors hover:bg-[#e04f00] focus:outline-none"
+              disabled={!custodyKnown}
+              className="rounded-full bg-[#ff5a00] px-6 py-3 text-sm font-bold text-white shadow-md shadow-orange-500/20 transition-colors hover:bg-[#e04f00] focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
               {t("carbon_chatbot.unlock_button")}
             </button>
@@ -317,14 +334,17 @@ export default function CarbonChatbotPage() {
               「以裝置的安全金鑰進行端對端加密」會給出一個它們沒有的承諾。
             */}
             <p className="max-w-sm text-sm text-gray-500">
-              {user?.custody === WalletCustodyType.CUSTODIAL
-                ? t("carbon_chatbot.unlock_hint_custodial")
-                : t("carbon_chatbot.unlock_hint")}
+              {!custodyKnown
+                ? t("carbon_chatbot.custody_loading")
+                : isCustodial
+                  ? t("carbon_chatbot.unlock_hint_custodial")
+                  : t("carbon_chatbot.unlock_hint")}
             </p>
             <button
               type="button"
               onClick={initializeChat}
-              className="rounded-full bg-[#ff5a00] px-6 py-3 text-sm font-bold text-white shadow-md shadow-orange-500/20 transition-colors hover:bg-[#e04f00] focus:outline-none"
+              disabled={!custodyKnown}
+              className="rounded-full bg-[#ff5a00] px-6 py-3 text-sm font-bold text-white shadow-md shadow-orange-500/20 transition-colors hover:bg-[#e04f00] focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
               {t("carbon_chatbot.unlock_button")}
             </button>
