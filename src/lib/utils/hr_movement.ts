@@ -29,6 +29,7 @@ import {
   IMovementAlert,
   IMovementCase,
   IOffboardingCase,
+  IOffboardingTask,
   IOnboardingRow,
   IProbationMetrics,
   IProbationRow,
@@ -55,6 +56,20 @@ import {
 // Info: (20260811 - Julian) 任務是否算完成。跳過（SKIPPED）視同完成，它代表「這件事不用做」
 function isTaskDone(task: IProcessTask): boolean {
   return task.status !== ProcessTaskStatus.PENDING;
+}
+
+/**
+ * Info: (20260812 - Julian) 從合併的任務串裡認出離職任務。
+ *
+ * ADR 019 §5.2 說 `taskType` 存在的唯一理由是「合併列表要標示每一列的來源」。
+ * 這支就是那個用途的完整形式：既然它已經標了來源，就讓 TypeScript
+ * 也照著它分辨，而不是在需要 `assetNo` 的地方各寫一次 `as IOffboardingTask`。
+ * 型別述詞與判別子綁在同一個欄位上，改 enum 時編譯器會一起提醒。
+ */
+export function isOffboardingTask(
+  task: IProcessTask,
+): task is IOffboardingTask {
+  return task.taskType === ProcessTaskType.OFFBOARDING;
 }
 
 /**
@@ -434,6 +449,17 @@ export function buildOffboardingCases(
 
       return {
         ...item,
+        /**
+         * Info: (20260812 - Julian) 這一行是型別收窄的執行期對應。
+         *
+         * 一個案件的任務全部來自同一張表（ADR 019 拆表後就是 `OffboardingTask`），
+         * 因此這個 filter 不會篩掉任何東西；它的作用是把「案件已經是離職案件」
+         * 這個事實帶到每一筆任務上，讓下游不必轉型。
+         *
+         * 真的篩掉了東西的話，`totalTaskCount` 會與 `tasks.length` 對不上 ——
+         * 那代表上游把兩種任務混進同一個 employeeId，是資料錯誤而不是顯示問題。
+         */
+        tasks: item.tasks.filter(isOffboardingTask),
         requiredNoticeDays,
         actualNoticeDays,
         isNoticeSatisfied: actualNoticeDays >= requiredNoticeDays,

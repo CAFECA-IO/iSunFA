@@ -149,29 +149,45 @@ export interface IProcessTask {
   templateKey: string;
   /** Info: (20260811 - Julian) 負責單位／負責人，任務指派給誰 */
   assigneeName: string;
+  /** Info: (20260811 - Julian) 補充說明／損壞紀錄 */
+  note: string | null;
+}
+
+/**
+ * Info: (20260812 - Julian) 離職交接任務：共用核心加上四個離職才有的欄位。
+ *
+ * ADR 019 §4 在拆表時就預告了這件事 ——「離職交接需要『交接對象』與
+ * 『資產歸還確認』，報到不需要；屆時單表會被迫再加一批只對其中一種
+ * 有意義的可選欄位」。那正是這四個欄位在 `IProcessTask` 上的處境：
+ * 報到任務永遠是 null，而且沒有任何報到端的程式碼讀它們。
+ *
+ * `taskType` 在這裡收窄成字面量，因此它同時是 TypeScript 的可辨識聯集判別子。
+ * ADR §5.2 說這個欄位存在的唯一理由是「合併列表要標示每一列的來源」——
+ * 收窄之後，同一個欄位讓編譯器也能分辨來源，不必轉型。
+ */
+export interface IOffboardingTask extends IProcessTask {
+  taskType: ProcessTaskType.OFFBOARDING;
   /**
-   * Info: (20260811 - Julian) 實際完成的經辦人與日期，與 `assigneeName` 不同。
+   * Info: (20260812 - Julian) 實際完成的經辦人與日期，與 `assigneeName` 不同。
    *
-   * 指派給 IT 部門的回收單，當資產出了爭議時可以查這一欄。
+   * 指派給 IT 部門的回收單，當資產出了爭議時要查的是誰真的去收的。
    *
-   * ToDo: (20260812 - Julian) `OnboardingTask` / `OffboardingTask` 都只有 `completedAt`，
-   * 沒有經辦人。接 API 前要在兩張表補 `completedById`。
+   * ToDo: (20260812 - Julian) `OffboardingTask` 只有 `completedAt`，沒有經辦人。
+   * 接 API 前要補 `completedById`。
    */
   completedBy: string | null;
   completedDate: string | null;
   /**
-   * Info: (20260811 - Julian) 資產序號／卡號。
-   * ToDo: (20260811 - Julian) 真實系統應該來自資產管理模組，
+   * Info: (20260812 - Julian) 資產序號／卡號。
+   * ToDo: (20260812 - Julian) 真實系統應該來自資產管理模組，
    * Prisma 目前完全沒有資產表，接 API 前要決定是新開一張表還是外接系統。
    */
   assetNo: string | null;
   /**
-   * Info: (20260811 - Julian) 排定生效時間（帳號停權用），格式 `YYYY-MM-DDTHH:mm`。
+   * Info: (20260812 - Julian) 排定生效時間（帳號停權用），格式 `YYYY-MM-DDTHH:mm`。
    * 停權是排程執行而不是當下執行，因此它是「預定」而非「完成」時間。
    */
   scheduledAt: string | null;
-  /** Info: (20260811 - Julian) 補充說明／損壞紀錄 */
-  note: string | null;
 }
 
 // Info: (20260811 - Julian) 待辦清單的一列（任務或試用期考核），已解析出員工姓名與剩餘天數
@@ -372,6 +388,14 @@ export interface IProbationMetrics {
 
 // Info: (20260811 - Julian) 離職案件，含預告期是否符合
 export interface IOffboardingCase extends IMovementCase {
+  /**
+   * Info: (20260812 - Julian) 把任務收窄成離職任務。
+   *
+   * 看板與抽屜吃的是 `IMovementCase`，只讀共用核心，兩種案件通用；
+   * 需要交接對象與資產欄位的只有離職 Modal，而它拿到的一定是這個型別。
+   * 收窄在這裡做一次，`hr_offboarding.ts` 全檔就不必出現任何轉型。
+   */
+  tasks: IOffboardingTask[];
   /** Info: (20260811 - Julian) 依勞基法第 16 條依年資推得的應預告天數 */
   requiredNoticeDays: number;
   actualNoticeDays: number;

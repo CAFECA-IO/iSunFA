@@ -14,7 +14,11 @@ import {
   MOCK_HR_EMPLOYEES,
   MOCK_HR_TODAY,
 } from "@/constants/mock_hr_employees";
-import { IEmployeeListItem, IProcessTask } from "@/interfaces/hr_management";
+import {
+  IEmployeeListItem,
+  IOffboardingTask,
+  IProcessTask,
+} from "@/interfaces/hr_management";
 import {
   addDays,
   differenceInDays,
@@ -326,6 +330,13 @@ function resolveCompletedDate(dueDate: Date, index: number): string {
   return toIsoDate(addDays(dueDate, -(index % 3)));
 }
 
+/**
+ * Info: (20260812 - Julian) 報到任務只填共用核心。
+ *
+ * 交接對象、資產序號、停權時間、完成人這四個欄位已經隨 ADR 019 移到
+ * `IOffboardingTask`。它們在報到端本來就恆為 null，也沒有任何報到畫面讀過 ——
+ * 補一排 null 只是讓型別看起來還在共用，實際上不是。
+ */
 function buildOnboardingTasks(employee: IEmployeeListItem): IProcessTask[] {
   const hireDate = parseIsoDate(employee.hireDate);
   // Info: (20260810 - Julian) 依工號末碼決定哪幾項卡住，讓每個人的進度不一樣但固定
@@ -335,7 +346,6 @@ function buildOnboardingTasks(employee: IEmployeeListItem): IProcessTask[] {
   return ONBOARDING_TEMPLATE.map((template, index) => {
     const dueDate = addDays(hireDate, template.dueOffset);
     const status = resolveStatus(dueDate, index, skipIndexes);
-    const isDone = status !== ProcessTaskStatus.PENDING;
     return {
       id: `task-on-${employee.id}-${template.key}`,
       employeeId: employee.id,
@@ -346,10 +356,6 @@ function buildOnboardingTasks(employee: IEmployeeListItem): IProcessTask[] {
       category: template.category,
       templateKey: template.key,
       assigneeName: template.assignee,
-      completedBy: isDone ? template.assignee : null,
-      completedDate: isDone ? resolveCompletedDate(dueDate, index) : null,
-      assetNo: null,
-      scheduledAt: null,
       note: null,
     } satisfies IProcessTask;
   });
@@ -358,7 +364,9 @@ function buildOnboardingTasks(employee: IEmployeeListItem): IProcessTask[] {
 /** Info: (20260810 - Julian) 離職滿這麼多天後，交接視為全部結清 */
 const OFFBOARDING_SETTLED_DAYS = 7;
 
-function buildOffboardingTasks(employee: IEmployeeListItem): IProcessTask[] {
+function buildOffboardingTasks(
+  employee: IEmployeeListItem,
+): IOffboardingTask[] {
   if (!employee.leaveDate) return [];
   const leaveDate = parseIsoDate(employee.leaveDate);
 
@@ -432,7 +440,7 @@ function buildOffboardingTasks(employee: IEmployeeListItem): IProcessTask[] {
         ? `${toIsoDate(leaveDate)}T${ACCOUNT_REVOKE_DEFAULT_TIME}`
         : null,
       note: template.note,
-    } satisfies IProcessTask;
+    } satisfies IOffboardingTask;
   });
 }
 

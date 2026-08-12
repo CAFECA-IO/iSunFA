@@ -23,6 +23,7 @@ import {
   IOffboardingCase,
   IOffboardingForm,
   IOffboardingProgress,
+  IOffboardingTask,
   IProcessTask,
 } from "@/interfaces/hr_management";
 import {
@@ -49,11 +50,20 @@ function isDone(task: IProcessTask): boolean {
   return task.status !== ProcessTaskStatus.PENDING;
 }
 
-function findByKeys(tasks: IProcessTask[], keys: string[]): IProcessTask[] {
+/**
+ * Info: (20260812 - Julian) 這裡吃 `IOffboardingTask` 而不是共用核心。
+ *
+ * 三個呼叫端（資產、停權、退保）取回來就是要讀 `assetNo`、`scheduledAt`、
+ * `completedDate` —— 用共用核心的話每一處都得補一次轉型。
+ */
+function findByKeys(
+  tasks: IOffboardingTask[],
+  keys: string[],
+): IOffboardingTask[] {
   // Info: (20260811 - Julian) 依 keys 的順序回傳，讓畫面上的排列與範本一致
   return keys
     .map((key) => tasks.find((task) => task.templateKey === key))
-    .filter((task): task is IProcessTask => task !== undefined);
+    .filter((task): task is IOffboardingTask => task !== undefined);
 }
 
 /**
