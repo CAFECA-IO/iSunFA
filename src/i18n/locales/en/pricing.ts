@@ -13,7 +13,8 @@ export const pricing = {
    */
   faith_agent_free_tooltip: "Short-term task memory",
   faith_agent_memory: "Faith AI Agent (with personal memory)",
-  faith_agent_memory_tooltip: "Short-term task memory and long-term memory",
+  faith_agent_memory_tooltip:
+    "Short-term task memory and long-term learning memory",
   faith_memory_note_title: "About Faith's personal memory",
   faith_memory_note:
     "Faith's memory comes in two layers. Short-term task memory lets it follow the context while a task is under way, and every plan has it. Long-term memory and feedback learning are exclusive to the cloud Team and Business plans: every member gets their own Faith AI agent, which records the feedback and preferences you give it while chatting — the accounts you use most, how you like reports presented, how much detail you want — and gradually learns your needs so its answers fit your way of working. This memory is used only to improve your own experience: it is never shared with other members or other customers, and never used to train shared AI models.",

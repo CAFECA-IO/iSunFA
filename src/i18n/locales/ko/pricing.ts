@@ -13,7 +13,7 @@ export const pricing = {
    */
   faith_agent_free_tooltip: "작업 단기 기억을 제공합니다",
   faith_agent_memory: "Faith AI 에이전트(전용 기억)",
-  faith_agent_memory_tooltip: "작업 단기 기억과 장기 기억을 제공합니다",
+  faith_agent_memory_tooltip: "작업 단기 기억과 장기 학습 기억을 제공합니다",
   faith_memory_note_title: "Faith 전용 기억에 대하여",
   faith_memory_note:
     "Faith의 기억은 두 층으로 나뉩니다. 작업 단기 기억은 같은 작업이 진행되는 동안 맥락을 유지하며 모든 요금제에 제공됩니다. 장기 기억과 피드백 학습은 클라우드 팀·비즈니스 요금제 전용으로, 구성원마다 독립된 Faith AI 에이전트가 대화 중 남기신 피드백과 선호(자주 쓰는 계정과목, 보고서 표현 방식, 답변의 상세도 등)를 기록해 사용할수록 필요를 기억하고, 답변을 업무 방식에 맞춰 갑니다. 이 기억은 오직 본인의 사용 경험 개선에만 쓰이며, 다른 구성원이나 다른 고객과 공유되지 않고 공용 AI 모델 학습에도 사용되지 않습니다.",
