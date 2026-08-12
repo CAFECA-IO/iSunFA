@@ -254,9 +254,14 @@ const EmployeeListPageBody: FC = () => {
               <Mail className="h-3.5 w-3.5 shrink-0" />
               {employee.email}
             </a>
+            {/**
+             * Info: (20260812 - Julian) 電話顯示遮罩後的值。
+             * 它是 Tier 2 CONFIDENTIAL（ADR 018 §2），列表一次帶一百多人的
+             * 完整號碼，等於把整份通訊錄放在一個畫面上。
+             */}
             <span className="flex items-center gap-1.5 text-xs text-gray-400">
               <Phone className="h-3.5 w-3.5 shrink-0" />
-              {employee.phone}
+              {employee.maskedPhone}
             </span>
           </div>
         ),

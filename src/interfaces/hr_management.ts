@@ -34,9 +34,26 @@ export interface IEmployeeListItem {
   name: string;
   englishName: string | null;
   gender: Gender;
-  birthday: string | null;
   email: string;
-  phone: string;
+  /**
+   * Info: (20260812 - Julian) 電話是 Tier 2 CONFIDENTIAL，DTO 只帶遮罩後的值。
+   *
+   * 完整值需要另一支帶授權檢查的端點才取得到 —— 列表一次撈一百多人，
+   * 若每一列都帶完整電話，一次外洩就是整份通訊錄（ADR 018 §2）。
+   */
+  maskedPhone: string;
+  /**
+   * Info: (20260812 - Julian) 生日不進 DTO，改帶兩個衍生值。
+   *
+   * ADR 018 §7 已知取捨第 1 點寫明：需要「本月壽星」這類功能時
+   * 加非敏感的衍生欄位，不要為了查詢把 `birthday` 改回明文。
+   * 出生年月日是身分驗證的常見要素，月／日與年齡不是。
+   *
+   * `birthMonthDay` 格式為 `MM-DD`，供壽星清單篩選與排序；
+   * `age` 供年齡結構分布，兩者都不足以回推完整生日。
+   */
+  birthMonthDay: string | null;
+  age: number | null;
   status: EmployeeStatus;
   hireDate: string;
   leaveDate: string | null;
@@ -137,8 +154,8 @@ export interface IProcessTask {
    *
    * 指派給 IT 部門的回收單，當資產出了爭議時可以查這一欄。
    *
-   * ToDo: (20260811 - Julian) Prisma 的 `ProcessTask` 只有 `completedAt`，
-   * 沒有經辦人。接 API 前要補 `completedById`。
+   * ToDo: (20260812 - Julian) `OnboardingTask` / `OffboardingTask` 都只有 `completedAt`，
+   * 沒有經辦人。接 API 前要在兩張表補 `completedById`。
    */
   completedBy: string | null;
   completedDate: string | null;
@@ -200,7 +217,10 @@ export interface IEngagementItem {
   employeeName: string;
   departmentName: string | null;
   jobTitle: string | null;
-  /** Info: (20260811 - Julian) 事件日期；報到為到職日、壽星為生日、週年為到職紀念日 */
+  /**
+   * Info: (20260812 - Julian) 事件日期。報到為到職日、週年為到職紀念日，
+   * 兩者是 `YYYY-MM-DD`；壽星只有 `MM-DD`（生日的年份不進畫面，見 ADR 018 §7）。
+   */
   eventDate: string;
   /** Info: (20260811 - Julian) 工作週年才有值，代表滿幾年 */
   anniversaryYears: number | null;
@@ -470,11 +490,15 @@ export interface IOffboardingForm {
   /** Info: (20260811 - Julian) 未休完特休天數，可到 0.5 天 */
   remainingLeaveDays: number;
   /**
-   * Info: (20260811 - Julian) 月薪，用來估算特休折算金額。
-   * ToDo: (20260811 - Julian) Prisma 的 Employee 沒有薪資欄位，
+   * Info: (20260812 - Julian) 月薪，用來估算特休折算金額。
+   *
+   * 型別是 `string` 不是 `number`：法幣金額一律以字串在前端流轉，
+   * 運算走 `MoneyUtil`（見 `numerical_precision_guideline.md`）。
+   *
+   * ToDo: (20260812 - Julian) Prisma 的 Employee 沒有薪資欄位，
    * 接 API 前要決定薪資從哪裡讀（多半是另一個受權限保護的薪資模組）。
    */
-  monthlySalary: number;
+  monthlySalary: string;
   certificateState: CertificateState;
   /** Info: (20260811 - Julian) 證明書對應的任務，發送時一併標記完成 */
   certificateTaskId: string | null;

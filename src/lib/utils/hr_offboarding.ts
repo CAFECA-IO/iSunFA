@@ -30,6 +30,7 @@ import {
   differenceInFullMonths,
   parseIsoDate,
 } from "@/lib/utils/hr_date";
+import { MoneyUtil } from "@/lib/utils/money";
 import {
   resolveRequiredNoticeDays,
   toProgressPercent,
@@ -85,20 +86,31 @@ export function resolveNoticeCheck(
 }
 
 /**
- * Info: (20260811 - Julian) 未休特休折算工資。
+ * Info: (20260812 - Julian) 未休特休折算工資。
  *
  * 一日工資 = 月薪 ÷ 30（勞基法施行細則第 24-1 條），取整到元。
- * ToDo: (20260811 - Julian) 真實結算還要併入當月未領薪資、資遣費與代扣項目，
+ *
+ * 全程走 `MoneyUtil`（Decimal.js）而不是原生 `number`：這是法幣金額，
+ * 而 `numerical_precision_guideline.md` 把「使用 JS Number 進行法幣小數運算」
+ * 列為反模式，適用範圍含前端工具函式。半天特休尤其會踩到 —— 月薪 50000
+ * 的 0.5 天用浮點數算是 833.3333333333334，取整前的尾數是憑空長出來的。
+ *
+ * 進出都用字串，讓它與 API 的 BigInt 序列化慣例（金額以字串傳輸）同形。
+ *
+ * ToDo: (20260812 - Julian) 真實結算還要併入當月未領薪資、資遣費與代扣項目，
  * 這裡只估「特休未休」這一項，畫面上必須標明是預估值。
  */
 export function estimateLeavePayout(
   remainingLeaveDays: number,
-  monthlySalary: number,
-): number {
-  if (remainingLeaveDays <= 0 || monthlySalary <= 0) return 0;
-  return Math.round(
-    (monthlySalary / MONTHLY_PAYROLL_DAYS) * remainingLeaveDays,
-  );
+  monthlySalary: string,
+): string {
+  const salary = MoneyUtil.toDecimal(monthlySalary);
+  if (remainingLeaveDays <= 0 || salary.lessThanOrEqualTo(0)) return "0";
+
+  const dailyWage = MoneyUtil.divide(monthlySalary, MONTHLY_PAYROLL_DAYS);
+  const payout = MoneyUtil.multiply(dailyWage, remainingLeaveDays);
+  // Info: (20260812 - Julian) 折算工資以元為單位，四捨五入到整數
+  return MoneyUtil.toDecimal(payout).toFixed(0);
 }
 
 /** Info: (20260811 - Julian) 依員工 id 取一個固定的離職原因，避免每次進畫面都不一樣 */
@@ -218,7 +230,7 @@ export function buildOffboardingForm(
     mailForwardTo: "",
     insurances,
     remainingLeaveDays: 0,
-    monthlySalary: 0,
+    monthlySalary: "0",
     certificateState:
       certificateTask && isDone(certificateTask)
         ? CertificateState.SENT

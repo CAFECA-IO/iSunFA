@@ -377,8 +377,8 @@ export const OFFBOARDING_CLOSING_DAYS = 3;
 /**
  * Info: (20260810 - Julian) 離職交接矩陣的四個負責面向。
  *
- * ToDo: (20260810 - Julian) Prisma 的 `ProcessTask` 目前只有 title / status / assignee，
- * 沒有分類欄位。接 API 前需要在 schema 補 `category`，否則右側矩陣分不了組。
+ * ToDo: (20260812 - Julian) `OffboardingTask` 沒有分類欄位（見 ADR 019 的欄位清單）。
+ * 接 API 前需要在 schema 補 `category`，否則交接清單分不了組。
  */
 export enum HandoverCategory {
   WORK = "WORK",
@@ -432,17 +432,6 @@ export const PROBATION_MILESTONE_I18N_KEY: Record<ProbationMilestone, string> =
       "hr_management.movement.milestone_interview",
     [ProbationMilestone.FINAL_85]: "hr_management.movement.milestone_final",
   };
-
-/**
- * Info: (20260810 - Julian) 試用期考核結果。
- * ToDo: (20260810 - Julian) Prisma 的 `ProbationReview.result` 是自由字串，
- * 接 API 前應改成 enum，否則「通過轉正」會有各種拼法。
- */
-export enum ProbationResult {
-  PASS = "PASS",
-  EXTEND = "EXTEND",
-  FAIL = "FAIL",
-}
 
 export const PROBATION_RESULTS: ProbationResult[] = [
   ProbationResult.PASS,
@@ -553,8 +542,8 @@ export const NOTICE_PERIOD_RULES = [
 
 /**
  * Info: (20260810 - Julian) 任務範本鍵值。
- * ToDo: (20260810 - Julian) Prisma 的 `ProcessTask` 沒有這個欄位，
- * 接 API 前需要在 schema 補上（真實系統通常來自任務範本表）。
+ * ToDo: (20260812 - Julian) `OnboardingTask` / `OffboardingTask` 都沒有這個欄位，
+ * 接 API 前需要在兩張 schema 補上（真實系統通常來自任務範本表）。
  */
 export enum OnboardingTaskKey {
   FORM = "ONBOARDING_FORM",

@@ -22,6 +22,7 @@ import {
   parseIsoDate,
   toIsoDate,
 } from "@/lib/utils/hr_date";
+import { maskPiiTail } from "@/lib/utils/hr_pii_mask";
 import { resolveRequiredNoticeDays } from "@/lib/utils/hr_movement";
 
 /**
@@ -48,9 +49,10 @@ export const MOCK_HR_INCOMING_EMPLOYEES: IEmployeeListItem[] = [
     name: "陳小明",
     englishName: "Ming Chen",
     gender: Gender.MALE,
-    birthday: "1997-04-12",
+    birthMonthDay: "04-12",
+    age: 29,
     email: "emp045@isunfa.com",
-    phone: "0918-334-770",
+    maskedPhone: maskPiiTail("0918-334-770"),
     status: EmployeeStatus.PROBATION,
     hireDate: toIsoDate(addDays(today, 10)),
     leaveDate: null,
@@ -66,9 +68,10 @@ export const MOCK_HR_INCOMING_EMPLOYEES: IEmployeeListItem[] = [
     name: "楊思妤",
     englishName: "Sylvia Yang",
     gender: Gender.FEMALE,
-    birthday: "1999-11-23",
+    birthMonthDay: "11-23",
+    age: 27,
     email: "emp046@isunfa.com",
-    phone: "0927-118-455",
+    maskedPhone: maskPiiTail("0927-118-455"),
     status: EmployeeStatus.PROBATION,
     hireDate: toIsoDate(addDays(today, 4)),
     leaveDate: null,
@@ -84,9 +87,10 @@ export const MOCK_HR_INCOMING_EMPLOYEES: IEmployeeListItem[] = [
     name: "何柏睿",
     englishName: "Bruce Ho",
     gender: Gender.MALE,
-    birthday: "1994-07-08",
+    birthMonthDay: "07-08",
+    age: 32,
     email: "emp047@isunfa.com",
-    phone: "0933-620-149",
+    maskedPhone: maskPiiTail("0933-620-149"),
     status: EmployeeStatus.PROBATION,
     hireDate: toIsoDate(addDays(today, 13)),
     leaveDate: null,

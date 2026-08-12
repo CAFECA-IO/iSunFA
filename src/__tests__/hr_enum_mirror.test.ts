@@ -89,6 +89,44 @@ const UI_ONLY = [
   "OrganizationTab",
   "OrganizationViewMode",
   "StructureDimension",
+
+  /**
+   * Info: (20260812 - Julian) 純畫面控制項：分頁、檢視模式、快速篩選。
+   * 它們決定「現在顯示哪一區」，不會被寫進任何一張表。
+   */
+  "MovementTab",
+  "MovementViewMode",
+  "OffboardingListMode",
+  "OffboardingModalTab",
+  "OnboardingQuickFilter",
+
+  /**
+   * Info: (20260812 - Julian) 由任務狀態推導出來的顯示狀態，不是被儲存的欄位。
+   *
+   * 例如 `MovementStage` 是看板欄位（由關鍵日期推得）、`MovementAlertLevel`
+   * 是紅黃綠三色（由「離職日剩幾天 + 帳號停權做了沒」推得）。
+   * 把推導結果存回 DB，就會出現「存的燈號與任務現況不一致」的第三種真相 ——
+   * 與 ADR 019 移除 `ProcessTaskType` 是同一個理由。
+   */
+  "ChecklistState",
+  "MovementStage",
+  "MovementAlertLevel",
+  "MovementAlertReason",
+  "HandoverItemState",
+  "CertificateState",
+
+  /**
+   * Info: (20260812 - Julian) schema 目前沒有對應欄位，但**應該要有** ——
+   * 這四個各自在 `hr_management.ts` 有一條 ToDo 列管。
+   *
+   * 補進 schema 的那一天，它們必須從這裡搬到 `MIRRORED`；
+   * 忘了搬的話，下面「should register every enum that exists on both sides」
+   * 會在名稱兩邊同時存在時直接擋下來，不需要有人記得這件事。
+   */
+  "HandoverCategory",
+  "ProbationMilestone",
+  "ProbationScoreItem",
+  "ResignationReason",
 ];
 
 /**

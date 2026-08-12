@@ -14,6 +14,7 @@ import {
 } from "@/constants/hr_management";
 import { IOffboardingForm } from "@/interfaces/hr_management";
 import { estimateLeavePayout } from "@/lib/utils/hr_offboarding";
+import { MoneyUtil } from "@/lib/utils/money";
 import { useTranslation } from "@/i18n/i18n_context";
 
 interface IOffboardingFinalizationTabProps {
@@ -143,7 +144,7 @@ const OffboardingFinalizationTab: FC<IOffboardingFinalizationTabProps> = ({
               step={1000}
               value={form.monthlySalary}
               onChange={(event) =>
-                onChange({ monthlySalary: Number(event.target.value) })
+                onChange({ monthlySalary: event.target.value })
               }
               className={`mt-1.5 w-full ${HR_INPUT_CLASS}`}
             />
@@ -152,8 +153,12 @@ const OffboardingFinalizationTab: FC<IOffboardingFinalizationTabProps> = ({
             <span className={LABEL_CLASS}>
               {t("hr_management.offboarding.payout_estimate")}
             </span>
+            {/**
+             * Info: (20260812 - Julian) 千分位交給 `MoneyUtil.format`，
+             * 不用 `Number.toLocaleString` —— 後者要先把金額降級成原生 number。
+             */}
             <p className="mt-1.5 rounded-lg bg-gray-50 px-3 py-1.5 text-sm font-bold text-gray-800">
-              {payout.toLocaleString("en-US")}
+              {MoneyUtil.format(payout)}
             </p>
           </div>
         </div>
