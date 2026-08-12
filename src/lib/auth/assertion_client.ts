@@ -6,6 +6,7 @@ import type {
 } from "@passwordless-id/webauthn/dist/esm/types";
 import { ApiCode } from "@/lib/utils/status";
 import { AppError } from "@/lib/utils/error";
+import { ApiError as RequestApiError } from "@/lib/utils/request";
 import { WalletCustodyType } from "@/constants/auth_provider";
 import { fido2ClientService } from "@/lib/auth/fido2_client";
 import { UserOperationJson } from "@/validators";
@@ -165,15 +166,27 @@ export async function requestPrfSecret(params: {
   };
 
   if (data.code !== ApiCode.SUCCESS || !data.payload?.prfSecret) {
-    throw new AppError({
-      code: typeof data.errorCode === "string" ? data.errorCode : "IS000099",
-      message: data.message || "Custodial PRF derivation failed",
-      status:
-        typeof data.code === "string" &&
-        (Object.values(ApiCode) as string[]).includes(data.code)
-          ? (data.code as ApiCode)
-          : ApiCode.INTERNAL_SERVER_ERROR,
-    });
+    /**
+     * Info: (20260812 - Luphia) 失敗改拋 `RequestApiError`,不是 `AppError`
+     * （PR review：限流無法被分類）。
+     *
+     * `isRateLimitedApiError()` 的第一個判斷是 `error instanceof RequestApiError`,
+     * 而這支用原生 `fetch` 拋 `AppError` —— 於是撞到限流時**分類接不起來**,
+     * 使用者拿到的是通用的「解鎖失敗」。而 `rate_limiting_guideline.md` 第 3 條
+     * 明文「前端以專屬文案提示（`carbon_chatbot.rate_limited`）,
+     * 不得顯示為一般系統錯誤」。
+     *
+     * 一併把整個信封放進 `data`:那三支既有的型別守衛
+     * (`isRateLimitedApiError` / `isQuotaApiError` / `isTimeoutApiError`)
+     * 讀的都是 `data.errorCode`,而不是 HTTP 狀態 —— 那是刻意的,
+     * 因為限流回應目前實際是 HTTP 500 + Retry-After
+     * (見同一份規範開頭的已知缺陷),狀態碼分不出來。
+     */
+    throw new RequestApiError(
+      data.message || "Custodial PRF derivation failed",
+      response.status,
+      data,
+    );
   }
 
   return base64ToArrayBuffer(data.payload.prfSecret);

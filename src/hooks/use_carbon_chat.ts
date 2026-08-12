@@ -4719,6 +4719,18 @@ export const useCarbonChat = () => {
         setUnlockError(t("carbon_chatbot.custody_loading"));
         return;
       }
+      /**
+       * Info: (20260812 - Luphia) 限流用專屬文案，不得顯示為一般系統錯誤。
+       *
+       * `rate_limiting_guideline.md` 第 3 條明文要求這件事，而 `carbon_chatbot.rate_limited`
+       * 早就存在（送訊息與載入歷史那兩條路徑都已經在用）。解鎖路徑原本接不上，
+       * 因為 `requestPrfSecret` 用原生 fetch 拋 `AppError`，
+       * 而 `isRateLimitedApiError()` 要求 `RequestApiError` —— 已在該處改掉。
+       */
+      if (isRateLimitedApiError(keyError)) {
+        setUnlockError(t("carbon_chatbot.rate_limited"));
+        return;
+      }
       setIsError(true);
       setUnlockError(t("carbon_chatbot.unlock_failed"));
       return;

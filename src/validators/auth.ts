@@ -31,6 +31,18 @@ export const updateProfileSchema = z.object({
  * 付款 UserOp。**刻意不接受呼叫端傳入的 UserOp**——只驗 sender 的話，callData 仍由
  * 呼叫端決定，那就是一支任意動作簽章預言機（見 custodial_wallet.service）。
  */
+export const custodialSignSchema = z
+  .object({
+    challenge: z.string().min(1).max(512).optional(),
+    challengeToken: z.string().min(1).optional(),
+    orderId: z.string().uuid().optional(),
+  })
+  // Info: (20260811 - Luphia) strict：多送的欄位一律拒絕，讓「不再接受 userOp」是可驗證的，而不是被靜默忽略
+  .strict()
+  .refine((value) => Boolean(value.challenge || value.orderId), {
+    message: "Either challenge or orderId is required",
+  });
+
 /**
  * Info: (20260812 - Luphia) 託管帳號索取 PRF 替身秘密。
  *
@@ -52,15 +64,3 @@ export const custodialPrfSchema = z
       .regex(/^[A-Za-z0-9+/]{43}=$/, "prfSalt must be 32 bytes in base64"),
   })
   .strict();
-
-export const custodialSignSchema = z
-  .object({
-    challenge: z.string().min(1).max(512).optional(),
-    challengeToken: z.string().min(1).optional(),
-    orderId: z.string().uuid().optional(),
-  })
-  // Info: (20260811 - Luphia) strict：多送的欄位一律拒絕，讓「不再接受 userOp」是可驗證的，而不是被靜默忽略
-  .strict()
-  .refine((value) => Boolean(value.challenge || value.orderId), {
-    message: "Either challenge or orderId is required",
-  });
