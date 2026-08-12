@@ -21,6 +21,16 @@ export const pricing = {
     "On the cloud Team and Business plans, every member gets their own Faith AI agent. Faith records the feedback and preferences you give it while chatting — the accounts you use most, how you like reports presented, how much detail you want — and gradually learns your needs so its answers fit your way of working. This memory is used only to improve your own experience: it is never shared with other members or other customers, and never used to train shared AI models.",
   faith_memory_note_retention:
     "If you stop subscribing, we keep that memory for {{days}} days — resubscribe within that window and it carries on. After {{days}} days we delete what Faith remembers about you to protect your privacy. You can also ask us to delete it at any time without waiting. The Free plan has no personal memory. See Terms of Service §3.7 and Privacy Policy §5.",
+  /**
+   * Info: (20260812 - Luphia) Seat-based pricing copy (Terms §3.1 / §3.6).
+   * The headline price is the per-seat rate, not the team total.
+   */
+  per_seat: "seat",
+  seat_billing_note_title: "About seat-based pricing",
+  seat_billing_note:
+    'The Team and Business plans are priced per seat: each team member takes one seat, and the amount due is seats × per-seat price. The price above is the per-seat rate; the actual amount is calculated once you pick a team, and we show "seats × per-seat price = total due" before you pay. The Free plan has no seat charge.',
+  seat_billing_note_change:
+    "When you invite a new member mid-cycle, the seat is taken from the moment the invitation is sent and we charge that seat pro rata for the days remaining in the current cycle (fractions rounded down; nothing is charged if the result is zero). If the invitation is declined, withdrawn or expires, the seat is released. When a member leaves or is removed, the current cycle is not refunded and the new seat count applies from the next cycle. See Terms of Service §3.1 and §3.6.",
   currency_prefix: "NT$ ",
   cta: "Get Started",
   features: "Features",
@@ -93,8 +103,7 @@ export const pricing = {
       features: {
         storage: "{{gb}} GB storage",
         fido: "Unlimited FIDO2 Keys",
-        fido_tooltip:
-          "Subscription fee charged based on the number of FIDO2 keys",
+        fido_tooltip: "The subscription fee is charged per team seat (member)",
         quota_multiple: "{{multiple}}x the token quota of the Free plan",
         consults: "Max {{amount}} Consults / Month",
         consults_tooltip: "{{price}} Credits / Consult",
@@ -114,8 +123,7 @@ export const pricing = {
       features: {
         storage: "{{gb}} GB storage",
         fido: "Unlimited FIDO2 Keys",
-        fido_tooltip:
-          "Subscription fee charged based on the number of FIDO2 keys",
+        fido_tooltip: "The subscription fee is charged per team seat (member)",
         quota_multiple: "{{multiple}}x the token quota of the Team plan",
         consults: "Max {{amount}} Consults / Month",
         consults_tooltip: "{{price}} Credits / Consult",

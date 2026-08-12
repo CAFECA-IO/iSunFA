@@ -10,6 +10,8 @@
  *
  * 新增設定時只要在這裡多一筆定義，設定頁、簽章與讀取邏輯都會自動涵蓋。
  */
+
+import { DEFAULT_FAITH_MEMORY_RETENTION_DAYS } from "@/constants/llm";
 export enum SystemSettingKey {
   GOOGLE_OAUTH_CLIENT_ID = "GOOGLE_OAUTH_CLIENT_ID",
   GOOGLE_OAUTH_CLIENT_SECRET = "GOOGLE_OAUTH_CLIENT_SECRET",
@@ -18,6 +20,14 @@ export enum SystemSettingKey {
   LLM_MODEL = "LLM_MODEL",
   OEN_ACCESS_TOKEN = "OEN_ACCESS_TOKEN",
   OEN_MERCHANT_ID = "OEN_MERCHANT_ID",
+  /**
+   * Info: (20260812 - Luphia) 費思個人化記憶於付費訂閱終止後的保留天數（見
+   * documents/architecture/ai_and_analytics/faith_personal_memory.md §7）。
+   *
+   * ⚠️ 調整此值等於變更對外承諾：服務條款 §3.7、《隱私權政策》§5 與訂閱方案頁
+   * 均載明相同天數，改設定時必須同步修訂該三處文字。
+   */
+  FAITH_MEMORY_RETENTION_DAYS = "FAITH_MEMORY_RETENTION_DAYS",
 }
 
 // Info: (20260809 - Luphia) 設定分組，供設定頁排版
@@ -86,6 +96,12 @@ export const SYSTEM_SETTING_DEFINITIONS: Record<
     isSecret: false,
     envKey: "OEN_MERCHANT_ID",
   },
+  [SystemSettingKey.FAITH_MEMORY_RETENTION_DAYS]: {
+    key: SystemSettingKey.FAITH_MEMORY_RETENTION_DAYS,
+    group: SystemSettingGroup.AI,
+    isSecret: false,
+    envKey: "FAITH_MEMORY_RETENTION_DAYS",
+  },
 };
 
 /**
@@ -97,6 +113,10 @@ export const SYSTEM_SETTING_FALLBACKS: Partial<
   Record<SystemSettingKey, string>
 > = {
   [SystemSettingKey.OEN_MERCHANT_ID]: "mermer",
+  // Info: (20260812 - Luphia) 保底值與 DEFAULT_FAITH_MEMORY_RETENTION_DAYS 同源，見 src/constants/llm.ts
+  [SystemSettingKey.FAITH_MEMORY_RETENTION_DAYS]: String(
+    DEFAULT_FAITH_MEMORY_RETENTION_DAYS,
+  ),
 };
 
 export const SYSTEM_SETTING_KEYS = Object.keys(

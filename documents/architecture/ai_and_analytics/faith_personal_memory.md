@@ -182,7 +182,11 @@ inputEstimate = FAITH_PROMPT_OVERHEAD_TOKENS + ceil(messageLength / 3) + (hasIma
 
 ## 7. 保留與刪除（90 天）
 
-保留天數的單一來源為 `FAITH_MEMORY_RETENTION_DAYS`（`src/constants/llm.ts`，現值 90），條款、隱私政策與方案頁文案皆以此為準；修改須同步四處。
+保留天數為**系統設定，保存於 DB**（`SystemSettingKey.FAITH_MEMORY_RETENTION_DAYS`，簽章式設定同 ADR 017；已於 2026-08-12 實作，取代原先的程式常數——開放問題 #1 拍板）。讀取一律經 `resolveFaithMemoryRetentionDays()`（`src/services/faith_memory.service.ts`），`DEFAULT_FAITH_MEMORY_RETENTION_DAYS`（90）僅為 fail-safe。
+
+- **解析為 fail-safe 且方向固定**：設定值是後台可編輯的自由文字，非純十進位整數、為 0、或超出 1–3,650 天一律退回 90（`parseRetentionDays()`，`src/lib/faith_memory/retention.ts`）。退回方向刻意選「會刪」而非「留著」：把 90 打成 90000 不該讓條款承諾要刪的資料永久留存。驗簽失敗（`UNTRUSTED`）同樣退回 90，而非拒絕服務——此值不授權任何事，退回承諾值即是保守解。
+- **方案頁天數由 server 注入**：定價頁為 server component，讀妥設定後以 prop 傳入 client（同額度倍數的既有做法），確保 SSR 與水合一致、後台調整後畫面自動同步。
+- ⚠️ **調整設定等於變更對外承諾**：條款 §3.7、《隱私權政策》§5 與方案頁均載明相同天數，後台改值必須同步修訂該三處文字，否則條款所述期間與系統行為不符。
 
 ### 7.1 期限的寫入與清除
 
@@ -240,7 +244,7 @@ inputEstimate = FAITH_PROMPT_OVERHEAD_TOKENS + ceil(messageLength / 3) + (hasIma
 
 ## 10. 開放問題（實作前需拍板）
 
-1. **90 天是否改為 DB 系統設定**：目前為程式常數。若營運需調整（如不同市場的法規期限），須依 ADR 017 搬入簽章式系統設定表，並同步條款「以本服務內公告為準」的寫法。
+1. ~~**90 天是否改為 DB 系統設定**~~ → **已拍板（2026-08-12）：改為 DB 系統設定並已實作**（見 §7）。條款仍載明具體天數（定型化契約需明確期間），故調整設定時必須同步修訂條款、隱私政策與方案頁；此連動已寫入設定鍵註解與條款 ToDo。
 2. **記憶是否跨帳本共用**：本規範定為 `(userId, teamId)`，同團隊內跨帳本共用。若客戶要求「一帳本一記憶」，鍵改為 `(userId, accountBookId)`，刪除觸發需另定（帳本刪除 vs 訂閱終止）。
 3. **記憶是否可編輯**（而非只能刪除）：編輯能提升準確度，但也讓用戶可寫入任意文字進 prompt——需評估注入攻擊面。
 4. **免費版曾是付費版的殘留記憶**：降級後 90 天內若用戶不再付費，期間記憶「保留但不可用」（§6.3 gate + §7 讀取側判定）。此設計是為了「恢復訂閱即延續」，但也意味著資料保留了 90 天卻不提供任何功能——須確認法務認同此保留具正當目的。

@@ -21,6 +21,16 @@ export const pricing = {
     "云端版的团队版与企业版，每位成员各自拥有一个独立的费思人工智能代理人。费思会记录您在对话中给予的反馈与偏好（例如惯用的会计科目、报表呈现方式、回答的详细程度），随着使用逐渐记住您的需求，让回答越来越贴近您的工作方式；这些记忆只用于改善您个人的使用体验，不会与其他成员或其他客户共用，也不会用于训练共享的 AI 模型。",
   faith_memory_note_retention:
     "若您停止订阅，我们会保留这份记忆 {{days}} 天，期间内恢复订阅即可延续；{{days}} 天届满后，我们会删除费思对您的记忆信息，以保障您的隐私。您也可以不必等待期满，随时要求我们删除。免费版不提供专属记忆。详见服务条款第 3.7 条与隐私权政策第 5 条。",
+  /**
+   * Info: (20260812 - Luphia) 席位计费文案（服务条款 §3.1 / §3.6）。
+   * 价格数字为「每席位」单价，不是团队总额。
+   */
+  per_seat: "席位",
+  seat_billing_note_title: "关于席位计费",
+  seat_billing_note:
+    "团队版与企业版依席位计费：一位团队成员占一个席位，应付金额 = 席位数 × 每席位费用。上方标示的价格为每席位单价，实际金额于您选定团队后计算，并在付款前显示「席位数 × 每席位费用 = 应付总额」。免费版不收席位费用。",
+  seat_billing_note_change:
+    "计费周期中邀请新成员时，该席位自邀请寄出时起占用，并依当期剩余天数比例补收该席位费用（尾数舍去，计算结果为零者免收）；邀请经拒绝、撤回或逾期即释出席位。成员退出或被移出团队时，当期不予退费，并自下一计费周期起以新席位数计费。详见服务条款第 3.1 条与第 3.6 条。",
   currency_prefix: "NT$ ",
 
   cta: "立即开始",
@@ -93,7 +103,7 @@ export const pricing = {
       features: {
         storage: "存储空间 {{gb}} GB",
         fido: "无限 FIDO2 密钥",
-        fido_tooltip: "根据 fido2 密钥数量收取订阅费",
+        fido_tooltip: "订阅费依团队席位（成员数）计收",
         quota_multiple: "Tokens 额度为免费版的 {{multiple}} 倍",
         consults: "每月最多咨询 {{amount}} 个问题",
         consults_tooltip: "每个问题 {{price}} 点数",
@@ -113,7 +123,7 @@ export const pricing = {
       features: {
         storage: "存储空间 {{gb}} GB",
         fido: "无限 FIDO2 密钥",
-        fido_tooltip: "根据 fido2 密钥数量收取订阅费",
+        fido_tooltip: "订阅费依团队席位（成员数）计收",
         quota_multiple: "Tokens 额度为团队版的 {{multiple}} 倍",
         consults: "每月最多咨询 {{amount}} 个问题",
         consults_tooltip: "每个问题 {{price}} 点数",
