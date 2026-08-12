@@ -2,7 +2,9 @@
  * Info: (20260716 - Tzuhan) LLM 同步路徑參數集中(issue #6515)。
  * 適用範圍:不經 mission executor 的同步 HTTP 路徑(carbon chat / draft / extraction)。
  * worker 管線的重試與用量記錄由檔案狀態機承擔(見 00.1_mission_executor_architecture.md)。
- *
+ */
+
+/**
  * Info: (20260811 - Luphia) 原本這裡寫著「本檔常數不影響 executor 行為」,那句話已不成立:
  * LLM_WORKER_TIMEOUT_MS 就是給 executor 用的。理由見該常數的說明——
  * 「檔案狀態機承擔重試」這個前提隱含「執行一定會結束」,而沒有逾時的呼叫不保證會結束。
@@ -117,6 +119,15 @@ export const LLM_TRUNCATED_ERROR_MARKER = "LLM_OUTPUT_TRUNCATED";
 
 // Info: (20260716 - Tzuhan) timeout 錯誤的識別標記(type guard 用,避免比對自由字串)
 export const LLM_TIMEOUT_ERROR_MARKER = "LLM_TIMEOUT";
+
+/**
+ * Info: (20260812 - Luphia) 完全取不到 LLM 金鑰的識別標記。
+ *
+ * 之前上層是用 `error.message.includes("GEMINI_API_KEY")` 認這個成因 ——
+ * 比對的是一段可以被任何人改掉的自由字串,而 `IS_GEMINI_API_KEY_UNDEFINED`
+ * 這個錯誤碼早就定義好、卻沒有任何地方使用。與另外兩個標記同一種做法。
+ */
+export const LLM_KEY_MISSING_ERROR_MARKER = "LLM_KEY_MISSING";
 
 /**
  * Info: (20260803 - Tzuhan) 傳輸層失敗的重試次數與退避(僅用於「沒送到」的錯誤)。

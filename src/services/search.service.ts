@@ -19,10 +19,21 @@ export class SearchService {
   private readonly timeoutMs = 90000; // Info: (20260407 - Luphia) Allow 90 seconds since we might scrape multiple pages
   private chatService: ChatService;
 
+  /**
+   * Info: (20260812 - Luphia) 沒收到金鑰就**不要傳** —— 交給 ChatService 解析。
+   *
+   * 原本寫 `apiKey || 環境變數 || … || ""`(直接讀 env),而 ChatService
+   * 的優先序是「建構子明確傳入 > 資料庫設定 > 環境變數」。把從 env 讀到的值
+   * 當成「明確傳入」送進去,資料庫那一層就永遠輪不到 ——
+   * env 是預設來源,不是呼叫端的明確意圖。
+   *
+   * 後果不是效能而是正確性:管理員在 /admin/settings 輪替或**撤銷**金鑰之後,
+   * 這條路徑仍然用 env 裡的舊值(見 system_setting.service 的 get() 註解,
+   * 那兩個問題正是它要修的);設定進入 UNTRUSTED 時 get() 會拒絕服務,
+   * 這裡卻靜默照跑。
+   */
   constructor(apiKey?: string) {
-    const key =
-      apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
-    this.chatService = new ChatService(key);
+    this.chatService = new ChatService(apiKey);
   }
 
   // Info: (20260407 - Luphia) Spawns a dockerized Puppeteer instance to scrape search engine results and article contents.

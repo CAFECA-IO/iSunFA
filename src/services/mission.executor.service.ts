@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import { getPriorityEnvConfig } from "@/services/env.service";
+import { ENV_PATH, loadEnvConfig } from "@/services/env.service";
 import { ChatService } from "@/services/chat.service";
 import { EsgGenerationSource, CountryCode } from "@/constants/enums";
 import { CurrencyCode } from "@/constants/exchange_rate";
@@ -26,17 +26,59 @@ import { LLM_WORKER_TIMEOUT_MS } from "@/constants/llm";
 export async function processNext() {
   console.log("[MissionExecutor] Scanning MISSION_DIR for tasks to execute...");
 
-  const setupConfig = await getPriorityEnvConfig();
-  const missionDirBase = setupConfig.MISSION_DIR || "missions";
+  /**
+   * Info: (20260812 - Luphia) 這個節點的設定只有**一個**來源:`.env` 檔案。
+   *
+   * 專案規則:一個設定只存在 `.env` 或資料庫其中一處,不從多處查找;
+   * `.env` 只保管最低限度(部署環境差異),其餘一律進資料庫。
+   *
+   * 對這個節點而言,「用哪把 LLM 金鑰」正是部署環境差異 —— 它依
+   * `async_workers/00_async_worker_overview.md` 沒有主資料庫權限,
+   * 所以資料庫那條路對它不存在,`.env` 就是它的單一來源(不是 fallback)。
+   *
+   * 刻意不用 `getPriorityEnvConfig()`:那支是「`.env.setup` 優先,否則 `.env`」——
+   * 兩個來源。而 `.env.setup` 是部署精靈的暫存區,簽章後會被清空
+   * (`setup.system_setting` 的 STAGED_KEYS),拿它當來源會在遷移前後給出不同答案。
+   *
+   * 也刻意不讀 `process.env`:worker 由 `npx tsx scripts/run_worker.ts` 啟動,
+   * 沒有任何地方把 `.env` 載進 `process.env`(`ecosystem.config.json` 只給
+   * `NODE_ENV`),所以那條路在這個節點上幾乎永遠是空的 —— 留著只會讓
+   * 「到底讀到哪一份」變成要試才知道。
+   */
+  const nodeEnv = await loadEnvConfig(ENV_PATH);
+  const missionDirBase = nodeEnv.MISSION_DIR || "missions";
   const missionDirPath = path.join(process.cwd(), missionDirBase);
 
-  const apiKey = setupConfig.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+  /**
+   * Info: (20260812 - Luphia) 金鑰與 MISSION_DIR 同源 —— 都取自上面那份 `.env`。
+   *
+   * 代價要說清楚:**管理員在 /admin/settings 輪替或撤銷金鑰對這個節點無效**,
+   * 它認的是自己 `.env` 裡的那份。這是隔離換來的,不是遺漏
+   * (見 `known_issues/executor_settings_isolation.md`)。
+   *
+   * 帶著金鑰進 ChatService 之後它會短路、不查資料庫(見 ensureClient);
+   * 沒有金鑰時 `allowSystemSettings: false` 會讓它直接拋錯,而不是悄悄去查資料庫。
+   */
+  const apiKey = nodeEnv.GEMINI_API_KEY;
   if (!apiKey) {
     console.warn(
-      "[MissionExecutor] Missing GEMINI_API_KEY. Execution might fail if ChatService is required.",
+      "[MissionExecutor] No LLM API key in this node's environment. Missions that need the LLM will fail loudly; /admin/settings does not reach this node.",
     );
   }
-  const chatService = new ChatService(apiKey || "");
+  /**
+   * Info: (20260812 - Luphia) `allowSystemSettings: false` 讓「不查資料庫」成為結構。
+   *
+   * 只傳 `apiKey` 是不夠的:它可能是 `undefined`,而 `ensureClient()` 的短路判斷是
+   * truthy —— 於是會默默落到查設定那條路。而**照精靈流程設定的部署剛好就是那一種**:
+   * 金鑰簽章後從 `.env.setup` 移進資料庫(`setup.system_setting` 的 STAGED_KEYS
+   * 涵蓋全部 SYSTEM_SETTING_KEYS),節點的環境裡本來就沒有。
+   *
+   * 為什麼缺金鑰不在這裡 `throw`:`processNext` 是整批任務的迴圈,在這裡拋會連
+   * 不需要 LLM 的任務一起停掉。改由需要 LLM 的那個 skill 在呼叫時拿到明確的
+   * key-missing 錯誤 —— 那筆任務照既有的重試/`giveup` 機制記為失敗,
+   * 而其餘任務照跑。fail fast 的位置是「真正用得到它的地方」。
+   */
+  const chatService = new ChatService(apiKey, { allowSystemSettings: false });
 
   try {
     const folders = await fs.readdir(missionDirPath, { withFileTypes: true });
