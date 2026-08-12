@@ -6,6 +6,7 @@
  * 所以裝字型解決不了 —— 預覽與 PDF 都是空心方框,實測 57 個。
  */
 import { describe, it, expect } from "@jest/globals";
+import { buildCarbonReportHtml } from "@/lib/utils/carbon_report_html";
 import {
   replaceOfficeSymbolChars,
   unmappedPrivateUseChars,
@@ -80,5 +81,23 @@ describe("unmappedPrivateUseChars", () => {
     expect(unmappedPrivateUseChars(line)).toEqual(
       unmappedPrivateUseChars(line),
     );
+  });
+});
+
+/**
+ * Info: (20260811 - Emily) 端到端:函式正確但**沒有接到讀取路徑上**——
+ * 這正是實際發生的事。匯入端換了,而既有草稿的 markdown 裡存著改動前抽進來的
+ * U+F06C,下載下來仍有 57 個空心方框(54 頁版 p.3 與 p.18–24)。
+ * 單元測試全綠也抓不到「沒接上」,所以在此測真正會被列印的那份輸出。
+ */
+describe("buildCarbonReportHtml 的私有區符號", () => {
+  it("should not leave a private-use character in the printed output", () => {
+    const html = buildCarbonReportHtml(
+      `${WINGDINGS_CIRCLE} 緊急發電機柴油\n\n${WINGDINGS_CIRCLE} 滅火器\n`,
+    );
+    const body = /<body>([\s\S]*)<\/body>/.exec(html)?.[1] ?? "";
+
+    expect(body).not.toContain(WINGDINGS_CIRCLE);
+    expect(body).toContain("●");
   });
 });

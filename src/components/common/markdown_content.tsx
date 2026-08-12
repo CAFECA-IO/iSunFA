@@ -19,6 +19,7 @@ import dynamic from "next/dynamic";
 import { escapeArithmeticEmphasis } from "@/lib/utils/markdown_arithmetic_safety";
 import { restoreLineStructure } from "@/lib/utils/markdown_line_structure";
 import { convertTimelineBlocksToTables } from "@/lib/utils/markdown_timeline_table";
+import { replaceOfficeSymbolChars } from "@/lib/utils/office_symbol_chars";
 
 // Info: (20260720 - Tzuhan) #54 證據鏈元件動態載入:含 RecordTabModal 依賴鏈,不拖累一般 markdown 渲染
 const EvidenceChain = dynamic(
@@ -194,9 +195,16 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
        * Info: (20260811 - Emily) timeline → 表格也要在預覽做,否則預覽是圖、下載是表格
        * —— 兩端分歧正是這幾天追的多數問題的形狀(issue_drafts/open/20 第 2 張票)。
        */
+      /**
+       * Info: (20260811 - Emily) 私有區符號兩端都換:匯入端只影響新匯入的報告,
+       * 既有草稿裡存著的 U+F06C 要在讀取時換掉才看得到 ——
+       * 只改一端會讓預覽是方框、下載是圓點,或者反過來。
+       */
       const normalized = convertTimelineBlocksToTables(
-        escapeArithmeticEmphasis(
-          stripHtmlLineBreaksOutsideFences(stripMarkdownComments(content)),
+        replaceOfficeSymbolChars(
+          escapeArithmeticEmphasis(
+            stripHtmlLineBreaksOutsideFences(stripMarkdownComments(content)),
+          ),
         ),
       );
       return restoreSourceLineBreaks

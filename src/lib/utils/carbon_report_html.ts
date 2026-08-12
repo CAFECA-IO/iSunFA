@@ -5,6 +5,7 @@ import { stripHtmlLineBreaksOutsideFences } from "@/lib/utils/markdown_line_brea
 import { escapeArithmeticEmphasis } from "@/lib/utils/markdown_arithmetic_safety";
 import { restoreLineStructure } from "@/lib/utils/markdown_line_structure";
 import { convertTimelineBlocksToTables } from "@/lib/utils/markdown_timeline_table";
+import { replaceOfficeSymbolChars } from "@/lib/utils/office_symbol_chars";
 import {
   CARBON_PDF_CHART_MAX_HEIGHT_MM,
   CARBON_PDF_FONT_STACK,
@@ -460,9 +461,18 @@ export const buildCarbonReportHtml = (
    * 不會因為產生器換了寫法就變 —— 實測那份 54 頁的下載仍是縮到 28% 的彩虹軸。
    * 轉換是決定性且冪等的,比重新產生整份報告便宜太多。
    */
+  /**
+   * Info: (20260811 - Emily) Word 私有區符號在此也換一次。
+   *
+   * 匯入端已經換了,但那只影響新匯入的報告 —— 既有草稿的 markdown 裡存著
+   * 改動前抽取進來的 U+F06C,實測那份 54 頁的下載仍有 57 個空心方框
+   * (p.3 與 p.18–24)。函式是冪等且不改長度的,兩端都套沒有代價。
+   */
   let body = marked.parse(
     convertTimelineBlocksToTables(
-      restoreLineStructure(escapeArithmeticEmphasis(source)),
+      replaceOfficeSymbolChars(
+        restoreLineStructure(escapeArithmeticEmphasis(source)),
+      ),
     ),
     { async: false },
   ) as string;
