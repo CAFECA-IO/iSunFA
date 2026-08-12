@@ -17,6 +17,8 @@
     "test:tz": "node scripts/jest_tz.mjs",
     "swarm": "npm run build && next start -p 10020",
     "worker": "npx tsx scripts/run_worker.ts",
+    "worker:compute": "npx tsx scripts/run_compute_node.ts",
+    "worker:ops": "npx tsx scripts/run_ops_node.ts",
     "executor": "npx tsx scripts/run_executor.ts",
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
     "integration_test": "npx tsx scripts/run_integration_test.ts",

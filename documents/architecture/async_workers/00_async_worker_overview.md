@@ -39,7 +39,7 @@ graph TD
     Issuer -- "上傳 mission.json (透過 DocumentHelper 切塊編碼)" --> IPFS
     Issuer -- "createTask (鎖定資金)" --> MissionBoard
     Issuer -- "寫入 plan.validator.md (防作弊標準)" --> IssueDir[/"本地 ISSUE_DIR"/]:::local
-    
+
     MissionBoard -- "偵測 Open 任務" --> Planner
     Planner -- "下載憑證 mission.json (透過 DocumentHelper 恢復切塊)" --> IPFS
     Planner -- "建立 plan.executor.json" --> MissionDir
@@ -70,38 +70,46 @@ graph TD
 系統的狀態流轉完全交由智能合約接管，Node.js 端的這 8 支微服務**互不認識、不直接呼叫彼此**，只透過聆聽區塊鏈與本機檔案目錄來決定下一步動作 (Event-Driven & Shared-Nothing Architecture)。
 
 ### 0. `TxTracker` (金流追蹤員)
+
 - **職責**：Web3 到 Web2 的訂單狀態同步器。
 - **動作**：不斷輪詢智能合約或區塊鏈節點，追蹤使用者的支付交易 (Tx)。一旦確認款項入帳 (`Success`)，立刻將 PostgreSQL 中的 Order 狀態更新為 `PAID`，正式啟動後續的發包流程。
 
 ### 1. `MissionIssuer` (發包員)
+
 - **職責**：Web2 到 Web3 的實體橋樑。
 - **動作**：不斷輪詢資料庫中狀態為 `PAID` 的訂單。找到後，向區塊鏈送出 `Approve` (授權扣款) 與 `createTask` (鑄造 NFT)，將使用者的原始憑證 `contentCid` 永久綁定，完成資金信託 (Escrow)。
 
 ### 2. `MissionPlanner` (調度員)
+
 - **職責**：任務準備與在地化。
 - **動作**：聆聽智能合約上狀態為 `Open (0)` 的任務。拿到任務後，從 IPFS 下載使用者的原始 `mission.json`，並在本地建立隔離的 `MISSION_DIR`，同時產出供 AI 讀取的 `plan.executor.json`。
 
 ### 3. `MissionExecutor` (推論引擎) 與決定論管線 (Deterministic Pipeline)
+
 - **職責**：系統的算力心臟，執行純粹的 AI 推論，並在寫入磁碟前透過決定論管線洗淨資料。
 - **動作**：掃描 `MISSION_DIR` 執行 AI 推論。在將結果寫入 `result.md` 前，**此處是決定論攔截器管線 (VoucherPipelineOrchestrator) 的唯一觸發點**。系統會偵測 Payload 並依序啟動：
   1. **TaxStrategyService**：偵測非本地統編，自動補齊 1423 / 2941 境外電商逆向稅額。
   2. **FxInterceptorService**：套用高精度匯率轉換，並處理借貸尾差配平 (Plug)。
   3. **AccountingEngineService**：執行應計基礎 (Accrual Basis) 跨期切斷 (Cut-off)。
-  清洗完成後，將最終結果寫成 `result.md`。若發生錯誤，除了寫入 `failed_*.md` 外，**會刻意輸出帶有錯誤標記的 `result.md` 以推進狀態機至後續的退回流程**。若偵測到 `giveup.md` 則會直接跳過。
+     清洗完成後，將最終結果寫成 `result.md`。若發生錯誤，除了寫入 `failed_*.md` 外，**會刻意輸出帶有錯誤標記的 `result.md` 以推進狀態機至後續的退回流程**。若偵測到 `giveup.md` 則會直接跳過。
 
 ### 4. `MissionCommitor` (上鏈員)
+
 - **職責**：產出保護與提交。
 - **動作**：掃描本地 `MISSION_DIR` 找出執行完畢的 `result.md`，並將其切塊加密上傳至 Laria 取得 `resultCid`。**同時，讀取 `execution_log.json` 總結 AI Token 消耗量**，將兩者一併透過 `submitResult` 送交合約，將任務推至 `PendingReview (1)`。
 
 ### 5. `IssueValidator` (自動化查帳員)
+
 - **職責**：取代傳統的人工覆核 (HITL)。
 - **動作**：聆聽合約上 `PendingReview` 的任務。將 IPFS 上的結果下載後進行規則驗證（例如確認 AI 信心度是否為滿分）。若驗證無誤，發送 `approveSubmission` 交易解鎖資金並放行任務。
 
 ### 6. `MissionRecorder` (總帳抄寫員)
+
 - **職責**：將 Web3 的客觀真相轉換為 Web2 的財務真相，並寫回總帳。
 - **動作**：掃描本地 `ISSUE_DIR` 尋找 Validator 留下的 `approved.*.md`。**作為絕對愚蠢的寫入器 (Dumb Writer)，它不再攔截或修改任何資料**。它僅單純地將 `approved.*.md` 內的 `dbSyncPayload` 安全地寫回 PostgreSQL 總帳本，並將原本的訂單標記為 `COMPLETED`。
 
 ### 7. `MissionFallbacker` (結算與回收員)
+
 - **職責**：任務最終狀態的結算與死信佇列 (DLQ) 處理。
 - **動作**：定期巡視任務最終狀態。若任務已在鏈上核准 (Approved)，則精算 Token 耗損與利潤率並寫入 `close.md` 結案；若任務被拒絕達 3 次，則寫入 `giveup.md` 打入死信佇列。(TODO: 未來實作合約的 `raiseDispute` 爭議仲裁機制)
 
@@ -110,27 +118,39 @@ graph TD
 ## 🏆 架構師評價與防禦機制實作 (Architectural Defenses)
 
 ### 🔐 零資料庫存取與安全隔離 (Zero DB Access & Security Boundary)
+
 系統劃下了一道不可踰越的安全鴻溝：**`MissionExecutor` (與其他所有負責 Web3 / AI 運算的外部節點) 絕對沒有存取主系統 PostgreSQL 資料庫的權限。**
+
+> ⚠️ **實作與本節不符（2026-08-12，Luphia）**：行程已於此日拆成「外部運算節點」（`npm run worker:compute`）與「內部維運節點」（`npm run worker:ops`），但**運算節點目前仍有兩處真實的資料庫查詢**，都是為了取排放係數字典：`voucher.pipeline.orchestrator` 的 `getCoefficientById()` 與 `skills/document/esg_parsing` 的 `getAllGlobalCoefficients()`。
+> 也就是說本節這句「絕對沒有權限」目前是**目標而非事實**。`src/__tests__/worker_node_isolation.test.ts` 以匯入圖掃描把這兩條清單化：新增任何耦合會讓測試變紅，已知的兩條是明示例外。解法與取捨見 **[已知缺陷](../../engineering_guidelines/known_issues/executor_settings_isolation.md)**。
+
 - **物理隔離**：它們無法連線 DB，更無法直接寫入、修改或刪除任何帳本資料。
 - **單向提議**：它們的輸出 (`result.md`) 僅是一份「提議載荷 (Payload)」，必須經過上鏈 (`MissionCommitor`)、查帳核准 (`IssueValidator`)，最終由具備寫庫權限的內部節點 `MissionRecorder` 負責抄寫回資料庫。
 - **防禦提示詞注入 (Prompt Injection Guard)**：這種極端的隔離確保了即使 AI 遭到惡意使用者的「提示詞注入攻擊」，攻擊者也絕對無法穿越實體網路邊界去污染或竊取核心財務資料庫。
 
 ### 🛡️ 徹底隔離的檔案系統 (Shared-Nothing Architecture)
+
 由於 Planner 與 Executor 依賴的是本地的檔案系統狀態機，這意味著多個 Worker 之間**完全不需要共用掛載硬碟 (Shared Volume)**。
 因為沒有共用硬碟，自然就從物理層面徹底消滅了分散式擴展時最難解的「競爭條件 (Race Condition)」。系統不需要實作任何 Redis Lock，K8s 的橫向擴展變得極度輕量、純粹且具備無限擴展性。
 
 ### 🏗️ 混合決定論管線 (Hybrid Deterministic Pipeline)
+
 Executor 的內部實作了「不確定的機率推論」與「絕對的數學真理」拆分。
+
 1. **任務層級分流 (`skillRegistry` 與 RAG 管線)**：判斷是否為預先寫死的 TypeScript 技能，透過本地 Vector Search 提供動態決策選項 (`EsgParsingSkill` 採 Two-Turn AI 決策；`VoucherLinesParsingSkill` 採單回合萃取並搭配後端 Bigram 嚴格懸記)。
 2. **AI 推論 Fallback**：若皆無命中，才會退回到純粹的 Gemini API 請求。所有產出預設為 `isVerified: false`。
 
 ### 🧮 數值型別防腐層 (Type Flow & Anti-Corruption)
+
 整個管線嚴格管制數值型別：
+
 1. **AI 萃取期 (Volatile JSON)**：視為原生 `number`，未受信任。
 2. **型別鑄造 (Type Casting)**：強制轉為 `BigInt` (財務金額) 或 `Decimal` (碳排係數)。
 3. **資料庫與聚合防禦**：全面透過基於 `Decimal.js` 的 `MoneyUtil` 防腐層進行後續運算，並受到 Prisma Boundary Guard 的嚴密保護，徹底阻絕浮點數漂移。
 
 ### 📦 隱藏的底層英雄：DocumentHelper 與 Laria 儲存層
+
 在架構圖中未被獨立列出為 Daemon，但扮演關鍵角色的 `DocumentHelper`，是我們去中心化檔案儲存的基石：
+
 - **切塊編碼 (Sharding)**：當 `MissionIssuer` 準備將任務上傳時，`DocumentHelper` 會在背景將實體檔案切碎（如將 593 bytes 切割為 8 個 119 bytes 的 shards），以符合分散式網路的傳輸標準。
 - **組裝恢復 (Recovery)**：當 `MissionPlanner` 接到任務時，`DocumentHelper` 會在背景將這 8 個切片自動找齊並無縫還原回實體檔案 (`Recovered file successfully`)。這使得上層的 Daemons 完全不需要處理複雜的 IPFS/Laria 下載與解碼邏輯。

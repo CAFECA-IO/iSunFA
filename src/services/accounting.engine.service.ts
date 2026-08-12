@@ -1,4 +1,6 @@
-import { IAggregatedDocumentResult } from "@/skills/utils/document_parser_db_sync";
+// Info: (20260812 - Luphia) `import type` —— 只用到型別；值匯入會把 document_sync.repo → lib/prisma
+// Info: (20260812 - Luphia) 拉進外部運算節點的模組圖（見 voucher.pipeline.orchestrator 的說明）
+import type { IAggregatedDocumentResult } from "@/skills/utils/document_parser_db_sync";
 import { Prisma } from "@/generated";
 import { IParsedVoucherLine } from "@/interfaces/voucher";
 import {

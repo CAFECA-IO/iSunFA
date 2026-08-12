@@ -9,9 +9,17 @@
       }
     },
     {
-      "name": "isunfa-worker",
+      "name": "isunfa-compute",
       "script": "npm",
-      "args": "run worker",
+      "args": "run worker:compute",
+      "env": {
+        "NODE_ENV": "production"
+      }
+    },
+    {
+      "name": "isunfa-ops",
+      "script": "npm",
+      "args": "run worker:ops",
       "env": {
         "NODE_ENV": "production"
       }

@@ -46,7 +46,40 @@ Executor 以 `new ChatService(apiKey, { allowSystemSettings: false })` 明示不
 - `documents/architecture/async_workers/00_async_worker_overview.md`
 - `src/services/mission.executor.service.ts`、`src/services/chat.service.ts`
 
-## 尚未拆分：同一個 worker 行程裡有必須存取資料庫的任務
+## 已拆分（2026-08-12）：兩個節點
+
+| 角色         | 啟動                     | 內容                                                                                                      | 設定來源      | 資料庫                 |
+| ------------ | ------------------------ | --------------------------------------------------------------------------------------------------------- | ------------- | ---------------------- |
+| 外部運算節點 | `npm run worker:compute` | MissionPlanner / Executor / Commitor / Closer（同一個 `MISSION_DIR` 上的檔案狀態機）                      | `.env.worker` | **目標為無**（見下）   |
+| 內部維運節點 | `npm run worker:ops`     | TransactionTracker、IssueService、IssueValidator、IssueRecorder、匯率、攤提、錢包守恆勾稽、訂閱到期與續約 | 系統 `.env`   | 有（寫庫就是它的工作） |
+
+`ecosystem.config.json` 已宣告成兩個 pm2 app（`isunfa-compute` / `isunfa-ops`）。`npm run worker` 保留為**會退出並印出指示**的入口 —— 讓它繼續跑兩邊等於拆分對既有部署無效，而讓它只跑一半會使 mission 管線**靜默停止**（沒有錯誤，只有任務不再前進）。
+
+分類依據是逐一驗證過的執行期匯入圖，不是文件敘述。過程中發現五條「幽靈耦合」：那些檔案只用到 `document_parser_db_sync` 的**型別**卻寫成值匯入，於是把 `document_sync.repo → lib/prisma` 整條拉進運算節點的模組圖，已改為 `import type`。`chat.service` 對 `system_setting.service` 的匯入也改為動態（只有真的要查設定時才載入）。
+
+### 拆分後仍存在的耦合：排放係數字典
+
+運算節點還有**兩處真實的資料庫查詢**，主題相同：
+
+1. `voucher.pipeline.orchestrator` → `EmissionFactorRepo.getCoefficientById()`（第 124、173 行；`mission.executor.service:521` 會走到）
+2. `skills/document/esg_parsing` → `EmissionFactorRepo.getAllGlobalCoefficients()`（第 166 行；經 `skills/index.ts` 被 Executor 取用）
+
+所以 `00_async_worker_overview.md` 那句「絕對沒有存取主資料庫的權限」目前是**目標而非事實**，而且不是匯入寫法的意外 —— 是兩次真正的查詢。三條可能的出路：
+
+| 出路                                | 代價                                                                     |
+| ----------------------------------- | ------------------------------------------------------------------------ |
+| Planner 預先把係數解析進 mission 檔 | 運算節點真正零資料庫；但係數在任務排入時就凍結，跨日的長任務可能用到舊值 |
+| 維運節點提供係數查詢 API            | 維持隔離（跨界改成 HTTP，符合單向模型）；多一條內部端點與其認證          |
+| 給運算節點唯讀的係數表權限          | 最省事；但「沒有資料庫可達性」這個前提消失，而那正是防提示詞注入的基礎   |
+
+`src/__tests__/worker_node_isolation.test.ts` 以集合比對把這兩條清單化 —— **新增任何一條耦合都會變紅**，已知的兩條不會讓測試長期紅著。第一版寫成「只找第一條路徑」時漏掉了 `esg_parsing` 那條，改成蒐集全部可達的匯入點才現形。
+
+### 尚未處理
+
+- 其餘 worker 端服務仍透過 `getPriorityEnvConfig()` 讀系統 `.env`（`issue.service`、`issue.validator`、`issue.recorder`、`order.backfill`、`cron/amortization.worker`、`admin.blockchain`）。它們都在**維運**節點上，讀系統 `.env` 是正確的 —— 不需要改。
+- `issue.recorder` 讀 `MISSION_DIR/<folder>/execution_log.json` 取 token 計數，那段在 `try {} catch {}` 內。拆成兩個節點（不共用磁碟）之後這個檔案讀不到，token 計數會落回結果載荷裡的值。**盡力而為的行為不變，但數字來源會變** —— 若要精確計數，需由運算節點把 log 併入結果載荷。
+
+## 拆分前的狀況（保留作為脈絡）
 
 `scripts/run_worker.ts` 在**同一個行程**裡跑 12 個迴圈，其中至少五個必須存取主資料庫：
 
