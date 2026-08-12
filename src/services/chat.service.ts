@@ -14,6 +14,7 @@ import { CARBON_CHAT_GREETING_PROMPT } from "@/constants/carbon_chatbot";
 import { CARBON_REPORT_OUTLINE } from "@/constants/carbon_report_outline";
 import {
   DEFAULT_GEMINI_MODEL,
+  LLM_KEY_MISSING_ERROR_MARKER,
   LLM_SYNC_TIMEOUT_MS,
   LLM_TEMPERATURE,
   LLM_TIMEOUT_ERROR_MARKER,
@@ -99,6 +100,17 @@ export const isLlmTimeoutError = (error: unknown): boolean =>
 export const isLlmTruncatedError = (error: unknown): boolean =>
   error instanceof Error &&
   error.message.startsWith(LLM_TRUNCATED_ERROR_MARKER);
+
+/**
+ * Info: (20260812 - Luphia) 判斷是否為「完全沒有可用的 LLM 金鑰」。
+ *
+ * 這與其他 LLM 失敗必須分開:它不是暫時性故障,重試一萬次都一樣 ——
+ * 唯一的解法是在 /admin/settings 設定金鑰。上層據此回
+ * `IS_GEMINI_API_KEY_UNDEFINED` 而不是通用的未知錯誤。
+ */
+export const isLlmKeyMissingError = (error: unknown): boolean =>
+  error instanceof Error &&
+  error.message.startsWith(LLM_KEY_MISSING_ERROR_MARKER);
 
 // Info: (20260714 - Tzuhan) 聊天回覆 responseSchema:readyParagraphId 以 enum 約束，禁止 LLM 捏造段落 id
 const CARBON_CHAT_REPLY_SCHEMA: Schema = {
@@ -267,26 +279,60 @@ export interface IChatGenerationOptions {
   signal?: AbortSignal;
 }
 
+/**
+ * Info: (20260812 - Luphia) 建構選項。目前只有一項,而它是安全邊界而不是效能開關。
+ */
+export interface IChatServiceOptions {
+  // Info: (20260812 - Luphia) false = 這個節點不得存取主資料庫（見 allowSystemSettings 欄位註解）
+  allowSystemSettings?: boolean;
+}
+
 export class ChatService {
   private genAI: GoogleGenerativeAI | null = null;
   private modelName: string = DEFAULT_GEMINI_MODEL;
   private readonly explicitApiKey?: string;
 
   /**
+   * Info: (20260812 - Luphia) 是否允許向 `systemSettingService` 查設定。
+   *
+   * 預設 true。設為 false 的唯一用途是**沒有主資料庫權限的節點** ——
+   * `MissionExecutor` 依 `async_workers/00_async_worker_overview.md` 就是這種節點,
+   * 而那道隔離是防提示詞注入的基礎。
+   *
+   * 為什麼要一個明示的旗標,而不是靠「有沒有傳 apiKey」:
+   * 傳進來的金鑰可能是 `undefined`（例如部署照精靈流程走完,金鑰已從 `.env.setup`
+   * 移入資料庫,節點的環境裡就沒有了）。那時 truthy 判斷會**默默落到查資料庫那條路**,
+   * 也就是隔離變成「env 剛好有值時才成立」的巧合。旗標讓它成為結構。
+   */
+  private readonly allowSystemSettings: boolean;
+
+  /**
+   */
+
+  /**
    * Info: (20260707 - Luphia)
    * 1. API Key 管理中心化：apiKey 改為選填，預設從環境變數讀取。
-   *    組件端與業務邏輯層不再需要負責 apiKey 的讀取與驗證，簡化呼叫流程。
+   * 組件端與業務邏輯層不再需要負責 apiKey 的讀取與驗證，簡化呼叫流程。
    * 2. 本地模型支援預留：將 apiKey 讀取移入 Service 內部，是為了未來能根據環境變數
-   *    直接切換至本地模型（如 Ollama）而不需要修改外部呼叫端的代碼。
-   *
+   * 直接切換至本地模型（如 Ollama）而不需要修改外部呼叫端的代碼。
+   */
+
+  /**
    * Info: (20260809 - Luphia) 金鑰與模型名改為「首次使用時才解析」。
    * 正式來源已移至資料庫的 system_setting（經 SUPER_ADMIN 簽章），解析必然是非同步的，
    * 但建構子不能是非同步的——而 `new ChatService()` 散落在 20 幾處，其中還包含
    * 預設參數值與同步 getter。延遲解析讓所有呼叫端一行都不必改，
    * 同時讓輪替金鑰後的新請求自動取得新值（不需重啟）。
    */
-  constructor(apiKey?: string) {
+
+  /**
+   * Info: (20260812 - Luphia) 上面第 1 條「預設從環境變數讀取」已不成立:
+   * `ensureClient()` 不再自行讀 env,環境變數由 `systemSettingService.get()`
+   * 在「從未用資料庫保管」的狀態下負責。
+   */
+  constructor(apiKey?: string, options?: IChatServiceOptions) {
     this.explicitApiKey = apiKey;
+    this.allowSystemSettings = options?.allowSystemSettings ?? true;
   }
 
   /**
@@ -296,25 +342,81 @@ export class ChatService {
   private async ensureClient(): Promise<GoogleGenerativeAI> {
     if (this.genAI) return this.genAI;
 
+    /**
+     * Info: (20260812 - Luphia) 呼叫端明確給了金鑰就**不問資料庫**。
+     *
+     * 原本 `systemSettingService.get()` 在檢查 `explicitApiKey` 之前就無條件執行,
+     * 於是即使呼叫端已經給了金鑰,也照樣讀一次主資料庫 —— 而 `MissionExecutor`
+     * 是文件明載「絕對沒有存取主系統 PostgreSQL 權限」的節點
+     * (`async_workers/00_async_worker_overview.md`),那道隔離是防提示詞注入的基礎。
+     *
+     * 短路之後,「建構子明確傳入 > 資料庫設定 > 環境變數」這句話才真的成立:
+     * 前者勝出時後面兩者連查都不查。Executor 帶著 env 金鑰進來就是零 DB 存取。
+     *
+     * 這條路徑的 model 取自 env 而非設定 —— 同一個理由:不能為了取模型名稱去讀 DB。
+     */
+    if (this.explicitApiKey) {
+      this.modelName = process.env.MODEL || DEFAULT_GEMINI_MODEL;
+      this.genAI = new GoogleGenerativeAI(this.explicitApiKey);
+      return this.genAI;
+    }
+
+    /**
+     * Info: (20260812 - Luphia) 不許查設定的節點在這裡就結束,不會走到下面的 `get()`。
+     *
+     * 沒有這一段的話,「Executor 零 DB 存取」只在 env 恰好有金鑰時成立 ——
+     * 而照精靈流程設定的部署,金鑰簽章後就從 `.env.setup` 移進資料庫了
+     * (`setup.system_setting.service` 的 STAGED_KEYS),那些節點的環境裡本來就沒有。
+     * 也就是最常見的部署形態剛好是隔離失效的那一種。
+     */
+    if (!this.allowSystemSettings) {
+      throw new Error(
+        `${LLM_KEY_MISSING_ERROR_MARKER}: no LLM API key in this node's environment (this node must not read system settings)`,
+      );
+    }
+
     const [settingKey, settingModel] = await Promise.all([
       systemSettingService.get(SystemSettingKey.GEMINI_API_KEY),
       systemSettingService.get(SystemSettingKey.LLM_MODEL),
     ]);
 
-    const key =
-      this.explicitApiKey ||
-      settingKey ||
-      process.env.GEMINI_API_KEY ||
-      process.env.GOOGLE_API_KEY;
+    /**
+     * Info: (20260812 - Luphia) 不再自行落回環境變數。
+     *
+     * `get()` 已經是四態的:資料庫可信時以資料庫為準、驗簽失敗拒絕服務、
+     * 從未用資料庫保管時才讀 env（`GEMINI_API_KEY` 正是 `LLM_MODEL` 的 `envKey`
+     * 對應的那個鍵，`MODEL` 亦然）。所以這裡再讀一次 env 在每個狀態下都是死碼 ——
+     * **除了它造成傷害的那一個**:管理員刻意清空並簽名（= 撤銷）之後，
+     * DB 回 undefined，這一行會把 env 裡的舊金鑰救回來，撤銷因此無效。
+     *
+     * `GOOGLE_API_KEY` 一併移除:它不在 `SystemSettingKey` 裡，永遠不受 manifest
+     * 簽章涵蓋、也不出現在 /admin/settings —— 能設環境變數的人可以繞過整套
+     * 「全集簽章 + 稽核 + 撤銷」注入一把金鑰。它未記載於 .env.example 與任何文件,
+     * 要用第二把金鑰請走系統設定。
+     */
+    const key = settingKey;
 
     if (!key) {
-      // Info: (20260707 - Luphia) 若未來支援純本地模型且不需 Key，此處應改為僅在切換至 Google Provider 時才拋錯
+      /**
+       */
+
+      /**
+       * Info: (20260707 - Luphia) 若未來支援純本地模型且不需 Key，此處應改為僅在切換至 Google Provider 時才拋錯
+       */
+
+      /**
+       * Info: (20260812 - Luphia) 以標記開頭,讓上層用 `isLlmKeyMissingError()` 分類,
+       * 而不是比對訊息裡有沒有「GEMINI_API_KEY」這串字。
+       * 也不再說「in environment」—— 金鑰的正式保管位置已經是資料庫的系統設定,
+       * env 只是尚未遷移時的 fallback,寫成 environment 會把人送去改錯的地方。
+       */
       throw new Error(
-        "Missing GEMINI_API_KEY or GOOGLE_API_KEY in environment",
+        `${LLM_KEY_MISSING_ERROR_MARKER}: no LLM API key is configured (checked system settings, then environment)`,
       );
     }
 
-    this.modelName = settingModel || process.env.MODEL || DEFAULT_GEMINI_MODEL;
+    // Info: (20260812 - Luphia) 同理不再讀 process.env.MODEL —— LLM_MODEL 的 envKey 就是 MODEL,`get()` 已經試過
+    this.modelName = settingModel || DEFAULT_GEMINI_MODEL;
     this.genAI = new GoogleGenerativeAI(key);
     return this.genAI;
   }

@@ -29,11 +29,9 @@ export class CrawlerService {
   private chatService: ChatService;
   private snapshotService: SnapshotService;
 
+  // Info: (20260812 - Luphia) 沒收到金鑰就不要傳 —— 理由同 SearchService 的建構子
   constructor(apiKey?: string) {
-    // Info: (20260407 - Luphia) Default to environment variable if no key is provided
-    const key =
-      apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
-    this.chatService = new ChatService(key);
+    this.chatService = new ChatService(apiKey);
     this.snapshotService = new SnapshotService();
   }
 

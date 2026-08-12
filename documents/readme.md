@@ -28,7 +28,7 @@
 
 ### 🐛 已知缺陷 (Known Issues)
 
-*尚未修復、但會影響開發判斷的系統性缺陷；動到相關區域前請先閱讀：*
+_尚未修復、但會影響開發判斷的系統性缺陷；動到相關區域前請先閱讀：_
 
 - ⚠️ **[API 錯誤碼對 HTTP 狀態碼雙套對照表](engineering_guidelines/known_issues/api_http_status_dual_mapping.md)**（已解決 2026-08-07）
   > `httpStatusOf()` 已收斂為讀 `HTTP_MAP`（`Record<ApiCode, number>`），新增 `ApiCode` 成員漏補對照會直接編譯失敗，無需再人工同步。
@@ -36,16 +36,19 @@
   > 數列名含配對分隔符（`<->` / `↔`）時，動作照常送出但標頭改寫被靜默略過（顏色仍生效）。資料層防護正確，缺的是 UI 層前置驗證與提示。
 - ⚠️ **[路網資料只有臺灣，境外陸運段全數為推估](engineering_guidelines/known_issues/osrm_taiwan_only_coverage.md)**
   > `dockerfiles/osrm/Dockerfile` 只載入 `taiwan-latest.osm.pbf`，非臺灣的陸運段一律落到 `直線距離 × 1.2` 並標記 `est.`。報告已揭露推估段數與其排放占比（實測 R02 為 2/3 段、占 0.07%），**但若業務要處理境外陸運為主的路線，推估誤差會直接進入申報數值**，屆時需擴充覆蓋或改用外部路徑服務。
+- ⚠️ **[`/admin/settings` 的輪替與撤銷對 MissionExecutor 無效](engineering_guidelines/known_issues/executor_settings_isolation.md)**：無主資料庫權限的節點認的是部署環境裡的金鑰，撤銷後背景任務仍可能繼續呼叫 LLM —— 設計取捨（隔離是防提示詞注入的基礎），但與管理員的預期相反。
+
 - ⚠️ **[列印環境缺少中文字型導致 PDF 中文變空心方框](engineering_guidelines/known_issues/pdf_cjk_font_missing.md)**（已解決，但維運前置條件持續有效）
   > 主機未安裝 CJK 字型時，Chrome 對所有中文字使用 `.notdef`，報告地點名稱全數變方框而流程回報成功。程式碼側有 `IS000022` fail fast，**但每台產出 PDF 的主機仍須 `apt install fonts-noto-cjk` 並重啟**，否則匯出會失敗而非產出破圖。文件內另更正了「中文是 Type 3 點陣字」這個既有的錯誤陳述（實測為向量），並記錄 Type 3 造成的約 128 KB 體積成本。
-
 
 ---
 
 ## 🏛️ 第二階段：系統架構與藍圖 (Architecture & Blueprint)
 
 ### 💡 2. 數位審計知識庫 (Digital Audit Knowledge Base)
-*聚焦於四大會計師級別的底層財報與內控實務：*
+
+_聚焦於四大會計師級別的底層財報與內控實務：_
+
 - 🌳 **[報表引擎溯源](architecture/compliance_and_audit/01_tree_traversal_reporting_engine.md)**：告別 startsWith，擁抱樹狀溯源。
 - 🔄 **[自動沖銷架構](architecture/compliance_and_audit/02_auto_reconciliation_accrual_basis.md)**：從「應計基礎」到「現金流」的完整閉環。
 - 🚧 **[雙軌懸記分流](architecture/compliance_and_audit/03_suspense_and_quarantine_guardrails.md)**：財務與 ESG 保守型推估的 ITAC 實務。
@@ -55,17 +58,21 @@
 - 📖 **[碳會計師實務手冊](domain/carbon_accounting_methodology.md)**：記載碳盤查的三大範疇與「黃金決策邏輯」，碳排管線工程師必讀。
 
 ### 🌐 3. 區塊鏈與資安 (Security & Web3)
+
 - ⛓️ **[區塊鏈防篡改架構](architecture/security_and_web3/blockchain_immutability_architecture.md)**：AA Wallet 與智能合約 SSOT 設計。
 - ⚖️ **[Mission Board 信託與仲裁](architecture/security_and_web3/mission_board_architecture.md)**：資金信託、爭議仲裁與動態 KYC 整合。
 - ☁️ **[主權雲端與災難復原](architecture/security_and_web3/sovereign_cloud_security_drp.md)**：HA/DR 與 ISO 標準對齊。
 - 🔒 **[機密隔離與 FHE 加密](architecture/security_and_web3/zkp_privacy_preserving.md)**：全同態加密 (FHE) 與金鑰管理 (計畫中)。
 
 ### 🧩 3.5 功能整合計畫 (Feature Integration Plans)
+
 - **[分類帳與試算表整合施行計劃 (Ledger & Trial Balance Integration Plan)](architecture/ledger_and_trial_balance_integration_plan.md)**：於既有報表引擎慣例上新增兩支唯讀報表（樹狀溯源 + MoneyUtil + 懸記納入）。
 - **[團隊錢包與訂閱額度消耗系統 (Team Wallet & Subscription Quota)](architecture/team_wallet_and_subscription_quota.md)**：團隊為計費主體、5 小時 / 週雙視窗訂閱額度、免簽章扣費管線與管理者點數分配。
 
 ### 📌 4. 架構決策紀錄 (Architecture Decision Records, ADRs)
-*追蹤重大架構變更背後的歷史脈絡與取捨：*
+
+_追蹤重大架構變更背後的歷史脈絡與取捨：_
+
 - **[ADR 001: The Great Purge](architecture/decisions/001_precision_refactor_removals.md)**：精準度重構，全面拔除幻覺。
 - **[ADR 002: ESG Vector RAG Pivot](architecture/decisions/002_esg_vector_rag_hybrid_pipeline.md)**：從靜態字典注入轉向 RAG 與動態檢索。
 - **[ADR 003: Residual `.toNumber()` Justifications](architecture/decisions/003_residual_tonumber_justifications.md)**：剩餘 `.toNumber()` 的 5 大安全情境與合規決策。
@@ -109,10 +116,12 @@
 ## 🔌 第五階段：維運與其他系統模組 (Ops & Compliance)
 
 ### 🚀 系統部署與管理員維運白皮書 (System Deployment & Admin Setup)
+
 - **[系統部署與維運白皮書 (Admin Setup Whitepaper)](architecture/admin_setup_whitepaper.md)**
   > 包含架構總覽、基礎設施與節點驗證、鏈上資產與合約部署、資料與超級管理員身分簽發、環境封裝與鎖定。
 
 ### 💼 業務領域與法律政策
+
 - **特定業務領域**：[薪資計算機運作機制 (Salary Calculator)](domain/salary_calculator_mechanism.md)
   > 薪資計算機採用的所得稅、勞健保與勞退公式及運作邏輯說明。
 - **合規政策**：[服務條款 (Terms of Service)](legal/terms_of_service.md) | [隱私權政策 (Privacy Policy)](legal/privacy_policy.md) | [退款政策 (Refund Policy)](legal/refund_policy.md)
