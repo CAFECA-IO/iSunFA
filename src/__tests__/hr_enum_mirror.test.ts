@@ -112,6 +112,19 @@ const UI_ONLY = [
    */
   "OnboardingTemplateKey",
   "OnboardingTrigger",
+  "OffboardingTemplateKey",
+
+  /**
+   * Info: (20260812 - Julian) 離職的法律類型（自請／資遣／契約期滿）。
+   *
+   * 它與 schema 上的 `ResignationReason` 是兩個軸：原因是「為什麼走」，
+   * 類型是「依什麼法律關係終止」，而後者決定預告期、資遣費與通報義務。
+   *
+   * ToDo: (20260812 - Julian) 目前只影響前端的預告期試算與提示，
+   * 因此還沒進 schema。真的要算資遣費或產出資遣通報時就必須存下來 ——
+   * 那一天它要從這裡搬到 `MIRRORED`。
+   */
+  "ResignationType",
 
   /**
    * Info: (20260812 - Julian) 由任務狀態推導出來的顯示狀態，不是被儲存的欄位。

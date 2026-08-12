@@ -2,9 +2,12 @@ import {
   ACCOUNT_REVOKE_DEFAULT_TIME,
   EmployeeStatus,
   Gender,
-  HandoverCategory,
   OFFBOARDING_CLOSING_DAYS,
+  OFFBOARDING_ASSIGNEE_BY_CATEGORY,
+  OFFBOARDING_TASK_TITLE_I18N_KEY,
+  OFFBOARDING_TEMPLATES,
   OffboardingTaskKey,
+  OffboardingTemplateKey,
   OnboardingTaskKey,
   OnboardingTemplateKey,
   ONBOARDING_ASSIGNEE_BY_CATEGORY,
@@ -112,146 +115,6 @@ export const MOCK_HR_INCOMING_EMPLOYEES: IEmployeeListItem[] = [
 ];
 
 /**
- * Info: (20260811 - Julian) 離職交接範本：四個面向對應規格的交接矩陣。
- *
- * `assetPrefix` 有值的是實體資產，會出現在資產回收表並依員工產生序號；
- * `isScheduled` 為真的是排程停權，顯示的是預定生效時間而不是完成日 ——
- * 停權由排程執行，「今天勾了」與「幾點生效」是兩件不同的事。
- */
-const OFFBOARDING_TEMPLATE = [
-  {
-    key: OffboardingTaskKey.DOCUMENT_HANDOVER,
-    title: "專案文件轉移",
-    category: HandoverCategory.WORK,
-    assignee: "王大明",
-    dueOffset: -7,
-    note: null,
-    assetPrefix: null,
-    isScheduled: false,
-  },
-  {
-    key: OffboardingTaskKey.CUSTOMER_HANDOVER,
-    title: "業務客戶移交",
-    category: HandoverCategory.WORK,
-    assignee: "王大明",
-    dueOffset: -5,
-    note: null,
-    assetPrefix: null,
-    isScheduled: false,
-  },
-  {
-    key: OffboardingTaskKey.HANDOVER_APPROVAL,
-    title: "主管驗收交接完成",
-    category: HandoverCategory.WORK,
-    assignee: "王大明",
-    dueOffset: -3,
-    note: null,
-    assetPrefix: null,
-    isScheduled: false,
-  },
-  {
-    key: OffboardingTaskKey.ACCESS_CARD,
-    title: "繳回門禁識別證",
-    category: HandoverCategory.ASSET,
-    assignee: "蔡宜臻",
-    dueOffset: 0,
-    note: null,
-    assetPrefix: "ID-",
-    isScheduled: false,
-  },
-  {
-    key: OffboardingTaskKey.CAR_KEY,
-    title: "清空個人座位與公務車鑰匙",
-    category: HandoverCategory.ASSET,
-    assignee: "蔡宜臻",
-    dueOffset: 0,
-    note: null,
-    assetPrefix: "KEY-",
-    isScheduled: false,
-  },
-  {
-    key: OffboardingTaskKey.LAPTOP_RETURN,
-    title: '回收 MacBook Pro 16"',
-    category: HandoverCategory.IT,
-    assignee: "許庭瑋",
-    dueOffset: 0,
-    note: null,
-    assetPrefix: "C02X",
-    isScheduled: false,
-  },
-  {
-    key: OffboardingTaskKey.MONITOR_RETURN,
-    title: "回收外接螢幕與擴充埠",
-    category: HandoverCategory.IT,
-    assignee: "許庭瑋",
-    dueOffset: 0,
-    note: null,
-    assetPrefix: "MON-",
-    isScheduled: false,
-  },
-  {
-    key: OffboardingTaskKey.ACCOUNT_REVOKE,
-    title: "Google Workspace 帳號停權",
-    category: HandoverCategory.IT,
-    assignee: "許庭瑋",
-    dueOffset: 0,
-    note: null,
-    assetPrefix: null,
-    isScheduled: true,
-  },
-  {
-    key: OffboardingTaskKey.VPN_REVOKE,
-    title: "停用 VPN 與 AWS 權限",
-    category: HandoverCategory.IT,
-    assignee: "許庭瑋",
-    dueOffset: 0,
-    note: null,
-    assetPrefix: null,
-    isScheduled: true,
-  },
-  {
-    key: OffboardingTaskKey.LABOR_INSURANCE,
-    title: "勞保退保申報",
-    category: HandoverCategory.HR,
-    assignee: "林巧芯",
-    dueOffset: 3,
-    note: null,
-    assetPrefix: null,
-    isScheduled: false,
-  },
-  {
-    key: OffboardingTaskKey.HEALTH_INSURANCE,
-    title: "健保退保申報",
-    category: HandoverCategory.HR,
-    assignee: "林巧芯",
-    dueOffset: 3,
-    note: null,
-    assetPrefix: null,
-    isScheduled: false,
-  },
-  {
-    key: OffboardingTaskKey.PENSION_STOP,
-    title: "勞退停提申報",
-    category: HandoverCategory.HR,
-    assignee: "林巧芯",
-    dueOffset: 3,
-    note: null,
-    assetPrefix: null,
-    isScheduled: false,
-  },
-  {
-    key: OffboardingTaskKey.CERTIFICATE,
-    title: "離職證明書發放",
-    category: HandoverCategory.HR,
-    assignee: "林巧芯",
-    dueOffset: 1,
-    note: null,
-    assetPrefix: null,
-    isScheduled: false,
-  },
-];
-
-/**
  * Info: (20260810 - Julian) 任務完成與否由「到期日是否已過」推導，不用亂數。
  *
  * 這樣產生的清單自洽：還沒到期的不會莫名其妙已完成，而未來才報到的人
@@ -299,6 +162,15 @@ function resolveCompletedDate(dueDate: Date, index: number): string {
  * 字典是巢狀物件而 `ONBOARDING_TASK_TITLE_I18N_KEY` 是點分路徑，
  * 因此這裡只取最後一段當鍵，避免在 mock 裡再寫一份路徑解析。
  */
+function resolveMockOffboardingTitle(key: OffboardingTaskKey): string {
+  const leafKey = OFFBOARDING_TASK_TITLE_I18N_KEY[key].split(".").pop() ?? "";
+  const titles = hrManagementZhTw.offboarding as unknown as Record<
+    string,
+    string
+  >;
+  return titles[leafKey] ?? key;
+}
+
 function resolveMockTaskTitle(key: OnboardingTaskKey): string {
   const leafKey = ONBOARDING_TASK_TITLE_I18N_KEY[key].split(".").pop() ?? "";
   const titles = hrManagementZhTw.onboarding as Record<string, string>;
@@ -368,9 +240,9 @@ function buildOffboardingTasks(
   const isClosingSoon =
     !isSettled &&
     differenceInDays(today, leaveDate) <= OFFBOARDING_CLOSING_DAYS;
-  const accountRevokeIndex = OFFBOARDING_TEMPLATE.findIndex(
-    (template) => template.key === OffboardingTaskKey.ACCOUNT_REVOKE,
-  );
+  const accountRevokeIndex = OFFBOARDING_TEMPLATES[
+    OffboardingTemplateKey.GENERAL
+  ].findIndex((template) => template.key === OffboardingTaskKey.ACCOUNT_REVOKE);
 
   const serial = employeeSerial(employee);
   const seed = serial % 4;
@@ -390,35 +262,38 @@ function buildOffboardingTasks(
         ),
       ];
 
-  return OFFBOARDING_TEMPLATE.map((template, index) => {
-    const dueDate = addDays(leaveDate, template.dueOffset);
-    const status = resolveStatus(dueDate, index, skipIndexes);
-    const isDone = status !== ProcessTaskStatus.PENDING;
-    return {
-      id: `task-off-${employee.id}-${template.key}`,
-      employeeId: employee.id,
-      taskType: ProcessTaskType.OFFBOARDING,
-      title: template.title,
-      status,
-      dueDate: toIsoDate(dueDate),
-      category: template.category,
-      templateKey: template.key,
-      assigneeName: template.assignee,
-      completedBy: isDone ? template.assignee : null,
-      completedDate: isDone ? resolveCompletedDate(dueDate, index) : null,
-      /**
-       * Info: (20260811 - Julian) 序號由工號推導，同一個人每次進畫面都一樣。
-       * 用亂數的話，重新整理後同一台筆電會換一組序號。
-       */
-      assetNo: template.assetPrefix
-        ? `${template.assetPrefix}${1000 + ((serial * 37 + index * 131) % 9000)}`
-        : null,
-      scheduledAt: template.isScheduled
-        ? `${toIsoDate(leaveDate)}T${ACCOUNT_REVOKE_DEFAULT_TIME}`
-        : null,
-      note: template.note,
-    } satisfies IOffboardingTask;
-  });
+  return OFFBOARDING_TEMPLATES[OffboardingTemplateKey.GENERAL].map(
+    (template, index) => {
+      const dueDate = addDays(leaveDate, template.dueOffset);
+      const status = resolveStatus(dueDate, index, skipIndexes);
+      const isDone = status !== ProcessTaskStatus.PENDING;
+      const assigneeName = OFFBOARDING_ASSIGNEE_BY_CATEGORY[template.category];
+      return {
+        id: `task-off-${employee.id}-${template.key}`,
+        employeeId: employee.id,
+        taskType: ProcessTaskType.OFFBOARDING,
+        title: resolveMockOffboardingTitle(template.key),
+        status,
+        dueDate: toIsoDate(dueDate),
+        category: template.category,
+        templateKey: template.key,
+        assigneeName,
+        completedBy: isDone ? assigneeName : null,
+        completedDate: isDone ? resolveCompletedDate(dueDate, index) : null,
+        /**
+         * Info: (20260811 - Julian) 序號由工號推導，同一個人每次進畫面都一樣。
+         * 用亂數的話，重新整理後同一台筆電會換一組序號。
+         */
+        assetNo: template.assetPrefix
+          ? `${template.assetPrefix}${1000 + ((serial * 37 + index * 131) % 9000)}`
+          : null,
+        scheduledAt: template.isScheduled
+          ? `${toIsoDate(leaveDate)}T${ACCOUNT_REVOKE_DEFAULT_TIME}`
+          : null,
+        note: null,
+      } satisfies IOffboardingTask;
+    },
+  );
 }
 
 /** Info: (20260810 - Julian) 離職滿 30 天後就不再出現在交接清單 */

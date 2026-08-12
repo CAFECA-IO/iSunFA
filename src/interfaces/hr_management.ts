@@ -10,6 +10,7 @@ import {
   MovementAlertReason,
   MovementStage,
   OffboardingModalTab,
+  OffboardingTemplateKey,
   OnboardingTemplateKey,
   OnboardingTrigger,
   ProbationMilestone,
@@ -18,6 +19,7 @@ import {
   ProcessTaskStatus,
   ProcessTaskType,
   ResignationReason,
+  ResignationType,
 } from "@/constants/hr_management";
 
 /**
@@ -621,4 +623,86 @@ export interface IOnboardingInitiateErrors {
 export interface IOnboardingInitiateResult {
   employee: IEmployeeListItem;
   tasks: IProcessTask[];
+}
+
+/**
+ * Info: (20260812 - Julian) 發起離職申請的表單。
+ *
+ * 與報到那張表最大的差別：這裡不建人，只在既有員工身上掛一個流程。
+ * 因此沒有任何個資欄位 —— 姓名、部門、年資全都是選了人之後系統帶出來的，
+ * 使用者一個字都不必打。表單只收「這次離職的四個日期與三個選擇」。
+ */
+export interface IOffboardingInitiateForm {
+  employeeId: string;
+  /** Info: (20260812 - Julian) 離職申請提出日；預告期由此起算 */
+  noticeDate: string;
+  /** Info: (20260812 - Julian) 預定最後工作日；即案件的關鍵日期 */
+  lastWorkingDate: string;
+  /** Info: (20260812 - Julian) 預定退保／生效日 */
+  insuranceOffDate: string;
+  resignationType: ResignationType;
+  /** Info: (20260812 - Julian) 詳細說明，選填 */
+  reasonNote: string;
+  handoverAssigneeId: string;
+  templateId: OffboardingTemplateKey;
+}
+
+// Info: (20260812 - Julian) 欄位 → i18n key，沒有錯誤為 null。逐欄列出的理由同報到端
+export interface IOffboardingInitiateErrors {
+  employeeId: string | null;
+  noticeDate: string | null;
+  lastWorkingDate: string | null;
+  insuranceOffDate: string | null;
+  handoverAssigneeId: string | null;
+}
+
+/**
+ * Info: (20260812 - Julian) 預告期試算的結果，含法規依據與是否適用。
+ *
+ * 比 `INoticePeriodCheck` 多兩件事：`isApplicable`（定期契約期滿不適用）
+ * 與 `type`（決定不足時該說什麼 —— 自請離職是「請確認是否為合意離職」，
+ * 資遣則是「雇主應發給預告期間工資」，兩者是完全不同的後果）。
+ */
+export interface INoticePeriodEstimate {
+  isApplicable: boolean;
+  type: ResignationType;
+  tenureMonths: number;
+  requiredDays: number;
+  actualDays: number;
+  shortageDays: number;
+  isSatisfied: boolean;
+}
+
+/**
+ * Info: (20260812 - Julian) 發起離職時決定、之後由離職流程 Modal 沿用的欄位。
+ *
+ * 它存在的理由是「同一件事只決定一次」：離職原因、交接對象、退保日
+ * 在發起時就選好了，流程 Modal 不該再從 mock 亂數推一次 ——
+ * 那會讓使用者發現自己剛剛填的東西打開後變成別的值。
+ *
+ * ToDo: (20260812 - Julian) 接 API 後這些欄位由 `OffboardingProcess` 回傳，
+ * 這個型別與 `resolveMockReason` 一起移除。
+ */
+export interface IOffboardingInitiation {
+  employeeId: string;
+  noticeDate: string;
+  lastWorkingDate: string;
+  insuranceOffDate: string;
+  resignationType: ResignationType;
+  reason: ResignationReason;
+  reasonNote: string;
+  handoverAssigneeId: string;
+}
+
+/**
+ * Info: (20260812 - Julian) 送出後產生的三樣東西。
+ *
+ * `employee` 是「改過 `leaveDate` 的同一個人」，不是新的一筆 ——
+ * 離職不建員工。少了這一份，看板不會出現這個案件：`buildMovementCases`
+ * 要求離職案件的員工有 `leaveDate`，沒有就整筆略過。
+ */
+export interface IOffboardingInitiateResult {
+  employee: IEmployeeListItem;
+  tasks: IOffboardingTask[];
+  initiation: IOffboardingInitiation;
 }

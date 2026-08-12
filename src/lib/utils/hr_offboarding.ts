@@ -22,6 +22,7 @@ import {
   IOffboardingAsset,
   IOffboardingCase,
   IOffboardingForm,
+  IOffboardingInitiation,
   IOffboardingProgress,
   IOffboardingTask,
   IProcessTask,
@@ -144,6 +145,14 @@ function resolveMockReason(employeeId: string): ResignationReason {
  */
 export function buildOffboardingForm(
   offboardingCase: IOffboardingCase,
+  /**
+   * Info: (20260812 - Julian) 由「發起離職申請」決定的欄位。
+   *
+   * 有這一份就用它，沒有（既有 mock 案件）才退回推導值。同一件事只決定一次：
+   * 離職原因、交接對象、退保日在發起時就選好了，這裡再推一次的話，
+   * 使用者會發現自己剛填的東西打開後變成別的值。
+   */
+  initiation: IOffboardingInitiation | null = null,
 ): IOffboardingForm {
   const { tasks } = offboardingCase;
 
@@ -215,13 +224,13 @@ export function buildOffboardingForm(
   );
 
   return {
-    reason: resolveMockReason(offboardingCase.employeeId),
-    reasonNote: "",
+    reason: initiation?.reason ?? resolveMockReason(offboardingCase.employeeId),
+    reasonNote: initiation?.reasonNote ?? "",
     expectedLeaveDate: offboardingCase.keyDate,
     // Info: (20260811 - Julian) 最後工作日預設同離職日，特休折抵時才會不一樣
     lastWorkingDate: offboardingCase.keyDate,
-    insuranceOffDate: offboardingCase.keyDate,
-    handoverAssigneeId: "",
+    insuranceOffDate: initiation?.insuranceOffDate ?? offboardingCase.keyDate,
+    handoverAssigneeId: initiation?.handoverAssigneeId ?? "",
     handoverItems,
     approvalTaskId: approvalTask?.id ?? null,
     isApproved: approvalTask !== undefined && isDone(approvalTask),

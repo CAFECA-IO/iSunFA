@@ -1,9 +1,10 @@
 "use client";
 
 import { FC, useCallback, useMemo, useState } from "react";
-import { LogOut, Repeat, Search, UserPlus } from "lucide-react";
+import { DoorOpen, Repeat, Search, UserPlus } from "lucide-react";
 import MovementKanban from "@/components/hr_management/movement/movement_kanban";
 import MovementTaskDrawer from "@/components/hr_management/movement/movement_task_drawer";
+import OffboardingInitiateModal from "@/components/hr_management/movement/offboarding_initiate_modal";
 import OffboardingProcessModal from "@/components/hr_management/movement/offboarding_process_modal";
 import OffboardingTable from "@/components/hr_management/movement/offboarding_table";
 import OnboardingInitiateModal from "@/components/hr_management/movement/onboarding_initiate_modal";
@@ -42,6 +43,8 @@ import {
   IMovementCase,
   IOffboardingCase,
   IOffboardingForm,
+  IOffboardingInitiateResult,
+  IOffboardingInitiation,
   IOnboardingInitiateResult,
   IProbationReviewForm,
   IProbationRow,
@@ -62,6 +65,7 @@ import {
   buildOffboardingProgress,
   mergeOffboardingForm,
 } from "@/lib/utils/hr_offboarding";
+import { resolveOffboardingCandidates } from "@/lib/utils/hr_offboarding_initiate";
 import {
   buildDepartmentTree,
   flattenDepartmentTree,
@@ -145,28 +149,92 @@ const MovementPageBody: FC = () => {
   const [newHireTasks, setNewHireTasks] = useState<IProcessTask[]>([]);
   const [isInitiateOpen, setIsInitiateOpen] = useState<boolean>(false);
 
+  /**
+   * Info: (20260812 - Julian) 這一輪發起的離職申請與交接任務。
+   *
+   * 離職不建人，因此不是「多一個員工」而是「既有員工多了 `leaveDate`」——
+   * 少了那個日期，`buildMovementCases` 會把整筆案件略過。
+   * 發起時決定的原因、交接對象、退保日另存一份，讓離職流程 Modal 打開時
+   * 看到的是使用者剛剛填的值，而不是再推導一次的別的值。
+   */
+  const [initiations, setInitiations] = useState<IOffboardingInitiation[]>([]);
+  const [newOffboardingTasks, setNewOffboardingTasks] = useState<
+    IProcessTask[]
+  >([]);
+  const [isOffboardingInitiateOpen, setIsOffboardingInitiateOpen] =
+    useState<boolean>(false);
+
   const today = useMemo(() => parseIsoDate(MOCK_HR_TODAY), []);
 
-  // Info: (20260812 - Julian) 到離職頁看得到的名冊 = 既有名冊 + 這一輪剛發起的新人
+  const initiationByEmployeeId = useMemo(
+    () => new Map(initiations.map((item) => [item.employeeId, item])),
+    [initiations],
+  );
+
+  /**
+   * Info: (20260812 - Julian) 到離職頁看得到的名冊 = 既有名冊 + 剛發起的新人，
+   * 再把剛發起離職的人補上 `leaveDate`。
+   *
+   * `status` 刻意不動：最後工作日還沒到的人仍然在職，提前改成 RESIGNED
+   * 會讓他當天就從在職人數與部門編制上消失。
+   */
   const people = useMemo<IEmployeeListItem[]>(
-    () => [...MOCK_HR_MOVEMENT_PEOPLE, ...newHires],
-    [newHires],
+    () =>
+      [...MOCK_HR_MOVEMENT_PEOPLE, ...newHires].map((person) => {
+        const initiation = initiationByEmployeeId.get(person.id);
+        return initiation
+          ? { ...person, leaveDate: initiation.lastWorkingDate }
+          : person;
+      }),
+    [newHires, initiationByEmployeeId],
   );
 
   // Info: (20260810 - Julian) 套用勾選覆寫後的任務，所有分頁都吃這一份
   const tasks = useMemo<IProcessTask[]>(
     () =>
-      [...MOCK_HR_MOVEMENT_TASKS, ...newHireTasks].map((task) => {
-        const override = taskOverrides[task.id];
-        if (override === undefined) return task;
-        return {
-          ...task,
-          status: override
-            ? ProcessTaskStatus.COMPLETED
-            : ProcessTaskStatus.PENDING,
-        };
-      }),
-    [taskOverrides, newHireTasks],
+      [...MOCK_HR_MOVEMENT_TASKS, ...newHireTasks, ...newOffboardingTasks].map(
+        (task) => {
+          const override = taskOverrides[task.id];
+          if (override === undefined) return task;
+          return {
+            ...task,
+            status: override
+              ? ProcessTaskStatus.COMPLETED
+              : ProcessTaskStatus.PENDING,
+          };
+        },
+      ),
+    [taskOverrides, newHireTasks, newOffboardingTasks],
+  );
+
+  /**
+   * Info: (20260812 - Julian) 提出離職的日期：mock 的既有案件加上這一輪發起的。
+   * 預告期由此起算，缺這一份的話新案件的實際預告天數會被算成 0。
+   */
+  const noticeDates = useMemo<Record<string, string>>(
+    () => ({
+      ...MOCK_HR_RESIGNATION_NOTICES,
+      ...Object.fromEntries(
+        initiations.map((item) => [item.employeeId, item.noticeDate]),
+      ),
+    }),
+    [initiations],
+  );
+
+  /**
+   * Info: (20260812 - Julian) 身上已經有任何流程任務的人。
+   *
+   * 用來擋掉「同一個人同時有報到與離職任務」——`buildMovementCases`
+   * 依第一筆任務的類型判斷案件屬性，混在一起時另一種會整批消失。
+   */
+  const employeeIdsWithProcess = useMemo(
+    () => new Set(tasks.map((task) => task.employeeId)),
+    [tasks],
+  );
+
+  const offboardingCandidates = useMemo(
+    () => resolveOffboardingCandidates(people, employeeIdsWithProcess, today),
+    [people, employeeIdsWithProcess, today],
   );
 
   const departmentOptions = useMemo(
@@ -227,14 +295,14 @@ const MovementPageBody: FC = () => {
       filteredCases,
       people,
       today,
-      MOCK_HR_RESIGNATION_NOTICES,
+      noticeDates,
     );
     return built.filter((item) =>
       offboardingMode === OffboardingListMode.ACTIVE
         ? !item.isCompleted
         : item.isCompleted,
     );
-  }, [filteredCases, people, today, offboardingMode]);
+  }, [filteredCases, people, today, noticeDates, offboardingMode]);
 
   /**
    * Info: (20260811 - Julian) 供 Modal 查閱的離職案件，走的是「未篩選」的名單。
@@ -246,14 +314,11 @@ const MovementPageBody: FC = () => {
   const offboardingById = useMemo(
     () =>
       new Map(
-        buildOffboardingCases(
-          allCases,
-          people,
-          today,
-          MOCK_HR_RESIGNATION_NOTICES,
-        ).map((item) => [item.id, item]),
+        buildOffboardingCases(allCases, people, today, noticeDates).map(
+          (item) => [item.id, item],
+        ),
       ),
-    [allCases, people, today],
+    [allCases, people, today, noticeDates],
   );
 
   // Info: (20260810 - Julian) 已填寫的考核結果覆寫回列，統計才會跟著動
@@ -326,11 +391,14 @@ const MovementPageBody: FC = () => {
    */
   const resolveOffboardingForm = useCallback(
     (item: IOffboardingCase): IOffboardingForm => {
-      const base = buildOffboardingForm(item);
+      const base = buildOffboardingForm(
+        item,
+        initiationByEmployeeId.get(item.employeeId) ?? null,
+      );
       const saved = offboardingForms[item.id];
       return saved ? mergeOffboardingForm(base, saved) : base;
     },
-    [offboardingForms],
+    [offboardingForms, initiationByEmployeeId],
   );
 
   const openOffboardingForm = useMemo(
@@ -397,6 +465,28 @@ const MovementPageBody: FC = () => {
     const caseId = `${ProcessTaskType.ONBOARDING}-${result.employee.id}`;
     const willAppear = result.tasks.length > 0;
     if (willAppear) setOpenCaseId(caseId);
+  };
+
+  /**
+   * Info: (20260812 - Julian) 發起離職後把使用者送到結果上，做法同報到端。
+   *
+   * 差別是這裡直接開「離職流程」Modal 而不是任務抽屜 —— 剛發起的案件
+   * 接下來要做的是填交接內容，那是流程 Modal 的事；抽屜只能勾任務。
+   */
+  const handleInitiateOffboarding = (result: IOffboardingInitiateResult) => {
+    setInitiations((prev) => [...prev, result.initiation]);
+    setNewOffboardingTasks((prev) => [...prev, ...result.tasks]);
+    setIsOffboardingInitiateOpen(false);
+
+    setActiveTab(MovementTab.OFFBOARDING);
+    setOffboardingMode(OffboardingListMode.ACTIVE);
+    setKeyword("");
+    setDepartmentId(HR_FILTER_ALL);
+    setAssignee(HR_FILTER_ALL);
+
+    setOpenOffboardingId(
+      `${ProcessTaskType.OFFBOARDING}-${result.employee.id}`,
+    );
   };
 
   const handleToggleTask = (taskId: string, isDone: boolean) => {
@@ -474,7 +564,7 @@ const MovementPageBody: FC = () => {
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div className="min-w-0">
             <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-gray-800">
-              <Repeat className="h-6 w-6 text-orange-500" />
+              <Repeat className="size-6 shrink-0 text-orange-500" />
               {t("hr_management.movement.title")}
             </h1>
             <p className="mt-1.5 text-sm text-gray-500">
@@ -485,20 +575,20 @@ const MovementPageBody: FC = () => {
           </div>
 
           <div className="flex shrink-0 flex-wrap items-center gap-2">
-            {/* ToDo: (20260812 - Julian) 發起離職申請的 Modal 尚未實作 */}
             <button
               type="button"
               onClick={() => setIsInitiateOpen(true)}
               className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 shadow-sm transition hover:bg-gray-50"
             >
-              <UserPlus className="h-4 w-4" />
+              <UserPlus className="size-4 shrink-0" />
               {t("hr_management.movement.action_new_onboarding")}
             </button>
             <button
               type="button"
+              onClick={() => setIsOffboardingInitiateOpen(true)}
               className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-700"
             >
-              <LogOut className="h-4 w-4" />
+              <DoorOpen className="size-4 shrink-0" />
               {t("hr_management.movement.action_new_offboarding")}
             </button>
           </div>
@@ -526,7 +616,7 @@ const MovementPageBody: FC = () => {
         {/* Info: (20260810 - Julian) 共用篩選列 */}
         <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm lg:flex-row lg:items-center">
           <div className="relative flex-1">
-            <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 shrink-0 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               aria-label={t("hr_management.movement.search_placeholder")}
@@ -668,6 +758,16 @@ const MovementPageBody: FC = () => {
           today={today}
           onClose={() => setIsInitiateOpen(false)}
           onSubmit={handleInitiateOnboarding}
+        />
+      ) : null}
+
+      {isOffboardingInitiateOpen ? (
+        <OffboardingInitiateModal
+          candidates={offboardingCandidates}
+          people={people}
+          today={today}
+          onClose={() => setIsOffboardingInitiateOpen(false)}
+          onSubmit={handleInitiateOffboarding}
         />
       ) : null}
 

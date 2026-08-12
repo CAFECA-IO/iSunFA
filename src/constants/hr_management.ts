@@ -28,14 +28,7 @@ export enum Gender {
   OTHER = "OTHER",
 }
 
-/**
- * Info: (20260812 - Julian) 性別選項與顯示文字。
- *
- * 三個都列出來而不是只給男／女：schema 的 enum 有 `OTHER`，
- * 畫面只給兩個選項等於讓一個合法值在 UI 上不可表示 ——
- * 那筆資料仍然存得進去（種子、匯入、API 直呼），只是沒有人選得到，
- * 而選不到的值最後會由某個地方隨便填一個進去。
- */
+// Info: (20260812 - Julian) 性別選項與顯示文字（共三種）
 export const GENDERS: Gender[] = [Gender.FEMALE, Gender.MALE, Gender.OTHER];
 
 export const GENDER_I18N_KEY: Record<Gender, string> = {
@@ -145,16 +138,15 @@ export const HR_DASHBOARD_ROLE_I18N_KEY: Record<HrDashboardRole, string> = {
 };
 
 /**
- * Info: (20260811 - Julian) 報到／離職任務類型。**DTO 層的衍生值，DB 沒有這個欄位。**
+ * Info: (20260811 - Julian) 報到／離職任務類型。DTO 層的衍生值，DB 沒有這個欄位。
  *
  * 原本對齊 Prisma enum `ProcessTaskType`，但那個 enum 已隨 `ProcessTask` 拆成
  * `OnboardingTask` / `OffboardingTask` 一併移除 —— 儲存層裡任務屬於哪種流程
- * 由它在哪張表決定，存一個可以與外鍵矛盾的欄位只會製造第三種真相
- * （見 ADR 019）。
+ * 由它在哪張表決定，存一個可以與外鍵矛盾的欄位只會製造第三種真相（見 ADR 019）。
  *
  * 這裡保留它的理由不同：待辦清單畫面把兩種任務併成一張列表，
  * 每一列需要標示自己來自哪邊。這個值由 service 層依來源表填入，
- * **不可以寫回資料庫**。
+ * ⚠️ 不可以寫回資料庫。
  */
 export enum ProcessTaskType {
   ONBOARDING = "ONBOARDING",
@@ -304,14 +296,7 @@ export const STRUCTURE_DIMENSION_I18N_KEY: Record<StructureDimension, string> =
     [StructureDimension.AGE]: "hr_management.dashboard.dimension_age",
   };
 
-// Info: (20260810 - Julian) 到離職頁的四個分頁
-/**
- * Info: (20260811 - Julian) 到離職的三個分頁。
- *
- * 沒有獨立的「新人報到」分頁：報到列表就是概覽的另一種檢視，
- * 兩邊本來就是同一個元件、同一份資料，分成兩頁只會讓快速篩選
- * 在其中一頁失效，而使用者分不出兩張長得一樣的表差在哪。
- */
+// Info: (20260811 - Julian) 到離職的三個分頁
 export enum MovementTab {
   OVERVIEW = "OVERVIEW",
   PROBATION = "PROBATION",
@@ -590,7 +575,7 @@ export const ONBOARDING_TASK_TITLE_I18N_KEY: Record<OnboardingTaskKey, string> =
 /**
  * Info: (20260812 - Julian) 發起報到時的三個自動化開關。
  *
- * 它們不是「要不要顯示這一區」，而是**要不要建立那幾筆任務**。
+ * 不是「要不要顯示這一區」，而是「要不要建立那幾筆任務」。
  * 取消勾選採「不建立」而不是「建立後標 SKIPPED」——
  * `ProcessTaskStatus.SKIPPED` 在 `isTaskDone` 裡視同完成，
  * 標 SKIPPED 會讓沒準備電腦的新人顯示 IT 進度 100%。
@@ -748,9 +733,7 @@ export const EMPLOYEE_NO_PATTERN = /^EMP\d{3,}$/;
 /**
  * Info: (20260812 - Julian) Email 與台灣手機號碼的格式檢查。
  *
- * 兩者都刻意寬鬆：Email 只擋「明顯不是 Email」的輸入（沒有 @ 或沒有網域），
- * 真正的有效性只有寄出去才知道；電話允許夾雜 `-` 與空白，
- * 因為使用者從通訊錄複製過來就是那個樣子，逼他手動清掉不會讓資料更正確。
+ * 兩者都刻意寬鬆：Email 只擋「明顯不是 Email」的輸入（沒有 @ 或沒有網域）。
  */
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const TW_MOBILE_PATTERN = /^09[\d\-\s]{8,12}$/;
@@ -770,7 +753,253 @@ export enum OffboardingTaskKey {
   HEALTH_INSURANCE = "OFFBOARDING_HEALTH_INSURANCE",
   PENSION_STOP = "OFFBOARDING_PENSION_STOP",
   CERTIFICATE = "OFFBOARDING_CERTIFICATE",
+  CODE_HANDOVER = "OFFBOARDING_CODE_HANDOVER",
+  PIPELINE_HANDOVER = "OFFBOARDING_PIPELINE_HANDOVER",
 }
+
+// Info: (20260812 - Julian) 任務標題。存進 `OffboardingTask.title` 的是這裡解析後的字串
+export const OFFBOARDING_TASK_TITLE_I18N_KEY: Record<
+  OffboardingTaskKey,
+  string
+> = {
+  [OffboardingTaskKey.DOCUMENT_HANDOVER]:
+    "hr_management.offboarding.task_document_handover",
+  [OffboardingTaskKey.CUSTOMER_HANDOVER]:
+    "hr_management.offboarding.task_customer_handover",
+  [OffboardingTaskKey.HANDOVER_APPROVAL]:
+    "hr_management.offboarding.task_handover_approval",
+  [OffboardingTaskKey.ACCESS_CARD]:
+    "hr_management.offboarding.task_access_card",
+  [OffboardingTaskKey.CAR_KEY]: "hr_management.offboarding.task_car_key",
+  [OffboardingTaskKey.LAPTOP_RETURN]:
+    "hr_management.offboarding.task_laptop_return",
+  [OffboardingTaskKey.MONITOR_RETURN]:
+    "hr_management.offboarding.task_monitor_return",
+  [OffboardingTaskKey.ACCOUNT_REVOKE]:
+    "hr_management.offboarding.task_account_revoke",
+  [OffboardingTaskKey.VPN_REVOKE]: "hr_management.offboarding.task_vpn_revoke",
+  [OffboardingTaskKey.LABOR_INSURANCE]:
+    "hr_management.offboarding.task_labor_insurance",
+  [OffboardingTaskKey.HEALTH_INSURANCE]:
+    "hr_management.offboarding.task_health_insurance",
+  [OffboardingTaskKey.PENSION_STOP]:
+    "hr_management.offboarding.task_pension_stop",
+  [OffboardingTaskKey.CERTIFICATE]:
+    "hr_management.offboarding.task_certificate",
+  [OffboardingTaskKey.CODE_HANDOVER]:
+    "hr_management.offboarding.task_code_handover",
+  [OffboardingTaskKey.PIPELINE_HANDOVER]:
+    "hr_management.offboarding.task_pipeline_handover",
+};
+
+/**
+ * Info: (20260812 - Julian) 離職的「法律類型」，與 `ResignationReason`（個人原因）是兩個軸。
+ *
+ * 最實際的差別在預告期：勞基法第 16 條的預告是「雇主資遣勞工」時的義務，
+ * 第 15 條讓勞工自請離職時準用同一組天數（方向相反、天數相同）；
+ * 而定期契約期滿不續約根本不適用預告期 —— 契約本來就到那天為止。
+ * 三者用同一張表算，會讓約聘期滿的人被標成「預告期不足」。
+ */
+export enum ResignationType {
+  VOLUNTARY = "VOLUNTARY",
+  LAYOFF = "LAYOFF",
+  CONTRACT_END = "CONTRACT_END",
+}
+
+export const RESIGNATION_TYPES: ResignationType[] = [
+  ResignationType.VOLUNTARY,
+  ResignationType.LAYOFF,
+  ResignationType.CONTRACT_END,
+];
+
+export const RESIGNATION_TYPE_I18N_KEY: Record<ResignationType, string> = {
+  [ResignationType.VOLUNTARY]: "hr_management.offboarding.type_voluntary",
+  [ResignationType.LAYOFF]: "hr_management.offboarding.type_layoff",
+  [ResignationType.CONTRACT_END]: "hr_management.offboarding.type_contract_end",
+};
+
+/**
+ * Info: (20260812 - Julian) 離職交接範本。GENERAL 就是原本那 13 項，順序不變 ——
+ * 既有 mock 的 `skipIndexes` 是依索引挑的，改順序會讓每個人的進度整批位移。
+ */
+export enum OffboardingTemplateKey {
+  GENERAL = "GENERAL",
+  ENGINEERING = "ENGINEERING",
+  SALES = "SALES",
+}
+
+export const OFFBOARDING_TEMPLATE_KEYS: OffboardingTemplateKey[] = [
+  OffboardingTemplateKey.GENERAL,
+  OffboardingTemplateKey.ENGINEERING,
+  OffboardingTemplateKey.SALES,
+];
+
+export const OFFBOARDING_TEMPLATE_I18N_KEY: Record<
+  OffboardingTemplateKey,
+  string
+> = {
+  [OffboardingTemplateKey.GENERAL]:
+    "hr_management.offboarding.template_general",
+  [OffboardingTemplateKey.ENGINEERING]:
+    "hr_management.offboarding.template_engineering",
+  [OffboardingTemplateKey.SALES]: "hr_management.offboarding.template_sales",
+};
+
+/**
+ * Info: (20260812 - Julian) 離職各分類的預設經辦窗口。
+ *
+ * 與報到那份的差別只在 WORK：報到的「部門介紹」是總務排的，
+ * 離職的「工作交接」則由用人主管驗收。共用一份會讓其中一邊指派錯人。
+ *
+ * ToDo: (20260812 - Julian) 同報到端：真實系統應由部門設定決定，且存 id 不存姓名。
+ */
+export const OFFBOARDING_ASSIGNEE_BY_CATEGORY: Record<
+  HandoverCategory,
+  string
+> = {
+  [HandoverCategory.WORK]: "王大明",
+  [HandoverCategory.ASSET]: "蔡宜臻",
+  [HandoverCategory.IT]: "許庭瑋",
+  [HandoverCategory.HR]: "林巧芯",
+};
+
+/**
+ * Info: (20260812 - Julian) 三份範本共用的十三項，陣列順序即畫面順序。
+ *
+ * `assetPrefix` 有值的是實體資產，會出現在資產回收表並依員工產生序號；
+ * `isScheduled` 為真的是排程停權，顯示的是預定生效時間而不是完成日 ——
+ * 停權由排程執行，「今天勾了」與「幾點生效」是兩件不同的事。
+ */
+const OFFBOARDING_COMMON_TASKS = [
+  {
+    key: OffboardingTaskKey.DOCUMENT_HANDOVER,
+    category: HandoverCategory.WORK,
+    dueOffset: -7,
+    assetPrefix: null as string | null,
+    isScheduled: false,
+  },
+  {
+    key: OffboardingTaskKey.CUSTOMER_HANDOVER,
+    category: HandoverCategory.WORK,
+    dueOffset: -5,
+    assetPrefix: null,
+    isScheduled: false,
+  },
+  {
+    key: OffboardingTaskKey.HANDOVER_APPROVAL,
+    category: HandoverCategory.WORK,
+    dueOffset: -3,
+    assetPrefix: null,
+    isScheduled: false,
+  },
+  {
+    key: OffboardingTaskKey.ACCESS_CARD,
+    category: HandoverCategory.ASSET,
+    dueOffset: 0,
+    assetPrefix: "ID-",
+    isScheduled: false,
+  },
+  {
+    key: OffboardingTaskKey.CAR_KEY,
+    category: HandoverCategory.ASSET,
+    dueOffset: 0,
+    assetPrefix: "KEY-",
+    isScheduled: false,
+  },
+  {
+    key: OffboardingTaskKey.LAPTOP_RETURN,
+    category: HandoverCategory.IT,
+    dueOffset: 0,
+    assetPrefix: "C02X",
+    isScheduled: false,
+  },
+  {
+    key: OffboardingTaskKey.MONITOR_RETURN,
+    category: HandoverCategory.IT,
+    dueOffset: 0,
+    assetPrefix: "MON-",
+    isScheduled: false,
+  },
+  {
+    key: OffboardingTaskKey.ACCOUNT_REVOKE,
+    category: HandoverCategory.IT,
+    dueOffset: 0,
+    assetPrefix: null,
+    isScheduled: true,
+  },
+  {
+    key: OffboardingTaskKey.VPN_REVOKE,
+    category: HandoverCategory.IT,
+    dueOffset: 0,
+    assetPrefix: null,
+    isScheduled: true,
+  },
+  {
+    key: OffboardingTaskKey.LABOR_INSURANCE,
+    category: HandoverCategory.HR,
+    dueOffset: 3,
+    assetPrefix: null,
+    isScheduled: false,
+  },
+  {
+    key: OffboardingTaskKey.HEALTH_INSURANCE,
+    category: HandoverCategory.HR,
+    dueOffset: 3,
+    assetPrefix: null,
+    isScheduled: false,
+  },
+  {
+    key: OffboardingTaskKey.PENSION_STOP,
+    category: HandoverCategory.HR,
+    dueOffset: 3,
+    assetPrefix: null,
+    isScheduled: false,
+  },
+  {
+    key: OffboardingTaskKey.CERTIFICATE,
+    category: HandoverCategory.HR,
+    dueOffset: 1,
+    assetPrefix: null,
+    isScheduled: false,
+  },
+];
+
+/**
+ * Info: (20260812 - Julian) 職務別的交接項目插在「主管驗收」之前。
+ *
+ * 位置用 `findIndex` 算而不是寫死：驗收的定義是「上面那些都做完了」，
+ * 排到它後面的項目等於沒有被驗收到，而那不會有任何地方報錯。
+ */
+const OFFBOARDING_APPROVAL_INDEX = OFFBOARDING_COMMON_TASKS.findIndex(
+  (task) => task.key === OffboardingTaskKey.HANDOVER_APPROVAL,
+);
+
+const withRoleHandover = (
+  key: OffboardingTaskKey,
+): (typeof OFFBOARDING_COMMON_TASKS)[number][] => [
+  ...OFFBOARDING_COMMON_TASKS.slice(0, OFFBOARDING_APPROVAL_INDEX),
+  {
+    key,
+    category: HandoverCategory.WORK,
+    dueOffset: -5,
+    assetPrefix: null,
+    isScheduled: false,
+  },
+  ...OFFBOARDING_COMMON_TASKS.slice(OFFBOARDING_APPROVAL_INDEX),
+];
+
+export const OFFBOARDING_TEMPLATES: Record<
+  OffboardingTemplateKey,
+  (typeof OFFBOARDING_COMMON_TASKS)[number][]
+> = {
+  [OffboardingTemplateKey.GENERAL]: OFFBOARDING_COMMON_TASKS,
+  [OffboardingTemplateKey.ENGINEERING]: withRoleHandover(
+    OffboardingTaskKey.CODE_HANDOVER,
+  ),
+  [OffboardingTemplateKey.SALES]: withRoleHandover(
+    OffboardingTaskKey.PIPELINE_HANDOVER,
+  ),
+};
 
 /**
  * Info: (20260811 - Julian) 會被畫成「資產回收表」一列的任務。
@@ -793,7 +1022,7 @@ export const OFFBOARDING_REVOKE_KEYS: string[] = [
 /**
  * Info: (20260811 - Julian) 主管驗收也是一筆任務，不是 Modal 裡的一個旗標。
  * 只活在表單裡的話，案件完成度（由任務推導）會跟交接進度對不起來，
- * 出現「已結案，但工作交接 67%」這種自相矛盾的一列。
+ * 可能出現「已結案，但工作交接 67%」這種自相矛盾的一列。
  */
 export const OFFBOARDING_APPROVAL_KEY: string =
   OffboardingTaskKey.HANDOVER_APPROVAL;
@@ -818,7 +1047,7 @@ export const ACCOUNT_REVOKE_DEFAULT_TIME = "18:00";
  *
  * 分頁順序就是流程順序：先確認離職本身成立（原因與預告期），
  * 再交接工作、收回資產，最後才是 HR 結算。倒過來做的話，
- * 會出現「證明書都發了才發現預告期不足」。
+ * 會出現「證明書都發了才發現預告期不足」的情形。
  */
 export enum OffboardingModalTab {
   APPLICATION = "APPLICATION",
@@ -875,6 +1104,22 @@ export const RESIGNATION_REASON_I18N_KEY: Record<ResignationReason, string> = {
   [ResignationReason.NEW_JOB]: "hr_management.offboarding.reason_new_job",
   [ResignationReason.LAYOFF]: "hr_management.offboarding.reason_layoff",
   [ResignationReason.OTHER]: "hr_management.offboarding.reason_other",
+};
+
+/**
+ * Info: (20260812 - Julian) 由類型推出離職原因的預設值。
+ *
+ * 兩者不是同一件事，但選了類型之後原因的合理起點是確定的 ——
+ * 讓離職流程 Modal 的原因下拉有個對的初值，而不是一個與類型矛盾的值
+ * （「公司資遣」配上「生涯規劃」）。使用者仍可在那裡改成更精確的原因。
+ */
+export const RESIGNATION_TYPE_DEFAULT_REASON: Record<
+  ResignationType,
+  ResignationReason
+> = {
+  [ResignationType.VOLUNTARY]: ResignationReason.CAREER,
+  [ResignationType.LAYOFF]: ResignationReason.LAYOFF,
+  [ResignationType.CONTRACT_END]: ResignationReason.OTHER,
 };
 
 // Info: (20260811 - Julian) 工作交接項目的狀態：未完成／已交接
@@ -945,10 +1190,10 @@ export const ONBOARDING_EQUIPMENT_KEYS: string[] = [
 /**
  * Info: (20260810 - Julian) 案件的自動化警示等級。
  *
- * 三色是有嚴格定義的，不是「看起來急不急」：紅色代表**現在就會出事**
- * （離職日在三天內但 IT 帳號還沒停權、試用期已過卻沒人考核），
- * 綠色代表**可以結案**，其餘一律黃色。判斷收斂在 `resolveCaseAlert`，
- * 各畫面只負責上色，不各自判斷 —— 否則同一筆案件在看板是紅的、在列表是黃的。
+ * 紅色「非常重要，現在就會出事」，如：離職日在三天內但 IT 帳號還沒停權、試用期已過卻沒人考核。
+ * 綠色「可以結案」。
+ * 其餘皆為黃色。
+ * 判斷收斂在 `resolveCaseAlert`各畫面只負責上色，不各自判斷。
  */
 export enum MovementAlertLevel {
   URGENT = "URGENT",
