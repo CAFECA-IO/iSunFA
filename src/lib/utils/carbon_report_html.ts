@@ -346,6 +346,30 @@ const printStyle = (): string => {
   .doc-shell-meta .dot { color: rgb(209, 213, 219); }
   .doc-shell-meta .doc-title { margin: 4mm 0 0; font-size: 16pt; }
 
+  /*
+   * Info: (20260812 - Emily) 目錄。整塊自成一頁：目錄橫跨兩頁而中間夾著正文
+   * 會讓人以為目錄結束了。項目用 flex 讓引導點自動撐開，頁碼靠右對齊。
+   */
+  .doc-toc { break-after: page; page-break-after: always; margin: 0 0 6mm; }
+  .doc-toc-title { font-size: 14pt; margin: 0 0 4mm; color: rgb(15, 23, 42); }
+  .doc-toc-list { list-style: none; margin: 0; padding: 0; font-size: 10pt; }
+  .doc-toc-list li { margin: 0 0 1.6mm; break-inside: avoid; }
+  .doc-toc-list a {
+    display: flex; align-items: baseline; gap: 1.5mm;
+    color: rgb(30, 41, 59); text-decoration: none;
+  }
+  .doc-toc-list .toc-dots {
+    flex: 1 1 auto; border-bottom: 0.2mm dotted rgb(148, 163, 184);
+    transform: translateY(-1mm);
+  }
+  /* 頁碼欄寬固定：填 1~3 位數都不會讓那一行重新換行（見 TOC_PAGE_PLACEHOLDER） */
+  .doc-toc-list .toc-page {
+    flex: 0 0 auto; min-width: 9mm; text-align: right;
+    font-variant-numeric: tabular-nums; color: rgb(71, 85, 105);
+  }
+  .doc-toc-list li.lv2 { padding-left: 5mm; }
+  .doc-toc-list li.lv3 { padding-left: 10mm; font-size: 9.5pt; }
+
   /* 頁尾整塊不可分頁,且必須與前文分開 —— 它是文件的結尾而不是一段內容 */
   .doc-shell-footer {
     border-top: 0.3mm solid rgb(255, 237, 213); background: rgb(255, 247, 237);
@@ -396,9 +420,90 @@ export interface ICarbonReportShell {
   logoDataUrl?: string;
   /** Info: (20260811 - Emily) 報告標題;省略即不印(內容自己的 h1 已足夠) */
   title?: string;
+  /** Info: (20260812 - Emily) 目錄抬頭;省略即不印目錄 */
+  tocTitle?: string;
 }
 
 const SHELL_VENDOR = "iSunFA Enterprise Solutions";
+
+/**
+ * Info: (20260812 - Emily) 下載的報告要有可點的目錄，而且每一條要標頁碼
+ * (Emily 2026-08-12)。應用程式裡已經有章節目錄，缺的是 PDF 這一份。
+ *
+ * 只收 h1~h3。h4 以下是節內的小標，收進來會讓一份 33 節的報告變成上百條，
+ * 目錄本身就要好幾頁 —— 目錄的用途是定位章節，不是重述全文。
+ */
+const TOC_HEADING = /<(h[123])([^>]*)>([\s\S]*?)<\/\1>/g;
+
+/**
+ * Info: (20260812 - Emily) 頁碼欄位**先佔位再填數字**。
+ *
+ * 這是這個做法的關鍵：目錄的高度在第一次排版時就已經是最終高度，
+ * 之後只把佔位符換成數字。若等量完頁碼才插入目錄，目錄本身會把後面的內容往後推，
+ * 頁碼跟著全錯，就得反覆排版到收斂 —— 而收斂與否沒有保證。
+ * 佔位符寬度固定（3 個字元寬、右對齊），填 1~3 位數都不會讓那一行重新換行。
+ */
+export const TOC_PAGE_PLACEHOLDER = "\u2007\u2007\u2007";
+
+const slugForIndex = (index: number): string => `carbon-sec-${index}`;
+
+export interface ICarbonTocEntry {
+  /** Info: (20260812 - Emily) 錨點 id，同時是 PDF 內部連結的目標 */
+  id: string;
+  /** Info: (20260812 - Emily) 標題純文字，服務端據此在產出的 PDF 裡找它落在第幾頁 */
+  text: string;
+  level: number;
+}
+
+/**
+ * Info: (20260812 - Emily) 給標題掛 id 並取出目錄項目。
+ * 已經有 id 的標題不覆蓋 —— 那可能是別處掛上去的錨點。
+ */
+export const collectHeadings = (
+  body: string,
+): { body: string; entries: ICarbonTocEntry[] } => {
+  const entries: ICarbonTocEntry[] = [];
+  let index = 0;
+  const next = body.replace(
+    TOC_HEADING,
+    (whole, tag: string, attrs: string, inner: string) => {
+      const text = inner.replace(/<[^>]+>/g, "").trim();
+      if (text === "") return whole;
+      index += 1;
+      const id = slugForIndex(index);
+      entries.push({ id, text, level: Number(tag.slice(1)) });
+      const withId = /\bid=/.test(attrs) ? attrs : `${attrs} id="${id}"`;
+      return `<${tag}${withId}>${inner}</${tag}>`;
+    },
+  );
+  return { body: next, entries };
+};
+
+/**
+ * Info: (20260812 - Emily) 目錄區塊。項目是 `<a href="#id">`，
+ * Chrome 的 page.pdf 會把它輸出成真的 PDF 內部連結（點了會跳），預覽端也天然可點。
+ */
+const tocSection = (
+  entries: readonly ICarbonTocEntry[],
+  title: string,
+): string =>
+  entries.length === 0
+    ? ""
+    : [
+        '<nav class="doc-toc">',
+        `<h2 class="doc-toc-title">${escapeHtml(title)}</h2>`,
+        '<ol class="doc-toc-list">',
+        ...entries.map(
+          (entry) =>
+            `<li class="lv${entry.level}"><a href="#${entry.id}">` +
+            `<span class="toc-text">${escapeHtml(entry.text)}</span>` +
+            `<span class="toc-dots"></span>` +
+            `<span class="toc-page" data-target="${entry.id}">${TOC_PAGE_PLACEHOLDER}</span>` +
+            "</a></li>",
+        ),
+        "</ol>",
+        "</nav>",
+      ].join("");
 
 const shellHeader = (shell: ICarbonReportShell): string =>
   [
@@ -484,11 +589,16 @@ export const buildCarbonReportHtml = (
   );
   body = body.replace(TABLE, (table) => annotateTable(table));
 
+  // Info: (20260812 - Emily) 掛 id 要在 annotateTable 之後：那一步只重寫表格，不動標題
+  const headed = collectHeadings(body);
+  body = headed.body;
+
   return [
     '<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8">',
     `<style>${printStyle()}</style>`,
     "</head><body>",
     shell ? shellHeader(shell) : "",
+    shell?.tocTitle ? tocSection(headed.entries, shell.tocTitle) : "",
     body,
     shell ? shellFooter(shell) : "",
     "</body></html>",

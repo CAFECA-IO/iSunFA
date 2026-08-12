@@ -43,6 +43,7 @@ export interface ICarbonPdfShell {
   footerTitle: string;
   footerText: string;
   title?: string;
+  tocTitle?: string;
 }
 
 export const requestCarbonReportPdf = async (params: {

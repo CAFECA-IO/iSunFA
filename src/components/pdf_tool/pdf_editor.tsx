@@ -689,6 +689,11 @@ export default function PdfEditor({
         footerText: t("admin_mission_board.pdf_editor.footer_text", {
           year: new Date().getFullYear(),
         })!,
+        /**
+         * Info: (20260812 - Emily) 目錄抬頭沿用側欄那顆按鈕的字，
+         * 兩處指的是同一份東西，各寫一份遲早會不一致。
+         */
+        tocTitle: t("carbon_chatbot.outline_title")!,
       },
     });
     saveBlobAs(result.blob, fileName);

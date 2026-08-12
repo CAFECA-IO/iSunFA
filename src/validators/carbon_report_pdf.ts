@@ -27,6 +27,7 @@ const CarbonReportShellSchema = z.object({
   footerTitle: z.string().min(1).max(120),
   footerText: z.string().min(1).max(300),
   title: z.string().max(200).optional(),
+  tocTitle: z.string().max(80).optional(),
 });
 
 export const CarbonReportPdfRequestSchema = z.object({

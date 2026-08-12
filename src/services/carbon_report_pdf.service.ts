@@ -6,6 +6,7 @@ import {
   buildCarbonReportHtml,
   type ICarbonReportShell,
 } from "@/lib/utils/carbon_report_html";
+import { extractPdfTextLayer, splitTextByPages } from "@/lib/pdf_text_layer";
 import { assertCjkRenderable } from "@/lib/utils/pdf_font_guard";
 import {
   dropPrintBrowser,
@@ -110,6 +111,82 @@ export class CarbonReportPdfService {
     }
   }
 
+  /**
+   * Info: (20260812 - Emily) 目錄的頁碼**從產出的 PDF 量**，不是從 DOM 推算。
+   *
+   * 向量列印的分頁是 Chrome 在 page.pdf 當下做的，DOM 裡量不到 ——
+   * 用「Y 偏移 ÷ 頁高」推算等於自己重寫一次它的排版引擎，而寬表會被移到橫式頁
+   * (`.wide { page: landscapePage }`)，那裡有強制分頁、頁高也不同，推算必偏。
+   *
+   * 所以先印一次，用文字層逐頁找標題落在第幾頁，填進目錄，再印一次。
+   * 第二次的分頁與第一次相同 —— 目錄的高度在第一次就是最終高度，
+   * 這一步只把佔位符換成數字，而佔位符的寬度固定（見 TOC_PAGE_PLACEHOLDER），
+   * 填 1~3 位數都不會讓那一行重新換行。
+   *
+   * 找不到的項目留白而不是填 0 或猜一個數字：一個錯的頁碼比沒有頁碼更糟，
+   * 查證的人會照著它翻到錯的一頁然後以為報告漏了那一節。
+   */
+  private static async fillTocPageNumbers(
+    page: IPrintPage,
+    buffer: Buffer,
+  ): Promise<{ filled: number; missing: number }> {
+    const entries = (await page.evaluate(`(() => {
+      return Array.from(document.querySelectorAll(".doc-toc-list .toc-page")).map(
+        function (el) {
+          var row = el.closest("a");
+          var text = row ? row.querySelector(".toc-text") : null;
+          return {
+            target: el.getAttribute("data-target") || "",
+            text: text ? (text.textContent || "").trim() : "",
+          };
+        },
+      );
+    })()`)) as Array<{ target: string; text: string }>;
+    if (entries.length === 0) return { filled: 0, missing: 0 };
+
+    const extracted = await extractPdfTextLayer(buffer);
+    if (!extracted) {
+      logger.warn("[CarbonReportPdfService] toc page numbers skipped", {
+        reason: "text layer unavailable",
+      });
+      return { filled: 0, missing: entries.length };
+    }
+    // Info: (20260812 - Emily) 比對前把空白去掉：文字層會在中文之間插入換行與空格
+    const squeeze = (value: string): string => value.replace(/\s+/g, "");
+    const pages = splitTextByPages(extracted.text).map(squeeze);
+
+    const numbers = entries.map((entry) => {
+      const needle = squeeze(entry.text);
+      if (needle === "") return 0;
+      const index = pages.findIndex((text) => text.includes(needle));
+      return index === -1 ? 0 : index + 1;
+    });
+
+    await page.evaluate(
+      `(() => {
+        var numbers = ${JSON.stringify(numbers)};
+        Array.from(document.querySelectorAll(".doc-toc-list .toc-page")).forEach(
+          function (el, i) {
+            el.textContent = numbers[i] > 0 ? String(numbers[i]) : "";
+          },
+        );
+      })()`,
+    );
+
+    const missing = numbers.filter((value) => value === 0).length;
+    if (missing > 0) {
+      logger.warn("[CarbonReportPdfService] toc entries without a page", {
+        missing,
+        total: entries.length,
+        samples: entries
+          .filter((unused, i) => numbers[i] === 0)
+          .slice(0, 3)
+          .map((entry) => entry.text.slice(0, 30)),
+      });
+    }
+    return { filled: numbers.length - missing, missing };
+  }
+
   async generate(input: ICarbonReportPdfInput): Promise<IGeneratedCarbonPdf> {
     const started = Date.now();
     const html = buildCarbonReportHtml(
@@ -142,18 +219,27 @@ export class CarbonReportPdfService {
         const charts = await this.renderCharts(page);
         const layout = await this.applyPageLayout(page);
 
-        const buffer = await page.pdf({
-          printBackground: true,
-          displayHeaderFooter: true,
-          headerTemplate: "<span></span>",
-          footerTemplate: buildFooterTemplate(input.title ?? input.fileName),
-          /**
-           * Info: (20260810 - Emily) preferCSSPageSize 必須開。
-           * 橫式頁是靠 `@page landscapePage { size: A4 landscape }` 生效的,
-           * 關掉它 Chrome 會忽略 @page 的 size,寬表就又擠回直式。
-           */
-          preferCSSPageSize: true,
-        });
+        const printPdf = (): Promise<Buffer> =>
+          page.pdf({
+            printBackground: true,
+            displayHeaderFooter: true,
+            headerTemplate: "<span></span>",
+            footerTemplate: buildFooterTemplate(input.title ?? input.fileName),
+            /**
+             * Info: (20260810 - Emily) preferCSSPageSize 必須開。
+             * 橫式頁是靠 `@page landscapePage { size: A4 landscape }` 生效的,
+             * 關掉它 Chrome 會忽略 @page 的 size,寬表就又擠回直式。
+             */
+            preferCSSPageSize: true,
+          }) as Promise<Buffer>;
+
+        let buffer = await printPdf();
+        const toc = await CarbonReportPdfService.fillTocPageNumbers(
+          page,
+          buffer,
+        );
+        // Info: (20260812 - Emily) 有填到東西才值得再印一次
+        if (toc.filled > 0) buffer = await printPdf();
 
         logger.info("[CarbonReportPdfService] rendered", {
           fileName: input.fileName,
@@ -166,6 +252,8 @@ export class CarbonReportPdfService {
           shrunkTables: layout.shrunk,
           chartsRendered: charts.rendered,
           chartsFailed: charts.failed,
+          tocFilled: toc.filled,
+          tocMissing: toc.missing,
         });
 
         return {
