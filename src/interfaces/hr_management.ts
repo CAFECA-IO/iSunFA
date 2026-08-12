@@ -338,6 +338,11 @@ export interface IProbationRow {
   managerName: string | null;
   hireDate: string;
   probationEndDate: string;
+  /**
+   * Info: (20260812 - Julian) 上面那個到期日來自考核決定的延長日，而非由到職日推得。
+   * 畫面用它標示「已延長」，否則使用者看到的只是一個莫名其妙變了的日期。
+   */
+  isExtended: boolean;
   daysUntilEnd: number;
   /** Info: (20260811 - Julian) 三個節點各自的完成狀態，key 為節點列舉 */
   milestones: Record<ProbationMilestone, ChecklistState>;
@@ -381,6 +386,21 @@ export interface IProbationReviewForm {
   newJobTitle: string;
   /** Info: (20260811 - Julian) true 代表這份只是暫存，尚未提交 */
   isDraft: boolean;
+}
+
+/**
+ * Info: (20260812 - Julian) 一份已送出的考核在名冊上的後果，只留會改變資料的三個欄位。
+ *
+ * 與 `IProbationReviewForm` 分開，是因為表單裡大部分欄位（評分、評語、調整項目）
+ * 不影響任何清單的推導；混在一起傳，計算層就得知道整張考核表長什麼樣，
+ * 而它其實只需要知道「結果是什麼、哪一天生效」。
+ */
+export interface IProbationOutcome {
+  result: ProbationResult;
+  /** Info: (20260812 - Julian) 通過轉正的生效日；未到之前該員仍在試用期 */
+  effectiveDate: string;
+  /** Info: (20260812 - Julian) 延長試用後的到期日 */
+  extendUntil: string;
 }
 
 // Info: (20260811 - Julian) 試用期分頁頂部的三個統計

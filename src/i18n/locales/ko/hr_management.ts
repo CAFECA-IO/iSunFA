@@ -19,7 +19,11 @@ export const hrManagement = {
     resigned: "퇴사",
   },
   value: {
+    select_filtered_count: "{{total}}명 중 {{shown}}명 표시",
+    group_same_department: "같은 부서",
+    group_other_department: "다른 부서",
     none: "—",
+    feature_pending: "개발 중인 기능입니다",
     headcount_unit: "명",
     tenure: "근속 {{years}}년 {{months}}개월",
     tenure_months_only: "근속 {{months}}개월",
@@ -159,6 +163,13 @@ export const hrManagement = {
     th_progress: "업무 진행",
     alert_it_account: "IT 계정 미차단",
     alert_probation_overdue: "평가 기한 초과",
+    probation_fail_notice:
+      "수습 불합격도 해고 절차를 따릅니다(예고기간·퇴직금·해고 신고). 제출 후 「입퇴사 → 퇴직 인수인계」에서 퇴직 절차를 시작하세요.",
+    probation_pass_notice:
+      "발효일에 정규직으로 전환되며, 그날부터 수습 목록에서 제외됩니다.",
+    probation_extend_notice:
+      "수습 만료일이 위 날짜로 변경되고, 기한 초과 표시도 해당 날짜 기준으로 다시 계산됩니다.",
+    probation_extended_badge: "연장",
     alert_ready: "마감 가능",
     alert_settled: "종결",
     alert_in_progress: "진행 중",
@@ -297,7 +308,6 @@ export const hrManagement = {
     placeholder_employee: "직원 선택",
     search_employee_placeholder: "사번 또는 이름 검색",
     no_matched_employee: "일치하는 직원이 없습니다",
-    select_filtered_count: "{{total}}명 중 {{shown}}명 표시",
     label_notice_date: "퇴직 신청일",
     label_last_working_date: "최종 근무일",
     label_insurance_off_date: "보험 자격상실일",
@@ -326,8 +336,6 @@ export const hrManagement = {
       "「해고 신고」 과제를 자동으로 추가했습니다. 효력 발생일 10일 전까지 완료해야 하며, 퇴직금은 별도로 산정하세요.",
     initiate_preview_title: "인수인계 과제 {{count}}건이 생성됩니다",
     initiate_placeholder_select: "선택하세요",
-    group_same_department: "같은 부서",
-    group_other_department: "다른 부서",
     no_candidate: "퇴직 절차를 시작할 수 있는 재직자가 없습니다",
     hint_insurance_off:
       "기본값은 최종 근무일의 다음 날이며 실제 신고일에 맞춰 조정하세요",
@@ -462,6 +470,9 @@ export const hrManagement = {
     gender_male: "남성",
     gender_other: "기타",
     placeholder_select: "선택하세요",
+    placeholder_manager: "직속 상사 선택",
+    search_manager_placeholder: "이름·부서·사번 검색",
+    no_matched_manager: "일치하는 직원이 없습니다",
     placeholder_name: "직원 전체 이름",
     placeholder_email: "name@isunfa.com",
     placeholder_phone: "0912-345-678",

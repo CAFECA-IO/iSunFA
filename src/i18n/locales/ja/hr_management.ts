@@ -19,7 +19,11 @@ export const hrManagement = {
     resigned: "退職",
   },
   value: {
+    select_filtered_count: "{{total}} 件中 {{shown}} 件を表示",
+    group_same_department: "同じ部門",
+    group_other_department: "他部門",
     none: "—",
+    feature_pending: "開発中の機能です",
     headcount_unit: "名",
     tenure: "勤続 {{years}} 年 {{months}} か月",
     tenure_months_only: "勤続 {{months}} か月",
@@ -159,6 +163,13 @@ export const hrManagement = {
     th_progress: "タスク進捗",
     alert_it_account: "IT アカウント未停止",
     alert_probation_overdue: "評価が期限超過",
+    probation_fail_notice:
+      "本採用見送りも解雇手続きに従います（予告期間・解雇予告手当・届出）。送信後、「入退社 → 退職手続き」から退職手続きを開始してください。",
+    probation_pass_notice:
+      "発効日に本採用となり、その日以降は試用期間リストから外れます。",
+    probation_extend_notice:
+      "試用期間の満了日が上記の日付に変更され、期限超過の表示もその日付で再計算されます。",
+    probation_extended_badge: "延長",
     alert_ready: "クローズ可能",
     alert_settled: "完了",
     alert_in_progress: "対応中",
@@ -297,7 +308,6 @@ export const hrManagement = {
     placeholder_employee: "従業員を選択",
     search_employee_placeholder: "社員番号・氏名で検索",
     no_matched_employee: "該当する従業員がいません",
-    select_filtered_count: "{{total}} 件中 {{shown}} 件を表示",
     label_notice_date: "退職申出日",
     label_last_working_date: "最終勤務日",
     label_insurance_off_date: "保険資格喪失日",
@@ -327,8 +337,6 @@ export const hrManagement = {
       "「解雇予告の届出」タスクを自動追加しました（効力発生日の 10 日前が期限）。解雇予告手当は別途算定してください。",
     initiate_preview_title: "引き継ぎタスクを {{count}} 件作成します",
     initiate_placeholder_select: "選択してください",
-    group_same_department: "同じ部門",
-    group_other_department: "他部門",
     no_candidate: "退職手続きを開始できる在籍者がいません",
     hint_insurance_off:
       "既定は最終勤務日の翌日です。実際の届出日に合わせて調整してください",
@@ -461,6 +469,9 @@ export const hrManagement = {
     gender_male: "男性",
     gender_other: "その他",
     placeholder_select: "選択してください",
+    placeholder_manager: "直属の上司を選択",
+    search_manager_placeholder: "氏名・部門・社員番号で検索",
+    no_matched_manager: "該当する従業員がいません",
     placeholder_name: "従業員の氏名",
     placeholder_email: "name@isunfa.com",
     placeholder_phone: "0912-345-678",

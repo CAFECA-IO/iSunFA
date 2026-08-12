@@ -1212,6 +1212,28 @@ export const MONTHLY_PAYROLL_DAYS = 30;
  * 抽成常數是因為它已經被三個 Modal 各抄了一份，
  * 而抄本之間的 focus 樣式已經開始不一樣了。
  */
+/**
+ * Info: (20260812 - Julian) 尚未開發的動作按鈕。
+ *
+ * 側邊選單早就用灰字加 `cursor-not-allowed` 表示「這一頁還沒有」，
+ * 這裡沿用同一種說法，只是換成 button 的 `disabled` 變體 ——
+ * 一個看起來能按、按下去沒反應的按鈕，比一個明講還沒好的按鈕糟。
+ *
+ * ToDo: (20260812 - Julian) 各自的 API 或頁面完成後，連同 `disabled`
+ * 與 `title` 一起移除，不要留著這個樣式當長期狀態。
+ */
+export const HR_PENDING_ACTION_CLASS =
+  "disabled:cursor-not-allowed disabled:border-gray-100 disabled:bg-gray-50 disabled:text-gray-300 disabled:shadow-none";
+
+/**
+ * Info: (20260812 - Julian) 從儀表板深連到到離職頁的試用期分頁。
+ *
+ * 用 hash 而不是 query string：兩個頁面都是 client component，
+ * 讀 query 要走 `useSearchParams`，那在 Next 15 需要 Suspense 邊界才過得了預渲染。
+ * hash 不進伺服器請求，`useEffect` 讀就好，沒有那個限制。
+ */
+export const MOVEMENT_HASH_PROBATION = "probation";
+
 export const HR_INPUT_CLASS =
   "rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-700 transition-all placeholder:text-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none";
 

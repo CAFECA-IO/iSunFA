@@ -15,12 +15,13 @@ import EmployeeHireCell from "@/components/hr_management/employee_hire_cell";
 import EmployeeStatusBadge from "@/components/hr_management/employee_status_badge";
 import EmployeeSummaryCards from "@/components/hr_management/employee_summary_cards";
 import {
+  EmployeeSortKey,
+  EmployeeStatus,
   EMPLOYEE_LIST_PAGE_SIZE,
   EMPLOYEE_STATUS_I18N_KEY,
   EMPLOYEE_SUMMARY_STATUSES,
-  EmployeeSortKey,
-  EmployeeStatus,
   HR_FILTER_ALL,
+  HR_PENDING_ACTION_CLASS,
 } from "@/constants/hr_management";
 import { MOCK_HR_EMPLOYEES } from "@/constants/mock_hr_employees";
 import { MOCK_HR_DEPARTMENTS } from "@/constants/mock_hr_organization";
@@ -274,7 +275,9 @@ const EmployeeListPageBody: FC = () => {
           // ToDo: (20260810 - Julian) 員工詳情頁完成後改為 Link 導向 /hr_management/employee/[id]
           <button
             type="button"
-            className="inline-flex items-center justify-center rounded-xl bg-orange-50 px-4 py-2 text-sm font-medium text-orange-600 transition hover:bg-orange-100"
+            title={t("hr_management.value.feature_pending")}
+            disabled
+            className={`inline-flex items-center justify-center rounded-xl bg-orange-50 px-4 py-2 text-sm font-medium text-orange-600 transition hover:bg-orange-100 ${HR_PENDING_ACTION_CLASS}`}
           >
             {t("hr_management.employee.table.view")}
           </button>
@@ -306,14 +309,18 @@ const EmployeeListPageBody: FC = () => {
           <div className="flex shrink-0 items-center gap-2">
             <button
               type="button"
-              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 shadow-sm transition hover:bg-gray-50"
+              title={t("hr_management.value.feature_pending")}
+              disabled
+              className={`inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 shadow-sm transition hover:bg-gray-50 ${HR_PENDING_ACTION_CLASS}`}
             >
               <Download className="size-4 shrink-0" />
               {t("hr_management.employee.export")}
             </button>
             <button
               type="button"
-              className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-700"
+              title={t("hr_management.value.feature_pending")}
+              disabled
+              className={`inline-flex items-center gap-2 rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-700 ${HR_PENDING_ACTION_CLASS}`}
             >
               <UserPlus className="size-4 shrink-0" />
               {t("hr_management.employee.add")}

@@ -19,7 +19,11 @@ export const hrManagement = {
     resigned: "Resigned",
   },
   value: {
+    select_filtered_count: "Showing {{shown}} of {{total}}",
+    group_same_department: "Same department",
+    group_other_department: "Other departments",
     none: "—",
+    feature_pending: "Coming soon",
     headcount_unit: "people",
     tenure: "{{years}}y {{months}}m of service",
     tenure_months_only: "{{months}}m of service",
@@ -159,6 +163,13 @@ export const hrManagement = {
     th_progress: "Progress",
     alert_it_account: "IT account still active",
     alert_probation_overdue: "Review overdue",
+    probation_fail_notice:
+      "A failed probation is still a termination by the employer: notice period, severance pay and the layoff filing all apply. Start the offboarding case under Movement after submitting.",
+    probation_pass_notice:
+      "The employee becomes a regular employee on the effective date and leaves the probation list from that day on.",
+    probation_extend_notice:
+      "The probation end date moves to the date above; the overdue reminder is recalculated from it.",
+    probation_extended_badge: "Extended",
     alert_ready: "Ready to close",
     alert_settled: "Closed",
     alert_in_progress: "In progress",
@@ -299,7 +310,6 @@ export const hrManagement = {
     placeholder_employee: "Select an employee",
     search_employee_placeholder: "Search by name or employee no.",
     no_matched_employee: "No matching employee",
-    select_filtered_count: "Showing {{shown}} of {{total}}",
     label_notice_date: "Notice Given On",
     label_last_working_date: "Last Working Day",
     label_insurance_off_date: "Insurance End Date",
@@ -329,8 +339,6 @@ export const hrManagement = {
       "A 'layoff report' task has been added, due 10 days before the effective date. Severance pay is calculated separately.",
     initiate_preview_title: "{{count}} handover tasks will be created",
     initiate_placeholder_select: "Select",
-    group_same_department: "Same department",
-    group_other_department: "Other departments",
     no_candidate: "No active employee is available to offboard",
     hint_insurance_off:
       "Defaults to the day after the last working day; adjust to the actual filing date",
@@ -472,6 +480,9 @@ export const hrManagement = {
     gender_male: "Male",
     gender_other: "Other",
     placeholder_select: "Select",
+    placeholder_manager: "Select a manager",
+    search_manager_placeholder: "Search by name, department or employee no.",
+    no_matched_manager: "No matching employee",
     placeholder_name: "Employee full name",
     placeholder_email: "name@isunfa.com",
     placeholder_phone: "0912-345-678",

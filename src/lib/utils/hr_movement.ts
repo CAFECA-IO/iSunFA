@@ -32,6 +32,7 @@ import {
   IOffboardingTask,
   IOnboardingRow,
   IProbationMetrics,
+  IProbationOutcome,
   IProbationRow,
   IProcessTask,
 } from "@/interfaces/hr_management";
@@ -348,15 +349,60 @@ export function resolveMilestones(
   >;
 }
 
+/**
+ * Info: (20260812 - Julian) 已送出的考核在名冊上的實際後果。
+ *
+ * 轉正「不是立刻」生效：考核表上填的是生效日，未到之前該員仍在試用期。
+ *
+ * 延長試用要改的是到期日，不是狀態：人還在試用期，只是逾期紅燈依新日期重算。
+ * 不予錄用不在這裡處理 —— 離職要另外走發起流程（見 `probation_review_modal`）。
+ */
+export function applyProbationOutcomes(
+  people: IEmployeeListItem[],
+  outcomes: Map<string, IProbationOutcome>,
+  today: Date,
+): IEmployeeListItem[] {
+  return people.map((employee) => {
+    const outcome = outcomes.get(employee.id);
+    if (
+      !outcome ||
+      outcome.result !== ProbationResult.PASS ||
+      outcome.effectiveDate === "" ||
+      employee.status !== EmployeeStatus.PROBATION
+    ) {
+      return employee;
+    }
+    const isEffective =
+      differenceInDays(today, parseIsoDate(outcome.effectiveDate)) <= 0;
+    return isEffective
+      ? { ...employee, status: EmployeeStatus.ACTIVE }
+      : employee;
+  });
+}
+
 export function buildProbationRows(
   people: IEmployeeListItem[],
   today: Date,
+  outcomes: Map<string, IProbationOutcome> = new Map(),
 ): IProbationRow[] {
   return people
     .filter((employee) => employee.status === EmployeeStatus.PROBATION)
     .map((employee) => {
       const hireDate = parseIsoDate(employee.hireDate);
-      const probationEnd = addMonths(hireDate, PROBATION_MONTHS);
+      const outcome = outcomes.get(employee.id);
+      /**
+       * Info: (20260812 - Julian) 到期日優先取延長後的日期。
+       *
+       * 原本的到期日是由到職日推得的衍生值，沒有地方可以覆寫；
+       * 不在這裡改，主管填了「延長至 10/22」之後清單仍會顯示 7/22 逾期，
+       * 那張紅燈就永遠消不掉。
+       */
+      const isExtended =
+        outcome?.result === ProbationResult.EXTEND &&
+        outcome.extendUntil !== "";
+      const probationEnd = isExtended
+        ? parseIsoDate(outcome.extendUntil)
+        : addMonths(hireDate, PROBATION_MONTHS);
       const daysUntilEnd = differenceInDays(today, probationEnd);
       return {
         employeeId: employee.id,
@@ -367,6 +413,7 @@ export function buildProbationRows(
         managerName: employee.managerName,
         hireDate: employee.hireDate,
         probationEndDate: toIsoDate(probationEnd),
+        isExtended,
         daysUntilEnd,
         milestones: resolveMilestones(hireDate, today),
         result: null,
@@ -385,18 +432,29 @@ export function buildProbationRows(
  * 「本月通過轉正」讀的是已送出考核且結果為通過者。mock 沒有歷史考核紀錄，
  * 因此改由呼叫端把當下已填寫的結果傳進來 —— 這樣切換視角或填完表單，
  * 上方數字會立刻跟著動，不會出現填完卻沒反應的空窗。
+ *
+ * Info: (20260812 - Julian) 通過轉正改成數 `outcomes` 而不是數 `rows`。
+ *
+ * 轉正生效後那個人的狀態變成 ACTIVE，就不在試用期清單裡了 ——
+ * 繼續數 `rows` 的話，這個數字會在生效當天自己歸零，
+ * 變成一個「愈成功愈看不到」的統計。改以生效日落在本月為準。
  */
 export function buildProbationMetrics(
   rows: IProbationRow[],
   today: Date,
+  outcomes: Map<string, IProbationOutcome> = new Map(),
 ): IProbationMetrics {
   return {
     endingThisMonth: rows.filter((row) =>
       isSameMonth(parseIsoDate(row.probationEndDate), today),
     ).length,
     overdue: rows.filter((row) => row.isOverdue && row.result === null).length,
-    passedThisMonth: rows.filter((row) => row.result === ProbationResult.PASS)
-      .length,
+    passedThisMonth: [...outcomes.values()].filter(
+      (outcome) =>
+        outcome.result === ProbationResult.PASS &&
+        outcome.effectiveDate !== "" &&
+        isSameMonth(parseIsoDate(outcome.effectiveDate), today),
+    ).length,
   };
 }
 

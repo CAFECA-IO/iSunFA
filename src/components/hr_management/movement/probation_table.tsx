@@ -5,9 +5,10 @@ import { AlertTriangle, CalendarClock, CheckCircle2, Send } from "lucide-react";
 import DataTable, { IDataTableColumn } from "@/components/common/data_table";
 import MovementAlertBadge from "@/components/hr_management/movement/movement_alert_badge";
 import {
-  CHECKLIST_STATE_STYLE,
   ChecklistState,
+  CHECKLIST_STATE_STYLE,
   HrDashboardRole,
+  HR_PENDING_ACTION_CLASS,
   PROBATION_MILESTONES,
   PROBATION_MILESTONE_I18N_KEY,
   PROBATION_RESULT_I18N_KEY,
@@ -121,7 +122,17 @@ const ProbationTable: FC<IProbationTableProps> = ({
         label: t("hr_management.movement.th_probation_end"),
         render: (row) => (
           <div>
-            <div className="text-sm text-gray-600">{row.probationEndDate}</div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm text-gray-600">
+                {row.probationEndDate}
+              </span>
+              {/* Info: (20260812 - Julian) 標示這個日期是被考核延長的 */}
+              {row.isExtended && (
+                <span className="rounded-md bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-700">
+                  {t("hr_management.movement.probation_extended_badge")}
+                </span>
+              )}
+            </div>
             <div
               className={`text-xs ${row.isOverdue ? "font-semibold text-red-600" : "text-gray-400"}`}
             >
@@ -226,14 +237,18 @@ const ProbationTable: FC<IProbationTableProps> = ({
               {/* ToDo: (20260811 - Julian) 通知 API 完成後接上寄送與催辦 */}
               <button
                 type="button"
-                className="inline-flex items-center gap-1.5 rounded-xl bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-600 transition hover:bg-orange-100"
+                title={t("hr_management.value.feature_pending")}
+                disabled
+                className={`inline-flex items-center gap-1.5 rounded-xl bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-600 transition hover:bg-orange-100 ${HR_PENDING_ACTION_CLASS}`}
               >
                 <Send className="h-3.5 w-3.5 shrink-0" />
                 {t("hr_management.movement.action_send_form")}
               </button>
               <button
                 type="button"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:bg-gray-50"
+                title={t("hr_management.value.feature_pending")}
+                disabled
+                className={`inline-flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:bg-gray-50 ${HR_PENDING_ACTION_CLASS}`}
               >
                 {t("hr_management.movement.action_urge")}
               </button>

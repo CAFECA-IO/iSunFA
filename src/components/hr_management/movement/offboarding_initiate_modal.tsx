@@ -129,8 +129,8 @@ const OffboardingInitiateModal: FC<IOffboardingInitiateModalProps> = ({
         : `${person.name}・${person.departmentName ?? "—"}`,
       hint: person.jobTitle ?? undefined,
       group: isSameDepartment(person)
-        ? t("hr_management.offboarding.group_same_department")
-        : t("hr_management.offboarding.group_other_department"),
+        ? t("hr_management.value.group_same_department")
+        : t("hr_management.value.group_other_department"),
     });
 
     return [

@@ -6,13 +6,14 @@ import DataTable, { IDataTableColumn } from "@/components/common/data_table";
 import MovementAlertBadge from "@/components/hr_management/movement/movement_alert_badge";
 import MovementProgressBar from "@/components/hr_management/movement/movement_progress_bar";
 import {
+  ChecklistState,
   CHECKLIST_STATE_I18N_KEY,
   CHECKLIST_STATE_STYLE,
-  ChecklistState,
+  HR_PENDING_ACTION_CLASS,
   MOVEMENT_STAGE_I18N_KEY,
+  OnboardingQuickFilter,
   ONBOARDING_QUICK_FILTERS,
   ONBOARDING_QUICK_FILTER_I18N_KEY,
-  OnboardingQuickFilter,
 } from "@/constants/hr_management";
 import { IOnboardingRow } from "@/interfaces/hr_management";
 import { getEmployeeInitials } from "@/lib/utils/hr_employee";
@@ -153,12 +154,10 @@ const OnboardingTable: FC<IOnboardingTableProps> = ({
             {/* ToDo: (20260811 - Julian) 通知 API 完成後接上寄送提醒 */}
             <button
               type="button"
-              /**
-               * Info: (20260811 - Julian) 擋掉冒泡。整列點擊會開啟任務抽屜，
-               * 不擋的話按「傳送提醒」會連帶把抽屜也打開，使用者會以為自己按錯了。
-               */
-              onClick={(event) => event.stopPropagation()}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:bg-gray-50"
+              // Info: (20260812 - Julian) 停用後不需擋冒泡，disabled 不會產生 click
+              title={t("hr_management.value.feature_pending")}
+              disabled
+              className={`inline-flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:bg-gray-50 ${HR_PENDING_ACTION_CLASS}`}
             >
               <Bell className="h-3.5 w-3.5 shrink-0" />
               {t("hr_management.movement.action_remind")}

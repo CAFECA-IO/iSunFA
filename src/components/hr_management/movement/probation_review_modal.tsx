@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, FC, useEffect, useMemo, useState } from "react";
-import { ClipboardList, X } from "lucide-react";
+import { AlertTriangle, ClipboardList, X } from "lucide-react";
 import ProbationScoreRow from "@/components/hr_management/movement/probation_score_row";
 import {
   HR_INPUT_CLASS,
@@ -322,6 +322,22 @@ const ProbationReviewModal: FC<IProbationReviewModalProps> = ({
                       </div>
                     )}
 
+                    {/*
+                      Info: (20260812 - Julian) 送出後名冊真的會變，先講清楚變成什麼。
+
+                      通過轉正改的是員工狀態、且以生效日為準，不是按下送出就生效；
+                      生效之後該員離開試用期清單。這兩件事都看不見 ——
+                      不寫在這裡，使用者只會看到一列突然消失。
+                    */}
+                    {isSelected && option === ProbationResult.PASS && (
+                      <p
+                        role="status"
+                        className="mt-2 rounded-xl bg-gray-50 px-3 py-2 text-xs text-gray-500"
+                      >
+                        {t("hr_management.movement.probation_pass_notice")}
+                      </p>
+                    )}
+
                     {isSelected && option === ProbationResult.EXTEND && (
                       <div className="mt-3 flex flex-wrap items-center gap-2 pl-7">
                         <label
@@ -357,6 +373,16 @@ const ProbationReviewModal: FC<IProbationReviewModalProps> = ({
                       </div>
                     )}
 
+                    {/* Info: (20260812 - Julian) 延長改的是到期日，逾期紅燈依新日期重算 */}
+                    {isSelected && option === ProbationResult.EXTEND && (
+                      <p
+                        role="status"
+                        className="mt-2 rounded-xl bg-gray-50 px-3 py-2 text-xs text-gray-500"
+                      >
+                        {t("hr_management.movement.probation_extend_notice")}
+                      </p>
+                    )}
+
                     {isSelected && option === ProbationResult.FAIL && (
                       <div className="mt-3 flex flex-wrap items-center gap-2 pl-7">
                         <label
@@ -375,6 +401,23 @@ const ProbationReviewModal: FC<IProbationReviewModalProps> = ({
                           className={HR_INPUT_CLASS}
                         />
                       </div>
+                    )}
+
+                    {/*
+                      Info: (20260812 - Julian) 不予錄用不是「考核填完就結束」。
+                      試用期不合格終止契約在實務上仍走資遣程序，因此還有預告期、
+                      資遣費與資遣通報三件事要辦，而這張表單一件都不會幫他做。
+                      這裡只提示、不自動建立離職案件 —— 那是 HR 的權責，
+                      不該由主管按下送出的當下代為決定。
+                    */}
+                    {isSelected && option === ProbationResult.FAIL && (
+                      <p
+                        role="status"
+                        className="mt-2 flex items-start gap-1.5 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-700"
+                      >
+                        <AlertTriangle className="mt-px size-3.5 shrink-0" />
+                        {t("hr_management.movement.probation_fail_notice")}
+                      </p>
                     )}
                   </div>
                 );

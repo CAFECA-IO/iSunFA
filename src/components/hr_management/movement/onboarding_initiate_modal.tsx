@@ -3,6 +3,9 @@
 import { FC, FormEvent, useMemo, useState } from "react";
 import { ShieldCheck, UserPlus, X } from "lucide-react";
 import HrField from "@/components/hr_management/movement/hr_field";
+import HrSearchableSelect, {
+  IHrSelectOption,
+} from "@/components/hr_management/movement/hr_searchable_select";
 import {
   GENDERS,
   GENDER_I18N_KEY,
@@ -98,11 +101,40 @@ const OnboardingInitiateModal: FC<IOnboardingInitiateModalProps> = ({
 
   const previewKeys = useMemo(() => previewTaskKeys(draft), [draft]);
 
-  // Info: (20260812 - Julian) 離職者不可能是新人的直屬主管，從候選名單排除
-  const managerOptions = useMemo(
-    () => people.filter((person) => person.leaveDate === null),
-    [people],
-  );
+  /**
+   * Info: (20260812 - Julian) 直屬主管候選名單。離職者不可能是新人的主管，先排除。
+   *
+   * 已選部門時分成「同部門／其他部門」兩組、同部門排前面。跨部門直屬確實存在
+   * （一人部門、暫由上一層代管），所以是排序而不是過濾。
+   * 還沒選部門時不分組 —— 那時候「同部門」是空的，一個空標題只是雜訊。
+   */
+  const managerOptions = useMemo<IHrSelectOption[]>(() => {
+    const available = people.filter((person) => person.leaveDate === null);
+    const department =
+      departments.find((item) => item.id === draft.departmentId)?.name ?? null;
+
+    const toOption = (person: IEmployeeListItem): IHrSelectOption => ({
+      value: person.id,
+      label: `${person.name}・${person.departmentName ?? t("hr_management.value.none")}`,
+      hint: person.employeeNo,
+      group:
+        department === null
+          ? undefined
+          : t(
+              person.departmentName === department
+                ? "hr_management.value.group_same_department"
+                : "hr_management.value.group_other_department",
+            ),
+    });
+
+    if (department === null) return available.map(toOption);
+
+    // Info: (20260812 - Julian) 陣列順序即畫面順序，分組標題由相鄰關係決定
+    return [
+      ...available.filter((person) => person.departmentName === department),
+      ...available.filter((person) => person.departmentName !== department),
+    ].map(toOption);
+  }, [people, departments, draft.departmentId, t]);
 
   const sortedJobTitles = useMemo(
     () => [...jobTitles].sort((a, b) => b.level - a.level),
@@ -415,23 +447,28 @@ const OnboardingInitiateModal: FC<IOnboardingInitiateModalProps> = ({
                     : t("hr_management.onboarding.hint_manager_auto")
                 }
               >
-                <select
+                {/* Info: (20260812 - Julian) 直屬主管列表 */}
+                <HrSearchableSelect
+                  id="onboarding-manager"
                   value={draft.managerId}
-                  onChange={(event) => {
+                  options={managerOptions}
+                  placeholder={t(
+                    "hr_management.onboarding.placeholder_manager",
+                  )}
+                  searchPlaceholder={t(
+                    "hr_management.onboarding.search_manager_placeholder",
+                  )}
+                  emptyText={t("hr_management.onboarding.no_matched_manager")}
+                  hasError={errorOf("managerId") !== null}
+                  describedBy={
+                    errorOf("managerId") ? "onboarding-manager-error" : ""
+                  }
+                  onChange={(managerId) => {
                     setIsManagerTouched(true);
-                    update({ managerId: event.target.value });
+                    update({ managerId });
                   }}
-                  {...fieldProps("managerId", "onboarding-manager")}
-                >
-                  <option value="">
-                    {t("hr_management.onboarding.placeholder_select")}
-                  </option>
-                  {managerOptions.map((person) => (
-                    <option key={person.id} value={person.id}>
-                      {`${person.name}（${person.employeeNo}）`}
-                    </option>
-                  ))}
-                </select>
+                  onBlur={() => markTouched("managerId")}
+                />
               </HrField>
 
               <HrField
@@ -528,7 +565,6 @@ const OnboardingInitiateModal: FC<IOnboardingInitiateModalProps> = ({
 
                   {/*
                     Info: (20260812 - Julian) 個人 Email 縮排在勾選項之下，
-                    讓「為什麼要填這一欄」與「勾了什麼」在視覺上是同一件事。
                     取消勾選後欄位仍在，已填的值不清空 —— 使用者可能只是暫時取消。
                   */}
                   {trigger === OnboardingTrigger.PREONBOARDING_FORM ? (

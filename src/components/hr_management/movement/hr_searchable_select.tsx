@@ -251,7 +251,7 @@ const HrSearchableSelect: FC<IHrSearchableSelectProps> = ({
           */}
           {keyword.trim() !== "" && filtered.length > 0 ? (
             <p className="border-t border-gray-100 bg-gray-50 px-3 py-1.5 text-xs text-gray-400">
-              {t("hr_management.offboarding.select_filtered_count", {
+              {t("hr_management.value.select_filtered_count", {
                 shown: filtered.length,
                 total: options.length,
               })}

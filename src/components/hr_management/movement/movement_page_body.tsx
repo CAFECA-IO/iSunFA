@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useCallback, useMemo, useState } from "react";
+import { FC, useCallback, useEffect, useMemo, useState } from "react";
 import { DoorOpen, Repeat, Search, UserPlus } from "lucide-react";
 import MovementKanban from "@/components/hr_management/movement/movement_kanban";
 import MovementTaskDrawer from "@/components/hr_management/movement/movement_task_drawer";
@@ -21,6 +21,7 @@ import {
   MOVEMENT_VIEW_MODES,
   MOVEMENT_VIEW_MODE_I18N_KEY,
   MovementStage,
+  MOVEMENT_HASH_PROBATION,
   MovementTab,
   MovementViewMode,
   OffboardingListMode,
@@ -46,6 +47,7 @@ import {
   IOffboardingInitiateResult,
   IOffboardingInitiation,
   IOnboardingInitiateResult,
+  IProbationOutcome,
   IProbationReviewForm,
   IProbationRow,
   IProcessTask,
@@ -53,6 +55,7 @@ import {
 import { parseIsoDate } from "@/lib/utils/hr_date";
 import {
   applyOnboardingFilter,
+  applyProbationOutcomes,
   buildMovementCases,
   buildOffboardingCases,
   buildOnboardingRows,
@@ -164,7 +167,55 @@ const MovementPageBody: FC = () => {
   const [isOffboardingInitiateOpen, setIsOffboardingInitiateOpen] =
     useState<boolean>(false);
 
+  /**
+   * Info: (20260812 - Julian) 從儀表板深連過來時，直接落在試用期分頁並打開該員工的考核表。
+   *
+   * 讀 hash 而不是 query string：本頁是 client component，用 `useSearchParams`
+   * 在 Next 15 需要 Suspense 邊界才過得了預渲染。hash 不進伺服器請求，
+   * 在 effect 裡讀就好。
+   *
+   * 只在掛載時讀一次：之後使用者自己切分頁時不該被網址拉回去。
+   */
+  useEffect(() => {
+    const hash = window.location.hash.replace("#", "");
+    if (!hash.startsWith(MOVEMENT_HASH_PROBATION)) return;
+
+    setActiveTab(MovementTab.PROBATION);
+    const employeeId = hash.slice(MOVEMENT_HASH_PROBATION.length + 1);
+    if (employeeId !== "") setReviewEmployeeId(employeeId);
+  }, []);
+
   const today = useMemo(() => parseIsoDate(MOCK_HR_TODAY), []);
+
+  /**
+   * Info: (20260812 - Julian) 已送出的考核 → 名冊與清單要跟著變的部分。
+   *
+   * 草稿不算：`isDraft` 為 true 的表單只是暫存，還沒有人做出決定，
+   * 不該讓一個人的狀態被改成正式員工、或讓逾期紅燈提前消失。
+   *
+   * ToDo: (20260812 - Julian) 接 API 後改為送出考核並重新查詢名冊，
+   * 這份由前端推導的對照表隨之移除 —— 屆時狀態轉換由後端負責，
+   * 前端不該有第二套判斷生效日的邏輯。
+   */
+  const probationOutcomes = useMemo<Map<string, IProbationOutcome>>(
+    () =>
+      new Map(
+        Object.entries(probationForms).flatMap(([employeeId, form]) => {
+          if (form.isDraft || form.result === null) return [];
+          return [
+            [
+              employeeId,
+              {
+                result: form.result,
+                effectiveDate: form.effectiveDate,
+                extendUntil: form.extendUntil,
+              },
+            ] as const,
+          ];
+        }),
+      ),
+    [probationForms],
+  );
 
   const initiationByEmployeeId = useMemo(
     () => new Map(initiations.map((item) => [item.employeeId, item])),
@@ -180,13 +231,17 @@ const MovementPageBody: FC = () => {
    */
   const people = useMemo<IEmployeeListItem[]>(
     () =>
-      [...MOCK_HR_MOVEMENT_PEOPLE, ...newHires].map((person) => {
-        const initiation = initiationByEmployeeId.get(person.id);
-        return initiation
-          ? { ...person, leaveDate: initiation.lastWorkingDate }
-          : person;
-      }),
-    [newHires, initiationByEmployeeId],
+      applyProbationOutcomes(
+        [...MOCK_HR_MOVEMENT_PEOPLE, ...newHires].map((person) => {
+          const initiation = initiationByEmployeeId.get(person.id);
+          return initiation
+            ? { ...person, leaveDate: initiation.lastWorkingDate }
+            : person;
+        }),
+        probationOutcomes,
+        today,
+      ),
+    [newHires, initiationByEmployeeId, probationOutcomes, today],
   );
 
   // Info: (20260810 - Julian) 套用勾選覆寫後的任務，所有分頁都吃這一份
@@ -324,7 +379,7 @@ const MovementPageBody: FC = () => {
   // Info: (20260810 - Julian) 已填寫的考核結果覆寫回列，統計才會跟著動
   const probationRows = useMemo<IProbationRow[]>(() => {
     const normalized = keyword.trim().toLowerCase();
-    return buildProbationRows(people, today)
+    return buildProbationRows(people, today, probationOutcomes)
       .filter(
         (row) =>
           normalized === "" ||
@@ -358,11 +413,11 @@ const MovementPageBody: FC = () => {
           alert: resolveProbationAlert(row.isOverdue, result),
         };
       });
-  }, [people, today, keyword, probationForms]);
+  }, [people, today, keyword, probationForms, probationOutcomes]);
 
   const probationMetrics = useMemo(
-    () => buildProbationMetrics(probationRows, today),
-    [probationRows, today],
+    () => buildProbationMetrics(probationRows, today, probationOutcomes),
+    [probationRows, today, probationOutcomes],
   );
 
   /**
