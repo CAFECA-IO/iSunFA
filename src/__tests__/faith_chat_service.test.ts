@@ -9,6 +9,7 @@ import {
 } from "@/services/spend.service";
 import { DEFAULT_FAITH_BILLING } from "@/constants/llm";
 import { faithBillingSettingRepo } from "@/repositories/faith_billing_setting.repo";
+import { assertAccountBookMember } from "@/services/account_book_access.guard";
 import type { ChatService } from "@/services/chat.service";
 
 jest.mock("@/repositories/faith_billing_setting.repo", () => ({
@@ -19,11 +20,22 @@ jest.mock("@/services/spend.service", () => ({
   refundCredits: jest.fn(),
   settleSpend: jest.fn(),
 }));
+jest.mock("@/services/account_book_access.guard", () => ({
+  assertAccountBookMember: jest.fn(),
+  mapServiceError: jest.fn(() => ({
+    code: "NF000001",
+    message: "Account book not found",
+    status: 404,
+  })),
+}));
 
 /**
  * Info: (20260808 - Luphia) 費思計費編排單測（設計書 §5.3）。
  * 覆蓋：預扣金額與冪等鍵、成功結算（以 usageMetadata 為準）、
  * LLM 失敗全額退還。ChatService 以注入替身隔離，spend 管線以模組 mock 隔離。
+ *
+ * Info: (20260812 - Luphia) 新增覆蓋「扣費團隊由帳本推導」（設計書 §5.3「使用前提」）：
+ * 帳本驗權不通過即不得呼叫 LLM、不得扣點。
  */
 
 const asMock = (fn: unknown) => fn as ReturnType<typeof jest.fn>;
@@ -45,7 +57,7 @@ function makeChatStub(totalTokens: number, shouldFail = false) {
 
 const BASE_PARAMS = {
   userId: "user-1",
-  teamId: "team-1",
+  accountBookId: "book-1",
   message: "x".repeat(1000),
   tags: [],
   clientMessageId: "msg-9",
@@ -55,6 +67,10 @@ const BASE_PARAMS = {
 describe("runFaithBilledChat", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    asMock(assertAccountBookMember).mockResolvedValue({
+      id: "book-1",
+      teamId: "team-1",
+    });
     asMock(spendCredits).mockResolvedValue({
       source: "SUBSCRIPTION_QUOTA",
       amount: "6",
@@ -82,6 +98,31 @@ describe("runFaithBilledChat", () => {
         nowSec: NOW_SEC,
       }),
     );
+  });
+
+  /**
+   * Info: (20260812 - Luphia) 扣費團隊來自帳本（設計書 §5.3「使用前提」），
+   * 不來自呼叫端參數——這是「計費主體不可由 client 自報」的實作面斷言。
+   */
+  it("bills the team that owns the account book", async () => {
+    await runFaithBilledChat(BASE_PARAMS, makeChatStub(3150));
+    expect(assertAccountBookMember).toHaveBeenCalledWith("book-1", "user-1");
+    expect(spendCredits).toHaveBeenCalledWith(
+      expect.objectContaining({ teamId: "team-1" }),
+    );
+  });
+
+  it("refuses to spend or call the LLM when the account book check fails", async () => {
+    asMock(assertAccountBookMember).mockRejectedValue(
+      new Error("NF_ACCOUNT_BOOK"),
+    );
+    const chatStub = makeChatStub(3150);
+
+    await expect(runFaithBilledChat(BASE_PARAMS, chatStub)).rejects.toThrow(
+      "Account book not found",
+    );
+    expect(spendCredits).not.toHaveBeenCalled();
+    expect(chatStub.generateFaithResponse).not.toHaveBeenCalled();
   });
 
   it("settles by the SDK-reported total tokens and returns the billing detail", async () => {

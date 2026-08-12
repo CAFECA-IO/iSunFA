@@ -2,7 +2,7 @@
 
 > **Date**: August 2026
 > **Author**: Luphia
-> **Version**: 1.6 (Draft) — 1.1 新增 §5.3 費思計費；1.2–1.4 費率迭代；1.5 拍板費率與點值下限；1.6 拍板 C 案混合制（離鏈營運 + 每日 merkle 鏈上錨定，Phase 2 為 1:1 backing）
+> **Version**: 1.7 (Draft) — 1.1 新增 §5.3 費思計費；1.2–1.4 費率迭代；1.5 拍板費率與點值下限；1.6 拍板 C 案混合制（離鏈營運 + 每日 merkle 鏈上錨定，Phase 2 為 1:1 backing）；1.7 §5.3 拍板「選定帳本後才能使用費思」，計費團隊由 `AccountBook.teamId` 推導，client 不再自報 `teamId`
 > **Status**: Proposed
 > **Branch**: `feature/team_wallet_subscription_quota`
 > **關聯 ADR**: [ADR 015: 離鏈團隊錢包帳本](decisions/015_offchain_team_wallet_ledger.md)
@@ -299,6 +299,24 @@ spendCredits(identity, teamId, featureCode, cost, idempotencyKey)
 | 3 | **零成本上限** | 未設 `maxOutputTokens`、未設 `thinkingBudget`、未設 timeout，跑在 `gemini-2.5-pro`（thinking 模型）。實測（`src/constants/llm.ts:62-72`）thinking 可吃掉 30%–100% 的輸出額度 |
 | 4 | **定價不一致** | 功能幾乎相同的 AI 諮詢室收 5 點（`ANALYSIS_BASE_COSTS.AI_CONSULTING`）並有完整 token 帳；費思免費無限 |
 
+#### 使用前提：必須先選定帳本（產品拍板 2026-08-12）
+
+> **費思僅在「已選定帳本」的情境下可用，計費團隊由該帳本決定。**
+
+| 面向 | 規則 |
+|---|---|
+| **入口** | `FaithAgent` 掛載點自 `src/app/user/layout.tsx` 移至 `src/app/user/account_book/[account_book_id]/layout.tsx`。未選帳本的頁面（`/user/main`、`/user/team`、`/user/billing`、帳本選擇頁…）**不出現**浮動鈕——不是點了才說不能用，而是沒有入口 |
+| **API 契約** | `POST /api/v1/chat` 收 **`accountBookId`**，不再收 `teamId`。Server 端經 `assertAccountBookMember()`（`account_book_access.guard.ts`，既有授權收斂點）驗證帳本存在且呼叫者為該帳本所屬團隊成員，再以 `AccountBook.teamId` 作為扣費團隊 |
+| **訪客試用** | 未登入或未帶 `accountBookId` → 維持既有試用路徑（不進計費管線、server-side IP 限流），語意不變 |
+
+**為什麼是帳本而不是團隊：**
+
+1. **計費歸屬必須決定論**：一位用戶可屬多個團隊（`TeamMember` 為多對多）。前端若以「取第一個所屬團隊」推導計費主體，同一句話會依團隊清單排序扣到不同團隊的額度——用戶看不出、管理者對不上帳。帳本是用戶操作時**唯一明確**的工作情境。
+2. **計費主體不可由 client 自報**：`teamId` 由前端送出，等於讓瀏覽器選擇「由誰付錢」；改由 server 從帳本推導後，越權自然被 `assertAccountBookMember()` 擋下（映射 `NF_ACCOUNT_BOOK` / `AUTH_PERMISSION_DENIED`），與報表 / 分類帳共用同一道授權，杜絕遷移遺漏。
+3. **映射已存在**：`AccountBook.teamId`（`prisma/schema.prisma:586`）是既有的唯一歸屬欄位，無需新增欄位或推導規則。與領域模型鐵律（CLAUDE.md §8）一致：`AccountBook` 是業務的 Root Node，計費掛在它下面而非掛在 `Company`。
+
+> ⚠️ 連帶影響：費思成為**帳本情境內**的功能，等於「先有帳本才有 AI 對話」。此為產品拍板結果；若日後要在無帳本情境（如首頁試用、帳本選擇頁）提供費思，須先回答「這一輪算誰的額度」，而不是把 `teamId` 交還給前端自報。
+
 #### 計費模型：token 計量，預扣—結算
 
 費思與 AI 諮詢室不同：諮詢室是單發任務，**維持既有固定 5 點不改**（產品拍板 2026-08-07）；費思是不定長度的多輪對話，**按 token 計量**才公平。規則：
@@ -342,7 +360,7 @@ spendCredits(identity, teamId, featureCode, cost, idempotencyKey)
 
 **計費前提 guardrails**（沒有上界就沒有可預扣的上界，四項缺一不可）：
 
-1. `route.ts` 補 DeWT 認證 + team context（未登入訪客維持前端試用，不進計費管線、加 server-side IP 限流）。
+1. `route.ts` 補 DeWT 認證 + **帳本 context**（`accountBookId` → `AccountBook.teamId`，見上節「使用前提」；未登入或未帶帳本的訪客維持前端試用，不進計費管線、加 server-side IP 限流）。
 2. `direct_chat.ts` 帶 `taskKey`（`LlmTaskKeyEnum` 新增 `FAITH_CHAT`），啟用 `usageMetadata` 記帳，並把每輪用量寫入 `TeamQuotaUsage.featureCode = FEATURE_CODE.FAITH_CHAT`。
 3. 設 `maxOutputTokens = 4096`（含 thinking）+ `thinkingBudget = 2048` + `timeoutMs = 45s`（對齊 `LLM_SYNC_TIMEOUT_MS`）。
 4. `chat_input.tsx` 補附件大小上限（現況不擋大檔，圖片 token 由 Gemini 按解析度計，等於敞開的成本口）。

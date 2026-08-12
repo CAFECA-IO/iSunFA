@@ -12,21 +12,23 @@ import { useTranslation } from "@/i18n/i18n_context";
 
 interface IChatInterfaceProps {
   className?: string;
+  /**
+   * Info: (20260812 - Luphia) 計費情境（設計書 §5.3「使用前提」）：選定帳本後才能使用費思，
+   * 扣費團隊由 server 從 AccountBook.teamId 推導。未帶帳本時後端走訪客試用路徑（不扣點）。
+   */
+  accountBookId?: string;
 }
 
-export default function ChatInterface({ className }: IChatInterfaceProps = {}) {
+export default function ChatInterface({
+  className,
+  accountBookId,
+}: IChatInterfaceProps = {}) {
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [loading, setLoading] = useState(false);
 
   const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const [guestUsage, setGuestUsage] = useState(0);
-  /**
-   * Info: (20260812 - Luphia) 計費主體是團隊（設計書 §5）：帶 teamId 才會進扣費管線，
-   * 不帶則後端視為訪客試用。取第一個所屬團隊——費思是浮動視窗，沒有團隊選擇器，
-   * 而目前一位用戶的所屬團隊即其計費歸屬；查無團隊時維持不計費路徑。
-   */
-  const [teamId, setTeamId] = useState<string | null>(null);
   // Info: (20260812 - Luphia) 額度用罄的 402 payload：非 null 即鎖住輸入並顯示重置倒數
   const [quotaExceeded, setQuotaExceeded] =
     useState<IQuotaExceededPayload | null>(null);
@@ -41,26 +43,6 @@ export default function ChatInterface({ className }: IChatInterfaceProps = {}) {
     const usage = parseInt(localStorage.getItem("guest_usage") || "0", 10);
     setGuestUsage(usage);
   }, []);
-
-  useEffect(() => {
-    if (!user) {
-      setTeamId(null);
-      return;
-    }
-    const fetchTeamId = async () => {
-      try {
-        const response = await request<{ payload: { id: string }[] | null }>(
-          "/api/v1/user/team",
-        );
-        setTeamId(response.payload?.[0]?.id ?? null);
-      } catch (error) {
-        // Info: (20260812 - Luphia) 取不到團隊不阻斷對話：後端會以訪客路徑處理（限流但不扣點）
-        console.error("Failed to resolve team for faith chat:", error);
-        setTeamId(null);
-      }
-    };
-    fetchTeamId();
-  }, [user]);
 
   // Info: (20260812 - Luphia) 倒數歸零即解除輸入鎖，用戶不需重整頁面
   const handleQuotaReset = useCallback(() => setQuotaRecovered(true), []);
@@ -124,7 +106,7 @@ export default function ChatInterface({ className }: IChatInterfaceProps = {}) {
             tags,
             file: base64Data,
             mimeType: file?.type,
-            teamId: teamId ?? undefined,
+            accountBookId,
             /**
              * Info: (20260812 - Luphia) 冪等鍵的業務主鍵（設計書 §5.3）：
              * 同一則訊息重送不會重複扣點。
