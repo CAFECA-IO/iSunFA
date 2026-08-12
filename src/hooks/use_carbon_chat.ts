@@ -115,6 +115,8 @@ import {
 } from "@/lib/chatroom_ecies";
 import {
   ensureMasterKey,
+  ChatroomKeySourceMismatchError,
+  ChatroomCustodyUnknownError,
   prefetchOwnKeyRecord,
 } from "@/lib/chatroom_key_manager";
 import { request, requestEnvelope } from "@/lib/utils/request";
@@ -228,6 +230,14 @@ export const useCarbonChat = () => {
   const [isError, setIsError] = useState<boolean>(false);
   // Info: (20260712 - Luphia) 是否已於進入時完成一次手勢解鎖（PRF）；未解鎖前不呼叫 AI、不顯示對話
   const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
+
+  /**
+   * Info: (20260812 - Luphia) 解鎖失敗的原因，給鎖定畫面顯示。
+   *
+   * 不用 `isError`：那個布林值同時被送訊息、載入歷史等路徑使用，
+   * 而鎖定畫面需要的是「為什麼解不開」這句話本身 —— 共用一個布林值說不出原因。
+   */
+  const [unlockError, setUnlockError] = useState<string | null>(null);
   // Info: (20260716 - Tzuhan) render 期不可讀 ref(react-hooks/refs):金鑰以 state 快照對外暴露(解鎖時設定)
   const [unlockedMasterKey, setUnlockedMasterKey] =
     useState<IChatroomMasterKey | null>(null);
@@ -558,13 +568,21 @@ export const useCarbonChat = () => {
 
   // Info: (20260712 - Luphia) 用戶主金鑰：經 WebAuthn PRF 解包/註冊後持久化；xpub 供後端加密、xprv 供本地解密
   const masterKeyRef = useRef<IChatroomMasterKey | null>(null);
+  /**
+   * Info: (20260812 - Luphia) 帶上 custody:託管帳號（第三方登入）沒有 passkey,
+   * PRF 秘密改向 API 索取（見 `requestPrfSecret`）。
+   *
+   * 不帶的話 `navigator.credentials.get()` 會開出一個永遠不會成功的 passkey 對話框,
+   * 使用者關掉它拿到 `NotAllowedError`,再被下面的 catch 翻譯成「您的裝置不支援」——
+   * 而裝置沒問題,是帳號沒有 passkey。
+   */
   const ensureMasterKeyCached =
     useCallback(async (): Promise<IChatroomMasterKey> => {
       if (!masterKeyRef.current) {
-        masterKeyRef.current = await ensureMasterKey();
+        masterKeyRef.current = await ensureMasterKey(user?.custody);
       }
       return masterKeyRef.current;
-    }, []);
+    }, [user?.custody]);
 
   // Info: (20260714 - Tzuhan) 等待中回覆的 channel 集合: 回覆若於 fetch 期間就送達，不再啟動逾時計時器(per-channel)
   const pendingReplyChannelsRef = useRef<Set<string>>(new Set());
@@ -4693,31 +4711,57 @@ export const useCarbonChat = () => {
   const initializeChat = useCallback(async () => {
     if (isUnlocked) return;
 
+    /**
+     * Info: (20260812 - Luphia) 解鎖失敗要在**還鎖著的畫面上**說出來。
+     *
+     * 原本兩條失敗路徑都是 `appendMessageLocally()`,而那則訊息會被畫進聊天區 ——
+     * 解鎖失敗時聊天區還鎖著,所以訊息一則都看不到。使用者的體驗是
+     * 「點了開始加密對話,完全沒有任何反應」,而 console 裡其實有錯誤。
+     *
+     * 改成把原因寫進 `unlockError`,由鎖定畫面渲染在按鈕旁邊。
+     * 重按一次會先清掉它,所以那句訊息不會停在上一次失敗的狀態。
+     */
+    setUnlockError(null);
+
     try {
       // Info: (20260714 - Tzuhan) 解鎖後主金鑰存於 masterKeyRef，歷史載入/招呼詞由 channel 載入 effect 接手
       await ensureMasterKeyCached();
     } catch (keyError) {
+      console.error("[carbon-chat] failed to unlock encryption key:", keyError);
       if (keyError instanceof ChatroomUnsupportedDeviceError) {
-        appendMessageLocally(
-          {
-            id: crypto.randomUUID(),
-            sender: ChatRoleEnum.AI,
-            text: t("carbon_chatbot.device_unsupported"),
-          },
-          0,
-        );
+        setUnlockError(t("carbon_chatbot.device_unsupported"));
         return;
       }
-      console.error("[carbon-chat] failed to unlock encryption key:", keyError);
+      /**
+       * Info: (20260812 - Luphia) 來源不符要說成它本來的樣子（PR review P-1）。
+       *
+       * 這一列是用另一種金鑰包裝的（最可能是補綁 passkey 之後託管金鑰列被廢除）,
+       * 解不開不是「失敗」而是「需要先做金鑰移轉」。共用 unlock_failed 會讓人
+       * 一直重按一件永遠不會成功的事。
+       */
+      if (keyError instanceof ChatroomKeySourceMismatchError) {
+        setUnlockError(t("carbon_chatbot.key_source_mismatch"));
+        return;
+      }
+      // Info: (20260812 - Luphia) custody 還沒載入（按鈕本該是 disabled，這是第二層）
+      if (keyError instanceof ChatroomCustodyUnknownError) {
+        setUnlockError(t("carbon_chatbot.custody_loading"));
+        return;
+      }
+      /**
+       * Info: (20260812 - Luphia) 限流用專屬文案，不得顯示為一般系統錯誤。
+       *
+       * `rate_limiting_guideline.md` 第 3 條明文要求這件事，而 `carbon_chatbot.rate_limited`
+       * 早就存在（送訊息與載入歷史那兩條路徑都已經在用）。解鎖路徑原本接不上，
+       * 因為 `requestPrfSecret` 用原生 fetch 拋 `AppError`，
+       * 而 `isRateLimitedApiError()` 要求 `RequestApiError` —— 已在該處改掉。
+       */
+      if (isRateLimitedApiError(keyError)) {
+        setUnlockError(t("carbon_chatbot.rate_limited"));
+        return;
+      }
       setIsError(true);
-      appendMessageLocally(
-        {
-          id: crypto.randomUUID(),
-          sender: ChatRoleEnum.AI,
-          text: t("carbon_chatbot.system_error"),
-        },
-        0,
-      );
+      setUnlockError(t("carbon_chatbot.unlock_failed"));
       return;
     }
 
@@ -4725,7 +4769,7 @@ export const useCarbonChat = () => {
     setUnlockedMasterKey(masterKeyRef.current);
     setIsError(false);
     // Info: (20260714 - Tzuhan) 歷史載入與招呼詞改由 channel 載入 effect 統一處理(切換 session 亦適用)
-  }, [isUnlocked, ensureMasterKeyCached, appendMessageLocally, t]);
+  }, [isUnlocked, ensureMasterKeyCached, t]);
 
   // Info: (20260712 - Luphia) 空 chatroom → 請後端做前置作業產生招呼詞並加密發佈；由訂閱端解密後顯示
   const requestGreeting = useCallback(
@@ -4825,6 +4869,7 @@ export const useCarbonChat = () => {
     // Info: (20260805 - Tzuhan) 推播連線狀態(壞掉必須看得見,見上方 effect)
     connectionState,
     isUnlocked,
+    unlockError,
     initializeChat,
     hasMoreHistory,
     isLoadingHistory,

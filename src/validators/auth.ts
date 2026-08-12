@@ -42,3 +42,25 @@ export const custodialSignSchema = z
   .refine((value) => Boolean(value.challenge || value.orderId), {
     message: "Either challenge or orderId is required",
   });
+
+/**
+ * Info: (20260812 - Luphia) 託管帳號索取 PRF 替身秘密。
+ *
+ * 只收 `prfSalt`：使用者身分一律取自 DeWT，不接受呼叫端指定 —— 否則這支就變成
+ * 「拿一枚 DeWT 換任意帳號的對話金鑰」。`strict()` 讓多送的欄位被拒絕而不是靜默忽略。
+ */
+export const custodialPrfSchema = z
+  .object({
+    /**
+     * Info: (20260812 - Luphia) 32 bytes 的 base64 就是 44 字元（含一個 padding）。
+     *
+     * 原本只寫 `min(1).max(256)`。亂送不構成漏洞（不同 salt 得到不同秘密，
+     * 而且必須與包裝時完全一致才解得開），但 custodial_signing 那邊已經為訂單
+     * challenge 立了 43 字元 base64url 的門檻 —— 沿用同樣的嚴格度，
+     * 讓「這個欄位應該長什麼樣」是程式碼而不是慣例（PR review P-6）。
+     */
+    prfSalt: z
+      .string()
+      .regex(/^[A-Za-z0-9+/]{43}=$/, "prfSalt must be 32 bytes in base64"),
+  })
+  .strict();

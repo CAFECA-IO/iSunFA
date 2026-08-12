@@ -22,6 +22,22 @@ export enum RateLimitBucketEnum {
    * 這種行為在造成損失前先撞牆並留下告警。
    */
   SIGNING = "SIGNING",
+
+  /**
+   * Info: (20260812 - Luphia) 託管帳號索取 PRF 替身秘密（PR review P-4）。
+   *
+   * 刻意不與 SIGNING 共用:那個桶是為資金授權訂的尺寸（5/min、50/day）,
+   * 而這支端點是**每次進聊天室都會走一次**的例行操作
+   * （masterKeyRef 只活在 hook 的生命週期內,重新整理就重來）。
+   *
+   * 共用會有兩個後果:重載頁面五次就撞每分鐘上限而解鎖失敗;
+   * 以及每日額度是共用的 —— 大量使用加密聊天會擠壓同一天的付款簽章額度,
+   * 讓一個例行 UI 操作擋掉一個可用性關鍵的資金操作。
+   *
+   * 限流本身仍然必要:這支端點回傳的是可以解開對話內容的秘密,
+   * 「偷到一枚 DeWT 就批次撈秘密」的成本不該是零。
+   */
+  PRF = "PRF",
 }
 
 export interface IRateLimitWindow {
@@ -64,6 +80,10 @@ export const RATE_LIMIT_RULES: Record<RateLimitBucketEnum, IRateLimitWindow[]> =
     [RateLimitBucketEnum.SIGNING]: [
       { windowMs: MINUTE_MS, max: envInt("SIGNING_RL_PER_MINUTE", 5) },
       { windowMs: DAY_MS, max: envInt("SIGNING_RL_PER_DAY", 50) },
+    ],
+    [RateLimitBucketEnum.PRF]: [
+      { windowMs: MINUTE_MS, max: envInt("PRF_RL_PER_MINUTE", 20) },
+      { windowMs: DAY_MS, max: envInt("PRF_RL_PER_DAY", 200) },
     ],
   };
 

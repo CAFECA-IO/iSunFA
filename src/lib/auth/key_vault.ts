@@ -2,6 +2,7 @@ import {
   createCipheriv,
   createDecipheriv,
   createHash,
+  createHmac,
   randomBytes,
   scryptSync,
 } from "crypto";
@@ -47,6 +48,14 @@ export const VAULT_KEY_VERSION = 1;
 export enum VaultPurpose {
   CUSTODIAL_KEY = "custodial-key",
   SYSTEM_SETTING = "system-setting",
+  /**
+   * Info: (20260812 - Luphia) 託管帳號的 PRF 替身（見 ADR 016 補充）。
+   *
+   * 刻意**不**沿用 CUSTODIAL_KEY:那把子金鑰保護的是可以動用資金的簽章私鑰,
+   * 這裡要的是一個決定性的加密秘密。共用同一把會讓「解開對話」與「動用資金」
+   * 落在同一個信任邊界內 —— 而它們的外洩後果完全不同。
+   */
+  CUSTODIAL_PRF = "custodial-prf",
 }
 
 export interface ISealedSecret {
@@ -129,6 +138,31 @@ export function openSecret(
     decipher.update(Buffer.from(sealed.ciphertext, "base64")),
     decipher.final(),
   ]).toString("utf8");
+}
+
+/**
+ * Info: (20260812 - Luphia) 從某個用途的子金鑰派生一段**決定性**秘密。
+ *
+ * `sealSecret` 每次的 IV 都不同,拿它當「同樣的輸入要得到同樣的輸出」用不了;
+ * 這支用 HMAC 取代,同一把主密鑰 + 同一個 purpose + 同一份 info 永遠得到同一個 32 bytes。
+ *
+ * `getSubKey` 仍然不外露 —— 呼叫端拿到的是派生結果,不是子金鑰本身,
+ * 因此無法用它去解別的東西。
+ *
+ * Info: (20260812 - Luphia) `info` 收 `Buffer` 而不只是字串（PR review P-3）。
+ *
+ * 綁字串的話,呼叫端只能餵「某個值的字串表示」;而當那個值本來是 bytes
+ * (例如 base64 的 salt),派生結果就對**編碼方式**敏感 ——
+ * base64 → base64url、去掉 padding、trim,任何一個看起來無害的改動都會換掉秘密。
+ * 收 Buffer 讓呼叫端可以綁 bytes 本身,與另一條路徑（WebAuthn PRF 吃的就是 bytes）
+ * 依賴同一件事。
+ */
+export function derivePurposeSecret(
+  purpose: VaultPurpose,
+  info: string | Buffer,
+): Buffer {
+  const material = typeof info === "string" ? Buffer.from(info, "utf8") : info;
+  return createHmac("sha256", getSubKey(purpose)).update(material).digest();
 }
 
 // Info: (20260809 - Luphia) 供健康檢查／設定頁判斷主密鑰是否就緒，不外露密鑰內容

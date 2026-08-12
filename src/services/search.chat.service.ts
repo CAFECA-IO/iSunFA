@@ -12,12 +12,15 @@ export class SearchChatService {
   private chatService: ChatService;
   private searchService: SearchService;
 
+  /**
+   * Info: (20260812 - Luphia) 沒收到金鑰就不要傳 —— 理由同 SearchService 的建構子。
+   *
+   * 這裡原本的 env 補位會同時汙染兩個下游(ChatService 與 SearchService),
+   * 兩者都因此看不到資料庫設定。
+   */
   constructor(apiKey?: string) {
-    // Info: (20260407 - Luphia) Fallback to runtime ENV variables
-    const key =
-      apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
-    this.chatService = new ChatService(key);
-    this.searchService = new SearchService(key);
+    this.chatService = new ChatService(apiKey);
+    this.searchService = new SearchService(apiKey);
   }
 
   // Info: (20260407 - Luphia) Generates a sub-query array from a broad user prompt.

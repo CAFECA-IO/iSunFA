@@ -91,7 +91,7 @@ FCL_WebAuthn.checkSignature(
 
 1. **託管使用者的私鑰由平台持有**，與 passkey 使用者的非託管保證不同。這是產品層的取捨，不是實作瑕疵——條款與 UI 需明確揭露兩者差異。
 2. **`SECRET_VAULT_MASTER_KEY` 是單點故障**。遺失 = 所有託管錢包永久失效；外洩 = 所有託管錢包遭接管。正式環境應移往 KMS / HSM，並建立輪替程序（`UserCustodialKey.keyVersion` 已預留欄位）。此金鑰在 ADR 017 後亦用於加密 DB 內的系統設定秘密值，以 `VaultPurpose` 做 KDF domain separation。
-3. **託管使用者無法使用 passkey PRF 端到端加密**（`UserEncryptionKey`）。這類功能必須在 UI 上引導使用者補綁 passkey。
+3. **託管使用者的端到端加密由伺服器派生 PRF 替身，平台因此有能力解開他們的對話**（`UserEncryptionKey`）。2026-08-12 之前是「完全無法使用」，藥方寫的是「引導補綁 passkey」而那個功能不存在；現在改為提供同等功能但揭露差異 —— 完整決策、代價與後續工作見下方「補充（2026-08-12）」。補綁 passkey 仍然是取得非託管保證的唯一路徑。
 4. ~~**既有的鏈上流程仍是前端驅動**~~ → **2026-08-10 已改接**，見下節。
 
 ## 補充（2026-08-10）：託管帳號的簽章 API
@@ -204,3 +204,60 @@ A-1 與 H-2 分別補上了「哪個錢包」與「做什麼」。回頭檢查�
 這個說法過於樂觀。實際至少要動 6 處：`AuthProvider` enum、`registry`、`SystemSettingKey` 與其定義、`PROVIDER_LABEL_KEYS`（`Record` 必填，不加會編譯失敗）、5 個語系的 i18n、以及 `emailVerified` 閘門（那是 Google 專屬語意，卻寫在 provider-agnostic 的 service 層）。
 
 而且 Apple 兩點都不符合：它的 `client_secret` 是需要現算的 ES256 JWT，塞不進「兩個字串設定」；它走 `response_mode=form_post`，而 callback 頁只從 `searchParams` 取 `code`，接不到 POST body。
+
+---
+
+## 補充（2026-08-12）：託管帳號的 PRF 替身
+
+### 問題
+
+上面「負面」第 3 條開的藥方是「引導使用者補綁 passkey」，而那個功能到今天還不存在（`oauth.service.unlinkIdentity` 的註解記著同一件事：`User` 沒有 credentialId 欄位、沒有 authenticator 表，也沒有任何刪除託管金鑰列的程式碼）。實際結果是 **Google 註冊的帳號完全用不了 `/user/carbon_chatbot` 的加密對話**。
+
+而它失敗的方式比「不能用」更糟。`getPrfSecret()` 直接呼叫 `navigator.credentials.get()`，託管帳號面對的是一個**開得起來但永遠不會成功**的 passkey 系統對話框；使用者關掉它，瀏覽器丟 `NotAllowedError`，不是 `ChatroomUnsupportedDeviceError`，於是落到通用分支。就算走到那個具名錯誤，文案也是「您的裝置或瀏覽器不支援…建議改用 Android 上的 Chrome，或支援 PRF 的實體安全金鑰」——**裝置沒問題，是帳號沒有 passkey**，那句話會把人送去買一支解決不了問題的硬體。
+
+這正是本 ADR 對 `startLogin` 寫過的那句警告：「新增需要簽章的流程時一律用 `requestAssertion()`，否則託管帳號會卡在一個永遠不會成功的系統對話框前面。」那句話對 PRF 一字不改地成立，而 PRF 這條路徑當初沒有跟著改。
+
+### 決策
+
+比照簽章的做法，把 PRF 秘密的取得也統一到一支 lib：
+
+|          | passkey 帳號                              | 託管帳號                           |
+| -------- | ----------------------------------------- | ---------------------------------- |
+| 簽章     | `fido2ClientService.startLogin()`         | `POST /api/v1/auth/custodial/sign` |
+| PRF 秘密 | `navigator.credentials.get()`（PRF 擴充） | `POST /api/v1/auth/custodial/prf`  |
+
+前端統一呼叫 `requestPrfSecret()`（`src/lib/auth/assertion_client.ts`），`chatroom_key_manager.ts` 因此不必知道帳號是哪一種。包裝／解包主私鑰的流程完全沒有分岔。
+
+伺服端以 `VaultPurpose.CUSTODIAL_PRF` 對 `SECRET_VAULT_MASTER_KEY` 做 domain separation，再以 `HMAC-SHA256(子金鑰, userId:prfSalt)` 派生 32 bytes。`userId` 與 `prfSalt` 都必須進輸入：少了前者，所有託管帳號共用同一個秘密；少了後者，重新註冊金鑰拿不到新的秘密。
+
+**刻意不從託管簽章私鑰派生。** 那會讓「解開對話」與「動用資金」共用同一份金鑰材料，而兩者的外洩後果完全不同；也不必為了加密去解封簽章私鑰，擴大它的暴露面。
+
+**passkey 帳號一律拒絕這支端點**（在 service 檢查 `resolveCustodyType`，不靠前端傳不傳 `custody`）。否則它就是一條把非託管帳號降級成「伺服器可解密」的路徑。
+
+### 這個決策的代價
+
+**伺服器有能力解開託管帳號的對話內容。** 這與託管錢包本來的信任模型一致——平台已經持有那些帳號的簽章私鑰——但它確實不是 passkey 帳號那種「伺服器連解密的能力都沒有」。
+
+因此**介面文案必須分兩種**：`carbon_chatbot.unlock_hint` 保留給 passkey 帳號，託管帳號改用 `unlock_hint_custodial`，明說金鑰由平台代管、平台在技術上具備解密能力，並指出「僅本人可解密」需改用 passkey 帳號。**在使用者按下解鎖之前就要講清楚，而不是寫在條款裡。**
+
+影響半徑跟著綁在主密鑰上：`SECRET_VAULT_MASTER_KEY` 遺失，託管帳號的對話與託管錢包一起失效。這一點與既有的託管私鑰相同，不是新增的風險。
+
+### 這不取代補綁 passkey
+
+補綁 passkey 仍然是託管使用者真正取得非託管保證的唯一路徑，也仍然是「帳號安全設定」那個功能的一部分。這個補充解的是「在那之前完全不能用，而且被告知了錯誤的原因」。補綁完成之後，那些帳號應改回 passkey 路徑，並廢除託管金鑰列——**屆時已用 PRF 替身加密的既有對話需要重新包裝主私鑰**（用新的 passkey PRF 秘密重新 wrap 同一把主私鑰即可，對話內容不必重新加密）。這一步屬於那個功能的範圍。
+
+### 補充決策（2026-08-12 review 回應）：包裝來源必須被記錄
+
+`UserEncryptionKey.algorithm` 這個欄位的註解本來就寫著「包裝/派生演算法標記（版本化）」，但兩條路徑原本都留在同一個預設值 `WebAuthnPRF-…` —— 對託管列來說那是**錯的**，而同一個 model 上「僅密文入庫，伺服器無法解開」那句話對託管列也已經不成立。
+
+沒有這個標記，三件事做不到：
+
+1. **稽核回答不了「哪些對話的金鑰在平台手上」** —— 只能回頭 join `UserCustodialKey` 推論當時的 custody，而 custody 會變。
+2. **上面承諾的「補綁 passkey 後重新包裝」找不出要重包哪些列。**
+3. **custody 一翻轉就是靜默的資料損失** —— 補綁 passkey 若廢除託管金鑰列，`resolveCustodyType` 回 PASSKEY、前端改走 passkey 派生，同一個 salt 得到不同的秘密，`unwrapMasterKey` 必然失敗。使用者看到的是一句通用的「解鎖失敗」，而真相是「這份對話已經解不開了」。
+
+因此：註冊時寫入來源標記（`src/constants/chatroom_key.ts` 是值域的單一來源，passkey 的值**必須**與 schema `@default` 一字不差，既有列都靠它寫入），解包前比對標記與當下的 custody，不一致即拋具名的 `ChatroomKeySourceMismatchError` 並顯示「需要金鑰移轉」而不是「解鎖失敗」。版本寫在標記裡（`CustodialPRF-v1-…`）並一併餵進 HMAC —— 否則「版本」只是註解。
+
+派生的輸入綁 **salt 的 bytes** 而非它的 base64 字串：另一條路徑吃的就是 bytes，若這裡綁字串表示，任何編碼上的改動都會換掉秘密，而**失敗方式不對稱** —— passkey 帳號毫無症狀，只有託管帳號的對話永久解不開。
+
+`custody` 尚未載入時**不猜**：UI 停用解鎖按鈕並顯示中性文案，`requestPrfSecret` 對未知 custody 拋錯。未知時倒向「不給任何保證」而不是「給較強的保證」—— 給錯的那一種，正好發生在本 ADR 要求「在使用者按下解鎖之前就講清楚」的那個時刻。

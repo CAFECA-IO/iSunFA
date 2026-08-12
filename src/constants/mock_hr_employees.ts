@@ -3,8 +3,10 @@ import {
   Gender,
   PROBATION_MONTHS,
 } from "@/constants/hr_management";
+import { MOCK_HR_DEPARTMENTS } from "@/constants/mock_hr_organization";
 import { IEmployeeListItem } from "@/interfaces/hr_management";
 import { addDays, parseIsoDate, toIsoDate } from "@/lib/utils/hr_date";
+import { maskPiiTail } from "@/lib/utils/hr_pii_mask";
 
 /**
  * ToDo: (20260810 - Julian) 待 `/api/v1/hr/employee` 上線後移除，改由 API 取得。
@@ -22,9 +24,10 @@ const MOCK_HR_CORE_EMPLOYEES: IEmployeeListItem[] = [
     name: "陳世豪",
     englishName: "Shihhao Chen",
     gender: Gender.MALE,
-    birthday: "1972-03-18",
+    birthMonthDay: "03-18",
+    age: 54,
     email: "shihhao.chen@isunfa.com",
-    phone: "0911-000-001",
+    maskedPhone: maskPiiTail("0911-000-001"),
     status: EmployeeStatus.ACTIVE,
     hireDate: "2015-01-05",
     leaveDate: null,
@@ -40,9 +43,10 @@ const MOCK_HR_CORE_EMPLOYEES: IEmployeeListItem[] = [
     name: "王大明",
     englishName: "David Wang",
     gender: Gender.MALE,
-    birthday: "1985-08-22",
+    birthMonthDay: "08-22",
+    age: 41,
     email: "david.wang@isunfa.com",
-    phone: "0912-345-678",
+    maskedPhone: maskPiiTail("0912-345-678"),
     status: EmployeeStatus.ACTIVE,
     hireDate: "2019-03-01",
     leaveDate: null,
@@ -58,9 +62,10 @@ const MOCK_HR_CORE_EMPLOYEES: IEmployeeListItem[] = [
     name: "張小明",
     englishName: "Sam Chang",
     gender: Gender.MALE,
-    birthday: "1993-11-05",
+    birthMonthDay: "11-05",
+    age: 33,
     email: "sam.chang@isunfa.com",
-    phone: "0922-113-456",
+    maskedPhone: maskPiiTail("0922-113-456"),
     status: EmployeeStatus.ACTIVE,
     hireDate: "2021-07-12",
     leaveDate: null,
@@ -76,9 +81,10 @@ const MOCK_HR_CORE_EMPLOYEES: IEmployeeListItem[] = [
     name: "李佳蓉",
     englishName: "Jarong Li",
     gender: Gender.FEMALE,
-    birthday: "1988-02-14",
+    birthMonthDay: "02-14",
+    age: 38,
     email: "jarong.li@isunfa.com",
-    phone: "0933-221-889",
+    maskedPhone: maskPiiTail("0933-221-889"),
     status: EmployeeStatus.ACTIVE,
     hireDate: "2020-01-06",
     leaveDate: null,
@@ -94,9 +100,10 @@ const MOCK_HR_CORE_EMPLOYEES: IEmployeeListItem[] = [
     name: "陳彥廷",
     englishName: "Ian Chen",
     gender: Gender.MALE,
-    birthday: "1999-06-30",
+    birthMonthDay: "06-30",
+    age: 27,
     email: "ian.chen@isunfa.com",
-    phone: "0955-667-201",
+    maskedPhone: maskPiiTail("0955-667-201"),
     status: EmployeeStatus.PROBATION,
     hireDate: "2026-06-15",
     leaveDate: null,
@@ -112,9 +119,10 @@ const MOCK_HR_CORE_EMPLOYEES: IEmployeeListItem[] = [
     name: "林巧芯",
     englishName: "Chiaohsin Lin",
     gender: Gender.FEMALE,
-    birthday: "1983-08-03",
+    birthMonthDay: "08-03",
+    age: 43,
     email: "chiaohsin.lin@isunfa.com",
-    phone: "0966-889-334",
+    maskedPhone: maskPiiTail("0966-889-334"),
     status: EmployeeStatus.ACTIVE,
     hireDate: "2018-09-03",
     leaveDate: null,
@@ -130,9 +138,10 @@ const MOCK_HR_CORE_EMPLOYEES: IEmployeeListItem[] = [
     name: "黃俊傑",
     englishName: "Jack Huang",
     gender: Gender.MALE,
-    birthday: "1990-12-11",
+    birthMonthDay: "12-11",
+    age: 36,
     email: "jack.huang@isunfa.com",
-    phone: "0977-450-112",
+    maskedPhone: maskPiiTail("0977-450-112"),
     status: EmployeeStatus.LEAVE_WITHOUT_PAY,
     hireDate: "2017-04-17",
     leaveDate: null,
@@ -148,9 +157,10 @@ const MOCK_HR_CORE_EMPLOYEES: IEmployeeListItem[] = [
     name: "吳雅婷",
     englishName: "Yating Wu",
     gender: Gender.FEMALE,
-    birthday: "1995-04-27",
+    birthMonthDay: "04-27",
+    age: 31,
     email: "yating.wu@isunfa.com",
-    phone: "0988-332-556",
+    maskedPhone: maskPiiTail("0988-332-556"),
     status: EmployeeStatus.ACTIVE,
     hireDate: "2022-11-01",
     leaveDate: null,
@@ -166,9 +176,10 @@ const MOCK_HR_CORE_EMPLOYEES: IEmployeeListItem[] = [
     name: "鄭子軒",
     englishName: "Zixuan Zheng",
     gender: Gender.MALE,
-    birthday: "1992-09-09",
+    birthMonthDay: "09-09",
+    age: 34,
     email: "zixuan.zheng@isunfa.com",
-    phone: "0910-778-224",
+    maskedPhone: maskPiiTail("0910-778-224"),
     status: EmployeeStatus.RESIGNED,
     hireDate: "2019-08-19",
     leaveDate: "2026-03-31",
@@ -184,9 +195,10 @@ const MOCK_HR_CORE_EMPLOYEES: IEmployeeListItem[] = [
     name: "許庭瑋",
     englishName: "Tingwei Hsu",
     gender: Gender.MALE,
-    birthday: "1996-01-19",
+    birthMonthDay: "01-19",
+    age: 30,
     email: "tingwei.hsu@isunfa.com",
-    phone: "0921-556-778",
+    maskedPhone: maskPiiTail("0921-556-778"),
     status: EmployeeStatus.ACTIVE,
     hireDate: "2023-02-13",
     leaveDate: null,
@@ -202,9 +214,10 @@ const MOCK_HR_CORE_EMPLOYEES: IEmployeeListItem[] = [
     name: "蔡宜臻",
     englishName: "Yichen Tsai",
     gender: Gender.FEMALE,
-    birthday: "2001-05-08",
+    birthMonthDay: "05-08",
+    age: 25,
     email: "yichen.tsai@isunfa.com",
-    phone: "0937-004-661",
+    maskedPhone: maskPiiTail("0937-004-661"),
     status: EmployeeStatus.PROBATION,
     hireDate: "2026-07-01",
     leaveDate: null,
@@ -220,9 +233,10 @@ const MOCK_HR_CORE_EMPLOYEES: IEmployeeListItem[] = [
     name: "劉冠宇",
     englishName: "Kuanyu Liu",
     gender: Gender.MALE,
-    birthday: "1980-10-02",
+    birthMonthDay: "10-02",
+    age: 46,
     email: "kuanyu.liu@isunfa.com",
-    phone: "0918-223-907",
+    maskedPhone: maskPiiTail("0918-223-907"),
     status: EmployeeStatus.ACTIVE,
     hireDate: "2024-05-06",
     leaveDate: null,
@@ -238,9 +252,10 @@ const MOCK_HR_CORE_EMPLOYEES: IEmployeeListItem[] = [
     name: "謝欣怡",
     englishName: "Hsinyi Hsieh",
     gender: Gender.FEMALE,
-    birthday: "1991-08-15",
+    birthMonthDay: "08-15",
+    age: 35,
     email: "hsinyi.hsieh@isunfa.com",
-    phone: "0963-118-042",
+    maskedPhone: maskPiiTail("0963-118-042"),
     status: EmployeeStatus.ACTIVE,
     hireDate: "2021-10-25",
     leaveDate: null,
@@ -256,9 +271,10 @@ const MOCK_HR_CORE_EMPLOYEES: IEmployeeListItem[] = [
     name: "洪世昌",
     englishName: "Shihchang Hung",
     gender: Gender.MALE,
-    birthday: "1975-07-21",
+    birthMonthDay: "07-21",
+    age: 51,
     email: "shihchang.hung@isunfa.com",
-    phone: "0975-330-118",
+    maskedPhone: maskPiiTail("0975-330-118"),
     status: EmployeeStatus.RESIGNED,
     hireDate: "2016-02-01",
     leaveDate: "2025-12-31",
@@ -274,9 +290,10 @@ const MOCK_HR_CORE_EMPLOYEES: IEmployeeListItem[] = [
     name: "簡妤庭",
     englishName: "Yuting Chien",
     gender: Gender.FEMALE,
-    birthday: "1998-03-06",
+    birthMonthDay: "03-06",
+    age: 28,
     email: "yuting.chien@isunfa.com",
-    phone: "0912-908-773",
+    maskedPhone: maskPiiTail("0912-908-773"),
     status: EmployeeStatus.ACTIVE,
     hireDate: "2025-03-17",
     leaveDate: null,
@@ -306,6 +323,24 @@ const GENERATED_COUNT = 125;
 
 /** Info: (20260810 - Julian) 這兩位的離職日固定落在基準月，見下方離職日的說明 */
 const RECENT_RESIGNATION_INDEXES = [2, 7];
+
+/**
+ * Info: (20260810 - Julian) 已提出離職、但最後一天還沒到的人。
+ *
+ * 狀態維持在職 —— 到最後一天之前他們確實還在上班，也還佔編制。
+ * 沒有這種人的話，到離職看板的「離職交接中」那一欄永遠是空的，
+ * 而那一欄正是交接流程真正在跑的階段。
+ */
+const PENDING_RESIGNATION_INDEXES = [11, 33];
+
+/**
+ * Info: (20260810 - Julian) 試用期已過但還沒完成考核的人。
+ *
+ * 一般規則是「到職 3 個月內才可能是試用期」，因此逾期未考核這條路徑
+ * 在推導出來的資料裡永遠不會發生。這裡刻意留一位，讓那個警示看得到。
+ */
+const OVERDUE_PROBATION_INDEX = 83;
+const OVERDUE_PROBATION_DAYS_AGO = 110;
 const RANDOM_SEED = 20260810;
 
 const SURNAMES = [
@@ -436,11 +471,29 @@ function shuffle<T>(items: T[], random: () => number): T[] {
  * 其中最前面 4 位刻意壓在 7 天內，讓「近期報到新人」一定有東西可看。
  */
 function hireDaysAgo(index: number, random: () => number): number {
+  if (index === OVERDUE_PROBATION_INDEX) return OVERDUE_PROBATION_DAYS_AGO;
   if (index < 85) return 400 + index * 35 + Math.floor(random() * 30);
   const recentIndex = index - 85;
   if (recentIndex < 4) return recentIndex * 2;
   return 12 + Math.round((recentIndex - 4) * 9.5);
 }
+
+/**
+ * Info: (20260810 - Julian) 部門 id → 部門主管姓名。
+ *
+ * 產生的員工原本 `managerName` 一律是 null，於是看板卡片與員工列表的
+ * 「直屬主管」有一半顯示「—」。主管其實是查得到的：部門的 managerId
+ * 指向前 15 位具名核心人員，照著查即可，不必再編一組名字。
+ */
+const MANAGER_NAME_BY_DEPARTMENT = new Map<string, string>(
+  MOCK_HR_DEPARTMENTS.flatMap((department) => {
+    if (!department.managerId) return [];
+    const manager = MOCK_HR_CORE_EMPLOYEES.find(
+      (employee) => employee.id === department.managerId,
+    );
+    return manager ? [[department.id, manager.name] as const] : [];
+  }),
+);
 
 function buildGeneratedEmployees(): IEmployeeListItem[] {
   const random = createRandom(RANDOM_SEED);
@@ -466,7 +519,9 @@ function buildGeneratedEmployees(): IEmployeeListItem[] {
      * 先決定誰離職（只從老員工挑），再看還在試用期的，最後才是留職停薪。
      */
     const isResigned = index < 85 && (index % 5 === 2 || index === 84);
-    const isProbation = !isResigned && daysAgo <= PROBATION_MONTHS * 31;
+    const isProbation =
+      !isResigned &&
+      (daysAgo <= PROBATION_MONTHS * 31 || index === OVERDUE_PROBATION_INDEX);
     const isLeaveWithoutPay = !isResigned && !isProbation && index % 37 === 5;
 
     let status = EmployeeStatus.ACTIVE;
@@ -479,6 +534,13 @@ function buildGeneratedEmployees(): IEmployeeListItem[] {
      * 但至少要在到職滿 60 天之後，否則會出現離職日早於到職日的資料。
      */
     let leaveDate: string | null = null;
+
+    // Info: (20260810 - Julian) 已預告離職者：狀態仍是在職，但已經有最後一天
+    const pendingIndex = PENDING_RESIGNATION_INDEXES.indexOf(index);
+    if (!isResigned && pendingIndex >= 0) {
+      leaveDate = toIsoDate(addDays(today, 12 + pendingIndex * 13));
+    }
+
     if (isResigned) {
       /**
        * Info: (20260810 - Julian) 前兩位離職者刻意排在本月。
@@ -502,13 +564,14 @@ function buildGeneratedEmployees(): IEmployeeListItem[] {
     if (titleRoll < 0.12) jobTitle = JOB_TITLE_LEAD;
     else if (titleRoll < 0.35) jobTitle = JOB_TITLE_SENIOR;
 
-    // Info: (20260810 - Julian) 年齡 22～59 歲；生日的月日獨立取，本月壽星才會自然散落
+    /**
+     * Info: (20260812 - Julian) 年齡 22～59 歲；生日的月日獨立取，本月壽星才會自然散落。
+     * 只產月日與年齡，不組出完整生日 —— DTO 本來就不帶它（見 ADR 018 §7）。
+     */
     const age = 22 + Math.floor(random() * 38);
     const birthMonth = 1 + Math.floor(random() * 12);
     const birthDay = 1 + Math.floor(random() * 28);
-    const birthday = toIsoDate(
-      new Date(today.getFullYear() - age, birthMonth - 1, birthDay),
-    );
+    const birthMonthDay = `${String(birthMonth).padStart(2, "0")}-${String(birthDay).padStart(2, "0")}`;
 
     const surname = SURNAMES[(index * 7 + 3) % SURNAMES.length];
     const givenName = GIVEN_NAMES[(index * 11 + 5) % GIVEN_NAMES.length];
@@ -519,9 +582,12 @@ function buildGeneratedEmployees(): IEmployeeListItem[] {
       name: `${surname}${givenName}`,
       englishName: null,
       gender: index % 2 === 0 ? Gender.MALE : Gender.FEMALE,
-      birthday,
       email: `${employeeNo.toLowerCase()}@isunfa.com`,
-      phone: `09${String(10000000 + index * 137).slice(0, 2)}-${String(100000 + index * 379).slice(0, 3)}-${String(100000 + index * 977).slice(0, 3)}`,
+      maskedPhone: maskPiiTail(
+        `09${String(10000000 + index * 137).slice(0, 2)}-${String(100000 + index * 379).slice(0, 3)}-${String(100000 + index * 977).slice(0, 3)}`,
+      ),
+      birthMonthDay,
+      age,
       status,
       hireDate: toIsoDate(hireDate),
       leaveDate,
@@ -529,7 +595,11 @@ function buildGeneratedEmployees(): IEmployeeListItem[] {
       departmentName: department.name,
       jobTitleId: jobTitle.id,
       jobTitle: jobTitle.title,
-      managerName: null,
+      /**
+       * Info: (20260810 - Julian) 自己就是部門主管時不會是自己的主管；
+       * 產生的員工都不是主管，因此直接查表即可。
+       */
+      managerName: MANAGER_NAME_BY_DEPARTMENT.get(department.id) ?? null,
     } satisfies IEmployeeListItem;
   });
 }

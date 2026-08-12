@@ -33,7 +33,7 @@
 | 級別 | 定義 | 欄位 | 加密 | 預設遮罩 | 讀取稽核 |
 |---|---|---|---|---|---|
 | **Tier 1 · RESTRICTED** | 單獨即可用於冒用身分或盜用金流 | `Employee.nationalId`、`Dependent.nationalId`、`BankAccount.accountNumber`、`BankAccount.accountHolder` | ✅ | ✅ | ✅ |
-| **Tier 2 · CONFIDENTIAL** | 可識別特定自然人，單獨不足以冒用 | `Employee.birthday` / `address` / `phone`、`Dependent.birthday`、`EmergencyContact.phone` / `altPhone` | ✅ | ✅ | ➖ |
+| **Tier 2 · CONFIDENTIAL** | 可識別特定自然人，單獨不足以冒用 | `Employee.birthday` / `address` / `phone` / `personalEmail`、`Dependent.birthday`、`EmergencyContact.phone` / `altPhone` | ✅ | ✅ | ➖ |
 | **Tier 3 · INTERNAL** | 業務識別資訊，本就需要在畫面與查詢中直接使用 | `employeeNo`、`email`、`name`、`englishName`、`gender`、`hireDate`、`bankCode` / `bankName` / `branchCode` / `branchName` | ➖ | ➖ | ➖ |
 
 ### 逐項說明 Tier 3 為何不加密
@@ -41,6 +41,8 @@
 不加密是**刻意的決定**，不是漏掉的：
 
 - **`employeeNo` / `email`**：兩者都是 `@@unique([accountBookId, x])` 的成員。AES-GCM 每次用隨機 IV，同一明文兩次加密不同值，唯一約束掛不上密文。
+  - 注意這裡的 `email` 指**公司信箱**。`personalEmail`（個人信箱）是 Tier 2，兩者不同欄也不同級：公司信箱隨離職一併停用、全公司通訊錄本來就看得到；個人信箱是一輩子跟著人走的識別碼，離職後仍然有效。
+  - 它的用途也不對稱：公司信箱在職期間天天用，個人信箱只在兩個沒有公司帳號的時點用 —— 報到前寄預填表單，以及**離職後**寄扣繳憑單、補發服務證明、給付遞延獎酬與競業補償。後者才是保存期限的錨點（見 `schema.prisma` 該欄位的 ToDo），因此它是一筆「用途會結束、但結束得比僱傭關係晚」的資料：**要加密、要遮罩、要有清除排程，三者缺一它就會變成沒有終點的個資。**
 - **`name` / `englishName`**：列表排序與模糊搜尋的主要欄位，加密後兩者都做不到，而姓名單獨不足以冒用身分。
 - **`gender` / `hireDate` / `status`**：統計與流程判斷的依據，且不具唯一識別性。
 - **`bankCode` / `bankName` / `branchCode` / `branchName`**：公開的金融機構字典值，不是個資。金融風險集中在帳號與戶名，那兩個已在 Tier 1。

@@ -800,9 +800,14 @@ export const API_ERRORS = {
     message: "Key generation failed",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
+  /**
+   * Info: (20260812 - Luphia) 訊息不再只說 environment variable。
+   * 金鑰的正式保管位置已是資料庫的系統設定（/admin/settings），env 只是尚未遷移時的
+   * fallback —— 說成環境變數會把維運送去改一個可能根本不生效的地方。
+   */
   IS_GEMINI_API_KEY_UNDEFINED: {
     code: "IS000008",
-    message: "GEMINI_API_KEY environment variable is not defined",
+    message: "No LLM API key is configured in system settings or environment",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
   // Info: (20260714 - Tzuhan) LLM 結構化輸出未通過後端 Zod 護欄(非 JSON 或欄位不符)
