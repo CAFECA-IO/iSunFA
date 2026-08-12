@@ -13,7 +13,7 @@ export const pricing = {
    */
   faith_agent_free_tooltip: "具备任务短期记忆",
   faith_agent_memory: "费思人工智能代理人（专属记忆）",
-  faith_agent_memory_tooltip: "具备任务短期记忆与长期学习记忆",
+  faith_agent_memory_tooltip: "具备任务短期记忆、长期记忆与反馈学习机制",
   faith_memory_note_title: "关于费思的专属记忆",
   faith_memory_note:
     "费思的记忆分两层：任务短期记忆让它在同一项任务进行中记得前后文，所有方案皆具备；长期记忆与反馈学习机制则为云端版的团队版与企业版专属——每位成员各自拥有一个独立的费思人工智能代理人，会记录您在对话中给予的反馈与偏好（例如惯用的会计科目、报表呈现方式、回答的详细程度），随着使用逐渐记住您的需求，让回答越来越贴近您的工作方式；这些记忆只用于改善您个人的使用体验，不会与其他成员或其他客户共用，也不会用于训练共享的 AI 模型。",
@@ -130,8 +130,7 @@ export const pricing = {
         migration: "资料移转服务",
         migration_tooltip: "根据资料年份与笔数额外收费",
         custom_tools: "客制化功能模块",
-        custom_tools_tooltip:
-          "针对需求客制化开发功能，需额外收取开发费用，功能上线后可获得分润",
+        custom_tools_tooltip: "针对需求客制化开发功能，需额外收取开发费用",
       },
     },
   },
