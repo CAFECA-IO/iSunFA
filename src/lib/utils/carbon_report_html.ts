@@ -79,9 +79,21 @@ const parseRow = (row: string): IParsedCell[] => {
 /**
  * Info: (20260810 - Emily) 只有第一格有內容的列 = 原文的類別分隔列
  * (「類別二:輸入能源的間接溫室氣體排放量」橫跨整張表的那一條)。
+ *
+ * Info: (20260813 - Emily) 只認資料列(`td`)—— 表頭列永遠不是分隔列。
+ *
+ * 少了這一條,`padAllTableHeaders` 補完欄的表頭會落進這個形狀:原文的父標題
+ * 橫跨整張表時表頭只有一格(`| 溫室氣體排放量 |`),補到資料列的欄數之後
+ * 就變成「第一格有內容、其餘皆空」,於是整個 `<thead>` 被改寫成
+ * `<tr class="group"><td colspan="N">` —— 那張表**一個 `<th>` 都不剩**。
+ *
+ * 文字還看得見,所以它不是內容遺失;但一份要送第三方查證的文件,表格沒有表頭列
+ * 對輔助技術與任何依賴 `th` 的處理都等於沒有標頭,而 `tr.group td` 的置中灰底
+ * 本來是設計給表身的分類分隔列,套到表頭上也不是它的用途。
  */
 export const isGroupRow = (cells: readonly IParsedCell[]): boolean =>
   cells.length > 1 &&
+  cells.every((cell) => cell.tag === "td") &&
   cells[0].text !== "" &&
   cells.slice(1).every((cell) => cell.text === "");
 

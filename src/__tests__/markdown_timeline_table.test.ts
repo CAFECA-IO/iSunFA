@@ -187,6 +187,36 @@ describe("convertTimelineBlocksToTables colon handling", () => {
     expect(rows).toEqual(["| 2024 | 見 https://example.com |"]);
   });
 
+  /**
+   * Info: (20260813 - Emily) 沒有時間標籤的那種行,第一個冒號往往不是分隔符。
+   *
+   * 上面幾條測的都是「有時間標籤」的行(第一個冒號就是 ` : `),而這支刻意支援
+   * 沒有時間標籤的行 —— 那種行裡的 `https://` 與 `14064-1:2018` 會被當成分隔符,
+   * 憑空生出一個假的時間標籤。內容不見得少一個字,但它宣稱了原文沒有的東西。
+   */
+  it("should not treat a url scheme colon as the period separator", () => {
+    const rows = rowsOf(block("  參考 https://a.example/x"));
+
+    expect(rows).toEqual([
+      `| 參考 https://a.example/x | ${MILESTONE_EMPTY_EVENT} |`,
+    ]);
+  });
+
+  it("should not treat a digit-flanked colon as the period separator", () => {
+    const rows = rowsOf(block("  ISO 14064-1:2018 查證聲明"));
+
+    expect(rows).toEqual([
+      `| ISO 14064-1:2018 查證聲明 | ${MILESTONE_EMPTY_EVENT} |`,
+    ]);
+  });
+
+  // Info: (20260813 - Emily) 時刻標籤:切在 ` : ` 而不是 `12:` 上
+  it("should split on the separator, not on a clock time in the period", () => {
+    const rows = rowsOf(block("  12:30 : 停爐檢修"));
+
+    expect(rows).toEqual(["| 12:30 | 停爐檢修 |"]);
+  });
+
   // Info: (20260812 - Emily) mermaid 的多事件寫法(冒號兩側有空白)仍須切開
   it("should still split multiple events written the mermaid way", () => {
     const rows = rowsOf(

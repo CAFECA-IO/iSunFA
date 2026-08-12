@@ -66,6 +66,23 @@ describe("annotateTable", () => {
   });
 
   /**
+   * Info: (20260813 - Emily) 補完欄的表頭不能被當成類別分隔列。
+   *
+   * 原文的父標題橫跨整張表時表頭只有一格,`padAllTableHeaders` 補到資料列的欄數
+   * 之後就長成「第一格有內容、其餘皆空」—— 與類別分隔列一模一樣。
+   * 少了 `td` 判準,整個 `<thead>` 會被改寫成 `<tr class="group">`,
+   * 那張表一個 `<th>` 都不剩,而文字還在、所以看不出來。
+   */
+  it("should not treat a padded header row as a group row", () => {
+    const html = buildCarbonReportHtml(
+      "| 溫室氣體排放量 |\n| --- |\n| CO2 | CH4 | N2O |\n",
+    );
+
+    expect(html).toContain("<th");
+    expect(html).not.toContain('<tr class="group"');
+  });
+
+  /**
    * Info: (20260810 - Emily) 類別列不能參與窄欄判定 ——
    * 它第二欄以後都是空字串,會把真正的文字欄拉成「整欄都很短」。
    */
