@@ -755,6 +755,7 @@ export enum OffboardingTaskKey {
   CERTIFICATE = "OFFBOARDING_CERTIFICATE",
   CODE_HANDOVER = "OFFBOARDING_CODE_HANDOVER",
   PIPELINE_HANDOVER = "OFFBOARDING_PIPELINE_HANDOVER",
+  LAYOFF_REPORT = "OFFBOARDING_LAYOFF_REPORT",
 }
 
 // Info: (20260812 - Julian) 任務標題。存進 `OffboardingTask.title` 的是這裡解析後的字串
@@ -790,10 +791,15 @@ export const OFFBOARDING_TASK_TITLE_I18N_KEY: Record<
     "hr_management.offboarding.task_code_handover",
   [OffboardingTaskKey.PIPELINE_HANDOVER]:
     "hr_management.offboarding.task_pipeline_handover",
+  [OffboardingTaskKey.LAYOFF_REPORT]:
+    "hr_management.offboarding.task_layoff_report",
 };
 
 /**
- * Info: (20260812 - Julian) 離職的「法律類型」，與 `ResignationReason`（個人原因）是兩個軸。
+ * Info: (20260812 - Julian) 離職的「法律類型」，對齊 Prisma enum ResignationType。
+ *
+ * 與 `ResignationReason`（個人原因）是兩個軸：原因是「為什麼走」，
+ * 類型是「依什麼法律關係終止」，只有後者會產生資遣費與通報義務。
  *
  * 最實際的差別在預告期：勞基法第 16 條的預告是「雇主資遣勞工」時的義務，
  * 第 15 條讓勞工自請離職時準用同一組天數（方向相反、天數相同）；
@@ -987,6 +993,36 @@ const withRoleHandover = (
   },
   ...OFFBOARDING_COMMON_TASKS.slice(OFFBOARDING_APPROVAL_INDEX),
 ];
+
+/**
+ * Info: (20260812 - Julian) 資遣通報的法定期限：離職生效日前 10 天（就業服務法第 33 條）。
+ *
+ * ToDo: (20260812 - Julian) 天災事變等立即終止的情形是「離職日起 3 日內」，
+ * 期限方向相反。目前沒有欄位可以表示那種情形，補上時這個常數要跟著分岔。
+ */
+export const LAYOFF_REPORT_DUE_OFFSET = -10;
+
+/**
+ * Info: (20260812 - Julian) 只有資遣才會產生的通報任務，不屬於任何範本。
+ *
+ * 它由離職類型決定而不是由範本決定，所以不放進 `OFFBOARDING_TEMPLATES` ——
+ * 三份範本各塞一份等於同一件事寫三次，而漏掉其中一份沒有任何地方會報錯。
+ *
+ * 自請離職與契約期滿沒有這個義務，硬塞一筆永遠不用做的任務，
+ * 人會學會忽略它，然後連該做的那次也一起忽略。
+ *
+ * ToDo: (20260812 - Julian) 資遣還有第二個有期限的法定義務：資遣費應於
+ * 終止勞動契約後 30 日內發給（勞退條例第 12 條第 2 項）。它應該用同一個模式
+ * 做成 `SEVERANCE_PAYMENT`（dueOffset +30、同樣只在 LAYOFF 產生）——
+ * 待決事項與資遣費試算的整體設計見 ADR 020 §5.2。
+ */
+export const OFFBOARDING_LAYOFF_REPORT_TASK = {
+  key: OffboardingTaskKey.LAYOFF_REPORT,
+  category: HandoverCategory.HR,
+  dueOffset: LAYOFF_REPORT_DUE_OFFSET,
+  assetPrefix: null as string | null,
+  isScheduled: false,
+};
 
 export const OFFBOARDING_TEMPLATES: Record<
   OffboardingTemplateKey,

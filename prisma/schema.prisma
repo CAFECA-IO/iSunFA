@@ -2107,6 +2107,21 @@ model OffboardingTask {
   @@map("offboarding_task")
 }
 
+/**
+ * Info: (20260812 - Julian) 離職的法律類型，與 `OffboardingProcess.reason`（個人原因）是兩個軸。
+ *
+ * 原因是「為什麼走」，類型是「依什麼法律關係終止」。存下來的理由是後者會產生義務：
+ * 資遣要算資遣費、要在離職 10 日前依就業服務法第 33 條列冊通報主管機關，
+ * 而自請離職與定期契約期滿都沒有這兩件事。
+ *
+ * 不存的話，「這個月有哪幾件要通報」就查不出來 —— 只能靠承辦人自己記得。
+ */
+enum ResignationType {
+  VOLUNTARY    // Info: (20260812 - Julian) 勞工自請離職
+  LAYOFF       // Info: (20260812 - Julian) 雇主資遣／解雇
+  CONTRACT_END // Info: (20260812 - Julian) 定期契約期滿不續約
+}
+
 // Info: (20260810 - Julian) 新人報到流程檔
 model OnboardingProcess {
   id           String           @id @default(uuid())
@@ -2171,9 +2186,24 @@ model OffboardingProcess {
   status         OffboardingStatus @default(PENDING)
 
   reason         String?           // Info: (20260810 - Julian) 離職原因
+  /**
+   * Info: (20260812 - Julian) 離職類型。可為 null 是給既有資料留的空間，不是它可以不填。
+   *
+   * ToDo: (20260812 - Julian) 既有紀錄回填後應改為必填 —— 一筆不知道是自請還是資遣的
+   * 離職紀錄，在資遣費與通報這兩件事上都答不出「該不該做」。
+   */
+  resignationType ResignationType? @map("resignation_type")
   expectedDate   DateTime          @map("expected_date") // Info: (20260810 - Julian) 預計離職日
   actualDate     DateTime?         @map("actual_date") // Info: (20260810 - Julian) 實際離職日
   insuranceOffAt DateTime?         @map("insurance_off_at") // Info: (20260810 - Julian) 勞健保退保生效日
+
+  /**
+   * ToDo: (20260812 - Julian) 資遣費相關欄位待補（平均工資、基數、實付金額、發給日）。
+   *
+   * 平均工資要讀離職前六個月的實際薪資，而 schema 裡沒有薪資表。
+   * 決策、待決事項與薪資模組要提供的介面見
+   * `documents/architecture/decisions/020_severance_pay_estimation.md`。
+   */
 
   // Info: (20260810 - Julian) 關聯至交接細項任務
   tasks          OffboardingTask[]

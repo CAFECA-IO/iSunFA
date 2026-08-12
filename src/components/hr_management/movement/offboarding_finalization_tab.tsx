@@ -105,6 +105,28 @@ const OffboardingFinalizationTab: FC<IOffboardingFinalizationTabProps> = ({
               )}
             </OffboardingCheckRow>
           ))}
+
+          {/*
+            Info: (20260812 - Julian) 資遣通報接在退保之後，同一區塊。
+            它是 HR 的法定申報，與退保同一類作業；但顯示的是期限不是生效日。
+          */}
+          {form.layoffReport && (
+            <OffboardingCheckRow
+              isChecked={form.layoffReport.isDone}
+              onToggle={(next) => {
+                onChange({
+                  layoffReport: form.layoffReport
+                    ? { ...form.layoffReport, isDone: next }
+                    : null,
+                });
+                onToggleTask(form.layoffReport!.taskId, next);
+              }}
+              label={form.layoffReport.title}
+              meta={t("hr_management.offboarding.layoff_report_due", {
+                date: form.layoffReport.dueDate,
+              })}
+            />
+          )}
         </ul>
       </section>
 

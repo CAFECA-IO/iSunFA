@@ -279,6 +279,8 @@ export const hrManagement = {
     task_certificate: "退職証明書の発行",
     task_code_handover: "ソースコードとデプロイ権限の引き継ぎ",
     task_pipeline_handover: "進行中案件と見積の引き継ぎ",
+    task_layoff_report: "解雇予告の届出（所轄機関へ名簿提出）",
+    layoff_report_due: "法定期限 {{date}}",
     type_voluntary: "自己都合（キャリア・転職）",
     type_layoff: "会社都合（解雇・整理）",
     type_contract_end: "有期契約の期間満了",
@@ -322,7 +324,7 @@ export const hrManagement = {
     notice_not_applicable:
       "有期契約の期間満了には予告期間の規定は適用されません。",
     layoff_notice:
-      "会社都合の場合は解雇予告手当・退職金の算定に加え、効力発生日の 10 日前までに所轄機関への届出が必要です。",
+      "「解雇予告の届出」タスクを自動追加しました（効力発生日の 10 日前が期限）。解雇予告手当は別途算定してください。",
     initiate_preview_title: "引き継ぎタスクを {{count}} 件作成します",
     initiate_placeholder_select: "選択してください",
     group_same_department: "同じ部門",

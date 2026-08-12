@@ -280,6 +280,8 @@ export const hrManagement = {
     task_certificate: "경력증명서 발급",
     task_code_handover: "소스코드 및 배포 권한 이관",
     task_pipeline_handover: "진행 중 상담 및 견적 이관",
+    task_layoff_report: "해고 신고(관할 기관 명부 제출)",
+    layoff_report_due: "법정 기한 {{date}}",
     type_voluntary: "자발적 퇴사(경력·이직)",
     type_layoff: "회사 사유 해고·정리",
     type_contract_end: "계약기간 만료",
@@ -321,7 +323,7 @@ export const hrManagement = {
     notice_not_applicable:
       "기간제 계약 만료에는 예고기간 규정이 적용되지 않습니다.",
     layoff_notice:
-      "회사 사유 해고는 퇴직금 산정 외에 효력 발생일 10일 전까지 관할 기관 신고가 필요합니다.",
+      "「해고 신고」 과제를 자동으로 추가했습니다. 효력 발생일 10일 전까지 완료해야 하며, 퇴직금은 별도로 산정하세요.",
     initiate_preview_title: "인수인계 과제 {{count}}건이 생성됩니다",
     initiate_placeholder_select: "선택하세요",
     group_same_department: "같은 부서",

@@ -10,7 +10,6 @@ import {
   EMPLOYEE_STATUS_I18N_KEY,
   HR_INPUT_CLASS,
   OFFBOARDING_TASK_TITLE_I18N_KEY,
-  OFFBOARDING_TEMPLATES,
   OFFBOARDING_TEMPLATE_I18N_KEY,
   OFFBOARDING_TEMPLATE_KEYS,
   OffboardingTaskKey,
@@ -32,6 +31,7 @@ import {
   buildOffboardingInitiateResult,
   hasOffboardingInitiateError,
   resolveNoticeEstimate,
+  resolveOffboardingTemplateItems,
   validateOffboardingInitiateForm,
 } from "@/lib/utils/hr_offboarding_initiate";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -156,9 +156,10 @@ const OffboardingInitiateModal: FC<IOffboardingInitiateModalProps> = ({
     [employee, today],
   );
 
+  // Info: (20260812 - Julian) 與實際建立走同一支，資遣時會多一筆通報
   const previewKeys = useMemo(
-    () => OFFBOARDING_TEMPLATES[draft.templateId].map((item) => item.key),
-    [draft.templateId],
+    () => resolveOffboardingTemplateItems(draft).map((item) => item.key),
+    [draft],
   );
 
   const update = (patch: Partial<IOffboardingInitiateForm>) =>
@@ -513,8 +514,9 @@ const OffboardingInitiateModal: FC<IOffboardingInitiateModalProps> = ({
             </fieldset>
 
             {/*
-              Info: (20260812 - Julian) 資遣另有資遣費與通報義務，但這兩件事
-              不會出現在交接清單上，沒有提醒可能會被整個漏掉。
+              Info: (20260812 - Julian) 通報已經是下面清單裡的一筆任務（有負責人、
+              有到期日、沒做完不能結案），這裡只說明系統做了什麼；
+              資遣費仍然沒有對應的關卡，所以留在文字裡。
             */}
             {draft.resignationType === ResignationType.LAYOFF ? (
               <p
@@ -608,7 +610,7 @@ const OffboardingInitiateModal: FC<IOffboardingInitiateModalProps> = ({
                   count: previewKeys.length,
                 })}
               </p>
-              <ul className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
+              <ul className="mt-1.5 grid grid-cols-1 gap-x-3 gap-y-1 md:grid-cols-2 lg:grid-cols-4">
                 {previewKeys.map((key) => (
                   <li key={key} className="text-xs text-gray-500">
                     {`· ${t(OFFBOARDING_TASK_TITLE_I18N_KEY[key as OffboardingTaskKey])}`}

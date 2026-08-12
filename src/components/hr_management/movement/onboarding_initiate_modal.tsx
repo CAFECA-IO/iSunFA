@@ -575,7 +575,7 @@ const OnboardingInitiateModal: FC<IOnboardingInitiateModalProps> = ({
                   count: previewKeys.length,
                 })}
               </p>
-              <ul className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
+              <ul className="mt-1.5 grid grid-cols-1 gap-x-3 gap-y-1 md:grid-cols-2 lg:grid-cols-4">
                 {previewKeys.map((key) => (
                   <li key={key} className="text-xs text-gray-500">
                     {`· ${t(ONBOARDING_TASK_TITLE_I18N_KEY[key])}`}

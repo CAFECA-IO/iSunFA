@@ -279,6 +279,8 @@ export const hrManagement = {
     task_certificate: "離職證明書發放",
     task_code_handover: "原始碼與部署權限移交",
     task_pipeline_handover: "在途商機與報價紀錄移交",
+    task_layoff_report: "資遣通報（列冊送當地主管機關）",
+    layoff_report_due: "法定期限 {{date}}",
     type_voluntary: "個人生涯規劃 / 轉職",
     type_layoff: "公司資遣 / 解雇",
     type_contract_end: "契約到期不續約",
@@ -319,7 +321,7 @@ export const hrManagement = {
       "當前預告期少於法定 {{days}} 天；雇主應依勞基法第 16 條第 3 項發給預告期間工資。",
     notice_not_applicable: "定期契約期滿不續約，不適用預告期規定。",
     layoff_notice:
-      "資遣另須計算資遣費，並於離職生效日 10 日前向地方主管機關辦理資遣通報。",
+      "已自動加入「資遣通報」關卡，須於離職生效日 10 日前完成；資遣費請另行計算。",
     initiate_preview_title: "將建立 {{count}} 項交接關卡",
     initiate_placeholder_select: "請選擇",
     group_same_department: "同部門",

@@ -2,6 +2,7 @@ import { describe, it, expect } from "@jest/globals";
 import {
   EmployeeStatus,
   Gender,
+  HandoverCategory,
   OffboardingTaskKey,
   OffboardingTemplateKey,
   ResignationReason,
@@ -14,6 +15,7 @@ import {
 import { parseIsoDate } from "@/lib/utils/hr_date";
 import {
   applyLastWorkingDateChange,
+  resolveOffboardingTemplateItems,
   buildInitialOffboardingForm,
   buildInitiatedOffboardingTasks,
   buildOffboardingInitiateResult,
@@ -433,5 +435,97 @@ describe("buildOffboardingInitiateResult", () => {
     expect(result.initiation.insuranceOffDate).toBe("2026-09-11");
     expect(result.initiation.handoverAssigneeId).toBe("emp-002");
     expect(result.initiation.reasonNote).toBe("轉至其他產業發展");
+  });
+});
+
+describe("resolveOffboardingTemplateItems", () => {
+  const keysOf = (form: IOffboardingInitiateForm) =>
+    resolveOffboardingTemplateItems(form).map((item) => item.key);
+
+  /**
+   * Info: (20260812 - Julian) 這一組是「資遣通報做成任務」的核心保證。
+   *
+   * 通報義務（就業服務法第 33 條）只在資遣時存在。三種類型都產生一筆的話，
+   * 那筆任務在另外兩種情境下永遠掛著沒人做，人會學會忽略它 ——
+   * 然後連該做的那次也一起忽略。
+   */
+  it.each([[ResignationType.VOLUNTARY], [ResignationType.CONTRACT_END]])(
+    "should not add the layoff report for %p",
+    (resignationType) => {
+      expect(keysOf(buildForm({ resignationType }))).not.toContain(
+        OffboardingTaskKey.LAYOFF_REPORT,
+      );
+    },
+  );
+
+  it("should add the layoff report for a termination by employer", () => {
+    const keys = keysOf(buildForm({ resignationType: ResignationType.LAYOFF }));
+    expect(keys).toContain(OffboardingTaskKey.LAYOFF_REPORT);
+    expect(keys).toHaveLength(14);
+  });
+
+  // Info: (20260812 - Julian) 通報是所有 HR 項目裡最早到期的，排在那一組的最前面
+  it("should place the layoff report at the head of the HR group", () => {
+    const items = resolveOffboardingTemplateItems(
+      buildForm({ resignationType: ResignationType.LAYOFF }),
+    );
+    const index = items.findIndex(
+      (item) => item.key === OffboardingTaskKey.LAYOFF_REPORT,
+    );
+    expect(items[index].category).toBe(HandoverCategory.HR);
+    expect(items[index - 1].category).not.toBe(HandoverCategory.HR);
+    expect(
+      items.slice(index).every((item) => item.category === HandoverCategory.HR),
+    ).toBe(true);
+  });
+
+  // Info: (20260812 - Julian) 通報由類型決定、職務別移交由範本決定，兩者互不排斥
+  it("should combine with a role-specific template", () => {
+    expect(
+      keysOf(
+        buildForm({
+          resignationType: ResignationType.LAYOFF,
+          templateId: OffboardingTemplateKey.ENGINEERING,
+        }),
+      ),
+    ).toHaveLength(15);
+  });
+});
+
+describe("buildInitiatedOffboardingTasks with a layoff report", () => {
+  const translate = (key: string) => key;
+  const employee = buildPerson();
+  const form = buildForm({ resignationType: ResignationType.LAYOFF });
+  const tasks = buildInitiatedOffboardingTasks(employee, form, translate);
+  const report = tasks.find(
+    (task) => task.templateKey === OffboardingTaskKey.LAYOFF_REPORT,
+  );
+
+  /**
+   * Info: (20260812 - Julian) 期限是離職生效日前 10 天，不是發起當下。
+   * 最後工作日 2026-09-10 對應 2026-08-31。
+   */
+  it("should fall due ten days before the last working day", () => {
+    expect(report?.dueDate).toBe("2026-08-31");
+  });
+
+  it("should belong to HR with a real assignee", () => {
+    expect(report?.category).toBe(HandoverCategory.HR);
+    expect(report?.assigneeName).toBe("林巧芯");
+    expect(report?.status).toBe("PENDING");
+  });
+
+  // Info: (20260812 - Julian) 預覽說會建幾項，實際就要建幾項
+  it("should build exactly what the resolver promised", () => {
+    expect(tasks.map((task) => task.templateKey)).toEqual(
+      resolveOffboardingTemplateItems(form).map((item) => item.key),
+    );
+  });
+
+  it("should carry the type into the initiation record", () => {
+    expect(
+      buildOffboardingInitiateResult(employee, form, translate).initiation
+        .resignationType,
+    ).toBe(ResignationType.LAYOFF);
   });
 });

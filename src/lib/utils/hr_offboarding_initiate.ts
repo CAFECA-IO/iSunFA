@@ -1,7 +1,9 @@
 import {
   ACCOUNT_REVOKE_DEFAULT_TIME,
   EmployeeStatus,
+  HandoverCategory,
   OFFBOARDING_ASSIGNEE_BY_CATEGORY,
+  OFFBOARDING_LAYOFF_REPORT_TASK,
   OFFBOARDING_TASK_TITLE_I18N_KEY,
   OFFBOARDING_TEMPLATES,
   OffboardingTaskKey,
@@ -68,6 +70,10 @@ const DEFAULT_NOTICE_DAYS = 30;
  *
  * 自請離職與資遣的天數相同（第 15 條準用第 16 條），但義務方相反，
  * 因此天數共用、警語不共用（見 `resolveNoticeEstimate` 的回傳型別）。
+ *
+ * ToDo: (20260812 - Julian) 資遣費的基數也是依年資推算，但它切分新舊制
+ * （2005/7/1）且新制有 6 個月上限，與預告期的級距表無關，不要共用這一支。
+ * 設計見 ADR 020。
  */
 export function resolveRequiredNoticeDaysByType(
   type: ResignationType,
@@ -258,6 +264,32 @@ export function hasOffboardingInitiateError(
  *
  * 資產序號由工號推導而不是亂數：同一個人重新整理後不該換一組序號。
  */
+/**
+ * Info: (20260812 - Julian) 這次要建立的任務清單：範本項目加上資遣才有的通報。
+ *
+ * 通報插在 HR 那一組的最前面（它是所有 HR 項目裡最早到期的，離職日前 10 天）。
+ * 位置用 `findIndex` 算，共用清單增減項目時不會安靜地插錯組。
+ *
+ * 預覽與實際建立都走這一支：分成兩份的話，「畫面說 14 項、實際建了 13 項」
+ * 是不會有人發現的差異，兩邊都各自合理，只是不同意。
+ */
+export function resolveOffboardingTemplateItems(
+  form: IOffboardingInitiateForm,
+): (typeof OFFBOARDING_LAYOFF_REPORT_TASK)[] {
+  const items = OFFBOARDING_TEMPLATES[form.templateId];
+  if (form.resignationType !== ResignationType.LAYOFF) return items;
+
+  const hrGroupStart = items.findIndex(
+    (item) => item.category === HandoverCategory.HR,
+  );
+  const insertAt = hrGroupStart === -1 ? items.length : hrGroupStart;
+  return [
+    ...items.slice(0, insertAt),
+    OFFBOARDING_LAYOFF_REPORT_TASK,
+    ...items.slice(insertAt),
+  ];
+}
+
 export function buildInitiatedOffboardingTasks(
   employee: IEmployeeListItem,
   form: IOffboardingInitiateForm,
@@ -266,7 +298,7 @@ export function buildInitiatedOffboardingTasks(
   const lastWorkingDate = parseIsoDate(form.lastWorkingDate);
   const serial = Number(employee.employeeNo.replace(/\D/g, "")) || 0;
 
-  return OFFBOARDING_TEMPLATES[form.templateId].map((template, index) => ({
+  return resolveOffboardingTemplateItems(form).map((template, index) => ({
     id: `task-off-${employee.id}-${template.key}`,
     employeeId: employee.id,
     taskType: ProcessTaskType.OFFBOARDING as ProcessTaskType.OFFBOARDING,

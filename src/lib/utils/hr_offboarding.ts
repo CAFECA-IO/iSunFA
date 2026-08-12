@@ -110,6 +110,10 @@ export function resolveNoticeCheck(
  *
  * ToDo: (20260812 - Julian) 真實結算還要併入當月未領薪資、資遣費與代扣項目，
  * 這裡只估「特休未休」這一項，畫面上必須標明是預估值。
+ *
+ * ToDo: (20260812 - Julian) 資遣費不能沿用這一支的作法。它吃的是平均工資
+ * 而不是約定月薪，而系統目前沒有薪資紀錄可以算平均工資 —— 決策與
+ * 薪資模組要提供的介面見 ADR 020。
  */
 export function estimateLeavePayout(
   remainingLeaveDays: number,
@@ -223,6 +227,11 @@ export function buildOffboardingForm(
     (task) => task.templateKey === OffboardingTaskKey.CERTIFICATE,
   );
 
+  // Info: (20260812 - Julian) 只有資遣案件會有這一筆，見 OFFBOARDING_LAYOFF_REPORT_TASK
+  const layoffReportTask = tasks.find(
+    (task) => task.templateKey === OffboardingTaskKey.LAYOFF_REPORT,
+  );
+
   return {
     reason: initiation?.reason ?? resolveMockReason(offboardingCase.employeeId),
     reasonNote: initiation?.reasonNote ?? "",
@@ -248,6 +257,14 @@ export function buildOffboardingForm(
     revokes,
     mailForwardTo: "",
     insurances,
+    layoffReport: layoffReportTask
+      ? {
+          taskId: layoffReportTask.id,
+          title: layoffReportTask.title,
+          isDone: isDone(layoffReportTask),
+          dueDate: layoffReportTask.dueDate,
+        }
+      : null,
     remainingLeaveDays: 0,
     monthlySalary: "0",
     certificateState:
@@ -345,6 +362,8 @@ export function mergeOffboardingForm(
         savedInsuranceById.get(item.taskId)?.effectiveDate ??
         item.effectiveDate,
     })),
+    // Info: (20260812 - Julian) 完成與否由任務決定，沒有使用者輸入可以疊，直接取 base
+    layoffReport: base.layoffReport,
     certificateTaskId: base.certificateTaskId,
     /**
      * Info: (20260811 - Julian) 證明書任務被別處標記完成時，狀態一律升到「已發送」。
@@ -378,6 +397,12 @@ export function buildOffboardingProgress(
 
   const insuranceDone = form.insurances.filter((item) => item.isDone).length;
   const isCertificateSent = form.certificateState === CertificateState.SENT;
+  /**
+   * Info: (20260812 - Julian) 資遣通報也算一格。
+   * 不算的話，案件已完成度會少一筆而 HR 結案卻是 100% —— 兩個數字互相矛盾。
+   */
+  const hasLayoffReport = form.layoffReport !== null;
+  const isLayoffReportDone = form.layoffReport?.isDone === true;
 
   return {
     handoverPercent: toProgressPercent(
@@ -389,8 +414,10 @@ export function buildOffboardingProgress(
       form.assets.length + form.revokes.length,
     ),
     finalizationPercent: toProgressPercent(
-      insuranceDone + (isCertificateSent ? 1 : 0),
-      form.insurances.length + 1,
+      insuranceDone +
+        (isCertificateSent ? 1 : 0) +
+        (isLayoffReportDone ? 1 : 0),
+      form.insurances.length + 1 + (hasLayoffReport ? 1 : 0),
     ),
   };
 }

@@ -515,6 +515,13 @@ export interface IOffboardingForm {
   /** Info: (20260811 - Julian) 離職後信件轉寄對象 */
   mailForwardTo: string;
   insurances: IInsuranceItem[];
+  /**
+   * Info: (20260812 - Julian) 只有資遣案件才有；其餘為 null。
+   *
+   * 它是一筆真的任務，因此會計入案件完成度。不在這裡呈現的話，
+   * 會出現「HR 結案 100%、案件卻是 13/14」——同一件事兩種說法。
+   */
+  layoffReport: ILayoffReportItem | null;
   /** Info: (20260811 - Julian) 未休完特休天數，可到 0.5 天 */
   remainingLeaveDays: number;
   /**
@@ -522,6 +529,11 @@ export interface IOffboardingForm {
    *
    * 型別是 `string` 不是 `number`：法幣金額一律以字串在前端流轉，
    * 運算走 `MoneyUtil`（見 `numerical_precision_guideline.md`）。
+   *
+   * 這是「約定月薪」，不是勞基法第 2 條第 4 款的「平均工資」。
+   * 資遣費、預告期間工資、職災補償都要用平均工資（前六個月工資總額 ÷ 總日數，
+   * 含加班費等經常性給與），拿這一欄去乘會在有加班的人身上算少。
+   * 兩者的差異與後續介面見 ADR 020。
    *
    * ToDo: (20260812 - Julian) Prisma 的 Employee 沒有薪資欄位，
    * 接 API 前要決定薪資從哪裡讀（多半是另一個受權限保護的薪資模組）。
@@ -623,6 +635,20 @@ export interface IOnboardingInitiateErrors {
 export interface IOnboardingInitiateResult {
   employee: IEmployeeListItem;
   tasks: IProcessTask[];
+}
+
+/**
+ * Info: (20260812 - Julian) 資遣通報那一列。
+ *
+ * 與退保三項分開，因為它不是「申報生效」而是「法定期限前完成」——
+ * 顯示的是到期日不是生效日，混進 `insurances` 會讓那一欄的語意變成兩種。
+ */
+export interface ILayoffReportItem {
+  taskId: string;
+  title: string;
+  isDone: boolean;
+  /** Info: (20260812 - Julian) 法定期限：離職生效日前 10 天 */
+  dueDate: string;
 }
 
 /**

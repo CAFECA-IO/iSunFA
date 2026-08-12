@@ -281,6 +281,8 @@ export const hrManagement = {
     task_certificate: "Issue certificate of employment",
     task_code_handover: "Hand over source code and deploy access",
     task_pipeline_handover: "Hand over open pipeline and quotes",
+    task_layoff_report: "File layoff report with the labor authority",
+    layoff_report_due: "Statutory deadline {{date}}",
     type_voluntary: "Resignation (career move)",
     type_layoff: "Termination by employer",
     type_contract_end: "Fixed-term contract ended",
@@ -324,7 +326,7 @@ export const hrManagement = {
     notice_not_applicable:
       "Notice periods do not apply when a fixed-term contract simply ends.",
     layoff_notice:
-      "Termination also requires severance pay and a filing with the local labor authority at least 10 days before the effective date.",
+      "A 'layoff report' task has been added, due 10 days before the effective date. Severance pay is calculated separately.",
     initiate_preview_title: "{{count}} handover tasks will be created",
     initiate_placeholder_select: "Select",
     group_same_department: "Same department",

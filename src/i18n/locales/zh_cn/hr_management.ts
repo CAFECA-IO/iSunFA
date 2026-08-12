@@ -279,6 +279,8 @@ export const hrManagement = {
     task_certificate: "离职证明书发放",
     task_code_handover: "源代码与部署权限移交",
     task_pipeline_handover: "在途商机与报价记录移交",
+    task_layoff_report: "资遣通报（列册送当地主管机关）",
+    layoff_report_due: "法定期限 {{date}}",
     type_voluntary: "个人生涯规划 / 转职",
     type_layoff: "公司资遣 / 解雇",
     type_contract_end: "合同到期不续约",
@@ -319,7 +321,7 @@ export const hrManagement = {
       "当前预告期少于法定 {{days}} 天；雇主应依劳基法第 16 条第 3 项发给预告期间工资。",
     notice_not_applicable: "定期合同期满不续约，不适用预告期规定。",
     layoff_notice:
-      "资遣另须计算资遣费，并于离职生效日 10 日前向地方主管机关办理资遣通报。",
+      "已自动加入「资遣通报」关卡，须于离职生效日 10 日前完成；资遣费请另行计算。",
     initiate_preview_title: "将建立 {{count}} 项交接关卡",
     initiate_placeholder_select: "请选择",
     group_same_department: "同部门",
