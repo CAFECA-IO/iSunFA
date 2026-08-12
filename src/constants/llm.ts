@@ -172,8 +172,10 @@ export const FAITH_INPUT_CHARS_PER_TOKEN = 3;
  * 亦由此常數插值，避免三處各寫一個數字而在調整後互相矛盾。定價頁為 SSR/CSR 共用，
  * 故放常數而非 env（非 NEXT_PUBLIC_ 的環境變數在 client bundle 讀不到）。
  *
- * ToDo: (20260812 - Luphia) 記憶儲存與到期刪除機制尚未實作（費思目前為無記憶 one-shot）。
- * 上線前須補：記憶寫入、訂閱終止起算的刪除 Worker（含降級為免費版）、提前刪除受理流程；
- * 未完成前不得對外宣稱此權益。屆時若改為可由後台調整，須一併搬入 DB 系統設定表。
+ * ToDo: (20260812 - Luphia) 記憶儲存與到期刪除機制尚未實作（費思目前為無記憶 one-shot），
+ * 須於 v0.13.0 釋出前完成。規範與驗收條件見
+ * documents/architecture/ai_and_analytics/faith_personal_memory.md（§1 承諾對照表、§9 Release Gate）；
+ * 其中 §5 記載一項必改點：記憶注入會抬高 input tokens，預扣估算須加計注入上界，
+ * 否則 hold 不再是成本上界。未完成前不得對外宣稱此權益。
  */
 export const FAITH_MEMORY_RETENTION_DAYS = 90;
