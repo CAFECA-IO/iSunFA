@@ -6,6 +6,7 @@ import { escapeArithmeticEmphasis } from "@/lib/utils/markdown_arithmetic_safety
 import { restoreLineStructure } from "@/lib/utils/markdown_line_structure";
 import { convertTimelineBlocksToTables } from "@/lib/utils/markdown_timeline_table";
 import { replaceOfficeSymbolChars } from "@/lib/utils/office_symbol_chars";
+import { padAllTableHeaders } from "@/lib/utils/markdown_table_columns";
 import {
   CARBON_PDF_CHART_MAX_HEIGHT_MM,
   CARBON_PDF_FONT_STACK,
@@ -601,10 +602,26 @@ export const buildCarbonReportHtml = (
    * 改動前抽取進來的 U+F06C,實測那份 54 頁的下載仍有 57 個空心方框
    * (p.3 與 p.18–24)。函式是冪等且不改長度的,兩端都套沒有代價。
    */
+  /**
+   * Info: (20260812 - Emily) `escapeArithmeticEmphasis` 必須是最後一道。
+   *
+   * 規則:**任何把圍籬內容搬到 prose 的轉換,都必須跑在語意防護之前。**
+   * `convertTimelineBlocksToTables` 就是一次「內容搬家」——
+   * 逸出跳過圍籬(那是對的,在 code block 裡加反斜線是污染不是防護),
+   * 於是原本待在 timeline 圍籬裡、沒有被逸出的 `*` 一旦被搬成表格儲存格,
+   * 就落回 prose 上下文,marked 照樣把它當強調吃掉:
+   * `2020 : 產能 2*300*4 噸` → `產能 23004 噸`。
+   *
+   * 這正是 `5ad9824fd`(stop markdown from eating the multiplication signs)
+   * 修掉的那件事在新路徑上重演,所以順序本身要當成一條規則寫下來,
+   * 而不是「記得把 esc 放最後」——下一支搬家型的轉換也適用。
+   */
   let body = marked.parse(
-    convertTimelineBlocksToTables(
-      replaceOfficeSymbolChars(
-        restoreLineStructure(escapeArithmeticEmphasis(source)),
+    escapeArithmeticEmphasis(
+      padAllTableHeaders(
+        convertTimelineBlocksToTables(
+          replaceOfficeSymbolChars(restoreLineStructure(source)),
+        ),
       ),
     ),
     { async: false },

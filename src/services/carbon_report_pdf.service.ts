@@ -6,6 +6,12 @@ import {
   buildCarbonReportHtml,
   type ICarbonReportShell,
 } from "@/lib/utils/carbon_report_html";
+import {
+  assignTocPageNumbers,
+  countLeadingTocPages,
+  squeezeForTocMatch,
+} from "@/lib/utils/carbon_toc_pages";
+import { CARBON_TOC_PAGE_HEADING_HITS } from "@/constants/carbon_pdf";
 import { extractPdfTextLayer, splitTextByPages } from "@/lib/pdf_text_layer";
 import { assertCjkRenderable } from "@/lib/utils/pdf_font_guard";
 import {
@@ -59,6 +65,16 @@ export interface IGeneratedCarbonPdf {
   landscapeTables: number;
   chartsRendered: number;
   chartsFailed: number;
+  /**
+   * Info: (20260812 - Emily) 目錄頁碼填了幾條、幾條留白。
+   *
+   * 原本只進 log。而文字層抽不出來時（`extractPdfTextLayer` 回 null，
+   * ADR 014 記載的 @napi-rs/canvas SIGBUS 至今未定案）整份目錄會靜默沒有頁碼,
+   * 使用者拿到的是一份看起來完整的報告 —— 與 chartsFailed 同一種需要
+   * 讓呼叫端知道的降級,所以比照它一起回傳。
+   */
+  tocFilled: number;
+  tocMissing: number;
 }
 
 const describeError = (error: unknown): string =>
@@ -130,18 +146,29 @@ export class CarbonReportPdfService {
     page: IPrintPage,
     buffer: Buffer,
   ): Promise<{ filled: number; missing: number }> {
-    const entries = (await page.evaluate(`(() => {
-      return Array.from(document.querySelectorAll(".doc-toc-list .toc-page")).map(
-        function (el) {
+    /**
+     * Info: (20260812 - Emily) 一併取目錄標題:它是短報告唯一能區分
+     * 「目錄頁」與「內容頁」的訊號(見 countLeadingTocPages)。
+     */
+    const { title: tocTitle, entries } = (await page.evaluate(`(() => {
+      var titleEl = document.querySelector(".doc-toc-title");
+      return {
+        title: titleEl ? (titleEl.textContent || "").trim() : "",
+        entries: Array.from(
+          document.querySelectorAll(".doc-toc-list .toc-page"),
+        ).map(function (el) {
           var row = el.closest("a");
           var text = row ? row.querySelector(".toc-text") : null;
           return {
             target: el.getAttribute("data-target") || "",
             text: text ? (text.textContent || "").trim() : "",
           };
-        },
-      );
-    })()`)) as Array<{ target: string; text: string }>;
+        }),
+      };
+    })()`)) as {
+      title: string;
+      entries: Array<{ target: string; text: string }>;
+    };
     if (entries.length === 0) return { filled: 0, missing: 0 };
 
     const extracted = await extractPdfTextLayer(buffer);
@@ -151,44 +178,49 @@ export class CarbonReportPdfService {
       });
       return { filled: 0, missing: entries.length };
     }
-    /**
-     * Info: (20260812 - Emily) 比對前先 NFKC 再去空白。
-     *
-     * 去空白是因為文字層會在中文之間插入換行與空格；NFKC 是因為
-     * **抽出來的字不一定是同一個碼位**：實測「第一章」的「一」抽出來是
-     * U+2F00（康熙部首），不是 U+4E00，字面看起來一樣但字串不相等。
-     * 少了這一步，34 條裡有 10 條找不到頁碼而留白 —— 而留白看起來像
-     * 「這節不在文件裡」，其實只是比對用錯了正規化形式。
-     */
-    const squeeze = (value: string): string =>
-      value.normalize("NFKC").replace(/\s+/g, "");
-    const pages = splitTextByPages(extracted.text).map(squeeze);
+    // Info: (20260812 - Emily) NFKC + 去空白的理由見 squeezeForTocMatch
+    const pages = splitTextByPages(extracted.text).map(squeezeForTocMatch);
 
-    /**
-     * Info: (20260812 - Emily) 先跳過目錄自己佔的那幾頁。
-     *
-     * 實測第一版每一條的頁碼都是 1 或 2 —— 因為**目錄頁本身就列著全部的標題**,
-     * 「第一個包含這個標題的頁」永遠是目錄自己。這在事後看很明顯,
-     * 而它產出的是一份每條都指向目錄的目錄。
-     *
-     * 目錄一定在文件最前面(`break-after: page`),所以要跳過的是一段**前綴**:
-     * 從第一頁往後,只要那一頁同時出現 5 個以上不同的標題,就還在目錄裡。
-     * 用前綴而不是全域判斷,後面的內容頁再密也不會被誤判成目錄。
-     */
-    const needles = entries.map((entry) => squeeze(entry.text));
-    const looksLikeToc = (text: string): boolean =>
-      needles.filter((needle) => needle !== "" && text.includes(needle))
-        .length >= 5;
-    let skip = 0;
-    while (skip < pages.length && looksLikeToc(pages[skip])) skip += 1;
-
-    const numbers = needles.map((needle) => {
-      if (needle === "") return 0;
-      const index = pages.findIndex(
-        (text, page) => page >= skip && text.includes(needle),
-      );
-      return index === -1 ? 0 : index + 1;
+    // Info: (20260812 - Emily) 目錄自己佔幾頁,判定與理由都在 countLeadingTocPages
+    const needles = entries.map((entry) => squeezeForTocMatch(entry.text));
+    const skip = countLeadingTocPages({
+      squeezedPages: pages,
+      squeezedTocTitle: squeezeForTocMatch(tocTitle),
+      squeezedEntries: needles,
+      headingHits: CARBON_TOC_PAGE_HEADING_HITS,
     });
+
+    /**
+     * Info: (20260812 - Emily) 頁碼的指派邏輯(單調游標、同名條目、退回全域)
+     * 都在 assignTocPageNumbers ——它需要純函式才測得到,而本方法要有 Chrome 才跑得起來。
+     * 這裡只負責 I/O 與把 `outOfOrder` 記成 log。
+     */
+    const assigned = assignTocPageNumbers({
+      squeezedPages: pages,
+      squeezedEntries: needles,
+      skip,
+    });
+    const numbers = assigned.map((entry) => entry.page);
+
+    /*
+     * Info: (20260812 - Emily) 文件順序被違反的條目要記出來:回報的頁碼可能是錯的,
+     * 而錯的頁碼比留白更糟(查證的人會照著它翻到錯的一頁)。
+     */
+    const outOfOrder = assigned
+      .map((entry, index) => ({ entry, index }))
+      .filter(({ entry }) => entry.outOfOrder);
+    if (outOfOrder.length > 0) {
+      logger.warn(
+        "[CarbonReportPdfService] toc entries out of document order",
+        {
+          count: outOfOrder.length,
+          samples: outOfOrder.slice(0, 3).map(({ entry, index }) => ({
+            text: needles[index].slice(0, 30),
+            page: entry.page,
+          })),
+        },
+      );
+    }
 
     await page.evaluate(
       `(() => {
@@ -291,6 +323,8 @@ export class CarbonReportPdfService {
           landscapeTables: layout.landscape,
           chartsRendered: charts.rendered,
           chartsFailed: charts.failed,
+          tocFilled: toc.filled,
+          tocMissing: toc.missing,
         };
       } finally {
         await page.close().catch(() => undefined);

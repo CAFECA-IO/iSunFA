@@ -97,9 +97,56 @@ describe("escapeArithmeticEmphasis 與行內程式碼", () => {
     expect(escapeArithmeticEmphasis("`a*1` 與 2*3")).toBe("`a*1` 與 2\\*3");
   });
 
-  it("should handle a doubled backtick span", () => {
-    expect(escapeArithmeticEmphasis("``a`b*1`` 與 2*3")).toBe(
-      "``a`b*1`` 與 2\\*3",
+  /**
+   * Info: (20260812 - Emily) 樣本從 ``a`b*1`` 改成 ``a`2*1``。
+   *
+   * 原本那個 `b*1` 的星號左側是字母,本來就不匹配判準 ——
+   * 於是這條測試在 code span 切法壞掉的時候也是綠的。換成數字才守得住:
+   * 舊的 /(`+[^`]*`+)/ 會在內層反引號提早收尾,span 內的算式被當成內文逸出。
+   */
+  it("should handle a doubled backtick span that contains a backtick", () => {
+    expect(escapeArithmeticEmphasis("``a`2*1`` 與 2*3")).toBe(
+      "``a`2*1`` 與 2\\*3",
     );
+  });
+});
+
+/**
+ * Info: (20260812 - Emily) 跳過範圍的四個洞(見 markdown_fence 檔頭)。
+ * 每一條壞掉的後果都是「保護在該生效的地方失效」或「在不該作用的地方污染內容」。
+ */
+describe("escapeArithmeticEmphasis 的跳過範圍", () => {
+  it("should keep protecting prose after a tilde line inside a backtick fence", () => {
+    const out = escapeArithmeticEmphasis(
+      ["```", "text", "~~~", "2*3", "```", "外面的公式 4*5=20"].join("\n"),
+    );
+
+    // Info: (20260812 - Emily) 圍籬內不動
+    expect(out).toContain("\n2*3\n");
+    // Info: (20260812 - Emily) 圍籬外仍受保護 —— 這是原本壞掉的那一半
+    expect(out).toContain("4\\*5=20");
+  });
+
+  it("should not escape inside a nested longer fence", () => {
+    const out = escapeArithmeticEmphasis(
+      ["````", "```mermaid", "2*3", "```", "````"].join("\n"),
+    );
+
+    expect(out).toContain("\n2*3\n");
+  });
+
+  it("should not escape an indented code block", () => {
+    const out = escapeArithmeticEmphasis(
+      ["說明:", "", "    0.6*200*248=1"].join("\n"),
+    );
+
+    expect(out).toContain("    0.6*200*248=1");
+    expect(out).not.toContain("\\*");
+  });
+
+  it("should still escape a formula in a list item", () => {
+    const out = escapeArithmeticEmphasis(["- 項目", "", "    2*3"].join("\n"));
+
+    expect(out).toContain("2\\*3");
   });
 });

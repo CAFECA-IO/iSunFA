@@ -33,32 +33,40 @@
  * 也不需要多裝 `remark-breaks`。設定是全域的,而這個轉換要能只作用在指定內容上。
  */
 
-const FENCE = /^\s*(```|~~~)/;
+import {
+  classifyMarkdownLines,
+  isMarkdownCodeLine,
+} from "@/lib/utils/markdown_fence";
+
 const TABLE_ROW = /^\s*\|/;
 
 export const restoreLineStructure = (markdown: string): string => {
   const lines = markdown.split("\n");
-  let insideFence = false;
+  /**
+   * Info: (20260812 - Emily) 圍籬與縮排 code 的判定收進 markdown_fence。
+   * 原本本檔自帶一份 `/^\s*(```|~~~)/` 加布林旗標,與 markdown_arithmetic_safety
+   * 那份同一個實作、同樣四個洞(見 markdown_fence 檔頭)。縮排 code 這一項在這裡
+   * 的後果是往程式碼行尾塞兩個空白。
+   */
+  const kinds = classifyMarkdownLines(lines);
+
+  const isBody = (index: number): boolean => {
+    const line = lines[index];
+    return (
+      line !== undefined &&
+      line.trim() !== "" &&
+      !isMarkdownCodeLine(kinds[index]) &&
+      !TABLE_ROW.test(line)
+    );
+  };
 
   return lines
     .map((line, index) => {
-      if (FENCE.test(line)) {
-        insideFence = !insideFence;
-        return line;
-      }
       // Info: (20260810 - Emily) 圍籬與表格列有自己的斷行語意,加尾隨空白是污染
-      if (insideFence || TABLE_ROW.test(line) || line.trim() === "")
-        return line;
-
-      const next = lines[index + 1];
-      const nextIsBody =
-        next !== undefined &&
-        next.trim() !== "" &&
-        !FENCE.test(next) &&
-        !TABLE_ROW.test(next);
+      if (!isBody(index)) return line;
 
       // Info: (20260810 - Emily) 只在「下一行還是內文」時加,段落最後一行不需要
-      return nextIsBody ? `${line.replace(/\s+$/, "")}  ` : line;
+      return isBody(index + 1) ? `${line.replace(/\s+$/, "")}  ` : line;
     })
     .join("\n");
 };

@@ -27,11 +27,11 @@
  * mermaid 圖的定義若含算式,轉義後圖上會多出一個反斜線。
  */
 
-/**
- * Info: (20260810 - Emily) 已被轉義的星號不再重複轉義(`(?<!\\)`)。
- * 冪等性是必要的:這支函式套用在三個地方(組裝段落、預覽、列印),
- * 而既有草稿裡的內容會經過不只一次 —— 二次轉義會印出一個字面反斜線。
- */
+import {
+  classifyMarkdownLines,
+  isMarkdownCodeLine,
+} from "@/lib/utils/markdown_fence";
+
 /**
  * Info: (20260812 - Emily) 冪等性由 `(?<=[0-9)])` 保證,不是由 `(?<!\\)`
  * (PR review 指出)。已經轉義過的 `\*`,它左邊那個字元是 `\` 而 `\` 不在 `[0-9)]` 裡,
@@ -40,8 +40,6 @@
  */
 const ARITHMETIC_STAR = /(?<=[0-9)])\*(?=[0-9(])/g;
 
-const FENCE = /^\s*(```|~~~)/;
-
 /**
  * Info: (20260812 - Emily) 行內程式碼也要跳過(PR review 第 2 點)。
  *
@@ -49,29 +47,42 @@ const FENCE = /^\s*(```|~~~)/;
  * 不是防護而是**污染**」。行內 code span 完全同理,只是當初漏了一種 ——
  * 實測 `` `2*3*4` `` 會被轉義成 `2\*3\*4`,反斜線直接印在報告上。
  *
- * 切法用捕捉群組:split 之後奇數索引就是 code span(含反引號),原樣保留。
- * 反引號可以有多個(``a`b``),所以是 `+`。
+ * Info: (20260812 - Emily) 開閉的反引號串長度必須相同(CommonMark)。
+ * 原本是 /(`+[^`]*`+)/,遇到內含反引號的 span(``a`2*1``)會提早收尾,
+ * split 之後奇偶索引錯位 —— 於是 span **內**的算式被當成內文而加了反斜線,
+ * 正好是這一段要避免的那件事。而原本守這一條的測試樣本是 ``a`b*1``,
+ * `b*1` 的星號左側是字母、本來就不匹配判準,所以那條測試在壞掉時也是綠的。
  */
-const INLINE_CODE = /(`+[^`]*`+)/;
+const CODE_SPAN = /(`+)(?:[^`]|(?!\1)`)*?\1(?!`)/;
+
+/**
+ * Info: (20260812 - Emily) 逐段跳過 code span,只在 span 之外逸出。
+ * 不用 split:CODE_SPAN 需要反向參照來比對反引號串長度,
+ * 而帶捕捉群組的 split 會把群組本身也放進結果,奇偶索引不再成立。
+ */
+const escapeOutsideCodeSpans = (line: string): string => {
+  let escaped = "";
+  let rest = line;
+  for (;;) {
+    const span = CODE_SPAN.exec(rest);
+    if (span === null) {
+      return escaped + rest.replace(ARITHMETIC_STAR, "\\*");
+    }
+    escaped +=
+      rest.slice(0, span.index).replace(ARITHMETIC_STAR, "\\*") + span[0];
+    rest = rest.slice(span.index + span[0].length);
+  }
+};
 
 export const escapeArithmeticEmphasis = (markdown: string): string => {
   if (!markdown.includes("*")) return markdown;
 
-  let insideFence = false;
-  return markdown
-    .split("\n")
-    .map((line) => {
-      if (FENCE.test(line)) {
-        insideFence = !insideFence;
-        return line;
-      }
-      if (insideFence) return line;
-      return line
-        .split(INLINE_CODE)
-        .map((part, index) =>
-          index % 2 === 1 ? part : part.replace(ARITHMETIC_STAR, "\\*"),
-        )
-        .join("");
-    })
+  const lines = markdown.split("\n");
+  // Info: (20260812 - Emily) 圍籬與縮排 code 的判定收在 markdown_fence（四個洞的說明在那裡）
+  const kinds = classifyMarkdownLines(lines);
+  return lines
+    .map((line, index) =>
+      isMarkdownCodeLine(kinds[index]) ? line : escapeOutsideCodeSpans(line),
+    )
     .join("\n");
 };

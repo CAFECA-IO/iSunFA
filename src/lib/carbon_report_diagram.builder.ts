@@ -4,13 +4,14 @@
 // Info: (20260730 - Tzuhan) LLM 只回結構化欄位,mermaid 由本模組組出,且每個節點文字都要能在原文找到才畫。
 
 import {
-  CarbonDiagramRendererEnum,
-  CarbonDiagramTemplateEnum,
-  CARBON_DIAGRAM_TEMPLATES,
   CARBON_DIAGRAM_MAX_LABEL_CHARS,
   CARBON_DIAGRAM_MAX_OVERLONG_SHARE,
   CARBON_DIAGRAM_MIN_NODES,
+  CARBON_DIAGRAM_TEMPLATES,
   CARBON_TIMELINE_MIN_DATED_EVENTS,
+  CarbonDiagramRendererEnum,
+  CarbonDiagramTemplateEnum,
+  MILESTONE_TABLE_HEADERS,
   buildDiagramAnchorEnd,
   buildDiagramAnchorStart,
 } from "@/constants/carbon_report_diagrams";
@@ -32,17 +33,12 @@ export interface ICarbonDiagramLabels {
    * 略過而不說等於靜默少了原文的一條 —— 這個專案一貫的做法是「沒畫出來的必須說出來」。
    */
   skippedTooLong?: string;
-  /** Info: (20260811 - Emily) 里程碑表的兩個表頭(見 buildMilestoneTable) */
-  milestonePeriodHeader?: string;
-  milestoneEventHeader?: string;
 }
 
 export const CARBON_DIAGRAM_DEFAULT_LABELS: ICarbonDiagramLabels = {
   unverifiable: "(圖表節點無法回溯至本節原文,已略過不繪製)",
   insufficient: "(本節內容不足以繪製結構圖)",
   skippedTooLong: "以下項目文字過長,未畫進圖中(內容仍在本節原文)",
-  milestonePeriodHeader: "時間",
-  milestoneEventHeader: "事件",
 };
 
 export enum DiagramRejectReasonEnum {
@@ -323,10 +319,14 @@ const escapeTableCell = (label: string): string =>
  * 註:template 的 renderer 仍叫 TIMELINE。那個列舉標的是「這個模板要呈現時序」,
  * 不是「一定要用 mermaid 畫成軸」;呈現方式改變不需要改模板的語意。
  */
-function buildMilestoneTable(
-  nodes: ICarbonDiagramNode[],
-  labels: ICarbonDiagramLabels,
-): string {
+/*
+ * Info: (20260812 - Emily) 不再收 labels。
+ *
+ * 表頭移到 `MILESTONE_TABLE_HEADERS`（唯一來源）之後這個參數就沒有用了 ——
+ * 而它是本檔私有函式、只有一個呼叫端，留著一個「傳進來但不看」的參數
+ * 會讓下一個人以為里程碑表還有 i18n 的餘地。沒有，兩端得吃同一組。
+ */
+function buildMilestoneTable(nodes: ICarbonDiagramNode[]): string {
   const eventsByPeriod = new Map<string, string[]>();
   const undated: string[] = [];
   /**
@@ -370,10 +370,13 @@ function buildMilestoneTable(
     rows.push(`| ${index === 0 ? TIMELINE_UNDATED_LABEL : ""} | ${event} |`);
   });
 
-  const periodHeader = labels.milestonePeriodHeader ?? "時間";
-  const eventHeader = labels.milestoneEventHeader ?? "事件";
+  /**
+   * Info: (20260812 - Emily) 表頭取自 MILESTONE_TABLE_HEADERS（唯一來源）。
+   * 原本是 `labels.milestonePeriodHeader ?? "時間"` —— 可覆寫,而讀取端的
+   * timeline 轉換是純文字函式拿不到 labels,覆寫會讓同一份報告出現兩種表頭。
+   */
   return [
-    `| ${periodHeader} | ${eventHeader} |`,
+    `| ${MILESTONE_TABLE_HEADERS.period} | ${MILESTONE_TABLE_HEADERS.event} |`,
     "| --- | --- |",
     ...rows,
   ].join("\n");
@@ -425,7 +428,7 @@ export function buildCarbonDiagramBlock(
 
   const template = CARBON_DIAGRAM_TEMPLATES[templateId];
   if (template.renderer === CarbonDiagramRendererEnum.TIMELINE) {
-    return wrap(noteSkipped(buildMilestoneTable(drawn, labels)));
+    return wrap(noteSkipped(buildMilestoneTable(drawn)));
   }
 
   /**

@@ -14,11 +14,10 @@
  * 表格是 688px 不縮放、11.3px。
  */
 
-/** Info: (20260811 - Emily) 與 CARBON_DIAGRAM_DEFAULT_LABELS 的兩個表頭一致 */
-export const MILESTONE_TABLE_HEADERS = {
-  period: "時間",
-  event: "事件",
-} as const;
+import {
+  MILESTONE_EMPTY_EVENT,
+  MILESTONE_TABLE_HEADERS,
+} from "@/constants/carbon_report_diagrams";
 
 const TIMELINE_BLOCK = /```mermaid[ \t]*\r?\n[ \t]*timeline\b([\s\S]*?)```/g;
 
@@ -53,15 +52,38 @@ const bodyToTable = (body: string): string => {
         return;
       }
       /*
-       * Info: (20260811 - Emily) 冒號可能是全形。第一段是時間標籤,其餘每一段各是一個事件;
+       * Info: (20260811 - Emily) 第一段是時間標籤,其餘每一段各是一個事件;
        * 同一時間標籤的多個事件各佔一列,時間只寫在第一列(縱向合併的表達方式)。
+       *
+       * Info: (20260812 - Emily) 只有**第一個**冒號切時間標籤,事件之間只認
+       * 「前後有空白」的冒號。
+       *
+       * 原本無條件 `split(/[:：]/)` 比 mermaid 本身更 aggressive(mermaid 只認半角),
+       * 結果是把一個里程碑劈成兩列:`2010 : 取得 ISO 14001：2015 認證`
+       * 變成「取得 ISO 14001」與「2015 認證」兩個里程碑,後者根本不是事件。
+       * `ISO 14064-1:2018`、`https://example.com` 同樣中。
+       *
+       * mermaid 的多事件寫法慣例是 `時間 : 事件 : 事件`(冒號兩側有空白),
+       * 而年份、標準編號、網址裡的冒號沒有。這裡刻意比 mermaid 保守:
+       * 寧可少切一次(一個事件寫長一點),也不要生出一列假的資料。
        */
-      const parts = line.split(/[:：]/).map((part) => part.trim());
-      const period = parts.shift() ?? "";
-      const events = parts.filter((part) => part.length > 0);
+      const separator = line.search(/[:：]/);
+      const period = (
+        separator === -1 ? line : line.slice(0, separator)
+      ).trim();
+      const events = (
+        separator === -1 ? [] : line.slice(separator + 1).split(/\s[:：]\s/)
+      )
+        .map((part) => part.trim())
+        .filter((part) => part.length > 0);
       if (events.length === 0) {
-        // Info: (20260811 - Emily) 只有時間標籤沒有事件:仍然列出來,不猜也不丟
-        rows.push(`| ${cell(period)} |  |`);
+        /**
+         * Info: (20260811 - Emily) 只有時間標籤沒有事件:仍然列出來,不猜也不丟
+         *
+         * Info: (20260812 - Emily) 事件欄放一個明示的破折號,不能留空
+         * (完整理由在 MILESTONE_EMPTY_EVENT 的定義處)。
+         */
+        rows.push(`| ${cell(period)} | ${MILESTONE_EMPTY_EVENT} |`);
         return;
       }
       events.forEach((event, index) => {

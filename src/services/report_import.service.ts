@@ -753,7 +753,16 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
     const normalizeSymbols = (text: string, paragraphId: string): string => {
       const stray = unmappedPrivateUseChars(text);
       if (stray.length > 0) {
+        /**
+         * Info: (20260812 - Emily) 訊息不再斷言「每一個都會是方框」。
+         *
+         * 掃描範圍是整個 BMP 私有區(U+E000–U+F8FF),而 Big5 造字區與 HKSCS 的
+         * 罕用漢字(人名用字)也落在裡面 —— 在繁中報告裡不算罕見,而它們在
+         * 裝好字型的環境是**正常顯示**的。原訊息會讓維運把那些當成缺陷去追。
+         * 真正需要處理的是 Word 符號字型的 U+F020–U+F0FF 區段。
+         */
         logger.warn("[ReportImportService] unmapped private-use chars", {
+          note: "U+F020–U+F0FF 多為 Word 符號字型；其餘可能是造字區漢字，裝好字型即正常",
           paragraphId,
           chars: stray.map(
             (char) =>
@@ -879,6 +888,12 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
             headerColumns: fix.headerColumns,
             widestColumns: fix.widestColumns,
             recoveredCells: fix.recoveredCells,
+            /**
+             * Info: (20260812 - Emily) 第二層表頭:那種表的欄位標籤與資料欄
+             * 不對應,而補欄不修那件事(見 markdown_table_columns 檔頭)。
+             * 需要人工對照原文,所以要記得出來。
+             */
+            hasSecondHeaderLevel: fix.hasSecondHeaderLevel,
           });
           return { ...table, markdown: fix.markdown };
         });

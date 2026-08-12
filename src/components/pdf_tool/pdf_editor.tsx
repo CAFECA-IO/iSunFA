@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import {
+  AlertTriangle,
   Check,
   Download,
   Edit3,
@@ -324,7 +325,31 @@ const renderSegmentedPdf = async (
 enum ToastType {
   SUCCESS = "success",
   ERROR = "error",
+  /**
+   * Info: (20260812 - Emily) 「成功了,但少了一塊」——**降級**,不是失敗。
+   *
+   * 需要第三種而不是沿用 ERROR:下載其實成功了,檔案就在使用者的硬碟上。
+   * 用紅色的 X 會讓人以為沒抽到檔而再點一次下載(而重印一份 53 頁的報告
+   * 要再跑一次 Chrome 與 mermaid),然後拿到同一份東西。
+   *
+   * 也不能沿用 SUCCESS:那條路徑不出任何提示,而這裡要說的正是
+   * 「這份查證文件缺了目錄頁碼／缺了幾張圖」—— 不說的話它看起來是完整的。
+   */
+  WARNING = "warning",
 }
+
+/**
+ * Info: (20260812 - Emily) toast 的底色。
+ *
+ * 用查表而不是巢狀三元:原本是「SUCCESS ? 綠 : 紅」的二元式,加第三種時
+ * 巢狀三元會在 className 的樣板字串裡再長一層,而那裡本來就不好讀。
+ * 加第四種狀態時這張表只要多一列。
+ */
+const TOAST_TONE: Readonly<Record<ToastType, string>> = {
+  [ToastType.SUCCESS]: "bg-emerald-500",
+  [ToastType.WARNING]: "bg-amber-500",
+  [ToastType.ERROR]: "bg-red-500",
+};
 
 interface IPdfEditorProps {
   setErrorModal: React.Dispatch<
@@ -697,11 +722,38 @@ export default function PdfEditor({
       },
     });
     saveBlobAs(result.blob, fileName);
-    if (result.chartsFailed > 0) {
-      console.warn(
-        "[PdfEditor] some charts could not be drawn:",
-        result.chartsFailed,
+    /**
+     * Info: (20260812 - Emily) 降級要說出來,不能只進 console。
+     *
+     * 這兩種降級都不會讓下載失敗,產出的是一份**看起來完整**的查證文件 ——
+     * 目錄每一條都留白、或少了幾張圖。原本只有 `console.warn`,
+     * 而看得到 console 的人不是拿這份文件去送查證的人。
+     *
+     * 目錄優先於圖表:沒有頁碼的目錄讓整份文件無法被引用,
+     * 而少一張圖時內容仍在該節的原文裡(見 carbon_report_diagram.builder 的
+     * `unverifiable` 文案)。兩者同時發生時說比較嚴重的那一個。
+     */
+    if (result.tocMissing > 0) {
+      showToast(
+        t("admin_mission_board.pdf_editor.toast_toc_pages_missing")!,
+        ToastType.WARNING,
       );
+    } else if (result.chartsFailed > 0) {
+      showToast(
+        t("admin_mission_board.pdf_editor.toast_charts_missing")!,
+        ToastType.WARNING,
+      );
+    }
+    /*
+     * Info: (20260812 - Emily) log 保留:toast 只有 3 秒,而這兩個數字
+     * 是事後追「那份下載為什麼缺頁碼」唯一的線索。
+     */
+    if (result.tocMissing > 0 || result.chartsFailed > 0) {
+      console.warn("[PdfEditor] report downloaded with gaps:", {
+        tocFilled: result.tocFilled,
+        tocMissing: result.tocMissing,
+        chartsFailed: result.chartsFailed,
+      });
     }
     return true;
   };
@@ -867,16 +919,17 @@ export default function PdfEditor({
       className={`relative flex flex-col overflow-hidden bg-white shadow-sm ${isEmbedded ? "h-full w-full rounded-none border-0" : "h-[800px] rounded-2xl border border-gray-200"}`}
     >
       {/* Info: (20260605 - Julian) Toast 訊息 */}
+      {/* Info: (20260812 - Emily) 三種狀態各自有色與圖示,WARNING 的理由見 ToastType */}
       {toastMessage && (
         <div
-          className={`fixed top-24 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-lg px-6 py-3 shadow-lg transition-all ${
-            toastMessage.type === ToastType.SUCCESS
-              ? "bg-emerald-500 text-white"
-              : "bg-red-500 text-white"
+          className={`fixed top-24 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-lg px-6 py-3 text-white shadow-lg transition-all ${
+            TOAST_TONE[toastMessage.type]
           }`}
         >
           {toastMessage.type === ToastType.SUCCESS ? (
             <Check size={20} />
+          ) : toastMessage.type === ToastType.WARNING ? (
+            <AlertTriangle size={20} />
           ) : (
             <XIcon size={20} />
           )}

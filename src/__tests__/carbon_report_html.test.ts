@@ -223,3 +223,33 @@ describe("目錄項目的逸出", () => {
     expect(text).not.toContain("&amp;amp;");
   });
 });
+
+/**
+ * Info: (20260812 - Emily) 轉換之間的互相干擾。
+ *
+ * 這些是**跨轉換**的案例,而每一支工具自己的測試只餵自己構造的理想輸入 ——
+ * 這批 bug 的形狀全部是「A 的輸出被 B 誤判」,所以驗收必須走完整條管線。
+ */
+describe("buildCarbonReportHtml transform ordering", () => {
+  /**
+   * Info: (20260812 - Emily) timeline → 表格是「內容搬家」:
+   * 搬出圍籬的算式沒有被逸出過。若逸出先跑,那些星號就裸露在 prose 裡被
+   * marked 當成強調吃掉 —— `2*300*4` 變成 `23004`,三個數字合併成一個。
+   */
+  it("should keep multiplication signs that come out of a timeline fence", () => {
+    const html = buildCarbonReportHtml(
+      ["```mermaid", "timeline", "  2020 : 產能 2*300*4 噸", "```"].join("\n"),
+    );
+
+    expect(html).toContain("2*300*4");
+    expect(html).not.toContain("<em>300</em>");
+  });
+
+  // Info: (20260812 - Emily) 圍籬外的算式本來就該受保護,一起釘住避免修法只顧一邊
+  it("should keep multiplication signs written in prose", () => {
+    const html = buildCarbonReportHtml("排放量 = 0.6*200*248 公噸");
+
+    expect(html).toContain("0.6*200*248");
+    expect(html).not.toContain("<em>200</em>");
+  });
+});

@@ -53,6 +53,10 @@ export const adminMissionBoard = {
     toast_draft_saved: "초안이 수동으로 저장되었습니다",
     toast_report_inserted: "보고서가 성공적으로 생성 및 삽입되었습니다!",
     toast_share_link_failed: "공유 링크 생성에 실패했습니다",
+    toast_toc_pages_missing:
+      "보고서를 다운로드했지만 목차에 페이지 번호가 입력되지 않았습니다",
+    toast_charts_missing:
+      "보고서를 다운로드했지만 일부 도표를 그리지 못했습니다",
     edit_markdown: "마크다운 편집",
     preview_pdf: "PDF 미리보기",
     download_pdf: "PDF 다운로드",

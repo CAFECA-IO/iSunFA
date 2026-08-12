@@ -20,6 +20,7 @@ import { escapeArithmeticEmphasis } from "@/lib/utils/markdown_arithmetic_safety
 import { restoreLineStructure } from "@/lib/utils/markdown_line_structure";
 import { convertTimelineBlocksToTables } from "@/lib/utils/markdown_timeline_table";
 import { replaceOfficeSymbolChars } from "@/lib/utils/office_symbol_chars";
+import { padAllTableHeaders } from "@/lib/utils/markdown_table_columns";
 
 // Info: (20260720 - Tzuhan) #54 證據鏈元件動態載入:含 RecordTabModal 依賴鏈,不拖累一般 markdown 渲染
 const EvidenceChain = dynamic(
@@ -200,16 +201,29 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
        * 既有草稿裡存著的 U+F06C 要在讀取時換掉才看得到 ——
        * 只改一端會讓預覽是方框、下載是圓點,或者反過來。
        */
-      const normalized = convertTimelineBlocksToTables(
-        replaceOfficeSymbolChars(
-          escapeArithmeticEmphasis(
+      /**
+       * Info: (20260812 - Emily) `escapeArithmeticEmphasis` 必須是最後一道
+       * (與 carbon_report_html 同一條規則,那裡有完整說明)。
+       *
+       * timeline → 表格是「內容搬家」:搬出圍籬的算式沒有被逸出過,
+       * 若逸出先跑,搬家之後那些 `*` 就裸露在 prose 裡被 marked 吃掉。
+       */
+      /**
+       * Info: (20260812 - Emily) 表頭補欄兩端都套。
+       * 匯入端只影響新匯入的報告 —— 既有草稿的表頭已經是窄的,
+       * 那 261 個被 GFM 丟掉的儲存格要在讀取時補才救得回來。
+       */
+      const normalized = padAllTableHeaders(
+        convertTimelineBlocksToTables(
+          replaceOfficeSymbolChars(
             stripHtmlLineBreaksOutsideFences(stripMarkdownComments(content)),
           ),
         ),
       );
-      return restoreSourceLineBreaks
+      const structured = restoreSourceLineBreaks
         ? restoreLineStructure(normalized)
         : normalized;
+      return escapeArithmeticEmphasis(structured);
     },
     [content, restoreSourceLineBreaks],
   );

@@ -8,6 +8,7 @@
  */
 import { describe, it, expect } from "@jest/globals";
 import { convertTimelineBlocksToTables } from "@/lib/utils/markdown_timeline_table";
+import { MILESTONE_EMPTY_EVENT } from "@/constants/carbon_report_diagrams";
 
 const block = (...lines: string[]): string =>
   ["```mermaid", "timeline", ...lines, "```"].join("\n");
@@ -68,10 +69,25 @@ describe("convertTimelineBlocksToTables", () => {
     expect(out).toContain("| 1968年06月 | 正字標記\\|甲等 |");
   });
 
+  /**
+   * Info: (20260812 - Emily) 事件欄放明示的破折號,不能留空。
+   *
+   * 空的話這一列與 `section` 產生的列形狀完全相同(第一格有內容、其餘皆空),
+   * 而 `carbon_report_html` 的 `isGroupRow` 正是這個判準 ——
+   * 於是一個資料點被渲染成橫跨整表的章節分隔列。
+   * 原本這條斷言的是 `| 1990年03月 |  |`,也就是**釘住了那個 bug**。
+   */
   it("should keep a period that has no event rather than drop it", () => {
     const out = convertTimelineBlocksToTables(block("    1990年03月"));
 
-    expect(out).toContain("| 1990年03月 |  |");
+    expect(out).toContain(`| 1990年03月 | ${MILESTONE_EMPTY_EVENT} |`);
+  });
+
+  // Info: (20260812 - Emily) 與 section 的列(第一格有內容、其餘皆空)必須分得開
+  it("should not take the shape of a section row", () => {
+    const out = convertTimelineBlocksToTables(block("    1990年03月"));
+
+    expect(out).not.toContain("| 1990年03月 |  |");
   });
 
   it("should be idempotent", () => {
@@ -122,5 +138,63 @@ describe("convertTimelineBlocksToTables 與相鄰的內容", () => {
     );
 
     expect(out.split("\n").some((line) => line.trim() === "前文")).toBe(true);
+  });
+});
+
+/**
+ * Info: (20260812 - Emily) 冒號只有第一個切時間標籤,事件之間只認前後有空白的冒號。
+ *
+ * 原本無條件 split(/[:：]/) 比 mermaid 本身更 aggressive(mermaid 只認半角),
+ * 把一個里程碑劈成兩列,而多出來那一列的內容根本不是事件。
+ */
+describe("convertTimelineBlocksToTables colon handling", () => {
+  const rowsOf = (markdown: string): string[] =>
+    convertTimelineBlocksToTables(markdown)
+      .split("\n")
+      .filter((line) => line.startsWith("|") && !line.includes("---"))
+      .slice(1);
+
+  it("should keep a full-width colon inside the event text", () => {
+    const rows = rowsOf(
+      [
+        "```mermaid",
+        "timeline",
+        "  2010 : 取得 ISO 14001：2015 認證",
+        "```",
+      ].join("\n"),
+    );
+
+    expect(rows).toEqual(["| 2010 | 取得 ISO 14001：2015 認證 |"]);
+  });
+
+  it("should keep a standard number that contains a colon", () => {
+    const rows = rowsOf(
+      ["```mermaid", "timeline", "  2018 : 導入 ISO 14064-1:2018", "```"].join(
+        "\n",
+      ),
+    );
+
+    expect(rows).toEqual(["| 2018 | 導入 ISO 14064-1:2018 |"]);
+  });
+
+  it("should keep a url in one piece", () => {
+    const rows = rowsOf(
+      ["```mermaid", "timeline", "  2024 : 見 https://example.com", "```"].join(
+        "\n",
+      ),
+    );
+
+    expect(rows).toEqual(["| 2024 | 見 https://example.com |"]);
+  });
+
+  // Info: (20260812 - Emily) mermaid 的多事件寫法(冒號兩側有空白)仍須切開
+  it("should still split multiple events written the mermaid way", () => {
+    const rows = rowsOf(
+      ["```mermaid", "timeline", "  1966 : 創立 : 遷廠 : 上市", "```"].join(
+        "\n",
+      ),
+    );
+
+    expect(rows).toEqual(["| 1966 | 創立 |", "|  | 遷廠 |", "|  | 上市 |"]);
   });
 });

@@ -19,8 +19,6 @@ import {
   type ICarbonSourceTableLabels,
 } from "@/lib/carbon_source_table.builder";
 import { CARBON_SOURCE_TABLE_ANCHOR_PREFIX } from "@/constants/carbon_source_tables";
-import { escapeArithmeticEmphasis } from "@/lib/utils/markdown_arithmetic_safety";
-import { restoreLineStructure } from "@/lib/utils/markdown_line_structure";
 
 /**
  * Info: (20260801 - Tzuhan) 對帳區塊的錨點。獨立命名空間的理由與其他三種相同:
@@ -115,13 +113,22 @@ const escapeAnchor = (anchor: string): string =>
  */
 export function composeParagraphContent(input: IComposeParagraphInput): string {
   /**
-   * Info: (20260810 - Emily) 敘述含原文照錄的計算式,星號是乘號而非強調語法。
-   * 在這裡轉義是因為這裡是段落 markdown 的組裝點 —— 存進去的內容就該是對的,
-   * 而不是每個讀取端各自修補一次(見 markdown_arithmetic_safety 的說明)。
+   * Info: (20260812 - Emily) 乘號逸出與行結構補償**不再寫進儲存的內容**。
+   *
+   * 原本在這裡套用,理由是「存進去的內容就該是對的」。但這兩支都是**顯示層的
+   * 補償**(markdown 渲染器會吃掉乘號、會收掉軟斷行),而這個函式第 113 行的
+   * 保證是「敘述零改動 —— 只搬動位置,不改寫文字」——寫進 `\*` 與每行兩個
+   * 尾隨空白就是改寫文字,直接違反 ADR 014 的「content 逐字照抄原文」。
+   *
+   * 而且它會壞掉一件不明顯的事:ADR 014 的圖表護欄要求「節點文字必須能在該段
+   * 原文中找到(去空白與標點後比對)」。行尾空白會被那個 normalize 吃掉,
+   * 反斜線不會 —— 於是一個含算式的節點 label 可能對不回自己的原文,
+   * 而失敗的表現是**整張圖不畫**,沒有人會知道原因是一個反斜線。
+   *
+   * 兩個讀取端都已經各自套了(`buildCarbonReportHtml` 與 `MarkdownContent`),
+   * 所以移除這裡不會讓任何一端的顯示變差。
    */
-  const narrative = restoreLineStructure(
-    escapeArithmeticEmphasis(extractNarrative(input.content)),
-  );
+  const narrative = extractNarrative(input.content);
   const blocks: string[] = [];
   if (narrative.length > 0) blocks.push(narrative);
 

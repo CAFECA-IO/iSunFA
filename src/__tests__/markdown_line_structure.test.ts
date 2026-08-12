@@ -113,3 +113,27 @@ describe("buildCarbonReportHtml with restored line structure", () => {
     expect(bodyTextOf(html)).toContain("創立");
   });
 });
+
+/**
+ * Info: (20260812 - Emily) 圍籬判定改用 markdown_fence 之後的回歸。
+ * 這裡誤判的後果是往程式碼行尾塞兩個空白。
+ */
+describe("restoreLineStructure 的跳過範圍", () => {
+  it("should not add trailing spaces inside an indented code block", () => {
+    const out = restoreLineStructure(
+      ["說明:", "", "    第一行", "    第二行"].join("\n"),
+    );
+
+    expect(out).toContain("    第一行\n");
+    expect(out).not.toContain("第一行  ");
+  });
+
+  it("should keep treating prose after a tilde line inside a backtick fence", () => {
+    const out = restoreLineStructure(
+      ["```", "~~~", "```", "甲", "乙"].join("\n"),
+    );
+
+    // Info: (20260812 - Emily) 圍籬外的相鄰內文行仍要拿到硬斷行
+    expect(out).toContain("甲  \n乙");
+  });
+});
