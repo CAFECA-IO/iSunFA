@@ -9,6 +9,7 @@ import {
   describeQuotaCountdown,
   isQuotaExceededPayload,
   parseQuotaExceededError,
+  quotaRemainingPercent,
   resolveQuotaResetAt,
 } from "@/lib/quota/quota_notice";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
@@ -156,5 +157,36 @@ describe("describeQuotaCountdown", () => {
 
   it("flags the exact reset second as expired so the input unlocks", () => {
     expect(describeQuotaCountdown(NOW_SEC, NOW_SEC).expired).toBe(true);
+  });
+});
+
+/**
+ * Info: (20260813 - Luphia) 額度儀表的剩餘百分比（團隊錢包面板與費思提示共用）。
+ *
+ * 這一層正是「錢包頁顯示 30%、費思卻擋下」那份客訴的雙方數字來源：
+ * 儀表報的是剩餘額度，擋下的原因是預扣上界超過剩餘——兩者都對，必須都能算對。
+ */
+describe("quotaRemainingPercent", () => {
+  it("reports remaining, not used", () => {
+    // Info: (20260813 - Luphia) free 方案每 5 小時 10 點、已用 7 → 剩 30%（截圖中的數字）
+    expect(quotaRemainingPercent("10", "7")).toBe(30);
+    expect(quotaRemainingPercent("40", "7")).toBe(83);
+    expect(quotaRemainingPercent("10", "0")).toBe(100);
+  });
+
+  it("clamps a fully consumed or over-consumed window to 0", () => {
+    expect(quotaRemainingPercent("10", "10")).toBe(0);
+    expect(quotaRemainingPercent("10", "12")).toBe(0);
+  });
+
+  /**
+   * Info: (20260813 - Luphia) 額度為 0 時儀表要是空的：回 100 會讓沒有額度的方案
+   * 顯示成滿格，正好與事實相反。
+   */
+  it("treats a zero or unparsable limit as empty", () => {
+    expect(quotaRemainingPercent("0", "0")).toBe(0);
+    expect(quotaRemainingPercent("", "0")).toBe(0);
+    expect(quotaRemainingPercent("abc", "1")).toBe(0);
+    expect(quotaRemainingPercent("10", "abc")).toBe(0);
   });
 });

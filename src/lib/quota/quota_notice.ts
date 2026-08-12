@@ -79,6 +79,22 @@ export function resolveQuotaResetAt(payload: IQuotaExceededPayload): number {
     : payload.quota5h.resetAt;
 }
 
+/**
+ * Info: (20260813 - Luphia) 額度儀表的「剩餘百分比」（團隊錢包面板與費思提示共用）。
+ *
+ * 語意為剩餘而非已用（見 components/common/quota_meter.tsx）。金額以字串傳輸，
+ * 這裡只做顯示用的百分比，故容許轉 Number——百分比不參與任何金額運算。
+ * limit 為 0 或不可解析時回 0：沒有額度可用時，儀表應該是空的而不是滿的。
+ */
+export function quotaRemainingPercent(limit: string, used: string): number {
+  const limitValue = Number(limit);
+  const usedValue = Number(used);
+  if (!Number.isFinite(limitValue) || limitValue <= 0) return 0;
+  if (!Number.isFinite(usedValue)) return 0;
+  const usedRatio = Math.min(1, Math.max(0, usedValue / limitValue));
+  return Math.round((1 - usedRatio) * 100);
+}
+
 export interface IQuotaCountdown {
   // Info: (20260812 - Luphia) true 表示重置時間已到，呼叫端據此解除輸入鎖
   expired: boolean;

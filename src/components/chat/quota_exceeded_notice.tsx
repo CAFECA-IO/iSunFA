@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { BatteryCharging, BatteryWarning, Coins, Rocket } from "lucide-react";
+import QuotaMeter from "@/components/common/quota_meter";
 import { QUOTA_WINDOW } from "@/constants/subscription_quota";
 import type { IQuotaExceededPayload } from "@/interfaces/team_wallet";
 import {
@@ -117,6 +118,31 @@ export default function QuotaExceededNotice({
                   countdown: countdownText,
                   resetAt: resetAtText,
                 })}
+              </p>
+
+              {/**
+               * Info: (20260813 - Luphia) 剩餘額度儀表（與團隊錢包面板同一元件、同一語意）。
+               *
+               * 為什麼被擋下時還要顯示「剩餘 30%」：因為那正是實情——擋下的原因不是額度歸零，
+               * 而是**本則訊息的預扣上界高於剩餘額度**（預扣＝輸入估算＋maxOutputTokens，
+               * 見設計書 §5.3）。少了這兩條儀表，用戶在錢包頁看到 30% 卻在此被擋，
+               * 只會認定其中一邊在說謊；補上儀表與下一行說明，兩個數字才對得起來。
+               */}
+              <div className="mt-3 space-y-2 rounded-lg bg-white/60 p-3">
+                <QuotaMeter
+                  label={t("chat.quota_exceeded.meter_5h")}
+                  limit={payload.quota5h.limit}
+                  used={payload.quota5h.used}
+                />
+                <QuotaMeter
+                  label={t("chat.quota_exceeded.meter_week")}
+                  limit={payload.quotaWeek.limit}
+                  used={payload.quotaWeek.used}
+                />
+              </div>
+
+              <p className="mt-2 text-xs text-amber-800">
+                {t("chat.quota_exceeded.hold_hint")}
               </p>
               <p className="mt-1 text-xs text-amber-700">
                 {t("chat.quota_exceeded.upsell_hint")}

@@ -6,11 +6,15 @@ export const chat = {
   generic_error: "죄송합니다. 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
   // Info: (20260812 - Luphia) 額度用罄提示（設計書 §5）：倒數、絕對重置時間與導購
   quota_exceeded: {
-    title: "{{window}} AI 대화 크레딧을 모두 사용했습니다",
+    title: "{{window}} AI 대화 한도가 부족합니다",
     window_5h: "최근 5시간",
     window_week: "이번 주",
     reset_hint: "{{countdown}} 후({{resetAt}})에 다시 사용할 수 있습니다.",
     reset_ready_title: "한도가 초기화되었습니다. 대화를 계속할 수 있습니다",
+    meter_5h: "최근 5시간 남은 한도",
+    meter_week: "이번 주 남은 한도",
+    hold_hint:
+      "메시지마다 한도의 상한을 먼저 확보합니다(메시지 길이와 답변 상한으로 추정). 실제 사용량이 정산되면 차액을 돌려드립니다. 남은 한도가 이 확보분보다 적으면 전송이 차단되므로 위에 잔여량이 표시될 수 있습니다.",
     countdown: "{{hours}}:{{minutes}}:{{seconds}}",
     countdown_days: "{{days}}일 {{hours}}시간",
     upsell_hint:
