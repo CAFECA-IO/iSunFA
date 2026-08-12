@@ -162,6 +162,22 @@ WHERE key='GEMINI_API_KEY';
 
 順帶修掉一個潛在缺陷：`payment_method/route.ts` 原本把 `merchantId` 寫死成 `"mermer"`，導致部署精靈收集的 `OEN_MERCHANT_ID` 從未生效。現已改讀設定（保底值仍為 `mermer`，行為相容）。
 
+#### 專案規則（2026-08-12）：一個設定只有一個來源
+
+1. **一個設定只存在 `.env` 或資料庫其中一處，不得從多處查找。** 禁止 `dbValue || process.env.X || …` 這種串接 —— 它讓「現在生效的是哪一個」變成要試才知道，而輪替與撤銷正是在那個模糊處失效的（本 ADR §7 補充記的三個缺陷都是這一類）。
+   - **允許**：`來源值 || 程式碼保底值`（單一來源加上編譯期常數，例如 `SYSTEM_SETTING_FALLBACKS`）。保底值不是第二個來源，它沒有部署差異。
+   - **允許**：以狀態機解析出**唯一**來源後再讀（`get()` 的 `TRUSTED → 資料庫` / `EMPTY → env`，並以 `SettingSourceEnum` 明確記錄結果是哪一個）。同一時刻只有一個來源生效。
+   - **禁止**：同一個運算式裡並列多個來源。
+2. **`.env` 只保管最低限度**，其餘一律進資料庫。「最低限度」的判準是**資料庫讀不到或不該讀**：
+   - 資料庫連線本身（`POSTGRES_*`、`DATABASE_URL`）
+   - 信任根（`SUPER_ADMIN_*`、`DEWT_PRIVATE_KEY_PEM`、`SUPER_ADMIN_SIGNATURE`、`SECRET_VAULT_MASTER_KEY`）—— 保護資料庫內容的東西不能存在它所保護的地方
+   - `NEXT_PUBLIC_*`（client bundle 讀不到資料庫，含合約地址與第三方前端金鑰）
+   - 部署拓撲與檔案路徑（`OSRM_ROUTER_URL`、`CHATROOM_URL`、`STORAGE_DOMAIN`、`MISSION_DIR` 等）
+   - **無主資料庫權限的節點**所需的設定（見下）
+3. **同一個鍵在不同節點可以有不同的單一來源。** `MissionExecutor` 依
+   `async_workers/00_async_worker_overview.md` 沒有主資料庫權限，對它而言「用哪把 LLM 金鑰」就是部署環境差異，來源是該節點的 `.env`；web 節點的來源是資料庫。**每個節點各查一處，不是 fallback。** 差異與後果記在
+   `known_issues/executor_settings_isolation.md`。
+
 #### 補充（2026-08-12）：`ChatService` 的讀取點已收斂為單一入口
 
 上面那段描述的「優先序：建構子 > DB > env」是當時的實作，之後有三處改變（見 `fix/llm_key_resolution_precedence`）：

@@ -22,6 +22,7 @@ import {
 import {
   SystemSettingKey,
   SYSTEM_SETTING_DEFINITIONS,
+  SYSTEM_SETTING_KEYS,
 } from "@/constants/system_setting";
 /**
  * Info: (20260812 - Luphia) 只匯入型別。
@@ -446,5 +447,70 @@ describe("nodes without database access", () => {
       (service as unknown as { genAI?: { apiKey?: string } }).genAI?.apiKey,
     ).toBe("node-env-key");
     expect(settingGetCalls).toEqual([]);
+  });
+});
+
+/**
+ * Info: (20260812 - Luphia) 專案規則:一個設定只有一個來源（ADR 017 §7 的規則章節）。
+ *
+ * 禁止 `dbValue || process.env.X || …` 這種串接 —— 它讓「現在生效的是哪一個」
+ * 變成要試才知道，而輪替與撤銷正是在那個模糊處失效的。
+ *
+ * 允許 `來源值 || 程式碼保底值`（保底值是編譯期常數，沒有部署差異），
+ * 也允許用狀態機先解析出唯一來源再讀。禁止的只有「同一個運算式並列多個來源」。
+ */
+describe("one setting, one source", () => {
+  /**
+   * Info: (20260812 - Luphia) 抓「兩個**來源**被 || 串在一起」，兩個方向都抓。
+   *
+   * 來源的形狀有兩種:`process.env.X`，或某個物件上的設定鍵
+   * （`nodeEnv.GEMINI_API_KEY`、`setupConfig.MISSION_DIR`…）。
+   * **刻意不列舉變數名** —— 第一版只列了 `setupConfig.`，於是把變數改名成
+   * `nodeEnv` 之後那個違規就繞過去了（實測突變不會紅）。改以「點號後接
+   * 兩個字以上的大寫底線鍵名」認形狀。
+   *
+   * 允許的形狀不會被誤抓:`process.env.X || "字面值"`、
+   * `process.env.X || DEFAULT_CONST`（裸識別字，沒有點號）都不符合。
+   */
+  /**
+   * Info: (20260812 - Luphia) 只針對**有資料庫歸屬的設定**（`SYSTEM_SETTING_KEYS`）。
+   *
+   * 規則要防的傷害是「輪替與撤銷靜默失效」，而那只發生在同一個鍵同時有資料庫與
+   * env 兩個可能來源時。`.env` 專屬的鍵（`DATABASE_URL`、`POSTGRES_*`、
+   * `NEXT_PUBLIC_*`）沒有資料庫歸屬，不會有那個模糊。
+   *
+   * 這也讓**部署精靈**自然落在範圍外:它在資料庫還不存在時讀 `.env.setup` 與
+   * `process.env`（`setup.db.service`、`setup.blockchain.service`…）——
+   * 那是它在**建立**單一來源，不是在多處查找一個已經有家的設定。
+   * 用白名單放行那幾支也可以，但收斂範圍比列舉檔名更貼近規則本身。
+   *
+   * 形狀刻意不列舉變數名:第一版只列了 `setupConfig.`，把變數改名成 `nodeEnv`
+   * 之後違規就繞過去了（實測突變不會紅）。改以「點號後接設定鍵名」認形狀。
+   */
+  const DB_OWNED_KEYS = SYSTEM_SETTING_KEYS.map(
+    (key) => SYSTEM_SETTING_DEFINITIONS[key].envKey,
+  );
+  const sourceOf = (key: string) =>
+    String.raw`(?:process\.env\.${key}|[A-Za-z_$][\w$]*\.${key})`;
+  const CHAINED_SOURCES = new RegExp(
+    DB_OWNED_KEYS.map(
+      (key) => `${sourceOf(key)}\\s*\\|\\|\\s*(?:await\\s+)?${sourceOf(key)}`,
+    ).join("|"),
+  );
+
+  it("should not chain two configuration sources in one expression", () => {
+    const offenders = SCAN_ROOTS.flatMap((segments) => {
+      const root = path.join(process.cwd(), ...segments);
+      return fs
+        .readdirSync(root, { recursive: true })
+        .filter((entry): entry is string => typeof entry === "string")
+        .filter((entry) => entry.endsWith(".ts") || entry.endsWith(".tsx"))
+        .filter((entry) =>
+          CHAINED_SOURCES.test(fs.readFileSync(path.join(root, entry), "utf8")),
+        )
+        .map((entry) => path.join(...segments, entry));
+    });
+
+    expect(offenders).toEqual([]);
   });
 });

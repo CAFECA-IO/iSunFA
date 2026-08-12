@@ -21,7 +21,9 @@
 
 那道隔離不是潔癖，是**防提示詞注入的基礎** —— Executor 處理使用者上傳的憑證內容，即使注入成功也必須穿不過實體網路邊界（ADR 009 的「單向黃金法則」建立在同一個前提上）。
 
-為了取一把金鑰而讓它連上主資料庫，等於把那個安全論證的前提拿掉。所以 Executor 以 `new ChatService(apiKey, { allowSystemSettings: false })` 明示不查設定；`llm_key_resolution.test.ts` 有兩支測試釘住「呼叫次數為 0」與「Executor 確實傳了那個旗標」。
+為了取一把金鑰而讓它連上主資料庫，等於把那個安全論證的前提拿掉。依專案規則「一個設定只有一個來源」（ADR 017 §7 的規則章節），對這個節點而言 `.env` 就是**唯一**來源而不是 fallback：金鑰與 `MISSION_DIR` 都取自 `loadEnvConfig(ENV_PATH)`，刻意不用 `getPriorityEnvConfig()`（那是「`.env.setup` 優先，否則 `.env`」兩個來源，而 `.env.setup` 簽章後會被清空），也不讀 `process.env`（worker 由 `npx tsx` 啟動，沒有任何地方把 `.env` 載進去，`ecosystem.config.json` 只給 `NODE_ENV`）。
+
+Executor 以 `new ChatService(apiKey, { allowSystemSettings: false })` 明示不查設定；`llm_key_resolution.test.ts` 有兩支測試釘住「呼叫次數為 0」與「Executor 確實傳了那個旗標」。
 
 ## 連帶的行為差異
 
