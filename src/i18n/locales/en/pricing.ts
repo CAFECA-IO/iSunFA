@@ -12,13 +12,13 @@ export const pricing = {
    * 保留天數由 FAITH_MEMORY_RETENTION_DAYS 插值，不寫死數字，避免與條款不一致。
    */
   faith_agent_free_tooltip:
-    "On the Free plan, Faith answers each question on its own and keeps no personalised memory. On the Team and Business plans every member gets their own Faith agent that gradually learns how they work.",
+    "Short-term task memory only: Faith follows the context while a task is under way, and keeps nothing once it ends. Long-term memory and feedback learning are exclusive to the Team and Business plans.",
   faith_agent_memory: "Faith AI Agent (with personal memory)",
   faith_agent_memory_tooltip:
-    "Every member gets their own Faith agent that remembers your feedback and preferences, so it fits your way of working better over time. {{days}} days after your subscription ends, we delete what Faith remembers about you to protect your privacy.",
+    "Short-term task memory plus long-term memory: every member gets their own Faith agent that learns from your feedback, remembering your preferences and corrections so it fits your way of working over time. {{days}} days after your subscription ends, we delete the long-term memory to protect your privacy.",
   faith_memory_note_title: "About Faith's personal memory",
   faith_memory_note:
-    "On the cloud Team and Business plans, every member gets their own Faith AI agent. Faith records the feedback and preferences you give it while chatting — the accounts you use most, how you like reports presented, how much detail you want — and gradually learns your needs so its answers fit your way of working. This memory is used only to improve your own experience: it is never shared with other members or other customers, and never used to train shared AI models.",
+    "Faith's memory comes in two layers. Short-term task memory lets it follow the context while a task is under way, and every plan has it. Long-term memory and feedback learning are exclusive to the cloud Team and Business plans: every member gets their own Faith AI agent, which records the feedback and preferences you give it while chatting — the accounts you use most, how you like reports presented, how much detail you want — and gradually learns your needs so its answers fit your way of working. This memory is used only to improve your own experience: it is never shared with other members or other customers, and never used to train shared AI models.",
   faith_memory_note_retention:
     "If you stop subscribing, we keep that memory for {{days}} days — resubscribe within that window and it carries on. After {{days}} days we delete what Faith remembers about you to protect your privacy. You can also ask us to delete it at any time without waiting. The Free plan has no personal memory. See Terms of Service §3.7 and Privacy Policy §5.",
   /**
