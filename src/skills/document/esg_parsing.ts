@@ -162,6 +162,17 @@ export class EsgParsingSkill implements ITaskSkill {
       ];
 
       // Info: (20260522 - Tzuhan) Fetch dynamic coefficients from DB (including our Mock EEIOs)
+      /**
+       * ToDo: (20260812 - Luphia) 外部運算節點不該連得到主資料庫,這裡是兩處例外之一。
+       *
+       * 本檔經 `skills/index.ts` 被 `MissionExecutor` 取用,而這一行是真正的資料庫查詢。
+       * `async_workers/00_async_worker_overview.md` 那句「絕對沒有存取主資料庫的權限」
+       * 因此目前是目標而非事實 —— 而那道隔離是防提示詞注入的基礎。
+       *
+       * 另一處在 `voucher.pipeline.orchestrator`（`getCoefficientById`）,
+       * 兩者主題相同:管線需要資料庫裡的排放係數字典。三條出路與代價見
+       * `documents/engineering_guidelines/known_issues/executor_settings_isolation.md`。
+       */
       const dbCoefficients =
         await EmissionFactorRepo.getAllGlobalCoefficients(prisma);
 

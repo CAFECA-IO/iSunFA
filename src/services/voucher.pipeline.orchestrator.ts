@@ -121,6 +121,22 @@ export class VoucherPipelineOrchestrator {
 
     // Info: (20260526 - Tzuhan) 2. ESG 稅額自動校正 (ESG Tax Auto-Correction)
     if (fileResult.esg && fileResult.esg.coefficientId) {
+      /**
+       * ToDo: (20260812 - Luphia) 外部運算節點不該連得到主資料庫,這裡是兩處例外之一。
+       *
+       * `mission.executor.service` 會走到本函式,而這一行是**真正的資料庫查詢** ——
+       * 於是 `async_workers/00_async_worker_overview.md` 那句「MissionExecutor 絕對沒有
+       * 存取主系統 PostgreSQL 的權限」目前是目標而非事實。那道隔離是防提示詞注入的基礎:
+       * Executor 處理使用者上傳的憑證內容,即使注入成功也必須穿不過實體網路邊界。
+       *
+       * 另一處在 `skills/document/esg_parsing`（`getAllGlobalCoefficients`）,
+       * 兩者主題相同:管線需要資料庫裡的排放係數字典。
+       *
+       * 三條出路與代價見
+       * `documents/engineering_guidelines/known_issues/executor_settings_isolation.md`:
+       * Planner 預先解析進 mission 檔 / 維運節點提供查詢 API / 給運算節點唯讀係數表權限。
+       * 選定之前 `worker_node_isolation.test.ts` 以清單擋住**新增**的耦合。
+       */
       const coef = await EmissionFactorRepo.getCoefficientById(
         fileResult.esg.coefficientId,
       );
@@ -170,6 +186,7 @@ export class VoucherPipelineOrchestrator {
 
     // Info: (20260526 - Tzuhan) 4. 決定性 ESG 碳排運算 (使用換匯後的金額)
     if (fileResult.esg && fileResult.esg.coefficientId) {
+      // ToDo: (20260812 - Luphia) 同上一處的資料庫例外（見本檔前一個 ToDo 區塊）
       const coef = await EmissionFactorRepo.getCoefficientById(
         fileResult.esg.coefficientId,
       );
