@@ -18,8 +18,12 @@ import { MermaidChartType } from "@/constants/mermaid_chart";
  * 2. 反過來,已經把金鑰搬進資料庫、env 不再保留的部署,這三個功能會直接不可用,
  *    而金鑰明明設好了。這三條路徑對應 /admin/pdf_editor 的三個端點。
  *
- * 缺金鑰的錯誤改由 ChatService 在實際呼叫時拋出;訊息仍含 "GEMINI_API_KEY",
- * 因此那三條路由以字串比對辨識此成因的處置行為不變。
+ * 缺金鑰的錯誤改由 ChatService 在實際呼叫時拋出,錯誤帶 `LLM_KEY_MISSING_ERROR_MARKER`;
+ * 那三條路由以 `isLlmKeyMissingError()` 分類並回 `IS_GEMINI_API_KEY_UNDEFINED`。
+ *
+ * Info: (20260812 - Luphia) 這段原本寫「訊息仍含 GEMINI_API_KEY,因此字串比對行為不變」——
+ * 那個機制在同一支 branch 的下一個 commit 就被換掉了,註解沒跟上。
+ * 留著會讓下一個人以為字串比對還在用,甚至為了「保護」那個訊息而不敢改它。
  */
 export class PdfEditorService {
   /**

@@ -31,18 +31,33 @@ export async function processNext() {
   const missionDirPath = path.join(process.cwd(), missionDirBase);
 
   /**
-   * Info: (20260812 - Luphia) 金鑰交給 ChatService 解析,不從 `.env` 檔案預先取。
+   * Info: (20260812 - Luphia) Executor 的金鑰**只從環境取**,刻意不經過
+   * `systemSettingService`（PR review F1）。
    *
-   * 原本讀的是 `getPriorityEnvConfig()`(直接解析 `.env.setup` / `.env` 檔案),
-   * 比 `process.env` 更外層,再把值當「明確傳入」交給 ChatService ——
-   * 於是 Worker 行程完全在系統設定機制之外:管理員在 /admin/settings
-   * 輪替或撤銷金鑰,背景任務照樣用檔案裡的舊值。
+   * `MissionExecutor` 是文件明載「絕對沒有存取主系統 PostgreSQL 資料庫的權限」
+   * 的節點(`async_workers/00_async_worker_overview.md`),而那道隔離不是潔癖 ——
+   * 它是防提示詞注入的基礎:Executor 處理使用者上傳的憑證內容,即使注入成功
+   * 也必須穿不過實體網路邊界。為了取一把金鑰而讓它連上主資料庫,
+   * 等於把那個安全論證的前提拿掉。
    *
-   * 拿掉的那個 `console.warn` 沒有換成別的:金鑰現在由 ChatService 在需要時解析
-   * (資料庫 > 環境變數),這裡無從判斷「缺不缺」—— 而它原本的訊息也只是
-   * 「might fail if ChatService is required」,真正缺的時候 ChatService 會明確拋錯。
+   * 因此這裡維持 `getPriorityEnvConfig()`(讀 `.env.setup` / `.env` 檔案,
+   * 比 `process.env` 更外層)—— 與同一支函式上面取 `MISSION_DIR` 用的是同一個來源,
+   * 不會出現「同一個檔案裡兩種配置來源」。
+   *
+   * 代價要說清楚:**管理員在 /admin/settings 輪替或撤銷金鑰對 Executor 無效**,
+   * 它認的是部署環境裡的那份。這是隔離換來的,不是遺漏 —— 要讓兩者一致,
+   * 得先回答「Executor 到不到得了 DB」那個問題(見該文件與 ADR 009)。
+   *
+   * 帶著金鑰進 ChatService 之後它會短路、不查資料庫(見 ensureClient),
+   * 所以正常路徑上是零 DB 存取。
    */
-  const chatService = new ChatService();
+  const apiKey = setupConfig.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    console.warn(
+      "[MissionExecutor] No LLM API key in the deployment environment. Skills that need the LLM will fail; /admin/settings does not reach this node.",
+    );
+  }
+  const chatService = new ChatService(apiKey);
 
   try {
     const folders = await fs.readdir(missionDirPath, { withFileTypes: true });

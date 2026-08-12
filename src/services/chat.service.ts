@@ -308,16 +308,45 @@ export class ChatService {
   private async ensureClient(): Promise<GoogleGenerativeAI> {
     if (this.genAI) return this.genAI;
 
+    /**
+     * Info: (20260812 - Luphia) 呼叫端明確給了金鑰就**不問資料庫**（PR review F1）。
+     *
+     * 原本 `systemSettingService.get()` 在檢查 `explicitApiKey` 之前就無條件執行,
+     * 於是即使呼叫端已經給了金鑰,也照樣讀一次主資料庫 —— 而 `MissionExecutor`
+     * 是文件明載「絕對沒有存取主系統 PostgreSQL 權限」的節點
+     * (`async_workers/00_async_worker_overview.md`),那道隔離是防提示詞注入的基礎。
+     *
+     * 短路之後,「建構子明確傳入 > 資料庫設定 > 環境變數」這句話才真的成立:
+     * 前者勝出時後面兩者連查都不查。Executor 帶著 env 金鑰進來就是零 DB 存取。
+     *
+     * 這條路徑的 model 取自 env 而非設定 —— 同一個理由:不能為了取模型名稱去讀 DB。
+     */
+    if (this.explicitApiKey) {
+      this.modelName = process.env.MODEL || DEFAULT_GEMINI_MODEL;
+      this.genAI = new GoogleGenerativeAI(this.explicitApiKey);
+      return this.genAI;
+    }
+
     const [settingKey, settingModel] = await Promise.all([
       systemSettingService.get(SystemSettingKey.GEMINI_API_KEY),
       systemSettingService.get(SystemSettingKey.LLM_MODEL),
     ]);
 
-    const key =
-      this.explicitApiKey ||
-      settingKey ||
-      process.env.GEMINI_API_KEY ||
-      process.env.GOOGLE_API_KEY;
+    /**
+     * Info: (20260812 - Luphia) 不再自行落回環境變數（PR review F3/F4）。
+     *
+     * `get()` 已經是四態的:資料庫可信時以資料庫為準、驗簽失敗拒絕服務、
+     * 從未用資料庫保管時才讀 env（`GEMINI_API_KEY` 正是 `LLM_MODEL` 的 `envKey`
+     * 對應的那個鍵，`MODEL` 亦然）。所以這裡再讀一次 env 在每個狀態下都是死碼 ——
+     * **除了它造成傷害的那一個**:管理員刻意清空並簽名（= 撤銷）之後，
+     * DB 回 undefined，這一行會把 env 裡的舊金鑰救回來，撤銷因此無效。
+     *
+     * `GOOGLE_API_KEY` 一併移除:它不在 `SystemSettingKey` 裡，永遠不受 manifest
+     * 簽章涵蓋、也不出現在 /admin/settings —— 能設環境變數的人可以繞過整套
+     * 「全集簽章 + 稽核 + 撤銷」注入一把金鑰。它未記載於 .env.example 與任何文件,
+     * 要用第二把金鑰請走系統設定。
+     */
+    const key = settingKey;
 
     if (!key) {
       /**
@@ -333,7 +362,8 @@ export class ChatService {
       );
     }
 
-    this.modelName = settingModel || process.env.MODEL || DEFAULT_GEMINI_MODEL;
+    // Info: (20260812 - Luphia) 同理不再讀 process.env.MODEL —— LLM_MODEL 的 envKey 就是 MODEL,`get()` 已經試過
+    this.modelName = settingModel || DEFAULT_GEMINI_MODEL;
     this.genAI = new GoogleGenerativeAI(key);
     return this.genAI;
   }

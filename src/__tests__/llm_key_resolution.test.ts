@@ -22,12 +22,27 @@ import {
 import { ChatService } from "@/services/chat.service";
 
 /**
- * Info: (20260812 - Luphia) 讓 ChatService 的解析走到「什麼都拿不到」那條路。
- * 只 mock 系統設定,不 mock ChatService 自己 —— 要驗的正是它實際拋出什麼。
+ * Info: (20260812 - Luphia) 只 mock 系統設定,不 mock ChatService 自己 ——
+ * 要驗的正是它實際解析出哪一把金鑰。
+ *
+ * 取用時必須走 `loadChatService()` 的動態載入:靜態 `import` 會在 `jest.mock`
+ * 註冊之前就把真實的 system_setting 模組綁進 chat.service,那個 mock 就形同不存在。
+ * (實測過:靜態載入時「資料庫優先」那條測試拿到的是 env 的值 ——
+ *  因為跑的是真的 `get()`,它在 EMPTY 狀態下本來就會去讀 env。)
  */
+const settingValues = new Map<string, string>();
+
 jest.mock("@/services/system_setting.service", () => ({
-  systemSettingService: { get: async () => undefined },
+  systemSettingService: {
+    get: async (key: string) => settingValues.get(key),
+  },
 }));
+
+const loadChatService = async () => {
+  jest.resetModules();
+  const loaded = await import("@/services/chat.service");
+  return loaded.ChatService;
+};
 
 /**
  * Info: (20260812 - Luphia) 守住 LLM 金鑰的解析責任歸屬。
@@ -58,6 +73,52 @@ const ENV_KEYS = ["GEMINI_API_KEY", "GOOGLE_API_KEY"] as const;
  * 繞過三態語意(資料庫可信 / 驗簽失敗拒絕服務 / 從未用資料庫保管)。
  */
 const RESOLVER_FILES = ["chat.service.ts"];
+
+/**
+ * Info: (20260812 - Luphia) 掃描面放寬（PR review nit）。
+ *
+ * 原本只掃 `src/services/**`,而一支 route 或 lib helper 直接讀環境變數不會被抓到;
+ * 而且只認 `process.env.X` 這一種字面形式 —— 中括號、解構、單引號全都繞得過。
+ * 契約測試的價值在於擋住「下一個人不知道這個約定」,所以形式覆蓋要寬一點。
+ *
+ * `mission.executor.service.ts` 是刻意的例外:那個節點沒有主資料庫權限
+ * (見該檔註解與 async_workers/00_async_worker_overview.md),它只能讀環境。
+ */
+const SCAN_ROOTS = [
+  ["src", "services"],
+  ["src", "app", "api"],
+  ["src", "lib"],
+];
+
+const ENV_ONLY_FILES = ["mission.executor.service.ts"];
+
+const readsKeyFromEnv = (source: string): boolean =>
+  ENV_KEYS.some(
+    (key) =>
+      source.includes(`process.env.${key}`) ||
+      source.includes(`process.env["${key}"]`) ||
+      source.includes(`process.env['${key}']`) ||
+      new RegExp(`\\{[^}]*\\b${key}\\b[^}]*\\}\\s*=\\s*process\\.env`).test(
+        source,
+      ),
+  );
+
+const scanForKeyReads = (): string[] =>
+  SCAN_ROOTS.flatMap((segments) => {
+    const root = path.join(process.cwd(), ...segments);
+    return fs
+      .readdirSync(root, { recursive: true })
+      .filter((entry): entry is string => typeof entry === "string")
+      .filter((entry) => entry.endsWith(".ts") || entry.endsWith(".tsx"))
+      .filter((entry) => {
+        const base = path.basename(entry);
+        return !RESOLVER_FILES.includes(base) && !ENV_ONLY_FILES.includes(base);
+      })
+      .filter((entry) =>
+        readsKeyFromEnv(fs.readFileSync(path.join(root, entry), "utf8")),
+      )
+      .map((entry) => path.join(...segments, entry));
+  });
 
 /**
  * Info: (20260812 - Luphia) 取出 wrapper 內部 ChatService 的 `explicitApiKey`。
@@ -117,18 +178,7 @@ describe("LLM key resolution stays in ChatService", () => {
    * (`scripts/**` 與 `src/scripts/**` 不在此列:那些在應用程式外執行,讀 env 是對的。)
    */
   it("should keep every service out of the business of reading the key from env", () => {
-    const serviceDir = path.join(process.cwd(), "src", "services");
-    const offenders = fs
-      .readdirSync(serviceDir, { recursive: true })
-      .filter((entry): entry is string => typeof entry === "string")
-      .filter((entry) => entry.endsWith(".ts"))
-      .filter((entry) => !RESOLVER_FILES.includes(entry))
-      .filter((entry) => {
-        const source = fs.readFileSync(path.join(serviceDir, entry), "utf8");
-        return ENV_KEYS.some((key) => source.includes(`process.env.${key}`));
-      });
-
-    expect(offenders).toEqual([]);
+    expect(scanForKeyReads()).toEqual([]);
   });
 });
 
@@ -201,5 +251,79 @@ describe("missing LLM key is a classified cause", () => {
       });
 
     expect(offenders).toEqual([]);
+  });
+});
+
+/**
+ * Info: (20260812 - Luphia) 這支 branch 要修的那件事本身（PR review nit）。
+ *
+ * 前面幾支驗的是**結構**（wrapper 不把 env 值當明確傳入）與**邊界**（什麼都拿不到時拋標記）。
+ * 結構是好的代理，但不是那件事本身 —— 真正要成立的是
+ * 「資料庫有值、環境變數有另一個不同的值 → 實際用的是資料庫那個」。
+ * 少了這條，把 `ensureClient()` 的優先序寫反也不會有任何測試變紅。
+ *
+ * 斷言方式:讀 `ensureClient()` 建出來的 `genAI` 實際帶的金鑰。
+ * SDK 只在建構子存下它，不發網路請求，所以這個斷言不會打到真的 API。
+ */
+describe("resolution order in ensureClient", () => {
+  interface IWithClient {
+    genAI?: { apiKey?: string };
+    modelName?: string;
+  }
+
+  const keyOf = (service: ChatService): string | undefined =>
+    (service as unknown as IWithClient).genAI?.apiKey;
+
+  // Info: (20260812 - Luphia) ensureClient 是私有的，由任何一支需要用戶端的方法觸發
+  const resolve = async (service: ChatService): Promise<void> => {
+    await service.generateRaw("ping").catch(() => undefined);
+  };
+
+  const ENV_KEY = "env-key";
+  const DB_KEY = "db-key";
+
+  beforeEach(() => {
+    settingValues.clear();
+    process.env.GEMINI_API_KEY = ENV_KEY;
+  });
+
+  afterEach(() => {
+    settingValues.clear();
+    delete process.env.GEMINI_API_KEY;
+  });
+
+  it("should prefer the database value over the environment variable", async () => {
+    settingValues.set("GEMINI_API_KEY", DB_KEY);
+    const Service = await loadChatService();
+    const service = new Service();
+
+    await resolve(service);
+
+    expect(keyOf(service)).toBe(DB_KEY);
+  });
+
+  /**
+   * Info: (20260812 - Luphia) 撤銷語意:管理員清空並簽名之後，資料庫回 undefined，
+   * 這時**不得**把環境變數裡的舊金鑰救回來 —— 否則簽下的撤銷等於沒發生。
+   * （`get()` 在 EMPTY/UNAVAILABLE 狀態才會自己去讀 env，那是它的職責。）
+   */
+  it("should not resurrect the env key when the database has none", async () => {
+    const Service = await loadChatService();
+    const service = new Service();
+
+    await resolve(service);
+
+    expect(keyOf(service)).toBeUndefined();
+  });
+
+  // Info: (20260812 - Luphia) 呼叫端明確給的仍然最高，且此路徑不查資料庫（見 F1）
+  it("should let an explicit key win without consulting the database", async () => {
+    settingValues.set("GEMINI_API_KEY", DB_KEY);
+    const Service = await loadChatService();
+    const service = new Service("caller-key");
+
+    await resolve(service);
+
+    expect(keyOf(service)).toBe("caller-key");
   });
 });
