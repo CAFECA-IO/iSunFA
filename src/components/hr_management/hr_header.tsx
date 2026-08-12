@@ -5,7 +5,10 @@ import Link from "next/link";
 import { Bell, Menu, Search, UserCircle2 } from "lucide-react";
 import BrandLogoImage from "@/components/common/brand_logo_image";
 import { useAuth } from "@/contexts/auth_context";
-import { HR_MANAGEMENT_ROUTE } from "@/constants/hr_management";
+import {
+  HR_MANAGEMENT_ROUTE,
+  HR_PENDING_ACTION_CLASS,
+} from "@/constants/hr_management";
 import { useTranslation } from "@/i18n/i18n_context";
 
 interface IHrHeaderProps {
@@ -62,7 +65,9 @@ const HrHeader: FC<IHrHeaderProps> = ({ onToggleSidebar }) => {
           <button
             type="button"
             aria-label={t("hr_management.global_search_placeholder")}
-            className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 md:hidden"
+            title={t("hr_management.value.feature_pending")}
+            disabled
+            className={`rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 md:hidden ${HR_PENDING_ACTION_CLASS}`}
           >
             <Search className="size-5 shrink-0" />
           </button>
@@ -70,17 +75,19 @@ const HrHeader: FC<IHrHeaderProps> = ({ onToggleSidebar }) => {
           <button
             type="button"
             aria-label={t("hr_management.notification_aria")}
-            className="relative rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100"
+            title={t("hr_management.value.feature_pending")}
+            disabled
+            className={`relative rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 ${HR_PENDING_ACTION_CLASS}`}
           >
             <Bell className="size-5 shrink-0" />
-            {/* Info: (20260810 - Julian) 未讀紅點，接上通知 API 前先固定顯示 */}
-            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-orange-500 ring-2 ring-white" />
           </button>
 
           <button
             type="button"
             aria-label={t("hr_management.user_menu_aria")}
-            className="flex items-center gap-2 rounded-xl p-1.5 transition-colors hover:bg-gray-100"
+            title={t("hr_management.value.feature_pending")}
+            disabled
+            className={`flex items-center gap-2 rounded-xl p-1.5 transition-colors hover:bg-gray-100 ${HR_PENDING_ACTION_CLASS}`}
           >
             <UserCircle2 className="h-7 w-7 text-gray-400" />
             {displayName && (

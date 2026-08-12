@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FC } from "react";
 import { ClipboardCheck, FileWarning, Repeat } from "lucide-react";
 import DashboardActionCard, {
@@ -8,6 +9,8 @@ import DashboardActionCard, {
 import {
   DASHBOARD_LIST_LIMIT,
   DOCUMENT_CATEGORY_I18N_KEY,
+  HR_MANAGEMENT_ROUTE,
+  MOVEMENT_HASH_PROBATION,
   PROCESS_TASK_TYPE_I18N_KEY,
   ProcessTaskType,
 } from "@/constants/hr_management";
@@ -70,13 +73,15 @@ const DashboardActionPanel: FC<IDashboardActionPanelProps> = ({
               "hr_management.dashboard.probation_due",
             )}
           </span>
-          {/* ToDo: (20260810 - Julian) 考核表單完成後接上 Modal */}
-          <button
-            type="button"
+          {/*  Info: (20260812 - Julian) 考核表單住在到離職頁，這裡用深連過去，
+           * hash 帶員工 id，落地後直接開那個人的考核表。
+           */}
+          <Link
+            href={`${HR_MANAGEMENT_ROUTE.MOVEMENT}#${MOVEMENT_HASH_PROBATION}-${item.employeeId}`}
             className="rounded-lg bg-orange-50 px-2.5 py-1 text-[11px] font-semibold text-orange-600 transition hover:bg-orange-100"
           >
             {t("hr_management.dashboard.review_action")}
-          </button>
+          </Link>
         </>
       }
     />

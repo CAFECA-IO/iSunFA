@@ -13,10 +13,8 @@ import {
   HR_DASHBOARD_ROLES,
   HrDashboardRole,
 } from "@/constants/hr_management";
-import {
-  MOCK_HR_DOCUMENTS,
-  MOCK_HR_PROCESS_TASKS,
-} from "@/constants/mock_hr_dashboard";
+import { MOCK_HR_DOCUMENTS } from "@/constants/mock_hr_dashboard";
+import { MOCK_HR_MOVEMENT_TASKS } from "@/constants/mock_hr_movement";
 import {
   MOCK_HR_EMPLOYEES,
   MOCK_HR_TODAY,
@@ -67,7 +65,7 @@ const DashboardPageBody: FC = () => {
         {
           employees: MOCK_HR_EMPLOYEES,
           documents: MOCK_HR_DOCUMENTS,
-          tasks: MOCK_HR_PROCESS_TASKS,
+          tasks: MOCK_HR_MOVEMENT_TASKS,
           departments: MOCK_HR_DEPARTMENTS,
           today,
           departmentScopeId,

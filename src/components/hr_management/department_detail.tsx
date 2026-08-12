@@ -8,6 +8,7 @@ import {
   IEmployeeListItem,
 } from "@/interfaces/hr_management";
 import { getEmployeeInitials } from "@/lib/utils/hr_employee";
+import { HR_PENDING_ACTION_CLASS } from "@/constants/hr_management";
 import { useTranslation } from "@/i18n/i18n_context";
 
 interface IDepartmentDetailProps {
@@ -72,7 +73,9 @@ const DepartmentDetail: FC<IDepartmentDetailProps> = ({
         {/* ToDo: (20260810 - Julian) 部門編輯 API 完成後接上 Modal */}
         <button
           type="button"
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-600 transition hover:bg-gray-50"
+          title={t("hr_management.value.feature_pending")}
+          disabled
+          className={`inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-600 transition hover:bg-gray-50 ${HR_PENDING_ACTION_CLASS}`}
         >
           <Pencil className="h-3.5 w-3.5 shrink-0" />
           {t("hr_management.organization.edit")}
