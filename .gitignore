@@ -40,6 +40,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# Info: (20260812 - Luphia) 範本必須進版控 —— 它是「worker 需要哪些鍵」的唯一說明。
+# `.env.example` 是在這條規則之前就被追蹤的，所以不需要例外；新加的範本需要。
+!.env.worker.example
 
 # vercel
 .vercel

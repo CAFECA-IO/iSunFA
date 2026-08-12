@@ -15,6 +15,7 @@ import {
   installWorkerShutdownHandlers,
   isShuttingDown,
 } from "@/lib/worker/shutdown";
+import { ENV_WORKER_PATH, loadWorkerEnvConfig } from "@/services/env.service";
 
 /**
  * Info: (20260130 - Luphia)
@@ -44,7 +45,44 @@ async function startServiceLoop(
   }
 }
 
+/**
+ * Info: (20260812 - Luphia) worker 用自己的 `.env.worker`,不吃系統的 `.env`。
+ *
+ * 在任何 service 被呼叫之前就載進 `process.env`,理由是 worker 端有不少程式碼
+ * 直接讀 `process.env` —— 先載好,它們拿到的就是 worker 自己的設定。
+ *
+ * **不 fallback 到系統 `.env`**:找不到自己的設定檔就大聲說,而不是悄悄改用
+ * web 節點那份。共用會讓一個處理使用者上傳內容的節點看得到 `DATABASE_URL`、
+ * `SECRET_VAULT_MASTER_KEY`、`SUPER_ADMIN_*` —— 那些它完全不該擁有。
+ *
+ * 為什麼缺檔案不直接 `process.exit`:同一個行程裡還有 `TransactionTracker`、
+ * `WalletGuardian`、訂閱續約這些**必須**存取資料庫的任務,它們的設定來自別處
+ * (見 `known_issues/executor_settings_isolation.md` 的「尚未拆分」一節)。
+ * 現在就退出會讓既有部署一升級就整批停擺;所以這裡只大聲記錄,
+ * 真正缺鍵的那個任務會在用到時自己失敗。
+ */
+async function loadWorkerEnv(): Promise<void> {
+  const config = await loadWorkerEnvConfig();
+  const keys = Object.keys(config);
+
+  if (keys.length === 0) {
+    console.error(
+      `[Worker] No worker configuration found at ${ENV_WORKER_PATH}. ` +
+        "The worker does not fall back to the system .env — copy .env.worker.example and fill it in.",
+    );
+    return;
+  }
+
+  keys.forEach((key) => {
+    process.env[key] = config[key];
+  });
+  console.log(`[Worker] Loaded ${keys.length} settings from .env.worker`);
+}
+
 async function runWorker() {
+  // Info: (20260812 - Luphia) 先載自己的設定，再啟動任何迴圈
+  await loadWorkerEnv();
+
   // Info: (20260811 - Luphia) 兩段式中斷 + 結束前釋放 mission 執行鎖
   installWorkerShutdownHandlers("Worker");
 
