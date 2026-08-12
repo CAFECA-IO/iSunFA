@@ -28,6 +28,22 @@ export enum Gender {
   OTHER = "OTHER",
 }
 
+/**
+ * Info: (20260812 - Julian) 性別選項與顯示文字。
+ *
+ * 三個都列出來而不是只給男／女：schema 的 enum 有 `OTHER`，
+ * 畫面只給兩個選項等於讓一個合法值在 UI 上不可表示 ——
+ * 那筆資料仍然存得進去（種子、匯入、API 直呼），只是沒有人選得到，
+ * 而選不到的值最後會由某個地方隨便填一個進去。
+ */
+export const GENDERS: Gender[] = [Gender.FEMALE, Gender.MALE, Gender.OTHER];
+
+export const GENDER_I18N_KEY: Record<Gender, string> = {
+  [Gender.FEMALE]: "hr_management.onboarding.gender_female",
+  [Gender.MALE]: "hr_management.onboarding.gender_male",
+  [Gender.OTHER]: "hr_management.onboarding.gender_other",
+};
+
 // Info: (20260810 - Julian) 篩選器的「全部」選項。
 export const HR_FILTER_ALL = "__ALL__";
 
@@ -541,9 +557,10 @@ export const NOTICE_PERIOD_RULES = [
 ];
 
 /**
- * Info: (20260810 - Julian) 任務範本鍵值。
- * ToDo: (20260812 - Julian) `OnboardingTask` / `OffboardingTask` 都沒有這個欄位，
- * 接 API 前需要在兩張 schema 補上（真實系統通常來自任務範本表）。
+ * Info: (20260810 - Julian) 任務範本鍵值，對應 `OnboardingTask.templateKey`。
+ *
+ * ToDo: (20260812 - Julian) DB 端目前只約束成 `String?`，值域由這裡約定。
+ * 範本改成可由使用者維護時，`templateKey` 要改成指向範本表的外鍵。
  */
 export enum OnboardingTaskKey {
   FORM = "ONBOARDING_FORM",
@@ -552,7 +569,191 @@ export enum OnboardingTaskKey {
   LAPTOP = "ONBOARDING_LAPTOP",
   BADGE = "ONBOARDING_BADGE",
   ORIENTATION = "ONBOARDING_ORIENTATION",
+  DEV_ACCESS = "ONBOARDING_DEV_ACCESS",
+  CRM_ACCESS = "ONBOARDING_CRM_ACCESS",
 }
+
+// Info: (20260812 - Julian) 任務標題。存進 `OnboardingTask.title` 的是這裡解析後的字串
+export const ONBOARDING_TASK_TITLE_I18N_KEY: Record<OnboardingTaskKey, string> =
+  {
+    [OnboardingTaskKey.FORM]: "hr_management.onboarding.task_form",
+    [OnboardingTaskKey.CONTRACT]: "hr_management.onboarding.task_contract",
+    [OnboardingTaskKey.ACCOUNT]: "hr_management.onboarding.task_account",
+    [OnboardingTaskKey.LAPTOP]: "hr_management.onboarding.task_laptop",
+    [OnboardingTaskKey.BADGE]: "hr_management.onboarding.task_badge",
+    [OnboardingTaskKey.ORIENTATION]:
+      "hr_management.onboarding.task_orientation",
+    [OnboardingTaskKey.DEV_ACCESS]: "hr_management.onboarding.task_dev_access",
+    [OnboardingTaskKey.CRM_ACCESS]: "hr_management.onboarding.task_crm_access",
+  };
+
+/**
+ * Info: (20260812 - Julian) 發起報到時的三個自動化開關。
+ *
+ * 它們不是「要不要顯示這一區」，而是**要不要建立那幾筆任務**。
+ * 取消勾選採「不建立」而不是「建立後標 SKIPPED」——
+ * `ProcessTaskStatus.SKIPPED` 在 `isTaskDone` 裡視同完成，
+ * 標 SKIPPED 會讓沒準備電腦的新人顯示 IT 進度 100%。
+ */
+export enum OnboardingTrigger {
+  IT_SETUP = "IT_SETUP",
+  FACILITY_SETUP = "FACILITY_SETUP",
+  PREONBOARDING_FORM = "PREONBOARDING_FORM",
+}
+
+export const ONBOARDING_TRIGGERS: OnboardingTrigger[] = [
+  OnboardingTrigger.IT_SETUP,
+  OnboardingTrigger.FACILITY_SETUP,
+  OnboardingTrigger.PREONBOARDING_FORM,
+];
+
+export const ONBOARDING_TRIGGER_I18N_KEY: Record<OnboardingTrigger, string> = {
+  [OnboardingTrigger.IT_SETUP]: "hr_management.onboarding.trigger_it",
+  [OnboardingTrigger.FACILITY_SETUP]:
+    "hr_management.onboarding.trigger_facility",
+  [OnboardingTrigger.PREONBOARDING_FORM]:
+    "hr_management.onboarding.trigger_form",
+};
+
+/**
+ * Info: (20260812 - Julian) 報到範本。三份的差別只在 IT 要開哪些系統權限。
+ *
+ * ToDo: (20260812 - Julian) 真實系統的範本應該可由 HR 自行維護（範本表 + 明細表），
+ * 這裡先寫死三份，讓「選了不同範本會產生不同任務」這條路徑成立。
+ */
+export enum OnboardingTemplateKey {
+  GENERAL = "GENERAL",
+  ENGINEERING = "ENGINEERING",
+  SALES = "SALES",
+}
+
+export const ONBOARDING_TEMPLATE_KEYS: OnboardingTemplateKey[] = [
+  OnboardingTemplateKey.GENERAL,
+  OnboardingTemplateKey.ENGINEERING,
+  OnboardingTemplateKey.SALES,
+];
+
+export const ONBOARDING_TEMPLATE_I18N_KEY: Record<
+  OnboardingTemplateKey,
+  string
+> = {
+  [OnboardingTemplateKey.GENERAL]: "hr_management.onboarding.template_general",
+  [OnboardingTemplateKey.ENGINEERING]:
+    "hr_management.onboarding.template_engineering",
+  [OnboardingTemplateKey.SALES]: "hr_management.onboarding.template_sales",
+};
+
+/**
+ * Info: (20260812 - Julian) 三份範本共用的六項，陣列順序即畫面順序。
+ *
+ * 排序依負責單位分組（HR → IT → 總務 → 用人部門）而不是依到期日 ——
+ * 這份清單的讀者是各單位窗口，他們找的是「我要做哪幾件」，
+ * 不是「今天該做哪一件」。到期日另外顯示在每一列上。
+ */
+const ONBOARDING_COMMON_TASKS = [
+  {
+    key: OnboardingTaskKey.FORM,
+    category: HandoverCategory.HR,
+    dueOffset: -3,
+    trigger: null,
+  },
+  {
+    key: OnboardingTaskKey.CONTRACT,
+    category: HandoverCategory.HR,
+    dueOffset: 1,
+    trigger: null,
+  },
+  {
+    key: OnboardingTaskKey.ACCOUNT,
+    category: HandoverCategory.IT,
+    dueOffset: 0,
+    trigger: OnboardingTrigger.IT_SETUP,
+  },
+  {
+    key: OnboardingTaskKey.LAPTOP,
+    category: HandoverCategory.IT,
+    dueOffset: 0,
+    trigger: OnboardingTrigger.IT_SETUP,
+  },
+  {
+    key: OnboardingTaskKey.BADGE,
+    category: HandoverCategory.ASSET,
+    dueOffset: 1,
+    trigger: OnboardingTrigger.FACILITY_SETUP,
+  },
+  {
+    key: OnboardingTaskKey.ORIENTATION,
+    category: HandoverCategory.WORK,
+    dueOffset: 3,
+    trigger: null,
+  },
+];
+
+/**
+ * Info: (20260812 - Julian) 職務別的系統權限插在 IT 那一組的最後，而不是接在整份清單後面。
+ *
+ * 位置用 `findIndex` 算而不是寫死索引：共用清單將來多一項或少一項，
+ * 這裡不會安靜地把研發權限插到總務那一組去。
+ */
+const ONBOARDING_IT_GROUP_END =
+  ONBOARDING_COMMON_TASKS.findIndex(
+    (task) => task.key === OnboardingTaskKey.LAPTOP,
+  ) + 1;
+
+const withRoleAccess = (
+  key: OnboardingTaskKey,
+): (typeof ONBOARDING_COMMON_TASKS)[number][] => [
+  ...ONBOARDING_COMMON_TASKS.slice(0, ONBOARDING_IT_GROUP_END),
+  {
+    key,
+    category: HandoverCategory.IT,
+    dueOffset: 1,
+    trigger: OnboardingTrigger.IT_SETUP,
+  },
+  ...ONBOARDING_COMMON_TASKS.slice(ONBOARDING_IT_GROUP_END),
+];
+
+export const ONBOARDING_TEMPLATES: Record<
+  OnboardingTemplateKey,
+  (typeof ONBOARDING_COMMON_TASKS)[number][]
+> = {
+  [OnboardingTemplateKey.GENERAL]: ONBOARDING_COMMON_TASKS,
+  [OnboardingTemplateKey.ENGINEERING]: withRoleAccess(
+    OnboardingTaskKey.DEV_ACCESS,
+  ),
+  [OnboardingTemplateKey.SALES]: withRoleAccess(OnboardingTaskKey.CRM_ACCESS),
+};
+
+/**
+ * Info: (20260812 - Julian) 各分類的預設經辦窗口。
+ *
+ * ToDo: (20260812 - Julian) 真實系統應由部門設定決定（每個部門的 IT / 總務窗口不同），
+ * 且應存 `assigneeId` 而不是姓名 —— 目前 `IProcessTask` 只有姓名，改名就對不上了。
+ */
+export const ONBOARDING_ASSIGNEE_BY_CATEGORY: Record<HandoverCategory, string> =
+  {
+    [HandoverCategory.HR]: "林巧芯",
+    [HandoverCategory.IT]: "許庭瑋",
+    [HandoverCategory.ASSET]: "蔡宜臻",
+    [HandoverCategory.WORK]: "蔡宜臻",
+  };
+
+/**
+ * Info: (20260812 - Julian) 工號格式。自動帶號與格式驗證共用同一份。
+ */
+export const EMPLOYEE_NO_PREFIX = "EMP";
+export const EMPLOYEE_NO_DIGITS = 3;
+export const EMPLOYEE_NO_PATTERN = /^EMP\d{3,}$/;
+
+/**
+ * Info: (20260812 - Julian) Email 與台灣手機號碼的格式檢查。
+ *
+ * 兩者都刻意寬鬆：Email 只擋「明顯不是 Email」的輸入（沒有 @ 或沒有網域），
+ * 真正的有效性只有寄出去才知道；電話允許夾雜 `-` 與空白，
+ * 因為使用者從通訊錄複製過來就是那個樣子，逼他手動清掉不會讓資料更正確。
+ */
+export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const TW_MOBILE_PATTERN = /^09[\d\-\s]{8,12}$/;
 
 // Info: (20260811 - Julian) 離職交接的任務範本鍵值
 export enum OffboardingTaskKey {

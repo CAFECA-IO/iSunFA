@@ -6,10 +6,15 @@ import {
   OFFBOARDING_CLOSING_DAYS,
   OffboardingTaskKey,
   OnboardingTaskKey,
+  OnboardingTemplateKey,
+  ONBOARDING_ASSIGNEE_BY_CATEGORY,
+  ONBOARDING_TASK_TITLE_I18N_KEY,
+  ONBOARDING_TEMPLATES,
   ONBOARDING_UPCOMING_DAYS,
   ProcessTaskStatus,
   ProcessTaskType,
 } from "@/constants/hr_management";
+import { hrManagement as hrManagementZhTw } from "@/i18n/locales/zh_tw/hr_management";
 import {
   MOCK_HR_EMPLOYEES,
   MOCK_HR_TODAY,
@@ -103,52 +108,6 @@ export const MOCK_HR_INCOMING_EMPLOYEES: IEmployeeListItem[] = [
     jobTitleId: "jt-006",
     jobTitle: "業務代表",
     managerName: "劉冠宇",
-  },
-];
-
-/** Info: (20260810 - Julian) 報到任務範本：相對報到日的到期天數、分類與負責人 */
-const ONBOARDING_TEMPLATE = [
-  {
-    key: OnboardingTaskKey.FORM,
-    title: "繳交報到前資料表",
-    category: HandoverCategory.HR,
-    assignee: "林巧芯",
-    dueOffset: -3,
-  },
-  {
-    key: OnboardingTaskKey.CONTRACT,
-    title: "簽署勞動契約",
-    category: HandoverCategory.HR,
-    assignee: "林巧芯",
-    dueOffset: 1,
-  },
-  {
-    key: OnboardingTaskKey.ACCOUNT,
-    title: "開通 Email 與系統帳號",
-    category: HandoverCategory.IT,
-    assignee: "許庭瑋",
-    dueOffset: 0,
-  },
-  {
-    key: OnboardingTaskKey.LAPTOP,
-    title: "領取公務筆電",
-    category: HandoverCategory.IT,
-    assignee: "許庭瑋",
-    dueOffset: 0,
-  },
-  {
-    key: OnboardingTaskKey.BADGE,
-    title: "發放識別證與門禁卡",
-    category: HandoverCategory.ASSET,
-    assignee: "蔡宜臻",
-    dueOffset: 1,
-  },
-  {
-    key: OnboardingTaskKey.ORIENTATION,
-    title: "安排 Orientation 與部門介紹",
-    category: HandoverCategory.WORK,
-    assignee: "蔡宜臻",
-    dueOffset: 3,
   },
 ];
 
@@ -331,6 +290,22 @@ function resolveCompletedDate(dueDate: Date, index: number): string {
 }
 
 /**
+ * Info: (20260812 - Julian) mock 的任務標題直接讀正體中文字典。
+ *
+ * `OnboardingTask.title` 存的是建立當下解析好的字串快照，不是 i18n key ——
+ * 而這份 mock 扮演的是「一個以正體中文建檔的資料庫」，所以它讀 zh_tw。
+ * 這樣改標題只要改字典一處，mock 與 Modal 新建的任務不會各說各話。
+ *
+ * 字典是巢狀物件而 `ONBOARDING_TASK_TITLE_I18N_KEY` 是點分路徑，
+ * 因此這裡只取最後一段當鍵，避免在 mock 裡再寫一份路徑解析。
+ */
+function resolveMockTaskTitle(key: OnboardingTaskKey): string {
+  const leafKey = ONBOARDING_TASK_TITLE_I18N_KEY[key].split(".").pop() ?? "";
+  const titles = hrManagementZhTw.onboarding as Record<string, string>;
+  return titles[leafKey] ?? key;
+}
+
+/**
  * Info: (20260812 - Julian) 報到任務只填共用核心。
  *
  * 交接對象、資產序號、停權時間、完成人這四個欄位已經隨 ADR 019 移到
@@ -343,22 +318,24 @@ function buildOnboardingTasks(employee: IEmployeeListItem): IProcessTask[] {
   const seed = employeeSerial(employee) % 3;
   const skipIndexes = seed === 0 ? [1] : seed === 1 ? [3, 5] : [2];
 
-  return ONBOARDING_TEMPLATE.map((template, index) => {
-    const dueDate = addDays(hireDate, template.dueOffset);
-    const status = resolveStatus(dueDate, index, skipIndexes);
-    return {
-      id: `task-on-${employee.id}-${template.key}`,
-      employeeId: employee.id,
-      taskType: ProcessTaskType.ONBOARDING,
-      title: template.title,
-      status,
-      dueDate: toIsoDate(dueDate),
-      category: template.category,
-      templateKey: template.key,
-      assigneeName: template.assignee,
-      note: null,
-    } satisfies IProcessTask;
-  });
+  return ONBOARDING_TEMPLATES[OnboardingTemplateKey.GENERAL].map(
+    (template, index) => {
+      const dueDate = addDays(hireDate, template.dueOffset);
+      const status = resolveStatus(dueDate, index, skipIndexes);
+      return {
+        id: `task-on-${employee.id}-${template.key}`,
+        employeeId: employee.id,
+        taskType: ProcessTaskType.ONBOARDING,
+        title: resolveMockTaskTitle(template.key),
+        status,
+        dueDate: toIsoDate(dueDate),
+        category: template.category,
+        templateKey: template.key,
+        assigneeName: ONBOARDING_ASSIGNEE_BY_CATEGORY[template.category],
+        note: null,
+      } satisfies IProcessTask;
+    },
+  );
 }
 
 /** Info: (20260810 - Julian) 離職滿這麼多天後，交接視為全部結清 */

@@ -6,6 +6,7 @@ import MovementKanban from "@/components/hr_management/movement/movement_kanban"
 import MovementTaskDrawer from "@/components/hr_management/movement/movement_task_drawer";
 import OffboardingProcessModal from "@/components/hr_management/movement/offboarding_process_modal";
 import OffboardingTable from "@/components/hr_management/movement/offboarding_table";
+import OnboardingInitiateModal from "@/components/hr_management/movement/onboarding_initiate_modal";
 import OnboardingTable from "@/components/hr_management/movement/onboarding_table";
 import ProbationReviewModal from "@/components/hr_management/movement/probation_review_modal";
 import ProbationTable from "@/components/hr_management/movement/probation_table";
@@ -32,11 +33,16 @@ import {
   MOCK_HR_MOVEMENT_TASKS,
   MOCK_HR_RESIGNATION_NOTICES,
 } from "@/constants/mock_hr_movement";
-import { MOCK_HR_DEPARTMENTS } from "@/constants/mock_hr_organization";
 import {
+  MOCK_HR_DEPARTMENTS,
+  MOCK_HR_JOB_TITLES,
+} from "@/constants/mock_hr_organization";
+import {
+  IEmployeeListItem,
   IMovementCase,
   IOffboardingCase,
   IOffboardingForm,
+  IOnboardingInitiateResult,
   IProbationReviewForm,
   IProbationRow,
   IProcessTask,
@@ -125,12 +131,32 @@ const MovementPageBody: FC = () => {
   const [reopenedCaseId, setReopenedCaseId] = useState<string | null>(null);
   const [reviewEmployeeId, setReviewEmployeeId] = useState<string | null>(null);
 
+  /**
+   * Info: (20260812 - Julian) 這一輪發起的新人與他們的報到任務。
+   *
+   * 新人放在與 `MOCK_HR_MOVEMENT_PEOPLE` 併起來的另一份陣列，
+   * 而不是塞回那個模組層級的常數 —— 常數被儀表板等其他頁面共用，
+   * 就地推入會讓一個還沒上班的人被算進全公司在職人數。
+   *
+   * ToDo: (20260812 - Julian) 接 API 後改為送出並重新查詢，
+   * 這兩份暫存狀態一併移除。
+   */
+  const [newHires, setNewHires] = useState<IEmployeeListItem[]>([]);
+  const [newHireTasks, setNewHireTasks] = useState<IProcessTask[]>([]);
+  const [isInitiateOpen, setIsInitiateOpen] = useState<boolean>(false);
+
   const today = useMemo(() => parseIsoDate(MOCK_HR_TODAY), []);
+
+  // Info: (20260812 - Julian) 到離職頁看得到的名冊 = 既有名冊 + 這一輪剛發起的新人
+  const people = useMemo<IEmployeeListItem[]>(
+    () => [...MOCK_HR_MOVEMENT_PEOPLE, ...newHires],
+    [newHires],
+  );
 
   // Info: (20260810 - Julian) 套用勾選覆寫後的任務，所有分頁都吃這一份
   const tasks = useMemo<IProcessTask[]>(
     () =>
-      MOCK_HR_MOVEMENT_TASKS.map((task) => {
+      [...MOCK_HR_MOVEMENT_TASKS, ...newHireTasks].map((task) => {
         const override = taskOverrides[task.id];
         if (override === undefined) return task;
         return {
@@ -140,15 +166,13 @@ const MovementPageBody: FC = () => {
             : ProcessTaskStatus.PENDING,
         };
       }),
-    [taskOverrides],
+    [taskOverrides, newHireTasks],
   );
 
   const departmentOptions = useMemo(
     () =>
-      flattenDepartmentTree(
-        buildDepartmentTree(MOCK_HR_DEPARTMENTS, MOCK_HR_MOVEMENT_PEOPLE),
-      ),
-    [],
+      flattenDepartmentTree(buildDepartmentTree(MOCK_HR_DEPARTMENTS, people)),
+    [people],
   );
 
   // Info: (20260810 - Julian) 負責人選單從任務裡取，避免列出與到離職無關的同仁
@@ -161,12 +185,12 @@ const MovementPageBody: FC = () => {
   );
 
   const allCases = useMemo(() => {
-    const built = buildMovementCases(MOCK_HR_MOVEMENT_PEOPLE, tasks, today);
+    const built = buildMovementCases(people, tasks, today);
     return built.map((item) => ({
       ...item,
       stage: stageOverrides[item.id] ?? item.stage,
     }));
-  }, [tasks, today, stageOverrides]);
+  }, [people, tasks, today, stageOverrides]);
 
   // Info: (20260810 - Julian) 頂部搜尋列同時作用在三個分頁
   const filteredCases = useMemo<IMovementCase[]>(() => {
@@ -201,7 +225,7 @@ const MovementPageBody: FC = () => {
   const offboardingCases = useMemo(() => {
     const built = buildOffboardingCases(
       filteredCases,
-      MOCK_HR_MOVEMENT_PEOPLE,
+      people,
       today,
       MOCK_HR_RESIGNATION_NOTICES,
     );
@@ -210,7 +234,7 @@ const MovementPageBody: FC = () => {
         ? !item.isCompleted
         : item.isCompleted,
     );
-  }, [filteredCases, today, offboardingMode]);
+  }, [filteredCases, people, today, offboardingMode]);
 
   /**
    * Info: (20260811 - Julian) 供 Modal 查閱的離職案件，走的是「未篩選」的名單。
@@ -224,18 +248,18 @@ const MovementPageBody: FC = () => {
       new Map(
         buildOffboardingCases(
           allCases,
-          MOCK_HR_MOVEMENT_PEOPLE,
+          people,
           today,
           MOCK_HR_RESIGNATION_NOTICES,
         ).map((item) => [item.id, item]),
       ),
-    [allCases, today],
+    [allCases, people, today],
   );
 
   // Info: (20260810 - Julian) 已填寫的考核結果覆寫回列，統計才會跟著動
   const probationRows = useMemo<IProbationRow[]>(() => {
     const normalized = keyword.trim().toLowerCase();
-    return buildProbationRows(MOCK_HR_MOVEMENT_PEOPLE, today)
+    return buildProbationRows(people, today)
       .filter(
         (row) =>
           normalized === "" ||
@@ -269,7 +293,7 @@ const MovementPageBody: FC = () => {
           alert: resolveProbationAlert(row.isOverdue, result),
         };
       });
-  }, [today, keyword, probationForms]);
+  }, [people, today, keyword, probationForms]);
 
   const probationMetrics = useMemo(
     () => buildProbationMetrics(probationRows, today),
@@ -340,13 +364,40 @@ const MovementPageBody: FC = () => {
    */
   const handoverCandidates = useMemo(() => {
     if (!openOffboardingCase) return [];
-    return MOCK_HR_MOVEMENT_PEOPLE.filter(
+    return people.filter(
       (person) =>
         person.id !== openOffboardingCase.employeeId &&
         person.leaveDate === null &&
         person.departmentName === openOffboardingCase.departmentName,
     );
-  }, [openOffboardingCase]);
+  }, [people, openOffboardingCase]);
+
+  /**
+   * Info: (20260812 - Julian) 建立成功後直接把使用者送到結果上。
+   *
+   * 三件事一起做：切回概覽的列表模式、清掉搜尋與篩選、打開新案件的抽屜。
+   * 清篩選是必要的 —— 剛才還停在「技術部」的篩選上而新人在業務部，
+   * 建完會什麼都看不到，那與建立失敗長得一模一樣。
+   *
+   * 抽屜只在案件真的存在時才開：到職日超出看板收錄範圍（未來 14 天）
+   * 的新人建得起來，但還不會出現在這一頁 —— Modal 已在送出前提醒過。
+   */
+  const handleInitiateOnboarding = (result: IOnboardingInitiateResult) => {
+    setNewHires((prev) => [...prev, result.employee]);
+    setNewHireTasks((prev) => [...prev, ...result.tasks]);
+    setIsInitiateOpen(false);
+
+    setActiveTab(MovementTab.OVERVIEW);
+    setViewMode(MovementViewMode.LIST);
+    setKeyword("");
+    setDepartmentId(HR_FILTER_ALL);
+    setAssignee(HR_FILTER_ALL);
+    setOnboardingFilter(OnboardingQuickFilter.ALL);
+
+    const caseId = `${ProcessTaskType.ONBOARDING}-${result.employee.id}`;
+    const willAppear = result.tasks.length > 0;
+    if (willAppear) setOpenCaseId(caseId);
+  };
 
   const handleToggleTask = (taskId: string, isDone: boolean) => {
     setTaskOverrides((prev) => ({ ...prev, [taskId]: isDone }));
@@ -434,9 +485,10 @@ const MovementPageBody: FC = () => {
           </div>
 
           <div className="flex shrink-0 flex-wrap items-center gap-2">
-            {/* ToDo: (20260810 - Julian) 發起流程的 API 完成後接上表單 Modal */}
+            {/* ToDo: (20260812 - Julian) 發起離職申請的 Modal 尚未實作 */}
             <button
               type="button"
+              onClick={() => setIsInitiateOpen(true)}
               className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 shadow-sm transition hover:bg-gray-50"
             >
               <UserPlus className="h-4 w-4" />
@@ -603,6 +655,21 @@ const MovementPageBody: FC = () => {
         onClose={() => setOpenCaseId(null)}
         onToggleTask={handleToggleTask}
       />
+
+      {/*
+        Info: (20260812 - Julian) 條件掛載而不是靠 prop 隱藏：
+        關掉再打開要拿到一張乾淨的表單，留著上一次的草稿只會讓人以為已經建過了。
+      */}
+      {isInitiateOpen ? (
+        <OnboardingInitiateModal
+          people={people}
+          departments={departmentOptions}
+          jobTitles={MOCK_HR_JOB_TITLES}
+          today={today}
+          onClose={() => setIsInitiateOpen(false)}
+          onSubmit={handleInitiateOnboarding}
+        />
+      ) : null}
 
       <ProbationReviewModal
         row={reviewRow}

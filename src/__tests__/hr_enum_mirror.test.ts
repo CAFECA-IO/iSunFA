@@ -101,6 +101,19 @@ const UI_ONLY = [
   "OnboardingQuickFilter",
 
   /**
+   * Info: (20260812 - Julian) 發起報到的範本與三個自動化開關。
+   *
+   * 兩者都只決定「建立當下要產生哪幾筆任務」。被存下來的是產生的**結果**
+   * （`OnboardingTask.templateKey`），不是產生它的規則 ——
+   * 把規則也存一份，就會出現「範本說有 7 項、任務只有 5 筆」的第二種真相。
+   *
+   * ToDo: (20260812 - Julian) 範本改成由 HR 自行維護（範本表 + 明細表）之後，
+   * `OnboardingTemplateKey` 會變成那張表的一列，屆時它就不屬於這裡了。
+   */
+  "OnboardingTemplateKey",
+  "OnboardingTrigger",
+
+  /**
    * Info: (20260812 - Julian) 由任務狀態推導出來的顯示狀態，不是被儲存的欄位。
    *
    * 例如 `MovementStage` 是看板欄位（由關鍵日期推得）、`MovementAlertLevel`

@@ -1706,6 +1706,35 @@ model Employee {
   addressCipher    String? @map("address_cipher")
   // Info: (20260811 - Julian) Tier 2 機密：聯絡電話（原為必填，加密後維持必填）
   phoneCipher      String  @map("phone_cipher")
+  /**
+   * Info: (20260812 - Julian) Tier 2 機密：個人信箱（非公司信箱）。
+   *
+   * 與 `email` 分成兩欄而不是共用一欄：公司信箱是複合唯一鍵成員、
+   * 全公司通訊錄都看得到，且隨離職一併停用；個人信箱是一輩子跟著人走的
+   * 識別碼，離職後仍然有效 —— 兩者的敏感度差一個級別，不該同欄。
+   *
+   * 可為 null：只有走「發起新人報到」且勾選寄送預填表單的人才有值。
+   *
+   * ## 它的用途在離職後才最重要
+   *
+   * 報到前那段「還沒有公司帳號」的空窗期只是最先想到的場景。真正撐起
+   * 這一欄的是離職之後 —— 那時公司信箱已停用，但公司仍然有事要找人：
+   * 隔年才寄的扣繳憑單、隨時可能被請求補發的服務證明書（勞基法第 19 條
+   * 對此沒有時效）、遞延獎酬與競業補償金的給付、事後才發現的薪資差額，
+   * 以及回聘。用「報到完成」當清除時點會剛好清在它開始有用的那一天。
+   *
+   * ToDo: (20260812 - Julian) 保存期限錨在 `leaveDate` 而不是
+   * `OnboardingProcess.completedAt`：離職滿 N 年後由排程清空。
+   * N 暫以 5 年為準（比照勞基法第 7 條勞工名卡的保存年限），但要注意
+   * **個人信箱並不在勞工名卡的法定欄位裡** —— 那是類比，不是依據，
+   * 實際年限需法務確認。個資法要求特定目的消失或期限屆滿即應刪除，
+   * 所以這條排程不是選配：沒有它，這一欄就是一個沒有終點的個資。
+   *
+   * ToDo: (20260812 - Julian) 保存到離職後，就必須同時答得出
+   * 「這個信箱當初依什麼特定目的、什麼時候蒐集的」。那是一筆同意紀錄，
+   * 不是 `Employee` 上再加一欄 —— 需要另開一張表或掛在 OnboardingProcess 上。
+   */
+  personalEmailCipher String? @map("personal_email_cipher")
 
   // Info: (20260811 - Julian) 個資封裝參數：演算法版本化，keyVersion 供金鑰輪替時新舊並存
   // Info: (20260811 - Julian) keyVersion 可為 null（整列無密文時），但任一密文有值即必須有值，由 hr_pii_invariant 擋在寫入端
@@ -2011,6 +2040,19 @@ model OnboardingTask {
   title       String            // Info: (20260810 - Julian) 任務名稱 (例: 發放門禁卡、環境設定、勞健保加保)
   description String?
   status      ProcessTaskStatus @default(PENDING)
+  /**
+   * Info: (20260812 - Julian) 這一列是由哪一條範本產生的（例：`ONBOARDING_LAPTOP`）。
+   *
+   * 不是給人看的標籤，是程式用來分類的鍵值：報到列表的「表單 / 設備 / 契約」
+   * 三欄各自看一組 key，離職的資產回收表與三項退保也是。沒有這一欄，
+   * 分類只能回頭比對 `title` 字串 —— 那會在有人改一個字、或換一種語言時整片失效。
+   *
+   * 可為 null：手動新增的臨時任務不屬於任何範本。
+   *
+   * ToDo: (20260812 - Julian) 目前值域由前端的 `OnboardingTaskKey` / `OffboardingTaskKey`
+   * 約定，DB 端不約束。範本改成可由使用者維護時，這裡要改成指向範本表的外鍵。
+   */
+  templateKey String?           @map("template_key")
 
   // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
   accountBookId String      @map("account_book_id")
@@ -2040,6 +2082,8 @@ model OffboardingTask {
   title       String            // Info: (20260810 - Julian) 任務名稱 (例: 收回電腦、繳回門禁卡、勞健保退保)
   description String?
   status      ProcessTaskStatus @default(PENDING)
+  // Info: (20260812 - Julian) 範本鍵值（例：`OFFBOARDING_LAPTOP_RETURN`），語意與限制同 OnboardingTask.templateKey
+  templateKey String?           @map("template_key")
 
   // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
   accountBookId String      @map("account_book_id")

@@ -10,6 +10,8 @@ import {
   MovementAlertReason,
   MovementStage,
   OffboardingModalTab,
+  OnboardingTemplateKey,
+  OnboardingTrigger,
   ProbationMilestone,
   ProbationResult,
   ProbationScoreItem,
@@ -545,4 +547,78 @@ export interface IHandoverGroup {
   category: HandoverCategory;
   tasks: IProcessTask[];
   completedCount: number;
+}
+
+/**
+ * Info: (20260812 - Julian) 發起新人報到的表單。
+ *
+ * 這是人事模組裡**唯一**持有個資明文的型別。`phone` 與 `personalEmail`
+ * 在 ADR 018 是 Tier 2：入庫加密、顯示遮罩。它們在這裡是明文，
+ * 因為建檔那一刻使用者本來就在鍵盤上打明文 —— 但這份表單送出即丟棄，
+ * 之後列表與看板拿到的是 `IEmployeeListItem.maskedPhone`，沒有還原路徑。
+ *
+ * 換句話說：**這個型別只往 API 去，不從 API 回來。**
+ * 想把它存進長期 state、或把它的欄位補進 `IEmployeeListItem` 之前，
+ * 這段註解就是那個決定要先過的關卡。
+ *
+ * `templateId` 用 `OnboardingTemplateKey` 而不是 string：範本決定要建立
+ * 哪幾筆任務，打錯字的後果是新人少了一整組報到關卡而沒有人會發現。
+ */
+export interface IOnboardingInitiateForm {
+  employeeNo: string;
+  name: string;
+  /**
+   * Info: (20260812 - Julian) 初始為 null，不預選任何一個。
+   *
+   * 預選其中一個性別的成本，是它在多數情況下是對的 —— 於是沒有人會發現
+   * 剩下那些情況錯了。必填欄位就讓它空著並擋在送出，那個錯誤才會被看見。
+   */
+  gender: Gender | null;
+  /** Info: (20260812 - Julian) 公務 Email，Tier 3；帳本內唯一 */
+  email: string;
+  /** Info: (20260812 - Julian) 聯絡電話明文，Tier 2 —— 見本介面開頭 */
+  phone: string;
+  departmentId: string;
+  jobTitleId: string;
+  managerId: string;
+  hireDate: string;
+  templateId: OnboardingTemplateKey;
+  /** Info: (20260812 - Julian) 個人信箱明文，Tier 2；只在勾選寄送預填表單時必填 */
+  personalEmail: string;
+  triggers: Record<OnboardingTrigger, boolean>;
+}
+
+/**
+ * Info: (20260812 - Julian) 表單錯誤：欄位 → i18n key，沒有錯誤為 null。
+ *
+ * 存 i18n key 而不是已翻譯的句子，驗證層才不必拿到 `t` ——
+ * 那會讓一個純函式變成要注入翻譯器才能測的東西。
+ *
+ * 逐欄列出而不是 `Partial<Record<keyof IOnboardingInitiateForm, string>>`：
+ * 這樣「哪些欄位可能出錯」是看得見的，新增欄位時編譯器也會要求做決定。
+ */
+export interface IOnboardingInitiateErrors {
+  employeeNo: string | null;
+  name: string | null;
+  gender: string | null;
+  email: string | null;
+  phone: string | null;
+  departmentId: string | null;
+  jobTitleId: string | null;
+  managerId: string | null;
+  hireDate: string | null;
+  personalEmail: string | null;
+}
+
+/**
+ * Info: (20260812 - Julian) 送出後產生的兩樣東西，對應 schema 的建立順序。
+ *
+ * `OnboardingTask.onboardingProcessId` 是必填外鍵（ADR 019 拆表換來的保證），
+ * 因此真實的建立順序是 Employee → OnboardingProcess → OnboardingTask[]，
+ * 不能先生任務。前端這一層還沒有流程物件，但任務已經依附在員工上，
+ * 順序與依賴關係與 API 落地時一致。
+ */
+export interface IOnboardingInitiateResult {
+  employee: IEmployeeListItem;
+  tasks: IProcessTask[];
 }
