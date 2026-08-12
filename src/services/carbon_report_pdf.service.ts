@@ -155,10 +155,29 @@ export class CarbonReportPdfService {
     const squeeze = (value: string): string => value.replace(/\s+/g, "");
     const pages = splitTextByPages(extracted.text).map(squeeze);
 
-    const numbers = entries.map((entry) => {
-      const needle = squeeze(entry.text);
+    /**
+     * Info: (20260812 - Emily) 先跳過目錄自己佔的那幾頁。
+     *
+     * 實測第一版每一條的頁碼都是 1 或 2 —— 因為**目錄頁本身就列著全部的標題**,
+     * 「第一個包含這個標題的頁」永遠是目錄自己。這在事後看很明顯,
+     * 而它產出的是一份每條都指向目錄的目錄。
+     *
+     * 目錄一定在文件最前面(`break-after: page`),所以要跳過的是一段**前綴**:
+     * 從第一頁往後,只要那一頁同時出現 5 個以上不同的標題,就還在目錄裡。
+     * 用前綴而不是全域判斷,後面的內容頁再密也不會被誤判成目錄。
+     */
+    const needles = entries.map((entry) => squeeze(entry.text));
+    const looksLikeToc = (text: string): boolean =>
+      needles.filter((needle) => needle !== "" && text.includes(needle))
+        .length >= 5;
+    let skip = 0;
+    while (skip < pages.length && looksLikeToc(pages[skip])) skip += 1;
+
+    const numbers = needles.map((needle) => {
       if (needle === "") return 0;
-      const index = pages.findIndex((text) => text.includes(needle));
+      const index = pages.findIndex(
+        (text, page) => page >= skip && text.includes(needle),
+      );
       return index === -1 ? 0 : index + 1;
     });
 
