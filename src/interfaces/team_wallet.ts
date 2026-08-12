@@ -1,5 +1,7 @@
 import type {
   BillableFeatureCode,
+  QuotaExceededOption,
+  QuotaWindow,
   SpendSource,
   TeamLedgerAnchorStatus,
   TeamPlanId,
@@ -79,11 +81,11 @@ export interface ISpendResult {
  * 附三條出路所需的全部資訊（等待重置 / 用分配點數 / 用個人錢包）。
  */
 export interface IQuotaExceededPayload {
-  exceeded: "PER_5H" | "PER_WEEK";
+  exceeded: QuotaWindow;
   quota5h: IQuotaWindowStatus;
   quotaWeek: IQuotaWindowStatus;
   allocationBalance: string;
-  options: ("WAIT_RESET" | "USE_ALLOCATION" | "USE_PERSONAL_WALLET")[];
+  options: QuotaExceededOption[];
 }
 
 export interface ILedgerAnchorView {

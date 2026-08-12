@@ -1,11 +1,14 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import ChatInput from '@/components/chat/chat_input';
-import MessageList, { IMessage } from '@/components/chat/message_list';
-import { request } from '@/lib/utils/request';
-import { useAuth } from '@/contexts/auth_context';
-import { useTranslation } from '@/i18n/i18n_context';
+import { useCallback, useEffect, useState } from "react";
+import ChatInput from "@/components/chat/chat_input";
+import MessageList, { IMessage } from "@/components/chat/message_list";
+import QuotaExceededNotice from "@/components/chat/quota_exceeded_notice";
+import { request } from "@/lib/utils/request";
+import { parseQuotaExceededError } from "@/lib/quota/quota_notice";
+import type { IQuotaExceededPayload } from "@/interfaces/team_wallet";
+import { useAuth } from "@/contexts/auth_context";
+import { useTranslation } from "@/i18n/i18n_context";
 
 interface IChatInterfaceProps {
   className?: string;
@@ -18,14 +21,55 @@ export default function ChatInterface({ className }: IChatInterfaceProps = {}) {
   const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const [guestUsage, setGuestUsage] = useState(0);
+  /**
+   * Info: (20260812 - Luphia) 計費主體是團隊（設計書 §5）：帶 teamId 才會進扣費管線，
+   * 不帶則後端視為訪客試用。取第一個所屬團隊——費思是浮動視窗，沒有團隊選擇器，
+   * 而目前一位用戶的所屬團隊即其計費歸屬；查無團隊時維持不計費路徑。
+   */
+  const [teamId, setTeamId] = useState<string | null>(null);
+  // Info: (20260812 - Luphia) 額度用罄的 402 payload：非 null 即鎖住輸入並顯示重置倒數
+  const [quotaExceeded, setQuotaExceeded] =
+    useState<IQuotaExceededPayload | null>(null);
+  /**
+   * Info: (20260812 - Luphia) 倒數歸零後解鎖但不撤掉卡片：卡片改顯示「已恢復」，
+   * 由下一次送出訊息才清掉。這樣「額度回來了」是看得見的狀態轉換，而非畫面靜靜消失。
+   */
+  const [quotaRecovered, setQuotaRecovered] = useState(false);
 
   // Info: (20260105 - Luphia) Load usage from localStorage on mount
   useEffect(() => {
-    const usage = parseInt(localStorage.getItem('guest_usage') || '0', 10);
+    const usage = parseInt(localStorage.getItem("guest_usage") || "0", 10);
     setGuestUsage(usage);
   }, []);
 
-  const handleSend = async (text: string, file: File | null, tags: string[]) => {
+  useEffect(() => {
+    if (!user) {
+      setTeamId(null);
+      return;
+    }
+    const fetchTeamId = async () => {
+      try {
+        const response = await request<{ payload: { id: string }[] | null }>(
+          "/api/v1/user/team",
+        );
+        setTeamId(response.payload?.[0]?.id ?? null);
+      } catch (error) {
+        // Info: (20260812 - Luphia) 取不到團隊不阻斷對話：後端會以訪客路徑處理（限流但不扣點）
+        console.error("Failed to resolve team for faith chat:", error);
+        setTeamId(null);
+      }
+    };
+    fetchTeamId();
+  }, [user]);
+
+  // Info: (20260812 - Luphia) 倒數歸零即解除輸入鎖，用戶不需重整頁面
+  const handleQuotaReset = useCallback(() => setQuotaRecovered(true), []);
+
+  const handleSend = async (
+    text: string,
+    file: File | null,
+    tags: string[],
+  ) => {
     // Info: (20260105 - Luphia) Check Guest Limit
     if (!user) {
       if (guestUsage >= 5) {
@@ -33,57 +77,83 @@ export default function ChatInterface({ className }: IChatInterfaceProps = {}) {
       }
       const newUsage = guestUsage + 1;
       setGuestUsage(newUsage);
-      localStorage.setItem('guest_usage', newUsage.toString());
+      localStorage.setItem("guest_usage", newUsage.toString());
     }
 
     // Info: (20260104 - Luphia) 1. Create User Message
     const fileUrl = file ? URL.createObjectURL(file) : undefined;
     const userMsg: IMessage = {
-      role: 'user',
+      role: "user",
       content: text,
       image: fileUrl,
       mimeType: file?.type,
-      tags
+      tags,
     };
     setMessages((prev) => [...prev, userMsg]);
     setLoading(true);
+    // Info: (20260812 - Luphia) 重新送出即撤掉上一輪的額度卡片，避免舊倒數殘留在畫面上
+    setQuotaExceeded(null);
+    setQuotaRecovered(false);
 
     try {
-      // Info: (20260104 - Luphia) 2. Convert File to Base64 if exists
-      let base64Data = null;
+      /**
+       * Info: (20260104 - Luphia) 2. Convert File to Base64 if exists
+       * Info: (20260812 - Luphia) 無附件時必須是 undefined 而非 null：
+       * faithChatSchema 的 `file` 是 z.string().optional()，只放行 undefined，
+       * 送 null 會讓每一則純文字訊息都被擋在 VL_SCHEMA_ERROR（JSON 不會省略 null 欄位）。
+       */
+      let base64Data: string | undefined;
       if (file) {
         base64Data = await new Promise<string>((resolve) => {
           const reader = new FileReader();
           reader.onloadend = () => {
             const result = reader.result as string;
-            resolve(result.split(',')[1]);
+            resolve(result.split(",")[1]);
           };
           reader.readAsDataURL(file);
         });
       }
 
       // Info: (20260104 - Luphia) 3. Call API
-      const response = await request<{ payload: { reply: string } }>('/api/v1/chat', {
-        method: 'POST',
-        body: JSON.stringify({
-          message: text,
-          tags,
-          file: base64Data,
-          mimeType: file?.type,
-
-        }),
-      });
+      const response = await request<{ payload: { reply: string } }>(
+        "/api/v1/chat",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            message: text,
+            tags,
+            file: base64Data,
+            mimeType: file?.type,
+            teamId: teamId ?? undefined,
+            /**
+             * Info: (20260812 - Luphia) 冪等鍵的業務主鍵（設計書 §5.3）：
+             * 同一則訊息重送不會重複扣點。
+             */
+            clientMessageId: crypto.randomUUID(),
+          }),
+        },
+      );
 
       // Info: (20260104 - Luphia) 4. Add AI Response
       setMessages((prev) => [
         ...prev,
-        { role: 'model', content: response.payload.reply },
+        { role: "model", content: response.payload.reply },
       ]);
     } catch (error) {
-      console.error('Chat error:', error);
+      /**
+       * Info: (20260812 - Luphia) 額度用罄（402 / TW000001）不是「系統錯誤」：
+       * 走專屬提示（重置倒數 + 導購），不要與通用錯誤文案混為一談，
+       * 否則用戶只會不斷重試同一句話。
+       */
+      const quotaPayload = parseQuotaExceededError(error);
+      if (quotaPayload) {
+        setQuotaExceeded(quotaPayload);
+        return;
+      }
+      console.error("Chat error:", error);
       setMessages((prev) => [
         ...prev,
-        { role: 'model', content: '抱歉，發生錯誤，請稍後再試。' },
+        { role: "model", content: t("chat.generic_error") },
       ]);
     } finally {
       setLoading(false);
@@ -93,16 +163,32 @@ export default function ChatInterface({ className }: IChatInterfaceProps = {}) {
   const isGuestLimitReached = !user && guestUsage >= 5;
 
   return (
-    <div className={`flex flex-col bg-gray-50 relative z-[9999] ${className || 'h-[calc(100vh-64px)]'}`}>
+    <div
+      className={`relative z-[9999] flex flex-col bg-gray-50 ${className || "h-[calc(100vh-64px)]"}`}
+    >
       {!user && !authLoading && (
-        <div className={`px-4 py-2 text-sm text-center border-b ${isGuestLimitReached ? 'bg-red-50 text-red-800 border-red-100' : 'bg-yellow-50 text-yellow-800 border-yellow-100'}`}>
-          {isGuestLimitReached ? t('chat.guest_limit_reached') : t('chat.login_warning')}
+        <div
+          className={`border-b px-4 py-2 text-center text-sm ${isGuestLimitReached ? "border-red-100 bg-red-50 text-red-800" : "border-yellow-100 bg-yellow-50 text-yellow-800"}`}
+        >
+          {isGuestLimitReached
+            ? t("chat.guest_limit_reached")
+            : t("chat.login_warning")}
         </div>
       )}
       <MessageList messages={messages} loading={loading} />
+      {quotaExceeded && (
+        <QuotaExceededNotice
+          payload={quotaExceeded}
+          onReset={handleQuotaReset}
+        />
+      )}
       <ChatInput
         onSend={handleSend}
-        disabled={loading || isGuestLimitReached}
+        disabled={
+          loading ||
+          isGuestLimitReached ||
+          (Boolean(quotaExceeded) && !quotaRecovered)
+        }
       />
     </div>
   );

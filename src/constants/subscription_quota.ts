@@ -17,6 +17,30 @@ export const WEEK_SEC = 7 * 24 * 60 * 60;
  */
 export const WEEK_ANCHOR_EPOCH_SEC = 1767542400;
 
+/**
+ * Info: (20260812 - Luphia) 雙視窗識別碼（402 payload 的 `exceeded`）。
+ * 原先以字面字串散落於 spend.service 與前端判斷，違反 CLAUDE.md §3「拒絕魔法字串」，
+ * 收斂至此作為唯一來源；前端據此決定倒數要讀哪一個視窗的 resetAt。
+ */
+export const QUOTA_WINDOW = {
+  PER_5H: "PER_5H",
+  PER_WEEK: "PER_WEEK",
+} as const;
+
+export type QuotaWindow = (typeof QUOTA_WINDOW)[keyof typeof QUOTA_WINDOW];
+
+/**
+ * Info: (20260812 - Luphia) 額度用罄時 402 payload 揭露的出路（設計書 §5 三條出路）。
+ */
+export const QUOTA_EXCEEDED_OPTION = {
+  WAIT_RESET: "WAIT_RESET",
+  USE_ALLOCATION: "USE_ALLOCATION",
+  USE_PERSONAL_WALLET: "USE_PERSONAL_WALLET",
+} as const;
+
+export type QuotaExceededOption =
+  (typeof QUOTA_EXCEEDED_OPTION)[keyof typeof QUOTA_EXCEEDED_OPTION];
+
 // Info: (20260807 - Luphia) 訂閱方案僅適用團隊三階（PLAN.PERSONAL 不參與團隊訂閱）
 export const TEAM_PLAN = {
   FREE: PLAN.FREE,

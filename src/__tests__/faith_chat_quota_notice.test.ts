@@ -1,0 +1,160 @@
+import { describe, it, expect } from "@jest/globals";
+import {
+  FIVE_HOURS_SEC,
+  QUOTA_EXCEEDED_OPTION,
+  QUOTA_WINDOW,
+} from "@/constants/subscription_quota";
+import type { IQuotaExceededPayload } from "@/interfaces/team_wallet";
+import {
+  describeQuotaCountdown,
+  isQuotaExceededPayload,
+  parseQuotaExceededError,
+  resolveQuotaResetAt,
+} from "@/lib/quota/quota_notice";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { ApiError as RequestApiError } from "@/lib/utils/request";
+
+/**
+ * Info: (20260812 - Luphia) 費思對話「點數用罄」前端提示的純函式層測試。
+ * 這一層決定用戶看到的是「額度用完，X 後恢復 + 導購」還是通用錯誤文案，
+ * 因此重點在：只認得自己的錯誤碼、payload 形狀不符時 fail closed、倒數數學正確。
+ */
+
+const NOW_SEC = 1786500000;
+
+const payload = (
+  overrides: Partial<IQuotaExceededPayload> = {},
+): IQuotaExceededPayload => ({
+  exceeded: QUOTA_WINDOW.PER_5H,
+  quota5h: { limit: "100", used: "100", resetAt: NOW_SEC + FIVE_HOURS_SEC },
+  quotaWeek: { limit: "750", used: "312", resetAt: NOW_SEC + 3 * 86400 },
+  allocationBalance: "0",
+  options: [
+    QUOTA_EXCEEDED_OPTION.WAIT_RESET,
+    QUOTA_EXCEEDED_OPTION.USE_PERSONAL_WALLET,
+  ],
+  ...overrides,
+});
+
+const quotaApiError = (body: unknown) =>
+  new RequestApiError("Team subscription quota exceeded", 402, body);
+
+describe("parseQuotaExceededError", () => {
+  it("extracts the payload from a 402 TW_QUOTA_EXCEEDED response", () => {
+    const error = quotaApiError({
+      success: false,
+      errorCode: API_ERRORS.TW_QUOTA_EXCEEDED.code,
+      payload: payload(),
+    });
+
+    expect(parseQuotaExceededError(error)).toEqual(payload());
+  });
+
+  it("ignores other API errors so they keep the generic error copy", () => {
+    const error = quotaApiError({
+      success: false,
+      errorCode: API_ERRORS.IS_LLM_QUOTA_EXCEEDED.code,
+      payload: payload(),
+    });
+
+    expect(parseQuotaExceededError(error)).toBeNull();
+  });
+
+  it("ignores non-API errors (network / thrown Error)", () => {
+    expect(parseQuotaExceededError(new Error("boom"))).toBeNull();
+    expect(parseQuotaExceededError(undefined)).toBeNull();
+  });
+
+  /**
+   * Info: (20260812 - Luphia) fail closed：payload 缺欄位時回 null 而非半套物件。
+   * 放行半套物件的後果是畫面直接寫出「將於 NaN:NaN:NaN 後恢復」。
+   */
+  it("rejects a malformed payload instead of rendering a broken countdown", () => {
+    const error = quotaApiError({
+      errorCode: API_ERRORS.TW_QUOTA_EXCEEDED.code,
+      payload: { exceeded: QUOTA_WINDOW.PER_5H, quota5h: { limit: "100" } },
+    });
+
+    expect(parseQuotaExceededError(error)).toBeNull();
+  });
+
+  it("rejects unknown window ids and unknown options", () => {
+    expect(isQuotaExceededPayload(payload())).toBe(true);
+    expect(
+      isQuotaExceededPayload({ ...payload(), exceeded: "PER_MONTH" }),
+    ).toBe(false);
+    expect(
+      isQuotaExceededPayload({ ...payload(), options: ["FREE_LUNCH"] }),
+    ).toBe(false);
+  });
+
+  it("rejects a resetAt that is not a finite number", () => {
+    const broken = payload();
+    expect(
+      isQuotaExceededPayload({
+        ...broken,
+        quota5h: { ...broken.quota5h, resetAt: Number.NaN },
+      }),
+    ).toBe(false);
+    expect(
+      isQuotaExceededPayload({
+        ...broken,
+        quota5h: { ...broken.quota5h, resetAt: "1786518000" },
+      }),
+    ).toBe(false);
+  });
+});
+
+describe("resolveQuotaResetAt", () => {
+  it("reads the 5h window when the 5h window is the one exceeded", () => {
+    expect(resolveQuotaResetAt(payload())).toBe(NOW_SEC + FIVE_HOURS_SEC);
+  });
+
+  /**
+   * Info: (20260812 - Luphia) 週額度用罄時報 5h 的 resetAt 會讓用戶白等一場——
+   * 5 小時後回來仍然被擋。
+   */
+  it("reads the week window when the week quota is the one exceeded", () => {
+    expect(
+      resolveQuotaResetAt(payload({ exceeded: QUOTA_WINDOW.PER_WEEK })),
+    ).toBe(NOW_SEC + 3 * 86400);
+  });
+});
+
+describe("describeQuotaCountdown", () => {
+  it("breaks the remaining seconds into d/h/m/s", () => {
+    expect(describeQuotaCountdown(NOW_SEC + 3661, NOW_SEC)).toEqual({
+      expired: false,
+      totalSeconds: 3661,
+      days: 0,
+      hours: 1,
+      minutes: 1,
+      seconds: 1,
+    });
+  });
+
+  it("separates days so a week-long wait stays readable", () => {
+    const countdown = describeQuotaCountdown(
+      NOW_SEC + 3 * 86400 + 7200,
+      NOW_SEC,
+    );
+    expect(countdown.days).toBe(3);
+    expect(countdown.hours).toBe(2);
+  });
+
+  it("clamps a past resetAt to expired instead of counting backwards", () => {
+    const countdown = describeQuotaCountdown(NOW_SEC - 10, NOW_SEC);
+    expect(countdown).toEqual({
+      expired: true,
+      totalSeconds: 0,
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+    });
+  });
+
+  it("flags the exact reset second as expired so the input unlocks", () => {
+    expect(describeQuotaCountdown(NOW_SEC, NOW_SEC).expired).toBe(true);
+  });
+});

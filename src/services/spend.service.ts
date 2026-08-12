@@ -1,5 +1,7 @@
 import {
   BillableFeatureCode,
+  QUOTA_EXCEEDED_OPTION,
+  QUOTA_WINDOW,
   SPEND_SOURCE,
   TEAM_PLAN,
   TEAM_SUBSCRIPTION_STATUS,
@@ -202,7 +204,8 @@ export async function spendCredits(
     // Info: (20260807 - Luphia) 第三層：皆不足 → 402，payload 附三條出路的完整資訊
     const allocation = await teamWalletRepo.getAllocation(teamId, userId);
     const payload: IQuotaExceededPayload = {
-      exceeded: used5h + cost > limit5h ? "PER_5H" : "PER_WEEK",
+      exceeded:
+        used5h + cost > limit5h ? QUOTA_WINDOW.PER_5H : QUOTA_WINDOW.PER_WEEK,
       quota5h: {
         limit: limit5h.toString(),
         used: used5h.toString(),
@@ -214,7 +217,10 @@ export async function spendCredits(
         resetAt: getResetAtWeek(nowSec),
       },
       allocationBalance: (allocation?.balance ?? BigInt(0)).toString(),
-      options: ["WAIT_RESET", "USE_PERSONAL_WALLET"],
+      options: [
+        QUOTA_EXCEEDED_OPTION.WAIT_RESET,
+        QUOTA_EXCEEDED_OPTION.USE_PERSONAL_WALLET,
+      ],
     };
     throw new QuotaExceededError(API_ERRORS.TW_QUOTA_EXCEEDED, payload);
   });
