@@ -10,6 +10,8 @@ import {
   CarbonChatPanelSizeEnum,
 } from "@/constants/carbon_chatbot";
 import { useTranslation } from "@/i18n/i18n_context";
+import { useAuth } from "@/contexts/auth_context";
+import { WalletCustodyType } from "@/constants/auth_provider";
 import { ChatSidebar } from "@/components/carbon_chatbot/chat_sidebar";
 import { ChatArea } from "@/components/carbon_chatbot/chat_area";
 import { ChatInput } from "@/components/carbon_chatbot/chat_input";
@@ -31,6 +33,22 @@ const RecordTabModal = dynamic(
 
 export default function CarbonChatbotPage() {
   const { t } = useTranslation();
+  // Info: (20260812 - Luphia) custody 決定解鎖說明給的是哪一種保證（見下方 unlock 提示）
+  const { user, loading: authLoading } = useAuth();
+
+  /**
+   * Info: (20260812 - Luphia) custody 未知時不給任何保證、也不讓解鎖成立（PR review P-2）。
+   *
+   * `user?.custody` 在 `/auth/me` 回來之前是 undefined,而原本兩處都寫成
+   * 「不是 CUSTODIAL 就當 passkey」—— 於是託管使用者在那個窗口看到的是
+   * **passkey 那句保證**（「以裝置的安全金鑰進行端對端加密」),
+   * 而 ADR 016 補充明寫「在使用者按下解鎖之前就要講清楚」。
+   *
+   * 按下去更糟:走 passkey 派生 → 開出一個永遠不會成功的系統對話框,
+   * 正是這批修正要消滅的 bug。未知時倒向「不給保證」而不是「給較強的保證」。
+   */
+  const custodyKnown = !authLoading && user?.custody !== undefined;
+  const isCustodial = user?.custody === WalletCustodyType.CUSTODIAL;
   const {
     sessionsList,
     activeSession,
@@ -45,6 +63,7 @@ export default function CarbonChatbotPage() {
     isTyping,
     isLoading,
     isUnlocked,
+    unlockError,
     initializeChat,
     hasMoreHistory,
     isLoadingHistory,
@@ -192,16 +211,39 @@ export default function CarbonChatbotPage() {
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
             <FileLock2 className="h-12 w-12 text-gray-300" />
+            {/*
+              Info: (20260812 - Luphia) 這裡也不能對託管帳號說「以裝置金鑰端對端加密」——
+              與下方 unlock 提示同一個理由(見 requestPrfSecret)。上一版只改了聊天區那句,
+              漏了報告區這句,等於揭露只做一半。
+            */}
             <p className="max-w-sm text-sm text-gray-500">
-              {t("carbon_chatbot.report_locked_hint")}
+              {!custodyKnown
+                ? t("carbon_chatbot.custody_loading")
+                : isCustodial
+                  ? t("carbon_chatbot.report_locked_hint_custodial")
+                  : t("carbon_chatbot.report_locked_hint")}
             </p>
             <button
               type="button"
               onClick={initializeChat}
-              className="rounded-full bg-[#ff5a00] px-6 py-3 text-sm font-bold text-white shadow-md shadow-orange-500/20 transition-colors hover:bg-[#e04f00] focus:outline-none"
+              disabled={!custodyKnown}
+              className="rounded-full bg-[#ff5a00] px-6 py-3 text-sm font-bold text-white shadow-md shadow-orange-500/20 transition-colors hover:bg-[#e04f00] focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
               {t("carbon_chatbot.unlock_button")}
             </button>
+            {/*
+              Info: (20260812 - Luphia) 解鎖失敗的原因顯示在這裡。
+              原本失敗只 appendMessageLocally() 到聊天區,而那個區塊在解鎖前還鎖著 ——
+              訊息一則都看不到,使用者的體驗是「點了完全沒有反應」。
+            */}
+            {unlockError ? (
+              <p
+                role="alert"
+                className="max-w-sm text-sm font-medium text-[#c2410c]"
+              >
+                {unlockError}
+              </p>
+            ) : null}
           </div>
         )}
 
@@ -286,16 +328,39 @@ export default function CarbonChatbotPage() {
         ) : (
           // Info: (20260712 - Luphia) 進入時需一次手勢解鎖加密金鑰(PRF)，之後才由 AI 前置作業回傳招呼詞
           <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
+            {/*
+              Info: (20260812 - Luphia) 託管帳號看到的是不同的保證。
+              那些帳號的加密金鑰由伺服器派生（見 requestPrfSecret），沿用 passkey 那句
+              「以裝置的安全金鑰進行端對端加密」會給出一個它們沒有的承諾。
+            */}
             <p className="max-w-sm text-sm text-gray-500">
-              {t("carbon_chatbot.unlock_hint")}
+              {!custodyKnown
+                ? t("carbon_chatbot.custody_loading")
+                : isCustodial
+                  ? t("carbon_chatbot.unlock_hint_custodial")
+                  : t("carbon_chatbot.unlock_hint")}
             </p>
             <button
               type="button"
               onClick={initializeChat}
-              className="rounded-full bg-[#ff5a00] px-6 py-3 text-sm font-bold text-white shadow-md shadow-orange-500/20 transition-colors hover:bg-[#e04f00] focus:outline-none"
+              disabled={!custodyKnown}
+              className="rounded-full bg-[#ff5a00] px-6 py-3 text-sm font-bold text-white shadow-md shadow-orange-500/20 transition-colors hover:bg-[#e04f00] focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
               {t("carbon_chatbot.unlock_button")}
             </button>
+            {/*
+              Info: (20260812 - Luphia) 解鎖失敗的原因顯示在這裡。
+              原本失敗只 appendMessageLocally() 到聊天區,而那個區塊在解鎖前還鎖著 ——
+              訊息一則都看不到,使用者的體驗是「點了完全沒有反應」。
+            */}
+            {unlockError ? (
+              <p
+                role="alert"
+                className="max-w-sm text-sm font-medium text-[#c2410c]"
+              >
+                {unlockError}
+              </p>
+            ) : null}
           </div>
         )}
       </CarbonChatWidget>

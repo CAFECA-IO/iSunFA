@@ -1532,13 +1532,26 @@ model UserEncryptionKey {
   // Info: (20260712 - Luphia) 對外公開的加密主公鑰（供他人以 ECIES 加密給此用戶）
   encryptionPublicKey String @map("encryption_public_key")
 
-  // Info: (20260712 - Luphia) 以 passkey PRF 派生金鑰包裝後的主私鑰（僅密文入庫，伺服器無法解開）
+  /**
+   * Info: (20260712 - Luphia) 以 passkey PRF 派生金鑰包裝後的主私鑰（僅密文入庫，伺服器無法解開）
+   *
+   * Info: (20260812 - Luphia) 「伺服器無法解開」**只對 passkey 列成立**。
+   * 託管帳號（第三方登入）的包裝金鑰由伺服器以保險庫主密鑰派生（見 ADR 016 補充），
+   * 那些列平台有能力解開。哪一種請看 `algorithm` —— 它就是為此而存在。
+   */
   wrappedPrivateKey String @map("wrapped_private_key") @db.Text
 
   // Info: (20260712 - Luphia) PRF 派生所需的 salt（類 hdwallet 的線索之一，供回推包裝金鑰）
   prfSalt String @map("prf_salt")
 
-  // Info: (20260712 - Luphia) 包裝/派生演算法標記（版本化）
+  /**
+   * Info: (20260712 - Luphia) 包裝/派生演算法標記（版本化）
+   *
+   * Info: (20260812 - Luphia) 值域見 `src/constants/chatroom_key.ts`：
+   * passkey 列為 `WebAuthnPRF-…`（即此處的預設值，既有列都靠它寫入，不可更動），
+   * 託管列為 `CustodialPRF-v1-…`。解包前會比對它與當下的 custody，
+   * 不一致即拒絕解包並要求金鑰移轉 —— 否則 custody 翻轉會靜默毀掉那些對話。
+   */
   algorithm String @default("WebAuthnPRF-HKDF-AES-256-GCM")
 
   createdAt DateTime @default(now()) @map("created_at")
