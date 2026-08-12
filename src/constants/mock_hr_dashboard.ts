@@ -1,20 +1,10 @@
-import {
-  DocumentCategory,
-  EmployeeStatus,
-  ProcessTaskStatus,
-  ProcessTaskType,
-} from "@/constants/hr_management";
+import { DocumentCategory, EmployeeStatus } from "@/constants/hr_management";
 import {
   MOCK_HR_EMPLOYEES,
   MOCK_HR_TODAY,
 } from "@/constants/mock_hr_employees";
-import { IEmployeeDocument, IProcessTask } from "@/interfaces/hr_management";
-import {
-  addDays,
-  differenceInDays,
-  parseIsoDate,
-  toIsoDate,
-} from "@/lib/utils/hr_date";
+import { IEmployeeDocument } from "@/interfaces/hr_management";
+import { addDays, parseIsoDate, toIsoDate } from "@/lib/utils/hr_date";
 
 /**
  * ToDo: (20260810 - Julian) 待 `/api/v1/hr/document`、`/api/v1/hr/process_task`
@@ -89,81 +79,9 @@ export const MOCK_HR_DOCUMENTS: IEmployeeDocument[] =
     return documents;
   });
 
-/** Info: (20260810 - Julian) 報到勾稽項目：名稱與相對報到日的到期天數 */
-const ONBOARDING_TASKS = [
-  { title: "發放筆記型電腦與門禁卡", dueOffset: 1 },
-  { title: "開通系統帳號與郵件信箱", dueOffset: 2 },
-  { title: "繳交勞健保與扶養資料", dueOffset: 5 },
-];
-
-/** Info: (20260810 - Julian) 離職交接項目：相對離職日的天數，負值代表離職前要完成 */
-const OFFBOARDING_TASKS = [
-  { title: "收回公司設備與門禁卡", dueOffset: -1 },
-  { title: "完成工作交接文件", dueOffset: -5 },
-  { title: "辦理勞健保退保", dueOffset: 3 },
-];
-
-/** Info: (20260810 - Julian) 只有近 30 天報到或離職的人還會有未完成任務 */
-const ACTIVE_PROCESS_WINDOW_DAYS = 30;
-
-export const MOCK_HR_PROCESS_TASKS: IProcessTask[] = MOCK_HR_EMPLOYEES.flatMap(
-  (employee, employeeIndex) => {
-    const tasks: IProcessTask[] = [];
-
-    const hiredDaysAgo = differenceInDays(
-      parseIsoDate(employee.hireDate),
-      today,
-    );
-    const isNewHire =
-      employee.status !== EmployeeStatus.RESIGNED &&
-      hiredDaysAgo >= 0 &&
-      hiredDaysAgo <= ACTIVE_PROCESS_WINDOW_DAYS;
-
-    if (isNewHire) {
-      ONBOARDING_TASKS.forEach((task, taskIndex) => {
-        tasks.push({
-          id: `task-on-${employee.id}-${taskIndex}`,
-          employeeId: employee.id,
-          taskType: ProcessTaskType.ONBOARDING,
-          title: task.title,
-          /**
-           * Info: (20260810 - Julian) 已經過了到期日的項目視為已完成，
-           * 只留下還沒到期的當作待辦 —— 否則整份清單都是逾期，
-           * 反而看不出哪一件真的該今天處理。
-           */
-          status:
-            hiredDaysAgo > task.dueOffset + taskIndex
-              ? ProcessTaskStatus.COMPLETED
-              : ProcessTaskStatus.PENDING,
-          dueDate: toIsoDate(
-            addDays(parseIsoDate(employee.hireDate), task.dueOffset),
-          ),
-        });
-      });
-    }
-
-    const leaveDate = employee.leaveDate;
-    if (employee.status === EmployeeStatus.RESIGNED && leaveDate) {
-      const leftDaysAgo = differenceInDays(parseIsoDate(leaveDate), today);
-      if (leftDaysAgo <= ACTIVE_PROCESS_WINDOW_DAYS) {
-        OFFBOARDING_TASKS.forEach((task, taskIndex) => {
-          tasks.push({
-            id: `task-off-${employee.id}-${taskIndex}`,
-            employeeId: employee.id,
-            taskType: ProcessTaskType.OFFBOARDING,
-            title: task.title,
-            status:
-              (employeeIndex + taskIndex) % 3 === 0
-                ? ProcessTaskStatus.COMPLETED
-                : ProcessTaskStatus.PENDING,
-            dueDate: toIsoDate(
-              addDays(parseIsoDate(leaveDate), task.dueOffset),
-            ),
-          });
-        });
-      }
-    }
-
-    return tasks;
-  },
-);
+/**
+ * Info: (20260810 - Julian) 報到／離職任務已搬到 `mock_hr_movement`。
+ *
+ * 儀表板的「待處理任務」與到離職頁看的必須是同一份，否則兩頁的數字會對不起來，
+ * 而使用者會相信其中一個。要用請 import `MOCK_HR_MOVEMENT_TASKS`。
+ */

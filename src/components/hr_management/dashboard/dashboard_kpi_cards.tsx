@@ -34,8 +34,8 @@ const KpiCardInner: FC<Omit<IKpiCardProps, "href">> = ({
   hint,
 }) => (
   <>
-    <p className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-gray-400 uppercase">
-      <Icon className={`h-3.5 w-3.5 shrink-0 ${iconClass}`} />
+    <p className="flex items-center gap-1.5 text-sm font-bold tracking-wider text-gray-400 uppercase">
+      <Icon className={`size-4 shrink-0 ${iconClass}`} />
       {label}
     </p>
     <p className="mt-2 flex items-baseline gap-1">
@@ -57,7 +57,10 @@ const KpiCard: FC<IKpiCardProps> = ({ href, ...rest }) => {
   }
 
   return (
-    <Link href={href} className={`${CARD_CLASS} hover:border-orange-300`}>
+    <Link
+      href={href}
+      className={`${CARD_CLASS} hover:border-orange-300 hover:bg-orange-50`}
+    >
       <KpiCardInner {...rest} />
     </Link>
   );

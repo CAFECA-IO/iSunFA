@@ -64,6 +64,12 @@ export const HR_PII_FIELD_TIER = {
   birthdayCipher: PiiTier.CONFIDENTIAL,
   addressCipher: PiiTier.CONFIDENTIAL,
   phoneCipher: PiiTier.CONFIDENTIAL,
+  /**
+   * Info: (20260812 - Julian) 個人信箱與公司信箱 (`email`) 分級不同。
+   * 公司信箱是 Tier 3：它是複合唯一鍵成員、全公司通訊錄都看得到；
+   * 個人信箱是跟著人走的識別碼，離職後仍然有效。
+   */
+  personalEmailCipher: PiiTier.CONFIDENTIAL,
   // Info: (20260811 - Julian) BankAccount
   accountNumberCipher: PiiTier.RESTRICTED,
   accountHolderCipher: PiiTier.RESTRICTED,

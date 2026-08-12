@@ -162,6 +162,32 @@ WHERE key='GEMINI_API_KEY';
 
 順帶修掉一個潛在缺陷：`payment_method/route.ts` 原本把 `merchantId` 寫死成 `"mermer"`，導致部署精靈收集的 `OEN_MERCHANT_ID` 從未生效。現已改讀設定（保底值仍為 `mermer`，行為相容）。
 
+#### 專案規則（2026-08-12）：一個設定只有一個來源
+
+1. **一個設定只存在 `.env` 或資料庫其中一處，不得從多處查找。** 禁止 `dbValue || process.env.X || …` 這種串接 —— 它讓「現在生效的是哪一個」變成要試才知道，而輪替與撤銷正是在那個模糊處失效的（本 ADR §7 補充記的三個缺陷都是這一類）。
+   - **允許**：`來源值 || 程式碼保底值`（單一來源加上編譯期常數，例如 `SYSTEM_SETTING_FALLBACKS`）。保底值不是第二個來源，它沒有部署差異。
+   - **允許**：以狀態機解析出**唯一**來源後再讀（`get()` 的 `TRUSTED → 資料庫` / `EMPTY → env`，並以 `SettingSourceEnum` 明確記錄結果是哪一個）。同一時刻只有一個來源生效。
+   - **禁止**：同一個運算式裡並列多個來源。
+2. **`.env` 只保管最低限度**，其餘一律進資料庫。「最低限度」的判準是**資料庫讀不到或不該讀**：
+   - 資料庫連線本身（`POSTGRES_*`、`DATABASE_URL`）
+   - 信任根（`SUPER_ADMIN_*`、`DEWT_PRIVATE_KEY_PEM`、`SUPER_ADMIN_SIGNATURE`、`SECRET_VAULT_MASTER_KEY`）—— 保護資料庫內容的東西不能存在它所保護的地方
+   - `NEXT_PUBLIC_*`（client bundle 讀不到資料庫，含合約地址與第三方前端金鑰）
+   - 部署拓撲與檔案路徑（`OSRM_ROUTER_URL`、`CHATROOM_URL`、`STORAGE_DOMAIN`、`MISSION_DIR` 等）
+   - **無主資料庫權限的節點**所需的設定（見下）
+3. **同一個鍵在不同節點可以有不同的單一來源。** `MissionExecutor` 依
+   `async_workers/00_async_worker_overview.md` 沒有主資料庫權限，對它而言「用哪把 LLM 金鑰」就是部署環境差異，來源是該節點的 `.env`；web 節點的來源是資料庫。**每個節點各查一處，不是 fallback。** 差異與後果記在
+   `known_issues/executor_settings_isolation.md`。
+
+#### 補充（2026-08-12）：`ChatService` 的讀取點已收斂為單一入口
+
+上面那段描述的「優先序：建構子 > DB > env」是當時的實作，之後有三處改變（見 `fix/llm_key_resolution_precedence`）：
+
+1. **`ensureClient()` 不再自行讀環境變數。** `get()` 已經是四態的，而 `GEMINI_API_KEY` / `MODEL` 正是 `GEMINI_API_KEY` / `LLM_MODEL` 的 `envKey` —— 在 `ensureClient()` 再讀一次 env 於每個狀態下都是死碼，**除了它造成傷害的那一個**：管理員清空並簽名（= 撤銷）之後 DB 回 `undefined`，那一行會把 env 裡的舊金鑰救回來，撤銷因此無效。現在 `get()` 是唯一的 env 入口。
+2. **`explicitApiKey` 存在時短路，完全不查資料庫。** 原本 `get()` 在檢查它之前就無條件執行，所以「呼叫端明確傳入」只是取值順序，不是「不必問」。
+3. **`GOOGLE_API_KEY` 已移除。** 它不在 `SystemSettingKey` 裡，永遠不受 manifest 簽章涵蓋、也不出現在 `/admin/settings` —— 能設環境變數的人可以繞過整套「全集簽章 + 稽核 + 撤銷」注入一把金鑰。要第二把金鑰請走系統設定。
+
+另外新增 `ChatService` 的 `allowSystemSettings` 選項：設為 `false` 時完全不查設定。唯一用途是**沒有主資料庫權限的節點**（`MissionExecutor`，見 `async_workers/00_async_worker_overview.md`）。那些節點的行為差異記在 `known_issues/executor_settings_isolation.md`。
+
 **刻意不做**：把 `process.env` 在啟動時用 DB 值覆寫（hydrate）。那樣所有讀取點都不必改，但會破壞 fail-closed —— 一旦寫進 `process.env`，之後即使偵測到簽章失效，舊值仍留在記憶體中被使用。
 
 ### 8. 遮罩秘密的合併規則

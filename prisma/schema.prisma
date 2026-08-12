@@ -1532,13 +1532,26 @@ model UserEncryptionKey {
   // Info: (20260712 - Luphia) 對外公開的加密主公鑰（供他人以 ECIES 加密給此用戶）
   encryptionPublicKey String @map("encryption_public_key")
 
-  // Info: (20260712 - Luphia) 以 passkey PRF 派生金鑰包裝後的主私鑰（僅密文入庫，伺服器無法解開）
+  /**
+   * Info: (20260712 - Luphia) 以 passkey PRF 派生金鑰包裝後的主私鑰（僅密文入庫，伺服器無法解開）
+   *
+   * Info: (20260812 - Luphia) 「伺服器無法解開」**只對 passkey 列成立**。
+   * 託管帳號（第三方登入）的包裝金鑰由伺服器以保險庫主密鑰派生（見 ADR 016 補充），
+   * 那些列平台有能力解開。哪一種請看 `algorithm` —— 它就是為此而存在。
+   */
   wrappedPrivateKey String @map("wrapped_private_key") @db.Text
 
   // Info: (20260712 - Luphia) PRF 派生所需的 salt（類 hdwallet 的線索之一，供回推包裝金鑰）
   prfSalt String @map("prf_salt")
 
-  // Info: (20260712 - Luphia) 包裝/派生演算法標記（版本化）
+  /**
+   * Info: (20260712 - Luphia) 包裝/派生演算法標記（版本化）
+   *
+   * Info: (20260812 - Luphia) 值域見 `src/constants/chatroom_key.ts`：
+   * passkey 列為 `WebAuthnPRF-…`（即此處的預設值，既有列都靠它寫入，不可更動），
+   * 託管列為 `CustodialPRF-v1-…`。解包前會比對它與當下的 custody，
+   * 不一致即拒絕解包並要求金鑰移轉 —— 否則 custody 翻轉會靜默毀掉那些對話。
+   */
   algorithm String @default("WebAuthnPRF-HKDF-AES-256-GCM")
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -1706,6 +1719,35 @@ model Employee {
   addressCipher    String? @map("address_cipher")
   // Info: (20260811 - Julian) Tier 2 機密：聯絡電話（原為必填，加密後維持必填）
   phoneCipher      String  @map("phone_cipher")
+  /**
+   * Info: (20260812 - Julian) Tier 2 機密：個人信箱（非公司信箱）。
+   *
+   * 與 `email` 分成兩欄而不是共用一欄：公司信箱是複合唯一鍵成員、
+   * 全公司通訊錄都看得到，且隨離職一併停用；個人信箱是一輩子跟著人走的
+   * 識別碼，離職後仍然有效 —— 兩者的敏感度差一個級別，不該同欄。
+   *
+   * 可為 null：只有走「發起新人報到」且勾選寄送預填表單的人才有值。
+   *
+   * ## 它的用途在離職後才最重要
+   *
+   * 報到前那段「還沒有公司帳號」的空窗期只是最先想到的場景。真正撐起
+   * 這一欄的是離職之後 —— 那時公司信箱已停用，但公司仍然有事要找人：
+   * 隔年才寄的扣繳憑單、隨時可能被請求補發的服務證明書（勞基法第 19 條
+   * 對此沒有時效）、遞延獎酬與競業補償金的給付、事後才發現的薪資差額，
+   * 以及回聘。用「報到完成」當清除時點會剛好清在它開始有用的那一天。
+   *
+   * ToDo: (20260812 - Julian) 保存期限錨在 `leaveDate` 而不是
+   * `OnboardingProcess.completedAt`：離職滿 N 年後由排程清空。
+   * N 暫以 5 年為準（比照勞基法第 7 條勞工名卡的保存年限），但要注意
+   * **個人信箱並不在勞工名卡的法定欄位裡** —— 那是類比，不是依據，
+   * 實際年限需法務確認。個資法要求特定目的消失或期限屆滿即應刪除，
+   * 所以這條排程不是選配：沒有它，這一欄就是一個沒有終點的個資。
+   *
+   * ToDo: (20260812 - Julian) 保存到離職後，就必須同時答得出
+   * 「這個信箱當初依什麼特定目的、什麼時候蒐集的」。那是一筆同意紀錄，
+   * 不是 `Employee` 上再加一欄 —— 需要另開一張表或掛在 OnboardingProcess 上。
+   */
+  personalEmailCipher String? @map("personal_email_cipher")
 
   // Info: (20260811 - Julian) 個資封裝參數：演算法版本化，keyVersion 供金鑰輪替時新舊並存
   // Info: (20260811 - Julian) keyVersion 可為 null（整列無密文時），但任一密文有值即必須有值，由 hr_pii_invariant 擋在寫入端
@@ -2011,6 +2053,19 @@ model OnboardingTask {
   title       String            // Info: (20260810 - Julian) 任務名稱 (例: 發放門禁卡、環境設定、勞健保加保)
   description String?
   status      ProcessTaskStatus @default(PENDING)
+  /**
+   * Info: (20260812 - Julian) 這一列是由哪一條範本產生的（例：`ONBOARDING_LAPTOP`）。
+   *
+   * 不是給人看的標籤，是程式用來分類的鍵值：報到列表的「表單 / 設備 / 契約」
+   * 三欄各自看一組 key，離職的資產回收表與三項退保也是。沒有這一欄，
+   * 分類只能回頭比對 `title` 字串 —— 那會在有人改一個字、或換一種語言時整片失效。
+   *
+   * 可為 null：手動新增的臨時任務不屬於任何範本。
+   *
+   * ToDo: (20260812 - Julian) 目前值域由前端的 `OnboardingTaskKey` / `OffboardingTaskKey`
+   * 約定，DB 端不約束。範本改成可由使用者維護時，這裡要改成指向範本表的外鍵。
+   */
+  templateKey String?           @map("template_key")
 
   // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
   accountBookId String      @map("account_book_id")
@@ -2040,6 +2095,8 @@ model OffboardingTask {
   title       String            // Info: (20260810 - Julian) 任務名稱 (例: 收回電腦、繳回門禁卡、勞健保退保)
   description String?
   status      ProcessTaskStatus @default(PENDING)
+  // Info: (20260812 - Julian) 範本鍵值（例：`OFFBOARDING_LAPTOP_RETURN`），語意與限制同 OnboardingTask.templateKey
+  templateKey String?           @map("template_key")
 
   // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
   accountBookId String      @map("account_book_id")
@@ -2061,6 +2118,21 @@ model OffboardingTask {
   @@index([offboardingProcessId])
   @@index([assigneeId])
   @@map("offboarding_task")
+}
+
+/**
+ * Info: (20260812 - Julian) 離職的法律類型，與 `OffboardingProcess.reason`（個人原因）是兩個軸。
+ *
+ * 原因是「為什麼走」，類型是「依什麼法律關係終止」。存下來的理由是後者會產生義務：
+ * 資遣要算資遣費、要在離職 10 日前依就業服務法第 33 條列冊通報主管機關，
+ * 而自請離職與定期契約期滿都沒有這兩件事。
+ *
+ * 不存的話，「這個月有哪幾件要通報」就查不出來 —— 只能靠承辦人自己記得。
+ */
+enum ResignationType {
+  VOLUNTARY    // Info: (20260812 - Julian) 勞工自請離職
+  LAYOFF       // Info: (20260812 - Julian) 雇主資遣／解雇
+  CONTRACT_END // Info: (20260812 - Julian) 定期契約期滿不續約
 }
 
 // Info: (20260810 - Julian) 新人報到流程檔
@@ -2127,9 +2199,24 @@ model OffboardingProcess {
   status         OffboardingStatus @default(PENDING)
 
   reason         String?           // Info: (20260810 - Julian) 離職原因
+  /**
+   * Info: (20260812 - Julian) 離職類型。可為 null 是給既有資料留的空間，不是它可以不填。
+   *
+   * ToDo: (20260812 - Julian) 既有紀錄回填後應改為必填 —— 一筆不知道是自請還是資遣的
+   * 離職紀錄，在資遣費與通報這兩件事上都答不出「該不該做」。
+   */
+  resignationType ResignationType? @map("resignation_type")
   expectedDate   DateTime          @map("expected_date") // Info: (20260810 - Julian) 預計離職日
   actualDate     DateTime?         @map("actual_date") // Info: (20260810 - Julian) 實際離職日
   insuranceOffAt DateTime?         @map("insurance_off_at") // Info: (20260810 - Julian) 勞健保退保生效日
+
+  /**
+   * ToDo: (20260812 - Julian) 資遣費相關欄位待補（平均工資、基數、實付金額、發給日）。
+   *
+   * 平均工資要讀離職前六個月的實際薪資，而 schema 裡沒有薪資表。
+   * 決策、待決事項與薪資模組要提供的介面見
+   * `documents/architecture/decisions/020_severance_pay_estimation.md`。
+   */
 
   // Info: (20260810 - Julian) 關聯至交接細項任務
   tasks          OffboardingTask[]
