@@ -2,7 +2,9 @@
  * Info: (20260716 - Tzuhan) LLM 同步路徑參數集中(issue #6515)。
  * 適用範圍:不經 mission executor 的同步 HTTP 路徑(carbon chat / draft / extraction)。
  * worker 管線的重試與用量記錄由檔案狀態機承擔(見 00.1_mission_executor_architecture.md)。
- *
+ */
+
+/**
  * Info: (20260811 - Luphia) 原本這裡寫著「本檔常數不影響 executor 行為」,那句話已不成立:
  * LLM_WORKER_TIMEOUT_MS 就是給 executor 用的。理由見該常數的說明——
  * 「檔案狀態機承擔重試」這個前提隱含「執行一定會結束」,而沒有逾時的呼叫不保證會結束。

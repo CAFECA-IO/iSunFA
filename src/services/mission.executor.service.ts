@@ -32,7 +32,7 @@ export async function processNext() {
 
   /**
    * Info: (20260812 - Luphia) Executor 的金鑰**只從環境取**,刻意不經過
-   * `systemSettingService`（PR review F1）。
+   * `systemSettingService`。
    *
    * `MissionExecutor` 是文件明載「絕對沒有存取主系統 PostgreSQL 資料庫的權限」
    * 的節點(`async_workers/00_async_worker_overview.md`),而那道隔離不是潔癖 ——
@@ -54,10 +54,23 @@ export async function processNext() {
   const apiKey = setupConfig.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
   if (!apiKey) {
     console.warn(
-      "[MissionExecutor] No LLM API key in the deployment environment. Skills that need the LLM will fail; /admin/settings does not reach this node.",
+      "[MissionExecutor] No LLM API key in this node's environment. Missions that need the LLM will fail loudly; /admin/settings does not reach this node.",
     );
   }
-  const chatService = new ChatService(apiKey);
+  /**
+   * Info: (20260812 - Luphia) `allowSystemSettings: false` 讓「不查資料庫」成為結構。
+   *
+   * 只傳 `apiKey` 是不夠的:它可能是 `undefined`,而 `ensureClient()` 的短路判斷是
+   * truthy —— 於是會默默落到查設定那條路。而**照精靈流程設定的部署剛好就是那一種**:
+   * 金鑰簽章後從 `.env.setup` 移進資料庫(`setup.system_setting` 的 STAGED_KEYS
+   * 涵蓋全部 SYSTEM_SETTING_KEYS),節點的環境裡本來就沒有。
+   *
+   * 為什麼缺金鑰不在這裡 `throw`:`processNext` 是整批任務的迴圈,在這裡拋會連
+   * 不需要 LLM 的任務一起停掉。改由需要 LLM 的那個 skill 在呼叫時拿到明確的
+   * key-missing 錯誤 —— 那筆任務照既有的重試/`giveup` 機制記為失敗,
+   * 而其餘任務照跑。fail fast 的位置是「真正用得到它的地方」。
+   */
+  const chatService = new ChatService(apiKey, { allowSystemSettings: false });
 
   try {
     const folders = await fs.readdir(missionDirPath, { withFileTypes: true });

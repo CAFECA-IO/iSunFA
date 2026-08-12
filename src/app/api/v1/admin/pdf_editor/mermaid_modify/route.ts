@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { isLlmKeyMissingError } from "@/services/chat.service";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { AppError } from "@/lib/utils/error";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { AiMermaidModifySchema } from "@/validators";
@@ -57,6 +58,22 @@ export async function POST(req: NextRequest) {
      */
     if (isLlmKeyMissingError(error)) {
       return jsonFail(API_ERRORS.IS_GEMINI_API_KEY_UNDEFINED);
+    }
+    /**
+     * Info: (20260812 - Luphia) 已分類的錯誤原樣回,不要收成 IS_UNKNOWN。
+     *
+     * 移除 env fallback 之後,`ensureClient()` 多了一條失敗途徑:系統設定進入
+     * UNTRUSTED 時 `get()` 直接拋 `AppError(IS_SETTING_STATE_UNTRUSTED)`。
+     * 落到 IS_UNKNOWN 的話,「資料庫設定驗簽失敗」這個最需要被維運看到的成因,
+     * 在畫面上與任何未知錯誤沒有區別 —— 與這批修正自己的主張矛盾。
+     * 形式沿用 repo 既有慣例（如 admin/system_setting/route.ts）。
+     */
+    if (error instanceof AppError) {
+      return jsonFail({
+        code: error.apiCode,
+        message: error.message,
+        status: error.code,
+      });
     }
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }

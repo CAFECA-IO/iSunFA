@@ -279,26 +279,60 @@ export interface IChatGenerationOptions {
   signal?: AbortSignal;
 }
 
+/**
+ * Info: (20260812 - Luphia) 建構選項。目前只有一項,而它是安全邊界而不是效能開關。
+ */
+export interface IChatServiceOptions {
+  // Info: (20260812 - Luphia) false = 這個節點不得存取主資料庫（見 allowSystemSettings 欄位註解）
+  allowSystemSettings?: boolean;
+}
+
 export class ChatService {
   private genAI: GoogleGenerativeAI | null = null;
   private modelName: string = DEFAULT_GEMINI_MODEL;
   private readonly explicitApiKey?: string;
 
   /**
+   * Info: (20260812 - Luphia) 是否允許向 `systemSettingService` 查設定。
+   *
+   * 預設 true。設為 false 的唯一用途是**沒有主資料庫權限的節點** ——
+   * `MissionExecutor` 依 `async_workers/00_async_worker_overview.md` 就是這種節點,
+   * 而那道隔離是防提示詞注入的基礎。
+   *
+   * 為什麼要一個明示的旗標,而不是靠「有沒有傳 apiKey」:
+   * 傳進來的金鑰可能是 `undefined`（例如部署照精靈流程走完,金鑰已從 `.env.setup`
+   * 移入資料庫,節點的環境裡就沒有了）。那時 truthy 判斷會**默默落到查資料庫那條路**,
+   * 也就是隔離變成「env 剛好有值時才成立」的巧合。旗標讓它成為結構。
+   */
+  private readonly allowSystemSettings: boolean;
+
+  /**
+   */
+
+  /**
    * Info: (20260707 - Luphia)
    * 1. API Key 管理中心化：apiKey 改為選填，預設從環境變數讀取。
-   *    組件端與業務邏輯層不再需要負責 apiKey 的讀取與驗證，簡化呼叫流程。
+   * 組件端與業務邏輯層不再需要負責 apiKey 的讀取與驗證，簡化呼叫流程。
    * 2. 本地模型支援預留：將 apiKey 讀取移入 Service 內部，是為了未來能根據環境變數
-   *    直接切換至本地模型（如 Ollama）而不需要修改外部呼叫端的代碼。
-   *
+   * 直接切換至本地模型（如 Ollama）而不需要修改外部呼叫端的代碼。
+   */
+
+  /**
    * Info: (20260809 - Luphia) 金鑰與模型名改為「首次使用時才解析」。
    * 正式來源已移至資料庫的 system_setting（經 SUPER_ADMIN 簽章），解析必然是非同步的，
    * 但建構子不能是非同步的——而 `new ChatService()` 散落在 20 幾處，其中還包含
    * 預設參數值與同步 getter。延遲解析讓所有呼叫端一行都不必改，
    * 同時讓輪替金鑰後的新請求自動取得新值（不需重啟）。
    */
-  constructor(apiKey?: string) {
+
+  /**
+   * Info: (20260812 - Luphia) 上面第 1 條「預設從環境變數讀取」已不成立:
+   * `ensureClient()` 不再自行讀 env,環境變數由 `systemSettingService.get()`
+   * 在「從未用資料庫保管」的狀態下負責。
+   */
+  constructor(apiKey?: string, options?: IChatServiceOptions) {
     this.explicitApiKey = apiKey;
+    this.allowSystemSettings = options?.allowSystemSettings ?? true;
   }
 
   /**
@@ -309,7 +343,7 @@ export class ChatService {
     if (this.genAI) return this.genAI;
 
     /**
-     * Info: (20260812 - Luphia) 呼叫端明確給了金鑰就**不問資料庫**（PR review F1）。
+     * Info: (20260812 - Luphia) 呼叫端明確給了金鑰就**不問資料庫**。
      *
      * 原本 `systemSettingService.get()` 在檢查 `explicitApiKey` 之前就無條件執行,
      * 於是即使呼叫端已經給了金鑰,也照樣讀一次主資料庫 —— 而 `MissionExecutor`
@@ -327,13 +361,27 @@ export class ChatService {
       return this.genAI;
     }
 
+    /**
+     * Info: (20260812 - Luphia) 不許查設定的節點在這裡就結束,不會走到下面的 `get()`。
+     *
+     * 沒有這一段的話,「Executor 零 DB 存取」只在 env 恰好有金鑰時成立 ——
+     * 而照精靈流程設定的部署,金鑰簽章後就從 `.env.setup` 移進資料庫了
+     * (`setup.system_setting.service` 的 STAGED_KEYS),那些節點的環境裡本來就沒有。
+     * 也就是最常見的部署形態剛好是隔離失效的那一種。
+     */
+    if (!this.allowSystemSettings) {
+      throw new Error(
+        `${LLM_KEY_MISSING_ERROR_MARKER}: no LLM API key in this node's environment (this node must not read system settings)`,
+      );
+    }
+
     const [settingKey, settingModel] = await Promise.all([
       systemSettingService.get(SystemSettingKey.GEMINI_API_KEY),
       systemSettingService.get(SystemSettingKey.LLM_MODEL),
     ]);
 
     /**
-     * Info: (20260812 - Luphia) 不再自行落回環境變數（PR review F3/F4）。
+     * Info: (20260812 - Luphia) 不再自行落回環境變數。
      *
      * `get()` 已經是四態的:資料庫可信時以資料庫為準、驗簽失敗拒絕服務、
      * 從未用資料庫保管時才讀 env（`GEMINI_API_KEY` 正是 `LLM_MODEL` 的 `envKey`
@@ -350,8 +398,13 @@ export class ChatService {
 
     if (!key) {
       /**
+       */
+
+      /**
        * Info: (20260707 - Luphia) 若未來支援純本地模型且不需 Key，此處應改為僅在切換至 Google Provider 時才拋錯
-       *
+       */
+
+      /**
        * Info: (20260812 - Luphia) 以標記開頭,讓上層用 `isLlmKeyMissingError()` 分類,
        * 而不是比對訊息裡有沒有「GEMINI_API_KEY」這串字。
        * 也不再說「in environment」—— 金鑰的正式保管位置已經是資料庫的系統設定,

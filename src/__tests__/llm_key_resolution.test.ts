@@ -19,7 +19,16 @@ import {
   LLM_KEY_MISSING_ERROR_MARKER,
   LLM_TIMEOUT_ERROR_MARKER,
 } from "@/constants/llm";
-import { ChatService } from "@/services/chat.service";
+import {
+  SystemSettingKey,
+  SYSTEM_SETTING_DEFINITIONS,
+} from "@/constants/system_setting";
+/**
+ * Info: (20260812 - Luphia) 只匯入型別。
+ * `import type` 不會綁到執行期模組，所以不會像值匯入那樣在 `jest.mock` 註冊前
+ * 就把真實的 system_setting 綁進 chat.service（見檔頭 loadChatService 的理由）。
+ */
+import type { ChatService } from "@/services/chat.service";
 
 /**
  * Info: (20260812 - Luphia) 只 mock 系統設定,不 mock ChatService 自己 ——
@@ -32,9 +41,14 @@ import { ChatService } from "@/services/chat.service";
  */
 const settingValues = new Map<string, string>();
 
+const settingGetCalls: string[] = [];
+
 jest.mock("@/services/system_setting.service", () => ({
   systemSettingService: {
-    get: async (key: string) => settingValues.get(key),
+    get: async (key: string) => {
+      settingGetCalls.push(key);
+      return settingValues.get(key);
+    },
   },
 }));
 
@@ -43,6 +57,16 @@ const loadChatService = async () => {
   const loaded = await import("@/services/chat.service");
   return loaded.ChatService;
 };
+
+/**
+ * Info: (20260812 - Luphia) 檔案層清乾淨，拿掉隱性的順序相依。
+ * `settingValues` 是模組級 Map，原本只有其中一個 describe 會 clear()，
+ * 另一個是靠「此前沒人 set 過」才成立 —— 那種相依在有人插入新測試時才會爆。
+ */
+beforeEach(() => {
+  settingValues.clear();
+  settingGetCalls.length = 0;
+});
 
 /**
  * Info: (20260812 - Luphia) 守住 LLM 金鑰的解析責任歸屬。
@@ -62,7 +86,15 @@ const loadChatService = async () => {
  * 所以把它變成測試,形式沿用 `env_example_contract.test.ts`。
  */
 
-const ENV_KEYS = ["GEMINI_API_KEY", "GOOGLE_API_KEY"] as const;
+/**
+ * Info: (20260812 - Luphia) 由設定定義推導，不寫死字串（`env_example_contract.test.ts` 同樣做法）。
+ * `GOOGLE_API_KEY` 不在 `SystemSettingKey` 裡 —— 它是刻意移除的那個後門，
+ * 留在掃描清單裡是為了確保沒有人把它加回來。
+ */
+const ENV_KEYS = [
+  SYSTEM_SETTING_DEFINITIONS[SystemSettingKey.GEMINI_API_KEY].envKey,
+  "GOOGLE_API_KEY",
+] as const;
 
 /**
  * Info: (20260812 - Luphia) 唯一允許直接讀環境變數的檔案。
@@ -72,10 +104,15 @@ const ENV_KEYS = ["GEMINI_API_KEY", "GOOGLE_API_KEY"] as const;
  * 白名單只有一個成員是刻意的 —— 要新增就得先說明為什麼那個位置需要
  * 繞過三態語意(資料庫可信 / 驗簽失敗拒絕服務 / 從未用資料庫保管)。
  */
-const RESOLVER_FILES = ["chat.service.ts"];
+/**
+ * Info: (20260812 - Luphia) 以**相對路徑**比對而不是 basename。
+ * basename 比對會讓未來任何同名檔案（含 `src/lib/**`）自動獲得豁免，
+ * 而「白名單只有一個成員是刻意的」這句話就不再成立。
+ */
+const RESOLVER_FILES = ["src/services/chat.service.ts"];
 
 /**
- * Info: (20260812 - Luphia) 掃描面放寬（PR review nit）。
+ * Info: (20260812 - Luphia) 掃描面放寬。
  *
  * 原本只掃 `src/services/**`,而一支 route 或 lib helper 直接讀環境變數不會被抓到;
  * 而且只認 `process.env.X` 這一種字面形式 —— 中括號、解構、單引號全都繞得過。
@@ -90,7 +127,7 @@ const SCAN_ROOTS = [
   ["src", "lib"],
 ];
 
-const ENV_ONLY_FILES = ["mission.executor.service.ts"];
+const ENV_ONLY_FILES = ["src/services/mission.executor.service.ts"];
 
 const readsKeyFromEnv = (source: string): boolean =>
   ENV_KEYS.some(
@@ -111,8 +148,11 @@ const scanForKeyReads = (): string[] =>
       .filter((entry): entry is string => typeof entry === "string")
       .filter((entry) => entry.endsWith(".ts") || entry.endsWith(".tsx"))
       .filter((entry) => {
-        const base = path.basename(entry);
-        return !RESOLVER_FILES.includes(base) && !ENV_ONLY_FILES.includes(base);
+        const relative = path.join(...segments, entry);
+        return (
+          !RESOLVER_FILES.includes(relative) &&
+          !ENV_ONLY_FILES.includes(relative)
+        );
       })
       .filter((entry) =>
         readsKeyFromEnv(fs.readFileSync(path.join(root, entry), "utf8")),
@@ -215,8 +255,18 @@ describe("missing LLM key is a classified cause", () => {
     const saved = ENV_KEYS.map((key) => [key, process.env[key]] as const);
     ENV_KEYS.forEach((key) => delete process.env[key]);
 
+    /**
+     * Info: (20260812 - Luphia) 走動態載入，理由同檔頭。
+     *
+     * 原本用靜態 import 的 `ChatService`，於是這條走的是**真實**的
+     * `systemSettingService`:CI 有 postgres 而表為空 → EMPTY → 讀 env（已刪）→ 綠;
+     * 本機沒有 DATABASE_URL → UNAVAILABLE → 也綠。兩種環境都綠但原因不同，
+     * 且都不是它要驗的那件事 —— 哪天 seed 塞進一組已簽章的金鑰，它會莫名轉紅。
+     */
+    const Service = await loadChatService();
+
     try {
-      await new ChatService().generateRaw("ping");
+      await new Service().generateRaw("ping");
       throw new Error("expected ChatService to refuse without a key");
     } catch (error) {
       expect(isLlmKeyMissingError(error)).toBe(true);
@@ -255,7 +305,7 @@ describe("missing LLM key is a classified cause", () => {
 });
 
 /**
- * Info: (20260812 - Luphia) 這支 branch 要修的那件事本身（PR review nit）。
+ * Info: (20260812 - Luphia) 這支 branch 要修的那件事本身。
  *
  * 前面幾支驗的是**結構**（wrapper 不把 env 值當明確傳入）與**邊界**（什麼都拿不到時拋標記）。
  * 結構是好的代理，但不是那件事本身 —— 真正要成立的是
@@ -325,5 +375,76 @@ describe("resolution order in ensureClient", () => {
     await resolve(service);
 
     expect(keyOf(service)).toBe("caller-key");
+  });
+});
+
+/**
+ * Info: (20260812 - Luphia) 沒有主資料庫權限的節點不得查系統設定。
+ *
+ * `MissionExecutor` 依 `async_workers/00_async_worker_overview.md` 就是這種節點，
+ * 而那道隔離是**防提示詞注入的基礎**：Executor 處理使用者上傳的憑證內容，
+ * 即使注入成功也必須穿不過實體網路邊界。
+ *
+ * 這條原本只靠「有沒有傳 apiKey」的 truthy 判斷撐著 —— 而照精靈流程設定的部署
+ * 金鑰已從 `.env.setup` 移進資料庫（`setup.system_setting` 的 STAGED_KEYS 涵蓋
+ * 全部 `SYSTEM_SETTING_KEYS`），節點環境裡本來就沒有，於是隔離在**最常見的
+ * 部署形態下剛好失效**。斷言「呼叫次數為 0」讓它成為結構而不是巧合。
+ */
+describe("nodes without database access", () => {
+  it("should never consult system settings, even with no key in the environment", async () => {
+    settingValues.set(
+      SYSTEM_SETTING_DEFINITIONS[SystemSettingKey.GEMINI_API_KEY].envKey,
+      "db-key",
+    );
+    const Service = await loadChatService();
+
+    // Info: (20260812 - Luphia) 刻意不傳金鑰 —— 正是精靈跑完之後 Executor 的處境
+    const error = await new Service(undefined, { allowSystemSettings: false })
+      .generateRaw("ping")
+      .catch((caught: unknown) => caught);
+
+    expect(isLlmKeyMissingError(error)).toBe(true);
+    expect(settingGetCalls).toEqual([]);
+  });
+
+  /**
+   * Info: (20260812 - Luphia) 上面兩支驗的是 ChatService **遵守**旗標，
+   * 而不是 Executor **有傳**旗標 —— 實測把那個參數拿掉，上面兩支照樣全綠。
+   *
+   * 這是同一種缺口：守衛存在，但沒有東西保證它被接上。以原始碼契約補起來，
+   * 形式沿用本檔其他兩支掃描測試。
+   */
+  it("should be requested by every node that has no database access", () => {
+    const source = fs.readFileSync(
+      path.join(process.cwd(), ENV_ONLY_FILES[0]),
+      "utf8",
+    );
+    /**
+     * Info: (20260812 - Luphia) 比對**建構子呼叫**而不是整份原始碼。
+     * 實測:只用 `toContain("allowSystemSettings: false")` 的話，把參數從呼叫裡拿掉
+     * 仍然全綠 —— 因為同一個檔案的註解裡就有那串字。掃描測試最常見的假綠就是這個。
+     */
+    expect(source).toMatch(
+      /new ChatService\([^)]*allowSystemSettings:\s*false/,
+    );
+  });
+
+  // Info: (20260812 - Luphia) 有金鑰時同樣不查（短路），且用的是傳進來的那把
+  it("should use the injected key without consulting settings", async () => {
+    settingValues.set(
+      SYSTEM_SETTING_DEFINITIONS[SystemSettingKey.GEMINI_API_KEY].envKey,
+      "db-key",
+    );
+    const Service = await loadChatService();
+
+    const service = new Service("node-env-key", {
+      allowSystemSettings: false,
+    });
+    await service.generateRaw("ping").catch(() => undefined);
+
+    expect(
+      (service as unknown as { genAI?: { apiKey?: string } }).genAI?.apiKey,
+    ).toBe("node-env-key");
+    expect(settingGetCalls).toEqual([]);
   });
 });

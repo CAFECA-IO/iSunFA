@@ -162,6 +162,16 @@ WHERE key='GEMINI_API_KEY';
 
 順帶修掉一個潛在缺陷：`payment_method/route.ts` 原本把 `merchantId` 寫死成 `"mermer"`，導致部署精靈收集的 `OEN_MERCHANT_ID` 從未生效。現已改讀設定（保底值仍為 `mermer`，行為相容）。
 
+#### 補充（2026-08-12）：`ChatService` 的讀取點已收斂為單一入口
+
+上面那段描述的「優先序：建構子 > DB > env」是當時的實作，之後有三處改變（見 `fix/llm_key_resolution_precedence`）：
+
+1. **`ensureClient()` 不再自行讀環境變數。** `get()` 已經是四態的，而 `GEMINI_API_KEY` / `MODEL` 正是 `GEMINI_API_KEY` / `LLM_MODEL` 的 `envKey` —— 在 `ensureClient()` 再讀一次 env 於每個狀態下都是死碼，**除了它造成傷害的那一個**：管理員清空並簽名（= 撤銷）之後 DB 回 `undefined`，那一行會把 env 裡的舊金鑰救回來，撤銷因此無效。現在 `get()` 是唯一的 env 入口。
+2. **`explicitApiKey` 存在時短路，完全不查資料庫。** 原本 `get()` 在檢查它之前就無條件執行，所以「呼叫端明確傳入」只是取值順序，不是「不必問」。
+3. **`GOOGLE_API_KEY` 已移除。** 它不在 `SystemSettingKey` 裡，永遠不受 manifest 簽章涵蓋、也不出現在 `/admin/settings` —— 能設環境變數的人可以繞過整套「全集簽章 + 稽核 + 撤銷」注入一把金鑰。要第二把金鑰請走系統設定。
+
+另外新增 `ChatService` 的 `allowSystemSettings` 選項：設為 `false` 時完全不查設定。唯一用途是**沒有主資料庫權限的節點**（`MissionExecutor`，見 `async_workers/00_async_worker_overview.md`）。那些節點的行為差異記在 `known_issues/executor_settings_isolation.md`。
+
 **刻意不做**：把 `process.env` 在啟動時用 DB 值覆寫（hydrate）。那樣所有讀取點都不必改，但會破壞 fail-closed —— 一旦寫進 `process.env`，之後即使偵測到簽章失效，舊值仍留在記憶體中被使用。
 
 ### 8. 遮罩秘密的合併規則

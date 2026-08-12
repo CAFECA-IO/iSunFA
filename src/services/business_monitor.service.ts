@@ -1,5 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { systemSettingService } from "@/services/system_setting.service";
+import { AppError } from "@/lib/utils/error";
+import { DEFAULT_GEMINI_MODEL } from "@/constants/llm";
+import { isLlmKeyMissingError } from "@/services/chat.service";
 import { SystemSettingKey } from "@/constants/system_setting";
 import { LLM_KEY_MISSING_ERROR_MARKER } from "@/constants/llm";
 import { reportRepo } from "@/repositories/report.repo";
@@ -307,9 +310,17 @@ ${question}`;
           );
         }
 
+        /**
+         * Info: (20260812 - Luphia) 模型名也接上設定,不再寫死。
+         * 金鑰吃設定而模型不吃,會讓「在 /admin/settings 換模型」對這條路徑無效,
+         * 而那個落差沒有任何跡象。
+         */
+        const modelName =
+          (await systemSettingService.get(SystemSettingKey.LLM_MODEL)) ||
+          DEFAULT_GEMINI_MODEL;
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({
-          model: "gemini-2.5-pro",
+          model: modelName,
           generationConfig: {
             responseMimeType: "application/json",
           },
@@ -346,6 +357,21 @@ ${query}
         aiResponse = JSON.parse(text) as IAIResponse;
       } catch (error) {
         console.error("LLM API 發生錯誤:", error);
+        /**
+         * Info: (20260812 - Luphia) 設定問題不降級成「系統忙線中」。
+         *
+         * 這個 catch 原本把所有東西吞成一句罐頭訊息,包括:
+         * - 缺金鑰(重試一萬次都一樣,要去 /admin/settings 設定)
+         * - `systemSettingService.get()` 在 UNTRUSTED 時拋的 `AppError`
+         *   ——「設定被竄改、系統拒絕服務」變成「忙線中」,而那是最需要
+         *   被維運看到的成因
+         *
+         * 只有「LLM 真的回答失敗」才適合降級成罐頭訊息:那是暫時性的,
+         * 而且使用者除了稍後再試也沒別的可做。
+         */
+        if (error instanceof AppError || isLlmKeyMissingError(error)) {
+          throw error;
+        }
         aiResponse = {
           answer: "系統忙線中或未設定正確的 API Key，請稍後再試。",
           sourceReportIds: [],
