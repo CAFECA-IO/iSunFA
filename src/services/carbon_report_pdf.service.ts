@@ -151,8 +151,17 @@ export class CarbonReportPdfService {
       });
       return { filled: 0, missing: entries.length };
     }
-    // Info: (20260812 - Emily) 比對前把空白去掉：文字層會在中文之間插入換行與空格
-    const squeeze = (value: string): string => value.replace(/\s+/g, "");
+    /**
+     * Info: (20260812 - Emily) 比對前先 NFKC 再去空白。
+     *
+     * 去空白是因為文字層會在中文之間插入換行與空格；NFKC 是因為
+     * **抽出來的字不一定是同一個碼位**：實測「第一章」的「一」抽出來是
+     * U+2F00（康熙部首），不是 U+4E00，字面看起來一樣但字串不相等。
+     * 少了這一步，34 條裡有 10 條找不到頁碼而留白 —— 而留白看起來像
+     * 「這節不在文件裡」，其實只是比對用錯了正規化形式。
+     */
+    const squeeze = (value: string): string =>
+      value.normalize("NFKC").replace(/\s+/g, "");
     const pages = splitTextByPages(extracted.text).map(squeeze);
 
     /**
