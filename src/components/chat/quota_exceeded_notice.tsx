@@ -123,10 +123,10 @@ export default function QuotaExceededNotice({
               {/**
                * Info: (20260813 - Luphia) 剩餘額度儀表（與團隊錢包面板同一元件、同一語意）。
                *
-               * 為什麼被擋下時還要顯示「剩餘 30%」：因為那正是實情——擋下的原因不是額度歸零，
-               * 而是**本則訊息的預扣上界高於剩餘額度**（預扣＝輸入估算＋maxOutputTokens，
-               * 見設計書 §5.3）。少了這兩條儀表，用戶在錢包頁看到 30% 卻在此被擋，
-               * 只會認定其中一邊在說謊；補上儀表與下一行說明，兩個數字才對得起來。
+               * 拆帳上線後（設計書 §5.4）走到這裡就代表**兩個來源都見底**：訂閱額度剩餘
+               * 只要 > 0 就會放行、不足的差額自動改扣分配點數。儀表因此通常是 0%，
+               * 但仍要顯示——它讓用戶自己看見「哪一層歸零、何時重置」，
+               * 也讓這張卡片與團隊錢包面板用同一套語意，不會再出現兩邊對不上的情況。
                */}
               <div className="mt-3 space-y-2 rounded-lg bg-white/60 p-3">
                 <QuotaMeter
@@ -142,7 +142,7 @@ export default function QuotaExceededNotice({
               </div>
 
               <p className="mt-2 text-xs text-amber-800">
-                {t("chat.quota_exceeded.hold_hint")}
+                {t("chat.quota_exceeded.exhausted_hint")}
               </p>
               <p className="mt-1 text-xs text-amber-700">
                 {t("chat.quota_exceeded.upsell_hint")}

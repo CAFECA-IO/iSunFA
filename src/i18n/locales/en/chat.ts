@@ -14,8 +14,8 @@ export const chat = {
     reset_ready_title: "Your quota has reset — you can keep chatting",
     meter_5h: "5-hour quota remaining",
     meter_week: "Weekly quota remaining",
-    hold_hint:
-      "Each message first reserves an upper bound of quota (estimated from the message length and the reply limit); the difference is returned once actual usage is settled. A message is blocked when the remaining quota is below that reservation — which is why some may still be shown above.",
+    exhausted_hint:
+      "Both your subscription quota and your allocated team credits are used up. As long as either still has a balance, we draw from it automatically and your message goes through.",
     countdown: "{{hours}}:{{minutes}}:{{seconds}}",
     countdown_days: "{{days}}d {{hours}}h",
     upsell_hint:

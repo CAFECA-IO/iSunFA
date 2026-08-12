@@ -12,8 +12,8 @@ export const chat = {
     reset_ready_title: "额度已重置，可以继续对话",
     meter_5h: "近 5 小时剩余额度",
     meter_week: "本周剩余额度",
-    hold_hint:
-      "每则信息会先预留一笔额度上限（依信息长度与回复上限估算），实际用量结算后退还差额；剩余额度低于这笔预留量时就会被挡下，因此上方仍可能显示尚有剩余。",
+    exhausted_hint:
+      "订阅额度与团队分配点数都已用完。只要任一边还有剩余，系统会自动接续扣抵，不会挡下您的信息。",
     countdown: "{{hours}}:{{minutes}}:{{seconds}}",
     countdown_days: "{{days}} 天 {{hours}} 小时",
     upsell_hint: "不想等？可加购点数或升级订阅方案，立即取得更高额度。",

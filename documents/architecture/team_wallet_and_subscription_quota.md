@@ -2,7 +2,7 @@
 
 > **Date**: August 2026
 > **Author**: Luphia
-> **Version**: 1.7 (Draft) — 1.1 新增 §5.3 費思計費；1.2–1.4 費率迭代；1.5 拍板費率與點值下限；1.6 拍板 C 案混合制（離鏈營運 + 每日 merkle 鏈上錨定，Phase 2 為 1:1 backing）；1.7 §5.3 拍板「選定帳本後才能使用費思」，計費團隊由 `AccountBook.teamId` 推導，client 不再自報 `teamId`
+> **Version**: 1.8 (Draft) — 1.1 新增 §5.3 費思計費；1.2–1.4 費率迭代；1.5 拍板費率與點值下限；1.6 拍板 C 案混合制（離鏈營運 + 每日 merkle 鏈上錨定，Phase 2 為 1:1 backing）；1.7 §5.3 拍板「選定帳本後才能使用費思」，計費團隊由 `AccountBook.teamId` 推導，client 不再自報 `teamId`；1.8 新增 §5.4 拆帳與封頂預扣（有餘額就放行、額度用光才扣錢包）
 > **Status**: Proposed
 > **Branch**: `feature/team_wallet_subscription_quota`
 > **關聯 ADR**: [ADR 015: 離鏈團隊錢包帳本](decisions/015_offchain_team_wallet_ledger.md)
@@ -253,6 +253,9 @@ spendCredits(identity, teamId, featureCode, cost, idempotencyKey)
   │     → $transaction: 條件扣款 + Ledger(CONSUME)。回 { source: "TEAM_ALLOCATION" }
   │
   └─ 3. 皆不足 → throw QuotaExceededError（Service 層攔截包裝，不噴 Prisma 原始錯誤）
+
+  ⚠️ 2026-08-13 起步驟 1 與 2 改為**拆帳**而非二選一：額度剩餘先用光、差額才扣分配點數，
+     且可用餘額不足全額時預扣封頂放行（見 §5.4）。步驟 3 的 402 僅在兩者同時見底時觸發。
         API 回 402，payload 附三條出路所需的全部資訊：
         {
           "code": "TEAM_QUOTA_EXCEEDED",
@@ -399,6 +402,24 @@ spendCredits(identity, teamId, featureCode, cost, idempotencyKey)
 | business | ~330 輪 | ~2,500 輪 |
 
 數字若與產品期望的體感不符，優先調 §4.1 的方案額度 env，其次才動費率。
+
+### 5.4 拆帳與封頂預扣（產品拍板 2026-08-13）
+
+原本的管線是「單一來源、全額或不放行」：預扣塞不進訂閱額度就整筆改扣分配點數，兩者都不夠即 402。實測後果是**剩餘 3 點的用戶被一筆預扣 5 點的訊息完全擋死**，而錢包頁的儀表同時顯示「每 5 小時額度剩 30%」——兩個畫面都沒說錯，但對用戶而言就是壞的，而且那 3 點額度會在視窗重置時直接作廢。
+
+新規則三條：
+
+| # | 規則 | 理由 |
+|---|---|---|
+| 1 | **有餘額就放行**：`訂閱額度剩餘 + 分配點數 > 0` 即可送出，402 只在兩者同時見底時丟出 | 「還有點數卻不能用」無法對用戶解釋 |
+| 2 | **拆帳**：訂閱額度先用光，差額才扣錢包（來源標記 `MIXED`） | 額度會週期性重置歸零，錢包點數是買來的；先用會過期的那一份 |
+| 3 | **封頂預扣**：可用餘額不足全額時，預扣封頂到餘額；結算時的差額**追補到訂閱額度**（鍵 `topup:{原鍵}`），**絕不追扣錢包** | 額度是軟限制，§5.1 早已容許最後一筆超額；錢包是硬限制，零容忍負餘額。追補同時是防濫用關鍵——不記這筆，用戶就能靠「只剩 1 點」無限發長訊息 |
+
+執行順序（`spend.service.ts`）刻意是**先扣錢包、後寫額度**：錢包是唯一可能條件失敗的一方（併發下餘額被扣走），放第一步能讓最常見的失敗路徑停在「什麼都還沒動」，不需要補償。額度寫入失敗才回頭沖銷錢包。
+
+退差額則**先退錢包**再退額度（`splitRefund`）：分配點數是資產，額度到期即歸零，退回額度對用戶幾乎沒有價值。失敗補償（`refundCredits`）兩邊都要沖銷——只沖一邊會留下「錢包扣了但功能失敗」的懸帳，而那一半正是用戶花錢買的。
+
+> 純函式層在 `src/lib/quota/spend_split.ts`（`resolveQuotaAvailable` / `splitSpend` / `splitRefund`），不碰 DB 與時鐘，可單測；`ISpendResult` 增列 `quotaAmount` / `allocationAmount` 拆帳明細，`ISettleResult` 增列 `toppedUp`。
 
 ---
 

@@ -115,6 +115,11 @@ export const SPEND_SOURCE = {
   SUBSCRIPTION_QUOTA: "SUBSCRIPTION_QUOTA",
   TEAM_ALLOCATION: "TEAM_ALLOCATION",
   PERSONAL_WALLET: "PERSONAL_WALLET",
+  /**
+   * Info: (20260813 - Luphia) 拆帳（設計書 §5.4）：同一筆消費同時扣了訂閱額度與分配點數。
+   * 額度剩餘不足全額時不再整筆改扣錢包，而是「額度用光、差額扣錢包」，故需要第四種來源。
+   */
+  MIXED: "MIXED",
 } as const;
 
 export type SpendSource = (typeof SPEND_SOURCE)[keyof typeof SPEND_SOURCE];

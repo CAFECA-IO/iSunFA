@@ -128,10 +128,20 @@ describe("runFaithBilledChat", () => {
   it("settles by the SDK-reported total tokens and returns the billing detail", async () => {
     const result = await runFaithBilledChat(BASE_PARAMS, makeChatStub(3150));
     // Info: (20260808 - Luphia) 3150 tokens → 實耗 4 點（進位）
+    /**
+     * Info: (20260813 - Luphia) nowSec 與 context 為追補差額所需（設計書 §5.4）：
+     * 純錢包預扣沒有額度用量列可沿用視窗與 teamId，缺這兩者就記不了封頂造成的差額。
+     */
     expect(settleSpend).toHaveBeenCalledWith({
       idempotencyKey: "faith:user-1:msg-9",
       actualCost: BigInt(4),
       operatorUserId: "user-1",
+      nowSec: NOW_SEC,
+      context: {
+        teamId: "team-1",
+        userId: "user-1",
+        featureCode: "FAITH_CHAT",
+      },
     });
     expect(result.reply).toBe("faith reply");
     expect(result.billing).toMatchObject({

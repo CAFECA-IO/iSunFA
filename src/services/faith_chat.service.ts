@@ -46,6 +46,7 @@ export interface IFaithBilledChatResult {
     held: string;
     charged: string;
     refunded: string;
+    toppedUp: string;
     totalTokens: number;
     tokensPerCredit: number;
   };
@@ -128,10 +129,20 @@ export async function runFaithBilledChat(
     generation.usage.totalTokens,
     billing,
   );
+  /**
+   * Info: (20260813 - Luphia) nowSec 與 context 供「預扣被餘額封頂」時追補差額用
+   * （設計書 §5.4）：純錢包預扣沒有額度用量列可沿用視窗與 teamId，只能由此注入。
+   */
   const settlement = await settleSpend({
     idempotencyKey,
     actualCost: actualCredits,
     operatorUserId: userId,
+    nowSec: params.nowSec,
+    context: {
+      teamId,
+      userId,
+      featureCode: BILLABLE_FEATURE_CODE.FAITH_CHAT,
+    },
   });
 
   return {
@@ -142,6 +153,8 @@ export async function runFaithBilledChat(
       held: settlement.held,
       charged: settlement.charged,
       refunded: settlement.refunded,
+      // Info: (20260813 - Luphia) 封頂預扣的追補額，供點數歷程對帳
+      toppedUp: settlement.toppedUp,
       totalTokens: generation.usage.totalTokens,
       tokensPerCredit: billing.tokensPerCredit,
     },

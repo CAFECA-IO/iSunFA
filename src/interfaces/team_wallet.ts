@@ -72,7 +72,11 @@ export interface ILedgerEntryView {
 
 export interface ISpendResult {
   source: SpendSource;
+  // Info: (20260813 - Luphia) 本次實際預扣總額（= quotaAmount + allocationAmount）
   amount: string;
+  // Info: (20260813 - Luphia) 拆帳明細（設計書 §5.4）：分別記錄兩個來源各扣多少
+  quotaAmount: string;
+  allocationAmount: string;
   idempotencyKey: string;
 }
 

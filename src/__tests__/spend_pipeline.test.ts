@@ -135,30 +135,79 @@ describe("spendCredits", () => {
     expect(teamWalletRepo.consumeAllocation).not.toHaveBeenCalled();
   });
 
-  it("falls back to team allocation when the 5h window is exhausted", async () => {
-    // Info: (20260807 - Luphia) team 方案 per5h = 100：98 + 3 > 100 → 額度層擋下
+  /**
+   * Info: (20260813 - Luphia) 拆帳（設計書 §5.4）：額度剩 2 點、本次要 3 點時，
+   * 不再整筆改扣錢包，而是「額度用光 2 點 + 錢包補 1 點」。
+   * 舊行為會讓那 2 點額度到期作廢，用戶卻多付了 3 點錢包點數。
+   */
+  it("splits the spend across quota and wallet when the quota is nearly out", async () => {
     asMock(teamQuotaUsageRepo.sumWindowUsage).mockResolvedValue({
       used5h: BigInt(98),
       usedWeek: BigInt(10),
     });
+    asMock(teamWalletRepo.getAllocation).mockResolvedValue({
+      balance: BigInt(10),
+    } as unknown);
+    asMock(teamWalletRepo.consumeAllocation).mockResolvedValue({
+      outcome: WALLET_OP_OUTCOME.OK,
+      ledger: { amount: BigInt(-1) },
+    } as unknown);
+
     const result = await spendCredits(BASE_PARAMS);
-    expect(result.source).toBe(SPEND_SOURCE.TEAM_ALLOCATION);
-    expect(teamQuotaUsageRepo.createUsage).not.toHaveBeenCalled();
+    expect(result.source).toBe(SPEND_SOURCE.MIXED);
+    expect(result.amount).toBe("3");
+    expect(result.quotaAmount).toBe("2");
+    expect(result.allocationAmount).toBe("1");
+    expect(teamQuotaUsageRepo.createUsage).toHaveBeenCalledWith(
+      expect.objectContaining({ amount: BigInt(2) }),
+    );
     expect(teamWalletRepo.consumeAllocation).toHaveBeenCalledWith(
-      expect.objectContaining({ amount: BigInt(3) }),
+      expect.objectContaining({ amount: BigInt(1) }),
     );
   });
 
-  it("throws QuotaExceededError with full payload when every source is exhausted", async () => {
+  /**
+   * Info: (20260813 - Luphia) 「有點數就能用」（設計書 §5.4）：可用餘額不足全額時
+   * 預扣封頂，而不是整筆擋下。這是本次改動的核心——舊行為讓剩 1 點的用戶完全無法送出訊息。
+   */
+  it("caps the hold at the available balance instead of blocking", async () => {
     asMock(teamQuotaUsageRepo.sumWindowUsage).mockResolvedValue({
-      used5h: BigInt(98),
+      used5h: BigInt(99),
       usedWeek: BigInt(10),
     });
-    asMock(teamWalletRepo.consumeAllocation).mockResolvedValue({
-      outcome: WALLET_OP_OUTCOME.INSUFFICIENT,
+
+    const result = await spendCredits(BASE_PARAMS);
+    expect(result.source).toBe(SPEND_SOURCE.SUBSCRIPTION_QUOTA);
+    expect(result.amount).toBe("1");
+    expect(teamWalletRepo.consumeAllocation).not.toHaveBeenCalled();
+  });
+
+  it("uses the wallet alone once the quota is fully consumed", async () => {
+    asMock(teamQuotaUsageRepo.sumWindowUsage).mockResolvedValue({
+      used5h: BigInt(100),
+      usedWeek: BigInt(10),
     });
     asMock(teamWalletRepo.getAllocation).mockResolvedValue({
-      balance: BigInt(1),
+      balance: BigInt(10),
+    } as unknown);
+
+    const result = await spendCredits(BASE_PARAMS);
+    expect(result.source).toBe(SPEND_SOURCE.TEAM_ALLOCATION);
+    expect(result.allocationAmount).toBe("3");
+    expect(teamQuotaUsageRepo.createUsage).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260813 - Luphia) 402 的門檻改為「訂閱額度與分配點數同時見底」（設計書 §5.4）。
+   * 只要還有 1 點就會放行，因此本測試把兩邊都設為 0。
+   */
+  it("throws QuotaExceededError with full payload when every source is exhausted", async () => {
+    asMock(teamQuotaUsageRepo.sumWindowUsage).mockResolvedValue({
+      used5h: BigInt(100),
+      usedWeek: BigInt(10),
+    });
+    asMock(teamWalletRepo.getAllocation).mockResolvedValue({
+      balance: BigInt(0),
     } as unknown);
 
     const error = await spendCredits(BASE_PARAMS).catch((e: unknown) => e);
@@ -168,23 +217,24 @@ describe("spendCredits", () => {
     expect(quotaError.data.exceeded).toBe("PER_5H");
     expect(quotaError.data.quota5h).toEqual({
       limit: "100",
-      used: "98",
+      used: "100",
       resetAt: getResetAt5h(NOW_SEC),
     });
     expect(quotaError.data.quotaWeek.resetAt).toBe(getResetAtWeek(NOW_SEC));
-    expect(quotaError.data.allocationBalance).toBe("1");
+    expect(quotaError.data.allocationBalance).toBe("0");
     expect(quotaError.data.options).toContain("WAIT_RESET");
   });
 
-  it("reports PER_WEEK when only the weekly window is exhausted", async () => {
-    // Info: (20260807 - Luphia) team 方案 perWeek = 750：749 + 3 > 750 但 5h 窗仍可容納
+  /**
+   * Info: (20260813 - Luphia) exceeded 取「剩餘較少」的視窗：週額度歸零而 5h 尚有餘裕時
+   * 要報 PER_WEEK，否則用戶等 5 小時後回來仍然被擋。
+   */
+  it("reports PER_WEEK when the weekly window is the binding one", async () => {
     asMock(teamQuotaUsageRepo.sumWindowUsage).mockResolvedValue({
       used5h: BigInt(0),
-      usedWeek: BigInt(749),
+      usedWeek: BigInt(750),
     });
-    asMock(teamWalletRepo.consumeAllocation).mockResolvedValue({
-      outcome: WALLET_OP_OUTCOME.NO_WALLET,
-    });
+    asMock(teamWalletRepo.getAllocation).mockResolvedValue(null);
 
     const error = await spendCredits(BASE_PARAMS).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(QuotaExceededError);
@@ -211,11 +261,33 @@ describe("spendCredits", () => {
     expect(teamWalletRepo.consumeAllocation).not.toHaveBeenCalled();
   });
 
+  /**
+   * Info: (20260813 - Luphia) 拆帳後的重放必須把兩邊加總回傳：只認其中一筆就早退，
+   * 會讓呼叫端把「已扣的錢包點數」當成沒扣過，結算時少退一半。
+   */
+  it("replays a split spend by summing both legs", async () => {
+    asMock(teamQuotaUsageRepo.findByIdempotencyKey).mockResolvedValue({
+      amount: BigInt(2),
+    } as unknown);
+    asMock(teamWalletRepo.findLedgerByIdempotencyKey).mockResolvedValue({
+      amount: BigInt(-1),
+    } as unknown);
+
+    const result = await spendCredits(BASE_PARAMS);
+    expect(result.source).toBe(SPEND_SOURCE.MIXED);
+    expect(result.amount).toBe("3");
+    expect(teamQuotaUsageRepo.createUsage).not.toHaveBeenCalled();
+    expect(teamWalletRepo.consumeAllocation).not.toHaveBeenCalled();
+  });
+
   it("treats a concurrent DUPLICATE outcome as success without double spending", async () => {
     asMock(teamQuotaUsageRepo.sumWindowUsage).mockResolvedValue({
       used5h: BigInt(100),
       usedWeek: BigInt(10),
     });
+    asMock(teamWalletRepo.getAllocation).mockResolvedValue({
+      balance: BigInt(10),
+    } as unknown);
     asMock(teamWalletRepo.consumeAllocation).mockResolvedValue({
       outcome: WALLET_OP_OUTCOME.DUPLICATE,
       ledger: { amount: BigInt(-3) },
@@ -229,6 +301,9 @@ describe("spendCredits", () => {
       used5h: BigInt(100),
       usedWeek: BigInt(10),
     });
+    asMock(teamWalletRepo.getAllocation).mockResolvedValue({
+      balance: BigInt(10),
+    } as unknown);
     asMock(teamWalletRepo.consumeAllocation).mockResolvedValue({
       outcome: WALLET_OP_OUTCOME.FROZEN,
     });
@@ -237,8 +312,11 @@ describe("spendCredits", () => {
     });
   });
 
+  /**
+   * Info: (20260813 - Luphia) 未知方案 fail-closed 到 free（per5h = 10）：已用 8 時
+   * 只剩 2 點可扣，若誤用 team 方案的 100 就會放行整筆 3 點。斷言拆帳金額即可證明額度上限。
+   */
   it("fails closed to the free plan when planId is unknown", async () => {
-    // Info: (20260807 - Luphia) free 方案 per5h = 10：8 + 3 > 10 → 未知方案不得放大額度
     asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
       planId: "enterprise-typo",
     } as unknown);
@@ -247,7 +325,31 @@ describe("spendCredits", () => {
       usedWeek: BigInt(8),
     });
     const result = await spendCredits(BASE_PARAMS);
-    expect(result.source).toBe(SPEND_SOURCE.TEAM_ALLOCATION);
+    expect(result.quotaAmount).toBe("2");
+    expect(teamQuotaUsageRepo.createUsage).toHaveBeenCalledWith(
+      expect.objectContaining({ amount: BigInt(2) }),
+    );
+  });
+
+  /**
+   * Info: (20260813 - Luphia) 錢包扣款失敗（併發下餘額被扣走）時不得寫入額度用量：
+   * 先扣錢包、後寫額度的順序，就是為了讓這條路徑「什麼都還沒動」而不需要補償。
+   */
+  it("writes no quota usage when the wallet leg fails", async () => {
+    asMock(teamQuotaUsageRepo.sumWindowUsage).mockResolvedValue({
+      used5h: BigInt(98),
+      usedWeek: BigInt(10),
+    });
+    asMock(teamWalletRepo.getAllocation).mockResolvedValue({
+      balance: BigInt(10),
+    } as unknown);
+    asMock(teamWalletRepo.consumeAllocation).mockResolvedValue({
+      outcome: WALLET_OP_OUTCOME.INSUFFICIENT,
+    });
+
+    await expect(spendCredits(BASE_PARAMS)).rejects.toBeInstanceOf(
+      QuotaExceededError,
+    );
     expect(teamQuotaUsageRepo.createUsage).not.toHaveBeenCalled();
   });
 
@@ -265,6 +367,7 @@ describe("refundCredits", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     asMock(teamQuotaUsageRepo.findByIdempotencyKey).mockResolvedValue(null);
+    asMock(teamWalletRepo.findLedgerByIdempotencyKey).mockResolvedValue(null);
     asMock(teamQuotaUsageRepo.createUsage).mockResolvedValue({
       created: true,
       usage: { amount: BigInt(-3) },
@@ -304,6 +407,9 @@ describe("refundCredits", () => {
   });
 
   it("refunds an allocation consumption through the wallet repo", async () => {
+    asMock(teamWalletRepo.findLedgerByIdempotencyKey).mockResolvedValue({
+      amount: BigInt(-3),
+    } as unknown);
     asMock(teamWalletRepo.refundAllocation).mockResolvedValue({
       outcome: WALLET_OP_OUTCOME.OK,
       ledger: { amount: BigInt(3) },
@@ -316,6 +422,44 @@ describe("refundCredits", () => {
       refunded: true,
       source: SPEND_SOURCE.TEAM_ALLOCATION,
     });
+  });
+
+  /**
+   * Info: (20260813 - Luphia) 拆帳後的失敗補償要沖銷兩邊（設計書 §5.4）：
+   * 只沖額度會留下「錢包扣了但功能失敗」的懸帳，而那一半是用戶花錢買的。
+   */
+  it("reverses both legs of a split spend", async () => {
+    asMock(teamQuotaUsageRepo.findByIdempotencyKey).mockResolvedValue({
+      teamId: "team-1",
+      userId: "user-1",
+      featureCode: BILLABLE_FEATURE_CODE.FAITH_CHAT,
+      amount: BigInt(2),
+      windowKey5h: 99226,
+      windowKeyWeek: 30,
+    } as unknown);
+    asMock(teamWalletRepo.findLedgerByIdempotencyKey).mockResolvedValue({
+      amount: BigInt(-1),
+    } as unknown);
+    asMock(teamWalletRepo.refundAllocation).mockResolvedValue({
+      outcome: WALLET_OP_OUTCOME.OK,
+      ledger: { amount: BigInt(1) },
+    } as unknown);
+
+    const result = await refundCredits({
+      idempotencyKey: "faith:msg-1",
+      operatorUserId: "worker",
+    });
+    expect(result).toEqual({ refunded: true, source: SPEND_SOURCE.MIXED });
+    expect(teamQuotaUsageRepo.createUsage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        amount: BigInt(-2),
+        idempotencyKey: "refund:faith:msg-1",
+      }),
+    );
+    expect(teamWalletRepo.refundAllocation).toHaveBeenCalledWith(
+      "faith:msg-1",
+      "worker",
+    );
   });
 
   it("returns refunded=false when there is nothing to refund", async () => {
@@ -363,6 +507,7 @@ describe("settleSpend", () => {
       held: "6",
       charged: "4",
       refunded: "2",
+      toppedUp: "0",
     });
     expect(teamQuotaUsageRepo.createUsage).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -393,7 +538,12 @@ describe("settleSpend", () => {
     expect(teamQuotaUsageRepo.createUsage).not.toHaveBeenCalled();
   });
 
-  it("never charges beyond the hold when actual exceeds it", async () => {
+  /**
+   * Info: (20260813 - Luphia) 預扣可能被可用餘額封頂，因此 actual > held 是**預期情形**
+   * 而非估算異常（設計書 §5.4）。差額追補到訂閱額度（軟限制，允許最後一筆超額），
+   * 絕不追扣錢包——錢包零容忍負餘額。不記這筆，用戶就能靠「只剩 1 點」無限發長訊息。
+   */
+  it("tops up the shortfall into the quota window when actual exceeds the capped hold", async () => {
     asMock(teamQuotaUsageRepo.findByIdempotencyKey).mockResolvedValue({
       teamId: "team-1",
       userId: "user-1",
@@ -408,9 +558,84 @@ describe("settleSpend", () => {
       actualCost: BigInt(9),
       operatorUserId: "user-1",
     });
-    expect(result.charged).toBe("4");
+    expect(result.charged).toBe("9");
     expect(result.refunded).toBe("0");
+    expect(result.toppedUp).toBe("5");
+    expect(teamQuotaUsageRepo.createUsage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        amount: BigInt(5),
+        windowKey5h: 99226,
+        windowKeyWeek: 30,
+        idempotencyKey: "topup:faith:msg-1",
+      }),
+    );
+    expect(teamWalletRepo.refundAllocationPartial).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260813 - Luphia) 拆帳的差額**先退錢包**：分配點數是買來的資產，
+   * 訂閱額度到期即歸零，退回額度對用戶幾乎沒有價值。
+   */
+  it("refunds a split settlement to the wallet before the quota", async () => {
+    asMock(teamQuotaUsageRepo.findByIdempotencyKey).mockResolvedValue({
+      teamId: "team-1",
+      userId: "user-1",
+      featureCode: BILLABLE_FEATURE_CODE.FAITH_CHAT,
+      amount: BigInt(2),
+      windowKey5h: 99226,
+      windowKeyWeek: 30,
+    } as unknown);
+    asMock(teamWalletRepo.findLedgerByIdempotencyKey).mockResolvedValue({
+      amount: BigInt(-4),
+    } as unknown);
+
+    const result = await settleSpend({
+      idempotencyKey: "faith:msg-1",
+      actualCost: BigInt(3),
+      operatorUserId: "user-1",
+    });
+    expect(result.source).toBe(SPEND_SOURCE.MIXED);
+    expect(result.held).toBe("6");
+    expect(result.refunded).toBe("3");
+    // Info: (20260813 - Luphia) 退 3 點：錢包扣了 4 點，故全額由錢包退回，額度不動
+    expect(teamWalletRepo.refundAllocationPartial).toHaveBeenCalledWith(
+      "faith:msg-1",
+      BigInt(3),
+      "user-1",
+    );
     expect(teamQuotaUsageRepo.createUsage).not.toHaveBeenCalled();
+  });
+
+  it("spills the remainder of a refund into the quota once the wallet leg is fully returned", async () => {
+    asMock(teamQuotaUsageRepo.findByIdempotencyKey).mockResolvedValue({
+      teamId: "team-1",
+      userId: "user-1",
+      featureCode: BILLABLE_FEATURE_CODE.FAITH_CHAT,
+      amount: BigInt(4),
+      windowKey5h: 99226,
+      windowKeyWeek: 30,
+    } as unknown);
+    asMock(teamWalletRepo.findLedgerByIdempotencyKey).mockResolvedValue({
+      amount: BigInt(-2),
+    } as unknown);
+
+    const result = await settleSpend({
+      idempotencyKey: "faith:msg-1",
+      actualCost: BigInt(1),
+      operatorUserId: "user-1",
+    });
+    expect(result.refunded).toBe("5");
+    expect(teamWalletRepo.refundAllocationPartial).toHaveBeenCalledWith(
+      "faith:msg-1",
+      BigInt(2),
+      "user-1",
+    );
+    expect(teamQuotaUsageRepo.createUsage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        amount: BigInt(-3),
+        idempotencyKey: "settle:faith:msg-1",
+      }),
+    );
   });
 
   it("refunds the allocation difference through the partial refund path", async () => {
@@ -429,6 +654,7 @@ describe("settleSpend", () => {
       held: "6",
       charged: "4",
       refunded: "2",
+      toppedUp: "0",
     });
     expect(teamWalletRepo.refundAllocationPartial).toHaveBeenCalledWith(
       "faith:msg-1",
@@ -507,8 +733,13 @@ describe("resolveEffectivePlanId (fail-closed)", () => {
       ledger: { amount: BigInt(-3) },
     } as unknown);
 
+    asMock(teamWalletRepo.getAllocation).mockResolvedValue(null);
+
     const result = await spendCredits(BASE_PARAMS);
-    expect(result.source).toBe(SPEND_SOURCE.TEAM_ALLOCATION);
-    expect(teamQuotaUsageRepo.createUsage).not.toHaveBeenCalled();
+    // Info: (20260813 - Luphia) free per5h = 10、已用 8 → 只剩 2 點；若誤享 team 額度會放行整筆 3 點
+    expect(result.amount).toBe("2");
+    expect(teamQuotaUsageRepo.createUsage).toHaveBeenCalledWith(
+      expect.objectContaining({ amount: BigInt(2) }),
+    );
   });
 });
