@@ -481,6 +481,122 @@ export const API_ERRORS = {
     message: "User canceled",
     status: ApiCode.UNAUTHORIZED,
   } as IErrorDef,
+  // Info: (20260809 - Luphia) AU000009 ~ AU000015：第三方（OAuth）登入
+  AUTH_PROVIDER_UNSUPPORTED: {
+    code: "AU000009",
+    message: "Unsupported login provider",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+  AUTH_PROVIDER_NOT_CONFIGURED: {
+    code: "AU000010",
+    message: "Login provider not configured",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
+  AUTH_OAUTH_STATE_INVALID: {
+    code: "AU000011",
+    message: "Invalid or expired login state",
+    status: ApiCode.UNAUTHORIZED,
+  } as IErrorDef,
+  AUTH_OAUTH_EXCHANGE_FAILED: {
+    code: "AU000012",
+    message: "Failed to exchange authorization code",
+    status: ApiCode.UNAUTHORIZED,
+  } as IErrorDef,
+  AUTH_OAUTH_EMAIL_UNVERIFIED: {
+    code: "AU000013",
+    message: "Provider email is not verified",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+  AUTH_IDENTITY_ALREADY_LINKED: {
+    code: "AU000014",
+    message: "Identity already linked to another account",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+  AUTH_IDENTITY_NOT_LINKED: {
+    code: "AU000015",
+    message: "Identity is not linked to this account",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+  AUTH_LAST_LOGIN_METHOD: {
+    code: "AU000016",
+    message: "Cannot remove the last login method",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+  /**
+   * Info: (20260810 - Luphia) 託管代簽只接受本站發出過的 challenge。
+   * 這是「不成為簽章預言機」的關鍵防線：對不上就拒絕，絕不代簽來源不明的雜湊。
+   */
+  AUTH_CHALLENGE_NOT_RECOGNISED: {
+    code: "AU000021",
+    message: "Challenge was not issued by this server",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+  AUTH_CUSTODIAL_KEY_MISSING: {
+    code: "AU000017",
+    message: "Custodial signing key not found",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+  AUTH_REDIRECT_URI_NOT_ALLOWED: {
+    code: "AU000018",
+    message: "Redirect URI is not allowed",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+  // Info: (20260809 - Luphia) AU000019 ~ AU000020：DB 系統設定的管理員簽章
+  AUTH_SETTING_SIGNATURE_INVALID: {
+    code: "AU000019",
+    message: "Invalid super admin config signature",
+    status: ApiCode.UNAUTHORIZED,
+  } as IErrorDef,
+  AUTH_SUPER_ADMIN_REQUIRED: {
+    code: "AU000020",
+    message: "Super admin access required",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+  CF_SETTING_VERSION_CONFLICT: {
+    code: "CF000001",
+    message: "Settings changed, please reload",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+  /**
+   * Info: (20260810 - Luphia) 現有設定讀不出來時拒絕寫入。
+   * 寫入是全量替換，若讀不到現況就覆寫，等於用「看不見的狀態」刪掉既有設定
+   * （20260810 曾因此遺失 Google OAuth 設定）。
+   */
+  /**
+   * Info: (20260811 - Luphia) 狀態改為 500：根因是伺服器端讀不到現況（保險庫主密鑰
+   * 不可用、設定遭竄改），不是客戶端拿著過期版本。回 409 會讓前端走「重新載入後重試」，
+   * 而那條路永遠不會成功——版本衝突請用 CF_SETTING_VERSION_CONFLICT。
+   */
+  CF_SETTING_STATE_UNREADABLE: {
+    code: "CF000002",
+    message: "Current settings unreadable, refusing to overwrite",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
+  CF_VAULT_KEY_WOULD_ORPHAN: {
+    code: "CF000003",
+    message: "Existing ciphertext would become unreadable",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+  /**
+   * Info: (20260809 - Luphia) 與泛用的 IS_CONFIG_MISSING 分開：
+   * 這個錯誤有明確的處理方式（設定 SECRET_VAULT_MASTER_KEY 後重新簽署 .env），
+   * 混在「設定缺失」裡會讓管理員無從下手。
+   */
+  IS_SECRET_VAULT_MISSING: {
+    code: "IS000098",
+    message: "Secret vault master key not configured",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
+  /**
+   * Info: (20260811 - Luphia) 資料庫裡有設定，但驗簽 / digest / 加密狀態對不上。
+   * 這種情況不退回 env（那等於讓一行 SQL 就能把系統換回輪替前的舊憑證），
+   * 一律拒絕服務並告警，由管理員重新簽署設定或還原資料。
+   */
+  IS_SETTING_STATE_UNTRUSTED: {
+    code: "IS000097",
+    message: "Stored system settings failed verification",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
 
   // Info: (20260421 - Luphia) VL: Validation & Input (000001 ~ 000099)
   VL_MISSING_PARAMS: {

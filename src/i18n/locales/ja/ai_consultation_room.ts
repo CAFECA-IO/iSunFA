@@ -1,7 +1,7 @@
 export const aiConsultationRoom = {
   title: "AI相談室",
   subtitle:
-    "AIとのリアルタイム会計Q&A、およびコミュニティメンバーとの議論の共有。",
+    "AIとのリアルタイム会計・カーボン管理Q&A、およびコミュニティメンバーとの議論の共有。",
   not_found: "会話履歴が見つかりません",
   not_found_desc:
     "申し訳ありませんが、お探しのコンテンツが見つかりませんでした。",

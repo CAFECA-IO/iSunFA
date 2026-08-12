@@ -338,7 +338,7 @@ export default function EsgDetailModal({
   };
 
   const EsgContent = (
-    <div className="flex size-full flex-col overflow-hidden bg-[#F8FAFC]">
+    <div className="flex size-full flex-col overflow-hidden bg-slate-50">
       {/* Info: (20260326 - Julian) Body */}
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-[10px]">
         <div className="flex shrink-0 flex-col items-start justify-between gap-3 p-4 sm:flex-row sm:items-center">

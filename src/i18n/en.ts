@@ -48,6 +48,7 @@ import { balanceSheetView } from "@/i18n/locales/en/balance_sheet_view";
 import { trialBalanceView } from "@/i18n/locales/en/trial_balance_view";
 import { incomeStatementView } from "@/i18n/locales/en/income_statement_view";
 import { adminSetup } from "@/i18n/locales/en/admin_setup";
+import { adminSettings } from "@/i18n/locales/en/admin_settings";
 import { adminMember } from "@/i18n/locales/en/admin_member";
 import { adminBlockchain } from "@/i18n/locales/en/admin_blockchain";
 import { adminMissionBoard } from "@/i18n/locales/en/admin_mission_board";
@@ -123,6 +124,7 @@ export const en = {
   trial_balance_view: trialBalanceView,
   income_statement_view: incomeStatementView,
   admin_setup: adminSetup,
+  admin_settings: adminSettings,
   admin_member: adminMember,
   admin_blockchain: adminBlockchain,
   admin_billing: adminBilling,

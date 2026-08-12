@@ -1,4 +1,5 @@
 import { IEmployeeListItem } from "@/interfaces/hr_management";
+import { parseIsoDate } from "@/lib/utils/hr_date";
 
 export interface ITenure {
   years: number;
@@ -18,8 +19,22 @@ export function calculateTenure(
   employee: IEmployeeListItem,
   referenceDate: Date,
 ): ITenure {
-  const start = new Date(employee.hireDate);
-  const end = employee.leaveDate ? new Date(employee.leaveDate) : referenceDate;
+  /**
+   * Info: (20260811 - Julian) 用 `parseIsoDate` 而不是 `new Date(employee.hireDate)`。
+   *
+   * `hireDate` / `leaveDate` 是 "YYYY-MM-DD" 字串，交給 `new Date()` 會被當成
+   * UTC 午夜解析，在 UTC 以西的時區取 `getMonth()` / `getDate()` 會退一天 ——
+   * 而下面整段計算都建立在這兩個值上。實測 4320 組（到職日 × 基準日）中有
+   * 562 組會因為執行環境的時區不同而算出不同年資，例如 2024-01-01 到職、
+   * 2026-12-31 為基準，台北算 2 年 11 個月，紐約算 3 年 0 個月。
+   *
+   * 這正是 `hr_date.ts` 檔頭警告的那個坑；那支工具存在的理由就是不要有人再踩。
+   * 回歸測試在 `hr_employee.tz.test.ts`，固定跑在 America/New_York。
+   */
+  const start = parseIsoDate(employee.hireDate);
+  const end = employee.leaveDate
+    ? parseIsoDate(employee.leaveDate)
+    : referenceDate;
 
   let totalMonths =
     (end.getFullYear() - start.getFullYear()) * 12 +

@@ -111,11 +111,14 @@ export interface IEmployeeDocument {
 }
 
 /**
- * Info: (20260811 - Julian) 報到／離職流程的細項任務，對應 Prisma model ProcessTask。
+ * Info: (20260811 - Julian) 報到／離職流程的細項任務（待辦清單用的合併型別）。
  *
- * ToDo: (20260811 - Julian) `category` 與 `assigneeName` 在 Prisma 沒有對應欄位
- * （ProcessTask 只有 title / status / assigneeId）。離職交接矩陣要靠 category 分組、
- * 篩選列的「負責人」要靠 assigneeName，接 API 前 schema 需要補上。
+ * 儲存層對應的是 `OnboardingTask` 與 `OffboardingTask` **兩張表**，不是單一 model ——
+ * 原本的 `ProcessTask` 已依 ADR 019 拆分，好讓「任務不屬於任何流程」與
+ * 「taskType 與所屬流程矛盾」在 schema 層就無法表示。
+ *
+ * 這個介面保留合併形狀，是因為畫面把兩種任務併成一張列表；
+ * `taskType` 因此是 service 依來源表填入的衍生值，DB 沒有這個欄位，也不可寫回。
  */
 export interface IProcessTask {
   id: string;

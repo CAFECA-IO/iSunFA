@@ -129,12 +129,17 @@ export const HR_DASHBOARD_ROLE_I18N_KEY: Record<HrDashboardRole, string> = {
 };
 
 /**
- * ToDo: (20260810 - Julian) 主管視角暫時固定看技術部。
- * 接上權限後改為由登入者的 `Employee.managedDepartment` 決定。
+ * Info: (20260811 - Julian) 報到／離職任務類型。**DTO 層的衍生值，DB 沒有這個欄位。**
+ *
+ * 原本對齊 Prisma enum `ProcessTaskType`，但那個 enum 已隨 `ProcessTask` 拆成
+ * `OnboardingTask` / `OffboardingTask` 一併移除 —— 儲存層裡任務屬於哪種流程
+ * 由它在哪張表決定，存一個可以與外鍵矛盾的欄位只會製造第三種真相
+ * （見 ADR 019）。
+ *
+ * 這裡保留它的理由不同：待辦清單畫面把兩種任務併成一張列表，
+ * 每一列需要標示自己來自哪邊。這個值由 service 層依來源表填入，
+ * **不可以寫回資料庫**。
  */
-export const MOCK_MANAGER_DEPARTMENT_ID = "dep-001";
-
-// Info: (20260810 - Julian) 報到／離職任務類型，對齊 Prisma enum ProcessTaskType
 export enum ProcessTaskType {
   ONBOARDING = "ONBOARDING",
   OFFBOARDING = "OFFBOARDING",
@@ -145,6 +150,18 @@ export enum ProcessTaskStatus {
   PENDING = "PENDING",
   COMPLETED = "COMPLETED",
   SKIPPED = "SKIPPED",
+}
+
+/**
+ * Info: (20260811 - Julian) 試用期考核結果，對齊 Prisma enum ProbationResult。
+ *
+ * 三個值都會進判斷：EXTEND 延長試用期並重排考核日、FAIL 觸發離職流程、
+ * PASS 把 `EmployeeStatus` 從 PROBATION 轉成 ACTIVE。
+ */
+export enum ProbationResult {
+  PASS = "PASS",
+  EXTEND = "EXTEND",
+  FAIL = "FAIL",
 }
 
 // Info: (20260810 - Julian) 文件分類，對齊 Prisma enum DocumentCategory

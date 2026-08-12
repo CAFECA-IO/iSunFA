@@ -23,3 +23,22 @@ export const updateProfileSchema = z.object({
     })
     .optional(),
 });
+
+/**
+ * Info: (20260811 - Luphia) 託管帳號代簽請求。
+ *
+ * 兩種模式：直接給 challenge（需為本站發出過的值），或給 orderId 讓伺服器自己組
+ * 付款 UserOp。**刻意不接受呼叫端傳入的 UserOp**——只驗 sender 的話，callData 仍由
+ * 呼叫端決定，那就是一支任意動作簽章預言機（見 custodial_wallet.service）。
+ */
+export const custodialSignSchema = z
+  .object({
+    challenge: z.string().min(1).max(512).optional(),
+    challengeToken: z.string().min(1).optional(),
+    orderId: z.string().uuid().optional(),
+  })
+  // Info: (20260811 - Luphia) strict：多送的欄位一律拒絕，讓「不再接受 userOp」是可驗證的，而不是被靜默忽略
+  .strict()
+  .refine((value) => Boolean(value.challenge || value.orderId), {
+    message: "Either challenge or orderId is required",
+  });

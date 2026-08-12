@@ -15,7 +15,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { useAuth } from "@/contexts/auth_context";
 import LegalModal from "@/components/common/legal_modal";
 import { MoneyUtil } from "@/lib/utils/money";
-import { fido2ClientService } from "@/lib/auth/fido2_client";
+import { requestAssertion } from "@/lib/auth/assertion_client";
 import { encodeWebAuthnSignature } from "@/lib/auth/crypto_utils";
 import {
   IPaymentModalProps,
@@ -443,11 +443,15 @@ export default function PaymentModal({
         throw new Error("Missing public keys. Please re-login.");
       }
 
-      const transferAuth = await fido2ClientService.startLogin({
-        challenge: challenge,
-        timeout: 60000,
-        userVerification: "required",
-        allowCredentials: [],
+      /**
+       * Info: (20260811 - Luphia) 走 requestAssertion，託管帳號才不會卡在永遠不會成功的系統對話框。
+       * 這裡簽的是訂單自己的 challenge（伺服器產生的 sha256），
+       * 託管路徑會以「這張訂單屬於本人且尚未付款」作為代簽的出處驗證。
+       */
+      const transferAuth = await requestAssertion({
+        challenge,
+        custody: user.custody,
+        passkeyOptions: { allowCredentials: [] },
       });
 
       const encodedSignature = encodeWebAuthnSignature(

@@ -60,9 +60,59 @@ model User {
   pdfEditorDocuments    PdfEditorDocument[]    @relation("PdfEditorDocumentCreator")
   accountingAccounts    AccountingAccount[]
   teamWalletAllocations TeamWalletAllocation[]
+  identities            UserIdentity[]
+  custodialKey          UserCustodialKey?
 
   @@index([address])
   @@map("user")
+}
+
+/**
+ * Info: (20260809 - Luphia) 第三方身分綁定（Google / Apple / ...）。
+ * 一個 User 可綁多個 provider，同一 provider 只能綁一個外部帳號；
+ * (provider, providerUserId) 為全域唯一，避免同一個 Google 帳號登入到兩個 User。
+ */
+model UserIdentity {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider       String
+  providerUserId String    @map("provider_user_id")
+  email          String?
+  emailVerified  Boolean   @default(false) @map("email_verified")
+  displayName    String?   @map("display_name")
+  avatarUrl      String?   @map("avatar_url")
+  lastLoginAt    DateTime? @map("last_login_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@unique([provider, providerUserId])
+  // Info: (20260811 - Luphia) 不另建 @@index([userId])：複合唯一索引的最左前綴已涵蓋以 userId 查詢
+  @@unique([userId, provider])
+  @@map("user_identity")
+}
+
+/**
+ * Info: (20260809 - Luphia) 託管式 SCW 簽章金鑰。
+ * 僅用於「沒有 passkey」的第三方登入使用者：伺服器代管其 P-256 私鑰，
+ * 私鑰以 AES-256-GCM 加密後存放（見 src/lib/auth/key_vault.ts），明文永不落盤。
+ * 使用者之後補綁 passkey 時，可將 SCW 擁有者換成 passkey 公鑰並廢除此列。
+ */
+model UserCustodialKey {
+  userId              String   @id @map("user_id")
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credentialId        String   @unique @map("credential_id")
+  pubKeyX             String   @map("pub_key_x")
+  pubKeyY             String   @map("pub_key_y")
+  encryptedPrivateKey String   @map("encrypted_private_key")
+  iv                  String
+  authTag             String   @map("auth_tag")
+  keyVersion          Int      @default(1) @map("key_version")
+  algorithm           String   @default("AES-256-GCM")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@map("user_custodial_key")
 }
 
 model Team {
@@ -212,6 +262,59 @@ model SubscriptionPlanQuota {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("subscription_plan_quota")
+}
+
+/**
+ * Info: (20260809 - Luphia) 系統設定（DB 為準，取代大部分 .env 變更）。
+ * 秘密值（如 OAuth client secret）以 AES-256-GCM 加密後存放，明文永不落盤。
+ * 完整性由 SystemSettingManifest 的全集簽章保護——單獨改這張表會導致 digest 對不上而被拒用。
+ */
+model SystemSetting {
+  key        String   @id
+  value      String
+  isSecret   Boolean  @default(false) @map("is_secret")
+  iv         String?
+  authTag    String?  @map("auth_tag")
+  keyVersion Int?     @map("key_version")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("system_setting")
+}
+
+/**
+ * Info: (20260809 - Luphia) 系統設定的全集簽章（單列）。
+ *
+ * 與 .env 的 SUPER_ADMIN_SIGNATURE 同構：把所有設定的「明文」鍵值排序串接成
+ * canonical string，SHA-256 後當作 WebAuthn challenge，由 SUPER_ADMIN 的 passkey 簽署。
+ *
+ * 之所以簽全集而非逐列：逐列簽章擋不住「整列刪除」與「換回舊值」，
+ * 只有涵蓋全集的 digest 才能偵測新增／刪除。version 單調遞增以緩解 rollback
+ * （完全防堵需 DB 以外的錨點，見 ADR 017）。
+ */
+model SystemSettingManifest {
+  key       String   @id @default("default")
+  digest    String
+  signature String
+  signedBy  String   @map("signed_by")
+  version   Int
+  signedAt  DateTime @default(now()) @map("signed_at")
+
+  @@map("system_setting_manifest")
+}
+
+// Info: (20260809 - Luphia) 設定變更稽核軌跡：保留每一版的 digest 與簽章，供事後追查與 version 單調性檢查
+model SystemSettingAudit {
+  id        String   @id @default(uuid())
+  version   Int      @unique
+  digest    String
+  signature String
+  signedBy  String   @map("signed_by")
+  // Info: (20260811 - Luphia) 逗號串接：目前 key 全部來自 SystemSettingKey 常數，不含逗號
+  changedKeys String   @map("changed_keys")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("system_setting_audit")
 }
 
 /**
@@ -516,6 +619,22 @@ model AccountBook {
   // Info: (20260703 - Julian) 帳本對應的客製化會計科目
   accountingAccounts AccountingAccount[]
 
+  // Info: (20260811 - Julian) 帳本對應的人資 (HR) 資料
+  departments          Department[]
+  jobTitles            JobTitle[]
+  employees            Employee[]
+  employeeEducations   EmployeeEducation[]
+  employeeExperiences  EmployeeExperience[]
+  emergencyContacts    EmergencyContact[]
+  dependents           Dependent[]
+  bankAccounts         BankAccount[]
+  onboardingTasks      OnboardingTask[]
+  offboardingTasks     OffboardingTask[]
+  onboardingProcesses  OnboardingProcess[]
+  probationReviews     ProbationReview[]
+  offboardingProcesses OffboardingProcess[]
+  employeeDocuments    EmployeeDocument[]
+
   @@map("account_book")
 }
 
@@ -524,12 +643,18 @@ enum AuditLogDataType {
   JOURNAL
   VOUCHER
   ESG_RECORD
+  // Info: (20260811 - Julian) 人事敏感個資的存取軌跡；dataId 一律填所屬 Employee.id，
+  // Info: (20260811 - Julian) 讓「誰在何時看了誰的身分證／銀行帳號」可以用單一員工當軸線查回來
+  EMPLOYEE_PII
 }
 
 enum AuditLogAction {
   CREATE
   UPDATE
   DELETE
+  // Info: (20260811 - Julian) 唯讀動作。財務資料改了才需要留痕，個資「被看過」本身就是事件
+  // Info: (20260811 - Julian) （個資法 §12 §27 的存取軌跡要求），因此僅用於 EMPLOYEE_PII
+  READ
 }
 
 model AuditLog {
@@ -1433,6 +1558,54 @@ model UserStorageUsage {
   @@map("user_storage_usage")
 }
 
+/**
+ * Info: (20260811 - Julian) ========== 人事模組個資保護等級（本區塊 13 張表的預設值）==========
+ *
+ * ## 決策
+ *
+ * 敏感個資欄位一律以**應用層欄位加密**入庫（AES-256-GCM，金鑰由伺服器持有），
+ * 對外預設回遮罩值，取用完整值另走一條路徑並寫 `AuditLog`。
+ * 完整脈絡見 `documents/architecture/decisions/018_hr_pii_data_classification.md`。
+ *
+ * ## 為什麼不是 E2EE（碳盤查的做法）
+ *
+ * `ChatroomMessage` / `CarbonReportDraft` 那套 ECIES envelope 之所以成立，是因為
+ * 那些資料**只有使用者自己要讀**；伺服器讀不到不影響任何功能。
+ * 人事資料相反：薪轉檔產製、勞健保申報、離職退保、試用期到期通知，
+ * 全部是背景 Worker 在跑。金鑰若只在前端，這些流程永遠解不開資料 ——
+ * E2EE 會廢掉這個模組一半的功能，也與 CLAUDE.md §7「計算收斂到後端確定性規則引擎」衝突。
+ *
+ * 所以這裡取的是中間值：**伺服器讀得到，資料庫本身讀不到**。
+ * 防的是 DB dump、備份外洩、DBA 越權直讀、誤上傳的還原檔 ——
+ * 這些正是個資外洩事故的實際大宗。防不了的是應用層被攻破，那由 §存取稽核 補。
+ *
+ * ## 為什麼不是「維持明文，靠 DB 層 at-rest 加密」
+ *
+ * `sovereign_cloud_security_drp.md` 宣告的 PostgreSQL AES-256 靜態加密是**磁碟層**的，
+ * 對 `pg_dump`、對持有連線字串的人、對備份檔完全無效 —— 它防的是實體磁碟被搬走。
+ * 帳本模式的 `CarbonReportDraft.plainContent` 接受這個等級，理由是那是碳排活動數據；
+ * 而這裡存的是身分證字號與銀行帳號，外洩後果是身分冒用與金流盜用，不是同一個量級。
+ * 保護強度不該低於它所保護的東西。
+ *
+ * ## 落地規則
+ *
+ * 1. 密文欄位一律以 `Cipher` 結尾（`nationalIdCipher`、`accountNumberCipher`…）。
+ *    命名就是型別以外的第二道提醒：看到 `Cipher` 就知道這不是能直接顯示的值。
+ * 2. 每張持有個資的表帶 `piiAlgorithm` + `piiKeyVersion`，支援金鑰輪替時新舊並存。
+ * 3. `piiKeyVersion` 在密文欄位全為選填的表（Dependent）可為 null；
+ *    其餘三張表至少有一個必填密文欄位，因此改為 NOT NULL 由資料庫直接擋
+ *    （見各表欄位上的說明）。不變式仍然保留：它涵蓋 Dependent，
+ *    也涵蓋「沒有任何密文卻標了代次」的反方向。
+ *    原文保留於此以說明規則本身：**任一密文欄位有值時它必須有值** ——
+ *    比照 `carbon_envelope_invariant.ts` 的「寫得進去就必須讀得出來」，
+ *    由 `src/repositories/hr_pii_invariant.ts` 擋在寫入端，而不是讀取端。
+ * 4. 未加密的欄位是刻意的，理由逐欄記在 ADR 018：
+ *    `employeeNo` / `email` 要進複合唯一鍵，`name` 要排序與模糊搜尋，
+ *    加密會讓這兩件事都做不到，而它們單獨不足以冒用身分。
+ * 5. `birthday` 加密後失去 DB 端的日期查詢能力。目前沒有任何查詢用到它；
+ *    未來若需要「本月壽星」這類需求，加一個非敏感的衍生欄位（如 `birthMonth Int?`），
+ *    不要為了查詢把 `birthday` 改回明文。
+ */
 // Info: (20260810 - Julian) 員工基本資料
 enum EmployeeStatus {
   ACTIVE             // Info: (20260810 - Julian) 在職
@@ -1450,65 +1623,111 @@ enum Gender {
 // Info: (20260810 - Julian) 公司部門 (支援無限層級樹狀圖)
 model Department {
   id          String       @id @default(uuid())
-  code        String       @unique // Info: (20260810 - Julian) 部門編號 (例: DEP-001)
+  code        String       // Info: (20260810 - Julian) 部門編號 (例: DEP-001)，唯一性以帳本為範圍
   name        String       // Info: (20260810 - Julian) 部門名稱
   description String?
-  
+
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
   // Info: (20260810 - Julian) 樹狀圖自關聯 (父部門與子部門)
-  parentId    String?
+  parentId    String?      @map("parent_id")
   parent      Department?  @relation("DepartmentTree", fields: [parentId], references: [id], onDelete: SetNull)
   children    Department[] @relation("DepartmentTree")
 
   // Info: (20260810 - Julian) 部門最高主管 (簽核流程節點之一)
-  managerId   String?      @unique
+  managerId   String?      @unique @map("manager_id")
   manager     Employee?    @relation("DeptManager", fields: [managerId], references: [id], onDelete: SetNull)
 
   employees   Employee[]   @relation("DeptEmployees")
 
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
 
+  @@unique([accountBookId, code])
+  @@index([accountBookId])
   @@index([parentId])
+  @@map("department")
 }
 
 // Info: (20260810 - Julian) 職稱字典
 model JobTitle {
   id          String     @id @default(uuid())
-  code        String     @unique // Info: (20260810 - Julian) 職稱代號 (例: JT-DEV-LEAD)
+  code        String     // Info: (20260810 - Julian) 職稱代號 (例: JT-DEV-LEAD)，唯一性以帳本為範圍
   title       String     // Info: (20260810 - Julian) 職稱名稱 (例: 前端工程師)
   level       Int        @default(1) // Info: (20260810 - Julian) 職等/職級 (可用於差旅標準或簽核門檻判斷)
   description String?
 
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
   employees   Employee[]
 
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  @@unique([accountBookId, code])
+  @@index([accountBookId])
+  @@map("job_title")
 }
 
 // Info: (20260810 - Julian) 員工基本資料
 model Employee {
   id            String         @id @default(uuid())
-  employeeNo    String         @unique // Info: (20260810 - Julian) 工號 (例: EMP001)
+  employeeNo    String         @map("employee_no") // Info: (20260810 - Julian) 工號 (例: EMP001)，唯一性以帳本為範圍
   name          String         // Info: (20260810 - Julian) 姓名
-  englishName   String?        // Info: (20260810 - Julian) 英文名
+  englishName   String?        @map("english_name") // Info: (20260810 - Julian) 英文名
   gender        Gender
-  birthday      DateTime?
-  nationalId    String?        // Info: (20260810 - Julian) 身分證字號 / 護照號碼
-  email         String         @unique // Info: (20260810 - Julian) 公司 Email
-  phone         String         // Info: (20260810 - Julian) 聯絡電話
-  address       String?        // Info: (20260810 - Julian) 通訊地址
+  email         String         // Info: (20260810 - Julian) 公司 Email，唯一性以帳本為範圍；為複合唯一鍵成員，不加密
   status        EmployeeStatus @default(PROBATION)
-  hireDate      DateTime       // Info: (20260810 - Julian) 到職日
-  leaveDate     DateTime?      // Info: (20260810 - Julian) 離職日
+  hireDate      DateTime       @map("hire_date") // Info: (20260810 - Julian) 到職日
+  leaveDate     DateTime?      @map("leave_date") // Info: (20260810 - Julian) 離職日
+
+  // Info: (20260811 - Julian) --- 敏感個資（密文入庫，見本區塊開頭的決策說明）---
+  // Info: (20260811 - Julian) Tier 1 受限：身分證字號 / 護照號碼，可直接用於冒用身分；讀取完整值需寫 AuditLog
+  nationalIdCipher String? @map("national_id_cipher")
+  /**
+   * Info: (20260811 - Julian) 盲索引 (blind index)：HMAC-SHA256(pepper, 正規化後的身分證字號)。
+   *
+   * AES-GCM 每次用隨機 IV，同一個身分證字號兩次加密不會得到同一段密文 ——
+   * 唯一約束掛不上密文，但「同一帳本不得重複建檔同一人」這條規則不該因為加密而消失。
+   * 因此另存一個決定性摘要專供唯一性比對，明文仍只在 `nationalIdCipher`。
+   *
+   * 用 HMAC 而不是裸 SHA-256：台灣身分證字號的空間只有約 2.4 億組，
+   * 裸雜湊被 dump 出去等於幾分鐘就能反查完。pepper 由伺服器持有且不入庫，
+   * 拿到 DB 的人沒有 pepper 就無法枚舉。
+   */
+  nationalIdHash String? @map("national_id_hash")
+  // Info: (20260811 - Julian) Tier 2 機密：生日以 ISO-8601 字串加密（型別由 DateTime 轉 String 是加密的必然代價）
+  birthdayCipher   String? @map("birthday_cipher")
+  // Info: (20260811 - Julian) Tier 2 機密：通訊地址
+  addressCipher    String? @map("address_cipher")
+  // Info: (20260811 - Julian) Tier 2 機密：聯絡電話（原為必填，加密後維持必填）
+  phoneCipher      String  @map("phone_cipher")
+
+  // Info: (20260811 - Julian) 個資封裝參數：演算法版本化，keyVersion 供金鑰輪替時新舊並存
+  // Info: (20260811 - Julian) keyVersion 可為 null（整列無密文時），但任一密文有值即必須有值，由 hr_pii_invariant 擋在寫入端
+  piiAlgorithm  String  @default("AES-256-GCM") @map("pii_algorithm")
+  // Info: (20260812 - Luphia) 非空:本表至少有一個密文欄位是必填的,所以代次必然存在。
+  // Info: (20260812 - Luphia) 由資料庫擋而不是只靠 assertStorablePii —— 那條不變式點名的威脅
+  // Info: (20260812 - Luphia) 是「繞過 service 的呼叫(種子腳本、資料遷移、金鑰輪替作業)」,
+  // Info: (20260812 - Luphia) 而用 raw SQL 的輪替腳本同樣繞過 TS 守衛,只有 NOT NULL 攔得住。
+  piiKeyVersion Int    @map("pii_key_version")
+
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
 
   // Info: (20260810 - Julian) 部門與職稱關聯
-  departmentId  String?
+  departmentId  String?        @map("department_id")
   department    Department?    @relation("DeptEmployees", fields: [departmentId], references: [id], onDelete: SetNull)
-  jobTitleId    String?
+  jobTitleId    String?        @map("job_title_id")
   jobTitle      JobTitle?      @relation(fields: [jobTitleId], references: [id], onDelete: SetNull)
 
   // Info: (20260810 - Julian) 直屬主管關係 (Self-Relation，假勤流程直屬主管簽核的核心)
-  managerId     String?
+  managerId     String?        @map("manager_id")
   manager       Employee?      @relation("ManagerSubordinate", fields: [managerId], references: [id], onDelete: SetNull)
   subordinates  Employee[]     @relation("ManagerSubordinate")
 
@@ -1525,104 +1744,181 @@ model Employee {
   probationReview     ProbationReview?
   offboardingProcess  OffboardingProcess?
   documents           EmployeeDocument[]
-  assignedTasks       ProcessTask[]        @relation("TaskAssignee")
   conductedReviews    ProbationReview[]    @relation("ProbationReviewer")
+  // Info: (20260811 - Julian) 被指派的任務拆成兩份：「我的待辦」需查兩張表再合併，是拆表換取型別保證的代價
+  assignedOnboardingTasks  OnboardingTask[]  @relation("OnboardingTaskAssignee")
+  assignedOffboardingTasks OffboardingTask[] @relation("OffboardingTaskAssignee")
 
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
 
+  @@unique([accountBookId, employeeNo])
+  @@unique([accountBookId, email])
+  // Info: (20260811 - Julian) 身分證的帳本內唯一改掛盲索引，不是取消 —— 理由見 nationalIdHash 欄位註解
+  @@unique([accountBookId, nationalIdHash])
+  @@index([accountBookId])
   @@index([departmentId])
   @@index([jobTitleId])
   @@index([managerId])
+  @@map("employee")
 }
 
 // Info: (20260810 - Julian) ========== 員工詳細資料 ==========
 // Info: (20260810 - Julian) 學歷資料
 model EmployeeEducation {
   id          String    @id @default(uuid())
-  employeeId  String
+  employeeId  String    @map("employee_id")
   employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  schoolName  String    // Info: (20260810 - Julian) 學校名稱
+
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  schoolName  String    @map("school_name") // Info: (20260810 - Julian) 學校名稱
   major       String?   // Info: (20260810 - Julian) 科系/專業
   degree      String    // Info: (20260810 - Julian) 學位 (如: 學士、碩士)
-  startDate   DateTime
-  endDate     DateTime?
-  isGraduated Boolean   @default(true)
+  startDate   DateTime  @map("start_date")
+  endDate     DateTime? @map("end_date")
+  isGraduated Boolean   @default(true) @map("is_graduated")
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
+  @@index([accountBookId])
   @@index([employeeId])
+  @@map("employee_education")
 }
 
 // Info: (20260810 - Julian) 工作經歷
 model EmployeeExperience {
   id          String    @id @default(uuid())
-  employeeId  String
+  employeeId  String    @map("employee_id")
   employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  companyName String    // Info: (20260810 - Julian) 公司名稱
+
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  companyName String    @map("company_name") // Info: (20260810 - Julian) 公司名稱
   position    String    // Info: (20260810 - Julian) 當時職位
   description String?   // Info: (20260810 - Julian) 主要職責/成就
-  startDate   DateTime
-  endDate     DateTime?
+  startDate   DateTime  @map("start_date")
+  endDate     DateTime? @map("end_date")
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
+  @@index([accountBookId])
   @@index([employeeId])
+  @@map("employee_experience")
 }
 
 // Info: (20260810 - Julian) 緊急聯絡人
 model EmergencyContact {
   id           String   @id @default(uuid())
-  employeeId   String
+  employeeId   String   @map("employee_id")
   employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
   name         String   // Info: (20260810 - Julian) 聯絡人姓名
   relationship String   // Info: (20260810 - Julian) 關係 (例: 配偶、父母)
-  phone        String   // Info: (20260810 - Julian) 主要電話
-  altPhone     String?  // Info: (20260810 - Julian) 備用電話
-  isPrimary    Boolean  @default(false) // Info: (20260810 - Julian) 是否為第一順位聯絡人
+  isPrimary    Boolean  @default(false) @map("is_primary") // Info: (20260810 - Julian) 是否為第一順位聯絡人
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  // Info: (20260811 - Julian) --- 敏感個資（密文入庫，見本區塊開頭的決策說明）---
+  // Info: (20260811 - Julian) Tier 2 機密：緊急聯絡人電話。與眷屬同理，聯絡人是未同意過條款的第三人，
+  // Info: (20260811 - Julian) 且這份名單本身就是「員工的私人關係網」，外洩即可用於社交工程
+  phoneCipher    String  @map("phone_cipher")
+  altPhoneCipher String? @map("alt_phone_cipher")
 
+  // Info: (20260811 - Julian) 個資封裝參數，語意同 Employee
+  piiAlgorithm  String @default("AES-256-GCM") @map("pii_algorithm")
+  // Info: (20260812 - Luphia) 非空:本表至少有一個密文欄位是必填的,所以代次必然存在。
+  // Info: (20260812 - Luphia) 由資料庫擋而不是只靠 assertStorablePii —— 那條不變式點名的威脅
+  // Info: (20260812 - Luphia) 是「繞過 service 的呼叫(種子腳本、資料遷移、金鑰輪替作業)」,
+  // Info: (20260812 - Luphia) 而用 raw SQL 的輪替腳本同樣繞過 TS 守衛,只有 NOT NULL 攔得住。
+  piiKeyVersion Int   @map("pii_key_version")
+
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([accountBookId])
   @@index([employeeId])
+  @@map("emergency_contact")
 }
 
 // Info: (20260810 - Julian) 眷屬資料 (健保投保 / 報稅扶養)
 model Dependent {
   id                    String    @id @default(uuid())
-  employeeId            String
+  employeeId            String    @map("employee_id")
   employee              Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
   name                  String    // Info: (20260810 - Julian) 眷屬姓名
   relationship          String    // Info: (20260810 - Julian) 關係
-  nationalId            String?   // Info: (20260810 - Julian) 眷屬身分證字號
-  birthday              DateTime?
-  isNationalHealthInsur Boolean   @default(true) // Info: (20260810 - Julian) 是否隨同參加健保
+  isNationalHealthInsur Boolean   @default(true) @map("is_national_health_insur") // Info: (20260810 - Julian) 是否隨同參加健保
 
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  // Info: (20260811 - Julian) --- 敏感個資（密文入庫，見本區塊開頭的決策說明）---
+  // Info: (20260811 - Julian) Tier 1 受限：眷屬身分證字號。眷屬並非本系統使用者、從未同意過任何條款，
+  // Info: (20260811 - Julian) 保護等級只能高於員工本人，不能低於；不設盲索引，眷屬本就可能重複掛在不同員工下（如夫妻同公司）
+  nationalIdCipher String? @map("national_id_cipher")
+  // Info: (20260811 - Julian) Tier 2 機密：眷屬生日（ISO-8601 字串）。與 Employee.birthday 同級，不因為是眷屬就降級
+  birthdayCipher   String? @map("birthday_cipher")
 
+  // Info: (20260811 - Julian) 個資封裝參數，語意同 Employee
+  piiAlgorithm  String @default("AES-256-GCM") @map("pii_algorithm")
+  piiKeyVersion Int?   @map("pii_key_version")
+
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  @@index([accountBookId])
   @@index([employeeId])
+  @@map("dependent")
 }
 
 // Info: (20260810 - Julian) 薪轉銀行帳戶
 model BankAccount {
   id            String   @id @default(uuid())
-  employeeId    String
+  employeeId    String   @map("employee_id")
   employee      Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  bankCode      String   // Info: (20260810 - Julian) 銀行代碼 (例: 822)
-  bankName      String   // Info: (20260810 - Julian) 銀行名稱 (例: 中國信託)
-  branchCode    String?  // Info: (20260810 - Julian) 分行代碼
-  branchName    String?  // Info: (20260810 - Julian) 分行名稱
-  accountNumber String   // Info: (20260810 - Julian) 帳戶號碼
-  accountHolder String   // Info: (20260810 - Julian) 戶名
-  isPrimary     Boolean  @default(true) // Info: (20260810 - Julian) 是否為主薪轉帳戶
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
 
+  // Info: (20260811 - Julian) 銀行/分行代碼與名稱維持明文：那是公開的金融機構字典值，不是個資
+  bankCode      String   @map("bank_code") // Info: (20260810 - Julian) 銀行代碼 (例: 822)
+  bankName      String   @map("bank_name") // Info: (20260810 - Julian) 銀行名稱 (例: 中國信託)
+  branchCode    String?  @map("branch_code") // Info: (20260810 - Julian) 分行代碼
+  branchName    String?  @map("branch_name") // Info: (20260810 - Julian) 分行名稱
+  isPrimary     Boolean  @default(true) @map("is_primary") // Info: (20260810 - Julian) 是否為主薪轉帳戶
+
+  // Info: (20260811 - Julian) --- 敏感個資（密文入庫，見本區塊開頭的決策說明）---
+  // Info: (20260811 - Julian) Tier 1 受限：帳戶號碼與戶名。這兩個湊齊即可直接用於金流盜用，
+  // Info: (20260811 - Julian) 是本模組風險最高的一組欄位；讀取完整值需寫 AuditLog
+  accountNumberCipher String @map("account_number_cipher")
+  accountHolderCipher String @map("account_holder_cipher")
+
+  // Info: (20260811 - Julian) 個資封裝參數，語意同 Employee
+  piiAlgorithm  String @default("AES-256-GCM") @map("pii_algorithm")
+  // Info: (20260812 - Luphia) 非空:本表至少有一個密文欄位是必填的,所以代次必然存在。
+  // Info: (20260812 - Luphia) 由資料庫擋而不是只靠 assertStorablePii —— 那條不變式點名的威脅
+  // Info: (20260812 - Luphia) 是「繞過 service 的呼叫(種子腳本、資料遷移、金鑰輪替作業)」,
+  // Info: (20260812 - Luphia) 而用 raw SQL 的輪替腳本同樣繞過 TS 守衛,只有 NOT NULL 攔得住。
+  piiKeyVersion Int   @map("pii_key_version")
+
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@index([accountBookId])
   @@index([employeeId])
+  @@map("bank_account")
 }
 
 enum OnboardingStatus {
@@ -1639,15 +1935,37 @@ enum OffboardingStatus {
   REJECTED    // Info: (20260810 - Julian) 駁回
 }
 
-enum ProcessTaskType {
-  ONBOARDING  // Info: (20260810 - Julian) 報到任務
-  OFFBOARDING // Info: (20260810 - Julian) 離職交接任務
-}
-
+/**
+ * Info: (20260811 - Julian) 任務狀態為報到／離職兩張任務表共用。
+ *
+ * 原本還有一個 `ProcessTaskType { ONBOARDING, OFFBOARDING }` 已移除 ——
+ * 任務拆成兩張表之後，表名本身就是型別，那個欄位唯一能做的事是與實際掛的流程矛盾。
+ * 詳見 `OnboardingTask` 的說明。
+ */
 enum ProcessTaskStatus {
   PENDING     // Info: (20260810 - Julian) 待處理
   COMPLETED   // Info: (20260810 - Julian) 已完成
   SKIPPED     // Info: (20260810 - Julian) 跳過
+}
+
+/**
+ * Info: (20260811 - Julian) 試用期考核結果。
+ *
+ * 原本是 `String?`，而註解裡自己列舉了這三個值 —— 註解列得出來的封閉集合就是 enum，
+ * 用 String 只是把「有哪些合法值」這件事從型別系統搬到人腦裡（CLAUDE.md §3 拒絕魔法字串）。
+ *
+ * 這三個值都會進 if/switch：EXTEND 要延長試用期並重排考核日，
+ * FAIL 要觸發離職流程，PASS 要把 `EmployeeStatus` 從 PROBATION 轉成 ACTIVE。
+ * 用 String 的話，一個 "Pass" 大小寫之差就會讓員工卡在試用期而沒有任何錯誤。
+ *
+ * 對照組：`relationship`（眷屬／緊急聯絡人關係）維持 String 是對的 ——
+ * 那是自由文字，使用者可以填「岳母」「同居人」，不進任何判斷。
+ * 判準不是「看起來像不像列舉」，是「有沒有程式碼拿它做分支」。
+ */
+enum ProbationResult {
+  PASS   // Info: (20260811 - Julian) 通過，轉正職
+  EXTEND // Info: (20260811 - Julian) 延長試用期
+  FAIL   // Info: (20260811 - Julian) 未通過
 }
 
 enum DocumentCategory {
@@ -1657,102 +1975,193 @@ enum DocumentCategory {
   OTHER       // Info: (20260810 - Julian) 其他
 }
 
-// Info: (20260810 - Julian) 報到與離職的共通任務清單 (Task Checklist)
-model ProcessTask {
-  id                  String             @id @default(uuid())
-  taskType            ProcessTaskType           // Info: (20260810 - Julian) 區分是 ONBOARDING 還是 OFFBOARDING
-  title               String             // Info: (20260810 - Julian) 任務名稱 (例: 發放門禁卡、收回電腦、退健保)
-  description         String?
-  status              ProcessTaskStatus         @default(PENDING)
-  
+/**
+ * Info: (20260811 - Julian) 報到任務清單 (Task Checklist)。
+ *
+ * ## 為什麼是兩張表，不是一張帶 taskType 的 ProcessTask
+ *
+ * 原本的單表設計把兩個外鍵都設成可選（`onboardingProcessId?` / `offboardingProcessId?`），
+ * 沒有任何機制保證恰有一個。這讓三種非法狀態都寫得進去：
+ *
+ * 1. **兩個都掛** —— 一個任務同時屬於某人的報到流程與另一人的離職流程。
+ * 2. **都不掛** —— 孤兒任務，不會出現在任何清單裡，也沒有人會發現它存在。
+ * 3. **taskType 與實際流程矛盾** —— `taskType: ONBOARDING` 卻掛在 `offboardingProcessId` 上。
+ *    這種紀錄在「報到進度」與「離職交接進度」兩張畫面上會各自呈現不同的真相。
+ *
+ * Prisma 的 schema DSL 沒有 CHECK 約束，單表要擋只能靠執行期檢查 ——
+ * 而執行期檢查擋不住繞過 service 的寫入（種子腳本、資料遷移、批次匯入）。
+ *
+ * 拆表之後外鍵轉為**必填**，三種狀態在型別層就無法表示，一行檢查都不用寫。
+ * `taskType` 一併移除：表名即型別，那個欄位唯一能做的事就是說謊。
+ *
+ * 這與碳盤查那條「一個寫得進去就再也讀不出來的狀態，不該是可達的」是同一個判準，
+ * 只是這裡有更強的解 —— 碳盤查的 envelope 無法用型別表達，只能用不變式擋在寫入端；
+ * 這裡可以直接讓非法狀態不存在。**能讓它不可表示，就不要退而求其次讓它可被拒絕。**
+ *
+ * ## 代價
+ *
+ * 兩張表的欄位目前完全相同，等於複製一份定義。接受這個重複，理由有二：
+ * 一是重複的是 7 個欄位、不是邏輯；二是兩種任務未來大概率會分化 ——
+ * 離職交接需要「交接對象」與「資產歸還確認」，報到不需要，屆時單表會被迫再加一批可選欄位。
+ *
+ * 「我的待辦」這類跨兩種任務的查詢需要查兩張表再合併。這是拆表唯一的實質成本。
+ */
+model OnboardingTask {
+  id          String            @id @default(uuid())
+  title       String            // Info: (20260810 - Julian) 任務名稱 (例: 發放門禁卡、環境設定、勞健保加保)
+  description String?
+  status      ProcessTaskStatus @default(PENDING)
+
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  // Info: (20260811 - Julian) 歸屬的報到流程。必填 —— 這正是拆表要換到的東西，孤兒任務不可表示
+  onboardingProcessId String            @map("onboarding_process_id")
+  onboardingProcess   OnboardingProcess @relation(fields: [onboardingProcessId], references: [id], onDelete: Cascade)
+
   // Info: (20260810 - Julian) 負責處理該任務的人 (例: IT 部門人員、HR)
-  assigneeId          String?
-  assignee            Employee?          @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
-  completedAt         DateTime?
+  assigneeId  String?   @map("assignee_id")
+  assignee    Employee? @relation("OnboardingTaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  completedAt DateTime? @map("completed_at")
 
-  // Info: (20260810 - Julian) 歸屬於哪個報到流程或離職流程
-  onboardingProcessId  String?
-  onboardingProcess    OnboardingProcess? @relation(fields: [onboardingProcessId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  offboardingProcessId String?
-  offboardingProcess   OffboardingProcess? @relation(fields: [offboardingProcessId], references: [id], onDelete: Cascade)
-
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
-
+  @@index([accountBookId])
   @@index([onboardingProcessId])
+  @@index([assigneeId])
+  @@map("onboarding_task")
+}
+
+// Info: (20260811 - Julian) 離職交接任務清單。拆表理由見 OnboardingTask 的說明，兩張表對稱
+model OffboardingTask {
+  id          String            @id @default(uuid())
+  title       String            // Info: (20260810 - Julian) 任務名稱 (例: 收回電腦、繳回門禁卡、勞健保退保)
+  description String?
+  status      ProcessTaskStatus @default(PENDING)
+
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  // Info: (20260811 - Julian) 歸屬的離職流程。必填，同 OnboardingTask
+  offboardingProcessId String             @map("offboarding_process_id")
+  offboardingProcess   OffboardingProcess @relation(fields: [offboardingProcessId], references: [id], onDelete: Cascade)
+
+  // Info: (20260810 - Julian) 負責處理該任務的人 (例: IT 部門人員、HR)
+  assigneeId  String?   @map("assignee_id")
+  assignee    Employee? @relation("OffboardingTaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  completedAt DateTime? @map("completed_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([accountBookId])
   @@index([offboardingProcessId])
   @@index([assigneeId])
+  @@map("offboarding_task")
 }
 
 // Info: (20260810 - Julian) 新人報到流程檔
 model OnboardingProcess {
   id           String           @id @default(uuid())
-  employeeId   String           @unique // Info: (20260810 - Julian) 一個員工對應一個報到流程
+  employeeId   String           @unique @map("employee_id") // Info: (20260810 - Julian) 一個員工對應一個報到流程
   employee     Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
   status       OnboardingStatus @default(NOT_STARTED)
-  startDate    DateTime         // Info: (20260810 - Julian) 預計/實際報到日
-  completedAt  DateTime?        // Info: (20260810 - Julian) 完成時間
+  startDate    DateTime         @map("start_date") // Info: (20260810 - Julian) 預計/實際報到日
+  completedAt  DateTime?        @map("completed_at") // Info: (20260810 - Julian) 完成時間
 
   // Info: (20260810 - Julian) 關聯至細項任務
-  tasks        ProcessTask[]
+  tasks        OnboardingTask[]
 
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+
+  @@index([accountBookId])
+  @@map("onboarding_process")
 }
 
 // Info: (20260810 - Julian) 試用期考核紀錄
 model ProbationReview {
   id           String    @id @default(uuid())
-  employeeId   String    @unique
+  employeeId   String    @unique @map("employee_id")
   employee     Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  
-  reviewerId   String?   // Info: (20260810 - Julian) 考核主管 ID
+
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  reviewerId   String?   @map("reviewer_id") // Info: (20260810 - Julian) 考核主管 ID
   reviewer     Employee? @relation("ProbationReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
 
-  reviewDate   DateTime? // Info: (20260810 - Julian) 考核日期
-  score        Int?      // Info: (20260810 - Julian) 評分 (例: 1-100)
-  comment      String?   // Info: (20260810 - Julian) 考核評語
-  result       String?   // Info: (20260810 - Julian) 考核結果 (例: PASS, EXTEND, FAIL)
-  
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  reviewDate   DateTime?        @map("review_date") // Info: (20260810 - Julian) 考核日期
+  score        Int?             // Info: (20260810 - Julian) 評分 (例: 1-100)
+  comment      String?          // Info: (20260810 - Julian) 考核評語
+  // Info: (20260811 - Julian) 尚未考核時為 null；已考核則必為三個列舉值之一
+  result       ProbationResult?
+
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@index([accountBookId])
+  @@index([reviewerId])
+  @@map("probation_review")
 }
 
 // Info: (20260810 - Julian) 離職申請與退保流程檔
 model OffboardingProcess {
   id             String            @id @default(uuid())
-  employeeId     String            @unique
+  employeeId     String            @unique @map("employee_id")
   employee       Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
   status         OffboardingStatus @default(PENDING)
-  
+
   reason         String?           // Info: (20260810 - Julian) 離職原因
-  expectedDate   DateTime          // Info: (20260810 - Julian) 預計離職日
-  actualDate     DateTime?         // Info: (20260810 - Julian) 實際離職日
-  insuranceOffAt DateTime?         // Info: (20260810 - Julian) 勞健保退保生效日
+  expectedDate   DateTime          @map("expected_date") // Info: (20260810 - Julian) 預計離職日
+  actualDate     DateTime?         @map("actual_date") // Info: (20260810 - Julian) 實際離職日
+  insuranceOffAt DateTime?         @map("insurance_off_at") // Info: (20260810 - Julian) 勞健保退保生效日
 
   // Info: (20260810 - Julian) 關聯至交接細項任務
-  tasks          ProcessTask[]
+  tasks          OffboardingTask[]
 
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  @@index([accountBookId])
+  @@map("offboarding_process")
 }
 
 // Info: (20260810 - Julian) 合約與文件管理 (Documents & Contracts)
 model EmployeeDocument {
   id          String           @id @default(uuid())
-  employeeId  String
+  employeeId  String           @map("employee_id")
   employee    Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  
+
+  // Info: (20260811 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
   title       String           // Info: (20260810 - Julian) 文件名稱 (例: 2026 勞動契約)
   category    DocumentCategory // Info: (20260810 - Julian) 文件分類
-  fileId String? @map("file_id")
-  file   File?   @relation(fields: [fileId], references: [id])
-  
-  expiredAt   DateTime?        // Info: (20260810 - Julian) 文件到期日 (如證照過期日、合約續約日)
-  
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  fileId      String?          @map("file_id")
+  file        File?            @relation(fields: [fileId], references: [id])
 
+  expiredAt   DateTime?        @map("expired_at") // Info: (20260810 - Julian) 文件到期日 (如證照過期日、合約續約日)
+
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  @@index([accountBookId])
   @@index([employeeId])
+  @@map("employee_document")
 }

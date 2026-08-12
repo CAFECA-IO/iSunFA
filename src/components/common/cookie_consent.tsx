@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useEffect, MouseEvent } from 'react';
+import { useState, useEffect, MouseEvent } from "react";
 
-import { useTranslation } from '@/i18n/i18n_context';
-import { Settings, X, Check } from 'lucide-react';
-import { MarkdownContent } from '@/components/common/markdown_content';
+import { useTranslation } from "@/i18n/i18n_context";
+import { Settings, X, Check } from "lucide-react";
+import { MarkdownContent } from "@/components/common/markdown_content";
 
 interface ICookiePreferences {
   necessary: boolean;
@@ -18,14 +18,30 @@ interface ICookieConsentProps {
 
 // Info: (20260309 - Luphia) 定義 GA4 同意模式的輔助函數
 const updateGA4Consent = (analyticsGranted: boolean) => {
-  if (typeof window !== 'undefined' && ('gtag' in window)) {
-    (window as unknown as { gtag: (command: string, action: string, params: Record<string, string>) => void }).gtag('consent', 'update', {
-      'analytics_storage': analyticsGranted ? 'granted' : 'denied'
+  if (typeof window !== "undefined" && "gtag" in window) {
+    (
+      window as unknown as {
+        gtag: (
+          command: string,
+          action: string,
+          params: Record<string, string>,
+        ) => void;
+      }
+    ).gtag("consent", "update", {
+      analytics_storage: analyticsGranted ? "granted" : "denied",
     });
   }
 };
 
-const Toggle = ({ checked, onChange = undefined, disabled = false }: { checked: boolean; onChange?: (checked: boolean) => void; disabled?: boolean }) => {
+const Toggle = ({
+  checked,
+  onChange = undefined,
+  disabled = false,
+}: {
+  checked: boolean;
+  onChange?: (checked: boolean) => void;
+  disabled?: boolean;
+}) => {
   return (
     <button
       type="button"
@@ -33,25 +49,30 @@ const Toggle = ({ checked, onChange = undefined, disabled = false }: { checked: 
       aria-checked={checked}
       disabled={disabled}
       onClick={() => !disabled && onChange?.(!checked)}
-      className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${checked
-        ? 'bg-green-200 dark:bg-green-200'
-        : 'bg-gray-700 dark:bg-gray-700'
-        } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+      className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none ${
+        checked ? "bg-green-200 dark:bg-green-200" : "bg-gray-700"
+      } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
     >
       <span
         aria-hidden="true"
-        className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow ring-0 transition duration-200 ease-in-out flex items-center justify-center ${checked
-          ? 'translate-x-[20px] bg-green-900'
-          : 'translate-x-0 bg-gray-400'
-          }`}
+        className={`pointer-events-none flex inline-block h-6 w-6 transform items-center justify-center rounded-full shadow ring-0 transition duration-200 ease-in-out ${
+          checked
+            ? "translate-x-[20px] bg-green-900"
+            : "translate-x-0 bg-gray-400"
+        }`}
       >
-        {checked && <Check className="mt-1 m-auto h-3.5 w-3.5 text-white" strokeWidth={3} />}
+        {checked && (
+          <Check
+            className="m-auto mt-1 h-3.5 w-3.5 text-white"
+            strokeWidth={3}
+          />
+        )}
       </span>
     </button>
   );
-}
+};
 
-const CookieConsent = ({ privacyPolicyContent = '' }: ICookieConsentProps) => {
+const CookieConsent = ({ privacyPolicyContent = "" }: ICookieConsentProps) => {
   const { t } = useTranslation();
   const [showConsent, setShowConsent] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
@@ -65,7 +86,7 @@ const CookieConsent = ({ privacyPolicyContent = '' }: ICookieConsentProps) => {
   });
 
   useEffect(() => {
-    const consent = localStorage.getItem('cookie_consent');
+    const consent = localStorage.getItem("cookie_consent");
     if (!consent) {
       setTimeout(() => setShowConsent(true), 0);
       // Info: (20260309 - Luphia) 如果完全沒設定過，預設 GA 是 denied
@@ -82,12 +103,13 @@ const CookieConsent = ({ privacyPolicyContent = '' }: ICookieConsentProps) => {
     }
 
     const handleOpenSettings = () => setShowPreferences(true);
-    window.addEventListener('openCookieSettings', handleOpenSettings);
-    return () => window.removeEventListener('openCookieSettings', handleOpenSettings);
+    window.addEventListener("openCookieSettings", handleOpenSettings);
+    return () =>
+      window.removeEventListener("openCookieSettings", handleOpenSettings);
   }, []);
 
   const saveConsent = (prefs: ICookiePreferences) => {
-    localStorage.setItem('cookie_consent', JSON.stringify(prefs));
+    localStorage.setItem("cookie_consent", JSON.stringify(prefs));
     updateGA4Consent(prefs.analytics);
     setShowConsent(false);
     setShowPreferences(false);
@@ -118,22 +140,27 @@ const CookieConsent = ({ privacyPolicyContent = '' }: ICookieConsentProps) => {
   if (showPrivacy) {
     return (
       <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-        <div className="flex h-[85vh] w-full max-w-4xl flex-col rounded-xl bg-white shadow-2xl dark:bg-gray-900">
-          <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-800">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('cookie_consent.privacy')}</h3>
-            <button onClick={() => setShowPrivacy(false)} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+        <div className="flex h-[85vh] w-full max-w-4xl flex-col rounded-xl bg-white shadow-2xl">
+          <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+              {t("cookie_consent.privacy")}
+            </h3>
+            <button
+              onClick={() => setShowPrivacy(false)}
+              className="text-gray-500 hover:text-gray-700"
+            >
               <X className="h-6 w-6" />
             </button>
           </div>
           <div className="flex-1 overflow-y-auto px-8 py-6">
             <MarkdownContent content={privacyPolicyContent} theme="dark" />
           </div>
-          <div className="border-t border-gray-200 px-6 py-4 dark:border-gray-800">
+          <div className="border-t border-gray-200 px-6 py-4">
             <button
               onClick={() => setShowPrivacy(false)}
               className="w-full rounded-md bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
             >
-              {t('common.close')}
+              {t("common.close")}
             </button>
           </div>
         </div>
@@ -145,37 +172,48 @@ const CookieConsent = ({ privacyPolicyContent = '' }: ICookieConsentProps) => {
   if (showPreferences) {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-        <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl dark:bg-gray-900">
+        <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl">
           <div className="mb-6 flex items-center justify-between">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('cookie_consent.customize')}</h3>
-            <button onClick={() => setShowPreferences(false)} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+              {t("cookie_consent.customize")}
+            </h3>
+            <button
+              onClick={() => setShowPreferences(false)}
+              className="text-gray-500 hover:text-gray-700"
+            >
               <X className="h-6 w-6" />
             </button>
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
-              <span className="font-medium text-gray-900 dark:text-white">{t('cookie_consent.necessary')}</span>
+            <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
+              <span className="font-medium text-gray-900 dark:text-white">
+                {t("cookie_consent.necessary")}
+              </span>
               <Toggle checked={true} disabled={true} />
             </div>
 
-            <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
-              <span className="font-medium text-gray-900 dark:text-white flex-grow">
-                {t('cookie_consent.security')}
+            <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
+              <span className="flex-grow font-medium text-gray-900 dark:text-white">
+                {t("cookie_consent.security")}
               </span>
               <Toggle
                 checked={preferences.security}
-                onChange={(checked) => setPreferences({ ...preferences, security: checked })}
+                onChange={(checked) =>
+                  setPreferences({ ...preferences, security: checked })
+                }
               />
             </div>
 
-            <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
-              <span className="font-medium text-gray-900 dark:text-white flex-grow">
-                {t('cookie_consent.analytics')}
+            <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
+              <span className="flex-grow font-medium text-gray-900 dark:text-white">
+                {t("cookie_consent.analytics")}
               </span>
               <Toggle
                 checked={preferences.analytics}
-                onChange={(checked) => setPreferences({ ...preferences, analytics: checked })}
+                onChange={(checked) =>
+                  setPreferences({ ...preferences, analytics: checked })
+                }
               />
             </div>
           </div>
@@ -185,7 +223,7 @@ const CookieConsent = ({ privacyPolicyContent = '' }: ICookieConsentProps) => {
               onClick={handleSavePreferences}
               className="flex-1 rounded-md bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
             >
-              {t('cookie_consent.save')}
+              {t("cookie_consent.save")}
             </button>
           </div>
         </div>
@@ -195,12 +233,16 @@ const CookieConsent = ({ privacyPolicyContent = '' }: ICookieConsentProps) => {
 
   // Info: (20260104 - Luphia) Main Banner
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[100] flex flex-col items-center justify-between gap-4 bg-white p-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] ring-1 ring-gray-900/5 md:flex-row md:px-8 dark:bg-gray-900 dark:ring-white/10">
-      <div className="text-sm md:text-base text-gray-600 dark:text-gray-300">
+    <div className="fixed right-0 bottom-0 left-0 z-[100] flex flex-col items-center justify-between gap-4 bg-white p-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] ring-1 ring-gray-900/5 md:flex-row md:px-8 dark:ring-white/10">
+      <div className="text-sm text-gray-600 md:text-base">
         <p>
-          {t('cookie_consent.message')}{' '}
-          <button type="button" onClick={openPrivacy} className="font-semibold text-orange-600 hover:text-orange-500 underline dark:text-orange-400">
-            {t('cookie_consent.privacy')}
+          {t("cookie_consent.message")}{" "}
+          <button
+            type="button"
+            onClick={openPrivacy}
+            className="font-semibold text-orange-600 underline hover:text-orange-500 dark:text-orange-400"
+          >
+            {t("cookie_consent.privacy")}
           </button>
           .
         </p>
@@ -208,26 +250,26 @@ const CookieConsent = ({ privacyPolicyContent = '' }: ICookieConsentProps) => {
       <div className="flex flex-wrap gap-3">
         <button
           onClick={() => setShowPreferences(true)}
-          className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+          className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none"
         >
           <Settings className="h-4 w-4" />
-          {t('cookie_consent.customize')}
+          {t("cookie_consent.customize")}
         </button>
         <button
           onClick={handleRejectAll}
-          className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+          className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none"
         >
-          {t('cookie_consent.reject')}
+          {t("cookie_consent.reject")}
         </button>
         <button
           onClick={handleAcceptAll}
-          className="rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+          className="rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none"
         >
-          {t('cookie_consent.accept')}
+          {t("cookie_consent.accept")}
         </button>
       </div>
     </div>
   );
-}
+};
 
 export default CookieConsent;

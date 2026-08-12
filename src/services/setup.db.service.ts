@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { randomBytes } from "crypto";
 import { dockerService } from "@/services/docker.service";
 import { runCommand } from "@/services/cli.service";
 import {
@@ -48,6 +49,21 @@ export async function initDb() {
       dbPassword,
     );
     setupContent = updateOrAppendEnv(setupContent, "DATABASE_URL", dbUrl);
+
+    /**
+     * Info: (20260809 - Luphia) 一併產生保險庫主密鑰。
+     * 它保護 DB 內的密文（託管錢包私鑰、系統設定秘密值），因此必須留在 env；
+     * 已存在時絕不覆寫——覆寫等同銷毀既有密文的解密能力。
+     */
+    const existingVaultKey = (await loadEnvConfig(ENV_SETUP_PATH))
+      .SECRET_VAULT_MASTER_KEY;
+    if (!existingVaultKey) {
+      setupContent = updateOrAppendEnv(
+        setupContent,
+        "SECRET_VAULT_MASTER_KEY",
+        `"${randomBytes(48).toString("base64")}"`,
+      );
+    }
 
     saveEnvRawContent(ENV_SETUP_PATH, setupContent);
     console.log(

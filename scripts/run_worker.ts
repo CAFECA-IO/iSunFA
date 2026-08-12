@@ -11,23 +11,29 @@ import { processAmortization } from "@/services/cron/amortization.worker.service
 import { runWalletGuardian } from "@/services/cron/wallet_audit.cron";
 import { expireOverdueTeamSubscriptions } from "@/services/cron/subscription_expiry.cron";
 import { processSubscriptionRenewals } from "@/services/cron/subscription_renewal.cron";
+import {
+  installWorkerShutdownHandlers,
+  isShuttingDown,
+} from "@/lib/worker/shutdown";
 
 /**
  * Info: (20260130 - Luphia)
  * Worker script to continuously process pending analysis tasks.
  * Run with: npx tsx scripts/workers.run.ts
  */
+/**
+ * Info: (20260811 - Luphia) 停止條件改讀共用的關機旗標（見 lib/worker/shutdown）。
+ *
+ * 原本每個迴圈各自 process.on("SIGINT")，13 個迴圈就掛 13 個 listener——
+ * 超過 Node 的預設上限會噴 MaxListenersExceededWarning，而且每個迴圈只能管自己，
+ * 沒有地方能在關機時統一釋放 mission 執行鎖。
+ */
 async function startServiceLoop(
   name: string,
   fn: () => Promise<unknown>,
   intervalMs = 10000,
 ) {
-  let isRunning = true;
-  process.on("SIGINT", () => {
-    isRunning = false;
-  });
-
-  while (isRunning) {
+  while (!isShuttingDown()) {
     try {
       await fn();
       await new Promise((resolve) => setTimeout(resolve, intervalMs));
@@ -39,9 +45,8 @@ async function startServiceLoop(
 }
 
 async function runWorker() {
-  process.on("SIGINT", () => {
-    console.log("\n[Worker] Stopping...");
-  });
+  // Info: (20260811 - Luphia) 兩段式中斷 + 結束前釋放 mission 執行鎖
+  installWorkerShutdownHandlers("Worker");
 
   console.log("[Worker] Starting independent service loops...");
 

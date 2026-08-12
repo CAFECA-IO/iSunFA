@@ -12,6 +12,8 @@ import {
   computePredictedFinalEnvString,
 } from "@/services/env.service";
 import { validateEnvDetailed } from "@/validators/env";
+import { systemSettingRepo } from "@/repositories/system_setting.repo";
+import { custodialKeyRepo } from "@/repositories/custodial_key.repo";
 
 export async function finalizeSetupEnvironment() {
   if (existsEnv(ENV_SETUP_PATH)) {
@@ -21,6 +23,73 @@ export async function finalizeSetupEnvironment() {
     return { success: true };
   }
   return { success: false, error: "Setup file not found." };
+}
+
+/**
+ * Info: (20260809 - Luphia) 確保 .env 內有可用的保險庫主密鑰。
+ *
+ * 這把金鑰保護資料庫裡的所有密文（託管錢包私鑰、系統設定的秘密值），
+ * 因此必須留在 env。原本只在「初始化資料庫」那一步產生，但資料庫早已初始化過的
+ * 部署會跳過該步驟，結果就是完成設定後仍然沒有金鑰——之後在 /admin/settings
+ * 儲存任何秘密設定都會失敗。
+ *
+ * 改由簽章步驟呼叫：寫進 .env.setup 後，接下來計算的 digest 就會涵蓋它，
+ * 金鑰因此和其他設定一起被簽署，不會破壞 .env 的完整性簽章。
+ * 已有有效值時不覆寫——覆寫等同銷毀既有密文的解密能力。
+ */
+export async function ensureSecretVaultKey(): Promise<{
+  success: boolean;
+  generated: boolean;
+  error?: string;
+}> {
+  try {
+    const merged = parse(computePredictedFinalEnvString());
+    const existing = (merged.SECRET_VAULT_MASTER_KEY || "").replace(
+      /^"(.*)"$/,
+      "$1",
+    );
+
+    // Info: (20260809 - Luphia) 空字串與過短的值一律視為未設定（key_vault 也是這個門檻）
+    if (existing.length >= 32) {
+      return { success: true, generated: false };
+    }
+
+    /**
+     * Info: (20260810 - Luphia) 已有密文時絕不換發新金鑰。
+     *
+     * 主密鑰不見了而資料庫裡還留著用舊金鑰加密的內容，這時發一把新的並不會修好任何事——
+     * 舊密文會永久解不開，而系統的反應是「把設定當成不存在」，接著一次全量寫入就把它們刪掉
+     * （20260810 的 Google OAuth 設定就是這樣消失的）。
+     * 這種狀況必須讓人知道，不能默默繞過。
+     */
+    const [secretCount, custodialCount] = await Promise.all([
+      systemSettingRepo.countSecrets(),
+      custodialKeyRepo.count(),
+    ]);
+
+    if (secretCount > 0 || custodialCount > 0) {
+      return {
+        success: false,
+        generated: false,
+        error: `Refusing to mint a new vault master key: ${secretCount} encrypted setting(s) and ${custodialCount} custodial key(s) already exist and would become permanently unreadable. Restore the original SECRET_VAULT_MASTER_KEY, or clear those records first.`,
+      };
+    }
+
+    const content = updateOrAppendEnv(
+      getEnvRawContent(ENV_SETUP_PATH),
+      "SECRET_VAULT_MASTER_KEY",
+      `"${crypto.randomBytes(48).toString("base64")}"`,
+    );
+    saveEnvRawContent(ENV_SETUP_PATH, content);
+
+    return { success: true, generated: true };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      generated: false,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
 }
 
 export async function getEnvHashChallenge(): Promise<{
@@ -60,13 +129,17 @@ export async function getEnvHashChallenge(): Promise<{
   }
 }
 
+/**
+ * Info: (20260809 - Luphia) 只處理「必須留在 .env」的外部整合設定。
+ *
+ * Gemini 金鑰、LLM 模型與 OEN 金流憑證已移交 saveSystemSettingDraft（保管於資料庫），
+ * 因為它們是會輪替的營運憑證；而這裡剩下的都是 NEXT_PUBLIC_*（build 時內嵌進 client
+ * bundle，資料庫的值到不了瀏覽器）或部署路徑，屬於環境差異。
+ */
 export async function saveExternalConfig(config: {
   appUrl: string;
   gaId: string;
-  geminiKey: string;
   maptilerKey: string;
-  oenToken: string;
-  oenMerchant: string;
 }): Promise<{ success: boolean; error?: string }> {
   try {
     let content = getEnvRawContent(ENV_SETUP_PATH);
@@ -85,34 +158,15 @@ export async function saveExternalConfig(config: {
         "NEXT_PUBLIC_GA_MEASUREMENT_ID",
         `"${config.gaId}"`,
       );
-    if (config.geminiKey)
-      content = updateOrAppendEnv(
-        content,
-        "GEMINI_API_KEY",
-        `"${config.geminiKey}"`,
-      );
     if (config.maptilerKey)
       content = updateOrAppendEnv(
         content,
         "NEXT_PUBLIC_MAPTILER_KEY",
         `"${config.maptilerKey}"`,
       );
-    if (config.oenToken)
-      content = updateOrAppendEnv(
-        content,
-        "OEN_ACCESS_TOKEN",
-        `"${config.oenToken}"`,
-      );
-    if (config.oenMerchant)
-      content = updateOrAppendEnv(
-        content,
-        "OEN_MERCHANT_ID",
-        `"${config.oenMerchant}"`,
-      );
     content = updateOrAppendEnv(content, "REPORT_OUTPUT_DIR", `"reports"`);
     content = updateOrAppendEnv(content, "MISSION_DIR", `"missions"`);
     content = updateOrAppendEnv(content, "ISSUE_DIR", `"issues"`);
-    content = updateOrAppendEnv(content, "MODEL", `"gemini-2.5-pro"`);
 
     saveEnvRawContent(ENV_SETUP_PATH, content);
     return { success: true };
@@ -133,10 +187,7 @@ export async function getExternalConfig() {
         data: {
           appUrl: config.NEXT_PUBLIC_APP_URL || "https://isunfa.localhost",
           gaId: config.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-ZNVVW7JP0N",
-          geminiKey: config.GEMINI_API_KEY || "",
           maptilerKey: config.NEXT_PUBLIC_MAPTILER_KEY || "",
-          oenToken: config.OEN_ACCESS_TOKEN || "",
-          oenMerchant: config.OEN_MERCHANT_ID || "mermer",
         },
       };
     }
