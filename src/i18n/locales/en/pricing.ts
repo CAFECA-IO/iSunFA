@@ -7,6 +7,20 @@ export const pricing = {
   save_percent: "Save 17%",
   // Info: (20260807 - Luphia) 費思費率標註（設計書 §5.3 定價揭露），數字由 API 插值、嚴禁寫死
   faith_agent: "Faith AI Agent",
+  /**
+   * Info: (20260812 - Luphia) 費思個人化記憶文案（服務條款 §3.7、隱私權政策 §5）。
+   * 保留天數由 FAITH_MEMORY_RETENTION_DAYS 插值，不寫死數字，避免與條款不一致。
+   */
+  faith_agent_free_tooltip:
+    "On the Free plan, Faith answers each question on its own and keeps no personalised memory. On the Team and Business plans every member gets their own Faith agent that gradually learns how they work.",
+  faith_agent_memory: "Faith AI Agent (with personal memory)",
+  faith_agent_memory_tooltip:
+    "Every member gets their own Faith agent that remembers your feedback and preferences, so it fits your way of working better over time. {{days}} days after your subscription ends, we delete what Faith remembers about you to protect your privacy.",
+  faith_memory_note_title: "About Faith's personal memory",
+  faith_memory_note:
+    "On the cloud Team and Business plans, every member gets their own Faith AI agent. Faith records the feedback and preferences you give it while chatting — the accounts you use most, how you like reports presented, how much detail you want — and gradually learns your needs so its answers fit your way of working. This memory is used only to improve your own experience: it is never shared with other members or other customers, and never used to train shared AI models.",
+  faith_memory_note_retention:
+    "If you stop subscribing, we keep that memory for {{days}} days — resubscribe within that window and it carries on. After {{days}} days we delete what Faith remembers about you to protect your privacy. You can also ask us to delete it at any time without waiting. The Free plan has no personal memory. See Terms of Service §3.7 and Privacy Policy §5.",
   currency_prefix: "NT$ ",
   cta: "Get Started",
   features: "Features",

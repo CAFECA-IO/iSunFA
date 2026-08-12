@@ -7,6 +7,7 @@ import {
   SUBSCRIPTION_PLAN_CREDITS,
 } from "@/constants/price";
 import { CARBON_STORAGE_QUOTA_GB_BY_PLAN } from "@/constants/carbon_chatbot";
+import { FAITH_MEMORY_RETENTION_DAYS } from "@/constants/llm";
 import { usePricing } from "@/contexts/pricing_context";
 import { useAuth } from "@/contexts/auth_context";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -32,8 +33,22 @@ export default function SubscriptionContent({
   /**
    * Info: (20260809 - Luphia) 方案功能列僅列出「費思人工智能代理人」（產品調整 20260809）：
    * 不再於此揭露計費費率與 token 計算方式，費率揭露改以服務條款 §3.4 為準。
+   *
+   * Info: (20260812 - Luphia) 個人化記憶為付費訂閱權益（服務條款 §3.7）：
+   * 免費版列「費思人工智能代理人」並於 tooltip 說明為單次問答；
+   * 團隊版 / 企業版列「（專屬記憶）」並揭露停止訂閱後的保留天數。
+   * 天數一律自 FAITH_MEMORY_RETENTION_DAYS 插值，與條款同源。
    */
-  const faithAgentFeature = t("pricing.faith_agent");
+  const faithAgentFeature = {
+    text: t("pricing.faith_agent"),
+    tooltip: t("pricing.faith_agent_free_tooltip"),
+  };
+  const faithAgentMemoryFeature = {
+    text: t("pricing.faith_agent_memory"),
+    tooltip: t("pricing.faith_agent_memory_tooltip", {
+      days: FAITH_MEMORY_RETENTION_DAYS,
+    }),
+  };
 
   const currentPlan = user
     ? user.plan === "personal" || !user.plan
@@ -227,7 +242,7 @@ export default function SubscriptionContent({
                 }),
                 tooltip: t("pricing.plans.team.features.ai_overage_tooltip"),
               },
-              faithAgentFeature,
+              faithAgentMemoryFeature,
               t("pricing.plans.team.features.analytics"),
               t("pricing.plans.team.features.support"),
               t("pricing.plans.team.features.storage", {
@@ -302,7 +317,7 @@ export default function SubscriptionContent({
                   "pricing.plans.business.features.ai_overage_tooltip",
                 ),
               },
-              faithAgentFeature,
+              faithAgentMemoryFeature,
               t("pricing.plans.business.features.analytics"),
               t("pricing.plans.business.features.support"),
               {
@@ -321,6 +336,25 @@ export default function SubscriptionContent({
             ]}
           />
         </div>
+
+        {/**
+         * Info: (20260812 - Luphia) 費思專屬記憶的補充說明（服務條款 §3.7、隱私權政策 §5）：
+         * 「記憶會累積」與「停止訂閱後會刪除」都影響購買決策，卡片的 tooltip 容不下，
+         * 故於方案格下方以完整段落說明，並回指條款供查證。
+         */}
+        <section className="mx-auto mt-16 max-w-3xl rounded-2xl bg-gray-50 p-6 ring-1 ring-gray-200 sm:p-8">
+          <h3 className="text-base font-semibold text-gray-900">
+            {t("pricing.faith_memory_note_title")}
+          </h3>
+          <p className="mt-3 text-sm leading-6 text-gray-600">
+            {t("pricing.faith_memory_note")}
+          </p>
+          <p className="mt-3 text-sm leading-6 text-gray-600">
+            {t("pricing.faith_memory_note_retention", {
+              days: FAITH_MEMORY_RETENTION_DAYS,
+            })}
+          </p>
+        </section>
       </div>
     </>
   );

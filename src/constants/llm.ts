@@ -164,3 +164,16 @@ export const DEFAULT_FAITH_BILLING: IFaithBillingSetting = {
  */
 export const FAITH_PROMPT_OVERHEAD_TOKENS = 600;
 export const FAITH_INPUT_CHARS_PER_TOKEN = 3;
+
+/**
+ * Info: (20260812 - Luphia) 費思個人化記憶於「付費訂閱終止後」的保留天數。
+ *
+ * 這是對外承諾的期間：服務條款 §3.7 與《隱私權政策》§5 均載明 90 天，方案頁文案
+ * 亦由此常數插值，避免三處各寫一個數字而在調整後互相矛盾。定價頁為 SSR/CSR 共用，
+ * 故放常數而非 env（非 NEXT_PUBLIC_ 的環境變數在 client bundle 讀不到）。
+ *
+ * ToDo: (20260812 - Luphia) 記憶儲存與到期刪除機制尚未實作（費思目前為無記憶 one-shot）。
+ * 上線前須補：記憶寫入、訂閱終止起算的刪除 Worker（含降級為免費版）、提前刪除受理流程；
+ * 未完成前不得對外宣稱此權益。屆時若改為可由後台調整，須一併搬入 DB 系統設定表。
+ */
+export const FAITH_MEMORY_RETENTION_DAYS = 90;
