@@ -441,11 +441,39 @@ const TOC_HEADING = /<(h[123])([^>]*)>([\s\S]*?)<\/\1>/g;
  * 這是這個做法的關鍵：目錄的高度在第一次排版時就已經是最終高度，
  * 之後只把佔位符換成數字。若等量完頁碼才插入目錄，目錄本身會把後面的內容往後推，
  * 頁碼跟著全錯，就得反覆排版到收斂 —— 而收斂與否沒有保證。
- * 佔位符寬度固定（3 個字元寬、右對齊），填 1~3 位數都不會讓那一行重新換行。
+ * **真正的護欄是 `.toc-page { min-width: 9mm }`**，不是佔位符的字元寬度
+ * （PR review 指出）：10pt 下 3 位數約 4.4mm，遠小於 9mm，所以佔位符與 1~3 位數
+ * 的量測寬度都被 min-width 吃掉。佔位符只讓沒有頁碼的那條不塌陷。
+ * 動了 min-width，這個保證就會無聲失效。
  */
 export const TOC_PAGE_PLACEHOLDER = "\u2007\u2007\u2007";
 
 const slugForIndex = (index: number): string => `carbon-sec-${index}`;
+
+/**
+ * Info: (20260812 - Emily) 目錄項目的文字要**解一次逸出**再存起來(PR review 第 1 點)。
+ *
+ * `collectHeadings` 讀的是 marked 產出的 HTML,裡面的 `&` 已經是 `&amp;`;
+ * `tocSection` 再逸出一次就成了 `&amp;amp;`,畫面上印出字面的 `&amp;`。
+ * 第二層後果更嚴重:同一份文字也是 `fillTocPageNumbers` 的比對用字,
+ * 而產出的 PDF 文字層裡是 `&` —— 永遠對不上,那一條會留白,
+ * 而留白的語意是「這一節不在文件裡」。
+ *
+ * 解在這裡而不是把 `tocSection` 的 `escapeHtml` 拿掉:
+ * entries 要的本來就是原始字,輸出面的逸出是該有的防護,兩者都要留。
+ */
+const HTML_ENTITY: Readonly<Record<string, string>> = {
+  "&amp;": "&",
+  "&lt;": "<",
+  "&gt;": ">",
+  "&quot;": '"',
+  "&#39;": "'",
+};
+const decodeEntities = (text: string): string =>
+  text.replace(
+    /&(?:amp|lt|gt|quot|#39);/g,
+    (entity) => HTML_ENTITY[entity] ?? entity,
+  );
 
 export interface ICarbonTocEntry {
   /** Info: (20260812 - Emily) 錨點 id，同時是 PDF 內部連結的目標 */
@@ -467,7 +495,7 @@ export const collectHeadings = (
   const next = body.replace(
     TOC_HEADING,
     (whole, tag: string, attrs: string, inner: string) => {
-      const text = inner.replace(/<[^>]+>/g, "").trim();
+      const text = decodeEntities(inner.replace(/<[^>]+>/g, "")).trim();
       if (text === "") return whole;
       index += 1;
       const id = slugForIndex(index);

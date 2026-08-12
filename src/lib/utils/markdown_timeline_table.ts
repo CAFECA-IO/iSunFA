@@ -88,6 +88,14 @@ export const convertTimelineBlocksToTables = (markdown: string): string => {
   if (!markdown.includes("timeline")) return markdown;
   return markdown.replace(TIMELINE_BLOCK, (block, body: string) => {
     const table = bodyToTable(body);
-    return table === "" ? block : table;
+    /**
+     * Info: (20260812 - Emily) 前後各補一個換行(PR review 第 3 點)。
+     *
+     * 圍籬本身佔一整行,替換成表格之後緊接在後的那一行會被當成表格的續列吃掉 ——
+     * 實測「後文」變成 `<tr class="group">` 的一列。產生器產出的形狀兩側本來就有
+     * 空行不會中,但手動編輯過的草稿會,而這條轉換現在跑在全 app 的 markdown 上。
+     * 消失是無聲的。
+     */
+    return table === "" ? block : `\n${table}\n`;
   });
 };

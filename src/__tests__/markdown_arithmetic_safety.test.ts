@@ -80,3 +80,26 @@ describe("buildCarbonReportHtml with transcribed formulas", () => {
     expect(html).toContain("<strong>表3.5 全公司類別一統計表</strong>");
   });
 });
+
+/**
+ * Info: (20260812 - Emily) 行內程式碼(PR review 第 2 點)。
+ * 本檔的立場是「圍籬內加反斜線不是防護而是污染」——行內 code span 同理,
+ * 當初只漏了一種。實測 `2*3*4` 會被轉義成 2\\*3\\*4,反斜線直接印在報告上。
+ */
+describe("escapeArithmeticEmphasis 與行內程式碼", () => {
+  it("should leave an inline code span untouched", () => {
+    expect(escapeArithmeticEmphasis("公式 `2*3*4` 見表")).toBe(
+      "公式 `2*3*4` 見表",
+    );
+  });
+
+  it("should still escape arithmetic outside the code span", () => {
+    expect(escapeArithmeticEmphasis("`a*1` 與 2*3")).toBe("`a*1` 與 2\\*3");
+  });
+
+  it("should handle a doubled backtick span", () => {
+    expect(escapeArithmeticEmphasis("``a`b*1`` 與 2*3")).toBe(
+      "``a`b*1`` 與 2\\*3",
+    );
+  });
+});

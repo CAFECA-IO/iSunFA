@@ -32,9 +32,27 @@
  * 冪等性是必要的:這支函式套用在三個地方(組裝段落、預覽、列印),
  * 而既有草稿裡的內容會經過不只一次 —— 二次轉義會印出一個字面反斜線。
  */
-const ARITHMETIC_STAR = /(?<!\\)(?<=[0-9)])\*(?=[0-9(])/g;
+/**
+ * Info: (20260812 - Emily) 冪等性由 `(?<=[0-9)])` 保證,不是由 `(?<!\\)`
+ * (PR review 指出)。已經轉義過的 `\*`,它左邊那個字元是 `\` 而 `\` 不在 `[0-9)]` 裡,
+ * 所以第二次跑就不會再匹配。原本那個 `(?<!\\)` 是死碼 ——
+ * 留著會讓下一個放寬左側字元集的人以為護欄在那裡。
+ */
+const ARITHMETIC_STAR = /(?<=[0-9)])\*(?=[0-9(])/g;
 
 const FENCE = /^\s*(```|~~~)/;
+
+/**
+ * Info: (20260812 - Emily) 行內程式碼也要跳過(PR review 第 2 點)。
+ *
+ * 本檔原本只跳過圍籬,理由是「圍籬內 markdown 不處理強調,在那裡加反斜線
+ * 不是防護而是**污染**」。行內 code span 完全同理,只是當初漏了一種 ——
+ * 實測 `` `2*3*4` `` 會被轉義成 `2\*3\*4`,反斜線直接印在報告上。
+ *
+ * 切法用捕捉群組:split 之後奇數索引就是 code span(含反引號),原樣保留。
+ * 反引號可以有多個(``a`b``),所以是 `+`。
+ */
+const INLINE_CODE = /(`+[^`]*`+)/;
 
 export const escapeArithmeticEmphasis = (markdown: string): string => {
   if (!markdown.includes("*")) return markdown;
@@ -47,7 +65,13 @@ export const escapeArithmeticEmphasis = (markdown: string): string => {
         insideFence = !insideFence;
         return line;
       }
-      return insideFence ? line : line.replace(ARITHMETIC_STAR, "\\*");
+      if (insideFence) return line;
+      return line
+        .split(INLINE_CODE)
+        .map((part, index) =>
+          index % 2 === 1 ? part : part.replace(ARITHMETIC_STAR, "\\*"),
+        )
+        .join("");
     })
     .join("\n");
 };

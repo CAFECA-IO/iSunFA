@@ -195,3 +195,31 @@ describe("buildCarbonReportHtml", () => {
     expect(html).toContain("&lt;br&gt;");
   });
 });
+
+/**
+ * Info: (20260812 - Emily) 目錄項目的文字被二次逸出(PR review 第 1 點)。
+ *
+ * `collectHeadings` 讀的是 marked 產出的 HTML(已逸出),`tocSection` 再逸出一次
+ * 就成了 `&amp;amp;`。而同一份文字也是頁碼比對用的 needle,
+ * PDF 文字層裡是 `&` —— 永遠對不上,那一條會留白,
+ * 而留白的語意是「這一節不在文件裡」。
+ */
+describe("目錄項目的逸出", () => {
+  const shell = {
+    brand: "b",
+    internalDocument: "i",
+    systemReport: "s",
+    issuedAt: "d",
+    footerTitle: "f",
+    footerText: "t",
+    tocTitle: "目錄",
+  };
+
+  it("should escape the heading text exactly once", () => {
+    const html = buildCarbonReportHtml("# 排放 & 移除 < >\n\n內文\n", shell);
+    const text = /<span class="toc-text">([^<]*)<\/span>/.exec(html)?.[1];
+
+    expect(text).toBe("排放 &amp; 移除 &lt; &gt;");
+    expect(text).not.toContain("&amp;amp;");
+  });
+});

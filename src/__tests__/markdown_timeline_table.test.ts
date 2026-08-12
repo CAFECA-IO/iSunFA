@@ -97,3 +97,30 @@ describe("convertTimelineBlocksToTables", () => {
     expect(convertTimelineBlocksToTables(empty)).toBe(empty);
   });
 });
+
+/**
+ * Info: (20260812 - Emily) 圍籬換成表格之後,緊接在後的那一行會被當成表格的續列
+ * 吃掉(PR review 第 3 點)。產生器產出的形狀兩側本來就有空行不會中,
+ * 但手動編輯過的草稿會 —— 而消失是無聲的。
+ */
+describe("convertTimelineBlocksToTables 與相鄰的內容", () => {
+  it("should not swallow the paragraph that follows the fence", () => {
+    const out = convertTimelineBlocksToTables(
+      ["前文", "```mermaid", "timeline", "  1966 : 創立", "```", "後文"].join(
+        "\n",
+      ),
+    );
+
+    // Info: (20260812 - Emily) 後文與表格之間必須有空行,否則 markdown 把它當續列
+    expect(out).toMatch(/\|\n\n?後文/);
+    expect(out.split("\n").some((line) => line.trim() === "後文")).toBe(true);
+  });
+
+  it("should keep the paragraph before the fence separate too", () => {
+    const out = convertTimelineBlocksToTables(
+      ["前文", "```mermaid", "timeline", "  1966 : 創立", "```"].join("\n"),
+    );
+
+    expect(out.split("\n").some((line) => line.trim() === "前文")).toBe(true);
+  });
+});
