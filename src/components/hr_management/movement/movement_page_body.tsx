@@ -69,6 +69,7 @@ import {
   mergeOffboardingForm,
 } from "@/lib/utils/hr_offboarding";
 import { resolveOffboardingCandidates } from "@/lib/utils/hr_offboarding_initiate";
+import { collectDepartmentScope } from "@/lib/utils/hr_dashboard";
 import {
   buildDepartmentTree,
   flattenDepartmentTree,
@@ -315,6 +316,24 @@ const MovementPageBody: FC = () => {
     }));
   }, [people, tasks, today, stageOverrides]);
 
+  /**
+   * Info: (20260813 - Julian) 選了部門就連同它的所有子部門一起收錄。
+   *
+   * 篩選選單畫的是一棵有縮排的樹，使用者選「技術部」時預期看到的是
+   * 整個技術部，含前端組與後端組 —— 只比對被選中的那一層，選父部門會
+   * 讓子部門的人整批消失，選根部門（總經理室）幾乎什麼都不剩。
+   *
+   * 走 `collectDepartmentScope` 而不是自己再寫一次：儀表板的部門主管視角
+   * 用的就是這一支，兩邊各寫一份的話「部門」在兩頁會是兩種意思。
+   */
+  const departmentScope = useMemo<ReadonlySet<string> | null>(
+    () =>
+      departmentId === HR_FILTER_ALL
+        ? null
+        : collectDepartmentScope(MOCK_HR_DEPARTMENTS, departmentId),
+    [departmentId],
+  );
+
   // Info: (20260810 - Julian) 頂部搜尋列同時作用在三個分頁
   const filteredCases = useMemo<IMovementCase[]>(() => {
     const normalized = keyword.trim().toLowerCase();
@@ -324,17 +343,14 @@ const MovementPageBody: FC = () => {
         item.employeeName.toLowerCase().includes(normalized) ||
         item.employeeNo.toLowerCase().includes(normalized);
       const matchedDepartment =
-        departmentId === HR_FILTER_ALL ||
-        departmentOptions.some(
-          (option) =>
-            option.id === departmentId && option.name === item.departmentName,
-        );
+        departmentScope === null ||
+        (item.departmentId !== null && departmentScope.has(item.departmentId));
       const matchedAssignee =
         assignee === HR_FILTER_ALL ||
         item.tasks.some((task) => task.assigneeName === assignee);
       return matchedKeyword && matchedDepartment && matchedAssignee;
     });
-  }, [allCases, keyword, departmentId, assignee, departmentOptions]);
+  }, [allCases, keyword, departmentScope, assignee]);
 
   const onboardingRows = useMemo(
     () =>

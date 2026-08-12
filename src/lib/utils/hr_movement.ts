@@ -154,17 +154,35 @@ export function resolveCaseAlert(
 }
 
 /**
+ * Info: (20260813 - Julian) 這份考核結果算不算「還沒有人做出最終決定」。
+ *
+ * 未考核（null）與延長試用都算 —— 兩者的共通點是「這個案件還要再被處理一次」，
+ * 而那正是催辦與逾期統計要盯的集合。通過與不予錄用則已經有結論。
+ */
+function isProbationUnsettled(result: ProbationResult | null): boolean {
+  return result === null || PROBATION_UNSETTLED_RESULTS.includes(result);
+}
+
+/**
  * Info: (20260811 - Julian) 試用期的警示。
  *
  * 逾期又沒有結果才是紅燈；送出考核就不再催辦。
  * 但「送出」與「結案」是兩件事 —— 延長試用同樣是送出了考核，
  * 案件卻還要跑到新的期滿日，所以它留在進行中而不是可結案。
+ *
+ * Info: (20260813 - Julian) 尚未結案的結果（延長試用）逾期時要再亮一次紅燈。
+ *
+ * 只用 `result === null` 當紅燈條件的話，延長後的新到期日再度過期時
+ * 這個案件永遠回不到紅燈 —— 而 `isOverdue` 已經是依新到期日算的，
+ * 於是同一列會同時顯示紅字的「逾期 N 天」與黃色的「進行中」，
+ * 也正好違背 `probation_extend_notice` 對使用者的承諾
+ * （「逾期提示依新日期重新計算」）。第二次考核沒人催，比第一次更容易掉。
  */
 export function resolveProbationAlert(
   isOverdue: boolean,
   result: ProbationResult | null,
 ): IMovementAlert {
-  if (isOverdue && result === null) {
+  if (isOverdue && isProbationUnsettled(result)) {
     return {
       level: MovementAlertLevel.URGENT,
       reason: MovementAlertReason.PROBATION_OVERDUE,
@@ -195,6 +213,7 @@ function buildCase(
     employeeId: employee.id,
     employeeName: employee.name,
     employeeNo: employee.employeeNo,
+    departmentId: employee.departmentId,
     departmentName: employee.departmentName,
     jobTitle: employee.jobTitle,
     managerName: employee.managerName,
@@ -438,6 +457,12 @@ export function buildProbationRows(
  * 轉正生效後那個人的狀態變成 ACTIVE，就不在試用期清單裡了 ——
  * 繼續數 `rows` 的話，這個數字會在生效當天自己歸零，
  * 變成一個「愈成功愈看不到」的統計。改以生效日落在本月為準。
+ *
+ * Info: (20260813 - Julian) 逾期改用 `isProbationUnsettled`，與紅燈同一個判斷。
+ *
+ * 原本是 `result === null`，於是延長試用後新到期日再過期的人不會被算進來，
+ * 而 `resolveProbationAlert` 已經把他標成紅燈 —— 上方數字說 0 件逾期、
+ * 下方清單躺著一列紅的，兩個數字都出自這一支，不該互相打架。
  */
 export function buildProbationMetrics(
   rows: IProbationRow[],
@@ -448,7 +473,9 @@ export function buildProbationMetrics(
     endingThisMonth: rows.filter((row) =>
       isSameMonth(parseIsoDate(row.probationEndDate), today),
     ).length,
-    overdue: rows.filter((row) => row.isOverdue && row.result === null).length,
+    overdue: rows.filter(
+      (row) => row.isOverdue && isProbationUnsettled(row.result),
+    ).length,
     passedThisMonth: [...outcomes.values()].filter(
       (outcome) =>
         outcome.result === ProbationResult.PASS &&

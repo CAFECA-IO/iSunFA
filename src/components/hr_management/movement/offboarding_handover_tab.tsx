@@ -30,6 +30,27 @@ interface IOffboardingHandoverTabProps {
 
 const LABEL_CLASS = "text-xs font-medium text-gray-500";
 
+// Info: (20260813 - Julian) 使用者自行新增的交接列的 id 前綴，範本列用的是 taskId
+const EXTRA_ITEM_ID_PREFIX = "handover-extra-";
+
+/**
+ * Info: (20260813 - Julian) 新增列的編號取「既有最大號 + 1」，不是「筆數 + 1」。
+ *
+ * 用筆數的話，刪掉中間一列之後下一次新增會算出一個還在使用中的 id ——
+ * 而 `updateItem` 與 `removeItem` 都是比對 id：打字會同時改到兩列，
+ * 按一次垃圾桶會一次刪掉兩列，`mergeOffboardingForm` 也會把兩列併成一列。
+ *
+ * 仍然不用亂數或時間戳：這個元件在 SSR 與客戶端各跑一次，兩邊必須算出同一個值。
+ */
+function nextExtraItemId(items: IHandoverItem[]): string {
+  const largest = items.reduce((max, item) => {
+    if (!item.id.startsWith(EXTRA_ITEM_ID_PREFIX)) return max;
+    const serial = Number(item.id.slice(EXTRA_ITEM_ID_PREFIX.length));
+    return Number.isInteger(serial) && serial > max ? serial : max;
+  }, 0);
+  return `${EXTRA_ITEM_ID_PREFIX}${largest + 1}`;
+}
+
 /**
  * Info: (20260811 - Julian) 分頁二：工作交接。
  *
@@ -68,11 +89,7 @@ const OffboardingHandoverTab: FC<IOffboardingHandoverTabProps> = ({
       handoverItems: [
         ...form.handoverItems,
         {
-          /**
-           * Info: (20260811 - Julian) 新增列的 id 由既有列數推導，不用亂數或時間戳。
-           * 這個元件會在 SSR 與客戶端各跑一次，用 Math.random() 會兩邊不一致。
-           */
-          id: `handover-extra-${form.handoverItems.length + 1}`,
+          id: nextExtraItemId(form.handoverItems),
           taskId: null,
           title: "",
           link: "",

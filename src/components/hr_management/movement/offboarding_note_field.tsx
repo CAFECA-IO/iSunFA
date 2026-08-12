@@ -10,7 +10,7 @@ interface IOffboardingNoteFieldProps {
   onChange: (next: string) => void;
 }
 
-/* Info: (20260811 - Julian) 每個分頁底部的備註事項：資產的損壞說明與 HR 的結算註記 */
+// Info: (20260811 - Julian) 每個分頁底部的備註事項：資產的損壞說明與 HR 的結算註記
 const OffboardingNoteField: FC<IOffboardingNoteFieldProps> = ({
   id,
   value,

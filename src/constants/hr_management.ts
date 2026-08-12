@@ -734,9 +734,16 @@ export const EMPLOYEE_NO_PATTERN = /^EMP\d{3,}$/;
  * Info: (20260812 - Julian) Email 與台灣手機號碼的格式檢查。
  *
  * 兩者都刻意寬鬆：Email 只擋「明顯不是 Email」的輸入（沒有 @ 或沒有網域）。
+ *
+ * Info: (20260813 - Julian) 手機號碼要求 10 個數字，分隔符只是可選的裝飾。
+ *
+ * 原本寫成 `/^09[\d\-\s]{8,12}$/`，把數字與分隔符放進同一個字元集，
+ * 於是 `09--------` 這種一個數字都沒有的輸入也會通過 —— 而它接著會被
+ * `maskPiiTail` 原樣存進 `maskedPhone`（可見字元不足 3 碼時遮不掉任何東西），
+ * 變成一筆沒有任何後續檢查會攔的無效電話。
  */
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-export const TW_MOBILE_PATTERN = /^09[\d\-\s]{8,12}$/;
+export const TW_MOBILE_PATTERN = /^09\d{2}[-\s]?\d{3}[-\s]?\d{3}$/;
 
 // Info: (20260811 - Julian) 離職交接的任務範本鍵值
 export enum OffboardingTaskKey {
@@ -1208,11 +1215,6 @@ export const CERTIFICATE_STATE_STYLE: Record<CertificateState, string> = {
 export const MONTHLY_PAYROLL_DAYS = 30;
 
 /**
- * Info: (20260811 - Julian) 人事模組表單輸入框的共用樣式。
- * 抽成常數是因為它已經被三個 Modal 各抄了一份，
- * 而抄本之間的 focus 樣式已經開始不一樣了。
- */
-/**
  * Info: (20260812 - Julian) 尚未開發的動作按鈕。
  *
  * 側邊選單早就用灰字加 `cursor-not-allowed` 表示「這一頁還沒有」，
@@ -1234,6 +1236,11 @@ export const HR_PENDING_ACTION_CLASS =
  */
 export const MOVEMENT_HASH_PROBATION = "probation";
 
+/**
+ * Info: (20260811 - Julian) 人事模組表單輸入框的共用樣式。
+ * 抽成常數是因為它已經被三個 Modal 各抄了一份，
+ * 而抄本之間的 focus 樣式已經開始不一樣了。
+ */
 export const HR_INPUT_CLASS =
   "rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-700 transition-all placeholder:text-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none";
 

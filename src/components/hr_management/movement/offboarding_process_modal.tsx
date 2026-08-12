@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useMemo, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import {
   ClipboardList,
   DoorOpen,
@@ -81,6 +81,20 @@ const OffboardingProcessModal: FC<IOffboardingProcessModalProps> = ({
   const [activeTab, setActiveTab] = useState<OffboardingModalTab>(
     OffboardingModalTab.APPLICATION,
   );
+
+  /**
+   * Info: (20260813 - Julian) 換案件就回到第一個分頁。
+   *
+   * 這個 Modal 是常駐掛載、靠 `offboardingCase` 為 null 收起來的，因此
+   * `activeTab` 會跨案件留著。少了這一段，上一個案件停在「HR 結案」，
+   * 下一個案件打開就直接落在結案頁 —— 而分頁順序就是流程順序，
+   * 跳過第一頁正是 `OFFBOARDING_MODAL_TABS` 說要避免的
+   * 「證明書都發了才發現預告期不足」。
+   */
+  const caseId = offboardingCase?.id ?? null;
+  useEffect(() => {
+    setActiveTab(OffboardingModalTab.APPLICATION);
+  }, [caseId]);
 
   const progress = useMemo(
     () => (form ? buildOffboardingProgress(form) : null),

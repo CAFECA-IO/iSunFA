@@ -305,6 +305,14 @@ export interface IMovementCase {
   employeeId: string;
   employeeName: string;
   employeeNo: string;
+  /**
+   * Info: (20260813 - Julian) 部門篩選比對的是 id，不是 `departmentName`。
+   *
+   * 比名稱有兩個問題：同名的兩個部門會被混為一談，而且拿不到父子關係 ——
+   * 選「技術部」時得連前端組、後端組一起收進來，那要靠 id 走
+   * `collectDepartmentScope`（與儀表板同一支）。
+   */
+  departmentId: string | null;
   departmentName: string | null;
   jobTitle: string | null;
   managerName: string | null;

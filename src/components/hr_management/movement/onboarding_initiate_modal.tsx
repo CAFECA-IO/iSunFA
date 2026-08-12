@@ -257,11 +257,11 @@ const OnboardingInitiateModal: FC<IOnboardingInitiateModalProps> = ({
                 <input
                   type="text"
                   value={draft.employeeNo}
-                  /*
-                    Info: (20260812 - Julian) 打字當下就轉大寫，讓畫面上看到的
-                    就是會被寫進 DB 的那一個字串 —— 大小寫在 Postgres 的
-                    唯一鍵上是有差別的（見 `normalizeEmployeeNo`）。
-                  */
+                  /**
+                   * Info: (20260812 - Julian) 打字當下就轉大寫，讓畫面上看到的
+                   * 就是會被寫進 DB 的那一個字串 —— 大小寫在 Postgres 的
+                   * 唯一鍵上是有差別的（見 `normalizeEmployeeNo`）。
+                   */
                   onChange={(event) =>
                     update({
                       employeeNo: normalizeEmployeeNo(event.target.value),
