@@ -5,6 +5,14 @@ export const chat = {
   guest_limit_reached:
     "You have used up your trial quota. Please log in to continue using this service.",
   generic_error: "Sorry, something went wrong. Please try again later.",
+  // Info: (20260813 - Luphia) 常駐額度指示器（產品調整 20260813）：平時收合只顯示百分比，點擊展開細節
+  quota_indicator: {
+    label: "Quota left",
+    wallet_fallback: "using team credits",
+    reset_at: "Resets {{time}}",
+    spend_order:
+      "We draw from your subscription quota first, then automatically from the credits your team allocated to you.",
+  },
   // Info: (20260812 - Luphia) 額度用罄提示（設計書 §5）：倒數、絕對重置時間與導購
   quota_exceeded: {
     title: "Not enough {{window}} AI chat quota",

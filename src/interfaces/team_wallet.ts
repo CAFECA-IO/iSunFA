@@ -39,6 +39,18 @@ export interface ITeamSubscriptionView {
   faithTokensPerCredit: number;
 }
 
+/**
+ * Info: (20260813 - Luphia) 帳本情境下的額度檢視（費思常駐儀表用）。
+ * 附 allocationBalance：拆帳後（設計書 §5.4）額度見底會自動接續扣分配點數，
+ * 只給訂閱額度會讓用戶把 0% 誤讀成「不能用了」。
+ */
+export interface IAccountBookQuotaView {
+  teamId: string;
+  planId: TeamPlanId;
+  quota: IQuotaStatus;
+  allocationBalance: string;
+}
+
 export interface ITeamWalletView {
   teamId: string;
   status: TeamWalletStatus;

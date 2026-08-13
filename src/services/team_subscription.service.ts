@@ -22,6 +22,7 @@ import {
 } from "@/lib/quota/window";
 import { API_ERRORS, ApiError, IErrorDef } from "@/lib/utils/error_dictionary";
 import type {
+  IAccountBookQuotaView,
   IQuotaStatus,
   ITeamSubscriptionView,
 } from "@/interfaces/team_wallet";
@@ -31,11 +32,16 @@ import {
 } from "@/services/spend.service";
 import { generatePaymentOrder } from "@/services/order.service";
 import { assertTeamMember } from "@/services/team_wallet_access.guard";
+import {
+  assertAccountBookMember,
+  mapServiceError,
+} from "@/services/account_book_access.guard";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { teamQuotaUsageRepo } from "@/repositories/team_quota_usage.repo";
 import { subscriptionPlanQuotaRepo } from "@/repositories/subscription_plan_quota.repo";
 import { faithBillingSettingRepo } from "@/repositories/faith_billing_setting.repo";
 import { paymentRepo } from "@/repositories/payment.repo";
+import { teamWalletRepo } from "@/repositories/team_wallet.repo";
 
 /**
  * Info: (20260807 - Luphia) 團隊訂閱 Service（設計書 §7 GET/PUT /subscription）。
@@ -113,6 +119,45 @@ export async function getTeamSubscriptionView(params: {
       autoRenew: subscription?.autoRenew ?? false,
       quota,
       faithTokensPerCredit: billing.tokensPerCredit,
+    };
+  });
+}
+
+/**
+ * Info: (20260813 - Luphia) 帳本情境下的額度檢視（費思常駐儀表用）。
+ *
+ * 與 getTeamSubscriptionView 的差別只在入口：這裡以 accountBookId 推導團隊
+ * （沿用 assertAccountBookMember 授權收斂點，與費思扣費同一條推導），
+ * 並附上成員自己的分配點數餘額——拆帳上線後（§5.4）額度見底會自動接續扣錢包，
+ * 只顯示訂閱額度會讓用戶以為 0% 就等於不能用。
+ */
+export async function getAccountBookQuotaView(params: {
+  userId: string;
+  accountBookId: string;
+  nowSec: number;
+}): Promise<IAccountBookQuotaView> {
+  const { userId, accountBookId, nowSec } = params;
+
+  const accountBook = await (async () => {
+    try {
+      return await assertAccountBookMember(accountBookId, userId);
+    } catch (error) {
+      throw toApiError(mapServiceError(error));
+    }
+  })();
+
+  return guarded(async () => {
+    const teamId = accountBook.teamId;
+    const subscription = await teamSubscriptionRepo.getByTeamId(teamId);
+    const planId = resolveEffectivePlanId(subscription, nowSec);
+    const quota = await buildQuotaStatus(teamId, planId, nowSec);
+    const allocation = await teamWalletRepo.getAllocation(teamId, userId);
+
+    return {
+      teamId,
+      planId,
+      quota,
+      allocationBalance: (allocation?.balance ?? BigInt(0)).toString(),
     };
   });
 }

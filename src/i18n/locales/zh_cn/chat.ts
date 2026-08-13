@@ -3,6 +3,13 @@ export const chat = {
   login_warning: "您尚未登录，所有对话内容将不会被保存",
   guest_limit_reached: "已用完试用额度，请登录以继续使用本服务",
   generic_error: "抱歉，发生错误，请稍后再试。",
+  // Info: (20260813 - Luphia) 常驻额度指示器（产品调整 20260813）：平时收合只显示百分比，点击展开细节
+  quota_indicator: {
+    label: "剩余额度",
+    wallet_fallback: "改扣团队点数",
+    reset_at: "{{time}} 重置",
+    spend_order: "扣抵顺序：先用订阅额度，用完自动接续扣团队分配给您的点数。",
+  },
   // Info: (20260812 - Luphia) 额度用尽提示（设计书 §5）：倒数、绝对重置时间与导购
   quota_exceeded: {
     title: "{{window}}的 AI 对话额度不足",

@@ -4,6 +4,14 @@ export const chat = {
   guest_limit_reached:
     "체험 한도를 모두 사용했습니다. 서비스를 계속 이용하려면 로그인해 주십시오.",
   generic_error: "죄송합니다. 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+  // Info: (20260813 - Luphia) 常駐額度指示器（產品調整 20260813）：平時收合只顯示百分比，點擊展開細節
+  quota_indicator: {
+    label: "남은 한도",
+    wallet_fallback: "팀 크레딧에서 차감",
+    reset_at: "{{time}} 초기화",
+    spend_order:
+      "구독 한도에서 먼저 차감하고, 모두 사용하면 팀이 배정한 크레딧에서 자동으로 이어서 차감합니다.",
+  },
   // Info: (20260812 - Luphia) 額度用罄提示（設計書 §5）：倒數、絕對重置時間與導購
   quota_exceeded: {
     title: "{{window}} AI 대화 한도가 부족합니다",

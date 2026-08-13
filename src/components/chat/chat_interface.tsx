@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import ChatInput from "@/components/chat/chat_input";
 import MessageList, { IMessage } from "@/components/chat/message_list";
 import QuotaExceededNotice from "@/components/chat/quota_exceeded_notice";
+import QuotaIndicator from "@/components/chat/quota_indicator";
 import { request } from "@/lib/utils/request";
 import { parseQuotaExceededError } from "@/lib/quota/quota_notice";
 import type { IQuotaExceededPayload } from "@/interfaces/team_wallet";
@@ -37,6 +38,11 @@ export default function ChatInterface({
    * 由下一次送出訊息才清掉。這樣「額度回來了」是看得見的狀態轉換，而非畫面靜靜消失。
    */
   const [quotaRecovered, setQuotaRecovered] = useState(false);
+  /**
+   * Info: (20260813 - Luphia) 常駐額度指示器的重取觸發：每次送出後用量都變了，
+   * 以計數器而非時間戳，避免同一秒內連送兩則時漏更新。
+   */
+  const [quotaRefreshToken, setQuotaRefreshToken] = useState(0);
 
   // Info: (20260105 - Luphia) Load usage from localStorage on mount
   useEffect(() => {
@@ -139,6 +145,8 @@ export default function ChatInterface({
       ]);
     } finally {
       setLoading(false);
+      // Info: (20260813 - Luphia) 成功或失敗都重取：失敗也可能已經扣掉預扣（例如 LLM 逾時後退款前）
+      setQuotaRefreshToken((prev) => prev + 1);
     }
   };
 
@@ -158,6 +166,10 @@ export default function ChatInterface({
         </div>
       )}
       <MessageList messages={messages} loading={loading} />
+      <QuotaIndicator
+        accountBookId={accountBookId}
+        refreshToken={quotaRefreshToken}
+      />
       {quotaExceeded && (
         <QuotaExceededNotice
           payload={quotaExceeded}
