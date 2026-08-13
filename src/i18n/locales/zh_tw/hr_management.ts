@@ -512,6 +512,15 @@ export const hrManagement = {
     action_submit: "建立並發送通知",
   },
   attendance: {
+    blocked_out_of_range:
+      "你在 {{name}} 外 {{distance}} 公尺，超出 {{radius}} 公尺的打卡範圍。走近工區後按鈕會自動恢復。",
+    confirm_title_in: "確認上班打卡",
+    confirm_title_out: "確認下班打卡",
+    confirm_message_in:
+      "將以你目前的位置在 {{name}} 記錄一筆上班打卡。時間由伺服器決定，記錄後不可刪改。",
+    confirm_message_out:
+      "將以你目前的位置在 {{name}} 記錄一筆下班打卡。時間由伺服器決定，記錄後不可刪改。",
+    confirm_cancel: "取消",
     map_unavailable: "地圖無法顯示，不影響打卡。上方的距離與精度仍然有效。",
     map_self_label: "你目前的位置",
     title: "出勤打卡",
@@ -545,9 +554,6 @@ export const hrManagement = {
     summary_none: "今日尚無打卡紀錄",
     error_load: "無法載入出勤資料，請稍後再試",
     error_punch: "打卡失敗，請稍後再試",
-    demo_banner: "示範模式：座標可手動輸入，正式環境不提供此功能",
-    manual_latitude: "緯度（示範用）",
-    manual_longitude: "經度（示範用）",
   },
   attendance_result: {
     title: "出勤總覽與異常",

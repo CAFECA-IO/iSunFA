@@ -520,6 +520,15 @@ export const hrManagement = {
     action_submit: "생성 및 통보",
   },
   attendance: {
+    blocked_out_of_range:
+      "{{name}} 에서 {{distance}} m 떨어져 있어 {{radius}} m 기록 범위를 벗어났습니다. 현장에 가까워지면 버튼이 다시 활성화됩니다.",
+    confirm_title_in: "출근 기록 확인",
+    confirm_title_out: "퇴근 기록 확인",
+    confirm_message_in:
+      "현재 위치에서 {{name}} 의 출근 기록을 남깁니다. 시각은 서버가 결정하며 기록 후에는 수정·삭제할 수 없습니다.",
+    confirm_message_out:
+      "현재 위치에서 {{name}} 의 퇴근 기록을 남깁니다. 시각은 서버가 결정하며 기록 후에는 수정·삭제할 수 없습니다.",
+    confirm_cancel: "취소",
     map_unavailable:
       "지도를 표시할 수 없습니다. 기록에는 영향이 없으며 위의 거리와 정확도는 그대로 유효합니다.",
     map_self_label: "현재 위치",
@@ -556,10 +565,6 @@ export const hrManagement = {
     error_load:
       "근태 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
     error_punch: "기록에 실패했습니다. 잠시 후 다시 시도해 주세요.",
-    demo_banner:
-      "데모 모드: 좌표를 직접 입력할 수 있습니다. 운영 환경에서는 제공하지 않습니다.",
-    manual_latitude: "위도（데모용）",
-    manual_longitude: "경도（데모용）",
   },
   attendance_result: {
     title: "근태 현황과 이상",

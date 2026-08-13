@@ -519,6 +519,15 @@ export const hrManagement = {
     action_submit: "作成して通知",
   },
   attendance: {
+    blocked_out_of_range:
+      "{{name}} から {{distance}} m の地点におり、{{radius}} m の打刻範囲外です。現場に近づくとボタンは自動的に有効になります。",
+    confirm_title_in: "出勤打刻の確認",
+    confirm_title_out: "退勤打刻の確認",
+    confirm_message_in:
+      "現在地から {{name}} での出勤打刻を記録します。時刻はサーバーが決定し、記録後の削除・修正はできません。",
+    confirm_message_out:
+      "現在地から {{name}} での退勤打刻を記録します。時刻はサーバーが決定し、記録後の削除・修正はできません。",
+    confirm_cancel: "キャンセル",
     map_unavailable:
       "地図を表示できません。打刻には影響しません —— 上部の距離と精度はそのまま有効です。",
     map_self_label: "現在地",
@@ -555,9 +564,6 @@ export const hrManagement = {
     error_load:
       "勤怠データを読み込めませんでした。しばらくしてお試しください。",
     error_punch: "打刻に失敗しました。しばらくしてお試しください。",
-    demo_banner: "デモモード：座標を手入力できます。本番環境では提供しません。",
-    manual_latitude: "緯度（デモ用）",
-    manual_longitude: "経度（デモ用）",
   },
   attendance_result: {
     title: "勤怠一覧と異常",

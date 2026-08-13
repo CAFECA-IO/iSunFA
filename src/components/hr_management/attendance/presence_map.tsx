@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useMemo, useState } from "react";
+import { FC, useMemo } from "react";
 import Map, { Layer, Marker, Source } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
@@ -10,6 +10,7 @@ import {
 } from "@/lib/utils/attendance_presence_view";
 import { IPresenceLocationSummary } from "@/interfaces/attendance";
 import { useTranslation } from "@/i18n/i18n_context";
+import { MAPTILER_STYLE, useMapStyle } from "@/hooks/use_map_style";
 
 /**
  * Info: (20260813 - Julian) 現場地圖：工區圓心 + 圍欄圓圈 + 每個工區的人數。
@@ -34,17 +35,14 @@ const PresenceMap: FC<{
   onSelect: (workLocationId: string) => void;
 }> = ({ locations, selectedId, onSelect }) => {
   const { t } = useTranslation();
-  const mapTilerKey = process.env.NEXT_PUBLIC_MAPTILER_KEY;
 
   /**
-   * Info: (20260813 - Julian) 底圖載入失敗時退回同一行說明。
-   *
-   * 只檢查「有沒有金鑰」不夠 —— **一把錯的金鑰會通過那個檢查**，
-   * 然後 maplibre 取不到 style，畫面上留下一塊空白的灰色方框。
-   * 那比一行說明糟：看的人會以為整頁壞了，而其實壞的只有底圖。
-   * 會場連不到 MapTiler 時也是同一條路徑。
+   * Info: (20260813 - Julian) 淡色底圖：這一頁的主角是四個工區的圓圈與人數，
+   * 路名與 POI 太搶眼會蓋掉主角。打卡頁相反，那裡要的正是路名。
    */
-  const [hasMapError, setHasMapError] = useState<boolean>(false);
+  const { styleUrl, checking, reportError } = useMapStyle(
+    MAPTILER_STYLE.DATAVIZ,
+  );
 
   const features = useMemo(
     () => buildGeofenceFeatures(locations, selectedId),
@@ -59,7 +57,10 @@ const PresenceMap: FC<{
    * （或會場連不上 MapTiler），紅色錯誤框會讓整頁看起來壞掉，
    * 而其實壞掉的只有底圖 —— 執行手冊的備援分級講的就是這件事。
    */
-  if (!mapTilerKey || !bounds || hasMapError) {
+  // Info: (20260813 - Julian) 還在確認金鑰時什麼都不顯示，避免先閃一下錯誤訊息再出現地圖
+  if (checking) return null;
+
+  if (!styleUrl || !bounds) {
     return (
       <div className="rounded-2xl bg-gray-50 px-4 py-6 text-center text-sm text-gray-400 ring-1 ring-gray-200">
         {t("hr_management.attendance_presence.map_unavailable")}
@@ -71,8 +72,8 @@ const PresenceMap: FC<{
     <div className="relative h-80 overflow-hidden rounded-2xl ring-1 ring-gray-200">
       <Map
         initialViewState={{ bounds, fitBoundsOptions: { padding: 64 } }}
-        mapStyle={`https://api.maptiler.com/maps/dataviz-light/style.json?key=${mapTilerKey}`}
-        onError={() => setHasMapError(true)}
+        mapStyle={styleUrl}
+        onError={reportError}
       >
         <Source id="attendance-geofence" type="geojson" data={features}>
           <Layer
