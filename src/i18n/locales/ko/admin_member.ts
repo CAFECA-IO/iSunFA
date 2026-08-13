@@ -31,6 +31,10 @@ export const adminMember = {
     title: "팀에 크레딧 지급",
     description:
       "팀 크레딧은 오프체인 원장입니다. 팀 지갑의 미배정 풀로 바로 입금되며, 팀 관리자가 구성원에게 배정합니다(개인에게 지급하는 온체인 크레딧과 다릅니다).",
+    search_placeholder: "팀 이름 또는 소유자로 검색",
+    scoped_hint: "'{{user}}'이(가) 속한 팀만 표시합니다",
+    no_result: "일치하는 팀이 없습니다",
+    confirm_target: "지급 대상: {{team}}",
     target_team: "대상 팀",
     select_team: "팀 선택",
     team_summary: "구성원 {{members}}명 · 미배정 잔액 {{balance}} 크레딧",

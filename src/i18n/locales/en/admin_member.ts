@@ -31,6 +31,10 @@ export const adminMember = {
     title: "Issue credits to a team",
     description:
       "Team credits live in an off-chain ledger: they go straight into the team wallet's unallocated pool, and the team's managers allocate them to members. This differs from issuing on-chain credits to an individual.",
+    search_placeholder: "Search by team name or owner",
+    scoped_hint: "Showing only the teams {{user}} belongs to",
+    no_result: "No matching team",
+    confirm_target: "Issuing to: {{team}}",
     target_team: "Target team",
     select_team: "Select a team",
     team_summary: "{{members}} members · {{balance}} credits unallocated",

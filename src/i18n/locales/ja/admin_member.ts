@@ -31,6 +31,10 @@ export const adminMember = {
     title: "チームへのポイント付与",
     description:
       "チームのポイントはオフチェーン台帳です。チームウォレットの未割当プールに直接入り、チームの管理者がメンバーへ割り当てます（個人へのオンチェーン付与とは異なります）。",
+    search_placeholder: "チーム名またはオーナーで検索",
+    scoped_hint: "「{{user}}」が所属するチームのみ表示しています",
+    no_result: "該当するチームがありません",
+    confirm_target: "付与先：{{team}}",
     target_team: "対象チーム",
     select_team: "チームを選択",
     team_summary: "メンバー {{members}} 名・未割当残高 {{balance}} ポイント",

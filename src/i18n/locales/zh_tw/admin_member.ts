@@ -31,6 +31,10 @@ export const adminMember = {
     title: "發放點數給團隊",
     description:
       "團隊點數為離鏈帳本，將直接入該團隊錢包的未分配池，再由該團隊管理者分配給成員；與發放給個人的鏈上點數不同。",
+    search_placeholder: "搜尋團隊名稱或擁有者",
+    scoped_hint: "僅列出「{{user}}」所屬的團隊",
+    no_result: "找不到符合的團隊",
+    confirm_target: "將發放給：{{team}}",
     target_team: "目標團隊",
     select_team: "請選擇團隊",
     team_summary: "成員 {{members}} 人．錢包未分配餘額 {{balance}} 點",

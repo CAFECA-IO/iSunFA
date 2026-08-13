@@ -31,6 +31,10 @@ export const adminMember = {
     title: "发放点数给团队",
     description:
       "团队点数为离链账本，将直接入该团队钱包的未分配池，再由该团队管理者分配给成员；与发放给个人的链上点数不同。",
+    search_placeholder: "搜索团队名称或拥有者",
+    scoped_hint: "仅列出「{{user}}」所属的团队",
+    no_result: "找不到符合的团队",
+    confirm_target: "将发放给：{{team}}",
     target_team: "目标团队",
     select_team: "请选择团队",
     team_summary: "成员 {{members}} 人・钱包未分配余额 {{balance}} 点",
