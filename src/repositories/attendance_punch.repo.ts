@@ -53,6 +53,12 @@ export interface IAttendancePunchRepository {
     accountBookId: string,
     workDate: string,
   ): Promise<AttendancePunch[]>;
+  findByWorkDateRange(params: {
+    accountBookId: string;
+    employeeIds: string[];
+    from: string;
+    to: string;
+  }): Promise<AttendancePunch[]>;
 }
 
 class AttendancePunchRepository implements IAttendancePunchRepository {
@@ -95,6 +101,35 @@ class AttendancePunchRepository implements IAttendancePunchRepository {
   ): Promise<AttendancePunch[]> {
     return prisma.attendancePunch.findMany({
       where: { accountBookId, workDate },
+      orderBy: { punchedAt: "asc" },
+    });
+  }
+
+  /**
+   * Info: (20260813 - Julian) 判定矩陣用：一次取整段期間、整批員工。
+   *
+   * `workDate` 是 "YYYY-MM-DD" 字串，字典序即日期序，故可直接用 gte / lte。
+   * 走 `@@index([accountBookId, employeeId, workDate])` 的前綴。
+   *
+   * **回傳的是完整的打卡列，含經緯度密文。** 判定只需要 `punchType` 與時刻
+   * （見 `IPunchSnapshot`），因此呼叫端必須在 service 層就投影掉其餘欄位 ——
+   * 讓密文一路流到 API 回應是這個模組最容易犯、也最不可逆的錯。
+   */
+  public async findByWorkDateRange(params: {
+    accountBookId: string;
+    employeeIds: string[];
+    from: string;
+    to: string;
+  }): Promise<AttendancePunch[]> {
+    const { accountBookId, employeeIds, from, to } = params;
+    if (employeeIds.length === 0) return [];
+
+    return prisma.attendancePunch.findMany({
+      where: {
+        accountBookId,
+        employeeId: { in: employeeIds },
+        workDate: { gte: from, lte: to },
+      },
       orderBy: { punchedAt: "asc" },
     });
   }

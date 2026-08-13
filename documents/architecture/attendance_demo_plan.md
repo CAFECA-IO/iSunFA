@@ -2,7 +2,7 @@
 
 > **Date**: 2026-08-13
 > **Author**: Julian
-> **Version**: 2.1
+> **Version**: 2.2
 > **Status**: 📝 Draft
 > **母文件**: `documents/architecture/time_attendance_module_plan.md`（v1.2）
 > **Base**: `develop` @ `9757e21e8`
@@ -11,6 +11,18 @@
 > **展示資料**: `documents/architecture/attendance_demo_mock_data.md`
 > **執行手冊**: `documents/architecture/attendance_demo_runbook.md`（座標校準、現場故障處置、備援分級）
 > **演示地點**: 新北市
+
+> **v2.2 變更摘要**（相對 v2.1）：**實作過程中回頭修正計畫書的三處**
+>
+> 1. **§3.3 手動座標的措辭錯誤（W8 發現）**：原文說示範用的手動座標輸入
+>    「與護欄 G2 直接衝突」。**那句話是錯的。** 伺服器本來就不信任 client
+>    送來的任何座標，用 curl 送一組假座標一直都做得到 —— 這個輸入框只是把
+>    那件事做成一般使用者按得到的按鈕。因此它的旗標只需要 `NEXT_PUBLIC_` 這一支
+>    （純前端），伺服器沒有、也不該有對應的開關；加一個伺服器旗標等於承認
+>    伺服器原本信任 client 座標。移除它的理由是「不要留一個現成的作弊入口」，
+>    不是「它繞過了護欄」。
+> 2. **§7.1 判定結果新增 `phase` 欄位（W6）**：見該節的 v2.2 實作補充。
+> 3. **§7.2 錯誤碼 `VA000044` 改配給 `VA_ATTENDANCE_RANGE_TOO_LARGE`**：見該節。
 
 > **v2.1 變更摘要**（相對 v2.0）：**確定展示對象為工程主管機關**
 >
@@ -534,7 +546,7 @@ export function evaluateAttendanceDay(
 | **A6** | `GET` | `/shift_pattern` | 班別清單（含衍生的 `kind`） |
 | **A7** | `GET` | `/schedule` | 排班月曆（部門 × 月），回傳每日 `dayType` 與班別 |
 | **A8** | `PUT` | `/schedule` | 改單日排班（演示輪班調整；body：`employeeId` / `workDate` / `dayType` / `shiftPatternId`） |
-| **A9** | `GET` | `/result` | **出勤判定結果**（期間 × 員工）。**即時計算，不讀表**（§4.3） |
+| **A9** | `GET` | `/result?from&to[&employeeId]` | **出勤判定結果**（期間 × 員工）。**即時計算，不讀表**（§4.3）。區間上限 92 天 |
 | **A10** | `POST` | `/presence/roster/export` | **現場名單匯出 CSV**（工安點名）。含地點、名單、**產出時間戳與產出者** |
 
 地點與班別的建立走 seed，不做 CRUD 端點。
@@ -553,7 +565,25 @@ export function evaluateAttendanceDay(
 4. 組成月曆矩陣回傳
 ```
 
-一個月 × 5 人 = 150 次純函數呼叫，兩次查詢。**Demo 規模下即時算完，不需要落地也不需要 Worker。**
+一個月 × 12 人 = 372 次純函數呼叫，三次查詢（名冊、排班、打卡）。
+**Demo 規模下即時算完，不需要落地也不需要 Worker。**
+
+> **v2.2 實作補充（W6）**
+>
+> 1. **回應每一格另帶 `phase`（`UPCOMING` / `IN_PROGRESS` / `CONCLUDED`）。**
+>    引擎的 `NORMAL` 意思是「目前查不到異常」—— 對還沒開始的工作日它回的也是
+>    `NORMAL`（判定表 #5）。前端若照 status 上色，下個月每一格都會是綠的，
+>    等於對尚未發生的日子宣稱「這天正常出勤」。§8.4 說的「今天那一格留白」
+>    就是這個欄位在做的事，而邊界是**該班別的窗迄加寬限**、不是日曆換日 ——
+>    夜間施工班的 8/12 要到 8/13 清晨才結束。
+> 2. **`evaluatedAt` 在 route 取一次、往下注入**，整張矩陣共用同一個時間點。
+>    逐列各取一次「現在」，兩位員工的邊界案例可能在同一張表裡得到互相矛盾的顏色。
+> 3. **名冊以到職／離職日期篩選，不以 `status`。** `status` 是「現在」的狀態，
+>    用它篩選會讓上個月的總覽少掉這個月才離職的人 —— 而那個人上個月確實有出勤義務。
+> 4. **統計只列出真的發生過的異常型別**，不補 `{ SUSPICIOUS_JUMP, days: 0 }`：
+>    瞬移偵測（G5）本期未實作，回一個 0 等於宣稱「查過了、沒有」。
+> 5. **區間上限 92 天**（`DEMO_ATTENDANCE_MAX_RANGE_DAYS`）。「即時計算不落地」
+>    這個主張只在成本有界時成立，否則同一支端點用 `from=2000-01-01` 就是全表掃描。
 
 ### 7.2 新增錯誤碼（流水號接續現況最大值 `VA000041` / `FO000008` / `NF000016` / `CF000003`）
 
@@ -562,14 +592,23 @@ export function evaluateAttendanceDay(
 | `FO_PUNCH_OUT_OF_FENCE` | `FO000009` | `FORBIDDEN` | **P2 主角**，回應含最近地點與 `distanceMeters` |
 | `VA_PUNCH_LOW_ACCURACY` | `VA000042` | `VALIDATION_ERROR` | 訊息須為「定位精度不足，請重試」而非「你不在現場」 |
 | `VA_PUNCH_INVALID_STATE` | `VA000043` | `VALIDATION_ERROR` | 重複上班卡 / 未上班先下班 |
-| `VA_PUNCH_NO_SCHEDULE` | `VA000044` | `VALIDATION_ERROR` | 當日無排班（demo 設為**允許**打卡，此碼保留備用） |
-| `VA_SCHEDULE_DAY_INVALID` | `VA000045` | `VALIDATION_ERROR` | `WORK` 未帶班別 / 非 `WORK` 卻帶班別（不變式轉譯） |
+| `VA_ATTENDANCE_RANGE_TOO_LARGE` | `VA000044` | `VALIDATION_ERROR` | A9 查詢區間超過 `DEMO_ATTENDANCE_MAX_RANGE_DAYS`（92 天）|
+| `VA_SCHEDULE_DAY_INVALID` | `VA000045` | `VALIDATION_ERROR` | `WORK` 未帶班別 / 非 `WORK` 卻帶班別（不變式轉譯，W5）|
 | `NF_EMPLOYEE_FOR_USER` | `NF000017` | `NOT_FOUND` | Google 帳號對不到員工檔（§2.1） |
 | `NF_WORK_LOCATION` | `NF000018` | `NOT_FOUND` | — |
 | `NF_SHIFT_PATTERN` | `NF000019` | `NOT_FOUND` | — |
 | `CF_EMPLOYEE_ALREADY_LINKED` | `CF000004` | `CONFLICT` | 該員工檔已綁給別的帳號 |
 
 > `ApiCode.CONFLICT` 在本專案的前綴是 **`CF_`**（見 `CF_SETTING_VERSION_CONFLICT`），不是 `CO_`。
+
+> **v2.2 更正（實作 W6 時）**：本表原先把 `VA000044` 留給 `VA_PUNCH_NO_SCHEDULE`，
+> 但 demo 已決定當日無排班**允許**打卡，那個碼因此不會被建立 ——
+> 為一個可能永遠不存在的碼保留號段，只會在流水號裡留下一個沒人解釋得清楚的洞。
+> 改由 W6 實際需要的 `VA_ATTENDANCE_RANGE_TOO_LARGE` 承接 `VA000044`。
+> 日後若真的需要 `VA_PUNCH_NO_SCHEDULE`，取當時的下一號即可。
+>
+> 另補 `CF_EMPLOYEE_EMAIL_AMBIGUOUS`（`CF000005`，W2 實作時新增）：
+> 同帳本內兩筆員工檔的公司信箱只差大小寫時，任選一筆綁定等於讓某人以另一個人的身分打卡。
 
 ---
 
@@ -698,7 +737,7 @@ v2.0 說「今天的資料留空，由現場真人打卡產生」。但若全體
 | W3 | 打卡：`attendance_punch.service.ts`（圍欄判定 + 加密 + append-only repo）+ A1 / A2 / A5 | 圍欄外回 403 帶距離 | 1.0 d |
 | **W4** | **規則引擎 `attendance_rules.ts` + 表格驅動測試（判定表 11 條 + 邊界）** | **T1 / T2 綠燈** | **1.5 d** |
 | W5 | 班表：`attendance_schedule.service.ts` + `assertSchedulableDay` + A6 / A7 / A8 | 排班可讀可改 | 0.75 d |
-| W6 | 判定 API：即時評估組月曆矩陣 + A9 | 出勤結果正確 | 0.5 d |
+| W6 | 判定 API：即時評估組月曆矩陣 + A9（含 `phase` 與區間上限） | 出勤結果正確 | 0.5 d |
 | W7 | 現場狀態：由 punch 推導 + `STALE`（正式語意）+ 應到未打卡 + A3 / A4 | 名單正確、窗迄後轉黃 | 0.5 d |
 | W8 | 前端打卡頁（四種定位狀態 + 今日班別 + 示範橫幅） | P1 / P2 可演 | 1.0 d |
 | W9 | 前端現場頁 + maplibre 地圖 + 圍欄圓圈 | P3 可演 | 1.0 d |

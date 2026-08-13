@@ -175,6 +175,14 @@ const UI_ONLY = [
    * 「should register every enum that exists on both sides」會直接擋下來。
    */
   "ShiftPatternKind",
+
+  /**
+   * Info: (20260813 - Julian) `AttendanceDayPhase` 與 `ShiftPatternKind` 同一類：
+   * 它是「現在」與班別窗的比較結果，隨時間自己改變。
+   * 存下來的那一刻就已經過期，因此不會搬到 MIRRORED。
+   */
+  "AttendanceDayPhase",
+
   "AttendanceDayStatus",
   "AttendanceExceptionType",
   "PresenceStatus",
