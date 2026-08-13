@@ -520,6 +520,9 @@ export const hrManagement = {
     action_submit: "생성 및 통보",
   },
   attendance: {
+    map_unavailable:
+      "지도를 표시할 수 없습니다. 기록에는 영향이 없으며 위의 거리와 정확도는 그대로 유효합니다.",
+    map_self_label: "현재 위치",
     title: "출퇴근 기록",
     greeting: "{{name}}（{{employeeNo}}）",
     loading: "불러오는 중…",
@@ -678,5 +681,30 @@ export const hrManagement = {
     weekday_thu: "목",
     weekday_fri: "금",
     weekday_sat: "토",
+  },
+  attendance_auth: {
+    checking: "로그인 상태를 확인하는 중…",
+    title: "먼저 로그인해 주세요",
+    description:
+      "출퇴근 기록, 근무 일정, 현장 명단은 모두 직원 정보에 연결되어 있어 회사 계정 로그인이 필요합니다.",
+    provider_checking: "사용 가능한 로그인 방식을 확인하는 중…",
+    provider_unconfigured: "Google 로그인이 설정되지 않았습니다",
+    provider_unconfigured_hint:
+      "이 환경에 활성화된 외부 로그인이 없다고 서버가 응답했습니다. SUPER_ADMIN 이 /admin/settings 에서 GOOGLE_OAUTH_CLIENT_ID 와 GOOGLE_OAUTH_CLIENT_SECRET 을 입력하고 서명해 주세요. 또한 Google Console 의 Authorized redirect URI 가 이 사이트 주소와 일치해야 합니다.",
+    provider_unreachable: "사용 가능한 로그인 방식을 확인할 수 없습니다",
+    provider_unreachable_hint:
+      "로그인 방식을 조회하는 API 가 정상적으로 응답하지 않았습니다. 브라우저 console 의 「Failed to load OAuth providers」와 서버 로그를 확인해 주세요. 시스템 설정 스냅샷이 UNTRUSTED 인 경우에도 같은 상태가 됩니다.",
+    passkey_toggle: "패스키로 로그인하기",
+    passkey_action: "패스키로 로그인",
+    passkey_pending: "기기 확인을 기다리는 중…",
+    passkey_canceled:
+      "취소되어 기기 확인이 완료되지 않았습니다. 로그인하려면 다시 눌러 주세요.",
+    passkey_failed:
+      "로그인에 실패했습니다. 이 기기에 패스키가 등록되지 않았거나 확인이 시간 초과되었을 수 있습니다 —— 등록한 기기가 맞는지 확인해 주세요.",
+    passkey_fallback_hint:
+      "패스키 계정에는 이메일이 없어 직원 정보와 자동으로 연결되지 않습니다 —— 인사팀이 미리 연결해 둔 계정만 이 방법으로 들어올 수 있습니다.",
+    passkey_unavailable:
+      "이 환경에서는 패스키를 사용할 수 없습니다. 패스키는 HTTPS（또는 localhost）보안 연결에서만 동작합니다. 정식 주소로 이 페이지를 열어 주세요.",
+    hint: "로그인하는 Google 계정은 등록된 회사 이메일이어야 합니다 —— 명단에 없는 사람은 이 현장에서 기록할 수 없습니다. 로그인 후 「직원 정보가 연결되지 않았습니다」가 표시되면 인사팀에 이메일을 확인해 주세요.",
   },
 };

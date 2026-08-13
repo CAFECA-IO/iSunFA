@@ -1136,4 +1136,67 @@ export const API_ERRORS = {
       "Multiple employee records share this e-mail; resolve before linking",
     status: ApiCode.CONFLICT,
   } as IErrorDef,
+
+  // Info: (20260813 - Julian) 假勤（銷假徵詢）
+
+  // Info: (20260813 - Julian) 指定的請假日不存在、不在生效中，或不屬於這個帳本
+  NF_LEAVE_DAY: {
+    code: "NF000022",
+    message: "No such active leave day in this account book",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  NF_LEAVE_RECALL: {
+    code: "NF000023",
+    message: "No such leave recall request",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260813 - Julian) 已過去的請假日不得徵詢銷假。
+   *
+   * 把過去的假日改回上班日，會讓那一天的判定從 OFF_DAY 變成曠職 ——
+   * 一個人的歷史出勤紀錄因為今天的一次操作而多出一筆異常。
+   * 這是計畫書 §7.3 第 3 順位那個洞（排班異動會無聲改寫歷史判定）
+   * 從「理論上的」變成「每天在用的」的最短路徑，因此擋在 validator 之後、service 之內。
+   */
+  VA_LEAVE_RECALL_PAST: {
+    code: "VA000046",
+    message: "A leave day in the past cannot be recalled",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  // Info: (20260813 - Julian) 同一個請假日已經有一張待回應的徵詢
+  CF_LEAVE_RECALL_PENDING: {
+    code: "CF000006",
+    message: "This leave day already has a pending recall request",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+
+  // Info: (20260813 - Julian) 徵詢已被回應過；同意與婉拒都是終局，不可覆寫
+  CF_LEAVE_RECALL_ANSWERED: {
+    code: "CF000007",
+    message: "This recall request has already been answered",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260813 - Julian) 只有被徵詢的本人能回應。
+   *
+   * 回 403 而不是 404：這裡不必隱藏徵詢的存在 —— 呼叫者手上就有 id，
+   * 而「這不是你的」正是他需要知道的事。與 NF_EMPLOYEE_FOR_USER 的取捨不同，
+   * 因為那一個洩漏的是「這個信箱在系統裡有員工檔」，這一個沒有等價的洩漏。
+   */
+  FO_LEAVE_RECALL_NOT_OWNER: {
+    code: "FO000010",
+    message: "Only the employee on leave can answer this recall request",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+
+  // Info: (20260813 - Julian) 只有主管（任一部門的 managerId）能發起徵詢或看地圖
+  FO_ATTENDANCE_SUPERVISOR_ONLY: {
+    code: "FO000011",
+    message: "This action is limited to department managers",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
 };

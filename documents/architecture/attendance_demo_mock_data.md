@@ -2,8 +2,8 @@
 
 > **Date**: 2026-08-13　
 > **Author**: Julian　
-> **Version**: 2.0（開發完成後精簡）
-> **對應**: `attendance_demo_plan.md`（v3.0）｜**執行手冊**: `attendance_demo_runbook.md`
+> **Version**: 2.2（登入方式改回 Google）
+> **對應**: `attendance_demo_plan.md`（v3.3）｜**執行手冊**: `attendance_demo_runbook.md`
 > **實作**: `scripts/seed/seed_attendance_demo.ts`
 > **演示地點**: **新北市**（工程名稱與座標依此設定，改地點需一併修改）
 > **演示日期假設**: **2026-08-13（週四）14:00** —— 資料全依此日推算，**改期需改 `DEMO_DATE` 並重跑 seed**
@@ -172,13 +172,17 @@ EMP008 刻意設為 `PROBATION`（不影響任何判定，`EmployeeStatus` 不�
 
 ### 4.2 ⚠️ 需要真實 Google 帳號的兩位
 
-**EMP005 張文彬（工地主任）** 與 **EMP006 李冠廷（工地工程師）** 的 `email` 必須改成實際上台者的公司 Google 帳號，
-其餘十位用 `emp0XX@demo.example`。
+**EMP005 張文彬（工地主任）** 與 **EMP006 李冠廷（工地工程師）** 的 `email` 必須是實際上台者的
+公司 Google 帳號，其餘十位用 `emp0XX@demo.example`。
 
 選這兩個角色：**工地主任是對出工人數負責的人**，由他的視角演示「我的工地現在有幾個人」最貼近工程機關的關切；
 工地工程師是第二位打卡者，用來演示名單即時增加。
 
-> 這兩筆的 `userId` **必須為 `null`**，否則首登綁定會撞上 `CF_EMPLOYEE_ALREADY_LINKED`。
+真實信箱**透過 `DEMO_EMAIL_EMP005` / `DEMO_EMAIL_EMP006` 傳入**，不寫進程式碼 ——
+`.gitignore` 第 42 行是 `.env*`，所以它們不會進版控。
+
+> 這兩筆的 `userId` 必須為 `null`（seed 後本來就是），首登才會自動綁定；
+> 已經綁在別的 `User` 上會撞 `CF_EMPLOYEE_ALREADY_LINKED`（執行手冊 §3.1）。
 
 ---
 
@@ -338,7 +342,7 @@ EMP008 刻意設為 `PROBATION`（不影響任何判定，`EmployeeStatus` 不�
 
 - [ ] `DEMO_SITE_A_LAT` / `_LNG` 為**演示現場實測值**（校準程序見執行手冊 §3）
 - [ ] **`LOC-A` 與其餘三處圍欄不重疊**（§2.2 的距離斷言通過）
-- [ ] EMP005、EMP006 的 `email` 已改為上台者真實 Google 帳號，且 `userId` 為 `null`
+- [ ] `DEMO_EMAIL_EMP005` / `_EMP006` 已設為上台者真實 Google 帳號，且 `userId` 為 `null`
 - [ ] `HR_PII_KEY_V1` 與 `HR_PII_BLIND_INDEX_PEPPER` 已設定（否則 seed 直接中止）
 - [ ] 今日打卡已 seed，且**不含** EMP005 / EMP006
 - [ ] EMP010 的 8/12 夜班打卡存在且無下班卡（`STALE` 演示靠它）
@@ -352,4 +356,4 @@ EMP008 刻意設為 `PROBATION`（不影響任何判定，`EmployeeStatus` 不�
 
 ---
 
-> **相關文件**：`attendance_demo_plan.md`（v3.0）｜`attendance_demo_runbook.md`｜`time_attendance_module_plan.md`（母文件 v1.3）｜`decisions/018_hr_pii_data_classification.md`
+> **相關文件**：`attendance_demo_plan.md`（v3.3）｜`attendance_demo_runbook.md`｜`time_attendance_module_plan.md`（母文件 v1.3）｜`decisions/018_hr_pii_data_classification.md`

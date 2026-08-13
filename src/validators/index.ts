@@ -23,3 +23,4 @@ export * from "@/validators/team_wallet";
 export * from "@/validators/faith_chat";
 // Info: (20260813 - Julian) 簽到系統
 export * from "@/validators/attendance";
+export * from "@/validators/leave";

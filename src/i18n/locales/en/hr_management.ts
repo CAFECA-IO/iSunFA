@@ -531,6 +531,9 @@ export const hrManagement = {
     action_submit: "Create & Notify",
   },
   attendance: {
+    map_unavailable:
+      "The map cannot be shown. Punching in is unaffected — the distance and accuracy above still apply.",
+    map_self_label: "Your current position",
     title: "Attendance",
     greeting: "{{name}} ({{employeeNo}})",
     loading: "Loading…",
@@ -688,5 +691,30 @@ export const hrManagement = {
     weekday_thu: "Th",
     weekday_fri: "Fr",
     weekday_sat: "Sa",
+  },
+  attendance_auth: {
+    checking: "Checking your session…",
+    title: "Sign in first",
+    description:
+      "Punching in, shifts and the on-site roster are all tied to your employee record, so you need to sign in with your company account.",
+    provider_checking: "Checking available sign-in methods…",
+    provider_unconfigured: "Google sign-in is not configured",
+    provider_unconfigured_hint:
+      "The server reports no enabled third-party sign-in for this environment. A SUPER_ADMIN needs to enter GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET at /admin/settings and sign the change, and the Authorized redirect URI in the Google Console must match this site's address.",
+    provider_unreachable: "Could not determine the available sign-in methods",
+    provider_unreachable_hint:
+      'The provider lookup API did not return successfully. Check the browser console for "Failed to load OAuth providers" and the server log; an UNTRUSTED system-settings snapshot produces the same result.',
+    passkey_toggle: "Use a passkey instead",
+    passkey_action: "Sign in with a passkey",
+    passkey_pending: "Waiting for your device…",
+    passkey_canceled:
+      "Cancelled — the device check was not completed. Press the button again to sign in.",
+    passkey_failed:
+      "Sign-in failed. This device may not have a passkey registered, or the check timed out — make sure you are on the device you registered.",
+    passkey_fallback_hint:
+      "A passkey account has no e-mail address, so it cannot be matched to an employee record automatically — only accounts HR has linked in advance can get in this way.",
+    passkey_unavailable:
+      "Passkeys are not available here. They only work over a secure connection (HTTPS or localhost) — open this page at the proper address.",
+    hint: 'The Google account must be a company address that already has an employee record — someone who is not on the roster cannot punch in at this site. If you see "no employee record is linked" after signing in, ask HR to check the address.',
   },
 };

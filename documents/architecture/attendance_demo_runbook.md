@@ -1,6 +1,6 @@
 # 🎯 簽到系統 Demo 執行手冊 (Demo Runbook)
 
-> **Date**: 2026-08-13　**Author**: Julian　**Version**: 2.0（開發完成後精簡）
+> **Date**: 2026-08-13　**Author**: Julian　**Version**: 2.4（打卡頁補上地圖）
 > **相關**: `attendance_demo_plan.md`（做了什麼、為什麼）｜`attendance_demo_mock_data.md`（資料長什麼樣）
 > **本文件**：**怎麼跑、會出什麼錯、出錯怎麼辦**
 >
@@ -17,8 +17,8 @@
 
 | 時點 | 工作 | 完成判準 |
 |---|---|---|
-| **T−7** | Google OAuth 用戶端申請、憑證灌入系統設定 | 登入頁**看得到** Google 按鈕 |
-| **T−7** | 確認上台兩位的公司 Google 帳號 | 兩個 email 已交給工程 |
+| **T−7** | Google OAuth 用戶端申請、憑證寫入 `/admin/settings` 並簽章（§3.2）| 打卡頁登入卡上**看得到** Google 按鈕，且設定頁該列來源標示為 **DB** |
+| **T−7** | 確認上台兩位的公司 Google 帳號，寫入 `DEMO_EMAIL_EMP005` / `_EMP006` | 兩個 email 已交給工程，且與 Google 帳號完全相同 |
 | **T−5** | **場勘 + 座標校準**（§2）| `DEMO_SITE_A_LAT` / `_LNG` 已寫入 |
 | **T−5** | 圍欄不重疊驗證 | seed 斷言通過 |
 | **T−3** | seed 全量跑一次，**人工核對四張畫面**（§4）| §4 全綠 |
@@ -76,7 +76,8 @@
 
 1. **會場有無 Wi-Fi、要不要密碼** —— 只靠 4G 時室內定位精度會明顯變差
 2. **HTTPS 是否正常** —— `navigator.geolocation` 在非 HTTPS（localhost 除外）根本不會啟動，症狀是「一直定位中」
-3. **能否連到 `accounts.google.com` 與 `www.googleapis.com`** —— 後者是 JWKS 驗簽用的，擋掉會讓登入在**最後一步**失敗
+3. **能否連到 `accounts.google.com` 與 `www.googleapis.com`** —— 後者是 JWKS 驗簽用的，
+   擋掉會讓登入在**最後一步**失敗（前面的授權全都會成功，所以看起來像帳號問題）
 
 ---
 
@@ -84,23 +85,96 @@
 
 **右欄比設定本身重要** —— 症狀能反推回原因，才有可能在 30 秒內判斷是哪裡出問題。
 
-| 設定 | 沒設定的症狀 |
+**設定分兩處**：Google 憑證在**資料庫**（`/admin/settings`，§3.2），其餘在 `.env`（§3.3 說明為什麼搬不了）。
+
+| 設定 | 位置 | 沒設定的症狀 |
+|---|---|---|
+| `GOOGLE_OAUTH_CLIENT_ID` / `_CLIENT_SECRET` | **DB** | 打卡頁的登入卡顯示**「Google 登入尚未設定」**（閘門自己查過 provider，不會只留一塊空白）|
+| Google Console 的 redirect URI | Google | 授權後跳轉失敗，Google 端顯示 `redirect_uri_mismatch` |
+| `DEMO_EMAIL_EMP005` / `_EMP006` 與實際登入帳號不符 | `.env` | **登入成功，但每一頁都顯示「尚未對應到員工檔」**（§3.1）|
+| `HR_PII_KEY_V1` / `HR_PII_BLIND_INDEX_PEPPER` | `.env` | **seed 直接中止**；若跳過 seed，打卡回 500（`HrPiiKeyError`）|
+| `NEXT_PUBLIC_APP_URL`（HTTPS）| `.env` | 打卡頁**一直停在「定位中」**，且沒有任何錯誤訊息 |
+| `DEMO_SITE_A_LAT` / `_LNG` | `.env` | seed 中止（刻意設計）|
+| **`NEXT_PUBLIC_DEMO_ALLOW_MANUAL_COORDINATE=true`** | `.env` | 示範模式的座標輸入框不出現，**P2 演不了**。⚠️ **前綴是 `NEXT_PUBLIC_`**，且它是 build-time 內聯，**改完要重啟 dev server** |
+| `NEXT_PUBLIC_MAPTILER_KEY` | `.env` | **打卡頁與現場頁**的地圖各換成一行說明，**其餘功能不受影響**（刻意設計，見 §7）|
+
+### 3.2 把 Google 憑證寫進系統設定（`/admin/settings`）
+
+**這是唯一的路徑。** `.env` 也讀得到這兩個值，但那是「DB 從沒被用過」時的 fallback ——
+一旦 DB 有了設定，env 就再也不會被看一眼（讀取優先序：**DB 已驗簽 > env > 程式碼保底值**，ADR 017）。
+把憑證同時放兩處只會製造「改了 env 卻沒有生效」這種最難查的問題。
+
+**前置條件**：SUPER_ADMIN 的 **passkey 實體裝置**在手上。託管帳號簽不了 ——
+`custodial_signing.service.ts` 對 `ADMIN_ACTION` 用途的 challenge 是硬拒絕的。
+
+**步驟**
+
+1. 以 SUPER_ADMIN 登入 → `/admin/settings`
+2. **等頁面把現有值全部載出來再動手**（理由見下方陷阱 1）
+3. 在 `THIRD_PARTY_LOGIN` 群組填入 `GOOGLE_OAUTH_CLIENT_ID` 與 `GOOGLE_OAUTH_CLIENT_SECRET`
+4. 按「簽章並儲存」→ 通過 passkey 驗證
+5. **驗收**：該列的來源標示變成 **DB**；打卡頁登出後看得到 Google 按鈕
+
+#### 三個會咬人的地方
+
+| # | 陷阱 | 後果 |
+|---|---|---|
+| 1 | **這是全量取代，不是差異更新** | 簽的是「整組設定的最終狀態」的 digest。2026-08-10 發生過一次真實事故：**一張還沒載入完的空白設定頁，把既有的 Google OAuth 與 `LLM_MODEL` 整組覆蓋掉**。`system_setting_write_guard.test.ts` 就是為它寫的 |
+| 2 | **半套的寫入比不寫更糟** | DB 有資料但驗簽不過 → 快照 `UNTRUSTED` → `get()` **直接 throw 且不退回 env**（刻意的防回滾設計）。症狀是登入卡顯示「無法確認可用的登入方式」，而且此時 `.env` 裡放什麼都救不了 |
+| 3 | **只放在 `.env` 的 secret 不在簽章覆蓋範圍** | 設定頁會對這種欄位顯示「env-only」警告。它能用，但沒有完整性保證 |
+
+> **不要在演示前一晚第一次嘗試這條路。** 陷阱 2 的失敗狀態會讓登入完全不可用，
+> 而唯一的復原方式是把 DB 的設定重新簽對 —— 那需要 passkey 與時間。
+
+### 3.3 這些留在 `.env`，而且搬不了
+
+| 設定 | 為什麼不能進 DB |
 |---|---|
-| `GOOGLE_OAUTH_CLIENT_ID` / `_CLIENT_SECRET` | **登入頁上根本沒有 Google 按鈕**（未就緒的 provider 會自動隱藏）|
-| Google Console 的 redirect URI | 授權後跳轉失敗，Google 端顯示 `redirect_uri_mismatch` |
-| `HR_PII_KEY_V1` / `HR_PII_BLIND_INDEX_PEPPER` | **seed 直接中止**；若跳過 seed，打卡回 500（`HrPiiKeyError`）|
-| `NEXT_PUBLIC_APP_URL`（HTTPS）| 打卡頁**一直停在「定位中」**，且沒有任何錯誤訊息 |
-| `DEMO_SITE_A_LAT` / `_LNG` | seed 中止（刻意設計）|
-| **`NEXT_PUBLIC_DEMO_ALLOW_MANUAL_COORDINATE=true`** | 示範模式的座標輸入框不出現，**P2 演不了**。⚠️ **前綴是 `NEXT_PUBLIC_`**，且它是 build-time 內聯，**改完要重啟 dev server** |
-| `NEXT_PUBLIC_MAPTILER_KEY` | 現場頁的地圖換成一行說明，**其餘功能不受影響**（刻意設計，見 §7）|
+| `NEXT_PUBLIC_*`（`APP_URL`、`MAPTILER_KEY`、`DEMO_ALLOW_MANUAL_COORDINATE`）| **build-time 內聯**進前端 bundle，執行期才讀的 DB 來不及 |
+| `HR_PII_KEY_V1` / `HR_PII_BLIND_INDEX_PEPPER` | 它們保護的是 **DB 欄位內容**。放進被自己保護的東西裡面，等於沒有保護（ADR 018 §5，與 `SECRET_VAULT_MASTER_KEY` 同理）|
+| `DEMO_SITE_A_LAT` / `_LNG`、`DEMO_EMAIL_EMP005` / `_EMP006` | 是 **seed 腳本的輸入參數**，不是 `SystemSettingKey`。它們在 seed 執行的那一刻就用完了 |
 
-**Google Cloud Console 要點**：用戶端類型 Web application；redirect URI 必須**完全相符**
-（含 `https://`、含結尾斜線）`${NEXT_PUBLIC_APP_URL}/auth/callback/google`；
-demo 與正式網址不同時**兩個都要加**；同意畫面若停在「測試中」，**上台的兩個帳號必須在測試使用者清單裡**。
-
-**需要對外連線**：`accounts.google.com`（授權）、`oauth2.googleapis.com`（換 token）、
-`www.googleapis.com`（JWKS 驗簽）、MapTiler（底圖）。
+**需要對外連線**：只有 MapTiler（底圖），而地圖掛掉不影響任何功能（§7）。
 **備援：手機熱點** —— 最便宜也最有效的一招，但要事先確認熱點也連得上 demo 站台。
+
+### 3.1 登入身分與員工檔的綁定
+
+**Google 首登會自動綁定，不需要任何人工步驟。**
+`AttendanceIdentityService.linkOnFirstLogin` 拿 `UserIdentity` 裡**已驗證的信箱**
+比對 `Employee.email`，命中即寫入 `Employee.userId`。之後每一次都直接走那個外鍵，
+不再碰信箱 —— 公司信箱可以變更，而打卡歷史不該跟著飄移。
+
+因此 T−7 唯一要做的是：**確認 `DEMO_EMAIL_EMP005` / `_EMP006` 與上台者實際登入的
+Google 帳號完全相同**（含大小寫）。
+
+#### 三件會讓自動綁定失效的事
+
+1. **用個人 Gmail 登入** —— `Employee.personalEmailCipher` 是密文、DB 端查不了，
+   永遠對不上。這是 ADR 018 §7 的必然結果，不是 bug
+2. **同帳本內兩筆員工檔的信箱只差大小寫** —— 系統擋住不猜（`CF_EMPLOYEE_EMAIL_AMBIGUOUS`），
+   任選一筆綁定就是讓某人以另一個人的身分打卡
+3. **該員工已經綁在別的 `User` 上** —— `CF_EMPLOYEE_ALREADY_LINKED`。
+   `oauth.service` **絕不用 email 自動合併既有帳號**，所以同一個人的 passkey 帳號與
+   Google 帳號是兩個不同的 `User`
+
+#### 救援工具（現場對不上時）
+
+`scripts/seed/link_employee_user.ts` 仍然保留，它是唯一能在 30 秒內手動綁定或解綁的方式：
+
+```bash
+# 預演（唯讀，不寫入任何東西）
+npx tsx scripts/seed/link_employee_user.ts
+
+# 指名綁定：address 取自登入後 localStorage 的 user_address
+npx tsx scripts/seed/link_employee_user.ts --employee-no=EMP005 --address=0x… --commit
+
+# 解綁（彩排後換人、或第 3 種情況的處置）
+npx tsx scripts/seed/link_employee_user.ts --unlink --employee-no=EMP005 --commit
+```
+
+> **`seed_attendance_demo.ts` 會清空並重建員工檔，`Employee.userId` 一併歸零。**
+> 走 Google 自動綁定的話這不是問題（下次登入會重新綁上），
+> 但如果你用過 `--commit` 手動綁定，重跑 seed 之後要再綁一次。
 
 ### 三個最難診斷的症狀
 
@@ -108,7 +182,7 @@ demo 與正式網址不同時**兩個都要加**；同意畫面若停在「測�
 |---|---|---|
 | **打卡回 500** | 錯誤訊息不會說是金鑰問題 | 看 server log 有沒有 `HrPiiKeyError`。**無法在台上修** |
 | **一直「定位中」** | 沒有錯誤、沒有逾時提示 | 先看網址列是不是 `https://`；再看有沒有出現權限詢問 |
-| **登入到一半失敗** | 看起來像帳號問題，其實是網路 | 會場擋 `www.googleapis.com` 時，前面的授權都會成功，只有最後驗簽失敗 |
+| **登入到一半失敗** | 看起來像帳號問題，其實是網路 | 會場擋 `www.googleapis.com` 時，前面的授權都會成功，只有最後驗簽失敗。切**手機熱點**重來 |
 
 ---
 
@@ -119,6 +193,7 @@ demo 與正式網址不同時**兩個都要加**；同意畫面若停在「測�
 **打卡頁**（以 EMP005 登入）
 
 - [ ] 顯示的姓名與工號是**張文彬 / EMP005**（這種錯誤只有看畫面才會發現）
+- [ ] **地圖有畫出來**，圍欄圈與自己的藍點都看得到（沒畫出來 → 檢查 `NEXT_PUBLIC_MAPTILER_KEY`；不影響打卡，但 P2 少一半衝擊）
 - [ ] 顯示今日班別「工地日班 07:30–17:00」
 - [ ] 顯示「距 大漢溪橋梁改建工程 工區 XX 公尺　可打卡」，且**距離 < 100 公尺**（大於就代表校準有問題）
 
@@ -158,7 +233,7 @@ demo 與正式網址不同時**兩個都要加**；同意畫面若停在「測�
 | # | 項目 | 常見問題 |
 |---|---|---|
 | 1 | 從**登出狀態**開始 | 開發時瀏覽器有 session，正式演示沒有 —— 沒彩排過會卡在登入 |
-| 2 | 兩台裝置分別登入不同帳號 | 同一瀏覽器登兩個 Google 帳號會互相踢掉 |
+| 2 | 兩台裝置分別登入不同的 Google 帳號 | 同一瀏覽器登兩個 Google 帳號會互相踢掉 |
 | 3 | 現場頁在第二人打卡後**確實更新**（15 秒輪詢）| 要在台上等 15 秒，先知道就不會慌 |
 | 4 | 示範模式的紅色橫幅有顯示 | 沒顯示會讓觀眾以為系統真能被任意定位 |
 | 5 | **切回正常模式後定位恢復正常** | 忘記切回來，後面的步驟全錯 |
@@ -174,17 +249,18 @@ demo 與正式網址不同時**兩個都要加**；同意畫面若停在「測�
 > 台詞見計畫書 §6。本節只列**操作**與**前置確認**。
 
 **演示前 30 分鐘**：① 打卡頁確認「可打卡」且距離 < 100 m　② 現場頁確認四個工地都有人、未到工 3
-③ 出勤總覽確認 8/12 紅綠對照看得到　④ 程式碼視窗開好捲到判定區塊　⑤ **登出**回登入頁待命
+③ 出勤總覽確認 8/12 紅綠對照看得到　④ 程式碼視窗開好捲到判定區塊
+⑤ **登出，停在 `/hr_management/attendance`** —— 該頁未登入時直接顯示登入卡，不必先繞到登入頁
 
 ### 第一段
 
 | 步 | 操作 | 前置確認 |
 |---|---|---|
-| 1 | 點「使用 Google 登入」→ 選帳號 | 按鈕存在 |
+| 1 | **在打卡頁上**點「使用 Google 登入」→ 選帳號 → **自動回到打卡頁** | 按鈕存在（換成黃底警告就是 OAuth 未設定）；帳號**不是**管理員 |
 | 2 | 停在打卡頁，唸出班別與距離 | 顯示「可打卡」 |
 | 3 | 按「上班打卡」 | — |
 | 4 | 切現場頁，指三個數字 | 自己已從未到工變成在班 |
-| 5 | **開示範模式**，輸入遠處座標，再按打卡 | 紅色橫幅已出現 |
+| 5 | **開示範模式**，輸入遠處座標 → **停一拍讓地圖縮出去、指出藍點在圈外** → 再按打卡 | 紅色橫幅已出現；地圖有畫出來（沒畫出來就純用文字講）|
 | 6 | 切現場頁，指出名單**沒有變** | — |
 | 7 | 請助手打卡 → 等 15 秒 → 名單多一人 | 助手已登入完成 |
 | 7b | 按「匯出點名單」，打開 CSV 指出時間戳與產出者 | — |
@@ -213,10 +289,13 @@ demo 與正式網址不同時**兩個都要加**；同意畫面若停在「測�
 
 | 症狀 | 最可能原因 | 現場處置 |
 |---|---|---|
-| **登入頁沒有 Google 按鈕** | OAuth 憑證未設定 | ❌ 無法現場修 → **Plan B** |
-| 授權後 `redirect_uri_mismatch` | redirect URI 不符 | ❌ 無法現場修 → Plan B |
-| 登入到最後一步失敗 | 會場擋 `www.googleapis.com` | 切**手機熱點**重來 |
-| **登入成功但顯示「尚未對應到員工檔」** | `Employee.email` ≠ 登入帳號 | 換另一位上台者；或 → Plan B |
+| 登入卡顯示**「Google 登入尚未設定」** | `/admin/settings` 裡沒有這兩個值，或整組設定被覆蓋掉了（§3.2 陷阱 1）| ❌ 需要 SUPER_ADMIN passkey 才修得了 → **Plan B** |
+| 登入卡顯示**「無法確認可用的登入方式」** | 設定快照 `UNTRUSTED` —— 簽章驗不過，而**此時 env 的 fallback 也被關掉了**（§3.2 陷阱 2）| 看伺服器記錄有無 `IS_SETTING_STATE_UNTRUSTED`。❌ 現場修不了 → **Plan B** |
+| Google 按鈕是**灰的**，上面一行琥珀色字 | 目前的網址不是 `NEXT_PUBLIC_APP_URL` —— OAuth 只能在那個 origin 上完成 | 改用手冊指定的正式網址重開 |
+| 授權後 `redirect_uri_mismatch` | Google Console 的 redirect URI 不符 | ❌ 無法現場修 → **Plan B** |
+| **登入後沒有回到打卡頁，跳到 `/admin/dashboard`** | 該帳號的 `Role` 是 ADMIN／SUPER_ADMIN —— callback 對管理員會忽略 `returnTo` | 手動輸入網址回打卡頁；**演示帳號不要用管理員** |
+| 登入到最後一步失敗 | 會場擋 `www.googleapis.com`（JWKS 驗簽）| 切**手機熱點**重來 |
+| **登入成功但顯示「尚未對應到員工檔」** | 登入的信箱 ≠ `Employee.email` | 有 DB 存取就用 `link_employee_user.ts --employee-no=… --address=… --commit`（約 30 秒）；否則換另一位上台者 → **Plan B** |
 | **打卡回 403「距離過遠」但人在現場** | 校準值錯 / 裝置定位偏移 | ① 走到窗邊重試　② **開示範模式輸入校準座標**（誠實說明「這是校準值」）　③ → Plan C |
 | **打卡回「定位精度不足，請重試」** | 室內收訊差，精度 > 200 公尺 | 走到窗邊或戶外重試。**這不是拒絕他到班，是證據品質不足** —— 可以順口講這個區別 |
 | **一直停在「定位中」** | 非 HTTPS / 權限未授權 | 看網址列鎖頭；重新整理後在權限詢問按「允許」 |
@@ -226,12 +305,12 @@ demo 與正式網址不同時**兩個都要加**；同意畫面若停在「測�
 | **看板頂端出現「顯示的是上一次成功取得的資料」** | 網路抖動，輪詢失敗 | 畫面上是舊資料但**有標示**。等下一輪；持續失敗就切熱點 |
 | **未打下班卡沒有出現** | 許家豪的夜班打卡未 seed | 跳過步驟 7c 與 12b，其餘照跑 |
 | **出勤總覽一片綠色** | 歷史異常未 seed | ❌ 第二段大部分演不了 → Plan C |
-| **地圖沒畫出來** | MapTiler 金鑰或底圖連不到 | **不必處理** —— 地圖區塊會自動換成一行說明，人數、名單、匯出全部照常。**名單才是主張，地圖是配菜** |
+| **地圖沒畫出來（兩頁皆是）** | MapTiler 金鑰或底圖連不到 | **不必處理** —— 兩頁的地圖區塊都會自動換成一行說明，打卡、人數、名單、匯出全部照常。P2 改用文字演（「距工區 3.2 公里」），少一點衝擊但主張不變。**距離才是主張，地圖是佐證** |
 | **觀眾拿自己手機想試打卡** | 該帳號沒有對應的員工檔 | ✅ **這是好事，見下** |
 
 ### 7.1 把最常見的「故障」變成賣點
 
-觀眾很容易當場拿出手機想試。他們會登入成功，然後看到「你的 Google 帳號尚未對應到員工檔」。
+觀眾很容易當場拿出手機想試。他們會註冊、登入成功，然後看到「尚未對應到員工檔」。
 
 **不要道歉，把它講成設計：**
 
@@ -254,9 +333,22 @@ demo 與正式網址不同時**兩個都要加**；同意畫面若停在「測�
 | 方案 | 觸發條件 | 內容 | 事前準備 |
 |---|---|---|---|
 | **Plan A** | 一切正常 | 完整現場演示 | — |
-| **Plan B** | 登入相關故障 | **事先登入好、放著不關的兩個分頁**，跳過登入直接從打卡開始 | 演示前 30 分鐘登入好兩台裝置，**不要登出、不要讓裝置休眠** |
+| **Plan B** | 登入相關故障 | **事先登入好、放著不關的兩個分頁**，跳過登入直接從打卡開始 | 演示前 30 分鐘登入好兩台裝置，**不要登出、不要讓裝置休眠**。登入卡上的 Passkey 備援**救不了 EMP005／EMP006**（見下），所以這仍是唯一的登入備援 |
 | **Plan C** | 定位或後端故障 | 播放 T−1 彩排的**螢幕錄影**，主講在旁同步解說 | **T−3 錄好，存本機硬碟** —— 需要它的時候通常就是網路壞掉的時候 |
 | **Plan D** | 完全無網路 | 四張畫面的**截圖**，講概念不演操作 | 與 Plan C 一起準備 |
+
+> ### 登入卡上的 Passkey 備援，救不了 EMP005／EMP006
+>
+> Passkey 是唯一**不需要外部網路**的登入路徑，所以它留在登入卡下方 —— 但它對這兩位無效。
+>
+> `Employee.userId` 只能指向一個 `User`，而 `oauth.service` **絕不用 email 自動合併既有帳號**：
+> 同一個人的 passkey 帳號與 Google 帳號是兩個不同的 `User`。
+> 若事先註冊 passkey 並手動綁定，Google 首登就會撞 `CF_EMPLOYEE_ALREADY_LINKED`；
+> 若留給 Google 自動綁，passkey 帳號登入後就是「尚未對應到員工檔」。**兩者互斥。**
+>
+> 真的想要一條不靠 Google 的活路，做法是拿一位**備用員工**（例如 EMP007）註冊 passkey 並手動綁定，
+> Google 掛掉時改用那個身分演打卡 —— 敘事要換一個角色，但打卡、現場名單、銷假徵詢全部照常。
+> 要不要做，建議 T−1 彩排確認會場網路之後再決定。
 
 ---
 
@@ -285,6 +377,7 @@ demo 與正式網址不同時**兩個都要加**；同意畫面若停在「測�
 
 ```
 □ 打卡頁：顯示「可打卡」，距離 < 100 m
+□ 打卡頁：地圖有畫出來，藍點在橘色圈內
 □ 打卡頁：班別顯示「工地日班 07:30–17:00」
 □ 現場頁：四個工地都有人、圓圈不重疊
 □ 現場頁：全處「未到工 3」（含上台兩位）
@@ -295,7 +388,9 @@ demo 與正式網址不同時**兩個都要加**；同意畫面若停在「測�
 □ 總覽頁：8/13 整欄為「·」
 □ 示範模式：紅色橫幅正常顯示，且目前為**關閉**狀態
 □ 程式碼視窗：已開好，捲到判定區塊
-□ 兩台裝置：都已登出，網路正常
+□ 兩台裝置：都已登出，且停在打卡頁（看得到 Google 按鈕，且不是灰的）
+□ 上台的兩個 Google 帳號**都不是**管理員（否則登入後會跳去 /admin/dashboard）
+□ 兩台裝置：網址列是 `NEXT_PUBLIC_APP_URL` 指定的那一個
 □ Plan B：兩個已登入的分頁備著
 □ Plan C：彩排影片在本機打得開
 □ 計時器：準備好
@@ -303,4 +398,4 @@ demo 與正式網址不同時**兩個都要加**；同意畫面若停在「測�
 
 ---
 
-> **相關文件**：`attendance_demo_plan.md`（v3.0）｜`attendance_demo_mock_data.md`（v2.0）｜`time_attendance_module_plan.md`（母文件 v1.3）
+> **相關文件**：`attendance_demo_plan.md`（v3.1）｜`attendance_demo_mock_data.md`（v2.1）｜`time_attendance_module_plan.md`（母文件 v1.3）

@@ -512,6 +512,8 @@ export const hrManagement = {
     action_submit: "建立並發送通知",
   },
   attendance: {
+    map_unavailable: "地圖無法顯示，不影響打卡。上方的距離與精度仍然有效。",
+    map_self_label: "你目前的位置",
     title: "出勤打卡",
     greeting: "{{name}}（{{employeeNo}}）",
     loading: "載入中…",
@@ -660,5 +662,29 @@ export const hrManagement = {
     weekday_thu: "四",
     weekday_fri: "五",
     weekday_sat: "六",
+  },
+  attendance_auth: {
+    checking: "確認登入狀態…",
+    title: "請先登入",
+    description:
+      "出勤打卡、班表與現場名單都綁在你的員工身分上，因此需要先以公司帳號登入。",
+    provider_checking: "確認可用的登入方式…",
+    provider_unconfigured: "Google 登入尚未設定",
+    provider_unconfigured_hint:
+      "伺服器回報這個環境沒有任何已啟用的第三方登入。請由 SUPER_ADMIN 在 /admin/settings 填入 GOOGLE_OAUTH_CLIENT_ID 與 GOOGLE_OAUTH_CLIENT_SECRET 並簽章，並確認 Google Console 的 Authorized redirect URI 與本站網址相符。",
+    provider_unreachable: "無法確認可用的登入方式",
+    provider_unreachable_hint:
+      "查詢登入方式的 API 沒有回應成功。請檢查瀏覽器 console 的「Failed to load OAuth providers」與伺服器記錄；系統設定快照為 UNTRUSTED 時也會是這個狀況。",
+    passkey_toggle: "改用 Passkey 登入",
+    passkey_action: "使用 Passkey 登入",
+    passkey_pending: "等待裝置驗證…",
+    passkey_canceled: "已取消，沒有完成裝置驗證。要登入請再按一次。",
+    passkey_failed:
+      "登入失敗。這台裝置上可能還沒有註冊過 Passkey，或是驗證逾時 —— 請確認用的是註冊時那台裝置。",
+    passkey_fallback_hint:
+      "Passkey 帳號沒有信箱，無法自動對應到員工檔 —— 只有事先由人事綁定過的帳號能用這個方式進入。",
+    passkey_unavailable:
+      "這個環境無法使用 Passkey。Passkey 只在 HTTPS（或 localhost）安全連線下運作，請改用正式網址開啟本頁。",
+    hint: "登入的 Google 帳號必須是已建檔的公司信箱 —— 不在名冊上的人打不了這個工地的卡。若登入後顯示「尚未對應到員工檔」，請聯繫人事確認信箱。",
   },
 };

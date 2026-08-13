@@ -45,6 +45,10 @@ export interface IEmployeeRepository {
     accountBookId: string,
     employeeId: string,
   ): Promise<Employee | null>;
+  isDepartmentManager(params: {
+    accountBookId: string;
+    employeeId: string;
+  }): Promise<boolean>;
 }
 
 class EmployeeRepository implements IEmployeeRepository {
@@ -161,6 +165,28 @@ class EmployeeRepository implements IEmployeeRepository {
     return prisma.employee.findFirst({
       where: { id: employeeId, accountBookId },
     });
+  }
+  /**
+   * Info: (20260813 - Julian) 這個人是不是任一部門的主管。
+   *
+   * **這不是權限矩陣**，是計畫書 §8.5 的視野分級 —— 決定「看不看得到圍欄地圖」
+   * 與「能不能發起銷假徵詢」兩件事。正式版的權限控制仍然是 §7.3 第 1 順位，
+   * 而它會取代這個方法，不是建立在它之上。
+   *
+   * 用 `Department.managerId` 而不是職稱字串：職稱是自由文字，
+   * 「工地主任」與「工地主任(代)」在字串比對下是兩個人，而在組織圖上是同一件事。
+   */
+  public async isDepartmentManager(params: {
+    accountBookId: string;
+    employeeId: string;
+  }): Promise<boolean> {
+    const count = await prisma.department.count({
+      where: {
+        accountBookId: params.accountBookId,
+        managerId: params.employeeId,
+      },
+    });
+    return count > 0;
   }
 }
 
