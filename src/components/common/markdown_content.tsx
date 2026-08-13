@@ -16,6 +16,11 @@ import { downloadFile } from "@/lib/file_operator";
 import { stripMarkdownComments } from "@/lib/utils/markdown_comment";
 import { stripHtmlLineBreaksOutsideFences } from "@/lib/utils/markdown_line_break";
 import dynamic from "next/dynamic";
+import { escapeArithmeticEmphasis } from "@/lib/utils/markdown_arithmetic_safety";
+import { restoreLineStructure } from "@/lib/utils/markdown_line_structure";
+import { convertTimelineBlocksToTables } from "@/lib/utils/markdown_timeline_table";
+import { replaceOfficeSymbolChars } from "@/lib/utils/office_symbol_chars";
+import { padAllTableHeaders } from "@/lib/utils/markdown_table_columns";
 
 // Info: (20260720 - Tzuhan) #54 證據鏈元件動態載入:含 RecordTabModal 依賴鏈,不拖累一般 markdown 渲染
 const EvidenceChain = dynamic(
@@ -101,6 +106,14 @@ export type MarkdownContentVariant = "document" | "compact";
 
 interface IMarkdownContentProps {
   content: string;
+  /**
+   * Info: (20260810 - Emily) 把段落內的換行還原成硬斷行(碳盤查報告專用)。
+   *
+   * 用 opt-in 而不是預設:這個元件同時服務文件工具、任務板與公開分享頁,
+   * 那些內容的斷行慣例未經量測。碳報告的原文行結構有量過(見
+   * markdown_line_structure 的說明),其他使用端沒有,不該替它們決定。
+   */
+  restoreSourceLineBreaks?: boolean;
   theme?: "dark" | "light";
   variant?: MarkdownContentVariant;
   onContentChange?: (newContent: string) => void;
@@ -108,6 +121,7 @@ interface IMarkdownContentProps {
 
 const MarkdownContent: FC<IMarkdownContentProps> = ({
   content,
+  restoreSourceLineBreaks = false,
   theme = "dark",
   variant = "document",
   onContentChange = () => {},
@@ -173,8 +187,45 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
    * 與註解剝除一樣:僅影響顯示,存下來的原文一字不改。
    */
   const displayContent = useMemo(
-    () => stripHtmlLineBreaksOutsideFences(stripMarkdownComments(content)),
-    [content],
+    /**
+     * Info: (20260810 - Emily) 一併轉義算式裡的星號 —— 否則預覽與下載的 PDF
+     * 會顯示不同的數字,而那正是這幾天一直在追的那種分歧。
+     */
+    () => {
+      /**
+       * Info: (20260811 - Emily) timeline → 表格也要在預覽做,否則預覽是圖、下載是表格
+       * —— 兩端分歧正是這幾天追的多數問題的形狀(issue_drafts/open/20 第 2 張票)。
+       */
+      /**
+       * Info: (20260811 - Emily) 私有區符號兩端都換:匯入端只影響新匯入的報告,
+       * 既有草稿裡存著的 U+F06C 要在讀取時換掉才看得到 ——
+       * 只改一端會讓預覽是方框、下載是圓點,或者反過來。
+       */
+      /**
+       * Info: (20260812 - Emily) `escapeArithmeticEmphasis` 必須是最後一道
+       * (與 carbon_report_html 同一條規則,那裡有完整說明)。
+       *
+       * timeline → 表格是「內容搬家」:搬出圍籬的算式沒有被逸出過,
+       * 若逸出先跑,搬家之後那些 `*` 就裸露在 prose 裡被 marked 吃掉。
+       */
+      /**
+       * Info: (20260812 - Emily) 表頭補欄兩端都套。
+       * 匯入端只影響新匯入的報告 —— 既有草稿的表頭已經是窄的,
+       * 那 261 個被 GFM 丟掉的儲存格要在讀取時補才救得回來。
+       */
+      const normalized = padAllTableHeaders(
+        convertTimelineBlocksToTables(
+          replaceOfficeSymbolChars(
+            stripHtmlLineBreaksOutsideFences(stripMarkdownComments(content)),
+          ),
+        ),
+      );
+      const structured = restoreSourceLineBreaks
+        ? restoreLineStructure(normalized)
+        : normalized;
+      return escapeArithmeticEmphasis(structured);
+    },
+    [content, restoreSourceLineBreaks],
   );
 
   const components = useMemo(

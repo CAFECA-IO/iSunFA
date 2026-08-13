@@ -2,7 +2,17 @@ import fs from "fs";
 import path from "path";
 import { logger } from "@/lib/utils/logger";
 import { ApiError, API_ERRORS } from "@/lib/utils/error_dictionary";
-import { buildCarbonReportHtml } from "@/lib/utils/carbon_report_html";
+import {
+  buildCarbonReportHtml,
+  type ICarbonReportShell,
+} from "@/lib/utils/carbon_report_html";
+import {
+  assignTocPageNumbers,
+  countLeadingTocPages,
+  squeezeForTocMatch,
+} from "@/lib/utils/carbon_toc_pages";
+import { CARBON_TOC_PAGE_HEADING_HITS } from "@/constants/carbon_pdf";
+import { extractPdfTextLayer, splitTextByPages } from "@/lib/pdf_text_layer";
 import { assertCjkRenderable } from "@/lib/utils/pdf_font_guard";
 import {
   dropPrintBrowser,
@@ -41,6 +51,11 @@ export interface ICarbonReportPdfInput {
   fileName: string;
   /** Info: (20260810 - Emily) 頁尾顯示的報告名稱;未給則用檔名 */
   title?: string;
+  /**
+   * Info: (20260811 - Emily) 文件外殼的文案(頁首／頁尾),由用戶端帶上來。
+   * 省略即不印外殼 —— 舊的用戶端不會因此壞掉。
+   */
+  shell?: Omit<ICarbonReportShell, "logoDataUrl">;
 }
 
 export interface IGeneratedCarbonPdf {
@@ -50,6 +65,16 @@ export interface IGeneratedCarbonPdf {
   landscapeTables: number;
   chartsRendered: number;
   chartsFailed: number;
+  /**
+   * Info: (20260812 - Emily) 目錄頁碼填了幾條、幾條留白。
+   *
+   * 原本只進 log。而文字層抽不出來時（`extractPdfTextLayer` 回 null，
+   * ADR 014 記載的 @napi-rs/canvas SIGBUS 至今未定案）整份目錄會靜默沒有頁碼,
+   * 使用者拿到的是一份看起來完整的報告 —— 與 chartsFailed 同一種需要
+   * 讓呼叫端知道的降級,所以比照它一起回傳。
+   */
+  tocFilled: number;
+  tocMissing: number;
 }
 
 const describeError = (error: unknown): string =>
@@ -81,9 +106,158 @@ const buildFooterTemplate = (title: string): string =>
    </div>`;
 
 export class CarbonReportPdfService {
+  /**
+   * Info: (20260811 - Emily) logo 讀成 data URL。
+   *
+   * 列印頁面沒有伺服器,`/isunfa_logo.svg` 這種相對路徑取不到;
+   * 而 `sealNetwork` 也會擋掉所有非 data/about/blob 的請求(SSRF 防護)。
+   * 讀不到就回 undefined —— 一份少了 logo 的報告仍然可用,
+   * 為了一個圖檔讓整份印不出來不成比例。
+   */
+  private static logoDataUrl(): string | undefined {
+    try {
+      const file = path.join(process.cwd(), "public", "isunfa_logo.svg");
+      const svg = fs.readFileSync(file);
+      return `data:image/svg+xml;base64,${svg.toString("base64")}`;
+    } catch (error) {
+      logger.warn("[CarbonReportPdfService] logo unavailable", {
+        reason: error instanceof Error ? error.message : "unknown",
+      });
+      return undefined;
+    }
+  }
+
+  /**
+   * Info: (20260812 - Emily) 目錄的頁碼**從產出的 PDF 量**，不是從 DOM 推算。
+   *
+   * 向量列印的分頁是 Chrome 在 page.pdf 當下做的，DOM 裡量不到 ——
+   * 用「Y 偏移 ÷ 頁高」推算等於自己重寫一次它的排版引擎，而寬表會被移到橫式頁
+   * (`.wide { page: landscapePage }`)，那裡有強制分頁、頁高也不同，推算必偏。
+   *
+   * 所以先印一次，用文字層逐頁找標題落在第幾頁，填進目錄，再印一次。
+   * 第二次的分頁與第一次相同 —— 目錄的高度在第一次就是最終高度，
+   * 這一步只把佔位符換成數字，而佔位符的寬度固定（見 TOC_PAGE_PLACEHOLDER），
+   * 填 1~3 位數都不會讓那一行重新換行。
+   *
+   * 找不到的項目留白而不是填 0 或猜一個數字：一個錯的頁碼比沒有頁碼更糟，
+   * 查證的人會照著它翻到錯的一頁然後以為報告漏了那一節。
+   */
+  private static async fillTocPageNumbers(
+    page: IPrintPage,
+    buffer: Buffer,
+  ): Promise<{ filled: number; missing: number }> {
+    /**
+     * Info: (20260812 - Emily) 一併取目錄標題:它是短報告唯一能區分
+     * 「目錄頁」與「內容頁」的訊號(見 countLeadingTocPages)。
+     */
+    const { title: tocTitle, entries } = (await page.evaluate(`(() => {
+      var titleEl = document.querySelector(".doc-toc-title");
+      return {
+        title: titleEl ? (titleEl.textContent || "").trim() : "",
+        entries: Array.from(
+          document.querySelectorAll(".doc-toc-list .toc-page"),
+        ).map(function (el) {
+          var row = el.closest("a");
+          var text = row ? row.querySelector(".toc-text") : null;
+          return {
+            target: el.getAttribute("data-target") || "",
+            text: text ? (text.textContent || "").trim() : "",
+          };
+        }),
+      };
+    })()`)) as {
+      title: string;
+      entries: Array<{ target: string; text: string }>;
+    };
+    if (entries.length === 0) return { filled: 0, missing: 0 };
+
+    const extracted = await extractPdfTextLayer(buffer);
+    if (!extracted) {
+      logger.warn("[CarbonReportPdfService] toc page numbers skipped", {
+        reason: "text layer unavailable",
+      });
+      return { filled: 0, missing: entries.length };
+    }
+    // Info: (20260812 - Emily) NFKC + 去空白的理由見 squeezeForTocMatch
+    const pages = splitTextByPages(extracted.text).map(squeezeForTocMatch);
+
+    // Info: (20260812 - Emily) 目錄自己佔幾頁,判定與理由都在 countLeadingTocPages
+    const needles = entries.map((entry) => squeezeForTocMatch(entry.text));
+    const skip = countLeadingTocPages({
+      squeezedPages: pages,
+      squeezedTocTitle: squeezeForTocMatch(tocTitle),
+      squeezedEntries: needles,
+      headingHits: CARBON_TOC_PAGE_HEADING_HITS,
+    });
+
+    /**
+     * Info: (20260812 - Emily) 頁碼的指派邏輯(單調游標、同名條目、退回全域)
+     * 都在 assignTocPageNumbers ——它需要純函式才測得到,而本方法要有 Chrome 才跑得起來。
+     * 這裡只負責 I/O 與把 `outOfOrder` 記成 log。
+     */
+    const assigned = assignTocPageNumbers({
+      squeezedPages: pages,
+      squeezedEntries: needles,
+      skip,
+    });
+    const numbers = assigned.map((entry) => entry.page);
+
+    /*
+     * Info: (20260812 - Emily) 文件順序被違反的條目要記出來:回報的頁碼可能是錯的,
+     * 而錯的頁碼比留白更糟(查證的人會照著它翻到錯的一頁)。
+     */
+    const outOfOrder = assigned
+      .map((entry, index) => ({ entry, index }))
+      .filter(({ entry }) => entry.outOfOrder);
+    if (outOfOrder.length > 0) {
+      logger.warn(
+        "[CarbonReportPdfService] toc entries out of document order",
+        {
+          count: outOfOrder.length,
+          samples: outOfOrder.slice(0, 3).map(({ entry, index }) => ({
+            text: needles[index].slice(0, 30),
+            page: entry.page,
+          })),
+        },
+      );
+    }
+
+    await page.evaluate(
+      `(() => {
+        var numbers = ${JSON.stringify(numbers)};
+        Array.from(document.querySelectorAll(".doc-toc-list .toc-page")).forEach(
+          function (el, i) {
+            el.textContent = numbers[i] > 0 ? String(numbers[i]) : "";
+          },
+        );
+      })()`,
+    );
+
+    const missing = numbers.filter((value) => value === 0).length;
+    if (missing > 0) {
+      logger.warn("[CarbonReportPdfService] toc entries without a page", {
+        missing,
+        total: entries.length,
+        samples: entries
+          .filter((unused, i) => numbers[i] === 0)
+          .slice(0, 3)
+          .map((entry) => entry.text.slice(0, 30)),
+      });
+    }
+    return { filled: numbers.length - missing, missing };
+  }
+
   async generate(input: ICarbonReportPdfInput): Promise<IGeneratedCarbonPdf> {
     const started = Date.now();
-    const html = buildCarbonReportHtml(input.markdown);
+    const html = buildCarbonReportHtml(
+      input.markdown,
+      input.shell
+        ? {
+            ...input.shell,
+            logoDataUrl: CarbonReportPdfService.logoDataUrl(),
+          }
+        : undefined,
+    );
 
     try {
       const browser = await getPrintBrowser();
@@ -105,18 +279,27 @@ export class CarbonReportPdfService {
         const charts = await this.renderCharts(page);
         const layout = await this.applyPageLayout(page);
 
-        const buffer = await page.pdf({
-          printBackground: true,
-          displayHeaderFooter: true,
-          headerTemplate: "<span></span>",
-          footerTemplate: buildFooterTemplate(input.title ?? input.fileName),
-          /**
-           * Info: (20260810 - Emily) preferCSSPageSize 必須開。
-           * 橫式頁是靠 `@page landscapePage { size: A4 landscape }` 生效的,
-           * 關掉它 Chrome 會忽略 @page 的 size,寬表就又擠回直式。
-           */
-          preferCSSPageSize: true,
-        });
+        const printPdf = (): Promise<Buffer> =>
+          page.pdf({
+            printBackground: true,
+            displayHeaderFooter: true,
+            headerTemplate: "<span></span>",
+            footerTemplate: buildFooterTemplate(input.title ?? input.fileName),
+            /**
+             * Info: (20260810 - Emily) preferCSSPageSize 必須開。
+             * 橫式頁是靠 `@page landscapePage { size: A4 landscape }` 生效的,
+             * 關掉它 Chrome 會忽略 @page 的 size,寬表就又擠回直式。
+             */
+            preferCSSPageSize: true,
+          }) as Promise<Buffer>;
+
+        let buffer = await printPdf();
+        const toc = await CarbonReportPdfService.fillTocPageNumbers(
+          page,
+          buffer,
+        );
+        // Info: (20260812 - Emily) 有填到東西才值得再印一次
+        if (toc.filled > 0) buffer = await printPdf();
 
         logger.info("[CarbonReportPdfService] rendered", {
           fileName: input.fileName,
@@ -129,6 +312,8 @@ export class CarbonReportPdfService {
           shrunkTables: layout.shrunk,
           chartsRendered: charts.rendered,
           chartsFailed: charts.failed,
+          tocFilled: toc.filled,
+          tocMissing: toc.missing,
         });
 
         return {
@@ -138,6 +323,8 @@ export class CarbonReportPdfService {
           landscapeTables: layout.landscape,
           chartsRendered: charts.rendered,
           chartsFailed: charts.failed,
+          tocFilled: toc.filled,
+          tocMissing: toc.missing,
         };
       } finally {
         await page.close().catch(() => undefined);

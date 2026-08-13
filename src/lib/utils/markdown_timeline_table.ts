@@ -1,0 +1,148 @@
+/**
+ * Info: (20260811 - Emily) 既有草稿裡的 mermaid timeline → 表格
+ * (issue_drafts/open/20 第 2 張票的後半)。
+ *
+ * 產表端已改成直接輸出表格,但**既有草稿的 markdown 裡已經存著 timeline 區塊** ——
+ * 那是改動之前產生的,不會因為產生器換了寫法就變。實測 UAT 那份下載下來仍是彩虹軸:
+ * 產生器的修正只影響下一次生成,而重新產生整份報告要再燒一次 LLM 額度。
+ *
+ * 所以讀取端也轉一次。與乘號那件同一個做法(`escapeArithmeticEmphasis` 也是兩端都套),
+ * 理由也一樣:重新產生一份 54 頁的報告很貴,而轉換是決定性的、冪等的。
+ *
+ * 為什麼非轉不可(數字在票裡):timeline 一個時間點一欄、欄寬固定,
+ * 15 條中文沿革的 SVG 內在寬度 3,559px,排到頁寬要縮到 28%、事件字級 4.5px(正文 14px)。
+ * 表格是 688px 不縮放、11.3px。
+ */
+
+import {
+  MILESTONE_EMPTY_EVENT,
+  MILESTONE_TABLE_HEADERS,
+} from "@/constants/carbon_report_diagrams";
+
+const TIMELINE_BLOCK = /```mermaid[ \t]*\r?\n[ \t]*timeline\b([\s\S]*?)```/g;
+
+/** Info: (20260811 - Emily) 表格以 `|` 分隔儲存格,內容裡的直線必須逸出否則多切一欄 */
+const cell = (text: string): string => text.trim().replace(/\|/g, "\\|");
+
+/**
+ * Info: (20260813 - Emily) 切時間標籤的冒號:排除兩種一定不是分隔符的冒號。
+ *
+ * 原本是 `line.search(/[:：]/)` —— 無條件取第一個。那對「有時間標籤」的行是對的
+ * (`2010 : 取得 ISO 14001：2015 認證` 取到的正是 ` : `),但這支刻意支援
+ * **沒有時間標籤**的行(下方 `separator === -1` 那一支),而那種行裡的第一個冒號
+ * 往往根本不是分隔符:
+ *
+ *     參考 https://a.example/x   →  | 參考 https | //a.example/x |
+ *     ISO 14064-1:2018 認證      →  | ISO 14064-1 | 2018 認證 |
+ *
+ * 兩者都憑空生出一個假的時間標籤,而且是無聲的 —— 這正是檔頭「不要生出一列假的資料」
+ * 要防的事,只是它先前只擋到「事件之間」的冒號,沒擋到第一個。
+ *
+ * 判準取「一定不是分隔符」的兩種形狀,而不是「一定是」:
+ * 1. 後面緊跟 `/` —— URL 的 scheme(`https://`)。
+ * 2. 兩側都是數字 —— 標準編號(`14064-1:2018`)與時刻(`12:30`)。
+ *    附帶修好 `12:30 : 事件`:原本切在 `12:` 上,產出 `| 12 | 30 |` 加一列 `|  | 事件 |`。
+ *
+ * 刻意**不**要求冒號兩側有空白:`1966年01月：公司創立於高雄市`(全角、無空白)
+ * 是既有測試釘住的合法寫法,加空白要求會讓那一行整段落進時間欄。
+ * 找不到合格的冒號就不切 —— 全行進時間欄、事件欄填破折號,內容一字不少。
+ */
+const SEPARATOR_COLON = /(?<![0-9])[:：](?!\/)|(?<=[0-9])[:：](?![0-9/])/;
+
+/**
+ * Info: (20260811 - Emily) 把一段 timeline 定義轉成表格列。
+ *
+ * mermaid timeline 的形狀是 `時間標籤 : 事件 : 事件`,另有 `title` 與 `section`。
+ * `title` 提到表格前面成為粗體行(它是這張圖的標題,不是資料);
+ * `section` 轉成只有第一格有內容的列 —— `annotateTable` 會把那種列渲染成橫跨整表的
+ * 分隔列,正好是原文分段的樣子。
+ */
+const bodyToTable = (body: string): string => {
+  const titles: string[] = [];
+  const rows: string[] = [];
+
+  body
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .forEach((line) => {
+      const title = /^title\s+(.+)$/.exec(line);
+      if (title) {
+        titles.push(`**${cell(title[1])}**`);
+        return;
+      }
+      const section = /^section\s+(.+)$/.exec(line);
+      if (section) {
+        rows.push(`| ${cell(section[1])} |  |`);
+        return;
+      }
+      /*
+       * Info: (20260811 - Emily) 第一段是時間標籤,其餘每一段各是一個事件;
+       * 同一時間標籤的多個事件各佔一列,時間只寫在第一列(縱向合併的表達方式)。
+       *
+       * Info: (20260812 - Emily) 只有**第一個**冒號切時間標籤,事件之間只認
+       * 「前後有空白」的冒號。
+       *
+       * 原本無條件 `split(/[:：]/)` 比 mermaid 本身更 aggressive(mermaid 只認半角),
+       * 結果是把一個里程碑劈成兩列:`2010 : 取得 ISO 14001：2015 認證`
+       * 變成「取得 ISO 14001」與「2015 認證」兩個里程碑,後者根本不是事件。
+       * `ISO 14064-1:2018`、`https://example.com` 同樣中。
+       *
+       * mermaid 的多事件寫法慣例是 `時間 : 事件 : 事件`(冒號兩側有空白),
+       * 而年份、標準編號、網址裡的冒號沒有。這裡刻意比 mermaid 保守:
+       * 寧可少切一次(一個事件寫長一點),也不要生出一列假的資料。
+       */
+      const separator = line.search(SEPARATOR_COLON);
+      const period = (
+        separator === -1 ? line : line.slice(0, separator)
+      ).trim();
+      const events = (
+        separator === -1 ? [] : line.slice(separator + 1).split(/\s[:：]\s/)
+      )
+        .map((part) => part.trim())
+        .filter((part) => part.length > 0);
+      if (events.length === 0) {
+        /**
+         * Info: (20260811 - Emily) 只有時間標籤沒有事件:仍然列出來,不猜也不丟
+         *
+         * Info: (20260812 - Emily) 事件欄放一個明示的破折號,不能留空
+         * (完整理由在 MILESTONE_EMPTY_EVENT 的定義處)。
+         */
+        rows.push(`| ${cell(period)} | ${MILESTONE_EMPTY_EVENT} |`);
+        return;
+      }
+      events.forEach((event, index) => {
+        rows.push(`| ${index === 0 ? cell(period) : ""} | ${cell(event)} |`);
+      });
+    });
+
+  if (rows.length === 0) return "";
+  return [
+    ...titles,
+    ...(titles.length > 0 ? [""] : []),
+    `| ${MILESTONE_TABLE_HEADERS.period} | ${MILESTONE_TABLE_HEADERS.event} |`,
+    "| --- | --- |",
+    ...rows,
+  ].join("\n");
+};
+
+/**
+ * Info: (20260811 - Emily) 把 markdown 裡所有 mermaid timeline 區塊換成表格。
+ * 沒有 timeline 就原樣返回;轉不出任何一列(空區塊)時保留原區塊 ——
+ * 把一個看不懂的區塊換成空表格會讓內容消失,而消失是無聲的。
+ */
+export const convertTimelineBlocksToTables = (markdown: string): string => {
+  if (!markdown.includes("timeline")) return markdown;
+  return markdown.replace(TIMELINE_BLOCK, (block, body: string) => {
+    const table = bodyToTable(body);
+    /**
+     * Info: (20260812 - Emily) 前後各補一個換行(PR review 第 3 點)。
+     *
+     * 圍籬本身佔一整行,替換成表格之後緊接在後的那一行會被當成表格的續列吃掉 ——
+     * 實測「後文」變成 `<tr class="group">` 的一列。產生器產出的形狀兩側本來就有
+     * 空行不會中,但手動編輯過的草稿會,而這條轉換現在跑在全 app 的 markdown 上。
+     * 消失是無聲的。
+     */
+    return table === "" ? block : `\n${table}\n`;
+  });
+};

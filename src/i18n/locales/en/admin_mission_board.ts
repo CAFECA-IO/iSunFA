@@ -53,6 +53,10 @@ export const adminMissionBoard = {
     toast_draft_saved: "Draft saved manually",
     toast_report_inserted: "Report generated and inserted successfully!",
     toast_share_link_failed: "Failed to generate share link",
+    toast_toc_pages_missing:
+      "Report downloaded, but the table of contents has no page numbers",
+    toast_charts_missing:
+      "Report downloaded, but some charts could not be drawn",
     edit_markdown: "Edit Markdown",
     preview_pdf: "Preview PDF",
     download_pdf: "Download PDF",
