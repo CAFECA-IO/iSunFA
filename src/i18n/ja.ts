@@ -70,8 +70,10 @@ import { applicationManagement } from "@/i18n/locales/ja/application_management"
 import type { BaseTranslation } from "@/i18n/zh_tw";
 import { carbonChatbot } from "@/i18n/locales/ja/carbon_chatbot";
 import { hrManagement } from "@/i18n/locales/ja/hr_management";
+import { paymentSource } from "@/i18n/locales/ja/payment_source";
 
 export const ja = {
+  payment_source: paymentSource,
   digital_product_passport: digitalProductPassport,
   logistics,
   dpp_urban_mining: dppUrbanMining,

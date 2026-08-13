@@ -69,8 +69,10 @@ import { solutions } from "@/i18n/locales/zh_tw/solutions";
 import { applicationManagement } from "@/i18n/locales/zh_tw/application_management";
 import { carbonChatbot } from "@/i18n/locales/zh_tw/carbon_chatbot";
 import { hrManagement } from "@/i18n/locales/zh_tw/hr_management";
+import { paymentSource } from "@/i18n/locales/zh_tw/payment_source";
 
 export const zhTw = {
+  payment_source: paymentSource,
   digital_product_passport: digitalProductPassport,
   logistics,
   dpp_urban_mining: dppUrbanMining,

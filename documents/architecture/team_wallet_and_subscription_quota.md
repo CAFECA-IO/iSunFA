@@ -515,6 +515,14 @@ spendCredits(identity, teamId, featureCode, cost, idempotencyKey)
 
 實作上 `POST /order/[order_id]/team_quota_payment` 的 `teamId` 改為**選填**：省略時由 server 解析（唯一團隊才成立），多團隊而未指定即回 `TW_TEAM_AMBIGUOUS`，讓前端知道要出選單而不是隨便挑一個。授權面本來就安全（`spendCredits` 會驗成員資格），這裡治的是**歸屬歧義**。
 
+前端由 `useTeamQuotaPayment()`（建單 → 扣抵，**免簽章**）與 `PaymentSourceSelector`（付款來源與團隊選單）承接：
+
+- 沒有任何團隊 → 選擇器不出現，行為與此前完全相同（走個人鏈上點數）。
+- 只有一個團隊 → 顯示團隊名稱但不給選單；送出時不帶 `teamId`，由 server 解析。多問一步只為消除歧義，不該讓每個人每次都選一遍。
+- 多個團隊 → 出選單；未選而送出時 server 回 `TW_TEAM_AMBIGUOUS`，選擇器隨即標紅並說明「為什麼要選」——不說的話用戶會覺得系統在刁難，說了他才知道這關係到哪個團隊被扣額度。
+
+已接上物流碳足跡（`/transportation_carbon_footprint_calculator`）。AI 諮詢室與 AI 分析報告的付款流程沿用同一組元件即可接上，尚未接。
+
 #### 分配點數不跨團隊
 
 `TeamWalletAllocation` 的鍵是 `(teamId, userId)`：同一人在 A 團隊有 500 點、在 B 團隊有 0 點時，於 B 的操作**不會**動用 A 的餘額。點數是團隊資產，管理者分配給成員是在自己團隊內的授權，不是給那個人的錢。

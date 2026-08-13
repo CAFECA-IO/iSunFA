@@ -44,6 +44,11 @@ import DataTable, { IDataTableColumn } from "@/components/common/data_table";
 import { useAuth } from "@/contexts/auth_context";
 import AuthPlaceholder from "@/components/common/auth_placeholder";
 import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
+import PaymentSourceSelector, {
+  PAYMENT_SOURCE,
+  type PaymentSource,
+} from "@/components/common/payment_source_selector";
+import { useTeamQuotaPayment } from "@/hooks/use_team_quota_payment";
 import { BatchExportRenderer } from "@/components/transportation_carbon_footprint_calculator/batch_export_renderer";
 import {
   ExportOptionsModal,
@@ -126,6 +131,22 @@ function ReportPageContent() {
   const { user } = useAuth();
   const { workflowStatus, resetTransaction, executeOrderTransaction } =
     useOrderTransaction();
+  /**
+   * Info: (20260813 - Luphia) 付款來源（設計書 §5.6）：物流查詢沒有帳本情境，
+   * 付款團隊只能來自用戶。有團隊時預設走團隊額度（免簽章、當場完成），
+   * 沒有團隊時選擇器不出現，行為與此前完全相同。
+   */
+  const {
+    teams,
+    selectedTeamId,
+    setSelectedTeamId,
+    status: teamPayStatus,
+    reset: resetTeamPayment,
+    payWithTeamQuota,
+  } = useTeamQuotaPayment();
+  const [paymentSource, setPaymentSource] = useState<PaymentSource>(
+    PAYMENT_SOURCE.TEAM,
+  );
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -424,6 +445,7 @@ function ReportPageContent() {
 
     setIsPaymentModalOpen(true);
     resetTransaction();
+    resetTeamPayment();
   };
 
   const handlePaymentConfirm = async () => {
@@ -446,14 +468,26 @@ function ReportPageContent() {
       ],
     };
 
+    const onPaid = async () => {
+      await calculateFootprint();
+      setIsPaymentModalOpen(false);
+      setActiveTab("history");
+    };
+
+    /**
+     * Info: (20260813 - Luphia) 團隊額度免簽章、當場完成；個人點數走既有鏈上簽章流程。
+     * 多團隊而未選定時 payWithTeamQuota 會回 needs_team，選擇器隨即標示要選哪個團隊，
+     * 此處不再往下走——避免把「還沒選團隊」當成付款失敗。
+     */
+    if (teams.length > 0 && paymentSource === PAYMENT_SOURCE.TEAM) {
+      await payWithTeamQuota(orderPayload, onPaid, selectedTeamId);
+      return;
+    }
+
     await executeOrderTransaction(
       orderPayload,
       ANALYSIS_BASE_COSTS.TRANSPORTATION_CARBON_FOOTPRINT,
-      async () => {
-        await calculateFootprint();
-        setIsPaymentModalOpen(false);
-        setActiveTab("history");
-      },
+      onPaid,
     );
   };
 
@@ -1452,6 +1486,17 @@ function ReportPageContent() {
           }
         }}
         onConfirm={handlePaymentConfirm}
+        extraContent={
+          <PaymentSourceSelector
+            source={paymentSource}
+            onSourceChange={setPaymentSource}
+            teams={teams}
+            selectedTeamId={selectedTeamId}
+            onSelectTeam={setSelectedTeamId}
+            needsTeamSelection={teamPayStatus === "needs_team"}
+            disabled={teamPayStatus === "paying"}
+          />
+        }
         cost={ANALYSIS_BASE_COSTS.TRANSPORTATION_CARBON_FOOTPRINT}
         items={[
           {
