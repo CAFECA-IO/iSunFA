@@ -1001,4 +1001,39 @@ export const API_ERRORS = {
     message: "Unknown credit plan id",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
+
+  // Info: (20260813 - Julian) ===== 簽到系統 (Time & Attendance) =====
+
+  /**
+   * Info: (20260813 - Julian) 登入的 Google 帳號對不到任何員工檔。
+   *
+   * 「這個人是別的帳本的員工」也回這一個，而不是 403 —— 回「你是員工但不屬於
+   * 這個帳本」會洩漏一個不該由未授權者得知的事實：這個信箱在系統裡有員工檔。
+   */
+  NF_EMPLOYEE_FOR_USER: {
+    code: "NF000017",
+    message: "No employee record is linked to this account",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  // Info: (20260813 - Julian) 該員工檔已綁給另一個系統帳號
+  CF_EMPLOYEE_ALREADY_LINKED: {
+    code: "CF000004",
+    message: "This employee record is already linked to another account",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260813 - Julian) 同一帳本內有多筆員工檔的公司信箱只差大小寫。
+   *
+   * `@@unique([accountBookId, email])` 大小寫敏感，因此這種資料寫得進去。
+   * 此時任選一筆綁定，就是讓某人以另一個人的身分打卡 —— 而出勤紀錄是法定文件，
+   * 所以擋住並要求 HR 先清理，不猜。
+   */
+  CF_EMPLOYEE_EMAIL_AMBIGUOUS: {
+    code: "CF000005",
+    message:
+      "Multiple employee records share this e-mail; resolve before linking",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
 };

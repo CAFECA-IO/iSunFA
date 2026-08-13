@@ -2,6 +2,7 @@ import { describe, it, expect } from "@jest/globals";
 import { readFileSync } from "fs";
 import { join } from "path";
 import * as HrConstants from "@/constants/hr_management";
+import * as AttendanceConstants from "@/constants/attendance";
 
 /**
  * Info: (20260811 - Julian) 把「前端 enum 鏡像與 Prisma schema 同步」這件事機械化。
@@ -67,6 +68,17 @@ const SCHEMA_ENUMS = parseSchemaEnums(
   stripComments(readFileSync(SCHEMA_PATH, "utf8")),
 );
 
+/**
+ * Info: (20260813 - Julian) 納入覆蓋率檢查的常數模組。
+ *
+ * 新增一個帶 enum 的常數檔時**必須登記在這裡** —— 否則它的 enum 不會被任何一條
+ * 檢查看到，而「忘了同步」會從「忘了改鏡像」退化成「忘了寫測試」。
+ */
+const CONSTANT_MODULES: Record<string, Record<string, unknown>> = {
+  "hr_management.ts": HrConstants,
+  "attendance.ts": AttendanceConstants,
+};
+
 // Info: (20260811 - Julian) 需與 Prisma schema 保持一致的鏡像。新增鏡像時必須在此登記
 const MIRRORED: Record<string, Record<string, string>> = {
   EmployeeStatus: HrConstants.EmployeeStatus,
@@ -75,6 +87,11 @@ const MIRRORED: Record<string, Record<string, string>> = {
   DocumentCategory: HrConstants.DocumentCategory,
   ProbationResult: HrConstants.ProbationResult,
   ResignationType: HrConstants.ResignationType,
+
+  // Info: (20260813 - Julian) 簽到系統
+  PunchType: AttendanceConstants.PunchType,
+  PunchVerification: AttendanceConstants.PunchVerification,
+  WorkDayType: AttendanceConstants.WorkDayType,
 };
 
 /**
@@ -142,6 +159,25 @@ const UI_ONLY = [
   "ProbationMilestone",
   "ProbationScoreItem",
   "ResignationReason",
+
+  /**
+   * Info: (20260813 - Julian) 簽到系統的衍生值與計算值。
+   *
+   * `ShiftPatternKind` 是**刻意**沒有 schema 對應物的那一種：固定班表就是
+   * 「窗＝核心」的彈性班表，型別由 ShiftPattern 那六個欄位的值決定，
+   * 存一個判別欄位唯一能做的事就是說謊（同 `ProcessTaskType` 的處置）。
+   * 它不會搬到 MIRRORED。
+   *
+   * ToDo: (20260813 - Julian) 其餘三個是暫時的：demo 版不落地判定結果與現場狀態
+   * （改為讀取時即時計算），所以 schema 沒有對應 enum。正式版補上
+   * `AttendanceDailyResult` / `AttendanceException` / `AttendancePresence` 之後，
+   * 它們必須從這裡搬到 MIRRORED —— 忘了搬的話，下面
+   * 「should register every enum that exists on both sides」會直接擋下來。
+   */
+  "ShiftPatternKind",
+  "AttendanceDayStatus",
+  "AttendanceExceptionType",
+  "PresenceStatus",
 ];
 
 /**
@@ -161,6 +197,19 @@ const isStringEnum = (value: unknown): value is Record<string, string> => {
     entries.every(([key, item]) => typeof item === "string" && key === item)
   );
 };
+
+/**
+ * Info: (20260813 - Julian) 所有常數模組匯出的字串 enum 名稱（聯集）。
+ *
+ * 兩個方向的覆蓋率檢查共用它 —— 各寫一份就會出現「一邊掃了新模組、
+ * 另一邊沒掃」這種只有在特定組合下才顯現的縫。
+ */
+const exportedEnumNames = (): string[] =>
+  Object.values(CONSTANT_MODULES).flatMap((constants) =>
+    Object.entries(constants)
+      .filter(([, value]) => isStringEnum(value))
+      .map(([name]) => name),
+  );
 
 describe("HR enum mirrors", () => {
   /**
@@ -202,16 +251,16 @@ describe("HR enum mirrors", () => {
   });
 
   /**
-   * Info: (20260811 - Julian) 覆蓋率方向一：hr_management.ts 新增了 enum 卻沒登記。
+   * Info: (20260811 - Julian) 覆蓋率方向一：常數模組新增了 enum 卻沒登記。
    * 沒有這條，「忘了同步」就只是從「忘了改鏡像」變成「忘了寫測試」。
+   *
+   * Info: (20260813 - Julian) 改為掃 `CONSTANT_MODULES` 的聯集而不是單一檔案：
+   * 簽到系統的 enum 住在 `attendance.ts`，只掃 hr_management.ts 會漏掉整個模組。
    */
-  it("should account for every string enum exported by hr_management.ts", () => {
-    const exported = Object.entries(HrConstants)
-      .filter(([, value]) => isStringEnum(value))
-      .map(([name]) => name)
-      .sort();
-
-    expect(exported).toEqual([...Object.keys(MIRRORED), ...UI_ONLY].sort());
+  it("should account for every string enum exported by the constants modules", () => {
+    expect([...exportedEnumNames()].sort()).toEqual(
+      [...Object.keys(MIRRORED), ...UI_ONLY].sort(),
+    );
   });
 
   /**
@@ -221,8 +270,9 @@ describe("HR enum mirrors", () => {
    * 這條改用名稱比對，不管值長什麼樣都會抓到。兩條合起來才沒有縫。
    */
   it("should register every enum that exists on both sides", () => {
+    const exported = exportedEnumNames();
     const unregistered = Object.keys(SCHEMA_ENUMS)
-      .filter((name) => name in HrConstants)
+      .filter((name) => exported.includes(name))
       .filter((name) => !(name in MIRRORED) && !UI_ONLY.includes(name))
       .sort();
 
