@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PunchType } from "@/constants/attendance";
+import { PunchType, WorkDayType } from "@/constants/attendance";
 
 /**
  * Info: (20260813 - Julian) 簽到系統的 API 驗證。
@@ -76,4 +76,58 @@ export const attendanceRosterExportSchema = z.object({
 
 export type IAttendanceRosterExportInput = z.infer<
   typeof attendanceRosterExportSchema
+>;
+
+// Info: (20260813 - Julian) 排班月曆查詢（A7）。區間規則同判定矩陣
+export const attendanceScheduleQuerySchema = z
+  .object({
+    from: isoDateSchema,
+    to: isoDateSchema,
+    departmentId: z.string().min(1).optional(),
+  })
+  .refine((value) => value.from <= value.to, {
+    message: "from must not be later than to",
+    path: ["from"],
+  });
+
+export type IAttendanceScheduleQuery = z.infer<
+  typeof attendanceScheduleQuerySchema
+>;
+
+/**
+ * Info: (20260813 - Julian) 改單日排班（A8）。**可辨識聯集，不是「選填的 shiftPatternId」。**
+ *
+ * ADR 019 的判準在這裡直接適用：能讓非法狀態不可表示，就不要退而求其次
+ * 讓它可被拒絕。寫成 `dayType` 加一個選填的 `shiftPatternId`，
+ * 「上班日沒帶班別」與「休假日卻帶了班別」都是**送得進來、要靠 if 擋掉**的請求；
+ * 寫成聯集之後，它們連通過解析都做不到。
+ *
+ * 非上班日刻意要求 `shiftPatternId` 為 `null` 而不是省略 ——
+ * 把上班日改成休假時，舊的班別必須被明確清掉，而 `undefined`
+ * 在 Prisma 的 `update` 裡的意思是「不要動這個欄位」。
+ */
+export const attendanceScheduleUpdateSchema = z.intersection(
+  z.object({
+    employeeId: z.string().min(1),
+    workDate: isoDateSchema,
+  }),
+  z.discriminatedUnion("dayType", [
+    z.object({
+      dayType: z.literal(WorkDayType.WORK),
+      shiftPatternId: z.string().min(1),
+    }),
+    z.object({
+      dayType: z.enum([
+        WorkDayType.REGULAR_OFF,
+        WorkDayType.REST_DAY,
+        WorkDayType.HOLIDAY,
+        WorkDayType.LEAVE,
+      ]),
+      shiftPatternId: z.null(),
+    }),
+  ]),
+);
+
+export type IAttendanceScheduleUpdate = z.infer<
+  typeof attendanceScheduleUpdateSchema
 >;

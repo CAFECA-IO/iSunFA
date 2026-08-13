@@ -11,6 +11,7 @@ export const hrManagement = {
     movement: "입·퇴사",
     attendance: "출퇴근 기록",
     attendance_result: "근태 현황",
+    attendance_presence: "현장 상황",
     document: "문서 관리",
     setting: "시스템 설정",
   },
@@ -616,5 +617,38 @@ export const hrManagement = {
     detail_no_exception: "이상 없음",
     worked_value: "{{hours}}시간 {{minutes}}분",
     minutes_value: "{{minutes}}분",
+  },
+  attendance_presence: {
+    title: "현장 인원과 출근 명단",
+    subtitle:
+      "기록에서 즉시 산출합니다. 지도에는 현장 범위만 표시하며 개인 위치는 표시하지 않습니다",
+    loading: "불러오는 중…",
+    error_load: "현장 상황을 가져오지 못했습니다",
+    error_export: "내보내기에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+    stale_feed:
+      "마지막으로 성공한 시점의 데이터를 표시하고 있습니다（{{message}}）",
+    map_unavailable:
+      "지도를 불러올 수 없습니다. 인원·명단·내보내기에는 영향이 없습니다",
+    marker_hint: "{{name}}: 현장 {{onSite}}명, 퇴근 기록 없음 {{stale}}명",
+    stat_on_site: "현장",
+    stat_on_site_hint: "출근 기록이 있고 아직 퇴근하지 않은 인원",
+    stat_stale: "퇴근 기록 없음",
+    stat_stale_hint:
+      "현장에 있는지 시스템이 확인할 수 없습니다. 점호 시 우선 연락하세요",
+    stat_expected_absent: "미도착",
+    stat_expected_absent_hint:
+      "근무가 배정되어 도착 예정 시각이 지났으나 기록이 없습니다",
+    status_on_site: "현장",
+    status_stale: "퇴근 기록 없음",
+    radius: "지오펜스 {{radius}} m",
+    export_all: "점호 명단 내보내기（전체 현장）",
+    export_location: "이 현장 내보내기",
+    no_location_selected: "현장이 선택되지 않았습니다",
+    roster_empty: "이 현장에는 현재 인원이 없습니다",
+    expected_absent_title: "미도착 명단",
+    expected_absent_note:
+      "오늘 근무가 배정되었으나 기록이 없습니다. 미도착인지, 기록 누락인지, 다른 현장인지는 알 수 없습니다",
+    expected_by: "{{shift}}　도착 예정 {{time}}",
+    observed_at: "관측 시각: {{time}}（시각 기준 {{zone}}, 15초마다 갱신）",
   },
 };

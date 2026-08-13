@@ -11,6 +11,7 @@ export const hrManagement = {
     movement: "Onboarding & Offboarding",
     attendance: "Attendance",
     attendance_result: "Attendance overview",
+    attendance_presence: "Site presence",
     document: "Documents",
     setting: "Settings",
   },
@@ -626,5 +627,38 @@ export const hrManagement = {
     detail_no_exception: "No exception",
     worked_value: "{{hours}} h {{minutes}} m",
     minutes_value: "{{minutes}} min",
+  },
+  attendance_presence: {
+    title: "On-site headcount and roster",
+    subtitle:
+      "Derived from punches on read. The map shows site boundaries only — never an individual's position",
+    loading: "Loading…",
+    error_load: "Could not read site presence",
+    error_export: "Export failed. Please try again later.",
+    stale_feed: "Showing the last data that loaded successfully ({{message}})",
+    map_unavailable:
+      "Base map unavailable. Headcount, roster and export are unaffected",
+    marker_hint: "{{name}}: {{onSite}} on site, {{stale}} unconfirmed",
+    stat_on_site: "On site",
+    stat_on_site_hint: "Clocked in and not yet clocked out",
+    stat_stale: "No clock-out",
+    stat_stale_hint:
+      "The system cannot confirm whether these people are still on site — contact them first during a roll call",
+    stat_expected_absent: "Not arrived",
+    stat_expected_absent_hint:
+      "Scheduled to work, past the expected arrival time, and no punch received yet",
+    status_on_site: "On site",
+    status_stale: "No clock-out",
+    radius: "{{radius}} m fence",
+    export_all: "Export roll call (all sites)",
+    export_location: "Export this site",
+    no_location_selected: "No site selected",
+    roster_empty: "Nobody is on site here right now",
+    expected_absent_title: "Not arrived",
+    expected_absent_note:
+      "Scheduled today with no punch yet. The system cannot tell whether they are absent, forgot to punch, or are at another site",
+    expected_by: "{{shift}} · expected by {{time}}",
+    observed_at:
+      "Observed at {{time}} (times in {{zone}}, refreshed every 15 s)",
   },
 };

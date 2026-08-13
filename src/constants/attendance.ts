@@ -388,3 +388,19 @@ export const ROSTER_CSV_LABELS_ZH_TW = {
   statusStale: "未打下班卡（系統無法確認是否仍在現場）",
   none: "—",
 };
+
+/**
+ * Info: (20260813 - Julian) 現場狀態的配色。與出勤總覽同一條規則：只用 50 / 100 / 700 階。
+ *
+ * `STALE` 用琥珀色而不是紅色：它不是異常也不是懲罰，是「系統不知道」。
+ * 紅色會讓看板上的人以為這幾位有問題，而實際上有問題的是系統的資訊。
+ */
+export const PRESENCE_STATUS_STYLE: Record<PresenceStatus, string> = {
+  [PresenceStatus.ON_SITE]: "bg-emerald-50 text-emerald-700",
+  [PresenceStatus.STALE]: "bg-amber-100 text-amber-700",
+};
+
+export const PRESENCE_STATUS_I18N_KEY: Record<PresenceStatus, string> = {
+  [PresenceStatus.ON_SITE]: "hr_management.attendance_presence.status_on_site",
+  [PresenceStatus.STALE]: "hr_management.attendance_presence.status_stale",
+};

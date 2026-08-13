@@ -384,3 +384,53 @@ export interface IPresenceRoster {
   timeZone: string;
   entries: IPresenceEntry[];
 }
+
+/**
+ * Info: (20260813 - Julian) ===== 班別與排班（W5）=====
+ */
+
+// Info: (20260813 - Julian) 班別清單（A6）。`kind` 是衍生值，不是欄位 —— 見 §D1
+export interface IShiftPatternSummary {
+  id: string;
+  code: string;
+  name: string;
+  kind: ShiftPatternKind;
+  window: IShiftWindow;
+}
+
+// Info: (20260813 - Julian) 排班月曆的一格
+export interface IScheduleDayCell {
+  workDate: string;
+  /** Info: (20260813 - Julian) null 表示這一天完全沒有排班紀錄，與「排了休假」是兩件事 */
+  dayType: WorkDayType | null;
+  shiftPatternId: string | null;
+  shiftCode: string | null;
+  shiftName: string | null;
+  shiftKind: ShiftPatternKind | null;
+}
+
+export interface IScheduleRow {
+  employeeId: string;
+  employeeNo: string;
+  name: string;
+  departmentId: string | null;
+  departmentName: string | null;
+  jobTitle: string | null;
+  /** Info: (20260813 - Julian) 長度與順序與 `IScheduleCalendar.workDates` 逐一對應 */
+  days: IScheduleDayCell[];
+}
+
+/**
+ * Info: (20260813 - Julian) 排班月曆（A7）。
+ *
+ * 與判定矩陣（A9）刻意分成兩支端點：這一支是**輸入**（人排的），
+ * 那一支是**輸出**（系統算的）。合成一支會讓「改了什麼」與「因此變成什麼」
+ * 混在同一個回應裡，而排班畫面要能在判定之外獨立存在 ——
+ * 下個月的班表現在就排得出來，那時還沒有任何打卡可判。
+ */
+export interface IScheduleCalendar {
+  from: string;
+  to: string;
+  workDates: string[];
+  rows: IScheduleRow[];
+}

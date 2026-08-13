@@ -5,6 +5,7 @@ import {
   ClipboardList,
   LucideIcon,
   MapPin,
+  Radar,
   Repeat,
   Settings,
   Users,
@@ -54,6 +55,13 @@ export const HR_NAV_ITEMS: IHrNavItem[] = [
     href: HR_MANAGEMENT_ROUTE.ATTENDANCE,
     labelKey: "hr_management.nav.attendance",
     icon: MapPin,
+    disabled: false,
+  },
+  {
+    key: "attendance_presence",
+    href: HR_MANAGEMENT_ROUTE.ATTENDANCE_PRESENCE,
+    labelKey: "hr_management.nav.attendance_presence",
+    icon: Radar,
     disabled: false,
   },
   {

@@ -1097,6 +1097,39 @@ export const API_ERRORS = {
     status: ApiCode.NOT_FOUND,
   } as IErrorDef,
 
+  /**
+   * Info: (20260813 - Julian) 排班日的型別與班別不一致（不變式轉譯）。
+   *
+   * 走 API 的正常路徑到不了這裡 —— zod 的可辨識聯集已讓非法組合送不進來
+   * （ADR 019：能讓它不可表示，就不要退而求其次讓它可被拒絕）。
+   * 這個碼服務的是**繞過 API 的寫入**：種子腳本、資料遷移、排班表匯入。
+   * 沒有它，那些路徑違反不變式時會得到一個與成因無關的 500。
+   */
+  VA_SCHEDULE_DAY_INVALID: {
+    code: "VA000045",
+    message: "Work days must carry a shift pattern; other day types must not",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  // Info: (20260813 - Julian) 指定的員工不存在，或不屬於這個帳本
+  NF_EMPLOYEE: {
+    code: "NF000020",
+    message: "No such employee in this account book",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260813 - Julian) 指定的班別不存在，或不屬於這個帳本。
+   *
+   * 跨帳本那一半不是理論顧慮：`EmployeeShiftDay.shiftPatternId` 在資料庫層
+   * 沒有任何跨帳本約束，光靠 id 查得到就寫下去，等於租戶隔離破了一個洞。
+   */
+  NF_SHIFT_PATTERN: {
+    code: "NF000021",
+    message: "No such shift pattern in this account book",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
   CF_EMPLOYEE_EMAIL_AMBIGUOUS: {
     code: "CF000005",
     message:
