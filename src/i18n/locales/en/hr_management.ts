@@ -531,6 +531,15 @@ export const hrManagement = {
     action_submit: "Create & Notify",
   },
   attendance: {
+    blocked_out_of_range:
+      "You are {{distance}} m from {{name}}, outside the {{radius}} m punch area. The button re-enables once you are closer.",
+    confirm_title_in: "Confirm clock in",
+    confirm_title_out: "Confirm clock out",
+    confirm_message_in:
+      "This records a clock-in at {{name}} from your current position. The time is set by the server and the record cannot be edited or deleted.",
+    confirm_message_out:
+      "This records a clock-out at {{name}} from your current position. The time is set by the server and the record cannot be edited or deleted.",
+    confirm_cancel: "Cancel",
     map_unavailable:
       "The map cannot be shown. Punching in is unaffected — the distance and accuracy above still apply.",
     map_self_label: "Your current position",
@@ -566,10 +575,6 @@ export const hrManagement = {
     summary_none: "No punch recorded today",
     error_load: "Could not load attendance data. Please try again later.",
     error_punch: "Punch failed. Please try again later.",
-    demo_banner:
-      "Demo mode: coordinates can be entered by hand. Not available in production.",
-    manual_latitude: "Latitude (demo)",
-    manual_longitude: "Longitude (demo)",
   },
   attendance_result: {
     title: "Attendance overview and exceptions",

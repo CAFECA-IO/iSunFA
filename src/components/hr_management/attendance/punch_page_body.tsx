@@ -12,15 +12,16 @@ import {
   ITodayStatus,
   IWorkLocationSummary,
 } from "@/interfaces/attendance";
-import { findNearestGeofence, IGeofenceMatch } from "@/lib/attendance_geofence";
+import {
+  findNearestGeofence,
+  IGeofenceMatch,
+  isDefinitelyOutside,
+} from "@/lib/attendance_geofence";
 import PunchMap from "@/components/hr_management/attendance/punch_map";
+import ConfirmModal from "@/components/common/confirm_modal";
 import { formatMinuteOfDay } from "@/lib/utils/attendance_format";
 import { ApiError, IEnvelopeLike, request } from "@/lib/utils/request";
-import {
-  GeolocationStatus,
-  IGeolocationReading,
-  useGeolocation,
-} from "@/hooks/use_geolocation";
+import { GeolocationStatus, useGeolocation } from "@/hooks/use_geolocation";
 import { useTranslation } from "@/i18n/i18n_context";
 
 /**
@@ -32,35 +33,25 @@ import { useTranslation } from "@/i18n/i18n_context";
  * 站在工地上卻被系統擋下來的人不會想再按第二次。
  * 因此距離與可否打卡在進頁時就算好並顯示。
  *
- * ## 但按鈕不 disable
+ * ## 確定在圈外才 disable，曖昧地帶維持可按
  *
- * 距離過遠時按鈕**仍然可以按**。disable 掉的按鈕不會告訴任何人為什麼，
- * 而按下去得到「距大漢溪橋梁工區 340 公尺」會。
- * 前端算的距離只是估算，真正的判定在伺服器（護欄 G2）——
- * 兩者不一致時，該讓伺服器說話。
+ * 原本的做法是「一律不 disable」，理由是 disable 掉的按鈕不會告訴任何人為什麼。
+ * 那句話仍然成立 —— 所以現在 disable 的同時**一定伴隨一行紅字說明原因與下一步**，
+ * 而不是只把按鈕變灰。
+ *
+ * 但門檻不是 `inside`，是 `isDefinitelyOutside()`：距離扣掉定位誤差之後仍然超出半徑。
+ * 精度 35 公尺、半徑 60 公尺時，一個**真的站在圈內**的人可能被回報成距中心 70 公尺 ——
+ * 照 `inside` 直接 disable，他會被鎖在門外，而且沒有任何辦法讓伺服器來裁決。
+ * 誤差範圍內因此維持可按，由伺服器判定（護欄 G2）。**前端的估算不該變成判決。**
+ *
+ * ## 打卡前要再確認一次
+ *
+ * 上下班共用同一顆按鈕，而打卡成功後標籤會立刻從「上班」翻成「下班」——
+ * 連點兩下就是打完上班卡再打下班卡，而**出勤紀錄是 append-only，那一筆刪不掉**。
+ * 因此中間隔一個確認對話框：它擋的不是誤解，是手指。
  */
 
 const API_BASE = `/api/v1/user/account_book/${DEMO_ACCOUNT_BOOK_ID}/hr/attendance`;
-
-/**
- * Deprecated: (20260813 - Julian) [start] Demo 專用：手動輸入座標。
- *
- * 存在的唯一理由是在會議室內演示「圍欄外被拒絕」—— 實際走出 500 公尺
- * 需要 6–8 分鐘，會毀掉演示節奏（demo 計畫書 §3.3）。
- *
- * **這不是一個安全漏洞開關。** 伺服器本來就不信任 client 送來的任何座標
- * （護欄 G2），用 curl 送一組假座標一直都是做得到的。這個輸入框只是把
- * 那件事做成了一般使用者按得到的按鈕 —— 移除它的理由是「不要留一個現成的
- * 作弊入口」，不是「它繞過了護欄」。
- *
- * 因此旗標只需要 `NEXT_PUBLIC_` 這一支（純前端）：伺服器沒有對應的開關，
- * 也不該有 —— 加一個伺服器旗標等於承認伺服器原本信任 client 座標。
- *
- * 正式版整段移除（含 UI 與環境變數）。
- */
-const ALLOW_MANUAL_COORDINATE =
-  process.env.NEXT_PUBLIC_DEMO_ALLOW_MANUAL_COORDINATE === "true";
-// Deprecated: [end]
 
 /**
  * Info: (20260813 - Julian) 從 `ApiError` 裡取出圍欄外的 403 payload。
@@ -108,24 +99,8 @@ const PunchPageBody: FC = () => {
    */
   const [success, setSuccess] = useState<PunchType | null>(null);
 
-  // Deprecated: (20260813 - Julian) [start] Demo 專用的手動座標
-  const [manual, setManual] = useState<{ latitude: string; longitude: string }>(
-    {
-      latitude: "",
-      longitude: "",
-    },
-  );
-  const manualReading = useMemo<IGeolocationReading | null>(() => {
-    if (!ALLOW_MANUAL_COORDINATE) return null;
-    if (!manual.latitude || !manual.longitude) return null;
-    const latitude = Number(manual.latitude);
-    const longitude = Number(manual.longitude);
-    if (Number.isNaN(latitude) || Number.isNaN(longitude)) return null;
-    return { latitude, longitude, accuracyMeters: 10 };
-  }, [manual]);
-  // Deprecated: [end]
-
-  const effectiveReading = manualReading ?? reading;
+  // Info: (20260813 - Julian) 待確認的打卡類型；非 null 時對話框開著
+  const [pendingPunch, setPendingPunch] = useState<PunchType | null>(null);
 
   const loadAll = useCallback(async () => {
     setLoadError(null);
@@ -154,16 +129,20 @@ const PunchPageBody: FC = () => {
 
   // Info: (20260813 - Julian) 前端自己算最近距離：顯示用，與伺服器判定各算各的
   const nearest = useMemo<IGeofenceMatch | null>(() => {
-    if (!effectiveReading || locations.length === 0) return null;
-    return findNearestGeofence(
-      effectiveReading.latitude,
-      effectiveReading.longitude,
-      locations,
-    );
-  }, [effectiveReading, locations]);
+    if (!reading || locations.length === 0) return null;
+    return findNearestGeofence(reading.latitude, reading.longitude, locations);
+  }, [reading, locations]);
+
+  /**
+   * Info: (20260813 - Julian) 只有「確定在圈外」才擋 —— 判準見 `isDefinitelyOutside`。
+   */
+  const outOfRange = isDefinitelyOutside(
+    nearest,
+    reading?.accuracyMeters ?? null,
+  );
 
   const punch = async (punchType: PunchType) => {
-    if (!effectiveReading) return;
+    if (!reading) return;
     setSubmitting(true);
     setRejection(null);
     setFailure(null);
@@ -176,9 +155,9 @@ const PunchPageBody: FC = () => {
           method: "POST",
           body: JSON.stringify({
             punchType,
-            latitude: effectiveReading.latitude,
-            longitude: effectiveReading.longitude,
-            accuracyMeters: effectiveReading.accuracyMeters,
+            latitude: reading.latitude,
+            longitude: reading.longitude,
+            accuracyMeters: reading.accuracyMeters,
           }),
         },
       );
@@ -217,16 +196,9 @@ const PunchPageBody: FC = () => {
   return (
     <div className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-2xl flex-col gap-5">
-        {/* Deprecated: (20260813 - Julian) Demo 專用的示範模式橫幅，正式版連同手動座標一起移除 */}
-        {ALLOW_MANUAL_COORDINATE && (
-          <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-200">
-            {t("hr_management.attendance.demo_banner")}
-          </div>
-        )}
-
         {/* Info: (20260813 - Julian) 標題與今日班別 */}
-        <div className="rounded-2xl bg-white p-6 ring-1 ring-gray-200">
-          <div className="text-lg font-semibold text-gray-800">
+        <div className="rounded-2xl bg-white p-3 ring-1 ring-gray-200 lg:p-6">
+          <div className="text-sm font-semibold text-gray-800 lg:text-lg">
             {today
               ? t("hr_management.attendance.greeting", {
                   name: today.name,
@@ -234,25 +206,25 @@ const PunchPageBody: FC = () => {
                 })
               : t("hr_management.attendance.title")}
           </div>
-          <div className="mt-1 text-sm text-gray-500">
+          <div className="mt-1 text-xs text-gray-500 lg:text-sm">
             {today
               ? `${t("hr_management.attendance.today_shift")}：${shiftLabel()}`
               : t("hr_management.attendance.loading")}
           </div>
 
           {loadError && (
-            <div className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800 ring-1 ring-amber-200">
+            <div className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-xs text-amber-800 ring-1 ring-amber-200 lg:text-sm">
               {loadError}
             </div>
           )}
         </div>
 
         {/* Info: (20260813 - Julian) 定位狀態：四種狀態各有各的下一步，不能壓成一個轉圈圈 */}
-        <div className="rounded-2xl bg-white p-6 ring-1 ring-gray-200">
+        <div className="rounded-2xl bg-white p-3 ring-1 ring-gray-200 lg:p-6">
           <LocationStatus
             geoStatus={geoStatus}
             nearest={nearest}
-            accuracyMeters={effectiveReading?.accuracyMeters ?? null}
+            accuracyMeters={reading?.accuracyMeters ?? null}
             onRetry={refresh}
           />
 
@@ -275,53 +247,22 @@ const PunchPageBody: FC = () => {
                     (location) => location.id === nearest?.location.id,
                   ) ?? null
                 }
-                reading={effectiveReading}
+                reading={reading}
                 inside={nearest?.inside ?? false}
               />
             </div>
           )}
-
-          {/* Deprecated: (20260813 - Julian) [start] Demo 專用的手動座標輸入 */}
-          {ALLOW_MANUAL_COORDINATE && (
-            <div className="mt-4 grid grid-cols-2 gap-3 border-t border-dashed border-red-200 pt-4">
-              <label className="text-xs text-red-700">
-                {t("hr_management.attendance.manual_latitude")}
-                <input
-                  className="mt-1 w-full rounded-lg border border-red-200 px-3 py-2 font-mono text-sm text-gray-700"
-                  value={manual.latitude}
-                  onChange={(event) =>
-                    setManual((prev) => ({
-                      ...prev,
-                      latitude: event.target.value,
-                    }))
-                  }
-                />
-              </label>
-              <label className="text-xs text-red-700">
-                {t("hr_management.attendance.manual_longitude")}
-                <input
-                  className="mt-1 w-full rounded-lg border border-red-200 px-3 py-2 font-mono text-sm text-gray-700"
-                  value={manual.longitude}
-                  onChange={(event) =>
-                    setManual((prev) => ({
-                      ...prev,
-                      longitude: event.target.value,
-                    }))
-                  }
-                />
-              </label>
-            </div>
-          )}
-          {/* Deprecated: [end] */}
         </div>
 
-        {/* Info: (20260813 - Julian) 打卡按鈕。距離過遠時**仍可按** —— 見檔頭說明 */}
-        <div className="rounded-2xl bg-white p-6 ring-1 ring-gray-200">
+        {/* Info: (20260813 - Julian) 打卡按鈕。確定在圈外才 disable —— 見檔頭說明 */}
+        <div className="rounded-2xl bg-white p-3 ring-1 ring-gray-200 lg:p-6">
           <button
             type="button"
-            disabled={submitting || !effectiveReading || !today}
+            disabled={submitting || !reading || !today || outOfRange}
             onClick={() =>
-              punch(today?.onSite ? PunchType.CLOCK_OUT : PunchType.CLOCK_IN)
+              setPendingPunch(
+                today?.onSite ? PunchType.CLOCK_OUT : PunchType.CLOCK_IN,
+              )
             }
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 py-4 text-base font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-gray-300"
           >
@@ -331,9 +272,25 @@ const PunchPageBody: FC = () => {
               : t("hr_management.attendance.action_clock_in")}
           </button>
 
+          {/**
+           * Info: (20260813 - Julian) 灰掉的按鈕一定要伴隨一句話。
+           *
+           * 只變灰不解釋，使用者會以為系統壞了或自己沒有權限 ——
+           * 而真正的原因（走近一點就好）是他自己解得開的。
+           */}
+          {outOfRange && nearest && (
+            <p className="mt-3 text-center text-sm font-medium text-red-600">
+              {t("hr_management.attendance.blocked_out_of_range", {
+                name: nearest.location.name,
+                distance: nearest.distanceMeters,
+                radius: nearest.location.radiusMeters,
+              })}
+            </p>
+          )}
+
           {success && (
             <div className="mt-4 flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 ring-1 ring-emerald-200">
-              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              <CheckCircle2 className="size-4 shrink-0" />
               {success === PunchType.CLOCK_IN
                 ? t("hr_management.attendance.success_clock_in", {
                     location: today?.workLocationName ?? "",
@@ -365,6 +322,41 @@ const PunchPageBody: FC = () => {
 
           <TodaySummary today={today} />
         </div>
+
+        {/**
+         * Info: (20260813 - Julian) 打卡前的確認。
+         *
+         * 訊息裡帶「上班／下班」與地點名稱，而不是一句「確定要打卡嗎」——
+         * 這個對話框要擋的正是「以為在打上班卡，其實在打下班卡」，
+         * 而那件事只有把動作名稱寫出來才擋得住。
+         */}
+        <ConfirmModal
+          isOpen={pendingPunch !== null}
+          onClose={() => setPendingPunch(null)}
+          title={
+            pendingPunch === PunchType.CLOCK_OUT
+              ? t("hr_management.attendance.confirm_title_out")
+              : t("hr_management.attendance.confirm_title_in")
+          }
+          message={
+            pendingPunch === PunchType.CLOCK_OUT
+              ? t("hr_management.attendance.confirm_message_out", {
+                  name: nearest?.location.name ?? "",
+                })
+              : t("hr_management.attendance.confirm_message_in", {
+                  name: nearest?.location.name ?? "",
+                })
+          }
+          confirmText={
+            pendingPunch === PunchType.CLOCK_OUT
+              ? t("hr_management.attendance.action_clock_out")
+              : t("hr_management.attendance.action_clock_in")
+          }
+          cancelText={t("hr_management.attendance.confirm_cancel")}
+          onConfirm={() => {
+            if (pendingPunch) punch(pendingPunch);
+          }}
+        />
       </div>
     </div>
   );
@@ -387,7 +379,7 @@ const LocationStatus: FC<{
   if (geoStatus === "locating" || geoStatus === "idle") {
     return (
       <div className="flex items-center gap-2 text-sm text-gray-500">
-        <Loader2 className="h-4 w-4 animate-spin" />
+        <Loader2 className="size-4 shrink-0 animate-spin" />
         {t("hr_management.attendance.locating")}
       </div>
     );
@@ -397,7 +389,7 @@ const LocationStatus: FC<{
     return (
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2 text-sm font-medium text-amber-700">
-          <TriangleAlert className="h-4 w-4" />
+          <TriangleAlert className="size-4 shrink-0" />
           {geoStatus === "denied"
             ? t("hr_management.attendance.geo_denied")
             : t("hr_management.attendance.geo_unavailable")}
@@ -434,9 +426,9 @@ const LocationStatus: FC<{
         }`}
       >
         {nearest.inside ? (
-          <CheckCircle2 className="h-4 w-4" />
+          <CheckCircle2 className="size-4 shrink-0" />
         ) : (
-          <MapPin className="h-4 w-4" />
+          <MapPin className="size-4 shrink-0" />
         )}
         {t(
           nearest.inside

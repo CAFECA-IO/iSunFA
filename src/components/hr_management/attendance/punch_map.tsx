@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useEffect, useMemo, useRef, useState } from "react";
+import { FC, useEffect, useMemo, useRef } from "react";
 import Map, { Layer, MapRef, Marker, Source } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
@@ -11,6 +11,7 @@ import {
 import { IWorkLocationSummary } from "@/interfaces/attendance";
 import { IGeolocationReading } from "@/hooks/use_geolocation";
 import { useTranslation } from "@/i18n/i18n_context";
+import { MAPTILER_STYLE, useMapStyle } from "@/hooks/use_map_style";
 
 /**
  * Info: (20260813 - Julian) 打卡頁地圖：圍欄 + 工區標記 + 自己的位置與精度圈。
@@ -41,16 +42,18 @@ const PunchMap: FC<{
   inside: boolean;
 }> = ({ locations, nearestLocation, reading, inside }) => {
   const { t } = useTranslation();
-  const mapTilerKey = process.env.NEXT_PUBLIC_MAPTILER_KEY;
   const mapRef = useRef<MapRef | null>(null);
 
   /**
-   * Info: (20260813 - Julian) 底圖載入失敗時退回一行說明。
+   * Info: (20260813 - Julian) 街道圖而不是資料視覺化底圖。
    *
-   * 只檢查「有沒有金鑰」不夠 —— **一把錯的金鑰會通過那個檢查**，
-   * 然後 maplibre 取不到 style，畫面上留下一塊空白的灰色方框。
+   * 這一頁的地圖要回答的是「我站在哪、離工區多遠」，而那個問題的答案是
+   * 路名與街廓 —— 一張沒有路名的淡色底圖，圈畫得再準也認不出自己在哪裡。
+   * 現場頁相反：那裡的主角是四個圓圈，標註太多會蓋掉主角。
    */
-  const [hasMapError, setHasMapError] = useState<boolean>(false);
+  const { styleUrl, checking, reportError } = useMapStyle(
+    MAPTILER_STYLE.STREETS,
+  );
 
   const fences = useMemo(
     () => buildPunchGeofenceFeatures(locations, nearestLocation?.id ?? null),
@@ -67,7 +70,10 @@ const PunchMap: FC<{
     mapRef.current?.fitBounds(bounds, { padding: 48, duration: 600 });
   }, [bounds]);
 
-  if (!mapTilerKey || !bounds || hasMapError) {
+  // Info: (20260813 - Julian) 還在確認金鑰時什麼都不顯示，避免先閃一下錯誤訊息再出現地圖
+  if (checking) return null;
+
+  if (!styleUrl || !bounds) {
     return (
       <div className="rounded-2xl bg-gray-50 px-4 py-4 text-center text-xs text-gray-400 ring-1 ring-gray-200">
         {t("hr_management.attendance.map_unavailable")}
@@ -75,13 +81,21 @@ const PunchMap: FC<{
     );
   }
 
+  /**
+   * ToDo: (20260813 - Julian) 手機上單指拖曳會被地圖吃掉，使用者捲不動頁面。
+   *
+   * 演示全程在手機上進行（計畫書 §10），而打卡按鈕就在地圖下方 ——
+   * 使用者想往下捲卻在拖地圖，是這一頁在手機上最可能被卡住的地方。
+   * 正解是 `dragPan: false` + 「點一下啟用地圖」的遮罩，或改成雙指才平移。
+   * 尚未實作：要先在真機上量過才知道哪一種不會誤觸。
+   */
   return (
     <div className="relative h-64 overflow-hidden rounded-2xl ring-1 ring-gray-200">
       <Map
         ref={mapRef}
         initialViewState={{ bounds, fitBoundsOptions: { padding: 48 } }}
-        mapStyle={`https://api.maptiler.com/maps/dataviz-light/style.json?key=${mapTilerKey}`}
-        onError={() => setHasMapError(true)}
+        mapStyle={styleUrl}
+        onError={reportError}
       >
         {/**
          * Info: (20260813 - Julian) 圍欄。最近的那一個用橘色，其餘灰色 ——

@@ -2,6 +2,7 @@ import { describe, it, expect } from "@jest/globals";
 import {
   findNearestGeofence,
   IGeofenceCandidate,
+  isDefinitelyOutside,
 } from "@/lib/attendance_geofence";
 
 /**
@@ -133,5 +134,53 @@ describe("findNearestGeofence", () => {
 
     expect(Number.isFinite(match?.distanceMeters)).toBe(true);
     expect(match?.inside).toBe(true);
+  });
+});
+
+/**
+ * Info: (20260813 - Julian) 打卡鈕要不要 disable。
+ *
+ * 這一組守的是**兩個方向都不能錯**：
+ * 確定在外面卻讓人按，是浪費一次注定失敗的點擊；
+ * 誤差範圍內就 disable，是把估算值當成判決 —— 而那會把真的站在工地上的人鎖在門外。
+ */
+describe("isDefinitelyOutside", () => {
+  const match = (distanceMeters: number, radiusMeters = 60) => ({
+    location: {
+      id: "loc-a",
+      name: "大漢溪橋梁工區",
+      latitude: 25,
+      longitude: 121.5,
+      radiusMeters,
+    } as IGeofenceCandidate,
+    distanceMeters,
+    inside: distanceMeters <= radiusMeters,
+  });
+
+  it("在圈內時一律回 false", () => {
+    expect(isDefinitelyOutside(match(20), 35)).toBe(false);
+  });
+
+  it("沒有定位結果時回 false —— 那時該 disable 的理由是沒座標，不是在圈外", () => {
+    expect(isDefinitelyOutside(null, 35)).toBe(false);
+  });
+
+  it("距離超出，但差距在定位誤差之內 → 仍可按，交給伺服器判", () => {
+    // Info: (20260813 - Julian) 半徑 60、距離 70、精度 35 → 70−35=35 < 60
+    expect(isDefinitelyOutside(match(70), 35)).toBe(false);
+  });
+
+  it("距離扣掉誤差之後仍然超出 → 確定在外面，disable", () => {
+    // Info: (20260813 - Julian) 半徑 60、距離 120、精度 35 → 120−35=85 > 60
+    expect(isDefinitelyOutside(match(120), 35)).toBe(true);
+  });
+
+  it("精度極差時幾乎不會 disable —— 那種座標本來就不該拿來下判斷", () => {
+    expect(isDefinitelyOutside(match(500), 1000)).toBe(false);
+  });
+
+  it("沒有精度資訊時不替使用者放寬，也不額外收緊", () => {
+    expect(isDefinitelyOutside(match(70), null)).toBe(true);
+    expect(isDefinitelyOutside(match(60), null)).toBe(false);
   });
 });

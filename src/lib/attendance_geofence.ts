@@ -80,3 +80,33 @@ export function findNearestGeofence(
     inside: nearest.distanceMeters <= nearest.location.radiusMeters,
   };
 }
+
+/**
+ * Info: (20260813 - Julian) 是否**確定**在圍欄外 —— 用來決定打卡鈕要不要 disable。
+ *
+ * ## 為什麼不是直接看 `inside`
+ *
+ * `inside` 比較的是「回報的座標」與圓心的距離，而那個座標帶著誤差。
+ * 定位精度 35 公尺、圍欄半徑 60 公尺時，一個**真的站在圈內**的人可能被回報成
+ * 距中心 70 公尺 —— 若照 `inside` 直接 disable，他會被鎖在門外，
+ * 而且畫面上沒有任何辦法可以讓伺服器來裁決。**那是把估算值當成判決。**
+ *
+ * 因此只有「距離扣掉誤差之後仍然超出半徑」才算確定在外面。
+ * 誤差範圍內的曖昧地帶維持可按 —— 按下去由伺服器判定（護欄 G2），
+ * 而伺服器拒絕時回的是「距工區 340 公尺」這種看得懂的話。
+ *
+ * ## 這條規則的兩端各自服務誰
+ *
+ * - **確定在外面 → disable**：省下一次注定失敗的點擊，這是使用者要的
+ * - **不確定 → 可按**：不讓前端的估算誤差變成一道打不開的門，這是出勤紀錄要的
+ */
+export function isDefinitelyOutside(
+  match: IGeofenceMatch | null,
+  accuracyMeters: number | null,
+): boolean {
+  if (!match || match.inside) return false;
+
+  // Info: (20260813 - Julian) 沒有精度資訊時視為 0：不替使用者放寬，也不額外收緊
+  const tolerance = accuracyMeters && accuracyMeters > 0 ? accuracyMeters : 0;
+  return match.distanceMeters - tolerance > match.location.radiusMeters;
+}
