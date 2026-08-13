@@ -9,6 +9,8 @@
 > **目標**: 演示「Google 登入 → GPS 打卡 → 工地現場人數與名單」與「班表 → 自動比對 → 出勤異常」兩段完整故事。
 > **展示對象**: **工程主管機關**（v2.1 起）
 > **展示資料**: `documents/architecture/attendance_demo_mock_data.md`
+> **執行手冊**: `documents/architecture/attendance_demo_runbook.md`（座標校準、現場故障處置、備援分級）
+> **演示地點**: 新北市
 
 > **v2.1 變更摘要**（相對 v2.0）：**確定展示對象為工程主管機關**
 >
@@ -687,7 +689,7 @@ v2.0 說「今天的資料留空，由現場真人打卡產生」。但若全體
 > **沒有這些，出勤總覽會是一片綠色 —— 而一片綠色什麼也證明不了。**
 > 逐筆的日期、員工、打卡時間與預期判定結果，見展示資料文件 §8。
 
-## 🗓️ 10. 工作分解（估 11 個工作天 / 1 人）
+## 🗓️ 10. 工作分解（估 11.25 個工作天 / 1 人）
 
 | # | 工作 | 產出 | 估時 |
 |---|---|---|---|
@@ -702,13 +704,16 @@ v2.0 說「今天的資料留空，由現場真人打卡產生」。但若全體
 | W9 | 前端現場頁 + maplibre 地圖 + 圍欄圓圈 | P3 可演 | 1.0 d |
 | W10 | 前端排班月曆（唯讀 + 單格下拉編輯） | P4 上半可演 | 1.0 d |
 | W11 | 前端出勤總覽（方格圖 + 明細彈窗 + 篩選） | P4 下半 / P5 可演 | 1.0 d |
-| W12 | Seed（12 人 / 4 地點 / §9.3 十一種情形）+ 現場名單 CSV 匯出（A10）+ 環境設定 + **實地座標量測** + 完整彩排 | §10.1 全綠 | 1.25 d |
+| W12 | Seed（12 人 / 4 地點 / §9.3 十一種情形）+ 現場名單 CSV 匯出（A10）+ **座標校準頁**（執行手冊 §3.4）+ 環境設定 + **實地校準** + 完整彩排 | §10.1 全綠 | 1.5 d |
 
 **關鍵路徑**：W1 → W2 → W3 → W8（第一段），W1 → W4 → W6 → W11（第二段）。W4 可與 W2/W3 併行 —— 它是純函數，不依賴任何其他部分。
 
 > **W4 是唯一不該壓縮的項目。** `attendance_rules.ts` 是本次 demo **唯一一段寫完就是正式版的程式碼**（母文件 §D7 要求它是純函數，而純函數沒有「demo 版」）。它的測試也是唯一必須窮舉的 —— 決定論的驗收方式是表格，不是抽樣。
 
 ### 10.1 Demo 前檢查清單
+
+> **完整的時程、校準程序與現場故障對照表見 `attendance_demo_runbook.md`。** 本節只保留工程側要交付的項目。
+
 
 - [ ] Google Cloud Console OAuth 用戶端已建立，redirect URI = `${NEXT_PUBLIC_APP_URL}/auth/callback/google`
 - [ ] `GOOGLE_OAUTH_CLIENT_ID` / `_CLIENT_SECRET` 已灌入系統設定 → **登入畫面看得到 Google 按鈕**（看不到就是沒設定好）
@@ -789,7 +794,7 @@ v2.0 說「今天的資料留空，由現場真人打卡產生」。但若全體
 
 | # | 項目 | 為什麼必須移除而不是保留 |
 |---|---|---|
-| 1 | `DEMO_ALLOW_MANUAL_COORDINATE` 與手動座標路徑（§3.3） | **它讓客戶端指定自己的位置，與護欄 G2 直接衝突。**改成「預設關閉」不夠 —— 一個 env 旗標就能繞過整個圍欄機制 |
+| 1 | `DEMO_ALLOW_MANUAL_COORDINATE` 與手動座標路徑（§3.3）**與座標校準頁**（執行手冊 §3.4） | **它讓客戶端指定自己的位置，與護欄 G2 直接衝突。**改成「預設關閉」不夠 —— 一個 env 旗標就能繞過整個圍欄機制 |
 | 2 | `DEMO_GEOFENCE_RADIUS_METERS = 500` | 母文件 §D6 要求實地量測。500 公尺意味著「在對面咖啡廳也算到班」，那讓圍欄即到班定義失效 |
 
 > ✅ **v1.1 的第 3 項（`isStaleForDemo`）已消失** —— 有了班表就能用正式語意（§3.2）。**擴充範圍反而讓拋棄式程式碼少了一項。**
@@ -846,6 +851,8 @@ src/__tests__/attendance_rules.boundary.test.ts         （新增：邊界值）
 src/__tests__/attendance_geofence.test.ts               （新增：圍欄半徑內／外／剛好）
 scripts/seed/seed_attendance_demo.ts                    （新增：工程機關版，規格見 attendance_demo_mock_data.md）
 documents/architecture/attendance_demo_mock_data.md      （新增：展示資料規格）
+documents/architecture/attendance_demo_runbook.md       （新增：執行手冊）
+src/app/hr_management/attendance/_calibrate/page.tsx    （新增：座標校準頁，demo 專用，標 Deprecated）
 .env.example                                            （修改：DEMO_ALLOW_MANUAL_COORDINATE + 警語）
 ```
 
