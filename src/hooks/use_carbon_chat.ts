@@ -1798,6 +1798,9 @@ export const useCarbonChat = () => {
       const formData = new FormData();
       appendImportSource(formData, source);
       formData.append("language", language);
+      // Info: (20260813 - Luphia) 計費上下文（設計書 §5.5）：帳本由 channel 推導，冪等鍵防重試重複扣點
+      formData.append("channel", chatChannel);
+      formData.append("clientMessageId", crypto.randomUUID());
       formData.append("mode", CarbonReportImportModeEnum.INDEX);
       try {
         // Info: (20260807 - Emily) 端點走保活式串流,失敗在信封裡:requestEnvelope 轉回拋出,
@@ -1841,7 +1844,7 @@ export const useCarbonChat = () => {
         return new Map();
       }
     },
-    [language],
+    [chatChannel, language],
   );
 
   /**
@@ -1923,6 +1926,9 @@ export const useCarbonChat = () => {
         const formData = new FormData();
         appendImportSource(formData, source);
         formData.append("language", language);
+        // Info: (20260813 - Luphia) 計費上下文（設計書 §5.5）：帳本由 channel 推導，冪等鍵防重試重複扣點
+        formData.append("channel", chatChannel);
+        formData.append("clientMessageId", crypto.randomUUID());
         formData.append("chapterId", chapter.id);
         // Info: (20260730 - Tzuhan) 活動數據只在「排放章」那次呼叫萃取(避免 11 章重複入帳)。
         // Info: (20260730 - Tzuhan) 原本掛在 index === 0 也就是第一章「組織與治理概況」,但用電量、油耗
@@ -2067,7 +2073,7 @@ export const useCarbonChat = () => {
       };
     },
     // Info: (20260806 - Tzuhan) 進度回報改由呼叫端注入 notify,此處不再依賴 setDraftNotice
-    [language, t],
+    [chatChannel, language, t],
   );
 
   // Info: (20260727 - Tzuhan) #57 草稿補齊執行器:對「原樣匯入後仍空白」的段落,依同一份上傳文件請 LLM 撰寫草稿。
@@ -2105,6 +2111,9 @@ export const useCarbonChat = () => {
         const formData = new FormData();
         appendImportSource(formData, source);
         formData.append("language", language);
+        // Info: (20260813 - Luphia) 計費上下文（設計書 §5.5）：帳本由 channel 推導，冪等鍵防重試重複扣點
+        formData.append("channel", chatChannel);
+        formData.append("clientMessageId", crypto.randomUUID());
         formData.append("mode", CarbonReportImportModeEnum.DRAFT);
         formData.append("sectionIds", JSON.stringify(batches[index]));
         try {
@@ -2129,7 +2138,7 @@ export const useCarbonChat = () => {
       return drafted;
     },
     // Info: (20260806 - Tzuhan) 同上:進度回報由呼叫端注入
-    [language, t],
+    [chatChannel, language, t],
   );
 
   /**
@@ -2405,6 +2414,9 @@ export const useCarbonChat = () => {
           const formData = new FormData();
           appendImportSource(formData, importSource);
           formData.append("language", language);
+          // Info: (20260813 - Luphia) 計費上下文（設計書 §5.5）：帳本由 channel 推導，冪等鍵防重試重複扣點
+          formData.append("channel", chatChannel);
+          formData.append("clientMessageId", crypto.randomUUID());
           const chunk = await requestEnvelope<{
             segments: {
               paragraphId: string;
@@ -2527,6 +2539,7 @@ export const useCarbonChat = () => {
       }
     },
     [
+      chatChannel,
       sessionsData,
       activeSessionId,
       language,
@@ -2712,7 +2725,17 @@ export const useCarbonChat = () => {
             isDrawn: boolean;
           }>("/api/v1/chat/carbon/diagram", {
             method: "POST",
-            body: JSON.stringify({ paragraphId, content, language }),
+            /**
+             * Info: (20260813 - Luphia) 計費上下文（設計書 §5.5）：
+             * channel 供後端推導計費帳本，clientMessageId 讓退避重試不重複扣點。
+             */
+            body: JSON.stringify({
+              paragraphId,
+              content,
+              language,
+              channel: chatChannel,
+              clientMessageId: crypto.randomUUID(),
+            }),
           });
           /**
            * Info: (20260806 - Tzuhan) 端點走保活式串流(繞開閘道 60 秒的閒置逾時),
@@ -2782,7 +2805,7 @@ export const useCarbonChat = () => {
         await attempt();
       }
     },
-    [sessionsData, activeSessionId, language],
+    [chatChannel, sessionsData, activeSessionId, language],
   );
 
   const applyPendingImport = useCallback(() => {
@@ -4626,7 +4649,20 @@ export const useCarbonChat = () => {
         setIsError(true);
         // Info: (20260716 - Tzuhan) 額度/逾時/限流分別給專屬文案(#6515/#6516)，其餘為一般系統錯誤
         let errorText = t("carbon_chatbot.system_error");
-        if (isQuotaApiError(error)) {
+        /**
+         * Info: (20260813 - Luphia) 兩種「額度」錯誤要分開講（設計書 §5.5）：
+         * IS_LLM_QUOTA_EXCEEDED 是供應商端的模型額度（稍候重試會好），
+         * TW_QUOTA_EXCEEDED 是團隊訂閱額度與分配點數同時見底（重試永遠不會好，
+         * 要等重置或加購）。混為一談會讓用戶一直重試一件不可能成功的事。
+         */
+        const apiErrorCode = getApiErrorCode(error);
+        if (apiErrorCode === API_ERRORS.TW_QUOTA_EXCEEDED.code) {
+          errorText = t("carbon_chatbot.team_quota_exceeded");
+        } else if (
+          apiErrorCode === API_ERRORS.VA_CARBON_SESSION_NOT_BOUND.code
+        ) {
+          errorText = t("carbon_chatbot.session_not_bound");
+        } else if (isQuotaApiError(error)) {
           errorText = t("carbon_chatbot.ai_quota_exceeded");
         } else if (isTimeoutApiError(error)) {
           errorText = t("carbon_chatbot.ai_timeout");

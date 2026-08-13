@@ -2,7 +2,7 @@
 
 > **Date**: August 2026
 > **Author**: Luphia
-> **Version**: 1.9 (Draft) — 1.1 新增 §5.3 費思計費；1.2–1.4 費率迭代；1.5 拍板費率與點值下限；1.6 拍板 C 案混合制（離鏈營運 + 每日 merkle 鏈上錨定，Phase 2 為 1:1 backing）；1.7 §5.3 拍板「選定帳本後才能使用費思」，計費團隊由 `AccountBook.teamId` 推導，client 不再自報 `teamId`；1.8 新增 §5.4 拆帳與封頂預扣（有餘額就放行、額度用光才扣錢包）；1.9 新增 §5.5 碳盤查計費（對話已接，附件／匯入待接）
+> **Version**: 1.10 (Draft) — 1.1 新增 §5.3 費思計費；1.2–1.4 費率迭代；1.5 拍板費率與點值下限；1.6 拍板 C 案混合制（離鏈營運 + 每日 merkle 鏈上錨定，Phase 2 為 1:1 backing）；1.7 §5.3 拍板「選定帳本後才能使用費思」，計費團隊由 `AccountBook.teamId` 推導，client 不再自報 `teamId`；1.8 新增 §5.4 拆帳與封頂預扣（有餘額就放行、額度用光才扣錢包）；1.9 新增 §5.5 碳盤查計費；1.10 碳盤查四條 LLM 路徑全數接上、會話一律綁帳本
 > **Status**: Proposed
 > **Branch**: `feature/team_wallet_subscription_quota`
 > **關聯 ADR**: [ADR 015: 離鏈團隊錢包帳本](decisions/015_offchain_team_wallet_ledger.md)
@@ -434,21 +434,27 @@ spendCredits(identity, teamId, featureCode, cost, idempotencyKey)
 | **失敗** | 工作拋錯即全額退還預扣（§5.2） |
 | **額度不足** | `spendCredits` 上拋 402，**LLM 不會被呼叫**——先確定付得起再花錢 |
 
-實作上以 `runBilledCarbonTask()`（`src/services/carbon_billing.service.ts`）包住任何一次碳盤查的 LLM 工作，呼叫端只需提供 `channel`、冪等鍵、輸入量與 `run()`；用量由 `generateCarbonChatbotStructuredResponse` 隨結構化回覆一併帶出（新增 `usage` 欄位，解析失敗降級時同樣帶出——那一輪的 tokens 一樣付了）。
+實作上以 `runBilledCarbonTask()`（`src/services/carbon_billing.service.ts`）包住任何一次碳盤查的 LLM 工作，呼叫端只需提供 `channel`、冪等鍵、輸入量與 `run()`。
 
-#### 上線範圍與尚未接上的路徑
+**用量以捕捉範圍累加，而非逐層回傳**（`src/lib/llm/usage_scope.ts`）：重成本路徑都是 fan-out——匯入一次可 fan-out 到十餘次 LLM 呼叫。逐層回傳 usage 等於把萃取、草稿、匯入、結構圖四條服務的簽名全部改一遍，而且**只要有人新增一個呼叫忘了往上傳，那次用量就靜靜地不計費**。改以 `AsyncLocalStorage`：`ChatService.invokeGuarded`（所有 LLM 呼叫的唯一入口）每次成功後把用量記進當前範圍，計費層包住整條管線即可拿到總量——新增的呼叫自動被涵蓋，**預設計費而不是預設漏計**。範圍外（executor、背景 worker）為 no-op，零影響。
 
-| 路徑 | 狀態 |
-|---|---|
-| 對話 `POST /api/v1/chat/carbon` | ✅ 已計費 |
-| 附件萃取 → 段落草稿 | ⬜ 待接（`attachment_extraction.service`、`paragraph_draft.service`；實測單次約 87 秒，成本遠高於純對話） |
-| 報告匯入 / 結構圖 / 碳排計算 | ⬜ 待接（`/chat/carbon/import`、`/diagram`、`/calculate`；匯入單章實測達 5 萬 tokens） |
+#### 上線範圍
 
-> ⚠️ 這三條路徑目前仍免費，且**它們才是成本大宗**。接上前不宜對外宣稱「碳盤查依用量計費」。
+| 路徑 | 冪等鍵前綴 | 預扣估算依據 | 狀態 |
+|---|---|---|---|
+| 對話 `POST /chat/carbon` | `carbon-chat:` | 送給 AI 的歷史字元數 | ✅ |
+| 附件萃取 → 段落草稿（同一支請求內） | `carbon-attachment:` | 附件位元組總和 | ✅ |
+| 報告匯入 `POST /chat/carbon/import`（三模式共用） | `carbon-import:` | 來源檔位元組數 | ✅ |
+| 結構圖 `POST /chat/carbon/diagram` | `carbon-diagram:` | 段落內容長度 | ✅ |
+| 碳排計算 `POST /chat/carbon/calculate` | — | — | ➖ **不需計費** |
+
+**碳排計算為何不計費**：`CarbonCalculationService.computeLedger()` 是**決定論規則引擎，完全沒有 LLM 呼叫**（CLAUDE.md §7：計算收斂到 TypeScript）。它的成本是 CPU 不是 token，按 token 計費無從計起。這不是遺漏，是它本來就不該在這張表上。
+
+附件與匯入各自獨立計一筆而非併入對話：它們是 fan-out 管線（萃取 1 次 + 每段草稿各 1 次；匯入逐章逐節），與對話共用一把鍵會讓兩者用量混在同一筆而無法分辨；預扣依據也不同——那兩條的輸入量來自檔案，不是訊息長度。
 
 #### 開放問題
 
-1. **無帳本的個人會話**：`Chatroom.accountBookId` 可為 null（舊資料相容），沒有帳本就沒有計費團隊。現況是**放行但不計費並留 log**，讓漏計量可觀測；長期應要求碳盤查會話一律綁帳本（與費思「選定帳本才能使用」一致），但那會影響既有會話，需產品決定遷移方式。
+1. ~~**無帳本的個人會話**~~ → **已拍板（2026-08-13）：碳盤查會話一律綁帳本**。沒有帳本即 fail closed，回專屬錯誤碼 `VA_CARBON_SESSION_NOT_BOUND`（`VA000041`），前端顯示「此盤查會話尚未綁定帳本」並引導至會話設定綁定（既有 `POST /chat/carbon/sessions` 綁定端點，需 EDITOR 以上）。**遷移影響**：`Chatroom.accountBookId` 為 null 的舊會話在綁定前無法再送出 LLM 請求；上線前應盤點這類會話數量，必要時提供批次綁定或於會話清單標示。
 2. **附件與匯入的預扣估算**：這兩條路徑的輸入量不是「訊息字元數」，預扣公式需另訂（例如以附件位元組數或章節字數估算），否則封頂預扣會頻繁觸發追補。
 3. **費率命名**：設定表名為 `FaithBillingSetting` 卻同時服務碳盤查，語意已不精確；改名需 migration，列入後續整理。
 

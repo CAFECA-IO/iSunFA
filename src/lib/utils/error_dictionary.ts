@@ -768,6 +768,16 @@ export const API_ERRORS = {
     message: "Carbon session not found",
     status: ApiCode.NOT_FOUND,
   } as IErrorDef,
+  /**
+   * Info: (20260813 - Luphia) 碳盤查會話未綁定帳本（產品拍板 20260813：一律綁帳本）。
+   * 沒有帳本就沒有計費團隊，扣不了額度；此時 fail closed 而非放行不計費，
+   * 並以專屬錯誤碼讓前端能引導用戶把會話綁到帳本，而不是丟一句「系統錯誤」。
+   */
+  VA_CARBON_SESSION_NOT_BOUND: {
+    code: "VA000041",
+    message: "Carbon session is not bound to an account book",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
 
   // Info: (20260421 - Luphia) IS: Internal Server Errors (000001 ~ 000099)
   IS_DB_FAILED: {

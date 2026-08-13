@@ -32,6 +32,7 @@ import { MeasurementUnit } from "@/constants/enums";
 import { CarbonChartTemplateEnum } from "@/constants/carbon_report_charts";
 import { IInventoryExtraction } from "@/types/carbon_chatbot.types";
 import { logger } from "@/lib/utils/logger";
+import { recordLlmUsage } from "@/lib/llm/usage_scope";
 import { SystemSettingKey } from "@/constants/system_setting";
 import { systemSettingService } from "@/services/system_setting.service";
 
@@ -494,6 +495,16 @@ export class ChatService {
 
     try {
       const result = await race();
+      /**
+       * Info: (20260813 - Luphia) 用量一律回報給捕捉範圍（設計書 §5.5），與 taskKey 無關：
+       * taskKey 決定「要不要寫 log」，計費則不能挑呼叫點——漏一個就是一次不計費的用量。
+       * 不在捕捉範圍內時 recordLlmUsage 是 no-op，executor 與既有呼叫端零影響。
+       */
+      recordLlmUsage({
+        inputTokens: result.response.usageMetadata?.promptTokenCount ?? 0,
+        outputTokens: result.response.usageMetadata?.candidatesTokenCount ?? 0,
+        totalTokens: result.response.usageMetadata?.totalTokenCount ?? 0,
+      });
       if (taskKey) {
         const usage = result.response.usageMetadata;
         logger.info("llm sync usage", {

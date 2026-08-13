@@ -11,6 +11,7 @@ import { chatroomRepo } from "@/repositories/chatroom.repo";
 import { assertAccountBookMember } from "@/services/account_book_access.guard";
 import { faithBillingSettingRepo } from "@/repositories/faith_billing_setting.repo";
 import { DEFAULT_FAITH_BILLING } from "@/constants/llm";
+import { recordLlmUsage } from "@/lib/llm/usage_scope";
 
 jest.mock("@/repositories/faith_billing_setting.repo", () => ({
   faithBillingSettingRepo: { resolveSetting: jest.fn() },
@@ -77,11 +78,24 @@ describe("runBilledCarbonTask", () => {
     });
   });
 
+  /**
+   * Info: (20260813 - Luphia) 用量來自捕捉範圍（設計書 §5.5）：`run` 內每一次 LLM 呼叫
+   * 都會經 invokeGuarded 回報，此處以 recordLlmUsage 模擬兩次呼叫的 fan-out。
+   */
   it("bills the team that owns the session's account book", async () => {
-    const run = jest.fn(async () => ({
-      result: { reply: "hi" },
-      usage: { inputTokens: 1000, outputTokens: 1500, totalTokens: 2500 },
-    }));
+    const run = jest.fn(async () => {
+      recordLlmUsage({
+        inputTokens: 800,
+        outputTokens: 700,
+        totalTokens: 1500,
+      });
+      recordLlmUsage({
+        inputTokens: 400,
+        outputTokens: 600,
+        totalTokens: 1000,
+      });
+      return { reply: "hi" };
+    });
 
     const outcome = await runBilledCarbonTask({ ...BASE_PARAMS, run });
 
@@ -98,7 +112,9 @@ describe("runBilledCarbonTask", () => {
       expect.objectContaining({ actualCost: BigInt(3) }),
     );
     expect(outcome.result).toEqual({ reply: "hi" });
-    expect(outcome.billing?.totalTokens).toBe(2500);
+    // Info: (20260813 - Luphia) 兩次呼叫的 tokens 相加，且呼叫次數可觀測（匯入可達十餘次）
+    expect(outcome.billing.totalTokens).toBe(2500);
+    expect(outcome.billing.llmCallCount).toBe(2);
   });
 
   /**
@@ -120,7 +136,7 @@ describe("runBilledCarbonTask", () => {
   });
 
   it("refunds the full hold when the task fails", async () => {
-    const run = jest.fn(async () => {
+    const run = jest.fn(async (): Promise<{ reply: string }> => {
       throw new Error("LLM exploded");
     });
 
@@ -139,7 +155,7 @@ describe("runBilledCarbonTask", () => {
    * 也不憑空推估——推估出來的數字在點數歷程裡無法查證。
    */
   it("settles at the minimum when the SDK reports no usage", async () => {
-    const run = jest.fn(async () => ({ result: { reply: "hi" }, usage: null }));
+    const run = jest.fn(async () => ({ reply: "hi" }));
 
     await runBilledCarbonTask({ ...BASE_PARAMS, run });
 
@@ -149,20 +165,17 @@ describe("runBilledCarbonTask", () => {
   });
 
   /**
-   * Info: (20260813 - Luphia) 舊的個人會話沒有綁帳本（Chatroom.accountBookId 可為 null），
-   * 沒有帳本就沒有計費團隊。放行但不計費，否則既有會話會一夕不能用。
+   * Info: (20260813 - Luphia) 一律綁帳本（產品拍板 20260813）：沒有帳本就沒有計費團隊，
+   * 此時 fail closed 並回專屬錯誤碼，讓前端能引導綁定——不再放行不計費。
    */
-  it("runs unbilled when the session has no account book", async () => {
+  it("fails closed when the session is not bound to an account book", async () => {
     asMock(chatroomRepo.findAccountBookIdByChannel).mockResolvedValue(null);
-    const run = jest.fn(async () => ({
-      result: { reply: "hi" },
-      usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2 },
-    }));
+    const run = jest.fn(async () => ({ reply: "hi" }));
 
-    const outcome = await runBilledCarbonTask({ ...BASE_PARAMS, run });
-
-    expect(run).toHaveBeenCalled();
+    await expect(
+      runBilledCarbonTask({ ...BASE_PARAMS, run }),
+    ).rejects.toMatchObject({ code: "VA000041" });
+    expect(run).not.toHaveBeenCalled();
     expect(spendCredits).not.toHaveBeenCalled();
-    expect(outcome.billing).toBeNull();
   });
 });

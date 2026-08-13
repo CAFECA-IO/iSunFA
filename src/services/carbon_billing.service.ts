@@ -6,7 +6,10 @@ import {
   estimateFaithHoldCredits,
   settleFaithCredits,
 } from "@/lib/faith_billing";
-import type { ILlmUsage } from "@/services/chat.service";
+import {
+  runWithUsageCapture,
+  type ICapturedLlmUsage,
+} from "@/lib/llm/usage_scope";
 import {
   assertAccountBookMember,
   mapServiceError,
@@ -16,7 +19,7 @@ import {
   settleSpend,
   spendCredits,
 } from "@/services/spend.service";
-import { ApiError } from "@/lib/utils/error_dictionary";
+import { API_ERRORS, ApiError, IErrorDef } from "@/lib/utils/error_dictionary";
 import { logger } from "@/lib/utils/logger";
 
 /**
@@ -45,7 +48,11 @@ export interface IBilledCarbonTaskParams<T> {
   inputChars: number;
   hasAttachment: boolean;
   nowSec: number;
-  run: () => Promise<{ result: T; usage: ILlmUsage | null }>;
+  /**
+   * Info: (20260813 - Luphia) 工作本體。用量不需由此回傳：整段會被 runWithUsageCapture
+   * 包住，管線內每一次 LLM 呼叫的 tokens 都會自動累加（設計書 §5.5）。
+   */
+  run: () => Promise<T>;
 }
 
 export interface IBilledCarbonTaskResult<T> {
@@ -55,7 +62,13 @@ export interface IBilledCarbonTaskResult<T> {
     idempotencyKey: string;
     charged: string;
     totalTokens: number;
-  } | null;
+    // Info: (20260813 - Luphia) 本次管線的 LLM 呼叫次數（匯入可達十餘次），供觀測與對帳
+    llmCallCount: number;
+  };
+}
+
+function toApiError(def: IErrorDef): ApiError {
+  return new ApiError(def.code, def.message, def.status);
 }
 
 async function resolveBillingTeamId(
@@ -96,19 +109,21 @@ export async function runBilledCarbonTask<T>(
     : null;
 
   /**
-   * Info: (20260813 - Luphia) 無帳本的舊個人會話不計費（`Chatroom.accountBookId` 可為 null）。
+   * Info: (20260813 - Luphia) 一律綁帳本（產品拍板 20260813）：沒有帳本就沒有計費團隊，
+   * 此時 **fail closed**，不再放行不計費。
    *
-   * 沒有帳本就沒有計費團隊，硬要擋下等於讓既有會話一夕不能用。此處放行但留 log，
-   * 讓「有多少用量沒被計費」是可觀測的；長期解法是要求碳盤查會話一律綁帳本
-   * （設計書 §5.5 開放問題）。
+   * 舊的個人會話（`Chatroom.accountBookId` 為 null）會在此被擋下並拿到專屬錯誤碼，
+   * 由前端引導綁定帳本——「有多少用量沒被計費」不該是靠 log 才知道的事。
    */
   if (!accountBookId) {
-    logger.warn("carbon task ran unbilled: chatroom has no account book", {
-      channel: channel ?? "(none)",
-      featureCode,
-    });
-    const { result } = await run();
-    return { result, billing: null };
+    logger.warn(
+      "carbon task blocked: chatroom is not bound to an account book",
+      {
+        channel: channel ?? "(none)",
+        featureCode,
+      },
+    );
+    throw toApiError(API_ERRORS.VA_CARBON_SESSION_NOT_BOUND);
   }
 
   const teamId = await resolveBillingTeamId(accountBookId, userId);
@@ -128,9 +143,10 @@ export async function runBilledCarbonTask<T>(
     nowSec,
   });
 
-  let outcome: { result: T; usage: ILlmUsage | null };
+  let outcome: { result: T; usage: ICapturedLlmUsage };
   try {
-    outcome = await run();
+    // Info: (20260813 - Luphia) 整段管線的 LLM 用量由捕捉範圍累加（含 fan-out 的每一次呼叫）
+    outcome = await runWithUsageCapture(run);
   } catch (taskError) {
     // Info: (20260813 - Luphia) 工作失敗即全額退還預扣，不留懸帳（設計書 §5.2）
     await refundCredits({ idempotencyKey, operatorUserId: userId });
@@ -141,7 +157,7 @@ export async function runBilledCarbonTask<T>(
    * Info: (20260813 - Luphia) SDK 未回報用量時 settleFaithCredits 收斂為最低 1 點：
    * 寧可少收，也不憑空推估用量——那等於讓帳面出現無法查證的數字。
    */
-  const totalTokens = outcome.usage?.totalTokens ?? 0;
+  const totalTokens = outcome.usage.totalTokens;
   const actualCredits = settleFaithCredits(totalTokens, billing);
   const settlement = await settleSpend({
     idempotencyKey,
@@ -157,6 +173,7 @@ export async function runBilledCarbonTask<T>(
       idempotencyKey,
       charged: settlement.charged,
       totalTokens,
+      llmCallCount: outcome.usage.callCount,
     },
   };
 }

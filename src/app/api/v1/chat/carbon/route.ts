@@ -176,15 +176,12 @@ export async function POST(request: NextRequest) {
       inputChars: historyForAi.reduce((sum, item) => sum + item.text.length, 0),
       hasAttachment: attachmentNames.length > 0,
       nowSec: Math.floor(Date.now() / 1000),
-      run: async () => {
-        const structured =
-          await chatService.generateCarbonChatbotStructuredResponse(
-            historyForAi,
-            currentStep,
-            language,
-          );
-        return { result: structured, usage: structured.usage };
-      },
+      run: () =>
+        chatService.generateCarbonChatbotStructuredResponse(
+          historyForAi,
+          currentStep,
+          language,
+        ),
     });
     const {
       reply,
@@ -254,29 +251,52 @@ export async function POST(request: NextRequest) {
     // Info: (20260714 - Tzuhan) 管線經 recoverLaria 取回內容 → 萃取 → 白名單裁決 → 生成草稿(graceful fallback)
     if (attachments && attachments.length > 0) {
       const pipeline = new AttachmentExtractionService();
-      const result = await pipeline.runAttachmentToParagraphPipeline({
-        attachments,
-        conversationContext,
-        language,
-        // Info: (20260730 - Tzuhan) 萃取是整條管線最長的單一步驟,結束時先報進度免得畫面像卡死
-        onExtracted: canPublish
-          ? async (sectionCount) => {
-              envelopes.push(
-                await chatroomService.recordAndPublishAiReply({
-                  channel: publishChannel,
-                  recipientPublicKey: publishKey,
-                  text: buildAttachmentExtractedNotice(
-                    language,
-                    attachments.length,
-                    sectionCount,
-                  ),
-                  purpose: CARBON_CHAT_PURPOSE,
-                }),
-              );
-            }
-          : undefined,
-        onDraft: canPublish ? publishDraftProgress : undefined,
+      /**
+       * Info: (20260813 - Luphia) 附件萃取→段落草稿另計一筆（設計書 §5.5）：
+       * 這條管線是 fan-out（萃取 1 次 + 每段草稿各 1 次，實測單次約 87 秒），
+       * 成本遠高於純對話，與對話共用一把鍵會讓兩者的用量混在同一筆無法分辨。
+       * 預扣以附件位元組數估算——這條路徑的輸入量來自檔案，不是訊息長度。
+       */
+      // Info: (20260813 - Luphia) metadata 的 size 是字串；非數字一律當 0，估算寧可低估不高估
+      const attachmentBytes = attachments.reduce((sum, item) => {
+        const size = Number(item.size);
+        return sum + (Number.isFinite(size) && size > 0 ? size : 0);
+      }, 0);
+      const billedPipeline = await runBilledCarbonTask({
+        userId: sessionUser.id,
+        channel,
+        idempotencyKey: clientMessageId
+          ? `carbon-attachment:${sessionUser.id}:${clientMessageId}`
+          : `carbon-attachment:${randomUUID()}`,
+        inputChars: attachmentBytes,
+        hasAttachment: true,
+        nowSec: Math.floor(Date.now() / 1000),
+        run: () =>
+          pipeline.runAttachmentToParagraphPipeline({
+            attachments,
+            conversationContext,
+            language,
+            // Info: (20260730 - Tzuhan) 萃取是整條管線最長的單一步驟,結束時先報進度免得畫面像卡死
+            onExtracted: canPublish
+              ? async (sectionCount) => {
+                  envelopes.push(
+                    await chatroomService.recordAndPublishAiReply({
+                      channel: publishChannel,
+                      recipientPublicKey: publishKey,
+                      text: buildAttachmentExtractedNotice(
+                        language,
+                        attachments.length,
+                        sectionCount,
+                      ),
+                      purpose: CARBON_CHAT_PURPOSE,
+                    }),
+                  );
+                }
+              : undefined,
+            onDraft: canPublish ? publishDraftProgress : undefined,
+          }),
       });
+      const result = billedPipeline.result;
       drafts = result.drafts;
       degraded = result.degraded;
       attachmentActivities = result.activities;

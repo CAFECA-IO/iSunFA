@@ -56,6 +56,9 @@ export const CarbonDiagramRequestSchema = z.object({
     }),
   content: z.string().min(1).max(50_000),
   language: z.string().max(10).optional(),
+  // Info: (20260813 - Luphia) 計費上下文（設計書 §5.5）：帳本由 channel 推導，冪等鍵防重試重複扣點
+  channel: z.string().max(200).optional(),
+  clientMessageId: z.string().min(1).max(128).optional(),
 });
 export type CarbonDiagramRequest = z.infer<typeof CarbonDiagramRequestSchema>;
 
