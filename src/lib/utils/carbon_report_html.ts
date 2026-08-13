@@ -2,6 +2,11 @@ import { marked } from "marked";
 import { escapeHtml } from "@/lib/utils/logistics_report_html";
 import { stripMarkdownComments } from "@/lib/utils/markdown_comment";
 import { stripHtmlLineBreaksOutsideFences } from "@/lib/utils/markdown_line_break";
+import { escapeArithmeticEmphasis } from "@/lib/utils/markdown_arithmetic_safety";
+import { restoreLineStructure } from "@/lib/utils/markdown_line_structure";
+import { convertTimelineBlocksToTables } from "@/lib/utils/markdown_timeline_table";
+import { replaceOfficeSymbolChars } from "@/lib/utils/office_symbol_chars";
+import { padAllTableHeaders } from "@/lib/utils/markdown_table_columns";
 import {
   CARBON_PDF_CHART_MAX_HEIGHT_MM,
   CARBON_PDF_FONT_STACK,
@@ -74,9 +79,21 @@ const parseRow = (row: string): IParsedCell[] => {
 /**
  * Info: (20260810 - Emily) 只有第一格有內容的列 = 原文的類別分隔列
  * (「類別二:輸入能源的間接溫室氣體排放量」橫跨整張表的那一條)。
+ *
+ * Info: (20260813 - Emily) 只認資料列(`td`)—— 表頭列永遠不是分隔列。
+ *
+ * 少了這一條,`padAllTableHeaders` 補完欄的表頭會落進這個形狀:原文的父標題
+ * 橫跨整張表時表頭只有一格(`| 溫室氣體排放量 |`),補到資料列的欄數之後
+ * 就變成「第一格有內容、其餘皆空」,於是整個 `<thead>` 被改寫成
+ * `<tr class="group"><td colspan="N">` —— 那張表**一個 `<th>` 都不剩**。
+ *
+ * 文字還看得見,所以它不是內容遺失;但一份要送第三方查證的文件,表格沒有表頭列
+ * 對輔助技術與任何依賴 `th` 的處理都等於沒有標頭,而 `tr.group td` 的置中灰底
+ * 本來是設計給表身的分類分隔列,套到表頭上也不是它的用途。
  */
 export const isGroupRow = (cells: readonly IParsedCell[]): boolean =>
   cells.length > 1 &&
+  cells.every((cell) => cell.tag === "td") &&
   cells[0].text !== "" &&
   cells.slice(1).every((cell) => cell.text === "");
 
@@ -293,6 +310,91 @@ const printStyle = (): string => {
     break-inside: avoid;
   }
   code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .9em; }
+
+  /*
+   * Info: (20260811 - Emily) 文件外殼(頁首／頁尾),對照預覽的 pdf_editor 版型。
+   *
+   * 各出現一次而不是每頁重印:預覽是一份連續文件,頁首在最上、頁尾在最下,
+   * 逐頁重印會與使用者看到的不同。逐頁的那條資訊(報告名 + 頁碼)已由
+   * page.pdf 的 displayHeaderFooter 負責,兩者不重疊。
+   *
+   * 深色底必須 break-inside: avoid —— 一條被切成兩頁的深色橫幅比沒有更難看。
+   * 顏色以 rgb() 寫死而不用 Tailwind 的色票:這份 HTML 在 headless Chrome 裡
+   * 沒有樣式表,而 oklch() 這類現代色彩空間在 html2canvas 那條路上炸過一次。
+   */
+  .doc-shell-header {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgb(17, 24, 39); color: rgb(255, 255, 255);
+    padding: 6mm 8mm; margin: 0 0 7mm;
+    break-inside: avoid; page-break-inside: avoid;
+    break-after: avoid-page; page-break-after: avoid;
+  }
+  .doc-shell-header .brand {
+    display: flex; align-items: center; gap: 3.5mm;
+    font-size: 13pt; font-weight: 700; line-height: 1;
+  }
+  .doc-shell-header .brand img { height: 8mm; width: auto; }
+  .doc-shell-header .brand-name {
+    border-left: 0.3mm solid rgb(75, 85, 99); padding-left: 3.5mm;
+  }
+  .doc-shell-header .badge {
+    border: 0.3mm solid rgb(147, 197, 253); border-radius: 20mm;
+    background: rgb(30, 58, 95); color: rgb(147, 197, 253);
+    padding: 1.2mm 3.5mm; font-size: 8pt; white-space: nowrap;
+  }
+
+  .doc-shell-meta {
+    border-bottom: 0.3mm solid rgb(226, 232, 240);
+    padding-bottom: 5mm; margin: 0 0 7mm;
+    break-inside: avoid; page-break-inside: avoid;
+    break-after: avoid-page; page-break-after: avoid;
+  }
+  .doc-shell-meta .tag {
+    display: inline-block; background: rgb(255, 237, 213); color: rgb(194, 65, 12);
+    font-size: 8pt; font-weight: 700; padding: 1mm 2mm; border-radius: 1mm;
+  }
+  .doc-shell-meta .line {
+    margin: 2.5mm 0 0; font-size: 9pt; color: rgb(107, 114, 128);
+  }
+  .doc-shell-meta .dot { color: rgb(209, 213, 219); }
+  .doc-shell-meta .doc-title { margin: 4mm 0 0; font-size: 16pt; }
+
+  /*
+   * Info: (20260812 - Emily) 目錄。整塊自成一頁：目錄橫跨兩頁而中間夾著正文
+   * 會讓人以為目錄結束了。項目用 flex 讓引導點自動撐開，頁碼靠右對齊。
+   */
+  .doc-toc { break-after: page; page-break-after: always; margin: 0 0 6mm; }
+  .doc-toc-title { font-size: 14pt; margin: 0 0 4mm; color: rgb(15, 23, 42); }
+  .doc-toc-list { list-style: none; margin: 0; padding: 0; font-size: 10pt; }
+  .doc-toc-list li { margin: 0 0 1.6mm; break-inside: avoid; }
+  .doc-toc-list a {
+    display: flex; align-items: baseline; gap: 1.5mm;
+    color: rgb(30, 41, 59); text-decoration: none;
+  }
+  .doc-toc-list .toc-dots {
+    flex: 1 1 auto; border-bottom: 0.2mm dotted rgb(148, 163, 184);
+    transform: translateY(-1mm);
+  }
+  /* 頁碼欄寬固定：填 1~3 位數都不會讓那一行重新換行（見 TOC_PAGE_PLACEHOLDER） */
+  .doc-toc-list .toc-page {
+    flex: 0 0 auto; min-width: 9mm; text-align: right;
+    font-variant-numeric: tabular-nums; color: rgb(71, 85, 105);
+  }
+  .doc-toc-list li.lv2 { padding-left: 5mm; }
+  .doc-toc-list li.lv3 { padding-left: 10mm; font-size: 9.5pt; }
+
+  /* 頁尾整塊不可分頁,且必須與前文分開 —— 它是文件的結尾而不是一段內容 */
+  .doc-shell-footer {
+    border-top: 0.3mm solid rgb(255, 237, 213); background: rgb(255, 247, 237);
+    padding: 9mm 8mm; margin: 10mm 0 0; text-align: center;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .doc-shell-footer h3 {
+    margin: 0 0 2mm; font-size: 13pt; color: rgb(17, 24, 39);
+  }
+  .doc-shell-footer p {
+    margin: 0 auto; max-width: 120mm; font-size: 9pt; color: rgb(75, 85, 99);
+  }
 `;
 };
 
@@ -302,7 +404,178 @@ const printStyle = (): string => {
  * mermaid 區塊只換成容器不在此渲染:mermaid 需要真的 DOM,
  * 而在 headless Chrome 裡畫出來的是**向量** SVG —— 這正是改走伺服端列印的理由之一。
  */
-export const buildCarbonReportHtml = (markdown: string): string => {
+/**
+ * Info: (20260811 - Emily) 下載的 PDF 要有預覽上那組頁首／頁尾
+ * (Emily 2026-08-11:「下載的檔案補上 header 跟 footer」)。
+ *
+ * 文案由呼叫端傳入而不是在這裡寫死:預覽那組是 i18n
+ * (`admin_mission_board.pdf_editor.*`),同一份文件在兩處各寫一份文案,
+ * 遲早會一邊改一邊沒改 —— 這幾天追的多數問題都是這種兩端分歧。
+ *
+ * logo 以 data URL 傳入:列印時 `sealNetwork` 會擋掉所有非 data/about/blob 的請求
+ * (SSRF 防護),`/isunfa_logo.svg` 這種相對路徑在無伺服器的頁面裡本來也取不到。
+ * 沒有 logo 就只出品牌文字,不讓一個圖檔讓整份報告印不出來。
+ */
+export interface ICarbonReportShell {
+  /** Info: (20260811 - Emily) 深色頁首左側的品牌字(預覽的 pdf_editor.brand) */
+  brand: string;
+  /** Info: (20260811 - Emily) 頁首右上的徽章(pdf_editor.internal_document) */
+  internalDocument: string;
+  /** Info: (20260811 - Emily) 內容上方的橘色標籤(pdf_editor.system_report) */
+  systemReport: string;
+  /** Info: (20260811 - Emily) 標籤下方那行的日期,呼叫端格式化(伺服端不知道使用者的地區設定) */
+  issuedAt: string;
+  /** Info: (20260811 - Emily) 頁尾標語(pdf_editor.footer_title) */
+  footerTitle: string;
+  /** Info: (20260811 - Emily) 頁尾版權句,`{{year}}` 已由呼叫端代入 */
+  footerText: string;
+  /** Info: (20260811 - Emily) iSunFA logo 的 data URL;取不到就省略 */
+  logoDataUrl?: string;
+  /** Info: (20260811 - Emily) 報告標題;省略即不印(內容自己的 h1 已足夠) */
+  title?: string;
+  /** Info: (20260812 - Emily) 目錄抬頭;省略即不印目錄 */
+  tocTitle?: string;
+}
+
+const SHELL_VENDOR = "iSunFA Enterprise Solutions";
+
+/**
+ * Info: (20260812 - Emily) 下載的報告要有可點的目錄，而且每一條要標頁碼
+ * (Emily 2026-08-12)。應用程式裡已經有章節目錄，缺的是 PDF 這一份。
+ *
+ * 只收 h1~h3。h4 以下是節內的小標，收進來會讓一份 33 節的報告變成上百條，
+ * 目錄本身就要好幾頁 —— 目錄的用途是定位章節，不是重述全文。
+ */
+const TOC_HEADING = /<(h[123])([^>]*)>([\s\S]*?)<\/\1>/g;
+
+/**
+ * Info: (20260812 - Emily) 頁碼欄位**先佔位再填數字**。
+ *
+ * 這是這個做法的關鍵：目錄的高度在第一次排版時就已經是最終高度，
+ * 之後只把佔位符換成數字。若等量完頁碼才插入目錄，目錄本身會把後面的內容往後推，
+ * 頁碼跟著全錯，就得反覆排版到收斂 —— 而收斂與否沒有保證。
+ * **真正的護欄是 `.toc-page { min-width: 9mm }`**，不是佔位符的字元寬度
+ * （PR review 指出）：10pt 下 3 位數約 4.4mm，遠小於 9mm，所以佔位符與 1~3 位數
+ * 的量測寬度都被 min-width 吃掉。佔位符只讓沒有頁碼的那條不塌陷。
+ * 動了 min-width，這個保證就會無聲失效。
+ */
+export const TOC_PAGE_PLACEHOLDER = "\u2007\u2007\u2007";
+
+const slugForIndex = (index: number): string => `carbon-sec-${index}`;
+
+/**
+ * Info: (20260812 - Emily) 目錄項目的文字要**解一次逸出**再存起來(PR review 第 1 點)。
+ *
+ * `collectHeadings` 讀的是 marked 產出的 HTML,裡面的 `&` 已經是 `&amp;`;
+ * `tocSection` 再逸出一次就成了 `&amp;amp;`,畫面上印出字面的 `&amp;`。
+ * 第二層後果更嚴重:同一份文字也是 `fillTocPageNumbers` 的比對用字,
+ * 而產出的 PDF 文字層裡是 `&` —— 永遠對不上,那一條會留白,
+ * 而留白的語意是「這一節不在文件裡」。
+ *
+ * 解在這裡而不是把 `tocSection` 的 `escapeHtml` 拿掉:
+ * entries 要的本來就是原始字,輸出面的逸出是該有的防護,兩者都要留。
+ */
+const HTML_ENTITY: Readonly<Record<string, string>> = {
+  "&amp;": "&",
+  "&lt;": "<",
+  "&gt;": ">",
+  "&quot;": '"',
+  "&#39;": "'",
+};
+const decodeEntities = (text: string): string =>
+  text.replace(
+    /&(?:amp|lt|gt|quot|#39);/g,
+    (entity) => HTML_ENTITY[entity] ?? entity,
+  );
+
+export interface ICarbonTocEntry {
+  /** Info: (20260812 - Emily) 錨點 id，同時是 PDF 內部連結的目標 */
+  id: string;
+  /** Info: (20260812 - Emily) 標題純文字，服務端據此在產出的 PDF 裡找它落在第幾頁 */
+  text: string;
+  level: number;
+}
+
+/**
+ * Info: (20260812 - Emily) 給標題掛 id 並取出目錄項目。
+ * 已經有 id 的標題不覆蓋 —— 那可能是別處掛上去的錨點。
+ */
+export const collectHeadings = (
+  body: string,
+): { body: string; entries: ICarbonTocEntry[] } => {
+  const entries: ICarbonTocEntry[] = [];
+  let index = 0;
+  const next = body.replace(
+    TOC_HEADING,
+    (whole, tag: string, attrs: string, inner: string) => {
+      const text = decodeEntities(inner.replace(/<[^>]+>/g, "")).trim();
+      if (text === "") return whole;
+      index += 1;
+      const id = slugForIndex(index);
+      entries.push({ id, text, level: Number(tag.slice(1)) });
+      const withId = /\bid=/.test(attrs) ? attrs : `${attrs} id="${id}"`;
+      return `<${tag}${withId}>${inner}</${tag}>`;
+    },
+  );
+  return { body: next, entries };
+};
+
+/**
+ * Info: (20260812 - Emily) 目錄區塊。項目是 `<a href="#id">`，
+ * Chrome 的 page.pdf 會把它輸出成真的 PDF 內部連結（點了會跳），預覽端也天然可點。
+ */
+const tocSection = (
+  entries: readonly ICarbonTocEntry[],
+  title: string,
+): string =>
+  entries.length === 0
+    ? ""
+    : [
+        '<nav class="doc-toc">',
+        `<h2 class="doc-toc-title">${escapeHtml(title)}</h2>`,
+        '<ol class="doc-toc-list">',
+        ...entries.map(
+          (entry) =>
+            `<li class="lv${entry.level}"><a href="#${entry.id}">` +
+            `<span class="toc-text">${escapeHtml(entry.text)}</span>` +
+            `<span class="toc-dots"></span>` +
+            `<span class="toc-page" data-target="${entry.id}">${TOC_PAGE_PLACEHOLDER}</span>` +
+            "</a></li>",
+        ),
+        "</ol>",
+        "</nav>",
+      ].join("");
+
+const shellHeader = (shell: ICarbonReportShell): string =>
+  [
+    '<header class="doc-shell-header">',
+    '<div class="brand">',
+    shell.logoDataUrl
+      ? `<img src="${escapeHtml(shell.logoDataUrl)}" alt="" />`
+      : "",
+    `<span class="brand-name">${escapeHtml(shell.brand)}</span>`,
+    "</div>",
+    `<span class="badge">${escapeHtml(shell.internalDocument)}</span>`,
+    "</header>",
+    '<section class="doc-shell-meta">',
+    `<span class="tag">${escapeHtml(shell.systemReport)}</span>`,
+    `<p class="line">${escapeHtml(SHELL_VENDOR)} <span class="dot">•</span> ${escapeHtml(shell.issuedAt)}</p>`,
+    shell.title ? `<h1 class="doc-title">${escapeHtml(shell.title)}</h1>` : "",
+    "</section>",
+  ].join("");
+
+const shellFooter = (shell: ICarbonReportShell): string =>
+  [
+    '<footer class="doc-shell-footer">',
+    `<h3>${escapeHtml(shell.footerTitle)}</h3>`,
+    `<p>${escapeHtml(shell.footerText)}</p>`,
+    "</footer>",
+  ].join("");
+
+export const buildCarbonReportHtml = (
+  markdown: string,
+  shell?: ICarbonReportShell,
+): string => {
   marked.setOptions({ gfm: true, breaks: false });
   /**
    * Info: (20260811 - Luphia) 先套上預覽層的兩道剝除,再交給 marked
@@ -319,11 +592,52 @@ export const buildCarbonReportHtml = (markdown: string): string => {
    *
    * 兩支都是 fence-aware 的既有共用工具(有單元測試護住),程式碼區塊內原樣保留 ——
    * 使用者貼 HTML 教學範例時,fence 內的那些是內容而不是錨點。
+   *
+   * Info: (20260810 - Emily) 剝除之後才轉義乘號:轉義要看的是**最後交給 marked 的那份文字**,
+   * 順序與 `MarkdownContent` 一致(comment → br → 乘號),兩端看到的輸入才是同一份。
+   * 既有草稿是在轉義加入之前組成的,內容裡的乘號還是裸的;重新產生一份 46 頁的報告很貴,
+   * 所以讀取端也擋一次 —— 函式是冪等的,重複套用無害。
    */
   const source = stripHtmlLineBreaksOutsideFences(
     stripMarkdownComments(markdown),
   );
-  let body = marked.parse(source, { async: false }) as string;
+  /**
+   * Info: (20260811 - Emily) 既有草稿裡的 mermaid timeline 在此轉成表格。
+   * 產表端已改成直接輸出表格,但既有草稿的 markdown 裡存著改動前產生的 timeline 區塊,
+   * 不會因為產生器換了寫法就變 —— 實測那份 54 頁的下載仍是縮到 28% 的彩虹軸。
+   * 轉換是決定性且冪等的,比重新產生整份報告便宜太多。
+   */
+  /**
+   * Info: (20260811 - Emily) Word 私有區符號在此也換一次。
+   *
+   * 匯入端已經換了,但那只影響新匯入的報告 —— 既有草稿的 markdown 裡存著
+   * 改動前抽取進來的 U+F06C,實測那份 54 頁的下載仍有 57 個空心方框
+   * (p.3 與 p.18–24)。函式是冪等且不改長度的,兩端都套沒有代價。
+   */
+  /**
+   * Info: (20260812 - Emily) `escapeArithmeticEmphasis` 必須是最後一道。
+   *
+   * 規則:**任何把圍籬內容搬到 prose 的轉換,都必須跑在語意防護之前。**
+   * `convertTimelineBlocksToTables` 就是一次「內容搬家」——
+   * 逸出跳過圍籬(那是對的,在 code block 裡加反斜線是污染不是防護),
+   * 於是原本待在 timeline 圍籬裡、沒有被逸出的 `*` 一旦被搬成表格儲存格,
+   * 就落回 prose 上下文,marked 照樣把它當強調吃掉:
+   * `2020 : 產能 2*300*4 噸` → `產能 23004 噸`。
+   *
+   * 這正是 `5ad9824fd`(stop markdown from eating the multiplication signs)
+   * 修掉的那件事在新路徑上重演,所以順序本身要當成一條規則寫下來,
+   * 而不是「記得把 esc 放最後」——下一支搬家型的轉換也適用。
+   */
+  let body = marked.parse(
+    escapeArithmeticEmphasis(
+      padAllTableHeaders(
+        convertTimelineBlocksToTables(
+          replaceOfficeSymbolChars(restoreLineStructure(source)),
+        ),
+      ),
+    ),
+    { async: false },
+  ) as string;
   body = stripActiveContent(body);
   body = body.replace(
     MERMAID_BLOCK,
@@ -332,9 +646,18 @@ export const buildCarbonReportHtml = (markdown: string): string => {
   );
   body = body.replace(TABLE, (table) => annotateTable(table));
 
+  // Info: (20260812 - Emily) 掛 id 要在 annotateTable 之後：那一步只重寫表格，不動標題
+  const headed = collectHeadings(body);
+  body = headed.body;
+
   return [
     '<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8">',
     `<style>${printStyle()}</style>`,
-    `</head><body>${body}</body></html>`,
+    "</head><body>",
+    shell ? shellHeader(shell) : "",
+    shell?.tocTitle ? tocSection(headed.entries, shell.tocTitle) : "",
+    body,
+    shell ? shellFooter(shell) : "",
+    "</body></html>",
   ].join("");
 };

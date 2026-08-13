@@ -12,12 +12,26 @@ import { base64ToBytes } from "@/lib/utils/logistics_report_client";
  */
 export const CARBON_PDF_API_PATH = "/api/v1/carbon/report_pdf";
 
+/**
+ * Info: (20260812 - Emily) `tocFilled` / `tocMissing` 必須一路帶到用戶端。
+ *
+ * 伺服端算出來、route 也用 `jsonOk({ file })` 全帶回來了,但這裡的兩個 interface
+ * 原本沒有這兩個欄位 —— 於是它們在解析時被靜默丟掉,呼叫端拿不到。
+ * 而那正是它們存在的理由:文字層抽不出來時(`extractPdfTextLayer` 回 null,
+ * ADR 014 記載的 @napi-rs/canvas SIGBUS 至今未定案)整份目錄會沒有頁碼,
+ * 而使用者拿到的是一份**看起來完整**的查證文件。
+ *
+ * DTO 少一個欄位不會有型別錯誤也不會有測試紅燈,只會讓資料在邊界上消失 ——
+ * 所以伺服端每加一個降級訊號,這裡就要跟著加。
+ */
 export interface ICarbonPdfResult {
   blob: Blob;
   sizeBytes: number;
   landscapeTables: number;
   chartsRendered: number;
   chartsFailed: number;
+  tocFilled: number;
+  tocMissing: number;
 }
 
 interface ICarbonPdfPayload {
@@ -28,13 +42,37 @@ interface ICarbonPdfPayload {
     landscapeTables: number;
     chartsRendered: number;
     chartsFailed: number;
+    /*
+     * Info: (20260812 - Emily) 這兩個是**線上格式**,所以是選填:
+     * 部署過程中舊版伺服端不會回這兩個欄位。而 `ICarbonPdfResult` 是本模組
+     * 對呼叫端的保證,那裡不能選填 —— 否則每個呼叫端都要各自處理 undefined。
+     * 邊界上補一次 0,語意正是「沒有缺」。
+     */
+    tocFilled?: number;
+    tocMissing?: number;
   };
+}
+
+/**
+ * Info: (20260811 - Emily) 下載的 PDF 要有預覽上那組頁首／頁尾,文案由這裡帶上去 ——
+ * 它們是 i18n,伺服端沒有使用者的語言設定(見 validators/carbon_report_pdf 的註解)。
+ */
+export interface ICarbonPdfShell {
+  brand: string;
+  internalDocument: string;
+  systemReport: string;
+  issuedAt: string;
+  footerTitle: string;
+  footerText: string;
+  title?: string;
+  tocTitle?: string;
 }
 
 export const requestCarbonReportPdf = async (params: {
   markdown: string;
   fileName: string;
   title?: string;
+  shell?: ICarbonPdfShell;
 }): Promise<ICarbonPdfResult> => {
   /*
    * Info: (20260810 - Emily) request() 回的是整個信封而不是 payload,
@@ -56,6 +94,13 @@ export const requestCarbonReportPdf = async (params: {
     landscapeTables: file.landscapeTables,
     chartsRendered: file.chartsRendered,
     chartsFailed: file.chartsFailed,
+    /*
+     * Info: (20260812 - Emily) 舊的伺服端不會有這兩個欄位,補 0 而不是 undefined:
+     * 呼叫端只做 `> 0` 判斷,0 的語意正是「沒有缺」——
+     * 這樣舊伺服端 + 新用戶端不會跳出一個沒有根據的警告。
+     */
+    tocFilled: file.tocFilled ?? 0,
+    tocMissing: file.tocMissing ?? 0,
   };
 };
 

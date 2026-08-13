@@ -890,6 +890,11 @@ export const useCarbonChat = () => {
        * (見 switchSession 的註解)。會話已經不存在,留著那一鍵就沒有任何人能套用它。
        */
       setPendingImportFor(sessionId, null);
+      /**
+       * Info: (20260811 - Emily) 提示同理:會話消失才是該清的時機(#6624)。
+       * 切房不清之後,這一鍵沒有別的清除點 —— 留著就是一筆永遠沒人讀的殘留。
+       */
+      setDraftNotice(null, sessionId);
       // Info: (20260730 - Tzuhan) 封存的若是當前會話,切到其餘任一會話;全空則建新的(畫面不可留在已封存的會話上)
       setActiveSessionId((current) => {
         if (current !== sessionId) return current;
@@ -900,7 +905,7 @@ export const useCarbonChat = () => {
       });
       return true;
     },
-    [user?.address, sessionsData, setPendingImportFor],
+    [user?.address, sessionsData, setPendingImportFor, setDraftNotice],
   );
 
   // Info: (20260716 - Tzuhan) #52 綁定會話至帳本(POST sessions);成功後記入存取中繼資料
@@ -953,6 +958,8 @@ export const useCarbonChat = () => {
               ? t("carbon_chatbot.book_bind_denied")
               : t("carbon_chatbot.book_bind_failed"),
         });
+        // Info: (20260811 - Emily) 一次性事件的提示要自己消失,不能靠切房順手清掉(#6624)
+        dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS);
       }
     },
     [t, setDraftNotice, dismissDraftNoticeAfter],
@@ -1123,6 +1130,8 @@ export const useCarbonChat = () => {
         }
         setSaveStatus("error");
         setDraftNotice({ type: "error", text: noticeText }, sessionId);
+        // Info: (20260811 - Emily) 同上:保存失敗是事件不是狀態,持續的那面是 saveStatus(#6624)
+        dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, sessionId);
       } finally {
         savingChannelsRef.current.delete(channel);
       }
@@ -1693,34 +1702,49 @@ export const useCarbonChat = () => {
 
   // Info: (20260714 - Tzuhan) 切換聊天室: 各室訊息/報告/等待狀態彼此隔離，僅重置跨室共用的暫態 UI
   // Info: (20260714 - Tzuhan) (輸入框、附件、高亮、跳段目標為輸入層暫態；busy/計時器 per-session 不需重置)
-  const switchSession = useCallback(
-    (sessionId: string) => {
-      setActiveSessionId(sessionId);
-      setActiveParagraphId(null);
-      setHighlightedParagraphId(null);
-      setFocusedMessageId(null);
-      setInputValue("");
-      setPendingAttachments([]);
-      setAttachmentError(null);
-      setSaveStatus(null);
-      setIsError(false);
-      setDraftNotice(null);
-      setPendingRevision(null);
-      /**
-       * Info: (20260805 - Luphia) 這裡刻意**不動** pendingImportBySession。
-       * 它已經以發起匯入的會話 id 為鍵,切房本來就不需要重設任何東西 ——
-       * 而原本沿用「清掉唯一那筆」的舊語意去清空整個 map,恰好抵銷了 per-session 的全部意義:
-       * 在 A 房啟動匯入 → 切到 B 房等 → 匯入完成落成 { A: preview } → 點回 A 房
-       * → switchSession('A') 把 map 清成 {} → 預覽卡消失。
-       * 數分鐘的 LLM 工作與整份報告的配額靜默丟棄,連 retryFailedImportChapters 都救不回來
-       * (它需要 pendingImport)。
-       *
-       * 生命週期正確的清除點是「會話消失」而不是「切走」,故改在 archiveSession 移除該鍵。
-       */
-      pendingDraftParagraphIdRef.current = null;
-    },
-    [setDraftNotice],
-  );
+  const switchSession = useCallback((sessionId: string) => {
+    setActiveSessionId(sessionId);
+    setActiveParagraphId(null);
+    setHighlightedParagraphId(null);
+    setFocusedMessageId(null);
+    setInputValue("");
+    setPendingAttachments([]);
+    setAttachmentError(null);
+    setSaveStatus(null);
+    setIsError(false);
+    /**
+     * Info: (20260811 - Emily) 這裡刻意**不再清除** draftNotice(#6624)。
+     *
+     * 這一行是 per-session 之前留下的:當時提示只有一格,「切房就清掉」本身就是隔離機制。
+     * 改成一房一格之後(20260806),隔離已由 `draftNoticeBySession[activeSessionId]` 完成,
+     * 這一行剩下的作用只有刪除 —— 而且刪的是**正要離開的那一房**:
+     * 省略 sessionId 的 `setDraftNotice` 讀 `activeSessionIdRef`,該 ref 由 effect 同步,
+     * 上一行的 `setActiveSessionId` 要到 commit 後才反映到 ref。
+     * 於是「A 房匯入中 → 切到 B 房」把 A 房的進度從 map 裡刪掉,
+     * 切回 A 房畫面是空的,要等下一次進度事件(可能好幾分鐘)才重新有字 ——
+     * 那正是 #6624 描述的「不會立刻出現」。
+     *
+     * 與下方 pendingImportBySession(20260805 - Luphia)同一個故事:
+     * 那次改了預覽卡,提示這一份漏了。
+     *
+     * 「匯入已結束才切回不得殘留假的進行中訊息」由匯入端保證:
+     * 每一條終止路徑都以 originSessionId 明確收尾
+     * (成功 `notify(null)`;失敗 `notify(error)` + `dismissDraftNoticeAfter`)。
+     */
+    setPendingRevision(null);
+    /**
+     * Info: (20260805 - Luphia) 這裡刻意**不動** pendingImportBySession。
+     * 它已經以發起匯入的會話 id 為鍵,切房本來就不需要重設任何東西 ——
+     * 而原本沿用「清掉唯一那筆」的舊語意去清空整個 map,恰好抵銷了 per-session 的全部意義:
+     * 在 A 房啟動匯入 → 切到 B 房等 → 匯入完成落成 { A: preview } → 點回 A 房
+     * → switchSession('A') 把 map 清成 {} → 預覽卡消失。
+     * 數分鐘的 LLM 工作與整份報告的配額靜默丟棄,連 retryFailedImportChapters 都救不回來
+     * (它需要 pendingImport)。
+     *
+     * 生命週期正確的清除點是「會話消失」而不是「切走」,故改在 archiveSession 移除該鍵。
+     */
+    pendingDraftParagraphIdRef.current = null;
+  }, []);
 
   // Info: (20260716 - Tzuhan) 對話改名:設自訂旗標(首訊衍生不再覆蓋);sessions 索引 effect 自動持久化
   const renameSession = useCallback((sessionId: string, title: string) => {
@@ -2310,6 +2334,8 @@ export const useCarbonChat = () => {
             name: importInFlightRef.current,
           }),
         });
+        // Info: (20260811 - Emily) 同上(#6624)
+        dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS);
         return;
       }
       importInFlightRef.current = file.name;
@@ -2803,6 +2829,8 @@ export const useCarbonChat = () => {
           name: pendingImport.originSessionTitle,
         }),
       });
+      // Info: (20260811 - Emily) 同上(#6624)
+      dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS);
       return;
     }
     const selected = pendingImport.items.filter((item) => item.checked);
@@ -3124,6 +3152,7 @@ export const useCarbonChat = () => {
     applyImportedLedgerEntries,
     t,
     setDraftNotice,
+    dismissDraftNoticeAfter,
     setPendingImportFor,
     // Info: (20260805 - Tzuhan) 匯入摘要訊息用到:頻道由 address 組出,文案語言由此決定
     user?.address,

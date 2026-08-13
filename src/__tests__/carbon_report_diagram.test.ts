@@ -384,19 +384,29 @@ const MILESTONE_SOURCE = `1966年01月 公司創立於高雄市,資本額新台�
 const BOUNDARY_SOURCE = `1.5.1盤查範圍:本次盤查組織邊界採用控制權法,邊界設定以「高興昌鋼鐵股份有限公司
 總公司、高興昌鋼鐵股份有限公司 台北分公司、高興昌鋼鐵股份有限公司 屏東分公司」為盤查範圍`;
 
-describe("時間軸模板(timeline renderer)", () => {
+describe("里程碑模板(TIMELINE renderer,產出表格)", () => {
+  /**
+   * Info: (20260811 - Emily) 里程碑改為表格(issue_drafts/open/20 第 2 張票)。
+   *
+   * mermaid timeline 一個時間點一欄、欄寬固定,15 條中文沿革的 SVG 內在寬度 3,559px,
+   * 排到橫式頁寬要縮到 28%、事件字級 4.5px(正文 14px)。表格是 688px 不縮放、11.3px。
+   * 下面這些不變式與時間軸版完全相同 —— 換的是呈現形式,不是規則。
+   */
   const nodes: ICarbonDiagramNode[] = [
     { label: "公司創立於高雄市", parent: "1966年01月" },
     { label: "榮獲經濟部中央標準局鍍鋅鋼管正字標記", parent: "1968年06月" },
     { label: "榮獲經濟部中央標準局黑鋼管正字標記", parent: "1968年11月" },
   ];
 
+  const rowsOf = (block: string): string[] =>
+    block.split("\n").filter((line) => line.startsWith("| "));
+
   /**
    * Info: (20260803 - Tzuhan) 實測產出過這一列:`未標註時間 : 1966年01月 : 1968年06月 : …`
-   * —— 模型把**時間標籤本身**當成無時間的事件再回傳一次,等於把時間軸自己列了兩遍。
-   * 這些是軸的複本而非事件,不可渲染。timeline 沒有層級,丟掉它們不會捏造結構。
+   * —— 模型把**時間標籤本身**當成無時間的事件再回傳一次,等於把里程碑自己列了兩遍。
+   * 這些是時間欄的複本而非事件,不可渲染。里程碑沒有層級,丟掉它們不會捏造結構。
    */
-  it("時間標籤被當成事件回傳時不渲染(軸的複本,不是事件)", () => {
+  it("時間標籤被當成事件回傳時不渲染(時間欄的複本,不是事件)", () => {
     const withAxisDuplicates: ICarbonDiagramNode[] = [
       ...nodes,
       { label: "1966年01月" },
@@ -410,7 +420,7 @@ describe("時間軸模板(timeline renderer)", () => {
     );
     expect(block).not.toContain("未標註時間");
     // Info: (20260803 - Tzuhan) 真實事件仍在,且仍掛在自己的時間標籤下
-    expect(block).toContain("1966年01月 : 公司創立於高雄市");
+    expect(block).toContain("| 1966年01月 | 公司創立於高雄市 |");
   });
 
   it("真正沒有時間標籤的事件仍保留(不猜時間也不丟事件)", () => {
@@ -419,22 +429,23 @@ describe("時間軸模板(timeline renderer)", () => {
       [...nodes, { label: "公司股票正式掛牌上市" }],
       MILESTONE_SOURCE,
     );
-    expect(block).toContain("未標註時間 : 公司股票正式掛牌上市");
+    expect(block).toContain("| 未標註時間 | 公司股票正式掛牌上市 |");
   });
 
-  it("產出 mermaid timeline,而非 flowchart", () => {
+  it("產出 markdown 表格,而非 mermaid 圖", () => {
     const block = buildCarbonDiagramBlock(
       CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
       nodes,
       MILESTONE_SOURCE,
     );
-    expect(block).toContain("```mermaid");
-    expect(block).toContain("timeline");
+    expect(block).not.toContain("```mermaid");
     expect(block).not.toContain("flowchart");
-    expect(block).toContain("1966年01月 : 公司創立於高雄市");
+    expect(block).toContain("| 時間 | 事件 |");
+    expect(block).toContain("| --- | --- |");
+    expect(block).toContain("| 1966年01月 | 公司創立於高雄市 |");
   });
 
-  it("同一時間標籤的多個事件併為一列", () => {
+  it("同一時間標籤的多個事件各佔一列,時間只寫在第一列", () => {
     const block = buildCarbonDiagramBlock(
       CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
       [
@@ -444,11 +455,21 @@ describe("時間軸模板(timeline renderer)", () => {
       ],
       MILESTONE_SOURCE,
     );
-    const row = block.split("\n").find((line) => line.includes("1968年06月"))!;
-    expect(row.split(" : ")).toHaveLength(3);
+    /**
+     * Info: (20260811 - Emily) 續列的時間欄留空 —— 與原文照錄表格的縱向合併慣例一致,
+     * 也讓 annotateTable 把欄寬讓給事件欄(把時間逐列重複正是 20 第 3 張票在修的事)。
+     */
+    expect(block).toContain(
+      "| 1968年06月 | 榮獲經濟部中央標準局鍍鋅鋼管正字標記 |",
+    );
+    expect(block).toContain("|  | 榮獲經濟部中央標準局黑鋼管正字標記 |");
+    // Info: (20260811 - Emily) 兩個事件兩列,不是併成一列
+    expect(
+      rowsOf(block).filter((row) => row.includes("正字標記")),
+    ).toHaveLength(2);
   });
 
-  it("時間標籤不必自己也是節點(timeline 的 parent 語意與樹不同)", () => {
+  it("時間標籤不必自己也是節點(里程碑的 parent 語意與樹不同)", () => {
     const result = validateDiagramNodes(
       CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
       nodes,
@@ -468,32 +489,33 @@ describe("時間軸模板(timeline renderer)", () => {
     expect(result.offendingLabels).toEqual(["1965年12月"]);
   });
 
-  it("沒有時間標籤的事件不丟棄,歸入未標註時間", () => {
-    const block = buildCarbonDiagramBlock(
-      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
-      [...nodes, { label: "公司股票正式掛牌上市" }],
-      MILESTONE_SOURCE,
-    );
-    expect(block).toContain("未標註時間 : 公司股票正式掛牌上市");
-  });
-
-  it("事件文字內的冒號換掉,避免撐破 timeline 的分隔語法", () => {
+  /**
+   * Info: (20260811 - Emily) 要逸出的字元換了。
+   *
+   * timeline 用冒號分隔時間與事件,所以原本必須把事件文字裡的冒號換成連字號。
+   * 表格用 `|` 分隔儲存格 —— 現在要逸出的是直線,而冒號沒有語意可以留原樣。
+   * 原文「品管分等檢驗甲等」那類帶冒號的句子因此不再被改寫。
+   */
+  it("事件文字內的直線逸出,冒號保持原樣", () => {
     const source =
-      "1966年01月 資本額:捌拾萬元 公司創立於高雄市 1968年06月 榮獲正字標記 1988年12月 掛牌上市";
+      "1966年01月 資本額:捌拾萬元 公司創立於高雄市 1968年06月 榮獲正字標記|甲等 1988年12月 掛牌上市";
     const block = buildCarbonDiagramBlock(
       CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
       [
         { label: "資本額:捌拾萬元", parent: "1966年01月" },
         { label: "公司創立於高雄市", parent: "1966年01月" },
-        { label: "榮獲正字標記", parent: "1968年06月" },
+        { label: "榮獲正字標記|甲等", parent: "1968年06月" },
       ],
       source,
     );
-    const row = block.split("\n").find((line) => line.includes("1966年01月"))!;
-    // Info: (20260730 - Tzuhan) 該時間點有兩個事件,故為「時間 : 事件 : 事件」三段;
-    // Info: (20260730 - Tzuhan) 重點是原本事件文字裡的冒號已換成連字號,不會多切出一段
-    expect(row.split(" : ")).toHaveLength(3);
-    expect(row).toContain("資本額-捌拾萬元");
+    // Info: (20260811 - Emily) 冒號原樣保留
+    expect(block).toContain("| 1966年01月 | 資本額:捌拾萬元 |");
+    // Info: (20260811 - Emily) 直線逸出,不會多切出一欄
+    expect(block).toContain("| 1968年06月 | 榮獲正字標記\\|甲等 |");
+    rowsOf(block).forEach((row) => {
+      // Info: (20260811 - Emily) 每一列都是「時間 | 事件」兩欄(逸出的直線不算欄位邊界)
+      expect(row.replace(/\\\|/g, "").split("|")).toHaveLength(4);
+    });
   });
 });
 
@@ -684,7 +706,31 @@ describe("時間軸的最少事件數(實測回歸)", () => {
 // Info: (20260730 - Tzuhan) 回 UNKNOWN 就直接顯示 "Mermaid Syntax Error"。實測 timeline 因未列入型別清單而全數被擋,
 // Info: (20260730 - Tzuhan) 圖從未有機會渲染 —— 產生器測到底也測不出這個缺口,故在此把兩端接起來。
 describe("產出的圖表可被前端型別偵測接受", () => {
-  it("timeline 區塊被辨識為 TIMELINE,而非 UNKNOWN", () => {
+  /**
+   * Info: (20260811 - Emily) 里程碑改成表格之後,這一條拆成兩件事。
+   *
+   * 原本它同時測了兩件:「里程碑模板會產出 mermaid」與「detectChartType 認得 timeline」。
+   * 前者已經不成立(改表格了),但後者仍要留著 —— 那是 20260730 實測過的缺口:
+   * timeline 未列入型別清單時全數被擋,圖從未有機會渲染。
+   * 使用者手動寫的 timeline、或其他模板日後改回圖表,都還會走到那條路。
+   * 所以改成直接對一段 timeline 語法斷言,不再經由里程碑產生器。
+   */
+  it("timeline 語法被辨識為 TIMELINE,而非 UNKNOWN", () => {
+    const block = [
+      "```mermaid",
+      "timeline",
+      "    1966年01月 : 公司創立於高雄市",
+      "    1968年06月 : 榮獲經濟部中央標準局鍍鋅鋼管正字標記",
+      "```",
+    ].join("\n");
+
+    const chart = extractMermaidChart(block);
+
+    expect(chart).not.toBe("");
+    expect(detectChartType(chart)).toBe(MermaidChartType.TIMELINE);
+  });
+
+  it("里程碑區塊不再是 mermaid 圖(改為表格,見上方里程碑模板)", () => {
     const block = buildCarbonDiagramBlock(
       CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
       [
@@ -694,9 +740,9 @@ describe("產出的圖表可被前端型別偵測接受", () => {
       ],
       MILESTONE_SOURCE,
     );
-    const chart = extractMermaidChart(block);
-    expect(chart).not.toBe("");
-    expect(detectChartType(chart)).toBe(MermaidChartType.TIMELINE);
+
+    expect(extractMermaidChart(block)).toBe("");
+    expect(block).toContain("| 時間 | 事件 |");
   });
 
   it("flowchart 區塊被辨識為 FLOWCHART", () => {
