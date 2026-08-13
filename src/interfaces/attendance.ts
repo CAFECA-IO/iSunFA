@@ -2,6 +2,7 @@ import {
   AttendanceDayStatus,
   AttendanceExceptionType,
   PunchType,
+  ShiftPatternKind,
   WorkDayType,
 } from "@/constants/attendance";
 
@@ -136,4 +137,61 @@ export interface IAttendanceEvaluation {
    * 答案在欄位裡，不在某個人的記憶裡。心智模型同 `piiAlgorithm`。
    */
   engineVersion: number;
+}
+
+/**
+ * Info: (20260813 - Julian) ===== 打卡流程（W3）=====
+ */
+
+/**
+ * Info: (20260813 - Julian) 打卡請求。**刻意沒有時間欄位。**
+ *
+ * `punchedAt` 一律由伺服器產生（護欄 G1）—— 竄改打卡時間是這個系統
+ * 價值最高的攻擊，而只要 client 傳得進來，它就永遠擋不住。
+ */
+export interface IPunchRequest {
+  punchType: PunchType;
+  latitude: number;
+  longitude: number;
+  accuracyMeters?: number;
+}
+
+// Info: (20260813 - Julian) 地點清單（A5）。前端用它畫地圖圓圈與顯示「距離 X 公尺」
+export interface IWorkLocationSummary {
+  id: string;
+  code: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  radiusMeters: number;
+}
+
+/**
+ * Info: (20260813 - Julian) 圍欄外被拒時一併回傳的資訊（403 payload）。
+ *
+ * 收到這個 403 的人正站在某處試圖上班。回應必須讓他立刻知道
+ * 「我離大漢溪橋梁工區 340 公尺，要再走近一點」，而不是「系統說我不能打卡」。
+ * 這兩個欄位免解密就拿得到 —— `distanceMeters` 是「有多接近」不是「在哪裡」。
+ */
+export interface IOutOfFencePayload {
+  nearestLocationName: string;
+  distanceMeters: number;
+  radiusMeters: number;
+}
+
+// Info: (20260813 - Julian) 今日狀態（A1 成功後與 A2）
+export interface ITodayStatus {
+  employeeId: string;
+  employeeNo: string;
+  name: string;
+  workDate: string;
+  /** Info: (20260813 - Julian) 當日班別；無排班時為 null，此時前端顯示「今日無排班」 */
+  shift: IShiftWindow | null;
+  shiftName: string | null;
+  shiftKind: ShiftPatternKind | null;
+  /** Info: (20260813 - Julian) 已上班且未下班 */
+  onSite: boolean;
+  firstInMinute: number | null;
+  lastOutMinute: number | null;
+  workLocationName: string | null;
 }

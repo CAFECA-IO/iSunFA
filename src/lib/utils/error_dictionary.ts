@@ -1024,6 +1024,47 @@ export const API_ERRORS = {
   } as IErrorDef,
 
   /**
+   * Info: (20260813 - Julian) 定位精度不足以判定。
+   *
+   * 訊息刻意寫成「請重試」而不是「你不在現場」：這是**證據品質不足**
+   * （還無法判定他到了），不是**判他沒到**。對站在工地上打不了卡的人，
+   * 這兩句話的意思完全不同。
+   */
+  VA_PUNCH_LOW_ACCURACY: {
+    code: "VA000042",
+    message: "Location accuracy is too low, please try again",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  // Info: (20260813 - Julian) 重複上班卡，或未上班就先下班
+  VA_PUNCH_INVALID_STATE: {
+    code: "VA000043",
+    message: "Punch does not match the current attendance state",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260813 - Julian) 不在任何打卡地點的圍欄內。
+   *
+   * 圍欄是「到班」這個事實的定義本身 —— 人不在登記的地點，
+   * 不是「到班了但有疑慮」，是到班這件事沒有發生。
+   * 回應以 `jsonFailWithPayload` 帶上最近地點與距離：收到這個 403 的人
+   * 正站在某處試圖上班，「離工區 340 公尺」比「不能打卡」有用得多。
+   */
+  FO_PUNCH_OUT_OF_FENCE: {
+    code: "FO000009",
+    message: "You are outside every registered work location",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+
+  // Info: (20260813 - Julian) 帳本尚未設定任何打卡地點：設定問題，不是位置問題
+  NF_WORK_LOCATION: {
+    code: "NF000018",
+    message: "No work location is configured for this account book",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  /**
    * Info: (20260813 - Julian) 同一帳本內有多筆員工檔的公司信箱只差大小寫。
    *
    * `@@unique([accountBookId, email])` 大小寫敏感，因此這種資料寫得進去。
