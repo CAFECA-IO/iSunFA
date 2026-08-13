@@ -36,6 +36,7 @@ export default function JournalScanView({
     pay,
     paymentSourceNode,
     paysWithTeamQuota,
+    teamAvailableCredits,
   } = useAnalysisPayment();
 
   const {
@@ -296,6 +297,7 @@ export default function JournalScanView({
       <PaymentConfirmModal
         extraContent={paymentSourceNode}
         paidByTeamQuota={paysWithTeamQuota}
+        teamAvailableCredits={teamAvailableCredits}
         isOpen={showConfirmModal}
         onClose={() => {
           if (

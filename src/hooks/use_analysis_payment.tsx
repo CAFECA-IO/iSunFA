@@ -12,6 +12,7 @@ import {
   type IOrderPayload,
 } from "@/hooks/use_order_transaction";
 import { useTeamQuotaPayment } from "@/hooks/use_team_quota_payment";
+import { resolveQuotaAvailable } from "@/lib/quota/spend_split";
 
 /**
  * Info: (20260813 - Luphia) 分析類消費的統一付款入口（設計書 §5.6）。
@@ -99,6 +100,25 @@ export const useAnalysisPayment = () => {
     ? team.errorMessage
     : personal.errorMessage;
 
+  /**
+   * Info: (20260813 - Luphia) 所選團隊的可用額度 = 雙視窗剩餘的**較小值** + 分配給我的點數。
+   * 取較小值而非相加：兩個視窗同時生效，週額度再多也不能突破 5 小時上限。
+   * 交給 modal 判斷夠不夠付——固定價格的訂單不接受封頂扣款（設計書 §5.4），
+   * 因此「不足」就該在按下去之前擋住，而不是送出後拿一個 402 回來。
+   */
+  const teamAvailableCredits = useMemo(() => {
+    if (!team.teamBalance) return null;
+    const available = resolveQuotaAvailable({
+      limit5h: BigInt(team.teamBalance.quota5h.limit),
+      used5h: BigInt(team.teamBalance.quota5h.used),
+      limitWeek: BigInt(team.teamBalance.quotaWeek.limit),
+      usedWeek: BigInt(team.teamBalance.quotaWeek.used),
+    });
+    return (
+      available + BigInt(team.teamBalance.allocationBalance || "0")
+    ).toString();
+  }, [team.teamBalance]);
+
   const paymentSourceNode = (
     <PaymentSourceSelector
       source={source}
@@ -120,6 +140,8 @@ export const useAnalysisPayment = () => {
      * （設計書 §5.6）：團隊額度付款不動個人點數，個人餘額的試算與攔阻都不適用。
      */
     paysWithTeamQuota: useTeamSource,
+    // Info: (20260813 - Luphia) 團隊可用額度（null = 尚未選定團隊或取不到）
+    teamAvailableCredits,
     /**
      * Info: (20260813 - Luphia) 沿用個人路徑的錯誤設定器：呼叫端用它顯示付款前的
      * 自訂驗證訊息（見 analysis_view）。團隊路徑的錯誤由 hook 內部管理。

@@ -69,6 +69,7 @@ export const AiChat = () => {
     pay,
     paymentSourceNode,
     paysWithTeamQuota,
+    teamAvailableCredits,
   } = useAnalysisPayment();
 
   // Info: (20260213 - Julian) 清除 Object URLs 避免記憶體洩漏
@@ -472,6 +473,7 @@ export const AiChat = () => {
       <PaymentConfirmModal
         extraContent={paymentSourceNode}
         paidByTeamQuota={paysWithTeamQuota}
+        teamAvailableCredits={teamAvailableCredits}
         isOpen={isPaymentModalOpen}
         onClose={() => {
           if (

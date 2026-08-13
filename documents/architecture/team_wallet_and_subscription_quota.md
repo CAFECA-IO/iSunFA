@@ -2,7 +2,7 @@
 
 > **Date**: August 2026
 > **Author**: Luphia
-> **Version**: 1.14 (Draft) — 1.1 新增 §5.3 費思計費；1.2–1.4 費率迭代；1.5 拍板費率與點值下限；1.6 拍板 C 案混合制（離鏈營運 + 每日 merkle 鏈上錨定，Phase 2 為 1:1 backing）；1.7 §5.3 拍板「選定帳本後才能使用費思」，計費團隊由 `AccountBook.teamId` 推導，client 不再自報 `teamId`；1.8 新增 §5.4 拆帳與封頂預扣（有餘額就放行、額度用光才扣錢包）；1.9 新增 §5.5 碳盤查計費；1.10 碳盤查四條 LLM 路徑全數接上；1.11 無帳本會話改扣個人鏈上點數（建單 → 402 → 付款 → 重送）；1.12 §5.4 新增逐功能扣款順序，物流碳足跡優先扣分配點數；1.13 新增 §5.6 多團隊成員的支付歸屬；1.14 §5.6 六個付款呼叫點統一至 useAnalysisPayment
+> **Version**: 1.15 (Draft) — 1.1 新增 §5.3 費思計費；1.2–1.4 費率迭代；1.5 拍板費率與點值下限；1.6 拍板 C 案混合制（離鏈營運 + 每日 merkle 鏈上錨定，Phase 2 為 1:1 backing）；1.7 §5.3 拍板「選定帳本後才能使用費思」，計費團隊由 `AccountBook.teamId` 推導，client 不再自報 `teamId`；1.8 新增 §5.4 拆帳與封頂預扣（有餘額就放行、額度用光才扣錢包）；1.9 新增 §5.5 碳盤查計費；1.10 碳盤查四條 LLM 路徑全數接上；1.11 無帳本會話改扣個人鏈上點數（建單 → 402 → 付款 → 重送）；1.12 §5.4 新增逐功能扣款順序，物流碳足跡優先扣分配點數；1.13 新增 §5.6 多團隊成員的支付歸屬；1.14 §5.6 六個付款呼叫點統一至 useAnalysisPayment；1.15 §5.4 訂單類扣款禁用封頂（`allowPartial` 必填），付款前以所選來源的可用額度攔阻並停用支付鈕
 > **Status**: Proposed
 > **Branch**: `feature/team_wallet_subscription_quota`
 > **關聯 ADR**: [ADR 015: 離鏈團隊錢包帳本](decisions/015_offchain_team_wallet_ledger.md)
@@ -421,6 +421,10 @@ spendCredits(identity, teamId, featureCode, cost, idempotencyKey)
 退差額則**先退錢包**再退額度（`splitRefund`）：分配點數是資產，額度到期即歸零，退回額度對用戶幾乎沒有價值。失敗補償（`refundCredits`）兩邊都要沖銷——只沖一邊會留下「錢包扣了但功能失敗」的懸帳，而那一半正是用戶花錢買的。
 
 未列於 `FEATURE_SPEND_PRIORITY` 的功能一律 `QUOTA_FIRST`——新增功能預設沿用對用戶有利的順序，要改成 `ALLOCATION_FIRST` 必須明寫，避免悄悄多花用戶買來的點數。順序由 `featureCode` 決定，因此物流碳足跡以專屬代碼 `LOGISTICS_CARBON` 記帳（自訂單的 `data.category` 判定），全部記成 `AI_ANALYSIS` 就分不出來也對不了帳。
+
+**封頂只適用於按用量計量的功能**（費思、碳盤查）。固定價格的消費——分析報告、物流查詢等**訂單類**扣款——必須傳 `allowPartial: false`（`ISpendParams`，**必填、無預設值**：兩種答案各自都會在對方的情境釀成帳務錯誤，沒有一個安全的預設可選，新增呼叫點必須先確認有沒有結算步驟）：它們沒有結算步驟，封頂會讓一張 5 點的訂單以 1 點成交，而沒有任何流程會回頭補收那 4 點。那是帳務上的漏，不是體貼。因此訂單類在餘額不足時整筆擋下，回 402。
+
+相對地，前端在**按下支付之前**就要知道付不付得起：`useAnalysisPayment` 回傳所選團隊的可用額度（雙視窗剩餘的較小值 + 分配點數），`PaymentConfirmModal` 依當前來源（團隊／個人）比對金額，不足即顯示「點數不足」並停用支付鈕；個人來源在提示內附加購入口。讓用戶按下去、建了一張單、再收到 402，等於要他自己試錯，還在資料庫留下待處理訂單。
 
 > 純函式層在 `src/lib/quota/spend_split.ts`（`resolveQuotaAvailable` / `splitSpend` / `splitRefund`），不碰 DB 與時鐘，可單測；`ISpendResult` 增列 `quotaAmount` / `allocationAmount` 拆帳明細，`ISettleResult` 增列 `toppedUp`。
 

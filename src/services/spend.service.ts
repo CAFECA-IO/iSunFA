@@ -46,6 +46,20 @@ export interface ISpendParams {
   idempotencyKey: string;
   // Info: (20260807 - Luphia) 時間由呼叫端注入（epoch 秒），維持視窗數學的決定論與可測性
   nowSec: number;
+  /**
+   * Info: (20260813 - Luphia) 是否允許「預扣封頂」（設計書 §5.4）。
+   *
+   * `true` 供**按用量計量**的功能使用（費思、碳盤查）：餘額不足全額時先放行、
+   * 結算階段再追補差額，因此少扣不會變成少收。
+   *
+   * 固定價格的消費（分析報告、物流查詢等訂單）必須傳 `false`：它們沒有結算步驟，
+   * 封頂扣款會讓一張 10 點的訂單以 3 點成交而無人補收——那是帳務上的漏，
+   * 不是體驗上的寬容。
+   *
+   * 刻意**不給預設值**：兩種答案各自都會在對方的情境釀成帳務錯誤，
+   * 沒有一個「安全的預設」可選。新增呼叫點時必須先想清楚有沒有結算步驟。
+   */
+  allowPartial: boolean;
 }
 
 export interface IRefundParams {
@@ -248,7 +262,15 @@ export async function resolvePayingTeamId(
 export async function spendCredits(
   params: ISpendParams,
 ): Promise<ISpendResult> {
-  const { teamId, userId, featureCode, cost, idempotencyKey, nowSec } = params;
+  const {
+    teamId,
+    userId,
+    featureCode,
+    cost,
+    idempotencyKey,
+    nowSec,
+    allowPartial,
+  } = params;
 
   // Info: (20260807 - Luphia) Fail Fast：非正整數的扣款金額直接凍結
   if (typeof cost !== "bigint" || cost <= BigInt(0)) {
@@ -309,6 +331,25 @@ export async function spendCredits(
       // Info: (20260813 - Luphia) 逐功能的扣款順序（設計書 §5.4）：物流碳足跡優先扣分配點數
       resolveSpendPriority(featureCode),
     );
+
+    /**
+     * Info: (20260813 - Luphia) 固定價格的消費不接受封頂（allowPartial = false）：
+     * 沒有結算步驟就沒有人補收差額，放行等於少收。此時與「完全無餘額」同樣回 402，
+     * 前端據此提示不足並停用支付按鈕。
+     */
+    if (!allowPartial && split.hold < cost) {
+      throw new QuotaExceededError(
+        API_ERRORS.TW_QUOTA_EXCEEDED,
+        buildQuotaExceededPayload({
+          nowSec,
+          limit5h,
+          used5h,
+          limitWeek,
+          usedWeek,
+          walletBalance,
+        }),
+      );
+    }
 
     if (split.hold <= BigInt(0)) {
       // Info: (20260813 - Luphia) 訂閱額度與分配點數同時見底才是真的用盡 → 402

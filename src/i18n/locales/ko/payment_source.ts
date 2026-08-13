@@ -4,6 +4,10 @@ export const paymentSource = {
   personal: "개인 크레딧",
   single_team:
     "'{{team}}'의 구독 한도와 배정 크레딧에서 결제됩니다(서명 불필요).",
+  team_insufficient:
+    "이 팀의 사용 가능 한도가 부족합니다(사용 가능 {{available}}, 필요 {{cost}}). 한도 초기화를 기다리거나 관리자에게 크레딧 배정을 요청하거나 개인 크레딧으로 결제하세요.",
+  personal_insufficient:
+    "개인 크레딧이 부족합니다(잔액 {{available}}, 필요 {{cost}}). 크레딧을 추가 구매하거나 팀 한도로 결제하세요.",
   quota_5h: "최근 5시간 남은 한도",
   quota_week: "이번 주 남은 한도",
   allocation_balance: "회원님에게 배정된 크레딧: {{balance}}",

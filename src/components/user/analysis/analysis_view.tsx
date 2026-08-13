@@ -103,6 +103,7 @@ export default function AnalysisView() {
     setErrorMessage,
     paymentSourceNode,
     paysWithTeamQuota,
+    teamAvailableCredits,
   } = useAnalysisPayment();
 
   // Info: (20260419 - Luphia) 衍生變數 (Derived States)
@@ -1022,6 +1023,7 @@ export default function AnalysisView() {
               </>
             }
             paidByTeamQuota={paysWithTeamQuota}
+            teamAvailableCredits={teamAvailableCredits}
             isLoading={uiState.isLoading}
             status={workflowStatus}
             errorMessage={errorMessage}

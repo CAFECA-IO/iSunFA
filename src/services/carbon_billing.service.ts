@@ -169,6 +169,8 @@ export async function runBilledCarbonTask<T>(
     cost: holdCredits,
     idempotencyKey,
     nowSec,
+    // Info: (20260813 - Luphia) 按 token 計量、有結算步驟，餘額不足時封頂放行（設計書 §5.4）
+    allowPartial: true,
   });
 
   let outcome: { result: T; usage: ICapturedLlmUsage };

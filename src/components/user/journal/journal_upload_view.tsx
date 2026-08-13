@@ -54,6 +54,7 @@ export default function JournalUploadView({
     pay,
     paymentSourceNode,
     paysWithTeamQuota,
+    teamAvailableCredits,
   } = useAnalysisPayment();
 
   const {
@@ -354,6 +355,7 @@ export default function JournalUploadView({
       <PaymentConfirmModal
         extraContent={paymentSourceNode}
         paidByTeamQuota={paysWithTeamQuota}
+        teamAvailableCredits={teamAvailableCredits}
         isOpen={showConfirmModal}
         onClose={() => {
           if (

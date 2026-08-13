@@ -77,6 +77,11 @@ export async function POST(
         cost: resolveOrderSpendCost(BigInt(order.amount)),
         idempotencyKey,
         nowSec: Math.floor(Date.now() / 1000),
+        /**
+         * Info: (20260813 - Luphia) 訂單是固定價格、沒有結算步驟（設計書 §5.4）：
+         * 不接受封頂扣款，否則一張 10 點的訂單會以剩餘的 3 點成交而無人補收。
+         */
+        allowPartial: false,
       });
     } catch (error) {
       /**

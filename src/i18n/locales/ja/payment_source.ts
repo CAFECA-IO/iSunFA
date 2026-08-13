@@ -4,6 +4,10 @@ export const paymentSource = {
   personal: "個人のクレジット",
   single_team:
     "「{{team}}」のサブスクリプション枠と割当クレジットから支払われます（署名不要）。",
+  team_insufficient:
+    "このチームの利用可能枠が不足しています（利用可能 {{available}} ポイント／必要 {{cost}} ポイント）。枠のリセットをお待ちいただくか、管理者にクレジットの割当を依頼するか、個人のクレジットでお支払いください。",
+  personal_insufficient:
+    "個人のクレジットが不足しています（残高 {{available}} ポイント／必要 {{cost}} ポイント）。クレジットを追加購入するか、チームの枠でお支払いください。",
   quota_5h: "直近 5 時間の残り枠",
   quota_week: "今週の残り枠",
   allocation_balance: "お客様への割当クレジット：{{balance}} ポイント",

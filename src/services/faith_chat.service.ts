@@ -107,6 +107,8 @@ export async function runFaithBilledChat(
     cost: holdCredits,
     idempotencyKey,
     nowSec: params.nowSec,
+    // Info: (20260813 - Luphia) 按 token 計量、有結算步驟，餘額不足時封頂放行（設計書 §5.4）
+    allowPartial: true,
   });
 
   // Info: (20260808 - Luphia) 2. 呼叫 LLM；失敗即全額退還預扣，不留懸帳

@@ -65,6 +65,8 @@ const BASE_PARAMS = {
   cost: BigInt(3),
   idempotencyKey: "faith:msg-1",
   nowSec: NOW_SEC,
+  // Info: (20260813 - Luphia) 基準情境沿用費思（計量型）：允許封頂預扣
+  allowPartial: true,
 };
 
 describe("spendCredits", () => {
@@ -181,6 +183,33 @@ describe("spendCredits", () => {
     expect(result.source).toBe(SPEND_SOURCE.SUBSCRIPTION_QUOTA);
     expect(result.amount).toBe("1");
     expect(teamWalletRepo.consumeAllocation).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260813 - Luphia) 固定價格的消費（分析報告、物流查詢等訂單）不能封頂：
+   * 它們沒有結算步驟，一旦以 1 點成交，剩下的 2 點就沒有任何流程會回頭補收——
+   * 那是帳務上的漏，不是體貼。因此 allowPartial: false 時餘額不足即整筆擋下。
+   */
+  it("rejects a capped hold when the caller forbids partial payment", async () => {
+    asMock(teamQuotaUsageRepo.sumWindowUsage).mockResolvedValue({
+      used5h: BigInt(99),
+      usedWeek: BigInt(10),
+    });
+
+    const error = await spendCredits({
+      ...BASE_PARAMS,
+      allowPartial: false,
+    }).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(QuotaExceededError);
+    expect(teamQuotaUsageRepo.createUsage).not.toHaveBeenCalled();
+    expect(teamWalletRepo.consumeAllocation).not.toHaveBeenCalled();
+  });
+
+  // Info: (20260813 - Luphia) 餘額足夠時 allowPartial: false 不改變任何行為
+  it("pays fixed-price orders in full when the balance covers them", async () => {
+    const result = await spendCredits({ ...BASE_PARAMS, allowPartial: false });
+    expect(result.amount).toBe("3");
   });
 
   it("uses the wallet alone once the quota is fully consumed", async () => {

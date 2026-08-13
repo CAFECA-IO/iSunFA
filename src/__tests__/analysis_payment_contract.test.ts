@@ -99,6 +99,27 @@ describe("analysis payment module", () => {
     expect(offenders).toEqual([]);
   });
 
+  /**
+   * Info: (20260813 - Luphia) 告知來源還不夠：團隊來源要一併把該團隊的可用額度交給 modal。
+   * 少了它，modal 只有個人餘額可比對，於是「團隊額度不足」這件事在按下支付之前
+   * 完全看不出來——用戶按下去，server 回 402，訂單留在資料庫裡。
+   */
+  it("gives the modal the team quota available for the selected team", () => {
+    const offenders = files
+      .filter((file) => {
+        const relative = file.slice(process.cwd().length + 1);
+        if (relative === join("src", "hooks", "use_analysis_payment.tsx")) {
+          return false;
+        }
+        const source = readFileSync(file, "utf8");
+        if (!/useAnalysisPayment\s*\(/.test(source)) return false;
+        return !/teamAvailableCredits=\{teamAvailableCredits\}/.test(source);
+      })
+      .map((file) => file.slice(process.cwd().length + 1));
+
+    expect(offenders).toEqual([]);
+  });
+
   it("covers the six known payment screens", () => {
     const screens = files.filter((file) =>
       /useAnalysisPayment\s*\(/.test(readFileSync(file, "utf8")),
