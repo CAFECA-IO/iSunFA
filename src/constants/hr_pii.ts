@@ -75,6 +75,20 @@ export const HR_PII_FIELD_TIER = {
   accountHolderCipher: PiiTier.RESTRICTED,
   // Info: (20260811 - Julian) EmergencyContact
   altPhoneCipher: PiiTier.CONFIDENTIAL,
+  /**
+   * Info: (20260813 - Julian) AttendancePunch —— 打卡當下的座標。
+   *
+   * 「某人某時在某座標」是行蹤資料，敏感度不低於通訊地址：住址是靜態的一個點，
+   * 打卡座標序列是動態的行蹤。列為 CONFIDENTIAL 而非 RESTRICTED 是因為
+   * ADR 018 對 RESTRICTED 的定義是「單獨即可用於冒用身分或盜用金流」，座標做不到
+   * —— 而 RESTRICTED 會強制每次讀取寫 AuditLog，現場人數看板每 30 秒查一次，
+   * 那張表會被沖爆（正是 ADR 018 §6 明確要避免的失敗模式）。
+   *
+   * 對外查詢一律改讀非敏感的 `workLocationId`（指向公司地點，不是個人座標），
+   * 完整明文只在「員工看自己的紀錄」與「HR 調閱單筆爭議紀錄」時解密。
+   */
+  latitudeCipher: PiiTier.CONFIDENTIAL,
+  longitudeCipher: PiiTier.CONFIDENTIAL,
 } as const satisfies Record<string, PiiTier>;
 
 export type HrPiiCipherField = keyof typeof HR_PII_FIELD_TIER;
@@ -91,4 +105,6 @@ export enum HrPiiTable {
   DEPENDENT = "Dependent",
   BANK_ACCOUNT = "BankAccount",
   EMERGENCY_CONTACT = "EmergencyContact",
+  // Info: (20260813 - Julian) 簽到系統的打卡紀錄，持有加密的經緯度
+  ATTENDANCE_PUNCH = "AttendancePunch",
 }
