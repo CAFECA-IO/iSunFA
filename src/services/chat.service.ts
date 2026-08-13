@@ -48,6 +48,12 @@ export interface ICarbonChatStructuredReply {
     templateId: CarbonChartTemplateEnum;
     paragraphId: string;
   } | null;
+  /**
+   * Info: (20260813 - Luphia) 碳盤查計費（設計書 §5.5）的結算依據：SDK 回報的 token 用量。
+   * 與費思同一套「預扣—結算」，故此處必須把用量原封帶出，不在服務層自行估算。
+   * SDK 未回報時為 null，呼叫端據此收斂為最低扣點而非憑空推估。
+   */
+  usage: ILlmUsage | null;
 }
 
 // Info: (20260714 - Tzuhan) readyParagraphId 的無段落標記(LLM enum 選項之一)
@@ -259,6 +265,27 @@ export interface ILlmUsage {
   inputTokens: number;
   outputTokens: number;
   totalTokens: number;
+}
+
+/**
+ * Info: (20260813 - Luphia) 自 SDK 回應取出用量摘要；缺欄位一律以 0 補齊
+ * （計費側會把 0 收斂為最低 1 點，絕不憑空放大）。
+ */
+export function toLlmUsage(
+  usageMetadata:
+    | {
+        promptTokenCount?: number;
+        candidatesTokenCount?: number;
+        totalTokenCount?: number;
+      }
+    | undefined,
+): ILlmUsage | null {
+  if (!usageMetadata) return null;
+  return {
+    inputTokens: usageMetadata.promptTokenCount ?? 0,
+    outputTokens: usageMetadata.candidatesTokenCount ?? 0,
+    totalTokens: usageMetadata.totalTokenCount ?? 0,
+  };
 }
 
 export interface IChatGenerationOptions {
@@ -757,6 +784,8 @@ ${outlineCatalog}${langInstruction}`;
       },
     );
     const raw = response.response.text();
+    // Info: (20260813 - Luphia) 用量與解析結果無關：即使 JSON 解析失敗降級，這一輪的 tokens 一樣付了
+    const usage = toLlmUsage(response.response.usageMetadata);
 
     // Info: (20260714 - Tzuhan) 永不直接採信 LLM 輸出，JSON + Zod 護欄；解析失敗降級為純文字回覆(不中斷對話)
     try {
@@ -800,6 +829,7 @@ ${outlineCatalog}${langInstruction}`;
         extraction,
         revisionParagraphId,
         chartRequest,
+        usage,
       };
     } catch {
       return {
@@ -808,6 +838,7 @@ ${outlineCatalog}${langInstruction}`;
         extraction: null,
         revisionParagraphId: null,
         chartRequest: null,
+        usage,
       };
     }
   }

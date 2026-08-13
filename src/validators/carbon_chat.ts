@@ -31,6 +31,8 @@ export const CarbonChatRequestSchema = z
       .max(100)
       .optional(),
     currentStep: z.string().max(1000).optional(),
+    // Info: (20260813 - Luphia) 計費冪等鍵（設計書 §5.5）：同一則訊息重送不重複扣點
+    clientMessageId: z.string().min(1).max(128).optional(),
     language: z.string().max(20).optional(),
     channel: z.string().max(200).optional(),
     recipientPublicKey: z.string().max(300).optional(),

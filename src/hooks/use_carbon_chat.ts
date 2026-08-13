@@ -4536,6 +4536,11 @@ export const useCarbonChat = () => {
             language,
             channel: chatChannel,
             recipientPublicKey: masterKey.extendedPublicKey,
+            /**
+             * Info: (20260813 - Luphia) 計費冪等鍵（設計書 §5.5）：
+             * 同一則訊息重送（重試、雙擊）不重複扣點。
+             */
+            clientMessageId: crypto.randomUUID(),
             // Info: (20260714 - Tzuhan) 附件只帶 metadata+cid(檔案已在 Laria)；請求 body 維持輕量
             ...(attachmentsMeta.length > 0
               ? { attachments: attachmentsMeta }
