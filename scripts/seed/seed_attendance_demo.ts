@@ -15,6 +15,7 @@ import type {
  * 因此統一取鏡像即可，兩邊的同步由 `hr_enum_mirror.test.ts` 保證。
  */
 import {
+  DEMO_ACCOUNT_BOOK_ID,
   PunchType,
   PunchVerification,
   WorkDayType,
@@ -71,7 +72,13 @@ const SUSPENDED_DATE = "2026-08-07";
 // Info: (20260813 - Julian) 颱風後搶修：排班仍是休息日，但有打卡 → 判定為 OFF_DAY 且無異常
 const TYPHOON_REPAIR_DATE = "2026-08-08";
 
-const ACCOUNT_BOOK_ID = "demo-book-public-works";
+/**
+ * Info: (20260813 - Julian) 與打卡頁共用同一份帳本 ID。
+ *
+ * 種子腳本與前端各自 hardcode 一份的話，改錯一邊的症狀是
+ * 「打卡頁一片空白但資料庫裡明明有資料」—— 那極難查，因此只留一個來源。
+ */
+const ACCOUNT_BOOK_ID = DEMO_ACCOUNT_BOOK_ID;
 const TEAM_ID = "demo-team-public-works";
 
 /**

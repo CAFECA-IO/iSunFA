@@ -1,4 +1,5 @@
 import {
+  AttendanceDayPhase,
   AttendanceDayStatus,
   AttendanceExceptionType,
   PunchType,
@@ -194,4 +195,99 @@ export interface ITodayStatus {
   firstInMinute: number | null;
   lastOutMinute: number | null;
   workLocationName: string | null;
+}
+
+/**
+ * Info: (20260813 - Julian) ===== 判定結果矩陣（W6）=====
+ */
+
+/**
+ * Info: (20260813 - Julian) 矩陣裡的一格：一位員工的一個工作日。
+ *
+ * 刻意**不帶 `engineVersion`** —— 整張矩陣由同一次呼叫、同一版引擎算出，
+ * 那是矩陣的屬性不是格子的屬性。每格重複一次只是把一個事實講 372 遍。
+ */
+export interface IAttendanceDayResult {
+  workDate: string;
+  status: AttendanceDayStatus;
+  /**
+   * Info: (20260813 - Julian) 這一天算完了沒。**上色前必須看它。**
+   * `status: NORMAL` 加 `phase: UPCOMING` 的意思是「還沒開始」，不是「正常出勤」。
+   */
+  phase: AttendanceDayPhase;
+  /** Info: (20260813 - Julian) null 表示當日完全沒有排班紀錄，與「排了休假」是兩件事 */
+  dayType: WorkDayType | null;
+  shiftName: string | null;
+  shiftKind: ShiftPatternKind | null;
+  workedMinutes: number;
+  firstInMinute: number | null;
+  lastOutMinute: number | null;
+  exceptions: IAttendanceExceptionItem[];
+}
+
+// Info: (20260813 - Julian) 單一異常型別在期間內的累計
+export interface IAttendanceExceptionTally {
+  type: AttendanceExceptionType;
+  /** Info: (20260813 - Julian) 發生天數；同一天有兩種異常時，各自計一天 */
+  days: number;
+  /** Info: (20260813 - Julian) 分鐘數總和；ABSENT / MISSING_* 這類無量值的恆為 0 */
+  minutes: number;
+}
+
+/**
+ * Info: (20260813 - Julian) 一位員工在期間內的統計。
+ *
+ * `normalDays` 只數 `phase === CONCLUDED` 的那些 —— 一天還沒過完就記一筆「正常」，
+ * 是拿一個尚未成立的事實去墊高分母。未結束的日子另計於 `pendingDays`。
+ */
+export interface IAttendanceResultSummary {
+  /** Info: (20260813 - Julian) 期間內排定的上班日數（dayType = WORK） */
+  scheduledWorkDays: number;
+  /** Info: (20260813 - Julian) 上班日中已過完且無異常者 */
+  normalDays: number;
+  /** Info: (20260813 - Julian) 判定為異常的天數；進行中的日子也可能已經成立（例如已早退） */
+  exceptionDays: number;
+  /** Info: (20260813 - Julian) 上班日中尚未過完者 —— 它們的「無異常」還不是結論 */
+  pendingDays: number;
+  offDays: number;
+  noScheduleDays: number;
+  workedMinutes: number;
+  /**
+   * Info: (20260813 - Julian) **只列出真的發生過的型別。**
+   *
+   * 不補上 `{ type: SUSPICIOUS_JUMP, days: 0 }` 這種零筆記錄：瞬移偵測（G5）
+   * 本期未實作，回一個 0 等於宣稱「查過了、沒有」，而系統根本沒查。
+   * 「沒發生」與「沒檢查」不能長成同一個樣子。
+   */
+  exceptions: IAttendanceExceptionTally[];
+}
+
+export interface IAttendanceResultRow {
+  employeeId: string;
+  employeeNo: string;
+  name: string;
+  departmentName: string | null;
+  jobTitle: string | null;
+  /** Info: (20260813 - Julian) 長度與順序與 `IAttendanceResultMatrix.workDates` 逐一對應 */
+  days: IAttendanceDayResult[];
+  summary: IAttendanceResultSummary;
+}
+
+/**
+ * Info: (20260813 - Julian) A9 的回應：期間 × 員工的判定矩陣。**即時計算，不讀結果表。**
+ *
+ * `evaluatedAt` 不是裝飾。整張矩陣的判定都以這一個時間點為準（進行中的日子
+ * 判定會隨時間改變），因此「這份結果是幾點算出來的」與結果本身同等重要 ——
+ * 同 A10 現場名單要求產出時間戳的理由。
+ */
+export interface IAttendanceResultMatrix {
+  from: string;
+  to: string;
+  /** Info: (20260813 - Julian) 連續日曆日；由 from/to 展開，不由資料決定，缺漏的一天不會整欄消失 */
+  workDates: string[];
+  /** Info: (20260813 - Julian) 分鐘數的解讀基準；前端據此把 minute 轉成 HH:mm */
+  timeZone: string;
+  evaluatedAt: string;
+  engineVersion: number;
+  rows: IAttendanceResultRow[];
 }

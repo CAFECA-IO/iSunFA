@@ -13,6 +13,7 @@ import { logger } from "@/lib/utils/logger";
 import { encryptPii } from "@/lib/hr_pii_crypto";
 import { deriveShiftPatternKind } from "@/lib/attendance_rules";
 import { findNearestGeofence, IGeofenceMatch } from "@/lib/attendance_geofence";
+import { toShiftWindow } from "@/lib/attendance_schedule_view";
 import {
   minutesFromWorkDateStart,
   previousIsoDate,
@@ -22,7 +23,6 @@ import {
 import {
   IOutOfFencePayload,
   IPunchRequest,
-  IShiftWindow,
   ITodayStatus,
   IWorkLocationSummary,
 } from "@/interfaces/attendance";
@@ -33,7 +33,6 @@ import {
 import {
   attendanceScheduleRepo,
   IAttendanceScheduleRepository,
-  IShiftDayWithPattern,
 } from "@/repositories/attendance_schedule.repo";
 import {
   IWorkLocationRepository,
@@ -82,19 +81,6 @@ export class OutOfFenceError extends AppError {
     this.name = "OutOfFenceError";
   }
 }
-
-const toShiftWindow = (day: IShiftDayWithPattern): IShiftWindow | null => {
-  if (!day.shiftPattern) return null;
-  const pattern = day.shiftPattern;
-  return {
-    windowStartMinute: pattern.windowStartMinute,
-    windowEndMinute: pattern.windowEndMinute,
-    coreStartMinute: pattern.coreStartMinute,
-    coreEndMinute: pattern.coreEndMinute,
-    requiredWorkMinutes: pattern.requiredWorkMinutes,
-    breakMinutes: pattern.breakMinutes,
-  };
-};
 
 export class AttendancePunchService {
   constructor(

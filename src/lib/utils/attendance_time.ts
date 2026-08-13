@@ -67,6 +67,32 @@ export function previousIsoDate(isoDate: string): string {
 }
 
 /**
+ * Info: (20260813 - Julian) 期間的日曆日數（含頭含尾）。`to` 早於 `from` 時回 0。
+ *
+ * 用它來擋過大的查詢區間 —— **不是先展開陣列再看長度**：
+ * 「即時計算、不落地」的前提是成本有界，而一個先配置十年份陣列
+ * 再回報「區間太大」的檢查，自己就是它要防的那個成本。
+ */
+export function isoDaySpan(from: string, to: string): number {
+  return Math.max(0, toDayNumber(to) - toDayNumber(from) + 1);
+}
+
+/**
+ * Info: (20260813 - Julian) 展開成連續的日曆日。純日曆運算，不牽涉時區。
+ *
+ * 判定矩陣的欄由它決定，而不是由「資料庫裡有哪幾天」——
+ * 沒有排班也沒有打卡的那一天必須出現在矩陣裡（顯示為無排班），
+ * 若讓資料決定欄位，缺漏的一天會**整欄消失**，看起來像那天不存在。
+ */
+export function enumerateIsoDates(from: string, to: string): string[] {
+  const start = toDayNumber(from);
+  const span = isoDaySpan(from, to);
+  return Array.from({ length: span }, (unused, index) =>
+    fromDayNumber(start + index),
+  );
+}
+
+/**
  * Info: (20260813 - Julian) 某時間點相對於指定工作日當地 00:00 的分鐘數。
  *
  * 跨日班會得到 >= 1440 的值：夜班 8/12 上班、8/13 02:30 下班，

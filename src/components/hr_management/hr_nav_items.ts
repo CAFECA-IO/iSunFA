@@ -3,6 +3,7 @@ import {
   FileText,
   LayoutDashboard,
   LucideIcon,
+  MapPin,
   Repeat,
   Settings,
   Users,
@@ -45,6 +46,13 @@ export const HR_NAV_ITEMS: IHrNavItem[] = [
     href: HR_MANAGEMENT_ROUTE.MOVEMENT,
     labelKey: "hr_management.nav.movement",
     icon: Repeat,
+    disabled: false,
+  },
+  {
+    key: "attendance",
+    href: HR_MANAGEMENT_ROUTE.ATTENDANCE,
+    labelKey: "hr_management.nav.attendance",
+    icon: MapPin,
     disabled: false,
   },
   {

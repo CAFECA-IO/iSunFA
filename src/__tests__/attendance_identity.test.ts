@@ -79,6 +79,8 @@ const buildService = (stubs: IStubs): AttendanceIdentityService => {
     },
     findByAccountBookAndEmails: async () => stubs.candidates ?? [],
     linkUser: async () => stubs.linkSucceeds ?? true,
+    // Info: (20260813 - Julian) 身分橋接用不到出勤名冊；由判定矩陣的測試覆蓋
+    findRosterInPeriod: async () => [],
   };
 
   const identities: IUserIdentityRepository = {
