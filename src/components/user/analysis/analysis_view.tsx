@@ -10,10 +10,8 @@ import SuccessNotification from "@/components/common/success_notification";
 import HistorySection from "@/components/user/analysis/history_section";
 import CompanySearchInput from "@/components/common/company_search_input";
 import { getAnalysisCost, IAnalysisParams } from "@/lib/analysis/pricing";
-import {
-  useOrderTransaction,
-  IOrderPayload,
-} from "@/hooks/use_order_transaction";
+import { IOrderPayload } from "@/hooks/use_order_transaction";
+import { useAnalysisPayment } from "@/hooks/use_analysis_payment";
 import { getPeriodDateRange } from "@/lib/analysis/period";
 import {
   INTERNAL_CATEGORIES,
@@ -95,14 +93,16 @@ export default function AnalysisView() {
   } | null>(null);
   const [taxIdInput, setTaxIdInput] = useState("");
 
+  // Info: (20260813 - Luphia) 統一付款入口（設計書 §5.6）：團隊額度 / 個人點數兩種來源
   const {
     workflowStatus,
     txHash,
-    resetTransaction,
-    executeOrderTransaction,
+    reset: resetPayment,
+    pay,
     errorMessage,
     setErrorMessage,
-  } = useOrderTransaction();
+    paymentSourceNode,
+  } = useAnalysisPayment();
 
   // Info: (20260419 - Luphia) 衍生變數 (Derived States)
   const currentCategories =
@@ -202,7 +202,7 @@ export default function AnalysisView() {
   // Info: (20260419 - Luphia) 處理函式 (Handlers)
   const handleGenerate = () => {
     setUiState((prev) => ({ ...prev, isPaymentModalOpen: true }));
-    resetTransaction();
+    resetPayment();
   };
 
   const handleAnalysisWorkflow = async () => {
@@ -260,20 +260,16 @@ export default function AnalysisView() {
       items: payloadItems,
     };
 
-    const success = await executeOrderTransaction(
-      payload,
-      finalCost,
-      async () => {
-        setTimeout(() => {
-          setUiState((prev) => ({
-            ...prev,
-            isPaymentModalOpen: false,
-            showSuccessNotification: true,
-          }));
-          setActiveTab("history");
-        }, 2000);
-      },
-    );
+    const success = await pay(payload, finalCost, async () => {
+      setTimeout(() => {
+        setUiState((prev) => ({
+          ...prev,
+          isPaymentModalOpen: false,
+          showSuccessNotification: true,
+        }));
+        setActiveTab("history");
+      }, 2000);
+    });
 
     if (!success && errorMessage === "Payment or Analysis failed") {
       setErrorMessage(t("auth_modal.failed"));
@@ -948,7 +944,7 @@ export default function AnalysisView() {
                 workflowStatus === "error" ||
                 workflowStatus === "payment_success"
               )
-                resetTransaction();
+                resetPayment();
               setUiState((prev) => ({ ...prev, isPaymentModalOpen: false }));
             }}
             onConfirm={handleAnalysisWorkflow}
@@ -992,30 +988,37 @@ export default function AnalysisView() {
               },
             ]}
             extraContent={
-              isInternalCompanyAnalysis ? (
-                <div className="mt-4 space-y-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                  <h4 className="text-sm font-bold text-gray-900">
-                    {t("analysis.addons_title")}
-                  </h4>
-                  <div className="space-y-2">
-                    {renderAddonsCheckbox(
-                      "bookkeeper",
-                      "analysis.addon_bookkeeper",
-                      ANALYSIS_ADDON_COSTS.BOOKKEEPER,
-                    )}
-                    {renderAddonsCheckbox(
-                      "cpa",
-                      "analysis.addon_cpa",
-                      ANALYSIS_ADDON_COSTS.CPA,
-                    )}
-                    {renderAddonsCheckbox(
-                      "thirdParty",
-                      "analysis.addon_third_party",
-                      ANALYSIS_ADDON_COSTS.THIRD_PARTY,
-                    )}
+              /**
+               * Info: (20260813 - Luphia) 付款來源選擇器與既有的加購項目併存：
+               * 這支 modal 原本就有 extraContent，兩者疊在同一個插槽而非互相取代。
+               */
+              <>
+                {paymentSourceNode}
+                {isInternalCompanyAnalysis ? (
+                  <div className="mt-4 space-y-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                    <h4 className="text-sm font-bold text-gray-900">
+                      {t("analysis.addons_title")}
+                    </h4>
+                    <div className="space-y-2">
+                      {renderAddonsCheckbox(
+                        "bookkeeper",
+                        "analysis.addon_bookkeeper",
+                        ANALYSIS_ADDON_COSTS.BOOKKEEPER,
+                      )}
+                      {renderAddonsCheckbox(
+                        "cpa",
+                        "analysis.addon_cpa",
+                        ANALYSIS_ADDON_COSTS.CPA,
+                      )}
+                      {renderAddonsCheckbox(
+                        "thirdParty",
+                        "analysis.addon_third_party",
+                        ANALYSIS_ADDON_COSTS.THIRD_PARTY,
+                      )}
+                    </div>
                   </div>
-                </div>
-              ) : undefined
+                ) : null}
+              </>
             }
             isLoading={uiState.isLoading}
             status={workflowStatus}

@@ -17,10 +17,8 @@ import { request } from "@/lib/utils/request";
 import { useTranslation } from "@/i18n/i18n_context";
 import ConfirmModal from "@/components/common/confirm_modal";
 import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
-import {
-  useOrderTransaction,
-  IOrderPayload,
-} from "@/hooks/use_order_transaction";
+import { IOrderPayload } from "@/hooks/use_order_transaction";
+import { useAnalysisPayment } from "@/hooks/use_analysis_payment";
 import {
   ANALYSIS_CATEGORY,
   MILEAGE_ACTION,
@@ -87,13 +85,18 @@ export function MileageCalculator({
   const [pollingAction, setPollingAction] = useState<MileageAction | null>(
     null,
   );
+  /**
+   * Info: (20260813 - Luphia) 統一付款入口（設計書 §5.6）：團隊額度與個人點數兩種來源，
+   * 選擇器由 hook 提供（塞進 modal 的 extraContent），各站點不再各自實作一次。
+   */
   const {
     workflowStatus,
     errorMessage,
     txHash,
-    resetTransaction,
-    executeOrderTransaction,
-  } = useOrderTransaction();
+    reset: resetPayment,
+    pay,
+    paymentSourceNode,
+  } = useAnalysisPayment();
 
   // Info: (20260510 - Luphia) Polling logic
   useEffect(() => {
@@ -198,18 +201,14 @@ export function MileageCalculator({
   const handleOrderPaymentConfirm = async () => {
     if (!currentOrderPayload) return;
 
-    await executeOrderTransaction(
-      currentOrderPayload,
-      totalCost,
-      async ({ orderId }) => {
-        setPollingOrderId(orderId);
-        setIsPaymentModalOpen(false);
-        resetTransaction();
-        if (onNavigateToHistory) {
-          onNavigateToHistory();
-        }
-      },
-    );
+    await pay(currentOrderPayload, totalCost, async ({ orderId }) => {
+      setPollingOrderId(orderId);
+      setIsPaymentModalOpen(false);
+      resetPayment();
+      if (onNavigateToHistory) {
+        onNavigateToHistory();
+      }
+    });
   };
 
   const toggleRow = (id: string) => {
@@ -941,9 +940,10 @@ export function MileageCalculator({
               ),
             );
           }
-          resetTransaction();
+          resetPayment();
         }}
         onConfirm={handleOrderPaymentConfirm}
+        extraContent={paymentSourceNode}
         cost={totalCost}
         title={t("analysis.confirm_title")}
         description={t("analysis.confirm_desc")}

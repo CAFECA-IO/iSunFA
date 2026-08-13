@@ -137,7 +137,8 @@ export const useTeamQuotaPayment = () => {
   const payWithTeamQuota = useCallback(
     async (
       orderPayload: IOrderPayload,
-      onSuccess: () => Promise<void> | void,
+      // Info: (20260813 - Luphia) 帶回 orderId：呼叫端（如里程試算）以它輪詢結果
+      onSuccess: (info: { orderId: string }) => Promise<void> | void,
       teamId?: string | null,
     ): Promise<boolean> => {
       setStatus("paying");
@@ -161,7 +162,7 @@ export const useTeamQuotaPayment = () => {
          * 但畫面上的餘額與待付訂單來自同一支 me 端點，不重取會停在付款前的數字。
          */
         await refreshAuth();
-        await onSuccess();
+        await onSuccess({ orderId });
         return true;
       } catch (error) {
         if (error instanceof RequestApiError) {

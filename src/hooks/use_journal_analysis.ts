@@ -18,15 +18,20 @@ export type UploadedFileData = {
 
 interface IUseJournalAnalysisProps {
   accountBookId: string;
+  /**
+   * Info: (20260813 - Luphia) 付款函式由呼叫端注入（現為統一的 useAnalysisPayment）。
+   * transactionHash 與簽章欄位改為選填：團隊額度付款是離鏈扣抵，沒有鏈上交易，
+   * 硬性要求這些欄位會讓這條路徑在型別上就過不去（設計書 §5.6）。
+   */
   executeOrderTransaction: (
     payload: IOrderPayload,
     calculatedCost: number,
     onPaymentSuccess: (
       authData: {
         orderId: string;
-        transactionHash: string;
+        transactionHash?: string;
         reportId?: string;
-      } & AuthenticationJSON,
+      } & Partial<AuthenticationJSON>,
     ) => Promise<void> | void,
   ) => Promise<boolean>;
   itemName: string;

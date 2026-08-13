@@ -2,7 +2,7 @@
 
 > **Date**: August 2026
 > **Author**: Luphia
-> **Version**: 1.13 (Draft) — 1.1 新增 §5.3 費思計費；1.2–1.4 費率迭代；1.5 拍板費率與點值下限；1.6 拍板 C 案混合制（離鏈營運 + 每日 merkle 鏈上錨定，Phase 2 為 1:1 backing）；1.7 §5.3 拍板「選定帳本後才能使用費思」，計費團隊由 `AccountBook.teamId` 推導，client 不再自報 `teamId`；1.8 新增 §5.4 拆帳與封頂預扣（有餘額就放行、額度用光才扣錢包）；1.9 新增 §5.5 碳盤查計費；1.10 碳盤查四條 LLM 路徑全數接上；1.11 無帳本會話改扣個人鏈上點數（建單 → 402 → 付款 → 重送）；1.12 §5.4 新增逐功能扣款順序，物流碳足跡優先扣分配點數；1.13 新增 §5.6 多團隊成員的支付歸屬
+> **Version**: 1.14 (Draft) — 1.1 新增 §5.3 費思計費；1.2–1.4 費率迭代；1.5 拍板費率與點值下限；1.6 拍板 C 案混合制（離鏈營運 + 每日 merkle 鏈上錨定，Phase 2 為 1:1 backing）；1.7 §5.3 拍板「選定帳本後才能使用費思」，計費團隊由 `AccountBook.teamId` 推導，client 不再自報 `teamId`；1.8 新增 §5.4 拆帳與封頂預扣（有餘額就放行、額度用光才扣錢包）；1.9 新增 §5.5 碳盤查計費；1.10 碳盤查四條 LLM 路徑全數接上；1.11 無帳本會話改扣個人鏈上點數（建單 → 402 → 付款 → 重送）；1.12 §5.4 新增逐功能扣款順序，物流碳足跡優先扣分配點數；1.13 新增 §5.6 多團隊成員的支付歸屬；1.14 §5.6 六個付款呼叫點統一至 useAnalysisPayment
 > **Status**: Proposed
 > **Branch**: `feature/team_wallet_subscription_quota`
 > **關聯 ADR**: [ADR 015: 離鏈團隊錢包帳本](decisions/015_offchain_team_wallet_ledger.md)
@@ -521,7 +521,23 @@ spendCredits(identity, teamId, featureCode, cost, idempotencyKey)
 - 只有一個團隊 → 顯示團隊名稱但不給選單；送出時不帶 `teamId`，由 server 解析。多問一步只為消除歧義，不該讓每個人每次都選一遍。
 - 多個團隊 → 出選單；未選而送出時 server 回 `TW_TEAM_AMBIGUOUS`，選擇器隨即標紅並說明「為什麼要選」——不說的話用戶會覺得系統在刁難，說了他才知道這關係到哪個團隊被扣額度。
 
-已接上物流碳足跡（`/transportation_carbon_footprint_calculator`）。AI 諮詢室與 AI 分析報告的付款流程沿用同一組元件即可接上，尚未接。
+#### 統一的付款入口（2026-08-13）
+
+系統裡有 **6 個付款呼叫點**，原本各自接一次 `useOrderTransaction` + `PaymentConfirmModal`。後果是「支援團隊額度」變成每個站點都要記得補的事——里程試算就是漏掉的那一個，直到使用者回報才發現。
+
+改以 `useAnalysisPayment()`（`src/hooks/use_analysis_payment.tsx`）作為單一入口，它是 `useOrderTransaction` 的**同介面替換品**：
+
+| 原本 | 統一後 |
+|---|---|
+| `executeOrderTransaction(payload, cost, onPaid)` | `pay(payload, cost, onPaid)`（簽名相同） |
+| 各站自行實作來源選擇 | `paymentSourceNode` 塞進 modal 的 `extraContent` |
+| `resetTransaction()` | `reset()` |
+
+因此每個站點的遷移是三行改動，而「兩種付款來源」從此是**模組的性質**，不是各站的功課。已遷移：物流分析、里程試算、AI 諮詢室、AI 分析報告、憑證掃描、憑證上傳。
+
+團隊路徑的狀態映射成既有 modal 認得的 `PaymentStatus`，各站的 modal 一行都不用改；`needs_team` 刻意映射為 `idle`——「還沒選團隊」不是付款失敗，畫面要維持可操作。`useJournalAnalysis` 的付款函式型別也一併放寬（`transactionHash` 與簽章欄位改選填）：團隊額度是離鏈扣抵，沒有鏈上交易，硬性要求那些欄位會讓這條路徑在型別上就過不去。
+
+規則由 `analysis_payment_contract` 測試釘住：任何直接使用 `useOrderTransaction()` 的畫面、或解構了 `paymentSourceNode` 卻沒渲染的站點，都會讓 CI 紅字（已驗證兩者都會失敗）。
 
 #### 分配點數不跨團隊
 

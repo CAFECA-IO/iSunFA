@@ -7,7 +7,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
 import { useParams } from "next/navigation";
 import { uploadFile, fileToBase64 } from "@/lib/file_operator";
-import { useOrderTransaction } from "@/hooks/use_order_transaction";
+import { useAnalysisPayment } from "@/hooks/use_analysis_payment";
 
 import {
   useJournalAnalysis,
@@ -27,13 +27,15 @@ export default function JournalScanView({
   const [capturedFiles, setCapturedFiles] = useState<UploadedFileData[]>([]);
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
 
+  // Info: (20260813 - Luphia) 統一付款入口（設計書 §5.6）：團隊額度 / 個人點數兩種來源
   const {
     workflowStatus,
     errorMessage,
     txHash,
-    resetTransaction,
-    executeOrderTransaction,
-  } = useOrderTransaction();
+    reset: resetPayment,
+    pay,
+    paymentSourceNode,
+  } = useAnalysisPayment();
 
   const {
     isAnalyzing,
@@ -43,7 +45,7 @@ export default function JournalScanView({
     handleAnalyzeAll,
   } = useJournalAnalysis({
     accountBookId,
-    executeOrderTransaction,
+    executeOrderTransaction: pay,
     itemName: "AI Journal OCR scan",
     onComplete: onScanComplete,
   });
@@ -291,13 +293,14 @@ export default function JournalScanView({
       )}
 
       <PaymentConfirmModal
+        extraContent={paymentSourceNode}
         isOpen={showConfirmModal}
         onClose={() => {
           if (
             workflowStatus === "error" ||
             workflowStatus === "payment_success"
           ) {
-            resetTransaction();
+            resetPayment();
             setShowConfirmModal(false);
           } else if (workflowStatus === "idle") {
             setShowConfirmModal(false);

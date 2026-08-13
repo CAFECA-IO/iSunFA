@@ -26,10 +26,8 @@ import LoginButton from "@/components/common/login_button";
 import ConfirmModal from "@/components/common/confirm_modal";
 import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
 import { FilePreview } from "@/components/common/file_preview";
-import {
-  useOrderTransaction,
-  IOrderPayload,
-} from "@/hooks/use_order_transaction";
+import { IOrderPayload } from "@/hooks/use_order_transaction";
+import { useAnalysisPayment } from "@/hooks/use_analysis_payment";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import { AnalysisCostParams, getAnalysisCost } from "@/lib/analysis/pricing";
 import { ORDER_TYPE } from "@/constants/status";
@@ -64,8 +62,13 @@ export const AiChat = () => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { workflowStatus, resetTransaction, executeOrderTransaction } =
-    useOrderTransaction();
+  // Info: (20260813 - Luphia) 統一付款入口（設計書 §5.6）：團隊額度 / 個人點數兩種來源
+  const {
+    workflowStatus,
+    reset: resetPayment,
+    pay,
+    paymentSourceNode,
+  } = useAnalysisPayment();
 
   // Info: (20260213 - Julian) 清除 Object URLs 避免記憶體洩漏
   useEffect(() => {
@@ -85,7 +88,7 @@ export const AiChat = () => {
   const handleOpenPayment = () => {
     if (isSubmitDisabled || !user) return;
     setIsPaymentModalOpen(true);
-    resetTransaction();
+    resetPayment();
   };
 
   const submitAiQuestion = async (params: { reportId?: string }) => {
@@ -128,7 +131,7 @@ export const AiChat = () => {
         },
       ],
     };
-    await executeOrderTransaction(orderPayload, 5, submitAiQuestion);
+    await pay(orderPayload, 5, submitAiQuestion);
   };
 
   const processFiles = async (selectedFiles: FileList | null) => {
@@ -466,13 +469,14 @@ export const AiChat = () => {
 
       {/* Info: (20260408 - Luphia) Payment Confirmation Modal */}
       <PaymentConfirmModal
+        extraContent={paymentSourceNode}
         isOpen={isPaymentModalOpen}
         onClose={() => {
           if (
             workflowStatus === "error" ||
             workflowStatus === "payment_success"
           ) {
-            resetTransaction();
+            resetPayment();
             setIsPaymentModalOpen(false);
           } else if (workflowStatus === "idle") {
             setIsPaymentModalOpen(false);
