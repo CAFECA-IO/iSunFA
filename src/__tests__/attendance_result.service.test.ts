@@ -68,6 +68,7 @@ const rosterRow = (
   id,
   employeeNo,
   name,
+  departmentId: "dept-1",
   department: { name: "工程處本部" },
   jobTitle: { title: "工務行政" },
 });
@@ -128,6 +129,7 @@ const buildService = (options: {
     findByAccountBookAndEmails: async () => [],
     linkUser: async () => false,
     findRosterInPeriod: async () => options.roster ?? [],
+    findByIdInAccountBook: async () => null,
   };
 
   const schedule: IAttendanceScheduleRepository = {
@@ -135,6 +137,10 @@ const buildService = (options: {
     findShiftDaysInRange: async (params) => {
       scopedEmployeeIds.push(params.employeeIds);
       return options.shiftDays ?? [];
+    },
+    // Info: (20260813 - Julian) 判定不寫排班；由排班 service 的測試覆蓋
+    upsertShiftDay: async () => {
+      throw new Error("not used by the result matrix");
     },
   };
 

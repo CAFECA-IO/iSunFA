@@ -16,6 +16,7 @@ export interface IAttendanceRosterRow {
   id: string;
   employeeNo: string;
   name: string;
+  departmentId: string | null;
   department: { name: string } | null;
   jobTitle: { title: string } | null;
 }
@@ -38,7 +39,12 @@ export interface IEmployeeRepository {
     from: string;
     to: string;
     employeeId?: string;
+    departmentId?: string;
   }): Promise<IAttendanceRosterRow[]>;
+  findByIdInAccountBook(
+    accountBookId: string,
+    employeeId: string,
+  ): Promise<Employee | null>;
 }
 
 class EmployeeRepository implements IEmployeeRepository {
@@ -110,8 +116,9 @@ class EmployeeRepository implements IEmployeeRepository {
     from: string;
     to: string;
     employeeId?: string;
+    departmentId?: string;
   }): Promise<IAttendanceRosterRow[]> {
-    const { accountBookId, from, to, employeeId } = params;
+    const { accountBookId, from, to, employeeId, departmentId } = params;
 
     // Info: (20260813 - Julian) 到職日落在 `to` 當天仍算重疊，故比到隔日 00:00
     const periodEnd = new Date(`${to}T00:00:00.000Z`);
@@ -121,6 +128,7 @@ class EmployeeRepository implements IEmployeeRepository {
       where: {
         accountBookId,
         ...(employeeId ? { id: employeeId } : {}),
+        ...(departmentId ? { departmentId } : {}),
         hireDate: { lt: periodEnd },
         OR: [
           { leaveDate: null },
@@ -131,10 +139,27 @@ class EmployeeRepository implements IEmployeeRepository {
         id: true,
         employeeNo: true,
         name: true,
+        departmentId: true,
         department: { select: { name: true } },
         jobTitle: { select: { title: true } },
       },
       orderBy: { employeeNo: "asc" },
+    });
+  }
+
+  /**
+   * Info: (20260813 - Julian) 帳本內查單一員工。**查詢一律綁帳本。**
+   *
+   * 排班寫入拿到的 `employeeId` 來自請求本體，而 `EmployeeShiftDay`
+   * 在資料庫層沒有「員工必須屬於同一帳本」的約束 —— 光用 id 查得到就寫下去，
+   * 等於任何一個登入者都能替別家公司的員工排班。
+   */
+  public async findByIdInAccountBook(
+    accountBookId: string,
+    employeeId: string,
+  ): Promise<Employee | null> {
+    return prisma.employee.findFirst({
+      where: { id: employeeId, accountBookId },
     });
   }
 }

@@ -102,6 +102,10 @@ const buildService = (options: {
     findShiftDays: async () => (options.shiftDay ? [options.shiftDay] : []),
     findShiftDaysInRange: async () =>
       options.shiftDay ? [options.shiftDay] : [],
+    // Info: (20260813 - Julian) 打卡流程不寫排班；由排班 service 的測試覆蓋
+    upsertShiftDay: async () => {
+      throw new Error("not used by the punch flow");
+    },
   };
 
   return {

@@ -1,5 +1,7 @@
 import { EmployeeShiftDay, ShiftPattern } from "@/generated";
 import { prisma } from "@/lib/prisma";
+import { WorkDayType } from "@/constants/attendance";
+import { assertSchedulableDay } from "@/repositories/attendance_schedule_invariant";
 
 /**
  * Info: (20260813 - Julian) 排班資料存取層（唯一碰 Prisma）；不含任何業務判斷。
@@ -24,6 +26,16 @@ export interface IAttendanceScheduleRepository {
     from: string;
     to: string;
   }): Promise<IShiftDayWithPattern[]>;
+  upsertShiftDay(input: IShiftDayInput): Promise<IShiftDayWithPattern>;
+}
+
+export interface IShiftDayInput {
+  accountBookId: string;
+  employeeId: string;
+  workDate: string;
+  dayType: WorkDayType;
+  /** Info: (20260813 - Julian) 非上班日必須是 null，不是省略 —— 改成休假時要把舊班別清掉 */
+  shiftPatternId: string | null;
 }
 
 class AttendanceScheduleRepository implements IAttendanceScheduleRepository {
@@ -76,6 +88,47 @@ class AttendanceScheduleRepository implements IAttendanceScheduleRepository {
         employeeId: { in: employeeIds },
         workDate: { gte: from, lte: to },
       },
+      include: { shiftPattern: true },
+    });
+  }
+
+  /**
+   * Info: (20260813 - Julian) 逐日指派。**upsert 而不是 create**。
+   *
+   * 排班的操作語意是「這一天排成這樣」，不是「新增一筆排班」——
+   * 而 `@@unique([accountBookId, employeeId, workDate])` 也不容許第二筆。
+   * 用 create 的話，改班就得先查再決定 create 或 update，
+   * 那中間的空窗會讓兩個分頁同時改同一天時後者炸在唯一鍵上。
+   *
+   * ## 寫入前呼叫 `assertSchedulableDay`
+   *
+   * service 端已用 zod 的可辨識聯集讓非法組合送不進來（ADR 019：
+   * 能讓它不可表示，就不要退而求其次讓它可被拒絕）。這一條留著的理由是
+   * repository 是唯一的 DB 閘口 —— 種子腳本、資料遷移、
+   * 以及未來的排班表 Excel 匯入都會經過這裡，而**匯入正是一次寫入上千筆、
+   * 且最可能把兩個欄位配錯的地方**。
+   */
+  public async upsertShiftDay(
+    input: IShiftDayInput,
+  ): Promise<IShiftDayWithPattern> {
+    assertSchedulableDay({
+      dayType: input.dayType,
+      shiftPatternId: input.shiftPatternId,
+    });
+
+    const { accountBookId, employeeId, workDate, dayType, shiftPatternId } =
+      input;
+
+    return prisma.employeeShiftDay.upsert({
+      where: {
+        accountBookId_employeeId_workDate: {
+          accountBookId,
+          employeeId,
+          workDate,
+        },
+      },
+      create: { accountBookId, employeeId, workDate, dayType, shiftPatternId },
+      update: { dayType, shiftPatternId },
       include: { shiftPattern: true },
     });
   }
