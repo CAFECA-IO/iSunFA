@@ -32,7 +32,7 @@ export type TeamQuotaPaymentStatus =
 // Info: (20260813 - Luphia) 沿用既有的訂單 payload 型別，兩條付款路徑餵的是同一份資料
 
 export const useTeamQuotaPayment = () => {
-  const { user } = useAuth();
+  const { user, refreshAuth } = useAuth();
   const [teams, setTeams] = useState<ITeamOption[]>([]);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [status, setStatus] = useState<TeamQuotaPaymentStatus>("idle");
@@ -98,6 +98,11 @@ export const useTeamQuotaPayment = () => {
         });
 
         setStatus("success");
+        /**
+         * Info: (20260813 - Luphia) 付款後同步帳戶狀態：團隊額度付款不動個人點數，
+         * 但畫面上的餘額與待付訂單來自同一支 me 端點，不重取會停在付款前的數字。
+         */
+        await refreshAuth();
         await onSuccess();
         return true;
       } catch (error) {
@@ -115,7 +120,7 @@ export const useTeamQuotaPayment = () => {
         return false;
       }
     },
-    [],
+    [refreshAuth],
   );
 
   return {

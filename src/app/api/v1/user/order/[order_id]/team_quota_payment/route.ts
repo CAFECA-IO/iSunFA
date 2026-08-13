@@ -8,10 +8,12 @@ import { BILLABLE_FEATURE_CODE } from "@/constants/subscription_quota";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import { teamQuotaPaymentSchema } from "@/validators";
 import {
+  failOrder,
   getPendingOrder,
   markOrderCompleted,
   markOrderPaying,
 } from "@/services/order.service";
+import { resolveOrderSpendCost } from "@/lib/order/order_cost";
 import { fulfillPaidAnalysisOrder } from "@/services/analysis_fulfillment.service";
 import {
   QuotaExceededError,
@@ -72,11 +74,21 @@ export async function POST(
         teamId,
         userId: user.id,
         featureCode,
-        cost: BigInt(order.amount),
+        cost: resolveOrderSpendCost(BigInt(order.amount)),
         idempotencyKey,
         nowSec: Math.floor(Date.now() / 1000),
       });
     } catch (error) {
+      /**
+       * Info: (20260813 - Luphia) 扣抵失敗即把訂單標記失敗，不讓它停在 PENDING。
+       * 前端每次重試都會建一張新訂單，殘留的待付訂單會越積越多
+       * （實測一次失敗的操作留下 4 張）；付不成的單就該收掉。
+       */
+      await failOrder(orderId, "team_quota_payment_failed").catch(
+        (failError: unknown) => {
+          console.error("[API] failed to close unpaid order", failError);
+        },
+      );
       if (error instanceof QuotaExceededError) {
         return jsonFailWithPayload(API_ERRORS.TW_QUOTA_EXCEEDED, error.data);
       }
