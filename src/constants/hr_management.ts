@@ -10,6 +10,7 @@ export const HR_MANAGEMENT_ROUTE = {
   EMPLOYEE: "/hr_management/employee",
   MOVEMENT: "/hr_management/movement",
   ATTENDANCE: "/hr_management/attendance",
+  ATTENDANCE_RESULT: "/hr_management/attendance/result",
   DOCUMENT: "/hr_management/document",
   SETTING: "/hr_management/setting",
 } as const;

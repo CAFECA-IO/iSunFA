@@ -89,7 +89,6 @@ const buildService = (options: {
       return input as unknown as AttendancePunch;
     },
     findByEmployeeAndWorkDate: async () => options.existing ?? [],
-    findByAccountBookAndWorkDate: async () => options.existing ?? [],
     // Info: (20260813 - Julian) 打卡流程用不到期間查詢；由判定矩陣的測試覆蓋
     findByWorkDateRange: async () => options.existing ?? [],
   };

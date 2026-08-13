@@ -49,10 +49,6 @@ export interface IAttendancePunchRepository {
     employeeId: string,
     workDate: string,
   ): Promise<AttendancePunch[]>;
-  findByAccountBookAndWorkDate(
-    accountBookId: string,
-    workDate: string,
-  ): Promise<AttendancePunch[]>;
   findByWorkDateRange(params: {
     accountBookId: string;
     employeeIds: string[];
@@ -91,16 +87,6 @@ class AttendancePunchRepository implements IAttendancePunchRepository {
   ): Promise<AttendancePunch[]> {
     return prisma.attendancePunch.findMany({
       where: { accountBookId, employeeId, workDate },
-      orderBy: { punchedAt: "asc" },
-    });
-  }
-
-  public async findByAccountBookAndWorkDate(
-    accountBookId: string,
-    workDate: string,
-  ): Promise<AttendancePunch[]> {
-    return prisma.attendancePunch.findMany({
-      where: { accountBookId, workDate },
       orderBy: { punchedAt: "asc" },
     });
   }

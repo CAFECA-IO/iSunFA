@@ -136,6 +136,34 @@ export enum AttendanceDayPhase {
   CONCLUDED = "CONCLUDED",
 }
 
+/**
+ * Info: (20260813 - Julian) 出勤總覽裡一格的顯示語意。**沒有 schema 對應物。**
+ *
+ * ## 為什麼不直接拿 AttendanceDayStatus 上色
+ *
+ * 一天可以同時成立多種異常（遲到 + 工時不足），而 `status` 只會說 `EXCEPTION`。
+ * 要在一格裡表達，就得先選出**主導的那一種** —— 那是一個顯示決策
+ * （哪一種異常先講），不是判定結果，所以它是自己的型別而不是 status 的別名。
+ *
+ * ## 為什麼 PENDING 與 NO_SCHEDULE 分開
+ *
+ * 兩者畫面上都接近留白，意思卻相反：`NO_SCHEDULE` 是「這天沒有出勤義務可比」，
+ * `PENDING` 是「這天有義務、但還沒過完，現在下任何結論都太早」。
+ * 壓成同一個，演示時就答不出「為什麼今天那一格是空的」。
+ */
+export enum AttendanceCellTone {
+  NORMAL = "NORMAL",
+  LATE = "LATE",
+  EARLY_LEAVE = "EARLY_LEAVE",
+  ABSENT = "ABSENT",
+  // Info: (20260813 - Julian) 漏打上班卡與漏打下班卡共用一格顏色，哪一端由明細交代
+  MISSING_PUNCH = "MISSING_PUNCH",
+  INSUFFICIENT_HOURS = "INSUFFICIENT_HOURS",
+  OFF_DAY = "OFF_DAY",
+  NO_SCHEDULE = "NO_SCHEDULE",
+  PENDING = "PENDING",
+}
+
 export enum PresenceStatus {
   ON_SITE = "ON_SITE",
   STALE = "STALE",
@@ -238,3 +266,125 @@ export const DEMO_ACCOUNT_BOOK_ID = "demo-book-public-works";
  * 訂在月會讓正當需求也踩線，而踩線的護欄很快就會被有人調大。
  */
 export const DEMO_ATTENDANCE_MAX_RANGE_DAYS = 92;
+
+/**
+ * Info: (20260813 - Julian) 出勤總覽格子的配色。
+ *
+ * 只用 50 / 100 / 700 這幾階，與 `EMPLOYEE_STATUS_STYLE` 同一條規則 ——
+ * 深色主題下 `globals.css` 會把彩色 50–300 階依比例混入頁面底色，
+ * 700 階則走中性色盤反轉，兩種主題都不必另外處理。
+ *
+ * `PENDING` 用虛線框而不是另一種顏色：它要表達的是「還沒有結論」，
+ * 而任何一個實色都會被讀成一種結論。
+ */
+export const ATTENDANCE_CELL_TONE_STYLE: Record<AttendanceCellTone, string> = {
+  [AttendanceCellTone.NORMAL]: "bg-emerald-50 text-emerald-700",
+  [AttendanceCellTone.LATE]: "bg-red-100 text-red-700",
+  [AttendanceCellTone.EARLY_LEAVE]: "bg-amber-100 text-amber-700",
+  [AttendanceCellTone.ABSENT]: "bg-orange-100 text-orange-700",
+  [AttendanceCellTone.MISSING_PUNCH]: "bg-gray-200 text-gray-700",
+  [AttendanceCellTone.INSUFFICIENT_HOURS]: "bg-yellow-100 text-yellow-700",
+  [AttendanceCellTone.OFF_DAY]: "bg-gray-50 text-gray-400",
+  [AttendanceCellTone.NO_SCHEDULE]: "bg-transparent text-gray-300",
+  [AttendanceCellTone.PENDING]:
+    "bg-transparent text-gray-400 border border-dashed border-gray-300",
+};
+
+// Info: (20260813 - Julian) 圖例與明細共用同一組文案，兩邊各寫一份就會出現兩種說法
+export const ATTENDANCE_CELL_TONE_I18N_KEY: Record<AttendanceCellTone, string> =
+  {
+    [AttendanceCellTone.NORMAL]: "hr_management.attendance_result.tone_normal",
+    [AttendanceCellTone.LATE]: "hr_management.attendance_result.tone_late",
+    [AttendanceCellTone.EARLY_LEAVE]:
+      "hr_management.attendance_result.tone_early_leave",
+    [AttendanceCellTone.ABSENT]: "hr_management.attendance_result.tone_absent",
+    [AttendanceCellTone.MISSING_PUNCH]:
+      "hr_management.attendance_result.tone_missing_punch",
+    [AttendanceCellTone.INSUFFICIENT_HOURS]:
+      "hr_management.attendance_result.tone_insufficient_hours",
+    [AttendanceCellTone.OFF_DAY]:
+      "hr_management.attendance_result.tone_off_day",
+    [AttendanceCellTone.NO_SCHEDULE]:
+      "hr_management.attendance_result.tone_no_schedule",
+    [AttendanceCellTone.PENDING]:
+      "hr_management.attendance_result.tone_pending",
+  };
+
+// Info: (20260813 - Julian) 異常型別的顯示文案，明細與統計欄共用
+export const ATTENDANCE_EXCEPTION_I18N_KEY: Record<
+  AttendanceExceptionType,
+  string
+> = {
+  [AttendanceExceptionType.LATE]: "hr_management.attendance_result.late",
+  [AttendanceExceptionType.EARLY_LEAVE]:
+    "hr_management.attendance_result.early_leave",
+  [AttendanceExceptionType.ABSENT]: "hr_management.attendance_result.absent",
+  [AttendanceExceptionType.MISSING_CLOCK_IN]:
+    "hr_management.attendance_result.missing_clock_in",
+  [AttendanceExceptionType.MISSING_CLOCK_OUT]:
+    "hr_management.attendance_result.missing_clock_out",
+  [AttendanceExceptionType.INSUFFICIENT_HOURS]:
+    "hr_management.attendance_result.insufficient_hours",
+  [AttendanceExceptionType.SUSPICIOUS_JUMP]:
+    "hr_management.attendance_result.suspicious_jump",
+};
+
+/**
+ * Info: (20260813 - Julian) 「僅顯示有異常者」的篩選值。
+ *
+ * 與 `HR_FILTER_ALL` 同一個位置的東西：一個不會與任何 `AttendanceExceptionType`
+ * 相撞的哨兵值，讓「全部 / 僅異常 / 某一種異常」共用同一個下拉選單。
+ * 三個獨立的控制項會讓使用者要想「這三個是 and 還是 or」，而答案永遠是錯的那個。
+ */
+export const ATTENDANCE_FILTER_EXCEPTION_ONLY = "__EXCEPTION_ONLY__";
+
+// Info: (20260813 - Julian) 排班日型別的顯示文案，出勤總覽與排班月曆共用
+export const WORK_DAY_TYPE_I18N_KEY: Record<WorkDayType, string> = {
+  [WorkDayType.WORK]: "hr_management.attendance_result.day_type_work",
+  [WorkDayType.REGULAR_OFF]:
+    "hr_management.attendance_result.day_type_regular_off",
+  [WorkDayType.REST_DAY]: "hr_management.attendance_result.day_type_rest_day",
+  [WorkDayType.HOLIDAY]: "hr_management.attendance_result.day_type_holiday",
+  [WorkDayType.LEAVE]: "hr_management.attendance_result.day_type_leave",
+};
+
+/**
+ * Info: (20260813 - Julian) 判定階段的顯示文案。
+ *
+ * 明細一定要把它印出來 —— 使用者看到一格是空的，第一個問題是「為什麼」，
+ * 而「這天還沒過完」與「這天沒有排班」是兩個完全不同的答案。
+ */
+export const ATTENDANCE_DAY_PHASE_I18N_KEY: Record<AttendanceDayPhase, string> =
+  {
+    [AttendanceDayPhase.UPCOMING]:
+      "hr_management.attendance_result.phase_upcoming",
+    [AttendanceDayPhase.IN_PROGRESS]:
+      "hr_management.attendance_result.phase_in_progress",
+    [AttendanceDayPhase.CONCLUDED]:
+      "hr_management.attendance_result.phase_concluded",
+  };
+
+/**
+ * Deprecated: (20260813 - Julian) 緊急點名 CSV 的欄位標題（繁中）。
+ *
+ * 寫死一個語系是 demo 的簡化。正式版應依請求者的語系取字典 ——
+ * 這份檔案會被貼進事故調查報告，而報告的語言不該由後端替使用者決定。
+ *
+ * 放在 constants 而不是 route 裡：它是一組**對外的欄位名**，
+ * 改動會影響所有已匯出檔案的可比對性，屬於需要被看見的常數。
+ */
+export const ROSTER_CSV_LABELS_ZH_TW = {
+  generatedAt: "產出時間",
+  generatedBy: "產出者",
+  timeZone: "時區",
+  location: "地點",
+  employeeNo: "工號",
+  name: "姓名",
+  department: "部門",
+  jobTitle: "職稱",
+  since: "上班打卡時間",
+  status: "狀態",
+  statusOnSite: "在班",
+  statusStale: "未打下班卡（系統無法確認是否仍在現場）",
+  none: "—",
+};

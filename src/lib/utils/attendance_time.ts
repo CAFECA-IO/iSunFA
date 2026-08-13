@@ -61,9 +61,14 @@ const toDayNumber = (isoDate: string): number => {
 const fromDayNumber = (dayNumber: number): string =>
   new Date(dayNumber * 86_400_000).toISOString().slice(0, 10);
 
+// Info: (20260813 - Julian) 日曆日加減天數。純日曆運算，不牽涉時區
+export function addIsoDays(isoDate: string, delta: number): string {
+  return fromDayNumber(toDayNumber(isoDate) + delta);
+}
+
 // Info: (20260813 - Julian) 指定日曆日的前一天
 export function previousIsoDate(isoDate: string): string {
-  return fromDayNumber(toDayNumber(isoDate) - 1);
+  return addIsoDays(isoDate, -1);
 }
 
 /**

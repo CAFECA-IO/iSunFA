@@ -4,7 +4,6 @@ import { FC, useCallback, useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Loader2, MapPin, TriangleAlert } from "lucide-react";
 import {
   DEMO_ACCOUNT_BOOK_ID,
-  MINUTES_PER_DAY,
   PunchType,
   ShiftPatternKind,
 } from "@/constants/attendance";
@@ -14,6 +13,7 @@ import {
   IWorkLocationSummary,
 } from "@/interfaces/attendance";
 import { findNearestGeofence, IGeofenceMatch } from "@/lib/attendance_geofence";
+import { formatMinuteOfDay } from "@/lib/utils/attendance_format";
 import { ApiError, IEnvelopeLike, request } from "@/lib/utils/request";
 import {
   GeolocationStatus,
@@ -60,22 +60,6 @@ const API_BASE = `/api/v1/user/account_book/${DEMO_ACCOUNT_BOOK_ID}/hr/attendanc
 const ALLOW_MANUAL_COORDINATE =
   process.env.NEXT_PUBLIC_DEMO_ALLOW_MANUAL_COORDINATE === "true";
 // Deprecated: [end]
-
-/**
- * Info: (20260813 - Julian) 分鐘數轉 HH:mm。
- *
- * >= 1440 表次日（跨夜班的下班時刻），顯示成「次日 05:03」——
- * 直接印 1743 沒有人看得懂，而印 05:03 會讓人以為是今天早上。
- */
-const formatMinute = (minute: number | null, nextDayLabel: string): string => {
-  if (minute === null) return "—";
-  const isNextDay = minute >= MINUTES_PER_DAY;
-  const normalised = minute % MINUTES_PER_DAY;
-  const text = `${String(Math.floor(normalised / 60)).padStart(2, "0")}:${String(
-    normalised % 60,
-  ).padStart(2, "0")}`;
-  return isNextDay ? `${nextDayLabel} ${text}` : text;
-};
 
 /**
  * Info: (20260813 - Julian) 從 `ApiError` 裡取出圍欄外的 403 payload。
@@ -224,8 +208,8 @@ const PunchPageBody: FC = () => {
         ? t("hr_management.attendance.kind_flexible")
         : t("hr_management.attendance.kind_fixed");
     const nextDay = t("hr_management.attendance.next_day");
-    const from = formatMinute(today.shift.windowStartMinute, nextDay);
-    const to = formatMinute(today.shift.windowEndMinute, nextDay);
+    const from = formatMinuteOfDay(today.shift.windowStartMinute, nextDay);
+    const to = formatMinuteOfDay(today.shift.windowEndMinute, nextDay);
     return `${today.shiftName}（${kind}）${from}–${to}`;
   };
 
@@ -464,12 +448,12 @@ const TodaySummary: FC<{ today: ITodayStatus | null }> = ({ today }) => {
         <div className="flex flex-col gap-1 text-gray-600">
           <div>
             {t("hr_management.attendance.summary_in")}：
-            {formatMinute(today.firstInMinute, nextDay)}
+            {formatMinuteOfDay(today.firstInMinute, nextDay)}
             {today.workLocationName ? ` @ ${today.workLocationName}` : ""}
           </div>
           <div>
             {t("hr_management.attendance.summary_out")}：
-            {formatMinute(today.lastOutMinute, nextDay)}
+            {formatMinuteOfDay(today.lastOutMinute, nextDay)}
           </div>
         </div>
       ) : (
