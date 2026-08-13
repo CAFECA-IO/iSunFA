@@ -222,6 +222,29 @@ function buildQuotaExceededPayload(input: {
   };
 }
 
+/**
+ * Info: (20260813 - Luphia) 無帳本情境的付款團隊解析（設計書 §5.6）。
+ *
+ * AI 分析與物流查詢的訂單不帶帳本，付款團隊只能來自用戶：
+ * 只屬一個團隊時直接用它（沒有歧義，不必多問一步）；屬多個團隊而未指定，
+ * 一律回 TW_TEAM_AMBIGUOUS 讓前端出選單——猜錯的後果是某個團隊莫名其妙被扣額度。
+ *
+ * 指定了 teamId 就照用（成員資格由 spendCredits 的 guard 驗證），此處不重複查權限。
+ */
+export async function resolvePayingTeamId(
+  userId: string,
+  requestedTeamId?: string,
+): Promise<string> {
+  if (requestedTeamId) return requestedTeamId;
+
+  return guarded(async () => {
+    const teams = await teamRepo.listMemberTeam(userId);
+    if (teams.length === 1) return teams[0].id;
+    if (teams.length === 0) throw toApiError(API_ERRORS.TW_NOT_TEAM_MEMBER);
+    throw toApiError(API_ERRORS.TW_TEAM_AMBIGUOUS);
+  });
+}
+
 export async function spendCredits(
   params: ISpendParams,
 ): Promise<ISpendResult> {

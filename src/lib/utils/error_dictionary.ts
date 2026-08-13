@@ -987,6 +987,16 @@ export const API_ERRORS = {
    * 前端走既有 useOrderTransaction 完成付款後重送同一則訊息（冪等鍵相同，不會重複建單）。
    * 託管帳號的簽章由伺服器代行，體感上就是直接扣。
    */
+  /**
+   * Info: (20260813 - Luphia) 用戶屬於多個團隊卻未指定付款團隊（設計書 §5.6）。
+   * 歧義不該由系統猜——猜錯的後果是某個團隊莫名其妙被扣了額度。
+   * 前端據此出團隊選單，而不是隨便挑一個。
+   */
+  TW_TEAM_AMBIGUOUS: {
+    code: "TW000011",
+    message: "Multiple teams available; specify which team pays",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
   TW_PERSONAL_PAYMENT_REQUIRED: {
     code: "TW000010",
     message: "Personal credit payment required",

@@ -5,6 +5,7 @@ import {
   QuotaExceededError,
   refundCredits,
   resolveEffectivePlanId,
+  resolvePayingTeamId,
   settleSpend,
   spendCredits,
 } from "@/services/spend.service";
@@ -21,7 +22,7 @@ import { subscriptionPlanQuotaRepo } from "@/repositories/subscription_plan_quot
 import { teamWalletRepo } from "@/repositories/team_wallet.repo";
 
 jest.mock("@/repositories/team.repo", () => ({
-  teamRepo: { getTeamMember: jest.fn() },
+  teamRepo: { getTeamMember: jest.fn(), listMemberTeam: jest.fn() },
 }));
 jest.mock("@/repositories/team_subscription.repo", () => ({
   teamSubscriptionRepo: { getByTeamId: jest.fn() },
@@ -741,5 +742,46 @@ describe("resolveEffectivePlanId (fail-closed)", () => {
     expect(teamQuotaUsageRepo.createUsage).toHaveBeenCalledWith(
       expect.objectContaining({ amount: BigInt(2) }),
     );
+  });
+});
+
+/**
+ * Info: (20260813 - Luphia) 無帳本情境的付款團隊解析（設計書 §5.6）。
+ *
+ * AI 分析與物流查詢的訂單不帶帳本，付款團隊只能來自用戶。多團隊時猜錯的後果是
+ * 某個團隊莫名其妙被扣額度，因此寧可要求明示。
+ */
+describe("resolvePayingTeamId", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("honours an explicitly requested team", async () => {
+    await expect(resolvePayingTeamId("user-1", "team-9")).resolves.toBe(
+      "team-9",
+    );
+    expect(teamRepo.listMemberTeam).not.toHaveBeenCalled();
+  });
+
+  it("resolves silently when the user belongs to exactly one team", async () => {
+    asMock(teamRepo.listMemberTeam).mockResolvedValue([{ id: "team-1" }]);
+    await expect(resolvePayingTeamId("user-1")).resolves.toBe("team-1");
+  });
+
+  it("refuses to guess when the user belongs to several teams", async () => {
+    asMock(teamRepo.listMemberTeam).mockResolvedValue([
+      { id: "team-1" },
+      { id: "team-2" },
+    ]);
+    await expect(resolvePayingTeamId("user-1")).rejects.toMatchObject({
+      code: "TW000011",
+    });
+  });
+
+  it("reports a non-member rather than an ambiguity when there is no team at all", async () => {
+    asMock(teamRepo.listMemberTeam).mockResolvedValue([]);
+    await expect(resolvePayingTeamId("user-1")).rejects.toMatchObject({
+      code: "TW000008",
+    });
   });
 });

@@ -16,6 +16,7 @@ import { fulfillPaidAnalysisOrder } from "@/services/analysis_fulfillment.servic
 import {
   QuotaExceededError,
   refundCredits,
+  resolvePayingTeamId,
   spendCredits,
 } from "@/services/spend.service";
 
@@ -37,7 +38,11 @@ export async function POST(
     const { order_id: orderId } = await params;
     const parsed = teamQuotaPaymentSchema.safeParse(await request.json());
     if (!parsed.success) return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
-    const { teamId } = parsed.data;
+    /**
+     * Info: (20260813 - Luphia) 付款團隊（設計書 §5.6）：只屬一個團隊時 server 自動解析，
+     * 屬多個團隊而未指定則回 TW_TEAM_AMBIGUOUS，由前端出選單。
+     */
+    const teamId = await resolvePayingTeamId(user.id, parsed.data.teamId);
 
     const order = await getPendingOrder(orderId, user.id);
     if (order.type !== ORDER_TYPE.ANALYSIS) {
