@@ -1,7 +1,9 @@
 "use client";
 
 import { Users, Wallet } from "lucide-react";
-import type { ITeamOption } from "@/hooks/use_team_quota_payment";
+import QuotaMeter from "@/components/common/quota_meter";
+import { useAuth } from "@/contexts/auth_context";
+import type { ITeamBalance, ITeamOption } from "@/hooks/use_team_quota_payment";
 import { useTranslation } from "@/i18n/i18n_context";
 
 /**
@@ -29,6 +31,11 @@ interface IPaymentSourceSelectorProps {
   teams: ITeamOption[];
   selectedTeamId: string | null;
   onSelectTeam: (teamId: string) => void;
+  /**
+   * Info: (20260813 - Luphia) 選定團隊的可用餘額；未選或取不到即不顯示。
+   * 付款前看得到餘額，才不會按下去才發現不夠。
+   */
+  teamBalance?: ITeamBalance | null;
   // Info: (20260813 - Luphia) server 回報歸屬歧義（TW_TEAM_AMBIGUOUS）時提示要選團隊
   needsTeamSelection?: boolean;
   disabled?: boolean;
@@ -40,10 +47,12 @@ export default function PaymentSourceSelector({
   teams,
   selectedTeamId,
   onSelectTeam,
+  teamBalance = null,
   needsTeamSelection = false,
   disabled = false,
 }: IPaymentSourceSelectorProps) {
   const { t } = useTranslation();
+  const { user } = useAuth();
 
   if (teams.length === 0) return null;
 
@@ -121,7 +130,42 @@ export default function PaymentSourceSelector({
               </p>
             </>
           )}
+
+          {/**
+           * Info: (20260813 - Luphia) 選定團隊後顯示該團隊的可用餘額：
+           * 雙視窗額度（剩餘百分比，與團隊錢包面板同一元件、同一語意）
+           * 加上「分配給我的點數」——扣抵是額度與分配點數依序（物流碳足跡相反），
+           * 只看其中一邊會誤判付不付得起。
+           */}
+          {teamBalance && (
+            <div className="space-y-2 rounded-lg bg-gray-50 p-3">
+              <QuotaMeter
+                label={t("payment_source.quota_5h")}
+                limit={teamBalance.quota5h.limit}
+                used={teamBalance.quota5h.used}
+              />
+              <QuotaMeter
+                label={t("payment_source.quota_week")}
+                limit={teamBalance.quotaWeek.limit}
+                used={teamBalance.quotaWeek.used}
+              />
+              <p className="text-xs text-gray-500">
+                {t("payment_source.allocation_balance", {
+                  balance: teamBalance.allocationBalance,
+                })}
+              </p>
+            </div>
+          )}
         </div>
+      )}
+
+      {/* Info: (20260813 - Luphia) 個人點數餘額：與團隊來源對稱，兩邊都看得到自己的餘額 */}
+      {source === PAYMENT_SOURCE.PERSONAL && (
+        <p className="rounded-lg bg-gray-50 p-3 text-xs text-gray-500">
+          {t("payment_source.personal_balance", {
+            balance: user?.credits ?? "—",
+          })}
+        </p>
       )}
     </div>
   );

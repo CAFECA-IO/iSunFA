@@ -138,6 +138,7 @@ function ReportPageContent() {
    */
   const {
     teams,
+    teamBalance,
     selectedTeamId,
     setSelectedTeamId,
     status: teamPayStatus,
@@ -1493,6 +1494,7 @@ function ReportPageContent() {
             teams={teams}
             selectedTeamId={selectedTeamId}
             onSelectTeam={setSelectedTeamId}
+            teamBalance={teamBalance}
             needsTeamSelection={teamPayStatus === "needs_team"}
             disabled={teamPayStatus === "paying"}
           />

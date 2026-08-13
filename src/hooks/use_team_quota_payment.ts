@@ -5,6 +5,10 @@ import { request, ApiError as RequestApiError } from "@/lib/utils/request";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { useAuth } from "@/contexts/auth_context";
 import type { IOrderPayload } from "@/hooks/use_order_transaction";
+import type {
+  ITeamSubscriptionView,
+  ITeamWalletView,
+} from "@/interfaces/team_wallet";
 
 /**
  * Info: (20260813 - Luphia) 以團隊額度支付一筆訂單（設計書 §5.6）。
@@ -22,6 +26,16 @@ export interface ITeamOption {
   name: string;
 }
 
+/**
+ * Info: (20260813 - Luphia) 選定團隊後的可用餘額：訂閱額度雙視窗 + 我的分配點數。
+ * 兩者都要——扣抵是先額度後點數（物流碳足跡相反），只看其中一邊會誤判付不付得起。
+ */
+export interface ITeamBalance {
+  quota5h: { limit: string; used: string; resetAt: number };
+  quotaWeek: { limit: string; used: string; resetAt: number };
+  allocationBalance: string;
+}
+
 export type TeamQuotaPaymentStatus =
   | "idle"
   | "paying"
@@ -36,6 +50,7 @@ export const useTeamQuotaPayment = () => {
   const [teams, setTeams] = useState<ITeamOption[]>([]);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [status, setStatus] = useState<TeamQuotaPaymentStatus>("idle");
+  const [teamBalance, setTeamBalance] = useState<ITeamBalance | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
@@ -63,6 +78,49 @@ export const useTeamQuotaPayment = () => {
       active = false;
     };
   }, [user]);
+
+  /**
+   * Info: (20260813 - Luphia) 選定團隊後取該團隊的可用餘額：
+   * 付款前看不到餘額，就只能按下去才知道夠不夠——而不夠的後果是一張待付訂單。
+   * 訂閱額度與分配點數分屬兩支端點（設計書 §7），兩者都要才算得出可用量。
+   */
+  useEffect(() => {
+    if (!selectedTeamId) {
+      setTeamBalance(null);
+      return;
+    }
+    let active = true;
+    const fetchBalance = async () => {
+      try {
+        const [subscription, wallet] = await Promise.all([
+          request<{ payload: ITeamSubscriptionView | null }>(
+            `/api/v1/user/team/${selectedTeamId}/subscription`,
+          ),
+          request<{ payload: ITeamWalletView | null }>(
+            `/api/v1/user/team/${selectedTeamId}/wallet`,
+          ),
+        ]);
+        if (!active) return;
+        const quota = subscription.payload?.quota;
+        if (!quota) {
+          setTeamBalance(null);
+          return;
+        }
+        setTeamBalance({
+          quota5h: quota.quota5h,
+          quotaWeek: quota.quotaWeek,
+          allocationBalance: wallet.payload?.myAllocationBalance ?? "0",
+        });
+      } catch {
+        // Info: (20260813 - Luphia) 餘額是輔助資訊，取不到就不顯示，不擋住付款
+        if (active) setTeamBalance(null);
+      }
+    };
+    fetchBalance();
+    return () => {
+      active = false;
+    };
+  }, [selectedTeamId]);
 
   const reset = useCallback(() => {
     setStatus("idle");
@@ -125,6 +183,7 @@ export const useTeamQuotaPayment = () => {
 
   return {
     teams,
+    teamBalance,
     selectedTeamId,
     setSelectedTeamId,
     status,
