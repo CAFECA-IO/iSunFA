@@ -13,6 +13,7 @@ import {
   IWorkLocationSummary,
 } from "@/interfaces/attendance";
 import { findNearestGeofence, IGeofenceMatch } from "@/lib/attendance_geofence";
+import PunchMap from "@/components/hr_management/attendance/punch_map";
 import { formatMinuteOfDay } from "@/lib/utils/attendance_format";
 import { ApiError, IEnvelopeLike, request } from "@/lib/utils/request";
 import {
@@ -254,6 +255,31 @@ const PunchPageBody: FC = () => {
             accuracyMeters={effectiveReading?.accuracyMeters ?? null}
             onRetry={refresh}
           />
+
+          {/**
+           * Info: (20260813 - Julian) 地圖擺在狀態列**下面**，不是上面。
+           *
+           * 上面那一行是主張（「距工區 340 公尺，超出打卡範圍」），
+           * 地圖是它的佐證。反過來擺，第一眼看到的會是一張還在載入的灰框，
+           * 而使用者真正需要的那句話被推到下面 —— 地圖掛掉時更是如此。
+           *
+           * 只有拿得到地點清單時才渲染：沒有地點就沒有圍欄可畫，
+           * 一張空白底圖不會告訴任何人任何事。
+           */}
+          {locations.length > 0 && (
+            <div className="mt-4">
+              <PunchMap
+                locations={locations}
+                nearestLocation={
+                  locations.find(
+                    (location) => location.id === nearest?.location.id,
+                  ) ?? null
+                }
+                reading={effectiveReading}
+                inside={nearest?.inside ?? false}
+              />
+            </div>
+          )}
 
           {/* Deprecated: (20260813 - Julian) [start] Demo 專用的手動座標輸入 */}
           {ALLOW_MANUAL_COORDINATE && (

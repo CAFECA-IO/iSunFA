@@ -82,6 +82,8 @@ const buildService = (stubs: IStubs): AttendanceIdentityService => {
     // Info: (20260813 - Julian) 身分橋接用不到出勤名冊與排班；由各自的測試覆蓋
     findRosterInPeriod: async () => [],
     findByIdInAccountBook: async () => null,
+    // Info: (20260813 - Julian) 假勤加入的成員；本測試用不到，補樁讓介面完整
+    isDepartmentManager: async () => false,
   };
 
   const identities: IUserIdentityRepository = {

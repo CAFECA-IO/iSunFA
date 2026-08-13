@@ -28,18 +28,25 @@ const PendingImportItemSchema = z.object({
    * 這裡的表格在寫入時已經過 Service 那道裁決,所以到不了這裡才壞;
    * 真的壞了就是資料損毀,靜靜丟掉一張表比丟掉整份解析結果輕。
    * 空陣列收斂為 undefined:「沒有表格」只該有一種表示。
+   *
+   * Info: (20260813 - Julian) `.optional()` 必須包在 `.transform()` **外面**。
+   * 寫成 `.optional().transform()` 時,ZodOptional 被 transform 吞掉,z.infer 推出的是
+   * 「鍵必填、值可為 undefined」的 `sourceTables: ICarbonSourceTable[] | undefined`,
+   * 與 IPendingImportItem 的 `sourceTables?: ICarbonSourceTable[]` 不相容(TS2322,擋 build)。
+   * 順序調換後鍵位維持 optional,執行語意不變:缺鍵時 transform 不執行直接得 undefined,
+   * 有鍵時照舊逐張裁決並把空陣列收斂為 undefined。
    */
   sourceTables: z
     .array(z.unknown())
     .max(20)
-    .optional()
     .transform((tables) => {
-      const accepted = (tables ?? []).flatMap((candidate) => {
+      const accepted = tables.flatMap((candidate) => {
         const parsed = CarbonSourceTableSchema.safeParse(candidate);
         return parsed.success ? [parsed.data] : [];
       });
       return accepted.length > 0 ? accepted : undefined;
-    }),
+    })
+    .optional(),
 });
 
 /**

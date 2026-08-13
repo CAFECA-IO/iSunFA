@@ -3,6 +3,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import * as HrConstants from "@/constants/hr_management";
 import * as AttendanceConstants from "@/constants/attendance";
+import * as LeaveConstants from "@/constants/leave";
 
 /**
  * Info: (20260811 - Julian) 把「前端 enum 鏡像與 Prisma schema 同步」這件事機械化。
@@ -77,6 +78,7 @@ const SCHEMA_ENUMS = parseSchemaEnums(
 const CONSTANT_MODULES: Record<string, Record<string, unknown>> = {
   "hr_management.ts": HrConstants,
   "attendance.ts": AttendanceConstants,
+  "leave.ts": LeaveConstants,
 };
 
 // Info: (20260811 - Julian) 需與 Prisma schema 保持一致的鏡像。新增鏡像時必須在此登記
@@ -92,6 +94,11 @@ const MIRRORED: Record<string, Record<string, string>> = {
   PunchType: AttendanceConstants.PunchType,
   PunchVerification: AttendanceConstants.PunchVerification,
   WorkDayType: AttendanceConstants.WorkDayType,
+
+  // Info: (20260813 - Julian) 假勤
+  LeaveType: LeaveConstants.LeaveType,
+  LeaveRequestStatus: LeaveConstants.LeaveRequestStatus,
+  LeaveRecallStatus: LeaveConstants.LeaveRecallStatus,
 };
 
 /**
@@ -193,6 +200,14 @@ const UI_ONLY = [
   "AttendanceDayStatus",
   "AttendanceExceptionType",
   "PresenceStatus",
+
+  /**
+   * Info: (20260813 - Julian) `LeaveRecallDecision` 是請求 DTO 的欄位，不是被儲存的值。
+   *
+   * 存下來的是回應**之後**的狀態（`LeaveRecallStatus.ACCEPTED` / `DECLINED`）。
+   * 把「他按了哪個鍵」與「結果是什麼」都存一份，就是第二種真相。
+   */
+  "LeaveRecallDecision",
 ];
 
 /**

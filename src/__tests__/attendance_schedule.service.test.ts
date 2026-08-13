@@ -98,6 +98,8 @@ const buildService = (options: {
       options.employeeInBook === false
         ? null
         : ({ id: "emp-2", employeeNo: "EMP002" } as Employee),
+    // Info: (20260813 - Julian) 假勤加入的成員；本測試用不到，補樁讓介面完整
+    isDepartmentManager: async () => false,
   };
 
   const schedule: IAttendanceScheduleRepository = {

@@ -642,6 +642,7 @@ model AccountBook {
   shiftPatterns     ShiftPattern[]
   employeeShiftDays EmployeeShiftDay[]
   attendancePunches AttendancePunch[]
+  leaveRequests     LeaveRequest[]
 
   @@map("account_book")
 }
@@ -1827,6 +1828,11 @@ model Employee {
   shiftDays         EmployeeShiftDay[]
   attendancePunches AttendancePunch[]
 
+  // Info: (20260813 - Julian) 假勤：自己的假單、以核准者身分做過的決定、以主管身分發起的銷假徵詢
+  leaveRequests  LeaveRequest[] @relation("LeaveRequestEmployee")
+  leaveDecisions LeaveRequest[] @relation("LeaveRequestDecider")
+  leaveRecalls   LeaveRecall[]  @relation("LeaveRecallRequester")
+
   createdAt     DateTime       @default(now()) @map("created_at")
   updatedAt     DateTime       @updatedAt @map("updated_at")
 
@@ -2428,6 +2434,9 @@ model ShiftPattern {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  // Info: (20260813 - Julian) 銷假徵詢指定的班別
+  leaveRecalls LeaveRecall[]
+
   @@unique([accountBookId, code])
   @@index([accountBookId])
   @@map("shift_pattern")
@@ -2549,4 +2558,199 @@ model AttendancePunch {
   @@index([accountBookId, workDate])
   @@index([workLocationId])
   @@map("attendance_punch")
+}
+
+// Info: (20260813 - Julian) ── 假勤（銷假徵詢）───────────────────────────────
+
+/**
+ * Info: (20260813 - Julian) 假別。
+ *
+ * 只是分類，不帶任何規則 —— 時數扣抵、特休年度結算、給薪比例都屬於薪資模組
+ * （母文件 §5.3 的跨模組邊界）。這裡放假別，是因為**銷假的合法性依假別而不同**：
+ * 特休依勞基法 §38 III 由勞工排定，事假病假不是。
+ *
+ * ToDo: (20260813 - Julian) 正式版需要一張假別設定表（是否給薪、年度額度、
+ * 可否銷假、需否附證明），而不是寫死的 enum。Demo 階段用 enum 是因為
+ * 一張只有七列且不會被編輯的表，比 enum 貴而不多任何一分保證。
+ */
+enum LeaveType {
+  ANNUAL      // Info: (20260813 - Julian) 特別休假
+  PERSONAL    // Info: (20260813 - Julian) 事假
+  SICK        // Info: (20260813 - Julian) 普通傷病假
+  OFFICIAL    // Info: (20260813 - Julian) 公假
+  MARRIAGE    // Info: (20260813 - Julian) 婚假
+  BEREAVEMENT // Info: (20260813 - Julian) 喪假
+  OTHER       // Info: (20260813 - Julian) 其他
+}
+
+/**
+ * Info: (20260813 - Julian) 假單狀態。
+ *
+ * **沒有 RECALLED。** 銷假是逐日的（見 LeaveDay 的說明），
+ * 整張假單不會因為其中一天被銷而改變狀態 —— 其餘的日子仍然生效。
+ * 把「部分被銷」寫成假單層級的狀態，等於宣稱一件不成立的事。
+ */
+enum LeaveRequestStatus {
+  PENDING   // Info: (20260813 - Julian) 待核准
+  APPROVED  // Info: (20260813 - Julian) 已核准，生效中
+  REJECTED  // Info: (20260813 - Julian) 未核准
+  WITHDRAWN // Info: (20260813 - Julian) 申請人自行撤回
+}
+
+/**
+ * Info: (20260813 - Julian) 銷假徵詢的狀態。
+ *
+ * ToDo: (20260813 - Julian) 缺 EXPIRED：日子過了而對方始終沒回應的徵詢，
+ * 目前會永遠停在 PENDING。要嘛加排程把它收掉，要嘛在讀取時依 workDate 推導。
+ * Demo 期間兩者都不做，因為演示的徵詢在三分鐘內就會被回應。
+ */
+enum LeaveRecallStatus {
+  PENDING  // Info: (20260813 - Julian) 已發出，等待員工回應。**此期間假仍然生效**
+  ACCEPTED // Info: (20260813 - Julian) 員工同意，該日已改回上班日
+  DECLINED // Info: (20260813 - Julian) 員工婉拒，假單原封不動
+}
+
+/**
+ * Info: (20260813 - Julian) 假單本體：回答「為什麼不用來」。
+ *
+ * 判定引擎讀的仍然是 `EmployeeShiftDay`，不是這張表 ——
+ * 假單核准時**投影**成 `dayType = LEAVE`，銷假時投影回 `WORK`。
+ * 不讓引擎直接讀假單，是為了維持它的純函數性質（計畫書 §2.5）：
+ * 多一個資料來源，就多一組「兩邊說法不一致」的可能。
+ */
+model LeaveRequest {
+  id String @id @default(uuid())
+
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  employeeId String   @map("employee_id")
+  employee   Employee @relation("LeaveRequestEmployee", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  leaveType LeaveType          @map("leave_type")
+  // Info: (20260813 - Julian) 請假事由。非空：一張沒有理由的假單，事後沒有人能判斷它合不合理
+  reason    String
+  status    LeaveRequestStatus @default(PENDING)
+
+  // Info: (20260813 - Julian) SetNull：核准者離職不該讓假單一起消失，但「誰核准的」會因此變成 null。
+  // Info: (20260813 - Julian) 正式版要留下不可變的核准者快照（姓名與工號），這裡是 demo 的取捨
+  decidedByEmployeeId String?   @map("decided_by_employee_id")
+  decidedBy           Employee? @relation("LeaveRequestDecider", fields: [decidedByEmployeeId], references: [id], onDelete: SetNull)
+  decidedAt           DateTime? @map("decided_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  days LeaveDay[]
+
+  @@index([accountBookId, employeeId])
+  @@index([accountBookId, status])
+  @@map("leave_request")
+}
+
+/**
+ * Info: (20260813 - Julian) 假單逐日展開：回答「哪幾天不用來」，也是與排班對位的那一層。
+ *
+ * ## 為什麼要展開成逐日，而不是在假單上放起迄
+ *
+ * 排班是逐日的，銷假也是逐日的 —— 工地缺的是**明天**的人，不是整週的人。
+ * 起迄區間無法表示「這五天裡的第三天被銷了、其餘四天仍然有效」，
+ * 而那正是這個需求最常見的情況。
+ *
+ * ## `activeKey`：讓「同一人同一天有兩張生效假單」不可表示
+ *
+ * 值為 `"<employeeId>:<workDate>"`，且**只在假單生效時填入**，其餘狀態為 null。
+ * Postgres 的 unique index 不約束 NULL，因此已駁回／已撤回／已銷假的日子可以
+ * 重複無限多筆，而生效中的只能有一筆 —— 這是 partial unique index 的可攜寫法。
+ *
+ * 銷假時把它設回 null，**不刪列**：刪掉的話「他曾經請過這天、後來被銷了」
+ * 這個事實就消失了，而那正是主管機關會查的東西。
+ *
+ * 刻意不在本表另存 `employeeId`：它可以從 `leaveRequest` 取得，
+ * 存第二份就等於允許「明細的員工與假單的員工不一致」這種非法狀態存在（ADR 019）。
+ * 代價是查詢要 join 一層，在這個資料量下不值得為它交換一個新的矛盾來源。
+ */
+model LeaveDay {
+  id String @id @default(uuid())
+
+  leaveRequestId String       @map("leave_request_id")
+  leaveRequest   LeaveRequest @relation(fields: [leaveRequestId], references: [id], onDelete: Cascade)
+
+  // Info: (20260813 - Julian) "YYYY-MM-DD"，與 EmployeeShiftDay.workDate 同型別同語意
+  workDate String @map("work_date")
+
+  // Info: (20260813 - Julian) 生效中才有值（見上方說明）
+  activeKey String? @unique @map("active_key")
+
+  // Info: (20260813 - Julian) 被銷假的時點。null 表示未被銷 —— 與 activeKey 是兩件事：
+  // Info: (20260813 - Julian) 假單被駁回的日子 activeKey 也是 null，但它從來沒有被銷過
+  recalledAt DateTime? @map("recalled_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  recalls LeaveRecall[]
+
+  @@unique([leaveRequestId, workDate])
+  @@index([workDate])
+  @@map("leave_day")
+}
+
+/**
+ * Info: (20260813 - Julian) 銷假徵詢：回答「誰要求誰回來、對方答應了嗎」。
+ *
+ * ## 為什麼是獨立的表，不是 LeaveRequest 的一個狀態
+ *
+ * 徵詢會被婉拒，而婉拒之後假單回到原狀 —— 若做成狀態，第二次徵詢會抹掉第一次，
+ * 「這個人被要求回來過三次、拒絕了兩次」這個事實無處可存。
+ * 而在人手不足的爭議裡，那正是最該留下的部分。
+ *
+ * ## 為什麼徵詢期間假仍然生效
+ *
+ * 主管按下去的當下若立刻把該日改回 WORK，員工還沒回應就已經是「排了班卻沒到」，
+ * 系統會把他算進未到工。那是拿系統事實去施壓，而勞基法 §38 III 要的是協商。
+ * 因此 `EmployeeShiftDay` 的寫入只發生在 `ACCEPTED` 的那一刻。
+ *
+ * ## `pendingLeaveDayId`
+ *
+ * 與 `LeaveDay.activeKey` 同一手法：只在 PENDING 時填入 `leaveDayId`，
+ * 讓「同一天同時掛著兩張待回應的徵詢」不可表示。被拒絕過的徵詢可以有很多筆。
+ */
+model LeaveRecall {
+  id String @id @default(uuid())
+
+  leaveDayId String   @map("leave_day_id")
+  leaveDay   LeaveDay @relation(fields: [leaveDayId], references: [id], onDelete: Cascade)
+
+  // Info: (20260813 - Julian) 僅 PENDING 時等於 leaveDayId，其餘為 null（見上方說明）
+  pendingLeaveDayId String? @unique @map("pending_leave_day_id")
+
+  requestedByEmployeeId String   @map("requested_by_employee_id")
+  requestedBy           Employee @relation("LeaveRecallRequester", fields: [requestedByEmployeeId], references: [id], onDelete: Cascade)
+
+  /**
+   * Info: (20260813 - Julian) 要他回來上哪一班。非空。
+   *
+   * 「請你回來上班」不是一個完整的請求 —— 員工同意的必須是一個具體的班別，
+   * 而不是一個待定的時間。它也讓「同意之後那天沒有班別」不可表示：
+   * 投影回 `EmployeeShiftDay` 時 `dayType = WORK` 與 `shiftPatternId` 一起寫入，
+   * `assertSchedulableDay` 因此永遠成立。
+   *
+   * Restrict：班別被刪不可讓歷史徵詢的班別靜默變成 null，語意同 EmployeeShiftDay。
+   */
+  shiftPatternId String       @map("shift_pattern_id")
+  shiftPattern   ShiftPattern @relation(fields: [shiftPatternId], references: [id], onDelete: Restrict)
+
+  // Info: (20260813 - Julian) 「企業經營上之急迫需求」的書面記載。非空 —— 沒有理由的徵詢就是命令
+  reason String
+  status LeaveRecallStatus @default(PENDING)
+
+  respondedAt  DateTime? @map("responded_at")
+  // Info: (20260813 - Julian) 員工回應時可附一句話；婉拒的理由對後續協商有意義
+  responseNote String?   @map("response_note")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([leaveDayId])
+  @@index([requestedByEmployeeId])
+  @@map("leave_recall")
 }

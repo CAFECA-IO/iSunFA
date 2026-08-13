@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useMemo } from "react";
+import { FC, useMemo, useState } from "react";
 import Map, { Layer, Marker, Source } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
@@ -36,6 +36,16 @@ const PresenceMap: FC<{
   const { t } = useTranslation();
   const mapTilerKey = process.env.NEXT_PUBLIC_MAPTILER_KEY;
 
+  /**
+   * Info: (20260813 - Julian) 底圖載入失敗時退回同一行說明。
+   *
+   * 只檢查「有沒有金鑰」不夠 —— **一把錯的金鑰會通過那個檢查**，
+   * 然後 maplibre 取不到 style，畫面上留下一塊空白的灰色方框。
+   * 那比一行說明糟：看的人會以為整頁壞了，而其實壞的只有底圖。
+   * 會場連不到 MapTiler 時也是同一條路徑。
+   */
+  const [hasMapError, setHasMapError] = useState<boolean>(false);
+
   const features = useMemo(
     () => buildGeofenceFeatures(locations, selectedId),
     [locations, selectedId],
@@ -49,7 +59,7 @@ const PresenceMap: FC<{
    * （或會場連不上 MapTiler），紅色錯誤框會讓整頁看起來壞掉，
    * 而其實壞掉的只有底圖 —— 執行手冊的備援分級講的就是這件事。
    */
-  if (!mapTilerKey || !bounds) {
+  if (!mapTilerKey || !bounds || hasMapError) {
     return (
       <div className="rounded-2xl bg-gray-50 px-4 py-6 text-center text-sm text-gray-400 ring-1 ring-gray-200">
         {t("hr_management.attendance_presence.map_unavailable")}
@@ -62,6 +72,7 @@ const PresenceMap: FC<{
       <Map
         initialViewState={{ bounds, fitBoundsOptions: { padding: 64 } }}
         mapStyle={`https://api.maptiler.com/maps/dataviz-light/style.json?key=${mapTilerKey}`}
+        onError={() => setHasMapError(true)}
       >
         <Source id="attendance-geofence" type="geojson" data={features}>
           <Layer

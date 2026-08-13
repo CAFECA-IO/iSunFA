@@ -1,6 +1,7 @@
 "use client";
 
 import Head from "next/head";
+import AttendanceAuthGate from "@/components/hr_management/attendance/attendance_auth_gate";
 import PunchPageBody from "@/components/hr_management/attendance/punch_page_body";
 import { useTranslation } from "@/i18n/i18n_context";
 
@@ -19,8 +20,10 @@ export default function AttendancePage() {
         </title>
       </Head>
 
-      {/* Info: (20260813 - Julian) Main body */}
-      <PunchPageBody />
+      {/* Info: (20260813 - Julian) Main body。未登入時閘門會擋住，子元件不會 mount */}
+      <AttendanceAuthGate>
+        <PunchPageBody />
+      </AttendanceAuthGate>
     </>
   );
 }

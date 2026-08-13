@@ -519,6 +519,9 @@ export const hrManagement = {
     action_submit: "作成して通知",
   },
   attendance: {
+    map_unavailable:
+      "地図を表示できません。打刻には影響しません —— 上部の距離と精度はそのまま有効です。",
+    map_self_label: "現在地",
     title: "勤怠打刻",
     greeting: "{{name}}（{{employeeNo}}）",
     loading: "読み込み中…",
@@ -673,5 +676,30 @@ export const hrManagement = {
     weekday_thu: "木",
     weekday_fri: "金",
     weekday_sat: "土",
+  },
+  attendance_auth: {
+    checking: "ログイン状態を確認しています…",
+    title: "先にログインしてください",
+    description:
+      "打刻・シフト・現場名簿はいずれも従業員情報に紐づいているため、会社アカウントでのログインが必要です。",
+    provider_checking: "利用可能なログイン方法を確認しています…",
+    provider_unconfigured: "Google ログインが未設定です",
+    provider_unconfigured_hint:
+      "この環境では有効な外部ログインが 1 つも登録されていないとサーバーが応答しました。SUPER_ADMIN が /admin/settings で GOOGLE_OAUTH_CLIENT_ID と GOOGLE_OAUTH_CLIENT_SECRET を入力して署名し、Google Console の Authorized redirect URI が本サイトのアドレスと一致していることをご確認ください。",
+    provider_unreachable: "利用可能なログイン方法を確認できません",
+    provider_unreachable_hint:
+      "ログイン方法を問い合わせる API が正常に応答しませんでした。ブラウザ console の「Failed to load OAuth providers」とサーバーログをご確認ください。システム設定スナップショットが UNTRUSTED の場合も同じ状態になります。",
+    passkey_toggle: "パスキーでログインする",
+    passkey_action: "パスキーでログイン",
+    passkey_pending: "端末の確認を待っています…",
+    passkey_canceled:
+      "キャンセルされ、端末の確認が完了しませんでした。ログインするにはもう一度押してください。",
+    passkey_failed:
+      "ログインに失敗しました。この端末にパスキーが登録されていないか、確認がタイムアウトした可能性があります —— 登録した端末かどうかご確認ください。",
+    passkey_fallback_hint:
+      "パスキーのアカウントにはメールアドレスがなく、従業員情報と自動で照合できません —— 人事が事前に紐づけたアカウントのみこの方法で入れます。",
+    passkey_unavailable:
+      "この環境ではパスキーを利用できません。パスキーは HTTPS（または localhost）の安全な接続でのみ動作します。正式なアドレスで開いてください。",
+    hint: "ログインする Google アカウントは登録済みの会社メールアドレスである必要があります —— 名簿にない人はこの現場で打刻できません。ログイン後に「従業員情報が見つかりません」と表示される場合は、人事にアドレスをご確認ください。",
   },
 };

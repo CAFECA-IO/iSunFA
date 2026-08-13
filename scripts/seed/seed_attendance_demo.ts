@@ -648,6 +648,39 @@ function requireEnv(name: string): string {
   return value;
 }
 
+/**
+ * Info: (20260813 - Julian) 座標必須是一個數字，而且要落在合理範圍。
+ *
+ * 因此檢查三件事：解析得出數字、落在台灣的經緯度範圍、而且經緯度沒有互換。
+ * 台灣的緯度約 21.9–25.3、經度約 119.3–122.0，兩個區間不重疊，
+ * **所以「把經度填進緯度欄」這種錯是抓得出來的**。
+ */
+function requireCoordinate(
+  name: string,
+  range: { min: number; max: number },
+): number {
+  const raw = requireEnv(name);
+  const value = Number(raw);
+
+  if (!Number.isFinite(value)) {
+    throw new Error(
+      `${name}="${raw}" 不是一個數字。` +
+        `從地圖複製出來的常是「緯度/經度」或「緯度, 經度」的成對字串 ——` +
+        `請把兩個數字分別填進 DEMO_SITE_A_LAT 與 DEMO_SITE_A_LNG。`,
+    );
+  }
+
+  if (value < range.min || value > range.max) {
+    throw new Error(
+      `${name}=${value} 不在合理範圍 [${range.min}, ${range.max}]。` +
+        `台灣的緯度約 21.9–25.3、經度約 119.3–122.0 —— ` +
+        `若這個值看起來像另一個欄位的值，就是經緯度填反了。`,
+    );
+  }
+
+  return value;
+}
+
 function buildWorkLocations() {
   return [
     {
@@ -660,8 +693,11 @@ function buildWorkLocations() {
     {
       code: "LOC-A",
       name: "大漢溪橋梁改建工程 工區",
-      latitude: Number(requireEnv("DEMO_SITE_A_LAT")),
-      longitude: Number(requireEnv("DEMO_SITE_A_LNG")),
+      latitude: requireCoordinate("DEMO_SITE_A_LAT", { min: 21.9, max: 25.3 }),
+      longitude: requireCoordinate("DEMO_SITE_A_LNG", {
+        min: 119.3,
+        max: 122.0,
+      }),
       radiusMeters: Number(process.env.DEMO_SITE_A_RADIUS ?? 500),
     },
     {
@@ -1137,9 +1173,17 @@ async function main(): Promise<void> {
   }
   verifyGeneratedData();
 
+  /**
+   * Info: (20260813 - Julian) 本腳本會重建員工檔，`Employee.userId` 一併歸零。
+   *
+   * 走 Google 登入時這不是問題 —— 下一次首登會以已驗證的信箱重新綁上。
+   * 真正會出事的是信箱對不上，而那件事在 seed 當下就決定了，
+   * 所以這句話印在最後：那時候沒有人會再回頭看文件。
+   */
   console.log(
-    `\n⚠️  演示前請確認 EMP005 / EMP006 的 email 已改為上台者的公司 Google 帳號` +
-      `（DEMO_EMAIL_EMP005 / DEMO_EMAIL_EMP006），且今日打卡不含這兩位。`,
+    `\n⚠️  員工檔已重建，所有 Employee.userId 已歸零（Google 首登會自動重新綁定）。` +
+      `\n   請確認 DEMO_EMAIL_EMP005 / DEMO_EMAIL_EMP006 與上台者實際登入的 Google 帳號完全相同，` +
+      `\n   且今日打卡不含這兩位。對不上時的救援見執行手冊 §3.1。`,
   );
   console.log("✅ 完成");
 }

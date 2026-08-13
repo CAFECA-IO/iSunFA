@@ -512,6 +512,8 @@ export const hrManagement = {
     action_submit: "建立并发送通知",
   },
   attendance: {
+    map_unavailable: "地图无法显示，不影响打卡。上方的距离与精度仍然有效。",
+    map_self_label: "你当前的位置",
     title: "出勤打卡",
     greeting: "{{name}}（{{employeeNo}}）",
     loading: "载入中…",
@@ -660,5 +662,29 @@ export const hrManagement = {
     weekday_thu: "四",
     weekday_fri: "五",
     weekday_sat: "六",
+  },
+  attendance_auth: {
+    checking: "确认登录状态…",
+    title: "请先登录",
+    description:
+      "出勤打卡、班表与现场名单都绑定在你的员工身份上，因此需要先以公司账号登录。",
+    provider_checking: "确认可用的登录方式…",
+    provider_unconfigured: "Google 登录尚未设定",
+    provider_unconfigured_hint:
+      "服务器回报这个环境没有任何已启用的第三方登录。请由 SUPER_ADMIN 在 /admin/settings 填入 GOOGLE_OAUTH_CLIENT_ID 与 GOOGLE_OAUTH_CLIENT_SECRET 并签章，并确认 Google Console 的 Authorized redirect URI 与本站网址相符。",
+    provider_unreachable: "无法确认可用的登录方式",
+    provider_unreachable_hint:
+      "查询登录方式的 API 没有回应成功。请检查浏览器 console 的「Failed to load OAuth providers」与服务器日志；系统设定快照为 UNTRUSTED 时也会是这个状况。",
+    passkey_toggle: "改用 Passkey 登录",
+    passkey_action: "使用 Passkey 登录",
+    passkey_pending: "等待设备验证…",
+    passkey_canceled: "已取消，没有完成设备验证。要登录请再按一次。",
+    passkey_failed:
+      "登录失败。这台设备上可能还没有注册过 Passkey，或是验证超时 —— 请确认用的是注册时那台设备。",
+    passkey_fallback_hint:
+      "Passkey 账号没有邮箱，无法自动对应到员工档 —— 只有事先由人事绑定过的账号能用这个方式进入。",
+    passkey_unavailable:
+      "这个环境无法使用 Passkey。Passkey 只在 HTTPS（或 localhost）安全连接下运作，请改用正式网址开启本页。",
+    hint: "登录的 Google 账号必须是已建档的公司邮箱 —— 不在名册上的人打不了这个工区的卡。若登录后显示「尚未对应到员工档」，请联系人事确认邮箱。",
   },
 };
