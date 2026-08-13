@@ -63,3 +63,17 @@ export const attendanceResultQuerySchema = z
 export type IAttendanceResultQuery = z.infer<
   typeof attendanceResultQuerySchema
 >;
+
+/**
+ * Info: (20260813 - Julian) 緊急點名匯出（A10）。
+ *
+ * `workLocationId` 選填：不給就匯出全帳本每一個地點。**預設是全部而不是必填**——
+ * 火災時打開這個功能的人要的是「樓裡還有誰」，不是「先想清楚是哪一棟」。
+ */
+export const attendanceRosterExportSchema = z.object({
+  workLocationId: z.string().min(1).optional(),
+});
+
+export type IAttendanceRosterExportInput = z.infer<
+  typeof attendanceRosterExportSchema
+>;

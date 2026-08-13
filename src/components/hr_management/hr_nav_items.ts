@@ -2,6 +2,7 @@ import {
   Building2,
   FileText,
   LayoutDashboard,
+  ClipboardList,
   LucideIcon,
   MapPin,
   Repeat,
@@ -53,6 +54,13 @@ export const HR_NAV_ITEMS: IHrNavItem[] = [
     href: HR_MANAGEMENT_ROUTE.ATTENDANCE,
     labelKey: "hr_management.nav.attendance",
     icon: MapPin,
+    disabled: false,
+  },
+  {
+    key: "attendance_result",
+    href: HR_MANAGEMENT_ROUTE.ATTENDANCE_RESULT,
+    labelKey: "hr_management.nav.attendance_result",
+    icon: ClipboardList,
     disabled: false,
   },
   {

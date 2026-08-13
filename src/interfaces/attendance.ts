@@ -2,6 +2,7 @@ import {
   AttendanceDayPhase,
   AttendanceDayStatus,
   AttendanceExceptionType,
+  PresenceStatus,
   PunchType,
   ShiftPatternKind,
   WorkDayType,
@@ -290,4 +291,96 @@ export interface IAttendanceResultMatrix {
   evaluatedAt: string;
   engineVersion: number;
   rows: IAttendanceResultRow[];
+}
+
+/**
+ * Info: (20260813 - Julian) ===== 現場在班狀態（W7）=====
+ *
+ * Demo 版**不落地 `AttendancePresence`**，改為讀取時由 `AttendancePunch`
+ * 即時推導（demo 計畫書 §4.3：砍掉的是快取，留下的是真相）。
+ * 母文件 §D10.1 說「推導是正確的，但每次推導不可行」—— 不可行的理由是效能，
+ * 而 demo 沒有那個壓力。這裡寫的推導邏輯正是正式版 `rebuildPresence` 的內容。
+ */
+
+// Info: (20260813 - Julian) 名單上的一個人。欄位即 §D10.5 要求的六項
+export interface IPresenceEntry {
+  employeeId: string;
+  employeeNo: string;
+  name: string;
+  departmentName: string | null;
+  jobTitle: string | null;
+  status: PresenceStatus;
+  /** Info: (20260813 - Julian) 這筆在班屬於哪個工作日；跨夜班會是昨天 */
+  workDate: string;
+  /** Info: (20260813 - Julian) 上班打卡時刻，以 `workDate` 當地 00:00 起算 */
+  sinceMinute: number;
+  workLocationId: string;
+  workLocationName: string;
+}
+
+/**
+ * Info: (20260813 - Julian) 排了上班日、時間到了卻沒有任何打卡的人。
+ *
+ * **這個數字是必要的，不是加分項**（母文件 §D10.6）。一個只顯示「在班 42 人」
+ * 的看板，會讓人以為現場就是 42 個人；把「沒打上班卡的人」一併顯示出來，
+ * 才誠實地表達了「系統知道什麼、不知道什麼」。
+ */
+export interface IPresenceExpectedAbsentee {
+  employeeId: string;
+  employeeNo: string;
+  name: string;
+  departmentName: string | null;
+  jobTitle: string | null;
+  shiftName: string | null;
+  /** Info: (20260813 - Julian) 遲到判定基準；看板據此說明「他該在幾點前到」 */
+  coreStartMinute: number;
+}
+
+// Info: (20260813 - Julian) 單一地點的人數。含圓心與半徑，供 W9 直接畫地圖
+export interface IPresenceLocationSummary {
+  workLocationId: string;
+  code: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  radiusMeters: number;
+  onSiteCount: number;
+  staleCount: number;
+}
+
+/**
+ * Info: (20260813 - Julian) 現場人數總覽（A3）。
+ *
+ * `observedAt` 與判定矩陣的 `evaluatedAt` 同一個角色，但這裡更重要：
+ * 現場狀態每分每秒都在變，一份沒有時間戳的名單在事故調查時無法採信。
+ */
+export interface IPresenceSummary {
+  observedAt: string;
+  timeZone: string;
+  /** Info: (20260813 - Julian) 觀測當下的當地日期，未到工以此日的排班認定 */
+  workDate: string;
+  locations: IPresenceLocationSummary[];
+  onSiteTotal: number;
+  staleTotal: number;
+  /**
+   * Info: (20260813 - Julian) 未到工**不分地點**。
+   *
+   * 這些人沒有打卡，因此系統手上沒有任何座標可以把他們歸給某個工區 ——
+   * 而 `EmployeeShiftDay` 目前也沒有地點欄位。硬要分配就是捏造。
+   *
+   * ToDo: (20260813 - Julian) 正式版讓排班帶上預定工區（或給員工一個預設工地），
+   * 屆時未到工才分得了地點 —— 而「這個工區今天少了三個人」比
+   * 「全處少了三個人」對工地主任有用得多。
+   */
+  expectedAbsentees: IPresenceExpectedAbsentee[];
+}
+
+// Info: (20260813 - Julian) 單一地點的到班名單（A4）
+export interface IPresenceRoster {
+  workLocationId: string;
+  code: string;
+  name: string;
+  observedAt: string;
+  timeZone: string;
+  entries: IPresenceEntry[];
 }

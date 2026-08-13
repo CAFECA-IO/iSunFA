@@ -141,7 +141,6 @@ const buildService = (options: {
   const punches: IAttendancePunchRepository = {
     create: async (input) => input as unknown as AttendancePunch,
     findByEmployeeAndWorkDate: async () => [],
-    findByAccountBookAndWorkDate: async () => [],
     findByWorkDateRange: async (params) => {
       scopedEmployeeIds.push(params.employeeIds);
       return options.punches ?? [];

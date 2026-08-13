@@ -183,6 +183,13 @@ const UI_ONLY = [
    */
   "AttendanceDayPhase",
 
+  /**
+   * Info: (20260813 - Julian) `AttendanceCellTone` 是純顯示語意：
+   * 「一格只有一個顏色，而一天可以有多種異常」這個限制下，
+   * 挑哪一種代表這一天是排版決定，不是判定結果 —— 它不會有 schema 對應物。
+   */
+  "AttendanceCellTone",
+
   "AttendanceDayStatus",
   "AttendanceExceptionType",
   "PresenceStatus",

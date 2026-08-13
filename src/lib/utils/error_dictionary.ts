@@ -1084,6 +1084,19 @@ export const API_ERRORS = {
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
 
+  /**
+   * Info: (20260813 - Julian) 指定的打卡地點不存在，或不屬於這個帳本。
+   *
+   * 與 `NF_WORK_LOCATION`（帳本一個地點都沒設定）分開：後者是設定問題。
+   * 這一條刻意**不回空名單** —— 一個打錯的地點 id 若回「現場 0 人」，
+   * 在職安場景下與「這個工區真的沒有人」長得一模一樣，而看的人會相信後者。
+   */
+  NF_WORK_LOCATION_UNKNOWN: {
+    code: "NF000019",
+    message: "No such work location in this account book",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
   CF_EMPLOYEE_EMAIL_AMBIGUOUS: {
     code: "CF000005",
     message:
