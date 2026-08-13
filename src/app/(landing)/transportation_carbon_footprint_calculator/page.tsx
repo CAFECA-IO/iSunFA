@@ -131,6 +131,7 @@ function ReportPageContent() {
     reset: resetPayment,
     pay,
     paymentSourceNode,
+    paysWithTeamQuota,
   } = useAnalysisPayment();
 
   const searchParams = useSearchParams();
@@ -1461,6 +1462,7 @@ function ReportPageContent() {
         }}
         onConfirm={handlePaymentConfirm}
         extraContent={paymentSourceNode}
+        paidByTeamQuota={paysWithTeamQuota}
         cost={ANALYSIS_BASE_COSTS.TRANSPORTATION_CARBON_FOOTPRINT}
         items={[
           {

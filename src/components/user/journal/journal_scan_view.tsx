@@ -35,6 +35,7 @@ export default function JournalScanView({
     reset: resetPayment,
     pay,
     paymentSourceNode,
+    paysWithTeamQuota,
   } = useAnalysisPayment();
 
   const {
@@ -294,6 +295,7 @@ export default function JournalScanView({
 
       <PaymentConfirmModal
         extraContent={paymentSourceNode}
+        paidByTeamQuota={paysWithTeamQuota}
         isOpen={showConfirmModal}
         onClose={() => {
           if (

@@ -77,6 +77,28 @@ describe("analysis payment module", () => {
     expect(offenders).toEqual([]);
   });
 
+  /**
+   * Info: (20260813 - Luphia) 選擇器畫出來還不夠：modal 必須知道付款來源。
+   * 不告知的後果有兩層——顯示層是「支付後餘額 100 - 5 = 95」這個與事實相反的數字
+   * （團隊額度不扣個人點數），功能層是確認鈕會以個人餘額擋下付款，
+   * 讓「個人 0 點、團隊有額度」的成員完全付不了款。後者比顯示錯誤嚴重得多。
+   */
+  it("tells the modal which source pays", () => {
+    const offenders = files
+      .filter((file) => {
+        const relative = file.slice(process.cwd().length + 1);
+        if (relative === join("src", "hooks", "use_analysis_payment.tsx")) {
+          return false;
+        }
+        const source = readFileSync(file, "utf8");
+        if (!/useAnalysisPayment\s*\(/.test(source)) return false;
+        return !/paidByTeamQuota=\{paysWithTeamQuota\}/.test(source);
+      })
+      .map((file) => file.slice(process.cwd().length + 1));
+
+    expect(offenders).toEqual([]);
+  });
+
   it("covers the six known payment screens", () => {
     const screens = files.filter((file) =>
       /useAnalysisPayment\s*\(/.test(readFileSync(file, "utf8")),

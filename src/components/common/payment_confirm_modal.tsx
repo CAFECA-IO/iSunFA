@@ -43,6 +43,14 @@ interface IPaymentConfirmModalProps {
   errorMessage?: string;
   txHash?: string;
   extraContent?: ReactNode;
+  /**
+   * Info: (20260813 - Luphia) 付款來源為團隊額度時的兩項差異（設計書 §5.6）：
+   * 1. 不顯示個人餘額的試算——團隊額度扣的不是個人點數，那行數字是錯的資訊；
+   * 2. 不以個人餘額擋下確認——個人點數為 0 但團隊有額度的人本來付得起，
+   *    卻會被「點數不足」的提示攔住，那是功能性的封鎖而不只是顯示問題。
+   * 預設 false：其他付款情境行為完全不變。
+   */
+  paidByTeamQuota?: boolean;
 }
 
 const EMPTY_ITEMS: IPaymentDetailItem[] = [];
@@ -61,6 +69,7 @@ export default function PaymentConfirmModal({
   errorMessage = undefined,
   txHash = undefined,
   extraContent = undefined,
+  paidByTeamQuota = false,
 }: IPaymentConfirmModalProps) {
   const { t } = useTranslation();
   const { user, refreshAuth } = useAuth();
@@ -251,21 +260,28 @@ export default function PaymentConfirmModal({
                           <div className="mt-4">{extraContent}</div>
                         )}
 
-                        <div className="mt-4 flex items-center justify-end gap-1 text-right text-xs text-gray-400">
-                          <p>{t("analysis.confirm_balance")}:</p>
-                          <p className="font-medium">
-                            {currentCredits} - {cost} ={" "}
-                            <span
-                              className={
-                                isBalanceNegative
-                                  ? "font-bold text-red-500"
-                                  : ""
-                              }
-                            >
-                              {balance}
-                            </span>
-                          </p>
-                        </div>
+                        {/**
+                         * Info: (20260813 - Luphia) 個人餘額試算只在扣個人點數時顯示：
+                         * 團隊額度付款不動個人餘額，這行會變成一個與事實相反的數字
+                         * （團隊那側的剩餘量由來源選擇器的額度儀表呈現）。
+                         */}
+                        {!paidByTeamQuota && (
+                          <div className="mt-4 flex items-center justify-end gap-1 text-right text-xs text-gray-400">
+                            <p>{t("analysis.confirm_balance")}:</p>
+                            <p className="font-medium">
+                              {currentCredits} - {cost} ={" "}
+                              <span
+                                className={
+                                  isBalanceNegative
+                                    ? "font-bold text-red-500"
+                                    : ""
+                                }
+                              >
+                                {balance}
+                              </span>
+                            </p>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -289,7 +305,14 @@ export default function PaymentConfirmModal({
                             disabled={isLoading}
                             className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-orange-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:cursor-wait disabled:opacity-70 sm:col-start-2"
                             onClick={() => {
+                              /**
+                               * Info: (20260813 - Luphia) 個人餘額不足的攔阻只適用於
+                               * 扣個人點數：團隊額度付款時個人餘額無關，拿它擋下等於
+                               * 讓「個人 0 點、團隊有額度」的成員完全付不了款。
+                               * 團隊側的餘額不足由 server 回 402 並附重置時間處理。
+                               */
                               if (
+                                !paidByTeamQuota &&
                                 MoneyUtil.toDecimal(currentCredits).lt(cost)
                               ) {
                                 setShowInsufficient(true);

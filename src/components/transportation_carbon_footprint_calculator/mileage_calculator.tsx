@@ -96,6 +96,7 @@ export function MileageCalculator({
     reset: resetPayment,
     pay,
     paymentSourceNode,
+    paysWithTeamQuota,
   } = useAnalysisPayment();
 
   // Info: (20260510 - Luphia) Polling logic
@@ -944,6 +945,7 @@ export function MileageCalculator({
         }}
         onConfirm={handleOrderPaymentConfirm}
         extraContent={paymentSourceNode}
+        paidByTeamQuota={paysWithTeamQuota}
         cost={totalCost}
         title={t("analysis.confirm_title")}
         description={t("analysis.confirm_desc")}

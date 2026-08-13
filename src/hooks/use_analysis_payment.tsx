@@ -116,6 +116,11 @@ export const useAnalysisPayment = () => {
     pay,
     reset,
     /**
+     * Info: (20260813 - Luphia) 供 PaymentConfirmModal 判斷要不要顯示／套用個人餘額
+     * （設計書 §5.6）：團隊額度付款不動個人點數，個人餘額的試算與攔阻都不適用。
+     */
+    paysWithTeamQuota: useTeamSource,
+    /**
      * Info: (20260813 - Luphia) 沿用個人路徑的錯誤設定器：呼叫端用它顯示付款前的
      * 自訂驗證訊息（見 analysis_view）。團隊路徑的錯誤由 hook 內部管理。
      */
