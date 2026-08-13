@@ -3,6 +3,7 @@ import {
   FileText,
   LayoutDashboard,
   ClipboardList,
+  CalendarDays,
   LucideIcon,
   MapPin,
   Radar,
@@ -55,6 +56,13 @@ export const HR_NAV_ITEMS: IHrNavItem[] = [
     href: HR_MANAGEMENT_ROUTE.ATTENDANCE,
     labelKey: "hr_management.nav.attendance",
     icon: MapPin,
+    disabled: false,
+  },
+  {
+    key: "attendance_schedule",
+    href: HR_MANAGEMENT_ROUTE.ATTENDANCE_SCHEDULE,
+    labelKey: "hr_management.nav.attendance_schedule",
+    icon: CalendarDays,
     disabled: false,
   },
   {

@@ -404,3 +404,49 @@ export const PRESENCE_STATUS_I18N_KEY: Record<PresenceStatus, string> = {
   [PresenceStatus.ON_SITE]: "hr_management.attendance_presence.status_on_site",
   [PresenceStatus.STALE]: "hr_management.attendance_presence.status_stale",
 };
+
+/**
+ * Info: (20260813 - Julian) 排班月曆裡各班別的配色。
+ *
+ * 依班別在清單中的順序取用（清單以 `code` 排序，因此同一本帳本每次都拿到
+ * 同一個顏色）。班別數量超過色盤時會繞回來 —— 兩個班別因此共用一個顏色，
+ * 由格子上的簡稱區分，而簡稱的唯一性是**算出來的**（見 `buildShiftLabels`）。
+ *
+ * 一樣只用 50 / 100 / 700 這幾階，理由同 `EMPLOYEE_STATUS_STYLE`。
+ */
+export const SHIFT_PATTERN_PALETTE: string[] = [
+  "bg-sky-100 text-sky-700",
+  "bg-violet-100 text-violet-700",
+  "bg-teal-100 text-teal-700",
+  "bg-rose-100 text-rose-700",
+  "bg-lime-100 text-lime-700",
+  "bg-cyan-100 text-cyan-700",
+];
+
+/**
+ * Info: (20260813 - Julian) 非上班日的配色。
+ *
+ * 與班別的色盤分開：這四種是**語意固定**的（例假就是例假，不隨帳本改變），
+ * 而班別是各家自己定的。共用一個色盤會讓「這個顏色是什麼意思」
+ * 在不同帳本之間得到不同答案。
+ */
+export const OFF_DAY_TYPE_STYLE: Record<
+  Exclude<WorkDayType, WorkDayType.WORK>,
+  string
+> = {
+  [WorkDayType.REGULAR_OFF]: "bg-gray-200 text-gray-600",
+  [WorkDayType.REST_DAY]: "bg-gray-100 text-gray-500",
+  [WorkDayType.HOLIDAY]: "bg-red-100 text-red-600",
+  [WorkDayType.LEAVE]: "bg-amber-100 text-amber-700",
+};
+
+// Info: (20260813 - Julian) 星期標頭。索引即 `isoWeekday` 的回傳值（0 = 週日）
+export const WEEKDAY_I18N_KEY: string[] = [
+  "hr_management.attendance_schedule.weekday_sun",
+  "hr_management.attendance_schedule.weekday_mon",
+  "hr_management.attendance_schedule.weekday_tue",
+  "hr_management.attendance_schedule.weekday_wed",
+  "hr_management.attendance_schedule.weekday_thu",
+  "hr_management.attendance_schedule.weekday_fri",
+  "hr_management.attendance_schedule.weekday_sat",
+];

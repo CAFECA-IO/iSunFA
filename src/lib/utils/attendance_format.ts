@@ -69,3 +69,14 @@ export function isoDateTimeLabel(
   ).padStart(2, "0")}`;
   return `${date} ${time}`;
 }
+
+/**
+ * Info: (20260813 - Julian) 日曆日的星期（0 = 週日）。純日曆運算，不牽涉時區。
+ *
+ * 以 UTC 解析而不是 `new Date("2026-08-13")` 之後取本地星期 ——
+ * 後者在 UTC 以西的時區會退一天，於是整張排班表的星期標頭全部錯一格，
+ * 而那種錯誤只有在特定時區的機器上才看得到。
+ */
+export function isoWeekday(isoDate: string): number {
+  return new Date(`${isoDate}T00:00:00.000Z`).getUTCDay();
+}
