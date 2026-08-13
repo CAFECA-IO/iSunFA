@@ -139,7 +139,7 @@ export async function POST(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ teamId: string }> },
+  { params }: { params: Promise<{ team_id: string }> },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -149,7 +149,15 @@ export async function GET(
       return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
-    const { teamId } = await params;
+    /**
+     * Info: (20260813 - Luphia) 路由參數是 team_id，不是 teamId。
+     * 取錯名字拿到的是 undefined，而 Prisma 會**忽略** where 裡的 undefined 欄位——
+     * 於是這支端點原本回的是「全系統所有待接受邀請」，且權限檢查
+     * getTeamMember(userId, undefined) 只要該用戶屬於任一團隊就通過。
+     * 症狀是團隊頁把別的團隊寄給我的邀請畫成「我的團隊在邀請我」，
+     * 而更嚴重的是它把其他團隊的受邀者位址一併吐了出來。
+     */
+    const { team_id: teamId } = await params;
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!operator) {
       return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);

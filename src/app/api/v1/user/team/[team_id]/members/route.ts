@@ -37,7 +37,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ teamId: string }> },
+  { params }: { params: Promise<{ team_id: string }> },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -47,7 +47,9 @@ export async function POST(
       return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
-    const { teamId } = await params;
+    // Info: (20260813 - Luphia) 路由參數為 team_id；取錯名字會讓 teamId 成為 undefined，
+    // Info: (20260813 - Luphia) 使權限檢查退化成「屬於任一團隊即通過」，且建立成員時必然拋錯
+    const { team_id: teamId } = await params;
 
     // Info: (20260325 - Tzuhan) Check permission (OWNER or ADMIN)
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
