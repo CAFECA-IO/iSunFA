@@ -1,3 +1,8 @@
+import {
+  SPEND_PRIORITY,
+  type SpendPriority,
+} from "@/constants/subscription_quota";
+
 /**
  * Info: (20260813 - Luphia) 扣費拆帳的純函式層（設計書 §5.4）。
  *
@@ -46,17 +51,33 @@ export interface ISpendSplit {
 
 /**
  * Info: (20260813 - Luphia) 把一筆預扣拆成「訂閱額度 + 錢包」兩段。
- * 訂閱額度優先用盡（它會週期性重置，錢包點數是買來的，留著更有價值）。
+ *
+ * 預設訂閱額度優先用盡（它會週期性重置，錢包點數是買來的，留著更有價值）；
+ * 少數功能反過來（`SPEND_PRIORITY.ALLOCATION_FIRST`，見 FEATURE_SPEND_PRIORITY）——
+ * 例如物流碳足跡優先扣分配點數，把視窗額度留給高頻的對話類功能。
+ * 兩種順序都不改變總額，只改變「先動哪一邊」。
  */
 export function splitSpend(
   cost: bigint,
   quotaAvailable: bigint,
   walletBalance: bigint,
+  priority: SpendPriority = SPEND_PRIORITY.QUOTA_FIRST,
 ): ISpendSplit {
   const quota = floorAtZero(quotaAvailable);
   const wallet = floorAtZero(walletBalance);
   const available = quota + wallet;
   const hold = cost <= available ? cost : available;
+
+  if (priority === SPEND_PRIORITY.ALLOCATION_FIRST) {
+    const walletPart = hold < wallet ? hold : wallet;
+    return {
+      hold,
+      quotaPart: hold - walletPart,
+      walletPart,
+      capped: hold < cost,
+    };
+  }
+
   const quotaPart = hold < quota ? hold : quota;
   return {
     hold,

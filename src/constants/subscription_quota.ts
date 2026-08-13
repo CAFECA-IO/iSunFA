@@ -129,12 +129,50 @@ export const BILLABLE_FEATURE_CODE = {
   FAITH_CHAT: "FAITH_CHAT",
   AI_ANALYSIS: "AI_ANALYSIS",
   CARBON_CHAT: "CARBON_CHAT",
+  // Info: (20260813 - Luphia) 物流碳足跡查詢：扣款順序與其他功能相反，見 FEATURE_SPEND_PRIORITY
+  LOGISTICS_CARBON: "LOGISTICS_CARBON",
   // Info: (20260807 - Luphia) 團隊解散歸零分錄專用（設計書 §6.3），非可消費功能
   TEAM_DISSOLVED: "TEAM_DISSOLVED",
 } as const;
 
 export type BillableFeatureCode =
   (typeof BILLABLE_FEATURE_CODE)[keyof typeof BILLABLE_FEATURE_CODE];
+
+/**
+ * Info: (20260813 - Luphia) 扣款來源的優先順序（設計書 §5.4）。
+ *
+ * 預設 QUOTA_FIRST：訂閱額度會週期性重置歸零，錢包點數是買來的資產，
+ * 先用會過期的那一份對用戶有利。
+ */
+export const SPEND_PRIORITY = {
+  QUOTA_FIRST: "QUOTA_FIRST",
+  ALLOCATION_FIRST: "ALLOCATION_FIRST",
+} as const;
+
+export type SpendPriority =
+  (typeof SPEND_PRIORITY)[keyof typeof SPEND_PRIORITY];
+
+/**
+ * Info: (20260813 - Luphia) 逐功能的扣款順序（產品拍板 20260813）。
+ *
+ * 物流碳足跡**優先扣團隊分配給該成員的點數**，把訂閱額度留給對話類功能：
+ * 物流查詢是低頻、單價固定（5 點）的重查詢，而對話類是高頻且吃 5 小時視窗；
+ * 讓物流去吃視窗額度，會讓同一團隊的對話在尖峰時段被幾筆查詢擠掉。
+ *
+ * 未列出的功能一律 QUOTA_FIRST——新增功能時預設沿用對用戶有利的順序，
+ * 要改成 ALLOCATION_FIRST 必須在此明寫，避免「悄悄多花用戶的錢」。
+ */
+export const FEATURE_SPEND_PRIORITY: Partial<
+  Record<BillableFeatureCode, SpendPriority>
+> = {
+  [BILLABLE_FEATURE_CODE.LOGISTICS_CARBON]: SPEND_PRIORITY.ALLOCATION_FIRST,
+};
+
+export function resolveSpendPriority(
+  featureCode: BillableFeatureCode,
+): SpendPriority {
+  return FEATURE_SPEND_PRIORITY[featureCode] ?? SPEND_PRIORITY.QUOTA_FIRST;
+}
 
 // Info: (20260807 - Luphia) 訂閱計費週期（對齊既有 Order.data.billingInterval 慣例）
 export const BILLING_INTERVAL = {

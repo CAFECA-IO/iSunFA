@@ -2,7 +2,7 @@
 
 > **Date**: August 2026
 > **Author**: Luphia
-> **Version**: 1.11 (Draft) — 1.1 新增 §5.3 費思計費；1.2–1.4 費率迭代；1.5 拍板費率與點值下限；1.6 拍板 C 案混合制（離鏈營運 + 每日 merkle 鏈上錨定，Phase 2 為 1:1 backing）；1.7 §5.3 拍板「選定帳本後才能使用費思」，計費團隊由 `AccountBook.teamId` 推導，client 不再自報 `teamId`；1.8 新增 §5.4 拆帳與封頂預扣（有餘額就放行、額度用光才扣錢包）；1.9 新增 §5.5 碳盤查計費；1.10 碳盤查四條 LLM 路徑全數接上；1.11 無帳本會話改扣個人鏈上點數（建單 → 402 → 付款 → 重送）
+> **Version**: 1.12 (Draft) — 1.1 新增 §5.3 費思計費；1.2–1.4 費率迭代；1.5 拍板費率與點值下限；1.6 拍板 C 案混合制（離鏈營運 + 每日 merkle 鏈上錨定，Phase 2 為 1:1 backing）；1.7 §5.3 拍板「選定帳本後才能使用費思」，計費團隊由 `AccountBook.teamId` 推導，client 不再自報 `teamId`；1.8 新增 §5.4 拆帳與封頂預扣（有餘額就放行、額度用光才扣錢包）；1.9 新增 §5.5 碳盤查計費；1.10 碳盤查四條 LLM 路徑全數接上；1.11 無帳本會話改扣個人鏈上點數（建單 → 402 → 付款 → 重送）；1.12 §5.4 新增逐功能扣款順序，物流碳足跡優先扣分配點數
 > **Status**: Proposed
 > **Branch**: `feature/team_wallet_subscription_quota`
 > **關聯 ADR**: [ADR 015: 離鏈團隊錢包帳本](decisions/015_offchain_team_wallet_ledger.md)
@@ -413,11 +413,14 @@ spendCredits(identity, teamId, featureCode, cost, idempotencyKey)
 |---|---|---|
 | 1 | **有餘額就放行**：`訂閱額度剩餘 + 分配點數 > 0` 即可送出，402 只在兩者同時見底時丟出 | 「還有點數卻不能用」無法對用戶解釋 |
 | 2 | **拆帳**：訂閱額度先用光，差額才扣錢包（來源標記 `MIXED`） | 額度會週期性重置歸零，錢包點數是買來的；先用會過期的那一份 |
+| 2b | **逐功能可反轉順序**（`FEATURE_SPEND_PRIORITY`）：物流碳足跡優先扣**分配點數** | 物流查詢低頻、單價固定（5 點）；對話類高頻且吃 5 小時視窗。讓物流去吃視窗額度，會讓同團隊的對話在尖峰被幾筆查詢擠掉。順序只改變「先動哪一邊」，不改總額與封頂行為 |
 | 3 | **封頂預扣**：可用餘額不足全額時，預扣封頂到餘額；結算時的差額**追補到訂閱額度**（鍵 `topup:{原鍵}`），**絕不追扣錢包** | 額度是軟限制，§5.1 早已容許最後一筆超額；錢包是硬限制，零容忍負餘額。追補同時是防濫用關鍵——不記這筆，用戶就能靠「只剩 1 點」無限發長訊息 |
 
 執行順序（`spend.service.ts`）刻意是**先扣錢包、後寫額度**：錢包是唯一可能條件失敗的一方（併發下餘額被扣走），放第一步能讓最常見的失敗路徑停在「什麼都還沒動」，不需要補償。額度寫入失敗才回頭沖銷錢包。
 
 退差額則**先退錢包**再退額度（`splitRefund`）：分配點數是資產，額度到期即歸零，退回額度對用戶幾乎沒有價值。失敗補償（`refundCredits`）兩邊都要沖銷——只沖一邊會留下「錢包扣了但功能失敗」的懸帳，而那一半正是用戶花錢買的。
+
+未列於 `FEATURE_SPEND_PRIORITY` 的功能一律 `QUOTA_FIRST`——新增功能預設沿用對用戶有利的順序，要改成 `ALLOCATION_FIRST` 必須明寫，避免悄悄多花用戶買來的點數。順序由 `featureCode` 決定，因此物流碳足跡以專屬代碼 `LOGISTICS_CARBON` 記帳（自訂單的 `data.category` 判定），全部記成 `AI_ANALYSIS` 就分不出來也對不了帳。
 
 > 純函式層在 `src/lib/quota/spend_split.ts`（`resolveQuotaAvailable` / `splitSpend` / `splitRefund`），不碰 DB 與時鐘，可單測；`ISpendResult` 增列 `quotaAmount` / `allocationAmount` 拆帳明細，`ISettleResult` 增列 `toppedUp`。
 

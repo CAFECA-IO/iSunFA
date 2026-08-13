@@ -1,5 +1,6 @@
 import {
   BillableFeatureCode,
+  resolveSpendPriority,
   type SpendSource,
   QUOTA_EXCEEDED_OPTION,
   QUOTA_WINDOW,
@@ -278,7 +279,13 @@ export async function spendCredits(
      * 預扣封頂到可用餘額——只要還有 1 點就放行，不再因為「預扣上界塞不進剩餘額度」
      * 而把有餘額的用戶整筆擋死。
      */
-    const split = splitSpend(cost, quotaAvailable, walletBalance);
+    const split = splitSpend(
+      cost,
+      quotaAvailable,
+      walletBalance,
+      // Info: (20260813 - Luphia) 逐功能的扣款順序（設計書 §5.4）：物流碳足跡優先扣分配點數
+      resolveSpendPriority(featureCode),
+    );
 
     if (split.hold <= BigInt(0)) {
       // Info: (20260813 - Luphia) 訂閱額度與分配點數同時見底才是真的用盡 → 402

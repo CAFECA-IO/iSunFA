@@ -4,6 +4,11 @@ import {
   splitRefund,
   splitSpend,
 } from "@/lib/quota/spend_split";
+import {
+  BILLABLE_FEATURE_CODE,
+  resolveSpendPriority,
+  SPEND_PRIORITY,
+} from "@/constants/subscription_quota";
 
 /**
  * Info: (20260813 - Luphia) 扣費拆帳的純函式測試（設計書 §5.4）。
@@ -146,5 +151,83 @@ describe("splitRefund", () => {
       walletRefund: bi(0),
       quotaRefund: bi(0),
     });
+  });
+});
+
+/**
+ * Info: (20260813 - Luphia) 逐功能的扣款順序（產品拍板 20260813）。
+ * 物流碳足跡優先扣分配點數，把 5 小時視窗額度留給高頻的對話類功能。
+ */
+describe("spend priority", () => {
+  it("defaults to quota first for every feature except the ones listed", () => {
+    expect(resolveSpendPriority(BILLABLE_FEATURE_CODE.FAITH_CHAT)).toBe(
+      SPEND_PRIORITY.QUOTA_FIRST,
+    );
+    expect(resolveSpendPriority(BILLABLE_FEATURE_CODE.CARBON_CHAT)).toBe(
+      SPEND_PRIORITY.QUOTA_FIRST,
+    );
+    expect(resolveSpendPriority(BILLABLE_FEATURE_CODE.AI_ANALYSIS)).toBe(
+      SPEND_PRIORITY.QUOTA_FIRST,
+    );
+  });
+
+  it("puts the member's allocated credits first for the logistics lookup", () => {
+    expect(resolveSpendPriority(BILLABLE_FEATURE_CODE.LOGISTICS_CARBON)).toBe(
+      SPEND_PRIORITY.ALLOCATION_FIRST,
+    );
+  });
+
+  it("drains the wallet before the quota under ALLOCATION_FIRST", () => {
+    // Info: (20260813 - Luphia) 物流一次 5 點、錢包剩 3：扣光錢包 3 點，差額 2 點才動額度
+    expect(
+      splitSpend(
+        BigInt(5),
+        BigInt(100),
+        BigInt(3),
+        SPEND_PRIORITY.ALLOCATION_FIRST,
+      ),
+    ).toEqual({
+      hold: BigInt(5),
+      quotaPart: BigInt(2),
+      walletPart: BigInt(3),
+      capped: false,
+    });
+  });
+
+  it("uses the wallet alone when it can absorb the whole cost", () => {
+    expect(
+      splitSpend(
+        BigInt(5),
+        BigInt(100),
+        BigInt(50),
+        SPEND_PRIORITY.ALLOCATION_FIRST,
+      ),
+    ).toEqual({
+      hold: BigInt(5),
+      quotaPart: BigInt(0),
+      walletPart: BigInt(5),
+      capped: false,
+    });
+  });
+
+  /**
+   * Info: (20260813 - Luphia) 順序只改變「先動哪一邊」，不改變總額與封頂行為：
+   * 兩邊加起來仍不足時，一樣封頂放行而非擋下。
+   */
+  it("caps the same way regardless of priority", () => {
+    const quotaFirst = splitSpend(BigInt(9), BigInt(2), BigInt(3));
+    const allocationFirst = splitSpend(
+      BigInt(9),
+      BigInt(2),
+      BigInt(3),
+      SPEND_PRIORITY.ALLOCATION_FIRST,
+    );
+    expect(quotaFirst.hold).toBe(BigInt(5));
+    expect(allocationFirst.hold).toBe(BigInt(5));
+    expect(quotaFirst.capped).toBe(true);
+    expect(allocationFirst.capped).toBe(true);
+    // Info: (20260813 - Luphia) 總額相同，兩邊的分配互為鏡像
+    expect(quotaFirst.quotaPart).toBe(BigInt(2));
+    expect(allocationFirst.walletPart).toBe(BigInt(3));
   });
 });

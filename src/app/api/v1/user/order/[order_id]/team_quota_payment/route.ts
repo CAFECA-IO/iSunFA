@@ -5,6 +5,7 @@ import { jsonOk, jsonFail, jsonFailWithPayload } from "@/lib/utils/response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { ORDER_TYPE } from "@/constants/status";
 import { BILLABLE_FEATURE_CODE } from "@/constants/subscription_quota";
+import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import { teamQuotaPaymentSchema } from "@/validators";
 import {
   getPendingOrder,
@@ -43,14 +44,29 @@ export async function POST(
       return jsonFail(API_ERRORS.VA_INVALID_ORDER_TYPE);
     }
 
-    // Info: (20260807 - Luphia) 1. 扣抵（訂閱額度 → 分配點數）；金額 = 訂單點數成本
+    /**
+     * Info: (20260813 - Luphia) 物流碳足跡以專屬 featureCode 記帳（設計書 §5.4）：
+     * 它的扣款順序與其他功能相反（優先扣分配點數），而順序是由 featureCode 決定的，
+     * 全部記成 AI_ANALYSIS 就分不出來、也對不了帳。category 可能巢狀於 data.data。
+     */
+    const orderData = order.data as {
+      category?: string;
+      data?: { category?: string };
+    } | null;
+    const category = orderData?.category ?? orderData?.data?.category;
+    const featureCode =
+      category === ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT
+        ? BILLABLE_FEATURE_CODE.LOGISTICS_CARBON
+        : BILLABLE_FEATURE_CODE.AI_ANALYSIS;
+
+    // Info: (20260807 - Luphia) 1. 扣抵（訂閱額度 / 分配點數，順序依 featureCode）；金額 = 訂單點數成本
     const idempotencyKey = `analysis:${orderId}`;
     let spend;
     try {
       spend = await spendCredits({
         teamId,
         userId: user.id,
-        featureCode: BILLABLE_FEATURE_CODE.AI_ANALYSIS,
+        featureCode,
         cost: BigInt(order.amount),
         idempotencyKey,
         nowSec: Math.floor(Date.now() / 1000),
