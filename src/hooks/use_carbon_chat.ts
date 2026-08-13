@@ -102,6 +102,7 @@ import {
   loadLocalDraftBackup,
 } from "@/lib/carbon_report_draft_storage";
 import { useTranslation } from "@/i18n/i18n_context";
+import { useOrderTransaction } from "@/hooks/use_order_transaction";
 import {
   ChatroomConnectionStateEnum,
   subscribeChatroom,
@@ -134,6 +135,7 @@ import {
 } from "@/lib/carbon_page_slice";
 import {
   getApiErrorCode,
+  parsePersonalPaymentRequired,
   isGatewayTimeoutError,
   isQuotaApiError,
   isRateLimitedApiError,
@@ -218,6 +220,12 @@ const resolveSession = (
 
 export const useCarbonChat = () => {
   const { t, language } = useTranslation();
+  /**
+   * Info: (20260813 - Luphia) 無帳本會話改扣個人鏈上點數（設計書 §5.5）：
+   * 後端先建單並回 402，這裡付掉那張單後以相同冪等鍵重送。
+   * 託管帳號的簽章由伺服器代行，passkey 帳號提示裝置簽章一次。
+   */
+  const { payExistingOrder } = useOrderTransaction();
   const { user } = useAuth();
   const [sessionsData, setSessionsData] = useState<
     Record<string, IChatSession>
@@ -4531,45 +4539,72 @@ export const useCarbonChat = () => {
           });
         }
 
-        const data = await request<{
-          success: boolean;
-          message: string;
-          payload: {
-            drafts?: IParagraphDraft[];
-            envelopes?: IEciesEnvelope[];
-            extraction?: IInventoryExtraction | null;
-            attachmentActivities?: IActivityRecord[];
-            revisionParagraphId?: string | null;
-            chartRequest?: {
-              templateId: CarbonChartTemplateEnum;
-              paragraphId: string;
+        /**
+         * Info: (20260813 - Luphia) 冪等鍵在重試間必須相同（設計書 §5.5）：
+         * 無帳本會話會先收到待付款 402，付款後以同一把鍵重送才找得回那張已付訂單；
+         * 每次重新產生就會變成「付了一張、又建一張」。
+         */
+        const clientMessageId = crypto.randomUUID();
+        const sendChatRequest = () =>
+          request<{
+            success: boolean;
+            message: string;
+            payload: {
+              drafts?: IParagraphDraft[];
+              envelopes?: IEciesEnvelope[];
+              extraction?: IInventoryExtraction | null;
+              attachmentActivities?: IActivityRecord[];
+              revisionParagraphId?: string | null;
+              chartRequest?: {
+                templateId: CarbonChartTemplateEnum;
+                paragraphId: string;
+              } | null;
+              attachmentFacts?: IContextFact[];
             } | null;
-            attachmentFacts?: IContextFact[];
-          } | null;
-        }>("/api/v1/chat/carbon", {
-          method: "POST",
-          body: JSON.stringify({
-            history: currentHistory,
-            // Info: (20260716 - Tzuhan) #6518:currentStep 改餵狀態機真值(跳段指引仍優先)
-            currentStep:
-              activeSession.currentStep ||
-              describeInventoryStep(
-                inventoryStates[chatChannel] ?? createEmptyInventoryState(),
-              ),
-            language,
-            channel: chatChannel,
-            recipientPublicKey: masterKey.extendedPublicKey,
-            /**
-             * Info: (20260813 - Luphia) 計費冪等鍵（設計書 §5.5）：
-             * 同一則訊息重送（重試、雙擊）不重複扣點。
-             */
-            clientMessageId: crypto.randomUUID(),
-            // Info: (20260714 - Tzuhan) 附件只帶 metadata+cid(檔案已在 Laria)；請求 body 維持輕量
-            ...(attachmentsMeta.length > 0
-              ? { attachments: attachmentsMeta }
-              : {}),
-          }),
-        });
+          }>("/api/v1/chat/carbon", {
+            method: "POST",
+            body: JSON.stringify({
+              history: currentHistory,
+              // Info: (20260716 - Tzuhan) #6518:currentStep 改餵狀態機真值(跳段指引仍優先)
+              currentStep:
+                activeSession.currentStep ||
+                describeInventoryStep(
+                  inventoryStates[chatChannel] ?? createEmptyInventoryState(),
+                ),
+              language,
+              channel: chatChannel,
+              recipientPublicKey: masterKey.extendedPublicKey,
+              /**
+               * Info: (20260813 - Luphia) 計費冪等鍵（設計書 §5.5）：
+               * 同一則訊息重送（重試、雙擊）不重複扣點。
+               */
+              clientMessageId,
+              // Info: (20260714 - Tzuhan) 附件只帶 metadata+cid(檔案已在 Laria)；請求 body 維持輕量
+              ...(attachmentsMeta.length > 0
+                ? { attachments: attachmentsMeta }
+                : {}),
+            }),
+          });
+
+        /**
+         * Info: (20260813 - Luphia) 無帳本會話：後端先回待付款 402 帶訂單，
+         * 付掉那張單後以**相同冪等鍵**重送即可放行（設計書 §5.5）。
+         * 付款失敗（用戶取消簽章、餘額不足）就原樣拋出，交由既有錯誤處理顯示。
+         */
+        let data: Awaited<ReturnType<typeof sendChatRequest>>;
+        try {
+          data = await sendChatRequest();
+        } catch (error) {
+          const pendingPayment = parsePersonalPaymentRequired(error);
+          if (!pendingPayment) throw error;
+          const paid = await payExistingOrder(
+            pendingPayment.orderId,
+            pendingPayment.cost,
+            () => {},
+          );
+          if (!paid) throw error;
+          data = await sendChatRequest();
+        }
 
         if (!data.success) {
           throw new Error(data.message || "AI API returned an error");
@@ -4680,6 +4715,7 @@ export const useCarbonChat = () => {
       }
     },
     [
+      payExistingOrder,
       inputValue,
       isLoading,
       pendingAttachments,

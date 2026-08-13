@@ -12,6 +12,7 @@ import { assertAccountBookMember } from "@/services/account_book_access.guard";
 import { faithBillingSettingRepo } from "@/repositories/faith_billing_setting.repo";
 import { DEFAULT_FAITH_BILLING } from "@/constants/llm";
 import { recordLlmUsage } from "@/lib/llm/usage_scope";
+import { ensurePersonalCreditCharge } from "@/services/personal_credit.service";
 
 jest.mock("@/repositories/faith_billing_setting.repo", () => ({
   faithBillingSettingRepo: { resolveSetting: jest.fn() },
@@ -24,6 +25,25 @@ jest.mock("@/services/spend.service", () => ({
   refundCredits: jest.fn(),
   settleSpend: jest.fn(),
 }));
+jest.mock("@/services/personal_credit.service", () => {
+  // Info: (20260813 - Luphia) 替身需與真實簽名一致：(errorDef, data)
+  class FakePersonalPaymentRequiredError extends Error {
+    public data: { orderId: string; cost: number };
+    public code: string;
+    constructor(
+      def: { code: string; message: string },
+      data: { orderId: string; cost: number },
+    ) {
+      super(def.message);
+      this.code = def.code;
+      this.data = data;
+    }
+  }
+  return {
+    ensurePersonalCreditCharge: jest.fn(),
+    PersonalPaymentRequiredError: FakePersonalPaymentRequiredError,
+  };
+});
 jest.mock("@/services/account_book_access.guard", () => ({
   assertAccountBookMember: jest.fn(),
   mapServiceError: jest.fn(() => ({
@@ -165,17 +185,49 @@ describe("runBilledCarbonTask", () => {
   });
 
   /**
-   * Info: (20260813 - Luphia) 一律綁帳本（產品拍板 20260813）：沒有帳本就沒有計費團隊，
-   * 此時 fail closed 並回專屬錯誤碼，讓前端能引導綁定——不再放行不計費。
+   * Info: (20260813 - Luphia) 無帳本會話改扣個人鏈上點數（產品拍板 20260813）。
+   * 個人點數扣款需簽章，故先建單並以 402 回 orderId；**款未付訖前不得執行工作**，
+   * 反過來做等於允許賴帳，而鏈上扣不到就沒有強制力。
    */
-  it("fails closed when the session is not bound to an account book", async () => {
+  it("asks for personal credit payment when the session has no account book", async () => {
     asMock(chatroomRepo.findAccountBookIdByChannel).mockResolvedValue(null);
+    asMock(ensurePersonalCreditCharge).mockResolvedValue({
+      paid: false,
+      orderId: "order-1",
+      cost: 6,
+    });
     const run = jest.fn(async () => ({ reply: "hi" }));
 
     await expect(
       runBilledCarbonTask({ ...BASE_PARAMS, run }),
-    ).rejects.toMatchObject({ code: "VA000041" });
+    ).rejects.toMatchObject({ data: { orderId: "order-1", cost: 6 } });
     expect(run).not.toHaveBeenCalled();
     expect(spendCredits).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260813 - Luphia) 付訖後（用戶簽章完成、重送同一則訊息）才執行，
+   * 且不走團隊額度管線——個人點數路徑以估算一次收足，不做預扣結算
+   * （鏈上退差額要再一筆交易與簽章，成本高於差額本身）。
+   */
+  it("runs on personal credits once the order is paid", async () => {
+    asMock(chatroomRepo.findAccountBookIdByChannel).mockResolvedValue(null);
+    asMock(ensurePersonalCreditCharge).mockResolvedValue({
+      paid: true,
+      orderId: "order-1",
+      cost: 6,
+    });
+    const run = jest.fn(async () => {
+      recordLlmUsage({ totalTokens: 2500 });
+      return { reply: "hi" };
+    });
+
+    const outcome = await runBilledCarbonTask({ ...BASE_PARAMS, run });
+
+    expect(outcome.result).toEqual({ reply: "hi" });
+    expect(outcome.billing.paidBy).toBe("PERSONAL");
+    expect(outcome.billing.charged).toBe("6");
+    expect(spendCredits).not.toHaveBeenCalled();
+    expect(settleSpend).not.toHaveBeenCalled();
   });
 });

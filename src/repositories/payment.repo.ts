@@ -277,6 +277,21 @@ export class PaymentRepository {
     return prisma.order.create({ data: safeData });
   }
 
+  /**
+   * Info: (20260813 - Luphia) 以冪等鍵查用戶的訂單（個人點數扣款路徑，設計書 §5.5）。
+   * 鍵存於 data.idempotencyKey：同一則訊息重送時要找回原訂單，
+   * 而不是每次重試都建一張新的待付訂單。
+   */
+  async findOrderByIdempotencyKey(userId: string, idempotencyKey: string) {
+    return prisma.order.findFirst({
+      where: {
+        userId,
+        data: { path: ["idempotencyKey"], equals: idempotencyKey },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
   async getOrderById(orderId: string) {
     return prisma.order.findUnique({ where: { id: orderId } });
   }

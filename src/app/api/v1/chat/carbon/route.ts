@@ -26,6 +26,7 @@ import {
 import { randomUUID } from "crypto";
 import { CarbonChatRequestSchema } from "@/validators";
 import { runBilledCarbonTask } from "@/services/carbon_billing.service";
+import { toBillingFailureResponse } from "@/lib/utils/billing_response";
 import {
   ChatRoleEnum,
   IAttachment,
@@ -390,6 +391,13 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     logger.error(`[API] /chat/carbon error: ${describeError(error)}`);
+    /**
+     * Info: (20260813 - Luphia) 兩種計費錯誤都要帶 payload（設計書 §5.5）：
+     * 團隊額度用罄回雙視窗 resetAt，無帳本會話回待付訂單的 orderId——
+     * 少了 payload，前端只能顯示一句錯誤，用戶無從知道下一步該做什麼。
+     */
+    const billingFailure = toBillingFailureResponse(error);
+    if (billingFailure) return billingFailure;
     // Info: (20260714 - Tzuhan) 額度耗盡回專屬錯誤碼，前端提示稍候重試(與一般系統錯誤區分)
     if (isLlmQuotaError(error)) {
       return jsonFail(API_ERRORS.IS_LLM_QUOTA_EXCEEDED);

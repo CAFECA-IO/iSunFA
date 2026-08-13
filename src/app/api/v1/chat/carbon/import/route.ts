@@ -7,6 +7,7 @@ import { NextRequest } from "next/server";
 import { randomUUID } from "crypto";
 import { logger } from "@/lib/utils/logger";
 import { runBilledCarbonTask } from "@/services/carbon_billing.service";
+import { toBillingFailureEnvelope } from "@/lib/utils/billing_response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { enforceCarbonRateLimit } from "@/lib/rate_limiter";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
@@ -306,6 +307,9 @@ export async function POST(request: NextRequest) {
           });
           return ok(billedImport.result);
         } catch (error) {
+          // Info: (20260813 - Luphia) 計費失敗要帶 payload（額度 resetAt / 待付 orderId），見 §5.5
+          const billingFailure = toBillingFailureEnvelope(error);
+          if (billingFailure) return billingFailure;
           if (error instanceof ApiError) {
             return fail({
               code: error.code,

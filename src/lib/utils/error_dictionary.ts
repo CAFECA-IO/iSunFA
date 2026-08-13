@@ -981,6 +981,17 @@ export const API_ERRORS = {
     message: "Only team owner or admin can manage the team wallet",
     status: ApiCode.FORBIDDEN,
   } as IErrorDef,
+  /**
+   * Info: (20260813 - Luphia) 無帳本會話改扣個人點數時，尚未完成付款（產品拍板 20260813）。
+   * 個人點數在鏈上，扣款需簽章：伺服器先建單並以此錯誤回傳 orderId，
+   * 前端走既有 useOrderTransaction 完成付款後重送同一則訊息（冪等鍵相同，不會重複建單）。
+   * 託管帳號的簽章由伺服器代行，體感上就是直接扣。
+   */
+  TW_PERSONAL_PAYMENT_REQUIRED: {
+    code: "TW000010",
+    message: "Personal credit payment required",
+    status: ApiCode.PAYMENT_REQUIRED,
+  } as IErrorDef,
   TW_WALLET_FROZEN: {
     code: "TW000005",
     message: "Team wallet is frozen pending audit",

@@ -19,7 +19,11 @@ import {
   settleSpend,
   spendCredits,
 } from "@/services/spend.service";
-import { API_ERRORS, ApiError, IErrorDef } from "@/lib/utils/error_dictionary";
+import {
+  ensurePersonalCreditCharge,
+  PersonalPaymentRequiredError,
+} from "@/services/personal_credit.service";
+import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { logger } from "@/lib/utils/logger";
 
 /**
@@ -57,18 +61,15 @@ export interface IBilledCarbonTaskParams<T> {
 
 export interface IBilledCarbonTaskResult<T> {
   result: T;
-  // Info: (20260813 - Luphia) null = 未計費（無帳本的舊個人會話），供呼叫端記錄與觀測
   billing: {
     idempotencyKey: string;
     charged: string;
     totalTokens: number;
     // Info: (20260813 - Luphia) 本次管線的 LLM 呼叫次數（匯入可達十餘次），供觀測與對帳
     llmCallCount: number;
+    // Info: (20260813 - Luphia) 扣款來源：團隊額度管線，或無帳本會話的個人鏈上點數
+    paidBy: "TEAM" | "PERSONAL";
   };
-}
-
-function toApiError(def: IErrorDef): ApiError {
-  return new ApiError(def.code, def.message, def.status);
 }
 
 async function resolveBillingTeamId(
@@ -108,31 +109,58 @@ export async function runBilledCarbonTask<T>(
     ? await chatroomRepo.findAccountBookIdByChannel(channel)
     : null;
 
-  /**
-   * Info: (20260813 - Luphia) 一律綁帳本（產品拍板 20260813）：沒有帳本就沒有計費團隊，
-   * 此時 **fail closed**，不再放行不計費。
-   *
-   * 舊的個人會話（`Chatroom.accountBookId` 為 null）會在此被擋下並拿到專屬錯誤碼，
-   * 由前端引導綁定帳本——「有多少用量沒被計費」不該是靠 log 才知道的事。
-   */
-  if (!accountBookId) {
-    logger.warn(
-      "carbon task blocked: chatroom is not bound to an account book",
-      {
-        channel: channel ?? "(none)",
-        featureCode,
-      },
-    );
-    throw toApiError(API_ERRORS.VA_CARBON_SESSION_NOT_BOUND);
-  }
-
-  const teamId = await resolveBillingTeamId(accountBookId, userId);
   const billing = await faithBillingSettingRepo.resolveSetting();
   const holdCredits = estimateFaithHoldCredits(
     inputChars,
     hasAttachment,
     billing,
   );
+
+  /**
+   * Info: (20260813 - Luphia) 無帳本會話改扣**個人鏈上點數**（產品拍板 20260813）。
+   *
+   * 沒有帳本就沒有計費團隊，但不因此擋下用戶——改由他自己的點數付。
+   * 個人點數在鏈上、扣款需簽章，故走「建單 → 402 → 付款 → 重送」兩段流程
+   * （見 personal_credit.service）。託管帳號的簽章由伺服器代行，體感是直接扣。
+   *
+   * 這條路徑**不做預扣—結算**：鏈上退差額要再一筆交易與簽章，成本高於差額本身。
+   * 因此以預扣估算（輸入估算 + 回覆上限）一次收足，屬保守計價——
+   * 綁定帳本即可改走團隊額度管線，享實耗結算。這個差別是引導綁帳本的正當理由，
+   * 不是懲罰。
+   */
+  if (!accountBookId) {
+    const charge = await ensurePersonalCreditCharge({
+      userId,
+      credits: Number(holdCredits),
+      idempotencyKey,
+      category: featureCode,
+    });
+    if (!charge.paid) {
+      logger.info("carbon task awaiting personal credit payment", {
+        channel: channel ?? "(none)",
+        featureCode,
+        orderId: charge.orderId,
+      });
+      throw new PersonalPaymentRequiredError(
+        API_ERRORS.TW_PERSONAL_PAYMENT_REQUIRED,
+        { orderId: charge.orderId, cost: charge.cost },
+      );
+    }
+
+    const paidOutcome = await runWithUsageCapture(run);
+    return {
+      result: paidOutcome.result,
+      billing: {
+        idempotencyKey,
+        charged: String(charge.cost),
+        totalTokens: paidOutcome.usage.totalTokens,
+        llmCallCount: paidOutcome.usage.callCount,
+        paidBy: "PERSONAL",
+      },
+    };
+  }
+
+  const teamId = await resolveBillingTeamId(accountBookId, userId);
 
   await spendCredits({
     teamId,
@@ -174,6 +202,7 @@ export async function runBilledCarbonTask<T>(
       charged: settlement.charged,
       totalTokens,
       llmCallCount: outcome.usage.callCount,
+      paidBy: "TEAM",
     },
   };
 }

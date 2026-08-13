@@ -14,6 +14,7 @@ import {
 } from "@/lib/quota/quota_notice";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { ApiError as RequestApiError } from "@/lib/utils/request";
+import { parsePersonalPaymentRequired } from "@/hooks/use_carbon_chat.helpers";
 
 /**
  * Info: (20260812 - Luphia) 費思對話「點數用罄」前端提示的純函式層測試。
@@ -188,5 +189,52 @@ describe("quotaRemainingPercent", () => {
     expect(quotaRemainingPercent("", "0")).toBe(0);
     expect(quotaRemainingPercent("abc", "1")).toBe(0);
     expect(quotaRemainingPercent("10", "abc")).toBe(0);
+  });
+});
+
+/**
+ * Info: (20260813 - Luphia) 無帳本會話的待付款 402（設計書 §5.5）。
+ * 這一層決定用戶看到的是「付款後自動繼續」還是一句系統錯誤——
+ * 沒有 orderId 就無從付款，形狀不符必須 fail closed。
+ */
+describe("parsePersonalPaymentRequired", () => {
+  const paymentError = (body: unknown) =>
+    new RequestApiError("Personal credit payment required", 402, body);
+
+  it("extracts the pending order from a TW_PERSONAL_PAYMENT_REQUIRED response", () => {
+    const error = paymentError({
+      errorCode: API_ERRORS.TW_PERSONAL_PAYMENT_REQUIRED.code,
+      payload: { orderId: "order-1", cost: 6 },
+    });
+
+    expect(parsePersonalPaymentRequired(error)).toEqual({
+      orderId: "order-1",
+      cost: 6,
+    });
+  });
+
+  it("ignores the team quota error, which has a different remedy", () => {
+    const error = paymentError({
+      errorCode: API_ERRORS.TW_QUOTA_EXCEEDED.code,
+      payload: { orderId: "order-1", cost: 6 },
+    });
+
+    expect(parsePersonalPaymentRequired(error)).toBeNull();
+  });
+
+  it("rejects a payload without a usable order", () => {
+    for (const payload of [
+      null,
+      {},
+      { orderId: "order-1" },
+      { orderId: 1, cost: 6 },
+      { orderId: "order-1", cost: "6" },
+    ]) {
+      const error = paymentError({
+        errorCode: API_ERRORS.TW_PERSONAL_PAYMENT_REQUIRED.code,
+        payload,
+      });
+      expect(parsePersonalPaymentRequired(error)).toBeNull();
+    }
   });
 });
