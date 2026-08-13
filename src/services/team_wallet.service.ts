@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import { Order, TeamWalletLedger } from "@/generated";
 import { CREDIT_PLANS } from "@/config/credit_plans";
 import { CURRENCY_UNIT } from "@/constants/price";
-import { ORDER_TYPE } from "@/constants/status";
+import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 import {
   ALLOCATION_DIRECTION,
   AllocationDirection,
@@ -310,5 +310,63 @@ export async function revokeAllocationOnMemberRemoval(params: {
     }
     // Info: (20260807 - Luphia) NOT_FOUND / NO_WALLET：無分配可收，no-op
     return { revoked: false };
+  });
+}
+
+/**
+ * Info: (20260813 - Luphia) 後台發放點數給團隊（/admin/user 的團隊發放功能）。
+ *
+ * 與用戶發放的關鍵差別：**團隊點數是離鏈帳本**（ADR 015），不 mint 鏈上點數，
+ * 因此不經 member.service，而是直接入團隊錢包的未分配池並寫一筆 Ledger。
+ *
+ * 仍建立一張 ADMIN_ISSUED 訂單：發放點數是金流事件，必須留下「誰、何時、發給哪個團隊」
+ * 的紀錄；訂單掛在**操作的管理員**名下並於 data 標記 teamId，
+ * 因此 point_history 需將帶 teamId 的 ADMIN_ISSUED 排除，否則會顯示成管理員自己收到點數。
+ */
+export async function issueTeamCreditsByAdmin(params: {
+  teamId: string;
+  credits: bigint;
+  operatorUserId: string;
+}): Promise<{ orderId: string; credits: string }> {
+  const { teamId, credits, operatorUserId } = params;
+
+  // Info: (20260813 - Luphia) Fail Fast：非正整數的發放金額直接凍結
+  if (typeof credits !== "bigint" || credits <= BigInt(0)) {
+    throw toApiError(API_ERRORS.TW_INVALID_SPEND_AMOUNT);
+  }
+
+  return guarded(async () => {
+    const team = await teamRepo.getTeamById(teamId);
+    if (!team) throw toApiError(API_ERRORS.NF_TEAM);
+
+    const order = await paymentRepo.createOrder({
+      userId: operatorUserId,
+      type: ORDER_TYPE.ADMIN_ISSUED,
+      amount: credits,
+      unit: CURRENCY_UNIT.ICP,
+      status: ORDER_STATUS.COMPLETED,
+      challenge: "admin_distribute_team",
+      data: { adminIssued: true, issuedBy: operatorUserId, teamId },
+    });
+
+    const credited = await teamWalletRepo.creditPool({
+      teamId,
+      credits,
+      orderId: order.id,
+      operatorUserId,
+      idempotencyKey: `admin-issue:${order.id}`,
+    });
+    if (
+      credited.outcome !== WALLET_OP_OUTCOME.OK &&
+      credited.outcome !== WALLET_OP_OUTCOME.DUPLICATE
+    ) {
+      /**
+       * Info: (20260813 - Luphia) 錢包凍結（守恆勾稽失敗）時不得入帳：
+       * 凍結的意思就是「這本帳現在不可信」，往裡面加點數只會讓人工核帳更難。
+       */
+      throw toApiError(API_ERRORS.TW_WALLET_FROZEN);
+    }
+
+    return { orderId: order.id, credits: credits.toString() };
   });
 }

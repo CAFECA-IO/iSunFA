@@ -21,6 +21,7 @@ import {
   PointIssueModal,
   IUserTarget,
 } from "@/components/admin/user/point_issue_modal";
+import { TeamPointIssueModal } from "@/components/admin/user/team_point_issue_modal";
 import { useTranslation } from "@/i18n/i18n_context";
 import { Role } from "@/constants/role";
 import { IBlockchainDashboardData } from "@/services/admin.blockchain.service";
@@ -158,6 +159,12 @@ export default function MemberAdminPage() {
     fetchUsers();
     fetchBlockchainData();
   }, [fetchUsers, fetchBlockchainData]);
+
+  /**
+   * Info: (20260813 - Luphia) 發放點數給團隊：與發放給個人是兩件事
+   * （團隊點數入離鏈錢包、個人點數是鏈上 mint），因此各自一個入口與 modal。
+   */
+  const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
 
   const openIssueModal = (user: IUser) => {
     setSelectedUser({
@@ -355,6 +362,15 @@ export default function MemberAdminPage() {
                 />
               </form>
 
+              <button
+                type="button"
+                onClick={() => setIsTeamModalOpen(true)}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-sm font-semibold text-orange-700 transition hover:bg-orange-100"
+              >
+                <Users className="h-4 w-4 shrink-0" />
+                {t("admin_member.page.issue_team_points_btn")}
+              </button>
+
               {/* Info: (20260416 - Luphia) 庫存 ICP 數量顯示 */}
               <div className="flex shrink-0 items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white py-1.5 pr-2 pl-3 shadow-sm">
                 <div className="flex items-center gap-2">
@@ -400,6 +416,12 @@ export default function MemberAdminPage() {
           emptyStateText={t("admin_member.page.no_users")}
         />
       </div>
+
+      <TeamPointIssueModal
+        isOpen={isTeamModalOpen}
+        onClose={() => setIsTeamModalOpen(false)}
+        onSuccess={fetchBlockchainData}
+      />
 
       <PointIssueModal
         isOpen={isModalOpen}

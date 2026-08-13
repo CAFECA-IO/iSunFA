@@ -19,6 +19,7 @@ export const adminMember = {
     unnamed_user: "名無しのユーザー",
     refresh_balance_aria: "残高を更新",
     issue_points_btn: "ポイント発行",
+    issue_team_points_btn: "チームにポイント付与",
     role_super_admin: "スーパー管理者",
     role_admin: "管理者",
     role_user: "一般ユーザー",
@@ -26,6 +27,17 @@ export const adminMember = {
     mint: "ミント",
   },
 
+  modal_issue_team: {
+    title: "チームへのポイント付与",
+    description:
+      "チームのポイントはオフチェーン台帳です。チームウォレットの未割当プールに直接入り、チームの管理者がメンバーへ割り当てます（個人へのオンチェーン付与とは異なります）。",
+    target_team: "対象チーム",
+    select_team: "チームを選択",
+    team_summary: "メンバー {{members}} 名・未割当残高 {{balance}} ポイント",
+    success_msg: "チームウォレットへ入金しました",
+    err_no_team: "付与するチームを選択してください",
+    err_load_teams: "チーム一覧の読み込みに失敗しました",
+  },
   modal_issue: {
     title: "システムポイントの発行",
     target_user: "対象ユーザー",
@@ -37,6 +49,7 @@ export const adminMember = {
     err_msg: "発行失敗",
     processing: "処理中...",
     issued: "発行済み",
+    cancel_btn: "キャンセル",
     confirm_btn: "発行を確認",
   },
 };

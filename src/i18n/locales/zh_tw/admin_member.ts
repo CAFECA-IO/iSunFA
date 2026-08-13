@@ -19,6 +19,7 @@ export const adminMember = {
     unnamed_user: "未命名用戶",
     refresh_balance_aria: "重新整理點數",
     issue_points_btn: "發放點數",
+    issue_team_points_btn: "發放點數給團隊",
     role_super_admin: "超級管理員",
     role_admin: "管理員",
     role_user: "一般用戶",
@@ -26,6 +27,17 @@ export const adminMember = {
     mint: "增發",
   },
 
+  modal_issue_team: {
+    title: "發放點數給團隊",
+    description:
+      "團隊點數為離鏈帳本，將直接入該團隊錢包的未分配池，再由該團隊管理者分配給成員；與發放給個人的鏈上點數不同。",
+    target_team: "目標團隊",
+    select_team: "請選擇團隊",
+    team_summary: "成員 {{members}} 人．錢包未分配餘額 {{balance}} 點",
+    success_msg: "已入帳至團隊錢包",
+    err_no_team: "請先選擇要發放的團隊",
+    err_load_teams: "團隊清單載入失敗",
+  },
   modal_issue: {
     title: "發放系統點數",
     target_user: "目標用戶",
@@ -37,6 +49,7 @@ export const adminMember = {
     err_msg: "發放失敗",
     processing: "處理中...",
     issued: "已發放",
+    cancel_btn: "取消",
     confirm_btn: "確認發放",
   },
 };

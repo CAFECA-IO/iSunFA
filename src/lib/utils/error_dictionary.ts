@@ -768,6 +768,12 @@ export const API_ERRORS = {
     message: "Carbon session not found",
     status: ApiCode.NOT_FOUND,
   } as IErrorDef,
+  // Info: (20260813 - Luphia) 團隊不存在（後台發放點數等以 teamId 定址的操作）
+  NF_TEAM: {
+    code: "NF000017",
+    message: "Team not found",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
   /**
    * Info: (20260813 - Luphia) 碳盤查會話未綁定帳本（產品拍板 20260813：一律綁帳本）。
    * 沒有帳本就沒有計費團隊，扣不了額度；此時 fail closed 而非放行不計費，
