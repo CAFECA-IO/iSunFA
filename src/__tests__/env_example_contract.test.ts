@@ -34,10 +34,26 @@ import {
  */
 const HR_PII_KEYS = ["HR_PII_KEY_V1", "HR_PII_BLIND_INDEX_PEPPER"];
 
+/**
+ * Info: (20260814 - Julian) 簽到 Demo 的 seed 輸入參數也納入這條契約。
+ *
+ * 它們與上面兩類的共同點只有一個：**對整個系統是選填的**。
+ * 差別在於它們連執行期都不參與 —— 只有 `seed_attendance_demo.ts` 會讀，跑完就用完了。
+ * 但「寫成鍵值就會讓既有部署掉進未初始化狀態」這個後果一模一樣，所以同樣只能寫在註解裡。
+ */
+const ATTENDANCE_DEMO_KEYS = [
+  "DEMO_SITE_A_LAT",
+  "DEMO_SITE_A_LNG",
+  "DEMO_SITE_A_RADIUS",
+  "DEMO_EMAIL_EMP005",
+  "DEMO_EMAIL_EMP006",
+];
+
 const OPTIONAL_KEYS = [
   ...SYSTEM_SETTING_KEYS.map((key) => SYSTEM_SETTING_DEFINITIONS[key].envKey),
   "SECRET_VAULT_MASTER_KEY",
   ...HR_PII_KEYS,
+  ...ATTENDANCE_DEMO_KEYS,
 ];
 
 describe(".env.example contract", () => {
