@@ -22,6 +22,38 @@ export interface IOrderWithUser extends Order {
   user: User | null;
 }
 
+/**
+ * Info: (20260814 - Luphia) 已扣款但無法履行時，把訂單標記為 MINT_FAILED 並寫入原因。
+ *
+ * 這裡刻意**不 throw**：webhook 的交易一旦回滾，收款紀錄（receipt、paymentTransaction）
+ * 會一起消失，金流商還會不斷重送——錢收了卻查無此事，比履行失敗本身更難處理。
+ * 因此收款照記，改把訂單推進到「已扣款、未履行」這個既有狀態：前端的訂單查詢會帶出
+ * data.error，後台訂單管理也篩得到，人工介入有依據。
+ *
+ * MINT_FAILED 的字面是鏈上鑄造失敗，這裡借用於離鏈履行（入池、套用方案）：
+ * 語意同為「款已收、貨未到」，且前端與後台都已認得這個狀態，另立新狀態的代價更大。
+ */
+async function markFulfillmentFailedInTx(
+  tx: Prisma.TransactionClient,
+  order: IOrderWithUser,
+  reason: string,
+): Promise<void> {
+  // Info: (20260814 - Luphia) 靜默是這裡最大的風險，log 與 DB 兩邊都要留痕
+  console.error(
+    `[payment] order ${order.id} (${order.type}) paid but not fulfilled: ${reason}`,
+  );
+  await tx.order.update({
+    where: { id: order.id },
+    data: {
+      status: ORDER_STATUS.MINT_FAILED,
+      data: {
+        ...((order.data as Prisma.InputJsonObject) ?? {}),
+        error: reason,
+      } as Prisma.InputJsonObject,
+    },
+  });
+}
+
 export class PaymentRepository {
   async getOrderWithUser(orderId: string): Promise<IOrderWithUser | null> {
     return prisma.order.findUnique({
@@ -85,11 +117,12 @@ export class PaymentRepository {
           order.type === ORDER_TYPE.OEN_PAYMENT ||
           order.type === ORDER_TYPE.BILLING_TEAM_POINT ||
           /**
-           * Info: (20260807 - Luphia) 團隊訂閱（data 帶 teamId）才進本分支；
-           * 個人 BILLING_SUBSCRIBE 維持原行為（webhook 不處理），避免改變既有語意
+           * Info: (20260814 - Luphia) 訂閱訂單一律進本分支，不再以 data.teamId 當門檻。
+           * 原本缺 teamId 的訂閱訂單連這個分支都進不來：不開收據、不改狀態、不報錯，
+           * 訂單就停在 PENDING——錢收了，而系統對此一無所知。
+           * 缺件改由下方履行段落標記為「已扣款未履行」，讓它浮上來。
            */
-          (order.type === ORDER_TYPE.BILLING_SUBSCRIBE &&
-            Boolean((order.data as { teamId?: string })?.teamId))
+          order.type === ORDER_TYPE.BILLING_SUBSCRIBE
         ) {
           const _creditsToMint = (order.data as IOenOrderData)?.credits || 0;
           const standardizedData = buildReceiptDataToSave(
@@ -149,7 +182,13 @@ export class PaymentRepository {
              */
             const teamId = (order.data as IOenOrderData & { teamId?: string })
               ?.teamId;
-            if (teamId && _creditsToMint > 0) {
+            if (!teamId || _creditsToMint <= 0) {
+              await markFulfillmentFailedInTx(
+                tx,
+                order,
+                `team point order missing ${!teamId ? "teamId" : "credits"}`,
+              );
+            } else {
               const credited = await creditPoolInTx(tx, {
                 teamId,
                 credits: BigInt(_creditsToMint),
@@ -165,6 +204,13 @@ export class PaymentRepository {
                   where: { id: order.id },
                   data: { status: ORDER_STATUS.COMPLETED },
                 });
+              } else {
+                // Info: (20260814 - Luphia) 錢包凍結等入池失敗：留痕供人工介入，不吞掉
+                await markFulfillmentFailedInTx(
+                  tx,
+                  order,
+                  `credit pool rejected: ${credited.outcome}`,
+                );
               }
             }
             amountPaid = order.amount;
@@ -178,7 +224,18 @@ export class PaymentRepository {
               planId?: string;
               billingInterval?: BillingInterval;
             };
-            if (subData.teamId && subData.planId) {
+            if (!subData.teamId || !subData.planId) {
+              /**
+               * Info: (20260814 - Luphia) 訂閱訂單不知道要套用到哪個團隊 / 哪個方案，
+               * 就是履行失敗。這種訂單不該存在（建單端一律帶齊），但真的出現時
+               * 必須看得見——靜靜停在 PAID 等於沒有人會發現用戶付了錢沒拿到方案。
+               */
+              await markFulfillmentFailedInTx(
+                tx,
+                order,
+                `subscription order missing ${!subData.teamId ? "teamId" : "planId"}`,
+              );
+            } else {
               await applyTeamSubscriptionInTx(tx, {
                 teamId: subData.teamId,
                 planId: subData.planId,

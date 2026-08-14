@@ -168,22 +168,49 @@ export async function POST(
         await fulfillTeamPointPurchase(order);
         return jsonOk({ requireBinding: false, success: true });
       } catch (fulfillError) {
-        // Info: (20260807 - Luphia) 已扣款但入池失敗（如錢包凍結）：訂單停在 PAID 供人工介入
+        /**
+         * Info: (20260814 - Luphia) 已扣款但入池失敗（如錢包凍結）：訂單推進到
+         * MINT_FAILED 並寫入原因。原本停在 PAID 且不記原因——PAID 是正常流程的
+         * 中繼狀態，混在裡面就等於沒有人會發現這筆卡住了。
+         */
         console.error("Team point fulfillment failed:", fulfillError);
+        await paymentRepo.updateOrderMintFailed(
+          order.id,
+          (order.data as IOenOrderData) ?? {},
+          oenData,
+          `team point fulfillment failed: ${fulfillError instanceof Error ? fulfillError.message : String(fulfillError)}`,
+        );
         return jsonFail(API_ERRORS.TW_WALLET_FROZEN);
       }
     }
 
     // Info: (20260807 - Luphia) 團隊訂閱分流（設計書 §7）：套用方案 + COMPLETED，不 mint 鏈上點數
-    if (
-      order.type === ORDER_TYPE.BILLING_SUBSCRIBE &&
-      (order.data as { teamId?: string })?.teamId
-    ) {
+    if (order.type === ORDER_TYPE.BILLING_SUBSCRIBE) {
+      /**
+       * Info: (20260814 - Luphia) 訂閱訂單缺 teamId 時，原本會**落到下方鑄造個人點數**——
+       * 用戶付了訂閱費，拿到的是等值的個人點數，方案一秒都沒生效，而流程回報成功。
+       * 這種訂單不該存在（建單端一律帶齊），出現時必須當場失敗並留痕。
+       */
+      if (!(order.data as { teamId?: string })?.teamId) {
+        await paymentRepo.updateOrderMintFailed(
+          order.id,
+          (order.data as IOenOrderData) ?? {},
+          oenData,
+          "subscription order missing teamId",
+        );
+        return jsonFail(API_ERRORS.TW_OPERATION_FAILED);
+      }
       try {
         await fulfillTeamSubscriptionOrder(order, Date.now());
         return jsonOk({ requireBinding: false, success: true });
       } catch (fulfillError) {
         console.error("Team subscription fulfillment failed:", fulfillError);
+        await paymentRepo.updateOrderMintFailed(
+          order.id,
+          (order.data as IOenOrderData) ?? {},
+          oenData,
+          `subscription fulfillment failed: ${fulfillError instanceof Error ? fulfillError.message : String(fulfillError)}`,
+        );
         return jsonFail(API_ERRORS.TW_OPERATION_FAILED);
       }
     }
