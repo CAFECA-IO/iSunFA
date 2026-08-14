@@ -3,6 +3,10 @@ export const purchaseTarget = {
   credits_title: "点数存入哪里",
   seat_breakdown: "{{seats}} 席 × NT$ {{unit}} ＝ NT$ {{total}}",
   seat_note: "席次以团队目前人数计算；实际收费金额以结帐当下的人数为准。",
+  // Info: (20260814 - Luphia) 沒有團隊可選時要說出是哪一種沒有（載入中／失敗／過期／無權限）
+  session_expired: "登录已过期，请重新登录后再选择团队。",
+  teams_loading: "正在加载你的团队⋯⋯",
+  teams_failed: "团队清单加载失败，请重试。",
   team: "团队",
   personal: "个人",
   select_team: "请选择团队",

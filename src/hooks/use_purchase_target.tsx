@@ -56,7 +56,7 @@ interface ITeamListItem {
 }
 
 export const usePurchaseTarget = (context: IPurchaseContext) => {
-  const { user } = useAuth();
+  const { user, sessionExpired } = useAuth();
   /**
    * Info: (20260814 - Luphia) 從團隊頁的「購買點數 / 管理方案」過來時會帶 `?team=`：
    * 那個人已經表明要買給哪個團隊，再問一次只是多一步，而且選錯就買到別人帳上。
@@ -65,6 +65,17 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
   const presetTeamId = searchParams?.get("team") ?? null;
   const { t } = useTranslation();
   const [teams, setTeams] = useState<ITeamListItem[]>([]);
+  /**
+   * Info: (20260814 - Luphia) 團隊清單的載入狀態。
+   *
+   * 原本查詢失敗一律 `setTeams([])`，於是「登入過期」「網路失敗」「你真的沒有團隊」
+   * 三件事在畫面上長得一模一樣——團隊按鈕靜靜停用、點了沒反應。
+   * 使用者實測就是這樣被卡住的（登入過期，但畫面只說得出「沒有團隊」）。
+   */
+  const [teamsStatus, setTeamsStatus] = useState<"loading" | "ready" | "error">(
+    "loading",
+  );
+  const [reloadToken, setReloadToken] = useState(0);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [target, setTarget] = useState<PurchaseTarget>(
     PURCHASE_TARGET.PERSONAL,
@@ -78,24 +89,34 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
   useEffect(() => {
     if (!user) {
       setTeams([]);
+      setTeamsStatus("ready");
       return;
     }
     let active = true;
+    setTeamsStatus("loading");
     const fetchTeams = async () => {
       try {
         const response = await request<{ payload: ITeamListItem[] | null }>(
           "/api/v1/user/team",
         );
-        if (active) setTeams(response.payload ?? []);
+        if (!active) return;
+        setTeams(response.payload ?? []);
+        setTeamsStatus("ready");
       } catch {
-        if (active) setTeams([]);
+        // Info: (20260814 - Luphia) 失敗就說失敗，不要偽裝成「沒有團隊」
+        if (!active) return;
+        setTeams([]);
+        setTeamsStatus("error");
       }
     };
     fetchTeams();
     return () => {
       active = false;
     };
-  }, [user]);
+  }, [user, reloadToken]);
+
+  // Info: (20260814 - Luphia) 供畫面重試（網路抖動不該讓人只能重整整頁）
+  const reloadTeams = useCallback(() => setReloadToken((n) => n + 1), []);
 
   const eligibleTeams = useMemo(
     () => filterEligibleTeams(teams, mode),
@@ -126,12 +147,28 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
 
   const usesTeam = target === PURCHASE_TARGET.TEAM;
 
+  /**
+   * Info: (20260814 - Luphia) 沒有團隊可選時，說出**是哪一種**沒有：
+   * 還在載入、載入失敗、登入過期、或真的沒有符合權限的團隊。
+   * 這四種的下一步完全不同（等一下／重試／重新登入／請團隊擁有者操作）。
+   */
   const unavailableHint = useMemo(() => {
     if (!isActive || !usesTeam || eligibleTeams.length > 0) return null;
+    if (sessionExpired) return t("purchase_target.session_expired");
+    if (teamsStatus === "loading") return t("purchase_target.teams_loading");
+    if (teamsStatus === "error") return t("purchase_target.teams_failed");
     return isSubscription
       ? t("purchase_target.no_owner_team")
       : t("purchase_target.no_manager_team");
-  }, [isActive, usesTeam, eligibleTeams.length, isSubscription, t]);
+  }, [
+    isActive,
+    usesTeam,
+    eligibleTeams.length,
+    isSubscription,
+    sessionExpired,
+    teamsStatus,
+    t,
+  ]);
 
   // Info: (20260814 - Luphia) 阻擋與否由純函式判定，畫面只負責把理由翻成句子
 
@@ -230,6 +267,7 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
       onSelectTeam={setSelectedTeamId}
       allowPersonal={!isSubscription}
       unavailableHint={unavailableHint}
+      onRetryTeams={teamsStatus === "error" ? reloadTeams : undefined}
       seatCount={seatCount}
       unitPrice={context.unitPrice ?? null}
       seatAmount={seatAmount}

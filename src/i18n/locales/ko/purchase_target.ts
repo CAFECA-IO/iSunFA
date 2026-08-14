@@ -4,6 +4,10 @@ export const purchaseTarget = {
   seat_breakdown: "{{seats}}석 × NT$ {{unit}} = NT$ {{total}}",
   seat_note:
     "좌석 수는 현재 팀 인원으로 계산하며, 실제 청구 금액은 결제 시점의 인원을 기준으로 합니다.",
+  // Info: (20260814 - Luphia) 沒有團隊可選時要說出是哪一種沒有（載入中／失敗／過期／無權限）
+  session_expired: "로그인이 만료되었습니다. 다시 로그인한 뒤 팀을 선택하세요.",
+  teams_loading: "팀을 불러오는 중…",
+  teams_failed: "팀 목록을 불러오지 못했습니다. 다시 시도하세요.",
   team: "팀",
   personal: "개인",
   select_team: "팀을 선택하세요",

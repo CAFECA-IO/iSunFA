@@ -37,8 +37,10 @@ interface IPurchaseTargetSelectorProps {
    * 購點兩者皆可，才需要那排切換鈕。
    */
   allowPersonal: boolean;
-  // Info: (20260814 - Luphia) 權限不足或沒有團隊時的說明，取代選單顯示
+  // Info: (20260814 - Luphia) 沒有團隊可選時的原因說明（載入中／失敗／過期／無權限）
   unavailableHint?: string | null;
+  // Info: (20260814 - Luphia) 團隊清單載入失敗時的重試；沒有值就不顯示重試鈕
+  onRetryTeams?: () => void;
   /**
    * Info: (20260814 - Luphia) 訂閱的席次揭露（規範 P2）：付款前就要看得到
    * 「幾席 × 單價 = 多少錢」，否則方案卡上的單價會被誤讀成總額。
@@ -57,6 +59,7 @@ export default function PurchaseTargetSelector({
   onSelectTeam,
   allowPersonal,
   unavailableHint = null,
+  onRetryTeams = undefined,
   seatCount = null,
   unitPrice = null,
   seatAmount = null,
@@ -90,9 +93,17 @@ export default function PurchaseTargetSelector({
             <Wallet className="h-4 w-4 shrink-0" />
             <span>{t("purchase_target.personal")}</span>
           </button>
+          {/**
+           * Info: (20260814 - Luphia) 沒有可用團隊時**不停用**這個按鈕。
+           *
+           * 停用的按鈕點了沒反應，而原因（下方的 unavailableHint）只在選到團隊時才顯示——
+           * 於是在最需要說明的情況下，畫面什麼都不說。實測回報就是這樣來的：
+           * 登入過期 → 團隊清單空的 → 按鈕停用 → 使用者以為功能壞了。
+           * 現在點得下去，點了就看得到原因。
+           */}
           <button
             type="button"
-            disabled={disabled || teams.length === 0}
+            disabled={disabled}
             onClick={() => onTargetChange(PURCHASE_TARGET.TEAM)}
             className={optionClass(target === PURCHASE_TARGET.TEAM)}
           >
@@ -109,7 +120,18 @@ export default function PurchaseTargetSelector({
       {unavailableHint && target === PURCHASE_TARGET.TEAM && (
         <div className="flex items-start gap-2 rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>{unavailableHint}</span>
+          <div className="space-y-1">
+            <p>{unavailableHint}</p>
+            {onRetryTeams && (
+              <button
+                type="button"
+                onClick={onRetryTeams}
+                className="cursor-pointer font-semibold underline"
+              >
+                {t("common.retry")}
+              </button>
+            )}
+          </div>
         </div>
       )}
 

@@ -4,6 +4,10 @@ export const purchaseTarget = {
   seat_breakdown: "{{seats}} seats × NT$ {{unit}} = NT$ {{total}}",
   seat_note:
     "Seats are counted from your team's current size; the amount charged reflects the size at checkout.",
+  // Info: (20260814 - Luphia) 沒有團隊可選時要說出是哪一種沒有（載入中／失敗／過期／無權限）
+  session_expired: "Your session has expired. Sign in again to choose a team.",
+  teams_loading: "Loading your teams…",
+  teams_failed: "Could not load your teams. Please retry.",
   team: "Team",
   personal: "Personal",
   select_team: "Select a team",

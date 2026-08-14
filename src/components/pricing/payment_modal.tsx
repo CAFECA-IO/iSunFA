@@ -69,7 +69,7 @@ export default function PaymentModal({
   purchaseBlockingMessage = null,
 }: IPaymentModalProps) {
   const { t } = useTranslation();
-  const { user, refreshAuth, loading: authLoading } = useAuth();
+  const { user, refreshAuth, loading: authLoading, sessionExpired } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -956,6 +956,15 @@ export default function PaymentModal({
                                 onSubmit={handleSubmit}
                                 className="mt-6 space-y-4"
                               >
+                                {/**
+                                 * Info: (20260814 - Luphia) 登入過期就不要讓他按下去：
+                                 * 按了只會拿到 401，而錯誤訊息長得像系統故障。
+                                 */}
+                                {sessionExpired && (
+                                  <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
+                                    {t("auth_modal.session_expired")}
+                                  </p>
+                                )}
                                 {purchaseBlockingMessage && (
                                   <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
                                     {purchaseBlockingMessage}
@@ -967,7 +976,8 @@ export default function PaymentModal({
                                     disabled={
                                       loading ||
                                       !agreedToTerms ||
-                                      // Info: (20260814 - Luphia) 歸屬對象未備妥不讓送出（未選團隊 / 權限不足）
+                                      // Info: (20260814 - Luphia) 登入過期／歸屬對象未備妥都不讓送出
+                                      sessionExpired ||
                                       Boolean(purchaseBlockingMessage) ||
                                       (!isBankTransferPlan &&
                                         paymentMethods.length <= 0)
