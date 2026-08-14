@@ -250,8 +250,9 @@ model TeamQuotaUsage {
   idempotencyKey String   @unique @map("idempotency_key")
   createdAt      DateTime @default(now()) @map("created_at")
 
-  @@index([teamId, windowKey5h])
-  @@index([teamId, windowKeyWeek])
+  // Info: (20260814 - Luphia) 額度為逐成員計算（一人一池），聚合條件含 userId
+  @@index([teamId, userId, windowKey5h])
+  @@index([teamId, userId, windowKeyWeek])
   @@map("team_quota_usage")
 }
 

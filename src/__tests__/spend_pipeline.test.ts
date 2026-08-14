@@ -292,6 +292,24 @@ describe("spendCredits", () => {
   });
 
   /**
+   * Info: (20260814 - Luphia) 額度是**一人一池**（產品拍板 20260814）。
+   *
+   * 聚合條件少了 userId 就會退回「全隊共用」：一個人能在一個視窗內用光整隊的額度，
+   * 而其他成員直到重置前一律 402。那個 mutation 不會讓任何行為測試變紅，
+   * 因此這裡直接釘住呼叫參數。
+   */
+  it("counts quota usage per member, not per team", async () => {
+    await spendCredits(BASE_PARAMS);
+
+    expect(teamQuotaUsageRepo.sumWindowUsage).toHaveBeenCalledWith(
+      "team-1",
+      "user-1",
+      expect.any(Number),
+      expect.any(Number),
+    );
+  });
+
+  /**
    * Info: (20260814 - Luphia) 逐功能扣款順序的**接線**測試（PR #6652 review B-5 #3）。
    *
    * `splitSpend` 的 priority 參數有預設值 `QUOTA_FIRST`，因此把 `resolveSpendPriority(featureCode)`

@@ -60,8 +60,13 @@ async function guarded<T>(operation: () => Promise<T>): Promise<T> {
   }
 }
 
+/**
+ * Info: (20260814 - Luphia) 額度狀態是**該成員自己的**（一人一池，產品拍板 20260814）：
+ * 畫面顯示的剩餘量必須與扣費側同一套算法，否則用戶會看到別人用掉的量算在自己頭上。
+ */
 async function buildQuotaStatus(
   teamId: string,
+  userId: string,
   planId: TeamPlanId,
   nowSec: number,
 ): Promise<IQuotaStatus> {
@@ -69,6 +74,7 @@ async function buildQuotaStatus(
   const quota = await subscriptionPlanQuotaRepo.resolveQuota(planId);
   const { used5h, usedWeek } = await teamQuotaUsageRepo.sumWindowUsage(
     teamId,
+    userId,
     getWindowKey5h(nowSec),
     getWindowKeyWeek(nowSec),
   );
@@ -99,7 +105,7 @@ export async function getTeamSubscriptionView(params: {
     const subscription = await teamSubscriptionRepo.getByTeamId(teamId);
     // Info: (20260807 - Luphia) 顯示「有效」方案：過期或非 ACTIVE 一律呈現 free，與扣費側一致
     const planId = resolveEffectivePlanId(subscription, nowSec);
-    const quota = await buildQuotaStatus(teamId, planId, nowSec);
+    const quota = await buildQuotaStatus(teamId, userId, planId, nowSec);
     // Info: (20260809 - Luphia) 費率為系統設定，自 DB 取得
     const billing = await faithBillingSettingRepo.resolveSetting();
 
@@ -148,7 +154,7 @@ export async function getAccountBookQuotaView(params: {
     const teamId = accountBook.teamId;
     const subscription = await teamSubscriptionRepo.getByTeamId(teamId);
     const planId = resolveEffectivePlanId(subscription, nowSec);
-    const quota = await buildQuotaStatus(teamId, planId, nowSec);
+    const quota = await buildQuotaStatus(teamId, userId, planId, nowSec);
     const allocation = await teamWalletRepo.getAllocation(teamId, userId);
 
     return {

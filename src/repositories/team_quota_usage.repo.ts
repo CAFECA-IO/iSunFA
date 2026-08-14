@@ -41,18 +41,27 @@ export class TeamQuotaUsageRepository {
     return prisma.teamQuotaUsage.findUnique({ where: { idempotencyKey } });
   }
 
+  /**
+   * Info: (20260814 - Luphia) 額度視窗用量**逐成員**聚合（產品拍板 20260814）。
+   *
+   * 原本只以 teamId 聚合，等於全隊共用一池、先用先得——一個人可以在一個視窗內
+   * 把整隊的額度用光，其他人直到重置前一律 402。改為一人一池後，
+   * 席次費買到的就是「這個人的額度」，價格隨人數增加、額度也隨之增加，
+   * 每點成本不再隨團隊規模惡化。
+   */
   async sumWindowUsage(
     teamId: string,
+    userId: string,
     windowKey5h: number,
     windowKeyWeek: number,
   ): Promise<IWindowUsageSum> {
     const [sum5h, sumWeek] = await Promise.all([
       prisma.teamQuotaUsage.aggregate({
-        where: { teamId, windowKey5h },
+        where: { teamId, userId, windowKey5h },
         _sum: { amount: true },
       }),
       prisma.teamQuotaUsage.aggregate({
-        where: { teamId, windowKeyWeek },
+        where: { teamId, userId, windowKeyWeek },
         _sum: { amount: true },
       }),
     ]);

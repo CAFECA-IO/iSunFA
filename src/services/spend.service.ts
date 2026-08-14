@@ -358,8 +358,10 @@ export async function spendCredits(
     );
     const windowKey5h = getWindowKey5h(nowSec);
     const windowKeyWeek = getWindowKeyWeek(nowSec);
+    // Info: (20260814 - Luphia) 額度逐成員計算：用量只算這個人自己的（一人一池）
     const { used5h, usedWeek } = await teamQuotaUsageRepo.sumWindowUsage(
       teamId,
+      userId,
       windowKey5h,
       windowKeyWeek,
     );
