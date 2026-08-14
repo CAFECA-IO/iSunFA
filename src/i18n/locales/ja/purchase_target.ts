@@ -1,6 +1,9 @@
 export const purchaseTarget = {
   subscription_title: "どのチームのサブスクリプションですか",
   credits_title: "クレジットの入金先",
+  seat_breakdown: "{{seats}} 席 × NT$ {{unit}} ＝ NT$ {{total}}",
+  seat_note:
+    "席数は現在のチーム人数で計算します。実際の請求額は決済時点の人数に基づきます。",
   team: "チーム",
   personal: "個人",
   select_team: "チームを選択してください",

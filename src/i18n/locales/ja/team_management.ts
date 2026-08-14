@@ -62,6 +62,8 @@ export const teamManagement = {
     frozen_warning:
       "チームウォレットは凍結中です（保存則監査の異常）。サポートにお問い合わせください。",
     buy_credits: "ポイントを購入",
+    manage_plan: "プランを管理",
+    manage_plan_hint: "枠が足りない場合はプランをアップグレードできます",
     buy_credits_hint:
       "購入したポイントはチームウォレットに入り、管理者が割り当てできます。",
     allocated_points: "割り当てポイント",

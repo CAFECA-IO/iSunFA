@@ -1,4 +1,4 @@
-import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { stringToHex } from "viem";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
@@ -9,6 +9,7 @@ import { webAuthnService } from "@/services/webauthn.service";
 import { bundlerService } from "@/services/bundler.service";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
 import { TEAM_INVITATION_STATUS } from "@/constants/status";
+import { chargeSeatAddition } from "@/services/team_seat.service";
 
 export async function POST(
   request: NextRequest,
@@ -121,6 +122,19 @@ export async function POST(
       );
     }
 
+    /**
+     * Info: (20260814 - Luphia) 付費團隊加人先補收席次費用（規範 §4「邀請即收費」、P3）。
+     *
+     * 順序是 fail-closed：扣款失敗就不建立邀請。反過來會出現「人已經進來、錢沒收到」，
+     * 而那筆錢沒有任何流程會回頭補——只能人工追討。
+     * 免費方案、期末零頭（補收金額為 0）不扣款，席次仍然照記。
+     */
+    const seatCharge = await chargeSeatAddition({
+      teamId,
+      seats: 1,
+      nowMs: Date.now(),
+    });
+
     // Info: (20260325 - Tzuhan) Create the TeamInvitation
     const newInvitation = await teamRepo.createTeamInvitation({
       teamId,
@@ -130,8 +144,16 @@ export async function POST(
       status: TEAM_INVITATION_STATUS.PENDING,
     });
 
-    return jsonOk(newInvitation);
+    // Info: (20260814 - Luphia) 一併回報補收結果，前端才說得出「已補收 N 元」
+    return jsonOk({ ...newInvitation, seatCharge });
   } catch (error) {
+    if (error instanceof ApiError) {
+      return jsonFail({
+        code: error.code,
+        message: error.message,
+        status: error.status,
+      });
+    }
     console.error("[API] /team/[team_id]/invitations POST error:", error);
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }

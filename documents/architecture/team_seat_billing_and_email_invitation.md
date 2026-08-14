@@ -2,8 +2,8 @@
 
 > **Date**: August 2026
 > **Author**: Luphia
-> **Version**: 1.0 (Draft)
-> **Status**: Proposed — 產品拍板 2026-08-12，實作待排程
+> **Version**: 1.1 (Draft)
+> **Status**: Partially implemented — 產品拍板 2026-08-12；P1–P3 已於 2026-08-14 實作，P4（email 邀請）、P5（席次帳單明細）待排程
 > **Target**: `src/services/order.service.ts`、`src/services/team_subscription.service.ts`、`src/repositories/team.repo.ts`、`src/app/api/v1/user/team/[team_id]/invitations/`、`src/services/mail.service.ts`（新）
 > **關聯文件**：[團隊錢包與訂閱額度設計書](team_wallet_and_subscription_quota.md)、[費思個人化記憶規範](ai_and_analytics/faith_personal_memory.md)、[ADR 017 簽章式資料庫系統設定](decisions/017_signed_system_settings_in_database.md)
 > **對外文件連動**：服務條款 §3.1 / §3.6、《隱私權政策》§1、訂閱方案頁
@@ -217,7 +217,26 @@ model TeamInvitation {
 
 > **產品指示（2026-08-12）：方案頁與條款一併先行改為席次計費**，與費思記憶採同一套「條款與文案先行、實作反推」的節奏。上表六處均已於同日更新（價格單位、`fido_tooltip`、席次說明段落、條款 §3.1 / §3.6、隱私政策 §1）。
 >
-> ⚠️ 因此在 P2–P3 完成前，**頁面標示的是本規範的模型，而非結帳實際行為**（現行結帳仍為整包月費、無席次乘算、無比例補收）。落差期間的處置：本分支未併入 production 前不對外可見；若需提前上線頁面，須先完成 P2（席次乘算與 server 端金額計算），否則價目牌與實收金額不一致。
+> ✅ **落差已於 2026-08-14 消除**：P2（席次乘算、金額由 server 計算、付款前揭露 `席次 × 單價`）與 P3（比例補收純函式 + 邀請 fail-closed）皆已實作，方案頁標示與實收金額一致。
+
+### 2.1 實作現況（2026-08-14）
+
+| 規則 | 實作 |
+|---|---|
+| 訂閱金額 = 單價 × 席次 | `changeTeamSubscription` 於 server 端以 `teamRepo.countMembers` 取人數，`resolveSubscriptionAmount` 計算；前端只負責顯示 |
+| 席次與單價快照 | `TeamSubscription.seats` / `unit_price`，由訂單頂層欄位帶入履行路徑（webhook 與 checkout 皆同） |
+| 續訂重算 | `subscription_renewal.cron` 依**續訂當下**人數重算，離職席次自動停收 |
+| 期中加人補收 | `chargeSeatAddition`：`單價 × 剩餘時間 / 整期 × 席次`，無條件捨去（零頭算給用戶） |
+| 收費時點 | **發出邀請**時（`POST /invitations`）；直接加成員（`POST /members`）同樣補收，避免留下免費加席的後門 |
+| fail-closed | 先扣款、成功才建立邀請；沒有可扣款的卡回 `TW000011`，扣款失敗回 `TW000012`，兩者都不建立邀請 |
+| 零元補收 | 期末零頭算出 0 元時**只加席次、不建單**——為了幾塊錢打一次金流，失敗率與雜訊都比收到的錢多 |
+
+**尚未實作（已知落差）**：
+
+- **邀請被拒或過期不釋出席次**：該席次的補收不退還，但下一次續訂會依實際人數重算，因此最多影響一期。P4 的 token 過期流程會一併處理。
+- **移除成員不即時減少席次**：同上，續訂時重算。與「剩餘點數不退還」（§6.3）一致，期中不退費。
+- **`TeamSeatChange` 稽核表未建**：目前以 `BILLING_SEAT_ADDITION` 訂單作為席次異動的軌跡；P5 的帳單明細需要更細的紀錄時再補。
+- **資料庫欄位需套用**：本專案無 migrations 目錄（schema 由部署流程套用），`team_subscription` 新增 `seats`、`unit_price` 兩欄需隨部署更新。
 
 ---
 
@@ -226,9 +245,9 @@ model TeamInvitation {
 | 階段 | 內容 | 完成判準 |
 |---|---|---|
 | **P0**（本次） | 本規範 + 條款 §3.1 / §3.6 + 隱私政策 §1 + **方案頁文案（每席單價、席次說明、`fido_tooltip`，五語系）** + `FAITH_MEMORY_RETENTION_DAYS` 進 DB 設定 | 規範、條款與方案頁三者對席次的描述一致；保留天數可後台調整且畫面同步 |
-| **P1** | Schema（`seats`、單價快照、`TeamSeatChange`、邀請 email/token/expiresAt）+ migration | 席次可查、可重算；既有 wallet 邀請不受影響 |
-| **P2** | 訂閱選團隊 + 席次計價 + 金額由 server 計算 | 前端送錯總額不影響實收；付款前揭露 `席次 × 單價` |
-| **P3** | 比例補收（純函式 + 單測）+ 邀請 fail-closed 順序 | 閏年 / 月底 / 期末最後一天的金額皆有測試；扣款失敗不建立邀請 |
+| ~~**P1**~~（2026-08-14，部分） | Schema `seats` + 單價快照已完成；`TeamSeatChange` 與邀請 email/token 欄位隨 P4 再補 | 席次可查、可重算；既有 wallet 邀請不受影響 |
+| ~~**P2**~~（2026-08-14） | 訂閱選團隊 + 席次計價 + 金額由 server 計算 | 前端送錯總額不影響實收；付款前揭露 `席次 × 單價` |
+| ~~**P3**~~（2026-08-14） | 比例補收（純函式 + 單測）+ 邀請 fail-closed 順序 | 期末最後一天 / 期間異常 / 零席次的金額皆有測試；扣款失敗不建立邀請 |
 | **P4** | SMTP 設定 + `mail.service` + 邀請信 + `/invite/<token>` 註冊即入團 | 未設定 SMTP 時邀請明確失敗；token 一次性、過期釋出席次；重寄不重複收費 |
 | **P5** | 團隊管理頁席次與帳單明細（誰佔席、何時佔、對應哪筆比例補收） | 管理者可自行核對席次費用，不需客服協助 |
 

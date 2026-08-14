@@ -1,6 +1,9 @@
 export const purchaseTarget = {
   subscription_title: "어느 팀의 구독인가요",
   credits_title: "크레딧을 어디에 넣을까요",
+  seat_breakdown: "{{seats}}석 × NT$ {{unit}} = NT$ {{total}}",
+  seat_note:
+    "좌석 수는 현재 팀 인원으로 계산하며, 실제 청구 금액은 결제 시점의 인원을 기준으로 합니다.",
   team: "팀",
   personal: "개인",
   select_team: "팀을 선택하세요",

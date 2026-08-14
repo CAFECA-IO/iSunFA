@@ -82,6 +82,12 @@ export interface IPaymentOrderParams {
    * 埋在巢狀裡等於沒帶，訂單付得掉卻履行不了。
    */
   teamId?: string;
+  /**
+   * Info: (20260814 - Luphia) 訂閱的席次數與單價快照（同樣必須是頂層欄位）。
+   * 履行時寫進 TeamSubscription：續訂要依此重算，期中加人要依此比例補收。
+   */
+  seats?: number;
+  unitPrice?: number;
   baseCredits?: string;
   bonusCredits?: string;
   items?: IJSONObject[];

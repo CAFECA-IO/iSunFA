@@ -39,6 +39,13 @@ interface IPurchaseTargetSelectorProps {
   allowPersonal: boolean;
   // Info: (20260814 - Luphia) 權限不足或沒有團隊時的說明，取代選單顯示
   unavailableHint?: string | null;
+  /**
+   * Info: (20260814 - Luphia) 訂閱的席次揭露（規範 P2）：付款前就要看得到
+   * 「幾席 × 單價 = 多少錢」，否則方案卡上的單價會被誤讀成總額。
+   */
+  seatCount?: number | null;
+  unitPrice?: number | null;
+  seatAmount?: number | null;
   disabled?: boolean;
 }
 
@@ -50,6 +57,9 @@ export default function PurchaseTargetSelector({
   onSelectTeam,
   allowPersonal,
   unavailableHint = null,
+  seatCount = null,
+  unitPrice = null,
+  seatAmount = null,
   disabled = false,
 }: IPurchaseTargetSelectorProps) {
   const { t } = useTranslation();
@@ -135,6 +145,28 @@ export default function PurchaseTargetSelector({
           )}
         </div>
       )}
+
+      {/**
+       * Info: (20260814 - Luphia) 席次明細：金額最終由 server 依結帳當下人數計算，
+       * 因此這裡標明依據，而不是讓人以為看到的是保證金額。
+       */}
+      {target === PURCHASE_TARGET.TEAM &&
+        seatCount !== null &&
+        unitPrice !== null &&
+        seatAmount !== null && (
+          <div className="rounded-lg bg-orange-50 p-3 text-xs text-orange-800">
+            <p className="font-semibold">
+              {t("purchase_target.seat_breakdown", {
+                seats: seatCount,
+                unit: unitPrice.toLocaleString(),
+                total: seatAmount.toLocaleString(),
+              })}
+            </p>
+            <p className="mt-1 text-orange-700">
+              {t("purchase_target.seat_note")}
+            </p>
+          </div>
+        )}
 
       {target === PURCHASE_TARGET.PERSONAL && (
         <p className="rounded-lg bg-gray-50 p-3 text-xs text-gray-500">

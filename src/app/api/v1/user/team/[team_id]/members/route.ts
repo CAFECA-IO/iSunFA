@@ -1,8 +1,9 @@
-import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { teamRepo } from "@/repositories/team.repo";
+import { chargeSeatAddition } from "@/services/team_seat.service";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { webAuthnService } from "@/services/webauthn.service";
 import { TeamRole } from "@/constants/team";
@@ -101,14 +102,31 @@ export async function POST(
       return jsonFail(API_ERRORS.VA_USER_IS_ALREADY_A_MEMBER_OF);
     }
 
+    /**
+     * Info: (20260814 - Luphia) 直接加人也要補收席次費用（規範 §4）：
+     * 這條路徑繞過邀請，若不收費就會成為「免費加席」的後門。
+     */
+    const seatCharge = await chargeSeatAddition({
+      teamId,
+      seats: 1,
+      nowMs: Date.now(),
+    });
+
     const newMember = await teamRepo.createTeamMember({
       team: { connect: { id: teamId } },
       user: { connect: { id: targetUser.id } },
       role: assignedRole,
     });
 
-    return jsonOk(newMember);
+    return jsonOk({ ...newMember, seatCharge });
   } catch (error) {
+    if (error instanceof ApiError) {
+      return jsonFail({
+        code: error.code,
+        message: error.message,
+        status: error.status,
+      });
+    }
     console.error("[API] /team/[team_id]/members POST error:", error);
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }

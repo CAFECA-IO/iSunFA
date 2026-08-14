@@ -40,6 +40,11 @@ export const ORDER_TYPE = {
   BILLING_POINT: "BILLING_POINT",
   // Info: (20260807 - Luphia) 團隊錢包購點：付款成功後入池（離鏈 Ledger），不 mint 鏈上點數
   BILLING_TEAM_POINT: "BILLING_TEAM_POINT",
+  /**
+   * Info: (20260814 - Luphia) 期中增加席次的比例補收（規範 P3）：
+   * 以團隊記錄在案的綁定卡即時扣款，成功才建立邀請，不 mint 鏈上點數。
+   */
+  BILLING_SEAT_ADDITION: "BILLING_SEAT_ADDITION",
 } as const;
 
 export type OrderType = (typeof ORDER_TYPE)[keyof typeof ORDER_TYPE];

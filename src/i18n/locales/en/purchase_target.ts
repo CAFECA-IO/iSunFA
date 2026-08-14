@@ -1,6 +1,9 @@
 export const purchaseTarget = {
   subscription_title: "Which team is this subscription for?",
   credits_title: "Where should the credits go?",
+  seat_breakdown: "{{seats}} seats × NT$ {{unit}} = NT$ {{total}}",
+  seat_note:
+    "Seats are counted from your team's current size; the amount charged reflects the size at checkout.",
   team: "Team",
   personal: "Personal",
   select_team: "Select a team",

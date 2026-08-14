@@ -37,6 +37,8 @@ import {
   mapServiceError,
 } from "@/services/account_book_access.guard";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
+import { teamRepo } from "@/repositories/team.repo";
+import { resolveSubscriptionAmount } from "@/lib/billing/seat_billing";
 import { teamQuotaUsageRepo } from "@/repositories/team_quota_usage.repo";
 import { subscriptionPlanQuotaRepo } from "@/repositories/subscription_plan_quota.repo";
 import { faithBillingSettingRepo } from "@/repositories/faith_billing_setting.repo";
@@ -194,20 +196,29 @@ export async function changeTeamSubscription(params: {
       throw toApiError(API_ERRORS.VL_SCHEMA_ERROR);
     }
 
-    const price =
+    /**
+     * Info: (20260814 - Luphia) 席次計價（規範 P2）：金額 = 單價 × 團隊人數，**由 server 計算**。
+     * 前端只負責顯示；採信前端送來的總額等於把價格交給呼叫端決定。
+     */
+    const unitPrice =
       SUBSCRIPTION_PLAN_PRICE[planId][
         billingInterval === BILLING_INTERVAL.YEAR ? "yearly" : "monthly"
       ];
+    const seats = await teamRepo.countMembers(teamId);
+    const amount = resolveSubscriptionAmount(unitPrice, seats);
+
     return generatePaymentOrder(userId, {
       type: ORDER_TYPE.BILLING_SUBSCRIBE,
-      amount: price,
+      amount,
       unit: CURRENCY_UNIT.TWD,
       credits: SUBSCRIPTION_PLAN_CREDITS[planId],
       paymentMethodId,
-      title: `iSunFA Team Subscription - ${planId} (${billingInterval})`,
+      title: `iSunFA Team Subscription - ${planId} (${billingInterval}) x${Math.max(1, seats)}`,
       planId,
       billingInterval,
       teamId,
+      seats: Math.max(1, seats),
+      unitPrice,
     });
   });
 }
@@ -228,6 +239,8 @@ export async function fulfillTeamSubscriptionOrder(
       teamId?: string;
       planId?: string;
       billingInterval?: BillingInterval;
+      seats?: number;
+      unitPrice?: number;
     } | null;
     if (!data?.teamId || !data.planId) {
       throw toApiError(API_ERRORS.TW_OPERATION_FAILED);
@@ -239,6 +252,8 @@ export async function fulfillTeamSubscriptionOrder(
       billingInterval: data.billingInterval ?? BILLING_INTERVAL.MONTH,
       orderId: order.id,
       nowMs,
+      seats: data.seats,
+      unitPrice: data.unitPrice,
     });
     await paymentRepo.updateOrderCompleted(order.id);
   });

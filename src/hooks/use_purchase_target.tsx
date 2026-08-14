@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { HTTP_METHOD } from "@/constants/http";
+import { resolveSubscriptionAmount } from "@/lib/billing/seat_billing";
 import {
   BLOCKING_REASON,
   PURCHASE_MODE,
@@ -36,6 +38,8 @@ export interface IPurchaseContext {
   billingInterval?: "month" | "year";
   // Info: (20260814 - Luphia) 點數包 id（tier1–tier6）；訂閱時為 undefined
   creditPlanId?: string;
+  // Info: (20260814 - Luphia) 訂閱單價（單一席次），用於在付款前揭露「席次 × 單價」
+  unitPrice?: number;
 }
 
 export interface IPurchaseOrderResult {
@@ -47,10 +51,18 @@ interface ITeamListItem {
   id: string;
   name: string;
   role: string | null;
+  // Info: (20260814 - Luphia) 團隊人數＝席次數，訂閱金額為「席次 × 單價」（規範 P2）
+  memberCount?: number;
 }
 
 export const usePurchaseTarget = (context: IPurchaseContext) => {
   const { user } = useAuth();
+  /**
+   * Info: (20260814 - Luphia) 從團隊頁的「購買點數 / 管理方案」過來時會帶 `?team=`：
+   * 那個人已經表明要買給哪個團隊，再問一次只是多一步，而且選錯就買到別人帳上。
+   */
+  const searchParams = useSearchParams();
+  const presetTeamId = searchParams?.get("team") ?? null;
   const { t } = useTranslation();
   const [teams, setTeams] = useState<ITeamListItem[]>([]);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
@@ -99,6 +111,18 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
     // Info: (20260814 - Luphia) 只有一個可用團隊就預選，多一步選擇沒有資訊量
     if (eligibleTeams.length === 1) setSelectedTeamId(eligibleTeams[0].id);
   }, [eligibleTeams]);
+
+  useEffect(() => {
+    /**
+     * Info: (20260814 - Luphia) 網址指定的團隊只在「確實有資格」時採用：
+     * 帶著沒有權限的 teamId 進來不該讓畫面看起來可以付款，
+     * 那只會把失敗延後到扣款那一刻。
+     */
+    if (!presetTeamId || !isActive) return;
+    if (!eligibleTeams.some((team) => team.id === presetTeamId)) return;
+    setSelectedTeamId(presetTeamId);
+    setTarget(PURCHASE_TARGET.TEAM);
+  }, [presetTeamId, eligibleTeams, isActive]);
 
   const usesTeam = target === PURCHASE_TARGET.TEAM;
 
@@ -181,6 +205,22 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
     context.creditPlanId,
   ]);
 
+  const selectedTeam = useMemo(
+    () => eligibleTeams.find((team) => team.id === selectedTeamId) ?? null,
+    [eligibleTeams, selectedTeamId],
+  );
+
+  /**
+   * Info: (20260814 - Luphia) 訂閱以「席次 × 單價」計費（規範 P2）。
+   * 這裡算出來的金額只用於**付款前揭露**——真正的收費金額由 server 依當下人數計算，
+   * 兩者若因為期間有人加入而有落差，以 server 為準。
+   */
+  const seatCount = isSubscription ? (selectedTeam?.memberCount ?? null) : null;
+  const seatAmount =
+    isSubscription && seatCount !== null && context.unitPrice
+      ? resolveSubscriptionAmount(context.unitPrice, seatCount)
+      : null;
+
   const targetNode = !isActive ? null : (
     <PurchaseTargetSelector
       target={target}
@@ -190,6 +230,9 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
       onSelectTeam={setSelectedTeamId}
       allowPersonal={!isSubscription}
       unavailableHint={unavailableHint}
+      seatCount={seatCount}
+      unitPrice={context.unitPrice ?? null}
+      seatAmount={seatAmount}
     />
   );
 
@@ -204,5 +247,11 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
     reset,
     target,
     selectedTeamId,
+    /**
+     * Info: (20260814 - Luphia) 供付款畫面顯示實際金額：選定團隊的訂閱是
+     * 「席次 × 單價」，沿用方案卡上的單價會少報一大截。
+     */
+    seatCount,
+    seatAmount,
   };
 };

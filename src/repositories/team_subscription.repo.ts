@@ -18,6 +18,9 @@ export interface IApplyTeamSubscriptionInput {
   billingInterval: BillingInterval;
   orderId: string | null;
   nowMs: number;
+  // Info: (20260814 - Luphia) 本期付費席次與單價快照（規範 P2）；缺省維持既有值不動
+  seats?: number;
+  unitPrice?: number;
 }
 
 const DAY_MS = 86_400_000;
@@ -31,7 +34,8 @@ export async function applyTeamSubscriptionInTx(
   tx: Prisma.TransactionClient,
   input: IApplyTeamSubscriptionInput,
 ): Promise<TeamSubscription> {
-  const { teamId, planId, billingInterval, orderId, nowMs } = input;
+  const { teamId, planId, billingInterval, orderId, nowMs, seats, unitPrice } =
+    input;
   const periodDays = billingInterval === BILLING_INTERVAL.YEAR ? 365 : 30;
   const currentPeriodStart = new Date(nowMs);
   const currentPeriodEnd = new Date(nowMs + periodDays * DAY_MS);
@@ -45,6 +49,12 @@ export async function applyTeamSubscriptionInTx(
       currentPeriodEnd,
       autoRenew: true,
       latestOrderId: orderId,
+      /**
+       * Info: (20260814 - Luphia) 席次與單價缺省時不覆寫：期中加人只動 seats，
+       * 續訂或改方案才會連同單價一起換新。用 undefined 讓 Prisma 略過該欄位。
+       */
+      seats,
+      unitPrice,
     },
     create: {
       teamId,
@@ -54,6 +64,8 @@ export async function applyTeamSubscriptionInTx(
       currentPeriodEnd,
       autoRenew: true,
       latestOrderId: orderId,
+      seats: seats ?? 1,
+      unitPrice: unitPrice ?? 0,
     },
   });
 }
@@ -67,6 +79,18 @@ export class TeamSubscriptionRepository {
     data: Prisma.TeamSubscriptionUncheckedCreateInput,
   ): Promise<TeamSubscription> {
     return prisma.teamSubscription.create({ data });
+  }
+
+  /**
+   * Info: (20260814 - Luphia) 期中增加席次（規範 P3）：只動 seats，不碰週期與單價。
+   * 用 increment 而非讀後寫，兩個管理者同時邀請時才不會有人的席次被蓋掉。
+   */
+  async addSeats(teamId: string, seats: number): Promise<void> {
+    if (seats <= 0) return;
+    await prisma.teamSubscription.update({
+      where: { teamId },
+      data: { seats: { increment: seats } },
+    });
   }
 
   async update(

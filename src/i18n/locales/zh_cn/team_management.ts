@@ -60,6 +60,8 @@ export const teamManagement = {
     pool_balance: "未分配点数",
     frozen_warning: "团队钱包已冻结（守恒核对异常），请联系客服处理。",
     buy_credits: "前往购买点数",
+    manage_plan: "管理方案",
+    manage_plan_hint: "额度不足时可升级方案",
     buy_credits_hint: "购买的点数将存入团队钱包，供管理者分配。",
     allocated_points: "分配点数",
     allocate_to: "分配点数给 {{name}}",

@@ -116,6 +116,7 @@ export class PaymentRepository {
         } else if (
           order.type === ORDER_TYPE.OEN_PAYMENT ||
           order.type === ORDER_TYPE.BILLING_TEAM_POINT ||
+          order.type === ORDER_TYPE.BILLING_SEAT_ADDITION ||
           /**
            * Info: (20260814 - Luphia) 訂閱訂單一律進本分支，不再以 data.teamId 當門檻。
            * 原本缺 teamId 的訂閱訂單連這個分支都進不來：不開收據、不改狀態、不報錯，
@@ -214,6 +215,14 @@ export class PaymentRepository {
               }
             }
             amountPaid = order.amount;
+          } else if (order.type === ORDER_TYPE.BILLING_SEAT_ADDITION) {
+            /**
+             * Info: (20260814 - Luphia) 席次補收由發起端（邀請 / 加成員）同步履行：
+             * 它拿得到 OEN 的即時回應，扣款成功當下就加席並標記 COMPLETED。
+             * 這裡只記收款、不重複加席——webhook 若在同步流程完成前先到，
+             * 兩邊都加一次就會讓團隊平白多出一個席次的帳。
+             */
+            amountPaid = order.amount;
           } else if (order.type === ORDER_TYPE.BILLING_SUBSCRIBE) {
             /**
              * Info: (20260807 - Luphia) 團隊訂閱履行（設計書 §7 PUT /subscription）：
@@ -223,6 +232,8 @@ export class PaymentRepository {
               teamId?: string;
               planId?: string;
               billingInterval?: BillingInterval;
+              seats?: number;
+              unitPrice?: number;
             };
             if (!subData.teamId || !subData.planId) {
               /**
@@ -243,6 +254,9 @@ export class PaymentRepository {
                   subData.billingInterval ?? BILLING_INTERVAL.MONTH,
                 orderId: order.id,
                 nowMs: Date.now(),
+                // Info: (20260814 - Luphia) 席次與單價快照（規範 P2），續訂與期中補收都靠它
+                seats: subData.seats,
+                unitPrice: subData.unitPrice,
               });
               await tx.order.update({
                 where: { id: order.id },

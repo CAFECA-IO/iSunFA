@@ -1,5 +1,4 @@
 import { logger } from "@/lib/utils/logger";
-import { isProduction } from "@/lib/utils/common";
 import {
   CURRENCY_UNIT,
   SUBSCRIPTION_PLAN_CREDITS,
@@ -12,14 +11,14 @@ import {
   TEAM_PLAN,
   TeamPlanId,
 } from "@/constants/subscription_quota";
-import { buildOenTransactionPayload } from "@/lib/utils/payment_helpers";
+import { chargeOrderWithSavedCard } from "@/services/team_billing.service";
 import { generatePaymentOrder } from "@/services/order.service";
 import { resolvePlanId } from "@/services/spend.service";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
+import { teamRepo } from "@/repositories/team.repo";
+import { resolveSubscriptionAmount } from "@/lib/billing/seat_billing";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
-import { SystemSettingKey } from "@/constants/system_setting";
-import { systemSettingService } from "@/services/system_setting.service";
 
 /**
  * Info: (20260807 - Luphia) autoRenew 自動扣款續訂（設計書 §9 P4 待辦收尾）。
@@ -28,10 +27,6 @@ import { systemSettingService } from "@/services/system_setting.service";
  * 成功 → 建新 BILLING_SUBSCRIBE 訂單 + 套用新週期；失敗 → 留 PAST_DUE 下輪重試；
  * 逾寬限期（預設 3 天）仍未成功 → 降級 free（不無限重試扣款，避免對用戶卡片反覆請款）。
  */
-
-const OEN_BASE_URL = isProduction()
-  ? "https://payment-api.oen.tw"
-  : "https://payment-api.testing.oen.tw";
 
 const RENEWAL_GRACE_MS = 3 * 86_400_000;
 // Info: (20260807 - Luphia) 續訂為 merchant-initiated 交易，無 FIDO 簽章；此標記寫入訂單供稽核
@@ -95,10 +90,17 @@ async function renewOne(
   if (!user) return "skipped";
 
   const billingInterval = lastData.billingInterval ?? BILLING_INTERVAL.MONTH;
-  const amount =
+  /**
+   * Info: (20260814 - Luphia) 續訂時**依當下人數重算席次**（規範 P2）：
+   * 期中離職的席次要停止收費，期中加入但已比例補收過的席次則從新一期起整期計。
+   * 沿用上一期的席次數會讓帳愈拖愈偏。
+   */
+  const unitPrice =
     SUBSCRIPTION_PLAN_PRICE[planId][
       billingInterval === BILLING_INTERVAL.YEAR ? "yearly" : "monthly"
     ];
+  const seats = await teamRepo.countMembers(sub.teamId);
+  const amount = resolveSubscriptionAmount(unitPrice, seats);
 
   const renewalOrder = await generatePaymentOrder(lastOrder.userId, {
     type: ORDER_TYPE.BILLING_SUBSCRIBE,
@@ -109,6 +111,8 @@ async function renewOne(
     title: `iSunFA Team Subscription Renewal - ${planId} (${billingInterval})`,
     planId,
     billingInterval,
+    seats: Math.max(1, seats),
+    unitPrice,
     /**
      * Info: (20260814 - Luphia) teamId 必須是頂層欄位：generatePaymentOrder 會把
      * params.data 沉一層到 order.data.data，而履行端讀的是 order.data.teamId。
@@ -122,6 +126,8 @@ async function renewOne(
     teamId: sub.teamId,
     planId,
     billingInterval,
+    seats: Math.max(1, seats),
+    unitPrice,
     renewal: true,
     paymentMethodId: paymentMethod.id,
     // Info: (20260807 - Luphia) IOenOrderData.amount 為字串（金額以字串傳輸避免浮點誤差）
@@ -129,80 +135,39 @@ async function renewOne(
     credits: SUBSCRIPTION_PLAN_CREDITS[planId],
   };
 
-  const paymentTransaction =
-    await paymentRepo.createPaymentTransactionAndUpdateOrder(
-      lastOrder.userId,
-      paymentMethod.id,
-      renewalOrder.orderId,
-      BigInt(amount),
-      orderData,
-      RENEWAL_AUTH_MARKER,
-    );
-
-  const pmData = paymentMethod.data as Record<string, string> | undefined;
-
-  // Info: (20260809 - Luphia) 金流憑證以資料庫設定為準，env 為 fallback；每次續訂重新解析，輪替後立即生效
-  const oenAccessToken = await systemSettingService.get(
-    SystemSettingKey.OEN_ACCESS_TOKEN,
-  );
-  // Info: (20260811 - Luphia) 與綁卡路徑取同一個設定值，避免兩邊商店代號不一致
-  const oenMerchantId = await systemSettingService.get(
-    SystemSettingKey.OEN_MERCHANT_ID,
-  );
-
-  const oenRes = await fetch(`${OEN_BASE_URL}/token/transactions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${oenAccessToken}`,
+  // Info: (20260814 - Luphia) 扣款流程與席次補收共用（team_billing.service），兩邊不各長一套
+  const charge = await chargeOrderWithSavedCard({
+    userId: lastOrder.userId,
+    userName: user.name ?? null,
+    orderId: renewalOrder.orderId,
+    amount,
+    credits: SUBSCRIPTION_PLAN_CREDITS[planId],
+    orderData,
+    paymentMethod: {
+      id: paymentMethod.id,
+      token: paymentMethod.token,
+      data: paymentMethod.data,
     },
-    body: JSON.stringify(
-      buildOenTransactionPayload(
-        { id: user.id, name: user.name ?? null },
-        pmData,
-        renewalOrder.orderId,
-        amount,
-        orderData,
-        paymentMethod.token,
-        oenMerchantId ?? "",
-      ),
-    ),
+    authMarker: RENEWAL_AUTH_MARKER,
   });
-  const oenData = await oenRes.json();
 
-  if (oenData.code !== "S0000" && !oenRes.ok) {
-    await paymentRepo.failPaymentTransactionAndOrder(
-      paymentTransaction.id,
-      renewalOrder.orderId,
-      orderData,
-      oenData,
-      RENEWAL_AUTH_MARKER,
-    );
+  if (!charge.ok) {
     logger.error("subscription renewal charge failed", {
       teamId: sub.teamId,
       orderId: renewalOrder.orderId,
-      oenCode: oenData.code,
+      oenCode: charge.reason ?? "unknown",
     });
     return "failed";
   }
 
-  await paymentRepo.completePaymentTransactionAndOrder(
-    paymentTransaction.id,
-    renewalOrder.orderId,
-    lastOrder.userId,
-    user.name || "Unknown",
-    BigInt(amount),
-    SUBSCRIPTION_PLAN_CREDITS[planId],
-    orderData,
-    oenData,
-    RENEWAL_AUTH_MARKER,
-  );
   await teamSubscriptionRepo.applyTeamSubscription({
     teamId: sub.teamId,
     planId,
     billingInterval,
     orderId: renewalOrder.orderId,
     nowMs,
+    seats: Math.max(1, seats),
+    unitPrice,
   });
   await paymentRepo.updateOrderCompleted(renewalOrder.orderId);
 

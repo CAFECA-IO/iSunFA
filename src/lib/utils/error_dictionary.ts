@@ -1038,4 +1038,19 @@ export const API_ERRORS = {
     message: "Unknown credit plan id",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
+  /**
+   * Info: (20260814 - Luphia) 付費團隊加人需先補收席次費用（規範 P3）：
+   * 找不到可扣款的卡就不能加人——否則等於免費加席，帳永遠補不回來。
+   */
+  TW_SEAT_PAYMENT_METHOD_MISSING: {
+    code: "TW000011",
+    message: "No payment method on record for seat charge",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+  // Info: (20260814 - Luphia) 席次補收扣款失敗：fail-closed，不建立邀請也不加人
+  TW_SEAT_CHARGE_FAILED: {
+    code: "TW000012",
+    message: "Seat charge failed",
+    status: ApiCode.PAYMENT_REQUIRED,
+  } as IErrorDef,
 };

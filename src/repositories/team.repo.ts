@@ -12,13 +12,18 @@ import { TEAM_INVITATION_STATUS } from "@/constants/status";
  * Info: (20260814 - Luphia) 團隊 + 我在其中的角色（null = 資料異常，查得到團隊卻查不到成員身分）。
  * 角色決定畫面上哪些團隊可被選為訂閱／購點的對象（設計書 §6.4）。
  */
-export type ITeamWithRole = Team & { role: string | null };
+export type ITeamWithRole = Team & {
+  role: string | null;
+  // Info: (20260814 - Luphia) 團隊人數＝訂閱席次數：訂閱畫面要先算得出「席次 × 單價」
+  memberCount: number;
+};
 
 export interface ITeamRepository {
   createTeam(data: Prisma.TeamCreateInput): Promise<Team>;
   createTeamMember(data: Prisma.TeamMemberCreateInput): Promise<TeamMember>;
   listTeamMember(teamId: string): Promise<TeamMember[]>;
   listMemberTeam(userId: string): Promise<ITeamWithRole[]>;
+  countMembers(teamId: string): Promise<number>;
   updateTeamMember(
     id: string,
     data: Prisma.TeamMemberUpdateInput,
@@ -108,12 +113,22 @@ export class TeamRepository implements ITeamRepository {
       include: {
         accountBooks: true,
         teamMembers: { where: { userId }, select: { role: true } },
+        _count: { select: { teamMembers: true } },
       },
     });
-    return teams.map(({ teamMembers, ...team }) => ({
+    return teams.map(({ teamMembers, _count, ...team }) => ({
       ...team,
       role: teamMembers[0]?.role ?? null,
+      memberCount: _count.teamMembers,
     }));
+  }
+
+  /**
+   * Info: (20260814 - Luphia) 團隊人數 = 席次數（規範 P2）：訂閱以此乘上單價計費。
+   * 以成員關聯計數，不含待接受的邀請——邀請的席次在發出時就已單獨補收。
+   */
+  async countMembers(teamId: string) {
+    return prisma.teamMember.count({ where: { teamId } });
   }
 
   async updateTeamMember(id: string, data: Prisma.TeamMemberUpdateInput) {

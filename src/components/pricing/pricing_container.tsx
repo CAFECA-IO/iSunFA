@@ -76,7 +76,23 @@ export default function PricingContainer({
     planId: pendingPlanId,
     billingInterval: pendingBillingInterval,
     creditPlanId: pendingCreditPlanId,
+    // Info: (20260814 - Luphia) 方案卡上的價格是**單一席次**的單價（規範 P2）
+    unitPrice: Number(pendingAmount) || undefined,
   });
+
+  /**
+   * Info: (20260814 - Luphia) 訂閱選定團隊後，付款畫面顯示的是「席次 × 單價」的總額。
+   * 沿用方案卡的單價會讓五人團隊看到 840、卡卻被扣 4,200——價目與實收不一致
+   * 是最不能出現在結帳畫面上的東西。實收金額仍由 server 依當下人數計算。
+   */
+  const effectiveAmount =
+    purchaseTarget.seatAmount !== null
+      ? String(purchaseTarget.seatAmount)
+      : pendingAmount;
+  const effectiveDisplayPrice =
+    purchaseTarget.seatAmount !== null
+      ? `NT$ ${purchaseTarget.seatAmount.toLocaleString()}`
+      : pendingDisplayPrice;
 
   const onSelectSubscription = (
     planKey: string,
@@ -304,11 +320,11 @@ export default function PricingContainer({
           onClose={() => setPaymentModalOpen(false)}
           onSuccess={() => {}}
           initialStep={modalInitialStep}
-          amount={pendingAmount}
+          amount={effectiveAmount}
           credits={pendingCredits}
           baseCredits={pendingBaseCredits}
           bonusCredits={pendingBonusCredits}
-          displayPrice={pendingDisplayPrice}
+          displayPrice={effectiveDisplayPrice}
           orderId={pendingOrderId}
           title={pendingTitle}
           planId={pendingPlanId}

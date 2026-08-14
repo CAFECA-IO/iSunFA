@@ -62,6 +62,8 @@ export const teamManagement = {
     frozen_warning:
       "팀 지갑이 동결되었습니다(보존 감사 이상). 고객 지원에 문의해 주세요.",
     buy_credits: "포인트 구매하기",
+    manage_plan: "플랜 관리",
+    manage_plan_hint: "한도가 부족하면 플랜을 업그레이드하세요",
     buy_credits_hint:
       "구매한 포인트는 팀 지갑에 적립되어 관리자가 배분할 수 있습니다.",
     allocated_points: "배분 포인트",

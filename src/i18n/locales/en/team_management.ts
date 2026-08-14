@@ -62,6 +62,8 @@ export const teamManagement = {
     frozen_warning:
       "The team wallet is frozen (conservation audit failure). Please contact support.",
     buy_credits: "Buy Credits",
+    manage_plan: "Manage plan",
+    manage_plan_hint: "Upgrade the plan when the quota runs short",
     buy_credits_hint:
       "Purchased credits go into the team wallet for managers to allocate.",
     allocated_points: "Allocated credits",

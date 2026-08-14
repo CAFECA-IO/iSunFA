@@ -196,6 +196,25 @@ export default function TeamWalletPanel({
                 limit={subscription.quota.quotaWeek.limit}
                 used={subscription.quota.quotaWeek.used}
               />
+
+              {/**
+               * Info: (20260814 - Luphia) 訂閱入口（管理職可見）：額度不夠時，
+               * 「升級方案」與「買點數」是兩條不同的路，畫面上都要找得到。
+               * 同樣以 `?team=` 指定本團隊，訂閱才不會套到別的團隊。
+               */}
+              {isManager && (
+                <div className="flex items-center justify-between gap-2 border-t border-gray-100 pt-4">
+                  <p className="text-xs text-gray-500">
+                    {t("team_management.wallet.manage_plan_hint")}
+                  </p>
+                  <Link
+                    href={`/pricing/subscription?team=${teamId}`}
+                    className="shrink-0 rounded-lg border border-orange-600 px-3 py-1.5 text-sm font-semibold text-orange-600 transition-colors hover:bg-orange-50"
+                  >
+                    {t("team_management.wallet.manage_plan")}
+                  </Link>
+                </div>
+              )}
             </div>
           )}
         </PanelCard>
@@ -216,13 +235,17 @@ export default function TeamWalletPanel({
               </p>
             </div>
 
-            {/* Info: (20260809 - Luphia) 團隊管理不內嵌購買流程：引導至 /pricing/credits */}
+            {/**
+             * Info: (20260814 - Luphia) 團隊管理不內嵌購買流程：引導至 /pricing/credits，
+             * 並以 `?team=` 帶上本團隊——從這裡出發的人要買的就是這個團隊的點數，
+             * 到了定價頁還要再選一次是多餘的，而且選錯會買到別的團隊帳上。
+             */}
             <div className="mt-4 flex items-center justify-between gap-2 border-t border-gray-100 pt-4">
               <p className="text-xs text-gray-500">
                 {t("team_management.wallet.buy_credits_hint")}
               </p>
               <Link
-                href="/pricing/credits"
+                href={`/pricing/credits?team=${teamId}`}
                 className="shrink-0 rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-orange-500"
               >
                 {t("team_management.wallet.buy_credits")}

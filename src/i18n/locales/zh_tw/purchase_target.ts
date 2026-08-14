@@ -1,6 +1,8 @@
 export const purchaseTarget = {
   subscription_title: "訂閱給哪個團隊",
   credits_title: "點數存入哪裡",
+  seat_breakdown: "{{seats}} 席 × NT$ {{unit}} ＝ NT$ {{total}}",
+  seat_note: "席次以團隊目前人數計算；實際收費金額以結帳當下的人數為準。",
   team: "團隊",
   personal: "個人",
   select_team: "請選擇團隊",

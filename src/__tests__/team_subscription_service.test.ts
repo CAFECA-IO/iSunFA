@@ -19,7 +19,7 @@ import { generatePaymentOrder } from "@/services/order.service";
 import type { Order } from "@/generated";
 
 jest.mock("@/repositories/team.repo", () => ({
-  teamRepo: { getTeamMember: jest.fn() },
+  teamRepo: { getTeamMember: jest.fn(), countMembers: jest.fn() },
 }));
 jest.mock("@/repositories/team_subscription.repo", () => ({
   teamSubscriptionRepo: {
@@ -62,6 +62,8 @@ function mockMembers(roles: Record<string, string | null>) {
     if (!role) return null;
     return { id: `member-${userId}`, role };
   });
+  // Info: (20260814 - Luphia) 席次數預設 5 人，驗證金額確實乘上人數（規範 P2）
+  asMock(teamRepo.countMembers).mockResolvedValue(5);
 }
 
 describe("getTeamSubscriptionView", () => {
@@ -183,7 +185,10 @@ describe("changeTeamSubscription", () => {
       "user-owner",
       expect.objectContaining({
         type: ORDER_TYPE.BILLING_SUBSCRIBE,
-        amount: 8400,
+        // Info: (20260814 - Luphia) 5 人團隊、年繳單價 8,400 → 實收 42,000（規範 P2 席次乘算）
+        amount: 42000,
+        seats: 5,
+        unitPrice: 8400,
         teamId: "team-1",
         planId: TEAM_PLAN.TEAM,
         billingInterval: BILLING_INTERVAL.YEAR,
