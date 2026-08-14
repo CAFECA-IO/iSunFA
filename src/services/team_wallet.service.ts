@@ -105,7 +105,8 @@ export async function createTeamPointPurchaseOrder(params: {
       credits: plan.credits,
       paymentMethodId,
       title: `iSunFA Team Credits - ${plan.credits}`,
-      data: { teamId, creditPlanId },
+      teamId,
+      data: { creditPlanId },
     });
   });
 }

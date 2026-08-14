@@ -71,9 +71,11 @@ import type { BaseTranslation } from "@/i18n/zh_tw";
 import { carbonChatbot } from "@/i18n/locales/ko/carbon_chatbot";
 import { hrManagement } from "@/i18n/locales/ko/hr_management";
 import { paymentSource } from "@/i18n/locales/ko/payment_source";
+import { purchaseTarget } from "@/i18n/locales/ko/purchase_target";
 
 export const ko = {
   payment_source: paymentSource,
+  purchase_target: purchaseTarget,
   digital_product_passport: digitalProductPassport,
   logistics,
   dpp_urban_mining: dppUrbanMining,

@@ -71,9 +71,11 @@ import type { BaseTranslation } from "@/i18n/zh_tw";
 import { carbonChatbot } from "@/i18n/locales/zh_cn/carbon_chatbot";
 import { hrManagement } from "@/i18n/locales/zh_cn/hr_management";
 import { paymentSource } from "@/i18n/locales/zh_cn/payment_source";
+import { purchaseTarget } from "@/i18n/locales/zh_cn/purchase_target";
 
 export const zhCn = {
   payment_source: paymentSource,
+  purchase_target: purchaseTarget,
   digital_product_passport: digitalProductPassport,
   logistics,
   dpp_urban_mining: dppUrbanMining,

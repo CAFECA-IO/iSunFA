@@ -2,7 +2,7 @@
 
 > **Date**: August 2026
 > **Author**: Luphia
-> **Version**: 1.15 (Draft) — 1.1 新增 §5.3 費思計費；1.2–1.4 費率迭代；1.5 拍板費率與點值下限；1.6 拍板 C 案混合制（離鏈營運 + 每日 merkle 鏈上錨定，Phase 2 為 1:1 backing）；1.7 §5.3 拍板「選定帳本後才能使用費思」，計費團隊由 `AccountBook.teamId` 推導，client 不再自報 `teamId`；1.8 新增 §5.4 拆帳與封頂預扣（有餘額就放行、額度用光才扣錢包）；1.9 新增 §5.5 碳盤查計費；1.10 碳盤查四條 LLM 路徑全數接上；1.11 無帳本會話改扣個人鏈上點數（建單 → 402 → 付款 → 重送）；1.12 §5.4 新增逐功能扣款順序，物流碳足跡優先扣分配點數；1.13 新增 §5.6 多團隊成員的支付歸屬；1.14 §5.6 六個付款呼叫點統一至 useAnalysisPayment；1.15 §5.4 訂單類扣款禁用封頂（`allowPartial` 必填），付款前以所選來源的可用額度攔阻並停用支付鈕
+> **Version**: 1.16 (Draft) — 1.1 新增 §5.3 費思計費；1.2–1.4 費率迭代；1.5 拍板費率與點值下限；1.6 拍板 C 案混合制（離鏈營運 + 每日 merkle 鏈上錨定，Phase 2 為 1:1 backing）；1.7 §5.3 拍板「選定帳本後才能使用費思」，計費團隊由 `AccountBook.teamId` 推導，client 不再自報 `teamId`；1.8 新增 §5.4 拆帳與封頂預扣（有餘額就放行、額度用光才扣錢包）；1.9 新增 §5.5 碳盤查計費；1.10 碳盤查四條 LLM 路徑全數接上；1.11 無帳本會話改扣個人鏈上點數（建單 → 402 → 付款 → 重送）；1.12 §5.4 新增逐功能扣款順序，物流碳足跡優先扣分配點數；1.13 新增 §5.6 多團隊成員的支付歸屬；1.14 §5.6 六個付款呼叫點統一至 useAnalysisPayment；1.15 §5.4 訂單類扣款禁用封頂（`allowPartial` 必填），付款前以所選來源的可用額度攔阻並停用支付鈕；1.16 新增 §6.1.1 訂閱／購點的歸屬對象入口，訂單 `teamId` 改為頂層欄位，履行失敗改記 MINT_FAILED
 > **Status**: Proposed
 > **Branch**: `feature/team_wallet_subscription_quota`
 > **關聯 ADR**: [ADR 015: 離鏈團隊錢包帳本](decisions/015_offchain_team_wallet_ledger.md)
@@ -558,6 +558,24 @@ spendCredits(identity, teamId, featureCode, cost, idempotencyKey)
 1. `POST /api/v1/user/team/[team_id]/wallet/purchase`：body 帶 `creditPlanId`（沿用 `src/config/credit_plans.ts` tier1–6）→ 建 `Order`，`type = ORDER_TYPE.BILLING_TEAM_POINT`（**新常數**），`data` 內含 `teamId` + `credits`。
 2. 走既有 `payment_method/[id]/checkout`（已綁卡免跳轉）或 OEN checkout-token 流程。
 3. OEN webhook → `processOenPayment()` 的 `$transaction` 內**分流**：`type === BILLING_TEAM_POINT` 時不 mint 鏈上點數，改為 `TeamWallet.unallocatedBalance += credits` + Ledger(PURCHASE, orderId)。冪等鍵 = `purchase:{orderId}`，webhook 重送不重複入帳。
+
+#### 6.1.1 入口與訂單歸屬（2026-08-14 補）
+
+上述端點寫好之後，有很長一段時間**沒有任何前端呼叫**——團隊訂閱與團隊購點在畫面上不存在，而定價頁的訂閱悄悄走成了另一條路：`onSelectSubscription` 打通用的 `POST /api/v1/user/order`，型別是 `OEN_PAYMENT`、訂單裡沒有 teamId，履行時落到「鑄造個人點數」的 fallback。結果是用戶付了訂閱費、拿到等值個人點數、團隊方案一秒都沒生效，而畫面顯示付款成功。
+
+現在定價頁的訂閱與點數包都必須先選歸屬對象（`usePurchaseTarget` + `PurchaseTargetSelector`）：
+
+| 消費 | 可選對象 | 權限 | 建單端點 |
+|---|---|---|---|
+| 團隊訂閱（team / business） | 只有團隊 | OWNER | `PUT /team/{id}/subscription` |
+| 點數包（tier1–6） | 個人或團隊 | 團隊需 OWNER / ADMIN | 個人：`POST /user/order`；團隊：`POST /team/{id}/wallet/purchase` |
+| 客製方案（on_premise、iso*、carbon_label） | 不適用 | — | 匯款，由業務接手 |
+
+未選定對象時支付鈕停用並說明原因（不是擁有者、還沒有團隊、尚未選擇）——沒有歸屬的訂單付得掉卻履行不了，而錢已經收了。規則收斂於 `src/lib/purchase/purchase_target.ts`（純函式、可單測）。
+
+**訂單欄位位置是硬性規定**：`teamId` 必須以**頂層欄位**傳給 `generatePaymentOrder`。該函式把整包 params 展開成 `order.data`，放進 `params.data` 的欄位會沉到 `order.data.data` 底下，而兩條履行路徑讀的都是 `order.data.teamId`。這正是先前兩支團隊端點即使被呼叫也履行不了的原因（`src/__tests__/team_order_payload.test.ts` 守住這件事）。
+
+**履行失敗不再靜默**：缺 teamId / 缺 planId / 入池被拒時，訂單推進到 `MINT_FAILED` 並在 `data.error` 寫明原因，前端訂單查詢與後台訂單管理都認得。webhook 內刻意不 throw——交易回滾會連收款紀錄一起抹掉，金流商還會重送，錢收了卻查無此事比履行失敗更難處理。
 
 ### 6.2 分配 / 收回（OWNER / ADMIN）
 

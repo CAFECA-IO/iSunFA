@@ -8,11 +8,17 @@ import {
 } from "@/generated";
 import { TEAM_INVITATION_STATUS } from "@/constants/status";
 
+/**
+ * Info: (20260814 - Luphia) 團隊 + 我在其中的角色（null = 資料異常，查得到團隊卻查不到成員身分）。
+ * 角色決定畫面上哪些團隊可被選為訂閱／購點的對象（設計書 §6.4）。
+ */
+export type ITeamWithRole = Team & { role: string | null };
+
 export interface ITeamRepository {
   createTeam(data: Prisma.TeamCreateInput): Promise<Team>;
   createTeamMember(data: Prisma.TeamMemberCreateInput): Promise<TeamMember>;
   listTeamMember(teamId: string): Promise<TeamMember[]>;
-  listMemberTeam(userId: string): Promise<Team[]>;
+  listMemberTeam(userId: string): Promise<ITeamWithRole[]>;
   updateTeamMember(
     id: string,
     data: Prisma.TeamMemberUpdateInput,
@@ -91,14 +97,23 @@ export class TeamRepository implements ITeamRepository {
     return teamMembers;
   }
 
+  /**
+   * Info: (20260814 - Luphia) 一併帶出「我在這個團隊的角色」：
+   * 訂閱限 OWNER、購點限 OWNER / ADMIN（設計書 §6.4），前端要據此決定哪些團隊可選。
+   * 少了這個欄位，畫面只能讓人全選一遍再被 server 打回票。
+   */
   async listMemberTeam(userId: string) {
     const teams = await prisma.team.findMany({
       where: { teamMembers: { some: { userId } } },
       include: {
         accountBooks: true,
+        teamMembers: { where: { userId }, select: { role: true } },
       },
     });
-    return teams;
+    return teams.map(({ teamMembers, ...team }) => ({
+      ...team,
+      role: teamMembers[0]?.role ?? null,
+    }));
   }
 
   async updateTeamMember(id: string, data: Prisma.TeamMemberUpdateInput) {

@@ -184,11 +184,9 @@ describe("changeTeamSubscription", () => {
       expect.objectContaining({
         type: ORDER_TYPE.BILLING_SUBSCRIBE,
         amount: 8400,
-        data: {
-          teamId: "team-1",
-          planId: TEAM_PLAN.TEAM,
-          billingInterval: BILLING_INTERVAL.YEAR,
-        },
+        teamId: "team-1",
+        planId: TEAM_PLAN.TEAM,
+        billingInterval: BILLING_INTERVAL.YEAR,
       }),
     );
   });

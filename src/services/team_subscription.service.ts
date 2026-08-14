@@ -207,7 +207,7 @@ export async function changeTeamSubscription(params: {
       title: `iSunFA Team Subscription - ${planId} (${billingInterval})`,
       planId,
       billingInterval,
-      data: { teamId, planId, billingInterval },
+      teamId,
     });
   });
 }

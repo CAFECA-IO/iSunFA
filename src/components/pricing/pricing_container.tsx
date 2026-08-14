@@ -16,6 +16,7 @@ import {
 import ConfirmModal from "@/components/common/confirm_modal";
 import AuthModal from "@/components/auth/auth_modal";
 import PaymentModal from "@/components/pricing/payment_modal";
+import { usePurchaseTarget } from "@/hooks/use_purchase_target";
 
 import { PricingProvider } from "@/contexts/pricing_context";
 
@@ -60,6 +61,22 @@ export default function PricingContainer({
   const [pendingBillingInterval, setPendingBillingInterval] =
     useState<PendingBillingIntervalType>();
   const [pendingDetails, setPendingDetails] = useState<string[] | undefined>();
+  /**
+   * Info: (20260814 - Luphia) 點數包 id：團隊購點端點以 creditPlanId 建單（設計書 §6.1），
+   * 不是自己算金額——價格由後端的 credit_plans 決定，前端算一份只會有機會算錯。
+   */
+  const [pendingCreditPlanId, setPendingCreditPlanId] = useState<string>("");
+
+  /**
+   * Info: (20260814 - Luphia) 訂閱 / 購點的歸屬對象（設計書 §6.1、§7）：
+   * 訂閱一定屬於某個團隊（額度掛在 TeamSubscription 上），點數則可個人或團隊。
+   * 選定團隊後由 hook 改走 team-scoped 端點建單，訂單才帶得到 teamId。
+   */
+  const purchaseTarget = usePurchaseTarget({
+    planId: pendingPlanId,
+    billingInterval: pendingBillingInterval,
+    creditPlanId: pendingCreditPlanId,
+  });
 
   const onSelectSubscription = (
     planKey: string,
@@ -85,6 +102,7 @@ export default function PricingContainer({
     setPendingBonusCredits("0");
     setPendingDisplayPrice(`NT$ ${Number(amount).toLocaleString()}`);
     setPendingTitle(title);
+    setPendingCreditPlanId("");
     setPendingPlanId(planKey);
     setPendingBillingInterval(billingInterval);
     setPendingDetails(undefined);
@@ -110,6 +128,7 @@ export default function PricingContainer({
     setPendingBonusCredits("0");
     setPendingDisplayPrice(`NT$ ${amount.toLocaleString()}`);
     setPendingTitle(title);
+    setPendingCreditPlanId("");
     setPendingPlanId(planId);
     setPendingBillingInterval(interval);
     setPendingDetails(details);
@@ -137,6 +156,7 @@ export default function PricingContainer({
     setPendingBonusCredits((bonus > 0 ? bonus : 0).toString());
     setPendingDisplayPrice(displayPrice);
     setPendingTitle(t("pricing.credits.title"));
+    setPendingCreditPlanId(plan.id);
     setPendingPlanId("");
     setPendingBillingInterval(undefined);
     setPendingDetails(undefined);
@@ -294,6 +314,9 @@ export default function PricingContainer({
           planId={pendingPlanId}
           billingInterval={pendingBillingInterval}
           details={pendingDetails}
+          targetSelector={purchaseTarget.targetNode}
+          orderCreator={purchaseTarget.orderCreator}
+          purchaseBlockingMessage={purchaseTarget.blockingMessage}
         />
         <ConfirmModal
           isOpen={confirmModal.isOpen}

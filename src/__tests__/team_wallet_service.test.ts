@@ -117,7 +117,8 @@ describe("createTeamPointPurchaseOrder", () => {
         type: ORDER_TYPE.BILLING_TEAM_POINT,
         amount: 600,
         credits: 700,
-        data: { teamId: "team-1", creditPlanId: "tier2" },
+        teamId: "team-1",
+        data: { creditPlanId: "tier2" },
       }),
     );
   });

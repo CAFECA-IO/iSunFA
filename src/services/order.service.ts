@@ -75,6 +75,13 @@ export interface IPaymentOrderParams {
   title?: string;
   planId?: string;
   billingInterval?: "month" | "year";
+  /**
+   * Info: (20260814 - Luphia) 團隊訂單（購點、訂閱）的歸屬團隊，**必須是頂層欄位**。
+   * generatePaymentOrder 把 params 整包展開成 order.data，放進 params.data 的東西
+   * 會落在 order.data.data 底下，而履行端讀的是 order.data.teamId——
+   * 埋在巢狀裡等於沒帶，訂單付得掉卻履行不了。
+   */
+  teamId?: string;
   baseCredits?: string;
   bonusCredits?: string;
   items?: IJSONObject[];

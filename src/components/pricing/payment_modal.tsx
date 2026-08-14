@@ -60,6 +60,9 @@ export default function PaymentModal({
   planId,
   billingInterval,
   details,
+  targetSelector = undefined,
+  orderCreator = undefined,
+  purchaseBlockingMessage = null,
 }: IPaymentModalProps) {
   const { t } = useTranslation();
   const { user, refreshAuth, loading: authLoading } = useAuth();
@@ -289,6 +292,65 @@ export default function PaymentModal({
     }
   };
 
+  /**
+   * Info: (20260814 - Luphia) 簽章 + 扣款：兩條建單路徑（通用建單、團隊建單）共用。
+   * 抽出來是因為團隊路徑必須走完全一樣的後續流程——不共用就會有一條分支慢慢長歪。
+   */
+  const completeCheckout = async (orderId: string, challenge: string) => {
+    // Info: (20260306 - Tzuhan) 2. FIDO Signature
+    if (!user?.pubKeyX || !user?.pubKeyY) {
+      throw new Error("Missing public keys. Please re-login.");
+    }
+
+    /**
+     * Info: (20260811 - Luphia) 走 requestAssertion，託管帳號才不會卡在永遠不會成功的系統對話框。
+     * 這裡簽的是訂單自己的 challenge（伺服器產生的 sha256），
+     * 託管路徑會以「這張訂單屬於本人且尚未付款」作為代簽的出處驗證。
+     */
+    const transferAuth = await requestAssertion({
+      challenge,
+      custody: user.custody,
+      passkeyOptions: { allowCredentials: [] },
+    });
+
+    const encodedSignature = encodeWebAuthnSignature(
+      transferAuth,
+      BigInt(user.pubKeyX),
+      BigInt(user.pubKeyY),
+    );
+
+    // Info: (20260306 - Tzuhan) 3. Submit Checkout
+    const response = await request<{
+      message?: string;
+      payload?: IOenCheckoutResponse;
+    }>(`/api/v1/user/payment_method/${selectedPaymentMethodId}/checkout`, {
+      method: HTTP_METHOD.POST,
+      body: JSON.stringify({
+        orderId,
+        authentication: {
+          ...transferAuth,
+          signature: encodedSignature,
+        },
+      }),
+    });
+
+    /**
+     * Info: (20260814 - Luphia) 成功的判準不能只看 txHash：團隊訂閱與團隊購點是**離鏈履行**
+     * （套用方案、點數入池），本來就沒有鏈上交易。只認 txHash 會把成功的團隊付款
+     * 判成失敗，讓用戶在已扣款的情況下看到錯誤畫面。
+     */
+    const payload = response.payload;
+    const fulfilled = Boolean(payload && !payload.requireBinding);
+    if (!fulfilled || (!payload?.txHash && !payload?.success)) {
+      throw new Error(response.message || "Payment failed");
+    }
+
+    await refreshAuth();
+    setTxHash(payload.txHash ?? "");
+    setStep(PaymentStep.success);
+    onSuccess(payload.txHash ?? "");
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -387,7 +449,17 @@ export default function PaymentModal({
         }
       }
 
-      // Info: (20260306 - Tzuhan) 1. Request Payment Order to get challenge
+      /**
+       * Info: (20260814 - Luphia) 1. 建立訂單取得 challenge。
+       * 歸屬團隊時由 orderCreator 走 team-scoped 端點建單（訂單帶 teamId，
+       * 履行路徑才套得到方案 / 入得了池）；個人歸屬維持原本的通用建單。
+       */
+      if (orderCreator) {
+        const teamOrder = await orderCreator(selectedPaymentMethodId);
+        await completeCheckout(teamOrder.orderId, teamOrder.challenge);
+        return;
+      }
+
       const orderRes = await request<{
         payload: { orderId: string; challenge: string };
       }>("/api/v1/user/order", {
@@ -437,54 +509,7 @@ export default function PaymentModal({
 
       if (!orderRes?.payload) throw new Error("Failed to create payment order");
       const { orderId, challenge } = orderRes.payload;
-
-      // Info: (20260306 - Tzuhan) 2. FIDO Signature
-      if (!user?.pubKeyX || !user?.pubKeyY) {
-        throw new Error("Missing public keys. Please re-login.");
-      }
-
-      /**
-       * Info: (20260811 - Luphia) 走 requestAssertion，託管帳號才不會卡在永遠不會成功的系統對話框。
-       * 這裡簽的是訂單自己的 challenge（伺服器產生的 sha256），
-       * 託管路徑會以「這張訂單屬於本人且尚未付款」作為代簽的出處驗證。
-       */
-      const transferAuth = await requestAssertion({
-        challenge,
-        custody: user.custody,
-        passkeyOptions: { allowCredentials: [] },
-      });
-
-      const encodedSignature = encodeWebAuthnSignature(
-        transferAuth,
-        BigInt(user.pubKeyX),
-        BigInt(user.pubKeyY),
-      );
-
-      // Info: (20260306 - Tzuhan) 3. Submit Checkout
-      const response = await request<{
-        message?: string;
-        payload?: IOenCheckoutResponse;
-      }>(`/api/v1/user/payment_method/${selectedPaymentMethodId}/checkout`, {
-        method: HTTP_METHOD.POST,
-        body: JSON.stringify({
-          orderId,
-          authentication: {
-            ...transferAuth,
-            signature: encodedSignature,
-          },
-        }),
-      });
-      console.log(`[PaymentModal] handleBindNewCard response:`, response);
-
-      if (!response.payload?.requireBinding && response.payload?.txHash) {
-        // Info: (20260303 - Tzuhan) [流程 2-3b: 直接扣款成功] 若選擇使用已綁定的卡片，後端會直接發動扣款並鑄造代幣。前端取得成功的 txHash 後更新畫面為「付款成功」
-        await refreshAuth();
-        setTxHash(response.payload.txHash);
-        setStep(PaymentStep.success);
-        onSuccess(response.payload.txHash);
-      } else {
-        throw new Error(response.message || "Payment failed");
-      }
+      await completeCheckout(orderId, challenge);
     } catch (err) {
       // Info: (20260303 - Tzuhan) [流程 2-3c: 捕捉錯誤] 若扣款 API 發生異常，顯示失敗畫面
       console.error(
@@ -665,6 +690,17 @@ export default function PaymentModal({
                                   </div>
                                 )}
                               </div>
+
+                              {/**
+                               * Info: (20260814 - Luphia) 歸屬對象放在付款方式之前：
+                               * 「買給誰」決定了這筆訂單的性質（團隊方案 / 團隊點數 / 個人點數），
+                               * 是比「用哪張卡」更前面的決定。
+                               */}
+                              {user &&
+                                !isBankTransferPlan &&
+                                targetSelector && (
+                                  <div className="mt-6">{targetSelector}</div>
+                                )}
 
                               {user && !isBankTransferPlan && (
                                 <div className="mt-6 space-y-3">
@@ -908,12 +944,19 @@ export default function PaymentModal({
                                 onSubmit={handleSubmit}
                                 className="mt-6 space-y-4"
                               >
+                                {purchaseBlockingMessage && (
+                                  <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
+                                    {purchaseBlockingMessage}
+                                  </p>
+                                )}
                                 <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:gap-4">
                                   <button
                                     type="submit"
                                     disabled={
                                       loading ||
                                       !agreedToTerms ||
+                                      // Info: (20260814 - Luphia) 歸屬對象未備妥不讓送出（未選團隊 / 權限不足）
+                                      Boolean(purchaseBlockingMessage) ||
                                       (!isBankTransferPlan &&
                                         paymentMethods.length <= 0)
                                     }
