@@ -343,6 +343,8 @@ export class AttendancePunchService {
         locations,
         lastPunch?.workLocationId,
       ),
+      // Info: (20260813 - Julian) 前端秒錶的校時基準，見 `ITodayStatus.serverNowIso`
+      serverNowIso: new Date().toISOString(),
     };
   }
 

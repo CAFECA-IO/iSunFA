@@ -19,6 +19,9 @@ import {
 } from "@/lib/attendance_geofence";
 import PunchMap from "@/components/hr_management/attendance/punch_map";
 import ConfirmModal from "@/components/common/confirm_modal";
+import { useRouter } from "next/navigation";
+import { HR_MANAGEMENT_ROUTE } from "@/constants/hr_management";
+import { useServerClock } from "@/hooks/use_server_clock";
 import { formatMinuteOfDay } from "@/lib/utils/attendance_format";
 import { ApiError, IEnvelopeLike, request } from "@/lib/utils/request";
 import { GeolocationStatus, useGeolocation } from "@/hooks/use_geolocation";
@@ -43,6 +46,17 @@ import { useTranslation } from "@/i18n/i18n_context";
  * 精度 35 公尺、半徑 60 公尺時，一個**真的站在圈內**的人可能被回報成距中心 70 公尺 ——
  * 照 `inside` 直接 disable，他會被鎖在門外，而且沒有任何辦法讓伺服器來裁決。
  * 誤差範圍內因此維持可按，由伺服器判定（護欄 G2）。**前端的估算不該變成判決。**
+ *
+ * ## 手機上「不用滑動就按得到」
+ *
+ * 演示全程在手機上（計畫書 §10）。原本的直式堆疊把打卡鈕推到地圖下方，
+ * 而地圖高 256px —— 使用者要先滑一段才看得到那顆按鈕，
+ * 而**那顆按鈕是這一頁存在的唯一理由**。
+ *
+ * 因此身分與班別收成**吸頂的細列**（`top-16`，讓開站台自己的 `h-16` 頁首），
+ * 打卡鈕在手機上**吸底**（`sm:` 以上恢復正常排版）。
+ * 兩者都用 sticky 而不是 fixed：fixed 會脫離文件流，
+ * 中間的內容捲到底時會被蓋住最後一段。
  *
  * ## 打卡前要再確認一次
  *
@@ -101,6 +115,14 @@ const PunchPageBody: FC = () => {
 
   // Info: (20260813 - Julian) 待確認的打卡類型；非 null 時對話框開著
   const [pendingPunch, setPendingPunch] = useState<PunchType | null>(null);
+
+  const router = useRouter();
+
+  /**
+   * Info: (20260813 - Julian) 秒錶以伺服器時刻為準 —— 見 `useServerClock` 的說明。
+   * `today` 每次更新（載入、打卡）都會帶來新的 `serverNowIso`，等於重新校時。
+   */
+  const { label: serverClock } = useServerClock(today?.serverNowIso ?? null);
 
   const loadAll = useCallback(async () => {
     setLoadError(null);
@@ -163,6 +185,17 @@ const PunchPageBody: FC = () => {
       );
       setToday(result.payload);
       setSuccess(punchType);
+
+      /**
+       * Info: (20260813 - Julian) 打卡成功後跳到現場狀態頁。
+       *
+       * 留 900ms 讓成功訊息看得見一眼再走 —— 直接跳走的話，使用者不確定
+       * 剛才那一下到底成功了沒，而下一頁的名單要 15 秒輪詢才會出現他自己。
+       * 這 900ms 就是「我按到了」與「我在名單上」之間的那個銜接。
+       */
+      window.setTimeout(() => {
+        router.push(HR_MANAGEMENT_ROUTE.ATTENDANCE_PRESENCE);
+      }, 900);
     } catch (error) {
       /**
        * Info: (20260813 - Julian) 圍欄外的 403 帶著最近地點與距離。
@@ -195,21 +228,25 @@ const PunchPageBody: FC = () => {
 
   return (
     <div className="px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto flex max-w-2xl flex-col gap-5">
-        {/* Info: (20260813 - Julian) 標題與今日班別 */}
-        <div className="rounded-2xl bg-white p-3 ring-1 ring-gray-200 lg:p-6">
-          <div className="text-sm font-semibold text-gray-800 lg:text-lg">
-            {today
-              ? t("hr_management.attendance.greeting", {
-                  name: today.name,
-                  employeeNo: today.employeeNo,
-                })
-              : t("hr_management.attendance.title")}
-          </div>
-          <div className="mt-1 text-xs text-gray-500 lg:text-sm">
-            {today
-              ? `${t("hr_management.attendance.today_shift")}：${shiftLabel()}`
-              : t("hr_management.attendance.loading")}
+      <div className="mx-auto flex max-w-2xl flex-col gap-3 lg:gap-5">
+        {/* Info: (20260813 - Julian) 身分、班別與現在時間。手機上吸頂，讓下方的按鈕進得了第一屏 */}
+        <div className="sticky top-16 z-20 rounded-2xl bg-white/95 p-3 ring-1 ring-gray-200 backdrop-blur lg:static lg:p-6">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="truncate text-sm font-semibold text-gray-800 lg:text-lg">
+                {today
+                  ? t("hr_management.attendance.greeting", {
+                      name: today.name,
+                      employeeNo: today.employeeNo,
+                    })
+                  : t("hr_management.attendance.title")}
+              </div>
+              <div className="mt-1 text-xs text-gray-500 lg:text-sm">
+                {today
+                  ? `${t("hr_management.attendance.today_shift")}：${shiftLabel()}`
+                  : t("hr_management.attendance.loading")}
+              </div>
+            </div>
           </div>
 
           {loadError && (
@@ -221,6 +258,14 @@ const PunchPageBody: FC = () => {
 
         {/* Info: (20260813 - Julian) 定位狀態：四種狀態各有各的下一步，不能壓成一個轉圈圈 */}
         <div className="rounded-2xl bg-white p-3 ring-1 ring-gray-200 lg:p-6">
+          {/* Info: (20260814 - Julian) 伺服器時間 */}
+          {serverClock && (
+            <div className="shrink-0 py-2 text-center lg:py-0 lg:text-right">
+              <p className="font-mono text-base leading-none font-semibold text-gray-800 tabular-nums lg:text-xl">
+                {serverClock}
+              </p>
+            </div>
+          )}
           <LocationStatus
             geoStatus={geoStatus}
             nearest={nearest}
@@ -254,8 +299,8 @@ const PunchPageBody: FC = () => {
           )}
         </div>
 
-        {/* Info: (20260813 - Julian) 打卡按鈕。確定在圈外才 disable —— 見檔頭說明 */}
-        <div className="rounded-2xl bg-white p-3 ring-1 ring-gray-200 lg:p-6">
+        {/* Info: (20260813 - Julian) 打卡按鈕。手機上吸底；確定在圈外才 disable —— 見檔頭說明 */}
+        <div className="sticky bottom-0 z-20 rounded-2xl bg-white/95 p-3 ring-1 ring-gray-200 backdrop-blur sm:static lg:p-6">
           <button
             type="button"
             disabled={submitting || !reading || !today || outOfRange}
@@ -264,9 +309,9 @@ const PunchPageBody: FC = () => {
                 today?.onSite ? PunchType.CLOCK_OUT : PunchType.CLOCK_IN,
               )
             }
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 py-4 text-base font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-gray-300"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-gray-300 lg:px-6 lg:py-4 lg:text-base"
           >
-            {submitting && <Loader2 className="h-5 w-5 animate-spin" />}
+            {submitting && <Loader2 className="size-5 shrink-0 animate-spin" />}
             {today?.onSite
               ? t("hr_management.attendance.action_clock_out")
               : t("hr_management.attendance.action_clock_in")}

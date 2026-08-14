@@ -196,6 +196,17 @@ export interface ITodayStatus {
   firstInMinute: number | null;
   lastOutMinute: number | null;
   workLocationName: string | null;
+  /**
+   * Info: (20260813 - Julian) 產生這個回應的**伺服器時刻**（ISO-8601）。
+   *
+   * 打卡頁的秒錶顯示的必須是「打下去會被記成幾點幾分幾秒」，而那個時刻由伺服器決定
+   * （護欄 G1：`punchedAt` 一律由伺服器產生）。瀏覽器時鐘可能差好幾分鐘，
+   * 甚至被刻意調過 —— 拿它印一個數字，等於在畫面上寫一個系統並不採信的時間。
+   *
+   * 前端以此算出與本機時鐘的差，之後在本地每秒遞增。誤差只剩下網路來回的一半，
+   * 在秒的精度下可以忽略；而 A1 與 A2 都回傳這個欄位，因此每次打卡都會重新校時。
+   */
+  serverNowIso: string;
 }
 
 /**
