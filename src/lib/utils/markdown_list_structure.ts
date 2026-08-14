@@ -79,6 +79,17 @@ const BULLETS: ReadonlySet<string> = new Set(
     .flatMap(([privateUse, glyph]) => [privateUse, glyph]),
 );
 
+/**
+ * Info: (20260814 - Emily) `委員: ` —— 同一個標籤重複多次
+ * (`data/issue_drafts/open/35_repeated_label_and_flat_numbering.md`)。
+ *
+ * 1.4 節的正文把 11 個 `委員: ` 塞在同一行，那是 59 頁實測件唯一剩下的文字牆。
+ * 標籤長度限 2~8 字：短於 2 字的「詞 + 冒號」太容易誤中，
+ * 長於 8 字的不是標籤而是一句話。
+ */
+const LABEL_ITEM = /([^\s:：]{2,8})[:：]/g;
+/** Info: (20260814 - Emily) `1. ` —— 單層編號；後面不得接數字，否則是小數或 `6.0.4` */
+const FLAT_ITEM = /(?<![\d.])(\d{1,2})\.(?!\d)/g;
 /** Info: (20260814 - Emily) `1.6.2` —— 三層以上的編號，前後不得再接數字或點 */
 const DOTTED_ITEM = /(?<![\d.])(\d+\.\d+\.)(\d+)(?![\d.])/g;
 /** Info: (20260814 - Emily) `(1)` 與全角 `（1）` */
@@ -94,6 +105,21 @@ const PAREN_ITEM = /[(（](\d{1,2})[)）]/g;
 const MIN_BULLETS = 2;
 const MIN_DOTTED = 2;
 const MIN_PARENS = 3;
+/**
+ * Info: (20260814 - Emily) 重複標籤要三次才算清單。
+ *
+ * 兩次太鬆 —— 一段散文裡同一個詞加冒號出現兩次並非不可能（問答、對照）。
+ * 三次開始就不像巧合了：清單必然重複，散文不會。
+ */
+const MIN_LABEL_REPEATS = 3;
+/**
+ * Info: (20260814 - Emily) 單層編號是本檔最危險的一族，三條同時成立才動手。
+ *
+ * `N.` 也是小數點、版本號、句末序號。所以要求：**從 1 開始、嚴格遞增、至少三個**。
+ * 缺一條都不動 —— `6.0.4` 靠 `(?!\d)` 就排除了，但「第 3. 項」這種
+ * 單獨出現的序號只能靠數量與起點擋。
+ */
+const MIN_FLAT_ITEMS = 3;
 
 const isStrictlyAscending = (values: readonly number[]): boolean =>
   values.every((value, index) => index === 0 || value > values[index - 1]);
@@ -122,6 +148,41 @@ const dottedOffsets = (line: string): number[] => {
         isStrictlyAscending(entries.map((entry) => entry.value)),
     )
     .flatMap((entries) => entries.map((entry) => entry.offset));
+};
+
+/**
+ * Info: (20260814 - Emily) 同一個標籤重複 ≥3 次的那幾個位置。
+ *
+ * 純數字的標籤不算：`10:30 10:45 10:50` 的標籤都是 `10`，會湊成一組三次，
+ * 而那是時刻不是清單。數字開頭的項目由 `FLAT_ITEM` 與 `DOTTED_ITEM` 兩族負責。
+ */
+const labelOffsets = (line: string): number[] => {
+  const groups = new Map<string, number[]>();
+  for (const match of line.matchAll(LABEL_ITEM)) {
+    const label = match[1];
+    if (/^[\d.]+$/.test(label)) continue;
+    groups.set(label, [...(groups.get(label) ?? []), match.index]);
+  }
+  return [...groups.values()]
+    .filter((offsets) => offsets.length >= MIN_LABEL_REPEATS)
+    .flat();
+};
+
+/**
+ * Info: (20260814 - Emily) 單層編號 `1. 2. 3.`。
+ *
+ * 必須**從 1 開始**且嚴格遞增：不從 1 開始的話無法分辨「清單的續段」與
+ * 「散文裡剛好遞增的兩三個數字」，而前者少見、後者不少見。寧可不斷。
+ */
+const flatOffsets = (line: string): number[] => {
+  const found = [...line.matchAll(FLAT_ITEM)].map((match) => ({
+    offset: match.index,
+    value: Number(match[1]),
+  }));
+  if (found.length < MIN_FLAT_ITEMS) return [];
+  if (found[0].value !== 1) return [];
+  if (!isStrictlyAscending(found.map((entry) => entry.value))) return [];
+  return found.map((entry) => entry.offset);
 };
 
 const parenOffsets = (line: string): number[] => {
@@ -159,6 +220,8 @@ export const splitInlineListItems = (
         ...bulletOffsets(line),
         ...dottedOffsets(line),
         ...parenOffsets(line),
+        ...labelOffsets(line),
+        ...flatOffsets(line),
       ]),
     ]
       .sort((left, right) => left - right)

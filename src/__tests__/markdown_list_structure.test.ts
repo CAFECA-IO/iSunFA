@@ -213,3 +213,149 @@ describe("splitInlineListItems + restoreLineStructure", () => {
     );
   });
 });
+
+/**
+ * Info: (20260814 - Emily) 重複標籤與單層編號兩族（issue 35）。
+ *
+ * 素材是 59 頁實測件（`smssqthnc`）的實際內容 —— 1.4 節的委員會名單是那份
+ * PDF 上唯一剩下的文字牆，而它正好緊鄰委員會架構圖（issue 34）。
+ */
+describe("splitInlineListItems 的重複標籤族", () => {
+  it("should break before each 委員 in the 1.4 committee wall of text", () => {
+    const source =
+      "執行秘書: 陳廉佳、歐家安 委員: 人事部經理及課級主管 委員: 會計部經理及課級主管 委員: 總務部經理及課級主管 委員: 工安部經理及課級主管";
+
+    const lines = splitInlineListItems(source).markdown.split("\n");
+
+    expect(lines).toEqual([
+      "執行秘書: 陳廉佳、歐家安",
+      "委員: 人事部經理及課級主管",
+      "委員: 會計部經理及課級主管",
+      "委員: 總務部經理及課級主管",
+      "委員: 工安部經理及課級主管",
+    ]);
+  });
+
+  it("should not confuse 主任委員 with 副主任委員 or 委員", () => {
+    // Info: (20260814 - Emily) 三個都以「委員」結尾，但它們是三個不同的標籤，各出現一次
+    const source =
+      "主任委員: 張印燈廠長 副主任委員: 陳豐仁副廠長 管理代表: 歐青銓 課長";
+
+    expect(splitInlineListItems(source)).toEqual({
+      markdown: source,
+      inserted: 0,
+    });
+  });
+
+  it("should ignore a label repeated only twice", () => {
+    // Info: (20260814 - Emily) 標籤要 2 字以上才算 —— 用「註」會因為長度不足而
+    // 根本不進判準，那條測試就會為了錯的理由通過（本檔第一版正是如此）
+    const source = "備註: 第一點說明 備註: 第二點說明";
+
+    expect(splitInlineListItems(source)).toEqual({
+      markdown: source,
+      inserted: 0,
+    });
+  });
+
+  it("should not treat a single character label as a marker", () => {
+    // Info: (20260814 - Emily) 一個字加冒號太容易誤中（「註:」「例:」「甲:」），
+    // 所以標籤下限是 2 字。這條把那個下限釘住。
+    const source = "註: 甲 註: 乙 註: 丙";
+
+    expect(splitInlineListItems(source)).toEqual({
+      markdown: source,
+      inserted: 0,
+    });
+  });
+
+  it("should not treat repeated clock hours as a label", () => {
+    // Info: (20260814 - Emily) 純數字標籤不算 —— 這是時刻不是清單
+    const source = "會議時段 10:30 至 10:45 與 10:50 各一場";
+
+    expect(splitInlineListItems(source)).toEqual({
+      markdown: source,
+      inserted: 0,
+    });
+  });
+});
+
+describe("splitInlineListItems 的單層編號族", () => {
+  it("should break the 第十一章 reference list", () => {
+    const source =
+      "1. 質量平衡法 2. 溫室氣體排放係數管理表 6.0.4 版（燃料熱值） 3. 溫室氣體排放係數管理表 6.0.4 版（逸散排放源） 4. 產品碳足跡資訊網";
+
+    const lines = splitInlineListItems(source).markdown.split("\n");
+
+    expect(lines).toEqual([
+      "1. 質量平衡法",
+      "2. 溫室氣體排放係數管理表 6.0.4 版（燃料熱值）",
+      "3. 溫室氣體排放係數管理表 6.0.4 版（逸散排放源）",
+      "4. 產品碳足跡資訊網",
+    ]);
+  });
+
+  it("should not break a version number or a decimal", () => {
+    /**
+     * Info: (20260814 - Emily) `6.0.4` 的 `6.` 後面接數字，`(?!\d)` 就排除了；
+     * `3.14` 同理。這一族最容易誤中的就是它們。
+     */
+    const source =
+      "依 6.0.4 版計算，圓周率取 3.14，係數 1.05 與 2.5 皆四捨五入。";
+
+    expect(splitInlineListItems(source)).toEqual({
+      markdown: source,
+      inserted: 0,
+    });
+  });
+
+  it("should require the list to start at 1", () => {
+    // Info: (20260814 - Emily) 不從 1 開始無法分辨「清單續段」與「散文裡剛好遞增的數字」
+    const source = "見 2. 與 3. 以及 4. 之規定";
+
+    expect(splitInlineListItems(source)).toEqual({
+      markdown: source,
+      inserted: 0,
+    });
+  });
+
+  it("should require at least three items", () => {
+    const source = "1. 第一項 2. 第二項";
+
+    expect(splitInlineListItems(source)).toEqual({
+      markdown: source,
+      inserted: 0,
+    });
+  });
+
+  it("should require the numbers to ascend", () => {
+    const source = "1. 甲 3. 乙 2. 丙";
+
+    expect(splitInlineListItems(source)).toEqual({
+      markdown: source,
+      inserted: 0,
+    });
+  });
+
+  it("should not touch section numbering like 1.4", () => {
+    // Info: (20260814 - Emily) `1.4` 的 `1.` 後面接 4，屬於 DOTTED 族的地盤
+    const source = "1.4溫室氣體盤查推行委員會 架構圖 如下所示";
+
+    expect(splitInlineListItems(source)).toEqual({
+      markdown: source,
+      inserted: 0,
+    });
+  });
+
+  it("should stay idempotent with the two new families", () => {
+    const source =
+      "職責: 協助督導 委員: 人事部 委員: 會計部 委員: 總務部 1. 甲 2. 乙 3. 丙";
+
+    const once = splitInlineListItems(source);
+    const twice = splitInlineListItems(once.markdown);
+
+    expect(once.inserted).toBeGreaterThan(0);
+    expect(twice.inserted).toBe(0);
+    expect(twice.markdown).toBe(once.markdown);
+  });
+});
