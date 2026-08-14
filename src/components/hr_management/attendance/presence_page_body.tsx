@@ -5,7 +5,13 @@ import LeaveTodayPanel from "@/components/hr_management/attendance/leave_today_p
 import LeaveRecallDialog from "@/components/hr_management/attendance/leave_recall_dialog";
 import { useLeaveToday } from "@/hooks/use_leave_today";
 import { ILeaveTodayEntry } from "@/interfaces/leave";
-import { Download, Loader2, TriangleAlert } from "lucide-react";
+import {
+  Clock,
+  Download,
+  Loader2,
+  TriangleAlert,
+  UserCheck,
+} from "lucide-react";
 import PresenceMap from "@/components/hr_management/attendance/presence_map";
 import {
   ATTENDANCE_API,
@@ -259,9 +265,10 @@ const PresencePageBody: FC = () => {
                     borderBottom: "20px solid #fb923c",
                   }}
                 ></div>
+                {/* Info: (20260814 - Julian) 刻意不下 aria-label：它會蓋掉卡片內所有內容，
+                    螢幕閱讀器就只唸得到工區名稱，聽不到在班與未打下班卡的人數 */}
                 <button
                   type="button"
-                  aria-label={location.name}
                   onClick={() => setSelectedId(location.workLocationId)}
                   className={`flex-1 rounded-2xl bg-white p-3 text-left ring-1 transition lg:p-4 ${
                     location.workLocationId === selectedId
@@ -278,16 +285,33 @@ const PresencePageBody: FC = () => {
                     </span>
                   </div>
                   <div className="mt-2 flex items-center gap-3 text-sm">
-                    <span className="rounded-md bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-700 tabular-nums">
+                    {/* Info: (20260814 - Julian) 兩個數字只靠背景色分辨，對紅綠色覺辨識障礙者
+                        等於兩個一樣的數字（同 attendance_result_grid 的理由）。
+                        加圖示給看得到的人，加 sr-only 文字給聽的人 */}
+                    <span
+                      className="flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-700 tabular-nums"
+                      title={t(
+                        "hr_management.attendance_presence.stat_on_site",
+                      )}
+                    >
+                      <UserCheck className="size-3.5" aria-hidden="true" />
+                      <span className="sr-only">
+                        {t("hr_management.attendance_presence.stat_on_site")}
+                      </span>
                       {location.onSiteCount}
                     </span>
                     <span
-                      className={`rounded-md px-2 py-0.5 font-semibold tabular-nums ${
+                      className={`flex items-center gap-1 rounded-md px-2 py-0.5 font-semibold tabular-nums ${
                         location.staleCount > 0
                           ? "bg-amber-100 text-amber-700"
                           : "bg-gray-50 text-gray-300"
                       }`}
+                      title={t("hr_management.attendance_presence.stat_stale")}
                     >
+                      <Clock className="size-3.5" aria-hidden="true" />
+                      <span className="sr-only">
+                        {t("hr_management.attendance_presence.stat_stale")}
+                      </span>
                       {location.staleCount}
                     </span>
                     <span className="text-center text-[10px] text-gray-400 lg:text-right lg:text-xs">

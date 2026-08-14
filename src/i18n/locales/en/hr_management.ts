@@ -586,6 +586,8 @@ export const hrManagement = {
     summary_out: "Out",
     summary_none: "No punch recorded today",
     error_load: "Could not load attendance data. Please try again later.",
+    error_no_employee:
+      "This account is not linked to an employee record yet, so attendance cannot be shown. Ask HR to check the company e-mail on file.",
     error_punch: "Punch failed. Please try again later.",
   },
   attendance_result: {
@@ -633,6 +635,11 @@ export const hrManagement = {
     day_type_rest_day: "Rest day",
     day_type_holiday: "Public holiday",
     day_type_leave: "Leave",
+    day_type_short_work: "W",
+    day_type_short_regular_off: "S",
+    day_type_short_rest_day: "R",
+    day_type_short_holiday: "P",
+    day_type_short_leave: "L",
     phase_upcoming: "Not started",
     phase_in_progress: "In progress",
     phase_concluded: "Concluded",

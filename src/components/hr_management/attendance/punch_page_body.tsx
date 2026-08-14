@@ -27,6 +27,7 @@ import { HR_MANAGEMENT_ROUTE } from "@/constants/hr_management";
 import { useServerClock } from "@/hooks/use_server_clock";
 import { formatMinuteOfDay } from "@/lib/utils/attendance_format";
 import { errorI18nKeyOf } from "@/lib/utils/attendance_error_message";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { ApiError, IEnvelopeLike, request } from "@/lib/utils/request";
 import { useGeolocation } from "@/hooks/use_geolocation";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -59,6 +60,15 @@ const outOfFencePayloadOf = (error: unknown): IOutOfFencePayload | null => {
   )
     return payload;
   return null;
+};
+
+/**
+ * Info: (20260814 - Julian) 打卡頁最高頻的錯誤：帳號還沒綁到員工檔。
+ * 它值得一句自己的話 —— 使用者能做的事（找人事確認信箱）與其他載入失敗完全不同。
+ */
+const LOAD_ERROR_I18N_KEY: Readonly<Record<string, string>> = {
+  [API_ERRORS.NF_EMPLOYEE_FOR_USER.code]:
+    "hr_management.attendance.error_no_employee",
 };
 
 const PunchPageBody: FC = () => {
@@ -108,7 +118,13 @@ const PunchPageBody: FC = () => {
        * （`NF_EMPLOYEE_FOR_USER`），直接顯示後端訊息，不再包一層。
        */
       setLoadError(
-        t(errorI18nKeyOf(error, "hr_management.attendance.error_load")),
+        t(
+          errorI18nKeyOf(
+            error,
+            "hr_management.attendance.error_load",
+            LOAD_ERROR_I18N_KEY,
+          ),
+        ),
       );
     }
   }, [t]);

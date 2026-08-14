@@ -3,8 +3,9 @@
 import { FC } from "react";
 import {
   WEEKDAY_I18N_KEY,
-  WorkDayType,
   WORK_DAY_TYPE_I18N_KEY,
+  WORK_DAY_TYPE_SHORT_I18N_KEY,
+  WorkDayType,
 } from "@/constants/attendance";
 import { dayOfIsoDate, isoWeekday } from "@/lib/utils/attendance_format";
 import { resolveScheduleCellStyle } from "@/lib/utils/attendance_schedule_view";
@@ -88,7 +89,7 @@ const ScheduleGrid: FC<{
                     cell.dayType === WorkDayType.WORK && cell.shiftPatternId
                       ? (shiftLabels.get(cell.shiftPatternId) ?? "?")
                       : cell.dayType
-                        ? t(WORK_DAY_TYPE_I18N_KEY[cell.dayType]).slice(0, 1)
+                        ? t(WORK_DAY_TYPE_SHORT_I18N_KEY[cell.dayType])
                         : ""
                   }
                   style={resolveScheduleCellStyle(cell, shiftStyles)}

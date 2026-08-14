@@ -576,6 +576,8 @@ export const hrManagement = {
     summary_none: "오늘 기록이 없습니다",
     error_load:
       "근태 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    error_no_employee:
+      "이 계정은 아직 직원 정보와 연결되지 않아 근태를 표시할 수 없습니다. 인사팀에 등록된 회사 이메일을 확인해 주세요.",
     error_punch: "기록에 실패했습니다. 잠시 후 다시 시도해 주세요.",
   },
   attendance_result: {
@@ -623,6 +625,11 @@ export const hrManagement = {
     day_type_rest_day: "휴무일",
     day_type_holiday: "공휴일",
     day_type_leave: "휴가",
+    day_type_short_work: "근",
+    day_type_short_regular_off: "법",
+    day_type_short_rest_day: "휴",
+    day_type_short_holiday: "공",
+    day_type_short_leave: "가",
     phase_upcoming: "시작 전",
     phase_in_progress: "진행 중",
     phase_concluded: "종료",

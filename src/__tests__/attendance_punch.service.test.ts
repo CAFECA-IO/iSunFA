@@ -170,13 +170,25 @@ describe("AttendancePunchService.punch", () => {
   it("should tell the caller which location is nearest and how far it is", async () => {
     const { service } = buildService({});
 
-    await service.punch(employee, punchAt(metresAway(3200))).catch((error) => {
-      expect(error).toBeInstanceOf(OutOfFenceError);
-      const detail = (error as OutOfFenceError).detail;
-      expect(detail.nearestLocationName).toBe(SITE_A.name);
-      expect(detail.radiusMeters).toBe(500);
-      expect(detail.distanceMeters).toBeGreaterThan(3000);
-    });
+    /**
+     * Info: (20260814 - Julian) 不可寫成 `.catch(error => expect(...))`：
+     * 那個結構在 `punch()` 成功 resolve 時**一個 expect 都不會跑**，
+     * 於是把 `assertInsideFence` 整支註解掉，這條測試照樣是綠的。
+     */
+    const rejection = await service
+      .punch(employee, punchAt(metresAway(3200)))
+      .then(
+        () => null,
+        (error: unknown) => error,
+      );
+
+    expect(rejection).toBeInstanceOf(OutOfFenceError);
+    const { detail } = rejection as OutOfFenceError;
+    expect(detail.nearestLocationName).toBe(SITE_A.name);
+    expect(detail.radiusMeters).toBe(500);
+    expect(detail.distanceMeters).toBeGreaterThan(3000);
+    // Info: (20260814 - Julian) 3200 公尺遠不可能是定位誤差，措辭必須是「你不在工區」
+    expect(detail.withinAccuracyMargin).toBe(false);
   });
 
   /**
