@@ -1056,6 +1056,15 @@ export const API_ERRORS = {
     message: "This request was already processed",
     status: ApiCode.CONFLICT,
   } as IErrorDef,
+  /**
+   * Info: (20260814 - Luphia) 分配點數要鑄到成員自己的區塊鏈錢包，
+   * 成員沒有錢包位址就無處可鑄——與其扣了池卻沒人收到，不如當場擋下。
+   */
+  TW_MEMBER_WALLET_MISSING: {
+    code: "TW000014",
+    message: "Member has no wallet address for on-chain allocation",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
   // Info: (20260814 - Luphia) 席次補收扣款失敗：fail-closed，不建立邀請也不加人
   TW_SEAT_CHARGE_FAILED: {
     code: "TW000012",

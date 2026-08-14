@@ -102,6 +102,18 @@ export default function AllocationModal({
             <p className="mt-1 text-xs text-gray-500 tabular-nums">
               {t("team_management.wallet.amount_limit", { max })}
             </p>
+
+            {/**
+             * Info: (20260814 - Luphia) 說明點數的去向與收回限制（ADR 015 修訂）：
+             * 分配是把點數鑄進成員自己的區塊鏈錢包，之後就是他的個人資產、
+             * 在團隊之外也能用；已經花掉的部分收不回來。不說清楚，
+             * 管理者會以為這只是團隊內部的一個數字。
+             */}
+            <p className="mt-3 rounded-lg bg-gray-50 p-3 text-xs text-gray-600">
+              {direction === ALLOCATION_DIRECTION.ALLOCATE
+                ? t("team_management.wallet.allocate_onchain_note")
+                : t("team_management.wallet.revoke_onchain_note")}
+            </p>
             <div className="mt-5 flex justify-end gap-2">
               <button
                 onClick={onClose}

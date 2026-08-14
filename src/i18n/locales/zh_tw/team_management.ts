@@ -70,6 +70,11 @@ export const teamManagement = {
     amount_limit: "可用上限 {{max}} 點",
     allocate: "分配",
     revoke: "收回",
+    // Info: (20260814 - Luphia) 分配即鑄到成員的鏈上錢包（ADR 015 修訂）
+    allocate_onchain_note:
+      "分配的點數會直接進入該成員的個人錢包（區塊鏈位址），成員在任何情境都能使用，不限於本團隊。",
+    revoke_onchain_note:
+      "收回會銷毀該成員錢包中的點數，上限為本團隊累計分配給他的數量；他已經使用掉的部分無法收回。",
     allocation_success: "操作成功。",
     allocation_failed: "操作失敗，請確認餘額後再試。",
     invalid_amount: "請輸入正整數點數。",

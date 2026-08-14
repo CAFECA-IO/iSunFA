@@ -73,6 +73,11 @@ export const teamManagement = {
     amount_limit: "사용 가능: {{max}} 포인트",
     allocate: "배분",
     revoke: "회수",
+    // Info: (20260814 - Luphia) 分配即鑄到成員的鏈上錢包（ADR 015 修訂）
+    allocate_onchain_note:
+      "배정한 크레딧은 멤버 본인의 지갑(블록체인 주소)으로 바로 들어가며, 이 팀 밖에서도 사용할 수 있습니다.",
+    revoke_onchain_note:
+      "회수는 멤버 지갑의 크레딧을 소각하며 한도는 이 팀이 배정한 누적 금액입니다. 이미 사용한 부분은 회수할 수 없습니다.",
     allocation_success: "완료되었습니다.",
     allocation_failed:
       "작업에 실패했습니다. 잔액을 확인한 후 다시 시도해 주세요.",

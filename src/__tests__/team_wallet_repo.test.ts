@@ -344,7 +344,11 @@ describe("TeamWalletRepository.allocate / revoke", () => {
     } as unknown);
   });
 
-  it("allocates with a conditional pool decrement and dual closing balances", async () => {
+  /**
+   * Info: (20260814 - Luphia) 分配改為鑄到成員鏈上錢包（ADR 015 修訂）：
+   * repo 只負責池的條件扣款與分錄，**不再寫離鏈的 TeamWalletAllocation**。
+   */
+  it("allocates with a conditional pool decrement and no off-chain allocation row", async () => {
     txMock.teamWallet.findUnique
       .mockResolvedValueOnce({
         ...ACTIVE_WALLET,
@@ -366,10 +370,11 @@ describe("TeamWalletRepository.allocate / revoke", () => {
         entryType: TEAM_WALLET_ENTRY_TYPE.ALLOCATE,
         amount: BigInt(50),
         poolBalanceAfter: BigInt(650),
-        allocationBalanceAfter: BigInt(50),
         targetUserId: "user-2",
       }),
     });
+    // Info: (20260814 - Luphia) 點數在鏈上，不再有第二套離鏈餘額
+    expect(txMock.teamWalletAllocation.upsert).not.toHaveBeenCalled();
   });
 
   it("returns INSUFFICIENT when the pool cannot cover the allocation", async () => {
@@ -379,45 +384,32 @@ describe("TeamWalletRepository.allocate / revoke", () => {
     expect(txMock.teamWalletLedger.create).not.toHaveBeenCalled();
   });
 
-  it("revokes with a conditional allocation decrement and a negative REVOKE entry", async () => {
-    txMock.teamWalletAllocation.updateMany.mockResolvedValue({
-      count: 1,
-    } as unknown);
+  /**
+   * Info: (20260814 - Luphia) 收回＝銷毀成員鏈上點數再回補池（ADR 015 修訂）：
+   * 銷毀由 service 在交易外完成，repo 只回補池、記分錄，並保存那筆銷毀交易的雜湊。
+   */
+  it("revokes by refilling the pool and recording the burn transaction", async () => {
     txMock.teamWallet.update.mockResolvedValue({
       ...ACTIVE_WALLET,
       unallocatedBalance: BigInt(750),
     } as unknown);
-    txMock.teamWalletAllocation.findUnique.mockResolvedValue({
-      balance: BigInt(0),
-    } as unknown);
 
-    const result = await teamWalletRepo.revoke(ALLOC_INPUT);
-    expect(result.outcome).toBe(WALLET_OP_OUTCOME.OK);
-    expect(txMock.teamWalletAllocation.updateMany).toHaveBeenCalledWith({
-      where: {
-        teamId: "team-1",
-        userId: "user-2",
-        balance: { gte: BigInt(50) },
-      },
-      data: { balance: { decrement: BigInt(50) } },
+    const result = await teamWalletRepo.revoke({
+      ...ALLOC_INPUT,
+      txHash: "0xburn",
     });
+
+    expect(result.outcome).toBe(WALLET_OP_OUTCOME.OK);
     expect(txMock.teamWalletLedger.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         entryType: TEAM_WALLET_ENTRY_TYPE.REVOKE,
         amount: BigInt(-50),
         poolBalanceAfter: BigInt(750),
-        allocationBalanceAfter: BigInt(0),
+        txHash: "0xburn",
       }),
     });
-  });
-
-  it("returns INSUFFICIENT when revoking more than the member holds", async () => {
-    txMock.teamWalletAllocation.updateMany.mockResolvedValue({
-      count: 0,
-    } as unknown);
-    const result = await teamWalletRepo.revoke(ALLOC_INPUT);
-    expect(result.outcome).toBe(WALLET_OP_OUTCOME.INSUFFICIENT);
-    expect(txMock.teamWalletLedger.create).not.toHaveBeenCalled();
+    // Info: (20260814 - Luphia) 不再扣離鏈分配餘額——那套餘額已經不存在
+    expect(txMock.teamWalletAllocation.updateMany).not.toHaveBeenCalled();
   });
 });
 

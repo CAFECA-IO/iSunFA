@@ -73,6 +73,11 @@ export const teamManagement = {
     amount_limit: "Available: {{max}} credits",
     allocate: "Allocate",
     revoke: "Revoke",
+    // Info: (20260814 - Luphia) 分配即鑄到成員的鏈上錢包（ADR 015 修訂）
+    allocate_onchain_note:
+      "Allocated credits go straight into the member's own wallet (their blockchain address) and can be used anywhere, not just in this team.",
+    revoke_onchain_note:
+      "Revoking burns credits from the member's wallet, up to what this team has allocated to them. Anything they have already spent cannot be reclaimed.",
     allocation_success: "Done.",
     allocation_failed: "Operation failed. Please check the balance and retry.",
     invalid_amount: "Please enter a positive integer amount.",

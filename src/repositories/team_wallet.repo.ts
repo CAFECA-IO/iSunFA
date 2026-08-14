@@ -50,6 +50,8 @@ export interface ICreditPoolInput {
 }
 
 export interface IAllocationOpInput {
+  // Info: (20260814 - Luphia) 對應的鏈上交易（收回＝銷毀；分配的雜湊於鑄造成功後回填）
+  txHash?: string;
   teamId: string;
   targetUserId: string;
   amount: bigint;
@@ -375,11 +377,15 @@ export class TeamWalletRepository {
           return { outcome: WALLET_OP_OUTCOME.INSUFFICIENT };
         }
 
-        const allocation = await tx.teamWalletAllocation.upsert({
-          where: { teamId_userId: { teamId, userId: targetUserId } },
-          update: { balance: { increment: amount } },
-          create: { teamId, userId: targetUserId, balance: amount },
-        });
+        /**
+         * Info: (20260814 - Luphia) 分配**不再寫離鏈的 TeamWalletAllocation**（ADR 015 修訂）：
+         * 點數改為直接鑄到成員自己的區塊鏈錢包，成員在任何情境都能用，
+         * 不再有「只能在這個團隊裡花」的第二套餘額。
+         *
+         * 這裡只做池的條件扣款與分錄；鏈上鑄造由 service 層在交易外進行
+         * （外部呼叫不能放進 DB 交易），成功後回填 txHash，明確失敗則寫反向分錄補回池。
+         * 因此 txHash 為 null 的 ALLOCATE 分錄 = 「已扣池、尚未確認上鏈」，是可稽核的中間狀態。
+         */
         const walletAfter = await tx.teamWallet.findUnique({
           where: { id: wallet.id },
         });
@@ -391,7 +397,6 @@ export class TeamWalletRepository {
             amount,
             poolBalanceAfter:
               walletAfter?.unallocatedBalance ?? wallet.unallocatedBalance,
-            allocationBalanceAfter: allocation.balance,
             targetUserId,
             operatorUserId,
             idempotencyKey,
@@ -433,20 +438,15 @@ export class TeamWalletRepository {
           return { outcome: WALLET_OP_OUTCOME.DUPLICATE, ledger: duplicated };
         }
 
-        const updated = await tx.teamWalletAllocation.updateMany({
-          where: { teamId, userId: targetUserId, balance: { gte: amount } },
-          data: { balance: { decrement: amount } },
-        });
-        if (updated.count === 0) {
-          return { outcome: WALLET_OP_OUTCOME.INSUFFICIENT };
-        }
-
+        /**
+         * Info: (20260814 - Luphia) 收回不再扣離鏈的分配餘額（ADR 015 修訂）：
+         * 點數已經在成員自己的鏈上錢包裡，收回＝**銷毀成員鏈上點數**再回補池。
+         * 銷毀由 service 層在交易外完成（外部呼叫不能進 DB 交易），成功後才呼叫本方法，
+         * 因此這裡只做池的回補與分錄，`txHash` 記錄那筆銷毀交易。
+         */
         const walletAfter = await tx.teamWallet.update({
           where: { id: wallet.id },
           data: { unallocatedBalance: { increment: amount } },
-        });
-        const allocation = await tx.teamWalletAllocation.findUnique({
-          where: { teamId_userId: { teamId, userId: targetUserId } },
         });
 
         const ledger = await tx.teamWalletLedger.create({
@@ -455,10 +455,10 @@ export class TeamWalletRepository {
             entryType: TEAM_WALLET_ENTRY_TYPE.REVOKE,
             amount: -amount,
             poolBalanceAfter: walletAfter.unallocatedBalance,
-            allocationBalanceAfter: allocation?.balance ?? BigInt(0),
             targetUserId,
             operatorUserId,
             idempotencyKey,
+            txHash: input.txHash ?? null,
           },
         });
 
@@ -548,6 +548,81 @@ export class TeamWalletRepository {
    */
   async listAllWallets(): Promise<TeamWallet[]> {
     return prisma.teamWallet.findMany();
+  }
+
+  /**
+   * Info: (20260814 - Luphia) 鑄造成功後回填交易雜湊：
+   * txHash 為 null 的 ALLOCATE 分錄代表「已扣池、尚未確認上鏈」，是需要人工追查的狀態。
+   */
+  async setLedgerTxHash(ledgerId: string, txHash: string): Promise<void> {
+    await prisma.teamWalletLedger.update({
+      where: { id: ledgerId },
+      data: { txHash },
+    });
+  }
+
+  /**
+   * Info: (20260814 - Luphia) 鏈上鑄造明確失敗時把點數退回池（反向 ADJUST 分錄）。
+   * 用反向分錄而非改寫原分錄：帳本 append-only，抹掉紀錄等於抹掉「曾經試過」這件事。
+   */
+  async compensateFailedAllocation(input: {
+    teamId: string;
+    targetUserId: string;
+    amount: bigint;
+    operatorUserId: string;
+    idempotencyKey: string;
+    reason: string;
+  }): Promise<void> {
+    const wallet = await prisma.teamWallet.findUnique({
+      where: { teamId: input.teamId },
+    });
+    if (!wallet) return;
+    await prisma.$transaction(async (tx) => {
+      const walletAfter = await tx.teamWallet.update({
+        where: { id: wallet.id },
+        data: { unallocatedBalance: { increment: input.amount } },
+      });
+      await tx.teamWalletLedger.create({
+        data: {
+          teamWalletId: wallet.id,
+          entryType: TEAM_WALLET_ENTRY_TYPE.ADJUST,
+          amount: input.amount,
+          poolBalanceAfter: walletAfter.unallocatedBalance,
+          targetUserId: input.targetUserId,
+          operatorUserId: input.operatorUserId,
+          idempotencyKey: `allocate-failed:${input.idempotencyKey}`,
+          featureCode: input.reason.slice(0, 60),
+        },
+      });
+    });
+  }
+
+  /**
+   * Info: (20260814 - Luphia) 這個團隊**淨分配**給該成員的量（Σ ALLOCATE − Σ REVOKE）。
+   *
+   * 收回的上限：點數進了成員的鏈上錢包後，與他自己買的點數混在同一個餘額裡，
+   * 鏈上分不出來。若不設這道上限，團隊就能銷毀成員自費購買的點數——
+   * 那是別人的資產，不是團隊給過的東西。
+   */
+  async sumNetAllocatedToMember(
+    teamId: string,
+    userId: string,
+  ): Promise<bigint> {
+    const wallet = await prisma.teamWallet.findUnique({ where: { teamId } });
+    if (!wallet) return BigInt(0);
+    const entries = await prisma.teamWalletLedger.findMany({
+      where: {
+        teamWalletId: wallet.id,
+        targetUserId: userId,
+        entryType: {
+          in: [TEAM_WALLET_ENTRY_TYPE.ALLOCATE, TEAM_WALLET_ENTRY_TYPE.REVOKE],
+        },
+      },
+      select: { amount: true },
+    });
+    // Info: (20260814 - Luphia) ALLOCATE 為正、REVOKE 為負，直接加總即為淨額
+    const net = entries.reduce((sum, entry) => sum + entry.amount, BigInt(0));
+    return net > BigInt(0) ? net : BigInt(0);
   }
 
   async sumAllocationsByTeam(): Promise<{ teamId: string; total: bigint }[]> {

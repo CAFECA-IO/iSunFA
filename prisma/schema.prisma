@@ -230,6 +230,8 @@ model TeamWalletLedger {
   operatorUserId         String     @map("operator_user_id")
   orderId                String?    @map("order_id")
   featureCode            String?    @map("feature_code") // Info: (20260807 - Luphia) BILLABLE_FEATURE_CODE 常數
+  // Info: (20260814 - Luphia) 分配／收回改為鏈上鑄造與銷毀（ADR 015 修訂），此欄記錄該筆鏈上交易
+  txHash                 String?    @map("tx_hash")
   idempotencyKey         String     @unique @map("idempotency_key")
   createdAt              DateTime   @default(now()) @map("created_at")
 

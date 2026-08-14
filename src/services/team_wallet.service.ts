@@ -27,6 +27,11 @@ import {
 import { teamRepo } from "@/repositories/team.repo";
 import { teamWalletRepo } from "@/repositories/team_wallet.repo";
 import { paymentRepo } from "@/repositories/payment.repo";
+import { webAuthnRepo } from "@/repositories/webauthn.repo";
+import { issuePurchasedPointsToMember } from "@/services/member.service";
+import { burn } from "@/services/token.service";
+import { CONTRACT_ADDRESSES } from "@/config/contracts";
+import { logger } from "@/lib/utils/logger";
 
 /**
  * Info: (20260807 - Luphia) 團隊錢包 Service（設計書 §6）：購點、分配、收回、
@@ -224,6 +229,16 @@ export async function manageAllocation(
     }
 
     const idempotencyKey = params.idempotencyKey ?? randomUUID();
+
+    /**
+     * Info: (20260814 - Luphia) 分配 / 收回都要動鏈上餘額（ADR 015 修訂，產品拍板 20260814）：
+     * 分配的點數直接鑄到成員自己的區塊鏈錢包，之後就是他的個人點數，
+     * 在任何情境都能用——不再有「只能在這個團隊裡花」的第二套餘額。
+     */
+    const target = await webAuthnRepo.findUserById(targetUserId);
+    if (!target?.address) {
+      throw toApiError(API_ERRORS.TW_MEMBER_WALLET_MISSING);
+    }
     const input = {
       teamId,
       targetUserId,
@@ -231,11 +246,82 @@ export async function manageAllocation(
       operatorUserId,
       idempotencyKey,
     };
-    const result =
-      direction === ALLOCATION_DIRECTION.ALLOCATE
-        ? await teamWalletRepo.allocate(input)
-        : await teamWalletRepo.revoke(input);
 
+    if (direction === ALLOCATION_DIRECTION.ALLOCATE) {
+      // Info: (20260814 - Luphia) 先扣池（可條件失敗、可補償），再鑄鏈上點數
+      const result = await teamWalletRepo.allocate(input);
+      if (result.outcome === WALLET_OP_OUTCOME.DUPLICATE && result.ledger) {
+        return toLedgerView(result.ledger);
+      }
+      if (result.outcome !== WALLET_OP_OUTCOME.OK || !result.ledger) {
+        throw toApiError(mapAllocationFailure(direction, result.outcome));
+      }
+
+      const minted = await issuePurchasedPointsToMember(
+        target.address,
+        Number(amount),
+      );
+      if (!minted.success) {
+        /**
+         * Info: (20260814 - Luphia) 鑄造明確失敗：把點數退回池並留下反向分錄。
+         * 不沉默吞掉——池已經扣過了，不補回去就是團隊平白少一筆點數。
+         */
+        await teamWalletRepo.compensateFailedAllocation({
+          teamId,
+          targetUserId,
+          amount,
+          operatorUserId,
+          idempotencyKey,
+          reason: minted.message ?? "mint failed",
+        });
+        logger.error("team allocation mint failed", {
+          teamId,
+          targetUserId,
+          amount: amount.toString(),
+          message: minted.message,
+        });
+        throw toApiError(API_ERRORS.TW_OPERATION_FAILED);
+      }
+
+      const txHash = (minted.data as { tx?: string })?.tx;
+      if (txHash)
+        await teamWalletRepo.setLedgerTxHash(result.ledger.id, txHash);
+      return toLedgerView({ ...result.ledger, txHash: txHash ?? null });
+    }
+
+    /**
+     * Info: (20260814 - Luphia) 收回＝銷毀成員鏈上點數再回補池，且**以團隊淨分配量為上限**：
+     * 點數進了成員錢包後與他自費購買的混在同一個餘額裡，鏈上分不出來；
+     * 沒有這道上限，團隊就能銷毀成員自己買的點數。
+     * 成員已經花掉的部分收不回來——這是「點數直接給他」的必然結果。
+     */
+    const netAllocated = await teamWalletRepo.sumNetAllocatedToMember(
+      teamId,
+      targetUserId,
+    );
+    if (netAllocated < amount) {
+      throw toApiError(API_ERRORS.TW_ALLOCATION_INSUFFICIENT);
+    }
+
+    const burned = await burn(
+      CONTRACT_ADDRESSES.CREDIT_POINT,
+      target.address,
+      Number(amount),
+    );
+    if (!burned.success) {
+      logger.error("team allocation burn failed", {
+        teamId,
+        targetUserId,
+        amount: amount.toString(),
+        message: burned.message,
+      });
+      throw toApiError(API_ERRORS.TW_ALLOCATION_INSUFFICIENT);
+    }
+
+    const result = await teamWalletRepo.revoke({
+      ...input,
+      txHash: (burned.data as { tx?: string })?.tx,
+    });
     if (
       result.outcome === WALLET_OP_OUTCOME.OK ||
       result.outcome === WALLET_OP_OUTCOME.DUPLICATE
@@ -285,6 +371,15 @@ export async function listTeamWalletLedger(params: {
  * Info: (20260807 - Luphia) 成員移除自動收回（設計書 §6.2）：
  * 於移除流程「刪除成員之前」呼叫；FROZEN 時丟錯中止移除（守恆優先）；
  * 冪等鍵綁 memberId，重試安全。
+ */
+/**
+ * Info: (20260814 - Luphia) 成員移除時的收回**只處理舊的離鏈分配餘額**（ADR 015 修訂）。
+ *
+ * 分配改為鑄到成員自己的錢包之後，那些點數就是他的個人資產、能在團隊之外使用，
+ * 移除成員時自動銷毀等於沒收別人的東西。要收回請在移除前明確執行 REVOKE
+ * （上限為團隊淨分配量，且成員已花掉的部分收不回來）。
+ *
+ * 遷移完成後這條路徑對新資料會一律回 NOT_FOUND（no-op），舊餘額則照原規則回池。
  */
 export async function revokeAllocationOnMemberRemoval(params: {
   teamId: string;

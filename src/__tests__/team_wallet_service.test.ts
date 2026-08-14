@@ -18,6 +18,9 @@ import { teamRepo } from "@/repositories/team.repo";
 import { teamWalletRepo } from "@/repositories/team_wallet.repo";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { generatePaymentOrder } from "@/services/order.service";
+import { issuePurchasedPointsToMember } from "@/services/member.service";
+import { burn } from "@/services/token.service";
+import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import type { Order } from "@/generated";
 
 jest.mock("@/repositories/team.repo", () => ({
@@ -33,7 +36,31 @@ jest.mock("@/repositories/team_wallet.repo", () => ({
     revoke: jest.fn(),
     revokeAllForUser: jest.fn(),
     creditPool: jest.fn(),
+    // Info: (20260814 - Luphia) 分配上鏈後新增：回填交易雜湊、鑄造失敗補償、淨分配上限
+    setLedgerTxHash: jest.fn(),
+    compensateFailedAllocation: jest.fn(),
+    sumNetAllocatedToMember: jest.fn(),
   },
+}));
+// Info: (20260814 - Luphia) 分配要鑄到成員的鏈上位址，收回要銷毀
+jest.mock("@/repositories/webauthn.repo", () => ({
+  webAuthnRepo: {
+    findUserById: jest.fn(async () => ({ address: "0xmember" })),
+  },
+}));
+jest.mock("@/services/member.service", () => ({
+  issuePurchasedPointsToMember: jest.fn(async () => ({
+    success: true,
+    message: "ok",
+    data: { tx: "0xmint" },
+  })),
+}));
+jest.mock("@/services/token.service", () => ({
+  burn: jest.fn(async () => ({
+    success: true,
+    message: "ok",
+    data: { tx: "0xburn" },
+  })),
 }));
 jest.mock("@/repositories/payment.repo", () => ({
   paymentRepo: { updateOrderCompleted: jest.fn() },
@@ -189,6 +216,131 @@ describe("manageAllocation", () => {
       outcome: WALLET_OP_OUTCOME.OK,
       ledger: { ...LEDGER_ROW, amount: BigInt(-50) },
     });
+    // Info: (20260814 - Luphia) 預設淨分配量足夠，個別測試再覆寫
+    asMock(teamWalletRepo.sumNetAllocatedToMember).mockResolvedValue(
+      BigInt(100),
+    );
+    /**
+     * Info: (20260814 - Luphia) 鏈上替身的預設值也要逐案重設：
+     * clearAllMocks 不會清掉 mockResolvedValue 設下的實作，
+     * 少了這幾行，某一個測試設的「鑄造失敗」會漏到後面每一個測試。
+     */
+    asMock(webAuthnRepo.findUserById).mockResolvedValue({
+      address: "0xmember",
+    });
+    asMock(issuePurchasedPointsToMember).mockResolvedValue({
+      success: true,
+      message: "ok",
+      data: { tx: "0xmint" },
+    });
+    asMock(burn).mockResolvedValue({
+      success: true,
+      message: "ok",
+      data: { tx: "0xburn" },
+    });
+  });
+
+  /**
+   * Info: (20260814 - Luphia) 分配＝鑄到成員自己的區塊鏈錢包（ADR 015 修訂，
+   * 產品拍板 20260814）。點數從此是他的個人點數，不再有只能在團隊內花的第二套餘額。
+   */
+  it("mints the points into the member's own wallet", async () => {
+    await manageAllocation({
+      teamId: "team-1",
+      operatorUserId: "user-admin",
+      targetUserId: "user-2",
+      amount: BigInt(50),
+      direction: ALLOCATION_DIRECTION.ALLOCATE,
+    });
+
+    expect(issuePurchasedPointsToMember).toHaveBeenCalledWith("0xmember", 50);
+    expect(teamWalletRepo.setLedgerTxHash).toHaveBeenCalledWith(
+      "ledger-1",
+      "0xmint",
+    );
+  });
+
+  /**
+   * Info: (20260814 - Luphia) 鑄造失敗必須把點數退回池：
+   * 池已經扣過了，不補回去就是團隊平白少一筆點數，而且沒有任何流程會發現。
+   */
+  it("refunds the pool when the mint fails", async () => {
+    asMock(issuePurchasedPointsToMember).mockResolvedValue({
+      success: false,
+      message: "rpc down",
+    });
+
+    await expect(
+      manageAllocation({
+        teamId: "team-1",
+        operatorUserId: "user-admin",
+        targetUserId: "user-2",
+        amount: BigInt(50),
+        direction: ALLOCATION_DIRECTION.ALLOCATE,
+      }),
+    ).rejects.toMatchObject({ code: "TW000009" });
+
+    expect(teamWalletRepo.compensateFailedAllocation).toHaveBeenCalledWith(
+      expect.objectContaining({ teamId: "team-1", amount: BigInt(50) }),
+    );
+  });
+
+  // Info: (20260814 - Luphia) 沒有錢包位址就無處可鑄，當場擋下而不是扣了池才發現
+  it("refuses to allocate to a member without a wallet address", async () => {
+    asMock(webAuthnRepo.findUserById).mockResolvedValue({ address: null });
+
+    await expect(
+      manageAllocation({
+        teamId: "team-1",
+        operatorUserId: "user-admin",
+        targetUserId: "user-2",
+        amount: BigInt(50),
+        direction: ALLOCATION_DIRECTION.ALLOCATE,
+      }),
+    ).rejects.toMatchObject({ code: "TW000014" });
+
+    expect(teamWalletRepo.allocate).not.toHaveBeenCalled();
+  });
+
+  // Info: (20260814 - Luphia) 收回＝銷毀成員鏈上點數，再回補池
+  it("burns the member's points when revoking", async () => {
+    await manageAllocation({
+      teamId: "team-1",
+      operatorUserId: "user-admin",
+      targetUserId: "user-2",
+      amount: BigInt(50),
+      direction: ALLOCATION_DIRECTION.REVOKE,
+    });
+
+    expect(burn).toHaveBeenCalledWith(expect.anything(), "0xmember", 50);
+    expect(teamWalletRepo.revoke).toHaveBeenCalledWith(
+      expect.objectContaining({ txHash: "0xburn" }),
+    );
+  });
+
+  /**
+   * Info: (20260814 - Luphia) 收回上限＝團隊淨分配量。
+   *
+   * 點數進了成員錢包後，與他自費購買的混在同一個餘額裡、鏈上分不出來；
+   * 沒有這道上限，團隊就能銷毀成員自己買的點數——那是別人的資產。
+   */
+  it("never burns more than the team actually allocated", async () => {
+    asMock(teamWalletRepo.sumNetAllocatedToMember).mockResolvedValue(
+      BigInt(20),
+    );
+
+    await expect(
+      manageAllocation({
+        teamId: "team-1",
+        operatorUserId: "user-admin",
+        targetUserId: "user-2",
+        amount: BigInt(50),
+        direction: ALLOCATION_DIRECTION.REVOKE,
+      }),
+      // Info: (20260814 - Luphia) TW000002 = TW_ALLOCATION_INSUFFICIENT
+    ).rejects.toMatchObject({ code: "TW000002" });
+
+    expect(burn).not.toHaveBeenCalled();
   });
 
   it("fails fast on non-positive amounts", async () => {
