@@ -756,3 +756,124 @@ describe("產出的圖表可被前端型別偵測接受", () => {
     );
   });
 });
+
+/**
+ * Info: (20260814 - Emily) 節點數上限（issue 34）。
+ *
+ * 這一組守的是一件比「有沒有畫出圖」更重要的事：**不畫的時候要說對原因**。
+ * 「節點太多」與「節點無法回溯原文」是完全不同的兩件事 ——
+ * 前者是版面容不下、內容可信；後者是懷疑模型編造。對一份送查證的文件，
+ * 說錯會把讀者導向錯誤的結論。
+ */
+describe("節點數上限與不畫的原因", () => {
+  /**
+   * Info: (20260814 - Emily) 高興昌那份 1.4 節的真實規模：
+   * 1 個根 + 4 位幹部 + 11 個部門委員 = 16 個節點。
+   * 上限是 12 的時候它畫不完，而模型被 prompt 要求「超過請只保留最上層與次層」，
+   * 於是交回 12 個、圖看起來完整，而品管部／鋼管廠／冷軋廠／屏南廠四個部門不見了。
+   */
+  const COMMITTEE_UNITS = [
+    "人事部",
+    "會計部",
+    "總務部",
+    "工安部",
+    "採購部",
+    "業務部",
+    "生管部",
+    "品管部",
+    "鋼管廠",
+    "冷軋廠",
+    "屏南廠",
+  ];
+  const committeeNodes = (): ICarbonDiagramNode[] => [
+    { label: "溫室氣體盤查推行委員會" },
+    { label: "主任委員", parent: "溫室氣體盤查推行委員會" },
+    { label: "副主任委員", parent: "溫室氣體盤查推行委員會" },
+    { label: "管理代表", parent: "溫室氣體盤查推行委員會" },
+    { label: "執行秘書", parent: "溫室氣體盤查推行委員會" },
+    ...COMMITTEE_UNITS.map((unit) => ({
+      label: unit,
+      parent: "溫室氣體盤查推行委員會",
+    })),
+  ];
+  const committeeSource = [
+    "溫室氣體盤查推行委員會",
+    "主任委員",
+    "副主任委員",
+    "管理代表",
+    "執行秘書",
+    ...COMMITTEE_UNITS,
+  ].join(" ");
+
+  it("16 個節點的委員會要畫得完（上限 12 時畫不完，四個部門會不見）", () => {
+    expect(committeeNodes()).toHaveLength(16);
+
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      committeeNodes(),
+      committeeSource,
+    );
+
+    expect(result.isValid).toBe(true);
+  });
+
+  it("每一個部門都要出現在圖裡，一個都不能少", () => {
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      committeeNodes(),
+      committeeSource,
+    );
+    const chart = extractMermaidChart(block);
+
+    // Info: (20260814 - Emily) 本檔最重要的一條:少一個部門的圖看起來是對的
+    COMMITTEE_UNITS.forEach((unit) => expect(chart).toContain(unit));
+  });
+
+  it("超過上限時要說「幾個超過幾個」，而不是說節點無法回溯原文", () => {
+    const max = CARBON_DIAGRAM_TEMPLATES.GOVERNANCE_TREE.maxNodes;
+    const nodes: ICarbonDiagramNode[] = Array.from(
+      { length: max + 3 },
+      (unused, index) => ({ label: `單位${index}` }),
+    );
+    const source = nodes.map((node) => node.label).join(" ");
+
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      nodes,
+      source,
+    );
+
+    expect(block).toContain(String(max + 3));
+    expect(block).toContain(String(max));
+    // Info: (20260814 - Emily) 這些節點全部通過原文回溯 —— 不可以說它們無法回溯
+    expect(block).not.toContain("無法回溯");
+  });
+
+  it("超過上限仍回報實際節點數，供判斷是差一點還是差很多", () => {
+    const max = CARBON_DIAGRAM_TEMPLATES.GOVERNANCE_TREE.maxNodes;
+    const nodes: ICarbonDiagramNode[] = Array.from(
+      { length: max + 1 },
+      (unused, index) => ({ label: `單位${index}` }),
+    );
+
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      nodes,
+      nodes.map((node) => node.label).join(" "),
+    );
+
+    expect(result.reason).toBe(DiagramRejectReasonEnum.TOO_MANY_NODES);
+    expect(result.nodeCount).toBe(max + 1);
+    expect(result.maxNodes).toBe(max);
+  });
+
+  it("節點無法回溯原文時仍然說「無法回溯」，不與數量問題混用", () => {
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      [{ label: "原文裡沒有這個單位" }, { label: "也沒有這個" }],
+      "本節原文完全沒有提到上面那兩個名稱",
+    );
+
+    expect(block).toContain("無法回溯");
+  });
+});

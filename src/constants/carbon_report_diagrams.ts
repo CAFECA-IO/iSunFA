@@ -44,11 +44,27 @@ export const CARBON_DIAGRAM_TEMPLATES: Record<
   CarbonDiagramTemplateEnum,
   ICarbonDiagramTemplate
 > = {
+  /**
+   * Info: (20260814 - Emily) 上限從 12 放寬到 20
+   * (`data/issue_drafts/open/34_diagram_overflow_clips_nodes.md`)。
+   *
+   * 實測高興昌那份的委員會是 1 個根 + 4 位幹部（主任委員、副主任委員、管理代表、
+   * 執行秘書）+ 11 位部門委員 = **16 個節點**,而上限 12 讓它畫不完。
+   *
+   * 原本的 12 不是量測出來的,而配合舊 prompt「超過請只保留最上層與次層」的結果是:
+   * 模型交回 12 個（根 + 4 幹部 + 7 個委員）、圖看起來完整,而**四個部門不見了** ——
+   * 品管部、鋼管廠、冷軋廠、屏南廠。這正是本檔驗證器開頭那條理由要防的事
+   * （少了成員的圖看起來是對的），只是刪減發生在驗證器之前,所以它沒機會攔。
+   *
+   * 20 是「16 再加餘裕」而不是拍出來的:委員會的規模由部門數決定,
+   * 下一家公司多幾個部門是常態，多一倍不是。真的超過 20 就不畫並說明 ——
+   * 那時「畫不下」是真的，而不是我們的上限太緊。
+   */
   [CarbonDiagramTemplateEnum.GOVERNANCE_TREE]: {
     paragraphId: "ch1-4",
     renderer: CarbonDiagramRendererEnum.FLOWCHART,
     direction: "TD",
-    maxNodes: 12,
+    maxNodes: 20,
   },
   [CarbonDiagramTemplateEnum.SCOPE_CATEGORY_MAP]: {
     paragraphId: "ch2-3",
