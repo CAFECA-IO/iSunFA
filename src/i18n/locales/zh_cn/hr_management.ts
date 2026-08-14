@@ -680,6 +680,8 @@ export const hrManagement = {
     loading: "载入中…",
     error_load: "无法载入排班数据，请稍后再试",
     error_save: "排班保存失败，请稍后再试",
+    error_save_conflict: "这一天刚刚被其他人改过，请刷新后再试",
+    error_save_invalid_day: "上班日必须指定班别，休假日则不能有班别",
     empty: "此部门在本月没有员工",
     saving: "保存中…",
     col_employee: "员工",
@@ -721,5 +723,15 @@ export const hrManagement = {
     passkey_unavailable:
       "这个环境无法使用 Passkey。Passkey 只在 HTTPS（或 localhost）安全连接下运作，请改用正式网址开启本页。",
     hint: "登录的 Google 账号必须是已建档的公司邮箱 —— 不在名册上的人打不了这个工区的卡。若登录后显示「尚未对应到员工档」，请联系人事确认邮箱。",
+  },
+  // Info: (20260814 - Julian) 假别名称，对应 `LEAVE_TYPE_I18N_KEY`
+  leave: {
+    type_annual: "年休假",
+    type_personal: "事假",
+    type_sick: "病假",
+    type_official: "公假",
+    type_marriage: "婚假",
+    type_bereavement: "丧假",
+    type_other: "其他",
   },
 };

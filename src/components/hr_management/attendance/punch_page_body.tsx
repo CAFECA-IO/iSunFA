@@ -25,6 +25,7 @@ import { useRouter } from "next/navigation";
 import { HR_MANAGEMENT_ROUTE } from "@/constants/hr_management";
 import { useServerClock } from "@/hooks/use_server_clock";
 import { formatMinuteOfDay } from "@/lib/utils/attendance_format";
+import { errorI18nKeyOf } from "@/lib/utils/attendance_error_message";
 import { ApiError, IEnvelopeLike, request } from "@/lib/utils/request";
 import { GeolocationStatus, useGeolocation } from "@/hooks/use_geolocation";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -60,9 +61,6 @@ const outOfFencePayloadOf = (error: unknown): IOutOfFencePayload | null => {
     return payload;
   return null;
 };
-
-const messageOf = (error: unknown, fallback: string): string =>
-  error instanceof ApiError && error.message ? error.message : fallback;
 
 const PunchPageBody: FC = () => {
   const { t } = useTranslation();
@@ -110,7 +108,9 @@ const PunchPageBody: FC = () => {
        * Info: (20260813 - Julian) 最可能的失敗是帳號尚未對應到員工檔
        * （`NF_EMPLOYEE_FOR_USER`），直接顯示後端訊息，不再包一層。
        */
-      setLoadError(messageOf(error, t("hr_management.attendance.error_load")));
+      setLoadError(
+        t(errorI18nKeyOf(error, "hr_management.attendance.error_load")),
+      );
     }
   }, [t]);
 
@@ -172,7 +172,9 @@ const PunchPageBody: FC = () => {
         setRejection(outOfFence);
         return;
       }
-      setFailure(messageOf(error, t("hr_management.attendance.error_punch")));
+      setFailure(
+        t(errorI18nKeyOf(error, "hr_management.attendance.error_punch")),
+      );
     } finally {
       setSubmitting(false);
     }

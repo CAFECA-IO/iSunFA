@@ -270,7 +270,7 @@ Demo 不建 `AttendancePresence` / `AttendanceDailyResult` / `AttendanceExceptio
 
 ---
 
-## 🪤 5. 踩雷紀錄：實作時才浮現、光看規格看不出來的十五處
+## 🪤 5. 踩雷紀錄：實作時才浮現、光看規格看不出來的十七處
 
 > **這一節是本文件最該保留的部分。** 每一條都是實作時才浮現、光看規格看不出來的問題。
 
@@ -291,6 +291,8 @@ Demo 不建 `AttendancePresence` / `AttendanceDailyResult` / `AttendanceExceptio
 | 13  | W18    | （未記載）| **`.next` 不一定會重編。** 透過裝置橋接寫入的檔案不保證產生 watcher 事件，症狀是改了程式碼但畫面完全沒變、也沒有錯誤 —— 而那會被誤判成「功能沒做出來」。判別方式：比對 `.next/BUILD_ID` 與原始檔的 mtime。**交付後一律重啟 dev server，不要相信 HMR** |
 | 14  | W19    | P2 靠手動座標輸入框，後改 DevTools 感應器 | **兩種都作廢了。** 輸入框被移除（§7.2 第 1 項提前執行），而改用 DevTools 之後才確定演示全程在手機上 —— **手機沒有那個面板**。現行做法是「真的走出去」（§10.2），代價是要把 demo 工區的圍欄半徑縮到 60–80 公尺，並**同步調降 `DEMO_MAX_ACCURACY_METERS`**，否則「站在圈內卻被判在圈外」會變成常態 |
 | 15  | W20    | 「先查狀態再寫入」擋得住重複回應銷假徵詢 | **擋不住，而且失敗方式是最壞的那一種。** `respondRecall` 讀出 `status === PENDING` 到真正寫入之間有時間差，兩個分頁同時回應時**兩邊都會通過檢查**：一個同意一個婉拒，最後 `LeaveRecall.status` 是 DECLINED，但排班已經被同意那一支改成 `WORK` 且再也改不回來 —— 畫面上看起來只是「他婉拒了」，沒有任何錯誤。更糟的是**這個不一致沒有任何測試會抓到**，因為單執行緒跑永遠不會重現。改為附條件更新（`updateMany where { id, status: PENDING }`），`count === 0` 就是輸了這場競爭，且 ACCEPT 的搶佔排在交易的第一步 —— 輸掉時後面兩張表一個字都不會動。連帶：service 原本把 P2002 對應成「已被回應」是錯的（那條路已改由回傳值表達），現在 P2002 只可能來自 `employeeShiftDay` 的唯一鍵，對應 `CF_SCHEDULE_DAY_CONFLICT`。**另外，route 層有 catch-all 會把非 `AppError` 轉成 `IS_DB_FAILED`，所以裸 Prisma 錯誤不會流到瀏覽器 —— 但那代表症狀是一個看不懂的 500，不是沒事**。同一支方法還留過一個 `throw new Error("ACCEPT requires a schedule projection")`：「ACCEPT 必有投影、DECLINE 必無」本來就該用可辨識聯集表達，**同一個 PR 的 `attendanceScheduleUpdateSchema` 對 `dayType` 已經這樣做了，這裡卻退回執行期檢查** —— 已改為型別層約束，並用 `@ts-expect-error` 立了一條由 tsc（不是 jest）執行的回歸護欄 |
+| 16  | W20    | `error instanceof ApiError && error.message ? error.message : t(...)` 是有 i18n fallback 的寫法 | **那個 fallback 是死碼，四頁六處全部。** `request()` 連網路錯誤都包成 `ApiError`（`status: 0`），所以左邊幾乎恆真；而 `error_dictionary` 的 message 是寫給開發者的英文（`"This schedule day was modified concurrently; retry"`），於是**所有**失敗都直接把英文印到畫面上，`t()` 那一支永遠不會執行。症狀騙人的地方在於「看起來有做 i18n」——四個語系的字典裡確實有 `error_load` / `error_save`，只是沒有一次被用到。改為只認 `errorCode`（`errorI18nKeyOf`，`src/lib/utils/attendance_error_message.ts`），登記過的碼給專屬訊息，其餘走該頁通用訊息，**回傳的是 i18n key 而不是字串**，讓「不小心把英文塞進畫面」寫不出來。同一處還有 `throw new ApiError("Empty payload", 200)`：200 是 `unwrapEnvelope` 為串流信封定下的慣例（該處有長註解說明「HTTP 那層真的成功了」），這支是一般 PUT，借用它沒有依據 |
+| 17  | W20    | `LEAVE_TYPE_I18N_KEY` 指向的字典鍵存在 | **五個語系裡都沒有 `hr_management.leave` 這個區塊**，整組 10 個鍵從加進來的那天起就是空的。而 `i18n_context` 的 `getNestedValue` 查不到時**回傳 key 本身**，所以「今日請假」面板上的假別欄位顯示的是字面的 `hr_management.leave.type_annual` —— 沒有錯誤、沒有 console 警告、tsc 也不會知道（那是字串，不是型別）。**這一類的錯只有使用者看得到**，而它剛好落在 demo 的 W16 路徑上。已補齊 `leave` 區塊 × 5 語系（假別用勞基法正式用語，`ANNUAL` = 特別休假而非「年假」），並加 `attendance_i18n_keys.test.ts`：走訪 `LEAVE_TYPE_I18N_KEY` 的每一條路徑、比照 `getNestedValue` 的查法逐段下鑽，缺任何一個語系就紅。同批移除 `LEAVE_RECALL_STATUS_I18N_KEY` 與 `LEAVE_RECALL_STATUS_STYLE` —— 它們指向同樣不存在的鍵，但全樹無人使用，是死碼 |
 
 ### 同時回頭修正母文件三處（v1.2 → v1.3）
 

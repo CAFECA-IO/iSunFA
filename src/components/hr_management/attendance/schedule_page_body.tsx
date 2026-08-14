@@ -23,7 +23,9 @@ import {
   filterScheduleRows,
   scheduleDepartmentOptions,
 } from "@/lib/utils/attendance_schedule_view";
-import { ApiError, IEnvelopeLike, request } from "@/lib/utils/request";
+import { errorI18nKeyOf } from "@/lib/utils/attendance_error_message";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { IEnvelopeLike, request } from "@/lib/utils/request";
 import {
   IScheduleCalendar,
   IScheduleDayCell,
@@ -32,6 +34,14 @@ import {
 } from "@/interfaces/attendance";
 import { IAttendanceScheduleUpdate } from "@/validators/attendance";
 import { useTranslation } from "@/i18n/i18n_context";
+
+// Info: (20260814 - Julian) 排班存檔的專屬訊息；其餘錯誤走通用的 error_save
+const SAVE_ERROR_I18N_KEY: Readonly<Record<string, string>> = {
+  [API_ERRORS.CF_SCHEDULE_DAY_CONFLICT.code]:
+    "hr_management.attendance_schedule.error_save_conflict",
+  [API_ERRORS.VA_SCHEDULE_DAY_INVALID.code]:
+    "hr_management.attendance_schedule.error_save_invalid_day",
+};
 
 /**
  * Info: (20260813 - Julian) 排班月曆，排班是判定的輸入之一，需能獨立於
@@ -101,9 +111,12 @@ const SchedulePageBody: FC = () => {
         setPatterns(patternResponse.payload ?? []);
       } catch (error) {
         setLoadError(
-          error instanceof ApiError && error.message
-            ? error.message
-            : t("hr_management.attendance_schedule.error_load"),
+          t(
+            errorI18nKeyOf(
+              error,
+              "hr_management.attendance_schedule.error_load",
+            ),
+          ),
         );
         setCalendar(null);
       } finally {
@@ -142,7 +155,16 @@ const SchedulePageBody: FC = () => {
         { method: "PUT", body: JSON.stringify(update) },
       );
       const cell = response.payload;
-      if (!cell) throw new ApiError("Empty payload", 200);
+
+      /**
+       * Info: (20260814 - Julian) 2xx 卻沒有 payload 是伺服器違約，使用者無從理解也無從處置，
+       * 一律走通用訊息。原本這裡丟 `new ApiError("Empty payload", 200)`，而下面的 catch
+       * 只要拿得到 message 就直接顯示 —— 那個英文字串會出現在畫面上。
+       */
+      if (!cell) {
+        setSaveError(t("hr_management.attendance_schedule.error_save"));
+        return;
+      }
 
       /**
        * Info: (20260813 - Julian) 只換那一格，不重抓整個月——A8 回的就是最新
@@ -159,9 +181,13 @@ const SchedulePageBody: FC = () => {
       setSelected((current) => (current ? { ...current, cell } : current));
     } catch (error) {
       setSaveError(
-        error instanceof ApiError && error.message
-          ? error.message
-          : t("hr_management.attendance_schedule.error_save"),
+        t(
+          errorI18nKeyOf(
+            error,
+            "hr_management.attendance_schedule.error_save",
+            SAVE_ERROR_I18N_KEY,
+          ),
+        ),
       );
     } finally {
       setIsSaving(false);

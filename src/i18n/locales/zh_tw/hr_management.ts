@@ -680,6 +680,8 @@ export const hrManagement = {
     loading: "載入中…",
     error_load: "無法載入排班資料，請稍後再試",
     error_save: "排班儲存失敗，請稍後再試",
+    error_save_conflict: "這一天剛剛被其他人改過，請重新整理後再試",
+    error_save_invalid_day: "上班日必須指定班別，休假日則不能有班別",
     empty: "此部門在本月沒有員工",
     saving: "儲存中…",
     col_employee: "員工",
@@ -721,5 +723,15 @@ export const hrManagement = {
     passkey_unavailable:
       "這個環境無法使用 Passkey。Passkey 只在 HTTPS（或 localhost）安全連線下運作，請改用正式網址開啟本頁。",
     hint: "登入的 Google 帳號必須是已建檔的公司信箱 —— 不在名冊上的人打不了這個工地的卡。若登入後顯示「尚未對應到員工檔」，請聯繫人事確認信箱。",
+  },
+  // Info: (20260814 - Julian) 假別名稱，對應 `LEAVE_TYPE_I18N_KEY`。用勞基法的正式用語，不用口語簡稱
+  leave: {
+    type_annual: "特別休假",
+    type_personal: "事假",
+    type_sick: "病假",
+    type_official: "公假",
+    type_marriage: "婚假",
+    type_bereavement: "喪假",
+    type_other: "其他",
   },
 };

@@ -21,7 +21,8 @@ import {
   formatMinuteOfDay,
   isoDateTimeLabel,
 } from "@/lib/utils/attendance_format";
-import { ApiError, requestFile } from "@/lib/utils/request";
+import { errorI18nKeyOf } from "@/lib/utils/attendance_error_message";
+import { requestFile } from "@/lib/utils/request";
 import { usePresenceFeed } from "@/hooks/use_presence_feed";
 import {
   IPresenceExpectedAbsentee,
@@ -131,9 +132,12 @@ const PresencePageBody: FC = () => {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       setExportError(
-        error instanceof ApiError && error.message
-          ? error.message
-          : t("hr_management.attendance_presence.error_export"),
+        t(
+          errorI18nKeyOf(
+            error,
+            "hr_management.attendance_presence.error_export",
+          ),
+        ),
       );
     } finally {
       setIsExporting(false);
