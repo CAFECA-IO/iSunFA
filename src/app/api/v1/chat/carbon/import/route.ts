@@ -223,7 +223,7 @@ export async function POST(request: NextRequest) {
     // Info: (20260730 - Tzuhan) 實測 64 頁報告一次匯入原本耗掉約 44 萬 input token,後段章節因額度耗盡連請求都發不出去。
     const scopedSource =
       fromPage !== null && toPage !== null
-        ? service.scopeSourceToPages(source, fromPage, toPage)
+        ? await service.scopeSourceToPages(source, fromPage, toPage)
         : source;
 
     /**

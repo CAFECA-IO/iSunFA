@@ -26,6 +26,7 @@ import { PdfTextLayerDecisionEnum } from "@/constants/pdf_text_layer";
 import { ensureTableDivider } from "@/lib/utils/markdown_table_divider";
 import { joinWrappedTableRows } from "@/lib/utils/markdown_table_rows";
 import { extractPagesAsPdf } from "@/lib/utils/pdf_page_extract";
+import { narrowVisionPagesToRange } from "@/lib/utils/pdf_vision_scope";
 import { CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES } from "@/constants/carbon_chatbot";
 import {
   LLM_REPORT_IMPORT_TIMEOUT_MS,
@@ -572,11 +573,11 @@ export class ReportImportService {
    * 切片本身是純函數(slicePagesForRange),此處只負責記錄實際生效範圍與退回情況 ——
    * 成本與品質的分水嶺必須看得到,否則無從判斷索引是否可靠。
    */
-  scopeSourceToPages(
+  async scopeSourceToPages(
     source: IReportImportSource,
     fromPage: number,
     toPage: number,
-  ): IReportImportSource {
+  ): Promise<IReportImportSource> {
     if (!source.isText) return source;
     const slice = slicePagesForRange(source.data, fromPage, toPage);
     logger.info("report import page slice", {
@@ -587,7 +588,41 @@ export class ReportImportService {
       chars: slice.text.length,
       originalChars: source.data.length,
     });
-    return { ...source, data: slice.text };
+
+    const { visionPages, ...rest } = source;
+    const scoped: IReportImportSource = { ...rest, data: slice.text };
+    if (!visionPages) return scoped;
+
+    /**
+     * Info: (20260814 - Emily) 影像也要跟著裁,原本只裁文字
+     * (`data/issue_drafts/open/25_image_only_sections.md` 的後續)。
+     *
+     * 原本 `return { ...source, data: slice.text }` 把 `visionPages` 原封不動帶過去,
+     * 於是一份 64 頁的報告在 14 次逐章呼叫裡**重送同一份 p6/p7/p8 影像 14 次**,
+     * 包括文字範圍是 p38–47 的那一次 —— 而 `buildImagePagesInstruction` 會對模型說
+     * 「另附原文第 6、7、8 頁的頁面影像」,那是一句與本次範圍矛盾的指示。
+     *
+     * 2026-08-14 實測:15 次呼叫、input 約 41 萬 token,每一次的
+     * `source decision (cached)` 都印著 `visionPages:[6,7,8]`。
+     */
+    const narrowed = await narrowVisionPagesToRange(visionPages, slice.range);
+    if (narrowed.decision !== "kept") {
+      /**
+       * Info: (20260814 - Emily) 裁掉也要記一行:少了它,「這一章不需要看圖」
+       * 與「該附圖但裁不動」在現場分不出來 —— 與 `source decision (cached)`
+       * 補印 visionPages 同一個判準(`open/29`)。
+       */
+      logger.info("report import vision pages scoped", {
+        fileName: source.name,
+        applied: slice.range,
+        decision: narrowed.decision,
+        had: narrowed.had,
+        kept: narrowed.visionPages?.pages ?? [],
+      });
+    }
+    return narrowed.visionPages
+      ? { ...scoped, visionPages: narrowed.visionPages }
+      : scoped;
   }
 
   /**
