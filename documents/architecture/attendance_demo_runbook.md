@@ -1,6 +1,7 @@
 # 🎯 簽到系統 Demo 執行手冊 (Demo Runbook)
 
-> **Date**: 2026-08-13　**Author**: Julian　**Version**: 2.6（全程手機演示；P2 改用「真的走出去」）
+> **Author**: Julian　**Last updated**: 2026-08-14
+> **演示形式**：**全程手機**（兩支）。P2 靠實地走出圍欄，不靠任何座標偽造工具。
 > **相關**: `attendance_demo_plan.md`（做了什麼、為什麼）｜`attendance_demo_mock_data.md`（資料長什麼樣）
 > **本文件**：**怎麼跑、會出什麼錯、出錯怎麼辦**
 >
@@ -8,8 +9,17 @@
 
 > ### 一句話的心法
 >
-> **這場 demo 的技術風險幾乎全部集中在「定位」與「網路」兩件事上，而它們都無法在台上修。**
-> 因此本手冊的重量放在**事前校準**（§2）與**備援分級**（§8），不是台上的臨場反應。
+> **技術風險幾乎全部集中在「定位」與「網路」，而它們都無法在台上修。**
+> 因此重量放在**事前校準**（§2）與**備援分級**（§8），不是台上的臨場反應。
+
+> ### ⚠️ 兩件會讓整場演不成、而且只能事前處理的事
+>
+> 1. **手機連得到 demo 站台**（計畫書 §10.1）。`NEXT_PUBLIC_APP_URL` 若還是
+>    `https://isunfa.localhost`，手機解析不到 —— 而定位、Google 登入、Passkey
+>    三者都要求安全來源。要嘛隧道、要嘛區網 IP + 憑證，**T−5 就要定案**。
+> 2. **演示日期綁在 seed 的常數上**。全文以 **2026-08-13（週四）14:00** 為演示當日，
+>    而 `seed_attendance_demo.ts` 是寫死日期的（`DEMO_DATE` 等六個常數）。
+>    **改期就要一起平移**，否則現場頁的「今日」是空的。清單見計畫書檔頭。
 
 ---
 
@@ -99,45 +109,6 @@
 | `DEMO_SITE_A_LAT` / `_LNG` | `.env` | seed 中止（刻意設計）|
 | `NEXT_PUBLIC_MAPTILER_KEY` | `.env` | **打卡頁與現場頁**的地圖各換成一行說明，**其餘功能不受影響**（刻意設計，見 §7）。金鑰**錯的或被網域限制擋住**也是同一條路徑 —— 前端會先問一次 style.json，401/403 就直接降級，不會留下一張沒有街道的空白圖 |
 
-### 3.2 把 Google 憑證寫進系統設定（`/admin/settings`）
-
-**這是唯一的路徑。** `.env` 也讀得到這兩個值，但那是「DB 從沒被用過」時的 fallback ——
-一旦 DB 有了設定，env 就再也不會被看一眼（讀取優先序：**DB 已驗簽 > env > 程式碼保底值**，ADR 017）。
-把憑證同時放兩處只會製造「改了 env 卻沒有生效」這種最難查的問題。
-
-**前置條件**：SUPER_ADMIN 的 **passkey 實體裝置**在手上。託管帳號簽不了 ——
-`custodial_signing.service.ts` 對 `ADMIN_ACTION` 用途的 challenge 是硬拒絕的。
-
-**步驟**
-
-1. 以 SUPER_ADMIN 登入 → `/admin/settings`
-2. **等頁面把現有值全部載出來再動手**（理由見下方陷阱 1）
-3. 在 `THIRD_PARTY_LOGIN` 群組填入 `GOOGLE_OAUTH_CLIENT_ID` 與 `GOOGLE_OAUTH_CLIENT_SECRET`
-4. 按「簽章並儲存」→ 通過 passkey 驗證
-5. **驗收**：該列的來源標示變成 **DB**；打卡頁登出後看得到 Google 按鈕
-
-#### 三個會咬人的地方
-
-| # | 陷阱 | 後果 |
-|---|---|---|
-| 1 | **這是全量取代，不是差異更新** | 簽的是「整組設定的最終狀態」的 digest。2026-08-10 發生過一次真實事故：**一張還沒載入完的空白設定頁，把既有的 Google OAuth 與 `LLM_MODEL` 整組覆蓋掉**。`system_setting_write_guard.test.ts` 就是為它寫的 |
-| 2 | **半套的寫入比不寫更糟** | DB 有資料但驗簽不過 → 快照 `UNTRUSTED` → `get()` **直接 throw 且不退回 env**（刻意的防回滾設計）。症狀是登入卡顯示「無法確認可用的登入方式」，而且此時 `.env` 裡放什麼都救不了 |
-| 3 | **只放在 `.env` 的 secret 不在簽章覆蓋範圍** | 設定頁會對這種欄位顯示「env-only」警告。它能用，但沒有完整性保證 |
-
-> **不要在演示前一晚第一次嘗試這條路。** 陷阱 2 的失敗狀態會讓登入完全不可用，
-> 而唯一的復原方式是把 DB 的設定重新簽對 —— 那需要 passkey 與時間。
-
-### 3.3 這些留在 `.env`，而且搬不了
-
-| 設定 | 為什麼不能進 DB |
-|---|---|
-| `NEXT_PUBLIC_*`（`APP_URL`、`MAPTILER_KEY`）| **build-time 內聯**進前端 bundle，執行期才讀的 DB 來不及。**改完一定要重啟 dev server** |
-| `HR_PII_KEY_V1` / `HR_PII_BLIND_INDEX_PEPPER` | 它們保護的是 **DB 欄位內容**。放進被自己保護的東西裡面，等於沒有保護（ADR 018 §5，與 `SECRET_VAULT_MASTER_KEY` 同理）|
-| `DEMO_SITE_A_LAT` / `_LNG`、`DEMO_EMAIL_EMP005` / `_EMP006` | 是 **seed 腳本的輸入參數**，不是 `SystemSettingKey`。它們在 seed 執行的那一刻就用完了 |
-
-**需要對外連線**：只有 MapTiler（底圖），而地圖掛掉不影響任何功能（§7）。
-**備援：手機熱點** —— 最便宜也最有效的一招，但要事先確認熱點也連得上 demo 站台。
-
 ### 3.1 登入身分與員工檔的綁定
 
 **Google 首登會自動綁定，不需要任何人工步驟。**
@@ -177,6 +148,46 @@ npx tsx scripts/seed/link_employee_user.ts --unlink --employee-no=EMP005 --commi
 > 走 Google 自動綁定的話這不是問題（下次登入會重新綁上），
 > 但如果你用過 `--commit` 手動綁定，重跑 seed 之後要再綁一次。
 
+### 3.2 把 Google 憑證寫進系統設定（`/admin/settings`）
+
+**這是唯一的路徑。** `.env` 也讀得到這兩個值，但那是「DB 從沒被用過」時的 fallback ——
+一旦 DB 有了設定，env 就再也不會被看一眼（讀取優先序：**DB 已驗簽 > env > 程式碼保底值**，ADR 017）。
+把憑證同時放兩處只會製造「改了 env 卻沒有生效」這種最難查的問題。
+
+**前置條件**：SUPER_ADMIN 的 **passkey 實體裝置**在手上。託管帳號簽不了 ——
+`custodial_signing.service.ts` 對 `ADMIN_ACTION` 用途的 challenge 是硬拒絕的。
+
+**步驟**
+
+1. 以 SUPER_ADMIN 登入 → `/admin/settings`
+2. **等頁面把現有值全部載出來再動手**（理由見下方陷阱 1）
+3. 在 `THIRD_PARTY_LOGIN` 群組填入 `GOOGLE_OAUTH_CLIENT_ID` 與 `GOOGLE_OAUTH_CLIENT_SECRET`
+4. 按「簽章並儲存」→ 通過 passkey 驗證
+5. **驗收**：該列的來源標示變成 **DB**；打卡頁登出後看得到 Google 按鈕
+
+#### 三個會咬人的地方
+
+| # | 陷阱 | 後果 |
+|---|---|---|
+| 1 | **這是全量取代，不是差異更新** | 簽的是「整組設定的最終狀態」的 digest。2026-08-10 發生過一次真實事故：**一張還沒載入完的空白設定頁，把既有的 Google OAuth 與 `LLM_MODEL` 整組覆蓋掉**。`system_setting_write_guard.test.ts` 就是為它寫的 |
+| 2 | **半套的寫入比不寫更糟** | DB 有資料但驗簽不過 → 快照 `UNTRUSTED` → `get()` **直接 throw 且不退回 env**（刻意的防回滾設計）。症狀是登入卡顯示「無法確認可用的登入方式」，而且此時 `.env` 裡放什麼都救不了 |
+| 3 | **只放在 `.env` 的 secret 不在簽章覆蓋範圍** | 設定頁會對這種欄位顯示「env-only」警告。它能用，但沒有完整性保證 |
+
+> **不要在演示前一晚第一次嘗試這條路。** 陷阱 2 的失敗狀態會讓登入完全不可用，
+> 而唯一的復原方式是把 DB 的設定重新簽對 —— 那需要 passkey 與時間。
+
+### 3.3 這些留在 `.env`，而且搬不了
+
+| 設定 | 為什麼不能進 DB |
+|---|---|
+| `NEXT_PUBLIC_*`（`APP_URL`、`MAPTILER_KEY`）| **build-time 內聯**進前端 bundle，執行期才讀的 DB 來不及。**改完一定要重啟 dev server** |
+| `HR_PII_KEY_V1` / `HR_PII_BLIND_INDEX_PEPPER` | 它們保護的是 **DB 欄位內容**。放進被自己保護的東西裡面，等於沒有保護（ADR 018 §5，與 `SECRET_VAULT_MASTER_KEY` 同理）|
+| `DEMO_SITE_A_LAT` / `_LNG`、`DEMO_EMAIL_EMP005` / `_EMP006` | 是 **seed 腳本的輸入參數**，不是 `SystemSettingKey`。它們在 seed 執行的那一刻就用完了 |
+
+**需要對外連線**：`accounts.google.com`、`oauth2.googleapis.com`、`www.googleapis.com`（JWKS 驗簽）、
+MapTiler（底圖，掛掉不影響任何功能）。
+**備援：手機熱點** —— 最便宜也最有效的一招，但要事先確認熱點也連得上 demo 站台。
+
 ### 三個最難診斷的症狀
 
 | 症狀 | 為什麼難 | 判別方式 |
@@ -184,6 +195,8 @@ npx tsx scripts/seed/link_employee_user.ts --unlink --employee-no=EMP005 --commi
 | **打卡回 500** | 錯誤訊息不會說是金鑰問題 | 看 server log 有沒有 `HrPiiKeyError`。**無法在台上修** |
 | **一直「定位中」** | 沒有錯誤、沒有逾時提示 | 先看網址列是不是 `https://`；再看有沒有出現權限詢問 |
 | **登入到一半失敗** | 看起來像帳號問題，其實是網路 | 會場擋 `www.googleapis.com` 時，前面的授權都會成功，只有最後驗簽失敗。切**手機熱點**重來 |
+| **地圖只剩一片底色、連圍欄圈也沒有** | 看起來像「還在載入」，沒有任何錯誤訊息 | 若 `<Marker>`（星星與藍點）看得到、其餘都不見，那是 **maplibre-gl 被升到 v6**（計畫書 §5 第 11 條）。`npm ls maplibre-gl` 必須是 5.x |
+| **改了程式碼但畫面完全沒變** | 沒有錯誤，容易誤判成功能沒做出來 | 比對 `.next/BUILD_ID` 與原始檔的 mtime；**重啟 dev server**（計畫書 §5 第 13 條）|
 
 ---
 
@@ -373,7 +386,7 @@ npx tsx scripts/seed/link_employee_user.ts --unlink --employee-no=EMP005 --commi
 
 **T+1**
 
-- [ ] 處理剩下的 `Deprecated:` 標記：`DEMO_GEOFENCE_RADIUS_METERS`、`DEMO_ACCOUNT_BOOK_ID`、CSV 欄位標題（手動座標路徑已於 2026-08-13 移除）
+- [ ] 處理剩下的 `Deprecated:` 標記：`DEMO_GEOFENCE_RADIUS_METERS`、`DEMO_ACCOUNT_BOOK_ID`、CSV 欄位標題（手動座標路徑已移除）
 - [ ] 若要延續為正式開發，**第一個 sprint 是權限矩陣**（計畫書 §7.3 第 1 順位）—— demo 沒有權限控制，登入者看得到全帳本名單、也改得了任何人的班
 - [ ] demo 資料庫**不得**匯入任何真實員工個資；若已有真人 email，評估是否清除
 - [ ] 若 demo 資料庫可能留作測試環境，**PII 金鑰需重新產生並納入正式的密鑰管理**
@@ -413,4 +426,4 @@ npx tsx scripts/seed/link_employee_user.ts --unlink --employee-no=EMP005 --commi
 
 ---
 
-> **相關文件**：`attendance_demo_plan.md`（v3.1）｜`attendance_demo_mock_data.md`（v2.1）｜`time_attendance_module_plan.md`（母文件 v1.3）
+> **相關文件**：`attendance_demo_plan.md`｜`attendance_demo_mock_data.md`｜`time_attendance_module_plan.md`（母文件 v1.3）
