@@ -15,6 +15,7 @@ import {
   ArticulationViolationReasonEnum,
   ArticulationWarningReasonEnum,
 } from "@/constants/carbon_articulation";
+import type { ICarbonReportIdentity } from "@/lib/utils/carbon_report_identity";
 
 export enum ChatRoleEnum {
   USER = "user",
@@ -124,6 +125,19 @@ export interface IReportData {
    * （見 `resolveReportName`）。
    */
   reportName?: string;
+  /**
+   * Info: (20260814 - Emily) 查證用的四個識別欄位
+   * (`data/issue_drafts/open/24_report_identity_fields.md`)。
+   *
+   * 盤查年度／製作單位／查證單位／更新日期。與 `reportName` 一樣是**文件的中繼資料**
+   * 而不是內容 —— ADR 014 要求 `content` 逐字照抄原文，這四項是我們加上去的，
+   * 不能住在那裡面。
+   *
+   * 為什麼不從內容抽:查證單位原文裡根本沒有；盤查年度雖然 2.1 節寫了涵蓋期間，
+   * 但抽錯的代價是**封面印錯年度**，而那會被查證單位當成事實。
+   * 更新日期現在印的是「下載當下」，需要的是定稿日 —— 兩者不是同一件事。
+   */
+  identity?: ICarbonReportIdentity;
   /**
    * Info: (20260716 - Tzuhan) 報告全文的權威來源(使用者所見即所存,零改動保證):
    * 存在時預覽直接渲染本欄,不重組大綱骨架;paragraphs 降為 derived view(進度/chip/查核)。

@@ -23,11 +23,18 @@ import {
   stripLeadingSectionHeading,
 } from "@/constants/carbon_report_outline";
 import {
+  buildIdentityRows,
+  missingIdentityFields,
+  type ICarbonReportIdentity,
+} from "@/lib/utils/carbon_report_identity";
+import {
+  buildDefaultReportName,
   resolveReportName,
   stripLeadingDocumentTitle,
 } from "@/lib/utils/carbon_report_title";
 import { CarbonDataBadgeStateEnum } from "@/lib/carbon_report_table.builder";
 import { ReportToolbar } from "@/components/carbon_chatbot/report_toolbar";
+import { ReportIdentityFields } from "@/components/carbon_chatbot/report_identity_fields";
 import { OutlineRail } from "@/components/carbon_chatbot/outline_rail";
 import { OutlineDrawer } from "@/components/carbon_chatbot/outline_drawer";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -56,6 +63,11 @@ interface ICarbonReportPreviewProps {
   onImportReport?: (file: File) => void;
   // Info: (20260716 - Tzuhan) 報告檔名改名(透傳工具列)
   onRenameDocument?: (documentName: string) => void;
+  /**
+   * Info: (20260814 - Emily) 查證識別欄位逐格寫回（issue 24）。
+   * 省略即不顯示那塊面板 —— 唯讀或尚未支援的使用端不該看到一個填不了的表單。
+   */
+  onUpdateIdentity?: (patch: ICarbonReportIdentity) => void;
   // Info: (20260720 - Tzuhan) #23 數據段落勾稽三態(透傳 OutlineDrawer → OutlineTree)
   dataBadgeState?: CarbonDataBadgeStateEnum;
 }
@@ -139,11 +151,19 @@ export default function CarbonReportPreview({
   readOnly = false,
   onImportReport = undefined,
   onRenameDocument = undefined,
+  onUpdateIdentity = undefined,
   dataBadgeState = undefined,
 }: ICarbonReportPreviewProps) {
   const { t } = useTranslation();
   const [, setErrorModal] = useState({ isOpen: false, message: "" });
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
+  /**
+   * Info: (20260814 - Emily) 查證識別欄位面板（issue 24）。
+   *
+   * 預設收合:那四格填一次就不再動,常駐展開會永久吃掉報告的高度。
+   * 但工具列的觸發鈕會顯示「還缺幾項」,所以沒填也不會被忘記。
+   */
+  const [isIdentityOpen, setIsIdentityOpen] = useState<boolean>(false);
   const previewContainerRef = useRef<HTMLDivElement>(null);
 
   const reportData = session?.reportData;
@@ -304,13 +324,42 @@ export default function CarbonReportPreview({
    * 與目錄頁碼「找不到就留白」同一個判準:第一頁沒有標題是一眼看得出來的缺漏，
    * 而一個猜出來的名稱印在查證文件的封面上會被當成事實。
    *
-   * `buildDefaultReportName`（公司名 + 盤查年度）還沒接上來 —— 這個元件目前
-   * 拿不到帳本名稱與盤查年度，那兩個值要跟識別欄位那一塊一起做。
+   * Info: (20260814 - Emily) 退路改為「盤查年度 + 報告書」（issue 24）。
+   *
+   * 仍然**不猜公司名**：報告 1.1 節雖然寫著公司名稱，但抽錯的代價是封面印成
+   * 另一家公司。盤查年度不一樣 —— 它是**使用者自己填的**識別欄位而不是抽出來的，
+   * 拿它組名稱不算猜。年度也沒填時 `buildDefaultReportName` 回空字串，
+   * 第一頁就沒有標題，維持「留空不猜」。
    */
+  const identity = reportData?.identity;
   const reportTitle = resolveReportName({
     explicitName: reportData?.reportName,
     legacyHeading,
-    fallback: "",
+    fallback: buildDefaultReportName({
+      inventoryYear: identity?.inventoryYear,
+      suffix: t("admin_mission_board.pdf_editor.report_identity.name_suffix")!,
+    }),
+  });
+
+  /**
+   * Info: (20260814 - Emily) 四列一律都給，沒填的填「未填寫」（見 buildIdentityRows）。
+   * 文案在這裡取而不是在渲染端寫死:純函式與伺服端都不知道使用者的語言。
+   */
+  const identityRows = buildIdentityRows({
+    identity,
+    labels: {
+      inventoryYear: t(
+        "admin_mission_board.pdf_editor.report_identity.inventory_year",
+      )!,
+      preparedBy: t(
+        "admin_mission_board.pdf_editor.report_identity.prepared_by",
+      )!,
+      verifiedBy: t(
+        "admin_mission_board.pdf_editor.report_identity.verified_by",
+      )!,
+      issuedOn: t("admin_mission_board.pdf_editor.report_identity.issued_on")!,
+    },
+    placeholder: t("admin_mission_board.pdf_editor.report_identity.unfilled")!,
   });
 
   return (
@@ -328,6 +377,23 @@ export default function CarbonReportPreview({
           isDrawerOpen={isDrawerOpen}
           onToggleDrawer={() => setIsDrawerOpen((prev) => !prev)}
           saveStatus={saveStatus}
+          onToggleIdentity={
+            onUpdateIdentity && !readOnly
+              ? () => setIsIdentityOpen((prev) => !prev)
+              : undefined
+          }
+          identityMissing={missingIdentityFields(identity).length}
+          isIdentityOpen={isIdentityOpen}
+        />
+      )}
+      {/* Info: (20260814 - Emily) 面板貼在工具列下方而不是做成 modal:
+          這四項要邊看報告邊填（年度對照 2.1 節、製作單位對照 1.4 節），
+          modal 會把要對照的東西蓋掉。 */}
+      {isIdentityOpen && onUpdateIdentity && (
+        <ReportIdentityFields
+          identity={identity}
+          onChange={onUpdateIdentity}
+          readOnly={readOnly}
         />
       )}
 
@@ -380,6 +446,7 @@ export default function CarbonReportPreview({
              * 空字串代表還沒命名 —— 外殼那端不印，而不是印一個猜出來的名稱。
              */
             reportTitle={reportTitle}
+            identityRows={identityRows}
             /*
              * Info: (20260812 - Emily) 既有草稿內容裡那行 `# <會話名>` 在**渲染時**剝掉。
              * 儲存的內容不動 —— 見上方 legacyHeading 那段。

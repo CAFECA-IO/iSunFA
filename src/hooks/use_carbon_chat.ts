@@ -174,6 +174,7 @@ import {
   CARBON_REPORT_AUTOSAVE_DEBOUNCE_MS,
   CARBON_DRAFT_NOTICE_DISMISS_MS,
 } from "@/constants/carbon_chatbot";
+import type { ICarbonReportIdentity } from "@/lib/utils/carbon_report_identity";
 
 // Info: (20260714 - Tzuhan) 報告草稿保存狀態(工具列顯示;null = 尚無變更;error = 保存失敗/版本衝突)
 // Info: (20260716 - Tzuhan) #50 新增 local:未解鎖/未還原前內容僅落本機安全快取,解鎖後自動推入 DB
@@ -1773,6 +1774,37 @@ export const useCarbonChat = () => {
           [activeSessionId]: {
             ...session,
             reportData: { ...session.reportData, documentName: trimmed },
+          },
+        };
+      });
+    },
+    [activeSessionId],
+  );
+
+  /**
+   * Info: (20260814 - Emily) 查證識別欄位逐格寫回
+   * (`data/issue_drafts/open/24_report_identity_fields.md`)。
+   *
+   * 收 patch 而不是整包:四個輸入框各自 onChange,整包覆蓋的話
+   * 連續改兩格時後寫的那次會拿著舊的 state 蓋掉前一次（React 的更新是非同步的）。
+   *
+   * 不 trim、不驗格式:這幾格的內容要逐字印在查證文件上,而
+   * 「2023」與「2023 年度」都是合法的寫法。空字串照存 —— 使用者清空一格
+   * 就是要清空它,不是要退回上一個值（列印端會印「未填寫」,見 buildIdentityRows）。
+   */
+  const updateReportIdentity = useCallback(
+    (patch: ICarbonReportIdentity) => {
+      setSessionsData((prev) => {
+        const session = prev[activeSessionId];
+        if (!session?.reportData) return prev;
+        return {
+          ...prev,
+          [activeSessionId]: {
+            ...session,
+            reportData: {
+              ...session.reportData,
+              identity: { ...session.reportData.identity, ...patch },
+            },
           },
         };
       });
@@ -4861,6 +4893,7 @@ export const useCarbonChat = () => {
     // Info: (20260716 - Tzuhan) 命名:對話改名 + 報告檔名改名
     renameSession,
     renameReportDocument,
+    updateReportIdentity,
     inputValue,
     setInputValue,
     isTyping,

@@ -348,6 +348,20 @@ const printStyle = (): string => {
   }
   .doc-shell-meta .dot { color: rgb(209, 213, 219); }
   .doc-shell-meta .doc-title { margin: 4mm 0 0; font-size: 16pt; }
+  /*
+   * Info: (20260814 - Emily) 識別欄位(issue 24)。兩欄自動排,四項就是 2x2;
+   * 欄數用 auto-fit 而不是寫死 2,因為省略某一項時剩三項也要排得好看。
+   * break-inside 讓這塊不會被分頁切開 —— 識別資訊斷成兩頁沒有意義。
+   */
+  .doc-identity {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(60mm, 1fr));
+    gap: 2mm 6mm; margin: 5mm 0 0; font-size: 9pt;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .doc-identity dt {
+    color: rgb(107, 114, 128); font-size: 8pt; margin: 0 0 0.5mm;
+  }
+  .doc-identity dd { margin: 0; color: rgb(15, 23, 42); font-weight: 600; }
 
   /*
    * Info: (20260812 - Emily) 目錄。整塊自成一頁：目錄橫跨兩頁而中間夾著正文
@@ -423,6 +437,28 @@ export interface ICarbonReportShell {
   logoDataUrl?: string;
   /** Info: (20260811 - Emily) 報告標題;省略即不印(內容自己的 h1 已足夠) */
   title?: string;
+  /**
+   * Info: (20260814 - Emily) 查證用的識別欄位
+   * (`data/issue_drafts/open/24_report_identity_fields.md`)。
+   *
+   * 盤查年度／製作單位／查證單位／更新日期 —— 原始報告都有，我們都沒有。
+   * 其中查證單位**無法從內容推導**，盤查年度雖然推得出來但抽錯的代價是封面寫錯年度。
+   *
+   * ## 為什麼是 label/value 陣列而不是四個具名欄位
+   *
+   * 文案與「沒填要印什麼」都由呼叫端決定,與本檔既有的 brand／systemReport
+   * 同一個立場(見檔頭:文案由呼叫端傳入而不是在這裡寫死)。
+   * 這支不知道使用者的語言,也不該替它決定「未填寫」三個字怎麼寫。
+   *
+   * ## 為什麼沒填的欄位也要印
+   *
+   * 藏起來的話,「這一項不適用」與「我們忘了填」在紙上完全同形 ——
+   * 而讀這份文件的是查證單位。空著但看得見,才會有人去填它。
+   * 這與目錄頁碼找不到就留白、圖畫不出來也要說是同一個判準。
+   *
+   * 省略整個欄位即不印這一區(例如公開分享頁那種不需要識別資訊的場合)。
+   */
+  identity?: ReadonlyArray<{ readonly label: string; readonly value: string }>;
   /** Info: (20260812 - Emily) 目錄抬頭;省略即不印目錄 */
   tocTitle?: string;
 }
@@ -536,6 +572,28 @@ const tocSection = (
         "</nav>",
       ].join("");
 
+/**
+ * Info: (20260814 - Emily) 識別欄位那一小塊(issue 24)。
+ *
+ * 刻意**不做整頁封面**:導覽已由目錄涵蓋、識別由這塊橫幅涵蓋,
+ * 再加一頁是多一頁不是多一份資訊(票上已判定)。
+ *
+ * 用 `dl` 而不是表格:這是四組「名稱 → 值」,不是資料表。
+ * 表格會帶進框線與表頭樣式,而這裡要的是一塊安靜的識別資訊。
+ */
+const shellIdentity = (identity: ICarbonReportShell["identity"]): string =>
+  identity === undefined || identity.length === 0
+    ? ""
+    : [
+        '<dl class="doc-identity">',
+        ...identity.map(
+          (field) =>
+            `<div><dt>${escapeHtml(field.label)}</dt>` +
+            `<dd>${escapeHtml(field.value)}</dd></div>`,
+        ),
+        "</dl>",
+      ].join("");
+
 const shellHeader = (shell: ICarbonReportShell): string =>
   [
     '<header class="doc-shell-header">',
@@ -551,6 +609,7 @@ const shellHeader = (shell: ICarbonReportShell): string =>
     `<span class="tag">${escapeHtml(shell.systemReport)}</span>`,
     `<p class="line">${escapeHtml(SHELL_VENDOR)} <span class="dot">•</span> ${escapeHtml(shell.issuedAt)}</p>`,
     shell.title ? `<h1 class="doc-title">${escapeHtml(shell.title)}</h1>` : "",
+    shellIdentity(shell.identity),
     "</section>",
   ].join("");
 
