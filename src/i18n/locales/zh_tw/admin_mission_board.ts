@@ -65,6 +65,16 @@ export const adminMissionBoard = {
     brand: "陽光智能碳會計",
     internal_document: "內部文件",
     system_report: "系統報告",
+    report_identity: {
+      title: "查證識別資訊",
+      inventory_year: "盤查年度",
+      prepared_by: "製作單位",
+      verified_by: "查證單位",
+      issued_on: "更新日期",
+      unfilled: "未填寫",
+      name_suffix: "溫室氣體盤查報告書",
+      hint: "查證單位無法從報告內容推導，需人工填寫",
+    },
     footer_title: "用人工智能重塑碳會計",
     footer_text:
       "© {{year}} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal.",

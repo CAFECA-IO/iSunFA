@@ -65,6 +65,16 @@ export const adminMissionBoard = {
     brand: "阳光智能会计",
     internal_document: "内部文件",
     system_report: "系统报告",
+    report_identity: {
+      title: "核查识别信息",
+      inventory_year: "盘查年度",
+      prepared_by: "编制单位",
+      verified_by: "核查单位",
+      issued_on: "更新日期",
+      unfilled: "未填写",
+      name_suffix: "温室气体盘查报告书",
+      hint: "核查单位无法从报告内容推导，需人工填写",
+    },
     footer_title: "用人工智能重塑碳会计",
     footer_text:
       "© {{year}} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal.",

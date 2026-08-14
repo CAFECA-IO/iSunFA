@@ -262,3 +262,95 @@ describe("buildCarbonReportHtml transform ordering", () => {
     expect(html).not.toContain("<em>200</em>");
   });
 });
+
+/**
+ * Info: (20260814 - Emily) 查證用的識別欄位（issue 24）。
+ *
+ * 這一區的存在理由是「查證單位無法從內容推導」，所以它必須是外殼的一部分，
+ * 而且**沒填的欄位也要印出來** —— 藏起來的話「不適用」與「忘了填」同形。
+ */
+describe("buildCarbonReportHtml 的識別欄位", () => {
+  const shell = {
+    brand: "陽光智能碳會計",
+    internalDocument: "內部文件",
+    systemReport: "系統報告",
+    issuedAt: "2026/8/14",
+    footerTitle: "用人工智能重塑碳會計",
+    footerText: "© 2026 iSunFA.",
+  };
+
+  it("should print every field it is given, in the order given", () => {
+    const html = buildCarbonReportHtml("## 一節\n\n內容。", {
+      ...shell,
+      title: "高興昌鋼鐵股份有限公司 2023 溫室氣體盤查報告書",
+      identity: [
+        { label: "盤查年度", value: "2023" },
+        { label: "製作單位", value: "溫室氣體盤查推行委員會" },
+        { label: "查證單位", value: "亞瑞仕國際驗證股份有限公司" },
+        { label: "更新日期", value: "2026-08-14" },
+      ],
+    });
+
+    const labels = [...html.matchAll(/<dt>([^<]+)<\/dt>/g)].map((m) => m[1]);
+    expect(labels).toEqual(["盤查年度", "製作單位", "查證單位", "更新日期"]);
+    expect(html).toContain("<dd>亞瑞仕國際驗證股份有限公司</dd>");
+  });
+
+  it("should still print a field whose value is a placeholder", () => {
+    // Info: (20260814 - Emily) 這是本區最重要的一條:空著但看得見,才會有人去填
+    const html = buildCarbonReportHtml("## 一節\n\n內容。", {
+      ...shell,
+      identity: [
+        { label: "查證單位", value: "未填寫" },
+        { label: "更新日期", value: "未填寫" },
+      ],
+    });
+
+    expect(html).toContain("<dt>查證單位</dt><dd>未填寫</dd>");
+    expect([...html.matchAll(/<dt>/g)]).toHaveLength(2);
+  });
+
+  it("should omit the block entirely when identity is absent or empty", () => {
+    // Info: (20260814 - Emily) 公開分享頁那種場合不需要識別資訊
+    const absent = buildCarbonReportHtml("## 一節\n\n內容。", shell);
+    const empty = buildCarbonReportHtml("## 一節\n\n內容。", {
+      ...shell,
+      identity: [],
+    });
+
+    // Info: (20260814 - Emily) 比對元素而不是字串:`.doc-identity` 的樣式一直在
+    // <style> 裡（樣式表是靜態的），拿整份 HTML 找 "doc-identity" 會永遠命中
+    expect(absent).not.toContain('<dl class="doc-identity">');
+    expect(empty).not.toContain('<dl class="doc-identity">');
+  });
+
+  it("should escape the values, they come from user input", () => {
+    const html = buildCarbonReportHtml("## 一節\n\n內容。", {
+      ...shell,
+      identity: [
+        { label: "查證單位", value: '<img src=x onerror="alert(1)">' },
+      ],
+    });
+
+    expect(html).not.toContain("<img src=x");
+    expect(html).toContain("&lt;img src=x");
+  });
+
+  it("should sit inside the meta banner rather than on a page of its own", () => {
+    /**
+     * Info: (20260814 - Emily) 票上已判定不做整頁封面:導覽由目錄涵蓋、
+     * 識別由橫幅涵蓋,再加一頁是多一頁不是多一份資訊。
+     * 所以這一區必須在 doc-shell-meta 裡面,而且不能帶 break-after。
+     */
+    const html = buildCarbonReportHtml("## 一節\n\n內容。", {
+      ...shell,
+      identity: [{ label: "盤查年度", value: "2023" }],
+    });
+
+    const meta = html.slice(
+      html.indexOf('<section class="doc-shell-meta">'),
+      html.indexOf("</section>"),
+    );
+    expect(meta).toContain('<dl class="doc-identity">');
+  });
+});

@@ -68,6 +68,16 @@ export const adminMissionBoard = {
     brand: "iSunFA Smart Accounting",
     internal_document: "Internal Document",
     system_report: "System Report",
+    report_identity: {
+      title: "Verification details",
+      inventory_year: "Inventory year",
+      prepared_by: "Prepared by",
+      verified_by: "Verified by",
+      issued_on: "Last updated",
+      unfilled: "Not filled in",
+      name_suffix: "GHG Inventory Report",
+      hint: "The verifier cannot be derived from the report content and must be entered",
+    },
     footer_title: "Reinventing Carbon Accounting with AI",
     footer_text:
       "© {{year}} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal.",

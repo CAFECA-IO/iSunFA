@@ -371,6 +371,14 @@ interface IPdfEditorProps {
    * 而一個猜出來的名稱印在查證文件的封面上會被當成事實。
    */
   reportTitle?: string;
+  /**
+   * Info: (20260814 - Emily) 查證識別欄位，印在第一頁橫幅裡（issue 24）。
+   *
+   * 已經是 label/value 的成品而不是原始資料:文案與「沒填印什麼」都由
+   * 呼叫端決定（`buildIdentityRows`），這個元件不知道使用者的語言。
+   * 與 `shell` 那組文案同一個立場。
+   */
+  identityRows?: ReadonlyArray<{ label: string; value: string }>;
   isEmbedded?: boolean;
   value?: string;
   onChange?: (val: string) => void;
@@ -416,6 +424,7 @@ export default function PdfEditor({
   setErrorModal,
   layout = "split",
   reportTitle = "",
+  identityRows = undefined,
   isEmbedded = false,
   value = undefined,
   onChange = undefined,
@@ -747,6 +756,12 @@ export default function PdfEditor({
          * 那個 <h1 class="doc-title">，第一頁就只有品牌橫幅與目錄。
          */
         title: reportTitle || undefined,
+        /**
+         * Info: (20260814 - Emily) 一項都沒有就整區不印(公開分享頁那種場合)；
+         * 有的話一律四列,包含沒填的 —— 藏起來的話「不適用」與「忘了填」同形。
+         */
+        identity:
+          identityRows && identityRows.length > 0 ? identityRows : undefined,
       },
     });
     saveBlobAs(result.blob, fileName);

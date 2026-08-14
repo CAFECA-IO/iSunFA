@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   FileUp,
   Pencil,
+  ShieldCheck,
 } from "lucide-react";
 import { IReportProgressStats } from "@/types/carbon_chatbot.types";
 import { ReportSaveStatus } from "@/hooks/use_carbon_chat";
@@ -38,6 +39,15 @@ interface IReportToolbarProps {
   onImportReport?: (file: File) => void;
   // Info: (20260716 - Tzuhan) 報告檔名改名(隨草稿持久化,下載檔名跟隨);唯讀時隱藏
   onRenameDocument?: (documentName: string) => void;
+  /**
+   * Info: (20260814 - Emily) 查證識別欄位面板的開關（issue 24）。
+   * 面板本身在預覽層（`carbon_report_preview`），這裡只放觸發鈕 ——
+   * 工具列是一列，塞不進四個輸入框。
+   */
+  onToggleIdentity?: () => void;
+  /** Info: (20260814 - Emily) 還沒填幾項;0 即不顯示紅點 */
+  identityMissing?: number;
+  isIdentityOpen?: boolean;
 }
 
 export function ReportToolbar({
@@ -52,6 +62,9 @@ export function ReportToolbar({
   readOnly = false,
   onImportReport = undefined,
   onRenameDocument = undefined,
+  onToggleIdentity = undefined,
+  identityMissing = 0,
+  isIdentityOpen = false,
 }: IReportToolbarProps) {
   const { t } = useTranslation();
   const importInputRef = useRef<HTMLInputElement>(null);
@@ -113,6 +126,27 @@ export function ReportToolbar({
           className="shrink-0 rounded p-0.5 text-gray-300 transition-colors hover:text-[#ff5a00]"
         >
           <Pencil size={12} />
+        </button>
+      )}
+      {/* Info: (20260814 - Emily) 查證識別欄位（issue 24）。未填的項數用數字而不是紅點:
+          「還缺 4 項」與「還缺 1 項」的急迫性不同,一個點看不出來。 */}
+      {onToggleIdentity && (
+        <button
+          type="button"
+          aria-label={t("admin_mission_board.pdf_editor.report_identity.title")}
+          title={t("admin_mission_board.pdf_editor.report_identity.title")}
+          aria-expanded={isIdentityOpen}
+          onClick={onToggleIdentity}
+          className={`flex shrink-0 items-center gap-1 rounded px-1 py-0.5 text-[11px] font-bold transition-colors ${
+            isIdentityOpen
+              ? "bg-orange-100 text-[#ff5a00]"
+              : "text-gray-300 hover:text-[#ff5a00]"
+          }`}
+        >
+          <ShieldCheck size={12} />
+          {identityMissing > 0 && (
+            <span className="text-[#ff5a00]">{identityMissing}</span>
+          )}
         </button>
       )}
       {status && (
