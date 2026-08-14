@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "@jest/globals";
 import { ShiftPattern } from "@/generated";
 import {
   LeaveRecallDecision,
+  LeaveRecallResolutionOutcome,
   LeaveRecallStatus,
   LeaveType,
 } from "@/constants/leave";
@@ -12,6 +13,8 @@ import {
   ILeaveDayRecord,
   ILeaveRecallProjection,
   ILeaveRecallRecord,
+  ILeaveRecallResolution,
+  ILeaveRecallResolveParams,
   ILeaveRepository,
 } from "@/repositories/leave.repo";
 import {
@@ -122,6 +125,12 @@ class FakeLeaveRepo implements ILeaveRepository {
 
   public recall: ILeaveRecallRecord | null = recallRecord();
 
+  // Info: (20260814 - Julian) 模擬附條件更新沒搶到 PENDING（另一個分頁先回應了）
+  public loseRace = false;
+
+  // Info: (20260814 - Julian) 模擬 repo 丟出 Prisma 錯誤，用純物件是因為 service 只看 code
+  public throwOnResolve: { code: string } | null = null;
+
   async findActiveLeaveDays() {
     return this.day ? [this.day] : [];
   }
@@ -148,23 +157,29 @@ class FakeLeaveRepo implements ILeaveRepository {
     return this.recall ? [this.recall] : [];
   }
 
-  async resolveRecall(params: {
-    recallId: string;
-    decision: LeaveRecallDecision;
-    note?: string;
-    respondedAt: Date;
-    projection?: ILeaveRecallProjection;
-  }) {
+  async resolveRecall(
+    params: ILeaveRecallResolveParams,
+  ): Promise<ILeaveRecallResolution> {
+    if (this.throwOnResolve) throw this.throwOnResolve;
+    if (this.loseRace) {
+      return { outcome: LeaveRecallResolutionOutcome.ALREADY_ANSWERED };
+    }
     this.resolved.push({
       decision: params.decision,
-      projection: params.projection,
-    });
-    return recallRecord({
-      status:
+      projection:
         params.decision === LeaveRecallDecision.ACCEPT
-          ? LeaveRecallStatus.ACCEPTED
-          : LeaveRecallStatus.DECLINED,
+          ? params.projection
+          : undefined,
     });
+    return {
+      outcome: LeaveRecallResolutionOutcome.RESOLVED,
+      recall: recallRecord({
+        status:
+          params.decision === LeaveRecallDecision.ACCEPT
+            ? LeaveRecallStatus.ACCEPTED
+            : LeaveRecallStatus.DECLINED,
+      }),
+    };
   }
 }
 
@@ -381,5 +396,94 @@ describe("回應徵詢（A14）", () => {
     await expect(respond(LeaveRecallDecision.ACCEPT)).rejects.toBeInstanceOf(
       AppError,
     );
+  });
+});
+
+/**
+ * Info: (20260814 - Julian) 型別層的護欄：`@ts-expect-error` 在「這行其實編得過」時反而會報錯，
+ * 所以這兩條是由 tsc 執行的斷言，不是由 jest。哪天有人把 projection 改回選擇性，這裡會先紅。
+ */
+describe("同意徵詢必須帶排班投影（型別層）", () => {
+  it("ACCEPT 少了 projection 編不過；DECLINE 多給 projection 也編不過", () => {
+    const base = { recallId: "recall-1", respondedAt: NOW };
+
+    // @ts-expect-error Info: (20260814 - Julian) ACCEPT 缺 projection
+    const missing: ILeaveRecallResolveParams = {
+      ...base,
+      decision: LeaveRecallDecision.ACCEPT,
+    };
+
+    const extra: ILeaveRecallResolveParams = {
+      ...base,
+      decision: LeaveRecallDecision.DECLINE,
+      // @ts-expect-error Info: (20260814 - Julian) DECLINE 沒有 projection 這個欄位
+      projection: {} as ILeaveRecallProjection,
+    };
+
+    expect([missing, extra]).toHaveLength(2);
+  });
+});
+
+/**
+ * Info: (20260814 - Julian) 兩個分頁同時回應同一張徵詢。
+ * service 的 `status === PENDING` 檢查讀的是查詢當下的快照，兩邊都會看到 PENDING，
+ * 真正決勝的是 repo 的附條件更新——輸的那邊必須拿到 409，且一格排班都不能動。
+ */
+describe("回應徵詢的併發（A14）", () => {
+  let leaves: FakeLeaveRepo;
+  let service: LeaveService;
+
+  beforeEach(() => {
+    leaves = new FakeLeaveRepo();
+    service = new LeaveService(
+      leaves,
+      new FakeEmployeeRepo(),
+      new FakeShiftPatternRepo(),
+      TZ,
+    );
+  });
+
+  const respond = (decision: LeaveRecallDecision) =>
+    service.respondRecall({
+      accountBookId: ACCOUNT_BOOK_ID,
+      recallId: "recall-1",
+      employeeId: "emp-006",
+      employeeNo: "EMP006",
+      decision,
+      respondedAt: NOW,
+    });
+
+  it("沒搶到 PENDING 時回 409，而不是把第二個答案寫進去", async () => {
+    leaves.loseRace = true;
+
+    await expect(respond(LeaveRecallDecision.DECLINE)).rejects.toMatchObject({
+      apiCode: API_ERRORS.CF_LEAVE_RECALL_ANSWERED.code,
+    });
+  });
+
+  it("沒搶到 PENDING 時不投影排班", async () => {
+    leaves.loseRace = true;
+
+    await expect(respond(LeaveRecallDecision.ACCEPT)).rejects.toBeInstanceOf(
+      AppError,
+    );
+    expect(leaves.resolved).toHaveLength(0);
+  });
+
+  // Info: (20260814 - Julian) P2002 已不再代表「徵詢被搶走」，那條路改由回傳值表達
+  it("排班撞唯一鍵時回排班衝突，不是徵詢已回應", async () => {
+    leaves.throwOnResolve = { code: "P2002" };
+
+    await expect(respond(LeaveRecallDecision.ACCEPT)).rejects.toMatchObject({
+      apiCode: API_ERRORS.CF_SCHEDULE_DAY_CONFLICT.code,
+    });
+  });
+
+  it("repo 丟出未知的 Prisma 錯誤時原樣拋回，不冒充業務錯誤", async () => {
+    leaves.throwOnResolve = { code: "P1001" };
+
+    await expect(
+      respond(LeaveRecallDecision.ACCEPT),
+    ).rejects.not.toBeInstanceOf(AppError);
   });
 });

@@ -1,9 +1,11 @@
 import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { logger } from "@/lib/utils/logger";
+import { PRISMA_ERROR, rethrowAsAppError } from "@/lib/utils/prisma_error";
 import { DEMO_TIME_ZONE } from "@/constants/attendance";
 import {
   LeaveRecallDecision,
+  LeaveRecallResolutionOutcome,
   LeaveRecallStatus,
   LeaveType,
 } from "@/constants/leave";
@@ -11,6 +13,7 @@ import { toZonedParts } from "@/lib/utils/attendance_time";
 import {
   ILeaveDayRecord,
   ILeaveRecallRecord,
+  ILeaveRecallResolveParams,
   ILeaveRepository,
   leaveRepo,
 } from "@/repositories/leave.repo";
@@ -124,12 +127,26 @@ export class LeaveService {
     );
     if (!pattern) throw new AppError(API_ERRORS.NF_SHIFT_PATTERN);
 
-    const created = await this.leaves.createRecall({
-      leaveDayId,
-      shiftPatternId,
-      requestedByEmployeeId: actorEmployeeId,
-      reason,
-    });
+    /**
+     * Info: (20260814 - Julian) 上面那次預先查詢只負責產生看得懂的 409；
+     * **唯一保證在 `pendingLeaveDayId` 的唯一鍵上**。查與寫之間隔著三次 await，
+     * 兩位主管同時對同一天發起時，第二個會在這裡撞 P2002。
+     */
+    let created;
+    try {
+      created = await this.leaves.createRecall({
+        leaveDayId,
+        shiftPatternId,
+        requestedByEmployeeId: actorEmployeeId,
+        reason,
+      });
+    } catch (error) {
+      rethrowAsAppError(error, {
+        [PRISMA_ERROR.UNIQUE_CONSTRAINT]: API_ERRORS.CF_LEAVE_RECALL_PENDING,
+        // Info: (20260814 - Julian) 查到之後那筆請假日被撤銷了，對呼叫端而言就是不存在
+        [PRISMA_ERROR.FOREIGN_KEY]: API_ERRORS.NF_LEAVE_DAY,
+      });
+    }
 
     logger.info(
       `[attendance] leave recall requested by ${actorEmployeeNo}: ${leaveDay.leaveRequest.employee.employeeNo} ${leaveDay.workDate}`,
@@ -178,32 +195,49 @@ export class LeaveService {
     }
 
     // Info: (20260813 - Julian) 同意與婉拒都是終局，不可覆寫——允許改答案會讓已經動過的排班與答案永久不一致
+    // Info: (20260814 - Julian) 這裡只是快路徑；真正的把關在 repo 的附條件更新，不可只留這一道
     if (String(recall.status) !== LeaveRecallStatus.PENDING) {
       throw new AppError(API_ERRORS.CF_LEAVE_RECALL_ANSWERED);
     }
 
-    const resolved = await this.leaves.resolveRecall({
-      recallId,
-      decision,
-      note,
-      respondedAt,
-      projection:
-        decision === LeaveRecallDecision.ACCEPT
-          ? {
+    // Info: (20260814 - Julian) 兩支各自完整，不是「共用參數 + 選擇性 projection」——repo 的型別不接受後者
+    const resolveParams: ILeaveRecallResolveParams =
+      decision === LeaveRecallDecision.ACCEPT
+        ? {
+            recallId,
+            note,
+            respondedAt,
+            decision,
+            projection: {
               leaveDayId: recall.leaveDayId,
               accountBookId,
               employeeId,
               workDate: recall.leaveDay.workDate,
               shiftPatternId: recall.shiftPatternId,
-            }
-          : undefined,
-    });
+            },
+          }
+        : { recallId, note, respondedAt, decision };
+
+    let resolution;
+    try {
+      resolution = await this.leaves.resolveRecall(resolveParams);
+    } catch (error) {
+      // Info: (20260814 - Julian) 徵詢被搶走已由 repo 用回傳值表達，這裡剩下的 P2002 只可能來自排班那張表
+      rethrowAsAppError(error, {
+        [PRISMA_ERROR.UNIQUE_CONSTRAINT]: API_ERRORS.CF_SCHEDULE_DAY_CONFLICT,
+        [PRISMA_ERROR.RECORD_NOT_FOUND]: API_ERRORS.NF_LEAVE_RECALL,
+      });
+    }
+
+    if (resolution.outcome === LeaveRecallResolutionOutcome.ALREADY_ANSWERED) {
+      throw new AppError(API_ERRORS.CF_LEAVE_RECALL_ANSWERED);
+    }
 
     logger.info(
       `[attendance] leave recall ${decision} by ${employeeNo}: ${recall.leaveDay.workDate}`,
     );
 
-    return toRecallView(resolved);
+    return toRecallView(resolution.recall);
   }
 }
 

@@ -1193,6 +1193,19 @@ export const API_ERRORS = {
     status: ApiCode.FORBIDDEN,
   } as IErrorDef,
 
+  /**
+   * Info: (20260814 - Julian) 同一人同一天的排班被並行寫入。
+   *
+   * `EmployeeShiftDay` 的 `@@unique([accountBookId, employeeId, workDate])` 在
+   * Prisma upsert 的競態下會撞 P2002。回 409 讓呼叫端知道「重試一次就好」——
+   * 轉成 500 會讓人以為資料庫壞了。
+   */
+  CF_SCHEDULE_DAY_CONFLICT: {
+    code: "CF000008",
+    message: "This schedule day was modified concurrently; retry",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+
   // Info: (20260813 - Julian) 只有主管（任一部門的 managerId）能發起徵詢或看地圖
   FO_ATTENDANCE_SUPERVISOR_ONLY: {
     code: "FO000011",

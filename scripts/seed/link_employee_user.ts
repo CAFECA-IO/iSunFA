@@ -167,7 +167,6 @@ async function autoLink(commit: boolean): Promise<void> {
   const pending = employees.filter((employee) => !employee.userId);
   let linked = 0;
 
-  // eslint-disable-next-line no-restricted-syntax
   for (const employee of pending) {
     const matches = unbound.filter(
       (user) =>
@@ -189,7 +188,6 @@ async function autoLink(commit: boolean): Promise<void> {
     );
 
     if (commit) {
-      // eslint-disable-next-line no-await-in-loop
       await prisma.employee.update({
         where: { id: employee.id },
         data: { userId: user.id },

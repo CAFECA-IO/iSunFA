@@ -44,6 +44,15 @@ export enum LeaveRecallDecision {
 }
 
 /**
+ * Info: (20260814 - Julian) 回應徵詢的結果。徵詢已被回應不是故障而是併發下的正常結局，
+ * 用回傳值表達而非丟例外，呼叫端才無法忘記處理。
+ */
+export enum LeaveRecallResolutionOutcome {
+  RESOLVED = "RESOLVED",
+  ALREADY_ANSWERED = "ALREADY_ANSWERED",
+}
+
+/**
  * Info: (20260813 - Julian) 銷假徵詢的理由長度上限。
  * 它是「企業經營上之急迫需求」的書面記載（勞基法 §38 III），不是備註欄。
  */

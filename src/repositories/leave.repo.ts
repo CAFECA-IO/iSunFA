@@ -2,6 +2,7 @@ import { Prisma } from "@/generated";
 import { prisma } from "@/lib/prisma";
 import {
   LeaveRecallDecision,
+  LeaveRecallResolutionOutcome,
   LeaveRecallStatus,
   LeaveRequestStatus,
 } from "@/constants/leave";
@@ -81,15 +82,39 @@ export interface ILeaveRepository {
     accountBookId: string;
     employeeId: string;
   }): Promise<ILeaveRecallRecord[]>;
-  resolveRecall(params: {
-    recallId: string;
-    decision: LeaveRecallDecision;
-    note?: string;
-    respondedAt: Date;
-    /** Info: (20260813 - Julian) 僅 ACCEPT 需要：要退出生效的請假日與要投影回去的排班 */
-    projection?: ILeaveRecallProjection;
-  }): Promise<ILeaveRecallRecord>;
+  resolveRecall(
+    params: ILeaveRecallResolveParams,
+  ): Promise<ILeaveRecallResolution>;
 }
+
+/**
+ * Info: (20260814 - Julian) ACCEPT 一定要有投影、DECLINE 一定沒有——用可辨識聯集讓
+ * 「同意卻沒帶排班」在型別層就寫不出來（ADR 019），而不是寫得出來再於執行期擋。
+ * 同 `attendanceScheduleUpdateSchema` 對 `dayType` 的處置。
+ */
+export type ILeaveRecallResolveParams = {
+  recallId: string;
+  note?: string;
+  respondedAt: Date;
+} & (
+  | { decision: LeaveRecallDecision.DECLINE }
+  | {
+      decision: LeaveRecallDecision.ACCEPT;
+      /** Info: (20260813 - Julian) 要退出生效的請假日與要投影回去的排班 */
+      projection: ILeaveRecallProjection;
+    }
+);
+
+/**
+ * Info: (20260814 - Julian) 回應徵詢只有兩種結局，用可辨識聯集表達：
+ * 搶到 PENDING 才有 recall 可讀，沒搶到就只有結局本身，呼叫端不會拿到 undefined 的紀錄。
+ */
+export type ILeaveRecallResolution =
+  | {
+      outcome: LeaveRecallResolutionOutcome.RESOLVED;
+      recall: ILeaveRecallRecord;
+    }
+  | { outcome: LeaveRecallResolutionOutcome.ALREADY_ANSWERED };
 
 /** Info: (20260813 - Julian) 同意徵詢時要一起改動的兩張表的定位資料 */
 export interface ILeaveRecallProjection {
@@ -194,32 +219,40 @@ class LeaveRepository implements ILeaveRepository {
    * 徵詢變 ACCEPTED 並清空 `pendingLeaveDayId`、請假日退出生效（`activeKey = null`），
    * 排班改回上班日。少了排班那步會變成 `NO_SCHEDULE` 而非 `WORK`；
    * 少了退出生效那步，同一天會同時「在請假」與「要上班」。
+   *
+   * Info: (20260814 - Julian) 狀態轉移用附條件的 `updateMany(where status = PENDING)` 搶，
+   * `count === 0` 就是輸給另一個分頁。不能先查再寫：兩個請求會同時看到 PENDING，
+   * 一個同意一個婉拒，最後狀態是 DECLINED 但排班已被改成 WORK，且永遠改不回來。
+   * ACCEPT 的搶佔必須在交易內且排在最前面，輸掉時後面兩張表一個字都不會動。
    */
-  public async resolveRecall(params: {
-    recallId: string;
-    decision: LeaveRecallDecision;
-    note?: string;
-    respondedAt: Date;
-    projection?: ILeaveRecallProjection;
-  }): Promise<ILeaveRecallRecord> {
-    const { recallId, decision, note, respondedAt, projection } = params;
+  public async resolveRecall(
+    params: ILeaveRecallResolveParams,
+  ): Promise<ILeaveRecallResolution> {
+    const { recallId, note, respondedAt } = params;
 
-    if (decision === LeaveRecallDecision.DECLINE) {
-      return prisma.leaveRecall.update({
-        where: { id: recallId },
+    if (params.decision === LeaveRecallDecision.DECLINE) {
+      const claimed = await prisma.leaveRecall.updateMany({
+        where: { id: recallId, status: LeaveRecallStatus.PENDING },
         data: {
           status: LeaveRecallStatus.DECLINED,
           respondedAt,
           responseNote: note ?? null,
           pendingLeaveDayId: null,
         },
-        include: RECALL_INCLUDE,
       });
+      if (claimed.count === 0) {
+        return { outcome: LeaveRecallResolutionOutcome.ALREADY_ANSWERED };
+      }
+      return {
+        outcome: LeaveRecallResolutionOutcome.RESOLVED,
+        recall: await prisma.leaveRecall.findUniqueOrThrow({
+          where: { id: recallId },
+          include: RECALL_INCLUDE,
+        }),
+      };
     }
 
-    if (!projection) {
-      throw new Error("resolveRecall: ACCEPT requires a schedule projection");
-    }
+    const { projection } = params;
 
     // Info: (20260813 - Julian) 與 upsertShiftDay 同一個閘口；投影的組合同樣得先過不變式
     assertSchedulableDay({
@@ -228,6 +261,19 @@ class LeaveRepository implements ILeaveRepository {
     });
 
     return prisma.$transaction(async (tx) => {
+      const claimed = await tx.leaveRecall.updateMany({
+        where: { id: recallId, status: LeaveRecallStatus.PENDING },
+        data: {
+          status: LeaveRecallStatus.ACCEPTED,
+          respondedAt,
+          responseNote: note ?? null,
+          pendingLeaveDayId: null,
+        },
+      });
+      if (claimed.count === 0) {
+        return { outcome: LeaveRecallResolutionOutcome.ALREADY_ANSWERED };
+      }
+
       await tx.leaveDay.update({
         where: { id: projection.leaveDayId },
         data: { activeKey: null, recalledAt: respondedAt },
@@ -254,16 +300,13 @@ class LeaveRepository implements ILeaveRepository {
         },
       });
 
-      return tx.leaveRecall.update({
-        where: { id: recallId },
-        data: {
-          status: LeaveRecallStatus.ACCEPTED,
-          respondedAt,
-          responseNote: note ?? null,
-          pendingLeaveDayId: null,
-        },
-        include: RECALL_INCLUDE,
-      });
+      return {
+        outcome: LeaveRecallResolutionOutcome.RESOLVED,
+        recall: await tx.leaveRecall.findUniqueOrThrow({
+          where: { id: recallId },
+          include: RECALL_INCLUDE,
+        }),
+      };
     });
   }
 }

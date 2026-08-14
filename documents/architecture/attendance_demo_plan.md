@@ -270,7 +270,7 @@ Demo 不建 `AttendancePresence` / `AttendanceDailyResult` / `AttendanceExceptio
 
 ---
 
-## 🪤 5. 踩雷紀錄：實作時才浮現、光看規格看不出來的十四處
+## 🪤 5. 踩雷紀錄：實作時才浮現、光看規格看不出來的十五處
 
 > **這一節是本文件最該保留的部分。** 每一條都是實作時才浮現、光看規格看不出來的問題。
 
@@ -290,6 +290,7 @@ Demo 不建 `AttendancePresence` / `AttendanceDailyResult` / `AttendanceExceptio
 | 12  | W18    | 地圖用 `dataviz-light` | 那是**資料視覺化底圖，刻意極少標註**。它對現場頁是對的（主角是四個圓圈），但打卡頁要回答「我站在哪」，而那個答案是路名 —— 改用 `streets-v2`。樣式選擇收在 `useMapStyle` 的 `MAPTILER_STYLE`，兩邊各自註明理由 |
 | 13  | W18    | （未記載）| **`.next` 不一定會重編。** 透過裝置橋接寫入的檔案不保證產生 watcher 事件，症狀是改了程式碼但畫面完全沒變、也沒有錯誤 —— 而那會被誤判成「功能沒做出來」。判別方式：比對 `.next/BUILD_ID` 與原始檔的 mtime。**交付後一律重啟 dev server，不要相信 HMR** |
 | 14  | W19    | P2 靠手動座標輸入框，後改 DevTools 感應器 | **兩種都作廢了。** 輸入框被移除（§7.2 第 1 項提前執行），而改用 DevTools 之後才確定演示全程在手機上 —— **手機沒有那個面板**。現行做法是「真的走出去」（§10.2），代價是要把 demo 工區的圍欄半徑縮到 60–80 公尺，並**同步調降 `DEMO_MAX_ACCURACY_METERS`**，否則「站在圈內卻被判在圈外」會變成常態 |
+| 15  | W20    | 「先查狀態再寫入」擋得住重複回應銷假徵詢 | **擋不住，而且失敗方式是最壞的那一種。** `respondRecall` 讀出 `status === PENDING` 到真正寫入之間有時間差，兩個分頁同時回應時**兩邊都會通過檢查**：一個同意一個婉拒，最後 `LeaveRecall.status` 是 DECLINED，但排班已經被同意那一支改成 `WORK` 且再也改不回來 —— 畫面上看起來只是「他婉拒了」，沒有任何錯誤。更糟的是**這個不一致沒有任何測試會抓到**，因為單執行緒跑永遠不會重現。改為附條件更新（`updateMany where { id, status: PENDING }`），`count === 0` 就是輸了這場競爭，且 ACCEPT 的搶佔排在交易的第一步 —— 輸掉時後面兩張表一個字都不會動。連帶：service 原本把 P2002 對應成「已被回應」是錯的（那條路已改由回傳值表達），現在 P2002 只可能來自 `employeeShiftDay` 的唯一鍵，對應 `CF_SCHEDULE_DAY_CONFLICT`。**另外，route 層有 catch-all 會把非 `AppError` 轉成 `IS_DB_FAILED`，所以裸 Prisma 錯誤不會流到瀏覽器 —— 但那代表症狀是一個看不懂的 500，不是沒事**。同一支方法還留過一個 `throw new Error("ACCEPT requires a schedule projection")`：「ACCEPT 必有投影、DECLINE 必無」本來就該用可辨識聯集表達，**同一個 PR 的 `attendanceScheduleUpdateSchema` 對 `dayType` 已經這樣做了，這裡卻退回執行期檢查** —— 已改為型別層約束，並用 `@ts-expect-error` 立了一條由 tsc（不是 jest）執行的回歸護欄 |
 
 ### 同時回頭修正母文件三處（v1.2 → v1.3）
 

@@ -5,6 +5,7 @@ import {
 import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { logger } from "@/lib/utils/logger";
+import { PRISMA_ERROR, rethrowAsAppError } from "@/lib/utils/prisma_error";
 import { deriveShiftPatternKind } from "@/lib/attendance_rules";
 import { toShiftWindow } from "@/lib/attendance_schedule_view";
 import { enumerateIsoDates, isoDaySpan } from "@/lib/utils/attendance_time";
@@ -195,7 +196,10 @@ export class AttendanceScheduleService {
       if (error instanceof AttendanceScheduleInvariantError) {
         throw new AppError(API_ERRORS.VA_SCHEDULE_DAY_INVALID);
       }
-      throw error;
+      // Info: (20260814 - Julian) upsert 在併發下會撞 @@unique，那是衝突不是故障
+      rethrowAsAppError(error, {
+        [PRISMA_ERROR.UNIQUE_CONSTRAINT]: API_ERRORS.CF_SCHEDULE_DAY_CONFLICT,
+      });
     }
   }
 }
