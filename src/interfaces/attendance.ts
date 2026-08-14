@@ -9,22 +9,14 @@ import {
 } from "@/constants/attendance";
 
 /**
- * Info: (20260813 - Julian) 簽到系統的資料結構。
- *
- * 判定引擎（`@/lib/attendance_rules`）的輸入與輸出都在這裡，
- * 而它們刻意**不含任何 `Date`**：時區換算屬於 service 層，
- * 引擎只做整數運算。理由見 `attendance_rules.ts` 的檔頭。
+ * Info: (20260813 - Julian) 簽到系統的資料結構。判定引擎（`@/lib/attendance_rules`）的輸入輸出都在這裡，
+ * 刻意不含任何 `Date`：時區換算屬於 service 層，引擎只做整數運算（見 `attendance_rules.ts`）。
  */
 
 /**
- * Info: (20260813 - Julian) 班別的時間窗。對應 `ShiftPattern` 的六個欄位。
- *
- * 全部必填 —— 沒有「只對某一種制度有意義」的欄位。
- * 固定班表就是 `windowStart === coreStart && windowEnd === coreEnd` 的特例，
- * 因此判定引擎不需要任何分支去區分固定班與彈性班。
- *
- * 分鐘值以「當地當日 00:00 起算」計，`>= MINUTES_PER_DAY` 表次日
- * （夜間施工班 20:00→次日 05:00 = 1200→1740）。
+ * Info: (20260813 - Julian) 班別的時間窗，對應 `ShiftPattern` 的六個欄位，全部必填。
+ * 固定班表是 `windowStart === coreStart && windowEnd === coreEnd` 的特例，引擎因此不需分支處理。
+ * 分鐘值以「當地當日 00:00 起算」計，`>= MINUTES_PER_DAY` 表次日。
  */
 export interface IShiftWindow {
   /** Info: (20260813 - Julian) 最早可認列的上班時刻 */
@@ -42,11 +34,8 @@ export interface IShiftWindow {
 }
 
 /**
- * Info: (20260813 - Julian) 上班日的排班：**必定帶班別**。
- *
- * 與 `IOffDaySchedule` 組成一個可辨識聯集，讓「排了上班日卻沒有班別」
- * 在型別層就無法表示 —— 同 ADR 019 的判準，只是這裡發生在 TypeScript
- * 而不是 schema（schema 端由 `assertSchedulableDay` 擋在 repository）。
+ * Info: (20260813 - Julian) 上班日的排班：**必定帶班別**。與 `IOffDaySchedule` 組成可辨識聯集（同 ADR 019 判準），
+ * 讓「排了上班日卻沒有班別」在型別層就無法表示；schema 端由 `assertSchedulableDay` 擋在 repository。
  */
 export interface IWorkDaySchedule {
   dayType: WorkDayType.WORK;
@@ -62,11 +51,8 @@ export interface IOffDaySchedule {
 export type IDaySchedule = IWorkDaySchedule | IOffDaySchedule;
 
 /**
- * Info: (20260813 - Julian) 一筆打卡在判定引擎眼中的樣子。
- *
- * 只有兩個欄位：判定不需要知道地點、定位精度或誰打的 ——
- * 那些在打卡當下就已經被護欄處理完（圍欄外的打卡根本進不了資料庫）。
- * 把它們帶進引擎只會讓測試要準備一堆與結論無關的資料。
+ * Info: (20260813 - Julian) 一筆打卡在判定引擎眼中的樣子，只有兩個欄位——
+ * 地點、精度、打卡人等已在打卡當下被護欄處理完，帶進引擎只會讓測試準備無關資料。
  */
 export interface IPunchSnapshot {
   punchType: PunchType;
@@ -75,10 +61,8 @@ export interface IPunchSnapshot {
 }
 
 /**
- * Info: (20260813 - Julian) 判定所需的政策參數。
- *
- * 三個寬限值分開帶而不是共用一個：它們服務於不同的目的，
- * 合成一個等於假設「安全」與「工時計算」要的是同一個數字（見 §D10.3）。
+ * Info: (20260813 - Julian) 判定所需的政策參數。三個寬限值分開帶——服務於不同目的，
+ * 合成一個等於假設「安全」與「工時計算」要的是同一個數字。
  */
 export interface IAttendancePolicySnapshot {
   lateGraceMinutes: number;
@@ -100,21 +84,15 @@ export interface IAttendanceDayInput {
   punches: IPunchSnapshot[];
   policy: IAttendancePolicySnapshot;
   /**
-   * Info: (20260813 - Julian) 「現在」相對於本工作日當地 00:00 的分鐘數。
-   *
-   * 由呼叫端注入而不是在引擎內取 `Date.now()`：那會讓同一組輸入在不同時刻
-   * 得到不同結果，而可重算是這個引擎唯一的驗收方式。
-   * 評估過去的日子時此值會大於 1440（例如評估三天前，相當於 4320 以上）。
+   * Info: (20260813 - Julian) 「現在」相對於本工作日當地 00:00 的分鐘數，由呼叫端注入而非引擎內取 `Date.now()`——
+   * 可重算是這個引擎唯一的驗收方式。評估過去的日子時此值會大於 1440。
    */
   nowMinuteOfDay: number;
 }
 
 /**
- * Info: (20260813 - Julian) 單一筆異常。
- *
- * `minutes` 是該異常的量值（遲到／早退／不足的分鐘數）；
- * 對 `ABSENT` 與 `MISSING_*` 這類「有或沒有」的異常固定為 0 ——
- * 用 0 而不是 null，是因為呼叫端要加總各類異常分鐘時不必先判空。
+ * Info: (20260813 - Julian) 單一筆異常。`minutes` 是量值；`ABSENT`／`MISSING_*` 這類固定為 0（非 null），
+ * 讓呼叫端加總時不必先判空。
  */
 export interface IAttendanceExceptionItem {
   type: AttendanceExceptionType;
@@ -132,11 +110,8 @@ export interface IAttendanceEvaluation {
   /** Info: (20260813 - Julian) 可同時有多筆；`status` 為 EXCEPTION 時必不為空 */
   exceptions: IAttendanceExceptionItem[];
   /**
-   * Info: (20260813 - Julian) 產生本結果的規則引擎版本。
-   *
-   * 規則改版時舊結果不就地改寫，而是重算並更新此值 —— 稽核問
-   * 「為什麼去年這天判成遲到、今年同樣的打卡判成正常」時，
-   * 答案在欄位裡，不在某個人的記憶裡。心智模型同 `piiAlgorithm`。
+   * Info: (20260813 - Julian) 產生本結果的規則引擎版本。規則改版時舊結果不就地改寫，而是重算並更新此值——
+   * 稽核時答案在欄位裡，不在某人的記憶裡。心智模型同 `piiAlgorithm`。
    */
   engineVersion: number;
 }
@@ -146,10 +121,8 @@ export interface IAttendanceEvaluation {
  */
 
 /**
- * Info: (20260813 - Julian) 打卡請求。**刻意沒有時間欄位。**
- *
- * `punchedAt` 一律由伺服器產生（護欄 G1）—— 竄改打卡時間是這個系統
- * 價值最高的攻擊，而只要 client 傳得進來，它就永遠擋不住。
+ * Info: (20260813 - Julian) 打卡請求。**刻意沒有時間欄位。**`punchedAt` 一律由伺服器產生（護欄 G1）——
+ * 竄改打卡時間是本系統價值最高的攻擊，只要 client 傳得進來就永遠擋不住。
  */
 export interface IPunchRequest {
   punchType: PunchType;
@@ -170,10 +143,7 @@ export interface IWorkLocationSummary {
 
 /**
  * Info: (20260813 - Julian) 圍欄外被拒時一併回傳的資訊（403 payload）。
- *
- * 收到這個 403 的人正站在某處試圖上班。回應必須讓他立刻知道
- * 「我離大漢溪橋梁工區 340 公尺，要再走近一點」，而不是「系統說我不能打卡」。
- * 這兩個欄位免解密就拿得到 —— `distanceMeters` 是「有多接近」不是「在哪裡」。
+ * 回應須讓使用者知道「離某地點多遠、要再走近多少」，而非只說「不能打卡」。
  */
 export interface IOutOfFencePayload {
   nearestLocationName: string;
@@ -197,14 +167,9 @@ export interface ITodayStatus {
   lastOutMinute: number | null;
   workLocationName: string | null;
   /**
-   * Info: (20260813 - Julian) 產生這個回應的**伺服器時刻**（ISO-8601）。
-   *
-   * 打卡頁的秒錶顯示的必須是「打下去會被記成幾點幾分幾秒」，而那個時刻由伺服器決定
-   * （護欄 G1：`punchedAt` 一律由伺服器產生）。瀏覽器時鐘可能差好幾分鐘，
-   * 甚至被刻意調過 —— 拿它印一個數字，等於在畫面上寫一個系統並不採信的時間。
-   *
-   * 前端以此算出與本機時鐘的差，之後在本地每秒遞增。誤差只剩下網路來回的一半，
-   * 在秒的精度下可以忽略；而 A1 與 A2 都回傳這個欄位，因此每次打卡都會重新校時。
+   * Info: (20260813 - Julian) 產生這個回應的**伺服器時刻**（ISO-8601），是前端秒錶的校時基準（護欄 G1：
+   * `punchedAt` 一律由伺服器產生，不可信瀏覽器時鐘）。前端算出與本機時鐘的差後每秒遞增，
+   * A1、A2 都回傳此欄位，每次打卡即重新校時。
    */
   serverNowIso: string;
 }
@@ -214,10 +179,8 @@ export interface ITodayStatus {
  */
 
 /**
- * Info: (20260813 - Julian) 矩陣裡的一格：一位員工的一個工作日。
- *
- * 刻意**不帶 `engineVersion`** —— 整張矩陣由同一次呼叫、同一版引擎算出，
- * 那是矩陣的屬性不是格子的屬性。每格重複一次只是把一個事實講 372 遍。
+ * Info: (20260813 - Julian) 矩陣裡的一格：一位員工的一個工作日。刻意不帶 `engineVersion`——
+ * 那是整張矩陣（同一次呼叫、同一版引擎）的屬性，不是格子的屬性。
  */
 export interface IAttendanceDayResult {
   workDate: string;
@@ -247,10 +210,8 @@ export interface IAttendanceExceptionTally {
 }
 
 /**
- * Info: (20260813 - Julian) 一位員工在期間內的統計。
- *
- * `normalDays` 只數 `phase === CONCLUDED` 的那些 —— 一天還沒過完就記一筆「正常」，
- * 是拿一個尚未成立的事實去墊高分母。未結束的日子另計於 `pendingDays`。
+ * Info: (20260813 - Julian) 一位員工在期間內的統計。`normalDays` 只數 `phase === CONCLUDED` 者——
+ * 未過完的日子不能記一筆「正常」，另計於 `pendingDays`。
  */
 export interface IAttendanceResultSummary {
   /** Info: (20260813 - Julian) 期間內排定的上班日數（dayType = WORK） */
@@ -265,11 +226,8 @@ export interface IAttendanceResultSummary {
   noScheduleDays: number;
   workedMinutes: number;
   /**
-   * Info: (20260813 - Julian) **只列出真的發生過的型別。**
-   *
-   * 不補上 `{ type: SUSPICIOUS_JUMP, days: 0 }` 這種零筆記錄：瞬移偵測（G5）
-   * 本期未實作，回一個 0 等於宣稱「查過了、沒有」，而系統根本沒查。
-   * 「沒發生」與「沒檢查」不能長成同一個樣子。
+   * Info: (20260813 - Julian) 只列出真的發生過的型別，不補 `{ type: SUSPICIOUS_JUMP, days: 0 }` 這種零筆記錄——
+   * 瞬移偵測（G5）本期未實作，回 0 等於宣稱「查過了、沒有」。「沒發生」與「沒檢查」不可混同。
    */
   exceptions: IAttendanceExceptionTally[];
 }
@@ -287,10 +245,7 @@ export interface IAttendanceResultRow {
 
 /**
  * Info: (20260813 - Julian) A9 的回應：期間 × 員工的判定矩陣。**即時計算，不讀結果表。**
- *
- * `evaluatedAt` 不是裝飾。整張矩陣的判定都以這一個時間點為準（進行中的日子
- * 判定會隨時間改變），因此「這份結果是幾點算出來的」與結果本身同等重要 ——
- * 同 A10 現場名單要求產出時間戳的理由。
+ * `evaluatedAt` 不是裝飾：進行中的日子判定會隨時間改變，因此產出時刻與結果本身同等重要。
  */
 export interface IAttendanceResultMatrix {
   from: string;
@@ -306,11 +261,8 @@ export interface IAttendanceResultMatrix {
 
 /**
  * Info: (20260813 - Julian) ===== 現場在班狀態（W7）=====
- *
- * Demo 版**不落地 `AttendancePresence`**，改為讀取時由 `AttendancePunch`
- * 即時推導（demo 計畫書 §4.3：砍掉的是快取，留下的是真相）。
- * 母文件 §D10.1 說「推導是正確的，但每次推導不可行」—— 不可行的理由是效能，
- * 而 demo 沒有那個壓力。這裡寫的推導邏輯正是正式版 `rebuildPresence` 的內容。
+ * Demo 版不落地 `AttendancePresence`，改為讀取時由 `AttendancePunch` 即時推導；
+ * 這裡的推導邏輯即正式版 `rebuildPresence` 的內容，正式版改為落地是因為效能，demo 沒有那個壓力。
  */
 
 // Info: (20260813 - Julian) 名單上的一個人。欄位即 §D10.5 要求的六項
@@ -330,11 +282,8 @@ export interface IPresenceEntry {
 }
 
 /**
- * Info: (20260813 - Julian) 排了上班日、時間到了卻沒有任何打卡的人。
- *
- * **這個數字是必要的，不是加分項**（母文件 §D10.6）。一個只顯示「在班 42 人」
- * 的看板，會讓人以為現場就是 42 個人；把「沒打上班卡的人」一併顯示出來，
- * 才誠實地表達了「系統知道什麼、不知道什麼」。
+ * Info: (20260813 - Julian) 排了上班日、時間到了卻沒有任何打卡的人。**這個數字是必要的，不是加分項**——
+ * 只顯示「在班 42 人」會讓人誤以為現場就是 42 人，須一併顯示未到工者才誠實。
  */
 export interface IPresenceExpectedAbsentee {
   employeeId: string;
@@ -360,10 +309,8 @@ export interface IPresenceLocationSummary {
 }
 
 /**
- * Info: (20260813 - Julian) 現場人數總覽（A3）。
- *
- * `observedAt` 與判定矩陣的 `evaluatedAt` 同一個角色，但這裡更重要：
- * 現場狀態每分每秒都在變，一份沒有時間戳的名單在事故調查時無法採信。
+ * Info: (20260813 - Julian) 現場人數總覽（A3）。`observedAt` 與判定矩陣的 `evaluatedAt` 同角色，
+ * 但這裡更重要：現場狀態每分每秒都在變，沒有時間戳的名單在事故調查時無法採信。
  */
 export interface IPresenceSummary {
   observedAt: string;
@@ -374,14 +321,9 @@ export interface IPresenceSummary {
   onSiteTotal: number;
   staleTotal: number;
   /**
-   * Info: (20260813 - Julian) 未到工**不分地點**。
+   * Info: (20260813 - Julian) 未到工**不分地點**——沒有打卡就沒有座標可歸屬工區，`EmployeeShiftDay` 也無地點欄位。
    *
-   * 這些人沒有打卡，因此系統手上沒有任何座標可以把他們歸給某個工區 ——
-   * 而 `EmployeeShiftDay` 目前也沒有地點欄位。硬要分配就是捏造。
-   *
-   * ToDo: (20260813 - Julian) 正式版讓排班帶上預定工區（或給員工一個預設工地），
-   * 屆時未到工才分得了地點 —— 而「這個工區今天少了三個人」比
-   * 「全處少了三個人」對工地主任有用得多。
+   * ToDo: (20260813 - Julian) 正式版讓排班帶上預定工區，屆時未到工才分得了地點。
    */
   expectedAbsentees: IPresenceExpectedAbsentee[];
 }
@@ -432,12 +374,8 @@ export interface IScheduleRow {
 }
 
 /**
- * Info: (20260813 - Julian) 排班月曆（A7）。
- *
- * 與判定矩陣（A9）刻意分成兩支端點：這一支是**輸入**（人排的），
- * 那一支是**輸出**（系統算的）。合成一支會讓「改了什麼」與「因此變成什麼」
- * 混在同一個回應裡，而排班畫面要能在判定之外獨立存在 ——
- * 下個月的班表現在就排得出來，那時還沒有任何打卡可判。
+ * Info: (20260813 - Julian) 排班月曆（A7）。與判定矩陣（A9）刻意分成兩支端點：這一支是輸入（人排的），
+ * 那一支是輸出（系統算的），排班畫面須能在判定之外獨立存在（例如下月班表先排好，還沒有打卡可判）。
  */
 export interface IScheduleCalendar {
   from: string;

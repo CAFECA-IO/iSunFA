@@ -10,27 +10,12 @@ import {
 } from "@/lib/auth/fido2_client";
 
 /**
- * Info: (20260813 - Julian) Passkey 登入儀式，只有這一份。
+ * Info: (20260813 - Julian) Passkey 登入儀式，全站只有這一份，供多個呼叫點共用。
  *
- * ## 為什麼要抽出來
- *
- * 這段流程（取 challenge → 喚起 passkey → 驗證 → 寫入 DeWT）原本只存在於
- * `auth_modal.tsx`。出勤閘門需要**同樣的登入**但**不同的後續**（不導頁、
- * 不處理活動獎勵），照抄一份的結果是兩個地方各自演化 ——
- * 而 `eslint.config.mjs` 那條 `no-restricted-syntax` 的註解已經寫過一次
- * 「第一版只遷移了一個呼叫點，其餘十幾處全數漏掉」的下場。
- *
- * ## 為什麼登入不走 `requestAssertion`
- *
- * `requestAssertion` 依 `custody` 決定用 passkey 還是伺服器代簽，而 `custody`
- * 來自 `/auth/me` —— 登入的當下還沒有 session，也就沒有 custody 可判斷。
- * 這正是那條規則例外清單第 1 類的理由，本檔案因此列在清單內。
- *
- * ## localStorage 寫在這裡
- *
- * `verifyLogin` 成功但沒寫 `dewt`，等於登入了卻沒有人知道 ——
- * `AuthContext.refreshAuth()` 只讀 localStorage，不讀回傳值。把這兩行留給
- * 呼叫端，就是留一個「忘了寫」的洞給下一個接手的人。
+ * 登入時不走 `requestAssertion`：那支函式依 `custody`（來自 `/auth/me`）決定
+ * 用 passkey 還是伺服器代簽，但登入當下還沒有 session，沒有 custody 可判斷。
+ * `localStorage`（`dewt` / `user_address`）的寫入就放在這裡，呼叫端不必再寫一次 ——
+ * `AuthContext.refreshAuth()` 只讀 localStorage，不讀函式回傳值。
  */
 
 export type PasskeyLoginStep =
@@ -46,7 +31,7 @@ export async function loginWithPasskey(
 
   /**
    * Info: (20260813 - Julian) 無狀態流程一定會帶 token；沒帶代表拿到的是
-   * 舊的 address-based options，用它去 `verifyLogin` 只會得到一個難解的 400。
+   * 舊的 address-based options，會讓 `verifyLogin` 回一個難解的 400。
    */
   if (!token) throw new AppError(API_ERRORS.AUTH_LOGIN_FAILED);
 

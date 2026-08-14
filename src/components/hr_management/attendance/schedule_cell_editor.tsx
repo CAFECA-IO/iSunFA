@@ -18,18 +18,10 @@ import { IAttendanceScheduleUpdate } from "@/validators/attendance";
 import { useTranslation } from "@/i18n/i18n_context";
 
 /**
- * Info: (20260813 - Julian) 單格排班編輯。
+ * Info: (20260813 - Julian) 單格排班編輯面板（非下拉選單）。
  *
- * ## 為什麼是面板而不是下拉選單
- *
- * 計畫書 §8.3 寫的是「點單格 → 下拉選單」。改成方格圖下方的面板，理由有二：
- *
- * 1. **這張表會橫向捲動**，而浮動選單在捲動容器裡的定位是一整類難查的錯誤 ——
- *    在演示當天出現「選單開在螢幕外」不值得為了形式上的一致去冒。
- * 2. **投影出來要看得懂。** 面板可以把班別的完整名稱與時間窗一起寫出來
- *    （「工地日班　07:30–17:00」），而 28 像素的下拉選單只放得下簡稱。
- *
- * 一樣不做拖拉 —— 拖拉是排班工具的功能，不是這場演示的主張。
+ * 用面板而非下拉選單：這張表會橫向捲動，浮動選單的定位在捲動容器裡容易出錯；
+ * 面板也能把班別全名與時間窗一起寫出來。不做拖拉排班。
  */
 
 const OFF_DAY_TYPES: Exclude<WorkDayType, WorkDayType.WORK>[] = [
@@ -125,9 +117,8 @@ const ScheduleCellEditor: FC<{
             >
               <span className="text-sm font-medium">{pattern.name}</span>
               {/**
-               * Info: (20260813 - Julian) 把時間窗印出來。排班的人要選的是
-               * 「這天上早班還是晚班」，而班別名稱未必說得出那件事 ——
-               * 「工地日班」是幾點到幾點，只有寫出來才不必去別的頁面查。
+               * Info: (20260813 - Julian) 把時間窗印出來——班別名稱未必說得出
+               * 是幾點到幾點，寫出來才不必去別的頁面查。
                */}
               <span className="text-xs opacity-80">
                 {formatMinuteOfDay(pattern.window.windowStartMinute, nextDay)}–

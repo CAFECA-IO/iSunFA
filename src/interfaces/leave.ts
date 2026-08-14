@@ -1,11 +1,8 @@
 import { LeaveRecallStatus, LeaveType } from "@/constants/leave";
 
 /**
- * Info: (20260813 - Julian) 假勤 API 的回應型別。
- *
- * 一律是**扁平的顯示用 DTO**，不是 Prisma 實體：`LeaveDay → LeaveRequest → Employee`
- * 三層巢狀對前端沒有任何價值，而把實體直接回傳出去，等於讓 API 的形狀
- * 跟著資料表一起漂移 —— 那正是 `IAttendanceRosterRow` 當初不用 `Employee` 的理由。
+ * Info: (20260813 - Julian) 假勤 API 的回應型別。一律是扁平的顯示用 DTO，不是 Prisma 實體——
+ * 直接回傳實體等於讓 API 形狀跟著資料表漂移（同 `IAttendanceRosterRow` 的理由）。
  */
 
 /** Info: (20260813 - Julian) 今日請假名單的一列 */
@@ -20,10 +17,8 @@ export interface ILeaveTodayEntry {
   leaveType: LeaveType;
   reason: string;
   /**
-   * Info: (20260813 - Julian) 是否已經有一張待回應的徵詢。
-   *
-   * 前端據此把按鈕換成「徵詢中」而不是讓人再按一次 ——
-   * 讓他按下去再回 409，等於用錯誤訊息當說明文字。
+   * Info: (20260813 - Julian) 是否已經有一張待回應的徵詢。前端據此把按鈕換成「徵詢中」，
+   * 而非讓人按下去才收到 409。
    */
   hasPendingRecall: boolean;
 }

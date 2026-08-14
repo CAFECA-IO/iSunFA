@@ -23,19 +23,10 @@ import {
 import { useTranslation } from "@/i18n/i18n_context";
 
 /**
- * Info: (20260813 - Julian) 單格明細。
+ * Info: (20260813 - Julian) 單格出勤明細：分鐘數與當天班別，供異常追查使用。
  *
- * ## 為什麼一定要有這個
- *
- * 方格圖能表達的是「有沒有問題」，不是「問題是什麼」。而出勤異常一旦要
- * 拿去跟人談（補登、扣薪、出工查核），談的是分鐘數與那天的班別 ——
- * 一個只有顏色的畫面在那個對話裡沒有任何用處。
- *
- * ## 一定要印出判定階段
- *
- * 使用者看到空白格會問「為什麼」，而答案有兩個且意思相反：
- * 「這天還沒過完」與「這天沒有排班」。少了 `phase` 這一行，
- * 演示現場最容易被問到的那一格，正好是唯一答不出來的。
+ * 必須顯示 `phase`（判定階段）——空白格可能是「還沒過完」或「沒有排班」，
+ * 兩種意思相反，只有這一行能分辨。
  */
 
 const DetailField: FC<{ label: string; children: ReactNode }> = ({
@@ -156,9 +147,8 @@ const AttendanceDayDetail: FC<{
                   {t(ATTENDANCE_EXCEPTION_I18N_KEY[exception.type])}
                 </span>
                 {/**
-                 * Info: (20260813 - Julian) 曠職與漏打卡的 `minutes` 恆為 0 ——
-                 * 那不是「0 分鐘」而是「這種異常沒有量值」，因此不印出來。
-                 * 印成「曠職 0 分」會讓人以為系統算錯了。
+                 * Info: (20260813 - Julian) 曠職與漏打卡的 `minutes` 恆為 0，代表「沒有量值」
+                 * 而非「0 分鐘」，因此不印出來，以免被誤讀成算錯了。
                  */}
                 {exception.minutes > 0 && (
                   <span className="text-gray-500">

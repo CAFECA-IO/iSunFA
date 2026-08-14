@@ -40,39 +40,13 @@ import {
 } from "@/repositories/work_location.repo";
 
 /**
- * Info: (20260813 - Julian) 打卡主流程。
- *
- * ## 這支 service 的核心主張：到班的定義是「人在登記的地點」
- *
- * 座標未落入任何圍欄的打卡**不會寫進資料庫** —— 直接回 403。
- * 這不是「事後標記可疑」，圍欄就是「到班」這個事實的定義本身：
- * 人不在登記的地點，不是「到班了但有疑慮」，是到班這件事沒有發生，
- * 而系統不記錄一件沒發生的事（CLAUDE.md 的零捏造）。
- *
- * 它也是現場人數能成立的前提 —— 若允許圍欄外打卡，「工地上有幾個人」
- * 這個數字立刻失去意義，而那個數字在緊急疏散時是要拿來對人頭的。
- *
- * ## 一條必須劃清楚的界線
- *
- * 「拒絕」只適用於圍欄判定本身，不得外推到其他護欄：
- *
- * - **圍欄命中與否**：對「到班事實」的**定義** → 拒絕
- * - **定位精度不足**：**證據品質**不足以判定 → 拒絕，但訊息是「請重試」
- *   而不是「你不在現場」（那是「還無法判定他到了」，不是「判他沒到」）
- * - **瞬移偵測（G5，本期未實作）**：對紀錄可信度的**推測** → 收下並標記。
- *   人確實在圍欄內（否則早被擋掉），一個成立的現場事實不該被啟發式推測否認
- *
- * 「拒絕」一旦被當成通則，下一個護欄很容易被順手改成拒絕 ——
- * 而有誤判率的啟發式一旦拒絕，就會出現「員工真的到了工地卻打不了卡」，
- * 那才是這個系統唯一不能發生的事。
+ * Info: (20260813 - Julian) 打卡主流程。到班的定義是「人在登記的地點」——
+ * 座標未落入任何圍欄的打卡不會寫進資料庫，直接回 403（護欄 G4）。
+ * 「拒絕」只適用於圍欄判定本身：精度不足（G3）拒收但訊息是「請重試」，
+ * 不得比照瞬移偵測等啟發式一律拒絕，否則會出現「人在現場卻打不了卡」。
  */
 
-/**
- * Info: (20260813 - Julian) 決定打卡歸屬工作日時的容差。
- *
- * **這不是寬限。** 它只影響「這筆打卡算哪一天」，不影響遲到早退的判定 ——
- * 提早 20 分鐘到工地的人，這一筆仍該歸屬今天，而不是變成沒有歸屬的孤兒。
- */
+// Info: (20260813 - Julian) 決定打卡歸屬工作日的容差，不是遲到寬限——只影響這筆算哪一天
 const WORK_DATE_TOLERANCE_MINUTES = 180;
 
 export class OutOfFenceError extends AppError {
@@ -107,8 +81,8 @@ export class AttendancePunchService {
   /**
    * Info: (20260813 - Julian) 打卡。
    *
-   * 時間由這裡產生（護欄 G1）：`punchedAt` 絕不接受任何 client 傳入值 ——
-   * 竄改打卡時間是本系統價值最高的攻擊，只要傳得進來就永遠擋不住。
+   * 時間由這裡產生（護欄 G1）：`punchedAt` 絕不接受任何 client 傳入值——
+   * 竄改打卡時間是本系統價值最高的攻擊。
    */
   public async punch(
     employee: Employee,
@@ -145,10 +119,7 @@ export class AttendancePunchService {
     );
     this.assertPunchableState(request.punchType, existing);
 
-    /**
-     * Info: (20260813 - Julian) id 先產生，因為它是加密 AAD 的一部分。
-     * 加密發生在 insert 之前，等資料庫的 `@default(uuid())` 就來不及了（ADR 018 §3）。
-     */
+    // Info: (20260813 - Julian) id 先產生，因為它是加密 AAD 的一部分，加密必須在 insert 之前完成（ADR 018 §3）
     const id = randomUUID();
     const latitude = encryptPii(String(request.latitude), {
       table: HrPiiTable.ATTENDANCE_PUNCH,
@@ -192,13 +163,8 @@ export class AttendancePunchService {
   }
 
   /**
-   * Info: (20260813 - Julian) 護欄 G3：定位精度不足即拒收。
-   *
-   * 這條擋的是「用 IP 粗定位假裝成 GPS」—— 那種來源的精度動輒數公里，
-   * 落在任何一個圍欄裡都只是碰運氣。
-   *
-   * 精度未回報時放行：部分裝置不提供這個值，把它們一律擋掉會讓
-   * 「打不了卡」變成裝置問題而不是位置問題。
+   * Info: (20260813 - Julian) 護欄 G3：定位精度不足即拒收，擋的是「用 IP 粗定位假裝 GPS」。
+   * 精度未回報時放行——部分裝置不提供這個值，一律擋會讓「打不了卡」變成裝置問題。
    */
   private assertAcceptableAccuracy(accuracyMeters?: number): void {
     if (accuracyMeters === undefined) return;
@@ -209,10 +175,8 @@ export class AttendancePunchService {
 
   /**
    * Info: (20260813 - Julian) 護欄 G4：圍欄外一律拒絕。
-   *
-   * 丟具名的 `OutOfFenceError` 而不是純 `AppError`：route 需要把最近地點與距離
-   * 一併回給前端（`jsonFailWithPayload`）。收到這個 403 的人正站在某處試圖上班，
-   * 「我離大漢溪橋梁工區 340 公尺」比「系統說我不能打卡」有用得多。
+   * 丟具名的 `OutOfFenceError`（而非純 `AppError`）讓 route 把最近地點與距離
+   * 一併回給前端（`jsonFailWithPayload`），方便使用者判斷自己離現場多遠。
    */
   private assertInsideFence(
     nearest: IGeofenceMatch | null,
@@ -232,15 +196,10 @@ export class AttendancePunchService {
   }
 
   /**
-   * Info: (20260813 - Julian) 狀態機：不能重複上班、不能未上班先下班。
+   * Info: (20260813 - Julian) 狀態機：不能重複上班、不能未上班先下班；一天內多次進出（外出洽公）合法。
    *
-   * 只擋這兩種 —— 一天內多次進出（外出洽公）是合法的，判定引擎以
-   * 「最早 IN / 最晚 OUT」收斂（母計畫 §7.4 的已知簡化）。
-   *
-   * `existing` 的 `punchType` 型別刻意寫成 `string` 而不是 `PunchType`：
-   * Prisma 產生的是字面量聯集（`"CLOCK_IN" | "CLOCK_OUT"`），而 `@/constants/attendance`
-   * 的是 TS string enum —— **後者可以寫進前者，但前者不能讀進後者**（TS 的 enum 是名義型別）。
-   * 用 `string` 接、與 enum 成員比對，兩個方向都成立且不需要任何 `as` 轉型。
+   * `existing` 的 `punchType` 刻意寫成 `string` 而非 `PunchType`：Prisma 回字面量聯集，
+   * `@/constants/attendance` 是 TS enum，enum 是名義型別、無法反向賦值，用 `string` 接才能兩邊互通。
    */
   private assertPunchableState(
     punchType: PunchType,
@@ -262,12 +221,7 @@ export class AttendancePunchService {
     }
   }
 
-  /**
-   * Info: (20260813 - Julian) 這一筆屬於哪一個工作日。
-   *
-   * 候選只取「當地今日」與「當地昨日」—— 跨日班最多只會跨一天，
-   * 而多取一天只會增加誤判成前天的可能。
-   */
+  // Info: (20260813 - Julian) 候選只取「當地今日」與「當地昨日」——跨日班最多只會跨一天
   private async resolvePunchWorkDate(
     employee: Employee,
     punchedAt: Date,

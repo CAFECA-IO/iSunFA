@@ -536,9 +536,9 @@ export const hrManagement = {
     confirm_title_in: "Confirm clock in",
     confirm_title_out: "Confirm clock out",
     confirm_message_in:
-      "This records a clock-in at {{name}} from your current position. The time is set by the server and the record cannot be edited or deleted.",
+      "This records a clock-in at {{name}} from your current position. The record cannot be edited or deleted.",
     confirm_message_out:
-      "This records a clock-out at {{name}} from your current position. The time is set by the server and the record cannot be edited or deleted.",
+      "This records a clock-out at {{name}} from your current position. The record cannot be edited or deleted.",
     confirm_cancel: "Cancel",
     map_unavailable:
       "The map cannot be shown. Punching in is unaffected — the distance and accuracy above still apply.",
