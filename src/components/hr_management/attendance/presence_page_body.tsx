@@ -183,7 +183,7 @@ const PresencePageBody: FC = () => {
         </div>
 
         {/* Info: (20260813 - Julian) 三個數字回答三個不同的問題，缺一個就會暗示系統其實不知道的事 */}
-        <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <StatCard
             label={t("hr_management.attendance_presence.stat_on_site")}
             value={feed.summary?.onSiteTotal ?? 0}
@@ -241,43 +241,59 @@ const PresencePageBody: FC = () => {
           {/* Info: (20260813 - Julian) 工區卡片。人數為零的工區也要列，否則「沒有人」與「不存在」同形 */}
           <div className="flex flex-col gap-3">
             {locations.map((location) => (
-              <button
+              <div
                 key={location.workLocationId}
-                type="button"
-                aria-label={location.name}
-                onClick={() => setSelectedId(location.workLocationId)}
-                className={`rounded-2xl bg-white p-4 text-left ring-1 transition ${
-                  location.workLocationId === selectedId
-                    ? "ring-2 ring-orange-400"
-                    : "ring-gray-200 hover:ring-gray-300"
-                }`}
+                className="relative flex w-fit items-center"
               >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-medium text-gray-800">
-                    {location.name}
-                  </span>
-                  <span className="text-xs text-gray-400">{location.code}</span>
-                </div>
-                <div className="mt-2 flex items-center gap-3 text-sm">
-                  <span className="rounded-md bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-700 tabular-nums">
-                    {location.onSiteCount}
-                  </span>
-                  <span
-                    className={`rounded-md px-2 py-0.5 font-semibold tabular-nums ${
-                      location.staleCount > 0
-                        ? "bg-amber-100 text-amber-700"
-                        : "bg-gray-50 text-gray-300"
-                    }`}
-                  >
-                    {location.staleCount}
-                  </span>
-                  <span className="ml-auto text-xs text-gray-400">
-                    {t("hr_management.attendance_presence.radius", {
-                      radius: location.radiusMeters,
-                    })}
-                  </span>
-                </div>
-              </button>
+                <div
+                  className={`${
+                    location.workLocationId === selectedId ? "block" : "hidden"
+                  } absolute -right-8 z-10 size-0 rotate-90`}
+                  style={{
+                    borderLeft: "20px solid transparent",
+                    borderRight: "20px solid transparent",
+                    borderBottom: "20px solid #fb923c",
+                  }}
+                ></div>
+                <button
+                  type="button"
+                  aria-label={location.name}
+                  onClick={() => setSelectedId(location.workLocationId)}
+                  className={`rounded-2xl bg-white p-4 text-left ring-1 transition ${
+                    location.workLocationId === selectedId
+                      ? "ring-2 ring-orange-400"
+                      : "ring-gray-200 hover:ring-gray-300"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-medium text-gray-800">
+                      {location.name}
+                    </span>
+                    <span className="text-xs text-gray-400">
+                      {location.code}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex items-center gap-3 text-sm">
+                    <span className="rounded-md bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-700 tabular-nums">
+                      {location.onSiteCount}
+                    </span>
+                    <span
+                      className={`rounded-md px-2 py-0.5 font-semibold tabular-nums ${
+                        location.staleCount > 0
+                          ? "bg-amber-100 text-amber-700"
+                          : "bg-gray-50 text-gray-300"
+                      }`}
+                    >
+                      {location.staleCount}
+                    </span>
+                    <span className="ml-auto text-xs text-gray-400">
+                      {t("hr_management.attendance_presence.radius", {
+                        radius: location.radiusMeters,
+                      })}
+                    </span>
+                  </div>
+                </button>
+              </div>
             ))}
           </div>
 
@@ -293,7 +309,7 @@ const PresencePageBody: FC = () => {
                   type="button"
                   disabled={isExporting}
                   onClick={() => exportRoster(feed.roster?.workLocationId)}
-                  className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-red-500 transition enabled:hover:bg-red-100 disabled:text-gray-500"
+                  className="flex items-center gap-1.5 rounded-lg py-1.5 text-sm text-red-500 transition enabled:hover:text-red-300 disabled:text-gray-500"
                 >
                   <Download className="size-4 shrink-0" />
                   {t("hr_management.attendance_presence.export_location")}

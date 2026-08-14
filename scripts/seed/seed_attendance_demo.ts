@@ -21,6 +21,7 @@ import {
   WorkDayType,
 } from "@/constants/attendance";
 import { EmployeeStatus, Gender } from "@/constants/hr_management";
+import { LeaveRequestStatus, LeaveType } from "@/constants/leave";
 import { prisma } from "@/lib/prisma";
 import { dbRepo } from "@/repositories/db.repo";
 import { encryptPii } from "@/lib/hr_pii_crypto";
@@ -471,6 +472,23 @@ const SCRIPTED_PUNCHES: IScriptedPunch[] = [
  * EMP007 無打卡 → 現場頁的「未到工 1」。
  * EMP010 是夜班，今晚 20:00 才開始，因此今日無打卡。
  */
+/**
+ * Info: (20260814 - Julian) 今日請假（P6 靠這兩位）。
+ *
+ * 兩位都在 DEP-001，而 EMP005 是該部門主管 —— 他徵詢的是自己段的人，敘事才順。
+ * 這兩位的今日排班會被覆寫成 LEAVE，且**不得有今日打卡**：
+ * 現場人數是打卡驅動的，一個「在請假」卻有打卡的人會同時出現在兩份名單上。
+ */
+const TODAY_LEAVE: {
+  no: string;
+  leaveType: LeaveType;
+  reason: string;
+}[] = [
+  { no: "EMP007", leaveType: LeaveType.PERSONAL, reason: "家中臨時有事" },
+  { no: "EMP008", leaveType: LeaveType.ANNUAL, reason: "家庭旅遊" },
+];
+const TODAY_LEAVE_NOS = TODAY_LEAVE.map((leave) => leave.no);
+
 const TODAY_PUNCHES: Record<string, [number, number] | null> = {
   EMP001: [8, 52],
   EMP002: [8, 55],
@@ -479,7 +497,8 @@ const TODAY_PUNCHES: Record<string, [number, number] | null> = {
   EMP005: null,
   EMP006: null,
   EMP007: null,
-  EMP008: [7, 26],
+  // Info: (20260814 - Julian) 今日請假，不得有打卡（見 TODAY_LEAVE）
+  EMP008: null,
   EMP009: [7, 22],
   EMP010: null,
   EMP011: [9, 5],
@@ -751,6 +770,15 @@ function assertFencesDoNotOverlap(
 
 // Info: (20260813 - Julian) 只清這個 demo 帳本的資料。順序依外鍵相依性由子而父
 async function clearDemoData(): Promise<void> {
+  /**
+   * Info: (20260814 - Julian) 假勤先清。`LeaveDay`／`LeaveRecall` 都靠 cascade，
+   * 但 `LeaveRequest` 掛在帳本上，不刪的話重跑會累積成好幾份「生效中」的假單 ——
+   * 而 `activeKey` 的唯一鍵會在第二次執行時直接撞上。
+   */
+  await prisma.leaveRequest.deleteMany({
+    where: { accountBookId: ACCOUNT_BOOK_ID },
+  });
+
   await prisma.attendancePunch.deleteMany({
     where: { accountBookId: ACCOUNT_BOOK_ID },
   });
@@ -969,6 +997,11 @@ async function main(): Promise<void> {
         dayType = WorkDayType.HOLIDAY;
       }
 
+      // Info: (20260814 - Julian) 例外三：今日請假。假單是來源，這一格是它的投影
+      if (workDate === DEMO_DATE && TODAY_LEAVE_NOS.includes(person.no)) {
+        dayType = WorkDayType.LEAVE;
+      }
+
       const shiftPatternId =
         dayType === WorkDayType.WORK ? shiftByCode.get(person.shift)!.id : null;
 
@@ -995,6 +1028,36 @@ async function main(): Promise<void> {
     }
   }
   await prisma.employeeShiftDay.createMany({ data: shiftDays });
+
+  /**
+   * Info: (20260814 - Julian) --- 今日請假的假單 ---
+   *
+   * 只建已核准的假單，**不建任何銷假徵詢** —— 那一筆要在演示現場當場產生，
+   * 否則畫面一進去就是「徵詢中」，P6 最關鍵的那一步沒有東西可按。
+   *
+   * `activeKey` 是「同一人同一天只能有一張生效假單」的唯一保證，
+   * 組法（`employeeId:workDate`）與 `leave.repo` 必須一致。
+   */
+  for (const leave of TODAY_LEAVE) {
+    const employee = employeeByNo.get(leave.no)!;
+    await prisma.leaveRequest.create({
+      data: {
+        accountBookId: ACCOUNT_BOOK_ID,
+        employeeId: employee.id,
+        leaveType: leave.leaveType,
+        reason: leave.reason,
+        status: LeaveRequestStatus.APPROVED,
+        decidedByEmployeeId: employeeByNo.get("EMP005")!.id,
+        decidedAt: at(DEMO_DATE, 8, 0),
+        days: {
+          create: {
+            workDate: DEMO_DATE,
+            activeKey: `${employee.id}:${DEMO_DATE}`,
+          },
+        },
+      },
+    });
+  }
 
   /**
    * Info: (20260813 - Julian) --- 打卡 ---

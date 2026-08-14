@@ -133,7 +133,7 @@ const ScheduleCell: FC<{
         onClick={onSelect}
         title={title}
         aria-label={title}
-        className={`flex size-7 items-center justify-center rounded-md text-xs font-medium transition ${style} ${
+        className={`flex size-7 shrink-0 items-center justify-center rounded-md text-[10px] font-medium whitespace-nowrap transition ${style} ${
           isSelected ? "ring-2 ring-orange-400" : "hover:opacity-80"
         }`}
       >
