@@ -16,11 +16,15 @@ import { ZodError } from "zod";
 import { describeError } from "@/lib/utils/error_message";
 import {
   assessPdfTextLayer,
+  extractPdfPageImagery,
   extractPdfTextLayer,
+  planImageOnlyPages,
   slicePagesForRange,
   PDF_TEXT_LAYER_REASON,
 } from "@/lib/pdf_text_layer";
 import { PdfTextLayerDecisionEnum } from "@/constants/pdf_text_layer";
+import { ensureTableDivider } from "@/lib/utils/markdown_table_divider";
+import { extractPagesAsPdf } from "@/lib/utils/pdf_page_extract";
 import { CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES } from "@/constants/carbon_chatbot";
 import {
   LLM_REPORT_IMPORT_TIMEOUT_MS,
@@ -252,12 +256,62 @@ const buildPageIndexResponseSchema = (
 const SECTION_BY_ID = new Map(CARBON_REPORT_OUTLINE.map((s) => [s.id, s]));
 
 // Info: (20260716 - Tzuhan) 匯入來源:文字類直接入 prompt;pdf 走 inlineData
+/**
+ * Info: (20260814 - Emily) 這次呼叫要附帶哪些圖。
+ *
+ * 收成一支函式而不是在兩個呼叫點各寫一次三元式：那兩處原本就是同一份邏輯的複本，
+ * 而這次要加的是第三種情況（純文字 + 只附幾頁）。複本會讓它只被加在其中一處，
+ * 那正是本專案這幾天反覆踩到的「只改了一端」。
+ */
+const buildLlmImageParts = (
+  source: IReportImportSource,
+): Array<{ data: string; mimeType: string }> | undefined => {
+  if (!source.isText) {
+    return [{ data: source.data, mimeType: source.mimeType }];
+  }
+  if (source.visionPages) {
+    return [
+      { data: source.visionPages.data, mimeType: source.visionPages.mimeType },
+    ];
+  }
+  return undefined;
+};
+
+/**
+ * Info: (20260814 - Emily) 附帶頁面的說明句。
+ *
+ * 沒有這句的話模型收到的是「一份文字 + 幾張沒頭沒尾的圖」，
+ * 不知道那幾張圖屬於哪一節，也不知道為什麼文字裡找不到對應內容。
+ * 明講頁碼：文字層帶著 `-- p.N/總頁 --` 標記，模型可以據此把圖對回原文位置。
+ */
+const buildImagePagesInstruction = (source: IReportImportSource): string => {
+  if (!source.visionPages) return "";
+  return `\n\n【附帶頁面影像】
+另附原文第 ${source.visionPages.pages.join("、")} 頁的頁面影像。
+這幾頁的內容**主要以圖片呈現**，文字層幾乎抽不到字 ——
+文字少不代表那一節沒有內容，請直接讀圖，把其中的文字（姓名、職稱、地址、
+組織層級關係等）逐字抄進對應段落，與讀原文文字時的照錄要求相同。
+若圖的內容確實無法辨識，照既有規則標示，不要臆造。`;
+};
+
 export interface IReportImportSource {
   name: string;
   mimeType: string;
   // Info: (20260716 - Tzuhan) base64(pdf)或 UTF-8 純文字(md/plain,由 route 解碼)
   data: string;
   isText: boolean;
+  /**
+   * Info: (20260814 - Emily) 「內容只住在圖片裡」的那幾頁，抽成一份小 PDF
+   * (`data/issue_drafts/open/25_image_only_sections.md`)。
+   *
+   * 只有走純文字路徑時才會有值。實測高興昌那份 64 頁的 p6/p7/p8
+   * （組織架構圖、三個廠址地圖）正文只有 0/146/369 字元，內容全在像素裡，
+   * 而整份走純文字所以從沒被看過。
+   *
+   * 與 `data` 併送而不是取代它：那幾頁的**上下文**仍在文字層裡，
+   * 只送圖的話模型不知道它屬於哪一節。
+   */
+  visionPages?: { data: string; mimeType: string; pages: number[] };
 }
 
 /**
@@ -451,7 +505,37 @@ export class ReportImportService {
      * 而它換掉的是每次呼叫都重跑一遍文字層抽取。
      */
     if (extracted && assessment?.decision === PdfTextLayerDecisionEnum.TEXT) {
-      const resolved = { ...base, data: extracted.text, isText: true };
+      /**
+       * Info: (20260814 - Emily) 文字層乾淨 ≠ 內容完整
+       * (`data/issue_drafts/open/25_image_only_sections.md`)。
+       *
+       * 逐頁找出「內容只住在圖片裡」的那幾頁，抽成一份小 PDF 一起送。
+       * 拿不到圖片資訊時維持現行行為（整份純文字）—— 這支是補完整性的，
+       * 不該讓匯入失敗；但 `extractPdfPageImagery` 會記 log，不靜默。
+       */
+      const imagery = await extractPdfPageImagery(input.buffer);
+      const planned = imagery
+        ? planImageOnlyPages(imagery, extracted.pages)
+        : null;
+      const imagePages =
+        planned && planned.pages.length > 0
+          ? await extractPagesAsPdf(input.buffer, planned.pages)
+          : null;
+
+      const resolved: IReportImportSource = {
+        ...base,
+        data: extracted.text,
+        isText: true,
+        ...(imagePages
+          ? {
+              visionPages: {
+                data: Buffer.from(imagePages.bytes).toString("base64"),
+                mimeType: input.mimeType,
+                pages: imagePages.extracted,
+              },
+            }
+          : {}),
+      };
       if (input.cacheKey) rememberSourceDecision(input.cacheKey, resolved);
       return resolved;
     }
@@ -650,7 +734,7 @@ T9. **跨欄的分隔列**(整列只有一個置中標題,如「類別二:輸入
     **縱向合併的儲存格**只在該範圍的第一列寫值,其餘列的該格留空,不要逐列重複。
 
 【標準大綱】
-${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\n${source.data}` : ""}`;
+${buildOutlineCatalog(scopedSections)}${buildImagePagesInstruction(source)}${source.isText ? `\n\n【報告原文】\n${source.data}` : ""}`;
 
     const scopeLabel = options?.sectionIds
       ? options.sectionIds.join(",")
@@ -661,9 +745,7 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
         () =>
           this.getChatService().generateRawWithImages(
             prompt,
-            source.isText
-              ? undefined
-              : [{ data: source.data, mimeType: source.mimeType }],
+            buildLlmImageParts(source),
             true,
             buildImportResponseSchema(scopedSections, withActivities),
             {
@@ -837,7 +919,38 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
          * 這與 Zod 層「壞一張丟一張」的原則自相矛盾 —— 同一件事在兩層用不同比例,
          * 是我設計上的不一致。統一為逐張:一張不合格只丟那一張。
          */
-        const shaped = candidates.filter((table) => {
+        /**
+         * Info: (20260814 - Emily) 缺分隔列的表先補一條，再交給裁決
+         * (`data/issue_drafts/open/27_source_table_missing_divider.md`)。
+         *
+         * 2026-08-14 匯入實測：表3.1／3.2／3.4／4.1 被 `not_a_table` 整張丟掉，
+         * 而表3.1 與表3.4 **被內文引用** —— 產出的報告留著「如表 3.1，…」
+         * 指向一張不存在的表。
+         *
+         * 那些表的內容其實是好的：表3.1 的表頭已經是 10 欄、子標題也對位，
+         * 匯入 prompt 的兩層表頭要求生效了，缺的只有一條 `| --- |` ——
+         * 而模型不寫它其實合理：兩層表頭的分隔列該放哪一列之後，GFM 本身沒有答案。
+         *
+         * **順序必須在裁決之前**：`validateSourceTables` 認的就是分隔列，
+         * 排在它之後等於補了也沒用。同理也在 `padTableHeaderToWidest` 之前 ——
+         * 表被丟掉的話補欄根本沒機會執行。
+         */
+        const repaired = candidates.map((table) => {
+          const fix = ensureTableDivider(table.markdown);
+          if (!fix.inserted) return table;
+          /*
+           * Info: (20260814 - Emily) 補了要記出來：這是「原文長得不標準」的訊號，
+           * 累積起來要回頭改 prompt，而不是永遠靠讀取端補。
+           */
+          logger.warn("[ReportImportService] source table divider inserted", {
+            paragraphId,
+            tableNo: table.tableNo,
+            caption: table.caption.slice(0, 40),
+          });
+          return { ...table, markdown: fix.markdown };
+        });
+
+        const shaped = repaired.filter((table) => {
           const check = validateSourceTables([table]);
           if (!check.isValid) {
             /**
@@ -988,15 +1101,13 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
 7. 報告原文完全沒有相關資訊的段落,仍需輸出草稿:以撰寫目標為骨架、全部關鍵資訊以「(待補: 說明)」佔位。
 
 【待撰寫段落】
-${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\n${source.data}` : ""}`;
+${buildOutlineCatalog(scopedSections)}${buildImagePagesInstruction(source)}${source.isText ? `\n\n【報告原文】\n${source.data}` : ""}`;
 
     let raw: string;
     try {
       raw = await this.getChatService().generateRawWithImages(
         prompt,
-        source.isText
-          ? undefined
-          : [{ data: source.data, mimeType: source.mimeType }],
+        buildLlmImageParts(source),
         true,
         buildGapFillResponseSchema(scopedSections),
         {

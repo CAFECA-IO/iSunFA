@@ -18,7 +18,15 @@ import {
   PDF_TEXT_PAGE_MARKER_PATTERN,
   PDF_TEXT_PAGE_SLICE_MIN_CHARS,
   PDF_TEXT_PAGE_SLICE_PADDING,
+  PDF_PAGE_IMAGE_MAX_VISION_SHARE,
+  PDF_PAGE_IMAGE_MIN_VISION_PAGES,
+  PDF_PAGE_LARGE_IMAGE_MIN_LONG_EDGE_PX,
 } from "@/constants/pdf_text_layer";
+import {
+  selectImageOnlyPages,
+  type IPdfPageImagery,
+  type ISelectedImagePages,
+} from "@/lib/utils/pdf_page_imagery";
 
 export interface IPdfTextLayerQuality {
   chars: number;
@@ -230,4 +238,88 @@ export function slicePagesForRange(
     return { text, range: null, fellBack: true };
   }
   return { text: sliced, range: { from, to }, fellBack: false };
+}
+
+/**
+ * Info: (20260814 - Emily) 薄 IO 包裝：逐頁量嵌入圖片的尺寸
+ * (`data/issue_drafts/open/25_image_only_sections.md`)。
+ *
+ * 與 `extractPdfTextLayer` 同一個分層：這裡只負責把數字取出來，
+ * 「哪幾頁要送視覺模型」的判準在 `selectImageOnlyPages`（純函式、可單測）。
+ *
+ * 失敗回 null 而不是丟例外：拿不到圖片資訊時**應該維持現行行為**（整份走純文字），
+ * 而不是讓整個匯入失敗 —— 這支是補完整性的，不是必要路徑。
+ * 但一定要記 log：靜默地少看幾張圖正是這張票要修的那件事。
+ */
+export async function extractPdfPageImagery(
+  buffer: Buffer,
+): Promise<IPdfPageImagery[] | null> {
+  try {
+    const { PDFParse } = await import("pdf-parse");
+    const parser = new PDFParse({ data: new Uint8Array(buffer) });
+    try {
+      const result = await parser.getImage();
+      return (result.pages ?? []).map((page) => ({
+        page: page.pageNumber,
+        chars: 0,
+        images: (page.images ?? []).map((image) => ({
+          widthPx: image.width,
+          heightPx: image.height,
+        })),
+      }));
+    } finally {
+      await parser.destroy();
+    }
+  } catch (error) {
+    logger.warn(
+      `[PdfTextLayer] page imagery unavailable (bytes=${buffer.length}): ${describeError(error)}`,
+    );
+    return null;
+  }
+}
+
+/**
+ * Info: (20260814 - Emily) 挑出「內容只住在圖片裡」的頁，並把量到的東西記下來。
+ *
+ * 上限用比例算（見 `PDF_PAGE_IMAGE_MAX_VISION_SHARE`），短報告有下限保護。
+ * 三種結果都要記 log 且**分得開**：
+ * 挑到了幾頁、一頁都沒命中、命中太多所以放棄 —— 混在一起就看不出是判準失效還是文件真的沒圖。
+ */
+export function planImageOnlyPages(
+  imagery: readonly IPdfPageImagery[],
+  totalPages: number,
+): ISelectedImagePages {
+  const maxPages = Math.max(
+    PDF_PAGE_IMAGE_MIN_VISION_PAGES,
+    Math.ceil(totalPages * PDF_PAGE_IMAGE_MAX_VISION_SHARE),
+  );
+  const selected = selectImageOnlyPages({
+    pages: imagery,
+    minLongEdgePx: PDF_PAGE_LARGE_IMAGE_MIN_LONG_EDGE_PX,
+    maxPages,
+  });
+
+  if (selected.exceededLimit) {
+    logger.warn("[PdfTextLayer] too many image pages, keeping text-only", {
+      matched: selected.matchedCount,
+      maxPages,
+      totalPages,
+    });
+  } else if (selected.pages.length > 0) {
+    logger.info("[PdfTextLayer] pages whose content lives in images", {
+      pages: selected.pages,
+      totalPages,
+      /*
+       * Info: (20260814 - Emily) 把尺寸也記下來：門檻目前只有一份真實樣本
+       * (1050x1417) 校準過，下一份報告要靠這行對答案。
+       */
+      sizes: imagery
+        .filter((page) => selected.pages.includes(page.page))
+        .map((page) => ({
+          page: page.page,
+          images: page.images.map((i) => `${i.widthPx}x${i.heightPx}`),
+        })),
+    });
+  }
+  return selected;
 }
